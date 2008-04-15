@@ -1,0 +1,338 @@
+{% extends "portal/base.html" %}
+
+{% block extrahead %}
+{% if job.is_finished %}
+{% else %}
+<meta http-equiv="refresh" content="5; URL=" />
+{% endif %}
+{% endblock extrahead %}
+
+{% block title %}
+Astrometry.net Job {{ jobid }}: {{ jobstatus }}
+{% endblock title %}
+
+{% block inlinecss %}
+#logout { float:right; padding:5px; margin-top:0; margin-bottom:auto;}
+#logo { float:left; width:300px; padding:5px;}
+h3.c { text-align:center; }
+p.c { text-align:center; }
+ul.c { text-align:center; }
+.c { margin-left:auto; margin-right:auto; }
+td {border-width: 0;}
+#onsky { margin-left:auto; margin-right:auto; text-align:center; }
+#onsky > a:link { color:white; }
+#onsky > a:visited { color:white; }
+#onsky > a:hover { color:gray; }
+#onsky > a:active { color:yellow; }
+#annotation { margin-left:auto; margin-right:auto; text-align:center; }
+#annotation > a:link { color:white; }
+#annotation > a:visited { color:white; }
+#annotation > a:hover { color:gray; }
+#annotation > a:active { color:yellow; }
+#description { margin-left:auto; margin-right:auto; text-align:center; }
+#tags { margin-left:auto; margin-right:auto; text-align:center; }
+#sources { margin-left:auto; margin-right:auto; text-align:center; }
+#sources > a:link { color:white; }
+#sources > a:visited { color:white; }
+#sources > a:hover { color:gray; }
+#sources > a:active { color:yellow; }
+#redgreen { margin-left:auto; margin-right:auto; text-align:center; }
+#currentxylist { margin-left:auto; margin-right:auto; text-align:center; }
+#otherxylists { margin-left:auto; margin-right:auto; text-align:center; }
+#gmapslink { margin-left:auto; margin-right:auto; text-align:center; }
+
+#objs2 {width:40%; margin-left:auto; margin-right:auto; }
+
+.bigbutton { font-size:110%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
+{% endblock inlinecss %}
+
+{% comment %}
+th {border-width: 0;}
+#objs {margin-left:auto; margin-right:auto; width:100%; }
+.c { margin-left:auto; margin-right:auto; text-align:center; }
+#logo { width:300px; margin-left:auto; margin-right:auto; text-align:center; padding:5px;}
+.smalllink { font-size:80%; } {#font-variant:small-caps; }#}
+{% endcomment %}
+
+{% block loggedin %}
+{% include "portal/menu.html" %}
+{% endblock loggedin %}
+
+{% block content %}
+
+<div style="float:right; text-align:right;">
+{% if jobowner %}
+<form action="{% url an.portal.views.changeperms %}" method="post" name="jobpermsform">
+{# Job <b>{{ jobid }}</b>: #}
+This job:
+<input type="hidden" name="jobid" value="{{ job.jobid }}" />
+{% if allowanon %}
+<input type="hidden" name="allowanon" value="0" />
+anyone can view this page.
+&nbsp;
+<a href="javascript:document.forms.jobpermsform.submit();" class="smalllink">Revoke access</a>
+{% else %}
+<input type="hidden" name="allowanon" value="1" />
+only you can view this page.
+&nbsp;
+<a href="javascript:document.forms.jobpermsform.submit();" class="smalllink">Grant access to everyone</a>
+{% endif %}
+</form>
+
+{% comment %}
+#########################
+<form action="{% url an.portal.views.changeperms %}" method="post" name="fieldpermsform">
+This field:
+<input type="hidden" name="jobid" value="{{ job.jobid }}" />
+{% if allowanon %}
+<input type="hidden" name="allowanon" value="0" />
+anyone can view this field.
+&nbsp;
+<a href="javascript:document.forms.fieldpermsform.submit();" class="smalllink">Revoke access</a>
+{% else %}
+<input type="hidden" name="allowanon" value="1" />
+only you can view this field.
+&nbsp;
+<a href="javascript:document.forms.fieldpermsform.submit();" class="smalllink">Grant access to everyone</a>
+{% endif %}
+</form>
+#########################
+{% endcomment %}
+
+{% comment %}
+#########################
+<form action="{% url an.portal.views.publishtovo %}" method="post" name="jobpublishform">
+<input type="hidden" name="jobid" value="{{ job.jobid }}" />
+<a href="javascript:document.forms.jobpublishform.submit();" class="smalllink">Publish to the VO</a>
+</form>
+#########################
+{% endcomment %}
+
+{% else %}
+Job owner: {{ job.get_user.username }}
+{% endif %}
+</div>
+
+<div style="clear:both;">
+</div>
+
+<hr />
+
+{% if jobsolved %}
+<h3 class="c">This field is at (RA, Dec) = ( {{ racenter }}, {{ deccenter }} ) degrees
+<br />
+and spans {{ fieldw }} x {{ fieldh }} {{ fieldunits }}.
+</h3>
+
+<hr />
+
+{% if objsinfield %}
+<div id="objs2">
+<p>
+This field contains:
+<ul>
+{% for obj in objsinfield %}
+<li><a href="{{ view_tagtxt_url }}{{obj}}">{{ obj }}</a></li>
+{% endfor %}
+</ul>
+</p>
+</div>
+{% endif %}
+
+{% if job.solved %}
+<p><a href="{{ view_nearby_url }}">View nearby fields</a></p>
+{% endif %}
+
+{% if objsinfield %}
+<hr />
+<div id="annotation">
+<p>Field plus annotations:</p>
+<a href="{{ annotation_big }}"><img src="{{ annotation }}" alt="your image plus our annotations" /></a>
+</div>
+{% endif %}
+
+{% if job.solved %}
+
+<div id="description">
+{% ifequal user job.get_user %}
+<form method="post" action={{ set_description_url }}>
+<p>
+<input type="hidden" name="jobid" value="{{ job.jobid }}" />
+<textarea name="desc" rows="4" cols="40">
+{{ job.get_description }}
+</textarea>
+</p>
+<p>
+<input type="submit" value="Change Description" />
+</p>
+</form>
+{% else %}
+ {% if job.get_description %}
+ <p>{{ job.get_description }}</p>
+ {% endif %}
+{% endifequal %}
+</div>
+
+<hr />
+
+<div id="tags">
+<p>
+{% if tags %}
+This field has been tagged with:
+<ul>
+{% for tag in tags %}
+{% if tag.machineTag %}
+{% else %}
+<li>
+<b><a href="{{view_tag_url}}tag={{tag.id}}">{{ tag.text }}</a></b>
+by
+<a href="{{view_user_url}}user={{tag.user.id}}">{{ tag.user.username }}</a>
+{% if tag.canremove %}
+&nbsp;&nbsp;
+<a href="{{ remove_tag_url }}tag={{ tag.id }}">remove</a>
+{% endif %}
+</li>
+{% endif %}
+{% endfor %}
+</ul>
+{% else %}
+This field has not been tagged yet.
+{% endif %}
+</p>
+<form method="post" action="{{ add_tag_url }}">
+<p>
+Tag with:
+<input type="hidden" name="jobid" value="{{ job.jobid }}" />
+<input type="text" name="tag" size="32" />
+<input type="submit" value="Add Tag" />
+</p>
+</form>
+</div>
+
+<hr />
+
+{% endif %}
+
+<div id="onsky">
+<p>This field on the sky:</p>
+{% for zimg,zlink in zoomimgs %}
+<a href="{{ zlink }}"><img src="{{ zimg }}" alt="your field on the sky" /></a>
+{% endfor %}
+</div>
+
+<div id="gmapslink">
+<a href="{{ gmapslink }}">View in Google Maps browser</a>
+</div>
+
+<hr />
+
+<div id="redgreen">
+{% if needs_medium_scale %}
+<a href="{{ redgreen_big }}">
+{% endif %}
+<img src="{{ redgreen_medium }}" alt="your field objects plus our index objects overlaid" />
+{% if needs_medium_scale %}
+</a>
+{% endif %}
+</div>
+
+{% else %}
+
+<div id="currentxylist">
+<p>Source extraction we're using: (<a href="{{ sources_big }}">big version</a>)</p>
+{#<a href="{{ sources_small }}">click me</a>#}
+<img src="{{ sources_small }}" />
+</div>
+
+{% if otherxylists %}
+<div id="otherxylists">
+<p>Other source extraction options:  If you click on one of these images we will
+switch to solving using that list of sources.</p>
+{% for otherxyimg, otherxylink  in otherxylists %}
+<a href="{{ otherxylink }}"><img src="{{ otherxyimg }}" /></a>
+{% cycle '' '<br />' %}
+{% endfor %}
+</div>
+{% endif %}
+
+{% endif %}
+{# (endif jobsolved) #}
+
+
+<br />
+
+<table cellpadding="3" border="1" class="c">
+
+<tr><th colspan="2">Job Status</th></tr>
+
+<tr><td>Job Id:</td><td> {{ jobid }} </td></tr>
+<tr><td>Job Status:</td><td> {{ jobstatus }} </td></tr>
+<tr><td>Submitted:</td><td> {{ jobsubmittime }} </td></tr>
+{% if jobstarttime %}
+<tr><td>Started:</td><td> {{ jobstarttime }} </td></tr>
+{% endif %}
+{% if jobfinishtime %}
+<tr><td>Finished:</td><td> {{ jobfinishtime }} </td></tr>
+{% endif %}
+<tr><td>Source extraction:</td><td><a href="{{ sources }}">sources.png</a></td></tr>
+{% if needs_medium_scale %}
+<tr><td>Source extraction (full size):</td><td><a href="{{ sources_big }}">sources-big.png</a></td></tr>
+{% endif %}
+{% if jobsolved %}
+<tr><td>(RA, Dec) center:</td><td> ({{ racenter }}, {{ deccenter }}) degrees</td></tr>
+<tr><td>(RA, Dec) center (H:M:S, D:M:S):</td><td> ({{ racenter_hms }}, {{ deccenter_dms }}) </td></tr>
+<tr><td>Orientation:</td><td> {{ orientation }} deg E of N</td></tr>
+<tr><td>Pixel scale:</td><td> {{ pixscale }} arcsec/pixel</td></tr>
+<tr><td>Parity (sign(det(CD))):</td><td> {{ parity }}</td></tr>
+<tr><td>Field size:</td><td> {{ fieldw }} x {{ fieldh }} {{ fieldunits }}</td></tr>
+<tr><td>WCS FITS header:</td><td><a href="{{ wcsurl }}">wcs.fits</a></td></tr>
+<tr><td>Field (x,y) positions:</td><td><a href="{{ fieldxyurl }}">field.xy.fits</a></td></tr>
+<tr><td>Field (RA,Dec) positions:</td><td><a href="{{ fieldrdurl }}">field.rd.fits</a></td></tr>
+<tr><td>Index (x,y) positions:</td><td><a href="{{ indexxyurl }}">index.xy.fits</a></td></tr>
+<tr><td>Index (RA,Dec) positions:</td><td><a href="{{ indexrdurl }}">index.rd.fits</a></td></tr>
+{% endif %}
+{% if jobstarttime %}
+<tr><td>Solver log file:</td><td><a href="{{ logurl }}">blind.log</a></td></tr>
+{% endif %}
+</table>
+
+{% if jobsolved %}
+{% else %}
+<br />
+
+<table cellpadding="3" border="1" class="c">
+<tr><th>Tail of the Log File</th></tr>
+<tr><td><pre>{{ logfile_tail }}</pre></td></tr>
+</table>
+
+{% endif %}
+<br />
+
+<table cellpadding="3" border="1" class="c">
+
+<tr><th colspan="2">Job Parameters</th></tr>
+
+{% if joburl %}
+<tr><td> URL: </td><td> <a href="{{ joburl }}">{{ joburl }}</a> </td></tr>
+{% endif %}
+{% if jobfile %}
+<tr><td> File: </td><td> {{ jobfile }} </td></tr>
+{% endif %}
+<tr><td> Field scale: </td><td> {{ jobscale }} </td></tr>
+{% if submission.tweak %}
+<tr><td> Tweak order: </td><td> {{ submission.tweakorder }} </td></tr>
+{% else %}
+<tr><td> Tweak: </td><td> No </td></tr>
+{% endif %}
+<tr><td> Parity: </td><td> {{ jobparity }} </td></tr>
+
+{% comment %}
+<tr><td> </td><td> </td></tr>
+{% endcomment %}
+
+</table>
+
+<br />
+<br />
+
+{% endblock content %}

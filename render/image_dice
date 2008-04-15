@@ -1,0 +1,15 @@
+#!/bin/sh
+if [ $# -ne 2 ]; then
+        echo 'usage: image_dice imagePrefix imageFile'
+        exit 127
+fi
+pamdice -outstem=$1 -width=256 -height=256 $2 
+
+for imgFile in *.ppm
+do 
+	pnmflip -tb $imgFile | pnmtopng > `basename $imgFile .ppm`.png
+	rm $imgFile
+done
+
+
+

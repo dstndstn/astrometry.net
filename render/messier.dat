@@ -1,0 +1,167 @@
+#####################################
+# Messier Data File                 #
+# Hartmut Frommert, Chris Kronberg  #
+#                 and Guy McArthur  #
+# URL:http://www.seds.org/messier/  #
+#####################################
+#
+# Columns:
+#
+# MMM  NNNN "CCCCCCCCCCCCCC" cccccc TT ttttt RR RR.R DDD DD MM.M DDDDDDDDD ddddd.ddd nnnnnnnn..
+#
+# MMM               Messier number
+# NNNN              NGC number ("0000" if none)
+# "CCCCCCCCCCCCCC"  Constellation (Full name)
+# cccccc            Constellation (Abbrevation, file name)
+# TT                Type of object
+# ttttt             Subtype (i.e., type of cluster, nebula, or galaxy)
+# RR RR.R           Right Ascension in hours and minutes
+# DDD DD            Declination in degrees and minutes
+# MM.M              Apparent visual magnitude
+# DDDDDDDDD         Apparent (angular) diameter in arc minutes
+# ddddd.ddd         distance in kilo-lightyears
+# nnnnnnnn..        Name and/or comments
+#
+#####################################
+#
+# Types:
+#
+#   1  Open Cluster
+#   2  Globular Cluster
+#   3  Planetary Nebula
+#   4  Diffuse Nebula
+#   5  Spiral Galaxy
+#   6  Elliptical Galaxy
+#   7  Irregular Galaxy       (M82)
+#   8  Lenticular (S0) Galaxy
+#   9  Supernova Remnant      (M1)
+#   A  System of 4 stars or Asterism (M73)
+#   B  Milky Way Patch        (M24)
+#   C  Binary star            (M40)
+#
+#####################################
+#
+# positions 2000.0 according to Sky Catalog 2000
+# PN vis mag from Hynes
+# Glob Cl vis mag and distances from Harris' database (29-Feb 96/15 May 97)
+# vis mag's cross-checked with Sky Catalogue 2000.0 and Kenneth Glyn Jones
+#   for galaxies adopted from Uroanometria 2000.0
+# diameters from Bill Arnett's data file
+# M63 dist from M51 (group)
+# M77 quoted from HST PR
+# M101, M81 group, M96 group distances from HST measurements
+# Virgo cl distance 60 Mly assumed (HST via M96 gr)
+#
+#####################################
+001  1952 "Taurus"         Tau     9 -     05 34.5 +22 01  8.4    6x4        6.3   Crab Nebula
+002  7089 "Aquarius"       Aqr     2 II    21 33.5 -00 49  6.5   12.9       37.5
+003  5272 "Canes Venatici" CVn     2 VI    13 42.2 +28 23  6.2   16.2       33.9
+004  6121 "Scorpius"       Sco     2 IX    16 23.6 -26 32  5.6   26.3        7.2
+005  5904 "Serpens"        SerCap  2 V     15 18.6 +02 05  5.6   17.4       24.5
+006  6405 "Scorpius"       Sco     1 'e'   17 40.1 -32 13  5.3   25.0        2     Butterfly Cluster
+007  6475 "Scorpius"       Sco     1 'e'   17 53.9 -34 49  4.1   80.0        0.8   The Scorpion's Tail, Ptolemy's Cluster
+008  6523 "Sagittarius"    Sgr     4 E     18 03.8 -24 23  6.0   90x40       5.2   Lagoon Nebula
+009  6333 "Ophiuchus"      Oph     2 VIII  17 19.2 -18 31  7.7    9.3       26.7
+010  6254 "Ophiuchus"      Oph     2 VII   16 57.1 -04 06  6.6   15.1       14.4  
+011  6705 "Scutum"         Sct     1 'g'   18 51.1 -06 16  6.3   14.0        6     Wild Duck Cluster
+012  6218 "Ophiuchus"      Oph     2 IX    16 47.2 -01 57  6.7   14.5       16.0
+013  6205 "Hercules"       Her     2 V     16 41.7 +36 28  5.8   16.6       25.1   Hercules Globular Cluster
+014  6402 "Ophiuchus"      Oph     2 VIII  17 37.6 -03 15  7.6   11.7       29.0
+015  7078 "Pegasus"        Peg     2 IV    21 30.0 +12 10  6.2   12.3       33.6
+016  6611 "Serpens"        SerCau  1 'e'   18 18.8 -13 47  6.4    7.0        7     associated with the Eagle Nebula
+017  6618 "Sagittarius"    Sgr     4 E     18 20.8 -16 11  7.0   11.0        5     Omega, Swan, Horseshoe, or Lobster Nebula
+018  6613 "Sagittarius"    Sgr     1 'd'   18 19.9 -17 08  7.5    9.0        4.9
+019  6273 "Ophiuchus"      Oph     2 VIII  17 02.6 -26 16  6.8   13.5       28.4
+020  6514 "Sagittarius"    Sgr     4 E+R   18 02.6 -23 02  9.0   28.0        5.2   Trifid Nebula
+021  6531 "Sagittarius"    Sgr     1 'd'   18 04.6 -22 30  6.5   13.0        4.25
+022  6656 "Sagittarius"    Sgr     2 VII   18 36.4 -23 54  5.1   24.0       10.4
+023  6494 "Sagittarius"    Sgr     1 'e'   17 56.8 -19 01  6.9   27.0        2.15
+024  6603 "Sagittarius"    Sgr     B -     18 16.9 -18 29  4.6   90         10     Sagittarius Star Cloud, Delle Caustiche
+025  0000 "Sagittarius"    Sgr     1 'd'   18 31.6 -19 15  6.5   40.0        2
+026  6694 "Scutum"         Sct     1 'f'   18 45.2 -09 24  8.0   15.0        5
+027  6853 "Vulpecula"      Vul     3 3a+2  19 59.6 +22 43  7.4  8.0x5.7      1.25  Dumbbell Nebula
+028  6626 "Sagittarius"    Sgr     2 IV    18 24.5 -24 52  6.8   11.2       18.6
+029  6913 "Cygnus"         Cyg     1 'd'   20 23.9 +38 32  7.1    7.0        4.0
+030  7099 "Capricornus"    Cap     2 V     21 40.4 -23 11  7.2   11.0       26.1
+031   224 "Andromeda"      And     5 Sb    00 42.7 +41 16  3.4  178x63    2900     Andromeda Galaxy
+032   221 "Andromeda"      And     6 E2    00 42.7 +40 52  8.1    8x6     2900     A Satellite of the Andromeda Galaxy, M31
+033   598 "Triangulum"     Tri     5 Sc    01 33.9 +30 39  5.7   73x45    3000     Triangulum Galaxy
+034  1039 "Perseus"        Per     1 'd'   02 42.0 +42 47  5.5   35.0        1.4
+035  2168 "Gemini"         Gem     1 'e'   06 08.9 +24 20  5.3   28.0        2.8
+036  1960 "Auriga"         Aur     1 'f'   05 36.1 +34 08  6.3   12.0        4.1
+037  2099 "Auriga"         Aur     1 'f'   05 52.4 +32 33  6.2   24.0        4.4
+038  1912 "Auriga"         Aur     1 'e'   05 28.4 +35 50  7.4   21.0        4.2
+039  7092 "Cygnus"         Cyg     1 'e'   21 32.2 +48 26  4.6   32.0        0.825
+040  0000 "Ursa Major"     UMa     C -     12 22.4 +58 05  8.4    0.8        0.51  Winnecke 4
+041  2287 "Canis Major"    CMa     1 'e'   06 46.0 -20 44  4.6   38.0        2.3
+042  1976 "Orion"          Ori     4 E+R   05 35.4 -05 27  4.0   85x60       1.6   Orion Nebula
+043  1982 "Orion"          Ori     4 E+R   05 35.6 -05 16  9.0   20x15       1.6   De Mairan's Nebula, part of Orion Nebula
+044  2632 "Cancer"         Cnc     1 'd'   08 40.1 +19 59  3.7   95.0        0.577 Beehive Cluster, Praesepe
+045  0000 "Taurus"         Tau     1 'c'   03 47.0 +24 07  1.6  110.0        0.38  Pleiades
+046  2437 "Puppis"         Pup     1 'f'   07 41.8 -14 49  6.0   27.0        5.4
+047  2422 "Puppis"         Pup     1 'd'   07 36.6 -14 30  5.2   30.0        1.6
+048  2548 "Hydra"          Hya     1 'f'   08 13.8 -05 48  5.5   54.0        1.5
+049  4472 "Virgo"          Vir     6 E4    12 29.8 +08 00  8.4    9x7.5  60000
+050  2323 "Monoceros"      Mon     1 'e'   07 03.2 -08 20  6.3   16.0        3
+051  5194 "Canes Venatici" CVn     5 Sc    13 29.9 +47 12  8.4   11x7    37000     Whirlpool Galaxy
+052  7654 "Cassiopeia"     Cas     1 'e'   23 24.2 +61 35  7.3   13.0        5.0
+053  5024 "Coma Berenices" Com     2 V     13 12.9 +18 10  7.6   12.6       59.7
+054  6715 "Sagittarius"    Sgr     2 III   18 55.1 -30 29  7.6    9.1       88.7
+055  6809 "Sagittarius"    Sgr     2 XI    19 40.0 -30 58  6.3   19.0       17.6
+056  6779 "Lyra"           Lyr     2 X     19 16.6 +30 11  8.3    7.1       32.9
+057  6720 "Lyra"           Lyr     3 4+3   18 53.6 +33 02  8.8  1.4x1.0      2.3   Ring Nebula
+058  4579 "Virgo"          Vir     5 SBc   12 37.7 +11 49  9.7  5.5x4.5  60000
+059  4621 "Virgo"          Vir     6 E5    12 42.0 +11 39  9.6    5x3.5  60000
+060  4649 "Virgo"          Vir     6 E2    12 43.7 +11 33  8.8    7x6    60000
+061  4303 "Virgo"          Vir     5 SABbc 12 21.9 +04 28  9.7    6x5.5  60000
+062  6266 "Ophiuchus"      Oph     2 IV    17 01.2 -30 07  6.5   14.1       22.5
+063  5055 "Canes Venatici" CVn     5 Sb    13 15.8 +42 02  8.6   10x6    37000     Sunflower Galaxy
+064  4826 "Coma Berenices" Com     5 Sb    12 56.7 +21 41  8.5  9.3x5.4  19000     Blackeye Galaxy
+065  3623 "Leo"            Leo     5 Sa    11 18.9 +13 05  9.3    8x1.5  35000     in the Leo Triplett
+066  3627 "Leo"            Leo     5 Sb    11 20.2 +12 59  8.9    8x2.5  35000     in the Leo Triplett
+067  2682 "Cancer"         Cnc     1 'f'   08 50.4 +11 49  6.1   30.0        2.7
+068  4590 "Hydra"          Hya     2 X     12 39.5 -26 45  7.8   12.0       33.3
+069  6637 "Sagittarius"    Sgr     2 V     18 31.4 -32 21  7.6    7.1       28.0
+070  6681 "Sagittarius"    Sgr     2 V     18 43.2 -32 18  7.9    7.8       29.4
+071  6838 "Sagitta"        Sge     2 X-XI  19 53.8 +18 47  8.2    7.2       12.7
+072  6981 "Aquarius"       Aqr     2 IX    20 53.5 -12 32  9.3    5.9       55.4
+073  6994 "Aquarius"       Aqr     A -     20 58.9 -12 38  9.0    2.8        2.0
+074   628 "Pisces"         Psc     5 Sc    01 36.7 +15 47  9.4 10.2x9.5  35000
+075  6864 "Sagittarius"    Sgr     2 I     20 06.1 -21 55  8.5    6.0       61.3
+076   650 "Perseus"        Per     3 3+6   01 42.4 +51 34 10.1  2.7x1.8      3.4   Little Dumbbell Nebula
+077  1068 "Cetus"          Cet     5 Sb    02 42.7 -00 01  8.9    7x6    60000     Cetus A
+078  2068 "Orion"          Ori     4 R     05 46.7 +00 03  8.3    8x6        1.6
+079  1904 "Lepus"          Lep     2 V     05 24.5 -24 33  7.7    8.7       42.1
+080  6093 "Scorpius"       Sco     2 II    16 17.0 -22 59  7.3    8.9       32.6
+081  3031 "Ursa Major"     UMa     5 Sb    09 55.6 +69 04  6.9   21x10   12000     Bode's Galaxy
+082  3034 "Ursa Major"     UMa     7 Ir-II 09 55.8 +69 41  8.4    9x4    12000     Cigar Galaxy
+083  5236 "Hydra"          Hya     5 SABc  13 37.0 -29 52  7.6   11x10   15000     Southern Pinwheel
+084  4374 "Virgo"          Vir     8 S0    12 25.1 +12 53  9.1    5.0    60000
+085  4382 "Coma Berenices" Com     8 S0    12 25.4 +18 11  9.1  7.1x5.2  60000
+086  4406 "Virgo"          Vir     8 S0    12 26.2 +12 57  8.9  7.5x5.5  60000
+087  4486 "Virgo"          Vir     6 E1    12 30.8 +12 24  8.6    7.0    60000     Virgo A
+088  4501 "Coma Berenices" Com     5 Sc    12 32.0 +14 25  9.6    7x4    60000
+089  4552 "Virgo"          Vir     6 E0    12 35.7 +12 33  9.8    4.0    60000
+090  4569 "Virgo"          Vir     5 Sb    12 36.8 +13 10  9.5  9.5x4.5  60000
+091  4548 "Coma Berenices" Com     5 SBb   12 35.4 +14 30 10.2  5.4x4.4  60000
+092  6341 "Hercules"       Her     2 IV    17 17.1 +43 08  6.4   11.2       26.7
+093  2447 "Puppis"         Pup     1 'g'   07 44.6 -23 52  6.0   22.0        3.6
+094  4736 "Canes Venatici" CVn     5 Sb    12 50.9 +41 07  8.2    7x3    14500
+095  3351 "Leo"            Leo     5 SBb   10 44.0 +11 42  9.7  4.4x3.3  38000
+096  3368 "Leo"            Leo     5 Sa    10 46.8 +11 49  9.2    6x4    38000
+097  3587 "Ursa Major"     UMa     3 3a    11 14.8 +55 01  9.9  3.4x3.3      2.6   Owl Nebula
+098  4192 "Coma Berenices" Com     5 Sb    12 13.8 +14 54 10.1  9.5x3.2  60000
+099  4254 "Coma Berenices" Com     5 Sc    12 18.8 +14 25  9.9  5.4x4.8  60000    
+100  4321 "Coma Berenices" Com     5 Sc    12 22.9 +15 49  9.3    7x6    60000
+101  5457 "Ursa Major"     UMa     5 Sc    14 03.2 +54 21  7.9   22.0    27000     Pinwheel Galaxy
+102  5457 "Ursa Major"     UMa     5 Sc    14 03.2 +54 21  7.9   22.0    27000     may duplicate M101
+102? 5866 "Draco"          Dra     8 S0_3  15 06.5 +55 46  9.9  5.2x2.3  40000     Spindle Galaxy
+103   581 "Cassiopeia"     Cas     1 'd'   01 33.2 +60 42  7.4    6.0        8.5 
+104  4594 "Virgo"          Vir     5 Sa    12 40.0 -11 37  8.0    9x4    50000     Sombrero Galaxy
+105  3379 "Leo"            Leo     6 E1    10 47.8 +12 35  9.3    2.0    38000
+106  4258 "Canes Venatici" CVn     5 Sbp   12 19.0 +47 18  8.4   19x8    25000
+107  6171 "Ophiuchus"      Oph     2 X     16 32.5 -13 03  7.9   10.0       20.9
+108  3556 "Ursa Major"     UMa     5 Sc    11 11.5 +55 40 10.0    8x1    45000
+109  3992 "Ursa Major"     UMa     5 SBc   11 57.6 +53 23  9.8    7x4    55000
+110   205 "Andromeda"      And     6 E6p   00 40.4 +41 41  8.5   17x10    2900     A Satellite of the Andromeda Galaxy, M31
+#                                

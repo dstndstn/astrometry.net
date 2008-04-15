@@ -1,0 +1,165 @@
+{% extends "portal/base.html" %}
+
+{% block extrahead %}
+{% if submission.is_finished %}
+{% else %}
+
+{#  <meta http-equiv="refresh" content="{{ reload_time }}; URL=" />  #}
+
+{% endif %}
+{% endblock extrahead %}
+
+{% block inlinecss %}
+#summarytable { margin-left:auto; margin-right:auto; border-collapse:collapse; border-style:solid; border-width:medium; border-color:black; }
+#summarytable td { padding-top:3px; padding-bottom:3px; padding-left:10px; padding-right:10px; border-style:none solid; border-width:thin; border-color:gray; }
+#summarytable th { padding-top:3px; padding-bottom:3px; padding-left:10px; padding-right:10px; border-style:solid; border-width:thin; border-color:gray; }
+td.c { text-align:center; }
+tr.even td { background-color:#EEE; }
+tr.odd td {}
+p.c { text-align:center; }
+{% endblock inlinecss %}
+
+{% block javascript %}
+<script type="text/javascript">
+var req;
+var reload = true;
+var period = 5000;
+
+function processRequest() {
+  if (!req) {
+    return false;
+  }
+  if (req.readyState != 4) {
+    return false;
+  }
+  if (req.status != 200) {
+    return true;
+  }
+  xml = req.responseXML;
+  if (!xml) {
+    return true;
+  }
+
+  jobs = xml.getElementsByTagName('job');
+  for (i=0; i<jobs.length; i++) {
+    job = jobs[i];
+    jobid = job.getAttribute('jobid');
+    for (j=0; j<job.childNodes.length; j++) {
+      child = job.childNodes[j];
+      //      if (child.
+      col = child.nodeName;
+      id = 'job-' + jobid + '-' + col;
+      div = document.getElementById(id);
+      if (!div) {
+        continue;
+      }
+      div.firstChild.nodeValue = child.firstChild.nodeValue;
+    }
+  }
+  return true;
+}
+
+function requestStateChanged() {
+  if (processRequest()) {
+    if (reload) {
+      setTimeout('sendRequest()', period);
+    }
+  }
+}
+
+function sendRequest() {
+  req = new XMLHttpRequest();
+  req.onreadystatechange = requestStateChanged;
+  var url = '{{ xmlsummaryurl }}';
+  req.open('GET', url, true);
+  req.setRequestHeader('Content-Type', 'text/plain;charset=UTF-8');
+  //  req.data = ' ';
+  req.send(' ');
+}
+
+function start() {
+  setTimeout('sendRequest()', period);
+  //sendRequest();
+}
+
+function stop() {
+  reload = false;
+  if (req) {
+    req.abort();
+  }
+  req = null;
+}
+</script>
+{% endblock javascript %}
+
+{% block bodytag %}
+<body onLoad="start();">
+{% endblock bodytag %}
+
+{% block content %}
+
+{% if jobs %}
+<table id="summarytable">
+
+<tr>
+<th>Job Id</th>
+<th>Status</th>
+<th>Start Time</th>
+<th>Finish Time</th>
+</tr>
+
+{% for job in jobs %}
+<tr class="{% cycle even,odd %}">
+<td><a href="{{ statusurl }}{{ job.jobid }}">
+<span id="job-{{job.jobid}}-jobid">
+{{ job.jobid }}
+</span>
+</a></td>
+<td class="c">
+<span id="job-{{job.jobid}}-status">
+{{ job.status }}
+{% if job.failurereason %}
+: {{ job.failurereason }}
+{% endif %}
+</span>
+</td>
+<td>
+<span id="job-{{job.jobid}}-start">
+{{ job.format_starttime_brief }}
+</span>
+</td>
+<td>
+<span id="job-{{job.jobid}}-start">
+{{ job.format_finishtime_brief }}
+</span>
+</td>
+</tr>
+{% endfor %}
+
+</table>
+
+{% if somesolved %}
+<br />
+
+<p class="c">
+<a href="{{ gmaps_view_submission }}">
+View this set of jobs in the Google Maps viewer
+</a>
+</p>
+
+{% endif %}
+
+{% else %}
+<table id="summarytable">
+
+<tr>
+<th>Job Status:</th>
+<td>{{ submission.status }}</td>
+</tr>
+
+</table>
+
+{% endif %}
+
+{% endblock content %}
+

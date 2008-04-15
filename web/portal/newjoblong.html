@@ -1,0 +1,690 @@
+{% extends "portal/newjob.html" %}
+
+{% block moreinlinecss %}
+table.c { margin-left:auto; margin-right:auto; }
+td.l { text-align:right; }
+td.lt { text-align:right; vertical-align:top; }
+#formtable { margin-left:auto; margin-right:auto; border-style:solid; border-color:gray; border-width:thin; }
+#formtable > tbody > tr > td { padding:10px; }
+.explain { color:blue; font-size:80%; }
+#scalelist { list-style:none; }
+#scalelist > li { margin-top:1em; }
+#tdsubmit { text-align:center; }
+
+#scalevalues { border-collapse:collapse; margin:10px;}
+
+#scalepanel { border-style:solid; border-color:gray; border-width:thin; margin-right:auto; margin-left:auto; }
+
+.scalelabel { text-align:right; padding-left:15px; }
+
+td[col=ll] { padding-left:15px; }
+td[col=lr] { padding-right:10px; }
+td[col=rr] { padding-right:10px; }
+td[col=rl] { padding-left:15px; }
+
+#boundscell { padding:10px; padding-bottom:3px; }
+#errestcell { padding:10px; padding-bottom:3px; }
+
+.boxcol { border-style:solid; border-width:thin; border-color:gray; }
+#spacercol { border-style:none; width:10px; }
+
+#toprow td { padding-top:10px; }
+#bottomrow td { padding-bottom:10px; }
+
+#xycol { margin-left:20px; }
+
+{% endblock moreinlinecss %}
+
+{% comment %}
+{% endcomment %}
+
+{% block javascript %}
+<script type="text/javascript">
+var fitscols;
+var scaleplus;
+var scaleminus;
+var scalepanel;
+var selectunits;
+var ulradio;
+var evradio;
+var scalelo;
+var scalehi;
+var scaleest;
+var scaleerr;
+var scalepanelshowing;
+
+//var imageOptions;
+//var textOptions;
+var fitsOptions;
+
+var upload_id;
+
+/**
+  It seems that when you call form.submit(), the form's
+  onsubmit() event doesn't get triggered.  This is pretty handy
+  for us, because is lets us distinguish between user- and
+  program-driven submits.
+*/
+
+function onSubmitUpload() {
+  //alert('onSubmitUpload()');
+  enableUploadProgress();
+  return true;
+}
+
+function uploadSucceeded() {
+  //alert('upload succeeded: submitting main form.');
+  addMissingFormElements();
+  document.forms.longform.submit();
+}
+
+function uploadFailed() {
+  //alert('upload failed.');
+  var up = document.getElementById('uploadframe');
+  up.src = '{{ uploadform }}';
+}
+
+function uploadFinished() {
+  var doc = getUploadDoc();
+  if (doc.getElementById('upload-succeeded')) {
+    //alert('upload succeeded')
+	uploadSucceeded();
+  } else {
+    //alert('upload failed')
+	uploadFailed();
+  }
+}
+
+function uploadframeloaded() {
+  var form = getUploadForm();
+  if (!form) {
+    uploadFinished();
+	return;
+  }
+  var doc = getUploadDoc();
+  if (doc.getElementById('id_file')) {
+    upload_id = form.upload_id.value;
+	// set the main form's upload_id hidden field...
+	document.forms.longform.upload_id.value = upload_id;
+    form.file.addEventListener('focus', setDatasourceFile, true);
+    form.addEventListener('submit', onSubmitUpload, true);
+  }
+}
+
+function submitUploadForm() {
+  var uploadform = getUploadForm();
+  if (uploadform) {
+    uploadform.submit();
+  }
+}
+
+function getUploadDoc() {
+  return document.getElementById('uploadframe').contentDocument;
+}
+
+function getUploadForm() {
+  var doc = getUploadDoc();
+  return doc.getElementById('uploadform');
+}
+
+function enableUploadProgress() {
+  var holder = document.getElementById('progressholder');
+  holder.style.visibility = 'visible';
+  var progress = document.getElementById('progressframe');
+  holder.style.height = progress.height;
+
+  {% if inline_progress %}
+    startProgressMeter(upload_id);
+  {% else %}
+    progress.src = '{{ progressform }}' + upload_id;
+  {% endif %}
+
+}
+
+function addMissingFormElements() {
+  var hidden = document.getElementById('hiddenitems');
+  // add form elements to the "hidden" div so that they are part of the
+  // document tree so their values get submitted with the form.
+  var elements = [ selectunits, ulradio, evradio, scalelo, scalehi,
+    scaleest, scaleerr ];
+  var longform = document.getElementById('longform');
+  var formelements = longform.elements;
+  for (var i=0; i<elements.length; i++) {
+    var gotit = false;
+    for (var j=0; j<formelements.length; j++) {
+      if (elements[i] == formelements[j]) {
+        gotit = true;
+      }
+    }
+    if (!gotit) {
+      hidden.appendChild(elements[i]);
+    }
+  }
+}
+
+function onSubmitForm() {
+  //alert('onSubmitForm()');
+  if (isDatasourceFile()) {
+    //alert('submitting upload form instead.');
+	onSubmitUpload();
+    submitUploadForm();
+	return false;
+  }
+
+  // URL submissions.
+  addMissingFormElements();
+  return true;
+}  
+
+function isDatasourceFile() {
+  return document.getElementById('datasrc_1').checked;
+}
+
+function datasourceChanged() {
+}
+
+function setDatasourceFile() {
+  setDatasource(false);
+}
+function setDatasourceUrl() {
+  setDatasource(true);
+}
+function setDatasource(set) {
+  var datasrc = document.getElementById('datasrc_0');
+  datasrc.checked = set;
+  datasrc = document.getElementById('datasrc_1');
+  datasrc.checked = !set;
+}
+
+function filetypeChanged() {
+  var filetype = document.getElementById('id_filetype').value;
+  var options = false;
+  switch (filetype) {
+    case 'image':
+	  //options = imageOptions;
+	  break;
+	case 'fits':
+	  options = fitsOptions;
+	  break;
+	case 'text':
+	  //options = textOptions;
+	  break;
+  }
+  var optionsPanel = document.getElementById('options-holder');
+  removeAllChildren(optionsPanel);
+  if (options) {
+    optionsPanel.appendChild(options);
+  }
+}
+
+function removeAllChildren(node) {
+	while (node.childNodes.length) {
+		node.removeChild(node.childNodes[0]);
+	}
+}
+
+function onLoad() {
+  fitscols = document.getElementById('fitscols');
+
+  //fitsOptions = document.getElementById('fits-options');
+  fitsOptions = fitscols;
+
+  // we have to remove this div because otherwise we have multiple copies of
+  // the "url" and "file" form fields.
+  var sources = document.getElementById('sources');
+  removeAllChildren(sources);
+
+  filetypeChanged();
+
+  scaleplus  = document.getElementById('scaleplus');
+  scaleminus = document.getElementById('scaleminus');
+  var scalepm = document.getElementById('scalepmimg');
+  removeAllChildren(scalepm);
+
+  scalepanel = document.getElementById('scalepanel');
+  selectunits = document.getElementById('id_scaleunits');
+  ulradio = document.getElementById('scaletype_0');
+  evradio = document.getElementById('scaletype_1');
+  scalelo = document.getElementById('id_scalelower');
+  scalehi = document.getElementById('id_scaleupper');
+  scaleest = document.getElementById('id_scaleest');
+  scaleerr = document.getElementById('id_scaleerr');
+
+  var holder = document.getElementById('scalepanelholder');
+  removeAllChildren(holder);
+
+  {% if scaletype_err or scalelower_err or scaleupper_err or scaleest_err or scaleerr_err %}
+  scaleshowhide(true);
+  {% else %}
+  scaleshowhide(false);
+  {% endif %}
+
+  scalechanged();
+}
+function setFsUl() {
+  var u = document.getElementById('scaletype_0');
+  u.checked = 1;
+  scalechanged();
+}
+function setFsEv() {
+  var u = document.getElementById('scaletype_1');
+  u.checked = 1;
+  scalechanged();
+}
+function scaleshowhidetoggle() {
+  scaleshowhide(!scalepanelshowing);
+}
+function scaleshowhide(show) {
+  scalepanelshowing = show;
+  var scalepm = document.getElementById('scalepmimg');
+  removeAllChildren(scalepm);
+  var holder = document.getElementById('scalepanelholder');
+  var child;
+  if (show) {
+    child  = scaleminus;
+	holder.appendChild(scalepanel);
+  } else {
+    child = scaleplus;
+	removeAllChildren(holder);
+  }
+  scalepm.appendChild(child);
+}
+function unitsChanged() {
+  scalechanged();
+}
+function scalechanged() {
+  var scaletxt = document.getElementById('scaletext');
+  var val = '';
+  if (ulradio.checked) {
+	var lower = scalelo.value;
+    var upper = scalehi.value;
+    if (lower == '') {
+      lower = '(none)';
+    }
+    if (upper == '') {
+      upper = '(none)';
+    }
+    val = 'between ' + lower + ' and ' + upper;
+  } else if (evradio.checked) {
+  	var est = scaleest.value;
+    var err = scaleerr.value;
+    if (est == '') {
+      est = '(none)';
+    }
+    if (err == '') {
+      err = '(none)';
+    }
+    val = est + ' plus or minus ' + err + '%';
+  } else {
+    val = '(none)';
+  }
+  var txt = '';
+  switch (selectunits.value) {
+  case 'arcsecperpix':
+    txt = val + " arcseconds per pixel";
+    break;
+  case 'arcminperpix':
+    txt = val + " arcminutes per pixel";
+    break;
+  case 'arcminwidth':
+    txt = val + " arcminutes wide";
+    break;
+  case 'degwidth':
+    txt = val + " degrees wide";
+    break;
+  case 'focalmm':
+    txt = "focal length of " + val + " mm";
+	break;
+  }
+  removeAllChildren(scaletxt);
+  scaletxt.appendChild(document.createTextNode(txt));
+}
+
+{% if inline_progress %}
+{{ progress_meter_js }}
+{% endif %}
+
+</script>
+{% endblock javascript %}
+
+{% block bodytag %}
+<body onload="onLoad()">
+{% endblock bodytag %}
+
+{% block logo %}
+<div id="logo">
+{% include "logo.html" %}
+</div>
+{% endblock logo %}
+
+{% block banner %}
+{% endblock banner %}
+
+{% block newjobcontent %}
+
+<div id="switch_views">
+<a href="{% url an.portal.newjob.newfile %}">switch to file upload version</a>
+&nbsp;&nbsp;
+<a href="{% url an.portal.newjob.newurl %}">switch to image URL version</a>
+</div>
+
+<br />
+
+<form action="{{ myurl }}" enctype="multipart/form-data" method="post" id="longform" onsubmit="return onSubmitForm();">
+{{form.upload_id}}
+
+<table id="formtable">
+
+<tr>
+<td class="l" rowspan="2" valign="top"> Data source: 
+<div class="explain">You can reference a URL <br />or upload a file.</div>
+</td>
+<td>
+{% if url_err %}
+<span class="err" style="margin-left:4em;">{{ url_err }}</span>
+<br />
+{% endif %}
+{{ datasrc_url }} URL
+{{ form.url }}
+</td>
+</tr>
+
+<tr>
+<!-- first td filled in by rowspan=2 above -->
+<td style="padding-top:2px; vertical-align:top;"> {{ datasrc_file }} File
+<iframe onload="uploadframeloaded()" src="{{ uploadform }}" scrolling="no" frameborder="0" id="uploadframe" style="width:25em; height:2em; vertical-align:top;">
+  [Your user agent does not support iframes]
+</iframe>
+<div id="progressholder" style="visibility:hidden; height:0px;">
+
+{% if inline_progress %}
+  <div id="progressframe" style="width:25em; height:3em;">
+  {{ progress_meter_html }}
+  </div>
+{% else %}
+  <iframe src="" scrolling="no" frameborder="0" id="progressframe" style="width:25em; height:3em;" >
+  [no iframes for you!]
+  </iframe>
+{% endif %}
+
+</div>
+</td>
+</tr>
+
+<tr>
+<td class="l"> File type: </td>
+<td> {{ form.filetype }} </td>
+</tr>
+
+<tr style="padding-top:0px; padding-bottom:0px;">
+<td  style="padding-top:0px; padding-bottom:0px;" />
+<td id="options-holder" style="padding-top:0px; padding-bottom:0px;"></td>
+</tr>
+
+<tr>
+<td class="l">
+<a href="javascript:scaleshowhidetoggle()" style="text-decoration:none; color:inherit;">
+<span id="scalepmimg">
+</span>
+Image scale:
+</a>
+</td>
+<td>
+<span id="scaletext">
+scaletext
+</span>
+</td>
+</tr>
+
+<tr><td colspan="2" id="scalepanelholder" style="padding-top:0px; padding-bottom:0px;"></td></tr>
+
+<tr>
+<td class="l">
+{{ form.tweak }} Tweak:
+</td>
+<td>
+{% if tweakorder_err %}
+<span class="err">{{ tweakorder_err }}</span>
+<br />
+{% endif %}
+Tweak order: {{ form.tweakorder }}
+</td>
+</tr>
+
+<tr>
+<td class="l">
+Parity:
+</td>
+<td>
+{{ form.parity }}
+</td>
+</tr>
+
+
+<tr>
+<td class="lt">
+Description of this submission:
+</td>
+<td>
+{{ form.description }}
+</td>
+</tr>
+
+
+<tr>
+<td colspan="2" id="tdsubmit">
+<input type="submit" name="sub" class="bigbutton" value="Submit" />
+<!-- We like big butt[on]s -->
+</td>
+</tr>
+
+</table>
+
+<div id="hiddenitems" style="visibility:hidden;">
+
+<img src="{% url an.media %}plus.png" border="0" alt="+" id="scaleplus" />
+<img src="{% url an.media %}minus.png" border="0" alt="-" id="scaleminus" />
+
+<div id="sources">
+
+<span id="imgurl-input">
+{{ form.url }}
+</span>
+
+<span id="imgurl-label">
+Image URL:
+</span>
+
+<span id="imgurl-error">
+{% if imgurl_err %}
+{{ imgurl_err }}
+<br />
+{% endif %}
+</span>
+
+<span id="imgurl-explain">
+<br />
+Explanatory text about image URL
+</span>
+
+<span id="imgfile-input">
+{{ form.file }}
+</span>
+
+<span id="imgfile-label">
+Image file: 
+</span>
+
+<span id="imgfile-error">
+{% if imgfile_err %}
+{{ imgfile_err }}
+<br />
+{% endif %}
+</span>
+
+<span id="imgfile-explain">
+<br />
+Explanatory text about image file
+</span>
+
+<span id="fitscols">
+
+<table id="xycol">
+{% if xcol_err %}
+<tr><td /><td class="err"> {{ xcol_err }} </td></tr>
+{% endif %}
+<tr><td>X column:</td><td> {{ form.xcol }} </td></tr>
+{% if ycol_err %}
+<tr><td /><td class="err"> {{ ycol_err }} </td></tr>
+{% endif %}
+<tr><td>Y column:</td><td> {{ form.ycol }} </td></tr>
+</table>
+
+</span>
+
+<span id="fitsfile-input">
+File: {{ form.file }}
+</span>
+
+<span id="fitsfile-label">
+FITS table: 
+</span>
+
+<span id="fitsfile-error">
+{% if fitsfile_err %}
+{{ fitsfile_err }}
+<br />
+{% endif %}
+</span>
+
+<span id="fitsfile-explain">
+Explanatory text about FITS file
+</span>
+
+<span id="fitsurl-input">
+URL: {{ form.url }}
+</span>
+
+<span id="fitsurl-label">
+FITS URL:
+</span>
+
+<span id="fitsurl-error">
+{% if fitsurl_err %}
+{{ fitsurl_err }}
+<br />
+{% endif %}
+</span>
+
+<span id="fitsurl-explain">
+Explanatory text about FITS URL
+</span>
+
+</div> <!-- end sources -->
+
+<div id="scalepanel">
+
+<ul id="scalelist">
+<li>
+Units: {{ form.scaleunits }}
+<div class="explain">
+Choose how you want to describe the scale of your field.
+</div>
+</li>
+<li>
+{% if scaletype_err %}
+<div class="err" id="fstype-err">
+{{ scaletype_err }}
+</div>
+{% endif %}
+Values:
+<div class="explain">
+Fill in ONE of the following pairs of values:
+</div>
+
+<table border="0" class="c" id="scalevalues">
+
+<colgroup span="2" class="boxcol" />
+<colgroup span="1" id="spacercol" />
+<colgroup span="2" class="boxcol" />
+
+<tr id="toprow">
+<td colspan="2" id="boundscell"> {{ scale_ul }} Bounds</td>
+<td />
+<td colspan="2" id="errestcell"> {{ scale_ee }} Estimate &plusmn; Error</td>
+</tr>
+
+{% if scalelower_err or scaleest_err %}
+<tr>
+<td></td>
+{% if scalelower_err %}
+<td class="err" id="fsl-err" col="lr"> {{ scalelower_err }} </td>
+{% else %}
+<td></td>
+{% endif %}
+<td />
+<td></td>
+{% if scaleest_err %}
+<td class="err" id="fsl-err" col="rr"> {{ scaleest_err }} </td>
+{% else %}
+<td></td>
+{% endif %}
+</tr>
+{% endif %}
+
+
+<tr>
+<td class="scalelabel" col="ll"> Lower bound:</td>
+<td col="lr"> {{ form.scalelower }} </td>
+
+<td />
+
+<td class="scalelabel" col="rl">Estimate:</td>
+<td col="rr"> {{ form.scaleest }} </td>
+</tr>
+
+
+{% if scaleupper_err or scaleerr_err %}
+<tr>
+<td></td>
+{% if scaleupper_err %}
+<td class="err" id="fsl-err" col="lr"> {{ scaleupper_err }} </td>
+{% else %}
+<td></td>
+{% endif %}
+
+<td />
+
+<td></td>
+{% if scaleerr_err %}
+<td class="err" id="fsl-err" col="rr"> {{ scaleerr_err }} </td>
+{% else %}
+<td></td>
+{% endif %}
+</tr>
+{% endif %}
+
+<tr id="bottomrow">
+<td class="scalelabel" col="ll">Upper bound:</td>
+<td col="lr"> {{ form.scaleupper }} </td>
+
+<td />
+
+<td class="scalelabel" col="rl">% Error:</td>
+<td col="rr"> {{ form.scaleerr }} </td>
+</tr>
+</table> <!-- end upper/lower estimate/error table -->
+
+</td></tr>
+
+</table>
+</li>
+
+</div> <!-- end "scalepanel" -->
+
+</div> <!-- end "hiddenitems" -->
+
+
+
+</form>
+{% endblock newjobcontent %}

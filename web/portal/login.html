@@ -1,0 +1,84 @@
+{% extends "portal/base.html" %}
+
+{% block inlinecss %}
+#logo {margin-left:auto; margin-right:auto; text-align:center;}
+div.c {margin-left:auto; margin-right:auto; text-align:center;}
+h2.c {margin-left:auto; margin-right:auto; text-align:center;}
+table.c {margin-left:auto; margin-right:auto;}
+td.r {text-align:right; padding:10px;}
+td.c {text-align:center;}
+#logintable {padding:15px; padding-left:30px; padding-right:30px; margin-right:auto; margin-left:auto; border-style:solid; border-color:gray; border-width:thin;}
+#loginbutton { font-size:110%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
+div.myerrors { font-size:110%; color:red; }
+#fineprint { font-size:85%; text-align:center; color:#888; margin-left:auto; margin-right:auto; }
+#fineprint a { color:#999; }
+{% endblock inlinecss %}
+
+
+{% block title %}
+Astrometry.net Login
+{% endblock title %}
+
+{% block usernameblock %}
+{% endblock usernameblock %}
+
+{% block content %}
+
+<form id="login" action="" method="post">
+<div id="loginbox">
+
+<table id="logintable" border="0">
+
+{% if form.non_field_errors %}
+<tr><td colspan="2">
+<div class="myerrors">
+{{ form.non_field_errors|join:", " }}
+</div>
+</td></tr>
+{% endif %}
+
+{% if form.username.errors %}
+<tr><td colspan="2">
+<div class="myerrors">
+{{ form.username.errors|join:", " }}
+</div>
+</td></tr>
+{% endif %}
+
+<tr>
+<td class="r">Username:</td>
+<td> {{ form.username }} </td>
+</tr>
+
+{% if form.password.errors %}
+<tr><td colspan="2">
+<div class="myerrors">
+{{ form.password.errors|join:", " }}
+</div>
+</td></tr>
+{% endif %}
+
+<tr>
+<td class="r" style="padding-top:0px;">Password:</td>
+<td> {{ form.password }} </td>
+</tr>
+
+<tr>
+<td colspan="2" class="c">
+<input type="hidden" name="next" value="{{ next }}" />
+<input type="submit" name="login" value="Login" id="loginbutton" />
+</td>
+
+</tr>
+</table>
+</div> <!-- end loginbox -->
+</form>
+
+<div id="fineprint">
+<a href="{% url an.resetpassword %}">Forgot your password?</a>
+&nbsp; &nbsp;
+<a href="{% url an.newaccount %}">Sign up!</a>
+</div>
+
+{% endblock content %}
+

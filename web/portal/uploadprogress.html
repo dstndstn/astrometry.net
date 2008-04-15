@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html 
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="refresh" content="{{ refresh }}" />
+<style type="text/css">
+p.c {margin-left:auto; margin-right:auto; text-align:center;}
+table.c {margin-left:auto; margin-right:auto;}
+div.c {margin-left:auto; margin-right:auto; text-align:center;}
+#meter_frame { background-color:gray; width:300px; padding:1px; }
+#meter_back  { background-color:white; padding:0px; }
+#meter_fore  { background-color:lightblue; left:0%; width:{{ pct }}%; height:16px; }
+#meter_text  { text-align:center; height:0; font-size:12px; }
+</style>
+</head>
+<body>
+<p class="c">
+<div class="c" id="meter_frame">
+ <div id="meter_back">
+  <div id="meter_text">{{ pct }}%</div>
+  <div id="meter_fore"></div>
+ </div> <!-- end meter_back -->
+</div> <!-- end meter_frame -->
+</p>
+{% if showstats %}
+<table class="c">
+<tr><td>
+{{ bytes_sofar }} / {{ bytes_total }}
+</td></tr>
+<tr><td>
+{{ time_sofar }} so far
+</td></tr>
+<tr><td>
+{{ time_remaining }} remaining
+</td></tr>
+</table>
+{% endif %}
+</body>
+</html>

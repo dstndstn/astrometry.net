@@ -1,0 +1,15 @@
+Content-Type: multipart/form-data; boundary=---------------------------6122974576061320472002908489
+Content-Length: 369
+
+-----------------------------6122974576061320472002908489
+Content-Disposition: form-data; name="upload_id"
+
+1234567890
+-----------------------------6122974576061320472002908489
+Content-Disposition: form-data; name="file"; filename="tst"
+Content-Type: application/octet-stream
+
+***file contents***
+
+
+-----------------------------6122974576061320472002908489--

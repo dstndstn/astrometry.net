@@ -1,0 +1,17 @@
+basedir = "/home/gmaps/explore/"
+tcdir = basedir + "tilecache/"
+
+logfile = basedir + "tilecache-django.log"
+tilerender = tcdir + "render/tilerender"
+templatedir = tcdir + "an/"
+mediadir = tcdir + "an/media/"
+portal_logfile = tcdir + "portal.log"
+
+sipso = basedir + "an-common/_sip.so"
+
+cachedir = "/data2/explore-tilecache"
+rendercachedir = "/data2/explore-rendercache/"
+dbfile = "/data2/explore-django/tile.db"
+imgdir = "/data2/apod-solves"
+
+tempdir = "/tmp"

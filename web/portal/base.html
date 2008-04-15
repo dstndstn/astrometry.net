@@ -1,0 +1,56 @@
+{% include "pageheader.html" %}
+<head>
+{% block favicon %}
+{% include "favicon.html" %}
+{% endblock favicon %}
+
+{% block linkcss %}
+<link rel="stylesheet" href="{% url an.media %}style.css" />
+{% endblock linkcss %}
+{% block inlinecssblock %}
+<style type="text/css">
+#logout { float:right; padding:5px; margin-top:0; margin-bottom:auto;}
+.bigbutton { font-size:110%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
+{% block inlinecss %}
+{% endblock inlinecss %}
+</style>
+{% endblock inlinecssblock %}
+
+{% block javascript %}
+{% endblock javascript %}
+
+<title>{% block title %}Astrometry.net{% endblock %}</title>
+{% block extrahead %}
+{% endblock extrahead %}
+</head>
+
+{% block bodytag %}
+<body>
+{% endblock bodytag %}
+
+{% block usernameblock %}
+<div id="username">
+{% if user.is_authenticated %}
+{% block loggedin %}
+{% include "portal/menu.html" %}
+{% endblock %}
+{% else %}
+{% block notloggedin %}{% endblock %}
+{% endif %}
+</div>
+{% endblock usernameblock %}
+
+{% block logo %}
+<div id="logo">
+{% include "logo.html" %}
+</div>
+{% endblock logo %}
+
+<div id="content">
+{% block content %}
+base content
+{% endblock %}
+</div>
+
+</body>
+</html>

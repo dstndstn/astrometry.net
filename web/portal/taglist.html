@@ -1,0 +1,54 @@
+{% extends "portal/base.html" %}
+
+{% block inlinecss %}
+#summarytable { margin-left:auto; margin-right:auto; border-collapse:collapse; border-style:solid; border-width:medium; border-color:black; }
+#summarytable td { padding-top:3px; padding-bottom:3px; padding-left:10px; padding-right:10px; border-style:none solid; border-width:thin; border-color:gray; }
+#summarytable th { padding-top:3px; padding-bottom:3px; padding-left:10px; padding-right:10px; border-style:solid; border-width:thin; border-color:gray; }
+td.c { text-align:center; }
+tr.even td { background-color:#EEE; }
+tr.odd td {}
+p.c { text-align:center; }
+h3.c { text-align:center; }
+.delcollink { font-size:75%; text-align:center; color:#999; }
+.grayedout { color:#999; }
+{% endblock inlinecss %}
+
+{% block content %}
+
+<h3 class="c">
+User Tags
+</h3>
+
+<ul>
+{% for tag in usertags %}
+<li><a href="{{ view_tagtxt_url }}{{ tag }}">{{ tag }}</a></li>
+{% endfor %}
+</ul>
+
+<h3 class="c">
+Machine Tags
+</h3>
+
+<ul>
+{% for tag in machinetags %}
+<li><a href="{{ view_tagtxt_url }}{{ tag }}">{{ tag }}</a></li>
+{% endfor %}
+</ul>
+
+{% comment %}
+<table id="summarytable">
+
+<tr>
+<th>
+</th>
+</tr>
+
+<tr class="{% cycle even,odd %}">
+<td class="{{ tdclass }}">
+</td>
+</tr>
+
+</table>
+{% endcomment %}
+
+{% endblock content %}

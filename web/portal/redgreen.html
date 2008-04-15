@@ -1,0 +1,29 @@
+{% extends "portal/base.html" %}
+
+{% block content %}
+
+<form method="get">
+<div style="margin-left:auto; margin-right:auto; text-align:center;">
+<p>
+Red (image sources): {{ form.red }}
+<br />
+or hex value (RRGGBB, eg <b>04fba6</b>) {{ form.redhex }}
+</p>
+<p>
+Marker: {{ form.rmarker }}
+</p>
+<p>
+Green (catalog stars): {{ form.green }}
+<br />
+or hex value (RRGGBB, eg <b>04fba6</b>) {{ form.greenhex }}
+</p>
+<p>
+Marker: {{ form.gmarker }}
+</p>
+<p>
+<input type="submit" value="Go" />
+</p>
+</div>
+</form>
+
+{% endblock content %}

@@ -1,0 +1,28 @@
+{% extends "portal/base.html" %}
+
+{% block content %}
+{% if msg %}
+<h3 style="text-align:center;">{{ msg }}</h3>
+{% endif %}
+
+<p style="text-align:center;">
+<a href="{% url an.changepassword %}">Change Password</a>
+</p>
+
+<hr />
+
+<form method="post">
+<table style="margin-left:auto; margin-right:auto;">
+<tr><td> {{ form.exposejobs }} </td>
+<td>When I submit new images, share them by default.</td>
+</tr>
+<tr><td colspan="2" style="text-align:center;">
+<input name="submit" value="Submit" type="submit" class="bigbutton" />
+</td></tr>
+</table>
+</form>
+
+
+
+{% endblock content %}
+

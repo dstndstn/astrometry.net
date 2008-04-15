@@ -1,0 +1,18 @@
+basedir = "/home/dstn/an/"
+tcdir = basedir + "tilecache/"
+
+logfile = tcdir + "tilecache/tilecache-django.log"
+tilerender = tcdir + "tilecache/render/tilerender"
+dbfile = tcdir + "tilecache/an/an.db"
+templatedir = tcdir + "an/"
+mediadir = tcdir + "an/media/"
+portal_logfile = tcdir + "portal.log"
+
+sipso = basedir + "an-common/_sip.so"
+
+cachedir = "/data2/test-tilecache"
+rendercachedir = "/data2/test-rendercache/"
+imgdir = "/data2/apod-solves"
+
+tempdir = "/tmp"
+

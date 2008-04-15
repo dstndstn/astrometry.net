@@ -1,0 +1,36 @@
+gmaps_api_key = 'ABQIAAAA7dWWcc9pB-GTzZE7CvT6SRTpFHQyuc9zMeXV0wfLqFiAr83b_xQ02hHbHnV4CjuIf4L-3WI_XATmBQ'
+
+w3c_validator_url = 'http://oven.cosmo.fas.nyu.edu:8888/w3c-markup-validator/check'
+
+basedir = "/home/gmaps/test/"
+tcdir = basedir + "tilecache/"
+
+hdcat = basedir + 'hd.fits'
+
+uploader_url = '/test/uploader'
+
+jobqueuedir = basedir + "job-queue/"
+
+logfile = basedir + "tilecache-django.log"
+tilerender = tcdir + "render/tilerender"
+sipso = basedir + "an-common/_sip.so"
+templatedir = tcdir + "an/"
+mediadir = tcdir + "an/media/"
+portal_logfile = tcdir + "portal.log"
+
+cachedir = "/data2/test-tilecache"
+rendercachedir = "/data2/test-rendercache/"
+dbfile = "/data2/test-django/tile.db"
+imgdir = "/data2/apod-solves"
+
+tempdir = "/tmp"
+
+siteid = 'test'
+jobdir = '/home/gmaps/test/web-data'
+fielddir = '/home/gmaps/test/web-data/fields'
+
+gmaps_base = 'http://oven.cosmo.fas.nyu.edu/'
+gmaps_url = gmaps_base + 'tilecache2/'
+tileurl = gmaps_base + 'test/tile/get/'
+
+vo_logfile = tcdir + "vo.log"

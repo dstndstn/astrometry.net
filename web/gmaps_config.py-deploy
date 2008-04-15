@@ -1,0 +1,30 @@
+basedir = "/home/gmaps/deploy/"
+tcdir = basedir + "tilecache/"
+
+uploader_url = '/uploader'
+
+jobqueuedir = basedir + "job-queue/"
+
+logfile = basedir + "tilecache-django.log"
+tilerender = tcdir + "render/tilerender"
+sipso = basedir + "an-common/_sip.so"
+templatedir = tcdir + "an/"
+mediadir = tcdir + "an/media/"
+portal_logfile = tcdir + "portal.log"
+
+cachedir = "/data2/deploy-tilecache"
+rendercachedir = "/data2/deploy-rendercache/"
+dbfile = "/data2/deploy-django/tile.db"
+imgdir = "/data2/apod-solves"
+
+tempdir = "/tmp"
+
+siteid = 'test'
+jobdir = '/home/gmaps/deploy/web-data'
+fielddir = '/home/gmaps/deploy/web-data/fields'
+
+gmaps_base = 'http://oven.cosmo.fas.nyu.edu/'
+gmaps_url = gmaps_base + 'tilecache2/'
+tileurl = gmaps_base + 'tile/get/'
+
+vo_logfile = tcdir + "vo.log"
