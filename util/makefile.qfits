@@ -39,5 +39,13 @@ $(QFITS_DIR)/Makefile:
 
 REMAKE_QFITS := remake-qfits
 .PHONY: $(REMAKE_QFITS)
-$(REMAKE_QFITS):
-	cd $(QFITS_DIR) && $(MAKE) && $(MAKE) install
+$(REMAKE_QFITS): $(QFITS_DIR)/Makefile
+	$(MAKE) -C $(QFITS_DIR) && $(MAKE) -C $(QFITS_DIR) install
+
+# YARR MAKE IS STUPID
+#	$(MAKE) -C $(QFITS_DIR) -q; \
+#	R=$$?; \
+#	echo Return value $$R; \
+#	if [ $$R -eq 1 ]; then \
+#		$(MAKE) -C $(QFITS_DIR) && $(MAKE) -C $(QFITS_DIR) install; \
+#	fi

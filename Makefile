@@ -21,29 +21,40 @@ INSTALL_DIR ?= /usr/local/astrometry
 export INSTALL_DIR
 
 all:
-	$(MAKE) -C qfits-an -q || $(MAKE) -C qfits-an install
-	$(MAKE) -C quads
+
+BASEDIR := .
+COMMON := $(BASEDIR)/util
+include $(COMMON)/makefile.qfits
+
+.PHONY: Makefile $(COMMON)/makefile.qfits
+
+all: $(REMAKE_QFITS)
+	$(MAKE) -C util
+	$(MAKE) -C blind
+#$(MAKE) -C qfits-an -q || $(MAKE) -C qfits-an install
 
 # Targets that require extra libraries
 extra:
-	$(MAKE) -C an-common
-	$(MAKE) -C quads cairo
+	$(MAKE) -C util
+	$(MAKE) -C blind cairo
 
 # Targets that support the web service
+.PHONY: web
 web:
-	$(MAKE) -C tilecache/render
-	$(MAKE) -C ontheweb/execs
+	$(MAKE) -C render
+# FIXME
+#	$(MAKE) -C ontheweb/execs
 
 install:
 	mkdir -p $(INSTALL_DIR)/data
 	mkdir -p $(INSTALL_DIR)/bin
-	$(MAKE) -C quads install
+	$(MAKE) -C blind install
 	@echo
 	@echo The following command may fail if you don\'t have the cairo, netpbm, and
 	@echo png libraries and headers installed.  You will lose out on some eye-candy
 	@echo but will still be able to solve images.
 	@echo
-	-$(MAKE) -C quads install-extra
+	-$(MAKE) -C blind install-extra
 
 install-indices:
 	mkdir -p $(INSTALL_DIR)/data
@@ -104,7 +115,7 @@ upgrade-indices:
 RELEASE_VER := 0.2-pre
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
-RELEASE_SUBDIRS := cfitsio qfits-an gsl-an an-common libkd quads demo
+RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo
 
 release:
 	-rm -R $(RELEASE_DIR)
@@ -135,30 +146,30 @@ snapshot:
 	bzip2 --best $(SNAPSHOT_DIR).tar
 
 test:
-	$(MAKE) -C quads test
+	$(MAKE) -C blind test
 
 clean:
-	$(MAKE) -C an-common clean
+	$(MAKE) -C util clean
 	-$(MAKE) -C cfitsio distclean
 	-$(MAKE) -C qfits-an distclean
 	-rm qfits-an/Makefile
 	-rm -R qfits-an/stage
 	$(MAKE) -C gsl-an clean
 	$(MAKE) -C libkd clean
-	$(MAKE) -C quads clean
-	-$(MAKE) -C tilecache/render clean
-	-$(MAKE) -C ontheweb/execs clean
+	$(MAKE) -C blind clean
+	-$(MAKE) -C render clean
+#-$(MAKE) -C ontheweb/execs clean
 
 realclean:
-	$(MAKE) -C an-common realclean
+	$(MAKE) -C util realclean
 	-$(MAKE) -C cfitsio distclean
 	-$(MAKE) -C qfits-an distclean
 	-rm -R qfits-an/stage
 	$(MAKE) -C gsl-an clean
 	$(MAKE) -C libkd realclean
-	$(MAKE) -C quads realclean
-	-$(MAKE) -C tilecache/render realclean
-	-$(MAKE) -C ontheweb/execs realclean
+	$(MAKE) -C blind realclean
+	-$(MAKE) -C render realclean
+#-$(MAKE) -C ontheweb/execs realclean
 
 TAGS:
 	etags -I `find . -name "*.c" -o -name "*.h"`

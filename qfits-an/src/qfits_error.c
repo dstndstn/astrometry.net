@@ -84,7 +84,7 @@ static void qfits_err_main_display(char *) ;
                               Function codes
  -----------------------------------------------------------------------------*/
 
-void qfits_err_remove_all() {
+void qfits_err_remove_all(void) {
     qfits_err_control.n = 0;
 }
 

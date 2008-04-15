@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 BASEDIR := ..
-COMMON := $(BASEDIR)/an-common
+COMMON := $(BASEDIR)/util
 
 all:
 

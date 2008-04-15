@@ -15,7 +15,8 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 BASEDIR := ..
-COMMON := $(BASEDIR)/an-common
+COMMON := $(BASEDIR)/util
+DATA := $(BASEDIR)/data
 
 .PHONY: all
 all:
@@ -265,16 +266,16 @@ xylist2fits: xylist2fits.o boilerplate.o svn.o \
 
 ngc2000.o: ngc2000.c ngc2000names.c ngc2000entries.c
 
-ngc2000names.c: parse-ngc2000names.awk ngc2000names.dat
-	$(AWK) -f parse-ngc2000names.awk < ngc2000names.dat  > $@
+ngc2000names.c: parse-ngc2000names.awk $(DATA)/ngc2000names.dat
+	$(AWK) -f parse-ngc2000names.awk < $(DATA)/ngc2000names.dat  > $@
 
-ngc2000entries.c: parse-ngc2000.awk ngc2000.dat
-	$(AWK) -f parse-ngc2000.awk < ngc2000.dat  > $@
+ngc2000entries.c: parse-ngc2000.awk $(DATA)/ngc2000.dat
+	$(AWK) -f parse-ngc2000.awk < $(DATA)/ngc2000.dat  > $@
 
 ngcic-accurate.c: ngcic-accurate.h ngcic-accurate-entries.c
 
-ngcic-accurate-entries.c: parse-ngcic-accurate.awk ngc2000_pos.txt ic2000_pos.txt
-	cat ngc2000_pos.txt ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate.awk > $@
+ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
+	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate.awk > $@
 
 certifiable: certifiable.o histogram.o matchfile.o solvedfile.o \
 		$(UTILS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
