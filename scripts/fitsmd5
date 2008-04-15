@@ -1,0 +1,44 @@
+#! /bin/bash
+
+# This file is part of the Astrometry.net suite.
+# Copyright 2006, Dustin Lang, Keir Mierle and Sam Roweis.
+#
+# The Astrometry.net suite is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, version 2.
+#
+# The Astrometry.net suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the Astrometry.net suite ; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+sigint_func () {
+	kill $$
+	return;
+}
+
+if [ $# -eq 0 ]; then
+	echo -e "\nusage: $0 <input.fits> ...\n"
+	echo -e "output is of the form:\n"
+	echo -e "<md5sum> <filename> [<FITS extension>]\n"
+	echo -e "eg:\n"
+	echo "> ./fitsmd5 ~/stars/INDEXES/sdss-20/sdss-20_03.skdt.fits"
+	echo "d0ce1352853bff44092a2b7732794c28 /h/42/dstn/stars/INDEXES/sdss-20/sdss-20_03.skdt.fits [1]"
+	echo "5ad98dc4acc5f753c66963de5bbe4eb3 /h/42/dstn/stars/INDEXES/sdss-20/sdss-20_03.skdt.fits [2]"
+	echo
+	exit 0;
+fi
+
+trap sigint_func SIGINT
+
+for x in $*; do
+	fitsgetext -i $x -b | \
+		awk "{if (NR > 1) {if (\$16 > 0) { system(\"dd if=$x bs=2880 skip=\" \$13 \" count=\" \$16 \" 2> /dev/null | md5sum -b | awk '{print \$1, \\\"$x\\\", \\\"[\"\$2\"]\\\"}'\");}}}"
+	if [ $? -ne 0 ]; then
+		break;
+	fi
+done
