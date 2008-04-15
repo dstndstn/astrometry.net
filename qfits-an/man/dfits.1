@@ -1,0 +1,59 @@
+.TH dfits 1 "30 Mar 2000"
+.SH NAME 
+dfits \- display FITS file header information 
+.SH SYNOPSIS
+.B dfits
+[-x xtnum] <list>
+.br
+.B dfits 
+[-x xtnum] -
+.SH DESCRIPTION
+.PP
+.B dfits
+displays FITS header informations on stdout. Header information can be
+found in the main header only (default), in extensions, or in both.
+See the \-x option below.
+.B dfits
+accepts multi-file input.
+.B 'dfits -'
+expects single file data coming from stdin.
+.B dfits
+also accepts now 'HDR' files. These are identified from the fact that
+they contain a line feed in one of the 80 first characters. 
+.SH OPTIONS
+.TP
+.BI \-x " xtnum"
+Specifies the extension to print out. Extensions are numbered starting
+from 1. If this option is not specified, only the main header is
+printed out. If this option specifies an extension that does not
+exist, nothing is printed out.
+.br
+Specify 0 as extension number to get a print of the main header plus
+all extension headers.
+.PP
+Examples :
+.br
+.B dfits
+*.fits
+.br
+.B dfits
+*.fits | grep NAXIS3
+.br
+gzip -d < star.fits.gz | 
+.B dfits -
+| more 
+.br
+.B dfits
+\-x 0 *.fits
+.br
+.B dfits
+\-x 3 *.fits
+.SH SEE ALSO
+.PP
+.B fitsort
+can be combined with
+.B dfits
+output to sort out keyword values of a group of FITS files.
+.SH FILES
+.PP
+Files shall all comply with FITS format

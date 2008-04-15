@@ -1,0 +1,38 @@
+qtest:		-----> Data dump tests
+qtest:		creating directory pixio_dat
+qtest:		dumping data    int -> BITPIX=  8
+qtest:		dumping data    int -> BITPIX= 16
+qtest:		dumping data    int -> BITPIX= 32
+qtest:		dumping data    int -> BITPIX=-32
+qtest:		dumping data    int -> BITPIX=-64
+qtest:		dumping data  float -> BITPIX=  8
+qtest:		dumping data  float -> BITPIX= 16
+qtest:		dumping data  float -> BITPIX= 32
+qtest:		dumping data  float -> BITPIX=-32
+qtest:		dumping data  float -> BITPIX=-64
+qtest:		dumping data double -> BITPIX=  8
+qtest:		dumping data double -> BITPIX= 16
+qtest:		dumping data double -> BITPIX= 32
+qtest:		dumping data double -> BITPIX=-32
+qtest:		dumping data double -> BITPIX=-64
+qtest:		-----> Data read tests
+qtest:		-----> int reading tests
+qtest:		reading data from file: pixio_dat/pixio_int_8.fits
+qtest:		reading data from file: pixio_dat/pixio_int_16.fits
+qtest:		reading data from file: pixio_dat/pixio_int_32.fits
+qtest:		reading data from file: pixio_dat/pixio_int_-32.fits
+qtest:		reading data from file: pixio_dat/pixio_int_-64.fits
+qtest:		-----> float reading tests
+qtest:		reading data from file: pixio_dat/pixio_float_8.fits
+qtest:		reading data from file: pixio_dat/pixio_float_16.fits
+qtest:		reading data from file: pixio_dat/pixio_float_32.fits
+qtest:		reading data from file: pixio_dat/pixio_float_-32.fits
+qtest:		reading data from file: pixio_dat/pixio_float_-64.fits
+qtest:		-----> double reading tests
+qtest:		reading data from file: pixio_dat/pixio_double_8.fits
+qtest:		reading data from file: pixio_dat/pixio_double_16.fits
+qtest:		reading data from file: pixio_dat/pixio_double_32.fits
+qtest:		reading data from file: pixio_dat/pixio_double_-32.fits
+qtest:		reading data from file: pixio_dat/pixio_double_-64.fits
+qtest:		cleaning up data files...
+qtest:		removing directory 'pixio_dat'

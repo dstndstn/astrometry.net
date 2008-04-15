@@ -1,0 +1,71 @@
+This file lists some of the code we've imported from elsewhere.
+
+First, the obvious ones:
+
+-cfitsio/
+  CFITSIO v3.060
+  see cfitsio/License.txt for details; includes GPL code.
+
+-gsl-an/
+  GSL (the GNU Scientific Library) v1.9
+  Licensed under the GPL, of course.
+
+-qfits-an/
+  QFITS library v6.2, licensed under the GPL.
+
+Now, some miscellaneous files:
+
+-quads/qsort_reentrant.{c,h}
+  Yoinked from FreeBSD.  Distributed under the BSD license, big surprise.
+
+-quads/svd.c
+  (C) 2000, C. Bond.  http://www.crbond.com/download/misc/svd.c
+
+-quads/pyfits.py
+  License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
+
+-quads/bt.c
+  AVL code was yoinked from GNU libavl which is under the GPL.
+
+-quads/cutest.{c,h} and quads/make-tests.sh
+  Imported from cutest-1.4.  Patches sent upstream 24-01-2008.
+  http://cutest.sourceforge.net/
+  zlib/libpng license.
+
+-quads/{tablist,modhead,fitscopy,tabmerge,fitstomatlab,liststruc,listhead,
+        imcopy,imarith,imstat}.c
+  From the CFITSIO utilities web page.
+  http://heasarc.gsfc.nasa.gov/docs/software/fitsio/cexamples.html
+  "You may freely modify, reuse, and redistribute these programs as you wish."
+  (fitstomatlab.c is just a modified version of tablist.c)
+
+-tilecache/web/map.js includes code borrowed from wms236.js by John Deck,
+  UC Berkeley.
+
+-tilecache/web/map.js includes code borrowed from:
+  http://www.scottandrew.com/weblog/jsjunk#inpoly
+  Copyright 2001 scott andrew lepera
+
+-quads/pnpoly.c
+  From http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+
+Data files:
+
+-quads/ngc2000{,names}.dat
+  Imported from ftp://cdsarc.u-strasbg.fr/cats/VII/118/
+  NGC 2000.0, The Complete New General Catalogue and Index Catalogue
+    of Nebulae and Star Clusters by J.L.E. Dreyer
+    Sinnott, R.W. (edited by)
+    Sky Publishing Corporation and Cambridge University Press (1988)
+
+  Copyright Notice:
+    This catalog is copyrighted by Sky Publishing Corporation, which has
+    kindly deposited the machine version in the data centers for permanent
+    archiving and dissemination to astronomers for scientific research
+    purposes only. The data should not be used for commercial purposes
+    without the explicit permission of Sky Publishing Corporation.
+
+-quads/{ic,ngc}2000_pos.txt
+  Imported from http://www.ngcic.org/corwin/default.htm
+  Dr. Harold G. Corwin Jr (hgcjr@ipac.caltech.edu)
+

@@ -1,0 +1,77 @@
+How to get the index files required to run the Astrometry.net code
+------------------------------------------------------------------
+2007 September                                 Astrometry.net team
+
+1. Preamble
+
+One of the goals of the Astrometry.net project is to "organize,
+annotate and make searchable all the world's astronomical
+information."
+
+We have put a lot of effort into building our solver, and we want to
+distribute the source code and the data files that make it tick.  Our
+project is all about making data accessible, and if we want to become
+a central part of astronomical data processing and storage, then our
+system must be transparent.  Also, by releasing our source code we
+hope to unleash the creative power of our users, who will adapt and
+extend it to their own purposes, doing things we haven't even thought
+about.
+
+We want our code to be open.  However, we want to avoid a situation in
+which people use our code in ways that don't lead to data becoming
+more accessible.  We're trying to encourage universal data
+availability by attaching some conditions to our data files.
+
+Our code is distributed under the GPL, and we won't impose additional
+conditions on its use or distribution.  However, we are also
+distributing data files that are required to run the solver, so we are
+applying conditions on the distribution of these files.
+
+2. Conditions
+
+Astrometry.net are making available a set of data files ("indices") under
+the following conditions:
+
+ * NOT-FOR-COMMERCIAL-USE: Because the indices represent a re-release of
+   data originating in the USNO-B Catalog, the indices may not
+   be used for any commercial purpose whatsoever without prior written
+   consent from our team.  Our consent will only be granted to
+   commercial users for use in public, not-for-profit projects they
+   are engaged in or supporting.
+
+ * CREDIT: If the indices are used in a system which provides a public
+   web service, then any web page that makes use of the results must
+   clearly display the following text:
+   "This service uses tools provided by Astrometry.net.
+    For more details visit http://astrometry.net/ ."
+
+ * PUBLIC SERVICES MUST BE OPEN: If the indices are used in a system
+   which provides a public web service, then any astronomical images
+   solved using the indices (alone or in conjunction with other data)
+   must be made available to any other interested party including the
+   Astrometry.net team.  The image files may be made accessible by
+   providing a list of URLs, by granting network access to a source
+   control repository or database, or by giving access to or sending
+   physical media.
+
+ * ACADEMIC CITATION: If the indices are used in any scholarly work,
+   research grant proposals or other scientific or academic
+   publications, the Astrometry.net project must be properly cited and
+   acknowledged.  The paper to cite is the Lang et al paper on our
+   bibliography page http://astrometry.net/biblio.html .  The
+   acknowledgement text is "This research made use of tools provided
+   by Astrometry.net."
+
+ * NO REDISTRIBUTION: Redistribution, copying, posting, mirroring, or
+   hosting copies of the indices or information sufficient to obtain
+   the indices is not permitted.  In other words, the only legitimate
+   way for someone to have the indices is for them to have obtained
+   them from us directly.
+
+3. Obtaining the indices
+
+Send an email to code@astrometry.net stating clearly your intended use
+of the indices, and stating explicitly that you have read and agreed
+to the conditions in this text file.  We will return to you
+information required to obtain the indices.  That information may not
+be redistributed, as noted in the conditions above.

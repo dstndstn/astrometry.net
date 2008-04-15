@@ -1,0 +1,64 @@
+.TH iofits 1 "25 Feb 1997"
+.SH NAME 
+iofits \- FITS data format conversion (pixel depth) 
+.SH SYNOPSIS
+.B iofits
+[options] <in_fits> <out_fits> <depth>
+.SH DESCRIPTION
+.PP
+iofits converts FITS files of any pixel depth to another pixel
+depth (bits per pixel). Depth is given as in the FITS norm :
+.PP
+.TP
+\(bu
+.IR 8 
+bits per pixel, unsigned.
+.TP
+\(bu
+.IR 16
+bits per pixel, signed
+.TP
+\(bu
+.IR 32
+bits per pixel, signed
+.TP
+\(bu
+.IR \-32 
+IEEE floating point
+.TP
+\(bu
+.IR \-64 
+IEEE double precision floating point
+.SH OPTIONS
+.TP
+.B \-v
+Verbose mode.
+.TP 
+.BI \-M " megs"
+Memory handling. To avoid saturate memory for huge
+cubes, this parameter specifies the maximum amount
+of memory to use before swapping data to disk.
+The amount is given in Megabytes.
+(1Meg = 1,048,576 Bytes)
+The process time is then considerably slowed down.
+Default value is 50 megs.
+.SH FILES
+.PP
+Input/output files shall all comply with FITS format.
+.PP
+The original FITS header  of the input FITS file
+is conserved along, except for the following keywords:
+NAXIS, NAXISn, BITPIX, BSCALE, BZERO, which are related to the
+newly created file.
+.PP
+HISTORY keywords are appended to the FITS header to indicate the
+eclipse process modifications, together with the command line which
+was used to generate the file.
+.SH SEE ALSO
+.PP
+.B average, filt, deadpix
+.SH BUGS
+.PP
+In general, decreasing the resolution in number of bits per pixel almost
+always means loss of precision. No rescaling is done on the data, use
+this command with care!

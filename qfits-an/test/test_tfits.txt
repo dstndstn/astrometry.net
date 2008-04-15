@@ -1,0 +1,44 @@
+qtest:		Test the BINARY table
+qtest:		Test the 1th column
+qtest:		Columns are identical...ok
+qtest:		Test the 2th column
+qtest:		Columns are identical...ok
+qtest:		Test the 3th column
+qtest:		Columns are identical...ok
+qtest:		Test the 4th column
+qtest:		Columns are identical...ok
+qtest:		Test the 5th column
+qtest:		Columns are identical...ok
+qtest:		Test the 6th column
+qtest:		Column 6 is empty
+qtest:		Test the 7th column
+qtest:		Columns are identical...ok
+qtest:		Test the 8th column
+qtest:		Columns are identical...ok
+qtest:		Test the 9th column
+qtest:		Columns are identical...ok
+qtest:		Test the 10th column
+qtest:		Columns are identical...ok
+qtest:		Test the 11th column
+qtest:		Columns are identical...ok
+qtest:		Test the 12th column
+qtest:		Columns are identical...ok
+qtest:		Test the 13th column
+qtest:		Columns are identical...ok
+qtest:		Test the ASCII table
+qtest:		Test the 1th column
+qtest:		Columns are identical...ok
+qtest:		Test the 2th column
+qtest:		Check the cumulated difference : 0.230148
+qtest:		Test the 3th column
+qtest:		Columns are identical...ok
+qtest:		Test the 4th column
+qtest:		Check the cumulated difference : 0
+qtest:		Test the 5th column
+qtest:		Check the cumulated difference : 0.140812
+qtest:		Test the 6th column
+qtest:		Columns are identical...ok
+qtest:		Test the 7th column
+qtest:		Columns are identical...ok
+qtest:		Test the 8th column
+qtest:		Columns are identical...ok

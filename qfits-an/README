@@ -1,0 +1,63 @@
+
+qfits: quick FITS library
+-------------------------
+
+Introduction
+------------
+
+qfits is a C library giving access to FITS file internals, both
+for reading and writing. qfits was born from the need to have a
+simple and efficient library to handle FITS files. It has been
+initially designed to support any kind of FITS data stream, but
+only relevant parts were implemented. New features and support
+for more data streams have been added as the need came up. This
+ensures that all features present in the library have been
+thoroughly tested, since they are all used daily in a production
+environment.
+
+Overview
+--------
+
+The FITS format is pretty simple, declaring ancillary data in
+80-char lines in ASCII format, and storing values in fixed-size,
+uncompressed format. Data are stored on the disk more or less as
+they will be in memory (bar some trivial transformations).
+
+qfits has several levels of complexity, depending on whether you
+only want to retrieve ancillary data from headers, or only read
+pixels in, or do some true data manipulation or header
+re-formatting.
+
+People only interested in getting ancillary information from FITS
+files (i.e. reading FITS headers) will potentially use only 1 or
+2 functions from qfits. If you want to do header manipulation
+(remove/add/modify keywords and dump the header back to disk),
+you will definitely want to have a look into the qfits_header
+methods. If you want to load pixels from FITS images, a couple of
+function calls should do the job. If you want to work on table
+data, you will want to check the qfits_table methods for generic
+data loading.
+
+qfits only gives you handles on the FITS format, it does not
+provide extra functionalities related to table or image
+processing, this is left to other (higher-level) libraries.
+
+Implementation
+--------------
+
+qfits is written in 100% pure ANSI C that should compile on any
+Unix. qfits has not been compiled or tested on any non-Unix
+platform (Windows, Be, etc.). qfits has been shown to work
+reliably on the following platforms:
+
+	- AIX
+	- Dec/OSF1 (True64)
+	- FreeBSD
+	- HPUX
+	- Linux
+	- Mac OS X / Darwin
+	- Solaris
+
+qfits should work fine on all POSIX-compliant Unixes. If you port
+qfits to any other platform, please let me know.
+

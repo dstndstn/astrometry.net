@@ -1,0 +1,65 @@
+
+HTML_RECURSIVE_TARGETS = install-html-recursive
+
+html-am: 
+	@if test -f doc/Doxyfile; then \
+	  echo "cd doc && $(DOXYGEN)"; \
+	  d=`pwd`; cd doc && $(DOXYGEN); cd $$d; \
+	  if test -n "$(POST_DOXYGEN_CLEANFILES)"; then \
+	    cd $(top_srcdir)/html && rm -f $(POST_DOXYGEN_CLEANFILES); \
+	  fi; \
+	else \
+	  echo "Nothing to be done for \`$@'."; \
+	fi
+
+clean-html: clean-html-am
+
+clean-html-am:
+	-rm -rf $(top_srcdir)/html
+
+install-html-am: html-am install-html-generic
+
+install-html: install-html-recursive
+
+install-html-generic:
+	@$(NORMAL_INSTALL)
+	@if test -d $(top_srcdir)/html; then \
+	  echo "$(mkinstalldirs) $(DESTDIR)$(htmldir)"; \
+	  $(mkinstalldirs) $(DESTDIR)$(htmldir); \
+	  list="`ls -1 $(top_srcdir)/html`"; \
+	  for p in $$list; do \
+	    if test -f $(top_srcdir)/html/$$p; then \
+	      echo " $(INSTALL_DATA) $(top_srcdir)/html/$$p $(DESTDIR)$(htmldir)/$$p"; \
+	      $(INSTALL_DATA) $(top_srcdir)/html/$$p $(DESTDIR)$(htmldir)/$$p; \
+	    else if test -f $$p; then \
+	      echo " $(INSTALL_DATA) $$p $(DESTDIR)$(htmldir)/$$p"; \
+	      $(INSTALL_DATA) $$p $(DESTDIR)$(htmldir)/$$p; \
+	    fi; fi; \
+	  done; \
+	fi
+
+uninstall-html:
+	@$(NORMAL_UNINSTALL)
+	@list="`ls -1 $(DESTDIR)$(htmldir)`"; for p in $$list; do \
+	  echo " rm -f $(DESTDIR)$(htmldir)/$$p"; \
+	  rm -f $(DESTDIR)$(htmldir)/$$p; \
+	done
+
+$(HTML_RECURSIVE_TARGETS):
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(HTML_SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"

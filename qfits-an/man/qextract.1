@@ -1,0 +1,23 @@
+.TH qextract 1 "25  Nov 2002"
+.SH NAME 
+qextract \- Extract an wriions from FITS files
+.SH SYNOPSIS
+.B qextract
+<in> <extension>
+.SH DESCRIPTION
+.PP
+.B qextract
+reads a FITS file with many extensions, and writes the desired extension
+in a new FITS file. qextract supports FITS images, ASCII and BINARY tables.
+.PP
+.SH OPTIONS
+.TP
+none
+.SH SEE ALSO
+.B dtfits
+.SH FILES
+.PP
+Files shall all comply with FITS format. The produced file is named
+"ext#.xxx" where # is the number of the requested extension and xxx is fits
+if the extension is a FITS image and TFITS if the extension is a TFITS
+table.

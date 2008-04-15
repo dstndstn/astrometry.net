@@ -1,0 +1,62 @@
+.TH dtfits 1 "22 Dec 1999"
+.SH NAME 
+dtfits \- display FITS table
+.SH SYNOPSIS
+.B dtfits
+<table>
+.SH DESCRIPTION
+.PP
+.B dtfits
+dumps the contents of a FITS table in an ASCII format, either into a
+user-specified file or on stdout. The output is formatted on a fixed
+number of columns to make it readable by human beings. Additional
+informations are printed out before the table values are dumped, these
+informations can be skipped by using the \-d option.
+.PP
+Last, if you want to dump the table into an easily parsable format
+(for a piece of software), you might want to use the \-s option which
+specifies a character to use as separator. All data fields will be
+printed out separated by this character only. This allows to use
+string parsers to cut down the output lines into tokens by looking for
+this separator. Fields (lines) will still be delimited by the
+end-of-line character. This option produces ASCII tables which are
+easy to parse for a piece of software but mostly unreadable to human
+beings.
+.PP
+Notice that
+.B dtfits
+only accepts one single FITS table in input.
+.SH OPTIONS
+.TP
+.BI \-d
+Skip information output about the table and column names. Outputs only
+the table values. Beware that if the FITS file contains several
+extensions, they will all appear one after another, separated only by
+two blank lines. In that case, it would be preferrable to keep the
+complete output and parse out the returned stream to differentiate
+which data come from where.
+.TP
+.BI \-s " <char>"
+Use the character <char> as separator in output. This option is useful
+if you want to produce a table that should be parsed by a piece of
+software (see above description). The separator can only be a single
+non-null character. To avoid special characters being interpreted by
+the shell, it is recommended to provide this character always between
+simple or double quotes. Example:
+.br
+dtfits \-s '&' table.tfits
+.PP
+If you want to use a special character as separator, such as a tab,
+use ^V to insert your character, such as:
+.br
+dtfits \-s '^V<TAB>' table.tfits
+.PP
+which means: you type CTRL-V and then the tab key.
+.SH SEE ALSO
+.PP
+.B dfits
+.SH FILES
+.PP
+FITS tables are stored into extensions. If there are several tables in
+a file, they will all be displayed one after another in the same
+output stream.

@@ -1,0 +1,25 @@
+.TH flipx 1 "25 Jul 2001"
+.SH NAME 
+flipx \- Flip x axis in a FITS image 
+.SH SYNOPSIS
+.B flipx
+<input images>
+.SH DESCRIPTION
+.PP
+This is an example use of the qfits library. This program expects 
+a list of FITS file names in input. For each input file, it will
+flip the image contained in the main data section in the X direction,
+i.e. pixel (i,j) is swapped with pixel (lx-i, j).
+.PP
+The pixel loading mechanism is independent from endian-ness of the
+local host or FITS pixel type. This program offers a good overview
+of how to use qfits for pixel-level operations.
+.SH OPTIONS
+None.
+.SH FILES
+.PP
+Input files shall all comply with FITS format.
+.SH BUGS
+.PP
+Notice that this program does not support cubes or image extensions,
+but could be easily extended to support that case.

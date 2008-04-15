@@ -1,0 +1,82 @@
+.TH hierarch28 1 "29 May 2000"
+.SH NAME
+hierarch28 \- header conversion from ESO to standard FITS 
+.SH SYNOPSIS
+.B hierarch28
+[options] <FITS> [table]
+.SH DESCRIPTION
+.PP
+.B hierarch28
+will convert keyword names in a FITS header to new names, using a
+user-provided ASCII conversion table. It is especially aimed at removing
+no-standard FITS features, such as the HIERARCH ESO keyword names.
+.PP
+.B hierarch28
+can also perform a translation to the IRAF convention on the following
+four keywords: 'RA', 'DEC', 'UT' and 'LST'. IRAF requires these
+keywords to contain the string representation of their values, e.g.
+.br
+RA      = ' 09:45:14.594'
+.br
+DEC     = '-33:47:09.420'
+.br
+UT      = ' 01:17:21.950'
+.br
+LST     = ' 08:19:59.688'
+.PP
+The ESO standard (see http://archive.eso.org/dicb) defines these
+keywords as floating point values with the units degrees for RA/DEC
+and elapsed seconds since midnight for UT/LST.
+.PP
+In order to have this translation performed, add
+.br
+RA = RA
+.br
+DEC = DEC
+.br
+UT = UT
+.br
+LST = LST
+.br
+to the conversion table.
+.SH OPTIONS
+.TP
+.BI "\-g " 
+This option is used to generate default translation tables. 
+.PP
+.SH FILES
+.PP
+.B hierarch28
+expects a conversion table in input. Default name for this table is
+.I table.conv
+in the current working directory. Indicate another name for this file
+as last argument on the command-line. This ASCII file
+contains a list of keywords to replace, in the following format:
+.PP
+#
+.br
+# Comment lines start with a hash '#'
+.br
+# Blank lines would be ignored
+.br
+#
+.br
+OLDKEYWORD1 = NEWKEYWORD1
+.br
+OLDKEYWORD2 = NEWKEYWORD2
+.br
+etc.
+.PP
+Input keywords are character strings, they may contain blanks. Example:
+.PP
+HIERARCH ESO DET DIT = DETDIT
+.PP
+One important restriction is that the new keyword name may not be longer
+than the initial one. The program will complain that it cannot achieve
+search and replace if this is the case.
+.SH IMPORTANT
+.PP
+This programs achieves maximal speed to operate because it modifies the
+input file directly. Be aware that using
+.B hierarch28
+on a file will modify its contents in an irreversible way!

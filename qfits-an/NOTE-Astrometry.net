@@ -1,0 +1,16 @@
+This distribution of the qfits library is a modified version of qfits-6.2.0.
+
+We have submitted our patches upstream but have not heard back from the original
+author.
+
+All modified files contain a note at the top of the file (as required by the GPL):
+
+/* Note: this file has been modified from its original form by the
+   Astrometry.net team.  For details see http://astrometry.net */
+
+In turn, we hereby claim all our modifications:
+  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis
+and release our modifications under the GPL.
+
+
+
