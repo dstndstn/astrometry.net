@@ -1,0 +1,93 @@
+Credits for demo images:
+
+* sdss.jpg : courtesy of the Sloan Digital Sky Survey.
+  http://cas.sdss.org/dr6/en/get/frameByRCFZ.asp?R=4517&C=2&F=103&Z=2&submit1=Get+Image
+  This image is SDSS Run 4517, Camcol 2, Field 103.
+  The SDSS Web site is http://www.sdss.org/.
+  (13x9 arcmin)
+
+  Index    Depth to solve
+  200-01   15
+  201-01   16
+  202-01   12
+  203-01   16
+  204-01   -
+
+* apod1.jpg : copyright Russell Croman, http://www.rc-astro.com/
+  Astronomy Picture of the Day, 2003 Feb 28
+  http://antwrp.gsfc.nasa.gov/apod/ap030228.html
+  http://antwrp.gsfc.nasa.gov/apod/image/0302/ngc2264_croman_c3.jpg
+  (90x60 arcmin)
+
+  Index    Depth to solve
+  200-05   -
+  201-05   9
+  202-05   20
+  203-05   4
+  204-05   27
+  205      19
+  206:     -
+  207:     23
+  208:     -
+
+* apod2.jpg : copyright Star Shadows Remote Observatory, http://www.starshadows.com/
+  Astronomy Picture of the Day, 2006 Feb 21
+  http://antwrp.gsfc.nasa.gov/apod/ap060221.html
+  http://antwrp.gsfc.nasa.gov/apod/image/0602/horseregion_ssro.jpg
+  (4.5x3.4 degrees)
+
+  Index    Depth to solve
+  205      -
+  206      20
+  207      20
+  208      20
+  209      11
+  210      36
+  211      33
+  212      -
+
+* apod3.jpg : Digitized Sky Survey, ESA/ESO/NASA FITS Liberator,
+  Davide De Martin (Skyfactory, http://www.skyfactory.org/)
+  Astronomy Picture of the Day, 2007 Feb 13
+  http://antwrp.gsfc.nasa.gov/apod/ap070213.html
+  http://antwrp.gsfc.nasa.gov/apod/image/0702/vela_skyfactory.jpg
+  (8.4x6.3 degrees)
+
+  Index    Depth to solve
+  207      -
+  208      47
+  209      46
+  210      15
+  211      13
+  212      13
+  213      18
+  214      23
+  215      58
+  216      -
+
+* apod4.jpg : copyright Noel Carboni, http://ncarboni.home.att.net/Astrophotography.html
+  Astronomy Picture of the Day, 2006 Mar 17
+  http://antwrp.gsfc.nasa.gov/apod/ap060317.html
+  http://antwrp.gsfc.nasa.gov/apod/image/0603/bigdipper_carboni_c46.jpg
+  (34x24 degrees)
+
+  Index    Depth to solve
+  212      -
+  213      45
+  214      35
+  215      33
+  216      18
+  217      9
+  218      19
+  219      -
+
+* apod5.jpg : copyright R. Hurt (SSC-Caltech), JPL-Caltech, NASA
+  Astronomy Picture of the Day, 2004 Mar 16
+  http://antwrp.gsfc.nasa.gov/apod/ap040316.html
+  http://antwrp.gsfc.nasa.gov/apod/image/0403/sedna_nasa_big.jpg
+  (72x54 degrees)
+
+  Index    Depth to solve
+  218      -
+  219      67
+

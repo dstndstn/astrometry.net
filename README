@@ -1,0 +1,358 @@
+Astrometry.net code release 0.1
+===============================
+Copyright 2006, 2007 Michael Blanton, David W. Hogg, Dustin Lang, Keir Mierle
+and Sam Roweis.
+
+   This code is meant as an accompanyment for an upcoming paper and its main
+   purpose is to allow reproduction of the results in that paper.
+
+   This is research code only and is not intended for scientific use in reducing
+   data or other analyses.
+
+   This release includes a snapshot of all of the components of our current
+   research code, including routines to:
+
+     * Convert raw USNO and Tycho2 into FITS format for easier use
+     * Uniformize, deduplicate, and cut the FITSified catalogs
+     * Build indices from these cuts
+     * Solve the astrometry of images using these indices
+
+   The code includes:
+     * A simple but powerful HEALPIX implementation
+     * The QFITS library with several modifications
+     * libkd, a compact and high-performance kdtree library
+
+   In principle, the code in the tarball is sufficient to reproduce our entire
+   astrometry system and replicate our blind astrometry results (e.g. on the
+   SDSS fields).  However, this requires the entire USNO-B 1.0 catalogue which
+   is about 80GB in size.  For ease of use, we are distributing our pre-cooked
+   indices (about 25 GB total), which are the same files we're using for our
+   web service.
+
+QUICKSTART
+----------
+
+   To compile everything, you will need gcc and the following libraries:
+      * cairo
+      * netpbm
+      * png
+      * jpeg
+
+   On Ubuntu or Debian-like systems, the following should suffice:
+      $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
+             libpng12-dev libjpeg-dev
+
+   If you don't have and can't get these libraries, you should still be able to
+   compile and use the core parts of the solver, but you will miss out on some
+   eye-candy.
+
+   We also use some Python code in some cases; if you can't install a Python
+   interpreter, see the Workarounds section below.
+
+   Grab the code:
+      $ wget http://astrometry.net/downloads/astrometry.net-0.1.tar.bz2
+      $ tar xjf astrometry.net-0.1.tar.bz2
+      $ cd astrometry.net-0.1
+
+   Build the solving system:
+      $ make
+
+   If you installed the libraries listed above, build the plotting code:
+      $ make extra
+
+   Install it:
+      $ make install
+
+   By default it will be installed in  /usr/local/astrometry .
+   You can override this by either:
+        * editing the top-level Makefile (look for INSTALL_DIR)
+     or * defining INSTALL_DIR on the command-line:
+           For bash shell:
+             $ export INSTALL_DIR=/path/to/astrometry
+             $ make install
+           For tcsh shell:
+             $ setenv INSTALL_DIR /path/to/astrometry
+             $ make install
+
+   The astrometry solver is composed of several executables.  You may want to add
+   the INSTALL_DIR/bin directory to your path:
+      For bash shell:
+        $ export PATH="$PATH:/usr/local/astrometry/bin"
+      For tcsh shell:
+        $ setenv PATH "$PATH:/usr/local/astrometry/bin"
+
+
+   Next, grab some pre-cooked indices.  See the file GETTING-INDICES for details
+   about how to do this.
+
+   Each index is designed to solve images within a narrow range of scales.  The
+   indices designed to solve small (angular size) images are rather large files,
+   so you probably only want to grab the indices required for the images you 
+   wish to solve.  If you grab extra indices, the solver will run more slowly,
+   but the results should be the same.
+
+   Each index contains a large number of "skymarks" (landmarks for the sky) that
+   allow our solver to identify your images.  The skymarks contained in each index
+   have sizes (diameters) within a narrow range.  You probably want to download
+   indices whose quads are, say, 10% to 100% of the sizes of the images you want to
+   solve.
+
+   For example, let's say you have some 1-degree square field of view images.  You
+   should grab indices that contain skymarks of size 0.1 to 1 degree, or 6 to 60
+   arcminutes.  Referring to the table below, you should grab indices 203 through 209.
+
+   For reference, we used index 202 alone for our SDSS tests.
+
+   ---------------------------------------------------------------
+   Index Filename          Range of skymark diameters    File Size
+                                 (arcminutes)              (MB)
+   ---------------------------------------------------------------
+   index-210+.tar.bz2           60  - 2000                    29
+   index-209.tar.bz2            42  -   60                    30
+   index-208.tar.bz2            30  -   42                    61
+   index-207.tar.bz2            22  -   30                   125
+   index-206.tar.bz2            16  -   22                   255
+   index-205.tar.bz2            11  -   16                   526
+   index-204.tar.bz2             8  -   11                 1,023
+   index-203.tar.bz2             5.6  -  8.0               2,089
+   index-202.tar.bz2             4.0  -  5.6               4,260
+   index-201.tar.bz2             2.8  -  4.0               5,878
+   index-200.tar.bz2             2.0  -  2.8              10,058
+   --------------------------------------------------------------
+
+   Download the indices you need and put them in the top-level (astrometry-0.1)
+   directory.
+
+   Install them:
+      $ make install-indices
+
+   (Or you can extract them into the INSTALL_DIR/data directory by hand.)
+
+
+   Next, you can (optionally) configure the solver by editing the file
+      INSTALL_DIR/etc/backend.cfg
+
+
+
+   Finally, solve some fields.
+
+   (If you didn't build the plotting commands, add "--no-plots" to the command
+    lines below.)
+
+   If you have the netpbm tools installed (eg, jpegtopnm):
+
+     If you have any of indices 213 to 218:
+        $ solve-field --scale-low 10 demo/apod4.jpg
+
+     If you have index 219:
+        $ solve-field --scale-low 30 demo/apod5.jpg
+
+     If you have any of indices 210 to 214:
+        $ solve-field --scale-low 1 demo/apod3.jpg
+
+     If you have any of indices 206 to 211:
+        $ solve-field --scale-low 1 demo/apod2.jpg
+
+     If you have any of indices 203 to 205:
+        $ solve-field apod1.jpg
+
+     If you have any of indices 200 to 203:
+        $ solve-field demo/sdss.jpg
+
+
+   Copyrights and credits for the demo images are listed in the file demo/CREDITS .
+
+   Note that you can also give solve-field a URL rather than a file as input:
+        $ solve-field --out apod1b http://antwrp.gsfc.nasa.gov/apod/image/0302/ngc2264_croman_c3.jpg 
+
+
+
+   If you don't have the netpbm tools, do this instead:
+
+     If you have any of indices 213 to 218:
+        $ solve-field --scale-low 10 demo/apod4.xyls
+
+     If you have index 219:
+        $ solve-field --scale-low 30 demo/apod5.xyls
+
+     If you have any of indices 210 to 214:
+        $ solve-field --scale-low 1 demo/apod3.xyls
+
+     If you have any of indices 206 to 211:
+        $ solve-field --scale-low 1 demo/apod2.xyls
+
+     If you have any of indices 203 to 205:
+        $ solve-field demo/apod1.xyls
+
+     If you have any of indices 200 to 203:
+        $ solve-field demo/sdss.xyls
+
+
+
+
+   Each of these commands should solve the field and produce a number of output
+   files:
+       sdss-ngc.png : an annotation of the image.
+       sdss.wcs : a FITS WCS header for the solution.
+       sdss-objs.png : a plot of the sources (stars) we extracted from the image.
+       sdss-indx.png : sources (red), plus stars from the index (green), plus the
+                       skymark ("quad") used to solve the image.
+       sdss-indx.xyls : a FITS BINTABLE with the pixel locations of stars from the index.
+       sdss.rdls : a FITS BINTABLE with the RA,Dec of sources we extracted from the image.
+       sdss.axy : a FITS BINTABLE of the sources we extracted, plus headers that
+                  describe the job (how the image is going to be solved).
+       sdss.solved : contains binary 1 if the field solved.
+       sdss.match : a FITS BINTABLE describing the quad match that solved the image.
+
+
+
+SOLVE-FIELDS ARGUMENTS
+----------------------
+   There are a few command-line arguments to solve-fields that are very important
+   in determining how quickly it runs:
+
+
+  * Scale of the image: if you provide bounds (lower and upper limits) on the size
+    of the image you are trying to solve, solving can be much faster.  In the last
+    examples above, for example, we specified that the field is at least 30 degrees
+    wide: this means that we don't need to search for matches in the indices that
+    contain only tiny skymarks.
+
+    Eg, to specify that the image is between 1 and 2 degrees wide:
+      solve-field --scale-units degwidth --scale-low 1 --scale-high 2
+
+    If you know the pixel scale instead:
+      solve-field --scale-units arcsecperpix --scale-low 0.386 --scale-high 0.406
+
+
+  * Depth.  The solver works by looking at sources in your image, starting with the
+    brightest.  It searches for all "skymarks" that can be built from the N brightest
+    stars before considering star N+1.  When using several indices, it can be much
+    faster to search for many skymarks in one index before switching to the next one.
+    This flag lets you control when the solver switches between indices.  It also lets
+    you control how much effort the solver puts in before giving up - by default it
+    looks at all the sources in your image, and this can take a ridiculously long time
+    for many images.
+
+    Eg, to first look at sources 0-20 in all indices, then sources 20-30 in all indices,
+    then 30-40:
+       solve-field --depth 0-20,20-30,30-40
+    or solve-field --depth 0-20 --depth 20-30 --depth 30-40
+
+    Note that sources are numbered starting at zero.  Yes, we're computer science geeks.
+
+
+XYLISTS
+-------
+   The solve-field program accepts either images or "xylists" (xyls), which are just
+   FITS BINTABLE files which contain two columns (float or double (E or D) format)
+   which list the pixel coordinates of sources (stars, etc) in the image.
+
+   To specify the column names (eg, "XIMAGE" and "YIMAGE"):
+      solve-field --x-column XIMAGE --y-column YIMAGE
+
+   Our solver assumes that the sources are listed in order of brightness, with the
+   brightest sources first.  If your files aren't sorted, you can specify a column by
+   which the file should be sorted.
+      solve-field --sort-column FLUX
+
+   By default it sorts with the largest value first (so it works correctly if the
+   column contains FLUX values), but you can reverse that by:
+      solve-field --sort-ascending --sort-column MAG
+
+   When using xylists, you should also specify the original width and height of the
+   image, in pixels:
+      solve-field --width 2000 --height 1500
+
+   Alternatively, if the FITS header contains "IMAGEW" and "IMAGEH" keys, these will be
+   used.
+
+   The solver can deal with multi-extension xylists; indeed, this is a convenient way
+   to solve a large number of fields at once.  You can tell it which extensions it
+   should solve by:
+      solve-field --fields 1-100,120,130-200
+
+   (Ranges of fields are inclusive, and the first FITS extension is 1, as per the FITS
+    standard.)
+
+   Unfortunately, the plotting code isn't smart about handling multiple fields, so
+   if you're using multi-extension xylists you probably want to turn off plotting:
+      solve-field --no-plots
+
+
+SOURCE EXTRACTION USING SEXTRACTOR
+----------------------------------
+   http://terapix.iap.fr/rubrique.php?id_rubrique=91/
+
+   The "Source Extractor" aka "SExtractor" program by Emmanuel Bertin can be used to do
+   source extraction if you don't want to (or can't) use our own bundled "image2xy"
+   program.
+
+   You can use the following configuration entries to produce an "xylist" which can be
+   fed to solve-field:
+
+   CATALOG_TYPE     FITS_1.0
+   # this is the output filename:
+   CATALOG_NAME     out.xyls
+   PARAMETERS_NAME  xylist.param
+
+   In the file "xylist.param", include:
+
+   X_IMAGE
+   Y_IMAGE
+   MAG_ISO
+   # or MAG_ISOCOR or MAG_AUTO
+
+   After running SExtractor on your image, you can feed the resulting file straight to
+   solve-field:
+      solve-field out.xyls --x-column X_IMAGE --y-column Y_IMAGE --sort-column MAG_ISO
+                  --sort-ascending --overwrite --width 496 --height 340
+
+
+WORKAROUNDS
+-----------
+
+   No python
+   ---------
+   There are two places we use python: handling images, and filtering FITS files.
+
+   You can avoid the image-handling code by doing source extraction yourself; see the
+   "No netpbm" section below.
+
+   You can avoid filtering FITS files by using the "--no-fits2fits" option to
+   solve-field.
+
+   No netpbm
+   ---------
+   We use the netpbm tools (jpegtopnm, pnmtofits, etc) to convert from all sorts of
+   image formats to PNM and FITS.
+
+   If you don't have these programs installed, you must do source extraction yourself
+   and use "xylists" rather than images as the input to solve-field.  See SEXTRACTOR
+   and XYLIST sections above.
+
+
+PROBLEMS COMPILING?
+-------------------
+
+I run a hip 90's era unix derivative and cairo doesn't work.
+
+   If you don't have or can't get cairo, you won't be able to get pretty overlay
+   plots of the solutions, but the solver should still work. To build the
+   solver components minus plotting, run 'make' instead of 'make extra'.
+
+   solve-field may fail when it tries to plot stuff, but it should produce a
+   WCS file and other useful stuff.
+
+LICENSE
+-------
+   The Astrometry.net code suite is free software licensed under the GNU GPL,
+   version 2.  See the file LICENSE for the full terms of the GNU GPL.
+
+   The index files come with their own license conditions.  See the file
+   GETTING-INDICES for details.
+
+CONTACT
+-------
+   Please send inquires and bug reports to code@astrometry.net .
+
