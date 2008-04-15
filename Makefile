@@ -31,7 +31,6 @@ include $(COMMON)/makefile.qfits
 all: $(REMAKE_QFITS)
 	$(MAKE) -C util
 	$(MAKE) -C blind
-#$(MAKE) -C qfits-an -q || $(MAKE) -C qfits-an install
 
 # Targets that require extra libraries
 extra:
@@ -42,8 +41,7 @@ extra:
 .PHONY: web
 web:
 	$(MAKE) -C render
-# FIXME
-#	$(MAKE) -C ontheweb/execs
+	$(MAKE) -C web/execs
 
 install:
 	mkdir -p $(INSTALL_DIR)/data
@@ -158,7 +156,7 @@ clean:
 	$(MAKE) -C libkd clean
 	$(MAKE) -C blind clean
 	-$(MAKE) -C render clean
-#-$(MAKE) -C ontheweb/execs clean
+	-$(MAKE) -C web/execs clean
 
 realclean:
 	$(MAKE) -C util realclean
@@ -169,7 +167,7 @@ realclean:
 	$(MAKE) -C libkd realclean
 	$(MAKE) -C blind realclean
 	-$(MAKE) -C render realclean
-#-$(MAKE) -C ontheweb/execs realclean
+	-$(MAKE) -C web/execs realclean
 
 TAGS:
 	etags -I `find . -name "*.c" -o -name "*.h"`
