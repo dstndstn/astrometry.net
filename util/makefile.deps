@@ -1,0 +1,43 @@
+# This file is part of the Astrometry.net suite.
+# Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+#
+# The Astrometry.net suite is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, version 2.
+#
+# The Astrometry.net suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the Astrometry.net suite ; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+# Dependencies:           
+DEPS := $(subst .o,.dep,$(DEP_OBJ))
+
+deps: $(DEP_PREREQS) $(DEPS)
+	cat $(DEPS) > deps
+
+DEP_ARGS := $(CFLAGS) -MM -MG
+
+# -MP is new in gcc-3.0
+TEST_OPTION := -MP
+DEP_ARGS += $(shell ($(CC) $(DEP_ARGS) -E -o /dev/null -x c $(TEST_OPTION) - < /dev/null > /dev/null 2>&1 && echo "$(TEST_OPTION)" ))
+
+# -MF is new in gcc-3.0
+TEST_OPTION := "-MF"
+TEST_FAIL_OPTION := "\>"
+DEP_OUT := $(shell ($(CC) $(DEP_ARGS) -E -x c -MF out.dep - < /dev/null > /dev/null 2>&1 && rm out.dep && echo "$(TEST_OPTION)" ) || echo "$(TEST_FAIL_OPTION)")
+
+%.dep : %.c
+	$(CC) $(DEP_ARGS) $< $(DEP_OUT) $@
+
+ifneq ($(MAKECMDGOALS),clean)
+  ifneq ($(MAKECMDGOALS),realclean)
+    ifneq ($(MAKECMDGOALS),allclean)
+      include deps
+    endif
+  endif
+endif

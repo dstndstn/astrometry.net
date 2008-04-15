@@ -1,0 +1,46 @@
+# This file is part of the Astrometry.net suite.
+# Copyright 2008 Dustin Lang.
+#
+# The Astrometry.net suite is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, version 2.
+#
+# The Astrometry.net suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the Astrometry.net suite ; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+
+### First, define these variables in your Makefile.
+
+ALL_TEST_FILES ?=
+ALL_TEST_EXTRA_OBJS ?=
+ALL_TEST_LIBS ?=
+
+### Next, include this file.
+
+### Ignore everything below here.  It's just magic.
+
+ALL_TEST_FILES_C = $(addsuffix .c, $(ALL_TEST_FILES))
+ALL_TEST_FILES_O = $(addsuffix .o, $(ALL_TEST_FILES))
+ALL_TEST_FILES_MAIN_C = $(addsuffix -main.c, $(ALL_TEST_FILES))
+ALL_TEST_FILES_MAIN_O = $(addsuffix -main.o, $(ALL_TEST_FILES))
+
+MAKE_TESTS := $(COMMON)/make-tests.sh
+
+$(ALL_TEST_FILES_MAIN_C): %-main.c: $(MAKE_TESTS)
+$(ALL_TEST_FILES_MAIN_C): %-main.c: %.c
+	$(AN_SHELL) $(MAKE_TESTS) $^ > $@
+
+$(ALL_TEST_FILES): %: %-main.o %.o $(COMMON)/cutest.o
+
+TEST_SOURCES = $(ALL_TEST_FILES_C)
+test.c: $(MAKE_TESTS) $(TEST_SOURCES)
+	$(AN_SHELL) $(MAKE_TESTS) $(TEST_SOURCES) > $@
+
+test: test.o $(COMMON)/cutest.o $(ALL_TEST_FILES_O) $(sort $(ALL_TEST_EXTRA_OBJS)) $(ALL_TEST_LIBS)
+

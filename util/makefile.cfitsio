@@ -1,0 +1,33 @@
+# This file is part of the Astrometry.net suite.
+# Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+#
+# The Astrometry.net suite is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, version 2.
+#
+# The Astrometry.net suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the Astrometry.net suite ; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+CFITS_DIR := $(BASEDIR)/cfitsio
+CFITS_INC := -I$(CFITS_DIR)
+CFITS_LIB := $(CFITS_DIR)/libcfitsio.a
+
+# CFLAGS to pass to CFITSIO's configure.
+CFITS_CONFIG_CFLAGS := $(CFLAGS_DEF)
+
+$(CFITS_LIB): $(wildcard $(CFITS_DIR)/*.c) $(wildcard $(CFITS_DIR)/*.h) $(CFITS_DIR)/Makefile
+	cd $(CFITS_DIR) && $(MAKE)
+
+$(CFITS_DIR)/Makefile: $(CFITS_DIR)/Makefile.in
+	cd $(CFITS_DIR) && CFLAGS="$(CFITS_CONFIG_CFLAGS)" CC="$(CC)" ./configure 
+
+REMAKE_CFITSIO := remake-cfitsio
+.PHONY: $(REMAKE_CFITSIO)
+$(REMAKE_CFITSIO): $(CFITS_DIR)/Makefile
+	cd $(CFITS_DIR) && $(MAKE)

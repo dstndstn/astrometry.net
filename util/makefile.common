@@ -1,0 +1,113 @@
+# This file is part of the Astrometry.net suite.
+# Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+#
+# The Astrometry.net suite is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, version 2.
+#
+# The Astrometry.net suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the Astrometry.net suite ; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+# only set CC if it hasn't already been set
+# (this allows the user to override it)
+# CC ?= gcc  ## can't use this because CC gets a default value ("cc")
+ifeq ($(origin CC), default)
+  CC := gcc
+endif
+
+whichcc:
+	@echo $(CC)
+	@echo $(origin CC)
+
+# Reset CFLAGS, unless the user set a value in the environment.
+CFLAGS ?=
+CFLAGS := $(CFLAGS)
+
+RANLIB := ranlib
+
+AWK := LC_ALL=C awk
+#AWK := gawk --lint --lint-old
+
+FLAGS_DEF := -g -Wall
+
+TEST_OPTION := -ffinite-math-only -fno-signaling-nans
+FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o /dev/null - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
+
+MACHINE:=$(shell uname -m)
+ifeq ($(MACHINE), i686)
+# gcc before version 3.1 doesn't support "pentium4"; use "i686" instead.
+# gcc 3.1: "pentium4"
+	TEST_OPTION := -march=pentium4
+	TEST_FAIL_OPTION := -march=i686
+	FLAGS_DEF += $(shell ($(CC) $(TEST_OPTION) -c -o /dev/null -x c - < /dev/null > /dev/null 2>/dev/null && echo "$(TEST_OPTION)" ) || echo "$(TEST_FAIL_OPTION)")
+else
+	K8 := $(shell $(CC) -dM -E - < /dev/null | grep "\#define __tune_k8__ 1")
+	ifneq ($(K8),)
+		FLAGS_DEF += -march=k8 -m64
+	else
+		FLAGS_DEF += -DNOT_686
+		APPLE := $(shell echo | $(CC) -dM -E - | grep __APPLE__)
+		ifneq ($(APPLE),)
+		     FLAGS_DEF += -DNOBOOL
+		endif
+	endif
+endif
+
+#$(warning CFLAGS default: $(CFLAGS_DEF))
+
+
+# FLAGS_DEF are gcc flags that are shared between compiling and
+# linking.  CFLAGS_DEF are compile flags, LDFLAGS_DEG are link flags.
+
+# speedy!
+#FLAGS_DEF += -O3
+#FLAGS_DEF += -fomit-frame-pointer
+
+TEST_OPTION := -fno-math-errno -fno-trapping-math
+FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o /dev/null - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
+
+TEST_OPTION := -fno-stack-protector
+FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o /dev/null - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
+
+# debuggy!
+FLAGS_DEF += -O0
+FLAGS_DEF += -g
+
+# profily!
+#FLAGS_DEF += -pg
+
+
+CFLAGS_DEF := $(FLAGS_DEF)
+CFLAGS_DEF += -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+CFLAGS_DEF += -D_GNU_SOURCE
+
+# to turn off asserts:
+#CFLAGS_DEF += -DNDEBUG
+
+#CFLAGS_DEF += -Wextra
+#CFLAGS_DEF += -Wpointer-arith
+#CFLAGS_DEF += -fmudflap
+#LDFLAGS_DEF += -lmudflap
+
+# What functions were and weren't inlined?
+#CFLAGS_DEF += -Winline
+
+# Print header files that are included
+#CFLAGS_DEF += -H
+
+LDFLAGS_DEF := $(FLAGS_DEF)
+
+
+# MacOSX shared libraries...
+TEST_OPTION := -shared
+TEST_FAIL_OPTION := -dynamic -dynamiclib
+SHAREDLIBFLAGS_DEF += $(shell ($(CC) $(TEST_OPTION) -x c -o /dev/null - < /dev/null > /dev/null 2>&1 && echo "$(TEST_OPTION)" ) || echo "$(TEST_FAIL_OPTION)")
+
+# sh shell
+AN_SHELL = /bin/sh
