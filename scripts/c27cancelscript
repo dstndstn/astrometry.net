@@ -1,0 +1,17 @@
+#! /bin/bash
+
+# This script gets run via ssh from oven.
+
+# It is used to cancel a running job.
+
+# Read jobid on stdin
+read -s jobid
+
+# Replace "-" by "/".
+jobid=`echo $jobid | sed s+-+/+g`
+
+# Go to our job directory.
+cd /nobackup/stars/ontheweb-data/$jobid && touch cancel
+#cd /nobackup/dstn/ontheweb-data/$jobid && touch cancel
+
+echo "Cancelled job."

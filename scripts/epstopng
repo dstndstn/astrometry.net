@@ -1,0 +1,69 @@
+#! /bin/bash
+
+# This file is part of the Astrometry.net suite.
+# Copyright 2006, Dustin Lang, Keir Mierle and Sam Roweis.
+#
+# The Astrometry.net suite is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, version 2.
+#
+# The Astrometry.net suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the Astrometry.net suite ; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+if [ $# -lt 1 ]; then
+  echo
+  echo "Usage: $0 <input-file.eps> [output-file.png]"
+  echo
+  exit
+fi
+
+IN=$1
+
+if [ $# -eq 2 ]; then
+  OUT=$2
+else
+  OUT=`basename $IN .eps`.png
+fi
+
+#echo IN $IN
+#echo OUT $OUT
+
+#pstopnm -portrait -stdout $IN | pnmtopng > $OUT
+
+#BBOX=`gs -q -dNOPAUSE -dBATCH -dSAFER -dTextAlphaBits=4 \
+#	-dGraphicsAlphaBits=4 -sDEVICE=bbox $IN 2>&1`
+
+BBOX=`grep %%BoundingBox $IN`
+
+echo bbox $BBOX
+
+XL=`echo $BBOX | grep "%%BoundingBox" | awk '{print $2}'`
+YL=`echo $BBOX | grep "%%BoundingBox" | awk '{print $3}'`
+XU=`echo $BBOX | grep "%%BoundingBox" | awk '{print $4}'`
+YU=`echo $BBOX | grep "%%BoundingBox" | awk '{print $5}'`
+
+echo X $XL -- $XU
+echo Y $YL -- $YU
+
+W=$(($XU - $XL))
+H=$(($YU - $YL))
+
+echo W $W
+echo H $H
+
+TMP=`mktemp /tmp/epstopng.XXXXXX`
+
+gs -q -dNOPAUSE -dBATCH -dSAFER -dTextAlphaBits=4 \
+	-dGraphicsAlphaBits=4 -sDEVICE=png16m \
+	-sOutputFile=$TMP -g${XU}x${YU} $IN
+
+echo "pngtopnm $TMP | pnmcut -l $XL -b $H | pnmtopng \> $OUT"
+pngtopnm $TMP | pnmcut -l $XL -b $(($H-1)) | pnmtopng > $OUT
+
+rm $TMP
