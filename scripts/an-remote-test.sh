@@ -4,10 +4,10 @@
 
 # Careful about writing things to stdout - we pipe it to tar on the other end.
 
-QUADS=/u/dstn/amd-an-2/quads
+# Assume this gets run in the astrometry/blind directory.
 
-BACKEND="${QUADS}/backend"
-BACKEND_CFG="${QUADS}/backend-test.cfg"
+BACKEND="`pwd`/backend"
+BACKEND_CFG="`pwd`/../etc/backend-test.cfg"
 AXY="job.axy"
 
 # Read jobid

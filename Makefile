@@ -24,6 +24,7 @@ all:
 
 BASEDIR := .
 COMMON := $(BASEDIR)/util
+include $(COMMON)/makefile.common
 include $(COMMON)/makefile.qfits
 
 .PHONY: Makefile $(COMMON)/makefile.qfits
