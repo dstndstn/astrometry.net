@@ -1,8 +1,8 @@
 #! /bin/bash
 
 Nthreads=4
-Log="/home/gmaps/test/tilecache/portal.log"
-Cmd="/home/gmaps/test/tilecache/an/portal/watcher-script-test.py an_remote_test %s 2>>$Log"
+Log="/home/gmaps/test/portal.log"
+Cmd="/home/gmaps/test/astrometry/net/portal/watcher-script-test.py an_remote_test %s 2>>$Log"
 
 cd /home/gmaps/test/job-queue
 rm queue
@@ -10,7 +10,7 @@ rm queue
 #newgrp - www-data
 umask 007
 
-export LD_LIBRARY_PATH=/home/gmaps/test/an-common
+export LD_LIBRARY_PATH=/home/gmaps/test/astrometry/util
 
-/home/gmaps/test/ontheweb/execs/watcher -D -n $Nthreads -c "$Cmd"
+/home/gmaps/test/astrometry/web/execs/watcher -D -n $Nthreads -c "$Cmd"
 
