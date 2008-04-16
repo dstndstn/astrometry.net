@@ -3,10 +3,9 @@ from django.template import Context, RequestContext, loader
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 
-from an.tile.models import Image
-
-from an.portal.job import Submission, Job, DiskFile
-from an.portal.convert import convert
+from astrometry.web.tile.models import Image
+from astrometry.web.portal.job import Submission, Job, DiskFile
+from astrometry.web.portal.convert import convert
 
 import re
 import os.path
@@ -22,11 +21,11 @@ import logging
 import commands
 import shutil
 
-import sip
+import astrometry.util.sip
 
 import ctypes
 
-import astrometry.web import settings
+import astrometry.web.settings as settings
 
 logfile        = settings.LOGFILE
 tilerender     = settings.TILERENDER
@@ -43,12 +42,12 @@ def index(request):
     ctxt = {
         'gmaps_key' : ('http://maps.google.com/maps?file=api&v=2&key=' +
                        settings.GMAPS_API_KEY),
-        'map_js_url' : reverse('an.media') + 'map.js',
+        'map_js_url' : reverse('astrometry.web.media') + 'map.js',
         #'gmaps_base_url' : reverse(get_tile),
         'gmaps_tile_url' : reverse(get_tile) + '?',
         'gmaps_image_url' : reverse(get_image)+ '?',
         'gmaps_image_list_url' : reverse(get_image_list) + '?',
-        'gmaps_black_url' : reverse('an.media') + 'black.png',
+        'gmaps_black_url' : reverse('astrometry.web.media') + 'black.png',
         }
     t = loader.get_template('tile/index.html')
     c = RequestContext(request, ctxt)

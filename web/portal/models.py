@@ -6,8 +6,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core import validators
 
-import an.gmaps_config as config
-from an.portal.log import log
+import astrometry.web.settings as settings
+from astrometry.web.portal.log import log
 
 class UserPreferences(models.Model):
     user = models.ForeignKey(User, editable=False)
@@ -37,5 +37,5 @@ class UserPreferences(models.Model):
         self.exposejobs = tf
 
 
-from an.portal.job import *
-from an.portal.wcs import *
+from astrometry.web.portal.job import *
+from astrometry.web.portal.wcs import *

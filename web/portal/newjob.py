@@ -10,16 +10,18 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
 from django.contrib.auth.decorators import login_required
 
-import an
+import astrometry
 
-from an.upload.models import UploadedFile
-from an.upload.views  import UploadIdField
+import astrometry.web.upload.views as uploadviews
 
-from an import gmaps_config
+from astrometry.web.upload.models import UploadedFile
+from astrometry.web.upload.views  import UploadIdField
 
-from an.portal.job import Submission, Job
-from an.portal.log import log
-from an.portal.views import printvals, get_status_url
+from astrometry.web import settings
+
+from astrometry.web.portal.job import Submission, Job
+from astrometry.web.portal.log import log
+from astrometry.web.portal.views import printvals, get_status_url
 
 ftpurl_re = re.compile(
     r'^ftp://'
@@ -307,8 +309,8 @@ def newfile(request):
     t = loader.get_template('portal/newjobfile.html')
     c = RequestContext(request, {
         'form' : form,
-        'uploadform' : reverse(an.upload.views.uploadform),
-        'progressform' : reverse(an.upload.views.progress_ajax) + '?upload_id='
+        'uploadform' : reverse(astrometry.web.upload.views.uploadform),
+        'progressform' : reverse(astrometry.web.upload.views.progress_ajax) + '?upload_id='
         })
     return HttpResponse(t.render(c))
 
@@ -384,7 +386,7 @@ def newlong(request):
     ds0 = render[0].tag()
     ds1 = render[1].tag()
 
-    uploadform = reverse(an.upload.views.uploadform)
+    uploadform = reverse(uploadviews.uploadform)
 
     inline = False
 
@@ -395,13 +397,13 @@ def newlong(request):
     else:
         progress_meter_html = ''
         progress_meter_js   = ''
-        progressform = reverse(an.upload.views.progress_ajax) + '?upload_id='
+        progressform = reverse(uploadviews.progress_ajax) + '?upload_id='
 
     ctxt = {
         'form' : form,
         'uploadform' : uploadform,
         'progressform' : progressform,
-        'myurl' : reverse(an.portal.newjob.newlong),
+        'myurl' : reverse(astrometry.web.portal.newjob.newlong),
         'scale_ul' : r0txt,
         'scale_ee' : r1txt,
         'datasrc_url' : ds0,

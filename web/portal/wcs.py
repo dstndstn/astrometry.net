@@ -1,6 +1,6 @@
 from django.db import models
 
-import sip
+from astrometry.util import sip
 import math
 
 class TanWCS(models.Model):

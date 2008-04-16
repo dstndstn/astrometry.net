@@ -14,7 +14,7 @@ import shutil
 #from math import *
 import math
 
-from an.util.run_command import run_command
+from astrometry.web.util.run_command import run_command
 import an.gmaps_config as gmaps_config
 
 logfile        = gmaps_config.logfile

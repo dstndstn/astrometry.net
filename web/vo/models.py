@@ -1,9 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-from an.util import orderby
-from an.portal.wcs import TanWCS
-from an.portal.job import Job
+from astrometry.web.util import orderby
+from astrometry.web.portal.wcs import TanWCS
+from astrometry.web.portal.job import Job
 
 import logging
 

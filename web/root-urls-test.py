@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import *
-from an import settings
+from astrometry.web import settings
 
 urlpatterns = patterns('',
-					   (r'^test/', include('an.urls')),
+					   (r'^test/', include('astrometry.web.urls')),
                        )

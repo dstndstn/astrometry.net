@@ -7,8 +7,8 @@ from astrometry.web import settings
 import quads.image2pnm as image2pnm
 import quads.fits2fits as fits2fits
 
-from an.portal.log import log
-from an.util.run_command import run_command
+from astrometry.web.portal.log import log
+from astrometry.web.util.run_command import run_command
 
 class FileConversionError(Exception):
     errstr = None
@@ -83,7 +83,7 @@ def convert(job, df, fn, args=None):
     if args is None:
         args = {}
     log('convert(%s, args=%s)' % (fn, str(args)))
-    tempdir = gmaps_config.tempdir
+    tempdir = settings.TEMPDIR
     basename = os.path.join(tempdir, job.get_id() + '-')
     fullfn = basename + fn
     exists = os.path.exists(fullfn)
@@ -109,7 +109,6 @@ def convert(job, df, fn, args=None):
 
     elif fn == 'pnm':
         infn = convert(job, df, 'uncomp')
-        #andir = gmaps_config.basedir + 'quads/'
         log('Converting %s to %s...\n' % (infn, fullfn))
         (filetype, errstr) = image2pnm.image2pnm(infn, fullfn, None, False, False, None, False)
         if errstr:

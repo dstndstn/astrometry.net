@@ -5,9 +5,8 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 
-from an.util.w3c_validator import W3CValidator
-
-import an.settings as settings
+from astrometry.util.w3c_validator import W3CValidator
+import astrometry.web.settings as settings
 
 class PortalTestCase(TestCase):
     def setUp(self):

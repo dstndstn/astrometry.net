@@ -16,8 +16,7 @@ from an import gmaps_config
 from an import settings
 from an.vo.log import log
 from an.vo.votable import *
-from an.util.file import file_size
-
+from astrometry.util.file import file_size
 from an.vo.models import Image as voImage
 
 #intersects = [ 'COVERS', 'ENCLOSED', 'CENTER', 'OVERLAPS' ]

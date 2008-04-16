@@ -10,17 +10,17 @@ BASEDIR = '/home/gmaps/test/'
 ANDIR = BASEDIR + 'astrometry/'
 UTIL_DIR = ANDIR + 'util/'
 BLIND_DIR = ANDIR + 'blind/'
-WEBDIR = ANDIR + 'web/'
+WEB_DIR = ANDIR + 'web/'
 JOB_QUEUE_DIR = BASEDIR + 'job-queue/'
+
 LOGFILE = BASEDIR + 'django.log'
+PORTAL_LOGFILE = BASEDIR + 'portal.log'
+VO_LOGFILE = BASEDIR + 'vo.log'
 
 HENRY_DRAPER_CAT = ANDIR + 'data/hd.fits'
 
 TILERENDER = ANDIR + 'render/tilerender'
 SIPSO = ANDIR + 'util/_sip.so'
-templatedir = tcdir + 'an/'
-mediadir = tcdir + 'an/media/'
-portal_logfile = tcdir + 'portal.log'
 
 CACHEDIR = '/data2/test-tilecache'
 RENDERCACHEDIR = '/data2/test-rendercache/'
@@ -37,7 +37,6 @@ gmaps_base = 'http://oven.cosmo.fas.nyu.edu/'
 gmaps_url = gmaps_base + 'tilecache2/'
 tileurl = gmaps_base + 'test/tile/get/'
 
-vo_logfile = tcdir + 'vo.log'
 
 
 
@@ -80,7 +79,7 @@ SITE_ID = 1
 USE_I18N = True
 
 # Absolute path to the directory that holds media.
-MEDIA_ROOT = gmaps_config.mediadir
+MEDIA_ROOT = WEB_DIR + 'media/'
 
 # URL that handles the media served from MEDIA_ROOT.
 # Example: "http://media.lawrence.com"
@@ -108,13 +107,13 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.doc.XViewMiddleware',
 	)
 
-ROOT_URLCONF = 'an.root-urls-test'
+ROOT_URLCONF = 'astrometry.web.root-urls-test'
 
 LOGIN_URL = '/test/login/'
 LOGIN_REDIRECT_URL = '/test/job/newurl/'
 
 TEMPLATE_DIRS = (
-    gmaps_config.templatedir,
+    WEB_DIR,
 )
 
 INSTALLED_APPS = (
@@ -123,11 +122,11 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
 	'django.contrib.admin',
-	'an.tile',
-	'an.upload',
-	'an.portal',
-	'an.vo',
-    'an.testbed',
+	'astrometry.web.tile',
+	'astrometry.web.upload',
+	'astrometry.web.portal',
+	#'astrometry.web.vo',
+    #'astrometry.web.testbed',
 )
 
 

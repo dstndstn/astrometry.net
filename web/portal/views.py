@@ -22,23 +22,15 @@ from django.template import Context, RequestContext, loader
 from django.core.urlresolvers import reverse
 
 import astrometry.web.portal.mercator as merc
-
 from astrometry.web.portal.models import UserPreferences
-
 from astrometry.web.portal.job import Job, Submission, DiskFile, Tag
-
 from astrometry.web.portal.convert import convert, get_objs_in_field
 from astrometry.web.portal.log import log
-
 from astrometry.web.util.file import file_size
-
-from astrometry.web.vo.models import Image as voImage
-
-from an import gmaps_config
-from an import settings
-
-import sip
-import healpix
+#from astrometry.web.vo.models import Image as voImage
+from astrometry.web import settings
+from astrometry.util import sip
+from astrometry.util import healpix
 
 def urlescape(s):
     return s.replace('&', '&amp;')
