@@ -10,7 +10,7 @@ BASEDIR = '/home/gmaps/test/'
 ANDIR = BASEDIR + 'astrometry/'
 UTIL_DIR = ANDIR + 'util/'
 BLIND_DIR = ANDIR + 'blind/'
-WEB_DIR = ANDIR + 'web/'
+WEB_DIR = ANDIR + 'net/'
 JOB_QUEUE_DIR = BASEDIR + 'job-queue/'
 
 LOGFILE = BASEDIR + 'django.log'

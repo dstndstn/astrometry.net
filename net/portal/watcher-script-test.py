@@ -8,15 +8,16 @@ import traceback
 from urlparse import urlparse
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
-sys.path.extend(['/home/gmaps/test/tilecache',
-                 '/home/gmaps/test/an-common',
-                 '/home/gmaps/test',
+sys.path.extend(['/home/gmaps/test',
                  '/home/gmaps/django/lib/python2.4/site-packages'])
 
 import astrometry.net.settings as settings
 
 os.environ['LD_LIBRARY_PATH'] = settings.UTIL_DIR
-os.environ['PATH'] = '/bin:/usr/bin:' + settings.BLIND_DIR
+os.environ['PATH'] = ':'.join(['/bin', '/usr/bin',
+                               settings.BLIND_DIR,
+                               settings.UTIL_DIR,
+                               ])
 # This must match the Apache setting UPLOAD_DIR
 os.environ['UPLOAD_DIR'] = settings.UPLOAD_DIR
 
@@ -34,9 +35,7 @@ from astrometry.net.portal.convert import convert, is_tarball, get_objs_in_field
 from astrometry.net.portal.wcs import TanWCS
 from astrometry.net.util.run_command import run_command
 
-# HACK
-import sip
-import healpix
+import astrometry.util.sip as sip
 
 def bailout(job, reason):
     job.set_status('Failed', reason)

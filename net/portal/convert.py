@@ -4,8 +4,8 @@ import os.path
 import re
 
 from astrometry.net import settings
-from astrometry.util.image2pnm import image2pnm
-from astrometry.util.fits2fits import fits2fits
+from astrometry.util import image2pnm
+from astrometry.util import fits2fits
 from astrometry.net.portal.log import log
 from astrometry.net.util.run_command import run_command
 
