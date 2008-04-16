@@ -1,6 +1,6 @@
 import logging
 
-from astrometry.web import settings
+from astrometry.net import settings
 
 logfile = settings.PORTAL_LOGFILE
 logging.basicConfig(level=logging.DEBUG,

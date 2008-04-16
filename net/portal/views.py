@@ -21,14 +21,14 @@ from django.newforms import widgets, ValidationError, form_for_model
 from django.template import Context, RequestContext, loader
 from django.core.urlresolvers import reverse
 
-import astrometry.web.portal.mercator as merc
-from astrometry.web.portal.models import UserPreferences
-from astrometry.web.portal.job import Job, Submission, DiskFile, Tag
-from astrometry.web.portal.convert import convert, get_objs_in_field
-from astrometry.web.portal.log import log
-from astrometry.web.util.file import file_size
-#from astrometry.web.vo.models import Image as voImage
-from astrometry.web import settings
+import astrometry.net.portal.mercator as merc
+from astrometry.net.portal.models import UserPreferences
+from astrometry.net.portal.job import Job, Submission, DiskFile, Tag
+from astrometry.net.portal.convert import convert, get_objs_in_field
+from astrometry.net.portal.log import log
+from astrometry.net.util.file import file_size
+#from astrometry.net.vo.models import Image as voImage
+from astrometry.net import settings
 from astrometry.util import sip
 from astrometry.util import healpix
 
@@ -260,7 +260,7 @@ def joblist(request):
         job = None
         jobs = sub.jobs.all().order_by('enqueuetime', 'starttime', 'jobid')
         N = jobs.count()
-        gmaps = (reverse('astrometry.web.tile.views.index') +
+        gmaps = (reverse('astrometry.net.tile.views.index') +
                  '?submission=%s' % sub.get_id() +
                  '&layers=tycho,grid,userboundary&arcsinh')
         if not cols:
@@ -470,7 +470,7 @@ def submission_status(request, submission):
     #gmaps = (gmaps_config.gmaps_url + ('?submission=%s' % submission.jobid) +
     #         '&layers=tycho,grid,userboundary&arcsinh')
 
-    gmaps = (reverse('astrometry.web.tile.views.index') +
+    gmaps = (reverse('astrometry.net.tile.views.index') +
              '?submission=%s' % submission.get_id() +
              '&layers=tycho,grid,userboundary&arcsinh')
 
@@ -686,7 +686,7 @@ def jobstatus(request):
         # deg
         fldsz = math.sqrt(df.imagew * df.imageh) * float(wcsinfo['pixscale']) / 3600.0
 
-        url = (reverse('astrometry.web.tile.views.get_tile') +
+        url = (reverse('astrometry.net.tile.views.get_tile') +
                '?layers=tycho,grid,userboundary' +
                '&arcsinh&wcsfn=%s' % job.get_relative_filename('wcs.fits'))
         smallstyle = '&w=300&h=300&lw=3'
@@ -725,7 +725,7 @@ def jobstatus(request):
 
         # HACK
         fn = convert(job, df, 'fullsizepng')
-        url = (reverse('astrometry.web.tile.views.index') +
+        url = (reverse('astrometry.net.tile.views.index') +
                ('?zoom=%i&ra=%.3f&dec=%.3f&userimage=%s' %
                 (int(wcsinfo['merczoom']), float(wcsinfo['ra_center']),
                  float(wcsinfo['dec_center']), job.get_relative_job_dir())))

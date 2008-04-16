@@ -9,12 +9,12 @@ import shutil
 from django.db import models
 from django.contrib.auth.models import User
 
-import astrometry.web.settings as settings
-from astrometry.web.upload.models import UploadedFile
-from astrometry.web.portal.log import log
-from astrometry.web.portal.wcs import *
-from astrometry.web.portal.convert import get_objs_in_field
-from astrometry.web.portal.models import UserPreferences
+import astrometry.net.settings as settings
+from astrometry.net.upload.models import UploadedFile
+from astrometry.net.portal.log import log
+from astrometry.net.portal.wcs import *
+from astrometry.net.portal.convert import get_objs_in_field
+from astrometry.net.portal.models import UserPreferences
 
 from astrometry.util import healpix
 

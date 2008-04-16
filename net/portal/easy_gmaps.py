@@ -11,17 +11,16 @@ import sha
 import logging
 import commands
 import shutil
-#from math import *
 import math
 
-from astrometry.web.util.run_command import run_command
-import an.gmaps_config as gmaps_config
+from astrometry.net.util.run_command import run_command
+import astrometry.net.settings as settings
 
-logfile        = gmaps_config.logfile
-tilerender     = gmaps_config.tilerender
-cachedir       = gmaps_config.cachedir
-rendercachedir = gmaps_config.rendercachedir
-tempdir        = gmaps_config.tempdir
+logfile        = settings.LOGFILE
+tilerender     = settings.TILERENDER
+cachedir       = settings.CACHEDIR
+rendercachedir = settings.RENDERCACHEDIR
+tempdir        = settings.TEMPDIR
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(message)s',

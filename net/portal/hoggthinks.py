@@ -8,10 +8,9 @@ from django.newforms import widgets, ValidationError, form_for_model
 from django.template import Context, RequestContext, loader
 from django.core.urlresolvers import reverse
 
-from astrometry.web.util.run_command import run_command
-from astrometry.web.util.shell import shell_escape, shell_escape_inside_quotes
-import an.gmaps_config as gmaps_config
-from an.portal.log import log
+from astrometry.net.util.run_command import run_command
+from astrometry.net.util.shell import shell_escape, shell_escape_inside_quotes
+from astrometry.net.portal.log import log
 
 class HoggThinksForm(forms.Form):
     text = forms.CharField(widget=forms.Textarea())

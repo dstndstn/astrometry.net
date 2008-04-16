@@ -12,16 +12,16 @@ from django.contrib.auth.decorators import login_required
 
 import astrometry
 
-import astrometry.web.upload.views as uploadviews
+import astrometry.net.upload.views as uploadviews
 
-from astrometry.web.upload.models import UploadedFile
-from astrometry.web.upload.views  import UploadIdField
+from astrometry.net.upload.models import UploadedFile
+from astrometry.net.upload.views  import UploadIdField
 
-from astrometry.web import settings
+from astrometry.net import settings
 
-from astrometry.web.portal.job import Submission, Job
-from astrometry.web.portal.log import log
-from astrometry.web.portal.views import printvals, get_status_url
+from astrometry.net.portal.job import Submission, Job
+from astrometry.net.portal.log import log
+from astrometry.net.portal.views import printvals, get_status_url
 
 ftpurl_re = re.compile(
     r'^ftp://'
@@ -309,8 +309,8 @@ def newfile(request):
     t = loader.get_template('portal/newjobfile.html')
     c = RequestContext(request, {
         'form' : form,
-        'uploadform' : reverse(astrometry.web.upload.views.uploadform),
-        'progressform' : reverse(astrometry.web.upload.views.progress_ajax) + '?upload_id='
+        'uploadform' : reverse(astrometry.net.upload.views.uploadform),
+        'progressform' : reverse(astrometry.net.upload.views.progress_ajax) + '?upload_id='
         })
     return HttpResponse(t.render(c))
 
@@ -403,7 +403,7 @@ def newlong(request):
         'form' : form,
         'uploadform' : uploadform,
         'progressform' : progressform,
-        'myurl' : reverse(astrometry.web.portal.newjob.newlong),
+        'myurl' : reverse(astrometry.net.portal.newjob.newlong),
         'scale_ul' : r0txt,
         'scale_ee' : r1txt,
         'datasrc_url' : ds0,

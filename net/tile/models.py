@@ -1,6 +1,6 @@
 from django.db import models
 
-from astrometry.web.util import orderby
+from astrometry.net.util import orderby
 import logging
 
 class Image(models.Model):

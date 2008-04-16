@@ -7,13 +7,13 @@ import traceback
 
 from urlparse import urlparse
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.web.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 sys.path.extend(['/home/gmaps/test/tilecache',
                  '/home/gmaps/test/an-common',
                  '/home/gmaps/test',
                  '/home/gmaps/django/lib/python2.4/site-packages'])
 
-import astrometry.web.settings as settings
+import astrometry.net.settings as settings
 
 os.environ['LD_LIBRARY_PATH'] = settings.UTIL_DIR
 os.environ['PATH'] = '/bin:/usr/bin:' + settings.BLIND_DIR
@@ -27,12 +27,12 @@ import shutil
 
 from django.db import models
 
-from astrometry.web.portal.models import Job, Submission, DiskFile, Calibration, Tag
-from astrometry.web.upload.models import UploadedFile
-from astrometry.web.portal.log import log
-from astrometry.web.portal.convert import convert, is_tarball, get_objs_in_field, FileConversionError
-from astrometry.web.portal.wcs import TanWCS
-from astrometry.web.util.run_command import run_command
+from astrometry.net.portal.models import Job, Submission, DiskFile, Calibration, Tag
+from astrometry.net.upload.models import UploadedFile
+from astrometry.net.portal.log import log
+from astrometry.net.portal.convert import convert, is_tarball, get_objs_in_field, FileConversionError
+from astrometry.net.portal.wcs import TanWCS
+from astrometry.net.util.run_command import run_command
 
 # HACK
 import sip

@@ -3,12 +3,12 @@ import os
 import os.path
 import re
 
-from astrometry.web import settings
+from astrometry.net import settings
 import quads.image2pnm as image2pnm
 import quads.fits2fits as fits2fits
 
-from astrometry.web.portal.log import log
-from astrometry.web.util.run_command import run_command
+from astrometry.net.portal.log import log
+from astrometry.net.util.run_command import run_command
 
 class FileConversionError(Exception):
     errstr = None
