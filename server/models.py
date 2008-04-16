@@ -8,11 +8,20 @@ class QueuedJob(models.Model):
     priority = models.SmallIntegerField(blank=True, default=0)
     jobid = models.CharField(max_length=32)
     stopwork = models.BooleanField(blank=True, default=False)
+    enqueuetime = models.DateTimeField(blank=True, default='2000-01-01')
+    # work completed so far...
+
+    def __str__(self):
+        return 'QueuedJob: %s' % self.jobid
 
 class Worker(models.Model):
     hostname = models.CharField(max_length=256)
     ip = models.IPAddressField()
-    job = models.ForeignKey(QueuedJob, related_name='workers')
+    job = models.ForeignKey(QueuedJob, related_name='workers', blank=True, null=True)
+
+    def pretty_index_list(self):
+        return ', '.join(['%i'%i.indexid + (i.healpix > -1 and '-%i'%i.healpix or '')
+                          for i in self.indexes.all()])
 
 class LoadedIndex(models.Model):
     indexid = models.IntegerField()
