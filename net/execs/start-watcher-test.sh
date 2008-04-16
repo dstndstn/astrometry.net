@@ -12,5 +12,5 @@ umask 007
 
 export LD_LIBRARY_PATH=/home/gmaps/test/astrometry/util
 
-/home/gmaps/test/astrometry/web/execs/watcher -D -n $Nthreads -c "$Cmd"
+/home/gmaps/test/astrometry/net/execs/watcher -D -n $Nthreads -c "$Cmd"
 
