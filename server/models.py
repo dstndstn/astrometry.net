@@ -1,5 +1,7 @@
 from django.db import models
 
+from urllib import urlretrieve
+
 class JobQueue(models.Model):
     name = models.CharField(max_length=32, unique=True, primary_key=True)
 
@@ -9,10 +11,30 @@ class QueuedJob(models.Model):
     jobid = models.CharField(max_length=32)
     stopwork = models.BooleanField(blank=True, default=False)
     enqueuetime = models.DateTimeField(blank=True, default='2000-01-01')
-    # work completed so far...
+    # .work: Work completed so far.
+
+    #axyurl = models.CharField(max_length=1024)
 
     def __str__(self):
         return 'QueuedJob: %s' % self.jobid
+
+    def get_url(self):
+        # HACK
+        return 'http://oven.cosmo.fas.nyu.edu:8888/server/input/?jobid=%s' % self.jobid
+
+    def get_put_results_url(self):
+        # HACK
+        return 'http://oven.cosmo.fas.nyu.edu:8888/server/results/?jobid=%s' % self.jobid
+
+    #def get_file(self):
+
+    def retrieve_to_file(self, fn=None):
+        if fn is not None:
+            (fn, hdrs) = urlretrieve(self.get_url(), fn)
+            return fn
+        else:
+            (fn, hdrs) = urlretrieve(self.get_url())
+            return fn
 
 class Worker(models.Model):
     hostname = models.CharField(max_length=256)

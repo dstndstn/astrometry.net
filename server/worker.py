@@ -4,6 +4,10 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.server.settings'
 
 import socket
 import time
+import tempfile
+
+from urllib import urlencode
+from urllib2 import urlopen
 
 import pyfits
 
@@ -89,6 +93,14 @@ def main():
 
     print 'My indexes:', me.pretty_index_list()
 
+    (f, backendcfg) = tempfile.mkstemp('', 'backend.cfg-')
+    os.close(f)
+    f = open(backendcfg, 'wb')
+    f.write('\n'.join(['inparallel'] +
+                      ['index %s' % path for (path, indid, hp, hpnside) in indexes]
+                      ))
+    f.close()
+
     while True:
         jobs = QueuedJob.objects.all().filter(q=q, stopwork=False).order_by('priority', 'enqueuetime')
         if len(jobs) == 0:
@@ -119,13 +131,59 @@ def main():
         w = Work(job=job, worker=me, inprogress=True)
         w.save()
 
+        # retrieve the input files.
+        url = job.get_url()
+        print 'Retrieving URL %s...' % url
+
+        (f, axy) = tempfile.mkstemp('', 'axy-%s-' % job.jobid)
+        os.close(f)
+        
+        fn = job.retrieve_to_file(axy)
+        print 'Saved as', fn
+
+        tmpdir = tempfile.mkdtemp('', 'backend-results-')
+
+        tarfile = os.path.join(tmpdir, 'results.tar')
+
+        # HACK
+        backend = '/home/gmaps/test/astrometry/blind/backend'
+        # HACK - pipes?
+        cmd = 'cd %s; %s -c %s %s; tar cf %s *' % (tmpdir, backend, backendcfg, axy, tarfile)
+        print 'Running command', cmd
+
         cancelfile = '/tmp/cancel'
-        run_command('sleep 30', timeout=1,
+        run_command(cmd, timeout=1,
                     callback=lambda: callback(job.jobid, cancelfile))
+
+        # Send results -- only if solved??
+        solvedfile = os.path.join(tmpdir, 'solved')
+        if os.path.exists(solvedfile):
+            url = job.get_put_results_url()
+            f = open(tarfile, 'rb')
+            tardata = f.read()
+            f.close()
+            print 'Tardata string is %i bytes long.' % len(tardata)
+            tardata = tardata.encode('base64_codec')
+            print 'Encoded string is %i bytes long.' % len(tardata)
+            data = urlencode({ 'tar': tardata })
+            print 'Sending response to', url
+            print 'url-encoded string is %i bytes long.' % len(data)
+            f = urlopen(url, data)
+            response = f.read()
+            f.close()
+            print 'Got response:', response
+
+            job.stopwork = True
+            job.save()
 
         w.inprogress = False
         w.done = True
         w.save()
+        me.job = None
+        me.save()
+
+        # HACK - delete tempfiles.
+
 
 if __name__ == '__main__':
     main()

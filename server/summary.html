@@ -23,6 +23,7 @@
 <th>Job Id</th>
 <th>Done?</th>
 <th>Priority</th>
+<th>Path</th>
 </tr>
 {% for j in queuedjobs %}
 <tr>
@@ -30,6 +31,7 @@
 <td>{{ j.jobid }}</td>
 <td>{{ j.stopwork }}</td>
 <td>{{ j.priority }}</td>
+<td>{{ j.path }}</td>
 </tr>
 {% endfor %}
 </table>
