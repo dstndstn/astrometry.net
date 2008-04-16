@@ -292,10 +292,6 @@ def real_handle_job(job, sshconfig):
     if os.path.exists(job.get_filename('solved')):
         job.set_status('Solved')
 
-        # BIG HACK! - look through LD_LIBRARY_PATH if this is still needed...
-        if not sip.libraryloaded():
-            sip.loadlibrary('/home/gmaps/test/an-common/_sip.so')
-
         # Add WCS to database.
         wcs = TanWCS(file=job.get_filename('wcs.fits'))
         wcs.save()

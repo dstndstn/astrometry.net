@@ -527,7 +527,7 @@ class Job(models.Model):
 
     def solved(self):
         calib = self.calibration
-        log('calib is %s' % str(calib))
+        #log('calib is %s' % str(calib))
         if calib is None:
             return False
         return True
@@ -707,9 +707,13 @@ class Job(models.Model):
     @staticmethod
     def generate_jobid():
         today = datetime.date.today()
+
+        log('Choosing job id: site id is', settings.SITE_ID)
+
         # HACK - we don't check that it's unique!!
         jobid = '%s-%i%02i-%08i' % (settings.SITE_ID, today.year,
                                     today.month, random.randint(0, 99999999))
+        log('Chose jobid', jobid)
         return jobid
 
     @staticmethod
