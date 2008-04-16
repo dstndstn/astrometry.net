@@ -66,38 +66,18 @@ th {border-width: 0;}
 {# Job <b>{{ jobid }}</b>: #}
 This job:
 <input type="hidden" name="jobid" value="{{ job.jobid }}" />
-{% if allowanon %}
-<input type="hidden" name="allowanon" value="0" />
+{% if exposejob %}
+<input type="hidden" name="exposejob" value="0" />
 anyone can view this page.
 &nbsp;
 <a href="javascript:document.forms.jobpermsform.submit();" class="smalllink">Revoke access</a>
 {% else %}
-<input type="hidden" name="allowanon" value="1" />
+<input type="hidden" name="exposejob" value="1" />
 only you can view this page.
 &nbsp;
 <a href="javascript:document.forms.jobpermsform.submit();" class="smalllink">Grant access to everyone</a>
 {% endif %}
 </form>
-
-{% comment %}
-#########################
-<form action="{% url astrometry.net.portal.views.changeperms %}" method="post" name="fieldpermsform">
-This field:
-<input type="hidden" name="jobid" value="{{ job.jobid }}" />
-{% if allowanon %}
-<input type="hidden" name="allowanon" value="0" />
-anyone can view this field.
-&nbsp;
-<a href="javascript:document.forms.fieldpermsform.submit();" class="smalllink">Revoke access</a>
-{% else %}
-<input type="hidden" name="allowanon" value="1" />
-only you can view this field.
-&nbsp;
-<a href="javascript:document.forms.fieldpermsform.submit();" class="smalllink">Grant access to everyone</a>
-{% endif %}
-</form>
-#########################
-{% endcomment %}
 
 {% comment %}
 #########################

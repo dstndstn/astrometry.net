@@ -13,9 +13,9 @@ urlpatterns = patterns('astrometry.net.portal',
 					   (r'^add_tag/$',         'views.job_add_tag' ),
 					   (r'^remove_tag/$',      'views.job_remove_tag' ),
 					   (r'^substatusxml/$',    'views.submission_status_xml'),
+					   (r'^changeperms/$',     'views.changeperms' ),
+					   #(r'^publishtovo/$',    'views.publishtovo'),
                        # PLAY
 					   (r'^redgreen$',     'views.redgreen'    ),
                        (r'^run-variant/$', 'views.run_variant' ),
-					   (r'^changeperms/$', 'views.changeperms' ),
-					   #(r'^publishtovo/$', 'views.publishtovo'),
 					   )

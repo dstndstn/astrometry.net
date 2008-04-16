@@ -643,7 +643,7 @@ def jobstatus(request):
         'redgreen_big' : get_url(job, 'redgreen-big'),
         #'otherxylists' : otherxylists,
         'jobowner' : jobowner,
-        'allowanon' : anonymous,
+        'exposejob': job.is_exposed(),
         'tags' : taglist,
         'view_tagtxt_url' : reverse(joblist) + '?type=tag&tagtext=',
         'view_nearby_url' : reverse(joblist) + '?type=nearby&jobid=' + job.jobid,
