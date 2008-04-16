@@ -453,12 +453,12 @@ class Job(models.Model):
             wcs = self.get_tan_wcs()
             radiusdeg = wcs.get_field_radius()
             nside = healpix.get_closest_pow2_nside(radiusdeg)
-            log('Field has radius %g deg.' % radiusdeg)
-            log('Closest power-of-2 healpix Nside is %i.' % nside)
+            #log('Field has radius %g deg.' % radiusdeg)
+            #log('Closest power-of-2 healpix Nside is %i.' % nside)
             (ra,dec) = wcs.get_field_center()
-            log('Field center: (%g, %g)' % (ra,dec))
+            #log('Field center: (%g, %g)' % (ra,dec))
             hp = healpix.radectohealpix(ra, dec, nside)
-            log('Healpix: %i' % hp)
+            #log('Healpix: %i' % hp)
             tag = Tag(job=self,
                       user=self.get_user(),
                       machineTag=True,
@@ -707,13 +707,11 @@ class Job(models.Model):
     @staticmethod
     def generate_jobid():
         today = datetime.date.today()
-
-        log('Choosing job id: site id is', settings.SITE_ID)
-
+        #log('Choosing job id: site id is', settings.SITE_ID)
         # HACK - we don't check that it's unique!!
         jobid = '%s-%i%02i-%08i' % (settings.SITE_ID, today.year,
                                     today.month, random.randint(0, 99999999))
-        log('Chose jobid', jobid)
+        #log('Chose jobid', jobid)
         return jobid
 
     @staticmethod
