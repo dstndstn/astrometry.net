@@ -12,6 +12,9 @@ from urllib2 import urlopen
 import pyfits
 
 import astrometry.server.settings as settings
+
+settings.LOGFILE = 'worker.log'
+
 from astrometry.server.log import log
 from astrometry.server.models import *
 
@@ -43,6 +46,7 @@ def main():
     #backendconfig = 'backend.cfg'
     indexdirs = [
         '/home/gmaps/INDEXES/500',
+        'INDEXES',
         ]
 
     q = JobQueue.objects.get(name=qname)
@@ -60,6 +64,9 @@ def main():
 
     indexes = []
     for d in indexdirs:
+        if not os.path.exists(d):
+            print 'No such directory:', d
+            continue
         files = os.listdir(d)
         for f in files:
             csuff = '.ckdt.fits'
