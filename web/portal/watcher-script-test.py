@@ -7,18 +7,18 @@ import traceback
 
 from urlparse import urlparse
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'an.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.web.settings'
 sys.path.extend(['/home/gmaps/test/tilecache',
                  '/home/gmaps/test/an-common',
                  '/home/gmaps/test',
                  '/home/gmaps/django/lib/python2.4/site-packages'])
 
-import an.gmaps_config as config
+import astrometry.web.settings as settings
 
-os.environ['LD_LIBRARY_PATH'] = '/home/gmaps/test/an-common'
-os.environ['PATH'] = '/bin:/usr/bin:/home/gmaps/test/quads'
+os.environ['LD_LIBRARY_PATH'] = settings.UTIL_DIR
+os.environ['PATH'] = '/bin:/usr/bin:' + settings.BLIND_DIR
 # This must match the Apache setting UPLOAD_DIR
-os.environ['UPLOAD_DIR'] = '/data2/TEMP-test'
+os.environ['UPLOAD_DIR'] = settings.UPLOAD_DIR
 
 import logging
 import os.path
@@ -27,12 +27,12 @@ import shutil
 
 from django.db import models
 
-from an.portal.models import Job, Submission, DiskFile, Calibration, Tag
-from an.upload.models import UploadedFile
-from an.portal.log import log
-from an.portal.convert import convert, is_tarball, get_objs_in_field, FileConversionError
-from an.portal.wcs import TanWCS
-from an.util.run_command import run_command
+from astrometry.web.portal.models import Job, Submission, DiskFile, Calibration, Tag
+from astrometry.web.upload.models import UploadedFile
+from astrometry.web.portal.log import log
+from astrometry.web.portal.convert import convert, is_tarball, get_objs_in_field, FileConversionError
+from astrometry.web.portal.wcs import TanWCS
+from astrometry.web.util.run_command import run_command
 
 # HACK
 import sip

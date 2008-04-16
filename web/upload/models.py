@@ -8,10 +8,9 @@ import random
 import os.path
 import logging
 
-from an import gmaps_config
+from astrometry.web import settings
 
-
-logfile = gmaps_config.portal_logfile
+logfile = settings.PORTAL_LOGFILE
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(message)s',
                     filename=logfile,

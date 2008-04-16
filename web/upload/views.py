@@ -8,10 +8,10 @@ from models import UploadedFile
 import logging
 import os.path
 
-from an import gmaps_config
+from astrometry.web import settings
 
 
-logfile = gmaps_config.portal_logfile
+logfile = settings.PORTAL_LOGFILE
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(message)s',
                     filename=logfile,
@@ -78,7 +78,7 @@ def get_uploadform_body():
     form = UploadForm({'upload_id': id})
     ctxt = {
         'form' : form,
-        'action' : gmaps_config.uploader_url,
+        'action' : settings.UPLOADER_URL,
         }
     t = loader.get_template('upload/upload-body.html')
     c = Context(ctxt)
@@ -92,7 +92,7 @@ def uploadform(request):
     body = get_uploadform_body()
     ctxt = {
         'body' : body,
-        'uploadtarget' : gmaps_config.uploader_url,
+        'uploadtarget' : settings.UPLOADER_URL,
         }
     t = loader.get_template('upload/upload.html')
     c = RequestContext(request, ctxt)

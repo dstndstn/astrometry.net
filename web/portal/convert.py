@@ -3,7 +3,7 @@ import os
 import os.path
 import re
 
-import an.gmaps_config as gmaps_config
+from astrometry.web import settings
 import quads.image2pnm as image2pnm
 import quads.fits2fits as fits2fits
 
@@ -76,7 +76,7 @@ def annotate_command(job):
     wcsfn = job.get_filename('wcs.fits')
     cmd = 'plot-constellations -w %s -N -C -B -b 10 -j' % wcsfn
     if hd:
-        cmd += ' -D -d %s' % gmaps_config.hdcat
+        cmd += ' -D -d %s' % settings.HENRY_DRAPER_CAT
     return cmd
 
 def convert(job, df, fn, args=None):

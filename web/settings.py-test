@@ -1,9 +1,45 @@
-# Django settings for an project.
-import an.gmaps_config as gmaps_config
+GMAPS_API_KEY = 'ABQIAAAA7dWWcc9pB-GTzZE7CvT6SRTpFHQyuc9zMeXV0wfLqFiAr83b_xQ02hHbHnV4CjuIf4L-3WI_XATmBQ'
 
-#import sip
-#if not sip.libraryloaded():
-#	sip.loadlibrary(gmaps_config.sipso)
+W3C_VALIDATOR_URL = 'http://oven.cosmo.fas.nyu.edu:8888/w3c-markup-validator/check'
+
+UPLOADER_URL = '/test/uploader'
+
+UPLOAD_DIR = '/data2/TEMP-test'
+
+BASEDIR = '/home/gmaps/test/'
+ANDIR = BASEDIR + 'astrometry/'
+UTIL_DIR = ANDIR + 'util/'
+BLIND_DIR = ANDIR + 'blind/'
+WEBDIR = ANDIR + 'web/'
+JOB_QUEUE_DIR = BASEDIR + 'job-queue/'
+LOGFILE = BASEDIR + 'django.log'
+
+HENRY_DRAPER_CAT = ANDIR + 'data/hd.fits'
+
+TILERENDER = ANDIR + 'render/tilerender'
+SIPSO = ANDIR + 'util/_sip.so'
+templatedir = tcdir + 'an/'
+mediadir = tcdir + 'an/media/'
+portal_logfile = tcdir + 'portal.log'
+
+CACHEDIR = '/data2/test-tilecache'
+RENDERCACHEDIR = '/data2/test-rendercache/'
+dbfile = '/data2/test-django/tile.db'
+imgdir = '/data2/apod-solves'
+
+TEMPDIR = '/tmp'
+
+siteid = 'test'
+jobdir = '/home/gmaps/test/web-data'
+fielddir = '/home/gmaps/test/web-data/fields'
+
+gmaps_base = 'http://oven.cosmo.fas.nyu.edu/'
+gmaps_url = gmaps_base + 'tilecache2/'
+tileurl = gmaps_base + 'test/tile/get/'
+
+vo_logfile = tcdir + 'vo.log'
+
+
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

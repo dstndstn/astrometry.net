@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 
 from an.upload.models import UploadedFile
 
-import an.gmaps_config as config
+import astrometry.web import settings
 from an.portal.log import log
 from an.portal.wcs import *
 from an.portal.convert import get_objs_in_field
@@ -720,7 +720,7 @@ class Job(models.Model):
         j.create_job_dir()
         # enqueue by creating a symlink in the job queue directory.
         jobdir = j.get_job_dir()
-        link = config.jobqueuedir + j.get_id()
+        link = settings.JOB_QUEUE_DIR + j.get_id()
         if os.path.exists(link):
             os.unlink(link)
         os.symlink(jobdir, link)

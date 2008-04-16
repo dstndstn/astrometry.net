@@ -26,13 +26,13 @@ import sip
 
 import ctypes
 
-import an.gmaps_config as gmaps_config
+import astrometry.web import settings
 
-logfile        = gmaps_config.logfile
-tilerender     = gmaps_config.tilerender
-cachedir       = gmaps_config.cachedir
-rendercachedir = gmaps_config.rendercachedir
-tempdir        = gmaps_config.tempdir
+logfile        = settings.LOGFILE
+tilerender     = settings.TILERENDER
+cachedir       = settings.CACHEDIR
+rendercachedir = settings.RENDERCACHEDIR
+tempdir        = settings.TEMPDIR
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(message)s',
@@ -42,7 +42,7 @@ logging.basicConfig(level=logging.DEBUG,
 def index(request):
     ctxt = {
         'gmaps_key' : ('http://maps.google.com/maps?file=api&v=2&key=' +
-                       gmaps_config.gmaps_api_key),
+                       settings.GMAPS_API_KEY),
         'map_js_url' : reverse('an.media') + 'map.js',
         #'gmaps_base_url' : reverse(get_tile),
         'gmaps_tile_url' : reverse(get_tile) + '?',
@@ -95,7 +95,7 @@ def get_image(request):
 
     res = HttpResponse()
     res['Content-Type'] = ctmap[img.origformat]
-    path = gmaps_config.imgdir + "/" + img.origfilename
+    path = settings.imgdir + "/" + img.origfilename
     logging.debug("Opening file " + path)
     f = open(path, "rb")
     res.write(f.read())
@@ -174,10 +174,10 @@ def get_image_list(request):
         logging.debug("Image " + img.filename + ": score %g (dra1=%g, dra2=%g))" %
                       (score, dra1, dra2))
 
-        wcsfn = gmaps_config.imgdir + '/' + img.filename + '.wcs'
+        wcsfn = settings.imgdir + '/' + img.filename + '.wcs'
         try:
             if not sip.libraryloaded():
-                fn = gmaps_config.sipso
+                fn = settings.sipso
                 logging.debug('Trying to load library %s' % fn)
                 #sip.loadlibrary(fn)
                 lib = ctypes.CDLL(fn)

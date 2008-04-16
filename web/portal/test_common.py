@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 
 from an.util.w3c_validator import W3CValidator
 
-import an.gmaps_config as config
+import an.settings as settings
 
 class PortalTestCase(TestCase):
     def setUp(self):
@@ -29,7 +29,7 @@ class PortalTestCase(TestCase):
     def validatePage(self, url):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
-        v = W3CValidator(config.w3c_validator_url)
+        v = W3CValidator(settings.W3C_VALIDATOR_URL)
         self.assert_(v.validateText(resp.content))
 
 
