@@ -1,0 +1,56 @@
+{% extends "server/base.html" %}
+
+{% block content %}
+
+<h3>Job Queues</h3>
+
+<table border="1">
+<tr>
+<th>Name</th>
+</tr>
+{% for q in jobqueues %}
+<tr>
+<td>{{ q.name }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h3>Queued Jobs</h3>
+
+<table border="1">
+<tr>
+<th>Queue</th>
+<th>Job Id</th>
+<th>Done?</th>
+<th>Priority</th>
+</tr>
+{% for j in queuedjobs %}
+<tr>
+<td>{{ j.q.name }}</td>
+<td>{{ j.jobid }}</td>
+<td>{{ j.stopwork }}</td>
+<td>{{ j.priority }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h3>Workers</h3>
+
+<table border="1">
+<tr>
+<th>Hostname</th>
+<th>Indexes</th>
+<th>Current Job</th>
+</tr>
+{% for ww in workers %}
+<tr>
+<td>{{ ww.hostname }}</td>
+<td>{{ ww.pretty_index_list }}</td>
+<td>{{ ww.job.jobid }}</td>
+</tr>
+{% endfor %}
+</table>
+
+
+
+{% endblock %}

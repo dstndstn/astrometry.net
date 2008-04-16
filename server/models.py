@@ -23,11 +23,24 @@ class Worker(models.Model):
         return ', '.join(['%i'%i.indexid + (i.healpix > -1 and '-%i'%i.healpix or '')
                           for i in self.indexes.all()])
 
-class LoadedIndex(models.Model):
+
+
+class Index(models.Model):
     indexid = models.IntegerField()
     healpix = models.IntegerField()
     healpix_nside = models.IntegerField()
+    # this is probably not required... might help for management, though.
     worker = models.ForeignKey(Worker, related_name='indexes')
+
+class Work(models.Model):
+    job = models.ForeignKey(QueuedJob, related_name='work')
+    #index = models.ForeignKey(Index)
+    worker = models.ForeignKey(Worker, related_name='work')
+    inprogress = models.BooleanField(blank=True, default=False)
+    done = models.BooleanField(blank=True, default=False)
+
+#class LoadedIndex(models.Model):
+#index = models.ForeignKey(Worker, related_name='indexes')
 
 
 
