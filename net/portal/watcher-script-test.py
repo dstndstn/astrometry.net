@@ -54,9 +54,10 @@ def userlog(*msg):
     f.write(' '.join(map(str, msg)) + '\n')
     f.close()
 
+# Returns True if the job was processed successfully (ie it finished)
 def handle_job(job, sshconfig):
     try:
-        real_handle_job(job, sshconfig)
+        return real_handle_job(job, sshconfig)
     except Exception,e:
         errstr = str(e)
         log('Failed with exception: ', str(e))
@@ -65,6 +66,7 @@ def handle_job(job, sshconfig):
         log('--------------')
         job.set_status('Failed', errstr)
         job.save()
+    return False
 
 def produce_alternate_xylists(job):
     log("I'm producing alternate xylists like nobody's bidness.")
@@ -74,8 +76,7 @@ def produce_alternate_xylists(job):
         log('Producing xyls variant %i...' % n)
         convert(job, df, 'xyls', { 'variant': n })
 
-
-   
+# Returns True if the job was processed successfully (ie it finished)
 def real_handle_job(job, sshconfig):
     log('handle_job: ' + str(job))
 
@@ -123,7 +124,7 @@ def real_handle_job(job, sshconfig):
         except FileConversionError,e:
             userlog('Source extraction failed.')
             bailout(job, 'Source extraction failed.')
-            return -1
+            return False
         log('created xylist %s' % xylist)
 
         axyargs['-x'] = xylist
@@ -138,7 +139,7 @@ def real_handle_job(job, sshconfig):
             except FileConversionError,e:
                 userlog('Parsing your text file failed.')
                 bailout(job, 'Parsing text file failed.')
-                return -1
+                return False
 
         else:
             df.filetype = 'xyls'
@@ -149,7 +150,7 @@ def real_handle_job(job, sshconfig):
             except FileConversionError,e:
                 userlog('Sanitizing your FITS file failed.')
                 bailout(job, 'Sanitizing FITS file failed.')
-                return -1
+                return False
 
             (xcol, ycol) = job.get_xy_cols()
             if xcol:
@@ -165,7 +166,7 @@ def real_handle_job(job, sshconfig):
             log('out: ' + out)
             log('err: ' + err)
             bailout(job, 'Getting xylist image size failed: ' + err)
-            return -1
+            return False
         lines = out.strip().split('\n')
         #log('out: ', out)
         #log('lines: ', str(lines))
@@ -194,8 +195,7 @@ def real_handle_job(job, sshconfig):
 
     else:
         bailout(job, 'no filetype')
-        return -1
-
+        return False
 
     rtnval = os.fork()
     if rtnval == 0:
@@ -241,7 +241,7 @@ def real_handle_job(job, sshconfig):
         log('out: ' + out)
         log('err: ' + err)
         bailout(job, 'Creating axy file failed: ' + err)
-        return -1
+        return False
 
     log('created axy file ' + axypath)
 
@@ -277,13 +277,13 @@ def real_handle_job(job, sshconfig):
 
     if not os.WIFEXITED(w):
         bailout(job, 'Solver didn\'t exit normally.')
-        return -1
+        return False
 
     rtn = os.WEXITSTATUS(w)
     if rtn:
         log('Solver failed with return value %i' % rtn)
         bailout(job, 'Solver failed.')
-        return -1
+        return False
 
     log('Command completed successfully.')
 
@@ -309,7 +309,7 @@ def real_handle_job(job, sshconfig):
         job.set_status('Failed', 'Did not solve.')
 
     job.save()
-
+    return True
 
 def handle_tarball(basedir, filenames, submission):
     validpaths = []
@@ -373,7 +373,6 @@ def handle_tarball(basedir, filenames, submission):
         log('Enqueuing Job: ' + str(job))
         Job.submit_job_or_submission(job)
 
-
 def main(sshconfig, joblink):
     if not os.path.islink(joblink):
         log('Expected second argument to be a symlink; "%s" isn\'t.' % joblink)
@@ -397,7 +396,7 @@ def main(sshconfig, joblink):
     submissions = Submission.objects.all().filter(subid=jobid)
     if len(submissions) != 1:
         log('Found %i submissions, not 1' % len(submissions))
-        sys.exit(-1)
+        return False
     submission = submissions[0]
     log('Running submission: ' + str(submission))
 
@@ -424,7 +423,7 @@ def main(sshconfig, joblink):
 
     else:
         bailout(job, 'no datasrc')
-        return -1
+        return False
 
     df = DiskFile.for_file(tmpfile)
     df.save()
@@ -451,10 +450,11 @@ def main(sshconfig, joblink):
         if rtn:
             userlog('Failed to un-tar file:\n' + err)
             bailout(submission, 'failed to extract tar file')
-            return -1
+            return False
         fns = out.strip('\n').split('\n')
         handle_tarball(tempdir, fns, submission)
         shutil.rmtree(tempdir)
+        return True
 
     else:
         # Not a tarball.
@@ -468,14 +468,7 @@ def main(sshconfig, joblink):
         job.set_is_duplicate()
         job.save()
         submission.save()
-        rtn = handle_job(job, sshconfig)
-        if rtn:
-            return rtn
-
-    # remove the symlink to indicate that we've successfully finished this
-    # job.
-    os.unlink(joblink)
-    return 0
+        return handle_job(job, sshconfig)
 
 
 if __name__ == '__main__':
@@ -487,5 +480,11 @@ if __name__ == '__main__':
 
     os.umask(07)
 
-    sys.exit(main(sshconfig, joblink))
+    ok = main(sshconfig, joblink)
 
+    if ok:
+        # remove the symlink to indicate that we've successfully finished this
+        # job.
+        os.unlink(joblink)
+        sys.exit(0)
+    sys.exit(-1)
