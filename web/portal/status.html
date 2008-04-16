@@ -62,7 +62,7 @@ th {border-width: 0;}
 
 <div style="float:right; text-align:right;">
 {% if jobowner %}
-<form action="{% url an.portal.views.changeperms %}" method="post" name="jobpermsform">
+<form action="{% url astrometry.web.portal.views.changeperms %}" method="post" name="jobpermsform">
 {# Job <b>{{ jobid }}</b>: #}
 This job:
 <input type="hidden" name="jobid" value="{{ job.jobid }}" />
@@ -81,7 +81,7 @@ only you can view this page.
 
 {% comment %}
 #########################
-<form action="{% url an.portal.views.changeperms %}" method="post" name="fieldpermsform">
+<form action="{% url astrometry.web.portal.views.changeperms %}" method="post" name="fieldpermsform">
 This field:
 <input type="hidden" name="jobid" value="{{ job.jobid }}" />
 {% if allowanon %}
@@ -101,7 +101,7 @@ only you can view this field.
 
 {% comment %}
 #########################
-<form action="{% url an.portal.views.publishtovo %}" method="post" name="jobpublishform">
+<form action="{% url astrometry.web.portal.views.publishtovo %}" method="post" name="jobpublishform">
 <input type="hidden" name="jobid" value="{{ job.jobid }}" />
 <a href="javascript:document.forms.jobpublishform.submit();" class="smalllink">Publish to the VO</a>
 </form>

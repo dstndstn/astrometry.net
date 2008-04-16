@@ -9,7 +9,7 @@ import shutil
 from django.db import models
 from django.contrib.auth.models import User
 
-import astrometry.web.settings
+import astrometry.web.settings as settings
 from astrometry.web.upload.models import UploadedFile
 from astrometry.web.portal.log import log
 from astrometry.web.portal.wcs import *
@@ -80,7 +80,7 @@ class DiskFile(models.Model):
 
     def get_path(self):
         hsh = str(self.filehash)
-        return os.path.join(config.fielddir, hsh[:2], hsh[2:])
+        return os.path.join(settings.FIELD_DIR, hsh[:2], hsh[2:])
 
     # ensure that this file's directory exists.
     def create_dir(self):
@@ -694,7 +694,7 @@ class Job(models.Model):
 
     @staticmethod
     def s_get_job_dir(jobid):
-        return os.path.join(config.jobdir, Job.s_get_relative_job_dir(jobid))
+        return os.path.join(settings.JOB_DIR, Job.s_get_relative_job_dir(jobid))
     
     @staticmethod
     def get_job_filename(jobid, fn):
@@ -708,7 +708,7 @@ class Job(models.Model):
     def generate_jobid():
         today = datetime.date.today()
         # HACK - we don't check that it's unique!!
-        jobid = '%s-%i%02i-%08i' % (config.siteid, today.year,
+        jobid = '%s-%i%02i-%08i' % (settings.SITE_ID, today.year,
                                     today.month, random.randint(0, 99999999))
         return jobid
 

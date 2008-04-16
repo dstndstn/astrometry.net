@@ -29,9 +29,9 @@ imgdir = '/data2/apod-solves'
 
 TEMPDIR = '/tmp'
 
-siteid = 'test'
-jobdir = '/home/gmaps/test/web-data'
-fielddir = '/home/gmaps/test/web-data/fields'
+SITE_ID = 'test'
+JOB_DIR = BASEDIR + 'web-data/'
+FIELD_DIR = '/home/gmaps/test/web-data/fields'
 
 gmaps_base = 'http://oven.cosmo.fas.nyu.edu/'
 gmaps_url = gmaps_base + 'tilecache2/'

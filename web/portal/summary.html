@@ -48,11 +48,11 @@ tr.odd td {}
 <th>Status</th>
 <th>Field</th>
 <th>Shared<br />to the web?<br />
-<form action="{% url an.portal.views.changeperms %}" method="post" name="alljobsexposeform">
+<form action="{% url astrometry.web.portal.views.changeperms %}" method="post" name="alljobsexposeform">
 <input type="hidden" name="exposeall" value="1" />
 <a href="javascript:document.forms.alljobsexposeform.submit();" class="smalllink">Share All</a>
 </form>
-<form action="{% url an.portal.views.changeperms %}" method="post" name="alljobsunexposeform">
+<form action="{% url astrometry.web.portal.views.changeperms %}" method="post" name="alljobsunexposeform">
 <input type="hidden" name="exposeall" value="0" />
 <a href="javascript:document.forms.alljobsunexposeform.submit();" class="smalllink">Hoard All</a>
 </form>
@@ -108,7 +108,7 @@ tr.odd td {}
 </td>
 
 <td class="c">
-<form action="{% url an.portal.views.changeperms %}" method="post" name="jobpermsform_{{ forloop.counter }}">
+<form action="{% url astrometry.web.portal.views.changeperms %}" method="post" name="jobpermsform_{{ forloop.counter }}">
 <input type="hidden" name="jobid" value="{{ job.get_id }}" />
 {% if job.is_exposed %}
 <input type="hidden" name="exposejob" value="0" />
