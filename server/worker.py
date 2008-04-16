@@ -11,6 +11,8 @@ import astrometry.server.settings as settings
 from astrometry.server.log import log
 from astrometry.server.models import *
 
+from astrometry.net.util.run_command import run_command
+
 def get_header(header, key, default):
     #if key in header:
     #    return header[key]
@@ -19,6 +21,18 @@ def get_header(header, key, default):
         return header[key]
     except KeyError:
         return default
+
+def callback(jobid, fn):
+    print 'callback.'
+    js=QueuedJob.objects.all().filter(jobid=jobid)
+    if js.count() == 0:
+        return
+    j=js[0]
+    if j.stopwork:
+        print 'Touching file', fn
+        f = open(fn, 'wb')
+        f.write('')
+        f.close()
 
 def main():
     qname = 'test'
@@ -84,6 +98,9 @@ def main():
 
         job = None
         for j in jobs:
+
+            # HACK - really I want to check that I have an index that
+            # another work hasn't already applied to this job.
             if j.work.all().filter(worker=me).count():
                 # I've already worked on this one.
                 continue
@@ -101,7 +118,11 @@ def main():
         print 'Working on job', job
         w = Work(job=job, worker=me, inprogress=True)
         w.save()
-        time.sleep(10)
+
+        cancelfile = '/tmp/cancel'
+        run_command('sleep 30', timeout=1,
+                    callback=lambda: callback(job.jobid, cancelfile))
+
         w.inprogress = False
         w.done = True
         w.save()

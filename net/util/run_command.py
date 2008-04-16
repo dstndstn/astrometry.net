@@ -2,7 +2,7 @@ import popen2
 import os
 import select
 
-def run_command(cmd):
+def run_command(cmd, timeout=None, callback=None):
     """
     Run a command and return the text written to stdout and stderr, plus
     the return value.
@@ -16,7 +16,7 @@ def run_command(cmd):
     stderr = ferr.fileno()
     outbl = []
     errbl = []
-    outeof = erreof = 0
+    outeof = erreof = False
     block = 1024
     while True:
         s=[]
@@ -26,17 +26,19 @@ def run_command(cmd):
             s.append(stderr)
         if not len(s):
             break
-        (ready, nil1, nil2) = select.select(s, [], [])
+        (ready, nil1, nil2) = select.select(s, [], [], timeout)
         if stdout in ready:
             outchunk = os.read(stdout, block)
             if len(outchunk) == 0:
-                outeof = 1
+                outeof = True
             outbl.append(outchunk)
         if stderr in ready:
             errchunk = os.read(stderr, block)
             if len(errchunk) == 0:
-                erreof = 1
+                erreof = True
             errbl.append(errchunk)
+        if callback:
+            callback()
     fout.close()
     ferr.close()
     w = child.wait()
