@@ -76,7 +76,7 @@ PIPELINE := usnobtofits tycho2tofits build-an-catalog hpowned cut-an \
 	startree hpquads codetree unpermute-quads unpermute-stars blind \
 	solvedserver printsolved xylist2fits mergesolved rdlsinfo xylsinfo \
 	wcsinfo fits-guess-scale an-fitstopnm agreeable new-wcs get-wcs \
-	backend augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
+	backend backend2 augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
 	certifiable wcs-annotate get-healpix 2masstofits nomadtofits
 
 PROSPECTUS := quadidx codeprojections quadlocations quadscales quadsperstar \
@@ -365,6 +365,12 @@ unpermute-quads: unpermute-quads.o codekd.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 backend: backend.o scriptutils.o fileutil.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
+backend2: backend2.o scriptutils.o blind.o solver.o codekd.o \
+		matchfile.o tic.o solvedclient.o solvedfile.o idfile.o verify.o \
+		svd.o intmap.o blind_wcs.o index.o log.o histogram.o tweak.o \
+		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
+		$(QFITS_LIB) $(GSL_LIB)
 
 solve-field: solve-field.o scriptutils.o matchfile.o fileutil.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)

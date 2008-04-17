@@ -181,7 +181,7 @@ static int read_parameters(blind_t* bp)
                     }
                 }
             }
-			bl_append(bp->verify_wcs_list, &wcs);
+            blind_add_verify_wcs(bp, &wcs);
 		} else if (is_word(line, "cpulimit ", &nextword)) {
 			bp->cpulimit = atoi(nextword);
 		} else if (is_word(line, "timelimit ", &nextword)) {
@@ -205,15 +205,9 @@ static int read_parameters(blind_t* bp)
 		} else if (is_word(line, "ratio_tobail ", &nextword)) {
 			sp->logratio_bail_threshold = log(atof(nextword));
 		} else if (is_word(line, "match ", &nextword)) {
-			free(bp->matchfname);
-			bp->matchfname = strdup(nextword);
+            blind_set_match_file(bp, nextword);
 		} else if (is_word(line, "indexrdls ", &nextword)) {
-			free(bp->indexrdlsfname);
-			bp->indexrdlsfname = strdup(nextword);
-            /*
-             } else if (is_word(line, "indexrdls_solvedonly", &nextword)) {
-             bp->indexrdls_solvedonly = TRUE;
-             */
+            blind_set_rdls_file(bp, nextword);
 		} else if (is_word(line, "correspondences ", &nextword)) {
 			free(bp->corr_fname);
 			bp->corr_fname = strdup(nextword);
@@ -222,19 +216,13 @@ static int read_parameters(blind_t* bp)
 		} else if (is_word(line, "best_only", &nextword)) {
 			bp->best_hit_only = TRUE;
 		} else if (is_word(line, "solved ", &nextword)) {
-			free(bp->solved_in);
-			free(bp->solved_out);
-			bp->solved_in = strdup(nextword);
-			bp->solved_out = strdup(nextword);
+            blind_set_solved_file(bp, nextword);
 		} else if (is_word(line, "solved_in ", &nextword)) {
-			free(bp->solved_in);
-			bp->solved_in = strdup(nextword);
+            blind_set_solvedin_file(bp, nextword);
 		} else if (is_word(line, "solved_out ", &nextword)) {
-			free(bp->solved_out);
-			bp->solved_out = strdup(nextword);
+            blind_set_solvedout_file(bp, nextword);
 		} else if (is_word(line, "cancel ", &nextword)) {
-			free(bp->cancelfname);
-			bp->cancelfname = strdup(nextword);
+            blind_set_cancel_file(bp, nextword);
 		} else if (is_word(line, "log ", &nextword)) {
 			// Open the log file...
 			free(bp->logfname);
@@ -258,8 +246,7 @@ static int read_parameters(blind_t* bp)
 		} else if (is_word(line, "tweak", &nextword)) {
 			bp->do_tweak = TRUE;
 		} else if (is_word(line, "wcs ", &nextword)) {
-			free(bp->wcs_template);
-			bp->wcs_template = strdup(nextword);
+            blind_set_wcs_file(bp, nextword);
 		} else if (is_word(line, "fieldid_key ", &nextword)) {
 			free(bp->fieldid_key);
 			bp->fieldid_key = strdup(nextword);
@@ -268,18 +255,15 @@ static int read_parameters(blind_t* bp)
 		} else if (is_word(line, "maxmatches ", &nextword)) {
 			sp->maxmatches = atoi(nextword);
 		} else if (is_word(line, "xcol ", &nextword)) {
-			free(bp->xcolname);
-			bp->xcolname = strdup(nextword);
+            blind_set_xcol(bp, nextword);
 		} else if (is_word(line, "ycol ", &nextword)) {
-			free(bp->ycolname);
-			bp->ycolname = strdup(nextword);
+            blind_set_ycol(bp, nextword);
 		} else if (is_word(line, "index ", &nextword)) {
-			sl_append(bp->indexnames, nextword);
+            blind_add_index(bp, nextword);
 		} else if (is_word(line, "indexes_inparallel", &nextword)) {
 			bp->indexes_inparallel = TRUE;
 		} else if (is_word(line, "field ", &nextword)) {
-			free(bp->fieldfname);
-			bp->fieldfname = strdup(nextword);
+            blind_set_field_file(bp, nextword);
 		} else if (is_word(line, "fieldw ", &nextword)) {
 			sp->field_maxx = atof(nextword);
 		} else if (is_word(line, "fieldh ", &nextword)) {
@@ -322,7 +306,7 @@ static int read_parameters(blind_t* bp)
 		} else if (is_word(line, "fields ", &nextword)) {
 			char* str = nextword;
             while (str && *str) {
-                unsigned int lo, hi, i;
+                unsigned int lo, hi;
                 int nread;
                 if (sscanf(str, "%u%*1[-/]%u", &lo, &hi) == 2) {
                     sscanf(str, "%*u%*1[-/]%*u%n", &nread);
@@ -341,9 +325,7 @@ static int read_parameters(blind_t* bp)
                     fprintf(stderr, "Field range %i to %i is invalid: max must be >= min!\n", lo, hi);
                     return -1;
                 }
-                for (i=lo; i<=hi; i++) {
-                    il_insert_unique_ascending(bp->fieldlist, i);
-                }
+                blind_add_field_range(bp, lo, hi);
                 str += nread;
                 while ((*str == ',') || isspace(*str))
                     str++;

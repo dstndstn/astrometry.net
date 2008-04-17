@@ -72,6 +72,76 @@ static void search_indexrdls(blind_t* bp, MatchObj* mo);
 static void remove_duplicate_solutions(blind_t* bp);
 static void free_matchobj(MatchObj* mo);
 
+
+void blind_set_field_file(blind_t* bp, const char* fn) {
+    free(bp->fieldfname);
+    bp->fieldfname = strdup(fn);
+}
+
+void blind_set_solved_file(blind_t* bp, const char* fn) {
+    blind_set_solvedin_file (bp, fn);
+    blind_set_solvedout_file(bp, fn);
+}
+
+void blind_set_solvedin_file(blind_t* bp, const char* fn) {
+    free(bp->solved_in);
+    bp->solved_in  = strdup(fn);
+}
+
+void blind_set_solvedout_file(blind_t* bp, const char* fn) {
+    free(bp->solved_out);
+    bp->solved_out = strdup(fn);
+}
+
+void blind_set_cancel_file(blind_t* bp, const char* fn) {
+    free(bp->cancelfname);
+    bp->cancelfname = strdup(fn);
+}
+
+void blind_set_match_file(blind_t* bp, const char* fn) {
+    free(bp->matchfname);
+    bp->matchfname = strdup(fn);
+}
+
+void blind_set_rdls_file(blind_t* bp, const char* fn) {
+    free(bp->indexrdlsfname);
+    bp->indexrdlsfname = strdup(fn);
+}
+
+void blind_set_wcs_file(blind_t* bp, const char* fn) {
+    free(bp->wcs_template);
+    bp->wcs_template = strdup(fn);
+}
+
+void blind_set_xcol(blind_t* bp, const char* x) {
+    free(bp->xcolname);
+    bp->xcolname = strdup(x);
+}
+
+void blind_set_ycol(blind_t* bp, const char* x) {
+    free(bp->ycolname);
+    bp->ycolname = strdup(x);
+}
+
+void blind_add_index(blind_t* bp, const char* index) {
+    sl_append(bp->indexnames, index);
+}
+
+void blind_add_verify_wcs(blind_t* bp, sip_t* wcs) {
+    bl_append(bp->verify_wcs_list, wcs);
+}
+
+void blind_add_field(blind_t* bp, int field) {
+    il_insert_unique_ascending(bp->fieldlist, field);
+}
+
+void blind_add_field_range(blind_t* bp, int lo, int hi) {
+    int i;
+    for (i=lo; i<=hi; i++) {
+        il_insert_unique_ascending(bp->fieldlist, i);
+    }
+}
+
 static int get_cpu_usage(blind_t* bp) {
 	struct rusage r;
 	int sofar;
