@@ -48,14 +48,18 @@ class Worker(models.Model):
     def __str__(self):
         return self.hostname
 
+    def save(self):
+        self.keepalive = datetime.utcnow()
+        super(Worker, self).save()
+
     def pretty_index_list(self):
         return ', '.join(['%i'%i.indexid + (i.healpix > -1 and '-%02i'%i.healpix or '')
                           for i in self.indexes.all()])
 
-    def update_keepalive(self):
-        self.keepalive = datetime.utcnow()
-        print 'Stamping keepalive:', self, '=', self.keepalive
-        self.save()
+    #def update_keepalive(self):
+    #    self.keepalive = datetime.utcnow()
+    #    print 'Stamping keepalive:', self, '=', self.keepalive
+    #    self.save()
 
     #def is_keepalive_stale(self, allowed_dt):
     #    # re-hit the database.

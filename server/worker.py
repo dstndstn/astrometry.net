@@ -27,7 +27,8 @@ def keep_alive(workerid):
     while True:
         #print 'Stamping keep-alive.'
         me = Worker.objects.all().get(id=workerid)
-        me.update_keepalive()
+        me.save()
+        #me.update_keepalive()
         #me.keepalive = datetime.utcnow()
         #me.save()
         time.sleep(10)

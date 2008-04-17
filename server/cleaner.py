@@ -23,8 +23,11 @@ def clean_db():
     late = Worker.filter_keepalive_stale(late, 30)
     if len(late):
         print 'Deleting workers who have not stamped their keepalives:'
+        stale = Worker.get_keepalive_stale_date(30)
+        print 'Now is    ', datetime.utcnow()
+        print 'Cutoff was', stale
         for w in late:
-            print '  %s: timestamp %s' % (str(w), str(w.keepalive))
+            print '  %s: timestamp %s, missed by %s' % (str(w), str(w.keepalive), str(stale - w.keepalive))
         late.delete()
 
     donejobs = QueuedJob.objects.all().filter(stopwork=True)
