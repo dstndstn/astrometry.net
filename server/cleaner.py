@@ -17,9 +17,14 @@ def clean_db():
     dt = timedelta(seconds=30)
     cutoff = now - dt
 
+    print 'Now        :', now
+    print 'Cutoff date:', cutoff
+
     late = Worker.objects.all().filter(keepalive__lt=cutoff)
     if len(late):
-        print 'Deleting workers who have not stamped their keepalives:', late
+        print 'Deleting workers who have not stamped their keepalives:'
+        for w in late:
+            print '  %s: timestamp %s' % (str(w), str(w.keepalive))
         late.delete()
 
     donejobs = QueuedJob.objects.all().filter(stopwork=True)

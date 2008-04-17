@@ -168,7 +168,12 @@ def main(indexdirs):
         backend = 'backend'
         cancelfile = os.path.join(tmpdir, 'cancel')
         # HACK - pipes?
-        cmd = 'cd %s; %s -c %s -C %s %s' % (tmpdir, backend, backendcfg, cancelfile, axy)
+        cmd = ('cd %(tempdir)s; %(backend)s -c %(backendconf)s -C %(cancel)s -i blind.in -v %(axy)s > %(logfile)s 2>&1' %
+               dict(tempdir=tmpdir, backend=backend,
+                    backendconf=backendcfg,
+                    cancel=cancelfile,
+                    axy=axy,
+                    logfile='blind.log'))
         #cmd = 'cd %s; %s -c %s %s; tar cf %s *' % (tmpdir, backend, backendcfg, axy, tarfile)
         print 'Running command', cmd
 

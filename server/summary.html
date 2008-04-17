@@ -24,6 +24,7 @@
 <th>Done?</th>
 <th>Priority</th>
 <th>Path</th>
+<th>Worked-On By</th>
 </tr>
 {% for j in queuedjobs %}
 <tr>
@@ -32,6 +33,7 @@
 <td>{{ j.stopwork }}</td>
 <td>{{ j.priority }}</td>
 <td>{{ j.path }}</td>
+<td>{{ j.workers.all|join:", "}}</td>
 </tr>
 {% endfor %}
 </table>

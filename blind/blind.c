@@ -406,7 +406,6 @@ void blind_restore_logging(blind_t* bp) {
 }
 
 void blind_init(blind_t* bp) {
-	solver_t* sp = &(bp->solver);
 	// Reset params.
 	memset(bp, 0, sizeof(blind_t));
 
@@ -423,10 +422,8 @@ void blind_init(blind_t* bp) {
 	bp->tweak_aborder = DEFAULT_TWEAK_ABORDER;
 	bp->tweak_abporder = DEFAULT_TWEAK_ABPORDER;
     bp->nsolves = 1;
-
-	sp->userdata = bp;
-	sp->record_match_callback = record_match_callback;
-	sp->timer_callback = timer_callback;
+    // don't set sp-> here because solver_set_default_values()
+    // will get called next and wipe it out...
 }
 
 int blind_parameters_are_sane(blind_t* bp, solver_t* sp) {
@@ -836,6 +833,11 @@ static time_t timer_callback(void* user_data) {
 
 	check_time_limits(bp);
 
+    /*
+     logmsg("Timer callback.  cancelfn %s; exists %s.\n",
+     bp->cancelfname, (file_exists(bp->cancelfname) ? "yes" : "no"));
+     */
+
 	// check if the field has already been solved...
     if (is_field_solved(bp, bp->fieldnum))
         return 0;
@@ -986,6 +988,7 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 
 		sp->logratio_record_threshold = MIN(bp->logratio_tokeep, bp->logratio_toprint);
 		sp->record_match_callback = record_match_callback;
+        sp->timer_callback = timer_callback;
 		sp->userdata = bp;
 
 		if (bp->field_uniform_NX && bp->field_uniform_NY) {
