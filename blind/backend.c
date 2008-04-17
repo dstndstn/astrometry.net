@@ -54,6 +54,7 @@ static struct option long_options[] =
 	    {"help",    no_argument,       0, 'h'},
         {"verbose", no_argument,       0, 'v'},
 	    {"config",  required_argument, 0, 'c'},
+	    {"cancel",  required_argument, 0, 'C'},
 	    {"input",   required_argument, 0, 'i'},
 	    {0, 0, 0, 0}
     };
@@ -65,6 +66,7 @@ static void print_help(const char* progname)
 	printf("Usage:   %s [options] <augmented xylist>\n"
 	       "   [-c <backend config file>]  (default: \"backend.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable)\n"
 	       "   [-i <blind input filename>]: save the input file used for blind.\n"
+           "   [-C <cancel-filename>]: quit solving if the file <cancel-filename> appears.\n"
            "   [-v]: verbose\n"
 	       "\n", progname);
 }
@@ -1068,6 +1070,7 @@ int main(int argc, char** args)
     char* me;
     bool help = FALSE;
     sl* strings = sl_new(4);
+    char* cancelfn = NULL;
 
 	while (1) {
 		int option_index = 0;
@@ -1080,6 +1083,9 @@ int main(int argc, char** args)
 			break;
         case 'v':
             verbose = TRUE;
+            break;
+        case 'C':
+            cancelfn = optarg;
             break;
 		case 'c':
 			configfn = strdup(optarg);
@@ -1220,6 +1226,10 @@ int main(int argc, char** args)
         }
 
 		qfits_header_destroy(hdr);
+
+        if (cancelfn) {
+            job->cancelfile = strdup(cancelfn);
+        }
 
         if (verbose) {
             printf("Running job:\n");

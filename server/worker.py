@@ -25,7 +25,7 @@ from astrometry.net.util.run_command import run_command
 
 def keep_alive(workerid):
     while True:
-        print 'Stamping keep-alive.'
+        #print 'Stamping keep-alive.'
         me = Worker.objects.all().get(id=workerid)
         me.keepalive = datetime.utcnow()
         me.save()
@@ -41,7 +41,7 @@ def get_header(header, key, default):
         return default
 
 def callback(jobid, fn):
-    print 'callback.'
+    #print 'callback.'
     js=QueuedJob.objects.all().filter(jobid=jobid)
     if js.count() == 0:
         return
@@ -166,12 +166,12 @@ def main(indexdirs):
         # HACK
         #backend = '/home/gmaps/test/astrometry/blind/backend'
         backend = 'backend'
+        cancelfile = os.path.join(tmpdir, 'cancel')
         # HACK - pipes?
-        cmd = 'cd %s; %s -c %s %s' % (tmpdir, backend, backendcfg, axy)
+        cmd = 'cd %s; %s -c %s -C %s %s' % (tmpdir, backend, backendcfg, cancelfile, axy)
         #cmd = 'cd %s; %s -c %s %s; tar cf %s *' % (tmpdir, backend, backendcfg, axy, tarfile)
         print 'Running command', cmd
 
-        cancelfile = '/tmp/cancel'
         (rtn, out, err) = run_command(cmd, timeout=1,
                                       callback=lambda: callback(job.jobid, cancelfile))
 
