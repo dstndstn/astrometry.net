@@ -1,6 +1,7 @@
 from django.db import models
 
 from urllib import urlretrieve
+from datetime import datetime, timedelta
 
 class JobQueue(models.Model):
     name = models.CharField(max_length=32, unique=True, primary_key=True)
