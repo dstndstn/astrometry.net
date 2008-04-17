@@ -27,8 +27,9 @@ def keep_alive(workerid):
     while True:
         #print 'Stamping keep-alive.'
         me = Worker.objects.all().get(id=workerid)
-        me.keepalive = datetime.utcnow()
-        me.save()
+        me.update_keepalive()
+        #me.keepalive = datetime.utcnow()
+        #me.save()
         time.sleep(10)
 
 def get_header(header, key, default):

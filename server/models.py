@@ -42,7 +42,6 @@ class Worker(models.Model):
     ip = models.IPAddressField()
     processid = models.IntegerField()
     job = models.ForeignKey(QueuedJob, related_name='workers', blank=True, null=True)
-
     keepalive = models.DateTimeField(blank=True, default='2000-01-01')
 
     def __str__(self):
@@ -52,7 +51,28 @@ class Worker(models.Model):
         return ', '.join(['%i'%i.indexid + (i.healpix > -1 and '-%02i'%i.healpix or '')
                           for i in self.indexes.all()])
 
+    def update_keepalive(self):
+        self.keepalive = datetime.utcnow()
+        print 'Stamping keepalive:', self, '=', self.keepalive
+        self.save()
 
+    #def is_keepalive_stale(self, allowed_dt):
+    #    # re-hit the database.
+    #    t = Worker.objects.get(id=self.id).keepalive
+    #    now = datetime.utcnow()
+    #    dt = timedelta(seconds=allowed_dt)
+    #    return (t + dt < now)
+
+    @staticmethod
+    def filter_keepalive_stale(queryset, allowed_dt):
+        cutoff = Worker.get_keepalive_stale_date(allowed_dt)
+        return queryset.filter(keepalive__lt=cutoff)
+
+    @staticmethod
+    def get_keepalive_stale_date(allowed_dt):
+        now = datetime.utcnow()
+        dt = timedelta(seconds=allowed_dt)
+        return now - dt
 
 class Index(models.Model):
     indexid = models.IntegerField()
