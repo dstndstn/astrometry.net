@@ -573,16 +573,14 @@ void solver_run(solver_t* solver)
 
 			// Give our caller a chance to cancel us midway. The callback
 			// returns how long to wait before calling again.
-            //logmsg("trying callback... solver->timer_callback is %p\n", solver->timer_callback);
+
 			if (solver->timer_callback) {
 				time_t delay;
                 time_t now = time(NULL);
-                //logmsg(" now - next = %i\n", (int)(now-next_timer_callback_time));
 				if (now > next_timer_callback_time) {
 					delay = solver->timer_callback(solver->userdata);
 					if (delay == 0) // Canceled
 						break;
-					//next_timer_callback_time += delay;
 					next_timer_callback_time = now + delay;
 				}
 			}

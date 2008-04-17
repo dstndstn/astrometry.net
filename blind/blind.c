@@ -833,11 +833,6 @@ static time_t timer_callback(void* user_data) {
 
 	check_time_limits(bp);
 
-    /*
-     logmsg("Timer callback.  cancelfn %s; exists %s.\n",
-     bp->cancelfname, (file_exists(bp->cancelfname) ? "yes" : "no"));
-     */
-
 	// check if the field has already been solved...
     if (is_field_solved(bp, bp->fieldnum))
         return 0;
