@@ -167,7 +167,7 @@ def main(indexdirs):
         #backend = '/home/gmaps/test/astrometry/blind/backend'
         backend = 'backend'
         # HACK - pipes?
-        cmd = 'cd %s; %s -c %s %s' % (tmpdir, backend, backendcfg, axy, tarfile)
+        cmd = 'cd %s; %s -c %s %s' % (tmpdir, backend, backendcfg, axy)
         #cmd = 'cd %s; %s -c %s %s; tar cf %s *' % (tmpdir, backend, backendcfg, axy, tarfile)
         print 'Running command', cmd
 
