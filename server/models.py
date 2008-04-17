@@ -55,18 +55,6 @@ class Worker(models.Model):
         return ', '.join(['%i'%i.indexid + (i.healpix > -1 and '-%02i'%i.healpix or '')
                           for i in self.indexes.all()])
 
-    #def update_keepalive(self):
-    #    self.keepalive = datetime.utcnow()
-    #    print 'Stamping keepalive:', self, '=', self.keepalive
-    #    self.save()
-
-    #def is_keepalive_stale(self, allowed_dt):
-    #    # re-hit the database.
-    #    t = Worker.objects.get(id=self.id).keepalive
-    #    now = datetime.utcnow()
-    #    dt = timedelta(seconds=allowed_dt)
-    #    return (t + dt < now)
-
     @staticmethod
     def filter_keepalive_stale(queryset, allowed_dt):
         cutoff = Worker.get_keepalive_stale_date(allowed_dt)
@@ -92,8 +80,6 @@ class Work(models.Model):
     inprogress = models.BooleanField(blank=True, default=False)
     done = models.BooleanField(blank=True, default=False)
 
-#class LoadedIndex(models.Model):
-#index = models.ForeignKey(Worker, related_name='indexes')
 
 
 

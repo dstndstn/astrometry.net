@@ -156,7 +156,7 @@ def main(indexdirs):
                     axy=axy,
                     logfile='blind.log'))
         print 'Running command', cmd
-
+    
         (rtn, out, err) = run_command(cmd, timeout=1,
                                       callback=lambda: callback(job.jobid, cancelfile))
 

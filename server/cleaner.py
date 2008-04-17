@@ -11,13 +11,6 @@ from astrometry.server.models import *
 
 def clean_db():
     print 'Cleaning db...'
-    #now = datetime.utcnow()
-    # Worker.keepalive should be updated every 10 seconds;
-    # we give it 30.
-    #dt = timedelta(seconds=30)
-    #cutoff = now - dt
-    #print 'Now        :', now
-    #print 'Cutoff date:', cutoff
 
     late = Worker.objects.all()
     late = Worker.filter_keepalive_stale(late, 30)
