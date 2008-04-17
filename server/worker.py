@@ -59,7 +59,8 @@ def main(indexdirs):
     hostname = socket.gethostname()
     ip = socket.gethostbyname(hostname)
     me = Worker(hostname=hostname,
-                ip=ip)
+                ip=ip,
+                processid=os.getpid())
     me.save()
 
     thread.start_new_thread(keep_alive, (me.id,))

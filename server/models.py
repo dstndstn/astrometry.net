@@ -40,12 +40,16 @@ class QueuedJob(models.Model):
 class Worker(models.Model):
     hostname = models.CharField(max_length=256)
     ip = models.IPAddressField()
+    processid = models.IntegerField()
     job = models.ForeignKey(QueuedJob, related_name='workers', blank=True, null=True)
 
     keepalive = models.DateTimeField(blank=True, default='2000-01-01')
 
+    def __str__(self):
+        return self.hostname
+
     def pretty_index_list(self):
-        return ', '.join(['%i'%i.indexid + (i.healpix > -1 and '-%i'%i.healpix or '')
+        return ', '.join(['%i'%i.indexid + (i.healpix > -1 and '-%02i'%i.healpix or '')
                           for i in self.indexes.all()])
 
 
