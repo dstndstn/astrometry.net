@@ -2,9 +2,12 @@ import os
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.server.settings'
 
+import sys
 import socket
 import time
 import tempfile
+import thread
+from datetime import datetime
 
 from urllib import urlencode
 from urllib2 import urlopen
@@ -19,6 +22,13 @@ from astrometry.server.log import log
 from astrometry.server.models import *
 
 from astrometry.net.util.run_command import run_command
+
+def keep_alive(workerid):
+    while True:
+        me = Worker.objects.all().get(id=workerid)
+        me.keepalive = datetime.utcnow()
+        me.save()
+        time.sleep(10)
 
 def get_header(header, key, default):
     #if key in header:
@@ -41,14 +51,9 @@ def callback(jobid, fn):
         f.write('')
         f.close()
 
-def main():
+def main(indexdirs):
     qname = 'test'
     #backendconfig = 'backend.cfg'
-    indexdirs = [
-        '/home/gmaps/INDEXES/500',
-        'INDEXES',
-        ]
-
     q = JobQueue.objects.get(name=qname)
 
     hostname = socket.gethostname()
@@ -56,6 +61,8 @@ def main():
     me = Worker(hostname=hostname,
                 ip=ip)
     me.save()
+
+    thread.start_new_thread(keep_alive, (me.id,))
 
     #f = open(backendconfig, 'rb')
     #be = f.read()
@@ -193,5 +200,11 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) > 1:
+        indexdirs = sys.argv[1:]
+    else:
+        indexdirs = [
+            '/home/gmaps/INDEXES/500',
+            ]
+    main(indexdirs)
 

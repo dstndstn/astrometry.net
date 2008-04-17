@@ -12,6 +12,7 @@ class QueuedJob(models.Model):
     stopwork = models.BooleanField(blank=True, default=False)
     enqueuetime = models.DateTimeField(blank=True, default='2000-01-01')
     # .work: Work completed so far.
+    # .workers: Workers current working on this job.
 
     #axyurl = models.CharField(max_length=1024)
 
@@ -40,6 +41,8 @@ class Worker(models.Model):
     hostname = models.CharField(max_length=256)
     ip = models.IPAddressField()
     job = models.ForeignKey(QueuedJob, related_name='workers', blank=True, null=True)
+
+    keepalive = models.DateTimeField(blank=True, default='2000-01-01')
 
     def pretty_index_list(self):
         return ', '.join(['%i'%i.indexid + (i.healpix > -1 and '-%i'%i.healpix or '')
