@@ -41,12 +41,14 @@
 <table border="1">
 <tr>
 <th>Hostname</th>
+<th>Process</th>
 <th>Indexes</th>
 <th>Current Job</th>
 </tr>
 {% for ww in workers %}
 <tr>
 <td>{{ ww.hostname }}</td>
+<td>{{ ww.processid }}</td>
 <td>{{ ww.pretty_index_list }}</td>
 <td>{{ ww.job.jobid }}</td>
 </tr>

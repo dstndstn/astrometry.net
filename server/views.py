@@ -20,7 +20,7 @@ def summary(request):
     ctxt = {
         'jobqueues': JobQueue.objects.all(),
         'queuedjobs': jobs,
-        'workers': Worker.objects.all(),
+        'workers': Worker.objects.all().order_by('hostname'),
         }
     t = loader.get_template('server/summary.html')
     c = RequestContext(request, ctxt)

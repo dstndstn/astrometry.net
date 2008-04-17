@@ -164,18 +164,27 @@ def main(indexdirs):
         tarfile = os.path.join(tmpdir, 'results.tar')
 
         # HACK
-        backend = '/home/gmaps/test/astrometry/blind/backend'
+        #backend = '/home/gmaps/test/astrometry/blind/backend'
+        backend = 'backend'
         # HACK - pipes?
-        cmd = 'cd %s; %s -c %s %s; tar cf %s *' % (tmpdir, backend, backendcfg, axy, tarfile)
+        cmd = 'cd %s; %s -c %s %s' % (tmpdir, backend, backendcfg, axy, tarfile)
+        #cmd = 'cd %s; %s -c %s %s; tar cf %s *' % (tmpdir, backend, backendcfg, axy, tarfile)
         print 'Running command', cmd
 
         cancelfile = '/tmp/cancel'
-        run_command(cmd, timeout=1,
-                    callback=lambda: callback(job.jobid, cancelfile))
+        (rtn, out, err) = run_command(cmd, timeout=1,
+                                      callback=lambda: callback(job.jobid, cancelfile))
+
+        if rtn:
+            print 'backend failed: rtn val %i' % rtn, ', out', out, ', err', err
 
         # Send results -- only if solved??
         solvedfile = os.path.join(tmpdir, 'solved')
         if os.path.exists(solvedfile):
+            cmd = 'cd %s; tar cf %s *' % (tmpdir, tarfile)
+            (rtn, out, err) = run_command(cmd)
+            if rtn:
+                print 'tar failed: rtn val %i' % rtn, ', out', out, ', err', err
             url = job.get_put_results_url()
             f = open(tarfile, 'rb')
             tardata = f.read()
