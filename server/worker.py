@@ -25,6 +25,7 @@ from astrometry.net.util.run_command import run_command
 
 def keep_alive(workerid):
     while True:
+        print 'Stamping keep-alive.'
         me = Worker.objects.all().get(id=workerid)
         me.keepalive = datetime.utcnow()
         me.save()
@@ -60,7 +61,9 @@ def main(indexdirs):
     ip = socket.gethostbyname(hostname)
     me = Worker(hostname=hostname,
                 ip=ip,
-                processid=os.getpid())
+                processid=os.getpid(),
+                keepalive = datetime.utcnow()
+                )
     me.save()
 
     thread.start_new_thread(keep_alive, (me.id,))
