@@ -4,6 +4,8 @@ import astrometry.server.secrets.server_db as secrets
 
 LOGFILE = '/home/gmaps/test/worker.log'
 
+MAIN_SERVER = 'http://oven.cosmo.fas.nyu.edu:8888'
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 

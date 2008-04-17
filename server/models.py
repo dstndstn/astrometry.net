@@ -3,6 +3,11 @@ from django.db import models
 from urllib import urlretrieve
 from datetime import datetime, timedelta
 
+from django.core.urlresolvers import reverse
+
+import views
+import settings
+
 class JobQueue(models.Model):
     name = models.CharField(max_length=32, unique=True, primary_key=True)
 
@@ -15,20 +20,14 @@ class QueuedJob(models.Model):
     # .work: Work completed so far.
     # .workers: Workers current working on this job.
 
-    #axyurl = models.CharField(max_length=1024)
-
     def __str__(self):
         return 'QueuedJob: %s' % self.jobid
 
     def get_url(self):
-        # HACK
-        return 'http://oven.cosmo.fas.nyu.edu:8888/server/input/?jobid=%s' % self.jobid
+        return (settings.MAIN_SERVER + reverse(views.get_input) + '?jobid=%s' % self.jobid)
 
     def get_put_results_url(self):
-        # HACK
-        return 'http://oven.cosmo.fas.nyu.edu:8888/server/results/?jobid=%s' % self.jobid
-
-    #def get_file(self):
+        return (settings.MAIN_SERVER + reverse(views.set_results) + '?jobid=%s' % self.jobid)
 
     def retrieve_to_file(self, fn=None):
         if fn is not None:

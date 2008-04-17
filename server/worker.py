@@ -25,25 +25,17 @@ from astrometry.net.util.run_command import run_command
 
 def keep_alive(workerid):
     while True:
-        #print 'Stamping keep-alive.'
         me = Worker.objects.all().get(id=workerid)
         me.save()
-        #me.update_keepalive()
-        #me.keepalive = datetime.utcnow()
-        #me.save()
         time.sleep(10)
 
 def get_header(header, key, default):
-    #if key in header:
-    #    return header[key]
-    #return default
     try:
         return header[key]
     except KeyError:
         return default
 
 def callback(jobid, fn):
-    #print 'callback.'
     js=QueuedJob.objects.all().filter(jobid=jobid)
     if js.count() == 0:
         return
@@ -56,7 +48,6 @@ def callback(jobid, fn):
 
 def main(indexdirs):
     qname = 'test'
-    #backendconfig = 'backend.cfg'
     q = JobQueue.objects.get(name=qname)
 
     hostname = socket.gethostname()
@@ -70,11 +61,6 @@ def main(indexdirs):
 
     thread.start_new_thread(keep_alive, (me.id,))
 
-    #f = open(backendconfig, 'rb')
-    #be = f.read()
-    #f.close()
-    #lines = be.split('\n')
-
     indexes = []
     for d in indexdirs:
         if not os.path.exists(d):
@@ -87,7 +73,6 @@ def main(indexdirs):
             ssuff = '.skdt.fits'
             if f.endswith(csuff):
                 base = os.path.join(d, f[:-len(csuff)])
-                #print 'file', f, 'base', base
                 if (os.path.exists(base + qsuff) and
                     os.path.exists(base + ssuff)):
                     print 'Found index', base
@@ -97,14 +82,11 @@ def main(indexdirs):
                     indexid = get_header(hdr, 'INDEXID', None)
                     hp = get_header(hdr, 'HEALPIX', -1)
                     hpnside = get_header(hdr, 'HPNSIDE', 1)
-                    print 'id', indexid
-                    print 'hp', hp
-                    print 'hp nside', hpnside
+                    print 'id', indexid, 'hp', hp, 'hp nside', hpnside
                     if indexid is not None:
                         indexes.append((base, indexid, hp, hpnside))
 
     for (fn, indexid, hp, hpnside) in indexes:
-        print 'Saving index', fn
         li = Index(indexid=indexid,
                    healpix=hp,
                    healpix_nside=hpnside,
@@ -113,6 +95,7 @@ def main(indexdirs):
 
     print 'My indexes:', me.pretty_index_list()
 
+    # Write my backend.cfg file.
     (f, backendcfg) = tempfile.mkstemp('', 'backend.cfg-')
     os.close(f)
     f = open(backendcfg, 'wb')
@@ -162,11 +145,7 @@ def main(indexdirs):
         print 'Saved as', fn
 
         tmpdir = tempfile.mkdtemp('', 'backend-results-')
-
         tarfile = os.path.join(tmpdir, 'results.tar')
-
-        # HACK
-        #backend = '/home/gmaps/test/astrometry/blind/backend'
         backend = 'backend'
         cancelfile = os.path.join(tmpdir, 'cancel')
         # HACK - pipes?
@@ -176,7 +155,6 @@ def main(indexdirs):
                     cancel=cancelfile,
                     axy=axy,
                     logfile='blind.log'))
-        #cmd = 'cd %s; %s -c %s %s; tar cf %s *' % (tmpdir, backend, backendcfg, axy, tarfile)
         print 'Running command', cmd
 
         (rtn, out, err) = run_command(cmd, timeout=1,
@@ -217,6 +195,7 @@ def main(indexdirs):
         me.save()
 
         # HACK - delete tempfiles.
+            
 
 
 if __name__ == '__main__':

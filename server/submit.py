@@ -34,6 +34,8 @@ def main(jobqueue, jobid, axyfile):
     job = QueuedJob(q=q, jobid=jobid, enqueuetime=now())
     job.save()
 
+    print 'URL', job.get_url()
+
     for i in range(15):
         jobs = QueuedJob.objects.all().filter(jobid=jobid)
         if not len(jobs):
@@ -43,7 +45,7 @@ def main(jobqueue, jobid, axyfile):
             break
         print 'Sleeping... %i workers' % job.workers.count()
 
-        set_status(job.id, 'Running (on %i machines)' % job.workers.count())
+        #set_status(job.id, 'Running (on %i machines)' % job.workers.count())
 
         sys.stdout.flush()
         time.sleep(3)
