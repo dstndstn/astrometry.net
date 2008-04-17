@@ -16,6 +16,14 @@ from astrometry.server.models import *
 def now():
     return datetime.utcnow()
 
+# THIS DOESN'T WORK.
+def set_status(jobid, status):
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
+    from astrometry.net.portal.job import Job
+    job = Job.objects.get(jobid=jobid)
+    job.status = status
+    job.save()
+
 def main(jobqueue, jobid, axyfile):
     print 'Queue', jobqueue
     print 'Jobid', jobid
@@ -34,6 +42,9 @@ def main(jobqueue, jobid, axyfile):
         if job.stopwork:
             break
         print 'Sleeping... %i workers' % job.workers.count()
+
+        set_status(job.id, 'Running (on %i machines)' % job.workers.count())
+
         sys.stdout.flush()
         time.sleep(3)
 
