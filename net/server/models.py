@@ -12,7 +12,7 @@ from datetime import timedelta
 from django.core.urlresolvers import reverse
 
 import astrometry.net.settings as settings
-import astrometry.net.server.views
+import astrometry.net.server.views as views
 from astrometry.net.portal.job import *
 
 class JobQueue(models.Model):
@@ -39,13 +39,18 @@ class QueuedJob(models.Model):
     # .workers: Workers currently working on this job.
 
     def __str__(self):
-        return 'QueuedJob: %s' % self.jobid
+        s = 'QueuedJob:'
+        if self.job:
+            s += ' job %s' % self.job.jobid
+        if self.submission:
+            s += 'submission %s' % self.submission.subid
+        return s
 
     def get_url(self):
-        return (settings.MAIN_SERVER + reverse(views.get_input) + '?jobid=%s' % self.jobid)
+        return (settings.MAIN_SERVER + reverse(views.get_input) + '?jobid=%s' % self.job.jobid)
 
     def get_put_results_url(self):
-        return (settings.MAIN_SERVER + reverse(views.set_results) + '?jobid=%s' % self.jobid)
+        return (settings.MAIN_SERVER + reverse(views.set_results) + '?jobid=%s' % self.job.jobid)
 
     def retrieve_to_file(self, fn=None):
         if fn is not None:

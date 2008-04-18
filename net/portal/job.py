@@ -317,6 +317,9 @@ class Submission(models.Model):
         s += '>'
         return s
 
+    def typestr(self):
+        return 'Submission'
+
     def check_if_finished(self):
         alljobs = self.jobs.all()
         for job in alljobs:
@@ -431,6 +434,9 @@ class Job(models.Model):
         s += ' ' + str(self.diskfile)
         s += '>'
         return s
+
+    def typestr(self):
+        return 'Job'
 
     def set_is_duplicate(self):
         others = Job.objects.all().filter(diskfile=self.diskfile, status='Solved').order_by('enqueuetime')

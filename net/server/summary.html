@@ -31,10 +31,13 @@
 {% for j in queuedjobs %}
 <tr>
 <td>{{ j.q }}</td>
-<td>{% if j.job %}
+<td>
+{% if j.job %}
+Job
 {{ j.job.jobid }}
 {% endif %}
 {% if j.submission %}
+Submission
 {{ j.submission.subid }}
 {% endif %}
 </td>

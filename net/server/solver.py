@@ -71,55 +71,53 @@ class Solver(object):
         print 'My indexes:', self.worker.pretty_index_list()
 
         # Write my backend.cfg file.
-        (f, backendcfg) = tempfile.mkstemp('', 'backend.cfg-')
+        (f, self.backendcfg) = tempfile.mkstemp('', 'backend.cfg-')
         os.close(f)
-        f = open(backendcfg, 'wb')
+        f = open(self.backendcfg, 'wb')
         f.write('\n'.join(['inparallel'] +
                           ['index %s' % path for (path, indid, hp, hpnside) in self.indexes]
                           ))
         f.close()
 
-    def run(self):
-        while True:
-            if not self.run_one():
-                time.sleep(5)
-
     def run_one(self):
-        jobs = QueuedJob.objects.all().filter(q=self.q, done=False).order_by('priority', 'enqueuetime')
-        if len(jobs) == 0:
+        qjobs = QueuedJob.objects.all().filter(q=self.q, done=False).order_by('priority', 'enqueuetime')
+        if len(qjobs) == 0:
             print 'No jobs; sleeping.'
             return False
 
-        job = None
-        for j in jobs:
+        qjob = None
+        for j in qjobs:
             # HACK - really I want to check that I have an index that
             # another worker hasn't already applied to this job.
             if j.work.all().filter(worker=self.worker).count():
                 # I've already worked on this one.
                 continue
             else:
-                job = j
+                qjob = j
                 break
 
-        if job is None:
+        if qjob is None:
             print "No jobs (that I haven't already worked on); sleeping."
             return False
             
-        self.worker.job = job
+        self.worker.job = qjob
         self.worker.save()
 
-        print 'Working on job', job
-        w = Work(job=job, worker=self.worker, inprogress=True)
-        w.save()
+        print 'Working on job', qjob
+        # FIXME
+        #w = Work(job=qjob, worker=self.worker, inprogress=True)
+        #w.save()
 
         # retrieve the input files.
-        url = job.get_url()
+        url = qjob.get_url()
         print 'Retrieving URL %s...' % url
+
+        job = qjob.job
 
         (f, axy) = tempfile.mkstemp('', 'axy-%s-' % job.jobid)
         os.close(f)
         
-        fn = job.retrieve_to_file(axy)
+        fn = qjob.retrieve_to_file(axy)
         print 'Saved as', fn
 
         tmpdir = tempfile.mkdtemp('', 'backend-results-')
@@ -129,14 +127,14 @@ class Solver(object):
         # HACK - pipes?
         cmd = ('cd %(tempdir)s; %(backend)s -c %(backendconf)s -C %(cancel)s -v %(axy)s > %(logfile)s 2>&1' %
                dict(tempdir=tmpdir, backend=backend,
-                    backendconf=backendcfg,
+                    backendconf=self.backendcfg,
                     cancel=cancelfile,
                     axy=axy,
                     logfile='blind.log'))
         print 'Running command', cmd
     
         (rtn, out, err) = run_command(cmd, timeout=1,
-                                      callback=lambda: self.callback(job, cancelfile))
+                                      callback=lambda: self.callback(qjob, cancelfile))
 
         if rtn:
             print 'backend failed: rtn val %i' % rtn, ', out', out, ', err', err
@@ -148,7 +146,7 @@ class Solver(object):
             (rtn, out, err) = run_command(cmd)
             if rtn:
                 print 'tar failed: rtn val %i' % rtn, ', out', out, ', err', err
-            url = job.get_put_results_url()
+            url = qjob.get_put_results_url()
             f = open(tarfile, 'rb')
             tardata = f.read()
             f.close()
@@ -163,12 +161,32 @@ class Solver(object):
             f.close()
             print 'Got response:', response
 
-            job.done = True
-            job.save()
+            job.set_status('Solved')
 
-        w.inprogress = False
-        w.done = True
-        w.save()
+            # Add WCS to database.
+            wcsfile = os.path.join(tmpdir, 'wcs.fits')
+            wcs = TanWCS(file=wcsfile)
+            wcs.save()
+
+            # HACK - need to make blind write out raw TAN, tweaked TAN, and tweaked SIP.
+            # HACK - compute ramin, ramax, decmin, decmax.
+            calib = Calibration(raw_tan = wcs)
+            calib.save()
+            job.calibration = calib
+            job.add_machine_tags()
+        else:
+            job.set_status('Failed', 'Did not solve.')
+
+        job.save()
+
+        qjob.inprogress = False
+        qjob.done = True
+        qjob.save()
+
+        # FIXME
+        #w.inprogress = False
+        #w.done = True
+        #w.save()
         self.worker.job = None
         self.worker.save()
 
@@ -187,6 +205,10 @@ class Solver(object):
             f.write('')
             f.close()
 
+    def run(self):
+        while True:
+            if not self.run_one():
+                time.sleep(5)
 
 
 if __name__ == '__main__':
