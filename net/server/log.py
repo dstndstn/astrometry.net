@@ -1,8 +1,8 @@
 import logging
 
-from astrometry.server import settings
+from astrometry.net import settings
 
-logfile = settings.LOGFILE
+logfile = settings.SERVER_LOGFILE
 logging.basicConfig(level=logging.DEBUG,
                     format='%(message)s',
                     filename=logfile,

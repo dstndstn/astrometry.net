@@ -2,14 +2,14 @@
 
 import os
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.server.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
 import time
 import sys
 from datetime import datetime
 
-import astrometry.server.settings as settings
-from astrometry.server.models import *
+import astrometry.net.settings as settings
+from astrometry.net.server.models import *
 
 def now():
     return datetime.utcnow()

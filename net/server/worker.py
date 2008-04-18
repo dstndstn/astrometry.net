@@ -1,6 +1,6 @@
 import os
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.server.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
 import sys
 import socket
@@ -14,12 +14,12 @@ from urllib2 import urlopen
 
 import pyfits
 
-import astrometry.server.settings as settings
+import astrometry.net.server.settings as settings
 
 settings.LOGFILE = 'worker.log'
 
-from astrometry.server.log import log
-from astrometry.server.models import *
+from astrometry.net.server.log import log
+from astrometry.net.server.models import *
 
 from astrometry.net.util.run_command import run_command
 

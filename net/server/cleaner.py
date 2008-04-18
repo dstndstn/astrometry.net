@@ -1,13 +1,13 @@
 import os
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.server.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
 import time
 from datetime import datetime
 from datetime import timedelta
 
-import astrometry.server.settings as settings
-from astrometry.server.models import *
+import astrometry.net.server.settings as settings
+from astrometry.net.server.models import *
 
 def clean_db():
     print 'Cleaning db...'
