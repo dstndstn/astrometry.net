@@ -34,7 +34,7 @@ def bailout(job, reason):
     job.save()
 
 def file_get_contents(fn):
-    f = open(fn, 'r')
+    f = open(fn, 'rb')
     txt = f.read()
     f.close()
     return txt

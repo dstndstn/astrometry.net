@@ -1,5 +1,9 @@
 from django.db import models
 
+import os
+import socket
+import thread
+
 from urllib import urlretrieve
 from datetime import datetime, timedelta
 
@@ -54,11 +58,11 @@ class Index(models.Model):
     healpix_nside = models.IntegerField()
 
 class Worker(models.Model):
-    hostname = models.CharField(max_length=256)
-    ip = models.IPAddressField()
-    processid = models.IntegerField()
+    hostname = models.CharField(max_length=256, default=socket.gethostname)
+    ip = models.IPAddressField(default=lambda: socket.gethostbyname(socket.gethostname()))
+    processid = models.IntegerField(default=os.getpid)
     job = models.ForeignKey(QueuedJob, related_name='workers', blank=True, null=True)
-    keepalive = models.DateTimeField(blank=True, default='2000-01-01')
+    keepalive = models.DateTimeField(blank=True, default=Job.timenow)
 
     indices = models.ManyToManyField(Index)
 
@@ -73,6 +77,9 @@ class Worker(models.Model):
         return ', '.join(['%i'%i.indexid + (i.healpix > -1 and '-%02i'%i.healpix or '')
                           for i in self.indexes.all()])
 
+    def start_keepalive_thread(self):
+        thread.start_new_thread(Worker.keep_alive, (self.id,))
+
     @staticmethod
     def filter_keepalive_stale(queryset, allowed_dt):
         cutoff = Worker.get_keepalive_stale_date(allowed_dt)
@@ -83,6 +90,27 @@ class Worker(models.Model):
         now = datetime.utcnow()
         dt = timedelta(seconds=allowed_dt)
         return now - dt
+
+    @staticmethod
+    def keep_alive(workerid):
+        while True:
+            me = Worker.objects.all().get(id=workerid)
+            me.save()
+            time.sleep(10)
+
+    @staticmethod
+    def create(qtype):
+        q = JobQueue.objects.get(name=settings.SITE_ID, queuetype=qtype)
+        hostname = socket.gethostname()
+        ip = socket.gethostbyname(hostname)
+        me = Worker(hostname=hostname,
+                    ip=ip,
+                    processid=os.getpid()
+                    )
+        return me
+
+        
+
 
 class Work(models.Model):
     job = models.ForeignKey(QueuedJob, related_name='work')

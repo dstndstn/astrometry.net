@@ -22,11 +22,17 @@ from astrometry.net.server.log import log
 from astrometry.net.server.models import *
 from astrometry.net.util.run_command import run_command
 
+class Solver(Worker):
 
-# Base class for queue workers.
-class 
+    def __init__(self):
+        
 
 
+def keep_alive(workerid):
+    while True:
+        me = Worker.objects.all().get(id=workerid)
+        me.save()
+        time.sleep(10)
 
 def get_header(header, key, default):
     try:
@@ -195,3 +201,15 @@ def main(indexdirs):
 
         # HACK - delete tempfiles.
             
+
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        indexdirs = sys.argv[1:]
+    else:
+        indexdirs = [
+            '/home/gmaps/INDEXES/500',
+            ]
+    s = Solver(indexdirs)
+    s.run()
+
