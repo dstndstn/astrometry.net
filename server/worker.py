@@ -146,10 +146,10 @@ def main(indexdirs):
 
         tmpdir = tempfile.mkdtemp('', 'backend-results-')
         tarfile = os.path.join(tmpdir, 'results.tar')
-        backend = 'backend'
+        backend = 'backend2'
         cancelfile = os.path.join(tmpdir, 'cancel')
         # HACK - pipes?
-        cmd = ('cd %(tempdir)s; %(backend)s -c %(backendconf)s -C %(cancel)s -i blind.in -v %(axy)s > %(logfile)s 2>&1' %
+        cmd = ('cd %(tempdir)s; %(backend)s -c %(backendconf)s -C %(cancel)s -v %(axy)s > %(logfile)s 2>&1' %
                dict(tempdir=tmpdir, backend=backend,
                     backendconf=backendcfg,
                     cancel=cancelfile,

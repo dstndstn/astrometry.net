@@ -45,6 +45,7 @@
 #include "scriptutils.h"
 #include "gnu-specific.h"
 #include "blind.h"
+#include "log.h"
 
 #include "qfits.h"
 
@@ -87,7 +88,6 @@ struct backend {
 	double sizesmallest;
 	double sizebiggest;
 	bool inparallel;
-	char* blind;
 	double minwidth;
 	double maxwidth;
     int cpulimit;
@@ -254,9 +254,6 @@ static int parse_config_file(FILE* fconf, backend_t* backend)
             sl_append(indices, nextword);
         } else if (is_word(line, "autoindex", &nextword)) {
             auto_index = TRUE;
-        } else if (is_word(line, "blind ", &nextword)) {
-			free(backend->blind);
-			backend->blind = strdup(nextword);
 		} else if (is_word(line, "inparallel", &nextword)) {
 			backend->inparallel = TRUE;
 		} else if (is_word(line, "minwidth ", &nextword)) {
@@ -534,6 +531,11 @@ static int run_blind(job_t* job, backend_t* backend) {
     double app_max_default;
 	bool firsttime = TRUE;
 
+    //if (verbose)
+    //log_init(4);
+    //else
+    log_init(3);
+
     app_min_default = deg2arcsec(backend->minwidth) / job->imagew;
     app_max_default = deg2arcsec(backend->maxwidth) / job->imagew;
 
@@ -571,6 +573,7 @@ static int run_blind(job_t* job, backend_t* backend) {
             solver_set_default_values(sp);
 
             bp->quiet = !verbose;
+            bp->verbose = verbose;
             if (job->timelimit)
                 bp->timelimit = job->timelimit;
             if (job->cpulimit)
@@ -680,6 +683,10 @@ static int run_blind(job_t* job, backend_t* backend) {
 				firsttime = FALSE;
 			}
 
+            printf("Running blind:\n");
+            if (verbose)
+                blind_log_run_parameters(bp);
+
             blind_run(bp);
 
             solver_cleanup(sp);
@@ -691,8 +698,7 @@ static int run_blind(job_t* job, backend_t* backend) {
 	return 0;
 }
 
-job_t* parse_job_from_qfits_header(qfits_header* hdr)
-{
+job_t* parse_job_from_qfits_header(qfits_header* hdr) {
 	double dnil = -HUGE_VAL;
 	job_t* job = job_new();
 	char *pstr;
@@ -936,8 +942,6 @@ void backend_free(backend_t* backend)
         il_free(backend->default_depths);
     if (backend->index_paths)
         sl_free2(backend->index_paths);
-	if (backend->blind)
-		free(backend->blind);
     free(backend);
 }
 
@@ -945,7 +949,6 @@ int main(int argc, char** args)
 {
     char* default_configfn = "backend.cfg";
     char* default_config_path = "../etc";
-    char* default_blind_command = "blind";
 
 	int c;
 	char* configfn = NULL;
@@ -979,6 +982,7 @@ int main(int argc, char** args)
 		case '?':
 			break;
 		default:
+            printf("Unknown flag %c\n", c);
 			exit( -1);
 		}
 	}
@@ -1055,13 +1059,6 @@ int main(int argc, char** args)
 	}
 
     free(configfn);
-
-    if (!backend->blind) {
-        // default "blind": relative to backend.
-        char* blindcmd;
-        asprintf_safe(&blindcmd, "%s/%s", mydir, default_blind_command);
-        backend->blind = blindcmd;
-    }
 
     if (!il_size(backend->default_depths)) {
         int step = 10;

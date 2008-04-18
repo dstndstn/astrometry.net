@@ -146,17 +146,13 @@ void blind_set_solvedout_file(blind_t* bp, const char* fn);
 void blind_set_match_file(blind_t* bp, const char* fn);
 void blind_set_rdls_file(blind_t* bp, const char* fn);
 void blind_set_wcs_file(blind_t* bp, const char* fn);
-
 void blind_set_xcol(blind_t* bp, const char* x);
-
 void blind_set_ycol(blind_t* bp, const char* x);
 
 void blind_add_verify_wcs(blind_t* bp, sip_t* wcs);
-
 void blind_add_index(blind_t* bp, const char* index);
 
 void blind_add_field(blind_t* bp, int field);
-
 void blind_add_field_range(blind_t* bp, int lo, int hi);
 
 void blind_run(blind_t* bp);
