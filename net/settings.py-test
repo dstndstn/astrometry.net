@@ -17,6 +17,7 @@ JOB_QUEUE_DIR = BASEDIR + 'job-queue/'
 
 LOGFILE = BASEDIR + 'django.log'
 PORTAL_LOGFILE = BASEDIR + 'portal.log'
+SERVER_LOGFILE = BASEDIR + 'server.log'
 VO_LOGFILE = BASEDIR + 'vo.log'
 
 HENRY_DRAPER_CAT = ANDIR + 'data/hd.fits'

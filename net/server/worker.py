@@ -14,13 +14,12 @@ from urllib2 import urlopen
 
 import pyfits
 
-import astrometry.net.server.settings as settings
+import astrometry.net.settings as settings
 
-settings.LOGFILE = 'worker.log'
+settings.SERVER_LOGFILE = 'worker.log'
 
 from astrometry.net.server.log import log
 from astrometry.net.server.models import *
-
 from astrometry.net.util.run_command import run_command
 
 def keep_alive(workerid):

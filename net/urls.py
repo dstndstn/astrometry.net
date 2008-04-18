@@ -3,6 +3,7 @@ from astrometry.net import settings
 
 urlpatterns = patterns('',
 					   (r'^tile/', include('astrometry.net.tile.urls')),
+					   (r'^server', include('astrometry.net.server.urls')),
 					   (r'^upload/', include('astrometry.net.upload.urls')),
 					   (r'^login/', 'django.contrib.auth.views.login',
                         {'template_name': 'portal/login.html'}),

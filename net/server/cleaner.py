@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 from datetime import timedelta
 
-import astrometry.net.server.settings as settings
+import astrometry.net.settings as settings
 from astrometry.net.server.models import *
 
 def clean_db():
