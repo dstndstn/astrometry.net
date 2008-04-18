@@ -370,218 +370,73 @@ static int parse_config_file(FILE* fconf, backend_t* backend)
 	return rtn;
 }
 
-struct job_t
-{
+struct job_t {
 	char* fieldfile;
-	double imagew;
-	double imageh;
-	bool run;
-	double poserr;
-	char* solvedfile;
-	char* solvedinfile;
-	char* matchfile;
-	char* rdlsfile;
-	char* wcsfile;
-	char* cancelfile;
-	int timelimit;
-	int cpulimit;
-	int parity;
-	bool tweak;
-	int tweakorder;
 	dl* scales;
 	il* depths;
-	il* fields;
-	double odds_toprint;
-	double odds_tokeep;
-	double odds_tosolve;
-	double image_fraction;
-	double codetol;
-	double distractor_fraction;
-	// Contains sip_t structs.
-	bl* verify_wcs;
     bool include_default_scales;
-    char* xcol;
-    char* ycol;
+
+    blind_t bp;
 };
 typedef struct job_t job_t;
 
-static job_t* job_new()
-{
+static job_t* job_new() {
 	job_t* job = calloc(1, sizeof(job_t));
 	if (!job) {
 		printf("Failed to allocate a new job_t.\n");
 		return NULL;
 	}
-	// Default values:
-	job->poserr = 1.0;
-	job->parity = PARITY_BOTH;
-	job->tweak = TRUE;
-	job->tweakorder = 3;
 	job->scales = dl_new(8);
 	job->depths = il_new(8);
-	job->fields = il_new(32);
-	job->odds_toprint = 1e3;
-	job->odds_tokeep = 1e9;
-	job->odds_tosolve = 1e9;
-	job->image_fraction = 1.0;
-	job->codetol = 0.01;
-	job->distractor_fraction = 0.25;
-	job->verify_wcs = bl_new(8, sizeof(sip_t));
-
 	return job;
 }
 
-static void job_free(job_t* job)
-{
+static void job_free(job_t* job) {
 	if (!job)
-		return ;
-	free(job->solvedfile);
-	free(job->solvedinfile);
-	free(job->matchfile);
-	free(job->rdlsfile);
-	free(job->wcsfile);
-	free(job->cancelfile);
+		return;
 	dl_free(job->scales);
 	il_free(job->depths);
-	il_free(job->fields);
-	bl_free(job->verify_wcs);
-    free(job->xcol);
-    free(job->ycol);
 	free(job);
 }
 
-static void job_print(job_t* job)
-{
-	int i;
-	printf("Image size: %g x %g\n", job->imagew, job->imageh);
-	printf("Positional error: %g pix\n", job->poserr);
-	printf("Solved file: %s\n", job->solvedfile);
-    if (job->solvedinfile)
-        printf("Solved input file: %s\n", job->solvedinfile);
-	printf("Match file: %s\n", job->matchfile);
-	printf("RDLS file: %s\n", job->rdlsfile);
-	printf("WCS file: %s\n", job->wcsfile);
-	printf("Cancel file: %s\n", job->cancelfile);
-    if (job->xcol)
-        printf("X column: %s\n", job->xcol);
-    if (job->ycol)
-        printf("Y column: %s\n", job->ycol);
-	printf("Time limit: %i sec\n", job->timelimit);
-	printf("CPU limit: %i sec\n", job->cpulimit);
-	printf("Parity: %s\n", (job->parity == PARITY_NORMAL ? "pos" :
-	                        (job->parity == PARITY_FLIP ? "neg" :
-	                         (job->parity == PARITY_BOTH ? "both" : "(unknown)"))));
-	printf("Tweak: %s\n", (job->tweak ? "yes" : "no"));
-	printf("Tweak order: %i\n", job->tweakorder);
-	printf("Odds to print: %g\n", job->odds_toprint);
-	printf("Odds to keep: %g\n", job->odds_tokeep);
-	printf("Odds to solve: %g\n", job->odds_tosolve);
-	printf("Image fraction: %g\n", job->image_fraction);
-	printf("Distractor fraction: %g\n", job->distractor_fraction);
-	printf("Code tolerance: %g\n", job->codetol);
-	printf("Scale ranges:\n");
-	for (i = 0; i < dl_size(job->scales) / 2; i++) {
-		double lo, hi;
-		lo = dl_get(job->scales, i * 2);
-		hi = dl_get(job->scales, i * 2 + 1);
-		printf("  [%g, %g] arcsec/pix\n", lo, hi);
-	}
-	printf("Depths:");
-	for (i = 0; i < il_size(job->depths)/2; i++) {
-		int dlo, dhi;
-        dlo = il_get(job->depths, 2*i);
-        dhi = il_get(job->depths, 2*i + 1);
-        if (!dhi)
-            printf(" %i-", dlo);
-        else
-            printf(" %i-%i", dlo, dhi);
-	}
-	printf("\n");
-	printf("Fields:");
-	for (i = 0; i < il_size(job->fields) / 2; i++) {
-		int lo, hi;
-		lo = il_get(job->fields, i * 2);
-		hi = il_get(job->fields, i * 2 + 1);
-		if (lo == hi)
-			printf(" %i", lo);
-		else
-			printf(" %i-%i", lo, hi);
-	}
-	printf("\n");
-	printf("Verify WCS:\n");
-	for (i = 0; i < bl_size(job->verify_wcs); i++) {
-		sip_t* wcs = bl_access(job->verify_wcs, i);
-		printf("  crpix (%g, %g)\n", wcs->wcstan.crpix[0], wcs->wcstan.crpix[1]);
-		printf("  crval (%g, %g)\n", wcs->wcstan.crval[0], wcs->wcstan.crval[1]);
-		printf("  cd  = ( %g, %g )\n", wcs->wcstan.cd[0][0], wcs->wcstan.cd[0][1]);
-		printf("        ( %g, %g )\n", wcs->wcstan.cd[1][0], wcs->wcstan.cd[1][1]);
-	}
-	printf("Run: %s\n", (job->run ? "yes" : "no"));
+static double job_imagew(job_t* job) {
+    return job->bp.solver.field_maxx;
+}
+static double job_imageh(job_t* job) {
+    return job->bp.solver.field_maxy;
 }
 
-static int run_blind(job_t* job, backend_t* backend) {
-    blind_t thebp;
-    blind_t* bp = &thebp;
+static int run_job(job_t* job, backend_t* backend) {
+    blind_t* bp = &(job->bp);
     solver_t* sp = &(bp->solver);
 
-    il* depths;
-    il* nolimit;
     int i;
     double app_min_default;
     double app_max_default;
-	bool firsttime = TRUE;
 
     //if (verbose)
     //log_init(4);
     //else
     log_init(3);
 
-    app_min_default = deg2arcsec(backend->minwidth) / job->imagew;
-    app_max_default = deg2arcsec(backend->maxwidth) / job->imagew;
+    app_min_default = deg2arcsec(backend->minwidth) / job_imagew(job);
+    app_max_default = deg2arcsec(backend->maxwidth) / job_imagew(job);
 
-    nolimit = il_new(4);
-    il_append(nolimit, 0);
-    il_append(nolimit, 0);
-
-    if (il_size(job->depths))
-        depths = job->depths;
-    else {
-        if (backend->inparallel)
-            depths = nolimit;
-        else
-            depths = backend->default_depths;
-    }
-
-    for (i=0; i<il_size(depths)/2; i++) {
+    for (i=0; i<il_size(job->depths)/2; i++) {
+		int startobj = il_get(job->depths, i*2);
+        int endobj = il_get(job->depths, i*2+1);
         int j;
-		int startobj = il_get(depths, i*2);
-        int endobj = il_get(depths, i*2+1);
 
         // make depth ranges be inclusive.
         if (startobj || endobj) {
             endobj++;
         }
 
-		for (j = 0; j < dl_size(job->scales) / 2; j++) {
+		for (j=0; j<dl_size(job->scales) / 2; j++) {
 			double fmin, fmax;
 			double app_max, app_min;
 			int nused;
             int k;
-
-            blind_init(bp);
-            // must be in this order because init_parameters handily zeros out sp
-            solver_set_default_values(sp);
-
-            bp->quiet = !verbose;
-            bp->verbose = verbose;
-            if (job->timelimit)
-                bp->timelimit = job->timelimit;
-            if (job->cpulimit)
-                bp->cpulimit = job->cpulimit;
-
-            sp->startobj = startobj;
-			if (endobj)
-                sp->endobj = endobj;
 
 			// arcsec per pixel range
 			app_min = dl_get(job->scales, j * 2);
@@ -592,16 +447,22 @@ static int run_blind(job_t* job, backend_t* backend) {
                 app_max = app_max_default;
             sp->funits_lower = app_min;
             sp->funits_upper = app_max;
-            sp->field_maxx = job->imagew;
-            sp->field_maxy = job->imageh;
+
+            //blind_init(bp);
+            // must be in this order because init_parameters handily zeros out sp
+            //solver_set_default_values(sp);
+
+            sp->startobj = startobj;
+			if (endobj)
+                sp->endobj = endobj;
 
 			// minimum quad size to try (in pixels)
-            sp->quadsize_min = 0.1 * MIN(job->imagew, job->imageh);
+            sp->quadsize_min = 0.1 * MIN(job_imagew(job), job_imageh(job));
 
 			// range of quad sizes that could be found in the field,
 			// in arcsec.
-			fmax = 1.0 * MAX(job->imagew, job->imageh) * app_max;
-			fmin = 0.1 * MIN(job->imagew, job->imageh) * app_min;
+			fmax = 1.0 * MAX(job_imagew(job), job_imageh(job)) * app_max;
+			fmin = 0.1 * MIN(job_imagew(job), job_imageh(job)) * app_min;
 
 			// Select the indices that should be checked.
 			nused = 0;
@@ -633,55 +494,7 @@ static int run_blind(job_t* job, backend_t* backend) {
 			if (backend->inparallel)
                 bp->indexes_inparallel = TRUE;
 
-			for (k = 0; k < il_size(job->fields) / 2; k++) {
-				int lo = il_get(job->fields, k * 2);
-				int hi = il_get(job->fields, k * 2 + 1);
-                blind_add_field_range(bp, lo, hi);
-			}
-
-            sp->parity = job->parity;
-            sp->verify_pix = job->poserr;
-            sp->codetol = job->codetol;
-            sp->distractor_ratio = job->distractor_fraction;
-            bp->logratio_toprint = job->odds_toprint;
-            bp->logratio_tokeep = job->odds_tokeep;
-            bp->logratio_tosolve = job->odds_tosolve;
-            sp->logratio_bail_threshold = 1e-100;
-            bp->best_hit_only = TRUE;
-
-            if (job->xcol)
-                blind_set_xcol(bp, job->xcol);
-            if (job->ycol)
-                blind_set_ycol(bp, job->ycol);
-
-			if (job->tweak) {
-                bp->do_tweak = TRUE;
-                bp->tweak_aborder = job->tweakorder;
-                bp->tweak_abporder = job->tweakorder;
-                bp->tweak_skipshift = TRUE;
-			}
-
             blind_set_field_file(bp, job->fieldfile);
-			if (job->solvedfile)
-                blind_set_solved_file(bp, job->solvedfile);
-			if (job->solvedinfile)
-                blind_set_solvedin_file(bp, job->solvedinfile);
-			if (job->matchfile)
-                blind_set_match_file(bp, job->matchfile);
-			if (job->rdlsfile)
-                blind_set_rdls_file(bp, job->rdlsfile);
-			if (job->wcsfile)
-				blind_set_wcs_file(bp, job->wcsfile);
-			if (job->cancelfile)
-                blind_set_cancel_file(bp, job->cancelfile);
-
-			if (firsttime) {
-				for (k = 0; k < bl_size(job->verify_wcs); k++) {
-					sip_t* wcs = bl_access(job->verify_wcs, k);
-                    blind_add_verify_wcs(bp, wcs);
-				}
-				firsttime = FALSE;
-			}
 
             printf("Running blind:\n");
             if (verbose)
@@ -689,51 +502,100 @@ static int run_blind(job_t* job, backend_t* backend) {
 
             blind_run(bp);
 
+            // we only want to try using the verify_wcses the first time.
+            blind_clear_verify_wcses(bp);
+            blind_clear_indexes(bp);
+            blind_clear_solutions(bp);
             solver_cleanup(sp);
-            blind_cleanup(bp);
 		}
 	}
 
-    il_free(nolimit);
 	return 0;
 }
 
-job_t* parse_job_from_qfits_header(qfits_header* hdr) {
+
+
+
+
+
+
+
+
+
+bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
+    blind_t* bp = &(job->bp);
+    solver_t* sp = &(bp->solver);
+
 	double dnil = -HUGE_VAL;
-	job_t* job = job_new();
 	char *pstr;
 	int n;
+    bool run;
 
-	job->imagew = qfits_header_getdouble(hdr, "IMAGEW", dnil);
-	job->imageh = qfits_header_getdouble(hdr, "IMAGEH", dnil);
-	if ((job->imagew == dnil) || (job->imageh == dnil) ||
-		(job->imagew <= 0.0) || (job->imageh <= 0.0)) {
+    double default_poserr = 1.0;
+    bool default_tweak = TRUE;
+    int default_tweakorder = 2;
+    double default_odds_toprint = 1e6;
+    double default_odds_tokeep = 1e9;
+    double default_odds_tosolve = 1e9;
+    //double default_image_fraction = 1.0;
+    double default_codetol = 0.01;
+	double default_distractor_fraction = 0.25;
+
+    blind_init(bp);
+    // must be in this order because init_parameters handily zeros out sp
+    solver_set_default_values(sp);
+
+    bp->quiet = !verbose;
+    bp->verbose = verbose;
+
+    sp->field_maxx = qfits_header_getdouble(hdr, "IMAGEW", dnil);
+    sp->field_maxy = qfits_header_getdouble(hdr, "IMAGEH", dnil);
+	if ((sp->field_maxx == dnil) || (sp->field_maxy == dnil) ||
+		(sp->field_maxx <= 0.0) || (sp->field_maxy <= 0.0)) {
 		printf("Must specify positive \"IMAGEW\" and \"IMAGEH\".\n");
 		goto bailout;
 	}
-	job->run = qfits_header_getboolean(hdr, "ANRUN", 0);
-	job->poserr = qfits_header_getdouble(hdr, "ANPOSERR", job->poserr);
-	job->solvedfile = fits_get_dupstring(hdr, "ANSOLVED");
-	job->solvedinfile = fits_get_dupstring(hdr, "ANSOLVIN");
-	job->matchfile = fits_get_dupstring(hdr, "ANMATCH");
-	job->rdlsfile = fits_get_dupstring(hdr, "ANRDLS");
-	job->wcsfile = fits_get_dupstring(hdr, "ANWCS");
-	job->cancelfile = fits_get_dupstring(hdr, "ANCANCEL");
-	job->timelimit = qfits_header_getint(hdr, "ANTLIM", job->timelimit);
-	job->cpulimit = qfits_header_getint(hdr, "ANCLIM", job->cpulimit);
+
+    sp->verify_pix = qfits_header_getdouble(hdr, "ANPOSERR", default_poserr);
+    sp->codetol = qfits_header_getdouble(hdr, "ANCTOL", default_codetol);
+    sp->distractor_ratio = qfits_header_getdouble(hdr, "ANDISTR", default_distractor_fraction);
+    sp->logratio_bail_threshold = 1e-100;
+
+    blind_set_solved_file(bp, fits_get_dupstring(hdr, "ANSOLVED"));
+    blind_set_solvedin_file(bp, fits_get_dupstring(hdr, "ANSOLVIN"));
+    blind_set_match_file(bp, fits_get_dupstring(hdr, "ANMATCH"));
+    blind_set_rdls_file(bp, fits_get_dupstring(hdr, "ANRDLS"));
+    blind_set_wcs_file(bp, fits_get_dupstring(hdr, "ANWCS"));
+    blind_set_cancel_file(bp, fits_get_dupstring(hdr, "ANCANCEL"));
+
+    blind_set_xcol(bp, fits_get_dupstring(hdr, "ANXCOL"));
+    blind_set_ycol(bp, fits_get_dupstring(hdr, "ANYCOL"));
+
+    bp->timelimit = qfits_header_getint(hdr, "ANTLIM", 0);
+    bp->cpulimit = qfits_header_getint(hdr, "ANCLIM", 0);
+    bp->logratio_toprint = qfits_header_getdouble(hdr, "ANODDSPR", default_odds_toprint);
+    bp->logratio_tokeep = qfits_header_getdouble(hdr, "ANODDSKP", default_odds_tokeep);
+    bp->logratio_tosolve = qfits_header_getdouble(hdr, "ANODDSSL", default_odds_tosolve);
+    bp->best_hit_only = TRUE;
+
+	// job->image_fraction = qfits_header_getdouble(hdr, "ANIMFRAC", job->image_fraction);
     job->include_default_scales = qfits_header_getboolean(hdr, "ANAPPDEF", 0);
 
-	job->xcol = fits_get_dupstring(hdr, "ANXCOL");
-	job->ycol = fits_get_dupstring(hdr, "ANYCOL");
-
+    sp->parity = PARITY_BOTH;
 	pstr = qfits_pretty_string(qfits_header_getstr(hdr, "ANPARITY"));
-	if (pstr && !strcmp(pstr, "NEG")) {
-		job->parity = PARITY_FLIP;
-	} else if (pstr && !strcmp(pstr, "POS")) {
-		job->parity = PARITY_NORMAL;
-	}
-	job->tweak = qfits_header_getboolean(hdr, "ANTWEAK", job->tweak);
-	job->tweakorder = qfits_header_getint(hdr, "ANTWEAKO", job->tweakorder);
+	if (pstr && !strcmp(pstr, "NEG"))
+		sp->parity = PARITY_FLIP;
+	else if (pstr && !strcmp(pstr, "POS"))
+		sp->parity = PARITY_NORMAL;
+
+    if (qfits_header_getboolean(hdr, "ANTWEAK", default_tweak)) {
+        int order = qfits_header_getint(hdr, "ANTWEAKO", default_tweakorder);
+        bp->do_tweak = TRUE;
+        bp->tweak_aborder = order;
+        bp->tweak_abporder = order;
+        bp->tweak_skipshift = TRUE;
+    }
+
 	n = 1;
 	while (1) {
 		char key[64];
@@ -758,6 +620,7 @@ job_t* parse_job_from_qfits_header(qfits_header* hdr) {
 		dl_append(job->scales, hi);
 		n++;
 	}
+
 	n = 1;
 	while (1) {
 		char key[64];
@@ -776,6 +639,7 @@ job_t* parse_job_from_qfits_header(qfits_header* hdr) {
 		il_append(job->depths, dhi);
 		n++;
 	}
+
 	n = 1;
 	while (1) {
 		char lokey[64];
@@ -796,10 +660,11 @@ job_t* parse_job_from_qfits_header(qfits_header* hdr) {
                     hikey, qfits_pretty_string(qfits_header_getstr(hdr, hikey)));
             goto bailout;
         }
-		il_append(job->fields, lo);
-		il_append(job->fields, hi);
+
+        blind_add_field_range(bp, lo, hi);
 		n++;
 	}
+
 	n = 1;
 	while (1) {
 		char key[64];
@@ -813,16 +678,11 @@ job_t* parse_job_from_qfits_header(qfits_header* hdr) {
                     qfits_pretty_string(qfits_header_getstr(hdr, key)));
             goto bailout;
         }
-		il_append(job->fields, fld);
-		il_append(job->fields, fld);
+
+        blind_add_field(bp, fld);
 		n++;
 	}
-	job->odds_toprint = qfits_header_getdouble(hdr, "ANODDSPR", job->odds_toprint);
-	job->odds_tokeep = qfits_header_getdouble(hdr, "ANODDSKP", job->odds_tokeep);
-	job->odds_tosolve = qfits_header_getdouble(hdr, "ANODDSSL", job->odds_tosolve);
-	job->image_fraction = qfits_header_getdouble(hdr, "ANIMFRAC", job->image_fraction);
-	job->codetol = qfits_header_getdouble(hdr, "ANCTOL", job->codetol);
-	job->distractor_fraction = qfits_header_getdouble(hdr, "ANDISTR", job->distractor_fraction);
+
 	n = 1;
 	while (1) {
 		char key[64];
@@ -886,25 +746,26 @@ job_t* parse_job_from_qfits_header(qfits_header* hdr) {
             }
         }
 
-		bl_append(job->verify_wcs, &wcs);
+        blind_add_verify_wcs(bp, &wcs);
 		n++;
 	}
 
+	run = qfits_header_getboolean(hdr, "ANRUN", FALSE);
+
 	// Default: solve first field.
-	if (job->run && !il_size(job->fields)) {
-		il_append(job->fields, 1);
-		il_append(job->fields, 1);
+	if (run && !il_size(bp->fieldlist)) {
+        blind_add_field(bp, 1);
 	}
 
-	return job;
+    return TRUE;
 
  bailout:
-	job_free(job);
-	return NULL;
+    return FALSE;
 }
 
-backend_t* backend_new()
-{
+
+
+backend_t* backend_new() {
 	backend_t* backend = calloc(1, sizeof(backend_t));
 	backend->indexinfos = bl_new(16, sizeof(indexinfo_t));
 	backend->index_paths = sl_new(10);
@@ -921,8 +782,7 @@ backend_t* backend_new()
 	return backend;
 }
 
-void backend_free(backend_t* backend)
-{
+void backend_free(backend_t* backend) {
 	int i;
     if (!backend)
         return;
@@ -945,8 +805,7 @@ void backend_free(backend_t* backend)
     free(backend);
 }
 
-int main(int argc, char** args)
-{
+int main(int argc, char** args) {
     char* default_configfn = "backend.cfg";
     char* default_config_path = "../etc";
 
@@ -1073,7 +932,8 @@ int main(int argc, char** args)
 	for (i = optind; i < argc; i++) {
 		char* jobfn;
 		qfits_header* hdr;
-		job_t* job = NULL;
+		job_t* job;
+        blind_t* bp;
 
 		jobfn = args[i];
 
@@ -1087,37 +947,46 @@ int main(int argc, char** args)
 			fprintf(stderr, "Failed to parse FITS header from file \"%s\".\n", jobfn);
 			exit( -1);
 		}
-		job = parse_job_from_qfits_header(hdr);
+        job = job_new();
+		if (!parse_job_from_qfits_header(hdr, job)) {
+            continue;
+        }
 		job->fieldfile = jobfn;
 
 		// If the job has no scale estimate, search everything provided
 		// by the backend
 		if (!dl_size(job->scales) || job->include_default_scales) {
 			double arcsecperpix;
-			arcsecperpix = deg2arcsec(backend->minwidth) / job->imagew;
+			arcsecperpix = deg2arcsec(backend->minwidth) / job_imagew(job);
 			dl_append(job->scales, arcsecperpix);
-			arcsecperpix = deg2arcsec(backend->maxwidth) / job->imagew;
+			arcsecperpix = deg2arcsec(backend->maxwidth) / job_imagew(job);
 			dl_append(job->scales, arcsecperpix);
 		}
 
         // The job can only decrease the CPU limit.
-        if (!job->cpulimit || job->cpulimit > backend->cpulimit) {
-            job->cpulimit = backend->cpulimit;
+        bp = &(job->bp);
+        if (!bp->cpulimit || bp->cpulimit > backend->cpulimit)
+            bp->cpulimit = backend->cpulimit;
+
+        // If the job didn't specify depths, set defaults.
+        if (il_size(job->depths) == 0) {
+            if (backend->inparallel) {
+                // no limit.
+                il_append(job->depths, 0);
+                il_append(job->depths, 0);
+            } else {
+                int k;
+                for (k=0; k<il_size(backend->default_depths); k++)
+                    il_append(job->depths, il_get(backend->default_depths, k));
+            }
         }
 
 		qfits_header_destroy(hdr);
 
-        if (cancelfn) {
-            job->cancelfile = strdup(cancelfn);
-        }
+        if (cancelfn)
+            blind_set_cancel_file(bp, cancelfn);
 
-        if (verbose) {
-            printf("Running job:\n");
-            job_print(job);
-            printf("\n");
-        }
-
-		if (run_blind(job, backend)) {
+		if (run_job(job, backend)) {
 			fprintf(stderr, "Failed to run_blind.\n");
 		}
 
@@ -1128,5 +997,5 @@ int main(int argc, char** args)
 	backend_free(backend);
     sl_free2(strings);
 
-	exit(0);
+    return 0;
 }

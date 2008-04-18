@@ -73,9 +73,21 @@ static void remove_duplicate_solutions(blind_t* bp);
 static void free_matchobj(MatchObj* mo);
 
 
+void blind_clear_verify_wcses(blind_t* bp) {
+    bl_remove_all(bp->verify_wcs_list);
+}
+
+void blind_clear_solutions(blind_t* bp) {
+	bl_remove_all(bp->solutions);
+}
+
+void blind_clear_indexes(blind_t* bp) {
+    sl_free2(bp->indexnames);
+}
+
 void blind_set_field_file(blind_t* bp, const char* fn) {
     free(bp->fieldfname);
-    bp->fieldfname = strdup(fn);
+    bp->fieldfname = strdup_safe(fn);
 }
 
 void blind_set_solved_file(blind_t* bp, const char* fn) {
@@ -85,42 +97,46 @@ void blind_set_solved_file(blind_t* bp, const char* fn) {
 
 void blind_set_solvedin_file(blind_t* bp, const char* fn) {
     free(bp->solved_in);
-    bp->solved_in  = strdup(fn);
+    bp->solved_in = strdup_safe(fn);
 }
 
 void blind_set_solvedout_file(blind_t* bp, const char* fn) {
     free(bp->solved_out);
-    bp->solved_out = strdup(fn);
+    bp->solved_out = strdup_safe(fn);
 }
 
 void blind_set_cancel_file(blind_t* bp, const char* fn) {
     free(bp->cancelfname);
-    bp->cancelfname = strdup(fn);
+    bp->cancelfname = strdup_safe(fn);
 }
 
 void blind_set_match_file(blind_t* bp, const char* fn) {
     free(bp->matchfname);
-    bp->matchfname = strdup(fn);
+    bp->matchfname = strdup_safe(fn);
 }
 
 void blind_set_rdls_file(blind_t* bp, const char* fn) {
     free(bp->indexrdlsfname);
-    bp->indexrdlsfname = strdup(fn);
+    bp->indexrdlsfname = strdup_safe(fn);
 }
 
 void blind_set_wcs_file(blind_t* bp, const char* fn) {
     free(bp->wcs_template);
-    bp->wcs_template = strdup(fn);
+    bp->wcs_template = strdup_safe(fn);
 }
 
 void blind_set_xcol(blind_t* bp, const char* x) {
     free(bp->xcolname);
+    if (!x)
+        x = "X";
     bp->xcolname = strdup(x);
 }
 
-void blind_set_ycol(blind_t* bp, const char* x) {
+void blind_set_ycol(blind_t* bp, const char* y) {
     free(bp->ycolname);
-    bp->ycolname = strdup(x);
+    if (!y)
+        y = "Y";
+    bp->ycolname = strdup_safe(y);
 }
 
 void blind_add_index(blind_t* bp, const char* index) {
@@ -485,8 +501,8 @@ void blind_init(blind_t* bp) {
 	bp->verify_wcs_list = bl_new(1, sizeof(sip_t));
 	bp->verify_wcsfiles = sl_new(1);
 	bp->fieldid_key = strdup("FIELDID");
-	bp->xcolname = strdup("X");
-	bp->ycolname = strdup("Y");
+    blind_set_xcol(bp, NULL);
+    blind_set_ycol(bp, NULL);
 	bp->firstfield = -1;
 	bp->lastfield = -1;
 	bp->tweak_aborder = DEFAULT_TWEAK_ABORDER;
