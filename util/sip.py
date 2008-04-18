@@ -84,6 +84,7 @@ class Tan(ctypes.Structure):
         return ra.value, dec.value
 
     def radec2pixelxy(self, RA, Dec):
+        'Return px,py of ra,dec'
         ra = ctypes.c_double(RA)
         dec = ctypes.c_double(Dec)
         fpx = ctypes.c_double(0.)
@@ -167,6 +168,20 @@ class Sip(ctypes.Structure):
                 ctypes.pointer(ra),
                 ctypes.pointer(dec))
         return ra.value, dec.value
+
+    def radec2pixelxy(self, RA, Dec):
+        'Return px,py of ra,dec'
+        ra = ctypes.c_double(RA)
+        dec = ctypes.c_double(Dec)
+        fpx = ctypes.c_double(0.)
+        fpy = ctypes.c_double(0.)
+        _sip.sip_radec2pixelxy(
+                ctypes.pointer(self),
+                ra, dec,
+                ctypes.pointer(fpx),
+                ctypes.pointer(fpy))
+        return fpx.value, fpy.value
+
 
 if __name__ == '__main__':
     t= Tan()
