@@ -1,3 +1,5 @@
+import astrometry.net.secrets.django_db as secrets
+
 GMAPS_API_KEY = 'ABQIAAAA7dWWcc9pB-GTzZE7CvT6SRTpFHQyuc9zMeXV0wfLqFiAr83b_xQ02hHbHnV4CjuIf4L-3WI_XATmBQ'
 
 W3C_VALIDATOR_URL = 'http://oven.cosmo.fas.nyu.edu:8888/w3c-markup-validator/check'
@@ -49,12 +51,13 @@ SESSION_COOKIE_NAME = 'AstrometryTestSession'
 
 MANAGERS = ADMINS
 
-DATABASE_ENGINE = 'postgresql_psycopg2'
+DATABASE_ENGINE = 'postgresql' # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
 DATABASE_NAME = 'an-test'
-DATABASE_USER = 'gmaps'             # Not used with sqlite3.
-DATABASE_PASSWORD = ''         # Not used with sqlite3.
-DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
-DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
+
+DATABASE_USER     = secrets.DATABASE_USER
+DATABASE_PASSWORD = secrets.DATABASE_PASSWORD
+DATABASE_HOST     = secrets.DATABASE_HOST
+DATABASE_PORT     = secrets.DATABASE_PORT
 
 # Local time zone for this installation. Choices can be found here:
 # http://www.postgresql.org/docs/8.1/static/datetime-keywords.html#DATETIME-TIMEZONE-SET-TABLE
