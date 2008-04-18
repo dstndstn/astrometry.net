@@ -98,16 +98,6 @@ class Worker(models.Model):
             me.save()
             time.sleep(10)
 
-    @staticmethod
-    def create(qtype):
-        q = JobQueue.objects.get(name=settings.SITE_ID, queuetype=qtype)
-        hostname = socket.gethostname()
-        ip = socket.gethostbyname(hostname)
-        me = Worker(hostname=hostname,
-                    ip=ip,
-                    processid=os.getpid()
-                    )
-        return me
 
         
 

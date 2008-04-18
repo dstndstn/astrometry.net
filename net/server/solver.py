@@ -22,106 +22,79 @@ from astrometry.net.server.log import log
 from astrometry.net.server.models import *
 from astrometry.net.util.run_command import run_command
 
-class Solver(Worker):
-
-    def __init__(self):
-        
-
-
-def keep_alive(workerid):
-    while True:
-        me = Worker.objects.all().get(id=workerid)
-        me.save()
-        time.sleep(10)
-
 def get_header(header, key, default):
     try:
         return header[key]
     except KeyError:
         return default
 
-def callback(jobid, fn):
-    js=QueuedJob.objects.all().filter(jobid=jobid)
-    if js.count() == 0:
-        return
-    j=js[0]
-    if j.stopwork:
-        print 'Touching file', fn
-        f = open(fn, 'wb')
-        f.write('')
+class Solver(Worker):
+    def __init__(self, q, indexdirs):
+        super(Worker, self).__init__(self)
+        self.q = q
+        #self.indexdirs = indexdirs
+        self.save()
+        self.start_keepalive_thread()
+
+        self.indexes = []
+        for d in indexdirs:
+            if not os.path.exists(d):
+                print 'No such directory:', d
+                continue
+            files = os.listdir(d)
+            for f in files:
+                csuff = '.ckdt.fits'
+                qsuff = '.quad.fits'
+                ssuff = '.skdt.fits'
+                if f.endswith(csuff):
+                    base = os.path.join(d, f[:-len(csuff)])
+                    if (os.path.exists(base + qsuff) and
+                        os.path.exists(base + ssuff)):
+                        print 'Found index', base
+                        qfile = base + qsuff
+                        hdus = pyfits.open(qfile)
+                        hdr = hdus[0].header
+                        indexid = get_header(hdr, 'INDEXID', None)
+                        hp = get_header(hdr, 'HEALPIX', -1)
+                        hpnside = get_header(hdr, 'HPNSIDE', 1)
+                        print 'id', indexid, 'hp', hp, 'hp nside', hpnside
+                        if indexid is not None:
+                            self.indexes.append((base, indexid, hp, hpnside))
+
+        for (fn, indexid, hp, hpnside) in self.indexes:
+            ind = Index.objects.get_or_create(indexid=indexid,
+                                              healpix=hp,
+                                              healpix_nside=hpnside)
+            self.indices.add(ind)
+        self.save()
+
+        print 'My indexes:', self.pretty_index_list()
+
+        # Write my backend.cfg file.
+        (f, backendcfg) = tempfile.mkstemp('', 'backend.cfg-')
+        os.close(f)
+        f = open(backendcfg, 'wb')
+        f.write('\n'.join(['inparallel'] +
+                          ['index %s' % path for (path, indid, hp, hpnside) in indexes]
+                          ))
         f.close()
 
-def main(indexdirs):
-    qname = 'test'
-    q = JobQueue.objects.get(name=qname)
+    def run(self):
+        while True:
+            if not self.run_one():
+                time.sleep(5)
 
-    hostname = socket.gethostname()
-    ip = socket.gethostbyname(hostname)
-    me = Worker(hostname=hostname,
-                ip=ip,
-                processid=os.getpid(),
-                keepalive = datetime.utcnow()
-                )
-    me.save()
-
-    thread.start_new_thread(keep_alive, (me.id,))
-
-    indexes = []
-    for d in indexdirs:
-        if not os.path.exists(d):
-            print 'No such directory:', d
-            continue
-        files = os.listdir(d)
-        for f in files:
-            csuff = '.ckdt.fits'
-            qsuff = '.quad.fits'
-            ssuff = '.skdt.fits'
-            if f.endswith(csuff):
-                base = os.path.join(d, f[:-len(csuff)])
-                if (os.path.exists(base + qsuff) and
-                    os.path.exists(base + ssuff)):
-                    print 'Found index', base
-                    qfile = base + qsuff
-                    hdus = pyfits.open(qfile)
-                    hdr = hdus[0].header
-                    indexid = get_header(hdr, 'INDEXID', None)
-                    hp = get_header(hdr, 'HEALPIX', -1)
-                    hpnside = get_header(hdr, 'HPNSIDE', 1)
-                    print 'id', indexid, 'hp', hp, 'hp nside', hpnside
-                    if indexid is not None:
-                        indexes.append((base, indexid, hp, hpnside))
-
-    for (fn, indexid, hp, hpnside) in indexes:
-        li = Index(indexid=indexid,
-                   healpix=hp,
-                   healpix_nside=hpnside,
-                   worker=me)
-        li.save()
-
-    print 'My indexes:', me.pretty_index_list()
-
-    # Write my backend.cfg file.
-    (f, backendcfg) = tempfile.mkstemp('', 'backend.cfg-')
-    os.close(f)
-    f = open(backendcfg, 'wb')
-    f.write('\n'.join(['inparallel'] +
-                      ['index %s' % path for (path, indid, hp, hpnside) in indexes]
-                      ))
-    f.close()
-
-    while True:
-        jobs = QueuedJob.objects.all().filter(q=q, stopwork=False).order_by('priority', 'enqueuetime')
+    def run_one(self):
+        jobs = QueuedJob.objects.all().filter(q=q, done=False).order_by('priority', 'enqueuetime')
         if len(jobs) == 0:
             print 'No jobs; sleeping.'
-            time.sleep(5)
-            continue
+            return False
 
         job = None
         for j in jobs:
-
             # HACK - really I want to check that I have an index that
-            # another work hasn't already applied to this job.
-            if j.work.all().filter(worker=me).count():
+            # another worker hasn't already applied to this job.
+            if j.work.all().filter(worker=self).count():
                 # I've already worked on this one.
                 continue
             else:
@@ -130,13 +103,13 @@ def main(indexdirs):
 
         if job is None:
             print "No jobs (that I haven't already worked on); sleeping."
-            time.sleep(5)
-            continue
+            return False
             
-        me.job = job
-        me.save()
+        self.job = job
+        self.save()
+
         print 'Working on job', job
-        w = Work(job=job, worker=me, inprogress=True)
+        w = Work(job=job, worker=self, inprogress=True)
         w.save()
 
         # retrieve the input files.
@@ -163,7 +136,7 @@ def main(indexdirs):
         print 'Running command', cmd
     
         (rtn, out, err) = run_command(cmd, timeout=1,
-                                      callback=lambda: callback(job.jobid, cancelfile))
+                                      callback=lambda: self.callback(job.jobid, cancelfile))
 
         if rtn:
             print 'backend failed: rtn val %i' % rtn, ', out', out, ', err', err
@@ -190,17 +163,30 @@ def main(indexdirs):
             f.close()
             print 'Got response:', response
 
-            job.stopwork = True
+            job.done = True
             job.save()
 
         w.inprogress = False
         w.done = True
         w.save()
-        me.job = None
-        me.save()
+        self.job = None
+        self.save()
 
         # HACK - delete tempfiles.
-            
+        return True
+
+
+    def callback(self, jobid, fn):
+        js=QueuedJob.objects.all().filter(jobid=jobid)
+        if js.count() == 0:
+            return
+        j=js[0]
+        if j.done:
+            print 'Touching file', fn
+            f = open(fn, 'wb')
+            f.write('')
+            f.close()
+
 
 
 if __name__ == '__main__':
@@ -210,6 +196,8 @@ if __name__ == '__main__':
         indexdirs = [
             '/home/gmaps/INDEXES/500',
             ]
-    s = Solver(indexdirs)
+
+    q = JobQueue.objects.get(name=settings.SITE_ID, queuetype='solve')
+    s = Solver(q, indexdirs)
     s.run()
 
