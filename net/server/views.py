@@ -14,8 +14,8 @@ from astrometry.net.util.run_command import run_command
 
 def summary(request):
     jobs = QueuedJob.objects.all()
-    for j in jobs:
-        j.path = Job.s_get_job_dir(j.jobid)
+    #for j in jobs:
+    #    j.path = Job.s_get_job_dir(j.job.jobid)
     
     ctxt = {
         'jobqueues': JobQueue.objects.all(),

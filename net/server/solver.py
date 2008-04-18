@@ -28,13 +28,13 @@ def get_header(header, key, default):
     except KeyError:
         return default
 
-class Solver(Worker):
+class Solver(object):
     def __init__(self, q, indexdirs):
-        super(Worker, self).__init__(self)
+        self.worker = Worker(queue=q)
         self.q = q
         #self.indexdirs = indexdirs
-        self.save()
-        self.start_keepalive_thread()
+        self.worker.save()
+        self.worker.start_keepalive_thread()
 
         self.indexes = []
         for d in indexdirs:
@@ -62,20 +62,20 @@ class Solver(Worker):
                             self.indexes.append((base, indexid, hp, hpnside))
 
         for (fn, indexid, hp, hpnside) in self.indexes:
-            ind = Index.objects.get_or_create(indexid=indexid,
-                                              healpix=hp,
-                                              healpix_nside=hpnside)
-            self.indices.add(ind)
-        self.save()
+            (ind,nil) = Index.objects.get_or_create(indexid=indexid,
+                                                    healpix=hp,
+                                                    healpix_nside=hpnside)
+            self.worker.indexes.add(ind)
+        self.worker.save()
 
-        print 'My indexes:', self.pretty_index_list()
+        print 'My indexes:', self.worker.pretty_index_list()
 
         # Write my backend.cfg file.
         (f, backendcfg) = tempfile.mkstemp('', 'backend.cfg-')
         os.close(f)
         f = open(backendcfg, 'wb')
         f.write('\n'.join(['inparallel'] +
-                          ['index %s' % path for (path, indid, hp, hpnside) in indexes]
+                          ['index %s' % path for (path, indid, hp, hpnside) in self.indexes]
                           ))
         f.close()
 
@@ -85,7 +85,7 @@ class Solver(Worker):
                 time.sleep(5)
 
     def run_one(self):
-        jobs = QueuedJob.objects.all().filter(q=q, done=False).order_by('priority', 'enqueuetime')
+        jobs = QueuedJob.objects.all().filter(q=self.q, done=False).order_by('priority', 'enqueuetime')
         if len(jobs) == 0:
             print 'No jobs; sleeping.'
             return False
@@ -94,7 +94,7 @@ class Solver(Worker):
         for j in jobs:
             # HACK - really I want to check that I have an index that
             # another worker hasn't already applied to this job.
-            if j.work.all().filter(worker=self).count():
+            if j.work.all().filter(worker=self.worker).count():
                 # I've already worked on this one.
                 continue
             else:
@@ -105,11 +105,11 @@ class Solver(Worker):
             print "No jobs (that I haven't already worked on); sleeping."
             return False
             
-        self.job = job
-        self.save()
+        self.worker.job = job
+        self.worker.save()
 
         print 'Working on job', job
-        w = Work(job=job, worker=self, inprogress=True)
+        w = Work(job=job, worker=self.worker, inprogress=True)
         w.save()
 
         # retrieve the input files.
@@ -136,7 +136,7 @@ class Solver(Worker):
         print 'Running command', cmd
     
         (rtn, out, err) = run_command(cmd, timeout=1,
-                                      callback=lambda: self.callback(job.jobid, cancelfile))
+                                      callback=lambda: self.callback(job, cancelfile))
 
         if rtn:
             print 'backend failed: rtn val %i' % rtn, ', out', out, ', err', err
@@ -169,15 +169,15 @@ class Solver(Worker):
         w.inprogress = False
         w.done = True
         w.save()
-        self.job = None
-        self.save()
+        self.worker.job = None
+        self.worker.save()
 
         # HACK - delete tempfiles.
         return True
 
 
-    def callback(self, jobid, fn):
-        js=QueuedJob.objects.all().filter(jobid=jobid)
+    def callback(self, job, fn):
+        js=QueuedJob.objects.all().filter(job=job)
         if js.count() == 0:
             return
         j=js[0]
@@ -197,7 +197,7 @@ if __name__ == '__main__':
             '/home/gmaps/INDEXES/500',
             ]
 
-    q = JobQueue.objects.get(name=settings.SITE_ID, queuetype='solve')
+    (q,nil) = JobQueue.objects.get_or_create(name=settings.SITE_ID, queuetype='solve')
     s = Solver(q, indexdirs)
     s.run()
 

@@ -5,7 +5,9 @@ import socket
 import thread
 
 from urllib import urlretrieve
-from datetime import datetime, timedelta
+import datetime
+import time
+from datetime import timedelta
 
 from django.core.urlresolvers import reverse
 
@@ -18,7 +20,7 @@ class JobQueue(models.Model):
     queuetype = models.CharField(max_length=32)
 
     def __str__(self):
-        return 'JobQueue: %s, %s' % (name, queuetype)
+        return '%s - %s' % (self.name, self.queuetype)
 
 class QueuedJob(models.Model):
     q = models.ForeignKey(JobQueue, related_name='jobs')
@@ -30,7 +32,8 @@ class QueuedJob(models.Model):
 
     enqueuetime = models.DateTimeField(blank=True, default='2000-01-01')
 
-    job = models.ForeignKey(Job)
+    job = models.ForeignKey(Job, blank=True, null=True)
+    submission = models.ForeignKey(Submission, blank=True, null=True)
 
     # .work: Work completed so far.
     # .workers: Workers currently working on this job.
@@ -61,16 +64,16 @@ class Worker(models.Model):
     hostname = models.CharField(max_length=256, default=socket.gethostname)
     ip = models.IPAddressField(default=lambda: socket.gethostbyname(socket.gethostname()))
     processid = models.IntegerField(default=os.getpid)
-    job = models.ForeignKey(QueuedJob, related_name='workers', blank=True, null=True)
     keepalive = models.DateTimeField(blank=True, default=Job.timenow)
-
-    indices = models.ManyToManyField(Index)
+    job = models.ForeignKey(QueuedJob, related_name='workers', blank=True, null=True)
+    queue = models.ForeignKey(JobQueue, related_name='workers')
+    indexes = models.ManyToManyField(Index)
 
     def __str__(self):
         return self.hostname
 
     def save(self):
-        self.keepalive = datetime.utcnow()
+        self.keepalive = datetime.datetime.utcnow()
         super(Worker, self).save()
 
     def pretty_index_list(self):
@@ -87,7 +90,7 @@ class Worker(models.Model):
 
     @staticmethod
     def get_keepalive_stale_date(allowed_dt):
-        now = datetime.utcnow()
+        now = datetime.datetime.utcnow()
         dt = timedelta(seconds=allowed_dt)
         return now - dt
 

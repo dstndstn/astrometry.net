@@ -726,7 +726,13 @@ class Job(models.Model):
             q.save()
         log('Adding job to queue', q)
 
-        qj = QueuedJob(q=q, enqueuetime=Job.timenow(), job=j)
+        if isinstance(j, Job):
+            qj = QueuedJob(q=q, enqueuetime=Job.timenow(), job=j)
+        elif isinstance(j, Submission):
+            qj = QueuedJob(q=q, enqueuetime=Job.timenow(), submission=j)
+        else:
+            assert(False)
+        
         qj.save()
 
         #os.umask(07)

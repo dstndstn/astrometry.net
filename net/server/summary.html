@@ -7,10 +7,12 @@
 <table border="1">
 <tr>
 <th>Name</th>
+<th>Type</th>
 </tr>
 {% for q in jobqueues %}
 <tr>
 <td>{{ q.name }}</td>
+<td>{{ q.queuetype }}</td>
 </tr>
 {% endfor %}
 </table>
@@ -21,18 +23,24 @@
 <tr>
 <th>Queue</th>
 <th>Job Id</th>
+<th>In Progress?</th>
 <th>Done?</th>
 <th>Priority</th>
-<th>Path</th>
 <th>Worked-On By</th>
 </tr>
 {% for j in queuedjobs %}
 <tr>
-<td>{{ j.q.name }}</td>
-<td>{{ j.jobid }}</td>
-<td>{{ j.stopwork }}</td>
+<td>{{ j.q }}</td>
+<td>{% if j.job %}
+{{ j.job.jobid }}
+{% endif %}
+{% if j.submission %}
+{{ j.submission.subid }}
+{% endif %}
+</td>
+<td>{{ j.inprogress }}</td>
+<td>{{ j.done }}</td>
 <td>{{ j.priority }}</td>
-<td>{{ j.path }}</td>
 <td>{{ j.workers.all|join:", "}}</td>
 </tr>
 {% endfor %}
@@ -42,6 +50,7 @@
 
 <table border="1">
 <tr>
+<th>Queue</th>
 <th>Hostname</th>
 <th>Process</th>
 <th>Indexes</th>
@@ -49,10 +58,11 @@
 </tr>
 {% for ww in workers %}
 <tr>
+<td>{{ ww.queue }}</td>
 <td>{{ ww.hostname }}</td>
 <td>{{ ww.processid }}</td>
 <td>{{ ww.pretty_index_list }}</td>
-<td>{{ ww.job.jobid }}</td>
+<td>{{ ww.job }}</td>
 </tr>
 {% endfor %}
 </table>
