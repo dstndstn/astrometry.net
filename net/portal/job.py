@@ -716,12 +716,25 @@ class Job(models.Model):
 
     @staticmethod
     def submit_job_or_submission(j):
-        os.umask(07)
-        j.create_job_dir()
+
+        from astrometry.net.server.models import JobQueue, QueuedJob
+
+        (q, created) = JobQueue.objects.get_or_create(name = settings.SITE_ID,
+                                                      queuetype = 'triage')
+        if created:
+            log('Created JobQueue', q)
+            q.save()
+        log('Adding job to queue', q)
+
+        qj = QueuedJob(q=q, enqueuetime=Job.timenow(), job=j)
+        qj.save()
+
+        #os.umask(07)
+        #j.create_job_dir()
         # enqueue by creating a symlink in the job queue directory.
-        jobdir = j.get_job_dir()
-        link = settings.JOB_QUEUE_DIR + j.get_id()
-        if os.path.exists(link):
-            os.unlink(link)
-        os.symlink(jobdir, link)
+        #jobdir = j.get_job_dir()
+        #link = settings.JOB_QUEUE_DIR + j.get_id()
+        #if os.path.exists(link):
+        #    os.unlink(link)
+        #os.symlink(jobdir, link)
 

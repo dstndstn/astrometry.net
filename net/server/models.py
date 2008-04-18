@@ -7,18 +7,29 @@ from django.core.urlresolvers import reverse
 
 import astrometry.net.settings as settings
 import astrometry.net.server.views
+from astrometry.net.portal.job import *
 
 class JobQueue(models.Model):
-    name = models.CharField(max_length=32, unique=True, primary_key=True)
+    name = models.CharField(max_length=32)
+    queuetype = models.CharField(max_length=32)
+
+    def __str__(self):
+        return 'JobQueue: %s, %s' % (name, queuetype)
 
 class QueuedJob(models.Model):
     q = models.ForeignKey(JobQueue, related_name='jobs')
     priority = models.SmallIntegerField(blank=True, default=0)
-    jobid = models.CharField(max_length=32)
-    stopwork = models.BooleanField(blank=True, default=False)
+
+    #stopwork = models.BooleanField(blank=True, default=False)
+    inprogress = models.BooleanField(blank=True, default=False)
+    done = models.BooleanField(blank=True, default=False)
+
     enqueuetime = models.DateTimeField(blank=True, default='2000-01-01')
+
+    job = models.ForeignKey(Job)
+
     # .work: Work completed so far.
-    # .workers: Workers current working on this job.
+    # .workers: Workers currently working on this job.
 
     def __str__(self):
         return 'QueuedJob: %s' % self.jobid
@@ -37,12 +48,19 @@ class QueuedJob(models.Model):
             (fn, hdrs) = urlretrieve(self.get_url())
             return fn
 
+class Index(models.Model):
+    indexid = models.IntegerField()
+    healpix = models.IntegerField()
+    healpix_nside = models.IntegerField()
+
 class Worker(models.Model):
     hostname = models.CharField(max_length=256)
     ip = models.IPAddressField()
     processid = models.IntegerField()
     job = models.ForeignKey(QueuedJob, related_name='workers', blank=True, null=True)
     keepalive = models.DateTimeField(blank=True, default='2000-01-01')
+
+    indices = models.ManyToManyField(Index)
 
     def __str__(self):
         return self.hostname
@@ -66,17 +84,11 @@ class Worker(models.Model):
         dt = timedelta(seconds=allowed_dt)
         return now - dt
 
-class Index(models.Model):
-    indexid = models.IntegerField()
-    healpix = models.IntegerField()
-    healpix_nside = models.IntegerField()
-    # this is probably not required... might help for management, though.
-    worker = models.ForeignKey(Worker, related_name='indexes')
-
 class Work(models.Model):
     job = models.ForeignKey(QueuedJob, related_name='work')
-    #index = models.ForeignKey(Index)
-    worker = models.ForeignKey(Worker, related_name='work')
+    index = models.ForeignKey(Index)
+    # could put more fine-grained detail (eg range of field objs) in here.
+    worker = models.ForeignKey(Worker, related_name='work', blank=True, null=True)
     inprogress = models.BooleanField(blank=True, default=False)
     done = models.BooleanField(blank=True, default=False)
 
