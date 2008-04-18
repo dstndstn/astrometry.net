@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 
 from django.core.urlresolvers import reverse
 
-import views
-import settings
+import astrometry.server.views
+import astrometry.server.settings
 
 class JobQueue(models.Model):
     name = models.CharField(max_length=32, unique=True, primary_key=True)
