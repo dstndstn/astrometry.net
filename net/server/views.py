@@ -21,7 +21,7 @@ def summary(request):
         'jobqueues': JobQueue.objects.all(),
         'queuedjobs': jobs,
         'workers': Worker.objects.all().order_by('hostname'),
-        'indexes': Index.objects.all().order_by('indexid'),
+        'indexes': Index.objects.all().order_by('indexid', 'healpix'),
         }
     t = loader.get_template('server/summary.html')
     c = RequestContext(request, ctxt)

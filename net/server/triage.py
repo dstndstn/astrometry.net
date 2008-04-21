@@ -34,6 +34,7 @@ from astrometry.net.portal.job import Job, Submission, DiskFile, Calibration, Ta
 from astrometry.net.upload.models import UploadedFile
 from astrometry.net.portal.convert import convert, is_tarball, get_objs_in_field, FileConversionError
 from astrometry.net.portal.wcs import TanWCS
+from astrometry.net.server import indexes
 
 from astrometry.net.util.run_command import run_command
 import astrometry.util.sip as sip
@@ -419,6 +420,9 @@ class Triage(object):
 
 
 if __name__ == '__main__':
+
+    indexes.load_indexes()
+
     (q,nil) = JobQueue.objects.get_or_create(name=settings.SITE_ID, queuetype='triage')
     t = Triage(q)
     t.run()

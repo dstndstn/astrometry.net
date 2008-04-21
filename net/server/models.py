@@ -13,6 +13,7 @@ from django.core.urlresolvers import reverse
 
 import astrometry.net.settings as settings
 from astrometry.net.portal.job import Job, Submission
+from astrometry.util.starutil import *
 
 class JobQueue(models.Model):
     name = models.CharField(max_length=32)
@@ -72,6 +73,17 @@ class Index(models.Model):
 
     def pretty_workers_list(self):
         return ', '.join([w.hostname for w in self.workers.all()])
+
+    def pretty_scalelo(self):
+        return '%.1f' % (rad2arcmin(self.scalelo))
+
+    def pretty_scalehi(self):
+        return '%.1f' % (rad2arcmin(self.scalehi))
+
+    def pretty_healpix(self):
+        if self.healpix == -1:
+            return ''
+        return self.healpix
 
 class Worker(models.Model):
     hostname = models.CharField(max_length=256, default=socket.gethostname)
