@@ -8,6 +8,9 @@ UPLOADER_URL = '/test/uploader'
 
 UPLOAD_DIR = '/data2/TEMP-test'
 
+# for astrometry.net.server
+MAIN_SERVER = 'http://oven.cosmo.fas.nyu.edu:8888'
+
 BASEDIR = '/home/gmaps/test/'
 ANDIR = BASEDIR + 'astrometry/'
 UTIL_DIR = ANDIR + 'util/'

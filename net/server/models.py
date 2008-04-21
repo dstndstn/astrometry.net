@@ -66,6 +66,13 @@ class Index(models.Model):
     healpix = models.IntegerField()
     healpix_nside = models.IntegerField()
 
+    # these are the quad sizes contained in the index.
+    scalelo = models.FloatField()
+    scalehi = models.FloatField()
+
+    def pretty_workers_list(self):
+        return ', '.join([w.hostname for w in self.workers.all()])
+
 class Worker(models.Model):
     hostname = models.CharField(max_length=256, default=socket.gethostname)
     ip = models.IPAddressField(default=lambda: socket.gethostbyname(socket.gethostname()))
@@ -73,7 +80,7 @@ class Worker(models.Model):
     keepalive = models.DateTimeField(blank=True, default=Job.timenow)
     job = models.ForeignKey(QueuedJob, related_name='workers', blank=True, null=True)
     queue = models.ForeignKey(JobQueue, related_name='workers')
-    indexes = models.ManyToManyField(Index)
+    indexes = models.ManyToManyField(Index, related_name='workers')
 
     def __str__(self):
         return self.hostname

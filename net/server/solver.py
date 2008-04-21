@@ -36,7 +36,8 @@ class Solver(object):
         self.worker.save()
         self.worker.start_keepalive_thread()
 
-        self.indexes = []
+        indexpaths = []
+
         for d in indexdirs:
             if not os.path.exists(d):
                 print 'No such directory:', d
@@ -46,27 +47,33 @@ class Solver(object):
                 csuff = '.ckdt.fits'
                 qsuff = '.quad.fits'
                 ssuff = '.skdt.fits'
-                if f.endswith(csuff):
-                    base = os.path.join(d, f[:-len(csuff)])
-                    if (os.path.exists(base + qsuff) and
+                if not f.endswith(qsuff):
+                    continue
+                base = os.path.join(d, f[:-len(qsuff)])
+                if not (os.path.exists(base + csuff) and
                         os.path.exists(base + ssuff)):
-                        print 'Found index', base
-                        qfile = base + qsuff
-                        hdus = pyfits.open(qfile)
-                        hdr = hdus[0].header
-                        indexid = get_header(hdr, 'INDEXID', None)
-                        hp = get_header(hdr, 'HEALPIX', -1)
-                        hpnside = get_header(hdr, 'HPNSIDE', 1)
-                        print 'id', indexid, 'hp', hp, 'hp nside', hpnside
-                        if indexid is not None:
-                            self.indexes.append((base, indexid, hp, hpnside))
+                    continue
+                print 'Found index', base
+                qfile = base + qsuff
+                hdus = pyfits.open(qfile)
+                hdr = hdus[0].header
+                indexid = get_header(hdr, 'INDEXID', None)
+                hp = get_header(hdr, 'HEALPIX', -1)
+                hpnside = get_header(hdr, 'HPNSIDE', 1)
+                scalelo = float(get_header(hdr, 'SCALE_L', 0))
+                scalehi = float(get_header(hdr, 'SCALE_U', 0))
+                print 'id', indexid, 'hp', hp, 'hp nside', hpnside, 'scale [%g, %g]' % (scalelo, scalehi)
+                if indexid is None:
+                    continue
 
-        for (fn, indexid, hp, hpnside) in self.indexes:
-            (ind,nil) = Index.objects.get_or_create(indexid=indexid,
-                                                    healpix=hp,
-                                                    healpix_nside=hpnside)
-            self.worker.indexes.add(ind)
-        self.worker.save()
+                (ind, nil) = Index.objects.get_or_create(indexid=indexid,
+                                                         healpix=hp,
+                                                         healpix_nside=hpnside,
+                                                         defaults={'scalelo': scalelo,
+                                                                   'scalehi': scalehi,})
+                self.worker.indexes.add(ind)
+                self.worker.save()
+                indexpaths.append(base)
 
         print 'My indexes:', self.worker.pretty_index_list()
 
@@ -75,7 +82,7 @@ class Solver(object):
         os.close(f)
         f = open(self.backendcfg, 'wb')
         f.write('\n'.join(['inparallel'] +
-                          ['index %s' % path for (path, indid, hp, hpnside) in self.indexes]
+                          ['index %s' % path for path in indexpaths]
                           ))
         f.close()
 

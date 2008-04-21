@@ -6,7 +6,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.template import Context, RequestContext, loader
 
-from astrometry.net.server.models import QueuedJob, Worker, JobQueue
+from astrometry.net.server.models import QueuedJob, Worker, JobQueue, Index
 from astrometry.net.server.log import log
 
 from astrometry.net.portal.job import Job
@@ -21,6 +21,7 @@ def summary(request):
         'jobqueues': JobQueue.objects.all(),
         'queuedjobs': jobs,
         'workers': Worker.objects.all().order_by('hostname'),
+        'indexes': Index.objects.all().order_by('indexid'),
         }
     t = loader.get_template('server/summary.html')
     c = RequestContext(request, ctxt)

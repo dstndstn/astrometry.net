@@ -71,5 +71,27 @@ Submission
 </table>
 
 
+<h3>Indexes</h3>
+
+<table border="1">
+<tr>
+<th>Id</th>
+<th>Healpix</th>
+<th>Scale Low</th>
+<th>Scale High</th>
+<th>Loaded by</th>
+</tr>
+{% for i in indexes %}
+<tr>
+<td>{{ i.indexid }}</td>
+<td>{{ i.healpix }}</td>
+<td>{{ i.scalelo }}</td>
+<td>{{ i.scalehi }}</td>
+<td>{{ i.pretty_workers_list }}</td>
+</tr>
+{% endfor %}
+</table>
+
+
 
 {% endblock %}
