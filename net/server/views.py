@@ -6,7 +6,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.template import Context, RequestContext, loader
 
-from astrometry.net.server.models import *
+from astrometry.net.server.models import QueuedJob, Worker, JobQueue
 from astrometry.net.server.log import log
 
 from astrometry.net.portal.job import Job

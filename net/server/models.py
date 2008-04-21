@@ -11,9 +11,8 @@ from datetime import timedelta
 
 from django.core.urlresolvers import reverse
 
-import astrometry.net.settings as settings
-import astrometry.net.server.views as views
-from astrometry.net.portal.job import *
+import astrometry.net.server.settings as settings
+from astrometry.net.portal.job import Job, Submission
 
 class JobQueue(models.Model):
     name = models.CharField(max_length=32)
@@ -47,9 +46,11 @@ class QueuedJob(models.Model):
         return s
 
     def get_url(self):
+        import astrometry.net.server.views as views
         return (settings.MAIN_SERVER + reverse(views.get_input) + '?jobid=%s' % self.job.jobid)
 
     def get_put_results_url(self):
+        import astrometry.net.server.views as views
         return (settings.MAIN_SERVER + reverse(views.set_results) + '?jobid=%s' % self.job.jobid)
 
     def retrieve_to_file(self, fn=None):

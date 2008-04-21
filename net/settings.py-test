@@ -4,9 +4,6 @@ GMAPS_API_KEY = 'ABQIAAAA7dWWcc9pB-GTzZE7CvT6SRTpFHQyuc9zMeXV0wfLqFiAr83b_xQ02hH
 
 W3C_VALIDATOR_URL = 'http://oven.cosmo.fas.nyu.edu:8888/w3c-markup-validator/check'
 
-# for astrometry.net.server
-MAIN_SERVER = 'http://oven.cosmo.fas.nyu.edu:8888'
-
 UPLOADER_URL = '/test/uploader'
 
 UPLOAD_DIR = '/data2/TEMP-test'
