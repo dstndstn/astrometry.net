@@ -407,8 +407,8 @@ class Triage(object):
         hdr = hdus[0].header
         scalelo = float(hdr['ANAPPL1'])
         scalehi = float(hdr['ANAPPU1'])
-        imagew = float(hdr['IMAGEW'])
-        imageh = float(hdr['IMAGEH'])
+        imagew  = float(hdr['IMAGEW' ])
+        imageh  = float(hdr['IMAGEH' ])
 
         minsize = scalelo * min(imagew, imageh)
         maxsize = scalehi * sqrt(imagew**2 + imageh**2)
@@ -420,12 +420,6 @@ class Triage(object):
 
         inds = Index.objects.all().filter(
             scalelo__lte=maxsize, scalehi__gte=minsize)
-        for index in inds:
-            w = Work(job=qjob, index=index)
-            w.save()
-
-        log('Added work: ', ', '.join([str(w.index) for w in qjob.work.all()]))
-
         # Re-enqueue in the solving queue.
 
         (q,nil) = JobQueue.objects.get_or_create(name=qjob.q.name,
@@ -433,6 +427,12 @@ class Triage(object):
         qnew = QueuedJob(q=q, enqueuetime=Job.timenow(), job=job)
         qnew.save()
         log('Enqueuing in "%s", Job "%s"' % (q, qnew))
+
+        for index in inds:
+            w = Work(job=qnew, index=index)
+            w.save()
+
+        print 'Added work: ', ', '.join([str(w.index) for w in qnew.work.all()])
 
         qjob.inprogress = False
         qjob.done = True

@@ -14,8 +14,8 @@ from astrometry.net.util.run_command import run_command
 
 def summary(request):
     jobs = QueuedJob.objects.all()
-    #for j in jobs:
-    #    j.path = Job.s_get_job_dir(j.job.jobid)
+    for j in jobs:
+        log('job', j, ': to-do:', j.pretty_unstarted_work(), ', in-progress:', j.pretty_inprogress_work())
     
     ctxt = {
         'jobqueues': JobQueue.objects.all(),
@@ -28,8 +28,9 @@ def summary(request):
     return HttpResponse(t.render(c))
 
 def get_input(request):
-    job = QueuedJob.objects.get(jobid=request.GET['jobid'])
-    path = os.path.join(Job.s_get_job_dir(job.jobid), 'job.axy')
+    qjob = QueuedJob.objects.get(job__jobid=request.GET['jobid'],
+                                q__queuetype='solve')
+    path = qjob.job.get_filename('job.axy')
     f = open(path, 'rb')
     res = HttpResponse()
     res['Content-Type'] = 'application/octet-stream'
@@ -38,7 +39,9 @@ def get_input(request):
     return res
 
 def set_results(request):
-    job = QueuedJob.objects.get(jobid=request.GET['jobid'])
+    qjob = QueuedJob.objects.get(job__jobid=request.GET['jobid'],
+                                 q__queuetype='solve')
+    job = qjob.job
     tardata = request.POST['tar']
     log('tardata is %i bytes long' % len(tardata))
     tardata = tardata.decode('base64_codec')

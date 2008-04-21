@@ -8,9 +8,6 @@ UPLOADER_URL = '/test/uploader'
 
 UPLOAD_DIR = '/data2/TEMP-test'
 
-# for astrometry.net.server
-MAIN_SERVER = 'http://oven.cosmo.fas.nyu.edu:8888'
-
 BASEDIR = '/home/gmaps/test/'
 ANDIR = BASEDIR + 'astrometry/'
 UTIL_DIR = ANDIR + 'util/'
@@ -18,9 +15,12 @@ BLIND_DIR = ANDIR + 'blind/'
 WEB_DIR = ANDIR + 'net/'
 JOB_QUEUE_DIR = BASEDIR + 'job-queue/'
 
+# for astrometry.net.server
+MAIN_SERVER = 'http://oven.cosmo.fas.nyu.edu:8888'
+SERVER_LOGFILE = BASEDIR + 'server.log'
+
 LOGFILE = BASEDIR + 'django.log'
 PORTAL_LOGFILE = BASEDIR + 'portal.log'
-SERVER_LOGFILE = BASEDIR + 'server.log'
 VO_LOGFILE = BASEDIR + 'vo.log'
 
 HENRY_DRAPER_CAT = ANDIR + 'data/hd.fits'

@@ -56,10 +56,18 @@ class QueuedJob(models.Model):
     def retrieve_to_file(self, fn=None):
         if fn is not None:
             (fn, hdrs) = urlretrieve(self.get_url(), fn)
-            return fn
         else:
             (fn, hdrs) = urlretrieve(self.get_url())
-            return fn
+        print 'Retrieve', self.get_url()
+        for k,v in hdrs.items():
+            print '  ', k, '=', v
+        return fn
+
+    def pretty_unstarted_work(self):
+        return ', '.join([str(w.index) for w in self.work.all().filter(done=False, inprogress=False)])
+
+    def pretty_inprogress_work(self):
+        return ', '.join([str(w.index) for w in self.work.all().filter(inprogress=True)])
 
 class Index(models.Model):
     indexid = models.IntegerField()
@@ -100,6 +108,28 @@ class Worker(models.Model):
 
     def __str__(self):
         return self.hostname
+
+    # Returns (QueuedJob, [Work, ...]) or None
+    def get_next_work(self, q):
+        qjobs = QueuedJob.objects.all().filter(q=q, done=False).order_by('priority', 'enqueuetime')
+        if len(qjobs) == 0:
+            return None
+
+        myinds = set(self.indexes.all())
+        for j in qjobs:
+            requested = set([w.index for w in j.work.all().filter(inprogress=False, done=False)])
+            incommon = requested.intersection(myinds)
+            print
+            print 'QJob', j
+            print 'Requested work:', requested
+            print 'My indexes:', myinds
+            print 'Incommon:', incommon
+            print
+            if len(incommon) == 0:
+                continue
+            return (j, [w for w in j.work.all() if w.index in incommon])
+
+        return None
 
     def save(self):
         self.keepalive = datetime.datetime.utcnow()
@@ -143,6 +173,7 @@ class Work(models.Model):
     inprogress = models.BooleanField(blank=True, default=False)
     done = models.BooleanField(blank=True, default=False)
 
-
+    def __str__(self):
+        return 'Job %s, Index %s' % (self.job, self.index)
 
 

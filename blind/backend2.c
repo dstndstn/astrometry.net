@@ -559,7 +559,7 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     sp->verify_pix = qfits_header_getdouble(hdr, "ANPOSERR", default_poserr);
     sp->codetol = qfits_header_getdouble(hdr, "ANCTOL", default_codetol);
     sp->distractor_ratio = qfits_header_getdouble(hdr, "ANDISTR", default_distractor_fraction);
-    sp->logratio_bail_threshold = 1e-100;
+    sp->logratio_bail_threshold = log(1e-100);
 
     blind_set_solved_file(bp, fits_get_dupstring(hdr, "ANSOLVED"));
     blind_set_solvedin_file(bp, fits_get_dupstring(hdr, "ANSOLVIN"));
@@ -573,9 +573,9 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 
     bp->timelimit = qfits_header_getint(hdr, "ANTLIM", 0);
     bp->cpulimit = qfits_header_getint(hdr, "ANCLIM", 0);
-    bp->logratio_toprint = qfits_header_getdouble(hdr, "ANODDSPR", default_odds_toprint);
-    bp->logratio_tokeep = qfits_header_getdouble(hdr, "ANODDSKP", default_odds_tokeep);
-    bp->logratio_tosolve = qfits_header_getdouble(hdr, "ANODDSSL", default_odds_tosolve);
+    bp->logratio_toprint = log(qfits_header_getdouble(hdr, "ANODDSPR", default_odds_toprint));
+    bp->logratio_tokeep = log(qfits_header_getdouble(hdr, "ANODDSKP", default_odds_tokeep));
+    bp->logratio_tosolve = log(qfits_header_getdouble(hdr, "ANODDSSL", default_odds_tosolve));
     bp->best_hit_only = TRUE;
 
 	// job->image_fraction = qfits_header_getdouble(hdr, "ANIMFRAC", job->image_fraction);

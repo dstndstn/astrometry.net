@@ -246,7 +246,13 @@ switch to solving using that list of sources.</p>
 <tr><th colspan="2">Job Status</th></tr>
 
 <tr><td>Job Id:</td><td> {{ jobid }} </td></tr>
-<tr><td>Job Status:</td><td> {{ jobstatus }} </td></tr>
+<tr><td>Job Status:</td><td>
+{% ifequal job.status 'Running' %}
+Running (on {{ job.nworkers }} machine{{ job.nworkers|pluralize }})
+{% else %}
+{{ jobstatus }}
+{% endifequal %}
+ </td></tr>
 <tr><td>Submitted:</td><td> {{ jobsubmittime }} </td></tr>
 {% if jobstarttime %}
 <tr><td>Started:</td><td> {{ jobstarttime }} </td></tr>

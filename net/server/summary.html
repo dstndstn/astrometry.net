@@ -26,6 +26,8 @@
 <th>In Progress?</th>
 <th>Done?</th>
 <th>Priority</th>
+<th>Work To-Do</th>
+<th>Work In Progress</th>
 <th>Worked-On By</th>
 </tr>
 {% for j in queuedjobs %}
@@ -44,6 +46,8 @@ Submission
 <td>{{ j.inprogress }}</td>
 <td>{{ j.done }}</td>
 <td>{{ j.priority }}</td>
+<td>{{ j.pretty_unstarted_work }}</td>
+<td>{{ j.pretty_inprogress_work }}</td>
 <td>{{ j.workers.all|join:", "}}</td>
 </tr>
 {% endfor %}

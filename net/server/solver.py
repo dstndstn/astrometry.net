@@ -21,6 +21,8 @@ settings.SERVER_LOGFILE = 'worker.log'
 from astrometry.net.server.log import log
 from astrometry.net.server.models import *
 from astrometry.net.util.run_command import run_command
+from astrometry.net.portal.wcs import TanWCS
+from astrometry.net.portal.job import Calibration, Job
 
 def get_header(header, key, default):
     try:
@@ -87,33 +89,24 @@ class Solver(object):
         f.close()
 
     def run_one(self):
-        qjobs = QueuedJob.objects.all().filter(q=self.q, done=False).order_by('priority', 'enqueuetime')
-        if len(qjobs) == 0:
-            print 'No jobs; sleeping.'
+        nextwork = self.worker.get_next_work(self.q)
+        if nextwork is None:
             return False
+        (qjob, work) = nextwork
 
-        qjob = None
-        for j in qjobs:
-            # HACK - really I want to check that I have an index that
-            # another worker hasn't already applied to this job.
-            if j.work.all().filter(worker=self.worker).count():
-                # I've already worked on this one.
-                continue
-            else:
-                qjob = j
-                break
-
-        if qjob is None:
-            print "No jobs (that I haven't already worked on); sleeping."
-            return False
-            
         self.worker.job = qjob
         self.worker.save()
 
+        qjob.inprogress = True
+        qjob.save()
+
+        for w in work:
+            w.worker = self.worker
+            w.inprogress = True
+            w.save()
+
         print 'Working on job', qjob
-        # FIXME
-        #w = Work(job=qjob, worker=self.worker, inprogress=True)
-        #w.save()
+        print 'Doing work:', work
 
         # retrieve the input files.
         url = qjob.get_url()
@@ -149,6 +142,7 @@ class Solver(object):
         # Send results -- only if solved??
         solvedfile = os.path.join(tmpdir, 'solved')
         if os.path.exists(solvedfile):
+            print 'Solved!'
             cmd = 'cd %s; tar cf %s *' % (tmpdir, tarfile)
             (rtn, out, err) = run_command(cmd)
             if rtn:
@@ -168,8 +162,6 @@ class Solver(object):
             f.close()
             print 'Got response:', response
 
-            job.set_status('Solved')
-
             # Add WCS to database.
             wcsfile = os.path.join(tmpdir, 'wcs.fits')
             wcs = TanWCS(file=wcsfile)
@@ -179,21 +171,36 @@ class Solver(object):
             # HACK - compute ramin, ramax, decmin, decmax.
             calib = Calibration(raw_tan = wcs)
             calib.save()
+
+            job.set_status('Solved')
             job.calibration = calib
             job.add_machine_tags()
+            job.save()
+
+            # Remove all queued work for this job.
+            qjob.work.all().delete()
+            qjob.inprogress = False
+            qjob.done = True
+            qjob.save()
+
         else:
-            job.set_status('Failed', 'Did not solve.')
+            print 'Did not solve.'
 
-        job.save()
+            # Mark this Work as done.
+            for w in work:
+                w.inprogress = False
+                w.done = True
+                w.save()
 
-        qjob.inprogress = False
-        qjob.done = True
-        qjob.save()
+            # Check whether this is the last Work to be done.
+            todo = qjob.work.all().filter(done=False)
+            if todo.count() == 0:
+                qjob.inprogress = False
+                qjob.save()
 
-        # FIXME
-        #w.inprogress = False
-        #w.done = True
-        #w.save()
+                job.set_status('Failed', 'Did not solve')
+                job.save()
+
         self.worker.job = None
         self.worker.save()
 
@@ -201,8 +208,8 @@ class Solver(object):
         return True
 
 
-    def callback(self, job, fn):
-        js=QueuedJob.objects.all().filter(job=job)
+    def callback(self, qjob, fn):
+        js=QueuedJob.objects.all().filter(id=qjob.id)
         if js.count() == 0:
             return
         j=js[0]
