@@ -8,6 +8,7 @@ import time
 import tempfile
 import thread
 from datetime import datetime
+from optparse import OptionParser
 
 from urllib import urlencode
 from urllib2 import urlopen
@@ -226,14 +227,25 @@ class Solver(object):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        indexdirs = sys.argv[1:]
+
+    parser = OptionParser()
+
+    # queue name
+    # queue type
+    #parser.add_option('-t', '--threads', dest='threads', type='int', default=1)
+
+    (options, args) = parser.parse_args(sys.argv)
+
+    if len(args):
+        indexdirs = args
     else:
         indexdirs = [
             '/home/gmaps/INDEXES/500',
             ]
 
     (q,nil) = JobQueue.objects.get_or_create(name=settings.SITE_ID, queuetype='solve')
+
     s = Solver(q, indexdirs)
     s.run()
+
 
