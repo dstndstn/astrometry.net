@@ -11,7 +11,7 @@ from datetime import timedelta
 
 from django.core.urlresolvers import reverse
 
-import astrometry.net.server.settings as settings
+import astrometry.net.settings as settings
 from astrometry.net.portal.job import Job, Submission
 
 class JobQueue(models.Model):
