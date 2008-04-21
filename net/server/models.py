@@ -26,7 +26,6 @@ class QueuedJob(models.Model):
     q = models.ForeignKey(JobQueue, related_name='jobs')
     priority = models.SmallIntegerField(blank=True, default=0)
 
-    #stopwork = models.BooleanField(blank=True, default=False)
     inprogress = models.BooleanField(blank=True, default=False)
     done = models.BooleanField(blank=True, default=False)
 
@@ -35,7 +34,7 @@ class QueuedJob(models.Model):
     job = models.ForeignKey(Job, blank=True, null=True)
     submission = models.ForeignKey(Submission, blank=True, null=True)
 
-    # .work: Work completed so far.
+    # .work: Work (requested or completed so far).
     # .workers: Workers currently working on this job.
 
     def __str__(self):
@@ -67,9 +66,14 @@ class Index(models.Model):
     healpix = models.IntegerField()
     healpix_nside = models.IntegerField()
 
-    # these are the quad sizes contained in the index.
+    # these are the quad sizes contained in the index, in radians.
     scalelo = models.FloatField()
     scalehi = models.FloatField()
+
+    def __str__(self):
+        if self.healpix == -1:
+            return '%i' % self.indexid
+        return '%i-%02i' % (self.indexid, self.healpix)
 
     def pretty_workers_list(self):
         return ', '.join([w.hostname for w in self.workers.all()])
@@ -134,6 +138,7 @@ class Work(models.Model):
     job = models.ForeignKey(QueuedJob, related_name='work')
     index = models.ForeignKey(Index)
     # could put more fine-grained detail (eg range of field objs) in here.
+
     worker = models.ForeignKey(Worker, related_name='work', blank=True, null=True)
     inprogress = models.BooleanField(blank=True, default=False)
     done = models.BooleanField(blank=True, default=False)

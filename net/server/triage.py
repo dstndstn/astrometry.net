@@ -18,12 +18,15 @@ import time
 import tempfile
 import thread
 from datetime import datetime
+from math import sqrt
 
 from urllib import urlencode, urlretrieve
 from urllib2 import urlopen
 from urlparse import urlparse
 
 import pyfits
+
+from django.db.models import Q
 
 settings.SERVER_LOGFILE = 'worker.log'
 
@@ -82,7 +85,8 @@ class Triage(object):
 
     def run_submission(self, qjob):
         submission = qjob.submission
-        log('Running submission: ' + str(submission))
+        log('Running submission:')
+        log(str(submission))
         tmpfile = None
         basename = None
 
@@ -395,6 +399,32 @@ class Triage(object):
         log('created axy file ' + axypath)
 
         df.save()
+
+        # Decide which indexes should be applied, and create Work entries
+        # for each of them.
+        # read the axy we just wrote...
+        hdus = pyfits.open(axypath)
+        hdr = hdus[0].header
+        scalelo = float(hdr['ANAPPL1'])
+        scalehi = float(hdr['ANAPPU1'])
+        imagew = float(hdr['IMAGEW'])
+        imageh = float(hdr['IMAGEH'])
+
+        minsize = scalelo * min(imagew, imageh)
+        maxsize = scalehi * sqrt(imagew**2 + imageh**2)
+        # MAGIC - minimum size of a quad in the field.
+        minsize *= 0.1
+
+        minsize = arcsec2rad(minsize)
+        maxsize = arcsec2rad(maxsize)
+
+        inds = Index.objects.all().filter(
+            scalelo__lte=maxsize, scalehi__gte=minsize)
+        for index in inds:
+            w = Work(job=qjob, index=index)
+            w.save()
+
+        log('Added work: ', ', '.join([str(w.index) for w in qjob.work.all()]))
 
         # Re-enqueue in the solving queue.
 

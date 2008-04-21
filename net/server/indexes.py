@@ -1,4 +1,4 @@
-from astrometry.util.starutil import *
+from astrometry.util.starutil import arcmin2rad
 from astrometry.net.server.models import Index
 
 def load_indexes():
