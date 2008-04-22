@@ -35,7 +35,6 @@ class Solver(object):
     def __init__(self, q, indexdirs):
         self.worker = Worker(queue=q)
         self.q = q
-        #self.indexdirs = indexdirs
         self.worker.save()
         self.worker.start_keepalive_thread()
 
@@ -234,6 +233,9 @@ if __name__ == '__main__':
     # queue type
     #parser.add_option('-t', '--threads', dest='threads', type='int', default=1)
 
+    parser.add_option('-D', '--daemon', dest='daemon',
+                      action='store_true', default=False)
+
     (options, args) = parser.parse_args(sys.argv)
 
     if len(args):
@@ -244,8 +246,13 @@ if __name__ == '__main__':
             ]
 
     (q,nil) = JobQueue.objects.get_or_create(name=settings.SITE_ID, queuetype='solve')
-
     s = Solver(q, indexdirs)
-    s.run()
 
+    if options.daemon:
+        print 'Becoming daemon...'
+
+        from astrometry.util.daemon import createDaemon
+        createDaemon()
+
+    s.run()
 

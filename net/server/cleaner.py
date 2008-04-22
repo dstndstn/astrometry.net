@@ -29,10 +29,10 @@ def clean_db():
         print 'Removing finished job from queue:', job
         job.delete()
 
-    time.sleep(10)
 
 
 if __name__ == '__main__':
     while True:
         clean_db()
+        time.sleep(10)
         
