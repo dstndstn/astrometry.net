@@ -9,6 +9,7 @@ UPLOADER_URL = '/test/uploader'
 UPLOAD_DIR = '/data2/TEMP-test'
 
 BASEDIR = '/u/dstn/an30/astrometry/'
+LOG_DIR = BASEDIR + 'log/'
 ANDIR = BASEDIR + 'astrometry/'
 UTIL_DIR = ANDIR + 'util/'
 BLIND_DIR = ANDIR + 'blind/'
@@ -17,11 +18,11 @@ JOB_QUEUE_DIR = BASEDIR + 'job-queue/'
 
 # for astrometry.net.server
 MAIN_SERVER = 'http://oven.cosmo.fas.nyu.edu:8888'
-SERVER_LOGFILE = BASEDIR + 'server.log'
+SERVER_LOGFILE = LOG_DIR + 'server.log'
 
-LOGFILE = BASEDIR + 'django.log'
-PORTAL_LOGFILE = BASEDIR + 'portal.log'
-VO_LOGFILE = BASEDIR + 'vo.log'
+LOGFILE = LOG_DIR + 'django.log'
+PORTAL_LOGFILE = LOG_DIR + 'portal.log'
+VO_LOGFILE = LOG_DIR + 'vo.log'
 
 HENRY_DRAPER_CAT = ANDIR + 'data/hd.fits'
 

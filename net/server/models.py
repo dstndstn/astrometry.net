@@ -110,6 +110,8 @@ class Worker(models.Model):
     queue = models.ForeignKey(JobQueue, related_name='workers')
     indexes = models.ManyToManyField(Index, related_name='workers')
 
+    # .work
+
     def __str__(self):
         return '%s:%i' % (self.hostname, self.processid)
 
@@ -138,6 +140,9 @@ class Worker(models.Model):
     def save(self):
         self.keepalive = datetime.datetime.utcnow()
         super(Worker, self).save()
+
+    def delete(self):
+        print 'deleting', self
 
     def pretty_index_list(self):
         return ', '.join(['%i'%i.indexid + (i.healpix > -1 and '-%02i'%i.healpix or '')
@@ -180,4 +185,6 @@ class Work(models.Model):
     def __str__(self):
         return 'Job %s, Index %s' % (self.job, self.index)
 
+    def delete(self):
+        print 'deleting', self
 
