@@ -122,6 +122,18 @@ class Solver(object):
         qjob.inprogress = True
         qjob.save()
 
+
+        # check that i'm the first of my peer workers to work on this job.
+        myinds = self.worker.pretty_index_list()
+        for w in qjob.workers.all():
+            inds = w.pretty_index_list()
+            print 'Worker', w, 'has inds', inds
+            if myinds == inds:
+                if w.id < worker.id:
+                    print 'Aborting because another Worker with the same index set is already working on this job: ', w
+                    return False
+
+
         log('Working on job', qjob)
         log('Doing work:', work)
 
