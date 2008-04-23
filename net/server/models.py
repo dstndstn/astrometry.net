@@ -68,6 +68,7 @@ class QueuedJob(models.Model):
 
     def pretty_inprogress_work(self):
         inds = [str(w.index) for w in self.work.all().filter(inprogress=True)]
+        #inds = [(str(w.index) + '(' + str(w.worker) + ')') for w in self.work.all().filter(inprogress=True)]
         inds.sort()
         return ', '.join(inds)
 
@@ -110,7 +111,7 @@ class Worker(models.Model):
     indexes = models.ManyToManyField(Index, related_name='workers')
 
     def __str__(self):
-        return self.hostname
+        return '%s:%i' % (self.hostname, self.processid)
 
     # Returns (QueuedJob, [Work, ...]) or None
     def get_next_work(self, q):
