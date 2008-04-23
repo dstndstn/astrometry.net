@@ -129,7 +129,7 @@ class Solver(object):
             inds = w.pretty_index_list()
             print 'Worker', w, 'has inds', inds
             if myinds == inds:
-                if w.id < worker.id:
+                if w.id < self.worker.id:
                     print 'Aborting because another Worker with the same index set is already working on this job: ', w
                     return False
 
