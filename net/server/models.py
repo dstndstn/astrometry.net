@@ -67,7 +67,9 @@ class QueuedJob(models.Model):
         return ', '.join([str(w.index) for w in self.work.all().filter(done=False, inprogress=False)])
 
     def pretty_inprogress_work(self):
-        return ', '.join([str(w.index) for w in self.work.all().filter(inprogress=True)])
+        inds = [str(w.index) for w in self.work.all().filter(inprogress=True)]
+        inds.sort()
+        return ', '.join(inds)
 
 class Index(models.Model):
     indexid = models.IntegerField()

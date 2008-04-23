@@ -215,11 +215,11 @@ class Solver(object):
         # HACK - delete tempfiles.
         return True
 
-    def abort_job(self):
+    def abort_job(self, cancelfn):
         self.aborting_job = True
-        log('Touching file', fn)
-        f = open(fn, 'wb')
-        f.write('')
+        log('Touching file', cancelfn)
+        f = open(cancelfn, 'wb')
+        f.write('x')
         f.close()
 
     def callback(self, qjob, worker, fn):
@@ -228,7 +228,7 @@ class Solver(object):
             return
         j=js[0]
         if j.done:
-            self.abort_job()
+            self.abort_job(fn)
         # check that i'm the first of my peer workers to work on this job.
         myinds = ', '.join([str(i) for i in worker.indexes.all().order_by('indexid', 'healpix')])
         for w in j.workers.all():
@@ -236,7 +236,7 @@ class Solver(object):
             if myinds == inds:
                 if w.id < worker.id:
                     log('Aborting because another Worker with the same index set is already working on this job: ', w)
-                    self.abort_job()
+                    self.abort_job(fn)
 
 
     def run(self):
