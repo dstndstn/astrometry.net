@@ -40,6 +40,7 @@ class Solver(object):
         self.q = q
         self.worker.save()
         self.worker.start_keepalive_thread()
+        self.aborting_job = False
 
         indexpaths = []
 
@@ -142,67 +143,71 @@ class Solver(object):
         if rtn:
             log('backend failed: rtn val %i' % rtn, ', out', out, ', err', err)
 
-        # Send results -- only if solved??
-        solvedfile = os.path.join(tmpdir, 'solved')
-        if os.path.exists(solvedfile):
-            log('Solved!')
-            cmd = 'cd %s; tar cf %s *' % (tmpdir, tarfile)
-            (rtn, out, err) = run_command(cmd)
-            if rtn:
-                log('tar failed: rtn val %i' % rtn, ', out', out, ', err', err)
-            url = qjob.get_put_results_url()
-            f = open(tarfile, 'rb')
-            tardata = f.read()
-            f.close()
-            log('Tardata string is %i bytes long.' % len(tardata))
-            tardata = tardata.encode('base64_codec')
-            log('Encoded string is %i bytes long.' % len(tardata))
-            data = urlencode({ 'tar': tardata })
-            log('Sending response to', url)
-            log('url-encoded string is %i bytes long.' % len(data))
-            f = urlopen(url, data)
-            response = f.read()
-            f.close()
-            log('Got response:', response)
+        if not self.aborting_job:
+            # Send results -- only if solved??
+            solvedfile = os.path.join(tmpdir, 'solved')
+            if os.path.exists(solvedfile):
+                log('Solved!')
+                cmd = 'cd %s; tar cf %s *' % (tmpdir, tarfile)
+                (rtn, out, err) = run_command(cmd)
+                if rtn:
+                    log('tar failed: rtn val %i' % rtn, ', out', out, ', err', err)
+                url = qjob.get_put_results_url()
+                f = open(tarfile, 'rb')
+                tardata = f.read()
+                f.close()
+                log('Tardata string is %i bytes long.' % len(tardata))
+                tardata = tardata.encode('base64_codec')
+                log('Encoded string is %i bytes long.' % len(tardata))
+                data = urlencode({ 'tar': tardata })
+                log('Sending response to', url)
+                log('url-encoded string is %i bytes long.' % len(data))
+                f = urlopen(url, data)
+                response = f.read()
+                f.close()
+                log('Got response:', response)
 
-            # Add WCS to database.
-            wcsfile = os.path.join(tmpdir, 'wcs.fits')
-            wcs = TanWCS(file=wcsfile)
-            wcs.save()
+                # Add WCS to database.
+                wcsfile = os.path.join(tmpdir, 'wcs.fits')
+                wcs = TanWCS(file=wcsfile)
+                wcs.save()
 
-            # HACK - need to make blind write out raw TAN, tweaked TAN, and tweaked SIP.
-            # HACK - compute ramin, ramax, decmin, decmax.
-            calib = Calibration(raw_tan = wcs)
-            calib.save()
+                # HACK - need to make blind write out raw TAN, tweaked TAN, and tweaked SIP.
+                # HACK - compute ramin, ramax, decmin, decmax.
+                calib = Calibration(raw_tan = wcs)
+                calib.save()
 
-            job.set_status('Solved')
-            job.calibration = calib
-            job.add_machine_tags()
-            job.save()
+                job.set_status('Solved')
+                job.calibration = calib
+                job.add_machine_tags()
+                job.save()
 
-            # Remove all queued work for this job.
-            qjob.work.all().delete()
-            qjob.inprogress = False
-            qjob.done = True
-            qjob.save()
-
-        else:
-            log('Did not solve.')
-
-            # Mark this Work as done.
-            for w in work:
-                w.inprogress = False
-                w.done = True
-                w.save()
-
-            # Check whether this is the last Work to be done.
-            todo = qjob.work.all().filter(done=False)
-            if todo.count() == 0:
+                # Remove all queued work for this job.
+                qjob.work.all().delete()
                 qjob.inprogress = False
+                qjob.done = True
                 qjob.save()
 
-                job.set_status('Failed', 'Did not solve')
-                job.save()
+            else:
+                log('Did not solve.')
+
+                # Mark this Work as done.
+                for w in work:
+                    w.inprogress = False
+                    w.done = True
+                    w.save()
+
+                # Check whether this is the last Work to be done.
+                todo = qjob.work.all().filter(done=False)
+                if todo.count() == 0:
+                    qjob.inprogress = False
+                    qjob.save()
+
+                    job.set_status('Failed', 'Did not solve')
+                    job.save()
+
+        else:
+            self.aborting_job = False
 
         self.worker.job = None
         self.worker.save()
@@ -211,6 +216,7 @@ class Solver(object):
         return True
 
     def abort_job(self):
+        self.aborting_job = True
         log('Touching file', fn)
         f = open(fn, 'wb')
         f.write('')

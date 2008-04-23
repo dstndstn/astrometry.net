@@ -30,21 +30,34 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-extern char *optarg;
-extern int optind, opterr, optopt;
-
 int main(int argc, char** args) {
-    int argidx, argchar;
     int rtn;
     char** child_argv;
+    int be_daemon = 1;
+
+    if (argc >= 2 && strcmp(args[1], "-D")==0) {
+        be_daemon = 0;
+        args++;
+        argc--;
+    }
 
     child_argv = calloc(argc, sizeof(char*));
     memcpy(child_argv, args+1, (argc-1) * sizeof(char*));
 
-    fprintf(stderr, "Becoming daemon...\n");
-    if (daemon(0, 0) == -1) {
-        fprintf(stderr, "Failed to set daemon process: %s\n", strerror(errno));
-        exit(-1);
+    /*
+     int i;
+     printf("Child args:\n");
+     for (i=0; i<argc; i++) {
+     printf("  %i: %s\n", i, child_argv[i]);
+     }
+     */
+
+    if (be_daemon) {
+        fprintf(stderr, "Daemon starting.\n");
+        if (daemon(0, 0) == -1) {
+            fprintf(stderr, "Failed to set daemon process: %s\n", strerror(errno));
+            exit(-1);
+        }
     }
 
     rtn = execvp(child_argv[0], child_argv);

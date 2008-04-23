@@ -35,20 +35,27 @@ def launch_cslab(args, inds):
     (hname,) = args
     cmd = 'echo "%s" | ssh -x -T solver-cslab' % hname
     print 'Running:', cmd
-    (rtn, out, err) = run_command(cmd)
-    if rtn:
-        print 'Command failed: rtn %i' % rtn
-    print 'Out:', out
-    print 'Err:', err
+    os.system(cmd)
+    print 'launch command returned.'
+
+    #(rtn, out, err) = run_command(cmd)
+    #if rtn:
+    #    print 'Command failed: rtn %i' % rtn
+    #print 'Out:', out
+    #print 'Err:', err
 
 def launch_oven(args, inds):
     print 'launching oven:', args
     print 'indexes:', inds
     (hname,) = args
+    cmd = '%ssimple-daemon %s' % (settings.WEB_DIR + 'execs/', settings.WEB_DIR + 'server/run-solver-oven.sh')
+    print 'Running:', cmd
+    os.system(cmd)
+    print 'launch command returned.'
 
 hosts = [
     (launch_oven,  ('oven',     ), i510up,  4),
-    (launch_cslab, ('cluster60',), i505to9, 2),
+    #(launch_cslab, ('cluster60',), i505to9, 2),
     (launch_cslab, ('cluster59',), i505to9, 2),
     (launch_cslab, ('cluster58',), i504,    2),
     (launch_cslab, ('cluster57',), i504,    2),
@@ -80,7 +87,7 @@ def launch_solvers():
             # is this host already running the maximum number of
             # instances?
             (hname,) = args
-            NW = Worker.objects.all().filter(hostname__istartswith=hname+'.').count()
+            NW = Worker.objects.all().filter(hostname__istartswith=hname).count()
             if NW >= Nmax:
                 continue
             Nlaunch = min(Ntarget - NW, Nmax)
@@ -99,6 +106,12 @@ def launch_solvers():
 
 if __name__ == '__main__':
     while True:
+        print 
+        print 'Checking if any solvers need to be launched...'
+        print
         launch_solvers()
+        print 
+        print 'Sleeping...'
+        print
         time.sleep(30)
 

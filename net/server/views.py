@@ -20,7 +20,7 @@ def summary(request):
     ctxt = {
         'jobqueues': JobQueue.objects.all(),
         'queuedjobs': jobs,
-        'workers': Worker.objects.all().order_by('hostname'),
+        'workers': Worker.objects.all().order_by('hostname', 'processid'),
         'indexes': Index.objects.all().order_by('indexid', 'healpix'),
         }
     t = loader.get_template('server/summary.html')
