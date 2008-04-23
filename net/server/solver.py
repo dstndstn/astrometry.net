@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import os
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
@@ -17,9 +19,10 @@ import pyfits
 
 import astrometry.net.settings as settings
 
-settings.SERVER_LOGFILE = 'worker.log'
 
+#settings.SERVER_LOGFILE = 'worker.log'
 from astrometry.net.server.log import log
+
 from astrometry.net.server.models import *
 from astrometry.net.util.run_command import run_command
 from astrometry.net.portal.wcs import TanWCS
@@ -105,12 +108,12 @@ class Solver(object):
             w.inprogress = True
             w.save()
 
-        print 'Working on job', qjob
-        print 'Doing work:', work
+        log('Working on job', qjob)
+        log('Doing work:', work)
 
         # retrieve the input files.
         url = qjob.get_url()
-        print 'Retrieving URL %s...' % url
+        log('Retrieving URL %s...' % url)
 
         job = qjob.job
 
@@ -118,7 +121,7 @@ class Solver(object):
         os.close(f)
         
         fn = qjob.retrieve_to_file(axy)
-        print 'Saved as', fn
+        log('Saved as', fn)
 
         tmpdir = tempfile.mkdtemp('', 'backend-results-')
         tarfile = os.path.join(tmpdir, 'results.tar')
@@ -131,36 +134,36 @@ class Solver(object):
                     cancel=cancelfile,
                     axy=axy,
                     logfile='blind.log'))
-        print 'Running command', cmd
+        log('Running command', cmd)
     
         (rtn, out, err) = run_command(cmd, timeout=1,
-                                      callback=lambda: self.callback(qjob, cancelfile))
+                                      callback=lambda: self.callback(qjob, self.worker, cancelfile))
 
         if rtn:
-            print 'backend failed: rtn val %i' % rtn, ', out', out, ', err', err
+            log('backend failed: rtn val %i' % rtn, ', out', out, ', err', err)
 
         # Send results -- only if solved??
         solvedfile = os.path.join(tmpdir, 'solved')
         if os.path.exists(solvedfile):
-            print 'Solved!'
+            log('Solved!')
             cmd = 'cd %s; tar cf %s *' % (tmpdir, tarfile)
             (rtn, out, err) = run_command(cmd)
             if rtn:
-                print 'tar failed: rtn val %i' % rtn, ', out', out, ', err', err
+                log('tar failed: rtn val %i' % rtn, ', out', out, ', err', err)
             url = qjob.get_put_results_url()
             f = open(tarfile, 'rb')
             tardata = f.read()
             f.close()
-            print 'Tardata string is %i bytes long.' % len(tardata)
+            log('Tardata string is %i bytes long.' % len(tardata))
             tardata = tardata.encode('base64_codec')
-            print 'Encoded string is %i bytes long.' % len(tardata)
+            log('Encoded string is %i bytes long.' % len(tardata))
             data = urlencode({ 'tar': tardata })
-            print 'Sending response to', url
-            print 'url-encoded string is %i bytes long.' % len(data)
+            log('Sending response to', url)
+            log('url-encoded string is %i bytes long.' % len(data))
             f = urlopen(url, data)
             response = f.read()
             f.close()
-            print 'Got response:', response
+            log('Got response:', response)
 
             # Add WCS to database.
             wcsfile = os.path.join(tmpdir, 'wcs.fits')
@@ -184,7 +187,7 @@ class Solver(object):
             qjob.save()
 
         else:
-            print 'Did not solve.'
+            log('Did not solve.')
 
             # Mark this Work as done.
             for w in work:
@@ -207,20 +210,33 @@ class Solver(object):
         # HACK - delete tempfiles.
         return True
 
+    def abort_job(self):
+        log('Touching file', fn)
+        f = open(fn, 'wb')
+        f.write('')
+        f.close()
 
-    def callback(self, qjob, fn):
+    def callback(self, qjob, worker, fn):
         js=QueuedJob.objects.all().filter(id=qjob.id)
         if js.count() == 0:
             return
         j=js[0]
         if j.done:
-            print 'Touching file', fn
-            f = open(fn, 'wb')
-            f.write('')
-            f.close()
+            self.abort_job()
+        # check that i'm the first of my peer workers to work on this job.
+        myinds = ', '.join([str(i) for i in worker.indexes.all().order_by('indexid', 'healpix')])
+        for w in j.workers.all():
+            inds = ', '.join([str(i) for i in w.indexes.all().order_by('indexid', 'healpix')])
+            if myinds == inds:
+                if w.id < worker.id:
+                    log('Aborting because another Worker with the same index set is already working on this job: ', w)
+                    self.abort_job()
+
 
     def run(self):
         while True:
+            # abort if my Worker isn't found in the database.
+            me = Worker.objects.get(id=self.worker.id)
             if not self.run_one():
                 time.sleep(5)
 
@@ -235,8 +251,9 @@ if __name__ == '__main__':
 
     parser.add_option('-D', '--daemon', dest='daemon',
                       action='store_true', default=False)
+    parser.add_option('-d', '--dir', dest='dir', default=None)
 
-    (options, args) = parser.parse_args(sys.argv)
+    (options, args) = parser.parse_args()
 
     if len(args):
         indexdirs = args
@@ -244,6 +261,17 @@ if __name__ == '__main__':
         indexdirs = [
             '/home/gmaps/INDEXES/500',
             ]
+
+    if options.dir:
+        print 'Changing to', options.dir
+        os.chdir(options.dir)
+
+    hostname = socket.gethostname()
+    hostname = hostname.split('.')[0]
+    pid = os.getpid()
+    settings.SERVER_LOGFILE = 'worker-%s-%i.log' % (hostname, pid)
+
+    print 'Logging to', settings.SERVER_LOGFILE
 
     (q,nil) = JobQueue.objects.get_or_create(name=settings.SITE_ID, queuetype='solve')
     s = Solver(q, indexdirs)

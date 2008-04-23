@@ -106,6 +106,8 @@ class Worker(models.Model):
     queue = models.ForeignKey(JobQueue, related_name='workers')
     indexes = models.ManyToManyField(Index, related_name='workers')
 
+    #quitnow = models.BooleanField(blank=True, default=False)
+
     def __str__(self):
         return self.hostname
 
@@ -115,9 +117,9 @@ class Worker(models.Model):
         if len(qjobs) == 0:
             return None
 
-        myinds = set(self.indexes.all())
+        myinds = set([str(i) for i in self.indexes.all()])
         for j in qjobs:
-            requested = set([w.index for w in j.work.all().filter(inprogress=False, done=False)])
+            requested = set([str(w.index) for w in j.work.all().filter(inprogress=False, done=False)])
             incommon = requested.intersection(myinds)
             print
             print 'QJob', j
@@ -127,7 +129,7 @@ class Worker(models.Model):
             print
             if len(incommon) == 0:
                 continue
-            return (j, [w for w in j.work.all() if w.index in incommon])
+            return (j, [w for w in j.work.all() if str(w.index) in incommon])
 
         return None
 
