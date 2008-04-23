@@ -19,9 +19,16 @@ import pyfits
 
 import astrometry.net.settings as settings
 
+#from astrometry.net.server.log import log, reconfig_logging
 
-#settings.SERVER_LOGFILE = 'worker.log'
+hostname = socket.gethostname()
+hostname = hostname.split('.')[0]
+pid = os.getpid()
+settings.SERVER_LOGFILE = settings.LOG_DIR + 'worker-%s-%i.log' % (hostname, pid)
+print 'Logging to', settings.SERVER_LOGFILE
+
 from astrometry.net.server.log import log
+
 
 from astrometry.net.server.models import *
 from astrometry.net.util.run_command import run_command
@@ -33,6 +40,9 @@ def get_header(header, key, default):
         return header[key]
     except KeyError:
         return default
+
+#def log(*args):
+#    pass
 
 class Solver(object):
     def __init__(self, q, indexdirs):
@@ -167,20 +177,21 @@ class Solver(object):
                 f.close()
                 log('Got response:', response)
 
-                # Add WCS to database.
-                wcsfile = os.path.join(tmpdir, 'wcs.fits')
-                wcs = TanWCS(file=wcsfile)
-                wcs.save()
+                if False:
+                    # Add WCS to database.
+                    wcsfile = os.path.join(tmpdir, 'wcs.fits')
+                    wcs = TanWCS(file=wcsfile)
+                    wcs.save()
 
-                # HACK - need to make blind write out raw TAN, tweaked TAN, and tweaked SIP.
-                # HACK - compute ramin, ramax, decmin, decmax.
-                calib = Calibration(raw_tan = wcs)
-                calib.save()
+                    # HACK - need to make blind write out raw TAN, tweaked TAN, and tweaked SIP.
+                    # HACK - compute ramin, ramax, decmin, decmax.
+                    calib = Calibration(raw_tan = wcs)
+                    calib.save()
 
-                job.set_status('Solved')
-                job.calibration = calib
-                job.add_machine_tags()
-                job.save()
+                    job.set_status('Solved')
+                    job.calibration = calib
+                    job.add_machine_tags()
+                    job.save()
 
                 # Remove all queued work for this job.
                 qjob.work.all().delete()
@@ -207,6 +218,7 @@ class Solver(object):
                     job.save()
 
         else:
+            log('Job aborted.')
             self.aborting_job = False
 
         self.worker.job = None
@@ -255,8 +267,8 @@ if __name__ == '__main__':
     # queue type
     #parser.add_option('-t', '--threads', dest='threads', type='int', default=1)
 
-    parser.add_option('-D', '--daemon', dest='daemon',
-                      action='store_true', default=False)
+    #parser.add_option('-D', '--daemon', dest='daemon',
+    #                  action='store_true', default=False)
     parser.add_option('-d', '--dir', dest='dir', default=None)
 
     (options, args) = parser.parse_args()
@@ -272,21 +284,16 @@ if __name__ == '__main__':
         print 'Changing to', options.dir
         os.chdir(options.dir)
 
-    hostname = socket.gethostname()
-    hostname = hostname.split('.')[0]
-    pid = os.getpid()
-    settings.SERVER_LOGFILE = 'worker-%s-%i.log' % (hostname, pid)
 
-    print 'Logging to', settings.SERVER_LOGFILE
+    log('Test')
 
     (q,nil) = JobQueue.objects.get_or_create(name=settings.SITE_ID, queuetype='solve')
     s = Solver(q, indexdirs)
 
-    if options.daemon:
-        print 'Becoming daemon...'
-
-        from astrometry.util.daemon import createDaemon
-        createDaemon()
+    #if options.daemon:
+    #    print 'Becoming daemon...'
+    #    from astrometry.util.daemon import createDaemon
+    #    createDaemon()
 
     s.run()
 

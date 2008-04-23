@@ -2,10 +2,9 @@ import logging
 
 from astrometry.net import settings
 
-logfile = settings.SERVER_LOGFILE
 logging.basicConfig(level=logging.DEBUG,
                     format='%(message)s',
-                    filename=logfile,
+                    filename=settings.SERVER_LOGFILE,
                     )
 
 def log(*msg):

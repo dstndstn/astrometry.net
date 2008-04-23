@@ -944,7 +944,8 @@ def summary(request):
     for sub in submissions:
         jobs += sub.jobs.all()
 
-    voimgs = voImage.objects.all().filter(user=request.user)
+    #voimgs = voImage.objects.all().filter(user=request.user)
+    voimgs = []
 
     log('Jobs:')
     for job in jobs:

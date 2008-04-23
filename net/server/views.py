@@ -6,13 +6,14 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.template import Context, RequestContext, loader
 
-from astrometry.net.server.models import QueuedJob, Worker, JobQueue, Index
 from astrometry.net.server.log import log
-
-from astrometry.net.portal.job import Job
+from astrometry.net.server.models import QueuedJob, Worker, JobQueue, Index
+from astrometry.net.portal.job import Job, Calibration
+from astrometry.net.portal.wcs import TanWCS
 from astrometry.net.util.run_command import run_command
 
 def summary(request):
+    log('test.')
     jobs = QueuedJob.objects.all()
     for j in jobs:
         log('job', j, ': to-do:', j.pretty_unstarted_work(), ', in-progress:', j.pretty_inprogress_work())
@@ -28,6 +29,7 @@ def summary(request):
     return HttpResponse(t.render(c))
 
 def get_input(request):
+    log('test.')
     qjob = QueuedJob.objects.get(job__jobid=request.GET['jobid'],
                                 q__queuetype='solve')
     path = qjob.job.get_filename('job.axy')
@@ -38,7 +40,7 @@ def get_input(request):
     f.close()
     return res
 
-def set_results(request):
+def real_set_results(request):
     qjob = QueuedJob.objects.get(job__jobid=request.GET['jobid'],
                                  q__queuetype='solve')
     job = qjob.job
@@ -64,4 +66,30 @@ def set_results(request):
 
     log('set_results: in dir %s, files' % outdir, out.split('\n'))
 
+    log('wcs')
+    # Add WCS to database.
+    wcsfile = job.get_filename('wcs.fits')
+    wcs = TanWCS(file=wcsfile)
+    wcs.save()
+
+    log('calib')
+    # HACK - need to make blind write out raw TAN, tweaked TAN, and tweaked SIP.
+    # HACK - compute ramin, ramax, decmin, decmax.
+    calib = Calibration(raw_tan = wcs)
+    calib.save()
+
+    log('job')
+    job.set_status('Solved')
+    job.calibration = calib
+    job.add_machine_tags()
+    job.save()
+
     return HttpResponse('ok')
+
+def set_results(request):
+    log('set_results()')
+    try:
+        return real_set_results(request)
+    except Error, e:
+        log('error', e)
+        raise e
