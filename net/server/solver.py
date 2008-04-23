@@ -108,16 +108,19 @@ class Solver(object):
             return False
         (qjob, work) = nextwork
 
+        print 'Got my next job:', qjob, 'work', work
+
+        for w in work:
+            print '  index', w.index
+            w.worker = self.worker
+            w.inprogress = True
+            w.save()
+
         self.worker.job = qjob
         self.worker.save()
 
         qjob.inprogress = True
         qjob.save()
-
-        for w in work:
-            w.worker = self.worker
-            w.inprogress = True
-            w.save()
 
         log('Working on job', qjob)
         log('Doing work:', work)
