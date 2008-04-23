@@ -125,6 +125,10 @@ def createDaemon():
       # and the parent branch(es) of a daemon use _exit().
       os._exit(0)	# Exit parent of the first child.
 
+   print 'Daemon is pid %i' % os.getpid()
+   REDIRECT_TO='/tmp/log-%i' % os.getpid()
+   print 'Logging to', REDIRECT_TO
+
    # Close all open file descriptors.  This prevents the child from keeping
    # open any file descriptors inherited from the parent.  There is a variety
    # of methods to accomplish this task.  Three are listed below.
@@ -175,6 +179,9 @@ def createDaemon():
    # Duplicate standard input to standard output and standard error.
    os.dup2(0, 1)			# standard output (1)
    os.dup2(0, 2)			# standard error (2)
+
+   print 'Testing, testing'
+   sys.stdout.flush()
 
    return(0)
 
