@@ -30,7 +30,7 @@ CFLAGS := $(CFLAGS_DEF)
 
 CFLAGS += $(ANUTILS_INC)
 
-EXECS := watcher
+EXECS := watcher simple-daemon
 
 all: $(EXECS)
 
@@ -38,6 +38,8 @@ $(ANUTILS_LIB): $(REMAKE_ANUTILS)
 
 watcher: watcher.o \
 		$(ANUTILS_LIB)
+
+simple-daemon: simple-daemon.o
 
 .PHONY: tags
 tags:
