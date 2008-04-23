@@ -103,6 +103,7 @@ class Worker(models.Model):
     hostname = models.CharField(max_length=256, default=socket.gethostname)
     ip = models.IPAddressField(default=lambda: socket.gethostbyname(socket.gethostname()))
     processid = models.IntegerField(default=os.getpid)
+    parentpid = models.IntegerField(default=os.getppid)
     keepalive = models.DateTimeField(blank=True, default=Job.timenow)
     job = models.ForeignKey(QueuedJob, related_name='workers', blank=True, null=True)
     queue = models.ForeignKey(JobQueue, related_name='workers')
