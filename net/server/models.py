@@ -142,7 +142,12 @@ class Worker(models.Model):
         super(Worker, self).save()
 
     def delete(self):
-        print 'deleting', self
+        print 'deleting worker', self, '...'
+        for work in self.work.all():
+            work.inprogress = False
+            work.worker = None
+            work.save()
+        super(Worker, self).delete()
 
     def pretty_index_list(self):
         return ', '.join(['%i'%i.indexid + (i.healpix > -1 and '-%02i'%i.healpix or '')
@@ -187,4 +192,5 @@ class Work(models.Model):
 
     def delete(self):
         print 'deleting', self
+        super(Work, self).delete()
 
