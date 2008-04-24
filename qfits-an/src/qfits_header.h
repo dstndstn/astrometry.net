@@ -64,6 +64,7 @@ typedef struct qfits_header qfits_header;
 
 qfits_header * qfits_header_new(void) ;
 qfits_header * qfits_header_default(void) ;
+int qfits_header_n(const qfits_header*);
 void qfits_header_add(qfits_header *, const char *, const char *, const char *,
         const char *) ;
 void qfits_header_add_after(qfits_header *, const char *, const char *, 

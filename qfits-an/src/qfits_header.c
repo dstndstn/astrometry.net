@@ -205,6 +205,11 @@ qfits_header * qfits_header_new(void)
     return h;
 }
 
+int qfits_header_n(const qfits_header* hdr) {
+    if (!hdr) return -1;
+    return hdr->n;
+}
+
 /*----------------------------------------------------------------------------*/
 /**
   @brief    FITS header default constructor.
@@ -278,12 +283,15 @@ void qfits_header_add(
 	}
 
     /* Find the last keytuple with same key type */
-    kbf = first ;
-    while (kbf!=NULL) {
-		if ((k->typ>=kbf->typ) && (kbf->next) && (k->typ<kbf->next->typ)) break ;
-        kbf = kbf->next ;
-    }
-    if (kbf==NULL) kbf = last->prev ;
+    /* NO, DO WHAT THE DOCUMENTATION SAYS WE'RE SUPPOSED TO DO.
+     kbf = first ;
+     while (kbf!=NULL) {
+     if ((k->typ>=kbf->typ) && (kbf->next) && (k->typ<kbf->next->typ)) break ;
+     kbf = kbf->next ;
+     }
+     if (kbf==NULL) kbf = last->prev ;
+     */
+    kbf = last->prev;
 
     /* Hook it into list */
     k->next = kbf->next ;
