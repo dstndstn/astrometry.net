@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
 
 	fprintf(stderr, "Reading input file FITS headers...\n");
 
-	N = inhdr->n;
+	N = qfits_header_n(inhdr);
 	for (i=0; i<N; i++) {
 		if (qfits_header_getitem(inhdr, i, key, val, comment, NULL)) {
 			fprintf(stderr, "Failed to read FITS header card %i from input file.\n", i);
@@ -216,7 +216,7 @@ int main(int argc, char *argv[]) {
 	qfits_header_append(outhdr, "COMMENT", "--Start of Astrometry.net WCS solution--", NULL, NULL);
 	qfits_header_append(outhdr, "COMMENT", "", NULL, NULL);
 
-	N = wcshdr->n;
+	N = qfits_header_n(wcshdr);
 	for (i=0; i<N; i++) {
 		if (qfits_header_getitem(wcshdr, i, key, val, comment, NULL)) {
 			fprintf(stderr, "Failed to read FITS header card %i from WCS file.\n", i);

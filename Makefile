@@ -43,7 +43,7 @@ extra:
 .PHONY: web
 web:
 	$(MAKE) -C render
-	$(MAKE) -C web/execs
+	$(MAKE) -C net/execs
 
 install:
 	mkdir -p $(INSTALL_DIR)/data
@@ -161,7 +161,7 @@ clean:
 	$(MAKE) -C libkd clean
 	$(MAKE) -C blind clean
 	-$(MAKE) -C render clean
-	-$(MAKE) -C web/execs clean
+	-$(MAKE) -C net/execs clean
 
 realclean:
 	$(MAKE) -C util realclean
@@ -172,7 +172,7 @@ realclean:
 	$(MAKE) -C libkd realclean
 	$(MAKE) -C blind realclean
 	-$(MAKE) -C render realclean
-	-$(MAKE) -C web/execs realclean
+	-$(MAKE) -C net/execs realclean
 
 TAGS:
 	etags -I `find . -name "*.c" -o -name "*.h"`
