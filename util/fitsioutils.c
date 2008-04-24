@@ -397,9 +397,11 @@ char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
         char key[FITS_LINESZ+1];
         char val[FITS_LINESZ+1];
         qfits_header_getitem(hdr, i, key, val, NULL, NULL);
-        printf("Looking for initial match:\n");
-        printf("  key \"%s\"\n", key);
-        printf("  val \"%s\"\n", val);
+        /*
+         printf("Looking for initial match:\n");
+         printf("  key \"%s\"\n", key);
+         printf("  val \"%s\"\n", val);
+         */
         if (strcmp(key, thekey))
             continue;
         str = qfits_pretty_string(val);
@@ -407,30 +409,23 @@ char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
         if (len < 1 || str[len-1] != '&')
             return strdup(str);
         slist = sl_new(4);
-        //sl_appendf(slist, "%.*s", len-1, str);
-        //free(str);
         sl_append(slist, str);
         for (j=i+1; j<N; j++) {
             qfits_header_getitem(hdr, j, key, val, NULL, NULL);
-            printf("Looking for CONTINUE cards:\n");
-            printf("  key \"%s\"\n", key);
-            printf("  val \"%s\"\n", val);
+            /*
+             printf("Looking for CONTINUE cards:\n");
+             printf("  key \"%s\"\n", key);
+             printf("  val \"%s\"\n", val);
+             */
             if (strcmp(key, "CONTINUE"))
                 break;
-            // There should be a space between CONTINUE and the string.
-            //if (val[0] != ' ')
-            //break;
-            // can't use this - leading spaces are significant.
-            //str = qfits_pretty_string(val+1);
-            //printf("Val = \"%s\"\n", str);
-            //sl_append(slist, str);
-            printf("Raw val = \"%s\"\n", val);
+            //printf("Raw val = \"%s\"\n", val);
             trim_spaces(val);
-            printf("Trimmed val = \"%s\"\n", val);
+            //printf("Trimmed val = \"%s\"\n", val);
             if (!pretty_continue_string(val))
                 break;
             str = val;
-            printf("Pretty val = \"%s\"\n", str);
+            //printf("Pretty val = \"%s\"\n", str);
             sl_append(slist, str);
             len = strlen(str);
             if (len < 1 || str[len-1] != '&')

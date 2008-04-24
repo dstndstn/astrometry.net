@@ -48,7 +48,7 @@ void test_from_paper_1(CuTest* tc) {
 
     hdr = qfits_header_read_hdr_string(buf, sizeof(buf));
 
-    qfits_header_debug_dump(hdr);
+    //qfits_header_debug_dump(hdr);
 
     CuAssertPtrNotNull(tc, hdr);
     /*
@@ -83,15 +83,17 @@ void test_write_long_string(CuTest* tc) {
                                 " an ampersand.&");
     qfits_header_dump(hdr, tmpf);
 
-    qfits_header_debug_dump(hdr);
+    //qfits_header_debug_dump(hdr);
 
-    rewind(tmpf);
-    for (;;) {
-        char line[81];
-        if (!fgets(line, sizeof(line), tmpf))
-            break;
-        printf("Line: >>%s<<\n", line);
-    }
+    /*
+     rewind(tmpf);
+     for (;;) {
+     char line[81];
+     if (!fgets(line, sizeof(line), tmpf))
+     break;
+     printf("Line: >>%s<<\n", line);
+     }
+     */
 
     str = fits_get_long_string(hdr, "VAL2");
 
