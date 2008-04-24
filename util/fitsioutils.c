@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <math.h>
+#include <sys/param.h>
 
 #include "qfits.h"
 #include "fitsioutils.h"
@@ -216,6 +217,118 @@ void fits_header_addf(qfits_header* hdr, const char* key, const char* comment,
     vsnprintf(buf, sizeof(buf), format, lst);
     qfits_header_add(hdr, key, buf, comment, NULL);
     va_end(lst);
+}
+
+// the column where the value of a header card begins, 0-indexed.
+// KEYWORD = 'VALUE'
+// 01234567890
+#define FITS_VALUE_START 10
+
+void fits_header_addf_longstring(qfits_header* hdr, const char* key,
+                                 const char* comment, const char* format, ...) {
+    char* str;
+    int nb;
+    int linelen;
+    va_list lst;
+    int i;
+    int commentlen;
+    
+    va_start(lst, format);
+    nb = vasprintf(&str, format, lst);
+    va_end(lst);
+    if (nb == -1) {
+        SYSERROR("vasprintf failed.");
+        return;
+    }
+    // +2 for the quotes
+    linelen = nb + FITS_VALUE_START + 2;
+    // +1 for each character ' which must be escaped
+    for (i=0; i<nb; i++)
+        if (str[i] == '\'')
+            linelen++;
+
+    // +3 for the " / "
+    commentlen = (comment ? 3 + strlen(comment) : 0);
+    linelen += commentlen;
+
+    if (linelen < FITS_LINESZ)
+        qfits_header_add(hdr, key, str, comment, NULL);
+    else {
+        // Long string - use CONTINUE.
+        int len = nb;
+        char line[FITS_LINESZ + 1];
+        char* linebuf;
+        char* buf;
+        bool addquotes = FALSE;
+        bool escapequotes = FALSE;
+        buf = str;
+        while (len > 0) {
+            bool amp = TRUE;
+            int maxlen;
+
+            printf("String: \"%s\"\n", buf);
+            printf("Linelen: %i\n", len);
+
+            maxlen = FITS_LINESZ - (commentlen + FITS_VALUE_START + 2);
+            for (i=0; i<MIN(maxlen, len); i++)
+                if (buf[i] == '\'')
+                    maxlen--;
+            if (len <= maxlen) {
+                amp = FALSE;
+                maxlen = len;
+            } else
+                // +1 for the &
+                maxlen--;
+            /* must escape single quotes also...
+             snprintf(line, sizeof(line)-1, "%s%.*s%s%s",
+             addquotes ? "  '" : "",
+             maxlen, buf, amp ? "&" : "",
+             addquotes ? "'" : "");
+             */
+            linebuf = line;
+            if (addquotes) {
+                *linebuf = ' ';
+                linebuf++;
+                *linebuf = '\'';
+                linebuf++;
+            }
+            for (i=0; i<maxlen; i++) {
+                if (escapequotes && buf[i] == '\'') {
+                    *linebuf = '\'';
+                    linebuf++;
+                }
+                *linebuf = buf[i];
+                linebuf++;
+            }
+            if (amp) {
+                *linebuf = '&';
+                linebuf++;
+            }
+            if (addquotes) {
+                *linebuf = '\'';
+                linebuf++;
+            }
+            *linebuf = '\0';
+            
+            qfits_header_add(hdr, key, line, comment, NULL);
+            comment = "";
+            commentlen = 0;
+            key = "CONTINUE";
+            addquotes = TRUE;
+            escapequotes = TRUE;
+            buf += maxlen;
+            len -= maxlen;
+        }
+    }
+    free(str);
+}
+
+void fits_header_add_longstring_boilerplate(qfits_header* hdr) {
+    qfits_header_add(hdr, "LONGSTRN", "OGIP 1.0", "The OGIP long string convention may be used", NULL);
+    qfits_header_add(hdr, "COMMENT", "This FITS file may contain long string keyword values that are",   NULL, NULL);
+    qfits_header_add(hdr, "COMMENT", "continued over multiple keywords.  This convention uses the  '&'", NULL, NULL);
+    qfits_header_add(hdr, "COMMENT", "character at the end of the string which is then continued",       NULL, NULL);
+    qfits_header_add(hdr, "COMMENT", "on subsequent keywords whose name = 'CONTINUE'.",                  NULL, NULL);
 }
 
 void fits_header_modf(qfits_header* hdr, const char* key, const char* comment,

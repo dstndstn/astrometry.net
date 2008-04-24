@@ -123,6 +123,7 @@ typedef enum _keytype_ {
     /* HISTORY and COMMENT */
     keytype_history            =400,
     keytype_comment            =500,
+    keytype_continue           =600,
     /* END */
     keytype_end                =1000
 } keytype ;
@@ -972,6 +973,7 @@ static keytype keytuple_type(const char * key)
     else if (!strncmp(key, "HIERARCH", 8))          kt = keytype_hierarch ;
     else if (!strcmp(key, "HISTORY"))               kt = keytype_history ;
     else if (!strcmp(key, "COMMENT"))               kt = keytype_comment ;
+    else if (!strcmp(key, "CONTINUE"))              kt = keytype_continue ;
     else if ((int)strlen(key)<9)                    kt = keytype_primary ;
     return kt ;
 }

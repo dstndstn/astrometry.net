@@ -802,12 +802,13 @@ int main(int argc, char** args) {
 	if (rdlsfile)
 		qfits_header_add(hdr, "ANRDLS", rdlsfile, "output filename", NULL);
 	if (wcsfile)
-		qfits_header_add(hdr, "ANWCS", wcsfile, "output filename", NULL);
+		fits_header_addf_longstring(hdr, "ANWCS", "WCS header output filename", wcsfile);
     if (codetol > 0.0)
 		fits_header_add_double(hdr, "ANCTOL", codetol, "code tolerance");
     if (pixerr > 0.0)
 		fits_header_add_double(hdr, "ANPOSERR", pixerr, "star pos'n error (pixels)");
-        
+
+    fits_header_add_longstring_boilerplate(hdr);
 
     for (i=0; i<il_size(depths)/2; i++) {
         int depthlo, depthhi;

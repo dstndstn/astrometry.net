@@ -114,6 +114,7 @@ void qfits_card_build(
     /* HISTORY, COMMENT and blank keywords */
     if (!strcmp(key, "HISTORY") ||
         !strcmp(key, "COMMENT") ||
+        !strcmp(key, "CONTINUE") ||
         !strncmp(key, "        ", 8)) {
         /* Write key */
         sprintf(line, "%s ", key);

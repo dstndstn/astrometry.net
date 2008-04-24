@@ -55,6 +55,13 @@ fits_header_addf(qfits_header* hdr, const char* key, const char* comment,
 
 void
 ATTRIB_FORMAT(printf,4,5)
+fits_header_addf_longstring(qfits_header* hdr, const char* key, const char* comment,
+                            const char* format, ...);
+
+void fits_header_add_longstring_boilerplate(qfits_header* hdr);
+
+void
+ATTRIB_FORMAT(printf,4,5)
 fits_header_modf(qfits_header* hdr, const char* key, const char* comment,
                  const char* format, ...);
 
