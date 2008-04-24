@@ -26,64 +26,43 @@
 #include "fitsioutils.h"
 #include "qfits_header.h"
 
-void test_from_paper_1(CuTest* tc) {
+static void expect(CuTest* tc, const char* header, const char* key, const char* val) {
     char buf[4096];
     qfits_header* hdr;
     char* str;
-
     fits_use_error_system();
-
     memset(buf, ' ', sizeof(buf));
     sprintf(buf,
             "SIMPLE  = T / this is FITS                                                      "
-            "SVALUE  = 'This is a long string value &'                                       "
-            "CONTINUE  'extending&   '                                                       "
-            "CONTINUE  ' over 3 lines.'                                                      "
-            "END                                                                             "
-            );
+            "%s"
+            "END                                                                             ",
+            header);
     // erase the null-termination.
     buf[strlen(buf)-1] = ' ';
-
     hdr = qfits_header_read_hdr_string(buf, sizeof(buf));
-
     CuAssertPtrNotNull(tc, hdr);
-
-    str = fits_get_long_string(hdr, "SVALUE");
-    CuAssertStrEquals(tc, "This is a long string value extending over 3 lines.",
-                      str);
+    str = fits_get_long_string(hdr, key);
+    CuAssertStrEquals(tc, val, str);
     free(str);
-
     qfits_header_destroy(hdr);
 }
 
+void test_from_paper_1(CuTest* tc) {
+    expect(tc,
+           "SVALUE  = 'This is a long string value &'                                       "
+           "CONTINUE  'extending&   '                                                       "
+           "CONTINUE  ' over 3 lines.'                                                      ",
+           "SVALUE",
+           "This is a long string value extending over 3 lines.");
+}
+
 void test_from_paper_2(CuTest* tc) {
-    char buf[4096];
-    qfits_header* hdr;
-    char* str;
-
-    fits_use_error_system();
-
-    memset(buf, ' ', sizeof(buf));
-    sprintf(buf,
-            "SIMPLE  = T / this is FITS                                                      "
-            "SVALUE  = 'This is a long string value &'                                       "
-            "MAXVOLT =   12.5                                                                "
-            "CONTINUE  ' over 3 lines.'                                                      "
-            "END                                                                             "
-            );
-    // erase the null-termination.
-    buf[strlen(buf)-1] = ' ';
-
-    hdr = qfits_header_read_hdr_string(buf, sizeof(buf));
-
-    CuAssertPtrNotNull(tc, hdr);
-
-    str = fits_get_long_string(hdr, "SVALUE");
-    CuAssertStrEquals(tc, "This is a long string value &",
-                      str);
-    free(str);
-
-    qfits_header_destroy(hdr);
+    expect(tc,
+           "SVALUE  = 'This is a long string value &'                                       "
+           "MAXVOLT =   12.5                                                                "
+           "CONTINUE  ' over 3 lines.'                                                      ",
+           "SVALUE",
+           "This is a long string value &");
 }
 
 void test_write_long_string(CuTest* tc) {
