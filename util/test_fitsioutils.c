@@ -27,9 +27,7 @@
 #include "qfits_header.h"
 
 void test_from_paper_1(CuTest* tc) {
-    //FILE* tmpf = tmpfile();
     char buf[4096];
-    int i;
     qfits_header* hdr;
     char* str;
 
@@ -48,16 +46,40 @@ void test_from_paper_1(CuTest* tc) {
 
     hdr = qfits_header_read_hdr_string(buf, sizeof(buf));
 
-    //qfits_header_debug_dump(hdr);
-
     CuAssertPtrNotNull(tc, hdr);
-    /*
-     printf("Got header:\n");
-     qfits_header_dump(hdr, stdout);
-     */
 
     str = fits_get_long_string(hdr, "SVALUE");
     CuAssertStrEquals(tc, "This is a long string value extending over 3 lines.",
+                      str);
+    free(str);
+
+    qfits_header_destroy(hdr);
+}
+
+void test_from_paper_2(CuTest* tc) {
+    char buf[4096];
+    qfits_header* hdr;
+    char* str;
+
+    fits_use_error_system();
+
+    memset(buf, ' ', sizeof(buf));
+    sprintf(buf,
+            "SIMPLE  = T / this is FITS                                                      "
+            "SVALUE  = 'This is a long string value &'                                       "
+            "MAXVOLT =   12.5                                                                "
+            "CONTINUE  ' over 3 lines.'                                                      "
+            "END                                                                             "
+            );
+    // erase the null-termination.
+    buf[strlen(buf)-1] = ' ';
+
+    hdr = qfits_header_read_hdr_string(buf, sizeof(buf));
+
+    CuAssertPtrNotNull(tc, hdr);
+
+    str = fits_get_long_string(hdr, "SVALUE");
+    CuAssertStrEquals(tc, "This is a long string value &",
                       str);
     free(str);
 
