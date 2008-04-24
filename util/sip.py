@@ -156,6 +156,14 @@ class Sip(ctypes.Structure):
         return '<Sip: ' + str(self.wcstan) + \
                ', a_order=%d, b_order=%d, ap_order=%d>' % (self.a_order, self.b_order, self.ap_order)
 
+    def write_to_file(self, fn):
+        if fn is None:
+            raise Exception, "Can't have None filename."
+        cfn = c_char_p(fn)
+        rtn = _sip.sip_write_to_file(ctypes.pointer(self), cfn)
+        return rtn
+
+
     def pixelxy2radec(self, px,py):
         'Return ra,dec of px,py'
         ra = ctypes.c_double(0)

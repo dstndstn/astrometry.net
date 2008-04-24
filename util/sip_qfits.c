@@ -24,6 +24,33 @@
 #include "an-bool.h"
 #include "fitsioutils.h"
 
+int sip_write_to_file(const sip_t* sip, const char* fn) {
+	FILE* fid;
+	qfits_header* hdr;
+	int res;
+	fid = fopen(fn, "wb");
+	if (!fid) {
+		fprintf(stderr, "Failed to open file %s to write WCS header: %s\n", fn, strerror(errno));
+		return -1;
+	}
+	hdr = sip_create_header(sip);
+	if (!hdr) {
+		fprintf(stderr, "Failed to create FITS header from WCS.\n");
+		return -1;
+	}
+	res = qfits_header_dump(hdr, fid);
+	qfits_header_destroy(hdr);
+	if (res) {
+		fprintf(stderr, "Failed to write FITS header to file %s: %s\n", fn, strerror(errno));
+		return -1;
+	}
+	if (fclose(fid)) {
+		fprintf(stderr, "Failed to close file %s after writing WCS header: %s\n", fn, strerror(errno));
+		return -1;
+	}
+	return 0;
+}
+
 int tan_write_to_file(const tan_t* tan, const char* fn) {
 	FILE* fid;
 	qfits_header* hdr;
