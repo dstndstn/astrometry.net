@@ -299,8 +299,7 @@ char * qfits_getvalue(const char * line)
         return NULL ;
     }
     /*
-     * HISTORY has for value everything else on the line, stripping
-     * blanks before and after. Blank HISTORY is also accepted.
+     * HISTORY has for value everything else on the line.
      */
     memset(value, 0, 81);
 
@@ -308,19 +307,8 @@ char * qfits_getvalue(const char * line)
         !strncmp(line, "        ", 8) ||
         !strncmp(line, "COMMENT ", 8) ||
         !strncmp(line, "CONTINUE", 8)) {
-        i=8;
-        /* Strip blanks from the left side */
-        while (line[i]==' ' && i<80) i++ ;
-        if (i>=80) return NULL ; /* Blank */
-        from=i ;
-        /* Strip blanks from the right side */
-        to=79 ;
-        while (line[to]==' ') to-- ;
-        /* Copy relevant characters into output buffer */
-        strncpy(value, line+from, to-from+1);
-        /* Null-terminate the string */
-        value[to-from+1] = (char)0;
-        return value ;
+        strncpy(value, line+8, 80-8);
+        return value;
     }
     /* General case - Get past the keyword */
     i=0 ;
