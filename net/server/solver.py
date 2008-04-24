@@ -151,7 +151,7 @@ class Solver(object):
 
         tmpdir = tempfile.mkdtemp('', 'backend-results-')
         tarfile = os.path.join(tmpdir, 'results.tar')
-        backend = 'backend2'
+        backend = 'backend'
         cancelfile = os.path.join(tmpdir, 'cancel')
         # HACK - pipes?
         cmd = ('cd %(tempdir)s; %(backend)s -c %(backendconf)s -C %(cancel)s -v %(axy)s > %(logfile)s 2>&1' %
