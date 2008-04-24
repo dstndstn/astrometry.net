@@ -1,5 +1,5 @@
 # This file is part of the Astrometry.net suite.
-# Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+# Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 #
 # The Astrometry.net suite is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License
@@ -29,8 +29,9 @@ include $(COMMON)/makefile.qfits
 
 .PHONY: Makefile $(COMMON)/makefile.qfits
 
-all: $(REMAKE_QFITS)
+all: #$(REMAKE_QFITS)
 	$(MAKE) -C util
+	$(MAKE) -C libkd
 	$(MAKE) -C blind
 
 # Targets that require extra libraries
@@ -47,6 +48,9 @@ web:
 install:
 	mkdir -p $(INSTALL_DIR)/data
 	mkdir -p $(INSTALL_DIR)/bin
+	mkdir -p $(INSTALL_DIR)/python
+	$(MAKE) -C util  install
+	$(MAKE) -C libkd install
 	$(MAKE) -C blind install
 	@echo
 	@echo The following command may fail if you don\'t have the cairo, netpbm, and

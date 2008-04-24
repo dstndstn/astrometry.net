@@ -64,7 +64,8 @@ DEP_OBJ := $(KD) $(KD_FITS) $(INTERNALS) $(INTERNALS_NOIO)
 %_noio.o: %.c
 	$(CC) -o $@ -c $< $(CFLAGS) -DKDTREE_NO_FITS
 
-all: $(REMAKE_ANUTILS) $(LIBKD) $(LIBKD_NOIO) checktree fix-bb
+all: $(REMAKE_ANUTILS) $(LIBKD) checktree fix-bb
+#$(LIBKD_NOIO) 
 
 $(LIBKD): $(KD) $(KD_FITS) $(INTERNALS)
 	-rm -f $@
@@ -81,6 +82,16 @@ checktree: checktree.o $(LIBKD) $(ANUTILS_LIB) $(QFITS_LIB)
 
 fix-bb: fix-bb.o $(LIBKD) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
+
+LIBKD_INSTALL := fix-bb checktree
+
+install: $(LIBKD_INSTALL)
+	@echo Installing in directory $(INSTALL_DIR)
+	mkdir -p $(INSTALL_DIR)/bin
+	@for x in $(LIBKD_INSTALL); do \
+		echo cp $$x $(INSTALL_DIR)/bin; \
+		cp $$x $(INSTALL_DIR)/bin; \
+	done
 
 ### TESTS are great
 

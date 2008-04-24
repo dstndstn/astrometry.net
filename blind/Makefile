@@ -111,7 +111,7 @@ TEST_DFIND_OBJ := dfind.o test_dfind.o
 
 IMAGE2XY := image2xy fixaxis test_dfind
 
-INSTALL_EXECS := $(FITS_UTILS) $(PIPELINE) image2xy fits2fits.py image2pnm.py
+INSTALL_EXECS := $(FITS_UTILS) $(PIPELINE) image2xy
 INSTALL_CAIRO_EXECS := $(CAIROEXECS)
 
 ALL_OBJ := $(UTIL_OBJS) $(KDTREE_OBJS) $(QFITS_OBJ) \
@@ -146,7 +146,7 @@ install: $(INSTALL_EXECS)
 		cp $$x $(INSTALL_DIR)/bin; \
 	done
 	mkdir -p $(INSTALL_DIR)/etc
-	sed "s+add_path /usr/local/astrometry/+add_path $(INSTALL_DIR)/+" < backend.cfg-dist > $(INSTALL_DIR)/etc/backend.cfg
+	sed "s+add_path /usr/local/astrometry/+add_path $(INSTALL_DIR)/+" < ../etc/backend.cfg-dist > $(INSTALL_DIR)/etc/backend.cfg
 
 install-extra: $(INSTALL_CAIRO_EXECS)
 	@echo Installing in directory $(INSTALL_DIR)

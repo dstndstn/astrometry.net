@@ -61,7 +61,9 @@ CFLAGS += -fPIC
 ANFILES_LIB := libanfiles.a
 ANUTILS_LIB := libanutils.a
 
-all: $(ANUTILS_LIB) $(ANFILES_LIB) _sip.so _healpix.so
+PYTHON_LIBS := _sip.so _healpix.so
+
+all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS)
 
 # Things that it depends on but which aren't linked in
 ANUTILS_DEPS :=
@@ -110,6 +112,17 @@ _sip.so: sip-utils.o sip.o starutil.o mathutil.o sip_qfits.o \
 
 _healpix.so: healpix.o starutil.o mathutil.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
+
+PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
+	$(PYTHON_LIBS)
+
+install: $(PYTHON_LIBS)
+	@echo Installing in directory $(INSTALL_DIR)
+	mkdir -p $(INSTALL_DIR)/python
+	@for x in $(PYTHON_INSTALL); do \
+		echo cp $$x $(INSTALL_DIR)/python; \
+		cp $$x $(INSTALL_DIR)/python; \
+	done
 
 gnu-specific-config.h: gnu-specific-test.c
 	(($(CC) -o gnu-specific-test-canonicalize \
@@ -168,8 +181,6 @@ test_healpix: $(ANUTILS_LIB)
 ifeq ($(MAKECMDGOALS),cairoutils.o)
   include cairoutils.dep
 endif
-#cairoutils.o: cairoutils.c
-#	$(CC) $(CFLAGS) $(NETPBM_INC) $(CAIRO_INC) $(JPEG_INC) $(PNG_INC) -c $< -o $@
 
 .PHONY: allclean realclean clean
 
