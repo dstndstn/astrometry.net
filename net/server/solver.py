@@ -192,22 +192,6 @@ class Solver(object):
                 f.close()
                 log('Got response:', response)
 
-                if False:
-                    # Add WCS to database.
-                    wcsfile = os.path.join(tmpdir, 'wcs.fits')
-                    wcs = TanWCS(file=wcsfile)
-                    wcs.save()
-
-                    # HACK - need to make blind write out raw TAN, tweaked TAN, and tweaked SIP.
-                    # HACK - compute ramin, ramax, decmin, decmax.
-                    calib = Calibration(raw_tan = wcs)
-                    calib.save()
-
-                    job.set_status('Solved')
-                    job.calibration = calib
-                    job.add_machine_tags()
-                    job.save()
-
                 # Remove all queued work for this job.
                 qjob.work.all().delete()
                 qjob.inprogress = False

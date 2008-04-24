@@ -78,6 +78,12 @@ def real_set_results(request):
     calib = Calibration(raw_tan = wcs)
     calib.save()
 
+    (yestweak, tweakorder) = job.get_tweak()
+    if yestweak:
+        pass
+        #import pytweak.tweak as tweak
+        #tweak.
+
     log('job')
     job.set_status('Solved')
     job.calibration = calib
