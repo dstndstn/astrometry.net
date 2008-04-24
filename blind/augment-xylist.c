@@ -717,7 +717,7 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 
-	orig_nheaders = hdr->n;
+	orig_nheaders = qfits_header_n(hdr);
 
     if (!(W && H)) {
         // Look for existing IMAGEW and IMAGEH in primary header.

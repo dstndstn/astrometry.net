@@ -15,6 +15,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 QFITS_DIR := $(BASEDIR)/qfits-an
+QFITS_SRCDIR := $(QFITS_DIR)/src
 QFITS_INSTALL := $(QFITS_DIR)/stage
 QFITS_INC := -I$(QFITS_INSTALL)/include
 QFITS_LIB := $(QFITS_INSTALL)/lib/libqfits.a
@@ -40,7 +41,7 @@ $(QFITS_DIR)/Makefile:
 REMAKE_QFITS := remake-qfits
 .PHONY: $(REMAKE_QFITS)
 $(REMAKE_QFITS): $(QFITS_DIR)/Makefile
-	$(MAKE) -C $(QFITS_DIR) && $(MAKE) -C $(QFITS_DIR) install
+	$(MAKE) -C $(QFITS_SRCDIR) && $(MAKE) -C $(QFITS_SRCDIR) install
 
 # YARR MAKE IS STUPID
 #	$(MAKE) -C $(QFITS_DIR) -q; \

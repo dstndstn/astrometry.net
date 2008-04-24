@@ -197,8 +197,9 @@ void fits_copy_non_table_headers(qfits_header* dest, const qfits_header* src) {
     char com[FITS_LINESZ+1];
     char lin[FITS_LINESZ+1];
     int i;
-    for (i=0; i<src->n; i++) {
-        qfits_header_getitem(src, i, key, val, com, lin);
+    for (i=0;; i++) {
+        if (qfits_header_getitem(src, i, key, val, com, lin) == -1)
+            break;
         if (fits_is_table_header(key))
             continue;
         qfits_header_add(dest, key, val, com, lin);
@@ -484,8 +485,9 @@ int fits_copy_all_headers(const qfits_header* src, qfits_header* dest, char* tar
 	char com[FITS_LINESZ+1];
 	char lin[FITS_LINESZ+1];
 
-	for (i=0; i<src->n; i++) {
-		qfits_header_getitem(src, i, key, val, com, lin);
+	for (i=0;; i++) {
+		if (qfits_header_getitem(src, i, key, val, com, lin) == -1)
+            break;
 		if (targetkey && strcasecmp(key, targetkey))
 			continue;
 		qfits_header_add(dest, key, val, com, lin);
