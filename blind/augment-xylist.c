@@ -737,18 +737,20 @@ int main(int argc, char** args) {
             exit(-1);
         }
     }
+
+    // we may write long filenames.
+    fits_header_add_longstring_boilerplate(hdr);
+
     if (addwh) {
         fits_header_add_int(hdr, "IMAGEW", W, "image width");
         fits_header_add_int(hdr, "IMAGEH", H, "image height");
     }
 	qfits_header_add(hdr, "ANRUN", "T", "Solve this field!", NULL);
 
-    if (xcol) {
+    if (xcol)
         qfits_header_add(hdr, "ANXCOL", xcol, "Name of column containing X coords", NULL);
-    }
-    if (ycol) {
+    if (ycol)
         qfits_header_add(hdr, "ANYCOL", ycol, "Name of column containing Y coords", NULL);
-    }
 
 	if ((scalelo > 0.0) || (scalehi > 0.0)) {
 		double appu, appl;
@@ -761,17 +763,16 @@ int main(int argc, char** args) {
 		} else if (!strcasecmp(scaleunits, "arcsecperpix")) {
 			appl = scalelo;
 			appu = scalehi;
-		} else {
+		} else
 			exit(-1);
-		}
 
 		dl_append(scales, appl);
 		dl_append(scales, appu);
 	}
 
-	if ((dl_size(scales) > 0) && guessed_scale) {
+	if ((dl_size(scales) > 0) && guessed_scale)
 		qfits_header_add(hdr, "ANAPPDEF", "T", "try the default scale range too.", NULL);
-	}
+
 	for (i=0; i<dl_size(scales)/2; i++) {
 		char key[64];
         double lo = dl_get(scales, 2*i);
@@ -787,28 +788,25 @@ int main(int argc, char** args) {
 	}
 
 	qfits_header_add(hdr, "ANTWEAK", (tweak ? "T" : "F"), (tweak ? "Tweak: yes please!" : "Tweak: no, thanks."), NULL);
-	if (tweak && tweak_order) {
+	if (tweak && tweak_order)
 		fits_header_add_int(hdr, "ANTWEAKO", tweak_order, "Tweak order");
-	}
 
 	if (solvedfile)
-		qfits_header_add(hdr, "ANSOLVED", solvedfile, "output filename", NULL);
+		fits_header_addf_longstring(hdr, "ANSOLVED", "solved output file", "%s", solvedfile);
 	if (solvedin)
-		qfits_header_add(hdr, "ANSOLVIN", solvedin, "input filename", NULL);
+		fits_header_addf_longstring(hdr, "ANSOLVIN", "solved input file", "%s", solvedin);
 	if (cancelfile)
-		qfits_header_add(hdr, "ANCANCEL", cancelfile, "output filename", NULL);
+		fits_header_addf_longstring(hdr, "ANCANCEL", "cancel output file", "%s", cancelfile);
 	if (matchfile)
-		qfits_header_add(hdr, "ANMATCH", matchfile, "output filename", NULL);
+		fits_header_addf_longstring(hdr, "ANMATCH", "match output file", "%s", matchfile);
 	if (rdlsfile)
-		qfits_header_add(hdr, "ANRDLS", rdlsfile, "output filename", NULL);
+		fits_header_addf_longstring(hdr, "ANRDLS", "ra-dec output file", "%s", rdlsfile);
 	if (wcsfile)
-		fits_header_addf_longstring(hdr, "ANWCS", "WCS header output filename", wcsfile);
+		fits_header_addf_longstring(hdr, "ANWCS", "WCS header output filename", "%s", wcsfile);
     if (codetol > 0.0)
 		fits_header_add_double(hdr, "ANCTOL", codetol, "code tolerance");
     if (pixerr > 0.0)
 		fits_header_add_double(hdr, "ANPOSERR", pixerr, "star pos'n error (pixels)");
-
-    fits_header_add_longstring_boilerplate(hdr);
 
     for (i=0; i<il_size(depths)/2; i++) {
         int depthlo, depthhi;
@@ -951,7 +949,6 @@ int main(int argc, char** args) {
 		if (unlink(fn)) {
 			fprintf(stderr, "Failed to delete temp file \"%s\": %s.\n", fn, strerror(errno));
 		}
-        //printf("Deleted temp file %s\n", fn);
 	}
 
     dl_free(scales);

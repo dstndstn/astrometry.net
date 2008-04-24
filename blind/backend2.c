@@ -545,16 +545,16 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 	}
 
     sp->verify_pix = qfits_header_getdouble(hdr, "ANPOSERR", default_poserr);
-    sp->codetol = qfits_header_getdouble(hdr, "ANCTOL", default_codetol);
+    sp->codetol    = qfits_header_getdouble(hdr, "ANCTOL",   default_codetol);
     sp->distractor_ratio = qfits_header_getdouble(hdr, "ANDISTR", default_distractor_fraction);
     sp->logratio_bail_threshold = log(1e-100);
 
-    blind_set_solved_file(bp, fits_get_dupstring(hdr, "ANSOLVED"));
-    blind_set_solvedin_file(bp, fits_get_dupstring(hdr, "ANSOLVIN"));
-    blind_set_match_file(bp, fits_get_dupstring(hdr, "ANMATCH"));
-    blind_set_rdls_file(bp, fits_get_dupstring(hdr, "ANRDLS"));
-    blind_set_wcs_file(bp, fits_get_dupstring(hdr, "ANWCS"));
-    blind_set_cancel_file(bp, fits_get_dupstring(hdr, "ANCANCEL"));
+    blind_set_solved_file  (bp, fits_get_long_string(hdr, "ANSOLVED"));
+    blind_set_solvedin_file(bp, fits_get_long_string(hdr, "ANSOLVIN"));
+    blind_set_match_file   (bp, fits_get_long_string(hdr, "ANMATCH" ));
+    blind_set_rdls_file    (bp, fits_get_long_string(hdr, "ANRDLS"  ));
+    blind_set_wcs_file     (bp, fits_get_long_string(hdr, "ANWCS"   ));
+    blind_set_cancel_file  (bp, fits_get_long_string(hdr, "ANCANCEL"));
 
     blind_set_xcol(bp, fits_get_dupstring(hdr, "ANXCOL"));
     blind_set_ycol(bp, fits_get_dupstring(hdr, "ANYCOL"));
