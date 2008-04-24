@@ -1024,9 +1024,7 @@ static void keytuple_del(keytuple * k)
   purposes only.
  */
 /*----------------------------------------------------------------------------*/
-/*
-static void keytuple_dmp(const keytuple * k)
-{
+static void keytuple_dmp(const keytuple * k) {
     if (!k) return ;
     printf("[%s]=[", k->key); 
     if (k->val) printf("%s", k->val);
@@ -1035,7 +1033,16 @@ static void keytuple_dmp(const keytuple * k)
     printf("\n");
     return ;
 }
-*/
+
+void qfits_header_debug_dump(const qfits_header* hdr) {
+	keytuple* k;
+	if (hdr==NULL) return;
+	k = (keytuple*)hdr->first;
+	while (k) {
+        keytuple_dmp(k);
+		k=k->next;
+	}
+}
 
 /*----------------------------------------------------------------------------*/
 /**

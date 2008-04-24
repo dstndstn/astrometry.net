@@ -62,6 +62,8 @@ typedef struct qfits_header qfits_header;
                         Function ANSI prototypes
  -----------------------------------------------------------------------------*/
 
+void qfits_header_debug_dump(const qfits_header*);
+
 qfits_header * qfits_header_new(void) ;
 qfits_header * qfits_header_default(void) ;
 int qfits_header_n(const qfits_header*);
