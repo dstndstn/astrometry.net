@@ -48,6 +48,8 @@ void fits_copy_non_table_headers(qfits_header* dest, const qfits_header* src);
 
 char* fits_get_dupstring(qfits_header* hdr, const char* key);
 
+char* fits_get_long_string(const qfits_header* hdr, const char* key);
+
 void
 ATTRIB_FORMAT(printf,4,5)
 fits_header_addf(qfits_header* hdr, const char* key, const char* comment,

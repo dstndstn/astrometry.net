@@ -152,7 +152,7 @@ grab-stellarium-constellations: grab-stellarium-constellations.o \
 ### TESTS
 
 ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
-	test_rdlist test_healpix
+	test_rdlist test_healpix test_fitsioutils
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -161,6 +161,8 @@ include $(COMMON)/makefile.tests
 DEP_OBJ += $(ALL_TEST_FILES_O)
 
 test_fitstable: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
+test_fitsioutils: $(ANUTILS_LIB) $(QFITS_LIB)
 
 test_xylist: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 

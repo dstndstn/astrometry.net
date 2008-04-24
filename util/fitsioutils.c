@@ -267,8 +267,8 @@ void fits_header_addf_longstring(qfits_header* hdr, const char* key,
             bool amp = TRUE;
             int maxlen;
 
-            printf("String: \"%s\"\n", buf);
-            printf("Linelen: %i\n", len);
+            //printf("String: \"%s\"\n", buf);
+            //printf("Linelen: %i\n", len);
 
             maxlen = FITS_LINESZ - (commentlen + FITS_VALUE_START + 2);
             for (i=0; i<MIN(maxlen, len); i++)
@@ -322,6 +322,101 @@ void fits_header_addf_longstring(qfits_header* hdr, const char* key,
         }
     }
     free(str);
+}
+
+// modifies s in-place.
+// if s does not start with " '" and end with "'", returns FALSE.
+static bool pretty_continue_string(char* s) {
+    char* out = s;
+    int i, iout, N;
+    N = strlen(s);
+    if (N < 3)
+        return FALSE;
+    if (strncmp(s, " '", 2))
+        return FALSE;
+    if (s[N-1] != '\'')
+        return FALSE;
+    i = 2;
+    iout = 0;
+    for (; i<N; i++) {
+        if (s[i] == '\'') {
+            i++;
+            if (i == N)
+                break;
+        }
+        out[iout] = s[i];
+        iout++;
+    }
+    out[iout] = '\0';
+    // trim right-hand side spaces.
+    for (iout--; iout>0; iout--) {
+        if (out[iout] != ' ')
+            break;
+        out[iout] = '\0';
+    }
+    return TRUE;
+}
+
+char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
+    int i, N;
+
+    N = qfits_header_n(hdr);
+    for (i=0; i<N; i++) {
+        int j;
+        char* str;
+        int len;
+        sl* slist;
+        char key[FITS_LINESZ+1];
+        char val[FITS_LINESZ+1];
+        qfits_header_getitem(hdr, i, key, val, NULL, NULL);
+        printf("Looking for initial match:\n");
+        printf("  key \"%s\"\n", key);
+        printf("  val \"%s\"\n", val);
+        if (strcmp(key, thekey))
+            continue;
+        str = qfits_pretty_string(val);
+        len = strlen(str);
+        if (len < 1 || str[len-1] != '&')
+            return strdup(str);
+        slist = sl_new(4);
+        //sl_appendf(slist, "%.*s", len-1, str);
+        //free(str);
+        sl_append(slist, str);
+        for (j=i+1; j<N; j++) {
+            qfits_header_getitem(hdr, j, key, val, NULL, NULL);
+            printf("Looking for CONTINUE cards:\n");
+            printf("  key \"%s\"\n", key);
+            printf("  val \"%s\"\n", val);
+            if (strcmp(key, "CONTINUE"))
+                break;
+            // There should be a space between CONTINUE and the string.
+            //if (val[0] != ' ')
+            //break;
+            // can't use this - leading spaces are significant.
+            //str = qfits_pretty_string(val+1);
+            //printf("Val = \"%s\"\n", str);
+            //sl_append(slist, str);
+            printf("Raw val = \"%s\"\n", val);
+            if (!pretty_continue_string(val))
+                break;
+            str = val;
+            printf("Pretty val = \"%s\"\n", str);
+            sl_append(slist, str);
+            len = strlen(str);
+            if (len < 1 || str[len-1] != '&')
+                break;
+        }
+        // On all but the last string, strip the trailing "&".
+        for (j=0; j<sl_size(slist)-1; j++) {
+            str = sl_get(slist, j);
+            str[strlen(str)-1] = '\0';
+        }
+        str = sl_join(slist, "");
+        sl_free2(slist);
+        return str;
+    }
+    // keyword not found.
+    return NULL;
 }
 
 void fits_header_add_longstring_boilerplate(qfits_header* hdr) {

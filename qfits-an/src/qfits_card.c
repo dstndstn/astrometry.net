@@ -304,39 +304,18 @@ char * qfits_getvalue(const char * line)
      */
     memset(value, 0, 81);
 
-    if (!strncmp(line, "HISTORY ", 8) || !strncmp(line, "        ", 8)) {
-        i=7 ;
+    if (!strncmp(line, "HISTORY ", 8) ||
+        !strncmp(line, "        ", 8) ||
+        !strncmp(line, "COMMENT ", 8) ||
+        !strncmp(line, "CONTINUE", 8)) {
+        i=8;
         /* Strip blanks from the left side */
         while (line[i]==' ' && i<80) i++ ;
-        if (i>=80) return NULL ; /* Blank HISTORY */
+        if (i>=80) return NULL ; /* Blank */
         from=i ;
-
         /* Strip blanks from the right side */
         to=79 ;
         while (line[to]==' ') to-- ;
-        /* Copy relevant characters into output buffer */
-        strncpy(value, line+from, to-from+1);
-        /* Null-terminate the string */
-        value[to-from+1] = (char)0;
-        return value ;
-    } else if (!strncmp(line, "COMMENT ", 8)) {
-        /* COMMENT is like HISTORY */
-        /* Strip blanks from the left side */
-        i=7 ;
-        while (line[i]==' ' && i<80) i++ ;
-        if (i>=80) return NULL ;
-        from=i ;
-
-        /* Strip blanks from the right side */
-        to=79 ;
-        while (line[to]==' ') to-- ;
-
-        if (to<from) {
-#ifdef DEBUG_FITSHEADER
-            printf("qfits_getvalue: inconsistent value search in COMMENT\n");
-#endif
-            return NULL ;
-        }
         /* Copy relevant characters into output buffer */
         strncpy(value, line+from, to-from+1);
         /* Null-terminate the string */

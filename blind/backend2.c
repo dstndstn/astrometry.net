@@ -510,15 +510,6 @@ static int run_job(job_t* job, backend_t* backend) {
 	return 0;
 }
 
-
-
-
-
-
-
-
-
-
 bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     blind_t* bp = &(job->bp);
     solver_t* sp = &(bp->solver);
