@@ -1,6 +1,6 @@
 /*
  This file is part of the Astrometry.net suite.
- Copyright 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+ Copyright 2007, 2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -371,7 +371,6 @@ static int parse_config_file(FILE* fconf, backend_t* backend)
 }
 
 struct job_t {
-	char* fieldfile;
 	dl* scales;
 	il* depths;
     bool include_default_scales;
@@ -493,8 +492,6 @@ static int run_job(job_t* job, backend_t* backend) {
 
 			if (backend->inparallel)
                 bp->indexes_inparallel = TRUE;
-
-            blind_set_field_file(bp, job->fieldfile);
 
             printf("Running blind:\n");
             if (verbose)
@@ -951,7 +948,8 @@ int main(int argc, char** args) {
 		if (!parse_job_from_qfits_header(hdr, job)) {
             continue;
         }
-		job->fieldfile = jobfn;
+
+        blind_set_field_file(bp, jobfn);
 
 		// If the job has no scale estimate, search everything provided
 		// by the backend
