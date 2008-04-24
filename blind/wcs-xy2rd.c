@@ -56,7 +56,6 @@ int main(int argc, char** args) {
 	char* ycol = NULL;
 	bool forcetan = FALSE;
 
-	bool hassip = FALSE;
 	rdlist_t* rdls = NULL;
 	xylist_t* xyls = NULL;
 	il* fields;
@@ -172,11 +171,7 @@ int main(int argc, char** args) {
             double x, y, ra, dec;
             x = xy_getx(&xy, j);
             y = xy_gety(&xy, j);
-			if (hassip) {
-				sip_pixelxy2radec(&sip, x, y, &ra, &dec);
-			} else {
-				tan_pixelxy2radec(&(sip.wcstan), x, y, &ra, &dec);
-			}
+			sip_pixelxy2radec(&sip, x, y, &ra, &dec);
 
             rd_setra (&rd, j, ra);
             rd_setdec(&rd, j, dec);

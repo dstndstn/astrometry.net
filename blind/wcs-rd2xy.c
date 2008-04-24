@@ -58,7 +58,6 @@ int main(int argc, char** args) {
 	bool forcetan = FALSE;
     bool verbose = TRUE;
 
-	bool hassip = FALSE;
 	xylist_t* xyls = NULL;
 	rdlist_t* rdls = NULL;
 	il* fields;
@@ -176,18 +175,10 @@ int main(int argc, char** args) {
 			double x, y, ra, dec;
             ra  = rd_getra (&rd, j);
             dec = rd_getdec(&rd, j);
-			if (hassip) {
-				if (!sip_radec2pixelxy(&sip, ra, dec, &x, &y)) {
-					fprintf(stderr, "Point RA,Dec = (%g,%g) projects to the opposite side of the sphere.\n",
-							ra, dec);
-					continue;
-				}
-			} else {
-				if (!tan_radec2pixelxy(&(sip.wcstan), ra, dec, &x, &y)) {
-					fprintf(stderr, "Point RA,Dec = (%g,%g) projects to the opposite side of the sphere.\n",
-							ra, dec);
-					continue;
-				}
+			if (!sip_radec2pixelxy(&sip, ra, dec, &x, &y)) {
+				fprintf(stderr, "Point RA,Dec = (%g,%g) projects to the opposite side of the sphere.\n",
+						ra, dec);
+				continue;
 			}
             xy_set(&xy, j, x, y);
 		}
