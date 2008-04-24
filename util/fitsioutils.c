@@ -327,62 +327,81 @@ void fits_header_addf_longstring(qfits_header* hdr, const char* key,
 }
 
 // modifies s in-place.
-// if s does not start with "'" and end with "'", returns FALSE.
+// removes leading spaces.
+static void trim_leading_spaces(char* s) {
+    char* out = s;
+    int i, N;
+    N = strlen(s);
+    for (i=0; i<N; i++)
+        if (s[i] != ' ')
+            break;
+    N = MAX(0, N - i);
+    memmove(out, s + i, N);
+    out[N] = '\0';
+}
+
+// modifies s in-place.
+// removes trailing spaces.
+static void trim_trailing_spaces(char* s) {
+    int N;
+    N = strlen(s) - 1;
+    while (N >= 0 && s[N] == ' ') {
+        s[N] = '\0';
+        N--;
+    }
+}
+
+// modifies s in-place.
 static bool pretty_continue_string(char* s) {
     char* out = s;
     int i, iout, N;
     N = strlen(s);
-    if (N < 2)
-        return FALSE;
-    if (s[0] != '\'')
-        return FALSE;
-    if (s[N-1] != '\'')
-        return FALSE;
-    i = 1;
+    i = 0;
     iout = 0;
     for (; i<N; i++) {
-        if (s[i] == '\'') {
+        if (s[i] == '\'')
             i++;
-            if (i == N)
-                break;
-        }
         out[iout] = s[i];
         iout++;
     }
     out[iout] = '\0';
-    // trim right-hand side spaces.
-    for (iout--; iout>0; iout--) {
-        if (out[iout] != ' ')
-            break;
-        out[iout] = '\0';
-    }
+    trim_trailing_spaces(out);
     return TRUE;
 }
 
 // modifies s in-place.
 // removes leading and trailing spaces.
-static void trim_spaces(char* s) {
-    char* out = s;
-    int i, start, end, N;
+static bool trim_valid_string(char* s) {
+    int i, N, end;
+    trim_leading_spaces(s);
+    if (s[0] != '\'')
+        return FALSE;
     N = strlen(s);
-    for (i=0; i<N; i++) {
-        if (s[i] != ' ')
+    end = -1;
+    for (i=1; i<N; i++) {
+        if (s[i] != '\'')
+            continue;
+        // if it's followed by another ',  it's ok.
+        i++;
+        if (i<N && s[i] == '\'')
+            continue;
+        // we found the end of the string.
+        end = i;
+        // it can be followed by spaces, / and a comment, but nothing else.
+        while (i < N && s[i] == ' ')
+            i++;
+        if (i == N)
             break;
-    }
-    start = i;
-    for (i=N-1; i>=0; i--) {
-        if (s[i] != ' ')
+        if (s[i] == '/')
             break;
+        return FALSE;
     }
-    end = i;
-
-    N = 1 + end - start;
-    if (N < 0) {
-        s[0] = '\0';
-        return;
-    }
-    memmove(out, s + start, N);
-    out[N] = '\0';
+    if (end == -1)
+        return FALSE;
+    N = end - 2;
+    memmove(s, s+1, N);
+    s[N] = '\0';
+    return TRUE;
 }
 
 char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
@@ -419,8 +438,12 @@ char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
              */
             if (strcmp(key, "CONTINUE"))
                 break;
+            // must begin with two spaces.
+            if (strncmp(val, "  ", 2))
+                break;
             //printf("Raw val = \"%s\"\n", val);
-            trim_spaces(val);
+            if (!trim_valid_string(val))
+                break;
             //printf("Trimmed val = \"%s\"\n", val);
             if (!pretty_continue_string(val))
                 break;
