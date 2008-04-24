@@ -290,6 +290,8 @@ void fits_header_addf_longstring(qfits_header* hdr, const char* key,
             if (addquotes) {
                 *linebuf = ' ';
                 linebuf++;
+                *linebuf = ' ';
+                linebuf++;
                 *linebuf = '\'';
                 linebuf++;
             }
@@ -325,18 +327,18 @@ void fits_header_addf_longstring(qfits_header* hdr, const char* key,
 }
 
 // modifies s in-place.
-// if s does not start with " '" and end with "'", returns FALSE.
+// if s does not start with "'" and end with "'", returns FALSE.
 static bool pretty_continue_string(char* s) {
     char* out = s;
     int i, iout, N;
     N = strlen(s);
-    if (N < 3)
+    if (N < 2)
         return FALSE;
-    if (strncmp(s, " '", 2))
+    if (s[0] != '\'')
         return FALSE;
     if (s[N-1] != '\'')
         return FALSE;
-    i = 2;
+    i = 1;
     iout = 0;
     for (; i<N; i++) {
         if (s[i] == '\'') {
@@ -355,6 +357,32 @@ static bool pretty_continue_string(char* s) {
         out[iout] = '\0';
     }
     return TRUE;
+}
+
+// modifies s in-place.
+// removes leading and trailing spaces.
+static void trim_spaces(char* s) {
+    char* out = s;
+    int i, start, end, N;
+    N = strlen(s);
+    for (i=0; i<N; i++) {
+        if (s[i] != ' ')
+            break;
+    }
+    start = i;
+    for (i=N-1; i>=0; i--) {
+        if (s[i] != ' ')
+            break;
+    }
+    end = i;
+
+    N = 1 + end - start;
+    if (N < 0) {
+        s[0] = '\0';
+        return;
+    }
+    memmove(out, s + start, N);
+    out[N] = '\0';
 }
 
 char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
@@ -397,6 +425,8 @@ char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
             //printf("Val = \"%s\"\n", str);
             //sl_append(slist, str);
             printf("Raw val = \"%s\"\n", val);
+            trim_spaces(val);
+            printf("Trimmed val = \"%s\"\n", val);
             if (!pretty_continue_string(val))
                 break;
             str = val;

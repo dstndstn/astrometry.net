@@ -26,46 +26,6 @@
 #include "fitsioutils.h"
 #include "qfits_header.h"
 
-void test_write_long_string(CuTest* tc) {
-    qfits_header* hdr;
-    FILE* tmpf;
-    char* str;
-
-    tmpf = tmpfile();
-
-    hdr = qfits_header_default();
-    fits_header_add_int(hdr, "VAL1", 42, "First value");
-    fits_header_addf_longstring(hdr, "VAL2", "Second value",
-                                "This is a very very very long string %s %i %s",
-                                "with lots of special characters like the "
-                                "following four single-quotes >>>>''''<<<< "
-                                "and lots of ampersands &&&&&&&&&&&&&&&&&& "
-                                "and the number", 42, "which of course has "
-                                "special significance.  This sentence ends with"
-                                " an ampersand.&");
-    qfits_header_dump(hdr, tmpf);
-
-    str = fits_get_long_string(hdr, "VAL2");
-
-    CuAssertStrEquals(tc, "This is a very very very long string with lots of "
-                      "special characters like the following four single-quotes "
-                      ">>>>''''<<<< and lots of ampersands &&&&&&&&&&&&&&&&&& "
-                      "and the number 42 which of course has special "
-                      "significance.  This sentence ends with an ampersand.&",
-                      str);
-    free(str);
-
-    qfits_header_destroy(hdr);
-
-    rewind(tmpf);
-    for (;;) {
-        char line[81];
-        if (!fgets(line, sizeof(line), tmpf))
-            break;
-        //printf("Line: >>%s<<\n", line);
-    }
-}
-
 void test_from_paper_1(CuTest* tc) {
     //FILE* tmpf = tmpfile();
     char buf[4096];
@@ -88,6 +48,8 @@ void test_from_paper_1(CuTest* tc) {
 
     hdr = qfits_header_read_hdr_string(buf, sizeof(buf));
 
+    qfits_header_debug_dump(hdr);
+
     CuAssertPtrNotNull(tc, hdr);
     /*
      printf("Got header:\n");
@@ -102,6 +64,47 @@ void test_from_paper_1(CuTest* tc) {
     qfits_header_destroy(hdr);
 }
 
+void test_write_long_string(CuTest* tc) {
+    qfits_header* hdr;
+    FILE* tmpf;
+    char* str;
 
+    tmpf = tmpfile();
+
+    hdr = qfits_header_default();
+    fits_header_add_int(hdr, "VAL1", 42, "First value");
+    fits_header_addf_longstring(hdr, "VAL2", "Second value",
+                                "This is a very very very long string %s %i %s",
+                                "with lots of special characters like the "
+                                "following four single-quotes >>>>''''<<<< "
+                                "and lots of ampersands &&&&&&&&&&&&&&&&&& "
+                                "and the number", 42, "which of course has "
+                                "special significance.  This sentence ends with"
+                                " an ampersand.&");
+    qfits_header_dump(hdr, tmpf);
+
+    qfits_header_debug_dump(hdr);
+
+    rewind(tmpf);
+    for (;;) {
+        char line[81];
+        if (!fgets(line, sizeof(line), tmpf))
+            break;
+        printf("Line: >>%s<<\n", line);
+    }
+
+    str = fits_get_long_string(hdr, "VAL2");
+
+    CuAssertStrEquals(tc, "This is a very very very long string with lots of "
+                      "special characters like the following four single-quotes "
+                      ">>>>''''<<<< and lots of ampersands &&&&&&&&&&&&&&&&&& "
+                      "and the number 42 which of course has special "
+                      "significance.  This sentence ends with an ampersand.&",
+                      str);
+    free(str);
+
+    qfits_header_destroy(hdr);
+
+}
 
 
