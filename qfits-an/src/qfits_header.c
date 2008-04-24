@@ -39,6 +39,16 @@
 #include "qfits_error.h"
 #include "qfits_memory.h"
 
+struct qfits_header {
+    void    *   first ;         /* Pointer to list start */
+    void    *   last ;          /* Pointer to list end */
+    int         n ;             /* Number of cards in list */
+    /* For efficient looping internally */
+    void    *   current ;
+    int         current_idx ;
+};
+
+
 /*----------------------------------------------------------------------------*/
 /*
   @brief    keytuple object (internal)

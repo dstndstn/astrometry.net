@@ -54,14 +54,9 @@
   accessor functions.
  */
 /*----------------------------------------------------------------------------*/
-typedef struct qfits_header {
-    void    *   first ;         /* Pointer to list start */
-    void    *   last ;          /* Pointer to list end */
-    int         n ;             /* Number of cards in list */
-    /* For efficient looping internally */
-    void    *   current ;
-    int         current_idx ;
-} qfits_header ;
+
+struct qfits_header;
+typedef struct qfits_header qfits_header;
 
 /*-----------------------------------------------------------------------------
                         Function ANSI prototypes
