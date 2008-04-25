@@ -286,7 +286,7 @@ def newurl(request):
     #    })
     #return HttpResponse(t.render(c))
 
-@login_required
+#@login_required
 def newfile(request):
     if len(request.POST):
         form = SimpleFancyFileForm(request.POST)
@@ -298,7 +298,7 @@ def newfile(request):
                             )
             submission.save()
             submit_submission(request, submission)
-            return HttpResponseRedirect(get_status_url(submission.jobid))
+            return HttpResponseRedirect(get_status_url(submission.subid))
         else:
             log('form not valid.')
     else:
@@ -309,7 +309,10 @@ def newfile(request):
     t = loader.get_template('portal/newjobfile.html')
     c = RequestContext(request, {
         'form' : form,
-        'uploadform' : reverse(astrometry.net.upload.views.uploadform),
+        'uploadform' : (reverse(astrometry.net.upload.views.uploadform)
+                        + '?onload=parent.uploadframeloaded()'
+                        + '&onload2=parent.uploadFinished()'
+                        ),
         'progressform' : reverse(astrometry.net.upload.views.progress_ajax) + '?upload_id='
         })
     return HttpResponse(t.render(c))

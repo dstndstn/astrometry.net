@@ -45,13 +45,16 @@ class NewJobTestCases(PortalTestCase):
 
     def testLongFormValid(self):
         self.login1()
+        print 'Validating long job form:'
         self.validatePage(self.joblongurl)
 
     def testURLFormValid(self):
         self.login1()
+        print 'Validating URL job form:'
         self.validatePage(self.joburlurl)
 
     def testFileFormValid(self):
         self.login1()
+        print 'Validating file job form:'
         self.validatePage(self.jobfileurl)
 

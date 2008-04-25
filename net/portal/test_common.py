@@ -29,6 +29,11 @@ class PortalTestCase(TestCase):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
         v = W3CValidator(settings.W3C_VALIDATOR_URL)
-        self.assert_(v.validateText(resp.content))
+        ok = v.validateText(resp.content)
+        if ok:
+            print 'Validation passed.'
+        else:
+            print 'Validation failed.'
+        self.assert_(ok)
 
 

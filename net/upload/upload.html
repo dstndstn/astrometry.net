@@ -10,7 +10,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 {% comment %}
 {% endcomment %}
 </head>
-<body style="margin:0px;">
+<body style="margin:0px;" {% if onload %}onload="{{ onload }}"{% endif %}>
 {{ body }}
 </body>
 </html>

@@ -18,6 +18,7 @@ class LoginTestCases(PortalTestCase):
         return resp
 
     def testLoginFormValid(self):
+        print 'Validating login form:'
         self.validatePage(self.loginurl)
 
     def testLoginForm(self):

@@ -1,5 +1,9 @@
 {% extends "portal/newjob.html" %}
 
+{% block doctype %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+{% endblock doctype %}
+
 {% block javascript %}
 <script type="text/javascript">
 
@@ -21,10 +25,13 @@ function enableUploadProgress() {
 
 function uploadframeloaded() {
   var form = getUploadForm();
-  if (!form) {
+  /*
+    if (!form) {
     uploadFinished();
+    alert('upload finished (1)')
 	return;
-  }
+    }
+  */
   var doc = getUploadDoc();
   if (doc.getElementById('id_file')) {
     upload_id = form.upload_id.value;
@@ -32,6 +39,7 @@ function uploadframeloaded() {
 	document.forms.mainform.upload_id.value = upload_id;
     form.addEventListener('submit', onSubmitUpload, true);
   }
+  //alert('upload frame loaded.()')
 }
 
 function uploadSucceeded() {
@@ -69,6 +77,7 @@ function getUploadForm() {
   return doc.getElementById('uploadform');
 }
 function uploadFinished() {
+  //alert('upload finished')
   var doc = getUploadDoc();
   if (doc.getElementById('upload-succeeded')) {
     //alert('upload succeeded')
@@ -89,26 +98,28 @@ function uploadFinished() {
 {% endcomment %}
 
 {% block newjobcontent %}
-<form method="post" id="mainform" onsubmit="return onSubmitForm();">
+<form method="post" id="mainform" onsubmit="return onSubmitForm();" action="">
 <p style="text-align:center">
 
-<iframe onload="uploadframeloaded()" src="{{ uploadform }}" scrolling="no" frameborder="0" id="uploadframe"
+<iframe 
+{% comment %}
+onload="uploadframeloaded()"
+{% endcomment %}
+src="{{ uploadform }}" scrolling="no" frameborder="0" id="uploadframe"
 style="width:25em; height:2em; vertical-align:top;">
   [Your user agent does not support iframes]
 </iframe>
 
 {{ form.upload_id }}
 <input name="sub" value="Submit" type="submit" style="vertical-align:top;" />
-
+</p>
+</form>
 
 <div id="progressholder" style="text-align:center;">
 <iframe src="" scrolling="no" frameborder="0" id="progressframe" style="width:25em; height:3em;" >
 [no iframes for you!]
 </iframe>
 </div>
-
-</p>
-</form>
 
 <div id="switch_views">
 <a href="{% url astrometry.net.portal.newjob.newurl %}">switch to image URL version</a>

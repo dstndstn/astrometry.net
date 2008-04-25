@@ -41,8 +41,6 @@ import cgi
 import cgitb
 import multipart
 
-#from an.upload.models import UploadedFile
-
 def log(x):
     print >> sys.stderr, x
 
@@ -61,7 +59,7 @@ class Upload(multipart.FileMultipart):
         self.starttime = int(time.time())
 
     def set_basedir(self, bdir):
-        from an.upload.models import UploadedFile
+        from astrometry.net.upload.models import UploadedFile
         log('Upload: setting base dir to %s' % bdir)
         self.basedir = bdir
         UploadedFile.set_default_base_dir(self.basedir)
@@ -98,7 +96,7 @@ class Upload(multipart.FileMultipart):
     # called from add_part when the part containing the file is
     # encountered.
     def file_part(self, part):
-        from an.upload.models import UploadedFile
+        from astrometry.net.upload.models import UploadedFile
         if not self.upload:
             return
         if 'filename' in part:
@@ -109,7 +107,7 @@ class Upload(multipart.FileMultipart):
     # called from add_part when the part containing the upload_id
     # field is encountered.
     def id_part(self, part):
-        from an.upload.models import UploadedFile
+        from astrometry.net.upload.models import UploadedFile
 
         uid = part['data']
         if not UploadedFile.isValidId(uid):
@@ -191,11 +189,25 @@ def handler(req):
     # Need this to compensate for mod_python hiding the environment...
     os.environ.update(req.subprocess_env)
 
-    from an.upload.models import UploadedFile
+    from astrometry.net.upload.models import UploadedFile
 
+    args = {}
+    for s in req.args.split('&'):
+        if '=' in s:
+            kv = s.split('=')
+            if len(kv) == 2:
+                args[kv[0]] = kv[1]
+
+    onload = args.get('onload', None)
+            
     req.content_type = 'text/html'
-    req.write('<html><head></head><body>')
+    req.write('<html><head></head>')
+    if onload:
+        req.write('<body onload="' + onload + '">')
+    else:
+        req.write('<body>')
     req.write('<p>Upload in progress...\n')
+    #req.write('</p>args: <pre>' + str(req.args) + '</pre>')
     postfix = '</p></body></html>'
     try:
         upload_base_dir = os.environ['UPLOAD_DIR']

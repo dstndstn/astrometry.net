@@ -72,12 +72,17 @@ def progress_ajax(request):
     c = RequestContext(request, ctxt)
     return HttpResponse(t.render(c))
 
-def get_uploadform_body():
+def get_uploadform_body(onload=None):
     id = UploadedFile.generateId()
     form = UploadForm({'upload_id': id})
+
+    target = settings.UPLOADER_URL
+    if onload:
+        target += '?onload=' + onload
+
     ctxt = {
         'form' : form,
-        'action' : settings.UPLOADER_URL,
+        'action' : target,
         }
     t = loader.get_template('upload/upload-body.html')
     c = Context(ctxt)
@@ -88,10 +93,13 @@ def uploadform(request):
         return HttpResponse('not authenticated')
     logging.debug("Upload form request.");
 
-    body = get_uploadform_body()
+    onload = request.GET.get('onload', None)
+    onload2 = request.GET.get('onload2', None)
+
+    body = get_uploadform_body(onload2)
     ctxt = {
         'body' : body,
-        'uploadtarget' : settings.UPLOADER_URL,
+        'onload': onload,
         }
     t = loader.get_template('upload/upload.html')
     c = RequestContext(request, ctxt)
