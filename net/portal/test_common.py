@@ -30,6 +30,7 @@ class PortalTestCase(TestCase):
             if not form in c:
                 continue
             f = c['form']
+            #print 'f is', f
             if not field in f.error_dict:
                 continue
             self.assert_(error in f.error_dict[field])

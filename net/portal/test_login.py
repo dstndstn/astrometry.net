@@ -31,31 +31,25 @@ class LoginTestCases(PortalTestCase):
 
     def testEmptyUsername(self):
         resp = self.login_with('', 'pass')
-
-        #print 'resp.context is', resp.context
-        for c in resp.context:
-            if not 'form' in c:
-                continue
-            #print 'form is in context', c
-            f = c['form']
-            print 'form type is', type(f)
-            print 'form is', f
-
         #self.assertFormError(resp, 'form', 'username', 'This field is required.')
         self.assertOldFormError(resp, 'form', 'username', 'This field is required.')
 
     def testEmptyPassword(self):
         resp = self.login_with('bob', '')
-        self.assertFormError(resp, 'form', 'password', 'This field is required.')
+        #self.assertFormError(resp, 'form', 'password', 'This field is required.')
+        self.assertOldFormError(resp, 'form', 'password', 'This field is required.')
 
     def testEmptyBoth(self):
         resp = self.login_with('', '')
-        self.assertFormError(resp, 'form', 'username', 'This field is required.')
-        self.assertFormError(resp, 'form', 'password', 'This field is required.')
+        #self.assertFormError(resp, 'form', 'username', 'This field is required.')
+        #self.assertFormError(resp, 'form', 'password', 'This field is required.')
+        self.assertOldFormError(resp, 'form', 'username', 'This field is required.')
+        self.assertOldFormError(resp, 'form', 'password', 'This field is required.')
 
     def assertBadUsernamePasswordPair(self, resp):
-        self.assertFormError(resp, 'form', None,#'__all__',
-                             'Please enter a correct username and password. Note that both fields are case-sensitive.')
+        #self.assertFormError(resp, 'form', None,#'__all__',
+        self.assertOldFormError(resp, 'form', 'username',
+                                'Please enter a correct username and password. Note that both fields are case-sensitive.')
 
     def testBadUsername(self):
         resp = self.login_with('u', 'smeg')
