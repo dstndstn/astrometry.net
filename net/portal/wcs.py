@@ -23,16 +23,19 @@ class TanWCS(models.Model):
         super(TanWCS, self).__init__(*args, **kwargs)
         if filename:
             wcs = sip.Tan(filename)
-            self.crval1 = wcs.crval[0]
-            self.crval2 = wcs.crval[1]
-            self.crpix1 = wcs.crpix[0]
-            self.crpix2 = wcs.crpix[1]
-            self.cd11 = wcs.cd[0]
-            self.cd12 = wcs.cd[1]
-            self.cd21 = wcs.cd[2]
-            self.cd22 = wcs.cd[3]
-            self.imagew = wcs.imagew
-            self.imageh = wcs.imageh
+            self.set_from_tanwcs(wcs)
+
+    def set_from_tanwcs(self, wcs):
+        self.crval1 = wcs.crval[0]
+        self.crval2 = wcs.crval[1]
+        self.crpix1 = wcs.crpix[0]
+        self.crpix2 = wcs.crpix[1]
+        self.cd11 = wcs.cd[0]
+        self.cd12 = wcs.cd[1]
+        self.cd21 = wcs.cd[2]
+        self.cd22 = wcs.cd[3]
+        self.imagew = wcs.imagew
+        self.imageh = wcs.imageh
 
     def __str__(self):
         return ('<TanWCS: CRVAL (%f, %f)' % (self.crval1, self.crval2) +
@@ -92,14 +95,62 @@ class TanWCS(models.Model):
         tan.imageh = self.imageh
         return tan
 
-class  SipWCS(TanWCS):
+class  SipWCS(models.Model):
+    tan = models.OneToOneField(TanWCS)
     order = models.PositiveSmallIntegerField(default=2)
-    terms = models.TextField(default='')
-    #def to_python(self, value):
-    #vals = []
-    #for i in range(self.order+1):
-    #    for j in range(self.order+1):
-    #        if i + j <= 1:
-    #            continue
-    #return map(float, vals.split(','))
+    aterms = models.TextField(default='')
+    bterms = models.TextField(default='')
+    apterms = models.TextField(default='')
+    bpterms = models.TextField(default='')
 
+    def __init__(self, *args, **kwargs):
+        filename = None
+        if 'file' in kwargs:
+            filename = kwargs['file']
+            del kwargs['file']
+        tan = TanWCS()
+        tan.save()
+        kwargs['tan'] = tan
+        super(SipWCS, self).__init__(*args, **kwargs)
+        if filename:
+            wcs = sip.Sip(filename)
+            self.set_from_sipwcs(wcs)
+
+    def set_from_sipwcs(self, wcs):
+        self.tan.set_from_tanwcs(wcs.wcstan)
+        self.aterms = ', '.join(['%i:%i:%g' % (i,j,c)
+                                 for (i, j, c) in wcs.get_nonzero_a_terms()])
+        self.bterms = ', '.join(['%i:%i:%g' % (i,j,c)
+                                 for (i, j, c) in wcs.get_nonzero_b_terms()])
+        self.apterms = ', '.join(['%i:%i:%g' % (i,j,c)
+                                 for (i, j, c) in wcs.get_nonzero_ap_terms()])
+        self.bpterms = ', '.join(['%i:%i:%g' % (i,j,c)
+                                 for (i, j, c) in wcs.get_nonzero_bp_terms()])
+
+    def to_sipwcs(self):
+        sip = sip.Sip()
+        sip.tan = self.tan.to_tanwcs()
+        terms = []
+        for s in self.aterms.split(', '):
+            ss = s.split(':')
+            terms.append((int(ss[0]), int(ss[1]), float(ss[2])))
+        sip.set_a_terms(terms)
+
+        terms = []
+        for s in self.bterms.split(', '):
+            ss = s.split(':')
+            terms.append((int(ss[0]), int(ss[1]), float(ss[2])))
+        sip.set_b_terms(terms)
+
+        terms = []
+        for s in self.apterms.split(', '):
+            ss = s.split(':')
+            terms.append((int(ss[0]), int(ss[1]), float(ss[2])))
+        sip.set_ap_terms(terms)
+
+        terms = []
+        for s in self.bpterms.split(', '):
+            ss = s.split(':')
+            terms.append((int(ss[0]), int(ss[1]), float(ss[2])))
+        sip.set_bp_terms(terms)
+        return sip

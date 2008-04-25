@@ -156,6 +156,68 @@ class Sip(ctypes.Structure):
         return '<Sip: ' + str(self.wcstan) + \
                ', a_order=%d, b_order=%d, ap_order=%d>' % (self.a_order, self.b_order, self.ap_order)
 
+    def get_a_term(self, i, j):
+        return Sip.get_term(self.a, i, j)
+    def get_b_term(self, i, j):
+        return Sip.get_term(self.b, i, j)
+    def get_ap_term(self, i, j):
+        return Sip.get_term(self.ap, i, j)
+    def get_bp_term(self, i, j):
+        return Sip.get_term(self.bp, i, j)
+
+    @staticmethod
+    def get_term(arr, i, j):
+        return arr[i * SIP_MAXORDER + j]
+
+    def set_a_term(self, i, j, c):
+        Sip.set_term(self.a, i, j, c)
+    def set_b_term(self, i, j, c):
+        Sip.set_term(self.b, i, j, c)
+    def set_ap_term(self, i, j, c):
+        Sip.set_term(self.ap, i, j, c)
+    def set_bp_term(self, i, j, c):
+        Sip.set_term(self.bp, i, j, c)
+
+    @staticmethod
+    def set_term(arr, i, j, c):
+        arr[i * SIP_MAXORDER + j] = c
+
+    def set_a_terms(self, terms):
+        set_terms(self.a, terms)
+    def set_b_terms(self, terms):
+        set_terms(self.b, terms)
+    def set_ap_terms(self, terms):
+        set_terms(self.ap, terms)
+    def set_bp_terms(self, terms):
+        set_terms(self.bp, terms)
+
+    @staticmethod
+    def set_terms(arr, terms):
+        for (i, j, c) in terms:
+            set_term(arr, i, j, c)
+
+    # returns a list of (i, j, coeff) tuples.
+    def get_nonzero_a_terms(self):
+        return Sip.nonzero_terms(self.a, self.a_order)
+    def get_nonzero_b_terms(self):
+        return Sip.nonzero_terms(self.b, self.b_order)
+    def get_nonzero_ap_terms(self):
+        return Sip.nonzero_terms(self.ap, self.ap_order)
+    def get_nonzero_bp_terms(self):
+        return Sip.nonzero_terms(self.bp, self.bp_order)
+
+    @staticmethod
+    def nonzero_terms(arr, order):
+        terms = []
+        for i in range(order):
+            for j in range(order):
+                if i+j > order:
+                    continue
+                c = Sip.get_term(arr, i, j)
+                if c != 0:
+                    terms.append((i, j, c))
+        return terms
+
     def write_to_file(self, fn):
         if fn is None:
             raise Exception, "Can't have None filename."

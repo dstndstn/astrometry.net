@@ -80,9 +80,28 @@ def real_set_results(request):
 
     (yestweak, tweakorder) = job.get_tweak()
     if yestweak:
-        pass
-        #import pytweak.tweak as tweak
-        #tweak.
+        import pytweak.tweak as tweak
+        indexrd = job.get_filename('index.rd.fits')
+        indexxy = job.get_filename('index.xy.fits')
+        fieldrd = job.get_filename('field.rd.fits')
+        fieldxy = job.get_filename('job.axy')
+        tweakedtan = job.get_filename('tweaked-tan.fits')
+        
+        tweak(wcsfile, indexrd, fieldxy, tweakedtan,
+              indexxy, fieldrd, 1, True)
+        wcs = TanWCS(file=tweakedtan)
+        wcs.save()
+        calib.tweaked_tan = wcs
+        calib.save()
+
+        tweakedsip = job.get_filename('tweaked.fits')
+
+        tweak(tweakedtan, indexrd, fieldxy, tweakedsip,
+              indexxy, fieldrd, job.tweakorder, True)
+        wcs = SipWCS(file=tweakedsip)
+        wcs.save()
+        calib.sip = wcs
+        calib.save()
 
     log('job')
     job.set_status('Solved')
