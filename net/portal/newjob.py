@@ -286,7 +286,13 @@ def newurl(request):
     #    })
     #return HttpResponse(t.render(c))
 
-#@login_required
+def uploadformurl():
+    return (reverse(astrometry.net.upload.views.uploadform)
+            + '?onload=parent.uploadframeloaded()'
+            + '&onload2=parent.uploadFinished()'
+            )
+
+@login_required
 def newfile(request):
     if len(request.POST):
         form = SimpleFancyFileForm(request.POST)
@@ -309,10 +315,7 @@ def newfile(request):
     t = loader.get_template('portal/newjobfile.html')
     c = RequestContext(request, {
         'form' : form,
-        'uploadform' : (reverse(astrometry.net.upload.views.uploadform)
-                        + '?onload=parent.uploadframeloaded()'
-                        + '&onload2=parent.uploadFinished()'
-                        ),
+        'uploadform' : uploadformurl(),
         'progressform' : reverse(astrometry.net.upload.views.progress_ajax) + '?upload_id='
         })
     return HttpResponse(t.render(c))
@@ -320,7 +323,7 @@ def newfile(request):
 # Note, if there are *ANY* errors in the form, it will have no
 # 'cleaned_data' array.
 
-@login_required
+#@login_required
 def newlong(request):
     if request.POST:
         form = FullForm(request.POST, request.FILES)
@@ -389,8 +392,6 @@ def newlong(request):
     ds0 = render[0].tag()
     ds1 = render[1].tag()
 
-    uploadform = reverse(uploadviews.uploadform)
-
     inline = False
 
     if inline:
@@ -402,9 +403,17 @@ def newlong(request):
         progress_meter_js   = ''
         progressform = reverse(uploadviews.progress_ajax) + '?upload_id='
 
+    form['url'].field.widget.attrs['id'] = 'id_img_url'
+    imgurlinput = str(form['url'])
+    form['url'].field.widget.attrs['id'] = 'id_fitsimg_url'
+    fitsurlinput = str(form['url'])
+    form['url'].field.widget.attrs['id'] = 'id_url'
+
     ctxt = {
         'form' : form,
-        'uploadform' : uploadform,
+        'imgurlinput': imgurlinput,
+        'fitsurlinput': fitsurlinput,
+        'uploadform' : uploadformurl(),
         'progressform' : progressform,
         'myurl' : reverse(astrometry.net.portal.newjob.newlong),
         'scale_ul' : r0txt,

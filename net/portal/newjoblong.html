@@ -1,5 +1,9 @@
 {% extends "portal/newjob.html" %}
 
+{% block doctype %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+{% endblock doctype %}
+
 {% block moreinlinecss %}
 table.c { margin-left:auto; margin-right:auto; }
 td.l { text-align:right; }
@@ -149,9 +153,9 @@ function addMissingFormElements() {
     scaleest, scaleerr ];
   var longform = document.getElementById('longform');
   var formelements = longform.elements;
-  for (var i=0; i<elements.length; i++) {
+  for (var i=0; i < elements.length; i++) {
     var gotit = false;
-    for (var j=0; j<formelements.length; j++) {
+    for (var j=0; j < formelements.length; j++) {
       if (elements[i] == formelements[j]) {
         gotit = true;
       }
@@ -371,7 +375,6 @@ function scalechanged() {
 <br />
 
 <form action="{{ myurl }}" enctype="multipart/form-data" method="post" id="longform" onsubmit="return onSubmitForm();">
-{{form.upload_id}}
 
 <table id="formtable">
 
@@ -391,8 +394,14 @@ function scalechanged() {
 
 <tr>
 <!-- first td filled in by rowspan=2 above -->
-<td style="padding-top:2px; vertical-align:top;"> {{ datasrc_file }} File
-<iframe onload="uploadframeloaded()" src="{{ uploadform }}" scrolling="no" frameborder="0" id="uploadframe" style="width:25em; height:2em; vertical-align:top;">
+<td style="padding-top:2px; vertical-align:top;"> 
+{{form.upload_id}}
+{{ datasrc_file }} File
+<iframe 
+{% comment %}
+onload="uploadframeloaded()"
+{% endcomment %}
+src="{{ uploadform }}" scrolling="no" frameborder="0" id="uploadframe" style="width:25em; height:2em; vertical-align:top;">
   [Your user agent does not support iframes]
 </iframe>
 <div id="progressholder" style="visibility:hidden; height:0px;">
@@ -488,7 +497,7 @@ Description of this submission:
 <div id="sources">
 
 <span id="imgurl-input">
-{{ form.url }}
+{{ imgurlinput }}
 </span>
 
 <span id="imgurl-label">
@@ -527,7 +536,7 @@ Image file:
 Explanatory text about image file
 </span>
 
-<span id="fitscols">
+<div id="fitscols">
 
 <table id="xycol">
 {% if xcol_err %}
@@ -540,7 +549,7 @@ Explanatory text about image file
 <tr><td>Y column:</td><td> {{ form.ycol }} </td></tr>
 </table>
 
-</span>
+</div>
 
 <span id="fitsfile-input">
 File: {{ form.file }}
@@ -562,7 +571,7 @@ Explanatory text about FITS file
 </span>
 
 <span id="fitsurl-input">
-URL: {{ form.url }}
+URL: {{ fitsurlinput }}
 </span>
 
 <span id="fitsurl-label">
@@ -675,10 +684,8 @@ Fill in ONE of the following pairs of values:
 </tr>
 </table> <!-- end upper/lower estimate/error table -->
 
-</td></tr>
-
-</table>
 </li>
+</ul>
 
 </div> <!-- end "scalepanel" -->
 
