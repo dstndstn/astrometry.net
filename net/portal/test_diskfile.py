@@ -6,8 +6,7 @@ from django.test import TestCase
 #from django.core.urlresolvers import reverse
 #from django.contrib.auth.models import User
 
-from an.portal.job import DiskFile
-import an.gmaps_config as config
+from astrometry.net.portal.job import DiskFile
 
 class DiskFileTestCases(TestCase):
     #def setUp(self):

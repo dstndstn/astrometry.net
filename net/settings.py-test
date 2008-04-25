@@ -33,7 +33,7 @@ CACHEDIR = '/data2/test-tilecache'
 RENDERCACHEDIR = '/data2/test-rendercache/'
 TEMPDIR = '/tmp'
 
-SITE_ID = 'test'
+SITE_NAME = 'test'
 JOB_DIR = BASEDIR + 'web-data/'
 FIELD_DIR = '/home/gmaps/test/web-data/fields'
 
@@ -63,6 +63,9 @@ DATABASE_USER     = secrets.DATABASE_USER
 DATABASE_PASSWORD = secrets.DATABASE_PASSWORD
 DATABASE_HOST     = secrets.DATABASE_HOST
 DATABASE_PORT     = secrets.DATABASE_PORT
+
+# Django's internal site id.
+SITE_ID = 1
 
 # Local time zone for this installation. Choices can be found here:
 # http://www.postgresql.org/docs/8.1/static/datetime-keywords.html#DATETIME-TIMEZONE-SET-TABLE

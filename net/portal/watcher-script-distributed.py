@@ -254,7 +254,7 @@ def real_handle_job(job, sshconfig):
 
     submitpath = '/home/gmaps/test/astrometry/server/submit.py'
 
-    jobqueue = settings.SITE_ID
+    jobqueue = settings.SITE_NAME
 
     cmd = ('%(submit)s %(jobqueue)s %(jobid)s %(axyfile)s'
            ' >> %(logfile)s 2>&1' %

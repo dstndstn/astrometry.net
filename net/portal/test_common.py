@@ -19,8 +19,8 @@ class PortalTestCase(TestCase):
                   ('test2@astrometry.net', 'password2'), ]
         for (e, p) in accts:
             User.objects.create_user(e, e, p).save()
-        self.loginurl = reverse('an.login')
-        self.logouturl = reverse('an.logout')
+        self.loginurl = reverse('astrometry.net.login')
+        self.logouturl = reverse('astrometry.net.logout')
 
     def login1(self):
         self.client.login(username=self.u1, password=self.p1)

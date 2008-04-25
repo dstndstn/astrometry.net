@@ -5,16 +5,16 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 
 from django.contrib.auth.models import User
-from an.portal import views
+from astrometry.net.portal import views
 
-from an.portal.test_common import PortalTestCase
+from astrometry.net.portal.test_common import PortalTestCase
 
 class NewJobTestCases(PortalTestCase):
     def setUp(self):
         super(NewJobTestCases, self).setUp()
-        self.joblongurl = reverse('an.portal.newjob.newlong')
-        self.joburlurl  = reverse('an.portal.newjob.newurl')
-        self.jobfileurl = reverse('an.portal.newjob.newfile')
+        self.joblongurl = reverse('astrometry.net.portal.newjob.newlong')
+        self.joburlurl  = reverse('astrometry.net.portal.newjob.newurl')
+        self.jobfileurl = reverse('astrometry.net.portal.newjob.newfile')
 
     def assertRedirectsToLogin(self, url):
         # When not logged in, it should redirect to the login page.

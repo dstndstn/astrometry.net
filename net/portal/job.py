@@ -713,9 +713,9 @@ class Job(models.Model):
     @staticmethod
     def generate_jobid():
         today = datetime.date.today()
-        #log('Choosing job id: site id is', settings.SITE_ID)
+        #log('Choosing job id: site id is', settings.SITE_NAME)
         # HACK - we don't check that it's unique!!
-        jobid = '%s-%i%02i-%08i' % (settings.SITE_ID, today.year,
+        jobid = '%s-%i%02i-%08i' % (settings.SITE_NAME, today.year,
                                     today.month, random.randint(0, 99999999))
         #log('Chose jobid', jobid)
         return jobid
@@ -725,7 +725,7 @@ class Job(models.Model):
 
         from astrometry.net.server.models import JobQueue, QueuedJob
 
-        (q, created) = JobQueue.objects.get_or_create(name = settings.SITE_ID,
+        (q, created) = JobQueue.objects.get_or_create(name = settings.SITE_NAME,
                                                       queuetype = 'triage')
         if created:
             log('Created JobQueue', q)

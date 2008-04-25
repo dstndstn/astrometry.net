@@ -286,7 +286,7 @@ if __name__ == '__main__':
 
     log('Test')
 
-    (q,nil) = JobQueue.objects.get_or_create(name=settings.SITE_ID, queuetype='solve')
+    (q,nil) = JobQueue.objects.get_or_create(name=settings.SITE_NAME, queuetype='solve')
     s = Solver(q, indexdirs)
 
     #if options.daemon:

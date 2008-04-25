@@ -453,7 +453,7 @@ if __name__ == '__main__':
 
     indexes.load_indexes()
 
-    (q,nil) = JobQueue.objects.get_or_create(name=settings.SITE_ID, queuetype='triage')
+    (q,nil) = JobQueue.objects.get_or_create(name=settings.SITE_NAME, queuetype='triage')
     t = Triage(q)
     t.run()
 
