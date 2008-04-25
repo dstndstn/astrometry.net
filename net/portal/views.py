@@ -10,11 +10,12 @@ import time
 
 from urllib import urlencode
 
+from django import newforms as forms
+
 import django.contrib.auth as auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-from django import newforms as forms
 from django.db import models
 from django.http import HttpResponse, HttpResponseRedirect, QueryDict
 from django.newforms import widgets, ValidationError, form_for_model

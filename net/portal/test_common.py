@@ -25,6 +25,18 @@ class PortalTestCase(TestCase):
     def login1(self):
         self.client.login(username=self.u1, password=self.p1)
 
+    def assertOldFormError(self, response, form, field, error):
+        for c in response.context:
+            if not form in c:
+                continue
+            f = c['form']
+            if not field in f.error_dict:
+                continue
+            self.assert_(error in f.error_dict[field])
+            return
+        # error not found.
+        self.assert_(False)
+
     def validatePage(self, url):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)

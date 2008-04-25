@@ -44,6 +44,8 @@ td[col=rl] { padding-left:15px; }
 
 {% block javascript %}
 <script type="text/javascript">
+<![CDATA[
+// the above is required to make this valid XHTML.
 var fitscols;
 var scaleplus;
 var scaleminus;
@@ -348,6 +350,7 @@ function scalechanged() {
 {{ progress_meter_js }}
 {% endif %}
 
+// ]]>
 </script>
 {% endblock javascript %}
 

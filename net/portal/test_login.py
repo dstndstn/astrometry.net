@@ -1,12 +1,13 @@
 import unittest
+
 from django.test.client import Client
 from django.test import TestCase
-
 from django.core.urlresolvers import reverse
-
 from django.contrib.auth.models import User
-from astrometry.net.portal import views
 
+import django.newforms as forms
+
+from astrometry.net.portal import views
 from astrometry.net.portal.test_common import PortalTestCase
 
 class LoginTestCases(PortalTestCase):
@@ -30,7 +31,18 @@ class LoginTestCases(PortalTestCase):
 
     def testEmptyUsername(self):
         resp = self.login_with('', 'pass')
-        self.assertFormError(resp, 'form', 'username', 'This field is required.')
+
+        #print 'resp.context is', resp.context
+        for c in resp.context:
+            if not 'form' in c:
+                continue
+            #print 'form is in context', c
+            f = c['form']
+            print 'form type is', type(f)
+            print 'form is', f
+
+        #self.assertFormError(resp, 'form', 'username', 'This field is required.')
+        self.assertOldFormError(resp, 'form', 'username', 'This field is required.')
 
     def testEmptyPassword(self):
         resp = self.login_with('bob', '')
@@ -42,7 +54,7 @@ class LoginTestCases(PortalTestCase):
         self.assertFormError(resp, 'form', 'password', 'This field is required.')
 
     def assertBadUsernamePasswordPair(self, resp):
-        self.assertFormError(resp, 'form', '__all__',
+        self.assertFormError(resp, 'form', None,#'__all__',
                              'Please enter a correct username and password. Note that both fields are case-sensitive.')
 
     def testBadUsername(self):
