@@ -5,9 +5,9 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 
 from django.contrib.auth.models import User
-from an.portal import views
+from astrometry.net.portal import views
 
-from an.portal.test_common import PortalTestCase
+from astrometry.net.portal.test_common import PortalTestCase
 
 class LoginTestCases(PortalTestCase):
     def setUp(self):
@@ -62,7 +62,7 @@ class LoginTestCases(PortalTestCase):
 
     # FIXME - this should maybe move to test_job_summary:
     def testJobSummaryRedirects(self):
-        url = reverse('an.portal.views.summary')
+        url = reverse('astrometry.net.portal.views.summary')
         resp = self.client.get(url)
         redirurl = self.urlprefix + self.loginurl + '?next=' + url
         self.assertRedirects(resp, redirurl)
@@ -72,19 +72,19 @@ class LoginTestCases(PortalTestCase):
     # check that when a user is logged in, they don't get redirected to the
     # login page.
     def testLoggedInNoRedirect(self):
-        url = reverse('an.portal.views.summary')
+        url = reverse('astrometry.net.portal.views.summary')
         self.login1()
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
 
     def testLoginWorks(self):
         resp = self.login_with(self.u1, self.p1)
-        url = reverse('an.portal.newjob.newurl')
+        url = reverse('astrometry.net.portal.newjob.newurl')
         self.assertRedirects(resp, self.urlprefix + url)
 
     def testLogoutRedirectsToLogin(self):
         resp = self.login_with(self.u1, self.p1)
-        url = reverse('an.portal.newjob.newurl')
+        url = reverse('astrometry.net.portal.newjob.newurl')
         # logged in.
         self.assertRedirects(resp, self.urlprefix + url)
         resp = self.client.post(self.logouturl)

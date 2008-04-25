@@ -1,8 +1,8 @@
 from unittest import TestLoader, TestSuite
 
-from an.portal.test_login import LoginTestCases
-from an.portal.test_newjob import NewJobTestCases
-from an.portal.test_diskfile import DiskFileTestCases
+from astrometry.net.portal.test_login import LoginTestCases
+from astrometry.net.portal.test_newjob import NewJobTestCases
+from astrometry.net.portal.test_diskfile import DiskFileTestCases
 
 def suite():
     all_suites = TestSuite()
