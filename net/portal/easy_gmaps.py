@@ -13,7 +13,7 @@ import commands
 import shutil
 import math
 
-from astrometry.net.util.run_command import run_command
+from astrometry.util.run_command import run_command
 import astrometry.net.settings as settings
 
 logfile        = settings.LOGFILE

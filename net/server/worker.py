@@ -20,7 +20,7 @@ settings.SERVER_LOGFILE = 'worker.log'
 
 from astrometry.net.server.log import log
 from astrometry.net.server.models import *
-from astrometry.net.util.run_command import run_command
+from astrometry.util.run_command import run_command
 
 
 # Base class for queue workers.

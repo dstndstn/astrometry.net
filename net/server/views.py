@@ -10,7 +10,7 @@ from astrometry.net.server.log import log
 from astrometry.net.server.models import QueuedJob, Worker, JobQueue, Index
 from astrometry.net.portal.job import Job, Calibration
 from astrometry.net.portal.wcs import TanWCS
-from astrometry.net.util.run_command import run_command
+from astrometry.util.run_command import run_command
 
 def summary(request):
     log('test.')

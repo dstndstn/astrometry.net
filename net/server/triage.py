@@ -39,7 +39,7 @@ from astrometry.net.portal.convert import convert, is_tarball, get_objs_in_field
 from astrometry.net.portal.wcs import TanWCS
 from astrometry.net.server import indexes
 
-from astrometry.net.util.run_command import run_command
+from astrometry.util.run_command import run_command
 import astrometry.util.sip as sip
 
 blindlog = 'blind.log'

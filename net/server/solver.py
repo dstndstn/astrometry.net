@@ -31,7 +31,7 @@ from astrometry.net.server.log import log
 
 
 from astrometry.net.server.models import *
-from astrometry.net.util.run_command import run_command
+from astrometry.util.run_command import run_command
 from astrometry.net.portal.wcs import TanWCS
 from astrometry.net.portal.job import Calibration, Job
 

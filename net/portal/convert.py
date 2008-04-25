@@ -7,7 +7,7 @@ from astrometry.net import settings
 from astrometry.util import image2pnm
 from astrometry.util import fits2fits
 from astrometry.net.portal.log import log
-from astrometry.net.util.run_command import run_command
+from astrometry.util.run_command import run_command
 
 class FileConversionError(Exception):
     errstr = None

@@ -26,7 +26,7 @@ from astrometry.net.portal.models import UserPreferences
 from astrometry.net.portal.job import Job, Submission, DiskFile, Tag
 from astrometry.net.portal.convert import convert, get_objs_in_field
 from astrometry.net.portal.log import log
-from astrometry.net.util.file import file_size
+from astrometry.util.file import file_size
 #from astrometry.net.vo.models import Image as voImage
 from astrometry.net import settings
 from astrometry.util import sip

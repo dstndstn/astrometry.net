@@ -33,7 +33,7 @@ from astrometry.net.upload.models import UploadedFile
 from astrometry.net.portal.log import log
 from astrometry.net.portal.convert import convert, is_tarball, get_objs_in_field, FileConversionError
 from astrometry.net.portal.wcs import TanWCS
-from astrometry.net.util.run_command import run_command
+from astrometry.util.run_command import run_command
 
 import astrometry.util.sip as sip
 

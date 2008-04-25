@@ -10,7 +10,7 @@ import astrometry.net.settings as settings
 from astrometry.net.server.models import *
 from astrometry.net.server.indexes import load_indexes
 
-from astrometry.net.util.run_command import run_command
+from astrometry.util.run_command import run_command
 
 load_indexes()
 

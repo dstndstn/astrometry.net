@@ -12,7 +12,7 @@ from django.db import models
 from astrometry.net.portal.models import Job, Submission, DiskFile, Calibration, Tag
 from astrometry.net.portal.log import log
 from astrometry.net.portal.convert import convert, is_tarball, get_objs_in_field, FileConversionError
-from astrometry.net.util.run_command import run_command
+from astrometry.util.run_command import run_command
 
 # mencoder -o sky.avi -ovc lavc -lavcopts vcodec=mpeg4:keyint=50:autoaspect mf://sky-0*.png -mf fps=10:type=png
 # mencoder -o ann.avi -ovc lavc -lavcopts vcodec=mpeg4:keyint=50:autoaspect mf://ann-*.png -mf fps=10:type=png

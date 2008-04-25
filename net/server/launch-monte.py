@@ -3,7 +3,7 @@
 import os
 import sys
 
-from astrometry.net.util.run_command import run_command
+from astrometry.util.run_command import run_command
 
 if __name__ == '__main__':
     print 'Waiting for cluster machine name on stdin...'
