@@ -23,7 +23,6 @@
 #include <stdlib.h>
 
 #include "bt.h"
-#include "starutil.h"
 
 /*
   The AVL tree portion of this code was adapted from GNU libavl.

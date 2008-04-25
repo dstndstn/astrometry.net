@@ -20,8 +20,7 @@
 #define BT_H
 
 #include "keywords.h"
-#include "starutil.h"
-
+#include "an-bool.h"
 /*
   We distinguish between "branch" (ie, internal) nodes and "leaf" nodes
   because leaf nodes can be much smaller.  Since there are a lot of leaves,
