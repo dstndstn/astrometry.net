@@ -15,6 +15,10 @@ class LoginTestCases(PortalTestCase):
         super(LoginTestCases, self).setUp()
 
     def login_with(self, username, password):
+        # Django's built-in login module uses a test cookie, so you have to request
+        # the login page before logging in directly.
+        r1 = self.client.get(self.loginurl)
+
         resp = self.client.post(self.loginurl, { 'username': username, 'password': password })
         return resp
 
@@ -91,6 +95,13 @@ class LoginTestCases(PortalTestCase):
 
     def testLogoutRedirectsToLogin(self):
         resp = self.login_with(self.u1, self.p1)
+
+        #print 'resp is a', type(resp)
+        #print 'resp code', resp.status_code
+        #print 'resp request', resp.request
+        ##print 'resp headers', resp.headers
+        #print 'resp content', resp.content
+
         url = reverse('astrometry.net.portal.newjob.newurl')
         # logged in.
         self.assertRedirects(resp, self.urlprefix + url)
