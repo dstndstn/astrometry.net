@@ -40,15 +40,7 @@ def get_input(request):
     f.close()
     return res
 
-def real_set_results(request):
-    qjob = QueuedJob.objects.get(job__jobid=request.GET['jobid'],
-                                 q__queuetype='solve')
-    job = qjob.job
-    tardata = request.POST['tar']
-    log('tardata is %i bytes long' % len(tardata))
-    tardata = tardata.decode('base64_codec')
-    log('decoded tardata is %i bytes long' % len(tardata))
-
+def real_set_results(job, tardata):
     # HACK - pipes?
     (f, tarfile) = tempfile.mkstemp('', 'tar-%s-' % job.jobid)
     os.close(f)
@@ -111,10 +103,37 @@ def real_set_results(request):
 
     return HttpResponse('ok')
 
+def save_logfile(job, solver, logdata):
+    #outdir = Job.s_get_job_dir(job.jobid)
+    logfile = job.get_filename('log-%i' % solver)
+    if os.path.exists(logfile):
+        return HttpResponse('file exists')
+    f = open(logfile, 'wb')
+    f.write(logdata)
+    f.close()
+    return HttpResponse('ok')
+
 def set_results(request):
     log('set_results()')
     try:
-        return real_set_results(request)
+        qjob = QueuedJob.objects.get(job__jobid=request.GET['jobid'],
+                                     q__queuetype='solve')
+        job = qjob.job
+
+        if 'tar' in request.POST:
+            tardata = request.POST['tar']
+            log('tardata is %i bytes long' % len(tardata))
+            tardata = tardata.decode('base64_codec')
+            log('decoded tardata is %i bytes long' % len(tardata))
+            return real_set_results(job, tardata)
+        elif 'log' in request.POST:
+            logdata = request.POST['log']
+            log('logdata is %i bytes long' % len(logdata))
+            logdata = logdata.decode('base64_codec')
+            log('decoded logdata is %i bytes long' % len(logdata))
+            solver = int(request.POST['solver'])
+            return save_logfile(job, solver, logdata)
+
     except Error, e:
         log('error', e)
         raise e

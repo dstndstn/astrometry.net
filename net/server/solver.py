@@ -168,35 +168,56 @@ class Solver(object):
         if rtn:
             log('backend failed: rtn val %i' % rtn, ', out', out, ', err', err)
 
-        if not self.aborting_job:
-            # Send results -- only if solved??
-            solvedfile = os.path.join(tmpdir, 'solved')
-            if os.path.exists(solvedfile):
-                log('Solved!')
-                cmd = 'cd %s; tar cf %s *' % (tmpdir, tarfile)
-                (rtn, out, err) = run_command(cmd)
-                if rtn:
-                    log('tar failed: rtn val %i' % rtn, ', out', out, ', err', err)
-                url = qjob.get_put_results_url()
-                f = open(tarfile, 'rb')
-                tardata = f.read()
-                f.close()
-                log('Tardata string is %i bytes long.' % len(tardata))
-                tardata = tardata.encode('base64_codec')
-                log('Encoded string is %i bytes long.' % len(tardata))
-                data = urlencode({ 'tar': tardata })
-                log('Sending response to', url)
-                log('url-encoded string is %i bytes long.' % len(data))
-                f = urlopen(url, data)
-                response = f.read()
-                f.close()
-                log('Got response:', response)
 
-                # Remove all queued work for this job.
-                qjob.work.all().delete()
-                qjob.inprogress = False
-                qjob.done = True
-                qjob.save()
+        # Send results
+        solvedfile = os.path.join(tmpdir, 'solved')
+        if os.path.exists(solvedfile):
+            log('Solved!')
+            cmd = 'cd %s; tar cf %s *' % (tmpdir, tarfile)
+            (rtn, out, err) = run_command(cmd)
+            if rtn:
+                log('tar failed: rtn val %i' % rtn, ', out', out, ', err', err)
+            url = qjob.get_put_results_url()
+            f = open(tarfile, 'rb')
+            tardata = f.read()
+            f.close()
+            log('Tardata string is %i bytes long.' % len(tardata))
+            tardata = tardata.encode('base64_codec')
+            log('Encoded string is %i bytes long.' % len(tardata))
+            data = urlencode({ 'tar': tardata })
+            log('Sending response to', url)
+            log('url-encoded string is %i bytes long.' % len(data))
+            f = urlopen(url, data)
+            response = f.read()
+            f.close()
+            log('Got response:', response)
+
+            # Remove all queued work for this job.
+            qjob.work.all().delete()
+            qjob.inprogress = False
+            qjob.done = True
+            qjob.save()
+
+        else:
+            # Send the log file.
+
+            url = qjob.get_put_results_url()
+            logfile = os.path.join(tmpdir, 'blind.log')
+            f = open(logfile, 'rb')
+            logdata = f.read()
+            f.close()
+            logdata = logdata.encode('base64_codec')
+            data = urlencode({ 'log': logdata, 'solver': '%i' % self.worker.id })
+            log('Sending response to', url)
+            log('url-encoded string is %i bytes long.' % len(data))
+            f = urlopen(url, data)
+            response = f.read()
+            f.close()
+            log('Got response:', response)
+
+            if self.aborting_job:
+                log('Job aborted.')
+                self.aborting_job = False
 
             else:
                 log('Did not solve.')
@@ -215,10 +236,6 @@ class Solver(object):
 
                     job.set_status('Failed', 'Did not solve')
                     job.save()
-
-        else:
-            log('Job aborted.')
-            self.aborting_job = False
 
         self.worker.job = None
         self.worker.save()
