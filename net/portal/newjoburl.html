@@ -1,7 +1,7 @@
 {% extends "portal/newjob.html" %}
 
 {% block newjobcontent %}
-<form enctype="multipart/form-data" method="post">
+<form enctype="multipart/form-data" method="post" action="{{ actionurl }}">
 
 {% if urlerr %}
 <div class="err"> {{ urlerr }} </div>

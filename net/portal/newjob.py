@@ -250,7 +250,7 @@ def submit_submission(request, submission):
     request.session['jobid'] = submission.get_id()
     Job.submit_job_or_submission(submission)
 
-@login_required
+#@login_required
 def newurl(request):
     urlerr = None
     if len(request.POST):
@@ -276,6 +276,7 @@ def newurl(request):
         {
         'form' : form,
         'urlerr' : urlerr,
+        'actionurl': reverse(newurl),
         },
         context_instance = RequestContext(request))
         
@@ -323,7 +324,7 @@ def newfile(request):
 # Note, if there are *ANY* errors in the form, it will have no
 # 'cleaned_data' array.
 
-#@login_required
+@login_required
 def newlong(request):
     if request.POST:
         form = FullForm(request.POST, request.FILES)
