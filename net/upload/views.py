@@ -21,10 +21,10 @@ class UploadIdField(forms.CharField):
         val = super(UploadIdField, self).clean(value)
         if not val:
             return val
-        ups = UploadedFile.objects.all().filter(uploadid=val)
-        if not ups or len(ups)==0:
+        try:
+            up = UploadedFile.objects.get(uploadid=val)
+        except:
             raise ValidationError('That upload ID wasn\'t uploaded')
-        up = ups[0]
         path = up.get_filename()
         if not os.path.exists(path):
             raise ValidationError('No file for that upload id')

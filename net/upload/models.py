@@ -62,14 +62,16 @@ class UploadedFile(models.Model):
     errorstring = models.CharField(max_length=256, null=True, default='')
 
     def __init__(self, *args, **kwargs):
+        logging.debug('UploadedFile.__init__()')
         for (x,y) in kwargs.items():
             logging.debug("kwarg[%s] = %s" % (str(x), str(y)))
         super(UploadedFile, self).__init__(*args, **kwargs)
+        logging.debug('setting base dir.')
         if 'upload_base_dir' in kwargs:
-            self.upload_base_dir = kwargs['upload_base_dir']
+            self.set_base_dir(kwargs['upload_base_dir'])
         else:
-            self.upload_base_dir = UploadedFile.default_base_dir
-        logging.debug("UploadedFile (init): setting base dir to %s" % self.upload_base_dir)
+            self.set_base_dir(UploadedFile.default_base_dir)
+        logging.debug('UploadedFile (init): base dir is', getattr(self, 'upload_base_dir', None))
         #logging.debug("Set upload id to " + str(self.uploadid))
         #logging.debug("
 
@@ -85,8 +87,11 @@ class UploadedFile(models.Model):
     #    self.save()
 
     def set_base_dir(self, bdir):
-        logging.debug("UploadedFile: setting base dir to %s" % bdir)
+        logging.debug('UploadedFile: setting base dir to', bdir)
         self.upload_base_dir = bdir
+
+    def get_base_dir(self):
+        return getattr(self, 'upload_base_dir', UploadedFile.default_base_dir)
 
     def xml(self):
         err = self.errorstring
@@ -120,9 +125,10 @@ class UploadedFile(models.Model):
         return tag
 
     def get_filename(self):
-        logging.debug("UploadedFile: base dir " + str(self.upload_base_dir))
-        #logging.debug("upload id " + str(self.uploadid))
-        return self.upload_base_dir + '/upload-' + self.uploadid
+        logging.debug('UploadedFile.get_filename: base dir', getattr(self, 'upload_base_dir', None))
+        fn = os.path.join(self.get_base_dir(), 'upload-' + self.uploadid)
+        logging.debug('UploadedFile.get_filename: returning', fn)
+        return fn
 
     def fileExists(self):
         path = self.get_filename()

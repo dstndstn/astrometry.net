@@ -15,6 +15,8 @@ from optparse import OptionParser
 from urllib import urlencode
 from urllib2 import urlopen
 
+from django.db import transaction
+
 import pyfits
 
 import astrometry.net.settings as settings
@@ -28,7 +30,6 @@ settings.SERVER_LOGFILE = settings.LOG_DIR + 'worker-%s-%i.log' % (hostname, pid
 print 'Logging to', settings.SERVER_LOGFILE
 
 from astrometry.net.server.log import log
-
 
 from astrometry.net.server.models import *
 from astrometry.util.run_command import run_command
@@ -101,6 +102,55 @@ class Solver(object):
                           ['index %s' % path for path in indexpaths]
                           ))
         f.close()
+
+    #@transaction.commit_manually
+    def claim_work(self):
+        #transaction.commit()
+
+        # pull candidate jobs from the queue
+        qjobs = (QueuedJob.objects.all()
+                 .filter(q=q, done=False)
+                 .filter(work__inprogress=False, work__done=False)
+                 .filter(work__index__in=[self.indexes.all()])
+                 .order_by('priority', 'enqueuetime'))
+        if len(qjobs) == 0:
+            return (None,None)
+
+        myinds = set(str(i) for i in self.indexes.all())
+        for j in qjobs:
+            requested = set(str(w.index) for w in
+                            j.work.all()
+                            .filter(inprogress=False, done=False))
+            incommon = requested.intersection(myinds)
+            #print
+            #print 'QJob', j
+            #print 'Requested work:', requested
+            #print 'My indexes:', myinds
+            #print 'Incommon:', incommon
+            #print
+            if len(incommon) == 0:
+                continue
+
+            # test and set
+            mywork = [w in j.work.all() if str(w.index) in incommon]
+            for w in mywork:
+                print '  index', w.index
+
+                # UPDATE SET worker=me, inprogress=true WHERE inprogress=false
+                # ?
+
+                #w.worker = self.worker
+                #w.inprogress = True
+                #w.save()
+
+            # pull out the list of Work items I successfully claimed.
+            mywork = mywork.filter(worker=self.worker)
+            return (j, mywork)
+
+        return (None, None)
+
+
+
 
     def run_one(self):
         nextwork = self.worker.get_next_work(self.q)
