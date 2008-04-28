@@ -71,7 +71,7 @@ class UploadedFile(models.Model):
             self.set_base_dir(kwargs['upload_base_dir'])
         else:
             self.set_base_dir(UploadedFile.default_base_dir)
-        logging.debug('UploadedFile (init): base dir is', getattr(self, 'upload_base_dir', None))
+        #logging.debug('UploadedFile (init): base dir is', getattr(self, 'upload_base_dir', None))
         #logging.debug("Set upload id to " + str(self.uploadid))
         #logging.debug("
 
@@ -125,7 +125,7 @@ class UploadedFile(models.Model):
         return tag
 
     def get_filename(self):
-        logging.debug('UploadedFile.get_filename: base dir', getattr(self, 'upload_base_dir', None))
+        #logging.debug('UploadedFile.get_filename: base dir', getattr(self, 'upload_base_dir', None))
         fn = os.path.join(self.get_base_dir(), 'upload-' + self.uploadid)
         logging.debug('UploadedFile.get_filename: returning', fn)
         return fn
