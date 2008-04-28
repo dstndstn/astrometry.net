@@ -42,6 +42,8 @@ if __name__ == '__main__':
     wid = int(sys.argv[1])
     worker = Worker.objects.get(id=wid)
 
+    print 'DB table is', Work.get_table_name()
+
     while True:
 
         print 'Looking for work...'

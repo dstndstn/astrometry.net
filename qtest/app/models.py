@@ -19,6 +19,10 @@ class Work(models.Model):
                                        str(self.worker),
                                        self.claimed and 'claimed' or 'unclaimed')
 
+    @staticmethod
+    def get_table_name():
+        return Work._meta.db_table
+
 
 class FinishedWork(models.Model):
     work = models.ForeignKey(Work)
