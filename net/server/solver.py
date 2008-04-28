@@ -109,7 +109,8 @@ class Solver(object):
 
         cursor = connection.cursor()
         cursor.execute('LOCK TABLE %s IN SHARE ROW EXCLUSIVE MODE' %
-                       QueuedJob._meta.db_table)
+                       ','.join([QueuedJob._meta.db_table,
+                                 Work._meta.db_table]))
 
         # pull candidate jobs from the queue
         qjobs = (QueuedJob.objects.all()
