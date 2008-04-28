@@ -116,12 +116,12 @@ class Solver(object):
         qjobs = (QueuedJob.objects.all()
                  .filter(q=q, done=False)
                  .filter(work__inprogress=False, work__done=False)
-                 .filter(work__index__in=[self.indexes.all()])
+                 .filter(work__index__in=list(self.worker.indexes.all()))
                  .order_by('priority', 'enqueuetime'))
         if qjobs.count() == 0:
             return (None,None)
 
-        myinds = set(str(i) for i in self.indexes.all())
+        myinds = set(str(i) for i in self.worker.indexes.all())
         for j in qjobs:
             requested = set(str(w.index) for w in
                             j.work.all()

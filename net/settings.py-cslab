@@ -33,7 +33,7 @@ CACHEDIR = '/data2/test-tilecache'
 RENDERCACHEDIR = '/data2/test-rendercache/'
 TEMPDIR = '/tmp'
 
-SITE_ID = 'test'
+SITE_NAME = 'test'
 JOB_DIR = BASEDIR + 'web-data/'
 FIELD_DIR = '/home/gmaps/test/web-data/fields'
 
@@ -55,6 +55,8 @@ ACCOUNT_ADMIN = 'dstn@cs.toronto.edu'
 SESSION_COOKIE_NAME = 'AstrometryTestSession'
 
 MANAGERS = ADMINS
+
+SITE_ID = 1
 
 DATABASE_ENGINE = 'postgresql' # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
 DATABASE_NAME = 'an-test'
