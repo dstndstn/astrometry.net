@@ -21,10 +21,7 @@ td.lt { text-align:right; vertical-align:top; }
 
 .scalelabel { text-align:right; padding-left:15px; }
 
-td[col=ll] { padding-left:15px; }
-td[col=lr] { padding-right:10px; }
-td[col=rr] { padding-right:10px; }
-td[col=rl] { padding-left:15px; }
+#fsl-err { padding-right:10px; }
 
 #boundscell { padding:10px; padding-bottom:3px; }
 #errestcell { padding:10px; padding-bottom:3px; }
@@ -44,7 +41,7 @@ td[col=rl] { padding-left:15px; }
 
 {% block javascript %}
 <script type="text/javascript">
-<![CDATA[
+// <![CDATA[
 // the above is required to make this valid XHTML.
 var fitscols;
 var scaleplus;
@@ -630,14 +627,14 @@ Fill in ONE of the following pairs of values:
 <tr>
 <td></td>
 {% if scalelower_err %}
-<td class="err" id="fsl-err" col="lr"> {{ scalelower_err }} </td>
+<td class="err" id="fsl-err"> {{ scalelower_err }} </td>
 {% else %}
 <td></td>
 {% endif %}
 <td />
 <td></td>
 {% if scaleest_err %}
-<td class="err" id="fsl-err" col="rr"> {{ scaleest_err }} </td>
+<td class="err" id="fsl-err" style="padding-right:10px;"> {{ scaleest_err }} </td>
 {% else %}
 <td></td>
 {% endif %}
@@ -646,13 +643,13 @@ Fill in ONE of the following pairs of values:
 
 
 <tr>
-<td class="scalelabel" col="ll"> Lower bound:</td>
-<td col="lr"> {{ form.scalelower }} </td>
+<td class="scalelabel"> Lower bound:</td>
+<td style="padding-right:10px;"> {{ form.scalelower }} </td>
 
 <td />
 
-<td class="scalelabel" col="rl">Estimate:</td>
-<td col="rr"> {{ form.scaleest }} </td>
+<td class="scalelabel">Estimate:</td>
+<td  style="padding-right:10px;"> {{ form.scaleest }} </td>
 </tr>
 
 
@@ -660,7 +657,7 @@ Fill in ONE of the following pairs of values:
 <tr>
 <td></td>
 {% if scaleupper_err %}
-<td class="err" id="fsl-err" col="lr"> {{ scaleupper_err }} </td>
+<td class="err" id="fsl-err" style="padding-right:10px;"> {{ scaleupper_err }} </td>
 {% else %}
 <td></td>
 {% endif %}
@@ -669,7 +666,7 @@ Fill in ONE of the following pairs of values:
 
 <td></td>
 {% if scaleerr_err %}
-<td class="err" id="fsl-err" col="rr"> {{ scaleerr_err }} </td>
+<td class="err" id="fsl-err" style="padding-right:10px;"> {{ scaleerr_err }} </td>
 {% else %}
 <td></td>
 {% endif %}
@@ -677,13 +674,13 @@ Fill in ONE of the following pairs of values:
 {% endif %}
 
 <tr id="bottomrow">
-<td class="scalelabel" col="ll">Upper bound:</td>
-<td col="lr"> {{ form.scaleupper }} </td>
+<td class="scalelabel">Upper bound:</td>
+<td style="padding-right:10px;"> {{ form.scaleupper }} </td>
 
 <td />
 
-<td class="scalelabel" col="rl">% Error:</td>
-<td col="rr"> {{ form.scaleerr }} </td>
+<td class="scalelabel">% Error:</td>
+<td  style="padding-right:10px;"> {{ form.scaleerr }} </td>
 </tr>
 </table> <!-- end upper/lower estimate/error table -->
 
