@@ -132,7 +132,7 @@ class Solver(object):
                 continue
 
             # test and set
-            mywork = [w in j.work.all() if str(w.index) in incommon]
+            mywork = [w for w in j.work.all() if str(w.index) in incommon]
             for w in mywork:
                 print '  index', w.index
 
