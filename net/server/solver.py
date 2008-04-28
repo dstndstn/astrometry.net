@@ -16,6 +16,7 @@ from urllib import urlencode
 from urllib2 import urlopen
 
 from django.db import transaction
+from django.db import connection
 
 import pyfits
 
@@ -103,9 +104,12 @@ class Solver(object):
                           ))
         f.close()
 
-    #@transaction.commit_manually
+    @transaction.commit_manually
     def claim_work(self):
-        #transaction.commit()
+
+        cursor = connection.cursor()
+        cursor.execute('LOCK TABLE %s IN SHARE ROW EXCLUSIVE MODE' %
+                       QueuedJob._meta.db_table)
 
         # pull candidate jobs from the queue
         qjobs = (QueuedJob.objects.all()
@@ -113,7 +117,7 @@ class Solver(object):
                  .filter(work__inprogress=False, work__done=False)
                  .filter(work__index__in=[self.indexes.all()])
                  .order_by('priority', 'enqueuetime'))
-        if len(qjobs) == 0:
+        if qjobs.count() == 0:
             return (None,None)
 
         myinds = set(str(i) for i in self.indexes.all())
@@ -122,49 +126,37 @@ class Solver(object):
                             j.work.all()
                             .filter(inprogress=False, done=False))
             incommon = requested.intersection(myinds)
-            #print
-            #print 'QJob', j
-            #print 'Requested work:', requested
-            #print 'My indexes:', myinds
-            #print 'Incommon:', incommon
-            #print
             if len(incommon) == 0:
                 continue
 
-            # test and set
             mywork = [w for w in j.work.all() if str(w.index) in incommon]
             for w in mywork:
-                print '  index', w.index
+                w.worker = self.worker
+                w.inprogress = True
+                w.save()
 
-                # UPDATE SET worker=me, inprogress=true WHERE inprogress=false
-                # ?
-
-                #w.worker = self.worker
-                #w.inprogress = True
-                #w.save()
-
-            # pull out the list of Work items I successfully claimed.
-            mywork = mywork.filter(worker=self.worker)
+            transaction.commit()
             return (j, mywork)
 
         return (None, None)
 
 
 
-
     def run_one(self):
-        nextwork = self.worker.get_next_work(self.q)
-        if nextwork is None:
+        #nextwork = self.worker.get_next_work(self.q)
+        #if nextwork is None:
+        #    return False
+        #(qjob, work) = nextwork
+        #print 'Got my next job:', qjob, 'work', work
+        #for w in work:
+        #    print '  index', w.index
+        #    w.worker = self.worker
+        #    w.inprogress = True
+        #    w.save()
+
+        (qjob, work) = self.claim_work()
+        if qjob is None:
             return False
-        (qjob, work) = nextwork
-
-        print 'Got my next job:', qjob, 'work', work
-
-        for w in work:
-            print '  index', w.index
-            w.worker = self.worker
-            w.inprogress = True
-            w.save()
 
         self.worker.job = qjob
         self.worker.save()
