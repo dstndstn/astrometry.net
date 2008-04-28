@@ -6,6 +6,8 @@ from qtest.app.models import *
 
 if __name__ == '__main__':
 
+    Work.objects.all().delete()
+
     # get Index
     ind1 = Index.objects.get(id=1)
 
@@ -21,5 +23,9 @@ if __name__ == '__main__':
     while True:
         fw = FinishedWork.objects.all().filter(work__id__in=ids)
         print '%i of %i done' % (fw.count(), len(ids))
+        print 'Ids:', ids
+        print 'All work:'
+        for w in Work.objects.all():
+            print '  ', w
         time.sleep(1)
 
