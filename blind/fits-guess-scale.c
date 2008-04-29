@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -23,60 +23,61 @@
 #include <string.h>
 #include <math.h>
 
+#include "fits-guess-scale.h"
 #include "qfits.h"
 #include "sip.h"
 #include "sip_qfits.h"
-#include "fitsioutils.h"
 #include "starutil.h"
+#include "errors.h"
 
-static char* OPTIONS = "h";
+int fits_guess_scale(const char* infn,
+                     sl** p_methods, dl** p_scales) {
+	qfits_header* hdr;
 
-static void printHelp(char* progname) {
-	printf("%s  <input-file>\n"
-		   "\n", progname);
+	hdr = qfits_header_read(infn);
+	if (!hdr) {
+		ERROR("Failed to read FITS header");
+        return -1;
+	}
+    fits_guess_scale_hdr(hdr, p_methods, p_scales);
+    qfits_header_destroy(hdr);
+    return 0;
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
+static void addscale(sl* methods, dl* scales,
+                     const char* method, double scale) {
+    if (methods)
+        sl_append(methods, method);
+    if (scales)
+        dl_append(scales, scale);
+}
 
-int main(int argc, char *argv[]) {
-	char* progname = argv[0];
-    int argchar;
-	char* infn = NULL;
-	qfits_header* hdr;
+void fits_guess_scale_hdr(const qfits_header* hdr,
+                          sl** p_methods, dl** p_scales) {
 	sip_t sip;
 	double val;
 	bool gotsip = FALSE;
 
-    while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
-        switch (argchar) {
-        case '?':
-        case 'h':
-			printHelp(progname);
-            return 0;
-        default:
-            return -1;
-        }
+    sl* methods = NULL;
+    dl* scales = NULL;
 
-	if (optind != (argc - 1)) {
-		printHelp(progname);
-		exit(-1);
-	}
-	infn = argv[optind];
-
-	hdr = qfits_header_read(infn);
-	if (!hdr) {
-		fprintf(stderr, "Failed to read FITS header.\n");
-		exit(-1);
-	}
+    if (p_methods) {
+        if (!*p_methods)
+            *p_methods = sl_new(4);
+        methods = *p_methods;
+    }
+    if (p_scales) {
+        if (!*p_scales)
+            *p_scales = dl_new(4);
+        scales = *p_scales;
+    }
 
 	memset(&sip, 0, sizeof(sip_t));
 	if (sip_read_header(hdr, &sip)) {
-		double det = sip_det_cd(&sip);
-		if (det != 0) {
-			printf("scale sip %g\n", 3600.0 * sqrt(fabs(det)));
-			// CHECK: printf("sip_parity %g\n", det > 0 ? 1 : 0);
-			gotsip = TRUE;
+        val = sip_pixel_scale(&sip);
+        if (val != 0.0) {
+            addscale(methods, scales, "sip", val);
+            gotsip = TRUE;
 		}
 	}
 
@@ -89,56 +90,48 @@ int main(int argc, char *argv[]) {
 		cd21 = qfits_header_getdouble(hdr, "CD2_1", errval);
 		cd22 = qfits_header_getdouble(hdr, "CD2_2", errval);
 		if ((cd11 != errval) && (cd12 != errval) && (cd21 != errval) && (cd22 != errval)) {
-			double det = cd11 * cd22 - cd12 * cd21;
-			if (det != 0) {
-				printf("scale cd %g\n", 3600.0 * sqrt(fabs(det)));
-			}
+			val = cd11 * cd22 - cd12 * cd21;
+			if (val != 0.0)
+                addscale(methods, scales, "cd", sqrt(fabs(val)));
 		}
 	}
 
 	val = qfits_header_getdouble(hdr, "PIXSCALE", -1.0);
-	if (val != -1.0) {
-		printf("scale pixscale %g\n", val);
-	}
+	if (val != -1.0)
+        addscale(methods, scales, "pixscale", val);
 
-	val = qfits_header_getdouble(hdr, "PIXSCAL1", -1.0);
-	if (val != -1.0) {
-		if (val != 0.0) {
-			printf("scale pixscal1 %g\n", val);
-		} else {
-			val = atof(qfits_pretty_string(qfits_header_getstr(hdr, "PIXSCAL1")));
-			if (val != 0.0) {
-				printf("scale pixscal1 %g\n", val);
-			}
-		}
-	}
+    /* Why all this?
+     val = qfits_header_getdouble(hdr, "PIXSCAL1", -1.0);
+     if (val != -1.0) {
+     if (val != 0.0) {
+     printf("scale pixscal1 %g\n", val);
+     } else {
+     val = atof(qfits_pretty_string(qfits_header_getstr(hdr, "PIXSCAL1")));
+     if (val != 0.0) {
+     printf("scale pixscal1 %g\n", val);
+     }
+     }
+     }
+     */
 
-	val = qfits_header_getdouble(hdr, "PIXSCAL2", -1.0);
-	if (val != -1.0) {
-		if (val != 0.0) {
-			printf("scale pixscal2 %g\n", val);
-		} else {
-			val = atof(qfits_pretty_string(qfits_header_getstr(hdr, "PIXSCAL2")));
-			if (val != 0.0) {
-				printf("scale pixscal2 %g\n", val);
-			}
-		}
-	}
+     val = qfits_header_getdouble(hdr, "PIXSCAL1", 0.0);
+     if (val != 0.0)
+         addscale(methods, scales, "pixscal1", val);
 
-	val = qfits_header_getdouble(hdr, "PLATESC", -1.0);
-	if ((val != -1.0) && (val != 0.0)) {
-		printf("scale platesc %g\n", val);
-	}
+     val = qfits_header_getdouble(hdr, "PIXSCAL2", 0.0);
+     if (val != 0.0)
+         addscale(methods, scales, "pixscal2", val);
 
-	val = qfits_header_getdouble(hdr, "CCDSCALE", -1.0);
-	if ((val != -1.0) && (val != 0.0)) {
-		printf("scale ccdscale %g\n", val);
-	}
+     val = qfits_header_getdouble(hdr, "PLATESC", 0.0);
+     if (val != 0.0)
+         addscale(methods, scales, "platesc", val);
 
-	val = qfits_header_getdouble(hdr, "CDELT1", -1.0);
-	if ((val != -1.0) && (val != 0.0)) {
-		printf("scale cdelt1 %g\n", 3600.0 * fabs(val));
-	}
+	val = qfits_header_getdouble(hdr, "CCDSCALE", 0.0);
+     if (val != 0.0)
+         addscale(methods, scales, "ccdscale", val);
 
-	return 0;
+	val = qfits_header_getdouble(hdr, "CDELT1", 0.0);
+     if (val != 0.0)
+         addscale(methods, scales, "cdelt1", 3600.0 * fabs(val));
 }
+

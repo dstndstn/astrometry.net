@@ -283,8 +283,10 @@ certifiable: certifiable.o histogram.o matchfile.o solvedfile.o \
 an-fitstopnm: an-fitstopnm.o \
 		$(ANUTILS_LIB) $(QFITS_LIB)
 
-fits-guess-scale: fits-guess-scale.o \
+fits-guess-scale: fits-guess-scale-main.o fits-guess-scale.o \
 		$(ANUTILS_LIB) $(QFITS_LIB)
+
+ALL_OBJ += fits-guess-scale-main.o
 
 get-wcs: get-wcs.o \
 		$(ANUTILS_LIB) $(QFITS_LIB)
