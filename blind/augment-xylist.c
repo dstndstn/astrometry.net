@@ -46,6 +46,7 @@
 #include "tabsort.h"
 #include "errors.h"
 #include "fits-guess-scale.h"
+#include "image2xy.h"
 
 #include "qfits.h"
 
@@ -542,25 +543,7 @@ int main(int argc, char** args) {
 		xylsfn = create_temp_file("xyls", tempdir);
         sl_append_nocopy(tempfiles, xylsfn);
 
-        append_executable(cmd, "image2xy", me);
-        if (!verbose)
-            sl_append(cmd, "-q");
-        sl_append(cmd, "-O");
-        sl_append(cmd, "-o");
-        append_escape(cmd, xylsfn);
-        append_escape(cmd, fitsimgfn);
-
-        if (scaledown > 1) {
-            if (scaledown == 2)
-                sl_append(cmd, "-H");
-            else {
-                // FIXME
-                fprintf(stderr, "Can only downsample image by 2.\n");
-                exit(-1);
-            }
-        }
-
-        run(cmd, verbose);
+        image2xy(fitsimgfn, xylsfn, TRUE, scaledown);
 
         dosort = TRUE;
 

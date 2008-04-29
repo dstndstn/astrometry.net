@@ -380,9 +380,9 @@ backend: backend.o scriptutils.o blind.o solver.o codekd.o \
 solve-field: solve-field.o scriptutils.o matchfile.o fileutil.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-augment-xylist: augment-xylist.o tabsort.o fits-guess-scale.o scriptutils.o \
-		fileutil.o \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+augment-xylist: augment-xylist.o tabsort.o fits-guess-scale.o image2xy.o \
+		scriptutils.o fileutil.o log.o svn.o $(SIMPLEXY2_OBJ) \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_LIB)
 
 blind: blind-main.o blind.o solver.o codekd.o matchfile.o tic.o \
 		solvedclient.o solvedfile.o idfile.o verify.o svd.o \
