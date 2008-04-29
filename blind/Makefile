@@ -377,7 +377,8 @@ backend: backend.o scriptutils.o blind.o solver.o codekd.o \
 solve-field: solve-field.o scriptutils.o matchfile.o fileutil.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-augment-xylist: augment-xylist.o tabsort.o scriptutils.o fileutil.o \
+augment-xylist: augment-xylist.o tabsort.o fits-guess-scale.o scriptutils.o \
+		fileutil.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 blind: blind-main.o blind.o solver.o codekd.o matchfile.o tic.o \

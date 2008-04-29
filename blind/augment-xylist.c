@@ -45,6 +45,7 @@
 #include "sip_qfits.h"
 #include "tabsort.h"
 #include "errors.h"
+#include "fits-guess-scale.h"
 
 #include "qfits.h"
 
@@ -493,26 +494,17 @@ int main(int argc, char** args) {
                 fitsimgfn = sanitizedfn;
 
 			if (guess_scale) {
-                append_executable(cmd, "fits-guess-scale", me);
-                append_escape(cmd, fitsimgfn);
-
-                lines = backtick(cmd, verbose);
-
-				for (i=0; i<sl_size(lines); i++) {
-					char type[256];
-					double scale;
-					line = sl_get(lines, i);
-					if (sscanf(line, "scale %255s %lg", type, &scale) == 2) {
-                        if (verbose)
-                            printf("Scale estimate: %g\n", scale);
-						dl_append(scales, scale * 0.99);
-						dl_append(scales, scale * 1.01);
-						guessed_scale = TRUE;
-					}
-				}
-
-				sl_free2(lines);
-
+                dl* estscales = NULL;
+                fits_guess_scale(fitsimgfn, NULL, &estscales);
+				for (i=0; i<dl_size(estscales); i++) {
+					double scale = dl_get(estscales, i);
+                    if (verbose)
+                        printf("Scale estimate: %g\n", scale);
+                    dl_append(scales, scale * 0.99);
+                    dl_append(scales, scale * 1.01);
+                    guessed_scale = TRUE;
+                }
+				dl_free(estscales);
 			}
 
 		} else {
