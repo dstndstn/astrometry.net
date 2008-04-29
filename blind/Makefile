@@ -238,7 +238,10 @@ demo_dsmooth: demo_dsmooth.o dsmooth.o \
 
 #ctmf.o: ctmf.c
 
-image2xy: $(SIMPLEXY2_OBJ) $(CFITS_LIB) svn.o $(ANUTILS_LIB)
+image2xy: image2xy-main.o log.o svn.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
+
+ALL_OBJ += image2xy-main.o
+
 PNG2XY_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o dpeaks.o \
 	dselip.o dsigma.o dsmooth.o png2xy.o simplexy.o radix.o \
 	ctmf.o $(COMMON)/cairoutils.o
