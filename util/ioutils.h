@@ -42,7 +42,7 @@ void
 ATTRIB_FORMAT(printf,2,3)
 asprintf_safe(char** strp, const char* format, ...);
 
-int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines, const char** errormsg);
+int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines);
 
 void get_mmap_size(int start, int size, off_t* mapstart, size_t* mapsize, int* pgap);
 

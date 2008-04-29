@@ -35,6 +35,7 @@
 
 #include "ioutils.h"
 #include "gnu-specific.h"
+#include "errors.h"
 
 uint32_t ENDIAN_DETECTOR = 0x01020304;
 
@@ -42,7 +43,7 @@ int pipe_file_offset(FILE* fin, int offset, int length, FILE* fout) {
     char buf[1024];
     int i;
     if (fseeko(fin, offset, SEEK_SET)) {
-        fprintf(stderr, "Failed to seek to offset %i: %s\n", offset, strerror(errno));
+        SYSERROR("Failed to seek to offset %i", offset);
         return -1;
     }
     for (i=0; i<length; i+=sizeof(buf)) {
@@ -51,11 +52,11 @@ int pipe_file_offset(FILE* fin, int offset, int length, FILE* fout) {
             n = length - i;
         }
         if (fread(buf, 1, n, fin) != n) {
-            fprintf(stderr, "Failed to read %i bytes: %s\n", n, strerror(errno));
+            SYSERROR("Failed to read %i bytes", n);
             return -1;
         }
         if (fwrite(buf, 1, n, fout) != n) {
-            fprintf(stderr, "Failed to write %i bytes: %s\n", n, strerror(errno));
+            SYSERROR("Failed to write %i bytes", n);
             return -1;
         }
     }
@@ -188,27 +189,27 @@ char* find_executable(const char* progname, const char* sibling) {
     return NULL;
 }
 
-int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines, const char** errormsg) {
+int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 	int outpipe[2];
 	int errpipe[2];
 	pid_t pid;
 
 	if (outlines) {
 		if (pipe(outpipe) == -1) {
-			if (errormsg) *errormsg = "Error creating pipe";
+            SYSERROR("Failed to create stdout pipe");
 			return -1;
 		}
 	}
 	if (errlines) {
 		if (pipe(errpipe) == -1) {
-			if (errormsg) *errormsg = "Error creating pipe";
+            SYSERROR("Failed to create stderr pipe");
 			return -1;
 		}
 	}
 
 	pid = fork();
 	if (pid == -1) {
-		if (errormsg) *errormsg = "Error fork()ing";
+        SYSERROR("Failed to fork");
 		return -1;
 	} else if (pid == 0) {
 		// Child process.
@@ -216,7 +217,7 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines, const
 			close(outpipe[0]);
 			// bind stdout to the pipe.
 			if (dup2(outpipe[1], STDOUT_FILENO) == -1) {
-				fprintf(stderr, "Failed to dup2 stdout: %s\n", strerror(errno));
+                SYSERROR("Failed to dup2 stdout");
 				_exit( -1);
 			}
 		}
@@ -224,13 +225,13 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines, const
 			close(errpipe[0]);
 			// bind stdout to the pipe.
 			if (dup2(errpipe[1], STDERR_FILENO) == -1) {
-				fprintf(stderr, "Failed to dup2 stdout: %s\n", strerror(errno));
+                SYSERROR("Failed to dup2 stderr");
 				_exit( -1);
 			}
 		}
 		// Use a "system"-like command to allow fancier commands.
 		if (execlp("/bin/sh", "/bin/sh", "-c", cmd, (char*)NULL)) {
-			fprintf(stderr, "Failed to execlp: %s\n", strerror(errno));
+            SYSERROR("Failed to execlp");
 			_exit( -1);
 		}
 		// execlp doesn't return.
@@ -242,7 +243,7 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines, const
 			close(outpipe[1]);
 			fout = fdopen(outpipe[0], "r");
 			if (!fout) {
-				if (errormsg) *errormsg = "Failed to fdopen() pipe";
+                SYSERROR("Failed to open stdout pipe");
 				return -1;
 			}
 		}
@@ -250,7 +251,7 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines, const
 			close(errpipe[1]);
 			ferr = fdopen(errpipe[0], "r");
 			if (!ferr) {
-				if (errormsg) *errormsg = "Failed to fdopen() pipe";
+                SYSERROR("Failed to open stderr pipe");
 				return -1;
 			}
 		}
@@ -260,19 +261,19 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines, const
 		//printf("Waiting for command to finish (PID %i).\n", (int)pid);
 		do {
 			if (waitpid(pid, &status, 0) == -1) {
-				if (errormsg) *errormsg = "Failed to waitpid()";
+                SYSERROR("Failed to waitpid() for command to finish");
 				return -1;
 			}
 			if (WIFSIGNALED(status)) {
-				if (errormsg) *errormsg = "Command was killed by signal"; // %i.\n", WTERMSIG(status));
+                ERROR("Command was killed by signal %i", WTERMSIG(status));
 				return -1;
 			} else {
 				int exitval = WEXITSTATUS(status);
 				if (exitval == 127) {
-					if (errormsg) *errormsg = "Command not found";
+                    ERROR("Command not found: %s", cmd);
 					return exitval;
 				} else if (exitval) {
-					if (errormsg) *errormsg = "Command failed"; //: return value %i.\n", exitval);
+                    SYSERROR("Command failed: return value %i", exitval);
 					return exitval;
 				}
 			}
@@ -295,7 +296,7 @@ sl* file_get_lines(const char* fn, bool include_newlines) {
 	sl* list;
     fid = fopen(fn, "r");
     if (!fid) {
-        fprintf(stderr, "file_get_lines: failed to open file \"%s\": %s\n", fn, strerror(errno));
+        SYSERROR("Failed to open file %s", fn);
         return NULL;
     }
 	list = fid_get_lines(fid, include_newlines);
@@ -310,7 +311,7 @@ sl* fid_get_lines(FILE* fid, bool include_newlines) {
 		char* line = read_string_terminated(fid, "\n\r\0", 3, include_newlines);
 		if (!line) {
 			// error.
-			fprintf(stderr, "fid_get_lines: failed to read a line.\n");
+            SYSERROR("Failed to read a line");
 			sl_free2(list);
 			return NULL;
 		}

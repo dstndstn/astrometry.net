@@ -8,34 +8,37 @@ import sys
 import os
 import tempfile
 
-fitstype = "FITS image data"
+from astrometry.util.shell import shell_escape
+
+fitstype = 'FITS image data'
 fitsext = 'fits'
 
-pgmcmd = "pgmtoppm rgbi:1/1/1 %s > %s"
+pgmcmd = 'pgmtoppm rgbi:1/1/1 %s > %s'
 
-imgcmds = {fitstype : (fitsext, "an-fitstopnm -i %s > %s"),
-           "JPEG image data"  : ("jpg",  "jpegtopnm %s > %s"),
-           "PNG image data"   : ("png",  "pngtopnm %s > %s"),
-           "GIF image data"   : ("gif",  "giftopnm %s > %s"),
-           "Netpbm PPM"       : ("pnm",  "ppmtoppm < %s > %s"),
-           "Netpbm PPM \"rawbits\" image data" : ("pnm",  "cp %s %s"),
-           "Netpbm PGM"       : ("pnm",  pgmcmd),
-           "Netpbm PGM \"rawbits\" image data" : ("pnm",  pgmcmd),
-           "TIFF image data"  : ("tiff",  "tifftopnm %s > %s"),
+filecmd = 'file -b -N -L %s'
+
+imgcmds = {fitstype : (fitsext, 'an-fitstopnm -i %s > %s'),
+           'JPEG image data'  : ('jpg',  'jpegtopnm %s > %s'),
+           'PNG image data'   : ('png',  'pngtopnm %s > %s'),
+           'GIF image data'   : ('gif',  'giftopnm %s > %s'),
+           'Netpbm PPM'       : ('pnm',  'ppmtoppm < %s > %s'),
+           'Netpbm PPM "rawbits" image data' : ('pnm',  'cp %s %s'),
+           'Netpbm PGM'       : ('pnm',  pgmcmd),
+           'Netpbm PGM "rawbits" image data' : ('pnm',  pgmcmd),
+           'TIFF image data'  : ('tiff',  'tifftopnm %s > %s'),
+           # RAW is not recognized by 'file'; we have to use 'dcraw',
+           # but we still store this here for convenience.
+           'raw'              : ('raw', 'dcraw -4 -c %s > %s'),
            }
 
-rawcmd = ('raw', 'dcraw -4 -c "%s" > "%s"')
+rawcmd = 
 
-compcmds = {"gzip compressed data"    : ("gz",  "gunzip -c %s > %s"),
-            "bzip2 compressed data"   : ("bz2", "bunzip2 -k -c %s > %s")
+compcmds = {'gzip compressed data'    : ('gz',  'gunzip -c %s > %s'),
+            'bzip2 compressed data'   : ('bz2', 'bunzip2 -k -c %s > %s')
            }
 
-def shell_escape(s):
-    repl = ("\\", "|", "&", ";", "(", ")", "<", ">", " ", "\t", "\n", "'", "\"")
-    # (note, "\\" must be first!)
-    for x in repl:
-        s = s.replace(x, '\\'+x)
-    return s
+# command to identify a RAW image.
+raw_id_cmd = 'dcraw -i %s >/dev/null 2> /dev/null'
 
 def log(*x):
     print >> sys.stderr, 'image2pnm:', ' '.join(x)
@@ -47,7 +50,7 @@ def do_command(cmd):
 
 # Run the "file" command, return the trimmed output.
 def run_file(fn):
-    (filein, fileout) = os.popen2('file -b -N -L %s' % shell_escape(fn))
+    (filein, fileout) = os.popen2(filecmd % shell_escape(fn))
     typeinfo = fileout.read().strip()
     # Trim extra data after the ,
     comma_pos = typeinfo.find(',')
@@ -80,11 +83,10 @@ def uncompress_file(infile, uncompressed, outdir=None, typeinfo=None, quiet=True
 def get_image_type(infile):
     typeinfo = run_file(infile)
     if not typeinfo in imgcmds:
-        dcrawcmd = 'dcraw -i "%s" > /dev/null 2> /dev/null' % (infile)
-        rtn = os.system(dcrawcmd)
+        rtn = os.system(raw_id_cmd % shell_escape(infile))
         if os.WIFEXITED(rtn) and (os.WEXITSTATUS(rtn) == 0):
             # it's a RAW image.
-            (ext, cmd) = rawcmd
+            (ext, cmd) = imgcmds['raw']
             return (ext, cmd, None)
         return (None, None, 'Unknown image type "%s"' % typeinfo)
     (ext, cmd) = imgcmds[typeinfo]
@@ -142,9 +144,9 @@ def image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits,
     # Do the actual conversion
     # an-fitstopnm: add path...
     if (ext == fitsext) and mydir:
-        cmd = mydir + cmd
+        cmd = os.path.join(mydir, cmd)
     if quiet:
-        cmd = cmd + " 2>/dev/null"
+        cmd += ' 2>/dev/null'
     do_command(cmd % (shell_escape(infile), shell_escape(outfile)))
 
     if force_ppm:
@@ -194,29 +196,29 @@ def convert_image(infile, outfile, uncompressed, sanitized, force_ppm, no_fits2f
 def main():
     from optparse import OptionParser
     parser = OptionParser()
-    parser.add_option("-i", "--infile",
-                      dest="infile",
-                      help="input image FILE", metavar="FILE")
-    parser.add_option("-u", "--uncompressed-outfile",
-                      dest="uncompressed_outfile",
-                      help="uncompressed temporary FILE", metavar="FILE",
+    parser.add_option('-i', '--infile',
+                      dest='infile',
+                      help='input image FILE', metavar='FILE')
+    parser.add_option('-u', '--uncompressed-outfile',
+                      dest='uncompressed_outfile',
+                      help='uncompressed temporary FILE', metavar='FILE',
                       default='')
-    parser.add_option("-s", "--sanitized-fits-outfile",
-                      dest="sanitized_outfile",
-                      help="sanitized temporary fits FILE", metavar="FILE",
+    parser.add_option('-s', '--sanitized-fits-outfile',
+                      dest='sanitized_outfile',
+                      help='sanitized temporary fits FILE', metavar='FILE',
                       default='')
-    parser.add_option("-o", "--outfile",
-                      dest="outfile",
-                      help="output pnm image FILE", metavar="FILE")
-    parser.add_option("-p", "--ppm",
-                      action="store_true", dest="force_ppm",
-                      help="convert the output to PPM");
-    parser.add_option("-2", "--no-fits2fits",
-                      action="store_true", dest="no_fits2fits",
+    parser.add_option('-o', '--outfile',
+                      dest='outfile',
+                      help='output pnm image FILE', metavar='FILE')
+    parser.add_option('-p', '--ppm',
+                      action='store_true', dest='force_ppm',
+                      help='convert the output to PPM');
+    parser.add_option('-2', '--no-fits2fits',
+                      action='store_true', dest='no_fits2fits',
                       help="don't sanitize FITS files");
-    parser.add_option("-q", "--quiet",
-                      action="store_true", dest="quiet",
-                      help="only print errors");
+    parser.add_option('-q', '--quiet',
+                      action='store_true', dest='quiet',
+                      help='only print errors');
 
     (options, args) = parser.parse_args()
 
@@ -228,7 +230,7 @@ def main():
     # Find the path to this executable and use it to find other Astrometry.net
     # executables.
     if (len(sys.argv) > 0):
-        mydir = os.path.dirname(sys.argv[0]) + "/"
+        mydir = os.path.dirname(sys.argv[0])
 
     return convert_image(options.infile, options.outfile,
                          options.uncompressed_outfile,

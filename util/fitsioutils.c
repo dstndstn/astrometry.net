@@ -651,7 +651,7 @@ int fits_pad_file(FILE* fid) {
 		npad = FITS_BLOCK_SIZE - npad;
 		for (i=0; i<npad; i++)
 			if (fwrite(&nil, 1, 1, fid) != 1) {
-				fprintf(stderr, "Failed to pad FITS file: %s\n", strerror(errno));
+                SYSERROR("Failed to pad FITS file");
 				return -1;
 			}
 	}

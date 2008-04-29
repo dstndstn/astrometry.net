@@ -44,6 +44,7 @@
 #include "scriptutils.h"
 #include "sip_qfits.h"
 #include "tabsort.h"
+#include "errors.h"
 
 #include "qfits.h"
 
@@ -150,14 +151,12 @@ static void append_executable(sl* list, const char* fn, const char* me) {
 
 static sl* backtick(sl* cmd, bool verbose) {
     char* cmdstr = sl_implode(cmd, " ");
-    const char* errmsg = NULL;
     sl* lines;
     if (verbose)
         printf("Running: %s\n", cmdstr);
-    if (run_command_get_outputs(cmdstr, &lines, NULL, &errmsg)) {
+    if (run_command_get_outputs(cmdstr, &lines, NULL)) {
         free(cmdstr);
-        fprintf(stderr, "%s\n", errmsg);
-        fprintf(stderr, "Failed to run %s.\n", sl_get(cmd, 0));
+        ERROR("Failed to run %s", sl_get(cmd, 0));
         exit(-1);
     }
     free(cmdstr);

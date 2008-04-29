@@ -1,8 +1,8 @@
 #! /usr/bin/env python
-import pyfits
 import os
 import sys
 import re
+import pyfits
 
 def fits2fits(infile, outfile, verbose):
     """
@@ -29,7 +29,7 @@ def fits2fits(infile, outfile, verbose):
             cnew = pat.sub('_', c)
             if (c != cnew):
                 if verbose:
-                    print "Replacing illegal keyword ", c, " by ", cnew
+                    print 'Replacing illegal keyword ', c, ' by ', cnew
                 # add the new header card
                 hdr.update(cnew, cards[c].value, cards[c].comment, after=c)
                 # remove the old one.
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         infile = sys.argv[2]
         outfile = sys.argv[3]
     else:
-        print "Usage: fits2fits.py [--verbose] input.fits output.fits"
+        print 'Usage: fits2fits.py [--verbose] input.fits output.fits'
         sys.exit()
 
     errstr = fits2fits(infile, outfile, verbose)

@@ -731,10 +731,9 @@ int main(int argc, char** args) {
         else
             printf("Solving...\n");
         fflush(NULL);
-		if (run_command_get_outputs(cmd, NULL, NULL, &errmsg)) {
+		if (run_command_get_outputs(cmd, NULL, NULL)) {
             fflush(NULL);
-			fprintf(stderr, "backend failed: %s\n", errmsg);
-			fprintf(stderr, "exiting.\n");
+            ERROR("backend failed");
 			exit(-1);
 		}
 		free(cmd);
@@ -781,10 +780,9 @@ int main(int argc, char** args) {
             if (verbose)
                 printf("Running:\n  %s\n", cmd);
             fflush(NULL);
-            if (run_command_get_outputs(cmd, &lines, NULL, &errmsg)) {
+            if (run_command_get_outputs(cmd, &lines, NULL)) {
                 fflush(NULL);
-                fprintf(stderr, "wcsinfo failed: %s\n", errmsg);
-                fprintf(stderr, "exiting.\n");
+                ERROR("wcsinfo failed");
                 exit(-1);
             }
 			free(cmd);
@@ -924,10 +922,9 @@ int main(int argc, char** args) {
 				if (verbose)
                     printf("Running:\n  %s\n", cmd);
                 fflush(NULL);
-                if (run_command_get_outputs(cmd, &lines, NULL, &errmsg)) {
+                if (run_command_get_outputs(cmd, &lines, NULL)) {
                     fflush(NULL);
-                    fprintf(stderr, "plot-constellations failed: %s\n", errmsg);
-                    fprintf(stderr, "exiting.\n");
+                    ERROR("plot-constellations failed");
                     exit(-1);
                 }
 				free(cmd);
