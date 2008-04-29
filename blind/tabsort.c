@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -27,55 +27,174 @@
 #include "ioutils.h"
 #include "fitsioutils.h"
 #include "permutedsort.h"
+#include "errors.h"
 
-static const char* OPTIONS = "hc:i:o:dq";
+int tabsort(const char* infn, const char* outfn, const char* colname,
+            bool descending) {
+	FILE* fin;
+	FILE* fout;
+	int ext, nextens;
+	int start, size;
+    void* data = NULL;
+    int* perm = NULL;
+    unsigned char* map = NULL;
+    size_t mapsize;
+
+    fin = fopen(infn, "rb");
+    if (!fin) {
+        SYSERROR("Failed to open input file %s", infn);
+        return -1;
+    }
+
+    fout = fopen(outfn, "wb");
+    if (!fout) {
+        SYSERROR("Failed to open output file %s", outfn);
+        goto bailout;
+    }
+
+	// copy the main header exactly.
+	if (qfits_get_hdrinfo(infn, 0, &start, &size)) {
+		ERROR("Failed to read primary FITS header.");
+        goto bailout;
+	}
+
+    if (pipe_file_offset(fin, start, size, fout)) {
+        ERROR("Failed to copy primary FITS header.");
+        goto bailout;
+    }
+
+	nextens = qfits_query_n_ext(infn);
+    //logverb("Sorting %i extensions.\n", nextens);
+	for (ext=1; ext<=nextens; ext++) {
+		int c;
+		qfits_table* table;
+		qfits_col* col;
+		int mgap;
+		off_t mstart;
+		size_t msize;
+		int atomsize;
+		int (*sort_func)(const void*, const void*);
+		unsigned char* tabledata;
+		unsigned char* tablehdr;
+		int hdrstart, hdrsize, datsize, datstart;
+		int i;
+
+		if (qfits_get_hdrinfo(infn, ext, &hdrstart, &hdrsize) ||
+			qfits_get_datinfo(infn, ext, &datstart, &datsize)) {
+			ERROR("Couldn't get extension %i header or data extent.", ext);
+            goto bailout;
+        }
+		if (!qfits_is_table(infn, ext)) {
+            ERROR("Extention %i isn't a table. Skipping.\n", ext);
+			continue;
+		}
+		table = qfits_table_open(infn, ext);
+		if (!table) {
+			ERROR("Failed to open table: file %s, extension %i. Skipping.", infn, ext);
+			continue;
+		}
+		c = fits_find_column(table, colname);
+		if (c == -1) {
+			ERROR("Couldn't find column named \"%s\" in extension %i.  Skipping.", colname, ext);
+			continue;
+		}
+		col = table->col + c;
+		switch (col->atom_type) {
+		case TFITS_BIN_TYPE_D:
+			data = realloc(data, table->nr * sizeof(double));
+			if (descending)
+				sort_func = compare_doubles_desc;
+			else
+				sort_func = compare_doubles;
+			break;
+		case TFITS_BIN_TYPE_E:
+			data = realloc(data, table->nr * sizeof(float));
+			if (descending)
+				sort_func = compare_floats_desc;
+			else
+				sort_func = compare_floats;
+			break;
+		default:
+			ERROR("Column %s is neither FITS type D nor E.  Skipping.", colname);
+			continue;
+		}
+
+        // Grab the data.
+		atomsize = fits_get_atom_size(col->atom_type);
+		qfits_query_column_seq_to_array(table, c, 0, table->nr, data, atomsize);
+        // Sort it.
+		perm = permuted_sort(data, atomsize, sort_func, NULL, table->nr);
+
+        // mmap the input file.
+		start = hdrstart;
+		size = hdrsize + datsize;
+		get_mmap_size(start, size, &mstart, &msize, &mgap);
+		mapsize = msize;
+		map = mmap(NULL, mapsize, PROT_READ, MAP_SHARED, fileno(fin), mstart);
+		if (map == MAP_FAILED) {
+			SYSERROR("Failed to mmap input file %s", infn);
+            map = NULL;
+            goto bailout;
+		}
+		tabledata = map + mgap + (datstart - hdrstart);
+		tablehdr  = map + mgap;
+
+        // Copy the table header without change.
+		if (fwrite(tablehdr, 1, hdrsize, fout) != hdrsize) {
+			SYSERROR("Failed to write FITS table header");
+            goto bailout;
+		}
+
+		for (i=0; i<table->nr; i++) {
+			unsigned char* rowptr;
+			rowptr = tabledata + perm[i] * table->tab_w;
+			if (fwrite(rowptr, 1, table->tab_w, fout) != table->tab_w) {
+				SYSERROR("Failed to write FITS table row");
+                goto bailout;
+			}
+		}
+
+		munmap(map, mapsize);
+        map = NULL;
+		free(perm);
+        perm = NULL;
+
+		if (fits_pad_file(fout)) {
+			ERROR("Failed to add padding to extension %i", ext);
+            goto bailout;
+		}
+
+        qfits_table_close(table);
+	}
+	free(data);
+
+	if (fclose(fout)) {
+		SYSERROR("Error closing output file");
+        fout = NULL;
+        goto bailout;
+	}
+	fclose(fin);
+	return 0;
+
+ bailout:
+    free(data);
+    free(perm);
+    if (fout)
+        fclose(fout);
+    fclose(fin);
+    if (map)
+        munmap(map, mapsize);
+    return -1;
+}
+
+#ifdef MAIN
+static const char* OPTIONS = "hc:i:o:d";
 
 static void printHelp(char* progname) {
-	printf("%s    -i <input-file>\n"
-		   "      -o <output-file>\n"
-		   "      -c <column-name>\n"
+	printf("%s  [options]  <column-name> <input-file> <output-file>\n"
+           "  options include:\n"
 		   "      [-d]: sort in descending order (default, ascending)\n",
 		   progname);
-}
-
-static int sort_doubles_desc(const void* v1, const void* v2) {
-	double d1 = *((double*)v1);
-	double d2 = *((double*)v2);
-	if (d1 > d2)
-		return -1;
-	if (d1 == d2)
-		return 0;
-	return 1;
-}
-
-static int sort_doubles_asc(const void* v1, const void* v2) {
-	double d1 = *((double*)v1);
-	double d2 = *((double*)v2);
-	if (d1 < d2)
-		return -1;
-	if (d1 == d2)
-		return 0;
-	return 1;
-}
-
-static int sort_floats_desc(const void* v1, const void* v2) {
-	float d1 = *((float*)v1);
-	float d2 = *((float*)v2);
-	if (d1 > d2)
-		return -1;
-	if (d1 == d2)
-		return 0;
-	return 1;
-}
-
-static int sort_floats_asc(const void* v1, const void* v2) {
-	float d1 = *((float*)v1);
-	float d2 = *((float*)v2);
-	if (d1 < d2)
-		return -1;
-	if (d1 == d2)
-		return 0;
-	return 1;
 }
 
 extern char *optarg;
@@ -85,33 +204,14 @@ int main(int argc, char *argv[]) {
     int argchar;
 	char* infn = NULL;
 	char* outfn = NULL;
-	FILE* fin = NULL;
-	FILE* fout = NULL;
 	char* colname = NULL;
 	char* progname = argv[0];
-	int nextens;
-	int ext;
-	int start, size;
-	int descending = 0;
-	unsigned char* buffer;
-    bool verbose = TRUE;
+	bool descending = FALSE;
 
-    while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
+    while ((argchar = getopt(argc, argv, OPTIONS)) != -1)
         switch (argchar) {
-        case 'q':
-            verbose = FALSE;
-            break;
-        case 'c':
-			colname = optarg;
-            break;
-        case 'i':
-			infn = optarg;
-			break;
-        case 'o':
-			outfn = optarg;
-			break;
 		case 'd':
-			descending = 1;
+			descending = TRUE;
 			break;
         case '?':
         case 'h':
@@ -121,153 +221,17 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-	if (!infn || !outfn || !colname) {
+    if (optind != argc-3) {
 		printHelp(progname);
 		exit(-1);
-	}
+    }
 
-	if (infn) {
-		fin = fopen(infn, "rb");
-		if (!fin) {
-			fprintf(stderr, "Failed to open input file %s: %s\n", infn, strerror(errno));
-			exit(-1);
-		}
-	}
+    colname = argv[optind  ];
+    infn    = argv[optind+1];
+    outfn   = argv[optind+2];
 
-	if (outfn) {
-		fout = fopen(outfn, "wb");
-		if (!fout) {
-			fprintf(stderr, "Failed to open output file %s: %s\n", outfn, strerror(errno));
-			exit(-1);
-		}
-	}
+    fits_use_error_system();
 
-	// copy the main header exactly.
-	if (qfits_get_hdrinfo(infn, 0, &start, &size)) {
-		fprintf(stderr, "Couldn't get main header.\n");
-		exit(-1);
-	}
-	buffer = malloc(size);
-	if (fread(buffer, 1, size, fin) != size) {
-		fprintf(stderr, "Error reading main header: %s\n", strerror(errno));
-		exit(-1);
-	}
-	if (fwrite(buffer, 1, size, fout) != size) {
-		fprintf(stderr, "Error writing main header: %s\n", strerror(errno));
-		exit(-1);
-	}
-	free(buffer);
-
-	nextens = qfits_query_n_ext(infn);
-    if (verbose)
-        printf("Sorting %i extensions.\n", nextens);
-	buffer = NULL;
-	for (ext=1; ext<=nextens; ext++) {
-		int c;
-		qfits_table* table;
-		qfits_col* col;
-		unsigned char* map;
-		size_t mapsize;
-		int mgap;
-		off_t mstart;
-		size_t msize;
-		int atomsize;
-		int (*sort_func)(const void*, const void*);
-		int* perm;
-		unsigned char* tabledata;
-		unsigned char* tablehdr;
-		int hdrstart, hdrsize, datsize, datstart;
-		int i;
-
-		if (!qfits_is_table(infn, ext)) {
-            fprintf(stderr, "Extention %i isn't a table. Skipping.\n", ext);
-			continue;
-		}
-		table = qfits_table_open(infn, ext);
-		if (!table) {
-			fprintf(stderr, "failed to open table: file %s, extension %i. Skipping.\n", infn, ext);
-			continue;
-		}
-		c = fits_find_column(table, colname);
-		if (c == -1) {
-			fprintf(stderr, "Couldn't find column named \"%s\" in extension %i.  Skipping.\n", colname, ext);
-			continue;
-		}
-		col = table->col + c;
-		switch (col->atom_type) {
-		case TFITS_BIN_TYPE_D:
-			buffer = realloc(buffer, table->nr * sizeof(double));
-			if (descending)
-				sort_func = sort_doubles_desc;
-			else
-				sort_func = sort_doubles_asc;
-			break;
-		case TFITS_BIN_TYPE_E:
-			buffer = realloc(buffer, table->nr * sizeof(float));
-			if (descending)
-				sort_func = sort_floats_desc;
-			else
-				sort_func = sort_floats_asc;
-			break;
-		default:
-			fprintf(stderr, "Column %s is neither FITS type D nor E.  Skipping.\n", colname);
-			continue;
-		}
-		atomsize = fits_get_atom_size(col->atom_type);
-
-		qfits_query_column_seq_to_array(table, c, 0, table->nr,
-										buffer, atomsize);
-
-		perm = permuted_sort(buffer, atomsize, sort_func, NULL, table->nr);
-
-		if (qfits_get_hdrinfo(infn, ext, &hdrstart, &hdrsize) ||
-			qfits_get_datinfo(infn, ext, &datstart, &datsize)) {
-			fprintf(stderr, "Couldn't get extension %i header or data extent.\n", ext);
-			exit(-1);
-		}
-		start = hdrstart;
-		size = hdrsize + datsize;
-		get_mmap_size(start, size, &mstart, &msize, &mgap);
-
-		mapsize = msize;
-		map = mmap(NULL, mapsize, PROT_READ, MAP_SHARED, fileno(fin), mstart);
-		if (map == MAP_FAILED) {
-			fprintf(stderr, "Failed to mmap input file: %s\n", strerror(errno));
-			exit(-1);
-		}
-		tabledata = map + mgap + (datstart - hdrstart);
-		tablehdr  = map + mgap;
-
-		if (fwrite(tablehdr, 1, hdrsize, fout) != hdrsize) {
-			fprintf(stderr, "Failed to write table header: %s\n", strerror(errno));
-			exit(-1);
-		}
-
-		for (i=0; i<table->nr; i++) {
-			unsigned char* rowptr;
-			rowptr = tabledata + perm[i] * table->tab_w;
-			if (fwrite(rowptr, 1, table->tab_w, fout) != table->tab_w) {
-				fprintf(stderr, "Failed to write: %s\n", strerror(errno));
-				exit(-1);
-			}
-		}
-
-		munmap(map, mapsize);
-		free(perm);
-
-		if (fits_pad_file(fout)) {
-			fprintf(stderr, "Failed to add padding to extension %i.\n", ext);
-			exit(-1);
-		}
-
-        qfits_table_close(table);
-	}
-	free(buffer);
-
-	if (fclose(fout)) {
-		fprintf(stderr, "Error closing output file: %s\n", strerror(errno));
-	}
-	fclose(fin);
-
-	return 0;
+    return tabsort(infn, outfn, colname, descending);
 }
+#endif

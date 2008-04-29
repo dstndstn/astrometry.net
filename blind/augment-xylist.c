@@ -43,6 +43,7 @@
 #include "fitsioutils.h"
 #include "scriptutils.h"
 #include "sip_qfits.h"
+#include "tabsort.h"
 
 #include "qfits.h"
 
@@ -147,6 +148,28 @@ static void append_executable(sl* list, const char* fn, const char* me) {
     free(exec);
 }
 
+static sl* backtick(sl* cmd, bool verbose) {
+    char* cmdstr = sl_implode(cmd, " ");
+    const char* errmsg = NULL;
+    sl* lines;
+    if (verbose)
+        printf("Running: %s\n", cmdstr);
+    if (run_command_get_outputs(cmdstr, &lines, NULL, &errmsg)) {
+        free(cmdstr);
+        fprintf(stderr, "%s\n", errmsg);
+        fprintf(stderr, "Failed to run %s.\n", sl_get(cmd, 0));
+        exit(-1);
+    }
+    free(cmdstr);
+    sl_remove_all(cmd);
+    return lines;
+}
+
+static void run(sl* cmd, bool verbose) {
+    sl* lines = backtick(cmd, verbose);
+    sl_free2(lines);
+}
+
 int main(int argc, char** args) {
 	int c;
 	int rtn;
@@ -155,7 +178,6 @@ int main(int argc, char** args) {
 	char* imagefn = NULL;
 	char* xylsfn = NULL;
     sl* cmd;
-    char* cmdstr;
 	int W = 0, H = 0;
 	double scalelo = 0.0, scalehi = 0.0;
 	char* scaleunits = NULL;
@@ -175,7 +197,6 @@ int main(int argc, char** args) {
 	char* matchfile = NULL;
 	char* rdlsfile = NULL;
 	char* wcsfile = NULL;
-    const char* errmsg = NULL;
     // contains ranges of depths as pairs of ints.
     il* depths;
     // contains ranges of fields as pairs of ints.
@@ -425,18 +446,7 @@ int main(int argc, char** args) {
         if (force_ppm)
             sl_append(cmd, "--ppm");
 
-        cmdstr = sl_implode(cmd, " ");
-        sl_remove_all(cmd);
-
-        if (verbose)
-            printf("Running: %s\n", cmdstr);
-		if (run_command_get_outputs(cmdstr, &lines, NULL, &errmsg)) {
-            free(cmdstr);
-            fprintf(stderr, "%s\n", errmsg);
-			fprintf(stderr, "Failed to run image2pnm.\n");
-			exit(-1);
-		}
-        free(cmdstr);
+        lines = backtick(cmd, verbose);
 
 		isfits = FALSE;
         iscompressed = FALSE;
@@ -454,18 +464,8 @@ int main(int argc, char** args) {
         sl_append(cmd, "pnmfile");
         append_escape(cmd, pnmfn);
 
-        cmdstr = sl_implode(cmd, " ");
-        sl_remove_all(cmd);
+        lines = backtick(cmd, verbose);
 
-        if (verbose)
-            printf("Running: %s\n", cmdstr);
-		if (run_command_get_outputs(cmdstr, &lines, NULL, &errmsg)) {
-            free(cmdstr);
-            fprintf(stderr, "%s\n", errmsg);
-			fprintf(stderr, "Failed to run pnmfile: %s\n", strerror(errno));
-			exit(-1);
-		}
-        free(cmdstr);
 		if (sl_size(lines) == 0) {
 			fprintf(stderr, "No output from pnmfile.\n");
 			exit(-1);
@@ -496,19 +496,8 @@ int main(int argc, char** args) {
 			if (guess_scale) {
                 append_executable(cmd, "fits-guess-scale", me);
                 append_escape(cmd, fitsimgfn);
-                
-                cmdstr = sl_implode(cmd, " ");
-                sl_remove_all(cmd);
 
-                if (verbose)
-                    printf("Running: %s\n", cmdstr);
-				if (run_command_get_outputs(cmdstr, &lines, NULL, &errmsg)) {
-                    free(cmdstr);
-                    fprintf(stderr, "%s\n", errmsg);
-					fprintf(stderr, "Failed to run fits-guess-scale: %s\n", strerror(errno));
-					exit(-1);
-				}
-                free(cmdstr);
+                lines = backtick(cmd, verbose);
 
 				for (i=0; i<sl_size(lines); i++) {
 					char type[256];
@@ -540,17 +529,8 @@ int main(int argc, char** args) {
                 sl_append(cmd, "| pnmtofits >");
                 append_escape(cmd, fitsimgfn);
 
-                cmdstr = sl_implode(cmd, " ");
-                sl_remove_all(cmd);
-                if (verbose)
-                    printf("Running: %s\n", cmdstr);
-				if (run_command_get_outputs(cmdstr, NULL, NULL, &errmsg)) {
-                    free(cmdstr);
-                    fprintf(stderr, "%s\n", errmsg);
-					fprintf(stderr, "Failed to convert PPM to FITS.\n");
-					exit(-1);
-				}
-                free(cmdstr);
+                run(cmd, verbose);
+
 			} else {
                 if (verbose)
                     printf("Converting PGM image to FITS...\n");
@@ -560,17 +540,7 @@ int main(int argc, char** args) {
                 sl_append(cmd, ">");
                 append_escape(cmd, fitsimgfn);
 
-                cmdstr = sl_implode(cmd, " ");
-                sl_remove_all(cmd);
-                if (verbose)
-                    printf("Running: %s\n", cmdstr);
-				if (run_command_get_outputs(cmdstr, NULL, NULL, &errmsg)) {
-                    free(cmdstr);
-                    fprintf(stderr, "%s\n", errmsg);
-					fprintf(stderr, "Failed to convert PGM to FITS.\n");
-					exit(-1);
-				}
-                free(cmdstr);
+                run(cmd, verbose);
 			}
 		}
 
@@ -599,18 +569,7 @@ int main(int argc, char** args) {
             }
         }
 
-        cmdstr = sl_implode(cmd, " ");
-        sl_remove_all(cmd);
-
-        if (verbose)
-            printf("Running: %s\n", cmdstr);
-		if (run_command_get_outputs(cmdstr, NULL, NULL, &errmsg)) {
-            free(cmdstr);
-            fprintf(stderr, "%s\n", errmsg);
-			fprintf(stderr, "Failed to run image2xy.\n");
-			exit(-1);
-		}
-        free(cmdstr);
+        run(cmd, verbose);
 
         dosort = TRUE;
 
@@ -638,18 +597,7 @@ int main(int argc, char** args) {
             append_escape(cmd, xylsfn);
             append_escape(cmd, sanexylsfn);
 
-            cmdstr = sl_implode(cmd, " ");
-            sl_remove_all(cmd);
-
-            if (verbose)
-                printf("Running: %s\n", cmdstr);
-            if (run_command_get_outputs(cmdstr, NULL, NULL, &errmsg)) {
-                free(cmdstr);
-                fprintf(stderr, "%s\n", errmsg);
-                fprintf(stderr, "Failed to run fits2fits.py\n");
-                exit(-1);
-            }
-            free(cmdstr);
+            run(cmd, verbose);
             xylsfn = sanexylsfn;
         }
 
@@ -668,7 +616,6 @@ int main(int argc, char** args) {
             sl_append_nocopy(tempfiles, sortedxylsfn);
         }
 
-		// sort the table by FLUX.
         if (resort) {
             append_executable(cmd, "resort-xylist", me);
             sl_append(cmd, "-f");
@@ -677,38 +624,18 @@ int main(int argc, char** args) {
                 sl_append(cmd, "-d");
             append_escape(cmd, xylsfn);
             append_escape(cmd, sortedxylsfn);
+            run(cmd, verbose);
+
         } else {
-            append_executable(cmd, "tabsort", me);
-            sl_append(cmd, "-i");
-            append_escape(cmd, xylsfn);
-            sl_append(cmd, "-o");
-            append_escape(cmd, sortedxylsfn);
-            sl_append(cmd, "-c");
-            append_escape(cmd, sortcol);
-            if (descending)
-                sl_append(cmd, "-d");
-            if (!verbose)
-                sl_append(cmd, "-q");
+            tabsort(sortcol, xylsfn, sortedxylsfn, descending);
         }
 
-        cmdstr = sl_implode(cmd, " ");
-        sl_remove_all(cmd);
-        if (verbose)
-            printf("Running: %s\n", cmdstr);
-		if (run_command_get_outputs(cmdstr, NULL, NULL, &errmsg)) {
-            free(cmdstr);
-            fprintf(stderr, "%s\n", errmsg);
-			fprintf(stderr, "Failed to run tabsort.\n");
-			exit(-1);
-		}
-        free(cmdstr);
 		xylsfn = sortedxylsfn;
     }
 
-    if (!doaugment) {
+    if (!doaugment)
         // done!
         goto cleanup;
-    }
 
 	// start piling FITS headers in there.
 	hdr = qfits_header_read(xylsfn);

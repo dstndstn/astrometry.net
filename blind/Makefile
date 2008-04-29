@@ -375,7 +375,7 @@ backend: backend.o scriptutils.o blind.o solver.o codekd.o \
 solve-field: solve-field.o scriptutils.o matchfile.o fileutil.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-augment-xylist: augment-xylist.o scriptutils.o fileutil.o \
+augment-xylist: augment-xylist.o tabsort.o scriptutils.o fileutil.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 blind: blind-main.o blind.o solver.o codekd.o matchfile.o tic.o \
@@ -472,7 +472,10 @@ fitsgetext: fitsgetext.o $(ANUTILS_LIB) $(QFITS_LIB)
 
 subtable: subtable.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 
-tabsort: tabsort.o $(UTIL_OBJS) $(ANUTILS_LIB) fileutil.o $(QFITS_LIB)
+tabsort: tabsort-main.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
+
+tabsort-main.o: %-main.o: %.c
+	$(CC) -o $@ $(CFLAGS) -c $< -DMAIN
 
 column-merge: column-merge.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 
