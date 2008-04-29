@@ -29,16 +29,41 @@
 #include "fitsioutils.h"
 #include "permutedsort.h"
 #include "an-bool.h"
+#include "fitstable.h"
+#include "errors.h"
 
-const char* OPTIONS = "hdf:b:";
+int resort_xylist(const char* infn, const char* outfn,
+                  const char* fluxcol, const char* backcol,
+                  bool ascending) {
+	FILE* fin;
+	FILE* fout;
+    double *flux = NULL, *back = NULL;
+    int *perm1 = NULL, *perm2 = NULL;
+    bool *used = NULL;
+    int Nhighwater = 0;
+    int start, size, nextens, ext;
+    int (*compare)(const void*, const void*);
 
-static void printHelp(char* progname) {
-    printf("Usage:   %s  <input> <output>\n"
-		   "      -f <flux-column-name>  (default: FLUX) \n"
-		   "      -b <background-column-name>  (default: BACKGROUND)\n"
-		   "      [-d]: sort in descending order (default is ascending)\n"
-           "\n", progname);
+    if (ascending)
+        compare = compare_doubles;
+    else
+        compare = compare_doubles_desc;
+
+    fin = fopen(infn, "rb");
+    if (!fin) {
+        fprintf(stderr, "Failed to open input file %s: %s\n", infn, strerror(errno));
+        exit(-1);
+    }
+    fout = fopen(outfn, "wb");
+    if (!fout) {
+        fprintf(stderr, "Failed to open output file %s: %s\n", outfn, strerror(errno));
+        exit(-1);
+    }
+
+
 }
+
+
 
 static int get_double_column(qfits_table* table, int col, double* result) {
     float* fdata;
@@ -61,69 +86,7 @@ static int get_double_column(qfits_table* table, int col, double* result) {
     }
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
 
-int main(int argc, char** args) {
-    int argchar;
-	char* infn = NULL;
-	char* outfn = NULL;
-	char* progname = args[0];
-    char* fluxcol = "FLUX";
-    char* backcol = "BACKGROUND";
-    bool ascending = TRUE;
-	FILE* fin;
-	FILE* fout;
-    double *flux = NULL, *back = NULL;
-    int *perm1 = NULL, *perm2 = NULL;
-    bool *used = NULL;
-    int Nhighwater = 0;
-    int start, size, nextens, ext;
-
-    int (*compare)(const void*, const void*);
-
-    while ((argchar = getopt (argc, args, OPTIONS)) != -1)
-        switch (argchar) {
-        case 'f':
-            fluxcol = optarg;
-            break;
-        case 'b':
-            backcol = optarg;
-            break;
-        case 'd':
-            ascending = FALSE;
-            break;
-        case '?':
-        case 'h':
-			printHelp(progname);
-            return 0;
-        default:
-            return -1;
-        }
-
-    if (optind != argc-2) {
-        printHelp(progname);
-        exit(-1);
-    }
-
-    if (ascending)
-        compare = compare_doubles;
-    else
-        compare = compare_doubles_desc;
-
-    infn = args[optind];
-    outfn = args[optind+1];
-
-    fin = fopen(infn, "rb");
-    if (!fin) {
-        fprintf(stderr, "Failed to open input file %s: %s\n", infn, strerror(errno));
-        exit(-1);
-    }
-    fout = fopen(outfn, "wb");
-    if (!fout) {
-        fprintf(stderr, "Failed to open output file %s: %s\n", outfn, strerror(errno));
-        exit(-1);
-    }
 
 	// copy the main header exactly.
 	if (qfits_get_hdrinfo(infn, 0, &start, &size)) {
