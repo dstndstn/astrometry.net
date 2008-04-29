@@ -474,8 +474,7 @@ subtable: subtable.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 
 tabsort: tabsort-main.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 
-tabsort-main.o: %-main.o: %.c
-	$(CC) -o $@ $(CFLAGS) -c $< -DMAIN
+ALL_OBJ += tabsort-main.o
 
 column-merge: column-merge.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 
