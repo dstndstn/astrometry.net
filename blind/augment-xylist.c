@@ -47,6 +47,7 @@
 #include "errors.h"
 #include "fits-guess-scale.h"
 #include "image2xy.h"
+#include "resort-xylist.h"
 
 #include "qfits.h"
 
@@ -591,14 +592,7 @@ int main(int argc, char** args) {
         }
 
         if (resort) {
-            append_executable(cmd, "resort-xylist", me);
-            sl_append(cmd, "-f");
-            append_escape(cmd, sortcol);
-            if (descending)
-                sl_append(cmd, "-d");
-            append_escape(cmd, xylsfn);
-            append_escape(cmd, sortedxylsfn);
-            run(cmd, verbose);
+            resort_xylist(xylsfn, sortedxylsfn, sortcol, NULL, !descending);
 
         } else {
             tabsort(sortcol, xylsfn, sortedxylsfn, descending);

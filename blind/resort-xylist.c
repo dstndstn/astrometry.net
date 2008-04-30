@@ -49,6 +49,11 @@ int resort_xylist(const char* infn, const char* outfn,
     else
         compare = compare_doubles_desc;
 
+    if (!fluxcol)
+        fluxcol = "FLUX";
+    if (!backcol)
+        backcol = "BACKGROUND";
+
     if (!fin) {
         SYSERROR("Failed to open input file %s", infn);
         return -1;
@@ -150,7 +155,7 @@ int resort_xylist(const char* infn, const char* outfn,
                     continue;
                 used[index] = TRUE;
                 if (pipe_file_offset(fin, datstart + index * rowsize, rowsize, fout)) {
-                    ERROR(stderr, "Failed to copy row %i", index);
+                    ERROR("Failed to copy row %i", index);
                     goto bailout;
                 }
             }

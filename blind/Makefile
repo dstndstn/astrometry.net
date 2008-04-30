@@ -381,6 +381,7 @@ solve-field: solve-field.o scriptutils.o matchfile.o fileutil.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 augment-xylist: augment-xylist.o tabsort.o fits-guess-scale.o image2xy.o \
+		resort-xylist.o \
 		scriptutils.o fileutil.o log.o svn.o $(SIMPLEXY2_OBJ) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_LIB)
 

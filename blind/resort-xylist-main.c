@@ -48,8 +48,8 @@ int main(int argc, char** args) {
 	char* infn = NULL;
 	char* outfn = NULL;
 	char* progname = args[0];
-    char* fluxcol = "FLUX";
-    char* backcol = "BACKGROUND";
+    char* fluxcol = NULL;
+    char* backcol = NULL;
     bool ascending = TRUE;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
