@@ -178,6 +178,9 @@ int fitstable_ncols(fitstable_t* t);
 
 int fitstable_nrows(fitstable_t* t);
 
+// Returns the size of the row in FITS format.
+int fitstable_row_size(fitstable_t* t);
+
 // when writing...
 void fitstable_next_extension(fitstable_t* tab);
 

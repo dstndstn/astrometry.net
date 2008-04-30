@@ -143,8 +143,21 @@ tfits_type fitscolumn_any_type() {
     return (tfits_type)-1;
 }
 
+int fitscolumn_get_size(fitscol_t* col) {
+    return col->fitssize * col->arraysize;
+}
+
 int fitstable_ncols(fitstable_t* t) {
     return ncols(t);
+}
+
+int fitstable_row_size(fitstable_t* t) {
+    int i, N, sz;
+    N = ncols(t);
+    sz = 0;
+    for (i=0; i<N; i++)
+        sz += fitscolumn_get_size(getcol(t, i));
+    return sz;
 }
 
 void fitstable_add_write_column(fitstable_t* tab, tfits_type t,
