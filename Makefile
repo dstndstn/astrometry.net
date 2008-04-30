@@ -50,9 +50,10 @@ install:
 	mkdir -p $(INSTALL_DIR)/bin
 	mkdir -p $(INSTALL_DIR)/doc
 	mkdir -p $(INSTALL_DIR)/examples
-	mkdir -p $(INSTALL_DIR)/python
-	$(CP) CREDITS GETTING-INDICES LICENSE README $(INSTALL_DIR)/doc
-	$(CP) demo/* $(INSTALL_DIR)/examples
+	mkdir -p $(INSTALL_DIR)/python/astrometry
+	cp __init__.py $(INSTALL_DIR)/python/astrometry
+	cp CREDITS GETTING-INDICES LICENSE README $(INSTALL_DIR)/doc
+	cp demo/* $(INSTALL_DIR)/examples
 	$(MAKE) -C util  install
 	$(MAKE) -C libkd install
 	$(MAKE) -C blind install

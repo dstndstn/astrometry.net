@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
 """
 Convert an image in a variety of formats into a pnm file
 
@@ -6,7 +6,24 @@ Author: Keir Mierle 2007
 """
 import sys
 import os
+import os.path
 import tempfile
+
+if __name__ == '__main__':
+    try:
+        import astrometry
+    except ImportError:
+        me = sys.argv[0]
+        #print 'i am', me
+        path = os.path.realpath(me)
+        #print 'my real path is', path
+        utildir = os.path.dirname(path)
+        assert(os.path.basename(utildir) == 'util')
+        andir = os.path.dirname(utildir)
+        assert(os.path.basename(andir) == 'astrometry')
+        rootdir = os.path.dirname(andir)
+        #print 'adding path', rootdir
+        sys.path += [rootdir]
 
 from astrometry.util.shell import shell_escape
 
@@ -30,8 +47,6 @@ imgcmds = {fitstype : (fitsext, 'an-fitstopnm -i %s > %s'),
            # but we still store this here for convenience.
            'raw'              : ('raw', 'dcraw -4 -c %s > %s'),
            }
-
-rawcmd = 
 
 compcmds = {'gzip compressed data'    : ('gz',  'gunzip -c %s > %s'),
             'bzip2 compressed data'   : ('bz2', 'bunzip2 -k -c %s > %s')

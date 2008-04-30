@@ -110,7 +110,7 @@ int image2xy(const char* infn, const char* outfn,
 	fits_write_key(ofptr, TINT, "MAXSIZE", &maxsize, "image2xy Max size for extended objects", &status);
 	fits_write_key(ofptr, TINT, "HALFBOX", &halfbox, "image2xy Half-size for sliding sky window", &status);
 
-	fits_write_history(ofptr, "Created by Astrometry.net's simplexy.", &status);
+	fits_write_history(ofptr, "Created by Astrometry.net's image2xy program.", &status);
     FITS_CHECK("Failed to write HISTORY headers");
 
     asprintf_safe(&str, "SVN URL: %s", svn_url());

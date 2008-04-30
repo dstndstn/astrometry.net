@@ -113,15 +113,28 @@ _sip.so: sip-utils.o sip.o starutil.o mathutil.o sip_qfits.o \
 _healpix.so: healpix.o starutil.o mathutil.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
-PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
+PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py shell.py __init__.py \
+	file.py run_command.py w3c_validator.py \
 	$(PYTHON_LIBS)
 
+PYTHON_EXECS := fits2fits.py image2pnm.py
+
+PY_INSTALL_DIR := $(INSTALL_DIR)/python/astrometry/util
+BIN_INSTALL_DIR := $(INSTALL_DIR)/bin
+LINK_DIR := ../python/astrometry/util
+
 install: $(PYTHON_LIBS)
-	@echo Installing in directory $(INSTALL_DIR)
-	mkdir -p $(INSTALL_DIR)/python
+	@echo Installing in base directory $(INSTALL_DIR)
+	mkdir -p $(PY_INSTALL_DIR)
 	@for x in $(PYTHON_INSTALL); do \
-		echo cp $$x $(INSTALL_DIR)/python; \
-		cp $$x $(INSTALL_DIR)/python; \
+		echo cp $$x $(PY_INSTALL_DIR)/$$x; \
+		cp $$x $(PY_INSTALL_DIR)/$$x; \
+	done
+	@echo Making symlinks in directory $(BIN_INSTALL_DIR)
+	mkdir -p $(BIN_INSTALL_DIR)
+	@for x in $(PYTHON_EXECS); do \
+		echo ln -s $(PY_INSTALL_DIR)/$$x $(BIN_INSTALL_DIR)/$$x; \
+		ln -s $(LINK_DIR)/$$x $(BIN_INSTALL_DIR)/$$x; \
 	done
 
 gnu-specific-config.h: gnu-specific-test.c

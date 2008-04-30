@@ -1,6 +1,6 @@
 /*
  This file is part of the Astrometry.net suite.
- Copyright 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+ Copyright 2007-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -138,6 +138,9 @@ static void print_help(const char* progname) {
 
 static int parse_depth_string(il* depths, const char* str);
 static int parse_fields_string(il* fields, const char* str);
+
+// run(): ppmtopgm, pnmtofits, fits2fits.py
+// backtick(): pnmfile, image2pnm.py
 
 static void append_escape(sl* list, const char* fn) {
     sl_append_nocopy(list, shell_escape(fn));
@@ -538,13 +541,22 @@ int main(int argc, char** args) {
 		}
 
         printf("Extracting sources...\n");
-        if (verbose)
-            printf("Running image2xy...\n");
 
 		xylsfn = create_temp_file("xyls", tempdir);
         sl_append_nocopy(tempfiles, xylsfn);
 
-        image2xy(fitsimgfn, xylsfn, TRUE, scaledown);
+        if (verbose)
+            printf("Running image2xy: input=%s, output=%s\n", fitsimgfn, xylsfn);
+
+        // we have to delete the temp file because otherwise image2xy is too timid to overwrite it.
+        if (unlink(xylsfn)) {
+            SYSERROR("Failed to delete temp file %s", xylsfn);
+            exit(-1);
+        }
+        if (image2xy(fitsimgfn, xylsfn, TRUE, scaledown)) {
+            ERROR("Source extraction failed");
+            exit(-1);
+        }
 
         dosort = TRUE;
 
@@ -595,7 +607,10 @@ int main(int argc, char** args) {
             resort_xylist(xylsfn, sortedxylsfn, sortcol, NULL, !descending);
 
         } else {
-            tabsort(sortcol, xylsfn, sortedxylsfn, descending);
+            if (verbose)
+                printf("Running tabsort: input=%s, output=%s, column=%s.\n",
+                       xylsfn, sortedxylsfn, sortcol);
+            tabsort(xylsfn, sortedxylsfn, sortcol, descending);
         }
 
 		xylsfn = sortedxylsfn;
