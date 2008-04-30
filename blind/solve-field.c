@@ -199,7 +199,6 @@ int main(int argc, char** args) {
     int inputnum;
 	int rtn;
 	sl* backendargs;
-	const char* errmsg;
 	bool guess_scale = TRUE;
 	int width = 0, height = 0;
 	int nllargs;

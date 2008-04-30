@@ -35,155 +35,113 @@
 int resort_xylist(const char* infn, const char* outfn,
                   const char* fluxcol, const char* backcol,
                   bool ascending) {
-	FILE* fin;
-	FILE* fout;
+	FILE* fin = NULL;
+	FILE* fout = NULL;
     double *flux = NULL, *back = NULL;
     int *perm1 = NULL, *perm2 = NULL;
     bool *used = NULL;
-    int Nhighwater = 0;
     int start, size, nextens, ext;
     int (*compare)(const void*, const void*);
+    fitstable_t* tab = NULL;
 
     if (ascending)
         compare = compare_doubles;
     else
         compare = compare_doubles_desc;
 
-    fin = fopen(infn, "rb");
     if (!fin) {
-        fprintf(stderr, "Failed to open input file %s: %s\n", infn, strerror(errno));
-        exit(-1);
-    }
-    fout = fopen(outfn, "wb");
-    if (!fout) {
-        fprintf(stderr, "Failed to open output file %s: %s\n", outfn, strerror(errno));
-        exit(-1);
-    }
-
-
-}
-
-
-
-static int get_double_column(qfits_table* table, int col, double* result) {
-    float* fdata;
-    int i;
-    switch (table->col[col].atom_type) {
-    case TFITS_BIN_TYPE_D:
-        qfits_query_column_seq_to_array(table, col, 0, table->nr,
-                                        (unsigned char*)result, sizeof(double));
-        return 0;
-    case TFITS_BIN_TYPE_E:
-        // copy it as floats, then convert to doubles.
-        fdata = (float*)result;
-        qfits_query_column_seq_to_array(table, col, 0, table->nr,
-                                        (unsigned char*)result, sizeof(float));
-        for (i=table->nr-1; i>=0; i--)
-            result[i] = fdata[i];
-        return 0;
-    default:
+        SYSERROR("Failed to open input file %s", infn);
         return -1;
     }
-}
 
-
+    fout = fopen(outfn, "wb");
+    if (!fout) {
+        SYSERROR("Failed to open output file %s", outfn);
+        goto bailout;
+    }
 
 	// copy the main header exactly.
 	if (qfits_get_hdrinfo(infn, 0, &start, &size)) {
-		fprintf(stderr, "Couldn't get main header.\n");
-		exit(-1);
+		ERROR("Failed to read primary FITS header.");
+        goto bailout;
 	}
-    assert(start == 0);
-    if (pipe_file_offset(fin, 0, size, fout)) {
-        fprintf(stderr, "Failed to copy main header.\n");
-        exit(-1);
+
+    if (pipe_file_offset(fin, start, size, fout)) {
+        ERROR("Failed to copy primary FITS header.");
+        goto bailout;
     }
 
 	nextens = qfits_query_n_ext(infn);
 
+    tab = fitstable_open(infn);
+    if (!tab) {
+        ERROR("Failed to open FITS table in file %s", infn);
+        goto bailout;
+    }
+
 	for (ext=1; ext<=nextens; ext++) {
-		int fc, bc;
-		qfits_table* table;
-		qfits_col *fcol, *bcol;
 		int hdrstart, hdrsize, datsize, datstart;
-		int i;
+		int i, N;
+        int rowsize;
 
-		if (!qfits_is_table(infn, ext)) {
-            fprintf(stderr, "Extention %i isn't a table. Skipping.\n", ext);
-			continue;
-		}
-		table = qfits_table_open(infn, ext);
-		if (!table) {
-			fprintf(stderr, "failed to open table: file %s, extension %i. Skipping.\n", infn, ext);
-			continue;
-		}
-
-		fc = fits_find_column(table, fluxcol);
-		if (fc == -1) {
-			fprintf(stderr, "Couldn't find column named \"%s\" in extension %i.  Skipping.\n", fluxcol, ext);
-			continue;
-		}
-		fcol = table->col + fc;
-
-		bc = fits_find_column(table, backcol);
-		if (bc == -1) {
-			fprintf(stderr, "Couldn't find column named \"%s\" in extension %i.  Skipping.\n", backcol, ext);
-			continue;
-		}
-		bcol = table->col + bc;
-
-        if (table->nr > Nhighwater) {
-            free(flux);
-            free(back);
-            free(perm1);
-            free(perm2);
-            free(used);
-            flux    = malloc(table->nr * sizeof(double));
-            back    = malloc(table->nr * sizeof(double));
-            perm1   = malloc(table->nr * sizeof(int));
-            perm2   = malloc(table->nr * sizeof(int));
-            used    = malloc(table->nr * sizeof(bool));
-            Nhighwater = table->nr;
-        }
-
-        if (get_double_column(table, fc, flux)) {
-			fprintf(stderr, "Column %s is neither FITS type D nor E.  Skipping.\n", fluxcol);
-            continue;
-        }
-        if (get_double_column(table, bc, back)) {
-			fprintf(stderr, "Column %s is neither FITS type D nor E.  Skipping.\n", backcol);
-            continue;
-        }
-
-		for (i=0; i<table->nr; i++) {
-			perm1[i] = i;
-			perm2[i] = i;
-        }
-
-        // set back = flux + back (ie, non-background-subtracted flux)
-		for (i=0; i<table->nr; i++)
-            back[i] += flux[i];
-
-        // Sort by flux...
-		permuted_sort(flux, sizeof(double), compare, perm1, table->nr);
-
-        // Sort by non-background-subtracted flux...
-		permuted_sort(back, sizeof(double), compare, perm2, table->nr);
-
-        // Copy the header as-is.
 		if (qfits_get_hdrinfo(infn, ext, &hdrstart, &hdrsize) ||
 			qfits_get_datinfo(infn, ext, &datstart, &datsize)) {
-			fprintf(stderr, "Couldn't get extension %i header extent.\n", ext);
-			exit(-1);
+			ERROR("Couldn't get extension %i header or data extent.", ext);
+            goto bailout;
+        }
+		if (!qfits_is_table(infn, ext)) {
+            ERROR("Extention %i isn't a table. Skipping.\n", ext);
+			continue;
 		}
+        // Copy the header as-is.
         if (pipe_file_offset(fin, hdrstart, hdrsize, fout)) {
             fprintf(stderr, "Failed to copy the header of extension %i\n", ext);
             exit(-1);
         }
 
-        memset(used, 0, table->nr * sizeof(bool));
+        if (fitstable_read_extension(tab, ext)) {
+            ERROR("Failed to read FITS table from extension %i", ext);
+            goto bailout;
+        }
+        rowsize = fitstable_row_size(tab);
 
-        for (i=0; i<table->nr; i++) {
+        // read FLUX column as doubles.
+        flux = fitstable_read_column(tab, fluxcol, TFITS_BIN_TYPE_D);
+        if (!flux) {
+            ERROR("Failed to read FLUX column from extension %i", ext);
+            goto bailout;
+        }
+        // BACKGROUND
+        back = fitstable_read_column(tab, backcol, TFITS_BIN_TYPE_D);
+        if (!back) {
+            ERROR("Failed to read BACKGROUND column from extension %i", ext);
+            goto bailout;
+        }
+
+        N = fitstable_nrows(tab);
+
+        perm1   = malloc(N * sizeof(int));
+        perm2   = malloc(N * sizeof(int));
+        used    = malloc(N * sizeof(bool));
+
+		for (i=0; i<N; i++) {
+			perm1[i] = i;
+			perm2[i] = i;
+        }
+
+        // set back = flux + back (ie, non-background-subtracted flux)
+		for (i=0; i<N; i++)
+            back[i] += flux[i];
+
+        // Sort by flux...
+		permuted_sort(flux, sizeof(double), compare, perm1, N);
+
+        // Sort by non-background-subtracted flux...
+		permuted_sort(back, sizeof(double), compare, perm2, N);
+
+        memset(used, 0, N * sizeof(bool));
+
+        for (i=0; i<N; i++) {
             int j;
             int inds[] = { perm1[i], perm2[i] };
             for (j=0; j<2; j++) {
@@ -191,31 +149,53 @@ static int get_double_column(qfits_table* table, int col, double* result) {
                 if (used[index])
                     continue;
                 used[index] = TRUE;
-                if (pipe_file_offset(fin, datstart + index * table->tab_w, table->tab_w, fout)) {
-                    fprintf(stderr, "Failed to copy row %i.\n", index);
-                    exit(-1);
+                if (pipe_file_offset(fin, datstart + index * rowsize, rowsize, fout)) {
+                    ERROR(stderr, "Failed to copy row %i", index);
+                    goto bailout;
                 }
             }
         }
-
+        
 		if (fits_pad_file(fout)) {
-			fprintf(stderr, "Failed to add padding to extension %i.\n", ext);
-			exit(-1);
+			ERROR("Failed to add padding to extension %i", ext);
+            goto bailout;
 		}
-	}
 
+        free(flux);
+        flux = NULL;
+        free(back);
+        back = NULL;
+        free(perm1);
+        perm1 = NULL;
+        free(perm2);
+        perm2 = NULL;
+        free(used);
+        used = NULL;
+    }
+
+    fitstable_close(tab);
+    tab = NULL;
+
+	if (fclose(fout)) {
+		SYSERROR("Failed to close output file %s", outfn);
+        return -1;
+    }
+	fclose(fin);
+    return 0;
+
+ bailout:
+    if (tab)
+        fitstable_close(tab);
+    if (fout)
+        fclose(fout);
+    if (fin)
+        fclose(fin);
     free(flux);
     free(back);
     free(perm1);
     free(perm2);
     free(used);
-
-	if (fclose(fout)) {
-		fprintf(stderr, "Error closing output file: %s\n", strerror(errno));
-	}
-	fclose(fin);
-
-	return 0;
+	return -1;
 }
 
 
