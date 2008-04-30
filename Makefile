@@ -52,6 +52,8 @@ install:
 	mkdir -p $(INSTALL_DIR)/examples
 	mkdir -p $(INSTALL_DIR)/python/astrometry
 	cp __init__.py $(INSTALL_DIR)/python/astrometry
+	cp pyfits/pyfits.py $(INSTALL_DIR)/python/
+	cp pyfits/rec.py $(INSTALL_DIR)/python/
 	cp CREDITS GETTING-INDICES LICENSE README $(INSTALL_DIR)/doc
 	cp demo/* $(INSTALL_DIR)/examples
 	$(MAKE) -C util  install

@@ -117,7 +117,10 @@ void error_report(err_t* e, const char* module, int line, const char* fmt, ...) 
 
 void error_reportv(err_t* e, const char* module, int line, const char* fmt, va_list va) {
     if (e->print) {
-        fprintf(e->print, "%s:%i: ", module, line);
+        if (line == -1)
+            fprintf(e->print, "%s: ", module);
+        else
+            fprintf(e->print, "%s:%i: ", module, line);
         vfprintf(e->print, fmt, va);
         fprintf(e->print, "\n");
     }
