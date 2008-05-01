@@ -48,93 +48,117 @@
 #include "fits-guess-scale.h"
 #include "image2xy.h"
 #include "resort-xylist.h"
-
 #include "qfits.h"
+#include "an-opts.h"
 
-static const char* OPTIONS = "2AC:E:F:H:I:L:M:P:R:S:TV:W:X:Y:ac:d:e:fg:hi:k:m:o:rs:t:u:vw:x:z::";
+static void print_special_opts(an_option_t* opt, bl* opts, int index,
+                               FILE* fid, void* extra) {
+    if (!strcmp(opt->name, "image")) {
+        fprintf(fid, "%s",
+                "  (   -i / --image  <image-input-file>\n"
+                "   OR -x / --xylist <xylist-input-file>  ): input file\n");
+    } else if (!strcmp(opt->name, "scale-units")) {
+        fprintf(fid, "%s",
+                "  -u / --scale-units <units>: in what units are the lower and upper bound specified?\n"
+                "     choices:  \"degwidth\"    : width of the image, in degrees\n"
+                "               \"arcminwidth\" : width of the image, in arcminutes\n"
+                "               \"arcsecperpix\": arcseconds per pixel\n"
+                );
+    } else if (!strcmp(opt->name, "depth")) {
+        fprintf(fid, "%s",
+                "  -d / --depth <number or range>: number of field objects to look at, or range of numbers;\n"
+                "                                  1 is the brightest star, so \"-d 10\" or \"-d 1-10\" mean look at\n"
+                "                                  the top ten brightest stars only.\n");
+    } else if (!strcmp(opt->name, "xylist-only")) {
+        fprintf(fid, "%s",
+                "The following options are valid for xylist inputs only:\n");
+    } else if (!strcmp(opt->name, "optional")) {
+        fprintf(fid, "%s", "The following are optional:\n");
+    } else if (!strcmp(opt->name, "fields")) {
+        fprintf(fid, "%s",
+                "  -F / --fields <number or range>: the FITS extension(s) to solve, inclusive\n");
+    }
+}
 
-static struct option long_options[] = {
-	{"help",		   no_argument,	      0, 'h'},
-	{"verbose",        no_argument,       0, 'v'},
-	{"image",		   required_argument, 0, 'i'},
-	{"xylist",		   required_argument, 0, 'x'},
-	{"guess-scale",    no_argument,	      0, 'g'},
-	{"cancel",		   required_argument, 0, 'C'},
-	{"solved",		   required_argument, 0, 'S'},
-	{"solved-in",      required_argument, 0, 'I'},
-	{"match",		   required_argument, 0, 'M'},
-	{"rdls",		   required_argument, 0, 'R'},
-	{"wcs",			   required_argument, 0, 'W'},
-	{"pnm",			   required_argument, 0, 'P'},
-	{"force-ppm",	   no_argument,       0, 'f'},
-	{"width",		   required_argument, 0, 'w'},
-	{"height",		   required_argument, 0, 'e'},
-	{"scale-low",	   required_argument, 0, 'L'},
-	{"scale-high",	   required_argument, 0, 'H'},
-	{"scale-units",    required_argument, 0, 'u'},
-    {"fields",         required_argument, 0, 'F'},
-	{"depth",		   required_argument, 0, 'd'},
-	{"tweak-order",    required_argument, 0, 't'},
-	{"out",			   required_argument, 0, 'o'},
-	{"no-tweak",	   no_argument,	      0, 'T'},
-	{"no-fits2fits",   no_argument,       0, '2'},
-	{"temp-dir",       required_argument, 0, 'm'},
-	{"x-column",       required_argument, 0, 'X'},
-	{"y-column",       required_argument, 0, 'Y'},
-    {"sort-column",    required_argument, 0, 's'},
-    {"sort-ascending", no_argument,       0, 'a'},
-    {"keep-xylist",    required_argument, 0, 'k'},
-    {"verify",         required_argument, 0, 'V'},
-    {"code-tolerance", required_argument, 0, 'c'},
-    {"pixel-error",    required_argument, 0, 'E'},
-    {"resort",         no_argument,       0, 'r'},
-    {"downsample",     optional_argument, 0, 'z'},
-    {"dont-augment",   no_argument,       0, 'A'},
-	{0, 0, 0, 0}
+static an_option_t options[] = {
+	{'i', "image",		   required_argument, NULL, NULL},
+    {'x', "xylist",		   required_argument, NULL, NULL},
+	{'o', "out",		   required_argument, "filename",
+     "output augmented xylist filename"},
+    {'\0', "optional",     no_argument, NULL, NULL},
+	{'h', "help",		   no_argument, NULL,
+     "print this help message" },
+	{'v', "verbose",       no_argument, NULL,
+     "be more chatty" },
+	{'C', "cancel",		   required_argument, "filename",
+     "filename whose creation signals the process to stop"},
+	{'S', "solved",		   required_argument, "filename",
+     "output file to mark that the solver succeeded"},
+	{'I', "solved-in",     required_argument, "filename",
+     "input filename for solved file"},
+	{'M', "match",		   required_argument, "filename",
+     "output filename for match file"},
+	{'R', "rdls",		   required_argument, "filename",
+     "output filename for RDLS file"},
+	{'W', "wcs",		   required_argument, "filename",
+     "output filename for WCS file"},
+	{'P', "pnm",		   required_argument, "filename",
+     "save the PNM file as <filename>"},
+	{'f', "force-ppm",	   no_argument, NULL,
+     "force the PNM file to be a PPM"},
+    {'k', "keep-xylist",   required_argument, "filename",
+     "save the (unaugmented) xylist to <filename>"},
+    {'A', "dont-augment",   no_argument, NULL,
+     "quit after writing the unaugmented xylist"},
+    {'V', "verify",         required_argument, "filename",
+     "try to verify an existing WCS file"},
+	{'g', "guess-scale",   no_argument, NULL,
+     "try to guess the image scale from the FITS headers"},
+	{'L', "scale-low",	   required_argument, "scale",
+     "lower bound of image scale estimate"},
+    {'H', "scale-high",   required_argument, "scale",
+     "upper bound of image scale estimate"},
+	{'u', "scale-units",    required_argument, "units", NULL},
+	{'d', "depth",		   required_argument, NULL, NULL},
+	{'T', "no-tweak",	   no_argument,	NULL,
+     "don't fine-tune WCS by computing a SIP polynomial"},
+	{'t', "tweak-order",    required_argument, "int",
+     "polynomial order of SIP WCS corrections"},
+    {'r', "resort",         no_argument, NULL,
+     "sort the star brightnesses using a compromise between background-subtraction and no background-subtraction"},
+    {'z', "downsample",     optional_argument, "int",
+     "downsample the image by factor <int> before running source extraction"},
+    {'c', "code-tolerance", required_argument, "distance",
+     "matching distance for quads, default 0.01"},
+    {'E', "pixel-error",    required_argument, "pixels",
+     "for verification, size of pixel positional error, default 1"},
+	{'m', "temp-dir",       required_argument, "dir",
+     "where to put temp files, default /tmp"},
+    // placeholder for printing "The following are for xylist inputs only"
+    {'\0', "xylist-only", no_argument, NULL, NULL},
+    {'F', "fields",         required_argument, NULL, NULL},
+	{'w', "width",		   required_argument, "pixels",
+     "specify the field width"},
+	{'e', "height",		   required_argument, "pixels", 
+     "specify the field height"},
+	{'2', "no-fits2fits",   no_argument, NULL,
+     "don't sanitize FITS files; assume they're already valid"},
+	{'X', "x-column",       required_argument, "column-name",
+     "the FITS column containing the X coordinate of the sources"},
+	{'Y', "y-column",       required_argument, "column-name",
+     "the FITS column containing the Y coordinate of the sources"},
+    {'s', "sort-column",    required_argument, "column-name",
+     "the FITS column that should be used to sort the sources"},
+    {'a', "sort-ascending", no_argument, NULL,
+     "sort in ascending order (smallest first); default is descending order"},
 };
 
-static void print_help(const char* progname) {
-	printf("Usage:	 %s [options] -o <output augmented xylist filename>\n"
-		   "  (    -i <image-input-file>\n"
-		   "   OR  -x <xylist-input-file>  )\n"
-	       "  [--guess-scale]: try to guess the image scale from the FITS headers  (-g)\n"
-           "  [--cancel <filename>]: filename whose creation signals the process to stop  (-C)\n"
-           "  [--solved <filename>]: output filename for solved file  (-S)\n"
-           "  [--solved-in <filename>]: input filename for solved file  (-I)\n"
-           "  [--match  <filename>]: output filename for match file   (-M)\n"
-           "  [--rdls   <filename>]: output filename for RDLS file    (-R)\n"
-           "  [--wcs    <filename>]: output filename for WCS file     (-W)\n"
-           "  [--pnm <filename>]: save the PNM file in <filename>  (-P)\n"
-           "  [--force-ppm]: force the PNM file to be a PPM  (-f)\n"
-           "  [--width  <int>]: specify the image width  (for xyls inputs)  (-w)\n"
-           "  [--height <int>]: specify the image height (for xyls inputs)  (-e)\n"
-           "  [--x-column <name>]: for xyls inputs: the name of the FITS column containing the X coordinate of the sources  (-X)\n"
-           "  [--y-column <name>]: for xyls inputs: the name of the FITS column containing the Y coordinate of the sources  (-Y)\n"
-           "  [--sort-column <name>]: for xyls inputs: the name of the FITS column that should be used to sort the sources  (-s)\n"
-           "  [--sort-ascending]: when sorting, sort in ascending (smallest first) order   (-a)\n"
-	       "  [--scale-units <units>]: in what units are the lower and upper bound specified?   (-u)\n"
-	       "     choices:  \"degwidth\"    : width of the image, in degrees\n"
-	       "               \"arcminwidth\" : width of the image, in arcminutes\n"
-	       "               \"arcsecperpix\": arcseconds per pixel\n"
-	       "  [--scale-low  <number>]: lower bound of image scale estimate   (-L)\n"
-	       "  [--scale-high <number>]: upper bound of image scale estimate   (-H)\n"
-           "  [--fields <number>]: specify a field (ie, FITS extension) to solve  (-F)\n"
-           "  [--fields <min>/<max>]: specify a range of fields (FITS extensions) to solve; inclusive  (-F)\n"
-		   "  [--depth <number>]: number of field objects to look at   (-d)\n"
-	       "  [--tweak-order <integer>]: polynomial order of SIP WCS corrections  (-t)\n"
-           "  [--no-fits2fits]: don't sanitize FITS files; assume they're already sane  (-2)\n"
-	       "  [--no-tweak]: don't fine-tune WCS by computing a SIP polynomial  (-T)\n"
-           "  [--temp-dir <dir>]: where to put temp files, default /tmp  (-m)\n"
-           "  [--verbose]: be more chatty!\n"
-           "  [--keep-xylist <filename>]: save the (unaugmented) xylist to <filename>  (-k)\n"
-           "  [--verify <wcs-file>]: try to verify an existing WCS file  (-V)\n"
-           "  [--code-tolerance <tol>]: matching distance for quads, default 0.01  (-c)\n"
-           "  [--pixel-error <pix>]: for verification, size of pixel positional error, default 1  (-E)\n"
-           "  [--resort]: sort the star brightnesses using a compromise between background-subtraction and no background-subtraction (-r). \n"
-           "  [--downsample <n>]: downsample the image by factor <n> before running source extraction  (-z).\n"
-           "  [--dont-augment]: quit after writing the xylist (use with --keep-xylist)  (-A)\n"
-		   "\n", progname);
+static void print_help(const char* progname, bl* opts) {
+	printf("Usage: %s [options]\n", progname);
+    opts_print_help(opts, stdout, print_special_opts, NULL);
+    printf("\n\n");
 }
+
 
 static int parse_depth_string(il* depths, const char* str);
 static int parse_fields_string(il* fields, const char* str);
@@ -226,6 +250,7 @@ int main(int argc, char** args) {
     bool resort = FALSE;
     bool doaugment = TRUE;
     int scaledown = 0;
+    bl* opts;
 
     depths = il_new(4);
     fields = il_new(16);
@@ -235,9 +260,10 @@ int main(int argc, char** args) {
 
     me = find_executable(args[0], NULL);
 
+    opts = opts_from_array(options, sizeof(options)/sizeof(an_option_t), NULL);
+
 	while (1) {
-		int option_index = 0;
-		c = getopt_long(argc, args, OPTIONS, long_options, &option_index);
+		c = opts_getopt(opts, argc, args);
 		if (c == -1)
 			break;
 		switch (c) {
@@ -399,9 +425,10 @@ int main(int argc, char** args) {
 		rtn = -1;
 	}
 	if (help_flag) {
-		print_help(args[0]);
+		print_help(args[0], opts);
 		exit(rtn);
 	}
+    bl_free(opts);
 
 	scales = dl_new(16);
 

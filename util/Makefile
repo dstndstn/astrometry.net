@@ -70,7 +70,7 @@ ANUTILS_DEPS :=
 
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix.o permutedsort.o \
 	qsort_reentrant.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
-	gnu-specific.o an-endian.o errors.o
+	gnu-specific.o an-endian.o errors.o an-opts.o
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o
 ANUTILS_DEPS += $(QFITS_LIB)

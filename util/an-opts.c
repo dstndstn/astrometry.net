@@ -1,0 +1,97 @@
+/*
+ This file is part of the Astrometry.net suite.
+ Copyright 2008 Dustin Lang.
+
+ The Astrometry.net suite is free software; you can redistribute
+ it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, version 2.
+
+ The Astrometry.net suite is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with the Astrometry.net suite ; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA	 02110-1301 USA
+ */
+
+#include <stdio.h>
+#include <getopt.h>
+
+#include "an-opts.h"
+#include "bl.h"
+
+void opts_print_help(bl* opts, FILE* fid,
+                     void (*special_case)(an_option_t* opt, bl* allopts, int index,
+                                          FILE* fid, void* extra), void* extra) {
+    int i;
+    for (i=0; i<bl_size(opts); i++) {
+        an_option_t* opt = bl_access(opts, i);
+        if (opt->help) {
+            fprintf(fid, "  -%c / --%s", opt->shortopt, opt->name);
+            if (opt->has_arg == optional_argument)
+                fprintf(fid, " [<%s>]", opt->argname);
+            else if (opt->has_arg == required_argument)
+                fprintf(fid, " <%s>", opt->argname);
+            fprintf(fid, ": %s\n", opt->help);
+        } else if (special_case)
+            special_case(opt, opts, i, fid, extra);
+    }
+}
+
+int opts_getopt(bl* opts, int argc, char** argv) {
+    int i, j, N;
+    char* optstring;
+    int c;
+    struct option* longoptions;
+
+    N = bl_size(opts);
+    // create the short options string.
+    optstring = malloc(3 * N + 1);
+    j = 0;
+    for (i=0; i<N; i++) {
+        an_option_t* opt = bl_access(opts, i);
+        if (!opt->shortopt)
+            continue;
+        optstring[j] = opt->shortopt;
+        j++;
+        if (opt->has_arg == no_argument)
+            continue;
+        optstring[j] = ':';
+        j++;
+        if (opt->has_arg == required_argument)
+            continue;
+        optstring[j] = ':';
+        j++;
+    }
+    optstring[j] = '\0';
+    // create long options.
+    longoptions = calloc(N, sizeof(struct option));
+    j = 0;
+    for (i=0; i<N; i++) {
+        an_option_t* opt = bl_access(opts, i);
+        if (!opt->shortopt)
+            continue;
+        longoptions[j].name = opt->name;
+        longoptions[j].has_arg = opt->has_arg;
+    }
+
+    c = getopt_long(argc, argv, optstring, longoptions, NULL);
+
+    free(optstring);
+    free(longoptions);
+
+    return c;
+}
+
+bl* opts_from_array(const an_option_t* opts, int N, bl* lst) {
+    int i;
+    if (!lst)
+        lst = bl_new(4, sizeof(an_option_t));
+    for (i=0; i<N; i++)
+        bl_append(lst, opts + i);
+    return lst;
+}
+
+
