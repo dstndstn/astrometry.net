@@ -50,6 +50,25 @@
 #include "resort-xylist.h"
 #include "qfits.h"
 #include "an-opts.h"
+#include "augment-xylist.h"
+
+void augment_xylist_init(augment_xylist_t* axy) {
+    memset(axy, 0, sizeof(augment_xylist_t));
+    axy->tempdir = "/tmp";
+    axy->tweak = TRUE;
+    axy->tweakorder = 2;
+    axy->depths = il_new(4);
+    axy->fields = il_new(16);
+	axy->scales = dl_new(16);
+    axy->verifywcs = sl_new(4);
+}
+
+void augment_xylist_free_contents(augment_xylist_t* axy) {
+    sl_free2(axy->verifywcs);
+    dl_free(axy->scales);
+    il_free(axy->depths);
+    il_free(axy->fields);
+}
 
 static void print_special_opts(an_option_t* opt, bl* opts, int index,
                                FILE* fid, void* extra) {
@@ -153,15 +172,144 @@ static an_option_t options[] = {
      "sort in ascending order (smallest first); default is descending order"},
 };
 
-static void print_help(const char* progname, bl* opts) {
-	printf("Usage: %s [options]\n", progname);
-    opts_print_help(opts, stdout, print_special_opts, NULL);
-    printf("\n\n");
+void augment_xylist_print_help(FILE* fid) {
+    bl* opts;
+    opts = opts_from_array(options, sizeof(options)/sizeof(an_option_t), NULL);
+    opts_print_help(opts, fid, print_special_opts, NULL);
+    bl_free(opts);
 }
 
+void augment_xylist_add_options(bl* opts) {
+    bl* myopts = opts_from_array(options, sizeof(options)/sizeof(an_option_t), NULL);
+    bl_append_list(opts, myopts);
+    bl_free(myopts);
+}
 
 static int parse_depth_string(il* depths, const char* str);
 static int parse_fields_string(il* fields, const char* str);
+
+int augment_xylist_parse_option(char argchar, char* optarg,
+                                augment_xylist_t* axy) {
+    switch (argchar) {
+    case 'A':
+        axy->dont_augment = TRUE;
+        break;
+    case 'z':
+        if (optarg)
+            axy->downsample = atoi(optarg);
+        else
+            axy->downsample = 2;
+        break;
+    case 'r':
+        axy->resort = TRUE;
+        break;
+    case 'E':
+        axy->pixelerr = atof(optarg);
+        break;
+    case 'c':
+        axy->codetol = atof(optarg);
+        break;
+    case 'v':
+        axy->verbosity++;
+        break;
+    case 'V':
+        sl_append(axy->verifywcs, optarg);
+        break;
+    case 'I':
+        axy->solvedinfn = optarg;
+        break;
+    case 'k':
+        axy->keepxylsfn = optarg;
+        break;
+    case 's':
+        axy->sortcol = optarg;
+        break;
+    case 'a':
+        axy->sort_ascending = TRUE;
+        break;
+    case 'X':
+        axy->xcol = optarg;
+        break;
+    case 'Y':
+        axy->ycol = optarg;
+        break;
+    case 'm':
+        axy->tempdir = optarg;
+        break;
+    case '2':
+        axy->no_fits2fits = TRUE;
+        break;
+    case 'F':
+        if (parse_fields_string(axy->fields, optarg)) {
+            fprintf(stderr, "Failed to parse fields specification \"%s\".\n", optarg);
+            return -1;
+        }
+        break;
+    case 'd':
+        if (parse_depth_string(axy->depths, optarg)) {
+            fprintf(stderr, "Failed to parse depth specification: \"%s\"\n", optarg);
+            return -1;
+        }
+        break;
+    case 'o':
+        axy->outfn = optarg;
+        break;
+    case 'i':
+        axy->imagefn = optarg;
+        break;
+    case 'x':
+        axy->xylsfn = optarg;
+        break;
+    case 'L':
+        axy->scalelo = atof(optarg);
+        break;
+    case 'H':
+        axy->scalehi = atof(optarg);
+        break;
+    case 'u':
+        axy->scaleunits = optarg;
+        break;
+    case 'w':
+        axy->W = atoi(optarg);
+        break;
+    case 'e':
+        axy->H = atoi(optarg);
+        break;
+    case 'T':
+        axy->tweak = FALSE;
+        break;
+    case 't':
+        axy->tweakorder = atoi(optarg);
+        break;
+    case 'P':
+        axy->pnmfn = optarg;
+        break;
+    case 'f':
+        axy->force_ppm = TRUE;
+        break;
+    case 'g':
+        axy->guess_scale = TRUE;
+        break;
+    case 'S':
+        axy->solvedfn = optarg;
+        break;
+    case 'C':
+        axy->cancelfn = optarg;
+        break;
+    case 'M':
+        axy->matchfn = optarg;
+        break;
+    case 'R':
+        axy->rdlsfn = optarg;
+        break;
+    case 'W':
+        axy->wcsfn = optarg;
+        break;
+    default:
+        return 1;
+    }
+    return 0;
+}
 
 // run(): ppmtopgm, pnmtofits, fits2fits.py
 // backtick(): pnmfile, image2pnm.py
@@ -199,240 +347,25 @@ static void run(sl* cmd, bool verbose) {
     sl_free2(lines);
 }
 
-int main(int argc, char** args) {
-	int c;
-	int rtn;
-	int help_flag = 0;
-	char* outfn = NULL;
-	char* imagefn = NULL;
-	char* xylsfn = NULL;
-    sl* cmd;
-	int W = 0, H = 0;
-	double scalelo = 0.0, scalehi = 0.0;
-	char* scaleunits = NULL;
-	qfits_header* hdr = NULL;
-	bool tweak = TRUE;
-	int tweak_order = 0;
-	int orig_nheaders;
-	FILE* fout = NULL;
-	char* savepnmfn = NULL;
-    bool force_ppm = FALSE;
-	bool guess_scale = FALSE;
-	dl* scales;
-	int i, I;
-	bool guessed_scale = FALSE;
-	char* cancelfile = NULL;
-	char* solvedfile = NULL;
-	char* matchfile = NULL;
-	char* rdlsfile = NULL;
-	char* wcsfile = NULL;
-    // contains ranges of depths as pairs of ints.
-    il* depths;
-    // contains ranges of fields as pairs of ints.
-    il* fields;
-    bool nof2f = FALSE;
-    char* xcol = NULL;
-    char* ycol = NULL;
-    char* me;
-    char* tempdir = "/tmp";
+int augment_xylist(augment_xylist_t* axy,
+                   const char* me) {
 	// tempfiles to delete when we finish
     sl* tempfiles;
-    char* sortcol = NULL;
-    bool descending = TRUE;
+    sl* cmd;
+    bool verbose = axy->verbosity > 0;
+    int i, I;
+	bool guessed_scale = FALSE;
     bool dosort = FALSE;
-    bool verbose = FALSE;
-    char* keep_xylist = NULL;
-    char* solvedin = NULL;
+    char* xylsfn;
+	qfits_header* hdr = NULL;
+    int orig_nheaders;
     bool addwh = TRUE;
-    sl* verifywcs;
-    double codetol = 0.0;
-    double pixerr = 0.0;
-    bool resort = FALSE;
-    bool doaugment = TRUE;
-    int scaledown = 0;
-    bl* opts;
+    FILE* fout = NULL;
 
-    depths = il_new(4);
-    fields = il_new(16);
     cmd = sl_new(16);
     tempfiles = sl_new(4);
-    verifywcs = sl_new(4);
 
-    me = find_executable(args[0], NULL);
-
-    opts = opts_from_array(options, sizeof(options)/sizeof(an_option_t), NULL);
-
-	while (1) {
-		c = opts_getopt(opts, argc, args);
-		if (c == -1)
-			break;
-		switch (c) {
-		case 0:
-            fprintf(stderr, "Unknown option '-%c'\n", optopt);
-            exit(-1);
-        case 'A':
-            doaugment = FALSE;
-            break;
-        case 'z':
-            if (optarg)
-                scaledown = atoi(optarg);
-            else
-                scaledown = 2;
-            break;
-		case 'h':
-			help_flag = 1;
-			break;
-        case 'r':
-            resort = TRUE;
-            break;
-        case 'E':
-            pixerr = atof(optarg);
-            break;
-        case 'c':
-            codetol = atof(optarg);
-            break;
-        case 'v':
-            verbose = TRUE;
-            break;
-        case 'V':
-            sl_append(verifywcs, optarg);
-            break;
-        case 'I':
-            solvedin = optarg;
-            break;
-        case 'k':
-            keep_xylist = optarg;
-            break;
-        case 's':
-            sortcol = optarg;
-            break;
-        case 'a':
-            descending = FALSE;
-            break;
-        case 'X':
-            xcol = optarg;
-            break;
-        case 'Y':
-            ycol = optarg;
-            break;
-        case 'm':
-            tempdir = optarg;
-            break;
-        case '2':
-            nof2f = TRUE;
-            break;
-        case 'F':
-            if (parse_fields_string(fields, optarg)) {
-                fprintf(stderr, "Failed to parse fields specification \"%s\".\n", optarg);
-                exit(-1);
-            }
-            break;
-        case 'd':
-            if (parse_depth_string(depths, optarg)) {
-                fprintf(stderr, "Failed to parse depth specification: \"%s\"\n", optarg);
-                exit(-1);
-            }
-            break;
-		case 'o':
-			outfn = optarg;
-			break;
-		case 'i':
-			imagefn = optarg;
-			break;
-		case 'x':
-			xylsfn = optarg;
-			break;
-		case 'L':
-			scalelo = atof(optarg);
-			break;
-		case 'H':
-			scalehi = atof(optarg);
-			break;
-		case 'u':
-			scaleunits = optarg;
-			break;
-		case 'w':
-			W = atoi(optarg);
-			break;
-		case 'e':
-			H = atoi(optarg);
-			break;
-		case 'T':
-			tweak = FALSE;
-			break;
-		case 't':
-			tweak_order = atoi(optarg);
-			break;
-		case 'P':
-			savepnmfn = optarg;
-			break;
-        case 'f':
-            force_ppm = TRUE;
-            break;
-		case 'g':
-			guess_scale = TRUE;
-			break;
-		case 'S':
-			solvedfile = optarg;
-			break;
-		case 'C':
-			cancelfile = optarg;
-			break;
-		case 'M':
-			matchfile = optarg;
-			break;
-		case 'R':
-			rdlsfile = optarg;
-			break;
-		case 'W':
-			wcsfile = optarg;
-			break;
-		case '?':
-			break;
-		default:
-            fprintf(stderr, "Unknown option '-%c'\n", optopt);
-			exit( -1);
-		}
-	}
-
-	rtn = 0;
-	if (optind != argc) {
-		int i;
-		printf("Unknown arguments:\n  ");
-		for (i=optind; i<argc; i++) {
-			printf("%s ", args[i]);
-		}
-		printf("\n");
-		help_flag = 1;
-		rtn = -1;
-	}
-	if (!outfn) {
-		printf("Output filename (-o / --out) is required.\n");
-		help_flag = 1;
-		rtn = -1;
-	}
-	if (!(imagefn || xylsfn)) {
-		printf("Require either an image (-i / --image) or an XYlist (-x / --xylist) input file.\n");
-		help_flag = 1;
-		rtn = -1;
-	}
-	if (!((!scaleunits) ||
-		  (!strcasecmp(scaleunits, "degwidth")) ||
-		  (!strcasecmp(scaleunits, "arcminwidth")) ||
-		  (!strcasecmp(scaleunits, "arcsecperpix")))) {
-		printf("Unknown scale units \"%s\".\n", scaleunits);
-		help_flag = 1;
-		rtn = -1;
-	}
-	if (help_flag) {
-		print_help(args[0], opts);
-		exit(rtn);
-	}
-    bl_free(opts);
-
-	scales = dl_new(16);
-
-	if (imagefn) {
+	if (axy->imagefn) {
 		// if --image is given:
 		//	 -run image2pnm.py
 		//	 -if it's a FITS image, keep the original (well, sanitized version)
@@ -450,32 +383,32 @@ int main(int argc, char** args) {
 		int maxval;
 		char typestr[256];
 
-        uncompressedfn = create_temp_file("uncompressed", tempdir);
-		sanitizedfn = create_temp_file("sanitized", tempdir);
+        uncompressedfn = create_temp_file("uncompressed", axy->tempdir);
+		sanitizedfn = create_temp_file("sanitized", axy->tempdir);
         sl_append_nocopy(tempfiles, uncompressedfn);
         sl_append_nocopy(tempfiles, sanitizedfn);
 
-		if (savepnmfn)
-			pnmfn = savepnmfn;
+		if (axy->pnmfn)
+			pnmfn = axy->pnmfn;
 		else {
-            pnmfn = create_temp_file("pnm", tempdir);
+            pnmfn = create_temp_file("pnm", axy->tempdir);
             sl_append_nocopy(tempfiles, pnmfn);
         }
 
         append_executable(cmd, "image2pnm.py", me);
         if (!verbose)
             sl_append(cmd, "--quiet");
-        if (nof2f)
+        if (axy->no_fits2fits)
             sl_append(cmd, "--no-fits2fits");
         sl_append(cmd, "--infile");
-        append_escape(cmd, imagefn);
+        append_escape(cmd, axy->imagefn);
         sl_append(cmd, "--uncompressed-outfile");
         append_escape(cmd, uncompressedfn);
         sl_append(cmd, "--sanitized-fits-outfile");
         append_escape(cmd, sanitizedfn);
         sl_append(cmd, "--outfile");
         append_escape(cmd, pnmfn);
-        if (force_ppm)
+        if (axy->force_ppm)
             sl_append(cmd, "--ppm");
 
         lines = backtick(cmd, verbose);
@@ -510,37 +443,37 @@ int main(int argc, char** args) {
 		}
 		line += strlen(pnmfn) + 1;
 		if (sscanf(line, " P%cM %255s %d by %d maxval %d",
-				   &pnmtype, typestr, &W, &H, &maxval) != 5) {
+				   &pnmtype, typestr, &axy->W, &axy->H, &maxval) != 5) {
 			fprintf(stderr, "Failed to parse output from pnmfile: %s\n", line);
 			exit(-1);
 		}
 		sl_free2(lines);
 
 		if (isfits) {
-            if (nof2f) {
+            if (axy->no_fits2fits) {
                 if (iscompressed)
                     fitsimgfn = uncompressedfn;
                 else
-                    fitsimgfn = imagefn;
+                    fitsimgfn = axy->imagefn;
             } else
                 fitsimgfn = sanitizedfn;
 
-			if (guess_scale) {
+			if (axy->guess_scale) {
                 dl* estscales = NULL;
                 fits_guess_scale(fitsimgfn, NULL, &estscales);
 				for (i=0; i<dl_size(estscales); i++) {
 					double scale = dl_get(estscales, i);
                     if (verbose)
                         printf("Scale estimate: %g\n", scale);
-                    dl_append(scales, scale * 0.99);
-                    dl_append(scales, scale * 1.01);
+                    dl_append(axy->scales, scale * 0.99);
+                    dl_append(axy->scales, scale * 1.01);
                     guessed_scale = TRUE;
                 }
 				dl_free(estscales);
 			}
 
 		} else {
-			fitsimgfn = create_temp_file("fits", tempdir);
+			fitsimgfn = create_temp_file("fits", axy->tempdir);
             sl_append_nocopy(tempfiles, fitsimgfn);
             
 			if (pnmtype == 'P') {
@@ -568,8 +501,7 @@ int main(int argc, char** args) {
 		}
 
         printf("Extracting sources...\n");
-
-		xylsfn = create_temp_file("xyls", tempdir);
+        xylsfn = create_temp_file("xyls", axy->tempdir);
         sl_append_nocopy(tempfiles, xylsfn);
 
         if (verbose)
@@ -580,7 +512,7 @@ int main(int argc, char** args) {
             SYSERROR("Failed to delete temp file %s", xylsfn);
             exit(-1);
         }
-        if (image2xy(fitsimgfn, xylsfn, TRUE, scaledown)) {
+        if (image2xy(fitsimgfn, xylsfn, TRUE, axy->downsample)) {
             ERROR("Source extraction failed");
             exit(-1);
         }
@@ -591,17 +523,18 @@ int main(int argc, char** args) {
 		// xylist.
 		// if --xylist is given:
 		//	 -fits2fits.py sanitize
+        xylsfn = axy->xylsfn;
 
-        if (sortcol)
+        if (axy->sortcol)
             dosort = TRUE;
 
-        if (!nof2f) {
+        if (!axy->no_fits2fits) {
             char* sanexylsfn;
 
-            if (keep_xylist && !dosort) {
-                sanexylsfn = keep_xylist;
+            if (axy->keepxylsfn && !dosort) {
+                sanexylsfn = axy->keepxylsfn;
             } else {
-                sanexylsfn = create_temp_file("sanexyls", tempdir);
+                sanexylsfn = create_temp_file("sanexyls", axy->tempdir);
                 sl_append_nocopy(tempfiles, sanexylsfn);
             }
 
@@ -620,30 +553,30 @@ int main(int argc, char** args) {
     if (dosort) {
         char* sortedxylsfn;
 
-        if (!sortcol)
-            sortcol = "FLUX";
+        if (!axy->sortcol)
+            axy->sortcol = "FLUX";
 
-        if (keep_xylist) {
-            sortedxylsfn = keep_xylist;
+        if (axy->keepxylsfn) {
+            sortedxylsfn = axy->keepxylsfn;
         } else {
-            sortedxylsfn = create_temp_file("sorted", tempdir);
+            sortedxylsfn = create_temp_file("sorted", axy->tempdir);
             sl_append_nocopy(tempfiles, sortedxylsfn);
         }
 
-        if (resort) {
-            resort_xylist(xylsfn, sortedxylsfn, sortcol, NULL, !descending);
+        if (axy->resort) {
+            resort_xylist(xylsfn, sortedxylsfn, axy->sortcol, NULL, axy->sort_ascending);
 
         } else {
             if (verbose)
                 printf("Running tabsort: input=%s, output=%s, column=%s.\n",
-                       xylsfn, sortedxylsfn, sortcol);
-            tabsort(xylsfn, sortedxylsfn, sortcol, descending);
+                       xylsfn, sortedxylsfn, axy->sortcol);
+            tabsort(xylsfn, sortedxylsfn, axy->sortcol, !axy->sort_ascending);
         }
 
 		xylsfn = sortedxylsfn;
     }
 
-    if (!doaugment)
+    if (axy->dont_augment)
         // done!
         goto cleanup;
 
@@ -656,20 +589,20 @@ int main(int argc, char** args) {
 
 	orig_nheaders = qfits_header_n(hdr);
 
-    if (!(W && H)) {
+    if (!(axy->W && axy->H)) {
         // Look for existing IMAGEW and IMAGEH in primary header.
-        W = qfits_header_getint(hdr, "IMAGEW", 0);
-        H = qfits_header_getint(hdr, "IMAGEH", 0);
-        if (W && H) {
+        axy->W = qfits_header_getint(hdr, "IMAGEW", 0);
+        axy->H = qfits_header_getint(hdr, "IMAGEH", 0);
+        if (axy->W && axy->H) {
             addwh = FALSE;
         } else {
             // Look for IMAGEW and IMAGEH headers in first extension, else bail.
             qfits_header* hdr2 = qfits_header_readext(xylsfn, 1);
-            W = qfits_header_getint(hdr2, "IMAGEW", 0);
-            H = qfits_header_getint(hdr2, "IMAGEH", 0);
+            axy->W = qfits_header_getint(hdr2, "IMAGEW", 0);
+            axy->H = qfits_header_getint(hdr2, "IMAGEH", 0);
             qfits_header_destroy(hdr2);
         }
-        if (!(W && H)) {
+        if (!(axy->W && axy->H)) {
             fprintf(stderr, "Error: image width and height must be specified for XYLS inputs.\n");
             exit(-1);
         }
@@ -679,41 +612,41 @@ int main(int argc, char** args) {
     fits_header_add_longstring_boilerplate(hdr);
 
     if (addwh) {
-        fits_header_add_int(hdr, "IMAGEW", W, "image width");
-        fits_header_add_int(hdr, "IMAGEH", H, "image height");
+        fits_header_add_int(hdr, "IMAGEW", axy->W, "image width");
+        fits_header_add_int(hdr, "IMAGEH", axy->H, "image height");
     }
 	qfits_header_add(hdr, "ANRUN", "T", "Solve this field!", NULL);
 
-    if (xcol)
-        qfits_header_add(hdr, "ANXCOL", xcol, "Name of column containing X coords", NULL);
-    if (ycol)
-        qfits_header_add(hdr, "ANYCOL", ycol, "Name of column containing Y coords", NULL);
+    if (axy->xcol)
+        qfits_header_add(hdr, "ANXCOL", axy->xcol, "Name of column containing X coords", NULL);
+    if (axy->ycol)
+        qfits_header_add(hdr, "ANYCOL", axy->ycol, "Name of column containing Y coords", NULL);
 
-	if ((scalelo > 0.0) || (scalehi > 0.0)) {
+	if ((axy->scalelo > 0.0) || (axy->scalehi > 0.0)) {
 		double appu, appl;
-		if (!scaleunits || !strcasecmp(scaleunits, "degwidth")) {
-			appl = deg2arcsec(scalelo) / (double)W;
-			appu = deg2arcsec(scalehi) / (double)W;
-		} else if (!strcasecmp(scaleunits, "arcminwidth")) {
-			appl = arcmin2arcsec(scalelo) / (double)W;
-			appu = arcmin2arcsec(scalehi) / (double)W;
-		} else if (!strcasecmp(scaleunits, "arcsecperpix")) {
-			appl = scalelo;
-			appu = scalehi;
+		if (!axy->scaleunits || !strcasecmp(axy->scaleunits, "degwidth")) {
+			appl = deg2arcsec(axy->scalelo) / (double)axy->W;
+			appu = deg2arcsec(axy->scalehi) / (double)axy->W;
+		} else if (!strcasecmp(axy->scaleunits, "arcminwidth")) {
+			appl = arcmin2arcsec(axy->scalelo) / (double)axy->W;
+			appu = arcmin2arcsec(axy->scalehi) / (double)axy->W;
+		} else if (!strcasecmp(axy->scaleunits, "arcsecperpix")) {
+			appl = axy->scalelo;
+			appu = axy->scalehi;
 		} else
 			exit(-1);
 
-		dl_append(scales, appl);
-		dl_append(scales, appu);
+		dl_append(axy->scales, appl);
+		dl_append(axy->scales, appu);
 	}
 
-	if ((dl_size(scales) > 0) && guessed_scale)
+	if ((dl_size(axy->scales) > 0) && guessed_scale)
 		qfits_header_add(hdr, "ANAPPDEF", "T", "try the default scale range too.", NULL);
 
-	for (i=0; i<dl_size(scales)/2; i++) {
+	for (i=0; i<dl_size(axy->scales)/2; i++) {
 		char key[64];
-        double lo = dl_get(scales, 2*i);
-        double hi = dl_get(scales, 2*i + 1);
+        double lo = dl_get(axy->scales, 2*i);
+        double hi = dl_get(axy->scales, 2*i + 1);
         if (lo > 0.0) {
             sprintf(key, "ANAPPL%i", i+1);
             fits_header_add_double(hdr, key, lo, "scale: arcsec/pixel min");
@@ -724,41 +657,41 @@ int main(int argc, char** args) {
         }
 	}
 
-	qfits_header_add(hdr, "ANTWEAK", (tweak ? "T" : "F"), (tweak ? "Tweak: yes please!" : "Tweak: no, thanks."), NULL);
-	if (tweak && tweak_order)
-		fits_header_add_int(hdr, "ANTWEAKO", tweak_order, "Tweak order");
+	qfits_header_add(hdr, "ANTWEAK", (axy->tweak ? "T" : "F"), (axy->tweak ? "Tweak: yes please!" : "Tweak: no, thanks."), NULL);
+	if (axy->tweak && axy->tweakorder)
+		fits_header_add_int(hdr, "ANTWEAKO", axy->tweakorder, "Tweak order");
 
-	if (solvedfile)
-		fits_header_addf_longstring(hdr, "ANSOLVED", "solved output file", "%s", solvedfile);
-	if (solvedin)
-		fits_header_addf_longstring(hdr, "ANSOLVIN", "solved input file", "%s", solvedin);
-	if (cancelfile)
-		fits_header_addf_longstring(hdr, "ANCANCEL", "cancel output file", "%s", cancelfile);
-	if (matchfile)
-		fits_header_addf_longstring(hdr, "ANMATCH", "match output file", "%s", matchfile);
-	if (rdlsfile)
-		fits_header_addf_longstring(hdr, "ANRDLS", "ra-dec output file", "%s", rdlsfile);
-	if (wcsfile)
-		fits_header_addf_longstring(hdr, "ANWCS", "WCS header output filename", "%s", wcsfile);
-    if (codetol > 0.0)
-		fits_header_add_double(hdr, "ANCTOL", codetol, "code tolerance");
-    if (pixerr > 0.0)
-		fits_header_add_double(hdr, "ANPOSERR", pixerr, "star pos'n error (pixels)");
+	if (axy->solvedfn)
+		fits_header_addf_longstring(hdr, "ANSOLVED", "solved output file", "%s", axy->solvedfn);
+	if (axy->solvedinfn)
+		fits_header_addf_longstring(hdr, "ANSOLVIN", "solved input file", "%s", axy->solvedinfn);
+	if (axy->cancelfn)
+		fits_header_addf_longstring(hdr, "ANCANCEL", "cancel output file", "%s", axy->cancelfn);
+	if (axy->matchfn)
+		fits_header_addf_longstring(hdr, "ANMATCH", "match output file", "%s", axy->matchfn);
+	if (axy->rdlsfn)
+		fits_header_addf_longstring(hdr, "ANRDLS", "ra-dec output file", "%s", axy->rdlsfn);
+	if (axy->wcsfn)
+		fits_header_addf_longstring(hdr, "ANWCS", "WCS header output filename", "%s", axy->wcsfn);
+    if (axy->codetol > 0.0)
+		fits_header_add_double(hdr, "ANCTOL", axy->codetol, "code tolerance");
+    if (axy->pixelerr > 0.0)
+		fits_header_add_double(hdr, "ANPOSERR", axy->pixelerr, "star pos'n error (pixels)");
 
-    for (i=0; i<il_size(depths)/2; i++) {
+    for (i=0; i<il_size(axy->depths)/2; i++) {
         int depthlo, depthhi;
         char key[64];
-        depthlo = il_get(depths, 2*i);
-        depthhi = il_get(depths, 2*i + 1);
+        depthlo = il_get(axy->depths, 2*i);
+        depthhi = il_get(axy->depths, 2*i + 1);
         sprintf(key, "ANDPL%i", (i+1));
 		fits_header_addf(hdr, key, "", "%i", depthlo);
         sprintf(key, "ANDPU%i", (i+1));
 		fits_header_addf(hdr, key, "", "%i", depthhi);
     }
 
-    for (i=0; i<il_size(fields)/2; i++) {
-        int lo = il_get(fields, 2*i);
-        int hi = il_get(fields, 2*i + 1);
+    for (i=0; i<il_size(axy->fields)/2; i++) {
+        int lo = il_get(axy->fields, 2*i);
+        int hi = il_get(axy->fields, 2*i + 1);
         char key[64];
         if (lo == hi) {
             sprintf(key, "ANFD%i", (i+1));
@@ -772,12 +705,12 @@ int main(int argc, char** args) {
     }
 
     I = 0;
-    for (i=0; i<sl_size(verifywcs); i++) {
+    for (i=0; i<sl_size(axy->verifywcs); i++) {
         char* fn;
         sip_t sip;
 		int j;
 
-        fn = sl_get(verifywcs, i);
+        fn = sl_get(axy->verifywcs, i);
         if (!sip_read_header_file(fn, &sip)) {
             fprintf(stderr, "Failed to parse WCS header from file \"%s\".\n", fn);
             continue;
@@ -831,16 +764,15 @@ int main(int argc, char** args) {
             }
         }
     }
-    sl_free2(verifywcs);
 
-	fout = fopen(outfn, "wb");
+	fout = fopen(axy->outfn, "wb");
 	if (!fout) {
 		fprintf(stderr, "Failed to open output file: %s\n", strerror(errno));
 		exit(-1);
 	}
 
     if (verbose)
-        printf("Writing headers to file %s.\n", outfn);
+        printf("Writing headers to file %s.\n", axy->outfn);
 
 	if (qfits_header_dump(hdr, fout)) {
 		fprintf(stderr, "Failed to write FITS header.\n");
@@ -856,7 +788,7 @@ int main(int argc, char** args) {
 		struct stat st;
 
         if (verbose)
-            printf("Copying body of file %s to output %s.\n", xylsfn, outfn);
+            printf("Copying body of file %s to output %s.\n", xylsfn, axy->outfn);
 
 		start = fits_blocks_needed(orig_nheaders * FITS_LINESZ) * FITS_BLOCK_SIZE;
 
@@ -873,7 +805,7 @@ int main(int argc, char** args) {
 		}
 
         if (pipe_file_offset(fin, start, nb - start, fout)) {
-            fprintf(stderr, "Failed to copy the data segment of xylist file %s to %s.\n", xylsfn, outfn);
+            fprintf(stderr, "Failed to copy the data segment of xylist file %s to %s.\n", xylsfn, axy->outfn);
             exit(-1);
         }
 		fclose(fin);
@@ -888,13 +820,9 @@ int main(int argc, char** args) {
 		}
 	}
 
-    dl_free(scales);
-    il_free(depths);
-    il_free(fields);
     sl_free2(cmd);
     sl_free2(tempfiles);
-
-	return 0;
+    return 0;
 }
 
 static int parse_depth_string(il* depths, const char* str) {
