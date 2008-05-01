@@ -67,7 +67,7 @@ int opts_getopt(bl* opts, int argc, char** argv) {
     }
     optstring[j] = '\0';
     // create long options.
-    longoptions = calloc(N, sizeof(struct option));
+    longoptions = calloc(N+1, sizeof(struct option));
     j = 0;
     for (i=0; i<N; i++) {
         an_option_t* opt = bl_access(opts, i);
