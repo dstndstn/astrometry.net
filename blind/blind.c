@@ -82,7 +82,7 @@ void blind_clear_solutions(blind_t* bp) {
 }
 
 void blind_clear_indexes(blind_t* bp) {
-    sl_free2(bp->indexnames);
+    sl_remove_all(bp->indexnames);
 }
 
 void blind_set_field_file(blind_t* bp, const char* fn) {

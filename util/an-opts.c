@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <getopt.h>
+#include <ctype.h>
 
 #include "an-opts.h"
 #include "bl.h"
@@ -54,6 +55,8 @@ int opts_getopt(bl* opts, int argc, char** argv) {
         an_option_t* opt = bl_access(opts, i);
         if (!opt->shortopt)
             continue;
+        if (iscntrl(opt->shortopt))
+            continue;
         optstring[j] = opt->shortopt;
         j++;
         if (opt->has_arg == no_argument)
@@ -73,8 +76,12 @@ int opts_getopt(bl* opts, int argc, char** argv) {
         an_option_t* opt = bl_access(opts, i);
         if (!opt->shortopt)
             continue;
+        if (iscntrl(opt->shortopt))
+            continue;
         longoptions[j].name = opt->name;
         longoptions[j].has_arg = opt->has_arg;
+        longoptions[j].val = opt->shortopt;
+        j++;
     }
 
     c = getopt_long(argc, argv, optstring, longoptions, NULL);

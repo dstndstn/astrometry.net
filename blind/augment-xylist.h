@@ -21,6 +21,7 @@
 
 #include "an-bool.h"
 #include "bl.h"
+#include "an-opts.h"
 
 struct augment_xylist_s {
     char* tempdir;
@@ -100,6 +101,10 @@ void augment_xylist_print_help(FILE* fid);
 void augment_xylist_add_options(bl* opts);
 
 int augment_xylist_parse_option(char argchar, char* optarg, augment_xylist_t* axyargs);
+
+void augment_xylist_print_special_opts(an_option_t* opt, bl* opts,
+                                       int index,
+                                       FILE* fid, void* extra);
 
 #endif
 

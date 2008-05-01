@@ -53,7 +53,7 @@
 #include "augment-xylist.h"
 
 static void print_help(const char* progname, bl* opts) {
-	printf("Usage: %s [options]\n", progname);
+	printf("\nUsage: %s [options]\n", progname);
     augment_xylist_print_help(stdout);
     printf("\n\n");
 }
@@ -71,7 +71,7 @@ int main(int argc, char** args) {
 
     me = find_executable(args[0], NULL);
 
-    opts = bl_new(sizeof(an_option_t), 4);
+    opts = bl_new(4, sizeof(an_option_t));
     augment_xylist_add_options(opts);
 
     augment_xylist_init(axy);

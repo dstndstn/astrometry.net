@@ -377,13 +377,18 @@ backend: backend.o scriptutils.o blind.o solver.o codekd.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB) $(GSL_LIB)
 
-solve-field: solve-field.o scriptutils.o matchfile.o fileutil.o \
+solve-field: solve-field.o augment-xylist.o scriptutils.o matchfile.o \
+		fileutil.o image2xy.o resort-xylist.o tabsort.o \
+		fits-guess-scale.o svn.o log.o \
+		$(SIMPLEXY2_OBJ) $(CFITS_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scale.o image2xy.o \
 		resort-xylist.o \
 		scriptutils.o fileutil.o log.o svn.o $(SIMPLEXY2_OBJ) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_LIB)
+
+ALL_OBJ += augment-xylist-main.o
 
 blind: blind-main.o blind.o solver.o codekd.o matchfile.o tic.o \
 		solvedclient.o solvedfile.o idfile.o verify.o svd.o \

@@ -70,8 +70,8 @@ void augment_xylist_free_contents(augment_xylist_t* axy) {
     il_free(axy->fields);
 }
 
-static void print_special_opts(an_option_t* opt, bl* opts, int index,
-                               FILE* fid, void* extra) {
+void augment_xylist_print_special_opts(an_option_t* opt, bl* opts, int index,
+                                       FILE* fid, void* extra) {
     if (!strcmp(opt->name, "image")) {
         fprintf(fid, "%s",
                 "  (   -i / --image  <image-input-file>\n"
@@ -91,11 +91,11 @@ static void print_special_opts(an_option_t* opt, bl* opts, int index,
     } else if (!strcmp(opt->name, "xylist-only")) {
         fprintf(fid, "%s",
                 "The following options are valid for xylist inputs only:\n");
-    } else if (!strcmp(opt->name, "optional")) {
-        fprintf(fid, "%s", "The following are optional:\n");
     } else if (!strcmp(opt->name, "fields")) {
         fprintf(fid, "%s",
                 "  -F / --fields <number or range>: the FITS extension(s) to solve, inclusive\n");
+    } else if (!strcmp(opt->name, "options")) {
+        fprintf(fid, "Options include:\n");
     }
 }
 
@@ -104,7 +104,7 @@ static an_option_t options[] = {
     {'x', "xylist",		   required_argument, NULL, NULL},
 	{'o', "out",		   required_argument, "filename",
      "output augmented xylist filename"},
-    {'\0', "optional",     no_argument, NULL, NULL},
+    {'\x01', "options",       no_argument, NULL, NULL},
 	{'h', "help",		   no_argument, NULL,
      "print this help message" },
 	{'v', "verbose",       no_argument, NULL,
@@ -175,7 +175,7 @@ static an_option_t options[] = {
 void augment_xylist_print_help(FILE* fid) {
     bl* opts;
     opts = opts_from_array(options, sizeof(options)/sizeof(an_option_t), NULL);
-    opts_print_help(opts, fid, print_special_opts, NULL);
+    opts_print_help(opts, fid, augment_xylist_print_special_opts, NULL);
     bl_free(opts);
 }
 

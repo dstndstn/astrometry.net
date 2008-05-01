@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2007-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -62,96 +62,45 @@ pixels=UxV arcmin
 #include "matchfile.h"
 #include "scriptutils.h"
 #include "fitsioutils.h"
+#include "augment-xylist.h"
+#include "an-opts.h"
 
-static const char* OPTIONS = "2C:D:E:F:GH:I:KL:OPSTU:V:W:X:Y:ac:d:fghi:k:m:o:rs:t:u:vz";
-
-
-static struct option long_options[] = {
-	{"help",           no_argument,       0, 'h'},
-	{"verbose",        no_argument,       0, 'v'},
-	{"width",          required_argument, 0, 'W'},
-	{"height",         required_argument, 0, 'H'},
-	{"scale-low",	   required_argument, 0, 'L'},
-	{"scale-high",	   required_argument, 0, 'U'},
-	{"scale-units",    required_argument, 0, 'u'},
-    {"fields",         required_argument, 0, 'F'},
-	{"depth",          required_argument, 0, 'D'},
-	{"no-tweak",       no_argument,       0, 'T'},
-	{"no-guess-scale", no_argument,       0, 'G'},
-	{"tweak-order",    required_argument, 0, 't'},
-	{"dir",            required_argument, 0, 'd'},
-	{"out",            required_argument, 0, 'o'},
-	{"backend-config", required_argument, 0, 'c'},
-	{"files-on-stdin", no_argument,       0, 'f'},
-	{"overwrite",      no_argument,       0, 'O'},
-	{"no-plots",       no_argument,       0, 'P'},
-	{"no-fits2fits",   no_argument,       0, '2'},
-	{"temp-dir",       required_argument, 0, 'm'},
-	{"x-column",       required_argument, 0, 'X'},
-	{"y-column",       required_argument, 0, 'Y'},
-    {"sort-column",    required_argument, 0, 's'},
-    {"sort-ascending", no_argument,       0, 'a'},
-    {"keep-xylist",    required_argument, 0, 'k'},
-	{"solved-in",      required_argument, 0, 'I'},
-	{"solved-in-dir",  required_argument, 0, 'i'},
-    {"verify",         required_argument, 0, 'V'},
-    {"code-tolerance", required_argument, 0, 'C'},
-    {"pixel-error",    required_argument, 0, 'E'},
-    {"use-wget",       no_argument,       0, 'g'},
-    {"resort",         no_argument,       0, 'r'},
-    {"downsample",     no_argument,       0, 'z'},
-    {"continue",       no_argument,       0, 'K'},
-    {"skip-solved",    no_argument,       0, 'S'},
-	{0, 0, 0, 0}
+static an_option_t options[] = {
+	{'h', "help",		   no_argument, NULL,
+     "print this help message" },
+	{'v', "verbose",       no_argument, NULL,
+     "be more chatty" },
+    {'D', "dir", required_argument, "directory",
+     "place all output files in this directory"},
+    {'o', "out", required_argument, "base-filename",
+     "name the output files with this base name"},
+    {'b', "backend-config", required_argument, "filename",
+     "use this config file for the \"backend\" program"},
+	{'f', "files-on-stdin", no_argument, NULL,
+     "read filenames to solve on stdin, one per line"},
+	{'p', "no-plots",       no_argument, NULL,
+     "don't create any plots of the results"},
+    //{"solved-in-dir",  required_argument, 0, 'i'},
+    //directory containing input solved files  (-i)\n"
+    {'G', "use-wget",       no_argument, NULL,
+     "use wget instead of curl"},
+  	{'O', "overwrite",      no_argument, NULL,
+     "overwrite output files if they already exist"},
+    {'K', "continue",       no_argument, NULL,
+     "don't overwrite output files if they already exist; continue a previous run"},
+    {'J', "skip-solved",    no_argument, NULL,
+     "skip input files for which the 'solved' output file already exists;\n"
+     "                  NOTE: this assumes single-field input files"},
 };
 
-static void print_help(const char* progname) {
-	printf("Usage:   %s [options]\n"
-	       "  [--dir <directory>]: place all output files in this directory\n"
-	       "  [--out <filename>]: name the output files with this base name\n"
-	       "  [--scale-units <units>]: in what units are the lower and upper bound specified?   (-u)\n"
-	       "     choices:  \"degwidth\"    : width of the image, in degrees\n"
-	       "               \"arcminwidth\" : width of the image, in arcminutes\n"
-	       "               \"arcsecperpix\": arcseconds per pixel\n"
-	       "  [--scale-low  <number>]: lower bound of image scale estimate   (-L)\n"
-	       "  [--scale-high <number>]: upper bound of image scale estimate   (-U)\n"
-           "  [--fields <number>]: specify a field (ie, FITS extension) to solve\n"
-           "  [--fields <min>/<max>]: specify a range of fields (FITS extensions) to solve; inclusive\n"
-	       "  [--width  <number>]: (mostly for xyls inputs): the original image width   (-W)\n"
-	       "  [--height <number>]: (mostly for xyls inputs): the original image height  (-H)\n"
-           "  [--x-column <name>]: for xyls inputs: the name of the FITS column containing the X coordinate of the sources.  (-X)\n"
-           "  [--y-column <name>]: for xyls inputs: the name of the FITS column containing the Y coordinate of the sources.  (-Y)\n"
-           "  [--sort-column <name>]: for xyls inputs: the name of the FITS column that should be used to sort the sources  (-s)\n"
-           "  [--sort-ascending]: when sorting, sort in ascending (smallest first) order   (-a)\n"
-		   "  [--depth <number1>-<number2>]: consider hypotheses generated from field objects num1-num2   (-D)\n"
-	       "  [--tweak-order <integer>]: polynomial order of SIP WCS corrections.  (-t <#>)\n"
-	       "  [--no-tweak]: don't fine-tune WCS by computing a SIP polynomial  (-T)\n"
-	       "  [--no-guess-scale]: don't try to guess the image scale from the FITS headers  (-G)\n"
-           "  [--no-plots]: don't create any PNG plots.  (-P)\n"
-           "  [--no-fits2fits]: don't sanitize FITS files; assume they're already sane.  (-2)\n"
-	       "  [--backend-config <filename>]: use this config file for the \"backend\" program.  (-c <file>)\n"
-	       "  [--overwrite]: overwrite output files if they already exist.  (-O)\n"
-	       "  [--continue]: don't overwrite output files if they already exist; continue a previous run  (-K)\n"
-	       "  [--skip-solved]: skip input files for which the 'solved' output file already exists;\n"
-           "                  NOTE: this assumes single-field input files.  (-S)\n"
-           "  [--continue]: don't overwrite output files if they already exist; continue a previous run  (-K)\n"
-	       "  [--files-on-stdin]: read filenames to solve on stdin, one per line (-f)\n"
-           "  [--temp-dir <dir>]: where to put temp files, default /tmp  (-m)\n"
-           "  [--verbose]: be more chatty!  (-v)\n"
-           "  [--keep-xylist <filename>]: save the (unaugmented) xylist to <filename>  (-k)\n"
-           "  [--solved-in-dir <dir>]: directory containing input solved files  (-i)\n"
-           "  [--solved-in <filename>]: input filename for solved file  (-I)\n"
-           "  [--verify <wcs-file>]: try to verify an existing WCS file  (-V)\n"
-           "  [--code-tolerance <tol>]: matching distance for quads (default 0.01) (-c)\n"
-           "  [--pixel-error <pix>]: for verification, size of pixel positional error, default 1  (-E)\n"
-           "  [--use-wget]: use wget instead of curl.  (-g)\n"
-           "  [--resort]: sort the star brightnesses using a compromise between background-subtraction and no background-subtraction (-r). \n"
-           "  [--downsample]: downsample the image by half before doing source extraction  (-z)\n"
-	       "\n"
-	       "  [<image-file-1> <image-file-2> ...] [<xyls-file-1> <xyls-file-2> ...]\n"
+static void print_help(const char* progname, bl* opts) {
+	printf("\nUsage:   %s [options]  [<image-file-1> <image-file-2> ...] [<xyls-file-1> <xyls-file-2> ...]\n"
            "\n"
            "You can specify http:// or ftp:// URLs instead of filenames.  The \"wget\" or \"curl\" program will be used to retrieve the URL.\n"
 	       "\n", progname);
+    printf("Options include:\n");
+    opts_print_help(opts, stdout, augment_xylist_print_special_opts, NULL);
+    printf("\n\n");
 }
 
 static int run_command(const char* cmd, bool* ctrlc) {
@@ -190,18 +139,12 @@ static void append_executable(sl* list, const char* fn, const char* me) {
 int main(int argc, char** args) {
 	int c;
 	bool help = FALSE;
-	sl* augmentxyargs;
 	char* outdir = NULL;
-	char* image = NULL;
-	char* xyls = NULL;
 	char* cmd;
-	int i, f;
+	int i, j, f;
     int inputnum;
 	int rtn;
 	sl* backendargs;
-	bool guess_scale = TRUE;
-	int width = 0, height = 0;
-	int nllargs;
 	int nbeargs;
 	bool fromstdin = FALSE;
 	bool overwrite = FALSE;
@@ -217,17 +160,132 @@ int main(int argc, char** args) {
     char* solvedin = NULL;
     char* solvedindir = NULL;
 	bool usecurl = TRUE;
-    bool resort = FALSE;
+    bl* opts;
+    augment_xylist_t theallaxy;
+    augment_xylist_t* allaxy = &theallaxy;
+    int nmyopts;
+    char* removeopts = "ixo\x01";
 
     me = find_executable(args[0], NULL);
-
-	augmentxyargs = sl_new(16);
-	append_executable(augmentxyargs, "augment-xylist", me);
 
 	backendargs = sl_new(16);
 	append_executable(backendargs, "backend", me);
 
 	rtn = 0;
+
+    nmyopts = sizeof(options)/sizeof(an_option_t);
+    opts = opts_from_array(options, nmyopts, NULL);
+    augment_xylist_add_options(opts);
+
+    // remove duplicate short options.
+    for (i=0; i<nmyopts; i++) {
+        an_option_t* opt1 = bl_access(opts, i);
+        for (j=nmyopts; j<bl_size(opts); j++) {
+            an_option_t* opt2 = bl_access(opts, j);
+            if (opt2->shortopt == opt1->shortopt)
+                bl_remove_index(opts, j);
+        }
+    }
+
+    // remove unwanted augment-xylist options.
+    for (i=0; i<strlen(removeopts); i++) {
+        for (j=nmyopts; j<bl_size(opts); j++) {
+            an_option_t* opt2 = bl_access(opts, j);
+            if (opt2->shortopt == removeopts[i])
+                bl_remove_index(opts, j);
+        }
+    }
+
+    augment_xylist_init(allaxy);
+
+	while (1) {
+        int res;
+		c = opts_getopt(opts, argc, args);
+        if (c == -1)
+            break;
+        switch (c) {
+            /*
+             case 'i':
+             solvedindir = optarg;
+             break;
+             }
+             */
+		case 'h':
+			help = TRUE;
+			break;
+        case 'v':
+            sl_append(backendargs, "--verbose");
+            verbose = TRUE;
+            break;
+		case 'D':
+			outdir = optarg;
+			break;
+        case 'o':
+            baseout = optarg;
+            break;
+		case 'b':
+			sl_append(backendargs, "--config");
+			append_escape(backendargs, optarg);
+			break;
+		case 'f':
+			fromstdin = TRUE;
+			break;
+        case 'O':
+            overwrite = TRUE;
+            break;
+        case 'p':
+            makeplots = FALSE;
+            break;
+        case 'G':
+            usecurl = FALSE;
+            break;
+        case 'K':
+            cont = TRUE;
+            break;
+        case 'J':
+            skip_solved = TRUE;
+            break;
+        default:
+            res = augment_xylist_parse_option(c, optarg, allaxy);
+            if (res) {
+                rtn = -1;
+                goto dohelp;
+            }
+        }
+    }
+
+	if (optind == argc) {
+		printf("ERROR: You didn't specify any files to process.\n");
+		help = TRUE;
+	}
+
+	if (help) {
+    dohelp:
+		print_help(args[0], opts);
+		exit(rtn);
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+    /*
+
+
+
+
+
+
+
+
+
 	while (1) {
 		int option_index = 0;
 		// getopt_long_only doesn't exist on my MacOS setup...
@@ -312,21 +370,6 @@ int main(int argc, char** args) {
             sl_append(augmentxyargs, "--depth");
             append_escape(augmentxyargs, optarg);
             break;
-        case 'P':
-            makeplots = FALSE;
-            break;
-        case 'O':
-            overwrite = TRUE;
-            break;
-        case 'K':
-            cont = TRUE;
-            break;
-        case 'S':
-            skip_solved = TRUE;
-            break;
-		case 'G':
-			guess_scale = FALSE;
-			break;
 		case 'W':
 			width = atoi(optarg);
 			break;
@@ -352,32 +395,13 @@ int main(int argc, char** args) {
 			sl_append(augmentxyargs, "--tweak-order");
 			append_escape(augmentxyargs, optarg);
 			break;
-		case 'c':
-			sl_append(backendargs, "--config");
-			append_escape(backendargs, optarg);
-			break;
-		case 'd':
-			outdir = optarg;
-			break;
-		case 'f':
-			fromstdin = TRUE;
-			break;
 
         case '?':
             printf("\nTry \"--help\" to get a list of options.\n");
             exit(-1);
 		}
 	}
-
-	if (optind == argc) {
-		printf("ERROR: You didn't specify any files to process.\n");
-		help = TRUE;
-	}
-
-	if (help) {
-		print_help(args[0]);
-		exit(rtn);
-	}
+     */
 
 	if (outdir) {
         char* escout;
@@ -392,34 +416,34 @@ int main(int argc, char** args) {
         free(cmd);
 	}
 
-	if (guess_scale)
-		sl_append(augmentxyargs, "--guess-scale");
-
-	// number of low-level and backend args (not specific to a particular file)
-	nllargs = sl_size(augmentxyargs);
+	// number of backend args not specific to a particular file
 	nbeargs = sl_size(backendargs);
 
 	f = optind;
     inputnum = 0;
 	while (1) {
-		char fnbuf[1024];
 		char* infile = NULL;
 		bool isxyls;
 		char* reason;
 		int len;
 		char* cpy;
 		char* base;
-		char *matchfn, *rdlsfn, *solvedfn, *wcsfn, *axyfn, *objsfn, *redgreenfn;
-        char* solvedinfn = NULL;
+		char *objsfn, *redgreenfn;
 		char *ngcfn, *ppmfn=NULL, *indxylsfn;
         char* downloadfn;
         char* suffix = NULL;
 		sl* outfiles;
 		sl* tempfiles;
 		sl* cmdline;
-        bool ctrlc = FALSE;
+        bool ctrlc;
+        augment_xylist_t theaxy;
+        augment_xylist_t* axy = &theaxy;
+
+        // reset augment-xylist args.
+        memcpy(axy, allaxy, sizeof(augment_xylist_t));
 
 		if (fromstdin) {
+            char fnbuf[1024];
 			if (!fgets(fnbuf, sizeof(fnbuf), stdin)) {
 				if (ferror(stdin))
 					fprintf(stderr, "Failed to read a filename!\n");
@@ -443,7 +467,6 @@ int main(int argc, char** args) {
         cmdline = sl_new(16);
 
         // Remove arguments that might have been added in previous trips through this loop
-		sl_remove_from(augmentxyargs, nllargs);
 		sl_remove_from(backendargs,  nbeargs);
 
 		// Choose the base path/filename for output files.
@@ -473,10 +496,11 @@ int main(int argc, char** args) {
 		outfiles = sl_new(16);
 		tempfiles = sl_new(4);
 
-		axyfn      = sl_appendf(outfiles, "%s.axy",       base);
-		matchfn    = sl_appendf(outfiles, "%s.match",     base);
-		rdlsfn     = sl_appendf(outfiles, "%s.rdls",      base);
-		wcsfn      = sl_appendf(outfiles, "%s.wcs",       base);
+		axy->outfn    = sl_appendf(outfiles, "%s.axy",       base);
+		axy->matchfn  = sl_appendf(outfiles, "%s.match",     base);
+		axy->rdlsfn   = sl_appendf(outfiles, "%s.rdls",      base);
+		axy->solvedfn = sl_appendf(outfiles, "%s.solved",    base);
+		axy->wcsfn    = sl_appendf(outfiles, "%s.wcs",       base);
 		objsfn     = sl_appendf(outfiles, "%s-objs.png",  base);
 		redgreenfn = sl_appendf(outfiles, "%s-indx.png",  base);
 		ngcfn      = sl_appendf(outfiles, "%s-ngc.png",   base);
@@ -486,22 +510,21 @@ int main(int argc, char** args) {
         else
             downloadfn = sl_appendf(outfiles, "%s-downloaded", base);
 
-		solvedfn   = sl_appendf(outfiles, "%s.solved",    base);
 
         if (solvedin || solvedindir) {
             if (solvedin && solvedindir)
-                asprintf(&solvedinfn, "%s/%s", solvedindir, solvedin);
+                asprintf(&axy->solvedinfn, "%s/%s", solvedindir, solvedin);
             else if (solvedin)
-                solvedinfn = strdup(solvedin);
+                axy->solvedinfn = strdup(solvedin);
             else {
                 char* bc = strdup(base);
                 char* bn = strdup(basename(bc));
-                asprintf(&solvedinfn, "%s/%s.solved", solvedindir, bn);
+                asprintf(&axy->solvedinfn, "%s/%s.solved", solvedindir, bn);
                 free(bn);
                 free(bc);
             }
         }
-        if (solvedinfn && (strcmp(solvedfn, solvedinfn) == 0)) {
+        if (axy->solvedinfn && (strcmp(axy->solvedfn, axy->solvedinfn) == 0)) {
             // solved input and output files are the same: don't delete the input!
             sl_pop(outfiles);
             // MEMLEAK
@@ -511,18 +534,18 @@ int main(int argc, char** args) {
 		base = NULL;
 
         if (skip_solved) {
-            if (solvedinfn) {
+            if (axy->solvedinfn) {
                 if (verbose)
-                    printf("Checking for solved file %s\n", solvedinfn);
-                if (file_exists(solvedinfn)) {
-                    printf("Solved file exists: %s; skipping this input file.\n", solvedinfn);
+                    printf("Checking for solved file %s\n", axy->solvedinfn);
+                if (file_exists(axy->solvedinfn)) {
+                    printf("Solved file exists: %s; skipping this input file.\n", axy->solvedinfn);
                     goto nextfile;
                 }
             }
             if (verbose)
-                printf("Checking for solved file %s\n", solvedfn);
-            if (file_exists(solvedfn)) {
-                printf("Solved file exists: %s; skipping this input file.\n", solvedfn);
+                printf("Checking for solved file %s\n", axy->solvedfn);
+            if (file_exists(axy->solvedfn)) {
+                printf("Solved file exists: %s; skipping this input file.\n", axy->solvedfn);
                 goto nextfile;
             }
         }
@@ -601,77 +624,31 @@ int main(int argc, char** args) {
         fflush(NULL);
 
 		if (isxyls) {
-			xyls = infile;
-			image = NULL;
+			axy->xylsfn = infile;
 		} else {
-			xyls = NULL;
-			image = infile;
+			axy->imagefn = infile;
 		}
 
-		if (image) {
-			sl_append(augmentxyargs, "--image");
-			append_escape(augmentxyargs, image);
-		} else {
-			sl_append(augmentxyargs, "--xylist");
-			append_escape(augmentxyargs, xyls);
-			/*
-			 if (!width || !height) {
-			 // Load the xylist and compute the min/max.
-			 }
-			 */
-		}
-
-		if (width) {
-			sl_appendf(augmentxyargs, "--width %i", width);
-		}
-		if (height) {
-			sl_appendf(augmentxyargs, "--height %i", height);
-		}
-
-		if (image) {
+		if (axy->imagefn) {
             ppmfn = create_temp_file("ppm", tempdir);
             sl_append_nocopy(tempfiles, ppmfn);
 
-			sl_append(augmentxyargs, "--pnm");
-			append_escape(augmentxyargs, ppmfn);
-			sl_append(augmentxyargs, "--force-ppm");
+            axy->pnmfn = ppmfn;
+            axy->force_ppm = TRUE;
 		}
 
-		sl_append(augmentxyargs, "--out");
-        append_escape(augmentxyargs, axyfn);
-		sl_append(augmentxyargs, "--match");
-        append_escape(augmentxyargs, matchfn);
-		sl_append(augmentxyargs, "--rdls");
-        append_escape(augmentxyargs, rdlsfn);
-		sl_append(augmentxyargs, "--solved");
-        append_escape(augmentxyargs, solvedfn);
-		sl_append(augmentxyargs, "--wcs");
-        append_escape(augmentxyargs, wcsfn);
-
-        if (solvedinfn) {
-            sl_append(augmentxyargs, "--solved-in");
-            append_escape(augmentxyargs, solvedinfn);
+        if (augment_xylist(axy, me)) {
+            ERROR("augment-xylist failed");
+            exit(-1);
         }
-
-		cmd = sl_implode(augmentxyargs, " ");
-        if (verbose)
-            printf("Running:\n  %s\n", cmd);
-        fflush(NULL);
-		if (run_command(cmd, &ctrlc)) {
-            fflush(NULL);
-            fprintf(stderr, "augment-xylist %s; exiting.\n",
-                    (ctrlc ? "was cancelled" : "failed"));
-			exit(-1);
-        }
-		free(cmd);
 
         if (makeplots) {
             // source extraction overlay
             // plotxy -i harvard.axy -I /tmp/pnm -C red -P -w 2 -N 50 | plotxy -w 2 -r 3 -I - -i harvard.axy -C red -n 50 > harvard-objs.png
             append_executable(cmdline, "plotxy", me);
             sl_append(cmdline, "-i");
-            append_escape(cmdline, axyfn);
-            if (image) {
+            append_escape(cmdline, axy->outfn);
+            if (axy->imagefn) {
                 sl_append(cmdline, "-I");
                 append_escape(cmdline, ppmfn);
             }
@@ -690,7 +667,7 @@ int main(int argc, char** args) {
 
             append_executable(cmdline, "plotxy", me);
             sl_append(cmdline, "-i");
-            append_escape(cmdline, axyfn);
+            append_escape(cmdline, axy->outfn);
             if (xcol) {
                 sl_append(cmdline, "-X");
                 append_escape(cmdline, xcol);
@@ -723,7 +700,7 @@ int main(int argc, char** args) {
             free(cmd);
         }
 
-		append_escape(backendargs, axyfn);
+		append_escape(backendargs, axy->outfn);
 		cmd = sl_implode(backendargs, " ");
         if (verbose)
             printf("Running:\n  %s\n", cmd);
@@ -732,13 +709,13 @@ int main(int argc, char** args) {
         fflush(NULL);
 		if (run_command_get_outputs(cmd, NULL, NULL)) {
             fflush(NULL);
-            ERROR("backend failed");
+            ERROR("backend failed.  Command that failed was:\n  %s", cmd);
 			exit(-1);
 		}
 		free(cmd);
         fflush(NULL);
 
-		if (!file_exists(solvedfn)) {
+		if (!file_exists(axy->solvedfn)) {
 			// boo hoo.
 			//printf("Field didn't solve.\n");
 		} else {
@@ -751,9 +728,9 @@ int main(int argc, char** args) {
             if (!verbose)
                 sl_append(cmdline, "-q");
 			sl_append(cmdline, "-w");
-			append_escape(cmdline, wcsfn);
+			append_escape(cmdline, axy->wcsfn);
 			sl_append(cmdline, "-i");
-			append_escape(cmdline, rdlsfn);
+			append_escape(cmdline, axy->rdlsfn);
 			sl_append(cmdline, "-o");
 			append_escape(cmdline, indxylsfn);
 
@@ -772,7 +749,7 @@ int main(int argc, char** args) {
 
 
             append_executable(cmdline, "wcsinfo", me);
-            append_escape(cmdline, wcsfn);
+            append_escape(cmdline, axy->wcsfn);
 
 			cmd = sl_implode(cmdline, " ");
 			sl_remove_all(cmdline);
@@ -840,8 +817,8 @@ int main(int argc, char** args) {
                 // sources + index overlay
                 append_executable(cmdline, "plotxy", me);
                 sl_append(cmdline, "-i");
-                append_escape(cmdline, axyfn);
-                if (image) {
+                append_escape(cmdline, axy->outfn);
+                if (axy->imagefn) {
                     sl_append(cmdline, "-I");
                     append_escape(cmdline, ppmfn);
                 }
@@ -861,15 +838,15 @@ int main(int argc, char** args) {
                 append_escape(cmdline, indxylsfn);
                 sl_append(cmdline, "-I - -w 2 -r 4 -C green -x 1 -y 1");
 
-                mf = matchfile_open(matchfn);
+                mf = matchfile_open(axy->matchfn);
                 if (!mf) {
-                    fprintf(stderr, "Failed to read matchfile %s.\n", matchfn);
+                    fprintf(stderr, "Failed to read matchfile %s.\n", axy->matchfn);
                     exit(-1);
                 }
                 // just read the first match...
                 mo = matchfile_read_match(mf);
                 if (!mo) {
-                    fprintf(stderr, "Failed to read a match from matchfile %s.\n", matchfn);
+                    fprintf(stderr, "Failed to read a match from matchfile %s.\n", axy->matchfn);
                     exit(-1);
                 }
 
@@ -901,14 +878,14 @@ int main(int argc, char** args) {
                 free(cmd);
             }
 
-            if (image && makeplots) {
+            if (axy->imagefn && makeplots) {
                 sl* lines;
 
                 append_executable(cmdline, "plot-constellations", me);
                 if (verbose)
                     sl_append(cmdline, "-v");
 				sl_append(cmdline, "-w");
-				append_escape(cmdline, wcsfn);
+				append_escape(cmdline, axy->wcsfn);
 				sl_append(cmdline, "-i");
 				append_escape(cmdline, ppmfn);
 				sl_append(cmdline, "-N");
@@ -943,7 +920,7 @@ int main(int argc, char** args) {
         fflush(NULL);
 
     nextfile:        // clean up and move on to the next file.
-        free(solvedinfn);
+        free(axy->solvedinfn);
 		for (i=0; i<sl_size(tempfiles); i++) {
 			char* fn = sl_get(tempfiles, i);
 			if (unlink(fn))
@@ -954,9 +931,10 @@ int main(int argc, char** args) {
 		sl_free2(tempfiles);
 	}
 
-	sl_free2(augmentxyargs);
 	sl_free2(backendargs);
     free(me);
+
+    augment_xylist_free_contents(allaxy);
 
 	return 0;
 }

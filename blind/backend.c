@@ -528,6 +528,7 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     //double default_image_fraction = 1.0;
     double default_codetol = 0.01;
 	double default_distractor_fraction = 0.25;
+    char* fn;
 
     blind_init(bp);
     // must be in this order because init_parameters handily zeros out sp
@@ -549,15 +550,23 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     sp->distractor_ratio = qfits_header_getdouble(hdr, "ANDISTR", default_distractor_fraction);
     sp->logratio_bail_threshold = log(1e-100);
 
-    blind_set_solved_file  (bp, fits_get_long_string(hdr, "ANSOLVED"));
-    blind_set_solvedin_file(bp, fits_get_long_string(hdr, "ANSOLVIN"));
-    blind_set_match_file   (bp, fits_get_long_string(hdr, "ANMATCH" ));
-    blind_set_rdls_file    (bp, fits_get_long_string(hdr, "ANRDLS"  ));
-    blind_set_wcs_file     (bp, fits_get_long_string(hdr, "ANWCS"   ));
-    blind_set_cancel_file  (bp, fits_get_long_string(hdr, "ANCANCEL"));
+    blind_set_solved_file  (bp, fn=fits_get_long_string(hdr, "ANSOLVED"));
+    free(fn);
+    blind_set_solvedin_file(bp, fn=fits_get_long_string(hdr, "ANSOLVIN"));
+    free(fn);
+    blind_set_match_file   (bp, fn=fits_get_long_string(hdr, "ANMATCH" ));
+    free(fn);
+    blind_set_rdls_file    (bp, fn=fits_get_long_string(hdr, "ANRDLS"  ));
+    free(fn);
+    blind_set_wcs_file     (bp, fn=fits_get_long_string(hdr, "ANWCS"   ));
+    free(fn);
+    blind_set_cancel_file  (bp, fn=fits_get_long_string(hdr, "ANCANCEL"));
+    free(fn);
 
-    blind_set_xcol(bp, fits_get_dupstring(hdr, "ANXCOL"));
-    blind_set_ycol(bp, fits_get_dupstring(hdr, "ANYCOL"));
+    blind_set_xcol(bp, fn=fits_get_dupstring(hdr, "ANXCOL"));
+    free(fn);
+    blind_set_ycol(bp, fn=fits_get_dupstring(hdr, "ANYCOL"));
+    free(fn);
 
     bp->timelimit = qfits_header_getint(hdr, "ANTLIM", 0);
     bp->cpulimit = qfits_header_getint(hdr, "ANCLIM", 0);
@@ -939,6 +948,7 @@ int main(int argc, char** args) {
 		if (!parse_job_from_qfits_header(hdr, job)) {
             continue;
         }
+        bp = &(job->bp);
 
         blind_set_field_file(bp, jobfn);
 
@@ -953,7 +963,6 @@ int main(int argc, char** args) {
 		}
 
         // The job can only decrease the CPU limit.
-        bp = &(job->bp);
         if (!bp->cpulimit || bp->cpulimit > backend->cpulimit)
             bp->cpulimit = backend->cpulimit;
 
@@ -979,6 +988,7 @@ int main(int argc, char** args) {
 			fprintf(stderr, "Failed to run_blind.\n");
 		}
 
+        blind_cleanup(bp);
 		//cleanup:
 		job_free(job);
 	}
