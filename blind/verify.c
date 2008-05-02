@@ -150,8 +150,8 @@ void verify_hit(startree* skdt,
 		for (i=0; i<dimquads; i++)
 			debug("%s%i", (i?", ":""), mo->field[i]);
 		debug("]\n");
-		fieldr = sqrt(fieldr2);
 		fieldarcsec = distsq2arcsec(fieldr2);
+		fieldr = sqrt(fieldr2);
 		debug("%g, %g\n", fieldr, fieldarcsec);
 	}
 

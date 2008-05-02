@@ -85,6 +85,11 @@ inline void radecdeg2xyzarr(double ra, double dec, double* xyz);
 inline void radecdegarr2xyzarr(double* radec, double* xyz);
 inline void radecdeg2xyzarrmany(double *ra, double *dec, double* xyz, int n);
 
+// Returns the distance-squared between two (RA,Dec)s in degrees.
+double distsq_between_radecdeg(double ra1, double dec1, double ra2, double dec2);
+
+// Returns the arcseconds between two (RA,Dec)s in degrees.
+double arcsec_between_radecdeg(double ra1, double dec1, double ra2, double dec2);
 
 // RA in degrees to Mercator X coordinate [0, 1).
 inline double ra2mercx(double ra);

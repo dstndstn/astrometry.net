@@ -52,7 +52,6 @@ pixels=UxV arcmin
 #include <unistd.h>
 #include <libgen.h>
 #include <errors.h>
-
 #include <getopt.h>
 
 #include "an-bool.h"
@@ -64,6 +63,10 @@ pixels=UxV arcmin
 #include "fitsioutils.h"
 #include "augment-xylist.h"
 #include "an-opts.h"
+#include "log.h"
+#include "errors.h"
+#include "sip_qfits.h"
+#include "sip-utils.h"
 
 static an_option_t options[] = {
 	{'h', "help",		   no_argument, NULL,
@@ -165,6 +168,8 @@ int main(int argc, char** args) {
     augment_xylist_t* allaxy = &theallaxy;
     int nmyopts;
     char* removeopts = "ixo\x01";
+
+    errors_print_on_exit(stderr);
 
     me = find_executable(args[0], NULL);
 
@@ -721,7 +726,10 @@ int main(int argc, char** args) {
 		} else {
 			matchfile* mf;
 			MatchObj* mo;
-            sl* lines;
+            sip_t wcs;
+            double ra, dec, fieldw, fieldh;
+            char rastr[32], decstr[32];
+            char* fieldunits;
 
 			// index rdls to xyls.
             append_executable(cmdline, "wcs-rd2xy", me);
@@ -747,71 +755,17 @@ int main(int argc, char** args) {
             }
 			free(cmd);
 
-
-            append_executable(cmdline, "wcsinfo", me);
-            append_escape(cmdline, axy->wcsfn);
-
-			cmd = sl_implode(cmdline, " ");
-			sl_remove_all(cmdline);
-            if (verbose)
-                printf("Running:\n  %s\n", cmd);
-            fflush(NULL);
-            if (run_command_get_outputs(cmd, &lines, NULL)) {
-                fflush(NULL);
-                ERROR("wcsinfo failed");
+            // print info about the field.
+            if (!sip_read_header_file(axy->wcsfn, &wcs)) {
+                ERROR("Failed to read WCS header from file %s", axy->wcsfn);
                 exit(-1);
             }
-			free(cmd);
-
-            if (lines) {
-                int i;
-                char* parity;
-                double rac, decc;
-                char* rahms=NULL;
-                char* decdms=NULL;
-                double fieldw, fieldh;
-                char* fieldunits = NULL;
-
-                for (i=0; i<sl_size(lines); i++) {
-                    char* line;
-                    char* nextword;
-                    line = sl_get(lines, i);
-                    if (is_word(line, "parity ", &nextword)) {
-                        if (nextword[0] == '1') {
-                            parity = "flipped";
-                        } else {
-                            parity = "normal";
-                        }
-                    } else if (is_word(line, "ra_center ", &nextword)) {
-                        rac = atof(nextword);
-                    } else if (is_word(line, "dec_center ", &nextword)) {
-                        decc = atof(nextword);
-                    } else if (is_word(line, "ra_center_hms ", &nextword)) {
-                        rahms = strdup(nextword);
-                    } else if (is_word(line, "dec_center_dms ", &nextword)) {
-                        decdms = strdup(nextword);
-                    } else if (is_word(line, "fieldw ", &nextword)) {
-                        fieldw = atof(nextword);
-                    } else if (is_word(line, "fieldh ", &nextword)) {
-                        fieldh = atof(nextword);
-                    } else if (is_word(line, "fieldunits ", &nextword)) {
-                        fieldunits = strdup(nextword);
-                    }
-                }
-
-                printf("Field center: (RA,Dec) = (%.4g, %.4g) deg.\n", rac, decc);
-                printf("Field center: (RA H:M:S, Dec D:M:S) = (%s, %s).\n", rahms, decdms);
-                printf("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
-
-                free(fieldunits);
-                free(rahms);
-                free(decdms);
-
-                sl_free2(lines);
-            }
-
-
-
+            sip_get_radec_center(&wcs, &ra, &dec);
+            sip_get_radec_center_hms_string(&wcs, rastr, decstr);
+            sip_get_field_size(&wcs, &fieldw, &fieldh, &fieldunits);
+            printf("Field center: (RA,Dec) = (%.4g, %.4g) deg.\n", ra, dec);
+            printf("Field center: (RA H:M:S, Dec D:M:S) = (%s, %s).\n", rastr, decstr);
+            printf("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
 
             if (makeplots) {
                 // sources + index overlay

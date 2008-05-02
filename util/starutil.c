@@ -70,6 +70,20 @@ inline void radec2xyz(double ra, double dec,
 	*z = sin(dec);
 }
 
+double distsq_between_radecdeg(double ra1, double dec1,
+                               double ra2, double dec2) {
+    double xyz1[3];
+    double xyz2[3];
+    radecdeg2xyzarr(ra1, dec1, xyz1);
+    radecdeg2xyzarr(ra2, dec2, xyz2);
+    return distsq(xyz1, xyz2, 3);
+}
+
+double arcsec_between_radecdeg(double ra1, double dec1,
+                               double ra2, double dec2) {
+    return distsq2arcsec(distsq_between_radecdeg(ra1, dec1, ra2, dec2));
+}
+
 inline void radecdeg2xyz(double ra, double dec,
 						 double* x, double* y, double* z) {
 	radec2xyz(deg2rad(ra), deg2rad(dec), x, y, z);

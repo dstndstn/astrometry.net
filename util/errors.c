@@ -23,8 +23,10 @@
 
 #include "errors.h"
 #include "ioutils.h"
+#include "an-bool.h"
 
 static pl* estack = NULL;
+static bool atexit_registered = FALSE;
 
 static err_t* error_copy(err_t* e) {
     err_t* copy = error_new();
@@ -35,9 +37,32 @@ static err_t* error_copy(err_t* e) {
     return copy;
 }
 
+static FILE* print_errs_fid;
+static void print_errs(void) {
+    FILE* fid = print_errs_fid;
+    fprintf(fid, "Error traceback:\n");
+    errors_print_stack(fid);
+}
+
+int errors_print_on_exit(FILE* fid) {
+    err_t* e;
+    errors_push_state();
+    e = errors_get_state();
+    e->save = TRUE;
+    e->print = NULL;
+    print_errs_fid = fid;
+    return atexit(print_errs);
+}
+
 err_t* errors_get_state() {
-    if (!estack)
+    if (!estack) {
         estack = pl_new(4);
+        // register an atexit() function to clean up.
+        if (!atexit_registered) {
+            if (atexit(errors_free) == 0)
+                atexit_registered = TRUE;
+        }
+    } 
     if (!pl_size(estack)) {
         err_t* e = error_new();
         e->print = stderr;
@@ -48,11 +73,14 @@ err_t* errors_get_state() {
 
 void errors_free() {
     int i;
+    if (!estack)
+        return;
     for (i=0; i<pl_size(estack); i++) {
         err_t* e = pl_get(estack, i);
         error_free(e);
     }
     pl_free(estack);
+    estack = NULL;
 }
 
 void errors_push_state() {
@@ -136,9 +164,12 @@ void error_reportv(err_t* e, const char* module, int line, const char* fmt, va_l
 
 void error_print_stack(err_t* e, FILE* f) {
     int i;
-    for (i=0; i<sl_size(e->modstack); i++) {
+    //for (i=0; i<sl_size(e->modstack); i++) {
+    for (i=sl_size(e->modstack)-1; i>=0; i--) {
         char* mod = sl_get(e->modstack, i);
         char* err = sl_get(e->errstack, i);
+        if (i < sl_size(e->modstack)-1)
+            fprintf(f, "  ");
         fprintf(f, "%s: %s\n", mod, err);
     }
 }

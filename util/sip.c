@@ -39,7 +39,7 @@ void sip_free(sip_t* sip) {
 }
 
 // Pixels to RA,Dec in degrees.
-void sip_pixelxy2radec(sip_t* sip, double px, double py,
+void sip_pixelxy2radec(const sip_t* sip, double px, double py,
 					   double *ra, double *dec)
 {
 	double U, V;
@@ -54,14 +54,14 @@ void sip_pixelxy2radec(sip_t* sip, double px, double py,
 }
 
 // Pixels to XYZ unit vector.
-void sip_pixelxy2xyzarr(sip_t* sip, double px, double py, double *xyz) {
+void sip_pixelxy2xyzarr(const sip_t* sip, double px, double py, double *xyz) {
 	double ra, dec;
 	sip_pixelxy2radec(sip, px, py, &ra, &dec);
 	radecdeg2xyzarr(ra, dec, xyz);
 }
 
 // Pixels to RA,Dec in degrees.
-void tan_pixelxy2radec(tan_t* tan, double px, double py, double *ra, double *dec)
+void tan_pixelxy2radec(const tan_t* tan, double px, double py, double *ra, double *dec)
 {
 	double xyz[3];
 	tan_pixelxy2xyzarr(tan, px, py, xyz);
@@ -69,7 +69,7 @@ void tan_pixelxy2radec(tan_t* tan, double px, double py, double *ra, double *dec
 }
 
 // Pixels to XYZ unit vector.
-void tan_pixelxy2xyzarr(tan_t* tan, double px, double py, double *xyz)
+void tan_pixelxy2xyzarr(const tan_t* tan, double px, double py, double *xyz)
 {
 	double rx, ry, rz;
 	double ix,iy,norm;
@@ -127,7 +127,7 @@ void tan_pixelxy2xyzarr(tan_t* tan, double px, double py, double *xyz)
 }
 
 // RA,Dec in degrees to Pixels.
-bool sip_radec2pixelxy(sip_t* sip, double ra, double dec, double *px, double *py)
+bool sip_radec2pixelxy(const sip_t* sip, double ra, double dec, double *px, double *py)
 {
 	double u, v;
 	double U, V;
@@ -154,7 +154,7 @@ bool sip_radec2pixelxy(sip_t* sip, double ra, double dec, double *px, double *py
 }
 
 // RA,Dec in degrees to Pixels.
-bool sip_radec2pixelxy_check(sip_t* sip, double ra, double dec, double *px, double *py) {
+bool sip_radec2pixelxy_check(const sip_t* sip, double ra, double dec, double *px, double *py) {
 	double u, v;
 	double U, V;
 	double U2, V2;
@@ -179,14 +179,14 @@ bool sip_radec2pixelxy_check(sip_t* sip, double ra, double dec, double *px, doub
 	return TRUE;
 }
 
-bool sip_xyzarr2pixelxy(sip_t* sip, const double* xyz, double *px, double *py) {
+bool sip_xyzarr2pixelxy(const sip_t* sip, const double* xyz, double *px, double *py) {
 	double ra, dec;
 	xyzarr2radecdeg(xyz, &ra, &dec);
 	return sip_radec2pixelxy(sip, ra, dec, px, py);
 }
 
 // xyz unit vector to Pixels.
-bool   tan_xyzarr2pixelxy(tan_t* tan, double* xyzpt, double *px, double *py)
+bool   tan_xyzarr2pixelxy(const tan_t* tan, double* xyzpt, double *px, double *py)
 {
 	double x,y,U,V;
 	double xyzcrval[3];
@@ -230,14 +230,14 @@ bool   tan_xyzarr2pixelxy(tan_t* tan, double* xyzpt, double *px, double *py)
 }
 
 // RA,Dec in degrees to Pixels.
-bool tan_radec2pixelxy(tan_t* tan, double a, double d, double *px, double *py)
+bool tan_radec2pixelxy(const tan_t* tan, double a, double d, double *px, double *py)
 {
 	double xyzpt[3];
 	radecdeg2xyzarr(a,d,xyzpt);
 	return tan_xyzarr2pixelxy(tan, xyzpt, px, py);
 }
 
-void sip_calc_distortion(sip_t* sip, double u, double v, double* U, double *V)
+void sip_calc_distortion(const sip_t* sip, double u, double v, double* U, double *V)
 {
 	// Do SIP distortion (in relative pixel coordinates)
 	// See the sip_t struct definition in header file for details
@@ -256,7 +256,7 @@ void sip_calc_distortion(sip_t* sip, double u, double v, double* U, double *V)
 	*V = v + guv;
 }
 
-void sip_calc_inv_distortion(sip_t* sip, double U, double V, double* u, double *v)
+void sip_calc_inv_distortion(const sip_t* sip, double U, double V, double* u, double *v)
 {
 	int p, q;
 	double fUV=0.;
@@ -272,25 +272,25 @@ void sip_calc_inv_distortion(sip_t* sip, double U, double V, double* u, double *
 	*v = V + gUV;
 }
 
-double tan_det_cd(tan_t* tan) {
+double tan_det_cd(const tan_t* tan) {
 	return (tan->cd[0][0]*tan->cd[1][1] - tan->cd[0][1]*tan->cd[1][0]);
 }
 
-double sip_det_cd(sip_t* sip) {
+double sip_det_cd(const sip_t* sip) {
 	return tan_det_cd(&(sip->wcstan));
 }
 
-double tan_pixel_scale(tan_t* tan) {
+double tan_pixel_scale(const tan_t* tan) {
 	double scale = deg2arcsec(sqrt(fabs(tan_det_cd(tan))));
 	return scale;
 }
 
 // returns pixel scale in arcseconds (NOT arcsec^2)
-double sip_pixel_scale(sip_t* sip) {
+double sip_pixel_scale(const sip_t* sip) {
 	return tan_pixel_scale(&(sip->wcstan));
 }
 
-void sip_print_to(sip_t* sip, FILE* f) {
+void sip_print_to(const sip_t* sip, FILE* f) {
    double det,pixsc;
 
 	fprintf(f,"SIP Structure:\n");
@@ -330,6 +330,6 @@ void sip_print_to(sip_t* sip, FILE* f) {
 	//fprintf(f,"\n");
 }
 
-void sip_print(sip_t* sip) {
+void sip_print(const sip_t* sip) {
 	sip_print_to(sip, stderr);
 }

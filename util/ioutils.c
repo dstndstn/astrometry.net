@@ -273,7 +273,7 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
                     ERROR("Command not found: %s", cmd);
 					return exitval;
 				} else if (exitval) {
-                    SYSERROR("Command failed: return value %i", exitval);
+                    ERROR("Command failed: return value %i", exitval);
 					return exitval;
 				}
 			}

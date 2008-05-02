@@ -29,7 +29,6 @@
 #include "sip_qfits.h"
 #include "starutil.h"
 #include "mathutil.h"
-#include "boilerplate.h"
 
 const char* OPTIONS = "h";
 
@@ -60,6 +59,8 @@ int main(int argc, char** args) {
 	//double mxlo, mxhi, mylo, myhi;
 	double dm;
 	int merczoom;
+    char rastr[32];
+    char decstr[32];
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1) {
 		switch (argchar) {
@@ -110,21 +111,21 @@ int main(int argc, char** args) {
 	orient = -rad2deg(atan2(A, T));
 	printf("orientation %.8g\n", orient);
 
-	sip_pixelxy2radec(&wcs, imw/2, imh/2, &rac, &decc);
-
+    sip_get_radec_center(&wcs, &rac, &decc);
 	printf("ra_center %.12g\n", rac);
 	printf("dec_center %.12g\n", decc);
 
-    ra2hms(rac, &rah, &ram, &ras);
-    dec2dms(decc, &decd, &decm, &decs);
+    sip_get_radec_center_hms(&wcs, &rah, &ram, &ras, &decd, &decm, &decs);
     printf("ra_center_h %i\n", rah);
     printf("ra_center_m %i\n", ram);
     printf("ra_center_s %.12g\n", ras);
-    printf("ra_center_hms %02i:%02i:%2.3g\n", rah, ram, ras);
     printf("dec_center_d %i\n", decd);
     printf("dec_center_m %i\n", decm);
     printf("dec_center_s %.12g\n", decs);
-    printf("dec_center_dms %+02i:%02i:%2.3g\n", decd, decm, decs);
+
+    sip_get_radec_center_hms_string(&wcs, rastr, decstr);
+    printf("ra_center_hms %s\n", rastr);
+    printf("dec_center_dms %s\n", decstr);
 
 	// mercator
 	printf("ra_center_merc %.8g\n", ra2mercx(rac));
@@ -135,21 +136,12 @@ int main(int argc, char** args) {
     // area of the field, in square degrees.
     printf("fieldarea %g\n", (arcsec2deg(fldw) * arcsec2deg(fldh)));
 
-    units = "arcseconds";
-    if (MIN(fldw, fldh) > 3600.0) {
-        fldw /= 3600.0;
-        fldh /= 3600.0;
-        units = "degrees";
-    } else if (MIN(fldw, fldh) > 60.0) {
-        fldw /= 60.0;
-        fldh /= 60.0;
-        units = "arcminutes";
-    }
+    sip_get_field_size(&wcs, &fldw, &fldh, &units);
     printf("fieldw %.4g\n", fldw);
     printf("fieldh %.4g\n", fldh);
     printf("fieldunits %s\n", units);
 
-    get_radec_bounds(&wcs, 10, &ramin, &ramax, &decmin, &decmax);
+    sip_get_radec_bounds(&wcs, 10, &ramin, &ramax, &decmin, &decmax);
     printf("decmin %g\n", decmin);
     printf("decmax %g\n", decmax);
     printf("ramin %g\n", ramin);

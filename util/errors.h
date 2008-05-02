@@ -61,6 +61,8 @@ void errors_free();
 
 void errors_print_stack(FILE* f);
 
+int errors_print_on_exit(FILE* fid);
+
 /***    End globals   ***/
 
 

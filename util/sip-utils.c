@@ -19,6 +19,8 @@
 #include <sys/param.h>
 
 #include "sip-utils.h"
+#include "starutil.h"
+#include "mathutil.h"
 
 static double fmod_pos(double a, double b) {
     double fm = fmod(a, b);
@@ -35,9 +37,74 @@ static double unshift(double ra) {
     return fmod_pos(ra - 180.0, 360.0);
 }
 
-void get_radec_bounds(sip_t* wcs, int stepsize,
-                      double* pramin, double* pramax,
-                      double* pdecmin, double* pdecmax) {
+void sip_get_radec_center(const sip_t* wcs,
+                          double* p_ra, double* p_dec) {
+    double px = (wcs->wcstan.imagew + 1.0) / 2.0;
+    double py = (wcs->wcstan.imageh + 1.0) / 2.0;
+	sip_pixelxy2radec(wcs, px, py, p_ra, p_dec);
+}
+
+void sip_get_radec_center_hms(const sip_t* wcs,
+                              int* rah, int* ram, double* ras,
+                              int* decd, int* decm, double* decs) {
+    double ra, dec;
+    sip_get_radec_center(wcs, &ra, &dec);
+    ra2hms(ra, rah, ram, ras);
+    dec2dms(dec, decd, decm, decs);
+}
+
+void sip_get_radec_center_hms_string(const sip_t* wcs,
+                                     char* rastr, char* decstr) {
+    int rah, ram, decd, decm;
+    double ras, decs;
+    sip_get_radec_center_hms(wcs, &rah, &ram, &ras, &decd, &decm, &decs);
+    sprintf(rastr, "%02i:%02i:%2.3g", rah, ram, ras);
+    sprintf(decstr, "%+02i:%02i:%2.3g", decd, decm, decs);
+}
+
+void sip_get_field_size(const sip_t* wcs,
+                        double* pw, double* ph,
+                        char** units) {
+    double minx = 0.5;
+    double maxx = (wcs->wcstan.imagew + 0.5);
+    double midx = (minx + maxx) / 2.0;
+    double miny = 0.5;
+    double maxy = (wcs->wcstan.imageh + 0.5);
+    double midy = (miny + maxy) / 2.0;
+    double ra1, dec1, ra2, dec2, ra3, dec3;
+    double w, h;
+
+    // measure width through the middle
+	sip_pixelxy2radec(wcs, minx, midy, &ra1, &dec1);
+	sip_pixelxy2radec(wcs, midx, midy, &ra2, &dec2);
+	sip_pixelxy2radec(wcs, maxx, midy, &ra3, &dec3);
+    w = arcsec_between_radecdeg(ra1, dec1, ra2, dec2) +
+        arcsec_between_radecdeg(ra2, dec2, ra3, dec3);
+    // measure height through the middle
+	sip_pixelxy2radec(wcs, midx, miny, &ra1, &dec1);
+	sip_pixelxy2radec(wcs, midx, midy, &ra2, &dec2);
+	sip_pixelxy2radec(wcs, midx, maxy, &ra3, &dec3);
+    h = arcsec_between_radecdeg(ra1, dec1, ra2, dec2) +
+        arcsec_between_radecdeg(ra2, dec2, ra3, dec3);
+
+    if (MIN(w, h) < 60.0) {
+        *units = "arcseconds";
+        *pw = w;
+        *ph = h;
+    } else if (MIN(w, h) < 3600.0) {
+        *units = "arcminutes";
+        *pw = w / 60.0;
+        *ph = h / 60.0;
+    } else {
+        *units = "degrees";
+        *pw = w / 3600.0;
+        *ph = h / 3600.0;
+    }
+}
+
+void sip_get_radec_bounds(const sip_t* wcs, int stepsize,
+                          double* pramin, double* pramax,
+                          double* pdecmin, double* pdecmax) {
     double ramin, ramax, decmin, decmax;
     int i, side;
     // Walk the perimeter of the image in steps of stepsize pixels

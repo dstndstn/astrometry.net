@@ -783,10 +783,8 @@ int main(int argc, char** args) {
 
         sip_pixelxy2radec(&sip, W/(2.0*scale), H/(2.0*scale), &rac, &decc);
         sip_pixelxy2radec(&sip, 0.0, 0.0, &ra2, &dec2);
-        radecdeg2xyzarr(rac, decc, xyz1);
-        radecdeg2xyzarr(ra2, dec2, xyz2);
-        r2 = distsq(xyz1, xyz2, 3);
         // Fudge
+        r2 = distsq_between_radecdeg(rec, decc, ra2, dec2);
         r2 *= 1.2;
         arcsec = distsq2arcsec(r2);
         hdlist = henry_draper_get(hdcat, rac, decc, arcsec);

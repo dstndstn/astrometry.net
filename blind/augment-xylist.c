@@ -51,6 +51,7 @@
 #include "qfits.h"
 #include "an-opts.h"
 #include "augment-xylist.h"
+#include "log.h"
 
 void augment_xylist_init(augment_xylist_t* axy) {
     memset(axy, 0, sizeof(augment_xylist_t));
@@ -241,13 +242,13 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         break;
     case 'F':
         if (parse_fields_string(axy->fields, optarg)) {
-            fprintf(stderr, "Failed to parse fields specification \"%s\".\n", optarg);
+            ERROR("Failed to parse fields specification \"%s\"", optarg);
             return -1;
         }
         break;
     case 'd':
         if (parse_depth_string(axy->depths, optarg)) {
-            fprintf(stderr, "Failed to parse depth specification: \"%s\"\n", optarg);
+            ERROR("Failed to parse depth specification: \"%s\"", optarg);
             return -1;
         }
         break;
@@ -320,7 +321,7 @@ static void append_escape(sl* list, const char* fn) {
 static void append_executable(sl* list, const char* fn, const char* me) {
     char* exec = find_executable(fn, me);
     if (!exec) {
-        fprintf(stderr, "Error, couldn't find executable \"%s\".\n", fn);
+        ERROR("Couldn't find executable \"%s\"", fn);
         exit(-1);
     }
     sl_append_nocopy(list, shell_escape(exec));
@@ -330,8 +331,7 @@ static void append_executable(sl* list, const char* fn, const char* me) {
 static sl* backtick(sl* cmd, bool verbose) {
     char* cmdstr = sl_implode(cmd, " ");
     sl* lines;
-    if (verbose)
-        printf("Running: %s\n", cmdstr);
+    logverb("Running: %s\n", cmdstr);
     if (run_command_get_outputs(cmdstr, &lines, NULL)) {
         free(cmdstr);
         ERROR("Failed to run %s", sl_get(cmd, 0));
@@ -416,8 +416,7 @@ int augment_xylist(augment_xylist_t* axy,
 		isfits = FALSE;
         iscompressed = FALSE;
 		for (i=0; i<sl_size(lines); i++) {
-            if (verbose)
-                printf("  %s\n", sl_get(lines, i));
+            logverb("  %s\n", sl_get(lines, i));
 			if (!strcmp("fits", sl_get(lines, i)))
 				isfits = TRUE;
 			if (!strcmp("compressed", sl_get(lines, i)))
@@ -432,19 +431,19 @@ int augment_xylist(augment_xylist_t* axy,
         lines = backtick(cmd, verbose);
 
 		if (sl_size(lines) == 0) {
-			fprintf(stderr, "No output from pnmfile.\n");
+			ERROR("Got no output from the \"pnmfile\" program.");
 			exit(-1);
 		}
 		line = sl_get(lines, 0);
 		// eg	"/tmp/pnm:	 PPM raw, 800 by 510  maxval 255"
 		if (strlen(pnmfn) + 1 >= strlen(line)) {
-			fprintf(stderr, "Failed to parse output from pnmfile: %s\n", line);
+			ERROR("Failed to parse output from pnmfile: \"%s\"", line);
 			exit(-1);
 		}
 		line += strlen(pnmfn) + 1;
 		if (sscanf(line, " P%cM %255s %d by %d maxval %d",
 				   &pnmtype, typestr, &axy->W, &axy->H, &maxval) != 5) {
-			fprintf(stderr, "Failed to parse output from pnmfile: %s\n", line);
+			ERROR("Failed to parse output from pnmfile: \"%s\"\n", line);
 			exit(-1);
 		}
 		sl_free2(lines);
@@ -463,8 +462,7 @@ int augment_xylist(augment_xylist_t* axy,
                 fits_guess_scale(fitsimgfn, NULL, &estscales);
 				for (i=0; i<dl_size(estscales); i++) {
 					double scale = dl_get(estscales, i);
-                    if (verbose)
-                        printf("Scale estimate: %g\n", scale);
+                    logverb("Scale estimate: %g\n", scale);
                     dl_append(axy->scales, scale * 0.99);
                     dl_append(axy->scales, scale * 1.01);
                     guessed_scale = TRUE;
@@ -477,8 +475,7 @@ int augment_xylist(augment_xylist_t* axy,
             sl_append_nocopy(tempfiles, fitsimgfn);
             
 			if (pnmtype == 'P') {
-                if (verbose)
-                    printf("Converting PPM image to FITS...\n");
+                logverb("Converting PPM image to FITS...\n");
 
                 sl_append(cmd, "ppmtopgm");
                 append_escape(cmd, pnmfn);
@@ -488,8 +485,7 @@ int augment_xylist(augment_xylist_t* axy,
                 run(cmd, verbose);
 
 			} else {
-                if (verbose)
-                    printf("Converting PGM image to FITS...\n");
+                logverb("Converting PGM image to FITS...\n");
 
                 sl_append(cmd, "pnmtofits");
                 append_escape(cmd, pnmfn);
@@ -500,12 +496,11 @@ int augment_xylist(augment_xylist_t* axy,
 			}
 		}
 
-        printf("Extracting sources...\n");
+        logmsg("Extracting sources...\n");
         xylsfn = create_temp_file("xyls", axy->tempdir);
         sl_append_nocopy(tempfiles, xylsfn);
 
-        if (verbose)
-            printf("Running image2xy: input=%s, output=%s\n", fitsimgfn, xylsfn);
+        logverb("Running image2xy: input=%s, output=%s\n", fitsimgfn, xylsfn);
 
         // we have to delete the temp file because otherwise image2xy is too timid to overwrite it.
         if (unlink(xylsfn)) {
@@ -567,9 +562,8 @@ int augment_xylist(augment_xylist_t* axy,
             resort_xylist(xylsfn, sortedxylsfn, axy->sortcol, NULL, axy->sort_ascending);
 
         } else {
-            if (verbose)
-                printf("Running tabsort: input=%s, output=%s, column=%s.\n",
-                       xylsfn, sortedxylsfn, axy->sortcol);
+            logverb("Running tabsort: input=%s, output=%s, column=%s.\n",
+                    xylsfn, sortedxylsfn, axy->sortcol);
             tabsort(xylsfn, sortedxylsfn, axy->sortcol, !axy->sort_ascending);
         }
 
@@ -583,7 +577,7 @@ int augment_xylist(augment_xylist_t* axy,
 	// start piling FITS headers in there.
 	hdr = qfits_header_read(xylsfn);
 	if (!hdr) {
-		fprintf(stderr, "Failed to read FITS header from file %s.\n", xylsfn);
+		ERROR("Failed to read FITS header from file %s", xylsfn);
 		exit(-1);
 	}
 
@@ -603,7 +597,7 @@ int augment_xylist(augment_xylist_t* axy,
             qfits_header_destroy(hdr2);
         }
         if (!(axy->W && axy->H)) {
-            fprintf(stderr, "Error: image width and height must be specified for XYLS inputs.\n");
+            ERROR("Error: image width and height must be specified for XYLS inputs");
             exit(-1);
         }
     }
@@ -712,7 +706,7 @@ int augment_xylist(augment_xylist_t* axy,
 
         fn = sl_get(axy->verifywcs, i);
         if (!sip_read_header_file(fn, &sip)) {
-            fprintf(stderr, "Failed to parse WCS header from file \"%s\".\n", fn);
+            ERROR("Failed to parse WCS header from file \"%s\"", fn);
             continue;
         }
         I++;
@@ -767,15 +761,14 @@ int augment_xylist(augment_xylist_t* axy,
 
 	fout = fopen(axy->outfn, "wb");
 	if (!fout) {
-		fprintf(stderr, "Failed to open output file: %s\n", strerror(errno));
+		SYSERROR("Failed to open output file %s", axy->outfn);
 		exit(-1);
 	}
 
-    if (verbose)
-        printf("Writing headers to file %s.\n", axy->outfn);
+    logverb("Writing headers to file %s\n", axy->outfn);
 
 	if (qfits_header_dump(hdr, fout)) {
-		fprintf(stderr, "Failed to write FITS header.\n");
+		ERROR("Failed to write FITS header");
 		exit(-1);
 	}
     qfits_header_destroy(hdr);
@@ -787,25 +780,24 @@ int augment_xylist(augment_xylist_t* axy,
 		int nb;
 		struct stat st;
 
-        if (verbose)
-            printf("Copying body of file %s to output %s.\n", xylsfn, axy->outfn);
+        logverb("Copying body of file %s to output %s.\n", xylsfn, axy->outfn);
 
 		start = fits_blocks_needed(orig_nheaders * FITS_LINESZ) * FITS_BLOCK_SIZE;
 
 		if (stat(xylsfn, &st)) {
-			fprintf(stderr, "Failed to stat() xyls file \"%s\": %s\n", xylsfn, strerror(errno));
+			SYSERROR("Failed to stat() xyls file \"%s\"", xylsfn);
 			exit(-1);
 		}
 		nb = st.st_size;
 
 		fin = fopen(xylsfn, "rb");
 		if (!fin) {
-			fprintf(stderr, "Failed to open xyls file \"%s\": %s\n", xylsfn, strerror(errno));
+			SYSERROR("Failed to open xyls file \"%s\"", xylsfn);
 			exit(-1);
 		}
 
         if (pipe_file_offset(fin, start, nb - start, fout)) {
-            fprintf(stderr, "Failed to copy the data segment of xylist file %s to %s.\n", xylsfn, axy->outfn);
+            ERROR("Failed to copy the data segment of xylist file %s to %s", xylsfn, axy->outfn);
             exit(-1);
         }
 		fclose(fin);
@@ -816,7 +808,7 @@ int augment_xylist(augment_xylist_t* axy,
 	for (i=0; i<sl_size(tempfiles); i++) {
 		char* fn = sl_get(tempfiles, i);
 		if (unlink(fn)) {
-			fprintf(stderr, "Failed to delete temp file \"%s\": %s.\n", fn, strerror(errno));
+			SYSERROR("Failed to delete temp file \"%s\"", fn);
 		}
 	}
 
@@ -840,15 +832,15 @@ static int parse_fields_string(il* fields, const char* str) {
             sscanf(str, "%*u%n", &nread);
             hi = lo;
         } else {
-            fprintf(stderr, "Failed to parse fragment: \"%s\"\n", str);
+            ERROR("Failed to parse fragment: \"%s\"", str);
             return -1;
         }
         if (lo <= 0) {
-            fprintf(stderr, "Field number %i is invalid: must be >= 1.\n", lo);
+            ERROR("Field number %i is invalid: must be >= 1.", lo);
             return -1;
         }
         if (lo > hi) {
-            fprintf(stderr, "Field range %i to %i is invalid: max must be >= min!\n", lo, hi);
+            ERROR("Field range %i to %i is invalid: max must be >= min!", lo, hi);
             return -1;
         }
         il_append(fields, lo);
