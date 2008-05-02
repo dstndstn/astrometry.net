@@ -301,8 +301,10 @@ wcs-annotate: wcs-annotate.o ngc2000.o \
 wcs-xy2rd: wcs-xy2rd.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-wcs-rd2xy: wcs-rd2xy.o $(UTIL_OBJS) \
+wcs-rd2xy: wcs-rd2xy-main.o wcs-rd2xy.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
+ALL_OBJ += wcs-rd2xy-main.o
 
 noisesim: noisesim.o noise.o $(ANUTILS_LIB)
 
@@ -379,7 +381,7 @@ backend: backend.o scriptutils.o blind.o solver.o codekd.o \
 
 solve-field: solve-field.o augment-xylist.o scriptutils.o matchfile.o \
 		fileutil.o image2xy.o resort-xylist.o tabsort.o \
-		fits-guess-scale.o svn.o log.o \
+		fits-guess-scale.o wcs-rd2xy.o svn.o log.o \
 		$(SIMPLEXY2_OBJ) $(CFITS_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 

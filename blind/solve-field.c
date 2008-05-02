@@ -67,6 +67,7 @@ pixels=UxV arcmin
 #include "errors.h"
 #include "sip_qfits.h"
 #include "sip-utils.h"
+#include "wcs-rd2xy.h"
 
 static an_option_t options[] = {
 	{'h', "help",		   no_argument, NULL,
@@ -732,28 +733,11 @@ int main(int argc, char** args) {
             char* fieldunits;
 
 			// index rdls to xyls.
-            append_executable(cmdline, "wcs-rd2xy", me);
-            if (!verbose)
-                sl_append(cmdline, "-q");
-			sl_append(cmdline, "-w");
-			append_escape(cmdline, axy->wcsfn);
-			sl_append(cmdline, "-i");
-			append_escape(cmdline, axy->rdlsfn);
-			sl_append(cmdline, "-o");
-			append_escape(cmdline, indxylsfn);
-
-			cmd = sl_implode(cmdline, " ");
-			sl_remove_all(cmdline);
-            if (verbose)
-                printf("Running:\n  %s\n", cmd);
-            fflush(NULL);
-			if (run_command(cmd, &ctrlc)) {
-                fflush(NULL);
-                fprintf(stderr, "wcs-rd2xy %s; exiting.\n",
-                        (ctrlc ? "was cancelled" : "failed"));
-				exit(-1);
+            if (wcs_rd2xy(axy->wcsfn, axy->rdlsfn, indxylsfn,
+                          NULL, NULL, FALSE, NULL)) {
+                ERROR("Failed to project index stars into field coordinates using wcs-rd2xy");
+                exit(-1);
             }
-			free(cmd);
 
             // print info about the field.
             if (!sip_read_header_file(axy->wcsfn, &wcs)) {
