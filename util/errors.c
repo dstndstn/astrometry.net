@@ -54,6 +54,15 @@ int errors_print_on_exit(FILE* fid) {
     return atexit(print_errs);
 }
 
+void errors_clear_stack() {
+    error_clear_stack(errors_get_state());
+}
+
+void error_clear_stack(err_t* e) {
+    sl_remove_all(e->modstack);
+    sl_remove_all(e->errstack);
+}
+
 err_t* errors_get_state() {
     if (!estack) {
         estack = pl_new(4);

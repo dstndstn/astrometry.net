@@ -109,10 +109,12 @@ static void print_help(const char* progname, bl* opts) {
 
 static int run_command(const char* cmd, bool* ctrlc) {
 	int rtn;
-	//printf("Running command:\n  %s\n", cmd);
+    logverb("Running: %s\n", cmd);
+    fflush(NULL);
 	rtn = system(cmd);
+    fflush(NULL);
 	if (rtn == -1) {
-		fprintf(stderr, "Failed to run command: %s\n", strerror(errno));
+		SYSERROR("Failed to run command \"%s\"", cmd);
 		return -1;
 	}
 	if (WIFSIGNALED(rtn)) {
@@ -121,9 +123,8 @@ static int run_command(const char* cmd, bool* ctrlc) {
 		return -1;
 	}
 	rtn = WEXITSTATUS(rtn);
-	if (rtn) {
-		fprintf(stderr, "Command exited with exit status %i.\n", rtn);
-	}
+	if (rtn)
+		ERROR("Command exited with exit status %i", rtn);
 	return rtn;
 }
 
@@ -133,7 +134,7 @@ static void append_escape(sl* list, const char* fn) {
 static void append_executable(sl* list, const char* fn, const char* me) {
     char* exec = find_executable(fn, me);
     if (!exec) {
-        fprintf(stderr, "Error, couldn't find executable \"%s\".\n", fn);
+        ERROR("Error, couldn't find executable \"%s\"", fn);
         exit(-1);
     }
     sl_append_nocopy(list, shell_escape(exec));
@@ -171,6 +172,7 @@ int main(int argc, char** args) {
     char* removeopts = "ixo\x01";
 
     errors_print_on_exit(stderr);
+    fits_use_error_system();
 
     me = find_executable(args[0], NULL);
 
@@ -300,6 +302,7 @@ int main(int argc, char** args) {
         bool ctrlc;
         augment_xylist_t theaxy;
         augment_xylist_t* axy = &theaxy;
+        int j;
 
         // reset augment-xylist args.
         memcpy(axy, allaxy, sizeof(augment_xylist_t));
@@ -308,20 +311,20 @@ int main(int argc, char** args) {
             char fnbuf[1024];
 			if (!fgets(fnbuf, sizeof(fnbuf), stdin)) {
 				if (ferror(stdin))
-					fprintf(stderr, "Failed to read a filename!\n");
+					SYSERROR("Failed to read a filename from stdin");
 				break;
 			}
 			len = strlen(fnbuf);
 			if (fnbuf[len-1] == '\n')
 				fnbuf[len-1] = '\0';
 			infile = fnbuf;
-            printf("Reading input file \"%s\"...\n", infile);
+            logmsg("Reading input file \"%s\"...\n", infile);
 		} else {
 			if (f == argc)
 				break;
 			infile = args[f];
 			f++;
-            printf("Reading input file %i of %i: \"%s\"...\n",
+            logmsg("Reading input file %i of %i: \"%s\"...\n",
                    f - optind, argc - optind, infile);
 		}
         inputnum++;
@@ -342,15 +345,14 @@ int main(int argc, char** args) {
 			base = strdup(basename(cpy));
 		free(cpy);
 		len = strlen(base);
-		// trim .xxx / .xxxx
+		// trim .xx / .xxx / .xxxx
 		if (len > 4) {
-			if (base[len - 4] == '.') {
-				base[len-4] = '\0';
-                suffix = base + len - 3;
-            }
-			if (base[len - 5] == '.') {
-				base[len-5] = '\0';
-                suffix = base + len - 4;
+            for (j=3; j<=5; j++) {
+                if (base[len - j] == '.') {
+                    base[len - j] = '\0';
+                    suffix = base + len - j + 1;
+                    break;
+                }
             }
 		}
 
@@ -396,19 +398,15 @@ int main(int argc, char** args) {
 		base = NULL;
 
         if (skip_solved) {
-            if (axy->solvedinfn) {
-                if (verbose)
-                    printf("Checking for solved file %s\n", axy->solvedinfn);
+            char* tocheck[] = { axy->solvedinfn, axy->solvedfn };
+            for (j=0; j<sizeof(tocheck)/sizeof(char*); j++) {
+                if (!tocheck[j])
+                    continue;
+                logverb("Checking for solved file %s\n", tocheck[j]);
                 if (file_exists(axy->solvedinfn)) {
-                    printf("Solved file exists: %s; skipping this input file.\n", axy->solvedinfn);
+                    logmsg("Solved file exists: %s; skipping this input file.\n", axy->solvedinfn);
                     goto nextfile;
                 }
-            }
-            if (verbose)
-                printf("Checking for solved file %s\n", axy->solvedfn);
-            if (file_exists(axy->solvedfn)) {
-                printf("Solved file exists: %s; skipping this input file.\n", axy->solvedfn);
-                goto nextfile;
             }
         }
 
@@ -420,14 +418,14 @@ int main(int argc, char** args) {
             if (cont) {
             } else if (overwrite) {
 				if (unlink(fn)) {
-					printf("Failed to delete an already-existing output file: \"%s\": %s\n", fn, strerror(errno));
+					SYSERROR("Failed to delete an already-existing output file \"%s\"", fn);
 					exit(-1);
 				}
 			} else {
-				printf("Output file \"%s\" already exists.  Bailing out.  "
+				logmsg("Output file \"%s\" already exists."
 				       "Use the --overwrite flag to overwrite existing files,\n"
-                       " or the --continue  flag to not overwrite existing files.\n", fn);
-				printf("Continuing to next input file.\n");
+                       " or the --continue  flag to not overwrite existing files but still try solving.\n", fn);
+				logmsg("Continuing to next input file.\n");
                 goto nextfile;
 			}
 		}
@@ -436,33 +434,21 @@ int main(int argc, char** args) {
         if (!file_exists(infile) &&
             ((strncasecmp(infile, "http://", 7) == 0) ||
              (strncasecmp(infile, "ftp://", 6) == 0))) {
-			if (usecurl) {
-				sl_append(cmdline, "curl");
-				if (!verbose)
-					sl_append(cmdline, "--silent");
-				sl_append(cmdline, "--output");
-			} else {
-				sl_append(cmdline, "wget");
-				if (!verbose)
-					sl_append(cmdline, "--quiet");
-                //sl_append(cmdline, "--no-verbose");
-				sl_append(cmdline, "-O");
-			}
+
+            sl_append(cmdline, usecurl ? "curl" : "wget");
+            if (!verbose)
+                sl_append(cmdline, usecurl ? "--silent" : "--quiet");
+            sl_append(cmdline, usecurl ? "--output" : "-O");
             append_escape(cmdline, downloadfn);
             append_escape(cmdline, infile);
 
             cmd = sl_implode(cmdline, " ");
             sl_remove_all(cmdline);
 
-            if (verbose)
-                printf("Running:\n  %s\n", cmd);
-            else
-                printf("Downloading...\n");
-            fflush(NULL);
+            logmsg("Downloading...\n");
             if (run_command(cmd, &ctrlc)) {
-                fflush(NULL);
-                fprintf(stderr, "wget command %s; exiting.\n",
-                        (ctrlc ? "was cancelled" : "failed"));
+                ERROR("%s command %s", sl_get(cmdline, 0),
+                      (ctrlc ? "was cancelled" : "failed"));
                 exit(-1);
             }
             free(cmd);
@@ -470,26 +456,20 @@ int main(int argc, char** args) {
             infile = downloadfn;
         }
 
-        if (verbose)
-            printf("Checking if file \"%s\" is xylist or image: ", infile);
+        logverb("Checking if file \"%s\" is xylist or image: ", infile);
         fflush(NULL);
-        fits_use_error_system();
         reason = NULL;
 		isxyls = xylist_is_file_xylist(infile, xcol, ycol, &reason);
-        if (verbose) {
-            printf(isxyls ? "xyls\n" : "image\n");
-            if (!isxyls) {
-                printf("  (%s)\n", reason);
-            }
-        }
+        logverb(isxyls ? "xyls\n" : "image\n");
+        if (!isxyls)
+            logverb("  (not xyls because: %s)\n", reason);
         free(reason);
         fflush(NULL);
 
-		if (isxyls) {
+		if (isxyls)
 			axy->xylsfn = infile;
-		} else {
+        else
 			axy->imagefn = infile;
-		}
 
 		if (axy->imagefn) {
             ppmfn = create_temp_file("ppm", tempdir);
@@ -546,17 +526,15 @@ int main(int argc, char** args) {
             cmd = sl_implode(cmdline, " ");
             sl_remove_all(cmdline);
             
-            if (verbose)
-                printf("Running:\n  %s\n", cmd);
-            fflush(NULL);
             if (run_command(cmd, &ctrlc)) {
-                fflush(NULL);
-                fprintf(stderr, "Plotting command %s.\n",
-                        (ctrlc ? "was cancelled" : "failed"));
+                ERROR("Plotting command %s",
+                      (ctrlc ? "was cancelled" : "failed"));
                 if (ctrlc)
                     exit(-1);
                 // don't try any more plots...
-                fprintf(stderr, "Maybe you didn't build the plotting programs?\n");
+                errors_print_stack(stdout);
+                errors_clear_stack();
+                logmsg("Maybe you didn't build the plotting programs?");
                 makeplots = FALSE;
             }
             free(cmd);
@@ -564,17 +542,15 @@ int main(int argc, char** args) {
 
 		append_escape(backendargs, axy->outfn);
 		cmd = sl_implode(backendargs, " ");
-        if (verbose)
-            printf("Running:\n  %s\n", cmd);
-        else
-            printf("Solving...\n");
+
+        logmsg("Solving...\n");
+        logverb("Running:\n  %s\n", cmd);
         fflush(NULL);
-		if (run_command_get_outputs(cmd, NULL, NULL)) {
-            fflush(NULL);
+        if (run_command_get_outputs(cmd, NULL, NULL)) {
             ERROR("backend failed.  Command that failed was:\n  %s", cmd);
 			exit(-1);
 		}
-		free(cmd);
+        free(cmd);
         fflush(NULL);
 
 		if (!file_exists(axy->solvedfn)) {
@@ -603,9 +579,9 @@ int main(int argc, char** args) {
             sip_get_radec_center(&wcs, &ra, &dec);
             sip_get_radec_center_hms_string(&wcs, rastr, decstr);
             sip_get_field_size(&wcs, &fieldw, &fieldh, &fieldunits);
-            printf("Field center: (RA,Dec) = (%.4g, %.4g) deg.\n", ra, dec);
-            printf("Field center: (RA H:M:S, Dec D:M:S) = (%s, %s).\n", rastr, decstr);
-            printf("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
+            logmsg("Field center: (RA,Dec) = (%.4g, %.4g) deg.\n", ra, dec);
+            logmsg("Field center: (RA H:M:S, Dec D:M:S) = (%s, %s).\n", rastr, decstr);
+            logmsg("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
 
             if (makeplots) {
                 // sources + index overlay
@@ -634,13 +610,13 @@ int main(int argc, char** args) {
 
                 mf = matchfile_open(axy->matchfn);
                 if (!mf) {
-                    fprintf(stderr, "Failed to read matchfile %s.\n", axy->matchfn);
+                    ERROR("Failed to read matchfile %s", axy->matchfn);
                     exit(-1);
                 }
                 // just read the first match...
                 mo = matchfile_read_match(mf);
                 if (!mo) {
-                    fprintf(stderr, "Failed to read a match from matchfile %s.\n", axy->matchfn);
+                    ERROR("Failed to read a match from matchfile %s", axy->matchfn);
                     exit(-1);
                 }
 
@@ -665,8 +641,8 @@ int main(int argc, char** args) {
                 fflush(NULL);
                 if (run_command(cmd, &ctrlc)) {
                     fflush(NULL);
-                    fprintf(stderr, "Plotting commands %s; exiting.\n",
-                            (ctrlc ? "were cancelled" : "failed"));
+                    ERROR("Plotting commands %s; exiting.",
+                          (ctrlc ? "were cancelled" : "failed"));
                     exit(-1);
                 }
                 free(cmd);
@@ -689,8 +665,7 @@ int main(int argc, char** args) {
 
 				cmd = sl_implode(cmdline, " ");
 				sl_remove_all(cmdline);
-				if (verbose)
-                    printf("Running:\n  %s\n", cmd);
+                logverb("Running:\n  %s\n", cmd);
                 fflush(NULL);
                 if (run_command_get_outputs(cmd, &lines, NULL)) {
                     fflush(NULL);
@@ -700,9 +675,9 @@ int main(int argc, char** args) {
 				free(cmd);
                 if (lines && sl_size(lines)) {
                     int i;
-                    printf("Your field contains:\n");
+                    logmsg("Your field contains:\n");
                     for (i=0; i<sl_size(lines); i++) {
-                        printf("  %s\n", sl_get(lines, i));
+                        logmsg("  %s\n", sl_get(lines, i));
                     }
                 }
                 if (lines)
@@ -718,11 +693,14 @@ int main(int argc, char** args) {
 		for (i=0; i<sl_size(tempfiles); i++) {
 			char* fn = sl_get(tempfiles, i);
 			if (unlink(fn))
-				fprintf(stderr, "Failed to delete temp file \"%s\": %s.\n", fn, strerror(errno));
+				SYSERROR("Failed to delete temp file \"%s\"", fn);
 		}
         sl_free2(cmdline);
 		sl_free2(outfiles);
 		sl_free2(tempfiles);
+
+        errors_print_stack(stdout);
+        errors_clear_stack();
 	}
 
 	sl_free2(backendargs);

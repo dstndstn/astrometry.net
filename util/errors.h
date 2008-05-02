@@ -61,6 +61,8 @@ void errors_free();
 
 void errors_print_stack(FILE* f);
 
+void errors_clear_stack();
+
 int errors_print_on_exit(FILE* fid);
 
 /***    End globals   ***/
@@ -89,6 +91,7 @@ void error_print_stack(err_t* e, FILE* f);
 // returns the error messages (not module:lines) in a newly-allocated string
 char* error_get_errs(err_t* e, const char* separator);
 
+void error_clear_stack(err_t* e);
 
 #endif
 
