@@ -254,7 +254,7 @@ int render_images(unsigned char* img, render_args_t* args) {
 
         // find the bounds in RA,Dec of this image.
         // magic 10 = step size in pixels for walking the image boundary.
-        get_radec_bounds(&wcs, 10, &ramin, &ramax, &decmin, &decmax);
+        sip_get_radec_bounds(&wcs, 10, &ramin, &ramax, &decmin, &decmax);
 
 		logmsg("RA,Dec range for this image: (%g to %g, %g to %g)\n",
 			   ramin, ramax, decmin, decmax);

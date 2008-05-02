@@ -431,7 +431,7 @@ int main(int argc, char** args) {
 
 		cairo_set_source_rgba(cairo, 0.2, 0.2, 0.2, 1.0);
 
-        get_radec_bounds(&sip, 100, &ramin, &ramax, &decmin, &decmax);
+        sip_get_radec_bounds(&sip, 100, &ramin, &ramax, &decmin, &decmax);
         for (dec = decstep * floor(decmin / decstep); dec<=decmax; dec+=decstep) {
             for (i=0; i<=N; i++) {
                 ra = ramin + ((double)i / (double)N) * (ramax - ramin);
@@ -765,8 +765,6 @@ int main(int argc, char** args) {
 
     if (HD) {
         double rac, decc, ra2, dec2;
-        double xyz1[3], xyz2[3];
-        double r2;
         double arcsec;
         hd_catalog_t* hdcat;
         bl* hdlist;
@@ -783,10 +781,9 @@ int main(int argc, char** args) {
 
         sip_pixelxy2radec(&sip, W/(2.0*scale), H/(2.0*scale), &rac, &decc);
         sip_pixelxy2radec(&sip, 0.0, 0.0, &ra2, &dec2);
+        arcsec = arcsec_between_radecdeg(rac, decc, ra2, dec2);
         // Fudge
-        r2 = distsq_between_radecdeg(rec, decc, ra2, dec2);
-        r2 *= 1.2;
-        arcsec = distsq2arcsec(r2);
+        arcsec *= 1.1;
         hdlist = henry_draper_get(hdcat, rac, decc, arcsec);
 
         for (i=0; i<bl_size(hdlist); i++) {

@@ -111,7 +111,7 @@ int main(int argc, char** args) {
 
         // find the bounds in RA,Dec of this image.
         // magic 10 = step size in pixels for walking the image boundary.
-        get_radec_bounds(&wcs, 10, &ramin, &ramax, &decmin, &decmax);
+        sip_get_radec_bounds(&wcs, 10, &ramin, &ramax, &decmin, &decmax);
 
         logmsg("Reading WCS file %s.\n", wcsfn);
         logmsg("Image file is    %s.\n", imgfn);
