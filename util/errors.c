@@ -40,7 +40,7 @@ static err_t* error_copy(err_t* e) {
 static FILE* print_errs_fid;
 static void print_errs(void) {
     FILE* fid = print_errs_fid;
-    fprintf(fid, "Error traceback:\n");
+    //fprintf(fid, "Error traceback:\n");
     errors_print_stack(fid);
 }
 

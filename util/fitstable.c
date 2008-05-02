@@ -591,9 +591,8 @@ int fitstable_close(fitstable_t* tab) {
             rtn = -1;
         }
     }
-    if (tab->primheader) {
+    if (tab->primheader)
         qfits_header_destroy(tab->primheader);
-    }
     if (tab->header)
         qfits_header_destroy(tab->header);
     if (tab->table)

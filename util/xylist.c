@@ -83,8 +83,12 @@ void xy_alloc_data(xy_t* f, int N, bool flux, bool back) {
     f->y = malloc(N * sizeof(double));
     if (flux)
         f->flux = malloc(N * sizeof(double));
+    else
+        f->flux = NULL;
     if (back)
         f->background = malloc(N * sizeof(double));
+    else
+        f->background = NULL;
     f->N = N;
 }
 

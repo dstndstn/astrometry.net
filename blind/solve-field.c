@@ -272,6 +272,12 @@ int main(int argc, char** args) {
 		print_help(args[0], opts);
 		exit(rtn);
 	}
+    bl_free(opts);
+
+    if (verbose)
+        log_init(LOG_ALL);
+    else
+        log_init(LOG_MSG);
 
 	if (outdir) {
         if (mkdir_p(outdir)) {
