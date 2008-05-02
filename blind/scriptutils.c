@@ -22,9 +22,38 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <assert.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "scriptutils.h"
 #include "ioutils.h"
+#include "bl.h"
+#include "errors.h"
+
+int mkdir_p(const char* dirpath) {
+    sl* tomake = sl_new(4);
+    char* path = strdup(dirpath);
+    while (!file_exists(path)) {
+        char* dir;
+        sl_push(tomake, path);
+        dir = strdup(dirname(path));
+        free(path);
+        path = dir;
+    }
+    free(path);
+    while (sl_size(tomake)) {
+        char* path = sl_pop(tomake);
+        if (mkdir(path, 0777)) {
+            SYSERROR("Failed to mkdir(%s)", path);
+            sl_free2(tomake);
+            free(path);
+            return -1;
+        }
+        free(path);
+    }
+    sl_free2(tomake);
+    return 0;
+}
 
 char* shell_escape(const char* str) {
     char* escape = "|&;()<> \t\n\\'\"";

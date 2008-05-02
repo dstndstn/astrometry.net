@@ -22,7 +22,10 @@
 #include "bl.h"
 
 char* create_temp_file(char* fn, char* dir);
+
 char* shell_escape(const char* str);
+
+int mkdir_p(const char* path);
 
 int parse_positive_range_string(il* depths, const char* str,
                                 int default_low, int default_high,
