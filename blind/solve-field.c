@@ -262,7 +262,7 @@ int main(int argc, char** args) {
         }
     }
 
-	if (optind == argc) {
+	if ((optind == argc) && !fromstdin) {
 		printf("ERROR: You didn't specify any files to process.\n");
 		help = TRUE;
 	}

@@ -110,6 +110,18 @@ static an_option_t options[] = {
      "print this help message" },
 	{'v', "verbose",       no_argument, NULL,
      "be more chatty" },
+	{'L', "scale-low",	   required_argument, "scale",
+     "lower bound of image scale estimate"},
+    {'H', "scale-high",   required_argument, "scale",
+     "upper bound of image scale estimate"},
+	{'u', "scale-units",    required_argument, "units", NULL},
+	{'d', "depth",		   required_argument, NULL, NULL},
+    {'l', "cpulimit",       required_argument, "seconds",
+     "give up solving after the specified (integer) number of seconds of CPU time"},
+    {'r', "resort",         no_argument, NULL,
+     "sort the star brightnesses using a compromise between background-subtraction and no background-subtraction"},
+    {'z', "downsample",     optional_argument, "int",
+     "downsample the image by factor <int> before running source extraction"},
 	{'C', "cancel",		   required_argument, "filename",
      "filename whose creation signals the process to stop"},
 	{'S', "solved",		   required_argument, "filename",
@@ -134,20 +146,10 @@ static an_option_t options[] = {
      "try to verify an existing WCS file"},
 	{'g', "guess-scale",   no_argument, NULL,
      "try to guess the image scale from the FITS headers"},
-	{'L', "scale-low",	   required_argument, "scale",
-     "lower bound of image scale estimate"},
-    {'H', "scale-high",   required_argument, "scale",
-     "upper bound of image scale estimate"},
-	{'u', "scale-units",    required_argument, "units", NULL},
-	{'d', "depth",		   required_argument, NULL, NULL},
 	{'T', "no-tweak",	   no_argument,	NULL,
      "don't fine-tune WCS by computing a SIP polynomial"},
 	{'t', "tweak-order",    required_argument, "int",
      "polynomial order of SIP WCS corrections"},
-    {'r', "resort",         no_argument, NULL,
-     "sort the star brightnesses using a compromise between background-subtraction and no background-subtraction"},
-    {'z', "downsample",     optional_argument, "int",
-     "downsample the image by factor <int> before running source extraction"},
     {'c', "code-tolerance", required_argument, "distance",
      "matching distance for quads, default 0.01"},
     {'E', "pixel-error",    required_argument, "pixels",
@@ -192,6 +194,9 @@ static int parse_fields_string(il* fields, const char* str);
 int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     switch (argchar) {
+    case 'l':
+        axy->cpulimit = atof(optarg);
+        break;
     case 'A':
         axy->dont_augment = TRUE;
         break;
@@ -610,6 +615,9 @@ int augment_xylist(augment_xylist_t* axy,
         fits_header_add_int(hdr, "IMAGEH", axy->H, "image height");
     }
 	qfits_header_add(hdr, "ANRUN", "T", "Solve this field!", NULL);
+
+    if (axy->cpulimit > 0)
+        fits_header_add_int(hdr, "ANCLIM", axy->cpulimit, "CPU time limit (seconds)");
 
     if (axy->xcol)
         qfits_header_add(hdr, "ANXCOL", axy->xcol, "Name of column containing X coords", NULL);

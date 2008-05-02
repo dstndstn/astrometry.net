@@ -46,7 +46,6 @@
 #include "gnu-specific.h"
 #include "blind.h"
 #include "log.h"
-
 #include "qfits.h"
 
 static bool verbose = FALSE;
