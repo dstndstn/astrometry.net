@@ -118,6 +118,9 @@ int simplexy2(simplexy_t* s) {
 	dsigma(s->image, nx, ny, 5, &(s->sigma));
 	if (s->verbose)
         fprintf(stderr, "simplexy: dsigma() found sigma=%g.\n", s->sigma);
+    if (s->sigma == 0.0) {
+        // hmm
+    }
 
 	/* find objects */
 	s->smooth = malloc(nx * ny * sizeof(float));

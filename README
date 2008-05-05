@@ -218,6 +218,11 @@ UPGRADING
     $ make upgrade-indices
 
 
+COMMON PROBLEMS
+---------------
+
+
+
 SOLVE-FIELDS ARGUMENTS
 ----------------------
    There are a few command-line arguments to solve-fields that are very important
@@ -255,16 +260,6 @@ SOLVE-FIELDS ARGUMENTS
     or solve-field --depth 0-20 --depth 20-30 --depth 30-40
 
     Note that sources are numbered starting at zero.  Yes, we're computer science geeks.
-
-
-SOLVING LOTS OF IMAGES
-----------------------
-
-
-FIXME
-
-
-
 
 
 XYLISTS

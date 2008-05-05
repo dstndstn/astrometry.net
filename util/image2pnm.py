@@ -55,25 +55,36 @@ compcmds = {'gzip compressed data'    : ('gz',  'gunzip -c %s > %s'),
 # command to identify a RAW image.
 raw_id_cmd = 'dcraw -i %s >/dev/null 2> /dev/null'
 
+verbose = False
+
 def log(*x):
     print >> sys.stderr, 'image2pnm:', ' '.join(x)
 
+def logverb(*x):
+    if verbose:
+        print >> sys.stderr, 'image2pnm:', ' '.join(x)
+
 def do_command(cmd):
+    logverb('Running: "%s"' % cmd)
     if os.system(cmd) != 0:
         print >>sys.stderr, 'Command failed: %s' % cmd
         sys.exit(-1)
 
 # Run the "file" command, return the trimmed output.
 def run_file(fn):
-    (filein, fileout) = os.popen2(filecmd % shell_escape(fn))
+    cmd = filecmd % shell_escape(fn)
+    logverb('Running: "%s"' % cmd)
+    (filein, fileout) = os.popen2(cmd)
     typeinfo = fileout.read().strip()
+    logverb('Result: "%s"' % typeinfo)
     # Trim extra data after the ,
     comma_pos = typeinfo.find(',')
     if comma_pos != -1:
         typeinfo = typeinfo[:comma_pos]
+    logverb('Trimmed: "%s"' % typeinfo)
     return typeinfo
 
-def uncompress_file(infile, uncompressed, outdir=None, typeinfo=None, quiet=True):
+def uncompress_file(infile, uncompressed, typeinfo=None, quiet=True):
     """
     infile: input filename.
     uncompressed: output filename.
@@ -83,14 +94,14 @@ def uncompress_file(infile, uncompressed, outdir=None, typeinfo=None, quiet=True
     Returns: comptype
     comptype: None if the file wasn't compressed, or 'gz' or 'bz2'.
     """
-    if not typeinfo:
+    if typeinfo is None:
         typeinfo = run_file(infile)
     if not typeinfo in compcmds:
+        logverb('File is not compressed: "%s"' % typeinfo)
         return None
     assert uncompressed != infile
-    if not quiet:
-        log('compressed file, dumping to:', uncompressed)
     (ext, cmd) = compcmds[typeinfo]
+    logverb('Compressed file (type %s), dumping to: "%s"' % (ext, uncompressed))
     do_command(cmd % (shell_escape(infile), shell_escape(uncompressed)))
     return ext
 
@@ -116,7 +127,7 @@ def find_program(mydir, cmd):
     # "bin".
     p = os.path.join(mydir, prog)
     if os.path.exists(p):
-        return ' '.join(p, parts[1])
+        return ' '.join([p, parts[1]])
     log('path', p, 'does not exist.')
     return None
 
@@ -200,13 +211,16 @@ def convert_image(infile, outfile, uncompressed, sanitized,
     typeinfo = run_file(infile)
 
     tempfiles = []
+    # if the caller didn't specify where to put the uncompressed file,
+    # create a tempfile.
     if not uncompressed:
         (outfile_dir, outfile_file) = os.path.split(outfile)
         (f, uncompressed) = tempfile.mkstemp(None, 'uncomp', outdir)
         os.close(f)
         tempfiles.append(uncompressed)
 
-    comp = uncompress_file(infile, uncompressed, typeinfo, quiet)
+    comp = uncompress_file(infile, uncompressed,
+                           typeinfo=typeinfo, quiet=quiet)
     if comp:
         print 'compressed'
         print comp
@@ -249,6 +263,9 @@ def main():
     parser.add_option('-q', '--quiet',
                       action='store_true', dest='quiet',
                       help='only print errors');
+    parser.add_option('-v', '--verbose',
+                      action='store_true', dest='verbose',
+                      help='be chatty');
 
     (options, args) = parser.parse_args()
 
@@ -261,6 +278,9 @@ def main():
     # executables.
     if (len(sys.argv) > 0):
         mydir = os.path.dirname(sys.argv[0])
+
+    global verbose
+    verbose = options.verbose
 
     return convert_image(options.infile, options.outfile,
                          options.uncompressed_outfile,

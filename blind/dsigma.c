@@ -45,10 +45,11 @@ int dsigma(float *image,
 	float *diff = NULL;
 	float tot;
 	int i, j, dx, dy, ndiff;
+    int rtn = 0;
 
 	if (nx == 1 && ny == 1) {
-		(*sigma) = 0.;
-		return (0);
+		*sigma = 0.;
+		return 0;
 	}
 
 	dx = 50;
@@ -65,26 +66,26 @@ int dsigma(float *image,
 
 	/* get a bunch of noise 'samples' by looking at the differences between two
 	 * diagonally spaced pixels (usually 5) */
-	diff = (float *) malloc(2 * nx * ny * sizeof(float));
+	diff = malloc(2 * nx * ny * sizeof(float));
 	ndiff = 0;
-	for (j = 0;j < ny-sp;j += dy) {
-		for (i = 0;i < nx-sp;i += dx) {
+	for (j = 0; j < ny-sp; j += dy) {
+		for (i = 0; i < nx-sp; i += dx) {
 			diff[ndiff] = fabs(image[i + j * nx] - image[i + sp + (j + sp) * nx]);
 			ndiff++;
 		}
 	}
 
 	if (ndiff <= 1) {
-		(*sigma) = 0.;
-		return (0);
+		*sigma = 0.;
+        goto finish;
 	}
 
 	if (ndiff <= 10) {
 		tot = 0.;
-		for (i = 0;i < ndiff;i++)
+		for (i = 0; i < ndiff; i++)
 			tot += diff[i] * diff[i];
-		(*sigma) = sqrt(tot / (float) ndiff);
-		return (0);
+		*sigma = sqrt(tot / (float) ndiff);
+        goto finish;
 	}
 
 	/* estimate sigma in a clever way to avoid having our estimate biased by
@@ -94,9 +95,10 @@ int dsigma(float *image,
 	 * drastically affect the final sigma estimate. by sorting, the outliers go
 	 * to the top and only affect the final value very slightly, because they
 	 * are a small fraction of the total entries in diff (or so we hope!) */
-	(*sigma) = (dselip((int) floor(ndiff * 0.68), ndiff, diff)) / sqrt(2.);
+	*sigma = dselip((int) floor(ndiff * 0.68), ndiff, diff) / sqrt(2.);
+    rtn = 1;
 
-	FREEVEC(diff);
-
-	return (1);
+ finish:
+    FREEVEC(diff);
+    return rtn;
 } /* end dsigma */
