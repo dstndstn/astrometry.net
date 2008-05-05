@@ -261,8 +261,8 @@ int image2xy(const char* infn, const char* outfn,
         npeaks = s.npeaks;
         sigma = s.sigma;
 
-		free(thedata);
-		free(theu8data);
+		free(s.image);
+		free(s.image_u8);
 
         if (downsample) {
             // Put the naxisn[] values back the way they were so that the

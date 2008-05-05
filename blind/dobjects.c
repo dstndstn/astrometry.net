@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <sys/param.h>
 
 #include "dimage.h"
 #include "simplexy-common.h"
@@ -47,7 +48,8 @@ int dobjects(float *image,
 	int i, j, ip, jp, ist, ind, jst, jnd;
 	float limit, sigma;
 	u8* mask;
-
+    int flagged_one = 0;
+    
 	/* smooth by the point spread function  */
 	dsmooth2(image, nx, ny, dpsf, smooth);
 
@@ -72,6 +74,7 @@ int dobjects(float *image,
 			if (smooth[i + j*nx] <= limit)
                 continue;
 
+            flagged_one = 1;
             ist = MAX(0, i - (long) (3 * dpsf));
             ind = MIN(nx-1, i + (long) (3 * dpsf));
 
@@ -84,6 +87,20 @@ int dobjects(float *image,
         }
 	}
 
+    if (!flagged_one) {
+        /* no pixels were masked - what parameter settings would cause at
+         least one pixel to be masked? */
+        float maxval = -HUGE_VAL;
+        for (i=0; i<(nx*ny); i++)
+            maxval = MAX(maxval, smooth[i]);
+        logmsg("No pixels were marked as significant.\n"
+               "  sigma = %g, plim = %g, limit = %g\n"
+               "  max value in image = %g\n",
+               sigma, plim, limit, maxval);
+        FREEVEC(mask);
+        return 0;
+    }
+
 	/* the mask now looks almost all black, except it's been painted with a
 	 * bunch of white boxes (each box 6*point spread width) on parts of the
 	 * image that have statistically significant 'events', aka sources. */
@@ -93,5 +110,5 @@ int dobjects(float *image,
 
 	FREEVEC(mask);
 
-	return (1);
+	return 1;
 } /* end dobjects */

@@ -162,7 +162,10 @@ int simplexy2(simplexy_t* s) {
     }
 
 	FREEVEC(s->simage);
-    FREEVEC(s->image);
+
+    // for u8 images, we allocate a temporary float image in s->image.
+    if (s->image_u8)
+        FREEVEC(s->image);
 
 	return 1;
 }

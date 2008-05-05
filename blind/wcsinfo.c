@@ -29,6 +29,7 @@
 #include "sip_qfits.h"
 #include "starutil.h"
 #include "mathutil.h"
+#include "boilerplate.h"
 
 const char* OPTIONS = "h";
 
