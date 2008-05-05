@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 #include "dimage.h"
 #include "simplexy-common.h"
@@ -44,12 +45,12 @@ int dsigma(float *image,
 {
 	float *diff = NULL;
 	float tot;
-	int i, j, dx, dy, ndiff;
+	int i, j, n, dx, dy, ndiff;
     int rtn = 0;
 
 	if (nx == 1 && ny == 1) {
 		*sigma = 0.;
-		return 0;
+		return rtn;
 	}
 
 	dx = 50;
@@ -66,19 +67,22 @@ int dsigma(float *image,
 
 	/* get a bunch of noise 'samples' by looking at the differences between two
 	 * diagonally spaced pixels (usually 5) */
-	diff = malloc(2 * nx * ny * sizeof(float));
-	ndiff = 0;
-	for (j = 0; j < ny-sp; j += dy) {
-		for (i = 0; i < nx-sp; i += dx) {
-			diff[ndiff] = fabs(image[i + j * nx] - image[i + sp + (j + sp) * nx]);
-			ndiff++;
-		}
-	}
+    ndiff = ((nx-sp + dx-1)/dx) * ((ny-sp + dy-1)/dy);
 
 	if (ndiff <= 1) {
 		*sigma = 0.;
-        goto finish;
+        return rtn;
 	}
+
+	diff = malloc(ndiff * sizeof(float));
+	n = 0;
+	for (j = 0; j < ny-sp; j += dy) {
+		for (i = 0; i < nx-sp; i += dx) {
+			diff[n] = fabs(image[i + j * nx] - image[i + sp + (j + sp) * nx]);
+			n++;
+		}
+	}
+    assert(n == ndiff);
 
 	if (ndiff <= 10) {
 		tot = 0.;
@@ -90,12 +94,13 @@ int dsigma(float *image,
 
 	/* estimate sigma in a clever way to avoid having our estimate biased by
 	 * outliers. outliers come into the diff list when we sampled a point where
-	 * the upper point was on a source, but the lower one was not. since the
+	 * the upper point was on a source, but the lower one was not (or vice versa).
+     * since the
 	 * sample variance involves squaring the already-large outliers, they
 	 * drastically affect the final sigma estimate. by sorting, the outliers go
 	 * to the top and only affect the final value very slightly, because they
 	 * are a small fraction of the total entries in diff (or so we hope!) */
-	*sigma = dselip((int) floor(ndiff * 0.68), ndiff, diff) / sqrt(2.);
+	*sigma = dselip((int)floor(ndiff * 0.68), ndiff, diff) / sqrt(2.);
     rtn = 1;
 
  finish:

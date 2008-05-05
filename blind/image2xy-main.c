@@ -117,7 +117,8 @@ int main(int argc, char *argv[]) {
         }
 	}
 
-    logverb("Downsampling by %i\n", downsample);
+    if (downsample)
+        logverb("Downsampling by %i\n", downsample);
 
     if (image2xy(infn, outfn, do_u8, downsample)) {
         ERROR("image2xy failed.");

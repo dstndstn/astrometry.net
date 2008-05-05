@@ -119,7 +119,21 @@ int simplexy2(simplexy_t* s) {
 	if (s->verbose)
         fprintf(stderr, "simplexy: dsigma() found sigma=%g.\n", s->sigma);
     if (s->sigma == 0.0) {
-        // hmm
+        double mn,mx;
+        // hmm...
+        fprintf(stderr, "simplexy: estimated image noise (sigma) is zero.\n");
+        mn =  HUGE_VAL;
+        mx = -HUGE_VAL;
+        for (i=0; i<nx*ny; i++) {
+            mn = MIN(mn, s->image[i]);
+            mx = MAX(mx, s->image[i]);
+        }
+        // MAGIC
+        s->sigma = (mx - mn) * 0.1;
+        if (s->sigma == 0.0)
+            s->sigma = 1.0;
+        fprintf(stderr, "simplexy: image range is [%g, %g]; setting sigma to %g.\n",
+                mn, mx, s->sigma);
     }
 
 	/* find objects */

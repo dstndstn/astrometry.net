@@ -25,8 +25,7 @@
 #include <assert.h>
 
 #include "simplexy-common.h"
-
-//#include <valgrind/memcheck.h>
+#include "bl.h"
 
 /*
  * dfind.c
@@ -79,16 +78,13 @@ int initial_max_groups = 50;
  *  . . . . .
  */
 
-struct uf_t {
-	short int maxlabel;
-	short int *equivs;
-};
+typedef short unsigned int label_t;
+#define LABEL_MAX 0xFFFF
 
 /* Finds the root of this set (which is the min label) but collapses
  * intermediate labels as it goes. */
-inline short unsigned int collapsing_find_minlabel(short unsigned int label,
-                                                   short unsigned int *equivs)
-{
+inline label_t collapsing_find_minlabel(label_t label,
+                                        label_t *equivs) {
 	int min;
 	min = label;
 	while (equivs[min] != min)
@@ -102,6 +98,30 @@ inline short unsigned int collapsing_find_minlabel(short unsigned int label,
 }
 
 // Yummy preprocessor goodness!
+
+static label_t relabel_image(il* on_pixels,
+                             int maxlabel,
+                             label_t* equivs,
+                             int* object) {
+    int i;
+	label_t maxcontiguouslabel = 0;
+	label_t *number;
+	number = malloc(sizeof(label_t) * maxlabel);
+	assert(number);
+	for (i = 0; i < maxlabel; i++)
+		number[i] = LABEL_MAX;
+	for (i=0; i<il_size(on_pixels); i++) {
+        int onpix;
+		int minlabel;
+        onpix = il_get(on_pixels, i);
+        minlabel = collapsing_find_minlabel(object[onpix], equivs);
+		if (number[minlabel] == LABEL_MAX)
+			number[minlabel] = maxcontiguouslabel++;
+        object[onpix] = number[minlabel];
+	}
+	free(number);
+    return maxcontiguouslabel;
+}
 
 #define DFIND2 dfind2
 #define IMGTYPE int

@@ -22,7 +22,8 @@
 // I did this so that we can handle int* and
 // unsigned char* images using the same code.
 
-#include "bl.h"
+#include "errors.h"
+#include "log.h"
 
 int DFIND2(IMGTYPE* image,
            int nx,
@@ -30,10 +31,8 @@ int DFIND2(IMGTYPE* image,
            int *object) {
 	int ix, iy, i;
 	int maxgroups = initial_max_groups;
-	short unsigned int *equivs = malloc(sizeof(short unsigned int) * maxgroups);
-	short unsigned int *number;
+	label_t *equivs = malloc(sizeof(label_t) * maxgroups);
 	int maxlabel = 0;
-	short unsigned int maxcontiguouslabel = 0;
 
 	/* Keep track of 'on' pixels to avoid later rescanning */
     il* on_pixels = il_new(256);
@@ -50,6 +49,8 @@ int DFIND2(IMGTYPE* image,
 			/* Store location of each 'on' pixel. */
             il_append(on_pixels, nx * iy + ix);
 
+            /* If the pixel to the left [exists and] is on, this pixel
+             joins its group. */
 			if (ix && image[nx*iy+ix-1]) {
 				/* Old group */
 				object[nx*iy+ix] = object[nx*iy+ix-1];
@@ -59,20 +60,23 @@ int DFIND2(IMGTYPE* image,
 				// FIXME this part should become uf_new_group()
 				if (maxlabel >= maxgroups) {
 					maxgroups *= 2;
-					equivs = realloc(equivs, sizeof(short unsigned int) * maxgroups);
+					equivs = realloc(equivs, sizeof(label_t) * maxgroups);
 					assert(equivs);
 				}
 				object[nx*iy+ix] = maxlabel;
 				equivs[maxlabel] = maxlabel;
 				maxlabel++;
 
-				if (maxlabel == 0xFFFF) {
-					fprintf(stderr, "simplexy: ERROR: Exceeded labels. Shrink your image.\n");
-					exit(1);
-					// FIXME before moving to full ints, we could also try
-					// collapsing maxlabels.
+				if (maxlabel == LABEL_MAX) {
+                    logverb("Ran out of labels.  Relabelling...\n");
+                    maxlabel = relabel_image(on_pixels, maxlabel, equivs, object);
+                    logverb("After relabelling, we need %i labels\n", maxlabel);
+                    if (maxlabel == LABEL_MAX) {
+                        ERROR("Ran out of labels.");
+                        exit(-1);
+                        //return -1;
+                    }
 				}
-				// to here
 			}
 
 			thislabel  = object[nx*iy + ix];
@@ -84,7 +88,7 @@ int DFIND2(IMGTYPE* image,
 				continue;
 
 			/* Check three pixels above this one which are 'neighbours' */
-			for (i = MAX(0, ix - 1); i < MIN(ix + 2, nx); i++) {
+			for (i = MAX(0, ix - 1); i <= MIN(ix + 1, nx - 1); i++) {
 				if (image[nx*(iy-1)+i]) {
 					int otherlabel = object[nx*(iy-1) + i];
 
@@ -107,23 +111,10 @@ int DFIND2(IMGTYPE* image,
 		}
 	}
 
-	/* Re-label the groups */
-	number = malloc(sizeof(short unsigned int) * maxlabel);
-	assert(number);
-	for (i = 0; i < maxlabel; i++)
-		number[i] = 0xFFFF;
-	for (i=0; i<il_size(on_pixels); i++) {
-        int onpix;
-		int minlabel;
-        onpix = il_get(on_pixels, i);
-        minlabel = collapsing_find_minlabel(object[onpix], equivs);
-		if (number[minlabel] == 0xFFFF)
-			number[minlabel] = maxcontiguouslabel++;
-        object[onpix] = number[minlabel];
-	}
+	/* Re-label the groups before returning */
+    relabel_image(on_pixels, maxlabel, equivs, object);
 
 	free(equivs);
-	free(number);
 	il_free(on_pixels);
 	return 1;
 }

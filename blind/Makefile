@@ -176,7 +176,7 @@ ALL_TEST_EXTRA_OBJS :=
 ALL_TEST_LIBS :=
 
 # Add the dependencies here...
-TEST_DFIND_OBJS := dfind.o
+TEST_DFIND_OBJS := dfind.o log.o
 ALL_TEST_EXTRA_OBJS += $(TEST_DFIND_OBJS)
 test_dfind: $(TEST_DFIND_OBJS) $(ANUTILS_LIB)
 
