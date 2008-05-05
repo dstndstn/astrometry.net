@@ -24,6 +24,7 @@
 
 #include "dimage.h"
 #include "simplexy-common.h"
+#include "log.h"
 
 /*
  * dobjects.c
@@ -57,35 +58,30 @@ int dobjects(float *image,
 	/* limit is the threshold at which to pay attention to a pixel */
 	limit = sigma * plim;
 
-	/* This makes a mask which dfind uses when looking at the pixels; it
+	/* This makes a mask which dfind uses when looking at the pixels; dfind
 	 * ignores any pixels the mask flagged as uninteresting. */
 	mask = calloc(nx * ny, sizeof(u8));
 	for (j = 0;j < ny;j++) {
-		jst = j - (long) (3 * dpsf);
-		if (jst < 0)
-			jst = 0;
-		jnd = j + (long) (3 * dpsf);
-		if (jnd > ny - 1)
-			jnd = ny - 1;
+		jst = MAX(0, j - (long) (3 * dpsf));
+		jnd = MIN(ny-1, j + (long) (3 * dpsf));
+
 		for (i = 0;i < nx;i++) {
 			/* this pixel looks interesting; note that we've already median
 			 * subtracted so it's valid to directly compare the image value to
 			 * sigma*significance without adding a mean */
-			if (smooth[i + j*nx] > limit) {
-				ist = i - (long) (3 * dpsf);
-				if (ist < 0)
-					ist = 0;
-				ind = i + (long) (3 * dpsf);
-				if (ind > nx - 1)
-					ind = nx - 1;
-				/* now that we found a single interesting pixel, flag a box
-				 * around it so the object finding code will be able to
-				 * accurately estimate the center. */
-				for (jp = jst;jp <= jnd;jp++)
-					for (ip = ist;ip <= ind;ip++)
-						mask[ip + jp*nx] = 1;
-			}
-		}
+			if (smooth[i + j*nx] <= limit)
+                continue;
+
+            ist = MAX(0, i - (long) (3 * dpsf));
+            ind = MIN(nx-1, i + (long) (3 * dpsf));
+
+            /* now that we found a single interesting pixel, flag a box
+             * around it so the object finding code will be able to
+             * accurately estimate the center. */
+            for (jp = jst; jp <= jnd; jp++)
+                for (ip = ist; ip <= ind; ip++)
+                    mask[ip + jp*nx] = 1;
+        }
 	}
 
 	/* the mask now looks almost all black, except it's been painted with a
