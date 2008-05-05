@@ -29,7 +29,8 @@
 #include "ctmf.h"
 #include "dimage.h"
 #include "simplexy-common.h"
-#include "cairoutils.h"
+#include "log.h"
+#include "errors.h"
 
 /*
  * simplexy.c
@@ -72,25 +73,23 @@ int simplexy2(simplexy_t* s) {
     assert(s->image || s->image_u8);
     assert(!s->image || !s->image_u8);
 
-	if (s->verbose) {
-		fprintf(stderr, "simplexy: nx=%d, ny=%d\n", nx, ny);
-		fprintf(stderr, "simplexy: dpsf=%f, plim=%f, dlim=%f, saddle=%f\n",
-				s->dpsf, s->plim, s->dlim, s->saddle);
-		fprintf(stderr, "simplexy: maxper=%d, maxnpeaks=%d, maxsize=%d, halfbox=%d\n",
-				s->maxper, s->maxnpeaks, s->maxsize, s->halfbox);
-	}
+    logverb("simplexy: nx=%d, ny=%d\n", nx, ny);
+    logverb("simplexy: dpsf=%f, plim=%f, dlim=%f, saddle=%f\n",
+            s->dpsf, s->plim, s->dlim, s->saddle);
+    logverb("simplexy: maxper=%d, maxnpeaks=%d, maxsize=%d, halfbox=%d\n",
+            s->maxper, s->maxnpeaks, s->maxsize, s->halfbox);
 
 	/* median smooth */
     if (s->image) {
+        logverb("simplexy: median smoothing...\n");
         s->simage = malloc(nx * ny * sizeof(float));
         dmedsmooth(s->image, nx, ny, s->halfbox, s->simage);
         for (i=0; i<nx*ny; i++)
             s->simage[i] = s->image[i] - s->simage[i];
-        if (s->verbose)
-            fprintf(stderr, "simplexy: finished dmedsmooth().\n");
 
     } else {
         // u8 image
+        logverb("simplexy: median smoothing...\n");
         if (MIN(nx,ny) < 2*s->halfbox+1) {
             s->halfbox = floor(((float)MIN(nx,ny) - 1.0) / 2.0);
         }
@@ -107,21 +106,18 @@ int simplexy2(simplexy_t* s) {
         s->image = malloc(nx * ny * sizeof(float));
         for (i=0; i<nx*ny; i++)
             s->image[i] = s->image_u8[i];
-
-        if (s->verbose)
-            fprintf(stderr, "simplexy: finished ctmf() median smoothing.\n");
     }
 
 	/* determine an estimate of the noise in the image (sigma) assuming the
 	 * noise is iid gaussian, by sampling at regular intervals, and comparing
 	 * the difference between pixels separated by a 5-pixel diagonal gap. */
+    logverb("simplexy: measuring image noise (sigma)...\n");
 	dsigma(s->image, nx, ny, 5, &(s->sigma));
-	if (s->verbose)
-        fprintf(stderr, "simplexy: dsigma() found sigma=%g.\n", s->sigma);
+    logverb("simplexy: found sigma=%g.\n", s->sigma);
     if (s->sigma == 0.0) {
         double mn,mx;
         // hmm...
-        fprintf(stderr, "simplexy: estimated image noise (sigma) is zero.\n");
+        logverb("simplexy: estimated image noise (sigma) is zero.\n");
         mn =  HUGE_VAL;
         mx = -HUGE_VAL;
         for (i=0; i<nx*ny; i++) {
@@ -132,26 +128,25 @@ int simplexy2(simplexy_t* s) {
         s->sigma = (mx - mn) * 0.1;
         if (s->sigma == 0.0)
             s->sigma = 1.0;
-        fprintf(stderr, "simplexy: image range is [%g, %g]; setting sigma to %g.\n",
+        logverb("simplexy: image range is [%g, %g]; setting sigma to %g.\n",
                 mn, mx, s->sigma);
     }
 
 	/* find objects */
 	s->smooth = malloc(nx * ny * sizeof(float));
 	s->oimage = malloc(nx * ny * sizeof(int));
+    logverb("simplexy: finding objects...\n");
 	dobjects(s->simage, s->smooth, nx, ny, s->dpsf, s->plim, s->oimage);
-	if (s->verbose)
-        fprintf(stderr, "simplexy: finished dobjects().\n");
 	FREEVEC(s->smooth);
 
     s->x = malloc(s->maxnpeaks * sizeof(float));
     s->y = malloc(s->maxnpeaks * sizeof(float));
 	
 	/* find all peaks within each object */
+    logverb("simplexy: finding peaks...\n");
 	dallpeaks(s->simage, nx, ny, s->oimage, s->x, s->y, &(s->npeaks), s->dpsf,
 	          s->sigma, s->dlim, s->saddle, s->maxper, s->maxnpeaks, s->sigma, s->maxsize);
-	if (s->verbose)
-        fprintf(stderr, "simplexy: dallpeaks() found %i peaks.\n", s->npeaks);
+    logmsg("simplexy: found %i sources.\n", s->npeaks);
 	FREEVEC(s->oimage);
 
     s->x   = realloc(s->x, s->npeaks * sizeof(float));
@@ -165,10 +160,9 @@ int simplexy2(simplexy_t* s) {
         s->flux[i]       = s->simage[ix + iy * nx];
         s->background[i] = s->image [ix + iy * nx] - s->simage[ix + iy * nx];
     }
-	FREEVEC(s->simage);
 
-    if (s->image_u8)
-        FREEVEC(s->image);
+	FREEVEC(s->simage);
+    FREEVEC(s->image);
 
 	return 1;
 }

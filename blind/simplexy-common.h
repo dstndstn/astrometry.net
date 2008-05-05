@@ -28,6 +28,6 @@
 
 #define PI M_PI
 
-#define FREEVEC(a) {if((a)!=NULL) free((char *) (a)); (a)=NULL;}
+#define FREEVEC(a) {if((a)!=NULL) free((a)); (a)=NULL;}
 
 #endif

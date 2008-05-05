@@ -73,7 +73,6 @@ int image2xy(const char* infn, const char* outfn,
 	float sigma;
 	int nhdus,maxper,maxsize,halfbox,hdutype,nimgs;
 	float dpsf,plim,dlim,saddle;
-    bool verbose = TRUE;
     char* str;
 
 	fits_open_file(&fptr, infn, READONLY, &status);
@@ -252,7 +251,6 @@ int image2xy(const char* infn, const char* outfn,
         s.maxnpeaks = maxnpeaks;
         s.maxsize = maxsize;
         s.halfbox = halfbox;
-        s.verbose = verbose;
         
         simplexy2(&s);
 

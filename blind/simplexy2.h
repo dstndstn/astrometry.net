@@ -54,7 +54,6 @@ struct simplexy_t {
     float *flux;
     float *background;
     int npeaks;
-    int verbose;
 
     /******
      Internal
