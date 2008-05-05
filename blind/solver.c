@@ -94,19 +94,7 @@ static void update_timeused(solver_t* sp) {
 		sp->timeused = 0.0;
 }
 
-/*
- void free_best_match_extras(solver_t* sp) {
- if (sp->best_match.corr_field)
- il_free(sp->best_match.corr_field);
- if (sp->best_match.corr_index)
- il_free(sp->best_match.corr_index);
- sp->best_match.corr_field = NULL;
- sp->best_match.corr_index = NULL;
- }
- */
-
 void solver_reset_best_match(solver_t* sp) {
-    //free_best_match_extras(sp);
     // we don't really care about very bad best matches...
 	sp->best_logodds = 0;
 	memset(&(sp->best_match), 0, sizeof(MatchObj));
@@ -115,21 +103,6 @@ void solver_reset_best_match(solver_t* sp) {
 	sp->best_match_solves = FALSE;
 	sp->have_best_match = FALSE;
 }
-
-/*
- void solver_init(solver_t* sp)
- {
- memset(sp, 0, sizeof(solver_t));
- sp->index = NULL;
- sp->indexes = pl_new(16);
- sp->num_verified = 0;
- sp->field_minx = sp->field_maxx = 0.0;
- sp->field_miny = sp->field_maxy = 0.0;
- sp->parity = DEFAULT_PARITY;
- sp->codetol = DEFAULT_CODE_TOL;
- sp->record_match_callback = NULL;
- }
- */
 
 /*
   Reorder the field stars by placing a grid over the field, sorting by
@@ -142,7 +115,6 @@ void solver_uniformize_field(solver_t* solver, int NX, int NY) {
 	int i, ix, iy;
 	double xstep, ystep;
 	double* newfield;
-	//il* templist;
 	int Ntotal;
 
 	// compute {min,max}{x,y}
@@ -175,17 +147,8 @@ void solver_uniformize_field(solver_t* solver, int NX, int NY) {
 	// cell is also sorted by brightness.
 
 	// reverse each list so that we can pop() bright stars off the back.
-	for (i=0; i<(NX*NY); i++) {
+	for (i=0; i<(NX*NY); i++)
 		il_reverse(lists[i]);
-		/*
-		  int j;
-		  templist = il_new(16);
-		  for (j=il_size(lists[i])-1; j>=0; j--)
-		  il_append(templist, il_get(lists[i], j));
-		  il_free(lists[i]);
-		  lists[i] = templist;
-		*/
-	}
 
 	// sweep through the cells...
 	Ntotal = 0;
@@ -266,13 +229,10 @@ void solver_compute_quad_range(solver_t* sp, index_t* index,
 		scalefudge = index->index_scale_upper * M_SQRT1_2 *
 		             sp->codetol / sp->funits_upper;
 		*minAB -= scalefudge;
-		//logverb(bp, "Scale fudge: %g pixels.\n", scalefudge);
-		//logmsg("Set minAB to %g\n", *minAB);
 	}
 	if (sp->funits_lower != 0.0) {
 		*maxAB = index->index_scale_upper / sp->funits_lower;
 		*maxAB += scalefudge;
-		//logmsg("Set maxAB to %g\n", *maxAB);
 	}
 }
 
@@ -301,8 +261,7 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 
 static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_match);
 
-static void check_scale(pquad* pq, solver_t* solver)
-{
+static void check_scale(pquad* pq, solver_t* solver) {
 	double Ax, Ay, Bx, By, dx, dy;
 
 	field_getxy(solver, pq->fieldA, &Ax, &Ay);
@@ -317,14 +276,11 @@ static void check_scale(pquad* pq, solver_t* solver)
 	}
 	pq->costheta = (dy + dx) / pq->scale;
 	pq->sintheta = (dy - dx) / pq->scale;
-
 	pq->rel_field_noise2 = (solver->verify_pix * solver->verify_pix) / pq->scale;
-
 	pq->scale_ok = TRUE;
 }
 
-static void check_inbox(pquad* pq, int start, solver_t* solver)
-{
+static void check_inbox(pquad* pq, int start, solver_t* solver) {
 	int i;
 	double Ax, Ay;
 	field_getxy(solver, pq->fieldA, &Ax, &Ay);
@@ -359,8 +315,7 @@ static void check_inbox(pquad* pq, int start, solver_t* solver)
 }
 
 #if defined DEBUGSOLVER
-static void print_inbox(pquad* pq)
-{
+static void print_inbox(pquad* pq) {
 	int i;
 	debug("[ ");
 	for (i = 0; i < pq->ninbox; i++) {
@@ -370,8 +325,7 @@ static void print_inbox(pquad* pq)
 	debug("] (n %i)\n", pq->ninbox);
 }
 #else
-static void print_inbox(pquad* pq)
-{}
+static void print_inbox(pquad* pq) {}
 #endif
 
 
@@ -391,7 +345,7 @@ static void find_field_boundaries(solver_t* solver) {
 }
 
 void solver_preprocess_field(solver_t* solver) {
-	// precompute a kdtree over the field itself
+	// precompute a kdtree over the field
 	solver->vf = verify_field_preprocess(solver->field, solver->nfield);
 	find_field_boundaries(solver);
 }
@@ -440,7 +394,7 @@ static void add_stars(pquad* pq, uint* field, int fieldoffset,
 
     // It looks funny that we're using f[adding] as a loop variable, but
     // it's required because try_all_codes needs to know which field stars
-    // were used to create the quad.
+    // were used to create the quad (which are stored in the "f" array)
     for (f[adding]=bottom; f[adding]<fieldtop; f[adding]++) {
         if (!pq->inbox[f[adding]])
             continue;
@@ -460,9 +414,8 @@ static void add_stars(pquad* pq, uint* field, int fieldoffset,
     }
 }
 
-// The real deal-- this is what makes it all happen
-void solver_run(solver_t* solver)
-{
+// The real deal
+void solver_run(solver_t* solver) {
 	uint numxy, newpoint;
 	int i;
 	double usertime, systime;
@@ -530,7 +483,7 @@ void solver_run(solver_t* solver)
 
 		/* (See explanatory paragraph below) If "solver->startobj" isn't zero,
 		 * then we need to initialize the triangle of "pquads" up to
-		 * A=startobj-2,B=startobj-1. */
+		 * A=startobj-2, B=startobj-1. */
 		if (solver->startobj) {
 			debug("startobj > 0; priming pquad arrays.\n");
 			for (field[B] = 0; field[B] < solver->startobj; field[B]++) {
@@ -721,16 +674,14 @@ void solver_run(solver_t* solver)
 	}
 }
 
-static inline void set_xy(double* dest, int destind, double* src, int srcind)
-{
+static inline void set_xy(double* dest, int destind, double* src, int srcind) {
 	setx(dest, destind, getx(src, srcind));
 	sety(dest, destind, gety(src, srcind));
 }
 
 static void try_all_codes(pquad* pq,
                           uint* fieldstars, int dimquad,
-                          solver_t* solver, double tol2)
-{
+                          solver_t* solver, double tol2) {
     int dimcode = (dimquad - 2) * 2;
     double code[dimcode];
     double swapcode[dimcode];
@@ -889,8 +840,7 @@ static void try_permutations(uint* origstars, int dimquad, double* origcode,
 // "field" contains the xy pixel coordinates of stars A,B,C,D.
 static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
                             uint* fieldstars, int dimquads,
-                            solver_t* solver, bool current_parity)
-{
+                            solver_t* solver, bool current_parity) {
 	uint jj, thisquadno;
 	MatchObj mo;
 	uint star[dimquads];
@@ -980,8 +930,7 @@ void solver_inject_match(solver_t* solver, MatchObj* mo, sip_t* sip) {
 	solver_handle_hit(solver, mo, sip, TRUE);
 }
 
-static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_match)
-{
+static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_match) {
 	double match_distance_in_pixels2;
     bool solved;
 	int dimquads;
@@ -1039,13 +988,6 @@ solver_t* solver_new() {
 }
 
 void solver_set_default_values(solver_t* solver) {
-//	if (solver->indexes) {
-//		int i;
-//		for (i=0; i<pl_size(solver->indexes); i++)
-//			index_close(pl_get(solver->indexes, i));
-//		pl_clear(solver->indexes);
-//	} else {
-//	}
 	memset(solver, 0, sizeof(solver_t));
 	solver->indexes = pl_new(16);
 	solver->funits_upper = HUGE_VAL;

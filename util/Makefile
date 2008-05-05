@@ -63,7 +63,9 @@ ANUTILS_LIB := libanutils.a
 
 PYTHON_LIBS := _sip.so _healpix.so
 
-all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS)
+PROGS := an-fitstopnm
+
+all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS)
 
 # Things that it depends on but which aren't linked in
 ANUTILS_DEPS :=
@@ -113,6 +115,10 @@ _sip.so: sip-utils.o sip.o starutil.o mathutil.o sip_qfits.o \
 _healpix.so: healpix.o starutil.o mathutil.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
+an-fitstopnm: an-fitstopnm.o $(ANUTILS_LIB) $(QFITS_LIB)
+
+ALL_OBJ += an-fitstopnm.o
+
 PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py shell.py __init__.py \
 	file.py run_command.py w3c_validator.py \
 	$(PYTHON_LIBS)
@@ -135,6 +141,11 @@ install: $(PYTHON_LIBS)
 	@for x in $(PYTHON_EXECS); do \
 		echo ln -f -s $(PY_INSTALL_DIR)/$$x $(BIN_INSTALL_DIR)/$$x; \
 		ln -f -s $(LINK_DIR)/$$x $(BIN_INSTALL_DIR)/$$x; \
+	done
+	@echo Installing executables into $(BIN_INSTALL_DIR)...
+	@for x in $(PROGS); do \
+		echo cp $$x $(BIN_INSTALL_DIR)/$$x; \
+		cp $$x $(BIN_INSTALL_DIR)/$$x; \
 	done
 
 gnu-specific-config.h: gnu-specific-test.c
@@ -207,4 +218,4 @@ realclean: allclean
 clean:
 	rm -f $(ANUTILS_LIB) $(ANFILES_LIB) $(ALL_OBJ) \
 		$(DEPS) deps cairoutils.o _sip.so grab-stellarium-constellations \
-		$(ALL_TARGETS)
+		$(PROGS) $(ALL_TARGETS)

@@ -338,8 +338,8 @@ static sl* backtick(sl* cmd, bool verbose) {
     sl* lines;
     logverb("Running: %s\n", cmdstr);
     if (run_command_get_outputs(cmdstr, &lines, NULL)) {
+        ERROR("Failed to run command: %s", cmdstr);
         free(cmdstr);
-        ERROR("Failed to run %s", sl_get(cmd, 0));
         exit(-1);
     }
     free(cmdstr);

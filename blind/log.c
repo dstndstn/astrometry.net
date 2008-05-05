@@ -24,10 +24,10 @@ void log_free(log_t* log) {
 	free(log);
 }
 
-static void loglvl(const log_t* logger, enum log_level level, const char* format, va_list va)
-{
+static void loglvl(const log_t* logger, enum log_level level,
+                   const char* format, va_list va) {
 	// FIXME: add pthread synchronization
-	if (level >= logger->level)
+	if (level > logger->level)
 		return;
 	vfprintf(stderr, format, va);
 	fflush(stderr);

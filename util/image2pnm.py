@@ -107,6 +107,19 @@ def get_image_type(infile):
     (ext, cmd) = imgcmds[typeinfo]
     return (ext, cmd, None)
 
+def find_program(mydir, cmd):
+    # pull off the executable name.
+    parts = cmd.split(' ', 1)
+    prog = parts[0]
+    # try the same directory - this should work for installed
+    # versions where image2pnm.py and an-fitstopnm are both in
+    # "bin".
+    p = os.path.join(mydir, prog)
+    if os.path.exists(p):
+        return ' '.join(p, parts[1])
+    log('path', p, 'does not exist.')
+    return None
+
 def image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits,
               mydir, quiet):
     """
@@ -157,9 +170,11 @@ def image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits,
             log('temporary output file: ', outfile)
 
     # Do the actual conversion
-    # an-fitstopnm: add path...
-    if (ext == fitsext) and mydir:
-        cmd = os.path.join(mydir, cmd)
+    if ext == fitsext and mydir:
+        # an-fitstopnm: add explicit path...
+        cmd = find_program(mydir, cmd)
+        if cmd is None:
+            return (None, 'Couldn\'t find the program "an-fitstopnm".')
     if quiet:
         cmd += ' 2>/dev/null'
     do_command(cmd % (shell_escape(infile), shell_escape(outfile)))
@@ -180,8 +195,8 @@ def image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits,
     return (ext, None)
     
 
-def convert_image(infile, outfile, uncompressed, sanitized, force_ppm, no_fits2fits,
-                  mydir, quiet):
+def convert_image(infile, outfile, uncompressed, sanitized,
+                  force_ppm, no_fits2fits, mydir, quiet):
     typeinfo = run_file(infile)
 
     tempfiles = []
