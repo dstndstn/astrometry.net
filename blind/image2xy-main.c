@@ -31,7 +31,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hOo:q8Hd:";
+static const char* OPTIONS = "hOo:8Hd:v";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -45,7 +45,7 @@ static void printHelp() {
             "   [-H]  downsample by a factor of 2 before running simplexy.\n"
             "   [-d <downsample-factor>]  downsample by an integer factor before running simplexy.\n"
 			"   [-o <output-filename>]  write XYlist to given filename.\n"
-            "   [-q] be quiet (non-verbose).\n"
+            "   [-v] verbose - repeat for more and more verboseness\n"
 			"\n"
 			"   image2xy 'file.fits[1]'   - process first extension.\n"
 			"   image2xy 'file.fits[2]'   - process second extension \n"
@@ -61,9 +61,10 @@ int main(int argc, char *argv[]) {
 	char* outfn = NULL;
 	char* infn;
 	int overwrite = 0;
-    bool verbose = TRUE;
+    int loglvl = LOG_MSG;
     bool do_u8 = TRUE;
     int downsample = 0;
+    
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
@@ -76,8 +77,8 @@ int main(int argc, char *argv[]) {
         case '8':
             do_u8 = FALSE;
             break;
-        case 'q':
-            verbose = FALSE;
+        case 'v':
+            loglvl++;
             break;
 		case 'O':
 			overwrite = 1;
@@ -98,9 +99,7 @@ int main(int argc, char *argv[]) {
 
 	infn = argv[optind];
 
-    if (verbose)
-        log_init(LOG_ALL);
-
+    log_init(loglvl);
     logverb("infile=%s\n", infn);
 
 	if (!outfn) {
