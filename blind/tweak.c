@@ -269,47 +269,6 @@ tweak_t* tweak_new()
 	return t;
 }
 
-void tweak_print4_fp(FILE* f, double x, double y,
-                     double z, double w)
-{
-	fprintf(f, "%.15g ", x);
-	fprintf(f, "%.15g ", y);
-	fprintf(f, "%.15g ", z);
-	fprintf(f, "%.15g ", w);
-	fprintf(f, "\n");
-}
-
-void tweak_print5_fp(FILE* f, double x, double y,
-                     double z, double w, double u)
-{
-	fprintf(f, "%.15g ", x);
-	fprintf(f, "%.15g ", y);
-	fprintf(f, "%.15g ", z);
-	fprintf(f, "%.15g ", w);
-	fprintf(f, "%.15g ", u);
-	fprintf(f, "\n");
-}
-
-void tweak_print2_fp(FILE* f, double x, double y)
-{
-	fprintf(f, "%.15g ", x);
-	fprintf(f, "%.15g ", y);
-	fprintf(f, "\n");
-}
-
-void tweak_print4(char* fn, double* x, double* y,
-                  double* z, double* w, int n)
-{
-	FILE* f = fopen(fn, "w");
-	int i = 0;
-	for (i = 0; i < n; i++)
-		if (!z && !w)
-			tweak_print2_fp(f, x[i], y[i]);
-		else
-			tweak_print4_fp(f, x[i], y[i], z[i], w[i]);
-	fclose(f);
-}
-
 void tweak_print_the_state(unsigned int state)
 {
 	if (state & TWEAK_HAS_SIP )
@@ -346,67 +305,10 @@ void tweak_print_the_state(unsigned int state)
 		printf("TWEAK_HAS_LINEAR_CD, ");
 }
 
-void tweak_print_state(tweak_t* t)
-{
+void tweak_print_state(tweak_t* t) {
 	tweak_print_the_state(t->state);
 }
 
-#define BUFSZ 100 
-//#define USE_FILE(x) snprintf(fn, BUFSZ, x "_%p_%d.dat", (void*)t->state, dump_nr)
-#define USE_FILE(x) snprintf(fn, BUFSZ, x "_%03d.dat", dump_nr)
-void tweak_dump_ascii(tweak_t* t)
-{
-	static int dump_nr = 0;
-	char fn[BUFSZ];
-	FILE* cor_im; // correspondences
-	FILE* cor_ref;
-	FILE* cor_delta;
-
-	USE_FILE("scatter_image");
-	tweak_print4(fn, t->x, t->y, t->a, t->d, t->n);
-
-	if (t->state & TWEAK_HAS_REF_XY &&
-	        t->state & TWEAK_HAS_REF_AD) {
-		USE_FILE("scatter_ref");
-		tweak_print4(fn, t->x_ref, t->y_ref, t->a_ref, t->d_ref, t->n_ref);
-	}
-
-	if (t->image) {
-		int i;
-		USE_FILE("corr_im");
-		cor_im = fopen(fn, "w");
-		USE_FILE("corr_ref");
-		cor_ref = fopen(fn, "w");
-		USE_FILE("corr_delta");
-		cor_delta = fopen(fn, "w");
-		for (i = 0; i < il_size(t->image); i++) {
-			double a, d;
-			int im_ind = il_get(t->image, i);
-			sip_pixelxy2radec(t->sip, t->x[im_ind], t->y[im_ind], &a, &d);
-			tweak_print4_fp(cor_im, t->x[im_ind], t->y[im_ind],
-			                a, d);
-
-			if (t->state & TWEAK_HAS_REF_XY) {
-				int ref_ind = il_get(t->ref, i);
-				tweak_print4_fp(cor_ref,
-				                t->x_ref[ref_ind], t->y_ref[ref_ind],
-				                t->a_ref[ref_ind], t->d_ref[ref_ind]);
-
-				tweak_print5_fp(cor_delta,
-						t->x[im_ind], t->y[im_ind],
-						t->x_ref[ref_ind] - t->x[im_ind],
-						t->y_ref[ref_ind] - t->y[im_ind],
-						il_get(t->included, i));
-			}
-
-		}
-		fclose(cor_im);
-		fclose(cor_ref);
-		fclose(cor_delta);
-	}
-	printf("dump=%d\n", dump_nr);
-	dump_nr++;
-}
 void get_center_and_radius(double* ra, double* dec, int n,
                            double* ra_mean, double* dec_mean, double* radius)
 {
@@ -1780,7 +1682,6 @@ void do_ransac(tweak_t* t)
 		thiserr = sqrt(figure_of_merit(t,NULL,NULL) / il_size(t->ref));
 		if (thiserr < besterr) {
 			besterr = thiserr;
-			tweak_dump_ascii(t);
 		}
 
 		/*
