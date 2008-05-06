@@ -512,7 +512,8 @@ int augment_xylist(augment_xylist_t* axy,
             SYSERROR("Failed to delete temp file %s", xylsfn);
             exit(-1);
         }
-        if (image2xy(fitsimgfn, xylsfn, TRUE, axy->downsample)) {
+        // MAGIC 3: downsample by a factor of 2, up to 3 times.
+        if (image2xy(fitsimgfn, xylsfn, TRUE, axy->downsample, 3)) {
             ERROR("Source extraction failed");
             exit(-1);
         }

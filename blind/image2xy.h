@@ -23,6 +23,7 @@
 #include "an-bool.h"
 
 int image2xy(const char* infn, const char* outfn,
-             bool do_u8, int downsample);
+             bool do_u8, int downsample,
+             int downsample_as_required);
 
 #endif

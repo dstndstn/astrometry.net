@@ -799,6 +799,7 @@ int main(int argc, char** args) {
     bool help = FALSE;
     sl* strings = sl_new(4);
     char* cancelfn = NULL;
+    int loglvl = LOG_MSG;
 
 	while (1) {
 		int option_index = 0;
@@ -810,7 +811,7 @@ int main(int argc, char** args) {
             help = TRUE;
 			break;
         case 'v':
-            verbose = TRUE;
+            loglvl++;
             break;
         case 'C':
             cancelfn = optarg;
@@ -836,10 +837,7 @@ int main(int argc, char** args) {
 		exit(0);
 	}
 
-    if (verbose)
-        log_init(LOG_ALL);
-    else
-        log_init(LOG_MSG);
+    log_init(loglvl);
 
 	backend = backend_new();
 

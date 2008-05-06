@@ -52,5 +52,5 @@ static void loglvl(const log_t* logger, enum log_level level,
 
 LOGGER_TEMPLATE(logerr,  LOG_ERROR);
 LOGGER_TEMPLATE(logmsg,  LOG_MSG);
-LOGGER_TEMPLATE(logverb, LOG_ALL);
+LOGGER_TEMPLATE(logverb, LOG_VERB);
 LOGGER_TEMPLATE(debug,   LOG_ALL);

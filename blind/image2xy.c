@@ -60,9 +60,44 @@ ERROR(msg, ##__VA_ARGS__); \
 goto bailout; \
 } \
 } while(0)
- 
+
+static void rebin(float** thedata,
+                  int W, int H, int S,
+                  int* newW, int* newH) {
+    float sigma = S;
+    int i, j, I, J;
+
+    *newW = (W + S-1) / S;
+    *newH = (H + S-1) / S;
+
+    // Gaussian smooth in-place.
+    dsmooth2(*thedata, W, H, sigma, *thedata);
+
+    // Average SxS blocks, placing the result in the bottom (newW * newH) first pixels.
+    for (j=0; j<*newH; j++) {
+        for (i=0; i<*newW; i++) {
+            float sum = 0.0;
+            int N = 0;
+            for (J=0; J<S; J++) {
+                if (j*S + J >= H)
+                    break;
+                for (I=0; I<S; I++) {
+                    if (i*S + I >= W)
+                        break;
+                    sum += (*thedata)[(j*S + J)*W + (i*S + I)];
+                    N++;
+                }
+            }
+            (*thedata)[j * (*newW) + i] = sum / (float)N;
+        }
+    }
+
+    // save some memory...
+    *thedata = realloc(*thedata, (*newW) * (*newH) * sizeof(float));
+}
+
 int image2xy(const char* infn, const char* outfn,
-             bool do_u8, int downsample) {
+             bool do_u8, int downsample, int downsample_as_required) {
 	fitsfile *fptr = NULL;
 	fitsfile *ofptr = NULL;
 	int status = 0; // FIXME should have ostatus too
@@ -74,6 +109,7 @@ int image2xy(const char* infn, const char* outfn,
 	int nhdus,maxper,maxsize,halfbox,hdutype,nimgs;
 	float dpsf,plim,dlim,saddle;
     char* str;
+    bool tryagain = FALSE;
 
 	fits_open_file(&fptr, infn, READONLY, &status);
     FITS_CHECK("Failed to open FITS input file %s", infn);
@@ -147,6 +183,7 @@ int image2xy(const char* infn, const char* outfn,
         float *y;
         float *flux;
         float* background;
+        int newW, newH;
 
         // the factor by which to downsample.
         int S = downsample ? downsample : 1;
@@ -200,66 +237,50 @@ int image2xy(const char* infn, const char* outfn,
         FITS_CHECK("Failed to read image pixels");
 
         if (downsample) {
-            int W = naxisn[0];
-            int H = naxisn[1];
-            int newW = (W + S-1) / S;
-            int newH = (H + S-1) / S;
-            float sigma = S;
-            int i, j, I, J;
-
-            // Gaussian smooth in-place.
-            dsmooth2(thedata, naxisn[0], naxisn[1], sigma, thedata);
-
-            // Average SxS blocks, placing the result in the bottom (newW * newH) first pixels.
-            for (j=0; j<newH; j++) {
-                for (i=0; i<newW; i++) {
-                    float sum = 0.0;
-                    int N = 0;
-                    for (J=0; J<S; J++) {
-                        if (j*S + J >= H)
-                            break;
-                        for (I=0; I<S; I++) {
-                            if (i*S + I >= W)
-                                break;
-                            sum += thedata[(j*S + J)*W + (i*S + I)];
-                            N++;
-                        }
-                    }
-                    thedata[j * newW + i] = sum / (float)N;
-                }
-            }
-
-            // save some memory...
-            thedata = realloc(thedata, newW * newH * sizeof(float));
-
-            fullW = W;
-            fullH = H;
+            fullW = naxisn[0];
+            fullH = naxisn[1];
+            rebin(&thedata, naxisn[0], naxisn[1], S, &newW, &newH);
             naxisn[0] = newW;
             naxisn[1] = newH;
         }
 
-        memset(&s, 0, sizeof(simplexy_t));
-        s.image = thedata;
-        s.image_u8 = theu8data;
-        s.nx = naxisn[0];
-        s.ny = naxisn[1];
-        s.dpsf = dpsf;
-        s.plim = plim;
-        s.dlim = dlim;
-        s.saddle = saddle;
-        s.maxper = maxper;
-        s.maxnpeaks = maxnpeaks;
-        s.maxsize = maxsize;
-        s.halfbox = halfbox;
+        do {
+            memset(&s, 0, sizeof(simplexy_t));
+            s.image = thedata;
+            s.image_u8 = theu8data;
+            s.nx = naxisn[0];
+            s.ny = naxisn[1];
+            s.dpsf = dpsf;
+            s.plim = plim;
+            s.dlim = dlim;
+            s.saddle = saddle;
+            s.maxper = maxper;
+            s.maxnpeaks = maxnpeaks;
+            s.maxsize = maxsize;
+            s.halfbox = halfbox;
         
-        simplexy2(&s);
+            simplexy2(&s);
 
-        x = s.x;
-        y = s.y;
-        flux = s.flux;
-        background = s.background;
-        npeaks = s.npeaks;
-        sigma = s.sigma;
+            x = s.x;
+            y = s.y;
+            flux = s.flux;
+            background = s.background;
+            npeaks = s.npeaks;
+            sigma = s.sigma;
+
+            tryagain = FALSE;
+            if (npeaks == 0 &&
+                downsample_as_required) {
+                logverb("Downsampling by 2x2...\n");
+                rebin(&thedata, naxisn[0], naxisn[1], 2, &newW, &newH);
+                naxisn[0] = newW;
+                naxisn[1] = newH;
+                S *= 2;
+                tryagain = TRUE;
+                downsample_as_required--;
+            }
+
+        } while (tryagain);
 
 		free(s.image);
 		free(s.image_u8);

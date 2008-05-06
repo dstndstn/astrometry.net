@@ -489,11 +489,6 @@ int main(int argc, char** args) {
             exit(-1);
         }
 
-        // Open the resulting xylist and complain if any of the fields
-        // have no sources...?
-        {
-        }
-
         if (makeplots) {
             // source extraction overlay
             // plotxy -i harvard.axy -I /tmp/pnm -C red -P -w 2 -N 50 | plotxy -w 2 -r 3 -I - -i harvard.axy -C red -n 50 > harvard-objs.png
