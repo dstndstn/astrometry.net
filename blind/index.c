@@ -20,19 +20,18 @@
 #include "fileutil.h"
 #include "log.h"
 
-index_t* index_load(const char* indexname, int flags)
-{
+index_t* index_load(const char* indexname, int flags) {
 	char *idfname, *treefname, *quadfname, *startreefname;
 
 	index_t* index = calloc(1, sizeof(index_t));
 	index->indexname = indexname;
 
 	if (flags & INDEX_ONLY_LOAD_METADATA)
-		logmsg("Loading only metadata for %s...\n", indexname);
+		logverb("Loading only metadata for %s...\n", indexname);
 
 	// Read .skdt file...
 	startreefname = mk_streefn(indexname);
-	logmsg("Reading star KD tree from %s...\n", startreefname);
+	logverb("Reading star KD tree from %s...\n", startreefname);
 	index->starkd = startree_open(startreefname);
 	if (!index->starkd) {
 		logerr("Failed to read star kdtree %s\n", startreefname);
@@ -44,14 +43,14 @@ index_t* index_load(const char* indexname, int flags)
 	logverb("  (%d stars, %d nodes).\n", startree_N(index->starkd), startree_nodes(index->starkd));
 
 	index->index_jitter = qfits_header_getdouble(index->starkd->header, "JITTER", DEFAULT_INDEX_JITTER);
-	logmsg("Setting index jitter to %g arcsec.\n", index->index_jitter);
+	logverb("Setting index jitter to %g arcsec.\n", index->index_jitter);
 
 	if (flags & INDEX_ONLY_LOAD_SKDT)
 		return index;
 
 	// Read .quad file...
 	quadfname = mk_quadfn(indexname);
-	logmsg("Reading quads file %s...\n", quadfname);
+	logverb("Reading quads file %s...\n", quadfname);
 	index->quads = quadfile_open(quadfname);
 	if (!index->quads) {
 		logerr("Couldn't read quads file %s\n", quadfname);
@@ -64,15 +63,15 @@ index_t* index_load(const char* indexname, int flags)
 	index->indexid = index->quads->indexid;
 	index->healpix = index->quads->healpix;
 
-	logmsg("Stars: %i, Quads: %i.\n", index->quads->numstars, index->quads->numquads);
+	logverb("Stars: %i, Quads: %i.\n", index->quads->numstars, index->quads->numquads);
 
-	logmsg("Index scale: [%g, %g] arcmin, [%g, %g] arcsec\n",
+	logverb("Index scale: [%g, %g] arcmin, [%g, %g] arcsec\n",
 	       index->index_scale_lower / 60.0, index->index_scale_upper / 60.0,
 	       index->index_scale_lower, index->index_scale_upper);
 
 	// Read .ckdt file...
 	treefname = mk_ctreefn(indexname);
-	logmsg("Reading code KD tree from %s...\n", treefname);
+	logverb("Reading code KD tree from %s...\n", treefname);
 	index->codekd = codetree_open(treefname);
 	if (!index->codekd) {
 		logerr("Failed to read code kdtree %s\n", treefname);

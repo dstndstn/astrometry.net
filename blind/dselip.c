@@ -57,6 +57,8 @@ float dselip(unsigned long k, unsigned long n, float *arr) {
 
 void dselip_cleanup() {
     free(past_data);
+    past_data = NULL;
+    high_water_mark = 0;
 }
 
 #endif
