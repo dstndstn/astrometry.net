@@ -112,7 +112,8 @@ int DFIND2(IMGTYPE* image,
 	}
 
 	/* Re-label the groups before returning */
-    relabel_image(on_pixels, maxlabel, equivs, object);
+    maxlabel = relabel_image(on_pixels, maxlabel, equivs, object);
+    //logverb("After final relabelling, %i labels were used.\n", maxlabel);
 
 	free(equivs);
 	il_free(on_pixels);

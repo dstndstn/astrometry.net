@@ -55,7 +55,7 @@ int dobjects(float *image,
 
 	/* check how much noise is left after running a median filter and a point
 	 * spread smooth */
-	dsigma(smooth, nx, ny, (int)(10*dpsf), &sigma);
+	dsigma(smooth, nx, ny, (int)(10*dpsf), 0, &sigma);
 
 	/* limit is the threshold at which to pay attention to a pixel */
 	limit = sigma * plim;

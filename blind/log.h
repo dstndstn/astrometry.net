@@ -5,6 +5,7 @@ enum log_level {
 	LOG_NONE,
 	LOG_ERROR,
 	LOG_MSG,
+	LOG_VERB,
 	LOG_ALL
 };
 
@@ -27,7 +28,8 @@ void log_init(enum log_level level);
  *   level - LOG_NONE  don't show anything
  *           LOG_ERROR only log errors
  *           LOG_MSG   log errors and important messages
- *           LOG_ALL   log everything
+ *           LOG_VERB  log verbose messages
+ *           LOG_ALL   log debug messages
  *
  * Returns:
  *

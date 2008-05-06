@@ -47,6 +47,7 @@
 #include "blind.h"
 #include "log.h"
 #include "qfits.h"
+#include "errors.h"
 
 static bool verbose = FALSE;
 
@@ -112,12 +113,10 @@ static int get_index_scales(const char* indexname,
 	double hi, lo;
 
 	quadfname = mk_quadfn(indexname);
-    if (verbose)
-        printf("Reading quads file %s...\n", quadfname);
+    logverb("Reading quads file %s...\n", quadfname);
 	quads = quadfile_open(quadfname);
 	if (!quads) {
-        if (verbose)
-            printf("Couldn't read quads file %s\n", quadfname);
+        logmsg("Couldn't read quads file %s\n", quadfname);
 		free_fn(quadfname);
 		return -1;
 	}
@@ -128,11 +127,9 @@ static int get_index_scales(const char* indexname,
 		*losize = lo;
 	if (hisize)
 		*hisize = hi;
-    if (verbose) {
-        printf("Stars: %i, Quads: %i.\n", quads->numstars, quads->numquads);
-        printf("Index scale: [%g, %g] arcmin, [%g, %g] arcsec\n",
-               lo / 60.0, hi / 60.0, lo, hi);
-    }
+    logverb("Stars: %i, Quads: %i.\n", quads->numstars, quads->numquads);
+    logverb("Index scale: [%g, %g] arcmin, [%g, %g] arcsec\n",
+            lo / 60.0, hi / 60.0, lo, hi);
 	quadfile_close(quads);
 	return 0;
 }
@@ -152,8 +149,7 @@ static bool add_index(backend_t* backend, char* full_index_path, double lo, doub
         indexinfo_t* iii = bl_access(backend->indexinfos, k);
         if (strcmp(iii->canonname, ii.canonname))
             continue;
-        if (verbose)
-            printf("Skipping duplicate index %s\n", full_index_path);
+        logverb("Skipping duplicate index %s\n", full_index_path);
         free(ii.canonname);
         return FALSE;
     }
@@ -203,20 +199,18 @@ static int find_index(backend_t* backend, char* index)
         }
     }
 	if (!found_index) {
-		printf("Failed to find the index \"%s\".\n", index);
+		logmsg("Failed to find the index \"%s\".\n", index);
 		return -1;
 	}
-    if (verbose)
-        printf("Found index: %s\n", full_index_path);
+    logverb("Found index: %s\n", full_index_path);
 
-    if (!add_index(backend, full_index_path, lo, hi)) {
+    if (!add_index(backend, full_index_path, lo, hi))
         free(full_index_path);
-    }
+
 	return 0;
 }
 
-static int parse_config_file(FILE* fconf, backend_t* backend)
-{
+static int parse_config_file(FILE* fconf, backend_t* backend) {
     sl* indices = sl_new(16);
     bool auto_index = FALSE;
     int i;
@@ -229,7 +223,7 @@ static int parse_config_file(FILE* fconf, backend_t* backend)
 		if (!fgets(buffer, sizeof(buffer), fconf)) {
 			if (feof(fconf))
 				break;
-			printf("Failed to read a line from the config file: %s\n", strerror(errno));
+			SYSERROR("Failed to read a line from the config file");
             rtn = -1;
             goto done;
 		}
@@ -281,7 +275,7 @@ static int parse_config_file(FILE* fconf, backend_t* backend)
 		} else if (is_word(line, "add_path ", &nextword)) {
 			sl_append(backend->index_paths, nextword);
 		} else {
-			printf("Didn't understand this config file line: \"%s\"\n", line);
+			ERROR("Didn't understand this config file line: \"%s\"", line);
 			// unknown config line is a firing offense
             rtn = -1;
             goto done;
@@ -290,8 +284,7 @@ static int parse_config_file(FILE* fconf, backend_t* backend)
 
     for (i=0; i<sl_size(indices); i++) {
         char* ind = sl_get(indices, i);
-        if (verbose)
-            printf("Trying index %s...\n", ind);
+        logverb("Trying index %s...\n", ind);
         if (find_index(backend, ind)) {
             rtn = -1;
             goto done;
@@ -306,11 +299,10 @@ static int parse_config_file(FILE* fconf, backend_t* backend)
             sl* trybases;
             int j;
             if (!dir) {
-                fprintf(stderr, "Failed to open directory \"%s\": %s\n", path, strerror(errno));
+                SYSERROR("Failed to open directory \"%s\"", path);
                 continue;
             }
-            if (verbose)
-                printf("Auto-indexing directory %s...\n", path);
+            logverb("Auto-indexing directory %s...\n", path);
             trybases = sl_new(16);
             while (1) {
                 struct dirent* de;
@@ -322,7 +314,7 @@ static int parse_config_file(FILE* fconf, backend_t* backend)
                 de = readdir(dir);
                 if (!de) {
                     if (errno)
-                        fprintf(stderr, "Failed to read entry from directory \"%s\": %s\n", path, strerror(errno));
+                        SYSERROR("Failed to read entry from directory \"%s\"", path);
                     break;
                 }
                 name = de->d_name;
@@ -347,15 +339,13 @@ static int parse_config_file(FILE* fconf, backend_t* backend)
                 double lo, hi;
                 // FIXME - look for corresponding .skdt.fits and .ckdt.fits files?
                 asprintf_safe(&fullpath, "%s/%s", path, base);
-                if (verbose)
-                    printf("Trying to add index \"%s\".\n", fullpath);
+                logverb("Trying to add index \"%s\".\n", fullpath);
                 if (get_index_scales(fullpath, &lo, &hi) == 0) {
                     if (!add_index(backend, fullpath, lo, hi)) {
                         free(fullpath);
                     }
                 } else {
-                    if (verbose)
-                        printf("Failed to add index \"%s\".\n", fullpath);
+                    logmsg("Failed to add index \"%s\".\n", fullpath);
                     free(fullpath);
                 }
             }
@@ -381,7 +371,7 @@ typedef struct job_t job_t;
 static job_t* job_new() {
 	job_t* job = calloc(1, sizeof(job_t));
 	if (!job) {
-		printf("Failed to allocate a new job_t.\n");
+		SYSERROR("Failed to allocate a new job_t.");
 		return NULL;
 	}
 	job->scales = dl_new(8);
@@ -411,11 +401,6 @@ static int run_job(job_t* job, backend_t* backend) {
     int i;
     double app_min_default;
     double app_max_default;
-
-    //if (verbose)
-    //log_init(4);
-    //else
-    log_init(3);
 
     app_min_default = deg2arcsec(backend->minwidth) / job_imagew(job);
     app_max_default = deg2arcsec(backend->maxwidth) / job_imagew(job);
@@ -492,9 +477,8 @@ static int run_job(job_t* job, backend_t* backend) {
 			if (backend->inparallel)
                 bp->indexes_inparallel = TRUE;
 
-            printf("Running blind:\n");
-            if (verbose)
-                blind_log_run_parameters(bp);
+            logverb("Running blind");
+            blind_log_run_parameters(bp);
 
             blind_run(bp);
 
@@ -540,7 +524,7 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     sp->field_maxy = qfits_header_getdouble(hdr, "IMAGEH", dnil);
 	if ((sp->field_maxx == dnil) || (sp->field_maxy == dnil) ||
 		(sp->field_maxx <= 0.0) || (sp->field_maxy <= 0.0)) {
-		printf("Must specify positive \"IMAGEW\" and \"IMAGEH\".\n");
+		logerr("Must specify positive \"IMAGEW\" and \"IMAGEH\".\n");
 		goto bailout;
 	}
 
@@ -604,7 +588,7 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 			break;
         if ((lo != dnil) && (hi != dnil)) {
             if ((lo < 0) || (lo > hi)) {
-                fprintf(stderr, "Scale range %g to %g is invalid: min must be >= 0, max must be >= min.\n", lo, hi);
+                logerr("Scale range %g to %g is invalid: min must be >= 0, max must be >= min.\n", lo, hi);
                 goto bailout;
             }
         }
@@ -628,7 +612,7 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 		if (dlo == 0 && dhi == 0)
 			break;
         if ((dlo < 0) || (dlo > dhi)) {
-            fprintf(stderr, "Depth range %i to %i is invalid: min must be >= 1, max must be >= min.\n", dlo, dhi);
+            logerr("Depth range %i to %i is invalid: min must be >= 1, max must be >= min.\n", dlo, dhi);
             goto bailout;
         }
 		il_append(job->depths, dlo);
@@ -650,10 +634,10 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 		if (hi == -1)
 			break;
         if ((lo <= 0) || (lo > hi)) {
-            fprintf(stderr, "Field range %i to %i is invalid: min must be >= 1, max must be >= min.\n", lo, hi);
-            fprintf(stderr, "  (FITS headers: \"%s = %s\", \"%s = %s\")\n",
-                    lokey, qfits_pretty_string(qfits_header_getstr(hdr, lokey)),
-                    hikey, qfits_pretty_string(qfits_header_getstr(hdr, hikey)));
+            logerr("Field range %i to %i is invalid: min must be >= 1, max must be >= min.\n", lo, hi);
+            logmsg("  (FITS headers: \"%s = %s\", \"%s = %s\")\n",
+                   lokey, qfits_pretty_string(qfits_header_getstr(hdr, lokey)),
+                   hikey, qfits_pretty_string(qfits_header_getstr(hdr, hikey)));
             goto bailout;
         }
 
@@ -670,8 +654,8 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 		if (fld == -1)
 			break;
         if (fld <= 0) {
-            fprintf(stderr, "Field %i is invalid: must be >= 1.  (FITS header: \"%s = %s\")\n", fld, key,
-                    qfits_pretty_string(qfits_header_getstr(hdr, key)));
+            logerr("Field %i is invalid: must be >= 1.  (FITS header: \"%s = %s\")\n", fld, key,
+                   qfits_pretty_string(qfits_header_getstr(hdr, key)));
             goto bailout;
         }
 
@@ -844,13 +828,18 @@ int main(int argc, char** args) {
 
 	if (optind == argc) {
 		// Need extra args: filename
-		printf("You must specify a job file.\n\n");
+		printf("You must specify at least one input file!\n\n");
 		help = TRUE;
 	}
 	if (help) {
 		print_help(args[0]);
 		exit(0);
 	}
+
+    if (verbose)
+        log_init(LOG_ALL);
+    else
+        log_init(LOG_MSG);
 
 	backend = backend_new();
 
@@ -873,43 +862,38 @@ int main(int argc, char** args) {
             char* cf = sl_get(trycf, i);
             if (file_exists(cf)) {
                 configfn = strdup(cf);
-                if (verbose)
-                    printf("Using config file \"%s\"\n", cf);
+                logverb("Using config file \"%s\"\n", cf);
                 break;
             } else {
-                if (verbose)
-                    printf("Config file \"%s\" doesn't exist.\n", cf);
+                logverb("Config file \"%s\" doesn't exist.\n", cf);
             }
         }
         if (!configfn) {
-            fprintf(stderr, "Couldn't find config file: tried ");
-            for (i=0; i<sl_size(trycf); i++) {
-                char* cf = sl_get(trycf, i);
-                fprintf(stderr, "%s\"%s\"", (i ? ", " : ""), cf);
-            }
-            fprintf(stderr, "\n");
+            char* cflist = sl_join(trycf, "\n  ");
+            logerr("Couldn't find config file: tried:\n  %s\n", cflist);
+            free(cflist);
         }
         sl_free2(trycf);
     }
 	fconf = fopen(configfn, "r");
 	if (!fconf) {
-		fprintf(stderr, "Failed to open config file \"%s\": %s.\n", configfn, strerror(errno));
+		SYSERROR("Failed to open config file \"%s\"", configfn);
 		exit( -1);
 	}
 
 	if (parse_config_file(fconf, backend)) {
-		fprintf(stderr, "Failed to parse config file \"%s\".\n", configfn);
+        logerr("Failed to parse config file \"%s\"\n", configfn);
 		exit( -1);
 	}
 	fclose(fconf);
 
 	if (!pl_size(backend->indexinfos)) {
-		fprintf(stderr, "You must list at least one index in the config file (%s)\n", configfn);
+		logerr("You must list at least one index in the config file (%s)\n", configfn);
 		exit( -1);
 	}
 
 	if (backend->minwidth <= 0.0 || backend->maxwidth <= 0.0) {
-		fprintf(stderr, "\"minwidth\" and \"maxwidth\" must be positive!\n");
+		logerr("\"minwidth\" and \"maxwidth\" in the config file %s must be positive!\n", configfn);
 		exit( -1);
 	}
 
@@ -933,14 +917,12 @@ int main(int argc, char** args) {
 
 		jobfn = args[i];
 
-        if (verbose)
-            printf("Reading job file \"%s\"...\n", jobfn);
-        fflush(NULL);
+        logverb("Reading job file \"%s\"...\n", jobfn);
 
 		// Read primary header.
 		hdr = qfits_header_read(jobfn);
 		if (!hdr) {
-			fprintf(stderr, "Failed to parse FITS header from file \"%s\".\n", jobfn);
+			ERROR("Failed to parse FITS header from file \"%s\"", jobfn);
 			exit( -1);
 		}
         job = job_new();
@@ -983,9 +965,8 @@ int main(int argc, char** args) {
         if (cancelfn)
             blind_set_cancel_file(bp, cancelfn);
 
-		if (run_job(job, backend)) {
-			fprintf(stderr, "Failed to run_blind.\n");
-		}
+		if (run_job(job, backend))
+			logerr("Failed to run_job()\n");
 
         blind_cleanup(bp);
 		//cleanup:

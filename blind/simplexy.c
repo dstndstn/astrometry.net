@@ -86,7 +86,7 @@ int simplexy_continue(float *image,
 	/* determine an estimate of the noise in the image (sigma) assuming the
 	 * noise is iid gaussian, by sampling at regular intervals, and comparing
 	 * the difference between pixels separated by a 5-pixel diagonal gap. */
-	dsigma(image, nx, ny, 5, sigma);
+	dsigma(image, nx, ny, 5, 0, sigma);
 	if (verbose)
 	  fprintf(stderr, "simplexy: dsigma() found sigma=%g.\n", *sigma);
 

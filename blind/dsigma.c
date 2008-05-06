@@ -25,6 +25,7 @@
 
 #include "dimage.h"
 #include "simplexy-common.h"
+#include "log.h"
 
 /*
  * dsigma.c
@@ -41,6 +42,7 @@ int dsigma(float *image,
            int nx,
            int ny,
            int sp,
+           int gridsize,
            float *sigma)
 {
 	float *diff = NULL;
@@ -53,13 +55,16 @@ int dsigma(float *image,
 		return rtn;
 	}
 
-	dx = 50;
+    if (gridsize == 0)
+        gridsize = 50;
+
+	dx = gridsize;
 	if (dx > nx / 4)
 		dx = nx / 4;
 	if (dx <= 0)
 		dx = 1;
 
-	dy = 50;
+	dy = gridsize;
 	if (dy > ny / 4)
 		dy = ny / 4;
 	if (dy <= 0)
@@ -94,13 +99,51 @@ int dsigma(float *image,
 
 	/* estimate sigma in a clever way to avoid having our estimate biased by
 	 * outliers. outliers come into the diff list when we sampled a point where
-	 * the upper point was on a source, but the lower one was not (or vice versa).
-     * since the
+	 * the upper point was on a source, but the lower one was not (or vice
+     * versa).  Since the
 	 * sample variance involves squaring the already-large outliers, they
 	 * drastically affect the final sigma estimate. by sorting, the outliers go
 	 * to the top and only affect the final value very slightly, because they
 	 * are a small fraction of the total entries in diff (or so we hope!) */
+
+    // DEBUG
+    /*{
+        int nzero = 0;
+        for (i=0; i<ndiff; i++) {
+            if (diff[i] == 0.0)
+                nzero++;
+        }
+        logverb("%i of %i diffs are zero.\n", nzero, ndiff);
+     }*/
+
 	*sigma = dselip((int)floor(ndiff * 0.68), ndiff, diff) / sqrt(2.);
+    if (*sigma == 0.0) {
+        int nzero = 0;
+        int NS = ndiff;
+        tot = 0.0;
+        logverb("outlier-rejecting sigma is zero.\n");
+        for (i=0; i<ndiff; i++) {
+            if (diff[i] == 0.0)
+                nzero++;
+        }
+        logverb("%i of %i diffs are zero.\n", nzero, ndiff);
+        if (nzero < (0.9 * ndiff)) {
+            // omit the top 5% as outliers...
+            NS = (0.95 * ndiff);
+        }
+
+        for (i=0; i<NS; i++)
+            tot += diff[i]*diff[i];
+        *sigma = sqrt(tot / (float)NS);
+        logverb("set sigma=%g\n", *sigma);
+        /*
+         for (i=0; i<ndiff; i++) {
+         if (diff[i] != 0)
+         break;
+         }
+         logverb("first non-zero difference is index %i of %i\n", i, ndiff);
+         */
+    }
     rtn = 1;
 
  finish:

@@ -74,7 +74,7 @@ int deblend(float *image,
             int pny,
             int dontsettemplates);
 int dcen3x3(float *image, float *xcen, float *ycen);
-int dsigma(float *image, int nx, int ny, int sp, float *sigma);
+int dsigma(float *image, int nx, int ny, int sp, int gridsize, float *sigma);
 int dmedsmooth(float *image,
 //	       float invvar,
 	       int nx, int ny, int halfbox, float *smooth);

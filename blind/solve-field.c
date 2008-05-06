@@ -428,7 +428,7 @@ int main(int argc, char** args) {
 					exit(-1);
 				}
 			} else {
-				logmsg("Output file \"%s\" already exists."
+				logmsg("Output file already exists: \"%s\".\n"
 				       "Use the --overwrite flag to overwrite existing files,\n"
                        " or the --continue  flag to not overwrite existing files but still try solving.\n", fn);
 				logmsg("Continuing to next input file.\n");
@@ -488,6 +488,11 @@ int main(int argc, char** args) {
         if (augment_xylist(axy, me)) {
             ERROR("augment-xylist failed");
             exit(-1);
+        }
+
+        // Open the resulting xylist and complain if any of the fields
+        // have no sources...?
+        {
         }
 
         if (makeplots) {

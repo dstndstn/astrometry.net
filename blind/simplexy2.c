@@ -112,24 +112,40 @@ int simplexy2(simplexy_t* s) {
 	 * noise is iid gaussian, by sampling at regular intervals, and comparing
 	 * the difference between pixels separated by a 5-pixel diagonal gap. */
     logverb("simplexy: measuring image noise (sigma)...\n");
-	dsigma(s->image, nx, ny, 5, &(s->sigma));
+	dsigma(s->image, nx, ny, 5, 0, &(s->sigma));
     logverb("simplexy: found sigma=%g.\n", s->sigma);
     if (s->sigma == 0.0) {
+        logverb("simplexy: re-estimating sigma with a finer grid...\n");
+        dsigma(s->image, nx, ny, 5, 5, &(s->sigma));
+        logverb("simplexy: found sigma=%g.\n", s->sigma);
+        if (s->sigma == 0.0) {
+            logverb("simplexy: re-estimating sigma with a finer grid...\n");
+            dsigma(s->image, nx, ny, 5, 1, &(s->sigma));
+            logverb("simplexy: found sigma=%g.\n", s->sigma);
+        }
+        /*
         double mn,mx;
+        int nzero;
         // hmm...
         logverb("simplexy: estimated image noise (sigma) is zero.\n");
         mn =  HUGE_VAL;
         mx = -HUGE_VAL;
+        nzero = 0;
         for (i=0; i<nx*ny; i++) {
             mn = MIN(mn, s->image[i]);
             mx = MAX(mx, s->image[i]);
+            if (s->image[i] == 0.0)
+                nzero++;
         }
+        logverb("simplexy: image contains %i of %i (%.1f %%) zero values.\n",
+                nzero, nx*ny, 100.0*nzero/(double)(nx*ny));
         // MAGIC
         s->sigma = (mx - mn) * 0.1;
         if (s->sigma == 0.0)
             s->sigma = 1.0;
         logverb("simplexy: image range is [%g, %g]; setting sigma to %g.\n",
                 mn, mx, s->sigma);
+         */
     }
 
 	/* find objects */
