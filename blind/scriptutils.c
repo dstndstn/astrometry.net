@@ -119,7 +119,6 @@ int parse_positive_range_string(il* depths, const char* str,
             check_range = 0;
         } else if (sscanf(str, "%u", &hi) == 1) {
             sscanf(str, "%*u%n", &nread);
-            lo = hi;
         } else {
             fprintf(stderr, "Failed to parse %s range: \"%s\"\n", valuename, str);
             return -1;

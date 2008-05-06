@@ -28,7 +28,7 @@ and Sam Roweis.
    indices (about 25 GB total), which are the same files we're using for our
    web service.
 
-QUICKSTART
+INSTALLING
 ----------
 
    To compile everything and run with full functionality, you will need:
@@ -304,7 +304,16 @@ TRICKS AND TIPS
    .   AISCHV2_037_08859_0001_sv01-nd-int.fits.gz  AISCHV2_040_19670_0001_sv02-nd-int.fits.gz
    ..  AISCHV2_040_19670_0001_sv01-nd-int.fits.gz
 
-   > solve-field data/*
+   > time solve-field data/*
+
+   Okay, that worked but it was really slow.  Annoyingly, it takes a long time to decide that
+   an image isn't going to solve.  You can reduce that time:
+
+   > solve-field --cpulimit 30 ...
+
+   Alternatively, you can force it to only look at the brightest N sources in your images:
+
+   > solve-field --depth 1-20 ...
 
 
 

@@ -834,7 +834,7 @@ int augment_xylist(augment_xylist_t* axy,
 }
 
 static int parse_depth_string(il* depths, const char* str) {
-    return parse_positive_range_string(depths, str, 0, 0, "Depth");
+    return parse_positive_range_string(depths, str, 1, 0, "Depth");
 }
 
 static int parse_fields_string(il* fields, const char* str) {

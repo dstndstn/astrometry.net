@@ -29,8 +29,8 @@ static void loglvl(const log_t* logger, enum log_level level,
 	// FIXME: add pthread synchronization
 	if (level > logger->level)
 		return;
-	vfprintf(stderr, format, va);
-	fflush(stderr);
+	vfprintf(stdout, format, va);
+	fflush(stdout);
 }
 
 void loglevel(enum log_level level,
