@@ -32,6 +32,20 @@ static Inline unsigned int my_hweight32(unsigned int w) {
 	return (res & 0x0000FFFF) + ((res >> 16) & 0x0000FFFF);
 }
 
+int invert_2by2_arr(const double* A, double* Ainv) {
+	double det;
+	double inv_det;
+	det = A[0] * A[3] - A[1] * A[2];
+	if (det == 0.0)
+		return -1;
+	inv_det = 1.0 / det;
+	Ainv[0] =  A[3] * inv_det;
+	Ainv[1] = -A[1] * inv_det;
+	Ainv[2] = -A[2] * inv_det;
+	Ainv[3] =  A[0] * inv_det;
+	return 0;
+}
+
 int invert_2by2(const double A[2][2], double Ainv[2][2]) {
 	double det;
 	double inv_det;

@@ -33,6 +33,17 @@ static void loglvl(const log_t* logger, enum log_level level,
 	fflush(stderr);
 }
 
+void loglevel(enum log_level level,
+              const char* format, ...) {
+    va_list va;
+    va_start(va, format);
+    loglvl(&_logger_global, level, format, va);
+    va_end(va);
+}
+
+int log_get_level() {
+    return _logger_global.level;
+}
 
 #define LOGGER_TEMPLATE(name, level)                  \
 	void                                                \

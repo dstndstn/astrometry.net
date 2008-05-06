@@ -459,7 +459,7 @@ void solver_run(solver_t* solver) {
 			}
 		}
 		solver->minminAB2 = MAX(solver->minminAB2, square(solver->quadsize_min));
-		logmsg("Quad scale range: [%g, %g] pixels\n", sqrt(solver->minminAB2), sqrt(solver->maxmaxAB2));
+		logverb("Quad scale range: [%g, %g] pixels\n", sqrt(solver->minminAB2), sqrt(solver->maxmaxAB2));
 
 		pquads = calloc(numxy * numxy, sizeof(pquad));
 
@@ -655,7 +655,7 @@ void solver_run(solver_t* solver) {
 				}
 			}
 
-			logmsg("object %u of %u: %i quads tried, %i matched.\n",
+			logverb("object %u of %u: %i quads tried, %i matched.\n",
 				   newpoint + 1, numxy, solver->numtries, solver->nummatches);
 
 			if ((solver->maxquads && (solver->numtries >= solver->maxquads))
@@ -955,7 +955,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		sp->best_logodds = mo->logodds;
 
 	if (!sp->have_best_match || (mo->logodds > sp->best_match.logodds)) {
-		logmsg("Got a new best match: logodds %g.\n", mo->logodds);
+		logverb("Got a new best match: logodds %g.\n", mo->logodds);
 
         //free_best_match_extras(sp);
 

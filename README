@@ -218,11 +218,6 @@ UPGRADING
     $ make upgrade-indices
 
 
-COMMON PROBLEMS
----------------
-
-
-
 SOLVE-FIELDS ARGUMENTS
 ----------------------
    There are a few command-line arguments to solve-fields that are very important
@@ -298,6 +293,19 @@ XYLISTS
    Unfortunately, the plotting code isn't smart about handling multiple fields, so
    if you're using multi-extension xylists you probably want to turn off plotting:
       solve-field --no-plots
+
+
+TRICKS AND TIPS
+---------------
+   Say you've got a directory full of FITS images from your latest observing run,
+   and you just want them calibrated NOW.
+
+   > ls data/
+   .   AISCHV2_037_08859_0001_sv01-nd-int.fits.gz  AISCHV2_040_19670_0001_sv02-nd-int.fits.gz
+   ..  AISCHV2_040_19670_0001_sv01-nd-int.fits.gz
+
+   > solve-field data/*
+
 
 
 SOURCE EXTRACTION USING SEXTRACTOR

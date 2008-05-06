@@ -202,7 +202,8 @@ int   pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1
 void  pl_sort(pl* list, int (*compare)(const void* v1, const void* v2));
 void  pl_remove(pl* list, int ind);
 void  pl_remove_index_range(pl* list, int start, int length);
-int   pl_remove_value(pl* list, void* value);
+// Returns the index where the value was found, or -1 if it wasn't found.
+int   pl_remove_value(pl* list, const void* value);
 void  pl_remove_all(pl* list);
 void  pl_merge_lists(pl* list1, pl* list2);
 #define pl_clear pl_remove_all
@@ -291,6 +292,11 @@ char* sl_insert_sorted(sl* list, const char* string);
 void sl_remove_index_range(sl* list, int start, int length);
 
 void sl_remove(sl* list, int index);
+
+// Removes "string" if it is found in the list.
+// Note that this checks pointer match, not a strcmp() match.
+// Returns the index where the string was found, or -1 if it wasn't found.
+int sl_remove_string(sl* list, const char* string);
 
 // remove all elements starting from "start" to the end of the list.
 void sl_remove_from(sl* list, int start);

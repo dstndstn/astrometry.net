@@ -19,25 +19,6 @@
 
 /**
    A command-line interface to the blind solver system.
-
-TODO:
-
-(2) It assumes you have netpbm tools installed which the main build
-doesn't require.
-
-> I think it will only complain if it needs one of the netpbm programs to do
-> its work - and it cannot do anything sensible (except print a friendly
-> error message) if they don't exist.
-
-(6)  by default, we do not produce an entirely new fits file but this can
-be turned on
-
-(7) * by default, we output to stdout a single line for each file something like:
-myimage.png: unsolved using X field objects
-or
-myimage.png: solved using X field objects, RA=rr,DEC=dd, size=AxB
-pixels=UxV arcmin
-
  */
 
 #include <stdio.h>
@@ -68,6 +49,7 @@ pixels=UxV arcmin
 #include "sip_qfits.h"
 #include "sip-utils.h"
 #include "wcs-rd2xy.h"
+#include "new-wcs.h"
 
 static an_option_t options[] = {
 	{'h', "help",		   no_argument, NULL,
@@ -299,6 +281,7 @@ int main(int argc, char** args) {
 		char* base;
 		char *objsfn, *redgreenfn;
 		char *ngcfn, *ppmfn=NULL, *indxylsfn;
+        char* newfitsfn = NULL;
         char* downloadfn;
         char* suffix = NULL;
 		sl* outfiles;
@@ -374,6 +357,7 @@ int main(int argc, char** args) {
 		redgreenfn = sl_appendf(outfiles, "%s-indx.png",  base);
 		ngcfn      = sl_appendf(outfiles, "%s-ngc.png",   base);
 		indxylsfn  = sl_appendf(outfiles, "%s-indx.xyls", base);
+        newfitsfn  = sl_appendf(outfiles, "%s-new.fits",  base);
         if (suffix)
             downloadfn = sl_appendf(outfiles, "%s-downloaded.%s", base, suffix);
         else
@@ -484,6 +468,8 @@ int main(int argc, char** args) {
             axy->force_ppm = TRUE;
 		}
 
+        axy->keep_fitsimg = TRUE;
+
         if (augment_xylist(axy, me)) {
             ERROR("augment-xylist failed");
             exit(-1);
@@ -568,6 +554,14 @@ int main(int argc, char** args) {
             double ra, dec, fieldw, fieldh;
             char rastr[32], decstr[32];
             char* fieldunits;
+
+            // create new FITS file...
+            if (axy->fitsimgfn) {
+                if (new_wcs(axy->fitsimgfn, axy->wcsfn, newfitsfn, TRUE)) {
+                    ERROR("Failed to create FITS image with new WCS headers");
+                    exit(-1);
+                }
+            }
 
 			// index rdls to xyls.
             if (wcs_rd2xy(axy->wcsfn, axy->rdlsfn, indxylsfn,
@@ -679,9 +673,10 @@ int main(int argc, char** args) {
 				free(cmd);
                 if (lines && sl_size(lines)) {
                     int i;
-                    logmsg("Your field contains:\n");
-                    for (i=0; i<sl_size(lines); i++) {
-                        logmsg("  %s\n", sl_get(lines, i));
+                    if (strlen(sl_get(lines, 0))) {
+                        logmsg("Your field contains:\n");
+                        for (i=0; i<sl_size(lines); i++)
+                            logmsg("  %s\n", sl_get(lines, i));
                     }
                 }
                 if (lines)
@@ -693,6 +688,7 @@ int main(int argc, char** args) {
         fflush(NULL);
 
     nextfile:        // clean up and move on to the next file.
+        free(axy->fitsimgfn);
         free(axy->solvedinfn);
 		for (i=0; i<sl_size(tempfiles); i++) {
 			char* fn = sl_get(tempfiles, i);
@@ -705,6 +701,7 @@ int main(int argc, char** args) {
 
         errors_print_stack(stdout);
         errors_clear_stack();
+        logmsg("\n");
 	}
 
 	sl_free2(backendargs);

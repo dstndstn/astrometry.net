@@ -745,7 +745,7 @@ void find_correspondences(tweak_t* t, double jitter)  // actually call the dualt
 	free(data_image);
 	free(data_ref);
 
-	logmsg("correspondences=%d\n", dl_size(t->dist2));
+	logverb("correspondences=%d\n", dl_size(t->dist2));
 
 	// find objs with multiple correspondences.
 	/*{
@@ -1210,7 +1210,7 @@ void do_sip_tweak(tweak_t* t) // bad name for this function
 
 	logverb("RMS error of correspondences: %g arcsec\n",
 		   correspondences_rms_arcsec(t, 0));
-	logmsg("Weighted RMS error of correspondences: %g arcsec\n",
+	logverb("Weighted RMS error of correspondences: %g arcsec\n",
 		   correspondences_rms_arcsec(t, 1));
 
 	/*
@@ -1378,7 +1378,7 @@ void do_sip_tweak(tweak_t* t) // bad name for this function
 	assert(i == M - 1);
 
 	if (t->weighted_fit)
-		logmsg("Total weight: %g\n", totalweight);
+		logverb("Total weight: %g\n", totalweight);
 
 	// Solve the equation.
 	{
@@ -1428,7 +1428,7 @@ void do_sip_tweak(tweak_t* t) // bad name for this function
 	t->sip->wcstan.cd[1][1] = gsl_vector_get(x2, 2);
 
 	// Compute inv(CD)
-	i = invert_2by2(t->sip->wcstan.cd, cdinv);
+	i = invert_2by2_arr((const double*)(t->sip->wcstan.cd), (double*)cdinv);
 	assert(i == 0);
 
 	// Grab the shift.
@@ -1540,7 +1540,7 @@ void do_sip_tweak(tweak_t* t) // bad name for this function
 
 	logverb("RMS error of correspondences: %g arcsec\n",
             correspondences_rms_arcsec(t, 0));
-	logmsg("Weighted RMS error of correspondences: %g arcsec\n",
+	logverb("Weighted RMS error of correspondences: %g arcsec\n",
 		   correspondences_rms_arcsec(t, 1));
 
 

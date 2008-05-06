@@ -405,12 +405,14 @@ int augment_xylist(augment_xylist_t* axy,
             sl_append(cmd, "--quiet");
         if (axy->no_fits2fits)
             sl_append(cmd, "--no-fits2fits");
+        else {
+            sl_append(cmd, "--sanitized-fits-outfile");
+            append_escape(cmd, sanitizedfn);
+        }
         sl_append(cmd, "--infile");
         append_escape(cmd, axy->imagefn);
         sl_append(cmd, "--uncompressed-outfile");
         append_escape(cmd, uncompressedfn);
-        sl_append(cmd, "--sanitized-fits-outfile");
-        append_escape(cmd, sanitizedfn);
         sl_append(cmd, "--outfile");
         append_escape(cmd, pnmfn);
         if (axy->force_ppm)
@@ -461,6 +463,11 @@ int augment_xylist(augment_xylist_t* axy,
                     fitsimgfn = axy->imagefn;
             } else
                 fitsimgfn = sanitizedfn;
+
+            if (axy->keep_fitsimg) {
+                axy->fitsimgfn = strdup(fitsimgfn);
+                sl_remove_string(tempfiles, fitsimgfn);
+            }
 
 			if (axy->guess_scale) {
                 dl* estscales = NULL;

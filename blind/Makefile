@@ -256,7 +256,9 @@ simplexy_shared: _simplexy.so
 _simplexy.so: $(SIMPLEXY_SHARED_OBJ)
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
-new-wcs: new-wcs.o $(ANUTILS_LIB) $(QFITS_LIB)
+new-wcs: new-wcs-main.o new-wcs.o log.o $(ANUTILS_LIB) $(QFITS_LIB)
+
+ALL_OBJ += new-wcs-main.o
 
 rdls2hpls: rdls2hpls.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
@@ -378,7 +380,7 @@ backend: backend.o scriptutils.o blind.o solver.o codekd.o \
 
 solve-field: solve-field.o augment-xylist.o scriptutils.o matchfile.o \
 		fileutil.o image2xy.o resort-xylist.o tabsort.o \
-		fits-guess-scale.o wcs-rd2xy.o svn.o log.o \
+		fits-guess-scale.o wcs-rd2xy.o new-wcs.o svn.o log.o \
 		$(SIMPLEXY2_OBJ) $(CFITS_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 

@@ -334,7 +334,8 @@ void blind_run(blind_t* bp) {
 			index_t* index;
 
 			fname = sl_get(bp->indexnames, I);
-			logmsg("\nLoading index %s...\n", fname);
+            logverb("\n");
+			logmsg("Loading index %s...\n", fname);
 			index = index_load(fname, index_options);
 			if (!index) {
 				logmsg("\nError loading index %s...\n", fname);
@@ -610,56 +611,54 @@ static void load_and_parse_wcsfiles(blind_t* bp) {
 	}
 }
 
-
-void blind_log_run_parameters(blind_t* bp)
-{
+void blind_log_run_parameters(blind_t* bp) {
 	solver_t* sp = &(bp->solver);
 	int i;
 
-	logmsg("fields ");
+	logverb("fields ");
 	for (i = 0; i < il_size(bp->fieldlist); i++)
-		logmsg("%i ", il_get(bp->fieldlist, i));
-	logmsg("\n");
-	logmsg("indexes:\n");
+		logverb("%i ", il_get(bp->fieldlist, i));
+	logverb("\n");
+	logverb("indexes:\n");
 	for (i = 0; i < sl_size(bp->indexnames); i++)
-		logmsg("  %s\n", sl_get(bp->indexnames, i));
-	logmsg("fieldfname %s\n", bp->fieldfname);
+		logverb("  %s\n", sl_get(bp->indexnames, i));
+	logverb("fieldfname %s\n", bp->fieldfname);
 	for (i = 0; i < sl_size(bp->verify_wcsfiles); i++)
-		logmsg("verify %s\n", sl_get(bp->verify_wcsfiles, i));
-	logmsg("fieldid %i\n", bp->fieldid);
-	logmsg("matchfname %s\n", bp->matchfname);
-	logmsg("startfname %s\n", bp->startfname);
-	logmsg("donefname %s\n", bp->donefname);
-	logmsg("donescript %s\n", bp->donescript);
-	logmsg("solved_in %s\n", bp->solved_in);
-	logmsg("solved_out %s\n", bp->solved_out);
-	logmsg("solvedserver %s\n", bp->solvedserver);
-	logmsg("cancel %s\n", bp->cancelfname);
-	logmsg("wcs %s\n", bp->wcs_template);
-	logmsg("fieldid_key %s\n", bp->fieldid_key);
-	logmsg("parity %i\n", sp->parity);
-	logmsg("codetol %g\n", sp->codetol);
-	logmsg("startdepth %i\n", sp->startobj);
-	logmsg("enddepth %i\n", sp->endobj);
-	logmsg("fieldunits_lower %g\n", sp->funits_lower);
-	logmsg("fieldunits_upper %g\n", sp->funits_upper);
-	logmsg("verify_dist %g\n", distsq2arcsec(bp->verify_dist2));
-	logmsg("verify_pix %g\n", sp->verify_pix);
-	logmsg("xcolname %s\n", bp->xcolname);
-	logmsg("ycolname %s\n", bp->ycolname);
-	logmsg("maxquads %i\n", sp->maxquads);
-	logmsg("maxmatches %i\n", sp->maxmatches);
-	logmsg("quiet %i\n", bp->quiet);
-	logmsg("verbose %i\n", bp->verbose);
-	logmsg("logfname %s\n", bp->logfname);
-	logmsg("cpulimit %i\n", bp->cpulimit);
-	logmsg("timelimit %i\n", bp->timelimit);
-	logmsg("total_timelimit %i\n", bp->total_timelimit);
-	logmsg("total_cpulimit %i\n", bp->total_cpulimit);
-	logmsg("tweak %s\n", bp->do_tweak ? "on" : "off");
+		logverb("verify %s\n", sl_get(bp->verify_wcsfiles, i));
+	logverb("fieldid %i\n", bp->fieldid);
+	logverb("matchfname %s\n", bp->matchfname);
+	logverb("startfname %s\n", bp->startfname);
+	logverb("donefname %s\n", bp->donefname);
+	logverb("donescript %s\n", bp->donescript);
+	logverb("solved_in %s\n", bp->solved_in);
+	logverb("solved_out %s\n", bp->solved_out);
+	logverb("solvedserver %s\n", bp->solvedserver);
+	logverb("cancel %s\n", bp->cancelfname);
+	logverb("wcs %s\n", bp->wcs_template);
+	logverb("fieldid_key %s\n", bp->fieldid_key);
+	logverb("parity %i\n", sp->parity);
+	logverb("codetol %g\n", sp->codetol);
+	logverb("startdepth %i\n", sp->startobj);
+	logverb("enddepth %i\n", sp->endobj);
+	logverb("fieldunits_lower %g\n", sp->funits_lower);
+	logverb("fieldunits_upper %g\n", sp->funits_upper);
+	logverb("verify_dist %g\n", distsq2arcsec(bp->verify_dist2));
+	logverb("verify_pix %g\n", sp->verify_pix);
+	logverb("xcolname %s\n", bp->xcolname);
+	logverb("ycolname %s\n", bp->ycolname);
+	logverb("maxquads %i\n", sp->maxquads);
+	logverb("maxmatches %i\n", sp->maxmatches);
+	logverb("quiet %i\n", bp->quiet);
+	logverb("verbose %i\n", bp->verbose);
+	logverb("logfname %s\n", bp->logfname);
+	logverb("cpulimit %i\n", bp->cpulimit);
+	logverb("timelimit %i\n", bp->timelimit);
+	logverb("total_timelimit %i\n", bp->total_timelimit);
+	logverb("total_cpulimit %i\n", bp->total_cpulimit);
+	logverb("tweak %s\n", bp->do_tweak ? "on" : "off");
 	if (bp->do_tweak) {
-		logmsg("tweak_aborder %i\n", bp->tweak_aborder);
-		logmsg("tweak_abporder %i\n", bp->tweak_abporder);
+		logverb("tweak_aborder %i\n", bp->tweak_aborder);
+		logverb("tweak_abporder %i\n", bp->tweak_abporder);
 	}
 }
 
@@ -712,11 +711,11 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree* starkd) {
 		twee->jitter = distsq2arcsec(bp->verify_dist2);
 	else {
 		twee->jitter = hypot(mo->scale * sp->verify_pix, sp->index->index_jitter);
-		logmsg("Star jitter: %g arcsec.\n", twee->jitter);
+		logverb("Star jitter: %g arcsec.\n", twee->jitter);
 	}
 	// Set tweak's jitter to 6 sigmas.
 	//twee->jitter *= 6.0;
-	logmsg("Setting tweak jitter: %g arcsec.\n", twee->jitter);
+	logverb("Setting tweak jitter: %g arcsec.\n", twee->jitter);
 
 	// pull out the field coordinates into separate X and Y arrays.
 	imgx = malloc(sp->nfield * sizeof(double));
@@ -725,7 +724,7 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree* starkd) {
 		imgx[i] = sp->field[i * 2 + 0];
 		imgy[i] = sp->field[i * 2 + 1];
 	}
-	logmsg("Pushing %i image coordinates.\n", sp->nfield);
+	logverb("Pushing %i image coordinates.\n", sp->nfield);
 	tweak_push_image_xy(twee, imgx, imgy, sp->nfield);
 
 	// find all the index stars that are inside the circle that bounds
@@ -741,7 +740,7 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree* starkd) {
 		goto bailout;
 	starxyz = res->results.d;
 	nstars = res->nres;
-	logmsg("Pushing %i star coordinates.\n", nstars);
+	logverb("Pushing %i star coordinates.\n", nstars);
 	tweak_push_ref_xyz(twee, starxyz, nstars);
 
 	tweak_push_wcs_tan(twee, &(mo->wcstan));
@@ -749,11 +748,11 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree* starkd) {
 	twee->sip->ap_order = twee->sip->bp_order = bp->tweak_abporder;
 
 	if (bp->tweak_skipshift) {
-		logmsg("Skipping shift operation.\n");
+		logverb("Skipping shift operation.\n");
 		tweak_skip_shift(twee);
 	}
 
-	logmsg("Begin tweaking (to order %i)...\n", bp->tweak_aborder);
+	logverb("Begin tweaking (to order %i)...\n", bp->tweak_aborder);
 	/*
 	  while (!(twee->state & TWEAK_HAS_LINEAR_CD)) {
 	  unsigned int r = tweak_advance_to(twee, TWEAK_HAS_LINEAR_CD);
@@ -770,19 +769,19 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree* starkd) {
 		int order;
 		int k;
 		for (order = 1; order <= MAX(1, bp->tweak_aborder); order++) {
-			logmsg("\n");
-			logmsg("--------------------------------\n");
-			logmsg("Order %i\n", order);
-			logmsg("--------------------------------\n");
+			logverb("\n");
+			logverb("--------------------------------\n");
+			logverb("Order %i\n", order);
+			logverb("--------------------------------\n");
 
 			twee->sip->a_order = twee->sip->b_order = order;
 			twee->sip->ap_order = twee->sip->bp_order = order;
 			tweak_go_to(twee, TWEAK_HAS_CORRESPONDENCES);
 
 			for (k = 0; k < 5; k++) {
-				logmsg("\n");
-				logmsg("--------------------------------\n");
-				logmsg("Iterating tweak: order %i, step %i\n", order, k);
+				logverb("\n");
+				logverb("--------------------------------\n");
+				logverb("Iterating tweak: order %i, step %i\n", order, k);
 				twee->state &= ~TWEAK_HAS_LINEAR_CD;
 				tweak_go_to(twee, TWEAK_HAS_LINEAR_CD);
 				tweak_clear_correspondences(twee);
@@ -793,7 +792,7 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree* starkd) {
 	fflush(stderr);
 
 
-	logmsg("Done tweaking!\n");
+	logverb("Done tweaking!\n");
 
     tweak_print_rms_curve(twee);
 
@@ -814,7 +813,7 @@ static void print_match(blind_t* bp, MatchObj* mo)
 {
 	int Nmin = MIN(mo->nindex, mo->nfield);
 	int ndropout = Nmin - mo->noverlap - mo->nconflict;
-	logmsg("  logodds ratio %g (%g), %i match, %i conflict, %i dropout, %i index.\n",
+	logverb("  logodds ratio %g (%g), %i match, %i conflict, %i dropout, %i index.\n",
 	       mo->logodds, exp(mo->logodds), mo->noverlap, mo->nconflict, ndropout, mo->nindex);
 }
 
@@ -833,7 +832,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 	if (mo->logodds < bp->logratio_tokeep)
 		return FALSE;
 
-    logmsg("Pixel scale: %g arcsec/pix.\n", mo->scale);
+    logverb("Pixel scale: %g arcsec/pix.\n", mo->scale);
 
 	// Tweak, if requested.
 	if (bp->do_tweak)
@@ -897,14 +896,14 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
             copy = strdup(bp->solver.index->indexname);
             base = strdup(basename(copy));
             free(copy);
-            logerr("Field %i: solved with index %s.\n", mo->fieldnum, base);
+            logmsg("Field %i: solved with index %s.\n", mo->fieldnum, base);
             free(base);
         } else {
-            logerr("Field %i: solved with index %i", mo->fieldnum, mo->indexid);
+            logmsg("Field %i: solved with index %i", mo->fieldnum, mo->indexid);
             if (mo->healpix >= 0)
-                logerr(", healpix %i\n", mo->healpix);
+                logmsg(", healpix %i\n", mo->healpix);
             else
-                logerr("\n");
+                logmsg("\n");
         }
         return TRUE;
     } else {
@@ -1163,7 +1162,7 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 
 		get_resource_stats(&utime, &stime, NULL);
 		gettimeofday(&wtime, NULL);
-		logmsg("Spent %g s user, %g s system, %g s total, %g s wall time.\n",
+		logverb("Spent %g s user, %g s system, %g s total, %g s wall time.\n",
 		       (utime - last_utime), (stime - last_stime), (stime - last_stime + utime - last_utime),
 		       millis_between(&last_wtime, &wtime) * 0.001);
 
@@ -1205,7 +1204,7 @@ static void solved_field(blind_t* bp, int fieldnum) {
     if (bp->solved_out) {
         logmsg("Field %i solved: writing to file %s to indicate this.\n", fieldnum, bp->solved_out);
         if (solvedfile_set(bp->solved_out, fieldnum)) {
-            logerr("Failed to write to solvedfile %s.\n", bp->solved_out);
+            logerr("Failed to write solvedfile %s.\n", bp->solved_out);
         }
     }
     if (bp->solvedserver) {

@@ -271,7 +271,7 @@ int image2xy(const char* infn, const char* outfn,
             tryagain = FALSE;
             if (npeaks == 0 &&
                 downsample_as_required) {
-                logverb("Downsampling by 2x2...\n");
+                logmsg("Downsampling by 2...\n");
                 rebin(&thedata, naxisn[0], naxisn[1], 2, &newW, &newH);
                 naxisn[0] = newW;
                 naxisn[1] = newH;

@@ -194,7 +194,7 @@ bool   tan_xyzarr2pixelxy(const tan_t* tan, double* xyzpt, double *px, double *p
 	int r;
 
 	// Invert CD
-	r = invert_2by2(tan->cd, cdi);
+    r = invert_2by2_arr((const double*)tan->cd, (double*)cdi);
 	assert(r == 0);
 
 	/*

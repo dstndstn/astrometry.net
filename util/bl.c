@@ -1338,7 +1338,7 @@ void  pl_remove(pl* list, int index) {
 	bl_remove_index(list, index);
 }
 
-int pl_remove_value(pl* plist, void* value) {
+int pl_remove_value(pl* plist, const void* value) {
     bl* list = plist;
 	bl_node *node, *prev;
 	int istart = 0;
@@ -1617,6 +1617,10 @@ void sl_insert_nocopy(sl* list, int indx, const char* str) {
 
 void sl_remove_from(sl* list, int start) {
     sl_remove_index_range(list, start, sl_size(list) - start);
+}
+
+int sl_remove_string(sl* list, const char* string) {
+    return pl_remove_value(list, string);
 }
 
 void sl_remove_index_range(sl* list, int start, int length) {

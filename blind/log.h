@@ -59,6 +59,11 @@ LOG_TEMPLATE(logerr);
 LOG_TEMPLATE(logverb);
 LOG_TEMPLATE(debug);
 
+// log at a particular level.
+void loglevel(enum log_level level, const char* format, ...);
+
+int log_get_level();
+
 extern log_t _logger_global;
 
 #endif // _LOG_H

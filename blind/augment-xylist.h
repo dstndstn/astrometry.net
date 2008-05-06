@@ -52,6 +52,9 @@ struct augment_xylist_s {
     char* keepxylsfn;
     char* pnmfn;
 
+    bool keep_fitsimg;
+    char* fitsimgfn;
+
     bool guess_scale;
     bool pnm;
     bool force_ppm;
