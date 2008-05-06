@@ -73,7 +73,7 @@ static an_option_t options[] = {
 	{'h', "help",		   no_argument, NULL,
      "print this help message" },
 	{'v', "verbose",       no_argument, NULL,
-     "be more chatty" },
+     "be more chatty -- repeat for even more verboseness" },
     {'D', "dir", required_argument, "directory",
      "place all output files in this directory"},
     {'o', "out", required_argument, "base-filename",
@@ -159,6 +159,7 @@ int main(int argc, char** args) {
     char* me;
     char* tempdir = "/tmp";
     bool verbose = FALSE;
+    int loglvl = LOG_MSG;
     char* baseout = NULL;
     char* xcol = NULL;
     char* ycol = NULL;
@@ -224,6 +225,7 @@ int main(int argc, char** args) {
         case 'v':
             sl_append(backendargs, "--verbose");
             verbose = TRUE;
+            loglvl++;
             break;
 		case 'D':
 			outdir = optarg;
@@ -274,10 +276,7 @@ int main(int argc, char** args) {
 	}
     bl_free(opts);
 
-    if (verbose)
-        log_init(LOG_ALL);
-    else
-        log_init(LOG_MSG);
+    log_init(loglvl);
 
 	if (outdir) {
         if (mkdir_p(outdir)) {
@@ -647,8 +646,7 @@ int main(int argc, char** args) {
 
                 cmd = sl_implode(cmdline, " ");
                 sl_remove_all(cmdline);
-                if (verbose)
-                    printf("Running:\n  %s\n", cmd);
+                logverb("Running:\n  %s\n", cmd);
                 fflush(NULL);
                 if (run_command(cmd, &ctrlc)) {
                     fflush(NULL);
