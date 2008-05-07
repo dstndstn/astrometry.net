@@ -77,6 +77,8 @@ static an_option_t options[] = {
     {'J', "skip-solved",    no_argument, NULL,
      "skip input files for which the 'solved' output file already exists;\n"
      "                  NOTE: this assumes single-field input files"},
+    {'N', "no-new-fits",    no_argument, NULL,
+     "don't create a new FITS file containing the WCS header"},
 };
 
 static void print_help(const char* progname, bl* opts) {
@@ -142,7 +144,7 @@ int main(int argc, char** args) {
     char* tempdir = "/tmp";
     bool verbose = FALSE;
     int loglvl = LOG_MSG;
-    char* baseout = NULL;
+    char* outbase = NULL;
     char* xcol = NULL;
     char* ycol = NULL;
     char* solvedin = NULL;
@@ -153,6 +155,7 @@ int main(int argc, char** args) {
     augment_xylist_t* allaxy = &theallaxy;
     int nmyopts;
     char* removeopts = "ixo\x01";
+    bool newfits = TRUE;
 
     errors_print_on_exit(stderr);
     fits_use_error_system();
@@ -201,6 +204,9 @@ int main(int argc, char** args) {
              break;
              }
              */
+        case 'N':
+            newfits = FALSE;
+            break;
 		case 'h':
 			help = TRUE;
 			break;
@@ -213,7 +219,7 @@ int main(int argc, char** args) {
 			outdir = optarg;
 			break;
         case 'o':
-            baseout = optarg;
+            outbase = optarg;
             break;
 		case 'b':
 			sl_append(backendargs, "--config");
@@ -279,6 +285,8 @@ int main(int argc, char** args) {
 		int len;
 		char* cpy;
 		char* base;
+        char* basedir;
+        char* basefile;
 		char *objsfn, *redgreenfn;
 		char *ngcfn, *ppmfn=NULL, *indxylsfn;
         char* newfitsfn = NULL;
@@ -323,18 +331,28 @@ int main(int argc, char** args) {
 		sl_remove_from(backendargs,  nbeargs);
 
 		// Choose the base path/filename for output files.
-        if (baseout)
-            asprintf_safe(&cpy, baseout, inputnum, infile);
-        else
+        if (outbase)
+            asprintf_safe(&basefile, outbase, inputnum, infile);
+        else {
             cpy = strdup(infile);
-        logverb("Base name for output files: %s\n", cpy);
+            basefile = strdup(basename(cpy));
+            free(cpy);
+        }
+        logverb("Base filename: %s\n", basefile);
 		if (outdir)
-			asprintf_safe(&base, "%s/%s", outdir, basename(cpy));
-		else
-			//base = strdup(basename(cpy));
-			base = strdup(cpy);
+            basedir = strdup(outdir);
+		else {
+            cpy = strdup(infile);
+            basedir = strdup(dirname(cpy));
+            free(cpy);
+        }
+        logverb("Base directory: %s\n", basedir);
+
+        asprintf_safe(&base, "%s/%s", basedir, basefile);
         logverb("Base name for output files: %s\n", base);
-		free(cpy);
+        free(basedir);
+        free(basefile);
+
         // trim .gz, .bz2
         // hmm, we drop the suffix in this case...
 		len = strlen(base);
@@ -368,7 +386,8 @@ int main(int argc, char** args) {
 		redgreenfn = sl_appendf(outfiles, "%s-indx.png",  base);
 		ngcfn      = sl_appendf(outfiles, "%s-ngc.png",   base);
 		indxylsfn  = sl_appendf(outfiles, "%s-indx.xyls", base);
-        newfitsfn  = sl_appendf(outfiles, "%s-new.fits",  base);
+        if (newfits)
+            newfitsfn  = sl_appendf(outfiles, "%s-new.fits",  base);
         if (suffix)
             downloadfn = sl_appendf(outfiles, "%s-downloaded.%s", base, suffix);
         else
@@ -479,7 +498,7 @@ int main(int argc, char** args) {
             axy->force_ppm = TRUE;
 		}
 
-        axy->keep_fitsimg = TRUE;
+        axy->keep_fitsimg = newfits;
 
         if (augment_xylist(axy, me)) {
             ERROR("augment-xylist failed");

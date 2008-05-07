@@ -188,7 +188,6 @@ void augment_xylist_add_options(bl* opts) {
     bl_free(myopts);
 }
 
-static int parse_depth_string(il* depths, const char* str);
 static int parse_fields_string(il* fields, const char* str);
 
 int augment_xylist_parse_option(char argchar, char* optarg,
@@ -828,10 +827,6 @@ int augment_xylist(augment_xylist_t* axy,
     sl_free2(cmd);
     sl_free2(tempfiles);
     return 0;
-}
-
-static int parse_depth_string(il* depths, const char* str) {
-    return parse_positive_range_string(depths, str, 1, 0, "Depth");
 }
 
 static int parse_fields_string(il* fields, const char* str) {

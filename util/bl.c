@@ -1085,6 +1085,13 @@ int* il_append(il* list, int data) {
 	return bl_append(list, &data);
 }
 
+void il_append_list(il* list, il* list2) {
+    int i, N;
+    N = il_size(list2);
+    for (i=0; i<N; i++)
+        il_append(list, il_get(list2, i));
+}
+
 void il_merge_lists(il* list1, il* list2) {
 	bl_append_list(list1, list2);
 }

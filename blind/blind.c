@@ -381,7 +381,7 @@ void blind_run(blind_t* bp) {
 				exit( -1);
 			}
 			pl_append(sp->indexes, index);
-			logmsg("\n\nTrying index %s...\n", fname);
+			logverb("Trying index %s...\n", fname);
 
 			// Record current CPU usage.
 			bp->cpu_start = get_cpu_usage(bp);
@@ -1108,15 +1108,15 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
             il_free(mo.corr_index);
 
 		} else {
-			logmsg("Solving field %i.\n", fieldnum);
+			logverb("Solving field %i.\n", fieldnum);
 
 			sp->distance_from_quad_bonus = TRUE;
 			
 			// The real thing
 			solver_run(sp);
 
-			logmsg("Field %i: tried %i quads, matched %i codes.\n",
-			       fieldnum, sp->numtries, sp->nummatches);
+			logverb("Field %i: tried %i quads, matched %i codes.\n",
+                    fieldnum, sp->numtries, sp->nummatches);
 
 			if (sp->maxquads && sp->numtries >= sp->maxquads) {
 				logmsg("  exceeded the number of quads to try: %i >= %i.\n",

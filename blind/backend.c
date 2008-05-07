@@ -256,21 +256,9 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
 		} else if (is_word(line, "cpulimit ", &nextword)) {
 			backend->cpulimit = atoi(nextword);
 		} else if (is_word(line, "depths ", &nextword)) {
-            int i;
-            //
-            if (parse_positive_range_string(backend->default_depths, nextword, 0, 0, "Depth")) {
+            if (parse_depth_string(backend->default_depths, nextword)) {
                 rtn = -1;
                 goto done;
-            }
-            for (i=0; i<il_size(backend->default_depths)/2; i++) {
-                int lo, hi;
-                lo = il_get(backend->default_depths, 2*i);
-                hi = il_get(backend->default_depths, 2*i+1);
-                if ((lo == hi) && (2*i+2 < il_size(backend->default_depths))) {
-                    // "hi" = the next "lo" - 1
-                    hi = il_get(backend->default_depths, 2*i+2) - 1;
-                    il_set(backend->default_depths, 2*i+1, hi);
-                }
             }
 		} else if (is_word(line, "add_path ", &nextword)) {
 			sl_append(backend->index_paths, nextword);
@@ -403,6 +391,11 @@ static int run_job(job_t* job, backend_t* backend) {
     double app_max_default;
     bool solved = FALSE;
 
+    if (blind_is_run_obsolete(bp, sp)) {
+        solved = TRUE;
+        return 0;
+    }
+
     app_min_default = deg2arcsec(backend->minwidth) / job_imagew(job);
     app_max_default = deg2arcsec(backend->maxwidth) / job_imagew(job);
 
@@ -479,11 +472,6 @@ static int run_job(job_t* job, backend_t* backend) {
 			if (backend->inparallel)
                 bp->indexes_inparallel = TRUE;
 
-            if (blind_is_run_obsolete(bp, sp)) {
-                solved = TRUE;
-                break;
-            }
-
             logverb("Running blind");
             blind_log_run_parameters(bp);
 
@@ -494,6 +482,11 @@ static int run_job(job_t* job, backend_t* backend) {
             blind_clear_indexes(bp);
             blind_clear_solutions(bp);
             solver_clear_indexes(sp);
+
+            if (blind_is_run_obsolete(bp, sp)) {
+                solved = TRUE;
+                break;
+            }
 		}
         if (solved)
             break;
@@ -623,7 +616,7 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 		dhi = qfits_header_getint(hdr, key, 0);
 		if (dlo == 0 && dhi == 0)
 			break;
-        if ((dlo < 0) || (dlo > dhi)) {
+        if ((dlo < 1) || (dlo > dhi)) {
             logerr("Depth range %i to %i is invalid: min must be >= 1, max must be >= min.\n", dlo, dhi);
             goto bailout;
         }
@@ -910,13 +903,9 @@ int main(int argc, char** args) {
     free(configfn);
 
     if (!il_size(backend->default_depths)) {
-        int step = 10;
-        int max = 200;
-        int i;
-        for (i=0; i<max; i+=step) {
-            il_append(backend->default_depths, i);
-            il_append(backend->default_depths, i+step-1);
-        }
+        parse_depth_string(backend->default_depths,
+                           "10 20 30 40 50 60 70 80 90 100 "
+                           "110 120 130 140 150 160 170 180 190 200");
     }
 
 	for (i = optind; i < argc; i++) {
@@ -954,8 +943,11 @@ int main(int argc, char** args) {
 		}
 
         // The job can only decrease the CPU limit.
-        if (!bp->cpulimit || bp->cpulimit > backend->cpulimit)
+        if (!bp->cpulimit || bp->cpulimit > backend->cpulimit) {
+            logverb("Decreasing CPU time limit to the backend's limit of %i\n",
+                    backend->cpulimit);
             bp->cpulimit = backend->cpulimit;
+        }
 
         // If the job didn't specify depths, set defaults.
         if (il_size(job->depths) == 0) {
@@ -963,11 +955,8 @@ int main(int argc, char** args) {
                 // no limit.
                 il_append(job->depths, 0);
                 il_append(job->depths, 0);
-            } else {
-                int k;
-                for (k=0; k<il_size(backend->default_depths); k++)
-                    il_append(job->depths, il_get(backend->default_depths, k));
-            }
+            } else
+                il_append_list(job->depths, backend->default_depths);
         }
 
 		qfits_header_destroy(hdr);

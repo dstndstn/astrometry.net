@@ -149,6 +149,7 @@ void il_remove_all(il* list);
 void il_remove_all_reuse(il* list);
 void il_free(il* list);
 int* il_append(il* list, int data);
+void il_append_list(il* list, il* list2);
 void il_merge_lists(il* list1, il* list2);
 void il_push(il* list, int data);
 int  il_pop(il* list);

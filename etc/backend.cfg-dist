@@ -18,7 +18,7 @@
 # maxwidth 180
 
 # If no depths are given, use these:
-#depths 0 10 20 30 40 50 60 70 80 90 100
+#depths 10 20 30 40 50 60 70 80 90 100
 
 # Maximum CPU time to spend on a field, in seconds:
 # default is 600 (ten minutes), which is probably way overkill.
