@@ -352,6 +352,9 @@ struct job_t {
 	il* depths;
     bool include_default_scales;
 
+    double quad_sizefraction_min;
+    double quad_sizefraction_max;
+
     blind_t bp;
 };
 typedef struct job_t job_t;
@@ -437,12 +440,13 @@ static int run_job(job_t* job, backend_t* backend) {
                 sp->endobj = endobj;
 
 			// minimum quad size to try (in pixels)
-            sp->quadsize_min = 0.1 * MIN(job_imagew(job), job_imageh(job));
+            sp->quadsize_min = job->quad_sizefraction_min * MIN(job_imagew(job), job_imageh(job));
 
 			// range of quad sizes that could be found in the field,
 			// in arcsec.
-			fmax = 1.0 * MAX(job_imagew(job), job_imageh(job)) * app_max;
-			fmin = 0.1 * MIN(job_imagew(job), job_imageh(job)) * app_min;
+            // the hypotenuse...
+			fmax = job->quad_sizefraction_max * sqrt(square(job_imagew(job)) + square(job_imageh(job))) * app_max;
+			fmin = sp->quadsize_min * app_min;
 
 			// Select the indices that should be checked.
 			nused = 0;
@@ -515,6 +519,8 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     //double default_image_fraction = 1.0;
     double default_codetol = 0.01;
 	double default_distractor_fraction = 0.25;
+    double default_quadsizefraction_min = 0.1;
+    double default_quadsizefraction_max = 1.0;
     char* fn;
 
     blind_init(bp);
@@ -582,6 +588,11 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
         bp->tweak_abporder = order;
         bp->tweak_skipshift = TRUE;
     }
+
+    job->quad_sizefraction_min = qfits_header_getdouble(hdr, "ANQSFMIN",
+                                                        default_quadsizefraction_min);
+    job->quad_sizefraction_max = qfits_header_getdouble(hdr, "ANQSFMAX",
+                                                        default_quadsizefraction_max);
 
 	n = 1;
 	while (1) {
