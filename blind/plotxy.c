@@ -28,6 +28,8 @@
 #include "xylist.h"
 #include "boilerplate.h"
 #include "cairoutils.h"
+#include "log.h"
+#include "errors.h"
 
 #define OPTIONS "hW:H:n:N:r:s:i:e:x:y:w:S:I:PC:X:Y:b:"
 
@@ -175,10 +177,13 @@ int main(int argc, char *args[]) {
 		exit(-1);
 	}
 
+    // log errors to stderr, not stdout.
+    errors_log_to(stderr);
+
 	// Open xylist.
 	xyls = xylist_open(fname);
 	if (!xyls) {
-		fprintf(stderr, "Failed to open xylist from file %s.\n", fname);
+		ERROR("Failed to open xylist from file \"%s\"", fname);
 		exit(-1);
 	}
     // we don't care about FLUX and BACKGROUND columns.

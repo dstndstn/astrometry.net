@@ -82,7 +82,7 @@ int main(int argc, char** args) {
     fits_use_error_system();
 
     if (resort_xylist(infn, outfn, fluxcol, backcol, ascending)) {
-        ERROR("Re-sorting xylist by FLUX and BACKGROUND failed");
+        ERROR("Failed to re-sorting xylist by FLUX and BACKGROUND");
         exit(-1);
     }
 

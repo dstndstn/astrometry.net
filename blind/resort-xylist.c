@@ -54,6 +54,7 @@ int resort_xylist(const char* infn, const char* outfn,
     if (!backcol)
         backcol = "BACKGROUND";
 
+    fin = fopen(infn, "rb");
     if (!fin) {
         SYSERROR("Failed to open input file %s", infn);
         return -1;

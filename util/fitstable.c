@@ -152,12 +152,17 @@ int fitstable_ncols(fitstable_t* t) {
 }
 
 int fitstable_row_size(fitstable_t* t) {
-    int i, N, sz;
-    N = ncols(t);
-    sz = 0;
-    for (i=0; i<N; i++)
-        sz += fitscolumn_get_size(getcol(t, i));
-    return sz;
+    // FIXME - should this return the size of the *existing* FITS table
+    // (when reading), or just the columns we care about (those in "cols")?
+    return t->table->tab_w;
+    /*
+     int i, N, sz;
+     N = ncols(t);
+     sz = 0;
+     for (i=0; i<N; i++)
+     sz += fitscolumn_get_size(getcol(t, i));
+     return sz;
+     */
 }
 
 void fitstable_add_write_column(fitstable_t* tab, tfits_type t,

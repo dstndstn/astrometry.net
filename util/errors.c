@@ -54,6 +54,12 @@ int errors_print_on_exit(FILE* fid) {
     return atexit(print_errs);
 }
 
+void errors_log_to(FILE* f) {
+    err_t* e;
+    e = errors_get_state();
+    e->print = f;
+}
+
 void errors_clear_stack() {
     error_clear_stack(errors_get_state());
 }

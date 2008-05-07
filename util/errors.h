@@ -59,6 +59,8 @@ void report_errno();
 // free globals.
 void errors_free();
 
+void errors_log_to(FILE* f);
+
 void errors_print_stack(FILE* f);
 
 void errors_clear_stack();
