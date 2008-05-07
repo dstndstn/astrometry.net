@@ -229,7 +229,7 @@ void blind_run(blind_t* bp) {
 	load_and_parse_wcsfiles(bp);
 
 	// Read .xyls file...
-	logmsg("Reading fields file %s...", bp->fieldfname);
+	logverb("Reading fields file %s...", bp->fieldfname);
 	bp->xyls = xylist_open(bp->fieldfname);
 	if (!bp->xyls) {
 		logerr("Failed to read xylist.\n");
@@ -237,7 +237,7 @@ void blind_run(blind_t* bp) {
 	}
 	xylist_set_xname(bp->xyls, bp->xcolname);
 	xylist_set_yname(bp->xyls, bp->ycolname);
-	logmsg("got %u fields.\n", xylist_n_fields(bp->xyls));
+	logverb("found %u fields.\n", xylist_n_fields(bp->xyls));
 
     remove_invalid_fields(bp->fieldlist, xylist_n_fields(bp->xyls));
 

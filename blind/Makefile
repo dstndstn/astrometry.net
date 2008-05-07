@@ -285,7 +285,7 @@ ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DAT
 certifiable: certifiable.o histogram.o matchfile.o solvedfile.o \
 		$(UTILS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-fits-guess-scale: fits-guess-scale-main.o fits-guess-scale.o \
+fits-guess-scale: fits-guess-scale-main.o fits-guess-scale.o log.o \
 		$(ANUTILS_LIB) $(QFITS_LIB)
 
 ALL_OBJ += fits-guess-scale-main.o

@@ -120,7 +120,7 @@ static an_option_t options[] = {
      "give up solving after the specified (integer) number of seconds of CPU time"},
     {'r', "resort",         no_argument, NULL,
      "sort the star brightnesses using a compromise between background-subtraction and no background-subtraction"},
-    {'z', "downsample",     optional_argument, "int",
+    {'z', "downsample",     required_argument, "int",
      "downsample the image by factor <int> before running source extraction"},
 	{'C', "cancel",		   required_argument, "filename",
      "filename whose creation signals the process to stop"},
@@ -201,10 +201,7 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         axy->dont_augment = TRUE;
         break;
     case 'z':
-        if (optarg)
-            axy->downsample = atoi(optarg);
-        else
-            axy->downsample = 2;
+        axy->downsample = atoi(optarg);
         break;
     case 'r':
         axy->resort = TRUE;

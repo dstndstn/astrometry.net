@@ -401,6 +401,7 @@ static int run_job(job_t* job, backend_t* backend) {
     int i;
     double app_min_default;
     double app_max_default;
+    bool solved = FALSE;
 
     app_min_default = deg2arcsec(backend->minwidth) / job_imagew(job);
     app_max_default = deg2arcsec(backend->maxwidth) / job_imagew(job);
@@ -413,7 +414,12 @@ static int run_job(job_t* job, backend_t* backend) {
         // make depth ranges be inclusive.
         if (startobj || endobj) {
             endobj++;
+            // up to this point they are 1-indexed; blind uses 0-indexed.
+            startobj--;
+            endobj--;
         }
+
+        logmsg("Feeding to blind: startobj %i, endobj %i\n", startobj, endobj);
 
 		for (j=0; j<dl_size(job->scales) / 2; j++) {
 			double fmin, fmax;
@@ -430,10 +436,6 @@ static int run_job(job_t* job, backend_t* backend) {
                 app_max = app_max_default;
             sp->funits_lower = app_min;
             sp->funits_upper = app_max;
-
-            //blind_init(bp);
-            // must be in this order because init_parameters handily zeros out sp
-            //solver_set_default_values(sp);
 
             sp->startobj = startobj;
 			if (endobj)
@@ -477,6 +479,11 @@ static int run_job(job_t* job, backend_t* backend) {
 			if (backend->inparallel)
                 bp->indexes_inparallel = TRUE;
 
+            if (blind_is_run_obsolete(bp, sp)) {
+                solved = TRUE;
+                break;
+            }
+
             logverb("Running blind");
             blind_log_run_parameters(bp);
 
@@ -486,8 +493,10 @@ static int run_job(job_t* job, backend_t* backend) {
             blind_clear_verify_wcses(bp);
             blind_clear_indexes(bp);
             blind_clear_solutions(bp);
-            solver_cleanup(sp);
+            solver_clear_indexes(sp);
 		}
+        if (solved)
+            break;
 	}
 
 	return 0;
@@ -535,7 +544,10 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 
     blind_set_solved_file  (bp, fn=fits_get_long_string(hdr, "ANSOLVED"));
     free(fn);
-    blind_set_solvedin_file(bp, fn=fits_get_long_string(hdr, "ANSOLVIN"));
+    fn = fits_get_long_string(hdr, "ANSOLVIN");
+    if (fn)
+        // only set the input solved filename if it was set.
+        blind_set_solvedin_file(bp, fn);
     free(fn);
     blind_set_match_file   (bp, fn=fits_get_long_string(hdr, "ANMATCH" ));
     free(fn);
@@ -966,8 +978,9 @@ int main(int argc, char** args) {
 		if (run_job(job, backend))
 			logerr("Failed to run_job()\n");
 
+        solver_cleanup(&(bp->solver));
         blind_cleanup(bp);
-		//cleanup:
+
 		job_free(job);
 	}
 

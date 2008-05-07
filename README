@@ -171,7 +171,6 @@ INSTALLING
         $ solve-field --out apod1b http://antwrp.gsfc.nasa.gov/apod/image/0302/ngc2264_croman_c3.jpg 
 
 
-
    If you don't have the netpbm tools (eg jpegtopnm), do this instead:
 
      If you have any of indices 213 to 218:
@@ -193,29 +192,29 @@ INSTALLING
         $ solve-field demo/sdss.xyls
 
 
-
-
-   Each of these commands should solve the field and produce a number of output
-   files:
-       sdss-ngc.png : an annotation of the image.
-       sdss.wcs : a FITS WCS header for the solution.
-       sdss-objs.png : a plot of the sources (stars) we extracted from the image.
-       sdss-indx.png : sources (red), plus stars from the index (green), plus the
-                       skymark ("quad") used to solve the image.
-       sdss-indx.xyls : a FITS BINTABLE with the pixel locations of stars from the index.
-       sdss.rdls : a FITS BINTABLE with the RA,Dec of sources we extracted from the image.
-       sdss.axy : a FITS BINTABLE of the sources we extracted, plus headers that
-                  describe the job (how the image is going to be solved).
-       sdss.solved : contains binary 1 if the field solved.
-       sdss.match : a FITS BINTABLE describing the quad match that solved the image.
-
-
-UPGRADING
----------
+UPGRADING INDEX FILES
+---------------------
   The format of the index files has changed from the 0.1 and 0.11 releases.
   There is a program for updating them, and there is also a makefile target.
 
     $ make upgrade-indices
+
+
+OUTPUT FILES
+------------
+
+   <base>-ngc.png   : an annotation of the image.
+   <base>.wcs       : a FITS WCS header for the solution.
+   <base>-new.fits  : a new FITS file containing the WCS header.
+   <base>-objs.png  : a plot of the sources (stars) we extracted from the image.
+   <base>-indx.png  : sources (red), plus stars from the index (green), plus the
+                       skymark ("quad") used to solve the image.
+   <base>-indx.xyls : a FITS BINTABLE with the pixel locations of stars from the index.
+   <base>.rdls      : a FITS BINTABLE with the RA,Dec of sources we extracted from the image.
+   <base>.axy       : a FITS BINTABLE of the sources we extracted, plus headers that
+                       describe the job (how the image is going to be solved).
+   <base>.solved    : exists and contains (binary) 1 if the field solved.
+   <base>.match     : a FITS BINTABLE describing the quad match that solved the image.
 
 
 SOLVE-FIELDS ARGUMENTS
@@ -297,23 +296,75 @@ XYLISTS
 
 TRICKS AND TIPS
 ---------------
-   Say you've got a directory full of FITS images from your latest observing run,
-   and you just want them calibrated NOW.
-
-   > ls data/
-   .   AISCHV2_037_08859_0001_sv01-nd-int.fits.gz  AISCHV2_040_19670_0001_sv02-nd-int.fits.gz
-   ..  AISCHV2_040_19670_0001_sv01-nd-int.fits.gz
-
-   > time solve-field data/*
-
-   Okay, that worked but it was really slow.  Annoyingly, it takes a long time to decide that
-   an image isn't going to solve.  You can reduce that time:
+** "solve-field" takes a long time before it gives up on your image.  You can reduce that time:
 
    > solve-field --cpulimit 30 ...
 
-   Alternatively, you can force it to only look at the brightest N sources in your images:
+   (Note, however, that the "backend" configuration file (backend.cfg) puts a limit on the
+   CPU time that is spent on an image; solve-field can reduce this but not increase it.)
+
+
+** Another way of reducing the amount of time spent is to specify a range of
+   stars for the solver to look at, in order of brightness.
 
    > solve-field --depth 1-20 ...
+
+   The numbers start at 1 and the ranges are inclusive, so you can break a solving
+   attempt into pieces like this:
+
+   > solve-field --depth 1-20 ...
+   > solve-field --depth 21-30 --continue ...
+
+
+** If our source extractor has estimated the background badly, then when we order
+   the stars by brightness they will be in an order that will take a long time to
+   solve.  You can tell solve-field to sort the stars in a different way (compromising
+   between background-subtracted and not-background-subtracted brightnesses), using:
+
+   > solve-field --resort
+
+
+** If you've got big images: you might want to downsample them before doing source extraction:
+
+   > solve-field --downsample 2
+
+   or
+
+   > solve-field --downsample 4
+
+   (etc)
+
+
+** When "solve-field" processes FITS files, it runs them through a "sanitizer" which tries to
+   clean up non-standards-compliant images.  If your FITS files are compliant, this is a waste
+   of time, and you can avoid doing it.
+
+   > solve-field --no-fits2fits ...
+
+
+** If you don't want the plots to be produced:
+
+   > solve-field --no-plots ...
+
+
+
+UNDER THE HOOD
+--------------
+   Because we also operate a web service using most of the same software, the local
+   version of the solver is a bit more complicated than it really needs to be.  The
+   "solve-field" program takes your input files, does source extraction on them to
+   produce an "xylist" -- a FITS BINTABLE of source positions -- then takes the
+   information you supplied about your fields on the command-line and adds FITS
+   headers encoding this information.  We call this file an "augmented xylist"; we
+   use the filename suffix ".axy".  "solve-field" then calls the "backend" program,
+   passing it your axy file.  "backend" reads a config file (by default
+   /usr/local/astrometry/etc/backend.cfg) that describes things like where to find
+   index files, whether to load all the indexes at once or run them one at a time,
+   how long to spend on each field, and so on.  If you want to force only a certain
+   set of indices to load, you can copy the backend.cfg file to a local version and
+   change the list of indices that are loaded, and then tell solve-field to use this
+   config file:
+      solve-field --backend-config mybackend.cfg ...
 
 
 
@@ -367,24 +418,6 @@ WORKAROUNDS
    and use "xylists" rather than images as the input to solve-field.  See SEXTRACTOR
    and XYLIST sections above.
 
-
-UNDER THE HOOD
---------------
-   Because we also operate a web service using most of the same software, the local
-   version of the solver is a bit more complicated than it really needs to be.  The
-   "solve-field" program takes your input files, does source extraction on them to
-   produce an "xylist" -- a FITS BINTABLE of source positions -- then takes the
-   information you supplied about your fields on the command-line and adds FITS
-   headers encoding this information.  We call this file an "augmented xylist"; we
-   use the filename suffix ".axy".  "solve-field" then calls the "backend" program,
-   passing it your axy file.  "backend" reads a config file (by default
-   /usr/local/astrometry/etc/backend.cfg) that describes things like where to find
-   index files, whether to load all the indexes at once or run them one at a time,
-   how long to spend on each field, and so on.  If you want to force only a certain
-   set of indices to load, you can copy the backend.cfg file to a local version and
-   change the list of indices that are loaded, and then tell solve-field to use this
-   config file:
-      solve-field --backend-config mybackend.cfg ...
 
 LICENSE
 -------

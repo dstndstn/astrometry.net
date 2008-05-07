@@ -327,14 +327,24 @@ int main(int argc, char** args) {
             asprintf_safe(&cpy, baseout, inputnum, infile);
         else
             cpy = strdup(infile);
+        logverb("Base name for output files: %s\n", cpy);
 		if (outdir)
 			asprintf_safe(&base, "%s/%s", outdir, basename(cpy));
 		else
-			base = strdup(basename(cpy));
+			//base = strdup(basename(cpy));
+			base = strdup(cpy);
+        logverb("Base name for output files: %s\n", base);
 		free(cpy);
+        // trim .gz, .bz2
+        // hmm, we drop the suffix in this case...
+		len = strlen(base);
+        if (ends_with(base, ".gz"))
+            base[len-3] = '\0';
+        else if (ends_with(base, ".bz2"))
+            base[len-4] = '\0';
 		len = strlen(base);
 		// trim .xx / .xxx / .xxxx
-		if (len > 4) {
+		if (len >= 5) {
             for (j=3; j<=5; j++) {
                 if (base[len - j] == '.') {
                     base[len - j] = '\0';
@@ -343,6 +353,7 @@ int main(int argc, char** args) {
                 }
             }
 		}
+        logverb("Base: %s, suffix %s\n", base, suffix);
 
 		// the output filenames.
 		outfiles = sl_new(16);

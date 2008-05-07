@@ -23,6 +23,7 @@
 #include "sip_qfits.h"
 #include "an-bool.h"
 #include "fitsioutils.h"
+#include "errors.h"
 
 int sip_write_to_file(const sip_t* sip, const char* fn) {
 	FILE* fid;
@@ -30,22 +31,22 @@ int sip_write_to_file(const sip_t* sip, const char* fn) {
 	int res;
 	fid = fopen(fn, "wb");
 	if (!fid) {
-		fprintf(stderr, "Failed to open file %s to write WCS header: %s\n", fn, strerror(errno));
+		SYSERROR("Failed to open file \"%s\" to write WCS header", fn);
 		return -1;
 	}
 	hdr = sip_create_header(sip);
 	if (!hdr) {
-		fprintf(stderr, "Failed to create FITS header from WCS.\n");
+		ERROR("Failed to create FITS header from WCS");
 		return -1;
 	}
 	res = qfits_header_dump(hdr, fid);
 	qfits_header_destroy(hdr);
 	if (res) {
-		fprintf(stderr, "Failed to write FITS header to file %s: %s\n", fn, strerror(errno));
+		ERROR("Failed to write FITS header to file \"%s\"", fn);
 		return -1;
 	}
 	if (fclose(fid)) {
-		fprintf(stderr, "Failed to close file %s after writing WCS header: %s\n", fn, strerror(errno));
+		SYSERROR("Failed to close file \"%s\" after writing WCS header", fn);
 		return -1;
 	}
 	return 0;
@@ -57,22 +58,22 @@ int tan_write_to_file(const tan_t* tan, const char* fn) {
 	int res;
 	fid = fopen(fn, "wb");
 	if (!fid) {
-		fprintf(stderr, "Failed to open file %s to write WCS header: %s\n", fn, strerror(errno));
+		SYSERROR("Failed to open file \"%s\" to write WCS header", fn);
 		return -1;
 	}
 	hdr = tan_create_header(tan);
 	if (!hdr) {
-		fprintf(stderr, "Failed to create FITS header from WCS.\n");
+		ERROR("Failed to create FITS header from WCS");
 		return -1;
 	}
 	res = qfits_header_dump(hdr, fid);
 	qfits_header_destroy(hdr);
 	if (res) {
-		fprintf(stderr, "Failed to write FITS header to file %s: %s\n", fn, strerror(errno));
+		ERROR("Failed to write FITS header to file \"%s\"", fn);
 		return -1;
 	}
 	if (fclose(fid)) {
-		fprintf(stderr, "Failed to close file %s after writing WCS header: %s\n", fn, strerror(errno));
+		SYSERROR("Failed to close file \"%s\" after writing WCS header", fn);
 		return -1;
 	}
 	return 0;
@@ -161,12 +162,12 @@ static void* read_header_file(const char* fn, void* dest,
 	void* result;
 	hdr = qfits_header_read(fn);
 	if (!hdr) {
-		fprintf(stderr, "Failed to read FITS header from file \"%s\".\n", fn);
+		ERROR("Failed to read FITS header from file \"%s\"", fn);
 		return NULL;
 	}
 	result = readfunc(hdr, dest);
 	if (!result) {
-		fprintf(stderr, "Failed to parse WCS header from file \"%s\".\n", fn);
+		ERROR("Failed to parse WCS header from file \"%s\"", fn);
 	}
 	qfits_header_destroy(hdr);
 	return result;
@@ -206,7 +207,7 @@ static bool read_polynomial(const qfits_header* hdr, const char* format,
 			sprintf(key, format, i, j);
 			val = qfits_header_getdouble(hdr, key, nil);
 			if (val == nil) {
-				fprintf(stderr, "SIP: warning: key \"%s\" not found; setting to zero.\n", key);
+                ERROR("SIP: warning: key \"%s\" not found; setting to zero.", key);
 				val=0.0;
 				//fprintf(stderr, "SIP: key \"%s\" not found.\n", key);
 				//return FALSE;
@@ -229,12 +230,12 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 	str = qfits_header_getstr(hdr, key);
 	str = qfits_pretty_string(str);
 	if (!str) {
-		fprintf(stderr, "SIP header: no %s.\n", key);
+		ERROR("SIP header: no key \"%s\"", key);
 		return NULL;
 	}
 	if (strncmp(str, expect, strlen(expect))) {
 		if (!tan_read_header(hdr, &(sip.wcstan))) {
-			fprintf(stderr, "SIP: failed to read TAN header.\n");
+			ERROR("SIP: failed to read TAN header");
 			return NULL;
 		}
 		goto gohome;
@@ -245,12 +246,12 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 	str = qfits_header_getstr(hdr, key);
 	str = qfits_pretty_string(str);
 	if (!str || strncmp(str, expect, strlen(expect))) {
-		fprintf(stderr, "SIP header: invalid \"%s\": expected \"%s\", got \"%s\".\n", key, expect, str);
+		ERROR("SIP header: incorrect key \"%s\": expected \"%s\", got \"%s\"", key, expect, str);
 		return NULL;
 	}
 
 	if (!tan_read_header(hdr, &sip.wcstan)) {
-		fprintf(stderr, "SIP: failed to read TAN header.\n");
+		ERROR("SIP: failed to read TAN header");
 		return NULL;
 	}
 
@@ -263,7 +264,7 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 		(sip.b_order == -1) || 
 		(sip.ap_order == -1) || 
 		(sip.bp_order == -1)) {
-		fprintf(stderr, "SIP: failed to read polynomial orders.\n");
+		ERROR("SIP: failed to read polynomial orders");
 		return NULL;
 	}
 
@@ -271,8 +272,8 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 		(sip.b_order > SIP_MAXORDER) || 
 		(sip.ap_order > SIP_MAXORDER) || 
 		(sip.bp_order > SIP_MAXORDER)) {
-		fprintf(stderr, "SIP: polynomial orders (A=%i, B=%i, AP=%i, BP=%i) exceeds maximum of %i.\n",
-				sip.a_order, sip.b_order, sip.ap_order, sip.bp_order, SIP_MAXORDER);
+		ERROR("SIP: polynomial orders (A=%i, B=%i, AP=%i, BP=%i) exceeds maximum of %i",
+              sip.a_order, sip.b_order, sip.ap_order, sip.bp_order, SIP_MAXORDER);
 		return NULL;
 	}
 
@@ -280,7 +281,7 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 		!read_polynomial(hdr, "B_%i_%i",  sip.b_order,  (double*)sip.b,  SIP_MAXORDER, TRUE) ||
 		!read_polynomial(hdr, "AP_%i_%i", sip.ap_order, (double*)sip.ap, SIP_MAXORDER, FALSE) ||
 		!read_polynomial(hdr, "BP_%i_%i", sip.bp_order, (double*)sip.bp, SIP_MAXORDER, FALSE)) {
-		fprintf(stderr, "SIP: failed to read polynomial terms.\n");
+		ERROR("SIP: failed to read polynomial terms");
 		return NULL;
 	}
 
@@ -306,7 +307,7 @@ tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
 	str = qfits_header_getstr(hdr, key);
 	str = qfits_pretty_string(str);
 	if (!str || strncmp(str, expect, strlen(expect))) {
-		fprintf(stderr, "TAN header: invalid \"%s\": expected \"%s\", got \"%s\".\n", key, expect, str);
+		ERROR("TAN header: incorrect key \"%s\": expected \"%s\", got \"%s\"", key, expect, str);
 		return NULL;
 	}
 
@@ -315,19 +316,17 @@ tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
 	str = qfits_header_getstr(hdr, key);
 	str = qfits_pretty_string(str);
 	if (!str || strncmp(str, expect, strlen(expect))) {
-		fprintf(stderr, "TAN header: invalid \"%s\": expected \"%s\", got \"%s\".\n", key, expect, str);
+		ERROR("TAN header: invalid \"%s\": expected \"%s\", got \"%s\"", key, expect, str);
 		return NULL;
 	}
 
     tan.imagew = qfits_header_getint(hdr, "IMAGEW", 0);
     tan.imageh = qfits_header_getint(hdr, "IMAGEH", 0);
 
-    if (!tan.imagew) {
+    if (!tan.imagew)
         tan.imagew = qfits_header_getint(hdr, "NAXIS1", 0);
-    }
-    if (!tan.imageh) {
+    if (!tan.imageh)
         tan.imageh = qfits_header_getint(hdr, "NAXIS2", 0);
-    }
 
 	{
 		const char* keys[] = { "CRVAL1", "CRVAL2", "CRPIX1", "CRPIX2",
@@ -341,7 +340,7 @@ tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
 		for (i=0; i<8; i++) {
 			*(vals[i]) = qfits_header_getdouble(hdr, keys[i], nil);
 			if (*(vals[i]) == nil) {
-				fprintf(stderr, "TAN header: missing or invalid value for \"%s\".\n", keys[i]);
+				ERROR("TAN header: missing or invalid value for \"%s\"", keys[i]);
 				return NULL;
 			}
 		}

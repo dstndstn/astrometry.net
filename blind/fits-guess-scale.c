@@ -29,6 +29,7 @@
 #include "sip_qfits.h"
 #include "starutil.h"
 #include "errors.h"
+#include "log.h"
 
 int fits_guess_scale(const char* infn,
                      sl** p_methods, dl** p_scales) {
@@ -57,6 +58,8 @@ void fits_guess_scale_hdr(const qfits_header* hdr,
 	sip_t sip;
 	double val;
 	bool gotsip = FALSE;
+    err_t* e;
+    char* errstr;
 
     sl* methods = NULL;
     dl* scales = NULL;
@@ -73,6 +76,11 @@ void fits_guess_scale_hdr(const qfits_header* hdr,
     }
 
 	memset(&sip, 0, sizeof(sip_t));
+    // suppress errors temporarily.
+    errors_push_state();
+    e = errors_get_state();
+    e->print = NULL;
+    e->save = TRUE;
 	if (sip_read_header(hdr, &sip)) {
         val = sip_pixel_scale(&sip);
         if (val != 0.0) {
@@ -80,6 +88,10 @@ void fits_guess_scale_hdr(const qfits_header* hdr,
             gotsip = TRUE;
 		}
 	}
+    errstr = error_get_errs(e, ", ");
+    logverb("fits-guess-scale: failed to read SIP/TAN header: %s\n", errstr);
+    free(errstr);
+    errors_pop_state();
 
 	if (!gotsip) {
 		// it might have a correct CD matrix but be missing other parts (eg CRVAL)

@@ -996,8 +996,13 @@ void solver_set_default_values(solver_t* solver) {
 	solver->codetol = DEFAULT_CODE_TOL;
 }
 
+void solver_clear_indexes(solver_t* solver) {
+	pl_remove_all(solver->indexes);
+}
+
 void solver_cleanup(solver_t* solver) {
 	pl_free(solver->indexes);
+    solver->indexes = NULL;
 }
 
 void solver_free(solver_t* solver) {

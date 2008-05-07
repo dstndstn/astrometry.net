@@ -26,8 +26,9 @@
 #include "qfits.h"
 #include "fits-guess-scale.h"
 #include "fitsioutils.h"
+#include "log.h"
 
-static char* OPTIONS = "h";
+static char* OPTIONS = "hv";
 
 static void printHelp(char* progname) {
 	printf("%s  <FITS-file>\n\n", progname);
@@ -44,6 +45,7 @@ int main(int argc, char *argv[]) {
     sl* methods = NULL;
     dl* scales = NULL;
     int i;
+    int loglvl = LOG_MSG;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
@@ -51,6 +53,9 @@ int main(int argc, char *argv[]) {
         case 'h':
 			printHelp(progname);
             return 0;
+        case 'v':
+            loglvl++;
+            break;
         default:
             return -1;
         }
@@ -60,6 +65,8 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 	infn = argv[optind];
+
+    log_init(loglvl);
 
     fits_use_error_system();
 

@@ -47,6 +47,7 @@ static char* exclude_input[] = {
 	"^[AB]P?_[[:digit:]]_[[:digit:]]$",
 	// Other
 	"^PV[[:digit:]]*_[[:digit:]]*.?$",
+	"^CROTA.*",
 	"^END$",
 };
 static int NE1 = sizeof(exclude_input) / sizeof(char*);
