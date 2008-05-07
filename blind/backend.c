@@ -404,12 +404,15 @@ static int run_job(job_t* job, backend_t* backend) {
         int endobj = il_get(job->depths, i*2+1);
         int j;
 
-        // make depth ranges be inclusive.
         if (startobj || endobj) {
+            // make depth ranges be inclusive.
             endobj++;
-            // up to this point they are 1-indexed; blind uses 0-indexed.
-            startobj--;
-            endobj--;
+            // up to this point they are 1-indexed, but with default value
+            // zero; blind uses 0-indexed.
+            if (startobj)
+                startobj--;
+            if (endobj)
+                endobj--;
         }
 
         logmsg("Feeding to blind: startobj %i, endobj %i\n", startobj, endobj);
