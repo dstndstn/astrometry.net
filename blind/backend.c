@@ -414,8 +414,7 @@ static int run_job(job_t* job, backend_t* backend) {
             if (endobj)
                 endobj--;
         }
-
-        logmsg("Feeding to blind: startobj %i, endobj %i\n", startobj, endobj);
+        //logmsg("Feeding to blind: startobj %i, endobj %i\n", startobj, endobj);
 
 		for (j=0; j<dl_size(job->scales) / 2; j++) {
 			double fmin, fmax;

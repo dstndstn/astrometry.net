@@ -1151,10 +1151,10 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
             }
             logerr(".\n");
 			if (sp->have_best_match) {
-				logmsg("Best match encountered: ");
+				logverb("Best match encountered: ");
 				print_match(bp, &(sp->best_match));
 			} else {
-				logmsg("Best odds encountered: %g\n", exp(sp->best_logodds));
+				logverb("Best odds encountered: %g\n", exp(sp->best_logodds));
 			}
 		}
 

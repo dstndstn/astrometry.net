@@ -587,6 +587,7 @@ int main(int argc, char** args) {
 
             // create new FITS file...
             if (axy->fitsimgfn) {
+                logmsg("Creating new FITS file \"%s\"...\n", newfitsfn);
                 if (new_wcs(axy->fitsimgfn, axy->wcsfn, newfitsfn, TRUE)) {
                     ERROR("Failed to create FITS image with new WCS headers");
                     exit(-1);
@@ -613,6 +614,7 @@ int main(int argc, char** args) {
             logmsg("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
 
             if (makeplots) {
+                logmsg("Creating plots...\n");
                 // sources + index overlay
                 append_executable(cmdline, "plotxy", me);
                 sl_append(cmdline, "-i");
