@@ -263,6 +263,20 @@ If you know the pixel scale instead:
    $ solve-field --scale-units arcsecperpix \
        --scale-low 0.386 --scale-high 0.406 ...
 
+When you tell solve-field the scale of your image, it uses this to
+decide which indexes to try to use to solve your image; each index
+contains quads whose scale is within a certain range, so if these
+quads are too big or too small to be in your image, there is no need
+to look in that index.  It is also used while matching quads: a small
+quad in your image is not allowed to match a large quad in the index
+if such a match would cause the image scale to be outside the bounds
+you specified.  However, all these checks are done before computing a
+best-fit WCS solution and polynomial distortion terms, so it is
+possible (though rare) for the final solution to fall outside the
+limits you specified.  This should only happen when the solution is
+correct, but you gave incorrect inputs, so you shouldn't be
+complaining! :)
+
 *** Depth.  The solver works by looking at sources in your image,
 starting with the brightest.  It searches for all "skymarks" that can
 be built from the N brightest stars before considering star N+1.  When
