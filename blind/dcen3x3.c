@@ -37,7 +37,7 @@
  * Mike Blanton
  * 1/2006 */
 
-int dcen3(float f0, float f1, float f2, float *xcen)
+int dcen3a(float f0, float f1, float f2, float *xcen)
 {
 	float s, d, aa, sod, kk;
 
@@ -57,6 +57,31 @@ int dcen3(float f0, float f1, float f2, float *xcen)
 
 	return (1);
 }
+
+/* given points at (0, f0), (1, f1), (2, f2), assume there is a
+ quadratic passing through the three points; return the peak of
+ the quadratic:
+
+ f = a x^2 + b x + c
+
+ df/dx = 2ax + b = 0  =>  x* = -b/2a
+ */
+int dcen3b(float f0, float f1, float f2, float *xcen) {
+    float a, b;
+    /*
+     f0 = c
+     f1 = a + b + c
+     f2 = 4a + 2b + c
+     */
+    a = 0.5 * (f2 - 2*f1 + f0);
+    b = f1 - a - f0;
+    *xcen = -0.5 * b / a;
+    if ((*xcen < 0.0) || (*xcen > 2.0))
+        return 0;
+    return 1;
+}
+
+#define dcen3 dcen3b
 
 int dcen3x3(float *image, float *xcen, float *ycen)
 {

@@ -170,7 +170,8 @@ solver_test.o: solver.c
 
 # Add the basename of your test sources here...
 ALL_TEST_FILES = test_dfind test_ctmf test_simplexy test_dsmooth test_2mass \
-	test_tycho2 test_usnob test_nomad test_matchfile test_hd test_scriptutils
+	test_tycho2 test_usnob test_nomad test_matchfile test_hd test_scriptutils \
+	test_dcen3x3
 
 ALL_TEST_EXTRA_OBJS :=
 ALL_TEST_LIBS :=
@@ -214,6 +215,9 @@ ALL_TEST_EXTRA_OBJS += hd.o
 
 test_scriptutils: scriptutils.o log.o $(ANUTILS_LIB)
 ALL_TEST_EXTRA_OBJS += scriptutils.o log.o
+
+test_dcen3x3: dcen3x3.o
+ALL_TEST_EXTRA_OBJS += dcen3x3.o
 
 ALL_TEST_LIBS += $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
