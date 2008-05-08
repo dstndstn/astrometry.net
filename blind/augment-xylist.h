@@ -86,6 +86,10 @@ struct augment_xylist_s {
     int downsample;
 
     bool dont_augment;
+
+    // fractions
+    double quadsize_min;
+    double quadsize_max;
 };
 typedef struct augment_xylist_s augment_xylist_t;
 

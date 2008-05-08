@@ -459,6 +459,8 @@ void solver_run(solver_t* solver) {
 			}
 		}
 		solver->minminAB2 = MAX(solver->minminAB2, square(solver->quadsize_min));
+        if (solver->quadsize_max != 0.0)
+            solver->maxmaxAB2 = MIN(solver->maxmaxAB2, square(solver->quadsize_max));
 		logverb("Quad scale range: [%g, %g] pixels\n", sqrt(solver->minminAB2), sqrt(solver->maxmaxAB2));
 
 		pquads = calloc(numxy * numxy, sizeof(pquad));

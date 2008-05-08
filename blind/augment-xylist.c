@@ -156,6 +156,10 @@ static an_option_t options[] = {
      "for verification, size of pixel positional error, default 1"},
 	{'m', "temp-dir",       required_argument, "dir",
      "where to put temp files, default /tmp"},
+    {'q', "quad-size-min",  required_argument, "fraction",
+     "minimum size of quads to try, as a fraction of the smaller image dimension, default 0.1"},
+    {'Q', "quad-size-max",  required_argument, "fraction",
+     "maximum size of quads to try, as a fraction of the image hypotenuse, default 1.0"},
     // placeholder for printing "The following are for xylist inputs only"
     {'\0', "xylist-only", no_argument, NULL, NULL},
     {'F', "fields",         required_argument, NULL, NULL},
@@ -192,7 +196,24 @@ static int parse_fields_string(il* fields, const char* str);
 
 int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
+    double d;
     switch (argchar) {
+    case 'q':
+        d = atof(optarg);
+        if (d < 0.0 || d > 1.0) {
+            ERROR("quad size fraction (-q / --quad-size-min) must be between 0.0 and 1.0");
+            return -1;
+        }
+        axy->quadsize_min = d;
+        break;
+    case 'Q':
+        d = atof(optarg);
+        if (d < 0.0 || d > 1.0) {
+            ERROR("quad size fraction (-Q / --quad-size-max) must be between 0.0 and 1.0");
+            return -1;
+        }
+        axy->quadsize_max = d;
+        break;
     case 'l':
         axy->cpulimit = atof(optarg);
         break;
@@ -662,6 +683,11 @@ int augment_xylist(augment_xylist_t* axy,
             fits_header_add_double(hdr, key, hi, "scale: arcsec/pixel max");
         }
 	}
+
+    if (axy->quadsize_min > 0.0)
+        fits_header_add_double(hdr, "ANQSFMIN", axy->quadsize_min, "minimum quad size: fraction");
+    if (axy->quadsize_max > 0.0)
+        fits_header_add_double(hdr, "ANQSFMAX", axy->quadsize_max, "maximum quad size: fraction");
 
 	qfits_header_add(hdr, "ANTWEAK", (axy->tweak ? "T" : "F"), (axy->tweak ? "Tweak: yes please!" : "Tweak: no, thanks."), NULL);
 	if (axy->tweak && axy->tweakorder)

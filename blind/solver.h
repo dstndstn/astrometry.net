@@ -85,6 +85,8 @@ struct solver_t {
 
 	// Minimum size of field quads to try, in pixels.
 	double quadsize_min;
+	// Maximum size of field quads to try, in pixels.
+	double quadsize_max;
 
 	// The first and last field objects to look at; default is all of them.
 	int startobj;

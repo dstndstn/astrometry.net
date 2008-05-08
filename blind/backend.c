@@ -445,7 +445,7 @@ static int run_job(job_t* job, backend_t* backend) {
 			// range of quad sizes that could be found in the field,
 			// in arcsec.
             // the hypotenuse...
-			fmax = job->quad_sizefraction_max * sqrt(square(job_imagew(job)) + square(job_imageh(job))) * app_max;
+			fmax = job->quad_sizefraction_max * hypot(job_imagew(job), job_imageh(job)) * app_max;
 			fmin = sp->quadsize_min * app_min;
 
 			// Select the indices that should be checked.
