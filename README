@@ -399,8 +399,9 @@ results:
    $ solve-field --keep-xylist %s.xy input.fits ...
 
 On subsequent runs, instead of using the original input file, use the
-saved xylist instead:
-   $ solve-field input.xy --no-fits2fits ...
+saved xylist instead.  Also add --continue to overwrite any output
+file that already exists.
+   $ solve-field input.xy --no-fits2fits --continue ...
 
 To skip previously solved inputs (note that this assumes single-HDU
 inputs):
