@@ -99,6 +99,16 @@ char* create_temp_file(char* fn, char* dir) {
     return tempfile;
 }
 
+char* create_temp_dir(char* name, char* dir) {
+    char* tempdir;
+    asprintf_safe(&tempdir, "%s/tmp.%s.XXXXXX", dir, name);
+    if (!mkdtemp(tempdir)) {
+        SYSERROR("Failed to create temp dir");
+        return NULL;
+    }
+    return tempdir;
+}
+
 /*
 int parse_positive_range_string(il* depths, const char* str,
                                 int default_low, int default_high,

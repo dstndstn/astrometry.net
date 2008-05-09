@@ -79,6 +79,8 @@ static an_option_t options[] = {
      "                  NOTE: this assumes single-field input files"},
     {'N', "no-new-fits",    no_argument, NULL,
      "don't create a new FITS file containing the WCS header"},
+    {'Z', "kmz",            required_argument, "filename",
+     "create KMZ file for Google Sky.  (requires wcs2kml)\n"},
 };
 
 static void print_help(const char* progname, bl* opts) {
@@ -114,6 +116,11 @@ static int run_command(const char* cmd, bool* ctrlc) {
 
 static void append_escape(sl* list, const char* fn) {
     sl_append_nocopy(list, shell_escape(fn));
+}
+static void appendf_escape(sl* list, const char* fmt, const char* fn) {
+    char* esc = shell_escape(fn);
+    sl_appendf(list, fmt, esc);
+    free(esc);
 }
 static void append_executable(sl* list, const char* fn, const char* me) {
     char* exec = find_executable(fn, me);
@@ -156,6 +163,7 @@ int main(int argc, char** args) {
     int nmyopts;
     char* removeopts = "ixo\x01";
     bool newfits = TRUE;
+    char* kmzfn = NULL;
 
     errors_print_on_exit(stderr);
     fits_use_error_system();
@@ -204,6 +212,9 @@ int main(int argc, char** args) {
              break;
              }
              */
+        case 'Z':
+            kmzfn = optarg;
+            break;
         case 'N':
             newfits = FALSE;
             break;
@@ -294,6 +305,7 @@ int main(int argc, char** args) {
         char* suffix = NULL;
 		sl* outfiles;
 		sl* tempfiles;
+		sl* tempdirs;
 		sl* cmdline;
         bool ctrlc;
         augment_xylist_t theaxy;
@@ -376,6 +388,7 @@ int main(int argc, char** args) {
 		// the output filenames.
 		outfiles = sl_new(16);
 		tempfiles = sl_new(4);
+		tempdirs = sl_new(4);
 
 		axy->outfn    = sl_appendf(outfiles, "%s.axy",       base);
 		axy->matchfn  = sl_appendf(outfiles, "%s.match",     base);
@@ -716,6 +729,81 @@ int main(int argc, char** args) {
                     sl_free2(lines);
 			}
 
+            if (axy->imagefn && kmzfn) {
+                char* pngfn = NULL;
+                char* kmlfn = NULL;
+                char* warpedpngfn = NULL;
+                char* tmpdir;
+
+                tmpdir = create_temp_dir("kmz", tempdir);
+                if (!tmpdir) {
+                    ERROR("Failed to create temp dir for KMZ output");
+                    exit(-1);
+                }
+                sl_append_nocopy(tempdirs, tmpdir);
+
+                pngfn = create_temp_file("png", tempdir);
+                sl_append_nocopy(tempfiles, pngfn);
+
+                sl_append(cmdline, "pnmtopng");
+                append_escape(cmdline, axy->pnmfn);
+                sl_append(cmdline, ">");
+                append_escape(cmdline, pngfn);
+                // run it
+				cmd = sl_implode(cmdline, " ");
+				sl_remove_all(cmdline);
+                logverb("Running:\n  %s\n", cmd);
+                if (run_command_get_outputs(cmd, NULL, NULL)) {
+                    ERROR("pnmtopng failed");
+                    exit(-1);
+                }
+				free(cmd);
+
+                kmlfn       = sl_appendf(tempfiles, "%s/%s", tmpdir, "doc.kml");
+                warpedpngfn = sl_appendf(tempfiles, "%s/%s", tmpdir, "warped.png");
+
+                logverb("Trying to run wcs2kml to generate KMZ output.\n");
+                sl_append(cmdline, "wcs2kml");
+                // FIXME - if parity?
+                sl_append(cmdline, "--input_image_origin_is_upper_left");
+                appendf_escape(cmdline, "--fitsfile=%s", axy->wcsfn);
+                appendf_escape(cmdline, "--imagefile=%s", pngfn);
+                appendf_escape(cmdline, "--kmlfile=%s", kmlfn);
+                appendf_escape(cmdline, "--outfile=%s", warpedpngfn);
+                // run it
+				cmd = sl_implode(cmdline, " ");
+				sl_remove_all(cmdline);
+                logverb("Running:\n  %s\n", cmd);
+                if (run_command_get_outputs(cmd, NULL, NULL)) {
+                    ERROR("pnmtopng failed");
+                    exit(-1);
+                }
+				free(cmd);
+
+                sl_append(cmdline, "zip");
+                sl_append(cmdline, "-j"); // no paths, just filenames
+                if (!verbose)
+                    sl_append(cmdline, "-q");
+                // pipe to stdout, because zip likes to add ".zip" to the
+                // output filename, and provides no way to turn off this
+                // behaviour.
+                sl_append(cmdline, "-");
+                appendf_escape(cmdline, "%s", warpedpngfn);
+                appendf_escape(cmdline, "%s", kmlfn);
+                sl_append(cmdline, ">");
+                append_escape(cmdline, kmzfn);
+
+                // run it
+				cmd = sl_implode(cmdline, " ");
+				sl_remove_all(cmdline);
+                logverb("Running:\n  %s\n", cmd);
+                if (run_command_get_outputs(cmd, NULL, NULL)) {
+                    ERROR("pnmtopng failed");
+                    exit(-1);
+                }
+				free(cmd);
+            }
+
 			// create field rdls?
 		}
         fflush(NULL);
@@ -728,9 +816,15 @@ int main(int argc, char** args) {
 			if (unlink(fn))
 				SYSERROR("Failed to delete temp file \"%s\"", fn);
 		}
+		for (i=0; i<sl_size(tempdirs); i++) {
+			char* fn = sl_get(tempdirs, i);
+			if (rmdir(fn))
+				SYSERROR("Failed to delete temp dir \"%s\"", fn);
+		}
         sl_free2(cmdline);
 		sl_free2(outfiles);
 		sl_free2(tempfiles);
+		sl_free2(tempdirs);
 
         errors_print_stack(stdout);
         errors_clear_stack();

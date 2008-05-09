@@ -23,6 +23,8 @@
 
 char* create_temp_file(char* fn, char* dir);
 
+char* create_temp_dir(char* name, char* dir);
+
 char* shell_escape(const char* str);
 
 int mkdir_p(const char* path);
