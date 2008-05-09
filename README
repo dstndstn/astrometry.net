@@ -234,7 +234,10 @@ OUTPUT FILES
    <base>.solved    : exists and contains (binary) 1 if the field solved.
    <base>.match     : a FITS BINTABLE describing the quad match that
                       solved the image.
-   <base>.kmz       : (optional) KMZ file for Google Sky-in-Earth.
+   <base>.kmz       : (optional) KMZ file for Google Sky-in-Earth.  You need
+                      to have "wcs2kml" in your PATH.  See
+                       http://code.google.com/p/wcs2kml/downloads/list
+                       http://code.google.com/p/google-gflags/downloads/list
 
 
 TRICKS AND TIPS
