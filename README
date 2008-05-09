@@ -279,6 +279,13 @@ correct, but you gave incorrect inputs, so you shouldn't be
 complaining! :)
 
 
+*** Guess the scale: solve-field can try to guess your image's scale
+from a number of different FITS header values.  When it's right, this
+often speeds up solving a lot, and when it's wrong it doesn't cost
+much.  Enable this with:
+
+   $ solve-field --guess-scale ...
+
 *** Depth.  The solver works by looking at sources in your image,
 starting with the brightest.  It searches for all "skymarks" that can
 be built from the N brightest stars before considering star N+1.  When
@@ -302,7 +309,7 @@ limit.  To look at a single source, do
     $ solve-field --depth 42-42 ...
 
 
-** Our source extractor sometimes estimates the background badly, so
+*** Our source extractor sometimes estimates the background badly, so
 by default we sort the stars by brightness using a compromise between
 the raw and background-subtracted flux estimates.  For images without
 much nebulosity, you might find that using the background-subtracted
@@ -311,7 +318,7 @@ fluxes yields faster results.  Enable this by:
     $ solve-field --resort ...
 
 
-** If you've got big images: you might want to downsample them before
+*** If you've got big images: you might want to downsample them before
 doing source extraction:
 
    $ solve-field --downsample 2 ...
@@ -319,7 +326,7 @@ or $ solve-field --downsample 4 ...
 or etc
 
 
-** When solve-field processes FITS files, it runs them through a
+*** When solve-field processes FITS files, it runs them through a
 "sanitizer" which tries to clean up non-standards-compliant images.
 If your FITS files are compliant, this is a waste of time, and you can
 avoid doing it.
@@ -327,7 +334,7 @@ avoid doing it.
    $ solve-field --no-fits2fits ...
 
 
-** When solve-field processes FITS images, it looks for an existing
+*** When solve-field processes FITS images, it looks for an existing
 WCS header.  If one is found, it tries to verify that header before
 trying to solve the image blindly.  You can prevent this with:
 
@@ -337,11 +344,13 @@ Note that currently solve-field only understands a small subset of
 valid WCS headers: essentially just the TAN projection with a CD
 matrix (not CROT).
 
-** If you don't want the plots to be produced:
+
+*** If you don't want the plots to be produced:
 
    $ solve-field --no-plots ...
 
-** "I know where my image is to within 1 arcminute, how can I tell
+
+*** "I know where my image is to within 1 arcminute, how can I tell
 solve-field to only look there?"
 
 In this release of the software, you can't.  We've got plans for v0.3,
@@ -354,7 +363,8 @@ the HEALPix number); you can edit the "backend.cfg" config file to
 tell the "backend" program to only load the index that contains your
 image.
 
-** To convert a list of pixel coordinates to RA,Dec coordinates:
+
+*** To convert a list of pixel coordinates to RA,Dec coordinates:
 
    $ wcs-xy2rd -w wcs-file -i xy-list -o radec-list
 
@@ -362,13 +372,16 @@ Where xy-list is a FITS BINTABLE of the pixel locations of sources;
 recall that FITS specifies that the center of the first pixel is pixel
 coordinate (1,1).
 
-** To convert from RA,Dec to pixels:
+
+*** To convert from RA,Dec to pixels:
 
    $ wcs-rd2xy -w wcs-file -i radec-list -o xy-list
 
-** To make cool overlay plots: see plotxy, plot-constellations.
 
-** To change the output filenames when processing multiple input
+*** To make cool overlay plots: see plotxy, plot-constellations.
+
+
+*** To change the output filenames when processing multiple input
 files: each of the output filename options listed below can include
 "%s", which will be replaced by the base output filename.  (Eg, the
 default for --wcs is "%s.wcs").  If you really want a "%" character in
@@ -376,8 +389,22 @@ your output filename, you have to put "%%".
 
 Outputs include: --new-fits, --kmz, --solved, --cancel, --match,
 --rdls, --corr, --wcs --keep-xylist --pnm
-Also included: --solved-in
+Also included: --solved-in, --verify
 
+
+*** Reusing files between runs:
+
+The first time you run solve-field, save the source extraction
+results:
+   $ solve-field --keep-xylist %s.xy input.fits ...
+
+On subsequent runs, instead of using the original input file, use the
+saved xylist instead:
+   $ solve-field input.xy --no-fits2fits ...
+
+To skip previously solved inputs (note that this assumes single-HDU
+inputs):
+   $ solve-field --skip-solved ...
 
 
 XYLISTS

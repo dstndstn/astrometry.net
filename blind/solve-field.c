@@ -361,7 +361,7 @@ int main(int argc, char** args) {
             basefile = strdup(basename(cpy));
             free(cpy);
         }
-        logverb("Base filename: %s\n", basefile);
+        //logverb("Base filename: %s\n", basefile);
 		if (outdir)
             basedir = strdup(outdir);
 		else {
@@ -369,10 +369,10 @@ int main(int argc, char** args) {
             basedir = strdup(dirname(cpy));
             free(cpy);
         }
-        logverb("Base directory: %s\n", basedir);
+        //logverb("Base directory: %s\n", basedir);
 
         asprintf_safe(&base, "%s/%s", basedir, basefile);
-        logverb("Base name for output files: %s\n", base);
+        //logverb("Base name for output files: %s\n", base);
 
         // trim .gz, .bz2
         // hmm, we drop the suffix in this case...
@@ -392,7 +392,7 @@ int main(int argc, char** args) {
                 }
             }
 		}
-        logverb("Base: %s, suffix %s\n", base, suffix);
+        //logverb("Base: %s, suffix %s\n", base, suffix);
 
 		// the output filenames.
 		outfiles = sl_new(16);
@@ -422,6 +422,15 @@ int main(int argc, char** args) {
         else
             downloadfn = sl_appendf(outfiles, "%s-downloaded", base);
 
+        // Do %s replacement on --verify-wcs entries...
+        if (sl_size(axy->verifywcs)) {
+            sl* newlist = sl_new(4);
+            for (j=0; j<sl_size(axy->verifywcs); j++) {
+                sl_appendf(newlist, sl_get(axy->verifywcs, j), base);
+            }
+            sl_free2(axy->verifywcs);
+            axy->verifywcs = newlist;
+        }
 
         if (solvedin || solvedindir) {
             char* dir = (solvedindir ? solvedindir : basedir);
@@ -436,8 +445,9 @@ int main(int argc, char** args) {
         }
         if (axy->solvedinfn && (strcmp(axy->solvedfn, axy->solvedinfn) == 0)) {
             // solved input and output files are the same: don't delete the input!
-            sl_pop(outfiles);
-            // MEMLEAK
+            sl_remove_string(outfiles, axy->solvedfn);
+            free(axy->solvedfn);
+            axy->solvedfn = axy->solvedinfn;
         }
 
         free(basedir);
@@ -449,9 +459,11 @@ int main(int argc, char** args) {
                 if (!tocheck[j])
                     continue;
                 logverb("Checking for solved file %s\n", tocheck[j]);
-                if (file_exists(axy->solvedinfn)) {
-                    logmsg("Solved file exists: %s; skipping this input file.\n", axy->solvedinfn);
+                if (file_exists(tocheck[j])) {
+                    logmsg("Solved file exists: %s; skipping this input file.\n", tocheck[j]);
                     goto nextfile;
+                } else {
+                    logverb("File \"%s\" does not exist.\n", tocheck[j]);
                 }
             }
         }
