@@ -556,6 +556,8 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     free(fn);
     blind_set_wcs_file     (bp, fn=fits_get_long_string(hdr, "ANWCS"   ));
     free(fn);
+    blind_set_corr_file    (bp, fn=fits_get_long_string(hdr, "ANCORR"  ));
+    free(fn);
     blind_set_cancel_file  (bp, fn=fits_get_long_string(hdr, "ANCANCEL"));
     free(fn);
 

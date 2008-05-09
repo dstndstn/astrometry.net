@@ -238,7 +238,7 @@ OUTPUT FILES
 TRICKS AND TIPS
 ---------------
 
-*** CPU time limit before giving up:
+*** To lower the CPU time limit before giving up:
 
     $  solve-field --cpu-limit 30 ...
 
@@ -247,6 +247,7 @@ will make it give up after 30 seconds.
 (Note, however, that the "backend" configuration file (backend.cfg)
 puts a limit on the CPU time that is spent on an image; solve-field
 can reduce this but not increase it.)
+
 
 *** Scale of the image: if you provide bounds (lower and upper limits)
 on the size of the image you are trying to solve, solving can be much
@@ -276,6 +277,7 @@ possible (though rare) for the final solution to fall outside the
 limits you specified.  This should only happen when the solution is
 correct, but you gave incorrect inputs, so you shouldn't be
 complaining! :)
+
 
 *** Depth.  The solver works by looking at sources in your image,
 starting with the brightest.  It searches for all "skymarks" that can
@@ -317,13 +319,23 @@ or $ solve-field --downsample 4 ...
 or etc
 
 
-** When "solve-field" processes FITS files, it runs them through a
+** When solve-field processes FITS files, it runs them through a
 "sanitizer" which tries to clean up non-standards-compliant images.
 If your FITS files are compliant, this is a waste of time, and you can
 avoid doing it.
 
    $ solve-field --no-fits2fits ...
 
+
+** When solve-field processes FITS images, it looks for an existing
+WCS header.  If one is found, it tries to verify that header before
+trying to solve the image blindly.  You can prevent this with:
+
+   $ solve-field --no-verify ...
+
+Note that currently solve-field only understands a small subset of
+valid WCS headers: essentially just the TAN projection with a CD
+matrix (not CROT).
 
 ** If you don't want the plots to be produced:
 

@@ -49,6 +49,7 @@ struct augment_xylist_s {
     char* matchfn;
     char* rdlsfn;
     char* wcsfn;
+    char* corrfn;
     char* keepxylsfn;
     char* pnmfn;
 

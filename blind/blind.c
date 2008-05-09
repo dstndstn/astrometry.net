@@ -120,6 +120,11 @@ void blind_set_rdls_file(blind_t* bp, const char* fn) {
     bp->indexrdlsfname = strdup_safe(fn);
 }
 
+void blind_set_corr_file(blind_t* bp, const char* fn) {
+    free(bp->corr_fname);
+    bp->corr_fname = strdup_safe(fn);
+}
+
 void blind_set_wcs_file(blind_t* bp, const char* fn) {
     free(bp->wcs_template);
     bp->wcs_template = strdup_safe(fn);

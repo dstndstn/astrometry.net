@@ -382,6 +382,7 @@ int main(int argc, char** args) {
 		axy->rdlsfn   = sl_appendf(outfiles, "%s.rdls",      base);
 		axy->solvedfn = sl_appendf(outfiles, "%s.solved",    base);
 		axy->wcsfn    = sl_appendf(outfiles, "%s.wcs",       base);
+		axy->corrfn   = sl_appendf(outfiles, "%s.corr",      base);
 		objsfn     = sl_appendf(outfiles, "%s-objs.png",  base);
 		redgreenfn = sl_appendf(outfiles, "%s-indx.png",  base);
 		ngcfn      = sl_appendf(outfiles, "%s-ngc.png",   base);

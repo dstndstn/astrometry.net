@@ -133,6 +133,8 @@ static an_option_t options[] = {
      "output filename for match file"},
 	{'R', "rdls",		   required_argument, "filename",
      "output filename for RDLS file"},
+    {'B', "corr",          required_argument, "filename",
+     "output filename for correspondences"},
 	{'W', "wcs",		   required_argument, "filename",
      "output filename for WCS file"},
 	{'P', "pnm",		   required_argument, "filename",
@@ -201,6 +203,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
     switch (argchar) {
+    case 'B':
+        axy->corrfn = optarg;
+        break;
     case 'y':
         axy->try_verify = FALSE;
         break;
@@ -735,6 +740,8 @@ int augment_xylist(augment_xylist_t* axy,
 		fits_header_addf_longstring(hdr, "ANRDLS", "ra-dec output file", "%s", axy->rdlsfn);
 	if (axy->wcsfn)
 		fits_header_addf_longstring(hdr, "ANWCS", "WCS header output filename", "%s", axy->wcsfn);
+	if (axy->corrfn)
+		fits_header_addf_longstring(hdr, "ANCORR", "Correspondences output filename", "%s", axy->corrfn);
     if (axy->codetol > 0.0)
 		fits_header_add_double(hdr, "ANCTOL", axy->codetol, "code tolerance");
     if (axy->pixelerr > 0.0)
