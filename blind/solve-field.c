@@ -775,7 +775,7 @@ int main(int argc, char** args) {
 				sl_remove_all(cmdline);
                 logverb("Running:\n  %s\n", cmd);
                 if (run_command_get_outputs(cmd, NULL, NULL)) {
-                    ERROR("pnmtopng failed");
+                    ERROR("wcs2kml failed");
                     exit(-1);
                 }
 				free(cmd);
@@ -798,7 +798,7 @@ int main(int argc, char** args) {
 				sl_remove_all(cmdline);
                 logverb("Running:\n  %s\n", cmd);
                 if (run_command_get_outputs(cmd, NULL, NULL)) {
-                    ERROR("pnmtopng failed");
+                    ERROR("zip failed");
                     exit(-1);
                 }
 				free(cmd);
