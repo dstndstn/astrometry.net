@@ -155,7 +155,8 @@ makefile target.
   $ make upgrade-indices
 
 If you want to do it by hand, use the program "fix-bb".  Run it on
-each of the ckdt.fits and skdt.fits files.
+each of the ckdt.fits and skdt.fits files in your INSTALL_DIR/data
+directory.
 
 
 SOLVING
@@ -217,7 +218,7 @@ OUTPUT FILES
 
    <base>-ngc.png   : an annotation of the image.
    <base>.wcs       : a FITS WCS header for the solution.
-   <base>-new.fits  : a new FITS file containing the WCS header.
+   <base>.new       : a new FITS file containing the WCS header.
    <base>-objs.png  : a plot of the sources (stars) we extracted from
                       the image.
    <base>-indx.png  : sources (red), plus stars from the index (green),
@@ -233,6 +234,7 @@ OUTPUT FILES
    <base>.solved    : exists and contains (binary) 1 if the field solved.
    <base>.match     : a FITS BINTABLE describing the quad match that
                       solved the image.
+   <base>.kmz       : (optional) KMZ file for Google Sky-in-Earth.
 
 
 TRICKS AND TIPS

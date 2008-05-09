@@ -131,7 +131,7 @@ release:
 	-rm -R $(RELEASE_DIR)
 	svn export -N $(RELEASE_SVN) $(RELEASE_DIR)
 	for x in $(RELEASE_SUBDIRS); do \
-		svn export $(RELEASE_SVN)/$$x $(RELEASE_DIR)/$$x; \
+		svn export $(RELEASE_SVN)/astrometry/$$x $(RELEASE_DIR)/$$x; \
 	done
 	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
 	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
@@ -142,7 +142,7 @@ tag-release:
 
 SNAPSHOT_VER := $(shell date "+%Y-%m-%d")
 SNAPSHOT_DIR := astrometry.net-$(SNAPSHOT_VER)
-SNAPSHOT_SVN := svn+ssh://astrometry.net/svn/trunk/src
+SNAPSHOT_SVN := svn+ssh://astrometry.net/svn/trunk/src/astrometry
 SNAPSHOT_SUBDIRS := $(RELEASE_SUBDIRS)
 
 snapshot:
@@ -153,6 +153,7 @@ snapshot:
 	done
 	tar cf $(SNAPSHOT_DIR).tar $(SNAPSHOT_DIR)
 	gzip --best -c $(SNAPSHOT_DIR).tar > $(SNAPSHOT_DIR).tar.gz
+	-rm $(SNAPSHOT_DIR).tar.bz2
 	bzip2 --best $(SNAPSHOT_DIR).tar
 
 test:
