@@ -77,8 +77,8 @@ static an_option_t options[] = {
     {'J', "skip-solved",    no_argument, NULL,
      "skip input files for which the 'solved' output file already exists;\n"
      "                  NOTE: this assumes single-field input files"},
-    {'N', "no-new-fits",    no_argument, NULL,
-     "don't create a new FITS file containing the WCS header"},
+    {'N', "new-fits",    required_argument, NULL,
+     "output filename of the new FITS file containing the WCS header; \"none\" to not create this file"},
     {'Z', "kmz",            required_argument, "filename",
      "create KMZ file for Google Sky.  (requires wcs2kml)\n"},
 };
@@ -162,7 +162,7 @@ int main(int argc, char** args) {
     augment_xylist_t* allaxy = &theallaxy;
     int nmyopts;
     char* removeopts = "ixo\x01";
-    bool newfits = TRUE;
+    char* newfits;
     char* kmzfn = NULL;
 
     errors_print_on_exit(stderr);
@@ -200,6 +200,15 @@ int main(int argc, char** args) {
 
     augment_xylist_init(allaxy);
 
+    // default output filename patterns.
+    allaxy->outfn    = "%s.axy";
+    allaxy->matchfn  = "%s.match";
+    allaxy->rdlsfn   = "%s.rdls";
+    allaxy->solvedfn = "%s.solved";
+    allaxy->wcsfn    = "%s.wcs";
+    allaxy->corrfn   = "%s.corr";
+    newfits          = "%s.new";
+
 	while (1) {
         int res;
 		c = opts_getopt(opts, argc, args);
@@ -216,7 +225,9 @@ int main(int argc, char** args) {
             kmzfn = optarg;
             break;
         case 'N':
-            newfits = FALSE;
+            newfits = optarg;
+            if (strcmp(newfits, "none") == 0)
+                newfits = NULL;
             break;
 		case 'h':
 			help = TRUE;
@@ -362,8 +373,6 @@ int main(int argc, char** args) {
 
         asprintf_safe(&base, "%s/%s", basedir, basefile);
         logverb("Base name for output files: %s\n", base);
-        free(basedir);
-        free(basefile);
 
         // trim .gz, .bz2
         // hmm, we drop the suffix in this case...
@@ -390,18 +399,24 @@ int main(int argc, char** args) {
 		tempfiles = sl_new(4);
 		tempdirs = sl_new(4);
 
-		axy->outfn    = sl_appendf(outfiles, "%s.axy",       base);
-		axy->matchfn  = sl_appendf(outfiles, "%s.match",     base);
-		axy->rdlsfn   = sl_appendf(outfiles, "%s.rdls",      base);
-		axy->solvedfn = sl_appendf(outfiles, "%s.solved",    base);
-		axy->wcsfn    = sl_appendf(outfiles, "%s.wcs",       base);
-		axy->corrfn   = sl_appendf(outfiles, "%s.corr",      base);
+		axy->outfn    = sl_appendf(outfiles, axy->outfn,       base);
+		axy->matchfn  = sl_appendf(outfiles, axy->matchfn,     base);
+		axy->rdlsfn   = sl_appendf(outfiles, axy->rdlsfn,      base);
+		axy->solvedfn = sl_appendf(outfiles, axy->solvedfn,    base);
+		axy->wcsfn    = sl_appendf(outfiles, axy->wcsfn,       base);
+		axy->corrfn   = sl_appendf(outfiles, axy->corrfn,      base);
+        if (newfits)
+            newfitsfn  = sl_appendf(outfiles, newfits,  base);
+        if (axy->cancelfn)
+            axy->cancelfn  = sl_appendf(outfiles, axy->cancelfn, base);
+        if (axy->keepxylsfn)
+            axy->keepxylsfn  = sl_appendf(outfiles, axy->keepxylsfn, base);
+        if (axy->pnmfn)
+            axy->pnmfn  = sl_appendf(outfiles, axy->pnmfn, base);
 		objsfn     = sl_appendf(outfiles, "%s-objs.png",  base);
 		redgreenfn = sl_appendf(outfiles, "%s-indx.png",  base);
 		ngcfn      = sl_appendf(outfiles, "%s-ngc.png",   base);
 		indxylsfn  = sl_appendf(outfiles, "%s-indx.xyls", base);
-        if (newfits)
-            newfitsfn  = sl_appendf(outfiles, "%s-new.fits",  base);
         if (suffix)
             downloadfn = sl_appendf(outfiles, "%s-downloaded.%s", base, suffix);
         else
@@ -409,17 +424,15 @@ int main(int argc, char** args) {
 
 
         if (solvedin || solvedindir) {
-            if (solvedin && solvedindir)
-                asprintf(&axy->solvedinfn, "%s/%s", solvedindir, solvedin);
-            else if (solvedin)
-                axy->solvedinfn = strdup(solvedin);
-            else {
-                char* bc = strdup(base);
-                char* bn = strdup(basename(bc));
-                asprintf(&axy->solvedinfn, "%s/%s.solved", solvedindir, bn);
-                free(bn);
-                free(bc);
-            }
+            char* dir = (solvedindir ? solvedindir : basedir);
+            if (solvedin) {
+                // "solvedin" might contain "%s"...
+                char* tmpstr;
+                asprintf(&tmpstr, "%s/%s", dir, solvedin);
+                asprintf(&axy->solvedinfn, tmpstr, base);
+                free(tmpstr);
+            } else
+                asprintf(&axy->solvedinfn, dir, axy->solvedfn);
         }
         if (axy->solvedinfn && (strcmp(axy->solvedfn, axy->solvedinfn) == 0)) {
             // solved input and output files are the same: don't delete the input!
@@ -427,8 +440,8 @@ int main(int argc, char** args) {
             // MEMLEAK
         }
 
-		free(base);
-		base = NULL;
+        free(basedir);
+        free(basefile);
 
         if (skip_solved) {
             char* tocheck[] = { axy->solvedinfn, axy->solvedfn };
@@ -512,7 +525,7 @@ int main(int argc, char** args) {
             axy->force_ppm = TRUE;
 		}
 
-        axy->keep_fitsimg = newfits;
+        axy->keep_fitsimg = (newfits != NULL);
 
         if (augment_xylist(axy, me)) {
             ERROR("augment-xylist failed");
@@ -600,7 +613,7 @@ int main(int argc, char** args) {
             char* fieldunits;
 
             // create new FITS file...
-            if (axy->fitsimgfn) {
+            if (axy->fitsimgfn && newfitsfn) {
                 logmsg("Creating new FITS file \"%s\"...\n", newfitsfn);
                 if (new_wcs(axy->fitsimgfn, axy->wcsfn, newfitsfn, TRUE)) {
                     ERROR("Failed to create FITS image with new WCS headers");
@@ -734,7 +747,10 @@ int main(int argc, char** args) {
                 char* kmlfn = NULL;
                 char* warpedpngfn = NULL;
                 char* tmpdir;
+                char* realkmzfn;
 
+                asprintf(&realkmzfn, kmzfn, base);
+                
                 tmpdir = create_temp_dir("kmz", tempdir);
                 if (!tmpdir) {
                     ERROR("Failed to create temp dir for KMZ output");
@@ -791,7 +807,7 @@ int main(int argc, char** args) {
                 appendf_escape(cmdline, "%s", warpedpngfn);
                 appendf_escape(cmdline, "%s", kmlfn);
                 sl_append(cmdline, ">");
-                append_escape(cmdline, kmzfn);
+                append_escape(cmdline, realkmzfn);
 
                 // run it
 				cmd = sl_implode(cmdline, " ");
@@ -802,6 +818,8 @@ int main(int argc, char** args) {
                     exit(-1);
                 }
 				free(cmd);
+
+                free(realkmzfn);
             }
 
 			// create field rdls?
@@ -809,6 +827,7 @@ int main(int argc, char** args) {
         fflush(NULL);
 
     nextfile:        // clean up and move on to the next file.
+		free(base);
         free(axy->fitsimgfn);
         free(axy->solvedinfn);
 		for (i=0; i<sl_size(tempfiles); i++) {

@@ -368,6 +368,17 @@ coordinate (1,1).
 
 ** To make cool overlay plots: see plotxy, plot-constellations.
 
+** To change the output filenames when processing multiple input
+files: each of the output filename options listed below can include
+"%s", which will be replaced by the base output filename.  (Eg, the
+default for --wcs is "%s.wcs").  If you really want a "%" character in
+your output filename, you have to put "%%".
+
+Outputs include: --new-fits, --kmz, --solved, --cancel, --match,
+--rdls, --corr, --wcs --keep-xylist --pnm
+Also included: --solved-in
+
+
 
 XYLISTS
 -------
