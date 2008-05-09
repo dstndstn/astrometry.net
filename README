@@ -302,11 +302,11 @@ limit.  To look at a single source, do
     $ solve-field --depth 42-42 ...
 
 
-** If our source extractor has estimated the background badly, then
-when we order the stars by brightness they will be in an order that
-will take a long time to solve.  You can tell solve-field to sort the
-stars in a different way (compromising between background-subtracted
-and not-background-subtracted brightnesses), using:
+** Our source extractor sometimes estimates the background badly, so
+by default we sort the stars by brightness using a compromise between
+the raw and background-subtracted flux estimates.  For images without
+much nebulosity, you might find that using the background-subtracted
+fluxes yields faster results.  Enable this by:
 
     $ solve-field --resort ...
 

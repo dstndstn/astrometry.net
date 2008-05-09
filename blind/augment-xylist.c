@@ -63,6 +63,7 @@ void augment_xylist_init(augment_xylist_t* axy) {
 	axy->scales = dl_new(16);
     axy->verifywcs = sl_new(4);
     axy->try_verify = TRUE;
+    axy->resort = TRUE;
 }
 
 void augment_xylist_free_contents(augment_xylist_t* axy) {
@@ -120,7 +121,8 @@ static an_option_t options[] = {
     {'l', "cpulimit",       required_argument, "seconds",
      "give up solving after the specified (integer) number of seconds of CPU time"},
     {'r', "resort",         no_argument, NULL,
-     "sort the star brightnesses using a compromise between background-subtraction and no background-subtraction"},
+     "sort the star brightnesses by background-subtracted flux; the default is to sort using a\n"
+     "    compromise between background-subtracted and non-background-subtracted flux"},
     {'z', "downsample",     required_argument, "int",
      "downsample the image by factor <int> before running source extraction"},
 	{'C', "cancel",		   required_argument, "filename",
@@ -235,7 +237,7 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         axy->downsample = atoi(optarg);
         break;
     case 'r':
-        axy->resort = TRUE;
+        axy->resort = FALSE;
         break;
     case 'E':
         axy->pixelerr = atof(optarg);
@@ -612,6 +614,7 @@ int augment_xylist(augment_xylist_t* axy,
 
     if (dosort) {
         char* sortedxylsfn;
+        bool do_tabsort;
 
         if (!axy->sortcol)
             axy->sortcol = "FLUX";
@@ -624,10 +627,24 @@ int augment_xylist(augment_xylist_t* axy,
         }
 
         if (axy->resort) {
-            resort_xylist(xylsfn, sortedxylsfn, axy->sortcol, NULL, axy->sort_ascending);
+            char* err;
+            int rtn;
+            errors_start_logging_to_string();
+            rtn = resort_xylist(xylsfn, sortedxylsfn, axy->sortcol, NULL, axy->sort_ascending);
+            err = errors_stop_logging_to_string(": ");
+            if (rtn) {
+                logmsg("Sorting brightness using %s and BACKGROUND columns failed; falling back to %s.\n",
+                       axy->sortcol, axy->sortcol);
+                logverb("Reason: %s\n", err);
+                do_tabsort = TRUE;
+            }
+            free(err);
 
-        } else {
-            logverb("Running tabsort: input=%s, output=%s, column=%s.\n",
+        } else
+            do_tabsort = TRUE;
+
+        if (do_tabsort) {
+            logverb("Sorting by brightness: input=%s, output=%s, column=%s.\n",
                     xylsfn, sortedxylsfn, axy->sortcol);
             tabsort(xylsfn, sortedxylsfn, axy->sortcol, !axy->sort_ascending);
         }
