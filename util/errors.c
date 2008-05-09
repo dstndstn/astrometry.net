@@ -44,6 +44,23 @@ static void print_errs(void) {
     errors_print_stack(fid);
 }
 
+void errors_start_logging_to_string() {
+    err_t* err;
+    errors_push_state();
+    err = errors_get_state();
+    err->print = NULL;
+    err->save = TRUE;
+}
+
+char* errors_stop_logging_to_string(const char* separator) {
+    err_t* err;
+    char* rtn;
+    err = errors_get_state();
+    rtn = error_get_errs(err, separator);
+    errors_pop_state();
+    return rtn;
+}
+
 int errors_print_on_exit(FILE* fid) {
     err_t* e;
     errors_push_state();

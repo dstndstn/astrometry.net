@@ -87,6 +87,9 @@ struct augment_xylist_s {
 
     bool dont_augment;
 
+    // try to verify FITS input images?
+    bool try_verify;
+
     // fractions
     double quadsize_min;
     double quadsize_max;
@@ -102,8 +105,6 @@ void augment_xylist_init(augment_xylist_t* args);
 void augment_xylist_free_contents(augment_xylist_t* args);
 
 // hmm, how should args work...
-
-//void augment_xylist_parse_args(int argc, char** argv, augment_xylist_t* axyargs);
 
 void augment_xylist_print_help(FILE* fid);
 

@@ -67,6 +67,20 @@ void errors_clear_stack();
 
 int errors_print_on_exit(FILE* fid);
 
+/*
+ A convenience routine for times when you want to suppress printing error
+ messages and instead capture them to a string.  Use in conjunction with
+ the following...
+ */
+void errors_start_logging_to_string();
+
+/*
+ Reverts the error-processing system to its previous state and returns the
+ captured error string.
+ Returns a newly-allocated string which you must free().
+ */
+char* errors_stop_logging_to_string(const char* separator);
+
 /***    End globals   ***/
 
 

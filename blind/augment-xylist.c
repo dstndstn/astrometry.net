@@ -62,6 +62,7 @@ void augment_xylist_init(augment_xylist_t* axy) {
     axy->fields = il_new(16);
 	axy->scales = dl_new(16);
     axy->verifywcs = sl_new(4);
+    axy->try_verify = TRUE;
 }
 
 void augment_xylist_free_contents(augment_xylist_t* axy) {
@@ -144,6 +145,8 @@ static an_option_t options[] = {
      "quit after writing the unaugmented xylist"},
     {'V', "verify",         required_argument, "filename",
      "try to verify an existing WCS file"},
+    {'y', "no-verify",     no_argument, NULL,
+     "ignore existing WCS headers in FITS input images"},
 	{'g', "guess-scale",   no_argument, NULL,
      "try to guess the image scale from the FITS headers"},
 	{'T', "no-tweak",	   no_argument,	NULL,
@@ -198,6 +201,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
     switch (argchar) {
+    case 'y':
+        axy->try_verify = FALSE;
+        break;
     case 'q':
         d = atof(optarg);
         if (d < 0.0 || d > 1.0) {
@@ -498,6 +504,30 @@ int augment_xylist(augment_xylist_t* axy,
                 }
 				dl_free(estscales);
 			}
+
+            if (axy->try_verify) {
+                char* errstr;
+                sip_t sip;
+                bool ok;
+                // Try to read WCS header from FITS image; if successful,
+                // add it to the list of WCS headers to verify.
+                logverb("Looking for a WCS header in FITS input image %s\n", fitsimgfn);
+
+                // FIXME - Right now we just try to read SIP/TAN -
+                // obviously this should be more flexible and robust.
+                errors_start_logging_to_string();
+                memset(&sip, 0, sizeof(sip_t));
+                ok = (sip_read_header_file(fitsimgfn, &sip) != NULL);
+                errstr = errors_stop_logging_to_string(": ");
+                if (ok) {
+                    logmsg("Found an existing WCS header, will try to verify it.\n");
+                    sl_append(axy->verifywcs, fitsimgfn);
+                } else {
+                    logverb("Failed to read a SIP or TAN header from FITS image.\n");
+                    logverb("  (reason: %s)\n", errstr);
+                }
+                free(errstr);
+            }
 
 		} else {
 			fitsimgfn = create_temp_file("fits", axy->tempdir);
