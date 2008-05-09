@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <sys/param.h>
 #include <assert.h>
 
 #include "dimage.h"
@@ -35,8 +36,6 @@
  * Mike Blanton
  * 1/2006 */
 
-
-float dselip(unsigned long k, unsigned long n, float *arr);
 
 int dsigma(float *image,
            int nx,
@@ -116,7 +115,12 @@ int dsigma(float *image,
         logverb("%i of %i diffs are zero.\n", nzero, ndiff);
      }*/
 
-	*sigma = dselip((int)floor(ndiff * 0.68), ndiff, diff) / sqrt(2.);
+    {
+        double s1 = dselip((int)floor(ndiff * 0.68), ndiff, diff) / sqrt(2.);
+        double s2 = dselip((int)floor(ndiff * 0.95), ndiff, diff) / (2.0 * sqrt(2.));
+        logverb("s1=%g, s2=%g\n", s1, s2);
+        *sigma = MAX(s1, s2);
+    }
     if (*sigma == 0.0) {
         int nzero = 0;
         int NS = ndiff;

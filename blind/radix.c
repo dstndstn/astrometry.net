@@ -12,14 +12,15 @@
 #include <stdint.h>
 
 #include "keywords.h"
+#include "radix.h"
 
 // ------------------------------------------------------------------------------------------------
 // ---- Basic types
 
 typedef int32_t  int32;
-typedef uint32_t uint32;
+//typedef uint32_t uint32;
 typedef uint8_t  uint8;
-typedef float    real32;
+//typedef float    real32;
 typedef double   real64;
 //typedef const char* cpointer;
 
