@@ -131,7 +131,7 @@ int main(int argc, char** args) {
                              "given below:");
     fits_append_long_comment(outhdr, "---------------------------------");
                           
-    for (i=0; i<hdr->n; i++) {
+    for (i=0; i<qfits_header_n(hdr); i++) {
         char key[FITS_LINESZ+1];
         char val[FITS_LINESZ+1];
         char com[FITS_LINESZ+1];

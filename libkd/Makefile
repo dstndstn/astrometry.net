@@ -1,5 +1,5 @@
 #  This file is part of libkd.
-#  Copyright 2006, 2007 Dustin Lang and Keir Mierle.
+#  Copyright 2006-2008 Dustin Lang and Keir Mierle.
 #
 #  libkd is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -65,7 +65,6 @@ DEP_OBJ := $(KD) $(KD_FITS) $(INTERNALS) $(INTERNALS_NOIO)
 	$(CC) -o $@ -c $< $(CFLAGS) -DKDTREE_NO_FITS
 
 all: $(REMAKE_ANUTILS) $(LIBKD) checktree fix-bb
-#$(LIBKD_NOIO) 
 
 $(LIBKD): $(KD) $(KD_FITS) $(INTERNALS)
 	-rm -f $@
@@ -78,10 +77,10 @@ $(LIBKD_NOIO): $(KD) $(INTERNALS_NOIO)
 	$(RANLIB) $@
 
 checktree: checktree.o $(LIBKD) $(ANUTILS_LIB) $(QFITS_LIB)
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 fix-bb: fix-bb.o $(LIBKD) $(ANUTILS_LIB) $(QFITS_LIB)
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
+
+DEP_OBJ += fix-bb.o checktree.o
 
 LIBKD_INSTALL := fix-bb checktree
 
