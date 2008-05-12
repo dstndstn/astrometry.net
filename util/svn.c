@@ -58,4 +58,4 @@ const char* svn_url() {
 // of this file every time libanutils.a gets built.
 //
 //
-//
+

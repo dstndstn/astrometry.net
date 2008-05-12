@@ -126,6 +126,7 @@ int main(int argc, char** args) {
 		unsigned char* map;
 		size_t map_size;
 		int i;
+		int lastgrass;
 
 		infn = args[optind];
 		fid = fopen(infn, "rb");
@@ -134,10 +135,8 @@ int main(int argc, char** args) {
 			exit(-1);
 		}
 
-		if ((optind > startoptind) && ((optind - startoptind) % 100 == 0)) {
-			printf("\nReading file %i of %i: %s\n", optind - startoptind,
-				   argc - startoptind, infn);
-		}
+        printf("Reading file %i of %i: %s\n", optind - startoptind,
+               argc - startoptind, infn);
 
 		if (fseeko(fid, 0, SEEK_END)) {
 			fprintf(stderr, "Couldn't seek to end of input file %s: %s\n", infn, strerror(errno));
@@ -160,16 +159,18 @@ int main(int argc, char** args) {
 					infn, (unsigned int)map_size, USNOB_RECORD_SIZE);
 		}
 
+        lastgrass = 0;
 		for (i=0; i<map_size; i+=USNOB_RECORD_SIZE) {
 			usnob_entry entry;
 			int hp;
 			int slice;
 
-			if (i && (i % 10000000 * USNOB_RECORD_SIZE == 0)) {
-				printf("o");
+			if ((i * 80 / map_size) != lastgrass) {
+				printf(".");
 				fflush(stdout);
+				lastgrass = i * 80 / map_size;
 			}
-			
+
 			if (usnob_parse_entry(map + i, &entry)) {
 				fprintf(stderr, "Failed to parse USNOB entry: offset %i in file %s.\n",
 						i, infn);
@@ -221,10 +222,8 @@ int main(int argc, char** args) {
 		munmap(map, map_size);
 
 		nfiles++;
-		printf(".");
-		fflush(stdout);
+		printf("\n");
 	}
-	printf("\n");
 
 	// close all the files...
 	for (i=0; i<HP; i++) {
