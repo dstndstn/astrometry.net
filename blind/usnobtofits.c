@@ -195,7 +195,7 @@ int main(int argc, char** args) {
 					fprintf(stderr, "Failed to initialized FITS file %i (filename %s).\n", hp, fn);
 					exit(-1);
 				}
-                hdr = usnob_fits_get_header(usnob[hp]);
+                hdr = usnob_fits_get_header(usnobs[hp]);
                 assert(hdr);
 
 				// header remarks...
