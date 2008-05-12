@@ -188,21 +188,24 @@ int main(int argc, char** args) {
 
 			if (!usnobs[hp]) {
 				char fn[256];
+                qfits_header* hdr;
 				sprintf(fn, outfn, hp);
 				usnobs[hp] = usnob_fits_open_for_writing(fn);
 				if (!usnobs[hp]) {
 					fprintf(stderr, "Failed to initialized FITS file %i (filename %s).\n", hp, fn);
 					exit(-1);
 				}
+                hdr = usnob_fits_get_header(usnob[hp]);
+                assert(hdr);
 
 				// header remarks...
-				fits_header_add_int(usnobs[hp]->header, "HEALPIX", hp, "The healpix number of this catalog.");
-				fits_header_add_int(usnobs[hp]->header, "NSIDE", Nside, "The healpix resolution.");
-				boilerplate_add_fits_headers(usnobs[hp]->header);
-				qfits_header_add(usnobs[hp]->header, "HISTORY", "Created by the program \"usnobtofits\"", NULL, NULL);
-				qfits_header_add(usnobs[hp]->header, "HISTORY", "usnobtofits command line:", NULL, NULL);
-				fits_add_args(usnobs[hp]->header, args, argc);
-				qfits_header_add(usnobs[hp]->header, "HISTORY", "(end of command line)", NULL, NULL);
+				fits_header_add_int(hdr, "HEALPIX", hp, "The healpix number of this catalog.");
+				fits_header_add_int(hdr, "NSIDE", Nside, "The healpix resolution.");
+				boilerplate_add_fits_headers(hdr);
+				qfits_header_add(hdr, "HISTORY", "Created by the program \"usnobtofits\"", NULL, NULL);
+				qfits_header_add(hdr, "HISTORY", "usnobtofits command line:", NULL, NULL);
+				fits_add_args(hdr, args, argc);
+				qfits_header_add(hdr, "HISTORY", "(end of command line)", NULL, NULL);
 
 				if (usnob_fits_write_headers(usnobs[hp])) {
 					fprintf(stderr, "Failed to write header for FITS file %s.\n", fn);

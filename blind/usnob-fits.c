@@ -192,3 +192,6 @@ int usnob_fits_fix_headers(usnob_fits* cat) {
     return fitstable_fix_header(cat);
 }
 
+qfits_header* usnob_fits_get_header(usnob_fits* usnob) {
+    return fitstable_get_primary_header(usnob);
+}

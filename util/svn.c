@@ -57,5 +57,5 @@ const char* svn_url() {
 // The Makefile automatically appends a blank comment line to the end
 // of this file every time libanutils.a gets built.
 //
-//
+
 

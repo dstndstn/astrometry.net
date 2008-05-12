@@ -33,6 +33,8 @@ usnob_fits* usnob_fits_open(char* fn);
 
 usnob_fits* usnob_fits_open_for_writing(char* fn);
 
+qfits_header* usnob_fits_get_header(usnob_fits* usnob);
+
 int usnob_fits_write_headers(usnob_fits* usnob);
 
 int usnob_fits_fix_headers(usnob_fits* usnob);
