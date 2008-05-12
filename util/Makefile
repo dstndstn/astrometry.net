@@ -72,7 +72,7 @@ ANUTILS_DEPS :=
 
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix.o permutedsort.o \
 	qsort_reentrant.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
-	gnu-specific.o an-endian.o errors.o an-opts.o
+	gnu-specific.o an-endian.o errors.o an-opts.o svn.o
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o
 ANUTILS_DEPS += $(QFITS_LIB)
@@ -114,6 +114,12 @@ _sip.so: sip-utils.o sip.o starutil.o mathutil.o sip_qfits.o \
 
 _healpix.so: healpix.o starutil.o mathutil.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
+
+# svn.c depends on all the .o files except svn.o
+SVN_C_DEPS := $(subst svn.o,,$(ANUTILS_OBJ))
+
+svn.c: $(SVN_C_DEPS)
+	./update-svn.sh > svn.c
 
 an-fitstopnm: an-fitstopnm.o $(ANUTILS_LIB) $(QFITS_LIB)
 
