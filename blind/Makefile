@@ -60,7 +60,7 @@ FITS_UTILS := $(QFITS_UTILS) $(CFITS_UTILS)
 MISC_EXECS := project-usnob diffractionFlag_check \
 	hpgrid read_nomad tycho2tostellarium
 
-UTIL_OBJS := fileutil.o boilerplate.o svn.o
+UTIL_OBJS := fileutil.o boilerplate.o
 
 OTHER_OBJS := usnob.o usnob-fits.o tycho2.o tycho2-fits.o catalog.o \
 	idfile.o codefile.o histogram.o tic.o codekd.o svd.o verify.o \
@@ -105,7 +105,7 @@ SIMPLEXY2_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o dpeaks.o 
 SIMPLEXY_SHARED_OBJ := simplexy.o dsigma.o dmedsmooth.o dallpeaks.o dpeaks.o \
 	dobjects.o dselip.o dsmooth.o dcen3x3.o dfind.o radix.o
 
-FIXAXIS_OBJ := fixaxis.o svn.o
+FIXAXIS_OBJ := fixaxis.o
 
 TEST_DFIND_OBJ := dfind.o test_dfind.o
 
@@ -236,23 +236,23 @@ ALL_EXECS += $(ALL_TEST_FILES) test
 # This is Jon ignoring the awesome testing framework
 demo_simplexy: demo_simplexy.o dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o dpeaks.o ctmf.o\
 	dselip.o dsigma.o dsmooth.o simplexy.o radix.o \
-	$(COMMON)/cairoutils.o boilerplate.o svn.o $(ANUTILS_LIB) $(QFITS_LIB) 
+	$(COMMON)/cairoutils.o boilerplate.o $(ANUTILS_LIB) $(QFITS_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg
 
 demo_dsmooth: demo_dsmooth.o dsmooth.o \
-	$(COMMON)/cairoutils.o boilerplate.o svn.o $(ANUTILS_LIB) $(QFITS_LIB) 
+	$(COMMON)/cairoutils.o boilerplate.o $(ANUTILS_LIB) $(QFITS_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg
 
 #ctmf.o: ctmf.c
 
-image2xy: image2xy-main.o log.o svn.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
+image2xy: image2xy-main.o log.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
 
 ALL_OBJ += image2xy-main.o
 
 PNG2XY_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o dpeaks.o \
 	dselip.o dsigma.o dsmooth.o png2xy.o simplexy.o radix.o \
 	ctmf.o $(COMMON)/cairoutils.o
-png2xy: $(PNG2XY_OBJ) $(CFITS_LIB) svn.o $(ANUTILS_LIB)
+png2xy: $(PNG2XY_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg
 
 fixaxis: $(FIXAXIS_OBJ) $(CFITS_LIB)
@@ -273,7 +273,7 @@ rdls2hpls: rdls2hpls.o \
 rdlstohealpix: rdlstohealpix.o \
 		$(ANUTILS_LIB) $(QFITS_LIB)
 
-xylist2fits: xylist2fits.o boilerplate.o svn.o \
+xylist2fits: xylist2fits.o boilerplate.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 ngc2000.o: ngc2000.c ngc2000names.c ngc2000entries.c
@@ -350,7 +350,7 @@ usnobtofits: usnobtofits.o usnob-fits.o usnob.o \
 tycho2tofits: tycho2tofits.o tycho2-fits.o tycho2.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-hpowned: hpowned.o boilerplate.o svn.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
+hpowned: hpowned.o boilerplate.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 
 build-an-catalog: build-an-catalog.o usnob-fits.o tycho2-fits.o \
 		tycho2.o usnob.o 2mass-fits.o 2mass.o \
@@ -387,13 +387,13 @@ backend: backend.o scriptutils.o blind.o solver.o codekd.o \
 
 solve-field: solve-field.o augment-xylist.o scriptutils.o matchfile.o \
 		fileutil.o image2xy.o resort-xylist.o tabsort.o \
-		fits-guess-scale.o wcs-rd2xy.o new-wcs.o svn.o log.o \
+		fits-guess-scale.o wcs-rd2xy.o new-wcs.o log.o \
 		$(SIMPLEXY2_OBJ) $(CFITS_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scale.o image2xy.o \
 		resort-xylist.o \
-		scriptutils.o fileutil.o log.o svn.o $(SIMPLEXY2_OBJ) \
+		scriptutils.o fileutil.o log.o $(SIMPLEXY2_OBJ) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_LIB)
 
 ALL_OBJ += augment-xylist-main.o
@@ -412,10 +412,10 @@ whynot: whynot.o index.o codekd.o matchfile.o tic.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
-quadcenters: quadcenters.o fileutil.o boilerplate.o svn.o \
+quadcenters: quadcenters.o fileutil.o boilerplate.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
-startree2rdls: startree2rdls.o fileutil.o boilerplate.o svn.o \
+startree2rdls: startree2rdls.o fileutil.o boilerplate.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
 agreeable: agreeable.o matchfile.o solvedfile.o solvedclient.o \
@@ -449,7 +449,7 @@ $(COMMON)/cairoutils.o:
 onepixel: onepixel.o $(COMMON)/cairoutils.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 
-plotquad: plotquad.o matchfile.o $(COMMON)/cairoutils.o boilerplate.o svn.o \
+plotquad: plotquad.o matchfile.o $(COMMON)/cairoutils.o boilerplate.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 
@@ -458,7 +458,7 @@ plot-constellations.o: plot-constellations.c
 
 plot-constellations: plot-constellations.o $(COMMON)/cairoutils.o \
 		ngc2000.o ngcic-accurate.o brightstars.o boilerplate.o \
-		svn.o hd.o \
+		hd.o \
 		$(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB)
 
@@ -468,7 +468,7 @@ add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)
 plotxy.o: plotxy.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) -c -o $@ $<
 
-plotxy: plotxy.o $(COMMON)/cairoutils.o boilerplate.o svn.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+plotxy: plotxy.o $(COMMON)/cairoutils.o boilerplate.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 
 quadidx: quadidx.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
