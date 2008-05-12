@@ -21,69 +21,41 @@
 
 #include "svn.h"
 
-/*
- static char date_rtnval[256];
- static char url_rtnval[256];
- */
-/* Ditto for "headurlstr". */
-/*
- static const char* date = "$Date$";
- static const char* url = "$HeadURL$";
- static const char* rev = "$Revision$";
- */
+static char date_rtnval[256];
+static char url_rtnval[256];
 
-#include "svnrev.h"
+/* Ditto for "headurlstr". */
+static const char* date = "$Date$";
+static const char* url  = "$HeadURL$";
+static const char* rev  = "$Revision$";
 
 const char* svn_date() {
-	/* Through the magic of Subversion, the date string on the following line will
-	   be replaced by the correct, updated string whenever you run "svn up".  All hail
-	   subversion! */
-	/* That's not quite right - it seems you actually have to modify 
-		the file.  Like this. Or this. Ok, this is getting silly. Very.
-		Nuts, really. Absurd. Wacky. Ridiculous. Preposterous. Spectacular.
-		Bizarre. Right out there. Loco. Homer-licking-a-hallucinogenic-toad-ish.
-		Like-we-should-call-it-svnlsd.  (That last one was an inside joke.)
-        I saw a poster once - it had a dog with a thought bubble that said,
-        "Whoever said that dogs shouldn't take LSD definitely wasn't a dog on LSD."
-        Hahahaha.  It was a dopey-looking golden retriever.  But then, aren't all
-        golden retrievers fairly dopey looking?  But did you ever wonder whether
-        golden retrievers think we're fairly dopey looking?  Are you starting to
-        wonder how long this is going to go on?
-	*/
-	// (I want to trim off the first seven and last two characters.)
-    /*
-     strncpy(date_rtnval, date + 7, strlen(date) - 9);
-     return date_rtnval;
-     */
-    return date;
+	// (trim off the first seven and last two characters.)
+    strncpy(date_rtnval, date + 7, strlen(date) - 9);
+    return date_rtnval;
 }
 
 int svn_revision() {
-	//int revnum;
-	/* See the comment above; the same thing is true of "rev". Huzzah! */
+	int revnum;
 	// rev+1 to avoid having "$" in the format string - otherwise svn seems to
 	// consider it close enough to the Revision keyword anchor to do replacement!
-    /*
-     if (sscanf(rev + 1, "Revision: %i $", &revnum) != 1)
-     return -1;
-     return revnum;
-     */
-    return rev;
+    if (sscanf(rev + 1, "Revision: %i $", &revnum) != 1)
+        return -1;
+    return revnum;
 }
 
 const char* svn_url() {
-    /*
-     char* cptr;
-     char* str = (char*)url + 10;
-     cptr = str + strlen(str) - 1;
-     while (cptr > str && *cptr != '/') cptr--;
-     strncpy(url_rtnval, str, cptr - str + 1);
-     return url_rtnval;
-     */
-    return url;
+    char* cptr;
+    char* str = (char*)url + 10;
+    cptr = str + strlen(str) - 1;
+    // chomp off the filename...
+    while (cptr > str && *cptr != '/') cptr--;
+    strncpy(url_rtnval, str, cptr - str + 1);
+    return url_rtnval;
 }
 
 // The Makefile automatically appends a blank comment line to the end
 // of this file every time libanutils.a gets built.
-
-
+//
+//
+//

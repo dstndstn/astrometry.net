@@ -95,16 +95,14 @@ MISC_OBJ := grab-stellarium-constellations.o
 
 ALL_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 
-# svn.c depends on all the .o files except svn.o
+# svn.c depends on all the .c and .h files in ANUTILS_OBJ
 SVN_C_DEPS := $(subst svn.o,,$(ANUTILS_OBJ))
+SVN_C_DEPS := $(subst .o,.c,$(SVN_C_DEPS)) $(subst .o,.h,$(SVN_C_DEPS))
 
-svnrev.h: $(SVN_C_DEPS)
-	./update-svn.sh > svnrev.h
+svn.c: $(SVN_C_DEPS)
+	echo "//" >> svn.c
 
-#svn.c: $(SVN_C_DEPS)
-#	echo "//" >> svn.c
-
-$(ANUTILS_LIB): $(ANUTILS_OBJ) $(ANUTILS_DEPS) #svn.o
+$(ANUTILS_LIB): $(ANUTILS_OBJ) $(ANUTILS_DEPS) 
 	-rm -f $@
 	$(AR) rc $@ $(ANUTILS_OBJ)
 	$(RANLIB) $@
@@ -173,7 +171,6 @@ DEP_PREREQS := $(QFITS_LIB)
 endif
 include $(COMMON)/makefile.deps
 
-#stellarium-constellations.c: grab-stellarium-constellations
 stellarium-constellations.c:
 	-$(MAKE) grab-stellarium-constellations
 	-(./grab-stellarium-constellations > $@.tmp  &&  mv $@.tmp $@) || touch $@
@@ -220,11 +217,12 @@ endif
 .PHONY: allclean realclean clean
 
 allclean: clean
-	rm -f *.o *~ *.dep 
+	rm -f *.o *~ *.dep *.so
 
 realclean: allclean
 
 clean:
 	rm -f $(ANUTILS_LIB) $(ANFILES_LIB) $(ALL_OBJ) \
-		$(DEPS) deps cairoutils.o _sip.so grab-stellarium-constellations \
+		$(DEPS) deps cairoutils.o $(PYTHON_LIBS) \
+		grab-stellarium-constellations \
 		$(PROGS) $(ALL_TARGETS)
