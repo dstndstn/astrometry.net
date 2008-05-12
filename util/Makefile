@@ -95,7 +95,16 @@ MISC_OBJ := grab-stellarium-constellations.o
 
 ALL_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 
-$(ANUTILS_LIB): $(ANUTILS_OBJ) $(ANUTILS_DEPS)
+# svn.c depends on all the .o files except svn.o
+SVN_C_DEPS := $(subst svn.o,,$(ANUTILS_OBJ))
+
+svnrev.h: $(SVN_C_DEPS)
+	./update-svn.sh > svnrev.h
+
+#svn.c: $(SVN_C_DEPS)
+#	echo "//" >> svn.c
+
+$(ANUTILS_LIB): $(ANUTILS_OBJ) $(ANUTILS_DEPS) #svn.o
 	-rm -f $@
 	$(AR) rc $@ $(ANUTILS_OBJ)
 	$(RANLIB) $@
@@ -114,12 +123,6 @@ _sip.so: sip-utils.o sip.o starutil.o mathutil.o sip_qfits.o \
 
 _healpix.so: healpix.o starutil.o mathutil.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
-
-# svn.c depends on all the .o files except svn.o
-SVN_C_DEPS := $(subst svn.o,,$(ANUTILS_OBJ))
-
-svn.c: $(SVN_C_DEPS)
-	./update-svn.sh > svn.c
 
 an-fitstopnm: an-fitstopnm.o $(ANUTILS_LIB) $(QFITS_LIB)
 

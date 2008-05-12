@@ -12,7 +12,7 @@ REV=$(echo "${INFO}" | awk '/^Revision:/{ print $2 }')
 DATE=$(echo "${INFO}" | awk 'BEGIN{FS=": "} /^Last Changed Date:/{ print $2 }')
 #echo "date is $DATE"
 
-echo "static char* URL = \"${URL}\";"
-echo "static int rev = ${REV};"
-echo "static char* date = \"${DATE}\";"
+echo "static const char* url  = \"${URL}\";"
+echo "static const int   rev  = ${REV};"
+echo "static const char* date = \"${DATE}\";"
 
