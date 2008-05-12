@@ -342,7 +342,7 @@ diffractionFlag_check: diffractionFlag_check.o usnob-fits.o usnob.o \
 		$(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 
 project-usnob: project-usnob.o usnob-fits.o usnob.o \
-		$(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
+		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 usnobtofits: usnobtofits.o usnob-fits.o usnob.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)

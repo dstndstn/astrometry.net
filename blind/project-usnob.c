@@ -17,6 +17,7 @@
 */
 
 #include <stdio.h>
+#include <assert.h>
 
 #include "math.h"
 #include "usnob-fits.h"
@@ -151,10 +152,12 @@ int main(int argc, char** args) {
 	  star = usnob_fits_read_entry(usnob);
 
 	  if(doProject){
-	    // find its xyz position
-	    radec2xyzarr(deg2rad(star->ra), deg2rad(star->dec), xyz);
-	    // project it around the center
-	    star_coords(xyz, center, &pointbuffer[0], &pointbuffer[1]);
+          bool ok;
+          // find its xyz position
+          radec2xyzarr(deg2rad(star->ra), deg2rad(star->dec), xyz);
+          // project it around the center
+          ok = star_coords(xyz, center, &pointbuffer[0], &pointbuffer[1]);
+          assert(ok);
 	  }
 	  else{
 	    pointbuffer[0] = deg2rad(star->ra);
@@ -184,11 +187,11 @@ int main(int argc, char** args) {
 	    pointbuffer[2] = pointbuffer[2] / (double)numMags;
 	  }
 
-	  motionbuffer[0] = round(1000*star->mu_ra);
-	  motionbuffer[1] = round(1000*star->mu_dec);
+	  motionbuffer[0] = round(1000*star->pm_ra);
+	  motionbuffer[1] = round(1000*star->pm_dec);
 	  
 	  fwrite(motionbuffer, sizeof(int), 2, motion_file);
-	  fwrite(galaxyBuffer, sizeof(int),5,galaxy_file);
+	  fwrite(galaxyBuffer, sizeof(int), 5, galaxy_file);
 	  fwrite(pointbuffer, sizeof(double), 3, point_file);
 	  fwrite(bandbuffer, sizeof(double), 5, band_file);
 	  fwrite(tilebuffer, sizeof(int), 5, tile_file);
