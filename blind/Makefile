@@ -255,7 +255,7 @@ PNG2XY_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o dpeaks.o \
 png2xy: $(PNG2XY_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg
 
-fixaxis: $(FIXAXIS_OBJ) $(CFITS_LIB)
+fixaxis: $(FIXAXIS_OBJ) $(ANUTILS_LIB) $(CFITS_LIB)
 
 simplexy_shared: _simplexy.so
 .PHONY: simplexy_shared

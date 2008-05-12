@@ -21,6 +21,7 @@ if __name__ == '__main__':
     #    print 'command failed: rtn val %i' % rtn
     #print 'out:', out
     #print 'err:', err
+    print 'command:', cmd
 
     os.system(cmd)
     
