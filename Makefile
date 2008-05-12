@@ -125,7 +125,7 @@ upgrade-indices:
 RELEASE_VER := 0.2-pre
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
-RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data
+RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data pyfits
 
 release:
 	-rm -R $(RELEASE_DIR)
