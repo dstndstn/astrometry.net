@@ -32,6 +32,7 @@
 #include <stdarg.h>
 #include <libgen.h>
 #include <dirent.h>
+#include <time.h>
 
 #include "ioutils.h"
 #include "gnu-specific.h"
@@ -390,6 +391,31 @@ void get_mmap_size(int start, int size, off_t* mapstart, size_t* mapsize, int* p
 	*mapstart = start - gap;
 	*mapsize  = size  + gap;
 	*pgap = gap;
+}
+
+int file_get_last_modified_string(const char* fn, const char* timeformat,
+                                  bool utc, char* output, size_t outsize) {
+    struct stat st;
+    time_t t;
+    struct tm tym;
+    if (stat(fn, &st)) {
+        SYSERROR("Failed to stat() file \"%s\"", fn);
+        return -1;
+    }
+    t = st.st_mtime;
+    if (utc) {
+        if (!gmtime_r(&t, &tym)) {
+            SYSERROR("gmtime_r() failed");
+            return -1;
+        }
+    } else {
+        if (!localtime_r(&t, &tym)) {
+            SYSERROR("localtime_r() failed");
+            return -1;
+        }
+    }
+    strftime(output, outsize, timeformat, &tym);
+    return 0;
 }
 
 bool file_exists(const char* fn) {

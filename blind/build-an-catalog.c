@@ -36,6 +36,7 @@
 #include "fitsioutils.h"
 #include "2mass-fits.h"
 #include "gnu-specific.h"
+#include "errors.h"
 
 #define OPTIONS "ho:N:H:"
 
@@ -111,6 +112,8 @@ int main(int argc, char** args) {
 	il* allowed_hps = NULL;
     sl* inputfiles = sl_new(4);
 
+    fits_use_error_system();
+
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
 		case '?':
@@ -159,6 +162,28 @@ int main(int argc, char** args) {
 		}
 	}
 
+    printf("Input file last-modification times:\n");
+    for (j=0; j<sl_size(inputfiles); j++) {
+        char* infn = sl_get(inputfiles, j);
+        char utcdate[256];
+        if (file_get_last_modified_string(infn, "%a, %d  %b %Y %H:%M:%S %z", TRUE, utcdate, sizeof(utcdate))) {
+            ERROR("Failed to get last-modified string for input file \"%s\"", infn);
+            exit(-1);
+        }
+        printf("%s -- %s\n", utcdate, infn);
+    }
+
+    printf("Input file FITS headers:\n");
+    for (j=0; j<sl_size(inputfiles); j++) {
+        char* infn = sl_get(inputfiles, j);
+        qfits_header* hdr;
+        printf("\n----FITS header for %s----\n", infn);
+        hdr = qfits_header_read(infn);
+        qfits_header_dump(hdr, stdout);
+        qfits_header_destroy(hdr);
+        printf("--------------------------\n");
+    }
+
 	cats = calloc(HP, sizeof(an_catalog*));
 
 	starid = 0;
@@ -179,7 +204,7 @@ int main(int argc, char** args) {
 		printf("Opening catalog file %s...\n", infn);
 		hdr = qfits_header_read(infn);
 		if (!hdr) {
-			fprintf(stderr, "Couldn't read FITS header in file %s.\n", infn);
+			ERROR("Couldn't read FITS header in file %s.\n", infn);
 			exit(-1);
 		}
 		is_usnob = qfits_header_getboolean(hdr, "USNOB", 0);
@@ -199,7 +224,7 @@ int main(int argc, char** args) {
 				if (!tycho) {
 					twomass = twomass_fits_open(infn);
 					if (!twomass) {
-						fprintf(stderr, "Couldn't figure out what catalog file %s came from.\n", infn);
+						ERROR("Couldn't figure out what catalog file %s came from.\n", infn);
 						exit(-1);
 					}
 				}
@@ -207,19 +232,19 @@ int main(int argc, char** args) {
 		} else if (is_usnob) {
 			usnob = usnob_fits_open(infn);
 			if (!usnob) {
-				fprintf(stderr, "Couldn't open USNO-B catalog: %s\n", infn);
+				ERROR("Couldn't open USNO-B catalog: %s\n", infn);
 				exit(-1);
 			}
 		} else if (is_tycho) {
 			tycho = tycho2_fits_open(infn);
 			if (!tycho) {
-				fprintf(stderr, "Couldn't open Tycho-2 catalog: %s\n", infn);
+				ERROR("Couldn't open Tycho-2 catalog: %s\n", infn);
 				exit(-1);
 			}
 		} else if (is_2mass) {
 			twomass = twomass_fits_open(infn);
 			if (!twomass) {
-				fprintf(stderr, "Couldn't open 2MASS catalog: %s\n", infn);
+				ERROR("Couldn't open 2MASS catalog: %s\n", infn);
 				exit(-1);
 			}
 		}
@@ -245,7 +270,7 @@ int main(int argc, char** args) {
 				}
 				entry = usnob_fits_read_entry(usnob);
 				if (!entry) {
-					fprintf(stderr, "Failed to read USNO-B entry.\n");
+					ERROR("Failed to read USNO-B entry.\n");
 					exit(-1);
 				}
 				if (!entry->ndetections)
@@ -300,7 +325,7 @@ int main(int argc, char** args) {
 			}
 			usnob_fits_close(usnob);
 			printf("\n");
-			fprintf(stderr, "spikes found %d\n", spikesFound);
+			printf("spikes found: %d\n", spikesFound);
 
 		} else if (tycho) {
 			tycho2_entry* entry;
@@ -314,7 +339,7 @@ int main(int argc, char** args) {
 				}
 				entry = tycho2_fits_read_entry(tycho);
 				if (!entry) {
-					fprintf(stderr, "Failed to read Tycho-2 entry.\n");
+					ERROR("Failed to read Tycho-2 entry.\n");
 					exit(-1);
 				}
 
@@ -363,7 +388,7 @@ int main(int argc, char** args) {
 				}
 				an.nobs = ob;
 				if (!an.nobs) {
-					fprintf(stderr, "Tycho entry %i: no observations!\n", i);
+					ERROR("Tycho entry %i: no observations!\n", i);
 					continue;
 				}
 
@@ -388,7 +413,7 @@ int main(int argc, char** args) {
 				}
 				entry = twomass_fits_read_entry(twomass);
 				if (!entry) {
-					fprintf(stderr, "Failed to read 2MASS entry.\n");
+					ERROR("Failed to read 2MASS entry.\n");
 					exit(-1);
 				}
 
@@ -443,7 +468,7 @@ int main(int argc, char** args) {
 				}
 				an.nobs = ob;
 				if (!an.nobs) {
-					//fprintf(stderr, "2MASS entry %i: no valid observations.\n", i);
+					//ERROR("2MASS entry %i: no valid observations.\n", i);
 					continue;
 				}
 
@@ -461,7 +486,7 @@ int main(int argc, char** args) {
 		for (i=0; i<HP; i++) {
 			if (!cats[i]) continue;
 			if (an_catalog_fix_headers(cats[i])) {
-				fprintf(stderr, "Error fixing the header or closing AN catalog for healpix %i.\n", i);
+				ERROR("Error fixing the header or closing AN catalog for healpix %i.\n", i);
 			}
             an_catalog_sync(cats[i]);
 		}
@@ -477,7 +502,7 @@ int main(int argc, char** args) {
 		//fits_header_mod_int(hdr, "NOBJS", an_catalog_count_entries(cats[i]), "Number of objects in this catalog.");
 		if (an_catalog_fix_headers(cats[i]) ||
 			an_catalog_close(cats[i])) {
-			fprintf(stderr, "Error fixing the header or closing AN catalog for healpix %i.\n", i);
+			ERROR("Error fixing the header or closing AN catalog for healpix %i.\n", i);
 		}
 	}
 	free(cats);
