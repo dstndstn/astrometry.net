@@ -26,22 +26,22 @@ if __name__ == '__main__':
         sys.path += [rootdir]
 
 from astrometry.util.shell import shell_escape
+from astrometry.util.filetype import filetype_short
 
 fitstype = 'FITS image data'
 fitsext = 'fits'
 
 pgmcmd = 'pgmtoppm rgbi:1/1/1 %s > %s'
-
-filecmd = 'file -b -N -L %s'
+pgmext = 'pgm'
 
 imgcmds = {fitstype : (fitsext, 'an-fitstopnm -i %s > %s'),
            'JPEG image data'  : ('jpg',  'jpegtopnm %s > %s'),
            'PNG image data'   : ('png',  'pngtopnm %s > %s'),
            'GIF image data'   : ('gif',  'giftopnm %s > %s'),
-           'Netpbm PPM'       : ('pnm',  'ppmtoppm < %s > %s'),
-           'Netpbm PPM "rawbits" image data' : ('pnm',  'cp %s %s'),
-           'Netpbm PGM'       : ('pnm',  pgmcmd),
-           'Netpbm PGM "rawbits" image data' : ('pnm',  pgmcmd),
+           'Netpbm PPM'       : ('ppm',  'ppmtoppm < %s > %s'),
+           'Netpbm PPM "rawbits" image data' : ('ppm',  'cp %s %s'),
+           'Netpbm PGM'       : ('pgm',  pgmcmd),
+           'Netpbm PGM "rawbits" image data' : ('pgm',  pgmcmd),
            'TIFF image data'  : ('tiff',  'tifftopnm %s > %s'),
            # RAW is not recognized by 'file'; we have to use 'dcraw',
            # but we still store this here for convenience.
@@ -70,19 +70,14 @@ def do_command(cmd):
         print >>sys.stderr, 'Command failed: %s' % cmd
         sys.exit(-1)
 
-# Run the "file" command, return the trimmed output.
-def run_file(fn):
-    cmd = filecmd % shell_escape(fn)
-    logverb('Running: "%s"' % cmd)
-    (filein, fileout) = os.popen2(cmd)
-    typeinfo = fileout.read().strip()
-    logverb('Result: "%s"' % typeinfo)
-    # Trim extra data after the ,
-    comma_pos = typeinfo.find(',')
-    if comma_pos != -1:
-        typeinfo = typeinfo[:comma_pos]
-    logverb('Trimmed: "%s"' % typeinfo)
-    return typeinfo
+def get_cmd(types, cmds):
+    ext=None
+    cmd=None
+    for t in types:
+        (ext,cmd) = cmds.get(t, (None,None))
+        if ext is not None:
+            break
+    return (ext,cmd)
 
 def uncompress_file(infile, uncompressed, typeinfo=None, quiet=True):
     """
@@ -95,28 +90,29 @@ def uncompress_file(infile, uncompressed, typeinfo=None, quiet=True):
     comptype: None if the file wasn't compressed, or 'gz' or 'bz2'.
     """
     if typeinfo is None:
-        typeinfo = run_file(infile)
-    if not typeinfo in compcmds:
-        logverb('File is not compressed: "%s"' % typeinfo)
+        typeinfo = filetype_short(infile)
+
+    (ext,cmd) = get_cmd(typeinfo, compcmds)
+    if ext is None:
+        logverb('File is not compressed: "%s"' % '/'.join(typeinfo))
         return None
     assert uncompressed != infile
-    (ext, cmd) = compcmds[typeinfo]
     logverb('Compressed file (type %s), dumping to: "%s"' % (ext, uncompressed))
     do_command(cmd % (shell_escape(infile), shell_escape(uncompressed)))
     return ext
 
 # Returns (extension, command, error)
 def get_image_type(infile):
-    typeinfo = run_file(infile)
-    if not typeinfo in imgcmds:
-        rtn = os.system(raw_id_cmd % shell_escape(infile))
-        if os.WIFEXITED(rtn) and (os.WEXITSTATUS(rtn) == 0):
-            # it's a RAW image.
-            (ext, cmd) = imgcmds['raw']
-            return (ext, cmd, None)
-        return (None, None, 'Unknown image type "%s"' % typeinfo)
-    (ext, cmd) = imgcmds[typeinfo]
-    return (ext, cmd, None)
+    typeinfo = filetype_short(infile)
+    (ext,cmd) = get_cmd(typeinfo, imgcmds)
+    if ext is not None:
+        return (ext, cmd, None)
+    rtn = os.system(raw_id_cmd % shell_escape(infile))
+    if os.WIFEXITED(rtn) and (os.WEXITSTATUS(rtn) == 0):
+        # it's a RAW image.
+        (ext, cmd) = imgcmds['raw']
+        return (ext, cmd, None)
+    return (None, None, 'Unknown image type "%s"' % typeinfo)
 
 def find_program(mydir, cmd):
     # pull off the executable name.
@@ -191,8 +187,7 @@ def image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits,
     do_command(cmd % (shell_escape(infile), shell_escape(outfile)))
 
     if force_ppm:
-        typeinfo = run_file(outfile)
-        if (typeinfo.startswith("Netpbm PGM")):
+        if ext == pgmext:
             # Convert to PPM.
             do_command(pgmcmd % (shell_escape(outfile), shell_escape(original_outfile)))
             tempfiles.append(outfile)

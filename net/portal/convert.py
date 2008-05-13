@@ -8,6 +8,7 @@ from astrometry.util import image2pnm
 from astrometry.util import fits2fits
 from astrometry.net.portal.log import log
 from astrometry.util.run_command import run_command
+from astrometry.util.filetype import filetype_short
 
 class FileConversionError(Exception):
     errstr = None
@@ -49,9 +50,9 @@ def run_pnmfile(fn):
 
 def is_tarball(fn):
     log('is_tarball: %s' % fn)
-    typeinfo = image2pnm.run_file(fn)
-    log('file type: "%s"' % typeinfo)
-    return typeinfo.startswith('POSIX tar archive')
+    types = filetype_short(fn)
+    #log('file type: "%s"' % typeinfo)
+    return any([t.startswith('POSIX tar archive') for t in types])
 
 def get_objs_in_field(job, df):
     objsfn = convert(job, df, 'objsinfield')
