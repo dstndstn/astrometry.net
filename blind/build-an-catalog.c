@@ -71,7 +71,7 @@ static void init_catalog(an_catalog** cats, char* outfn, int hp, int Nside, int 
 	// header remarks...
     hdr = an_catalog_get_primary_header(cats[hp]);
 	fits_header_add_int(hdr, "HEALPIX", hp, "The healpix number of this catalog.");
-	fits_header_add_int(hdr, "NOBJS", 0, "(filler)");
+	//fits_header_add_int(hdr, "NOBJS", 0, "(filler)");
 	fits_header_add_int(hdr, "NSIDE", Nside, "The healpix resolution.");
 	boilerplate_add_fits_headers(hdr);
 	qfits_header_add(hdr, "HISTORY", "Created by the program \"build-an-catalog\"", NULL, NULL);
@@ -101,16 +101,15 @@ static uint tycho2_id_to_int(int tyc1, int tyc2, int tyc3) {
 int main(int argc, char** args) {
 	char* outfn = NULL;
 	int c;
-	int startoptind;
 	int Nside = 9;
-	int i, HP;
+	int i, HP, j;
 	an_catalog** cats;
 	int64_t starid;
 	int version = 0;
 	int nusnob = 0, ntycho = 0;
 	int n2mass = 0;
-	//int BLOCK = 100000;
 	il* allowed_hps = NULL;
+    sl* inputfiles = sl_new(4);
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
@@ -132,7 +131,11 @@ int main(int argc, char** args) {
 		}
     }
 
-	if (!outfn || (optind == argc)) {
+	for (; optind<argc; optind++) {
+        sl_append(inputfiles, args[optind]);
+    }
+
+	if (!outfn || !sl_size(inputfiles)) {
 		print_help(args[0]);
 		exit(-1);
 	}
@@ -160,8 +163,7 @@ int main(int argc, char** args) {
 
 	starid = 0;
 
-	startoptind = optind;
-	for (; optind<argc; optind++) {
+    for (j=0; j<sl_size(inputfiles); j++) {
 		char* infn;
 		usnob_fits* usnob = NULL;
 		tycho2_fits* tycho = NULL;
@@ -173,7 +175,7 @@ int main(int argc, char** args) {
 		an_entry an;
 		int hp;
 
-		infn = args[optind];
+		infn = sl_get(inputfiles, j);
 		printf("Opening catalog file %s...\n", infn);
 		hdr = qfits_header_read(infn);
 		if (!hdr) {
@@ -472,7 +474,7 @@ int main(int argc, char** args) {
         qfits_header* hdr;
 		if (!cats[i]) continue;
         hdr = an_catalog_get_primary_header(cats[i]);
-		fits_header_mod_int(hdr, "NOBJS", an_catalog_count_entries(cats[i]), "Number of objects in this catalog.");
+		//fits_header_mod_int(hdr, "NOBJS", an_catalog_count_entries(cats[i]), "Number of objects in this catalog.");
 		if (an_catalog_fix_headers(cats[i]) ||
 			an_catalog_close(cats[i])) {
 			fprintf(stderr, "Error fixing the header or closing AN catalog for healpix %i.\n", i);
@@ -482,6 +484,8 @@ int main(int argc, char** args) {
 
 	if (allowed_hps)
 		il_free(allowed_hps);
+
+    sl_free2(inputfiles);
 
 	return 0;
 }

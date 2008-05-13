@@ -341,6 +341,16 @@ int md5_file( const char *path, unsigned char *output )
     return( 0 );
 }
 
+int md5_file_hex( const char *path, char *output ) {
+    unsigned char out[16];
+    int rtn;
+    rtn = md5_file(path, out);
+    if (rtn)
+        return rtn;
+    write_hex(out, output);
+    return rtn;
+}
+
 /*
  * MD5 HMAC context setup
  */

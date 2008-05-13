@@ -103,6 +103,11 @@ void md5( const void *input, int ilen,
 int md5_file( const char *path, unsigned char *output );
 
 /**
+ Same as above, but hex output.  "output" must have length >= 33.
+ */
+int md5_file_hex( const char *path, char *output );
+
+/**
  * \brief          MD5 HMAC context setup
  *
  * \param ctx      HMAC context to be initialized
