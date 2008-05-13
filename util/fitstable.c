@@ -245,6 +245,18 @@ void fitstable_add_column_struct(fitstable_t* tab,
     fitstable_add_column(tab, &col);
 }
 
+int fitstable_remove_column(fitstable_t* tab, const char* name) {
+    int i;
+    for (i=0; i<ncols(tab); i++) {
+        fitscol_t* col = getcol(tab, i);
+        if (strcmp(name, col->colname) == 0) {
+            bl_remove_index(tab->cols, i);
+            return 0;
+        }
+    }
+    return -1;
+}
+
 int fitstable_read_structs(fitstable_t* tab, void* struc,
                            int strucstride, int offset, int N) {
     int i;

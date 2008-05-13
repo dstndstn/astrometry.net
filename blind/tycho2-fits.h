@@ -33,6 +33,8 @@ tycho2_fits* tycho2_fits_open(char* fn);
 
 tycho2_fits* tycho2_fits_open_for_writing(char* fn);
 
+qfits_header* tycho2_fits_get_header(tycho2_fits* tycho2);
+
 int tycho2_fits_write_headers(tycho2_fits* tycho2);
 
 int tycho2_fits_fix_headers(tycho2_fits* tycho2);

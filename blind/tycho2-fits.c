@@ -145,6 +145,10 @@ static int postprocess_read_structs(fitstable_t* table, void* struc,
     return 0;
 }
 
+qfits_header* tycho2_fits_get_header(tycho2_fits* tycho2) {
+    return fitstable_get_primary_header(tycho2);
+}
+
 tycho2_fits* tycho2_fits_open(char* fn) {
 	tycho2_fits* cat = NULL;
     cat = fitstable_open(fn);

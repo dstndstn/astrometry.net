@@ -243,6 +243,8 @@ void fitstable_add_write_column_array_convert(fitstable_t* tab,
                                               const char* name,
                                               const char* units);
 
+int fitstable_remove_column(fitstable_t* tab, const char* name);
+
 void* fitstable_read_column(const fitstable_t* tab,
                             const char* colname, tfits_type t);
 

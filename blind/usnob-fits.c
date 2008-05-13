@@ -123,6 +123,10 @@ static int postprocess_read_structs(fitstable_t* table, void* struc,
     return 0;
 }
 
+int usnob_fits_remove_an_diffraction_spike_column(usnob_fits* usnob) {
+    return fitstable_remove_column(usnob, "AN_DIFFRACTION_SPIKE");
+}
+
 usnob_entry* usnob_fits_read_entry(usnob_fits* cat) {
     return (usnob_entry*)fitstable_next_struct(cat);
 }

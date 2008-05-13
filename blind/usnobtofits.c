@@ -195,6 +195,10 @@ int main(int argc, char** args) {
 					fprintf(stderr, "Failed to initialized FITS file %i (filename %s).\n", hp, fn);
 					exit(-1);
 				}
+                if (usnob_fits_remove_an_diffraction_spike_column(usnobs[hp])) {
+                    fprintf(stderr, "Failed to remove the AN_DIFFRACTION_SPIKE column.\n");
+                    exit(-1);
+                }
                 hdr = usnob_fits_get_header(usnobs[hp]);
                 assert(hdr);
 

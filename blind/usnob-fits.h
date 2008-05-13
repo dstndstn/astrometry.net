@@ -50,4 +50,6 @@ int usnob_fits_close(usnob_fits* usnob);
 
 int usnob_fits_write_entry(usnob_fits* usnob, usnob_entry* entry);
 
+int usnob_fits_remove_an_diffraction_spike_column(usnob_fits* usnob);
+
 #endif

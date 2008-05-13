@@ -66,8 +66,8 @@ endif
 # linking.  CFLAGS_DEF are compile flags, LDFLAGS_DEG are link flags.
 
 # speedy!
-FLAGS_DEF += -O3
-FLAGS_DEF += -fomit-frame-pointer
+#FLAGS_DEF += -O3
+#FLAGS_DEF += -fomit-frame-pointer
 
 TEST_OPTION := -fno-math-errno -fno-trapping-math
 FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o /dev/null - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
@@ -76,8 +76,8 @@ TEST_OPTION := -fno-stack-protector
 FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o /dev/null - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
 
 # debuggy!
-#FLAGS_DEF += -O0
-#FLAGS_DEF += -g
+FLAGS_DEF += -O0
+FLAGS_DEF += -g
 
 # profily!
 #FLAGS_DEF += -pg
