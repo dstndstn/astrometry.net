@@ -32,7 +32,7 @@ def dcen3b(f0, f1, f2):
 	return xc
 
 def dcen3(f0, f1, f2):
-	return dcen3b(f0,f1,f2)
+	return dcen3a(f0,f1,f2)
 
 def dcen3x3(image):
 	my0 = dcen3(image[0,0], image[1,0], image[2,0])
@@ -65,7 +65,6 @@ def dcen3x3(image):
 	return (xc,yc)
 
 
-#def cnoise(imgfn, xyfn):
 if __name__ == '__main__':
 	imgfn = sys.argv[1]
 	xyfn = sys.argv[2]
@@ -121,8 +120,6 @@ if __name__ == '__main__':
 		for j in xrange(N):
 			noise = normal(0, sigma, size=(3,3))
 			img = cutout + noise
-			#print 'noise is', noise
-			#print 'img is', img
 			cen = dcen3x3(img)
 			# original center:
 			xx = x[i] - ix
@@ -203,7 +200,7 @@ if __name__ == '__main__':
 	yy = (len(dboth)*(xx.max()-xx.min())/40) / (sigd * sqrt(2. * pi)) * exp(-((xx-md)**2)/(2*sigd**2))
 
 	subplot(2,1,1)
-	hist(dboth, 40)
+	(n,bins,patches) = hist(dboth, 40)
 	plot(xx, yy, 'r-')
 	title('3x3 centroid coordinate errors (std=%g)' % sigd)
 	#xlabel('pixels')
@@ -211,11 +208,14 @@ if __name__ == '__main__':
 	dboth2 = hstack((dx2,dy2))
 	sigd2 = std(dboth2)
 	md2 = mean(dboth2)
-	xx2 = arange(dboth2.min(), dboth2.max(), 0.01)
-	yy2 = (len(dboth2)*(xx2.max()-xx2.min())/40) / (sigd2 * sqrt(2. * pi)) * exp(-((xx2-md2)**2)/(2*sigd2**2))
-
+	if len(dboth2):
+		xx2 = arange(dboth2.min(), dboth2.max(), 0.01)
+		yy2 = (len(dboth2)*(xx2.max()-xx2.min())/40) / (sigd2 * sqrt(2. * pi)) * exp(-((xx2-md2)**2)/(2*sigd2**2))
+	else:
+		xx2 = []
+		yy2 = []
 	subplot(2,1,2)
-	hist(dboth2, 40)
+	hist(dboth2, bins=bins)
 	plot(xx2, yy2, 'r-')
 	title('5x5 centroid coordinate errors (std=%g)' % sigd2)
 	xlabel('pixels')
@@ -235,6 +235,4 @@ if __name__ == '__main__':
 	savefig('fluxdist.png', dpi=75)
 	
 	
-	
-#	cnoise(imgfn, xyfn)
 
