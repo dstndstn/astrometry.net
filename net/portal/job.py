@@ -725,8 +725,9 @@ class Job(models.Model):
 
         from astrometry.net.server.models import JobQueue, QueuedJob
 
-        (q, created) = JobQueue.objects.get_or_create(name = settings.SITE_NAME,
-                                                      queuetype = 'triage')
+        (q, created) = (JobQueue.objects
+						.get_or_create(name = settings.SITE_NAME,
+									   queuetype = 'triage'))
         if created:
             log('Created JobQueue', q)
             q.save()
