@@ -31,6 +31,7 @@ CustomGetTileUrl = function(a,b,c) {
 	lURL+="&layers=" + this.myLayers;
 	if (this.jpeg)
 		lURL += "&jpeg";
+	lURL += '&ax=' + a.x + '&ay=' + a.y + '&b=' + b;
 	lURL+="&bb="+lBbox;
 	lURL+="&w=256";
 	lURL+="&h=256";
