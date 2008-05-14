@@ -51,6 +51,10 @@ class MainPage(webapp.RequestHandler):
 		xstep = (xmax - xmin) / float(W)
 		ystep = (ymax - ymin) / float(H)
 
+		cmap = []
+		for i in range(256):
+			cmap.append(heatmap(i))
+
 		pixels = array('B')
 		for j in range(H):
 			for i in range(W):
@@ -64,14 +68,9 @@ class MainPage(webapp.RequestHandler):
 					y = yn
 					if x*x + y*y > 2.0:
 						break
-				[r,g,b] = heatmap(k)
-				a = 255
-				pixels.append(r)
-				pixels.append(g)
-				pixels.append(b)
-				pixels.append(a)
+				pixels.extend(cmap[k])
 
-		writer = png.Writer(width=W, height=H, has_alpha=True)
+		writer = png.Writer(width=W, height=H)
 		writer.write_array(res.out, pixels)
 
 
