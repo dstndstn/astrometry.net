@@ -74,13 +74,13 @@ int main(int argc, char *argv[])
               fits_get_hdu_type(outfptr, &outtype, &status) )
         printf("couldn't get the type of HDU for the files\n");
 
-    else if (intype == IMAGE_HDU)
+    else if (intype == IMAGE_HDU) {
         printf("The input HDU is an image, not a table\n");
-
-    else if (outtype == IMAGE_HDU)
+        exit(-1);
+    } else if (outtype == IMAGE_HDU) {
         printf("The output HDU is an image, not a table\n");
-
-    else if (outtype != intype)
+        exit(-1);
+    } else if (outtype != intype)
         printf("Input and output HDUs are not the same type of table.\n");
 
     else if ( fits_get_num_cols(infptr,  &incols,  &status) ||

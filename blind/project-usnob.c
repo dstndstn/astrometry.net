@@ -60,11 +60,11 @@ int main(int argc, char** args) {
 	double pointbuffer[3];
 	double bandbuffer[5];
 	unsigned int tilebuffer[5];
-	double xyz[3];
 	int motionbuffer[2];
 	int numMags;
 	usnob_entry* star;
 	int doProject;
+    qfits_header* hdr;
 
 	while ((c = getopt(argc, args, OPTIONS)) != -1) {
 		switch (c) {
@@ -91,8 +91,9 @@ int main(int argc, char** args) {
 	}
 
 	// find out which healpix the file covers.
-	hp = qfits_header_getint(usnob->header, "HEALPIX", -1);
-	Nside = qfits_header_getint(usnob->header, "NSIDE", -1);
+    hdr = usnob_fits_get_header(usnob);
+	hp = qfits_header_getint(hdr, "HEALPIX", -1);
+	Nside = qfits_header_getint(hdr, "NSIDE", -1);
 	if ((hp == -1) || (Nside == -1)) {
 		fprintf(stderr, "Failed to find \"HEALPIX\" and \"NSIDE\" headers in file %s.\n", infn);
 		exit(-1);
@@ -152,9 +153,10 @@ int main(int argc, char** args) {
 	  star = usnob_fits_read_entry(usnob);
 
 	  if(doProject){
+          double xyz[3];
           bool ok;
           // find its xyz position
-          radec2xyzarr(deg2rad(star->ra), deg2rad(star->dec), xyz);
+          radecdeg2xyzarr(star->ra, star->dec, xyz);
           // project it around the center
           ok = star_coords(xyz, center, &pointbuffer[0], &pointbuffer[1]);
           assert(ok);
