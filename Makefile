@@ -142,20 +142,12 @@ tag-release:
 
 SNAPSHOT_SVN := svn+ssh://astrometry.net/svn/trunk/src/astrometry
 #SNAPSHOT_VER := $(shell date "+%Y-%m-%d")
-SNAPSHOT_VER := $(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}')
-SNAPSHOT_DIR := astrometry.net-$(SNAPSHOT_VER)
+#SNAPSHOT_VER := $(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}')
+#SNAPSHOT_DIR := astrometry.net-$(SNAPSHOT_VER)
 SNAPSHOT_SUBDIRS := $(RELEASE_SUBDIRS)
 
 snapshot:
-	-rm -R $(SNAPSHOT_DIR)
-	svn export -N $(SNAPSHOT_SVN) $(SNAPSHOT_DIR)
-	for x in $(SNAPSHOT_SUBDIRS); do \
-		svn export $(SNAPSHOT_SVN)/$$x $(SNAPSHOT_DIR)/$$x; \
-	done
-	tar cf $(SNAPSHOT_DIR).tar $(SNAPSHOT_DIR)
-	gzip --best -c $(SNAPSHOT_DIR).tar > $(SNAPSHOT_DIR).tar.gz
-	-rm $(SNAPSHOT_DIR).tar.bz2
-	bzip2 --best $(SNAPSHOT_DIR).tar
+	$(AN_SHELL) ./make-snapshot.sh $(SNAPSHOT_SVN) $(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}') "$(SNAPSHOT_SUBDIRS)"
 
 test:
 	$(MAKE) -C blind test
