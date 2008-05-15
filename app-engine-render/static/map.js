@@ -519,6 +519,7 @@ function startup() {
 			G_SATELLITE_MAP.getProjection(), "Map2",
 			{tileSize: tilesize});
 	map.addMapType(otherMapType);
+	map.addControl(new GMapTypeControl());
 	*/
 
 	// Connect up the event listeners...
@@ -531,7 +532,6 @@ function startup() {
 	GEvent.bindDom(window, "resize", map, map.onResize);
 
 	map.addControl(new GLargeMapControl());
-	map.addControl(new GMapTypeControl());
 
 	moveended();
 	mapzoomed(map.getZoom(), map.getZoom());
