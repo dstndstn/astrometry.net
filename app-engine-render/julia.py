@@ -65,17 +65,13 @@ class MainPage(webapp.RequestHandler):
 		t[0] = clock()
 		pixels = array('B')
 		for j in range(H):
-			for i in range(W):
-				x = x0[i]
-				y = y0[j]
-				for k in range(254):
-					xn = x*x - y*y + cx
-					yn = 2.0 * x * y + cy
-					x = xn
-					y = yn
-					if x*x + y*y > 2.0:
-						break
-				pixels.extend(cmap[k])
+			pp = [255]*W
+			xyi = zip(x0, [y0[j]]*W, range(W))
+			for k in range(254):
+				pp = [min(i, (x*x+y*y > 2) and k or 255) for (x,y,i) in xyi]
+				xyi = [(x*x - y*y + cx, 2.0 * x * y + cy, i) for (x,y,i) in xyi]
+			for (x,y,i) in xyi:
+				pixels.extend(cmap[i])
 		t[1] = clock()
 
 		for i in range(9):
