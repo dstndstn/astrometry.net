@@ -1,4 +1,5 @@
 import sys
+from logging import debug
 
 from array import array
 
@@ -55,20 +56,23 @@ class MainPage(webapp.RequestHandler):
 		for i in range(256):
 			cmap.append(heatmap(i))
 
+		xy = [(xmin + xstep * i, ymin + ystep * j, j*W+i) for j in range(H) for i in range(W)]
+		#p = [0]*len(xy)
+		p = []
+		for k in range(254):
+			xy = [(x*x - y*y + cx, 2.0 * x * y + cy, i) for (x,y,i) in xy if x*x+y*y < 2]
+			p = p + [(i,k) for (x,y,i) in xy if x*x+y*y >= 2]
+		p = p + [(i,255) for (x,y,i) in xy]
+		pp = [0]*len(p)
+		pi = [i for (i,k) in p]
+		print >> sys.stderr, 'len(p)', len(p)
+		print >> sys.stderr, 'max in pp:', max(pi), 'min in pp:', min(pi)
+		for (i,k) in p:
+			pp[i] = k
 		pixels = array('B')
-		for j in range(H):
-			for i in range(W):
-				x = xmin + xstep * i
-				y = ymin + ystep * j
-
-				for k in range(254):
-					xn = x*x - y*y + cx
-					yn = 2.0 * x * y + cy
-					x = xn
-					y = yn
-					if x*x + y*y > 2.0:
-						break
-				pixels.extend(cmap[k])
+		for k in pp:
+			pixels.extend(cmap[k])
+		#pixels.extend([cmap[k] for k in pp])
 
 		writer = png.Writer(width=W, height=H)
 		writer.write_array(res.out, pixels)
