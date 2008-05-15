@@ -203,8 +203,6 @@ def image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits,
 
 def convert_image(infile, outfile, uncompressed, sanitized,
                   force_ppm, no_fits2fits, mydir, quiet):
-    typeinfo = run_file(infile)
-
     tempfiles = []
     # if the caller didn't specify where to put the uncompressed file,
     # create a tempfile.
@@ -214,8 +212,8 @@ def convert_image(infile, outfile, uncompressed, sanitized,
         os.close(f)
         tempfiles.append(uncompressed)
 
-    comp = uncompress_file(infile, uncompressed,
-                           typeinfo=typeinfo, quiet=quiet)
+    comp = uncompress_file(infile, uncompressed, quiet=quiet)
+                           
     if comp:
         print 'compressed'
         print comp

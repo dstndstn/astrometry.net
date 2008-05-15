@@ -216,7 +216,24 @@ int main(int argc, char *argv[])
 		valstr = qfits_pretty_string(qfits_header_getstr(hdr, "AN_FILE"));
 		if (valstr) {
 			fprintf(stderr, "Astrometry.net file type: \"%s\".\n", valstr);
-			if (strncasecmp(valstr, AN_FILETYPE_CATALOG, strlen(AN_FILETYPE_CATALOG)) == 0) {
+
+            if (strncasecmp(valstr, AN_FILETYPE_USNOB, strlen(AN_FILETYPE_USNOB)) == 0) {
+				fprintf(stderr, "Looks like a USNOB file.\n");
+                usnob = usnob_fits_open(fname);
+                if (!usnob) {
+                    fprintf(stderr, "Couldn't open catalog.\n");
+                    exit(-1);
+                }
+                numstars = usnob_fits_count_entries(usnob);
+            } else if (strncasecmp(valstr, AN_FILETYPE_TYCHO2, strlen(AN_FILETYPE_TYCHO2)) == 0) {
+                fprintf(stderr, "Looks like a Tycho-2 file.\n");
+                tycho = tycho2_fits_open(fname);
+                if (!tycho) {
+                    fprintf(stderr, "Couldn't open catalog.\n");
+                    exit(-1);
+                }
+                numstars = tycho2_fits_count_entries(tycho);
+            } else if (strncasecmp(valstr, AN_FILETYPE_CATALOG, strlen(AN_FILETYPE_CATALOG)) == 0) {
 				fprintf(stderr, "Looks like a catalog.\n");
 				cat = catalog_open(fname);
 				if (!cat) {
@@ -302,25 +319,6 @@ int main(int argc, char *argv[])
 				numstars = an_catalog_count_entries(ancat);
 				an_catalog_set_blocksize(ancat, BLOCK);
 			}
-		}
-		if (qfits_header_getboolean(hdr, "USNOB", 0)) {
-			fprintf(stderr, "File has USNOB = T header.\n");
-			usnob = usnob_fits_open(fname);
-			if (!usnob) {
-				fprintf(stderr, "Couldn't open catalog.\n");
-				exit(-1);
-			}
-			numstars = usnob_fits_count_entries(usnob);
-			//usnob->br.blocksize = BLOCK;
-		} else if (qfits_header_getboolean(hdr, "TYCHO_2", 0)) {
-			fprintf(stderr, "File has TYCHO_2 = T header.\n");
-			tycho = tycho2_fits_open(fname);
-			if (!tycho) {
-				fprintf(stderr, "Couldn't open catalog.\n");
-				exit(-1);
-			}
-			numstars = tycho2_fits_count_entries(tycho);
-			//tycho->br.blocksize = BLOCK;
 		}
 		qfits_header_destroy(hdr);
 		if (!(cat || skdt || ancat || usnob || tycho || rd)) {
