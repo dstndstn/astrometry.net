@@ -15,8 +15,24 @@ handlers:
   static_files: static/tileSizeMap.js
   upload: static/tileSizeMap.js
 
+- url: /tileSizeB
+  static_files: static/tileSizeB.html
+  upload: static/tileSizeB.html
+
+- url: /tileSizeMapB.js
+  static_files: static/tileSizeMapB.js
+  upload: static/tileSizeMapB.js
+
 - url: /tileSizeTile
   script: tilesize.py
+
+- url: /julia
+  static_files: static/index.html
+  upload: static/index.html
+
+- url: /map.js
+  static_files: static/map.js
+  upload: static/map.js
 
 - url: /tile.*
   script: julia.py

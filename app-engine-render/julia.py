@@ -32,6 +32,21 @@ class MainPage(webapp.RequestHandler):
 		W = int(req.get('w', 256))
 		H = int(req.get('h', 256))
 
+		layers = req.get('layers', '').split(',')
+		if 'grid' in layers:
+			pixels = array('B')
+			off = [0,0,0,0]
+			on  = [128,128,0,255]
+			for j in range(H):
+				for i in range(W):
+					if j == H/2 or i == W/2:
+						pixels.extend(on)
+					else:
+						pixels.extend(off)
+			writer = png.Writer(width=W, height=H, has_alpha=True)
+			writer.write_array(res.out, pixels)
+			return
+		
 		cx = float(req.get('seedx', -0.726895347709114071439))
 		cy = float(req.get('seedy', 0.188887129043845954792))
 
@@ -39,10 +54,11 @@ class MainPage(webapp.RequestHandler):
 		ay = float(req.get('ay', 0))
 		zoom = float(req.get('b', 1))
 
-		xmin = ax / (2.**zoom)
-		ymin = ay / (2.**zoom)
-		xmax = (ax+1) / (2.**zoom)
-		ymax = (ay+1) / (2.**zoom)
+		nmax = 2.**(zoom+1)
+		xmin = ax / nmax
+		ymin = ay / nmax
+		xmax = (ax+1) / nmax
+		ymax = (ay+1) / nmax
 
 		# rescale to the [-1, 1] box.
 		xmin = xmin * 2.0 - 1.0

@@ -16,25 +16,22 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-/*
-  This function was borrowed from the file "wms236.js" by John Deck,
-  UC Berkeley, which interfaces the Google Maps client to a WMS
-  (Web Mapping Service) server.
- */
-CustomGetTileUrl = function(a,b,c) {
-	var lULP = new GPoint(a.x*256,(a.y+1)*256);
-	var lLRP = new GPoint((a.x+1)*256,a.y*256);
-	var lUL = G_NORMAL_MAP.getProjection().fromPixelToLatLng(lULP,b,c);
-	var lLR = G_NORMAL_MAP.getProjection().fromPixelToLatLng(lLRP,b,c);
-	var lBbox=lUL.x+","+lUL.y+","+lLR.x+","+lLR.y;
+var tilesize = 128;
+
+CustomGetTileUrl = function(a,b) {
+	var lULP = new GPoint(a.x*tilesize,(a.y+1)*tilesize);
+	var lLRP = new GPoint((a.x+1)*tilesize,a.y*tilesize);
+	//var lUL = G_NORMAL_MAP.getProjection().fromPixelToLatLng(lULP,b,c);
+	//var lLR = G_NORMAL_MAP.getProjection().fromPixelToLatLng(lLRP,b,c);
+	//var lBbox=lUL.x+","+lUL.y+","+lLR.x+","+lLR.y;
 	var lURL=this.myBaseURL;
 	lURL+="&layers=" + this.myLayers;
-	if (this.jpeg)
-		lURL += "&jpeg";
+	//if (this.jpeg)
+	//	lURL += "&jpeg";
 	lURL += '&ax=' + a.x + '&ay=' + a.y + '&b=' + b;
-	lURL+="&bb="+lBbox;
-	lURL+="&w=256";
-	lURL+="&h=256";
+	//lURL+="&bb="+lBbox;
+	lURL+='&w=' + tilesize;
+	lURL+='&h=' + tilesize;
 	return lURL;
 }
 
@@ -263,7 +260,8 @@ function makeOverlay(layers, tag) {
 }
 
 function makeMapType(tiles, label) {
-	return new GMapType(tiles, G_SATELLITE_MAP.getProjection(), label, G_SATELLITE_MAP);
+	return new GMapType(tiles, G_SATELLITE_MAP.getProjection(), label,
+				{tileSize: tilesize});
 }
 
 var seedx = 0;
@@ -314,6 +312,45 @@ function toggleGrid() {
 	updateGrid();
 	restackOverlays();
 }
+
+/*
+var otherMapType;
+var imageLayer2;
+var gridLayer2;
+var image2Showing = 0;
+var grid2Showing = 0;
+
+function updateMap2() {
+	map.removeMapType(otherMapType);
+	layers = []
+	if (image2Showing) {
+	layers.push(imageLayer2);
+    }
+	if (grid2Showing) {
+	layers.push(gridLayer2);
+	}
+	otherMapType = new GMapType(layers,
+			G_SATELLITE_MAP.getProjection(), "Map2",
+			{tileSize: tilesize});
+	map.addMapType(otherMapType);
+	map.setMapType(otherMapType);
+}
+
+function toggleImage2() {
+	toggleButton("image2");
+	updateMap2();
+}
+
+function toggleGrid2() {
+	toggleButton("grid2");
+	updateMap2();
+}
+
+|
+<a id="grid2ToggleButton" href="#" onclick="toggleGrid2()"> Grid2</a> | 
+<a id="image2ToggleButton" href="#" onclick="toggleImage2()">Image2 </a>
+
+*/
 
 function updateGrid() {
 	//var tag = "&tag=grid";
@@ -435,6 +472,7 @@ function startup() {
     var blackTile = new GTileLayer(new GCopyrightCollection(""), 1, 17);
     blackTile.getTileUrl = getBlackUrl;
     var blackMapType = makeMapType([blackTile], "Map");
+
     map.addMapType(blackMapType);
     map.setMapType(blackMapType);
 
@@ -469,6 +507,20 @@ function startup() {
 
 	restackOverlays();
 
+	/*
+	imageLayer2 = new GTileLayer(new GCopyrightCollection(""), 1, 17);
+	imageLayer2.myBaseURL = TILE_URL;
+	imageLayer2.getTileUrl = CustomGetTileUrl;
+	gridLayer2 = new GTileLayer(new GCopyrightCollection(""), 1, 17);
+	gridLayer2.myLayers = 'grid';
+	gridLayer2.myBaseURL = TILE_URL;
+	gridLayer2.getTileUrl = CustomGetTileUrl;
+	otherMapType = new GMapType([imageLayer2, gridLayer2],
+			G_SATELLITE_MAP.getProjection(), "Map2",
+			{tileSize: tilesize});
+	map.addMapType(otherMapType);
+	*/
+
 	// Connect up the event listeners...
 	GEvent.addListener(map, "move", mapmoved);
 	GEvent.addListener(map, "moveend", moveended);
@@ -479,6 +531,7 @@ function startup() {
 	GEvent.bindDom(window, "resize", map, map.onResize);
 
 	map.addControl(new GLargeMapControl());
+	map.addControl(new GMapTypeControl());
 
 	moveended();
 	mapzoomed(map.getZoom(), map.getZoom());
