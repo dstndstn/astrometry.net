@@ -79,7 +79,7 @@ class MainPage(webapp.RequestHandler):
 		t[1] = clock()
 
 		for i in range(9):
-			if t[i] == 0:
+			if t[i+1] == 0:
 				break
 			print >> sys.stderr, 't%i to %i: %g' % (i, i+1, t[i+1]-t[i])
 
