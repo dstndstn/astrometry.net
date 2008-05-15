@@ -126,8 +126,9 @@ an-fitstopnm: an-fitstopnm.o $(ANUTILS_LIB) $(QFITS_LIB)
 
 ALL_OBJ += an-fitstopnm.o
 
-PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py shell.py __init__.py \
-	file.py run_command.py w3c_validator.py \
+PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
+	shell.py __init__.py file.py run_command.py w3c_validator.py \
+	filetype.py \
 	$(PYTHON_LIBS)
 
 PYTHON_EXECS := fits2fits.py image2pnm.py

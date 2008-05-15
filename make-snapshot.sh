@@ -12,6 +12,8 @@ for x in ${SNAPSHOT_SUBDIRS}; do
 done
 tar cf ${SNAPSHOT_DIR}.tar ${SNAPSHOT_DIR}
 gzip --best -c ${SNAPSHOT_DIR}.tar > ${SNAPSHOT_DIR}.tar.gz
+echo "Created ${SNAPSHOT_DIR}.tar.gz"
 rm ${SNAPSHOT_DIR}.tar.bz2
 bzip2 --best ${SNAPSHOT_DIR}.tar
+echo "Created ${SNAPSHOT_DIR}.tar.bz2"
 
