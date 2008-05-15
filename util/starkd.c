@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -24,8 +24,8 @@
 #include "kdtree_fits_io.h"
 #include "starutil.h"
 
-static startree* startree_alloc() {
-	startree* s = calloc(1, sizeof(startree));
+static startree_t* startree_alloc() {
+	startree_t* s = calloc(1, sizeof(startree_t));
 	if (!s) {
 		fprintf(stderr, "Failed to allocate a star kdtree struct.\n");
 		return NULL;
@@ -33,19 +33,19 @@ static startree* startree_alloc() {
 	return s;
 }
 
-int startree_N(startree* s) {
+int startree_N(startree_t* s) {
 	return s->tree->ndata;
 }
 
-int startree_nodes(startree* s) {
+int startree_nodes(startree_t* s) {
 	return s->tree->nnodes;
 }
 
-int startree_D(startree* s) {
+int startree_D(startree_t* s) {
 	return s->tree->ndim;
 }
 
-qfits_header* startree_header(startree* s) {
+qfits_header* startree_header(startree_t* s) {
 	return s->header;
 }
 
@@ -53,8 +53,8 @@ static void sweep_tablesize(kdtree_t* kd, extra_table* tab) {
 	tab->nitems = kd->ndata;
 }
 
-startree* startree_open(char* fn) {
-	startree* s;
+startree_t* startree_open(char* fn) {
+	startree_t* s;
 	extra_table extras[1];
 	extra_table* sweep = extras;
 
@@ -86,7 +86,7 @@ startree* startree_open(char* fn) {
 	return NULL;
 }
 
-int startree_close(startree* s) {
+int startree_close(startree_t* s) {
 	if (!s) return 0;
 	if (s->inverse_perm)
 		free(s->inverse_perm);
@@ -98,11 +98,11 @@ int startree_close(startree* s) {
 	return 0;
 }
 
-static int Ndata(startree* s) {
+static int Ndata(startree_t* s) {
 	return s->tree->ndata;
 }
 
-void startree_compute_inverse_perm(startree* s) {
+void startree_compute_inverse_perm(startree_t* s) {
 	// compute inverse permutation vector.
 	s->inverse_perm = malloc(Ndata(s) * sizeof(int));
 	if (!s->inverse_perm) {
@@ -112,7 +112,7 @@ void startree_compute_inverse_perm(startree* s) {
 	kdtree_inverse_permutation(s->tree, s->inverse_perm);
 }
 
-int startree_get(startree* s, uint starid, double* posn) {
+int startree_get(startree_t* s, int starid, double* posn) {
 	if (s->tree->perm && !s->inverse_perm) {
 		startree_compute_inverse_perm(s);
 		if (!s->inverse_perm)
@@ -131,8 +131,8 @@ int startree_get(startree* s, uint starid, double* posn) {
 	return 0;
 }
 
-startree* startree_new() {
-	startree* s = startree_alloc();
+startree_t* startree_new() {
+	startree_t* s = startree_alloc();
 	s->header = qfits_header_default();
 	if (!s->header) {
 		fprintf(stderr, "Failed to create a qfits header for star kdtree.\n");
@@ -143,7 +143,7 @@ startree* startree_new() {
 	return s;
 }
 
-int startree_write_to_file(startree* s, char* fn) {
+int startree_write_to_file(startree_t* s, char* fn) {
 	if (s->sweep) {
 		extra_table extras[1];
 		extra_table* sweep = extras;

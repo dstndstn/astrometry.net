@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -25,34 +25,34 @@
 
 #define AN_FILETYPE_STARTREE "SKDT"
 
-struct startree {
+struct startree_s {
 	kdtree_t* tree;
 	qfits_header* header;
 	int* inverse_perm;
 	uint8_t* sweep;
 };
-typedef struct startree startree;
+typedef struct startree_s startree_t;
 
 
-startree* startree_open(char* fn);
+startree_t* startree_open(char* fn);
 
-int startree_N(startree* s);
+int startree_N(startree_t* s);
 
-int startree_nodes(startree* s);
+int startree_nodes(startree_t* s);
 
-int startree_D(startree* s);
+int startree_D(startree_t* s);
 
-qfits_header* startree_header(startree* s);
+qfits_header* startree_header(startree_t* s);
 
-int startree_get(startree* s, unsigned int starid, double* posn);
+int startree_get(startree_t* s, int starid, double* posn);
 
-int startree_close(startree* s);
+int startree_close(startree_t* s);
 
-void startree_compute_inverse_perm(startree* s);
+void startree_compute_inverse_perm(startree_t* s);
 
 // for writing
-startree* startree_new();
+startree_t* startree_new();
 
-int startree_write_to_file(startree* s, char* fn);
+int startree_write_to_file(startree_t* s, char* fn);
 
 #endif

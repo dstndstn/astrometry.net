@@ -61,7 +61,7 @@ extern int optind, opterr, optopt;
 int main(int argc, char *argv[]) {
     int argidx, argchar;
     int nkeep = 0;
-	startree* starkd;
+	startree_t* starkd;
     catalog* cat;
     int Nleaf = 25;
     char* basename = NULL;
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
 	int buildopts = 0;
 	int i, N, D;
 	int checktree = 0;
-
+    qfits_header* hdr;
 	qfits_header* catheader = NULL;
 
     if (argc <= 2) {
@@ -230,19 +230,20 @@ int main(int argc, char *argv[]) {
 
 	fprintf(stderr, "Writing output to %s ...\n", treefname);
 	fflush(stderr);
-	fits_header_add_int(startree_header(starkd), "NLEAF", Nleaf, "Target number of points in leaves.");
-	fits_header_add_int(startree_header(starkd), "KEEP", nkeep, "Number of stars kept (0=no limit).");
-	fits_copy_header(catheader, startree_header(starkd), "HEALPIX");
-	fits_copy_header(catheader, startree_header(starkd), "ALLSKY");
-	fits_copy_header(catheader, startree_header(starkd), "JITTER");
-	boilerplate_add_fits_headers(startree_header(starkd));
-	qfits_header_add(startree_header(starkd), "HISTORY", "This file was created by the program \"startree\".", NULL, NULL);
-	qfits_header_add(startree_header(starkd), "HISTORY", "startree command line:", NULL, NULL);
-	fits_add_args(startree_header(starkd), argv, argc);
-	qfits_header_add(startree_header(starkd), "HISTORY", "(end of startree command line)", NULL, NULL);
-	qfits_header_add(startree_header(starkd), "HISTORY", "** History entries copied from the input file:", NULL, NULL);
-	fits_copy_all_headers(catheader, startree_header(starkd), "HISTORY");
-	qfits_header_add(startree_header(starkd), "HISTORY", "** End of history entries.", NULL, NULL);
+    hdr = startree_header(starkd);
+	fits_header_add_int(hdr, "NLEAF", Nleaf, "Target number of points in leaves.");
+	fits_header_add_int(hdr, "KEEP", nkeep, "Number of stars kept (0=no limit).");
+	fits_copy_header(catheader, hdr, "HEALPIX");
+	fits_copy_header(catheader, hdr, "ALLSKY");
+	fits_copy_header(catheader, hdr, "JITTER");
+	boilerplate_add_fits_headers(hdr);
+	qfits_header_add(hdr, "HISTORY", "This file was created by the program \"startree\".", NULL, NULL);
+	qfits_header_add(hdr, "HISTORY", "startree command line:", NULL, NULL);
+	fits_add_args(hdr, argv, argc);
+	qfits_header_add(hdr, "HISTORY", "(end of startree command line)", NULL, NULL);
+	qfits_header_add(hdr, "HISTORY", "** History entries copied from the input file:", NULL, NULL);
+	fits_copy_all_headers(catheader, hdr, "HISTORY");
+	qfits_header_add(hdr, "HISTORY", "** End of history entries.", NULL, NULL);
 
 	for (i=1;; i++) {
 		char key[16];
@@ -251,7 +252,7 @@ int main(int argc, char *argv[]) {
 		n = qfits_header_getint(catheader, key, -1);
 		if (n == -1)
 			break;
-		fits_copy_header(catheader, startree_header(starkd), key);
+		fits_copy_header(catheader, hdr, key);
 	}
 
 	if (startree_write_to_file(starkd, treefname)) {

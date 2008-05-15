@@ -54,7 +54,7 @@ int main(int argc, char** args) {
 	char* basename;
 	char* fn;
 	quadfile* qf;
-	startree* skdt = NULL;
+	startree_t* skdt = NULL;
 	int i;
 	int Nbins = 100;
 	histogram* sumhist = NULL;

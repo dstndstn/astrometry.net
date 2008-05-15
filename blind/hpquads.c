@@ -78,7 +78,7 @@ extern int optind, opterr, optopt;
 
 static quadfile* quads;
 static codefile* codes;
-static startree* starkd;
+static startree_t* starkd;
 
 // bounds of quad scale (in radians^2)
 static double quad_scale_upper2;

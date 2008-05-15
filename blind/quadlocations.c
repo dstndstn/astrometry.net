@@ -59,7 +59,7 @@ int main(int argc, char** args) {
 	char* fn;
 	quadfile* qf;
 	catalog* cat = NULL;
-	startree* skdt = NULL;
+	startree_t* skdt = NULL;
 	uchar* img = NULL;
 	int i;
 	int maxval;

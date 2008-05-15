@@ -58,7 +58,7 @@ int main(int argc, char** args) {
 	char* fn;
 	quadfile* qf;
     rdlist_t* rdls;
-	startree* skdt = NULL;
+	startree_t* skdt = NULL;
     bool addradius = FALSE;
 	int i;
     int radcolumn = -1;

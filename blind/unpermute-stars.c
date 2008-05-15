@@ -64,8 +64,8 @@ int main(int argc, char **args) {
 	quadfile* qfout;
 	idfile* idin;
 	idfile* idout = NULL;
-	startree* treein;
-	startree* treeout;
+	startree_t* treein;
+	startree_t* treeout;
 	char* progname = args[0];
 	char* basein = NULL;
 	char* baseout = NULL;

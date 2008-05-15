@@ -87,7 +87,7 @@ void verify_field_free(verify_field_t* vf) {
     return;
 }
 
-void verify_hit(startree* skdt,
+void verify_hit(startree_t* skdt,
                 MatchObj* mo,
                 sip_t* sip,
                 verify_field_t* vf,

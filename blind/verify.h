@@ -34,7 +34,7 @@ struct verify_field_t {
 };
 typedef struct verify_field_t verify_field_t;
 
-void verify_hit(startree* skdt,
+void verify_hit(startree_t* skdt,
                 MatchObj* mo,
                 sip_t* sip, // if non-NULL, verify this SIP WCS.
                 verify_field_t* vf,

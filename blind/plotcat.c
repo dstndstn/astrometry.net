@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 	char* valstr;
 	int BLOCK = 100000;
 	catalog* cat;
-	startree* skdt;
+	startree_t* skdt;
 	an_catalog* ancat;
 	usnob_fits* usnob;
 	tycho2_fits* tycho;

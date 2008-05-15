@@ -692,7 +692,7 @@ void blind_cleanup(blind_t* bp) {
 	free(bp->ycolname);
 }
 
-static sip_t* tweak(blind_t* bp, MatchObj* mo, startree* starkd) {
+static sip_t* tweak(blind_t* bp, MatchObj* mo, startree_t* starkd) {
 	solver_t* sp = &(bp->solver);
 	tweak_t* twee = NULL;
 	double *imgx = NULL, *imgy = NULL;

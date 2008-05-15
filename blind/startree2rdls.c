@@ -52,7 +52,7 @@ int main(int argc, char** args) {
 	char* outfn = NULL;
 	char* fn;
     rdlist_t* rdls;
-	startree* skdt = NULL;
+	startree_t* skdt = NULL;
 	int i;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)

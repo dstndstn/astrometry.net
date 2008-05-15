@@ -28,7 +28,7 @@ struct index_s {
 	codetree* codekd;
 	idfile* id_file;
 	quadfile* quads;
-	startree* starkd;
+	startree_t* starkd;
 
 	// Jitter in the index, in arcseconds.
 	double index_jitter;
