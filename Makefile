@@ -125,7 +125,7 @@ upgrade-indices:
 RELEASE_VER := 0.2-pre
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
-RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data pyfits
+RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data pyfits etc
 
 release:
 	-rm -R $(RELEASE_DIR)
@@ -140,9 +140,10 @@ release:
 tag-release:
 	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
 
-SNAPSHOT_VER := $(shell date "+%Y-%m-%d")
-SNAPSHOT_DIR := astrometry.net-$(SNAPSHOT_VER)
 SNAPSHOT_SVN := svn+ssh://astrometry.net/svn/trunk/src/astrometry
+#SNAPSHOT_VER := $(shell date "+%Y-%m-%d")
+SNAPSHOT_VER := $(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}')
+SNAPSHOT_DIR := astrometry.net-$(SNAPSHOT_VER)
 SNAPSHOT_SUBDIRS := $(RELEASE_SUBDIRS)
 
 snapshot:
