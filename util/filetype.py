@@ -16,9 +16,9 @@ def filetype(fn):
     out = fileout.read().strip()
     #logverb('Result: "%s"' % typeinfo)
 
-    lst = [line.split(', ', 1) for line in out.split('\n- ')]
+    lst = [tuple(line.split(', ', 1)) for line in out.split('\n- ')]
     #logverb('Trimmed: "%s"' % typeinfo)
-    return list
+    return lst
 
 # Returns a list (usually with just one element) of filetypes:
 # eg
