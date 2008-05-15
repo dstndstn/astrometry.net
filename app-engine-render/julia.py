@@ -1,5 +1,5 @@
 import sys
-from logging import debug
+
 from time import clock
 
 from array import array
@@ -53,48 +53,38 @@ class MainPage(webapp.RequestHandler):
 		xstep = (xmax - xmin) / float(W)
 		ystep = (ymax - ymin) / float(H)
 
-		t = [0]*10
-		t[0] = clock()
-
 		cmap = []
 		for i in range(256):
 			cmap.append(heatmap(i))
 
+		y0 = [ymin + ystep * j for j in range(H)]
+		x0 = [xmin + ystep * i for i in range(W)]
+
+		t = [0]*10
+
+		t[0] = clock()
+		pixels = array('B')
+		for j in range(H):
+			for i in range(W):
+				x = x0[i]
+				y = y0[j]
+				for k in range(254):
+					xn = x*x - y*y + cx
+					yn = 2.0 * x * y + cy
+					x = xn
+					y = yn
+					if x*x + y*y > 2.0:
+						break
+				pixels.extend(cmap[k])
 		t[1] = clock()
 
-		xy = [(xmin + xstep * i, ymin + ystep * j, j*W+i) for j in range(H) for i in range(W)]
-
-		t[2] = clock()
-
-		pp = [0]*len(xy)
-
-		t[3] = clock()
-
-		for k in range(254):
-			ii = [i for (x,y,i) in xy if x*x+y*y >= 2]
-			for i in ii:
-				pp[i] = k
-			xy = [(x*x - y*y + cx, 2.0 * x * y + cy, i) for (x,y,i) in xy if x*x+y*y < 2]
-		t[4] = clock()
-
-		for (x,y,i) in xy:
-			pp[i] = 255
-
-		t[5] = clock()
-
-		pixels = array('B')
-		for k in pp:
-			pixels.extend(cmap[k])
-		t[6] = clock()
-
-		#print >> sys.stderr, 'min in pixels:', min(pixels), 'max in pixels:', max(pixels)
-
-		writer = png.Writer(width=W, height=H, compression=1)
-		writer.write_array(res.out, pixels)
-		t[7] = clock()
-
-		for i in range(7):
+		for i in range(9):
+			if t[i] == 0:
+				break
 			print >> sys.stderr, 't%i to %i: %g' % (i, i+1, t[i+1]-t[i])
+
+		writer = png.Writer(width=W, height=H)
+		writer.write_array(res.out, pixels)
 
 
 
