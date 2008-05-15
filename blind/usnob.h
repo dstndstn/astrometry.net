@@ -134,7 +134,7 @@ struct usnob_entry {
 	// it allows us to point back to the USNO-B source.
 	// top byte: [0,180): south-polar distance slice.
 	// bottom 24 bits: [0, 12,271,141): index within slice.
-	uint usnob_id;
+	uint32_t usnob_id;
 
     // this is a "staging" variable used by the FITS i/o routines.
     uint8_t flags;

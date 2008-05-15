@@ -46,7 +46,7 @@
 #define DEBUGSOLVER 1
 #define TRY_ALL_CODES test_try_all_codes
 void test_try_all_codes(pquad* pq,
-                        uint* fieldstars, int dimquad,
+                        int* fieldstars, int dimquad,
                         solver_t* solver, double tol2);
 #else
 #define TRY_ALL_CODES try_all_codes
@@ -57,20 +57,16 @@ static const int A = 0, B = 1, C = 2, D = 3;
 
 static void find_field_boundaries(solver_t* solver);
 
-static inline double getx(const double* d, uint ind)
-{
+static inline double getx(const double* d, int ind) {
 	return d[ind*2];
 }
-static inline double gety(const double* d, uint ind)
-{
+static inline double gety(const double* d, int ind) {
 	return d[ind*2 + 1];
 }
-static inline void setx(double* d, uint ind, double val)
-{
+static inline void setx(double* d, int ind, double val) {
 	d[ind*2] = val;
 }
-static inline void sety(double* d, uint ind, double val)
-{
+static inline void sety(double* d, int ind, double val) {
 	d[ind*2 + 1] = val;
 }
 
@@ -237,17 +233,17 @@ void solver_compute_quad_range(solver_t* sp, index_t* index,
 }
 
 static void try_all_codes(pquad* pq,
-                          uint* fieldstars, int dimquad,
+                          int* fieldstars, int dimquad,
                           solver_t* solver, double tol2);
 
-static void try_all_codes_2(uint* fieldstars, int dimquad,
+static void try_all_codes_2(int* fieldstars, int dimquad,
                             double* code, solver_t* solver,
                             bool current_parity, double tol2);
 
-static void try_permutations(uint* origstars, int dimquad, double* origcode,
+static void try_permutations(int* origstars, int dimquad, double* origcode,
 							 solver_t* solver, bool current_parity,
 							 double tol2,
-							 uint* stars,
+							 int* stars,
 							 double* code,
 							 int firststar,
 							 int star,
@@ -256,7 +252,7 @@ static void try_permutations(uint* origstars, int dimquad, double* origcode,
 							 kdtree_qres_t** presult);
 
 static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
-                            uint* fstars, int dimquads,
+                            int* fstars, int dimquads,
                             solver_t* solver, bool current_parity);
 
 static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_match);
@@ -381,12 +377,12 @@ static double get_tolerance(solver_t* solver) {
  fieldtop - the maximum field star number to build quads out of.
  dimquad, solver, tol2 - passed to try_all_codes.
  */
-static void add_stars(pquad* pq, uint* field, int fieldoffset,
-                      int n_to_add, int adding, uint fieldtop,
+static void add_stars(pquad* pq, int* field, int fieldoffset,
+                      int n_to_add, int adding, int fieldtop,
                       int dimquad,
                       solver_t* solver, double tol2) {
-    uint bottom;
-    uint* f = field + fieldoffset;
+    int bottom;
+    int* f = field + fieldoffset;
     // When we're adding the first star, we start from index zero.
     // When we're adding subsequent stars, we start from the previous value
     // plus one, to avoid adding permutations.
@@ -416,14 +412,14 @@ static void add_stars(pquad* pq, uint* field, int fieldoffset,
 
 // The real deal
 void solver_run(solver_t* solver) {
-	uint numxy, newpoint;
+	int numxy, newpoint;
 	int i;
 	double usertime, systime;
 	time_t next_timer_callback_time = time(NULL) + 1;
 	pquad* pquads;
-	uint num_indexes;
+	int num_indexes;
     double tol2;
-    uint field[DQMAX];
+    int field[DQMAX];
 
 	memset(field, 0, sizeof(field));
 
@@ -682,7 +678,7 @@ static inline void set_xy(double* dest, int destind, double* src, int srcind) {
 }
 
 static void try_all_codes(pquad* pq,
-                          uint* fieldstars, int dimquad,
+                          int* fieldstars, int dimquad,
                           solver_t* solver, double tol2) {
     int dimcode = (dimquad - 2) * 2;
     double code[dimcode];
@@ -730,7 +726,7 @@ static void try_all_codes(pquad* pq,
 	}
 }
 
-static void try_all_codes_2(uint* fieldstars, int dimquad,
+static void try_all_codes_2(int* fieldstars, int dimquad,
                             double* code, solver_t* solver,
                             bool current_parity, double tol2) {
 	int i;
@@ -744,7 +740,7 @@ static void try_all_codes_2(uint* fieldstars, int dimquad,
 		double flipcode[dimcode];
 		double* origcode;
 		double searchcode[dimcode];
-		uint stars[dimquad];
+		int stars[dimquad];
 		bool placed[dimquad];
 
 		for (i=0; i<dimquad; i++)
@@ -773,10 +769,10 @@ static void try_all_codes_2(uint* fieldstars, int dimquad,
 }
 
 
-static void try_permutations(uint* origstars, int dimquad, double* origcode,
+static void try_permutations(int* origstars, int dimquad, double* origcode,
 							 solver_t* solver, bool current_parity,
 							 double tol2,
-							 uint* stars,
+							 int* stars,
 							 double* code,
 							 int firststar,
 							 int star,
@@ -841,11 +837,11 @@ static void try_permutations(uint* origstars, int dimquad, double* origcode,
 
 // "field" contains the xy pixel coordinates of stars A,B,C,D.
 static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
-                            uint* fieldstars, int dimquads,
+                            int* fieldstars, int dimquads,
                             solver_t* solver, bool current_parity) {
-	uint jj, thisquadno;
+	int jj, thisquadno;
 	MatchObj mo;
-	uint star[dimquads];
+	unsigned int star[dimquads];
 
 	for (jj = 0; jj < krez->nres; jj++) {
 		double starxyz[dimquads*3];
@@ -856,7 +852,7 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 
 		solver->nummatches++;
 
-		thisquadno = (uint)krez->inds[jj];
+		thisquadno = (int)krez->inds[jj];
 
 		quadfile_get_stars(solver->index->quads, thisquadno, star);
         for (i=0; i<dimquads; i++)

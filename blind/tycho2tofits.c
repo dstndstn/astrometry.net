@@ -51,7 +51,7 @@ int main(int argc, char** args) {
 	char* outfn = NULL;
     int c;
 	int startoptind;
-	uint nrecords, nobs;
+	int nrecords, nobs;
 	int Nside = 8;
 	tycho2_fits** tycs;
 	int i, HP;
@@ -109,7 +109,7 @@ int main(int argc, char** args) {
 		size_t map_size;
 		int i;
 		bool supplement;
-		uint recsize;
+		int recsize;
 
 		infn = args[optind];
 		fid = fopen(infn, "rb");

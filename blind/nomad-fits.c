@@ -112,8 +112,8 @@ nomad_entry* nomad_fits_read_entry(nomad_fits* cat) {
     return (nomad_entry*)fitstable_next_struct(cat);
 }
 
-int nomad_fits_read_entries(nomad_fits* cat, uint offset,
-							uint count, nomad_entry* entries) {
+int nomad_fits_read_entries(nomad_fits* cat, int offset,
+							int count, nomad_entry* entries) {
     return fitstable_read_structs(cat, entries, sizeof(nomad_entry), offset, count);
 }
 

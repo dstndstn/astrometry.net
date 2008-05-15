@@ -41,8 +41,8 @@ int usnob_fits_fix_headers(usnob_fits* usnob);
 
 usnob_entry* usnob_fits_read_entry(usnob_fits* u);
 
-int usnob_fits_read_entries(usnob_fits* usnob, uint offset,
-							uint count, usnob_entry* entries);
+int usnob_fits_read_entries(usnob_fits* usnob, int offset,
+							int count, usnob_entry* entries);
 
 int usnob_fits_count_entries(usnob_fits* usnob);
 

@@ -125,7 +125,7 @@ int main(int argc, char** args) {
         assert(dimquads >= 2);
 
 		for (i=0; i<qf->numquads; i++) {
-			uint stars[dimquads];
+			unsigned int stars[dimquads];
 			int grass;
 			double xyzA[3];
 			double xyzB[3];

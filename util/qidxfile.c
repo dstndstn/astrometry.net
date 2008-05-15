@@ -106,7 +106,7 @@ int qidxfile_close(qidxfile* qf) {
     return rtn;
 }
 
-qidxfile* qidxfile_open_for_writing(const char* fn, uint nstars, uint nquads) {
+qidxfile* qidxfile_open_for_writing(const char* fn, int nstars, int nquads) {
 	qidxfile* qf;
 	qfits_header* hdr;
 
@@ -155,7 +155,7 @@ int qidxfile_write_header(qidxfile* qf) {
 	return 0;
 }
 
-int qidxfile_write_star(qidxfile* qf, uint* quads, uint nquads) {
+int qidxfile_write_star(qidxfile* qf, int* quads, int nquads) {
 	fitsbin_t* fb = qf->fb;
 	FILE* fid;
 	uint32_t nq;
@@ -195,8 +195,8 @@ int qidxfile_write_star(qidxfile* qf, uint* quads, uint nquads) {
 	return 0;
 }
 
-int qidxfile_get_quads(const qidxfile* qf, uint starid, uint32_t** quads, uint* nquads) {
-	uint heapindex = qf->index[2*starid];
+int qidxfile_get_quads(const qidxfile* qf, int starid, uint32_t** quads, int* nquads) {
+	int heapindex = qf->index[2*starid];
 	*nquads = qf->index[2*starid + 1];
 	*quads = qf->heap + heapindex;
 	return 0;

@@ -34,8 +34,8 @@ int compare_ints_ascending(const void* v1, const void* v2) {
 }
 
 int compare_quad(const void* v1, const void* v2) {
-    const uint* u1 = v1;
-    const uint* u2 = v2;
+    const int* u1 = v1;
+    const int* u2 = v2;
     int i;
     for (i=0; i<4; i++) {
         if (u1[i] < u2[i]) return -1;
@@ -49,9 +49,9 @@ int compare_quad(const void* v1, const void* v2) {
 bl* quadlist;
 
 void test_try_all_codes(pquad* pq,
-                        uint* fieldstars, int dimquad,
+                        unsigned int* fieldstars, int dimquad,
                         solver_t* solver, double tol2) {
-    uint sorted[dimquad];
+    int sorted[dimquad];
     int i;
     fflush(NULL);
     printf("test_try_all_codes: [");
@@ -61,9 +61,9 @@ void test_try_all_codes(pquad* pq,
     printf("]");
 
     // sort AB and CD...
-    memcpy(sorted, fieldstars, dimquad * sizeof(uint));
-    qsort(sorted, 2, sizeof(uint), compare_ints_ascending);
-    qsort(sorted+2, dimquad-2, sizeof(uint), compare_ints_ascending);
+    memcpy(sorted, fieldstars, dimquad * sizeof(int));
+    qsort(sorted, 2, sizeof(int), compare_ints_ascending);
+    qsort(sorted+2, dimquad-2, sizeof(int), compare_ints_ascending);
 
     printf(" -> [");
     for (i=0; i<dimquad; i++) {
@@ -81,7 +81,7 @@ void test1() {
     int i=0;
     solver_t* solver;
     index_t index;
-    uint wanted[][4] = { { 0,1,3,4 },
+    int wanted[][4] = { { 0,1,3,4 },
                          { 0,2,3,4 },
                          { 1,2,3,4 },
                          { 2,5,0,1 },

@@ -130,7 +130,7 @@ int main(int argc, char** args) {
 
 		printf("Reading quads...\n");
 		for (i=0; i<qf->numquads; i++) {
-			uint stars[dimquads];
+			unsigned int stars[dimquads];
             double axyz[3], bxyz[3];
             double midab[3];
             double radec[2];

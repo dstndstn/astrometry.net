@@ -121,8 +121,8 @@ int usnob_get_index(usnob_entry* entry) {
 }
 
 int usnob_parse_entry(unsigned char* line, usnob_entry* usnob) {
-    uint obs;
-	uint A, S, P, i, j, M, R, Q, y, x, k, e, v, u;
+    int obs;
+	int A, S, P, i, j, M, R, Q, y, x, k, e, v, u;
 	uint32_t ival;
     uint32_t* uline;
 
@@ -235,7 +235,7 @@ int usnob_parse_entry(unsigned char* line, usnob_entry* usnob) {
 	usnob->ys4 = (k == 1) ? 1 : 0;
 
 	for (obs=0; obs<5; obs++) {
-		uint G, S, F, m, C, r, R;
+		int G, S, F, m, C, r, R;
 
 		// bytes 20-23, 24-27, ...: uint, packed in base-10:
 		//     GGSFFFmmmm

@@ -27,7 +27,7 @@ static void grab_substring(char* dst, const char* src, int n) {
 	strncpy(dst, src, n);
 }
 
-static int parse_uint(const char* src, int n, uint* data) {
+static int parse_uint(const char* src, int n, unsigned int* data) {
 	char buf[256];
 	grab_substring(buf, src, n);
 	if (sscanf(buf, " %u", data) != 1) {
@@ -65,7 +65,7 @@ static int parse_optional_double(const char* src, int n, double* data, double de
 	return 0;
 }
 
-static int parse_optional_uint(const char* src, int n, uint* data, uint defaultval) {
+static int parse_optional_uint(const char* src, int n, unsigned int* data, unsigned int defaultval) {
 	char buf[256];
 	int i;
 	grab_substring(buf, src, n);
@@ -105,11 +105,11 @@ int tycho2_guess_is_supplement(const char* line) {
 
 int tycho2_parse_entry(const char* line, tycho2_entry* entry) {
 	int len;
-	uint t1, t2, t3;
+	unsigned int t1, t2, t3;
 	char pxflag, tycho1, posflag;
 	double d1, d2, d3, d4, d5, d6, d7, d8, d9, d10;
 	double d11, d12, d13, d14, d15, d16;
-	uint u1, u2, u3;
+	unsigned int u1, u2, u3;
     int i;
 
 	memset(entry, 0, sizeof(tycho2_entry));
@@ -266,10 +266,10 @@ int tycho2_parse_entry(const char* line, tycho2_entry* entry) {
 
 int tycho2_supplement_parse_entry(const char* line, tycho2_entry* entry) {
 	int len;
-	uint t1, t2, t3;
+	unsigned int t1, t2, t3;
 	char htflag, tycho1, bvhflag;
 	double d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12;
-	uint u1, u2;
+	unsigned int u1, u2;
 
 	memset(entry, 0, sizeof(tycho2_entry));
 

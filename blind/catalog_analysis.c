@@ -37,7 +37,7 @@ typedef struct {
 
 /* Dead simple linked list */
 struct ll_node {
-	uint data;
+	int data;
 	struct ll_node *next;
 };
 
@@ -45,7 +45,7 @@ struct ll_node {
  * this file won't need it anymore anyway if the healpix code is rewritten
  * to abandon the current behaviour of using hierarchical numbering for 
  * powers of 4. */
-static Inline bool ispowerof4(uint x) {
+static Inline bool ispowerof4(unsigned int x) {
 	if (x >= 0x40000)
 		return (					x == 0x40000   ||
 				 x == 0x100000   || x == 0x400000  ||

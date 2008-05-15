@@ -41,8 +41,8 @@ int nomad_fits_count_entries(nomad_fits* nomad);
 
 nomad_entry* nomad_fits_read_entry(nomad_fits* t);
 
-int nomad_fits_read_entries(nomad_fits* nomad, uint offset,
-							 uint count, nomad_entry* entries);
+int nomad_fits_read_entries(nomad_fits* nomad, int offset,
+                            int count, nomad_entry* entries);
 
 int nomad_fits_close(nomad_fits* nomad);
 

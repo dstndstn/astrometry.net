@@ -89,7 +89,7 @@ static double quad_dist2_upper;
 static double quad_dist2_lower;
 
 struct quad {
-	uint star[DQMAX];
+	unsigned int star[DQMAX];
 };
 typedef struct quad quad;
 
@@ -226,7 +226,7 @@ static void write_quad(codefile* codes, quadfile* quads,
 	sum /= (dimquads-2);
 	if (sum > 0.5) {
 		// swap the labels of A,B.
-		uint tmp = q->star[0];
+		int tmp = q->star[0];
 		q->star[0] = q->star[1];
 		q->star[1] = tmp;
 
@@ -242,7 +242,7 @@ static void write_quad(codefile* codes, quadfile* quads,
 		double smallest;
 		double x1;
 		double dtmp;
-		uint tmp;
+		int tmp;
 
 		x1 = code[2*i];
 		jsmallest = -1;
@@ -279,7 +279,7 @@ struct potential_quad {
 	double Ax, Ay;
 	double costheta, sintheta;
 	int iA, iB;
-	uint staridA, staridB;
+	int staridA, staridB;
 	int* inbox;
 	int ninbox;
 	bool scale_ok;
@@ -429,7 +429,7 @@ static int create_quad(double* stars, int* starinds, int Nstars,
 					   double* origin, double* vx, double* vy,
 					   double* boxx, double* boxy,
 					   bool count_uses, int dimquads) {
-	uint iA=0, iB, iC, iD, newpoint;
+	int iA=0, iB, iC, iD, newpoint;
 	int rtn = 0;
 	int ninbox;
 	int i, j;
@@ -721,7 +721,7 @@ int main(int argc, char** argv) {
 	char* failedrdlsfn = NULL;
 	rdlist_t* failedrdls = NULL;
 	int xpass, ypass;
-	uint id = 0;
+	int id = 0;
 	int xpasses = 1;
 	int ypasses = 1;
 	bool circle = FALSE;
@@ -953,7 +953,7 @@ int main(int argc, char** argv) {
 	if (hp != -1) {
 		bool* try = calloc(HEALPIXES, sizeof(bool));
 		for (i=0; i<HEALPIXES; i++) {
-			uint bighp, x, y;
+			unsigned int bighp, x, y;
 			healpix_decompose_xy(i, &bighp, &x, &y, Nside);
 			// If this small healpix isn't in the big healpix...
 			if (bighp != hp)
@@ -962,8 +962,8 @@ int main(int argc, char** argv) {
 			if (boundary) {
 				// If this small healpix is on the boundary...
 				if ((x == 0) || (y == 0) || (x == Nside-1) || (y == Nside-1)) {
-					uint neigh[8];
-					uint nneigh;
+					unsigned int neigh[8];
+					unsigned int nneigh;
 					int k;
 					// ... include its neighbours!
 					nneigh = healpix_get_neighbours(i, neigh, Nside);

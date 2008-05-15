@@ -131,8 +131,8 @@ usnob_entry* usnob_fits_read_entry(usnob_fits* cat) {
     return (usnob_entry*)fitstable_next_struct(cat);
 }
 
-int usnob_fits_read_entries(usnob_fits* cat, uint offset,
-							uint count, usnob_entry* entries) {
+int usnob_fits_read_entries(usnob_fits* cat, int offset,
+							int count, usnob_entry* entries) {
     return fitstable_read_structs(cat, entries, sizeof(usnob_entry), offset, count);
 }
 

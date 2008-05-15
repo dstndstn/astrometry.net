@@ -142,9 +142,9 @@ int main(int argc, char *argv[]) {
 	for (i=0; i<res->nres; i++) {
 		double x, y;
 		double* starpos;
-		uint nquads;
+		int nquads;
 		uint32_t *quads;
-		uint star = res->inds[i];
+		int star = res->inds[i];
 		if (qidxfile_get_quads(qidx, star, &quads, &nquads)) {
 			fprintf(stderr, "Failed to get quads for star %u.\n", star);
 			exit(-1);
@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
 	printf("quadlinesx=zeros(6,%i);\n", il_size(goodquads));
 	printf("quadlinesy=zeros(6,%i);\n", il_size(goodquads));
 	for (i=0; i<il_size(goodquads); i++) {
-		uint sa, sb, sc, sd;
+		int sa, sb, sc, sd;
 		int quad = il_get(goodquads, i);
 		int ia, ib, ic, id;
 		quadfile_get_starids(qf, quad, &sa, &sb, &sc, &sd);

@@ -116,7 +116,7 @@ int matchfile_pushback_match(matchfile* m) {
 }
 
 int matchfile_read_matches(matchfile* mf, MatchObj* entries,
-                           uint offset, uint count) {
+                           int offset, int count) {
     return fitstable_read_structs(mf, entries, sizeof(MatchObj), offset, count);
 }
 
@@ -188,7 +188,7 @@ void matchobj_compute_derived(MatchObj* mo) {
 	mo->radius = sqrt(distsq(mo->center, mo->sMin, 3));
 }
 
-pl* matchfile_get_matches_for_field(matchfile* mf, uint field) {
+pl* matchfile_get_matches_for_field(matchfile* mf, int field) {
 	pl* list = pl_new(256);
 	for (;;) {
 		MatchObj* mo = matchfile_read_match(mf);

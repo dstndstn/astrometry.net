@@ -1494,8 +1494,8 @@ static int write_solutions(blind_t* bp) {
             MatchObj* mo;
             int j;
             qfits_table* table;
-            uint datasize;
-            uint ncols, nrows, tablesize;
+            int datasize;
+            int ncols, nrows, tablesize;
             int NC;
             int col;
             int corrs;

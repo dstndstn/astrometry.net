@@ -166,7 +166,7 @@ int quadfile_write_header(quadfile* qf) {
 	return 0;
 }
 
-int quadfile_write_quad(quadfile* qf, uint* stars) {
+int quadfile_write_quad(quadfile* qf, unsigned int* stars) {
 	uint32_t* data;
 	uint32_t ustars[qf->dimquads];
 	int i;
@@ -219,7 +219,7 @@ double quadfile_get_index_scale_lower_arcsec(const quadfile* qf) {
 	return rad2arcsec(qf->index_scale_lower);
 }
 
-int quadfile_get_stars(const quadfile* qf, uint quadid, uint* stars) {
+int quadfile_get_stars(const quadfile* qf, unsigned int quadid, unsigned int* stars) {
     int i;
 	if (quadid >= qf->numquads) {
 		fprintf(stderr, "Requested quadid %i, but number of quads is %i.\n",

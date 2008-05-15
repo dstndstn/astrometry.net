@@ -164,7 +164,7 @@ int main(int argc, char **args) {
 	}
 
 	for (i=0; i<codetree_N(treein); i++) {
-		uint stars[quadin->dimquads];
+		unsigned int stars[quadin->dimquads];
 		int ind = codetree_get_permuted(treein, i);
 		if (quadfile_get_stars(quadin, ind, stars)) {
 			fprintf(stderr, "Failed to read quad entry.\n");

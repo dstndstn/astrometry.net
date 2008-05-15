@@ -188,8 +188,8 @@ int twomass_fits_fix_headers(twomass_fits* cat) {
     return fitstable_fix_header(cat);
 }
 
-int twomass_fits_read_entries(twomass_fits* cat, uint offset,
-                              uint count, twomass_entry* entries) {
+int twomass_fits_read_entries(twomass_fits* cat, int offset,
+                              int count, twomass_entry* entries) {
     return fitstable_read_structs(cat, entries, sizeof(twomass_entry),
                                   offset, count);
 }

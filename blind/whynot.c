@@ -179,7 +179,7 @@ int main(int argc, char** args) {
 	for (i=0; i<pl_size(indexes); i++) {
 		kdtree_qres_t* res;
 		index_t* indx;
-		uint nquads;
+		int nquads;
 		uint32_t* quads;
 		int j;
 		qidxfile* qidx;
@@ -268,7 +268,7 @@ int main(int argc, char** args) {
 		starsinquadslist = il_new(16);
 		for (j=0; j<il_size(uniqquadlist); j++) {
             int k;
-			uint stars[dimquads];
+			unsigned int stars[dimquads];
 			int quad = il_get(uniqquadlist, j);
 			quadfile_get_stars(indx->quads, quad, stars);
             for (k=0; k<dimquads; k++)
@@ -280,7 +280,7 @@ int main(int argc, char** args) {
 		starsinquadsfull = il_new(16);
 		for (j=0; j<il_size(fullquadlist); j++) {
             int k;
-			uint stars[dimquads];
+			unsigned int stars[dimquads];
 			int quad = il_get(fullquadlist, j);
 			quadfile_get_stars(indx->quads, quad, stars);
             for (k=0; k<dimquads; k++)
@@ -345,7 +345,7 @@ int main(int argc, char** args) {
 			//fprintf(stderr, "star %i is involved in %i quads.\n", starnum, nquads);
 			for (k=0; k<nquads; k++) {
 				/* Don't need this - since we'll only get "full" quads if all four are in the "corr" set.
-				  uint sA, sB, sC, sD;
+                 int sA, sB, sC, sD;
 				  int quad = quads[k];
 				  quadfile_get_starids(indx->quads, quad, &sA, &sB, &sC, &sD);
 				  if (!(il_contains(corrstars, sA) &&
@@ -375,7 +375,7 @@ int main(int argc, char** args) {
 		fprintf(stderr, "Found %i quads built from stars with correspondencs, fully contained in the field.\n", il_size(corrfullquads));
 
 		for (j=0; j<il_size(corrfullquads); j++) {
-			uint stars[dimquads];
+			unsigned int stars[dimquads];
 			int k;
 			int ind;
 			double px,py;

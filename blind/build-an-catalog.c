@@ -86,8 +86,8 @@ static void init_catalog(an_catalog** cats, char* outfn, int hp, int Nside, int 
 	}
 }
 
-static uint tycho2_id_to_int(int tyc1, int tyc2, int tyc3) {
-	uint id = 0;
+static int32_t tycho2_id_to_int(int tyc1, int tyc2, int tyc3) {
+	int32_t id = 0;
 	// tyc1 and tyc2 each fit in 14 bits.
 	assert((tyc1 & ~0x3fff) == 0);
 	assert((tyc2 & ~0x3fff) == 0);

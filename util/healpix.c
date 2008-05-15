@@ -29,8 +29,8 @@ Const static Inline double mysquare(double d) {
 	return d*d;
 }
 
-Const int healpix_xy_to_nested(uint hp, uint Nside) {
-	uint bighp,x,y;
+Const int healpix_xy_to_nested(unsigned int hp, unsigned int Nside) {
+	unsigned int bighp,x,y;
 	int index;
 	int i;
 
@@ -46,7 +46,7 @@ Const int healpix_xy_to_nested(uint hp, uint Nside) {
 	//    y = ... b5 b3 b1
 	// We go through the bits of x,y, building up "index":
 	index = 0;
-	for (i=0; i<(8*sizeof(uint)/2); i++) {
+	for (i=0; i<(8*sizeof(unsigned int)/2); i++) {
 		index |= (((y & 1) << 1) | (x & 1)) << (i*2);
 		y >>= 1;
 		x >>= 1;
@@ -56,8 +56,8 @@ Const int healpix_xy_to_nested(uint hp, uint Nside) {
 	return index + bighp * Nside * Nside;
 }
 
-Const int healpix_nested_to_xy(uint hp, uint Nside) {
-	uint bighp, x, y;
+Const int healpix_nested_to_xy(unsigned int hp, unsigned int Nside) {
+	unsigned int bighp, x, y;
 	int index;
 	int i;
 	if (!is_power_of_two(Nside)) {
@@ -67,7 +67,7 @@ Const int healpix_nested_to_xy(uint hp, uint Nside) {
 	bighp = hp / (Nside*Nside);
 	index = hp % (Nside*Nside);
 	x = y = 0;
-	for (i=0; i<(8*sizeof(uint)/2); i++) {
+	for (i=0; i<(8*sizeof(unsigned int)/2); i++) {
 		x |= (index & 0x1) << i;
 		index >>= 1;
 		y |= (index & 0x1) << i;
@@ -77,7 +77,7 @@ Const int healpix_nested_to_xy(uint hp, uint Nside) {
 	return healpix_compose_xy(bighp, x, y, Nside);
 }
 
-Const int healpix_compose_ring(uint ring, uint longind, uint Nside) {
+Const int healpix_compose_ring(unsigned int ring, unsigned int longind, unsigned int Nside) {
 	if (ring <= Nside)
 		// north polar
 		return ring * (ring-1) * 2 + longind;
@@ -91,7 +91,7 @@ Const int healpix_compose_ring(uint ring, uint longind, uint Nside) {
 	}
 }
 
-void healpix_decompose_ring(uint hp, uint Nside, uint* p_ring, uint* p_longind) {
+void healpix_decompose_ring(unsigned int hp, unsigned int Nside, unsigned int* p_ring, unsigned int* p_longind) {
 	// FIXME: this could be written in closed form...
 	int longind;
 	int ring;
@@ -118,8 +118,8 @@ void healpix_decompose_ring(uint hp, uint Nside, uint* p_ring, uint* p_longind) 
 		offset += (Nside*4 - ring)*4;
 	}
 	fprintf(stderr, "healpix_decompose_ring: shouldn't get here!\n");
-	if (p_ring) *p_ring = (uint)-1;
-	if (p_longind) *p_longind = (uint)-1;
+	if (p_ring) *p_ring = (unsigned int)-1;
+	if (p_longind) *p_longind = (unsigned int)-1;
 	return;
  gotit:
 	if (p_ring)
@@ -128,10 +128,10 @@ void healpix_decompose_ring(uint hp, uint Nside, uint* p_ring, uint* p_longind) 
 		*p_longind = longind;
 }
 
-Const int healpix_ring_to_xy(uint ring, uint Nside) {
+Const int healpix_ring_to_xy(unsigned int ring, unsigned int Nside) {
 	int bighp, x, y;
 	int ringind, longind;
-	healpix_decompose_ring(ring, Nside, (uint*)&ringind, (uint*)&longind);
+	healpix_decompose_ring(ring, Nside, (unsigned int*)&ringind, (unsigned int*)&longind);
 	if (ringind <= Nside) {
 		int ind;
 		int v;
@@ -227,8 +227,8 @@ Const int healpix_ring_to_xy(uint ring, uint Nside) {
 	}
 }
 
-Const int healpix_xy_to_ring(uint hp, uint Nside) {
-	uint bighp,x,y;
+Const int healpix_xy_to_ring(unsigned int hp, unsigned int Nside) {
+	unsigned int bighp,x,y;
 	int frow;
 	int F1;
 	int v;
@@ -296,13 +296,13 @@ Const int healpix_xy_to_ring(uint hp, uint Nside) {
 	return index;
 }
 
-Const double healpix_side_length_arcmin(uint Nside) {
+Const double healpix_side_length_arcmin(unsigned int Nside) {
 	return sqrt((4.0 * M_PI * mysquare(180.0 * 60.0 / M_PI)) /
 				(double)(12 * Nside * Nside));
 }
 
-static Inline void swap(uint* i1, uint* i2) {
-	uint tmp;
+static Inline void swap(unsigned int* i1, unsigned int* i2) {
+	unsigned int tmp;
 	tmp = *i1;
 	*i1 = *i2;
 	*i2 = tmp;
@@ -339,18 +339,18 @@ static Inline bool issouthpolar(int healpix)
 	return (healpix >= 8);
 }
 
-static uint compose_xy(uint x, uint y, uint Nside) {
+static unsigned int compose_xy(unsigned int x, unsigned int y, unsigned int Nside) {
 	return (x * Nside) + y;
 }
 
-uint healpix_compose_xy(uint bighp, uint x, uint y, uint Nside) {
+unsigned int healpix_compose_xy(unsigned int bighp, unsigned int x, unsigned int y, unsigned int Nside) {
 	return (bighp * Nside * Nside) + compose_xy(x, y, Nside);
 }
 
-void healpix_decompose_xy(uint finehp, uint* pbighp, uint* px, uint* py, uint Nside) {
-	uint hp;
+void healpix_decompose_xy(unsigned int finehp, unsigned int* pbighp, unsigned int* px, unsigned int* py, unsigned int Nside) {
+	unsigned int hp;
 	if (pbighp) {
-		uint bighp   = finehp / (Nside * Nside);
+		unsigned int bighp   = finehp / (Nside * Nside);
 		*pbighp = bighp;
 	}
 	hp = finehp % (Nside * Nside);
@@ -394,14 +394,14 @@ static int healpix_get_neighbour(int hp, int dx, int dy)
 	return -1;
 }
 
-uint healpix_get_neighbours(uint pix, uint* neighbour, uint Nside)
+unsigned int healpix_get_neighbours(unsigned int pix, unsigned int* neighbour, unsigned int Nside)
 {
-	uint base;
-	uint x, y;
+	unsigned int base;
+	unsigned int x, y;
 	int nn = 0;
 	int nbase;
 	int Ns2 = Nside * Nside;
-	uint nx, ny;
+	unsigned int nx, ny;
 
 	healpix_decompose_xy(pix, &base, &x, &y, Nside);
 
@@ -608,7 +608,7 @@ uint healpix_get_neighbours(uint pix, uint* neighbour, uint Nside)
 	return nn;
 }
 
-uint xyztohealpix(double x, double y, double z, uint Nside) {
+unsigned int xyztohealpix(double x, double y, double z, unsigned int Nside) {
 	double phi;
 	double phioverpi;
 	double twothirds = 2.0 / 3.0;
@@ -627,8 +627,8 @@ uint xyztohealpix(double x, double y, double z, uint Nside) {
 		double zfactor;
 		bool north;
 		double phit;
-		uint x, y;
-		uint pnprime;
+		unsigned int x, y;
+		unsigned int pnprime;
 		int column;
 		int basehp;
 		int hp;
@@ -696,7 +696,7 @@ uint xyztohealpix(double x, double y, double z, uint Nside) {
 		double u1, u2;
 		double zunits, phiunits;
 		int x, y;
-		uint pnprime;
+		unsigned int pnprime;
 		int hp;
 
 		phim = fmod(phi, pi / 2.0);
@@ -745,7 +745,7 @@ uint xyztohealpix(double x, double y, double z, uint Nside) {
 	return -1;
 }
 
-uint radectohealpix(double ra, double dec, uint Nside) {
+unsigned int radectohealpix(double ra, double dec, unsigned int Nside) {
 	double x, y, z;
 	x = radec2x(ra, dec);
 	y = radec2y(ra, dec);
@@ -753,22 +753,22 @@ uint radectohealpix(double ra, double dec, uint Nside) {
 	return xyztohealpix(x, y, z, Nside);
 }
 
-Const uint radecdegtohealpix(double ra, double dec, uint Nside) {
+Const unsigned int radecdegtohealpix(double ra, double dec, unsigned int Nside) {
 	return radectohealpix(deg2rad(ra), deg2rad(dec), Nside);
 }
 
-uint xyzarrtohealpix(double* xyz, uint Nside) {
+unsigned int xyzarrtohealpix(double* xyz, unsigned int Nside) {
 	return xyztohealpix(xyz[0], xyz[1], xyz[2], Nside);
 }
 
-void healpix_to_xyz(uint hp, uint Nside,
+void healpix_to_xyz(unsigned int hp, unsigned int Nside,
 					double dx, double dy, 
 					double* rx, double *ry, double *rz)
 {
-	uint chp;
-	uint equatorial = 1;
+	unsigned int chp;
+	unsigned int equatorial = 1;
 	double zfactor = 1.0;
-	uint xp, yp;
+	unsigned int xp, yp;
 	double x, y, z;
 	double pi = M_PI, phi;
 	double rad;
@@ -883,13 +883,13 @@ void healpix_to_xyz(uint hp, uint Nside,
 	*rz = z;
 }
 
-void healpix_to_xyzarr(uint hp, uint Nside,
+void healpix_to_xyzarr(unsigned int hp, unsigned int Nside,
 					   double dx, double dy,
 					   double* xyz) {
 	healpix_to_xyz(hp, Nside, dx, dy, xyz, xyz+1, xyz+2);
 }
 
-void healpix_to_radec(uint hp, uint Nside,
+void healpix_to_radec(unsigned int hp, unsigned int Nside,
 					  double dx, double dy,
 					  double* ra, double* dec) {
 	double xyz[3];
@@ -897,7 +897,7 @@ void healpix_to_radec(uint hp, uint Nside,
 	xyzarr2radec(xyz, ra, dec);
 }
 
-void healpix_to_radecdeg(uint hp, uint Nside,
+void healpix_to_radecdeg(unsigned int hp, unsigned int Nside,
                          double dx, double dy,
                          double* ra, double* dec) {
 	double xyz[3];
@@ -905,7 +905,7 @@ void healpix_to_radecdeg(uint hp, uint Nside,
 	xyzarr2radecdeg(xyz, ra, dec);
 }
 
-void healpix_to_radecarr(uint hp, uint Nside,
+void healpix_to_radecarr(unsigned int hp, unsigned int Nside,
 						 double dx, double dy,
 						 double* radec) {
 	double xyz[3];
@@ -913,7 +913,7 @@ void healpix_to_radecarr(uint hp, uint Nside,
 	xyzarr2radec(xyz, radec, radec+1);
 }
 
-void healpix_to_radecdegarr(uint hp, uint Nside,
+void healpix_to_radecdegarr(unsigned int hp, unsigned int Nside,
                             double dx, double dy,
                             double* radec) {
 	double xyz[3];

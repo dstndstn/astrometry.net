@@ -56,9 +56,9 @@ int main(int argc, char *argv[]) {
 	il** quadlist;
 	quadfile* quads;
 	qidxfile* qidx;
-	uint q;
+	int q;
 	int i;
-	uint numused;
+	int numused;
 	qfits_header* quadhdr;
 	qfits_header* qidxhdr;
 	int dimquads;
@@ -108,13 +108,13 @@ int main(int argc, char *argv[]) {
 	dimquads = quadfile_dimquads(quads);
 
 	for (q=0; q<quads->numquads; q++) {
-		uint inds[dimquads];
+		unsigned int inds[dimquads];
 		quadfile_get_stars(quads, q, inds);
 
 		// append this quad index to the lists of each of its stars.
 		for (i=0; i<dimquads; i++) {
 			il* list;
-			uint starind = inds[i];
+			int starind = inds[i];
 			list = quadlist[starind];
 			// create the list if necessary
 			if (!list) {
@@ -163,9 +163,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	for (i=0; i<quads->numstars; i++) {
-		uint thisnumq;
-		uint thisstar;
-		uint* stars; // bad variable name - list of quads this star is in.
+		int thisnumq;
+		int thisstar;
+		int* stars; // bad variable name - list of quads this star is in.
 		il* list = quadlist[i];
 		if (list) {
 			thisnumq = (uint)il_size(list);

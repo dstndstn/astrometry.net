@@ -180,7 +180,7 @@ int idfile_write_header(idfile* id) {
 	return 0;
 }
 
-uint64_t idfile_get_anid(idfile* id, uint starid) {
+uint64_t idfile_get_anid(idfile* id, unsigned int starid) {
 	if (starid >= id->numstars) {
 		fflush(stdout);
 		fprintf(stderr, "Requested quadid %i, but number of quads is %i. SKY IS FALLING\n",

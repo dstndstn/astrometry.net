@@ -859,7 +859,7 @@ static void fitstable_create_table(fitstable_t* tab) {
     }
 }
 
-static int refill_buffer(void* userdata, void* buffer, uint offset, uint n) {
+static int refill_buffer(void* userdata, void* buffer, unsigned int offset, unsigned int n) {
     fitstable_t* tab = userdata;
     if (fitstable_read_structs(tab, buffer, tab->br->elementsize, offset, n)) {
         ERROR("Error refilling FITS table read buffer");

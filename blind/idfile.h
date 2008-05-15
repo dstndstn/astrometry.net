@@ -43,15 +43,15 @@ idfile* idfile_open_for_writing(char* fn);
 
 qfits_header* idfile_get_header(idfile* id);
 
-int idfile_close(idfile* qf);
+int idfile_close(idfile* id);
 
-uint64_t idfile_get_anid(idfile* qf, unsigned int starid);
+uint64_t idfile_get_anid(idfile* id, unsigned int starid);
 
-int idfile_write_anid(idfile* qf, uint64_t anid /* astrometry.net id */ );
+int idfile_write_anid(idfile* id, uint64_t anid /* astrometry.net id */ );
 
-int idfile_fix_header(idfile* qf);
+int idfile_fix_header(idfile* id);
 
-int idfile_write_header(idfile* qf);
+int idfile_write_header(idfile* id);
 
 
 #endif

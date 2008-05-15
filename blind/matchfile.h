@@ -30,7 +30,7 @@
 
 typedef fitstable_t matchfile;
 
-pl* matchfile_get_matches_for_field(matchfile* m, uint field);
+pl* matchfile_get_matches_for_field(matchfile* m, int field);
 
 matchfile* matchfile_open_for_writing(char* fn);
 
@@ -42,7 +42,7 @@ int matchfile_write_match(matchfile* m, MatchObj* mo);
 
 matchfile* matchfile_open(char* fn);
 
-int matchfile_read_matches(matchfile* m, MatchObj* mo, uint offset, uint n);
+int matchfile_read_matches(matchfile* m, MatchObj* mo, int offset, int n);
 
 MatchObj* matchfile_read_match(matchfile* m);
 

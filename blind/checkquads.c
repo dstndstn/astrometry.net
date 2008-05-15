@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 	char *quadfname = NULL;
 	quadfile* quad;
 	qidxfile* qidx;
-	uint q, s;
+	int q, s;
 	int dimquads;
 	
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
@@ -91,11 +91,11 @@ int main(int argc, char *argv[]) {
 	printf("Checking stars...\n");
 	for (s=0; s<qidx->numstars; s++) {
 		uint32_t* quads;
-		uint nquads;
+		int nquads;
 		int j;
 		qidxfile_get_quads(qidx, s, &quads, &nquads);
 		for (j=0; j<nquads; j++) {
-			uint star[dimquads];
+			int star[dimquads];
 			int k, n;
 			quadfile_get_stars(quad, quads[j], star);
 			n = 0;
@@ -117,13 +117,13 @@ int main(int argc, char *argv[]) {
 
 	printf("Checking quads...\n");
 	for (q=0; q<quad->numquads; q++) {
-		uint star[dimquads];
+		int star[dimquads];
 		uint32_t* quads;
-		uint nquads;
+		int nquads;
 		int j;
 		quadfile_get_stars(quad, q, star);
 		for (j=0; j<dimquads; j++) {
-			uint k;
+			int k;
 			int n;
 			qidxfile_get_quads(qidx, star[j], &quads, &nquads);
 			n = 0;

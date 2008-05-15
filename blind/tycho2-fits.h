@@ -43,8 +43,8 @@ int tycho2_fits_count_entries(tycho2_fits* tycho2);
 
 tycho2_entry* tycho2_fits_read_entry(tycho2_fits* t);
 
-int tycho2_fits_read_entries(tycho2_fits* tycho2, uint offset,
-							 uint count, tycho2_entry* entries);
+int tycho2_fits_read_entries(tycho2_fits* tycho2, int offset,
+							 int count, tycho2_entry* entries);
 
 int tycho2_fits_close(tycho2_fits* tycho2);
 

@@ -785,7 +785,7 @@ void* buffered_read(bread_t* br) {
 	}
 	if (br->buffind == br->nbuff) {
 		// read a new block!
-		uint n = br->blocksize;
+		int n = br->blocksize;
 		// the new block to read starts after the current block...
 		br->off += br->nbuff;
 		if (n + br->off > br->ntotal)

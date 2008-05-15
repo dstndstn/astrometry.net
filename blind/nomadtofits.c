@@ -56,7 +56,7 @@ int main(int argc, char** args) {
 	char* outfn = NULL;
     int c;
 	int startoptind;
-	uint nrecords, nfiles;
+	int nrecords, nfiles;
 	int Nside = 9;
 
 	nomad_fits** nomads;

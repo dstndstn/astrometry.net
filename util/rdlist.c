@@ -186,18 +186,6 @@ int rdlist_write_one_radec(rdlist_t* ls, double ra, double dec) {
     return xylist_write_one_row(ls, &xy, 0);
 }
 
-/*
- int rdlist_n_entries(rdlist_t* ls, uint field) {
- return xylist_n_entries(ls, field);
- }
-
- int rdlist_read_entries(rdlist_t* ls, uint field,
- uint offset, uint n,
- double* vals) {
- return xylist_read_entries(ls, field, offset, n, vals);
- }
- */
-
 rdlist_t* rdlist_open_for_writing(const char* fn) {
 	rdlist_t* rtn = xylist_open_for_writing(fn);
     xylist_set_antype(rtn, AN_FILETYPE_RDLS);
@@ -212,40 +200,3 @@ rdlist_t* rdlist_open_for_writing(const char* fn) {
 	return rtn;
 }
 
-/*
- int rdlist_n_fields(rdlist_t* ls) {
- return ls->nfields;
- }
-
- int rdlist_write_header(rdlist_t* ls) {
- return xylist_write_header(ls);
- }
-
- int rdlist_fix_header(rdlist_t* ls) {
- return xylist_fix_header(ls);
- }
-
- int rdlist_new_field(rdlist_t* ls) {
- return xylist_new_field(ls);
- }
-
- int rdlist_write_field_header(rdlist_t* ls) {
- return xylist_write_field_header(ls);
- }
-
- int rdlist_write_new_field(rdlist_t* ls) {
- return xylist_write_new_field(ls);
- }
-
- int rdlist_write_entries(rdlist_t* ls, double* vals, uint nvals) {
- return xylist_write_entries(ls, vals, nvals);
- }
-
- int rdlist_fix_field(rdlist_t* ls) {
- return xylist_fix_field(ls);
- }
-
- int rdlist_close(rdlist_t* ls) {
- return xylist_close(ls);
- }
- */

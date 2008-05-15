@@ -27,7 +27,7 @@
 #define AN_FILETYPE_CATALOG "OBJS"
 
 struct catalog {
-	uint numstars;
+	int numstars;
 	double ramin;
 	double ramax;
 	double decmin;
@@ -51,7 +51,7 @@ catalog* catalog_open(char* catfn);
 
 catalog* catalog_open_for_writing(char* catfn);
 
-double* catalog_get_star(catalog* cat, uint sid);
+double* catalog_get_star(catalog* cat, int sid);
 
 double* catalog_get_base(catalog* cat);
 

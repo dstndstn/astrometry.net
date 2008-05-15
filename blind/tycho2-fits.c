@@ -185,8 +185,8 @@ tycho2_entry* tycho2_fits_read_entry(tycho2_fits* cat) {
     return (tycho2_entry*)fitstable_next_struct(cat);
 }
 
-int tycho2_fits_read_entries(tycho2_fits* cat, uint offset,
-                             uint count, tycho2_entry* entries) {
+int tycho2_fits_read_entries(tycho2_fits* cat, int offset,
+                             int count, tycho2_entry* entries) {
     return fitstable_read_structs(cat, entries, sizeof(tycho2_entry), offset, count);
 }
 

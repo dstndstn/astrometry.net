@@ -246,7 +246,7 @@ double* catalog_get_base(catalog* cat) {
 	return cat->stars;
 }
 
-double* catalog_get_star(catalog* cat, uint sid) {
+double* catalog_get_star(catalog* cat, int sid) {
 	if (sid >= cat->numstars) {
 		fflush(stdout);
 		fprintf(stderr, "catalog: asked for star %u, but catalog size is only %u.\n",

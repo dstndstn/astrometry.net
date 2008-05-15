@@ -79,7 +79,7 @@ static codefile* new_codefile() {
 	return cf;
 }
 
-void codefile_get_code(const codefile* cf, uint codeid, double* code) {
+void codefile_get_code(const codefile* cf, int codeid, double* code) {
 	int i;
 	if (codeid >= cf->numcodes) {
 		fprintf(stderr, "Requested codeid %i, but number of codes is %i.\n",

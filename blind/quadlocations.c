@@ -66,7 +66,7 @@ int main(int argc, char** args) {
 	unsigned char* starcounts;
 	il* imgsizes;
 	pl* outnames;
-	uint** counts;
+	unsigned int** counts;
 	int Nimgs;
     int dimquads;
 
@@ -98,7 +98,7 @@ int main(int argc, char** args) {
 
 	Nimgs = pl_size(outnames);
 
-	counts = malloc(Nimgs * sizeof(uint*));
+	counts = malloc(Nimgs * sizeof(unsigned int*));
 	for (i=0; i<Nimgs; i++) {
 		int n = il_get(imgsizes, i);
 		counts[i] = calloc(n*n, sizeof(int));
@@ -143,7 +143,7 @@ int main(int argc, char** args) {
 		printf("Counting stars in quads...\n");
 		starcounts = calloc(sizeof(unsigned char), Nstars);
 		for (i=0; i<qf->numquads; i++) {
-			uint stars[dimquads];
+			unsigned int stars[dimquads];
 			int j;
 			if (!(i % 200000)) {
 				printf(".");

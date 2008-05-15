@@ -255,7 +255,7 @@ int main(int argc, char **args) {
 	lastgrass = 0;
 	for (i=0; i<qfin->numquads; i++) {
 		int j;
-		uint stars[qfin->dimquads];
+		unsigned int stars[qfin->dimquads];
 		if (i*80/qfin->numquads != lastgrass) {
 			printf(".");
 			fflush(stdout);

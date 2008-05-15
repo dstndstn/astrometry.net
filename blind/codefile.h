@@ -27,8 +27,8 @@
 #include "fitsbin.h"
 
 struct codefile {
-	uint numcodes;
-	uint numstars;
+	int numcodes;
+	int numstars;
 
 	int dimcodes;
 
@@ -52,7 +52,7 @@ int codefile_close(codefile* cf);
 
 int codefile_dimcodes(const codefile* cf);
 
-void codefile_get_code(const codefile* cf, uint codeid, double* code);
+void codefile_get_code(const codefile* cf, int codeid, double* code);
 
 codefile* codefile_open(const char* fn);
 

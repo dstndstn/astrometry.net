@@ -37,11 +37,11 @@ void print_help(char* progname)
 			"   <base-name> [<base-name> ...]\n\n",
 	        progname);
 }
-static Inline void ensure_hist_size(uint** hist, uint* size, uint newsize) {
+static Inline void ensure_hist_size(unsigned int** hist, unsigned int* size, unsigned int newsize) {
 	if (newsize <= *size)
 		return;
-	*hist = realloc(*hist, newsize*sizeof(uint));
-	memset((*hist) + (*size), 0, (newsize - *size) * sizeof(uint));
+	*hist = realloc(*hist, newsize*sizeof(unsigned int));
+	memset((*hist) + (*size), 0, (newsize - *size) * sizeof(unsigned int));
 	*size = newsize;
 }
 
@@ -49,9 +49,9 @@ int main(int argc, char** args) {
     int argchar;
 	char* basefn;
 	qidxfile* qf;
-	uint* sumhist = NULL;
-	uint Nsumhist = 0;
-	uint i;
+	unsigned int* sumhist = NULL;
+	unsigned int Nsumhist = 0;
+	unsigned int i;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
         switch (argchar) {
@@ -67,9 +67,9 @@ int main(int argc, char** args) {
 
 	for (; optind<argc; optind++) {
 		uint32_t* quads;
-		uint nquads;
-		uint* hist = NULL;
-		uint Nhist = 0;
+		int nquads;
+		unsigned int* hist = NULL;
+		unsigned int Nhist = 0;
 		char* fn;
 
 		basefn = args[optind];

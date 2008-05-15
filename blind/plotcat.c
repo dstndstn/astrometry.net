@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 {
   double *projection;
 	char* progname = argv[0];
-	uint ii,jj,numstars=0;
+	int ii,jj,numstars=0;
 	int reverse=0, hammer=0, grid=0;
 	int maxval;
 	char* fname = NULL;

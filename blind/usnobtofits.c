@@ -59,7 +59,7 @@ int main(int argc, char** args) {
 	char* outfn = NULL;
     int c;
 	int startoptind;
-	uint nrecords, nobs, nfiles;
+	int nrecords, nobs, nfiles;
 	int Nside = 8;
 
 	usnob_fits** usnobs;

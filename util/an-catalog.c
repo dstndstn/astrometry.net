@@ -79,8 +79,8 @@ static void add_columns(fitstable_t* tab, bool write) {
 }
 #undef ADDCOL
 
-int an_catalog_read_entries(an_catalog* cat, uint offset,
-							uint count, an_entry* entries) {
+int an_catalog_read_entries(an_catalog* cat, int offset,
+							int count, an_entry* entries) {
     return fitstable_read_structs(cat, entries, sizeof(an_entry),
                                   offset, count);
 }

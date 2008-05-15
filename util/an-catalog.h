@@ -43,7 +43,7 @@ struct an_observation {
     // the catalog-specific band of the observation ('O', 'E', 'J', 'H', etc)
 	unsigned char band;
     // the ID number in the original survey
-	int id;
+	int32_t id;
     // [mag]
 	float mag;
     // [mag]
@@ -97,8 +97,8 @@ int an_catalog_write_headers(an_catalog* cat);
 
 int an_catalog_fix_headers(an_catalog* cat);
 
-int an_catalog_read_entries(an_catalog* cat, uint offset,
-							uint count, an_entry* entries);
+int an_catalog_read_entries(an_catalog* cat, int offset,
+							int count, an_entry* entries);
 
 an_entry* an_catalog_read_entry(an_catalog* cat);
 

@@ -36,8 +36,8 @@ int twomass_fits_write_headers(twomass_fits* cat);
 
 int twomass_fits_fix_headers(twomass_fits* cat);
 
-int twomass_fits_read_entries(twomass_fits* cat, uint offset,
-                              uint count, twomass_entry* entries);
+int twomass_fits_read_entries(twomass_fits* cat, int offset,
+                              int count, twomass_entry* entries);
 
 twomass_entry* twomass_fits_read_entry(twomass_fits* cat);
 

@@ -26,8 +26,8 @@
 #include "fitsbin.h"
 
 struct qidxfile {
-	uint numstars;
-	uint numquads;
+	int numstars;
+	int numquads;
 
 	int dimquads;
 
@@ -44,16 +44,16 @@ typedef struct qidxfile qidxfile;
 
 int qidxfile_close(qidxfile* qf);
 
-int qidxfile_get_quads(const qidxfile* qf, uint starid, uint32_t** quads, uint* nquads);
+int qidxfile_get_quads(const qidxfile* qf, int starid, uint32_t** quads, int* nquads);
 
-int qidxfile_write_star(qidxfile* qf, uint* quads, uint nquads);
+int qidxfile_write_star(qidxfile* qf, int* quads, int nquads);
 
 int qidxfile_write_header(qidxfile* qf);
 
 qidxfile* qidxfile_open(const char* fname);
 
 qidxfile* qidxfile_open_for_writing(const char* qidxfname,
-									uint nstars, uint nquads);
+									int nstars, int nquads);
 
 qfits_header* qidxfile_get_header(const qidxfile* qf);
 
