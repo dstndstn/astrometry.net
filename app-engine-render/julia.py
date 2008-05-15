@@ -28,8 +28,8 @@ class MainPage(webapp.RequestHandler):
 		req = self.request
 
 		res.headers['Content-Type'] = 'image/png'
-		W = 256
-		H = 256
+		W = int(req.get('w', 256))
+		H = int(req.get('h', 256))
 
 		cx = float(req.get('seedx', -0.726895347709114071439))
 		cy = float(req.get('seedy', 0.188887129043845954792))
@@ -57,22 +57,19 @@ class MainPage(webapp.RequestHandler):
 			cmap.append(heatmap(i))
 
 		xy = [(xmin + xstep * i, ymin + ystep * j, j*W+i) for j in range(H) for i in range(W)]
-		#p = [0]*len(xy)
-		p = []
+		pp = [0]*len(xy)
 		for k in range(254):
+			for (x,y,i) in xy:
+				if x*x+y*y >= 2:
+					pp[i] = k
 			xy = [(x*x - y*y + cx, 2.0 * x * y + cy, i) for (x,y,i) in xy if x*x+y*y < 2]
-			p = p + [(i,k) for (x,y,i) in xy if x*x+y*y >= 2]
-		p = p + [(i,255) for (x,y,i) in xy]
-		pp = [0]*len(p)
-		pi = [i for (i,k) in p]
-		print >> sys.stderr, 'len(p)', len(p)
-		print >> sys.stderr, 'max in pp:', max(pi), 'min in pp:', min(pi)
-		for (i,k) in p:
-			pp[i] = k
+		for (x,y,i) in xy:
+			pp[i] = 255
 		pixels = array('B')
 		for k in pp:
 			pixels.extend(cmap[k])
-		#pixels.extend([cmap[k] for k in pp])
+
+		#print >> sys.stderr, 'min in pixels:', min(pixels), 'max in pixels:', max(pixels)
 
 		writer = png.Writer(width=W, height=H)
 		writer.write_array(res.out, pixels)
