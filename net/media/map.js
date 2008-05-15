@@ -22,18 +22,19 @@
   (Web Mapping Service) server.
  */
 CustomGetTileUrl = function(a,b,c) {
-	var lULP = new GPoint(a.x*256,(a.y+1)*256);
-	var lLRP = new GPoint((a.x+1)*256,a.y*256);
+    var tilesize = this.myTileSize;
+	var lULP = new GPoint(a.x*tilesize,(a.y+1)*tilesize);
+	var lLRP = new GPoint((a.x+1)*tilesize,a.y*tilesize);
 	var lUL = G_NORMAL_MAP.getProjection().fromPixelToLatLng(lULP,b,c);
 	var lLR = G_NORMAL_MAP.getProjection().fromPixelToLatLng(lLRP,b,c);
 	var lBbox=lUL.x+","+lUL.y+","+lLR.x+","+lLR.y;
 	var lURL=this.myBaseURL;
-	lURL+="&layers=" + this.myLayers;
+	lURL+='&layers=' + this.myLayers;
 	if (this.jpeg)
-		lURL += "&jpeg";
-	lURL+="&bb="+lBbox;
-	lURL+="&w=256";
-	lURL+="&h=256";
+		lURL += '&jpeg';
+	lURL+='&bb='+lBbox;
+	lURL+='&w=' + tilesize;
+	lURL+='&h=' + tilesize;
 	return lURL;
 }
 
@@ -347,16 +348,24 @@ function toggleButton(overlayName) {
 	}
 }
 
+var tileSize = 128;
+
 function makeOverlay(layers, tag) {
 	var newTile = new GTileLayer(new GCopyrightCollection(""), 1, 17);
 	newTile.myLayers=layers;
 	newTile.myBaseURL=TILE_URL + tag;
+    newTile.myTileSize = tileSize;
 	newTile.getTileUrl=CustomGetTileUrl;
 	return new GTileLayerOverlay(newTile);
 }
 
 function makeMapType(tiles, label) {
-	return new GMapType(tiles, G_SATELLITE_MAP.getProjection(), label, G_SATELLITE_MAP);
+    // GMapType(layers, projection, name, options)
+	var m = new GMapType(tiles, G_SATELLITE_MAP.getProjection(), label,
+            { tileSize: tileSize });
+    //m.getTileSize = function() { return tileSize; }
+    //alert('m.getTileSize() is ' + m.getTileSize());
+    return m;
 }
 
 function getBlackUrl(tile, zoom) {

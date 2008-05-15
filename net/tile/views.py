@@ -40,7 +40,7 @@ logging.basicConfig(level=logging.DEBUG,
 
 def index(request):
     ctxt = {
-        'gmaps_key' : ('http://maps.google.com/maps?file=api&v=2&key=' +
+        'gmaps_key' : ('http://maps.google.com/maps?file=api&v=2.x&key=' +
                        settings.GMAPS_API_KEY),
         'map_js_url' : reverse('astrometry.net.media') + 'map.js',
         'gmaps_tile_url' : reverse(get_tile) + '?',
