@@ -7,6 +7,17 @@ handlers:
 - url: /static/
   static_dir: static
 
+- url: /tileSize
+  static_files: static/tileSize.html
+  upload: static/tileSize.html
+
+- url: /tileSizeMap.js
+  static_files: static/tileSizeMap.js
+  upload: static/tileSizeMap.js
+
+- url: /tileSizeTile
+  script: tilesize.py
+
 - url: /tile.*
   script: julia.py
 
