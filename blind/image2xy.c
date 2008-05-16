@@ -205,7 +205,7 @@ int image2xy(const char* infn, const char* outfn,
         logverb("Got naxis=%d, na1=%lu, na2=%lu\n", naxis, naxisn[0], naxisn[1]);
 
 		if (naxis > 2)
-            logverb("NAXIS > 2: processing the first image plane only.\n");
+            logmsg("This looks like a multi-color image: processing the first image plane only.  (NAXIS=%i)\n", naxis);
 
         fits_get_img_type(fptr, &bitpix, &status);
         FITS_CHECK("Failed to get FITS image type");
@@ -239,6 +239,7 @@ int image2xy(const char* infn, const char* outfn,
         if (downsample) {
             fullW = naxisn[0];
             fullH = naxisn[1];
+            logmsg("Downsampling by %i...\n", S);
             rebin(&thedata, naxisn[0], naxisn[1], S, &newW, &newH);
             naxisn[0] = newW;
             naxisn[1] = newH;

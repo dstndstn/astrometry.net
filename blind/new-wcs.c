@@ -150,7 +150,8 @@ int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
 
 	N = qfits_header_n(inhdr);
 	for (i=0; i<N; i++) {
-		if (qfits_header_getitem(inhdr, i, key, val, comment, NULL)) {
+        char line[FITS_LINESZ + 1];
+		if (qfits_header_getitem(inhdr, i, key, val, comment, line)) {
 			ERROR("Failed to read FITS header card %i from input file", i);
             goto bailout;
 		}
@@ -159,11 +160,14 @@ int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
 			logverb("Regular expression matched: \"%s\", key \"%s\".\n", exclude_input[imatch], key);
 			snprintf(newkey, FITS_LINESZ+1, "Original key: \"%s\"", key);
 			qfits_header_append(outhdr, "COMMENT", newkey, NULL, NULL);
-			snprintf(newkey, FITS_LINESZ+1, "_%.7s", key);
-			strcpy(key, newkey);
+            /*
+             snprintf(newkey, FITS_LINESZ+1, "_%.7s", key);
+             strcpy(key, newkey);
+             */
+            line[0] = '_';
 		}
 
-		qfits_header_append(outhdr, key, val, comment, NULL);
+		qfits_header_append(outhdr, key, val, comment, line);
 	}
 	qfits_header_destroy(inhdr);
     inhdr = NULL;
@@ -176,26 +180,30 @@ int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
 
 	N = qfits_header_n(wcshdr);
 	for (i=0; i<N; i++) {
-		if (qfits_header_getitem(wcshdr, i, key, val, comment, NULL)) {
+        char line[FITS_LINESZ + 1];
+		if (qfits_header_getitem(wcshdr, i, key, val, comment, line)) {
 			ERROR("Failed to read FITS header card %i from WCS file.", i);
             goto bailout;
 		}
 
 		if (key_matches(key, re2, exclude_wcs, NE2, &imatch)) {
 			logverb("Regular expression matched: \"%s\", key \"%s\".\n", exclude_wcs[imatch], key);
-			snprintf(newkey, FITS_LINESZ+1, "Original WCS key: \"%s\"", key);
-			qfits_header_append(outhdr, "COMMENT", newkey, NULL, NULL);
-			snprintf(newkey, FITS_LINESZ+1, "_%.7s", key);
-			strcpy(key, newkey);
+            // These don't really need to appear in the output file...
+            /*
+             snprintf(newkey, FITS_LINESZ+1, "Original WCS key: \"%s\"", key);
+             qfits_header_append(outhdr, "COMMENT", newkey, NULL, NULL);
+             snprintf(newkey, FITS_LINESZ+1, "_%.7s", key);
+             strcpy(key, newkey);
+             */
+            continue;
 		}
-
-		qfits_header_append(outhdr, key, val, comment, NULL);
+		qfits_header_append(outhdr, key, val, comment, line);
 	}
 	qfits_header_destroy(wcshdr);
     wcshdr = NULL;
 
 	qfits_header_append(outhdr, "COMMENT", "", NULL, NULL);
-	qfits_header_append(outhdr, "COMMENT", "--End of WCS--", NULL, NULL);
+	qfits_header_append(outhdr, "COMMENT", "--End of Astrometry.net WCS--", NULL, NULL);
 	qfits_header_append(outhdr, "COMMENT", "", NULL, NULL);
 
 	qfits_header_append(outhdr, "END", NULL, NULL, NULL);

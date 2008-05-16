@@ -68,7 +68,8 @@ verify_field_t* verify_field_preprocess(double* field, int NF) {
     memcpy(vf->fieldcopy, field, NF * 2 * sizeof(double));
 
     // Build a tree out of the field objects (in pixel space)
-    vf->ftree = kdtree_build(NULL, vf->fieldcopy, NF, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
+    // HACK - force_sort
+    vf->ftree = kdtree_build(NULL, vf->fieldcopy, NF, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT | KD_BUILD_FORCE_SORT);
 
     return vf;
 }

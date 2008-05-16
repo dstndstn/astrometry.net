@@ -201,11 +201,9 @@ static void run_test_nn(CuTest* tc, int treetype, int treeopts,
     free(origdata);
 }
 
-static void run_test_rs(CuTest* tc, int treetype, int treeopts,
-                        double eps) {
-    int N = 1000;
+static void run_test_rs_ND(CuTest* tc, int treetype, int treeopts,
+                           double eps, int N, int D) {
     int Nleaf = 10;
-    int D = 3;
     int Q = 10;
     double rad2 = 0.01;
     double* origdata;
@@ -278,10 +276,19 @@ static void run_test_rs(CuTest* tc, int treetype, int treeopts,
     free(origdata);
 }
 
-
+static void run_test_rs(CuTest* tc, int treetype, int treeopts,
+                        double eps) {
+    int N = 1000;
+    int D = 3;
+    run_test_rs_ND(tc, treetype, treeopts, eps, N, D);
+}
 
 void test_rs_bb_duu(CuTest* tc) {
     run_test_rs(tc, KDTT_DUU, KD_BUILD_BBOX, 1e-9);
+}
+
+void test_rs_bb_ddd_small(CuTest* tc) {
+    run_test_rs_ND(tc, KDTT_DOUBLE, KD_BUILD_BBOX, 1e-9, 10, 1);
 }
 
 void test_rs_bb_ddd(CuTest* tc) {

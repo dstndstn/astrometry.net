@@ -70,7 +70,10 @@ enum kd_build_options {
     KD_BUILD_NO_LR     = 0x8,
     /* Twiddle the split locations so that computing LR is O(1).
      Only works for double trees or int trees with KD_BUILD_SPLITDIM. */
-    KD_BUILD_LINEAR_LR     = 0x10
+    KD_BUILD_LINEAR_LR     = 0x10,
+    // DEBUG
+    KD_BUILD_FORCE_SORT    = 0x20,
+    
 };
 
 typedef uint64_t u64;

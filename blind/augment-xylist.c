@@ -494,11 +494,6 @@ int augment_xylist(augment_xylist_t* axy,
             } else
                 fitsimgfn = sanitizedfn;
 
-            if (axy->keep_fitsimg) {
-                axy->fitsimgfn = strdup(fitsimgfn);
-                sl_remove_string(tempfiles, fitsimgfn);
-            }
-
 			if (axy->guess_scale) {
                 dl* estscales = NULL;
                 fits_guess_scale(fitsimgfn, NULL, &estscales);
@@ -561,6 +556,11 @@ int augment_xylist(augment_xylist_t* axy,
                 run(cmd, verbose);
 			}
 		}
+
+        if (axy->keep_fitsimg) {
+            axy->fitsimgfn = strdup(fitsimgfn);
+            sl_remove_string(tempfiles, fitsimgfn);
+        }
 
         logmsg("Extracting sources...\n");
         xylsfn = create_temp_file("xyls", axy->tempdir);

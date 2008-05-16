@@ -77,7 +77,7 @@ static an_option_t options[] = {
     {'J', "skip-solved",    no_argument, NULL,
      "skip input files for which the 'solved' output file already exists;\n"
      "                  NOTE: this assumes single-field input files"},
-    {'N', "new-fits",    required_argument, NULL,
+    {'N', "new-fits",    required_argument, "filename",
      "output filename of the new FITS file containing the WCS header; \"none\" to not create this file"},
     {'Z', "kmz",            required_argument, "filename",
      "create KMZ file for Google Sky.  (requires wcs2kml)\n"},

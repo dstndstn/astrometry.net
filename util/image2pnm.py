@@ -2,7 +2,7 @@
 """
 Convert an image in a variety of formats into a pnm file
 
-Author: Keir Mierle 2007
+Copyright Keir Mierle 2007, Dustin Lang 2008
 """
 import sys
 import os
@@ -22,7 +22,7 @@ if __name__ == '__main__':
         andir = os.path.dirname(utildir)
         assert(os.path.basename(andir) == 'astrometry')
         rootdir = os.path.dirname(andir)
-        #print 'adding path', rootdir
+        print 'adding path', rootdir
         sys.path += [rootdir]
 
 from astrometry.util.shell import shell_escape

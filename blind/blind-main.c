@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 	blind_t* bp = &my_bp;
 	solver_t* sp = &(bp->solver);
 
-	log_init(3);
+	log_init(LOG_MSG);
 
 	if (argc == 2 && strcmp(argv[1], "-s") == 0) {
 		log_init(0);
@@ -69,9 +69,9 @@ int main(int argc, char *argv[]) {
 		}
 
         if (bp->quiet)
-            log_init(2);
-        if (bp->verbose)
-            log_init(4);
+            log_init(LOG_ERROR);
+        else if (bp->verbose)
+            log_init(LOG_VERB);
 
 		if (!blind_parameters_are_sane(bp, sp)) {
 			exit(-1);

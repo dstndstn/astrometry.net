@@ -711,11 +711,13 @@ void find_correspondences(tweak_t* t, double jitter)  // actually call the dualt
 	memcpy(data_image, t->xyz, 3*t->n*sizeof(double));
 	memcpy(data_ref, t->xyz_ref, 3*t->n_ref*sizeof(double));
 
+    // HACK - force sort.
+
 	t->kd_image = kdtree_build(NULL, data_image, t->n, 3, 4, KDTT_DOUBLE,
-	                           KD_BUILD_BBOX);
+	                           KD_BUILD_BBOX | KD_BUILD_FORCE_SORT);
 
 	t->kd_ref = kdtree_build(NULL, data_ref, t->n_ref, 3, 4, KDTT_DOUBLE,
-	                         KD_BUILD_BBOX);
+	                         KD_BUILD_BBOX | KD_BUILD_FORCE_SORT);
 
 	// Storage for correspondences
 	t->image = il_new(600);

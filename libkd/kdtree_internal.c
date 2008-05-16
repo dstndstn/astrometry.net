@@ -2254,8 +2254,9 @@ kdtree_t* MANGLE(kdtree_build)
 		d = dim;
 		assert (d < D);
 
-		if (TTYPE_INTEGER &&
-            !(options & KD_BUILD_SPLITDIM)) {
+		if ((options & KD_BUILD_FORCE_SORT) ||
+            (TTYPE_INTEGER && !(options & KD_BUILD_SPLITDIM))) {
+            
             /* We're packing dimension and split location into an int. */
 
 			/* Sort the data. */
@@ -2334,6 +2335,7 @@ kdtree_t* MANGLE(kdtree_build)
             assert(m >= left);
             assert(m <= right);
 			kdtree_quickselect_partition(data, kd->perm, left, right, D, dim, m);
+
 			s = POINT_DT(kd, d, data[D*m+d], KD_ROUND);
 
 			assert(m != 0);
