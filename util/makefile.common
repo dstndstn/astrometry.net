@@ -39,7 +39,8 @@ AWK := LC_ALL=C awk
 FLAGS_DEF := -g -Wall
 
 TEST_OPTION := -ffinite-math-only -fno-signaling-nans
-FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o /dev/null - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
+TMPFILE := $(shell mktemp)
+FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o $(TMPFILE) - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
 
 MACHINE:=$(shell uname -m)
 ifeq ($(MACHINE), i686)
@@ -47,7 +48,7 @@ ifeq ($(MACHINE), i686)
 # gcc 3.1: "pentium4"
 	TEST_OPTION := -march=pentium4
 	TEST_FAIL_OPTION := -march=i686
-	FLAGS_DEF += $(shell ($(CC) $(TEST_OPTION) -c -o /dev/null -x c - < /dev/null > /dev/null 2>/dev/null && echo "$(TEST_OPTION)" ) || echo "$(TEST_FAIL_OPTION)")
+	FLAGS_DEF += $(shell ($(CC) $(TEST_OPTION) -c -o $(TMPFILE) -x c - < /dev/null > /dev/null 2>/dev/null && echo "$(TEST_OPTION)" ) || echo "$(TEST_FAIL_OPTION)")
 else
 	K8 := $(shell $(CC) -dM -E - < /dev/null | grep "\#define __tune_k8__ 1")
 	ifneq ($(K8),)
@@ -72,10 +73,10 @@ endif
 #FLAGS_DEF += -fomit-frame-pointer
 
 TEST_OPTION := -fno-math-errno -fno-trapping-math
-FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o /dev/null - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
+FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o $(TMPFILE) - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
 
 TEST_OPTION := -fno-stack-protector
-FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o /dev/null - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
+FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o $(TMPFILE) - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
 
 # debuggy!
 FLAGS_DEF += -O0
@@ -108,7 +109,7 @@ LDFLAGS_DEF := $(FLAGS_DEF)
 # MacOSX shared libraries...
 TEST_OPTION := -shared
 TEST_FAIL_OPTION := -dynamic -dynamiclib
-SHAREDLIBFLAGS_DEF += $(shell ($(CC) $(TEST_OPTION) -x c -o /dev/null - < /dev/null > /dev/null 2>&1 && echo "$(TEST_OPTION)" ) || echo "$(TEST_FAIL_OPTION)")
+SHAREDLIBFLAGS_DEF += $(shell ($(CC) $(TEST_OPTION) -x c -o $(TMPFILE) - < /dev/null > /dev/null 2>&1 && echo "$(TEST_OPTION)" ) || echo "$(TEST_FAIL_OPTION)")
 
 # sh shell
 AN_SHELL = /bin/sh
