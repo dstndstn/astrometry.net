@@ -21,6 +21,9 @@ ifeq ($(origin CC), default)
   CC := gcc
 endif
 
+# no default rules
+.SUFFIXES :=
+
 whichcc:
 	@echo $(CC)
 	@echo $(origin CC)
@@ -32,7 +35,6 @@ CFLAGS := $(CFLAGS)
 RANLIB := ranlib
 
 AWK := LC_ALL=C awk
-#AWK := gawk --lint --lint-old
 
 FLAGS_DEF := -g -Wall
 

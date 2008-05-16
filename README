@@ -64,6 +64,9 @@ If you installed the libraries listed above, build the plotting code:
 Install it:
   $ make install
 
+You might see some error message during compilation; see the section
+ERROR MESSAGES below for fixes to common problems.
+
 By default it will be installed in  /usr/local/astrometry .
 You can override this by either:
      * editing the top-level Makefile (look for INSTALL_DIR)
@@ -528,6 +531,52 @@ all sorts of image formats to PNM and FITS.
 If you don't have these programs installed, you must do source
 extraction yourself and use "xylists" rather than images as the input
 to solve-field.  See SEXTRACTOR and XYLIST sections above.
+
+ERROR MESSAGES during compiling
+-------------------------------
+
+1.    /bin/sh: line 1: /dev/null: No such file or directory
+
+We've seen this happen on Macs a couple of times.  Reboot and it goes
+away...
+
+2.    makefile.deps:40: deps: No such file or directory
+
+Not a problem.  We use automatic dependency tracking: "make" keeps
+track of which source files depend on which other source files.  These
+dependencies get stored in a file named "deps"; when it doesn't exist,
+"make" tries to rebuild it, but not before printing this message.
+
+3.    gnu-specific-test.c: In function 'main':
+      gnu-specific-test.c:23: warning: implicit declaration of function 'canonicalize_file_name'
+      gnu-specific-test.c:23: warning: initialization makes pointer from integer without a cast
+      /usr/bin/ld: Undefined symbols:
+      _canonicalize_file_name
+      collect2: ld returned 1 exit status
+
+Not a problem.  We provide replacements for a couple of GNU-specific
+functions, but we need to decide whether to use them or not.  We do
+that by trying to build a test program and checking whether it works.
+This failure tells us your OS doesn't provide the
+canonicalize_file_name() function, so we plug in a replacement.
+
+4.    configure: WARNING: cfitsio: == No acceptable f77 found in $PATH
+      configure: WARNING: cfitsio: == Cfitsio will be built without Fortran wrapper support
+      drvrfile.c: In function 'file_truncate':
+      drvrfile.c:360: warning: implicit declaration of function 'ftruncate'
+      drvrnet.c: In function 'http_open':
+      drvrnet.c:300: warning: implicit declaration of function 'alarm'
+      drvrnet.c: In function 'http_open_network':
+      drvrnet.c:810: warning: implicit declaration of function 'close'
+      drvrsmem.c: In function 'shared_cleanup':
+      drvrsmem.c:154: warning: implicit declaration of function 'close'
+      group.c: In function 'fits_get_cwd':
+      group.c:5439: warning: implicit declaration of function 'getcwd'
+      ar: creating archive libcfitsio.a
+
+Not a problem; these errors come from cfitsio and we just haven't
+fixed them.
+
 
 LICENSE
 -------
