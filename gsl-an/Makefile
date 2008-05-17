@@ -23,7 +23,7 @@ include $(COMMON)/makefile.common
 
 GSL_LIB := libgsl-an.a
 
-all: $(GSL_LIB) qr-demo chol-demo
+all: $(GSL_LIB) #qr-demo chol-demo
 
 CFLAGS := $(CFLAGS_DEF)
 CFLAGS += -I.
@@ -140,7 +140,7 @@ dsdot.o
 
 CBLAS := $(addprefix cblas/,$(BLAS))
 
-QR_DEPS := linalg/qr.o linalg/householder.o \
+QR_OBJS := linalg/qr.o linalg/householder.o \
 		matrix/matrix.o matrix/rowcol.o matrix/init.o matrix/submatrix.o \
 		matrix/copy.o \
 		vector/vector.o vector/subvector.o vector/copy.o vector/init.o \
@@ -151,7 +151,7 @@ QR_DEPS := linalg/qr.o linalg/householder.o \
 qr-demo: qr-demo.o $(GSL_LIB)
 	gcc -o $@ $^ -lm
 
-CHOL_DEPS := linalg/cholesky.o matrix/matrix.o matrix/rowcol.o \
+CHOL_OBJS := linalg/cholesky.o matrix/matrix.o matrix/rowcol.o \
 		vector/vector.o vector/subvector.o vector/copy.o \
 		err/error.o err/stream.o sys/infnan.o sys/fdiv.o \
 		blas/blas.o $(CBLAS)
@@ -160,19 +160,19 @@ chol-demo: chol-demo.o $(GSL_LIB)
 	gcc -o $@ $^ -lm
 
 # "sort" removes duplicates.
-GSL_DEPS := $(sort $(QR_DEPS) $(CHOL_DEPS))
+GSL_OBJS := $(sort $(QR_OBJS) $(CHOL_OBJS))
 
-$(GSL_LIB): config.h $(GSL_DEPS)
-	$(AR) rc $@ $^
+$(GSL_LIB): config.h $(GSL_OBJS)
+	$(AR) rc $@ $(GSL_OBJS)
 	$(RANLIB) $@
 
 config.h: configure
 	./configure --enable-shared=no --prefix=`pwd`/stage
 
-DEP_OBJ := $(GSL_DEPS)
+DEP_OBJ := $(GSL_OBJS)
 include $(COMMON)/makefile.deps
 
 clean:
-	-rm -f qr-demo chol-demo $(QR_DEPS) $(CHOL_DEPS) \
+	-rm -f qr-demo chol-demo $(QR_OBJS) $(CHOL_OBJS) \
 		$(DEPS) deps $(GSL_LIB) qr-demo.o chol-demo.o
 
