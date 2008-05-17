@@ -27,6 +27,8 @@ $(CFITS_LIB): $(wildcard $(CFITS_DIR)/*.c) $(wildcard $(CFITS_DIR)/*.h) $(CFITS_
 $(CFITS_DIR)/Makefile: $(CFITS_DIR)/Makefile.in
 	cd $(CFITS_DIR) && CFLAGS="$(CFITS_CONFIG_CFLAGS)" CC="$(CC)" ./configure 
 
+$(CFITS_DIR)/Makefile.in: ;
+
 REMAKE_CFITSIO := remake-cfitsio
 .PHONY: $(REMAKE_CFITSIO)
 $(REMAKE_CFITSIO): $(CFITS_DIR)/Makefile

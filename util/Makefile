@@ -28,29 +28,17 @@ all:
 #   NO_QFITS := 1
 #   export NO_QFITS
 
-%.c: ;
-%.h: ;
-Makefile: ;
-
 include $(COMMON)/makefile.common
-$(COMMON)/makefile.common: ;
 ifndef NO_QFITS
 include $(COMMON)/makefile.qfits
-$(COMMON)/makefile.qfits : ;
 endif
 ifndef NO_KDTREE
 include $(COMMON)/makefile.libkd
-$(COMMON)/makefile.libkd : ;
 endif
 
 include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.netpbm
-
-$(COMMON)/makefile.deps  : ;
-$(COMMON)/makefile.netpbm: ;
-$(COMMON)/makefile.jpeg  : ;
-$(COMMON)/makefile.cairo : ;
 
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(CAIRO_INC)
@@ -201,8 +189,6 @@ ALL_TEST_EXTRA_OBJS =
 ALL_TEST_LIBS = $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 include $(COMMON)/makefile.tests
-
-$(COMMON)/makefile.tests: ;
 
 DEP_OBJ += $(ALL_TEST_FILES_O)
 

@@ -32,6 +32,8 @@ ALL_TEST_FILES_MAIN_O = $(addsuffix -main.o, $(ALL_TEST_FILES))
 
 MAKE_TESTS := $(COMMON)/make-tests.sh
 
+$(COMMON)/make-tests.sh: ;
+
 $(ALL_TEST_FILES_MAIN_C): %-main.c: $(MAKE_TESTS)
 $(ALL_TEST_FILES_MAIN_C): %-main.c: %.c
 	$(AN_SHELL) $(MAKE_TESTS) $^ > $@

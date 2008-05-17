@@ -24,6 +24,13 @@ endif
 # no default rules
 .SUFFIXES :=
 
+%.c: ;
+%.h: ;
+%.awk: ;
+#$(COMMON)/makefile.%: ;
+makefile.%: ;
+Makefile: ;
+
 whichcc:
 	@echo $(CC)
 	@echo $(origin CC)

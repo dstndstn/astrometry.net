@@ -21,6 +21,9 @@ DATA := $(BASEDIR)/data
 .PHONY: all
 all:
 
+$(DATA)/%.txt: ;
+$(DATA)/%.dat: ;
+
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.utils
 include $(COMMON)/makefile.anfiles
@@ -283,8 +286,6 @@ ngc2000names.c: parse-ngc2000names.awk $(DATA)/ngc2000names.dat
 
 ngc2000entries.c: parse-ngc2000.awk $(DATA)/ngc2000.dat
 	$(AWK) -f parse-ngc2000.awk < $(DATA)/ngc2000.dat  > $@
-
-ngcic-accurate.c: ngcic-accurate.h ngcic-accurate-entries.c
 
 ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
 	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate.awk > $@
