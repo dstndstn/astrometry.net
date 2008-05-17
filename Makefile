@@ -180,3 +180,12 @@ TAGS:
 
 tags:
 	ctags-exuberant --fields=+aiKS --c++-kinds=+p --extra=+q -I --file-scope=no -R *
+
+report:
+	-uname -m
+	-uname -a
+	@echo "CC is $(CC)"
+	-which $(CC)
+	-$(CC) --version
+	-$(MAKE) --version
+	-$(CC) -dM -E - < /dev/null
