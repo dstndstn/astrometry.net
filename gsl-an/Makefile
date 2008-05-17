@@ -18,6 +18,7 @@ BASEDIR := ..
 COMMON := $(BASEDIR)/util
 
 all:
+.PHONY: all
 
 include $(COMMON)/makefile.common
 

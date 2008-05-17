@@ -128,6 +128,7 @@ all: $(QFITS_LIB) $(CFITS_LIB) $(LIBKD_LIB) \
 	$(PIPELINE) $(PROSPECTUS) $(IMAGE2XY) $(FITS_UTILS) fitsverify
 
 cairo: $(CAIROEXECS)
+.PHONY: cairo
 
 .PHONY: pipeline
 pipeline: $(PIPELINE)
