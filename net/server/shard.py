@@ -2,7 +2,7 @@ import os
 import os.path
 import socket
 
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 
 from astrometry.net.server.log import log
 from astrometry.net.server.models import QueuedJob, Worker, JobQueue, Index
@@ -22,9 +22,9 @@ def solve(request):
     log('shard.solve')
 
     if not 'axy' in request.POST:
-        return HttpResponseBadRequest('no axy')
+        return HttpResponse('no axy')
     if not 'jobid' in request.POST:
-        return HttpResponseBadRequest('no jobid')
+        return HttpResponse('no jobid')
 
     jobid = request.POST['jobid']
     axy = request.POST['axy']
