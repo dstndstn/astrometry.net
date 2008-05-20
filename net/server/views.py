@@ -12,6 +12,17 @@ from astrometry.net.portal.job import Job, Calibration
 from astrometry.net.portal.wcs import TanWCS
 from astrometry.util.run_command import run_command
 
+def test(request):
+    import time
+    log('test starting.')
+    res = HttpResponse()
+    for i in range(10):
+        log('sleeping...')
+        res.write('%i ' % i)
+        time.sleep(1)
+    res.write('done')
+    return res
+
 def summary(request):
     log('test.')
     jobs = QueuedJob.objects.all()

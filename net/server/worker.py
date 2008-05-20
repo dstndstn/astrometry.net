@@ -23,11 +23,6 @@ from astrometry.net.server.models import *
 from astrometry.util.run_command import run_command
 
 
-# Base class for queue workers.
-class 
-
-
-
 def get_header(header, key, default):
     try:
         return header[key]
