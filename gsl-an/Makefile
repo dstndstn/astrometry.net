@@ -17,14 +17,11 @@
 BASEDIR := ..
 COMMON := $(BASEDIR)/util
 
-all:
+GSL_LIB := libgsl-an.a
+all: $(GSL_LIB)
 .PHONY: all
 
 include $(COMMON)/makefile.common
-
-GSL_LIB := libgsl-an.a
-
-all: $(GSL_LIB) #qr-demo chol-demo
 
 CFLAGS := $(CFLAGS_DEF)
 CFLAGS += -I.
