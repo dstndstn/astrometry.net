@@ -37,7 +37,7 @@ AWK := LC_ALL=C awk
 
 FLAGS_DEF := -g -Wall
 
-TMPFILE := $(shell mktemp)
+TMPFILE := $(shell mktemp whatever.XXXXXX)
 
 TEST_OPTION := -ffinite-math-only -fno-signaling-nans
 FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o $(TMPFILE) - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
