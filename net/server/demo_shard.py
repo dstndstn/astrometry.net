@@ -6,8 +6,10 @@ from urllib2 import urlopen
 from astrometry.util.file import *
 
 if __name__ == '__main__':
-    tar = read_file(sys.argv[1]) #.encode('base64_codec')
-    data = urlencode({ 'tar': tardata, 'jobid':'123456' })
+    axy = read_file(sys.argv[1])
+    # FIXME
+    axy = axy.encode('base64_codec')
+    data = urlencode({ 'axy': axy, 'jobid':'123456' })
     url = sys.argv[2]
 
     f = urlopen(url, data)

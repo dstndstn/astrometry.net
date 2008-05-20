@@ -21,6 +21,7 @@ def tempdir_for_jobid(jobid):
 def solve(request):
     log('shard.solve')
 
+    print 'start'
     if not 'axy' in request.POST:
         return HttpResponse('no axy')
     if not 'jobid' in request.POST:
@@ -28,17 +29,29 @@ def solve(request):
 
     jobid = request.POST['jobid']
     axy = request.POST['axy']
-    #axy = axy.decode('base64_codec')
+    # FIXME
+    axy = axy.decode('base64_codec')
 
     tmpdir = tempdir_for_jobid(jobid)
-    os.mkdir(tmpdir)
+    print 'tmpdir is',tmpdir
+    if not os.path.exists(tmpdir):
+        os.mkdir(tmpdir)
+    print 'made tmpdir.'
     axyfn = os.path.join(tmpdir, 'input.axy')
-    write_file(axy, axyfn)
+    print 'axyfn is', axyfn
+    try:
+        write_file(axy, axyfn)
+    except Exception, e:
+        print 'something failed',e
+    print 'wrote axy'
 
     cancelfile = os.path.join(tmpdir, 'cancel')
     tarfile = os.path.join(tmpdir, 'results.tar')
 
-    backendcfg = settings.BACKEND_CONFIG % socket.gethostname()
+    #backendcfg = settings.BACKEND_CONFIG % socket.gethostname()
+    backendcfg = settings.BACKEND_CONFIG
+
+    print 'backendcfg', backendcfg
 
     cmd = ('cd %(tempdir)s; '
            '%(backend)s -c %(backendconf)s -C %(cancel)s -v %(axy)s > %(logfile)s 2>&1; '
@@ -62,7 +75,7 @@ def solve(request):
     return res
 
 def cancel(request):
-    jobid = request.POST.get('jobid')
+    jobid = request.GET.get('jobid')
     if not jobid:
         return HttpResponseBadRequest('no jobid')
 
