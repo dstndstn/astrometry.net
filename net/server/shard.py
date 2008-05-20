@@ -28,7 +28,7 @@ def solve(request):
 
     jobid = request.POST['jobid']
     axy = request.POST['axy']
-    axy = axy.decode('base64_codec')
+    #axy = axy.decode('base64_codec')
 
     tmpdir = tempdir_for_jobid(jobid)
     os.mkdir(tmpdir)

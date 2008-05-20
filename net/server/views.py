@@ -16,7 +16,7 @@ def test(request):
     import time
     log('test starting.')
     res = HttpResponse()
-    for i in range(10):
+    for i in range(int(request.GET.get('t','10'))):
         log('sleeping...')
         res.write('%i ' % i)
         time.sleep(1)
