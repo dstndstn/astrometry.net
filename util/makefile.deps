@@ -22,7 +22,7 @@ deps: $(DEP_PREREQS) $(DEPS)
 
 DEP_ARGS := $(CFLAGS) -MM -MG
 
-TMPFILE := $(shell mktemp)
+TMPFILE := $(shell $(MKTEMP))
 
 # -MP is new in gcc-3.0
 TEST_OPTION := -MP
@@ -32,6 +32,8 @@ DEP_ARGS += $(shell ($(CC) $(DEP_ARGS) -E -o $(TMPFILE) -x c $(TEST_OPTION) - < 
 TEST_OPTION := "-MF"
 TEST_FAIL_OPTION := "\>"
 DEP_OUT := $(shell ($(CC) $(DEP_ARGS) -E -x c -MF $(TMPFILE) - < /dev/null > /dev/null 2>&1 && rm $(TMPFILE) && echo "$(TEST_OPTION)" ) || echo "$(TEST_FAIL_OPTION)")
+
+NIL := $(shell rm $(TMPFILE))
 
 %.dep : %.c
 	$(CC) $(DEP_ARGS) $< $(DEP_OUT) $@

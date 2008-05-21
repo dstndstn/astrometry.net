@@ -114,3 +114,5 @@ SHAREDLIBFLAGS_DEF += $(shell ($(CC) $(TEST_OPTION) -x c -o $(TMPFILE) - < /dev/
 
 # sh shell
 AN_SHELL = /bin/sh
+
+$(shell rm $(TMPFILE))
