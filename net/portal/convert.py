@@ -52,7 +52,11 @@ def is_tarball(fn):
     log('is_tarball: %s' % fn)
     types = filetype_short(fn)
     #log('file type: "%s"' % typeinfo)
-    return any([t.startswith('POSIX tar archive') for t in types])
+    #return any([t.startswith('POSIX tar archive') for t in types])
+    for t in types:
+        if t.startswith('POSIX tar archive'):
+            return True
+    return False
 
 def get_objs_in_field(job, df):
     objsfn = convert(job, df, 'objsinfield')

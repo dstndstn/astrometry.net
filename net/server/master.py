@@ -19,15 +19,16 @@ class ShardRequest(object):
     def __init__(self, url):
         self.url = url
 
-def get_shard_solve_urls():
-    return ['http://oven.cosmo.fas.nyu.edu:8888/test/shard/solve/',
-            'http://oven.cosmo.fas.nyu.edu:8888/test/shard/solve/',
+def get_shard_urls():
+    return ['http://localhost:9058/test/shard/',
+            'http://localhost:9059/test/shard/',
             ]
 
-def get_shard_cancel_urls():
-    return ['http://oven.cosmo.fas.nyu.edu:8888/test/shard/cancel/',
-            'http://oven.cosmo.fas.nyu.edu:8888/test/shard/cancel/',
-            ]
+def get_shard_solve_urls():
+    return [url + 'solve/' for url in get_shard_urls()]
+
+def get_shard_cancel_urls(jobid):
+    return [url + 'cancel/?jobid=%s' % jobid for url in get_shard_urls()]
 
 def solve(request):
     log('master.solve')
@@ -47,7 +48,7 @@ def solve(request):
     #   so it'll just be different machine names)
 
     reqs = [ShardRequest(url) for url in get_shard_solve_urls()]
-    for (r,u) in zip(reqs, get_shard_cancel_urls()):
+    for (r,u) in zip(reqs, get_shard_cancel_urls(jobid)):
         r.cancelurl = u
 
     # write the encoded POST data to a temp file...
@@ -116,7 +117,7 @@ def solve(request):
                 tar = tarfile.open(mode='r|', fileobj=f)
                 for tarinfo in tar:
                     log('  ', tarinfo.name, 'is', tarinfo.size, 'bytes in size')
-                    if tarinfo.name.endswith('.solved'):
+                    if tarinfo.name == 'solved':
                         req.solved = True
                     # read and save the file contents.
                     ff = tar.extractfile(tarinfo)
@@ -134,6 +135,7 @@ def solve(request):
                     for r in reqs:
                         if r == req:
                             continue
+                        log('sending cancel request to url', r.cancelurl)
                         r.cancommand = ['wget', '-nv', '-O', '-', r.cancelurl]
                         r.canproc = subprocess.Popen(r.cancommand, close_fds = True)
 

@@ -109,7 +109,7 @@ class Tan(ctypes.Structure):
         sip.b_order = 0
         sip.ap_order = 0
         sip.bp_order = 0
-        _sip.get_radec_bounds(
+        _sip.sip_get_radec_bounds(
             #ctypes.pointer(self),
             ctypes.pointer(sip),
             step,
