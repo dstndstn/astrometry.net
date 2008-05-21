@@ -68,6 +68,7 @@ def solve(request):
         req.outdata = []
         req.running = True
         req.solved = False
+        req.tarfiles = []
 
     firstsolved = None
 
@@ -115,9 +116,13 @@ def solve(request):
                 tar = tarfile.open(mode='r|', fileobj=f)
                 for tarinfo in tar:
                     log('  ', tarinfo.name, 'is', tarinfo.size, 'bytes in size')
-                    #tar.extract(tarinfo)
                     if tarinfo.name.endswith('.solved'):
                         req.solved = True
+                    # read and save the file contents.
+                    ff = tar.extractfile(tarinfo)
+                    tarinfo.data = ff.read()
+                    ff.close()
+                    req.tarfiles.append(tarinfo)
                 tar.close()
 
                 if req.solved:
@@ -129,8 +134,6 @@ def solve(request):
                     for r in reqs:
                         if r == req:
                             continue
-                        r.cancelurl
-                        # for each index / shard, wget the solve request URL
                         r.cancommand = ['wget', '-nv', '-O', '-', r.cancelurl]
                         r.canproc = subprocess.Popen(r.cancommand, close_fds = True)
 
@@ -149,14 +152,40 @@ def solve(request):
     # -> (c) finished, unsolved
     # (b), wget(?) the cancel URLs - should lead to processes
     #     finishing and connections being closed.
-    
+
+
+    # merge all the resulting tar files into one big tar file.
+    # the firstsolved results will be in the base dir, the other
+    # shards will be in 1/, 2/, etc.
+    f = StringIO()
+    tar = tarfile.open(mode='w', fileobj=f)
+    tar.debug = 3
+    i = 1
+    for r in reqs:
+        if r == firstsolved:
+            prefix = ''
+        else:
+            prefix = '%i/' % i
+            i += 1
+        for tf in r.tarfiles:
+            tf.name = prefix + tf.name
+            log('  adding (%i bytes) %s' % (tf.size, tf.name))
+            ff = StringIO(tf.data)
+            tar.addfile(tf, ff)
+    tar.close()
+    tardata = f.getvalue()
+    log('tardata length is', len(tardata))
+    f.close()
     res = HttpResponse()
     res['Content-type'] = 'application/x-tar'
-    if firstsolved is None:
-        res.write('unsolved')
-    else:
-        log('returning tar data from shard %s' % firstsolved.url)
-        res.write(firstsolved.tardata)
+    res.write(tardata)
+
+    #if firstsolved is None:
+    #    res.write('unsolved')
+    #else:
+    #    log('returning tar data from shard %s' % firstsolved.url)
+    #    res.write(firstsolved.tardata)
+
     return res
 
 def cancel(request):
