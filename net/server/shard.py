@@ -21,14 +21,12 @@ def tempdir_for_jobid(jobid):
 def solve(request):
     log('shard.solve')
 
-    print 'start'
-    if not 'axy' in request.POST:
-        return HttpResponse('no axy')
-    if not 'jobid' in request.POST:
+    jobid = request.POST.get('jobid')
+    if not jobid:
         return HttpResponse('no jobid')
-
-    jobid = request.POST['jobid']
-    axy = request.POST['axy']
+    axy = request.POST.get('axy')
+    if not axy:
+        return HttpResponse('no axy')
     # FIXME
     axy = axy.decode('base64_codec')
 
@@ -77,7 +75,7 @@ def solve(request):
 def cancel(request):
     jobid = request.GET.get('jobid')
     if not jobid:
-        return HttpResponseBadRequest('no jobid')
+        return HttpResponse('no jobid')
 
     tmpdir = tempdir_for_jobid(jobid)
     cancelfile = os.path.join(tmpdir, 'cancel')

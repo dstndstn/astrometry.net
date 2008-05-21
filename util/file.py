@@ -8,7 +8,7 @@ def read_file(fn):
     return open(fn).read()
 
 def write_file(data, fn):
-    f = open(fn, 'wb')
+    f = file(fn, 'wb')
     f.write(data)
     f.close()
     

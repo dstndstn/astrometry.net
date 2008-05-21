@@ -12,6 +12,8 @@ if __name__ == '__main__':
     data = urlencode({ 'axy': axy, 'jobid':'123456' })
     url = sys.argv[2]
 
+    #print >> sys.stderr, data
+
     f = urlopen(url, data)
     response = f.read()
     f.close()
