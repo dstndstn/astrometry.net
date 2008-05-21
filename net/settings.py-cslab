@@ -8,7 +8,7 @@ UPLOADER_URL = '/test/uploader'
 
 UPLOAD_DIR = '/data2/TEMP-test'
 
-BASEDIR = '/u/dstn/an30/astrometry/'
+BASEDIR = '/u/dstn/go/dsolver/'
 LOG_DIR = BASEDIR + 'log/'
 ANDIR = BASEDIR + 'astrometry/'
 UTIL_DIR = ANDIR + 'util/'
@@ -41,7 +41,7 @@ FIELD_DIR = '/home/gmaps/test/web-data/fields'
 #gmaps_url = gmaps_base + 'tilecache2/'
 #tileurl = gmaps_base + 'test/tile/get/'
 
-
+BACKEND_CONFIG = '/u/dstn/go/dsolver/backend-conf/backend-%s.cfg'
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

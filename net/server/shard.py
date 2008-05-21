@@ -46,8 +46,8 @@ def solve(request):
     cancelfile = os.path.join(tmpdir, 'cancel')
     tarfile = os.path.join(tmpdir, 'results.tar')
 
-    #backendcfg = settings.BACKEND_CONFIG % socket.gethostname()
-    backendcfg = settings.BACKEND_CONFIG
+    backendcfg = settings.BACKEND_CONFIG % socket.gethostname()
+    #backendcfg = settings.BACKEND_CONFIG
 
     print 'backendcfg', backendcfg
 
@@ -83,3 +83,12 @@ def cancel(request):
     # FIXME - security hole.
     write_file(' ', cancelfile)
     return HttpResponse('ok')
+
+def index(request):
+    res = HttpResponse()
+    backendcfg = settings.BACKEND_CONFIG % socket.gethostname()
+    res['Content-type'] = 'text/plain'
+    res.write('backend config file: %s\n\n' % backendcfg)
+    for line in open(backendcfg):
+        res.write('    %s' % line)
+    return res
