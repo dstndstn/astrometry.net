@@ -272,7 +272,13 @@ def real_handle_job(job):
         tardata = f.read()
         f.close()
 
-    tardata = ssh_master.solve(job)
+
+    def logfunc(s):
+        f = open(job.get_filename('blind.log'), 'a')
+        f.write(s)
+        f.close()
+
+    tardata = ssh_master.solve(job, logfunc)
 
     
     # extract the resulting tarball...

@@ -25,7 +25,10 @@ def get_shards():
             'shard59',
             ]
 
-def solve(job):
+class ShardRequest(object):
+    pass
+
+def solve(job, logfunc):
     log('ssh-master.solve', job.jobid)
     axypath = job.get_axy_filename()
 
@@ -33,9 +36,9 @@ def solve(job):
     
     shards = []
     for x in get_shards():
-        s = object()
+        s = ShardRequest()
         s.ssh = x
-        s.command = ['ssh', s.ssh]
+        s.command = ['ssh', '-x', '-T', s.ssh]
         s.proc = subprocess.Popen(s.command,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE,
@@ -45,9 +48,9 @@ def solve(job):
         s.out = s.proc.stdout
         s.err = s.proc.stderr
 
-        # FIXME - pipe the jobid and axy file to s.sin...
-        s.sin.write('%s\n', job.jobid)
-        s.sin.write('%i\n', len(axy))
+        # Send the jobid, axy length, and axy contents.
+        s.sin.write('%s\n' % job.jobid)
+        s.sin.write('%i\n' % len(axy))
         s.sin.write(axy)
 
         s.running = True
@@ -83,8 +86,11 @@ def solve(job):
                     s.err.close()
                 else:
                     # we should log this directly...
-                    log('[err %i] --> "%s"' % (i, str(txt)))
-
+                    #log('[err %i] --> "%s"' % (i, str(txt)))
+                    lines = txt.split('\n')
+                    for l in lines:
+                        logfunc(('[%i] ' % i) + l + '\n')
+                    
             if s.out.closed:
                 s.proc.poll()
                 if s.proc.returncode is None:
@@ -110,10 +116,14 @@ def solve(job):
                     firstsolved = s
 
                     # send cancel requests to others.
-                    # FIXME - How???
+                    # actually, if they share a filesystem then this isn't
+                    # necessary - they can use "cancel" or "solved" files.
                     for ss in shards:
                         if ss == s:
                             continue
+                        # send ctrl-C!
+                        #ss.sin.write('\x03')
+                        #ss.sin.flush()
                         #r.cancommand = ['wget', '-nv', '-O', '-', r.cancelurl]
                         #r.canproc = subprocess.Popen(r.cancommand, close_fds = True)
 
