@@ -27,7 +27,6 @@ endif
 %.c: ;
 %.h: ;
 %.awk: ;
-#$(COMMON)/makefile.%: ;
 makefile.%: ;
 Makefile: ;
 
@@ -37,45 +36,13 @@ AWK := LC_ALL=C awk
 
 FLAGS_DEF := -g -Wall
 
-TMPFILE := $(shell mktemp whatever.XXXXXX)
+#MKTEMP := mktemp -t whatever.XXXXXX
+#TMPFILE := $(shell $(MKTEMP))
 
-TEST_OPTION := -ffinite-math-only -fno-signaling-nans
-FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o $(TMPFILE) - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
+include compiler-flags
 
-MACHINE:=$(shell uname -m)
-ifeq ($(MACHINE), i686)
-    # gcc before version 3.1 doesn't support "pentium4"; use "i686" instead.
-    # gcc 3.1: "pentium4"
-	TEST_OPTION := -march=pentium4
-	TEST_FAIL_OPTION := -march=i686
-	FLAGS_DEF += $(shell ($(CC) $(TEST_OPTION) -c -o $(TMPFILE) -x c - \
-              < /dev/null > /dev/null 2>/dev/null && echo "$(TEST_OPTION)" ) \
-              || echo "$(TEST_FAIL_OPTION)")
-else
-	K8 := $(shell $(CC) -dM -E - < /dev/null | grep "\#define __tune_k8__ 1")
-	ifneq ($(K8),)
-		FLAGS_DEF += -march=k8 -m64
-	else
-		FLAGS_DEF += -DNOT_686
-		APPLE := $(shell echo | $(CC) -dM -E - | grep __APPLE__)
-		ifneq ($(APPLE),)
-		     FLAGS_DEF += -DNOBOOL
-		endif
-	endif
-endif
-
-# FLAGS_DEF are gcc flags that are shared between compiling and
-# linking.  CFLAGS_DEF are compile flags, LDFLAGS_DEG are link flags.
-
-# speedy!
-#FLAGS_DEF += -O3
-#FLAGS_DEF += -fomit-frame-pointer
-
-TEST_OPTION := -fno-math-errno -fno-trapping-math
-FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o $(TMPFILE) - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
-
-TEST_OPTION := -fno-stack-protector
-FLAGS_DEF += $(shell $(CC) $(TEST_OPTION) -c -x c -o $(TMPFILE) - < /dev/null > /dev/null 2> /dev/null && echo "$(TEST_OPTION)")
+compiler-flags: get-compiler-flags.sh makefile.common
+	./get-compiler-flags.sh > $@
 
 # debuggy!
 FLAGS_DEF += -O0
@@ -106,13 +73,7 @@ CFLAGS_DEF += -D_GNU_SOURCE
 # fold in the user's LDFLAGS, if set...
 LDFLAGS_DEF := $(LDFLAGS) $(FLAGS_DEF)
 
-
-# MacOSX shared libraries...
-TEST_OPTION := -shared
-TEST_FAIL_OPTION := -dynamic -dynamiclib
-SHAREDLIBFLAGS_DEF += $(shell ($(CC) $(TEST_OPTION) -x c -o $(TMPFILE) - < /dev/null > /dev/null 2>&1 && echo "$(TEST_OPTION)" ) || echo "$(TEST_FAIL_OPTION)")
-
 # sh shell
 AN_SHELL = /bin/sh
 
-$(shell rm $(TMPFILE))
+#X := $(shell echo rm $(TMPFILE); rm $(TMPFILE))

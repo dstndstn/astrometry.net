@@ -33,7 +33,7 @@ TEST_OPTION := "-MF"
 TEST_FAIL_OPTION := "\>"
 DEP_OUT := $(shell ($(CC) $(DEP_ARGS) -E -x c -MF $(TMPFILE) - < /dev/null > /dev/null 2>&1 && rm $(TMPFILE) && echo "$(TEST_OPTION)" ) || echo "$(TEST_FAIL_OPTION)")
 
-NIL := $(shell rm $(TMPFILE))
+#NIL := $(shell rm $(TMPFILE))
 
 %.dep : %.c
 	$(CC) $(DEP_ARGS) $< $(DEP_OUT) $@
