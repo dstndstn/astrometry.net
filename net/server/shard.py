@@ -16,8 +16,6 @@ def tempdir_for_jobid(jobid):
 
 
 def solve(request):
-    log('shard.solve')
-
     jobid = request.POST.get('jobid')
     if not jobid:
         return HttpResponse('no jobid')
@@ -26,6 +24,8 @@ def solve(request):
         return HttpResponse('no axy')
     # FIXME
     axy = axy.decode('base64_codec')
+
+    log('shard.solve', jobid)
 
     tmpdir = tempdir_for_jobid(jobid)
     print 'tmpdir is',tmpdir
