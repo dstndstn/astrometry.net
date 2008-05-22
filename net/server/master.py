@@ -1,6 +1,5 @@
 import os
 import tempfile
-#import popen2
 import select
 import subprocess
 import time
@@ -184,13 +183,6 @@ def solve(request):
     res = HttpResponse()
     res['Content-type'] = 'application/x-tar'
     res.write(tardata)
-
-    #if firstsolved is None:
-    #    res.write('unsolved')
-    #else:
-    #    log('returning tar data from shard %s' % firstsolved.url)
-    #    res.write(firstsolved.tardata)
-
     return res
 
 def cancel(request):
