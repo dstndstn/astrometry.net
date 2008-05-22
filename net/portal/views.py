@@ -622,13 +622,6 @@ def jobstatus(request):
         tag.canremove = tag.can_remove_tag(request.user)
         taglist.append(tag)
 
-    from astrometry.net.server.models import QueuedJob
-    qjob = QueuedJob.objects.all().filter(job=job, q__queuetype='solve')
-    if len(qjob):
-        job.nworkers = qjob[0].workers.count()
-    else:
-        job.nworkers = 0
-
     ctxt = {
         'jobid' : job.jobid,
         'jobstatus' : job.status,

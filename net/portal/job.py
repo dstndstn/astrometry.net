@@ -730,22 +730,3 @@ class Job(models.Model):
         if os.path.exists(link):
             os.unlink(link)
         os.symlink(jobdir, link)
-
-
-        #from astrometry.net.server.models import JobQueue, QueuedJob
-        #(q, created) = (JobQueue.objects
-		#				.get_or_create(name = settings.SITE_NAME,
-		#							   queuetype = 'triage'))
-        #if created:
-        #    log('Created JobQueue', q)
-        #    q.save()
-        #log('Adding job to queue', q)
-        #if isinstance(j, Job):
-        #    qj = QueuedJob(q=q, enqueuetime=Job.timenow(), job=j)
-        #elif isinstance(j, Submission):
-        #    qj = QueuedJob(q=q, enqueuetime=Job.timenow(), submission=j)
-        #else:
-        #    assert(False)
-        #qj.save()
-
-
