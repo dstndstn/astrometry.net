@@ -40,16 +40,11 @@ AWK := LC_ALL=C LC_NUMERIC=EN_US awk
 FLAGS_DEF := -g -Wall
 
 TMPFILE := cc-out.tmp
-#CCTEST := $(CC) -x c -c -o $(TMPFILE) -
-#CCTEST_SUFF := < /dev/null > /dev/null 2> /dev/null
-
-
+# Test whether $(CC) accepts a particular argument; set ARG before running.
 CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - < /dev/null > /dev/null 2> /dev/null && echo $(ARG)
-#COMPILER_DEFS := $(shell $(CC) -dM -E - < /dev/null 2> /dev/null)
-#DEFTEST = echo $(COMPILER_DEFS) | grep -l $(STR) > /dev/null
-#COMPILER_DEFS := $(shell 
+# Test whether a particular string appears in the compiler's default environment;
+# set STR before running.
 DEFTEST = $(CC) -dM -E - < /dev/null 2> /dev/null | grep "$(STR)" > /dev/null
-
 
 ARG := -shared
 SHAREDLIBFLAGS_DEF := $(shell $(CCTEST))
