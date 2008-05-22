@@ -116,17 +116,10 @@ def solve(job, logfunc):
                     firstsolved = s
 
                     # send cancel requests to others.
+
                     # actually, if they share a filesystem then this isn't
                     # necessary - they can use "cancel" or "solved" files.
-                    for ss in shards:
-                        if ss == s:
-                            continue
-                        # send ctrl-C!
-                        #ss.sin.write('\x03')
-                        #ss.sin.flush()
-                        #r.cancommand = ['wget', '-nv', '-O', '-', r.cancelurl]
-                        #r.canproc = subprocess.Popen(r.cancommand, close_fds = True)
-
+                
                 # this proc is done!
                 s.running = False
         # HACK
