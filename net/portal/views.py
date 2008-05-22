@@ -843,10 +843,10 @@ def getfile(request):
     if f in binaryfiles:
         downloadfn = f
         if f == 'field.xy.fits':
-            f = 'job.axy'
+            fn = job.get_axy_filename()
         elif f in [ 'index.xy.fits', 'field.rd.fits' ]:
             f = convert(job, job.diskfile, f, convertargs)
-        fn = job.get_filename(f)
+            fn = job.get_filename(f)
         res['Content-Type'] = 'application/octet-stream'
         res['Content-Disposition'] = 'attachment; filename="' + downloadfn + '"'
         res['Content-Length'] = file_size(fn)

@@ -667,6 +667,9 @@ class Job(models.Model):
     def get_orig_file(self):
         return self.fileorigname()
 
+    def get_axy_filename(self):
+        return self.get_filename('job.axy')
+
     def get_filename(self, fn):
         return Job.get_job_filename(self.get_id(), fn)
 

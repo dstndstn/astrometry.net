@@ -153,7 +153,7 @@ def convert(job, df, fn, args=None):
         eightbit = (fn == 'ppm-8bit')
         if job.is_input_fits() or job.is_input_text():
             # just create the red-circle plot.
-            xylist = job.get_filename('job.axy')
+            xylist = job.get_axy_filename()
             cmd = ('plotxy -i %s -W %i -H %i -x 1 -y 1 -C brightred -w 2 -P > %s' %
                    (xylist, df.imagew, df.imageh, fullfn))
             run_convert_command(cmd)
@@ -282,7 +282,7 @@ def convert(job, df, fn, args=None):
             return fullfn
         if job.is_input_fits() or job.is_input_text():
             # just create the red-circle plot.
-            xylist = job.get_filename('job.axy')
+            xylist = job.get_axy_filename()
             cmd = ('plotxy -i %s -W %i -H %i -x 1 -y 1 -C brightred -w 2 > %s' %
                    (xylist, df.imagew, df.imageh, fullfn))
             run_convert_command(cmd)
@@ -312,7 +312,7 @@ def convert(job, df, fn, args=None):
 
     elif fn == 'field.rd.fits':
         wcsfn = job.get_filename('wcs.fits')
-        fieldxyfn = job.get_filename('job.axy')
+        fieldxyfn = job.get_axy_filename()
         if not (os.path.exists(wcsfn) and os.path.exists(fieldxyfn)):
             errmsg('indexxyls: WCS and Index rdls files don\'t exist.')
             raise FileConversionError(errmsg)
@@ -365,7 +365,7 @@ def convert(job, df, fn, args=None):
                     return convert(job, df, 'ppm-8bit')
                 else:
                     return convert(job, df, 'ppm')
-            xylist = job.get_filename('job.axy')
+            xylist = job.get_axy_filename()
             cmd = ('plotxy -i %s -W %i -H %i -s %i -x 1 -y 1 -C brightred -w 2 -P > %s' %
                    (xylist, dw, dh, scale, fullfn))
             run_convert_command(cmd)
@@ -449,7 +449,7 @@ def convert(job, df, fn, args=None):
         else:
             imgfn = convert(job, df, 'ppm-8bit')
             scale = 1.0
-        fxy = job.get_filename('job.axy')
+        fxy = job.get_axy_filename()
         match = job.get_filename('match.fits')
         ixy = convert(job, df, 'index-xy')
         commonargs = ' -S %f -x %f -y %f -w 2' % (scale, scale, scale)
@@ -482,7 +482,7 @@ def convert(job, df, fn, args=None):
                 return fullfn
             xyls = convert(job, df, 'xyls', args)
         else:
-            xyls = job.get_filename('job.axy')
+            xyls = job.get_axy_filename()
         (dscale, dw, dh) = df.get_small_scale()
         scale = 1.0 / float(dscale)
         commonargs = ('-i %s -x %g -y %g -w 1 -S %g -C red' %
@@ -497,7 +497,7 @@ def convert(job, df, fn, args=None):
 
     elif fn == 'sources-medium':
         imgfn = convert(job, df, 'ppm-medium-8bit')
-        xyls = job.get_filename('job.axy')
+        xyls = job.get_axy_filename()
         (dscale, dw, dh) = df.get_medium_scale()
         scale = 1.0 / float(dscale)
         commonargs = ('-i %s -x %g -y %g -w 2 -S %g -C red' %
@@ -511,7 +511,7 @@ def convert(job, df, fn, args=None):
 
     elif fn == 'sources-big':
         imgfn = convert(job, df, 'ppm-8bit')
-        xyls = job.get_filename('job.axy')
+        xyls = job.get_axy_filename()
         commonargs = ('-i %s -x %g -y %g -w 2 -C red' %
                       (xyls, 1, 1))
         cmd = (('plotxy %s -I %s -N 100 -r 6 -P' %

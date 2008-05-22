@@ -100,8 +100,7 @@ def real_handle_job(job, sshconfig):
     # Compute hash of uncompressed file.
     #field.compute_filehash(uncomp)
 
-    axy = 'job.axy'
-    axypath = job.get_filename(axy)
+    axypath = job.get_axy_filename()
     axyargs = {}
 
     filetype = job.submission.filetype
@@ -215,7 +214,7 @@ def real_handle_job(job, sshconfig):
     units = job.get_scaleunits()
 
     axyargs.update({
-        '-o' : axy,
+        '-o' : axypath,
         '--scale-units' : units,
         '--scale-low' : lower,
         '--scale-high' : upper,
