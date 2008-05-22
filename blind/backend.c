@@ -61,7 +61,7 @@ static struct option long_options[] =
 	    {0, 0, 0, 0}
     };
 
-static const char* OPTIONS = "hc:i:vC:";
+static const char* OPTIONS = "hc:i:vC:E";
 
 static void print_help(const char* progname) {
 	printf("Usage:   %s [options] <augmented xylist>\n"

@@ -14,9 +14,11 @@ read -s jobid
 jobid=`echo "$jobid" | sed s+-+/+g`
 
 # Create our job directory.
-cd /u/dstn/go/dsolver/jobs
+cd /u/dstn/go/dsolver/jobs/
 mkdir -p $jobid
 cd $jobid
+mkdir `hostname`
+cd `hostname`
 # Read tarred input data...
 #tar xf -
 
@@ -25,7 +27,11 @@ echo "Will read $nbytes bytes..." > /dev/stderr
 dd bs=1 count=$nbytes of=job.axy
 
 # stderr goes back over the ssh tunnel...
-$BACKEND -c $BACKEND_CONFIG -E -v job.axy > backend.stdout
+$BACKEND -c $BACKEND_CONFIG -E -v job.axy -C ../cancel > backend.stdout
+
+if [ -e solved ]; then
+    touch ../cancel
+fi
 
 # Send back all the files we generated!
 tar cf - --exclude=job.axy *

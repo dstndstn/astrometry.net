@@ -97,10 +97,6 @@ endif
 
 X := $(shell rm $(TMPFILE))
 
-flags:
-	@echo shared lib flags $(SHAREDLIBFLAGS_DEF)
-	@echo compile flags $(FLAGS_DEF)
-
 # FLAGS_DEF are gcc flags that are shared between compiling and
 # linking.  CFLAGS_DEF are compile flags, LDFLAGS_DEF are link flags.
 
@@ -136,5 +132,4 @@ CFLAGS_DEF += -D_GNU_SOURCE
 
 # fold in the user's LDFLAGS, if set...
 LDFLAGS_DEF := $(LDFLAGS) $(FLAGS_DEF)
-
 
