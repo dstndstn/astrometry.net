@@ -28,6 +28,8 @@ def get_shards():
 def solve(job):
     log('ssh-master.solve', job.jobid)
     axypath = job.get_axy_filename()
+
+    axy = read_file(axypath)
     
     shards = []
     for x in get_shards():
@@ -44,7 +46,9 @@ def solve(job):
         s.err = s.proc.stderr
 
         # FIXME - pipe the jobid and axy file to s.sin...
-
+        s.sin.write('%s\n', job.jobid)
+        s.sin.write('%i\n', len(axy))
+        s.sin.write(axy)
 
         s.running = True
         s.solved = False
@@ -141,14 +145,5 @@ def solve(job):
     tardata = f.getvalue()
     log('tardata length is', len(tardata))
     f.close()
-    res = HttpResponse()
-    res['Content-type'] = 'application/x-tar'
-    res.write(tardata)
-    return res
-    
 
-
-
-
-
-
+    return tardata

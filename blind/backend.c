@@ -57,6 +57,7 @@ static struct option long_options[] =
         {"verbose", no_argument,       0, 'v'},
 	    {"config",  required_argument, 0, 'c'},
 	    {"cancel",  required_argument, 0, 'C'},
+        {"to-stderr", no_argument,     0, 'E'},
 	    {0, 0, 0, 0}
     };
 
@@ -67,6 +68,7 @@ static void print_help(const char* progname) {
 	       "   [-c <backend config file>]  (default: \"backend.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable)\n"
            "   [-C <cancel-filename>]: quit solving if the file <cancel-filename> appears.\n"
            "   [-v]: verbose\n"
+           "   [-E]: send log messages to stderr\n"
 	       "\n", progname);
 }
 
@@ -820,6 +822,7 @@ int main(int argc, char** args) {
     sl* strings = sl_new(4);
     char* cancelfn = NULL;
     int loglvl = LOG_MSG;
+    bool tostderr = FALSE;
 
 	while (1) {
 		int option_index = 0;
@@ -827,6 +830,9 @@ int main(int argc, char** args) {
 		if (c == -1)
 			break;
 		switch (c) {
+        case 'E':
+            tostderr = TRUE;
+            break;
 		case 'h':
             help = TRUE;
 			break;
@@ -858,6 +864,8 @@ int main(int argc, char** args) {
 	}
 
     log_init(loglvl);
+    if (tostderr)
+        log_to(stderr);
 
 	backend = backend_new();
 

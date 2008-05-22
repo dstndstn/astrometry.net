@@ -8,10 +8,15 @@ log_t _logger_global;
 
 void log_init_structure(log_t* logger, enum log_level level) {
 	logger->level = level;
+    logger->f = stdout;
 }
 
 void log_init(enum log_level level) {
 	log_init_structure(&_logger_global, level);
+}
+
+void log_to(FILE* fid) {
+	_logger_global.f = fid;
 }
 
 log_t* log_create(enum log_level level) {
@@ -29,8 +34,8 @@ static void loglvl(const log_t* logger, enum log_level level,
 	// FIXME: add pthread synchronization
 	if (level > logger->level)
 		return;
-	vfprintf(stdout, format, va);
-	fflush(stdout);
+	vfprintf(logger->f, format, va);
+	fflush(logger->f);
 }
 
 void loglevel(enum log_level level,

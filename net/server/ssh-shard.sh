@@ -18,7 +18,11 @@ cd /u/dstn/go/dsolver/jobs
 mkdir -p $jobid
 cd $jobid
 # Read tarred input data...
-tar xf -
+#tar xf -
+
+read -s nbytes
+echo "Will read $nbytes bytes..." > /dev/stderr
+dd bs=1 count=$nbytes of=job.axy
 
 # stderr goes back over the ssh tunnel...
 $BACKEND -c $BACKEND_CONFIG -E -v job.axy > backend.stdout

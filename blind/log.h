@@ -1,6 +1,8 @@
 #ifndef _LOG_H
 #define _LOG_H
 
+#include <stdio.h>
+
 enum log_level {
 	LOG_NONE,
 	LOG_ERROR,
@@ -11,6 +13,7 @@ enum log_level {
 
 struct log_t {
 	enum log_level level;
+    FILE* f;
 };
 typedef struct log_t log_t;
 
@@ -19,6 +22,11 @@ typedef struct log_t log_t;
  * log_* functions.
  */
 void log_init(enum log_level level);
+
+/**
+ Sends global logging to the given FILE*.
+ */
+void log_to(FILE* fid);
 
 /**
  * Create a new logger.

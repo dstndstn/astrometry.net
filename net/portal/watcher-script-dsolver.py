@@ -40,6 +40,8 @@ from astrometry.net.portal.wcs import TanWCS
 from astrometry.util.run_command import run_command
 from astrometry.util.file import *
 
+from astrometry.net.server import ssh_master
+
 import astrometry.util.sip as sip
 
 def bailout(job, reason):
@@ -256,18 +258,22 @@ def real_handle_job(job):
     job.set_starttime_now()
     job.save()
 
-    # POST to master server...
+    if False:
+        # POST to master server...
 
-    # HACKeroo!
-    master_url = 'http://oven.cosmo.fas.nyu.edu:8888/test/master/solve/'
+        # HACKeroo!
+        master_url = 'http://oven.cosmo.fas.nyu.edu:8888/test/master/solve/'
 
-    log('Contacting master server %s ...' % master_url)
+        log('Contacting master server %s ...' % master_url)
 
-    axydata = read_file(axypath).encode('base64_codec')
-    postdata = urlencode({ 'axy': axydata, 'jobid': jobid })
-    f = urlopen(master_url, postdata)
-    tardata = f.read()
-    f.close()
+        axydata = read_file(axypath).encode('base64_codec')
+        postdata = urlencode({ 'axy': axydata, 'jobid': jobid })
+        f = urlopen(master_url, postdata)
+        tardata = f.read()
+        f.close()
+
+    tardata = ssh_master.solve(job)
+
     
     # extract the resulting tarball...
     f = StringIO(tardata)
