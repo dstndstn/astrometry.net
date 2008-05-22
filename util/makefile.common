@@ -30,19 +30,32 @@ endif
 makefile.%: ;
 Makefile: ;
 
+# sh shell
+AN_SHELL = /bin/sh
+
 RANLIB := ranlib
 
-AWK := LC_ALL=C awk
+AWK := LC_ALL=C LC_NUMERIC=EN_US awk
 
 FLAGS_DEF := -g -Wall
 
 #MKTEMP := mktemp -t whatever.XXXXXX
 #TMPFILE := $(shell $(MKTEMP))
 
-include compiler-flags
+# Assume "COMMON" is defined (as the util/ directory) by the Makefile that
+# includes this one.
 
-compiler-flags: get-compiler-flags.sh makefile.common
-	./get-compiler-flags.sh > $@
+include $(COMMON)/compiler-flags
+
+$(COMMON)/compiler-flags: $(COMMON)/get-compiler-flags.sh $(COMMON)/makefile.common
+    $(AN_SHELL) $(COMMON)/get-compiler-flags.sh > $@
+
+# FLAGS_DEF are gcc flags that are shared between compiling and
+# linking.  CFLAGS_DEF are compile flags, LDFLAGS_DEG are link flags.
+
+# speedy!
+#FLAGS_DEF += -O3
+#FLAGS_DEF += -fomit-frame-pointer
 
 # debuggy!
 FLAGS_DEF += -O0
@@ -73,7 +86,5 @@ CFLAGS_DEF += -D_GNU_SOURCE
 # fold in the user's LDFLAGS, if set...
 LDFLAGS_DEF := $(LDFLAGS) $(FLAGS_DEF)
 
-# sh shell
-AN_SHELL = /bin/sh
 
 #X := $(shell echo rm $(TMPFILE); rm $(TMPFILE))
