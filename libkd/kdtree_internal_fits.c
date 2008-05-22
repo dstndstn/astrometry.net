@@ -214,6 +214,7 @@ int MANGLE(kdtree_read_fits)(const char* fn, kdtree_t* kd, extra_table* uextras,
 
 	if (extras[ibb].found) {
 		kd->bb.any = extras[ibb].ptr;
+        kd->n_bb = extras[ibb].nitems;
 	}
 
 	if (extras[iperm].found) {

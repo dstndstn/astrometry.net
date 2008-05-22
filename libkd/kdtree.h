@@ -213,6 +213,8 @@ struct kdtree {
 		u16* s;
 		void* any;
 	} bb;
+    // how many bounding-boxes were found?
+    int n_bb;
 
 	/* Split position (& dimension for ints) (ttype x ninterior). */
 	union {
@@ -279,6 +281,7 @@ struct kdtree_qres {
 	u32 *inds;    /* Indexes into original data set */
 };
 
+bool kdtree_has_old_bb(const kdtree_t* kd);
 
 /* These functions return the number of bytes each entry in the kdtree is
  expected to have.  These return positive values EVEN IF THE ACTUAL array

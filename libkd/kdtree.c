@@ -31,6 +31,10 @@
 #include "an-fls.h"
 #include "errors.h"
 
+bool kdtree_has_old_bb(const kdtree_t* kd) {
+    return kd->n_bb != kd->nnodes;
+}
+
 KD_DECLARE(kdtree_update_funcs, void, (kdtree_t*));
 
 void kdtree_update_funcs(kdtree_t* kd) {

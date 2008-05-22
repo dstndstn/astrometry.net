@@ -66,6 +66,11 @@ int main(int argc, char** args) {
     infn = args[optind];
     outfn = args[optind+1];
 
+    if (!strcmp(infn, outfn)) {
+        printf("Sorry, in-place modification of files is not supported.\n");
+        exit(-1);
+    }
+
     printf("Reading kdtree from file %s ...\n", infn);
 
     {
@@ -85,6 +90,11 @@ int main(int argc, char** args) {
         }
 
         errors_pop_state();
+    }
+
+    if (!kdtree_has_old_bb(kd)) {
+        printf("Kdtree %s has the correct number of bounding boxes; it doesn't need fixing.\n", infn);
+        exit(0);
     }
 
     printf("Tree name: %s\n", kd->name);
@@ -198,5 +208,8 @@ int main(int argc, char** args) {
 
     kdtree_fits_close(kd);
     errors_free();
+
+    printf("Fixed file %s was written successfully.\n", outfn);
+
 	return 0;
 }
