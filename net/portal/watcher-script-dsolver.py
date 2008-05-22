@@ -258,21 +258,6 @@ def real_handle_job(job):
     job.set_starttime_now()
     job.save()
 
-    if False:
-        # POST to master server...
-
-        # HACKeroo!
-        master_url = 'http://oven.cosmo.fas.nyu.edu:8888/test/master/solve/'
-
-        log('Contacting master server %s ...' % master_url)
-
-        axydata = read_file(axypath).encode('base64_codec')
-        postdata = urlencode({ 'axy': axydata, 'jobid': jobid })
-        f = urlopen(master_url, postdata)
-        tardata = f.read()
-        f.close()
-
-
     def logfunc(s):
         f = open(job.get_filename('blind.log'), 'a')
         f.write(s)
