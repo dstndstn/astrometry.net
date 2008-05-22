@@ -39,19 +39,75 @@ AWK := LC_ALL=C LC_NUMERIC=EN_US awk
 
 FLAGS_DEF := -g -Wall
 
-#MKTEMP := mktemp -t whatever.XXXXXX
-#TMPFILE := $(shell $(MKTEMP))
+TMPFILE := cc-out.tmp
+#CCTEST := $(CC) -x c -c -o $(TMPFILE) -
+#CCTEST_SUFF := < /dev/null > /dev/null 2> /dev/null
 
-# Assume "COMMON" is defined (as the util/ directory) by the Makefile that
-# includes this one.
 
-include $(COMMON)/compiler-flags
+CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - < /dev/null > /dev/null 2> /dev/null && echo $(ARG)
+#COMPILER_DEFS := $(shell $(CC) -dM -E - < /dev/null 2> /dev/null)
+#DEFTEST = echo $(COMPILER_DEFS) | grep -l $(STR) > /dev/null
+#COMPILER_DEFS := $(shell 
+DEFTEST = $(CC) -dM -E - < /dev/null 2> /dev/null | grep "$(STR)" > /dev/null
 
-$(COMMON)/compiler-flags: $(COMMON)/get-compiler-flags.sh $(COMMON)/makefile.common
-    $(AN_SHELL) $(COMMON)/get-compiler-flags.sh > $@
+
+ARG := -shared
+SHAREDLIBFLAGS_DEF := $(shell $(CCTEST))
+
+ARG := -ffinite-math-only -fno-signaling-nans
+FLAGS_DEF += $(shell $(CCTEST))
+
+# Use -march=native if it's available (gcc 4.2 and above)
+ARG := -march=native
+X := $(shell $(CCTEST))
+ifneq ($(X),)
+  FLAGS_DEF += $(X)
+else
+  # Try to guess -march
+  MACHINE:=$(shell uname -m)
+  ifeq ($(MACHINE), i686)
+    # gcc before version 3.1 doesn't support "pentium4"; use "i686" instead.
+
+    ARG := -march=pentium4
+    X := $(shell $(CCTEST))
+    ifneq ($(X),)
+      STR := \#define __tune_pentium4__ 1
+	  FLAGS_DEF += $(shell $(DEFTEST) && echo "-march=pentium4" \
+                                      || echo "-march=i686")
+    else
+      ARG := -march=i686
+      FLAGS_DEF += $(shell $(CCTEST))
+    endif
+
+  else ifeq ($(MACHINE), x86_64)
+    STR := \#define __tune_k8__ 1
+    FLAGS_DEF += $(shell $(DEFTEST) && echo "-march=k8")
+	FLAGS_DEF += -m64
+
+  else # ppc, ...
+	FLAGS_DEF += -DNOT_686
+
+  endif
+
+endif
+
+STR := __APPLE__
+X := $(shell $(DEFTEST) && echo "-DNOBOOL")
+ifneq ($(X),)
+  # Darwin does dynamic libs differently
+  ARG := -dynamic -dynamiclib
+  X := $(shell $(CCTEST))
+  SHAREDLIBFLAGS_DEF += $(X)
+endif
+
+X := $(shell rm $(TMPFILE))
+
+flags:
+	@echo shared lib flags $(SHAREDLIBFLAGS_DEF)
+	@echo compile flags $(FLAGS_DEF)
 
 # FLAGS_DEF are gcc flags that are shared between compiling and
-# linking.  CFLAGS_DEF are compile flags, LDFLAGS_DEG are link flags.
+# linking.  CFLAGS_DEF are compile flags, LDFLAGS_DEF are link flags.
 
 # speedy!
 #FLAGS_DEF += -O3
@@ -87,4 +143,3 @@ CFLAGS_DEF += -D_GNU_SOURCE
 LDFLAGS_DEF := $(LDFLAGS) $(FLAGS_DEF)
 
 
-#X := $(shell echo rm $(TMPFILE); rm $(TMPFILE))
