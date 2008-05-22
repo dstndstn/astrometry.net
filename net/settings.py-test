@@ -133,7 +133,6 @@ INSTALLED_APPS = (
 	'astrometry.net.tile',
 	'astrometry.net.upload',
 	'astrometry.net.portal',
-    'astrometry.net.server',
 	#'astrometry.net.vo',
     #'astrometry.net.testbed',
 )
