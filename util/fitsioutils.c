@@ -622,13 +622,14 @@ int fits_copy_header(const qfits_header* src, qfits_header* dest, char* key) {
 }
 
 int fits_copy_all_headers(const qfits_header* src, qfits_header* dest, char* targetkey) {
-	int i;
+	int i, N;
 	char key[FITS_LINESZ+1];
 	char val[FITS_LINESZ+1];
 	char com[FITS_LINESZ+1];
 	char lin[FITS_LINESZ+1];
+    N = qfits_header_n(src);
 
-	for (i=0;; i++) {
+	for (i=0; i<N; i++) {
 		if (qfits_header_getitem(src, i, key, val, com, lin) == -1)
             break;
 		if (targetkey && strcasecmp(key, targetkey))

@@ -677,7 +677,7 @@ int qfits_header_getitem(
 
     if (hdr==NULL) return -1 ;
     if (key==NULL && val==NULL && com==NULL && lin==NULL) return 0 ;
-    if (idx<0 || idx>hdr->n) return -1 ;
+    if (idx<0 || idx>=hdr->n) return -1 ;
 
     /* Get pointer to keytuple */
     if (idx == 0) {

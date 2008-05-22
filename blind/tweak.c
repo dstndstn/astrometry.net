@@ -714,10 +714,10 @@ void find_correspondences(tweak_t* t, double jitter)  // actually call the dualt
     // HACK - force sort.
 
 	t->kd_image = kdtree_build(NULL, data_image, t->n, 3, 4, KDTT_DOUBLE,
-	                           KD_BUILD_BBOX | KD_BUILD_FORCE_SORT);
+	                           KD_BUILD_BBOX); // | KD_BUILD_FORCE_SORT);
 
 	t->kd_ref = kdtree_build(NULL, data_ref, t->n_ref, 3, 4, KDTT_DOUBLE,
-	                         KD_BUILD_BBOX | KD_BUILD_FORCE_SORT);
+	                         KD_BUILD_BBOX); // | KD_BUILD_FORCE_SORT);
 
 	// Storage for correspondences
 	t->image = il_new(600);
