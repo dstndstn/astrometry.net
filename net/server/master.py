@@ -20,7 +20,10 @@ class ShardRequest(object):
         self.url = url
 
 def get_shard_urls():
-    return ['http://localhost:9058/test/shard/',
+    return ['http://localhost:9055/test/shard/',
+            'http://localhost:9056/test/shard/',
+            'http://localhost:9057/test/shard/',
+            'http://localhost:9058/test/shard/',
             'http://localhost:9059/test/shard/',
             ]
 
