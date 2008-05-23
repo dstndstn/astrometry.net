@@ -191,7 +191,10 @@ report:
 	-$(CC) --version
 	-$(MAKE) --version
 	-$(CC) -dM -E - < /dev/null
+	-cat /proc/cpuinfo
+	-free
 	@echo "SHAREDLIBFLAGS_DEF: $(SHAREDLIBFLAGS_DEF)"
 	@echo "FLAGS_DEF: $(FLAGS_DEF)"
 	@echo "CFLAGS: $(CFLAGS)"
 	@echo "LDFLAGS: $(LDFLAGS)"
+	@echo "cpuinfo:"
