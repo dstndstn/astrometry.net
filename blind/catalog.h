@@ -33,6 +33,7 @@ struct catalog {
 	double decmin;
 	double decmax;
 	int healpix;
+    int hpnside;
 
 	double* stars;
 

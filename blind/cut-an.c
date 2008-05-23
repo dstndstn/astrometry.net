@@ -534,6 +534,7 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 	cat->healpix = bighp;
+    cat->hpnside = bignside;
     catheader = catalog_get_header(cat);
     add_to_header(catheader, args, argc, allsky, jitter, sweeps);
 

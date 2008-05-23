@@ -42,6 +42,7 @@ static int callback_read_header(qfits_header* primheader, qfits_header* header,
 
 	cat->numstars = qfits_header_getint(primheader, "NSTARS", -1);
 	cat->healpix = qfits_header_getint(primheader, "HEALPIX", -1);
+	cat->hpnside = qfits_header_getint(primheader, "HPNSIDE", 1);
 	if (fits_check_endian(primheader)) {
 		if (errstr) *errstr = "Catalog file was written with wrong endianness.\n";
         return -1;
@@ -120,7 +121,8 @@ static void add_default_header_vals(catalog* cat) {
     fits_add_endian(hdr);
 	fits_add_double_size(hdr);
 	qfits_header_add(hdr, "NSTARS", "0", "Number of stars in this file.", NULL);
-	qfits_header_add(hdr, "HEALPIX", "-1", "Healpix covered by this catalog.", NULL);
+	qfits_header_add(hdr, "HEALPIX", "-1", "Healpix covered by this catalog, with Nside=HPNSIDE", NULL);
+	qfits_header_add(hdr, "HPNSIDE", "-1", "Nside of HEALPIX.", NULL);
 	qfits_header_add(hdr, "COMMENT", "This is a flat array of XYZ for each catalog star.", NULL, NULL);
 	qfits_header_add(hdr, "COMMENT", "  (ie, star position on the unit sphere)", NULL, NULL);
 	qfits_header_add(hdr, "COMMENT", "  (stored as three native-{endian,size} doubles)", NULL, NULL);
@@ -137,6 +139,8 @@ catalog* catalog_open_for_writing(char* fn)  {
     if (fitsbin_start_write(cat->fb))
 		//fprintf(stderr, "%s\n", errstr);
         goto bailout;
+
+    cat->hpnside = 1;
 
     add_default_header_vals(cat);
 	return cat;
@@ -204,7 +208,8 @@ int catalog_fix_header(catalog* cat) {
 	hdr = catalog_get_header(cat);
 	// fill in the real values...
     fits_header_mod_int(hdr, "NSTARS", cat->numstars, "Number of stars.");
-    fits_header_mod_int(hdr, "HEALPIX", cat->healpix, "Healpix covered by this catalog.");
+    fits_header_mod_int(hdr, "HEALPIX", cat->healpix, "Healpix covered by this catalog, with Nside=HPNSIDE");
+    fits_header_mod_int(hdr, "HPNSIDE", cat->hpnside, "Nside of HEALPIX.");
 
 	if (fitsbin_fix_primary_header(fb) ||
 		fitsbin_fix_header(fb)) {
