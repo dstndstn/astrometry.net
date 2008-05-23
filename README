@@ -433,6 +433,15 @@ code.  Here are some things you can do to make the code run faster:
 
       $ ARCH_FLAGS="-mtune=nocona" make
 
+    You can find details in the gcc manual:
+      http://gcc.gnu.org/onlinedocs/
+
+    You probably want to look in the section:
+      "GCC Command Options"
+         -> "Hardware Models and Configurations"
+             -> "Intel 386 and AMD x86-64 Options"
+
+    http://gcc.gnu.org/onlinedocs/gcc-4.3.0/gcc/i386-and-x86_002d64-Options.html#i386-and-x86_002d64-Options
 
 XYLISTS
 -------
