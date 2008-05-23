@@ -139,6 +139,8 @@ static int read_parameters(blind_t* bp)
 		}
 		if (is_word(line, "help", &nextword)) {
 			logmsg("No help soup for you!\n  (use the source, Luke)\n");
+        } else if (is_word(line, "logtostderr", &nextword)) {
+            log_to(stderr);
 		} else if (is_word(line, "idfile", &nextword)) {
 			bp->use_idfile = TRUE;
 		} else if (is_word(line, "verify ", &nextword)) {
