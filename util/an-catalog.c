@@ -147,6 +147,7 @@ an_catalog* an_catalog_open_for_writing(char* fn) {
         an_catalog_close(cat);
         return NULL;
     }
+    add_columns(cat, TRUE);
     hdr = fitstable_get_primary_header(cat);
 	qfits_header_add(hdr, "AN_CAT", "T", "This is an Astrometry.net catalog.", NULL);
     qfits_header_add(hdr, "AN_FILE", AN_FILETYPE_ANCAT, "Astrometry.net file type", NULL);

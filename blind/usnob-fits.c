@@ -49,7 +49,8 @@ static void add_columns(fitstable_t* tab, bool write) {
     tfits_type i32 = fitscolumn_i32_type();
     tfits_type J = TFITS_BIN_TYPE_J;
     tfits_type u = fitscolumn_int_type();
-    tfits_type logical = fitscolumn_boolean_type();
+    //tfits_type bool = fitscolumn_bool_type();
+    //tfits_type logical = fitscolumn_boolean_type();
     tfits_type bitfield = fitscolumn_bitfield_type();
     char* nil = " ";
     int ob;
@@ -99,10 +100,9 @@ static void add_columns(fitstable_t* tab, bool write) {
     ADDCOL(bitfield, bitfield, "FLAGS", nil, flags);
 
     // AN_DIFFRACTION_SPIKE is optional.
-    //ADDCOL(logical,  logical,  "AN_DIFFRACTION_SPIKE", nil, an_diffraction_spike);
-    fitstable_add_column_struct(tab, logical, 1,
+    fitstable_add_column_struct(tab, bitfield, 1,
                                 offsetof(usnob_entry, an_diffraction_spike),
-                                (write ? logical : any),
+                                (write? bitfield : any),
                                 "AN_DIFFRACTION_SPIKE", nil, FALSE);
 }
 #undef ADDCOL
@@ -111,7 +111,6 @@ static void add_columns(fitstable_t* tab, bool write) {
 static int postprocess_read_structs(fitstable_t* table, void* struc,
                                     int stride, int offset, int N) {
     int i;
-    //usnob_fits* cat = table;
     usnob_entry* entries = struc;
 
     for (i=0; i<N; i++) {

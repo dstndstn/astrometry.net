@@ -127,8 +127,8 @@ struct usnob_entry {
 	// YS4.0 correlation
 	bool ys4;
 
-	// astrometry.net diffraction detection
-	bool an_diffraction_spike;
+	// astrometry.net diffraction detection: 0, 1=spike, 2=halo
+	uint8_t an_diffraction_spike;
 
 	// this is our identifier; it's not in the USNO-B files.
 	// it allows us to point back to the USNO-B source.

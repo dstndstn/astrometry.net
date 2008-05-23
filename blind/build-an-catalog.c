@@ -72,7 +72,6 @@ static void init_catalog(an_catalog** cats, char* outfn, int hp, int Nside, int 
 	// header remarks...
     hdr = an_catalog_get_primary_header(cats[hp]);
 	fits_header_add_int(hdr, "HEALPIX", hp, "The healpix number of this catalog.");
-	//fits_header_add_int(hdr, "NOBJS", 0, "(filler)");
 	fits_header_add_int(hdr, "NSIDE", Nside, "The healpix resolution.");
 	boilerplate_add_fits_headers(hdr);
 	qfits_header_add(hdr, "HISTORY", "Created by the program \"build-an-catalog\"", NULL, NULL);
@@ -279,7 +278,7 @@ int main(int argc, char** args) {
 				if (entry->diffraction_spike)
 					// may be a diffraction spike.  Ignore it.
 					continue;
-				if (entry->an_diffraction_spike=='1'){
+				if (entry->an_diffraction_spike) {
 					spikesFound++;
 					continue;
 				}
