@@ -54,3 +54,8 @@
 #include "kdtree_internal.c"
 #include "kdtree_internal_fits.c"
 
+// FIXME
+double kd_round(double x) {
+    return KD_ROUND(x);
+}
+

@@ -184,6 +184,12 @@ int fitsbin_write_item(fitsbin_t* fb, int chunk, void* data) {
 }
 
 int fitsbin_start_write(fitsbin_t* fb) {
+	fb->fid = fopen(fn, "wb");
+	if (!fb->fid) {
+		fprintf(stderr, "Couldn't open file \"%s\" for output: %s\n", fn, strerror(errno));
+        fitsbin_close(fb);
+        return 
+	}
     return 0;
 }
 
@@ -195,14 +201,11 @@ fitsbin_t* fitsbin_open_for_writing(const char* fn, const char* tablename) {
 	if (!fb)
         return NULL;
 
-	fb->fid = fopen(fn, "wb");
-	if (!fb->fid) {
-		fprintf(stderr, "Couldn't open file \"%s\" for output: %s\n", fn, strerror(errno));
-        fitsbin_close(fb);
-        return NULL;
-	}
-
 	fb->filename = strdup(fn);
+
+    if (fitsbin_start_write(fb))
+        return NULL;
+
     fb->primheader = qfits_header_default();
 
     chunk = fb->chunks;

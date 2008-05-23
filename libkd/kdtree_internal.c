@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <sys/param.h>
 
 #include "kdtree.h"
 #include "kdtree_internal.h"
@@ -2025,7 +2026,7 @@ kdtree_t* MANGLE(kdtree_convert_data)
 	ddata = kd->data.any = MALLOC(N * D * sizeof(dtype));
 	for (i=0; i<N; i++) {
 		for (d=0; d<D; d++) {
-			etype dd = POINT_ED(kd, d, *edata, floor);
+			etype dd = POINT_ED(kd, d, *edata, KD_ROUND);
 			if (dd > DTYPE_MAX) {
 				WARNING("Clamping value %.12g -> %.12g to %u", (double)*edata, (double)dd, (unsigned int)DTYPE_MAX);
 				dd = DTYPE_MAX;
@@ -2040,6 +2041,14 @@ kdtree_t* MANGLE(kdtree_convert_data)
 			edata++;
 		}
 	}
+
+    // tune up kd->maxval so that it is larger than the external-type
+    // value of all points in the tree.
+    for (d=0; d<D; d++) {
+        dtype dmax = POINT_ED(kd, d, kd->maxval[d], KD_ROUND);
+        etype emax = POINT_DE(kd, d, dmax);
+        kd->maxval[d] = MAX(kd->maxval[d], emax);
+    }
 
 #ifndef NDEBUG
 	for (i=0; i<N; i++) {

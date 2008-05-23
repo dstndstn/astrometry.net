@@ -141,6 +141,8 @@ enum kd_tree_types {
 
 	/* Data and tree are "u16". */
 	KDTT_DSS = KDT_EXT_DOUBLE | KDT_DATA_U16 | KDT_TREE_U16,
+
+	KDTT_DDU = KDT_EXT_DOUBLE | KDT_DATA_DOUBLE | KDT_TREE_U32,
 };
 
 struct kdtree;

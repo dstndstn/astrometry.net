@@ -137,7 +137,6 @@ catalog* catalog_open_for_writing(char* fn)  {
 
     fitsbin_set_filename(cat->fb, fn);
     if (fitsbin_start_write(cat->fb))
-		//fprintf(stderr, "%s\n", errstr);
         goto bailout;
 
     cat->hpnside = 1;

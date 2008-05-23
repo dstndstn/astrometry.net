@@ -305,6 +305,14 @@ void test_rs_split_duu(CuTest* tc) {
     run_test_rs(tc, KDTT_DUU, KD_BUILD_SPLIT, 1e-9);
 }
 
+/**
+ Sadly, does not work.
+
+ void test_rs_split_ddu(CuTest* tc) {
+ run_test_rs(tc, KDTT_DDU, KD_BUILD_SPLIT, 1e-9);
+ }
+ */
+
 void test_rs_bb_dss(CuTest* tc) {
     run_test_rs(tc, KDTT_DSS, KD_BUILD_BBOX, 1e-5);
 }
