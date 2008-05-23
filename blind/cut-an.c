@@ -251,9 +251,9 @@ static int get_magnitude(an_entry* an,
 	return 0;
 }
 
+// Used for debugging / drawing nice pictures.
 #include "rdlist.h"
-
-static void write_radeclist(bool* owned, int Nside, char* fn) {
+void write_radeclist(bool* owned, int Nside, char* fn) {
 	int HP = 12 * Nside * Nside;
     int i;
     rdlist_t* rd = rdlist_open_for_writing(fn);
@@ -450,7 +450,7 @@ int main(int argc, char** args) {
         ninside = nowned;
         printf("Number of fine healpixes owned: %i\n", nowned);
 
-        write_radeclist(owned, Nside, "step0.rdls");
+        //write_radeclist(owned, Nside, "step0.rdls");
 
 		// Prime the queue with the boundaries of the healpix.
 		for (i=0; i<(Nside / bignside); i++) {
@@ -506,18 +506,18 @@ int main(int argc, char** args) {
 			}
 			il_remove_index_range(q, 0, Q);
 
-            char fn[16];
-            sprintf(fn, "step%02i.rdls", k+1);
-            write_radeclist(owned, Nside, fn);
+            /*
+             char fn[16];
+             sprintf(fn, "step%02i.rdls", k+1);
+             write_radeclist(owned, Nside, fn);
+             */
 		}
 		il_free(q);
 
-        write_radeclist(owned, Nside, "final.rdls");
+        //write_radeclist(owned, Nside, "final.rdls");
 
 		printf("%i healpixes in this big healpix, plus %i boundary make %i total.\n",
                ninside, nowned - ninside, nowned);
-
-        exit(0);
 
 	} else
 		owned = NULL;
