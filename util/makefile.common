@@ -74,13 +74,16 @@ else
       FLAGS_DEF += $(shell $(CCTEST))
     endif
 
-  else ifeq ($(MACHINE), x86_64)
-    STR := \#define __tune_k8__ 1
-    FLAGS_DEF += $(shell $(DEFTEST) && echo "-march=k8")
-	FLAGS_DEF += -m64
+  else
+    # make 3.79 doesn't allow multiple "else" statements, so nest 'em.
+    ifeq ($(MACHINE), x86_64)
+      STR := \#define __tune_k8__ 1
+      FLAGS_DEF += $(shell $(DEFTEST) && echo "-march=k8")
+        FLAGS_DEF += -m64
+    else # ppc, ...
+      FLAGS_DEF += -DNOT_686
 
-  else # ppc, ...
-	FLAGS_DEF += -DNOT_686
+    endif
 
   endif
 
