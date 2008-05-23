@@ -195,6 +195,5 @@ report:
 	-free
 	@echo "SHAREDLIBFLAGS_DEF: $(SHAREDLIBFLAGS_DEF)"
 	@echo "FLAGS_DEF: $(FLAGS_DEF)"
-	@echo "CFLAGS: $(CFLAGS)"
-	@echo "LDFLAGS: $(LDFLAGS)"
-	@echo "cpuinfo:"
+	@echo "CFLAGS_DEF: $(CFLAGS_DEF)"
+	@echo "LDFLAGS_DEF: $(LDFLAGS_DEF)"
