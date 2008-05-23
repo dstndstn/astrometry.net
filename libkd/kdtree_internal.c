@@ -1983,7 +1983,7 @@ static double compute_scale(dtype* ddata, int N, int D,
 	return (double)(DTYPE_MAX) / range;
 }
 
-// same as "compute_scale" but takes an "etype".
+// same as "compute_scale" but takes data of "etype".
 static double compute_scale_ext(etype* edata, int N, int D,
 								double* lo, double* hi) {
 	double range;
@@ -2025,10 +2025,7 @@ kdtree_t* MANGLE(kdtree_convert_data)
 	ddata = kd->data.any = MALLOC(N * D * sizeof(dtype));
 	for (i=0; i<N; i++) {
 		for (d=0; d<D; d++) {
-			//*ddata = POINT_ED(kd, d, *edata, KD_ROUND);
-			// Bizarrely, the above causes conversion errors,
-			// while the below does not...
-			etype dd = POINT_ED(kd, d, *edata, KD_ROUND);
+			etype dd = POINT_ED(kd, d, *edata, floor);
 			if (dd > DTYPE_MAX) {
 				WARNING("Clamping value %.12g -> %.12g to %u", (double)*edata, (double)dd, (unsigned int)DTYPE_MAX);
 				dd = DTYPE_MAX;
@@ -2043,16 +2040,6 @@ kdtree_t* MANGLE(kdtree_convert_data)
 			edata++;
 		}
 	}
-
-    // adjust minval, maxval
-    for (d=0; d<D; d++) {
-        dtype dt;
-        // have to do this with an intermediate "dtype" variable to force down-conversion.
-        dt = POINT_ED(kd, d, kd->minval[d], floor);
-        kd->minval[d] = POINT_DE(kd, d, dt);
-        dt = POINT_ED(kd, d, kd->maxval[d], ceil);
-        kd->maxval[d] = POINT_DE(kd, d, dt);
-    }
 
 #ifndef NDEBUG
 	for (i=0; i<N; i++) {

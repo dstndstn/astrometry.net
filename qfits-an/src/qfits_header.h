@@ -64,6 +64,10 @@ typedef struct qfits_header qfits_header;
 
 void qfits_header_debug_dump(const qfits_header*);
 
+int qfits_header_list(const qfits_header* hdr, FILE* out);
+                      
+
+
 qfits_header * qfits_header_new(void) ;
 qfits_header * qfits_header_default(void) ;
 int qfits_header_n(const qfits_header*);

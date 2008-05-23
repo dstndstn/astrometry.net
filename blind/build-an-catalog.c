@@ -179,7 +179,7 @@ int main(int argc, char** args) {
         qfits_header* hdr;
         printf("\n----FITS header for %s----\n", infn);
         hdr = qfits_header_read(infn);
-        qfits_header_dump(hdr, stdout);
+        qfits_header_list(hdr, stdout);
         qfits_header_destroy(hdr);
         printf("--------------------------\n");
     }

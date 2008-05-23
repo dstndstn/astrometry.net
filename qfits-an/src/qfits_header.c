@@ -891,6 +891,34 @@ int qfits_header_dump(
     return 0 ;
 }
 
+
+int qfits_header_list(
+        const qfits_header  *   hdr,
+        FILE                *   out)
+{
+    keytuple    *   k ;
+    char            line[81];
+    int             n_out ;    
+
+    if (hdr==NULL) return -1 ;
+    if (out==NULL) out=stdout ;
+
+    k = (keytuple*)hdr->first ;
+    n_out = 0 ;
+    while (k!=NULL) {
+        /* Make line from information in the node */
+        qfits_header_makeline(line, k, 1);
+        if ((fwrite(line, 1, 80, out))!=80) {
+            fprintf(stderr, "error dumping FITS header");
+            return -1 ;
+        }
+        fprintf(out, "\n");
+        n_out ++;
+        k=k->next;
+    }
+    return 0 ;
+}
+
 /**@}*/
 
 /*----------------------------------------------------------------------------*/
