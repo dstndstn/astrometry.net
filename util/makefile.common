@@ -54,39 +54,45 @@ SHAREDLIBFLAGS_DEF := $(shell $(CCTEST))
 ARG := -ffinite-math-only -fno-signaling-nans
 FLAGS_DEF += $(shell $(CCTEST))
 
-# Use -march=native if it's available (gcc 4.2 and above)
-ARG := -march=native
-X := $(shell $(CCTEST))
-ifneq ($(X),)
-  FLAGS_DEF += $(X)
+ifneq ($(origin ARCH_FLAGS),undefined)
+  FLAGS_DEF += $(ARCH_FLAGS)
 else
-  # Try to guess -march
-  MACHINE:=$(shell uname -m)
-  ifeq ($(MACHINE), i686)
-    # gcc before version 3.1 doesn't support "pentium4"; use "i686" instead.
+  # Try to guess some good compiler flags for this CPU.
 
-    ARG := -march=pentium4
-    X := $(shell $(CCTEST))
-    ifneq ($(X),)
-      STR := \#define __tune_pentium4__ 1
-	  FLAGS_DEF += $(shell $(DEFTEST) && echo "-march=pentium4" \
-                                      || echo "-march=i686")
-    else
-      ARG := -march=i686
-      FLAGS_DEF += $(shell $(CCTEST))
-    endif
-
+  # Use -march=native if it's available (gcc 4.2 and above)
+  ARG := -march=native
+  X := $(shell $(CCTEST))
+  ifneq ($(X),)
+    FLAGS_DEF += $(X)
   else
-    # make 3.79 doesn't allow multiple "else" statements, so nest 'em.
-    ifeq ($(MACHINE), x86_64)
-      STR := \#define __tune_k8__ 1
-      FLAGS_DEF += $(shell $(DEFTEST) && echo "-march=k8")
-        FLAGS_DEF += -m64
-    else # ppc, ...
-      FLAGS_DEF += -DNOT_686
+    # Try to guess -march
+    MACHINE:=$(shell uname -m)
+    ifeq ($(MACHINE), i686)
+      # gcc before version 3.1 doesn't support "pentium4"; use "i686" instead.
+
+      ARG := -march=pentium4
+      X := $(shell $(CCTEST))
+      ifneq ($(X),)
+        STR := \#define __tune_pentium4__ 1
+        FLAGS_DEF += $(shell $(DEFTEST) && echo "-march=pentium4" \
+                                        || echo "-march=i686")
+      else
+        ARG := -march=i686
+        FLAGS_DEF += $(shell $(CCTEST))
+      endif
+
+    else
+      # make 3.79 doesn't allow multiple "else" statements, so nest 'em.
+      ifeq ($(MACHINE), x86_64)
+        STR := \#define __tune_k8__ 1
+        FLAGS_DEF += $(shell $(DEFTEST) && echo "-march=k8")
+          FLAGS_DEF += -m64
+      else # ppc, ...
+        FLAGS_DEF += -DNOT_686
+
+      endif
 
     endif
-
   endif
 
 endif
@@ -105,13 +111,24 @@ X := $(shell rm $(TMPFILE))
 # FLAGS_DEF are gcc flags that are shared between compiling and
 # linking.  CFLAGS_DEF are compile flags, LDFLAGS_DEF are link flags.
 
-# speedy!
-#FLAGS_DEF += -O3
-#FLAGS_DEF += -fomit-frame-pointer
+RICKY_BOBBY := no
+#RICKY_BOBBY := yes
 
-# debuggy!
-FLAGS_DEF += -O0
-FLAGS_DEF += -g
+ifeq ($(RICKY_BOBBY),yes)
+  # speedy!
+  FLAGS_DEF += -O3
+  FLAGS_DEF += -fomit-frame-pointer
+
+  # turn off asserts:
+  FLAGS_DEF += -DNDEBUG
+
+else
+  # debuggy!
+  FLAGS_DEF += -O0
+  FLAGS_DEF += -g
+
+endif
+
 
 # profily!
 #FLAGS_DEF += -pg
@@ -120,9 +137,6 @@ FLAGS_DEF += -g
 CFLAGS_DEF := $(CFLAGS) $(FLAGS_DEF)
 CFLAGS_DEF += -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 CFLAGS_DEF += -D_GNU_SOURCE
-
-# to turn off asserts:
-#CFLAGS_DEF += -DNDEBUG
 
 #CFLAGS_DEF += -Wextra
 #CFLAGS_DEF += -Wpointer-arith

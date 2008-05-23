@@ -416,6 +416,24 @@ inputs):
    $ solve-field --skip-solved ...
 
 
+"I wanna go fast!"
+------------------
+
+Sadly, gcc doesn't have a flag --super-fast to generate the fastest
+possible code for the machine on which it is running.  Also, we are
+shipping the code with assertion and debugging turned on -- this helps
+ensure that bugs are caught and reported, but it does slow down the
+code.  Here are some things you can do to make the code run faster:
+
+  * in util/makefile.common, set RICKY_BOBBY to yes.
+
+  * we try to guess "-mtune" settings that will work for you; if we're
+    wrong, you can set the environment variable ARCH_FLAGS before
+    compiling:
+
+      $ ARCH_FLAGS="-mtune=nocona" make
+
+
 XYLISTS
 -------
 
