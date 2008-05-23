@@ -184,8 +184,14 @@ tags:
 report:
 	-uname -m
 	-uname -a
+	-uname -p
+	-uname -s
 	@echo "CC is $(CC)"
 	-which $(CC)
 	-$(CC) --version
 	-$(MAKE) --version
 	-$(CC) -dM -E - < /dev/null
+	@echo "SHAREDLIBFLAGS_DEF: $(SHAREDLIBFLAGS_DEF)"
+	@echo "FLAGS_DEF: $(FLAGS_DEF)"
+	@echo "CFLAGS: $(CFLAGS)"
+	@echo "LDFLAGS: $(LDFLAGS)"

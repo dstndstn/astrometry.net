@@ -41,7 +41,9 @@ FLAGS_DEF := -g -Wall
 
 TMPFILE := cc-out.tmp
 # Test whether $(CC) accepts a particular argument; set ARG before running.
-CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - < /dev/null > /dev/null 2> /dev/null && echo $(ARG)
+#CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - < /dev/null > /dev/null 2> /dev/null && echo $(ARG)
+# On MacOS, unrecognized gcc args don't cause it to return 1... look for "unrecognized option" on stderr.
+CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - 2>&1 > /dev/null < /dev/null | grep "unrecognized\|invalid" > /dev/null || echo $(ARG)
 # Test whether a particular string appears in the compiler's default environment;
 # set STR before running.
 DEFTEST = $(CC) -dM -E - < /dev/null 2> /dev/null | grep "$(STR)" > /dev/null
