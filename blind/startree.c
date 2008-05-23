@@ -234,6 +234,7 @@ int main(int argc, char *argv[]) {
 	fits_header_add_int(hdr, "NLEAF", Nleaf, "Target number of points in leaves.");
 	fits_header_add_int(hdr, "KEEP", nkeep, "Number of stars kept (0=no limit).");
 	fits_copy_header(catheader, hdr, "HEALPIX");
+	fits_copy_header(catheader, hdr, "HPNSIDE");
 	fits_copy_header(catheader, hdr, "ALLSKY");
 	fits_copy_header(catheader, hdr, "JITTER");
 	boilerplate_add_fits_headers(hdr);

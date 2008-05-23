@@ -944,6 +944,13 @@ int main(int argc, char** argv) {
 		   distsq2arcsec(quadscale*quadscale),
 		   distsq2arcsec(radius2));
 
+    /**
+     NOTE to future self:
+     do we really need a boundary?  We're looking at the *center of AB mass* -
+     so won't the neighbouring big healpix just build the quads on the other
+     side of the boundary?
+     */
+
 	// if the SKDT had the HEALPIX property, then it includes stars that are
 	// within that healpix and within a small margin around it.
 	// Try fine-grained healpixes that are either within that big healpix

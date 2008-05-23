@@ -109,8 +109,10 @@ static int run_command(const char* cmd, bool* ctrlc) {
 		return -1;
 	}
 	rtn = WEXITSTATUS(rtn);
-	if (rtn)
+	if (rtn) {
 		ERROR("Command exited with exit status %i", rtn);
+        ERROR("Command was: \"%s\"\n", cmd);
+    }
 	return rtn;
 }
 
@@ -319,6 +321,7 @@ int main(int argc, char** args) {
 		sl* tempdirs;
 		sl* cmdline;
         bool ctrlc;
+        bool isurl;
         augment_xylist_t theaxy;
         augment_xylist_t* axy = &theaxy;
         int j;
@@ -362,12 +365,21 @@ int main(int argc, char** args) {
             free(cpy);
         }
         //logverb("Base filename: %s\n", basefile);
+
+        isurl = (!file_exists(infile) &&
+                 (starts_with(infile, "http://") ||
+                  starts_with(infile, "ftp://")));
+
 		if (outdir)
             basedir = strdup(outdir);
 		else {
-            cpy = strdup(infile);
-            basedir = strdup(dirname(cpy));
-            free(cpy);
+            if (isurl)
+                basedir = strdup(".");
+            else {
+                cpy = strdup(infile);
+                basedir = strdup(dirname(cpy));
+                free(cpy);
+            }
         }
         //logverb("Base directory: %s\n", basedir);
 
@@ -392,7 +404,7 @@ int main(int argc, char** args) {
                 }
             }
 		}
-        //logverb("Base: %s, suffix %s\n", base, suffix);
+        logverb("Base: %s, basefile %s, basedir %s, suffix %s\n", base, basefile, basedir, suffix);
 
 		// the output filenames.
 		outfiles = sl_new(16);
@@ -489,9 +501,7 @@ int main(int argc, char** args) {
 		}
 
         // Download URL...
-        if (!file_exists(infile) &&
-            ((strncasecmp(infile, "http://", 7) == 0) ||
-             (strncasecmp(infile, "ftp://", 6) == 0))) {
+            if (isurl) {
 
             sl_append(cmdline, usecurl ? "curl" : "wget");
             if (!verbose)
@@ -501,7 +511,6 @@ int main(int argc, char** args) {
             append_escape(cmdline, infile);
 
             cmd = sl_implode(cmdline, " ");
-            sl_remove_all(cmdline);
 
             logmsg("Downloading...\n");
             if (run_command(cmd, &ctrlc)) {
@@ -509,6 +518,7 @@ int main(int argc, char** args) {
                       (ctrlc ? "was cancelled" : "failed"));
                 exit(-1);
             }
+            sl_remove_all(cmdline);
             free(cmd);
 
             infile = downloadfn;

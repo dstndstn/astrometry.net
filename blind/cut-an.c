@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -31,7 +31,7 @@
 #include "ioutils.h"
 #include "boilerplate.h"
 
-#define OPTIONS "ho:i:N:n:m:M:H:d:e:ARBJb:gj:p" // I
+#define OPTIONS "ho:i:N:n:m:M:H:d:e:ARBJb:gj:ps:" // I
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -42,6 +42,7 @@ static void print_help(char* progname) {
            //"  [-I]: include star IDs in the output file\n"
 		   "  [-i <output-id-template>]      (eg, an-sdss-%%02i.id.fits)\n"
 		   "  [-H <big healpix>]  or  [-A] (all-sky)\n"
+           "  [-s <big healpix Nside>]\n"
 		   "  [-n <max-stars-per-fine-healpix-grid>]    (ie, number of sweeps)\n"
 		   "  [-N <nside>]:   fine healpixelization grid; default 100.\n"
 		   "  [-d <dedup-radius>]: deduplication radius (arcseconds)\n"
@@ -250,6 +251,25 @@ static int get_magnitude(an_entry* an,
 	return 0;
 }
 
+#include "rdlist.h"
+
+static void write_radeclist(bool* owned, int Nside, char* fn) {
+	int HP = 12 * Nside * Nside;
+    int i;
+    rdlist_t* rd = rdlist_open_for_writing(fn);
+    rdlist_write_primary_header(rd);
+    rdlist_write_header(rd);
+    for (i=0; i<HP; i++) {
+        double ra, dec;
+        if (!owned[i])
+            continue;
+        healpix_to_radecdeg(i, Nside, 0.5, 0.5, &ra, &dec);
+        rdlist_write_one_radec(rd, ra, dec);
+    }
+    rdlist_fix_header(rd);
+    rdlist_fix_primary_header(rd);
+}
+
 int main(int argc, char** args) {
 	char* outfn = NULL;
 	char* idfn = NULL;
@@ -264,6 +284,7 @@ int main(int argc, char** args) {
 	double maxmag = 30.0;
 	bool* owned;
 	int maxperbighp = 0;
+    int bignside = 1;
 	int bighp = -1;
 	char fn[256];
 	catalog* cat;
@@ -293,6 +314,9 @@ int main(int argc, char** args) {
         case 'h':
 			print_help(args[0]);
 			exit(0);
+        case 's':
+            bignside = atoi(optarg);
+            break;
         case 'p':
             domotion = TRUE;
             break;
@@ -377,6 +401,11 @@ int main(int argc, char** args) {
 		printf("Warning: ID files will not be written.\n");
 	}
 
+    if (Nside % bignside) {
+        printf("Fine healpixelization Nside (-N) must be a multiple of the coarse healpixelization Nside (-s).\n");
+        exit(-1);
+    }
+
 	HP = 12 * Nside * Nside;
 
 	printf("Nside=%i, HP=%i, sweeps=%i, max number of stars = HP*sweeps = %i.\n", Nside, HP, sweeps, HP*sweeps);
@@ -399,27 +428,62 @@ int main(int argc, char** args) {
 		il* q = il_new(32);
 		int hp;
 		int nowned = 0;
+        unsigned int bigbighp; // one of 12
+        unsigned int bighpx, bighpy;
+        int ninside;
+
+        healpix_decompose_xy(bighp, &bigbighp, &bighpx, &bighpy, bignside);
+        
 		owned = calloc(HP, sizeof(bool));
+
 		// The set of small healpixes in the big healpix is just an
 		// Nside-by-Nside grid:
-		for (i=0; i<Nside; i++) {
-			for (k=0; k<Nside; k++) {
-				hp = healpix_compose_xy(bighp, i, k, Nside);
+		for (i=0; i<(Nside / bignside); i++) {
+			for (k=0; k<(Nside / bignside); k++) {
+                int xx = i + bighpx * (Nside / bignside);
+                int yy = k + bighpy * (Nside / bignside);
+				hp = healpix_compose_xy(bigbighp, xx, yy, Nside);
 				owned[hp] = 1;
 				nowned++;
 			}
 		}
+        ninside = nowned;
+        printf("Number of fine healpixes owned: %i\n", nowned);
+
+        write_radeclist(owned, Nside, "step0.rdls");
+
 		// Prime the queue with the boundaries of the healpix.
-		for (i=0; i<Nside; i++) {
-			hp = healpix_compose_xy(bighp, i, 0, Nside);
+		for (i=0; i<(Nside / bignside); i++) {
+            int xx = i + bighpx * (Nside / bignside);
+            int yy = i + bighpy * (Nside / bignside);
+            int y0 =     bighpy * (Nside / bignside);
+            int y1 =(1 + bighpy)* (Nside / bignside) - 1;
+            int x0 =     bighpx * (Nside / bignside);
+            int x1 =(1 + bighpx)* (Nside / bignside) - 1;
+            
+            assert(xx < Nside);
+            assert(yy < Nside);
+            assert(x0 < Nside);
+            assert(x1 < Nside);
+            assert(y0 < Nside);
+            assert(y1 < Nside);
+
+			hp = healpix_compose_xy(bigbighp, xx, y0, Nside);
+            assert(owned[hp]);
 			il_append(q, hp);
-			hp = healpix_compose_xy(bighp, i, Nside-1, Nside);
+			hp = healpix_compose_xy(bigbighp, xx, y1, Nside);
+            assert(owned[hp]);
 			il_append(q, hp);
-			hp = healpix_compose_xy(bighp, 0, i, Nside);
+			hp = healpix_compose_xy(bigbighp, x0, yy, Nside);
+            assert(owned[hp]);
 			il_append(q, hp);
-			hp = healpix_compose_xy(bighp, Nside-1, i, Nside);
+			hp = healpix_compose_xy(bigbighp, x1, yy, Nside);
+            assert(owned[hp]);
 			il_append(q, hp);
 		}
+        printf("Number of boundary healpixes on the primed queue: %i\n",
+               il_size(q));
+
 		// Now we want to add "nmargin" levels of neighbours.
 		for (k=0; k<nmargin; k++) {
 			int Q = il_size(q);
@@ -441,11 +505,19 @@ int main(int argc, char** args) {
 				}
 			}
 			il_remove_index_range(q, 0, Q);
+
+            char fn[16];
+            sprintf(fn, "step%02i.rdls", k+1);
+            write_radeclist(owned, Nside, fn);
 		}
 		il_free(q);
 
+        write_radeclist(owned, Nside, "final.rdls");
+
 		printf("%i healpixes in this big healpix, plus %i boundary make %i total.\n",
-			   Nside*Nside, nowned - Nside*Nside, nowned);
+               ninside, nowned - ninside, nowned);
+
+        exit(0);
 
 	} else
 		owned = NULL;
