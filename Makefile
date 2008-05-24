@@ -29,10 +29,11 @@ include $(COMMON)/makefile.qfits
 
 .PHONY: Makefile $(COMMON)/makefile.qfits
 
-all: #$(REMAKE_QFITS)
+all:
 	$(MAKE) -C util
 	$(MAKE) -C libkd
 	$(MAKE) -C blind
+.PHONY: all
 
 # Targets that require extra libraries
 extra:
