@@ -184,11 +184,11 @@ int fitsbin_write_item(fitsbin_t* fb, int chunk, void* data) {
 }
 
 int fitsbin_start_write(fitsbin_t* fb) {
-	fb->fid = fopen(fn, "wb");
+	fb->fid = fopen(fb->filename, "wb");
 	if (!fb->fid) {
-		fprintf(stderr, "Couldn't open file \"%s\" for output: %s\n", fn, strerror(errno));
+		fprintf(stderr, "Couldn't open file \"%s\" for output: %s\n", fb->filename, strerror(errno));
         fitsbin_close(fb);
-        return 
+        return -1;
 	}
     return 0;
 }
