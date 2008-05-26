@@ -19,19 +19,20 @@
 #include <math.h>
 #include <errno.h>
 #include <string.h>
+#include <assert.h>
 
 #include "an-catalog.h"
 #include "usnob.h"
 #include "catalog.h"
-#include "idfile.h"
 #include "healpix.h"
 #include "starutil.h"
 #include "mathutil.h"
 #include "fitsioutils.h"
 #include "ioutils.h"
 #include "boilerplate.h"
+#include "errors.h"
 
-#define OPTIONS "ho:i:N:n:m:M:H:d:e:ARBJb:gj:ps:" // I
+#define OPTIONS "ho:N:n:m:M:H:d:e:ARBJb:gj:ps:I"
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -39,8 +40,7 @@ static void print_help(char* progname) {
 		   "   -o <output-objs-template>    (eg, an-sdss-%%02i.objs.fits)\n"
 		   "  [-g]: include magnitudes in the output file\n"
            "  [-p]: include proper motions in the output file\n"
-           //"  [-I]: include star IDs in the output file\n"
-		   "  [-i <output-id-template>]      (eg, an-sdss-%%02i.id.fits)\n"
+           "  [-I]: include star IDs in the output file\n"
 		   "  [-H <big healpix>]  or  [-A] (all-sky)\n"
            "  [-s <big healpix Nside>]\n"
 		   "  [-n <max-stars-per-fine-healpix-grid>]    (ie, number of sweeps)\n"
@@ -272,7 +272,6 @@ void write_radeclist(bool* owned, int Nside, char* fn) {
 
 int main(int argc, char** args) {
 	char* outfn = NULL;
-	char* idfn = NULL;
 	int c;
 	int startoptind;
 	int i, k, HP;
@@ -288,7 +287,6 @@ int main(int argc, char** args) {
 	int bighp = -1;
 	char fn[256];
 	catalog* cat;
-	idfile* id = NULL;
 	int nwritten;
 	int BLOCK = 100000;
 	double deduprad = 0.0;
@@ -302,11 +300,8 @@ int main(int argc, char** args) {
 	bool domags = FALSE;
     bool domotion = FALSE;
     bool doid = FALSE;
-	float* mags = NULL;
-	int mi = 0;
 	double jitter = 1.0;
     qfits_header* catheader;
-    qfits_header* idheader = NULL;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
@@ -362,9 +357,6 @@ int main(int argc, char** args) {
 		case 'o':
 			outfn = optarg;
 			break;
-		case 'i':
-			idfn = optarg;
-			break;
 		case 'n':
 			sweeps = atoi(optarg);
 			break;
@@ -378,7 +370,7 @@ int main(int argc, char** args) {
     }
 
 	if (!outfn || (optind == argc)) {
-		printf("Specify catalog and idfile names and input files.\n");
+		printf("Specify catalog names and input files.\n");
 		print_help(args[0]);
 		exit(-1);
 	}
@@ -395,10 +387,6 @@ int main(int argc, char** args) {
 		printf("Either specify a healpix (-H) or all-sky (-A).\n");
 		print_help(args[0]);
 		exit(-1);
-	}
-
-	if (!idfn) {
-		printf("Warning: ID files will not be written.\n");
 	}
 
     if (Nside % bignside) {
@@ -436,8 +424,6 @@ int main(int argc, char** args) {
         
 		owned = calloc(HP, sizeof(bool));
 
-		// The set of small healpixes in the big healpix is just an
-		// Nside-by-Nside grid:
 		for (i=0; i<(Nside / bignside); i++) {
 			for (k=0; k<(Nside / bignside); k++) {
                 int xx = i + bighpx * (Nside / bignside);
@@ -538,23 +524,8 @@ int main(int argc, char** args) {
     catheader = catalog_get_header(cat);
     add_to_header(catheader, args, argc, allsky, jitter, sweeps);
 
-	if (idfn) {
-		sprintf(fn, idfn, bighp);
-		id = idfile_open_for_writing(fn);
-		if (!id) {
-			fflush(stdout);
-			fprintf(stderr, "Couldn't open file %s for writing IDs.\n", fn);
-			exit(-1);
-		}
-		id->healpix = bighp;
-        idheader = idfile_get_header(id);
-        add_to_header(idheader, args, argc, allsky, jitter, sweeps);
-	}
-
-	if (catalog_write_header(cat) ||
-		(id && idfile_write_header(id))) {
-		fflush(stdout);
-		fprintf(stderr, "Failed to write catalog or idfile header.\n");
+	if (catalog_write_header(cat)) {
+		ERROR("Failed to write catalog header");
 		exit(-1);
 	}
 
@@ -598,14 +569,25 @@ int main(int argc, char** args) {
 			fprintf(stderr, "Looks like a catalog.\n");
 			cat = catalog_open(infn);
 			if (!cat) {
-				fprintf(stderr, "Couldn't open file \"%s\" as a catalog.\n", infn);
+				ERROR("Couldn't open file \"%s\" as a catalog", infn);
 				exit(-1);
 			}
 			if (!cat->mags) {
-				fprintf(stderr, "Catalog file \"%s\" doesn't contain magnitudes!  "
-						"These are required (use \"-g\" to include them).\n", infn);
+				ERROR("Catalog file \"%s\" doesn't contain magnitudes!  "
+                      "These are required (use \"-g\" to include them).\n",
+                      infn);
 				exit(-1);
 			}
+            if (domotion &&
+                !(cat->sigma_radec && cat->proper_motion && cat->sigma_pm)) {
+                ERROR("Catalog file \"%s\" doesn't contain required "
+                      "sigma_radec, proper_motion, and sigma_pm tables.  "
+                      "(Use -p to include them)", infn);
+            }
+            if (doid && !cat->starids) {
+                ERROR("Catalog file \"%s\" doesn't contain required "
+                      "starid table.  (Use -I to include it)", infn);
+            }
 			N = cat->numstars;
 		} else {
 			// "AN_CATALOG" gets truncated...
@@ -655,15 +637,30 @@ int main(int argc, char** args) {
 					fprintf(stderr, "Failed to read Astrometry.net catalog entry.\n");
 					exit(-1);
 				}
-				sd.ra = an->ra;
-				sd.dec = an->dec;
-				sd.id = an->id;
+				sd.ra               = an->ra;
+				sd.dec              = an->dec;
+				sd.id               = an->id;
+                sd.sigma_ra         = an->sigma_ra;
+                sd.sigma_dec        = an->sigma_dec;
+                sd.motion_ra        = an->motion_ra;
+                sd.motion_dec       = an->motion_dec;
+                sd.sigma_motion_ra  = an->sigma_motion_ra;
+                sd.sigma_motion_dec = an->sigma_motion_dec;
 			} else {
 				double* xyz;
 				xyz = catalog_get_star(cat, i);
 				xyzarr2radecdeg(xyz, &sd.ra, &sd.dec);
 				sd.mag = cat->mags[i];
-				sd.id = 0;
+                if (doid)
+                    sd.id = cat->starids[i];
+                if (domotion) {
+                    sd.sigma_ra         = cat->sigma_radec[2*i];
+                    sd.sigma_dec        = cat->sigma_radec[2*i + 1];
+                    sd.motion_ra        = cat->proper_motion[2*i];
+                    sd.motion_dec       = cat->proper_motion[2*i + 1];
+                    sd.sigma_motion_ra  = cat->sigma_pm[2*i];
+                    sd.sigma_motion_dec = cat->sigma_pm[2*i + 1];
+                }
 			}
 
 			hp = radecdegtohealpix(sd.ra, sd.dec, Nside);
@@ -767,15 +764,8 @@ int main(int argc, char** args) {
 	}
 
 	sweeplist = malloc(npix * sizeof(stardata));
-	if (domags) {
-		mags = malloc(sweeps * npix * sizeof(float));
-		if (!mags) {
-			fprintf(stderr, "Failed to allocate memory for \"mags\" array.\n");
-		}
-	}
 
 	// sweep through the healpixes...
-	mi = 0;
 	for (k=0;; k++) {
 		char key[64];
 		char val[64];
@@ -808,16 +798,20 @@ int main(int argc, char** args) {
 			stardata* sd = sweeplist + i;
 			radecdeg2xyzarr(sd->ra, sd->dec, xyz);
 
-			if (catalog_write_star(cat, xyz) ||
-				(id && idfile_write_anid(id, sd->id))) {
-				fflush(stdout);
-				fprintf(stderr, "Failed to write star to catalog.  Possible cause: %s\n", strerror(errno));
+			if (catalog_write_star(cat, xyz)) {
+				//(id && idfile_write_anid(id, sd->id))) {
+				ERROR("Failed to write star to catalog.");
 				exit(-1);
 			}
-			if (mags) {
-				mags[mi] = sd->mag;
-				mi++;
-			}
+			if (domags)
+                catalog_add_mag(cat, sd->mag);
+            if (doid)
+                catalog_add_id(cat, sd->id);
+            if (domotion) {
+                catalog_add_sigmas(cat, sd->sigma_ra, sd->sigma_dec);
+                catalog_add_sigma_pms(cat, sd->sigma_motion_ra, sd->sigma_motion_dec);
+                catalog_add_pms(cat, sd->motion_ra, sd->motion_dec);
+            }
 
 			nwritten++;
 			if (nwritten == maxperbighp)
@@ -828,8 +822,6 @@ int main(int argc, char** args) {
 		if (sweeps || (k<100)) {
 			sprintf(key, "SWEEP%i", (k+1));
 			sprintf(val, "%i", nsweep);
-			if (id)
-                            qfits_header_mod(idheader , key, val, "");
 			qfits_header_mod(catheader, key, val, "");
 		}
 
@@ -851,17 +843,22 @@ int main(int argc, char** args) {
 		fprintf(stderr, "Failed to fix catalog header.\n");
 		exit(-1);
 	}
-	if (mags) {
-		cat->mags = mags;
-		if (catalog_write_mags(cat)) {
-			fprintf(stderr, "Failed to write magnitudes.\n");
-		}
-	}
-	if (catalog_close(cat) ||
-		(id && (idfile_fix_header(id) ||
-				idfile_close(id)))) {
-		fflush(stdout);
-		fprintf(stderr, "Failed to close output files.\n");
+	if (domags &&
+		catalog_write_mags(cat)) {
+        ERROR("Failed to write magnitudes");
+    }
+    if (doid &&
+        catalog_write_ids(cat)) {
+        ERROR("Failed to write star IDs");
+    }
+    if (domotion &&
+        (catalog_write_sigmas(cat) ||
+         catalog_write_pms(cat) ||
+         catalog_write_sigma_pms(cat))) {
+        ERROR("Failed to write star motions");
+    }
+	if (catalog_close(cat)) {
+		ERROR("Failed to close output catalog");
 		exit(-1);
 	}
 

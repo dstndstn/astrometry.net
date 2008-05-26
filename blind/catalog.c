@@ -149,7 +149,7 @@ static catalog* new_catalog(const char* fn, bool writing) {
     fitsbin_add_chunk(cat->fb, &chunk);
 
     // Ids
-    chunk.tablename = "starids";
+    chunk.tablename = "starid";
     chunk.required = 0;
     chunk.callback_read_header = callback_read_ids;
     chunk.userdata = cat;
