@@ -28,42 +28,36 @@
 #include "fitsioutils.h"
 #include "ioutils.h"
 #include "fitsfile.h"
-
-/*
- static void
- ATTRIB_FORMAT(printf,2,3)
- seterr(char** errstr, const char* format, ...) {
- va_list va;
- if (!errstr) return;
- va_start(va, format);
- vasprintf(errstr, format, va);
- va_end(va);
- // Hack
- fprintf(stderr, "%s", *errstr);
- }
- */
+#include "errors.h"
 
 FILE* fitsbin_get_fid(fitsbin_t* fb) {
     return fb->fid;
 }
 
-off_t fitsbin_get_data_start(fitsbin_t* fb, int chunk) {
-    assert(chunk < fb->nchunks);
-    return fb->chunks[chunk].header_end;
+static int nchunks(fitsbin_t* fb) {
+    return bl_size(fb->chunks);
 }
 
-void fitsbin_set_filename(fitsbin_t* fb, const char* fn) {
-    free(fb->filename);
-    fb->filename = strdup(fn);
+static fitsbin_chunk_t* get_chunk(fitsbin_t* fb, int i) {
+    if (i >= bl_size(fb->chunks)) {
+        ERROR("Attempt to get chunk %i from a fitsbin with only %i chunks",
+              i, bl_size(fb->chunks));
+        return NULL;
+    }
+    if (i < 0) {
+        ERROR("Attempt to get fitsbin chunk %i", i);
+        return NULL;
+    }
+    return bl_access(fb->chunks, i);
 }
 
-fitsbin_t* fitsbin_new(int nchunks) {
+static fitsbin_t* new_fitsbin(const char* fn) {
 	fitsbin_t* fb;
 	fb = calloc(1, sizeof(fitsbin_t));
 	if (!fb)
 		return NULL;
-    fb->chunks = calloc(nchunks, sizeof(fitsbin_chunk_t));
-    fb->nchunks = nchunks;
+    fb->chunks = bl_new(4, sizeof(fitsbin_chunk_t));
+    fb->filename = strdup(fn);
 	return fb;
 }
 
@@ -74,9 +68,22 @@ static void free_chunk(fitsbin_chunk_t* chunk) {
         qfits_header_destroy(chunk->header);
 	if (chunk->map) {
 		if (munmap(chunk->map, chunk->mapsize)) {
-			fprintf(stderr, "Failed to munmap fitsbin: %s\n", strerror(errno));
+			SYSERROR("Failed to munmap fitsbin");
 		}
 	}
+}
+
+fitsbin_chunk_t* fitsbin_get_chunk(fitsbin_t* fb, int chunk) {
+    return get_chunk(fb, chunk);
+}
+
+void fitsbin_add_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    chunk->tablename = strdup(chunk->tablename);
+    bl_append(fb->chunks, chunk);
+}
+
+off_t fitsbin_get_data_start(fitsbin_t* fb, int chunk) {
+    return get_chunk(fb, chunk)->header_end;
 }
 
 int fitsbin_close(fitsbin_t* fb) {
@@ -86,16 +93,17 @@ int fitsbin_close(fitsbin_t* fb) {
     if (fb->fid) {
 		fits_pad_file(fb->fid);
 		if (fclose(fb->fid)) {
-			fprintf(stderr, "Error closing fitsbin file: %s\n", strerror(errno));
+			SYSERROR("Error closing fitsbin file");
             rtn = -1;
         }
     }
     if (fb->primheader)
         qfits_header_destroy(fb->primheader);
-    for (i=0; i<fb->nchunks; i++)
-        free_chunk(fb->chunks + i);
+    for (i=0; i<nchunks(fb); i++)
+        free_chunk(get_chunk(fb, i));
     free(fb->filename);
-    free(fb->chunks);
+    if (fb->chunks)
+        bl_free(fb->chunks);
 	free(fb);
     return rtn;
 }
@@ -114,10 +122,6 @@ int fitsbin_fix_primary_header(fitsbin_t* fb) {
                                        &fb->primheader_end, fb->filename);
 }
 
-int fitsbin_write_header(fitsbin_t* fb) {
-    return fitsbin_write_chunk_header(fb, 0);
-}
-
 qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, int chunknum) {
     fitsbin_chunk_t* chunk;
     qfits_table* table;
@@ -125,7 +129,7 @@ qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, int chunknum) {
     qfits_header* hdr;
     int ncols = 1;
 
-    chunk = fb->chunks + chunknum;
+    chunk = get_chunk(fb, chunknum);
 	// the table header
 	tablesize = chunk->itemsize * chunk->nrows * ncols;
 	table = qfits_table_new(fb->filename, QFITS_BINTABLE, tablesize, ncols, chunk->nrows);
@@ -142,9 +146,7 @@ int fitsbin_write_chunk_header(fitsbin_t* fb, int chunknum) {
     qfits_header* hdr;
     fitsbin_chunk_t* chunk;
 
-    assert(chunknum < fb->nchunks);
-    assert(chunknum >= 0);
-    chunk = fb->chunks + chunknum;
+    chunk = get_chunk(fb, chunknum);
     hdr = fitsbin_get_chunk_header(fb, chunknum);
     if (fitsfile_write_header(fb->fid, chunk->header,
                               &chunk->header_start, &chunk->header_end,
@@ -154,15 +156,9 @@ int fitsbin_write_chunk_header(fitsbin_t* fb, int chunknum) {
 	return 0;
 }
 
-int fitsbin_fix_header(fitsbin_t* fb) {
-    return fitsbin_fix_chunk_header(fb, 0);
-}
-
 int fitsbin_fix_chunk_header(fitsbin_t* fb, int chunknum) {
     fitsbin_chunk_t* chunk;
-    assert(chunknum < fb->nchunks);
-    assert(chunknum >= 0);
-    chunk = fb->chunks + chunknum;
+    chunk = get_chunk(fb, chunknum);
     if (fitsfile_fix_header(fb->fid, chunk->header,
                             &chunk->header_start, &chunk->header_end,
                             chunknum, fb->filename)) {
@@ -172,8 +168,8 @@ int fitsbin_fix_chunk_header(fitsbin_t* fb, int chunknum) {
 }
 
 int fitsbin_write_items(fitsbin_t* fb, int chunk, void* data, int N) {
-    if (fwrite(data, fb->chunks[chunk].itemsize, N, fb->fid) != N) {
-        fprintf(stderr, "Failed to write %i items: %s\n", N, strerror(errno));
+    if (fwrite(data, get_chunk(fb, chunk)->itemsize, N, fb->fid) != N) {
+        SYSERROR("Failed to write %i items", N);
         return -1;
     }
     return 0;
@@ -183,70 +179,6 @@ int fitsbin_write_item(fitsbin_t* fb, int chunk, void* data) {
     return fitsbin_write_items(fb, chunk, data, 1);
 }
 
-int fitsbin_start_write(fitsbin_t* fb) {
-	fb->fid = fopen(fb->filename, "wb");
-	if (!fb->fid) {
-		fprintf(stderr, "Couldn't open file \"%s\" for output: %s\n", fb->filename, strerror(errno));
-        fitsbin_close(fb);
-        return -1;
-	}
-    return 0;
-}
-
-fitsbin_t* fitsbin_open_for_writing(const char* fn, const char* tablename) {
-	fitsbin_t* fb;
-    fitsbin_chunk_t* chunk;
-
-	fb = fitsbin_new(1);
-	if (!fb)
-        return NULL;
-
-	fb->filename = strdup(fn);
-
-    if (fitsbin_start_write(fb))
-        return NULL;
-
-    fb->primheader = qfits_header_default();
-
-    chunk = fb->chunks;
-	chunk->tablename = strdup(tablename);
-
-	return fb;
-}
-
-fitsbin_t* fitsbin_open(const char* fn, const char* tablename,
-						int (*callback_read_header)(qfits_header* primheader, qfits_header* header, size_t* expected, char** errstr, void* userdata),
-						void* userdata) {
-    fitsbin_t* fb;
-    fitsbin_chunk_t* chunk;
-    int rtn;
-
-    fb = fitsbin_new(1);
-    if (!fb)
-        return fb;
-
-    fb->primheader = qfits_header_read(fn);
-    if (!fb->primheader) {
-        fprintf(stderr, "Couldn't read FITS header from file \"%s\".", fn);
-        fitsbin_close(fb);
-        return NULL;
-    }
-
-	fb->filename = strdup(fn);
-
-    chunk = fb->chunks;
-    chunk->tablename = strdup(tablename);
-    chunk->callback_read_header = callback_read_header;
-    chunk->userdata = userdata;
-
-    rtn = fitsbin_read(fb);
-    if (rtn) {
-        fitsbin_close(fb);
-        return NULL;
-    }
-    return fb;
-}
-
 int fitsbin_read(fitsbin_t* fb) {
 	FILE* fid = NULL;
     int tabstart, tabsize, ext;
@@ -254,59 +186,32 @@ int fitsbin_read(fitsbin_t* fb) {
 	int mode, flags;
 	off_t mapstart;
 	int mapoffset;
-    char* fn;
     int i;
-    char* errstr;
 
-    fn = fb->filename;
+    for (i=0; i<nchunks(fb); i++) {
+        fitsbin_chunk_t* chunk = get_chunk(fb, i);
 
-	if (!qfits_is_fits(fn)) {
-        fprintf(stderr, "File \"%s\" is not FITS format.", fn);
-        goto bailout;
-	}
-
-    // HACK .... what is the interaction between this func and fitsbin_open()?
-    if (!fb->primheader) {
-        fb->primheader = qfits_header_read(fn);
-        if (!fb->primheader) {
-            fprintf(stderr, "Couldn't read FITS header from file \"%s\".", fn);
-            //fitsbin_close(fb);
-            return -1;
-        }
-    }
-
-	fid = fopen(fn, "rb");
-	if (!fid) {
-		fprintf(stderr, "Failed to open file \"%s\": %s.", fn, strerror(errno));
-        goto bailout;
-	}
-
-    for (i=0; i<fb->nchunks; i++) {
-        fitsbin_chunk_t* chunk = fb->chunks + i;
-
-        if (fits_find_table_column(fn, chunk->tablename, &tabstart, &tabsize, &ext)) {
-            if (chunk->required) {
-                fprintf(stderr, "Couldn't find table \"%s\" in file \"%s\".", chunk->tablename, fn);
-                goto bailout;
-            } else {
+        if (fits_find_table_column(fb->filename, chunk->tablename, &tabstart, &tabsize, &ext)) {
+            if (!chunk->required)
                 continue;
-            }
+            ERROR("Couldn't find table \"%s\" in file \"%s\"", chunk->tablename, fb->filename);
+            goto bailout;
         }
 
-        chunk->header = qfits_header_readext(fn, ext);
+        chunk->header = qfits_header_readext(fb->filename, ext);
         if (!chunk->header) {
-            fprintf(stderr, "Couldn't read FITS header from file \"%s\" extension %i.", fn, ext);
+            ERROR("Couldn't read FITS header from file \"%s\" extension %i", fb->filename, ext);
             goto bailout;
         }
 
         if (chunk->callback_read_header &&
-            chunk->callback_read_header(fb->primheader, chunk->header, &expected, &errstr, chunk->userdata)) {
-            fprintf(stderr, "fitsbin callback failed: %s\n", errstr);
+            chunk->callback_read_header(fb->primheader, chunk->header, &expected, chunk->userdata)) {
+            ERROR("fitsbin callback failed");
             goto bailout;
         }
 
         if (expected && (fits_bytes_needed(expected) != tabsize)) {
-            fprintf(stderr, "Expected table size (%i => %i FITS blocks) is not equal to size of table \"%s\" (%i FITS blocks).",
+            ERROR("Expected table size (%i => %i FITS blocks) is not equal to size of table \"%s\" (%i FITS blocks).",
                    (int)expected, fits_blocks_needed(expected), chunk->tablename, tabsize / FITS_BLOCK_SIZE);
             goto bailout;
         }
@@ -318,7 +223,7 @@ int fitsbin_read(fitsbin_t* fb) {
 
         chunk->map = mmap(0, chunk->mapsize, mode, flags, fileno(fid), mapstart);
         if (chunk->map == MAP_FAILED) {
-            fprintf(stderr, "Couldn't mmap file \"%s\": %s", fn, strerror(errno));
+            SYSERROR("Couldn't mmap file \"%s\"", fb->filename);
             chunk->map = NULL;
             goto bailout;
         }
@@ -332,3 +237,109 @@ int fitsbin_read(fitsbin_t* fb) {
  bailout:
     return -1;
 }
+
+fitsbin_t* fitsbin_open(const char* fn) {
+    fitsbin_t* fb;
+	if (!qfits_is_fits(fn)) {
+        ERROR("File \"%s\" is not FITS format.", fn);
+        return NULL;
+	}
+    fb = new_fitsbin(fn);
+    if (!fb)
+        return fb;
+	fb->fid = fopen(fn, "rb");
+	if (!fb->fid) {
+		SYSERROR("Failed to open file \"%s\"", fn);
+        goto bailout;
+	}
+    fb->primheader = qfits_header_read(fn);
+    if (!fb->primheader) {
+        ERROR("Couldn't read FITS header from file \"%s\"", fn);
+        goto bailout;
+    }
+    return fb;
+ bailout:
+    fitsbin_close(fb);
+    return NULL;
+}
+
+fitsbin_t* fitsbin_single_open_for_writing(const char* fn) {
+    fitsbin_t* fb;
+
+    fb = new_fitsbin(fn);
+    if (!fb)
+        return NULL;
+    fb->primheader = qfits_header_default();
+	fb->fid = fopen(fb->filename, "wb");
+	if (!fb->fid) {
+		SYSERROR("Couldn't open file \"%s\" for output", fb->filename);
+        fitsbin_close(fb);
+        return NULL;
+	}
+    return fb;
+}
+
+/*
+ fitsbin_t* fitsbin_single_open(const char* fn, const char* tablename,
+ int (*callback_read_header)(qfits_header* primheader, qfits_header* header, size_t* expected, char** errstr, void* userdata),
+ void* userdata) {
+ fitsbin_t* fb;
+ fitsbin_chunk_t* chunk;
+ int rtn;
+ 
+ fb = fitsbin_new(1);
+ if (!fb)
+ return fb;
+
+ fb->primheader = qfits_header_read(fn);
+ if (!fb->primheader) {
+ fprintf(stderr, "Couldn't read FITS header from file \"%s\".", fn);
+ fitsbin_close(fb);
+ return NULL;
+ }
+
+ fb->filename = strdup(fn);
+ 
+ // FIXME - should fitsbin_add()
+ chunk = get_chunk(fb, 0);
+ chunk->tablename = strdup(tablename);
+ chunk->callback_read_header = callback_read_header;
+ chunk->userdata = userdata;
+
+ rtn = fitsbin_read(fb);
+ if (rtn) {
+ fitsbin_close(fb);
+ return NULL;
+ }
+ return fb;
+ }
+
+ fitsbin_t* fitsbin_single_open_for_writing(const char* fn, const char* tablename) {
+ fitsbin_t* fb;
+ fitsbin_chunk_t* chunk;
+ 
+ fb = fitsbin_new(1);
+ if (!fb)
+ return NULL;
+
+ fb->filename = strdup(fn);
+
+ if (fitsbin_start_write(fb))
+ return NULL;
+
+ fb->primheader = qfits_header_default();
+
+ chunk = get_chunk(fb, 0);
+ chunk->tablename = strdup(tablename);
+
+ return fb;
+ }
+
+ int fitsbin_single_write_header(fitsbin_t* fb) {
+ return fitsbin_write_chunk_header(fb, 0);
+ }
+
+ int fitsbin_single_fix_header(fitsbin_t* fb) {
+ return fitsbin_fix_chunk_header(fb, 0);
+ }
+ */ 

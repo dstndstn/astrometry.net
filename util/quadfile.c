@@ -28,12 +28,16 @@
 #include "quadfile.h"
 #include "starutil.h"
 #include "ioutils.h"
+#include "errors.h"
 
 #define CHUNK_QUADS 0
 
+static fitsbin_chunk_t* quads_chunk(quadfile* qf) {
+    return fitsbin_get_chunk(qf->fb, CHUNK_QUADS);
+}
+
 static int callback_read_header(qfits_header* primheader, qfits_header* header,
-								size_t* expected, char** errstr,
-								void* userdata) {
+								size_t* expected, void* userdata) {
 	quadfile* qf = userdata;
 
     qf->dimquads = qfits_header_getint(primheader, "DIMQUADS", 4);
@@ -46,37 +50,43 @@ static int callback_read_header(qfits_header* primheader, qfits_header* header,
 
 	if ((qf->numquads == -1) || (qf->numstars == -1) ||
 		(qf->index_scale_upper == -1.0) || (qf->index_scale_lower == -1.0)) {
-        asprintf(errstr, "Couldn't find NQUADS or NSTARS or SCALE_U or SCALE_L entries in FITS header.");
+        ERROR("Couldn't find NQUADS or NSTARS or SCALE_U or SCALE_L entries in FITS header");
 		return -1;
 	}
     if (fits_check_endian(primheader)) {
-        asprintf(errstr, "File was written with the wrong endianness.");
+        ERROR("Quad file was written with the wrong endianness");
 		return -1;
     }
 
-    qf->fb->chunks[CHUNK_QUADS].itemsize = qf->dimquads * sizeof(uint32_t);
-
+    quads_chunk(qf)->itemsize = qf->dimquads * sizeof(uint32_t);
     *expected = qf->numquads * qf->dimquads * sizeof(uint32_t);
 	return 0;
 }
 
-static quadfile* new_quadfile() {
+static quadfile* new_quadfile(const char* fn, bool writing) {
 	quadfile* qf = calloc(1, sizeof(quadfile));
-	fitsbin_chunk_t* chunk;
+	fitsbin_chunk_t chunk;
 
 	if (!qf) {
-		fprintf(stderr, "Couldn't malloc a quadfile struct: %s\n", strerror(errno));
+		SYSERROR("Couldn't malloc a quadfile struct");
 		return NULL;
 	}
 	qf->healpix = -1;
 
-    qf->fb = fitsbin_new(1);
+    if (writing)
+        qf->fb = fitsbin_open_for_writing(fn);
+    else
+        qf->fb = fitsbin_open(fn);
+    if (!qf->fb) {
+        ERROR("Failed to create fitsbin");
+        return NULL;
+    }
 
-    chunk = qf->fb->chunks + CHUNK_QUADS;
-    chunk->tablename = strdup("quads");
-    chunk->required = 1;
-    chunk->callback_read_header = callback_read_header;
-    chunk->userdata = qf;
+    chunk.tablename = "quads";
+    chunk.required = 1;
+    chunk.callback_read_header = callback_read_header;
+    chunk.userdata = qf;
+    fitsbin_add_chunk(qf->fb, &chunk);
     
 	return qf;
 }
@@ -91,17 +101,17 @@ qfits_header* quadfile_get_header(const quadfile* qf) {
 
 quadfile* quadfile_open(const char* fn) {
     quadfile* qf = NULL;
+    fitsbin_chunk_t* chunk;
 
-    qf = new_quadfile();
+    qf = new_quadfile(fn, FALSE);
     if (!qf)
         goto bailout;
-
-    fitsbin_set_filename(qf->fb, fn);
     if (fitsbin_read(qf->fb)) {
-        fprintf(stderr, "quadfile_open: fitsbin_read failed.\n");
+        ERROR("Failed to open quads file");
         goto bailout;
     }
-	qf->quadarray = qf->fb->chunks[CHUNK_QUADS].data;
+    chunk = quads_chunk(qf);
+	qf->quadarray = chunk->data;
     return qf;
 
  bailout:
@@ -122,15 +132,10 @@ quadfile* quadfile_open_for_writing(const char* fn) {
 	quadfile* qf;
 	qfits_header* hdr;
 
-	qf = new_quadfile();
+	qf = new_quadfile(fn, TRUE);
 	if (!qf)
 		goto bailout;
-
     qf->dimquads = 4;
-    fitsbin_set_filename(qf->fb, fn);
-
-    if (fitsbin_start_write(qf->fb))
-        goto bailout;
 
 	// add default values to header
 	hdr = fitsbin_get_primary_header(qf->fb);
@@ -155,12 +160,13 @@ quadfile* quadfile_open_for_writing(const char* fn) {
 
 int quadfile_write_header(quadfile* qf) {
 	fitsbin_t* fb = qf->fb;
-	fb->chunks[CHUNK_QUADS].itemsize = qf->dimquads * sizeof(uint32_t);
-	fb->chunks[CHUNK_QUADS].nrows = qf->numquads;
+	fitsbin_chunk_t* chunk = quads_chunk(qf);
+    chunk->itemsize = qf->dimquads * sizeof(uint32_t);
+	chunk->nrows = qf->numquads;
 
 	if (fitsbin_write_primary_header(fb) ||
-		fitsbin_write_header(fb)) {
-		fprintf(stderr, "Failed to write quadfile header.\n");
+		fitsbin_write_chunk_header(fb, CHUNK_QUADS)) {
+		ERROR("Failed to write quadfile header");
 		return -1;
 	}
 	return 0;
@@ -178,7 +184,7 @@ int quadfile_write_quad(quadfile* qf, unsigned int* stars) {
 			ustars[i] = stars[i];
 	}
     if (fitsbin_write_item(qf->fb, CHUNK_QUADS, data)) {
-		fprintf(stderr, "quadfile_write_quad: failed to write: %s\n", strerror(errno));
+		ERROR("Failed to write a quad");
 		return -1;
 	}
 	qf->numquads++;
@@ -188,9 +194,10 @@ int quadfile_write_quad(quadfile* qf, unsigned int* stars) {
 int quadfile_fix_header(quadfile* qf) {
 	qfits_header* hdr;
 	fitsbin_t* fb = qf->fb;
+	fitsbin_chunk_t* chunk = quads_chunk(qf);
 
-	fb->chunks[CHUNK_QUADS].itemsize = qf->dimquads * sizeof(uint32_t);
-	fb->chunks[CHUNK_QUADS].nrows = qf->numquads;
+	chunk->itemsize = qf->dimquads * sizeof(uint32_t);
+	chunk->nrows = qf->numquads;
 
 	hdr = fitsbin_get_primary_header(fb);
 
@@ -204,8 +211,8 @@ int quadfile_fix_header(quadfile* qf) {
 	fits_header_mod_int(hdr, "HEALPIX", qf->healpix, "Healpix of this index.");
 
 	if (fitsbin_fix_primary_header(fb) ||
-		fitsbin_fix_header(fb)) {
-        fprintf(stderr, "Failed to fix quad header.\n");
+		fitsbin_fix_chunk_header(fb, CHUNK_QUADS)) {
+        ERROR("Failed to fix quad header");
 		return -1;
 	}
 	return 0;
@@ -222,8 +229,7 @@ double quadfile_get_index_scale_lower_arcsec(const quadfile* qf) {
 int quadfile_get_stars(const quadfile* qf, unsigned int quadid, unsigned int* stars) {
     int i;
 	if (quadid >= qf->numquads) {
-		fprintf(stderr, "Requested quadid %i, but number of quads is %i.\n",
-				quadid, qf->numquads);
+		ERROR("Requested quadid %i, but number of quads is %i",	quadid, qf->numquads);
         assert(quadid < qf->numquads);
 		return -1;
 	}

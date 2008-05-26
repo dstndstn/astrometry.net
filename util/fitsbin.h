@@ -22,7 +22,7 @@
 #include <stdio.h>
 
 #include "qfits.h"
-
+#include "bl.h"
 
 struct fitsbin_chunk_t {
 	char* tablename;
@@ -40,7 +40,7 @@ struct fitsbin_chunk_t {
 	int required;
 
     // Reading:
-    int (*callback_read_header)(qfits_header* primheader, qfits_header* header, size_t* expected, char** errstr, void* userdata);
+    int (*callback_read_header)(qfits_header* primheader, qfits_header* header, size_t* expected, void* userdata);
     void* userdata;
 
 
@@ -62,8 +62,7 @@ typedef struct fitsbin_chunk_t fitsbin_chunk_t;
 struct fitsbin_t {
 	char* filename;
 
-    fitsbin_chunk_t* chunks;
-    int nchunks;
+    bl* chunks;
 
     // Writing:
     FILE* fid;
@@ -74,13 +73,53 @@ struct fitsbin_t {
 };
 typedef struct fitsbin_t fitsbin_t;
 
-off_t fitsbin_get_data_start(fitsbin_t* fb, int chunk);
+/**
+ Typical usage patterns:
 
-FILE* fitsbin_get_fid(fitsbin_t* fb);
+ -Reading:
+ fitsbin_open();
+ fitsbin_add_chunk();
+ fitsbin_add_chunk();
+ ...
+ fitsbin_read();
+ ...
+ fitsbin_close();
 
-fitsbin_t* fitsbin_new(int nchunks);
+ -Writing:
+ fitsbin_open_for_writing();
+ fitsbin_add_chunk();
+ fitsbin_add_chunk();
+ ...
+ fitsbin_write_primary_header();
+ ...
+ fitsbin_write_chunk_header();
+ fitsbin_write_items();
+ ...
+ fitsbin_fix_chunk_header();
+
+ fitsbin_write_chunk_header();
+ fitsbin_write_items();
+ ...
+ fitsbin_fix_chunk_header();
+ ...
+ fitsbin_fix_primary_header();
+ fitsbin_close();
+
+ */
+
+fitsbin_t* fitsbin_open(const char* fn);
+
+fitsbin_t* fitsbin_open_for_writing(const char* fn);
 
 int fitsbin_read(fitsbin_t* fb);
+
+off_t fitsbin_get_data_start(fitsbin_t* fb, int chunk);
+
+fitsbin_chunk_t* fitsbin_get_chunk(fitsbin_t* fb, int chunk);
+
+void fitsbin_add_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk);
+
+FILE* fitsbin_get_fid(fitsbin_t* fb);
 
 int fitsbin_close(fitsbin_t* fb);
 
@@ -96,22 +135,19 @@ int fitsbin_write_chunk_header(fitsbin_t* fb, int chunk);
 
 int fitsbin_fix_chunk_header(fitsbin_t* fb, int chunk);
 
-int fitsbin_start_write(fitsbin_t* fb);
-
 int fitsbin_write_item(fitsbin_t* fb, int chunk, void* data);
 
 int fitsbin_write_items(fitsbin_t* fb, int chunk, void* data, int N);
 
-void fitsbin_set_filename(fitsbin_t* fb, const char* fn);
 
-// Single-chunk shortcuts:
-
-fitsbin_t* fitsbin_open(const char* fn, const char* tablename,
-						int (*callback_read_header)(qfits_header* primheader, qfits_header* header, size_t* expected, char** errstr, void* userdata),
-						void* userdata);
-int fitsbin_write_header(fitsbin_t* fb);
-int fitsbin_fix_header(fitsbin_t* fb);
-
-fitsbin_t* fitsbin_open_for_writing(const char* fn, const char* tablename);
+/*
+ // Single-chunk shortcuts:
+ fitsbin_t* fitsbin_single_open(const char* fn, const char* tablename,
+ int (*callback_read_header)(qfits_header* primheader, qfits_header* header, size_t* expected, char** errstr, void* userdata),
+ void* userdata);
+ int fitsbin_single_write_header(fitsbin_t* fb);
+ int fitsbin_single_fix_header(fitsbin_t* fb);
+ fitsbin_t* fitsbin_single_open_for_writing(const char* fn, const char* tablename);
+ */
 
 #endif
