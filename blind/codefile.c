@@ -27,12 +27,16 @@
 #include "fileutil.h"
 #include "ioutils.h"
 #include "fitsioutils.h"
+#include "errors.h"
 
 #define CHUNK_CODES 0
 
+static fitsbin_chunk_t* codes_chunk(codefile* cf) {
+    return fitsbin_get_chunk(cf->fb, CHUNK_CODES);
+}
+
 static int callback_read_header(qfits_header* primheader, qfits_header* header,
-								size_t* expected, char** errstr,
-								void* userdata) {
+								size_t* expected, void* userdata) {
 	codefile* cf = userdata;
 
     cf->dimcodes = qfits_header_getint(primheader, "DIMCODES", 4);
@@ -45,36 +49,40 @@ static int callback_read_header(qfits_header* primheader, qfits_header* header,
 
 	if ((cf->numcodes == -1) || (cf->numstars == -1) ||
 		(cf->index_scale_upper == -1.0) || (cf->index_scale_lower == -1.0)) {
-		if (errstr) *errstr = "Couldn't find NCODES or NSTARS or SCALE_U or SCALE_L entries in FITS header.";
+        ERROR("Couldn't find NCODES or NSTARS or SCALE_U or SCALE_L entries in FITS header");
 		return -1;
 	}
     if (fits_check_endian(primheader)) {
-		if (errstr) *errstr = "File was written with the wrong endianness.";
+		ERROR("File was written with the wrong endianness");
 		return -1;
     }
-
-    cf->fb->chunks[CHUNK_CODES].itemsize = cf->dimcodes * sizeof(double);
-
+    codes_chunk(cf)->itemsize = cf->dimcodes * sizeof(double);
     *expected = cf->numcodes * cf->dimcodes * sizeof(double);
 	return 0;
 }
 
-static codefile* new_codefile() {
-	fitsbin_chunk_t* chunk;
+static codefile* new_codefile(const char* fn, bool writing) {
+	fitsbin_chunk_t chunk;
 	codefile* cf = calloc(1, sizeof(codefile));
 	if (!cf) {
-		fprintf(stderr, "Couldn't calloc a codefile struct: %s\n", strerror(errno));
+		SYSERROR("Couldn't calloc a codefile struct");
 		return NULL;
 	}
 	cf->healpix = -1;
 
-    cf->fb = fitsbin_new(1);
+    if (writing)
+        cf->fb = fitsbin_open_for_writing(fn);
+    else
+        cf->fb = fitsbin_open(fn);
+    if (!cf->fb) {
+        ERROR("Failed to create fitsbin");
+        return NULL;
+    }
 
-    chunk = cf->fb->chunks + CHUNK_CODES;
-    chunk->tablename = strdup("codes");
-    chunk->required = 1;
-    chunk->callback_read_header = callback_read_header;
-    chunk->userdata = cf;
+    chunk.tablename = "codes";
+    chunk.required = 1;
+    chunk.callback_read_header = callback_read_header;
+    chunk.userdata = cf;
 
 	return cf;
 }
@@ -82,14 +90,12 @@ static codefile* new_codefile() {
 void codefile_get_code(const codefile* cf, int codeid, double* code) {
 	int i;
 	if (codeid >= cf->numcodes) {
-		fprintf(stderr, "Requested codeid %i, but number of codes is %i.\n",
-				codeid, cf->numcodes);
+		ERROR("Requested codeid %i, but number of codes is %i", codeid, cf->numcodes);
         assert(codeid < cf->numcodes);
         // just carry on - we'll probably segfault.
 	}
-	for (i=0; i<cf->dimcodes; i++) {
+	for (i=0; i<cf->dimcodes; i++)
 		code[i] = cf->codearray[codeid * cf->dimcodes + i];
-	}
 }
 
 int codefile_close(codefile* cf) {
@@ -103,15 +109,10 @@ int codefile_close(codefile* cf) {
 codefile* codefile_open(const char* fn) {
     codefile* cf = NULL;
 
-    cf = new_codefile();
+    cf = new_codefile(fn, FALSE);
     if (!cf)
         goto bailout;
-
-    fitsbin_set_filename(cf->fb, fn);
-    if (fitsbin_read(cf->fb))
-        goto bailout;
-
-	cf->codearray = cf->fb->chunks[CHUNK_CODES].data;
+	cf->codearray = codes_chunk(cf)->data;
     return cf;
 
  bailout:
@@ -124,16 +125,11 @@ codefile* codefile_open_for_writing(const char* fn) {
 	codefile* cf;
 	qfits_header* hdr;
 
-	cf = new_codefile();
+	cf = new_codefile(fn, TRUE);
 	if (!cf)
 		goto bailout;
-
     // default
     cf->dimcodes = 4;
-
-    fitsbin_set_filename(cf->fb, fn);
-    if (fitsbin_start_write(cf->fb))
-		goto bailout;
 
 	// add default values to header
 	hdr = codefile_get_header(cf);
@@ -159,12 +155,13 @@ codefile* codefile_open_for_writing(const char* fn) {
 
 int codefile_write_header(codefile* cf) {
 	fitsbin_t* fb = cf->fb;
-	fb->chunks[CHUNK_CODES].itemsize = cf->dimcodes * sizeof(double);
-	fb->chunks[CHUNK_CODES].nrows = cf->numcodes;
+    fitsbin_chunk_t* chunk = codes_chunk(cf);
+	chunk->itemsize = cf->dimcodes * sizeof(double);
+	chunk->nrows = cf->numcodes;
 
 	if (fitsbin_write_primary_header(fb) ||
-		fitsbin_write_header(fb)) {
-		fprintf(stderr, "Failed to write codefile header.\n");
+		fitsbin_write_chunk_header(fb, CHUNK_CODES)) {
+		ERROR("Failed to write codefile header");
 		return -1;
 	}
 	return 0;
@@ -173,8 +170,9 @@ int codefile_write_header(codefile* cf) {
 int codefile_fix_header(codefile* cf) {
 	qfits_header* hdr;
 	fitsbin_t* fb = cf->fb;
-	fb->chunks[CHUNK_CODES].itemsize = cf->dimcodes * sizeof(double);
-	fb->chunks[CHUNK_CODES].nrows = cf->numcodes;
+    fitsbin_chunk_t* chunk = codes_chunk(cf);
+	chunk->itemsize = cf->dimcodes * sizeof(double);
+	chunk->nrows = cf->numcodes;
 
 	hdr = codefile_get_header(cf);
 
@@ -188,8 +186,8 @@ int codefile_fix_header(codefile* cf) {
 	fits_header_mod_int(hdr, "HEALPIX", cf->healpix, "Healpix of this index.");
 
 	if (fitsbin_fix_primary_header(fb) ||
-		fitsbin_fix_header(fb)) {
-        fprintf(stderr, "Failed to fix code header.\n");
+		fitsbin_fix_chunk_header(fb, CHUNK_CODES)) {
+        ERROR("Failed to fix code header");
 		return -1;
 	}
 	return 0;
@@ -197,7 +195,7 @@ int codefile_fix_header(codefile* cf) {
 
 int codefile_write_code(codefile* cf, double* code) {
     if (fitsbin_write_item(cf->fb, CHUNK_CODES, code)) {
-		fprintf(stderr, "codefile_write_code: failed to write: %s\n", strerror(errno));
+		ERROR("Failed to write code");
 		return -1;
 	}
 	cf->numcodes++;
