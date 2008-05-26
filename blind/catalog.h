@@ -20,18 +20,22 @@
 #define CATUTILS_H
 
 #include <sys/types.h>
+#include <stdint.h>
 
 #include "qfits.h"
 #include "fitsbin.h"
+#include "bl.h"
 
 #define AN_FILETYPE_CATALOG "OBJS"
 
 struct catalog {
 	int numstars;
-	double ramin;
-	double ramax;
-	double decmin;
-	double decmax;
+    /*
+     double ramin;
+     double ramax;
+     double decmin;
+     double decmax;
+     */
 	int healpix;
     int hpnside;
 
@@ -40,13 +44,24 @@ struct catalog {
 	// optional table: star magnitudes.
 	float* mags;
 
+    // optional tables: positional error ellipses, proper motions
+    float* sigma_radec;   // sigma_ra, sigma_dec
+    float* proper_motion; // motion_ra, motion_dec
+    float* sigma_pm;      // sigma_motion_ra, sigma_motion_dec
+
+    // optional table: star IDs
+    uint64_t* starids;
+
+    // while writing: storage for the extra fields.
+    fl* maglist;
+    fl* siglist;
+    fl* pmlist;
+    fl* sigpmlist;
+    bl* idlist;
+
     fitsbin_t* fb;
 };
 typedef struct catalog catalog;
-
-// FIXME.
-// if "modifiable" is non-zero, a private copy-on-write is made.
-// (changes don't automatically get written to the file.)
 
 catalog* catalog_open(char* catfn);
 
@@ -60,7 +75,7 @@ int catalog_write_star(catalog* cat, double* star);
 
 int catalog_close(catalog* cat);
 
-void catalog_compute_radecminmax(catalog* cat);
+//void catalog_compute_radecminmax(catalog* cat);
 
 int catalog_write_header(catalog* cat);
 
@@ -68,7 +83,11 @@ qfits_header* catalog_get_header(catalog* cat);
 
 int catalog_fix_header(catalog* cat);
 
-int catalog_write_to_file(catalog* cat, char* fn);
+void catalog_add_mag(catalog* cat, float mag);
+void catalog_add_sigmas(catalog* cat, float sra, float sdec);
+void catalog_add_pms(catalog* cat, float sra, float sdec);
+void catalog_add_sigma_pms(catalog* cat, float sra, float sdec);
+void catalog_add_id(catalog* cat, uint64_t id);
 
 /*
   This should be called after writing all the star positions and
@@ -76,5 +95,10 @@ int catalog_write_to_file(catalog* cat, char* fn);
   to the file as an extra FITS table.
  */
 int catalog_write_mags(catalog* cat);
+
+int catalog_write_sigmas(catalog* cat);
+int catalog_write_pms(catalog* cat);
+int catalog_write_sigma_pms(catalog* cat);
+int catalog_write_ids(catalog* cat);
 
 #endif
