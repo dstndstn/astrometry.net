@@ -139,15 +139,4 @@ int fitsbin_write_item(fitsbin_t* fb, int chunk, void* data);
 
 int fitsbin_write_items(fitsbin_t* fb, int chunk, void* data, int N);
 
-
-/*
- // Single-chunk shortcuts:
- fitsbin_t* fitsbin_single_open(const char* fn, const char* tablename,
- int (*callback_read_header)(qfits_header* primheader, qfits_header* header, size_t* expected, char** errstr, void* userdata),
- void* userdata);
- int fitsbin_single_write_header(fitsbin_t* fb);
- int fitsbin_single_fix_header(fitsbin_t* fb);
- fitsbin_t* fitsbin_single_open_for_writing(const char* fn, const char* tablename);
- */
-
 #endif
