@@ -232,6 +232,23 @@ void   dl_merge_lists(dl* list1, dl* list2);
 void   dl_print(dl* list);
 
 ///////////////////////////////////////////////
+// special-case functions for float lists. //
+///////////////////////////////////////////////
+typedef bl fl;
+fl*    fl_new(int blocksize);
+void   fl_init(fl* list, int blocksize);
+void   fl_free(fl* list);
+int    fl_size(fl* list);
+float* fl_append(fl* list, float data);
+float* fl_access(fl* list, int i);
+void   fl_push(fl* list, float data);
+float fl_pop(fl* list);
+float fl_get(fl* list, int n);
+void   fl_set(fl* list, int n, float val);
+void   fl_insert(fl* list, int indx, float data);
+void   fl_remove_all(fl* list);
+
+///////////////////////////////////////////////
 // special-case functions for string lists.  //
 ///////////////////////////////////////////////
 /*

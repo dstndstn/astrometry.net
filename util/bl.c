@@ -1518,6 +1518,54 @@ void dl_print(dl* list) {
 	}
 }
 
+fl*    fl_new(int blocksize) {
+	return bl_new(blocksize, sizeof(float));
+}
+void   fl_init(fl* list, int blocksize) {
+	bl_init(list, blocksize, sizeof(float));
+}
+void   fl_free(fl* list) {
+    bl_free(list);
+}
+int    fl_size(fl* list) {
+    return bl_size(list);
+}
+float* fl_append(fl* list, float data) {
+    return bl_append(list, &data);
+}
+void   fl_push(fl* list, float data) {
+    fl_append(list, data);
+}
+float fl_pop(fl* list) {
+    float ret;
+    bl_pop(list, &ret);
+    return ret;
+}
+float fl_get(fl* list, int n) {
+	float* ptr;
+	ptr = bl_access(list, n);
+	return *ptr;
+}
+float* fl_access(fl* list, int i) {
+    return bl_access(list, i);
+}
+void   fl_set(fl* list, int n, float val) {
+	int i;
+	int nadd = (n+1) - list->N;
+	if (nadd > 0) {
+		// enlarge the list to hold 'nadd' more entries.
+		for (i=0; i<nadd; i++) {
+			fl_append(list, 0.0);
+		}
+	}
+	bl_set(list, n, &val);
+}
+void   fl_insert(fl* list, int indx, float data) {
+	bl_insert(list, indx, &data);
+}
+void   fl_remove_all(fl* list) {
+	bl_remove_all(list);
+}
 
 
 
