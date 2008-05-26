@@ -36,9 +36,9 @@ static fitsbin_chunk_t* quads_chunk(quadfile* qf) {
     return fitsbin_get_chunk(qf->fb, CHUNK_QUADS);
 }
 
-static int callback_read_header(qfits_header* primheader, qfits_header* header,
-								size_t* expected, void* userdata) {
-	quadfile* qf = userdata;
+static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    qfits_header* primheader = fitsbin_get_primary_header(fb);
+	quadfile* qf = chunk->userdata;
 
     qf->dimquads = qfits_header_getint(primheader, "DIMQUADS", 4);
     qf->numquads = qfits_header_getint(primheader, "NQUADS", -1);
@@ -58,8 +58,8 @@ static int callback_read_header(qfits_header* primheader, qfits_header* header,
 		return -1;
     }
 
-    quads_chunk(qf)->itemsize = qf->dimquads * sizeof(uint32_t);
-    *expected = qf->numquads * qf->dimquads * sizeof(uint32_t);
+    chunk->itemsize = qf->dimquads * sizeof(uint32_t);
+    chunk->nrows = qf->numquads;
 	return 0;
 }
 
@@ -165,7 +165,7 @@ int quadfile_write_header(quadfile* qf) {
 	chunk->nrows = qf->numquads;
 
 	if (fitsbin_write_primary_header(fb) ||
-		fitsbin_write_chunk_header(fb, CHUNK_QUADS)) {
+		fitsbin_write_chunk_header(fb, chunk)) {
 		ERROR("Failed to write quadfile header");
 		return -1;
 	}
@@ -176,6 +176,8 @@ int quadfile_write_quad(quadfile* qf, unsigned int* stars) {
 	uint32_t* data;
 	uint32_t ustars[qf->dimquads];
 	int i;
+	fitsbin_chunk_t* chunk = quads_chunk(qf);
+
 	if (sizeof(uint32_t) == sizeof(uint)) {
 		data = stars;
 	} else {
@@ -183,7 +185,7 @@ int quadfile_write_quad(quadfile* qf, unsigned int* stars) {
 		for (i=0; i<qf->dimquads; i++)
 			ustars[i] = stars[i];
 	}
-    if (fitsbin_write_item(qf->fb, CHUNK_QUADS, data)) {
+    if (fitsbin_write_item(qf->fb, chunk, data)) {
 		ERROR("Failed to write a quad");
 		return -1;
 	}
@@ -211,7 +213,7 @@ int quadfile_fix_header(quadfile* qf) {
 	fits_header_mod_int(hdr, "HEALPIX", qf->healpix, "Healpix of this index.");
 
 	if (fitsbin_fix_primary_header(fb) ||
-		fitsbin_fix_chunk_header(fb, CHUNK_QUADS)) {
+		fitsbin_fix_chunk_header(fb, chunk)) {
         ERROR("Failed to fix quad header");
 		return -1;
 	}

@@ -24,6 +24,8 @@
 #include "qfits.h"
 #include "bl.h"
 
+struct fitsbin_t;
+
 struct fitsbin_chunk_t {
 	char* tablename;
 
@@ -40,9 +42,9 @@ struct fitsbin_chunk_t {
 	int required;
 
     // Reading:
-    int (*callback_read_header)(qfits_header* primheader, qfits_header* header, size_t* expected, void* userdata);
+    //int (*callback_read_header)(qfits_header* primheader, qfits_header* header, size_t* expected, void* userdata);
+    int (*callback_read_header)(struct fitsbin_t* fb, struct fitsbin_chunk_t* chunk);
     void* userdata;
-
 
     qfits_header* header;
 
@@ -70,6 +72,9 @@ struct fitsbin_t {
     // The primary FITS header
     qfits_header* primheader;
     off_t primheader_end;
+
+    // for use by callback_read_header().
+    void* userdata;
 };
 typedef struct fitsbin_t fitsbin_t;
 
@@ -113,11 +118,25 @@ fitsbin_t* fitsbin_open_for_writing(const char* fn);
 
 int fitsbin_read(fitsbin_t* fb);
 
-off_t fitsbin_get_data_start(fitsbin_t* fb, int chunk);
-
 fitsbin_chunk_t* fitsbin_get_chunk(fitsbin_t* fb, int chunk);
 
-void fitsbin_add_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk);
+off_t fitsbin_get_data_start(fitsbin_t* fb, fitsbin_chunk_t* chunk);
+
+int fitsbin_n_chunks(fitsbin_t* fb);
+
+/**
+ Appends the given chunk -- makes a copy of the contents of "chunk" and
+ returns a pointer to the stored location.
+ */
+fitsbin_chunk_t* fitsbin_add_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk);
+
+/**
+ Immediately tries to read a chunk.  If the chunk is not found, -1 is returned
+ and the chunk is not added to this fitsbin's list.  If it's found, 0 is
+ returned, a copy of the chunk is stored, and the results are placed in
+ "chunk".
+ */
+int fitsbin_read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk);
 
 FILE* fitsbin_get_fid(fitsbin_t* fb);
 
@@ -131,16 +150,18 @@ int fitsbin_write_primary_header(fitsbin_t* fb);
 // (pads to FITS block size)
 int fitsbin_fix_primary_header(fitsbin_t* fb);
 
-qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, int chunk);
+qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk);
+
+int fitsbin_write_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk);
 
 // (pads to FITS block size)
-int fitsbin_write_chunk_header(fitsbin_t* fb, int chunk);
+int fitsbin_write_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk);
 
 // (pads to FITS block size)
-int fitsbin_fix_chunk_header(fitsbin_t* fb, int chunk);
+int fitsbin_fix_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk);
 
-int fitsbin_write_item(fitsbin_t* fb, int chunk, void* data);
+int fitsbin_write_item(fitsbin_t* fb, fitsbin_chunk_t* chunk, void* data);
 
-int fitsbin_write_items(fitsbin_t* fb, int chunk, void* data, int N);
+int fitsbin_write_items(fitsbin_t* fb, fitsbin_chunk_t* chunk, void* data, int N);
 
 #endif

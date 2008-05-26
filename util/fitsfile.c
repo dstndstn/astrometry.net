@@ -16,7 +16,10 @@ int fitsfile_write_header(FILE* fid, qfits_header* hdr,
     fits_pad_file(fid);
     *start_offset = ftello(fid);
 	if (qfits_header_dump(hdr, fid)) {
-        ERROR("Failed to write header for extension %i to file %s", ext, fn);
+        if (ext == -1)
+            ERROR("Failed to write FITS extension header to file %s", fn);
+        else
+            ERROR("Failed to write header for extension %i to file %s", ext, fn);
         return -1;
     }
     *end_offset = ftello(fid);
@@ -39,9 +42,14 @@ int fitsfile_fix_header(FILE* fid, qfits_header* hdr,
 	new_header_end = *end_offset;
 
 	if (new_header_end != old_header_end) {
-		ERROR("Error: FITS header for file %s, ext %i, used to end at %lu, "
-              "now it ends at %lu.  Data loss is likely!", fn, ext,
-              (unsigned long)old_header_end, (unsigned long)new_header_end);
+        if (ext == -1)
+            ERROR("Error: FITS header for file %s, used to end at %lu, "
+                  "now it ends at %lu.  Data loss is likely!", fn,
+                  (unsigned long)old_header_end, (unsigned long)new_header_end);
+        else
+            ERROR("Error: FITS header for file %s, ext %i, used to end at %lu, "
+                  "now it ends at %lu.  Data loss is likely!", fn, ext,
+                  (unsigned long)old_header_end, (unsigned long)new_header_end);
 		return -1;
 	}
 	fseek(fid, offset, SEEK_SET);

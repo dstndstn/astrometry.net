@@ -31,9 +31,9 @@
 
 #define CHUNK_QIDX 0
 
-static int callback_read_header(qfits_header* primheader, qfits_header* header,
-								size_t* expected, void* userdata) {
-	qidxfile* qf = userdata;
+static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    qfits_header* primheader = fitsbin_get_primary_header(fb);
+	qidxfile* qf = chunk->userdata;
 
 	if (fits_check_endian(primheader)) {
 		ERROR("qidx file was written with wrong endianness");
@@ -47,8 +47,7 @@ static int callback_read_header(qfits_header* primheader, qfits_header* header,
 		return -1;
 	}
 
-    *expected = qf->numstars * 2 * sizeof(uint32_t) +
-		qf->numquads * qf->dimquads * sizeof(uint32_t);
+    chunk->nrows = qf->numstars * 2 + qf->numquads * qf->dimquads;
 	return 0;
 }
 
@@ -150,7 +149,7 @@ int qidxfile_write_header(qidxfile* qf) {
     chunk = fitsbin_get_chunk(fb, CHUNK_QIDX);
     chunk->nrows = 2 * qf->numstars + qf->dimquads * qf->numquads;
 	if (fitsbin_write_primary_header(fb) ||
-		fitsbin_write_chunk_header(fb, CHUNK_QIDX)) {
+		fitsbin_write_chunk_header(fb, chunk)) {
 		ERROR("Failed to write qidxfile header");
 		return -1;
 	}
@@ -164,22 +163,24 @@ int qidxfile_write_star(qidxfile* qf, int* quads, int nquads) {
 	FILE* fid;
 	uint32_t nq;
 	int i;
+	fitsbin_chunk_t* chunk;
 
     fid = fitsbin_get_fid(fb);
+    chunk = fitsbin_get_chunk(fb, CHUNK_QIDX);
 
 	// Write the offset & size:
-	if (fseeko(fid, fitsbin_get_data_start(fb, CHUNK_QIDX) + qf->cursor_index * 2 * sizeof(uint32_t), SEEK_SET)) {
+	if (fseeko(fid, fitsbin_get_data_start(fb, chunk) + qf->cursor_index * 2 * sizeof(uint32_t), SEEK_SET)) {
 		ERROR("qidxfile_write_star: failed to fseek");
 		return -1;
 	}
 	nq = nquads;
-	if (fitsbin_write_item(fb, CHUNK_QIDX, &qf->cursor_heap) ||
-        fitsbin_write_item(fb, CHUNK_QIDX, &nq)) {
+	if (fitsbin_write_item(fb, chunk, &qf->cursor_heap) ||
+        fitsbin_write_item(fb, chunk, &nq)) {
 		ERROR("qidxfile_write_star: failed to write a qidx offset/size");
 		return -1;
 	}
 	// Write the quads.
-	if (fseeko(fid, fitsbin_get_data_start(fb, CHUNK_QIDX) + qf->numstars * 2 * sizeof(uint32_t) +
+	if (fseeko(fid, fitsbin_get_data_start(fb, chunk) + qf->numstars * 2 * sizeof(uint32_t) +
 			   qf->cursor_heap * sizeof(uint32_t), SEEK_SET)) {
 		SYSERROR("qidxfile_write_star: failed to fseek");
 		return -1;
@@ -188,7 +189,7 @@ int qidxfile_write_star(qidxfile* qf, int* quads, int nquads) {
 	for (i=0; i<nquads; i++) {
         // (in case uint != uint32_t)
 		uint32_t q = quads[i];
-        if (fitsbin_write_item(fb, CHUNK_QIDX, &q)) {
+        if (fitsbin_write_item(fb, chunk, &q)) {
             ERROR("qidxfile_write_star: failed to write quads");
             return -1;
         }

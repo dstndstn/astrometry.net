@@ -77,13 +77,17 @@ fitsbin_chunk_t* fitsbin_get_chunk(fitsbin_t* fb, int chunk) {
     return get_chunk(fb, chunk);
 }
 
-void fitsbin_add_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
-    chunk->tablename = strdup(chunk->tablename);
-    bl_append(fb->chunks, chunk);
+int fitsbin_n_chunks(fitsbin_t* fb) {
+    return nchunks(fb);
 }
 
-off_t fitsbin_get_data_start(fitsbin_t* fb, int chunk) {
-    return get_chunk(fb, chunk)->header_end;
+fitsbin_chunk_t* fitsbin_add_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    chunk->tablename = strdup(chunk->tablename);
+    return bl_append(fb->chunks, chunk);
+}
+
+off_t fitsbin_get_data_start(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    return chunk->header_end;
 }
 
 int fitsbin_close(fitsbin_t* fb) {
@@ -122,14 +126,14 @@ int fitsbin_fix_primary_header(fitsbin_t* fb) {
                                        &fb->primheader_end, fb->filename);
 }
 
-qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, int chunknum) {
-    fitsbin_chunk_t* chunk;
+qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     qfits_table* table;
     int tablesize;
     qfits_header* hdr;
     int ncols = 1;
 
-    chunk = get_chunk(fb, chunknum);
+    if (chunk->header)
+        return chunk->header;
 	// the table header
 	tablesize = chunk->itemsize * chunk->nrows * ncols;
 	table = qfits_table_new(fb->filename, QFITS_BINTABLE, tablesize, ncols, chunk->nrows);
@@ -142,36 +146,43 @@ qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, int chunknum) {
     return hdr;
 }
 
-int fitsbin_write_chunk_header(fitsbin_t* fb, int chunknum) {
-    qfits_header* hdr;
-    fitsbin_chunk_t* chunk;
+int fitsbin_write_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    if (fitsbin_write_chunk_header(fb, chunk)) {
+        return -1;
+    }
+    if (fitsbin_write_items(fb, chunk, chunk->data, chunk->nrows)) {
+        return -1;
+    }
+    if (fitsbin_fix_chunk_header(fb, chunk)) {
+        return -1;
+    }
+    return 0;
+}
 
-    chunk = get_chunk(fb, chunknum);
-    hdr = fitsbin_get_chunk_header(fb, chunknum);
+int fitsbin_write_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    qfits_header* hdr;
+    hdr = fitsbin_get_chunk_header(fb, chunk);
     if (fitsfile_write_header(fb->fid, chunk->header,
                               &chunk->header_start, &chunk->header_end,
-                              chunknum, fb->filename)) {
+                              -1, fb->filename)) {
         return -1;
     }
 	return 0;
 }
 
-int fitsbin_fix_chunk_header(fitsbin_t* fb, int chunknum) {
-    fitsbin_chunk_t* chunk;
-    chunk = get_chunk(fb, chunknum);
+int fitsbin_fix_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     // update NAXIS2 to reflect the number of rows written.
     fits_header_mod_int(chunk->header, "NAXIS2", chunk->nrows, NULL);
 
     if (fitsfile_fix_header(fb->fid, chunk->header,
                             &chunk->header_start, &chunk->header_end,
-                            chunknum, fb->filename)) {
+                            -1, fb->filename)) {
         return -1;
     }
 	return 0;
 }
 
-int fitsbin_write_items(fitsbin_t* fb, int chunknum, void* data, int N) {
-    fitsbin_chunk_t* chunk = get_chunk(fb, chunknum);
+int fitsbin_write_items(fitsbin_t* fb, fitsbin_chunk_t* chunk, void* data, int N) {
     if (fwrite(data, chunk->itemsize, N, fb->fid) != N) {
         SYSERROR("Failed to write %i items", N);
         return -1;
@@ -180,58 +191,99 @@ int fitsbin_write_items(fitsbin_t* fb, int chunknum, void* data, int N) {
     return 0;
 }
 
-int fitsbin_write_item(fitsbin_t* fb, int chunk, void* data) {
+int fitsbin_write_item(fitsbin_t* fb, fitsbin_chunk_t* chunk, void* data) {
     return fitsbin_write_items(fb, chunk, data, 1);
 }
 
-int fitsbin_read(fitsbin_t* fb) {
+static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     int tabstart, tabsize, ext;
     size_t expected = 0;
 	int mode, flags;
 	off_t mapstart;
 	int mapoffset;
+    qfits_table* table;
+    int table_nrows;
+    int table_rowsize;
+    
+    if (fits_find_table_column(fb->filename, chunk->tablename,
+                               &tabstart, &tabsize, &ext)) {
+        if (chunk->required)
+            ERROR("Couldn't find table \"%s\" in file \"%s\"",
+                  chunk->tablename, fb->filename);
+        return -1;
+    }
+    chunk->header = qfits_header_readext(fb->filename, ext);
+    if (!chunk->header) {
+        ERROR("Couldn't read FITS header from file \"%s\" extension %i", fb->filename, ext);
+        return -1;
+    }
+
+    table = qfits_table_open(fb->filename, ext);
+    table_nrows = table->nr;
+    table_rowsize = table->tab_w;
+    qfits_table_close(table);
+
+    if (!chunk->itemsize)
+        chunk->itemsize = table_rowsize;
+    if (!chunk->nrows)
+        chunk->nrows = table_nrows;
+
+    if (chunk->callback_read_header &&
+        chunk->callback_read_header(fb, chunk)) {
+        ERROR("fitsbin callback_read_header failed");
+        return -1;
+    }
+
+    if (chunk->nrows != table_nrows) {
+        ERROR("Table %s in file %s: expected %i data items (ie, rows), found %i",
+              chunk->tablename, fb->filename, chunk->nrows, table_nrows);
+        return -1;
+    }
+
+    if (chunk->itemsize != table_rowsize) {
+        ERROR("Table %s in file %s: expected data size %i (ie, row width in bytes), found %i",
+              chunk->tablename, fb->filename, chunk->itemsize, table_rowsize);
+        return -1;
+    }
+
+    expected = chunk->itemsize * chunk->nrows;
+    if (fits_bytes_needed(expected) != tabsize) {
+        ERROR("Expected table size (%i => %i FITS blocks) is not equal to "
+              "size of table \"%s\" (%i FITS blocks).",
+              (int)expected, fits_blocks_needed(expected),
+              chunk->tablename, tabsize / FITS_BLOCK_SIZE);
+        return -1;
+    }
+
+    get_mmap_size(tabstart, tabsize, &mapstart, &(chunk->mapsize), &mapoffset);
+    mode = PROT_READ;
+    flags = MAP_SHARED;
+    chunk->map = mmap(0, chunk->mapsize, mode, flags, fileno(fb->fid), mapstart);
+    if (chunk->map == MAP_FAILED) {
+        SYSERROR("Couldn't mmap file \"%s\"", fb->filename);
+        chunk->map = NULL;
+        return -1;
+    }
+    chunk->data = chunk->map + mapoffset;
+    return 0;
+}
+
+int fitsbin_read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    if (read_chunk(fb, chunk))
+        return -1;
+    fitsbin_add_chunk(fb, chunk);
+    return 0;
+}
+
+int fitsbin_read(fitsbin_t* fb) {
     int i;
 
     for (i=0; i<nchunks(fb); i++) {
         fitsbin_chunk_t* chunk = get_chunk(fb, i);
-
-        if (fits_find_table_column(fb->filename, chunk->tablename, &tabstart, &tabsize, &ext)) {
-            if (!chunk->required)
-                continue;
-            ERROR("Couldn't find table \"%s\" in file \"%s\"", chunk->tablename, fb->filename);
-            goto bailout;
+        if (fitsbin_read_chunk(fb, chunk)) {
+            if (chunk->required)
+                goto bailout;
         }
-
-        chunk->header = qfits_header_readext(fb->filename, ext);
-        if (!chunk->header) {
-            ERROR("Couldn't read FITS header from file \"%s\" extension %i", fb->filename, ext);
-            goto bailout;
-        }
-
-        if (chunk->callback_read_header &&
-            chunk->callback_read_header(fb->primheader, chunk->header, &expected, chunk->userdata)) {
-            ERROR("fitsbin callback failed");
-            goto bailout;
-        }
-
-        if (expected && (fits_bytes_needed(expected) != tabsize)) {
-            ERROR("Expected table size (%i => %i FITS blocks) is not equal to size of table \"%s\" (%i FITS blocks).",
-                   (int)expected, fits_blocks_needed(expected), chunk->tablename, tabsize / FITS_BLOCK_SIZE);
-            goto bailout;
-        }
-
-        mode = PROT_READ;
-        flags = MAP_SHARED;
-
-        get_mmap_size(tabstart, tabsize, &mapstart, &(chunk->mapsize), &mapoffset);
-
-        chunk->map = mmap(0, chunk->mapsize, mode, flags, fileno(fb->fid), mapstart);
-        if (chunk->map == MAP_FAILED) {
-            SYSERROR("Couldn't mmap file \"%s\"", fb->filename);
-            chunk->map = NULL;
-            goto bailout;
-        }
-        chunk->data = chunk->map + mapoffset;
     }
     return 0;
 
