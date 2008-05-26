@@ -607,6 +607,7 @@ int main(int argc, char** args) {
 						"catalog or a cut catalog (.objs.fits file).\n", infn);
 			}
 		}
+        qfits_header_destroy(hdr);
 
 		if (!(ancat || cat)) {
 			fflush(stdout);

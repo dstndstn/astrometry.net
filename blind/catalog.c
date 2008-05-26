@@ -108,6 +108,8 @@ static catalog* new_catalog(const char* fn, bool writing) {
         return NULL;
     }
 
+    memset(&chunk, 0, sizeof(fitsbin_chunk_t));
+
     // Star positions
     chunk.tablename = "xyz";
     chunk.required = 1;
@@ -304,26 +306,25 @@ int catalog_write_star(catalog* cat, double* star) {
 
 int write_floats(catalog* cat, int chunknum, 
                   const char* name, fl* list, int nperstar) {
-	fitsbin_chunk_t* chunk;
-    int i, k;
+    int i;
     if (!list || (fl_size(list) != cat->numstars * nperstar)) {
         ERROR("Number of %ss (%i) doesn't match number of stars (%i)",
               name, list ? fl_size(list) : 0, cat->numstars);
         return -1;
     }
-    chunk = get_chunk(cat, chunknum);
-    chunk->nrows = cat->numstars;
 
     if (fitsbin_write_chunk_header(cat->fb, chunknum)) {
         ERROR("Failed to write %ss header", name);
         return -1;
     }
-    for (i=0; i<chunk->nrows; i++)
-        for (k=0; k<nperstar; k++)
-            if (fitsbin_write_item(cat->fb, chunknum, fl_access(list, i*nperstar + k))) {
-                ERROR("Failed to write %s for star %i", name, i);
-                return -1;
-            }
+    for (i=0; i<cat->numstars; i++) {
+        float data[nperstar];
+        fl_copy(list, i*nperstar, nperstar, data);
+        if (fitsbin_write_item(cat->fb, chunknum, data)) {
+            ERROR("Failed to write %s for star %i", name, i);
+            return -1;
+        }
+    }
     if (fitsbin_fix_chunk_header(cat->fb, chunknum)) {
         ERROR("Failed to fix %ss header", name);
         return -1;
@@ -348,7 +349,6 @@ int catalog_write_sigma_pms(catalog* cat) {
 }
 
 int catalog_write_ids(catalog* cat) {
-	fitsbin_chunk_t* chunk;
     int i;
     char* name = "id";
     int chunknum = CHUNK_STARID;
@@ -357,14 +357,12 @@ int catalog_write_ids(catalog* cat) {
               name, cat->idlist ? bl_size(cat->idlist) : 0, cat->numstars);
         return -1;
     }
-    chunk = get_chunk(cat, chunknum);
-    chunk->nrows = cat->numstars;
 
     if (fitsbin_write_chunk_header(cat->fb, chunknum)) {
         ERROR("Failed to write %ss header", name);
         return -1;
     }
-    for (i=0; i<chunk->nrows; i++)
+    for (i=0; i<cat->numstars; i++)
         if (fitsbin_write_item(cat->fb, chunknum, bl_access(cat->idlist, i))) {
             ERROR("Failed to write %s for star %i", name, i);
             return -1;
@@ -407,12 +405,12 @@ int catalog_close(catalog* cat) {
     int rtn;
 	if (!cat) return 0;
 	rtn = fitsbin_close(cat->fb);
-	free(cat);
     fl_free(cat->maglist);
     fl_free(cat->siglist);
     fl_free(cat->pmlist);
     fl_free(cat->sigpmlist);
     bl_free(cat->idlist);
+	free(cat);
     return rtn;
 }
 

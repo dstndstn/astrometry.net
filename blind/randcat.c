@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	double ramin = DEFAULT_RAMIN, ramax = DEFAULT_RAMAX;
 	double decmin = DEFAULT_DECMIN, decmax = DEFAULT_DECMAX;
 	int i;
-	catalog cat;
+	catalog* cat;
 
 	if (argc <= 4) {
 		fprintf(stderr, HelpString);
@@ -93,25 +93,25 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "  using limits %f<=RA<=%f ; %f<=DEC<=%f deg.\n",
 				rad2deg(ramin), rad2deg(ramax), rad2deg(decmin), rad2deg(decmax));
 
-	cat.numstars = numstars;
-	cat.stars = malloc(numstars * DIM_STARS * sizeof(double));
+    cat = catalog_open_for_writing(fname);
 
 	for (i=0; i <numstars; i++) {
-		make_rand_star(cat.stars + i*DIM_STARS, ramin, ramax, decmin, decmax);
+        double star[DIM_STARS];
+		make_rand_star(star, ramin, ramax, decmin, decmax);
+        if (catalog_write_star(cat, star)) {
+            fprintf(stderr, "Failed to write star %i.\n", i);
+            exit(-1);
+        }
 	}
 
-	catalog_compute_radecminmax(&cat);
+	//catalog_compute_radecminmax(&cat);
 
-	if (catalog_write_to_file(&cat, fname)) {
+    if (catalog_close(cat)) {
 		fprintf(stderr, "Failed to write catalog.\n");
-		free(cat.stars);
 		exit(-1);
 	}
 
-	free(cat.stars);
-
-	return (0);
-
+    return 0;
 }
 
 
