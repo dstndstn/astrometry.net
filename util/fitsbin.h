@@ -125,14 +125,18 @@ int fitsbin_close(fitsbin_t* fb);
 
 qfits_header* fitsbin_get_primary_header(fitsbin_t* fb);
 
+// (pads to FITS block size)
 int fitsbin_write_primary_header(fitsbin_t* fb);
 
+// (pads to FITS block size)
 int fitsbin_fix_primary_header(fitsbin_t* fb);
 
 qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, int chunk);
 
+// (pads to FITS block size)
 int fitsbin_write_chunk_header(fitsbin_t* fb, int chunk);
 
+// (pads to FITS block size)
 int fitsbin_fix_chunk_header(fitsbin_t* fb, int chunk);
 
 int fitsbin_write_item(fitsbin_t* fb, int chunk, void* data);

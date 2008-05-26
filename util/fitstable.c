@@ -808,7 +808,7 @@ int fitstable_fix_header(fitstable_t* t) {
                             t->extension, t->fn)) {
         return -1;
     }
-    return fits_pad_file(t->fid);
+    return 0; //fits_pad_file(t->fid);
 }
 
 void fitstable_close_table(fitstable_t* tab) {

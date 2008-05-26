@@ -91,7 +91,7 @@ int fitsbin_close(fitsbin_t* fb) {
     int rtn = 0;
 	if (!fb) return rtn;
     if (fb->fid) {
-		fits_pad_file(fb->fid);
+		//fits_pad_file(fb->fid);
 		if (fclose(fb->fid)) {
 			SYSERROR("Error closing fitsbin file");
             rtn = -1;
@@ -263,7 +263,7 @@ fitsbin_t* fitsbin_open(const char* fn) {
     return NULL;
 }
 
-fitsbin_t* fitsbin_single_open_for_writing(const char* fn) {
+fitsbin_t* fitsbin_open_for_writing(const char* fn) {
     fitsbin_t* fb;
 
     fb = new_fitsbin(fn);
