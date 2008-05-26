@@ -247,6 +247,7 @@ float fl_get(fl* list, int n);
 void   fl_set(fl* list, int n, float val);
 void   fl_insert(fl* list, int indx, float data);
 void   fl_remove_all(fl* list);
+void   fl_copy(fl* list, int start, int length, float* dest);
 
 ///////////////////////////////////////////////
 // special-case functions for string lists.  //

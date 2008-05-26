@@ -68,7 +68,7 @@ static void free_chunk(fitsbin_chunk_t* chunk) {
         qfits_header_destroy(chunk->header);
 	if (chunk->map) {
 		if (munmap(chunk->map, chunk->mapsize)) {
-			SYSERROR("Failed to munmap fitsbin");
+			SYSERROR("Failed to munmap fitsbin chunk");
 		}
 	}
 }
@@ -159,6 +159,9 @@ int fitsbin_write_chunk_header(fitsbin_t* fb, int chunknum) {
 int fitsbin_fix_chunk_header(fitsbin_t* fb, int chunknum) {
     fitsbin_chunk_t* chunk;
     chunk = get_chunk(fb, chunknum);
+    // update NAXIS2 to reflect the number of rows written.
+    fits_header_mod_int(chunk->header, "NAXIS2", chunk->nrows, NULL);
+
     if (fitsfile_fix_header(fb->fid, chunk->header,
                             &chunk->header_start, &chunk->header_end,
                             chunknum, fb->filename)) {
@@ -167,11 +170,13 @@ int fitsbin_fix_chunk_header(fitsbin_t* fb, int chunknum) {
 	return 0;
 }
 
-int fitsbin_write_items(fitsbin_t* fb, int chunk, void* data, int N) {
-    if (fwrite(data, get_chunk(fb, chunk)->itemsize, N, fb->fid) != N) {
+int fitsbin_write_items(fitsbin_t* fb, int chunknum, void* data, int N) {
+    fitsbin_chunk_t* chunk = get_chunk(fb, chunknum);
+    if (fwrite(data, chunk->itemsize, N, fb->fid) != N) {
         SYSERROR("Failed to write %i items", N);
         return -1;
     }
+    chunk->nrows += N;
     return 0;
 }
 
@@ -180,7 +185,6 @@ int fitsbin_write_item(fitsbin_t* fb, int chunk, void* data) {
 }
 
 int fitsbin_read(fitsbin_t* fb) {
-	FILE* fid = NULL;
     int tabstart, tabsize, ext;
     size_t expected = 0;
 	int mode, flags;
@@ -221,7 +225,7 @@ int fitsbin_read(fitsbin_t* fb) {
 
         get_mmap_size(tabstart, tabsize, &mapstart, &(chunk->mapsize), &mapoffset);
 
-        chunk->map = mmap(0, chunk->mapsize, mode, flags, fileno(fid), mapstart);
+        chunk->map = mmap(0, chunk->mapsize, mode, flags, fileno(fb->fid), mapstart);
         if (chunk->map == MAP_FAILED) {
             SYSERROR("Couldn't mmap file \"%s\"", fb->filename);
             chunk->map = NULL;
@@ -229,9 +233,6 @@ int fitsbin_read(fitsbin_t* fb) {
         }
         chunk->data = chunk->map + mapoffset;
     }
-    fclose(fid);
-    fid = NULL;
-
     return 0;
 
  bailout:
@@ -269,7 +270,7 @@ fitsbin_t* fitsbin_open_for_writing(const char* fn) {
     fb = new_fitsbin(fn);
     if (!fb)
         return NULL;
-    fb->primheader = qfits_header_default();
+    fb->primheader = qfits_table_prim_header_default();
 	fb->fid = fopen(fb->filename, "wb");
 	if (!fb->fid) {
 		SYSERROR("Couldn't open file \"%s\" for output", fb->filename);

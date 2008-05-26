@@ -1566,6 +1566,9 @@ void   fl_insert(fl* list, int indx, float data) {
 void   fl_remove_all(fl* list) {
 	bl_remove_all(list);
 }
+void   fl_copy(fl* list, int start, int length, float* dest) {
+    bl_copy(list, start, length, dest);
+}
 
 
 
