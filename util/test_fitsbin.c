@@ -5,7 +5,7 @@
 
 #include "cutest.h"
 
-char* get_tmpfile(int i) {
+static char* get_tmpfile(int i) {
     static char fn[256];
     sprintf(fn, "/tmp/test-fitsbin-%i", i);
     return fn;

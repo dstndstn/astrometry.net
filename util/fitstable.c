@@ -445,6 +445,12 @@ int fitstable_write_row(fitstable_t* table, ...) {
 }
 
 void fitstable_clear_table(fitstable_t* tab) {
+    int i;
+    for (i=0; i<ncols(tab); i++) {
+        fitscol_t* col = getcol(tab, i);
+        free(col->colname);
+        free(col->units);
+    }
     bl_remove_all(tab->cols);
 }
 

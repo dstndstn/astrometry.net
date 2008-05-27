@@ -54,6 +54,7 @@ void test_one_column_write_read(CuTest* ct) {
     indata = fitstable_read_column(tab, "X", dubl);
     CuAssertPtrNotNull(ct, indata);
     CuAssertIntEquals(ct, 0, memcmp(outdata, indata, sizeof(outdata)));
+    free(indata);
     CuAssertIntEquals(ct, 0, fitstable_close(tab));
 
 }
@@ -204,6 +205,7 @@ void test_one_int_column_write_read(CuTest* ct) {
     indata = fitstable_read_column(tab, "X", i32);
     CuAssertPtrNotNull(ct, indata);
     CuAssertIntEquals(ct, memcmp(outdata, indata, sizeof(outdata)), 0);
+    free(indata);
     CuAssertIntEquals(ct, 0, fitstable_close(tab));
 }
 
@@ -265,6 +267,10 @@ void test_two_columns_with_conversion(CuTest* ct) {
         CuAssertIntEquals(ct, outx[i], (int)inx[i]);
         CuAssertIntEquals(ct, (int)outy[i], iny[i]);
     }
+
+    free(inx);
+    free(iny);
+
     CuAssertIntEquals(ct, 0, fitstable_close(tab));
 }
 
@@ -361,6 +367,10 @@ void test_arrays(CuTest* ct) {
         CuAssertIntEquals(ct, outx[i], (int)inx[i]);
     for (i=0; i<N*DY; i++)
         CuAssertIntEquals(ct, (int)outy[i], iny[i]);
+
+    free(inx);
+    free(iny);
+
     CuAssertIntEquals(ct, 0, fitstable_close(tab));
 }
 
@@ -414,6 +424,7 @@ void test_conversion(CuTest* ct) {
 
     for (i=0; i<N*D; i++)
         CuAssertIntEquals(ct, out[i], (int)in[i]);
+    free(in);
     CuAssertIntEquals(ct, 0, fitstable_close(tab));
 }
 

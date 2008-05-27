@@ -261,6 +261,7 @@ void test_delete(CuTest* tc) {
 	CuAssertPtrEquals(tc, bl->head, NULL);
 	CuAssertPtrEquals(tc, bl->tail, NULL);
 	CuAssertIntEquals(tc, il_check_consistency(bl), 0);
+    il_free(bl);
 }
 
 void test_delete_2(CuTest* tc) {
@@ -279,6 +280,7 @@ void test_delete_2(CuTest* tc) {
 	CuAssertPtrEquals(tc, bl->head, NULL);
 	CuAssertPtrEquals(tc, bl->tail, NULL);
 	CuAssertIntEquals(tc, il_check_consistency(bl), 0);
+    il_free(bl);
 }
 
 void test_delete_3(CuTest* tc) {
@@ -298,6 +300,7 @@ void test_delete_3(CuTest* tc) {
 	CuAssertPtrEquals(tc, bl->head, NULL);
 	CuAssertPtrEquals(tc, bl->tail, NULL);
 	CuAssertIntEquals(tc, il_check_consistency(bl), 0);
+    il_free(bl);
 }
 
 void test_set(CuTest* tc) {
@@ -318,6 +321,7 @@ void test_set(CuTest* tc) {
 	CuAssertIntEquals(tc, 1, il_get(bl, 1));
 	CuAssertIntEquals(tc, 2, il_get(bl, 2));
 	CuAssertIntEquals(tc, il_check_consistency(bl), 0);
+    il_free(bl);
 }
 
 void test_delete_4(CuTest* tc) {
@@ -340,6 +344,7 @@ void test_delete_4(CuTest* tc) {
 	CuAssertPtrEquals(tc, bl->head, NULL);
 	CuAssertPtrEquals(tc, bl->tail, NULL);
 	CuAssertIntEquals(tc, il_check_consistency(bl), 0);
+    il_free(bl);
 }
 
 /******************************************************************************/
@@ -365,6 +370,7 @@ void test_dl_push(CuTest* tc) {
 	CuAssert(tc, "dl", 1.0 == dl_get(bl, 1));
 	CuAssert(tc, "dl", 2.0 == dl_get(bl, 2));
 	CuAssertIntEquals(tc, dl_check_consistency(bl), 0);
+    dl_free(bl);
 }
 
 void test_bl_extend(CuTest *tc) {
@@ -376,6 +382,7 @@ void test_bl_extend(CuTest *tc) {
 	*new1 = 10;
 	int *new2 = bl_access(list, 0);
 	CuAssertPtrEquals(tc, new2, new1);
+    bl_free(list);
 }
 
 ///////////
@@ -388,16 +395,23 @@ static void addsome(sl* s, const char* fmt, ...) {
 }
 
 void test_sl_join(CuTest* tc) {
+    char* s1;
     sl* s = sl_new(4);
     sl_append(s, "123");
     sl_appendf(s, "%1$s%1$s", "testing");
     addsome(s, "%i", 456);
     sl_insert(s, 1, "inserted");
     sl_insertf(s, 2, "%s%s", "ins", "ertedf");
-    CuAssertStrEquals(tc, "123insertedinsertedftestingtesting456", sl_join(s, ""));
-    CuAssertStrEquals(tc, "123--inserted--insertedf--testingtesting--456",
-                      sl_join(s, "--"));
-    CuAssertStrEquals(tc, "456--testingtesting--insertedf--inserted--123",
-                      sl_join_reverse(s, "--"));
+    s1 = sl_join(s, "");
+    CuAssertStrEquals(tc, "123insertedinsertedftestingtesting456", s1);
+    free(s1);
+    s1 = sl_join(s, "--");
+    CuAssertStrEquals(tc, "123--inserted--insertedf--testingtesting--456", s1);
+    free(s1);
+    s1 = sl_join_reverse(s, "--");
+    CuAssertStrEquals(tc, "456--testingtesting--insertedf--inserted--123", s1);
+    free(s1);
+
+    sl_free2(s);
 }
 

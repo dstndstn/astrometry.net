@@ -57,7 +57,7 @@ void test_simple(CuTest* ct) {
         CuAssertIntEquals(ct, fld.ra[i], infld2->ra[i]);
         CuAssertIntEquals(ct, fld.dec[i], infld2->dec[i]);
     }
-    rd_free_data(infld2);
+    rd_free(infld2);
 
     CuAssertIntEquals(ct, 0, rdlist_close(in));
     in = NULL;

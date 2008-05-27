@@ -39,7 +39,7 @@ static void expect(CuTest* tc, const char* header, const char* key, const char* 
             header);
     // erase the null-termination.
     buf[strlen(buf)-1] = ' ';
-    hdr = qfits_header_read_hdr_string(buf, sizeof(buf));
+    hdr = qfits_header_read_hdr_string((unsigned char*)buf, sizeof(buf));
     CuAssertPtrNotNull(tc, hdr);
     str = fits_get_long_string(hdr, key);
     CuAssertStrEquals(tc, val, str);
@@ -156,10 +156,7 @@ void test_from_paper_page2_notes(CuTest* tc) {
 
 void test_write_long_string(CuTest* tc) {
     qfits_header* hdr;
-    FILE* tmpf;
     char* str;
-
-    tmpf = tmpfile();
 
     hdr = qfits_header_default();
     fits_header_add_int(hdr, "VAL1", 42, "First value");
@@ -171,10 +168,8 @@ void test_write_long_string(CuTest* tc) {
                                 "and the number", 42, "which of course has "
                                 "special significance.  This sentence ends with"
                                 " an ampersand.&");
-    qfits_header_dump(hdr, tmpf);
 
     str = fits_get_long_string(hdr, "VAL2");
-
     CuAssertStrEquals(tc, "This is a very very very long string with lots of "
                       "special characters like the following four single-quotes "
                       ">>>>''''<<<< and lots of ampersands &&&&&&&&&&&&&&&&&& "
@@ -184,7 +179,6 @@ void test_write_long_string(CuTest* tc) {
     free(str);
 
     qfits_header_destroy(hdr);
-
 }
 
 

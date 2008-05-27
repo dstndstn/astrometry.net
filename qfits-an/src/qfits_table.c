@@ -313,7 +313,10 @@ qfits_table * qfits_table_new(
     qt->tab_t = table_type ;
     qt->nc = nb_cols ;
     qt->nr = nb_raws ;
-    qt->col = qfits_calloc(qt->nc, sizeof(qfits_col)) ;
+    if (qt->nc)
+        qt->col = qfits_calloc(qt->nc, sizeof(qfits_col)) ;
+    else
+        qt->col = NULL;
     qt->tab_w = table_width ;
     
     return qt ;

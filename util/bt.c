@@ -462,12 +462,14 @@ bool bt_insert(bt* tree, void* data, bool unique, compare_func compare) {
 	np->branch.children[1-dir] = p;
 	np->branch.N = p->leaf.N + 1;
 	np->branch.firstleaf = &(np->branch.children[0]->leaf);
-	if (q->branch.children[0] == p) {
-		q->branch.children[0] = np;
-		if (!dir)
-			update_firstleaf(ancestors, nancestors, np, np->branch.firstleaf);
-	} else if (q->branch.children[1] == p) // need this because it could be that p = q = root.
-		q->branch.children[1] = np;
+    if (!isleaf(q)) {
+        if (q->branch.children[0] == p) {
+            q->branch.children[0] = np;
+            if (!dir)
+                update_firstleaf(ancestors, nancestors, np, np->branch.firstleaf);
+        } else if (q->branch.children[1] == p) // need this because it could be that p = q = root.
+            q->branch.children[1] = np;
+    }
 
 	if (p == tree->root)
 		tree->root = np;
