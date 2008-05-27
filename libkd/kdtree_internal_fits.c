@@ -216,6 +216,7 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
 			 chunk.tablename, (unsigned int)sizeof(unsigned int), kd->ndim,
              (unsigned int)sizeof(double), chunk.itemsize);
         WRITE_CHUNK();
+        free(chunk.tablename);
         fitsbin_chunk_reset(&chunk);
 	}
 	if (kd->lr) {
@@ -231,6 +232,7 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
 			 "rightmost data point owned by the node.",
 			 chunk.tablename, chunk.itemsize);
         WRITE_CHUNK();
+        free(chunk.tablename);
         fitsbin_chunk_reset(&chunk);
 	}
 	if (kd->perm) {
@@ -246,6 +248,7 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
 			 "index that the data point had in the original array on which the "
 			 "kdtree was built.", chunk.tablename, chunk.itemsize);
         WRITE_CHUNK();
+        free(chunk.tablename);
         fitsbin_chunk_reset(&chunk);
 	}
 	if (kd->bb.any) {
@@ -263,6 +266,7 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
              (unsigned int)sizeof(ttype),
 			 kdtree_kdtype_to_string(kdtree_treetype(kd)));
         WRITE_CHUNK();
+        free(chunk.tablename);
         fitsbin_chunk_reset(&chunk);
 	}
 	if (kd->split.any) {
@@ -297,6 +301,7 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
 				 kdtree_kdtype_to_string(kdtree_treetype(kd)));
 		}
         WRITE_CHUNK();
+        free(chunk.tablename);
         fitsbin_chunk_reset(&chunk);
 	}
 	if (kd->splitdim) {
@@ -315,6 +320,7 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
 			 "data points on the high side of the plane.",
 			 chunk.tablename, chunk.itemsize);
         WRITE_CHUNK();
+        free(chunk.tablename);
         fitsbin_chunk_reset(&chunk);
 	}
 	if (kd->minval && kd->maxval) {
@@ -347,6 +353,7 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
 				(hdr, "  dim %i: [%g, %g]", d, kd->minval[d], kd->maxval[d]);
 		fits_add_long_comment(hdr, "scale: %g", kd->scale);
 		fits_add_long_comment(hdr, "1/scale: %g", kd->invscale);
+        free(chunk.tablename);
         WRITE_CHUNK();
         fitsbin_chunk_reset(&chunk);
 	}
@@ -361,6 +368,7 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
 			 "It is stored as %u-dimensional, %u-byte native-endian %ss.",
 			 chunk.tablename, (unsigned int)kd->ndim, (unsigned int)sizeof(dtype),
 			 kdtree_kdtype_to_string(kdtree_datatype(kd)));
+        free(chunk.tablename);
         WRITE_CHUNK();
         fitsbin_chunk_reset(&chunk);
 	}

@@ -149,8 +149,8 @@ int startree_close(startree_t* s) {
 		free(s->inverse_perm);
  	if (s->header)
 		qfits_header_destroy(s->header);
-	//if (s->tree)
-    //kdtree_fits_close(s->tree);
+	if (s->tree)
+        kdtree_free(s->tree);
 	free(s);
 	return 0;
 }
@@ -217,6 +217,8 @@ int startree_write_to_file(startree_t* s, char* fn) {
     chunks = get_chunks(s);
     for (i=0; i<bl_size(chunks); i++) {
         fitsbin_chunk_t* chunk = bl_access(chunks, i);
+        if (!chunk->data)
+            continue;
         kdtree_fits_write_chunk(io, chunk);
     }
     bl_free(chunks);

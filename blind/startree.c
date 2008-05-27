@@ -38,12 +38,13 @@
 #include "starkd.h"
 #include "boilerplate.h"
 
-#define OPTIONS "hR:f:k:d:t:bsSc"
+#define OPTIONS "hR:k:d:t:bsSci:o:"
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
-		   "     -f <input-catalog-name>\n"
+		   "     -i <input-catalog-name>\n"
+           "     -o <output-star-kdtree-name>\n"
 		   "   (   [-b]: build bounding boxes\n"
 		   "    OR [-s]: build splitting planes   )\n"
 		   "    [-R Nleaf]: number of points in a kdtree leaf node (default 25)\n"
@@ -64,7 +65,6 @@ int main(int argc, char *argv[]) {
 	startree_t* starkd;
     catalog* cat;
     int Nleaf = 25;
-    char* basename = NULL;
     char* treefname = NULL;
     char* catfname = NULL;
 	char* progname = argv[0];
@@ -99,8 +99,11 @@ int main(int argc, char *argv[]) {
                 exit(-1);
             }
             break;
-        case 'f':
-            basename = optarg;
+        case 'i':
+            catfname = optarg;
+            break;
+        case 'o':
+            treefname = optarg;
             break;
 		case 't':
 			treetype = kdtree_kdtype_parse_tree_string(optarg);
@@ -139,7 +142,7 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-    if (!basename) {
+    if (!(catfname && treefname)) {
         printHelp(progname);
         exit(-1);
     }
@@ -150,14 +153,11 @@ int main(int argc, char *argv[]) {
 	if (!treetype)
 		treetype = KDT_TREE_U32;
 
-    catfname = mk_catfn(basename);
-	treefname = mk_streefn(basename);
     fprintf(stderr, "%s: building KD tree for %s\n", argv[0], catfname);
 	fprintf(stderr, "Will write output to %s\n", treefname);
 
     fprintf(stderr, "Reading star catalogue...");
     cat = catalog_open(catfname);
-    free_fn(catfname);
     if (!cat) {
         fprintf(stderr, "Couldn't read catalogue.\n");
         exit(-1);
@@ -246,7 +246,6 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
     catalog_close(cat);
-    free_fn(treefname);
     fprintf(stderr, "done.\n");
 
     startree_close(starkd);

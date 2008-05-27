@@ -2060,6 +2060,8 @@ kdtree_t* MANGLE(kdtree_convert_data)
 	}
 #endif
 
+    kd->converted_data = TRUE;
+
 	return kd;
 }
 
