@@ -24,26 +24,6 @@
 #include "kdtree.h"
 #include "fitsbin.h"
 
-/*
-// convenience function
-kdtree_t* kdtree_fits_read(const char* fn, const char* treename, qfits_header** p_hdr);
-
-kdtree_t* kdtree_fits_read_extras(const char* fn, const char* treename, qfits_header** p_hdr, extra_table* extras, int nextras);
-
-int kdtree_fits_write(const kdtree_t* kdtree, const char* fn, const qfits_header* hdr);
-
-int kdtree_fits_write_extras(const kdtree_t* kdtree, const char* fn, const qfits_header* hdr, const extra_table* extras, int nextras);
-
-void kdtree_fits_close(kdtree_t* kd);
-
-FILE* kdtree_fits_write_primary_header(const char* fn);
-
-int kdtree_fits_append(const kdtree_t* kdtree, const qfits_header* hdr, FILE* out);
-
-int kdtree_fits_append_extras(const kdtree_t* kdtree, const qfits_header* hdr, const extra_table* extras, int nextras, FILE* out);
- */
-
-
 /**
  Usage patterns:
 
@@ -89,12 +69,15 @@ kdtree_t* kdtree_fits_read(const char* fn, const char* treename,
 int kdtree_fits_write(const kdtree_t* kdtree, const char* fn,
                       const qfits_header* hdr);
 
-/*
- FILE* kdtree_fits_write_primary_header(const char* fn);
 
- int kdtree_fits_append(const kdtree_t* kdtree, const qfits_header* hdr,
- FILE* out);
- */
+//bl* kdtree_fits_get_chunks(const kdtree_t* kd);
+
+
+
+
+typedef fitsbin_t kdtree_fits_t;
+
+fitsbin_t* kdtree_fits_get_fitsbin(kdtree_fits_t* io);
 
 
 kdtree_fits_t* kdtree_fits_open(const char* fn);
@@ -111,34 +94,10 @@ kdtree_fits_t* kdtree_fits_open_for_writing(const char* fn);
 
 int kdtree_fits_write_tree(kdtree_fits_t* io, kdtree_t* kd);
 
-fitsbin_t* kdtree_fits_get_fitsbin(kdtree_fits_t* io);
-
 int kdtree_fits_write_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk);
 
 
-kdtree_fits_close(kdtree_fits_t* io);
-
-/*
- struct kdtree_io_s {
- fitsbin_t* fb;
- kdtree_t* kd;
- };
- typedef struct kdtree_io_s kdtree_io_t;
- */
-
-typedef fitsbin_t kdtree_fits_t;
-
-/*
- struct extra_table_info {
- fitsbin_chunk_t chunk;
- 
- // this gets called after the kdtree size has been discovered.
- void (*compute_tablesize)(kdtree_t* kd, struct extra_table_info* thistable);
- 
- // when writing: don't write this one.
- int dontwrite;
- };
- */
+int kdtree_fits_close(kdtree_fits_t* io);
 
 // names (actually prefixes) of FITS tables.
 #define KD_STR_HEADER    "kdtree_header"

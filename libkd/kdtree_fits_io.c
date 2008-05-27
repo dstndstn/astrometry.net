@@ -84,33 +84,52 @@ static int is_tree_header_ok(qfits_header* header, int* ndim, int* ndata,
     return 0;
 }
 
-
-kdtree_io_t* kdtree_io_open(const char* fn) {
-    return fitsbin_open(fn);
+/*
+bl* kdtree_fits_get_chunks(const kdtree_t* kd) {
+    bl* chunks = bl_new(4, sizeof(fitsbin_chunk_t));
+    fitsbin_chunk_t chunk;
+    qfits_header* hdr;
+    fitsbin_chunk_init(&chunk);
+    chunk.tablename = "";
+    hdr = fitsbin_get_chunk_header(NULL, &chunk);
+    fits_add_endian(hdr);
+    fits_header_addf   (hdr, "KDT_NAME", "kdtree: name of this tree", "'%s'", kd->name ? kd->name : "");
+    fits_header_add_int(hdr, "KDT_NDAT", kd->ndata,  "kdtree: number of data points");
+    fits_header_add_int(hdr, "KDT_NDIM", kd->ndim,   "kdtree: number of dimensions");
+    fits_header_add_int(hdr, "KDT_NNOD", kd->nnodes, "kdtree: number of nodes");
+    fits_header_add_int(hdr, "KDT_VER",  KDTREE_FITS_VERSION, "kdtree: version number");
+    bl_append(chunks, &chunk);
 }
+ */
 
-qfits_header* kdtree_io_get_primary_header(kdtree_io_t* io) {
-    return fitsbin_get_primary_header(kdtree_io_get_fitsbin(io));
-}
-
-int kdtree_io_read_chunk(kdtree_io_t* io, fitsbin_chunk_t* chunk) {
-    return fitsbin_read_chunk(io, chunk);
-}
-
-fitsbin_t* kdtree_io_get_fitsbin(kdtree_io_t* io) {
+fitsbin_t* kdtree_fits_get_fitsbin(kdtree_fits_t* io) {
     return io;
 }
 
-// declarations
-KD_DECLARE(kdtree_read_fits, int, (const char* fn, kdtree_t* kd, extra_table* uextras, int nuextras));
+kdtree_fits_t* kdtree_fits_open(const char* fn) {
+    return fitsbin_open(fn);
+}
 
-kdtree_t* kdtree_io_read_tree(kdtree_io_t* io, const char* treename) {
+qfits_header* kdtree_fits_get_primary_header(kdtree_fits_t* io) {
+    return fitsbin_get_primary_header(kdtree_fits_get_fitsbin(io));
+}
+
+int kdtree_fits_read_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
+    return fitsbin_read_chunk(io, chunk);
+}
+
+// declarations
+KD_DECLARE(kdtree_read_fits, int, (kdtree_fits_t* io, kdtree_t* kd));
+KD_DECLARE(kdtree_write_fits, int, (kdtree_fits_t* io, kdtree_t* kd));
+
+kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename) {
     int ndim, ndata, nnodes;
 	unsigned int tt;
 	kdtree_t* kd = NULL;
     int found = 0;
     fitsbin_t* fb = io;
 	qfits_header* header;
+    int rtn;
 
     kd = CALLOC(1, sizeof(kdtree_t));
     if (!kd) {
@@ -123,9 +142,11 @@ kdtree_t* kdtree_io_read_tree(kdtree_io_t* io, const char* treename) {
         header = fitsbin_get_primary_header(fb);
         if (is_tree_header_ok(header, &ndim, &ndata, &nnodes, &tt, 1))
             found = 1;
+        header = qfits_header_copy(header);
     }
     if (!found) {
         int i, nexten;
+        char* fn = fb->filename;
         // scan the extension headers, looking for one that contains a matching KDT_NAME entry.
         nexten = qfits_query_n_ext(fn);
         header = NULL;
@@ -138,7 +159,7 @@ kdtree_t* kdtree_io_read_tree(kdtree_io_t* io, const char* treename) {
             }
             name = fits_get_dupstring(header, "KDT_NAME");
             if (!name)
-                continue;
+                goto next;
             //printf("Found KDT_NAME entry \"%s\".\n", name);
             if (name && !name[0]) {
                 // treat empty string as NULL.
@@ -148,7 +169,7 @@ kdtree_t* kdtree_io_read_tree(kdtree_io_t* io, const char* treename) {
             // if the desired treename was specified and this one doesn't match...
             if (treename && strcmp(name, treename)) {
                 free(name);
-                continue;
+                goto next;
             }
 
             if (is_tree_header_ok(header, &ndim, &ndata, &nnodes, &tt, 0)) {
@@ -156,6 +177,7 @@ kdtree_t* kdtree_io_read_tree(kdtree_io_t* io, const char* treename) {
                 found = 1;
                 break;
             }
+        next:
             qfits_header_destroy(header);
         }
         if (!found) {
@@ -167,11 +189,7 @@ kdtree_t* kdtree_io_read_tree(kdtree_io_t* io, const char* treename) {
     }
 
     kd->has_linear_lr = qfits_header_getboolean(header, "KDT_LINL", 0);
-
-    if (p_hdr)
-        *p_hdr = header;
-    else
-        qfits_header_destroy(header);
+    qfits_header_destroy(header);
 
     kd->ndata  = ndata;
     kd->ndim   = ndim;
@@ -195,8 +213,9 @@ kdtree_t* kdtree_io_read_tree(kdtree_io_t* io, const char* treename) {
     
 }
 
-int kdtree_io_write_chunk(kdtree_io_t* io, fitsbin_chunk_t* chunk) {
+int kdtree_fits_write_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
     fitsbin_chunk_t* ch;
+    fitsbin_t* fb = kdtree_fits_get_fitsbin(io);
     ch = fitsbin_add_chunk(fb, chunk);
     if (fitsbin_write_chunk(fb, ch)) {
         ERROR("Failed to write kdtree extra chunk");
@@ -205,19 +224,15 @@ int kdtree_io_write_chunk(kdtree_io_t* io, fitsbin_chunk_t* chunk) {
     return 0;
 }
 
-int kdtree_io_write_tree(kdtree_io_t* io, kdtree_t* kd) {
+int kdtree_fits_write_tree(kdtree_fits_t* io, kdtree_t* kd) {
     fitsbin_chunk_t chunk;
-    fitsbin_t* fb = kdtree_io_get_fitsbin(io);
-    int c;
+    fitsbin_t* fb = kdtree_fits_get_fitsbin(io);
     qfits_header* hdr;
     int rtn;
 
-    memset(&chunk, 0, sizeof(fitsbin_chunk_t));
-
-    chunk.name = "";
-    c = fitsbin_n_chunks(fb);
-    fitsbin_add_chunk(fb, &chunk);
-    hdr = fitsbin_get_chunk_header(fb, c);
+    fitsbin_chunk_init(&chunk);
+    chunk.tablename = "";
+    hdr = fitsbin_get_chunk_header(fb, &chunk);
 
     /*
      if (inhdr)
@@ -232,69 +247,20 @@ int kdtree_io_write_tree(kdtree_io_t* io, kdtree_t* kd) {
     fits_header_add_int(hdr, "KDT_VER",  KDTREE_FITS_VERSION, "kdtree: version number");
 
     // kdtree header is an empty fitsbin_chunk.
-    fitsbin_write_chunk_header(fb, c);
-    fitsbin_fix_chunk_header(fb, c);
+    fitsbin_write_chunk(fb, &chunk);
+    fitsbin_chunk_clean(&chunk);
 
-	KD_DISPATCH(kdtree_write_fits, kd->tt, rtn = , (io, kd));
+	KD_DISPATCH(kdtree_write_fits, kd->treetype, rtn = , (io, kd));
     return rtn;
 }
 
 
 
-
-
-
-
-
-
-/**
-   This function reads FITS headers to try to determine which kind of tree
-   is contained in the file, then calls the appropriate (mangled) function
-   kdtree_read_fits() (defined in kdtree_internal_fits.c).  This, in turn,
-   calls kdtree_fits_common_read(), then does some extras processing and
-   returns.
- */
-
-/**
-   This function calls the appropriate (mangled) function
-   kdtree_append_fits(), which in turn calls kdtree_fits_common_write()
-   which does the actual writing.
- */
-
-int kdtree_fits_common_write(const kdtree_t* kdtree, const qfits_header* inhdr, const extra_table* extras, int nextras, FILE* out) {
-	for (i=0; i<nextras; i++) {
-		const extra_table* tab;
-        int datasize;
-        void* dataptr;
-
-        tab = extras + i;
-		if (tab->dontwrite)
-			continue;
-		datasize = tab->datasize;
-		dataptr  = tab->ptr;
-		ncols = 1;
-		nrows = tab->nitems;
-		tablesize = datasize * nrows * ncols;
-		table = qfits_table_new("", QFITS_BINTABLE, tablesize, ncols, nrows);
-		qfits_col_fill(table->col, datasize, 0, 1, TFITS_BIN_TYPE_A,
-					   tab->name, "", "", "", 0, 0, 0, 0, 0);
-		tablehdr = qfits_table_ext_header_default(table);
-		qfits_header_dump(tablehdr, out);
-		qfits_header_destroy(tablehdr);
-		qfits_table_close(table);
-		if ((fwrite(dataptr, 1, tablesize, out) != tablesize) ||
-			fits_pad_file(out)) {
-			SYSERROR("Failed to write kdtree table %s", tab->name);
-			return -1;
-		}
-	}
-
-    return 0;
-}
-
-void kdtree_fits_close(kdtree_t* kd) {
-	if (!kd) return;
-    FREE(kd->name);
-	munmap(kd->mmapped, kd->mmapped_size);
-	FREE(kd);
+int kdtree_fits_close(kdtree_fits_t* io) {
+    fitsbin_t* fb;
+	if (!io) return 0;
+    fb = kdtree_fits_get_fitsbin(io);
+    return fitsbin_close(fb);
+    //FREE(kd->name);
+	//FREE(kd);
 }

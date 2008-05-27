@@ -22,6 +22,7 @@ all:
 
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.utils
+include $(COMMON)/makefile.anfiles
 include $(COMMON)/makefile.qfits
 
 INTERNALS := \
@@ -77,9 +78,9 @@ $(LIBKD_NOIO): $(KD) $(INTERNALS_NOIO)
 	$(AR) rc $@ $^
 	$(RANLIB) $@
 
-checktree: checktree.o $(LIBKD) $(ANUTILS_LIB) $(QFITS_LIB)
+checktree: checktree.o $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-fix-bb: fix-bb.o $(LIBKD) $(ANUTILS_LIB) $(QFITS_LIB)
+fix-bb: fix-bb.o $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 DEP_OBJ += fix-bb.o checktree.o
 
