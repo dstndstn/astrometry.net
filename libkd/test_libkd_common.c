@@ -20,12 +20,6 @@ static kdtree_t* build_tree(CuTest* tc, double* data, int N, int D,
                             int Nleaf, int treetype, int treeopts);
 static double* random_points_d(int N, int D);
 
-static void free_tree(kdtree_t* kd) {
-	if ((kd->treetype & KDT_DATA_MASK) != KDT_DATA_DOUBLE)
-		free(kd->data.any);
-	kdtree_free(kd);
-}
-
 static double* random_points_d(int N, int D) {
     int i;
     double* data = malloc(N * D * sizeof(double));

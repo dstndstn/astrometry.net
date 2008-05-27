@@ -99,7 +99,7 @@ void tst_1(CuTest* ct) {
          CuAssertIntEquals(ct, R1, R3);
          */
     }
-	free_tree(kd);
+	kdtree_free(kd);
 }
 
 static inline u8 node_level(int nodeid) {
@@ -196,7 +196,7 @@ static void run_test_nn(CuTest* tc, int treetype, int treeopts,
         CuAssertDblEquals(tc, sqrt(d2), sqrt(trued2), eps);
     }
 
-	free_tree(kd);
+	kdtree_free(kd);
     free(treedata);
     free(origdata);
 }
@@ -271,7 +271,7 @@ static void run_test_rs_ND(CuTest* tc, int treetype, int treeopts,
 		kdtree_free_query(res);
     }
 
-	free_tree(kd);
+	kdtree_free(kd);
     free(treedata);
     free(origdata);
 }
@@ -392,7 +392,7 @@ void run_test_lr(CuTest* tc, int D, int Nleaf, int treetype, int treeopts) {
         }
 
         kd->lr = lr;
-		free_tree(kd);
+        kdtree_free(kd);
         free(treedata);
     }
 }
