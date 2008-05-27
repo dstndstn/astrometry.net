@@ -747,7 +747,7 @@ int main(int argc, char** argv) {
 	double centre[3];
 	double vx[3], vy[3];
 	double boxx[4], boxy[4];
-	int hp;
+	int hp, hpnside;
 
 	qfits_header* qhdr;
 	qfits_header* chdr;
@@ -891,9 +891,12 @@ int main(int argc, char** argv) {
 	if (hp == -1) {
 		fprintf(stderr, "Warning: skdt does not contain \"HEALPIX\" header.  Code and quad files will not contain this header either.\n");
 	}
-
 	quads->healpix = hp;
 	codes->healpix = hp;
+    // likewise "HPNSIDE"
+	hpnside = qfits_header_getint(startree_header(starkd), "HPNSIDE", 1);
+	quads->hpnside = hpnside;
+	codes->hpnside = hpnside;
 
 	qhdr = quadfile_get_header(quads);
 	chdr = codefile_get_header(codes);

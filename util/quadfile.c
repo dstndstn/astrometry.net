@@ -47,6 +47,7 @@ static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     qf->index_scale_lower = qfits_header_getdouble(primheader, "SCALE_L", -1.0);
 	qf->indexid = qfits_header_getint(primheader, "INDEXID", 0);
 	qf->healpix = qfits_header_getint(primheader, "HEALPIX", -1);
+	qf->hpnside = qfits_header_getint(primheader, "HPNSIDE", 1);
 
 	if ((qf->numquads == -1) || (qf->numstars == -1) ||
 		(qf->index_scale_upper == -1.0) || (qf->index_scale_lower == -1.0)) {
@@ -72,6 +73,7 @@ static quadfile* new_quadfile(const char* fn, bool writing) {
 		return NULL;
 	}
 	qf->healpix = -1;
+    qf->hpnside = 1;
 
     if (writing)
         qf->fb = fitsbin_open_for_writing(fn);
@@ -143,13 +145,14 @@ quadfile* quadfile_open_for_writing(const char* fn) {
 	hdr = fitsbin_get_primary_header(qf->fb);
     fits_add_endian(hdr);
 	qfits_header_add(hdr, "AN_FILE", "QUAD", "This file lists, for each quad, its stars.", NULL);
-	qfits_header_add(hdr, "DIMQUADS", "0", "Number of stars in a quad.", NULL);
-	qfits_header_add(hdr, "NQUADS", "0", "Number of quads.", NULL);
-	qfits_header_add(hdr, "NSTARS", "0", "Number of stars used (or zero).", NULL);
-	qfits_header_add(hdr, "SCALE_U", "0.0", "Upper-bound index scale.", NULL);
-	qfits_header_add(hdr, "SCALE_L", "0.0", "Lower-bound index scale.", NULL);
-	qfits_header_add(hdr, "INDEXID", "0", "Index unique ID.", NULL);
-	qfits_header_add(hdr, "HEALPIX", "-1", "Healpix of this index.", NULL);
+	qfits_header_add(hdr, "DIMQUADS", "0", "", NULL);
+	qfits_header_add(hdr, "NQUADS", "0", "", NULL);
+	qfits_header_add(hdr, "NSTARS", "0", "", NULL);
+	qfits_header_add(hdr, "SCALE_U", "0.0", "", NULL);
+	qfits_header_add(hdr, "SCALE_L", "0.0", "", NULL);
+	qfits_header_add(hdr, "INDEXID", "0", "", NULL);
+	qfits_header_add(hdr, "HEALPIX", "-1", "", NULL);
+ 	qfits_header_add(hdr, "HPNSIDE", "1", "", NULL);
     fits_add_long_comment(hdr, "The first extension contains the quads "
                           "stored as %i 32-bit native-endian unsigned ints.", qf->dimquads);
 	return qf;
@@ -213,6 +216,7 @@ int quadfile_fix_header(quadfile* qf) {
 	fits_header_mod_double(hdr, "SCALE_L", qf->index_scale_lower, "Lower-bound index scale (radians).");
 	fits_header_mod_int(hdr, "INDEXID", qf->indexid, "Index unique ID.");
 	fits_header_mod_int(hdr, "HEALPIX", qf->healpix, "Healpix of this index.");
+	fits_header_mod_int(hdr, "HPNSIDE", qf->hpnside, "Nside of the healpixelization");
 
 	if (fitsbin_fix_primary_header(fb) ||
 		fitsbin_fix_chunk_header(fb, chunk)) {

@@ -37,6 +37,8 @@ struct quadfile {
 	int indexid;
 	// healpix covered by this index
 	int healpix;
+    // Nside of the healpixelization
+    int hpnside;
 
 	fitsbin_t* fb;
 

@@ -46,6 +46,7 @@ static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     cf->index_scale_lower = qfits_header_getdouble(primheader, "SCALE_L", -1.0);
 	cf->indexid = qfits_header_getint(primheader, "INDEXID", 0);
 	cf->healpix = qfits_header_getint(primheader, "HEALPIX", -1);
+	cf->hpnside = qfits_header_getint(primheader, "HPNSIDE", 1);
 
 	if ((cf->numcodes == -1) || (cf->numstars == -1) ||
 		(cf->index_scale_upper == -1.0) || (cf->index_scale_lower == -1.0)) {
@@ -69,6 +70,7 @@ static codefile* new_codefile(const char* fn, bool writing) {
 		return NULL;
 	}
 	cf->healpix = -1;
+    cf->hpnside = 1;
 
     if (writing)
         cf->fb = fitsbin_open_for_writing(fn);
@@ -144,14 +146,15 @@ codefile* codefile_open_for_writing(const char* fn) {
 	qfits_header_add(hdr, "AN_FILE", "CODE", "This file lists the code for each quad.", NULL);
 	qfits_header_add(hdr, "NCODES", "0", "", NULL);
 	qfits_header_add(hdr, "NSTARS", "0", "", NULL);
-	fits_header_add_int(hdr, "DIMCODES", cf->dimcodes, "Code dimension");
+	fits_header_add_int(hdr, "DIMCODES", cf->dimcodes, "");
 	qfits_header_add(hdr, "SCALE_U", "0.0", "", NULL);
 	qfits_header_add(hdr, "SCALE_L", "0.0", "", NULL);
-	qfits_header_add(hdr, "INDEXID", "0", "Index unique ID.", NULL);
-	qfits_header_add(hdr, "HEALPIX", "-1", "Healpix of this index.", NULL);
+	qfits_header_add(hdr, "INDEXID", "0", "", NULL);
+	qfits_header_add(hdr, "HEALPIX", "-1", "", NULL);
+	qfits_header_add(hdr, "HPNSIDE", "1", "", NULL);
 	fits_add_long_comment(hdr, "The first extension contains the codes "
 						  "stored as %i native-endian doubles.  "
-						  "(ie, the quad location in %i-D code space.", cf->dimcodes, cf->dimcodes);
+						  "(the quad location in %i-D code space)", cf->dimcodes, cf->dimcodes);
 	return cf;
 
  bailout:
@@ -191,6 +194,7 @@ int codefile_fix_header(codefile* cf) {
 	fits_header_mod_double(hdr, "SCALE_L", cf->index_scale_lower, "Lower-bound index scale (radians).");
 	fits_header_mod_int(hdr, "INDEXID", cf->indexid, "Index unique ID.");
 	fits_header_mod_int(hdr, "HEALPIX", cf->healpix, "Healpix of this index.");
+	fits_header_mod_int(hdr, "HPNSIDE", cf->hpnside, "Nside of the healpixelization");
 
 	if (fitsbin_fix_primary_header(fb) ||
 		fitsbin_fix_chunk_header(fb, chunk)) {
