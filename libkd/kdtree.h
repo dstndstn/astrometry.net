@@ -263,8 +263,11 @@ struct kdtree {
     // For i/o: the name of this tree in the file.
     char* name;
 
-	void* mmapped;          /* Next two are for mmap'd access */
-	unsigned int mmapped_size;  
+    /*
+     void* mmapped;
+     unsigned int mmapped_size;  
+    */
+    void* io;
 
 	struct kdtree_funcs fun;
 };

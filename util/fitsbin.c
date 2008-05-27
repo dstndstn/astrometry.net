@@ -95,8 +95,10 @@ int fitsbin_n_chunks(fitsbin_t* fb) {
 }
 
 fitsbin_chunk_t* fitsbin_add_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
-    chunk->tablename = chunk->tablename_copy = strdup(chunk->tablename);
-    return bl_append(fb->chunks, chunk);
+    chunk->tablename_copy = strdup(chunk->tablename);
+    chunk = bl_append(fb->chunks, chunk);
+    chunk->tablename = chunk->tablename_copy;
+    return chunk;
 }
 
 off_t fitsbin_get_data_start(fitsbin_t* fb, fitsbin_chunk_t* chunk) {

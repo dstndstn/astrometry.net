@@ -82,7 +82,8 @@ fitsbin_t* kdtree_fits_get_fitsbin(kdtree_fits_t* io);
 
 kdtree_fits_t* kdtree_fits_open(const char* fn);
 
-kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename);
+kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
+                                qfits_header** p_hdr);
 
 int kdtree_fits_read_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk);
 
@@ -92,12 +93,15 @@ qfits_header* kdtree_fits_get_primary_header(kdtree_fits_t* io);
 
 kdtree_fits_t* kdtree_fits_open_for_writing(const char* fn);
 
-int kdtree_fits_write_tree(kdtree_fits_t* io, kdtree_t* kd);
+int kdtree_fits_write_tree(kdtree_fits_t* io, const kdtree_t* kd,
+                           const qfits_header* add_headers);
 
 int kdtree_fits_write_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk);
 
+int kdtree_fits_close(kdtree_t* io);
 
-int kdtree_fits_close(kdtree_fits_t* io);
+
+int kdtree_fits_io_close(kdtree_fits_t* io);
 
 // names (actually prefixes) of FITS tables.
 #define KD_STR_HEADER    "kdtree_header"

@@ -84,6 +84,42 @@ static int is_tree_header_ok(qfits_header* header, int* ndim, int* ndata,
     return 0;
 }
 
+kdtree_t* kdtree_fits_read(const char* fn, const char* treename,
+                           qfits_header** p_hdr) {
+    kdtree_fits_t* io;
+    kdtree_t* kd;
+    io = kdtree_fits_open(fn);
+	if (!io) {
+        ERROR("Failed to open FITS file \"%s\"", fn);
+        return NULL;
+    }
+    kd = kdtree_fits_read_tree(io, treename, p_hdr);
+    if (!kd) {
+        ERROR("Failed to read kdtree %s from file %s", treename, fn);
+        kdtree_fits_io_close(io);
+        return NULL;
+    }
+    kd->io = io;
+    return kd;
+}
+
+int kdtree_fits_write(const kdtree_t* kd, const char* fn,
+                      const qfits_header* hdr) {
+    kdtree_fits_t* io;
+    int rtn;
+    io = kdtree_fits_open_for_writing(fn);
+    if (!io) {
+        ERROR("Failed to open file %s for writing", fn);
+        return -1;
+    }
+    rtn = kdtree_fits_write_tree(io, kd, hdr);
+    kdtree_fits_io_close(io);
+    if (rtn) {
+        ERROR("Failed to write kdtree to file %s", fn);
+    }
+    return rtn;
+}
+
 /*
 bl* kdtree_fits_get_chunks(const kdtree_t* kd) {
     bl* chunks = bl_new(4, sizeof(fitsbin_chunk_t));
@@ -110,6 +146,10 @@ kdtree_fits_t* kdtree_fits_open(const char* fn) {
     return fitsbin_open(fn);
 }
 
+kdtree_fits_t* kdtree_fits_open_for_writing(const char* fn) {
+    return fitsbin_open_for_writing(fn);
+}
+
 qfits_header* kdtree_fits_get_primary_header(kdtree_fits_t* io) {
     return fitsbin_get_primary_header(kdtree_fits_get_fitsbin(io));
 }
@@ -120,9 +160,10 @@ int kdtree_fits_read_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
 
 // declarations
 KD_DECLARE(kdtree_read_fits, int, (kdtree_fits_t* io, kdtree_t* kd));
-KD_DECLARE(kdtree_write_fits, int, (kdtree_fits_t* io, kdtree_t* kd));
+KD_DECLARE(kdtree_write_fits, int, (kdtree_fits_t* io, const kdtree_t* kd));
 
-kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename) {
+kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
+                                qfits_header** p_hdr) {
     int ndim, ndata, nnodes;
 	unsigned int tt;
 	kdtree_t* kd = NULL;
@@ -140,9 +181,10 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename) {
     if (!treename) {
         // Look in the primary header...
         header = fitsbin_get_primary_header(fb);
-        if (is_tree_header_ok(header, &ndim, &ndata, &nnodes, &tt, 1))
+        if (is_tree_header_ok(header, &ndim, &ndata, &nnodes, &tt, 1)) {
             found = 1;
-        header = qfits_header_copy(header);
+            header = qfits_header_copy(header);
+        }
     }
     if (!found) {
         int i, nexten;
@@ -189,7 +231,11 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename) {
     }
 
     kd->has_linear_lr = qfits_header_getboolean(header, "KDT_LINL", 0);
-    qfits_header_destroy(header);
+
+    if (p_hdr)
+        *p_hdr = header;
+    else
+        qfits_header_destroy(header);
 
     kd->ndata  = ndata;
     kd->ndim   = ndim;
@@ -224,7 +270,8 @@ int kdtree_fits_write_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
     return 0;
 }
 
-int kdtree_fits_write_tree(kdtree_fits_t* io, kdtree_t* kd) {
+int kdtree_fits_write_tree(kdtree_fits_t* io, const kdtree_t* kd,
+                           const qfits_header* inhdr) {
     fitsbin_chunk_t chunk;
     fitsbin_t* fb = kdtree_fits_get_fitsbin(io);
     qfits_header* hdr;
@@ -234,11 +281,8 @@ int kdtree_fits_write_tree(kdtree_fits_t* io, kdtree_t* kd) {
     chunk.tablename = "";
     hdr = fitsbin_get_chunk_header(fb, &chunk);
 
-    /*
-     if (inhdr)
-     // FIXME - don't copy headers that conflict with the ones used by this routine!
-     fits_copy_all_headers(inhdr, hdr, NULL);
-     */
+    if (inhdr)
+        fits_copy_all_headers(inhdr, hdr, NULL);
     fits_add_endian(hdr);
     fits_header_addf   (hdr, "KDT_NAME", "kdtree: name of this tree", "'%s'", kd->name ? kd->name : "");
     fits_header_add_int(hdr, "KDT_NDAT", kd->ndata,  "kdtree: number of data points");
@@ -254,13 +298,19 @@ int kdtree_fits_write_tree(kdtree_fits_t* io, kdtree_t* kd) {
     return rtn;
 }
 
-
-
-int kdtree_fits_close(kdtree_fits_t* io) {
+int kdtree_fits_io_close(kdtree_fits_t* io) {
     fitsbin_t* fb;
-	if (!io) return 0;
     fb = kdtree_fits_get_fitsbin(io);
     return fitsbin_close(fb);
-    //FREE(kd->name);
-	//FREE(kd);
+}
+
+int kdtree_fits_close(kdtree_t* kd) {
+    kdtree_fits_t* io;
+    if (!kd) return 0;
+    io = kd->io;
+	if (!io) return 0;
+    kdtree_fits_io_close(io);
+    FREE(kd->name);
+	FREE(kd);
+    return 0;
 }

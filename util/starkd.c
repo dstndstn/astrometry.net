@@ -119,7 +119,7 @@ startree_t* startree_open(char* fn) {
         ERROR("Failed to open FITS file \"%s\"", fn);
         goto bailout;
     }
-    s->tree = kdtree_fits_read_tree(s->io, NULL);
+    s->tree = kdtree_fits_read_tree(s->io, NULL, &s->header);
     if (!s->tree) {
         ERROR("Failed to read kdtree from file \"%s\"", fn);
         goto bailout;
@@ -144,7 +144,7 @@ startree_t* startree_open(char* fn) {
 int startree_close(startree_t* s) {
 	if (!s) return 0;
     if (s->io)
-        kdtree_fits_close(s->io);
+        kdtree_fits_io_close(s->io);
 	if (s->inverse_perm)
 		free(s->inverse_perm);
  	if (s->header)
@@ -209,8 +209,7 @@ int startree_write_to_file(startree_t* s, char* fn) {
         ERROR("Failed to open file \"%s\" for writing kdtree", fn);
         return -1;
     }
-    // FIXME - s->header ??
-    if (kdtree_fits_write_tree(io, s->tree)) {
+    if (kdtree_fits_write_tree(io, s->tree, s->header)) {
         ERROR("Failed to write kdtree to file \"%s\"", fn);
         return -1;
     }
@@ -222,6 +221,6 @@ int startree_write_to_file(startree_t* s, char* fn) {
     }
     bl_free(chunks);
     
-    kdtree_fits_close(io);
+    kdtree_fits_io_close(io);
     return 0;
 }
