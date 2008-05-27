@@ -47,9 +47,9 @@ static fitsbin_chunk_t* get_chunk(catalog* cat, int i) {
     return fitsbin_get_chunk(cat->fb, i);
 }
 
-static int callback_read_header(qfits_header* primheader, qfits_header* header,
-								size_t* expected, void* userdata) {
-	catalog* cat = userdata;
+static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    qfits_header* primheader = fitsbin_get_primary_header(fb);
+	catalog* cat = chunk->userdata;
 
 	cat->numstars = qfits_header_getint(primheader, "NSTARS", -1);
 	cat->healpix = qfits_header_getint(primheader, "HEALPIX", -1);
@@ -63,30 +63,27 @@ static int callback_read_header(qfits_header* primheader, qfits_header* header,
         return -1;
 	}
 
-    *expected = cat->numstars * DIM_STARS * sizeof(double);
+    chunk->nrows = cat->numstars;
 	return 0;
 }
 
-static int callback_read_mags(qfits_header* primheader, qfits_header* header,
-                              size_t* expected, void* userdata) {
-	catalog* cat = userdata;
-    *expected = cat->numstars * sizeof(float);
+static int callback_read_mags(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+	catalog* cat = chunk->userdata;
+    chunk->nrows = cat->numstars;
 	return 0;
 }
 
-static int callback_read_sigmas(qfits_header* primheader, qfits_header* header,
-                                size_t* expected, void* userdata) {
-	catalog* cat = userdata;
-    *expected = cat->numstars * 2 * sizeof(float);
+static int callback_read_sigmas(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+	catalog* cat = chunk->userdata;
+    chunk->nrows = cat->numstars;
 	return 0;
 }
 #define callback_read_pms callback_read_sigmas
 #define callback_read_sigma_pms callback_read_sigmas
 
-static int callback_read_ids(qfits_header* primheader, qfits_header* header,
-                                size_t* expected, void* userdata) {
-	catalog* cat = userdata;
-    *expected = cat->numstars * sizeof(uint64_t);
+static int callback_read_ids(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+	catalog* cat = chunk->userdata;
+    chunk->nrows = cat->numstars;
 	return 0;
 }
 
@@ -221,10 +218,11 @@ qfits_header* catalog_get_header(catalog* cat) {
 
 int catalog_write_header(catalog* cat) {
 	fitsbin_t* fb = cat->fb;
-    xyz_chunk(cat)->nrows = cat->numstars;
+    //fitsbin_chunk_t* xyz = xyz_chunk(cat);
+    //chunk->nrows = cat->numstars;
 
 	if (fitsbin_write_primary_header(fb) ||
-		fitsbin_write_chunk_header(fb, CHUNK_XYZ)) {
+		fitsbin_write_chunk_header(fb, xyz_chunk(cat))) {
 		ERROR("Failed to write catalog header");
 		return -1;
 	}
@@ -234,7 +232,7 @@ int catalog_write_header(catalog* cat) {
 int catalog_fix_header(catalog* cat) {
 	qfits_header* hdr;
 	fitsbin_t* fb = cat->fb;
-    xyz_chunk(cat)->nrows = cat->numstars;
+    //xyz_chunk(cat)->nrows = cat->numstars;
 
 	hdr = catalog_get_header(cat);
 	// fill in the real values...
@@ -243,7 +241,7 @@ int catalog_fix_header(catalog* cat) {
     fits_header_mod_int(hdr, "HPNSIDE", cat->hpnside, "Nside of HEALPIX.");
 
 	if (fitsbin_fix_primary_header(fb) ||
-		fitsbin_fix_chunk_header(fb, CHUNK_XYZ)) {
+		fitsbin_fix_chunk_header(fb, xyz_chunk(cat))) {
         ERROR("Failed to fix catalog header");
 		return -1;
 	}
@@ -295,7 +293,7 @@ double* catalog_get_star(catalog* cat, int sid) {
 }
 
 int catalog_write_star(catalog* cat, double* star) {
-	if (fitsbin_write_item(cat->fb, CHUNK_XYZ, star)) {
+	if (fitsbin_write_item(cat->fb, xyz_chunk(cat), star)) {
 		fprintf(stderr, "Failed to write catalog data to file %s: %s\n",
                 cat->fb->filename, strerror(errno));
 		return -1;
@@ -307,25 +305,26 @@ int catalog_write_star(catalog* cat, double* star) {
 int write_floats(catalog* cat, int chunknum, 
                   const char* name, fl* list, int nperstar) {
     int i;
+    fitsbin_chunk_t* chunk = get_chunk(cat, chunknum);
     if (!list || (fl_size(list) != cat->numstars * nperstar)) {
         ERROR("Number of %ss (%i) doesn't match number of stars (%i)",
               name, list ? fl_size(list) : 0, cat->numstars);
         return -1;
     }
 
-    if (fitsbin_write_chunk_header(cat->fb, chunknum)) {
+    if (fitsbin_write_chunk_header(cat->fb, chunk)) {
         ERROR("Failed to write %ss header", name);
         return -1;
     }
     for (i=0; i<cat->numstars; i++) {
         float data[nperstar];
         fl_copy(list, i*nperstar, nperstar, data);
-        if (fitsbin_write_item(cat->fb, chunknum, data)) {
+        if (fitsbin_write_item(cat->fb, chunk, data)) {
             ERROR("Failed to write %s for star %i", name, i);
             return -1;
         }
     }
-    if (fitsbin_fix_chunk_header(cat->fb, chunknum)) {
+    if (fitsbin_fix_chunk_header(cat->fb, chunk)) {
         ERROR("Failed to fix %ss header", name);
         return -1;
     }
@@ -352,22 +351,23 @@ int catalog_write_ids(catalog* cat) {
     int i;
     char* name = "id";
     int chunknum = CHUNK_STARID;
+    fitsbin_chunk_t* chunk = get_chunk(cat, chunknum);
     if (!cat->idlist || (bl_size(cat->idlist) != cat->numstars)) {
         ERROR("Number of %ss (%i) doesn't match number of stars (%i)",
               name, cat->idlist ? bl_size(cat->idlist) : 0, cat->numstars);
         return -1;
     }
 
-    if (fitsbin_write_chunk_header(cat->fb, chunknum)) {
+    if (fitsbin_write_chunk_header(cat->fb, chunk)) {
         ERROR("Failed to write %ss header", name);
         return -1;
     }
     for (i=0; i<cat->numstars; i++)
-        if (fitsbin_write_item(cat->fb, chunknum, bl_access(cat->idlist, i))) {
+        if (fitsbin_write_item(cat->fb, chunk, bl_access(cat->idlist, i))) {
             ERROR("Failed to write %s for star %i", name, i);
             return -1;
         }
-    if (fitsbin_fix_chunk_header(cat->fb, chunknum)) {
+    if (fitsbin_fix_chunk_header(cat->fb, chunk)) {
         ERROR("Failed to fix %ss header", name);
         return -1;
     }

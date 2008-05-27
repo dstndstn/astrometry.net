@@ -35,9 +35,9 @@ static fitsbin_chunk_t* codes_chunk(codefile* cf) {
     return fitsbin_get_chunk(cf->fb, CHUNK_CODES);
 }
 
-static int callback_read_header(qfits_header* primheader, qfits_header* header,
-								size_t* expected, void* userdata) {
-	codefile* cf = userdata;
+static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    qfits_header* primheader = fitsbin_get_primary_header(fb);
+	codefile* cf = chunk->userdata;
 
     cf->dimcodes = qfits_header_getint(primheader, "DIMCODES", 4);
     cf->numcodes = qfits_header_getint(primheader, "NCODES", -1);
@@ -56,8 +56,8 @@ static int callback_read_header(qfits_header* primheader, qfits_header* header,
 		ERROR("File was written with the wrong endianness");
 		return -1;
     }
-    codes_chunk(cf)->itemsize = cf->dimcodes * sizeof(double);
-    *expected = cf->numcodes * cf->dimcodes * sizeof(double);
+    chunk->itemsize = cf->dimcodes * sizeof(double);
+    chunk->nrows = cf->numcodes;
 	return 0;
 }
 
@@ -114,6 +114,10 @@ codefile* codefile_open(const char* fn) {
     cf = new_codefile(fn, FALSE);
     if (!cf)
         goto bailout;
+    if (fitsbin_read(cf->fb)) {
+        ERROR("Failed to open codes file");
+        goto bailout;
+    }
 	cf->codearray = codes_chunk(cf)->data;
     return cf;
 
@@ -162,7 +166,7 @@ int codefile_write_header(codefile* cf) {
 	chunk->nrows = cf->numcodes;
 
 	if (fitsbin_write_primary_header(fb) ||
-		fitsbin_write_chunk_header(fb, CHUNK_CODES)) {
+		fitsbin_write_chunk_header(fb, chunk)) {
 		ERROR("Failed to write codefile header");
 		return -1;
 	}
@@ -188,7 +192,7 @@ int codefile_fix_header(codefile* cf) {
 	fits_header_mod_int(hdr, "HEALPIX", cf->healpix, "Healpix of this index.");
 
 	if (fitsbin_fix_primary_header(fb) ||
-		fitsbin_fix_chunk_header(fb, CHUNK_CODES)) {
+		fitsbin_fix_chunk_header(fb, chunk)) {
         ERROR("Failed to fix code header");
 		return -1;
 	}
@@ -196,7 +200,8 @@ int codefile_fix_header(codefile* cf) {
 }
 
 int codefile_write_code(codefile* cf, double* code) {
-    if (fitsbin_write_item(cf->fb, CHUNK_CODES, code)) {
+    fitsbin_chunk_t* chunk = codes_chunk(cf);
+    if (fitsbin_write_item(cf->fb, chunk, code)) {
 		ERROR("Failed to write code");
 		return -1;
 	}
