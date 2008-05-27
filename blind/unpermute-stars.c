@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -17,9 +17,10 @@
 */
 
 /**
-   \file Applies a star kdtree permutation array to the corresponding
-   .id file, and also rewrites the .quad file to produce new .id, .quad
-   and .skdt files that are consistent and don't require permutation.
+ \file Applies a star kdtree permutation array to all files that depend on
+ the ordering of the stars:   .quad and .skdt .
+ The new files are consistent and don't require the star kdtree to have a
+ permutation array.
 
    In:  .quad, .skdt
    Out: .quad, .skdt
@@ -42,8 +43,6 @@
 #include "starkd.h"
 #include "boilerplate.h"
 
-#include "idfile.h"
-
 #define OPTIONS "hf:o:q:s"
 
 void printHelp(char* progname) {
@@ -63,8 +62,6 @@ int main(int argc, char **args) {
     int argchar;
     quadfile* qfin;
 	quadfile* qfout;
-	idfile* idin;
-	idfile* idout = NULL;
 	startree_t* treein;
 	startree_t* treeout;
 	char* progname = args[0];
@@ -75,6 +72,7 @@ int main(int argc, char **args) {
 	int i;
 	int N;
 	int healpix;
+    int hpnside;
 	int starhp;
 	int lastgrass;
 	bool dosweeps = FALSE;
@@ -133,31 +131,11 @@ int main(int argc, char **args) {
 	}
 	free_fn(fn);
 
-	fn = mk_idfn(basein);
-	printf("Reading id file from %s ...\n", fn);
-	idin = idfile_open(fn);
-	if (!idin) {
-		fprintf(stderr, "Failed to read id file from %s.  Will not generate output id file.\n", fn);
-	}
-	free_fn(fn);
-
-	if (idin) {
-		healpix = idin->healpix;
-		if (qfin->healpix != healpix) {
-			fprintf(stderr, "Quadfile header says it's healpix %i, but idfile say %i.\n",
-					qfin->healpix, idin->healpix);
-		}
-	} else
-		healpix = qfin->healpix;
-
 	starhp = qfits_header_getint(startree_header(treein), "HEALPIX", -1);
 	if (starhp == -1)
 		fprintf(stderr, "Warning, input star kdtree didn't have a HEALPIX header.\n");
-	else if (starhp != healpix) {
-		fprintf(stderr, "Idfile says it's healpix %i, but star kdtree says %i.\n",
-				healpix, starhp);
-		exit(-1);
-	}
+    healpix = starhp;
+	hpnside = qfits_header_getint(startree_header(treein), "HPNSIDE", 1);
 
 	fn = mk_quadfn(baseout);
 	printf("Writing quadfile to %s ...\n", fn);
@@ -168,20 +146,8 @@ int main(int argc, char **args) {
 	}
 	free_fn(fn);
 
-	if (idin) {
-		fn = mk_idfn(baseout);
-		printf("Writing id to %s ...\n", fn);
-		idout = idfile_open_for_writing(fn);
-		if (!idout) {
-			fprintf(stderr, "Failed to write id file to %s.\n", fn);
-			exit(-1);
-		}
-		free_fn(fn);
-	}
-
 	qfout->healpix = healpix;
-	if (idin)
-		idout->healpix = healpix;
+    qfout->hpnside = hpnside;
 
 	qfout->numstars          = qfin->numstars;
 	qfout->dimquads          = qfin->dimquads;
@@ -204,50 +170,11 @@ int main(int argc, char **args) {
 	fits_copy_all_headers(qinhdr, qouthdr, "COMMENT");
 	qfits_header_add(qouthdr, "COMMENT", "** unpermute-stars: end of comments from input.", NULL, NULL);
 
-	if (idin) {
-        qfits_header* idinhdr;
-        qfits_header* idouthdr;
-        idouthdr = idfile_get_header(idout);
-        idinhdr = idfile_get_header(idin);
-		boilerplate_add_fits_headers(idouthdr);
-		qfits_header_add(idouthdr, "HISTORY", "This file was created by the program \"unpermute-stars\".", NULL, NULL);
-		qfits_header_add(idouthdr, "HISTORY", "unpermute-stars command line:", NULL, NULL);
-		fits_add_args(idouthdr, args, argc);
-		qfits_header_add(idouthdr, "HISTORY", "(end of unpermute-stars command line)", NULL, NULL);
-		qfits_header_add(idouthdr, "HISTORY", "** unpermute-stars: history from input:", NULL, NULL);
-		fits_copy_all_headers(idinhdr, idouthdr, "HISTORY");
-		qfits_header_add(idouthdr, "HISTORY", "** unpermute-stars: end of history from input.", NULL, NULL);
-		qfits_header_add(idouthdr, "COMMENT", "** unpermute-stars: comments from input:", NULL, NULL);
-		fits_copy_all_headers(idinhdr, idouthdr, "COMMENT");
-		qfits_header_add(idouthdr, "COMMENT", "** unpermute-stars: end of comments from input.", NULL, NULL);
-	}
-
-	if (quadfile_write_header(qfout) ||
-		(idin && idfile_write_header(idout))) {
-		fprintf(stderr, "Failed to write quadfile or idfile header.\n");
+	if (quadfile_write_header(qfout)) {
+		fprintf(stderr, "Failed to write quadfile header.\n");
 		exit(-1);
 	}
 
-	if (idin) {
-		printf("Writing IDs...\n");
-		lastgrass = 0;
-		for (i=0; i<N; i++) {
-			uint64_t id;
-			int ind;
-			if (i*80/N != lastgrass) {
-				printf(".");
-				fflush(stdout);
-				lastgrass = i*80/N;
-			}
-			ind = treein->tree->perm[i];
-			id = idfile_get_anid(idin, ind);
-			if (idfile_write_anid(idout, id)) {
-				fprintf(stderr, "Failed to write idfile entry.\n");
-				exit(-1);
-			}
-		}
-		printf("\n");
-	}
 
 	printf("Writing quads...\n");
 
@@ -275,11 +202,11 @@ int main(int argc, char **args) {
 	}
 	printf("\n");
 
+	quadfile_close(qfin);
+
 	if (quadfile_fix_header(qfout) ||
-		quadfile_close(qfout) ||
-		(idin && (idfile_fix_header(idout) ||
-				  idfile_close(idout)))) {
-		fprintf(stderr, "Failed to close output quadfile or idfile.\n");
+		quadfile_close(qfout)) {
+		fprintf(stderr, "Failed to close output quadfile.\n");
 		exit(-1);
 	}
 
@@ -300,10 +227,6 @@ int main(int argc, char **args) {
 	qfits_header_add(startree_header(treeout), "COMMENT", "** unpermute-stars: comments from input:", NULL, NULL);
 	fits_copy_all_headers(startree_header(treein), startree_header(treeout), "COMMENT");
 	qfits_header_add(startree_header(treeout), "COMMENT", "** unpermute-stars: end of comments from input.", NULL, NULL);
-
-	quadfile_close(qfin);
-	if (idin)
-		idfile_close(idin);
 
 	if (dosweeps) {
 		// copy sweepX headers.
@@ -328,6 +251,34 @@ int main(int argc, char **args) {
 		}
 	}
 
+    printf("Permuting tag-along arrays...\n");
+    if (treein->sigma_radec)
+        treeout->sigma_radec   = malloc(N * 2 * sizeof(float));
+    if (treein->proper_motion)
+        treeout->proper_motion = malloc(N * 2 * sizeof(float));
+    if (treein->sigma_pm)
+        treeout->sigma_pm      = malloc(N * 2 * sizeof(float));
+    if (treein->starids)
+        treeout->starids       = malloc(N * sizeof(uint64_t));
+
+    for (i=0; i<N; i++) {
+        int ind = treein->tree->perm[i];
+        if (treein->sigma_radec) {
+            treeout->sigma_radec[2*i] = treein->sigma_radec[2*ind];
+            treeout->sigma_radec[2*i+1] = treein->sigma_radec[2*ind+1];
+        }
+        if (treein->proper_motion) {
+            treeout->proper_motion[2*i] = treein->proper_motion[ind];
+            treeout->proper_motion[2*i+1] = treein->proper_motion[2*ind+1];
+        }
+        if (treein->sigma_pm) {
+            treeout->sigma_pm[2*i] = treein->sigma_pm[2*ind];
+            treeout->sigma_pm[2*i+1] = treein->sigma_pm[2*ind+1];
+        }
+        if (treein->starids)
+            treeout->starids[i] = treein->starids[ind];
+    }
+
 	fn = mk_streefn(baseout);
 	printf("Writing star kdtree to %s ...\n", fn);
 	if (startree_write_to_file(treeout, fn)) {
@@ -335,9 +286,16 @@ int main(int argc, char **args) {
 		exit(-1);
 	}
 	free_fn(fn);
+    free(treeout->sigma_radec);
+    free(treeout->proper_motion);
+    free(treeout->sigma_pm);
+    free(treeout->starids);
+
 	startree_close(treein);
 	free(treeout->sweep);
-	free(treeout);
+    free(treeout->tree);
+    treeout->tree = NULL;
+	startree_close(treeout);
 
 	return 0;
 }
