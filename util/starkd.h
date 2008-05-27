@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include "kdtree.h"
 #include "qfits.h"
+#include "kdtree_fits_io.h"
 
 #define AN_FILETYPE_STARTREE "SKDT"
 
@@ -30,6 +31,8 @@ struct startree_s {
 	qfits_header* header;
 	int* inverse_perm;
 	uint8_t* sweep;
+
+    kdtree_fits_t* io;
 
     // optional tables: positional error ellipses, proper motions
     float* sigma_radec;

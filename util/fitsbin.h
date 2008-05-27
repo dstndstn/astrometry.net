@@ -29,6 +29,9 @@ struct fitsbin_t;
 struct fitsbin_chunk_t {
 	char* tablename;
 
+    // internal use: pointer to strdup'd name.
+    char* tablename_copy;
+
 	// The data (NULL if the table was not found)
 	void* data;
 
@@ -90,6 +93,15 @@ typedef struct fitsbin_t fitsbin_t;
  ...
  fitsbin_close();
 
+ OR:
+ fb = fitsbin_open();
+ fitsbin_chunk_init(&chunk);
+ chunk.tablename = "hello";
+ fitsbin_read_chunk(fb, &chunk);
+ // chunk.data;
+ //NO fitsbin_add_chunk(fb, &chunk);
+ fitsbin_close();
+
  -Writing:
  fitsbin_open_for_writing();
  fitsbin_add_chunk();
@@ -110,7 +122,35 @@ typedef struct fitsbin_t fitsbin_t;
  fitsbin_fix_primary_header();
  fitsbin_close();
 
+ OR:
+
+ fb = fitsbin_open_for_writing();
+ fitsbin_write_primary_header();
+
+ fitsbin_chunk_init(&chunk);
+ chunk.tablename = "whatever";
+ chunk.data = ...;
+ chunk.itemsize = 4;
+ chunk.nrows = 1000;
+ fitsbin_write_chunk(fb, &chunk);
+ fitsbin_chunk_clean(&chunk);
+
+ fitsbin_fix_primary_header();
+ fitsbin_close(fb);
+
  */
+
+// Initializes a chunk to default values
+void fitsbin_chunk_init(fitsbin_chunk_t* chunk);
+
+// Frees contents of this chunk.
+void fitsbin_chunk_clean(fitsbin_chunk_t* chunk);
+
+// clean + init
+void fitsbin_chunk_reset(fitsbin_chunk_t* chunk);
+
+
+
 
 fitsbin_t* fitsbin_open(const char* fn);
 

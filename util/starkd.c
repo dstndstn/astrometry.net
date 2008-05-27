@@ -23,6 +23,8 @@
 #include "starkd.h"
 #include "kdtree_fits_io.h"
 #include "starutil.h"
+#include "fitsbin.h"
+#include "errors.h"
 
 static startree_t* startree_alloc() {
 	startree_t* s = calloc(1, sizeof(startree_t));
@@ -49,53 +51,106 @@ qfits_header* startree_header(startree_t* s) {
 	return s->header;
 }
 
-static void sweep_tablesize(kdtree_t* kd, extra_table* tab) {
-	tab->nitems = kd->ndata;
+bl* get_chunks(startree_t* s) {
+    bl* chunks = bl_new(4, sizeof(fitsbin_chunk_t));
+    fitsbin_chunk_t chunk;
+    kdtree_t* kd = s->tree;
+
+    fitsbin_chunk_init(&chunk);
+    chunk.tablename = "sweep";
+    chunk.itemsize = sizeof(uint8_t);
+    chunk.nrows = kd->ndata;
+    chunk.data = s->sweep;
+    chunk.userdata = &(s->sweep);
+    chunk.required = FALSE;
+    bl_append(chunks, &chunk);
+
+    fitsbin_chunk_reset(&chunk);
+    chunk.tablename = "sigma_radec";
+    chunk.itemsize = 2 * sizeof(float);
+    chunk.nrows = kd->ndata;
+    chunk.data = s->sigma_radec;
+    chunk.userdata = &(s->sigma_radec);
+    chunk.required = FALSE;
+    bl_append(chunks, &chunk);
+
+    fitsbin_chunk_reset(&chunk);
+    chunk.tablename = "proper_motion";
+    chunk.itemsize = 2 * sizeof(float);
+    chunk.nrows = kd->ndata;
+    chunk.data = s->proper_motion;
+    chunk.userdata = &(s->proper_motion);
+    chunk.required = FALSE;
+    bl_append(chunks, &chunk);
+
+    fitsbin_chunk_reset(&chunk);
+    chunk.tablename = "sigma_pm";
+    chunk.itemsize = 2 * sizeof(float);
+    chunk.nrows = kd->ndata;
+    chunk.data = s->sigma_pm;
+    chunk.userdata = &(s->sigma_pm);
+    chunk.required = FALSE;
+    bl_append(chunks, &chunk);
+
+    fitsbin_chunk_reset(&chunk);
+    chunk.tablename = "starid";
+    chunk.itemsize = sizeof(uint64_t);
+    chunk.nrows = kd->ndata;
+    chunk.data = s->starids;
+    chunk.userdata = &(s->starids);
+    chunk.required = FALSE;
+    bl_append(chunks, &chunk);
+
+    fitsbin_chunk_clean(&chunk);
+    return chunks;
 }
 
 startree_t* startree_open(char* fn) {
 	startree_t* s;
-	extra_table extras[1];
-	extra_table* sweep = extras;
-
-	memset(extras, 0, sizeof(extras));
-
-	sweep->name = "sweep";
-	sweep->datasize = sizeof(uint8_t);
-	sweep->nitems = 0;
-	sweep->required = 0;
-	sweep->compute_tablesize = sweep_tablesize;
-
-    // FIXME - read motions
+    bl* chunks;
+    int i;
 
 	s = startree_alloc();
 	if (!s)
 		return s;
 
-	s->tree = kdtree_fits_read_extras(fn, NULL, &s->header, extras,
-									  sizeof(extras)/sizeof(extra_table));
-	if (!s->tree) {
-		fprintf(stderr, "Failed to read star kdtree from file %s\n", fn);
-		goto bailout;
-	}
+    s->io = kdtree_fits_open(fn);
+	if (!s->io) {
+        ERROR("Failed to open FITS file \"%s\"", fn);
+        goto bailout;
+    }
+    s->tree = kdtree_fits_read_tree(s->io, NULL);
+    if (!s->tree) {
+        ERROR("Failed to read kdtree from file \"%s\"", fn);
+        goto bailout;
+    }
 
-	s->sweep = sweep->ptr;
+    chunks = get_chunks(s);
+    for (i=0; i<bl_size(chunks); i++) {
+        fitsbin_chunk_t* chunk = bl_access(chunks, i);
+        void** dest = chunk->userdata;
+        kdtree_fits_read_chunk(s->io, chunk);
+        *dest = chunk->data;
+    }
+    bl_free(chunks);
 
 	return s;
 
  bailout:
-	free(s);
+    startree_close(s);
 	return NULL;
 }
 
 int startree_close(startree_t* s) {
 	if (!s) return 0;
+    if (s->io)
+        kdtree_fits_close(s->io);
 	if (s->inverse_perm)
 		free(s->inverse_perm);
  	if (s->header)
 		qfits_header_destroy(s->header);
-	if (s->tree)
-		kdtree_fits_close(s->tree);
+	//if (s->tree)
+    //kdtree_fits_close(s->tree);
 	free(s);
 	return 0;
 }
@@ -146,55 +201,27 @@ startree_t* startree_new() {
 }
 
 int startree_write_to_file(startree_t* s, char* fn) {
-    int ne = 0;
-    extra_table extras[5];
-    memset(extras, 0, sizeof(extras));
-
-	if (s->sweep) {
-		extra_table* sweep = extras + ne;
-        ne++;
-		sweep->name = "sweep";
-		sweep->datasize = sizeof(uint8_t);
-		sweep->nitems = s->tree->ndata;
-		sweep->ptr = s->sweep;
-		sweep->found = 1;
+    bl* chunks;
+    int i;
+    kdtree_fits_t* io;
+    io = kdtree_fits_open_for_writing(fn);
+    if (!io) {
+        ERROR("Failed to open file \"%s\" for writing kdtree", fn);
+        return -1;
     }
-    if (s->sigma_radec) {
-		extra_table* e = extras + ne;
-        ne++;
-		e->name = "sigma_radec";
-		e->datasize = 2 * sizeof(float);
-		e->nitems = s->tree->ndata;
-		e->ptr = s->sigma_radec;
-		e->found = 1;
-    }
-    if (s->proper_motion) {
-		extra_table* e = extras + ne;
-        ne++;
-		e->name = "proper_motion";
-		e->datasize = 2 * sizeof(float);
-		e->nitems = s->tree->ndata;
-		e->ptr = s->proper_motion;
-		e->found = 1;
-    }
-    if (s->sigma_pm) {
-		extra_table* e = extras + ne;
-        ne++;
-		e->name = "sigma_pm";
-		e->datasize = 2 * sizeof(float);
-		e->nitems = s->tree->ndata;
-		e->ptr = s->sigma_pm;
-		e->found = 1;
-    }
-    if (s->starids) {
-		extra_table* e = extras + ne;
-        ne++;
-		e->name = "starid";
-		e->datasize = sizeof(uint64_t);
-		e->nitems = s->tree->ndata;
-		e->ptr = s->starids;
-		e->found = 1;
+    // FIXME - s->header ??
+    if (kdtree_fits_write_tree(io, s->tree)) {
+        ERROR("Failed to write kdtree to file \"%s\"", fn);
+        return -1;
     }
 
-    return kdtree_fits_write_extras(s->tree, fn, s->header, extras, ne);
+    chunks = get_chunks(s);
+    for (i=0; i<bl_size(chunks); i++) {
+        fitsbin_chunk_t* chunk = bl_access(chunks, i);
+        kdtree_fits_write_chunk(io, chunk);
+    }
+    bl_free(chunks);
+    
+    kdtree_fits_close(io);
+    return 0;
 }

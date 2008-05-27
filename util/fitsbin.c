@@ -63,7 +63,7 @@ static fitsbin_t* new_fitsbin(const char* fn) {
 
 static void free_chunk(fitsbin_chunk_t* chunk) {
     if (!chunk) return;
-	free(chunk->tablename);
+	free(chunk->tablename_copy);
     if (chunk->header)
         qfits_header_destroy(chunk->header);
 	if (chunk->map) {
@@ -71,6 +71,19 @@ static void free_chunk(fitsbin_chunk_t* chunk) {
 			SYSERROR("Failed to munmap fitsbin chunk");
 		}
 	}
+}
+
+void fitsbin_chunk_init(fitsbin_chunk_t* chunk) {
+    memset(chunk, 0, sizeof(fitsbin_chunk_t));
+}
+
+void fitsbin_chunk_clean(fitsbin_chunk_t* chunk) {
+    free_chunk(chunk);
+}
+
+void fitsbin_chunk_reset(fitsbin_chunk_t* chunk) {
+    fitsbin_chunk_clean(chunk);
+    fitsbin_chunk_init(chunk);
 }
 
 fitsbin_chunk_t* fitsbin_get_chunk(fitsbin_t* fb, int chunk) {
@@ -82,7 +95,7 @@ int fitsbin_n_chunks(fitsbin_t* fb) {
 }
 
 fitsbin_chunk_t* fitsbin_add_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
-    chunk->tablename = strdup(chunk->tablename);
+    chunk->tablename = chunk->tablename_copy = strdup(chunk->tablename);
     return bl_append(fb->chunks, chunk);
 }
 
@@ -131,12 +144,15 @@ qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     int tablesize;
     qfits_header* hdr;
     int ncols = 1;
+    char* fn = NULL;
 
     if (chunk->header)
         return chunk->header;
+    if (fb)
+        fn = fb->filename;
 	// the table header
 	tablesize = chunk->itemsize * chunk->nrows * ncols;
-	table = qfits_table_new(fb->filename, QFITS_BINTABLE, tablesize, ncols, chunk->nrows);
+	table = qfits_table_new(fn, QFITS_BINTABLE, tablesize, ncols, chunk->nrows);
 	assert(table);
     qfits_col_fill(table->col, chunk->itemsize, 0, 1, TFITS_BIN_TYPE_A,
 				   chunk->tablename, "", "", "", 0, 0, 0, 0, 0);
