@@ -310,7 +310,7 @@ int fitsbin_read(fitsbin_t* fb) {
 
     for (i=0; i<nchunks(fb); i++) {
         fitsbin_chunk_t* chunk = get_chunk(fb, i);
-        if (fitsbin_read_chunk(fb, chunk)) {
+        if (read_chunk(fb, chunk)) {
             if (chunk->required)
                 goto bailout;
         }
