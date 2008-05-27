@@ -66,6 +66,8 @@ startree_t* startree_open(char* fn) {
 	sweep->required = 0;
 	sweep->compute_tablesize = sweep_tablesize;
 
+    // FIXME - read motions
+
 	s = startree_alloc();
 	if (!s)
 		return s;
@@ -144,17 +146,55 @@ startree_t* startree_new() {
 }
 
 int startree_write_to_file(startree_t* s, char* fn) {
+    int ne = 0;
+    extra_table extras[5];
+    memset(extras, 0, sizeof(extras));
+
 	if (s->sweep) {
-		extra_table extras[1];
-		extra_table* sweep = extras;
-		memset(extras, 0, sizeof(extras));
+		extra_table* sweep = extras + ne;
+        ne++;
 		sweep->name = "sweep";
 		sweep->datasize = sizeof(uint8_t);
 		sweep->nitems = s->tree->ndata;
 		sweep->ptr = s->sweep;
 		sweep->found = 1;
-		return kdtree_fits_write_extras(s->tree, fn, s->header, extras,
-										sizeof(extras)/sizeof(extra_table));
-	} else
-		return kdtree_fits_write(s->tree, fn, s->header);
+    }
+    if (s->sigma_radec) {
+		extra_table* e = extras + ne;
+        ne++;
+		e->name = "sigma_radec";
+		e->datasize = 2 * sizeof(float);
+		e->nitems = s->tree->ndata;
+		e->ptr = s->sigma_radec;
+		e->found = 1;
+    }
+    if (s->proper_motion) {
+		extra_table* e = extras + ne;
+        ne++;
+		e->name = "proper_motion";
+		e->datasize = 2 * sizeof(float);
+		e->nitems = s->tree->ndata;
+		e->ptr = s->proper_motion;
+		e->found = 1;
+    }
+    if (s->sigma_pm) {
+		extra_table* e = extras + ne;
+        ne++;
+		e->name = "sigma_pm";
+		e->datasize = 2 * sizeof(float);
+		e->nitems = s->tree->ndata;
+		e->ptr = s->sigma_pm;
+		e->found = 1;
+    }
+    if (s->starids) {
+		extra_table* e = extras + ne;
+        ne++;
+		e->name = "starid";
+		e->datasize = sizeof(uint64_t);
+		e->nitems = s->tree->ndata;
+		e->ptr = s->starids;
+		e->found = 1;
+    }
+
+    return kdtree_fits_write_extras(s->tree, fn, s->header, extras, ne);
 }

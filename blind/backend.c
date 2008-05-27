@@ -34,6 +34,7 @@
 #include <libgen.h>
 #include <getopt.h>
 #include <dirent.h>
+#include <assert.h>
 
 #include "fileutil.h"
 #include "ioutils.h"

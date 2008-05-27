@@ -66,7 +66,7 @@ MISC_EXECS := project-usnob diffractionFlag_check \
 UTIL_OBJS := fileutil.o boilerplate.o
 
 OTHER_OBJS := usnob.o usnob-fits.o tycho2.o tycho2-fits.o catalog.o \
-	idfile.o codefile.o histogram.o tic.o codekd.o svd.o verify.o \
+	codefile.o histogram.o tic.o codekd.o svd.o verify.o \
 	solver.o matchfile.o solvedclient.o solvedfile.o intmap.o pnpoly.o \
 	blind_wcs.o index.o tweak.o log.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
@@ -91,7 +91,7 @@ OLDEXECS := plotquads rawstartree checkquads
 CAIROEXECS := plotquad plotxy plot-constellations add-text
 
 OLDEXECS_OBJS := catalog.o histogram.o verify.o intmap.o tic.o matchfile.o \
-	codekd.o idfile.o $(UTIL_OBJS)
+	codekd.o $(UTIL_OBJS)
 
 PIPELINE_MAIN_OBJ := $(addsuffix .o,$(PIPELINE))
 PROSPECTUS_MAIN_OBJ := $(addsuffix .o,$(PROSPECTUS))
@@ -160,7 +160,7 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 		cp $$x $(INSTALL_DIR)/bin; \
 	done
 
-test-solver: test-solver.o solver_test.o idfile.o blind_wcs.o verify.o log.o \
+test-solver: test-solver.o solver_test.o blind_wcs.o verify.o log.o \
 		matchfile.o tic.o svd.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -358,7 +358,7 @@ build-an-catalog: build-an-catalog.o usnob-fits.o tycho2-fits.o \
 		tycho2.o usnob.o 2mass-fits.o 2mass.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-cut-an: cut-an.o catalog.o idfile.o usnob.o \
+cut-an: cut-an.o catalog.o usnob.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
@@ -373,7 +373,7 @@ hpquads: hpquads.o codefile.o pnpoly.o histogram.o tic.o \
 codetree: codetree.o codekd.o codefile.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-unpermute-stars: unpermute-stars.o idfile.o \
+unpermute-stars: unpermute-stars.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 unpermute-quads: unpermute-quads.o codekd.o \
@@ -382,7 +382,7 @@ unpermute-quads: unpermute-quads.o codekd.o \
 backend-old: backend-old.o scriptutils.o fileutil.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 backend: backend.o scriptutils.o blind.o solver.o codekd.o \
-		matchfile.o tic.o solvedclient.o solvedfile.o idfile.o verify.o \
+		matchfile.o tic.o solvedclient.o solvedfile.o verify.o \
 		svd.o intmap.o blind_wcs.o index.o log.o histogram.o tweak.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB) $(GSL_LIB)
@@ -401,7 +401,7 @@ augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scal
 ALL_OBJ += augment-xylist-main.o
 
 blind: blind-main.o blind.o solver.o codekd.o matchfile.o tic.o \
-		solvedclient.o solvedfile.o idfile.o verify.o svd.o \
+		solvedclient.o solvedfile.o verify.o svd.o \
 		intmap.o blind_wcs.o index.o log.o histogram.o tweak.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
@@ -410,7 +410,7 @@ blind: blind-main.o blind.o solver.o codekd.o matchfile.o tic.o \
 
 whynot: whynot.o index.o codekd.o matchfile.o tic.o \
 		solvedclient.o solvedfile.o \
-		idfile.o verify.o svd.o intmap.o blind_wcs.o log.o \
+		verify.o svd.o intmap.o blind_wcs.o log.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 

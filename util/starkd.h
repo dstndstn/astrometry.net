@@ -30,6 +30,13 @@ struct startree_s {
 	qfits_header* header;
 	int* inverse_perm;
 	uint8_t* sweep;
+
+    // optional tables: positional error ellipses, proper motions
+    float* sigma_radec;
+    float* proper_motion;
+    float* sigma_pm;
+    // optional table: star IDs
+    uint64_t* starids;
 };
 typedef struct startree_s startree_t;
 

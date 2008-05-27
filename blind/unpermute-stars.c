@@ -21,8 +21,8 @@
    .id file, and also rewrites the .quad file to produce new .id, .quad
    and .skdt files that are consistent and don't require permutation.
 
-   In:  .quad, .id, .skdt
-   Out: .quad, .id, .skdt
+   In:  .quad, .skdt
+   Out: .quad, .skdt
 
    Original author: dstn
 */
@@ -37,7 +37,6 @@
 #include "starutil.h"
 #include "fileutil.h"
 #include "quadfile.h"
-#include "idfile.h"
 #include "fitsioutils.h"
 #include "qfits.h"
 #include "starkd.h"

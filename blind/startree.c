@@ -72,7 +72,6 @@ int main(int argc, char *argv[]) {
 	int exttype  = KDT_EXT_DOUBLE;
 	int datatype = KDT_DATA_NULL;
 	int treetype = KDT_TREE_NULL;
-	bool convert = FALSE;
 	int tt;
 	int buildopts = 0;
 	int i, N, D;
@@ -151,10 +150,6 @@ int main(int argc, char *argv[]) {
 	if (!treetype)
 		treetype = KDT_TREE_U32;
 
-	// the outside world works in doubles.
-	if (datatype != KDT_DATA_DOUBLE)
-		convert = TRUE;
-
     catfname = mk_catfn(basename);
 	treefname = mk_streefn(basename);
     fprintf(stderr, "%s: building KD tree for %s\n", argv[0], catfname);
@@ -194,27 +189,11 @@ int main(int argc, char *argv[]) {
 		}
 		kdtree_set_limits(starkd->tree, low, high);
 	}
-	if (convert) {
-		fprintf(stderr, "Converting data...\n");
-		fflush(stderr);
-		starkd->tree = kdtree_convert_data(starkd->tree, catalog_get_base(cat),
-										   N, D, Nleaf, tt);
-		// close the catalog to save space, but grab the FITS header first.
-		catheader = qfits_header_copy(catalog_get_header(cat));
-        catalog_close(cat);
-
-		fprintf(stderr, "Building tree...\n");
-		fflush(stderr);
-		starkd->tree = kdtree_build(starkd->tree, starkd->tree->data.any, N, D,
-									Nleaf, tt, buildopts);
-	} else {
-		fprintf(stderr, "Building tree...\n");
-		fflush(stderr);
-		starkd->tree = kdtree_build(NULL, catalog_get_base(cat), N, D,
-									Nleaf, tt, buildopts);
-		catheader = qfits_header_copy(catalog_get_header(cat));
-        catalog_close(cat);
-	}
+    fprintf(stderr, "Building tree...\n");
+    fflush(stderr);
+    starkd->tree = kdtree_build(starkd->tree, catalog_get_base(cat), N, D,
+                                Nleaf, tt, buildopts);
+    catheader = qfits_header_copy(catalog_get_header(cat));
 
     if (!starkd->tree) {
         fprintf(stderr, "Couldn't build kdtree.\n");
@@ -256,10 +235,17 @@ int main(int argc, char *argv[]) {
 		fits_copy_header(catheader, hdr, key);
 	}
 
+    // copy optional tables
+    starkd->sigma_radec = cat->sigma_radec;
+    starkd->proper_motion = cat->proper_motion;
+    starkd->sigma_pm = cat->sigma_pm;
+    starkd->starids = cat->starids;
+
 	if (startree_write_to_file(starkd, treefname)) {
 		fprintf(stderr, "Failed to write star kdtree.\n");
 		exit(-1);
 	}
+    catalog_close(cat);
     free_fn(treefname);
     fprintf(stderr, "done.\n");
 
