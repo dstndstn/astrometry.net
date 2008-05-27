@@ -34,6 +34,9 @@ struct startree_s {
 
     kdtree_fits_t* io;
 
+    // reading or writing?
+    int writing;
+
     // optional tables: positional error ellipses, proper motions
     float* sigma_radec;
     float* proper_motion;

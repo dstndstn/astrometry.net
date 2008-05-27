@@ -82,11 +82,13 @@ static quadfile* new_quadfile(const char* fn, bool writing) {
         return NULL;
     }
 
+    fitsbin_chunk_init(&chunk);
     chunk.tablename = "quads";
     chunk.required = 1;
     chunk.callback_read_header = callback_read_header;
     chunk.userdata = qf;
     fitsbin_add_chunk(qf->fb, &chunk);
+    fitsbin_chunk_clean(&chunk);
     
 	return qf;
 }

@@ -108,12 +108,14 @@ static catalog* new_catalog(const char* fn, bool writing) {
     memset(&chunk, 0, sizeof(fitsbin_chunk_t));
 
     // Star positions
+    fitsbin_chunk_init(&chunk);
     chunk.tablename = "xyz";
     chunk.required = 1;
     chunk.callback_read_header = callback_read_header;
     chunk.userdata = cat;
 	chunk.itemsize = DIM_STARS * sizeof(double);
     fitsbin_add_chunk(cat->fb, &chunk);
+    fitsbin_chunk_reset(&chunk);
 
     // Star magnitudes
     chunk.tablename = "mags";
@@ -122,6 +124,7 @@ static catalog* new_catalog(const char* fn, bool writing) {
     chunk.userdata = cat;
     chunk.itemsize = sizeof(float);
     fitsbin_add_chunk(cat->fb, &chunk);
+    fitsbin_chunk_reset(&chunk);
 
     // Sigmas
     chunk.tablename = "sigma_radec";
@@ -130,6 +133,7 @@ static catalog* new_catalog(const char* fn, bool writing) {
     chunk.userdata = cat;
     chunk.itemsize = 2 * sizeof(float);
     fitsbin_add_chunk(cat->fb, &chunk);
+    fitsbin_chunk_reset(&chunk);
 
     // Motions
     chunk.tablename = "proper_motion";
@@ -138,6 +142,7 @@ static catalog* new_catalog(const char* fn, bool writing) {
     chunk.userdata = cat;
     chunk.itemsize = 2 * sizeof(float);
     fitsbin_add_chunk(cat->fb, &chunk);
+    fitsbin_chunk_reset(&chunk);
 
     // Sigma Motions
     chunk.tablename = "sigma_pm";
@@ -146,6 +151,7 @@ static catalog* new_catalog(const char* fn, bool writing) {
     chunk.userdata = cat;
     chunk.itemsize = 2 * sizeof(float);
     fitsbin_add_chunk(cat->fb, &chunk);
+    fitsbin_chunk_reset(&chunk);
 
     // Ids
     chunk.tablename = "starid";
@@ -154,6 +160,7 @@ static catalog* new_catalog(const char* fn, bool writing) {
     chunk.userdata = cat;
     chunk.itemsize = sizeof(uint64_t);
     fitsbin_add_chunk(cat->fb, &chunk);
+    fitsbin_chunk_clean(&chunk);
 
     return cat;
 }

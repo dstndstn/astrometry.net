@@ -45,13 +45,13 @@
 #include "pnpoly.h"
 #include "boilerplate.h"
 
-#define OPTIONS "hf:u:l:n:o:i:cr:x:y:F:RHL:bq:"
+#define OPTIONS "hi:u:l:n:o:I:cr:x:y:F:RHL:bq:"
 
 static void print_help(char* progname)
 {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
-	       "      -f <input-filename-base>    (ie, the .skdt.fits file without the .skdt.fits suffix)\n"
+	       "      -i <input-filename>    (star kdtree (skdt.fits) input file)\n"
 		   "      -o <output-filename-base>   (ie, the .*.fits output filenames, without the .*.fits suffixes)\n"
 		   "     [-c]            allow quads in the circle, not the box, defined by AB\n"
 		   "     [-b]            try to make any quads outside the bounds of this big healpix.\n"
@@ -66,7 +66,7 @@ static void print_help(char* progname)
 		   "                     limit each time, up to \"max-reuses\".\n"
 		   "     [-R]            make a second pass through healpixes in which quads couldn't be made,\n"
 		   "                     removing the \"-r\" restriction on the number of times a star can be used.\n"
-		   "     [-i <unique-id>] set the unique ID of this index\n\n"
+		   "     [-I <unique-id>] set the unique ID of this index\n\n"
 		   "     [-F <failed-rdls-file>] write the centers of the healpixes in which quads can't be made.\n"
 		   "     [-H]: print histograms.\n"
 		   "\nReads skdt, writes {code, quad}.\n\n"
@@ -712,11 +712,10 @@ int main(int argc, char** argv) {
 	int argchar;
 	char *quadfname;
 	char *codefname;
-	char *skdtfname;
+	char *skdtfname = NULL;
 	int HEALPIXES;
 	int Nside = 501;
 	int i;
-	char* basefnin = NULL;
 	char* basefnout = NULL;
 	char* failedrdlsfn = NULL;
 	rdlist_t* failedrdls = NULL;
@@ -787,7 +786,7 @@ int main(int argc, char** argv) {
 		case 'y':
 			ypasses = atoi(optarg);
 			break;
-		case 'i':
+		case 'I':
 			id = atoi(optarg);
 			break;
 		case 'n':
@@ -796,8 +795,8 @@ int main(int argc, char** argv) {
 		case 'h':
 			print_help(argv[0]);
 			exit(0);
-		case 'f':
-			basefnin = optarg;
+		case 'i':
+            skdtfname = optarg;
 			break;
 		case 'o':
 			basefnout = optarg;
@@ -819,7 +818,7 @@ int main(int argc, char** argv) {
 			return -1;
 		}
 
-	if (!basefnin || !basefnout) {
+	if (!skdtfname || !basefnout) {
 		fprintf(stderr, "Specify in & out base filenames, bonehead!\n");
 		print_help(argv[0]);
 		exit( -1);
@@ -855,14 +854,12 @@ int main(int argc, char** argv) {
 
 	tic();
 
-	skdtfname = mk_streefn(basefnin);
 	printf("Reading star kdtree %s ...\n", skdtfname);
 	starkd = startree_open(skdtfname);
 	if (!starkd) {
 		fprintf(stderr, "Failed to open star kdtree %s\n", skdtfname);
 		exit( -1);
 	}
-	free_fn(skdtfname);
 	printf("Star tree contains %i objects.\n", startree_N(starkd));
 
 	quadfname = mk_quadfn(basefnout);
@@ -1421,8 +1418,11 @@ int main(int argc, char** argv) {
 
 	bt_free(bigquadlist);
 
-	if (loosenmax)
+	if (loosenmax) {
+        for (i=0; i<xpasses*ypasses; i++)
+            il_free(loosenhps[i]);
 		free(loosenhps);
+    }
 
 	toc();
 	printf("Done.\n");

@@ -143,14 +143,20 @@ startree_t* startree_open(char* fn) {
 
 int startree_close(startree_t* s) {
 	if (!s) return 0;
-    if (s->io)
-        kdtree_fits_io_close(s->io);
+    /*
+     if (s->io)
+     kdtree_fits_io_close(s->io);
+     */
 	if (s->inverse_perm)
 		free(s->inverse_perm);
  	if (s->header)
 		qfits_header_destroy(s->header);
-	if (s->tree)
-        kdtree_free(s->tree);
+    if (s->tree) {
+        if (s->writing)
+            kdtree_free(s->tree);
+        else
+            kdtree_fits_close(s->tree);
+    }
 	free(s);
 	return 0;
 }
@@ -197,6 +203,7 @@ startree_t* startree_new() {
 		return NULL;
 	}
 	qfits_header_add(s->header, "AN_FILE", AN_FILETYPE_STARTREE, "This file is a star kdtree.", NULL);
+    s->writing = TRUE;
 	return s;
 }
 

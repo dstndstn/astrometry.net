@@ -42,6 +42,8 @@
 #include "starkd.h"
 #include "boilerplate.h"
 
+#include "idfile.h"
+
 #define OPTIONS "hf:o:q:s"
 
 void printHelp(char* progname) {

@@ -79,12 +79,13 @@ static codefile* new_codefile(const char* fn, bool writing) {
         return NULL;
     }
 
-    memset(&chunk, 0, sizeof(fitsbin_chunk_t));
+    fitsbin_chunk_init(&chunk);
     chunk.tablename = "codes";
     chunk.required = 1;
     chunk.callback_read_header = callback_read_header;
     chunk.userdata = cf;
     fitsbin_add_chunk(cf->fb, &chunk);
+    fitsbin_chunk_clean(&chunk);
 
 	return cf;
 }

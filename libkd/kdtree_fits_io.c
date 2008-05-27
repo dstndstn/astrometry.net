@@ -97,7 +97,6 @@ kdtree_t* kdtree_fits_read(const char* fn, const char* treename,
         kdtree_fits_io_close(io);
         return NULL;
     }
-    kd->io = io;
     return kd;
 }
 
@@ -254,8 +253,9 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
 
     kdtree_update_funcs(kd);
 
+    kd->io = io;
+
 	return kd;
-    
 }
 
 int kdtree_fits_write_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
@@ -304,11 +304,11 @@ int kdtree_fits_io_close(kdtree_fits_t* io) {
 }
 
 int kdtree_fits_close(kdtree_t* kd) {
-    kdtree_fits_t* io;
     if (!kd) return 0;
-    io = kd->io;
-	if (!io) return 0;
-    kdtree_fits_io_close(io);
+    // FIXME - erm, this will double-free if we try to read and then free
+    // multiple kdtrees from one file...  reference count??
+	if (kd->io)
+        kdtree_fits_io_close(kd->io);
     FREE(kd->name);
 	FREE(kd);
     return 0;
