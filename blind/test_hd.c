@@ -66,6 +66,7 @@ void test_hd_1(CuTest* tc) {
         xyzarr2radecdeg(xyz, &ra, &dec);
         printf("HD %i: RA,Dec %g, %g\n", strangehds[i], ra, dec);
     }
+    free(invperm);
 
     henry_draper_close(hdcat);
 }

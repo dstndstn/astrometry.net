@@ -193,7 +193,7 @@ TEST_SIMPLEXY_OBJS := simplexy.o ctmf.o dsigma.o dobjects.o dselip.o \
 		dallpeaks.o radix.o dsmooth.o dfind.o \
 		dmedsmooth.o dpeaks.o dcen3x3.o
 ALL_TEST_EXTRA_OBJS += $(TEST_SIMPLEXY_OBJS)
-test_simplexy: $(TEST_SIMPLEXY_OBJS) $(ANUTILS_LIB)
+test_simplexy: $(TEST_SIMPLEXY_OBJS) log.o $(ANUTILS_LIB)
 
 TEST_DSMOOTH_OBJS := dsmooth.o
 ALL_TEST_EXTRA_OBJS += $(TEST_DSMOOTH_OBJS)

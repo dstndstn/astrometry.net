@@ -251,7 +251,8 @@ int dfind(int *image,
 		goto bail;
 
 	for (i = 0;i < nx*ny;i++)
-		object[i] = mapgroup[object[i]];
+        if (object[i] >= 0)
+            object[i] = mapgroup[object[i]];
 
 	for (i = 0;i < nx*ny;i++)
 		mapgroup[i] = -1;

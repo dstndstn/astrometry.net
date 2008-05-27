@@ -58,6 +58,12 @@ int compare_inputs(int *test_data, int nx, int ny) {
 			}
 		}
 	}
+
+    free(u8img);
+    free(test_outs_keir);
+    free(test_outs_blanton);
+    free(test_outs_u8);
+
 	return fail;
 }
 
