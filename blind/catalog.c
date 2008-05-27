@@ -218,8 +218,6 @@ qfits_header* catalog_get_header(catalog* cat) {
 
 int catalog_write_header(catalog* cat) {
 	fitsbin_t* fb = cat->fb;
-    //fitsbin_chunk_t* xyz = xyz_chunk(cat);
-    //chunk->nrows = cat->numstars;
 
 	if (fitsbin_write_primary_header(fb) ||
 		fitsbin_write_chunk_header(fb, xyz_chunk(cat))) {
@@ -232,7 +230,6 @@ int catalog_write_header(catalog* cat) {
 int catalog_fix_header(catalog* cat) {
 	qfits_header* hdr;
 	fitsbin_t* fb = cat->fb;
-    //xyz_chunk(cat)->nrows = cat->numstars;
 
 	hdr = catalog_get_header(cat);
 	// fill in the real values...
@@ -247,36 +244,6 @@ int catalog_fix_header(catalog* cat) {
 	}
 	return 0;
 }
-
-/*
-void catalog_compute_radecminmax(catalog* cat) {
-	double ramin, ramax, decmin, decmax;
-	int i;
-	ramin = HUGE_VAL;
-	ramax = -HUGE_VAL;
-	decmin = HUGE_VAL;
-	decmax = -HUGE_VAL;
-	for (i = 0; i < cat->numstars; i++) {
-		double* xyz;
-		double ra, dec;
-		xyz = catalog_get_star(cat, i);
-		ra = xy2ra(xyz[0], xyz[1]);
-		dec = z2dec(xyz[2]);
-		if (ra > ramax)
-			ramax = ra;
-		if (ra < ramin)
-			ramin = ra;
-		if (dec > decmax)
-			decmax = dec;
-		if (dec < decmin)
-			decmin = dec;
-	}
-	cat->ramin = ramin;
-	cat->ramax = ramax;
-	cat->decmin = decmin;
-	cat->decmax = decmax;
-}
- */
 
 double* catalog_get_base(catalog* cat) {
 	return cat->stars;

@@ -30,12 +30,7 @@
 
 struct catalog {
 	int numstars;
-    /*
-     double ramin;
-     double ramax;
-     double decmin;
-     double decmax;
-     */
+
 	int healpix;
     int hpnside;
 
