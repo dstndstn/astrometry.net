@@ -898,6 +898,11 @@ int main(int argc, char** argv) {
 	quads->hpnside = hpnside;
 	codes->hpnside = hpnside;
 
+    if (Nside % hpnside) {
+        fprintf(stderr, "Error: Nside (-n) must be a multiple of the star kdtree healpixelisation: %i\n", hpnside);
+        exit(-1);
+    }
+
 	qhdr = quadfile_get_header(quads);
 	chdr = codefile_get_header(codes);
 
@@ -944,58 +949,40 @@ int main(int argc, char** argv) {
 		   distsq2arcsec(quadscale*quadscale),
 		   distsq2arcsec(radius2));
 
-    /**
-     NOTE to future self:
-     do we really need a boundary?  We're looking at the *center of AB mass* -
-     so won't the neighbouring big healpix just build the quads on the other
-     side of the boundary?
-     */
-
-	// if the SKDT had the HEALPIX property, then it includes stars that are
-	// within that healpix and within a small margin around it.
-	// Try fine-grained healpixes that are either within that big healpix
-	// or neighbouring it.  That's not exactly right, since we don't really
-	// know how big the margin is - it could be bigger than the one-healpix
-	// margin we add in this way - but it's probably what we want to do anyway.
-	if (hp != -1) {
-		bool* try = calloc(HEALPIXES, sizeof(bool));
-		for (i=0; i<HEALPIXES; i++) {
-			unsigned int bighp, x, y;
-			healpix_decompose_xy(i, &bighp, &x, &y, Nside);
-			// If this small healpix isn't in the big healpix...
-			if (bighp != hp)
-				continue;
-			try[i] = TRUE;
-			if (boundary) {
-				// If this small healpix is on the boundary...
-				if ((x == 0) || (y == 0) || (x == Nside-1) || (y == Nside-1)) {
-					unsigned int neigh[8];
-					unsigned int nneigh;
-					int k;
-					// ... include its neighbours!
-					nneigh = healpix_get_neighbours(i, neigh, Nside);
-					for (k=0; k<nneigh; k++)
-						try[neigh[k]] = TRUE;
-				}
-			}
-		}
-		Nhptotry = 0;
-		for (i=0; i<HEALPIXES; i++)
-			if (try[i])
-				Nhptotry++;
-		// Compact the "try" array (gather the TRUE indexes)
-		hptotry = malloc(Nhptotry * sizeof(int));
-		Nhptotry = 0;
-		for (i=0; i<HEALPIXES; i++)
-			if (try[i])
-				hptotry[Nhptotry++] = i;
-		free(try);
-	} else {
-		// try all healpixes.
+	if (hp == -1) {
+        // Try all healpixes.
 		hptotry = malloc(HEALPIXES * sizeof(int));
 		for (i=0; i<HEALPIXES; i++)
 			hptotry[i] = i;
 		Nhptotry = HEALPIXES;
+    } else {
+        // The star kdtree may itself be healpixed
+        unsigned int starhp, starx, stary;
+        // In that case, the healpixes we are interested in form a rectangle
+        // within a big healpix.  These are the coords (in [0, Nside)) of
+        // that rectangle.
+        unsigned int x0, x1, y0, y1;
+        unsigned int x, y;
+        int i, nhp;
+
+        healpix_decompose_xy(hp, &starhp, &starx, &stary, hpnside);
+        x0 =  starx    * (Nside / hpnside);
+        x1 = (starx+1) * (Nside / hpnside);
+        y0 =  stary    * (Nside / hpnside);
+        y1 = (stary+1) * (Nside / hpnside);
+
+		Nhptotry = (Nside/hpnside) * (Nside/hpnside);
+		hptotry = malloc(Nhptotry * sizeof(int));
+
+        nhp = 0;
+        for (y=y0; y<y1; y++) {
+            for (x=x0; x<x1; x++) {
+                i = healpix_compose_xy(starhp, x, y, Nside);
+                hptotry[nhp] = i;
+                nhp++;
+            }
+        }
+        assert(nhp == Nhptotry);
 	}
 
 	quadlist = malloc(Nhptotry * sizeof(quad));

@@ -35,13 +35,13 @@
 #include "codekd.h"
 #include "boilerplate.h"
 
-#define OPTIONS "hR:f:o:bsSt:d:"
+#define OPTIONS "hR:i:o:bsSt:d:"
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
-		   "    -f <input-basename>\n"
-		   "    -o <output-basename>\n"
+		   "    -i <input-filename>\n"
+		   "    -o <output-filename>\n"
 		   "   (   [-b]: build bounding boxes\n"
 		   "    OR [-s]: build splitting planes   )\n"
 		   "    [-t  <tree type>]:  {double,float,u32,u16}, default u16.\n"
@@ -60,17 +60,14 @@ int main(int argc, char *argv[]) {
 
 	int Nleaf = 25;
     codetree *codekd = NULL;
-    char* basenamein = NULL;
-    char* basenameout = NULL;
-    char* treefname;
-    char* codefname;
+    char* treefname = NULL;
+    char* codefname = NULL;
     codefile* codes;
 	int rtn;
 	qfits_header* hdr;
 	int exttype = KDT_EXT_DOUBLE;
 	int datatype = KDT_DATA_NULL;
 	int treetype = KDT_TREE_NULL;
-	bool convert = FALSE;
 	int tt;
 	int buildopts = 0;
 	int N, D;
@@ -86,11 +83,11 @@ int main(int argc, char *argv[]) {
         case 'R':
             Nleaf = (int)strtoul(optarg, NULL, 0);
             break;
-        case 'f':
-            basenamein = optarg;
+        case 'i':
+            codefname = optarg;
             break;
         case 'o':
-            basenameout = optarg;
+            treefname = optarg;
             break;
 		case 't':
 			treetype = kdtree_kdtype_parse_tree_string(optarg);
@@ -122,7 +119,7 @@ int main(int argc, char *argv[]) {
 		printHelp(progname);
 		exit(-1);
     }
-    if (!basenamein || !basenameout) {
+    if (!codefname || !treefname) {
 		printHelp(progname);
 		exit(-1);
     }
@@ -132,18 +129,11 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	codefname = mk_codefn(basenamein);
-	treefname = mk_ctreefn(basenameout);
-
 	// defaults
 	if (!datatype)
 		datatype = KDT_DATA_U16;
 	if (!treetype)
 		treetype = KDT_TREE_U16;
-
-	// the outside world works in doubles.
-	if (datatype != KDT_DATA_DOUBLE)
-		convert = TRUE;
 
     fprintf(stderr, "codetree: building KD tree for %s\n", codefname);
     fprintf(stderr, "       will write KD tree file %s\n", treefname);
@@ -151,9 +141,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "  Reading codes...");
     fflush(stderr);
 
-    //codes = codefile_open(codefname, 1);
     codes = codefile_open(codefname);
-    free_fn(codefname);
     if (!codes) {
         exit(-1);
     }
@@ -188,21 +176,10 @@ int main(int argc, char *argv[]) {
 		}
 		kdtree_set_limits(codekd->tree, low, high);
 	}
-	if (convert) {
-		fprintf(stderr, "Converting data...\n");
-		fflush(stderr);
-		codekd->tree = kdtree_convert_data(codekd->tree, codes->codearray,
-										   N, D, Nleaf, tt);
-		fprintf(stderr, "Building tree...");
-		fflush(stderr);
-		codekd->tree = kdtree_build(codekd->tree, codekd->tree->data.any, N, D,
-									Nleaf, tt, buildopts);
-	} else {
-		fprintf(stderr, "Building tree...");
-		fflush(stderr);
-		codekd->tree = kdtree_build(NULL, codes->codearray, N, D,
-									Nleaf, tt, buildopts);
-	}
+    fprintf(stderr, "Building tree...");
+    fflush(stderr);
+    codekd->tree = kdtree_build(codekd->tree, codes->codearray, N, D,
+                                Nleaf, tt, buildopts);
     if (!codekd->tree) {
 		fprintf(stderr, "Failed to build code kdtree.\n");
 		exit(-1);
@@ -216,6 +193,7 @@ int main(int argc, char *argv[]) {
 	fits_header_add_int(hdr, "NLEAF", Nleaf, "Target number of points in leaves.");
 	fits_copy_header(chdr, hdr, "INDEXID");
 	fits_copy_header(chdr, hdr, "HEALPIX");
+	fits_copy_header(chdr, hdr, "HPNSIDE");
 	fits_copy_header(chdr, hdr, "CXDX");
 	fits_copy_header(chdr, hdr, "CXDXLT1");
 	fits_copy_header(chdr, hdr, "CIRCLE");
@@ -230,7 +208,6 @@ int main(int argc, char *argv[]) {
 	qfits_header_add(hdr, "HISTORY", "** codetree: end of history from input file.", NULL, NULL);
 
 	rtn = codetree_write_to_file(codekd, treefname);
-    free_fn(treefname);
 	if (rtn) {
         fprintf(stderr, "Couldn't write code kdtree.\n");
         exit(-1);
@@ -238,6 +215,9 @@ int main(int argc, char *argv[]) {
 
     fprintf(stderr, "done.\n");
     codefile_close(codes);
+
+    kdtree_free(codekd->tree);
+    codekd->tree = NULL;
     codetree_close(codekd);
 	return 0;
 }

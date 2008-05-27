@@ -599,15 +599,20 @@ fits_add_long_history(qfits_header* dst, const char* format, ...) {
 }
 
 int fits_add_args(qfits_header* hdr, char** args, int argc) {
+    sl* s;
     int i;
+    char* ss;
+
+    s = sl_new(4);
 	for (i=0; i<argc; i++) {
 		const char* str = args[i];
-		int rtn;
-		rtn = add_long_line_b(hdr, "HISTORY", "  ", "%s", str);
-		if (rtn)
-			return rtn;
+        sl_append_nocopy(s, str);
 	}
-	return 0;
+    ss = sl_join(s, " ");
+    sl_free_nonrecursive(s);
+    i = add_long_line_b(hdr, "HISTORY", "  ", "%s", ss);
+    free(ss);
+	return i;
 }
 
 int fits_copy_header(const qfits_header* src, qfits_header* dest, char* key) {
