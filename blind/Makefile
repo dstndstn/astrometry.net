@@ -223,7 +223,7 @@ ALL_TEST_EXTRA_OBJS += scriptutils.o log.o
 test_dcen3x3: dcen3x3.o
 ALL_TEST_EXTRA_OBJS += dcen3x3.o
 
-ALL_TEST_LIBS += $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_TEST_LIBS += $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 include $(COMMON)/makefile.tests
 
@@ -362,7 +362,7 @@ cut-an: cut-an.o catalog.o usnob.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
-		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 startree: startree.o catalog.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)

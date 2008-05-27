@@ -201,7 +201,7 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
             name = fits_get_dupstring(header, "KDT_NAME");
             if (!name)
                 goto next;
-            printf("Found KDT_NAME entry \"%s\".\n", name);
+            //printf("Found KDT_NAME entry \"%s\".\n", name);
             if (name && !name[0]) {
                 // treat empty string as NULL.
                 free(name);
@@ -272,13 +272,7 @@ int kdtree_fits_write_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
 // just writes the tree, no primary header.
 int kdtree_fits_append_tree(kdtree_fits_t* io, const kdtree_t* kd,
                             const qfits_header* inhdr) {
-    /*
-     fitsbin_chunk_t chunk;
-     fitsbin_t* fb = kdtree_fits_get_fitsbin(io);
-     qfits_header* hdr;
-     */
-     int rtn;
-
+    int rtn;
 	KD_DISPATCH(kdtree_write_fits, kd->treetype, rtn = , (io, kd, inhdr));
     return rtn;
 }
