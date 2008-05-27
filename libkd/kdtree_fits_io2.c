@@ -195,6 +195,16 @@ kdtree_t* kdtree_io_read_tree(kdtree_io_t* io, const char* treename) {
     
 }
 
+int kdtree_io_write_chunk(kdtree_io_t* io, fitsbin_chunk_t* chunk) {
+    fitsbin_chunk_t* ch;
+    ch = fitsbin_add_chunk(fb, chunk);
+    if (fitsbin_write_chunk(fb, ch)) {
+        ERROR("Failed to write kdtree extra chunk");
+        return -1;
+    }
+    return 0;
+}
+
 int kdtree_io_write_tree(kdtree_io_t* io, kdtree_t* kd) {
     fitsbin_chunk_t chunk;
     fitsbin_t* fb = kdtree_io_get_fitsbin(io);
