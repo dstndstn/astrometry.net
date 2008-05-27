@@ -165,22 +165,35 @@ qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 }
 
 int fitsbin_write_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    int N;
+    /*
+     printf("writing chunk %s\n", chunk->tablename);
+     fitsbin_get_chunk_header(fb, chunk);
+     printf("header:\n");
+     qfits_header_debug_dump(chunk->header);
+     printf("file pos: 0x%x\n", (int)ftello(fb->fid));
+     */
     if (fitsbin_write_chunk_header(fb, chunk)) {
         return -1;
     }
+    //printf("after header: 0x%x\n", (int)ftello(fb->fid));
+    N = chunk->nrows;
     if (fitsbin_write_items(fb, chunk, chunk->data, chunk->nrows)) {
         return -1;
     }
+    chunk->nrows -= N;
+    //printf("after data: 0x%x\n", (int)ftello(fb->fid));
     if (fitsbin_fix_chunk_header(fb, chunk)) {
         return -1;
     }
+    //printf("after fixing header: 0x%x\n", (int)ftello(fb->fid));
     return 0;
 }
 
 int fitsbin_write_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     qfits_header* hdr;
     hdr = fitsbin_get_chunk_header(fb, chunk);
-    if (fitsfile_write_header(fb->fid, chunk->header,
+    if (fitsfile_write_header(fb->fid, hdr,
                               &chunk->header_start, &chunk->header_end,
                               -1, fb->filename)) {
         return -1;
@@ -191,7 +204,6 @@ int fitsbin_write_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 int fitsbin_fix_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     // update NAXIS2 to reflect the number of rows written.
     fits_header_mod_int(chunk->header, "NAXIS2", chunk->nrows, NULL);
-
     if (fitsfile_fix_header(fb->fid, chunk->header,
                             &chunk->header_start, &chunk->header_end,
                             -1, fb->filename)) {

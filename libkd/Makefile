@@ -98,13 +98,13 @@ install: $(LIBKD_INSTALL)
 
 ALL_TEST_FILES = test_libkd test_libkd_io
 ALL_TEST_EXTRA_OBJS =
-ALL_TEST_LIBS = $(LIBKD) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_TEST_LIBS = $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 include $(COMMON)/makefile.tests
 
 test_libkd: $(LIBKD_NOIO) $(ANUTILS_LIB)
 
-test_libkd_io: $(LIBKD) $(ANUTILS_LIB) $(QFITS_LIB)
+test_libkd_io: $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 DEP_OBJ += $(ALL_TEST_FILES_O) $(ALL_TEST_FILES_MAIN_O)
 

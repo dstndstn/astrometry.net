@@ -73,12 +73,9 @@ int kdtree_fits_write(const kdtree_t* kdtree, const char* fn,
 //bl* kdtree_fits_get_chunks(const kdtree_t* kd);
 
 
-
-
 typedef fitsbin_t kdtree_fits_t;
 
 fitsbin_t* kdtree_fits_get_fitsbin(kdtree_fits_t* io);
-
 
 kdtree_fits_t* kdtree_fits_open(const char* fn);
 
@@ -93,8 +90,17 @@ qfits_header* kdtree_fits_get_primary_header(kdtree_fits_t* io);
 
 kdtree_fits_t* kdtree_fits_open_for_writing(const char* fn);
 
+// writes the primary header and the tree.
 int kdtree_fits_write_tree(kdtree_fits_t* io, const kdtree_t* kd,
                            const qfits_header* add_headers);
+
+// just writes the tree, no primary header.
+int kdtree_fits_append_tree(kdtree_fits_t* io, const kdtree_t* kd,
+                            const qfits_header* add_headers);
+
+// just writes the tree, no primary header.
+int kdtree_fits_write_primary_header(kdtree_fits_t* io,
+                                     const qfits_header* add_headers);
 
 int kdtree_fits_write_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk);
 

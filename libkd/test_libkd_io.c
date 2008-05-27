@@ -244,7 +244,7 @@ void test_read_write_two_trees(CuTest* ct) {
     kdtree_t* kd2;
     kdtree_t* kd2B;
     int fd;
-    FILE* fout;
+    kdtree_fits_t* io;
 
     data = random_points_d(N, D);
     kd = build_tree(ct, data, N, D, Nleaf, KDTT_DOUBLE,
@@ -264,19 +264,21 @@ void test_read_write_two_trees(CuTest* ct) {
     }
     printf("Two trees: writing to file %s.\n", fn);
 
-    //fout = fdopen(fd, "wb");
     close(fd);
-    fout = kdtree_fits_write_primary_header(fn);
-    if (!fout) {
+
+    io = kdtree_fits_open_for_writing(fn);
+    if (!io) {
         fprintf(stderr, "Failed to open temp file: %s\n", strerror(errno));
         CuFail(ct, "fdopen");
     }
-    rtn = kdtree_fits_append(kd, NULL, fout);
+    rtn = kdtree_fits_write_primary_header(io, NULL);
     CuAssertIntEquals(ct, 0, rtn);
-    rtn = kdtree_fits_append(kdB, NULL, fout);
+    rtn = kdtree_fits_append_tree(io, kd, NULL);
+    CuAssertIntEquals(ct, 0, rtn);
+    rtn = kdtree_fits_append_tree(io, kdB, NULL);
     CuAssertIntEquals(ct, 0, rtn);
 
-    if (fclose(fout)) {
+    if (kdtree_fits_io_close(io)) {
         fprintf(stderr, "Failed to close temp file: %s\n", strerror(errno));
         CuFail(ct, "fclose");
     }

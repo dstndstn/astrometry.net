@@ -34,8 +34,6 @@
 #include "errors.h"
 #include "fitsbin.h"
 
-#define KDTREE_FITS_VERSION 1
-
 // is the given table name one of the above strings?
 int kdtree_fits_column_is_kdtree(char* columnname) {
     return
@@ -160,7 +158,8 @@ int kdtree_fits_read_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
 
 // declarations
 KD_DECLARE(kdtree_read_fits, int, (kdtree_fits_t* io, kdtree_t* kd));
-KD_DECLARE(kdtree_write_fits, int, (kdtree_fits_t* io, const kdtree_t* kd));
+KD_DECLARE(kdtree_write_fits, int, (kdtree_fits_t* io, const kdtree_t* kd,
+                                    const qfits_header* inhdr));
 
 kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
                                 qfits_header** p_hdr) {
@@ -171,6 +170,7 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
     fitsbin_t* fb = io;
 	qfits_header* header;
     int rtn;
+    char* fn = fb->filename;
 
     kd = CALLOC(1, sizeof(kdtree_t));
     if (!kd) {
@@ -188,7 +188,6 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
     }
     if (!found) {
         int i, nexten;
-        char* fn = fb->filename;
         // scan the extension headers, looking for one that contains a matching KDT_NAME entry.
         nexten = qfits_query_n_ext(fn);
         header = NULL;
@@ -202,7 +201,7 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
             name = fits_get_dupstring(header, "KDT_NAME");
             if (!name)
                 goto next;
-            //printf("Found KDT_NAME entry \"%s\".\n", name);
+            printf("Found KDT_NAME entry \"%s\".\n", name);
             if (name && !name[0]) {
                 // treat empty string as NULL.
                 free(name);
@@ -222,12 +221,12 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
         next:
             qfits_header_destroy(header);
         }
-        if (!found) {
-            // Not found.
-            ERROR("Kdtree named \"%s\" not found in file %s", treename, fn);
-            FREE(kd);
-            return NULL;
-        }
+    }
+    if (!found) {
+        // Not found.
+        ERROR("Kdtree named \"%s\" not found in file %s", treename, fn);
+        FREE(kd);
+        return NULL;
     }
 
     kd->has_linear_lr = qfits_header_getboolean(header, "KDT_LINL", 0);
@@ -270,32 +269,38 @@ int kdtree_fits_write_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
     return 0;
 }
 
+// just writes the tree, no primary header.
+int kdtree_fits_append_tree(kdtree_fits_t* io, const kdtree_t* kd,
+                            const qfits_header* inhdr) {
+    /*
+     fitsbin_chunk_t chunk;
+     fitsbin_t* fb = kdtree_fits_get_fitsbin(io);
+     qfits_header* hdr;
+     */
+     int rtn;
+
+	KD_DISPATCH(kdtree_write_fits, kd->treetype, rtn = , (io, kd, inhdr));
+    return rtn;
+}
+
+// just writes the tree, no primary header.
+int kdtree_fits_write_primary_header(kdtree_fits_t* io,
+                                     const qfits_header* inhdr) {
+    fitsbin_t* fb;
+    qfits_header* hdr;
+    fb = kdtree_fits_get_fitsbin(io);
+    if (inhdr) {
+        hdr = fitsbin_get_primary_header(fb);
+        fits_copy_all_headers(inhdr, hdr, NULL);
+    }
+    return fitsbin_write_primary_header(fb);
+}
+
+
 int kdtree_fits_write_tree(kdtree_fits_t* io, const kdtree_t* kd,
                            const qfits_header* inhdr) {
-    fitsbin_chunk_t chunk;
-    fitsbin_t* fb = kdtree_fits_get_fitsbin(io);
-    qfits_header* hdr;
-    int rtn;
-
-    fitsbin_chunk_init(&chunk);
-    chunk.tablename = "";
-    hdr = fitsbin_get_chunk_header(fb, &chunk);
-
-    if (inhdr)
-        fits_copy_all_headers(inhdr, hdr, NULL);
-    fits_add_endian(hdr);
-    fits_header_addf   (hdr, "KDT_NAME", "kdtree: name of this tree", "'%s'", kd->name ? kd->name : "");
-    fits_header_add_int(hdr, "KDT_NDAT", kd->ndata,  "kdtree: number of data points");
-    fits_header_add_int(hdr, "KDT_NDIM", kd->ndim,   "kdtree: number of dimensions");
-    fits_header_add_int(hdr, "KDT_NNOD", kd->nnodes, "kdtree: number of nodes");
-    fits_header_add_int(hdr, "KDT_VER",  KDTREE_FITS_VERSION, "kdtree: version number");
-
-    // kdtree header is an empty fitsbin_chunk.
-    fitsbin_write_chunk(fb, &chunk);
-    fitsbin_chunk_clean(&chunk);
-
-	KD_DISPATCH(kdtree_write_fits, kd->treetype, rtn = , (io, kd));
-    return rtn;
+    return (kdtree_fits_write_primary_header(io, NULL) ||
+            kdtree_fits_append_tree(io, kd, inhdr));
 }
 
 int kdtree_fits_io_close(kdtree_fits_t* io) {
