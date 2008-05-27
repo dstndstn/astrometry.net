@@ -402,7 +402,7 @@ ALL_OBJ += augment-xylist-main.o
 
 blind: blind-main.o blind.o solver.o codekd.o matchfile.o tic.o \
 		solvedclient.o solvedfile.o verify.o svd.o \
-		intmap.o blind_wcs.o index.o log.o histogram.o tweak.o \
+		intmap.o blind_wcs.o index.o log.o histogram.o tweak.o idfile.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^

@@ -189,6 +189,7 @@ int main(int argc, char **args) {
 
 	hdr = codetree_header(treeout);
 	fits_copy_header(qinhdr, hdr, "HEALPIX");
+	fits_copy_header(qinhdr, hdr, "HPNSIDE");
 	boilerplate_add_fits_headers(hdr);
 	qfits_header_add(hdr, "HISTORY", "This file was created by the program \"unpermute-quads\".", NULL, NULL);
 	qfits_header_add(hdr, "HISTORY", "unpermute-quads command line:", NULL, NULL);
