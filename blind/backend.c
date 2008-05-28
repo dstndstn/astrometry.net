@@ -212,7 +212,7 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
         for (j=-1; j<sl_size(backend->index_paths); j++) {
             char* path;
             bool ok;
-            char* err;
+            //char* err;
             if (j == -1)
                 // try as an absolute or relative filename.
                 path = strdup(ind);
@@ -220,13 +220,14 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
                 asprintf(&path, "%s/%s", sl_get(backend->index_paths, j), ind);
 
             logverb("Trying path %s...\n", path);
-            errors_start_logging_to_string();
+            //errors_start_logging_to_string();
             ok = index_is_file_index(path);
-            err = errors_stop_logging_to_string(": ");
-            if (!ok) {
-                logverb("File is not an index: %s\n", err);
-            }
-            free(err);
+            /*err = errors_stop_logging_to_string(": ");
+             if (!ok) {
+             logverb("File is not an index: %s\n", err);
+             }
+             free(err);
+             */
             if (ok) {
                 if (add_index(backend, path))
                     logmsg("Failed to add index \"%s\".\n", path);
@@ -262,6 +263,8 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
                 struct dirent* de;
                 char* name;
                 char* fullpath;
+                char* err;
+                bool ok;
                 errno = 0;
                 de = readdir(dir);
                 if (!de) {
@@ -274,7 +277,11 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
                 asprintf(&fullpath, "%s/%s", path, name);
 
                 logverb("\nChecking file \"%s\"\n", fullpath);
-                if (!index_is_file_index(fullpath)) {
+                errors_start_logging_to_string();
+                ok = index_is_file_index(fullpath);
+                err = errors_stop_logging_to_string(": ");
+                if (!ok) {
+                    logverb("File is not an index: %s\n", err);
                     free(fullpath);
                     continue;
                 }
