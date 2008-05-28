@@ -242,6 +242,8 @@ void blind_run(blind_t* bp) {
 	}
 	xylist_set_xname(bp->xyls, bp->xcolname);
 	xylist_set_yname(bp->xyls, bp->ycolname);
+    xylist_set_include_flux(bp->xyls, FALSE);
+    xylist_set_include_background(bp->xyls, FALSE);
 	logverb("found %u fields.\n", xylist_n_fields(bp->xyls));
 
     remove_invalid_fields(bp->fieldlist, xylist_n_fields(bp->xyls));

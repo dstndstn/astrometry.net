@@ -211,8 +211,6 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
 
         for (j=-1; j<sl_size(backend->index_paths); j++) {
             char* path;
-            bool ok;
-            //char* err;
             if (j == -1)
                 // try as an absolute or relative filename.
                 path = strdup(ind);
@@ -220,15 +218,7 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
                 asprintf(&path, "%s/%s", sl_get(backend->index_paths, j), ind);
 
             logverb("Trying path %s...\n", path);
-            //errors_start_logging_to_string();
-            ok = index_is_file_index(path);
-            /*err = errors_stop_logging_to_string(": ");
-             if (!ok) {
-             logverb("File is not an index: %s\n", err);
-             }
-             free(err);
-             */
-            if (ok) {
+            if (index_is_file_index(path)) {
                 if (add_index(backend, path))
                     logmsg("Failed to add index \"%s\".\n", path);
                 else {
