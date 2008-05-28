@@ -847,6 +847,8 @@ def getfile(request):
         elif f in [ 'index.xy.fits', 'field.rd.fits' ]:
             f = convert(job, job.diskfile, f, convertargs)
             fn = job.get_filename(f)
+        else:
+            fn = job.get_filename(f)
         res['Content-Type'] = 'application/octet-stream'
         res['Content-Disposition'] = 'attachment; filename="' + downloadfn + '"'
         res['Content-Length'] = file_size(fn)
