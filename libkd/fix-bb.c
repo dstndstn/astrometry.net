@@ -94,7 +94,7 @@ int main(int argc, char** args) {
 
     if (!kdtree_has_old_bb(kd)) {
         printf("Kdtree %s has the correct number of bounding boxes; it doesn't need fixing.\n", infn);
-        exit(0);
+        exit(1);
     }
 
     printf("Tree name: %s\n", kd->name);

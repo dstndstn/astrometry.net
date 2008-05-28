@@ -12,6 +12,8 @@ import tempfile
 if __name__ == '__main__':
     try:
         import astrometry
+        from astrometry.util.shell import shell_escape
+        from astrometry.util.filetype import filetype_short
     except ImportError:
         me = sys.argv[0]
         #print 'i am', me
@@ -22,7 +24,7 @@ if __name__ == '__main__':
         andir = os.path.dirname(utildir)
         assert(os.path.basename(andir) == 'astrometry')
         rootdir = os.path.dirname(andir)
-        print 'adding path', rootdir
+        #print 'adding path', rootdir
         sys.path += [rootdir]
 
 from astrometry.util.shell import shell_escape

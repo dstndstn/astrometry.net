@@ -107,28 +107,29 @@ upgrade-indices:
 	@echo
 
 	@echo "Upgrading:"
-	@ls -1 $(INSTALL_DIR)/data/index-*.{skdt,ckdt}.fits
+	@ls -1 $(INSTALL_DIR)/data/index-*.skdt.fits $(INSTALL_DIR)/data/index-*.ckdt.fits
 	@echo
 	@echo "Waiting 5 seconds for you to read that..."
 	sleep 5
 	@echo
 	@echo "Hold on to your socks."
 	@echo
-
-	@for x in `ls $(INSTALL_DIR)/data/index-*.{skdt,ckdt}.fits 2>/dev/null`; do \
+	@for x in `ls $(INSTALL_DIR)/data/index-*.skdt.fits $(INSTALL_DIR)/data/index-*.ckdt.fits 2>/dev/null`; do \
 		echo "Upgrading $$x in $(INSTALL_DIR)/data ..."; \
 		echo; \
 		echo ./libkd/fix-bb "$$x" "$$x.tmp"; \
-		echo; \
 		./libkd/fix-bb "$$x" "$$x.tmp"; \
-		if [ $$? -ne 0 ]; then \
+		if [ $$? -eq 0 ]; then \
+			echo mv "$$x.tmp" "$$x"; \
+			mv "$$x.tmp" "$$x"; \
+		elif [ $$? -eq 1 ]; then \
+			echo; \
+		else \
 			echo; \
 			echo "Command failed.  Aborting."; \
 			echo; \
 			break; \
 		fi; \
-		echo "mv $$x.tmp $$x"; \
-		mv "$$x.tmp" "$$x"; \
 	done
 
 
