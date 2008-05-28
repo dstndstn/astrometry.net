@@ -178,7 +178,7 @@ int merctree_write_to_file(merctree* s, char* fn) {
     }
     fitsbin_chunk_clean(&chunk);
 
-    if (kdtree_fits_close(io)) {
+    if (kdtree_fits_io_close(io)) {
         fprintf(stderr, "Failed to close output file %s.\n", fn);
         return -1;
     }
