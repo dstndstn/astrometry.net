@@ -23,6 +23,8 @@ typedef struct log_t log_t;
  */
 void log_init(enum log_level level);
 
+void log_set_level(enum log_level level);
+
 /**
  Sends global logging to the given FILE*.
  */

@@ -15,6 +15,10 @@ void log_init(enum log_level level) {
 	log_init_structure(&_logger_global, level);
 }
 
+void log_set_level(enum log_level level) {
+    _logger_global.level = level;
+}
+
 void log_to(FILE* fid) {
 	_logger_global.f = fid;
 }

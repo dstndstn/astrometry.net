@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 	log_init(LOG_MSG);
 
 	if (argc == 2 && strcmp(argv[1], "-s") == 0) {
-		log_init(0);
+		log_set_level(LOG_NONE);
 		fprintf(stderr, "premptive silence\n");
 	}
 
@@ -69,9 +69,9 @@ int main(int argc, char *argv[]) {
 		}
 
         if (bp->quiet)
-            log_init(LOG_ERROR);
+            log_set_level(LOG_ERROR);
         else if (bp->verbose)
-            log_init(LOG_VERB);
+            log_set_level(LOG_VERB);
 
 		if (!blind_parameters_are_sane(bp, sp)) {
 			exit(-1);
