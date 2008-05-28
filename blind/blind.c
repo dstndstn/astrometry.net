@@ -1178,7 +1178,6 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		last_wtime = wtime;
 
 	cleanup:
-		logmsg("\n");
 	}
 
 	free(sp->field);
