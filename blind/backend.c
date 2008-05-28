@@ -212,8 +212,12 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
         for (j=-1; j<sl_size(backend->index_paths); j++) {
             char* path;
             if (j == -1)
-                // try as an absolute or relative filename.
-                path = strdup(ind);
+                if (strlen(ind) && ind[0] == '/') {
+                    // try as an absolute filename.
+                    path = strdup(ind);
+                } else {
+                    continue;
+                }
             else
                 asprintf(&path, "%s/%s", sl_get(backend->index_paths, j), ind);
 
