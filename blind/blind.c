@@ -1178,6 +1178,7 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		last_wtime = wtime;
 
 	cleanup:
+        { int x; x = 42; }// gcc doesn't like labels at the end of loops.
 	}
 
 	free(sp->field);
