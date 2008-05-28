@@ -23,7 +23,7 @@ cd `hostname`
 #tar xf -
 
 read -s nbytes
-echo "Will read $nbytes bytes..." > /dev/stderr
+echo "Will read $nbytes bytes..." 1>&2
 dd bs=1 count=$nbytes of=job.axy
 
 # stderr goes back over the ssh tunnel...
