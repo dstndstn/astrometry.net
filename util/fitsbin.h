@@ -182,7 +182,7 @@ FILE* fitsbin_get_fid(fitsbin_t* fb);
 
 int fitsbin_close(fitsbin_t* fb);
 
-qfits_header* fitsbin_get_primary_header(fitsbin_t* fb);
+qfits_header* fitsbin_get_primary_header(const fitsbin_t* fb);
 
 // (pads to FITS block size)
 int fitsbin_write_primary_header(fitsbin_t* fb);

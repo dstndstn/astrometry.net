@@ -45,20 +45,21 @@
 #include "pnpoly.h"
 #include "boilerplate.h"
 
-#define OPTIONS "hi:u:l:n:o:I:cr:x:y:F:RHL:bq:"
+#define OPTIONS "hi:u:l:n:I:r:x:y:F:RHL:bc:q:d:"
 
 static void print_help(char* progname)
 {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
 	       "      -i <input-filename>    (star kdtree (skdt.fits) input file)\n"
-		   "      -o <output-filename-base>   (ie, the .*.fits output filenames, without the .*.fits suffixes)\n"
+		   "      -c <codes-output-filename>    (codes file (code.fits) output file)\n"
+           "      -q <quads-output-filename>    (quads file (quad.fits) output file)\n"
 		   "     [-c]            allow quads in the circle, not the box, defined by AB\n"
 		   "     [-b]            try to make any quads outside the bounds of this big healpix.\n"
 	       "     [-n <nside>]    healpix nside (default 501)\n"
 	       "     [-u <scale>]    upper bound of quad scale (arcmin)\n"
 	       "     [-l <scale>]    lower bound of quad scale (arcmin)\n"
-		   "     [-q <dimquads>] number of stars in a \"quad\".\n"
+		   "     [-d <dimquads>] number of stars in a \"quad\".\n"
 		   "     [-x <x-passes>] number of passes in the x direction\n"
 		   "     [-y <y-passes>] number of passes in the y direction\n"
 		   "     [-r <reuse-times>] number of times a star can be used.\n"
@@ -710,20 +711,19 @@ static void add_headers(qfits_header* hdr, char** argv, int argc,
 
 int main(int argc, char** argv) {
 	int argchar;
-	char *quadfname;
-	char *codefname;
+	char *quadfname = NULL;
+	char *codefname = NULL;
 	char *skdtfname = NULL;
 	int HEALPIXES;
 	int Nside = 501;
 	int i;
-	char* basefnout = NULL;
 	char* failedrdlsfn = NULL;
 	rdlist_t* failedrdls = NULL;
 	int xpass, ypass;
 	int id = 0;
 	int xpasses = 1;
 	int ypasses = 1;
-	bool circle = FALSE;
+	bool circle = TRUE;
 	int Nreuse = 3;
 	double radius2;
 	int lastgrass = 0;
@@ -759,7 +759,7 @@ int main(int argc, char** argv) {
 	
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
-		case 'q':
+		case 'd':
 			dimquads = atoi(optarg);
 			break;
 		case 'b':
@@ -776,9 +776,6 @@ int main(int argc, char** argv) {
 			break;
 		case 'r':
 			Nreuse = atoi(optarg);
-			break;
-		case 'c':
-			circle = TRUE;
 			break;
 		case 'x':
 			xpasses = atoi(optarg);
@@ -798,9 +795,12 @@ int main(int argc, char** argv) {
 		case 'i':
             skdtfname = optarg;
 			break;
-		case 'o':
-			basefnout = optarg;
-			break;
+		case 'c':
+            codefname = optarg;
+            break;
+        case 'q':
+            quadfname = optarg;
+            break;
 		case 'u':
 			rads = arcmin2rad(atof(optarg));
 			quad_scale_upper2 = square(rads);
@@ -818,8 +818,8 @@ int main(int argc, char** argv) {
 			return -1;
 		}
 
-	if (!skdtfname || !basefnout) {
-		fprintf(stderr, "Specify in & out base filenames, bonehead!\n");
+	if (!skdtfname || !codefname || !quadfname) {
+		fprintf(stderr, "Specify in & out filenames, bonehead!\n");
 		print_help(argv[0]);
 		exit( -1);
 	}
@@ -861,9 +861,6 @@ int main(int argc, char** argv) {
 		exit( -1);
 	}
 	printf("Star tree contains %i objects.\n", startree_N(starkd));
-
-	quadfname = mk_quadfn(basefnout);
-	codefname = mk_codefn(basefnout);
 
 	printf("Will write to quad file %s and code file %s\n", quadfname, codefname);
 
@@ -917,9 +914,6 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Couldn't write headers to code file %s\n", codefname);
         exit(-1);
     }
-
-	free_fn(quadfname);
-	free_fn(codefname);
 
     codes->numstars = startree_N(starkd);
     codes->index_scale_upper = sqrt(quad_scale_upper2);

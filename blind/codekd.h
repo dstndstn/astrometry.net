@@ -24,6 +24,8 @@
 
 #define AN_FILETYPE_CODETREE "CKDT"
 
+#define CODETREE_NAME "codes"
+
 struct codetree {
 	kdtree_t* tree;
 	qfits_header* header;

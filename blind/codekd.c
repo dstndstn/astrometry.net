@@ -22,6 +22,7 @@
 #include "codekd.h"
 #include "kdtree_fits_io.h"
 #include "starutil.h"
+#include "errors.h"
 
 static codetree* codetree_alloc() {
 	codetree* s = calloc(1, sizeof(codetree));
@@ -55,12 +56,21 @@ int codetree_get_permuted(codetree* s, int index) {
 
 codetree* codetree_open(char* fn) {
 	codetree* s;
+    kdtree_fits_t* io;
+    char* treename = CODETREE_NAME;
 
 	s = codetree_alloc();
 	if (!s)
 		return s;
 
-	s->tree = kdtree_fits_read(fn, NULL, &s->header);
+    io = kdtree_fits_open(fn);
+	if (!io) {
+        ERROR("Failed to open FITS file \"%s\"", fn);
+        goto bailout;
+    }
+    if (!kdtree_fits_contains_tree(io, treename))
+        treename = NULL;
+    s->tree = kdtree_fits_read_tree(io, treename, &s->header);
 	if (!s->tree) {
 		fprintf(stderr, "Failed to read code kdtree from file %s\n", fn);
 		goto bailout;

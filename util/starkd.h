@@ -26,6 +26,8 @@
 
 #define AN_FILETYPE_STARTREE "SKDT"
 
+#define STARTREE_NAME "stars"
+
 struct startree_s {
 	kdtree_t* tree;
 	qfits_header* header;

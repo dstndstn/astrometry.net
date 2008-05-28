@@ -43,15 +43,16 @@
 #include "starkd.h"
 #include "boilerplate.h"
 
-#define OPTIONS "hf:o:q:s"
+#define OPTIONS "hs:q:S:Q:w"
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
-		   "    -f <input-basename>\n"
-		   "   [-q <input-quadfile-basename>]\n"
-		   "   [-s]: store sweep number in output star kdtree file.\n"
-		   "    -o <output-basename>\n"
+           "    -s <input-star-kdtree-filename>\n"
+           "    -q <input-quads-filename>\n"
+           "    -S <output-star-kdtree-filename>\n"
+           "    -Q <output-quads-filename>\n"
+		   "   [-w]: store sweep number in output star kdtree file.\n"
 		   "\n", progname);
 }
 
@@ -65,10 +66,10 @@ int main(int argc, char **args) {
 	startree_t* treein;
 	startree_t* treeout;
 	char* progname = args[0];
-	char* basein = NULL;
-	char* baseout = NULL;
-	char* basequadin = NULL;
-	char* fn;
+    char* quadinfn = NULL;
+    char* skdtinfn = NULL;
+    char* quadoutfn = NULL;
+    char* skdtoutfn = NULL;
 	int i;
 	int N;
 	int healpix;
@@ -83,15 +84,18 @@ int main(int argc, char **args) {
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
         switch (argchar) {
 		case 'q':
-			basequadin = optarg;
+			quadinfn = optarg;
 			break;
-        case 'f':
-			basein = optarg;
+		case 'Q':
+			quadoutfn = optarg;
 			break;
-        case 'o':
-			baseout = optarg;
-			break;
-		case 's':
+        case 's':
+            skdtinfn = optarg;
+            break;
+        case 'S':
+            skdtoutfn = optarg;
+            break;
+		case 'w':
 			dosweeps = TRUE;
 			break;
         case '?':
@@ -103,33 +107,26 @@ int main(int argc, char **args) {
             return -1;
         }
 
-	if (!basein || !baseout) {
+	if (!(quadinfn && quadoutfn && skdtinfn && skdtoutfn)) {
 		printHelp(progname);
+        fprintf(stderr, "\nMust include all filenames (-q, -Q, -s, -S)\n");
 		exit(-1);
 	}
 
-	fn = mk_streefn(basein);
-	printf("Reading star tree from %s ...\n", fn);
-	treein = startree_open(fn);
+	printf("Reading star tree from %s ...\n", skdtinfn);
+	treein = startree_open(skdtinfn);
 	if (!treein) {
-		fprintf(stderr, "Failed to read star kdtree from %s.\n", fn);
+		fprintf(stderr, "Failed to read star kdtree from %s.\n", skdtinfn);
 		exit(-1);
 	}
-	free_fn(fn);
-
 	N = startree_N(treein);
 
-	if (basequadin)
-		fn = mk_quadfn(basequadin);
-	else
-		fn = mk_quadfn(basein);
-	printf("Reading quadfile from %s ...\n", fn);
-	qfin = quadfile_open(fn);
+	printf("Reading quadfile from %s ...\n", quadinfn);
+	qfin = quadfile_open(quadinfn);
 	if (!qfin) {
-		fprintf(stderr, "Failed to read quadfile from %s.\n", fn);
+		fprintf(stderr, "Failed to read quadfile from %s.\n", quadinfn);
 		exit(-1);
 	}
-	free_fn(fn);
 
 	starhp = qfits_header_getint(startree_header(treein), "HEALPIX", -1);
 	if (starhp == -1)
@@ -137,18 +134,15 @@ int main(int argc, char **args) {
     healpix = starhp;
 	hpnside = qfits_header_getint(startree_header(treein), "HPNSIDE", 1);
 
-	fn = mk_quadfn(baseout);
-	printf("Writing quadfile to %s ...\n", fn);
-	qfout = quadfile_open_for_writing(fn);
+	printf("Writing quadfile to %s ...\n", quadoutfn);
+	qfout = quadfile_open_for_writing(quadoutfn);
 	if (!qfout) {
-		fprintf(stderr, "Failed to write quadfile to %s.\n", fn);
+		fprintf(stderr, "Failed to write quadfile to %s.\n", quadoutfn);
 		exit(-1);
 	}
-	free_fn(fn);
 
 	qfout->healpix = healpix;
     qfout->hpnside = hpnside;
-
 	qfout->numstars          = qfin->numstars;
 	qfout->dimquads          = qfin->dimquads;
 	qfout->index_scale_upper = qfin->index_scale_upper;
@@ -174,7 +168,6 @@ int main(int argc, char **args) {
 		fprintf(stderr, "Failed to write quadfile header.\n");
 		exit(-1);
 	}
-
 
 	printf("Writing quads...\n");
 
@@ -216,6 +209,7 @@ int main(int argc, char **args) {
 	treeout->tree->perm = NULL;
 
 	fits_copy_header(startree_header(treein), startree_header(treeout), "HEALPIX");
+	fits_copy_header(startree_header(treein), startree_header(treeout), "HPNSIDE");
 	fits_copy_header(startree_header(treein), startree_header(treeout), "ALLSKY");
 	fits_copy_header(startree_header(treein), startree_header(treeout), "JITTER");
 	qfits_header_add(startree_header(treeout), "HISTORY", "unpermute-stars command line:", NULL, NULL);
@@ -279,13 +273,12 @@ int main(int argc, char **args) {
             treeout->starids[i] = treein->starids[ind];
     }
 
-	fn = mk_streefn(baseout);
-	printf("Writing star kdtree to %s ...\n", fn);
-	if (startree_write_to_file(treeout, fn)) {
+	printf("Writing star kdtree to %s ...\n", skdtoutfn);
+	if (startree_write_to_file(treeout, skdtoutfn)) {
 		fprintf(stderr, "Failed to write star kdtree.\n");
 		exit(-1);
 	}
-	free_fn(fn);
+
     free(treeout->sigma_radec);
     free(treeout->proper_motion);
     free(treeout->sigma_pm);

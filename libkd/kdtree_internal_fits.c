@@ -184,7 +184,7 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
     fitsbin_chunk_init(&chunk);
 
     // kdtree header is an empty fitsbin_chunk.
-    chunk.tablename = "kdtree_header";
+    chunk.tablename = get_table_name(kd->name, KD_STR_HEADER);
     hdr = fitsbin_get_chunk_header(fb, &chunk);
     if (inhdr)
         fits_copy_all_headers(inhdr, hdr, NULL);
@@ -199,6 +199,7 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
     qfits_header_add(hdr, "KDT_DATA", (char*)kdtree_kdtype_to_string(kdtree_datatype(kd)), "kdtree: type of the data", NULL);
     qfits_header_add(hdr, "KDT_LINL", (kd->has_linear_lr ? "T" : "F"), "kdtree: has_linear_lr", NULL);
     WRITE_CHUNK();
+    free(chunk.tablename);
     fitsbin_chunk_reset(&chunk);
 
 	if (kd->nodes) {

@@ -200,6 +200,8 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
+    starkd->tree->name = strdup(STARTREE_NAME);
+
 	if (checktree) {
 		fprintf(stderr, "Checking tree...\n");
 		if (kdtree_check(starkd->tree)) {

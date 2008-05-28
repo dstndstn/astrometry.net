@@ -132,7 +132,7 @@ int fitsbin_write_primary_header(fitsbin_t* fb) {
                                          &fb->primheader_end, fb->filename);
 }
 
-qfits_header* fitsbin_get_primary_header(fitsbin_t* fb) {
+qfits_header* fitsbin_get_primary_header(const fitsbin_t* fb) {
     return fb->primheader;
 }
 

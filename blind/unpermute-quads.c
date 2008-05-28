@@ -42,13 +42,15 @@
 #include "qfits.h"
 #include "boilerplate.h"
 
-#define OPTIONS "hf:o:"
+#define OPTIONS "hq:c:Q:C:"
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
-		   "    -f <input-basename>\n"
-		   "    -o <output-basename>\n"
+           "   -q <input-quad-filename>\n"
+           "   -c <input-code-kdtree-filename>\n"
+           "   -Q <output-quad-filename>\n"
+           "   -C <output-code-kdtree-filename>\n"
 		   "\n", progname);
 }
 
@@ -62,25 +64,33 @@ int main(int argc, char **args) {
 	codetree* treein;
 	codetree* treeout;
 	char* progname = args[0];
-	char* basein = NULL;
-	char* baseout = NULL;
-	char* fn;
+	char* quadinfn = NULL;
+	char* quadoutfn = NULL;
+	char* ckdtinfn = NULL;
+	char* ckdtoutfn = NULL;
 	int i;
 	qfits_header* codehdr;
 	qfits_header* hdr;
 	int healpix;
+	int hpnside;
 	int codehp;
 	qfits_header* qouthdr;
 	qfits_header* qinhdr;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
         switch (argchar) {
-        case 'f':
-			basein = optarg;
-			break;
-        case 'o':
-			baseout = optarg;
-			break;
+        case 'q':
+            quadinfn = optarg;
+            break;
+        case 'c':
+            ckdtinfn = optarg;
+            break;
+        case 'Q':
+            quadoutfn = optarg;
+            break;
+        case 'C':
+            ckdtoutfn = optarg;
+            break;
         case '?':
             fprintf(stderr, "Unknown option `-%c'.\n", optopt);
         case 'h':
@@ -90,31 +100,29 @@ int main(int argc, char **args) {
             return -1;
         }
 
-	if (!basein || !baseout) {
+	if (!(quadinfn && quadoutfn && ckdtinfn && ckdtoutfn)) {
 		printHelp(progname);
+        fprintf(stderr, "\nYou must specify all filenames (-q, -c, -Q, -C)\n");
 		exit(-1);
 	}
 
-	fn = mk_ctreefn(basein);
-	printf("Reading code tree from %s ...\n", fn);
-	treein = codetree_open(fn);
+	printf("Reading code tree from %s ...\n", ckdtinfn);
+	treein = codetree_open(ckdtinfn);
 	if (!treein) {
-		fprintf(stderr, "Failed to read code kdtree from %s.\n", fn);
+		fprintf(stderr, "Failed to read code kdtree from %s.\n", ckdtinfn);
 		exit(-1);
 	}
-	free_fn(fn);
 	codehdr = codetree_header(treein);
 
-	fn = mk_quadfn(basein);
-	printf("Reading quads from %s ...\n", fn);
-	quadin = quadfile_open(fn);
+	printf("Reading quads from %s ...\n", quadinfn);
+	quadin = quadfile_open(quadinfn);
 	if (!quadin) {
-		fprintf(stderr, "Failed to read quads from %s.\n", fn);
+		fprintf(stderr, "Failed to read quads from %s.\n", quadinfn);
 		exit(-1);
 	}
-	free_fn(fn);
 
 	healpix = quadin->healpix;
+	hpnside = quadin->hpnside;
 	codehp = qfits_header_getint(codehdr, "HEALPIX", -1);
 	if (codehp == -1)
 		fprintf(stderr, "Warning, input code kdtree didn't have a HEALPIX header.\n");
@@ -124,16 +132,15 @@ int main(int argc, char **args) {
 		exit(-1);
 	}
 
-	fn = mk_quadfn(baseout);
-	printf("Writing quads to %s ...\n", fn);
-	quadout = quadfile_open_for_writing(fn);
+	printf("Writing quads to %s ...\n", quadoutfn);
+	quadout = quadfile_open_for_writing(quadoutfn);
 	if (!quadout) {
-		fprintf(stderr, "Failed to write quads to %s.\n", fn);
+		fprintf(stderr, "Failed to write quads to %s.\n", quadoutfn);
 		exit(-1);
 	}
-	free_fn(fn);
 
 	quadout->healpix = healpix;
+	quadout->hpnside = hpnside;
 	quadout->indexid = quadin->indexid;
 	quadout->numstars = quadin->numstars;
 	quadout->dimquads = quadin->dimquads;
@@ -207,14 +214,12 @@ int main(int argc, char **args) {
 
 	quadfile_close(quadin);
 
-	fn = mk_ctreefn(baseout);
-	printf("Writing code kdtree to %s ...\n", fn);
-	if (codetree_write_to_file(treeout, fn) ||
+	printf("Writing code kdtree to %s ...\n", ckdtoutfn);
+	if (codetree_write_to_file(treeout, ckdtoutfn) ||
 		codetree_close(treeout)) {
 		fprintf(stderr, "Failed to write code kdtree.\n");
 		exit(-1);
 	}
-	free_fn(fn);
 
     free(treein->tree);
     treein->tree = NULL;

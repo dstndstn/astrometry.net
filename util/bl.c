@@ -1608,6 +1608,22 @@ void sl_append_contents(sl* dest, sl* src) {
 	}
 }
 
+int sl_index_of(sl* lst, const char* str) {
+    int i;
+    for (i=0; i<sl_size(lst); i++) {
+        char* s = sl_get(lst, i);
+        if (strcmp(s, str) == 0)
+            return i;
+    }
+    return -1;
+}
+
+// Returns 0 if the string is not in the sl, 1 otherwise.
+// (same as sl_index_of(lst, str) > -1)
+int sl_contains(sl* lst, const char* str) {
+    return (sl_index_of(lst, str) > -1);
+}
+
 void sl_reverse(sl* list) {
 	bl_reverse(list);
 }

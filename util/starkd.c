@@ -110,6 +110,7 @@ startree_t* startree_open(char* fn) {
     bl* chunks;
     int i;
     kdtree_fits_t* io;
+    char* treename = STARTREE_NAME;
 
 	s = startree_alloc();
 	if (!s)
@@ -120,7 +121,11 @@ startree_t* startree_open(char* fn) {
         ERROR("Failed to open FITS file \"%s\"", fn);
         goto bailout;
     }
-    s->tree = kdtree_fits_read_tree(io, NULL, &s->header);
+
+    if (!kdtree_fits_contains_tree(io, treename))
+        treename = NULL;
+
+    s->tree = kdtree_fits_read_tree(io, treename, &s->header);
     if (!s->tree) {
         ERROR("Failed to read kdtree from file \"%s\"", fn);
         goto bailout;

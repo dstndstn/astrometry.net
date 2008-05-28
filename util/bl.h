@@ -279,6 +279,14 @@ void   sl_free2(sl* list);
 
 void sl_append_contents(sl* dest, sl* src);
 
+// Searches the sl for the given string.  Comparisons use strcmp().
+// Returns -1 if the string is not found, or the first index where it was found.
+int sl_index_of(sl* lst, const char* str);
+
+// Returns 0 if the string is not in the sl, 1 otherwise.
+// (same as sl_index_of(lst, str) > -1)
+int sl_contains(sl* lst, const char* str);
+
 // just free the list structure, not the strings in it.
 void   sl_free_nonrecursive(sl* list);
 int    sl_size(sl* list);

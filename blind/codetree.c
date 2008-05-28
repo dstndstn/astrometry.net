@@ -186,6 +186,8 @@ int main(int argc, char *argv[]) {
 	}
     fprintf(stderr, "done (%d nodes)\n", codetree_N(codekd));
 
+    codekd->tree->name = strdup(CODETREE_NAME);
+
     fprintf(stderr, "  Writing code KD tree to %s...", treefname);
     fflush(stderr);
 
