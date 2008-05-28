@@ -38,7 +38,7 @@ static char* get_table_name(const char* treename, const char* tabname) {
 int MANGLE(kdtree_read_fits)(kdtree_fits_t* io, kdtree_t* kd) {
     fitsbin_chunk_t chunk;
 
-    memset(&chunk, 0, sizeof(fitsbin_chunk_t));
+    fitsbin_chunk_init(&chunk);
 
 	// kd->nodes
     chunk.tablename = get_table_name(kd->name, KD_STR_NODES);

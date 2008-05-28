@@ -217,6 +217,7 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
             else
                 asprintf(&path, "%s/%s", sl_get(backend->index_paths, j), ind);
 
+            logverb("Trying path %s...\n", path);
             if (index_is_file_index(path)) {
                 if (add_index(backend, path))
                     logmsg("Failed to add index \"%s\".\n", path);

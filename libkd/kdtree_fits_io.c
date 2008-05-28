@@ -203,7 +203,7 @@ KD_DECLARE(kdtree_write_fits, int, (kdtree_fits_t* io, const kdtree_t* kd,
 
 static qfits_header* find_tree(const char* treename, const fitsbin_t* fb,
                                int* ndim, int* ndata, int* nnodes,
-                               unsigned int* tt) {
+                               unsigned int* tt, char** realname) {
     qfits_header* header;
     int i, nexten;
     char* fn = fb->filename;
@@ -213,6 +213,7 @@ static qfits_header* find_tree(const char* treename, const fitsbin_t* fb,
         header = fitsbin_get_primary_header(fb);
         if (is_tree_header_ok(header, ndim, ndata, nnodes, tt, 1)) {
             header = qfits_header_copy(header);
+            *realname = NULL;
             return header;
         }
     }
@@ -241,7 +242,7 @@ static qfits_header* find_tree(const char* treename, const fitsbin_t* fb,
             goto next;
         }
         if (is_tree_header_ok(header, ndim, ndata, nnodes, tt, 0)) {
-            free(name);
+            *realname = name;
             return header;
         }
     next:
@@ -256,7 +257,8 @@ int kdtree_fits_contains_tree(const kdtree_fits_t* io, const char* treename) {
     qfits_header* hdr;
     int rtn;
     const fitsbin_t* fb = get_fitsbin_const(io);
-    hdr = find_tree(treename, fb, &ndim, &ndata, &nnodes, &tt);
+    char* realname;
+    hdr = find_tree(treename, fb, &ndim, &ndata, &nnodes, &tt, &realname);
     rtn = (hdr != NULL);
     if (hdr != NULL)
         qfits_header_destroy(hdr);
@@ -279,18 +281,14 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
 		return NULL;
     }
 
-    header = find_tree(treename, fb, &ndim, &ndata, &nnodes, &tt);
+    header = find_tree(treename, fb, &ndim, &ndata, &nnodes, &tt, &kd->name);
     if (!header) {
         // Not found.
-        ERROR("Kdtree named \"%s\" not found in file %s", treename, fn);
+        ERROR("Kdtree matching \"%s\" not found in file %s", treename, fn);
         FREE(kd);
         return NULL;
     }
 
-    if (treename)
-        kd->name = strdup(treename);
-    else
-        kd->name = NULL;
     kd->has_linear_lr = qfits_header_getboolean(header, "KDT_LINL", 0);
 
     if (p_hdr)

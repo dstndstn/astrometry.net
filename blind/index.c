@@ -32,19 +32,19 @@ void get_filenames(const char* indexname,
                    char** skdtfn,
                    bool* singlefile) {
     char* basename;
-    if (file_readable(indexname)) {
+    if (ends_with(indexname, ".quad.fits")) {
+        basename = strdup(indexname);
+        basename[strlen(indexname)-10] = '\0';
+    } else if (file_readable(indexname)) {
         // assume single-file index.
         *ckdtfn = strdup(indexname);
         *skdtfn = strdup(indexname);
         *quadfn = strdup(indexname);
         *singlefile = TRUE;
         return;
+    } else {
+        basename = strdup(indexname);
     }
-    if (ends_with(indexname, ".quad.fits")) {
-        basename = strdup(indexname);
-        basename[strlen(indexname)-10] = '\0';
-    } else
-        basename = strdup(indexname);
     *ckdtfn = mk_ctreefn(basename);
     *skdtfn = mk_streefn(basename);
     *quadfn = mk_quadfn (basename);
@@ -57,22 +57,44 @@ bool index_is_file_index(const char* filename) {
     char* ckdtfn, *skdtfn, *quadfn;
     bool singlefile;
     index_t* ind;
-    bool rtn;
+    bool rtn = FALSE;
 
     get_filenames(filename, &quadfn, &ckdtfn, &skdtfn, &singlefile);
-    if (!(file_readable(quadfn) &&
-          (singlefile || (file_readable(ckdtfn) && file_readable(skdtfn))))) {
-        rtn = FALSE;
+    if (!file_readable(quadfn)) {
+        ERROR("Index file %s is not readable.\n", quadfn);
         goto finish;
     }
+    if (!singlefile) {
+        if (!file_readable(ckdtfn)) {
+            ERROR("Index file %s is not readable.\n", ckdtfn);
+            goto finish;
+        }
+        if (!file_readable(skdtfn)) {
+            ERROR("Index file %s is not readable.\n", skdtfn);
+            goto finish;
+        }
+    }
+
     if (!(qfits_is_fits(quadfn) &&
           (singlefile || (qfits_is_fits(ckdtfn) && qfits_is_fits(skdtfn))))) {
+        if (singlefile)
+            ERROR("Index file %s is not FITS.\n", quadfn);
+        else
+            ERROR("Index files %s , %s , and %s are not FITS.\n",
+                  quadfn, skdtfn, ckdtfn);
         rtn = FALSE;
         goto finish;
     }
 
     ind = index_load(filename, INDEX_ONLY_LOAD_METADATA);
     rtn = (ind != NULL);
+    if (!rtn) {
+        if (singlefile)
+            ERROR("File %s does not contain an index.\n", quadfn);
+        else
+            ERROR("Files %s , %s , and %s do not contain an index.\n",
+                  quadfn, skdtfn, ckdtfn);
+    }
 
  finish:
     free(ckdtfn);
