@@ -216,8 +216,9 @@ int main(int argc, char **args) {
 	}
 	free_fn(fn);
 
-	codetree_close(treein);
-	free(treeout);
+    free(treein->tree);
+    treein->tree = NULL;
+    codetree_close(treein);
 
 	printf("Done!\n");
 
