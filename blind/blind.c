@@ -44,7 +44,6 @@
 #include "fileutil.h"
 #include "mathutil.h"
 #include "quadfile.h"
-#include "idfile.h"
 #include "solvedclient.h"
 #include "solvedfile.h"
 #include "starkd.h"
@@ -248,7 +247,7 @@ void blind_run(blind_t* bp) {
     remove_invalid_fields(bp->fieldlist, xylist_n_fields(bp->xyls));
 
     if (bp->use_idfile)
-        index_options |= INDEX_USE_IDFILE;
+        index_options |= INDEX_USE_IDS;
 
 	// Verify any WCS estimates we have.
 	if (bl_size(bp->verify_wcs_list)) {

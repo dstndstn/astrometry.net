@@ -20,8 +20,12 @@
 #include "fileutil.h"
 #include "log.h"
 
+bool index_has_ids(index_t* index) {
+    return index->use_ids;
+}
+
 index_t* index_load(const char* indexname, int flags) {
-	char *idfname, *treefname, *quadfname, *startreefname;
+	char *treefname, *quadfname, *startreefname;
 
 	index_t* index = calloc(1, sizeof(index_t));
 	index->indexname = indexname;
@@ -62,6 +66,7 @@ index_t* index_load(const char* indexname, int flags) {
 	index->index_scale_lower = quadfile_get_index_scale_lower_arcsec(index->quads);
 	index->indexid = index->quads->indexid;
 	index->healpix = index->quads->healpix;
+	index->hpnside = index->quads->hpnside;
 
 	logverb("Stars: %i, Quads: %i.\n", index->quads->numstars, index->quads->numquads);
 
@@ -96,22 +101,11 @@ index_t* index_load(const char* indexname, int flags) {
 	else
 		index->cx_less_than_dx = FALSE;
 
-	if (flags & INDEX_USE_IDFILE) {
-		logerr("BLAH:%d\n",flags);
-		idfname = mk_idfn(indexname);
-		// Read .id file...
-		index->id_file = idfile_open(idfname);
-		if (!index->id_file) {
-			logerr("Couldn't open id file %s.\n", idfname);
-			free_fn(idfname);
-			return NULL;
-		}
-		free_fn(idfname);
-	}
+	if (flags & INDEX_USE_IDS)
+        index->use_ids = TRUE;
 
-	if (flags & INDEX_ONLY_LOAD_METADATA) {
+	if (flags & INDEX_ONLY_LOAD_METADATA)
 		index_close(index);
-	}
 
 	return index;
 }
@@ -123,13 +117,10 @@ void index_close(index_t* index)
 		startree_close(index->starkd);
 	if (index->codekd)
 		codetree_close(index->codekd);
-	if (index->id_file)
-		idfile_close(index->id_file);
 	if (index->quads)
 		quadfile_close(index->quads);
 	index->starkd = NULL;
 	index->codekd = NULL;
-	index->id_file = NULL;
 	index->quads = NULL;
 	free(index);
 }

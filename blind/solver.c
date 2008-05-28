@@ -901,9 +901,9 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 		memcpy(mo.quadpix, field, 2 * dimquads * sizeof(double));
 		memcpy(mo.quadxyz, starxyz, 3 * dimquads * sizeof(double));
 
-		if (solver->index->id_file) {
+		if (index_has_ids(solver->index)) {
             for (i=0; i<dimquads; i++)
-                mo.ids[i] = idfile_get_anid(solver->index->id_file, star[i]);
+                mo.ids[i] = startree_get_starid(solver->index->starkd, star[i]);
 		} else {
             for (i=0; i<dimquads; i++)
                 mo.ids[i] = 0;
@@ -935,6 +935,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 
 	mo->indexid = sp->index->indexid;
 	mo->healpix = sp->index->healpix;
+	mo->hpnside = sp->index->hpnside;
 	mo->wcstan.imagew = sp->field_maxx;
 	mo->wcstan.imageh = sp->field_maxy;
 

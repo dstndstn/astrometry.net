@@ -1,10 +1,28 @@
+/*
+ This file is part of the Astrometry.net suite.
+ Copyright 2007-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+
+ The Astrometry.net suite is free software; you can redistribute
+ it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, version 2.
+
+ The Astrometry.net suite is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with the Astrometry.net suite ; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+*/
+
 #ifndef _INDEX_H
 #define _INDEX_H
 
-#include "idfile.h"
 #include "quadfile.h"
 #include "starkd.h"
 #include "codekd.h"
+#include "an-bool.h"
 
 /*
  * These routines handle loading and closing indexes which consist of several
@@ -23,12 +41,14 @@ struct index_s {
 	// Unique id for this index.
 	int indexid;
 	int healpix;
+    int hpnside;
 
 	// The index
 	codetree* codekd;
-	idfile* id_file;
 	quadfile* quads;
 	startree_t* starkd;
+
+    bool use_ids;
 
 	// Jitter in the index, in arcseconds.
 	double index_jitter;
@@ -44,10 +64,11 @@ struct index_s {
 };
 typedef struct index_s index_t;
 
-#define INDEX_USE_IDFILE 1
+#define INDEX_USE_IDS            1
 #define INDEX_ONLY_LOAD_METADATA 2
-#define INDEX_ONLY_LOAD_SKDT 4
-//#define INDEX_QUIET 8
+#define INDEX_ONLY_LOAD_SKDT     4
+
+bool index_has_ids(index_t* index);
 
 /**
  * Load an index from disk

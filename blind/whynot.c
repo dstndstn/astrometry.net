@@ -31,7 +31,6 @@
 #include "catalog.h"
 #include "tic.h"
 #include "quadfile.h"
-#include "idfile.h"
 #include "intmap.h"
 #include "xylist.h"
 #include "rdlist.h"

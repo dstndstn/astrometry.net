@@ -26,7 +26,6 @@
 #include "kdtree.h"
 #include "bl.h"
 #include "matchobj.h"
-#include "idfile.h"
 #include "quadfile.h"
 #include "starkd.h"
 #include "codekd.h"

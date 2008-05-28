@@ -84,6 +84,7 @@ static void add_columns(fitstable_t* tab, bool write) {
     ADDCOL(i,i32,   "FIELDID",         nil, fieldfile);
     ADDCOL(i16,i16, "INDEXID",         nil, indexid);
     ADDCOL(i16,i16, "HEALPIX",         nil, healpix);
+    ADDCOL(i16,i16, "HPNSIDE",         nil, hpnside);
     ADDARR(c,  c,   "FIELDNAME",       nil, fieldname, sizeof(mo.fieldname)-1);
     ADDCOL(b, logical, "PARITY",       nil, parity);
     ADDCOL(i,i32,   "QTRIED",          nil, quads_tried);

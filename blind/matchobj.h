@@ -74,6 +74,7 @@ struct match_struct {
 	int fieldfile;
 	int16_t indexid;
 	int16_t healpix;
+	int16_t hpnside;
 
 	char fieldname[32];
 

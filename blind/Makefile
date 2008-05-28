@@ -71,7 +71,7 @@ OTHER_OBJS := usnob.o usnob-fits.o tycho2.o tycho2-fits.o catalog.o \
 	blind_wcs.o index.o tweak.o log.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	brightstars.o ngcic-accurate.o nomad.o nomad-fits.o \
-	ngc2000.o noisesim.o noise.o scriptutils.o hd.o idfile.o
+	ngc2000.o noisesim.o noise.o scriptutils.o hd.o
 
 2MASSOBJ := 2masstofits.o 2mass-fits.o 2mass.o
 
@@ -402,7 +402,7 @@ ALL_OBJ += augment-xylist-main.o
 
 blind: blind-main.o blind.o solver.o codekd.o matchfile.o tic.o \
 		solvedclient.o solvedfile.o verify.o svd.o \
-		intmap.o blind_wcs.o index.o log.o histogram.o tweak.o idfile.o \
+		intmap.o blind_wcs.o index.o log.o histogram.o tweak.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^
@@ -476,7 +476,7 @@ plotxy: plotxy.o $(COMMON)/cairoutils.o boilerplate.o $(ANFILES_LIB) $(ANUTILS_L
 quadidx: quadidx.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 codeprojections: codeprojections.o codekd.o \
-		$(UTIL_OBJS) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 quadlocations: quadlocations.o catalog.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
