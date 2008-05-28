@@ -106,6 +106,15 @@ upgrade-indices:
 	@echo
 	@echo
 
+	@echo "Upgrading:"
+	@ls -1 $(INSTALL_DIR)/data/index-*.{skdt,ckdt}.fits
+	@echo
+	@echo "Waiting 5 seconds for you to read that..."
+	sleep 5
+	@echo
+	@echo "Hold on to your socks."
+	@echo
+
 	@for x in `ls $(INSTALL_DIR)/data/index-*.{skdt,ckdt}.fits 2>/dev/null`; do \
 		echo "Upgrading $$x in $(INSTALL_DIR)/data ..."; \
 		echo; \
