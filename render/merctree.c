@@ -33,54 +33,64 @@ static merctree* merctree_alloc() {
 	return s;
 }
 
-static void merctree_stats_tablesize(kdtree_t* kd, extra_table* tab) {
-	tab->nitems = kd->nnodes;
+void get_stats_chunk(merctree* mt, fitsbin_chunk_t* chunk) {
+    fitsbin_chunk_init(chunk);
+    chunk->tablename = "merc_stats";
+    chunk->itemsize = sizeof(merc_stats);
+    chunk->nrows = mt->tree->nnodes;
+    chunk->data = mt->stats;
+    //chunk->userdata = &(mt->stats);
+    chunk->required = TRUE;
 }
-
-static void merctree_flux_tablesize(kdtree_t* kd, extra_table* tab) {
-	tab->nitems = kd->ndata;
+void get_flux_chunk(merctree* mt, fitsbin_chunk_t* chunk) {
+    fitsbin_chunk_init(chunk);
+    chunk->tablename = "merc_flux";
+    chunk->itemsize = sizeof(merc_flux);
+    chunk->nrows = mt->tree->ndata;
+    chunk->data = mt->flux;
+    //chunk->userdata = &(mt->flux);
+    chunk->required = TRUE;
 }
 
 merctree* merctree_open(char* fn) {
 	merctree* s;
-	extra_table extras[2];
-	extra_table* stats = extras;
-	extra_table* fluxes = extras + 1;
+    kdtree_fits_t* io;
+    fitsbin_chunk_t chunk;
 	
 	s = merctree_alloc();
 	if (!s)
 		return s;
-
-	memset(extras, 0, sizeof(extras));
-
-	stats->name = "merc_stats";
-	stats->datasize = sizeof(merc_stats);
-	stats->nitems = 0;
-	stats->required = 1;
-	stats->compute_tablesize = merctree_stats_tablesize;
-
-	fluxes->name = "merc_flux";
-	fluxes->datasize = sizeof(merc_flux);
-	fluxes->nitems = 0;
-	fluxes->required = 1;
-	fluxes->compute_tablesize = merctree_flux_tablesize;
-
-	s->tree = kdtree_fits_read_extras(fn, NULL, &s->header, extras, 2);
+    io = kdtree_fits_open(fn);
+    if (!io) {
+		fprintf(stderr, "Failed to open file %s\n", fn);
+        goto bailout;
+        return NULL;
+    }
+	s->tree = kdtree_fits_read_tree(io, NULL, &s->header);
 	if (!s->tree) {
 		fprintf(stderr, "Failed to read merc kdtree from file %s\n", fn);
 		goto bailout;
 	}
-	s->stats = stats->ptr;
-	s->flux  = fluxes->ptr;
+
+    get_stats_chunk(s, &chunk);
+    if (kdtree_fits_read_chunk(io, &chunk)) {
+		fprintf(stderr, "Failed to read merc stats from file %s\n", fn);
+		goto bailout;
+    }
+	s->stats = chunk.data;
+
+    get_flux_chunk(s, &chunk);
+    if (kdtree_fits_read_chunk(io, &chunk)) {
+		fprintf(stderr, "Failed to read merc flux from file %s\n", fn);
+		goto bailout;
+    }
+	s->flux = chunk.data;
 
 	return s;
 
  bailout:
-	if (s->tree)
-            kdtree_fits_close(s->tree);
- 	if (s->header)
-		qfits_header_destroy(s->header);
-	free(s);
+    
+    merctree_close(s);
 	return NULL;
 }
 
@@ -141,23 +151,38 @@ merctree* merctree_new() {
 }
 
 int merctree_write_to_file(merctree* s, char* fn) {
-	extra_table extras[2];
-	extra_table* stats = extras;
-	extra_table* fluxes = extras + 1;
-	memset(extras, 0, sizeof(extras));
+    kdtree_fits_t* io;
+    fitsbin_chunk_t chunk;
 
-	stats->name = "merc_stats";
-	stats->datasize = sizeof(merc_stats);
-	stats->nitems = s->tree->nnodes;
-	stats->ptr = s->stats;
-	stats->found = 1;
+    io = kdtree_fits_open_for_writing(fn);
+    if (!io) {
+        fprintf(stderr, "Failed to open file %s for writing.\n", fn);
+        return -1;
+    }
+    if (kdtree_fits_write_tree(io, s->tree, s->header)) {
+        fprintf(stderr, "Failed to write merc kdtree to file %s.\n", fn);
+        return -1;
+    }
 
-	fluxes->name = "merc_flux";
-	fluxes->datasize = sizeof(merc_flux);
-	fluxes->nitems = s->tree->ndata;
-	fluxes->ptr = s->flux;
-	fluxes->found = 1;
+    get_stats_chunk(s, &chunk);
+    if (kdtree_fits_write_chunk(io, &chunk)) {
+        fprintf(stderr, "Failed to write merc stats to file %s.\n", fn);
+        return -1;
+    }
+    fitsbin_chunk_clean(&chunk);
 
-	return kdtree_fits_write_extras(s->tree, fn, s->header, extras, 2);
+    get_flux_chunk(s, &chunk);
+    if (kdtree_fits_write_chunk(io, &chunk)) {
+        fprintf(stderr, "Failed to write merc flux to file %s.\n", fn);
+        return -1;
+    }
+    fitsbin_chunk_clean(&chunk);
+
+    if (kdtree_fits_close(io)) {
+        fprintf(stderr, "Failed to close output file %s.\n", fn);
+        return -1;
+    }
+
+    return 0;
 }
 

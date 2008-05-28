@@ -109,17 +109,18 @@ startree_t* startree_open(char* fn) {
 	startree_t* s;
     bl* chunks;
     int i;
+    kdtree_fits_t* io;
 
 	s = startree_alloc();
 	if (!s)
 		return s;
 
-    s->io = kdtree_fits_open(fn);
-	if (!s->io) {
+    io = kdtree_fits_open(fn);
+	if (!io) {
         ERROR("Failed to open FITS file \"%s\"", fn);
         goto bailout;
     }
-    s->tree = kdtree_fits_read_tree(s->io, NULL, &s->header);
+    s->tree = kdtree_fits_read_tree(io, NULL, &s->header);
     if (!s->tree) {
         ERROR("Failed to read kdtree from file \"%s\"", fn);
         goto bailout;
@@ -129,7 +130,7 @@ startree_t* startree_open(char* fn) {
     for (i=0; i<bl_size(chunks); i++) {
         fitsbin_chunk_t* chunk = bl_access(chunks, i);
         void** dest = chunk->userdata;
-        kdtree_fits_read_chunk(s->io, chunk);
+        kdtree_fits_read_chunk(io, chunk);
         *dest = chunk->data;
     }
     bl_free(chunks);
@@ -141,12 +142,22 @@ startree_t* startree_open(char* fn) {
 	return NULL;
 }
 
+/*
+ void startree_close_starids(startree_t* s) {
+ }
+
+ void startree_close_motions(startree_t* s) {
+ }
+ */
+
+uint64_t startree_get_starid(startree_t* s, int ind) {
+    if (!s->starids)
+        return 0;
+    return s->starids[ind];
+}
+
 int startree_close(startree_t* s) {
 	if (!s) return 0;
-    /*
-     if (s->io)
-     kdtree_fits_io_close(s->io);
-     */
 	if (s->inverse_perm)
 		free(s->inverse_perm);
  	if (s->header)

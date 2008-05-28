@@ -461,7 +461,7 @@ plot-constellations.o: plot-constellations.c
 plot-constellations: plot-constellations.o $(COMMON)/cairoutils.o \
 		ngc2000.o ngcic-accurate.o brightstars.o boilerplate.o \
 		hd.o \
-		$(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB)
 
 add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)

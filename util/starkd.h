@@ -32,8 +32,6 @@ struct startree_s {
 	int* inverse_perm;
 	uint8_t* sweep;
 
-    kdtree_fits_t* io;
-
     // reading or writing?
     int writing;
 
@@ -48,6 +46,13 @@ typedef struct startree_s startree_t;
 
 
 startree_t* startree_open(char* fn);
+
+/*
+ void startree_close_starids(startree_t* s);
+ void startree_close_motions(startree_t* s);
+ */
+
+uint64_t startree_get_starid(startree_t* s, int ind);
 
 int startree_N(startree_t* s);
 
