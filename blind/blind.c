@@ -1445,6 +1445,11 @@ static int write_solutions(blind_t* bp) {
             qfits_header_add(hdr, "DATE", tm, "Date this file was created.", NULL);
             add_blind_params(bp, hdr);
             fits_add_long_comment(hdr, "-- properties of the matching quad: --");
+            fits_add_long_comment(hdr, "index id: %i", mo->indexid);
+            fits_add_long_comment(hdr, "index healpix: %i", mo->healpix);
+            fits_add_long_comment(hdr, "index hpnside: %i", mo->hpnside);
+            fits_add_long_comment(hdr, "log odds: %g", mo->logodds);
+            fits_add_long_comment(hdr, "odds: %g", exp(mo->logodds));
             fits_add_long_comment(hdr, "quadno: %i", mo->quadno);
             fits_add_long_comment(hdr, "stars: %i,%i,%i,%i", mo->star[0], mo->star[1], mo->star[2], mo->star[3]);
             fits_add_long_comment(hdr, "field: %i,%i,%i,%i", mo->field[0], mo->field[1], mo->field[2], mo->field[3]);

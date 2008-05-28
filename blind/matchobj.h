@@ -98,7 +98,7 @@ struct match_struct {
     sip_t* sip;
     double* indexrdls;
     int nindexrdls;
-	//const char* indexname;
+
     il* corr_field;
     il* corr_index;
     dl* corr_field_xy;
