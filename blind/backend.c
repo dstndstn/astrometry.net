@@ -75,8 +75,10 @@ static void print_help(const char* progname) {
 
 struct indexinfo {
 	char* indexname;
-    char* canonname;
-	// quad size
+    int indexid;
+    int healpix;
+    int hpnside;
+	// quad size, in arcsec.
 	double losize;
 	double hisize;
 };
@@ -97,66 +99,31 @@ struct backend {
 };
 typedef struct backend backend_t;
 
-static char* get_canonical(const char* indexname) {
-    // canonicalize_file_name requires an extant file; "indexname" is the base
-    // name, so add the ".quad.fits" suffix.
-    char* path;
-    char* canon;
-    asprintf(&path, "%s.quad.fits", indexname);
-    canon = canonicalize_file_name(path);
-    free(path);
-    return canon;
-}
-
-static int get_index_scales(const char* indexname,
-                            double* losize, double* hisize)
-{
-	char *quadfname;
-	quadfile* quads;
-	double hi, lo;
-
-	quadfname = mk_quadfn(indexname);
-    logverb("Reading quads file %s...\n", quadfname);
-	quads = quadfile_open(quadfname);
-	if (!quads) {
-        logmsg("Couldn't read quads file %s\n", quadfname);
-		free_fn(quadfname);
-		return -1;
-	}
-	free_fn(quadfname);
-	lo = quadfile_get_index_scale_lower_arcsec(quads);
-	hi = quadfile_get_index_scale_upper_arcsec(quads);
-	if (losize)
-		*losize = lo;
-	if (hisize)
-		*hisize = hi;
-    logverb("Stars: %i, Quads: %i.\n", quads->numstars, quads->numquads);
-    logverb("Index scale: [%g, %g] arcmin, [%g, %g] arcsec\n",
-            lo / 60.0, hi / 60.0, lo, hi);
-	quadfile_close(quads);
-	return 0;
-}
-
-static bool add_index(backend_t* backend, char* full_index_path, double lo, double hi) {
+static int add_index(backend_t* backend, char* path) {
 	indexinfo_t ii;
     int k;
 
-	ii.indexname = full_index_path;
-    ii.canonname = get_canonical(full_index_path);
-	ii.losize = lo;
-	ii.hisize = hi;
+    if (index_get_scale_and_id(path, &ii.losize, &ii.hisize,
+                               &ii.indexid, &ii.healpix, &ii.hpnside)) {
+        ERROR("Failed to get index metadata for index %s", path);
+        return -1;
+    }
 
-    // check that this canonical path isn't already in the list of
-    // index files that we've openend.
+    // check that an index with the same id and healpix isn't already listed.
     for (k=0; k<bl_size(backend->indexinfos); k++) {
         indexinfo_t* iii = bl_access(backend->indexinfos, k);
-        if (strcmp(iii->canonname, ii.canonname))
-            continue;
-        logverb("Skipping duplicate index %s\n", full_index_path);
-        free(ii.canonname);
-        return FALSE;
+        if (iii->indexid == ii.indexid &&
+            iii->healpix == ii.healpix) {
+            logverb("Skipping duplicate index %s\n", path);
+            return 0;
+        }
     }
+
+	ii.indexname = strdup(path);
+
 	bl_append(backend->indexinfos, &ii);
+
+    // <= smallest we've seen?
 	if (ii.losize < backend->sizesmallest) {
 		backend->sizesmallest = ii.losize;
         bl_remove_all(backend->ismallest);
@@ -164,6 +131,8 @@ static bool add_index(backend_t* backend, char* full_index_path, double lo, doub
 	} else if (ii.losize == backend->sizesmallest) {
 		il_append(backend->ismallest, bl_size(backend->indexinfos) - 1);
     }
+
+    // >= largest we've seen?
 	if (ii.hisize > backend->sizebiggest) {
 		backend->sizebiggest = ii.hisize;
         bl_remove_all(backend->ibiggest);
@@ -171,46 +140,7 @@ static bool add_index(backend_t* backend, char* full_index_path, double lo, doub
 	} else if (ii.hisize == backend->sizebiggest) {
 		il_append(backend->ibiggest, bl_size(backend->indexinfos) - 1);
 	}
-    return TRUE;
-}
-
-static int find_index(backend_t* backend, char* index)
-{
-	bool found_index = FALSE;
-	double lo, hi;
-	int i = 0;
-	char* full_index_path;
-
-    if (strlen(index) && index[0] == '/') {
-        // it's an absolute path - don't search dirs.
-        full_index_path = strdup(index);
-        if (get_index_scales(full_index_path, &lo, &hi) == 0) {
-			found_index = TRUE;
-		} else {
-            free(full_index_path);
-        }
-    }
-    if (!found_index) {
-        for (i=0; i<sl_size(backend->index_paths); i++) {
-            char* index_path = sl_get(backend->index_paths, i);
-            asprintf_safe(&full_index_path, "%s/%s", index_path, index);
-            if (get_index_scales(full_index_path, &lo, &hi) == 0) {
-                found_index = TRUE;
-                break;
-            }
-            free(full_index_path);
-        }
-    }
-	if (!found_index) {
-		logmsg("Failed to find the index \"%s\".\n", index);
-		return -1;
-	}
-    logverb("Found index: %s\n", full_index_path);
-
-    if (!add_index(backend, full_index_path, lo, hi))
-        free(full_index_path);
-
-	return 0;
+    return 0;
 }
 
 static int parse_config_file(FILE* fconf, backend_t* backend) {
@@ -274,9 +204,32 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
 	}
 
     for (i=0; i<sl_size(indices); i++) {
+        int j;
         char* ind = sl_get(indices, i);
+        bool found = FALSE;
         logverb("Trying index %s...\n", ind);
-        if (find_index(backend, ind)) {
+
+        for (j=-1; j<sl_size(backend->index_paths); j++) {
+            char* path;
+            if (j == -1)
+                // try as an absolute or relative filename.
+                path = strdup(ind);
+            else
+                asprintf(&path, "%s/%s", sl_get(backend->index_paths, j), ind);
+
+            if (index_is_file_index(path)) {
+                if (add_index(backend, path))
+                    logmsg("Failed to add index \"%s\".\n", path);
+                else {
+                    found = TRUE;
+                    free(path);
+                    break;
+                }
+            }
+            free(path);
+        }
+        if (!found) {
+            logmsg("Couldn't find index \"%s\".\n", ind);
             rtn = -1;
             goto done;
         }
@@ -287,20 +240,18 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
         for (i=0; i<sl_size(backend->index_paths); i++) {
             char* path = sl_get(backend->index_paths, i);
             DIR* dir = opendir(path);
-            sl* trybases;
+            sl* tryinds;
             int j;
             if (!dir) {
                 SYSERROR("Failed to open directory \"%s\"", path);
                 continue;
             }
-            logverb("Auto-indexing directory %s...\n", path);
-            trybases = sl_new(16);
+            logverb("Auto-indexing directory \"%s\" ...\n", path);
+            tryinds = sl_new(16);
             while (1) {
                 struct dirent* de;
                 char* name;
-                int len;
-                int baselen;
-                char* base;
+                char* fullpath;
                 errno = 0;
                 de = readdir(dir);
                 if (!de) {
@@ -309,39 +260,28 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
                     break;
                 }
                 name = de->d_name;
-                // Look for files ending with .quad.fits
-                len = strlen(name);
-                if (len <= 10)
-                    continue;
-                baselen = len - 10;
-                if (strcmp(name + baselen, ".quad.fits"))
-                    continue;
-                base = malloc(baselen + 1);
-                memcpy(base, name, baselen);
-                base[baselen] = '\0';
 
-                sl_insert_sorted(trybases, base);
-                free(base);
-            }
-            // reverse-sort
-            for (j=sl_size(trybases)-1; j>=0; j--) {
-                char* base = sl_get(trybases, j);
-                char* fullpath;
-                double lo, hi;
-                // FIXME - look for corresponding .skdt.fits and .ckdt.fits files?
-                asprintf_safe(&fullpath, "%s/%s", path, base);
-                logverb("Trying to add index \"%s\".\n", fullpath);
-                if (get_index_scales(fullpath, &lo, &hi) == 0) {
-                    if (!add_index(backend, fullpath, lo, hi)) {
-                        free(fullpath);
-                    }
-                } else {
-                    logmsg("Failed to add index \"%s\".\n", fullpath);
+                asprintf(&fullpath, "%s/%s", path, name);
+
+                logverb("\nChecking file \"%s\"\n", fullpath);
+                if (!index_is_file_index(fullpath)) {
                     free(fullpath);
+                    continue;
+                }
+
+                sl_insert_sorted_nocopy(tryinds, fullpath);
+            }
+            closedir(dir);
+
+            // in reverse order...
+            for (j=sl_size(tryinds)-1; j>=0; j--) {
+                char* path = sl_get(tryinds, j);
+                logverb("Trying to add index \"%s\".\n", path);
+                if (add_index(backend, path)) {
+                    logmsg("Failed to add index \"%s\".\n", path);
                 }
             }
-            sl_free2(trybases);
-            closedir(dir);
+            sl_free2(tryinds);
         }
     }
 
@@ -793,7 +733,6 @@ void backend_free(backend_t* backend) {
 		for (i = 0; i < bl_size(backend->indexinfos); i++) {
 			indexinfo_t* ii = bl_access(backend->indexinfos, i);
 			free(ii->indexname);
-			free(ii->canonname);
 		}
 		bl_free(backend->indexinfos);
 	}

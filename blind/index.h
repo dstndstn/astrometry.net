@@ -68,6 +68,12 @@ typedef struct index_s index_t;
 #define INDEX_ONLY_LOAD_METADATA 2
 #define INDEX_ONLY_LOAD_SKDT     4
 
+bool index_is_file_index(const char* filename);
+
+int index_get_scale_and_id(const char* filename,
+                           double* scalelo, double* scalehi,
+                           int* indexid, int* healpix, int* hpnside);
+
 bool index_has_ids(index_t* index);
 
 /**

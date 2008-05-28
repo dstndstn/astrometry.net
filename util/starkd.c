@@ -143,6 +143,7 @@ startree_t* startree_open(char* fn) {
 	return s;
 
  bailout:
+    kdtree_fits_io_close(io);
     startree_close(s);
 	return NULL;
 }

@@ -287,7 +287,10 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
         return NULL;
     }
 
-    kd->name = strdup(treename);
+    if (treename)
+        kd->name = strdup(treename);
+    else
+        kd->name = NULL;
     kd->has_linear_lr = qfits_header_getboolean(header, "KDT_LINL", 0);
 
     if (p_hdr)
