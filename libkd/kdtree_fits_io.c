@@ -93,7 +93,10 @@ kdtree_t* kdtree_fits_read(const char* fn, const char* treename,
     }
     kd = kdtree_fits_read_tree(io, treename, p_hdr);
     if (!kd) {
-        ERROR("Failed to read kdtree %s from file %s", treename, fn);
+        if (treename)
+            ERROR("Failed to read kdtree named \"%s\" from file %s", treename, fn);
+        else
+            ERROR("Failed to read kdtree from file %s", fn);
         kdtree_fits_io_close(io);
         return NULL;
     }
@@ -284,7 +287,11 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
     header = find_tree(treename, fb, &ndim, &ndata, &nnodes, &tt, &kd->name);
     if (!header) {
         // Not found.
-        ERROR("Kdtree matching \"%s\" not found in file %s", treename, fn);
+        if (treename)
+            ERROR("Kdtree header for a tree named \"%s\" was not found in file %s", treename, fn);
+        else
+            ERROR("Kdtree header was not found in file %s", fn);
+
         FREE(kd);
         return NULL;
     }

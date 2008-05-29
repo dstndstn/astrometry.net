@@ -37,7 +37,7 @@ void printHelp(char* progname) {
 extern char *optarg;
 extern int optind, opterr, optopt;
 
-const char* OPTIONS = "hv";
+const char* OPTIONS = "hvq";
 
 int main(int argc, char** args) {
     int argchar;
@@ -52,11 +52,15 @@ int main(int argc, char** args) {
     FILE* fin;
     bool verbose = FALSE;
     char* err;
+    bool force_quad = FALSE;
 
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
         case 'v':
             verbose = TRUE;
+            break;
+        case 'q':
+            force_quad = TRUE;
             break;
 		case 'h':
 			printHelp(progname);
@@ -74,6 +78,12 @@ int main(int argc, char** args) {
     if (!strcmp(infn, outfn)) {
         printf("Sorry, in-place modification of files is not supported.\n");
         exit(-1);
+    }
+
+    if (!force_quad && ends_with(infn, ".quad.fits")) {
+        printf("\nYou don't need to fix .quad.fits files.\n"
+               "  (use the -q option to try anyway.)\n");
+        exit(1);
     }
 
     printf("Reading kdtree from file %s ...\n", infn);
