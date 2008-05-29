@@ -37,7 +37,7 @@ void printHelp(char* progname) {
 extern char *optarg;
 extern int optind, opterr, optopt;
 
-const char* OPTIONS = "h";
+const char* OPTIONS = "hv";
 
 int main(int argc, char** args) {
     int argchar;
@@ -50,9 +50,14 @@ int main(int argc, char** args) {
     int i, Next;
     FILE* fout;
     FILE* fin;
+    bool verbose = FALSE;
+    char* err;
 
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
+        case 'v':
+            verbose = TRUE;
+            break;
 		case 'h':
 			printHelp(progname);
 			exit(-1);
@@ -73,62 +78,56 @@ int main(int argc, char** args) {
 
     printf("Reading kdtree from file %s ...\n", infn);
 
-    {
-        err_t* err;
-        errors_push_state();
-        err = errors_get_state();
-        err->print = NULL;
-        err->save = TRUE;
-
-        kd = kdtree_fits_read(infn, NULL, &hdr);
-
-        if (!kd) {
-            ERROR("Failed to read kdtree from file %s", infn);
-            error_print_stack(err, stderr);
-            errors_free();
-            exit(-1);
-        }
-
-        errors_pop_state();
+    errors_start_logging_to_string();
+    kd = kdtree_fits_read(infn, NULL, &hdr);
+    err = errors_stop_logging_to_string("\n  ");
+    if (!kd) {
+        ERROR("Failed to read kdtree from file %s", infn);
+        ERROR("  %s\n", err);
+        free(err);
+        exit(-1);
     }
+    free(err);
 
     if (!kdtree_has_old_bb(kd)) {
         printf("Kdtree %s has the correct number of bounding boxes; it doesn't need fixing.\n", infn);
         exit(1);
     }
 
-    printf("Tree name: %s\n", kd->name);
-    printf("Treetype: 0x%x\n", kd->treetype);
-    printf("Data type:     %s\n", kdtree_kdtype_to_string(kdtree_datatype(kd)));
-    printf("Tree type:     %s\n", kdtree_kdtype_to_string(kdtree_treetype(kd)));
-    printf("External type: %s\n", kdtree_kdtype_to_string(kdtree_exttype(kd)));
+    if (verbose) {
+        printf("Tree name: %s\n", kd->name);
+        printf("Treetype: 0x%x\n", kd->treetype);
+        printf("Data type:     %s\n", kdtree_kdtype_to_string(kdtree_datatype(kd)));
+        printf("Tree type:     %s\n", kdtree_kdtype_to_string(kdtree_treetype(kd)));
+        printf("External type: %s\n", kdtree_kdtype_to_string(kdtree_exttype(kd)));
+        printf("N data points:  %i\n", kd->ndata);
+        printf("Dimensions:     %i\n", kd->ndim);
+        printf("Nodes:          %i\n", kd->nnodes);
+        printf("Leaf nodes:     %i\n", kd->nbottom);
+        printf("Non-leaf nodes: %i\n", kd->ninterior);
+        printf("Tree levels:    %i\n", kd->nlevels);
+        printf("Legacy nodes: %s\n", (kd->nodes  ? "yes" : "no"));
+        printf("LR array:     %s\n", (kd->lr     ? "yes" : "no"));
+        printf("Perm array:   %s\n", (kd->perm   ? "yes" : "no"));
+        printf("Bounding box: %s\n", (kd->bb.any ? "yes" : "no"));
+        printf("Split plane:  %s\n", (kd->split.any ? "yes" : "no"));
+        printf("Split dim:    %s\n", (kd->splitdim  ? "yes" : "no"));
+        printf("Data:         %s\n", (kd->data.any  ? "yes" : "no"));
 
-    printf("N data points:  %i\n", kd->ndata);
-    printf("Dimensions:     %i\n", kd->ndim);
-    printf("Nodes:          %i\n", kd->nnodes);
-    printf("Leaf nodes:     %i\n", kd->nbottom);
-    printf("Non-leaf nodes: %i\n", kd->ninterior);
-    printf("Tree levels:    %i\n", kd->nlevels);
-
-    printf("Legacy nodes: %s\n", (kd->nodes  ? "yes" : "no"));
-    printf("LR array:     %s\n", (kd->lr     ? "yes" : "no"));
-    printf("Perm array:   %s\n", (kd->perm   ? "yes" : "no"));
-    printf("Bounding box: %s\n", (kd->bb.any ? "yes" : "no"));
-    printf("Split plane:  %s\n", (kd->split.any ? "yes" : "no"));
-    printf("Split dim:    %s\n", (kd->splitdim  ? "yes" : "no"));
-    printf("Data:         %s\n", (kd->data.any  ? "yes" : "no"));
-
-    if (kd->minval && kd->maxval) {
-        int d;
-        printf("Data ranges:\n");
-        for (d=0; d<kd->ndim; d++)
-            printf("  %i: [%g, %g]\n", d, kd->minval[d], kd->maxval[d]);
+        if (kd->minval && kd->maxval) {
+            int d;
+            printf("Data ranges:\n");
+            for (d=0; d<kd->ndim; d++)
+                printf("  %i: [%g, %g]\n", d, kd->minval[d], kd->maxval[d]);
+        }
     }
 
-    printf("Computing bounding boxes...\n");
+    if (verbose)
+        printf("Computing bounding boxes...\n");
     kdtree_fix_bounding_boxes(kd);
 
-    printf("Running kdtree_check...\n");
+    if (verbose)
+        printf("Running kdtree_check...\n");
     if (kdtree_check(kd)) {
         printf("kdtree_check failed.\n");
         exit(-1);
@@ -153,14 +152,13 @@ int main(int argc, char** args) {
     }
     fits_append_long_comment(outhdr, "---------------------------------");
 
-    kd->name = strdup("tst");
-
     if (kdtree_fits_write(kd, outfn, outhdr)) {
         ERROR("Failed to write output");
         exit(-1);
     }
 
-    printf("Finding extra extensions...\n");
+    if (verbose)
+        printf("Finding extra extensions...\n");
     Next = qfits_query_n_ext(infn);
 
     fin = fopen(infn, "rb");
@@ -187,7 +185,8 @@ int main(int argc, char** args) {
                 kdtree_fits_column_is_kdtree(table->col[0].tlabel))
                 continue;
         }
-        printf("Extension %i is not part of the kdtree.  Copying it verbatim.\n", ext);
+        if (verbose)
+            printf("Extension %i is not part of the kdtree.  Copying it verbatim.\n", ext);
         if (qfits_get_hdrinfo(infn, ext, &hoffset, &hlength) ||
             qfits_get_datinfo(infn, ext, &doffset, &dlength)) {
             ERROR("Failed to get header or data offset & length for extension %i", ext);
