@@ -486,6 +486,26 @@ int main(int argc, char *argv[]) {
             exit(-1);
         }
 
+        if (tostdout) {
+            int npad = (FITS_BLOCK_SIZE -
+                        ((abs(qd.out_ptype) / 8 * qd.npix) % FITS_BLOCK_SIZE)) %
+                FITS_BLOCK_SIZE;
+            while (npad > 0) {
+                putchar('\0');
+                npad--;
+            }
+        } else {
+            fout = fopen(outfn, "ab");
+            if (!fout) {
+                SYSERROR("Failed to re-open output file %s", outfn);
+                exit(-1);
+            }
+            fits_pad_file(fout);
+            if (fclose(fout)) {
+                SYSERROR("Failed to close output file %s", outfn);
+                exit(-1);
+            }
+        }
 
     } else {    
         // Output PGM format
