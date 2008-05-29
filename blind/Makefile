@@ -438,7 +438,7 @@ solvedserver: solvedserver.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) \
 		$(QFITS_LIB)
 	$(CC) $(CFLAGS) -o $@ $^ -lm
 
-plotcat: plotcat.o catalog.o tycho2-fits.o tycho2.o usnob-fits.o usnob.o \
+plotcat: plotcat.o log.o catalog.o tycho2-fits.o tycho2.o usnob-fits.o usnob.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB)
 

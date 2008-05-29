@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <stdint.h>
 
 #include "keywords.h"
 #include "starutil.h"
@@ -33,13 +34,19 @@
 #include "rdlist.h"
 #include "boilerplate.h"
 #include "starkd.h"
+#include "errors.h"
+#include "fitsioutils.h"
+#include "qfits.h"
+#include "log.h"
 
-#define OPTIONS "bhgN:f:tsS"
+#define OPTIONS "bhgN:f:tsSo:F"
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s [-b] [-h] [-g] [-N imsize]"
-		   " <filename> [<filename> ...] > outfile.pgm\n"
+		   " <filename> [<filename> ...]"
+           "  [-o <output-file.pgm>]  (default is to stdout)\n"
+           "  [-F]: FITS image output\n"
 		   "  -h sets Hammer-Aitoff (default is an equal-area, positive-Z projection)\n"
 	       "  -S squishes Hammer-Aitoff projection to make an ellipse; height becomes N/2.\n"
 		   "  -b sets reverse (negative-Z projection)\n"
@@ -71,7 +78,7 @@ Inline void getxy(double px, double py, int W, int H,
 
 void add_ink(double* xyz, int hammer, int reverse,
 	     int* backside, int W, int H,
-	     double* projection, int value) {
+             int* projection, int value) {
   double px, py;
   int X,Y;
   if (!hammer) {
@@ -94,16 +101,14 @@ void add_ink(double* xyz, int hammer, int reverse,
     projection[X+W*Y]++;
 }
 
-int main(int argc, char *argv[])
-{
-  double *projection;
+int main(int argc, char *argv[]) {
+    int *projection;
 	char* progname = argv[0];
 	int ii,jj,numstars=0;
 	int reverse=0, hammer=0, grid=0;
 	int maxval;
 	char* fname = NULL;
 	int argchar;
-	FILE* fid;
 	qfits_header* hdr;
 	char* valstr;
 	int BLOCK = 100000;
@@ -125,10 +130,22 @@ int main(int argc, char *argv[])
 	int imgmax = 255;
 	int squish = 0;
 
+    bool fitsformat = FALSE;
+    bool tostdout = TRUE;
+    char* outfn = NULL;
+    FILE* fout;
+
 	fields = il_new(32);
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+        case 'o':
+            outfn = optarg;
+            tostdout = FALSE;
+            break;
+        case 'F':
+            fitsformat = TRUE;
+            break;
 		case 's':
 			imgmax = 65535;
 			break;
@@ -163,16 +180,15 @@ int main(int argc, char *argv[])
 			return (OPT_ERR);
 		}
 
-	if (optind == argc) {
-		printHelp(progname);
-		exit(-1);
-	}
+    log_init(LOG_MSG);
+    log_to(stderr);
+    fits_use_error_system();
 
 	if (((fieldslow == -1) && (fieldshigh != -1)) ||
 		((fieldslow != -1) && (fieldshigh == -1)) ||
 		(fieldslow > fieldshigh)) {
 		printHelp(progname);
-		fprintf(stderr, "If you specify -L you must also specify -H.\n");
+		ERROR("If you specify -L you must also specify -H.");
 		exit(-1);
 	}
 	if (fieldslow != -1) {
@@ -186,9 +202,20 @@ int main(int argc, char *argv[])
 	else
 	  H = W;
 
-	projection=calloc(sizeof(double), W*H);
+    if (tostdout)
+        fout = stdout;
+    else {
+        fout = fopen(outfn, "wb");
+        if (!fout) {
+            SYSERROR("Failed to open output file %s", outfn);
+            exit(-1);
+        }
+    }
+
+	projection=calloc(sizeof(int), W*H);
 
 	for (; optind<argc; optind++) {
+        FILE* fid;
 		int i;
 		char* key;
 		cat = NULL;
@@ -199,53 +226,53 @@ int main(int argc, char *argv[])
 		rd = NULL;
 		numstars = 0;
 		fname = argv[optind];
-		fprintf(stderr, "Reading file %s...\n", fname);
+		logmsg("Reading file %s...\n", fname);
 		fid = fopen(fname, "rb");
 		if (!fid) {
-			fprintf(stderr, "Couldn't open file %s.  (Specify the complete filename with -f <filename>)\n", fname);
+			ERROR("Couldn't open file %s.  (Specify the complete filename with -f <filename>)\n", fname);
 			exit(-1);
 		}
 		fclose(fid);
 
 		hdr = qfits_header_read(fname);
 		if (!hdr) {
-			fprintf(stderr, "Couldn't read FITS header from file %s.\n", fname);
+			ERROR("Couldn't read FITS header from file %s.\n", fname);
 			exit(-1);
 		}
 		// look for AN_FILE (Astrometry.net filetype) in the FITS header.
 		valstr = qfits_pretty_string(qfits_header_getstr(hdr, "AN_FILE"));
 		if (valstr) {
-			fprintf(stderr, "Astrometry.net file type: \"%s\".\n", valstr);
+			logmsg("Astrometry.net file type: \"%s\".\n", valstr);
 
             if (strncasecmp(valstr, AN_FILETYPE_USNOB, strlen(AN_FILETYPE_USNOB)) == 0) {
-				fprintf(stderr, "Looks like a USNOB file.\n");
+				logmsg("Looks like a USNOB file.\n");
                 usnob = usnob_fits_open(fname);
                 if (!usnob) {
-                    fprintf(stderr, "Couldn't open catalog.\n");
+                    ERROR("Couldn't open catalog.");
                     exit(-1);
                 }
                 numstars = usnob_fits_count_entries(usnob);
             } else if (strncasecmp(valstr, AN_FILETYPE_TYCHO2, strlen(AN_FILETYPE_TYCHO2)) == 0) {
-                fprintf(stderr, "Looks like a Tycho-2 file.\n");
+                logmsg("Looks like a Tycho-2 file.\n");
                 tycho = tycho2_fits_open(fname);
                 if (!tycho) {
-                    fprintf(stderr, "Couldn't open catalog.\n");
+                    ERROR("Couldn't open catalog.");
                     exit(-1);
                 }
                 numstars = tycho2_fits_count_entries(tycho);
             } else if (strncasecmp(valstr, AN_FILETYPE_CATALOG, strlen(AN_FILETYPE_CATALOG)) == 0) {
-				fprintf(stderr, "Looks like a catalog.\n");
+				logmsg("Looks like a catalog.\n");
 				cat = catalog_open(fname);
 				if (!cat) {
-					fprintf(stderr, "Couldn't open catalog.\n");
+					ERROR("Couldn't open catalog.");
 					return 1;
 				}
 				numstars = cat->numstars;
 			} else if (strncasecmp(valstr, AN_FILETYPE_STARTREE, strlen(AN_FILETYPE_STARTREE)) == 0) {
-				fprintf(stderr, "Looks like a star kdtree.\n");
+				logmsg("Looks like a star kdtree.\n");
 				skdt = startree_open(fname);
 				if (!skdt) {
-					fprintf(stderr, "Couldn't open star kdtree.\n");
+					ERROR("Couldn't open star kdtree.");
 					return 1;
 				}
 				numstars = startree_N(skdt);
@@ -254,16 +281,16 @@ int main(int argc, char *argv[])
 				rdlist_t* rdls;
 				int nfields, f;
                 int ntotal;
-				fprintf(stderr, "Looks like an rdls (RA,DEC list)\n");
+				logmsg("Looks like an rdls (RA,DEC list)\n");
 				rdls = rdlist_open(fname);
 				if (!rdls) {
-					fprintf(stderr, "Couldn't open RDLS file.\n");
+					ERROR("Couldn't open RDLS file.");
 					return 1;
 				}
 				nfields = il_size(fields);
 				if (!nfields) {
 					nfields = rdlist_n_fields(rdls);
-					fprintf(stderr, "Plotting all %i fields.\n", nfields);
+					logmsg("Plotting all %i fields.\n", nfields);
 				}
                 rds = pl_new(nfields);
                 ntotal = 0;
@@ -276,10 +303,10 @@ int main(int argc, char *argv[])
 						fld = f;
                     thisrd = rdlist_read_field_num(rdls, fld, NULL);
                     if (!thisrd) {
-						fprintf(stderr, "Failed to open extension %i in RDLS file %s.\n", fld, fname);
+						ERROR("Failed to open extension %i in RDLS file %s.\n", fld, fname);
                         return 1;
                     }
-					fprintf(stderr, "Field %i has %i entries.\n", fld, rd_n(thisrd));
+					logmsg("Field %i has %i entries.\n", fld, rd_n(thisrd));
                     ntotal += rd_n(thisrd);
                     pl_append(rds, thisrd);
 				}
@@ -302,7 +329,7 @@ int main(int argc, char *argv[])
                 pl_free(rds);
 
 			} else {
-				fprintf(stderr, "Unknown Astrometry.net file type: \"%s\".\n", valstr);
+				ERROR("Unknown Astrometry.net file type: \"%s\".\n", valstr);
 				exit(-1);
 			}
 		}
@@ -310,10 +337,10 @@ int main(int argc, char *argv[])
 		key = qfits_header_findmatch(hdr, "AN_CAT");
 		if (key) {
 			if (qfits_header_getboolean(hdr, key, 0)) {
-				fprintf(stderr, "File has AN_CATALOG = T header.\n");
+				logmsg("File has AN_CATALOG = T header.\n");
 				ancat = an_catalog_open(fname);
 				if (!ancat) {
-					fprintf(stderr, "Couldn't open catalog.\n");
+					ERROR("Couldn't open catalog.");
 					exit(-1);
 				}
 				numstars = an_catalog_count_entries(ancat);
@@ -322,18 +349,18 @@ int main(int argc, char *argv[])
 		}
 		qfits_header_destroy(hdr);
 		if (!(cat || skdt || ancat || usnob || tycho || rd)) {
-			fprintf(stderr, "I can't figure out what kind of file %s is.\n", fname);
+			ERROR("I can't figure out what kind of file %s is.\n", fname);
 			exit(-1);
 		}
 
-		fprintf(stderr, "Reading %i stars...\n", numstars);
+		logmsg("Reading %i stars...\n", numstars);
 
 		for (i=0; i<numstars; i++) {
 			if (is_power_of_two(i+1)) {
 				if (backside) {
-					fprintf(stderr, "%i stars project onto the opposite hemisphere.\n", backside);
+					logmsg("%i stars project onto the opposite hemisphere.\n", backside);
 				}
-				fprintf(stderr,"  done %u/%u stars\r",i+1,numstars);
+				logmsg("  done %u of %u stars\r", i+1, numstars);
 			}
 
 			if (cat) {
@@ -344,7 +371,7 @@ int main(int argc, char *argv[])
 			  xyz[2] = sxyz[2];
 			} else if (skdt) {
 				if (startree_get(skdt, i, xyz)) {
-					fprintf(stderr, "Failed to read star %i from star kdtree.\n", i);
+					ERROR("Failed to read star %i from star kdtree.\n", i);
 					exit(-1);
 				}
 			} else if (rd) {
@@ -382,11 +409,14 @@ int main(int argc, char *argv[])
 		if (tycho)
 			tycho2_fits_close(tycho);
 	}
+	il_free(fields);
+    logmsg("\n");
 
 	maxval = 0;
 	for (ii = 0; ii < (W*H); ii++)
 		if (projection[ii] > maxval)
 			maxval = projection[ii];
+    logmsg("Maximum value is %i\n", maxval);
 
 	if (grid) {
 		/* Draw a line for ra=-160...+160 in 10 degree sections */
@@ -417,31 +447,84 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	// Output PGM format
-	printf("P5 %d %d %d\n", W, H, imgmax);
-	// hack - we reuse the "projection" storage to store the image data:
-	if (imgmax == 255) {
-		img = (unsigned char*)projection;
-		for (ii=0; ii<(W*H); ii++)
-			img[ii] = (int)((double)imgmax * projection[ii] / (double)maxval);
-		if (fwrite(img, 1, W*H, stdout) != (W*H)) {
-			fprintf(stderr, "Failed to write image: %s\n", strerror(errno));
-			exit(-1);
-		}
-	} else {
-		uint16_t* img = (uint16_t*)projection;
-		for (ii=0; ii<(W*H); ii++) {
-			img[ii] = (int)((double)imgmax * projection[ii] / (double)maxval);
-			img[ii] = htons(img[ii]);
-		}
-		if (fwrite(img, 2, W*H, stdout) != (W*H)) {
-			fprintf(stderr, "Failed to write image: %s\n", strerror(errno));
-			exit(-1);
-		}
-	}
-	free(projection);
+    if (fitsformat) {
+        qfitsdumper qd;
+        qfits_header* header;
 
-	il_free(fields);
+        if (tostdout)
+            qd.filename = "STDOUT";
+        else
+            qd.filename = outfn;
+        qd.npix = W*H;
+        qd.ptype = PTYPE_INT;
+        qd.ibuf = projection;
+        if (maxval <= UINT8_MAX)
+            qd.out_ptype = BPP_8_UNSIGNED;
+        else if (maxval <= INT16_MAX)
+            qd.out_ptype = BPP_16_SIGNED;
+        else
+            qd.out_ptype = BPP_32_SIGNED;
+
+        header = fits_get_header_for_image(&qd, W, NULL);
+
+        fits_add_long_history(header, "Created by the 'plotcat' program, with command-line args:");
+        fits_add_args(header, argv, argc);
+        fits_add_long_history(header, "--(end of command-line args)--");
+        boilerplate_add_fits_headers(hdr);
+        fits_header_add_int(header, "MAXVAL", maxval, "Maximum pixel value in image");
+
+        if (qfits_header_dump(header, fout)) {
+            ERROR("Failed to write header to output");
+            exit(-1);
+        }
+        qfits_header_destroy(header);
+
+        if (!tostdout) {
+            if (fclose(fout)) {
+                SYSERROR("Failed to close output file %s", outfn);
+                exit(-1);
+            }
+        }
+
+        if (qfits_pixdump(&qd)) {
+            ERROR("Failed to dump image pixels");
+            exit(-1);
+        }
+
+
+    } else {    
+        // Output PGM format
+        fprintf(fout, "P5 %d %d %d\n", W, H, imgmax);
+        // hack - we reuse the "projection" storage to store the image data:
+        if (imgmax == 255) {
+            img = (unsigned char*)projection;
+            for (ii=0; ii<(W*H); ii++)
+                img[ii] = (int)((double)imgmax * projection[ii] / (double)maxval);
+            if (fwrite(img, 1, W*H, fout) != (W*H)) {
+                ERROR("Failed to write image: %s\n", strerror(errno));
+                exit(-1);
+            }
+        } else {
+            uint16_t* img = (uint16_t*)projection;
+            for (ii=0; ii<(W*H); ii++) {
+                img[ii] = (int)((double)imgmax * projection[ii] / (double)maxval);
+                img[ii] = htons(img[ii]);
+            }
+            if (fwrite(img, 2, W*H, fout) != (W*H)) {
+                ERROR("Failed to write image: %s\n", strerror(errno));
+                exit(-1);
+            }
+        }
+
+        if (!tostdout) {
+            if (fclose(fout)) {
+                SYSERROR("Failed to close output file %s", outfn);
+                exit(-1);
+            }
+        }
+
+    }
+    free(projection);
 
 	return 0;
 }
