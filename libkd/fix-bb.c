@@ -92,8 +92,8 @@ int main(int argc, char** args) {
     kd = kdtree_fits_read(infn, NULL, &hdr);
     err = errors_stop_logging_to_string("\n  ");
     if (!kd) {
-        ERROR("Failed to read kdtree from file %s", infn);
-        ERROR("  %s\n", err);
+        printf("Failed to read kdtree from file %s:\n", infn);
+        printf("  %s\n", err);
         free(err);
         exit(-1);
     }
