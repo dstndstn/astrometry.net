@@ -36,6 +36,20 @@ static void errfunc(char* errstr) {
     report_error("qfits", -1, "%s", errstr);
 }
 
+qfits_header* fits_get_header_for_image(qfitsdumper* qd, int W,
+                                        qfits_header* addtoheader) {
+    qfits_header* hdr;
+    if (addtoheader)
+        hdr = addtoheader;
+    else
+        hdr = qfits_header_default();
+    fits_header_add_int(hdr, "BITPIX", qd->out_ptype, "bits per pixel");
+    fits_header_add_int(hdr, "NAXIS", 2, "number of axes");
+    fits_header_add_int(hdr, "NAXIS1", W, "image width");
+    fits_header_add_int(hdr, "NAXIS2", qd->npix / W, "image height");
+    return hdr;
+}
+
 void fits_use_error_system() {
     qfits_err_remove_all();
     qfits_err_register(errfunc);

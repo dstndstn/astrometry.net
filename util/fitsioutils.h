@@ -133,6 +133,9 @@ qfits_table* fits_get_table_column(const char* fn, const char* colname, int* pco
 int fits_add_column(qfits_table* table, int column, tfits_type type,
 					int ncopies, const char* units, const char* label);
 
+qfits_header* fits_get_header_for_image(qfitsdumper* qd, int W,
+                                        qfits_header* addtoheader);
+
 /**
  Converts data between different FITS types.
 
