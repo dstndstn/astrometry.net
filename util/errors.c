@@ -135,15 +135,16 @@ void errors_print_stack(FILE* f) {
     error_print_stack(errors_get_state(), f);
 }
 
-void report_error(const char* modfile, int modline, const char* fmt, ...) {
+void report_error(const char* modfile, int modline,
+                  const char* modfunc, const char* fmt, ...) {
     va_list va;
     va_start(va, fmt);
-    error_reportv(errors_get_state(), modfile, modline, fmt, va);
+    error_reportv(errors_get_state(), modfile, modline, modfunc, fmt, va);
     va_end(va);
 }
 
 void report_errno() {
-    error_report(errors_get_state(), "system", -1, "%s", strerror(errno));
+    error_report(errors_get_state(), "system", -1, "", "%s", strerror(errno));
 }
 
 err_t* error_new() {
@@ -168,26 +169,28 @@ char* error_get_errstr(err_t* e, int i) {
     return sl_get(e->errstack, i);
 }
 
-void error_report(err_t* e, const char* module, int line, const char* fmt, ...) {
+void error_report(err_t* e, const char* module, int line, const char* func, 
+                  const char* fmt, ...) {
     va_list va;
     va_start(va, fmt);
-    error_reportv(errors_get_state(), module, line, fmt, va);
+    error_reportv(errors_get_state(), module, line, func, fmt, va);
     va_end(va);
 }
 
-void error_reportv(err_t* e, const char* module, int line, const char* fmt, va_list va) {
+void error_reportv(err_t* e, const char* module, int line,
+                   const char* func, const char* fmt, va_list va) {
     if (e->print) {
         if (line == -1)
             fprintf(e->print, "%s: ", module);
         else
-            fprintf(e->print, "%s:%i: ", module, line);
+            fprintf(e->print, "%s:%i:%s: ", module, line, func);
         vfprintf(e->print, fmt, va);
         fprintf(e->print, "\n");
     }
     if (e->save) {
         sl_appendvf(e->errstack, fmt, va);
         if (line >= 0) {
-            sl_appendf(e->modstack, "%s:%i", module, line);
+            sl_appendf(e->modstack, "%s:%i:%s", module, line, func);
         } else {
             sl_appendf(e->modstack, "%s", module);
         }
@@ -196,7 +199,6 @@ void error_reportv(err_t* e, const char* module, int line, const char* fmt, va_l
 
 void error_print_stack(err_t* e, FILE* f) {
     int i;
-    //for (i=0; i<sl_size(e->modstack); i++) {
     for (i=sl_size(e->modstack)-1; i>=0; i--) {
         char* mod = sl_get(e->modstack, i);
         char* err = sl_get(e->errstack, i);

@@ -488,8 +488,9 @@ int main(int argc, char *argv[]) {
 
         if (tostdout) {
             int npad = (FITS_BLOCK_SIZE -
-                        ((abs(qd.out_ptype) / 8 * qd.npix) % FITS_BLOCK_SIZE)) %
+                        ((abs(qd.out_ptype)/8 * qd.npix) % FITS_BLOCK_SIZE)) %
                 FITS_BLOCK_SIZE;
+            logmsg("Padding with %i bytes\n", npad);
             while (npad > 0) {
                 putchar('\0');
                 npad--;

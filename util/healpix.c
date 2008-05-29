@@ -644,7 +644,7 @@ unsigned int xyztohealpix(double x, double y, double z, unsigned int Nside) {
 		}
 
 		phit = fmod(phi, pi / 2.0);
-		assert (phit >= 0.00);
+		assert (phit >= 0.0);
 
 		root = (1.0 - z*zfactor) * 3.0 * mysquare(Nside * (2.0 * phit - pi) / pi);
 		if (root <= 0.0)

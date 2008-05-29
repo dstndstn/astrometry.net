@@ -203,7 +203,7 @@ int main(int argc, char** args) {
 		printf("Opening catalog file %s...\n", infn);
 		hdr = qfits_header_read(infn);
 		if (!hdr) {
-			ERROR("Couldn't read FITS header in file %s.\n", infn);
+			ERROR("Couldn't read FITS header from file %s.\n", infn);
 			exit(-1);
 		}
 		is_usnob = qfits_header_getboolean(hdr, "USNOB", 0);
@@ -258,7 +258,9 @@ int main(int argc, char** args) {
 		if (usnob) {
 			usnob_entry* entry;
 			int N = usnob_fits_count_entries(usnob);
+			int anSpikesFound = 0;
 			int spikesFound = 0;
+            int tychoStars = 0;
 			printf("Reading %i entries from USNO-B catalog file %s\n", N, infn);
 			for (i=0; i<N; i++) {
 				int ob, j;
@@ -272,14 +274,18 @@ int main(int argc, char** args) {
 					ERROR("Failed to read USNO-B entry.\n");
 					exit(-1);
 				}
-				if (!entry->ndetections)
+				if (!entry->ndetections) {
 					// Tycho-2 star.  Ignore it.
+                    tychoStars++;
 					continue;
-				if (entry->diffraction_spike)
+                }
+				if (entry->diffraction_spike) {
 					// may be a diffraction spike.  Ignore it.
-					continue;
-				if (entry->an_diffraction_spike) {
 					spikesFound++;
+					continue;
+                }
+				if (entry->an_diffraction_spike) {
+					anSpikesFound++;
 					continue;
 				}
 
@@ -324,7 +330,9 @@ int main(int argc, char** args) {
 			}
 			usnob_fits_close(usnob);
 			printf("\n");
-			printf("spikes found: %d\n", spikesFound);
+			printf("Tycho-2 stars ignored: %d\n", tychoStars);
+			printf("USNOB diffraction spikes ignored: %d\n", spikesFound);
+			printf("Astrometry.net diffraction spikes ignored: %d\n", anSpikesFound);
 
 		} else if (tycho) {
 			tycho2_entry* entry;
@@ -484,9 +492,6 @@ int main(int argc, char** args) {
 		// update and sync each output file...
 		for (i=0; i<HP; i++) {
 			if (!cats[i]) continue;
-			if (an_catalog_fix_headers(cats[i])) {
-				ERROR("Error fixing the header or closing AN catalog for healpix %i.\n", i);
-			}
             an_catalog_sync(cats[i]);
 		}
 	}
@@ -495,9 +500,9 @@ int main(int argc, char** args) {
 		   nusnob, ntycho, n2mass);
 
 	for (i=0; i<HP; i++) {
-        qfits_header* hdr;
+        //qfits_header* hdr;
 		if (!cats[i]) continue;
-        hdr = an_catalog_get_primary_header(cats[i]);
+        //hdr = an_catalog_get_primary_header(cats[i]);
 		//fits_header_mod_int(hdr, "NOBJS", an_catalog_count_entries(cats[i]), "Number of objects in this catalog.");
 		if (an_catalog_fix_headers(cats[i]) ||
 			an_catalog_close(cats[i])) {

@@ -24,4 +24,13 @@ char* canonicalize_file_name(const char* fn);
 // This is actually in POSIX1b but may or may not be available.
 int fdatasync(int fd);
 
+// As suggested in http://gcc.gnu.org/onlinedocs/gcc-4.3.0/gcc/Function-Names.html
+#if __STDC_VERSION__ < 199901L
+# if __GNUC__ >= 2
+#  define __func__ __FUNCTION__
+# else
+#  define __func__ "<unknown>"
+# endif
+#endif
+
 #endif

@@ -27,6 +27,7 @@
 #include "fitsioutils.h"
 #include "starutil.h"
 #include "gnu-specific.h"
+#include "errors.h"
 
 // This is a naughty preprocessor function because it uses variables
 // declared in the scope from which it is called.
@@ -112,11 +113,24 @@ qfits_header* an_catalog_get_primary_header(const an_catalog* cat) {
 int an_catalog_sync(an_catalog* cat) {
     FILE* fid = cat->fid;
     off_t offset = ftello(fid);
+    if (offset == -1) {
+        SYSERROR("Failed to get file offset while syncing file %s", cat->fn);
+        return -1;
+    }
     if (fits_pad_file(fid) ||
         fdatasync(fileno(fid))) {
-        fprintf(stderr, "Error padding and syncing AN catalog file for file %s\n", cat->fn);
+        SYSERROR("Error padding and syncing AN catalog file for file %s", cat->fn);
+        return -1;
     }
-    fseeko(fid, offset, SEEK_SET);
+    if (an_catalog_fix_headers(cat)) {
+        ERROR("Error fixing headers while syncing AN catalog file %s", cat->fn);
+        return -1;
+    }
+    
+    if (fseeko(fid, offset, SEEK_SET)) {
+        SYSERROR("Failed to seek back to the end of the file while syncing file %s", cat->fn);
+        return -1;
+    }
     return 0;
 }
 
