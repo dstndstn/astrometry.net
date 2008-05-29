@@ -1,20 +1,20 @@
 /*
-  This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+ This file is part of the Astrometry.net suite.
+ Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
 
-  The Astrometry.net suite is free software; you can redistribute
-  it and/or modify it under the terms of the GNU General Public License
-  as published by the Free Software Foundation, version 2.
+ The Astrometry.net suite is free software; you can redistribute
+ it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, version 2.
 
-  The Astrometry.net suite is distributed in the hope that it will be
-  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
+ The Astrometry.net suite is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the Astrometry.net suite ; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-*/
+ You should have received a copy of the GNU General Public License
+ along with the Astrometry.net suite ; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #include <math.h>
 #include <errno.h>
@@ -77,28 +77,28 @@ Inline void getxy(double px, double py, int W, int H,
 }
 
 void add_ink(double* xyz, int hammer, int reverse,
-	     int* backside, int W, int H,
+             int* backside, int W, int H,
              int* projection, int value) {
-  double px, py;
-  int X,Y;
-  if (!hammer) {
-    double z = xyz[2];
-    if ((z <= 0 && !reverse) || (z >= 0 && reverse)) {
-      (*backside)++;
-      return;
+    double px, py;
+    int X,Y;
+    if (!hammer) {
+        double z = xyz[2];
+        if ((z <= 0 && !reverse) || (z >= 0 && reverse)) {
+            (*backside)++;
+            return;
+        }
+        if (reverse)
+            z = -z;
+        project_equal_area(xyz[0], xyz[1], z, &px, &py);
+    } else {
+        /* Hammer-Aitoff projection */
+        project_hammer_aitoff_x(xyz[0], xyz[1], xyz[2], &px, &py);
     }
-    if (reverse)
-      z = -z;
-    project_equal_area(xyz[0], xyz[1], z, &px, &py);
-  } else {
-    /* Hammer-Aitoff projection */
-    project_hammer_aitoff_x(xyz[0], xyz[1], xyz[2], &px, &py);
-  }
-  getxy(px, py, W, H, &X, &Y);
-  if (value)
-    projection[X+W*Y] = value;
-  else
-    projection[X+W*Y]++;
+    getxy(px, py, W, H, &X, &Y);
+    if (value)
+        projection[X+W*Y] = value;
+    else
+        projection[X+W*Y]++;
 }
 
 int main(int argc, char *argv[]) {
@@ -110,7 +110,6 @@ int main(int argc, char *argv[]) {
 	char* fname = NULL;
 	int argchar;
 	qfits_header* hdr;
-	char* valstr;
 	int BLOCK = 100000;
 	catalog* cat;
 	startree_t* skdt;
@@ -122,7 +121,7 @@ int main(int argc, char *argv[]) {
 	int backside = 0;
 	int W = 3000, H;
 	unsigned char* img;
-	  double xyz[3];
+    double xyz[3];
 
 	int fieldslow = -1;
 	int fieldshigh = -1;
@@ -137,6 +136,11 @@ int main(int argc, char *argv[]) {
 
 	fields = il_new(32);
 
+    if (argc == 1) {
+		printHelp(progname);
+        exit(0);
+    }
+
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
         case 'o':
@@ -150,8 +154,8 @@ int main(int argc, char *argv[]) {
 			imgmax = 65535;
 			break;
 		case 'S':
-		  squish = 1;
-		  break;
+            squish = 1;
+            break;
 		case 'b':
 			reverse = 1;
 			break;
@@ -162,8 +166,8 @@ int main(int argc, char *argv[]) {
 			grid = 1;
 			break;
 		case 'N':
-		  W=(int)strtoul(optarg, NULL, 0);
-		  break;
+            W=(int)strtoul(optarg, NULL, 0);
+            break;
 		case 'f':
 			il_append(fields, atoi(optarg));
 			break;
@@ -198,9 +202,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (squish)
-	  H = W/2;
+        H = W/2;
 	else
-	  H = W;
+        H = W;
 
     if (tostdout)
         fout = stdout;
@@ -215,9 +219,9 @@ int main(int argc, char *argv[]) {
 	projection=calloc(sizeof(int), W*H);
 
 	for (; optind<argc; optind++) {
-        FILE* fid;
 		int i;
-		char* key;
+        char* filetype;
+
 		cat = NULL;
 		skdt = NULL;
 		ancat = NULL;
@@ -227,12 +231,6 @@ int main(int argc, char *argv[]) {
 		numstars = 0;
 		fname = argv[optind];
 		logmsg("Reading file %s...\n", fname);
-		fid = fopen(fname, "rb");
-		if (!fid) {
-			ERROR("Couldn't open file %s.  (Specify the complete filename with -f <filename>)\n", fname);
-			exit(-1);
-		}
-		fclose(fid);
 
 		hdr = qfits_header_read(fname);
 		if (!hdr) {
@@ -240,212 +238,209 @@ int main(int argc, char *argv[]) {
 			exit(-1);
 		}
 		// look for AN_FILE (Astrometry.net filetype) in the FITS header.
-		valstr = qfits_pretty_string(qfits_header_getstr(hdr, "AN_FILE"));
-		if (valstr) {
-			logmsg("Astrometry.net file type: \"%s\".\n", valstr);
+		filetype = qfits_pretty_string(qfits_header_getstr(hdr, "AN_FILE"));
 
-            if (strncasecmp(valstr, AN_FILETYPE_USNOB, strlen(AN_FILETYPE_USNOB)) == 0) {
-				logmsg("Looks like a USNOB file.\n");
-                usnob = usnob_fits_open(fname);
-                if (!usnob) {
-                    ERROR("Couldn't open catalog.");
+		if (filetype)
+			logmsg("Astrometry.net file type: \"%s\".\n", filetype);
+
+        if (filetype && !strcasecmp(filetype, AN_FILETYPE_USNOB)) {
+            logmsg("Looks like a USNOB file.\n");
+            usnob = usnob_fits_open(fname);
+            if (!usnob) {
+                ERROR("Couldn't open catalog.");
+                exit(-1);
+            }
+            numstars = usnob_fits_count_entries(usnob);
+        } else if (filetype && !strcasecmp(filetype, AN_FILETYPE_TYCHO2)) {
+            logmsg("Looks like a Tycho-2 file.\n");
+            tycho = tycho2_fits_open(fname);
+            if (!tycho) {
+                ERROR("Couldn't open catalog.");
+                exit(-1);
+            }
+            numstars = tycho2_fits_count_entries(tycho);
+        } else if (filetype && !strcasecmp(filetype, AN_FILETYPE_CATALOG)) {
+            logmsg("Looks like a catalog.\n");
+            cat = catalog_open(fname);
+            if (!cat) {
+                ERROR("Couldn't open catalog.");
+                return 1;
+            }
+            numstars = cat->numstars;
+        } else if (filetype && !strcasecmp(filetype, AN_FILETYPE_STARTREE)) {
+            logmsg("Looks like a star kdtree.\n");
+            skdt = startree_open(fname);
+            if (!skdt) {
+                ERROR("Couldn't open star kdtree.");
+                return 1;
+            }
+            numstars = startree_N(skdt);
+        } else if ((filetype && !strcasecmp(filetype, AN_FILETYPE_ANCAT)) ||
+                   (qfits_header_getboolean(hdr, "AN_CAT", 0))) {
+            // "AN_CATALOG" gets truncated...
+            logmsg("Looks like an Astrometry.net catalog.\n");
+            ancat = an_catalog_open(fname);
+            if (!ancat) {
+                ERROR("Couldn't open catalog.");
+                exit(-1);
+            }
+            numstars = an_catalog_count_entries(ancat);
+            an_catalog_set_blocksize(ancat, BLOCK);
+        } else if (filetype && !strcasecmp(filetype, AN_FILETYPE_RDLS)) {
+            pl* rds;
+            rdlist_t* rdls;
+            int nfields, f;
+            int ntotal;
+            logmsg("Looks like an rdls (RA,DEC list)\n");
+            rdls = rdlist_open(fname);
+            if (!rdls) {
+                ERROR("Couldn't open RDLS file.");
+                return 1;
+            }
+            nfields = il_size(fields);
+            if (!nfields) {
+                nfields = rdlist_n_fields(rdls);
+                logmsg("Plotting all %i fields.\n", nfields);
+            }
+            rds = pl_new(nfields);
+            ntotal = 0;
+            for (f=1; f<=nfields; f++) {
+                int fld;
+                rd_t* thisrd;
+                if (il_size(fields))
+                    fld = il_get(fields, f-1);
+                else
+                    fld = f;
+                thisrd = rdlist_read_field_num(rdls, fld, NULL);
+                if (!thisrd) {
+                    ERROR("Failed to open extension %i in RDLS file %s.\n", fld, fname);
+                    return 1;
+                }
+                logmsg("Field %i has %i entries.\n", fld, rd_n(thisrd));
+                ntotal += rd_n(thisrd);
+                pl_append(rds, thisrd);
+            }
+            rdlist_close(rdls);
+            numstars = ntotal;
+            // merge all the rd_t data.
+            if (pl_size(rds) == 1) {
+                rd = pl_get(rds, 0);
+            } else {
+                int j;
+                int nsofar = 0;
+                rd = rd_alloc(ntotal);
+                for (j=0; j<pl_size(rds); j++) {
+                    rd_t* thisrd = pl_get(rds, j);
+                    rd_copy(rd, nsofar, thisrd, 0, rd_n(thisrd));
+                    nsofar += rd_n(thisrd);
+                    rd_free(thisrd);
+                }
+            }
+            pl_free(rds);
+                
+        } else {
+            ERROR("Unknown Astrometry.net file type: \"%s\".\n", filetype);
+            exit(-1);
+        }
+
+        qfits_header_destroy(hdr);
+        if (!(cat || skdt || ancat || usnob || tycho || rd)) {
+            ERROR("I can't figure out what kind of file %s is.\n", fname);
+            exit(-1);
+        }
+
+        logmsg("Reading %i stars...\n", numstars);
+
+        for (i=0; i<numstars; i++) {
+            if (is_power_of_two(i+1)) {
+                if (backside) {
+                    logmsg("%i stars project onto the opposite hemisphere.\n", backside);
+                }
+                logmsg("  done %u of %u stars\r", i+1, numstars);
+            }
+
+            if (cat) {
+                double* sxyz;
+                sxyz = catalog_get_star(cat, i);
+                xyz[0] = sxyz[0];
+                xyz[1] = sxyz[1];
+                xyz[2] = sxyz[2];
+            } else if (skdt) {
+                if (startree_get(skdt, i, xyz)) {
+                    ERROR("Failed to read star %i from star kdtree.\n", i);
                     exit(-1);
                 }
-                numstars = usnob_fits_count_entries(usnob);
-            } else if (strncasecmp(valstr, AN_FILETYPE_TYCHO2, strlen(AN_FILETYPE_TYCHO2)) == 0) {
-                logmsg("Looks like a Tycho-2 file.\n");
-                tycho = tycho2_fits_open(fname);
-                if (!tycho) {
-                    ERROR("Couldn't open catalog.");
-                    exit(-1);
-                }
-                numstars = tycho2_fits_count_entries(tycho);
-            } else if (strncasecmp(valstr, AN_FILETYPE_CATALOG, strlen(AN_FILETYPE_CATALOG)) == 0) {
-				logmsg("Looks like a catalog.\n");
-				cat = catalog_open(fname);
-				if (!cat) {
-					ERROR("Couldn't open catalog.");
-					return 1;
-				}
-				numstars = cat->numstars;
-			} else if (strncasecmp(valstr, AN_FILETYPE_STARTREE, strlen(AN_FILETYPE_STARTREE)) == 0) {
-				logmsg("Looks like a star kdtree.\n");
-				skdt = startree_open(fname);
-				if (!skdt) {
-					ERROR("Couldn't open star kdtree.");
-					return 1;
-				}
-				numstars = startree_N(skdt);
-			} else if (strncasecmp(valstr, AN_FILETYPE_RDLS, strlen(AN_FILETYPE_RDLS)) == 0) {
-                pl* rds;
-				rdlist_t* rdls;
-				int nfields, f;
-                int ntotal;
-				logmsg("Looks like an rdls (RA,DEC list)\n");
-				rdls = rdlist_open(fname);
-				if (!rdls) {
-					ERROR("Couldn't open RDLS file.");
-					return 1;
-				}
-				nfields = il_size(fields);
-				if (!nfields) {
-					nfields = rdlist_n_fields(rdls);
-					logmsg("Plotting all %i fields.\n", nfields);
-				}
-                rds = pl_new(nfields);
-                ntotal = 0;
-				for (f=1; f<=nfields; f++) {
-					int fld;
-                    rd_t* thisrd;
-					if (il_size(fields))
-						fld = il_get(fields, f-1);
-					else
-						fld = f;
-                    thisrd = rdlist_read_field_num(rdls, fld, NULL);
-                    if (!thisrd) {
-						ERROR("Failed to open extension %i in RDLS file %s.\n", fld, fname);
-                        return 1;
-                    }
-					logmsg("Field %i has %i entries.\n", fld, rd_n(thisrd));
-                    ntotal += rd_n(thisrd);
-                    pl_append(rds, thisrd);
-				}
-				rdlist_close(rdls);
-				numstars = ntotal;
-                // merge all the rd_t data.
-                if (pl_size(rds) == 1) {
-                    rd = pl_get(rds, 0);
-                } else {
-                    int j;
-                    int nsofar = 0;
-                    rd = rd_alloc(ntotal);
-                    for (j=0; j<pl_size(rds); j++) {
-                        rd_t* thisrd = pl_get(rds, j);
-                        rd_copy(rd, nsofar, thisrd, 0, rd_n(thisrd));
-                        nsofar += rd_n(thisrd);
-                        rd_free(thisrd);
-                    }
-                }
-                pl_free(rds);
+            } else if (rd) {
+                double ra, dec;
+                ra  = rd_getra (rd, i);
+                dec = rd_getdec(rd, i);
+                radecdeg2xyzarr(ra, dec, xyz);
+            } else if (ancat) {
+                an_entry* entry = an_catalog_read_entry(ancat);
+                radecdeg2xyzarr(entry->ra, entry->dec, xyz);
+            } else if (usnob) {
+                usnob_entry* entry = usnob_fits_read_entry(usnob);
+                if (notycho && (entry->ndetections == 0))
+                    continue;
+                radecdeg2xyzarr(entry->ra, entry->dec, xyz);
+            } else if (tycho) {
+                tycho2_entry* entry = tycho2_fits_read_entry(tycho);
+                radecdeg2xyzarr(entry->ra, entry->dec, xyz);
+            }
 
-			} else {
-				ERROR("Unknown Astrometry.net file type: \"%s\".\n", valstr);
-				exit(-1);
-			}
-		}
-		// "AN_CATALOG" gets truncated...
-		key = qfits_header_findmatch(hdr, "AN_CAT");
-		if (key) {
-			if (qfits_header_getboolean(hdr, key, 0)) {
-				logmsg("File has AN_CATALOG = T header.\n");
-				ancat = an_catalog_open(fname);
-				if (!ancat) {
-					ERROR("Couldn't open catalog.");
-					exit(-1);
-				}
-				numstars = an_catalog_count_entries(ancat);
-				an_catalog_set_blocksize(ancat, BLOCK);
-			}
-		}
-		qfits_header_destroy(hdr);
-		if (!(cat || skdt || ancat || usnob || tycho || rd)) {
-			ERROR("I can't figure out what kind of file %s is.\n", fname);
-			exit(-1);
-		}
+            add_ink(xyz, hammer, reverse, &backside, W, H, projection, 0);
+        }
 
-		logmsg("Reading %i stars...\n", numstars);
-
-		for (i=0; i<numstars; i++) {
-			if (is_power_of_two(i+1)) {
-				if (backside) {
-					logmsg("%i stars project onto the opposite hemisphere.\n", backside);
-				}
-				logmsg("  done %u of %u stars\r", i+1, numstars);
-			}
-
-			if (cat) {
-			  double* sxyz;
-			  sxyz = catalog_get_star(cat, i);
-			  xyz[0] = sxyz[0];
-			  xyz[1] = sxyz[1];
-			  xyz[2] = sxyz[2];
-			} else if (skdt) {
-				if (startree_get(skdt, i, xyz)) {
-					ERROR("Failed to read star %i from star kdtree.\n", i);
-					exit(-1);
-				}
-			} else if (rd) {
-				double ra, dec;
-				ra  = rd_getra (rd, i);
-				dec = rd_getdec(rd, i);
-				radecdeg2xyzarr(ra, dec, xyz);
-			} else if (ancat) {
-			  an_entry* entry = an_catalog_read_entry(ancat);
-			  radecdeg2xyzarr(entry->ra, entry->dec, xyz);
-			} else if (usnob) {
-			  usnob_entry* entry = usnob_fits_read_entry(usnob);
-			  if (notycho && (entry->ndetections == 0))
-			    continue;
-			  radecdeg2xyzarr(entry->ra, entry->dec, xyz);
-			} else if (tycho) {
-			  tycho2_entry* entry = tycho2_fits_read_entry(tycho);
-			  radecdeg2xyzarr(entry->ra, entry->dec, xyz);
-			}
-
-			add_ink(xyz, hammer, reverse, &backside, W, H, projection, 0);
-
-		}
-
-		if (cat)
-			catalog_close(cat);
-		if (skdt)
-			startree_close(skdt);
-		if (rd)
+        if (cat)
+            catalog_close(cat);
+        if (skdt)
+            startree_close(skdt);
+        if (rd)
             rd_free(rd);
-		if (ancat)
-			an_catalog_close(ancat);
-		if (usnob)
-			usnob_fits_close(usnob);
-		if (tycho)
-			tycho2_fits_close(tycho);
-	}
-	il_free(fields);
+        if (ancat)
+            an_catalog_close(ancat);
+        if (usnob)
+            usnob_fits_close(usnob);
+        if (tycho)
+            tycho2_fits_close(tycho);
+    }
+    il_free(fields);
     logmsg("\n");
 
-	maxval = 0;
-	for (ii = 0; ii < (W*H); ii++)
-		if (projection[ii] > maxval)
-			maxval = projection[ii];
+    maxval = 0;
+    for (ii = 0; ii < (W*H); ii++)
+        if (projection[ii] > maxval)
+            maxval = projection[ii];
     logmsg("Maximum value is %i\n", maxval);
 
-	if (grid) {
-		/* Draw a line for ra=-160...+160 in 10 degree sections */
-		for (ii=-160; ii <= 160; ii+= 10) {
-			int RES = 10000;
-			for (jj=-RES; jj<RES; jj++) {
-				/* Draw a bunch of points for dec -90...90*/
+    if (grid) {
+        /* Draw a line for ra=-160...+160 in 10 degree sections */
+        for (ii=-160; ii <= 160; ii+= 10) {
+            int RES = 10000;
+            for (jj=-RES; jj<RES; jj++) {
+                /* Draw a bunch of points for dec -90...90*/
 
-				double ra = deg2rad(ii);
-				double dec = jj/(double)RES * PI/2.0;
-				radec2xyzarr(ra, dec, xyz);
+                double ra = deg2rad(ii);
+                double dec = jj/(double)RES * PI/2.0;
+                radec2xyzarr(ra, dec, xyz);
 
-				add_ink(xyz, hammer, reverse, &backside, W, H, projection, maxval);
-			}
-		}
-		/* Draw a line for dec=-80...+80 in 10 degree sections */
-		for (ii=-80; ii <= 80; ii+= 10) {
-			int RES = 10000;
-			for (jj=-RES; jj<RES; jj++) {
-				/* Draw a bunch of points for dec -90...90*/
+                add_ink(xyz, hammer, reverse, &backside, W, H, projection, maxval);
+            }
+        }
+        /* Draw a line for dec=-80...+80 in 10 degree sections */
+        for (ii=-80; ii <= 80; ii+= 10) {
+            int RES = 10000;
+            for (jj=-RES; jj<RES; jj++) {
+                /* Draw a bunch of points for dec -90...90*/
 
-				double ra = jj/(double)RES * PI;
-				double dec = deg2rad(ii);
-				radec2xyzarr(ra, dec, xyz);
+                double ra = jj/(double)RES * PI;
+                double dec = deg2rad(ii);
+                radec2xyzarr(ra, dec, xyz);
 
-				add_ink(xyz, hammer, reverse, &backside, W, H, projection, maxval);
-			}
-		}
-	}
+                add_ink(xyz, hammer, reverse, &backside, W, H, projection, maxval);
+            }
+        }
+    }
 
     if (fitsformat) {
         qfitsdumper qd;
@@ -526,5 +521,5 @@ int main(int argc, char *argv[]) {
     }
     free(projection);
 
-	return 0;
+    return 0;
 }
