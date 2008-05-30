@@ -67,7 +67,7 @@ static void add_columns(fitstable_t* tab, bool write) {
 	for (ob=0; ob<AN_N_OBSERVATIONS; ob++) {
 		char fld[32];
 		sprintf(fld, "CATALOG_%i", ob);
-        ADDCOL(c, c, fld, nil, obs[ob].catalog);
+        ADDCOL(u8, u8, fld, nil, obs[ob].catalog);
 		sprintf(fld, "BAND_%i", ob);
         ADDCOL(c, c, fld, nil, obs[ob].band);
 		sprintf(fld, "ID_%i", ob);
