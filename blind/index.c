@@ -26,6 +26,18 @@ bool index_has_ids(index_t* index) {
     return index->use_ids;
 }
 
+int index_get_quad_dim(const index_t* index) {
+    return quadfile_dimquads(index->quads);
+}
+
+int index_nquads(const index_t* index) {
+    return quadfile_nquads(index->quads);
+}
+
+int index_nstars(const index_t* index) {
+    return startree_N(index->starkd);
+}
+
 void get_filenames(const char* indexname,
                    char** quadfn,
                    char** ckdtfn,

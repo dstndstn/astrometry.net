@@ -56,6 +56,8 @@ int quadfile_write_quad(quadfile* qf, unsigned int* stars);
 
 int quadfile_dimquads(const quadfile* qf);
 
+int quadfile_nquads(const quadfile* qf);
+
 int quadfile_fix_header(quadfile* qf);
 
 int quadfile_write_header(quadfile* qf);

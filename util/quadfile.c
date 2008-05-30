@@ -99,6 +99,10 @@ int quadfile_dimquads(const quadfile* qf) {
     return qf->dimquads;
 }
 
+int quadfile_nquads(const quadfile* qf) {
+    return qf->numquads;
+}
+
 qfits_header* quadfile_get_header(const quadfile* qf) {
 	return fitsbin_get_primary_header(qf->fb);
 }

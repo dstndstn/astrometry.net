@@ -76,6 +76,12 @@ int index_get_scale_and_id(const char* filename,
 
 bool index_has_ids(index_t* index);
 
+int index_get_quad_dim(const index_t* index);
+
+int index_nquads(const index_t* index);
+
+int index_nstars(const index_t* index);
+
 /**
  * Load an index from disk
  *
