@@ -14,8 +14,8 @@ This release includes a snapshot of all of the components of our
 current research code, including routines to:
   * Convert raw USNO-B and Tycho2 into FITS format for easier use
   * Uniformize, deduplicate, and cut the FITSified catalogs
-  * Build indices from these cuts
-  * Solve the astrometry of images using these indices
+  * Build indexes from these cuts
+  * Solve the astrometry of images using these indexes
 
 The code includes:
   * A simple but powerful HEALPIX implementation
@@ -26,7 +26,7 @@ In principle, the code in the tarball is sufficient to reproduce our
 entire astrometry system and replicate our blind astrometry results
 (e.g. on the SDSS fields).  However, this requires the entire USNO-B
 1.0 catalogue which is about 80GB in size.  For ease of use, we are
-distributing our pre-cooked indices (about 25 GB total), which are the
+distributing our pre-cooked indexes (about 25 GB total), which are the
 same files we're using for our web service.
 
 INSTALLING
@@ -88,31 +88,31 @@ want to add the INSTALL_DIR/bin directory to your path:
      $ setenv PATH "$PATH:/usr/local/astrometry/bin"
 
 
-GETTING INDICES
+GETTING INDEXES
 ---------------
-Next, grab some pre-cooked indices.  See the file GETTING-INDICES for
+Next, grab some pre-cooked indexes.  See the file GETTING-INDEXES for
 details about how to do this.
 
-(If you have indices from a previous version of the Astrometry.net
+(If you have indexes from a previous version of the Astrometry.net
 software, see the "Upgrading" section below.)
 
 Each index is designed to solve images within a narrow range of
-scales.  The indices designed to solve small (angular size) images are
-rather large files, so you probably only want to grab the indices
-required for the images you wish to solve.  If you grab extra indices,
+scales.  The indexes designed to solve small (angular size) images are
+rather large files, so you probably only want to grab the indexes
+required for the images you wish to solve.  If you grab extra indexes,
 the solver will run more slowly, but the results should be the same.
 
 Each index contains a large number of "skymarks" (landmarks for the
 sky) that allow our solver to identify your images.  The skymarks
 contained in each index have sizes (diameters) within a narrow range.
-You probably want to download indices whose quads are, say, 10% to
+You probably want to download indexes whose quads are, say, 10% to
 100% of the sizes of the images you want to solve.
 
 For example, let's say you have some 1-degree square images.  You
-should grab indices that contain skymarks of size 0.1 to 1 degree, or
+should grab indexes that contain skymarks of size 0.1 to 1 degree, or
 6 to 60 arcminutes.  Referring to the table below, you should grab
-indices 203 through 209.  You might find that the same number of
-fields solve, and faster, using just one or two of the indices in the
+indexes 203 through 209.  You might find that the same number of
+fields solve, and faster, using just one or two of the indexes in the
 middle of that range - in our example you might try 205, 206 and 207.
 
 For reference, we used index 202 alone for our SDSS tests (13x9 arcmin
@@ -135,11 +135,11 @@ index-201.tar.bz2             2.8  -  4.0               5,878
 index-200.tar.bz2             2.0  -  2.8              10,058
 --------------------------------------------------------------
 
-Download the indices you need and put them in the top-level
+Download the indexes you need and put them in the top-level
 (astrometry-0.2) source directory.
 
 Install them:
-   $ make install-indices
+   $ make install-indexes
 
 (Or you can extract them into the INSTALL_DIR/data directory by hand.)
 
@@ -155,7 +155,7 @@ The format of the index files has changed from the 0.1 and 0.11
 releases.  There is a program for updating them, and there is also a
 makefile target.
 
-  $ make upgrade-indices
+  $ make upgrade-indexes
 
 If you want to do it by hand, use the program "fix-bb".  Run it on
 each of the ckdt.fits and skdt.fits files in your INSTALL_DIR/data
@@ -170,22 +170,22 @@ Finally, solve some fields.
 (If you didn't build the plotting commands, add "--no-plots" to the
 command lines below.)
 
-If you have any of indices 213 to 218:
+If you have any of indexes 213 to 218:
    $ solve-field --scale-low 10 demo/apod4.jpg
 
 If you have index 219:
    $ solve-field --scale-low 30 demo/apod5.jpg
 
-If you have any of indices 210 to 214:
+If you have any of indexes 210 to 214:
    $ solve-field --scale-low 1 demo/apod3.jpg
 
-If you have any of indices 206 to 211:
+If you have any of indexes 206 to 211:
    $ solve-field --scale-low 1 demo/apod2.jpg
 
-If you have any of indices 203 to 205:
+If you have any of indexes 203 to 205:
    $ solve-field apod1.jpg
 
-If you have any of indices 200 to 203:
+If you have any of indexes 200 to 203:
    $ solve-field demo/sdss.jpg
 
 
@@ -197,22 +197,22 @@ Note that you can also give solve-field a URL rather than a file as input:
 
 If you don't have the netpbm tools (eg jpegtopnm), do this instead:
 
-If you have any of indices 213 to 218:
+If you have any of indexes 213 to 218:
    $ solve-field --scale-low 10 demo/apod4.xyls
 
 If you have index 219:
    $ solve-field --scale-low 30 demo/apod5.xyls
 
-If you have any of indices 210 to 214:
+If you have any of indexes 210 to 214:
    $ solve-field --scale-low 1 demo/apod3.xyls
 
-If you have any of indices 206 to 211:
+If you have any of indexes 206 to 211:
    $ solve-field --scale-low 1 demo/apod2.xyls
 
-If you have any of indices 203 to 205:
+If you have any of indexes 203 to 205:
    $ solve-field demo/apod1.xyls
 
-If you have any of indices 200 to 203:
+If you have any of indexes 200 to 203:
    $ solve-field demo/sdss.xyls
 
 
@@ -261,7 +261,7 @@ can reduce this but not increase it.)
 on the size of the image you are trying to solve, solving can be much
 faster.  In the last examples above, for example, we specified that
 the field is at least 30 degrees wide: this means that we don't need
-to search for matches in the indices that contain only tiny skymarks.
+to search for matches in the indexes that contain only tiny skymarks.
 
 Eg, to specify that the image is between 1 and 2 degrees wide:
 
@@ -297,15 +297,15 @@ much.  Enable this with:
 *** Depth.  The solver works by looking at sources in your image,
 starting with the brightest.  It searches for all "skymarks" that can
 be built from the N brightest stars before considering star N+1.  When
-using several indices, it can be much faster to search for many
+using several indexes, it can be much faster to search for many
 skymarks in one index before switching to the next one.  This flag
-lets you control when the solver switches between indices.  It also
+lets you control when the solver switches between indexes.  It also
 lets you control how much effort the solver puts in before giving up -
 by default it looks at all the sources in your image, and usually
 times out before this finishes.
 
-Eg, to first look at sources 1-20 in all indices, then sources 21-30
-in all indices, then 31-40:
+Eg, to first look at sources 1-20 in all indexes, then sources 21-30
+in all indexes, then 31-40:
 
     $ solve-field --depth 20,30,40 ...
  or $ solve-field --depth 1-20 --depth 21-30 --depth 31-40 ...
@@ -499,9 +499,9 @@ we use the filename suffix ".axy".  "solve-field" then calls the
 file (by default /usr/local/astrometry/etc/backend.cfg) that describes
 things like where to find index files, whether to load all the indexes
 at once or run them one at a time, how long to spend on each field,
-and so on.  If you want to force only a certain set of indices to
+and so on.  If you want to force only a certain set of indexes to
 load, you can copy the backend.cfg file to a local version and change
-the list of indices that are loaded, and then tell solve-field to use
+the list of indexes that are loaded, and then tell solve-field to use
 this config file:
 
    $ solve-field --backend-config mybackend.cfg ...
@@ -613,7 +613,7 @@ GPL, version 2.  See the file LICENSE for the full terms of the GNU
 GPL.
 
 The index files come with their own license conditions.  See the file
-GETTING-INDICES for details.
+GETTING-INDEXES for details.
 
 CONTACT
 -------

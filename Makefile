@@ -55,7 +55,7 @@ install:
 	cp __init__.py $(INSTALL_DIR)/python/astrometry
 	cp pyfits/pyfits.py $(INSTALL_DIR)/python/
 	cp pyfits/rec.py $(INSTALL_DIR)/python/
-	cp CREDITS GETTING-INDICES LICENSE README $(INSTALL_DIR)/doc
+	cp CREDITS GETTING-INDEXES LICENSE README $(INSTALL_DIR)/doc
 	cp demo/* $(INSTALL_DIR)/examples
 	$(MAKE) -C util  install
 	$(MAKE) -C libkd install
@@ -67,7 +67,7 @@ install:
 	@echo
 	-$(MAKE) -C blind install-extra
 
-install-indices:
+install-indexes:
 	mkdir -p $(INSTALL_DIR)/data
 	@for x in `ls index-*.tar.bz2 2>/dev/null`; do \
 		echo Installing $$x in $(INSTALL_DIR)/data...; \
@@ -80,7 +80,7 @@ install-indices:
 		tar xvzf $$x -C $(INSTALL_DIR)/data; \
 	done
 
-upgrade-indices:
+upgrade-indexes:
 	@echo
 	@echo
 	@echo "Warning: this process will modify the index files that you downloaded"
