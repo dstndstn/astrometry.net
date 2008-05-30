@@ -157,12 +157,13 @@ int usnob_parse_entry(unsigned char* line, usnob_entry* usnob) {
 
 	// A: mu_RA, in units of 0.002 arcsec per year, offset by
 	//    -10 arcsec per year.
-	usnob->pm_ra = -10.0 + (0.002 * A);
+    // (rewrite in this form to avoid cancellation error for zero)
+	usnob->pm_ra = 0.002 * (A - 5000); // -10.0 + (0.002 * A);
 
 	// S: mu_SPD, in units of 0.002 arcsec per year, offset by
 	//    -10 arcsec per year.
 	// This is a derivative of SPD which is equal to a derivative of DEC.
-	usnob->pm_dec = -10.0 + (0.002 * S);
+	usnob->pm_dec = 0.002 * (S - 5000); //-10.0 + (0.002 * S);
 
 	// P: total mu probability, in units of 0.1.
 	usnob->pm_prob = 0.1 * P;
@@ -287,9 +288,9 @@ int usnob_parse_entry(unsigned char* line, usnob_entry* usnob) {
             usnob->obs[obs].eta_resid = 0.0;
         } else {
             // R: xi residual, in units of 0.01 arcsec, offset by -50 arcsec.
-            usnob->obs[obs].xi_resid = arcsec2deg(-50.0 + 0.01 * R);
+            usnob->obs[obs].xi_resid = arcsec2deg(0.01 * (R - 5000)); // (-50.0 + 0.01 * R);
             // r: eta residual, in units of 0.01 arcesc, offset by -50.
-            usnob->obs[obs].eta_resid = arcsec2deg(-50.0 + 0.01 * r);
+            usnob->obs[obs].eta_resid = arcsec2deg(0.01 * (r - 5000)); // (-50.0 + 0.01 * r);
         }
 
 		// C: source of photometric calibration.
@@ -304,5 +305,4 @@ int usnob_parse_entry(unsigned char* line, usnob_entry* usnob) {
 
 	return 0;
 }
-
 
