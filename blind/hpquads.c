@@ -54,7 +54,6 @@ static void print_help(char* progname)
 	       "      -i <input-filename>    (star kdtree (skdt.fits) input file)\n"
 		   "      -c <codes-output-filename>    (codes file (code.fits) output file)\n"
            "      -q <quads-output-filename>    (quads file (quad.fits) output file)\n"
-		   "     [-c]            allow quads in the circle, not the box, defined by AB\n"
 		   "     [-b]            try to make any quads outside the bounds of this big healpix.\n"
 	       "     [-n <nside>]    healpix nside (default 501)\n"
 	       "     [-u <scale>]    upper bound of quad scale (arcmin)\n"
