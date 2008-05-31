@@ -196,6 +196,8 @@ def real_handle_job(job):
             '--height' : height,
             '--no-fits2fits' : None,
             })
+        width  = int(round(width ))
+        height = int(round(height))
         df.imagew = width
         df.imageh = height
 
