@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <assert.h>
+#include <sys/param.h>
 
 #include "catalog.h"
 #include "fitsioutils.h"
@@ -278,6 +279,7 @@ int catalog_write_star(catalog* cat, double* star) {
 int write_floats(catalog* cat, int chunknum, 
                   const char* name, fl* list, int nperstar) {
     int i;
+    int B = 1000;
     fitsbin_chunk_t* chunk = get_chunk(cat, chunknum);
     if (!list || (fl_size(list) != cat->numstars * nperstar)) {
         ERROR("Number of %ss (%i) doesn't match number of stars (%i)",
@@ -289,11 +291,12 @@ int write_floats(catalog* cat, int chunknum,
         ERROR("Failed to write %ss header", name);
         return -1;
     }
-    for (i=0; i<cat->numstars; i++) {
-        float data[nperstar];
-        fl_copy(list, i*nperstar, nperstar, data);
-        if (fitsbin_write_item(cat->fb, chunk, data)) {
-            ERROR("Failed to write %s for star %i", name, i);
+    for (i=0; i<cat->numstars; i+=B) {
+        float data[nperstar * B];
+        int n = MIN(i+B, cat->numstars) - i;
+        fl_copy(list, i*nperstar, nperstar*n, data);
+        if (fitsbin_write_items(cat->fb, chunk, data, n)) {
+            ERROR("Failed to write %s for stars %i to %i", name, i, i+n-1);
             return -1;
         }
     }
