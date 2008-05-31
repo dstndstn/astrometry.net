@@ -31,6 +31,7 @@
 #include "ioutils.h"
 #include "boilerplate.h"
 #include "errors.h"
+#include "log.h"
 
 #define OPTIONS "ho:N:n:m:M:H:d:e:ARBJb:gj:ps:I"
 
@@ -302,6 +303,7 @@ int main(int argc, char** args) {
     bool doid = FALSE;
 	double jitter = 1.0;
     qfits_header* catheader;
+    int loglvl = LOG_MSG;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
@@ -369,6 +371,8 @@ int main(int argc, char** args) {
 		}
     }
 
+    log_init(loglvl);
+
 	if (!outfn || (optind == argc)) {
 		printf("Specify catalog names and input files.\n");
 		print_help(args[0]);
@@ -396,15 +400,15 @@ int main(int argc, char** args) {
 
 	HP = 12 * Nside * Nside;
 
-	printf("Nside=%i, HP=%i, sweeps=%i, max number of stars = HP*sweeps = %i.\n", Nside, HP, sweeps, HP*sweeps);
-	printf("Healpix side length: %g arcmin.\n", healpix_side_length_arcmin(Nside));
+	logmsg("Nside=%i, HP=%i, sweeps=%i, max number of stars = HP*sweeps = %i.\n", Nside, HP, sweeps, HP*sweeps);
+	logmsg("Healpix side length: %g arcmin.\n", healpix_side_length_arcmin(Nside));
 	if (bighp != -1)
-		printf("Writing big healpix %i.\n", bighp);
+		logmsg("Writing big healpix %i.\n", bighp);
 	else
-		printf("Writing an all-sky catalog.\n");
+		logmsg("Writing an all-sky catalog.\n");
 
 	if (deduprad > 0.0) {
-		printf("Deduplication radius %f arcsec.\n", deduprad);
+		logmsg("Deduplication radius %f arcsec.\n", deduprad);
 		dedupr2 = arcsec2distsq(deduprad);
 	}
 
@@ -434,7 +438,7 @@ int main(int argc, char** args) {
 			}
 		}
         ninside = nowned;
-        printf("Number of fine healpixes owned: %i\n", nowned);
+        logmsg("Number of fine healpixes owned: %i\n", nowned);
 
         //write_radeclist(owned, Nside, "step0.rdls");
 
@@ -467,7 +471,7 @@ int main(int argc, char** args) {
             assert(owned[hp]);
 			il_append(q, hp);
 		}
-        printf("Number of boundary healpixes on the primed queue: %i\n",
+        logmsg("Number of boundary healpixes on the primed queue: %i\n",
                il_size(q));
 
 		// Now we want to add "nmargin" levels of neighbours.
@@ -502,7 +506,7 @@ int main(int argc, char** args) {
 
         //write_radeclist(owned, Nside, "final.rdls");
 
-		printf("%i healpixes in this big healpix, plus %i boundary make %i total.\n",
+		logmsg("%i healpixes in this big healpix, plus %i boundary make %i total.\n",
                ninside, nowned - ninside, nowned);
 
 	} else
@@ -566,7 +570,7 @@ int main(int argc, char** args) {
 		valstr = qfits_pretty_string(qfits_header_getstr(hdr, "AN_FILE"));
 		if (valstr &&
 			(strncasecmp(valstr, AN_FILETYPE_CATALOG, strlen(AN_FILETYPE_CATALOG)) == 0)) {
-			fprintf(stderr, "Looks like a catalog.\n");
+			logmsg("Looks like a catalog.\n");
 			cat = catalog_open(infn);
 			if (!cat) {
 				ERROR("Couldn't open file \"%s\" as a catalog", infn);
@@ -594,7 +598,7 @@ int main(int argc, char** args) {
 			key = qfits_header_findmatch(hdr, "AN_CAT");
 			if (key &&
 				qfits_header_getboolean(hdr, key, 0)) {
-				fprintf(stderr, "File has AN_CATALOG = T header.\n");
+				logmsg("Looks like an Astrometry.net catalog (AN_CATALOG = T header).\n");
 				ancat = an_catalog_open(infn);
 				if (!ancat) {
 					fprintf(stderr, "Couldn't open file \"%s\" as an Astrometry.net catalog.\n", infn);
@@ -603,7 +607,7 @@ int main(int argc, char** args) {
 				N = an_catalog_count_entries(ancat);
 				an_catalog_set_blocksize(ancat, BLOCK);
 			} else {
-				fprintf(stderr, "File \"%s\": doesn't seem to be an Astrometry.net "
+				logmsg("File \"%s\": doesn't seem to be an Astrometry.net "
 						"catalog or a cut catalog (.objs.fits file).\n", infn);
 			}
 		}
@@ -614,7 +618,7 @@ int main(int argc, char** args) {
 			fprintf(stderr, "Couldn't open input file \"%s\".\n", infn);
 			exit(-1);
 		}
-		printf("Reading   %i entries from %s...\n", N, infn);
+		logmsg("Reading   %i entries from %s...\n", N, infn);
 		fflush(stdout);
 		ndiscarded = 0;
 		nduplicates = 0;
@@ -626,7 +630,7 @@ int main(int argc, char** args) {
 			an_entry* an = NULL;
 
 			if ((i * 80 / N) != lastgrass) {
-				printf(".");
+				logmsg(".");
 				fflush(stdout);
 				lastgrass = i * 80 / N;
 			}
@@ -709,11 +713,11 @@ int main(int argc, char** args) {
 			}
 			bl_insert_sorted(starlists[hp], &sd, sort_stardata_mag);
 		}
-		printf("\n");
+		logmsg("\n");
 
 		if (bighp != -1)
-			printf("Discarded %i stars not in this big healpix.\n", ndiscarded);
-		printf("Discarded %i duplicate stars.\n", nduplicates);
+			logmsg("Discarded %i stars not in this big healpix.\n", ndiscarded);
+		logmsg("Discarded %i duplicate stars.\n", nduplicates);
 
 		if (nkeep)
 			for (i=0; i<HP; i++) {
@@ -826,13 +830,13 @@ int main(int argc, char** args) {
 			qfits_header_mod(catheader, key, val, "");
 		}
 
-		printf("sweep %i: got %i stars (%i total)\n", k, nsweep, nwritten);
+		logmsg("sweep %i: got %i stars (%i total)\n", k, nsweep, nwritten);
 		fflush(stdout);
 		// if we broke out of the loop...
 		if (nwritten == maxperbighp)
 			break;
 	}
-	printf("Made %i sweeps through the healpixes.\n", k);
+	logmsg("Made %i sweeps through the healpixes.\n", k);
 
 	free(sweeplist);
 	free(stararrayN);
@@ -845,31 +849,31 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 	if (domags) {
-        printf("Writing magnitudes...\n");
+        logmsg("Writing magnitudes...\n");
 		if (catalog_write_mags(cat)) {
             ERROR("Failed to write magnitudes");
             exit(-1);
         }
     }
     if (doid) {
-        printf("Writing IDs...\n");
+        logmsg("Writing IDs...\n");
         if (catalog_write_ids(cat)) {
             ERROR("Failed to write star IDs");
             exit(-1);
         }
     }
     if (domotion) {
-        printf("Writing sigmas...\n");
+        logmsg("Writing sigmas...\n");
         if (catalog_write_sigmas(cat)) {
             ERROR("Failed to write star motions");
             exit(-1);
         }
-        printf("Writing proper motions...\n");
+        logmsg("Writing proper motions...\n");
         if (catalog_write_pms(cat)) {
             ERROR("Failed to write star motions");
             exit(-1);
         }
-        printf("Writing sigma proper motions...\n");
+        logmsg("Writing sigma proper motions...\n");
         if (catalog_write_sigma_pms(cat)) {
             ERROR("Failed to write star motions");
             exit(-1);

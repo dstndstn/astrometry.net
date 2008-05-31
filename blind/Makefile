@@ -359,7 +359,7 @@ build-an-catalog: build-an-catalog.o usnob-fits.o tycho2-fits.o \
 		tycho2.o usnob.o 2mass-fits.o 2mass.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-cut-an: cut-an.o catalog.o usnob.o \
+cut-an: cut-an.o catalog.o usnob.o log.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
