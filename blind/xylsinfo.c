@@ -97,7 +97,7 @@ int main(int argc, char** args) {
 		}
  
 		diag = hypot(xmax-xmin, ymax-ymin);
-        hdr = xylist_get_header(xyls);
+        hdr = xylist_get_primary_header(xyls);
 		imw = qfits_header_getint(hdr, "IMAGEW", -1);
 		imh = qfits_header_getint(hdr, "IMAGEH", -1);
 		if (imw > -1)
