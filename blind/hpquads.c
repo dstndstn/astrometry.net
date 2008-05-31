@@ -823,7 +823,7 @@ int main(int argc, char** argv) {
 		exit( -1);
 	}
 
-    if (optind != argc-1) {
+    if (optind != argc) {
         print_help(argv[0]);
         printf("\nExtra command-line args were given: ");
         for (i=optind; i<argc; i++) {

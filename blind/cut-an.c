@@ -844,19 +844,36 @@ int main(int argc, char** args) {
 		fprintf(stderr, "Failed to fix catalog header.\n");
 		exit(-1);
 	}
-	if (domags &&
-		catalog_write_mags(cat)) {
-        ERROR("Failed to write magnitudes");
+	if (domags) {
+        printf("Writing magnitudes...\n");
+		if (catalog_write_mags(cat)) {
+            ERROR("Failed to write magnitudes");
+            exit(-1);
+        }
     }
-    if (doid &&
-        catalog_write_ids(cat)) {
-        ERROR("Failed to write star IDs");
+    if (doid) {
+        printf("Writing IDs...\n");
+        if (catalog_write_ids(cat)) {
+            ERROR("Failed to write star IDs");
+            exit(-1);
+        }
     }
-    if (domotion &&
-        (catalog_write_sigmas(cat) ||
-         catalog_write_pms(cat) ||
-         catalog_write_sigma_pms(cat))) {
-        ERROR("Failed to write star motions");
+    if (domotion) {
+        printf("Writing sigmas...\n");
+        if (catalog_write_sigmas(cat)) {
+            ERROR("Failed to write star motions");
+            exit(-1);
+        }
+        printf("Writing proper motions...\n");
+        if (catalog_write_pms(cat)) {
+            ERROR("Failed to write star motions");
+            exit(-1);
+        }
+        printf("Writing sigma proper motions...\n");
+        if (catalog_write_sigma_pms(cat)) {
+            ERROR("Failed to write star motions");
+            exit(-1);
+        }
     }
 	if (catalog_close(cat)) {
 		ERROR("Failed to close output catalog");

@@ -50,7 +50,6 @@ static fitsbin_chunk_t* get_chunk(catalog* cat, int i) {
 static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     qfits_header* primheader = fitsbin_get_primary_header(fb);
 	catalog* cat = chunk->userdata;
-
 	cat->numstars = qfits_header_getint(primheader, "NSTARS", -1);
 	cat->healpix = qfits_header_getint(primheader, "HEALPIX", -1);
 	cat->hpnside = qfits_header_getint(primheader, "HPNSIDE", 1);
