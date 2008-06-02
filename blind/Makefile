@@ -175,8 +175,9 @@ solver_test.o: solver.c
 
 # Add the basename of your test sources here...
 ALL_TEST_FILES = test_dfind test_ctmf test_simplexy test_dsmooth test_2mass \
-	test_tycho2 test_usnob test_nomad test_matchfile test_hd test_scriptutils \
+	test_tycho2 test_usnob test_nomad test_matchfile test_scriptutils \
 	test_dcen3x3
+# test_hd depends on hd.fits...
 
 ALL_TEST_EXTRA_OBJS :=
 ALL_TEST_LIBS :=

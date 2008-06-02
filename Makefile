@@ -135,14 +135,14 @@ upgrade-indexes:
 
 RELEASE_VER := 0.2
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
-RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
+RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
 RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data pyfits etc
 
 release:
-	-rm -R $(RELEASE_DIR)
+	-rm -R $(RELEASE_DIR) $(RELEASE_DIR).tar $(RELEASE_DIR).tar.gz $(RELEASE_DIR).tar.bz2
 	svn export -N $(RELEASE_SVN) $(RELEASE_DIR)
 	for x in $(RELEASE_SUBDIRS); do \
-		svn export $(RELEASE_SVN)/astrometry/$$x $(RELEASE_DIR)/$$x; \
+		svn export $(RELEASE_SVN)/$$x $(RELEASE_DIR)/$$x; \
 	done
 	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
 	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
@@ -162,6 +162,8 @@ snapshot:
 
 test:
 	$(MAKE) -C blind test
+	$(MAKE) -C util  test
+	$(MAKE) -C libkd test
 
 clean:
 	$(MAKE) -C util clean
