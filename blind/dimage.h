@@ -21,7 +21,14 @@
 #ifndef DIMAGE_H
 #define DIMAGE_H
 
+#include <stdint.h>
+
 #include "simplexy.h"
+
+// this is only really included here so that it can be tested :)
+typedef uint16_t label_t;
+#define LABEL_MAX UINT16_MAX
+label_t collapsing_find_minlabel(label_t label, label_t *equivs);
 
 int dfluxes(float *image, float *templates, float *weights, int nx, int ny,
             float *xcen, float *ycen, int nchild, float *children,

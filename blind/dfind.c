@@ -25,6 +25,7 @@
 #include <assert.h>
 
 #include "simplexy-common.h"
+#include "dimage.h"
 #include "bl.h"
 
 /*
@@ -78,13 +79,10 @@ int initial_max_groups = 50;
  *  . . . . .
  */
 
-typedef short unsigned int label_t;
-#define LABEL_MAX 0xFFFF
-
 /* Finds the root of this set (which is the min label) but collapses
  * intermediate labels as it goes. */
-inline label_t collapsing_find_minlabel(label_t label,
-                                        label_t *equivs) {
+label_t collapsing_find_minlabel(label_t label,
+                                 label_t *equivs) {
 	int min;
 	min = label;
 	while (equivs[min] != min)

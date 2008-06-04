@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "dimage.h"
 #include "cutest.h"
 
 extern int initial_max_groups;
@@ -139,9 +140,9 @@ void test_very_nasty(CuTest* tc) {
 }
 
 void test_collapsing_find_simple(CuTest* tc) {
-	short int equivs[] = {0, 0, 1, 2};
-	             /* 0  1  2  3 */
-	short int minlabel = collapsing_find_minlabel(3, equivs);
+    label_t equivs[] = {0, 0, 1, 2};
+    /* 0  1  2  3 */
+    label_t minlabel = collapsing_find_minlabel(3, equivs);
 	CuAssertIntEquals(tc, minlabel, 0);
 	CuAssertIntEquals(tc, equivs[0], 0);
 	CuAssertIntEquals(tc, equivs[1], 0);
