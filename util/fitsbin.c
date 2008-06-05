@@ -29,6 +29,7 @@
 #include "ioutils.h"
 #include "fitsfile.h"
 #include "errors.h"
+#include "an-endian.h"
 
 FILE* fitsbin_get_fid(fitsbin_t* fb) {
     return fb->fid;
@@ -176,29 +177,24 @@ static int write_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk, int flipped) {
     } else {
         // endian-flip words of the data of length "flipped", write them,
         // then flip them back to the way they were.
+
+        // NO, copy to temp array, flip it, write it.
+
         // this is slow, but it won't be run very often...
+
         int i, j;
         int nper = chunk->itemsize / flipped;
+        char tempdata[chunk->itemsize];
         assert(chunk->itemsize >= flipped);
         assert(nper * flipped == chunk->itemsize);
-        char* cdata = chunk->data;
         for (i=0; i<N; i++) {
+            // copy it...
+            memcpy(tempdata, chunk->data + i*chunk->itemsize, chunk->itemsize);
             // swap it...
-            char* swapcdata = cdata;
-            for (j=0; j<nper; j++) {
-                endian_swap(swapcdata, flipped);
-                swapcdata += flipped;
-            }
+            for (j=0; j<nper; j++)
+                endian_swap(tempdata + j*flipped, flipped);
             // write it...
-            fitsbin_write_item(fb, chunk, cdata);
-            // swap it back...
-            swapcdata = cdata;
-            for (j=0; j<nper; j++) {
-                endian_swap(swapcdata, flipped);
-                swapcdata += flipped;
-            }
-            // next item...
-            cdata += chunk->itemsize;
+            fitsbin_write_item(fb, chunk, tempdata);
         }
     }
     chunk->nrows -= N;
