@@ -85,6 +85,8 @@ int fits_copy_header(const qfits_header* src, qfits_header* dest, char* key);
 
 int fits_copy_all_headers(const qfits_header* src, qfits_header* dest, char* targetkey);
 
+int fits_append_all_headers(const qfits_header* src, qfits_header* dest, char* targetkey);
+
 int fits_add_args(qfits_header* src, char** args, int argc);
 
 int 

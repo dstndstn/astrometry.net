@@ -135,8 +135,8 @@ int main(int argc, char **args) {
     printf("Writing code tree to %s ...\n", codeoutfn);
     hdr = qfits_header_new();
     inhdr = codetree_header(code);
-    fits_copy_all_headers(inhdr, hdr, "HISTORY");
-    fits_copy_all_headers(inhdr, hdr, "COMMENT");
+    fits_append_all_headers(inhdr, hdr, "HISTORY");
+    fits_append_all_headers(inhdr, hdr, "COMMENT");
     code->header = hdr;
     if (codetree_write_to_file_flipped(code, codeoutfn)) {
         ERROR("Failed to write code kdtree to file %s", codeoutfn);
@@ -147,8 +147,8 @@ int main(int argc, char **args) {
     printf("Writing star tree to %s ...\n", staroutfn);
     hdr = qfits_header_new();
     inhdr = startree_header(star);
-    fits_copy_all_headers(inhdr, hdr, "HISTORY");
-    fits_copy_all_headers(inhdr, hdr, "COMMENT");
+    fits_append_all_headers(inhdr, hdr, "HISTORY");
+    fits_append_all_headers(inhdr, hdr, "COMMENT");
     star->header = hdr;
     if (startree_write_to_file_flipped(star, staroutfn)) {
         ERROR("Failed to write star kdtree to file %s", staroutfn);

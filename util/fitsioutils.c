@@ -640,7 +640,8 @@ int fits_copy_header(const qfits_header* src, qfits_header* dest, char* key) {
 	return 0;
 }
 
-int fits_copy_all_headers(const qfits_header* src, qfits_header* dest, char* targetkey) {
+static int copy_all_headers(const qfits_header* src, qfits_header* dest, char* targetkey,
+                            bool append) {
 	int i, N;
 	char key[FITS_LINESZ+1];
 	char val[FITS_LINESZ+1];
@@ -653,9 +654,20 @@ int fits_copy_all_headers(const qfits_header* src, qfits_header* dest, char* tar
             break;
 		if (targetkey && strcasecmp(key, targetkey))
 			continue;
-		qfits_header_add(dest, key, val, com, lin);
+        if (append)
+            qfits_header_append(dest, key, val, com, lin);
+        else
+            qfits_header_add(dest, key, val, com, lin);
 	}
 	return 0;
+}
+
+int fits_copy_all_headers(const qfits_header* src, qfits_header* dest, char* targetkey) {
+    return copy_all_headers(src, dest, targetkey, FALSE);
+}
+
+int fits_append_all_headers(const qfits_header* src, qfits_header* dest, char* targetkey) {
+    return copy_all_headers(src, dest, targetkey, TRUE);
 }
 
 int fits_pad_file(FILE* fid) {
