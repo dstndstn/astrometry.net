@@ -244,9 +244,16 @@ static int write_to_file(startree_t* s, char* fn, bool flipped) {
         ERROR("Failed to open file \"%s\" for writing kdtree", fn);
         return -1;
     }
-    if (kdtree_fits_write_tree(io, s->tree, s->header)) {
-        ERROR("Failed to write kdtree to file \"%s\"", fn);
-        return -1;
+    if (flipped) {
+        if (kdtree_fits_write_tree_flipped(io, s->tree, s->header)) {
+            ERROR("Failed to write (flipped) kdtree to file \"%s\"", fn);
+            return -1;
+        }
+    } else {
+        if (kdtree_fits_write_tree(io, s->tree, s->header)) {
+            ERROR("Failed to write kdtree to file \"%s\"", fn);
+            return -1;
+        }
     }
 
     if (flipped)
