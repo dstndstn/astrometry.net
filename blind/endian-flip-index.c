@@ -137,6 +137,12 @@ int main(int argc, char **args) {
     inhdr = codetree_header(code);
     fits_append_all_headers(inhdr, hdr, "HISTORY");
     fits_append_all_headers(inhdr, hdr, "COMMENT");
+    fits_append_all_headers(inhdr, hdr, "CIRCLE");
+    fits_append_all_headers(inhdr, hdr, "INDEXID");
+    fits_append_all_headers(inhdr, hdr, "HEALPIX");
+    fits_append_all_headers(inhdr, hdr, "HPNSIDE");
+    fits_append_all_headers(inhdr, hdr, "CXDX");
+    fits_append_all_headers(inhdr, hdr, "CXDXLT1");
     code->header = hdr;
     if (codetree_write_to_file_flipped(code, codeoutfn)) {
         ERROR("Failed to write code kdtree to file %s", codeoutfn);
@@ -149,6 +155,10 @@ int main(int argc, char **args) {
     inhdr = startree_header(star);
     fits_append_all_headers(inhdr, hdr, "HISTORY");
     fits_append_all_headers(inhdr, hdr, "COMMENT");
+    fits_append_all_headers(inhdr, hdr, "HEALPIX");
+    fits_append_all_headers(inhdr, hdr, "HPNSIDE");
+    fits_append_all_headers(inhdr, hdr, "ALLSKY");
+    fits_append_all_headers(inhdr, hdr, "JITTER");
     star->header = hdr;
     if (startree_write_to_file_flipped(star, staroutfn)) {
         ERROR("Failed to write star kdtree to file %s", staroutfn);
