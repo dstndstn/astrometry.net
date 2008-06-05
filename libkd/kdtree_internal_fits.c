@@ -197,10 +197,10 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
     hdr = fitsbin_get_chunk_header(fb, &chunk);
     if (inhdr)
         fits_copy_all_headers(inhdr, hdr, NULL);
-    if (!flip_endian)
-        fits_add_endian(hdr);
-    else
+    if (flip_endian)
         fits_add_reverse_endian(hdr);
+    else
+        fits_add_endian(hdr);
     fits_header_addf   (hdr, "KDT_NAME", "kdtree: name of this tree", "'%s'", kd->name ? kd->name : "");
     fits_header_add_int(hdr, "KDT_NDAT", kd->ndata,  "kdtree: number of data points");
     fits_header_add_int(hdr, "KDT_NDIM", kd->ndim,   "kdtree: number of dimensions");
