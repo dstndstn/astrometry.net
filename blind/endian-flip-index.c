@@ -146,7 +146,7 @@ int main(int argc, char **args) {
 
     printf("Writing star tree to %s ...\n", staroutfn);
     hdr = qfits_header_new();
-    inhdr = startree_header(code);
+    inhdr = startree_header(star);
     fits_copy_all_headers(inhdr, hdr, "HISTORY");
     fits_copy_all_headers(inhdr, hdr, "COMMENT");
     star->header = hdr;
