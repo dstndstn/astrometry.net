@@ -220,6 +220,11 @@ static qfits_header* find_tree(const char* treename, const fitsbin_t* fb,
             return header;
         }
     }
+
+    // treat empty treename as NULL...
+    if (treename && !treename[0])
+      treename = NULL;
+
     // scan the extension headers, looking for one that contains a matching KDT_NAME entry.
     nexten = qfits_query_n_ext(fn);
     header = NULL;
@@ -239,10 +244,13 @@ static qfits_header* find_tree(const char* treename, const fitsbin_t* fb,
             free(name);
             name = NULL;
         }
-        // if the desired treename was specified and this one doesn't match...
-        if (treename && strcmp(name, treename)) {
-            free(name);
-            goto next;
+
+	// if the desired treename was specified, it must match;
+	// bail out if this is not the case.
+	// (if treename is NULL then anything matches.)
+	if (treename && !(name && (strcmp(name, treename) == 0))) {
+	  free(name);
+	  goto next;
         }
         if (is_tree_header_ok(header, ndim, ndata, nnodes, tt, 0)) {
             *realname = name;
