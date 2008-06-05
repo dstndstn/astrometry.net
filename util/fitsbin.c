@@ -164,30 +164,57 @@ qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     return hdr;
 }
 
-int fitsbin_write_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+static int write_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk, int flipped) {
     int N;
-    /*
-     printf("writing chunk %s\n", chunk->tablename);
-     fitsbin_get_chunk_header(fb, chunk);
-     printf("header:\n");
-     qfits_header_debug_dump(chunk->header);
-     printf("file pos: 0x%x\n", (int)ftello(fb->fid));
-     */
     if (fitsbin_write_chunk_header(fb, chunk)) {
         return -1;
     }
-    //printf("after header: 0x%x\n", (int)ftello(fb->fid));
     N = chunk->nrows;
-    if (fitsbin_write_items(fb, chunk, chunk->data, chunk->nrows)) {
-        return -1;
+    if (!flipped) {
+        if (fitsbin_write_items(fb, chunk, chunk->data, chunk->nrows))
+            return -1;
+    } else {
+        // endian-flip words of the data of length "flipped", write them,
+        // then flip them back to the way they were.
+        // this is slow, but it won't be run very often...
+        int i, j;
+        int nper = chunk->itemsize / flipped;
+        assert(chunk->itemsize >= flipped);
+        assert(nper * flipped == chunk->itemsize);
+        char* cdata = chunk->data;
+        for (i=0; i<N; i++) {
+            // swap it...
+            char* swapcdata = cdata;
+            for (j=0; j<nper; j++) {
+                endian_swap(swapcdata, flipped);
+                swapcdata += flipped;
+            }
+            // write it...
+            fitsbin_write_item(fb, chunk, cdata);
+            // swap it back...
+            swapcdata = cdata;
+            for (j=0; j<nper; j++) {
+                endian_swap(swapcdata, flipped);
+                swapcdata += flipped;
+            }
+            // next item...
+            cdata += chunk->itemsize;
+        }
     }
     chunk->nrows -= N;
-    //printf("after data: 0x%x\n", (int)ftello(fb->fid));
     if (fitsbin_fix_chunk_header(fb, chunk)) {
         return -1;
     }
-    //printf("after fixing header: 0x%x\n", (int)ftello(fb->fid));
     return 0;
+}
+
+int fitsbin_write_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    return write_chunk(fb, chunk, 0);
+}
+
+int fitsbin_write_chunk_flipped(fitsbin_t* fb, fitsbin_chunk_t* chunk,
+                                int wordsize) {
+    return write_chunk(fb, chunk, wordsize);
 }
 
 int fitsbin_write_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {

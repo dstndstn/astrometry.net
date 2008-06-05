@@ -54,6 +54,10 @@ static inline void v_swap(void* p, int nbytes) {
 	}
 }
 
+void endian_swap(void* p, int nbytes) {
+    v_swap(p, nbytes);
+}
+
 static inline void v_htole(void* p, int nbytes) {
 #if IS_BIG_ENDIAN
     return v_swap(p, nbytes);

@@ -72,4 +72,7 @@ quadfile* quadfile_open_for_writing(const char* quadfname);
 
 qfits_header* quadfile_get_header(const quadfile* qf);
 
+
+int quadfile_write_quad_flipped(quadfile* qf, unsigned int* stars);
+
 #endif

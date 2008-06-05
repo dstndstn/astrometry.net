@@ -29,6 +29,7 @@
 #include "starutil.h"
 #include "ioutils.h"
 #include "errors.h"
+#include "an-endian.h"
 
 #define CHUNK_QUADS 0
 
@@ -250,4 +251,23 @@ int quadfile_get_stars(const quadfile* qf, unsigned int quadid, unsigned int* st
         stars[i] = qf->quadarray[quadid * qf->dimquads + i];
     }
     return 0;
+}
+
+
+
+int quadfile_write_quad_flipped(quadfile* qf, unsigned int* stars) {
+	uint32_t ustars[qf->dimquads];
+	int i;
+	fitsbin_chunk_t* chunk = quads_chunk(qf);
+
+    for (i=0; i<qf->dimquads; i++) {
+        ustars[i] = stars[i];
+        endian_swap(ustars+i, sizeof(uint32_t));
+	}
+    if (fitsbin_write_item(qf->fb, chunk, ustars)) {
+		ERROR("Failed to write a quad");
+		return -1;
+	}
+	qf->numquads++;
+	return 0;
 }

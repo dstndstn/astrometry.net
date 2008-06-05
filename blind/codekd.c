@@ -141,3 +141,7 @@ codetree* codetree_new() {
 int codetree_write_to_file(codetree* s, char* fn) {
 	return kdtree_fits_write(s->tree, fn, s->header);
 }
+
+int codetree_write_to_file_flipped(codetree* s, char* fn) {
+	return kdtree_fits_write_flipped(s->tree, fn, s->header);
+}

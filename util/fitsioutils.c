@@ -896,6 +896,16 @@ void fits_add_endian(qfits_header* header) {
 	// (don't make this a COMMENT because that makes it get separated from the ENDIAN header line.)
 }
 
+void fits_add_reverse_endian(qfits_header* header) {
+    uint32_t endian = ENDIAN_DETECTOR;
+    unsigned char* cptr = (unsigned char*)&endian;
+
+	fits_header_addf(header, "ENDIAN", "Endianness detector: u32 0x01020304 written ",
+                     "%02x:%02x:%02x:%02x", (int)cptr[3], (int)cptr[2], (int)cptr[1], (int)cptr[0]);
+	qfits_header_add(header, "", NULL, " in the order it is stored in memory.", NULL);
+    qfits_header_add(header, "", NULL, "Note, this was written by a machine of the reverse endianness.", NULL);
+}
+
 qfits_table* fits_get_table_column(const char* fn, const char* colname, int* pcol) {
     int i, nextens, start, size;
 

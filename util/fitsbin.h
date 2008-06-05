@@ -45,7 +45,6 @@ struct fitsbin_chunk_t {
 	int required;
 
     // Reading:
-    //int (*callback_read_header)(qfits_header* primheader, qfits_header* header, size_t* expected, void* userdata);
     int (*callback_read_header)(struct fitsbin_t* fb, struct fitsbin_chunk_t* chunk);
     void* userdata;
 
@@ -193,6 +192,9 @@ int fitsbin_fix_primary_header(fitsbin_t* fb);
 qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk);
 
 int fitsbin_write_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk);
+
+int fitsbin_write_chunk_flipped(fitsbin_t* fb, fitsbin_chunk_t* chunk,
+                                int wordsize);
 
 // (pads to FITS block size)
 int fitsbin_write_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk);

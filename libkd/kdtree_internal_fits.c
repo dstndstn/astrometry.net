@@ -168,18 +168,27 @@ int MANGLE(kdtree_read_fits)(kdtree_fits_t* io, kdtree_t* kd) {
 
 #define WRITE_CHUNK() \
 do { \
-  if (fitsbin_write_chunk(fb, &chunk)) { \
-    ERROR("Failed to write kdtree chunk"); \
-    fitsbin_chunk_clean(&chunk); \
-    return -1; \
+  if (flip_endian) { \
+    if (fitsbin_write_chunk_flipped(fb, &chunk, wordsize)) { \
+      ERROR("Failed to write (flipped) kdtree chunk"); \
+      fitsbin_chunk_clean(&chunk); \
+      return -1; \
+    } \
+  } else { \
+    if (fitsbin_write_chunk(fb, &chunk)) { \
+      ERROR("Failed to write kdtree chunk"); \
+      fitsbin_chunk_clean(&chunk); \
+      return -1; \
+    } \
   } \
 } while (0)
 
 int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd, 
-                              const qfits_header* inhdr) {
+                              const qfits_header* inhdr, bool flip_endian) {
     fitsbin_chunk_t chunk;
     fitsbin_t* fb = kdtree_fits_get_fitsbin(io);
     qfits_header* hdr;
+    int wordsize = 0;
 
     fitsbin_chunk_init(&chunk);
 
@@ -188,7 +197,10 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
     hdr = fitsbin_get_chunk_header(fb, &chunk);
     if (inhdr)
         fits_copy_all_headers(inhdr, hdr, NULL);
-    fits_add_endian(hdr);
+    if (!flip_endian)
+        fits_add_endian(hdr);
+    else
+        fits_add_reverse_endian(hdr);
     fits_header_addf   (hdr, "KDT_NAME", "kdtree: name of this tree", "'%s'", kd->name ? kd->name : "");
     fits_header_add_int(hdr, "KDT_NDAT", kd->ndata,  "kdtree: number of data points");
     fits_header_add_int(hdr, "KDT_NDIM", kd->ndim,   "kdtree: number of dimensions");
@@ -203,6 +215,10 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
     fitsbin_chunk_reset(&chunk);
 
 	if (kd->nodes) {
+        if (flip_endian)
+            // Not supported.
+            assert(0);
+
 		chunk.tablename = get_table_name(kd->name, KD_STR_NODES);
 		chunk.itemsize = COMPAT_NODE_SIZE(kd);
 		chunk.nrows = kd->nnodes;
@@ -225,6 +241,8 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
         chunk.itemsize = sizeof(u32);
         chunk.nrows = kd->nbottom;
 		chunk.data = kd->lr;
+        if (flip_endian)
+            wordsize = sizeof(u32);
         hdr = fitsbin_get_chunk_header(fb, &chunk);
 		fits_add_long_comment
 			(hdr, "The \"%s\" table contains the kdtree \"LR\" array. "
@@ -241,6 +259,8 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
         chunk.itemsize = sizeof(u32);
         chunk.nrows = kd->ndata;
         chunk.data = kd->perm;
+        if (flip_endian)
+            wordsize = sizeof(u32);
         hdr = fitsbin_get_chunk_header(fb, &chunk);
 		fits_add_long_comment
 			(hdr, "The \"%s\" table contains the kdtree permutation array. "
@@ -257,6 +277,8 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
         chunk.itemsize = sizeof(ttype) * kd->ndim * 2;
         chunk.nrows = kd->nnodes;
         chunk.data = kd->bb.any;
+        if (flip_endian)
+            wordsize = sizeof(ttype);
         hdr = fitsbin_get_chunk_header(fb, &chunk);
 		fits_add_long_comment
 			(hdr, "The \"%s\" table contains the kdtree bounding-box array. "
@@ -275,6 +297,8 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
         chunk.itemsize = sizeof(ttype);
         chunk.nrows = kd->ninterior;
         chunk.data = kd->split.any;
+        if (flip_endian)
+            wordsize = sizeof(ttype);
         hdr = fitsbin_get_chunk_header(fb, &chunk);
 		if (!kd->splitdim) {
 			fits_add_long_comment
@@ -310,6 +334,8 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
         chunk.itemsize = sizeof(u8);
         chunk.nrows = kd->ninterior;
         chunk.data = kd->splitdim;
+        if (flip_endian)
+            wordsize = sizeof(u8);
         hdr = fitsbin_get_chunk_header(fb, &chunk);
 		fits_add_long_comment
 			(hdr, "The \"%s\" table contains the kdtree splitting-plane "
@@ -335,6 +361,8 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
         chunk.itemsize = sizeof(double);
         chunk.nrows = (kd->ndim * 2 + 1);
         chunk.data = tempranges;
+        if (flip_endian)
+            wordsize = sizeof(double);
         hdr = fitsbin_get_chunk_header(fb, &chunk);
 		fits_add_long_comment
 			(hdr, "The \"%s\" table contains the scaling parameters of the "
@@ -363,6 +391,8 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
         chunk.itemsize = sizeof(dtype) * kd->ndim;
         chunk.nrows = kd->ndata;
         chunk.data = kd->data.any;
+        if (flip_endian)
+            wordsize = sizeof(dtype);
         hdr = fitsbin_get_chunk_header(fb, &chunk);
 		fits_add_long_comment
 			(hdr, "The \"%s\" table contains the kdtree data. "

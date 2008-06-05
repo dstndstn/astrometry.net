@@ -51,7 +51,7 @@ qfits_header* startree_header(startree_t* s) {
 	return s->header;
 }
 
-bl* get_chunks(startree_t* s) {
+bl* get_chunks(startree_t* s, il* wordsizes) {
     bl* chunks = bl_new(4, sizeof(fitsbin_chunk_t));
     fitsbin_chunk_t chunk;
     kdtree_t* kd = s->tree;
@@ -64,6 +64,8 @@ bl* get_chunks(startree_t* s) {
     chunk.userdata = &(s->sweep);
     chunk.required = FALSE;
     bl_append(chunks, &chunk);
+    if (wordsizes)
+        il_append(wordsizes, sizeof(uint8_t));
 
     fitsbin_chunk_reset(&chunk);
     chunk.tablename = "sigma_radec";
@@ -73,6 +75,8 @@ bl* get_chunks(startree_t* s) {
     chunk.userdata = &(s->sigma_radec);
     chunk.required = FALSE;
     bl_append(chunks, &chunk);
+    if (wordsizes)
+        il_append(wordsizes, sizeof(float));
 
     fitsbin_chunk_reset(&chunk);
     chunk.tablename = "proper_motion";
@@ -82,6 +86,8 @@ bl* get_chunks(startree_t* s) {
     chunk.userdata = &(s->proper_motion);
     chunk.required = FALSE;
     bl_append(chunks, &chunk);
+    if (wordsizes)
+        il_append(wordsizes, sizeof(float));
 
     fitsbin_chunk_reset(&chunk);
     chunk.tablename = "sigma_pm";
@@ -91,6 +97,8 @@ bl* get_chunks(startree_t* s) {
     chunk.userdata = &(s->sigma_pm);
     chunk.required = FALSE;
     bl_append(chunks, &chunk);
+    if (wordsizes)
+        il_append(wordsizes, sizeof(float));
 
     fitsbin_chunk_reset(&chunk);
     chunk.tablename = "starid";
@@ -100,6 +108,8 @@ bl* get_chunks(startree_t* s) {
     chunk.userdata = &(s->starids);
     chunk.required = FALSE;
     bl_append(chunks, &chunk);
+    if (wordsizes)
+        il_append(wordsizes, sizeof(uint64_t));
 
     fitsbin_chunk_clean(&chunk);
     return chunks;
@@ -131,7 +141,7 @@ startree_t* startree_open(char* fn) {
         goto bailout;
     }
 
-    chunks = get_chunks(s);
+    chunks = get_chunks(s, NULL);
     for (i=0; i<bl_size(chunks); i++) {
         fitsbin_chunk_t* chunk = bl_access(chunks, i);
         void** dest = chunk->userdata;
@@ -224,8 +234,9 @@ startree_t* startree_new() {
 	return s;
 }
 
-int startree_write_to_file(startree_t* s, char* fn) {
+static int write_to_file(startree_t* s, char* fn, bool flipped) {
     bl* chunks;
+    il* wordsizes = NULL;
     int i;
     kdtree_fits_t* io;
     io = kdtree_fits_open_for_writing(fn);
@@ -238,15 +249,34 @@ int startree_write_to_file(startree_t* s, char* fn) {
         return -1;
     }
 
-    chunks = get_chunks(s);
+    if (flipped)
+        wordsizes = il_new(4);
+
+    chunks = get_chunks(s, wordsizes);
     for (i=0; i<bl_size(chunks); i++) {
         fitsbin_chunk_t* chunk = bl_access(chunks, i);
         if (!chunk->data)
             continue;
-        kdtree_fits_write_chunk(io, chunk);
+        if (flipped)
+            kdtree_fits_write_chunk_flipped(io, chunk, il_get(wordsizes, i));
+        else
+            kdtree_fits_write_chunk(io, chunk);
     }
     bl_free(chunks);
+
+    if (flipped)
+        il_free(wordsizes);
     
     kdtree_fits_io_close(io);
     return 0;
 }
+
+
+int startree_write_to_file(startree_t* s, char* fn) {
+    return write_to_file(s, fn, FALSE);
+}
+
+int startree_write_to_file_flipped(startree_t* s, char* fn) {
+    return write_to_file(s, fn, TRUE);
+}
+

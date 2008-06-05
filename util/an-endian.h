@@ -38,20 +38,22 @@
 #define IS_BIG_ENDIAN 0
 #endif
 
-inline uint32_t u32_letoh(uint32_t i);
-inline uint32_t u32_htole(uint32_t i);
+uint32_t u32_letoh(uint32_t i);
+uint32_t u32_htole(uint32_t i);
 
-inline void v32_htole(void* p);
-inline void v16_htole(void* p);
+void v32_htole(void* p);
+void v16_htole(void* p);
 
-inline void v32_letoh(void* p);
+void v32_letoh(void* p);
 
-inline void v64_ntoh(void* p);
-inline void v32_ntoh(void* p);
-inline void v16_ntoh(void* p);
+void v64_ntoh(void* p);
+void v32_ntoh(void* p);
+void v16_ntoh(void* p);
 
-inline void v64_hton(void* p);
-inline void v32_hton(void* p);
-inline void v16_hton(void* p);
+void v64_hton(void* p);
+void v32_hton(void* p);
+void v16_hton(void* p);
+
+void endian_swap(void* p, int nbytes);
 
 #endif

@@ -81,7 +81,7 @@ PIPELINE := usnobtofits tycho2tofits build-an-catalog hpowned cut-an \
 	wcsinfo fits-guess-scale agreeable new-wcs get-wcs \
 	backend augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
 	certifiable wcs-annotate get-healpix 2masstofits nomadtofits \
-	merge-index index-to-table
+	merge-index index-to-table endian-flip-index
 
 PROSPECTUS := quadidx codeprojections quadlocations quadscales quadsperstar \
 	whynot quadcenters startree2rdls
@@ -385,6 +385,9 @@ merge-index: merge-index.o codekd.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 index-to-table: index-to-table.o index.o log.o codekd.o \
+		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
+endian-flip-index: endian-flip-index.o codekd.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 backend-old: backend-old.o scriptutils.o fileutil.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)

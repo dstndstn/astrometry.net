@@ -75,4 +75,6 @@ startree_t* startree_new();
 
 int startree_write_to_file(startree_t* s, char* fn);
 
+int startree_write_to_file_flipped(startree_t* s, char* fn);
+
 #endif

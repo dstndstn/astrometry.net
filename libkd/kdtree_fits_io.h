@@ -105,10 +105,23 @@ int kdtree_fits_write_primary_header(kdtree_fits_t* io,
 
 int kdtree_fits_write_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk);
 
+int kdtree_fits_write_chunk_flipped(kdtree_fits_t* io, fitsbin_chunk_t* chunk,
+                                    int wordsize);
+
 int kdtree_fits_close(kdtree_t* io);
 
 
 int kdtree_fits_io_close(kdtree_fits_t* io);
+
+
+// flipped-endian writing...
+int kdtree_fits_write_flipped(const kdtree_t* kdtree, const char* fn,
+                              const qfits_header* hdr);
+int kdtree_fits_write_tree_flipped(kdtree_fits_t* io, const kdtree_t* kd,
+                                   const qfits_header* inhdr);
+int kdtree_fits_append_tree_flipped(kdtree_fits_t* io, const kdtree_t* kd,
+                                    const qfits_header* inhdr);
+
 
 // names (actually prefixes) of FITS tables.
 #define KD_STR_HEADER    "kdtree_header"
