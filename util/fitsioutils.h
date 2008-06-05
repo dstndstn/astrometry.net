@@ -121,6 +121,7 @@ int fits_check_double_size(const qfits_header* header);
 void fits_add_endian(qfits_header* header);
 
 void fits_add_reverse_endian(qfits_header* header);
+void fits_mod_reverse_endian(qfits_header* header);
 
 void fits_add_uint_size(qfits_header* header);
 

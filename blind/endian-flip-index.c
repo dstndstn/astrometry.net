@@ -162,6 +162,8 @@ int main(int argc, char **args) {
         ERROR("Failed to open file %s for writing quad file", quadoutfn);
         exit(-1);
     }
+    hdr = quadfile_get_header(quadout);
+    fits_mod_reverse_endian(hdr);
     if (quadfile_write_header(quadout)) {
         ERROR("Failed to write quad header");
         exit(-1);
