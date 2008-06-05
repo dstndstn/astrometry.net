@@ -174,6 +174,13 @@ int main(int argc, char **args) {
     }
     hdr = quadfile_get_header(quadout);
     fits_mod_reverse_endian(hdr);
+    quadout->numstars = quad->numstars;
+    quadout->dimquads = quad->dimquads;
+    quadout->index_scale_upper = quad->index_scale_upper;
+    quadout->index_scale_lower = quad->index_scale_lower;
+    quadout->indexid = quad->indexid;
+    quadout->healpix = quad->healpix;
+    quadout->hpnside = quad->hpnside;
     if (quadfile_write_header(quadout)) {
         ERROR("Failed to write quad header");
         exit(-1);
