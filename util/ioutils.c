@@ -430,6 +430,16 @@ bool file_executable(const char* fn) {
     return (access(fn, X_OK) == 0);
 }
 
+bool path_is_dir(const char* path) {
+    struct stat st;
+    if (stat(path, &st)) {
+        SYSERROR("Couldn't stat path %s", path);
+        return FALSE;
+    }
+    //return st.st_mode & S_IFDIR;
+    return S_ISDIR(st.st_mode);
+}
+
 int starts_with(const char* str, const char* prefix) {
 	int len = strlen(prefix);
 	if (strncmp(str, prefix, len))

@@ -54,6 +54,8 @@ bool file_readable(const char* fn);
 
 bool file_executable(const char* fn);
 
+bool path_is_dir(const char* path);
+
 void* file_get_contents(const char* fn, size_t* len, bool addzero);
 
 char* file_get_contents_offset(const char* fn, int offset, int length);
