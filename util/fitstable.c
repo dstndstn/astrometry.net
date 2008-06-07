@@ -859,8 +859,12 @@ static void fitstable_create_table(fitstable_t* tab) {
     for (i=0; i<ncols(tab); i++) {
         fitscol_t* col = getcol(tab, i);
 		char* nil = "";
+        int arraysize;
 		assert(col->colname);
-        fits_add_column(qt, i, col->fitstype, col->arraysize,
+        arraysize = col->arraysize;
+        if (col->fitstype == TFITS_BIN_TYPE_X)
+            arraysize = col->arraysize * 8;
+        fits_add_column(qt, i, col->fitstype, arraysize,
 						col->units ? col->units : nil, col->colname);
     }
 }

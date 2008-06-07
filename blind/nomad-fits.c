@@ -76,7 +76,7 @@ static void add_columns(fitstable_t* tab, bool write) {
     ADDCOL(u8, u8,  "VISUAL_SRC",         nil, visual_src);
     ADDCOL(u8, u8,  "RED_SRC",            nil, red_src);
 	ADDCOL(i32, J,  "NOMAD_ID",           nil, nomad_id);
-    ADDARR(bitfield, bitfield, "FLAGS",   nil, flags, 16);
+    ADDARR(bitfield, bitfield, "FLAGS",   nil, flags, 2);
 }
 #undef ADDCOL
 #undef ADDARR
