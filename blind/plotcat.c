@@ -29,6 +29,7 @@
 #include "catalog.h"
 #include "an-catalog.h"
 #include "usnob-fits.h"
+#include "nomad-fits.h"
 #include "tycho2-fits.h"
 #include "mathutil.h"
 #include "rdlist.h"
@@ -115,6 +116,7 @@ int main(int argc, char *argv[]) {
 	startree_t* skdt;
 	an_catalog* ancat;
 	usnob_fits* usnob;
+	nomad_fits* nomad;
 	tycho2_fits* tycho;
 	rd_t* rd;
 	il* fields;
@@ -226,6 +228,7 @@ int main(int argc, char *argv[]) {
 		skdt = NULL;
 		ancat = NULL;
 		usnob = NULL;
+        nomad = NULL;
 		tycho = NULL;
 		rd = NULL;
 		numstars = 0;
@@ -337,14 +340,23 @@ int main(int argc, char *argv[]) {
                 }
             }
             pl_free(rds);
-                
+
+        } else if (qfits_header_getboolean(hdr, "NOMAD", FALSE)) {
+            logmsg("Looks like a NOMAD file...\n");
+            nomad = nomad_fits_open(fname);
+            if (!nomad) {
+                ERROR("Failed to open NOMAD file %s", fname);
+                return -1;
+            }
+            numstars = nomad_fits_count_entries(nomad);
+
         } else {
-            ERROR("Unknown Astrometry.net file type: \"%s\".\n", filetype);
-            exit(-1);
+            if (filetype)
+                ERROR("Unknown Astrometry.net file type: \"%s\".\n", filetype);
         }
 
         qfits_header_destroy(hdr);
-        if (!(cat || skdt || ancat || usnob || tycho || rd)) {
+        if (!(cat || skdt || ancat || usnob || nomad || tycho || rd)) {
             ERROR("I can't figure out what kind of file %s is.\n", fname);
             exit(-1);
         }
@@ -383,6 +395,9 @@ int main(int argc, char *argv[]) {
                 if (notycho && (entry->ndetections == 0))
                     continue;
                 radecdeg2xyzarr(entry->ra, entry->dec, xyz);
+            } else if (nomad) {
+                nomad_entry* entry = nomad_fits_read_entry(nomad);
+                radecdeg2xyzarr(entry->ra, entry->dec, xyz);
             } else if (tycho) {
                 tycho2_entry* entry = tycho2_fits_read_entry(tycho);
                 radecdeg2xyzarr(entry->ra, entry->dec, xyz);
@@ -401,6 +416,8 @@ int main(int argc, char *argv[]) {
             an_catalog_close(ancat);
         if (usnob)
             usnob_fits_close(usnob);
+        if (nomad)
+            nomad_fits_close(nomad);
         if (tycho)
             tycho2_fits_close(tycho);
     }
