@@ -736,17 +736,19 @@ int fitstable_read_extension(fitstable_t* tab, int ext) {
         col->fitssize = fits_get_atom_size(col->fitstype);
 
         if (col->arraysize) {
-            if (col->fitstype == TFITS_BIN_TYPE_X) {
-                if (((col->arraysize + 7)/8) != qcol->atom_nb) {
-                    col->col = -1;
-                    continue;
-                }
-            } else {
-                if (col->arraysize != qcol->atom_nb) {
-                    col->col = -1;
-                    continue;
-                }
+            /*
+             if (col->fitstype == TFITS_BIN_TYPE_X) {
+             if (((col->arraysize + 7)/8) != qcol->atom_nb) {
+             col->col = -1;
+             continue;
+             }
+             } else {
+             */
+            if (col->arraysize != qcol->atom_nb) {
+                col->col = -1;
+                continue;
             }
+            //}
         }
         if (col->fitstype == TFITS_BIN_TYPE_X) {
             col->arraysize = 8 * qcol->atom_nb;
