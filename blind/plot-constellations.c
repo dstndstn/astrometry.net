@@ -49,7 +49,7 @@
 #include "fitsioutils.h"
 #include "sip-utils.h"
 
-const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:";
+const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:J";
 
 void print_help(char* progname) {
     boilerplate_help_header(stdout);
@@ -74,6 +74,7 @@ void print_help(char* progname) {
            "   [-f <size>]: font size.\n"
            "   [-M]: show only NGC/IC and Messier numbers (no common names)\n"
            "   [-G <grid spacing in arcmin>]: plot RA,Dec grid\n"
+           "   [-J]: print JSON output to stderr\n"
            "\n", progname);
 }
 
@@ -210,6 +211,9 @@ int main(int argc, char** args) {
     bool grid = FALSE;
     double gridspacing = 0.0;
 
+    //char* jsonfn = NULL;
+    sl* json = NULL;
+
     fits_use_error_system();
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
@@ -217,6 +221,9 @@ int main(int argc, char** args) {
         case 'h':
             print_help(args[0]);
             exit(0);
+        case 'J':
+            json = sl_new(4);
+            break;
         case 'G':
             gridspacing = atof(optarg);
             break;
@@ -283,6 +290,7 @@ int main(int argc, char** args) {
             break;
         }
     }
+
 
     if (optind != argc) {
         print_help(args[0]);
@@ -658,6 +666,15 @@ int main(int argc, char** args) {
 			//printf("Bright star %i/%i: %s, radec (%g,%g), pixel (%g,%g)\n", i, N, text, bs->ra, bs->dec, px, py);
 			if (verbose) fprintf(stderr, "%s at (%g, %g)\n", text, px + label_offset, py + dy);
 
+            if (json)
+                sl_appendf(json,
+                           "{ \"type\"  : \"star\", "
+                           "  \"pixelx\": %g,       "
+                           "  \"pixely\": %g,       "
+                           "  \"name\"  : \"%s\"  } "
+                           , px, py,
+                           (bs->common_name && strlen(bs->common_name)) ? bs->common_name : bs->name);
+
 			if (bs->common_name && strlen(bs->common_name))
 				printf("The star %s (%s)\n", bs->common_name, bs->name);
 			else
@@ -694,7 +711,6 @@ int main(int argc, char** args) {
 			dy = extents.ascent * 0.5;
 		}
 
-        // Code stolen from wcs-annotate.c
         // arcsec/pixel
         imscale = sip_pixel_scale(&sip);
         // arcmin
@@ -736,17 +752,18 @@ int main(int argc, char** args) {
                     //printf("  >>%s<<\n", sl_get(names, n));
                     if (only_messier && strncmp(sl_get(names, n), "M ", 2))
                         continue;
-					sl_appendf(str, " / %s", sl_get(names, n));
+					sl_append(str, sl_get(names, n));
                 }
             }
             sl_free2(names);
-			text = sl_implode(str, "");
+
+			text = sl_implode(str, " / ");
 
 			printf("%s\n", text);
 
-			if (!justlist) {
-				pixsize = ngc->size * 60.0 / imscale;
+            pixsize = ngc->size * 60.0 / imscale;
 
+			if (!justlist) {
                 // black circle behind the white one...
                 cairo_arc(cairobg, px, py, pixsize/2.0+1.0, 0.0, 2.0*M_PI);
                 cairo_stroke(cairobg);
@@ -758,6 +775,19 @@ int main(int argc, char** args) {
 
                 add_text(cairos, text, px + label_offset, py + dy);
 			}
+
+            if (json) {
+                char* namelist = sl_implode(str, "\", \"");
+                sl_appendf(json,
+                           "{ \"type\"   : \"ngc\", "
+                           "  \"names\"  : [ \"%s\" ], "
+                           "  \"pixelx\" : %g, "
+                           "  \"pixely\" : %g, "
+                           "  \"radius\" : %g }"
+                           , namelist, px, py, pixsize/2.0);
+                free(namelist);
+            }
+
 			free(text);
 			sl_free2(str);
         }
@@ -812,11 +842,27 @@ int main(int argc, char** args) {
 
                 add_text(cairos, txt, px, py);
             }
+
+            if (json)
+                sl_appendf(json,
+                           "{ \"type\"  : \"hd\","
+                           "  \"pixelx\": %g, "
+                           "  \"pixely\": %g, "
+                           "  \"name\"  : \"HD %i\" }"
+                           , px, py, hd->hd);
+
             printf("%s\n", txt);
             free(txt);
         }
         bl_free(hdlist);
         henry_draper_close(hdcat);
+    }
+
+    if (json) {
+        FILE* fout = stderr;
+        char* annstr = sl_implode(json, ",\n");
+        fprintf(fout, "{ \"annotations\": %s\n}\n", annstr);
+        free(annstr);
     }
 
 	if (justlist)
