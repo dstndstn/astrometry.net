@@ -214,7 +214,6 @@ int main(int argc, char** args) {
 
     int loglvl = LOG_MSG;
 
-    //char* jsonfn = NULL;
     sl* json = NULL;
 
     fits_use_error_system();
