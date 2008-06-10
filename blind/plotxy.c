@@ -23,7 +23,9 @@
 #include <sys/param.h>
 
 #include <cairo.h>
+#ifndef ASTROMETRY_NO_PPM
 #include <ppm.h>
+#endif
 
 #include "xylist.h"
 #include "boilerplate.h"
@@ -231,8 +233,19 @@ int main(int argc, char *args[]) {
 	}
 
     if (infn) {
-        ppm_init(&argc, args);
-        img = cairoutils_read_ppm(infn, &W, &H);
+        if (strcasecmp(infn-strlen(infn)+4, ".png") == 0) {
+            img = cairoutils_read_png(infn, &W, &H);
+        }
+#ifndef ASTROMETRY_NO_PPM
+        else if (strcasecmp(infn-strlen(infn)+4, ".ppm") == 0) {
+            ppm_init(&argc, args);
+            img = cairoutils_read_ppm(infn, &W, &H);
+        }
+#endif // ASTROMETRY_NO_PPM
+        else {
+            fprintf(stderr, "Unrecognized image format: %s.\n", infn);
+            exit(-1);
+        }
         if (!img) {
             fprintf(stderr, "Failed to read input image %s.\n", infn);
             exit(-1);
