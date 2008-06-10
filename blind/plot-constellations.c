@@ -328,24 +328,6 @@ int main(int argc, char** args) {
     fontsize /= scale;
     label_offset /= scale;
 
-    if (infn) {
-        ppm_init(&argc, args);
-        img = cairoutils_read_ppm(infn, &W, &H);
-        if (!img) {
-            fprintf(stderr, "Failed to read input image %s.\n", infn);
-            exit(-1);
-        }
-        cairoutils_rgba_to_argb32(img, W, H);
-    } else if (!justlist) {
-        // Allocate a black image.
-        img = calloc(4 * W * H, 1);
-    }
-
-    if (HD && !hdpath) {
-        fprintf(stderr, "If you specify -D (plot Henry Draper objs), you also have to give -d (path to Henry Draper catalog)\n");
-        exit(-1);
-    }
-
     // read WCS.
     if (verbose)
         fprintf(stderr, "Trying to parse SIP/TAN header from %s...\n", wcsfn);
@@ -365,6 +347,25 @@ int main(int argc, char** args) {
 		fprintf(stderr, "Image W,H unknown.\n");
 		exit(-1);
 	}
+
+
+    if (infn) {
+        ppm_init(&argc, args);
+        img = cairoutils_read_ppm(infn, &W, &H);
+        if (!img) {
+            fprintf(stderr, "Failed to read input image %s.\n", infn);
+            exit(-1);
+        }
+        cairoutils_rgba_to_argb32(img, W, H);
+    } else if (!justlist) {
+        // Allocate a black image.
+        img = calloc(4 * W * H, 1);
+    }
+
+    if (HD && !hdpath) {
+        fprintf(stderr, "If you specify -D (plot Henry Draper objs), you also have to give -d (path to Henry Draper catalog)\n");
+        exit(-1);
+    }
 
     srand(0);
 
