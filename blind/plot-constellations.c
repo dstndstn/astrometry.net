@@ -48,6 +48,8 @@
 #include "hd.h"
 #include "fitsioutils.h"
 #include "sip-utils.h"
+#include "errors.h"
+#include "log.h"
 
 const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:J";
 
@@ -202,7 +204,6 @@ int main(int argc, char** args) {
 	bool common_only = FALSE;
 	bool print_common_only = FALSE;
 	int Nbright = 0;
-    bool verbose = FALSE;
 	double ra, dec, px, py;
 	int i, N;
 	bool justlist = FALSE;
@@ -210,6 +211,8 @@ int main(int argc, char** args) {
 
     bool grid = FALSE;
     double gridspacing = 0.0;
+
+    int loglvl = LOG_MSG;
 
     //char* jsonfn = NULL;
     sl* json = NULL;
@@ -247,7 +250,8 @@ int main(int argc, char** args) {
 			outfn = NULL;
 			break;
         case 'v':
-            verbose = TRUE;
+            loglvl++;
+            break;
             break;
 		case 'j':
 			print_common_only = TRUE;
@@ -291,6 +295,9 @@ int main(int argc, char** args) {
         }
     }
 
+    log_init(loglvl);
+    log_to(stderr);
+    fits_use_error_system();
 
     if (optind != argc) {
         print_help(args[0]);
@@ -302,13 +309,6 @@ int main(int argc, char** args) {
         print_help(args[0]);
         exit(-1);
     }
-	/*
-	  if (!(infn || (W>0 && H>0))) {
-	  fprintf(stderr, "Need -i or (-W and -H) args.\n");
-	  print_help(args[0]);
-	  exit(-1);
-	  }
-	*/
 
     if (gridspacing > 0.0)
         grid = TRUE;
@@ -329,13 +329,11 @@ int main(int argc, char** args) {
     label_offset /= scale;
 
     // read WCS.
-    if (verbose)
-        fprintf(stderr, "Trying to parse SIP/TAN header from %s...\n", wcsfn);
+    logverb("Trying to parse SIP/TAN header from %s...\n", wcsfn);
     if (sip_read_header_file(wcsfn, &sip)) {
-        if (verbose)
-            fprintf(stderr, "Got SIP header.\n");
+	logverb("Got SIP header.\n");
     } else {
-        fprintf(stderr, "Failed to parse SIP/TAN header from %s.\n", wcsfn);
+        ERROR("Failed to parse SIP/TAN header from %s", wcsfn);
         exit(-1);
     }
 
@@ -344,7 +342,7 @@ int main(int argc, char** args) {
 		H = sip.wcstan.imageh;
 	}
 	if (!W || !H) {
-		fprintf(stderr, "Image W,H unknown.\n");
+	    logerr("Image width/height unknown.\n");
 		exit(-1);
 	}
 
@@ -353,17 +351,21 @@ int main(int argc, char** args) {
         ppm_init(&argc, args);
         img = cairoutils_read_ppm(infn, &W, &H);
         if (!img) {
-            fprintf(stderr, "Failed to read input image %s.\n", infn);
+            ERROR("Failed to read input image %s", infn);
             exit(-1);
         }
         cairoutils_rgba_to_argb32(img, W, H);
     } else if (!justlist) {
         // Allocate a black image.
         img = calloc(4 * W * H, 1);
+	if (!img) {
+	    SYSERROR("Failed to allocate a blank image on which to plot!");
+	    exit(-1);
+	}
     }
 
     if (HD && !hdpath) {
-        fprintf(stderr, "If you specify -D (plot Henry Draper objs), you also have to give -d (path to Henry Draper catalog)\n");
+        logerr("If you specify -D (plot Henry Draper objs), you also have to give -d (path to Henry Draper catalog)\n");
         exit(-1);
     }
 
@@ -469,8 +471,7 @@ int main(int argc, char** args) {
     if (constell) {
 		N = constellations_n();
 
-		if (verbose)
-            fprintf(stderr, "Checking %i constellations.\n", N);
+		logverb("Checking %i constellations.\n", N);
 		for (c=0; c<N; c++) {
 			const char* shortname;
 			const char* longname;
@@ -487,7 +488,7 @@ int main(int argc, char** args) {
 			inboundstars = il_new(16);
 
 			Nunique = il_size(uniqstars);
-			//fprintf(stderr, "%s: %i unique stars.\n", shortname, il_size(uniqstars));
+			debug("%s: %i unique stars.\n", shortname, il_size(uniqstars));
 
 			// Count the number of unique stars belonging to this contellation
 			// that are within the image bounds
@@ -496,7 +497,7 @@ int main(int argc, char** args) {
 				int star;
 				star = il_get(uniqstars, i);
 				constellations_get_star_radec(star, &ra, &dec);
-				//fprintf(stderr, "star %i: ra,dec (%g,%g)\n", il_get(uniqstars, i), ra, dec);
+				debug("star %i: ra,dec (%g,%g)\n", il_get(uniqstars, i), ra, dec);
                 if (!sip_radec2pixelxy(&sip, ra, dec, &px, &py))
                     continue;
 				if (px < 0 || py < 0 || px*scale > W || py*scale > H)
@@ -505,7 +506,7 @@ int main(int argc, char** args) {
 				il_append(inboundstars, star);
 			}
 			il_free(uniqstars);
-			//fprintf(stderr, "%i are in-bounds.\n", Ninbounds);
+			debug("%i are in-bounds.\n", Ninbounds);
 			// Only draw this constellation if at least 2 of its stars
 			// are within the image bounds.
 			if (Ninbounds < 2) {
@@ -557,7 +558,7 @@ int main(int argc, char** args) {
 			longname = constellations_get_longname(c);
 			assert(shortname && longname);
 
-			if (verbose) fprintf(stderr, "%s at (%g, %g)\n", longname, px, py);
+			logverb(stderr, "%s at (%g, %g)\n", longname, px, py);
 
 			if (Ninbounds == Nunique) {
 				printf("The constellation %s (%s)\n", longname, shortname);
@@ -578,7 +579,7 @@ int main(int argc, char** args) {
 				px = W/scale - textents.width;
 			if ((py+textents.height)*scale > H)
 				py = H/scale - textents.height;
-			//fprintf(stderr, "%s at (%g, %g)\n", shortname, px, py);
+			logverb("%s at (%g, %g)\n", shortname, px, py);
 
             add_text(cairos, longname, px, py);
 
@@ -609,7 +610,7 @@ int main(int argc, char** args) {
 			}
 			il_free(lines);
         }
-        if (verbose) fprintf(stderr, "done constellations.\n");
+		logverb("done constellations.\n");
     }
 
 	if (bright) {
@@ -625,7 +626,7 @@ int main(int argc, char** args) {
 		}
 
 		N = bright_stars_n();
-		if (verbose) fprintf(stderr, "Checking %i bright stars.\n", N);
+		logverb("Checking %i bright stars.\n", N);
 
 		for (i=0; i<N; i++) {
 			const brightstar_t* bs = bright_stars_get(i);
@@ -664,8 +665,7 @@ int main(int argc, char** args) {
 			else
 				text = strdup(bs->name);
 
-			//printf("Bright star %i/%i: %s, radec (%g,%g), pixel (%g,%g)\n", i, N, text, bs->ra, bs->dec, px, py);
-			if (verbose) fprintf(stderr, "%s at (%g, %g)\n", text, px + label_offset, py + dy);
+			logverb("%s at (%g, %g)\n", text, px + label_offset, py + dy);
 
             if (json)
                 sl_appendf(json,
@@ -718,7 +718,7 @@ int main(int argc, char** args) {
         imsize = imscale * (imin(W, H) / scale) / 60.0;
         N = ngc_num_entries();
 
-		if (verbose) fprintf(stderr, "Checking %i NGC/IC objects.\n", N);
+	logverb("Checking %i NGC/IC objects.\n", N);
 
         for (i=0; i<N; i++) {
             ngc_entry* ngc = ngc_get_entry(i);
@@ -750,7 +750,6 @@ int main(int argc, char** args) {
             if (names) {
                 int n;
                 for (n=0; n<sl_size(names); n++) {
-                    //printf("  >>%s<<\n", sl_get(names, n));
                     if (only_messier && strncmp(sl_get(names, n), "M ", 2))
                         continue;
 					sl_append(str, sl_get(names, n));
@@ -771,7 +770,7 @@ int main(int argc, char** args) {
 
 				cairo_move_to(cairoshapes, px + pixsize/2.0, py);
 				cairo_arc(cairoshapes, px, py, pixsize/2.0, 0.0, 2.0*M_PI);
-				//fprintf(stderr, "size: %f arcsec, pixsize: %f pixels\n", ngc->size, pixsize);
+				debug("size: %f arcsec, pixsize: %f pixels\n", ngc->size, pixsize);
 				cairo_stroke(cairoshapes);
 
                 add_text(cairos, text, px + label_offset, py + dy);
@@ -806,7 +805,7 @@ int main(int argc, char** args) {
 
         hdcat = henry_draper_open(hdpath);
         if (!hdcat) {
-            fprintf(stderr, "Failed to open HD catalog.\n");
+            ERROR("Failed to open HD catalog");
             exit(-1);
         }
 
@@ -829,12 +828,8 @@ int main(int argc, char** args) {
             if (!justlist) {
                 cairo_text_extents_t textents;
                 cairo_text_extents(cairo, txt, &textents);
-                //add_text(cairos, txt, px, py - label_offset);
-                //fprintf(stderr, "(%g, %g), (%g, %g)\n", hd->ra, hd->dec, px, py);
-
                 cairo_arc(cairobg, px, py, crad+1.0, 0.0, 2.0*M_PI);
                 cairo_stroke(cairobg);
-
 				cairo_arc(cairoshapes, px, py, crad, 0.0, 2.0*M_PI);
 				cairo_stroke(cairoshapes);
 
@@ -894,12 +889,12 @@ int main(int argc, char** args) {
 
     if (pngformat) {
         if (cairoutils_write_png(outfn, img, W, H)) {
-            fprintf(stderr, "Failed to write PNG.\n");
+            ERROR("Failed to write PNG");
             exit(-1);
         }
     } else {
         if (cairoutils_write_ppm(outfn, img, W, H)) {
-            fprintf(stderr, "Failed to write PPM.\n");
+            ERROR("Failed to write PPM");
             exit(-1);
         }
     }
