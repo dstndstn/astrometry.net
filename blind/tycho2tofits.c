@@ -66,7 +66,7 @@ int main(int argc, char** args) {
 		case 'H':
 			do_hp = 1;
 			break;
-		case 'n':
+		case 'N':
 			Nside = atoi(optarg);
 			break;
 		case 'o':

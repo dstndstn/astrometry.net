@@ -449,7 +449,7 @@ solvedserver: solvedserver.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) \
 		$(QFITS_LIB)
 	$(CC) $(CFLAGS) -o $@ $^ -lm
 
-plotcat: plotcat.o log.o nomad-fits.o nomad.o catalog.o tycho2-fits.o tycho2.o usnob-fits.o usnob.o \
+plotcat: plotcat.o log.o 2mass-fits.o 2mass.o nomad-fits.o nomad.o catalog.o tycho2-fits.o tycho2.o usnob-fits.o usnob.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB)
 
@@ -475,6 +475,10 @@ plot-constellations: plot-constellations.o $(COMMON)/cairoutils.o \
 		hd.o \
 		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB)
+
+catalog-dists: catalog-dists.o 2mass-fits.o usnob-fits.o usnob.o tycho2-fits.o tycho2.o \
+		log.o \
+		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB)

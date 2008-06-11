@@ -31,6 +31,7 @@
 #include "usnob-fits.h"
 #include "nomad-fits.h"
 #include "tycho2-fits.h"
+#include "2mass-fits.h"
 #include "mathutil.h"
 #include "rdlist.h"
 #include "boilerplate.h"
@@ -60,7 +61,7 @@ static void printHelp(char* progname) {
 		   "\n"
 		   "  [-t]: for USNOB inputs, include Tycho-2 stars, even though their format isn't quite right.\n"
 		   "\n"
-		   "Can read Tycho2.fits, USNOB.fits, AN.fits, AN.objs.fits, AN.skdt.fits, and rdls.fits files.\n"
+		   "Can read Tycho2.fits, USNOB.fits, 2MASS.fits, AN.fits, AN.objs.fits, AN.skdt.fits, and rdls.fits files.\n"
 		   "\n", progname);
 }
 		   
@@ -118,6 +119,7 @@ int main(int argc, char *argv[]) {
 	usnob_fits* usnob;
 	nomad_fits* nomad;
 	tycho2_fits* tycho;
+    twomass_fits* twomass;
 	rd_t* rd;
 	il* fields;
 	int backside = 0;
@@ -230,6 +232,7 @@ int main(int argc, char *argv[]) {
 		usnob = NULL;
         nomad = NULL;
 		tycho = NULL;
+        twomass = NULL;
 		rd = NULL;
 		numstars = 0;
 		fname = argv[optind];
@@ -350,13 +353,22 @@ int main(int argc, char *argv[]) {
             }
             numstars = nomad_fits_count_entries(nomad);
 
-        } else {
+         } else if (qfits_header_getboolean(hdr, "2MASS", FALSE)) {
+            logmsg("Looks like a 2MASS file...\n");
+            twomass = twomass_fits_open(fname);
+            if (!twomass) {
+                ERROR("Failed to open 2MASS file %s", fname);
+                return -1;
+            }
+            numstars = twomass_fits_count_entries(twomass);
+
+       } else {
             if (filetype)
                 ERROR("Unknown Astrometry.net file type: \"%s\".\n", filetype);
         }
 
         qfits_header_destroy(hdr);
-        if (!(cat || skdt || ancat || usnob || nomad || tycho || rd)) {
+        if (!(cat || skdt || ancat || usnob || nomad || twomass || tycho || rd)) {
             ERROR("I can't figure out what kind of file %s is.\n", fname);
             exit(-1);
         }
@@ -398,6 +410,9 @@ int main(int argc, char *argv[]) {
             } else if (nomad) {
                 nomad_entry* entry = nomad_fits_read_entry(nomad);
                 radecdeg2xyzarr(entry->ra, entry->dec, xyz);
+            } else if (twomass) {
+                twomass_entry* entry = twomass_fits_read_entry(twomass);
+                radecdeg2xyzarr(entry->ra, entry->dec, xyz);
             } else if (tycho) {
                 tycho2_entry* entry = tycho2_fits_read_entry(tycho);
                 radecdeg2xyzarr(entry->ra, entry->dec, xyz);
@@ -418,6 +433,8 @@ int main(int argc, char *argv[]) {
             usnob_fits_close(usnob);
         if (nomad)
             nomad_fits_close(nomad);
+        if (twomass)
+            twomass_fits_close(twomass);
         if (tycho)
             tycho2_fits_close(tycho);
     }
