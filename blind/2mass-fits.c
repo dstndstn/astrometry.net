@@ -94,7 +94,7 @@ static void add_columns(fitstable_t* tab, bool write) {
 	ADDCOL(b,  logical, "DIST_FLAG_EW",      nil,    dist_flag_ew);
 	ADDCOL(u8, u8,      "DUP_SRC",           nil,    dup_src);
 	ADDCOL(b,  logical, "USE_SRC",           nil,    use_src);
-	ADDCOL(c,  c,       "ASSOCATION",        nil,    association);
+	ADDCOL(c,  c,       "ASSOCIATION",       nil,    association);
 	ADDCOL(i,  j,       "COADD_KEY",         nil,    coadd_key);
 	ADDCOL(i16, I,      "COADD",             nil,    coadd);
 	ADDCOL(i,  j,       "SCAN_KEY",          nil,    scan_key);
