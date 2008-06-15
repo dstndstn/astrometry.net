@@ -557,7 +557,7 @@ int main(int argc, char** args) {
 			longname = constellations_get_longname(c);
 			assert(shortname && longname);
 
-			logverb(stderr, "%s at (%g, %g)\n", longname, px, py);
+			logverb("%s at (%g, %g)\n", longname, px, py);
 
 			if (Ninbounds == Nunique) {
 				printf("The constellation %s (%s)\n", longname, shortname);
