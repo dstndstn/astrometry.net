@@ -666,14 +666,27 @@ int main(int argc, char** args) {
 
 			logverb("%s at (%g, %g)\n", text, px + label_offset, py + dy);
 
-            if (json)
+            if (json) {
+                sl* names = sl_new(4);
+                char* namearr;
+                if (bs->common_name && strlen(bs->common_name))
+                    sl_append(names, bs->common_name);
+                if (bs->name)
+                    sl_append(names, bs->name);
+                namearr = sl_join(names, "\", \"");
+
                 sl_appendf(json,
                            "{ \"type\"  : \"star\", "
                            "  \"pixelx\": %g,       "
                            "  \"pixely\": %g,       "
-                           "  \"name\"  : \"%s\"  } "
+                           "  \"name\"  : \"%s\",   "
+                           "  \"names\" : [ \"%s\" ] } "
                            , px, py,
-                           (bs->common_name && strlen(bs->common_name)) ? bs->common_name : bs->name);
+                           (bs->common_name && strlen(bs->common_name)) ? bs->common_name : bs->name,
+                           namearr);
+                free(namearr);
+                sl_free2(names);
+            }
 
 			if (bs->common_name && strlen(bs->common_name))
 				printf("The star %s (%s)\n", bs->common_name, bs->name);
