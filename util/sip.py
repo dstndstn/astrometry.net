@@ -126,6 +126,10 @@ class Tan(ctypes.Structure):
         cfn = c_char_p(fn)
         rtn = _sip.tan_write_to_file(ctypes.pointer(self), cfn)
         return rtn
+
+	# in arcsec/pixel
+	def get_pixel_scale(self):
+		return _sip.tan_pixel_scale(ctypes.pointer(self))
     
     def __str__(self):
         return '<Tan: crval=(%g, %g), crpix=(%g, %g), cd=(%g, %g; %g, %g), imagew=%d, imageh=%d>' % \
