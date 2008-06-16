@@ -269,7 +269,7 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
                 name = de->d_name;
                 asprintf(&fullpath, "%s/%s", path, name);
                 if (path_is_dir(fullpath)) {
-                    logverb("Skipping directory %s", fullpath);
+                    logverb("Skipping directory %s\n", fullpath);
                     free(fullpath);
                     continue;
                 }
