@@ -53,7 +53,7 @@ CFLAGS += -fPIC
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
 QFITS_UTILS := fitsgetext subtable tabsort column-merge add-healpix-column \
-		resort-xylist
+		resort-xylist fits-flip-endian
 
 CFITS_UTILS := tablist modhead fitscopy tabmerge fitstomatlab liststruc \
 		listhead imcopy imarith imstat
@@ -507,6 +507,8 @@ quadsperstar: quadsperstar.o \
 		$(QFITS_LIB)
 
 fitsgetext: fitsgetext.o $(ANUTILS_LIB) $(QFITS_LIB)
+
+fits-flip-endian: fits-flip-endian.o log.o $(ANUTILS_LIB) $(QFITS_LIB)
 
 subtable: subtable.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 

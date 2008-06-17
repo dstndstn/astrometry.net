@@ -54,6 +54,7 @@ int main(int argc, char *argv[]) {
   il* sizes;
   int i;
   char* progname = argv[0];
+  int Next;
 
   exts = il_new(16);
   sizes = il_new(16);
@@ -107,14 +108,14 @@ int main(int argc, char *argv[]) {
     int e = il_get(exts, i);
     int s = il_get(sizes, i);
     if (e < 0 || e >= Next) {
-      logerr("Extension %i is not valid: must be in [%i, %i]\n", 0, Next-1);
+      logerr("Extension %i is not valid: must be in [%i, %i]\n", e, 0, Next-1);
       exit(-1);
     }
     if (s != 2 && s != 4 && s != 8) {
       logerr("Invalid byte size %i: must be 2, 4, or 8.\n", s);
       exit(-1);
+    }
   }
-
 
   if (!strcmp(outfn, "-"))
     tostdout = TRUE;
@@ -140,15 +141,15 @@ int main(int argc, char *argv[]) {
       size = il_get(sizes, ind);
     }
 
-    if (qfits_get_hdrinfo(infn, ext, &hdrstart,  &hdrlen ) ||
-	qfits_get_datinfo(infn, ext, &datastart, &datalen)) {
-      ERROR("Error getting extents of extension %i", ext);
+    if (qfits_get_hdrinfo(infn, i, &hdrstart,  &hdrlen ) ||
+	qfits_get_datinfo(infn, i, &datastart, &datalen)) {
+      ERROR("Error getting extents of extension %i", i);
       exit(-1);
     }
 
     if (hdrlen) {
       if (pipe_file_offset(fin, hdrstart, hdrlen, fout)) {
-	ERROR("Failed to write header for extension %i", ext);
+	ERROR("Failed to write header for extension %i", i);
 	exit(-1);
       }
     }
@@ -161,24 +162,23 @@ int main(int argc, char *argv[]) {
       char buf[size];
       for (j=0; j<Nitems; j++) {
 	if (fread(buf, size, 1, fin) != 1) {
-	  SYSERROR("Failed to read data element %i from extenison %i", j, i);
+	  SYSERROR("Failed to read data element %i from extension %i", j, i);
 	  exit(-1);
 	}
 	endian_swap(buf, size);
 	if (fwrite(buf, size, 1, fout) != 1) {
-	  SYSERROR("Failed to write data element %i to extenison %i", j, i);
+	  SYSERROR("Failed to write data element %i to extension %i", j, i);
 	  exit(-1);
 	}
       }
     } else {
       // passthrough
       if (pipe_file_offset(fin, datastart, datalen, fout)) {
-	ERROR("Failed to write data for extension %i", ext);
+	ERROR("Failed to write data for extension %i", i);
 	exit(-1);
       }
     }
   }
-
   fclose(fin);
   if (!tostdout)
     fclose(fout);
