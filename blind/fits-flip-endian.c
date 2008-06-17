@@ -1,20 +1,20 @@
 /*
-  This file is part of the Astrometry.net suite.
-  Copyright 2008 Dustin Lang.
+ This file is part of the Astrometry.net suite.
+ Copyright 2008 Dustin Lang.
 
-  The Astrometry.net suite is free software; you can redistribute
-  it and/or modify it under the terms of the GNU General Public License
-  as published by the Free Software Foundation, version 2.
+ The Astrometry.net suite is free software; you can redistribute
+ it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, version 2.
 
-  The Astrometry.net suite is distributed in the hope that it will be
-  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
+ The Astrometry.net suite is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the Astrometry.net suite ; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-*/
+ You should have received a copy of the GNU General Public License
+ along with the Astrometry.net suite ; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -31,158 +31,158 @@
 #include "log.h"
 #include "an-endian.h"
 
-char* OPTIONS = "he:i:o:baDH";
+char* OPTIONS = "hi:o:e:s:";
 
 void printHelp(char* progname) {
-  fprintf(stderr, "%s -i <input-file>\n"
-	  "      -o <output-file>\n"
-	  "      -e <extension-number> -s <data-size-in-bytes>\n\n",
-	  progname);
+    fprintf(stderr, "%s -i <input-file>\n"
+            "      -o <output-file>\n"
+            "    [ -e <extension-number> -s <data-size-in-bytes> ] ...\n\n",
+            progname);
 }
 
 extern char *optarg;
 extern int optind, opterr, optopt;
 
 int main(int argc, char *argv[]) {
-  int argchar;
-  char* infn = NULL;
-  char* outfn = NULL;
-  bool tostdout = FALSE;
-  FILE* fin = NULL;
-  FILE* fout = NULL;
-  il* exts;
-  il* sizes;
-  int i;
-  char* progname = argv[0];
-  int Next;
+    int argchar;
+    char* infn = NULL;
+    char* outfn = NULL;
+    bool tostdout = FALSE;
+    FILE* fin = NULL;
+    FILE* fout = NULL;
+    il* exts;
+    il* sizes;
+    int i;
+    char* progname = argv[0];
+    int Next;
 
-  exts = il_new(16);
-  sizes = il_new(16);
+    exts = il_new(16);
+    sizes = il_new(16);
 
-  while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
-    switch (argchar) {
-    case 'e':
-      il_append(exts, atoi(optarg));
-      break;
-    case 's':
-      il_append(sizes, atoi(optarg));
-      break;
-    case 'i':
-      infn = optarg;
-      break;
-    case 'o':
-      outfn = optarg;
-      break;
-    case '?':
-    case 'h':
-      printHelp(progname);
-      return 0;
-    default:
-      return -1;
+    while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
+        switch (argchar) {
+        case 'e':
+            il_append(exts, atoi(optarg));
+            break;
+        case 's':
+            il_append(sizes, atoi(optarg));
+            break;
+        case 'i':
+            infn = optarg;
+            break;
+        case 'o':
+            outfn = optarg;
+            break;
+        case '?':
+        case 'h':
+            printHelp(progname);
+            return 0;
+        default:
+            return -1;
+        }
+
+    log_init(LOG_MSG);
+
+    if (!infn || !outfn || !il_size(exts) || (il_size(exts) != il_size(sizes))) {
+        printHelp(progname);
+        exit(-1);
     }
 
-  log_init(LOG_MSG);
-
-  if (!infn || !outfn || !il_size(exts) || (il_size(exts) != il_size(sizes))) {
-    printHelp(progname);
-    exit(-1);
-  }
-
-  if (infn) {
-    fin = fopen(infn, "rb");
-    if (!fin) {
-      SYSERROR("Failed to open input file %s", infn);
-      exit(-1);
+    if (infn) {
+        fin = fopen(infn, "rb");
+        if (!fin) {
+            SYSERROR("Failed to open input file %s", infn);
+            exit(-1);
+        }
     }
-  }
 
-  Next = qfits_query_n_ext(infn);
-  if (Next == -1) {
-    ERROR("Couldn't determine how many extensions are in file %s", infn);
-    exit(-1);
-  } else {
-    logverb("File %s contains %i FITS extensions.\n", infn, Next);
-  }
-
-  for (i=0; i<il_size(exts); i++) {
-    int e = il_get(exts, i);
-    int s = il_get(sizes, i);
-    if (e < 0 || e >= Next) {
-      logerr("Extension %i is not valid: must be in [%i, %i]\n", e, 0, Next-1);
-      exit(-1);
-    }
-    if (s != 2 && s != 4 && s != 8) {
-      logerr("Invalid byte size %i: must be 2, 4, or 8.\n", s);
-      exit(-1);
-    }
-  }
-
-  if (!strcmp(outfn, "-"))
-    tostdout = TRUE;
-
-  if (tostdout)
-    fout = stdout;
-  else {
-    fout = fopen(outfn, "wb");
-    if (!fout) {
-      SYSERROR("Failed to open output file %s", outfn);
-      exit(-1);
-    }
-  }
-
-  for (i=0; i<Next; i++) {
-    int hdrstart, hdrlen, datastart, datalen;
-    int ind;
-    int size;
-    ind = il_index_of(exts, i);
-    if (ind == -1) {
-      size = 0;
+    Next = qfits_query_n_ext(infn);
+    if (Next == -1) {
+        ERROR("Couldn't determine how many extensions are in file %s", infn);
+        exit(-1);
     } else {
-      size = il_get(sizes, ind);
+        logverb("File %s contains %i FITS extensions.\n", infn, Next);
     }
 
-    if (qfits_get_hdrinfo(infn, i, &hdrstart,  &hdrlen ) ||
-	qfits_get_datinfo(infn, i, &datastart, &datalen)) {
-      ERROR("Error getting extents of extension %i", i);
-      exit(-1);
+    for (i=0; i<il_size(exts); i++) {
+        int e = il_get(exts, i);
+        int s = il_get(sizes, i);
+        if (e < 0 || e > Next) {
+            logerr("Extension %i is not valid: must be in [%i, %i]\n", e, 0, Next);
+            exit(-1);
+        }
+        if (s != 2 && s != 4 && s != 8) {
+            logerr("Invalid byte size %i: must be 2, 4, or 8.\n", s);
+            exit(-1);
+        }
     }
 
-    if (hdrlen) {
-      if (pipe_file_offset(fin, hdrstart, hdrlen, fout)) {
-	ERROR("Failed to write header for extension %i", i);
-	exit(-1);
-      }
-    }
-    if (!datalen)
-      continue;
+    if (!strcmp(outfn, "-"))
+        tostdout = TRUE;
 
-    if (size) {
-      int Nitems = datalen / size;
-      int j;
-      char buf[size];
-      for (j=0; j<Nitems; j++) {
-	if (fread(buf, size, 1, fin) != 1) {
-	  SYSERROR("Failed to read data element %i from extension %i", j, i);
-	  exit(-1);
-	}
-	endian_swap(buf, size);
-	if (fwrite(buf, size, 1, fout) != 1) {
-	  SYSERROR("Failed to write data element %i to extension %i", j, i);
-	  exit(-1);
-	}
-      }
-    } else {
-      // passthrough
-      if (pipe_file_offset(fin, datastart, datalen, fout)) {
-	ERROR("Failed to write data for extension %i", i);
-	exit(-1);
-      }
+    if (tostdout)
+        fout = stdout;
+    else {
+        fout = fopen(outfn, "wb");
+        if (!fout) {
+            SYSERROR("Failed to open output file %s", outfn);
+            exit(-1);
+        }
     }
-  }
-  fclose(fin);
-  if (!tostdout)
-    fclose(fout);
-  il_free(exts);
-  il_free(sizes);
-  return 0;
+
+    for (i=0; i<=Next; i++) {
+        int hdrstart, hdrlen, datastart, datalen;
+        int ind;
+        int size;
+        ind = il_index_of(exts, i);
+        if (ind == -1) {
+            size = 0;
+        } else {
+            size = il_get(sizes, ind);
+        }
+
+        if (qfits_get_hdrinfo(infn, i, &hdrstart,  &hdrlen ) ||
+            qfits_get_datinfo(infn, i, &datastart, &datalen)) {
+            ERROR("Error getting extents of extension %i", i);
+            exit(-1);
+        }
+
+        if (hdrlen) {
+            if (pipe_file_offset(fin, hdrstart, hdrlen, fout)) {
+                ERROR("Failed to write header for extension %i", i);
+                exit(-1);
+            }
+        }
+        if (!datalen)
+            continue;
+
+        if (size) {
+            int Nitems = datalen / size;
+            int j;
+            char buf[size];
+            for (j=0; j<Nitems; j++) {
+                if (fread(buf, size, 1, fin) != 1) {
+                    SYSERROR("Failed to read data element %i from extension %i", j, i);
+                    exit(-1);
+                }
+                endian_swap(buf, size);
+                if (fwrite(buf, size, 1, fout) != 1) {
+                    SYSERROR("Failed to write data element %i to extension %i", j, i);
+                    exit(-1);
+                }
+            }
+        } else {
+            // passthrough
+            if (pipe_file_offset(fin, datastart, datalen, fout)) {
+                ERROR("Failed to write data for extension %i", i);
+                exit(-1);
+            }
+        }
+    }
+    fclose(fin);
+    if (!tostdout)
+        fclose(fout);
+    il_free(exts);
+    il_free(sizes);
+    return 0;
 }
