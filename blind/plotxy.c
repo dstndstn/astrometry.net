@@ -40,6 +40,7 @@ static void printHelp(char* progname) {
 	printf("\nUsage: %s [options] > output.png\n"
 		   "  -i <input-file>   Input file (xylist)\n"
            "  [-I <image>   ]   Input image on which plotting will occur; PPM format.\n"
+	       "  [-p]: Input image is PNG format, not PPM.\n"
            "  [-P]              Write PPM output instead of PNG.\n"
 		   "  [-W <width>   ]   Width of output image (default: data-dependent).\n"
 		   "  [-H <height>  ]   Height of output image (default: data-dependent).\n"
@@ -84,7 +85,8 @@ int main(int argc, char *args[]) {
 	int Nxy;
 	int i;
 	double scale = 1.0;
-    bool pngformat = TRUE;
+    bool pngoutput = TRUE;
+    bool pnginput = FALSE;
     unsigned char* img;
 	cairo_t* cairo;
 	cairo_surface_t* target;
@@ -117,7 +119,10 @@ int main(int argc, char *args[]) {
             ycol = optarg;
             break;
         case 'P':
-            pngformat = FALSE;
+            pngoutput = FALSE;
+            break;
+		case 'p':
+		  pnginput = FALSE;
             break;
         case 'I':
             infn = optarg;
@@ -233,19 +238,15 @@ int main(int argc, char *args[]) {
 	}
 
     if (infn) {
-        if (strcasecmp(infn-strlen(infn)+4, ".png") == 0) {
-            img = cairoutils_read_png(infn, &W, &H);
-        }
+      if (pnginput) {
+	img = cairoutils_read_png(infn, &W, &H);
+      }
 #ifndef ASTROMETRY_NO_PPM
-        else if (strcasecmp(infn-strlen(infn)+4, ".ppm") == 0) {
-            ppm_init(&argc, args);
-            img = cairoutils_read_ppm(infn, &W, &H);
-        }
+      else {
+	ppm_init(&argc, args);
+	img = cairoutils_read_ppm(infn, &W, &H);
+      }
 #endif // ASTROMETRY_NO_PPM
-        else {
-            fprintf(stderr, "Unrecognized image format: %s.\n", infn);
-            exit(-1);
-        }
         if (!img) {
             fprintf(stderr, "Failed to read input image %s.\n", infn);
             exit(-1);
@@ -296,7 +297,7 @@ int main(int argc, char *args[]) {
     // Convert image for output...
     cairoutils_argb32_to_rgba(img, W, H);
 
-    if (pngformat) {
+    if (pngoutput) {
         if (cairoutils_stream_png(stdout, img, W, H)) {
             fprintf(stderr, "Failed to write PNG.\n");
             exit(-1);
