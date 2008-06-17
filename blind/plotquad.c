@@ -74,7 +74,7 @@ int main(int argc, char *args[]) {
 	dl* coords;
     char* infn = NULL;
     bool pngoutput = TRUE;
-    bool pnginput = TRUE;
+    bool pnginput = FALSE;
 	bool fromstdin = FALSE;
 	bool randomcolor = FALSE;
 	float a = 1.0;
@@ -135,7 +135,7 @@ int main(int argc, char *args[]) {
             pngoutput = FALSE;
             break;
 		case 'p':
-            pnginput = FALSE;
+            pnginput = TRUE;
             break;
 		case 'W':
 			W = atoi(optarg);

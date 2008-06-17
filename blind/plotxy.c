@@ -122,7 +122,7 @@ int main(int argc, char *args[]) {
             pngoutput = FALSE;
             break;
 		case 'p':
-		  pnginput = FALSE;
+		  pnginput = TRUE;
             break;
         case 'I':
             infn = optarg;
