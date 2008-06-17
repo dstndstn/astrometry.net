@@ -41,14 +41,11 @@ static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s [options] <quads>  > output.png\n"
            "  [-I <input-image>]  Input image (PPM format) to plot over.\n"
+	       "  [-p]: Input image is PNG format, not PPM.\n"
            "  [-P]              Write PPM output instead of PNG.\n"
            "  [-C <color>]      Color to plot in: (default: white)\n",
            progname);
-    for (i=0;; i++) {
-        const char* color = cairoutils_get_color_name(i);
-        if (!color) break;
-        printf("                       %s\n", color);
-    }
+    cairoutils_print_color_names("\n                 ");
     printf("  [-b <color>]      Draw in <color> behind each line.\n"
            "  [-c]:            Also plot a circle at each vertex.\n"
            "  [-W <width> ]       Width of output image.\n"
@@ -76,7 +73,8 @@ int main(int argc, char *args[]) {
 	int i;
 	dl* coords;
     char* infn = NULL;
-    bool pngformat = TRUE;
+    bool pngoutput = TRUE;
+    bool pnginput = TRUE;
 	bool fromstdin = FALSE;
 	bool randomcolor = FALSE;
 	float a = 1.0;
@@ -134,7 +132,10 @@ int main(int argc, char *args[]) {
             infn = optarg;
             break;
         case 'P':
-            pngformat = FALSE;
+            pngoutput = FALSE;
+            break;
+		case 'p':
+            pnginput = FALSE;
             break;
 		case 'W':
 			W = atoi(optarg);
@@ -211,19 +212,18 @@ int main(int argc, char *args[]) {
 	nquads = dl_size(coords) / (2*dimquads);
 
     if (infn) {
-        if (strcasecmp(infn-strlen(infn)+4, ".png") == 0) {
-            img = cairoutils_read_png(infn, &W, &H);
-        }
+#ifdef ASTROMETRY_NO_PPM
+	pnginput = TRUE;
+#endif
+      if (pnginput) {
+	img = cairoutils_read_png(infn, &W, &H);
+      }
 #ifndef ASTROMETRY_NO_PPM
-        else if (strcasecmp(infn-strlen(infn)+4, ".ppm") == 0) {
-            ppm_init(&argc, args);
-            img = cairoutils_read_ppm(infn, &W, &H);
-        }
+      else {
+	ppm_init(&argc, args);
+	img = cairoutils_read_ppm(infn, &W, &H);
+      }
 #endif // ASTROMETRY_NO_PPM
-        else {
-            fprintf(stderr, "Unrecognized image format: %s.\n", infn);
-            exit(-1);
-        }
         if (!img) {
             fprintf(stderr, "Failed to read input image %s.\n", infn);
             exit(-1);
@@ -310,7 +310,7 @@ int main(int argc, char *args[]) {
     // Convert image for output...
     cairoutils_argb32_to_rgba(img, W, H);
 
-    if (pngformat) {
+    if (pngoutput) {
         if (cairoutils_stream_png(stdout, img, W, H)) {
             fprintf(stderr, "Failed to write PNG.\n");
             exit(-1);

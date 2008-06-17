@@ -238,6 +238,9 @@ int main(int argc, char *args[]) {
 	}
 
     if (infn) {
+#ifdef ASTROMETRY_NO_PPM
+	pnginput = TRUE;
+#endif
       if (pnginput) {
 	img = cairoutils_read_png(infn, &W, &H);
       }
