@@ -37,7 +37,6 @@
 #define OPTIONS "hW:H:w:I:C:PRo:d:cm:s:b:"
 
 static void printHelp(char* progname) {
-    int i;
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s [options] <quads>  > output.png\n"
            "  [-I <input-image>]  Input image (PPM format) to plot over.\n"
