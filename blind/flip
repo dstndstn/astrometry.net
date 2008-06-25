@@ -1,0 +1,42 @@
+#! /bin/bash
+
+# A little script for endian-flipping and fixing index files.
+
+
+#AN_BIN=/path/to/astrometry/bin
+AN_BIN=./blind
+
+#INDEXES=/path/to/astrometry/data
+INDEXES=.
+
+FLIP=${AN_BIN}/fits-flip-endian
+MODHEAD=${AN_BIN}/modhead
+FIXBB=${AN_BIN}/fix-bb
+#FIXBB=${AN_BIN}/../libkd/fix-bb
+CP=cp
+
+for quad in ${INDEXES}/*.quad.fits; do
+    dir=$(dirname $quad)
+    base=$(basename $quad .quad.fits)
+    inquad=${quad}
+    inskdt=${dir}/${base}.skdt.fits
+    inckdt=${dir}/${base}.ckdt.fits
+    beskdt=${dir}/${base}.skdt.fits.be
+    beckdt=${dir}/${base}.ckdt.fits.be
+    bequad=${dir}/${base}.quad.fits.be
+    outskdt=${dir}/${base}.skdt.fits.out
+    outckdt=${dir}/${base}.ckdt.fits.out
+    outquad=${dir}/${base}.quad.fits.out
+    #echo "quad in ${inquad} be ${bequad} out ${outquad}"
+    echo ${FLIP} -i ${inskdt} -o ${beskdt}  -e 1 -s 4 -e 2 -s 4 -e 3 -s 4 -e 4 -s 8   || exit
+    echo ${FLIP} -i ${inckdt} -o ${beckdt}  -e 1 -s 4 -e 2 -s 2 -e 3 -s 2 -e 4 -s 8   || exit
+    echo ${FLIP} -i ${inquad} -o ${bequad} -e 1 -s 4   || exit
+    echo ${MODHEAD} ${beskdt} ENDIAN "01:02:03:04"   || exit
+    echo ${MODHEAD} ${beckdt} ENDIAN "01:02:03:04"   || exit
+    echo ${MODHEAD} ${bequad} ENDIAN "01:02:03:04"   || exit
+    echo ${FIXBB}   ${beckdt} ${outckdt}   || exit
+    echo ${FIXBB}   ${beskdt} ${outskdt}   || exit
+    echo ${CP}      ${bequad} ${outquad}   || exit
+done
+
+

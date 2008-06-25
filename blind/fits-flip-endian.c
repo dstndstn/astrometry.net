@@ -160,6 +160,7 @@ int main(int argc, char *argv[]) {
             int Nitems = datalen / size;
             int j;
             char buf[size];
+            logmsg("Extension %i: flipping words of length %i bytes.\n", i, size);
             for (j=0; j<Nitems; j++) {
                 if (fread(buf, size, 1, fin) != 1) {
                     SYSERROR("Failed to read data element %i from extension %i", j, i);
@@ -172,6 +173,7 @@ int main(int argc, char *argv[]) {
                 }
             }
         } else {
+            logmsg("Extension %i: copying verbatim.\n", i);
             // passthrough
             if (pipe_file_offset(fin, datastart, datalen, fout)) {
                 ERROR("Failed to write data for extension %i", i);
