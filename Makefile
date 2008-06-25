@@ -46,7 +46,7 @@ web:
 	$(MAKE) -C render
 	$(MAKE) -C net/execs
 
-install:
+install: report.txt
 	mkdir -p $(INSTALL_DIR)/data
 	mkdir -p $(INSTALL_DIR)/bin
 	mkdir -p $(INSTALL_DIR)/doc
@@ -56,6 +56,7 @@ install:
 	cp pyfits/pyfits.py $(INSTALL_DIR)/python/
 	cp pyfits/rec.py $(INSTALL_DIR)/python/
 	cp CREDITS GETTING-INDEXES LICENSE README $(INSTALL_DIR)/doc
+	cp report.txt $(INSTALL_DIR)/doc
 	cp demo/* $(INSTALL_DIR)/examples
 	$(MAKE) -C util  install
 	$(MAKE) -C libkd install
@@ -209,3 +210,7 @@ report:
 	@echo "FLAGS_DEF: $(FLAGS_DEF)"
 	@echo "CFLAGS_DEF: $(CFLAGS_DEF)"
 	@echo "LDFLAGS_DEF: $(LDFLAGS_DEF)"
+
+report.txt: Makefile
+	$(MAKE) report > $@
+
