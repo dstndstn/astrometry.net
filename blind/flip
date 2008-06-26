@@ -2,18 +2,19 @@
 
 # A little script for endian-flipping and fixing index files.
 
+AN_BIN=/usr/local/astrometry/bin
+#AN_BIN=./blind
 
-#AN_BIN=/path/to/astrometry/bin
-AN_BIN=./blind
-
-#INDEXES=/path/to/astrometry/data
-INDEXES=.
+INDEXES=/usr/local/astrometry/data
+#INDEXES=.
 
 FLIP=${AN_BIN}/fits-flip-endian
 MODHEAD=${AN_BIN}/modhead
 FIXBB=${AN_BIN}/fix-bb
 #FIXBB=${AN_BIN}/../libkd/fix-bb
 CP=cp
+RM=rm
+MV=mv
 
 for quad in ${INDEXES}/*.quad.fits; do
     dir=$(dirname $quad)
@@ -28,15 +29,21 @@ for quad in ${INDEXES}/*.quad.fits; do
     outckdt=${dir}/${base}.ckdt.fits.out
     outquad=${dir}/${base}.quad.fits.out
     #echo "quad in ${inquad} be ${bequad} out ${outquad}"
-    echo ${FLIP} -i ${inskdt} -o ${beskdt}  -e 1 -s 4 -e 2 -s 4 -e 3 -s 4 -e 4 -s 8   || exit
-    echo ${FLIP} -i ${inckdt} -o ${beckdt}  -e 1 -s 4 -e 2 -s 2 -e 3 -s 2 -e 4 -s 8   || exit
-    echo ${FLIP} -i ${inquad} -o ${bequad} -e 1 -s 4   || exit
-    echo ${MODHEAD} ${beskdt} ENDIAN "01:02:03:04"   || exit
-    echo ${MODHEAD} ${beckdt} ENDIAN "01:02:03:04"   || exit
-    echo ${MODHEAD} ${bequad} ENDIAN "01:02:03:04"   || exit
-    echo ${FIXBB}   ${beckdt} ${outckdt}   || exit
-    echo ${FIXBB}   ${beskdt} ${outskdt}   || exit
-    echo ${CP}      ${bequad} ${outquad}   || exit
+    ${FLIP} -i ${inskdt} -o ${beskdt}  -e 1 -s 4 -e 2 -s 4 -e 3 -s 4 -e 4 -s 8   || exit
+    ${FLIP} -i ${inckdt} -o ${beckdt}  -e 1 -s 4 -e 2 -s 2 -e 3 -s 2 -e 4 -s 8   || exit
+    ${FLIP} -i ${inquad} -o ${bequad} -e 1 -s 4   || exit
+    ${MODHEAD} ${beskdt} ENDIAN "01:02:03:04"   || exit
+    ${MODHEAD} ${beckdt} ENDIAN "01:02:03:04"   || exit
+    ${MODHEAD} ${bequad} ENDIAN "01:02:03:04"   || exit
+    ${FIXBB}   ${beckdt} ${outckdt}   || exit
+    ${FIXBB}   ${beskdt} ${outskdt}   || exit
+    ${CP}      ${bequad} ${outquad}   || exit
+    ${RM}      ${beckdt}   || exit
+    ${RM}      ${beskdt}   || exit
+    ${RM}      ${bequad}   || exit
+    ${MV}      ${outckdt} ${inckdt}   || exit
+    ${MV}      ${outskdt} ${inskdt}   || exit
+    ${MV}      ${outquad} ${inquad}   || exit
 done
 
 

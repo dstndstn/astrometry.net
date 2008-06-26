@@ -58,6 +58,7 @@ install: report.txt
 	cp CREDITS GETTING-INDEXES LICENSE README $(INSTALL_DIR)/doc
 	cp report.txt $(INSTALL_DIR)/doc
 	cp demo/* $(INSTALL_DIR)/examples
+	#cp blind/flip $(INSTALL_DIR)/bin
 	$(MAKE) -C util  install
 	$(MAKE) -C libkd install
 	$(MAKE) -C blind install
