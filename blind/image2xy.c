@@ -61,6 +61,19 @@ goto bailout; \
 } \
 } while(0)
 
+static float* upconvert(unsigned char* u8,
+                        int nx, int ny) {
+    int i;
+    float* f = malloc(nx * ny * sizeof(float));
+    if (!f) {
+        SYSERROR("Failed to allocate image array");
+        return NULL;
+    }
+    for (i=0; i<(nx*ny); i++)
+        f[i] = u8[i];
+    return f;
+}
+
 static void rebin(float** thedata,
                   int W, int H, int S,
                   int* newW, int* newH) {
@@ -184,6 +197,7 @@ int image2xy(const char* infn, const char* outfn,
         float *flux;
         float* background;
         int newW, newH;
+        bool did_downsample = FALSE;
 
         // the factor by which to downsample.
         int S = downsample ? downsample : 1;
@@ -236,13 +250,14 @@ int image2xy(const char* infn, const char* outfn,
 
         FITS_CHECK("Failed to read image pixels");
 
+        fullW = naxisn[0];
+        fullH = naxisn[1];
         if (downsample) {
-            fullW = naxisn[0];
-            fullH = naxisn[1];
             logmsg("Downsampling by %i...\n", S);
             rebin(&thedata, naxisn[0], naxisn[1], S, &newW, &newH);
             naxisn[0] = newW;
             naxisn[1] = newH;
+            did_downsample = TRUE;
         }
 
         do {
@@ -273,20 +288,32 @@ int image2xy(const char* infn, const char* outfn,
             if (npeaks == 0 &&
                 downsample_as_required) {
                 logmsg("Downsampling by 2...\n");
+                if (theu8data) {
+                    thedata = upconvert(theu8data, naxisn[0], naxisn[1]);
+                    if (!thedata) {
+                        ERROR("Failed to convert image to float before downsampling");
+                        goto bailout;
+                    }
+                    free(theu8data);
+                    theu8data = NULL;
+                    s.image = thedata;
+                    s.image_u8 = theu8data;
+                }
                 rebin(&thedata, naxisn[0], naxisn[1], 2, &newW, &newH);
                 naxisn[0] = newW;
                 naxisn[1] = newH;
                 S *= 2;
                 tryagain = TRUE;
                 downsample_as_required--;
+                did_downsample = TRUE;
             }
-
+            
         } while (tryagain);
 
 		free(s.image);
 		free(s.image_u8);
 
-        if (downsample) {
+        if (did_downsample) {
             // Put the naxisn[] values back the way they were so that the
             // FITS headers are written correctly.
             naxisn[0] = fullW;
