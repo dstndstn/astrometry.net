@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 #include "simplexy-common.h"
 
@@ -74,6 +75,8 @@ int dcen3b(float f0, float f1, float f2, float *xcen) {
      f2 = 4a + 2b + c
      */
     a = 0.5 * (f2 - 2*f1 + f0);
+    if (a == 0.0)
+        return 0;
     b = f1 - a - f0;
     *xcen = -0.5 * b / a;
     if ((*xcen < 0.0) || (*xcen > 2.0))
@@ -114,6 +117,9 @@ int dcen3x3(float *image, float *xcen, float *ycen)
 	/* find intersection */
 	(*xcen) = (mx * (by - my - 1.) + bx) / (1. + mx * my);
 	(*ycen) = ((*xcen) - 1.) * my + by;
+
+    assert(isfinite(*xcen));
+    assert(isfinite(*ycen));
 
 	/* check that we are in the box */
 	if (((*xcen) < 0.0) || ((*xcen) > 2.0) ||

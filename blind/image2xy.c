@@ -25,6 +25,7 @@
 #include <sys/param.h>
 #include <errno.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "image2xy.h"
 #include "fitsio.h"
@@ -321,6 +322,10 @@ int image2xy(const char* infn, const char* outfn,
         }
 
         for (jj=0; jj<npeaks; jj++) {
+            bool finite = isfinite(x[jj]);
+            assert(finite);
+            finite = isfinite(y[jj]);
+            assert(finite);
             // if S=1, this just shifts the origin to (1,1); the FITS
             // standard says the center of the lower-left pixel is (1,1).
             x[jj] = (x[jj] + 0.5) * (double)S + 0.5;

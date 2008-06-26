@@ -1,26 +1,27 @@
 /*
-  This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Michael Blanton, Keir Mierle, David W. Hogg,
-  Sam Roweis and Dustin Lang.
+ This file is part of the Astrometry.net suite.
+ Copyright 2006, 2007 Michael Blanton, Keir Mierle, David W. Hogg,
+ Sam Roweis and Dustin Lang.
 
-  The Astrometry.net suite is free software; you can redistribute
-  it and/or modify it under the terms of the GNU General Public License
-  as published by the Free Software Foundation, version 2.
+ The Astrometry.net suite is free software; you can redistribute
+ it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, version 2.
 
-  The Astrometry.net suite is distributed in the hope that it will be
-  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
+ The Astrometry.net suite is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the Astrometry.net suite ; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-*/
+ You should have received a copy of the GNU General Public License
+ along with the Astrometry.net suite ; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 #include "dimage.h"
 #include "qsort_reentrant.h"
@@ -125,8 +126,8 @@ int dallpeaks(float *image,
 		}
 
 		if (xmax - xmin > 2 && xmax - xmin < maxsize &&
-		        ymax - ymin > 2 && ymax - ymin < maxsize &&
-		        *npeaks < maxnpeaks) {
+            ymax - ymin > 2 && ymax - ymin < maxsize &&
+            *npeaks < maxnpeaks) {
 
 			/* make object cutout (if it is 3x3 or bigger) */
 			onx = xmax - xmin + 1;
@@ -152,12 +153,14 @@ int dallpeaks(float *image,
 			imore = 0;
 			for (i = 0;i < nc;i++) {
 				if (xc[i] > 0 && xc[i] < onx - 1 &&
-				        yc[i] > 0 && yc[i] < ony - 1 &&
-				        imore < (maxnpeaks - (*npeaks))) {
+                    yc[i] > 0 && yc[i] < ony - 1 &&
+                    imore < (maxnpeaks - (*npeaks))) {
 
 					/* install default centroid to begin */
 					xcen[imore + (*npeaks)] = (float)(xc[i] + xmin);
 					ycen[imore + (*npeaks)] = (float)(yc[i] + ymin);
+                    assert(isfinite(xcen[imore + *npeaks]));
+                    assert(isfinite(ycen[imore + *npeaks]));
 
 					/* try to get centroid in the 3 x 3 box */
 					for (oi = -1;oi <= 1;oi++)
@@ -165,10 +168,14 @@ int dallpeaks(float *image,
 							three[oi + 1 + (oj + 1)*3] =
 							    simage[oi + xc[i] + (oj + yc[i]) * onx];
 					if (dcen3x3(three, &tmpxc, &tmpyc)) {
+                        assert(isfinite(tmpxc));
+                        assert(isfinite(tmpyc));
 						xcen[imore + (*npeaks)] = tmpxc
-						                          + (float)(xc[i] + xmin - 1);
+                            + (float)(xc[i] + xmin - 1);
 						ycen[imore + (*npeaks)] = tmpyc
-						                          + (float)(yc[i] + ymin - 1);
+                            + (float)(yc[i] + ymin - 1);
+                        assert(isfinite(xcen[imore + *npeaks]));
+                        assert(isfinite(ycen[imore + *npeaks]));
 
 					} else if (xc[i] > 1 && xc[i] < onx - 2 &&
 					           yc[i] > 1 && yc[i] < ony - 2 &&
@@ -182,11 +189,16 @@ int dallpeaks(float *image,
 								    simage[2*oi + xc[i] + (2 * oj + yc[i]) * onx];
 						if (dcen3x3(three, &tmpxc, &tmpyc)) {
 							xcen[imore + (*npeaks)] = 2.0 * tmpxc
-							                          + (float)(xc[i] + xmin - 2);
+                                + (float)(xc[i] + xmin - 2);
 							ycen[imore + (*npeaks)] = 2.0 * tmpyc
-							                          + (float)(yc[i] + ymin - 2);
+                                + (float)(yc[i] + ymin - 2);
 
-						}
+                            assert(isfinite(xcen[imore + *npeaks]));
+                            assert(isfinite(ycen[imore + *npeaks]));
+						} else {
+                            // don't add this peak.
+                            continue;
+                        }
 					}
 					imore++;
 				}

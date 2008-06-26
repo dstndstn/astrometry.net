@@ -173,6 +173,15 @@ int simplexy2(simplexy_t* s) {
 	for (i = 0; i < s->npeaks; i++) {
         int ix = (int)(s->x[i] + 0.5);
         int iy = (int)(s->y[i] + 0.5);
+        bool finite;
+        finite = isfinite(s->x[i]);
+        assert(finite);
+        finite = isfinite(s->y[i]);
+        assert(finite);
+        assert(ix >= 0);
+        assert(iy >= 0);
+        assert(ix < nx);
+        assert(iy < ny);
         s->flux[i]       = s->simage[ix + iy * nx];
         s->background[i] = s->image [ix + iy * nx] - s->simage[ix + iy * nx];
     }

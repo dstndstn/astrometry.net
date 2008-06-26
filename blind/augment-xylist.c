@@ -614,7 +614,7 @@ int augment_xylist(augment_xylist_t* axy,
 
     if (dosort) {
         char* sortedxylsfn;
-        bool do_tabsort;
+        bool do_tabsort = FALSE;
 
         if (!axy->sortcol)
             axy->sortcol = "FLUX";
