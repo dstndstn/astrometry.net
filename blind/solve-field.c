@@ -1,24 +1,24 @@
 /*
-  This file is part of the Astrometry.net suite.
-  Copyright 2007-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+ This file is part of the Astrometry.net suite.
+ Copyright 2007-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
-  The Astrometry.net suite is free software; you can redistribute
-  it and/or modify it under the terms of the GNU General Public License
-  as published by the Free Software Foundation, version 2.
+ The Astrometry.net suite is free software; you can redistribute
+ it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, version 2.
 
-  The Astrometry.net suite is distributed in the hope that it will be
-  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
+ The Astrometry.net suite is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the Astrometry.net suite ; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-*/
+ You should have received a copy of the GNU General Public License
+ along with the Astrometry.net suite ; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 
 /**
-   A command-line interface to the blind solver system.
+ A command-line interface to the blind solver system.
  */
 
 #include <stdio.h>
@@ -154,8 +154,6 @@ int main(int argc, char** args) {
     bool verbose = FALSE;
     int loglvl = LOG_MSG;
     char* outbase = NULL;
-    char* xcol = NULL;
-    char* ycol = NULL;
     char* solvedin = NULL;
     char* solvedindir = NULL;
 	bool usecurl = TRUE;
@@ -501,7 +499,7 @@ int main(int argc, char** args) {
 		}
 
         // Download URL...
-            if (isurl) {
+        if (isurl) {
 
             sl_append(cmdline, usecurl ? "curl" : "wget");
             if (!verbose)
@@ -527,7 +525,7 @@ int main(int argc, char** args) {
         logverb("Checking if file \"%s\" is xylist or image: ", infile);
         fflush(NULL);
         reason = NULL;
-		isxyls = xylist_is_file_xylist(infile, xcol, ycol, &reason);
+		isxyls = xylist_is_file_xylist(infile, axy->xcol, axy->ycol, &reason);
         logverb(isxyls ? "xyls\n" : "image\n");
         if (!isxyls)
             logverb("  (not xyls because: %s)\n", reason);
@@ -564,13 +562,13 @@ int main(int argc, char** args) {
                 sl_append(cmdline, "-I");
                 append_escape(cmdline, ppmfn);
             }
-            if (xcol) {
+            if (axy->xcol) {
                 sl_append(cmdline, "-X");
-                append_escape(cmdline, xcol);
+                append_escape(cmdline, axy->xcol);
             }
-            if (ycol) {
+            if (axy->ycol) {
                 sl_append(cmdline, "-Y");
-                append_escape(cmdline, ycol);
+                append_escape(cmdline, axy->ycol);
             }
             sl_append(cmdline, "-P");
             sl_append(cmdline, "-C red -w 2 -N 50 -x 1 -y 1");
@@ -580,13 +578,13 @@ int main(int argc, char** args) {
             append_executable(cmdline, "plotxy", me);
             sl_append(cmdline, "-i");
             append_escape(cmdline, axy->outfn);
-            if (xcol) {
+            if (axy->xcol) {
                 sl_append(cmdline, "-X");
-                append_escape(cmdline, xcol);
+                append_escape(cmdline, axy->xcol);
             }
-            if (ycol) {
+            if (axy->ycol) {
                 sl_append(cmdline, "-Y");
-                append_escape(cmdline, ycol);
+                append_escape(cmdline, axy->ycol);
             }
             sl_append(cmdline, "-I - -w 2 -r 3 -C red -n 50 -N 200 -x 1 -y 1");
 
@@ -672,13 +670,13 @@ int main(int argc, char** args) {
                     sl_append(cmdline, "-I");
                     append_escape(cmdline, ppmfn);
                 }
-                if (xcol) {
+                if (axy->xcol) {
                     sl_append(cmdline, "-X");
-                    append_escape(cmdline, xcol);
+                    append_escape(cmdline, axy->xcol);
                 }
-                if (ycol) {
+                if (axy->ycol) {
                     sl_append(cmdline, "-Y");
-                    append_escape(cmdline, ycol);
+                    append_escape(cmdline, axy->ycol);
                 }
                 sl_append(cmdline, "-P");
                 sl_append(cmdline, "-C red -w 2 -r 6 -N 200 -x 1 -y 1");

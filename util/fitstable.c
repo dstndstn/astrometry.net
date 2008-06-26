@@ -851,6 +851,21 @@ void fitstable_print_missing(fitstable_t* tab, FILE* f) {
     //fprintf(f, "\n");
 }
 
+void fitstable_error_report_missing(fitstable_t* tab) {
+    int i;
+    sl* missing = sl_new(4);
+    char* mstr;
+    for (i=0; i<ncols(tab); i++) {
+        fitscol_t* col = getcol(tab, i);
+        if (col->col == -1 && col->required)
+            sl_append(missing, col->colname);
+    }
+    mstr = sl_join(missing, ", ");
+    sl_free2(missing);
+    ERROR("Missing required columns: %s", mstr);
+    free(mstr);
+}
+
 static void fitstable_create_table(fitstable_t* tab) {
     qfits_table* qt;
     int i;

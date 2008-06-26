@@ -175,11 +175,11 @@ bool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* ycol
                                      1, 0, fitscolumn_any_type(), xyls->yname, TRUE);
 
     rtn = fitstable_read_extension(xyls->table, 1);
+    if (rtn)
+        fitstable_error_report_missing(xyls->table);
     xylist_close(xyls);
-    if (rtn) {
-        //if (reason) asprintf(reason, "Failed to find a matching FITS table in extension 1 of file %s\n", fn);
+    if (rtn)
         goto bail;
-    }
 
     errors_pop_state();
     return TRUE;
