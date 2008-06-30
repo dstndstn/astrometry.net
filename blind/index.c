@@ -47,14 +47,28 @@ void get_filenames(const char* indexname,
     if (ends_with(indexname, ".quad.fits")) {
         basename = strdup(indexname);
         basename[strlen(indexname)-10] = '\0';
-    } else if (file_readable(indexname)) {
-        // assume single-file index.
-        *ckdtfn = strdup(indexname);
-        *skdtfn = strdup(indexname);
-        *quadfn = strdup(indexname);
-        *singlefile = TRUE;
-        return;
     } else {
+        char* fits;
+        if (file_readable(indexname)) {
+            // assume single-file index.
+            *ckdtfn = strdup(indexname);
+            *skdtfn = strdup(indexname);
+            *quadfn = strdup(indexname);
+            *singlefile = TRUE;
+            return;
+        }
+        asprintf(&fits, "%s.fits", indexname);
+        if (file_readable(fits)) {
+            // assume single-file index.
+            indexname = fits;
+            *ckdtfn = strdup(indexname);
+            *skdtfn = strdup(indexname);
+            *quadfn = strdup(indexname);
+            *singlefile = TRUE;
+            free(fits);
+            return;
+        }
+        free(fits);
         basename = strdup(indexname);
     }
     *ckdtfn = mk_ctreefn(basename);

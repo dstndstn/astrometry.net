@@ -841,7 +841,7 @@ int fitstable_nrows(fitstable_t* t) {
 
 void fitstable_print_missing(fitstable_t* tab, FILE* f) {
     int i;
-    fprintf(f, "Missing required rows: ");
+    fprintf(f, "Missing required columns: ");
     for (i=0; i<ncols(tab); i++) {
         fitscol_t* col = getcol(tab, i);
         if (col->col == -1 && col->required) {
