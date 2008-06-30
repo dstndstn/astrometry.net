@@ -152,6 +152,12 @@ int main(int argc, char *args[]) {
 			exit(-1);
 		}
 
+    if (dimquads == 0) {
+        printf("Error: dimquads (-d) must be positive.\n");
+        printHelp(progname);
+        exit(-1);
+    }
+
 	if (!fromstdin && ((argc - optind) % (2*dimquads))) {
 		printHelp(progname);
 		exit(-1);

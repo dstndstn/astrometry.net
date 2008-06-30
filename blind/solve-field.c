@@ -698,14 +698,17 @@ int main(int argc, char** args) {
                     exit(-1);
                 }
 
-                sl_append(cmdline, " -P |");
-                append_executable(cmdline, "plotquad", me);
-                sl_append(cmdline, "-I -");
-                sl_append(cmdline, "-C green");
-                sl_append(cmdline, "-w 2");
-				sl_appendf(cmdline, "-d %i", mo->dimquads);
-                for (i=0; i<(2 * mo->dimquads); i++)
-                    sl_appendf(cmdline, " %g", mo->quadpix[i]);
+                // if we solved by verifying an existing WCS, there is no quad.
+                if (mo->dimquads) {
+                    sl_append(cmdline, " -P |");
+                    append_executable(cmdline, "plotquad", me);
+                    sl_append(cmdline, "-I -");
+                    sl_append(cmdline, "-C green");
+                    sl_append(cmdline, "-w 2");
+                    sl_appendf(cmdline, "-d %i", mo->dimquads);
+                    for (i=0; i<(2 * mo->dimquads); i++)
+                        sl_appendf(cmdline, " %g", mo->quadpix[i]);
+                }
 
                 matchfile_close(mf);
 			
