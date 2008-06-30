@@ -52,8 +52,8 @@ static void print_help(char* progname) {
 		   "      stars in the input files.\n"
 		   "  <input-file> [<input-file> ...]\n"
 		   "\n"
-		   "\nThe input files should be USNO-B1.0 and Tycho-2 files in FITS format.\n"
-		   "(To generate these files, see \"usnobtofits\" and \"tycho2tofits\".)"
+		   "\nThe input files should be USNO-B1.0, Tycho-2, or 2MASS files in FITS format.\n"
+		   "(To generate these files, see \"usnobtofits\", \"tycho2tofits\", and \"2masstofits\".)"
 		   "\n", progname);
 }
 
