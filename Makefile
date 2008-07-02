@@ -211,6 +211,9 @@ report:
 	@echo "FLAGS_DEF: $(FLAGS_DEF)"
 	@echo "CFLAGS_DEF: $(CFLAGS_DEF)"
 	@echo "LDFLAGS_DEF: $(LDFLAGS_DEF)"
+	-python -V
+	@echo "PYTHONPATH: $${PYTHONPATH}"
+	@echo "PATH: $${PATH}"
 
 report.txt: Makefile
 	$(MAKE) report > $@
