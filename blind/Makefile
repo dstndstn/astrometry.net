@@ -66,7 +66,7 @@ MISC_EXECS := project-usnob diffractionFlag_check \
 UTIL_OBJS := boilerplate.o
 
 OTHER_OBJS := usnob.o usnob-fits.o tycho2.o tycho2-fits.o catalog.o \
-	codefile.o histogram.o tic.o codekd.o svd.o verify.o \
+	codefile.o histogram.o tic.o codekd.o verify.o \
 	solver.o matchfile.o solvedclient.o solvedfile.o intmap.o pnpoly.o \
 	blind_wcs.o index.o tweak.o log.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
@@ -162,7 +162,7 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 	done
 
 test-solver: test-solver.o solver_test.o blind_wcs.o verify.o log.o \
-		matchfile.o tic.o svd.o \
+		matchfile.o tic.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 NODEP_OBJS += solver_test.o
@@ -318,7 +318,7 @@ ALL_OBJ += wcs-rd2xy-main.o
 
 noisesim: noisesim.o noise.o $(ANUTILS_LIB)
 
-noisesim2: noisesim2.o noise.o svd.o $(ANUTILS_LIB)
+noisesim2: noisesim2.o noise.o $(ANUTILS_LIB)
 
 hpgrid: hpgrid.o $(ANUTILS_LIB)
 
@@ -394,7 +394,7 @@ backend-old: backend-old.o scriptutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_L
 
 backend: backend.o scriptutils.o blind.o solver.o codekd.o \
 		matchfile.o tic.o solvedclient.o solvedfile.o verify.o \
-		boilerplate.o svd.o blind_wcs.o index.o log.o tweak.o \
+		boilerplate.o blind_wcs.o index.o log.o tweak.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB) $(GSL_LIB)
 
@@ -411,7 +411,7 @@ augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scal
 ALL_OBJ += augment-xylist-main.o
 
 blind: blind-main.o blind.o solver.o codekd.o matchfile.o tic.o \
-		solvedclient.o solvedfile.o verify.o svd.o \
+		solvedclient.o solvedfile.o verify.o \
 		intmap.o blind_wcs.o index.o log.o histogram.o tweak.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
@@ -420,7 +420,7 @@ blind: blind-main.o blind.o solver.o codekd.o matchfile.o tic.o \
 
 whynot: whynot.o index.o codekd.o matchfile.o tic.o \
 		solvedclient.o solvedfile.o \
-		verify.o svd.o intmap.o blind_wcs.o log.o \
+		verify.o intmap.o blind_wcs.o log.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
