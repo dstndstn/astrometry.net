@@ -66,7 +66,7 @@ MISC_EXECS := project-usnob diffractionFlag_check \
 UTIL_OBJS := boilerplate.o
 
 OTHER_OBJS := usnob.o usnob-fits.o tycho2.o tycho2-fits.o catalog.o \
-	codefile.o histogram.o tic.o codekd.o verify.o \
+	codefile.o histogram.o codekd.o verify.o \
 	solver.o matchfile.o solvedclient.o solvedfile.o intmap.o pnpoly.o \
 	blind_wcs.o index.o tweak.o log.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
@@ -91,7 +91,7 @@ OLDEXECS := plotquads rawstartree checkquads
 
 CAIROEXECS := plotquad plotxy plot-constellations add-text
 
-OLDEXECS_OBJS := catalog.o histogram.o verify.o intmap.o tic.o matchfile.o \
+OLDEXECS_OBJS := catalog.o histogram.o verify.o intmap.o matchfile.o \
 	codekd.o $(UTIL_OBJS)
 
 PIPELINE_MAIN_OBJ := $(addsuffix .o,$(PIPELINE))
@@ -162,7 +162,7 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 	done
 
 test-solver: test-solver.o solver_test.o blind_wcs.o verify.o log.o \
-		matchfile.o tic.o \
+		matchfile.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 NODEP_OBJS += solver_test.o
@@ -369,7 +369,7 @@ build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
 startree: startree.o catalog.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-hpquads: hpquads.o codefile.o pnpoly.o histogram.o tic.o \
+hpquads: hpquads.o codefile.o pnpoly.o histogram.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 codetree: codetree.o codekd.o codefile.o \
@@ -393,7 +393,7 @@ endian-flip-index: endian-flip-index.o codekd.o \
 backend-old: backend-old.o scriptutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 backend: backend.o scriptutils.o blind.o solver.o codekd.o \
-		matchfile.o tic.o solvedclient.o solvedfile.o verify.o \
+		matchfile.o solvedclient.o solvedfile.o verify.o \
 		boilerplate.o blind_wcs.o index.o log.o tweak.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB) $(GSL_LIB)
@@ -410,7 +410,7 @@ augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scal
 
 ALL_OBJ += augment-xylist-main.o
 
-blind: blind-main.o blind.o solver.o codekd.o matchfile.o tic.o \
+blind: blind-main.o blind.o solver.o codekd.o matchfile.o \
 		solvedclient.o solvedfile.o verify.o \
 		intmap.o blind_wcs.o index.o log.o histogram.o tweak.o \
 		$(UTIL_OBJS) \
@@ -418,7 +418,7 @@ blind: blind-main.o blind.o solver.o codekd.o matchfile.o tic.o \
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^
 	mv $@.tmp $@
 
-whynot: whynot.o index.o codekd.o matchfile.o tic.o \
+whynot: whynot.o index.o codekd.o matchfile.o \
 		solvedclient.o solvedfile.o \
 		verify.o intmap.o blind_wcs.o log.o \
 		$(UTIL_OBJS) \

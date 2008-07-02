@@ -45,7 +45,7 @@ int get_resource_stats(double* p_usertime, double* p_systime, long* p_maxrss)
 {
 	struct rusage usage;
 	if (getrusage(RUSAGE_SELF, &usage)) {
-		SYSERROR("Failed to get resource stats (getrusage): %s");
+		SYSERROR("Failed to get resource stats (getrusage)");
 		return 1;
 	}
 	if (p_usertime) {
