@@ -57,7 +57,7 @@ static an_option_t options[] = {
 	{'v', "verbose",       no_argument, NULL,
      "be more chatty -- repeat for even more verboseness" },
     {'D', "dir", required_argument, "directory",
-     "place all output files in this directory"},
+     "place all output files in the specified directory"},
     {'o', "out", required_argument, "base-filename",
      "name the output files with this base name"},
     {'b', "backend-config", required_argument, "filename",
@@ -291,6 +291,13 @@ int main(int argc, char** args) {
     bl_free(opts);
 
     log_init(loglvl);
+
+    if (kmzfn && starts_with(kmzfn, "-")) {
+        logmsg("Do you really want to save KMZ to the file named \"%s\" ??\n", kmzfn);
+    }
+    if (newfits && starts_with(newfits, "-")) {
+        logmsg("Do you really want to save the new FITS file to the file named \"%s\" ??\n", newfits);
+    }
 
 	if (outdir) {
         if (mkdir_p(outdir)) {
