@@ -863,7 +863,7 @@ int main(int argc, char** args) {
 	}
 
 	if (parse_config_file(fconf, backend)) {
-        logerr("Failed to parse config file \"%s\"\n", configfn);
+        logerr("Failed to parse (or encountered an error while interpreting) config file \"%s\"\n", configfn);
 		exit( -1);
 	}
 	fclose(fconf);
