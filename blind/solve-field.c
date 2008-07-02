@@ -129,6 +129,10 @@ static void append_executable(sl* list, const char* fn, const char* me) {
     if (!exec) {
         ERROR("Error, couldn't find executable \"%s\"", fn);
         exit(-1);
+        /*
+         sl_append(list, fn);
+         return;
+         */
     }
     sl_append_nocopy(list, shell_escape(exec));
     free(exec);
@@ -553,6 +557,16 @@ int main(int argc, char** args) {
         }
 
         if (makeplots) {
+            // Check that the plotting executables were built...
+            char* exec = find_executable("plotxy", me);
+            free(exec);
+            if (!exec) {
+                logmsg("Couldn't find \"plotxy\" executable - maybe you didn't build the plotting programs?");
+                logmsg("Disabling plots.\n");
+                makeplots = FALSE;
+            }
+        }
+        if (makeplots) {
             // source extraction overlay
             // plotxy -i harvard.axy -I /tmp/pnm -C red -P -w 2 -N 50 | plotxy -w 2 -r 3 -I - -i harvard.axy -C red -n 50 > harvard-objs.png
             append_executable(cmdline, "plotxy", me);
@@ -602,7 +616,6 @@ int main(int argc, char** args) {
                 // don't try any more plots...
                 errors_print_stack(stdout);
                 errors_clear_stack();
-                logmsg("Maybe you didn't build the plotting programs?");
                 makeplots = FALSE;
             }
             free(cmd);
