@@ -86,6 +86,19 @@ PIPELINE := usnobtofits tycho2tofits build-an-catalog hpowned cut-an \
 PROSPECTUS := quadidx codeprojections quadlocations quadscales quadsperstar \
 	whynot quadcenters startree2rdls
 
+BACKEND_LIB := libbackend.a
+
+BACKEND_OBJS := \
+		blindutils.o blind.o solver.o codekd.o \
+		matchfile.o solvedclient.o solvedfile.o verify.o \
+		boilerplate.o blind_wcs.o index.o tweak.o
+#backend.o
+
+$(BACKEND_LIB): $(BACKEND_OBJS)
+	-rm -f $@
+	$(AR) rc $@ $(BACKEND_OBJS)
+	$(RANLIB) $@
+
 # old and miscellaneous executables that aren't part of the pipeline.
 OLDEXECS := plotquads rawstartree checkquads
 
@@ -126,7 +139,8 @@ ALL_EXECS :=
 
 all: $(QFITS_LIB) $(CFITS_LIB) $(LIBKD_LIB) \
 	$(REMAKE_LIBKD) $(REMAKE_ANUTILS) $(REMAKE_ANFILES) \
-	$(PIPELINE) $(PROSPECTUS) $(IMAGE2XY) $(FITS_UTILS) fitsverify
+	$(PIPELINE) $(PROSPECTUS) $(IMAGE2XY) $(FITS_UTILS) fitsverify \
+	$(BACKEND_LIB)
 
 cairo: $(CAIROEXECS)
 .PHONY: cairo
@@ -375,7 +389,7 @@ hpquads: hpquads.o codefile.o pnpoly.o histogram.o \
 codetree: codetree.o codekd.o codefile.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-7unpermute-stars: unpermute-stars.o \
+unpermute-stars: unpermute-stars.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 unpermute-quads: unpermute-quads.o codekd.o \
@@ -392,21 +406,17 @@ endian-flip-index: endian-flip-index.o codekd.o \
 
 backend-old: backend-old.o blindutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-backend: backend.o blindutils.o blind.o solver.o codekd.o \
-		matchfile.o solvedclient.o solvedfile.o verify.o \
-		boilerplate.o blind_wcs.o index.o tweak.o \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
-		$(QFITS_LIB) $(GSL_LIB)
+backend: backend.o $(BACKEND_LIB) \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
 solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o \
 		image2xy.o resort-xylist.o tabsort.o \
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
 		$(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scale.o image2xy.o \
-		resort-xylist.o \
-		blindutils.o $(SIMPLEXY2_OBJ) \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_LIB)
+augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scale.o \
+		image2xy.o resort-xylist.o blindutils.o \
+		$(SIMPLEXY2_OBJ) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_LIB)
 
 ALL_OBJ += augment-xylist-main.o
 

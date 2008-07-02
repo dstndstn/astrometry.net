@@ -25,7 +25,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "scriptutils.h"
+#include "blindutils.h"
 #include "ioutils.h"
 #include "bl.h"
 #include "errors.h"

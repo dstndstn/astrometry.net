@@ -41,7 +41,7 @@
 #include "solver.h"
 #include "math.h"
 #include "fitsioutils.h"
-#include "scriptutils.h"
+#include "blindutils.h"
 #include "sip_qfits.h"
 #include "tabsort.h"
 #include "errors.h"

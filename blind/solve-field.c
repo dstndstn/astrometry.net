@@ -40,7 +40,6 @@
 #include "ioutils.h"
 #include "xylist.h"
 #include "matchfile.h"
-#include "scriptutils.h"
 #include "fitsioutils.h"
 #include "augment-xylist.h"
 #include "an-opts.h"

@@ -42,7 +42,7 @@
 #include "solver.h"
 #include "math.h"
 #include "fitsioutils.h"
-#include "scriptutils.h"
+#include "blindutils.h"
 #include "gnu-specific.h"
 #include "blind.h"
 #include "log.h"
