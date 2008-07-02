@@ -394,15 +394,14 @@ backend-old: backend-old.o scriptutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_L
 
 backend: backend.o scriptutils.o blind.o solver.o codekd.o \
 		matchfile.o tic.o solvedclient.o solvedfile.o verify.o \
-		svd.o intmap.o blind_wcs.o index.o log.o histogram.o tweak.o \
-		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
+		boilerplate.o svd.o blind_wcs.o index.o log.o tweak.o \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB) $(GSL_LIB)
 
 solve-field: solve-field.o augment-xylist.o scriptutils.o matchfile.o \
 		image2xy.o resort-xylist.o tabsort.o \
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o log.o \
-		$(SIMPLEXY2_OBJ) $(CFITS_LIB) \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+		$(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scale.o image2xy.o \
 		resort-xylist.o \
