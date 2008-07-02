@@ -71,7 +71,7 @@ OTHER_OBJS := usnob.o usnob-fits.o tycho2.o tycho2-fits.o catalog.o \
 	blind_wcs.o index.o tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	brightstars.o ngcic-accurate.o nomad.o nomad-fits.o \
-	ngc2000.o noisesim.o noise.o scriptutils.o hd.o
+	ngc2000.o noisesim.o noise.o blindutils.o hd.o
 
 2MASSOBJ := 2masstofits.o 2mass-fits.o 2mass.o
 
@@ -175,7 +175,7 @@ solver_test.o: solver.c
 
 # Add the basename of your test sources here...
 ALL_TEST_FILES = test_dfind test_ctmf test_simplexy test_dsmooth test_2mass \
-	test_tycho2 test_usnob test_nomad test_matchfile test_scriptutils \
+	test_tycho2 test_usnob test_nomad test_matchfile test_blindutils \
 	test_dcen3x3
 # test_hd depends on hd.fits...
 
@@ -219,8 +219,8 @@ ALL_TEST_EXTRA_OBJS += matchfile.o
 test_hd: hd.o $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_TEST_EXTRA_OBJS += hd.o
 
-test_scriptutils: scriptutils.o $(ANUTILS_LIB)
-ALL_TEST_EXTRA_OBJS += scriptutils.o
+test_blindutils: blindutils.o $(ANUTILS_LIB)
+ALL_TEST_EXTRA_OBJS += blindutils.o
 
 test_dcen3x3: dcen3x3.o
 ALL_TEST_EXTRA_OBJS += dcen3x3.o
@@ -390,22 +390,22 @@ index-to-table: index-to-table.o index.o codekd.o \
 endian-flip-index: endian-flip-index.o codekd.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-backend-old: backend-old.o scriptutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+backend-old: backend-old.o blindutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-backend: backend.o scriptutils.o blind.o solver.o codekd.o \
+backend: backend.o blindutils.o blind.o solver.o codekd.o \
 		matchfile.o solvedclient.o solvedfile.o verify.o \
 		boilerplate.o blind_wcs.o index.o tweak.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB) $(GSL_LIB)
 
-solve-field: solve-field.o augment-xylist.o scriptutils.o matchfile.o \
+solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o \
 		image2xy.o resort-xylist.o tabsort.o \
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
 		$(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scale.o image2xy.o \
 		resort-xylist.o \
-		scriptutils.o $(SIMPLEXY2_OBJ) \
+		blindutils.o $(SIMPLEXY2_OBJ) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_LIB)
 
 ALL_OBJ += augment-xylist-main.o
