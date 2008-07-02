@@ -5,15 +5,6 @@
 #include "scriptutils.h"
 #include "bl.h"
 
-/*
- static void assertListsEqual(CuTest* tc, il* expect, il* lst) {
- int i;
- CuAssertIntEquals(tc, il_size(expect), il_size(lst));
- for (i=0; i<il_size(expect); i++)
- CuAssertIntEquals(tc, il_get(expect, i), il_get(lst, i));
- }
- */
-
 static void assertListEquals(CuTest* tc, int* expect, int N, il* lst) {
     int i;
     CuAssertIntEquals(tc, N, il_size(lst));
