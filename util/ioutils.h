@@ -48,6 +48,14 @@ void get_mmap_size(int start, int size, off_t* mapstart, size_t* mapsize, int* p
 
 char* find_executable(const char* progname, const char* sibling);
 
+char* create_temp_file(char* fn, char* dir);
+
+char* create_temp_dir(char* name, char* dir);
+
+char* shell_escape(const char* str);
+
+int mkdir_p(const char* path);
+
 bool file_exists(const char* fn);
 
 bool file_readable(const char* fn);
