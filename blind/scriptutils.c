@@ -31,51 +31,6 @@
 #include "errors.h"
 #include "log.h"
 
-
-/*
-int parse_positive_range_string(il* depths, const char* str,
-                                int default_low, int default_high,
-                                const char* valuename) {
-    // -10,10-20,20-30,40-
-    while (str && *str) {
-        int check_range = 1;
-        unsigned int lo, hi;
-        int nread;
-        char div[2];
-        lo = default_low;
-        hi = default_high;
-        if (sscanf(str, "%u-%u", &lo, &hi) == 2) {
-            sscanf(str, "%*u-%*u%n", &nread);
-        } else if (sscanf(str, "%u%1[-]", &lo, div) == 2) {
-            sscanf(str, "%*u%*1[-]%n", &nread);
-            check_range = 0;
-        } else if (sscanf(str, "-%u", &hi) == 1) {
-            sscanf(str, "-%*u%n", &nread);
-            check_range = 0;
-        } else if (sscanf(str, "%u", &hi) == 1) {
-            sscanf(str, "%*u%n", &nread);
-        } else {
-            fprintf(stderr, "Failed to parse %s range: \"%s\"\n", valuename, str);
-            return -1;
-        }
-        if (check_range && (lo < 0)) {
-            fprintf(stderr, "%s value %i is invalid: must be >= 0.\n", valuename, lo);
-            return -1;
-        }
-        if (check_range && (lo > hi)) {
-            fprintf(stderr, "%s range %i to %i is invalid: max must be >= min!\n", valuename, lo, hi);
-            return -1;
-        }
-        il_append(depths, lo);
-        il_append(depths, hi);
-        str += nread;
-        while ((*str == ',') || isspace(*str))
-            str++;
-    }
-    return 0;
-}
- */
-
 int parse_depth_string(il* depths, const char* str) {
     unsigned int lasthi = 0;
     unsigned int lo, hi;

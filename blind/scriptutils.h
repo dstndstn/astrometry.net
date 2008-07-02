@@ -23,10 +23,4 @@
 
 int parse_depth_string(il* depths, const char* str);
 
-/*
- int parse_positive_range_string(il* depths, const char* str,
- int default_low, int default_high,
- const char* valuename);
- */
-
 #endif
