@@ -561,7 +561,7 @@ int main(int argc, char** args) {
             char* exec = find_executable("plotxy", me);
             free(exec);
             if (!exec) {
-                logmsg("Couldn't find \"plotxy\" executable - maybe you didn't build the plotting programs?");
+                logmsg("Couldn't find \"plotxy\" executable - maybe you didn't build the plotting programs?\n");
                 logmsg("Disabling plots.\n");
                 makeplots = FALSE;
             }
