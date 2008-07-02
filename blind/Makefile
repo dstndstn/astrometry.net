@@ -68,7 +68,7 @@ UTIL_OBJS := boilerplate.o
 OTHER_OBJS := usnob.o usnob-fits.o tycho2.o tycho2-fits.o catalog.o \
 	codefile.o histogram.o codekd.o verify.o \
 	solver.o matchfile.o solvedclient.o solvedfile.o intmap.o pnpoly.o \
-	blind_wcs.o index.o tweak.o log.o blind-main.o \
+	blind_wcs.o index.o tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	brightstars.o ngcic-accurate.o nomad.o nomad-fits.o \
 	ngc2000.o noisesim.o noise.o scriptutils.o hd.o
@@ -161,7 +161,7 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 		cp $$x $(INSTALL_DIR)/bin; \
 	done
 
-test-solver: test-solver.o solver_test.o blind_wcs.o verify.o log.o \
+test-solver: test-solver.o solver_test.o blind_wcs.o verify.o \
 		matchfile.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -183,7 +183,7 @@ ALL_TEST_EXTRA_OBJS :=
 ALL_TEST_LIBS :=
 
 # Add the dependencies here...
-TEST_DFIND_OBJS := dfind.o log.o
+TEST_DFIND_OBJS := dfind.o
 ALL_TEST_EXTRA_OBJS += $(TEST_DFIND_OBJS)
 test_dfind: $(TEST_DFIND_OBJS) $(ANUTILS_LIB)
 
@@ -195,7 +195,7 @@ TEST_SIMPLEXY_OBJS := simplexy.o ctmf.o dsigma.o dobjects.o dselip.o \
 		dallpeaks.o radix.o dsmooth.o dfind.o \
 		dmedsmooth.o dpeaks.o dcen3x3.o
 ALL_TEST_EXTRA_OBJS += $(TEST_SIMPLEXY_OBJS)
-test_simplexy: $(TEST_SIMPLEXY_OBJS) log.o $(ANUTILS_LIB)
+test_simplexy: $(TEST_SIMPLEXY_OBJS) $(ANUTILS_LIB)
 
 TEST_DSMOOTH_OBJS := dsmooth.o
 ALL_TEST_EXTRA_OBJS += $(TEST_DSMOOTH_OBJS)
@@ -219,8 +219,8 @@ ALL_TEST_EXTRA_OBJS += matchfile.o
 test_hd: hd.o $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_TEST_EXTRA_OBJS += hd.o
 
-test_scriptutils: scriptutils.o log.o $(ANUTILS_LIB)
-ALL_TEST_EXTRA_OBJS += scriptutils.o log.o
+test_scriptutils: scriptutils.o $(ANUTILS_LIB)
+ALL_TEST_EXTRA_OBJS += scriptutils.o
 
 test_dcen3x3: dcen3x3.o
 ALL_TEST_EXTRA_OBJS += dcen3x3.o
@@ -251,7 +251,7 @@ demo_dsmooth: demo_dsmooth.o dsmooth.o \
 
 #ctmf.o: ctmf.c
 
-image2xy: image2xy-main.o log.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
+image2xy: image2xy-main.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
 
 ALL_OBJ += image2xy-main.o
 
@@ -269,7 +269,7 @@ simplexy_shared: _simplexy.so
 _simplexy.so: $(SIMPLEXY_SHARED_OBJ)
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
-new-wcs: new-wcs-main.o new-wcs.o log.o $(ANUTILS_LIB) $(QFITS_LIB)
+new-wcs: new-wcs-main.o new-wcs.o $(ANUTILS_LIB) $(QFITS_LIB)
 
 ALL_OBJ += new-wcs-main.o
 
@@ -296,7 +296,7 @@ ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DAT
 certifiable: certifiable.o histogram.o matchfile.o solvedfile.o \
 		$(UTILS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-fits-guess-scale: fits-guess-scale-main.o fits-guess-scale.o log.o \
+fits-guess-scale: fits-guess-scale-main.o fits-guess-scale.o \
 		$(ANUTILS_LIB) $(QFITS_LIB)
 
 ALL_OBJ += fits-guess-scale-main.o
@@ -360,7 +360,7 @@ build-an-catalog: build-an-catalog.o usnob-fits.o tycho2-fits.o \
 		tycho2.o usnob.o 2mass-fits.o 2mass.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-cut-an: cut-an.o catalog.o usnob.o log.o \
+cut-an: cut-an.o catalog.o usnob.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
@@ -375,7 +375,7 @@ hpquads: hpquads.o codefile.o pnpoly.o histogram.o \
 codetree: codetree.o codekd.o codefile.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-unpermute-stars: unpermute-stars.o \
+7unpermute-stars: unpermute-stars.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 unpermute-quads: unpermute-quads.o codekd.o \
@@ -384,7 +384,7 @@ unpermute-quads: unpermute-quads.o codekd.o \
 merge-index: merge-index.o codekd.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-index-to-table: index-to-table.o index.o log.o codekd.o \
+index-to-table: index-to-table.o index.o codekd.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 endian-flip-index: endian-flip-index.o codekd.o \
@@ -394,25 +394,25 @@ backend-old: backend-old.o scriptutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_L
 
 backend: backend.o scriptutils.o blind.o solver.o codekd.o \
 		matchfile.o solvedclient.o solvedfile.o verify.o \
-		boilerplate.o blind_wcs.o index.o log.o tweak.o \
+		boilerplate.o blind_wcs.o index.o tweak.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB) $(GSL_LIB)
 
 solve-field: solve-field.o augment-xylist.o scriptutils.o matchfile.o \
 		image2xy.o resort-xylist.o tabsort.o \
-		fits-guess-scale.o wcs-rd2xy.o new-wcs.o log.o \
+		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
 		$(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scale.o image2xy.o \
 		resort-xylist.o \
-		scriptutils.o log.o $(SIMPLEXY2_OBJ) \
+		scriptutils.o $(SIMPLEXY2_OBJ) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_LIB)
 
 ALL_OBJ += augment-xylist-main.o
 
 blind: blind-main.o blind.o solver.o codekd.o matchfile.o \
 		solvedclient.o solvedfile.o verify.o \
-		intmap.o blind_wcs.o index.o log.o histogram.o tweak.o \
+		intmap.o blind_wcs.o index.o histogram.o tweak.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^
@@ -420,7 +420,7 @@ blind: blind-main.o blind.o solver.o codekd.o matchfile.o \
 
 whynot: whynot.o index.o codekd.o matchfile.o \
 		solvedclient.o solvedfile.o \
-		verify.o intmap.o blind_wcs.o log.o \
+		verify.o intmap.o blind_wcs.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
@@ -448,7 +448,7 @@ solvedserver: solvedserver.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) \
 		$(QFITS_LIB)
 	$(CC) $(CFLAGS) -o $@ $^ -lm
 
-plotcat: plotcat.o log.o 2mass-fits.o 2mass.o nomad-fits.o nomad.o catalog.o tycho2-fits.o tycho2.o usnob-fits.o usnob.o \
+plotcat: plotcat.o 2mass-fits.o 2mass.o nomad-fits.o nomad.o catalog.o tycho2-fits.o tycho2.o usnob-fits.o usnob.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB)
 
@@ -507,7 +507,7 @@ quadsperstar: quadsperstar.o \
 
 fitsgetext: fitsgetext.o $(ANUTILS_LIB) $(QFITS_LIB)
 
-fits-flip-endian: fits-flip-endian.o log.o $(ANUTILS_LIB) $(QFITS_LIB)
+fits-flip-endian: fits-flip-endian.o $(ANUTILS_LIB) $(QFITS_LIB)
 
 subtable: subtable.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 
