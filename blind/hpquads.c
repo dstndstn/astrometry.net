@@ -30,7 +30,6 @@
 #include "healpix.h"
 #include "starutil.h"
 #include "codefile.h"
-#include "fileutil.h"
 #include "mathutil.h"
 #include "quadfile.h"
 #include "kdtree.h"

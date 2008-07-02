@@ -26,7 +26,6 @@
 #include <libgen.h>
 #include <ctype.h>
 
-#include "fileutil.h"
 #include "xylist.h"
 #include "bl.h"
 #include "boilerplate.h"

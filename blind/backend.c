@@ -36,7 +36,6 @@
 #include <dirent.h>
 #include <assert.h>
 
-#include "fileutil.h"
 #include "ioutils.h"
 #include "bl.h"
 #include "an-bool.h"

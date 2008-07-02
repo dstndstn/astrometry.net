@@ -24,7 +24,6 @@
 #include <string.h>
 
 #include "starutil.h"
-#include "fileutil.h"
 #include "quadfile.h"
 #include "qidxfile.h"
 #include "bl.h"

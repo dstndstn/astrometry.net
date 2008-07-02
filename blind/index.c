@@ -17,7 +17,6 @@
 */
 
 #include "index.h"
-#include "fileutil.h"
 #include "log.h"
 #include "errors.h"
 #include "ioutils.h"
@@ -71,9 +70,9 @@ void get_filenames(const char* indexname,
         free(fits);
         basename = strdup(indexname);
     }
-    *ckdtfn = mk_ctreefn(basename);
-    *skdtfn = mk_streefn(basename);
-    *quadfn = mk_quadfn (basename);
+    asprintf(ckdtfn, "%s.ckdt.fits", basename);
+    asprintf(skdtfn, "%s.skdt.fits", basename);
+    asprintf(quadfn, "%s.quad.fits", basename);
     *singlefile = FALSE;
     free(basename);
     return;

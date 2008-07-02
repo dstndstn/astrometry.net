@@ -23,7 +23,6 @@
 #include <libgen.h>
 
 #include "qidxfile.h"
-#include "fileutil.h"
 
 #define OPTIONS "h"
 
@@ -73,7 +72,7 @@ int main(int argc, char** args) {
 		char* fn;
 
 		basefn = args[optind];
-		fn = mk_qidxfn(basefn);
+        asprintf(&fn, "%s.qidx.fits", basefn);
 		fprintf(stderr, "Reading qidx from %s...\n", fn);
 		fflush(stderr);
 		qf = qidxfile_open(fn);
@@ -84,7 +83,7 @@ int main(int argc, char** args) {
 
 		fprintf(stderr, "Reading %i stars from %s...\n", qf->numstars, fn);
 		fflush(stderr);
-		free_fn(fn);
+		free(fn);
 
 		for (i=0; i<qf->numstars; i++) {
 			qidxfile_get_quads(qf, i, &quads, &nquads);

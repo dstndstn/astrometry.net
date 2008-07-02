@@ -17,7 +17,6 @@
 */
 
 #include "starutil.h"
-#include "fileutil.h"
 #include "catalog.h"
 
 #define OPTIONS "hn:f:r:R:d:D:S:"

@@ -23,7 +23,6 @@
 #include <sys/param.h>
 
 #include "starutil.h"
-#include "fileutil.h"
 #include "mathutil.h"
 #include "bl.h"
 #include "matchobj.h"

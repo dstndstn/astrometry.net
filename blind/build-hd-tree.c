@@ -64,7 +64,6 @@ deg|deg|
 #include "kdtree.h"
 #include "kdtree_fits_io.h"
 #include "starutil.h"
-#include "fileutil.h"
 #include "catalog.h"
 #include "fitsioutils.h"
 #include "starkd.h"

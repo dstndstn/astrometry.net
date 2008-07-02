@@ -24,7 +24,6 @@
 #include <assert.h>
 
 #include "kdtree.h"
-#include "fileutil.h"
 #include "starutil.h"
 #include "bl.h"
 #include "starkd.h"

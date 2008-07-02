@@ -30,7 +30,6 @@
 #include <string.h>
 
 #include "starutil.h"
-#include "fileutil.h"
 #include "quadfile.h"
 #include "qidxfile.h"
 #include "bl.h"
@@ -71,8 +70,8 @@ int main(int argc, char *argv[]) {
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
 		case 'f':
-			idxfname = mk_qidxfn(optarg);
-			quadfname = mk_quadfn(optarg);
+            asprintf(&idxfname, "%s.qidx.fits", optarg);
+            asprintf(&quadfname, "%s.quad.fits", optarg);
 			break;
 		case '?':
 			fprintf(stderr, "Unknown option `-%c'.\n", optopt);
@@ -195,7 +194,8 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Failed to close qidx file.\n");
 		exit(-1);
 	}
-	free_fn(idxfname);
+	free(idxfname);
+	free(quadfname);
 
 	fprintf(stderr, "  done.\n");
 	return 0;

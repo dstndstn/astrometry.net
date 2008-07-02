@@ -24,7 +24,6 @@
 
 #include "kdtree.h"
 #include "starutil.h"
-#include "fileutil.h"
 #include "mathutil.h"
 #include "bl.h"
 #include "matchobj.h"
@@ -53,7 +52,6 @@ void print_help(char* progname) {
 	printf("\nUsage: %s\n"
 		   "   -w <WCS input file>\n"
 		   "   -x <xyls input file>\n"
-		   //"   -r <rdls output file>\n"
 		   "   -i <index-name>\n"
 		   "\n", progname);
 }
@@ -65,13 +63,11 @@ int main(int argc, char** args) {
 	int c;
 	char* xylsfn = NULL;
 	char* wcsfn = NULL;
-	//char* rdlsfn = NULL;
 
 	sl* indexnames;
 	pl* indexes;
 	pl* qidxes;
 
-	//rdlist* rdls = NULL;
 	xylist_t* xyls = NULL;
 	sip_t sip;
 	int i;
@@ -91,11 +87,6 @@ int main(int argc, char** args) {
 		case 'i':
 			sl_append(indexnames, optarg);
 			break;
-			/*
-		case 'r':
-		rdlsfn = optarg;
-		break;
-			*/
 		case 'x':
 			xylsfn = optarg;
 			break;
@@ -108,7 +99,7 @@ int main(int argc, char** args) {
 		print_help(args[0]);
 		exit(-1);
 	}
-	if (/*!rdlsfn ||*/ !xylsfn || !wcsfn) {
+	if (!xylsfn || !wcsfn) {
 		print_help(args[0]);
 		exit(-1);
 	}
@@ -134,15 +125,6 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 
-	// read RDLS.
-	/*
-	  rdls = rdlist_open(rdlsfn);
-	  if (!rdls) {
-	  fprintf(stderr, "Failed to open rdlist from file %s.\n", rdlsfn);
-	  exit(-1);
-	  }
-	*/
-
 	// read indices.
 	indexes = pl_new(8);
 	qidxes = pl_new(8);
@@ -159,13 +141,13 @@ int main(int argc, char** args) {
 		}
 		pl_append(indexes, indx);
 
-		qidxfn = mk_qidxfn(name);
+        asprintf(&qidxfn, "%s.qidx.fits", name);
 		qidx = qidxfile_open(qidxfn);
 		if (!qidx) {
 			fprintf(stderr, "Failed to open qidxfile \"%s\".\n", qidxfn);
 			exit(-1);
 		}
-		free_fn(qidxfn);
+		free(qidxfn);
 		pl_append(qidxes, qidx);
 	}
 	sl_free2(indexnames);
@@ -343,16 +325,6 @@ int main(int argc, char** args) {
 			}
 			//fprintf(stderr, "star %i is involved in %i quads.\n", starnum, nquads);
 			for (k=0; k<nquads; k++) {
-				/* Don't need this - since we'll only get "full" quads if all four are in the "corr" set.
-                 int sA, sB, sC, sD;
-				  int quad = quads[k];
-				  quadfile_get_starids(indx->quads, quad, &sA, &sB, &sC, &sD);
-				  if (!(il_contains(corrstars, sA) &&
-				  il_contains(corrstars, sB) &&
-				  il_contains(corrstars, sC) &&
-				  il_contains(corrstars, sD)))
-				  continue;
-				*/
 				il_insert_ascending(corrquads, quads[k]);
 				il_insert_unique_ascending(corruniqquads, quads[k]);
 			}
@@ -399,10 +371,5 @@ int main(int argc, char** args) {
 	if (xylist_close(xyls)) {
 		fprintf(stderr, "Failed to close XYLS file.\n");
 	}
-	/*
-	  if (rdlist_close(rdls)) {
-	  fprintf(stderr, "Failed to close RDLS file.\n");
-	  }
-	*/
 	return 0;
 }

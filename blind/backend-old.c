@@ -35,7 +35,6 @@
 #include <getopt.h>
 #include <dirent.h>
 
-#include "fileutil.h"
 #include "ioutils.h"
 #include "bl.h"
 #include "an-bool.h"

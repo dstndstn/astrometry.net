@@ -30,7 +30,6 @@
 #include <string.h>
 
 #include "codefile.h"
-#include "fileutil.h"
 #include "fitsioutils.h"
 #include "codekd.h"
 #include "boilerplate.h"

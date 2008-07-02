@@ -26,7 +26,6 @@
 #include "quadfile.h"
 #include "catalog.h"
 #include "kdtree.h"
-#include "fileutil.h"
 #include "starutil.h"
 #include "bl.h"
 #include "starkd.h"
@@ -113,22 +112,22 @@ int main(int argc, char** args) {
 		basename = args[optind];
 		printf("Reading files with basename %s\n", basename);
 
-		fn = mk_quadfn(basename);
+        asprintf(&fn, "%s.quad.fits", basename);
 		qf = quadfile_open(fn);
 		if (!qf) {
 			fprintf(stderr, "Failed to open quad file %s.\n", fn);
 			continue;
 		}
-		free_fn(fn);
+		free(fn);
 
-		fn = mk_catfn(basename);
+        asprintf(&fn, "%s.objs.fits", basename);
 		printf("Trying to open catalog file %s...\n", fn);
 		cat = catalog_open(fn);
-		free_fn(fn);
+		free(fn);
 		if (cat) {
 			Nstars = cat->numstars;
 		} else {
-			fn = mk_streefn(basename);
+            asprintf(&fn, "%s.skdt.fits", basename);
 			printf("Trying to open star kdtree %s instead...\n", fn);
 			skdt = startree_open(fn);
 			if (!skdt) {

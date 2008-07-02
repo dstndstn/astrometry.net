@@ -25,7 +25,6 @@
 #include <assert.h>
 #include <time.h>
 
-#include "fileutil.h"
 #include "starutil.h"
 #include "kdtree.h"
 #include "kdtree_fits_io.h"

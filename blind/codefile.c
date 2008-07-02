@@ -24,7 +24,6 @@
 
 #include "codefile.h"
 #include "starutil.h"
-#include "fileutil.h"
 #include "ioutils.h"
 #include "fitsioutils.h"
 #include "errors.h"

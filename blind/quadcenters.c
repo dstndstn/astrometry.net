@@ -25,7 +25,6 @@
 
 #include "quadfile.h"
 #include "kdtree.h"
-#include "fileutil.h"
 #include "starutil.h"
 #include "mathutil.h"
 #include "fitsioutils.h"
@@ -104,15 +103,15 @@ int main(int argc, char** args) {
 		basename = args[optind];
 		printf("Reading files with basename %s\n", basename);
 
-		fn = mk_quadfn(basename);
+        asprintf(&fn, "%s.quad.fits", basename);
 		qf = quadfile_open(fn);
 		if (!qf) {
 			fprintf(stderr, "Failed to open quad file %s.\n", fn);
             exit(-1);
 		}
-		free_fn(fn);
+		free(fn);
 
-        fn = mk_streefn(basename);
+        asprintf(&fn, "%s.skdt.fits", basename);
         printf("Trying to open star kdtree %s...\n", fn);
         skdt = startree_open(fn);
         if (!skdt) {

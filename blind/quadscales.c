@@ -25,7 +25,6 @@
 
 #include "quadfile.h"
 #include "kdtree.h"
-#include "fileutil.h"
 #include "starutil.h"
 #include "mathutil.h"
 #include "bl.h"
@@ -89,23 +88,23 @@ int main(int argc, char** args) {
 				fixed_basename[i] = '_';
 		}
 
-		fn = mk_quadfn(basename);
+        asprintf(&fn, "%s.quad.fits", basename);
 		fprintf(stderr, "Opening quad file %s...\n", fn);
 		qf = quadfile_open(fn);
 		if (!qf) {
 			fprintf(stderr, "Failed to open quad file %s.\n", fn);
 			continue;
 		}
-		free_fn(fn);
+		free(fn);
 
-		fn = mk_streefn(basename);
+        asprintf(&fn, "%s.skdt.fits", basename);
 		fprintf(stderr, "Opening skdt file %s...\n", fn);
 		skdt = startree_open(fn);
 		if (!skdt) {
 			fprintf(stderr, "Failed to read star kdtree %s.\n", fn);
 			continue;
 		}
-		free_fn(fn);
+		free(fn);
 
 		hist = histogram_new_nbins(qf->index_scale_lower,
 								   qf->index_scale_upper, Nbins);

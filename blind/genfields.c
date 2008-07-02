@@ -19,9 +19,7 @@
 #include <math.h>
 #include "mathutil.h"
 #include "starutil.h"
-#include "fileutil.h"
 #include "kdtree.h"
-//#include "kdtree_io.h"
 #include "kdtree_fits_io.h"
 
 #define OPTIONS "hpn:s:z:f:o:w:x:q:r:d:S:"
@@ -37,6 +35,15 @@ const char HelpString[] =
 
 extern char *optarg;
 extern int optind, opterr, optopt;
+
+static void fopenout(char* fn, FILE** pfid) {
+	FILE* fid = fopen(fn, "wb");
+	if (!fid) {
+		fprintf(stderr, "Error opening file %s: %s\n", fn, strerror(errno));
+		exit(-1);
+	}
+	*pfid = fid;
+}
 
 uint gen_pix(FILE *listfid, FILE *pix0fid, FILE *pixfid,
              kdtree_t* starkd,

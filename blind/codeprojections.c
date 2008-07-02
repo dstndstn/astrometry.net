@@ -33,7 +33,6 @@
 #include <limits.h>
 #include <math.h>
 
-#include "fileutil.h"
 #include "starutil.h"
 #include "codekd.h"
 #include "kdtree_fits_io.h"

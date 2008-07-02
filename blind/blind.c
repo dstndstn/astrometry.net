@@ -41,7 +41,6 @@
 #include "blind.h"
 
 #include "starutil.h"
-#include "fileutil.h"
 #include "mathutil.h"
 #include "quadfile.h"
 #include "solvedclient.h"

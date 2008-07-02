@@ -35,7 +35,6 @@
 
 #include "kdtree.h"
 #include "starutil.h"
-#include "fileutil.h"
 #include "quadfile.h"
 #include "fitsioutils.h"
 #include "codekd.h"

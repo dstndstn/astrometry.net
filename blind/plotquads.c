@@ -26,7 +26,6 @@
 #include "qidxfile.h"
 #include "quadfile.h"
 #include "starutil.h"
-#include "fileutil.h"
 #include "mathutil.h"
 #include "bl.h"
 #include "intmap.h"

@@ -63,7 +63,7 @@ FITS_UTILS := $(QFITS_UTILS) $(CFITS_UTILS)
 MISC_EXECS := project-usnob diffractionFlag_check \
 	hpgrid read_nomad tycho2tostellarium
 
-UTIL_OBJS := fileutil.o boilerplate.o
+UTIL_OBJS := boilerplate.o
 
 OTHER_OBJS := usnob.o usnob-fits.o tycho2.o tycho2-fits.o catalog.o \
 	codefile.o histogram.o tic.o codekd.o svd.o verify.o \
@@ -390,7 +390,7 @@ index-to-table: index-to-table.o index.o log.o codekd.o \
 endian-flip-index: endian-flip-index.o codekd.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-backend-old: backend-old.o scriptutils.o fileutil.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+backend-old: backend-old.o scriptutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 backend: backend.o scriptutils.o blind.o solver.o codekd.o \
 		matchfile.o tic.o solvedclient.o solvedfile.o verify.o \
@@ -399,14 +399,14 @@ backend: backend.o scriptutils.o blind.o solver.o codekd.o \
 		$(QFITS_LIB) $(GSL_LIB)
 
 solve-field: solve-field.o augment-xylist.o scriptutils.o matchfile.o \
-		fileutil.o image2xy.o resort-xylist.o tabsort.o \
+		image2xy.o resort-xylist.o tabsort.o \
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o log.o \
 		$(SIMPLEXY2_OBJ) $(CFITS_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scale.o image2xy.o \
 		resort-xylist.o \
-		scriptutils.o fileutil.o log.o $(SIMPLEXY2_OBJ) \
+		scriptutils.o log.o $(SIMPLEXY2_OBJ) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_LIB)
 
 ALL_OBJ += augment-xylist-main.o
@@ -425,10 +425,10 @@ whynot: whynot.o index.o codekd.o matchfile.o tic.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
-quadcenters: quadcenters.o fileutil.o boilerplate.o \
+quadcenters: quadcenters.o boilerplate.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
-startree2rdls: startree2rdls.o fileutil.o boilerplate.o \
+startree2rdls: startree2rdls.o boilerplate.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
 agreeable: agreeable.o matchfile.o solvedfile.o solvedclient.o \
@@ -520,7 +520,7 @@ column-merge: column-merge.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 
 add-healpix-column: add-healpix-column.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 
-resort-xylist: resort-xylist-main.o resort-xylist.o fileutil.o $(UTIL_OBJS) \
+resort-xylist: resort-xylist-main.o resort-xylist.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 ALL_OBJ += resort-xylist-main.o
