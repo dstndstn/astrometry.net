@@ -22,6 +22,7 @@ os.environ['UPLOAD_DIR'] = settings.UPLOAD_DIR
 import logging
 import os.path
 import urllib
+import urllib2
 import shutil
 import tarfile
 
@@ -45,6 +46,7 @@ from astrometry.net.server import ssh_master
 import astrometry.util.sip as sip
 
 def bailout(job, reason):
+    log('Bailing out:', reason)
     job.set_status('Failed', reason)
     job.save()
 
@@ -267,10 +269,9 @@ def real_handle_job(job):
 
     tardata = ssh_master.solve(job, logfunc)
 
-    
     # extract the resulting tarball...
     f = StringIO(tardata)
-    tar = tarfile.open(mode='r|', fileobj=f)
+    tar = tarfile.open(name='', mode='r|', fileobj=f)
     for tarinfo in tar:
         log('  ', tarinfo.name, 'is', tarinfo.size, 'bytes in size')
         tar.extract(tarinfo, job.get_job_dir())
@@ -408,7 +409,20 @@ def main(joblink):
         (fd, tmpfile) = tempfile.mkstemp('', 'download')
         os.close(fd)
         log('Retrieving URL ' + submission.url + ' to file ' + tmpfile)
-        f = urllib.urlretrieve(submission.url, tmpfile)
+        #f = urllib.urlretrieve(submission.url, tmpfile)
+        try:
+            f = urlopen(submission.url)
+            fout = open(tmpfile, 'wb')
+            fout.write(f.read())
+            fout.close()
+            f.close()
+        except urllib2.HTTPError, e:
+            bailout(submission, 'Failed to retrieve URL: ' + str(e))
+            return False
+
+        log('URL info for %s:' % f.geturl())
+        for k,v in f.info().items():
+            log('  ',k,'=',v)
         p = urlparse(submission.url)
         p = p[2]
         if p:
