@@ -186,7 +186,8 @@ def convert(job, df, fn, args=None):
             raise FileConversionError(errmsg)
 
         # fits image: fits2fits it.
-        if df.filetype == image2pnm.fitstype:
+        log('image filetype: ', df.filetype)
+        if df.filetype == image2pnm.fitsext:
             errmsg = fits2fits.fits2fits(infn, fullfn, False)
             if errmsg:
                 log(errmsg)
@@ -243,7 +244,7 @@ def convert(job, df, fn, args=None):
             sxylog = '/tmp/alternate-xylist-%s.log' % variant
 
         infn = convert(job, df, 'fitsimg')
-        cmd = 'image2xy %s-o %s %s >> %s 2>&1' % (extraargs, fullfn, infn, sxylog)
+        cmd = 'image2xy -v %s-o %s %s >> %s 2>&1' % (extraargs, fullfn, infn, sxylog)
         run_convert_command(cmd)
         return fullfn
 
