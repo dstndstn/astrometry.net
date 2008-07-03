@@ -91,8 +91,7 @@ BACKEND_LIB := libbackend.a
 BACKEND_OBJS := \
 		blindutils.o blind.o solver.o codekd.o \
 		matchfile.o solvedclient.o solvedfile.o verify.o \
-		boilerplate.o blind_wcs.o index.o tweak.o
-#backend.o
+		boilerplate.o blind_wcs.o index.o tweak.o backend.o
 
 $(BACKEND_LIB): $(BACKEND_OBJS)
 	-rm -f $@
@@ -406,7 +405,7 @@ endian-flip-index: endian-flip-index.o codekd.o \
 
 backend-old: backend-old.o blindutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-backend: backend.o $(BACKEND_LIB) \
+backend: backend-main.o $(BACKEND_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
 solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o \

@@ -22,7 +22,6 @@
  * indices with the job description to create an input file for 'blind'.  Runs blind
  * and merges the results.
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,55 +47,7 @@
 #include "log.h"
 #include "qfits.h"
 #include "errors.h"
-
-static bool verbose = FALSE;
-
-static struct option long_options[] =
-    {
-	    {"help",    no_argument,       0, 'h'},
-        {"verbose", no_argument,       0, 'v'},
-	    {"config",  required_argument, 0, 'c'},
-	    {"cancel",  required_argument, 0, 'C'},
-        {"to-stderr", no_argument,     0, 'E'},
-	    {0, 0, 0, 0}
-    };
-
-static const char* OPTIONS = "hc:i:vC:E";
-
-static void print_help(const char* progname) {
-	printf("Usage:   %s [options] <augmented xylist>\n"
-	       "   [-c <backend config file>]  (default: \"backend.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable)\n"
-           "   [-C <cancel-filename>]: quit solving if the file <cancel-filename> appears.\n"
-           "   [-v]: verbose\n"
-           "   [-E]: send log messages to stderr\n"
-	       "\n", progname);
-}
-
-struct indexinfo {
-	char* indexname;
-    int indexid;
-    int healpix;
-    int hpnside;
-	// quad size, in arcsec.
-	double losize;
-	double hisize;
-};
-typedef struct indexinfo indexinfo_t;
-
-struct backend {
-	bl* indexinfos;
-	sl* index_paths;
-	il* ibiggest;
-	il* ismallest;
-    il* default_depths;
-	double sizesmallest;
-	double sizebiggest;
-	bool inparallel;
-	double minwidth;
-	double maxwidth;
-    int cpulimit;
-};
-typedef struct backend backend_t;
+#include "backend.h"
 
 static int add_index(backend_t* backend, char* path) {
 	indexinfo_t ii;
@@ -142,7 +93,7 @@ static int add_index(backend_t* backend, char* path) {
     return 0;
 }
 
-static int parse_config_file(FILE* fconf, backend_t* backend) {
+int backend_parse_config_file(backend_t* backend, FILE* fconf) {
     sl* indices = sl_new(16);
     bool auto_index = FALSE;
     int i;
@@ -304,18 +255,6 @@ static int parse_config_file(FILE* fconf, backend_t* backend) {
 	return rtn;
 }
 
-struct job_t {
-	dl* scales;
-	il* depths;
-    bool include_default_scales;
-
-    double quad_sizefraction_min;
-    double quad_sizefraction_max;
-
-    blind_t bp;
-};
-typedef struct job_t job_t;
-
 static job_t* job_new() {
 	job_t* job = calloc(1, sizeof(job_t));
 	if (!job) {
@@ -327,7 +266,7 @@ static job_t* job_new() {
 	return job;
 }
 
-static void job_free(job_t* job) {
+void job_free(job_t* job) {
 	if (!job)
 		return;
 	dl_free(job->scales);
@@ -342,18 +281,17 @@ static double job_imageh(job_t* job) {
     return job->bp.solver.field_maxy;
 }
 
-static int run_job(job_t* job, backend_t* backend) {
+int backend_run_job(backend_t* backend, job_t* job) {
     blind_t* bp = &(job->bp);
     solver_t* sp = &(bp->solver);
-
+    
     int i;
     double app_min_default;
     double app_max_default;
     bool solved = FALSE;
 
     if (blind_is_run_obsolete(bp, sp)) {
-        solved = TRUE;
-        return 0;
+        goto finish;
     }
 
     app_min_default = deg2arcsec(backend->minwidth) / job_imagew(job);
@@ -374,7 +312,6 @@ static int run_job(job_t* job, backend_t* backend) {
             if (endobj)
                 endobj--;
         }
-        //logmsg("Feeding to blind: startobj %i, endobj %i\n", startobj, endobj);
 
 		for (j=0; j<dl_size(job->scales) / 2; j++) {
 			double fmin, fmax;
@@ -455,10 +392,13 @@ static int run_job(job_t* job, backend_t* backend) {
             break;
 	}
 
+ finish:
+    solver_cleanup(sp);
+    blind_cleanup(bp);
 	return 0;
 }
 
-bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
+bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job, bool verbose) {
     blind_t* bp = &(job->bp);
     solver_t* sp = &(bp->solver);
 
@@ -761,197 +701,61 @@ void backend_free(backend_t* backend) {
     free(backend);
 }
 
-int main(int argc, char** args) {
-    char* default_configfn = "backend.cfg";
-    char* default_config_path = "../etc";
+job_t* backend_read_job_file(backend_t* backend,
+                             const char* jobfn) {
+    qfits_header* hdr;
+    job_t* job;
+    blind_t* bp;
 
-	int c;
-	char* configfn = NULL;
-	FILE* fconf;
-	int i;
-	backend_t* backend;
-    char* mydir = NULL;
-    char* me;
-    bool help = FALSE;
-    sl* strings = sl_new(4);
-    char* cancelfn = NULL;
-    int loglvl = LOG_MSG;
-    bool tostderr = FALSE;
-
-	while (1) {
-		int option_index = 0;
-		c = getopt_long(argc, args, OPTIONS, long_options, &option_index);
-		if (c == -1)
-			break;
-		switch (c) {
-        case 'E':
-            tostderr = TRUE;
-            break;
-		case 'h':
-            help = TRUE;
-			break;
-        case 'v':
-            loglvl++;
-            break;
-        case 'C':
-            cancelfn = optarg;
-            break;
-		case 'c':
-			configfn = strdup(optarg);
-			break;
-		case '?':
-			break;
-		default:
-            printf("Unknown flag %c\n", c);
-			exit( -1);
-		}
-	}
-
-	if (optind == argc) {
-		// Need extra args: filename
-		printf("You must specify at least one input file!\n\n");
-		help = TRUE;
-	}
-	if (help) {
-		print_help(args[0]);
-		exit(0);
-	}
-
-    log_init(loglvl);
-    if (tostderr)
-        log_to(stderr);
-
-	backend = backend_new();
-
-    // directory containing the 'backend' executable:
-    me = find_executable(args[0], NULL);
-    if (!me)
-        me = strdup(args[0]);
-    mydir = sl_append(strings, dirname(me));
-    free(me);
-
-	// Read config file
-    if (!configfn) {
-        int i;
-        sl* trycf = sl_new(4);
-        sl_appendf(trycf, "%s/%s/%s", mydir, default_config_path, default_configfn);
-        sl_appendf(trycf, "%s/%s", mydir, default_configfn);
-        sl_appendf(trycf, "./%s", default_configfn);
-        sl_appendf(trycf, "./%s/%s", default_config_path, default_configfn);
-        for (i=0; i<sl_size(trycf); i++) {
-            char* cf = sl_get(trycf, i);
-            if (file_exists(cf)) {
-                configfn = strdup(cf);
-                logverb("Using config file \"%s\"\n", cf);
-                break;
-            } else {
-                logverb("Config file \"%s\" doesn't exist.\n", cf);
-            }
-        }
-        if (!configfn) {
-            char* cflist = sl_join(trycf, "\n  ");
-            logerr("Couldn't find config file: tried:\n  %s\n", cflist);
-            free(cflist);
-        }
-        sl_free2(trycf);
+    // Read primary header.
+    hdr = qfits_header_read(jobfn);
+    if (!hdr) {
+        ERROR("Failed to parse FITS header from file \"%s\"", jobfn);
+        return NULL;
     }
-	fconf = fopen(configfn, "r");
-	if (!fconf) {
-		SYSERROR("Failed to open config file \"%s\"", configfn);
-		exit( -1);
-	}
+    job = job_new();
+    if (!parse_job_from_qfits_header(hdr, job, backend->verbose)) {
+        job_free(job);
+        qfits_header_destroy(hdr);
+        return NULL;
+    }
+    qfits_header_destroy(hdr);
 
-	if (parse_config_file(fconf, backend)) {
-        logerr("Failed to parse (or encountered an error while interpreting) config file \"%s\"\n", configfn);
-		exit( -1);
-	}
-	fclose(fconf);
+    bp = &(job->bp);
 
-	if (!pl_size(backend->indexinfos)) {
-		logerr("You must list at least one index in the config file (%s)\n", configfn);
-		exit( -1);
-	}
+    blind_set_field_file(bp, jobfn);
 
-	if (backend->minwidth <= 0.0 || backend->maxwidth <= 0.0) {
-		logerr("\"minwidth\" and \"maxwidth\" in the config file %s must be positive!\n", configfn);
-		exit( -1);
-	}
-
-    free(configfn);
-
-    if (!il_size(backend->default_depths)) {
-        parse_depth_string(backend->default_depths,
-                           "10 20 30 40 50 60 70 80 90 100 "
-                           "110 120 130 140 150 160 170 180 190 200");
+    // If the job has no scale estimate, search everything provided
+    // by the backend
+    if (!dl_size(job->scales) || job->include_default_scales) {
+        double arcsecperpix;
+        arcsecperpix = deg2arcsec(backend->minwidth) / job_imagew(job);
+        dl_append(job->scales, arcsecperpix);
+        arcsecperpix = deg2arcsec(backend->maxwidth) / job_imagew(job);
+        dl_append(job->scales, arcsecperpix);
     }
 
-	for (i = optind; i < argc; i++) {
-		char* jobfn;
-		qfits_header* hdr;
-		job_t* job;
-        blind_t* bp;
+    // The job can only decrease the CPU limit.
+    if (!bp->cpulimit || bp->cpulimit > backend->cpulimit) {
+        logverb("Decreasing CPU time limit to the backend's limit of %i\n",
+                backend->cpulimit);
+        bp->cpulimit = backend->cpulimit;
+    }
 
-		jobfn = args[i];
+    // If the job didn't specify depths, set defaults.
+    if (il_size(job->depths) == 0) {
+        if (backend->inparallel) {
+            // no limit.
+            il_append(job->depths, 0);
+            il_append(job->depths, 0);
+        } else
+            il_append_list(job->depths, backend->default_depths);
+    }
 
-        logverb("Reading job file \"%s\"...\n", jobfn);
+    if (backend->cancelfn)
+        blind_set_cancel_file(bp, backend->cancelfn);
 
-		// Read primary header.
-		hdr = qfits_header_read(jobfn);
-		if (!hdr) {
-			ERROR("Failed to parse FITS header from file \"%s\"", jobfn);
-			exit( -1);
-		}
-        job = job_new();
-		if (!parse_job_from_qfits_header(hdr, job)) {
-            continue;
-        }
-        bp = &(job->bp);
-
-        blind_set_field_file(bp, jobfn);
-
-		// If the job has no scale estimate, search everything provided
-		// by the backend
-		if (!dl_size(job->scales) || job->include_default_scales) {
-			double arcsecperpix;
-			arcsecperpix = deg2arcsec(backend->minwidth) / job_imagew(job);
-			dl_append(job->scales, arcsecperpix);
-			arcsecperpix = deg2arcsec(backend->maxwidth) / job_imagew(job);
-			dl_append(job->scales, arcsecperpix);
-		}
-
-        // The job can only decrease the CPU limit.
-        if (!bp->cpulimit || bp->cpulimit > backend->cpulimit) {
-            logverb("Decreasing CPU time limit to the backend's limit of %i\n",
-                    backend->cpulimit);
-            bp->cpulimit = backend->cpulimit;
-        }
-
-        // If the job didn't specify depths, set defaults.
-        if (il_size(job->depths) == 0) {
-            if (backend->inparallel) {
-                // no limit.
-                il_append(job->depths, 0);
-                il_append(job->depths, 0);
-            } else
-                il_append_list(job->depths, backend->default_depths);
-        }
-
-		qfits_header_destroy(hdr);
-
-        if (cancelfn)
-            blind_set_cancel_file(bp, cancelfn);
-
-		if (run_job(job, backend))
-			logerr("Failed to run_job()\n");
-
-        solver_cleanup(&(bp->solver));
-        blind_cleanup(bp);
-
-		job_free(job);
-	}
-
-	backend_free(backend);
-    sl_free2(strings);
-
-    return 0;
+    return job;
 }
+
+
