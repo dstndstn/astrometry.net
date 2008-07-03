@@ -624,7 +624,7 @@ def jobstatus(request):
 
     ctxt = {
         'jobid' : job.jobid,
-        'jobstatus' : job.status,
+        'jobstatus' : job.format_status_full(),
         'jobsolved' : job.solved(),
         'jobsubmittime' : submission.format_submittime(),
         'jobstarttime' : job.format_starttime(),

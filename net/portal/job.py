@@ -332,12 +332,19 @@ class Submission(models.Model):
         return self.status in [ 'Finished' ]
 
     def set_status(self, stat, reason=None):
-        if stat in ['Queued', 'Running', 'Finished']:
+        if stat in ['Queued', 'Running', 'Failed', 'Finished']:
             self.status = stat
         else:
             raise ValueError('Invalid status "%s"' % stat)
         if stat == 'Failed' and reason is not None:
-            job.failurereason = reason[:256]
+            self.failurereason = reason[:256]
+
+    def format_status(self):
+        s = self.status
+        r = self.failurereason
+        if r:
+            s = s + ': ' + r
+        return s
 
     def get_id(self):
         return self.subid
@@ -646,6 +653,13 @@ class Job(models.Model):
     def format_status(self):
         s = self.status
         r = self.short_failurereason()
+        if r:
+            s = s + ': ' + r
+        return s
+
+    def format_status_full(self):
+        s = self.status
+        r = self.failurereason
         if r:
             s = s + ': ' + r
         return s
