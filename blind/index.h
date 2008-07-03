@@ -31,24 +31,13 @@
 
 #define DEFAULT_INDEX_JITTER 1.0  // arcsec
 
-/**
- * A loaded index
- */
-struct index_s {
-	// Name of the current index.
-	const char *indexname;
+struct index_meta_s {
+	char *indexname;
 
 	// Unique id for this index.
 	int indexid;
 	int healpix;
     int hpnside;
-
-	// The index
-	codetree* codekd;
-	quadfile* quads;
-	startree_t* starkd;
-
-    bool use_ids;
 
 	// Jitter in the index, in arcseconds.
 	double index_jitter;
@@ -61,6 +50,24 @@ struct index_s {
 	// Limits of the size of quads in the index, in arcseconds.
 	double index_scale_upper;
 	double index_scale_lower;
+
+    int dimquads;
+    int nstars;
+    int nquads;
+};
+typedef struct index_meta_s index_meta_t;
+
+/**
+ * A loaded index
+ */
+struct index_s {
+	codetree* codekd;
+	quadfile* quads;
+	startree_t* starkd;
+
+    bool use_ids;
+
+    index_meta_t meta;
 };
 typedef struct index_s index_t;
 
@@ -70,9 +77,7 @@ typedef struct index_s index_t;
 
 bool index_is_file_index(const char* filename);
 
-int index_get_scale_and_id(const char* filename,
-                           double* scalelo, double* scalehi,
-                           int* indexid, int* healpix, int* hpnside);
+int index_get_meta(const char* filename, index_meta_t* meta);
 
 bool index_has_ids(index_t* index);
 

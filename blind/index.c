@@ -37,11 +37,12 @@ int index_nstars(const index_t* index) {
     return startree_N(index->starkd);
 }
 
-void get_filenames(const char* indexname,
-                   char** quadfn,
-                   char** ckdtfn,
-                   char** skdtfn,
-                   bool* singlefile) {
+// Ugh!
+static void get_filenames(const char* indexname,
+                          char** quadfn,
+                          char** ckdtfn,
+                          char** skdtfn,
+                          bool* singlefile) {
     char* basename;
     if (ends_with(indexname, ".quad.fits")) {
         basename = strdup(indexname);
@@ -81,8 +82,8 @@ void get_filenames(const char* indexname,
 bool index_is_file_index(const char* filename) {
     char* ckdtfn, *skdtfn, *quadfn;
     bool singlefile;
-    index_t* ind;
-    bool rtn = FALSE;
+    //index_meta_t meta;
+    bool rtn = TRUE;
 
     get_filenames(filename, &quadfn, &ckdtfn, &skdtfn, &singlefile);
     if (!file_readable(quadfn)) {
@@ -111,15 +112,17 @@ bool index_is_file_index(const char* filename) {
         goto finish;
     }
 
-    ind = index_load(filename, INDEX_ONLY_LOAD_METADATA);
-    rtn = (ind != NULL);
-    if (!rtn) {
-        if (singlefile)
-            ERROR("File %s does not contain an index.\n", quadfn);
-        else
-            ERROR("Files %s , %s , and %s do not contain an index.\n",
-                  quadfn, skdtfn, ckdtfn);
-    }
+    /* This is a bit expensive...
+
+     if (index_get_meta(filename, &meta)) {
+     if (singlefile)
+     ERROR("File %s does not contain an index.\n", quadfn);
+     else
+     ERROR("Files %s , %s , and %s do not contain an index.\n",
+     quadfn, skdtfn, ckdtfn);
+     rtn = FALSE;
+     }
+     */
 
  finish:
     free(ckdtfn);
@@ -128,23 +131,12 @@ bool index_is_file_index(const char* filename) {
     return rtn;
 }
 
-int index_get_scale_and_id(const char* filename,
-                           double* scalelo, double* scalehi,
-                           int* indexid, int* healpix, int* hpnside) {
+int index_get_meta(const char* filename, index_meta_t* meta) {
     index_t* ind = index_load(filename, 0);
     if (!ind) {
         return -1;
     }
-    if (scalelo)
-        *scalelo = quadfile_get_index_scale_lower_arcsec(ind->quads);
-    if (scalehi)
-        *scalehi = quadfile_get_index_scale_upper_arcsec(ind->quads);
-    if (indexid)
-        *indexid = ind->indexid;
-    if (healpix)
-        *healpix = ind->healpix;
-    if (hpnside)
-        *hpnside = ind->hpnside;
+    memcpy(meta, &(ind->meta), sizeof(index_meta_t));
     index_close(ind);
     return 0;
 }
@@ -152,7 +144,7 @@ int index_get_scale_and_id(const char* filename,
 index_t* index_load(const char* indexname, int flags) {
 	char *codetreefname=NULL, *quadfname=NULL, *startreefname=NULL;
 	index_t* index = calloc(1, sizeof(index_t));
-	index->indexname = indexname;
+	index->meta.indexname = indexname;
     bool singlefile;
 
 	if (flags & INDEX_ONLY_LOAD_METADATA)
@@ -171,7 +163,7 @@ index_t* index_load(const char* indexname, int flags) {
     startreefname = NULL;
 	//logverb("  (%d stars, %d nodes).\n", startree_N(index->starkd), startree_nodes(index->starkd));
 
-	index->index_jitter = qfits_header_getdouble(index->starkd->header, "JITTER", DEFAULT_INDEX_JITTER);
+	index->meta.index_jitter = qfits_header_getdouble(index->starkd->header, "JITTER", DEFAULT_INDEX_JITTER);
 	//logverb("Setting index jitter to %g arcsec.\n", index->index_jitter);
 
 	if (flags & INDEX_ONLY_LOAD_SKDT)
@@ -186,17 +178,21 @@ index_t* index_load(const char* indexname, int flags) {
 	}
 	free(quadfname);
     quadfname = NULL;
-	index->index_scale_upper = quadfile_get_index_scale_upper_arcsec(index->quads);
-	index->index_scale_lower = quadfile_get_index_scale_lower_arcsec(index->quads);
-	index->indexid = index->quads->indexid;
-	index->healpix = index->quads->healpix;
-	index->hpnside = index->quads->hpnside;
+	index->meta.index_scale_upper = quadfile_get_index_scale_upper_arcsec(index->quads);
+	index->meta.index_scale_lower = quadfile_get_index_scale_lower_arcsec(index->quads);
+	index->meta.indexid = index->quads->indexid;
+	index->meta.healpix = index->quads->healpix;
+	index->meta.hpnside = index->quads->hpnside;
+	index->meta.dimquads = index->quads->dimquads;
+	index->meta.nquads = index->quads->numquads;
+	index->meta.nstars = index->quads->numstars;
 
 	//logverb("  (%d stars: %i, Quads: %i.\n", index->quads->numstars, index->quads->numquads);
 
 	logverb("Index scale: [%g, %g] arcmin, [%g, %g] arcsec\n",
-            index->index_scale_lower / 60.0, index->index_scale_upper / 60.0,
-            index->index_scale_lower, index->index_scale_upper);
+            index->meta.index_scale_lower / 60.0, index->meta.index_scale_upper / 60.0,
+            index->meta.index_scale_lower, index->meta.index_scale_upper);
+    logverb("Index has %i quads and %i stars\n", index->meta.nquads, index->meta.nstars);
 
 	// Read .ckdt file...
 	logverb("Reading code KD tree from %s...\n", codetreefname);
@@ -209,17 +205,15 @@ index_t* index_load(const char* indexname, int flags) {
     codetreefname = NULL;
 
 	// check for CIRCLE field in ckdt header...
-	index->circle = qfits_header_getboolean(index->codekd->header, "CIRCLE", 0);
-	if (!index->circle) {
+	index->meta.circle = qfits_header_getboolean(index->codekd->header, "CIRCLE", 0);
+	if (!index->meta.circle) {
 		ERROR("Code kdtree does not contain the CIRCLE header.");
         goto bailout;
 	}
 
-	//logverb("  (%d quads, %d nodes).\n", codetree_N(index->codekd), codetree_nodes(index->codekd));
-
 	// New indexes are cooked such that cx < dx for all codes, but not
 	// all of the old ones are like this.
-    index->cx_less_than_dx = qfits_header_getboolean(index->codekd->header, "CXDX", FALSE);
+    index->meta.cx_less_than_dx = qfits_header_getboolean(index->codekd->header, "CXDX", FALSE);
 
 	if (flags & INDEX_USE_IDS)
         index->use_ids = TRUE;

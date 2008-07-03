@@ -23,21 +23,17 @@
 
 #include "bl.h"
 #include "an-bool.h"
-
-struct indexinfo {
-	char* indexname;
-    int indexid;
-    int healpix;
-    int hpnside;
-	// quad size, in arcsec.
-	double losize;
-	double hisize;
-};
-typedef struct indexinfo indexinfo_t;
+#include "index.h"
 
 struct backend {
-	bl* indexinfos;
+    // search paths (directories)
 	sl* index_paths;
+
+    // contains "index_meta_t" objects.
+	bl* indexmetas;
+    // if "inparallel" is set: contains "index_t" objects.
+    pl* indexes;
+
 	il* ibiggest;
 	il* ismallest;
     il* default_depths;

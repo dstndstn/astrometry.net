@@ -296,8 +296,8 @@ void blind_run(blind_t* bp) {
 				index = index_load(fname, index_options);
 				if (!index) 
 					exit( -1);
-				if ((quadfile_get_index_scale_lower_arcsec(index->quads) > quadhi) ||
-					(quadfile_get_index_scale_upper_arcsec(index->quads) < quadlo)) {
+                if ((index->meta.index_scale_lower > quadhi) ||
+                    (index->meta.index_scale_upper < quadlo)) {
 					index_close(index);
 					continue;
 				}
@@ -716,7 +716,7 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree_t* starkd) {
 	if (bp->verify_dist2 > 0.0)
 		twee->jitter = distsq2arcsec(bp->verify_dist2);
 	else {
-		twee->jitter = hypot(mo->scale * sp->verify_pix, sp->index->index_jitter);
+		twee->jitter = hypot(mo->scale * sp->verify_pix, sp->index->meta.index_jitter);
 		logverb("Star jitter: %g arcsec.\n", twee->jitter);
 	}
 	// Set tweak's jitter to 6 sigmas.
@@ -899,7 +899,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
         if (bp->solver.index) {
             char* copy;
             char* base;
-            copy = strdup(bp->solver.index->indexname);
+            copy = strdup(bp->solver.index->meta.indexname);
             base = strdup(basename(copy));
             free(copy);
             logmsg("Field %i: solved with index %s.\n", mo->fieldnum, base);
@@ -940,13 +940,14 @@ static void add_blind_params(blind_t* bp, qfits_header* hdr) {
 	int i;
 	fits_add_long_comment(hdr, "-- blind solver parameters: --");
 	if (sp->index) {
-		fits_add_long_comment(hdr, "Index name: %s", sp->index->indexname);
-		fits_add_long_comment(hdr, "Index id: %i", sp->index->indexid);
-		fits_add_long_comment(hdr, "Index healpix: %i", sp->index->healpix);
-		fits_add_long_comment(hdr, "Index scale lower: %g arcsec", sp->index->index_scale_lower);
-		fits_add_long_comment(hdr, "Index scale upper: %g arcsec", sp->index->index_scale_upper);
-		fits_add_long_comment(hdr, "Index jitter: %g", sp->index->index_jitter);
-		fits_add_long_comment(hdr, "Circle: %s", sp->index->circle ? "yes" : "no");
+		fits_add_long_comment(hdr, "Index name: %s", sp->index->meta.indexname);
+		fits_add_long_comment(hdr, "Index id: %i", sp->index->meta.indexid);
+		fits_add_long_comment(hdr, "Index healpix: %i", sp->index->meta.healpix);
+		fits_add_long_comment(hdr, "Index healpix nside: %i", sp->index->meta.hpnside);
+		fits_add_long_comment(hdr, "Index scale lower: %g arcsec", sp->index->meta.index_scale_lower);
+		fits_add_long_comment(hdr, "Index scale upper: %g arcsec", sp->index->meta.index_scale_upper);
+		fits_add_long_comment(hdr, "Index jitter: %g", sp->index->meta.index_jitter);
+		fits_add_long_comment(hdr, "Circle: %s", sp->index->meta.circle ? "yes" : "no");
 		fits_add_long_comment(hdr, "Cxdx margin: %g", sp->cxdx_margin);
 	}
 	for (i = 0; i < sl_size(bp->indexnames); i++)
@@ -1143,10 +1144,10 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		} else if (!verify_wcs) {
 			// Field unsolved.
             logerr("Field %i did not solve", fieldnum);
-            if (bp->solver.index && bp->solver.index->indexname) {
+            if (bp->solver.index && bp->solver.index->meta.indexname) {
                 char* copy;
                 char* base;
-                copy = strdup(bp->solver.index->indexname);
+                copy = strdup(bp->solver.index->meta.indexname);
                 base = strdup(basename(copy));
                 free(copy);
                 logerr(" (index %s", base);
