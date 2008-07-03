@@ -18,12 +18,20 @@ from astrometry.net.portal.job import Job
 
 # return the ssh config names of the shards.
 def get_shards():
-    return ['shard55',
-            'shard56',
-            'shard57',
-            'shard58',
-            'shard59',
-            ]
+    if True:
+        return ['neuron0',
+                'neuron1',
+                'neuron2',
+                'neuron3',
+                'neuron4',
+                ]
+    else:
+        return ['shard55',
+                'shard56',
+                'shard57',
+                'shard58',
+                'shard59',
+                ]
 
 class ShardRequest(object):
     pass
@@ -98,9 +106,16 @@ def solve(job, logfunc):
                 log('return code from shard %i is %i' % (i, s.proc.returncode))
 
                 s.tardata = ''.join(s.outdata)
+
+                # DEBUG
+                (fd, tmpfile) = tempfile.mkstemp('', 'tarfile')
+                os.close(fd)
+                write_file(s.tardata, tmpfile)
+                log('Saved tardata in', tmpfile)
+
                 log('tarfile contents:')
                 f = StringIO(s.tardata)
-                tar = tarfile.open(mode='r|', fileobj=f)
+                tar = tarfile.open(name='', mode='r|', fileobj=f)
                 for tarinfo in tar:
                     log('  ', tarinfo.name, 'is', tarinfo.size, 'bytes in size')
                     if tarinfo.name == 'solved':
@@ -131,7 +146,7 @@ def solve(job, logfunc):
     # the firstsolved results will be in the base dir, the other
     # shards will be in 1/, 2/, etc.
     f = StringIO()
-    tar = tarfile.open(mode='w', fileobj=f)
+    tar = tarfile.open(name='', mode='w', fileobj=f)
     i = 1
     for s in shards:
         if s == firstsolved:
