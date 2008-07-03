@@ -38,6 +38,7 @@ include $(COMMON)/makefile.jpeg
 
 LDFLAGS := $(LDFLAGS_DEF)
 LDFLAGS += -lm
+LDFLAGS += -fPIC
 
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(QFITS_INC)
@@ -90,15 +91,23 @@ PROSPECTUS := quadidx codeprojections quadlocations quadscales quadsperstar \
 
 BACKEND_LIB := libbackend.a
 
+BACKEND_SO := libbackend.so
+
 BACKEND_OBJS := \
-		blindutils.o blind.o solver.o codekd.o \
+		backend.o blindutils.o blind.o solver.o codekd.o \
 		matchfile.o solvedclient.o solvedfile.o verify.o \
-		boilerplate.o blind_wcs.o index.o tweak.o backend.o
+		boilerplate.o blind_wcs.o index.o tweak.o
 
 $(BACKEND_LIB): $(BACKEND_OBJS)
 	-rm -f $@
 	$(AR) rc $@ $(BACKEND_OBJS)
 	$(RANLIB) $@
+
+SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
+
+$(BACKEND_SO): $(BACKEND_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
+		$(QFITS_LIB) $(GSL_LIB)
+	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
 # old and miscellaneous executables that aren't part of the pipeline.
 OLDEXECS := plotquads rawstartree checkquads
@@ -141,7 +150,7 @@ ALL_EXECS :=
 all: $(QFITS_LIB) $(CFITS_LIB) $(LIBKD_LIB) \
 	$(REMAKE_LIBKD) $(REMAKE_ANUTILS) $(REMAKE_ANFILES) \
 	$(PIPELINE) $(PROSPECTUS) $(FITS_UTILS) fitsverify \
-	$(PROGS) $(BACKEND_LIB)
+	$(PROGS) $(BACKEND_LIB) $(BACKEND_SO)
 
 cairo: $(CAIROEXECS)
 .PHONY: cairo

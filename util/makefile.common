@@ -129,6 +129,7 @@ else
 
 endif
 
+FLAGS_DEF += -fPIC
 
 # profily!
 #FLAGS_DEF += -pg

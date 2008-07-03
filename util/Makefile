@@ -57,7 +57,7 @@ endif
 CFLAGS += -I.
 
 # for _sip.so:
-CFLAGS += -fPIC
+#CFLAGS += -fPIC
 
 ANFILES_LIB := libanfiles.a
 ANUTILS_LIB := libanutils.a
