@@ -124,7 +124,20 @@ static void add_index_to_blind(backend_t* backend, blind_t* bp,
     }
 }
 
-int backend_parse_config_file(backend_t* backend, FILE* fconf) {
+int backend_parse_config_file(backend_t* backend, char* fn) {
+	FILE* fconf;
+    int rtn;
+	fconf = fopen(fn, "r");
+	if (!fconf) {
+		SYSERROR("Failed to open config file \"%s\"", fn);
+        return -1;
+	}
+    rtn = backend_parse_config_file_stream(backend, fconf);
+	fclose(fconf);
+    return rtn;
+}
+
+int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
     sl* indices = sl_new(16);
     bool auto_index = FALSE;
     int i;
@@ -230,7 +243,8 @@ int backend_parse_config_file(backend_t* backend, FILE* fconf) {
             int j;
             if (!dir) {
                 SYSERROR("Failed to open directory \"%s\"", path);
-                continue;
+                rtn = -1;
+                break;
             }
             logverb("Auto-indexing directory \"%s\" ...\n", path);
             tryinds = sl_new(16);

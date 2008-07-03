@@ -77,7 +77,6 @@ int main(int argc, char** args) {
 
 	int c;
 	char* configfn = NULL;
-	FILE* fconf;
 	int i;
 	backend_t* backend;
     char* mydir = NULL;
@@ -167,17 +166,11 @@ int main(int argc, char** args) {
         }
         sl_free2(trycf);
     }
-	fconf = fopen(configfn, "r");
-	if (!fconf) {
-		SYSERROR("Failed to open config file \"%s\"", configfn);
-		exit( -1);
-	}
 
-	if (backend_parse_config_file(backend, fconf)) {
+	if (backend_parse_config_file(backend, configfn)) {
         logerr("Failed to parse (or encountered an error while interpreting) config file \"%s\"\n", configfn);
 		exit( -1);
 	}
-	fclose(fconf);
 
 	if (!pl_size(backend->indexmetas)) {
 		logerr("You must list at least one index in the config file (%s)\n", configfn);
