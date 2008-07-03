@@ -717,7 +717,7 @@ static void try_all_codes(pquad* pq,
             swapcode[2*i+1] = code[2*i+0];
         }
 
-		debug("    trying normal parity: code=[");
+		debug("    trying reverse parity: code=[");
 		for (i=0; i<dimcode; i++)
 			debug("%s%g", (i?", ":""), swapcode[i]);
 		debug("].\n");

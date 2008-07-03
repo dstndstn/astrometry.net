@@ -44,11 +44,6 @@ typedef unsigned char uchar;
 #define DEFAULT_DECMIN (-PIl/2.0)
 #define DEFAULT_DECMAX (+PIl/2.0)
 
-#define ABCD_ORDER 0
-#define BACD_ORDER 1
-#define ABDC_ORDER 2
-#define BADC_ORDER 3
-
 #define rad2deg(r) (180.0*(r)/(double)PIl)
 #define deg2rad(d) ((d)*(double)PIl/180.0)
 #define deg2arcsec(d) ((d) * 3600.0)
