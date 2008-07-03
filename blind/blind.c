@@ -35,11 +35,9 @@
 #include <math.h>
 #include <assert.h>
 
+#include "blind.h"
 #include "tweak.h"
 #include "sip_qfits.h"
-
-#include "blind.h"
-
 #include "starutil.h"
 #include "mathutil.h"
 #include "quadfile.h"
@@ -55,6 +53,7 @@
 #include "log.h"
 #include "tic.h"
 #include "qfits_table.h"
+#include "errors.h"
 
 static bool record_match_callback(MatchObj* mo, void* userdata);
 static time_t timer_callback(void* user_data);
@@ -70,6 +69,44 @@ static int compare_matchobjs(const void* v1, const void* v2);
 static void search_indexrdls(blind_t* bp, MatchObj* mo);
 static void remove_duplicate_solutions(blind_t* bp);
 static void free_matchobj(MatchObj* mo);
+
+/** Index handling for in_parallel and not.
+
+ Currently it supposedly could handle both "indexnames" and "indexes",
+ but we should probably just assert that only one of these can be used.
+ **/
+static index_t* get_index(blind_t* bp, int i) {
+    if (i < sl_size(bp->indexnames)) {
+        char* fn = sl_get(bp->indexnames, i);
+        index_t* ind = index_load(fn, bp->index_options);
+        if (!ind) {
+            ERROR("Failed to load index %s", fn);
+            exit( -1);
+        }
+        return ind;
+    }
+    i -= sl_size(bp->indexnames);
+    return pl_get(bp->indexes, i);
+}
+static char* get_index_name(blind_t* bp, int i) {
+    index_t* index;
+    if (i < sl_size(bp->indexnames)) {
+        char* fn = sl_get(bp->indexnames, i);
+        return fn;
+    }
+    i -= sl_size(bp->indexnames);
+    index = pl_get(bp->indexes, i);
+    return index->meta.indexname;
+}
+static void done_with_index(blind_t* bp, int i, index_t* ind) {
+    if (i < sl_size(bp->indexnames)) {
+        index_close(ind);
+    }
+}
+static int n_indexes(blind_t* bp) {
+    return sl_size(bp->indexnames) + pl_size(bp->indexes);
+}
+
 
 
 void blind_clear_verify_wcses(blind_t* bp) {
@@ -147,6 +184,10 @@ void blind_add_index(blind_t* bp, const char* index) {
     sl_append(bp->indexnames, index);
 }
 
+void blind_add_loaded_index(blind_t* bp, index_t* ind) {
+    pl_append(bp->indexes, ind);
+}
+
 void blind_add_verify_wcs(blind_t* bp, sip_t* wcs) {
     bl_append(bp->verify_wcs_list, wcs);
 }
@@ -208,7 +249,7 @@ static void check_time_limits(blind_t* bp) {
 void blind_run(blind_t* bp) {
 	solver_t* sp = &(bp->solver);
 	int i, I;
-    int index_options = 0;
+    int Nindexes;
 
 	// Write the start file.
 	if (bp->startfname) {
@@ -248,7 +289,9 @@ void blind_run(blind_t* bp) {
     remove_invalid_fields(bp->fieldlist, xylist_n_fields(bp->xyls));
 
     if (bp->use_idfile)
-        index_options |= INDEX_USE_IDS;
+        bp->index_options |= INDEX_USE_IDS;
+
+    Nindexes = n_indexes(bp);
 
 	// Verify any WCS estimates we have.
 	if (bl_size(bp->verify_wcs_list)) {
@@ -264,12 +307,7 @@ void blind_run(blind_t* bp) {
 		for (w = 0; w < bl_size(bp->verify_wcs_list); w++) {
 			double quadlo, quadhi;
 			sip_t* wcs = bl_access(bp->verify_wcs_list, w);
-			//logmsg("Verifying WCS with index %i of %i\n",  I + 1, sl_size(bp->indexnames));
 
-            /*
-             fprintf(stderr, "Verifying using WCS:\n");
-             sip_print(wcs);
-             */
 			// We don't want to try to verify a wide-field image using a narrow-
 			// field index, because it will contain a TON of index stars in the
 			// field.  We therefore only try to verify using indices that contain
@@ -289,26 +327,20 @@ void blind_run(blind_t* bp) {
 			logmsg("Verifying WCS using indices with quads of size [%g, %g] arcmin\n",
 				   arcsec2arcmin(quadlo), arcsec2arcmin(quadhi));
 
-			for (I = 0; I < sl_size(bp->indexnames); I++) {
-				char* fname;
-				index_t* index;
-				fname = sl_get(bp->indexnames, I);
-				index = index_load(fname, index_options);
-				if (!index) 
-					exit( -1);
+			for (I=0; I<Nindexes; I++) {
+                index_t* index = get_index(bp, I);
                 if ((index->meta.index_scale_lower > quadhi) ||
                     (index->meta.index_scale_upper < quadlo)) {
-					index_close(index);
+                    done_with_index(bp, I, index);
 					continue;
 				}
 				pl_append(sp->indexes, index);
-				//sp->index_num = I;
 				sp->index = index;
 				logmsg("Verifying WCS with index %i of %i\n",  I + 1, sl_size(bp->indexnames));
 				// Do it!
 				solve_fields(bp, wcs);
 				// Clean up this index...
-				index_close(index);
+                done_with_index(bp, I, index);
 				pl_remove_all(sp->indexes);
 				sp->index = NULL;
 			}
@@ -333,20 +365,9 @@ void blind_run(blind_t* bp) {
 	// Start solving...
 	if (bp->indexes_inparallel) {
 
-		// Read all the indices...
-		// FIXME avoid re-reading indices!!!
-		for (I = 0; I < sl_size(bp->indexnames); I++) {
-			char* fname;
-			index_t* index;
-
-			fname = sl_get(bp->indexnames, I);
-            logverb("\n");
-			logmsg("Loading index %s...\n", fname);
-			index = index_load(fname, index_options);
-			if (!index) {
-				logmsg("\nError loading index %s...\n", fname);
-				exit( -1);
-			}
+        // Add all the indexes...
+        for (I=0; I<Nindexes; I++) {
+            index_t* index = get_index(bp, I);
 			pl_append(sp->indexes, index);
 		}
 
@@ -359,19 +380,17 @@ void blind_run(blind_t* bp) {
 		solve_fields(bp, NULL);
 
 		// Clean up the indices...
-		for (I = 0; I < bl_size(sp->indexes); I++) {
-			index_t* index;
-			index = pl_get(sp->indexes, I);
-			index_close(index);
+        for (I=0; I<Nindexes; I++) {
+			index_t* index = pl_get(sp->indexes, I);
+            done_with_index(bp, I, index);
 		}
 		bl_remove_all(sp->indexes);
 		sp->index = NULL;
 
 	} else {
 
-		for (I = 0; I < sl_size(bp->indexnames); I++) {
-			char* fname;
-			index_t* index;
+        for (I=0; I<Nindexes; I++) {
+            index_t* index;
 
 			if (bp->hit_total_timelimit || bp->hit_total_cpulimit)
 				break;
@@ -381,13 +400,9 @@ void blind_run(blind_t* bp) {
 				break;
 
 			// Load the index...
-			fname = sl_get(bp->indexnames, I);
-			index = index_load(fname, index_options);
-			if (!index) {
-				exit( -1);
-			}
+            index = get_index(bp, I);
 			pl_append(sp->indexes, index);
-			logverb("Trying index %s...\n", fname);
+			logverb("Trying index %s...\n", index->meta.indexname);
 
 			// Record current CPU usage.
 			bp->cpu_start = get_cpu_usage(bp);
@@ -398,7 +413,7 @@ void blind_run(blind_t* bp) {
 			solve_fields(bp, NULL);
 
 			// Clean up this index...
-			index_close(index);
+            done_with_index(bp, I, index);
 			pl_remove_all(sp->indexes);
 			sp->index = NULL;
 		}
@@ -505,6 +520,7 @@ void blind_init(blind_t* bp) {
 	bp->fieldlist = il_new(256);
     bp->solutions = bl_new(16, sizeof(MatchObj));
 	bp->indexnames = sl_new(16);
+	bp->indexes = pl_new(16);
 	bp->verify_wcs_list = bl_new(1, sizeof(sip_t));
 	bp->verify_wcsfiles = sl_new(1);
 	bp->fieldid_key = strdup("FIELDID");
@@ -524,8 +540,8 @@ int blind_parameters_are_sane(blind_t* bp, solver_t* sp) {
 		logerr("You must set a \"distractors\" proportion.\n");
 		return 0;
 	}
-	if (!sl_size(bp->indexnames)) {
-		logerr("You must specify an index.\n");
+	if (!(sl_size(bp->indexnames) || (bp->indexes_inparallel && pl_size(bp->indexes)))) {
+		logerr("You must specify one or more indexes.\n");
 		return 0;
 	}
 	if (!bp->fieldfname) {
@@ -628,6 +644,10 @@ void blind_log_run_parameters(blind_t* bp) {
 	logverb("indexes:\n");
 	for (i = 0; i < sl_size(bp->indexnames); i++)
 		logverb("  %s\n", sl_get(bp->indexnames, i));
+	for (i = 0; i < pl_size(bp->indexes); i++) {
+        index_t* ind = pl_get(bp->indexes, i);
+		logverb("  %s\n", ind->meta.indexname);
+    }
 	logverb("fieldfname %s\n", bp->fieldfname);
 	for (i = 0; i < sl_size(bp->verify_wcsfiles); i++)
 		logverb("verify %s\n", sl_get(bp->verify_wcsfiles, i));
@@ -672,6 +692,7 @@ void blind_cleanup(blind_t* bp) {
 	il_free(bp->fieldlist);
     bl_free(bp->solutions);
 	sl_free2(bp->indexnames);
+	pl_free(bp->indexes);
 	sl_free2(bp->verify_wcsfiles);
 	bl_free(bp->verify_wcs_list);
 
@@ -938,6 +959,7 @@ static time_t timer_callback(void* user_data) {
 static void add_blind_params(blind_t* bp, qfits_header* hdr) {
 	solver_t* sp = &(bp->solver);
 	int i;
+    int Nindexes;
 	fits_add_long_comment(hdr, "-- blind solver parameters: --");
 	if (sp->index) {
 		fits_add_long_comment(hdr, "Index name: %s", sp->index->meta.indexname);
@@ -950,8 +972,9 @@ static void add_blind_params(blind_t* bp, qfits_header* hdr) {
 		fits_add_long_comment(hdr, "Circle: %s", sp->index->meta.circle ? "yes" : "no");
 		fits_add_long_comment(hdr, "Cxdx margin: %g", sp->cxdx_margin);
 	}
-	for (i = 0; i < sl_size(bp->indexnames); i++)
-		fits_add_long_comment(hdr, "Index(%i): %s", i, sl_get(bp->indexnames, i));
+    Nindexes = n_indexes(bp);
+	for (i = 0; i < Nindexes; i++)
+		fits_add_long_comment(hdr, "Index(%i): %s", i, get_index_name(bp, i));
 
 	fits_add_long_comment(hdr, "Field name: %s", bp->fieldfname);
 	fits_add_long_comment(hdr, "Field scale lower: %g arcsec/pixel", sp->funits_lower);

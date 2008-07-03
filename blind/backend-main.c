@@ -179,7 +179,7 @@ int main(int argc, char** args) {
 	}
 	fclose(fconf);
 
-	if (!pl_size(backend->indexinfos)) {
+	if (!pl_size(backend->indexmetas)) {
 		logerr("You must list at least one index in the config file (%s)\n", configfn);
 		exit( -1);
 	}
@@ -197,9 +197,7 @@ int main(int argc, char** args) {
                            "110 120 130 140 150 160 170 180 190 200");
     }
 
-    if (cancelfn)
-        backend->cancelfn = cancelfn;
-
+    backend->cancelfn = cancelfn;
     backend->verbose = verbose;
 
 	for (i = optind; i < argc; i++) {

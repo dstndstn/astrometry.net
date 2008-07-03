@@ -79,9 +79,11 @@ PIPELINE := usnobtofits tycho2tofits build-an-catalog hpowned cut-an \
 	startree hpquads codetree unpermute-quads unpermute-stars blind \
 	solvedserver printsolved xylist2fits mergesolved rdlsinfo xylsinfo \
 	wcsinfo fits-guess-scale agreeable new-wcs get-wcs \
-	backend augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
+	augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
 	certifiable wcs-annotate get-healpix 2masstofits nomadtofits \
 	merge-index index-to-table endian-flip-index
+
+PROGS := backend image2xy
 
 PROSPECTUS := quadidx codeprojections quadlocations quadscales quadsperstar \
 	whynot quadcenters startree2rdls
@@ -127,7 +129,7 @@ TEST_DFIND_OBJ := dfind.o test_dfind.o
 
 IMAGE2XY := image2xy fixaxis test_dfind
 
-INSTALL_EXECS := $(FITS_UTILS) $(PIPELINE) image2xy
+INSTALL_EXECS := $(FITS_UTILS) $(PIPELINE) $(PROGS)
 INSTALL_CAIRO_EXECS := $(CAIROEXECS)
 
 ALL_OBJ := $(UTIL_OBJS) $(KDTREE_OBJS) $(QFITS_OBJ) \
@@ -138,8 +140,8 @@ ALL_EXECS :=
 
 all: $(QFITS_LIB) $(CFITS_LIB) $(LIBKD_LIB) \
 	$(REMAKE_LIBKD) $(REMAKE_ANUTILS) $(REMAKE_ANFILES) \
-	$(PIPELINE) $(PROSPECTUS) $(IMAGE2XY) $(FITS_UTILS) fitsverify \
-	$(BACKEND_LIB)
+	$(PIPELINE) $(PROSPECTUS) $(FITS_UTILS) fitsverify \
+	$(PROGS) $(BACKEND_LIB)
 
 cairo: $(CAIROEXECS)
 .PHONY: cairo
@@ -554,7 +556,7 @@ allclean: clean
 realclean: allclean
 
 clean:
-	rm -f $(EXECS) $(EXTRA_EXECS) $(SOLVER_EXECS) $(MISC_EXECS) \
+	rm -f $(EXECS) $(EXTRA_EXECS) $(SOLVER_EXECS) $(MISC_EXECS) $(PROGS) \
 		$(PIPELINE) $(PROSPECTUS) $(DEPS) deps $(FITS_UTILS) $(ALL_OBJ) $(IMAGE2XY) \
 		$(NODEP_OBJS) plot-constellations fitsverify plotquad plotxy \
 		$(ALL_EXECS) $(GENERATED_FILES)

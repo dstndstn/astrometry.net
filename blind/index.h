@@ -32,7 +32,7 @@
 #define DEFAULT_INDEX_JITTER 1.0  // arcsec
 
 struct index_meta_s {
-	char *indexname;
+	char* indexname;
 
 	// Unique id for this index.
 	int indexid;

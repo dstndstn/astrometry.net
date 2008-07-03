@@ -143,9 +143,9 @@ int index_get_meta(const char* filename, index_meta_t* meta) {
 
 index_t* index_load(const char* indexname, int flags) {
 	char *codetreefname=NULL, *quadfname=NULL, *startreefname=NULL;
+    bool singlefile;
 	index_t* index = calloc(1, sizeof(index_t));
 	index->meta.indexname = indexname;
-    bool singlefile;
 
 	if (flags & INDEX_ONLY_LOAD_METADATA)
 		logverb("Loading metadata for %s...\n", indexname);
@@ -161,10 +161,7 @@ index_t* index_load(const char* indexname, int flags) {
 	}
 	free(startreefname);
     startreefname = NULL;
-	//logverb("  (%d stars, %d nodes).\n", startree_N(index->starkd), startree_nodes(index->starkd));
-
 	index->meta.index_jitter = qfits_header_getdouble(index->starkd->header, "JITTER", DEFAULT_INDEX_JITTER);
-	//logverb("Setting index jitter to %g arcsec.\n", index->index_jitter);
 
 	if (flags & INDEX_ONLY_LOAD_SKDT)
 		return index;
@@ -186,8 +183,6 @@ index_t* index_load(const char* indexname, int flags) {
 	index->meta.dimquads = index->quads->dimquads;
 	index->meta.nquads = index->quads->numquads;
 	index->meta.nstars = index->quads->numstars;
-
-	//logverb("  (%d stars: %i, Quads: %i.\n", index->quads->numstars, index->quads->numquads);
 
 	logverb("Index scale: [%g, %g] arcmin, [%g, %g] arcsec\n",
             index->meta.index_scale_lower / 60.0, index->meta.index_scale_upper / 60.0,

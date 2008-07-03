@@ -52,7 +52,8 @@
 static int add_index(backend_t* backend, char* path) {
     int k;
     index_t* ind = NULL;
-    index_meta_t meta;
+    index_meta_t* meta;
+    index_meta_t mymeta;
 
     if (backend->inparallel) {
         ind = index_load(path, 0);
@@ -60,22 +61,22 @@ static int add_index(backend_t* backend, char* path) {
             ERROR("Failed to load index from path %s", path);
             return -1;
         }
-        //pl_append(backend->indexes, ind);
-        memcpy(&meta, &(ind->meta), sizeof(index_meta_t));
+        meta = &(ind->meta);
 
     } else {
-        if (index_get_meta(path, &meta)) {
+        if (index_get_meta(path, &mymeta)) {
             ERROR("Failed to load index metadata from path %s", path);
             return -1;
         }
+        meta = &mymeta;
 
     }
 
     // check that an index with the same id and healpix isn't already listed.
     for (k=0; k<bl_size(backend->indexmetas); k++) {
         index_meta_t* m = bl_access(backend->indexmetas, k);
-        if (m->indexid == meta.indexid &&
-            m->healpix == meta.healpix) {
+        if (m->indexid == meta->indexid &&
+            m->healpix == meta->healpix) {
             logverb("Skipping duplicate index %s\n", path);
             if (ind)
                 index_close(ind);
@@ -83,25 +84,24 @@ static int add_index(backend_t* backend, char* path) {
         }
     }
 
-	meta.indexname = strdup(path);
-
-	bl_append(backend->indexmetas, &meta);
+    meta->indexname = strdup(path);
+	bl_append(backend->indexmetas, meta);
 
     // <= smallest we've seen?
-	if (meta.index_scale_lower < backend->sizesmallest) {
-		backend->sizesmallest = meta.index_scale_lower;
+	if (meta->index_scale_lower < backend->sizesmallest) {
+		backend->sizesmallest = meta->index_scale_lower;
         bl_remove_all(backend->ismallest);
 		il_append(backend->ismallest, bl_size(backend->indexmetas) - 1);
-	} else if (meta.index_scale_lower == backend->sizesmallest) {
+	} else if (meta->index_scale_lower == backend->sizesmallest) {
 		il_append(backend->ismallest, bl_size(backend->indexmetas) - 1);
     }
 
     // >= largest we've seen?
-	if (meta.index_scale_upper > backend->sizebiggest) {
-		backend->sizebiggest = meta.index_scale_upper;
+	if (meta->index_scale_upper > backend->sizebiggest) {
+		backend->sizebiggest = meta->index_scale_upper;
         bl_remove_all(backend->ibiggest);
 		il_append(backend->ibiggest, bl_size(backend->indexmetas) - 1);
-	} else if (meta.index_scale_upper == backend->sizebiggest) {
+	} else if (meta->index_scale_upper == backend->sizebiggest) {
 		il_append(backend->ibiggest, bl_size(backend->indexmetas) - 1);
 	}
 
@@ -109,6 +109,19 @@ static int add_index(backend_t* backend, char* path) {
         pl_append(backend->indexes, ind);
 
     return 0;
+}
+
+static void add_index_to_blind(backend_t* backend, blind_t* bp,
+                               int i) {
+    if (backend->inparallel) {
+        index_t* index;
+        assert(pl_size(backend->indexes) == bl_size(backend->indexmetas));
+        index = pl_get(backend->indexes, i);
+        blind_add_loaded_index(bp, index);
+    } else {
+        index_meta_t* meta = bl_access(backend->indexmetas, i);
+        blind_add_index(bp, meta->indexname);
+    }
 }
 
 int backend_parse_config_file(backend_t* backend, FILE* fconf) {
@@ -248,9 +261,11 @@ int backend_parse_config_file(backend_t* backend, FILE* fconf) {
                 err = errors_stop_logging_to_string(": ");
                 if (!ok) {
                     logverb("File is not an index: %s\n", err);
+                    free(err);
                     free(fullpath);
                     continue;
                 }
+                free(err);
 
                 sl_insert_sorted_nocopy(tryinds, fullpath);
             }
@@ -315,6 +330,9 @@ int backend_run_job(backend_t* backend, job_t* job) {
     app_min_default = deg2arcsec(backend->minwidth) / job_imagew(job);
     app_max_default = deg2arcsec(backend->maxwidth) / job_imagew(job);
 
+    if (backend->inparallel)
+        bp->indexes_inparallel = TRUE;
+
     for (i=0; i<il_size(job->depths)/2; i++) {
 		int startobj = il_get(job->depths, i*2);
         int endobj = il_get(job->depths, i*2+1);
@@ -366,7 +384,8 @@ int backend_run_job(backend_t* backend, job_t* job) {
 				index_meta_t* meta = bl_access(backend->indexmetas, k);
 				if ((fmin > meta->index_scale_upper) || (fmax < meta->index_scale_lower))
 					continue;
-                blind_add_index(bp, meta->indexname);
+
+                add_index_to_blind(backend, bp, k);
 				nused++;
 			}
 
@@ -381,13 +400,10 @@ int backend_run_job(backend_t* backend, job_t* job) {
                     assert(0);
                 }
                 for (k=0; k<il_size(list); k++) {
-                    index_meta_t* meta = bl_access(backend->indexmetas, il_get(list, k));
-                    blind_add_index(bp, meta->indexname);
+                    int ii = il_get(list, k);
+                    add_index_to_blind(backend, bp, ii);
                 }
             }
-
-			if (backend->inparallel)
-                bp->indexes_inparallel = TRUE;
 
             logverb("Running blind");
             blind_log_run_parameters(bp);
@@ -701,6 +717,13 @@ void backend_free(backend_t* backend) {
 	int i;
     if (!backend)
         return;
+    if (backend->indexes) {
+        for (i=0; i<bl_size(backend->indexes); i++) {
+            index_t* ind = pl_get(backend->indexes, i);
+            index_close(ind);
+        }
+        pl_free(backend->indexes);
+    }
 	if (backend->indexmetas) {
 		for (i=0; i < bl_size(backend->indexmetas); i++) {
 			index_meta_t* meta = bl_access(backend->indexmetas, i);
@@ -708,13 +731,6 @@ void backend_free(backend_t* backend) {
 		}
 		bl_free(backend->indexmetas);
 	}
-    if (backend->indexes) {
-		for (i=0; i<bl_size(backend->indexes); i++) {
-			index_t* ind = bl_access(backend->indexes, i);
-            index_close(ind);
-        }
-        pl_free(backend->indexes);
-    }
     if (backend->ismallest)
         il_free(backend->ismallest);
     if (backend->ibiggest)

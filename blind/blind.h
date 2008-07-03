@@ -66,6 +66,11 @@ struct blind_params {
 	// Indexes to use (base filenames)
 	sl* indexnames;
 
+    // Indexes to use (index_t objects)
+    pl* indexes;
+
+    int index_options;
+
 	// Logfile
 	FILE* logfd;
 	int dup_stderr;
@@ -151,6 +156,7 @@ void blind_set_xcol(blind_t* bp, const char* x);
 void blind_set_ycol(blind_t* bp, const char* x);
 
 void blind_add_verify_wcs(blind_t* bp, sip_t* wcs);
+void blind_add_loaded_index(blind_t* bp, index_t* ind);
 void blind_add_index(blind_t* bp, const char* index);
 
 void blind_clear_verify_wcses(blind_t* bp);

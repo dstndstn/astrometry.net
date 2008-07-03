@@ -281,8 +281,9 @@ int kdtree_fits_contains_tree(const kdtree_fits_t* io, const char* treename) {
     qfits_header* hdr;
     int rtn;
     const fitsbin_t* fb = get_fitsbin_const(io);
-    char* realname;
+    char* realname = NULL;
     hdr = find_tree(treename, fb, &ndim, &ndata, &nnodes, &tt, &realname);
+    free(realname);
     rtn = (hdr != NULL);
     if (hdr != NULL)
         qfits_header_destroy(hdr);
