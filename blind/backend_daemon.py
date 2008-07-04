@@ -1,6 +1,7 @@
 import ctypes
 import ctypes.util
 import sys
+import os
 
 from SocketServer import ThreadingTCPServer, BaseRequestHandler
 
@@ -25,8 +26,20 @@ class BackendHandler(BaseRequestHandler):
         # self.server
         f = self.request.makefile('rw')
         #self.request.send("Hello.\n");
-        axy = f.readline()
-        print 'Axy is', axy
+        while True:
+            cmdline = f.readline().strip()
+            print 'Command is', cmdline
+            args = cmdline.split(' ')
+            cmd = args[0]
+            args = args[1:]
+
+            if cmd == 'cd':
+                os.chdir(args[0])
+
+            elif cmd == 'pwd':
+                print 'pwd is', os.getcwd()
+
+        
         f.write('Hello\n')
 
         backend = self.server.backend
@@ -51,12 +64,17 @@ if __name__ == '__main__':
         print 'Failed to initialize backend.'
         sys.exit(-1)
 
-    server_address = ('127.0.0.1', 9999)
+    port = 9999
+    if len(sys.argv) > 1:
+        port = int(sys.argv[1])
+
+    server_address = ('127.0.0.1', port)
+
     request_handler_class = BackendHandler
     ss = ThreadingTCPServer(server_address, request_handler_class)
     ss.backend = _backend
     print
-    print 'Waiting for network connections...'
+    print 'Waiting for network connections on', ss.server_address
     print
     ss.serve_forever()
 

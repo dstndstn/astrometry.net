@@ -812,3 +812,9 @@ job_t* backend_read_job_file(backend_t* backend, const char* jobfn) {
     return job;
 }
 
+/*
+ int backend_set_base_dir(backend_t* backend, const char* dir) {
+ // Modify all output filenames 
+ }
+ */
+

@@ -63,6 +63,7 @@ void backend_free(backend_t* backend);
 int backend_parse_config_file_stream(backend_t* backend, FILE* fconf);
 int backend_parse_config_file(backend_t* backend, char* fn);
 job_t* backend_read_job_file(backend_t* backend, const char* jobfn);
+//int backend_set_base_dir(backend_t* backend, const char* dir);
 int backend_run_job(backend_t* backend, job_t* job);
 void job_free(job_t* job);
 
