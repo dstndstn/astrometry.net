@@ -46,6 +46,8 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines);
 
 void get_mmap_size(int start, int size, off_t* mapstart, size_t* mapsize, int* pgap);
 
+char* resolve_path(const char* filename, const char* basedir);
+
 char* find_executable(const char* progname, const char* sibling);
 
 char* create_temp_file(char* fn, char* dir);

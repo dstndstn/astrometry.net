@@ -25,8 +25,12 @@ class BackendHandler(BaseRequestHandler):
         # self.request: a socket
         # self.client_address: ('123.4.5.6', 4567)
         # self.server
+
         f = self.request.makefile('rw')
-        #self.request.send("Hello.\n");
+        f.write('Hello\n')
+        backend = self.server.backend
+        backend.log_to_fd(f.fileno())
+
         while True:
             cmdline = f.readline().strip()
             print 'Command is', cmdline
@@ -34,25 +38,27 @@ class BackendHandler(BaseRequestHandler):
             cmd = args[0]
             args = args[1:]
 
-            if cmd == 'cd':
-                os.chdir(args[0])
+            if cmd == 'job':
+                jobpath = args[0]
+                jobdir = os.path.dirname(jobpath)
+
+                job = backend.backend_read_job_file(be, jobfn)
+                if not job:
+                    print 'Failed to read job.'
+                    return
+                backend.job_set_base_dir(job, jobdir)
+                backend.backend_run_job(be, job)
+                backend.job_free(job)
+                break
 
             elif cmd == 'info':
                 print 'pwd is', os.getcwd()
                 print 'pid is', os.getpid()
                 print 'thread id is', thread.get_ident()
         
-        f.write('Hello\n')
 
-        backend = self.server.backend
 
-        jobfn = '/tmp/job.axy'
-        job = backend.backend_read_job_file(be, jobfn)
-        if not job:
-            print 'Failed to read job.'
-            return
-        backend.backend_run_job(be, job)
-        backend.job_free(job)
+
 
 if __name__ == '__main__':
 

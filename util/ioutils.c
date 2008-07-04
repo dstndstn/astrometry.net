@@ -128,6 +128,18 @@ sl* dir_get_contents(const char* path, sl* list, bool filesonly, bool recurse) {
     return list;
 }
 
+char* resolve_path(const char* filename, const char* basedir) {
+    char* path;
+    char* canon;
+    // If it's an absolute path, just return it.
+    if (filename[0] == '/')
+        return canonicalize_file_name(filename);
+    asprintf_safe(&path, "%s/%s", basedir, filename);
+    canon = canonicalize_file_name(path);
+    free(path);
+    return canon;
+}
+
 char* find_executable(const char* progname, const char* sibling) {
     char* sib;
     char* sibdir;

@@ -35,6 +35,8 @@ void log_set_level(enum log_level level);
  */
 void log_to(FILE* fid);
 
+void log_to_fd(int fd);
+
 /**
  * Create a new logger.
  *

@@ -47,6 +47,12 @@ void log_to(FILE* fid) {
 	get_logger()->f = fid;
 }
 
+void log_to_fd(int fd) {
+    // MEMLEAK
+    FILE* fid = fdopen(fd, "a");
+    log_to(fid);
+}
+
 log_t* log_create(enum log_level level) {
 	log_t* logger = calloc(1, sizeof(log_t));
 	return logger;

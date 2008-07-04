@@ -817,9 +817,51 @@ job_t* backend_read_job_file(backend_t* backend, const char* jobfn) {
     return job;
 }
 
-/*
- int backend_set_base_dir(backend_t* backend, const char* dir) {
- // Modify all output filenames 
- }
- */
+// Modify all filenames to be relative to "dir".
+int job_set_base_dir(job_t* job, const char* dir) {
+    char* path;
+    blind_t* bp = &(job->bp);
+
+    if (bp->cancelfname) {
+        path = resolve_path(bp->cancelfname, dir);
+        logverb("Cancel file was %s, changing to %s.\n", bp->cancelfname, path);
+        blind_set_cancel_file(bp, path);
+    }
+    if (bp->fieldfname) {
+        path = resolve_path(bp->fieldfname, dir);
+        logverb("Changing %s to %s\n", bp->fieldfname, path);
+        blind_set_field_file(bp, path);
+    }
+    if (bp->solved_in) {
+        path = resolve_path(bp->solved_in, dir);
+        logverb("Changing %s to %s\n", bp->solved_in, path);
+        blind_set_solvedin_file(bp, path);
+    }
+    if (bp->solved_out) {
+        path = resolve_path(bp->solved_out, dir);
+        logverb("Changing %s to %s\n", bp->solved_out, path);
+        blind_set_solvedout_file(bp, path);
+    }
+    if (bp->matchfname) {
+        path = resolve_path(bp->matchfname, dir);
+        logverb("Changing %s to %s\n", bp->matchfname, path);
+        blind_set_match_file(bp, path);
+    }
+    if (bp->indexrdlsfname) {
+        path = resolve_path(bp->indexrdlsfname, dir);
+        logverb("Changing %s to %s\n", bp->indexrdlsfname, path);
+        blind_set_rdls_file(bp, path);
+    }
+    if (bp->corr_fname) {
+        path = resolve_path(bp->corr_fname, dir);
+        logverb("Changing %s to %s\n", bp->corr_fname, path);
+        blind_set_corr_file(bp, path);
+    }
+    if (bp->wcs_template) {
+        path = resolve_path(bp->wcs_template, dir);
+        logverb("Changing %s to %s\n", bp->wcs_template, path);
+        blind_set_wcs_file(bp, path);
+    }
+    return 0;
+}
 
