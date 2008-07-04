@@ -58,10 +58,12 @@ class BackendHandler(BaseRequestHandler):
                 print 'thread id is', thread.get_ident()
         
 
-            f.close()
+        # probably not necessary:
+        backend.log_to_fd(0)
+
+        f.close()
 
 
-                                                            
 
 if __name__ == '__main__':
     port = 9999
