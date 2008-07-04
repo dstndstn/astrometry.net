@@ -7,6 +7,7 @@ log="${base}/logs/daemon-$(hostname -s).log"
 echo "running ${daemon}"
 echo "using config file ${config}"
 echo "logging to ${log}"
+echo "pythonpath is ${PYTHONPATH}"
 touch ${log}
 python ${daemon} -c ${config} >> ${log} 2>&1 #> ${log}
 echo "daemon exiting"
