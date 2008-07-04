@@ -2,8 +2,10 @@ import ctypes
 import ctypes.util
 import sys
 import os
+import os.path
 import thread
 
+from optparse import OptionParser
 from SocketServer import ThreadingTCPServer, BaseRequestHandler
 
 _backend = None
@@ -11,10 +13,8 @@ _libname = ctypes.util.find_library('libbackend.so')
 if _libname:
     _backend = ctypes.CDLL(_libname)
 else:
-    import os.path
     p = os.path.join(os.path.dirname(__file__), 'libbackend.so')
     _backend = ctypes.CDLL(p)
-
 
 
 class BackendHandler(BaseRequestHandler):
@@ -58,26 +58,36 @@ class BackendHandler(BaseRequestHandler):
                 print 'thread id is', thread.get_ident()
         
 
+            f.close()
 
 
+                                                            
 
 if __name__ == '__main__':
+    port = 9999
+    configfn = '../etc/backend.cfg'
 
-    import os.path
-    p = os.path.join(os.path.dirname(__file__), '../etc/backend-test.cfg')
+    usage = 'backend_daemon.py [args]'
+    parser = OptionParser(usage)
+    parser.add_option("-p", "--port", dest="port",
+                      help="port to listen on", default=port)
+    parser.add_option("-c", "--config", dest="configfn",
+                      help="config filename", default=configfn)
+    (options, args) = parser.parse_args()
+    if len(args):
+        parser.error("incorrect number of arguments")
+        sys.exit(-1)
+
+    port = options.port
+    configfn = options.configfn
 
     _backend.log_init(3)
     _backend.log_set_thread_specific()
 
     be = _backend.backend_new()
-    configfn = p
     if _backend.backend_parse_config_file(be, configfn):
         print 'Failed to initialize backend.'
         sys.exit(-1)
-
-    port = 9999
-    if len(sys.argv) > 1:
-        port = int(sys.argv[1])
 
     server_address = ('127.0.0.1', port)
 
