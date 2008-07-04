@@ -49,7 +49,7 @@ CFLAGS += $(ANFILES_INC)
 CFLAGS += $(GSL_INC)
 
 # For Keir's fancy Python bindings:
-CFLAGS += -fPIC
+#CFLAGS += -fPIC
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 

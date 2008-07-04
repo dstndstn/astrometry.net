@@ -130,6 +130,7 @@ else
 endif
 
 FLAGS_DEF += -fPIC
+FLAGS_DEF += -pthread
 
 # profily!
 #FLAGS_DEF += -pg

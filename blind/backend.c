@@ -48,6 +48,7 @@
 #include "qfits.h"
 #include "errors.h"
 #include "backend.h"
+#include "tic.h"
 
 static int add_index(backend_t* backend, char* path) {
     int k;
@@ -56,7 +57,11 @@ static int add_index(backend_t* backend, char* path) {
     index_meta_t mymeta;
 
     if (backend->inparallel) {
+        struct timeval tv1, tv2;
+        gettimeofday(&tv1, NULL);
         ind = index_load(path, 0);
+        gettimeofday(&tv2, NULL);
+        logverb("index_load(%s) took %g ms\n", path, millis_between(&tv1, &tv2));
         if (!ind) {
             ERROR("Failed to load index from path %s", path);
             return -1;
