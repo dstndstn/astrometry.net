@@ -2,6 +2,7 @@ import ctypes
 import ctypes.util
 import sys
 import os
+import thread
 
 from SocketServer import ThreadingTCPServer, BaseRequestHandler
 
@@ -36,9 +37,10 @@ class BackendHandler(BaseRequestHandler):
             if cmd == 'cd':
                 os.chdir(args[0])
 
-            elif cmd == 'pwd':
+            elif cmd == 'info':
                 print 'pwd is', os.getcwd()
-
+                print 'pid is', os.getpid()
+                print 'thread id is', thread.get_ident()
         
         f.write('Hello\n')
 
