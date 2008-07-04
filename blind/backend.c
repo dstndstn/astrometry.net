@@ -817,10 +817,16 @@ job_t* backend_read_job_file(backend_t* backend, const char* jobfn) {
     return job;
 }
 
+void job_set_cancel_file(job_t* job, const char* fn) {
+    blind_set_cancel_file(&(job->bp), fn);
+}
+
 // Modify all filenames to be relative to "dir".
 int job_set_base_dir(job_t* job, const char* dir) {
     char* path;
     blind_t* bp = &(job->bp);
+
+    logverb("Changing base dir to %s\n", dir);
 
     if (bp->cancelfname) {
         path = resolve_path(bp->cancelfname, dir);

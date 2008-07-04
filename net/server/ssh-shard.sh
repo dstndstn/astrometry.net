@@ -28,6 +28,7 @@ dd bs=1 count=$nbytes of=job.axy
 
 # stderr goes back over the ssh tunnel...
 $BACKEND -c $BACKEND_CONFIG -E -v job.axy -C ../cancel > backend.stdout
+#python $BACKEND_CLIENT `pwd`/job.axy `pwd`/../cancel > backend.stdout
 
 if [ -e solved ]; then
     touch ../cancel

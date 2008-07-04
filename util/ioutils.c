@@ -129,15 +129,20 @@ sl* dir_get_contents(const char* path, sl* list, bool filesonly, bool recurse) {
 }
 
 char* resolve_path(const char* filename, const char* basedir) {
+    // we don't use canonicalize_file_name() because it requires the paths
+    // to actually exist, while this function should work for output files
+    // that don't already exist.
     char* path;
     char* canon;
-    // If it's an absolute path, just return it.
+    // absolute path?
     if (filename[0] == '/')
-        return canonicalize_file_name(filename);
+        //return canonicalize_file_name(filename);
+        return strdup(filename);
     asprintf_safe(&path, "%s/%s", basedir, filename);
-    canon = canonicalize_file_name(path);
-    free(path);
-    return canon;
+    //canon = canonicalize_file_name(path);
+    //free(path);
+    //return canon;
+    return path;
 }
 
 char* find_executable(const char* progname, const char* sibling) {

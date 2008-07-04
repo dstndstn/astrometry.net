@@ -17,8 +17,6 @@ else:
 
 
 
-
-
 class BackendHandler(BaseRequestHandler):
     def handle(self):
         print 'Got request from ', self.client_address
@@ -28,6 +26,7 @@ class BackendHandler(BaseRequestHandler):
 
         f = self.request.makefile('rw')
         f.write('Hello\n')
+        f.flush()
         backend = self.server.backend
         backend.log_to_fd(f.fileno())
 
@@ -40,13 +39,15 @@ class BackendHandler(BaseRequestHandler):
 
             if cmd == 'job':
                 jobpath = args[0]
+                cancelfile = args[1]
                 jobdir = os.path.dirname(jobpath)
 
-                job = backend.backend_read_job_file(be, jobfn)
+                job = backend.backend_read_job_file(be, jobpath)
                 if not job:
                     print 'Failed to read job.'
                     return
                 backend.job_set_base_dir(job, jobdir)
+                backend.job_set_cancel_file(job, cancelfile)
                 backend.backend_run_job(be, job)
                 backend.job_free(job)
                 break
@@ -66,6 +67,8 @@ if __name__ == '__main__':
     p = os.path.join(os.path.dirname(__file__), '../etc/backend-test.cfg')
 
     _backend.log_init(3)
+    _backend.log_set_thread_specific()
+
     be = _backend.backend_new()
     configfn = p
     if _backend.backend_parse_config_file(be, configfn):
