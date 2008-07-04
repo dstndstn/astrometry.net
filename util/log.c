@@ -2,9 +2,33 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
+
 #include "log.h"
 
-log_t _logger_global;
+static int g_thread_specific = 0;
+static log_t g_logger;
+
+void log_set_thread_specific() {
+    g_thread_specific = 1;
+}
+
+static void* logts_init_key(void* user) {
+    log_t* l = malloc(sizeof(log_t));
+    if (user)
+        memcpy(l, user, sizeof(log_t));
+    return l;
+}
+#define TSNAME logts
+#include "thread-specific.inc"
+
+static log_t* get_logger() {
+    if (g_thread_specific)
+        return logts_get_key(&g_logger);
+    return &g_logger;
+}
+
+
 
 void log_init_structure(log_t* logger, enum log_level level) {
 	logger->level = level;
@@ -12,15 +36,15 @@ void log_init_structure(log_t* logger, enum log_level level) {
 }
 
 void log_init(enum log_level level) {
-	log_init_structure(&_logger_global, level);
+	log_init_structure(get_logger(), level);
 }
 
 void log_set_level(enum log_level level) {
-    _logger_global.level = level;
+    get_logger()->level = level;
 }
 
 void log_to(FILE* fid) {
-	_logger_global.f = fid;
+	get_logger()->f = fid;
 }
 
 log_t* log_create(enum log_level level) {
@@ -46,12 +70,12 @@ void loglevel(enum log_level level,
               const char* format, ...) {
     va_list va;
     va_start(va, format);
-    loglvl(&_logger_global, level, format, va);
+    loglvl(get_logger(), level, format, va);
     va_end(va);
 }
 
 int log_get_level() {
-    return _logger_global.level;
+    return get_logger()->level;
 }
 
 #define LOGGER_TEMPLATE(name, level)                  \
@@ -66,7 +90,7 @@ int log_get_level() {
 	name(const char* format, ...) {                     \
 		va_list va;                                       \
 		va_start(va, format);                             \
-		loglvl(&_logger_global, level, format, va);       \
+		loglvl(get_logger(), level, format, va);       \
 		va_end(va);                                       \
 	}                                                   \
 

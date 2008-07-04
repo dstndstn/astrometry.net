@@ -30,6 +30,8 @@
 #include "fitsfile.h"
 #include "errors.h"
 #include "an-endian.h"
+#include "tic.h"
+#include "log.h"
 
 FILE* fitsbin_get_fid(fitsbin_t* fb) {
     return fb->fid;
@@ -249,6 +251,7 @@ int fitsbin_write_item(fitsbin_t* fb, fitsbin_chunk_t* chunk, void* data) {
 }
 
 static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+    struct timeval tv1, tv2;
     int tabstart, tabsize, ext;
     size_t expected = 0;
 	int mode, flags;
@@ -257,7 +260,8 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     qfits_table* table;
     int table_nrows;
     int table_rowsize;
-    
+
+    gettimeofday(&tv1, NULL);
     if (fits_find_table_column(fb->filename, chunk->tablename,
                                &tabstart, &tabsize, &ext)) {
         if (chunk->required)
@@ -265,6 +269,9 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
                   chunk->tablename, fb->filename);
         return -1;
     }
+    gettimeofday(&tv2, NULL);
+    logmsg("fits_find_table_column(%s) took %g ms\n", chunk->tablename, millis_between(&tv1, &tv2));
+
     chunk->header = qfits_header_readext(fb->filename, ext);
     if (!chunk->header) {
         ERROR("Couldn't read FITS header from file \"%s\" extension %i", fb->filename, ext);

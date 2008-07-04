@@ -25,6 +25,8 @@
 #include "starutil.h"
 #include "fitsbin.h"
 #include "errors.h"
+#include "tic.h"
+#include "log.h"
 
 static startree_t* startree_alloc() {
 	startree_t* s = calloc(1, sizeof(startree_t));
@@ -116,6 +118,7 @@ bl* get_chunks(startree_t* s, il* wordsizes) {
 }
 
 startree_t* startree_open(char* fn) {
+    struct timeval tv1, tv2;
 	startree_t* s;
     bl* chunks;
     int i;
@@ -126,21 +129,31 @@ startree_t* startree_open(char* fn) {
 	if (!s)
 		return s;
 
+    gettimeofday(&tv1, NULL);
     io = kdtree_fits_open(fn);
+    gettimeofday(&tv2, NULL);
+    logverb("kdtree_fits_open() took %g ms\n", millis_between(&tv1, &tv2));
 	if (!io) {
         ERROR("Failed to open FITS file \"%s\"", fn);
         goto bailout;
     }
 
+    gettimeofday(&tv1, NULL);
     if (!kdtree_fits_contains_tree(io, treename))
         treename = NULL;
+    gettimeofday(&tv2, NULL);
+    logverb("kdtree_fits_contains_tree() took %g ms\n", millis_between(&tv1, &tv2));
 
+    gettimeofday(&tv1, NULL);
     s->tree = kdtree_fits_read_tree(io, treename, &s->header);
+    gettimeofday(&tv2, NULL);
+    logverb("kdtree_fits_read_tree() took %g ms\n", millis_between(&tv1, &tv2));
     if (!s->tree) {
         ERROR("Failed to read kdtree from file \"%s\"", fn);
         goto bailout;
     }
 
+    gettimeofday(&tv1, NULL);
     chunks = get_chunks(s, NULL);
     for (i=0; i<bl_size(chunks); i++) {
         fitsbin_chunk_t* chunk = bl_access(chunks, i);
@@ -149,6 +162,8 @@ startree_t* startree_open(char* fn) {
         *dest = chunk->data;
     }
     bl_free(chunks);
+    gettimeofday(&tv2, NULL);
+    logverb("reading chunks took %g ms\n", millis_between(&tv1, &tv2));
 
 	return s;
 

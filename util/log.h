@@ -18,6 +18,11 @@ struct log_t {
 typedef struct log_t log_t;
 
 /**
+ Make all logging commands thread-specific rather than global.
+ */
+void log_set_thread_specific();
+
+/**
  * Initialize global logging object. Must be called before any of the other
  * log_* functions.
  */

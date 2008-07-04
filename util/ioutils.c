@@ -394,7 +394,9 @@ sl* fid_get_lines(FILE* fid, bool include_newlines) {
 			sl_free2(list);
 			return NULL;
 		}
-		sl_append_nocopy(list, line);
+        if (feof(fid) && line[0] == '\0')
+            break;
+        sl_append_nocopy(list, line);
 		if (feof(fid))
 			break;
 	}
