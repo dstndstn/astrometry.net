@@ -8,5 +8,6 @@ echo "running ${daemon}"
 echo "using config file ${config}"
 echo "logging to ${log}"
 touch ${log}
-python ${daemon} -c ${config} >> ${log} 2>> ${log}
+python ${daemon} -c ${config} >> ${log} 2>&1 #> ${log}
+echo "daemon exiting"
 

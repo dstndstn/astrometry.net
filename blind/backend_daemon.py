@@ -99,5 +99,12 @@ if __name__ == '__main__':
     print
     print 'Waiting for network connections on', ss.server_address
     print
+    # ??
+    ss.daemon_threads = True
+
     ss.serve_forever()
+
+    print
+    print "serve_forever() finished."
+    print
 
