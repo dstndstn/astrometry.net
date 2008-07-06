@@ -8,10 +8,17 @@
 //#include "ufuncobject.h"
 //#include "log.h"
 
+#include "kdtree.h"
+
 static void info(PyArrayObject* x);
 
 static PyObject* spherematch_info(PyObject* self, PyObject* args) {
-    int result;
+    //int result;
+    int N, D;
+    int i,j;
+    int Nleaf, treeoptions, treetype;
+    kdtree_t* kd;
+    double* data;
     //const char *command;
     PyArrayObject* x;
 
@@ -19,15 +26,55 @@ static PyObject* spherematch_info(PyObject* self, PyObject* args) {
     //if (!PyArg_ParseTuple(args, .i:function.,&x))
     if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &x))
         return NULL;
-    /*
-     if (array->nd != 2 || array->descr->type_num != PyArray_DOUBLE) {
-     PyErr_SetString(PyExc_ValueError,
-     "array must be two-dimensional and of type float");
-     */
+
+    if (PyArray_NDIM(x) != 2) {
+        PyErr_SetString(PyExc_ValueError,
+                        "array must be two-dimensional");
+        return NULL;
+    }
+    if (PyArray_TYPE(x) != PyArray_DOUBLE) {
+        PyErr_SetString(PyExc_ValueError,
+                        "array must contain floats");
+        return NULL;
+    }
+
+    N = PyArray_DIM(x, 0);
+    D = PyArray_DIM(x, 1);
+
+    if (D > 10) {
+        PyErr_SetString(PyExc_ValueError,
+                        "maximum dimensionality is 10: maybe you need to transpose your array?");
+        return NULL;
+    }
+
+    for (i=0; i<N; i++) {
+        printf("data pt = [ ");
+        for (j=0; j<D; j++) {
+            double* pd = PyArray_GETPTR2(x, i, j);
+            double xx = *pd;
+            printf("%g ", xx);
+        }
+        printf("]\n");
+    }
+
     info(x);
 
-    result = 0;
-    return Py_BuildValue("i", result);
+    Nleaf = 16;
+    treetype = KDTT_DOUBLE;
+    treeoptions = KD_BUILD_SPLIT;
+
+    data = malloc(N * D * sizeof(double));
+    for (i=0; i<N; i++) {
+        for (j=0; j<D; j++) {
+            double* pd = PyArray_GETPTR2(x, i, j);
+            data[i*D + j] = *pd;
+        }
+    }
+
+    kd = kdtree_build(NULL, data, N, D, Nleaf,
+                      treetype, treeoptions);
+
+    return Py_BuildValue("k", kd);
 }
 
 static PyMethodDef spherematchMethods[] = {
