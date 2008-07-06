@@ -160,7 +160,7 @@ install: $(PYTHON_LIBS)
 gnu-specific-config.h: gnu-specific-test.c
 	(($(CC) -o gnu-specific-test-canonicalize \
 		$(CFLAGS) -DTEST_CANONICALIZE_FILE_NAME $(LDFLAGS) $^ && \
-	  ./gnu-specific-test-canonicalize) \
+	  ./gnu-specific-test-canonicalize) > /dev/null \
 	|| echo "#define NEED_CANONICALIZE_FILE_NAME 1") > $@
 
 ALL_OBJ += gnu-specific.o

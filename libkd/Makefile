@@ -61,6 +61,22 @@ INTERNALS_NOIO := \
 	kdint_dds_noio.o \
 	kdint_dss_noio.o
 
+PYSPHEREMATCH_OBJ := pyspherematch.o
+
+NUMPY_BASE := $(shell python -c "import numpy; import os.path; print os.path.dirname(numpy.__file__)")
+NUMPY_INC := $(NUMPY_BASE)/core/include/numpy
+
+# FIXME
+PYTHON_INC := /opt/local/include/python2.5
+
+pyspherematch.o: pyspherematch.c
+	$(CC) $(CFLAGS) -I$(PYTHON_INC) -I$(NUMPY_INC) -c $< -o $@
+
+SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
+
+libpyspherematch.so: $(PYSPHEREMATCH_OBJ) $(LIBKD_NOIO)
+	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
+
 DEP_OBJ := $(KD) $(KD_FITS) $(INTERNALS) $(INTERNALS_NOIO)
 
 %_noio.o: %.c

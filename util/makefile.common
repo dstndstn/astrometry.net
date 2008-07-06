@@ -54,6 +54,10 @@ SHAREDLIBFLAGS_DEF := $(shell $(CCTEST))
 ARG := -ffinite-math-only -fno-signaling-nans
 FLAGS_DEF += $(shell $(CCTEST))
 
+# gcc 3.3 on Mac doesn't support -pthread
+ARG := -pthread
+FLAGS_DEF += $(shell $(CCTEST))
+
 ifneq ($(origin ARCH_FLAGS),undefined)
   FLAGS_DEF += $(ARCH_FLAGS)
 else
@@ -130,7 +134,6 @@ else
 endif
 
 FLAGS_DEF += -fPIC
-FLAGS_DEF += -pthread
 
 # profily!
 #FLAGS_DEF += -pg
