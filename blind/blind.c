@@ -203,19 +203,6 @@ void blind_add_field_range(blind_t* bp, int lo, int hi) {
     }
 }
 
-static int get_cpu_usage(blind_t* bp) {
-	struct rusage r;
-	int sofar;
-
-	if (getrusage(RUSAGE_SELF, &r)) {
-		logerr("Failed to get resource usage: %s\n", strerror(errno));
-		return -1;
-	}
-	sofar = ceil((float)(r.ru_utime.tv_sec + r.ru_stime.tv_sec) +
-				 (float)(1e-6 * (r.ru_utime.tv_usec + r.ru_stime.tv_usec)));
-	return sofar;
-}
-
 static void check_time_limits(blind_t* bp) {
 	if (bp->total_timelimit || bp->timelimit) {
 		time_t now = time(NULL);
@@ -229,12 +216,14 @@ static void check_time_limits(blind_t* bp) {
 		}
 	}
 	if (bp->total_cpulimit || bp->cpulimit) {
-		int now = get_cpu_usage(bp);
-		if (bp->total_cpulimit && (now - bp->cpu_total_start > bp->total_cpulimit)) {
+		float now = get_cpu_usage(bp);
+		if ((bp->total_cpulimit > 0.0) &&
+            (now - bp->cpu_total_start > bp->total_cpulimit)) {
 			logmsg("Total CPU time limit reached!\n");
 			bp->hit_total_cpulimit = TRUE;
 		}
-		if (bp->cpulimit && (now - bp->cpu_start > bp->cpulimit)) {
+		if ((bp->cpulimit > 0.0) &&
+            (now - bp->cpu_start > bp->cpulimit)) {
 			logmsg("CPU time limit reached!\n");
 			bp->hit_cpulimit = TRUE;
 		}
@@ -349,6 +338,9 @@ void blind_run(blind_t* bp) {
         }
 	}
 
+    if (bp->single_field_solved)
+        goto cleanup;
+
 	// Start solving...
 	if (bp->indexes_inparallel) {
 
@@ -406,8 +398,8 @@ void blind_run(blind_t* bp) {
 		}
 	}
 
+ cleanup:
 	// Clean up.
-    // verified:
 	xylist_close(bp->xyls);
 
 	if (bp->solvedserver)
@@ -583,10 +575,10 @@ void blind_log_run_parameters(blind_t* bp) {
 	logverb("maxquads %i\n", sp->maxquads);
 	logverb("maxmatches %i\n", sp->maxmatches);
 	logverb("verbose %i\n", bp->verbose);
-	logverb("cpulimit %i\n", bp->cpulimit);
+	logverb("cpulimit %f\n", bp->cpulimit);
 	logverb("timelimit %i\n", bp->timelimit);
 	logverb("total_timelimit %i\n", bp->total_timelimit);
-	logverb("total_cpulimit %i\n", bp->total_cpulimit);
+	logverb("total_cpulimit %f\n", bp->total_cpulimit);
 	logverb("tweak %s\n", bp->do_tweak ? "on" : "off");
 	if (bp->do_tweak) {
 		logverb("tweak_aborder %i\n", bp->tweak_aborder);
@@ -895,10 +887,10 @@ static void add_blind_params(blind_t* bp, qfits_header* hdr) {
 
 	fits_add_long_comment(hdr, "Maxquads: %i", sp->maxquads);
 	fits_add_long_comment(hdr, "Maxmatches: %i", sp->maxmatches);
-	fits_add_long_comment(hdr, "Cpu limit: %i s", bp->cpulimit);
+	fits_add_long_comment(hdr, "Cpu limit: %f s", bp->cpulimit);
 	fits_add_long_comment(hdr, "Time limit: %i s", bp->timelimit);
 	fits_add_long_comment(hdr, "Total time limit: %i s", bp->total_timelimit);
-	fits_add_long_comment(hdr, "Total CPU limit: %i s", bp->total_cpulimit);
+	fits_add_long_comment(hdr, "Total CPU limit: %f s", bp->total_cpulimit);
 
 	fits_add_long_comment(hdr, "Tweak: %s", (bp->do_tweak ? "yes" : "no"));
 	if (bp->do_tweak) {

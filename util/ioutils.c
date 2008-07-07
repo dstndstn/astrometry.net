@@ -40,6 +40,18 @@
 
 uint32_t ENDIAN_DETECTOR = 0x01020304;
 
+float get_cpu_usage() {
+	struct rusage r;
+	float sofar;
+	if (getrusage(RUSAGE_SELF, &r)) {
+		SYSERROR("Failed to get resource usage");
+		return -1.0;
+	}
+	sofar = (float)(r.ru_utime.tv_sec + r.ru_stime.tv_sec) +
+        (1e-6 * (r.ru_utime.tv_usec + r.ru_stime.tv_usec));
+	return sofar;
+}
+
 char* an_canonicalize_file_name(const char* fn) {
     sl* dirs;
     int i;

@@ -28,6 +28,9 @@
 
 extern uint32_t ENDIAN_DETECTOR;
 
+// Returns (system + user) CPU time, in seconds.
+float get_cpu_usage();
+
 /*
  Removes '.' and '..' references from a path.
  Collapses '//' to '/'.

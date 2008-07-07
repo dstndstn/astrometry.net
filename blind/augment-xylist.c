@@ -119,7 +119,7 @@ static an_option_t options[] = {
 	{'u', "scale-units",    required_argument, "units", NULL},
 	{'d', "depth",		   required_argument, NULL, NULL},
     {'l', "cpulimit",       required_argument, "seconds",
-     "give up solving after the specified (integer) number of seconds of CPU time"},
+     "give up solving after the specified number of seconds of CPU time"},
     {'r', "resort",         no_argument, NULL,
      "sort the star brightnesses by background-subtracted flux; the default is to sort using a\n"
      "    compromise between background-subtracted and non-background-subtracted flux"},
@@ -694,7 +694,7 @@ int augment_xylist(augment_xylist_t* axy,
 	qfits_header_add(hdr, "ANRUN", "T", "Solve this field!", NULL);
 
     if (axy->cpulimit > 0)
-        fits_header_add_int(hdr, "ANCLIM", axy->cpulimit, "CPU time limit (seconds)");
+        fits_header_add_double(hdr, "ANCLIM", axy->cpulimit, "CPU time limit (seconds)");
 
     if (axy->xcol)
         qfits_header_add(hdr, "ANXCOL", axy->xcol, "Name of column containing X coords", NULL);

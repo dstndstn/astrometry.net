@@ -42,7 +42,7 @@ struct backend {
 	bool inparallel;
 	double minwidth;
 	double maxwidth;
-    int cpulimit;
+    float cpulimit;
     char* cancelfn;
     bool verbose;
 };

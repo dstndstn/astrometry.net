@@ -186,7 +186,7 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
 		} else if (is_word(line, "maxwidth ", &nextword)) {
 			backend->maxwidth = atof(nextword);
 		} else if (is_word(line, "cpulimit ", &nextword)) {
-			backend->cpulimit = atoi(nextword);
+			backend->cpulimit = atof(nextword);
 		} else if (is_word(line, "depths ", &nextword)) {
             if (parse_depth_string(backend->default_depths, nextword)) {
                 rtn = -1;
@@ -515,7 +515,7 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job, bool verbose) {
     free(fn);
 
     bp->timelimit = qfits_header_getint(hdr, "ANTLIM", 0);
-    bp->cpulimit = qfits_header_getint(hdr, "ANCLIM", 0);
+    bp->cpulimit = qfits_header_getdouble(hdr, "ANCLIM", 0.0);
     bp->logratio_toprint = log(qfits_header_getdouble(hdr, "ANODDSPR", default_odds_toprint));
     bp->logratio_tokeep = log(qfits_header_getdouble(hdr, "ANODDSKP", default_odds_tokeep));
     bp->logratio_tosolve = log(qfits_header_getdouble(hdr, "ANODDSSL", default_odds_tosolve));
@@ -727,7 +727,7 @@ backend_t* backend_new() {
 	// Default scale estimate: field width, in degrees:
 	backend->minwidth = 0.1;
 	backend->maxwidth = 180.0;
-    backend->cpulimit = 600;
+    backend->cpulimit = 600.0;
 	return backend;
 }
 
@@ -794,8 +794,8 @@ job_t* backend_read_job_file(backend_t* backend, const char* jobfn) {
     }
 
     // The job can only decrease the CPU limit.
-    if (!bp->cpulimit || bp->cpulimit > backend->cpulimit) {
-        logverb("Decreasing CPU time limit to the backend's limit of %i\n",
+    if ((bp->cpulimit == 0.0) || bp->cpulimit > backend->cpulimit) {
+        logverb("Decreasing CPU time limit to the backend's limit of %g seconds\n",
                 backend->cpulimit);
         bp->cpulimit = backend->cpulimit;
     }

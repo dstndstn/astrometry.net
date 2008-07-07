@@ -69,7 +69,6 @@ int main(int argc, char *argv[]) {
             goto clean;
 		}
 
-        logverb("blind solver params:\n", progname);
         blind_log_run_parameters(bp);
 
 		blind_run(bp);
@@ -167,13 +166,13 @@ static int read_parameters(blind_t* bp)
             }
             blind_add_verify_wcs(bp, &wcs);
 		} else if (is_word(line, "cpulimit ", &nextword)) {
-			bp->cpulimit = atoi(nextword);
+			bp->cpulimit = atof(nextword);
 		} else if (is_word(line, "timelimit ", &nextword)) {
 			bp->timelimit = atoi(nextword);
 		} else if (is_word(line, "total_timelimit ", &nextword)) {
 			bp->total_timelimit = atoi(nextword);
 		} else if (is_word(line, "total_cpulimit ", &nextword)) {
-			bp->total_cpulimit = atoi(nextword);
+			bp->total_cpulimit = atof(nextword);
 		} else if (is_word(line, "verify_dist ", &nextword)) {
 			bp->verify_dist2 = arcsec2distsq(atof(nextword));
 		} else if (is_word(line, "verify_pix ", &nextword)) {

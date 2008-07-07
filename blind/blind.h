@@ -105,16 +105,16 @@ struct blind_params {
     // List of MatchObjs with logodds >= logodds_tokeep
     bl* solutions;
 
-	int cpulimit;
-	int cpu_start;
+	float cpulimit;
+	float cpu_start;
 	bool hit_cpulimit;
 
 	int timelimit;
 	time_t time_start;
 	bool hit_timelimit;
 
-	int total_cpulimit;
-	int cpu_total_start;
+	float total_cpulimit;
+	float cpu_total_start;
 	bool hit_total_cpulimit;
 
 	int total_timelimit;

@@ -67,7 +67,7 @@ struct augment_xylist_s {
     double scalehi;
     char* scaleunits;
 
-    int cpulimit;
+    float cpulimit;
 
     bool tweak;
     int tweakorder;
