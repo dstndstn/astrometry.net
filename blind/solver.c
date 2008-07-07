@@ -912,6 +912,7 @@ void solver_set_default_values(solver_t* solver) {
 	solver->logratio_bail_threshold = log(1e-100);
 	solver->parity = DEFAULT_PARITY;
 	solver->codetol = DEFAULT_CODE_TOL;
+    solver->distractor_ratio = DEFAULT_DISTRACTOR_RATIO;
 }
 
 void solver_clear_indexes(solver_t* solver) {

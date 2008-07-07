@@ -43,6 +43,7 @@ enum {
 #define DEFAULT_PARITY PARITY_BOTH
 #define DEFAULT_TWEAK_ABORDER 3
 #define DEFAULT_TWEAK_ABPORDER 3
+#define DEFAULT_DISTRACTOR_RATIO 0.25
 
 struct verify_field_t;
 struct solver_t {
@@ -53,7 +54,7 @@ struct solver_t {
 	// The set of indexes.  Caller must add with solver_add_index()
 	pl* indexes;
 
-	// The field as x1,y1,x2,y2, etc.
+	// The field as { x_1, y_1, x_2, y_2, ..., x_nfield, y_nfield }.
 	double* field;
 	int nfield;
 
@@ -61,14 +62,8 @@ struct solver_t {
 	double funits_lower;
 	double funits_upper;
 
-	// Code tolerance in 4D codespace L2 distance.
-	double codetol;
-
 	// The positional noise in the field, in pixels.
 	double verify_pix;
-
-	// Fraction of distractors in [0,1].
-	double distractor_ratio;
 
 	// Callback; called for each match found whose log-odds ratio is above
 	// "logratio_record_threshold".  The second parameter is "userdata".
@@ -81,6 +76,12 @@ struct solver_t {
 
 	// OPTIONAL FIELDS WITH SENSIBLE DEFAULTS
 	// ======================================
+
+	// Fraction of distractors in [0,1].
+	double distractor_ratio;
+
+	// Code tolerance in 4D codespace L2 distance.
+	double codetol;
 
 	// Minimum size of field quads to try, in pixels.
 	double quadsize_min;
