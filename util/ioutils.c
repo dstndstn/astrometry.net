@@ -181,11 +181,16 @@ char* resolve_path(const char* filename, const char* basedir) {
     // to actually exist, while this function should work for output files
     // that don't already exist.
     char* path;
+    char* rtn;
     // absolute path?
     if (filename[0] == '/')
-        return strdup(filename);
+        //return strdup(filename);
+        return an_canonicalize_file_name(filename);
     asprintf_safe(&path, "%s/%s", basedir, filename);
-    return path;
+    //return path;
+    rtn = an_canonicalize_file_name(path);
+    free(path);
+    return rtn;
 }
 
 char* find_executable(const char* progname, const char* sibling) {
