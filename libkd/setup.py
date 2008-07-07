@@ -8,7 +8,8 @@ numpy_inc = (os.path.dirname(numpy.__file__) +
 module1 = Extension('spherematch',
                     sources = ['pyspherematch.c'],
                     include_dirs = [ numpy_inc,
-                                     '../util' ],
+                                     '../util', '.',
+                                     ],
                     extra_objects = ['libkd-noio.a',
                                      '../util/libanutils.a' ])
 

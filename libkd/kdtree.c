@@ -242,6 +242,12 @@ void kdtree_copy_data_double(const kdtree_t* kd, int start, int N, double* dest)
 	}
 }
 
+int kdtree_permute(const kdtree_t* tree, int ind) {
+    if (!tree->perm)
+        return ind;
+    return tree->perm[ind];
+}
+
 void kdtree_inverse_permutation(const kdtree_t* tree, int* invperm) {
 	int i;
 	if (!tree->perm) {

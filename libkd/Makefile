@@ -69,13 +69,15 @@ NUMPY_INC := $(NUMPY_BASE)/core/include/numpy
 # FIXME
 PYTHON_INC := /opt/local/include/python2.5
 
-pyspherematch.o: pyspherematch.c
-	$(CC) $(CFLAGS) -I$(PYTHON_INC) -I$(NUMPY_INC) -c $< -o $@
+spherematch.so: pyspherematch.c setup.py $(LIBKD_NOIO)
+	python setup.py build --force --build-base build --build-platlib build/lib
+	cp build/lib/spherematch.so $@
 
-SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
+#$(CC) $(CFLAGS) -I$(PYTHON_INC) -I$(NUMPY_INC) -c $< -o $@
 
-libpyspherematch.so: $(PYSPHEREMATCH_OBJ) $(LIBKD_NOIO)
-	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
+#SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
+#libpyspherematch.so: $(PYSPHEREMATCH_OBJ) $(LIBKD_NOIO)
+#	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
 DEP_OBJ := $(KD) $(KD_FITS) $(INTERNALS) $(INTERNALS_NOIO)
 

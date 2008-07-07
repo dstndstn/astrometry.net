@@ -343,6 +343,8 @@ int kdtree_kdtype_parse_ext_string(const char* str);
 
 int kdtree_kdtypes_to_treetype(int exttype, int treetype, int datatype);
 
+int kdtree_permute(const kdtree_t* tree, int ind);
+
 /*
   Compute the inverse permutation of tree->perm and place it in "invperm".
  */
