@@ -44,6 +44,7 @@ enum {
 #define DEFAULT_TWEAK_ABORDER 3
 #define DEFAULT_TWEAK_ABPORDER 3
 #define DEFAULT_DISTRACTOR_RATIO 0.25
+#define DEFAULT_VERIFY_PIX 1.0
 
 struct verify_field_t;
 struct solver_t {
@@ -62,9 +63,6 @@ struct solver_t {
 	double funits_lower;
 	double funits_upper;
 
-	// The positional noise in the field, in pixels.
-	double verify_pix;
-
 	// Callback; called for each match found whose log-odds ratio is above
 	// "logratio_record_threshold".  The second parameter is "userdata".
 	bool (*record_match_callback)(MatchObj*, void*);
@@ -76,6 +74,9 @@ struct solver_t {
 
 	// OPTIONAL FIELDS WITH SENSIBLE DEFAULTS
 	// ======================================
+
+	// The positional noise in the field, in pixels.
+	double verify_pix;
 
 	// Fraction of distractors in [0,1].
 	double distractor_ratio;

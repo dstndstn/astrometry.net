@@ -459,18 +459,16 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 	int n;
     bool run;
 
-    double default_poserr = 1.0;
     bool default_tweak = TRUE;
     int default_tweakorder = 2;
     double default_odds_toprint = 1e6;
     double default_odds_tokeep = 1e9;
     double default_odds_tosolve = 1e9;
     //double default_image_fraction = 1.0;
-    double default_codetol = 0.01;
-	double default_distractor_fraction = 0.25;
     double default_quadsizefraction_min = 0.1;
     double default_quadsizefraction_max = 1.0;
     char* fn;
+    double val;
 
     blind_init(bp);
     // must be in this order because init_parameters handily zeros out sp
@@ -484,10 +482,15 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 		goto bailout;
 	}
 
-    sp->verify_pix = qfits_header_getdouble(hdr, "ANPOSERR", default_poserr);
-    sp->codetol    = qfits_header_getdouble(hdr, "ANCTOL",   default_codetol);
-    sp->distractor_ratio = qfits_header_getdouble(hdr, "ANDISTR", default_distractor_fraction);
-    sp->logratio_bail_threshold = log(1e-100);
+    val = qfits_header_getdouble(hdr, "ANPOSERR", 0.0);
+    if (val > 0.0)
+        sp->verify_pix = val;
+    val = qfits_header_getdouble(hdr, "ANCTOL", 0.0);
+    if (val > 0.0)
+        sp->codetol = val;
+    val = qfits_header_getdouble(hdr, "ANDISTR", 0.0);
+    if (val > 0.0)
+        sp->distractor_ratio = val;
 
     blind_set_solved_file  (bp, fn=fits_get_long_string(hdr, "ANSOLVED"));
     free(fn);

@@ -913,6 +913,7 @@ void solver_set_default_values(solver_t* solver) {
 	solver->parity = DEFAULT_PARITY;
 	solver->codetol = DEFAULT_CODE_TOL;
     solver->distractor_ratio = DEFAULT_DISTRACTOR_RATIO;
+    solver->verify_pix = DEFAULT_VERIFY_PIX;
 }
 
 void solver_clear_indexes(solver_t* solver) {
