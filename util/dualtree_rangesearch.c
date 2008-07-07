@@ -57,6 +57,10 @@ static void rs_handle_result(void* extra, kdtree_t* searchtree, int searchnode,
 							 kdtree_t* querytree, int querynode);
 static void rs_start_results(void* extra, kdtree_t* querytree, int querynode);
 
+static double mydistsq(void* v1, void* v2, int D) {
+    return distsq((double*)v1, (double*)v2, D);
+}
+
 void dualtree_rangesearch(kdtree_t* xtree, kdtree_t* ytree,
 						  double mindist, double maxdist,
 						  dist2_function distsquared,
@@ -76,7 +80,7 @@ void dualtree_rangesearch(kdtree_t* xtree, kdtree_t* ytree,
 
     // set search params
 	memset(&params, 0, sizeof(params));
-    if (mindist == RANGESEARCH_NO_LIMIT) {
+    if ((mindist == RANGESEARCH_NO_LIMIT) || (mindist == 0.0)) {
 		params.usemin = FALSE;
     } else {
 		params.usemin = TRUE;
@@ -90,7 +94,11 @@ void dualtree_rangesearch(kdtree_t* xtree, kdtree_t* ytree,
 		params.maxdistsq = maxdist * maxdist;
     }
 
-	params.distsquared = distsquared;
+    if (distsquared)
+        params.distsquared = distsquared;
+    else
+        params.distsquared = mydistsq;
+
     params.user_callback = callback;
     params.user_callback_param = param;
 	params.xtree = xtree;
