@@ -236,10 +236,6 @@ static int read_parameters(blind_t* bp)
 			sp->field_maxx = atof(nextword);
 		} else if (is_word(line, "fieldh ", &nextword)) {
 			sp->field_maxy = atof(nextword);
-		} else if (is_word(line, "uniformize ", &nextword)) {
-			if (sscanf(nextword, "%i %i", &(bp->field_uniform_NX), &(bp->field_uniform_NY)) != 2) {
-				logerr("Failed to parse \"uniformize\" arguments: \"%s\", expected two ints.\n", nextword);
-			}
 		} else if (is_word(line, "distractors ", &nextword)) {
 			sp->distractor_ratio = atof(nextword);
 		} else if (is_word(line, "fieldid ", &nextword)) {
