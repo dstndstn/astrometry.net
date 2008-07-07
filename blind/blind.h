@@ -70,8 +70,6 @@ struct blind_params {
 
     int index_options;
 
-	bool verbose;
-
 	// Fields to try
 	il* fieldlist;
 

@@ -203,8 +203,6 @@ static int read_parameters(blind_t* bp)
 		} else if (is_word(line, "solvedserver ", &nextword)) {
 			free(bp->solvedserver);
 			bp->solvedserver = strdup(nextword);
-		} else if (is_word(line, "verbose", &nextword)) {
-			bp->verbose = TRUE;
 		} else if (is_word(line, "tweak_skipshift", &nextword)) {
 			bp->tweak_skipshift = TRUE;
 		} else if (is_word(line, "tweak_aborder ", &nextword)) {

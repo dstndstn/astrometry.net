@@ -450,7 +450,7 @@ int backend_run_job(backend_t* backend, job_t* job) {
 	return 0;
 }
 
-bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job, bool verbose) {
+static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     blind_t* bp = &(job->bp);
     solver_t* sp = &(bp->solver);
 
@@ -475,8 +475,6 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job, bool verbose) {
     blind_init(bp);
     // must be in this order because init_parameters handily zeros out sp
     solver_set_default_values(sp);
-
-    bp->verbose = verbose;
 
     sp->field_maxx = qfits_header_getdouble(hdr, "IMAGEW", dnil);
     sp->field_maxy = qfits_header_getdouble(hdr, "IMAGEH", dnil);
@@ -772,7 +770,7 @@ job_t* backend_read_job_file(backend_t* backend, const char* jobfn) {
         return NULL;
     }
     job = job_new();
-    if (!parse_job_from_qfits_header(hdr, job, backend->verbose)) {
+    if (!parse_job_from_qfits_header(hdr, job)) {
         job_free(job);
         qfits_header_destroy(hdr);
         return NULL;

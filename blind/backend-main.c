@@ -191,7 +191,6 @@ int main(int argc, char** args) {
     }
 
     backend->cancelfn = cancelfn;
-    backend->verbose = verbose;
 
 	for (i = optind; i < argc; i++) {
 		char* jobfn;

@@ -44,7 +44,6 @@ struct backend {
 	double maxwidth;
     float cpulimit;
     char* cancelfn;
-    bool verbose;
 };
 typedef struct backend backend_t;
 

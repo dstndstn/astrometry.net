@@ -574,7 +574,6 @@ void blind_log_run_parameters(blind_t* bp) {
 	logverb("ycolname %s\n", bp->ycolname);
 	logverb("maxquads %i\n", sp->maxquads);
 	logverb("maxmatches %i\n", sp->maxmatches);
-	logverb("verbose %i\n", bp->verbose);
 	logverb("cpulimit %f\n", bp->cpulimit);
 	logverb("timelimit %i\n", bp->timelimit);
 	logverb("total_timelimit %i\n", bp->total_timelimit);
@@ -623,8 +622,6 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree_t* starkd) {
 	logmsg("Tweaking!\n");
 
 	twee = tweak_new();
-    if (bp->verbose)
-        twee->verbose = TRUE;
 
 	if (bp->verify_dist2 > 0.0)
 		twee->jitter = distsq2arcsec(bp->verify_dist2);
