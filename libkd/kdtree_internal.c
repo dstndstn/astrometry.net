@@ -1795,7 +1795,7 @@ static int kdtree_check_node(const kdtree_t* kd, int nodeid) {
             for (i=L; i<=R; i++) {
                 dtype* dat = KD_DATA(kd, D, i);
                 for (d=0; d<D; d++) {
-                    etype e = POINT_DE(kd, d, dat[d]);
+                    Unused etype e = POINT_DE(kd, d, dat[d]);
                     assert(e >= kd->minval[d]);
                     assert(e <= kd->maxval[d]);
                 }
