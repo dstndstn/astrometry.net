@@ -42,7 +42,6 @@ struct blind_params {
 	// Filenames
 	char *fieldfname;
 	char *matchfname, *indexrdlsfname;
-	char *logfname;
     char *corr_fname;
 
 	// WCS filename template (sprintf format with %i for field number)
@@ -71,10 +70,6 @@ struct blind_params {
 
     int index_options;
 
-	// Logfile
-	FILE* logfd;
-	int dup_stderr;
-	int dup_stdout;
 	bool silent;
 	bool quiet;
 	bool verbose;
@@ -177,9 +172,5 @@ int blind_parameters_are_sane(blind_t* bp, solver_t* sp);
 int blind_is_run_obsolete(blind_t* bp, solver_t* sp);
 
 void blind_log_run_parameters(blind_t* bp);
-
-void blind_setup_logging(blind_t* bp);
-
-void blind_restore_logging(blind_t* bp);
 
 #endif

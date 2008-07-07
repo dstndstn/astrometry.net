@@ -423,62 +423,6 @@ void blind_run(blind_t* bp) {
 	bl_remove_all(bp->solutions);
 }
 
-void blind_setup_logging(blind_t* bp) {
-	if (!bp->logfname)
-		return;
-	bp->logfd = fopen(bp->logfname, "a");
-	if (!bp->logfd) {
-		logerr("Failed to open log file %s: %s\n", bp->logfname, strerror(errno));
-		goto bailout;
-	}
-	// Save old stdout/stderr...
-	bp->dup_stdout = dup(STDOUT_FILENO);
-	if (bp->dup_stdout == -1) {
-		logerr("Failed to dup stdout: %s\n", strerror(errno));
-		goto bailout;
-	}
-	bp->dup_stderr = dup(STDERR_FILENO);
-	if (bp->dup_stderr == -1) {
-		logerr("Failed to dup stderr: %s\n", strerror(errno));
-		goto bailout;
-	}
-	// Replace stdout/stderr with logfile...
-	if (dup2(fileno(bp->logfd), STDERR_FILENO) == -1) {
-		logerr("Failed to dup2 log file: %s\n", strerror(errno));
-		goto bailout;
-	}
-	if (dup2(fileno(bp->logfd), STDOUT_FILENO) == -1) {
-		logerr("Failed to dup2 log file: %s\n", strerror(errno));
-		goto bailout;
-	}
-	return;
-
- bailout:
-	if (bp->logfd)
-		fclose(bp->logfd);
-	free(bp->logfname);
-	bp->logfname = NULL;
-}
-
-void blind_restore_logging(blind_t* bp) {
-	// Put stdout and stderr back to the way they were!
-	if (bp->logfname) {
-		if (dup2(bp->dup_stdout, fileno(stdout)) == -1) {
-			logerr("Failed to dup2() back to stdout.\n");
-		}
-		if (dup2(bp->dup_stderr, fileno(stderr)) == -1) {
-			logerr("Failed to dup2() back to stderr.\n");
-		}
-		if (close(bp->dup_stdout) || close(bp->dup_stderr)) {
-			logerr("Failed to close duplicate stdout/stderr: %s\n", strerror(errno));
-		}
-		if (fclose(bp->logfd)) {
-			logerr("Failed to close log file: %s\n",
-				   strerror(errno));
-		}
-	}
-}
-
 void blind_init(blind_t* bp) {
 	// Reset params.
 	memset(bp, 0, sizeof(blind_t));
@@ -639,7 +583,6 @@ void blind_log_run_parameters(blind_t* bp) {
 	logverb("maxmatches %i\n", sp->maxmatches);
 	logverb("quiet %i\n", bp->quiet);
 	logverb("verbose %i\n", bp->verbose);
-	logverb("logfname %s\n", bp->logfname);
 	logverb("cpulimit %i\n", bp->cpulimit);
 	logverb("timelimit %i\n", bp->timelimit);
 	logverb("total_timelimit %i\n", bp->total_timelimit);
@@ -664,7 +607,6 @@ void blind_cleanup(blind_t* bp) {
 	free(bp->fieldid_key);
 	free(bp->indexrdlsfname);
 	free(bp->corr_fname);
-	free(bp->logfname);
 	free(bp->matchfname);
 	free(bp->solvedserver);
 	free(bp->solved_in);

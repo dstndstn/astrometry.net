@@ -92,8 +92,6 @@ int main(int argc, char *argv[]) {
 		if (!bp->quiet)
 			toc();
 
-		blind_restore_logging(bp);
-
 		if (bp->hit_total_timelimit)
 			break;
 		if (bp->hit_total_cpulimit)
@@ -225,11 +223,6 @@ static int read_parameters(blind_t* bp)
             blind_set_solvedout_file(bp, nextword);
 		} else if (is_word(line, "cancel ", &nextword)) {
             blind_set_cancel_file(bp, nextword);
-		} else if (is_word(line, "log ", &nextword)) {
-			// Open the log file...
-			free(bp->logfname);
-			bp->logfname = strdup(nextword);
-			blind_setup_logging(bp);
 		} else if (is_word(line, "solvedserver ", &nextword)) {
 			free(bp->solvedserver);
 			bp->solvedserver = strdup(nextword);
