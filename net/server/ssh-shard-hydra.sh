@@ -21,8 +21,8 @@ jobid=`echo "$jobid" | sed s+-+/+g`
 cd $JOBDIR
 mkdir -p $jobid
 cd $jobid
-mkdir `hostname`
-cd `hostname`
+mkdir `hostname -s`
+cd `hostname -s`
 # Read tarred input data...
 #tar xf -
 
@@ -35,9 +35,13 @@ dd bs=1 count=$nbytes of=job.axy
 
 $BACKEND_CLIENT `pwd`/job.axy `pwd`/../cancel > backend.stdout
 
-if [ -e solved ]; then
-    touch ../cancel
-fi
+#echo -n "Finished: " 1>&2
+#if [ -e solved ]; then
+#    echo "solved." 1>&2
+#    cp solved ../solved
+#else
+#    echo "did not solve." 1>&2
+#fi
 
-# Send back all the files we generated!
-tar cf - --exclude=job.axy *
+# Send back all the files we generated
+tar cf - --ignore-failed-read --exclude=job.axy * ../solved
