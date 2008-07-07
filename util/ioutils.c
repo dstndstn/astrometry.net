@@ -45,44 +45,47 @@ char* an_canonicalize_file_name(const char* fn) {
     int i;
     char* result;
     // Ugh, special cases.
-    if (!strcmp(fn, ".") || !strcmp(fn, "/"))
+    if (streq(fn, ".") || streq(fn, "/"))
         return strdup(fn);
 
     dirs = sl_split(NULL, fn, "/");
     for (i=0; i<sl_size(dirs); i++) {
-
-        {
-            int j;
-            for (j=0; j<sl_size(dirs); j++) {
-                printf("%s/", sl_get(dirs, j));
-            }
-            printf("\n");
-            printf("i=%i, dir=\"%s\"\n", i, sl_get(dirs, i));
-        }
-
-        if (!strcmp(sl_get(dirs, i), "")) {
+        if (streq(sl_get(dirs, i), "")) {
             // don't remove '/' from beginning of path!
             if (i) {
                 sl_remove(dirs, i);
                 i--;
             }
-        } else if (!strcmp(sl_get(dirs, i), ".")) {
+        } else if (streq(sl_get(dirs, i), ".")) {
             sl_remove(dirs, i);
             i--;
-        } else if (!strcmp(sl_get(dirs, i), "..")) {
-            if (i) {
-                sl_remove(dirs, i-1);
-                sl_remove(dirs, i-1);
-                i-=2;
-            } else {
+        } else if (streq(sl_get(dirs, i), "..")) {
+            // don't remove ".." at start of path.
+            if (!i)
+                continue;
+            // don't remove chains of '../../../' at the start.
+            if (streq(sl_get(dirs, i-1), ".."))
+                continue;
+            // but do collapse '/../' to '/' at the start.
+            if (streq(sl_get(dirs, i-1), "")) {
                 sl_remove(dirs, i);
                 i--;
+            } else {
+                sl_remove(dirs, i-1);
+                sl_remove(dirs, i-1);
+                i -= 2;
             }
         }
     }
     result = sl_join(dirs, "/");
     sl_free2(dirs);
     return result;
+}
+
+bool streq(const char* s1, const char* s2) {
+    if (s1 == NULL || s2 == NULL)
+        return (s1 == s2);
+    return !strcmp(s1, s2);
 }
 
 int pipe_file_offset(FILE* fin, int offset, int length, FILE* fout) {
