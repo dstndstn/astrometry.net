@@ -389,12 +389,14 @@ int backend_run_job(backend_t* backend, job_t* job) {
                 sp->endobj = endobj;
 
 			// minimum quad size to try (in pixels)
-            sp->quadsize_min = job->quad_sizefraction_min * MIN(job_imagew(job), job_imageh(job));
+            sp->quadsize_min = bp->quad_size_fraction_lo *
+                MIN(job_imagew(job), job_imageh(job));
 
 			// range of quad sizes that could be found in the field,
 			// in arcsec.
             // the hypotenuse...
-			fmax = job->quad_sizefraction_max * hypot(job_imagew(job), job_imageh(job)) * app_max;
+			fmax = bp->quad_size_fraction_hi *
+                hypot(job_imagew(job), job_imageh(job)) * app_max;
 			fmin = sp->quadsize_min * app_min;
 
 			// Select the indices that should be checked.
@@ -403,7 +405,6 @@ int backend_run_job(backend_t* backend, job_t* job) {
 				index_meta_t* meta = bl_access(backend->indexmetas, k);
 				if ((fmin > meta->index_scale_upper) || (fmax < meta->index_scale_lower))
 					continue;
-
                 add_index_to_blind(backend, bp, k);
 				nused++;
 			}
@@ -465,8 +466,6 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     double default_odds_tokeep = 1e9;
     double default_odds_tosolve = 1e9;
     //double default_image_fraction = 1.0;
-    double default_quadsizefraction_min = 0.1;
-    double default_quadsizefraction_max = 1.0;
     char* fn;
     double val;
 
@@ -540,10 +539,12 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
         bp->tweak_skipshift = TRUE;
     }
 
-    job->quad_sizefraction_min = qfits_header_getdouble(hdr, "ANQSFMIN",
-                                                        default_quadsizefraction_min);
-    job->quad_sizefraction_max = qfits_header_getdouble(hdr, "ANQSFMAX",
-                                                        default_quadsizefraction_max);
+    val = qfits_header_getdouble(hdr, "ANQSFMIN", 0.0);
+    if (val > 0.0)
+        bp->quad_size_fraction_lo = val;
+    val = qfits_header_getdouble(hdr, "ANQSFMAX", 0.0);
+    if (val > 0.0)
+        bp->quad_size_fraction_hi = val;
 
 	n = 1;
 	while (1) {

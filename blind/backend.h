@@ -51,8 +51,6 @@ struct job_t {
 	dl* scales;
 	il* depths;
     bool include_default_scales;
-    double quad_sizefraction_min;
-    double quad_sizefraction_max;
     blind_t bp;
 };
 typedef struct job_t job_t;

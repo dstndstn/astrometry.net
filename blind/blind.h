@@ -26,6 +26,9 @@
 #include "rdlist.h"
 #include "bl.h"
 
+#define DEFAULT_QSF_LO 0.1
+#define DEFAULT_QSF_HI 1.0
+
 struct blind_params {
 	solver_t solver;
 
@@ -70,6 +73,11 @@ struct blind_params {
     pl* indexes;
 
     int index_options;
+
+    // Quad size fraction: select indexes that contain quads of size fraction
+    // [quad_size_fraction_lo, quad_size_fraction_hi] of the image size.
+    double quad_size_fraction_lo;
+    double quad_size_fraction_hi;
 
 	// Fields to try
 	il* fieldlist;

@@ -300,8 +300,8 @@ void blind_run(blind_t* bp) {
                 logmsg("Verifying WCS: image width or height is zero / unknown.\n");
                 continue;
             }
-			quadlo = 0.1 * MIN(wcs->wcstan.imagew, wcs->wcstan.imageh) * sip_pixel_scale(wcs);
-			quadhi = 1.0 * MAX(wcs->wcstan.imagew, wcs->wcstan.imageh) * sip_pixel_scale(wcs);
+			quadlo = bp->quad_size_fraction_lo * MIN(wcs->wcstan.imagew, wcs->wcstan.imageh) * sip_pixel_scale(wcs);
+			quadhi = bp->quad_size_fraction_hi * MAX(wcs->wcstan.imagew, wcs->wcstan.imageh) * sip_pixel_scale(wcs);
 			logmsg("Verifying WCS using indices with quads of size [%g, %g] arcmin\n",
 				   arcsec2arcmin(quadlo), arcsec2arcmin(quadhi));
 
@@ -429,6 +429,8 @@ void blind_init(blind_t* bp) {
 	bp->lastfield = -1;
 	bp->tweak_aborder = DEFAULT_TWEAK_ABORDER;
 	bp->tweak_abporder = DEFAULT_TWEAK_ABPORDER;
+    bp->quad_size_fraction_lo = DEFAULT_QSF_LO;
+    bp->quad_size_fraction_hi = DEFAULT_QSF_HI;
     bp->nsolves = 1;
     // don't set sp-> here because solver_set_default_values()
     // will get called next and wipe it out...
