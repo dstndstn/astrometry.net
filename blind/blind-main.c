@@ -26,16 +26,10 @@
 #include "log.h"
 #include "tic.h"
 
-static void printHelp(char* progname) {
-	boilerplate_help_header(stderr);
-	fprintf(stderr, "Usage: %s\n", progname);
-}
-
 static int read_parameters(blind_t* bp);
 
 int main(int argc, char *argv[]) {
 	blind_t my_bp;
-	char* progname = argv[0];
 	blind_t* bp = &my_bp;
 	solver_t* sp = &(bp->solver);
 

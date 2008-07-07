@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     index_t* index;
     fitstable_t* table;
 	char* indexfn = NULL;
-	char* outfn;
+	char* outfn = NULL;
 	int i, D, N;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1) {
