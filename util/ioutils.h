@@ -30,6 +30,7 @@ extern uint32_t ENDIAN_DETECTOR;
 
 /*
  Removes '.' and '..' references from a path.
+ Collapses '//' to '/'.
  Does NOT care whether the file actually exists.
  Does NOT resolve symlinks.
  Assumes '/' is the path separator.

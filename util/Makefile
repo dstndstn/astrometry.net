@@ -184,7 +184,7 @@ grab-stellarium-constellations: grab-stellarium-constellations.o \
 ### TESTS
 
 ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
-	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log
+	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log test_ioutils
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -213,6 +213,8 @@ test_healpix: $(ANUTILS_LIB)
 test_log: $(ANUTILS_LIB)
 	$(CC) $(LDFLAGS) -o $@ $^ $(ANUTILS_LIB) -pthread
 #test_log-main.o cutest.o $(ANUTILS_LIB)
+
+test_ioutils: $(ANUTILS_LIB)
 
 ### /TESTS
 
