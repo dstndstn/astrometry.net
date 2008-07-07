@@ -918,6 +918,7 @@ void solver_set_default_values(solver_t* solver) {
 
 void solver_clear_indexes(solver_t* solver) {
 	pl_remove_all(solver->indexes);
+    solver->index = NULL;
 }
 
 void solver_cleanup(solver_t* solver) {

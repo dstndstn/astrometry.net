@@ -319,8 +319,7 @@ void blind_run(blind_t* bp) {
 				solve_fields(bp, wcs);
 				// Clean up this index...
                 done_with_index(bp, I, index);
-				pl_remove_all(sp->indexes);
-				sp->index = NULL;
+                solver_clear_indexes(sp);
 			}
 		}
 
@@ -360,11 +359,10 @@ void blind_run(blind_t* bp) {
 
 		// Clean up the indices...
         for (I=0; I<Nindexes; I++) {
-			index_t* index = pl_get(sp->indexes, I);
+			index_t* index = get_index(bp, I);
             done_with_index(bp, I, index);
 		}
-		bl_remove_all(sp->indexes);
-		sp->index = NULL;
+        solver_clear_indexes(sp);
 
 	} else {
 
@@ -393,8 +391,7 @@ void blind_run(blind_t* bp) {
 
 			// Clean up this index...
             done_with_index(bp, I, index);
-			pl_remove_all(sp->indexes);
-			sp->index = NULL;
+            solver_clear_indexes(sp);
 		}
 	}
 
@@ -527,17 +524,13 @@ static void load_and_parse_wcsfiles(blind_t* bp) {
 			logerr("Failed to parse WCS header from file %s\n", fn);
 			continue;
 		}
-        /*
-         fprintf(stderr, "Read WCS header:\n");
-         sip_print(&wcs);
-         */
 		bl_append(bp->verify_wcs_list, &wcs);
 	}
 }
 
 void blind_log_run_parameters(blind_t* bp) {
 	solver_t* sp = &(bp->solver);
-	int i;
+	int i, N;
 
     logverb("blind solver run parameters:\n");
 	logverb("fields ");
@@ -545,12 +538,9 @@ void blind_log_run_parameters(blind_t* bp) {
 		logverb("%i ", il_get(bp->fieldlist, i));
 	logverb("\n");
 	logverb("indexes:\n");
-	for (i = 0; i < sl_size(bp->indexnames); i++)
-		logverb("  %s\n", sl_get(bp->indexnames, i));
-	for (i = 0; i < pl_size(bp->indexes); i++) {
-        index_t* ind = pl_get(bp->indexes, i);
-		logverb("  %s\n", ind->meta.indexname);
-    }
+    N = n_indexes(bp);
+    for (i=0; i<N; i++)
+        logverb("  %s\n", get_index_name(bp, i));
 	logverb("fieldfname %s\n", bp->fieldfname);
 	for (i = 0; i < sl_size(bp->verify_wcsfiles); i++)
 		logverb("verify %s\n", sl_get(bp->verify_wcsfiles, i));

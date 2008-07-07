@@ -68,6 +68,9 @@ struct solver_t {
 	bool (*record_match_callback)(MatchObj*, void*);
 	double logratio_record_threshold;
 
+	// User data passed to the callbacks
+	void* userdata;
+
 	// Assume that stars far from the matched quad will have larger positional
 	// variance?
 	bool distance_from_quad_bonus;
@@ -113,9 +116,6 @@ struct solver_t {
 	// Called after a delay in seconds; returns how long to wait before
 	// calling again.  The parameter is "userdata".
 	time_t (*timer_callback)(void*);
-
-	// User data passed to the callbacks
-	void* userdata;
 
 	// FIELDS THAT AFFECT THE RUNNING SOLVER ON CALLBACK
 	// =================================================
