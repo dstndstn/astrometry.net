@@ -19,9 +19,8 @@
 #include <ctype.h>
 #include <math.h>
 
-#include "qfits_error.h"
 #include "qfits_cache.h"
-
+#include "fitsioutils.h"
 #include "boilerplate.h"
 #include "blind.h"
 #include "log.h"
@@ -41,18 +40,12 @@ int main(int argc, char *argv[]) {
 	solver_t* sp = &(bp->solver);
 
 	log_init(LOG_MSG);
+    fits_use_error_system();
 
 	if (argc == 2 && strcmp(argv[1], "-s") == 0) {
 		log_set_level(LOG_NONE);
 		fprintf(stderr, "premptive silence\n");
 	}
-
-	if (argc != 1 && !bp->silent) {
-		printHelp(progname);
-		exit( -1);
-	}
-
-	qfits_err_statset(1);
 
 	// Read input settings until "run" is encountered; repeat.
 	for (;;) {

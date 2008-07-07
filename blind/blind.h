@@ -70,7 +70,6 @@ struct blind_params {
 
     int index_options;
 
-	bool silent;
 	bool quiet;
 	bool verbose;
 
