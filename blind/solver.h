@@ -139,9 +139,6 @@ struct solver_t {
 	// ==================================
 	// The index we're currently dealing with.
 	index_t* index;
-	// The index in the "indexes" array of the index we're currently dealing with;
-	// ie indexes.indexOf(index).  (Phew, we're really overloading the word "index"!)
-	int index_num;
 
 	// The extreme limits of quad size, for all indexes, in pixels^2.
 	double minminAB2;
@@ -172,7 +169,6 @@ struct solver_t {
 	double   best_logodds;
 	MatchObj best_match;
 	index_t* best_index;
-	int      best_index_num;
 	bool     best_match_solves;
 	bool     have_best_match;
 

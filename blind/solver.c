@@ -95,7 +95,6 @@ void solver_reset_best_match(solver_t* sp) {
 	sp->best_logodds = 0;
 	memset(&(sp->best_match), 0, sizeof(MatchObj));
 	sp->best_index = NULL;
-	sp->best_index_num = 0;
 	sp->best_match_solves = FALSE;
 	sp->have_best_match = FALSE;
 }
@@ -573,7 +572,6 @@ void solver_run(solver_t* solver) {
                 index_t* index = pl_get(solver->indexes, i);
                 int dimquads;
 
-                solver->index_num = i;
                 solver->index = index;
                 solver->rel_index_noise2 = square(index->meta.index_jitter / index->meta.index_scale_lower);
                 dimquads = quadfile_dimquads(index->quads);
@@ -634,7 +632,6 @@ void solver_run(solver_t* solver) {
 						if ((pq->scale < minAB2s[i]) ||
 					        (pq->scale > maxAB2s[i]))
 							continue;
-						solver->index_num = i;
 						solver->index = index;
 						solver->rel_index_noise2 = square(index->meta.index_jitter / index->meta.index_scale_lower);
 						dimquads = quadfile_dimquads(index->quads);
@@ -962,7 +959,6 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		memcpy(&(sp->best_match), mo, sizeof(MatchObj));
 		sp->have_best_match = TRUE;
 		sp->best_index = sp->index;
-		sp->best_index_num = sp->index_num;
 	}
 
 	if (mo->logodds < sp->logratio_record_threshold)
