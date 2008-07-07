@@ -603,15 +603,6 @@ void dtrs_match_callback(void* extra, int image_ind, int ref_ind, double dist2)
 
 	if (t->weight)
 		dl_append(t->weight, exp(-dist2 / (2.0 * t->jitterd2)));
-
-}
-
-// Dualtree rangesearch callback for distance calc. this should be integrated
-// with real dualtree rangesearch.
-double dtrs_dist2_callback(void* p1, void* p2, int D)
-{
-	double* pp1 = p1, *pp2 = p2;
-	return distsq(pp1, pp2, D);
 }
 
 void tweak_print_rms_curve(tweak_t* t) {
@@ -733,8 +724,7 @@ void find_correspondences(tweak_t* t, double jitter)  // actually call the dualt
 
 	// Find closest neighbours
 	dualtree_rangesearch(t->kd_image, t->kd_ref,
-	                     RANGESEARCH_NO_LIMIT, dist,
-	                     dtrs_dist2_callback,   // specify callback as the above func
+	                     RANGESEARCH_NO_LIMIT, dist, NULL,
 	                     dtrs_match_callback, t,
 	                     NULL, NULL);
 

@@ -410,7 +410,7 @@ int backend_run_job(backend_t* backend, job_t* job) {
 
 			// Use the (list of) smallest or largest indices if no other one fits.
 			if (!nused) {
-                il* list;
+                il* list = NULL;
                 if (fmin > backend->sizebiggest) {
                     list = backend->ibiggest;
                 } else if (fmax < backend->sizesmallest) {
