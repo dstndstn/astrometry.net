@@ -40,6 +40,10 @@
 
 uint32_t ENDIAN_DETECTOR = 0x01020304;
 
+char* an_canonicalize_file_name(const char* fn) {
+    
+}
+
 int pipe_file_offset(FILE* fin, int offset, int length, FILE* fout) {
     char buf[1024];
     int i;

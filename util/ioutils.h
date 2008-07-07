@@ -29,6 +29,16 @@
 extern uint32_t ENDIAN_DETECTOR;
 
 /*
+ Removes '.' and '..' references from a path.
+ Does NOT care whether the file actually exists.
+ Does NOT resolve symlinks.
+ Assumes '/' is the path separator.
+
+ Returns a newly-allocated string which should be freed with free().
+ */
+char* an_canonicalize_file_name(const char* fn);
+
+/*
  Copy data from "fin" to "fout", starting at offset "offset"
  (from the beginning of "fin"), and length "length".
  Returns 0 on success.

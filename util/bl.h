@@ -331,6 +331,16 @@ void sl_remove_from(sl* list, int start);
 void   sl_merge_lists(sl* list1, sl* list2);
 void   sl_print(sl* list);
 
+/*
+ Splits the given string 'str' into substrings separated by 'sepstring'.
+ (Some of the substrings may be empty, for example if the 'sepstring' appears
+ consecutively.)
+ Adds them to 'lst', if non-NULL.
+ Allocates and fills a new sl* if 'lst' is NULL.
+ The original string can be reconstructed by calling "sl_implode(lst, sepstring)"
+ */
+sl* sl_split(sl* lst, const char* str, const char* sepstring);
+
 // Like the PHP function implode(), joins each element in the list with the given
 // "join" string.  The result is a newly-allocate string containing:
 //   sl_get(list, 0) + join + sl_get(list, 1) + join + ... + join + sl_get(list, N-1)

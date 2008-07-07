@@ -25,6 +25,56 @@
 
 #include "bl.h"
 
+void test_sl_split_1(CuTest* tc) {
+    sl* s = sl_split(NULL, "hello world this is a test", " ");
+    CuAssertPtrNotNull(tc, s);
+    CuAssertIntEquals(tc, 6, sl_size(s));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 0), "hello"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 1), "world"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 2), "this"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 3), "is"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 4), "a"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 5), "test"));
+    sl_free2(s);
+}
+
+void test_sl_split_2(CuTest* tc) {
+    int i;
+    sl* s = sl_split(NULL, "hello  world  this  is  a  test     ", "  ");
+    CuAssertPtrNotNull(tc, s);
+    printf("got: ");
+    for (i=0; i<sl_size(s); i++)
+        printf("/%s/ ", sl_get(s, i));
+    printf("\n");
+    CuAssertIntEquals(tc, 8, sl_size(s));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 0), "hello"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 1), "world"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 2), "this"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 3), "is"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 4), "a"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 5), "test"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 6), ""));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 7), " "));
+    sl_free2(s);
+}
+
+void test_sl_split_3(CuTest* tc) {
+    int i;
+    sl* s, *s2;
+    s = sl_new(1);
+    sl_append(s, "guard");
+    s2 = sl_split(s, "XYhelloXYworldXYXY", "XY");
+    CuAssertPtrNotNull(tc, s2);
+    CuAssertPtrEquals(tc, s, s2);
+    CuAssertIntEquals(tc, 5, sl_size(s));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 0), "guard"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 1), ""));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 2), "hello"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 3), "world"));
+    CuAssertIntEquals(tc, 0, strcmp(sl_get(s, 4), ""));
+    sl_free2(s);
+}
+
 void test_il_new(CuTest* tc) {
 	il* x = NULL;
 	x = il_new(10);

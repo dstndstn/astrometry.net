@@ -1590,6 +1590,26 @@ void sl_free2(sl* list) {
 	bl_free(list);
 }
 
+sl* sl_split(sl* lst, const char* str, const char* sepstring) {
+    int seplen;
+    const char* s;
+    char* nexts;
+    if (!lst)
+        lst = sl_new(4);
+    seplen = strlen(sepstring);
+    s = str;
+    while (s && *s) {
+        nexts = strstr(s, sepstring);
+        if (!nexts) {
+            sl_append(lst, s);
+            break;
+        }
+        sl_appendf(lst, "%.*s", (int)(nexts - s), s);
+        s = nexts + seplen;
+    }
+    return lst;
+}
+
 void sl_free_nonrecursive(sl* list) {
 	bl_free(list);
 }
