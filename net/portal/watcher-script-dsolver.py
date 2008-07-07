@@ -233,7 +233,7 @@ def real_handle_job(job):
         '--wcs' : 'wcs.fits',
         '--rdls' : 'index.rd.fits',
         '--match' : 'match.fits',
-        '--solved' : 'solved',
+        '--solved' : '../solved',
         })
 
     (dotweak, tweakorder) = job.get_tweak()

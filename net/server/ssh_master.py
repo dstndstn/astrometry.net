@@ -107,18 +107,12 @@ def solve(job, logfunc):
 
                 s.tardata = ''.join(s.outdata)
 
-                # DEBUG
-                (fd, tmpfile) = tempfile.mkstemp('', 'tarfile')
-                os.close(fd)
-                write_file(s.tardata, tmpfile)
-                log('Saved tardata in', tmpfile)
-
                 log('tarfile contents:')
                 f = StringIO(s.tardata)
                 tar = tarfile.open(name='', mode='r|', fileobj=f)
                 for tarinfo in tar:
                     log('  ', tarinfo.name, 'is', tarinfo.size, 'bytes in size')
-                    if tarinfo.name == 'solved':
+                    if tarinfo.name == 'wcs.fits':
                         s.solved = True
                     # read and save the file contents.
                     ff = tar.extractfile(tarinfo)
