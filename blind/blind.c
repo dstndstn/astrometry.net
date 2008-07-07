@@ -993,10 +993,6 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
         sp->timer_callback = timer_callback;
 		sp->userdata = bp;
 
-		if (bp->field_uniform_NX && bp->field_uniform_NY) {
-			solver_uniformize_field(sp, bp->field_uniform_NX, bp->field_uniform_NY);
-		}
-
 		solver_preprocess_field(sp);
 
 		if (verify_wcs) {

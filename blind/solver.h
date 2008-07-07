@@ -192,16 +192,6 @@ void solver_preprocess_field(solver_t* sp);
 // Call this after solver_inject_match() or solver_run().
 void solver_free_field(solver_t* sp);
 
-/*
-  Reorders the field stars by placing a grid over the field (with NX x NY
-  cells), sorting by brightness within each grid cell, then making sweeps
-  over the grid, taking the Nth brightest star in each cell in the Nth sweep.
-  (And sorting the stars within a sweep by their absolute brightness.)
-
-  Overwrites solver->field with the newly-ordered field stars.
- */
-void solver_uniformize_field(solver_t* solver, int NX, int NY);
-
 void      solver_transform_corners(solver_t* solver, MatchObj* mo);
 void      solver_inject_match(solver_t* solver, MatchObj* mo, sip_t* sip);
 
