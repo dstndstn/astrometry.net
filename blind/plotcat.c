@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
 	int maxval;
 	char* fname = NULL;
 	int argchar;
-	qfits_header* hdr;
+	qfits_header* hdr = NULL;
 	int BLOCK = 100000;
 	catalog* cat;
 	startree_t* skdt;
@@ -499,7 +499,7 @@ int main(int argc, char *argv[]) {
         fits_add_long_history(header, "Created by the 'plotcat' program, with command-line args:");
         fits_add_args(header, argv, argc);
         fits_add_long_history(header, "--(end of command-line args)--");
-        boilerplate_add_fits_headers(hdr);
+        boilerplate_add_fits_headers(header);
         fits_header_add_int(header, "MAXVAL", maxval, "Maximum pixel value in image");
 
         if (qfits_header_dump(header, fout)) {

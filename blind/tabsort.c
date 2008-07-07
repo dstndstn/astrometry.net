@@ -38,7 +38,7 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
     void* data = NULL;
     int* perm = NULL;
     unsigned char* map = NULL;
-    size_t mapsize;
+    size_t mapsize = 0;
 
     fin = fopen(infn, "rb");
     if (!fin) {
