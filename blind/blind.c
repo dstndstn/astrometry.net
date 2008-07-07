@@ -1214,6 +1214,16 @@ static bool is_field_solved(blind_t* bp, int fieldnum) {
       solved = solvedfile_get(bp->solved_in, fieldnum);
       logverb("Checking %s field %i to see if the field is solved: %s.\n",
 	      bp->solved_in, fieldnum, (solved ? "yes" : "no"));
+      {
+	size_t len = 0;
+	size_t i;
+	char* contents = file_get_contents(bp->solved_in, &len, TRUE);
+	logverb("File %s is %i bytes long: 0x[ ", bp->solved_in, (int)len);
+	for (i=0; i<len; i++)
+	  logverb("%x ", (int)((unsigned char*)contents)[i]);
+	logverb("]\n");
+	free(contents);
+      }
     }
     if (solved) {
         // file exists; field has already been solved.
