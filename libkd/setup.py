@@ -5,16 +5,19 @@ import os.path
 numpy_inc = (os.path.dirname(numpy.__file__) +
              '/core/include/numpy')
 
-module1 = Extension('spherematch',
-                    sources = ['pyspherematch.c'],
-                    include_dirs = [ numpy_inc,
-                                     '../util', '.',
-                                     ],
-                    extra_objects = ['libkd-noio.a',
-                                     '../util/libanutils.a' ])
+c_module = Extension('spherematch_c',
+                     sources = ['pyspherematch.c'],
+                     include_dirs = [ numpy_inc,
+                                      '../util', '.', ],
+                     extra_objects = ['libkd-noio.a',
+                                      '../util/libanutils.a' ])
 
-setup(name = 'PackageName',
+setup(name = 'Kdtree matching in Python',
       version = '1.0',
-      description = 'This is a demo package',
-      ext_modules = [module1])
+      description = 'This package finds near neighbours in two sets of points',
+      author = 'Astrometry.net (Dustin Lang)',
+      author_email = 'dstn@cs.toronto.edu',
+      url = 'http://astrometry.net',
+      py_modules = [ 'spherematch' ],
+      ext_modules = [c_module])
 

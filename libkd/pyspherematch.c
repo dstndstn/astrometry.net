@@ -158,8 +158,8 @@ static PyMethodDef spherematchMethods[] = {
 };
 
 PyMODINIT_FUNC
-initspherematch(void) {
-    Py_InitModule("spherematch", spherematchMethods);
+initspherematch_c(void) {
+    Py_InitModule("spherematch_c", spherematchMethods);
 
     import_array();
 }

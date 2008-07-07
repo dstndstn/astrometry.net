@@ -3,25 +3,20 @@ from numpy import *
 from numpy.random import rand
 #from pylab import *
 
-N1 = 100
-N2 = 100
+N1 = 1000
+N2 = 1000
 D = 2
 r = 0.02
 
 x1 = rand(N1, D)
 x2 = rand(N2, D)
 
-kd1 = spherematch.kdtree_build(x1)
-kd2 = spherematch.kdtree_build(x2)
+inds = spherematch.match(x1, x2, r)
 
-inds = spherematch.match(kd1, kd2, r)
 print 'C: found', len(inds), 'pairs'
 
 order = argsort(inds[:,0]*N2 + inds[:,1])
 inds = inds[order]
-
-spherematch.kdtree_free(kd1)
-spherematch.kdtree_free(kd2)
 
 pairs = []
 for i in range(N1):

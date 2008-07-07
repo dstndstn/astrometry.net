@@ -61,24 +61,6 @@ INTERNALS_NOIO := \
 	kdint_dds_noio.o \
 	kdint_dss_noio.o
 
-PYSPHEREMATCH_OBJ := pyspherematch.o
-
-NUMPY_BASE := $(shell python -c "import numpy; import os.path; print os.path.dirname(numpy.__file__)")
-NUMPY_INC := $(NUMPY_BASE)/core/include/numpy
-
-# FIXME
-PYTHON_INC := /opt/local/include/python2.5
-
-spherematch.so: pyspherematch.c setup.py $(LIBKD_NOIO)
-	python setup.py build --force --build-base build --build-platlib build/lib
-	cp build/lib/spherematch.so $@
-
-#$(CC) $(CFLAGS) -I$(PYTHON_INC) -I$(NUMPY_INC) -c $< -o $@
-
-#SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
-#libpyspherematch.so: $(PYSPHEREMATCH_OBJ) $(LIBKD_NOIO)
-#	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
-
 DEP_OBJ := $(KD) $(KD_FITS) $(INTERNALS) $(INTERNALS_NOIO)
 
 %_noio.o: %.c
@@ -95,6 +77,14 @@ $(LIBKD_NOIO): $(KD) $(INTERNALS_NOIO)
 	-rm -f $@
 	$(AR) rc $@ $^
 	$(RANLIB) $@
+
+PYSPHEREMATCH_OBJ := pyspherematch.o
+
+spherematch_c.so: pyspherematch.c setup.py $(LIBKD_NOIO) $(ANUTILS_LIB)
+	python setup.py build --force --build-base build --build-platlib build/lib
+	cp build/lib/spherematch_c.so $@
+
+DEP_OBJ += $(PYSPHEREMATCH_OBJ)
 
 checktree: checktree.o $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
