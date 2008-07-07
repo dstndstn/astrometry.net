@@ -421,15 +421,6 @@ void blind_run(blind_t* bp) {
 		free_matchobj(mo);
 	}
 	bl_remove_all(bp->solutions);
-
-	if (bp->donescript) {
-		int rtn = system(bp->donescript);
-		if (rtn == -1) {
-			logerr("Donescript failed.\n");
-		} else {
-			logmsg("Donescript returned %i.\n", rtn);
-		}
-	}
 }
 
 void blind_setup_logging(blind_t* bp) {
@@ -628,7 +619,6 @@ void blind_log_run_parameters(blind_t* bp) {
 		logverb("verify %s\n", sl_get(bp->verify_wcsfiles, i));
 	logverb("fieldid %i\n", bp->fieldid);
 	logverb("matchfname %s\n", bp->matchfname);
-	logverb("donescript %s\n", bp->donescript);
 	logverb("solved_in %s\n", bp->solved_in);
 	logverb("solved_out %s\n", bp->solved_out);
 	logverb("solvedserver %s\n", bp->solvedserver);
@@ -670,7 +660,6 @@ void blind_cleanup(blind_t* bp) {
 	bl_free(bp->verify_wcs_list);
 
 	free(bp->cancelfname);
-	free(bp->donescript);
 	free(bp->fieldfname);
 	free(bp->fieldid_key);
 	free(bp->indexrdlsfname);
