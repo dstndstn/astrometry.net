@@ -360,8 +360,6 @@ void blind_run(blind_t* bp) {
         }
 	}
 
-	verify_init();
-
 	// Start solving...
 	if (bp->indexes_inparallel) {
 
@@ -418,8 +416,6 @@ void blind_run(blind_t* bp) {
 			sp->index = NULL;
 		}
 	}
-
-	verify_cleanup();
 
 	// Clean up.
     // verified:

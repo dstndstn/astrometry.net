@@ -51,8 +51,4 @@ verify_field_t* verify_field_preprocess(double* field, int NF);
 
 void verify_field_free(verify_field_t* vf);
 
-void verify_init();
-
-void verify_cleanup();
-
 #endif

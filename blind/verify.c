@@ -26,9 +26,6 @@
 #include "mathutil.h"
 #include "keywords.h"
 
-void verify_init() {}
-void verify_cleanup() {}
-
 #define DEBUGVERIFY 0
 #if DEBUGVERIFY
 #define debug(args...) fprintf(stderr, args)
