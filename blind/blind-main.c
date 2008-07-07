@@ -61,11 +61,6 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 
-        if (bp->quiet)
-            log_set_level(LOG_ERROR);
-        else if (bp->verbose)
-            log_set_level(LOG_VERB);
-
 		if (!blind_parameters_are_sane(bp, sp)) {
 			exit(-1);
 		}
@@ -74,16 +69,12 @@ int main(int argc, char *argv[]) {
             goto clean;
 		}
 
-		// Log this run's parameters
-        if (!bp->quiet) {
-            logmsg("%s params:\n", progname);
-            blind_log_run_parameters(bp);
-        }
+        logverb("blind solver params:\n", progname);
+        blind_log_run_parameters(bp);
 
 		blind_run(bp);
 
-		if (!bp->quiet)
-			toc();
+        toc();
 
 		if (bp->hit_total_timelimit)
 			break;
@@ -219,10 +210,6 @@ static int read_parameters(blind_t* bp)
 		} else if (is_word(line, "solvedserver ", &nextword)) {
 			free(bp->solvedserver);
 			bp->solvedserver = strdup(nextword);
-		} else if (is_word(line, "silent", &nextword)) {
-			bp->silent = TRUE;
-		} else if (is_word(line, "quiet", &nextword)) {
-			bp->quiet = TRUE;
 		} else if (is_word(line, "verbose", &nextword)) {
 			bp->verbose = TRUE;
 		} else if (is_word(line, "tweak_skipshift", &nextword)) {

@@ -476,7 +476,6 @@ bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job, bool verbose) {
     // must be in this order because init_parameters handily zeros out sp
     solver_set_default_values(sp);
 
-    bp->quiet = !verbose;
     bp->verbose = verbose;
 
     sp->field_maxx = qfits_header_getdouble(hdr, "IMAGEW", dnil);

@@ -547,6 +547,7 @@ void blind_log_run_parameters(blind_t* bp) {
 	solver_t* sp = &(bp->solver);
 	int i;
 
+    logverb("blind solver run parameters:\n");
 	logverb("fields ");
 	for (i = 0; i < il_size(bp->fieldlist); i++)
 		logverb("%i ", il_get(bp->fieldlist, i));
@@ -581,7 +582,6 @@ void blind_log_run_parameters(blind_t* bp) {
 	logverb("ycolname %s\n", bp->ycolname);
 	logverb("maxquads %i\n", sp->maxquads);
 	logverb("maxmatches %i\n", sp->maxmatches);
-	logverb("quiet %i\n", bp->quiet);
 	logverb("verbose %i\n", bp->verbose);
 	logverb("cpulimit %i\n", bp->cpulimit);
 	logverb("timelimit %i\n", bp->timelimit);
@@ -633,8 +633,6 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree_t* starkd) {
 	twee = tweak_new();
     if (bp->verbose)
         twee->verbose = TRUE;
-    if (bp->quiet)
-        twee->quiet = TRUE;
 
 	if (bp->verify_dist2 > 0.0)
 		twee->jitter = distsq2arcsec(bp->verify_dist2);

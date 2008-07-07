@@ -543,8 +543,6 @@ static int job_write_blind_input(job_t* job, FILE* fout, backend_t* backend)
     app_min_default = deg2arcsec(backend->minwidth) / job->imagew;
     app_max_default = deg2arcsec(backend->maxwidth) / job->imagew;
 
-    if (!verbose)
-        WRITE(fout, "quiet\n");
     if (job->timelimit)
         WRITE(fout, "timelimit %i\n", job->timelimit);
     if (job->cpulimit)
