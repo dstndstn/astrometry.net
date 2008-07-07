@@ -422,16 +422,6 @@ void blind_run(blind_t* bp) {
 	}
 	bl_remove_all(bp->solutions);
 
-	if (bp->donefname) {
-		FILE* fdone = NULL;
-		logmsg("Writing marker file %s...\n", bp->donefname);
-		fdone = fopen(bp->donefname, "wb");
-		if (fdone)
-			fclose(fdone);
-		else
-			logerr("Failed to write marker file %s: %s\n", bp->donefname, strerror(errno));
-	}
-
 	if (bp->donescript) {
 		int rtn = system(bp->donescript);
 		if (rtn == -1) {
@@ -638,7 +628,6 @@ void blind_log_run_parameters(blind_t* bp) {
 		logverb("verify %s\n", sl_get(bp->verify_wcsfiles, i));
 	logverb("fieldid %i\n", bp->fieldid);
 	logverb("matchfname %s\n", bp->matchfname);
-	logverb("donefname %s\n", bp->donefname);
 	logverb("donescript %s\n", bp->donescript);
 	logverb("solved_in %s\n", bp->solved_in);
 	logverb("solved_out %s\n", bp->solved_out);
@@ -681,7 +670,6 @@ void blind_cleanup(blind_t* bp) {
 	bl_free(bp->verify_wcs_list);
 
 	free(bp->cancelfname);
-	free(bp->donefname);
 	free(bp->donescript);
 	free(bp->fieldfname);
 	free(bp->fieldid_key);
