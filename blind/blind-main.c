@@ -278,9 +278,6 @@ static int read_parameters(blind_t* bp)
 			sp->distractor_ratio = atof(nextword);
 		} else if (is_word(line, "fieldid ", &nextword)) {
 			bp->fieldid = atoi(nextword);
-		} else if (is_word(line, "start ", &nextword)) {
-			free(bp->startfname);
-			bp->startfname = strdup(nextword);
 		} else if (is_word(line, "done ", &nextword)) {
 			free(bp->donefname);
 			bp->donefname = strdup(nextword);

@@ -42,7 +42,7 @@ struct blind_params {
 	// Filenames
 	char *fieldfname;
 	char *matchfname, *indexrdlsfname;
-	char *startfname, *donefname, *donescript, *logfname;
+	char *donefname, *donescript, *logfname;
     char *corr_fname;
 
 	// WCS filename template (sprintf format with %i for field number)

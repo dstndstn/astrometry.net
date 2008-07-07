@@ -251,17 +251,6 @@ void blind_run(blind_t* bp) {
 	int i, I;
     int Nindexes;
 
-	// Write the start file.
-	if (bp->startfname) {
-		FILE* fstart = NULL;
-		logmsg("Writing marker file %s...\n", bp->startfname);
-		fstart = fopen(bp->startfname, "wb");
-		if (fstart)
-			fclose(fstart);
-		else
-			logerr("Failed to write marker file %s: %s\n", bp->startfname, strerror(errno));
-	}
-
 	// Record current time for total wall-clock time limit.
 	bp->time_total_start = time(NULL);
 
@@ -649,7 +638,6 @@ void blind_log_run_parameters(blind_t* bp) {
 		logverb("verify %s\n", sl_get(bp->verify_wcsfiles, i));
 	logverb("fieldid %i\n", bp->fieldid);
 	logverb("matchfname %s\n", bp->matchfname);
-	logverb("startfname %s\n", bp->startfname);
 	logverb("donefname %s\n", bp->donefname);
 	logverb("donescript %s\n", bp->donescript);
 	logverb("solved_in %s\n", bp->solved_in);
@@ -704,7 +692,6 @@ void blind_cleanup(blind_t* bp) {
 	free(bp->solvedserver);
 	free(bp->solved_in);
 	free(bp->solved_out);
-	free(bp->startfname);
 	free(bp->wcs_template);
 	free(bp->xcolname);
 	free(bp->ycolname);
