@@ -152,7 +152,7 @@ void test1() {
     solver->funits_lower = 0.1;
     solver->funits_upper = 10;
 
-    pl_append(solver->indexes, &index);
+    solver_add_index(solver, &index);
     solver->field = field;
     solver->nfield = sizeof(field) / (2 * sizeof(double));
 

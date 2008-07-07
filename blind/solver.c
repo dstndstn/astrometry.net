@@ -90,6 +90,10 @@ static void update_timeused(solver_t* sp) {
 		sp->timeused = 0.0;
 }
 
+void solver_add_index(solver_t* solver, index_t* index) {
+    pl_append(solver->indexes, index);
+}
+
 void solver_reset_best_match(solver_t* sp) {
     // we don't really care about very bad best matches...
 	sp->best_logodds = 0;

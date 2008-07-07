@@ -50,7 +50,7 @@ struct solver_t {
 	// FIELDS REQUIRED FROM THE CALLER BEFORE CALLING SOLVER_RUN
 	// =========================================================
 	
-	// The set of indices.  Caller must add new indices.
+	// The set of indexes.  Caller must add with solver_add_index()
 	pl* indexes;
 
 	// The field as x1,y1,x2,y2, etc.
@@ -180,6 +180,7 @@ typedef struct solver_t solver_t;
 solver_t* solver_new();
 void      solver_set_default_values(solver_t* solver);
 void      solver_free(solver_t*);
+void solver_add_index(solver_t* solver, index_t* index);
 void      solver_compute_quad_range(solver_t* solver, index_t* index, double*, double*);
 void      solver_run(solver_t* solver);
 void solver_reset_best_match(solver_t* sp);

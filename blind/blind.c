@@ -312,7 +312,7 @@ void blind_run(blind_t* bp) {
                     done_with_index(bp, I, index);
 					continue;
 				}
-				pl_append(sp->indexes, index);
+                solver_add_index(sp, index);
 				sp->index = index;
 				logmsg("Verifying WCS with index %i of %i\n",  I + 1, sl_size(bp->indexnames));
 				// Do it!
@@ -347,7 +347,7 @@ void blind_run(blind_t* bp) {
         // Add all the indexes...
         for (I=0; I<Nindexes; I++) {
             index_t* index = get_index(bp, I);
-			pl_append(sp->indexes, index);
+            solver_add_index(sp, index);
 		}
 
 		// Record current CPU usage.
@@ -380,7 +380,7 @@ void blind_run(blind_t* bp) {
 
 			// Load the index...
             index = get_index(bp, I);
-			pl_append(sp->indexes, index);
+            solver_add_index(sp, index);
 			logverb("Trying index %s...\n", index->meta.indexname);
 
 			// Record current CPU usage.
