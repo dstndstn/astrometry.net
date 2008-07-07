@@ -1209,13 +1209,13 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 }
 
 static bool is_field_solved(blind_t* bp, int fieldnum) {
+  bool solved = FALSE;
     if (bp->solved_in) {
-        logverb("Checking %s field %i to see if the field is solved: %s.\n",
-                bp->solved_in, fieldnum,
-                (solvedfile_get(bp->solved_in, fieldnum) ? "yes" : "no"));
+      solved = solvedfile_get(bp->solved_in, fieldnum);
+      logverb("Checking %s field %i to see if the field is solved: %s.\n",
+	      bp->solved_in, fieldnum, (solved ? "yes" : "no"));
     }
-    if (bp->solved_in &&
-        (solvedfile_get(bp->solved_in, fieldnum) == 1)) {
+    if (solved) {
         // file exists; field has already been solved.
         logmsg("Field %i: solvedfile %s: field has been solved.\n", fieldnum, bp->solved_in);
         return TRUE;

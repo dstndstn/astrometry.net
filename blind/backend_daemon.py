@@ -83,6 +83,14 @@ if __name__ == '__main__':
     port = options.port
     configfn = options.configfn
 
+    server_address = ('127.0.0.1', port)
+    request_handler_class = BackendHandler
+    ss = ThreadingTCPServer(server_address, request_handler_class)
+    ss.backend = _backend
+    print
+    print 'Waiting for network connections on', ss.server_address
+    print
+
     _backend.log_init(3)
     _backend.log_set_thread_specific()
 
@@ -91,16 +99,11 @@ if __name__ == '__main__':
         print 'Failed to initialize backend.'
         sys.exit(-1)
 
-    server_address = ('127.0.0.1', port)
-
-    request_handler_class = BackendHandler
-    ss = ThreadingTCPServer(server_address, request_handler_class)
-    ss.backend = _backend
+    # ??
+    ss.daemon_threads = True
     print
     print 'Waiting for network connections on', ss.server_address
     print
-    # ??
-    ss.daemon_threads = True
 
     ss.serve_forever()
 

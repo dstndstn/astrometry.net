@@ -82,7 +82,7 @@ PIPELINE := usnobtofits tycho2tofits build-an-catalog hpowned cut-an \
 	wcsinfo fits-guess-scale agreeable new-wcs get-wcs \
 	augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
 	certifiable wcs-annotate get-healpix 2masstofits nomadtofits \
-	merge-index index-to-table endian-flip-index
+	merge-index index-to-table endian-flip-index setsolved
 
 PROGS := backend image2xy
 
@@ -461,6 +461,8 @@ wcsinfo: wcsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) \
 		$(QFITS_LIB)
 
 printsolved: printsolved.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB) 
+
+setsolved: setsolved.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB) 
 
 mergesolved: mergesolved.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 
