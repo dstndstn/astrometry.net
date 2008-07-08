@@ -189,8 +189,6 @@ static int read_parameters(blind_t* bp) {
 		} else if (is_word(line, "correspondences ", &nextword)) {
 			free(bp->corr_fname);
 			bp->corr_fname = strdup(nextword);
-		} else if (is_word(line, "indexrdls_expand ", &nextword)) {
-			bp->indexrdls_expand = atof(nextword);
 		} else if (is_word(line, "best_only", &nextword)) {
 			bp->best_hit_only = TRUE;
 		} else if (is_word(line, "solved ", &nextword)) {

@@ -22,12 +22,6 @@
 #include <math.h>
 #include <sys/param.h>
 
-/*
- #include <gsl/gsl_linalg.h>
- #include <gsl/gsl_matrix.h>
- #include <gsl/gsl_vector.h>
- #include <gsl/gsl_blas.h>
- */
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_vector_double.h>
 
@@ -228,6 +222,10 @@ tweak_t* tweak_new() {
 	return t;
 }
 
+void tweak_iterate_to_order(tweak_t* t) {
+    
+}
+
 void tweak_print_the_state(unsigned int state) {
 	if (state & TWEAK_HAS_SIP )
 		printf("TWEAK_HAS_SIP, ");
@@ -397,7 +395,7 @@ void tweak_clear_image_xy(tweak_t* t) {
 }
 
 // tell us (from outside tweak) where the catalog stars are
-void tweak_push_ref_ad(tweak_t* t, double* a, double *d, int n) {
+void tweak_push_ref_ad(tweak_t* t, const double* a, const double *d, int n) {
 	assert(a);
 	assert(d);
 	assert(n);
@@ -412,48 +410,42 @@ void tweak_push_ref_ad(tweak_t* t, double* a, double *d, int n) {
 	t->state |= TWEAK_HAS_REF_AD;
 }
 
-// tell us (from outside tweak) where the catalog stars are
-void tweak_ref_find_xyz_from_ad(tweak_t* t) {
+static void ref_xyz_from_ad(tweak_t* t) {
 	int i;
 	assert(t->state & TWEAK_HAS_REF_AD);
 	assert(!t->xyz_ref);
 	t->xyz_ref = malloc(sizeof(double) * 3 * t->n_ref);
-	for (i = 0; i < t->n_ref; i++) {
-		double *pt = t->xyz_ref + 3 * i;
-		radecdeg2xyzarr(t->a_ref[i], t->d_ref[i], pt);
-	}
+    assert(t->xyz_ref);
+	for (i = 0; i < t->n_ref; i++)
+		radecdeg2xyzarr(t->a_ref[i], t->d_ref[i], t->xyz_ref + 3 * i);
+	t->state |= TWEAK_HAS_REF_XYZ;
+}
+
+static void ref_ad_from_xyz(tweak_t* t) {
+	int i, n;
+	assert(t->state & TWEAK_HAS_REF_XYZ);
+	assert(!t->a_ref);
+	assert(!t->d_ref);
+    n = t->n_ref;
+    t->a_ref = malloc(sizeof(double) * n);
+    t->d_ref = malloc(sizeof(double) * n);
+    assert(t->a_ref);
+    assert(t->d_ref);
+	for (i=0; i<n; i++)
+        xyzarr2radecdeg(t->xyz_ref + 3*i, t->a_ref + i, t->d_ref + i);
 	t->state |= TWEAK_HAS_REF_XYZ;
 }
 
 // tell us (from outside tweak) where the catalog stars are
-void tweak_push_ref_xyz(tweak_t* t, double* xyz, int n) {
-	double *ra, *dec;
-	int i;
-
-	tweak_clear_ref_ad(t);
-
+void tweak_push_ref_xyz(tweak_t* t, const double* xyz, int n) {
 	assert(xyz);
 	assert(n);
-
+	tweak_clear_ref_ad(t);
 	assert(!t->xyz_ref);
 	t->xyz_ref = malloc(sizeof(double) * 3 * n);
-	memcpy(t->xyz_ref, xyz, 3*n*sizeof(double));
-
-	ra = malloc(sizeof(double) * n);
-	dec = malloc(sizeof(double) * n);
-	assert(ra);
-	assert(dec);
-
-	for (i = 0; i < n; i++) {
-		double *pt = xyz + 3 * i;
-		xyzarr2radecdeg(pt, ra+i, dec+i);
-	}
-
-	t->a_ref = ra;
-	t->d_ref = dec;
+	assert(t->xyz_ref);
 	t->n_ref = n;
-
-	t->state |= TWEAK_HAS_REF_AD;
+	memcpy(t->xyz_ref, xyz, 3*n*sizeof(double));
 	t->state |= TWEAK_HAS_REF_XYZ;
 }
 
@@ -1354,9 +1346,15 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 	want(TWEAK_HAS_REF_AD) {
 		ensure(TWEAK_HAS_REF_XYZ);
 		logverb("Satisfying TWEAK_HAS_REF_AD\n");
-		logerr("FIXME!\n");
-        assert(0);
-		//done(TWEAK_HAS_REF_AD);
+        ref_ad_from_xyz(t);
+		done(TWEAK_HAS_REF_AD);
+	}
+
+	want(TWEAK_HAS_REF_XYZ) {
+        ensure(TWEAK_HAS_REF_AD);
+        logverb("Satisfying TWEAK_HAS_REF_XYZ\n");
+        ref_xyz_from_ad(t);
+		done(TWEAK_HAS_REF_XYZ);
 	}
 
 	want(TWEAK_HAS_REF_XY) {
@@ -1398,13 +1396,6 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 		for (i = 0; i < t->n; i++)
 			radecdeg2xyzarr(t->a[i], t->d[i], t->xyz + 3*i);
 		done(TWEAK_HAS_IMAGE_XYZ);
-	}
-
-	want(TWEAK_HAS_REF_XYZ) {
-        logverb("Satisfying TWEAK_HAS_REF_XYZ\n");
-        ensure(TWEAK_HAS_REF_AD);
-        tweak_ref_find_xyz_from_ad(t);
-		done(TWEAK_HAS_REF_XYZ);
 	}
 
 	want(TWEAK_HAS_COARSLY_SHIFTED) {
@@ -1478,7 +1469,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 	return -1;
 }
 
-void tweak_push_wcs_tan(tweak_t* t, tan_t* wcs) {
+void tweak_push_wcs_tan(tweak_t* t, const tan_t* wcs) {
 	if (!t->sip)
 		t->sip = sip_create();
 	memcpy(&(t->sip->wcstan), wcs, sizeof(tan_t));

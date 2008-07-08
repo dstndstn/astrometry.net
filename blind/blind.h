@@ -102,7 +102,6 @@ struct blind_params {
 	// Output files
 	matchfile* mf;
 	rdlist_t* indexrdls;
-	double indexrdls_expand;
 
     // List of MatchObjs with logodds >= logodds_tokeep
     bl* solutions;

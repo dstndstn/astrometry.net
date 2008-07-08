@@ -21,6 +21,7 @@
 #include <assert.h>
 
 #include "starkd.h"
+#include "kdtree.h"
 #include "kdtree_fits_io.h"
 #include "starutil.h"
 #include "fitsbin.h"
@@ -35,6 +36,41 @@ static startree_t* startree_alloc() {
 		return NULL;
 	}
 	return s;
+}
+
+void startree_search(startree_t* s, double* xyzcenter, double radius2,
+                     double** xyzresults, double** radecresults, int* nresults) {
+    kdtree_qres_t* res = NULL;
+    double* xyz;
+    int i, N;
+
+    res = kdtree_rangesearch_options(s->tree, xyzcenter, radius2,
+                                     KD_OPTIONS_SMALL_RADIUS |
+                                     KD_OPTIONS_RETURN_POINTS);
+    if (!res || !res->nres) {
+        if (xyzresults)
+            *xyzresults = NULL;
+        if (radecresults)
+            *radecresults = NULL;
+        *nresults = 0;
+        return;
+    }
+
+    xyz = res->results.d;
+    N = res->nres;
+    *nresults = N;
+
+    if (radecresults) {
+        *radecresults = malloc(N * 2 * sizeof(double));
+        for (i=0; i<N; i++)
+            xyzarr2radecdegarr(xyz + i*3, (*radecresults) + i*2);
+    }
+    if (xyzresults) {
+        // Steal the results array.
+        *xyzresults = xyz;
+        res->results.d = NULL;
+    }
+    kdtree_free_query(res);
 }
 
 int startree_N(startree_t* s) {

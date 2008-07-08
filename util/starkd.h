@@ -49,6 +49,9 @@ typedef struct startree_s startree_t;
 
 startree_t* startree_open(char* fn);
 
+void startree_search(startree_t* s, double* xyzcenter, double radius2,
+                     double** xyzresults, double** radecresults, int* nresults);
+
 /*
  void startree_close_starids(startree_t* s);
  void startree_close_motions(startree_t* s);

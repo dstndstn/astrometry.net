@@ -122,16 +122,15 @@ typedef struct tweak_s {
 
 tweak_t* tweak_new();
 void tweak_init(tweak_t*);
-void tweak_push_wcs_tan(tweak_t* t, tan_t* wcs);
-void tweak_push_ref_xyz(tweak_t* t, double* xyz, int n);
+void tweak_push_wcs_tan(tweak_t* t, const tan_t* wcs);
+void tweak_push_ref_xyz(tweak_t* t, const double* xyz, int n);
+void tweak_push_ref_ad(tweak_t* t, const double* a, const double *d, int n);
+void tweak_push_image_xy(tweak_t* t, const starxy_t* xy);
+
 unsigned int tweak_advance_to(tweak_t* t, unsigned int flag);
 void tweak_clear(tweak_t* t);
 void tweak_dump_ascii(tweak_t* t);
 void tweak_skip_shift(tweak_t* t);
-
-void tweak_push_image_xy(tweak_t* t, const starxy_t* xy);
-
-void tweak_push_ref_ad(tweak_t* t, double* a, double *d, int n);
 void tweak_print_state(tweak_t* t);
 void tweak_go_to(tweak_t* t, unsigned int flag);
 void tweak_clear_correspondences(tweak_t* t);
@@ -140,5 +139,7 @@ void tweak_clear_image_ad(tweak_t* t);
 void tweak_clear_ref_xy(tweak_t* t);
 void tweak_clear_image_xyz(tweak_t* t);
 void tweak_free(tweak_t* t);
+
+void tweak_iterate_to_order(tweak_t* t);
 
 #endif

@@ -66,7 +66,6 @@ static bool is_field_solved(blind_t* bp, int fieldnum);
 static int write_solutions(blind_t* bp);
 static void solved_field(blind_t* bp, int fieldnum);
 static int compare_matchobjs(const void* v1, const void* v2);
-static void search_indexrdls(blind_t* bp, MatchObj* mo);
 static void remove_duplicate_solutions(blind_t* bp);
 static void free_matchobj(MatchObj* mo);
 
@@ -599,14 +598,9 @@ void blind_cleanup(blind_t* bp) {
 	free(bp->ycolname);
 }
 
-static sip_t* tweak(blind_t* bp, MatchObj* mo, startree_t* starkd) {
+static sip_t* tweak(blind_t* bp, MatchObj* mo, const double* starxyz, int nstars) {
 	solver_t* sp = &(bp->solver);
 	tweak_t* twee = NULL;
-	double* starxyz;
-	int nstars;
-	kdtree_qres_t* res = NULL;
-	double fieldcenter[3];
-	double fieldr2;
 	sip_t* sip = NULL;
 
 	logmsg("Tweaking!\n");
@@ -619,27 +613,12 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree_t* starkd) {
 		twee->jitter = hypot(mo->scale * sp->verify_pix, sp->index->meta.index_jitter);
 		logverb("Star jitter: %g arcsec.\n", twee->jitter);
 	}
-	// Set tweak's jitter to 6 sigmas.
-	//twee->jitter *= 6.0;
 	logverb("Setting tweak jitter: %g arcsec.\n", twee->jitter);
 
-	// pull out the field coordinates into separate X and Y arrays.
+    // Image coords:
     tweak_push_image_xy(twee, sp->fieldxy);
 	logverb("Pushing %i image coordinates.\n", starxy_n(sp->fieldxy));
 
-	// find all the index stars that are inside the circle that bounds
-	// the field.
-	star_midpoint(fieldcenter, mo->sMin, mo->sMax);
-	fieldr2 = distsq(fieldcenter, mo->sMin, 3);
-	// 1.05 is a little safety factor.
-	res = kdtree_rangesearch_options(starkd->tree, fieldcenter,
-	                                 fieldr2 * 1.05,
-	                                 KD_OPTIONS_SMALL_RADIUS |
-	                                 KD_OPTIONS_RETURN_POINTS);
-	if (!res || !res->nres)
-		goto bailout;
-	starxyz = res->results.d;
-	nstars = res->nres;
 	logverb("Pushing %i star coordinates.\n", nstars);
 	tweak_push_ref_xyz(twee, starxyz, nstars);
 
@@ -688,10 +667,6 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree_t* starkd) {
 			}
 		}
 	}
-	fflush(stdout);
-	fflush(stderr);
-
-
 	logverb("Done tweaking!\n");
 
 	// Steal the resulting SIP structure
@@ -700,13 +675,11 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree_t* starkd) {
 	twee->sip = NULL;
 
  bailout:
-	kdtree_free_query(res);
 	tweak_free(twee);
 	return sip;
 }
 
-static void print_match(blind_t* bp, MatchObj* mo)
-{
+static void print_match(blind_t* bp, MatchObj* mo) {
 	int Nmin = MIN(mo->nindex, mo->nfield);
 	int ndropout = Nmin - mo->noverlap - mo->nconflict;
 	logverb("  logodds ratio %g (%g), %i match, %i conflict, %i dropout, %i index.\n",
@@ -730,12 +703,33 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 
     logverb("Pixel scale: %g arcsec/pix.\n", mo->scale);
 
-	// Tweak, if requested.
-	if (bp->do_tweak)
-		mo->sip = tweak(bp, mo, sp->index->starkd);
-	// Gather stars for index rdls, if requested.
-	if (bp->indexrdlsfname)
-		search_indexrdls(bp, mo);
+    if (bp->do_tweak || bp->indexrdlsfname) {
+        // Gather stars that are within range.
+        double* xyz;
+        double** pxyz = NULL;
+        double** pradec = NULL;
+        int nstars;
+        double rad2, safety;
+
+        if (bp->do_tweak)
+            pxyz = &xyz;
+        if (bp->indexrdlsfname)
+            pradec = &(mo->indexrdls);
+            
+        // add a small margin.
+        safety = 1.05;
+        rad2 = square(safety * mo->radius);
+
+        startree_search(sp->index->starkd, mo->center, rad2, pxyz, pradec, &nstars);
+
+        if (bp->indexrdlsfname)
+            mo->nindexrdls = nstars;
+
+        if (bp->do_tweak) {
+            mo->sip = tweak(bp, mo, xyz, nstars);
+            free(xyz);
+        }
+    }
 
     ind = bl_insert_sorted(bp->solutions, mo, compare_matchobjs);
     ourmo = bl_access(bp->solutions, ind);
@@ -1082,38 +1076,6 @@ static void solved_field(blind_t* bp, int fieldnum) {
     // If we're just solving a single field, and we solved it...
     if (il_size(bp->fieldlist) == 1)
         bp->single_field_solved = TRUE;
-}
-
-static void search_indexrdls(blind_t* bp, MatchObj* mo) {
-    kdtree_qres_t* res = NULL;
-    double* starxyz;
-    int nstars;
-    double* radec;
-    int i;
-    double safetyfactor;
-	solver_t* sp = &(bp->solver);
-
-    // find all the index stars that are inside the circle that bounds
-    // the field.
-    safetyfactor = 1.05;
-    if (bp->indexrdls_expand > 0.0)
-        safetyfactor *= bp->indexrdls_expand;
-    res = kdtree_rangesearch_options(sp->index->starkd->tree, mo->center,
-                                     square(mo->radius) * safetyfactor,
-                                     KD_OPTIONS_SMALL_RADIUS |
-                                     KD_OPTIONS_RETURN_POINTS);
-    if (!res || !res->nres) {
-        logmsg("No index stars found!\n");
-    }
-    starxyz = res->results.d;
-    nstars = res->nres;
-    radec = malloc(nstars * 2 * sizeof(double));
-    for (i = 0; i < nstars; i++)
-        xyzarr2radecdegarr(starxyz + i*3, radec + i*2);
-    kdtree_free_query(res);
-
-    mo->indexrdls = radec;
-    mo->nindexrdls = nstars;
 }
 
 static void free_matchobj(MatchObj* mo) {
