@@ -592,47 +592,20 @@ void blind_cleanup(blind_t* bp) {
 	free(bp->ycolname);
 }
 
-static sip_t* tweak(blind_t* bp, tan_t* wcs, const double* starradec, int nstars) {
-	solver_t* sp = &(bp->solver);
-	tweak_t* twee = NULL;
-	sip_t* sip = NULL;
-
+static sip_t* tweak(const blind_t* bp, const tan_t* wcs, const double* starradec, int nstars) {
+	const solver_t* sp = &(bp->solver);
+    double jitter;
+    sip_t* sip;
 	logmsg("Tweaking!\n");
-
-	twee = tweak_new();
-
-    twee->jitter = hypot(tan_pixel_scale(wcs) * sp->verify_pix, sp->index->meta.index_jitter);
-	logverb("Setting tweak jitter: %g arcsec.\n", twee->jitter);
-
-	twee->sip->a_order  = twee->sip->b_order  = bp->tweak_aborder;
-	twee->sip->ap_order = twee->sip->bp_order = bp->tweak_abporder;
-	twee->weighted_fit = TRUE;
-
-    // Image coords:
-	logverb("Tweaking using %i image coordinates.\n", starxy_n(sp->fieldxy));
-    tweak_push_image_xy(twee, sp->fieldxy);
-
-    // Index coords:
-	logverb("Tweaking using %i star coordinates.\n", nstars);
-	tweak_push_ref_ad_array(twee, starradec, nstars);
-
-	tweak_push_wcs_tan(twee, wcs);
-
-	if (bp->tweak_skipshift) {
-		logverb("Skipping shift operation.\n");
-		tweak_skip_shift(twee);
-	}
-
-	logverb("Begin tweaking (to order %i)...\n", bp->tweak_aborder);
-    tweak_iterate_to_order(twee, MAX(1, bp->tweak_aborder), 5);
+	logverb("Setting tweak jitter: %g arcsec.\n", jitter);
+    logverb("Using %i image stars and %i index stars.\n", starxy_n(sp->fieldxy), nstars);
+	logverb("Begin tweaking to order %i...\n", bp->tweak_aborder);
+    jitter = hypot(tan_pixel_scale(wcs) * sp->verify_pix, sp->index->meta.index_jitter);
+    sip = tweak_just_do_it(wcs, sp->fieldxy, starradec, NULL, NULL, NULL, nstars,
+                           jitter, bp->tweak_aborder, bp->tweak_abporder, 5,
+                           TRUE, bp->tweak_skipshift);
 	logverb("Done tweaking!\n");
-
-	// Steal the resulting SIP structure
-	sip = twee->sip;
-	twee->sip = NULL;
-
-	tweak_free(twee);
-	return sip;
+    return sip;
 }
 
 static void print_match(blind_t* bp, MatchObj* mo) {

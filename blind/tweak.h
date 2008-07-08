@@ -143,6 +143,13 @@ void tweak_free(tweak_t* t);
 
 void tweak_iterate_to_order(tweak_t* t, int maxorder, int iterations);
 
+sip_t* tweak_just_do_it(const tan_t* wcs, const starxy_t* imagexy,
+                        const double* starxyz,
+                        const double* star_ra, const double* star_dec,
+                        const double* star_radec,
+                        int nstars, double jitter_arcsec,
+                        int order, int inverse_order, int iterations,
+                        bool weighted, bool skip_shift);
 
 
 #endif

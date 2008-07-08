@@ -56,6 +56,46 @@
 #define KERNEL_SIZE 5
 #define KERNEL_MARG ((KERNEL_SIZE-1)/2)
 
+sip_t* tweak_just_do_it(const tan_t* wcs, const starxy_t* imagexy,
+                        const double* starxyz,
+                        const double* star_ra, const double* star_dec,
+                        const double* star_radec,
+                        int nstars, double jitter_arcsec,
+                        int order, int inverse_order, int iterations,
+                        bool weighted, bool skip_shift) {
+	tweak_t* twee = NULL;
+	sip_t* sip = NULL;
+
+	twee = tweak_new();
+    twee->jitter = jitter_arcsec;
+	twee->sip->a_order  = twee->sip->b_order  = order;
+	twee->sip->ap_order = twee->sip->bp_order = inverse_order;
+	twee->weighted_fit = weighted;
+    if (skip_shift)
+		tweak_skip_shift(twee);
+
+    tweak_push_image_xy(twee, imagexy);
+    if (starxyz)
+        tweak_push_ref_xyz(twee, starxyz, nstars);
+    else if (star_ra && star_dec)
+        tweak_push_ref_ad(twee, star_ra, star_dec, nstars);
+    else if (star_radec)
+        tweak_push_ref_ad_array(twee, star_radec, nstars);
+    else {
+        logerr("Need starxyz, (star_ra and star_dec), or star_radec");
+        return NULL;
+    }
+	tweak_push_wcs_tan(twee, wcs);
+    tweak_iterate_to_order(twee, order, iterations);
+
+	// Steal the resulting SIP structure
+	sip = twee->sip;
+	twee->sip = NULL;
+
+	tweak_free(twee);
+	return sip;
+}
+
 void get_dydx_range(double* ximg, double* yimg, int nimg,
                     double* xcat, double* ycat, int ncat,
                     double *mindx, double *mindy, double *maxdx, double *maxdy)
