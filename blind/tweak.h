@@ -46,8 +46,6 @@ enum tweak_flags {
 	TWEAK_HAS_REF_AD                = 0x40, 
 	TWEAK_HAS_AD_BAR_AND_R          = 0x80,
 	TWEAK_HAS_CORRESPONDENCES       = 0x100,
-	TWEAK_HAS_RUN_OPT               = 0x200,
-	TWEAK_HAS_RUN_RANSAC_OPT        = 0x400,
 	TWEAK_HAS_COARSLY_SHIFTED       = 0x800,
 	TWEAK_HAS_FINELY_SHIFTED        = 0x1000,
 	TWEAK_HAS_REALLY_FINELY_SHIFTED = 0x2000,
@@ -91,14 +89,6 @@ typedef struct tweak_s {
 	il* ref;
 	dl* dist2;
 	dl* weight;
-
-	// Correspondence subsets for RANSAC
-	il* maybeinliers;
-	il* bestinliers;
-	il* included;
-
-	int opt_flags;
-	double err;
 
 	// Size of Hough space for shift
 	double mindx, mindy, maxdx, maxdy;

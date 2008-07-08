@@ -288,38 +288,30 @@ void tweak_iterate_to_order(tweak_t* t, int maxorder, int iterations) {
     }
 }
 
+#define CHECK_STATE(x) if (state & x) sl_append(s, #x)
+
 void tweak_print_the_state(unsigned int state) {
-	if (state & TWEAK_HAS_SIP )
-		printf("TWEAK_HAS_SIP, ");
-	if (state & TWEAK_HAS_IMAGE_XY )
-		printf("TWEAK_HAS_IMAGE_XY, ");
-	if (state & TWEAK_HAS_IMAGE_XYZ )
-		printf("TWEAK_HAS_IMAGE_XYZ, ");
-	if (state & TWEAK_HAS_IMAGE_AD )
-		printf("TWEAK_HAS_IMAGE_AD, ");
-	if (state & TWEAK_HAS_REF_XY )
-		printf("TWEAK_HAS_REF_XY, ");
-	if (state & TWEAK_HAS_REF_XYZ )
-		printf("TWEAK_HAS_REF_XYZ, ");
-	if (state & TWEAK_HAS_REF_AD )
-		printf("TWEAK_HAS_REF_AD, ");
-	if (state & TWEAK_HAS_AD_BAR_AND_R )
-		printf("TWEAK_HAS_AD_BAR_AND_R, ");
-	if (state & TWEAK_HAS_CORRESPONDENCES)
-		printf("TWEAK_HAS_CORRESPONDENCES, ");
-	if (state & TWEAK_HAS_RUN_OPT )
-		printf("TWEAK_HAS_RUN_OPT, ");
-	if (state & TWEAK_HAS_RUN_RANSAC_OPT )
-		printf("TWEAK_HAS_RUN_RANSAC_OPT, ");
-	if (state & TWEAK_HAS_COARSLY_SHIFTED)
-		printf("TWEAK_HAS_COARSLY_SHIFTED, ");
-	if (state & TWEAK_HAS_FINELY_SHIFTED )
-		printf("TWEAK_HAS_FINELY_SHIFTED, ");
-	if (state & TWEAK_HAS_REALLY_FINELY_SHIFTED )
-		printf("TWEAK_HAS_REALLY_FINELY_SHIFTED, ");
-	if (state & TWEAK_HAS_LINEAR_CD )
-		printf("TWEAK_HAS_LINEAR_CD, ");
+    sl* s = sl_new(4);
+    char* str;
+	CHECK_STATE(TWEAK_HAS_SIP);
+	CHECK_STATE(TWEAK_HAS_IMAGE_XY);
+	CHECK_STATE(TWEAK_HAS_IMAGE_XYZ);
+	CHECK_STATE(TWEAK_HAS_IMAGE_AD);
+	CHECK_STATE(TWEAK_HAS_REF_XY);
+	CHECK_STATE(TWEAK_HAS_REF_XYZ);
+	CHECK_STATE(TWEAK_HAS_REF_AD);
+	CHECK_STATE(TWEAK_HAS_AD_BAR_AND_R);
+	CHECK_STATE(TWEAK_HAS_CORRESPONDENCES);
+	CHECK_STATE(TWEAK_HAS_COARSLY_SHIFTED);
+	CHECK_STATE(TWEAK_HAS_FINELY_SHIFTED);
+	CHECK_STATE(TWEAK_HAS_REALLY_FINELY_SHIFTED);
+	CHECK_STATE(TWEAK_HAS_LINEAR_CD);
+    str = sl_join(s, " ");
+    printf("%s\n", str);
+    sl_free2(s);
 }
+
+#undef CHECK_STATE
 
 void tweak_print_state(tweak_t* t) {
 	tweak_print_the_state(t->state);
@@ -356,17 +348,14 @@ void tweak_clear_correspondences(tweak_t* t) {
 		assert(t->image);
 		assert(t->ref);
 		assert(t->dist2);
-		assert(t->included);
 		il_free(t->image);
 		il_free(t->ref);
 		dl_free(t->dist2);
-		il_free(t->included);
 		if (t->weight)
 			dl_free(t->weight);
 		t->image    = NULL;
 		t->ref      = NULL;
 		t->dist2    = NULL;
-		t->included = NULL;
 		t->weight   = NULL;
 		t->state &= ~TWEAK_HAS_CORRESPONDENCES;
 	}
@@ -374,7 +363,6 @@ void tweak_clear_correspondences(tweak_t* t) {
 	assert(!t->ref);
 	assert(!t->dist2);
 	assert(!t->weight);
-	assert(!t->included);
 }
 
 void tweak_clear_on_sip_change(tweak_t* t) {
@@ -551,7 +539,6 @@ static void dtrs_match_callback(void* extra, int image_ind, int ref_ind, double 
 	il_append(t->image, image_ind);
 	il_append(t->ref, ref_ind);
 	dl_append(t->dist2, dist2);
-	il_append(t->included, 1);
 	if (t->weight)
 		dl_append(t->weight, exp(-dist2 / (2.0 * t->jitterd2)));
 }
@@ -581,7 +568,6 @@ void find_correspondences(tweak_t* t, double jitter) {
 	t->dist2 = dl_new(600);
 	if (t->weighted_fit)
 		t->weight = dl_new(600);
-	t->included = il_new(600);
 
 	dist = rad2dist(jitter);
 
@@ -614,8 +600,6 @@ double correspondences_rms_arcsec(tweak_t* t, int weighted) {
 		double refxyz[3];
 		double weight;
         int refi, imgi;
-		if (!il_get(t->included, i))
-			continue;
 		if (weighted && t->weight)
 			weight = dl_get(t->weight, i);
         else
@@ -648,9 +632,7 @@ double figure_of_merit(tweak_t* t, double *rmsX, double *rmsY) {
 		radecdeg2xyzarr(a, d, xyzpt);
 		radecdeg2xyzarr(t->a_ref[il_get(t->ref, i)],
 		                t->d_ref[il_get(t->ref, i)], xyzpt_ref);
-
-		if (il_get(t->included, i)) 
-            sqerr += distsq(xyzpt, xyzpt_ref, 3);
+        sqerr += distsq(xyzpt, xyzpt_ref, 3);
 	}
 	return rad2arcsec(1)*rad2arcsec(1)*sqerr;
 }
@@ -869,14 +851,13 @@ void invert_sip_polynomial(tweak_t* t) {
 
 // Run a polynomial tweak
 void do_sip_tweak(tweak_t* t) {
-	int sip_order, sip_coeffs, stride;
+	int sip_order, sip_coeffs;
 	double xyzcrval[3];
 	double cdinv[2][2];
 	double sx, sy, sU, sV, su, sv;
 	sip_t* swcs;
 	int M, N;
 	int i, j, p, q, order;
-	int row;
 	double totalweight;
 
 	gsl_matrix *mA;
@@ -894,14 +875,7 @@ void do_sip_tweak(tweak_t* t) {
 	// matrix missing the 0,0 element.
 	sip_coeffs = (sip_order + 1) * (sip_order + 2) / 2;
 
-	/* calculate how many points to use based on t->include */
-	stride = 0;
-	for (i = 0; i < il_size(t->included); i++)
-		if (il_get(t->included, i))
-			stride++;
-	assert(il_size(t->included) == il_size(t->image));
-
-	M = stride;
+	M = il_size(t->image);
 	N = sip_coeffs;
 
     if (M < N) {
@@ -1012,8 +986,7 @@ void do_sip_tweak(tweak_t* t) {
 	// Fill in matrix mA:
 	radecdeg2xyzarr(t->sip->wcstan.crval[0], t->sip->wcstan.crval[1], xyzcrval);
 	totalweight = 0.0;
-	i = -1;
-	for (row = 0; row < il_size(t->included); row++) {
+	for (i=0; i<M; i++) {
         int refi;
         double x, y;
         double xyzpt[3];
@@ -1021,12 +994,6 @@ void do_sip_tweak(tweak_t* t) {
         double u;
         double v;
         bool ok;
-
-        if (!il_get(t->included, row))
-            continue;
-        i++;
-        assert(i >= 0);
-        assert(i < M);
 
         u = t->x[il_get(t->image, i)] - t->sip->wcstan.crpix[0];
         v = t->y[il_get(t->image, i)] - t->sip->wcstan.crpix[1];
@@ -1186,177 +1153,6 @@ void do_sip_tweak(tweak_t* t) {
 	gsl_vector_free(x2);
 }
 
-// RANSAC from Wikipedia:
-// Given:
-//     data - a set of observed data points
-//     model - a model that can be fitted to data points
-//     n - the minimum number of data values required to fit the model
-//     k - the maximum number of iterations allowed in the algorithm
-//     t - a threshold value for determining when a data point fits a model
-//     d - the number of close data values required to assert that a model fits well to data
-// Return:
-//     bestfit - model parameters which best fit the data (or nil if no good model is found)
-// iterations = 0
-// bestfit = nil
-// besterr = something really large
-// while iterations < k {
-//     maybeinliers = n randomly selected values from data
-//     maybemodel = model parameters fitted to maybeinliers
-//     alsoinliers = empty set
-//     for every point in data not in maybeinliers {
-//         if point fits maybemodel with an error smaller than t
-//              add point to alsoinliers
-//     }
-//     if the number of elements in alsoinliers is > d {
-//         % this implies that we may have found a good model
-//         % now test how good it is
-//         bettermodel = model parameters fitted to all points in maybeinliers and alsoinliers
-//         thiserr = a measure of how well model fits these points
-//         if thiserr < besterr {
-//             bestfit = bettermodel
-//             besterr = thiserr
-//         }
-//     }
-//     increment iterations
-// }
-// return bestfit
-
-void do_ransac(tweak_t* t) {
-	int iterations = 0;
-	int maxiter = 500;
-
-	sip_t wcs_try, wcs_best;
-
-	double besterr = 100000000000000.;
-	int sorder = t->sip->a_order;
-	int num_free_coeffs = sorder*(sorder+1) + 4 + 2; // CD and CRVAL
-	int min_data_points = num_free_coeffs/2 + 5;
-	int set_size;
-	il* maybeinliers;
-	il* used_ref_sources;
-	il* used_image_sources;
-	int i;
-
-    //	min_data_points *= 2;
-    //	min_data_points *= 2;
-	memcpy(&wcs_try, t->sip, sizeof(sip_t));
-	memcpy(&wcs_best, t->sip, sizeof(sip_t));
-	printf("/--------------------\n");
-	printf("&&&&&&&&&&& mindatapts=%d\n", min_data_points);
-	printf("\\-------------------\n");
-	set_size = il_size(t->image);
-	assert( il_size(t->image) == il_size(t->ref) );
-	maybeinliers = il_new(30);
-    //	il* alsoinliers = il_new(4);
-
-	// we need to prevent pairing any reference star to multiple image
-	// stars, or multiple reference stars to single image stars
-	used_ref_sources = il_new(t->n_ref);
-	used_image_sources = il_new(t->n);
-
-	for (i=0; i<t->n_ref; i++) 
-		il_append(used_ref_sources, 0);
-	for (i=0; i<t->n; i++) 
-		il_append(used_image_sources, 0);
-
-	while (iterations++ < maxiter) {
-		double thiserr;
-		//		assert(t->ref);
-		printf("++++++++++ ITERATION %d\n", iterations);
-
-		// select n random pairs to use for the fit
-		il_remove_all(maybeinliers);
-		for (i=0; i<t->n_ref; i++) 
-			il_set(used_ref_sources, i, 0);
-		for (i=0; i<t->n; i++) 
-			il_set(used_image_sources, i, 0);
-		while (il_size(maybeinliers) < min_data_points) {
-			int r = rand()/(double)RAND_MAX * set_size;
-            //			printf("eeeeeeeeeeeeeeeee %d\n", r);
-			// check to see if either star in this pairing is
-			// already taken before adding this pairing
-			int ref_ind = il_get(t->ref, r);
-			int image_ind = il_get(t->image, r);
-			if (!il_get(used_ref_sources, ref_ind) &&
-			    !il_get(used_image_sources, image_ind)) {
-				il_insert_unique_ascending(maybeinliers, r);
-				il_set(used_ref_sources, ref_ind, 1);
-				il_set(used_image_sources, image_ind, 1);
-			}
-		}
-		for (i=0; i<il_size(t->included); i++) 
-			il_set(t->included, i, 0);
-		for (i=0; i<il_size(maybeinliers); i++) 
-			il_set(t->included, il_get(maybeinliers,i), 1);
-		
-		// now do a fit with our random sample selection
-		t->state &= ~TWEAK_HAS_LINEAR_CD;
-		tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
-
-		// this data is now wrong
-        tweak_clear_on_sip_change(t);
-
-		// recalc based on new SIP
-		tweak_go_to(t, TWEAK_HAS_IMAGE_AD);
-		tweak_go_to(t, TWEAK_HAS_REF_XY);
-		tweak_go_to(t, TWEAK_HAS_IMAGE_XYZ);
-
-		// rms arcsec
-		thiserr = sqrt(figure_of_merit(t,NULL,NULL) / il_size(t->ref));
-		if (thiserr < besterr) {
-			besterr = thiserr;
-		}
-
-		/*
-         // now find other samples which do well under the model fit by
-         // the random sample set.
-         il_remove_all(alsoinliers);
-         for (i=0; i<il_size(t->included); i++) {
-         if (il_get(t->included, i))
-         continue;
-         double thresh = 2.e-04; // FIXME mystery parameter
-         double image_xyz[3];
-         double ref_xyz[3];
-         int ref_ind = il_get(t->ref, i);
-         int image_ind = il_get(t->image, i);
-         double a,d;
-         pixelxy2radec(t->sip, t->x[image_ind],t->x[image_ind], &a,&d);
-         radecdeg2xyzarr(a,d,image_xyz);
-         radecdeg2xyzarr(t->a_ref[ref_ind],t->d_ref[ref_ind],ref_xyz);
-         double dx = ref_xyz[0] - image_xyz[0];
-         double dy = ref_xyz[1] - image_xyz[1];
-         double dz = ref_xyz[2] - image_xyz[2];
-         double err = dx*dx+dy*dy+dz*dz;
-         if (sqrt(err) < thresh)
-         il_append(alsoinliers, i);
-         }
-
-         // if we found a good number of points which are really close,
-         // then fit both our random sample and the other close points
-         if (10 < il_size(alsoinliers)) { // FIXME mystery parameter
-
-         printf("found extra samples %d\n", il_size(alsoinliers));
-         for (i=0; i<il_size(alsoinliers); i++) 
-         il_set(t->included, il_get(alsoinliers,i), 1);
-			
-         // FIT AGAIN
-         // FIXME put tweak here
-         if (t->err < besterr) {
-         memcpy(&wcs_best, t->sip, sizeof(sip_t));
-         besterr = t->err;
-         printf("new best error %g\n", besterr);
-         }
-         }
-         printf("error=%g besterror=%g\n", t->err, besterr);
-         */
-	}
-	printf("==============================\n");
-	printf("==============================\n");
-	printf("besterr = %g \n", besterr);
-	printf("==============================\n");
-	printf("==============================\n");
-}
-
 // Really what we want is some sort of fancy dependency system... DTDS!
 // Duct-tape dependencey system (DTDS)
 #define done(x) t->state |= x; return x;
@@ -1498,12 +1294,6 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 		done(TWEAK_HAS_LINEAR_CD);
 	}
 
-	want(TWEAK_HAS_RUN_RANSAC_OPT) {
-		ensure(TWEAK_HAS_CORRESPONDENCES);
-		do_ransac(t);
-		done(TWEAK_HAS_RUN_RANSAC_OPT);
-	}
-
 	logerr("die for dependence: ");
 	tweak_print_the_state(flag);
 	printf("\n");
@@ -1544,16 +1334,10 @@ void tweak_clear(tweak_t* t) {
 	dl_free(t->dist2);
 	if (t->weight)
 		dl_free(t->weight);
-	il_free(t->maybeinliers);
-	il_free(t->bestinliers);
-	il_free(t->included);
 	t->image = NULL;
 	t->ref = NULL;
 	t->dist2 = NULL;
 	t->weight = NULL;
-	t->maybeinliers = NULL;
-	t->bestinliers = NULL;
-	t->included = NULL;
 	kdtree_free(t->kd_image);
 	kdtree_free(t->kd_ref);
 }
