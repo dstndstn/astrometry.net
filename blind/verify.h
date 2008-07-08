@@ -25,9 +25,10 @@
 #include "starkd.h"
 #include "sip.h"
 #include "bl.h"
+#include "starxy.h"
 
 struct verify_field_t {
-    double* field;
+    const starxy_t* field;
     double* fieldcopy;
     int NF;
     kdtree_t* ftree;
@@ -47,7 +48,7 @@ void verify_hit(startree_t* skdt,
 				int dimquads,
                 bool fake_match);
 
-verify_field_t* verify_field_preprocess(double* field, int NF);
+verify_field_t* verify_field_preprocess(const starxy_t* fieldxy);
 
 void verify_field_free(verify_field_t* vf);
 

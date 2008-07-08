@@ -555,20 +555,25 @@ void tweak_push_ref_xyz(tweak_t* t, double* xyz, int n) // tell us (from outside
 	t->state |= TWEAK_HAS_REF_XYZ;
 }
 
-void tweak_push_image_xy(tweak_t* t, double* x, double *y, int n) // tell us the input dude
-{
-	tweak_clear_image_xy(t);
-
-	assert(n);
-
-	t->x = malloc(sizeof(double) * n);
-	t->y = malloc(sizeof(double) * n);
-	memcpy(t->x, x, sizeof(double)*n);
-	memcpy(t->y, y, sizeof(double)*n);
-	t->n = n;
-
+void tweak_push_image_xy(tweak_t* t, const starxy_t* xy) {
+    tweak_clear_image_xy(t);
+    t->x = starxy_copy_x(xy);
+    t->y = starxy_copy_y(xy);
+    t->n = starxy_n(xy);
 	t->state |= TWEAK_HAS_IMAGE_XY;
 }
+/*
+ void tweak_push_image_xy(tweak_t* t, const double* x, const double *y, int n) {
+ tweak_clear_image_xy(t);
+ assert(n);
+ t->x = malloc(sizeof(double) * n);
+ t->y = malloc(sizeof(double) * n);
+ memcpy(t->x, x, sizeof(double)*n);
+ memcpy(t->y, y, sizeof(double)*n);
+ t->n = n;
+ t->state |= TWEAK_HAS_IMAGE_XY;
+ }
+ */
 
 void tweak_push_hppath(tweak_t* t, char* hppath) //healpix path
 {

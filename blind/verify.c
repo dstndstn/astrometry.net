@@ -38,7 +38,7 @@
  We build a kdtree out of the field stars (in pixel space) which will be
  used during verification to find nearest-neighbours.
  */
-verify_field_t* verify_field_preprocess(double* field, int NF) {
+verify_field_t* verify_field_preprocess(const starxy_t* fieldxy) {
     verify_field_t* vf;
     int Nleaf = 5;
 
@@ -48,24 +48,23 @@ verify_field_t* verify_field_preprocess(double* field, int NF) {
         return NULL;
     }
 
-    vf->NF = NF;
-    vf->field = field;
+    vf->field = fieldxy;
 
     // Note: kdtree type: I tried U32 (duu) but it was marginally slower.
     // I didn't try U16 (dss) because we need a fair bit of accuracy here.
 
     // Make a copy of the field objects, because we're going to build a
     // kdtree out of them and that shuffles their order.
-    vf->fieldcopy = malloc(NF * 2 * sizeof(double));
+    vf->fieldcopy = starxy_copy_xy(fieldxy);
     if (!vf->fieldcopy) {
         fprintf(stderr, "Failed to copy the field.\n");
         free(vf);
         return NULL;
     }
-    memcpy(vf->fieldcopy, field, NF * 2 * sizeof(double));
 
     // Build a tree out of the field objects (in pixel space)
-    vf->ftree = kdtree_build(NULL, vf->fieldcopy, NF, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
+    vf->ftree = kdtree_build(NULL, vf->fieldcopy, starxy_n(vf->field),
+                             2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
 
     return vf;
 }
@@ -102,6 +101,7 @@ void verify_hit(startree_t* skdt,
 	kdtree_qres_t* res;
 	// number of stars in the index that are within the bounds of the field.
 	int NI;
+    int NF;
 	double* indexpix;
 
 	double* bestprob = NULL;
@@ -200,6 +200,8 @@ void verify_hit(startree_t* skdt,
 	}
 	indexpix = realloc(indexpix, NI * 2 * sizeof(double));
 
+    NF = starxy_n(vf->field);
+
 	/*
      if (DEBUGVERIFY) {
      double minx,maxx,miny,maxy;
@@ -215,7 +217,7 @@ void verify_hit(startree_t* skdt,
      minx, maxx, miny, maxy);
      }
      */
-	debug("Number of field stars: %i\n", vf->NF);
+	debug("Number of field stars: %i\n", NF);
 	debug("Number of index stars: %i\n", NI);
 
 	if (!NI) {
@@ -243,13 +245,13 @@ void verify_hit(startree_t* skdt,
 
     // Prime the array where we store conflicting-match info:
     // any match is an improvement, except for stars that form the matched quad.
-	bestprob = malloc(vf->NF * sizeof(double));
-	for (i=0; i<vf->NF; i++)
+	bestprob = malloc(NF * sizeof(double));
+	for (i=0; i<NF; i++)
 		bestprob[i] = -HUGE_VAL;
     if (!fake_match) {
         for (i=0; i<dimquads; i++) {
             assert(mo->field[i] >= 0);
-            assert(mo->field[i] < vf->NF);
+            assert(mo->field[i] < NF);
             bestprob[mo->field[i]] = HUGE_VAL;
         }
     }
@@ -260,11 +262,14 @@ void verify_hit(startree_t* skdt,
     // If we're modelling the expected noise as a Gaussian whose variance grows
     // away from the quad center, compute the required quantities...
 	if (do_gamma) {
+        double Axy[2], Bxy[2];
         // Find the midpoint of AB of the quad in pixel space.
-        qc[0] = 0.5 * (vf->field[2*mo->field[0]  ] + vf->field[2*mo->field[1]  ]);
-        qc[1] = 0.5 * (vf->field[2*mo->field[0]+1] + vf->field[2*mo->field[1]+1]);
+        starxy_get(vf->field, mo->field[0], Axy);
+        starxy_get(vf->field, mo->field[1], Bxy);
+        qc[0] = 0.5 * (Axy[0] + Bxy[0]);
+        qc[1] = 0.5 * (Axy[1] + Bxy[1]);
         // Find the radius-squared of the quad = distsq(qc, A)
-        rquad2 = distsq(vf->field + 2*mo->field[0], qc, 2);
+        rquad2 = distsq(Axy, qc, 2);
         debug("Quad radius = %g pixels\n", sqrt(rquad2));
 	}
 
@@ -346,8 +351,11 @@ void verify_hit(startree_t* skdt,
 			assert(fldind < vf->NF);
 
 			if (do_gamma) {
+                double sxy[2];
+                starxy_get(vf->field, fldind, sxy);
+
                 // Distance from the quad center of this field star:
-                R2 = distsq(vf->field+fldind*2, qc, 2);
+                R2 = distsq(sxy, qc, 2);
 
                 // Variance of a field star at that distance from the 
                 // quad center:

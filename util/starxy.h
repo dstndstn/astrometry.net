@@ -31,23 +31,29 @@ struct starxy_t {
 };
 typedef struct starxy_t starxy_t;
 
-double starxy_getx(starxy_t* f, int i);
-double starxy_gety(starxy_t* f, int i);
+double starxy_getx(const starxy_t* f, int i);
+double starxy_gety(const starxy_t* f, int i);
+
+void starxy_get(const starxy_t* f, int i, double* xy);
 
 void starxy_setx(starxy_t* f, int i, double x);
 void starxy_sety(starxy_t* f, int i, double y);
 
 void starxy_set(starxy_t* f, int i, double x, double y);
 
-int starxy_n(starxy_t* f);
+int starxy_n(const starxy_t* f);
+
+double* starxy_copy_x(const starxy_t* xy);
+double* starxy_copy_y(const starxy_t* xy);
+double* starxy_copy_xy(const starxy_t* xy);
+
+double* starxy_to_flat_array(starxy_t* xy, double* arr);
 
 starxy_t* starxy_alloc(int N, bool flux, bool back);
 
 void starxy_alloc_data(starxy_t* f, int N, bool flux, bool back);
 
 void starxy_from_dl(starxy_t* xy, dl* l, bool flux, bool back);
-
-double* starxy_to_flat_array(starxy_t* xy, double* arr);
 
 // Just free the data, not the field itself.
 void starxy_free_data(starxy_t* f);

@@ -24,6 +24,7 @@
 #include "bl.h"
 #include "sip.h"
 #include "starutil.h"
+#include "starxy.h"
 
 enum opt_flags {
 	OPT_CRVAL         = 1,
@@ -131,7 +132,10 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag);
 void tweak_clear(tweak_t* t);
 void tweak_dump_ascii(tweak_t* t);
 void tweak_skip_shift(tweak_t* t);
-void tweak_push_image_xy(tweak_t* t, double* x, double *y, int n);
+
+//void tweak_push_image_xy(tweak_t* t, const double* x, const double *y, int n);
+void tweak_push_image_xy(tweak_t* t, const starxy_t* xy);
+
 void tweak_push_hppath(tweak_t* t, char* hppath);
 void tweak_push_ref_ad(tweak_t* t, double* a, double *d, int n);
 void tweak_print_state(tweak_t* t);

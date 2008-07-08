@@ -602,8 +602,6 @@ void blind_cleanup(blind_t* bp) {
 static sip_t* tweak(blind_t* bp, MatchObj* mo, startree_t* starkd) {
 	solver_t* sp = &(bp->solver);
 	tweak_t* twee = NULL;
-	double *imgx = NULL, *imgy = NULL;
-	int i;
 	double* starxyz;
 	int nstars;
 	kdtree_qres_t* res = NULL;
@@ -626,14 +624,8 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree_t* starkd) {
 	logverb("Setting tweak jitter: %g arcsec.\n", twee->jitter);
 
 	// pull out the field coordinates into separate X and Y arrays.
-	imgx = malloc(sp->nfield * sizeof(double));
-	imgy = malloc(sp->nfield * sizeof(double));
-	for (i = 0; i < sp->nfield; i++) {
-		imgx[i] = sp->field[i * 2 + 0];
-		imgy[i] = sp->field[i * 2 + 1];
-	}
-	logverb("Pushing %i image coordinates.\n", sp->nfield);
-	tweak_push_image_xy(twee, imgx, imgy, sp->nfield);
+    tweak_push_image_xy(twee, sp->fieldxy);
+	logverb("Pushing %i image coordinates.\n", starxy_n(sp->fieldxy));
 
 	// find all the index stars that are inside the circle that bounds
 	// the field.
@@ -711,8 +703,6 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree_t* starkd) {
 
  bailout:
 	kdtree_free_query(res);
-	free(imgx);
-	free(imgy);
 	tweak_free(twee);
 	return sip;
 }
@@ -753,38 +743,28 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 	  assert(sp->index->indexname);
 	  mo->indexname = sp->index->indexname;
 	*/
-
     ind = bl_insert_sorted(bp->solutions, mo, compare_matchobjs);
     ourmo = bl_access(bp->solutions, ind);
 
-    // Ugh!!  Make our own copy of these lists...
-    /*
-     ourmo->corr_field = il_dupe(mo->corr_field);
-     ourmo->corr_index = il_dupe(mo->corr_index);
-     */
-    
     ourmo->corr_field = NULL;
     ourmo->corr_index = NULL;
     ourmo->corr_field_xy = dl_new(16);
     ourmo->corr_index_rd = dl_new(16);
 
     for (j=0; j<il_size(mo->corr_field); j++) {
-        double fxy[2];
         double ixyz[3];
         double iradec[2];
         int iindex, ifield;
 
         ifield = il_get(mo->corr_field, j);
         iindex = il_get(mo->corr_index, j);
-        //printf("  field %i -> star %i.\n", ifield, iindex);
         assert(ifield >= 0);
         assert(ifield < sp->nfield);
 
-        fxy[0] = sp->field[2*ifield + 0];
-        fxy[1] = sp->field[2*ifield + 1];
-
-        dl_append(ourmo->corr_field_xy, fxy[0]);
-        dl_append(ourmo->corr_field_xy, fxy[1]);
+        dl_append(ourmo->corr_field_xy,
+                  starxy_getx(sp->fieldxy, ifield));
+        dl_append(ourmo->corr_field_xy,
+                  starxy_gety(sp->fieldxy, ifield));
 
         startree_get(sp->index->starkd, iindex, ixyz);
         xyzarr2radecdegarr(ixyz, iradec);
@@ -918,14 +898,11 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 	gettimeofday(&last_wtime, NULL);
 
 	nfields = xylist_n_fields(bp->xyls);
-	sp->field = NULL;
 
 	for (fi = 0; fi < il_size(bp->fieldlist); fi++) {
 		int fieldnum;
 		MatchObj template ;
 		qfits_header* fieldhdr = NULL;
-        starxy_t xy;
-        int i;
 
 		fieldnum = il_get(bp->fieldlist, fi);
 
@@ -950,19 +927,11 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
             goto cleanup;
 
 		// Get the field.
-        if (!xylist_read_field(bp->xyls, &xy)) {
+        sp->fieldxy = xylist_read_field(bp->xyls, NULL);
+        if (!sp->fieldxy) {
             logerr("Failed to read xylist field.\n");
             goto cleanup;
         }
-
-        // HACK - make sp->nfield,field into an starxy_t.
-		sp->nfield = xy.N;
-		sp->field = realloc(sp->field, 2 * sp->nfield * sizeof(double));
-        for (i=0; i<xy.N; i++) {
-            sp->field[2*i + 0] = xy.x[i];
-            sp->field[2*i + 1] = xy.y[i];
-        }
-        starxy_free_data(&xy);
 
 		sp->numtries = 0;
 		sp->nummatches = 0;
@@ -1078,11 +1047,10 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		last_wtime = wtime;
 
 	cleanup:
-        { int x; x = 42; }// gcc doesn't like labels at the end of loops.
+        starxy_free(sp->fieldxy);
 	}
 
-	free(sp->field);
-	sp->field = NULL;
+    sp->fieldxy = NULL;
 }
 
 static bool is_field_solved(blind_t* bp, int fieldnum) {

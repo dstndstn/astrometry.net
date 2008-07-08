@@ -22,7 +22,7 @@
 #include <time.h>
 
 #include "starutil.h"
-#include "xylist.h"
+#include "starxy.h"
 #include "kdtree.h"
 #include "bl.h"
 #include "matchobj.h"
@@ -55,9 +55,8 @@ struct solver_t {
 	// The set of indexes.  Caller must add with solver_add_index()
 	pl* indexes;
 
-	// The field as { x_1, y_1, x_2, y_2, ..., x_nfield, y_nfield }.
-	double* field;
-	int nfield;
+	// The field to solve
+    starxy_t* fieldxy;
 
 	// Limits on the image pixel scale in arcsec per pixel.
 	double funits_lower;

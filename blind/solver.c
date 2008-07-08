@@ -71,15 +71,15 @@ static inline void sety(double* d, int ind, double val) {
 }
 
 static void field_getxy(solver_t* sp, int index, double* x, double* y) {
-	*x = sp->field[2*index];
-	*y = sp->field[2*index+1];
+	*x = starxy_getx(sp->fieldxy, index);
+	*y = starxy_gety(sp->fieldxy, index);
 }
 
 static double field_getx(solver_t* sp, int index) {
-	return sp->field[2*index];
+	return starxy_getx(sp->fieldxy, index);
 }
 static double field_gety(solver_t* sp, int index) {
-	return sp->field[2*index+1];
+	return starxy_gety(sp->fieldxy, index);
 }
 
 static void update_timeused(solver_t* sp) {
@@ -180,12 +180,13 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_match);
 
 static void check_scale(pquad* pq, solver_t* solver) {
-	double Ax, Ay, Bx, By, dx, dy;
+	double dx, dy;
+    
+    dx = (starxy_getx(solver->fieldxy, pq->fieldB) -
+          starxy_getx(solver->fieldxy, pq->fieldA));
+    dy = (starxy_gety(solver->fieldxy, pq->fieldB) -
+          starxy_gety(solver->fieldxy, pq->fieldA));
 
-	field_getxy(solver, pq->fieldA, &Ax, &Ay);
-	field_getxy(solver, pq->fieldB, &Bx, &By);
-	dx = Bx - Ax;
-	dy = By - Ay;
 	pq->scale = dx * dx + dy * dy;
 	if ((pq->scale < solver->minminAB2) ||
 			(pq->scale > solver->maxmaxAB2)) {
@@ -251,7 +252,7 @@ static void find_field_boundaries(solver_t* solver) {
 	if ((solver->field_minx == solver->field_maxx) 
 			|| (solver->field_miny == solver->field_maxy)) {
 		int i;
-		for (i = 0; i < solver->nfield; i++) {
+		for (i = 0; i < starxy_n(solver->fieldxy); i++) {
 			solver->field_minx = MIN(solver->field_minx, field_getx(solver, i));
 			solver->field_maxx = MAX(solver->field_maxx, field_getx(solver, i));
 			solver->field_miny = MIN(solver->field_miny, field_gety(solver, i));
@@ -264,7 +265,7 @@ static void find_field_boundaries(solver_t* solver) {
 
 void solver_preprocess_field(solver_t* solver) {
 	// precompute a kdtree over the field
-	solver->vf = verify_field_preprocess(solver->field, solver->nfield);
+	solver->vf = verify_field_preprocess(solver->fieldxy);
 	find_field_boundaries(solver);
 }
 
@@ -348,7 +349,7 @@ void solver_run(solver_t* solver) {
 	get_resource_stats(&usertime, &systime, NULL);
 	solver->starttime = usertime + systime;
 
-	numxy = solver->nfield;
+	numxy = starxy_n(solver->fieldxy);
 	if (solver->endobj && (numxy > solver->endobj))
 		numxy = solver->endobj;
 	if (solver->startobj >= numxy)
@@ -590,11 +591,6 @@ void solver_run(solver_t* solver) {
 		}
 		free(pquads);
 	}
-}
-
-static inline void set_xy(double* dest, int destind, double* src, int srcind) {
-	setx(dest, destind, getx(src, srcind));
-	sety(dest, destind, gety(src, srcind));
 }
 
 static void try_all_codes(pquad* pq,

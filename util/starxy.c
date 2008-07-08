@@ -17,17 +17,23 @@
 */
 
 #include <assert.h>
+#include <string.h>
 
 #include "starxy.h"
 
-double starxy_getx(starxy_t* f, int i) {
+double starxy_getx(const starxy_t* f, int i) {
     assert(i < f->N);
     return f->x[i];
 }
 
-double starxy_gety(starxy_t* f, int i) {
+double starxy_gety(const starxy_t* f, int i) {
     assert(i < f->N);
     return f->y[i];
+}
+
+void starxy_get(const starxy_t* f, int i, double* xy) {
+    xy[0] = starxy_getx(f, i);
+    xy[1] = starxy_gety(f, i);
 }
 
 void starxy_setx(starxy_t* f, int i, double val) {
@@ -46,7 +52,7 @@ void starxy_set(starxy_t* f, int i, double x, double y) {
     f->y[i] = y;
 }
 
-int starxy_n(starxy_t* f) {
+int starxy_n(const starxy_t* f) {
     return f->N;
 }
 
@@ -61,6 +67,30 @@ void starxy_free_data(starxy_t* f) {
 void starxy_free(starxy_t* f) {
     starxy_free_data(f);
     free(f);
+}
+
+double* starxy_copy_x(const starxy_t* xy) {
+    double* res = malloc(sizeof(double) * starxy_n(xy));
+    memcpy(res, xy->x, sizeof(double) * starxy_n(xy));
+    return res;
+}
+
+double* starxy_copy_y(const starxy_t* xy) {
+    double* res = malloc(sizeof(double) * starxy_n(xy));
+    memcpy(res, xy->y, sizeof(double) * starxy_n(xy));
+    return res;
+}
+
+double* starxy_copy_xy(const starxy_t* xy) {
+    int i, N;
+    double* res;
+    N = starxy_n(xy);
+    res = malloc(sizeof(double) * 2 * N);
+    for (i=0; i<N; i++) {
+        res[2*i + 0] = starxy_getx(xy, i);
+        res[2*i + 1] = starxy_gety(xy, i);
+    }
+    return res;
 }
 
 starxy_t* starxy_alloc(int N, bool flux, bool back) {
