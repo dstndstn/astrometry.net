@@ -403,8 +403,8 @@ int backend_run_job(backend_t* backend, job_t* job) {
 			nused = 0;
 			for (k = 0; k < bl_size(backend->indexmetas); k++) {
 				index_meta_t* meta = bl_access(backend->indexmetas, k);
-				if ((fmin > meta->index_scale_upper) || (fmax < meta->index_scale_lower))
-					continue;
+                if (!index_meta_overlaps_scale_range(meta, fmin, fmax))
+                    continue;
                 add_index_to_blind(backend, bp, k);
 				nused++;
 			}

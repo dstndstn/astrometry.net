@@ -22,6 +22,12 @@
 #include "ioutils.h"
 #include "tic.h"
 
+bool index_meta_overlaps_scale_range(index_meta_t* meta,
+                                     double quadlo, double quadhi) {
+    return !((quadlo > meta->index_scale_upper) ||
+             (quadhi < meta->index_scale_lower));
+}
+
 bool index_has_ids(index_t* index) {
     return index->use_ids;
 }

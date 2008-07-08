@@ -57,6 +57,10 @@ struct index_meta_s {
 };
 typedef struct index_meta_s index_meta_t;
 
+// Returns TRUE if the given index contains quads of sizes that overlap the given
+// range of quad sizes, [quadlo, quadhi], in arcseconds.
+bool index_meta_overlaps_scale_range(index_meta_t* meta, double quadlo, double quadhi);
+
 /**
  * A loaded index
  */

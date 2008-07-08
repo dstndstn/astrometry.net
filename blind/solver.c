@@ -107,12 +107,7 @@ static void get_field_ll_corner(solver_t* s, double* lx, double* ly) {
     *ly = s->field_miny;
 }
 
-void solver_set_field(solver_t* s, starxy_t* field) {
-    s->fieldxy = field;
-    // FIXME -- compute size of field, etc?
-}
-
-void set_center_and_radius(solver_t* solver, MatchObj* mo,
+static void set_center_and_radius(solver_t* solver, MatchObj* mo,
                            tan_t* tan, sip_t* sip) {
     double cx, cy, lx, ly;
     double xyz[3];
@@ -129,7 +124,18 @@ void set_center_and_radius(solver_t* solver, MatchObj* mo,
     mo->radius_deg = dist2deg(mo->radius);
 }
 
+static void set_index(solver_t* s, index_t* index) {
+    s->index = index;
+    s->rel_index_noise2 = square(index->meta.index_jitter / index->meta.index_scale_lower);
+}
+
+void solver_set_field(solver_t* s, starxy_t* field) {
+    s->fieldxy = field;
+    // FIXME -- compute size of field, etc?
+}
+
 void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) {
+    int i, nindexes;
     MatchObj mo;
     // fabricate a match and inject it into the solver.
     set_matchobj_template(solver, &mo);
@@ -138,7 +144,13 @@ void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) {
     mo.scale = sip_pixel_scale(sip);
     set_center_and_radius(solver, &mo, NULL, sip);
     solver->distance_from_quad_bonus = FALSE;
-    solver_inject_match(solver, &mo, sip);
+
+    nindexes = pl_size(solver->indexes);
+    for (i=0; i<nindexes; i++) {
+        index_t* index = pl_get(solver->indexes, i);
+        set_index(solver, index);
+        solver_inject_match(solver, &mo, sip);
+    }
 }
 
 void solver_add_index(solver_t* solver, index_t* index) {
@@ -391,7 +403,7 @@ void solver_run(solver_t* solver) {
 	if (solver->startobj >= numxy)
 		return;
 
-	num_indexes = bl_size(solver->indexes);
+	num_indexes = pl_size(solver->indexes);
 	{
 		double minAB2s[num_indexes];
 		double maxAB2s[num_indexes];
@@ -532,8 +544,7 @@ void solver_run(solver_t* solver) {
                 index_t* index = pl_get(solver->indexes, i);
                 int dimquads;
 
-                solver->index = index;
-                solver->rel_index_noise2 = square(index->meta.index_jitter / index->meta.index_scale_lower);
+                set_index(solver, index);
                 dimquads = quadfile_dimquads(index->quads);
 
                 for (field[A] = 0; field[A] < newpoint; field[A]++) {
@@ -592,8 +603,7 @@ void solver_run(solver_t* solver) {
 						if ((pq->scale < minAB2s[i]) ||
 					        (pq->scale > maxAB2s[i]))
 							continue;
-						solver->index = index;
-						solver->rel_index_noise2 = square(index->meta.index_jitter / index->meta.index_scale_lower);
+                        set_index(solver, index);
 						dimquads = quadfile_dimquads(index->quads);
 
                         tol2 = get_tolerance(solver);

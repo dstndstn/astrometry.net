@@ -282,6 +282,7 @@ void blind_run(blind_t* bp) {
         bp->logratio_tosolve = HUGE_VAL;
 
 		for (w = 0; w < bl_size(bp->verify_wcs_list); w++) {
+            double pixscale;
 			double quadlo, quadhi;
 			sip_t* wcs = bl_access(bp->verify_wcs_list, w);
 
@@ -299,18 +300,23 @@ void blind_run(blind_t* bp) {
                 logmsg("Verifying WCS: image width or height is zero / unknown.\n");
                 continue;
             }
-			quadlo = bp->quad_size_fraction_lo * MIN(wcs->wcstan.imagew, wcs->wcstan.imageh) * sip_pixel_scale(wcs);
-			quadhi = bp->quad_size_fraction_hi * MAX(wcs->wcstan.imagew, wcs->wcstan.imageh) * sip_pixel_scale(wcs);
+            pixscale = sip_pixel_scale(wcs);
+			quadlo = bp->quad_size_fraction_lo
+                * MIN(wcs->wcstan.imagew, wcs->wcstan.imageh)
+                * pixscale;
+			quadhi = bp->quad_size_fraction_hi
+                * MAX(wcs->wcstan.imagew, wcs->wcstan.imageh)
+                * pixscale;
 			logmsg("Verifying WCS using indices with quads of size [%g, %g] arcmin\n",
 				   arcsec2arcmin(quadlo), arcsec2arcmin(quadhi));
 
 			for (I=0; I<Nindexes; I++) {
                 index_t* index = get_index(bp, I);
-                if ((index->meta.index_scale_lower > quadhi) ||
-                    (index->meta.index_scale_upper < quadlo)) {
+                index_meta_t* meta = &(index.meta);
+                if (!index_meta_overlaps_scale_range(meta, quadlo, quadhi)) {
                     done_with_index(bp, I, index);
-					continue;
-				}
+                    continue;
+                }
                 solver_add_index(sp, index);
 				sp->index = index;
 				logmsg("Verifying WCS with index %i of %i\n",  I + 1, sl_size(bp->indexnames));

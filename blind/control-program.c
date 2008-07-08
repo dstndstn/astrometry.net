@@ -39,6 +39,14 @@ int main(int argc, char** args) {
 
     //"../etc/backend.cfg";
 
+    // Image size in pixels.
+    int imagew = 1024;
+    int imageh = 1024;
+    // Image angular width range, in arcminutes.
+    double arcmin_width_min = 15.0;
+    double arcmin_width_max = 25.0;
+
+
     while (1) {
 		int option_index = 0;
 		c = getopt_long(argc, args, OPTIONS, long_options, &option_index);
@@ -103,13 +111,12 @@ int main(int argc, char** args) {
                            "110 120 130 140 150 160 170 180 190 200");
     }
 
+    // I assume that the backend config file only contains indexes that cover
+    // the range of scales you are interested in.
 
-
-
-
-
-
-
+    // Furthermore, I assume the range of scales is small enough so that if we
+    // try to verify an existing WCS that claims the field is huge, we won't
+    // accidentally try to load millions of stars.
 
     for (;;) {
         // Get field
@@ -118,17 +125,29 @@ int main(int argc, char** args) {
         // Try to verify initial WCS
         // Use initial WCS to select appropriate indexes
         // Call solver.
-
         solver_t* sp;
+        double app_min, app_max;
+        double qsf_min = 0.1;
 
         sp = solver_new();
         solver_set_default_values(sp);
 
-        // sp->timer_callback = timer_callback;
-        // sp->userdata = sp;
-        // sp->record_match_callback = match_callback;
+        // compute scale range in arcseconds per pixel.
+        app_min = arcmin2arcsec(arcmin_min / imagew);
+        app_max = arcmin2arcsec(arcmin_max / imagew);
+        sp->funits_lower = app_min;
+        sp->funits_upper = app_max;
 
-        //solver_compute_quad_range();
+        // If you want to look at only a limited number of sources:
+        // sp->endobj = 20;
+
+        // don't try teeny-tiny quads.
+        sp->quadsize_min = qsf_min * MIN(imagew, imageh);
+
+        sp->userdata = sp;
+        sp->record_match_callback = match_callback;
+
+        // sp->timer_callback = timer_callback;
         //solver_add_index(sp, index);
 
         solver_preprocess_field(sp);
