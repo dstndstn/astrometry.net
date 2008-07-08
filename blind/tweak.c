@@ -290,7 +290,7 @@ void tweak_iterate_to_order(tweak_t* t, int maxorder, int iterations) {
 
 #define CHECK_STATE(x) if (state & x) sl_append(s, #x)
 
-void tweak_print_the_state(unsigned int state) {
+char* state_string(unsigned int state) {
     sl* s = sl_new(4);
     char* str;
 	CHECK_STATE(TWEAK_HAS_SIP);
@@ -307,15 +307,15 @@ void tweak_print_the_state(unsigned int state) {
 	CHECK_STATE(TWEAK_HAS_REALLY_FINELY_SHIFTED);
 	CHECK_STATE(TWEAK_HAS_LINEAR_CD);
     str = sl_join(s, " ");
-    printf("%s\n", str);
     sl_free2(s);
+    return str;
+}
+
+char* tweak_get_state_string(const tweak_t* t) {
+    return state_string(t->state);
 }
 
 #undef CHECK_STATE
-
-void tweak_print_state(tweak_t* t) {
-	tweak_print_the_state(t->state);
-}
 
 void get_center_and_radius(double* ra, double* dec, int n,
                            double* ra_mean, double* dec_mean, double* radius) {
@@ -1133,9 +1133,6 @@ void do_sip_tweak(tweak_t* t) {
 	memcpy(t->sip, swcs, sizeof(sip_t));
 	sip_free(swcs);
 
-	//logverb("After applying shift:\n");
-    //sip_print_to(t->sip, stdout);
-
 	// recalc using new SIP
     tweak_clear_on_sip_change(t);
 	tweak_go_to(t, TWEAK_HAS_IMAGE_AD);
@@ -1182,16 +1179,22 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 	}
 
 	want(TWEAK_HAS_REF_AD) {
-		ensure(TWEAK_HAS_REF_XYZ);
-		debug("Satisfying TWEAK_HAS_REF_AD\n");
-        ref_ad_from_xyz(t);
+        if (!(t->a_ref && t->d_ref)) {
+            ensure(TWEAK_HAS_REF_XYZ);
+            debug("Satisfying TWEAK_HAS_REF_AD\n");
+            ref_ad_from_xyz(t);
+        }
+        assert(t->a_ref && t->d_ref);
 		done(TWEAK_HAS_REF_AD);
 	}
 
 	want(TWEAK_HAS_REF_XYZ) {
-        ensure(TWEAK_HAS_REF_AD);
-        debug("Satisfying TWEAK_HAS_REF_XYZ\n");
-        ref_xyz_from_ad(t);
+        if (!t->xyz_ref) {
+            ensure(TWEAK_HAS_REF_AD);
+            debug("Satisfying TWEAK_HAS_REF_XYZ\n");
+            ref_xyz_from_ad(t);
+        }
+        assert(t->xyz_ref);
 		done(TWEAK_HAS_REF_XYZ);
 	}
 
@@ -1294,9 +1297,8 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 		done(TWEAK_HAS_LINEAR_CD);
 	}
 
-	logerr("die for dependence: ");
-	tweak_print_the_state(flag);
-	printf("\n");
+    // small memleak -- but it's a major bug if this happens, so suck it up.
+    logerr("die for dependence: %s\n", state_string(flag));
 	assert(0);
 	return -1;
 }

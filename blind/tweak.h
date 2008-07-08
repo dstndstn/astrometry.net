@@ -122,7 +122,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag);
 void tweak_clear(tweak_t* t);
 void tweak_dump_ascii(tweak_t* t);
 void tweak_skip_shift(tweak_t* t);
-void tweak_print_state(tweak_t* t);
+char* tweak_get_state_string(const tweak_t* t);
 void tweak_go_to(tweak_t* t, unsigned int flag);
 void tweak_clear_correspondences(tweak_t* t);
 void tweak_clear_on_sip_change(tweak_t* t);
