@@ -214,6 +214,7 @@ sip_t* do_entire_shift_operation(tweak_t* t, double rho) {
  * structures, NOT for operating on existing ones.*/
 void tweak_init(tweak_t* t) {
 	memset(t, 0, sizeof(tweak_t));
+    t->sip = sip_create();
 }
 
 tweak_t* tweak_new() {
@@ -744,21 +745,10 @@ void invert_sip_polynomial(tweak_t* t) {
 	}
 
 	// Solve the linear equation.
-	{
-        gsl_vector *B[2], *X[2];
-
-        B[0] = b1;
-        B[1] = b2;
-        X[0] = X[1] = NULL;
-
-        if (gslutils_solve_leastsquares(mA, B, X, NULL, 2)) {
-            ERROR("Failed to solve tweak inversion matrix equation!");
-            return;
-        }
-
-        x1 = X[0];
-        x2 = X[1];
-	}
+    if (gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL)) {
+        ERROR("Failed to solve tweak inversion matrix equation!");
+        return;
+    }
 
 	// Extract the coefficients
 	j = 0;
@@ -1054,16 +1044,9 @@ void do_sip_tweak(tweak_t* t) {
 		logverb("Total weight: %g\n", totalweight);
 
 	// Solve the equation.
-	{
-        gsl_vector *B[2], *X[2];
-        B[0] = b1;
-        B[1] = b2;
-        if (gslutils_solve_leastsquares(mA, B, X, NULL, 2)) {
-            ERROR("Failed to solve tweak matrix equation!");
-            return;
-        }
-        x1 = X[0];
-        x2 = X[1];
+    if (gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL)) {
+        ERROR("Failed to solve tweak inversion matrix equation!");
+        return;
     }
 
 	// Row 0 of X are the shift (p=0, q=0) terms.
@@ -1491,8 +1474,6 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 }
 
 void tweak_push_wcs_tan(tweak_t* t, const tan_t* wcs) {
-	if (!t->sip)
-		t->sip = sip_create();
 	memcpy(&(t->sip->wcstan), wcs, sizeof(tan_t));
 	t->state |= TWEAK_HAS_SIP;
 }
