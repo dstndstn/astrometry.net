@@ -20,6 +20,7 @@
 #include <assert.h>
 #include <string.h>
 #include <math.h>
+#include <sys/param.h>
 
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
@@ -58,19 +59,6 @@
 #define KERNEL_SIZE 5
 #define KERNEL_MARG ((KERNEL_SIZE-1)/2)
 
-double dblmax(double x, double y)
-{
-	if (x < y)
-		return y;
-	return x;
-}
-double dblmin(double x, double y)
-{
-	if (x < y)
-		return x;
-	return y;
-}
-
 void get_dydx_range(double* ximg, double* yimg, int nimg,
                     double* xcat, double* ycat, int ncat,
                     double *mindx, double *mindy, double *maxdx, double *maxdy)
@@ -85,10 +73,10 @@ void get_dydx_range(double* ximg, double* yimg, int nimg,
 		for (j = 0; j < ncat; j++) {
 			double dx = ximg[i] - xcat[j];
 			double dy = yimg[i] - ycat[j];
-			*maxdx = dblmax(dx, *maxdx);
-			*maxdy = dblmax(dy, *maxdy);
-			*mindx = dblmin(dx, *mindx);
-			*mindy = dblmin(dy, *mindy);
+			*maxdx = MAX(dx, *maxdx);
+			*maxdy = MAX(dy, *maxdy);
+			*mindx = MIN(dx, *mindx);
+			*mindy = MIN(dy, *mindy);
 		}
 	}
 }
@@ -986,10 +974,10 @@ void invert_sip_polynomial(tweak_t* t)
 	maxu = maxv = -1e100;
 
 	for (i = 0; i < t->n; i++) {
-		minu = dblmin(minu, t->x[i] - t->sip->wcstan.crpix[0]);
-		minv = dblmin(minv, t->y[i] - t->sip->wcstan.crpix[1]);
-		maxu = dblmax(maxu, t->x[i] - t->sip->wcstan.crpix[0]);
-		maxv = dblmax(maxv, t->y[i] - t->sip->wcstan.crpix[1]);
+		minu = MIN(minu, t->x[i] - t->sip->wcstan.crpix[0]);
+		minv = MIN(minv, t->y[i] - t->sip->wcstan.crpix[1]);
+		maxu = MAX(maxu, t->x[i] - t->sip->wcstan.crpix[0]);
+		maxv = MAX(maxv, t->y[i] - t->sip->wcstan.crpix[1]);
 	}
 	//printf("maxu=%g, minu=%g\n", maxu, minu);
 	//printf("maxv=%g, minv=%g\n", maxv, minv);

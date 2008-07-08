@@ -30,7 +30,6 @@
 struct verify_field_t {
     const starxy_t* field;
     double* fieldcopy;
-    int NF;
     kdtree_t* ftree;
 };
 typedef struct verify_field_t verify_field_t;
