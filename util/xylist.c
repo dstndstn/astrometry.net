@@ -29,125 +29,6 @@
 #include "an-bool.h"
 #include "keywords.h"
 
-double xy_getx(xy_t* f, int i) {
-    assert(i < f->N);
-    return f->x[i];
-}
-
-double xy_gety(xy_t* f, int i) {
-    assert(i < f->N);
-    return f->y[i];
-}
-
-void xy_setx(xy_t* f, int i, double val) {
-    assert(i < f->N);
-    f->x[i] = val;
-}
-
-void xy_sety(xy_t* f, int i, double val) {
-    assert(i < f->N);
-    f->y[i] = val;
-}
-
-void xy_set(xy_t* f, int i, double x, double y) {
-    assert(i < f->N);
-    f->x[i] = x;
-    f->y[i] = y;
-}
-
-int xy_n(xy_t* f) {
-    return f->N;
-}
-
-void xy_free_data(xy_t* f) {
-    if (!f) return;
-    free(f->x);
-    free(f->y);
-    free(f->flux);
-    free(f->background);
-}
-
-void xy_free(xy_t* f) {
-    xy_free_data(f);
-    free(f);
-}
-
-xy_t* xy_alloc(int N, bool flux, bool back) {
-    xy_t* xy = calloc(1, sizeof(xy_t));
-    xy_alloc_data(xy, N, flux, back);
-    return xy;
-}
-
-void xy_alloc_data(xy_t* f, int N, bool flux, bool back) {
-    f->x = malloc(N * sizeof(double));
-    f->y = malloc(N * sizeof(double));
-    if (flux)
-        f->flux = malloc(N * sizeof(double));
-    else
-        f->flux = NULL;
-    if (back)
-        f->background = malloc(N * sizeof(double));
-    else
-        f->background = NULL;
-    f->N = N;
-}
-
-double* xy_to_flat_array(xy_t* xy, double* arr) {
-    int nr = 2;
-    int i, ind;
-    if (xy->flux)
-        nr++;
-    if (xy->background)
-        nr++;
-
-    if (!arr)
-        arr = malloc(nr * xy_n(xy) * sizeof(double));
-
-    ind = 0;
-    for (i=0; i<xy->N; i++) {
-        arr[ind] = xy->x[i];
-        ind++;
-        arr[ind] = xy->y[i];
-        ind++;
-        if (xy->flux) {
-            arr[ind] = xy->flux[i];
-            ind++;
-        }
-        if (xy->background) {
-            arr[ind] = xy->background[i];
-            ind++;
-        }
-    }
-    return arr;
-}
-
-void xy_from_dl(xy_t* xy, dl* l, bool flux, bool back) {
-    int i;
-    int nr = 2;
-    int ind;
-    if (flux)
-        nr++;
-    if (back)
-        nr++;
-
-    xy_alloc_data(xy, dl_size(l)/nr, flux, back);
-    ind = 0;
-    for (i=0; i<xy->N; i++) {
-        xy->x[i] = dl_get(l, ind);
-        ind++;
-        xy->y[i] = dl_get(l, ind);
-        ind++;
-        if (flux) {
-            xy->flux[i] = dl_get(l, ind);
-            ind++;
-        }
-        if (back) {
-            xy->background[i] = dl_get(l, ind);
-            ind++;
-        }
-    }
-}
-
 
 bool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* ycolumn,
                            char** reason) {
@@ -319,13 +200,13 @@ int xylist_n_fields(xylist_t* ls) {
     return ls->nfields;
 }
 
-int xylist_write_one_row(xylist_t* ls, xy_t* fld, int row) {
+int xylist_write_one_row(xylist_t* ls, starxy_t* fld, int row) {
     return fitstable_write_row(ls->table, fld->x + row, fld->y + row,
                                ls->include_flux ? fld->flux + row : NULL,
                                ls->include_background ? fld->background + row : NULL);
 }
 
-int xylist_write_field(xylist_t* ls, xy_t* fld) {
+int xylist_write_field(xylist_t* ls, starxy_t* fld) {
     int i;
     assert(fld);
     for (i=0; i<fld->N; i++) {
@@ -337,7 +218,7 @@ int xylist_write_field(xylist_t* ls, xy_t* fld) {
     return 0;
 }
 
-xy_t* xylist_read_field(xylist_t* ls, xy_t* fld) {
+starxy_t* xylist_read_field(xylist_t* ls, starxy_t* fld) {
     bool freeit = FALSE;
     tfits_type dubl = fitscolumn_double_type();
 
@@ -347,7 +228,7 @@ xy_t* xylist_read_field(xylist_t* ls, xy_t* fld) {
     }
 
     if (!fld) {
-        fld = calloc(1, sizeof(xy_t));
+        fld = calloc(1, sizeof(starxy_t));
         freeit = TRUE;
     }
 
@@ -375,8 +256,8 @@ xy_t* xylist_read_field(xylist_t* ls, xy_t* fld) {
     return fld;
 }
 
-xy_t* xylist_read_field_num(xylist_t* ls, int ext, xy_t* fld) {
-	xy_t* rtn;
+starxy_t* xylist_read_field_num(xylist_t* ls, int ext, starxy_t* fld) {
+	starxy_t* rtn;
 	if (xylist_open_field(ls, ext)) {
 		ERROR("Failed to open field %i from xylist", ext);
         return NULL;

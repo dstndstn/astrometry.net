@@ -175,7 +175,7 @@ int main(int argc, char** args) {
 		il* corrquads;
 		il* corruniqquads;
 		il* corrfullquads;
-        xy_t* xy;
+        starxy_t* xy;
 		double* fieldxy;
 		int Nfield;
 		kdtree_t* ftree;
@@ -275,9 +275,9 @@ int main(int argc, char** args) {
 			fprintf(stderr, "Failed to read xyls entries.\n");
 			exit(-1);
         }
-        Nfield = xy_n(xy);
-        fieldxy = xy_to_flat_array(xy, NULL);
-        xy_free(xy);
+        Nfield = starxy_n(xy);
+        fieldxy = starxy_to_flat_array(xy, NULL);
+        starxy_free(xy);
 
 		// Build a tree out of the field objects (in pixel space)
 		ftree = kdtree_build(NULL, fieldxy, Nfield, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);

@@ -87,7 +87,7 @@ int wcs_rd2xy(const char* wcsfn, const char* rdlsfn, const char* xylsfn,
 	for (i=0; i<il_size(fields); i++) {
 		int fieldnum = il_get(fields, i);
 		int j;
-        xy_t xy;
+        starxy_t xy;
         rd_t rd;
 
         if (!rdlist_read_field_num(rdls, fieldnum, &rd)) {
@@ -95,7 +95,7 @@ int wcs_rd2xy(const char* wcsfn, const char* rdlsfn, const char* xylsfn,
             goto bailout;
         }
 
-        xy_alloc_data(&xy, rd_n(&rd), FALSE, FALSE);
+        starxy_alloc_data(&xy, rd_n(&rd), FALSE, FALSE);
 
 		if (xylist_write_header(xyls)) {
 			ERROR("Failed to write xyls field header");
@@ -110,7 +110,7 @@ int wcs_rd2xy(const char* wcsfn, const char* rdlsfn, const char* xylsfn,
 				ERROR("Point RA,Dec = (%g,%g) projects to the opposite side of the sphere", ra, dec);
 				continue;
 			}
-            xy_set(&xy, j, x, y);
+            starxy_set(&xy, j, x, y);
 		}
         if (xylist_write_field(xyls, &xy)) {
             ERROR("Failed to write xyls field");
@@ -122,7 +122,7 @@ int wcs_rd2xy(const char* wcsfn, const char* rdlsfn, const char* xylsfn,
 		}
         xylist_next_field(xyls);
 
-        xy_free_data(&xy);
+        starxy_free_data(&xy);
         rd_free_data(&rd);
 	}
 

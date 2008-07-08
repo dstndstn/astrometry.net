@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -19,44 +19,8 @@
 #ifndef XYLIST_H
 #define XYLIST_H
 
-#include <stdio.h>
-#include <sys/types.h>
-
-#include "starutil.h"
-#include "qfits.h"
+#include "starxy.h"
 #include "fitstable.h"
-
-struct xy_t {
-    double* x;
-    double* y;
-    double* flux;
-    double* background;
-    int N;
-};
-typedef struct xy_t xy_t;
-
-double xy_getx(xy_t* f, int i);
-double xy_gety(xy_t* f, int i);
-
-void xy_setx(xy_t* f, int i, double x);
-void xy_sety(xy_t* f, int i, double y);
-
-void xy_set(xy_t* f, int i, double x, double y);
-
-int xy_n(xy_t* f);
-
-xy_t* xy_alloc(int N, bool flux, bool back);
-
-void xy_alloc_data(xy_t* f, int N, bool flux, bool back);
-
-void xy_from_dl(xy_t* xy, dl* l, bool flux, bool back);
-
-double* xy_to_flat_array(xy_t* xy, double* arr);
-
-// Just free the data, not the field itself.
-void xy_free_data(xy_t* f);
-
-void xy_free(xy_t* f);
 
 #define AN_FILETYPE_XYLS "XYLS"
 
@@ -127,14 +91,14 @@ int xylist_open_field(xylist_t* ls, int i);
 
 int xylist_write_header(xylist_t* ls);
 
-int xylist_write_field(xylist_t* ls, xy_t* fld);
+int xylist_write_field(xylist_t* ls, starxy_t* fld);
 
-int xylist_write_one_row(xylist_t* ls, xy_t* fld, int row);
+int xylist_write_one_row(xylist_t* ls, starxy_t* fld, int row);
 
-// (input xy_t* is optional; if not given, a new one is allocated and returned.)
-xy_t* xylist_read_field(xylist_t* ls, xy_t* fld);
+// (input starxy_t* is optional; if not given, a new one is allocated and returned.)
+starxy_t* xylist_read_field(xylist_t* ls, starxy_t* fld);
 
-xy_t* xylist_read_field_num(xylist_t* ls, int ext, xy_t* fld);
+starxy_t* xylist_read_field_num(xylist_t* ls, int ext, starxy_t* fld);
 
 int xylist_fix_header(xylist_t* ls);
 

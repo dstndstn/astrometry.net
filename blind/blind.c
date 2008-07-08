@@ -924,7 +924,7 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		int fieldnum;
 		MatchObj template ;
 		qfits_header* fieldhdr = NULL;
-        xy_t xy;
+        starxy_t xy;
         int i;
 
 		fieldnum = il_get(bp->fieldlist, fi);
@@ -955,14 +955,14 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
             goto cleanup;
         }
 
-        // HACK - make sp->nfield,field into an xy_t.
+        // HACK - make sp->nfield,field into an starxy_t.
 		sp->nfield = xy.N;
 		sp->field = realloc(sp->field, 2 * sp->nfield * sizeof(double));
         for (i=0; i<xy.N; i++) {
             sp->field[2*i + 0] = xy.x[i];
             sp->field[2*i + 1] = xy.y[i];
         }
-        xy_free_data(&xy);
+        starxy_free_data(&xy);
 
 		sp->numtries = 0;
 		sp->nummatches = 0;

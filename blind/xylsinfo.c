@@ -46,7 +46,7 @@ int main(int argc, char** args) {
 	char** inputfiles = NULL;
 	int ninputfiles = 0;
 	xylist_t* xyls;
-	xy_t* xy;
+	starxy_t* xy;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1) {
 		switch (argchar) {
@@ -87,9 +87,9 @@ int main(int argc, char** args) {
 		int i;
 		xmax = ymax = -HUGE_VAL;
 		xmin = ymin =  HUGE_VAL;
-		for (i=0; i<xy_n(xy); i++) {
-			double x = xy_getx(xy, i);
-			double y = xy_gety(xy, i);
+		for (i=0; i<starxy_n(xy); i++) {
+			double x = starxy_getx(xy, i);
+			double y = starxy_gety(xy, i);
 			if (x > xmax) xmax = x;
 			if (x < xmin) xmin = x;
 			if (y > ymax) ymax = y;
@@ -116,7 +116,7 @@ int main(int argc, char** args) {
 		printf("diag %g\n", diag);
 	}
 
-	xy_free(xy);
+	starxy_free(xy);
 	xylist_close(xyls);
 	return 0;
 }

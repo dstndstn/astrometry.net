@@ -140,7 +140,7 @@ rdlist_t* rdlist_open(const char* fn) {
 }
 
 rd_t* rdlist_read_field(rdlist_t* ls, rd_t* fld) {
-    xy_t xy;
+    starxy_t xy;
     if (!xylist_read_field(ls, &xy)) {
         return NULL;
     }
@@ -161,8 +161,8 @@ rd_t* rdlist_read_field_num(rdlist_t* ls, int ext, rd_t* fld) {
 }
 
 int rdlist_write_field(rdlist_t* ls, rd_t* fld) {
-    xy_t xy;
-    memset(&xy, 0, sizeof(xy_t));
+    starxy_t xy;
+    memset(&xy, 0, sizeof(starxy_t));
     xy.x = fld->ra;
     xy.y = fld->dec;
     xy.N = fld->N;
@@ -170,8 +170,8 @@ int rdlist_write_field(rdlist_t* ls, rd_t* fld) {
 }
 
 int rdlist_write_one_row(rdlist_t* ls, rd_t* fld, int row) {
-    xy_t xy;
-    memset(&xy, 0, sizeof(xy_t));
+    starxy_t xy;
+    memset(&xy, 0, sizeof(starxy_t));
     xy.x = fld->ra;
     xy.y = fld->dec;
     xy.N = fld->N;
@@ -179,7 +179,7 @@ int rdlist_write_one_row(rdlist_t* ls, rd_t* fld, int row) {
 }
 
 int rdlist_write_one_radec(rdlist_t* ls, double ra, double dec) {
-    xy_t xy;
+    starxy_t xy;
     xy.x = &ra;
     xy.y = &dec;
     xy.N = 1;

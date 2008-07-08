@@ -44,7 +44,7 @@ void print_help(char* progname) {
            progname, AN_FILETYPE_XYLS);
 }
 
-static xy_t* readxysimple(char* fn);
+static starxy_t* readxysimple(char* fn);
 
 extern char *optarg;
 extern int optind, opterr, optopt;
@@ -53,7 +53,7 @@ int main(int argc, char** args) {
     char* infn = NULL;
     char* outfn = NULL;
     int c;
-    xy_t* xy;
+    starxy_t* xy;
     xylist_t* ls;
     int doubleformat = 0;
     char* xname = NULL;
@@ -144,10 +144,10 @@ int main(int argc, char** args) {
 // Read a simple xy file; column 1 is x column 2 is y;
 // whitespace/comma seperated.
 // Lines starting with "#" are ignored.
-xy_t* readxysimple(char* fn) {
+starxy_t* readxysimple(char* fn) {
     FILE* fid;
     dl* xylist;
-    xy_t* xy;
+    starxy_t* xy;
 
     fid = fopen(fn, "r");
     if (!fid) {
@@ -201,7 +201,7 @@ xy_t* readxysimple(char* fn) {
         dl_append(xylist, x);
         dl_append(xylist, y);
     }
-    xy = xy_alloc(dl_size(xylist)/2, FALSE, FALSE);
-    xy_from_dl(xy, xylist, FALSE, FALSE);
+    xy = starxy_alloc(dl_size(xylist)/2, FALSE, FALSE);
+    starxy_from_dl(xy, xylist, FALSE, FALSE);
     return xy;
 }

@@ -81,7 +81,7 @@ int main(int argc, char *args[]) {
 	double lw = 1.0;
 	char* shape = "circle";
 	xylist_t* xyls;
-	xy_t* xy;
+	starxy_t* xy;
 	int Nxy;
 	int i;
 	double scale = 1.0;
@@ -164,10 +164,12 @@ int main(int argc, char *args[]) {
 			shape = optarg;
 			break;
 		case 'h':
+			printHelp(progname);
+            exit(0);
 		case '?':
 		default:
 			printHelp(progname);
-			return (OPT_ERR);
+            exit(-1);
 		}
 
 	if (optind != argc) {
@@ -207,7 +209,7 @@ int main(int argc, char *args[]) {
 		fprintf(stderr, "Failed to read FITS extension %i from file %s.\n", ext, fname);
 		exit(-1);
 	}
-    Nxy = xy_n(xy);
+    Nxy = starxy_n(xy);
 
 	// If N is specified, apply it as a max.
     if (N)
@@ -216,8 +218,8 @@ int main(int argc, char *args[]) {
 	// Scale xylist entries.
 	if (scale != 1.0) {
 		for (i=0; i<Nxy; i++) {
-			xy_setx(xy, i, scale * xy_getx(xy, i));
-			xy_sety(xy, i, scale * xy_gety(xy, i));
+			starxy_setx(xy, i, scale * starxy_getx(xy, i));
+			starxy_sety(xy, i, scale * starxy_gety(xy, i));
 		}
 	}
 
@@ -227,13 +229,13 @@ int main(int argc, char *args[]) {
 	if (!W) {
 		double maxX = 0.0;
 		for (i=n; i<Nxy; i++)
-            maxX = MAX(maxX, xy_getx(xy, i));
+            maxX = MAX(maxX, starxy_getx(xy, i));
 		W = ceil(maxX + rad - xoff);
 	}
 	if (!H) {
 		double maxY = 0.0;
 		for (i=n; i<Nxy; i++)
-            maxY = MAX(maxY, xy_gety(xy, i));
+            maxY = MAX(maxY, starxy_gety(xy, i));
 		H = ceil(maxY + rad - yoff);
 	}
 
@@ -281,8 +283,8 @@ int main(int argc, char *args[]) {
         cairo_set_line_width(cairo, lw+2.0);
         cairo_set_source_rgba(cairo, br, bg, bb, 0.75);
         for (i=n; i<Nxy; i++) {
-            double x = xy_getx(xy, i) + 0.5 - xoff;
-            double y = xy_gety(xy, i) + 0.5 - yoff;
+            double x = starxy_getx(xy, i) + 0.5 - xoff;
+            double y = starxy_gety(xy, i) + 0.5 - yoff;
             cairoutils_draw_marker(cairo, marker, x, y, rad);
             cairo_stroke(cairo);
         }
@@ -291,8 +293,8 @@ int main(int argc, char *args[]) {
 
 	// Draw markers.
 	for (i=n; i<Nxy; i++) {
-		double x = xy_getx(xy, i) + 0.5 - xoff;
-		double y = xy_gety(xy, i) + 0.5 - yoff;
+		double x = starxy_getx(xy, i) + 0.5 - xoff;
+		double y = starxy_gety(xy, i) + 0.5 - yoff;
         cairoutils_draw_marker(cairo, marker, x, y, rad);
 		cairo_stroke(cairo);
 	}
@@ -312,7 +314,7 @@ int main(int argc, char *args[]) {
         }
     }
 
-    xy_free(xy);
+    starxy_free(xy);
 	cairo_surface_destroy(target);
 	cairo_destroy(cairo);
     free(img);

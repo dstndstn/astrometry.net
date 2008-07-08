@@ -151,7 +151,7 @@ int main(int argc, char** args) {
 	fprintf(stderr, "Processing %i extensions...\n", il_size(fields));
 	for (i=0; i<il_size(fields); i++) {
 		int fieldind = il_get(fields, i);
-        xy_t xy;
+        starxy_t xy;
         rd_t rd;
 		int j;
 
@@ -165,12 +165,12 @@ int main(int argc, char** args) {
 			exit(-1);
 		}
 
-        rd_alloc_data(&rd, xy_n(&xy));
+        rd_alloc_data(&rd, starxy_n(&xy));
 
-		for (j=0; j<xy_n(&xy); j++) {
+		for (j=0; j<starxy_n(&xy); j++) {
             double x, y, ra, dec;
-            x = xy_getx(&xy, j);
-            y = xy_gety(&xy, j);
+            x = starxy_getx(&xy, j);
+            y = starxy_gety(&xy, j);
 			sip_pixelxy2radec(&sip, x, y, &ra, &dec);
 
             rd_setra (&rd, j, ra);
@@ -182,7 +182,7 @@ int main(int argc, char** args) {
             exit(-1);
         }
         rd_free_data(&rd);
-        xy_free_data(&xy);
+        starxy_free_data(&xy);
 
 		if (rdlist_fix_header(rdls)) {
 			fprintf(stderr, "Failed to fix rdls field header.\n");
