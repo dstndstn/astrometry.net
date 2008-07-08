@@ -96,10 +96,10 @@ sip_t* tweak_just_do_it(const tan_t* wcs, const starxy_t* imagexy,
 	return sip;
 }
 
-void get_dydx_range(double* ximg, double* yimg, int nimg,
-                    double* xcat, double* ycat, int ncat,
-                    double *mindx, double *mindy, double *maxdx, double *maxdy)
-{
+static void get_dydx_range(double* ximg, double* yimg, int nimg,
+                           double* xcat, double* ycat, int ncat,
+                           double *mindx, double *mindy,
+                           double *maxdx, double *maxdy) {
 	int i, j;
 	*maxdx = -1e100;
 	*mindx = 1e100;
@@ -118,12 +118,10 @@ void get_dydx_range(double* ximg, double* yimg, int nimg,
 	}
 }
 
-void get_shift(double* ximg, double* yimg, int nimg,
-               double* xcat, double* ycat, int ncat,
-               double mindx, double mindy, double maxdx, double maxdy,
-               double* xshift, double* yshift)
-{
-
+static void get_shift(double* ximg, double* yimg, int nimg,
+                      double* xcat, double* ycat, int ncat,
+                      double mindx, double mindy, double maxdx, double maxdy,
+                      double* xshift, double* yshift) {
 	int i, j;
 	int themax, themaxind, ys, xs;
 
@@ -238,7 +236,7 @@ sip_t* wcs_shift(sip_t* wcs, double xs, double ys) {
 	return swcs;
 }
 
-sip_t* do_entire_shift_operation(tweak_t* t, double rho) {
+static sip_t* do_entire_shift_operation(tweak_t* t, double rho) {
 	sip_t* swcs;
 	get_shift(t->x, t->y, t->n,
 	          t->x_ref, t->y_ref, t->n_ref,
@@ -290,7 +288,7 @@ void tweak_iterate_to_order(tweak_t* t, int maxorder, int iterations) {
 
 #define CHECK_STATE(x) if (state & x) sl_append(s, #x)
 
-char* state_string(unsigned int state) {
+static char* state_string(unsigned int state) {
     sl* s = sl_new(4);
     char* str;
 	CHECK_STATE(TWEAK_HAS_SIP);
@@ -300,7 +298,6 @@ char* state_string(unsigned int state) {
 	CHECK_STATE(TWEAK_HAS_REF_XY);
 	CHECK_STATE(TWEAK_HAS_REF_XYZ);
 	CHECK_STATE(TWEAK_HAS_REF_AD);
-	CHECK_STATE(TWEAK_HAS_AD_BAR_AND_R);
 	CHECK_STATE(TWEAK_HAS_CORRESPONDENCES);
 	CHECK_STATE(TWEAK_HAS_COARSLY_SHIFTED);
 	CHECK_STATE(TWEAK_HAS_FINELY_SHIFTED);
@@ -316,31 +313,6 @@ char* tweak_get_state_string(const tweak_t* t) {
 }
 
 #undef CHECK_STATE
-
-void get_center_and_radius(double* ra, double* dec, int n,
-                           double* ra_mean, double* dec_mean, double* radius) {
-	double* xyz = malloc(3 * n * sizeof(double));
-	double xyz_mean[3] = {0, 0, 0};
-	double maxdist2 = 0;
-	int i, j;
-
-	for (i = 0; i < n; i++)
-		radecdeg2xyzarr(ra[i], dec[i], xyz + 3*i);
-
-	for (i = 0; i < n; i++)  // dumb average
-		for (j = 0; j < 3; j++)
-			xyz_mean[j] += xyz[3 * i + j];
-
-	normalize_3(xyz_mean);
-
-	for (i = 0; i < n; i++) { // find largest distance from average
-		double dist2 = distsq(xyz_mean, xyz + 3*i, 3);
-        maxdist2 = MAX(maxdist2, dist2);
-	}
-	*radius = sqrt(maxdist2);
-	xyzarr2radecdeg(xyz_mean, ra_mean, dec_mean);
-	free(xyz);
-}
 
 void tweak_clear_correspondences(tweak_t* t) {
 	if (t->state & TWEAK_HAS_CORRESPONDENCES) {
@@ -544,7 +516,7 @@ static void dtrs_match_callback(void* extra, int image_ind, int ref_ind, double 
 }
 
 // The jitter is in radians
-void find_correspondences(tweak_t* t, double jitter) {
+static void find_correspondences(tweak_t* t, double jitter) {
 	double dist;
 	double* data_image = malloc(sizeof(double) * t->n * 3);
 	double* data_ref = malloc(sizeof(double) * t->n_ref * 3);
@@ -591,7 +563,7 @@ void find_correspondences(tweak_t* t, double jitter) {
 	logverb("Number of correspondences: %d\n", dl_size(t->dist2));
 }
 
-double correspondences_rms_arcsec(tweak_t* t, int weighted) {
+static double correspondences_rms_arcsec(tweak_t* t, int weighted) {
 	double err2 = 0.0;
 	int i;
 	double totalweight = 0.0;
@@ -618,7 +590,7 @@ double correspondences_rms_arcsec(tweak_t* t, int weighted) {
 }
 
 // in arcseconds^2 on the sky (chi-sq)
-double figure_of_merit(tweak_t* t, double *rmsX, double *rmsY) {
+static double figure_of_merit(tweak_t* t, double *rmsX, double *rmsY) {
 	double sqerr = 0.0;
 	int i;
 	for (i = 0; i < il_size(t->image); i++) {
@@ -637,7 +609,7 @@ double figure_of_merit(tweak_t* t, double *rmsX, double *rmsY) {
 	return rad2arcsec(1)*rad2arcsec(1)*sqerr;
 }
 
-double figure_of_merit2(tweak_t* t) {
+static double figure_of_merit2(tweak_t* t) {
     // find error in pixels^2
 	double sqerr = 0.0;
 	int i;
@@ -655,7 +627,7 @@ double figure_of_merit2(tweak_t* t) {
 }
 
 // I apologize for the rampant copying and pasting of the polynomial calcs...
-void invert_sip_polynomial(tweak_t* t) {
+static void invert_sip_polynomial(tweak_t* t) {
 	/*
      basic idea: lay down a grid in image, for each gridpoint, push through
      the polynomial to get yourself into warped image coordinate (but not yet 
@@ -850,7 +822,7 @@ void invert_sip_polynomial(tweak_t* t) {
 //    thing for better estimation.
 
 // Run a polynomial tweak
-void do_sip_tweak(tweak_t* t) {
+static void do_sip_tweak(tweak_t* t) {
 	int sip_order, sip_coeffs;
 	double xyzcrval[3];
 	double cdinv[2][2];
@@ -1215,17 +1187,6 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 			assert(ok);
 		}
 		done(TWEAK_HAS_REF_XY);
-	}
-
-	want(TWEAK_HAS_AD_BAR_AND_R) {
-		ensure(TWEAK_HAS_IMAGE_AD);
-		debug("Satisfying TWEAK_HAS_AD_BAR_AND_R\n");
-		assert(t->state & TWEAK_HAS_IMAGE_AD);
-		get_center_and_radius(t->a, t->d, t->n,
-		                      &t->a_bar, &t->d_bar, &t->radius);
-		debug("a_bar=%g [deg], d_bar=%g [deg], radius=%g [arcmin]\n",
-              t->a_bar, t->d_bar, rad2arcmin(t->radius));
-		done(TWEAK_HAS_AD_BAR_AND_R);
 	}
 
 	want(TWEAK_HAS_IMAGE_XYZ) {

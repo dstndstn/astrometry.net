@@ -26,15 +26,6 @@
 #include "starutil.h"
 #include "starxy.h"
 
-enum opt_flags {
-	OPT_CRVAL         = 1,
-	OPT_CRPIX         = 2,
-	OPT_CD            = 4,
-	OPT_SIP           = 8,
-	OPT_SIP_INVERSE   = 16,
-	OPT_SHIFT         = 32
-};
-
 // These flags represent the work already done on a tweak problem
 enum tweak_flags {
 	TWEAK_HAS_SIP                   = 0x1,
@@ -44,7 +35,6 @@ enum tweak_flags {
 	TWEAK_HAS_REF_XY                = 0x10, 
 	TWEAK_HAS_REF_XYZ               = 0x20, 
 	TWEAK_HAS_REF_AD                = 0x40, 
-	TWEAK_HAS_AD_BAR_AND_R          = 0x80,
 	TWEAK_HAS_CORRESPONDENCES       = 0x100,
 	TWEAK_HAS_COARSLY_SHIFTED       = 0x800,
 	TWEAK_HAS_FINELY_SHIFTED        = 0x1000,
@@ -57,29 +47,26 @@ typedef struct tweak_s {
     // bitfield of tweak_flags
 	unsigned int state; 
 
-	// For sources in the image
+	// Sources in the image
 	int n;
+    // pixel x,y
+	double *x;
+	double *y;
+    // CACHED:
     // RA,Dec
 	double *a;
 	double *d;
     // vector on the unit sphere
 	double *xyz;
-    // pixel x,y
-	double *x;
-	double *y;
 
-	// Center of field estimate
-	double a_bar;  // degrees
-	double d_bar;  // degrees
-	double radius; // radians (genius!)
-
-	// Cached values of sources in the catalog
+	// Sources in the catalog
 	int n_ref;
     // RA,Dec
 	double *a_ref;
 	double *d_ref;
     // unit vector on the sphere
 	double *xyz_ref;
+    // CACHED:
     // pixel
 	double *x_ref;
 	double *y_ref;
