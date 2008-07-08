@@ -28,8 +28,12 @@ struct starxy_t {
     double* flux;
     double* background;
     int N;
+
+    double xlo, xhi, ylo, yhi;
 };
 typedef struct starxy_t starxy_t;
+
+void starxy_compute_range(starxy_t* xy);
 
 double starxy_getx(const starxy_t* f, int i);
 double starxy_gety(const starxy_t* f, int i);

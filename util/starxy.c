@@ -18,8 +18,23 @@
 
 #include <assert.h>
 #include <string.h>
+#include <math.h>
+#include <sys/param.h>
 
 #include "starxy.h"
+
+void starxy_compute_range(starxy_t* xy) {
+    int i, N;
+    xy->xlo = xy->ylo =  HUGE_VAL;
+    xy->xhi = xy->yhi = -HUGE_VAL;
+    N = starxy_n(xy);
+    for (i=0; i<N; i++) {
+        xy->xlo = MIN(xy->xlo, starxy_getx(xy, i));
+        xy->xhi = MAX(xy->xhi, starxy_getx(xy, i));
+        xy->ylo = MIN(xy->ylo, starxy_gety(xy, i));
+        xy->yhi = MAX(xy->yhi, starxy_gety(xy, i));
+    }
+}
 
 double starxy_getx(const starxy_t* f, int i) {
     assert(i < f->N);

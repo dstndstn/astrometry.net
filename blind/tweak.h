@@ -32,40 +32,43 @@ enum opt_flags {
 	OPT_CD            = 4,
 	OPT_SIP           = 8,
 	OPT_SIP_INVERSE   = 16,
-	OPT_SHIFT         = 32 };
+	OPT_SHIFT         = 32
+};
 
 // These flags represent the work already done on a tweak problem
 enum tweak_flags {
-	TWEAK_HAS_SIP              = 1,
-	TWEAK_HAS_IMAGE_XY         = 2,
-	TWEAK_HAS_IMAGE_XYZ        = 4,
-	TWEAK_HAS_IMAGE_AD         = 8,
-	TWEAK_HAS_REF_XY           = 16, 
-	TWEAK_HAS_REF_XYZ          = 32, 
-	TWEAK_HAS_REF_AD           = 64, 
-	TWEAK_HAS_AD_BAR_AND_R     = 128,
-	TWEAK_HAS_CORRESPONDENCES  = 256,
-	TWEAK_HAS_RUN_OPT          = 512,
-	TWEAK_HAS_RUN_RANSAC_OPT   = 1024,
-	TWEAK_HAS_COARSLY_SHIFTED  = 2048,
-	TWEAK_HAS_FINELY_SHIFTED   = 4096,
-	TWEAK_HAS_REALLY_FINELY_SHIFTED   = 8192,
-	TWEAK_HAS_HEALPIX_PATH     = 16384,
-	TWEAK_HAS_LINEAR_CD        = 32768
+	TWEAK_HAS_SIP                   = 0x1,
+	TWEAK_HAS_IMAGE_XY              = 0x2,
+	TWEAK_HAS_IMAGE_XYZ             = 0x4,
+	TWEAK_HAS_IMAGE_AD              = 0x8,
+	TWEAK_HAS_REF_XY                = 0x10, 
+	TWEAK_HAS_REF_XYZ               = 0x20, 
+	TWEAK_HAS_REF_AD                = 0x40, 
+	TWEAK_HAS_AD_BAR_AND_R          = 0x80,
+	TWEAK_HAS_CORRESPONDENCES       = 0x100,
+	TWEAK_HAS_RUN_OPT               = 0x200,
+	TWEAK_HAS_RUN_RANSAC_OPT        = 0x400,
+	TWEAK_HAS_COARSLY_SHIFTED       = 0x800,
+	TWEAK_HAS_FINELY_SHIFTED        = 0x1000,
+	TWEAK_HAS_REALLY_FINELY_SHIFTED = 0x2000,
+	TWEAK_HAS_LINEAR_CD             = 0x4000,
 };
-// FIXME add a method to print out the state in a readable way
 
 typedef struct tweak_s {
 	sip_t* sip;
-	unsigned int state; // bitfield of tweak_flags
+    // bitfield of tweak_flags
+	unsigned int state; 
 
 	// For sources in the image
 	int n;
+    // RA,Dec
 	double *a;
 	double *d;
+    // vector on the unit sphere
+	double *xyz;
+    // pixel x,y
 	double *x;
 	double *y;
-	double *xyz;
 
 	// Center of field estimate
 	double a_bar;  // degrees
@@ -74,11 +77,14 @@ typedef struct tweak_s {
 
 	// Cached values of sources in the catalog
 	int n_ref;
-	double *x_ref;
-	double *y_ref;
+    // RA,Dec
 	double *a_ref;
 	double *d_ref;
+    // unit vector on the sphere
 	double *xyz_ref;
+    // pixel
+	double *x_ref;
+	double *y_ref;
 
 	// Correspondences
 	il* image;
@@ -92,9 +98,6 @@ typedef struct tweak_s {
 	il* included;
 
 	int opt_flags;
-//	int n;
-//	int m;
-//	double parameters[500];
 	double err;
 
 	// Size of Hough space for shift
@@ -107,10 +110,6 @@ typedef struct tweak_s {
 	kdtree_t* kd_image;
 	kdtree_t* kd_ref;
 
-	// path for raw star data
-	char* hppath;
-	// Nside for healpixed star kdtree... necessary?
-	int Nside;
 	// star jitter, in arcseconds.
 	double jitter;
 
@@ -136,7 +135,6 @@ void tweak_skip_shift(tweak_t* t);
 //void tweak_push_image_xy(tweak_t* t, const double* x, const double *y, int n);
 void tweak_push_image_xy(tweak_t* t, const starxy_t* xy);
 
-void tweak_push_hppath(tweak_t* t, char* hppath);
 void tweak_push_ref_ad(tweak_t* t, double* a, double *d, int n);
 void tweak_print_state(tweak_t* t);
 void tweak_go_to(tweak_t* t, unsigned int flag);
