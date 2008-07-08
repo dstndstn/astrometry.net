@@ -312,7 +312,7 @@ void blind_run(blind_t* bp) {
 
 			for (I=0; I<Nindexes; I++) {
                 index_t* index = get_index(bp, I);
-                index_meta_t* meta = &(index.meta);
+                index_meta_t* meta = &(index->meta);
                 if (!index_meta_overlaps_scale_range(meta, quadlo, quadhi)) {
                     done_with_index(bp, I, index);
                     continue;

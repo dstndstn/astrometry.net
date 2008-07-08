@@ -65,5 +65,4 @@ void job_set_cancel_file(job_t* job, const char* fn);
 int backend_run_job(backend_t* backend, job_t* job);
 void job_free(job_t* job);
 
-
 #endif

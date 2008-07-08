@@ -97,19 +97,28 @@ int main(int argc, char** args) {
 		logerr("You must list at least one index in the config file (%s)\n", configfn);
 		exit( -1);
 	}
-
-	if (backend->minwidth <= 0.0 || backend->maxwidth <= 0.0) {
-		logerr("\"minwidth\" and \"maxwidth\" in the config file %s must be positive!\n", configfn);
-		exit( -1);
-	}
-
     free(configfn);
 
-    if (!il_size(backend->default_depths)) {
-        parse_depth_string(backend->default_depths,
-                           "10 20 30 40 50 60 70 80 90 100 "
-                           "110 120 130 140 150 160 170 180 190 200");
+    // For a control program you almost certainly want to be using small enough
+    // indexes that they fit in memory!
+    if (!backend->inparallel) {
+        logerr("Forcing indexes_inparallel.\n");
+        backend->inparallel = TRUE;
     }
+
+    /*
+     if (backend->minwidth <= 0.0 || backend->maxwidth <= 0.0) {
+     logerr("\"minwidth\" and \"maxwidth\" in the config file %s must be positive!\n", configfn);
+     exit( -1);
+     }
+     */
+    /*
+     if (!il_size(backend->default_depths)) {
+     parse_depth_string(backend->default_depths,
+     "10 20 30 40 50 60 70 80 90 100 "
+     "110 120 130 140 150 160 170 180 190 200");
+     }
+     */
 
     // I assume that the backend config file only contains indexes that cover
     // the range of scales you are interested in.
@@ -128,6 +137,10 @@ int main(int argc, char** args) {
         solver_t* sp;
         double app_min, app_max;
         double qsf_min = 0.1;
+        int i, N;
+        sip_t* sip = NULL;
+        double centerxyz[3];
+        int centerhp;
 
         sp = solver_new();
         solver_set_default_values(sp);
@@ -147,8 +160,22 @@ int main(int argc, char** args) {
         sp->userdata = sp;
         sp->record_match_callback = match_callback;
 
+        // Which indexes should we use to verify the existing WCS?
+        sip_pixelxy2xyzarr(sip, imagew/2.0, imageh/2.0, centerxyz);
+
+        N = pl_size(backend->indexes);
+        for (i=0; i<N; i++) {
+            index_t* index = pl_get(backend->indexes);
+            index_meta_t* meta = &(index->meta);
+            int centerhp;
+
+            centerhp = xyzarrtohealpix(centerxyz, meta->hpnside);
+
+
+            solver_add_index(sp, index);
+        }
+
         // sp->timer_callback = timer_callback;
-        //solver_add_index(sp, index);
 
         solver_preprocess_field(sp);
         solver_verify_sip_wcs(sp, sip);
