@@ -187,6 +187,15 @@ Const inline double arcsec2dist(double arcInArcSec) {
    return sqrt(arcsec2distsq(arcInArcSec));
 }
 
+// Degrees to distance on the unit sphere.
+Const inline double deg2dist(double arcInDegrees) {
+    return arcsec2dist(deg2arcsec(arcInDegrees));
+}
+
+Const inline double dist2deg(double dist) {
+    return arcsec2deg(dist2arcsec(dist));
+}
+
 Const inline double distsq2arcsec(double dist2) {
 	return rad2arcsec(distsq2arc(dist2));
 }

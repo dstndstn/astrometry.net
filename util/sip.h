@@ -134,7 +134,7 @@ void   sip_free(sip_t* sip);
 void   sip_pixelxy2radec(const sip_t* sip, double px, double py, double *a, double *d);
 
 // Pixels to XYZ unit vector.
-void   sip_pixelxy2xyzarr(const sip_t* tan, double px, double py, double *xyz);
+void   sip_pixelxy2xyzarr(const sip_t* sip, double px, double py, double *xyz);
 
 // RA,Dec in degrees to Pixels.
 // Returns FALSE if the point is on the opposite side of the sphere (and hence the point

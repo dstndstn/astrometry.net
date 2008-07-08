@@ -47,6 +47,7 @@ typedef unsigned char uchar;
 #define rad2deg(r) (180.0*(r)/(double)PIl)
 #define deg2rad(d) ((d)*(double)PIl/180.0)
 #define deg2arcsec(d) ((d) * 3600.0)
+#define deg2arcmin(d) ((d) * 60.0)
 #define arcsec2deg(a) ((a) / 3600.0)
 #define arcsec2arcmin(a) ((a) / 60.0)
 #define arcmin2arcsec(a) ((a) * 60.0)
@@ -136,6 +137,12 @@ Const inline double arcsec2distsq(double arcInArcSec);
 
 // Arcseconds to distance on the unit sphere.
 Const inline double arcsec2dist(double arcInArcSec);
+
+// Degrees to distance on the unit sphere.
+Const inline double deg2dist(double arcInDegrees);
+
+// Distance on the unit sphere to degrees.
+Const inline double dist2deg(double dist);
 
 #define HELP_ERR -101
 #define OPT_ERR -201
