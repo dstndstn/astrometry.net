@@ -598,7 +598,7 @@ void blind_cleanup(blind_t* bp) {
 	free(bp->ycolname);
 }
 
-static sip_t* tweak(blind_t* bp, MatchObj* mo, const double* starxyz, int nstars) {
+static sip_t* tweak(blind_t* bp, MatchObj* mo, const double* starradec, int nstars) {
 	solver_t* sp = &(bp->solver);
 	tweak_t* twee = NULL;
 	sip_t* sip = NULL;
@@ -620,7 +620,7 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, const double* starxyz, int nstars
 	logverb("Pushing %i image coordinates.\n", starxy_n(sp->fieldxy));
 
 	logverb("Pushing %i star coordinates.\n", nstars);
-	tweak_push_ref_xyz(twee, starxyz, nstars);
+	tweak_push_ref_ad_array(twee, starradec, nstars);
 
 	tweak_push_wcs_tan(twee, &(mo->wcstan));
 	twee->sip->a_order = twee->sip->b_order = bp->tweak_aborder;
@@ -674,7 +674,6 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, const double* starxyz, int nstars
 	// Set it NULL so tweak_free() doesn't delete it.
 	twee->sip = NULL;
 
- bailout:
 	tweak_free(twee);
 	return sip;
 }
@@ -705,30 +704,27 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 
     if (bp->do_tweak || bp->indexrdlsfname) {
         // Gather stars that are within range.
-        double* xyz;
-        double** pxyz = NULL;
-        double** pradec = NULL;
+        double* radec = NULL;
         int nstars;
         double rad2, safety;
 
-        if (bp->do_tweak)
-            pxyz = &xyz;
-        if (bp->indexrdlsfname)
-            pradec = &(mo->indexrdls);
-            
         // add a small margin.
         safety = 1.05;
         rad2 = square(safety * mo->radius);
 
-        startree_search(sp->index->starkd, mo->center, rad2, pxyz, pradec, &nstars);
+        startree_search(sp->index->starkd, mo->center, rad2, NULL, &radec, &nstars);
 
-        if (bp->indexrdlsfname)
+        if (bp->do_tweak)
+            mo->sip = tweak(bp, mo, radec, nstars);
+
+        if (bp->indexrdlsfname) {
+            // steal this array...
+            mo->indexrdls = radec;
+            radec = NULL;
             mo->nindexrdls = nstars;
-
-        if (bp->do_tweak) {
-            mo->sip = tweak(bp, mo, xyz, nstars);
-            free(xyz);
         }
+
+        free(radec);
     }
 
     ind = bl_insert_sorted(bp->solutions, mo, compare_matchobjs);

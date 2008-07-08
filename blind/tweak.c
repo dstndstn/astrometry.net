@@ -410,6 +410,23 @@ void tweak_push_ref_ad(tweak_t* t, const double* a, const double *d, int n) {
 	t->state |= TWEAK_HAS_REF_AD;
 }
 
+void tweak_push_ref_ad_array(tweak_t* t, const double* ad, int n) {
+    int i;
+	assert(ad);
+	assert(n);
+	tweak_clear_ref_ad(t);
+	assert(!t->a_ref);
+	assert(!t->d_ref);
+	t->a_ref = malloc(sizeof(double) * n);
+	t->d_ref = malloc(sizeof(double) * n);
+    for (i=0; i<n; i++) {
+        t->a_ref[i] = ad[2*i + 0];
+        t->d_ref[i] = ad[2*i + 1];
+    }
+	t->n_ref = n;
+	t->state |= TWEAK_HAS_REF_AD;
+}
+
 static void ref_xyz_from_ad(tweak_t* t) {
 	int i;
 	assert(t->state & TWEAK_HAS_REF_AD);
