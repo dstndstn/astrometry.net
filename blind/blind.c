@@ -663,7 +663,7 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, startree_t* starkd) {
 	  }
 	*/
 
-	twee->weighted_fit = 1;
+	twee->weighted_fit = TRUE;
 
 	{
 		int order;

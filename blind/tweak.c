@@ -22,12 +22,14 @@
 #include <math.h>
 #include <sys/param.h>
 
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_vector.h>
+/*
+ #include <gsl/gsl_linalg.h>
+ #include <gsl/gsl_matrix.h>
+ #include <gsl/gsl_vector.h>
+ #include <gsl/gsl_blas.h>
+ */
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_vector_double.h>
-#include <gsl/gsl_blas.h>
 
 #include "tweak.h"
 #include "healpix.h"
@@ -834,7 +836,7 @@ void do_sip_tweak(tweak_t* t) {
 	int row;
 	double totalweight;
 
-	gsl_matrix *mA, *QR;
+	gsl_matrix *mA;
 	gsl_vector *b1, *b2, *x1, *x2;
 
 	// a_order and b_order should be the same!
@@ -867,13 +869,9 @@ void do_sip_tweak(tweak_t* t) {
 	mA = gsl_matrix_alloc(M, N);
 	b1 = gsl_vector_alloc(M);
 	b2 = gsl_vector_alloc(M);
-	x1 = gsl_vector_alloc(N);
-	x2 = gsl_vector_alloc(N);
 	assert(mA);
 	assert(b1);
 	assert(b2);
-	assert(x1);
-	assert(x2);
 
 	debug("do_sip_tweak starting.\n");
 	logverb("RMS error of correspondences: %g arcsec\n",
@@ -1044,40 +1042,16 @@ void do_sip_tweak(tweak_t* t) {
 
 	// Solve the equation.
 	{
-		gsl_vector *tau, *resid1, *resid2;
-		int ret;
-		double rmsB=0;
-
-		tau = gsl_vector_alloc(imin(M, N));
-		resid1 = gsl_vector_alloc(M);
-		resid2 = gsl_vector_alloc(M);
-		assert(tau);
-		assert(resid1);
-		assert(resid2);
-
-		ret = gsl_linalg_QR_decomp(mA, tau);
-		assert(ret == 0);
-		// mA,tau now contains a packed version of Q,R.
-		QR = mA;
-
-		ret = gsl_linalg_QR_lssolve(QR, tau, b1, x1, resid1);
-		assert(ret == 0);
-		ret = gsl_linalg_QR_lssolve(QR, tau, b2, x2, resid2);
-		assert(ret == 0);
-
-		// Find RMS of (AX - B)
-		for (j=0; j<M; j++) {
-			rmsB += square(gsl_vector_get(resid1, j));
-			rmsB += square(gsl_vector_get(resid2, j));
-		}
-		if (M > 0)
-			rmsB = sqrt(rmsB / (double)(M*2));
-		debug("gsl rms                = %g\n", rmsB);
-
-		gsl_vector_free(tau);
-		gsl_vector_free(resid1);
-		gsl_vector_free(resid2);
-	}
+        gsl_vector *B[2], *X[2];
+        B[0] = b1;
+        B[1] = b2;
+        if (gslutils_solve_leastsquares(mA, B, X, NULL, 2)) {
+            ERROR("Failed to solve tweak matrix equation!");
+            return;
+        }
+        x1 = X[0];
+        x2 = X[1];
+    }
 
 	// Row 0 of X are the shift (p=0, q=0) terms.
 	// Row 1 of X are the terms that multiply "u".
@@ -1147,72 +1121,27 @@ void do_sip_tweak(tweak_t* t) {
 	sip_calc_inv_distortion(t->sip, sU, sV, &su, &sv);
 	//	su *= -1;
 	//	sv *= -1;
-	//printf("sU=%g, su=%g, sV=%g, sv=%g\n", sU, su, sV, sv);
-	//printf("before cdinv b0=%g, b1=%g\n", get(b, 2, 0), get(b, 2, 1));
-	//printf("BEFORE crval=(%.12g,%.12g)\n", t->sip->wcstan.crval[0], t->sip->wcstan.crval[1]);
 
-	logverb("sx = %g, sy = %g\n", sx, sy);
-	logverb("sU = %g, sV = %g\n", sU, sV);
-	logverb("su = %g, sv = %g\n", su, sv);
-
-	/*
-     printf("Before applying shift:\n");
-     sip_print_to(t->sip, stdout);
-     printf("RMS error of correspondences: %g arcsec\n",
-     correspondences_rms_arcsec(t));
-     */
+	debug("sx = %g, sy = %g\n", sx, sy);
+	debug("sU = %g, sV = %g\n", sU, sV);
+	debug("su = %g, sv = %g\n", su, sv);
 
 	swcs = wcs_shift(t->sip, -su, -sv);
 	memcpy(t->sip, swcs, sizeof(sip_t));
 	sip_free(swcs);
 
-	//sip_free(t->sip);
-	//t->sip = swcs;
-
-	/*
-     t->sip->wcstan.crpix[0] -= su;
-     t->sip->wcstan.crpix[1] -= sv;
-     */
-
-	logverb("After applying shift:\n");
+	//logverb("After applying shift:\n");
     //sip_print_to(t->sip, stdout);
 
-	/*
-     printf("shiftxun=%g, shiftyun=%g\n", sU, sV);
-     printf("shiftx=%g, shifty=%g\n", su, sv);
-     printf("sqerr=%g\n", figure_of_merit(t,NULL,NULL));
-     */
-
-	// this data is now wrong
-	tweak_clear_image_ad(t);
-	tweak_clear_ref_xy(t);
-	tweak_clear_image_xyz(t);
-
-	// recalc based on new SIP
+	// recalc using new SIP
+    tweak_clear_on_sip_change(t);
 	tweak_go_to(t, TWEAK_HAS_IMAGE_AD);
 	tweak_go_to(t, TWEAK_HAS_REF_XY);
-
-	/*
-     printf("+++++++++++++++++++++++++++++++++++++\n");
-     printf("RMS=%g [arcsec on sky]\n", sqrt(figure_of_merit(t,NULL,NULL) / stride));
-     printf("+++++++++++///////////+++++++++++++++\n");
-     //	fprintf(stderr,"sqerrxy=%g\n", figure_of_merit2(t));
-     */
 
 	logverb("RMS error of correspondences: %g arcsec\n",
             correspondences_rms_arcsec(t, 0));
 	logverb("Weighted RMS error of correspondences: %g arcsec\n",
             correspondences_rms_arcsec(t, 1));
-
-
-	//	t->sip->wcstan.cd[0][0] = tmptan.cd[0][0];
-	//	t->sip->wcstan.cd[0][1] = tmptan.cd[0][1];
-	//	t->sip->wcstan.cd[1][0] = tmptan.cd[1][0];
-	//	t->sip->wcstan.cd[1][1] = tmptan.cd[1][1];
-	//	t->sip->wcstan.crval[0] = tmptan.crval[0];
-	//	t->sip->wcstan.crval[1] = tmptan.crval[1];
-	//	t->sip->wcstan.crpix[0] = tmptan.crpix[0];
-	//	t->sip->wcstan.crpix[1] = tmptan.crpix[1];
 
 	gsl_matrix_free(mA);
 	gsl_vector_free(b1);
@@ -1256,8 +1185,7 @@ void do_sip_tweak(tweak_t* t) {
 // }
 // return bestfit
 
-void do_ransac(tweak_t* t)
-{
+void do_ransac(tweak_t* t) {
 	int iterations = 0;
 	int maxiter = 500;
 
@@ -1407,48 +1335,33 @@ void do_ransac(tweak_t* t)
 		return tweak_advance_to(t, x); \
 	}
 
-unsigned int tweak_advance_to(tweak_t* t, unsigned int flag)
-{
-	//	fprintf(stderr,"WANT: ");
-	//	tweak_print_the_state(flag);
-	//	fprintf(stderr,"\n");
+unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 	want(TWEAK_HAS_IMAGE_AD) {
-		//printf("////++++-////\n");
 		int jj;
 		ensure(TWEAK_HAS_SIP);
 		ensure(TWEAK_HAS_IMAGE_XY);
-
 		logverb("Satisfying TWEAK_HAS_IMAGE_AD\n");
-
 		// Convert to ra dec
 		assert(!t->a);
 		assert(!t->d);
 		t->a = malloc(sizeof(double) * t->n);
 		t->d = malloc(sizeof(double) * t->n);
-		for (jj = 0; jj < t->n; jj++) {
+		for (jj = 0; jj < t->n; jj++)
 			sip_pixelxy2radec(t->sip, t->x[jj], t->y[jj], t->a + jj, t->d + jj);
-			//			printf("i=%4d, x=%10g, y=%10g ==> a=%10g, d=%10g\n", jj, t->x[jj], t->y[jj], t->a[jj], t->d[jj]);
-		}
-
 		done(TWEAK_HAS_IMAGE_AD);
 	}
 
 	want(TWEAK_HAS_REF_AD) {
 		ensure(TWEAK_HAS_REF_XYZ);
-
-		// FIXME
 		logverb("Satisfying TWEAK_HAS_REF_AD\n");
 		logerr("FIXME!\n");
-
-		done(TWEAK_HAS_REF_AD);
+        assert(0);
+		//done(TWEAK_HAS_REF_AD);
 	}
 
 	want(TWEAK_HAS_REF_XY) {
 		int jj;
 		ensure(TWEAK_HAS_REF_AD);
-
-		//tweak_clear_ref_xy(t);
-
 		logverb("Satisfying TWEAK_HAS_REF_XY\n");
 		assert(t->state & TWEAK_HAS_REF_AD);
 		assert(t->n_ref);
@@ -1461,37 +1374,29 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag)
 			ok = sip_radec2pixelxy(t->sip, t->a_ref[jj], t->d_ref[jj],
 								   t->x_ref + jj, t->y_ref + jj);
 			assert(ok);
-			//fprintf(stderr,"ref star %04d: %g,%g\n",jj,t->x_ref[jj],t->y_ref[jj]);
 		}
-
 		done(TWEAK_HAS_REF_XY);
 	}
 
 	want(TWEAK_HAS_AD_BAR_AND_R) {
 		ensure(TWEAK_HAS_IMAGE_AD);
-
 		logverb("Satisfying TWEAK_HAS_AD_BAR_AND_R\n");
-
 		assert(t->state & TWEAK_HAS_IMAGE_AD);
 		get_center_and_radius(t->a, t->d, t->n,
 		                      &t->a_bar, &t->d_bar, &t->radius);
-		logverb("a_bar=%g [deg], d_bar=%g [deg], radius=%g [arcmin]\n",
-		        t->a_bar, t->d_bar, rad2arcmin(t->radius));
-
+		debug("a_bar=%g [deg], d_bar=%g [deg], radius=%g [arcmin]\n",
+              t->a_bar, t->d_bar, rad2arcmin(t->radius));
 		done(TWEAK_HAS_AD_BAR_AND_R);
 	}
 
 	want(TWEAK_HAS_IMAGE_XYZ) {
 		int i;
 		ensure(TWEAK_HAS_IMAGE_AD);
-
 		logverb("Satisfying TWEAK_HAS_IMAGE_XYZ\n");
 		assert(!t->xyz);
-
 		t->xyz = malloc(3 * t->n * sizeof(double));
-		for (i = 0; i < t->n; i++) {
+		for (i = 0; i < t->n; i++)
 			radecdeg2xyzarr(t->a[i], t->d[i], t->xyz + 3*i);
-		}
 		done(TWEAK_HAS_IMAGE_XYZ);
 	}
 
