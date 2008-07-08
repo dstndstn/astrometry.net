@@ -487,14 +487,12 @@ plot-constellations.o: plot-constellations.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
 plot-constellations: plot-constellations.o $(COMMON)/cairoutils.o \
-		log.o \
 		ngc2000.o ngcic-accurate.o brightstars.o boilerplate.o \
 		hd.o \
 		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB)
 
 catalog-dists: catalog-dists.o 2mass-fits.o usnob-fits.o usnob.o tycho2-fits.o tycho2.o \
-		log.o \
 		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)
