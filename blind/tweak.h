@@ -141,6 +141,6 @@ void tweak_clear_ref_xy(tweak_t* t);
 void tweak_clear_image_xyz(tweak_t* t);
 void tweak_free(tweak_t* t);
 
-void tweak_iterate_to_order(tweak_t* t);
+void tweak_iterate_to_order(tweak_t* t, int maxorder, int iterations);
 
 #endif

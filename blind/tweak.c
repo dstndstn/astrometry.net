@@ -222,8 +222,29 @@ tweak_t* tweak_new() {
 	return t;
 }
 
-void tweak_iterate_to_order(tweak_t* t) {
-    
+void tweak_iterate_to_order(tweak_t* t, int maxorder, int iterations) {
+    int order;
+    int k;
+
+    for (order=1; order<=maxorder; order++) {
+        logverb("\n");
+        logverb("--------------------------------\n");
+        logverb("Order %i\n", order);
+        logverb("--------------------------------\n");
+
+        t->sip->a_order  = t->sip->b_order  = order;
+        //t->sip->ap_order = t->sip->bp_order = order;
+        tweak_go_to(t, TWEAK_HAS_CORRESPONDENCES);
+
+        for (k=0; k<iterations; k++) {
+            logverb("\n");
+            logverb("--------------------------------\n");
+            logverb("Iterating tweak: order %i, step %i\n", order, k);
+            t->state &= ~TWEAK_HAS_LINEAR_CD;
+            tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
+            tweak_clear_correspondences(t);
+        }
+    }
 }
 
 void tweak_print_the_state(unsigned int state) {

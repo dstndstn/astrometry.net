@@ -615,16 +615,19 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, const double* starradec, int nsta
 	}
 	logverb("Setting tweak jitter: %g arcsec.\n", twee->jitter);
 
-    // Image coords:
-    tweak_push_image_xy(twee, sp->fieldxy);
-	logverb("Pushing %i image coordinates.\n", starxy_n(sp->fieldxy));
+	twee->sip->a_order  = twee->sip->b_order  = bp->tweak_aborder;
+	twee->sip->ap_order = twee->sip->bp_order = bp->tweak_abporder;
+	twee->weighted_fit = TRUE;
 
-	logverb("Pushing %i star coordinates.\n", nstars);
+    // Image coords:
+	logverb("Tweaking using %i image coordinates.\n", starxy_n(sp->fieldxy));
+    tweak_push_image_xy(twee, sp->fieldxy);
+
+    // Index coords:
+	logverb("Tweaking using %i star coordinates.\n", nstars);
 	tweak_push_ref_ad_array(twee, starradec, nstars);
 
 	tweak_push_wcs_tan(twee, &(mo->wcstan));
-	twee->sip->a_order = twee->sip->b_order = bp->tweak_aborder;
-	twee->sip->ap_order = twee->sip->bp_order = bp->tweak_abporder;
 
 	if (bp->tweak_skipshift) {
 		logverb("Skipping shift operation.\n");
@@ -632,46 +635,11 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, const double* starradec, int nsta
 	}
 
 	logverb("Begin tweaking (to order %i)...\n", bp->tweak_aborder);
-	/*
-	  while (!(twee->state & TWEAK_HAS_LINEAR_CD)) {
-	  unsigned int r = tweak_advance_to(twee, TWEAK_HAS_LINEAR_CD);
-	  if (r == -1) {
-	  logerr("Tweak error!\n");
-	  goto bailout;
-	  }
-	  }
-	*/
-
-	twee->weighted_fit = TRUE;
-
-	{
-		int order;
-		int k;
-		for (order = 1; order <= MAX(1, bp->tweak_aborder); order++) {
-			logverb("\n");
-			logverb("--------------------------------\n");
-			logverb("Order %i\n", order);
-			logverb("--------------------------------\n");
-
-			twee->sip->a_order = twee->sip->b_order = order;
-			twee->sip->ap_order = twee->sip->bp_order = order;
-			tweak_go_to(twee, TWEAK_HAS_CORRESPONDENCES);
-
-			for (k = 0; k < 5; k++) {
-				logverb("\n");
-				logverb("--------------------------------\n");
-				logverb("Iterating tweak: order %i, step %i\n", order, k);
-				twee->state &= ~TWEAK_HAS_LINEAR_CD;
-				tweak_go_to(twee, TWEAK_HAS_LINEAR_CD);
-				tweak_clear_correspondences(twee);
-			}
-		}
-	}
+    tweak_iterate_to_order(twee, MAX(1, bp->tweak_aborder), 5);
 	logverb("Done tweaking!\n");
 
 	// Steal the resulting SIP structure
 	sip = twee->sip;
-	// Set it NULL so tweak_free() doesn't delete it.
 	twee->sip = NULL;
 
 	tweak_free(twee);
