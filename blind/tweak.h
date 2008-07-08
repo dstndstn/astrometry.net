@@ -119,7 +119,6 @@ typedef struct tweak_s {
 	// Weighted or unweighted fit?
 	int weighted_fit;
 
-    bool verbose;
     bool quiet;
 } tweak_t;
 
@@ -144,7 +143,5 @@ void tweak_clear_image_ad(tweak_t* t);
 void tweak_clear_ref_xy(tweak_t* t);
 void tweak_clear_image_xyz(tweak_t* t);
 void tweak_free(tweak_t* t);
-
-void tweak_print_rms_curve(tweak_t* t);
 
 #endif
