@@ -1254,9 +1254,7 @@ void do_ransac(tweak_t* t) {
 		tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
 
 		// this data is now wrong
-		tweak_clear_image_ad(t);
-		tweak_clear_ref_xy(t);
-		tweak_clear_image_xyz(t);
+        tweak_clear_on_sip_change(t);
 
 		// recalc based on new SIP
 		tweak_go_to(t, TWEAK_HAS_IMAGE_AD);

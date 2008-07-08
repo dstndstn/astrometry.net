@@ -598,7 +598,7 @@ void blind_cleanup(blind_t* bp) {
 	free(bp->ycolname);
 }
 
-static sip_t* tweak(blind_t* bp, MatchObj* mo, const double* starradec, int nstars) {
+static sip_t* tweak(blind_t* bp, tan_t* wcs, const double* starradec, int nstars) {
 	solver_t* sp = &(bp->solver);
 	tweak_t* twee = NULL;
 	sip_t* sip = NULL;
@@ -610,7 +610,7 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, const double* starradec, int nsta
 	if (bp->verify_dist2 > 0.0)
 		twee->jitter = distsq2arcsec(bp->verify_dist2);
 	else {
-		twee->jitter = hypot(mo->scale * sp->verify_pix, sp->index->meta.index_jitter);
+		twee->jitter = hypot(tan_pixel_scale(wcs) * sp->verify_pix, sp->index->meta.index_jitter);
 		logverb("Star jitter: %g arcsec.\n", twee->jitter);
 	}
 	logverb("Setting tweak jitter: %g arcsec.\n", twee->jitter);
@@ -627,7 +627,7 @@ static sip_t* tweak(blind_t* bp, MatchObj* mo, const double* starradec, int nsta
 	logverb("Tweaking using %i star coordinates.\n", nstars);
 	tweak_push_ref_ad_array(twee, starradec, nstars);
 
-	tweak_push_wcs_tan(twee, &(mo->wcstan));
+	tweak_push_wcs_tan(twee, wcs);
 
 	if (bp->tweak_skipshift) {
 		logverb("Skipping shift operation.\n");
@@ -683,7 +683,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
         startree_search(sp->index->starkd, mo->center, rad2, NULL, &radec, &nstars);
 
         if (bp->do_tweak)
-            mo->sip = tweak(bp, mo, radec, nstars);
+            mo->sip = tweak(bp, &(mo->wcstan), radec, nstars);
 
         if (bp->indexrdlsfname) {
             // steal this array...
