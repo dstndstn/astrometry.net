@@ -738,11 +738,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 	// Gather stars for index rdls, if requested.
 	if (bp->indexrdlsfname)
 		search_indexrdls(bp, mo);
-	/*
-	  assert(sp->index);
-	  assert(sp->index->indexname);
-	  mo->indexname = sp->index->indexname;
-	*/
+
     ind = bl_insert_sorted(bp->solutions, mo, compare_matchobjs);
     ourmo = bl_access(bp->solutions, ind);
 
@@ -759,7 +755,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
         ifield = il_get(mo->corr_field, j);
         iindex = il_get(mo->corr_index, j);
         assert(ifield >= 0);
-        assert(ifield < sp->nfield);
+        assert(ifield < starxy_n(sp->fieldxy));
 
         dl_append(ourmo->corr_field_xy,
                   starxy_getx(sp->fieldxy, ifield));

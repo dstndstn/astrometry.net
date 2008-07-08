@@ -348,7 +348,7 @@ void verify_hit(startree_t* skdt,
 
 			fldind = vf->ftree->perm[ind];
 			assert(fldind >= 0);
-			assert(fldind < vf->NF);
+			assert(fldind < NF);
 
 			if (do_gamma) {
                 double sxy[2];
@@ -364,9 +364,6 @@ void verify_hit(startree_t* skdt,
 			} else
                 sigma2 = verify_pix2;
 
-			// don't bother computing the logprob if it's tiny...
-			//if (bestd2 > 100.0 * sigma2)
-
 			if (DEBUGVERIFY) {
 				double ra,dec;
 				if (do_gamma)
@@ -379,13 +376,13 @@ void verify_hit(startree_t* skdt,
 				// log((1.0 - distractors) / (2.0 * M_PI * sigma2 * M)));
 				debug("NN dist: %5.1f pix, %g sigmas\n", sqrt(bestd2), sqrt(bestd2/sigma2));
 			}
-			if (log((1.0 - distractors) / (2.0 * M_PI * sigma2 * vf->NF)) < logprob_background) {
+			if (log((1.0 - distractors) / (2.0 * M_PI * sigma2 * NF)) < logprob_background) {
 				// what's the point?!
 				debug("This Gaussian is nearly uninformative.\n");
 				continue;
 			}
 
-			logprob = log((1.0 - distractors) / (2.0 * M_PI * sigma2 * vf->NF)) - (bestd2 / (2.0 * sigma2));
+			logprob = log((1.0 - distractors) / (2.0 * M_PI * sigma2 * NF)) - (bestd2 / (2.0 * sigma2));
 			if (logprob < logprob_distractor) {
 				debug("Distractor.\n");
 				logprob = logprob_distractor;
