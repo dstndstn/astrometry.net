@@ -21,13 +21,51 @@
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_vector_double.h>
 #include <gsl/gsl_linalg.h>
+#include <stdarg.h>
 
 #include "gslutils.h"
+
+int gslutils_solve_leastsquares_v(gsl_matrix* A, int NB, ...) {
+    int i, res;
+    gsl_vector**  B = malloc(NB * sizeof(gsl_vector*));
+    // Whoa, three-star programming!
+    gsl_vector*** X = malloc(NB * sizeof(gsl_vector**));
+    gsl_vector*** R = malloc(NB * sizeof(gsl_vector**));
+
+    gsl_vector** Xtmp = malloc(NB * sizeof(gsl_vector*));
+    gsl_vector** Rtmp = malloc(NB * sizeof(gsl_vector*));
+
+    va_list va;
+    va_start(va, NB);
+    for (i=0; i<NB; i++) {
+        B[i] = va_arg(va, gsl_vector*);
+        X[i] = va_arg(va, gsl_vector**);
+        R[i] = va_arg(va, gsl_vector**);
+    }
+    va_end(va);
+
+    res = gslutils_solve_leastsquares(A, B, Xtmp, Rtmp, NB);
+    for (i=0; i<NB; i++) {
+        if (X[i])
+            *(X[i]) = Xtmp[i];
+        else
+            gsl_vector_free(Xtmp[i]);
+        if (R[i])
+            *(R[i]) = Rtmp[i];
+        else
+            gsl_vector_free(Rtmp[i]);
+    }
+    free(Xtmp);
+    free(Rtmp);
+    free(X);
+    free(R);
+    free(B);
+    return res;
+}
 
 int gslutils_solve_leastsquares(gsl_matrix* A, gsl_vector** B,
                                 gsl_vector** X, gsl_vector** resids,
                                 int NB) {
-    //double rmsB=0;
     int i;
     gsl_vector *tau, *resid = NULL;
     int ret;
@@ -62,16 +100,6 @@ int gslutils_solve_leastsquares(gsl_matrix* A, gsl_vector** B,
             resid = NULL;
         }
     }
-    /*
-     // RMS of (AX-B).
-     for (j=0; j<M; j++) {
-     rmsB += square(gsl_vector_get(resid1, j));
-     rmsB += square(gsl_vector_get(resid2, j));
-     }
-     if (M > 0)
-     rmsB = sqrt(rmsB / (double)(M*2));
-     debug("gsl rms                = %g\n", rmsB);
-     */
 
     gsl_vector_free(tau);
     if (resid)

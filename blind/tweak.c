@@ -745,36 +745,19 @@ void invert_sip_polynomial(tweak_t* t) {
 
 	// Solve the linear equation.
 	{
-		//double rmsB=0;
         gsl_vector *B[2], *X[2];
-        //, *resids[2];
-        gsl_vector** resids = NULL;
 
         B[0] = b1;
         B[1] = b2;
         X[0] = X[1] = NULL;
-        //resids[0] = resids[1] = NULL;
 
-        if (gslutils_solve_leastsquares(mA, B, X, resids, 2)) {
+        if (gslutils_solve_leastsquares(mA, B, X, NULL, 2)) {
             ERROR("Failed to solve tweak inversion matrix equation!");
             return;
         }
 
         x1 = X[0];
         x2 = X[1];
-
-		// RMS of (AX-B).
-        /*
-         for (j=0; j<M; j++) {
-         rmsB += square(gsl_vector_get(resids[0], j));
-         rmsB += square(gsl_vector_get(resids[1], j));
-         }
-         if (M > 0)
-         rmsB = sqrt(rmsB / (double)(M*2));
-         debug("gsl rms                = %g\n", rmsB);
-         gsl_vector_free(resid1);
-         gsl_vector_free(resid2);
-         */
 	}
 
 	// Extract the coefficients

@@ -43,4 +43,17 @@ int gslutils_solve_leastsquares(gsl_matrix* A, gsl_vector** B,
                                 gsl_vector** X, gsl_vector** resids,
                                 int NB);
 
+/**
+ Same as above, but using varargs.  There must be exactly 3 * NB additional
+ arguments, in the order:
+
+ B0, &X0, &resid0, B1, &X1, &resid1, ...
+
+ ie, the types must be repeating triples of:
+ 
+ gsl_vector* b, gsl_vector** x, gsl_vector** resid
+
+ */
+int gslutils_solve_leastsquares_v(gsl_matrix* A, int NB, ...);
+
 #endif
