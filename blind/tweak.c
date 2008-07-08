@@ -1336,7 +1336,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 		int jj;
 		ensure(TWEAK_HAS_SIP);
 		ensure(TWEAK_HAS_IMAGE_XY);
-		logverb("Satisfying TWEAK_HAS_IMAGE_AD\n");
+		debug("Satisfying TWEAK_HAS_IMAGE_AD\n");
 		// Convert to ra dec
 		assert(!t->a);
 		assert(!t->d);
@@ -1349,14 +1349,14 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 
 	want(TWEAK_HAS_REF_AD) {
 		ensure(TWEAK_HAS_REF_XYZ);
-		logverb("Satisfying TWEAK_HAS_REF_AD\n");
+		debug("Satisfying TWEAK_HAS_REF_AD\n");
         ref_ad_from_xyz(t);
 		done(TWEAK_HAS_REF_AD);
 	}
 
 	want(TWEAK_HAS_REF_XYZ) {
         ensure(TWEAK_HAS_REF_AD);
-        logverb("Satisfying TWEAK_HAS_REF_XYZ\n");
+        debug("Satisfying TWEAK_HAS_REF_XYZ\n");
         ref_xyz_from_ad(t);
 		done(TWEAK_HAS_REF_XYZ);
 	}
@@ -1364,7 +1364,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 	want(TWEAK_HAS_REF_XY) {
 		int jj;
 		ensure(TWEAK_HAS_REF_AD);
-		logverb("Satisfying TWEAK_HAS_REF_XY\n");
+		debug("Satisfying TWEAK_HAS_REF_XY\n");
 		assert(t->state & TWEAK_HAS_REF_AD);
 		assert(t->n_ref);
 		assert(!t->x_ref);
@@ -1382,7 +1382,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 
 	want(TWEAK_HAS_AD_BAR_AND_R) {
 		ensure(TWEAK_HAS_IMAGE_AD);
-		logverb("Satisfying TWEAK_HAS_AD_BAR_AND_R\n");
+		debug("Satisfying TWEAK_HAS_AD_BAR_AND_R\n");
 		assert(t->state & TWEAK_HAS_IMAGE_AD);
 		get_center_and_radius(t->a, t->d, t->n,
 		                      &t->a_bar, &t->d_bar, &t->radius);
@@ -1394,7 +1394,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 	want(TWEAK_HAS_IMAGE_XYZ) {
 		int i;
 		ensure(TWEAK_HAS_IMAGE_AD);
-		logverb("Satisfying TWEAK_HAS_IMAGE_XYZ\n");
+		debug("Satisfying TWEAK_HAS_IMAGE_XYZ\n");
 		assert(!t->xyz);
 		t->xyz = malloc(3 * t->n * sizeof(double));
 		for (i = 0; i < t->n; i++)
@@ -1405,7 +1405,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 	want(TWEAK_HAS_COARSLY_SHIFTED) {
 		ensure(TWEAK_HAS_REF_XY);
 		ensure(TWEAK_HAS_IMAGE_XY);
-		logverb("Satisfying TWEAK_HAS_COARSLY_SHIFTED\n");
+		debug("Satisfying TWEAK_HAS_COARSLY_SHIFTED\n");
 		get_dydx_range(t->x, t->y, t->n, t->x_ref, t->y_ref, t->n_ref,
 		               &t->mindx, &t->mindy, &t->maxdx, &t->maxdy);
 		do_entire_shift_operation(t, 1.0);
@@ -1418,7 +1418,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 		ensure(TWEAK_HAS_REF_XY);
 		ensure(TWEAK_HAS_IMAGE_XY);
 		ensure(TWEAK_HAS_COARSLY_SHIFTED);
-		logverb("Satisfying TWEAK_HAS_FINELY_SHIFTED\n");
+		debug("Satisfying TWEAK_HAS_FINELY_SHIFTED\n");
 		// Shrink size of hough box
 		do_entire_shift_operation(t, 0.3);
 		tweak_clear_image_ad(t);
@@ -1430,7 +1430,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 		ensure(TWEAK_HAS_REF_XY);
 		ensure(TWEAK_HAS_IMAGE_XY);
 		ensure(TWEAK_HAS_FINELY_SHIFTED);
-		logverb("Satisfying TWEAK_HAS_REALLY_FINELY_SHIFTED\n");
+		debug("Satisfying TWEAK_HAS_REALLY_FINELY_SHIFTED\n");
 		// Shrink size of hough box
 		do_entire_shift_operation(t, 0.03);
 		tweak_clear_image_ad(t);
@@ -1441,7 +1441,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 	want(TWEAK_HAS_CORRESPONDENCES) {
 		ensure(TWEAK_HAS_REF_XYZ);
 		ensure(TWEAK_HAS_IMAGE_XYZ);
-		logverb("Satisfying TWEAK_HAS_CORRESPONDENCES\n");
+		debug("Satisfying TWEAK_HAS_CORRESPONDENCES\n");
 		t->jitterd2 = arcsec2distsq(t->jitter);
 		find_correspondences(t, 6.0 * arcsec2rad(t->jitter));
 		done(TWEAK_HAS_CORRESPONDENCES);
@@ -1454,7 +1454,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 		ensure(TWEAK_HAS_REF_AD);
 		ensure(TWEAK_HAS_IMAGE_XY);
 		ensure(TWEAK_HAS_CORRESPONDENCES);
-		logverb("Satisfying TWEAK_HAS_LINEAR_CD\n");
+		debug("Satisfying TWEAK_HAS_LINEAR_CD\n");
 		do_sip_tweak(t);
 		tweak_clear_on_sip_change(t);
 		done(TWEAK_HAS_LINEAR_CD);
