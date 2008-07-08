@@ -18,13 +18,76 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <sys/param.h>
 
 #include "cutest.h"
 #include "starutil.h"
 #include "healpix.h"
 
-static double square(x) {
+static double square(double x) {
     return x*x;
+}
+
+/*
+ static void tst_radectohpf(CuTest* ct,
+ double ra, double dec) {
+ }
+ */
+
+void tst_xyztohpf(CuTest* ct,
+                  int hp, int nside, double dx, double dy) {
+    double x,y,z;
+    double outdx, outdy;
+    int outhp;
+    double outx,outy,outz;
+    double dist;
+    //printf("going to try: hp %i, dx %g, dy %g.\n", hp, dx, dy);
+    healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
+    outhp = xyztohealpixf(x, y, z, nside, &outdx, &outdy);
+    healpix_to_xyz(outhp, nside, outdx, outdy, &outx, &outy, &outz);
+    dist = sqrt(MAX(0, square(x-outx) + square(y-outy) + square(z-outz)));
+    printf("true/computed:\n"
+           "hp: %i / %i\n"
+           "dx: %g / %g\n"
+           "dy: %g / %g\n"
+           "dist: %g\n\n", hp, outhp, dx, outdx, dy, outdy, dist);
+    outhp = xyztohealpixf(x, y, z, nside, &outdx, &outdy);
+}
+
+void test_xyztohpf_2(CuTest* ct) {
+    tst_xyztohpf(ct, 0, 1, 0, 0.8);
+    tst_xyztohpf(ct, 0, 1, 0, 1.0);
+    tst_xyztohpf(ct, 0, 1, 0.3, 0.0);
+    tst_xyztohpf(ct, 0, 1, 0.5, 0.0);
+    tst_xyztohpf(ct, 0, 1, 0.6, 0.0);
+    tst_xyztohpf(ct, 0, 1, 0.7, 0.0);
+    tst_xyztohpf(ct, 0, 1, 0.8, 0.0);
+    tst_xyztohpf(ct, 0, 1, 0.9, 0.9);
+    tst_xyztohpf(ct, 0, 1, 1.0, 0.3);
+    tst_xyztohpf(ct, 0, 1, 1.0, 0.4);
+    tst_xyztohpf(ct, 0, 1, 1.0, 0.5);
+    tst_xyztohpf(ct, 0, 1, 1.0, 0.7);
+    tst_xyztohpf(ct, 0, 1, 1.0, 0.8);
+    tst_xyztohpf(ct, 0, 1, 1.0, 0.9);
+    tst_xyztohpf(ct, 0, 1, 1.0, 1.0);
+
+    tst_xyztohpf(ct, 1, 1, 0.0, 0.1);
+}
+
+void test_xyztohpf(CuTest* ct) {
+    double dx, dy;
+    int hp;
+    int nside;
+    nside = 1;
+
+    for (hp=0; hp<12*nside*nside; hp++) {
+        for (dx=0.0; dx<=1.0; dx+=0.1) {
+            for (dy=0.0; dy<=1.0; dy+=0.1) {
+                tst_xyztohpf(ct, hp, nside, dx, dy);
+            }
+        }
+    }
+
 }
 
 static void tst_neighbours(CuTest* ct, uint pix, uint* true_neigh, uint true_nn,

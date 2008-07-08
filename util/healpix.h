@@ -224,6 +224,9 @@ Const unsigned int xyztohealpix(double x, double y, double z, unsigned int Nside
 */
 unsigned int xyzarrtohealpix(double* xyz, unsigned int Nside);
 
+unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
+                           double* p_dx, double* p_dy);
+
 /**
    Converts a healpix index, plus fractional offsets (dx,dy), into (x,y,z)
    coordinates on the unit sphere.  (dx,dy) must be in [0, 1].  (0.5, 0.5)

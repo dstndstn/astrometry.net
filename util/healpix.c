@@ -609,11 +609,20 @@ unsigned int healpix_get_neighbours(unsigned int pix, unsigned int* neighbour, u
 }
 
 unsigned int xyztohealpix(double x, double y, double z, unsigned int Nside) {
+    return xyztohealpixf(x, y, z, Nside, NULL, NULL);
+}
+
+unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
+                           double* p_dx, double* p_dy) {
 	double phi;
 	double phioverpi;
 	double twothirds = 2.0 / 3.0;
 	double twopi = 2.0 * M_PI;
 	double pi = M_PI;
+    double dx, dy;
+    int basehp;
+    int hp;
+    int pnprime;
 
 	/* Convert our point into cylindrical coordinates for middle ring */
 	phi = atan2(y, x);
@@ -628,10 +637,7 @@ unsigned int xyztohealpix(double x, double y, double z, unsigned int Nside) {
 		bool north;
 		double phit;
 		unsigned int x, y;
-		unsigned int pnprime;
 		int column;
-		int basehp;
-		int hp;
 		double root;
 
 		// Which pole?
@@ -647,19 +653,27 @@ unsigned int xyztohealpix(double x, double y, double z, unsigned int Nside) {
 		assert (phit >= 0.0);
 
 		root = (1.0 - z*zfactor) * 3.0 * mysquare(Nside * (2.0 * phit - pi) / pi);
-		if (root <= 0.0)
+		if (root <= 0.0) {
 			x = 1;
-		else
-			x = (int)ceil(sqrt(root));
+            dx = 0.0;
+        } else {
+            double fx = sqrt(root);
+			x = (int)ceil(fx);
+            dx = x - fx;
+        }
 
 		assert(x >= 1);
 		assert(x <= Nside);
 
 		root = (1.0 - z*zfactor) * 3.0 * mysquare(Nside * 2.0 * phit / pi);
-		if (root <= 0.0)
+		if (root <= 0.0) {
 			y = 1;
-		else
-			y = (int)ceil(sqrt(root));
+            dy = 0.0;
+        } else {
+            double fy = sqrt(root);
+			y = (int)ceil(fy);
+            dy = y - fy;
+        }
 
 		assert(y >= 1);
 		assert(y <= Nside);
@@ -667,8 +681,10 @@ unsigned int xyztohealpix(double x, double y, double z, unsigned int Nside) {
 		x = Nside - x;
 		y = Nside - y;
 
-		if (!north)
+		if (!north) {
 			swap(&x, &y);
+            swap_double(&dx, &dy);
+        }
 
 		pnprime = compose_xy(x, y, Nside);
 
@@ -682,22 +698,16 @@ unsigned int xyztohealpix(double x, double y, double z, unsigned int Nside) {
 		else
 			basehp = 8 + column;
 
-		hp = basehp * (Nside * Nside) + pnprime;
-
-		return hp;
-
 	} else {
 		// could be polar or equatorial.
 		double phimod;
 		int offset;
 		double z1, z2;
-		int basehp;
 		double phim;
 		double u1, u2;
 		double zunits, phiunits;
 		int x, y;
-		unsigned int pnprime;
-		int hp;
+        double fx, fy;
 
 		phim = fmod(phi, pi / 2.0);
 
@@ -707,8 +717,12 @@ unsigned int xyztohealpix(double x, double y, double z, unsigned int Nside) {
 		u1 = (zunits + phiunits) / 2.0;
 		u2 = (zunits - phiunits) / 2.0;
 		// x is the northeast direction, y is the northwest.
-		x = (int)floor(u1 * 2.0 * Nside);
-		y = (int)floor(u2 * 2.0 * Nside);
+        fx = u1 * 2.0 * Nside;
+		x = (int)floor(fx);
+        dx = fx - x;
+        fy = u2 * 2.0 * Nside;
+		y = (int)floor(fy);
+        dy = fy - y;
 		x %= (int)Nside;
 		y %= (int)Nside;
 
@@ -737,12 +751,13 @@ unsigned int xyztohealpix(double x, double y, double z, unsigned int Nside) {
 			// right equatorial
 			basehp = ((offset + 1) % 4) + 4;
 		}
-
-		hp = basehp * Nside * Nside + pnprime;
-
-		return hp;
 	}
-	return -1;
+    hp = basehp * Nside * Nside + pnprime;
+
+    if (p_dx) *p_dx = dx;
+    if (p_dy) *p_dy = dy;
+
+    return hp;
 }
 
 unsigned int radectohealpix(double ra, double dec, unsigned int Nside) {
