@@ -120,10 +120,11 @@ DEP_OBJ += $(ALL_TEST_FILES_O) $(ALL_TEST_FILES_MAIN_O)
 
 .PHONY: realclean clean
 clean:
-	-rm $(LIBKD) $(KD) $(KD_FITS) deps $(DEPS) \
+	-rm -f $(LIBKD) $(KD) $(KD_FITS) deps $(DEPS) \
 		checktree checktree.o \
 		fix-bb fix-bb.o \
-		$(INTERNALS) $(INTERNALS_NOIO) $(LIBKD_NOIO)
+		$(INTERNALS) $(INTERNALS_NOIO) $(LIBKD_NOIO) \
+		$(ALL_TESTS_CLEAN)
 
 realclean: clean
 	-rm *~ *.dep

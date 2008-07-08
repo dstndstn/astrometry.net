@@ -48,9 +48,6 @@ CFLAGS += $(ANUTILS_INC)
 CFLAGS += $(ANFILES_INC)
 CFLAGS += $(GSL_INC)
 
-# For Keir's fancy Python bindings:
-#CFLAGS += -fPIC
-
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
 QFITS_UTILS := fitsgetext subtable tabsort column-merge add-healpix-column \
@@ -72,7 +69,8 @@ OTHER_OBJS := usnob.o usnob-fits.o tycho2.o tycho2-fits.o catalog.o \
 	blind_wcs.o index.o tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	brightstars.o ngcic-accurate.o nomad.o nomad-fits.o \
-	ngc2000.o noisesim.o noise.o blindutils.o hd.o
+	ngc2000.o noisesim.o noise.o blindutils.o hd.o \
+	backend-main.o backend.o build-hd-tree.o plotquad.o plotxy.o add-text.o
 
 2MASSOBJ := 2masstofits.o 2mass-fits.o 2mass.o
 
@@ -568,7 +566,7 @@ clean:
 	rm -f $(EXECS) $(EXTRA_EXECS) $(SOLVER_EXECS) $(MISC_EXECS) $(PROGS) \
 		$(PIPELINE) $(PROSPECTUS) $(DEPS) deps $(FITS_UTILS) $(ALL_OBJ) $(IMAGE2XY) \
 		$(NODEP_OBJS) plot-constellations fitsverify plotquad plotxy \
-		$(ALL_EXECS) $(GENERATED_FILES)
+		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN)
 
 
 

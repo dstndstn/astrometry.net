@@ -30,6 +30,10 @@ ALL_TEST_FILES_O = $(addsuffix .o, $(ALL_TEST_FILES))
 ALL_TEST_FILES_MAIN_C = $(addsuffix -main.c, $(ALL_TEST_FILES))
 ALL_TEST_FILES_MAIN_O = $(addsuffix -main.o, $(ALL_TEST_FILES))
 
+ALL_TESTS_CLEAN = $(ALL_TEST_FILES) $(ALL_TEST_FILES_O) \
+    $(ALL_TEST_FILES_MAIN_C) $(ALL_TEST_FILES_MAIN_O) \
+    test test.o test.c cutest.o
+
 MAKE_TESTS := $(COMMON)/make-tests.sh
 
 $(COMMON)/make-tests.sh: ;

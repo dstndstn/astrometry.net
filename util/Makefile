@@ -236,4 +236,4 @@ clean:
 	rm -f $(ANUTILS_LIB) $(ANFILES_LIB) $(ALL_OBJ) \
 		$(DEPS) deps cairoutils.o $(PYTHON_LIBS) \
 		grab-stellarium-constellations \
-		$(PROGS) $(ALL_TARGETS)
+		$(PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN)

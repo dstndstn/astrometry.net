@@ -115,8 +115,8 @@ X := $(shell rm $(TMPFILE))
 # FLAGS_DEF are gcc flags that are shared between compiling and
 # linking.  CFLAGS_DEF are compile flags, LDFLAGS_DEF are link flags.
 
-#RICKY_BOBBY := no
-RICKY_BOBBY := yes
+RICKY_BOBBY := no
+#RICKY_BOBBY := yes
 
 ifeq ($(RICKY_BOBBY),yes)
   # speedy!
