@@ -28,11 +28,16 @@
 
  For NB pairs of X_i, B_i.
 
+ NOTE: THIS DESTROYS A!
+
  A: MxN matrix
  B: array of NB x length-M vectors
- X: array of NB x length-N vectors
+ X: must be an array big enough to hold NB vectors.
+   (they will be length-N).
  resids: if non-NULL, must be an array big enough to hold NB vectors
    (they will be length-M).
+
+ The result vectors are freshly allocated and should be freed with gsl_vector_free().
  */
 int gslutils_solve_leastsquares(gsl_matrix* A, gsl_vector** B,
                                 gsl_vector** X, gsl_vector** resids,

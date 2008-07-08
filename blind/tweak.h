@@ -117,9 +117,7 @@ typedef struct tweak_s {
 	double jitterd2;
 
 	// Weighted or unweighted fit?
-	int weighted_fit;
-
-    bool quiet;
+    bool weighted_fit;
 } tweak_t;
 
 tweak_t* tweak_new();
@@ -131,7 +129,6 @@ void tweak_clear(tweak_t* t);
 void tweak_dump_ascii(tweak_t* t);
 void tweak_skip_shift(tweak_t* t);
 
-//void tweak_push_image_xy(tweak_t* t, const double* x, const double *y, int n);
 void tweak_push_image_xy(tweak_t* t, const starxy_t* xy);
 
 void tweak_push_ref_ad(tweak_t* t, double* a, double *d, int n);

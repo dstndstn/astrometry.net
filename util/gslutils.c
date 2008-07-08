@@ -39,8 +39,6 @@ int gslutils_solve_leastsquares(gsl_matrix* A, gsl_vector** B,
     for (i=0; i<NB; i++) {
         assert(B[i]);
         assert(B[i]->size == M);
-        assert(X[i]);
-        assert(X[i]->size == N);
     }
 
     tau = gsl_vector_alloc(MIN(M, N));
@@ -55,6 +53,8 @@ int gslutils_solve_leastsquares(gsl_matrix* A, gsl_vector** B,
             resid = gsl_vector_alloc(M);
             assert(resid);
         }
+        X[i] = gsl_vector_alloc(N);
+        assert(X[i]);
         ret = gsl_linalg_QR_lssolve(A, tau, B[i], X[i], resid);
 		assert(ret == 0);
         if (resids) {

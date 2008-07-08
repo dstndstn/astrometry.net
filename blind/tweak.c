@@ -36,6 +36,8 @@
 #include "mathutil.h"
 #include "log.h"
 #include "permutedsort.h"
+#include "gslutils.h"
+#include "errors.h"
 
 // TODO:
 //
@@ -471,15 +473,12 @@ void tweak_skip_shift(tweak_t* t) {
 // optimizer can take care of it.
 static void dtrs_match_callback(void* extra, int image_ind, int ref_ind, double dist2) {
 	tweak_t* t = extra;
-
 	image_ind = kdtree_permute(t->kd_image, image_ind);
 	ref_ind   = kdtree_permute(t->kd_ref,   ref_ind);
-
 	il_append(t->image, image_ind);
 	il_append(t->ref, ref_ind);
 	dl_append(t->dist2, dist2);
 	il_append(t->included, 1);
-
 	if (t->weight)
 		dl_append(t->weight, exp(-dist2 / (2.0 * t->jitterd2)));
 }
@@ -533,28 +532,6 @@ void find_correspondences(tweak_t* t, double jitter) {
 	logverb("Number of correspondences: %d\n", dl_size(t->dist2));
 }
 
-// in arcseconds^2 on the sky (chi-sq)
-double figure_of_merit(tweak_t* t, double *rmsX, double *rmsY) {
-	double sqerr = 0.0;
-	int i;
-	for (i = 0; i < il_size(t->image); i++) {
-		double a, d;
-		double xyzpt[3];
-		double xyzpt_ref[3];
-		sip_pixelxy2radec(t->sip, t->x[il_get(t->image, i)],
-		                  t->y[il_get(t->image, i)], &a, &d);
-
-		// xref and yref should be intermediate WC's not image x and y!
-		radecdeg2xyzarr(a, d, xyzpt);
-		radecdeg2xyzarr(t->a_ref[il_get(t->ref, i)],
-		                t->d_ref[il_get(t->ref, i)], xyzpt_ref);
-
-		if (il_get(t->included, i)) 
-            sqerr += distsq(xyzpt, xyzpt_ref, 3);
-	}
-	return rad2arcsec(1)*rad2arcsec(1)*sqerr;
-}
-
 double correspondences_rms_arcsec(tweak_t* t, int weighted) {
 	double err2 = 0.0;
 	int i;
@@ -581,6 +558,28 @@ double correspondences_rms_arcsec(tweak_t* t, int weighted) {
 		err2 += weight * distsq(imgxyz, refxyz, 3);
 	}
 	return distsq2arcsec( err2 / totalweight );
+}
+
+// in arcseconds^2 on the sky (chi-sq)
+double figure_of_merit(tweak_t* t, double *rmsX, double *rmsY) {
+	double sqerr = 0.0;
+	int i;
+	for (i = 0; i < il_size(t->image); i++) {
+		double a, d;
+		double xyzpt[3];
+		double xyzpt_ref[3];
+		sip_pixelxy2radec(t->sip, t->x[il_get(t->image, i)],
+		                  t->y[il_get(t->image, i)], &a, &d);
+
+		// xref and yref should be intermediate WC's not image x and y!
+		radecdeg2xyzarr(a, d, xyzpt);
+		radecdeg2xyzarr(t->a_ref[il_get(t->ref, i)],
+		                t->d_ref[il_get(t->ref, i)], xyzpt_ref);
+
+		if (il_get(t->included, i)) 
+            sqerr += distsq(xyzpt, xyzpt_ref, 3);
+	}
+	return rad2arcsec(1)*rad2arcsec(1)*sqerr;
 }
 
 double figure_of_merit2(tweak_t* t) {
@@ -610,20 +609,17 @@ void invert_sip_polynomial(tweak_t* t) {
      */
 
 	int inv_sip_order, ngrid, inv_sip_coeffs;
-
 	double maxu, maxv, minu, minv;
 	int i, j, p, q, gu, gv;
 	int N, M;
 	double u, v, U, V;
-
-	gsl_matrix *mA, *QR;
+	gsl_matrix *mA;
 	gsl_vector *b1, *b2, *x1, *x2;
 
 	assert(t->sip->a_order == t->sip->b_order);
 	assert(t->sip->ap_order == t->sip->bp_order);
 
 	inv_sip_order = t->sip->ap_order;
-
 	// Number of grid points to use:
 	ngrid = 10 * (inv_sip_order + 1);
 	logverb("tweak inversion using %u gridpoints\n", ngrid);
@@ -640,41 +636,39 @@ void invert_sip_polynomial(tweak_t* t) {
 	mA = gsl_matrix_alloc(M, N);
 	b1 = gsl_vector_alloc(M);
 	b2 = gsl_vector_alloc(M);
-	x1 = gsl_vector_alloc(N);
-	x2 = gsl_vector_alloc(N);
 	assert(mA);
 	assert(b1);
 	assert(b2);
-	assert(x1);
-	assert(x2);
 
-	// Rearranging formula (4), (5), and (6) from the SIP paper gives the
-	// following equations:
-	//
-	//   +----------------------- Linear pixel coordinates in PIXELS
-	//   |                        before SIP correction
-	//   |                   +--- Intermediate world coordinates in DEGREES
-	//   |                   |
-	//   v                   v
-	//                  -1
-	//   U = [CD11 CD12]   * x
-	//   V   [CD21 CD22]     y
-	//
-	//   +---------------- PIXEL distortion delta from telescope to
-	//   |                 linear coordinates
-	//   |    +----------- Linear PIXEL coordinates before SIP correction
-	//   |    |       +--- Polynomial U,V terms in powers of PIXELS
-	//   v    v       v
-	//
-	//   -f(u1,v1) =  p11 p12 p13 p14 p15 ... * ap1
-	//   -f(u2,v2) =  p21 p22 p23 p24 p25 ...   ap2
-	//   ...
-	//
-	//   -g(u1,v1) =  p11 p12 p13 p14 p15 ... * bp1
-	//   -g(u2,v2) =  p21 p22 p23 p24 p25 ...   bp2
-	//   ...
-	//
-	// which recovers the A and B's.
+    /*
+     *  Rearranging formula (4), (5), and (6) from the SIP paper gives the
+     *  following equations:
+     * 
+     *    +----------------------- Linear pixel coordinates in PIXELS
+     *    |                        before SIP correction
+     *    |                   +--- Intermediate world coordinates in DEGREES
+     *    |                   |
+     *    v                   v
+     *                   -1
+     *    U = [CD11 CD12]   * x
+     *    V   [CD21 CD22]     y
+     * 
+     *    +---------------- PIXEL distortion delta from telescope to
+     *    |                 linear coordinates
+     *    |    +----------- Linear PIXEL coordinates before SIP correction
+     *    |    |       +--- Polynomial U,V terms in powers of PIXELS
+     *    v    v       v
+     * 
+     *    -f(u1,v1) =  p11 p12 p13 p14 p15 ... * ap1
+     *    -f(u2,v2) =  p21 p22 p23 p24 p25 ...   ap2
+     *    ...
+     * 
+     *    -g(u1,v1) =  p11 p12 p13 p14 p15 ... * bp1
+     *    -g(u2,v2) =  p21 p22 p23 p24 p25 ...   bp2
+     *    ...
+     * 
+     *  which recovers the A and B's.
+     */
 
 	// Find image boundaries
 	minu = minv = 1e100;
@@ -693,8 +687,8 @@ void invert_sip_polynomial(tweak_t* t) {
 		for (gv = 0; gv < ngrid; gv++) {
 			double fuv, guv;
 			// Calculate grid position in original image pixels
-			u = (gu * (maxu - minu) / (ngrid-1)) + minu; // now in pixels
-			v = (gv * (maxv - minv) / (ngrid-1)) + minv;  // now in pixels
+			u = (gu * (maxu - minu) / (ngrid-1)) + minu;
+			v = (gv * (maxv - minv) / (ngrid-1)) + minv;
 			// compute U=u+f(u,v) and V=v+g(u,v)
 			sip_calc_distortion(t->sip, u, v, &U, &V);
 			fuv = U - u;
@@ -719,39 +713,36 @@ void invert_sip_polynomial(tweak_t* t) {
 
 	// Solve the linear equation.
 	{
-		double rmsB=0;
-		gsl_vector *tau, *resid1, *resid2;
-		int ret;
+		//double rmsB=0;
+        gsl_vector *B[2], *X[2];
+        //, *resids[2];
+        gsl_vector** resids = NULL;
 
-		tau = gsl_vector_alloc(imin(M, N));
-		resid1 = gsl_vector_alloc(M);
-		resid2 = gsl_vector_alloc(M);
-		assert(tau);
-		assert(resid1);
-		assert(resid2);
+        B[0] = b1;
+        B[1] = b2;
+        X[0] = X[1] = NULL;
+        //resids[0] = resids[1] = NULL;
 
-		ret = gsl_linalg_QR_decomp(mA, tau);
-		assert(ret == 0);
-		// mA,tau now contains a packed version of Q,R.
-		QR = mA;
+        if (gslutils_solve_leastsquares(mA, B, X, resids, 2)) {
+            ERROR("Failed to solve tweak inversion matrix equation!");
+            return;
+        }
 
-		ret = gsl_linalg_QR_lssolve(QR, tau, b1, x1, resid1);
-		assert(ret == 0);
-		ret = gsl_linalg_QR_lssolve(QR, tau, b2, x2, resid2);
-		assert(ret == 0);
+        x1 = X[0];
+        x2 = X[1];
 
 		// RMS of (AX-B).
-		for (j=0; j<M; j++) {
-			rmsB += square(gsl_vector_get(resid1, j));
-			rmsB += square(gsl_vector_get(resid2, j));
-		}
-		if (M > 0)
-			rmsB = sqrt(rmsB / (double)(M*2));
-		debug("gsl rms                = %g\n", rmsB);
-
-		gsl_vector_free(tau);
-		gsl_vector_free(resid1);
-		gsl_vector_free(resid2);
+        /*
+         for (j=0; j<M; j++) {
+         rmsB += square(gsl_vector_get(resids[0], j));
+         rmsB += square(gsl_vector_get(resids[1], j));
+         }
+         if (M > 0)
+         rmsB = sqrt(rmsB / (double)(M*2));
+         debug("gsl rms                = %g\n", rmsB);
+         gsl_vector_free(resid1);
+         gsl_vector_free(resid2);
+         */
 	}
 
 	// Extract the coefficients
@@ -939,7 +930,7 @@ void do_sip_tweak(tweak_t* t) {
      */
 
 	/*
-     * 
+     *  Dustin's interpretation of the above:
      *  We want to solve:
      * 
      *     min || b[M-by-1] - A[M-by-N] x[N-by-1] ||_2
@@ -981,77 +972,71 @@ void do_sip_tweak(tweak_t* t) {
 	radecdeg2xyzarr(t->sip->wcstan.crval[0], t->sip->wcstan.crval[1], xyzcrval);
 	totalweight = 0.0;
 	i = -1;
-	for (row = 0; row < il_size(t->included); row++)
-        {
-            int refi;
-            double x, y;
-            double xyzpt[3];
-            double weight = 1.0;
-            double u;
-            double v;
-            bool ok;
+	for (row = 0; row < il_size(t->included); row++) {
+        int refi;
+        double x, y;
+        double xyzpt[3];
+        double weight = 1.0;
+        double u;
+        double v;
+        bool ok;
 
-            if (!il_get(t->included, row)) {
-                continue;
-            }
-            i++;
+        if (!il_get(t->included, row))
+            continue;
+        i++;
+        assert(i >= 0);
+        assert(i < M);
 
-            assert(i >= 0);
-            assert(i < M);
+        u = t->x[il_get(t->image, i)] - t->sip->wcstan.crpix[0];
+        v = t->y[il_get(t->image, i)] - t->sip->wcstan.crpix[1];
 
-            u = t->x[il_get(t->image, i)] - t->sip->wcstan.crpix[0];
-            v = t->y[il_get(t->image, i)] - t->sip->wcstan.crpix[1];
-
-            if (t->weighted_fit) {
-                //double dist2 = dl_get(t->dist2, i);
-                //exp(-dist2 / (2.0 * dist2sigma));
-                weight = dl_get(t->weight, i);
-                assert(weight >= 0.0);
-                assert(weight <= 1.0);
-                totalweight += weight;
-            }
-
-            j = 0;
-            for (order=0; order<=sip_order; order++) {
-                for (q=0; q<=order; q++) {
-                    p = order - q;
-
-                    assert(j >= 0);
-                    assert(j < N);
-                    assert(p >= 0);
-                    assert(q >= 0);
-                    assert(p + q <= sip_order);
-
-                    gsl_matrix_set(mA, i, j, weight * pow(u, (double)p) * pow(v, (double)q));
-
-                    j++;
-                }
-            }
-            assert(j == N);
-
-            //  p q
-            // (0,0) = 1     <- order 0
-            // (1,0) = u     <- order 1
-            // (0,1) = v
-            // (2,0) = u^2   <- order 2
-            // (1,1) = uv
-            // (0,2) = v^2
-            // ...
-
-            // The shift - aka (0,0) - SIP coefficient must be 1.
-            assert(gsl_matrix_get(mA, i, 0) == 1.0 * weight);
-            assert(fabs(gsl_matrix_get(mA, i, 1) - u * weight) < 1e-12);
-            assert(fabs(gsl_matrix_get(mA, i, 2) - v * weight) < 1e-12);
-
-            // B contains Intermediate World Coordinates (in degrees)
-            refi = il_get(t->ref, i);
-            radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], xyzpt);
-            ok = star_coords(xyzpt, xyzcrval, &y, &x); // tangent-plane projection
-            assert(ok);
-
-            gsl_vector_set(b1, i, weight * rad2deg(x));
-            gsl_vector_set(b2, i, weight * rad2deg(y));
+        if (t->weighted_fit) {
+            weight = dl_get(t->weight, i);
+            assert(weight >= 0.0);
+            assert(weight <= 1.0);
+            totalweight += weight;
         }
+
+        /* The coefficients are stored in this order:
+         *   p q
+         *  (0,0) = 1     <- order 0
+         *  (1,0) = u     <- order 1
+         *  (0,1) = v
+         *  (2,0) = u^2   <- order 2
+         *  (1,1) = uv
+         *  (0,2) = v^2
+         *  ...
+         */
+
+        j = 0;
+        for (order=0; order<=sip_order; order++) {
+            for (q=0; q<=order; q++) {
+                p = order - q;
+                assert(j >= 0);
+                assert(j < N);
+                assert(p >= 0);
+                assert(q >= 0);
+                assert(p + q <= sip_order);
+                gsl_matrix_set(mA, i, j, weight * pow(u, (double)p) * pow(v, (double)q));
+                j++;
+            }
+        }
+        assert(j == N);
+
+        // The shift - aka (0,0) - SIP coefficient must be 1.
+        assert(gsl_matrix_get(mA, i, 0) == 1.0 * weight);
+        assert(fabs(gsl_matrix_get(mA, i, 1) - u * weight) < 1e-12);
+        assert(fabs(gsl_matrix_get(mA, i, 2) - v * weight) < 1e-12);
+
+        // B contains Intermediate World Coordinates (in degrees)
+        refi = il_get(t->ref, i);
+        radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], xyzpt);
+        ok = star_coords(xyzpt, xyzcrval, &y, &x); // tangent-plane projection
+        assert(ok);
+
+        gsl_vector_set(b1, i, weight * rad2deg(x));
+        gsl_vector_set(b2, i, weight * rad2deg(y));
+    }
 	assert(i == M - 1);
 
 	if (t->weighted_fit)
@@ -1087,7 +1072,7 @@ void do_sip_tweak(tweak_t* t) {
 		}
 		if (M > 0)
 			rmsB = sqrt(rmsB / (double)(M*2));
-		logverb("gsl rms                = %g\n", rmsB);
+		debug("gsl rms                = %g\n", rmsB);
 
 		gsl_vector_free(tau);
 		gsl_vector_free(resid1);
@@ -1190,8 +1175,7 @@ void do_sip_tweak(tweak_t* t) {
      */
 
 	logverb("After applying shift:\n");
-    if (t->verbose)
-        sip_print_to(t->sip, stdout);
+    //sip_print_to(t->sip, stdout);
 
 	/*
      printf("shiftxun=%g, shiftyun=%g\n", sU, sV);
