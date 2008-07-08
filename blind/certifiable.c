@@ -220,7 +220,6 @@ int main(int argc, char *argv[]) {
             for (; mfcursors[i]<matchfile_count(mf); mfcursors[i]++) {
                 int filenum;
                 int fieldnum;
-                double xyzc[3];
                 double rac, decc;
                 double r2;
                 double arc;
@@ -245,12 +244,6 @@ int main(int argc, char *argv[]) {
 
                 nread++;
 
-                star_midpoint(xyzc, mo->sMin, mo->sMax);
-                r2 = distsq(xyzc, mo->sMin, 3);
-                arc = distsq2arcsec(r2)/60.0;
-                rac = rad2deg(xy2ra(xyzc[0], xyzc[1]));
-                decc = rad2deg(z2dec(xyzc[2]));
-
                 rd = rdlist_read_field_num(rdls, fieldnum, NULL);
                 if (!rd) {
                     fprintf(stderr, "Failed to read RDLS entries for field %i.\n", fieldnum);
@@ -260,13 +253,16 @@ int main(int argc, char *argv[]) {
                 if (Ncenter)
                     nrd = MIN(nrd, Ncenter);
 
+                r2 = square(mo->radius);
+                arc = deg2arcmin(mo->radius_deg);
+
                 for (k=0; k<nrd; k++) {
                     double xyz[3];
                     double ra, dec;
                     ra  = rd_getra (rd, k);
                     dec = rd_getdec(rd, k);
                     radecdeg2xyzarr(ra, dec, xyz);
-                    if (distsq_exceeds(xyz, xyzc, 3, r2 * 1.2)) {
+                    if (distsq_exceeds(xyz, mo->center, 3, r2 * 1.2)) {
                         printf("\nError: Field %i: match says center (%g, %g), scale %g arcmin, but\n",
                                fieldnum, rac, decc, arc);
                         printf("rdls %i is (%g, %g).\n", k, ra, dec);

@@ -105,10 +105,50 @@ int main(int argc, char** args) {
 
 
 
+
+
+
+
+
+
     for (;;) {
+        // Get field
+        // Do source extraction
+        // Get initial WCS
+        // Try to verify initial WCS
+        // Use initial WCS to select appropriate indexes
+        // Call solver.
 
+        solver_t* sp;
 
+        sp = solver_new();
+        solver_set_default_values(sp);
+
+        // sp->timer_callback = timer_callback;
+        // sp->userdata = sp;
+        // sp->record_match_callback = match_callback;
+
+        //solver_compute_quad_range();
+        //solver_add_index(sp, index);
+
+        solver_preprocess_field(sp);
+        solver_verify_sip_wcs(sp, sip);
+
+        solver_run(sp);
+        solver_free_field(sp);
+
+        solver_free(sp);
     }
+
+
+
+
+
+
+
+
+
+
 
 	for (i = optind; i < argc; i++) {
 		char* jobfn;

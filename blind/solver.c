@@ -90,6 +90,57 @@ static void update_timeused(solver_t* sp) {
 		sp->timeused = 0.0;
 }
 
+static void set_matchobj_template(solver_t* solver, MatchObj* mo) {
+    if (solver->mo_template)
+        memcpy(&mo, solver->mo_template, sizeof(MatchObj));
+    else
+        memset(&mo, 0, sizeof(MatchObj));
+}
+
+static void get_field_center(solver_t* s, double* cx, double* cy) {
+    *cx = 0.5 * (s->field_minx + s->field_maxx);
+    *cy = 0.5 * (s->field_miny + s->field_maxy);
+}
+
+static void get_field_ll_corner(solver_t* s, double* lx, double* ly) {
+    *lx = s->field_minx;
+    *ly = s->field_miny;
+}
+
+void solver_set_field(solver_t* s, starxy_t* field) {
+    s->fieldxy = field;
+    // FIXME -- compute size of field, etc?
+}
+
+void set_center_and_radius(solver_t* solver, MatchObj* mo,
+                           tan_t* tan, sip_t* sip) {
+    double cx, cy, lx, ly;
+    double xyz[3];
+    get_field_center(solver, &cx, &cy);
+    get_field_ll_corner(solver, &lx, &ly);
+    if (sip) {
+        sip_pixelxy2xyzarr(sip, cx, cy, mo->center);
+        sip_pixelxy2xyzarr(sip, lx, ly, xyz);
+    } else {
+        tan_pixelxy2xyzarr(tan, cx, cy, mo->center);
+        tan_pixelxy2xyzarr(tan, lx, ly, xyz);
+    }
+    mo->radius = sqrt(distsq(mo->center, xyz, 3));
+    mo->radius_deg = dist2deg(mo->radius);
+}
+
+void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) {
+    MatchObj mo;
+    // fabricate a match and inject it into the solver.
+    set_matchobj_template(solver, &mo);
+    memcpy(&(mo.wcstan), &(sip->wcstan), sizeof(tan_t));
+    mo.wcs_valid = TRUE;
+    mo.scale = sip_pixel_scale(sip);
+    set_center_and_radius(solver, &mo, NULL, sip);
+    solver->distance_from_quad_bonus = FALSE;
+    solver_inject_match(solver, &mo, sip);
+}
+
 void solver_add_index(solver_t* solver, index_t* index) {
     pl_append(solver->indexes, index);
 }
@@ -104,26 +155,11 @@ void solver_reset_best_match(solver_t* sp) {
 }
 
 void solver_transform_corners(solver_t* solver, MatchObj* mo) {
-	// transform the corners of the field...
-	tan_pixelxy2xyzarr(&(mo->wcstan), solver->field_minx, solver->field_miny, mo->sMin);
-	tan_pixelxy2xyzarr(&(mo->wcstan), solver->field_maxx, solver->field_maxy, mo->sMax);
-	tan_pixelxy2xyzarr(&(mo->wcstan), solver->field_minx, solver->field_maxy, mo->sMinMax);
-	tan_pixelxy2xyzarr(&(mo->wcstan), solver->field_maxx, solver->field_miny, mo->sMaxMin);
-	// center and radius...
-	star_midpoint(mo->center, mo->sMin, mo->sMax);
-	mo->radius = sqrt(distsq(mo->center, mo->sMin, 3));
-
-    assert(isfinite(mo->radius));
-    assert(isfinite(mo->sMin[0]));
-    assert(isfinite(mo->sMax[0]));
-    assert(isfinite(mo->sMinMax[0]));
-    assert(isfinite(mo->sMaxMin[0]));
-    assert(isfinite(mo->center[0]));
+    set_center_and_radius(solver, mo, &(mo->wcstan), NULL);
 }
 
 void solver_compute_quad_range(solver_t* sp, index_t* index,
-		double* minAB, double* maxAB)
-{
+                               double* minAB, double* maxAB) {
 	double scalefudge = 0.0; // in pixels
 
 	if (sp->funits_upper != 0.0) {
@@ -145,7 +181,7 @@ void solver_compute_quad_range(solver_t* sp, index_t* index,
 		// -that divided by the smallest arcsec-per-pixel scale
 		//  gives the largest motion in pixels.
 		scalefudge = index->meta.index_scale_upper * M_SQRT1_2 *
-		             sp->codetol / sp->funits_upper;
+            sp->codetol / sp->funits_upper;
 		*minAB -= scalefudge;
 	}
 	if (sp->funits_lower != 0.0) {
@@ -792,10 +828,7 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 
 		solver->numscaleok++;
 
-		if (solver->mo_template)
-			memcpy(&mo, solver->mo_template, sizeof(MatchObj));
-        else
-            memset(&mo, 0, sizeof(MatchObj));
+        set_matchobj_template(solver, &mo);
 
 		memcpy(&(mo.wcstan), &wcs, sizeof(tan_t));
 		mo.wcs_valid = TRUE;

@@ -31,10 +31,6 @@ struct match_struct {
 	uint64_t ids[DQMAX];
 	// actually code error ^2.
     float code_err;
-	double sMin[3];
-	double sMax[3];
-	double sMinMax[3];
-	double sMaxMin[3];
 
 	// Pixel positions of the quad stars.
 	double quadpix[2 * DQMAX];
@@ -43,6 +39,20 @@ struct match_struct {
 
 	uint8_t dimquads;
 
+	// the center of the field in xyz coords
+	double center[3];
+	// radius of the bounding circle, in distance on the unit sphere.
+	double radius;
+    // radius of the bounding circle in degrees
+    double radius_deg;
+
+	// WCS params
+	bool wcs_valid;
+	tan_t wcstan;
+
+	// arcseconds per pixel; computed: scale=3600*sqrt(abs(det(wcstan.cd)))
+	double scale;
+    
     // How many quads were matched to this single quad (not a running total)
     // (only counts a single ABCD permutation)
     int16_t quad_npeers;
@@ -56,19 +66,6 @@ struct match_struct {
 
 	// how many other matches agreed with this one *at the time it was found*
 	int16_t nagree;
-
-	// WCS params
-	bool wcs_valid;
-	tan_t wcstan;
-
-	// arcseconds per pixel; computed: scale=3600*sqrt(abs(det(wcstan.cd)))
-	double scale;
-
-	// proposed location of the center of the field
-	//  = normalize(sMin + sMax);
-	double center[3];
-	// radius of the bounding circle, in distance on the unit sphere.
-	double radius;
 
 	int fieldnum;
 	int fieldfile;

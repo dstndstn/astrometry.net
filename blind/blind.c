@@ -867,38 +867,11 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		solver_preprocess_field(sp);
 
 		if (verify_wcs) {
-			// fabricate a match...
-			MatchObj mo;
-			memcpy(&mo, &template, sizeof(MatchObj));
-			memcpy(&(mo.wcstan), &(verify_wcs->wcstan), sizeof(tan_t));
-			mo.wcs_valid = TRUE;
-			mo.scale = sip_pixel_scale(verify_wcs);
-
-			//solver_transform_corners(sp, &mo);
-            sip_pixelxy2xyzarr(verify_wcs, sp->field_minx, sp->field_miny, mo.sMin);
-            sip_pixelxy2xyzarr(verify_wcs, sp->field_maxx, sp->field_maxy, mo.sMax);
-            sip_pixelxy2xyzarr(verify_wcs, sp->field_minx, sp->field_maxy, mo.sMinMax);
-            sip_pixelxy2xyzarr(verify_wcs, sp->field_maxx, sp->field_miny, mo.sMaxMin);
-            star_midpoint(mo.center, mo.sMin, mo.sMax);
-            mo.radius = sqrt(distsq(mo.center, mo.sMin, 3));
-
-			sp->distance_from_quad_bonus = FALSE;
-
 			logmsg("Verifying WCS of field %i.\n", fieldnum);
-
-			solver_inject_match(sp, &mo, verify_wcs);
-
-			// print it, if it hasn't been already.
-			if (mo.logodds < bp->logratio_toprint)
-				print_match(bp, &mo);
-
-            // HACK
-            il_free(mo.corr_field);
-            il_free(mo.corr_index);
+            solver_verify_sip_wcs(sp, verify_wcs);
 
 		} else {
 			logverb("Solving field %i.\n", fieldnum);
-
 			sp->distance_from_quad_bonus = TRUE;
 			
 			// The real thing
@@ -907,17 +880,14 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 			logverb("Field %i: tried %i quads, matched %i codes.\n",
                     fieldnum, sp->numtries, sp->nummatches);
 
-			if (sp->maxquads && sp->numtries >= sp->maxquads) {
+			if (sp->maxquads && sp->numtries >= sp->maxquads)
 				logmsg("  exceeded the number of quads to try: %i >= %i.\n",
 				       sp->numtries, sp->maxquads);
-			}
-			if (sp->maxmatches && sp->nummatches >= sp->maxmatches) {
+			if (sp->maxmatches && sp->nummatches >= sp->maxmatches)
 				logmsg("  exceeded the number of quads to match: %i >= %i.\n",
 				       sp->nummatches, sp->maxmatches);
-			}
-			if (bp->cancelled) {
+			if (bp->cancelled)
 				logmsg("  cancelled at user request.\n");
-			}
 		}
 
 

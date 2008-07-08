@@ -69,8 +69,8 @@ static void add_columns(fitstable_t* tab, bool write) {
     ADDCOL(f,  f,   "CODEERR",         nil, code_err);
     ADDARR(d,  d,   "QUADPIX",         nil, quadpix, 2*DQMAX);
     ADDARR(d,  d,   "QUADXYZ",         nil, quadxyz, 3*DQMAX);
-    ADDARR(d,  d,   "MINCORNER",       nil, sMin, 3);
-    ADDARR(d,  d,   "MAXCORNER",       nil, sMax, 3);
+    ADDARR(d,  d,   "CENTERXYZ",       nil, center, 3);
+    ADDCOL(d,  d,   "RADIUS",          "DEG", radius_deg);
     ADDCOL(i16,i16, "NOVERLAP",        nil, noverlap);
     ADDCOL(i16,i16, "NCONFLICT",       nil, nconflict);
     ADDCOL(i16,i16, "NFIELD",          nil, nfield);
@@ -102,9 +102,8 @@ static int postprocess_read_structs(fitstable_t* table, void* struc,
                                     int stride, int offset, int N) {
     MatchObj* mo = struc;
     int i;
-    for (i=0; i<N; i++) {
+    for (i=0; i<N; i++)
 		matchobj_compute_derived(mo + i);
-    }
     return 0;
 }
 
@@ -185,8 +184,7 @@ void matchobj_compute_derived(MatchObj* mo) {
 	mo->objs_tried = mx+1;
 	if (mo->wcs_valid)
 		mo->scale = tan_pixel_scale(&(mo->wcstan));
-	star_midpoint(mo->center, mo->sMin, mo->sMax);
-	mo->radius = sqrt(distsq(mo->center, mo->sMin, 3));
+    mo->radius = deg2dist(mo->radius_deg);
 }
 
 pl* matchfile_get_matches_for_field(matchfile* mf, int field) {
