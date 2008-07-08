@@ -92,8 +92,6 @@ struct blind_params {
 	// FITS keyword to copy from xylist to matchfile.
 	char *fieldid_key;
 
-	double verify_dist2;
-
 	bool use_idfile;
 
 	// The fields to solve!

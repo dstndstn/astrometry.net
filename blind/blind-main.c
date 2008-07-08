@@ -168,8 +168,6 @@ static int read_parameters(blind_t* bp) {
 			bp->total_timelimit = atoi(nextword);
 		} else if (is_word(line, "total_cpulimit ", &nextword)) {
 			bp->total_cpulimit = atof(nextword);
-		} else if (is_word(line, "verify_dist ", &nextword)) {
-			bp->verify_dist2 = arcsec2distsq(atof(nextword));
 		} else if (is_word(line, "verify_pix ", &nextword)) {
 			sp->verify_pix = atof(nextword);
 		} else if (is_word(line, "nsolves ", &nextword)) {

@@ -452,13 +452,8 @@ int blind_parameters_are_sane(blind_t* bp, solver_t* sp) {
 		logerr("You must specify codetol > 0\n");
 		return 0;
 	}
-	if ((((sp->verify_pix > 0.0) ? 1 : 0) +
-		 ((bp->verify_dist2 > 0.0) ? 1 : 0)) != 1) {
-		logerr("You must specify either verify_pix or verify_dist2.\n");
-		return 0;
-	}
-	if (bp->verify_dist2 > 0.0) {
-		logerr("verify_dist2 mode is broken; email mierle@gmail.com to complain.\n");
+	if (sp->verify_pix <= 0.0) {
+		logerr("You must specify a positive verify_pix.\n");
 		return 0;
 	}
 	if ((sp->funits_lower != 0.0) && (sp->funits_upper != 0.0) &&
@@ -559,7 +554,6 @@ void blind_log_run_parameters(blind_t* bp) {
 	logverb("enddepth %i\n", sp->endobj);
 	logverb("fieldunits_lower %g\n", sp->funits_lower);
 	logverb("fieldunits_upper %g\n", sp->funits_upper);
-	logverb("verify_dist %g\n", distsq2arcsec(bp->verify_dist2));
 	logverb("verify_pix %g\n", sp->verify_pix);
 	logverb("xcolname %s\n", bp->xcolname);
 	logverb("ycolname %s\n", bp->ycolname);
@@ -607,12 +601,7 @@ static sip_t* tweak(blind_t* bp, tan_t* wcs, const double* starradec, int nstars
 
 	twee = tweak_new();
 
-	if (bp->verify_dist2 > 0.0)
-		twee->jitter = distsq2arcsec(bp->verify_dist2);
-	else {
-		twee->jitter = hypot(tan_pixel_scale(wcs) * sp->verify_pix, sp->index->meta.index_jitter);
-		logverb("Star jitter: %g arcsec.\n", twee->jitter);
-	}
+    twee->jitter = hypot(tan_pixel_scale(wcs) * sp->verify_pix, sp->index->meta.index_jitter);
 	logverb("Setting tweak jitter: %g arcsec.\n", twee->jitter);
 
 	twee->sip->a_order  = twee->sip->b_order  = bp->tweak_aborder;
@@ -803,7 +792,6 @@ static void add_blind_params(blind_t* bp, qfits_header* hdr) {
 
 	fits_add_long_comment(hdr, "Parity: %i", sp->parity);
 	fits_add_long_comment(hdr, "Codetol: %g", sp->codetol);
-	fits_add_long_comment(hdr, "Verify distance: %g arcsec", distsq2arcsec(bp->verify_dist2));
 	fits_add_long_comment(hdr, "Verify pixels: %g pix", sp->verify_pix);
 
 	fits_add_long_comment(hdr, "Maxquads: %i", sp->maxquads);
