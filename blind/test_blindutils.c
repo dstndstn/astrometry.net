@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "cutest.h"
-#include "scriptutils.h"
+#include "blindutils.h"
 #include "bl.h"
 
 static void assertListEquals(CuTest* tc, int* expect, int N, il* lst) {

@@ -83,8 +83,7 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-static int read_parameters(blind_t* bp)
-{
+static int read_parameters(blind_t* bp) {
 	solver_t* sp = &(bp->solver);
 	for (;;) {
 		char buffer[10240];
@@ -116,6 +115,8 @@ static int read_parameters(blind_t* bp)
 			logmsg("No help soup for you!\n  (use the source, Luke)\n");
         } else if (is_word(line, "logtostderr", &nextword)) {
             log_to(stderr);
+        } else if (is_word(line, "verbose", &nextword)) {
+            log_init(LOG_VERB);
 		} else if (is_word(line, "idfile", &nextword)) {
 			bp->use_idfile = TRUE;
 		} else if (is_word(line, "verify ", &nextword)) {
