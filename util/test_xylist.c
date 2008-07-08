@@ -15,8 +15,8 @@ static char* get_tmpfile(int i) {
 void test_tagalong(CuTest* ct) {
     xylist_t *in, *out;
     char* fn = get_tmpfile(2);
-    xy_t fld;
-    xy_t infld;
+    starxy_t fld;
+    starxy_t infld;
 
     out = xylist_open_for_writing(fn);
     CuAssertPtrNotNull(ct, out);
@@ -86,7 +86,7 @@ void test_tagalong(CuTest* ct) {
     CuAssertIntEquals(ct, 0, memcmp(tagalong, intag, 2 * N * sizeof(double)));
     free(intag);
 
-    xy_free_data(&infld);
+    starxy_free_data(&infld);
     CuAssertIntEquals(ct, 0, xylist_close(in));
     in = NULL;
 
@@ -97,8 +97,8 @@ void test_tagalong(CuTest* ct) {
 void test_simple_xy(CuTest* ct) {
     xylist_t *in, *out;
     char* fn = get_tmpfile(1);
-    xy_t fld;
-    xy_t infld;
+    starxy_t fld;
+    starxy_t infld;
 
     out = xylist_open_for_writing(fn);
     CuAssertPtrNotNull(ct, out);
@@ -143,7 +143,7 @@ void test_simple_xy(CuTest* ct) {
     }
     CuAssertPtrEquals(ct, NULL, infld.background);
 
-    xy_free_data(&infld);
+    starxy_free_data(&infld);
     CuAssertIntEquals(ct, 0, xylist_close(in));
     in = NULL;
 
@@ -157,8 +157,8 @@ void test_simple_xy(CuTest* ct) {
 void test_read_write_xy(CuTest* ct) {
     xylist_t *in, *out;
     char* fn = get_tmpfile(0);
-    xy_t fld;
-    xy_t infld;
+    starxy_t fld;
+    starxy_t infld;
 
     out = xylist_open_for_writing(fn);
     CuAssertPtrNotNull(ct, out);
@@ -255,7 +255,7 @@ void test_read_write_xy(CuTest* ct) {
     }
     CuAssertPtrEquals(ct, NULL, infld.background);
 
-    xy_free_data(&infld);
+    starxy_free_data(&infld);
 
     int r = xylist_next_field(in);
     CuAssertIntEquals(ct, 0, r);
@@ -277,7 +277,7 @@ void test_read_write_xy(CuTest* ct) {
     CuAssertPtrEquals(ct, NULL, infld.flux);
     CuAssertPtrEquals(ct, NULL, infld.background);
 
-    xy_free_data(&infld);
+    starxy_free_data(&infld);
 
     r = xylist_next_field(in);
     // no such field...
