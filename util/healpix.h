@@ -211,15 +211,22 @@ Const int healpix_compose_xy(int bighp, int x, int y, int Nside);
 */
 Const int radectohealpix(double ra, double dec, int Nside);
 
+int radectohealpixf(double ra, double dec, int Nside, double* dx, double* dy);
+
 /**
    Converts (RA, DEC) coordinates (in degrees) to healpix index.
 */
 Const int radecdegtohealpix(double ra, double dec, int Nside);
 
+int radecdegtohealpixf(double ra, double dec, int Nside, double* dx, double* dy);
+
 /**
    Converts (x,y,z) coordinates on the unit sphere into a healpix index.
  */
 Const int xyztohealpix(double x, double y, double z, int Nside);
+
+int xyztohealpixf(double x, double y, double z, int Nside,
+                  double* p_dx, double* p_dy);
 
 /**
    Converts (x,y,z) coordinates (stored in an array) on the unit sphere into
@@ -227,8 +234,7 @@ Const int xyztohealpix(double x, double y, double z, int Nside);
 */
 int xyzarrtohealpix(double* xyz, int Nside);
 
-int xyztohealpixf(double x, double y, double z, int Nside,
-                           double* p_dx, double* p_dy);
+int xyzarrtohealpixf(double* xyz,int Nside, double* p_dx, double* p_dy);
 
 /**
    Converts a healpix index, plus fractional offsets (dx,dy), into (x,y,z)

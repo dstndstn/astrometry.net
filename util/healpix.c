@@ -791,19 +791,28 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 }
 
 int radectohealpix(double ra, double dec, int Nside) {
-	double x, y, z;
-	x = radec2x(ra, dec);
-	y = radec2y(ra, dec);
-	z = radec2z(ra, dec);
-	return xyztohealpix(x, y, z, Nside);
+    return xyztohealpix(radec2x(ra,dec), radec2y(ra,dec), radec2z(ra,dec), Nside);
 }
 
+int radectohealpixf(double ra, double dec, int Nside, double* dx, double* dy) {
+    return xyztohealpixf(radec2x(ra,dec), radec2y(ra,dec), radec2z(ra,dec),
+                         Nside, dx, dy);
+}
+ 
 Const int radecdegtohealpix(double ra, double dec, int Nside) {
 	return radectohealpix(deg2rad(ra), deg2rad(dec), Nside);
 }
 
+int radecdegtohealpixf(double ra, double dec, int Nside, double* dx, double* dy) {
+	return radectohealpixf(deg2rad(ra), deg2rad(dec), Nside, dx, dy);
+}
+
 int xyzarrtohealpix(double* xyz, int Nside) {
 	return xyztohealpix(xyz[0], xyz[1], xyz[2], Nside);
+}
+
+int xyzarrtohealpixf(double* xyz,int Nside, double* p_dx, double* p_dy) {
+    return xyztohealpixf(xyz[0], xyz[1], xyz[2], Nside, p_dx, p_dy);
 }
 
 void healpix_to_xyz(int hp, int Nside,
