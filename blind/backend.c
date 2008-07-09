@@ -89,7 +89,6 @@ static int add_index(backend_t* backend, char* path) {
         }
     }
 
-    meta->indexname = strdup(path);
 	bl_append(backend->indexmetas, meta);
 
     // <= smallest we've seen?

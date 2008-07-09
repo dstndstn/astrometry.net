@@ -154,7 +154,7 @@ index_t* index_load(const char* indexname, int flags) {
 	char *codetreefname=NULL, *quadfname=NULL, *startreefname=NULL;
     bool singlefile;
 	index_t* index = calloc(1, sizeof(index_t));
-	index->meta.indexname = indexname;
+	index->meta.indexname = strdup(indexname);
 
 	if (flags & INDEX_ONLY_LOAD_METADATA)
 		logverb("Loading metadata for %s...\n", indexname);
@@ -247,9 +247,9 @@ index_t* index_load(const char* indexname, int flags) {
     return NULL;
 }
 
-void index_close(index_t* index)
-{
+void index_close(index_t* index) {
 	if (!index) return;
+	free(index->meta.indexname);
 	if (index->starkd)
 		startree_close(index->starkd);
 	if (index->codekd)

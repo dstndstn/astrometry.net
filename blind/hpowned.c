@@ -90,8 +90,8 @@ int main(int argc, char** args) {
 		// for each big healpix, find the set of small healpixes it owns
 		// (including a bit of overlap)
 		for (i=0; i<HP; i++) {
-			uint big, x, y;
-			uint nn, neigh[8], k;
+			int big, x, y;
+			int nn, neigh[8], k;
 			healpix_decompose_xy(i, &big, &x, &y, Nside);
 			if (big != bighp)
 				continue;

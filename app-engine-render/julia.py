@@ -9,6 +9,9 @@ import png
 import wsgiref.handlers
 from google.appengine.ext import webapp
 
+# nope, doesn't work.
+#from numpy import *
+
 def heatmap(pix):
 	if pix <= 96.0:
 		r = pix * 255.0 / 96.0

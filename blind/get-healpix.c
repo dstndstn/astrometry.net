@@ -121,9 +121,9 @@ int main(int argc, char** args) {
 		}
 	}
 	{
-		uint ri;
-		uint ringnum, longind;
-		uint bighp, x, y;
+		int ri;
+		int ringnum, longind;
+		int bighp, x, y;
         double ra, dec;
         double ramin, ramax;
         double decmin, decmax;
@@ -151,8 +151,8 @@ int main(int argc, char** args) {
 	}
 
 	if (neighbours) {
-		uint neigh[8];
-		uint nneigh;
+		int neigh[8];
+		int nneigh;
 		nneigh = healpix_get_neighbours(healpix, neigh, Nside);
 		printf("Neighbours=[ ");
 		for (i=0; i<nneigh; i++)

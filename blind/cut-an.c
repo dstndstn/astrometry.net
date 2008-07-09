@@ -125,8 +125,8 @@ static bool find_duplicate(stardata* sd, int hp, int Nside,
 						   bl** starlists, double dedupr2,
 						   int* duphp, int* dupindex) {
 	double xyz[3];
-	unsigned int neigh[8];
-	unsigned int nn;
+	int neigh[8];
+	int nn;
 	double xyz2[3];
 	int j, k;
 	radecdeg2xyzarr(sd->ra, sd->dec, xyz);
@@ -420,8 +420,8 @@ int main(int argc, char** args) {
 		il* q = il_new(32);
 		int hp;
 		int nowned = 0;
-        unsigned int bigbighp; // one of 12
-        unsigned int bighpx, bighpy;
+        int bigbighp; // one of 12
+        int bighpx, bighpy;
         int ninside;
 
         healpix_decompose_xy(bighp, &bigbighp, &bighpx, &bighpy, bignside);
@@ -479,7 +479,7 @@ int main(int argc, char** args) {
 			int Q = il_size(q);
 			for (i=0; i<Q; i++) {
 				int j;
-				unsigned int nn, neigh[8];
+				int nn, neigh[8];
 				hp = il_get(q, i);
 				// grab the neighbours...
 				nn = healpix_get_neighbours(hp, neigh, Nside);

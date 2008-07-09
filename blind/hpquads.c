@@ -959,12 +959,12 @@ int main(int argc, char** argv) {
 		Nhptotry = HEALPIXES;
     } else {
         // The star kdtree may itself be healpixed
-        unsigned int starhp, starx, stary;
+        int starhp, starx, stary;
         // In that case, the healpixes we are interested in form a rectangle
         // within a big healpix.  These are the coords (in [0, Nside)) of
         // that rectangle.
-        unsigned int x0, x1, y0, y1;
-        unsigned int x, y;
+        int x0, x1, y0, y1;
+        int x, y;
         int i, nhp;
 
         healpix_decompose_xy(hp, &starhp, &starx, &stary, hpnside);
