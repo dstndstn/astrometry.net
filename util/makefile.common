@@ -118,6 +118,11 @@ X := $(shell rm $(TMPFILE))
 RICKY_BOBBY := no
 #RICKY_BOBBY := yes
 
+
+### temp
+FLAGS_DEF += -DNDEBUG
+
+
 ifeq ($(RICKY_BOBBY),yes)
   # speedy!
   FLAGS_DEF += -O3

@@ -158,22 +158,22 @@
 /**
    Converts a healpix index from the XY scheme to the RING scheme.
 */
-Const int healpix_xy_to_ring(unsigned int hp, unsigned int Nside);
+Const int healpix_xy_to_ring(int hp, int Nside);
 
 /**
    Converts a healpix index from the RING scheme to the XY scheme.
 */
-Const int healpix_ring_to_xy(unsigned int ring_index, unsigned int Nside);
+Const int healpix_ring_to_xy(int ring_index, int Nside);
 
 /**
    Converts a healpix index from the XY scheme to the NESTED scheme.
  */
-Const int healpix_xy_to_nested(unsigned int hp, unsigned int Nside);
+Const int healpix_xy_to_nested(int hp, int Nside);
 
 /**
    Converts a healpix index from the NESTED scheme to the XY scheme.
  */
-Const int healpix_nested_to_xy(unsigned int nested_index, unsigned int Nside);
+Const int healpix_nested_to_xy(int nested_index, int Nside);
 
 /**
    Decomposes a RING index into the "ring number" (each ring contain
@@ -181,27 +181,27 @@ Const int healpix_nested_to_xy(unsigned int nested_index, unsigned int Nside);
    ring have longitude index starting at zero for the first pixel with
    RA >= 0.  Different rings contain different numbers of healpixels.
 */
-void healpix_decompose_ring(unsigned int ring_index, unsigned int Nside,
-							unsigned int* p_ring_number, unsigned int* p_longitude_index);
+void healpix_decompose_ring(int ring_index, int Nside,
+							int* p_ring_number, int* p_longitude_index);
 
 /**
    Composes a RING index given the "ring number" and "longitude index".
 
    Does NOT check that the values are legal!  Garbage in, garbage out.
 */
-Const int healpix_compose_ring(unsigned int ring, unsigned int longind, unsigned int Nside);
+Const int healpix_compose_ring(int ring, int longind, int Nside);
 
 /**
    Decomposes an XY index into the "base healpix" and "x" and "y" coordinates
    within that healpix.
 */
-void healpix_decompose_xy(unsigned int finehp, unsigned int* bighp, unsigned int* x, unsigned int* y, unsigned int Nside);
+void healpix_decompose_xy(int finehp, int* bighp, int* x, int* y, int Nside);
 
 /**
    Composes an XY index given the "base healpix" and "x" and "y" coordinates
    within that healpix.
 */
-Const unsigned int healpix_compose_xy(unsigned int bighp, unsigned int x, unsigned int y, unsigned int Nside);
+Const int healpix_compose_xy(int bighp, int x, int y, int Nside);
 
 
 
@@ -209,25 +209,25 @@ Const unsigned int healpix_compose_xy(unsigned int bighp, unsigned int x, unsign
 /**
    Converts (RA, DEC) coordinates (in radians) to healpix index.
 */
-Const unsigned int radectohealpix(double ra, double dec, unsigned int Nside);
+Const int radectohealpix(double ra, double dec, int Nside);
 
 /**
    Converts (RA, DEC) coordinates (in degrees) to healpix index.
 */
-Const unsigned int radecdegtohealpix(double ra, double dec, unsigned int Nside);
+Const int radecdegtohealpix(double ra, double dec, int Nside);
 
 /**
    Converts (x,y,z) coordinates on the unit sphere into a healpix index.
  */
-Const unsigned int xyztohealpix(double x, double y, double z, unsigned int Nside);
+Const int xyztohealpix(double x, double y, double z, int Nside);
 
 /**
    Converts (x,y,z) coordinates (stored in an array) on the unit sphere into
    a healpix index.
 */
-unsigned int xyzarrtohealpix(double* xyz, unsigned int Nside);
+int xyzarrtohealpix(double* xyz, int Nside);
 
-unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
+int xyztohealpixf(double x, double y, double z, int Nside,
                            double* p_dx, double* p_dy);
 
 /**
@@ -237,37 +237,37 @@ unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
    the northernmost corner, (1,0) is the easternmost, and (0,1) the
    westernmost.
 */
-void healpix_to_xyz(unsigned int hp, unsigned int Nside, double dx, double dy,
+void healpix_to_xyz(int hp, int Nside, double dx, double dy,
                     double* p_x, double *p_y, double *p_z);
 
 /**
    Same as healpix_to_xyz, but (x,y,z) are stored in an array.
 */
-void healpix_to_xyzarr(unsigned int hp, unsigned int Nside, double dx, double dy,
+void healpix_to_xyzarr(int hp, int Nside, double dx, double dy,
 					   double* xyz);
 
 /**
    Same as healpix_to_xyz, but returns (RA,DEC) in radians.
 */
-void healpix_to_radec(unsigned int hp, unsigned int Nside, double dx, double dy,
+void healpix_to_radec(int hp, int Nside, double dx, double dy,
 					  double* ra, double* dec);
 
-void healpix_to_radecdeg(unsigned int hp, unsigned int Nside, double dx, double dy,
+void healpix_to_radecdeg(int hp, int Nside, double dx, double dy,
                          double* ra, double* dec);
 
 /**
    Same as healpix_to_radec, but (RA,DEC) are stored in an array.
  */
-void healpix_to_radecarr(unsigned int hp, unsigned int Nside, double dx, double dy,
+void healpix_to_radecarr(int hp, int Nside, double dx, double dy,
 						 double* radec);
 
-void healpix_to_radecdegarr(unsigned int hp, unsigned int Nside, double dx, double dy,
+void healpix_to_radecdegarr(int hp, int Nside, double dx, double dy,
                             double* radec);
 
 /**
    Computes the approximate side length of a healpix, in arcminutes.
  */
-Const double healpix_side_length_arcmin(unsigned int Nside);
+Const double healpix_side_length_arcmin(int Nside);
 
 /**
    Finds the healpixes neighbouring the given healpix, placing them in the
@@ -277,6 +277,6 @@ Const double healpix_side_length_arcmin(unsigned int Nside);
    Healpixes in the interior of a large healpix will have eight neighbours;
    pixels near the edges can have fewer.
 */
-unsigned int healpix_get_neighbours(unsigned int hp, unsigned int* neighbour, unsigned int Nside);
+int healpix_get_neighbours(int hp, int* neighbour, int Nside);
 
 #endif

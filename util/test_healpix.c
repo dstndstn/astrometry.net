@@ -1,20 +1,20 @@
 /*
-  This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+ This file is part of the Astrometry.net suite.
+ Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
 
-  The Astrometry.net suite is free software; you can redistribute
-  it and/or modify it under the terms of the GNU General Public License
-  as published by the Free Software Foundation, version 2.
+ The Astrometry.net suite is free software; you can redistribute
+ it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, version 2.
 
-  The Astrometry.net suite is distributed in the hope that it will be
-  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
+ The Astrometry.net suite is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the Astrometry.net suite ; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-*/
+ You should have received a copy of the GNU General Public License
+ along with the Astrometry.net suite ; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #include <math.h>
 #include <stdio.h>
@@ -35,8 +35,20 @@ static double square(double x) {
  }
  */
 
+void test_healpix_to_xyz(CuTest* ct) {
+	double x1,y1,z1;
+	double x2,y2,z2;
+	double dist;
+	healpix_to_xyz(2, 1, 0.5999999999999999778, 0.59999999999999964473, &x1,&y1,&z1);
+	printf("A: xyz %g, %g, %g\n", x1,y1,z1);
+	healpix_to_xyz(2, 1, 0.5999999999999999778, 0.60000000000000008882, &x2,&y2,&z2);
+	printf("B: xyz %g, %g, %g\n", x2,y2,z2);
+	dist = sqrt(square(x1-x2)+square(y1-y2)+square(z1-z2));
+	printf("dist: %g\n", dist);
+}
+
 int tst_xyztohpf(CuTest* ct,
-                  int hp, int nside, double dx, double dy) {
+				 int hp, int nside, double dx, double dy) {
     double x,y,z;
     double outdx, outdy;
     int outhp;
@@ -49,22 +61,34 @@ int tst_xyztohpf(CuTest* ct,
     dist = sqrt(MAX(0, square(x-outx) + square(y-outy) + square(z-outz)));
     printf("true/computed:\n"
            "hp: %i / %i\n"
-           "dx: %g / %g\n"
-           "dy: %g / %g\n"
-           "dist: %g\n\n", hp, outhp, dx, outdx, dy, outdy, dist);
+           "dx: %.20g / %.20g\n"
+           "dy: %.20g / %.20g\n"
+		   "x:  %g / %g\n"
+		   "y:  %g / %g\n"
+		   "z:  %g / %g\n"
+           "dist: %g\n\n",
+		   hp, outhp, dx, outdx, dy, outdy,
+		   x, outx, y, outy, z, outz, dist);
+
+	/*printf("\n");
+	 printf("True hp %i, dx %g, dy %g\n", hp, dx, dy);
+	 printf("True xyz = %g, %g, %g\n", x, y, z);
+	 printf("Computed hp %i, dx %g, dy %g\n", outhp, outdx, outdy);
+	 printf("Computed xyz = %g, %g, %g\n", outx, outy, outz);
+	 */
+
     outhp = xyztohealpixf(x, y, z, nside, &outdx, &outdy);
+	CuAssertIntEquals(ct, 1, (dist < 1e-6)?1:0);
     return (dist > 1e-6);
 }
 
-void test_xyztohpf_2(CuTest* ct) {
+void tEst_xyztohpf_2(CuTest* ct) {
 	/*
 	 tst_xyztohpf(ct, 0, 1, 0, 0.8);
 	 tst_xyztohpf(ct, 0, 1, 0, 1.0);
 	 tst_xyztohpf(ct, 0, 1, 0.3, 0.0);
 	 tst_xyztohpf(ct, 0, 1, 0.5, 0.0);
-	 */
-    tst_xyztohpf(ct, 0, 1, 0.6, 0.0);
-	/*
+	 tst_xyztohpf(ct, 0, 1, 0.6, 0.0);
 	 tst_xyztohpf(ct, 0, 1, 0.7, 0.0);
 	 tst_xyztohpf(ct, 0, 1, 0.8, 0.0);
 	 tst_xyztohpf(ct, 0, 1, 0.9, 0.9);
@@ -78,6 +102,7 @@ void test_xyztohpf_2(CuTest* ct) {
 	 
 	 tst_xyztohpf(ct, 1, 1, 0.0, 0.1);
 	 */
+	tst_xyztohpf(ct, 2, 1, 0.6, 0.6);
 }
 
 void test_xyztohpf(CuTest* ct) {
@@ -89,86 +114,91 @@ void test_xyztohpf(CuTest* ct) {
 	double outa, outb;
     nside = 1;
 
-    fprintf(stderr, "%s", "from pylab import plot,text,savefig\n");
+    fprintf(stderr, "%s", "from pylab import plot,text,savefig,clf\n");
+	fprintf(stderr, "clf()\n");
 
 	/*
 	 Plot the grid of healpixes with dx,dy=0.1 steps.
 	 */
 	//for (hp=0; hp<12*nside*nside; hp++) {
 	for (hp=0; hp<1; hp++) {
-	 double x,y,z;
-	 int i;
-	 for (dx=0.0; dx<=1.05; dx+=0.1) {
-	 fprintf(stderr, "xp=[]\n");
-	 fprintf(stderr, "yp=[]\n");
-	 for (dy=0.0; dy<=1.05; dy+=0.1) {
-	 healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
-	 a = xy2ra(x,y) / (2.0 * M_PI);
-	 b = z2dec(z) / (M_PI);
-	 fprintf(stderr, "xp.append(%g)\n", a);
-	 fprintf(stderr, "yp.append(%g)\n", b);
-	 }
-	 fprintf(stderr, "plot(xp, yp, 'k-')\n");
-	 }
-	 for (dy=0.0; dy<=1.05; dy+=0.1) {
-	 fprintf(stderr, "xp=[]\n");
-	 fprintf(stderr, "yp=[]\n");
-	 for (dx=0.0; dx<=1.0; dx+=0.1) {
-	 healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
-	 a = xy2ra(x,y) / (2.0 * M_PI);
-	 b = z2dec(z) / (M_PI);
-	 fprintf(stderr, "xp.append(%g)\n", a);
-	 fprintf(stderr, "yp.append(%g)\n", b);
-	 }
-	 fprintf(stderr, "plot(xp, yp, 'k-')\n");
-	 }
-	 }
-	 //fprintf(stderr, "savefig('plot1.png')\n");
-
-    //for (hp=0; hp<12*nside*nside; hp++) {
-    for (hp=0; hp<1*nside*nside; hp++) {
-        for (dx=0.0; dx<=1.0; dx+=0.1) {
-            for (dy=0.0; dy<=1.0; dy+=0.1) {
-
-				double outdx, outdy;
-				int outhp;
-				double outx,outy,outz;
-				double dist;
-
-				// true (x,y,z) position
+		//for (hp=2; hp<=2; hp++) {
+		double x,y,z;
+		int i;
+		for (dx=0.0; dx<=1.05; dx+=0.1) {
+			fprintf(stderr, "xp=[]\n");
+			fprintf(stderr, "yp=[]\n");
+			for (dy=0.0; dy<=1.05; dy+=0.1) {
 				healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
-				// test: project to healpix position.
-				outhp = xyztohealpixf(x, y, z, nside, &outdx, &outdy);
-				// convert projected healpix back to out(x,y,z)
-				healpix_to_xyz(outhp, nside, outdx, outdy, &outx, &outy, &outz);
-				// should match original (x,y,z).
-				dist = sqrt(MAX(0, square(x-outx) + square(y-outy) + square(z-outz)));
+				a = xy2ra(x,y) / (2.0 * M_PI);
+				b = z2dec(z) / (M_PI);
+				fprintf(stderr, "xp.append(%g)\n", a);
+				fprintf(stderr, "yp.append(%g)\n", b);
+			}
+			fprintf(stderr, "plot(xp, yp, 'k-')\n");
+		}
+		for (dy=0.0; dy<=1.05; dy+=0.1) {
+			fprintf(stderr, "xp=[]\n");
+			fprintf(stderr, "yp=[]\n");
+			for (dx=0.0; dx<=1.0; dx+=0.1) {
+				healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
+				a = xy2ra(x,y) / (2.0 * M_PI);
+				b = z2dec(z) / (M_PI);
+				fprintf(stderr, "xp.append(%g)\n", a);
+				fprintf(stderr, "yp.append(%g)\n", b);
+			}
+			fprintf(stderr, "plot(xp, yp, 'k-')\n");
+		}
+	}
+	//fprintf(stderr, "savefig('plot1.png')\n");
 
-                if (dist > 1e-6) {
-					a = xy2ra(x,y) / (2.0 * M_PI);
-					b = z2dec(z) / (M_PI);
+	/*
+	 //for (hp=0; hp<12*nside*nside; hp++) {
+	 //for (hp=0; hp<1*nside*nside; hp++) {
+	 for (hp=2; hp<=2; hp++) {
+	 for (dx=0.0; dx<=1.0; dx+=0.1) {
+	 for (dy=0.0; dy<=1.0; dy+=0.1) {
 
-					outa = xy2ra(outx, outy) / (2.0 * M_PI);
-					outb = z2dec(outz) / (M_PI);
+	 double outdx, outdy;
+	 int outhp;
+	 double outx,outy,outz;
+	 double dist;
 
-                    fprintf(stderr,
-                            "plot([%g, %g],[%g, %g],'r.-')\n", a, outa, b, outb);
-                    fprintf(stderr, 
-                            "text(%g, %g, \"(%g,%g)\")\n",
-                            a, b, dx, dy);
-                }
-            }
-        }
-    }
+	 // true (x,y,z) position
+	 healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
+	 // test: project to healpix position.
+	 outhp = xyztohealpixf(x, y, z, nside, &outdx, &outdy);
+	 // convert projected healpix back to out(x,y,z)
+	 healpix_to_xyz(outhp, nside, outdx, outdy, &outx, &outy, &outz);
+	 // should match original (x,y,z).
+	 dist = sqrt(MAX(0, square(x-outx) + square(y-outy) + square(z-outz)));
+
+	 if (dist > 1e-6) {
+	 a = xy2ra(x,y) / (2.0 * M_PI);
+	 b = z2dec(z) / (M_PI);
+
+	 outa = xy2ra(outx, outy) / (2.0 * M_PI);
+	 outb = z2dec(outz) / (M_PI);
+
+	 fprintf(stderr,
+	 "plot([%g, %g],[%g, %g],'r.-')\n", a, outa, b, outb);
+	 fprintf(stderr, 
+	 "text(%g, %g, \"(%g,%g)\")\n",
+	 a, b, dx, dy);
+	 }
+	 }
+	 }
+	 }
+	 */
     fprintf(stderr, "savefig('plot.png')\n");
 
 }
 
-static void tst_neighbours(CuTest* ct, uint pix, uint* true_neigh, uint true_nn,
+static void tst_neighbours(CuTest* ct, int pix, int* true_neigh, int true_nn,
                            int Nside) {
-	uint neigh[8];
-	uint nn;
-	uint i;
+	int neigh[8];
+	int nn;
+	int i;
 	for (i=0; i<8; i++)
 		neigh[i] = -1;
 	nn = healpix_get_neighbours(pix, neigh, Nside);
@@ -187,11 +217,11 @@ static void tst_neighbours(CuTest* ct, uint pix, uint* true_neigh, uint true_nn,
 		CuAssertIntEquals(ct, true_neigh[i], neigh[i]);
 }
 
-static void tst_nested(CuTest* ct, uint pix, uint* true_neigh, uint true_nn,
+static void tst_nested(CuTest* ct, int pix, int* true_neigh, int true_nn,
                        int Nside) {
     int i;
-    uint truexy[8];
-    uint xypix;
+    int truexy[8];
+    int xypix;
 
 	printf("nested true(%i) : [ ", pix);
 	for (i=0; i<true_nn; i++)
@@ -212,8 +242,8 @@ static void tst_nested(CuTest* ct, uint pix, uint* true_neigh, uint true_nn,
 void print_node(double z, double phi, int Nside) {
 	double ra, dec;
 	int hp;
-	uint nn;
-	uint neigh[8];
+	int nn;
+	int neigh[8];
 	int k;
 
 	double scale = 10.0;
@@ -237,82 +267,82 @@ void print_node(double z, double phi, int Nside) {
 }
 
 void test_healpix_neighbours(CuTest *ct) {
-	uint n0[] = { 1,3,2,71,69,143,90,91 };
-	uint n5[] = { 26,27,7,6,4,94,95 };
-	uint n13[] = { 30,31,15,14,12,6,7,27 };
-	uint n15[] = { 31,47,63,61,14,12,13,30 };
-	uint n30[] = { 31,15,13,7,27,25,28,29 };
-	uint n101[] = { 32,34,103,102,100,174,175,122 };
-	uint n127[] = { 58,37,36,126,124,125,56 };
-	uint n64[] = { 65,67,66,183,181,138,139 };
-	uint n133[] = { 80,82,135,134,132,152,154 };
-	uint n148[] = { 149,151,150,147,145,162,168,170 };
-	uint n160[] = { 161,163,162,145,144,128,176,178 };
-	uint n24[] = { 25,27,26,95,93,87,18,19 };
-	uint n42[] = { 43,23,21,111,109,40,41 };
-	uint n59[] = { 62,45,39,37,58,56,57,60 };
-	uint n191[] = { 74,48,117,116,190,188,189,72 };
-	uint n190[] = { 191,117,116,113,187,185,188,189 };
-	uint n186[] = { 187,113,112,165,164,184,185 };
-	uint n184[] = { 185,187,186,165,164,161,178,179 };
+	int n0[] = { 1,3,2,71,69,143,90,91 };
+	int n5[] = { 26,27,7,6,4,94,95 };
+	int n13[] = { 30,31,15,14,12,6,7,27 };
+	int n15[] = { 31,47,63,61,14,12,13,30 };
+	int n30[] = { 31,15,13,7,27,25,28,29 };
+	int n101[] = { 32,34,103,102,100,174,175,122 };
+	int n127[] = { 58,37,36,126,124,125,56 };
+	int n64[] = { 65,67,66,183,181,138,139 };
+	int n133[] = { 80,82,135,134,132,152,154 };
+	int n148[] = { 149,151,150,147,145,162,168,170 };
+	int n160[] = { 161,163,162,145,144,128,176,178 };
+	int n24[] = { 25,27,26,95,93,87,18,19 };
+	int n42[] = { 43,23,21,111,109,40,41 };
+	int n59[] = { 62,45,39,37,58,56,57,60 };
+	int n191[] = { 74,48,117,116,190,188,189,72 };
+	int n190[] = { 191,117,116,113,187,185,188,189 };
+	int n186[] = { 187,113,112,165,164,184,185 };
+	int n184[] = { 185,187,186,165,164,161,178,179 };
 
     // These were taken (IIRC) from the Healpix paper, so the healpix
     // numbers are all in the NESTED scheme.
 
-	tst_nested(ct, 0,   n0,   sizeof(n0)  /sizeof(uint), 4);
-	tst_nested(ct, 5,   n5,   sizeof(n5)  /sizeof(uint), 4);
-	tst_nested(ct, 13,  n13,  sizeof(n13) /sizeof(uint), 4);
-	tst_nested(ct, 15,  n15,  sizeof(n15) /sizeof(uint), 4);
-	tst_nested(ct, 30,  n30,  sizeof(n30) /sizeof(uint), 4);
-	tst_nested(ct, 101, n101, sizeof(n101)/sizeof(uint), 4);
-	tst_nested(ct, 127, n127, sizeof(n127)/sizeof(uint), 4);
-	tst_nested(ct, 64,  n64,  sizeof(n64) /sizeof(uint), 4);
-	tst_nested(ct, 133, n133, sizeof(n133)/sizeof(uint), 4);
-	tst_nested(ct, 148, n148, sizeof(n148)/sizeof(uint), 4);
-	tst_nested(ct, 160, n160, sizeof(n160)/sizeof(uint), 4);
-	tst_nested(ct, 24,  n24,  sizeof(n24) /sizeof(uint), 4);
-	tst_nested(ct, 42,  n42,  sizeof(n42) /sizeof(uint), 4);
-	tst_nested(ct, 59,  n59,  sizeof(n59) /sizeof(uint), 4);
-	tst_nested(ct, 191, n191, sizeof(n191)/sizeof(uint), 4);
-	tst_nested(ct, 190, n190, sizeof(n190)/sizeof(uint), 4);
-	tst_nested(ct, 186, n186, sizeof(n186)/sizeof(uint), 4);
-	tst_nested(ct, 184, n184, sizeof(n184)/sizeof(uint), 4);
+	tst_nested(ct, 0,   n0,   sizeof(n0)  /sizeof(int), 4);
+	tst_nested(ct, 5,   n5,   sizeof(n5)  /sizeof(int), 4);
+	tst_nested(ct, 13,  n13,  sizeof(n13) /sizeof(int), 4);
+	tst_nested(ct, 15,  n15,  sizeof(n15) /sizeof(int), 4);
+	tst_nested(ct, 30,  n30,  sizeof(n30) /sizeof(int), 4);
+	tst_nested(ct, 101, n101, sizeof(n101)/sizeof(int), 4);
+	tst_nested(ct, 127, n127, sizeof(n127)/sizeof(int), 4);
+	tst_nested(ct, 64,  n64,  sizeof(n64) /sizeof(int), 4);
+	tst_nested(ct, 133, n133, sizeof(n133)/sizeof(int), 4);
+	tst_nested(ct, 148, n148, sizeof(n148)/sizeof(int), 4);
+	tst_nested(ct, 160, n160, sizeof(n160)/sizeof(int), 4);
+	tst_nested(ct, 24,  n24,  sizeof(n24) /sizeof(int), 4);
+	tst_nested(ct, 42,  n42,  sizeof(n42) /sizeof(int), 4);
+	tst_nested(ct, 59,  n59,  sizeof(n59) /sizeof(int), 4);
+	tst_nested(ct, 191, n191, sizeof(n191)/sizeof(int), 4);
+	tst_nested(ct, 190, n190, sizeof(n190)/sizeof(int), 4);
+	tst_nested(ct, 186, n186, sizeof(n186)/sizeof(int), 4);
+	tst_nested(ct, 184, n184, sizeof(n184)/sizeof(int), 4);
 }
 
 /*
-void pnprime_to_xy(uint, uint*, uint*, uint);
-uint xy_to_pnprime(uint, uint, uint);
+ void pnprime_to_xy(int, int*, int*, int);
+ int xy_to_pnprime(int, int, int);
 
-void tst_healpix_pnprime_to_xy(CuTest *ct) {
-	uint px,py;
-	pnprime_to_xy(6, &px, &py, 3);
-	CuAssertIntEquals(ct, px, 2);
-	CuAssertIntEquals(ct, py, 0);
-	pnprime_to_xy(8, &px, &py, 3);
-	CuAssertIntEquals(ct, px, 2);
-	CuAssertIntEquals(ct, py, 2);
-	pnprime_to_xy(0, &px, &py, 3);
-	CuAssertIntEquals(ct, px, 0);
-	CuAssertIntEquals(ct, py, 0);
-	pnprime_to_xy(2, &px, &py, 3);
-	CuAssertIntEquals(ct, px, 0);
-	CuAssertIntEquals(ct, py, 2);
-	pnprime_to_xy(4, &px, &py, 3);
-	CuAssertIntEquals(ct, px, 1);
-	CuAssertIntEquals(ct, py, 1);
-}
+ void tst_healpix_pnprime_to_xy(CuTest *ct) {
+ int px,py;
+ pnprime_to_xy(6, &px, &py, 3);
+ CuAssertIntEquals(ct, px, 2);
+ CuAssertIntEquals(ct, py, 0);
+ pnprime_to_xy(8, &px, &py, 3);
+ CuAssertIntEquals(ct, px, 2);
+ CuAssertIntEquals(ct, py, 2);
+ pnprime_to_xy(0, &px, &py, 3);
+ CuAssertIntEquals(ct, px, 0);
+ CuAssertIntEquals(ct, py, 0);
+ pnprime_to_xy(2, &px, &py, 3);
+ CuAssertIntEquals(ct, px, 0);
+ CuAssertIntEquals(ct, py, 2);
+ pnprime_to_xy(4, &px, &py, 3);
+ CuAssertIntEquals(ct, px, 1);
+ CuAssertIntEquals(ct, py, 1);
+ }
 
-void tst_healpix_xy_to_pnprime(CuTest *ct) {
-	CuAssertIntEquals(ct, xy_to_pnprime(0,0,3), 0);
-	CuAssertIntEquals(ct, xy_to_pnprime(1,0,3), 3);
-	CuAssertIntEquals(ct, xy_to_pnprime(2,0,3), 6);
-	CuAssertIntEquals(ct, xy_to_pnprime(0,1,3), 1);
-	CuAssertIntEquals(ct, xy_to_pnprime(1,1,3), 4);
-	CuAssertIntEquals(ct, xy_to_pnprime(2,1,3), 7);
-	CuAssertIntEquals(ct, xy_to_pnprime(0,2,3), 2);
-	CuAssertIntEquals(ct, xy_to_pnprime(1,2,3), 5);
-	CuAssertIntEquals(ct, xy_to_pnprime(2,2,3), 8);
-}
+ void tst_healpix_xy_to_pnprime(CuTest *ct) {
+ CuAssertIntEquals(ct, xy_to_pnprime(0,0,3), 0);
+ CuAssertIntEquals(ct, xy_to_pnprime(1,0,3), 3);
+ CuAssertIntEquals(ct, xy_to_pnprime(2,0,3), 6);
+ CuAssertIntEquals(ct, xy_to_pnprime(0,1,3), 1);
+ CuAssertIntEquals(ct, xy_to_pnprime(1,1,3), 4);
+ CuAssertIntEquals(ct, xy_to_pnprime(2,1,3), 7);
+ CuAssertIntEquals(ct, xy_to_pnprime(0,2,3), 2);
+ CuAssertIntEquals(ct, xy_to_pnprime(1,2,3), 5);
+ CuAssertIntEquals(ct, xy_to_pnprime(2,2,3), 8);
+ }
  */
 void print_test_healpix_output(int Nside) {
 
@@ -428,36 +458,36 @@ int main(int argc, char** args) {
 	printf("%s\n", output->buffer);
 
     /*
-	print_healpix_grid(1);
-	print_healpix_grid(2);
-	print_healpix_grid(3);
-	print_healpix_grid(4);
-	print_healpix_grid(5);
-    */
+	 print_healpix_grid(1);
+	 print_healpix_grid(2);
+	 print_healpix_grid(3);
+	 print_healpix_grid(4);
+	 print_healpix_grid(5);
+	 */
 
 	//print_test_healpix_output();
 	
 	/*
-	  int rastep, decstep;
-	  int Nra = 100;
-	  int Ndec = 100;
-	  double ra, dec;
-	  int healpix;
-	  printf("radechealpix=zeros(%i,3);\n", Nra*Ndec);
-	  for (rastep=0; rastep<Nra; rastep++) {
-	  ra = ((double)rastep / (double)(Nra-1)) * 2.0 * M_PI;
-	  for (decstep=0; decstep<Ndec; decstep++) {
-	  dec = (((double)decstep / (double)(Ndec-1)) * M_PI) - M_PI/2.0;
-	  healpix = radectohealpix(ra, dec);
-	  printf("radechealpix(%i,:)=[%g,%g,%i];\n", 
-	  (rastep*Ndec) + decstep + 1, ra, dec, healpix);
-	  }
-	  }
-	  printf("ra=radechealpix(:,1);\n");
-	  printf("dec=radechealpix(:,2);\n");
-	  printf("healpix=radechealpix(:,3);\n");
-	  return 0;
-	*/
+	 int rastep, decstep;
+	 int Nra = 100;
+	 int Ndec = 100;
+	 double ra, dec;
+	 int healpix;
+	 printf("radechealpix=zeros(%i,3);\n", Nra*Ndec);
+	 for (rastep=0; rastep<Nra; rastep++) {
+	 ra = ((double)rastep / (double)(Nra-1)) * 2.0 * M_PI;
+	 for (decstep=0; decstep<Ndec; decstep++) {
+	 dec = (((double)decstep / (double)(Ndec-1)) * M_PI) - M_PI/2.0;
+	 healpix = radectohealpix(ra, dec);
+	 printf("radechealpix(%i,:)=[%g,%g,%i];\n", 
+	 (rastep*Ndec) + decstep + 1, ra, dec, healpix);
+	 }
+	 }
+	 printf("ra=radechealpix(:,1);\n");
+	 printf("dec=radechealpix(:,2);\n");
+	 printf("healpix=radechealpix(:,3);\n");
+	 return 0;
+	 */
 	return 0;
 }
 #endif

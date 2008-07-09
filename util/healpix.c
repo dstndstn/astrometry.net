@@ -34,8 +34,8 @@ Const static Inline double mysquare(double d) {
 	return d*d;
 }
 
-Const int healpix_xy_to_nested(unsigned int hp, unsigned int Nside) {
-	unsigned int bighp,x,y;
+Const int healpix_xy_to_nested(int hp, int Nside) {
+	int bighp,x,y;
 	int index;
 	int i;
 
@@ -51,7 +51,7 @@ Const int healpix_xy_to_nested(unsigned int hp, unsigned int Nside) {
 	//    y = ... b5 b3 b1
 	// We go through the bits of x,y, building up "index":
 	index = 0;
-	for (i=0; i<(8*sizeof(unsigned int)/2); i++) {
+	for (i=0; i<(8*sizeof(int)/2); i++) {
 		index |= (((y & 1) << 1) | (x & 1)) << (i*2);
 		y >>= 1;
 		x >>= 1;
@@ -61,8 +61,8 @@ Const int healpix_xy_to_nested(unsigned int hp, unsigned int Nside) {
 	return index + bighp * Nside * Nside;
 }
 
-Const int healpix_nested_to_xy(unsigned int hp, unsigned int Nside) {
-	unsigned int bighp, x, y;
+Const int healpix_nested_to_xy(int hp, int Nside) {
+	int bighp, x, y;
 	int index;
 	int i;
 	if (!is_power_of_two(Nside)) {
@@ -72,7 +72,7 @@ Const int healpix_nested_to_xy(unsigned int hp, unsigned int Nside) {
 	bighp = hp / (Nside*Nside);
 	index = hp % (Nside*Nside);
 	x = y = 0;
-	for (i=0; i<(8*sizeof(unsigned int)/2); i++) {
+	for (i=0; i<(8*sizeof(int)/2); i++) {
 		x |= (index & 0x1) << i;
 		index >>= 1;
 		y |= (index & 0x1) << i;
@@ -82,7 +82,7 @@ Const int healpix_nested_to_xy(unsigned int hp, unsigned int Nside) {
 	return healpix_compose_xy(bighp, x, y, Nside);
 }
 
-Const int healpix_compose_ring(unsigned int ring, unsigned int longind, unsigned int Nside) {
+Const int healpix_compose_ring(int ring, int longind, int Nside) {
 	if (ring <= Nside)
 		// north polar
 		return ring * (ring-1) * 2 + longind;
@@ -96,7 +96,7 @@ Const int healpix_compose_ring(unsigned int ring, unsigned int longind, unsigned
 	}
 }
 
-void healpix_decompose_ring(unsigned int hp, unsigned int Nside, unsigned int* p_ring, unsigned int* p_longind) {
+void healpix_decompose_ring(int hp, int Nside, int* p_ring, int* p_longind) {
 	// FIXME: this could be written in closed form...
 	int longind;
 	int ring;
@@ -123,8 +123,8 @@ void healpix_decompose_ring(unsigned int hp, unsigned int Nside, unsigned int* p
 		offset += (Nside*4 - ring)*4;
 	}
 	fprintf(stderr, "healpix_decompose_ring: shouldn't get here!\n");
-	if (p_ring) *p_ring = (unsigned int)-1;
-	if (p_longind) *p_longind = (unsigned int)-1;
+	if (p_ring) *p_ring = -1;
+	if (p_longind) *p_longind = -1;
 	return;
  gotit:
 	if (p_ring)
@@ -133,10 +133,10 @@ void healpix_decompose_ring(unsigned int hp, unsigned int Nside, unsigned int* p
 		*p_longind = longind;
 }
 
-Const int healpix_ring_to_xy(unsigned int ring, unsigned int Nside) {
+Const int healpix_ring_to_xy(int ring, int Nside) {
 	int bighp, x, y;
 	int ringind, longind;
-	healpix_decompose_ring(ring, Nside, (unsigned int*)&ringind, (unsigned int*)&longind);
+	healpix_decompose_ring(ring, Nside, &ringind, &longind);
 	if (ringind <= Nside) {
 		int ind;
 		int v;
@@ -232,8 +232,8 @@ Const int healpix_ring_to_xy(unsigned int ring, unsigned int Nside) {
 	}
 }
 
-Const int healpix_xy_to_ring(unsigned int hp, unsigned int Nside) {
-	unsigned int bighp,x,y;
+Const int healpix_xy_to_ring(int hp, int Nside) {
+	int bighp,x,y;
 	int frow;
 	int F1;
 	int v;
@@ -301,13 +301,13 @@ Const int healpix_xy_to_ring(unsigned int hp, unsigned int Nside) {
 	return index;
 }
 
-Const double healpix_side_length_arcmin(unsigned int Nside) {
+Const double healpix_side_length_arcmin(int Nside) {
 	return sqrt((4.0 * M_PI * mysquare(180.0 * 60.0 / M_PI)) /
 				(double)(12 * Nside * Nside));
 }
 
-static Inline void swap(unsigned int* i1, unsigned int* i2) {
-	unsigned int tmp;
+static Inline void swap(int* i1, int* i2) {
+	int tmp;
 	tmp = *i1;
 	*i1 = *i2;
 	*i2 = tmp;
@@ -344,18 +344,18 @@ static Inline bool issouthpolar(int healpix)
 	return (healpix >= 8);
 }
 
-static unsigned int compose_xy(unsigned int x, unsigned int y, unsigned int Nside) {
+static int compose_xy(int x, int y, int Nside) {
 	return (x * Nside) + y;
 }
 
-unsigned int healpix_compose_xy(unsigned int bighp, unsigned int x, unsigned int y, unsigned int Nside) {
+int healpix_compose_xy(int bighp, int x, int y, int Nside) {
 	return (bighp * Nside * Nside) + compose_xy(x, y, Nside);
 }
 
-void healpix_decompose_xy(unsigned int finehp, unsigned int* pbighp, unsigned int* px, unsigned int* py, unsigned int Nside) {
-	unsigned int hp;
+void healpix_decompose_xy(int finehp, int* pbighp, int* px, int* py, int Nside) {
+	int hp;
 	if (pbighp) {
-		unsigned int bighp   = finehp / (Nside * Nside);
+		int bighp   = finehp / (Nside * Nside);
 		*pbighp = bighp;
 	}
 	hp = finehp % (Nside * Nside);
@@ -399,14 +399,14 @@ static int healpix_get_neighbour(int hp, int dx, int dy)
 	return -1;
 }
 
-unsigned int healpix_get_neighbours(unsigned int pix, unsigned int* neighbour, unsigned int Nside)
+int healpix_get_neighbours(int pix, int* neighbour, int Nside)
 {
-	unsigned int base;
-	unsigned int x, y;
+	int base;
+	int x, y;
 	int nn = 0;
 	int nbase;
 	int Ns2 = Nside * Nside;
-	unsigned int nx, ny;
+	int nx, ny;
 
 	healpix_decompose_xy(pix, &base, &x, &y, Nside);
 
@@ -613,12 +613,12 @@ unsigned int healpix_get_neighbours(unsigned int pix, unsigned int* neighbour, u
 	return nn;
 }
 
-unsigned int xyztohealpix(double x, double y, double z, unsigned int Nside) {
+int xyztohealpix(double x, double y, double z, int Nside) {
     return xyztohealpixf(x, y, z, Nside, NULL, NULL);
 }
 
-unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
-                           double* p_dx, double* p_dy) {
+int xyztohealpixf(double x, double y, double z, int Nside,
+				  double* p_dx, double* p_dy) {
 	double phi;
 	double phioverpi;
 	double twothirds = 2.0 / 3.0;
@@ -643,9 +643,10 @@ unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
 		double zfactor;
 		bool north;
 		double phi_t;
-		unsigned int x, y;
+		int x, y;
 		int column;
 		double root;
+		double xx, yy;
 
 		// Which pole?
 		if (z >= twothirds) {
@@ -656,51 +657,72 @@ unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
 			zfactor = -1.0;
 		}
 
-		phi_t = fmod(phi, pi / 2.0);
+		phi_t = fmod(phi, halfpi);
 		assert (phi_t >= 0.0);
 
         // solve eqn 20 for k^2 = root.
 		root = (1.0 - z*zfactor) * 3.0 * mysquare(Nside * (2.0 * phi_t - pi) / pi);
 		if (root <= 0.0) {
-			x = 1;
-            dx = 0.0;
+			xx = 0.0;
         } else {
-            double fx = sqrt(root);
-			x = (int)ceil(fx);
-            dx = x - fx;
+			xx = sqrt(root);
         }
-
-		assert(x >= 1);
-		assert(x <= Nside);
 
         // solve eqn 19 for k^2 = root.
 		root = (1.0 - z*zfactor) * 3.0 * mysquare(Nside * 2.0 * phi_t / pi);
 		if (root <= 0.0) {
-			y = 1;
-            dy = 0.0;
+			yy = 0.0;
         } else {
-            double fy = sqrt(root);
-			y = (int)ceil(fy);
-            dy = y - fy;
+			yy = sqrt(root);
         }
 
-		assert(y >= 1);
-		assert(y <= Nside);
+		xx = Nside - xx;
+		yy = Nside - yy;
 
-		x = Nside - x;
-		y = Nside - y;
+		x = (int)floor(xx);
+		if (x == Nside)
+			x = Nside-1;
+		assert(x >= 0);
+		assert(x < Nside);
+
+		y = (int)floor(yy);
+		if (y == Nside)
+			y = Nside-1;
+		assert(y >= 0);
+		assert(y < Nside);
+
+		dx = xx - x;
+		dy = yy - y;
 
 		if (!north) {
 			swap(&x, &y);
             swap_double(&dx, &dy);
         }
 
+		assert(x < Nside);
+		assert(y < Nside);
+		assert(x >= 0);
+		assert(y >= 0);
 		pnprime = compose_xy(x, y, Nside);
+		assert(pnprime < Nside*Nside);
 
 		if (!north)
 			pnprime = Nside * Nside - 1 - pnprime;
 
-		column = (int)(phi / (pi / 2.0));
+		/*
+		 column = (int)((phi - phi_t) / halfpi);
+		 */
+		{
+			double sector;
+			int offset;
+			sector = (phi - phi_t) / (halfpi);
+			offset = (int)round(sector);
+			assert(fabs(sector - offset) < EPS);
+			offset = ((offset % 4) + 4) % 4;
+			assert(offset >= 0);
+			assert(offset <= 3);
+			column = offset;
+		}
 
 		if (north)
 			basehp = column;
@@ -720,7 +742,6 @@ unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
         double xx, yy;
 
 		phim = fmod(phi, halfpi);
-
 		// project into the unit square z=[-2/3, 2/3], phi=[0, pi/2]
 		zunits = (z + twothirds) / (4.0 / 3.0);
 		phiunits = phim / halfpi;
@@ -744,6 +765,8 @@ unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
 		offset = (int)round(sector);
 		assert(fabs(sector - offset) < EPS);
 		offset = ((offset % 4) + 4) % 4;
+		assert(offset >= 0);
+		assert(offset <= 3);
 
 		// we're looking at a square in z,phi space with an X dividing it.
 		// we want to know which section we're in.
@@ -792,6 +815,7 @@ unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
 		dy = yy - y;
 
 		pnprime = compose_xy(x, y, Nside);
+		assert(pnprime < Nside*Nside);
 	}
     hp = basehp * Nside * Nside + pnprime;
 
@@ -801,7 +825,7 @@ unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
     return hp;
 }
 
-unsigned int radectohealpix(double ra, double dec, unsigned int Nside) {
+int radectohealpix(double ra, double dec, int Nside) {
 	double x, y, z;
 	x = radec2x(ra, dec);
 	y = radec2y(ra, dec);
@@ -809,22 +833,21 @@ unsigned int radectohealpix(double ra, double dec, unsigned int Nside) {
 	return xyztohealpix(x, y, z, Nside);
 }
 
-Const unsigned int radecdegtohealpix(double ra, double dec, unsigned int Nside) {
+Const int radecdegtohealpix(double ra, double dec, int Nside) {
 	return radectohealpix(deg2rad(ra), deg2rad(dec), Nside);
 }
 
-unsigned int xyzarrtohealpix(double* xyz, unsigned int Nside) {
+int xyzarrtohealpix(double* xyz, int Nside) {
 	return xyztohealpix(xyz[0], xyz[1], xyz[2], Nside);
 }
 
-void healpix_to_xyz(unsigned int hp, unsigned int Nside,
+void healpix_to_xyz(int hp, int Nside,
 					double dx, double dy, 
-					double* rx, double *ry, double *rz)
-{
-	unsigned int chp;
-	unsigned int equatorial = 1;
+					double* rx, double *ry, double *rz) {
+	int chp;
+	bool equatorial = TRUE;
 	double zfactor = 1.0;
-	unsigned int xp, yp;
+	int xp, yp;
 	double x, y, z;
 	double pi = M_PI, phi;
 	double rad;
@@ -837,13 +860,13 @@ void healpix_to_xyz(unsigned int hp, unsigned int Nside,
 
 	if (isnorthpolar(chp)) {
 		if ((x + y) > Nside) {
-			equatorial = 0;
+			equatorial = FALSE;
 			zfactor = 1.0;
 		}
 	}
 	if (issouthpolar(chp)) {
 		if ((x + y) < Nside) {
-			equatorial = 0;
+			equatorial = FALSE;
 			zfactor = -1.0;
 		}
 	}
@@ -851,15 +874,18 @@ void healpix_to_xyz(unsigned int hp, unsigned int Nside,
 	if (equatorial) {
 		double zoff=0;
 		double phioff=0;
-		x /= Nside;
-		y /= Nside;
+		x /= (double)Nside;
+		y /= (double)Nside;
 
 		if (chp <= 3) {
+			// north
 			phioff = 1.0;
 		} else if (chp <= 7) {
+			// equator
 			zoff = -1.0;
 			chp -= 4;
 		} else if (chp <= 11) {
+			// south
 			phioff = 1.0;
 			zoff = -2.0;
 			chp -= 8;
@@ -874,9 +900,15 @@ void healpix_to_xyz(unsigned int hp, unsigned int Nside,
 	} else {
 		// do other magic
 
+		/*
+		 Rearrange eqns (19) and (20) to find phi_t in terms of x,y.
+
+		 (x/y)^2 = (2 phi_t / (2 phi_t - pi))^2
+		 */
+		double a,b,c;
 		// get z/phi using magical equations
 		double phiP, phiN, phi_t;
-		double A, B, a, b, c;
+		 double A, B;
 
 		if (zfactor == -1.0) {
 			swap_double(&x, &y);
@@ -884,34 +916,50 @@ void healpix_to_xyz(unsigned int hp, unsigned int Nside,
 			y = (Nside - y);
 		}
 
-		A = (Nside - y) * (Nside - y);
-		B = (Nside - x) * (Nside - x);
-		a = (A - B);
-		b = -A * pi;
-		c = A * pi * pi / 4.0;
+		/*
+		 if (y > 0.1) {
+		 double J;
+		 J = (x*x) / (y*y);
+		 a = 4.0 * (J-1.0);
+		 b = -4.0 * pi * J;
+		 c = pi*pi * J;
+		 } else {
+		 }
+		 */
 
-		if (a == 0.0) {
-			phi_t = pi / 4.0;
-		} else {
-			double disc = b*b - 4.0*a*c;
-			if (disc <= 0.0) {
-				phi_t = -b / (2.0 * a);
-				// with Nside=200, hp 349000, and -O2 with gcc 4.0.1, this
-				// assert fails (marginally).
-				//assert(0.0 <= phi_t && phi_t <= pi/2.0);
-				if (phi_t < 0.0) phi_t = 0.0;
-				if (phi_t > pi/2.0) phi_t = pi/2.0;
-			} else {
-				phiP = (-b + sqrt(disc)) / (2.0*a);
-				phiN = (-b - sqrt(disc)) / (2.0*a);
-				if (0.0 <= phiP && phiP <= pi/2.0) {
-					phi_t = phiP;
-				} else {
-					phi_t = phiN;
-					assert(0.0 <= phiN && phiN <= pi/2.0);
-				}
-			}
-		}
+		 A = (Nside - y) * (Nside - y);
+		 B = (Nside - x) * (Nside - x);
+		 a = (A - B);
+		 b = -A * pi;
+		 c = A * pi * pi / 4.0;
+
+		 if (a == 0.0) {
+		 phi_t = pi / 4.0;
+		 } else {
+		 double disc = b*b - 4.0*a*c;
+		 if (disc <= 0.0) {
+		 phi_t = -b / (2.0 * a);
+		 // with Nside=200, hp 349000, and -O2 with gcc 4.0.1, this
+		 // assert fails (marginally).
+		 //assert(0.0 <= phi_t && phi_t <= pi/2.0);
+		 if (phi_t < 0.0) phi_t = 0.0;
+		 if (phi_t > pi/2.0) phi_t = pi/2.0;
+		 } else {
+		 double rd = sqrt(disc);
+		 phiP = (-b + rd) / (2.0*a);
+		 phiN = (-b - rd) / (2.0*a);
+		 if (0.0 <= phiP && phiP <= pi/2.0) {
+		 phi_t = phiP;
+		 } else {
+		 phi_t = phiN;
+		 assert(0.0 <= phiN && phiN <= pi/2.0);
+		 }
+		 }
+		 }
+
+		//phi_t = pi * x / (2.0 * (x + y));
+		//phi_t = pi * y / (2.0 * (x + y));
+		//phi_t = pi * (Nside-x) / (2.0 * ((Nside-x) + (Nside-y)));
 
 		if (phi_t == 0.0) {
 			z = 1.0 - mysquare(pi * (Nside - x) / ((2.0 * phi_t - pi) * Nside)) / 3.0;
@@ -939,13 +987,13 @@ void healpix_to_xyz(unsigned int hp, unsigned int Nside,
 	*rz = z;
 }
 
-void healpix_to_xyzarr(unsigned int hp, unsigned int Nside,
+void healpix_to_xyzarr(int hp, int Nside,
 					   double dx, double dy,
 					   double* xyz) {
 	healpix_to_xyz(hp, Nside, dx, dy, xyz, xyz+1, xyz+2);
 }
 
-void healpix_to_radec(unsigned int hp, unsigned int Nside,
+void healpix_to_radec(int hp, int Nside,
 					  double dx, double dy,
 					  double* ra, double* dec) {
 	double xyz[3];
@@ -953,7 +1001,7 @@ void healpix_to_radec(unsigned int hp, unsigned int Nside,
 	xyzarr2radec(xyz, ra, dec);
 }
 
-void healpix_to_radecdeg(unsigned int hp, unsigned int Nside,
+void healpix_to_radecdeg(int hp, int Nside,
                          double dx, double dy,
                          double* ra, double* dec) {
 	double xyz[3];
@@ -961,7 +1009,7 @@ void healpix_to_radecdeg(unsigned int hp, unsigned int Nside,
 	xyzarr2radecdeg(xyz, ra, dec);
 }
 
-void healpix_to_radecarr(unsigned int hp, unsigned int Nside,
+void healpix_to_radecarr(int hp, int Nside,
 						 double dx, double dy,
 						 double* radec) {
 	double xyz[3];
@@ -969,7 +1017,7 @@ void healpix_to_radecarr(unsigned int hp, unsigned int Nside,
 	xyzarr2radec(xyz, radec, radec+1);
 }
 
-void healpix_to_radecdegarr(unsigned int hp, unsigned int Nside,
+void healpix_to_radecdegarr(int hp, int Nside,
                             double dx, double dy,
                             double* radec) {
 	double xyz[3];
