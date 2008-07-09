@@ -23,6 +23,7 @@
 #include "cutest.h"
 #include "starutil.h"
 #include "healpix.h"
+#include "bl.h"
 
 static double square(double x) {
     return x*x;
@@ -79,9 +80,40 @@ void test_xyztohpf(CuTest* ct) {
     double dx, dy;
     int hp;
     int nside;
-    nside = 1;
+    nside = 2;
 
     fprintf(stderr, "%s", "from pylab import plot,text,savefig\n");
+
+    for (hp=0; hp<12*nside*nside; hp++) {
+        double x,y,z;
+        double a, b;
+        int i;
+        for (dx=0.0; dx<=1.0; dx+=0.1) {
+            fprintf(stderr, "xp=[]\n");
+            fprintf(stderr, "yp=[]\n");
+            for (dy=0.0; dy<=1.0; dy+=0.1) {
+                healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
+                a = xy2ra(x,y) / (2.0 * M_PI);
+                b = z2dec(z) / (M_PI);
+                fprintf(stderr, "xp.append(%g)\n", a);
+                fprintf(stderr, "yp.append(%g)\n", b);
+            }
+            fprintf(stderr, "plot(xp, yp, 'r.-')\n");
+        }
+        for (dy=0.0; dy<=1.0; dy+=0.1) {
+            fprintf(stderr, "xp=[]\n");
+            fprintf(stderr, "yp=[]\n");
+            for (dx=0.0; dx<=1.0; dx+=0.1) {
+                healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
+                a = xy2ra(x,y) / (2.0 * M_PI);
+                b = z2dec(z) / (M_PI);
+                fprintf(stderr, "xp.append(%g)\n", a);
+                fprintf(stderr, "yp.append(%g)\n", b);
+            }
+            fprintf(stderr, "plot(xp, yp, 'r.-')\n");
+        }
+    }
+    fprintf(stderr, "savefig('plot1.png')\n");
 
     for (hp=0; hp<12*nside*nside; hp++) {
         for (dx=0.0; dx<=1.0; dx+=0.1) {
