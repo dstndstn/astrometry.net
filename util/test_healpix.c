@@ -109,7 +109,7 @@ void test_xyztohpf(CuTest* ct) {
 	double x,y,z;
 	double outa, outb;
 	double step = 0.1;
-    nside = 2;
+    nside = 3;
 
     fprintf(stderr, "%s", "from pylab import plot,text,savefig,clf\n");
 	fprintf(stderr, "clf()\n");
@@ -173,7 +173,7 @@ void test_xyztohpf(CuTest* ct) {
 				// should match original (x,y,z).
 				dist = sqrt(MAX(0, square(x-outx) + square(y-outy) + square(z-outz)));
 
-				//CuAssertIntEquals(ct, 1, (dist < 1e-6)?1:0);
+				CuAssertIntEquals(ct, 1, (dist < 1e-6)?1:0);
 
 				if (dist > 1e-6) {
 					a = xy2ra(x,y) / (2.0 * M_PI);

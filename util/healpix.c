@@ -19,6 +19,7 @@
 #include <math.h>
 #include <assert.h>
 #include <stdio.h>
+#include <sys/param.h>
 
 #include "healpix.h"
 #include "mathutil.h"
@@ -620,7 +621,6 @@ int xyztohealpix(double x, double y, double z, int Nside) {
 int xyztohealpixf(double x, double y, double z, int Nside,
 				  double* p_dx, double* p_dy) {
 	double phi;
-	double phioverpi;
 	double twothirds = 2.0 / 3.0;
 	double pi = M_PI;
 	double twopi = 2.0 * M_PI;
@@ -629,6 +629,9 @@ int xyztohealpixf(double x, double y, double z, int Nside,
     int basehp;
     int hp;
     int pnprime;
+	double sector;
+	int offset;
+	double phi_t;
 
 	double EPS = 1e-8;
 
@@ -636,17 +639,17 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 	phi = atan2(y, x);
 	if (phi < 0.0)
 		phi += twopi;
-	phioverpi = phi / pi;
+	phi_t = fmod(phi, halfpi);
+	assert (phi_t >= 0.0);
 
 	// North or south polar cap.
 	if ((z >= twothirds) || (z <= -twothirds)) {
 		double zfactor;
 		bool north;
-		double phi_t;
 		int x, y;
 		int column;
 		double root;
-		double xx, yy;
+		double xx, yy, kx, ky;
 
 		// Which pole?
 		if (z >= twothirds) {
@@ -657,76 +660,44 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 			zfactor = -1.0;
 		}
 
-		phi_t = fmod(phi, halfpi);
-		assert (phi_t >= 0.0);
-
-        // solve eqn 20 for k^2 = root.
+        // solve eqn 20: k = Ns - xx (in the northern hemi)
 		root = (1.0 - z*zfactor) * 3.0 * mysquare(Nside * (2.0 * phi_t - pi) / pi);
-		if (root <= 0.0) {
-			xx = 0.0;
-        } else {
-			xx = sqrt(root);
-        }
+		kx = (root <= 0.0) ? 0.0 : sqrt(root);
 
-        // solve eqn 19 for k^2 = root.
+        // solve eqn 19 for k = Ns - yy
 		root = (1.0 - z*zfactor) * 3.0 * mysquare(Nside * 2.0 * phi_t / pi);
-		if (root <= 0.0) {
-			yy = 0.0;
-        } else {
-			yy = sqrt(root);
-        }
+		ky = (root <= 0.0) ? 0.0 : sqrt(root);
 
 		if (north) {
-			xx = Nside - xx;
-			yy = Nside - yy;
+			xx = Nside - kx;
+			yy = Nside - ky;
+		} else {
+			xx = ky;
+			yy = kx;
 		}
 
-		x = (int)floor(xx);
-		if (x == Nside)
-			x = Nside-1;
+		// xx, yy should be in [0, Nside].
+		x = MIN(Nside-1, floor(xx));
 		assert(x >= 0);
 		assert(x < Nside);
 
-		y = (int)floor(yy);
-		if (y == Nside)
-			y = Nside-1;
+		y = MIN(Nside-1, floor(yy));
 		assert(y >= 0);
 		assert(y < Nside);
 
 		dx = xx - x;
 		dy = yy - y;
 
-		if (!north) {
-			swap(&x, &y);
-            swap_double(&dx, &dy);
-        }
-
-		assert(x < Nside);
-		assert(y < Nside);
-		assert(x >= 0);
-		assert(y >= 0);
 		pnprime = compose_xy(x, y, Nside);
 		assert(pnprime < Nside*Nside);
 
-		/*
-		 if (!north)
-		 pnprime = Nside * Nside - 1 - pnprime;
-		 */
-
-		/*
-		 column = (int)((phi - phi_t) / halfpi);
-		 */
-		{
-			double sector;
-			int offset;
-			sector = (phi - phi_t) / (halfpi);
-			offset = (int)round(sector);
-			assert(fabs(sector - offset) < EPS);
-			offset = ((offset % 4) + 4) % 4;
-			assert(offset >= 0);
-			assert(offset <= 3);
-			column = offset;
-		}
+		sector = (phi - phi_t) / (halfpi);
+		offset = (int)round(sector);
+		assert(fabs(sector - offset) < EPS);
+		offset = ((offset % 4) + 4) % 4;
+		assert(offset >= 0);
+		assert(offset <= 3);
+		column = offset;
 
 		if (north)
 			basehp = column;
@@ -735,20 +706,16 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 
 	} else {
 		// could be polar or equatorial.
-		double phimod;
 		double sector;
 		int offset;
-		double z1, z2;
-		double phim;
 		double u1, u2;
 		double zunits, phiunits;
 		int x, y;
         double xx, yy;
 
-		phim = fmod(phi, halfpi);
 		// project into the unit square z=[-2/3, 2/3], phi=[0, pi/2]
 		zunits = (z + twothirds) / (4.0 / 3.0);
-		phiunits = phim / halfpi;
+		phiunits = phi_t / halfpi;
 		// convert into diagonal units
 		// (add 1 to u2 so that they both cover the range [0,2].
 		u1 = zunits + phiunits;
@@ -765,7 +732,7 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 		// (note that we subtract off the modded portion used to
 		// compute the position within the healpix, so this should be
 		// very close to one of the boundaries.)
-		sector = (phi - phim) / (halfpi);
+		sector = (phi - phi_t) / (halfpi);
 		offset = (int)round(sector);
 		assert(fabs(sector - offset) < EPS);
 		offset = ((offset % 4) + 4) % 4;
@@ -774,7 +741,9 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 
 		// we're looking at a square in z,phi space with an X dividing it.
 		// we want to know which section we're in.
-
+		// xx ranges from 0 in the bottom-left to 2Nside in the top-right.
+		// yy ranges from 0 in the bottom-right to 2Nside in the top-left.
+		// (of the phi,z unit box)
 		if (xx >= Nside) {
 			xx -= Nside;
 			if (yy >= Nside) {
@@ -798,22 +767,14 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 
 		assert(xx >= -EPS);
 		assert(xx < (Nside+EPS));
-		x = (int)floor(xx);
-		if (x == -1)
-			x = 0;
-		if (x == Nside)
-			x = Nside - 1;
+		x = MAX(0, MIN(Nside-1, floor(xx)));
 		assert(x >= 0);
 		assert(x < Nside);
 		dx = xx - x;
 
 		assert(yy >= -EPS);
 		assert(yy < (Nside+EPS));
-		y = (int)floor(yy);
-		if (y == -1)
-			y = 0;
-		if (y == Nside)
-			y = Nside - 1;
+		y = MAX(0, MIN(Nside-1, floor(yy)));
 		assert(y >= 0);
 		assert(y < Nside);
 		dy = yy - y;
@@ -902,8 +863,6 @@ void healpix_to_xyz(int hp, int Nside,
 		phi = pi/4*(x - y + phioff + 2*chp);
 
 	} else {
-		// do other magic
-
 		/*
 		 Rearrange eqns (19) and (20) to find phi_t in terms of x,y.
 
@@ -941,12 +900,11 @@ void healpix_to_xyz(int hp, int Nside,
 		z *= zfactor;
 		assert(0.0 <= fabs(z) && fabs(z) <= 1.0);
 
-		// Need to get phi
+		// The big healpix determines the phi offset
 		if (issouthpolar(chp))
 			phi = pi/2.0* (chp-8) + phi_t;
 		else
 			phi = pi/2.0 * chp + phi_t;
-
 	}
 
 	if (phi < 0.0)
