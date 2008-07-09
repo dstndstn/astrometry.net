@@ -57,78 +57,105 @@ int tst_xyztohpf(CuTest* ct,
 }
 
 void test_xyztohpf_2(CuTest* ct) {
-    tst_xyztohpf(ct, 0, 1, 0, 0.8);
-    tst_xyztohpf(ct, 0, 1, 0, 1.0);
-    tst_xyztohpf(ct, 0, 1, 0.3, 0.0);
-    tst_xyztohpf(ct, 0, 1, 0.5, 0.0);
+	/*
+	 tst_xyztohpf(ct, 0, 1, 0, 0.8);
+	 tst_xyztohpf(ct, 0, 1, 0, 1.0);
+	 tst_xyztohpf(ct, 0, 1, 0.3, 0.0);
+	 tst_xyztohpf(ct, 0, 1, 0.5, 0.0);
+	 */
     tst_xyztohpf(ct, 0, 1, 0.6, 0.0);
-    tst_xyztohpf(ct, 0, 1, 0.7, 0.0);
-    tst_xyztohpf(ct, 0, 1, 0.8, 0.0);
-    tst_xyztohpf(ct, 0, 1, 0.9, 0.9);
-    tst_xyztohpf(ct, 0, 1, 1.0, 0.3);
-    tst_xyztohpf(ct, 0, 1, 1.0, 0.4);
-    tst_xyztohpf(ct, 0, 1, 1.0, 0.5);
-    tst_xyztohpf(ct, 0, 1, 1.0, 0.7);
-    tst_xyztohpf(ct, 0, 1, 1.0, 0.8);
-    tst_xyztohpf(ct, 0, 1, 1.0, 0.9);
-    tst_xyztohpf(ct, 0, 1, 1.0, 1.0);
-
-    tst_xyztohpf(ct, 1, 1, 0.0, 0.1);
+	/*
+	 tst_xyztohpf(ct, 0, 1, 0.7, 0.0);
+	 tst_xyztohpf(ct, 0, 1, 0.8, 0.0);
+	 tst_xyztohpf(ct, 0, 1, 0.9, 0.9);
+	 tst_xyztohpf(ct, 0, 1, 1.0, 0.3);
+	 tst_xyztohpf(ct, 0, 1, 1.0, 0.4);
+	 tst_xyztohpf(ct, 0, 1, 1.0, 0.5);
+	 tst_xyztohpf(ct, 0, 1, 1.0, 0.7);
+	 tst_xyztohpf(ct, 0, 1, 1.0, 0.8);
+	 tst_xyztohpf(ct, 0, 1, 1.0, 0.9);
+	 tst_xyztohpf(ct, 0, 1, 1.0, 1.0);
+	 
+	 tst_xyztohpf(ct, 1, 1, 0.0, 0.1);
+	 */
 }
 
 void test_xyztohpf(CuTest* ct) {
     double dx, dy;
     int hp;
     int nside;
-    nside = 2;
+	double a, b;
+	double x,y,z;
+	double outa, outb;
+    nside = 1;
 
     fprintf(stderr, "%s", "from pylab import plot,text,savefig\n");
 
-    for (hp=0; hp<12*nside*nside; hp++) {
-        double x,y,z;
-        double a, b;
-        int i;
-        for (dx=0.0; dx<=1.0; dx+=0.1) {
-            fprintf(stderr, "xp=[]\n");
-            fprintf(stderr, "yp=[]\n");
-            for (dy=0.0; dy<=1.0; dy+=0.1) {
-                healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
-                a = xy2ra(x,y) / (2.0 * M_PI);
-                b = z2dec(z) / (M_PI);
-                fprintf(stderr, "xp.append(%g)\n", a);
-                fprintf(stderr, "yp.append(%g)\n", b);
-            }
-            fprintf(stderr, "plot(xp, yp, 'r.-')\n");
-        }
-        for (dy=0.0; dy<=1.0; dy+=0.1) {
-            fprintf(stderr, "xp=[]\n");
-            fprintf(stderr, "yp=[]\n");
-            for (dx=0.0; dx<=1.0; dx+=0.1) {
-                healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
-                a = xy2ra(x,y) / (2.0 * M_PI);
-                b = z2dec(z) / (M_PI);
-                fprintf(stderr, "xp.append(%g)\n", a);
-                fprintf(stderr, "yp.append(%g)\n", b);
-            }
-            fprintf(stderr, "plot(xp, yp, 'r.-')\n");
-        }
-    }
-    fprintf(stderr, "savefig('plot1.png')\n");
+	/*
+	 Plot the grid of healpixes with dx,dy=0.1 steps.
+	 */
+	//for (hp=0; hp<12*nside*nside; hp++) {
+	for (hp=0; hp<1; hp++) {
+	 double x,y,z;
+	 int i;
+	 for (dx=0.0; dx<=1.05; dx+=0.1) {
+	 fprintf(stderr, "xp=[]\n");
+	 fprintf(stderr, "yp=[]\n");
+	 for (dy=0.0; dy<=1.05; dy+=0.1) {
+	 healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
+	 a = xy2ra(x,y) / (2.0 * M_PI);
+	 b = z2dec(z) / (M_PI);
+	 fprintf(stderr, "xp.append(%g)\n", a);
+	 fprintf(stderr, "yp.append(%g)\n", b);
+	 }
+	 fprintf(stderr, "plot(xp, yp, 'k-')\n");
+	 }
+	 for (dy=0.0; dy<=1.05; dy+=0.1) {
+	 fprintf(stderr, "xp=[]\n");
+	 fprintf(stderr, "yp=[]\n");
+	 for (dx=0.0; dx<=1.0; dx+=0.1) {
+	 healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
+	 a = xy2ra(x,y) / (2.0 * M_PI);
+	 b = z2dec(z) / (M_PI);
+	 fprintf(stderr, "xp.append(%g)\n", a);
+	 fprintf(stderr, "yp.append(%g)\n", b);
+	 }
+	 fprintf(stderr, "plot(xp, yp, 'k-')\n");
+	 }
+	 }
+	 //fprintf(stderr, "savefig('plot1.png')\n");
 
-    for (hp=0; hp<12*nside*nside; hp++) {
+    //for (hp=0; hp<12*nside*nside; hp++) {
+    for (hp=0; hp<1*nside*nside; hp++) {
         for (dx=0.0; dx<=1.0; dx+=0.1) {
             for (dy=0.0; dy<=1.0; dy+=0.1) {
-                if (tst_xyztohpf(ct, hp, nside, dx, dy)) {
-                    double x,y,z;
-                    double theta;
-                    healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
-                    theta = xy2ra(x,y);
-                    theta /= (2.0 * M_PI);
+
+				double outdx, outdy;
+				int outhp;
+				double outx,outy,outz;
+				double dist;
+
+				// true (x,y,z) position
+				healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
+				// test: project to healpix position.
+				outhp = xyztohealpixf(x, y, z, nside, &outdx, &outdy);
+				// convert projected healpix back to out(x,y,z)
+				healpix_to_xyz(outhp, nside, outdx, outdy, &outx, &outy, &outz);
+				// should match original (x,y,z).
+				dist = sqrt(MAX(0, square(x-outx) + square(y-outy) + square(z-outz)));
+
+                if (dist > 1e-6) {
+					a = xy2ra(x,y) / (2.0 * M_PI);
+					b = z2dec(z) / (M_PI);
+
+					outa = xy2ra(outx, outy) / (2.0 * M_PI);
+					outb = z2dec(outz) / (M_PI);
+
                     fprintf(stderr,
-                            "plot([%g],[%g],'r.')\n", theta, z);
+                            "plot([%g, %g],[%g, %g],'r.-')\n", a, outa, b, outb);
                     fprintf(stderr, 
                             "text(%g, %g, \"(%g,%g)\")\n",
-                            theta, z, dx, dy);
+                            a, b, dx, dy);
                 }
             }
         }

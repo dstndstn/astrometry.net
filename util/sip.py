@@ -129,7 +129,8 @@ class Tan(ctypes.Structure):
 
 	# in arcsec/pixel
 	def get_pixel_scale(self):
-		return _sip.tan_pixel_scale(ctypes.pointer(self))
+		_sip.tan_pixel_scale.restype = c_double
+		return float(_sip.tan_pixel_scale(ctypes.pointer(self)))
 	
 	def __str__(self):
 		return '<Tan: crval=(%g, %g), crpix=(%g, %g), cd=(%g, %g; %g, %g), imagew=%d, imageh=%d>' % \
