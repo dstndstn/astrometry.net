@@ -34,7 +34,7 @@ static double square(double x) {
  }
  */
 
-void tst_xyztohpf(CuTest* ct,
+int tst_xyztohpf(CuTest* ct,
                   int hp, int nside, double dx, double dy) {
     double x,y,z;
     double outdx, outdy;
@@ -52,6 +52,7 @@ void tst_xyztohpf(CuTest* ct,
            "dy: %g / %g\n"
            "dist: %g\n\n", hp, outhp, dx, outdx, dy, outdy, dist);
     outhp = xyztohealpixf(x, y, z, nside, &outdx, &outdy);
+    return (dist > 1e-6);
 }
 
 void test_xyztohpf_2(CuTest* ct) {
@@ -80,13 +81,27 @@ void test_xyztohpf(CuTest* ct) {
     int nside;
     nside = 1;
 
+    fprintf(stderr, "%s", "from pylab import plot,text,savefig\n");
+
     for (hp=0; hp<12*nside*nside; hp++) {
         for (dx=0.0; dx<=1.0; dx+=0.1) {
             for (dy=0.0; dy<=1.0; dy+=0.1) {
-                tst_xyztohpf(ct, hp, nside, dx, dy);
+                if (tst_xyztohpf(ct, hp, nside, dx, dy)) {
+                    double x,y,z;
+                    double theta;
+                    healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
+                    theta = xy2ra(x,y);
+                    theta /= (2.0 * M_PI);
+                    fprintf(stderr,
+                            "plot([%g],[%g],'r.')\n", theta, z);
+                    fprintf(stderr, 
+                            "text(%g, %g, \"(%g,%g)\")\n",
+                            theta, z, dx, dy);
+                }
             }
         }
     }
+    fprintf(stderr, "savefig('plot.png')\n");
 
 }
 

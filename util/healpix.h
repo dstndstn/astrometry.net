@@ -27,8 +27,11 @@
 //#define Const 
 
 /**
-   The HEALPix paper is here:
-   http://www.journals.uchicago.edu/ApJ/journal/issues/ApJ/v622n2/61342/61342.web.pdf
+ The HEALPix paper is here:
+ http://www.journals.uchicago.edu/ApJ/journal/issues/ApJ/v622n2/61342/61342.web.pdf
+ (this one seems to have gone 404)
+ See:
+ http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=2005ApJ...622..759G&db_key=AST&high=41069202cf02947
 */
 
 /**

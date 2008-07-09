@@ -628,7 +628,6 @@ unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
 	phi = atan2(y, x);
 	if (phi < 0.0)
 		phi += twopi;
-
 	phioverpi = phi / pi;
 
 	// North or south pole
@@ -652,6 +651,7 @@ unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
 		phit = fmod(phi, pi / 2.0);
 		assert (phit >= 0.0);
 
+        // solve eqn 20 for k^2 = root.
 		root = (1.0 - z*zfactor) * 3.0 * mysquare(Nside * (2.0 * phit - pi) / pi);
 		if (root <= 0.0) {
 			x = 1;
@@ -665,6 +665,7 @@ unsigned int xyztohealpixf(double x, double y, double z, unsigned int Nside,
 		assert(x >= 1);
 		assert(x <= Nside);
 
+        // solve eqn 19 for k^2 = root.
 		root = (1.0 - z*zfactor) * 3.0 * mysquare(Nside * 2.0 * phit / pi);
 		if (root <= 0.0) {
 			y = 1;
