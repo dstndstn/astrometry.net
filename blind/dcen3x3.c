@@ -118,14 +118,15 @@ int dcen3x3(float *image, float *xcen, float *ycen)
 	(*xcen) = (mx * (by - my - 1.) + bx) / (1. + mx * my);
 	(*ycen) = ((*xcen) - 1.) * my + by;
 
-    assert(isfinite(*xcen));
-    assert(isfinite(*ycen));
-
 	/* check that we are in the box */
 	if (((*xcen) < 0.0) || ((*xcen) > 2.0) ||
 	    ((*ycen) < 0.0) || ((*ycen) > 2.0)){
 	  return (0);
 	}
+
+        /* check for nan's and inf's */
+	if (!isnormal(*xcen) || !isnormal(*ycen))
+		return 0;
 
 	return (1);
 } /* end dcen3x3 */
