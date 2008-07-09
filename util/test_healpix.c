@@ -19,6 +19,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <sys/param.h>
+#include <assert.h>
 
 #include "cutest.h"
 #include "starutil.h"
@@ -27,6 +28,91 @@
 
 static double square(double x) {
     return x*x;
+}
+
+static void add_plot_point(int hp, int nside, double dx, double dy) {
+	double x,y,z;
+	double a,b;
+	healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
+	a = xy2ra(x,y) / (2.0 * M_PI);
+	b = z2dec(z) / (M_PI);
+	fprintf(stderr, "xp.append(%g)\n", a);
+	fprintf(stderr, "yp.append(%g)\n", b);
+}
+
+static void plot_point(int hp, int nside, double dx, double dy, char* style) {
+	fprintf(stderr, "xp=[]\n");
+	fprintf(stderr, "yp=[]\n");
+	add_plot_point(hp, nside, dx, dy);
+	fprintf(stderr, "plot(xp, yp, '%s')\n", style);
+}
+
+static void plot_hp_boundary(int hp, int nside, double step, char* style) {
+	double dx, dy;
+	fprintf(stderr, "xp=[]\n");
+	fprintf(stderr, "yp=[]\n");
+	dy = 0.0;
+	for (dx=0.0; dx<=1.0; dx+=step)
+		add_plot_point(hp, nside, dx, dy);
+	dx = 1.0;
+	for (dy=0.0; dy<=1.0; dy+=step)
+		add_plot_point(hp, nside, dx, dy);
+	dy = 1.0;
+	for (dx=1.0; dx>=0.0; dx-=step)
+		add_plot_point(hp, nside, dx, dy);
+	dx = 0.0;
+	for (dy=1.0; dy>=0.0; dy-=step)
+		add_plot_point(hp, nside, dx, dy);
+	dy = 0.0;
+	add_plot_point(hp, nside, dx, dy);
+	fprintf(stderr, "plot(xp, yp, '%s')\n", style);
+}
+
+void test_within_range(CuTest* ct) {
+	int nhp;
+	int nside = 1;
+	double xyz[3];
+	double range;
+	int hps[9];
+	int i;
+	int hp;
+	double dx, dy;
+
+    fprintf(stderr, "%s", "from pylab import plot,text,savefig,clf\n");
+	fprintf(stderr, "clf()\n");
+
+	// pick a point on the edge.
+	/*
+	 hp = 0;
+	 dx = 0.05;
+	 dy = 0.05;
+	 range = 0.1;
+	 */
+	hp = 6;
+	dx = 0.05;
+	dy = 0.95;
+	range = 0.1;
+	healpix_to_xyzarr(hp, nside, dx, dy, xyz);
+
+	for (i=0; i<12*nside*nside; i++) {
+		plot_hp_boundary(i, nside, 0.25, "r--");
+	}
+
+	nhp = healpix_get_neighbours_within_range(xyz, range, hps, nside);
+	assert(nhp >= 1);
+	assert(nhp <= 9);
+
+	for (i=0; i<nhp; i++) {
+		printf("in range: %i\n", hps[i]);
+		plot_hp_boundary(hps[i], nside, 0.1, "b-");
+	}
+
+	plot_hp_boundary(hp, nside, 0.1, "k-");
+	plot_point(hp, nside, dx, dy, "r.");
+
+
+    fprintf(stderr, "savefig('range.png')\n");
+	fprintf(stderr, "clf()\n");
 }
 
 int tst_xyztohpf(CuTest* ct,
@@ -69,13 +155,13 @@ int tst_xyztohpf(CuTest* ct,
     return (dist > 1e-6);
 }
 
-void test_xyztohpf(CuTest* ct) {
+void tEst_xyztohpf(CuTest* ct) {
     double dx, dy;
     int hp;
     int nside;
 	double step = 0.1;
 	double a, b;
-    nside = 3;
+    nside = 1;
 
     fprintf(stderr, "%s", "from pylab import plot,text,savefig,clf\n");
 	fprintf(stderr, "clf()\n");
@@ -84,7 +170,8 @@ void test_xyztohpf(CuTest* ct) {
 	 Plot the grid of healpixes with dx,dy=step steps.
 	 */
 	step = 0.25;
-	for (hp=0; hp<12*nside*nside; hp++) {
+	//for (hp=0; hp<12*nside*nside; hp++) {
+	for (hp=0; hp<1*nside*nside; hp++) {
 		double x,y,z;
 		for (dx=0.0; dx<=1.05; dx+=step) {
 			fprintf(stderr, "xp=[]\n");

@@ -285,4 +285,9 @@ Const double healpix_side_length_arcmin(int Nside);
 */
 int healpix_get_neighbours(int hp, int* neighbour, int Nside);
 
+
+int healpix_get_neighbours_within_range(double* xyz, double range, int* healpixes,
+										//int maxNhealpixes,
+										int Nside);
+
 #endif

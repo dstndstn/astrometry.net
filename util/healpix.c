@@ -962,3 +962,136 @@ void healpix_to_radecdegarr(int hp, int Nside,
 	healpix_to_xyzarr(hp, Nside, dx, dy, xyz);
 	xyzarr2radecdeg(xyz, radec, radec+1);
 }
+
+/*
+ int healpix_get_neighbours_within_range(int hp, double dx, double dy,
+ int* neighbour, int Nside) {
+ }
+ */
+
+/*
+ static int add_hp(int** healpixes, int* nhp, int hp) {}
+ */
+
+int healpix_get_neighbours_within_range(double* xyz, double range, int* healpixes,
+										//int maxhp,
+										int Nside) {
+	int hp;
+	int i,j;
+	double fx, fy;
+	int nhp = 0;
+	double nearx, neary, neardx, neardy, nearhp;
+
+	hp = xyzarrtohealpixf(xyz, Nside, &fx, &fy);
+	//if (nhp >= maxhp)
+	//return -1;
+	healpixes[nhp] = hp;
+	nhp++;
+	
+	// Try all four edges and four diagonals.
+	for (i=0; i<8; i++) {
+		double nearxyz[3];
+		double nearxyzstep[3];
+		double across[3];
+		double step = 1e-3;
+		double d2;
+		nearx = fx;
+		neary = fy;
+		neardx = neardy = 0.0;
+		// edges
+		if (i == 0) {
+			nearx = 0.0;
+			neardx = 1.0;
+		} else if (i == 1) {
+			nearx = 1.0;
+			neardx = -1.0;
+		} else if (i == 2) {
+			neary = 0.0;
+			neardy = 1.0;
+		} else if (i == 3) {
+			neary = 1.0;
+			neardy = -1.0;
+		// diagonals
+		} else if (i == 4) {
+			nearx = 0.0;
+			neary = 0.0;
+			neardx = 1.0;
+			neardy = 1.0;
+		} else if (i == 5) {
+			nearx = 0.0;
+			neary = 1.0;
+			neardx = 1.0;
+			neardy = -1.0;
+		} else if (i == 6) {
+			nearx = 1.0;
+			neary = 0.0;
+			neardx = -1.0;
+			neardy = 1.0;
+		} else if (i == 7) {
+			nearx = 1.0;
+			neary = 1.0;
+			neardx = -1.0;
+			neardy = -1.0;
+		}
+
+		// nearxyz = point on the edge nearest to the query point.
+		// FIXME -- check that this is true, esp in the polar regions!
+		healpix_to_xyzarr(hp, Nside, nearx, neary, nearxyz);
+		d2 = distsq(nearxyz, xyz, 3);
+		if (d2 > range*range)
+			continue;
+
+		// A small step from the edge toward the center...
+		healpix_to_xyzarr(hp, Nside,
+						  nearx + neardx * step,
+						  neary + neardy * step, nearxyzstep);
+		// A small step across the edge...
+		for (j=0; j<3; j++)
+			across[j] = nearxyz[j] * 2 - nearxyzstep[j];
+		nearhp = xyzarrtohealpix(across, Nside);
+
+		//if (nhp >= maxhp)
+		//return -1;
+		healpixes[nhp] = nearhp;
+		nhp++;
+	}
+
+	// Remove duplicates...
+	for (i=0; i<nhp; i++) {
+		for (j=i+1;  j<nhp; j++) {
+			if (healpixes[i] == healpixes[j]) {
+				int k;
+				for (k=j+1; k<nhp; k++)
+					healpixes[j-1] = healpixes[j];
+				nhp--;
+				i=-1;
+				break;
+			}
+		}
+	}
+	/*
+	 // Find nearest edge.
+	 if (fabs(fx - 0.5) > fabs(fy - 0.5)) {
+	 nearx = (fx <= 0.5) ? 0.0 : 1.0;
+	 neary = fy;
+	 } else {
+	 nearx = fx;
+	 neary = (fy <= 0.5) ? 0.0 : 1.0;
+	 }
+	 */
+
+	/*
+	 if (maxhp == 0)
+	 maxhp = 12 * Nside * Nside;
+	 if (!healpixes) {
+	 allocd = TRUE;
+	 healpixes = malloc(maxhp * sizeof(int));
+	 }
+	 if (allocd)
+	 healpixes = realloc(nhp * sizeof(int));
+	 */
+
+	return nhp;
+}
+
+
