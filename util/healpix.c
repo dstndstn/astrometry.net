@@ -1,20 +1,20 @@
 /*
-  This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+ This file is part of the Astrometry.net suite.
+ Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
 
-  The Astrometry.net suite is free software; you can redistribute
-  it and/or modify it under the terms of the GNU General Public License
-  as published by the Free Software Foundation, version 2.
+ The Astrometry.net suite is free software; you can redistribute
+ it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, version 2.
 
-  The Astrometry.net suite is distributed in the hope that it will be
-  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
+ The Astrometry.net suite is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with the Astrometry.net suite ; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-*/
+ You should have received a copy of the GNU General Public License
+ along with the Astrometry.net suite ; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ */
 
 #include <math.h>
 #include <assert.h>
@@ -248,12 +248,12 @@ Const int healpix_xy_to_ring(int hp, int Nside) {
 	// the south pole; the pixels in each ring have the same latitude.
 	ring = F1*Nside - v - 1;
 	/*
-	  ring:
-	  [1, Nside] : n pole
-	  (Nside, 2Nside] : n equatorial
-	  (2Nside+1, 3Nside) : s equat
-	  [3Nside, 4Nside-1] : s pole
-	*/
+	 ring:
+	 [1, Nside] : n pole
+	 (Nside, 2Nside] : n equatorial
+	 (2Nside+1, 3Nside) : s equat
+	 [3Nside, 4Nside-1] : s pole
+	 */
 	// this probably can't happen...
 	if ((ring < 1) || (ring >= 4*Nside)) {
 		fprintf(stderr, "Invalid ring index: %i\n", ring);
@@ -366,8 +366,8 @@ void healpix_decompose_xy(int finehp, int* pbighp, int* px, int* py, int Nside) 
 }
 
 /**
-   Given a large-scale healpix number, computes its neighbour in the
-   direction (dx,dy).  Returns -1 if there is no such neighbour.
+ Given a large-scale healpix number, computes its neighbour in the
+ direction (dx,dy).  Returns -1 if there is no such neighbour.
  */
 static int healpix_get_neighbour(int hp, int dx, int dy)
 {
@@ -676,8 +676,10 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 			yy = sqrt(root);
         }
 
-		xx = Nside - xx;
-		yy = Nside - yy;
+		if (north) {
+			xx = Nside - xx;
+			yy = Nside - yy;
+		}
 
 		x = (int)floor(xx);
 		if (x == Nside)
@@ -706,8 +708,10 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 		pnprime = compose_xy(x, y, Nside);
 		assert(pnprime < Nside*Nside);
 
-		if (!north)
-			pnprime = Nside * Nside - 1 - pnprime;
+		/*
+		 if (!north)
+		 pnprime = Nside * Nside - 1 - pnprime;
+		 */
 
 		/*
 		 column = (int)((phi - phi_t) / halfpi);
@@ -903,12 +907,19 @@ void healpix_to_xyz(int hp, int Nside,
 		/*
 		 Rearrange eqns (19) and (20) to find phi_t in terms of x,y.
 
-		 (x/y)^2 = (2 phi_t / (2 phi_t - pi))^2
+		 y = Ns - k in eq(19)
+		 x - Ns - k in eq(20)
+
+		 (Ns - y)^2 / (Ns - x)^2 = (2 phi_t)^2 / (2 phi_t - pi)^2
+
+		 Recall than y<=Ns, x<=Ns and 0<=phi_t<pi/2, so we can choose the
+		 root we want by taking square roots:
+
+		 (Ns - y) (pi - 2 phi_t) = 2 phi_t (Ns - x)
+		 (Ns - y) pi = 2 phi_t (Ns - x + Ns - y)
+		 phi_t = pi (Ns-y) / (2 (Ns - x) + (Ns - y))
 		 */
-		double a,b,c;
-		// get z/phi using magical equations
-		double phiP, phiN, phi_t;
-		 double A, B;
+		double phi_t;
 
 		if (zfactor == -1.0) {
 			swap_double(&x, &y);
@@ -916,52 +927,12 @@ void healpix_to_xyz(int hp, int Nside,
 			y = (Nside - y);
 		}
 
-		/*
-		 if (y > 0.1) {
-		 double J;
-		 J = (x*x) / (y*y);
-		 a = 4.0 * (J-1.0);
-		 b = -4.0 * pi * J;
-		 c = pi*pi * J;
-		 } else {
-		 }
-		 */
+		if (y == Nside && x == Nside)
+			phi_t = 0.0;
+		else
+			phi_t = pi * (Nside-y) / (2.0 * ((Nside-x) + (Nside-y)));
 
-		 A = (Nside - y) * (Nside - y);
-		 B = (Nside - x) * (Nside - x);
-		 a = (A - B);
-		 b = -A * pi;
-		 c = A * pi * pi / 4.0;
-
-		 if (a == 0.0) {
-		 phi_t = pi / 4.0;
-		 } else {
-		 double disc = b*b - 4.0*a*c;
-		 if (disc <= 0.0) {
-		 phi_t = -b / (2.0 * a);
-		 // with Nside=200, hp 349000, and -O2 with gcc 4.0.1, this
-		 // assert fails (marginally).
-		 //assert(0.0 <= phi_t && phi_t <= pi/2.0);
-		 if (phi_t < 0.0) phi_t = 0.0;
-		 if (phi_t > pi/2.0) phi_t = pi/2.0;
-		 } else {
-		 double rd = sqrt(disc);
-		 phiP = (-b + rd) / (2.0*a);
-		 phiN = (-b - rd) / (2.0*a);
-		 if (0.0 <= phiP && phiP <= pi/2.0) {
-		 phi_t = phiP;
-		 } else {
-		 phi_t = phiN;
-		 assert(0.0 <= phiN && phiN <= pi/2.0);
-		 }
-		 }
-		 }
-
-		//phi_t = pi * x / (2.0 * (x + y));
-		//phi_t = pi * y / (2.0 * (x + y));
-		//phi_t = pi * (Nside-x) / (2.0 * ((Nside-x) + (Nside-y)));
-
-		if (phi_t == 0.0) {
+		if (phi_t < pi/4.) {
 			z = 1.0 - mysquare(pi * (Nside - x) / ((2.0 * phi_t - pi) * Nside)) / 3.0;
 		} else {
 			z = 1.0 - mysquare(pi * (Nside - y) / (2.0 * phi_t * Nside)) / 3.0;

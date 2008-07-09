@@ -120,7 +120,7 @@ RICKY_BOBBY := no
 
 
 ### temp
-FLAGS_DEF += -DNDEBUG
+#FLAGS_DEF += -DNDEBUG
 
 
 ifeq ($(RICKY_BOBBY),yes)
