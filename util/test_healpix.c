@@ -29,18 +29,6 @@ static double square(double x) {
     return x*x;
 }
 
-void tEst_healpix_to_xyz(CuTest* ct) {
-	double x1,y1,z1;
-	double x2,y2,z2;
-	double dist;
-	healpix_to_xyz(2, 1, 0.5999999999999999778, 0.59999999999999964473, &x1,&y1,&z1);
-	printf("A: xyz %g, %g, %g\n", x1,y1,z1);
-	healpix_to_xyz(2, 1, 0.5999999999999999778, 0.60000000000000008882, &x2,&y2,&z2);
-	printf("B: xyz %g, %g, %g\n", x2,y2,z2);
-	dist = sqrt(square(x1-x2)+square(y1-y2)+square(z1-z2));
-	printf("dist: %g\n", dist);
-}
-
 int tst_xyztohpf(CuTest* ct,
 				 int hp, int nside, double dx, double dy) {
     double x,y,z;
@@ -48,7 +36,6 @@ int tst_xyztohpf(CuTest* ct,
     int outhp;
     double outx,outy,outz;
     double dist;
-    //printf("going to try: hp %i, dx %g, dy %g.\n", hp, dx, dy);
     healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
     outhp = xyztohealpixf(x, y, z, nside, &outdx, &outdy);
     healpix_to_xyz(outhp, nside, outdx, outdy, &outx, &outy, &outz);
@@ -64,51 +51,30 @@ int tst_xyztohpf(CuTest* ct,
 		   hp, outhp, dx, outdx, dy, outdy,
 		   x, outx, y, outy, z, outz, dist);
 
-	/*printf("\n");
-	 printf("True hp %i, dx %g, dy %g\n", hp, dx, dy);
-	 printf("True xyz = %g, %g, %g\n", x, y, z);
-	 printf("Computed hp %i, dx %g, dy %g\n", outhp, outdx, outdy);
-	 printf("Computed xyz = %g, %g, %g\n", outx, outy, outz);
-	 */
+	if (dist > 1e-6) {
+		double a, b;
+		double outa, outb;
+		a = xy2ra(x,y) / (2.0 * M_PI);
+		b = z2dec(z) / (M_PI);
+		outa = xy2ra(outx, outy) / (2.0 * M_PI);
+		outb = z2dec(outz) / (M_PI);
+		fprintf(stderr,
+				"plot([%g, %g],[%g, %g],'r.-')\n", a, outa, b, outb);
+		fprintf(stderr, 
+				"text(%g, %g, \"(%g,%g)\")\n",
+				a, b, dx, dy);
+	}
 
-    outhp = xyztohealpixf(x, y, z, nside, &outdx, &outdy);
 	CuAssertIntEquals(ct, 1, (dist < 1e-6)?1:0);
     return (dist > 1e-6);
-}
-
-void test_xyztohpf_2(CuTest* ct) {
-	/*
-	 tst_xyztohpf(ct, 0, 1, 0, 0.8);
-	 tst_xyztohpf(ct, 0, 1, 0, 1.0);
-	 tst_xyztohpf(ct, 0, 1, 0.3, 0.0);
-	 tst_xyztohpf(ct, 0, 1, 0.5, 0.0);
-	 tst_xyztohpf(ct, 0, 1, 0.6, 0.0);
-	 tst_xyztohpf(ct, 0, 1, 0.7, 0.0);
-	 tst_xyztohpf(ct, 0, 1, 0.8, 0.0);
-	 tst_xyztohpf(ct, 0, 1, 0.9, 0.9);
-	 tst_xyztohpf(ct, 0, 1, 1.0, 0.3);
-	 tst_xyztohpf(ct, 0, 1, 1.0, 0.4);
-	 tst_xyztohpf(ct, 0, 1, 1.0, 0.5);
-	 tst_xyztohpf(ct, 0, 1, 1.0, 0.7);
-	 tst_xyztohpf(ct, 0, 1, 1.0, 0.8);
-	 tst_xyztohpf(ct, 0, 1, 1.0, 0.9);
-	 tst_xyztohpf(ct, 0, 1, 1.0, 1.0);
-	 
-	 tst_xyztohpf(ct, 1, 1, 0.0, 0.1);
-	 tst_xyztohpf(ct, 2, 1, 0.6, 0.6);
-	 */
-	//tst_xyztohpf(ct, 8, 1, 0.0, 0.5);
-	tst_xyztohpf(ct, 32, 2, 0.0, 0.0);
 }
 
 void test_xyztohpf(CuTest* ct) {
     double dx, dy;
     int hp;
     int nside;
-	double a, b;
-	double x,y,z;
-	double outa, outb;
 	double step = 0.1;
+	double a, b;
     nside = 3;
 
     fprintf(stderr, "%s", "from pylab import plot,text,savefig,clf\n");
@@ -117,11 +83,9 @@ void test_xyztohpf(CuTest* ct) {
 	/*
 	 Plot the grid of healpixes with dx,dy=step steps.
 	 */
+	step = 0.25;
 	for (hp=0; hp<12*nside*nside; hp++) {
-	//for (hp=0; hp<1; hp++) {
-	//for (hp=8*nside*nside; hp<9*nside*nside; hp++) {
 		double x,y,z;
-		int i;
 		for (dx=0.0; dx<=1.05; dx+=step) {
 			fprintf(stderr, "xp=[]\n");
 			fprintf(stderr, "yp=[]\n");
@@ -147,47 +111,15 @@ void test_xyztohpf(CuTest* ct) {
 			fprintf(stderr, "plot(xp, yp, 'k-')\n");
 		}
 	}
-	//fprintf(stderr, "savefig('plot1.png')\n");
 
-	step = 1.;
-
+	step = 0.5;
+	/*
+	 Plot places where the conversion screws up.
+	 */
 	for (hp=0; hp<12*nside*nside; hp++) {
-	//for (hp=0; hp<1*nside*nside; hp++) {
-	//for (hp=2; hp<=2; hp++) {
-	//for (hp=8*nside*nside; hp<9*nside*nside; hp++) {
-		//for (hp=8; hp<=8; hp++) {
 		for (dx=0.0; dx<=1.01; dx+=step) {
 			for (dy=0.0; dy<=1.01; dy+=step) {
-
-				double outdx, outdy;
-				int outhp;
-				double outx,outy,outz;
-				double dist;
-
-				// true (x,y,z) position
-				healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
-				// test: project to healpix position.
-				outhp = xyztohealpixf(x, y, z, nside, &outdx, &outdy);
-				// convert projected healpix back to out(x,y,z)
-				healpix_to_xyz(outhp, nside, outdx, outdy, &outx, &outy, &outz);
-				// should match original (x,y,z).
-				dist = sqrt(MAX(0, square(x-outx) + square(y-outy) + square(z-outz)));
-
-				CuAssertIntEquals(ct, 1, (dist < 1e-6)?1:0);
-
-				if (dist > 1e-6) {
-					a = xy2ra(x,y) / (2.0 * M_PI);
-					b = z2dec(z) / (M_PI);
-
-					outa = xy2ra(outx, outy) / (2.0 * M_PI);
-					outb = z2dec(outz) / (M_PI);
-
-					fprintf(stderr,
-							"plot([%g, %g],[%g, %g],'r.-')\n", a, outa, b, outb);
-					fprintf(stderr, 
-							"text(%g, %g, \"(%g,%g)\")\n",
-							a, b, dx, dy);
-				}
+				tst_xyztohpf(ct, hp, nside, dx, dy);
 			}
 		}
 	}
