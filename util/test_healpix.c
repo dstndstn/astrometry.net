@@ -97,8 +97,8 @@ void test_within_range(CuTest* ct) {
 	// pick a point on the edge.
     //hp = 8;
     hp = 9;
-    dx = 0.05;
-    dy = 0.05;
+    dx = 0.5;
+    dy = 0.0;
     range = 0.1;
     /*
      hp = 6;

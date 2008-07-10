@@ -1044,6 +1044,7 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
             double across[3];
             double step = 0.1; // 1e-3;
             double d2;
+            double stepdir;
             struct neighbour_dirn* dir = dirs+i;
             ptx = dir->x;
             pty = dir->y;
@@ -1071,10 +1072,29 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
             if (d2 > range*range)
                 continue;
 
-            // pt-dx,pt-dy vectors -- step back toward the interior.
-            healpix_to_xyzarr(hp, Nside, ptx - ptdx * step, pty, ptstepx);
-            healpix_to_xyzarr(hp, Nside, ptx, pty - ptdy * step, ptstepy);
+            // compute dx and dy directions that are toward the interior of
+            // the healpix.
+            if (ptx < step)
+                stepdir = 1.;
+            else
+                stepdir = -1.;
+            healpix_to_xyzarr(hp, Nside, ptx + stepdir * step, pty, ptstepx);
+            // convert the step into dx vector.
+            for (j=0; j<3; j++)
+                ptstepx[j] = stepdir * (ptstepx[j] - pt[j]);
 
+            if (pty < step)
+                stepdir = 1.;
+            else
+                stepdir = -1.;
+            healpix_to_xyzarr(hp, Nside, ptx, pty + stepdir * step, ptstepy);
+            for (j=0; j<3; j++)
+                ptstepy[j] = stepdir * (ptstepy[j] - pt[j]);
+
+            /*
+             healpix_to_xyzarr(hp, Nside, ptx - ptdx * step, pty, ptstepx);
+             healpix_to_xyzarr(hp, Nside, ptx, pty - ptdy * step, ptstepy);
+             */
             /*
              plot_point(hp, Nside, ptx - ptdx * step, pty, "ko");
              plot_point(hp, Nside, ptx, pty - ptdy * step, "mo");
@@ -1083,10 +1103,10 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
             plot_xyz_point(ptstepy, "mo");
 
             for (j=0; j<3; j++) {
-                ptstepx[j] = pt[j] - ptstepx[j];
-                ptstepy[j] = pt[j] - ptstepy[j];
+                //ptstepx[j] = pt[j] - ptstepx[j];
+                //ptstepy[j] = pt[j] - ptstepy[j];
                 // now ptstepx is dx, ptstepy is dy.
-                across[j] = pt[j] + ptstepx[j] + ptstepy[j];
+                across[j] = pt[j] + ptdx * ptstepx[j] + ptdy * ptstepy[j];
             }
             /*
              // take a small step across the edge...
