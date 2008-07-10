@@ -1064,8 +1064,8 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
             stepdiry = (pty < step) ? 1 : -1;
 
             // take steps in those directions.
-            healpix_to_xyzarr(hp, Nside, ptx + stepdir * step, pty, ptstepx);
-            healpix_to_xyzarr(hp, Nside, ptx, pty + stepdir * step, ptstepy);
+            healpix_to_xyzarr(hp, Nside, ptx + stepdirx * step, pty, ptstepx);
+            healpix_to_xyzarr(hp, Nside, ptx, pty + stepdirx * step, ptstepy);
 
             // convert the steps into dx,dy vectors.
             for (j=0; j<3; j++) {
