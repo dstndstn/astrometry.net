@@ -120,36 +120,9 @@ static void get_next_field(int* nstars, double** starx, double** stary,
 	}
 }
 
-#if 0
-/**
- Structure passed between main loop and solver callbacks.
- struct control_t {
- backend_t* backend;
- solver_t* solver;
- };
- typedef struct control_t control_t;
- */
-
-/**
- This callback gets called by the solver when it encounters a match
- whose log-odds ratio is above solver->logratio_record_threshold.
- */
-static bool match_callback(MatchObj* mo, void* v) {
-	//control_t* control = v;
-	/*
-	 If you want to abort:
-	 control->solver->quit_now = TRUE;
-	 return FALSE;
-	 */
-	return TRUE;
-}
-#endif
-
 int main(int argc, char** args) {
     char* configfn = NULL;
     int loglvl = LOG_MSG;
-
-    //"../etc/backend.cfg";
 
     // Image size in pixels.
     int imagew = 1024;
@@ -237,12 +210,6 @@ int main(int argc, char** args) {
     // accidentally try to load millions of stars.
 
     for (;;) {
-        // Get field
-        // Do source extraction
-        // Get initial WCS
-        // Try to verify initial WCS
-        // Use initial WCS to select appropriate indexes
-        // Call solver.
         solver_t* solver;
         double app_min, app_max;
         double qsf_min = 0.1;
@@ -253,13 +220,9 @@ int main(int argc, char** args) {
 		il* hplist = il_new(4);
 		double hprange;
 		starxy_t* field;
-
 		double *starx, *stary, *starflux;
 		int nstars;
-
-		//control_t control;
 		double imagecx, imagecy;
-
 		bool solved = FALSE;
 
 		// Get the next image...
@@ -292,17 +255,9 @@ int main(int argc, char** args) {
 		// or
 		// solver->parity = PARITY_FLIP;
 
-		// This callback gets called when a match is found...
-        //solver->record_match_callback = match_callback;
-		// ... if the log-odds ratio is above this value...
+		// This determines how good a match has to be.
 		// (you can set it huge; most matches are overwhelmingly good)
 		solver->logratio_record_threshold = log(1e12);
-		// ... and this argument is passed to the callback.
-		/*
-		 control.backend = backend;
-		 control.solver = solver;
-		 solver->userdata = &control;
-		 */
 
 		// Feed the image source coordinates to the solver...
 		field = starxy_new(nstars, TRUE, FALSE);
@@ -315,11 +270,11 @@ int main(int argc, char** args) {
 		free(stary);
 		free(starflux);
 
+		// center of the image in pixels, according to FITS indexing.
+		imagecx = (imagew - 1.0)/2.0;
+		imagecy = (imageh - 1.0)/2.0;
+
 		// Where is the center of the image according to the existing WCS?
-		// center of the image in pixels
-		// FIXME - not quite right wrt FITS 1-indexing
-		imagecx = imagew/2.0;
-		imagecy = imageh/2.0;
 		if (sip)
 			sip_pixelxy2xyzarr(sip, imagecx, imagecy, centerxyz);
 		else
@@ -349,10 +304,6 @@ int main(int argc, char** args) {
 
 			il_remove_all(hplist);
         }
-
-        // solver->timer_callback = timer_callback;
-
-        solver_preprocess_field(solver);
 
 		if (sip) {
 			logmsg("Trying to verify existing WCS...\n");
@@ -402,7 +353,6 @@ int main(int argc, char** args) {
 			}
 		}
 
-        solver_free_field(solver);
         solver_free(solver);
 		starxy_free(field);
 		il_free(hplist);

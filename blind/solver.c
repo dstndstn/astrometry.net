@@ -137,6 +137,10 @@ void solver_set_field(solver_t* s, starxy_t* field) {
 void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) {
     int i, nindexes;
     MatchObj mo;
+
+	if (!solver->vf)
+		solver_preprocess_field(solver);
+
     // fabricate a match and inject it into the solver.
     set_matchobj_template(solver, &mo);
     memcpy(&(mo.wcstan), &(sip->wcstan), sizeof(tan_t));
@@ -314,7 +318,9 @@ void solver_preprocess_field(solver_t* solver) {
 }
 
 void solver_free_field(solver_t* solver) {
-	verify_field_free(solver->vf);
+	if (solver->vf)
+		verify_field_free(solver->vf);
+	solver->vf = NULL;
 }
 
 void solver_resolve_correspondences(const solver_t* sp, MatchObj* mo) {
@@ -411,6 +417,9 @@ void solver_run(solver_t* solver) {
 	int num_indexes;
     double tol2;
     int field[DQMAX];
+
+	if (!solver->vf)
+		solver_preprocess_field(solver);
 
 	memset(field, 0, sizeof(field));
 
@@ -980,6 +989,7 @@ void solver_clear_indexes(solver_t* solver) {
 }
 
 void solver_cleanup(solver_t* solver) {
+	solver_free_field(solver);
 	pl_free(solver->indexes);
     solver->indexes = NULL;
 }

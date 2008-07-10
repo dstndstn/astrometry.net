@@ -181,21 +181,24 @@ typedef struct solver_t solver_t;
 solver_t* solver_new();
 void solver_set_default_values(solver_t* solver);
 void solver_free(solver_t*);
+
 void solver_set_field(solver_t*, starxy_t* field);
+
 void solver_add_index(solver_t* solver, index_t* index);
+void solver_clear_indexes(solver_t* solver);
+
+void solver_verify_sip_wcs(solver_t* solver, sip_t* sip);
 void solver_run(solver_t* solver);
+
 void solver_reset_best_match(solver_t* sp);
 void solver_cleanup(solver_t* solver);
 
-void solver_clear_indexes(solver_t* solver);
-
 // Call this before solver_inject_match(), solver_verify_sip_wcs() or solver_run().
+// (or it will get called automatically)
 void solver_preprocess_field(solver_t* sp);
 // Call this after solver_inject_match() or solver_run().
+// (or it will get called when you solver_free())
 void solver_free_field(solver_t* sp);
-
-void solver_verify_sip_wcs(solver_t* solver, sip_t* sip);
-
 
 void solver_inject_match(solver_t* solver, MatchObj* mo, sip_t* sip);
 void solver_compute_quad_range(const solver_t* solver, const index_t* index, double*, double*);
