@@ -31,13 +31,25 @@ static double square(double x) {
 }
 
 static void add_plot_point(int hp, int nside, double dx, double dy) {
-	double x,y,z;
-	double a,b;
-	healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
-	a = xy2ra(x,y) / (2.0 * M_PI);
-	b = z2dec(z) / (M_PI);
-	fprintf(stderr, "xp.append(%g)\n", a);
-	fprintf(stderr, "yp.append(%g)\n", b);
+    double a,b;
+    /*
+     double x,y,z;
+     healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
+     a = xy2ra(x,y) / (2.0 * M_PI);
+     b = z2dec(z) / (M_PI);
+     */
+    double c[3];
+    double xyz[3];
+    bool ok;
+    healpix_to_xyzarr(hp, nside, dx, dy, xyz);
+    c[0] = -0.0576869;
+    c[1] = 0.0576869;
+    c[2] = -0.996667;
+    ok = star_coords(c, xyz, &a, &b);
+    if (ok && a > -1 && a < 1 && b > -1 && b < 1) {
+        fprintf(stderr, "xp.append(%g)\n", a);
+        fprintf(stderr, "yp.append(%g)\n", b);
+    }
 }
 
 void plot_point(int hp, int nside, double dx, double dy, char* style) {
@@ -78,13 +90,14 @@ void test_within_range(CuTest* ct) {
 	int hp;
 	double dx, dy;
 
-    fprintf(stderr, "%s", "from pylab import plot,text,savefig,clf\n");
+    fprintf(stderr, "%s", "from pylab import plot,text,savefig,clf,axis\n");
 	fprintf(stderr, "clf()\n");
 
 	// pick a point on the edge.
-    hp = 8;
-    dx = 0.;
-    dy = 0.;
+    //hp = 8;
+    hp = 9;
+    dx = 0.0;
+    dy = 0.0;
     range = 0.1;
     /*
      hp = 6;
@@ -95,7 +108,7 @@ void test_within_range(CuTest* ct) {
 	healpix_to_xyzarr(hp, nside, dx, dy, xyz);
 
 	for (i=0; i<12*nside*nside; i++) {
-		plot_hp_boundary(i, nside, 0.25, "r--");
+		plot_hp_boundary(i, nside, 0.01, "r--");
 	}
 
 	nhp = healpix_get_neighbours_within_range(xyz, range, hps, nside);
@@ -104,13 +117,13 @@ void test_within_range(CuTest* ct) {
 
 	for (i=0; i<nhp; i++) {
 		printf("in range: %i\n", hps[i]);
-		plot_hp_boundary(hps[i], nside, 0.1, "b-");
+		plot_hp_boundary(hps[i], nside, 0.01, "b-");
 	}
 
-	plot_hp_boundary(hp, nside, 0.1, "k-");
+	plot_hp_boundary(hp, nside, 0.01, "k-");
 	plot_point(hp, nside, dx, dy, "r.");
 
-
+    //fprintf(stderr, "axis((-1, 1, -1, 1))\n");
     fprintf(stderr, "savefig('range.png')\n");
 	fprintf(stderr, "clf()\n");
 }

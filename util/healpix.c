@@ -988,8 +988,6 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
 	int i,j;
 	double fx, fy;
 	int nhp = 0;
-	double nearx, neary, neardx, neardy;
-    int nearhp;
 
     // HACK -- temp array to avoid cleverly avoiding duplicates
     int healpixes[100];
@@ -999,6 +997,7 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
 	nhp++;
 
     printf("point is in healpix %i\n", hp);
+    printf("point xyz is %g, %g, %g\n", xyz[0], xyz[1], xyz[2]);
 
     {
         struct neighbour_dirn dirs[] = {
@@ -1034,61 +1033,72 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
         };
         int ndirs = sizeof(dirs) / sizeof(struct neighbour_dirn);
 
+        double ptx, pty, ptdx, ptdy;
+        int pthp;
+
         for (i=0; i<ndirs; i++) {
-            double nearxyz[3];
-            double nearxyzstep[3];
+            double pt[3];
+            double ptstepx[3];
+            double ptstepy[3];
             double across[3];
             double step = 0.1; // 1e-3;
             double d2;
             struct neighbour_dirn* dir = dirs+i;
-            nearx = dir->x;
-            neary = dir->y;
-            neardx = dir->dx;
-            neardy = dir->dy;
+            ptx = dir->x;
+            pty = dir->y;
+            ptdx = dir->dx;
+            ptdy = dir->dy;
 
-            // nearxyz = point on the edge nearest to the query point.
+            // pt = point on the edge nearest to the query point.
             // FIXME -- check that this is true, esp in the polar regions!
-            healpix_to_xyzarr(hp, Nside, nearx, neary, nearxyz);
-            d2 = distsq(nearxyz, xyz, 3);
+            healpix_to_xyzarr(hp, Nside, ptx, pty, pt);
+            d2 = distsq(pt, xyz, 3);
 
             printf("neighbour %i: (%g, %g), dist to (%g, %g) is %g, vector (%g,%g)",
-                   i, nearx, neary, fx, fy, sqrt(d2), neardx, neardy);
+                   i, ptx, pty, fx, fy, sqrt(d2), ptdx, ptdy);
             if (d2 > range*range)
                 printf(" (out of range)\n");
             else
                 printf(" (in range)\n");
 
             // delta vector should be outside the healpix
-            assert((nearx+step*neardx < 0) ||
-                   (nearx+step*neardx > 1) ||
-                   (neary+step*neardy < 0) ||
-                   (neary+step*neardy > 1));
+            assert((ptx+step*ptdx < 0) ||
+                   (ptx+step*ptdx > 1) ||
+                   (pty+step*ptdy < 0) ||
+                   (pty+step*ptdy > 1));
 
             if (d2 > range*range)
                 continue;
 
-            // A small step from the edge toward the interior...
-            healpix_to_xyzarr(hp, Nside,
-                              nearx - neardx * step,
-                              neary - neardy * step, nearxyzstep);
-            // A small step across the edge...
-            for (j=0; j<3; j++)
-                across[j] = nearxyz[j] * 2 - nearxyzstep[j];
+            // -dx,-dy vectors -- step back toward the interior.
+            healpix_to_xyzarr(hp, Nside, ptx - ptdx * step, pty, ptstepx);
+            healpix_to_xyzarr(hp, Nside, ptx, pty - ptdy * step, ptstepy);
 
-            //nearhp = xyzarrtohealpix(across, Nside);
+            // take a small step across the edge...
+            for (j=0; j<3; j++)
+                across[j] = pt[j]*3 - ptstepx[j] - ptstepy[j];
+
+            printf("pt        %g, %g, %g\n", pt[0], pt[1], pt[2]);
+            printf("pt-dx(%2g) %g, %g, %g\n", ptdx, ptstepx[0], ptstepx[1], ptstepx[2]);
+            printf("pt-dy(%2g) %g, %g, %g\n", ptdy, ptstepy[0], ptstepy[1], ptstepy[2]);
+            printf("across    %g, %g, %g\n", across[0], across[1], across[2]);
+            normalize_3(across);
+            printf("across(n) %g, %g, %g\n", across[0], across[1], across[2]);
+
+            //pthp = xyzarrtohealpix(across, Nside);
             {
                 double ddx, ddy;
-                nearhp = xyzarrtohealpixf(across, Nside, &ddx, &ddy);
-                plot_point(nearhp, Nside, ddx, ddy, "b.");
-                printf("(hp %i, %g, %g)\n", nearhp, ddx, ddy);
+                pthp = xyzarrtohealpixf(across, Nside, &ddx, &ddy);
+                plot_point(pthp, Nside, ddx, ddy, "b.");
+                printf("(hp %i, %g, %g)\n", pthp, ddx, ddy);
             }
-            //printf("(hp %i)\n", nearhp);
+            //printf("(hp %i)\n", pthp);
 
             // the step should take us outside this hp.
             // (not always, sometimes it's along a boundary.)
-            //assert(nearhp != hp);
+            //assert(pthp != hp);
 
-            healpixes[nhp] = nearhp;
+            healpixes[nhp] = pthp;
             nhp++;
         }
     }
