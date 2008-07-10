@@ -40,7 +40,7 @@ static void add_plot_point(int hp, int nside, double dx, double dy) {
 	fprintf(stderr, "yp.append(%g)\n", b);
 }
 
-static void plot_point(int hp, int nside, double dx, double dy, char* style) {
+void plot_point(int hp, int nside, double dx, double dy, char* style) {
 	fprintf(stderr, "xp=[]\n");
 	fprintf(stderr, "yp=[]\n");
 	add_plot_point(hp, nside, dx, dy);
@@ -82,16 +82,16 @@ void test_within_range(CuTest* ct) {
 	fprintf(stderr, "clf()\n");
 
 	// pick a point on the edge.
-	/*
-	 hp = 0;
-	 dx = 0.05;
-	 dy = 0.05;
-	 range = 0.1;
-	 */
-	hp = 6;
-	dx = 0.05;
-	dy = 0.95;
-	range = 0.1;
+    hp = 8;
+    dx = 0.;
+    dy = 0.;
+    range = 0.1;
+    /*
+     hp = 6;
+     dx = 0.05;
+     dy = 0.95;
+     range = 0.1;
+     */
 	healpix_to_xyzarr(hp, nside, dx, dy, xyz);
 
 	for (i=0; i<12*nside*nside; i++) {
@@ -222,15 +222,16 @@ static void tst_neighbours(CuTest* ct, int pix, int* true_neigh, int true_nn,
 	for (i=0; i<8; i++)
 		neigh[i] = -1;
 	nn = healpix_get_neighbours(pix, neigh, Nside);
-	printf("true(%i) : [ ", pix);
-	for (i=0; i<true_nn; i++)
-		printf("%u, ", true_neigh[i]);
-	printf("]\n");
-	printf("got (%i) : [ ", pix);
-	for (i=0; i<nn; i++)
-		printf("%u, ", neigh[i]);
-	printf("]\n");
-
+    /*
+     printf("true(%i) : [ ", pix);
+     for (i=0; i<true_nn; i++)
+     printf("%u, ", true_neigh[i]);
+     printf("]\n");
+     printf("got (%i) : [ ", pix);
+     for (i=0; i<nn; i++)
+     printf("%u, ", neigh[i]);
+     printf("]\n");
+     */
 	CuAssertIntEquals(ct, nn, true_nn);
 
 	for (i=0; i<true_nn; i++)
@@ -243,10 +244,12 @@ static void tst_nested(CuTest* ct, int pix, int* true_neigh, int true_nn,
     int truexy[8];
     int xypix;
 
-	printf("nested true(%i) : [ ", pix);
-	for (i=0; i<true_nn; i++)
-		printf("%u ", true_neigh[i]);
-	printf("]\n");
+    /*
+     printf("nested true(%i) : [ ", pix);
+     for (i=0; i<true_nn; i++)
+     printf("%u ", true_neigh[i]);
+     printf("]\n");
+     */
 
     CuAssert(ct, "true_nn <= 8", true_nn <= 8);
 	for (i=0; i<true_nn; i++) {
