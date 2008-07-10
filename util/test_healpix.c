@@ -32,12 +32,18 @@ static double square(double x) {
 
 static void add_plot_xyz_point(double* xyz) {
     double a,b;
-    if (xyz[2] < 0) {
-        a = xyz[0];
-        b = xyz[1];
-        fprintf(stderr, "xp.append(%g)\n", a);
-        fprintf(stderr, "yp.append(%g)\n", b);
-    }
+    /*
+     if (xyz[2] < 0) {
+     a = xyz[0];
+     b = xyz[1];
+     fprintf(stderr, "xp.append(%g)\n", a);
+     fprintf(stderr, "yp.append(%g)\n", b);
+     }
+     */
+    a = xy2ra(xyz[0], xyz[1]) / (2.0*M_PI);
+    b = z2dec(xyz[2]) / M_PI;
+    fprintf(stderr, "xp.append(%g)\n", a);
+    fprintf(stderr, "yp.append(%g)\n", b);
 }
 
 static void add_plot_point(int hp, int nside, double dx, double dy) {
@@ -97,7 +103,7 @@ void test_within_range(CuTest* ct) {
 	// pick a point on the edge.
     //hp = 8;
     hp = 9;
-    dx = 0.5;
+    dx = 0.95;
     dy = 0.0;
     range = 0.1;
     /*

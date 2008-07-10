@@ -1035,7 +1035,7 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
             double ptstepx[3];
             double ptstepy[3];
             double across[3];
-            double step = 0.1; // 1e-3;
+            double step = 1e-3;
             double d2;
             double stepdirx, stepdiry;
             struct neighbour_dirn* dir = dirs+i;
@@ -1065,12 +1065,12 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
 
             // take steps in those directions.
             healpix_to_xyzarr(hp, Nside, ptx + stepdirx * step, pty, ptstepx);
-            healpix_to_xyzarr(hp, Nside, ptx, pty + stepdirx * step, ptstepy);
+            healpix_to_xyzarr(hp, Nside, ptx, pty + stepdiry * step, ptstepy);
 
             // convert the steps into dx,dy vectors.
             for (j=0; j<3; j++) {
                 ptstepx[j] = stepdirx * (ptstepx[j] - pt[j]);
-                ptstepx[j] = stepdiry * (ptstepy[j] - pt[j]);
+                ptstepy[j] = stepdiry * (ptstepy[j] - pt[j]);
             }
 
             // take a small step in the specified direction.
