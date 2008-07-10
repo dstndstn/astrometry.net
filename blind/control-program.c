@@ -38,6 +38,16 @@ static void print_help(const char* progname) {
 	       "\n", progname);
 }
 
+static void get_next_field(int* nstars, double** starx, double** stary,
+						   double** starflux, sip_t* sip) {
+	int N;
+	*nstars = N;
+	*starx = malloc(N * sizeof(double));
+	*stary = malloc(N * sizeof(double));
+	*starflux = malloc(N * sizeof(double));
+
+}
+
 /**
  Structure passed between main loop and solver callbacks.
  struct control_t {
@@ -154,14 +164,22 @@ int main(int argc, char** args) {
         double app_min, app_max;
         double qsf_min = 0.1;
         int i, N;
-        sip_t* sip = NULL;
+        sip_t mysip;
+		sip_t* sip = &mysip;
         double centerxyz[3];
 		il* hplist = il_new(4);
 		double hprange;
 		starxy_t* field;
+
+		double *starx, *stary, *starflux;
 		int nstars;
+
 		//control_t control;
 		double imagecx, imagecy;
+
+		memset(sip, 0, sizeof(sip_t));
+		// Get the next image...
+		get_next_field(&nstars, &starx, &stary, &starflux, sip);
 
         solver = solver_new();
         solver_set_default_values(solver);
@@ -174,12 +192,15 @@ int main(int argc, char** args) {
 
         // If you want to look at only a limited number of sources:
         // solver->endobj = 20;
+		// Or you can limit the number of quads the solver tries:
+		// solver->maxquads = 1000000;
+		// solver->maxmatches = 1000000;
 
         // don't try teeny-tiny quads.
         solver->quadsize_min = qsf_min * MIN(imagew, imageh);
 
 		// This callback gets called when a match is found...
-        solver->record_match_callback = match_callback;
+        //solver->record_match_callback = match_callback;
 		// ... if the log-odds ratio is above this value...
 		// (you can set it huge; most matches are overwhelmingly good)
 		solver->logratio_record_threshold = log(1e12);

@@ -953,7 +953,10 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	update_timeused(sp);
 	mo->timeused = sp->timeused;
 
-	solved = sp->record_match_callback(mo, sp->userdata);
+	// If the user didn't supply a callback, or if the callback
+	// returns TRUE, consider it solved.
+	solved = (!sp->record_match_callback ||
+			  sp->record_match_callback(mo, sp->userdata));
 
 	if (solved) {
 		sp->best_match_solves = TRUE;

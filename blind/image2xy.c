@@ -67,7 +67,7 @@ static float* upconvert(unsigned char* u8,
     int i;
     float* f = malloc(nx * ny * sizeof(float));
     if (!f) {
-        SYSERROR("Failed to allocate image array");
+        SYSERROR("Failed to allocate image array to upconvert u8 image to floating-point.");
         return NULL;
     }
     for (i=0; i<(nx*ny); i++)
@@ -107,7 +107,105 @@ static void rebin(float** thedata,
     }
 
     // save some memory...
-    *thedata = realloc(*thedata, (*newW) * (*newH) * sizeof(float));
+    //*thedata = realloc(*thedata, (*newW) * (*newH) * sizeof(float));
+}
+
+int image2xy_image(uint8_t* u8image, float* fimage,
+				   int W, int H,
+				   int downsample, int downsample_as_required,
+				   double dpsf, double plim, double dlim, double saddle,
+				   int maxper, int maxsize, int halfbox, int maxnpeaks,
+				   float** x, float** y, float** flux, float** background,
+				   int* npeaks, float* sigma) {
+	int fullW=-1, fullH=-1;
+	simplexy_t s;
+	int newW, newH;
+	bool did_downsample = FALSE;
+	bool free_fimage = FALSE;
+	// the factor by which to downsample.
+	int S = downsample ? downsample : 1;
+	int jj;
+    bool tryagain;
+
+	fullW = W;
+	fullH = H;
+	if (downsample) {
+		logmsg("Downsampling by %i...\n", S);
+		fimage = upconvert(u8image, W, H);
+		if (!fimage)
+			goto bailout;
+		free_fimage = TRUE;
+		rebin(&fimage, W, H, S, &newW, &newH);
+		W = newW;
+		H = newH;
+		did_downsample = TRUE;
+	}
+
+	do {
+		memset(&s, 0, sizeof(simplexy_t));
+		s.image = fimage;
+		s.image_u8 = u8image;
+		s.nx = W;
+		s.ny = H;
+
+		s.dpsf = dpsf;
+		s.plim = plim;
+		s.dlim = dlim;
+		s.saddle = saddle;
+		s.maxper = maxper;
+		s.maxnpeaks = maxnpeaks;
+		s.maxsize = maxsize;
+		s.halfbox = halfbox;
+        
+		simplexy2(&s);
+
+		*x = s.x;
+		*y = s.y;
+		*flux = s.flux;
+		*background = s.background;
+		*npeaks = s.npeaks;
+		*sigma = s.sigma;
+
+		tryagain = FALSE;
+		if (s.npeaks == 0 &&
+			downsample_as_required) {
+			logmsg("Downsampling by 2...\n");
+			if (u8image) {
+				fimage = upconvert(u8image, W, H);
+				if (!fimage)
+					goto bailout;
+				free_fimage = TRUE;
+				u8image = NULL;
+				s.image = fimage;
+				s.image_u8 = u8image;
+			}
+			rebin(&fimage, W, H, 2, &newW, &newH);
+			W = newW;
+			H = newH;
+			S *= 2;
+			tryagain = TRUE;
+			downsample_as_required--;
+			did_downsample = TRUE;
+		}
+	} while (tryagain);
+
+	for (jj=0; jj<s.npeaks; jj++) {
+		assert(isfinite((*x)[jj]));
+		assert(isfinite((*y)[jj]));
+		// if S=1, this just shifts the origin to (1,1); the FITS
+		// standard says the center of the lower-left pixel is (1,1).
+		(*x)[jj] = ((*x)[jj] + 0.5) * (double)S + 0.5;
+		(*y)[jj] = ((*y)[jj] + 0.5) * (double)S + 0.5;
+	}
+
+	if (free_fimage)
+		free(fimage);
+
+	return 0;
+ bailout:
+	if (free_fimage)
+		free(fimage);
+	return -1;
 }
 
 int image2xy(const char* infn, const char* outfn,
@@ -118,12 +216,11 @@ int image2xy(const char* infn, const char* outfn,
 	int naxis;
 	int maxnpeaks = MAXNPEAKS, npeaks;
 	long naxisn[2];
-	int kk, jj;
+	int kk;
 	float sigma;
 	int nhdus,maxper,maxsize,halfbox,hdutype,nimgs;
 	float dpsf,plim,dlim,saddle;
     char* str;
-    bool tryagain = FALSE;
 
 	fits_open_file(&fptr, infn, READONLY, &status);
     FITS_CHECK("Failed to open FITS input file %s", infn);
@@ -188,8 +285,7 @@ int image2xy(const char* infn, const char* outfn,
 		int a;
 		int w, h;
         int bitpix;
-        int fullW=-1, fullH=-1;
-        simplexy_t s;
+
         // FIXME - we leak this memory on error.
         float *thedata = NULL;
         unsigned char* theu8data = NULL;
@@ -197,11 +293,6 @@ int image2xy(const char* infn, const char* outfn,
         float *y;
         float *flux;
         float* background;
-        int newW, newH;
-        bool did_downsample = FALSE;
-
-        // the factor by which to downsample.
-        int S = downsample ? downsample : 1;
 
 		fits_movabs_hdu(fptr, kk, &hdutype, &status);
 		fits_get_hdu_type(fptr, &hdutype, &status);
@@ -248,89 +339,17 @@ int image2xy(const char* infn, const char* outfn,
                           thedata, NULL, &status);
         }
 		free(fpixel);
-
         FITS_CHECK("Failed to read image pixels");
 
-        fullW = naxisn[0];
-        fullH = naxisn[1];
-        if (downsample) {
-            logmsg("Downsampling by %i...\n", S);
-            rebin(&thedata, naxisn[0], naxisn[1], S, &newW, &newH);
-            naxisn[0] = newW;
-            naxisn[1] = newH;
-            did_downsample = TRUE;
-        }
 
-        do {
-            memset(&s, 0, sizeof(simplexy_t));
-            s.image = thedata;
-            s.image_u8 = theu8data;
-            s.nx = naxisn[0];
-            s.ny = naxisn[1];
-            s.dpsf = dpsf;
-            s.plim = plim;
-            s.dlim = dlim;
-            s.saddle = saddle;
-            s.maxper = maxper;
-            s.maxnpeaks = maxnpeaks;
-            s.maxsize = maxsize;
-            s.halfbox = halfbox;
-        
-            simplexy2(&s);
+		image2xy_image(theu8data, thedata, naxisn[0], naxisn[1],
+					   downsample, downsample_as_required,
+					   dpsf, plim, dlim, saddle, maxper, maxsize, halfbox,
+					   maxnpeaks,
+					   &x, &y, &flux, &background, &npeaks, &sigma);
 
-            x = s.x;
-            y = s.y;
-            flux = s.flux;
-            background = s.background;
-            npeaks = s.npeaks;
-            sigma = s.sigma;
-
-            tryagain = FALSE;
-            if (npeaks == 0 &&
-                downsample_as_required) {
-                logmsg("Downsampling by 2...\n");
-                if (theu8data) {
-                    thedata = upconvert(theu8data, naxisn[0], naxisn[1]);
-                    if (!thedata) {
-                        ERROR("Failed to convert image to float before downsampling");
-                        goto bailout;
-                    }
-                    free(theu8data);
-                    theu8data = NULL;
-                    s.image = thedata;
-                    s.image_u8 = theu8data;
-                }
-                rebin(&thedata, naxisn[0], naxisn[1], 2, &newW, &newH);
-                naxisn[0] = newW;
-                naxisn[1] = newH;
-                S *= 2;
-                tryagain = TRUE;
-                downsample_as_required--;
-                did_downsample = TRUE;
-            }
-            
-        } while (tryagain);
-
-		free(s.image);
-		free(s.image_u8);
-
-        if (did_downsample) {
-            // Put the naxisn[] values back the way they were so that the
-            // FITS headers are written correctly.
-            naxisn[0] = fullW;
-            naxisn[1] = fullH;
-        }
-
-        for (jj=0; jj<npeaks; jj++) {
-            bool finite = isfinite(x[jj]);
-            assert(finite);
-            finite = isfinite(y[jj]);
-            assert(finite);
-            // if S=1, this just shifts the origin to (1,1); the FITS
-            // standard says the center of the lower-left pixel is (1,1).
-            x[jj] = (x[jj] + 0.5) * (double)S + 0.5;
-            y[jj] = (y[jj] + 0.5) * (double)S + 0.5;
-        }
+		free(theu8data);
+		free(thedata);
 
 		fits_create_tbl(ofptr, BINARY_TBL, npeaks, 4, ttype, tform,
                         tunit, "SOURCES", &status);
