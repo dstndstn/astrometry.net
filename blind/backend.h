@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 
+#include "blind.h"
 #include "bl.h"
 #include "an-bool.h"
 #include "index.h"

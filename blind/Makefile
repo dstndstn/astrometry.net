@@ -82,7 +82,7 @@ PIPELINE := usnobtofits tycho2tofits build-an-catalog hpowned cut-an \
 	certifiable wcs-annotate get-healpix 2masstofits nomadtofits \
 	merge-index index-to-table endian-flip-index setsolved
 
-PROGS := backend image2xy
+PROGS := backend image2xy control-program
 
 PROSPECTUS := quadidx codeprojections quadlocations quadscales quadsperstar \
 	whynot quadcenters startree2rdls
@@ -271,7 +271,12 @@ demo_dsmooth: demo_dsmooth.o dsmooth.o \
 	$(COMMON)/cairoutils.o boilerplate.o $(ANUTILS_LIB) $(QFITS_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg
 
-#ctmf.o: ctmf.c
+#control-program: control-program.o $(BACKEND_SO)
+#	$(CC) $(LDFLAGS) -o $@ control-program.o -L. -lbackend -lm
+
+control-program: control-program.o \
+		$(BACKEND_OBJS) $(SIMPLEXY2_OBJ) \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
 image2xy: image2xy-main.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
 
