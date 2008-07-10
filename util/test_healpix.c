@@ -30,32 +30,33 @@ static double square(double x) {
     return x*x;
 }
 
-static void add_plot_point(int hp, int nside, double dx, double dy) {
+static void add_plot_xyz_point(double* xyz) {
     double a,b;
-    /*
-     double x,y,z;
-     healpix_to_xyz(hp, nside, dx, dy, &x, &y, &z);
-     a = xy2ra(x,y) / (2.0 * M_PI);
-     b = z2dec(z) / (M_PI);
-     */
-    double c[3];
-    double xyz[3];
-    bool ok;
-    healpix_to_xyzarr(hp, nside, dx, dy, xyz);
-    c[0] = -0.0576869;
-    c[1] = 0.0576869;
-    c[2] = -0.996667;
-    ok = star_coords(c, xyz, &a, &b);
-    if (ok && a > -1 && a < 1 && b > -1 && b < 1) {
+    if (xyz[2] < 0) {
+        a = xyz[0];
+        b = xyz[1];
         fprintf(stderr, "xp.append(%g)\n", a);
         fprintf(stderr, "yp.append(%g)\n", b);
     }
+}
+
+static void add_plot_point(int hp, int nside, double dx, double dy) {
+    double xyz[3];
+    healpix_to_xyzarr(hp, nside, dx, dy, xyz);
+    add_plot_xyz_point(xyz);
 }
 
 void plot_point(int hp, int nside, double dx, double dy, char* style) {
 	fprintf(stderr, "xp=[]\n");
 	fprintf(stderr, "yp=[]\n");
 	add_plot_point(hp, nside, dx, dy);
+	fprintf(stderr, "plot(xp, yp, '%s')\n", style);
+}
+
+void plot_xyz_point(double* xyz, char* style) {
+	fprintf(stderr, "xp=[]\n");
+	fprintf(stderr, "yp=[]\n");
+    add_plot_xyz_point(xyz);
 	fprintf(stderr, "plot(xp, yp, '%s')\n", style);
 }
 
@@ -96,8 +97,8 @@ void test_within_range(CuTest* ct) {
 	// pick a point on the edge.
     //hp = 8;
     hp = 9;
-    dx = 0.0;
-    dy = 0.0;
+    dx = 0.05;
+    dy = 0.05;
     range = 0.1;
     /*
      hp = 6;

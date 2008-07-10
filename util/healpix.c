@@ -980,6 +980,7 @@ struct neighbour_dirn {
 
 // DEBUG
 void plot_point(int hp, int nside, double dx, double dy, char* style);
+void plot_xyz_point(double* xyz, char* style);
 
 int healpix_get_neighbours_within_range(double* xyz, double range, int* out_healpixes,
 										//int maxhp,
@@ -1070,13 +1071,28 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
             if (d2 > range*range)
                 continue;
 
-            // -dx,-dy vectors -- step back toward the interior.
+            // pt-dx,pt-dy vectors -- step back toward the interior.
             healpix_to_xyzarr(hp, Nside, ptx - ptdx * step, pty, ptstepx);
             healpix_to_xyzarr(hp, Nside, ptx, pty - ptdy * step, ptstepy);
 
-            // take a small step across the edge...
-            for (j=0; j<3; j++)
-                across[j] = pt[j]*3 - ptstepx[j] - ptstepy[j];
+            /*
+             plot_point(hp, Nside, ptx - ptdx * step, pty, "ko");
+             plot_point(hp, Nside, ptx, pty - ptdy * step, "mo");
+             */
+            plot_xyz_point(ptstepx, "ko");
+            plot_xyz_point(ptstepy, "mo");
+
+            for (j=0; j<3; j++) {
+                ptstepx[j] = pt[j] - ptstepx[j];
+                ptstepy[j] = pt[j] - ptstepy[j];
+                // now ptstepx is dx, ptstepy is dy.
+                across[j] = pt[j] + ptstepx[j] + ptstepy[j];
+            }
+            /*
+             // take a small step across the edge...
+             for (j=0; j<3; j++)
+             across[j] = pt[j]*3 - ptdx * ptstepx[j] - ptdy * ptstepy[j];
+             */
 
             printf("pt        %g, %g, %g\n", pt[0], pt[1], pt[2]);
             printf("pt-dx(%2g) %g, %g, %g\n", ptdx, ptstepx[0], ptstepx[1], ptstepx[2]);
@@ -1085,11 +1101,13 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
             normalize_3(across);
             printf("across(n) %g, %g, %g\n", across[0], across[1], across[2]);
 
+            plot_xyz_point(across, "go");
+
             //pthp = xyzarrtohealpix(across, Nside);
             {
                 double ddx, ddy;
                 pthp = xyzarrtohealpixf(across, Nside, &ddx, &ddy);
-                plot_point(pthp, Nside, ddx, ddy, "b.");
+                //plot_point(pthp, Nside, ddx, ddy, "bo");
                 printf("(hp %i, %g, %g)\n", pthp, ddx, ddy);
             }
             //printf("(hp %i)\n", pthp);
