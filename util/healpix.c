@@ -963,23 +963,12 @@ void healpix_to_radecdegarr(int hp, int Nside,
 	xyzarr2radecdeg(xyz, radec, radec+1);
 }
 
-/*
- int healpix_get_neighbours_within_range(int hp, double dx, double dy,
- int* neighbour, int Nside) {
- }
- */
-
-/*
- static int add_hp(int** healpixes, int* nhp, int hp) {}
- */
-
 struct neighbour_dirn {
     double x, y;
     double dx, dy;
 };
 
 int healpix_get_neighbours_within_range(double* xyz, double range, int* out_healpixes,
-										//int maxhp,
 										int Nside) {
 	int hp;
 	int i,j;
@@ -1086,21 +1075,10 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
         }
     }
 
-    printf("in range:");
-	for (i=0; i<nhp; i++)
-        printf(" %i", healpixes[i]);
-    printf("\n");
-
 	// Remove duplicates...
 	for (i=0; i<nhp; i++) {
 		for (j=i+1;  j<nhp; j++) {
             int k;
-            printf("comparing %i to %i: vals %i, %i.  list",
-                   i, j, healpixes[i], healpixes[j]);
-            for (k=0; k<nhp; k++)
-                printf(" %i", healpixes[k]);
-            printf("\n");
-
 			if (healpixes[i] == healpixes[j]) {
 				int k;
 				for (k=j+1; k<nhp; k++)

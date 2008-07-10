@@ -102,6 +102,8 @@ int image2xy_image(uint8_t* u8image, float* fimage,
 
 	if (dpsf == 0)
 		dpsf = IMAGE2XY_DEFAULT_DPSF;
+	if (plim == 0)
+		plim = IMAGE2XY_DEFAULT_PLIM;
 	if (dlim == 0)
 		dlim = IMAGE2XY_DEFAULT_DLIM;
 	if (saddle == 0)

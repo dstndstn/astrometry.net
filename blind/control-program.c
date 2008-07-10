@@ -76,9 +76,7 @@ static void get_next_field(int* nstars, double** starx, double** stary,
 	qimg.map = 1;
 
 	if (qfitsloader_init(&qimg)) {
-		
-
-ERROR("Failed to read FITS image from file \"%s\"\n", fits_image_fn);
+        ERROR("Failed to read FITS image from file \"%s\"\n", fits_image_fn);
 		exit(-1);
 	}
 	W = qimg.lx;
@@ -392,6 +390,9 @@ int main(int argc, char** args) {
         solver_free(solver);
 		starxy_free(field);
 		il_free(hplist);
+
+        // TEMP
+        break;
     }
 
 
