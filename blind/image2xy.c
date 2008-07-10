@@ -191,6 +191,8 @@ int image2xy_image(uint8_t* u8image, float* fimage,
 	if (free_fimage)
 		free(fimage);
 
+	dselip_cleanup();
+
 	return 0;
  bailout:
 	if (free_fimage)

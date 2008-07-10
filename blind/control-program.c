@@ -269,7 +269,6 @@ int main(int argc, char** args) {
 					   &racenter, &deccenter);
 
         solver = solver_new();
-        solver_set_default_values(solver);
 
         // compute scale range in arcseconds per pixel.
         
@@ -306,6 +305,9 @@ int main(int argc, char** args) {
 		starxy_set_flux_array(field, starflux);
 		starxy_sort_by_flux(field);
 		solver_set_field(solver, field);
+		free(starx);
+		free(stary);
+		free(starflux);
 
 		// Where is the center of the image according to the existing WCS?
 		// center of the image in pixels
