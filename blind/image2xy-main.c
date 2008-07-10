@@ -26,7 +26,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "image2xy.h"
+#include "image2xy-files.h"
 #include "log.h"
 #include "errors.h"
 #include "ioutils.h"
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
     if (downsample)
         logverb("Downsampling by %i\n", downsample);
 
-    if (image2xy(infn, outfn, do_u8, downsample, 0)) {
+    if (image2xy_files(infn, outfn, do_u8, downsample, 0)) {
         ERROR("image2xy failed.");
         exit(-1);
     }

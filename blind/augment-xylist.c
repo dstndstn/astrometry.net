@@ -46,7 +46,7 @@
 #include "tabsort.h"
 #include "errors.h"
 #include "fits-guess-scale.h"
-#include "image2xy.h"
+#include "image2xy-files.h"
 #include "resort-xylist.h"
 #include "qfits.h"
 #include "an-opts.h"
@@ -574,7 +574,7 @@ int augment_xylist(augment_xylist_t* axy,
             exit(-1);
         }
         // MAGIC 3: downsample by a factor of 2, up to 3 times.
-        if (image2xy(fitsimgfn, xylsfn, TRUE, axy->downsample, 3)) {
+        if (image2xy_files(fitsimgfn, xylsfn, TRUE, axy->downsample, 3)) {
             ERROR("Source extraction failed");
             exit(-1);
         }

@@ -278,9 +278,9 @@ control-program: control-program.o \
 		$(BACKEND_OBJS) $(SIMPLEXY2_OBJ) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
-image2xy: image2xy-main.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
+image2xy: image2xy-main.o image2xy-files.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
 
-ALL_OBJ += image2xy-main.o
+ALL_OBJ += image2xy-main.o image2xy-files.o
 
 PNG2XY_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o dpeaks.o \
 	dselip.o dsigma.o dsmooth.o png2xy.o simplexy.o radix.o \
@@ -421,12 +421,12 @@ backend: backend-main.o $(BACKEND_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
 solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o \
-		image2xy.o resort-xylist.o tabsort.o \
+		image2xy-files.o resort-xylist.o tabsort.o \
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
 		$(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scale.o \
-		image2xy.o resort-xylist.o blindutils.o \
+		image2xy-files.o resort-xylist.o blindutils.o \
 		$(SIMPLEXY2_OBJ) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_LIB)
 
 ALL_OBJ += augment-xylist-main.o
