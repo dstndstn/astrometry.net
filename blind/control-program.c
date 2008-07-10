@@ -107,20 +107,6 @@ int main(int argc, char** args) {
         backend->inparallel = TRUE;
     }
 
-    /*
-     if (backend->minwidth <= 0.0 || backend->maxwidth <= 0.0) {
-     logerr("\"minwidth\" and \"maxwidth\" in the config file %s must be positive!\n", configfn);
-     exit( -1);
-     }
-     */
-    /*
-     if (!il_size(backend->default_depths)) {
-     parse_depth_string(backend->default_depths,
-     "10 20 30 40 50 60 70 80 90 100 "
-     "110 120 130 140 150 160 170 180 190 200");
-     }
-     */
-
     // I assume that the backend config file only contains indexes that cover
     // the range of scales you are interested in.
 
@@ -175,9 +161,6 @@ int main(int argc, char** args) {
         for (i=0; i<N; i++) {
             index_t* index = pl_get(backend->indexes);
             index_meta_t* meta = &(index->meta);
-            //int centerhp;
-			//double dx, dy;
-            //centerhp = xyzarrtohealpixf(centerxyz, meta->hpnside, &dx, &dy);
 			int healpixes[9];
 			int nhp;
 
@@ -197,14 +180,15 @@ int main(int argc, char** args) {
         solver_preprocess_field(solver);
         solver_verify_sip_wcs(solver, sip);
 
-		// Now, if you wanted to ignore the WCS and check all indexes...
-		if (FALSE) {
-			solver_clear_indexes(solver);
-			for (i=0; i<N; i++) {
-				index_t* index = pl_get(backend->indexes);
-				solver_add_index(solver, index);
-			}
-		}
+		/*
+		 // Now, if you wanted to ignore the WCS and check all indexes, you
+		 // could do this:
+		 solver_clear_indexes(solver);
+		 for (i=0; i<N; i++) {
+		 index_t* index = pl_get(backend->indexes);
+		 solver_add_index(solver, index);
+		 }
+		 */
 
         solver_run(solver);
         solver_free_field(solver);
@@ -213,33 +197,6 @@ int main(int argc, char** args) {
 		il_free(hplist);
     }
 
-
-
-
-
-
-
-
-
-
-
-	for (i = optind; i < argc; i++) {
-		char* jobfn;
-        job_t* job;
-
-		jobfn = args[i];
-        logverb("Reading job file \"%s\"...\n", jobfn);
-        job = backend_read_job_file(backend, jobfn);
-        if (!job) {
-            ERROR("Failed to read job file \"%s\"", jobfn);
-            exit(-1);
-        }
-
-		if (backend_run_job(backend, job))
-			logerr("Failed to run_job()\n");
-
-		job_free(job);
-	}
 
 	backend_free(backend);
     return 0;
