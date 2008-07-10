@@ -92,9 +92,9 @@ static void update_timeused(solver_t* sp) {
 
 static void set_matchobj_template(solver_t* solver, MatchObj* mo) {
     if (solver->mo_template)
-        memcpy(&mo, solver->mo_template, sizeof(MatchObj));
+        memcpy(mo, solver->mo_template, sizeof(MatchObj));
     else
-        memset(&mo, 0, sizeof(MatchObj));
+        memset(mo, 0, sizeof(MatchObj));
 }
 
 static void get_field_center(solver_t* s, double* cx, double* cy) {
@@ -166,11 +166,7 @@ void solver_reset_best_match(solver_t* sp) {
 	sp->have_best_match = FALSE;
 }
 
-void solver_transform_corners(solver_t* solver, MatchObj* mo) {
-    set_center_and_radius(solver, mo, &(mo->wcstan), NULL);
-}
-
-void solver_compute_quad_range(solver_t* sp, index_t* index,
+void solver_compute_quad_range(const solver_t* sp, const index_t* index,
                                double* minAB, double* maxAB) {
 	double scalefudge = 0.0; // in pixels
 
@@ -312,16 +308,16 @@ static void find_field_boundaries(solver_t* solver) {
 }
 
 void solver_preprocess_field(solver_t* solver) {
+	find_field_boundaries(solver);
 	// precompute a kdtree over the field
 	solver->vf = verify_field_preprocess(solver->fieldxy);
-	find_field_boundaries(solver);
 }
 
 void solver_free_field(solver_t* solver) {
 	verify_field_free(solver->vf);
 }
 
-void solver_resolve_correspondences(solver_t* sp, MatchObj* mo) {
+void solver_resolve_correspondences(const solver_t* sp, MatchObj* mo) {
 	int j;
     mo->corr_field_xy = dl_new(16);
     mo->corr_index_rd = dl_new(16);
@@ -720,8 +716,6 @@ static void try_all_codes_2(int* fieldstars, int dimquad,
 	int flipab;
     int dimcode = (dimquad - 2) * 2;
 
-	//assert(solver->index->cx_less_than_dx
-
 	for (flipab=0; flipab<2; flipab++) {
 		double flipcode[dimcode];
 		double* origcode;
@@ -829,6 +823,8 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 	MatchObj mo;
 	unsigned int star[dimquads];
 
+	assert(krez);
+
 	for (jj = 0; jj < krez->nres; jj++) {
 		double starxyz[dimquads*3];
 		double scale;
@@ -837,9 +833,7 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
         int i;
 
 		solver->nummatches++;
-
-		thisquadno = (int)krez->inds[jj];
-
+		thisquadno = krez->inds[jj];
 		quadfile_get_stars(solver->index->quads, thisquadno, star);
         for (i=0; i<dimquads; i++)
             startree_get(solver->index->starkd, star[i], starxyz + 3*i);
@@ -859,11 +853,9 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 			debug("          bad scale.\n");
 			continue;
 		}
-
 		solver->numscaleok++;
 
         set_matchobj_template(solver, &mo);
-
 		memcpy(&(mo.wcstan), &wcs, sizeof(tan_t));
 		mo.wcs_valid = TRUE;
 		mo.code_err = krez->sdists[jj];
@@ -876,10 +868,10 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 		mo.timeused = solver->timeused;
 		mo.quadno = thisquadno;
 		mo.dimquads = dimquads;
-        for (i=0; i<dimquads; i++)
+        for (i=0; i<dimquads; i++) {
             mo.star[i] = star[i];
-        for (i=0; i<dimquads; i++)
             mo.field[i] = fieldstars[i];
+		}
 
 		memcpy(mo.quadpix, field, 2 * dimquads * sizeof(double));
 		memcpy(mo.quadxyz, starxyz, 3 * dimquads * sizeof(double));
@@ -892,7 +884,7 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
                 mo.ids[i] = 0;
 		}
 
-		solver_transform_corners(solver, &mo);
+		set_center_and_radius(solver, &mo, &(mo.wcstan), NULL);
 
 		if (solver_handle_hit(solver, &mo, NULL, FALSE))
 			solver->quit_now = TRUE;

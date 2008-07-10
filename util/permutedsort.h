@@ -49,7 +49,7 @@ void permutation_init(int* perm, int Nperm);
 
  This also works when "inarray" == "outarray".
  */
-void permutation_apply(int* perm, int Nperm, const void* inarray,
+void permutation_apply(const int* perm, int Nperm, const void* inarray,
 					   void* outarray, int elemsize);
 
 /*

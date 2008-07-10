@@ -334,8 +334,10 @@ int main(int argc, char** args) {
 													  healpixes, meta->hpnside);
 			il_append_array(hplist, healpixes, nhp);
 			// If the index is nearby, add it.
-			if (il_contains(hplist, meta->healpix))
+			if (il_contains(hplist, meta->healpix)) {
+				logmsg("Adding index %s\n", meta->indexname);
 				solver_add_index(solver, index);
+			}
 
 			il_remove_all(hplist);
         }
@@ -345,6 +347,7 @@ int main(int argc, char** args) {
         solver_preprocess_field(solver);
 
 		if (sip) {
+			logmsg("Trying to verify existing WCS...\n");
 			solver_verify_sip_wcs(solver, sip);
 			if (solver->best_match_solves) {
 				// Existing WCS passed the test.
@@ -352,6 +355,8 @@ int main(int argc, char** args) {
 					   solver->best_match.logodds);
 				// the WCS is solver->best_match.wcstan
 				solved = TRUE;
+			} else {
+				logmsg("Existing WCS failed the verification test...\n");
 			}
 		}
 
@@ -365,6 +370,9 @@ int main(int argc, char** args) {
 			 solver_add_index(solver, index);
 			 }
 			 */
+			// 
+			solver->distance_from_quad_bonus = TRUE;
+
 			solver_run(solver);
 
 			if (solver->best_match_solves) {

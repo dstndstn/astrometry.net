@@ -28,7 +28,7 @@ void permutation_init(int* perm, int Nperm) {
 		perm[i] = i;
 }
 
-void permutation_apply(int* perm, int Nperm, const void* inarray,
+void permutation_apply(const int* perm, int Nperm, const void* inarray,
 					   void* outarray, int elemsize) {
 	void* temparr;
 	int i;
@@ -43,7 +43,8 @@ void permutation_apply(int* perm, int Nperm, const void* inarray,
 
 	cinput = inarray;
 	for (i=0; i<Nperm; i++)
-		memcpy(coutput, cinput + perm[i] * elemsize, elemsize);
+		memcpy(coutput + i * elemsize, cinput + perm[i] * elemsize, elemsize);
+
 	if (inarray == outarray) {
 		memcpy(outarray, temparr, elemsize * Nperm);
 		free(temparr);
