@@ -978,10 +978,6 @@ struct neighbour_dirn {
     double dx, dy;
 };
 
-// DEBUG
-void plot_point(int hp, int nside, double dx, double dy, char* style);
-void plot_xyz_point(double* xyz, char* style);
-
 int healpix_get_neighbours_within_range(double* xyz, double range, int* out_healpixes,
 										//int maxhp,
 										int Nside) {
@@ -996,9 +992,6 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
 	hp = xyzarrtohealpixf(xyz, Nside, &fx, &fy);
 	healpixes[nhp] = hp;
 	nhp++;
-
-    printf("point is in healpix %i\n", hp);
-    printf("point xyz is %g, %g, %g\n", xyz[0], xyz[1], xyz[2]);
 
     {
         struct neighbour_dirn dirs[] = {
@@ -1056,13 +1049,6 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
             healpix_to_xyzarr(hp, Nside, ptx, pty, pt);
             d2 = distsq(pt, xyz, 3);
 
-            printf("neighbour %i: (%g, %g), dist to (%g, %g) is %g, vector (%g,%g)",
-                   i, ptx, pty, fx, fy, sqrt(d2), ptdx, ptdy);
-            if (d2 > range*range)
-                printf(" (out of range)\n");
-            else
-                printf(" (in range)\n");
-
             // delta vector should be outside the healpix
             assert((ptx+step*ptdx < 0) ||
                    (ptx+step*ptdx > 1) ||
@@ -1081,9 +1067,6 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
             healpix_to_xyzarr(hp, Nside, ptx + stepdir * step, pty, ptstepx);
             healpix_to_xyzarr(hp, Nside, ptx, pty + stepdir * step, ptstepy);
 
-            plot_xyz_point(ptstepx, "ko");
-            plot_xyz_point(ptstepy, "mo");
-
             // convert the steps into dx,dy vectors.
             for (j=0; j<3; j++) {
                 ptstepx[j] = stepdirx * (ptstepx[j] - pt[j]);
@@ -1094,17 +1077,9 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
             for (j=0; j<3; j++)
                 across[j] = pt[j] + ptdx * ptstepx[j] + ptdy * ptstepy[j];
 
-            printf("pt        %g, %g, %g\n", pt[0], pt[1], pt[2]);
-            printf("pt-dx(%2g) %g, %g, %g\n", ptdx, ptstepx[0], ptstepx[1], ptstepx[2]);
-            printf("pt-dy(%2g) %g, %g, %g\n", ptdy, ptstepy[0], ptstepy[1], ptstepy[2]);
-            printf("across    %g, %g, %g\n", across[0], across[1], across[2]);
+            // see which healpix is at the end of the step.
             normalize_3(across);
-            printf("across(n) %g, %g, %g\n", across[0], across[1], across[2]);
-
-            plot_xyz_point(across, "go");
-
             pthp = xyzarrtohealpix(across, Nside);
-            printf("(hp %i)\n", pthp);
 
             healpixes[nhp] = pthp;
             nhp++;
