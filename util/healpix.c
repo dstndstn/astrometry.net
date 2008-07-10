@@ -1044,7 +1044,7 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
             double across[3];
             double step = 0.1; // 1e-3;
             double d2;
-            double stepdir;
+            double stepdirx, stepdiry;
             struct neighbour_dirn* dir = dirs+i;
             ptx = dir->x;
             pty = dir->y;
@@ -1074,45 +1074,25 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
 
             // compute dx and dy directions that are toward the interior of
             // the healpix.
-            if (ptx < step)
-                stepdir = 1.;
-            else
-                stepdir = -1.;
+            stepdirx = (ptx < step) ? 1 : -1;
+            stepdiry = (pty < step) ? 1 : -1;
+
+            // take steps in those directions.
             healpix_to_xyzarr(hp, Nside, ptx + stepdir * step, pty, ptstepx);
-            // convert the step into dx vector.
-            for (j=0; j<3; j++)
-                ptstepx[j] = stepdir * (ptstepx[j] - pt[j]);
-
-            if (pty < step)
-                stepdir = 1.;
-            else
-                stepdir = -1.;
             healpix_to_xyzarr(hp, Nside, ptx, pty + stepdir * step, ptstepy);
-            for (j=0; j<3; j++)
-                ptstepy[j] = stepdir * (ptstepy[j] - pt[j]);
 
-            /*
-             healpix_to_xyzarr(hp, Nside, ptx - ptdx * step, pty, ptstepx);
-             healpix_to_xyzarr(hp, Nside, ptx, pty - ptdy * step, ptstepy);
-             */
-            /*
-             plot_point(hp, Nside, ptx - ptdx * step, pty, "ko");
-             plot_point(hp, Nside, ptx, pty - ptdy * step, "mo");
-             */
             plot_xyz_point(ptstepx, "ko");
             plot_xyz_point(ptstepy, "mo");
 
+            // convert the steps into dx,dy vectors.
             for (j=0; j<3; j++) {
-                //ptstepx[j] = pt[j] - ptstepx[j];
-                //ptstepy[j] = pt[j] - ptstepy[j];
-                // now ptstepx is dx, ptstepy is dy.
-                across[j] = pt[j] + ptdx * ptstepx[j] + ptdy * ptstepy[j];
+                ptstepx[j] = stepdirx * (ptstepx[j] - pt[j]);
+                ptstepx[j] = stepdiry * (ptstepy[j] - pt[j]);
             }
-            /*
-             // take a small step across the edge...
-             for (j=0; j<3; j++)
-             across[j] = pt[j]*3 - ptdx * ptstepx[j] - ptdy * ptstepy[j];
-             */
+
+            // take a small step in the specified direction.
+            for (j=0; j<3; j++)
+                across[j] = pt[j] + ptdx * ptstepx[j] + ptdy * ptstepy[j];
 
             printf("pt        %g, %g, %g\n", pt[0], pt[1], pt[2]);
             printf("pt-dx(%2g) %g, %g, %g\n", ptdx, ptstepx[0], ptstepx[1], ptstepx[2]);
@@ -1123,18 +1103,8 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
 
             plot_xyz_point(across, "go");
 
-            //pthp = xyzarrtohealpix(across, Nside);
-            {
-                double ddx, ddy;
-                pthp = xyzarrtohealpixf(across, Nside, &ddx, &ddy);
-                //plot_point(pthp, Nside, ddx, ddy, "bo");
-                printf("(hp %i, %g, %g)\n", pthp, ddx, ddy);
-            }
-            //printf("(hp %i)\n", pthp);
-
-            // the step should take us outside this hp.
-            // (not always, sometimes it's along a boundary.)
-            //assert(pthp != hp);
+            pthp = xyzarrtohealpix(across, Nside);
+            printf("(hp %i)\n", pthp);
 
             healpixes[nhp] = pthp;
             nhp++;
