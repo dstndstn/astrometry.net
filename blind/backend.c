@@ -736,6 +736,8 @@ void backend_free(backend_t* backend) {
 	int i;
     if (!backend)
         return;
+	if (backend->indexmetas)
+		bl_free(backend->indexmetas);
     if (backend->indexes) {
         for (i=0; i<bl_size(backend->indexes); i++) {
             index_t* ind = pl_get(backend->indexes, i);
@@ -743,13 +745,6 @@ void backend_free(backend_t* backend) {
         }
         pl_free(backend->indexes);
     }
-	if (backend->indexmetas) {
-		for (i=0; i < bl_size(backend->indexmetas); i++) {
-			index_meta_t* meta = bl_access(backend->indexmetas, i);
-			free(meta->indexname);
-		}
-		bl_free(backend->indexmetas);
-	}
     if (backend->ismallest)
         il_free(backend->ismallest);
     if (backend->ibiggest)

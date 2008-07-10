@@ -352,7 +352,7 @@ int main(int argc, char** args) {
 			if (solver->best_match_solves) {
 				// Existing WCS passed the test.
 				logmsg("Existing WCS pass the verification test with odds ratio %g\n",
-					   solver->best_match.logodds);
+					   exp(solver->best_match.logodds));
 				// the WCS is solver->best_match.wcstan
 				solved = TRUE;
 			} else {

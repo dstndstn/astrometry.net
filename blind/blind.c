@@ -603,11 +603,11 @@ static sip_t* tweak(const blind_t* bp, const tan_t* wcs, const double* starradec
     double jitter;
     sip_t* sip;
 	logmsg("Tweaking!\n");
+    jitter = hypot(tan_pixel_scale(wcs) * sp->verify_pix, sp->index->meta.index_jitter);
 	logverb("Setting tweak jitter: %g arcsec.\n", jitter);
     logverb("Using %i image stars and %i index stars.\n", starxy_n(sp->fieldxy), nstars);
 	logverb("Begin tweaking to order %i...\n", bp->tweak_aborder);
-    jitter = hypot(tan_pixel_scale(wcs) * sp->verify_pix, sp->index->meta.index_jitter);
-    sip = tweak_just_do_it(wcs, sp->fieldxy, starradec, NULL, NULL, NULL, nstars,
+    sip = tweak_just_do_it(wcs, sp->fieldxy, NULL, NULL, NULL, starradec, nstars,
                            jitter, bp->tweak_aborder, bp->tweak_abporder, 5,
                            TRUE, bp->tweak_skipshift);
 	logverb("Done tweaking!\n");

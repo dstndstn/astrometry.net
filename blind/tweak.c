@@ -483,8 +483,8 @@ void tweak_push_ref_xyz(tweak_t* t, const double* xyz, int n) {
 	assert(!t->xyz_ref);
 	t->xyz_ref = malloc(sizeof(double) * 3 * n);
 	assert(t->xyz_ref);
-	t->n_ref = n;
 	memcpy(t->xyz_ref, xyz, 3*n*sizeof(double));
+	t->n_ref = n;
 	t->state |= TWEAK_HAS_REF_XYZ;
 }
 
@@ -543,9 +543,7 @@ static void find_correspondences(tweak_t* t, double jitter) {
 
 	dist = rad2dist(jitter);
 
-	logverb("search radius = %g arcsec / %g arcmin / %g deg\n",
-	        rad2arcsec(jitter), rad2arcmin(jitter), rad2deg(jitter));
-	logverb("distance on the unit sphere: %g\n", dist);
+	logverb("search radius = %g arcsec\n", rad2arcsec(jitter));
 
 	// Find closest neighbours
 	dualtree_rangesearch(t->kd_image, t->kd_ref,
@@ -1017,7 +1015,6 @@ static void do_sip_tweak(tweak_t* t) {
         gsl_vector_set(b1, i, weight * rad2deg(x));
         gsl_vector_set(b2, i, weight * rad2deg(y));
     }
-	assert(i == M - 1);
 
 	if (t->weighted_fit)
 		logverb("Total weight: %g\n", totalweight);
