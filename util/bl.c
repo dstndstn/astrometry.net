@@ -938,6 +938,12 @@ void il_reverse(il* list) {
 	bl_reverse(list);
 }
 
+void il_append_array(il* list, int* data, int ndata) {
+	int i;
+	for (i=0; i<ndata; i++)
+		il_append(list, data[i]);
+}
+
 il* il_merge_ascending(il* list1, il* list2) {
 	il* res;
 	int i1, i2, N1, N2, v1, v2;
