@@ -1078,7 +1078,6 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
 	// Remove duplicates...
 	for (i=0; i<nhp; i++) {
 		for (j=i+1;  j<nhp; j++) {
-            int k;
 			if (healpixes[i] == healpixes[j]) {
 				int k;
 				for (k=j+1; k<nhp; k++)

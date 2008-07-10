@@ -273,8 +273,8 @@ int main(int argc, char** args) {
 
         // compute scale range in arcseconds per pixel.
         
-		app_min = arcmin2arcsec(arcmin_width_min / imagew);
-        app_max = arcmin2arcsec(arcmin_width_max / imagew);
+		app_min = arcmin2arcsec(arcmin_width_min / (double)imagew);
+        app_max = arcmin2arcsec(arcmin_width_max / (double)imagew);
         solver->funits_lower = app_min;
         solver->funits_upper = app_max;
 
