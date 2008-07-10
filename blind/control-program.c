@@ -271,7 +271,6 @@ int main(int argc, char** args) {
         solver = solver_new();
 
         // compute scale range in arcseconds per pixel.
-        
 		app_min = arcmin2arcsec(arcmin_width_min / (double)imagew);
         app_max = arcmin2arcsec(arcmin_width_max / (double)imagew);
         solver->funits_lower = app_min;
@@ -285,6 +284,13 @@ int main(int argc, char** args) {
 
         // don't try teeny-tiny quads.
         solver->quadsize_min = qsf_min * MIN(imagew, imageh);
+
+		// by determining whether your images have "positive" or
+		// "negative" parity (sign of the determinant of WCS CD matrix),
+		// you can set this and save half the compute time.
+		// solver->parity = PARITY_NORMAL;
+		// or
+		// solver->parity = PARITY_FLIP;
 
 		// This callback gets called when a match is found...
         //solver->record_match_callback = match_callback;
