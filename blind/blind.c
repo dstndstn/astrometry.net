@@ -666,32 +666,10 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
     ind = bl_insert_sorted(bp->solutions, mo, compare_matchobjs);
     ourmo = bl_access(bp->solutions, ind);
 
+	solver_resolve_correspondences(sp, ourmo);
+	// drop references to these arrays: they'll be free by "mo".
     ourmo->corr_field = NULL;
     ourmo->corr_index = NULL;
-    ourmo->corr_field_xy = dl_new(16);
-    ourmo->corr_index_rd = dl_new(16);
-
-    for (j=0; j<il_size(mo->corr_field); j++) {
-        double ixyz[3];
-        double iradec[2];
-        int iindex, ifield;
-
-        ifield = il_get(mo->corr_field, j);
-        iindex = il_get(mo->corr_index, j);
-        assert(ifield >= 0);
-        assert(ifield < starxy_n(sp->fieldxy));
-
-        dl_append(ourmo->corr_field_xy,
-                  starxy_getx(sp->fieldxy, ifield));
-        dl_append(ourmo->corr_field_xy,
-                  starxy_gety(sp->fieldxy, ifield));
-
-        startree_get(sp->index->starkd, iindex, ixyz);
-        xyzarr2radecdegarr(ixyz, iradec);
-
-        dl_append(ourmo->corr_index_rd, iradec[0]);
-        dl_append(ourmo->corr_index_rd, iradec[1]);
-    }
 
 	if (mo->logodds < bp->logratio_tosolve)
 		return FALSE;
@@ -699,11 +677,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
     bp->nsolves_sofar++;
     if (bp->nsolves_sofar >= bp->nsolves) {
         if (bp->solver.index) {
-            char* copy;
-            char* base;
-            copy = strdup(bp->solver.index->meta.indexname);
-            base = strdup(basename(copy));
-            free(copy);
+			char* base = basename_safe(bp->solver.index->meta.indexname);
             logmsg("Field %i: solved with index %s.\n", mo->fieldnum, base);
             free(base);
         } else {

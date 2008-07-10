@@ -200,4 +200,9 @@ void solver_verify_sip_wcs(solver_t* solver, sip_t* sip);
 void      solver_transform_corners(solver_t* solver, MatchObj* mo);
 void      solver_inject_match(solver_t* solver, MatchObj* mo, sip_t* sip);
 
+// During solving, the solver records the indices of image-to-index
+// correspondences.  This function uses those indices to find the actual
+// pixel and RA,Dec positions of the corresponding stars.
+void solver_resolve_correspondences(solver_t* solver, MatchObj* mo);
+
 #endif

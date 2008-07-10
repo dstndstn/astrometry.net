@@ -25,8 +25,17 @@
 
 #include "an-bool.h"
 #include "bl.h"
+#include "keywords.h"
 
 extern uint32_t ENDIAN_DETECTOR;
+
+/*
+ The "basename" function may overwrite its arg and may return a pointer
+ to static memory... both undesirable.  This replacement returns a newly-
+ allocated string containing the result.
+ */
+Malloc
+char* basename_safe(const char* path);
 
 // Returns (system + user) CPU time, in seconds.
 float get_cpu_usage();

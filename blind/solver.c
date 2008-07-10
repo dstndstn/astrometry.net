@@ -321,6 +321,30 @@ void solver_free_field(solver_t* solver) {
 	verify_field_free(solver->vf);
 }
 
+void solver_resolve_correspondences(solver_t* sp, MatchObj* mo) {
+	int j;
+    mo->corr_field_xy = dl_new(16);
+    mo->corr_index_rd = dl_new(16);
+    for (j=0; j<il_size(mo->corr_field); j++) {
+        double ixyz[3];
+        double iradec[2];
+        int iindex, ifield;
+
+        ifield = il_get(mo->corr_field, j);
+        iindex = il_get(mo->corr_index, j);
+        assert(ifield >= 0);
+        assert(ifield < starxy_n(sp->fieldxy));
+
+        dl_append(mo->corr_field_xy, starxy_getx(sp->fieldxy, ifield));
+        dl_append(mo->corr_field_xy, starxy_gety(sp->fieldxy, ifield));
+
+        startree_get(sp->index->starkd, iindex, ixyz);
+        xyzarr2radecdegarr(ixyz, iradec);
+        dl_append(mo->corr_index_rd, iradec[0]);
+        dl_append(mo->corr_index_rd, iradec[1]);
+    }
+}
+
 static double get_tolerance(solver_t* solver) {
     return square(solver->codetol);
     /*

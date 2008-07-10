@@ -42,6 +42,14 @@
 
 uint32_t ENDIAN_DETECTOR = 0x01020304;
 
+Malloc
+char* basename_safe(const char* path) {
+	char* copy = strdup(path);
+	char* res = strdup(basename(copy));
+	free(copy);
+	return res;
+}
+
 float get_cpu_usage() {
 	struct rusage r;
 	float sofar;

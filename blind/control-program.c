@@ -26,6 +26,7 @@
 #include "solver.h"
 #include "index.h"
 #include "starxy.h"
+#include "matchobj.h"
 #include "bl.h"
 
 static const char* OPTIONS = "hc:v";
@@ -36,6 +37,30 @@ static void print_help(const char* progname) {
            "   [-v]: verbose\n"
 	       "\n", progname);
 }
+
+/**
+ Structure passed between main loop and solver callbacks.
+ struct control_t {
+ backend_t* backend;
+ solver_t* solver;
+ };
+ typedef struct control_t control_t;
+ */
+
+/**
+ This callback gets called by the solver when it encounters a match
+ whose log-odds ratio is above solver->logratio_record_threshold.
+ */
+static void match_callback(MatchObj* mo, void* v) {
+	//control_t* control = v;
+	/*
+	 If you want to abort:
+	 control->solver->quit_now = TRUE;
+	 return FALSE;
+	 */
+	return TRUE;
+}
+
 
 int main(int argc, char** args) {
     char* configfn = NULL;
@@ -135,6 +160,8 @@ int main(int argc, char** args) {
 		double hprange;
 		starxy_t* field;
 		int nstars;
+		//control_t control;
+		double imagecx, imagecy;
 
         solver = solver_new();
         solver_set_default_values(solver);
@@ -151,8 +178,17 @@ int main(int argc, char** args) {
         // don't try teeny-tiny quads.
         solver->quadsize_min = qsf_min * MIN(imagew, imageh);
 
-        solver->userdata = solver;
+		// This callback gets called when a match is found...
         solver->record_match_callback = match_callback;
+		// ... if the log-odds ratio is above this value...
+		// (you can set it huge; most matches are overwhelmingly good)
+		solver->logratio_record_threshold = log(1e12);
+		// ... and this argument is passed to the callback.
+		/*
+		 control.backend = backend;
+		 control.solver = solver;
+		 solver->userdata = &control;
+		 */
 
 		// Feed the image source coordinates to the solver...
 		field = starxy_new(nstars, TRUE, FALSE);
@@ -163,7 +199,11 @@ int main(int argc, char** args) {
 		solver_set_field(solver, field);
 
 		// Where is the center of the image according to the existing WCS?
-        sip_pixelxy2xyzarr(sip, imagew/2.0, imageh/2.0, centerxyz);
+		// center of the image in pixels
+		// FIXME - not quite right wrt FITS 1-indexing
+		imagecx = imagew/2.0;
+		imagecy = imageh/2.0;
+        sip_pixelxy2xyzarr(sip, imagecx, imagecy, centerxyz);
 
 		// What is the radius of the bounding circle of a field?
 		// (in units of distance on the unit sphere)
@@ -193,20 +233,45 @@ int main(int argc, char** args) {
         solver_preprocess_field(solver);
         solver_verify_sip_wcs(solver, sip);
 
-		/*
-		 // Now, if you wanted to ignore the WCS and check all indexes, you
-		 // could do this:
-		 solver_clear_indexes(solver);
-		 for (i=0; i<N; i++) {
-		 index_t* index = pl_get(backend->indexes);
-		 solver_add_index(solver, index);
-		 }
-		 */
+		if (solver->best_match_solves) {
+			// Existing WCS passed the test.
+			logmsg("Existing WCS pass the verification test with odds ratio %g\n",
+				   solver->best_match.logodds);
+			// Our WCS is solver->best_match.wcstan;
+		} else {
+			/*
+			 // Now, if you wanted to ignore the WCS and check all indexes, you
+			 // could do this:
+			 solver_clear_indexes(solver);
+			 for (i=0; i<N; i++) {
+			 index_t* index = pl_get(backend->indexes);
+			 solver_add_index(solver, index);
+			 }
+			 */
+			solver_run(solver);
 
-        solver_run(solver);
+			if (solver->best_match_solves) {
+				double ra, dec;
+				double pscale;
+				tan_t* wcs;
+				logmsg("Solved using index %s with odds ratio %g\n",
+					   solver->best_index.meta.indexname,
+					   solver->best_match.logodds);
+				// WCS is solver->best_match.wcstan
+				wcs = &(solver->best_match.wcstan);
+				// center
+				tan_pixelxy2radec(wcs, imagecx, imagecy, &ra, &dec);
+				pscale = tan_pixel_scale(wcs);
+				logmsg("Image center is RA,Dec = (%g,%g) degrees, size is %.2g x %.2g arcmin.\n",
+					   ra, dec, arcsec2arcmin(pscale * imagew), arcsec2arcmin(pscale * imageh));
+			} else {
+				logmsg("Failed to solve.\n");
+			}
+		}
+
         solver_free_field(solver);
-
         solver_free(solver);
+		starxy_free(field);
 		il_free(hplist);
     }
 
