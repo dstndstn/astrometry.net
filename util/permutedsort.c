@@ -17,13 +17,42 @@
 */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "permutedsort.h"
 #include "qsort_reentrant.h"
 
+void permutation_init(int* perm, int Nperm) {
+	int i;
+	for (i=0; i<Nperm; i++)
+		perm[i] = i;
+}
+
+void permutation_apply(int* perm, int Nperm, const void* inarray,
+					   void* outarray, int elemsize) {
+	void* temparr;
+	int i;
+	const char* cinput;
+	char* coutput;
+
+	if (inarray == outarray) {
+		temparr = malloc(elemsize * Nperm);
+		coutput = temparr;
+	} else
+		coutput = outarray;
+
+	cinput = inarray;
+	for (i=0; i<Nperm; i++)
+		memcpy(coutput, cinput + perm[i] * elemsize, elemsize);
+	if (inarray == outarray) {
+		memcpy(outarray, temparr, elemsize * Nperm);
+		free(temparr);
+	}
+}
+
 struct permuted_sort_t {
     int (*compare)(const void*, const void*);
-    void* data_array;
+    const void* data_array;
     int data_array_stride;
 };
 typedef struct permuted_sort_t permsort_t;
@@ -33,22 +62,20 @@ static int compare_permuted(void* user, const void* v1, const void* v2) {
     permsort_t* ps = user;
 	int i1 = *(int*)v1;
 	int i2 = *(int*)v2;
-	void* val1, *val2;
-    char* darray = ps->data_array;
+	const void *val1, *val2;
+    const char* darray = ps->data_array;
 	val1 = darray + i1 * ps->data_array_stride;
 	val2 = darray + i2 * ps->data_array_stride;
 	return ps->compare(val1, val2);
 }
 
-int* permuted_sort(void* realarray, int array_stride,
+int* permuted_sort(const void* realarray, int array_stride,
                    int (*compare)(const void*, const void*),
                    int* perm, int N) {
     permsort_t ps;
     if (!perm) {
-        int i;
         perm = malloc(sizeof(int) * N);
-        for (i=0; i<N; i++)
-            perm[i] = i;
+		permutation_init(perm, N);
     }
 
     ps.compare = compare;

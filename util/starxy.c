@@ -22,6 +22,7 @@
 #include <sys/param.h>
 
 #include "starxy.h"
+#include "permutedsort.h"
 
 void starxy_compute_range(starxy_t* xy) {
     int i, N;
@@ -108,7 +109,31 @@ double* starxy_copy_xy(const starxy_t* xy) {
     return res;
 }
 
-starxy_t* starxy_alloc(int N, bool flux, bool back) {
+void starxy_sort_by_flux(starxy_t* s) {
+	int* perm;
+	perm = permuted_sort(s->flux, sizeof(double), compare_doubles_desc,
+						 NULL, s->N);
+	permutation_apply(perm, s->N, s->x, s->x, sizeof(double));
+	permutation_apply(perm, s->N, s->y, s->y, sizeof(double));
+	if (s->flux)
+		permutation_apply(perm, s->N, s->flux, s->flux, sizeof(double));
+	if (s->background)
+		permutation_apply(perm, s->N, s->background, s->background, sizeof(double));
+	free(perm);
+}
+
+void starxy_set_x_array(starxy_t* s, const double* x) {
+	memcpy(s->x, x, s->N * sizeof(double));
+}
+void starxy_set_y_array(starxy_t* s, const double* y) {
+	memcpy(s->y, y, s->N * sizeof(double));
+}
+void starxy_set_flux_array(starxy_t* s, const double* f) {
+	memcpy(s->flux, f, s->N * sizeof(double));
+}
+
+
+starxy_t* starxy_new(int N, bool flux, bool back) {
     starxy_t* xy = calloc(1, sizeof(starxy_t));
     starxy_alloc_data(xy, N, flux, back);
     return xy;

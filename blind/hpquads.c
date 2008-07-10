@@ -643,16 +643,11 @@ static bool find_stars_and_vectors(int hp, int Nside, double radius2,
 		Nhighwater = N;
 	}
 	// find permutation that sorts by index...
-	for (j=0; j<N; j++)
-		perm[j] = j;
+	permutation_init(perm, N);
 	permuted_sort(res->inds, sizeof(int), compare_ints, perm, N);
-
 	// apply the permutation...
-	for (j=0; j<N; j++) {
-		inds[j] = res->inds[perm[j]];
-		for (d=0; d<3; d++)
-			stars[j*3+d] = res->results.d[perm[j]*3+d];
-	}
+	permutation_apply(perm, N, res->inds, inds, sizeof(int));
+	permutation_apply(perm, N, res->results.d, stars, 3 * sizeof(double));
 	kdtree_free_query(res);
 
 	// compute the projection vectors

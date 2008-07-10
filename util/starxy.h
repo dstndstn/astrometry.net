@@ -33,6 +33,8 @@ struct starxy_t {
 };
 typedef struct starxy_t starxy_t;
 
+starxy_t* starxy_new(int N, bool flux, bool back);
+
 void starxy_compute_range(starxy_t* xy);
 
 double starxy_getx(const starxy_t* f, int i);
@@ -43,6 +45,12 @@ void starxy_get(const starxy_t* f, int i, double* xy);
 void starxy_setx(starxy_t* f, int i, double x);
 void starxy_sety(starxy_t* f, int i, double y);
 
+void starxy_set_x_array(starxy_t* s, const double* x);
+void starxy_set_y_array(starxy_t* s, const double* y);
+void starxy_set_flux_array(starxy_t* s, const double* f);
+
+void starxy_sort_by_flux(starxy_t* f);
+
 void starxy_set(starxy_t* f, int i, double x, double y);
 
 int starxy_n(const starxy_t* f);
@@ -52,8 +60,6 @@ double* starxy_copy_y(const starxy_t* xy);
 double* starxy_copy_xy(const starxy_t* xy);
 
 double* starxy_to_flat_array(starxy_t* xy, double* arr);
-
-starxy_t* starxy_alloc(int N, bool flux, bool back);
 
 void starxy_alloc_data(starxy_t* f, int N, bool flux, bool back);
 

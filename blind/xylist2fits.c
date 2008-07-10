@@ -201,7 +201,7 @@ starxy_t* readxysimple(char* fn) {
         dl_append(xylist, x);
         dl_append(xylist, y);
     }
-    xy = starxy_alloc(dl_size(xylist)/2, FALSE, FALSE);
+    xy = starxy_new(dl_size(xylist)/2, FALSE, FALSE);
     starxy_from_dl(xy, xylist, FALSE, FALSE);
     return xy;
 }

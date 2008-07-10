@@ -126,24 +126,17 @@ int resort_xylist(const char* infn, const char* outfn,
 
         N = fitstable_nrows(tab);
 
-        perm1   = malloc(N * sizeof(int));
-        perm2   = malloc(N * sizeof(int));
         used    = malloc(N * sizeof(bool));
-
-		for (i=0; i<N; i++) {
-			perm1[i] = i;
-			perm2[i] = i;
-        }
 
         // set back = flux + back (ie, non-background-subtracted flux)
 		for (i=0; i<N; i++)
             back[i] += flux[i];
 
         // Sort by flux...
-		permuted_sort(flux, sizeof(double), compare, perm1, N);
+		perm1 = permuted_sort(flux, sizeof(double), compare, NULL, N);
 
         // Sort by non-background-subtracted flux...
-		permuted_sort(back, sizeof(double), compare, perm2, N);
+		perm2 = permuted_sort(back, sizeof(double), compare, NULL, N);
 
         memset(used, 0, N * sizeof(bool));
 

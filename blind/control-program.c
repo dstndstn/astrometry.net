@@ -23,6 +23,10 @@
  */
 
 #include "backend.h"
+#include "solver.h"
+#include "index.h"
+#include "starxy.h"
+#include "bl.h"
 
 static const char* OPTIONS = "hc:v";
 
@@ -127,9 +131,10 @@ int main(int argc, char** args) {
         int i, N;
         sip_t* sip = NULL;
         double centerxyz[3];
-        //int centerhp;
 		il* hplist = il_new(4);
 		double hprange;
+		starxy_t* field;
+		int nstars;
 
         solver = solver_new();
         solver_set_default_values(solver);
@@ -148,6 +153,14 @@ int main(int argc, char** args) {
 
         solver->userdata = solver;
         solver->record_match_callback = match_callback;
+
+		// Feed the image source coordinates to the solver...
+		field = starxy_new(nstars, TRUE, FALSE);
+		starxy_set_x_array(field, starx);
+		starxy_set_y_array(field, stary);
+		starxy_set_flux_array(field, starflux);
+		starxy_sort_by_flux(field);
+		solver_set_field(solver, field);
 
 		// Where is the center of the image according to the existing WCS?
         sip_pixelxy2xyzarr(sip, imagew/2.0, imageh/2.0, centerxyz);

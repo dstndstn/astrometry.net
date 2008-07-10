@@ -19,9 +19,38 @@
 #ifndef PERMUTED_SORT_H
 #define PERMUTED_SORT_H
 
-int* permuted_sort(void* realarray, int array_stride,
+/*
+ Computes the permutation array that will cause the "realarray" to be
+ sorted according to the "compare" function.
+
+ Ie, the first element in the sorted array will be at
+ (char*)realarray + perm[0] * array_stride
+
+ The "stride" parameter gives the number of bytes between successive entries
+ in "realarray".
+
+ If "perm" is NULL, a new permutation array will be allocated and returned.
+ Otherwise, the permutation array will be placed in "perm".
+
+ Note that if you pass in a non-NULL "perm" array, its existing values will
+ be used!  You probably want to initialize it with "permutation_init()" to
+ set it to the identity permutation.
+ */
+int* permuted_sort(const void* realarray, int array_stride,
                    int (*compare)(const void*, const void*),
                    int* perm, int Nperm);
+
+void permutation_init(int* perm, int Nperm);
+
+/**
+ Applies a permutation array to a data vector.
+
+ Copies "inarray" into "outarray" according to the given "perm"utation.
+
+ This also works when "inarray" == "outarray".
+ */
+void permutation_apply(int* perm, int Nperm, const void* inarray,
+					   void* outarray, int elemsize);
 
 /*
   Some sort functions that might come in handy:
