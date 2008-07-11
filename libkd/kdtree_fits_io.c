@@ -373,14 +373,14 @@ int kdtree_fits_write_chunk_flipped(kdtree_fits_t* io, fitsbin_chunk_t* chunk,
 // just writes the tree, no primary header.
 int kdtree_fits_append_tree(kdtree_fits_t* io, const kdtree_t* kd,
                             const qfits_header* inhdr) {
-    int rtn;
+    int rtn = -1;
 	KD_DISPATCH(kdtree_write_fits, kd->treetype, rtn = , (io, kd, inhdr, FALSE));
     return rtn;
 }
 
 int kdtree_fits_append_tree_flipped(kdtree_fits_t* io, const kdtree_t* kd,
                                     const qfits_header* inhdr) {
-    int rtn;
+    int rtn = -1;
 	KD_DISPATCH(kdtree_write_fits, kd->treetype, rtn = , (io, kd, inhdr, TRUE));
     return rtn;
 }

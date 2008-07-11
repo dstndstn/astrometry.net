@@ -28,7 +28,8 @@ void toc();
 
 double millis_between(struct timeval* tv1, struct timeval* tv2);
 
-// Returns the number of seconds since Jan 1, 2000 UTC.
+// Returns the number of seconds since (approximately) Jan 1, 2000 UTC.
+// You probably only want to look at differences in the values returned by this function.
 double timenow();
 
 #endif
