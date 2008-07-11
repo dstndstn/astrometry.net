@@ -44,8 +44,9 @@
 #include "image2xy.h"
 #include "sip_qfits.h"
 #include "fitsioutils.h"
+#include "tic.h"
 
-static const char* OPTIONS = "hvc:i:a:A:W:H:";
+static const char* OPTIONS = "hvc:a:A:W:H:";
 
 #define DEFAULT_IMAGEW 1024
 #define DEFAULT_IMAGEH 1024
@@ -53,7 +54,7 @@ static const char* OPTIONS = "hvc:i:a:A:W:H:";
 #define DEFAULT_ARCMIN_MAX 25.0
 
 static void print_help(const char* progname) {
-	printf("Usage:   %s [options]\n"
+	printf("Usage:   %s\n"
 	       "   [-c <backend config file>]  (default: \"../etc/backend.cfg\" relative to this executable)\n"
            "   [-a <minimum field width>] in arcminutes, default %g\n"
            "   [-A <maximum field width>] in arcminutes, default %g\n"
@@ -61,17 +62,16 @@ static void print_help(const char* progname) {
            "   [-H <image height>] in pixels, default %i\n"
            "   [-v]: verbose\n"
            "\n"
-		   "    -i <FITS image filename>: the image to load.\n"
+		   "    <FITS image filename> [<FITS image filename> ...]: the images to process.\n"
            "\n"
 	       "\n", progname, DEFAULT_ARCMIN_MIN, DEFAULT_ARCMIN_MAX,
            DEFAULT_IMAGEW, DEFAULT_IMAGEH);
 }
 
-static char* fits_image_fn = NULL;
-
 // If you've got a TAN or SIP WCS, set "sip".  Otherwise, be sure to set
 // (racenter, deccenter).
-static void get_next_field(int* nstars, double** starx, double** stary,
+static void get_next_field(char* fits_image_fn,
+                           int* nstars, double** starx, double** stary,
 						   double** starflux, sip_t** sip,
 						   double* ra, double* dec) {
 	int i, N;
@@ -129,6 +129,7 @@ static void get_next_field(int* nstars, double** starx, double** stary,
 		*ra = qfits_header_getdouble(hdr, "RA", 0.0);
 		*dec = qfits_header_getdouble(hdr, "DEC", 0.0);
 		qfits_header_destroy(hdr);
+        logmsg("Using RA,Dec estimate (%g, %g)\n", *ra, *dec);
 	}
 }
 
@@ -144,8 +145,8 @@ int main(int argc, char** args) {
     double arcmin_width_max = DEFAULT_ARCMIN_MAX;
 
 	backend_t* backend;
-
-	int c;
+	int i, I, c;
+    sl* imagefiles;
 
 	while ((c = getopt(argc, args, OPTIONS)) != -1)
 		switch (c) {
@@ -170,26 +171,23 @@ int main(int argc, char** args) {
         case 'A':
             arcmin_width_max = atof(optarg);
             break;
-		case 'i':
-			fits_image_fn = optarg;
-			break;
 		case '?':
 		default:
             printf("Unknown flag %c\n", c);
 			exit( -1);
 		}
 
-	if (optind != argc) {
-		printf("Didn't understand extra args (starting with \"%s\")\n", args[optind]);
+    imagefiles = sl_new(4);
+
+    for (i=optind; i<argc; i++)
+        sl_append(imagefiles, args[i]);
+
+    if (!sl_size(imagefiles)) {
+		printf("You must specify at least one FITS image file to read.\n");
         print_help(args[0]);
         exit(-1);
-	}
+    }
 
-	if (!fits_image_fn) {
-		printf("Error, you must specify a FITS image file to read (with the -i argument).\n");
-		print_help(args[0]);
-		exit(-1);
-	}
     log_init(loglvl);
 
 	// only required if you use qfits.
@@ -203,6 +201,7 @@ int main(int argc, char** args) {
         mydir = strdup(dirname(me));
         free(me);
         configfn = resolve_path("../etc/backend.cfg", mydir);
+        free(mydir);
     }
 
 	backend = backend_new();
@@ -233,7 +232,7 @@ int main(int argc, char** args) {
     // try to verify an existing WCS that claims the field is huge, we won't
     // accidentally try to load millions of stars.
 
-    for (;;) {
+    for (I=0;; I++) {
         solver_t* solver;
         double app_min, app_max;
         double qsf_min = 0.1;
@@ -248,13 +247,18 @@ int main(int argc, char** args) {
 		int nstars;
 		double imagecx, imagecy;
 		bool solved = FALSE;
+        char* img;
+        double t0, t1;
 
 		// Get the next image...
 		racenter = 0.0;
 		deccenter = 0.0;
-		get_next_field(&nstars, &starx, &stary, &starflux, &sip,
+        img = sl_get(imagefiles, I % sl_size(imagefiles));
+        logmsg("Reading image file %s\n", img);
+		get_next_field(img, &nstars, &starx, &stary, &starflux, &sip,
 					   &racenter, &deccenter);
 
+        t0 = timenow();
         solver = solver_new();
 
         // compute scale range in arcseconds per pixel.
@@ -387,12 +391,15 @@ int main(int argc, char** args) {
 		starxy_free(field);
 		il_free(hplist);
 
+        t1 = timenow();
+        logmsg("That took %g seconds\n", t1-t0);
+
         logmsg("Sleeping...\n");
         sleep(1);
         logmsg("Starting!\n");
     }
 
-
+    sl_free2(imagefiles);
 	backend_free(backend);
     return 0;
 }

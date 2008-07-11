@@ -28,4 +28,7 @@ void toc();
 
 double millis_between(struct timeval* tv1, struct timeval* tv2);
 
+// Returns the number of seconds since Jan 1, 2000 UTC.
+double timenow();
+
 #endif

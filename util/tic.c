@@ -31,6 +31,15 @@
 
 static time_t starttime, endtime;
 
+double timenow() {
+    struct timeval tv;
+    if (gettimeofday(&tv, NULL)) {
+        ERROR("Failed to get time of day");
+        return -1.0;
+    }
+    return tv.tv_sec + tv.tv_usec * 1e-6;
+}
+
 double millis_between(struct timeval* tv1, struct timeval* tv2) {
 	return
 		(tv2->tv_usec - tv1->tv_usec)*1e-3 +
