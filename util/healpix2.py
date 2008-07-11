@@ -27,7 +27,9 @@ _hp = ctypes.CDLL(os.path.join(os.path.dirname(__file__), '_healpix.so'))
 def healpix_to_radecdeg(hp, nside=1., dx=0.5, dy=0.5):
     ra = ctypes.c_double(0)
     dec = ctypes.c_double(0)
-    _hp.healpix_to_radecdeg(hp, nside, dx, dy,
+    _hp.healpix_to_radecdeg(hp, nside,
+							c_double(dx),
+							c_double(dy),
                             ctypes.pointer(ra),
                             ctypes.pointer(dec))
     return (ra.value, dec.value)

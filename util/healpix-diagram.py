@@ -18,27 +18,58 @@ from astrometry.util.healpix2 import *
 from pylab import *
 
 if __name__ == '__main__':
-    nside = 2
-    for hp in range(12 * nside**2):
-        (ra,dec) = healpix_to_radecdeg(hp, nside, 0.5, 0.5)
-        text(ra, dec, '%i' % hp)
+	nside = 2
 
-        nsteps = 20
-        stepvals = [x/float(nsteps) for x in range(nsteps+1)]
-        rstepvals = [1-x for x in stepvals]
-        ones = [1.0]*(nsteps+1)
-        zeros = [0.0]*(nsteps+1)
+	# RA,Dec grid lines.
+	for x in range(-50,410,10):
+		axvline(x=x, lw=0.5, ls='-', color='0.8')
+	for y in range(-90,100,10):
+		axhline(y=y, lw=0.5, ls='-', color='0.8')
 
-        x = stepvals + ones + rstepvals + zeros
-        y = zeros + stepvals + ones + rstepvals
+	textkws = { 'horizontalalignment': 'center',
+				'verticalalignment': 'center' }
 
-        edges = [healpix_to_radecdeg(hp, nside, xx, yy) for (xx,yy) in zip(x,y)]
-        ra = [ra for (ra,dec) in edges]
-        dec = [dec for (ra,dec) in edges]
-        plot(ra, dec, 'k-')
+	for hp in range(12 * nside**2):
+		(racen,deccen) = healpix_to_radecdeg(hp, nside, 0.5, 0.5)
+		text(racen, deccen, '%i' % hp, **textkws)
 
-    xlabel('RA (deg)')
-    ylabel('Dec (deg)')
-    title('Healpixes (nside=%i)' % i)
-    savefig('healpix.png')
-    
+		nsteps = 20
+		stepvals = [x/float(nsteps) for x in range(nsteps+1)]
+		rstepvals = [1-x for x in stepvals]
+		ones = [1.0]*(nsteps+1)
+		zeros = [0.0]*(nsteps+1)
+
+		x = stepvals + ones + rstepvals + zeros
+		y = zeros + stepvals + ones + rstepvals
+
+		edges = [healpix_to_radecdeg(hp, nside, xx, yy) for (xx,yy) in zip(x,y)]
+		ras = [ra for (ra,dec) in edges]
+		decs = [dec for (ra,dec) in edges]
+
+		if max(ras) > 270 and min(ras) < 90:
+			# wrap-around!
+			ras1 = []
+			ras2 = []
+			for ra in ras:
+				if ra < 180:
+					ras1.append(ra)
+					ras2.append(ra+360)
+				else:
+					ras1.append(ra-360)
+					ras2.append(ra)
+			plot(ras1, decs, 'k--')
+			plot(ras2, decs, 'k-')
+			if racen > 180:
+				text(racen-360, deccen, '%i' % hp, **textkws)
+			else:
+				text(racen+360, deccen, '%i' % hp, **textkws)
+
+		else:
+			plot(ras, decs, 'k-')
+
+	xlabel('RA (deg)')
+	ylabel('Dec (deg)')
+	ylim(-90, 90)
+	title('Healpixes (nside=%i)' % nside)
+	savefig('healpix.png')
+	
