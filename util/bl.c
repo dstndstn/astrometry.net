@@ -1772,6 +1772,9 @@ static char* sljoin(sl* list, const char* join, int forward) {
 	int offset;
 	int JL;
 
+    if (sl_size(list) == 0)
+        return strdup("");
+
     // step through the list forward or backward?
     if (forward) {
         start = 0;

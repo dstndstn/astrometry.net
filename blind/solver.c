@@ -134,6 +134,19 @@ void solver_set_field(solver_t* s, starxy_t* field) {
     // FIXME -- compute size of field, etc?
 }
 
+void solver_new_field(solver_t* solver) {
+    solver_reset_best_match(solver);
+    solver_free_field(solver);
+    solver->fieldxy = NULL;
+    solver->numtries = 0;
+    solver->nummatches = 0;
+    solver->numscaleok = 0;
+    solver->num_cxdx_skipped = 0;
+    solver->num_verified = 0;
+    solver->last_examined_object = 0;
+    solver->quit_now = FALSE;
+}
+
 void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) {
     int i, nindexes;
     MatchObj mo;

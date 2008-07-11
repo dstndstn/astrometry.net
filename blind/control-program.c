@@ -151,9 +151,12 @@ int main(int argc, char** args) {
     double arcmin_width_min = DEFAULT_ARCMIN_MIN;
     double arcmin_width_max = DEFAULT_ARCMIN_MAX;
 
-	backend_t* backend;
 	int i, I, c;
     sl* imagefiles;
+
+	backend_t* backend;
+    solver_t* solver;
+    double hprange;
 
 	while ((c = getopt(argc, args, OPTIONS)) != -1)
 		switch (c) {
@@ -242,34 +245,10 @@ int main(int argc, char** args) {
     // try to verify an existing WCS that claims the field is huge, we won't
     // accidentally try to load millions of stars.
 
-    for (I=0;; I++) {
-        solver_t* solver;
+    solver = solver_new();
+    {
         double app_min, app_max;
         double qsf_min = 0.1;
-        int i, N;
-		sip_t* sip;
-        double centerxyz[3];
-		double racenter, deccenter;
-		il* hplist = il_new(4);
-		double hprange;
-		starxy_t* field;
-		double *starx, *stary, *starflux;
-		int nstars;
-		double imagecx, imagecy;
-		bool solved = FALSE;
-        char* img;
-        double t0, t1;
-
-		// Get the next image...
-		racenter = 0.0;
-		deccenter = 0.0;
-        img = sl_get(imagefiles, I % sl_size(imagefiles));
-        logmsg("Reading image file %s\n", img);
-		get_next_field(img, &nstars, &starx, &stary, &starflux, &sip,
-					   &racenter, &deccenter);
-
-        t0 = timenow();
-        solver = solver_new();
 
         // compute scale range in arcseconds per pixel.
 		app_min = arcmin2arcsec(arcmin_width_min / (double)imagew);
@@ -297,6 +276,43 @@ int main(int argc, char** args) {
 		// (you can set it huge; most matches are overwhelmingly good)
 		solver->logratio_record_threshold = log(1e12);
 
+		// What is the radius of the bounding circle of a field?
+		// (in units of distance on the unit sphere)
+        // This is used to decide which indexes to use.
+        // You could expand this to take into account the error you expect in
+        // the initial WCS estimate.  However, currently the healpix code that
+        // decides which healpixes are within range doesn't work if the range is
+        // larger than the healpix side -- but that's probably 10s of degrees for
+        // typical situations.
+		hprange = arcsec2dist(app_max * hypot(imagew, imageh) / 2.0);
+    }
+
+    for (I=0;; I++) {
+        int i, N;
+		sip_t* sip;
+        double centerxyz[3];
+		double racenter, deccenter;
+		il* hplist = il_new(4);
+		starxy_t* field;
+		double *starx, *stary, *starflux;
+		int nstars;
+		double imagecx, imagecy;
+		bool solved = FALSE;
+        char* img;
+        double t0, t1;
+
+		// Get the next image...
+		racenter = 0.0;
+		deccenter = 0.0;
+        img = sl_get(imagefiles, I % sl_size(imagefiles));
+        logmsg("Reading image file %s\n", img);
+		get_next_field(img, &nstars, &starx, &stary, &starflux, &sip,
+					   &racenter, &deccenter);
+
+        t0 = timenow();
+
+        solver_new_field(solver);
+
 		// Feed the image source coordinates to the solver...
 		field = starxy_new(nstars, TRUE, FALSE);
 		starxy_set_x_array(field, starx);
@@ -319,15 +335,6 @@ int main(int argc, char** args) {
 		else
 			radecdeg2xyzarr(racenter, deccenter, centerxyz);
 
-		// What is the radius of the bounding circle of a field?
-		// (in units of distance on the unit sphere)
-        // You could expand this to take into account the error you expect in
-        // the initial WCS estimate.  However, currently the healpix code that
-        // decides which healpixes are within range doesn't work if the range is
-        // larger than the healpix side -- but that's probably 10s of degrees for
-        // typical situations.
-		hprange = arcsec2dist(app_max * hypot(imagew, imageh) / 2.0);
-
         // Which indexes should we use?  Use the WCS or RA,Dec estimate to decide.
         N = pl_size(backend->indexes);
         for (i=0; i<N; i++) {
@@ -339,13 +346,16 @@ int main(int argc, char** args) {
 			// Find nearby healpixes (at the healpix scale of this index)
 			nhp = healpix_get_neighbours_within_range(centerxyz, hprange,
 													  healpixes, meta->hpnside);
+            // (You could move this healpix computation outside this loop if you
+            // knew that all your indexes are built with the same healpix "Nside"
+            // setting)
+
 			il_append_array(hplist, healpixes, nhp);
 			// If the index is nearby, add it.
 			if (il_contains(hplist, meta->healpix)) {
 				logmsg("Adding index %s\n", meta->indexname);
 				solver_add_index(solver, index);
 			}
-
 			il_remove_all(hplist);
         }
 
@@ -397,7 +407,7 @@ int main(int argc, char** args) {
 			}
 		}
 
-        solver_free(solver);
+        solver_clear_indexes(solver);
 		starxy_free(field);
 		il_free(hplist);
 
@@ -411,6 +421,7 @@ int main(int argc, char** args) {
 
     sl_free2(imagefiles);
 	backend_free(backend);
+    solver_free(solver);
     return 0;
 }
 

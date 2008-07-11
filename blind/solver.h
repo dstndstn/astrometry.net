@@ -182,6 +182,9 @@ solver_t* solver_new();
 void solver_set_default_values(solver_t* solver);
 void solver_free(solver_t*);
 
+// call this to reset everything associated with solving a particular field.
+void solver_new_field(solver_t*);
+
 void solver_set_field(solver_t*, starxy_t* field);
 
 void solver_add_index(solver_t* solver, index_t* index);
