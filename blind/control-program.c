@@ -45,14 +45,26 @@
 #include "sip_qfits.h"
 #include "fitsioutils.h"
 
-static const char* OPTIONS = "hvc:i:";
+static const char* OPTIONS = "hvc:i:a:A:W:H:";
+
+#define DEFAULT_IMAGEW 1024
+#define DEFAULT_IMAGEH 1024
+#define DEFAULT_ARCMIN_MIN 15.0
+#define DEFAULT_ARCMIN_MAX 25.0
 
 static void print_help(const char* progname) {
 	printf("Usage:   %s [options]\n"
 	       "   [-c <backend config file>]  (default: \"../etc/backend.cfg\" relative to this executable)\n"
+           "   [-a <minimum field width>] in arcminutes, default %g\n"
+           "   [-A <maximum field width>] in arcminutes, default %g\n"
+           "   [-W <image width> ] in pixels, default %i\n"
+           "   [-H <image height>] in pixels, default %i\n"
            "   [-v]: verbose\n"
-		   "    -i <FITS image filename>\n"
-	       "\n", progname);
+           "\n"
+		   "    -i <FITS image filename>: the image to load.\n"
+           "\n"
+	       "\n", progname, DEFAULT_ARCMIN_MIN, DEFAULT_ARCMIN_MAX,
+           DEFAULT_IMAGEW, DEFAULT_IMAGEH);
 }
 
 static char* fits_image_fn = NULL;
@@ -125,11 +137,11 @@ int main(int argc, char** args) {
     int loglvl = LOG_MSG;
 
     // Image size in pixels.
-    int imagew = 1024;
-    int imageh = 1024;
+    int imagew = DEFAULT_IMAGEW;
+    int imageh = DEFAULT_IMAGEH;
     // Image angular width range, in arcminutes.
-    double arcmin_width_min = 15.0;
-    double arcmin_width_max = 25.0;
+    double arcmin_width_min = DEFAULT_ARCMIN_MIN;
+    double arcmin_width_max = DEFAULT_ARCMIN_MAX;
 
 	backend_t* backend;
 
@@ -146,6 +158,18 @@ int main(int argc, char** args) {
 		case 'c':
 			configfn = strdup(optarg);
 			break;
+        case 'W':
+            imagew = atoi(optarg);
+            break;
+        case 'H':
+            imageh = atoi(optarg);
+            break;
+        case 'a':
+            arcmin_width_min = atof(optarg);
+            break;
+        case 'A':
+            arcmin_width_max = atof(optarg);
+            break;
 		case 'i':
 			fits_image_fn = optarg;
 			break;
@@ -277,14 +301,20 @@ int main(int argc, char** args) {
 		// Where is the center of the image according to the existing WCS?
 		if (sip)
 			sip_pixelxy2xyzarr(sip, imagecx, imagecy, centerxyz);
+        // If there's no existing WCS, assume we got an RA,Dec estimate.
 		else
 			radecdeg2xyzarr(racenter, deccenter, centerxyz);
 
 		// What is the radius of the bounding circle of a field?
 		// (in units of distance on the unit sphere)
+        // You could expand this to take into account the error you expect in
+        // the initial WCS estimate.  However, currently the healpix code that
+        // decides which healpixes are within range doesn't work if the range is
+        // larger than the healpix side -- but that's probably 10s of degrees for
+        // typical situations.
 		hprange = arcsec2dist(app_max * hypot(imagew, imageh) / 2.0);
 
-        // Which indexes should we use to verify the existing WCS?
+        // Which indexes should we use?  Use the WCS or RA,Dec estimate to decide.
         N = pl_size(backend->indexes);
         for (i=0; i<N; i++) {
             index_t* index = pl_get(backend->indexes, i);
@@ -357,8 +387,9 @@ int main(int argc, char** args) {
 		starxy_free(field);
 		il_free(hplist);
 
-        // TEMP
-        break;
+        logmsg("Sleeping...\n");
+        sleep(1);
+        logmsg("Starting!\n");
     }
 
 

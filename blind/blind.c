@@ -626,7 +626,6 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 	solver_t* sp = &(bp->solver);
     MatchObj* ourmo;
     int ind;
-    int j;
 
 	check_time_limits(bp);
 
