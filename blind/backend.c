@@ -273,7 +273,7 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
                     continue;
                 }
 
-                logverb("\nChecking file \"%s\"\n", fullpath);
+                logverb("Checking file \"%s\"\n", fullpath);
                 errors_start_logging_to_string();
                 ok = index_is_file_index(fullpath);
                 err = errors_stop_logging_to_string(": ");

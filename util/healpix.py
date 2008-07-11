@@ -252,6 +252,7 @@ def get_closest_pow2_nside(radius):
 def compose_xy(x, y, nside):
     return x*nside + y
 
+##### NOTE NOTE NOTE -- this is out of sync with the C version!
 def xyztohealpix(x, y, z, nside):
     twothirds = 2. / 3.
     twopi = 2. * pi
