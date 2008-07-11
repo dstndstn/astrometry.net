@@ -122,7 +122,14 @@ static void get_next_field(char* fits_image_fn,
     qfitsloader_free_buffers(&qimg);
 
 	// Try reading SIP header...
+    logmsg("Trying to read WCS header from %s...\n", fits_image_fn);
+    errors_start_logging_to_string();
 	*sip = sip_read_header_file(fits_image_fn, NULL);
+	if (!*sip) {
+        char* errmsg = errors_stop_logging_to_string("\n  ");
+        logmsg("Reading WCS header failed:\n  %s\n", errmsg);
+        free(errmsg);
+    }
 	// If that doesn't work, look for "RA" and "DEC" header cards.
 	if (!*sip) {
 		qfits_header* hdr = qfits_header_read(fits_image_fn);
@@ -206,6 +213,7 @@ int main(int argc, char** args) {
 
 	backend = backend_new();
 
+    logmsg("Reading config file %s and loading indexes...\n", configfn);
 	if (backend_parse_config_file(backend, configfn)) {
         logerr("Failed to parse (or encountered an error while interpreting) config file \"%s\"\n", configfn);
 		exit( -1);
@@ -216,6 +224,8 @@ int main(int argc, char** args) {
 		exit( -1);
 	}
     free(configfn);
+
+    logmsg("Loaded %i indexes.\n", pl_size(backend->indexmetas));
 
     // For a control program you almost certainly want to be using small enough
     // indexes that they fit in memory!

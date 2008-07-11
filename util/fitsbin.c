@@ -270,7 +270,7 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
         return -1;
     }
     gettimeofday(&tv2, NULL);
-    logmsg("fits_find_table_column(%s) took %g ms\n", chunk->tablename, millis_between(&tv1, &tv2));
+    debug("fits_find_table_column(%s) took %g ms\n", chunk->tablename, millis_between(&tv1, &tv2));
 
     chunk->header = qfits_header_readext(fb->filename, ext);
     if (!chunk->header) {

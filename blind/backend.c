@@ -61,7 +61,7 @@ static int add_index(backend_t* backend, char* path) {
         gettimeofday(&tv1, NULL);
         ind = index_load(path, 0);
         gettimeofday(&tv2, NULL);
-        logverb("index_load(%s) took %g ms\n", path, millis_between(&tv1, &tv2));
+        debug("index_load(%s) took %g ms\n", path, millis_between(&tv1, &tv2));
         if (!ind) {
             ERROR("Failed to load index from path %s", path);
             return -1;

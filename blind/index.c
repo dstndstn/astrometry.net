@@ -162,14 +162,14 @@ index_t* index_load(const char* indexname, int flags) {
     gettimeofday(&tv1, NULL);
     get_filenames(indexname, &quadfname, &codetreefname, &startreefname, &singlefile);
     gettimeofday(&tv2, NULL);
-    logverb("get_filenames took %g ms.\n", millis_between(&tv1, &tv2));
+    debug("get_filenames took %g ms.\n", millis_between(&tv1, &tv2));
 
 	// Read .skdt file...
 	logverb("Reading star KD tree from %s...\n", startreefname);
     gettimeofday(&tv1, NULL);
 	index->starkd = startree_open(startreefname);
     gettimeofday(&tv2, NULL);
-    logverb("reading skdt took %g ms.\n", millis_between(&tv1, &tv2));
+    debug("reading skdt took %g ms.\n", millis_between(&tv1, &tv2));
 	if (!index->starkd) {
 		ERROR("Failed to read star kdtree from file %s", startreefname);
         goto bailout;
@@ -186,7 +186,7 @@ index_t* index_load(const char* indexname, int flags) {
     gettimeofday(&tv1, NULL);
 	index->quads = quadfile_open(quadfname);
     gettimeofday(&tv2, NULL);
-    logverb("reading quad took %g ms.\n", millis_between(&tv1, &tv2));
+    debug("reading quad took %g ms.\n", millis_between(&tv1, &tv2));
 	if (!index->quads) {
         ERROR("Failed to read quads file from %s", quadfname);
         goto bailout;
@@ -212,7 +212,7 @@ index_t* index_load(const char* indexname, int flags) {
     gettimeofday(&tv1, NULL);
 	index->codekd = codetree_open(codetreefname);
     gettimeofday(&tv2, NULL);
-    logverb("reading ckdt took %g ms.\n", millis_between(&tv1, &tv2));
+    debug("reading ckdt took %g ms.\n", millis_between(&tv1, &tv2));
 	if (!index->codekd) {
 		ERROR("Failed to read code kdtree from file %s", codetreefname);
         goto bailout;

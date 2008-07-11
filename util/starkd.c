@@ -168,7 +168,7 @@ startree_t* startree_open(char* fn) {
     gettimeofday(&tv1, NULL);
     io = kdtree_fits_open(fn);
     gettimeofday(&tv2, NULL);
-    logverb("kdtree_fits_open() took %g ms\n", millis_between(&tv1, &tv2));
+    debug("kdtree_fits_open() took %g ms\n", millis_between(&tv1, &tv2));
 	if (!io) {
         ERROR("Failed to open FITS file \"%s\"", fn);
         goto bailout;
@@ -178,12 +178,12 @@ startree_t* startree_open(char* fn) {
     if (!kdtree_fits_contains_tree(io, treename))
         treename = NULL;
     gettimeofday(&tv2, NULL);
-    logverb("kdtree_fits_contains_tree() took %g ms\n", millis_between(&tv1, &tv2));
+    debug("kdtree_fits_contains_tree() took %g ms\n", millis_between(&tv1, &tv2));
 
     gettimeofday(&tv1, NULL);
     s->tree = kdtree_fits_read_tree(io, treename, &s->header);
     gettimeofday(&tv2, NULL);
-    logverb("kdtree_fits_read_tree() took %g ms\n", millis_between(&tv1, &tv2));
+    debug("kdtree_fits_read_tree() took %g ms\n", millis_between(&tv1, &tv2));
     if (!s->tree) {
         ERROR("Failed to read kdtree from file \"%s\"", fn);
         goto bailout;
@@ -199,7 +199,7 @@ startree_t* startree_open(char* fn) {
     }
     bl_free(chunks);
     gettimeofday(&tv2, NULL);
-    logverb("reading chunks took %g ms\n", millis_between(&tv1, &tv2));
+    debug("reading chunks took %g ms\n", millis_between(&tv1, &tv2));
 
 	return s;
 
