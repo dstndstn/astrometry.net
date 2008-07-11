@@ -129,7 +129,7 @@ static void get_next_field(char* fits_image_fn,
 		*ra = qfits_header_getdouble(hdr, "RA", 0.0);
 		*dec = qfits_header_getdouble(hdr, "DEC", 0.0);
 		qfits_header_destroy(hdr);
-        logmsg("Using RA,Dec estimate (%g, %g)\n", *ra, *dec);
+        logmsg("Using (RA,Dec) estimate (%g, %g)\n", *ra, *dec);
 	}
 }
 
