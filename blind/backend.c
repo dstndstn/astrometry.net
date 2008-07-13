@@ -246,9 +246,8 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
             sl* tryinds;
             int j;
             if (!dir) {
-                SYSERROR("Failed to open directory \"%s\"", path);
-                rtn = -1;
-                break;
+                logerr("Warning: failed to open directory specified in backend.cfg: \"%s\"\n", path);
+                continue;
             }
             logverb("Auto-indexing directory \"%s\" ...\n", path);
             tryinds = sl_new(16);
