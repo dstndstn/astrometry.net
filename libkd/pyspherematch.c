@@ -24,6 +24,7 @@
 #include "arrayobject.h"
 
 #include "kdtree.h"
+#include "kdtree_fits_io.h"
 #include "dualtree_rangesearch.h"
 #include "bl.h"
 
@@ -87,6 +88,23 @@ static PyObject* spherematch_kdtree_free(PyObject* self, PyObject* args) {
     return Py_BuildValue("");
 }
 
+static PyObject* spherematch_kdtree_write(PyObject* self, PyObject* args) {
+    long i;
+    kdtree_t* kd;
+    char* fn;
+    int rtn;
+
+    if (!PyArg_ParseTuple(args, "ls", &i, &fn)) {
+        PyErr_SetString(PyExc_ValueError, "need two args: kdtree identifier (int), filename (string)");
+        return NULL;
+    }
+    // Nasty!
+    kd = (kdtree_t*)i;
+
+    rtn = kdtree_fits_write(kd, fn, NULL);
+    return Py_BuildValue("i", rtn);
+}
+
 struct dualtree_results {
     il* inds1;
     il* inds2;
@@ -142,6 +160,8 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
 static PyMethodDef spherematchMethods[] = {
     { "kdtree_build", spherematch_kdtree_build, METH_VARARGS,
       "build kdtree" },
+    { "kdtree_write", spherematch_kdtree_write, METH_VARARGS,
+      "save kdtree to file" },
     { "kdtree_free", spherematch_kdtree_free, METH_VARARGS,
       "free kdtree" },
     { "match", spherematch_match, METH_VARARGS,

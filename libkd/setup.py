@@ -8,8 +8,11 @@ numpy_inc = (os.path.dirname(numpy.__file__) +
 c_module = Extension('spherematch_c',
                      sources = ['pyspherematch.c'],
                      include_dirs = [ numpy_inc,
+                                      '../qfits-an/stage/include',
                                       '../util', '.', ],
-                     extra_objects = ['libkd-noio.a',
+#                     extra_objects = ['libkd-noio.a',
+                     extra_objects = ['libkd.a',
+                                      '../qfits-an/stage/lib/libqfits.a',
                                       '../util/libanutils.a' ])
 
 setup(name = 'Kdtree matching in Python',

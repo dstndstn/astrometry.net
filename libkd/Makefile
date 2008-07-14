@@ -80,7 +80,8 @@ $(LIBKD_NOIO): $(KD) $(INTERNALS_NOIO)
 
 PYSPHEREMATCH_OBJ := pyspherematch.o
 
-spherematch_c.so: pyspherematch.c setup.py $(LIBKD_NOIO) $(ANUTILS_LIB)
+#spherematch_c.so: pyspherematch.c setup.py $(LIBKD_NOIO) $(ANUTILS_LIB)
+spherematch_c.so: pyspherematch.c setup.py $(LIBKD) $(QFITS_LIB) $(ANUTILS_LIB)
 	python setup.py build --force --build-base build --build-platlib build/lib
 	cp build/lib/spherematch_c.so $@
 
