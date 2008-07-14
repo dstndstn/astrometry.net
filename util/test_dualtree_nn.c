@@ -32,7 +32,7 @@
 void test_nn_1(CuTest* tc) {
     int NX = 5000;
     int NY = 5000;
-    int D = 2;
+    int D = 3;
     int Nleaf = 5;
 
     int i, j;
@@ -88,14 +88,6 @@ void test_nn_1(CuTest* tc) {
 
     for (j=0; j<NY; j++) {
         int jj = kdtree_permute(ykd, j);
-        /*
-         if ((true_nearest_ind[jj] != kdtree_permute(xkd, nearest_ind[j])) ||
-         (fabs(true_nearest_d2[jj] - nearest_d2[j]) > 1e-6)) {
-         printf("y point %i: nearest %i / %i (%i)\n", j, true_nearest_ind[j],
-         nearest_ind[jj], kdtree_permute(xkd, nearest_ind[jj]));
-         printf("  dist %g / %g\n", true_nearest_d2[j], nearest_d2[jj]);
-         }
-         */
         CuAssertIntEquals(tc, true_nearest_ind[jj], kdtree_permute(xkd, nearest_ind[j]));
         CuAssertDblEquals(tc, true_nearest_d2[jj],  nearest_d2[j], 1e-6);
     }
