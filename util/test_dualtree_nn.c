@@ -61,43 +61,6 @@ void test_nn_1(CuTest* tc) {
     for (i=0; i<(NY*D); i++)
         ydata[i] = rand() / (double)RAND_MAX;
 
-    // HACK - build tree before computing ground truth so that permutation array is identity.
-    xkd = kdtree_build(NULL, xdata, NX, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);// | KD_BUILD_FORCE_SORT);
-
-    xdata2 = malloc(NX * D * sizeof(double));
-    memcpy(xdata2, xdata, NX * D * sizeof(double));
-    xkd2 = kdtree_build(NULL, xdata2, NX, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);// | KD_BUILD_FORCE_SORT);
-
-    for (i=0; i<xkd->nnodes; i++) {
-        int d;
-        printf("xkd  : bb %i: [", i);
-        for (d=0; d<D; d++)
-            printf(" (%g, %g)", xkd->bb.d[i*D*2 + d*2], xkd->bb.d[i*D*2 + d*2+1]);
-        printf(" ]\n");
-
-        printf("xkd2 : bb %i: [", i);
-        for (d=0; d<D; d++)
-            printf(" (%g, %g)", xkd2->bb.d[i*D*2 + d*2], xkd2->bb.d[i*D*2 + d*2+1]);
-        printf(" ]\n");
-    }
-
-    printf("check xkd : %i\n", kdtree_check(xkd));
-    printf("check xkd2: %i\n", kdtree_check(xkd2));
-
-    for (j=0; j<NX; j++)
-        assert(kdtree_permute(xkd2, j) == j);
-
-    exit(0);
-
-    ykd = kdtree_build(NULL, ydata, NY, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);
-    kdtree_free(xkd);
-    kdtree_free(ykd);
-
-    ykd = kdtree_build(NULL, ydata, NY, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);
-
-    for (j=0; j<NY; j++)
-        assert(kdtree_permute(ykd, j) == j);
-
     true_nearest_d2  = malloc(NY * sizeof(double));
     true_nearest_ind = malloc(NY * sizeof(int));
     for (j=0; j<NY; j++) {
@@ -113,6 +76,9 @@ void test_nn_1(CuTest* tc) {
         true_nearest_d2[j] = bestd2;
         true_nearest_ind[j] = ind;
     }
+
+    xkd = kdtree_build(NULL, xdata, NX, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);
+    ykd = kdtree_build(NULL, ydata, NY, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);
 
     dualtree_nearestneighbour(xkd, ykd, 1000.0, &nearest_d2, &nearest_ind);
 
