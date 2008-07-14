@@ -82,7 +82,7 @@ ANUTILS_OBJ += fitsioutils.o sip_qfits.o
 ANUTILS_DEPS += $(QFITS_LIB)
 endif
 ifndef NO_KDTREE
-ANUTILS_OBJ += dualtree.o dualtree_rangesearch.o
+ANUTILS_OBJ += dualtree.o dualtree_rangesearch.o dualtree_nearestneighbour.o
 endif
 
 # Things that it depends on but which aren't linked in
