@@ -12,7 +12,7 @@ x1 = rand(N1, D)
 x2 = rand(N2, D)
 
 t0 = time()
-inds = spherematch.match(x1, x2, r)
+(inds,dists) = spherematch.match(x1, x2, r)
 dt = time() - t0
 
 print 'C     : found', len(inds), 'pairs in', int(dt*1000.), 'ms'

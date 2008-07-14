@@ -108,12 +108,14 @@ static PyObject* spherematch_kdtree_write(PyObject* self, PyObject* args) {
 struct dualtree_results {
     il* inds1;
     il* inds2;
+    dl* dists;
 };
 
 static void callback_dualtree(void* v, int ind1, int ind2, double dist2) {
     struct dualtree_results* dtresults = v;
     il_append(dtresults->inds1, ind1);
     il_append(dtresults->inds2, ind2);
+    dl_append(dtresults->dists, sqrt(dist2));
 }
 
 static PyObject* spherematch_match(PyObject* self, PyObject* args) {
@@ -122,8 +124,9 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     kdtree_t *kd1, *kd2;
     double rad;
     struct dualtree_results dtresults;
-    PyArrayObject* rtn;
+    PyArrayObject* inds;
     int dims[2];
+    PyArrayObject* dists;
 
     if (!PyArg_ParseTuple(args, "lld", &p1, &p2, &rad)) {
         PyErr_SetString(PyExc_ValueError, "need three args: two kdtree identifiers (ints), and search radius");
@@ -135,6 +138,7 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
 
     dtresults.inds1 = il_new(256);
     dtresults.inds2 = il_new(256);
+    dtresults.dists = dl_new(256);
     dualtree_rangesearch(kd1, kd2, 0.0, rad, NULL,
                          callback_dualtree, &dtresults,
                          NULL, NULL);
@@ -142,19 +146,26 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     N = il_size(dtresults.inds1);
     dims[0] = N;
     dims[1] = 2;
-    rtn = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_INT);
+    inds = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_INT);
+    dims[1] = 1;
+    dists = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_DOUBLE);
     for (i=0; i<N; i++) {
         int* iptr;
-        iptr = PyArray_GETPTR2(rtn, i, 0);
+        double* dptr;
+        iptr = PyArray_GETPTR2(inds, i, 0);
         *iptr = kdtree_permute(kd1, il_get(dtresults.inds1, i));
-        iptr = PyArray_GETPTR2(rtn, i, 1);
+        iptr = PyArray_GETPTR2(inds, i, 1);
         *iptr = kdtree_permute(kd2, il_get(dtresults.inds2, i));
+        dptr = PyArray_GETPTR2(dists, i, 0);
+        *dptr = dl_get(dtresults.dists, i);
     }
 
     il_free(dtresults.inds1);
     il_free(dtresults.inds2);
+    dl_free(dtresults.dists);
 
-    return PyArray_Return(rtn);
+    return Py_BuildValue("(OO)", inds, dists);
+    //return PyArray_Return(inds);
 }
 
 static PyMethodDef spherematchMethods[] = {
