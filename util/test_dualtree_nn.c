@@ -62,11 +62,11 @@ void test_nn_1(CuTest* tc) {
         ydata[i] = rand() / (double)RAND_MAX;
 
     // HACK - build tree before computing ground truth so that permutation array is identity.
-    xkd = kdtree_build(NULL, xdata, NX, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);
+    xkd = kdtree_build(NULL, xdata, NX, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);// | KD_BUILD_FORCE_SORT);
 
     xdata2 = malloc(NX * D * sizeof(double));
     memcpy(xdata2, xdata, NX * D * sizeof(double));
-    xkd2 = kdtree_build(NULL, xdata2, NX, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);
+    xkd2 = kdtree_build(NULL, xdata2, NX, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);// | KD_BUILD_FORCE_SORT);
 
     for (i=0; i<xkd->nnodes; i++) {
         int d;
@@ -85,7 +85,7 @@ void test_nn_1(CuTest* tc) {
     printf("check xkd2: %i\n", kdtree_check(xkd2));
 
     for (j=0; j<NX; j++)
-        assert(kdtree_permute(xkd, j) == j);
+        assert(kdtree_permute(xkd2, j) == j);
 
     exit(0);
 
