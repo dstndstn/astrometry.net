@@ -19,6 +19,7 @@
 #include "Python.h"
 
 #include <stdio.h>
+#include <assert.h>
 
 // numpy - this should be in site-packages/numpy/core/include
 #include "arrayobject.h"
@@ -221,8 +222,8 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     inds  = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_INT);
     dists = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_DOUBLE);
 
-    printf("inds size: %i\n", PyArray_ITEMSIZE(inds));
-    printf("dists size: %i\n", PyArray_ITEMSIZE(dists));
+    assert(PyArray_ITEMSIZE(inds) == sizeof(int));
+    assert(PyArray_ITEMSIZE(dists) == sizeof(double));
 
     pinds  = PyArray_DATA(inds);
     pdists = PyArray_DATA(dists);
