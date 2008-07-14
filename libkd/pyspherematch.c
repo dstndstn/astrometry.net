@@ -26,6 +26,7 @@
 #include "kdtree.h"
 #include "kdtree_fits_io.h"
 #include "dualtree_rangesearch.h"
+#include "dualtree_nearestneighbour.h"
 #include "bl.h"
 
 static PyObject* spherematch_kdtree_build(PyObject* self, PyObject* args) {
@@ -192,7 +193,43 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     dl_free(dtresults.dists);
 
     return Py_BuildValue("(OO)", inds, dists);
-    //return PyArray_Return(inds);
+}
+
+static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
+    int NY;
+    long p1, p2;
+    kdtree_t *kd1, *kd2;
+    int dims[2];
+    PyArrayObject* inds;
+    PyArrayObject* dists;
+    int *pinds;
+    double *pdists;
+    double rad;
+
+    if (!PyArg_ParseTuple(args, "lld", &p1, &p2, &rad)) {
+        PyErr_SetString(PyExc_ValueError, "need three args: two kdtree identifiers (ints), and search radius");
+        return NULL;
+    }
+    // Nasty!
+    kd1 = (kdtree_t*)p1;
+    kd2 = (kdtree_t*)p2;
+
+    NY = kdtree_n(kd2);
+
+    dims[0] = NY;
+    dims[1] = 1;
+    inds  = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_INT);
+    dists = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_DOUBLE);
+
+    printf("inds size: %i\n", PyArray_ITEMSIZE(inds));
+    printf("dists size: %i\n", PyArray_ITEMSIZE(dists));
+
+    pinds  = PyArray_DATA(inds);
+    pdists = PyArray_DATA(dists);
+
+    dualtree_nearestneighbour(kd1, kd2, rad, &pdists, &pinds);
+
+    return Py_BuildValue("(OO)", inds, dists);
 }
 
 static PyMethodDef spherematchMethods[] = {
@@ -208,6 +245,8 @@ static PyMethodDef spherematchMethods[] = {
       "free kdtree" },
     { "match", spherematch_match, METH_VARARGS,
       "find matching data points" },
+    { "nearest", spherematch_nn, METH_VARARGS,
+      "find nearest neighbours" },
     {NULL, NULL, 0, NULL}
 };
 

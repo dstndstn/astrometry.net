@@ -263,10 +263,6 @@ struct kdtree {
     // For i/o: the name of this tree in the file.
     char* name;
 
-    /*
-     void* mmapped;
-     unsigned int mmapped_size;  
-    */
     void* io;
 
 	struct kdtree_funcs fun;
@@ -285,6 +281,12 @@ struct kdtree_qres {
 	double *sdists;          /* Squared distance from query point */
 	u32 *inds;    /* Indexes into original data set */
 };
+
+// Returns the number of data points in this kdtree.
+int kdtree_n(const kdtree_t* kd);
+
+// Returns the number of nodes in this kdtree.
+int kdtree_nnodes(const kdtree_t* kd);
 
 bool kdtree_has_old_bb(const kdtree_t* kd);
 
@@ -447,6 +449,12 @@ double kdtree_get_splitval(const kdtree_t* kd, int nodeid);
 
 int kdtree_get_splitdim(const kdtree_t* kd, int nodeid);
 
+double kdtree_node_node_mindist2(const kdtree_t* kd1, int node1,
+                                 const kdtree_t* kd2, int node2);
+
+double kdtree_node_node_maxdist2(const kdtree_t* kd1, int node1,
+                                 const kdtree_t* kd2, int node2);
+
 bool kdtree_node_node_mindist2_exceeds(const kdtree_t* kd1, int node1,
 									   const kdtree_t* kd2, int node2,
 									   double dist2);
@@ -454,6 +462,10 @@ bool kdtree_node_node_mindist2_exceeds(const kdtree_t* kd1, int node1,
 bool kdtree_node_node_maxdist2_exceeds(const kdtree_t* kd1, int node1,
 									   const kdtree_t* kd2, int node2,
 									   double dist2);
+
+double kdtree_node_point_mindist2(const kdtree_t* kd, int node, const void* pt);
+
+double kdtree_node_point_maxdist2(const kdtree_t* kd, int node, const void* pt);
 
 bool kdtree_node_point_mindist2_exceeds(const kdtree_t* kd, int node,
                                         const void* pt, double dist2);

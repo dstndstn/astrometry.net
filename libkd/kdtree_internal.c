@@ -2437,6 +2437,61 @@ void MANGLE(kdtree_fix_bounding_boxes)(kdtree_t* kd) {
     }
 }
 
+double MANGLE(kdtree_node_point_mindist2)
+	 (const kdtree_t* kd, int node, const etype* query) {
+	int D = kd->ndim;
+	int d;
+	ttype* tlo, *thi;
+	double d2 = 0.0;
+	if (!bboxes(kd, node, &tlo, &thi, D)) {
+		ERROR("Error: kdtree does not have bounding boxes!");
+		return HUGE_VAL;
+	}
+	for (d=0; d<D; d++) {
+		etype delta;
+	    etype lo = POINT_TE(kd, d, tlo[d]);
+		if (query[d] < lo)
+			delta = lo - query[d];
+		else {
+			etype hi = POINT_TE(kd, d, thi[d]);
+			if (query[d] > hi)
+				delta = query[d] - hi;
+			else
+				continue;
+		}
+		d2 += delta * delta;
+	}
+    return d2;
+}
+
+double MANGLE(kdtree_node_point_maxdist2)
+	 (const kdtree_t* kd, int node, const etype* query) {
+	int D = kd->ndim;
+	int d;
+	ttype* tlo=NULL, *thi=NULL;
+	double d2 = 0.0;
+	if (!bboxes(kd, node, &tlo, &thi, D)) {
+		ERROR("Error: kdtree_node_point_maxdist2_exceeds: kdtree does not have bounding boxes!");
+		return FALSE;
+	}
+	for (d=0; d<D; d++) {
+		etype delta1, delta2, delta;
+		etype lo = POINT_TE(kd, d, tlo[d]);
+		etype hi = POINT_TE(kd, d, thi[d]);
+		if (query[d] < lo)
+			delta = hi - query[d];
+		else if (query[d] > hi)
+			delta = query[d] - lo;
+		else {
+			delta1 = hi - query[d];
+			delta2 = query[d] - lo;
+			delta = MAX(delta1, delta2);
+		}
+		d2 += delta*delta;
+	}
+	return d2;
+}
+
 bool MANGLE(kdtree_node_point_mindist2_exceeds)
 	 (const kdtree_t* kd, int node, const etype* query, double maxd2) {
 	int D = kd->ndim;
@@ -2444,34 +2499,23 @@ bool MANGLE(kdtree_node_point_mindist2_exceeds)
 	ttype* tlo, *thi;
 	double d2 = 0.0;
 
-	if (kd->nodes) {
-		// compat mode
-		tlo = COMPAT_LOW_HR (kd, node);
-		thi = COMPAT_HIGH_HR(kd, node);
-	} else if (kd->bb.any) {
-		// bb trees
-		tlo =  LOW_HR(kd, D, node);
-		thi = HIGH_HR(kd, D, node);
-	} else {
-		ERROR("Error: kdtree_node_point_mindist2_exceeds: kdtree does not have bounding boxes!");
+	if (!bboxes(kd, node, &tlo, &thi, D)) {
+		ERROR("Error: kdtree does not have bounding boxes!");
 		return FALSE;
 	}
 	for (d=0; d<D; d++) {
 		etype delta;
 	    etype lo = POINT_TE(kd, d, tlo[d]);
-		//printf("d%i: lo %g, query %g\n", d, (double)lo, (double)query[d]);
 		if (query[d] < lo)
 			delta = lo - query[d];
 		else {
 			etype hi = POINT_TE(kd, d, thi[d]);
-			//printf("   hi %g\n", (double)hi);
 			if (query[d] > hi)
 				delta = query[d] - hi;
 			else
 				continue;
 		}
 		d2 += delta * delta;
-		//printf("  d2 %g\n", d2);
 		if (d2 > maxd2)
 			return TRUE;
 	}
@@ -2507,6 +2551,74 @@ bool MANGLE(kdtree_node_point_maxdist2_exceeds)
 			return TRUE;
 	}
 	return FALSE;
+}
+
+double MANGLE(kdtree_node_node_maxdist2)
+	 (const kdtree_t* kd1, int node1,
+	  const kdtree_t* kd2, int node2) {
+	ttype *tlo1=NULL, *tlo2=NULL, *thi1=NULL, *thi2=NULL;
+	double d2 = 0.0;
+	int d, D = kd1->ndim;
+
+	assert(kd1->ndim == kd2->ndim);
+	if (!bboxes(kd1, node1, &tlo1, &thi1, D)) {
+		ERROR("Error: kdtree_node_node_maxdist2: kdtree does not have bounding boxes!");
+		return FALSE;
+	}
+	if (!bboxes(kd2, node2, &tlo2, &thi2, D)) {
+		ERROR("Error: kdtree_node_node_maxdist2: kdtree does not have bounding boxes!");
+		return FALSE;
+	}
+	for (d=0; d<D; d++) {
+		etype alo, ahi, blo, bhi;
+		etype delta1, delta2, delta;
+		alo = POINT_TE(kd1, d, tlo1[d]);
+		ahi = POINT_TE(kd1, d, thi1[d]);
+		blo = POINT_TE(kd2, d, tlo2[d]);
+		bhi = POINT_TE(kd2, d, thi2[d]);
+		if (ETYPE_INTEGER)
+			WARNING("HACK - int overflow is possible here.");
+		delta1 = bhi - alo;
+		delta2 = ahi - blo;
+		delta = MAX(delta1, delta2);
+		d2 += delta*delta;
+	}
+    return d2;
+}
+
+double MANGLE(kdtree_node_node_mindist2)
+	 (const kdtree_t* kd1, int node1,
+	  const kdtree_t* kd2, int node2) {
+	ttype *tlo1=NULL, *tlo2=NULL, *thi1=NULL, *thi2=NULL;
+	double d2 = 0.0;
+	int d, D = kd1->ndim;
+	assert(kd1->ndim == kd2->ndim);
+	if (!bboxes(kd1, node1, &tlo1, &thi1, D)) {
+		ERROR("Error: kdtree_node_node_mindist2: kdtree does not have bounding boxes!");
+		return FALSE;
+	}
+	if (!bboxes(kd2, node2, &tlo2, &thi2, D)) {
+		ERROR("Error: kdtree_node_node_mindist2: kdtree does not have bounding boxes!");
+		return FALSE;
+	}
+	for (d=0; d<D; d++) {
+		etype alo, ahi, blo, bhi;
+	    etype delta;
+		ahi = POINT_TE(kd1, d, thi1[d]);
+		blo = POINT_TE(kd2, d, tlo2[d]);
+		if (ahi < blo)
+			delta = blo - ahi;
+		else {
+			alo = POINT_TE(kd1, d, tlo1[d]);
+			bhi = POINT_TE(kd2, d, thi2[d]);
+			if (bhi < alo)
+				delta = alo - bhi;
+			else
+				continue;
+		}
+		d2 += delta*delta;
+	}
+	return d2;
 }
 
 bool MANGLE(kdtree_node_node_maxdist2_exceeds)

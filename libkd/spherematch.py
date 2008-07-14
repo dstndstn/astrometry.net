@@ -17,15 +17,18 @@ def match(x1, x2, radius):
 def rad2deg(x):
     return x * 180./pi
 
+def deg2rad(x):
+    return x * pi / 180
+
 def tree_build(ra=None, dec=None, xyz=None):
     if ra is not None:
         (N,) = ra.shape
         print 'dec shape', dec.shape
         xyz = zeros((N,3)).astype(float)
-        xyz[:,2] = sin(rad2deg(dec))
-        cosd = cos(rad2deg(dec))
-        xyz[:,0] = cosd * cos(rad2deg(ra))
-        xyz[:,1] = cosd * sin(rad2deg(ra))
+        xyz[:,2] = sin(deg2rad(dec))
+        cosd = cos(deg2rad(dec))
+        xyz[:,0] = cosd * cos(deg2rad(ra))
+        xyz[:,1] = cosd * sin(deg2rad(ra))
     kd = spherematch_c.kdtree_build(xyz)
     return kd
 
