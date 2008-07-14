@@ -156,9 +156,6 @@ static void rs_handle_result(void* vparams,
 	yl = kdtree_left (ytree, ynode);
 	yr = kdtree_right(ytree, ynode);
 
-	//printf("rs_handle_result: %i, %i.\n", xnode, ynode);
-	//printf("  [%i, %i].  [%i, %i].\n", xl, xr, yl, yr);
-
 	for (y=yl; y<=yr; y++) {
 		void* py = kdtree_get_data(ytree, y);
 		// check if we can eliminate the whole box for this point...
@@ -167,7 +164,6 @@ static void rs_handle_result(void* vparams,
 			if (p->usemax &&
 				kdtree_node_point_mindist2_exceeds(xtree, xnode, py,
 												   p->maxdistsq))
-				//printf("eliminated box.\n");
 				continue;
 			if (p->usemin &&
 				!kdtree_node_point_maxdist2_exceeds(xtree, xnode, py,
