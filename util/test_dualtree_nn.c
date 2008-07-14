@@ -27,10 +27,11 @@
 
 #include "dualtree_nearestneighbour.h"
 #include "mathutil.h"
+#include "tic.h"
 
 void test_nn_1(CuTest* tc) {
-    int NX = 100;
-    int NY = 100;
+    int NX = 5000;
+    int NY = 5000;
     int D = 2;
     int Nleaf = 5;
 
@@ -48,6 +49,8 @@ void test_nn_1(CuTest* tc) {
     double* true_nearest_d2;
     int* true_nearest_ind;
 
+    double t0;
+
     srand(0);
 
     xdata = malloc(NX * D * sizeof(double));
@@ -60,6 +63,7 @@ void test_nn_1(CuTest* tc) {
 
     true_nearest_d2  = malloc(NY * sizeof(double));
     true_nearest_ind = malloc(NY * sizeof(int));
+    t0 = timenow();
     for (j=0; j<NY; j++) {
         int ind = -1;
         double bestd2 = HUGE_VAL;
@@ -73,11 +77,14 @@ void test_nn_1(CuTest* tc) {
         true_nearest_d2[j] = bestd2;
         true_nearest_ind[j] = ind;
     }
+    printf("Naive took %g ms\n", 1000.0*(timenow() - t0));
 
     xkd = kdtree_build(NULL, xdata, NX, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);
     ykd = kdtree_build(NULL, ydata, NY, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);
 
+    t0 = timenow();
     dualtree_nearestneighbour(xkd, ykd, 1000.0, &nearest_d2, &nearest_ind);
+    printf("Dualtree took %g ms\n", 1000.0*(timenow() - t0));
 
     for (j=0; j<NY; j++) {
         int jj = kdtree_permute(ykd, j);
