@@ -204,7 +204,7 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     PyArrayObject* inds;
     PyArrayObject* dists;
     int *pinds;
-    double *pdists;
+    double *pdist2s;
     double rad;
 
     if (!PyArg_ParseTuple(args, "lld", &p1, &p2, &rad)) {
@@ -220,17 +220,17 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     dims[0] = NY;
     dims[1] = 1;
     inds  = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_INT);
-    dists = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_DOUBLE);
+    dist2s = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_DOUBLE);
 
     assert(PyArray_ITEMSIZE(inds) == sizeof(int));
-    assert(PyArray_ITEMSIZE(dists) == sizeof(double));
+    assert(PyArray_ITEMSIZE(dist2s) == sizeof(double));
 
     pinds  = PyArray_DATA(inds);
-    pdists = PyArray_DATA(dists);
+    pdist2s = PyArray_DATA(dist2s);
 
-    dualtree_nearestneighbour(kd1, kd2, rad, &pdists, &pinds);
+    dualtree_nearestneighbour(kd1, kd2, rad, &pdist2s, &pinds);
 
-    return Py_BuildValue("(OO)", inds, dists);
+    return Py_BuildValue("(OO)", inds, dist2s);
 }
 
 static PyMethodDef spherematchMethods[] = {
