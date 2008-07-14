@@ -12,6 +12,7 @@ c_module = Extension('spherematch_c',
                                       '../util', '.', ],
 #                     extra_objects = ['libkd-noio.a',
                      extra_objects = ['libkd.a',
+                                      '../util/libanfiles.a',
                                       '../qfits-an/stage/lib/libqfits.a',
                                       '../util/libanutils.a' ])
 

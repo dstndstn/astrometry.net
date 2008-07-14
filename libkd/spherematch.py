@@ -16,7 +16,7 @@ def match(x1, x2, radius):
 
 def tree_build(ra=None, dec=None, xyz=None):
     if ra is not None:
-        N = ra.shape
+        (N,) = ra.shape
         xyz = zeros((N,3)).astype(float)
         xyz[:,2] = sin(radians(dec))
         cosd = cos(radians(dec))
