@@ -9,10 +9,10 @@ def match(x1, x2, radius):
         raise ValueError, 'Arrays must have the same dimensionality'
     kd1 = spherematch_c.kdtree_build(x1)
     kd2 = spherematch_c.kdtree_build(x2)
-    inds = spherematch_c.match(kd1, kd2, radius)
+    (inds,dists) = spherematch_c.match(kd1, kd2, radius)
     spherematch_c.kdtree_free(kd1)
     spherematch_c.kdtree_free(kd2)
-    return inds
+    return (inds,dists)
 
 def tree_build(ra=None, dec=None, xyz=None):
     if ra is not None:
@@ -29,3 +29,9 @@ def tree_save(kd, fn):
     rtn = spherematch_c.kdtree_write(kd, fn)
     return rtn
 
+def tree_open(fn):
+    return spherematch_c.kdtree_open(fn)
+
+def tree_close(kd):
+    return spherematch_c.kdtree_close(kd)
+    

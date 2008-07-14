@@ -105,6 +105,33 @@ static PyObject* spherematch_kdtree_write(PyObject* self, PyObject* args) {
     return Py_BuildValue("i", rtn);
 }
 
+static PyObject* spherematch_kdtree_open(PyObject* self, PyObject* args) {
+    kdtree_t* kd;
+    char* fn;
+
+    if (!PyArg_ParseTuple(args, "s", &fn)) {
+        PyErr_SetString(PyExc_ValueError, "need one args: kdtree filename");
+        return NULL;
+    }
+
+    kd = kdtree_fits_read(fn, NULL, NULL);
+    return Py_BuildValue("k", kd);
+}
+
+static PyObject* spherematch_kdtree_close(PyObject* self, PyObject* args) {
+    long i;
+    kdtree_t* kd;
+
+    if (!PyArg_ParseTuple(args, "l", &i)) {
+        PyErr_SetString(PyExc_ValueError, "need one arg: kdtree identifier (int)");
+        return NULL;
+    }
+    // Nasty!
+    kd = (kdtree_t*)i;
+    kdtree_fits_close(kd);
+    return Py_BuildValue("");
+}
+
 struct dualtree_results {
     il* inds1;
     il* inds2;
@@ -173,6 +200,10 @@ static PyMethodDef spherematchMethods[] = {
       "build kdtree" },
     { "kdtree_write", spherematch_kdtree_write, METH_VARARGS,
       "save kdtree to file" },
+    { "kdtree_open", spherematch_kdtree_open, METH_VARARGS,
+      "open kdtree from file" },
+    { "kdtree_close", spherematch_kdtree_close, METH_VARARGS,
+      "close kdtree opened with kdtree_open" },
     { "kdtree_free", spherematch_kdtree_free, METH_VARARGS,
       "free kdtree" },
     { "match", spherematch_match, METH_VARARGS,
