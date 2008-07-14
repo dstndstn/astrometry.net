@@ -126,18 +126,30 @@ static void rs_handle_result(void* vparams,
 	yl = kdtree_left (ytree, ynode);
 	yr = kdtree_right(ytree, ynode);
 
+    printf("nodes y: %i (%i to %i); x: %i (%i to %i)\n",
+           ynode, yl, yr, xnode, xl, xr);
+    printf("node_nearest_d2: %g\n", p->node_nearest_d2[ynode]);
+
 	for (y=yl; y<=yr; y++) {
 		void* py = kdtree_get_data(ytree, y);
         p->nearest_d2[y] = MIN(p->nearest_d2[y], p->node_nearest_d2[ynode]);
+        printf("y=%i: nearest_d2: %g\n", y, p->nearest_d2[y]);
+
 		// check if we can eliminate the whole x node for this y point...
-        if (kdtree_node_point_mindist2_exceeds(xtree, xnode, py, p->nearest_d2[y]))
+        if (kdtree_node_point_mindist2_exceeds(xtree, xnode, py, p->nearest_d2[y])) {
+            printf("pruning x node for this y point.\n");
             continue;
+        }
 		for (x=xl; x<=xr; x++) {
 			double d2;
 			void* px = kdtree_get_data(xtree, x);
 			d2 = distsq(px, py, D);
-            if (d2 > p->nearest_d2[y])
+            printf("x point %i: d2 %g\n", x, d2);
+            if (d2 > p->nearest_d2[y]) {
+                printf("pruned.\n");
                 continue;
+            }
+            printf("best so far.\n");
             p->nearest_d2[y] = d2;
             p->nearest_ind[y] = x;
 		}
