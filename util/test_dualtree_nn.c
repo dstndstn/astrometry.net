@@ -29,18 +29,15 @@
 #include "mathutil.h"
 
 void test_nn_1(CuTest* tc) {
-    int NX = 10;
+    int NX = 100;
     int NY = 100;
-    int D = 1;
+    int D = 2;
     int Nleaf = 5;
 
     int i, j;
 
     kdtree_t* xkd;
     kdtree_t* ykd;
-
-    double* xdata2;
-    kdtree_t* xkd2;
 
     double* xdata;
     double* ydata;
@@ -84,8 +81,16 @@ void test_nn_1(CuTest* tc) {
 
     for (j=0; j<NY; j++) {
         int jj = kdtree_permute(ykd, j);
-        CuAssertIntEquals(tc, true_nearest_ind[j], kdtree_permute(xkd, nearest_ind[jj]));
-        CuAssertDblEquals(tc, true_nearest_d2[j],  nearest_d2[jj], 1e-6);
+        /*
+         if ((true_nearest_ind[jj] != kdtree_permute(xkd, nearest_ind[j])) ||
+         (fabs(true_nearest_d2[jj] - nearest_d2[j]) > 1e-6)) {
+         printf("y point %i: nearest %i / %i (%i)\n", j, true_nearest_ind[j],
+         nearest_ind[jj], kdtree_permute(xkd, nearest_ind[jj]));
+         printf("  dist %g / %g\n", true_nearest_d2[j], nearest_d2[jj]);
+         }
+         */
+        CuAssertIntEquals(tc, true_nearest_ind[jj], kdtree_permute(xkd, nearest_ind[j]));
+        CuAssertDblEquals(tc, true_nearest_d2[jj],  nearest_d2[j], 1e-6);
     }
 
     free(nearest_d2);
