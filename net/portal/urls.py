@@ -1,21 +1,26 @@
 from django.conf.urls.defaults import *
 
-urlpatterns = patterns('astrometry.net.portal',
-					   (r'^newurl/$',          'newjob.newurl'  ),
-					   (r'^newfile/$',         'newjob.newfile' ),
-					   (r'^newlong/$',         'newjob.newlong' ),
-					   (r'^status/$',          'views.jobstatus'),
-					   (r'^getfile/$',         'views.getfile'  ),
-					   (r'^joblist/$',         'views.joblist'  ),
-					   (r'^summary/$',         'views.summary'  ),
-					   (r'^set_description/$', 'views.job_set_description'),
-					   (r'^taglist/$',         'tags.taglist'  ),
-					   (r'^add_tag/$',         'tags.job_add_tag' ),
-					   (r'^remove_tag/$',      'tags.job_remove_tag' ),
-					   (r'^substatusxml/$',    'views.submission_status_xml'),
-					   (r'^changeperms/$',     'views.changeperms' ),
-					   #(r'^publishtovo/$',    'views.publishtovo'),
+urlpatterns = (patterns('astrometry.net.portal.newjob',
+                        (r'^newurl/$',          'newurl'  ),
+                        (r'^newfile/$',         'newfile' ),
+                        (r'^newlong/$',         'newlong' ),
+                        ) +
+               patterns('astrometry.net.portal.views',
+					   (r'^status/$',          'jobstatus'),
+					   (r'^getfile/$',         'getfile'  ),
+					   (r'^joblist/$',         'joblist'  ),
+					   (r'^summary/$',         'summary'  ),
+					   (r'^set_description/$', 'job_set_description'),
+					   (r'^substatusxml/$',    'submission_status_xml'),
+					   (r'^changeperms/$',     'changeperms' ),
+					   #(r'^publishtovo/$',    'publishtovo'),
                        # PLAY
-					   (r'^redgreen$',     'views.redgreen'    ),
-                       (r'^run-variant/$', 'views.run_variant' ),
-					   )
+					   (r'^redgreen$',     'redgreen'    ),
+                       (r'^run-variant/$', 'run_variant' ),
+					   ) +
+               patterns('astrometry.net.portal.tags',
+					   (r'^taglist/$',         'taglist'  ),
+					   (r'^add_tag/$',         'job_add_tag' ),
+					   (r'^remove_tag/$',      'job_remove_tag' ),
+                        )
+               )
