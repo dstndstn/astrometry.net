@@ -77,7 +77,7 @@ def redgreen(request):
     return HttpResponse(t.render(c))
 
 def get_status_url(jobid):
-    return reverse(jobstatus) + '?jobid=' + jobid
+    return reverse(jobstatus, args=[jobid])
 
 def get_job(jobid):
     if jobid is None:
@@ -511,12 +511,15 @@ def get_neighbouring_healpixes(nside, hp):
         hps.append((nside+1, i))
     return hps
 
-def jobstatus(request):
+def jobstatus_old(request):
     if not request.GET:
         return HttpResponse('no GET')
     if not 'jobid' in request.GET:
         return HttpResponse('no jobid')
     jobid = request.GET['jobid']
+    return jobstatus(request, jobid)
+
+def jobstatus(request, jobid=None):
     log('jobstatus: jobid=', jobid)
     job = get_job(jobid)
     if not job:
