@@ -1,4 +1,4 @@
-from math import pi,cos,sin,radians,asin,atan2
+from math import pi,cos,sin,radians,asin,atan2,sqrt,acos
 
 # RA, Dec in degrees
 def radectoxyz(ra, dec):
@@ -22,3 +22,21 @@ def xy2ra(x,y):
     r = atan2(y,x)
     r += 2*pi*(r>=0.00)
     return r
+
+def rad2distsq(rad):
+    return 2. * (1. - cos(rad))
+
+def arcsec2distsq(arcsec):
+    return rad2distsq(arcsec2rad(arcsec))
+
+def arcsec2dist(arcsec):
+    return sqrt(arcsec2distsq(arcsec))
+
+def dist2arcsec(dist):
+    return distsq2arcsec(dist**2)
+
+def distsq2arcsec(dist2):
+    return rad2arcsec(distsq2rad(dist2))
+
+def distsq2rad(dist2):
+    return acos(1. - dist2 / 2.)
