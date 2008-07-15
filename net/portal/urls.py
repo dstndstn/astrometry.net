@@ -15,13 +15,15 @@ urlpatterns = (patterns('astrometry.net.portal.newjob',
                         (r'^changeperms/$',     'changeperms' ),
                         #(r'^publishtovo/$',    'publishtovo'),
                         # PLAY
-                        (r'^redgreen$',     'redgreen'    ),
                         (r'^run-variant/$', 'run_variant' ),
                         ) +
                patterns('astrometry.net.portal.tags',
                         (r'^taglist/$',         'taglist'  ),
                         (r'^add_tag/$',         'job_add_tag' ),
                         (r'^remove_tag/$',      'job_remove_tag' ),
+                        ) +
+               patterns('astrometry.net.portal.redgreen',
+                        (r'^redgreen$',     'redgreen'    ),
                         ) +
                patterns('astrometry.net.portal.legacy',
                         (r'^status/$',          'jobstatus_old'),

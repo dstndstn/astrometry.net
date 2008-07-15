@@ -27,7 +27,6 @@ from astrometry.net.portal.models import UserPreferences
 from astrometry.net.portal.job import Job, Submission, DiskFile, Tag
 from astrometry.net.portal.convert import convert, get_objs_in_field
 from astrometry.net.portal.log import log
-#from astrometry.net.portal.tags import job_add_tag, job_remove_tag, taglist
 from astrometry.net.portal import tags
 from astrometry.util.file import file_size
 #from astrometry.net.vo.models import Image as voImage
@@ -37,39 +36,6 @@ from astrometry.util import healpix
 
 def urlescape(s):
     return s.replace('&', '&amp;')
-
-
-culurs=[(c,c) for c in ['red','green', 'blue', 'white',
-                        'black', 'cyan', 'magenta', 'yellow',
-                        'brightred', 'skyblue', 'orange']]
-markurs=[(m,m) for m in [ 'circle', 'crosshair', 'square', 'diamond', 'X', 'Xcrosshair' ]]
-
-class RedGreenForm(forms.Form):
-    red   = forms.ChoiceField(choices=culurs, initial='red')
-    green = forms.ChoiceField(choices=culurs, initial='green')
-    rmarker = forms.ChoiceField(choices=markurs, initial='circle')
-    gmarker = forms.ChoiceField(choices=markurs, initial='circle')
-    redhex   = forms.CharField(required=False)#, attrs={'size':6})
-    greenhex = forms.CharField(required=False)#, attrs={'size':6})
-
-def redgreen(request):
-    if request.GET:
-        form = RedGreenForm(request.GET)
-    else:
-        form = RedGreenForm()
-    if form.is_valid():
-        red = form.cleaned_data['redhex'] or form.cleaned_data['red']
-        green = form.cleaned_data['greenhex'] or form.cleaned_data['green']
-        return HttpResponseRedirect(reverse(getfile) + '?jobid=%s&f=redgreen&red=%s&green=%s&rmarker=%s&gmarker=%s' %
-                                    ('test-200802-02380922', red, green,
-                                     form.cleaned_data['rmarker'], form.cleaned_data['gmarker']))
-                                     
-    ctxt = {
-        'form' : form,
-        }
-    t = loader.get_template('portal/redgreen.html')
-    c = RequestContext(request, ctxt)
-    return HttpResponse(t.render(c))
 
 def get_status_url(jobid):
     return reverse(jobstatus, args=[jobid])
