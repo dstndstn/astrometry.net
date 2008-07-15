@@ -164,9 +164,9 @@ This field has been tagged with:
 {% if tag.machineTag %}
 {% else %}
 <li>
-<b><a href="{{view_tag_url}}tag={{tag.id}}">{{ tag.text }}</a></b>
+<b><a href="{{view_tagtxt_url}}{{tag.text}}">{{ tag.text }}</a></b>
 by
-<a href="{{view_user_url}}user={{tag.user.id}}">{{ tag.user.username }}</a>
+<a href="{{view_user_url}}{{tag.user.username}}">{{ tag.user.username }}</a>
 {% if tag.canremove %}
 &nbsp;&nbsp;
 <a href="{{ remove_tag_url }}tag={{ tag.id }}">remove</a>

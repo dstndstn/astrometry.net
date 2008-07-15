@@ -27,6 +27,8 @@ from astrometry.net.portal.models import UserPreferences
 from astrometry.net.portal.job import Job, Submission, DiskFile, Tag
 from astrometry.net.portal.convert import convert, get_objs_in_field
 from astrometry.net.portal.log import log
+#from astrometry.net.portal.tags import job_add_tag, job_remove_tag, taglist
+from astrometry.net.portal import tags
 from astrometry.util.file import file_size
 #from astrometry.net.vo.models import Image as voImage
 from astrometry.net import settings
@@ -104,23 +106,6 @@ def getsessionjob(request):
         return None
     jobid = request.session['jobid']
     return get_job(jobid)
-
-@login_required
-def taglist(request):
-    mtags = Tag.objects.all().filter(machineTag=True).values('text').distinct()
-    mtags = [d['text'] for d in mtags]
-
-    utags = Tag.objects.all().filter(machineTag=False).values('text').distinct()
-    utags = [d['text'] for d in utags]
-
-    ctxt = {
-        'usertags' : utags,
-        'machinetags' : mtags,
-        'view_tagtxt_url' : reverse(joblist) + '?type=tag&tagtext=',
-        }
-    t = loader.get_template('portal/taglist.html')
-    c = RequestContext(request, ctxt)
-    return HttpResponse(t.render(c))
 
 @login_required
 def joblist(request):
@@ -508,37 +493,10 @@ def job_set_description(request):
     job.save()
     return HttpResponseRedirect(get_status_url(jobid))
 
-@login_required
-def job_add_tag(request):
-    if not 'jobid' in request.POST:
-        return HttpResponse('no jobid')
-    jobid = request.POST['jobid']
-    job = get_job(jobid)
-    if not job:
-        return HttpResponse('no such jobid')
-    if not job.can_add_tag(request.user):
-        return HttpResponse('not permitted')
-    if not 'tag' in request.POST:
-        return HttpResponse('no tag')
-    txt = request.POST['tag']
-    if not len(txt):
-        return HttpResponse('empty tag')
-    tag = Tag(job=job,
-              user=request.user,
-              machineTag=False,
-              text=txt,
-              addedtime=Job.timenow())
-    if not tag.is_duplicate():
-        tag.save()
-    #job.tags.add(tag)
-    #job.save()
-    return HttpResponseRedirect(get_status_url(jobid))
-
 def get_neighbouring_healpixes(nside, hp):
     hps = [ (nside, hp) ]
     # neighbours at this scale.
     neigh = healpix.get_neighbours(hp, nside)
-    #log('neighbours: %s' % (str(neigh)))
     for n in neigh:
         hps.append((nside, n))
     # the next bigger scale.
@@ -552,20 +510,6 @@ def get_neighbouring_healpixes(nside, hp):
     for i in allneigh:
         hps.append((nside+1, i))
     return hps
-
-@login_required
-def job_remove_tag(request):
-    if not 'tag' in request.GET:
-        return HttpResponse('no tag')
-    tagid = request.GET['tag']
-    tag = Tag.objects.all().filter(id=tagid)
-    if not len(tag):
-        return HttpResponse('no such tag')
-    tag = tag[0]
-    if not tag.can_remove_tag(request.user):
-        return HttpResponse('not permitted')
-    tag.delete()
-    return HttpResponseRedirect(get_status_url(tag.job.jobid))
 
 def jobstatus(request):
     if not request.GET:
@@ -648,10 +592,10 @@ def jobstatus(request):
         'tags' : taglist,
         'view_tagtxt_url' : reverse(joblist) + '?type=tag&tagtext=',
         'view_nearby_url' : reverse(joblist) + '?type=nearby&jobid=' + job.jobid,
-        'view_user_url' : reverse(joblist) + '?type=user&user=' + job.get_user().username,
+        'view_user_url' : reverse(joblist) + '?type=user&user=',
         'set_description_url' : reverse(job_set_description),
-        'add_tag_url' : reverse(job_add_tag),
-        'remove_tag_url' : reverse(job_remove_tag) + '?',
+        'add_tag_url' : reverse(tags.job_add_tag),
+        'remove_tag_url' : reverse(tags.job_remove_tag) + '?',
         }
 
     if job.solved():
