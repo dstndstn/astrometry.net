@@ -511,14 +511,6 @@ def get_neighbouring_healpixes(nside, hp):
         hps.append((nside+1, i))
     return hps
 
-def jobstatus_old(request):
-    if not request.GET:
-        return HttpResponse('no GET')
-    if not 'jobid' in request.GET:
-        return HttpResponse('no jobid')
-    jobid = request.GET['jobid']
-    return jobstatus(request, jobid)
-
 def jobstatus(request, jobid=None):
     log('jobstatus: jobid=', jobid)
     job = get_job(jobid)

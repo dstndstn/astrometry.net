@@ -6,8 +6,7 @@ urlpatterns = (patterns('astrometry.net.portal.newjob',
                         (r'^newlong/$',         'newlong' ),
                         ) +
                patterns('astrometry.net.portal.views',
-                        (r'^status/$',          'jobstatus_old'),
-                        (r'^status/(?P<jobid>[a-z0-9-]*)', 'jobstatus'),
+                        (r'^status/(?P<jobid>[a-z0-9-]+)', 'jobstatus'),
                         (r'^getfile/$',         'getfile'  ),
                         (r'^joblist/$',         'joblist'  ),
                         (r'^summary/$',         'summary'  ),
@@ -23,5 +22,8 @@ urlpatterns = (patterns('astrometry.net.portal.newjob',
                         (r'^taglist/$',         'taglist'  ),
                         (r'^add_tag/$',         'job_add_tag' ),
                         (r'^remove_tag/$',      'job_remove_tag' ),
+                        ) +
+               patterns('astrometry.net.portal.legacy',
+                        (r'^status/$',          'jobstatus_old'),
                         )
                )
