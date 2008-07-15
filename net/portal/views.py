@@ -45,7 +45,6 @@ def get_file_url(job, fn, args=None):
     if args:
         url += '?' + args
     return url
-#+ '?jobid=%s&f=%s' % (job.jobid, fn)
 
 def get_job(jobid):
     if jobid is None:
@@ -56,6 +55,16 @@ def get_job(jobid):
         return None
     job = jobs[0]
     return job
+
+# a decorator for calls that need a valid jobid; puts the job in
+# request.job
+def needs_job(handler):
+    def handle_request(request, *args, **kwargs):
+        #log('Calling handler...')
+        rtn = handler(request, *args, **kwargs)
+        #log('Called handler.')
+        return rtn
+    return handle_request
 
 def get_submission(subid):
     if subid is None:
@@ -471,6 +480,7 @@ def get_neighbouring_healpixes(nside, hp):
         hps.append((nside+1, i))
     return hps
 
+@needs_job
 def jobstatus(request, jobid=None):
     log('jobstatus: jobid=', jobid)
     job = get_job(jobid)
@@ -844,6 +854,7 @@ def summary(request):
         'jobs' : jobs,
         'voimgs' : voimgs,
         'prefs' : prefs,
+
         'substatusurl' : reverse(joblist) + '?type=sub&subid=',
         }
     t = loader.get_template('portal/summary.html')
