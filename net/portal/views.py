@@ -40,6 +40,13 @@ def urlescape(s):
 def get_status_url(jobid):
     return reverse(jobstatus, args=[jobid])
 
+def get_file_url(job, fn, args=None):
+    url = reverse(getfile, args=[job.jobid, fn])
+    if args:
+        url += '?' + args
+    return url
+#+ '?jobid=%s&f=%s' % (job.jobid, fn)
+
 def get_job(jobid):
     if jobid is None:
         return None
@@ -57,9 +64,6 @@ def get_submission(subid):
     if len(subs) != 1:
         return None
     return subs[0]
-
-def get_url(job, fn):
-    return reverse(getfile) + '?jobid=%s&f=%s' % (job.jobid, fn)
 
 def getsessionjob(request):
     if not 'jobid' in request.session:
@@ -299,15 +303,12 @@ def joblist(request):
                          ) for obj in objs])
             elif c == 'thumbnail':
                 t = ('<img src="'
-                     + reverse(getfile) + '?'
-                     + urlescape(urlencode({ 'jobid' : job.jobid,
-                                             'f' : 'thumbnail' }))
+                     + get_file_url(job, 'thumbnail')
                      + '" alt="Thumbnail" />')
             elif c == 'annthumb':
                 if job.solved():
                     t = ('<img src="'
-                         + reverse(getfile)
-                         + '?jobid=%s&f=annotation-thumb' % job.jobid
+                         + get_file_url(job, 'annotation-thumb')
                          + '" alt="Thumbnail" />')
             elif c == 'user':
                 t = ('<a href="'
@@ -403,8 +404,6 @@ def submission_status_xml(request):
 @login_required
 def submission_status(request, submission):
     jobs = submission.jobs.all().order_by('-starttime', '-enqueuetime', 'jobid')
-    #order_by('starttime', 'jobid')
-    
 
     somesolved = False
     for job in jobs:
@@ -413,6 +412,7 @@ def submission_status(request, submission):
             somesolved = True
             log("somesolved = true.")
             break
+        job.statusurl = get_status_url(job.jobid)
 
     #gmaps = (gmaps_config.gmaps_url + ('?submission=%s' % submission.jobid) +
     #         '&layers=tycho,grid,userboundary&arcsinh')
@@ -425,7 +425,6 @@ def submission_status(request, submission):
         'submission' : submission,
         'reload_time' : (len(jobs) < 2) and 2 or 15,
         'jobs' : jobs,
-        'statusurl' : get_status_url(''),
         'somesolved' : somesolved,
         'gmaps_view_submission' : gmaps,
         'xmlsummaryurl' : reverse(submission_status_xml) + '?subid=' + submission.subid,
@@ -511,7 +510,7 @@ def jobstatus(request, jobid=None):
         fn = convert(job, df, 'xyls-exists?', { 'variant': n })
         if fn is None:
             break
-        otherxylists.append((get_url(job, 'sources-small&variant=%i' % n),
+        otherxylists.append((get_file_url(job, 'sources-small', 'variant=%i' % n),
                              reverse(run_variant) + '?jobid=%s&variant=%i' % (job.jobid, n)))
                              #get_status_url(job.jobid) + '&run-xyls&variant=%i' % n))
 
@@ -529,7 +528,7 @@ def jobstatus(request, jobid=None):
         'jobsubmittime' : submission.format_submittime(),
         'jobstarttime' : job.format_starttime(),
         'jobfinishtime' : job.format_finishtime(),
-        'logurl' : get_url(job, 'blind.log'),
+        'logurl' : get_file_url(job, 'blind.log'),
         'job' : job,
         'submission' : job.submission,
         'joburl' : (submission.datasrc == 'url') and submission.url or None,
@@ -537,11 +536,11 @@ def jobstatus(request, jobid=None):
         'jobscale' : job.friendly_scale(),
         'jobparity' : job.friendly_parity(),
         'needs_medium_scale' : job.diskfile.needs_medium_size(),
-        'sources' : get_url(job, 'sources-medium'),
-        'sources_big' : get_url(job, 'sources-big'),
-        'sources_small' : get_url(job, 'sources-small'),
-        'redgreen_medium' : get_url(job, 'redgreen'),
-        'redgreen_big' : get_url(job, 'redgreen-big'),
+        'sources' : get_file_url(job, 'sources-medium'),
+        'sources_big' : get_file_url(job, 'sources-big'),
+        'sources_small' : get_file_url(job, 'sources-small'),
+        'redgreen_medium' : get_file_url(job, 'redgreen'),
+        'redgreen_big' : get_file_url(job, 'redgreen-big'),
         #'otherxylists' : otherxylists,
         'jobowner' : jobowner,
         'exposejob': job.is_exposed(),
@@ -575,11 +574,11 @@ def jobstatus(request, jobid=None):
                      'orientation' : '%.3f' % float(wcsinfo['orientation']),
                      'pixscale' : '%.4g' % float(wcsinfo['pixscale']),
                      'parity' : (float(wcsinfo['det']) > 0 and 'Positive' or 'Negative'),
-                     'wcsurl' : get_url(job, 'wcs.fits'),
-                     'indexxyurl' : get_url(job, 'index.xy.fits'),
-                     'indexrdurl' : get_url(job, 'index.rd.fits'),
-                     'fieldxyurl' : get_url(job, 'field.xy.fits'),
-                     'fieldrdurl' : get_url(job, 'field.rd.fits'),
+                     'wcsurl' : get_file_url(job, 'wcs.fits'),
+                     'indexxyurl' : get_file_url(job, 'index.xy.fits'),
+                     'indexrdurl' : get_file_url(job, 'index.rd.fits'),
+                     'fieldxyurl' : get_file_url(job, 'field.xy.fits'),
+                     'fieldrdurl' : get_file_url(job, 'field.rd.fits'),
                      })
 
         ctxt['objsinfield'] = get_objs_in_field(job, df)
@@ -634,8 +633,8 @@ def jobstatus(request, jobid=None):
         ctxt.update({
             'gmapslink' : url,
             'zoomimgs'  : zlist,
-            'annotation': get_url(job, 'annotation'),
-            'annotation_big' : get_url(job, 'annotation-big'),
+            'annotation': get_file_url(job, 'annotation'),
+            'annotation_big' : get_file_url(job, 'annotation-big'),
             })
 
     else:
@@ -687,26 +686,15 @@ def getfield(request):
     f.close()
     return res
 
-def getfile(request):
-    if not request.GET:
-        return HttpResponse('no GET')
-    if 'fieldid' in request.GET:
-        return getfield(request)
-    if not 'jobid' in request.GET:
-        return HttpResponse('no jobid')
-    jobid = request.GET['jobid']
+def getfile(request, jobid=None, filename=None):
     job = get_job(jobid)
     if not job:
         return HttpResponse('no such job')
-    if not 'f' in request.GET:
-        return HttpResponse('no f=')
 
     jobowner = (job.get_user() == request.user)
     anonymous = job.is_exposed()
     if not (jobowner or anonymous):
         return HttpResponse('The owner of this job (' + job.get_user().username + ') has not granted public access.')
-
-    f = request.GET['f']
 
     res = HttpResponse()
 
@@ -724,13 +712,13 @@ def getfile(request):
         convertargs['variant'] = variant
 
     ### DEBUG - play with red-green colours.
-    if f.startswith('redgreen'):
+    if filename.startswith('redgreen'):
         for x in ['red', 'green', 'rmarker', 'gmarker']:
             if x in request.GET:
                 convertargs[x] = request.GET[x]
 
-    if f in pngimages:
-        fn = convert(job, job.diskfile, f, convertargs)
+    if filename in pngimages:
+        fn = convert(job, job.diskfile, filename, convertargs)
         res['Content-Type'] = 'image/png'
         res['Content-Length'] = file_size(fn)
         f = open(fn)
@@ -740,15 +728,15 @@ def getfile(request):
 
     binaryfiles = [ 'wcs.fits', 'match.fits', 'field.xy.fits', 'field.rd.fits',
                     'index.xy.fits', 'index.rd.fits' ]
-    if f in binaryfiles:
-        downloadfn = f
-        if f == 'field.xy.fits':
+    if filename in binaryfiles:
+        downloadfn = filename
+        if filename == 'field.xy.fits':
             fn = job.get_axy_filename()
-        elif f in [ 'index.xy.fits', 'field.rd.fits' ]:
-            f = convert(job, job.diskfile, f, convertargs)
-            fn = job.get_filename(f)
+        elif filename in [ 'index.xy.fits', 'field.rd.fits' ]:
+            filename = convert(job, job.diskfile, filename, convertargs)
+            fn = job.get_filename(filename)
         else:
-            fn = job.get_filename(f)
+            fn = job.get_filename(filename)
         res['Content-Type'] = 'application/octet-stream'
         res['Content-Disposition'] = 'attachment; filename="' + downloadfn + '"'
         res['Content-Length'] = file_size(fn)
@@ -758,8 +746,8 @@ def getfile(request):
         return res
 
     textfiles = [ 'blind.log' ]
-    if f in textfiles:
-        fn = job.get_filename(f)
+    if filename in textfiles:
+        fn = job.get_filename(filename)
         res['Content-Type'] = 'text/plain'
         res['Content-Disposition'] = 'inline'
         res['Content-Length'] = file_size(fn)
@@ -768,7 +756,7 @@ def getfile(request):
         f.close()
         return res
 
-    if f == 'origfile':
+    if filename == 'origfile':
         if not job.is_exposed():
             return HttpResponse('access to this file is forbidden.')
         df = job.diskfile
@@ -847,15 +835,16 @@ def summary(request):
     for job in jobs:
         log('  %s: is_exposed: %s' % (job.get_id(), job.is_exposed()))
 
+    for job in jobs:
+        job.origfileurl = get_file_url(job, 'origfile')
+        job.statusurl = get_status_url(job.jobid)
+
     ctxt = {
         'subs' : subs,
         'jobs' : jobs,
         'voimgs' : voimgs,
         'prefs' : prefs,
-        'statusurl' : get_status_url(''),
         'substatusurl' : reverse(joblist) + '?type=sub&subid=',
-        'getfileurl' : reverse(getfile) + '?jobid=',
-        'getfield' : reverse(getfile) + '?fieldid=',
         }
     t = loader.get_template('portal/summary.html')
     c = RequestContext(request, ctxt)

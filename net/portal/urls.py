@@ -1,13 +1,15 @@
 from django.conf.urls.defaults import *
 
+jobpattern = r'[a-z0-9-]+'
+
 urlpatterns = (patterns('astrometry.net.portal.newjob',
                         (r'^newurl/$',          'newurl'  ),
                         (r'^newfile/$',         'newfile' ),
                         (r'^newlong/$',         'newlong' ),
                         ) +
                patterns('astrometry.net.portal.views',
-                        (r'^status/(?P<jobid>[a-z0-9-]+)', 'jobstatus'),
-                        (r'^getfile/$',         'getfile'  ),
+                        (r'^status/(?P<jobid>' + jobpattern + r')', 'jobstatus'),
+                        (r'^getfile/(?P<jobid>' + jobpattern + r')/(?P<filename>[a-z0-9.-]+)$', 'getfile'),
                         (r'^joblist/$',         'joblist'  ),
                         (r'^summary/$',         'summary'  ),
                         (r'^set_description/$', 'job_set_description'),

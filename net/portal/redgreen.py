@@ -25,8 +25,9 @@ def redgreen(request):
     if form.is_valid():
         red = form.cleaned_data['redhex'] or form.cleaned_data['red']
         green = form.cleaned_data['greenhex'] or form.cleaned_data['green']
-        return HttpResponseRedirect(reverse(getfile) + '?jobid=%s&f=redgreen&red=%s&green=%s&rmarker=%s&gmarker=%s' %
-                                    ('test-200802-02380922', red, green,
+        # HACK
+        return HttpResponseRedirect(reverse(getfile, args=['test-200802-02380922', 'redgreen']) + '?red=%s&green=%s&rmarker=%s&gmarker=%s' %
+                                    (red, green,
                                      form.cleaned_data['rmarker'], form.cleaned_data['gmarker']))
                                      
     ctxt = {

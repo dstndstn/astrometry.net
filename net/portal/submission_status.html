@@ -110,7 +110,7 @@ function stop() {
 
 {% for job in jobs %}
 <tr class="{% cycle even,odd %}">
-<td><a href="{{ statusurl }}{{ job.jobid }}">
+<td><a href="{{ job.statusurl }}">
 <span id="job-{{job.jobid}}-jobid">
 {{ job.jobid }}
 </span>

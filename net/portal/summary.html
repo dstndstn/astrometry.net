@@ -63,7 +63,7 @@ tr.odd td {}
 
 <tr class="{% cycle even,odd %}">
 
-<td><a href="{{ statusurl }}{{ job.jobid }}"> {{ job.jobid }} </a></td>
+<td><a href="{{ job.statusurl }}"> {{ job.jobid }} </a></td>
 
 <td>
 {% if job.get_description %}
@@ -94,17 +94,8 @@ tr.odd td {}
 {% endifequal %}
 {% endif %}
 
-{% comment %}
-{# <a href="{{ getfileurl }}{{ job.jobid }}&f=original"></a> #}
-{% ifequal job.jobid job.submission.jobid %}
-{% else %}
-{# tarfile #}
-({{ job.field.origname }})
-{% endifequal %}
-{% endcomment %}
-
 {% endif %}
-<a href="{{ getfileurl }}{{ job.get_id }}&f=origfile">Cached</a>
+<a href="{{ job.origfileurl }}">Cached</a>
 </td>
 
 <td class="c">
