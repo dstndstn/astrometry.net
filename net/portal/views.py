@@ -38,11 +38,6 @@ from astrometry.util import healpix
 def urlescape(s):
     return s.replace('&', '&amp;')
 
-class SetDescriptionForm(forms.Form):
-    description = forms.CharField(widget=forms.Textarea(
-        attrs={'rows':2, 'cols':40,}
-        ))
-
 
 culurs=[(c,c) for c in ['red','green', 'blue', 'white',
                         'black', 'cyan', 'magenta', 'yellow',
