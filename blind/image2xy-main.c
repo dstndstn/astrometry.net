@@ -31,7 +31,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hOo:8Hd:v";
+static const char* OPTIONS = "hOo:8Hd:D:v";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -44,6 +44,7 @@ static void printHelp() {
             "   [-8]  don't use optimization for byte (u8) images.\n"
             "   [-H]  downsample by a factor of 2 before running simplexy.\n"
             "   [-d <downsample-factor>]  downsample by an integer factor before running simplexy.\n"
+            "   [-D <downsample-factor>] downsample, if necessary, by this many factors of two.\n"
 			"   [-o <output-filename>]  write XYlist to given filename.\n"
             "   [-v] verbose - repeat for more and more verboseness\n"
 			"\n"
@@ -64,10 +65,13 @@ int main(int argc, char *argv[]) {
     int loglvl = LOG_MSG;
     bool do_u8 = TRUE;
     int downsample = 0;
-    
+    int downsample_as_reqd = 0;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+        case 'D':
+            downsample_as_reqd = atoi(optarg);
+            break;
         case 'H':
             downsample = 2;
             break;
@@ -119,7 +123,7 @@ int main(int argc, char *argv[]) {
     if (downsample)
         logverb("Downsampling by %i\n", downsample);
 
-    if (image2xy_files(infn, outfn, do_u8, downsample, 0)) {
+    if (image2xy_files(infn, outfn, do_u8, downsample, downsample_as_reqd)) {
         ERROR("image2xy failed.");
         exit(-1);
     }

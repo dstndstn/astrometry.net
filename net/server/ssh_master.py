@@ -132,7 +132,7 @@ def solve(job, logfunc):
                 # this proc is done!
                 s.running = False
         # HACK
-        time.sleep(1)
+        #time.sleep(1)
 
 
 
