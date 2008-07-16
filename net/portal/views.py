@@ -28,11 +28,11 @@ from astrometry.net.portal.job import Job, Submission, DiskFile, Tag
 from astrometry.net.portal.convert import convert, get_objs_in_field
 from astrometry.net.portal.log import log
 from astrometry.net.portal import tags
+from astrometry.net.portal import nearby
 from astrometry.util.file import file_size
 #from astrometry.net.vo.models import Image as voImage
 from astrometry.net import settings
 from astrometry.util import sip
-from astrometry.util import healpix
 
 def urlescape(s):
     return s.replace('&', '&amp;')
@@ -72,6 +72,8 @@ def get_job_and_sub(request, args, kwargs):
     subid = request.GET.get('subid')
     if subid:
         sub = get_submission(subid)
+    if sub is None and job is None and jobid is not None:
+        sub = get_submission(jobid)
     return (job, sub)
 
 # a decorator for calls that need a valid jobid; puts the job in
@@ -201,19 +203,9 @@ def joblist(request):
     elif kind == 'nearby':
         if job is None:
             return HttpResponse('no job')
-        tags = job.tags.all().filter(machineTag=True, text__startswith='hp:')
-        if tags.count() != 1:
-            return HttpResponse('no such tag')
-        tag = tags[0]
-        parts = tag.text.split(':')
-        if len(parts) != 3:
-            return HttpResponse('bad tag')
-        nside = int(parts[1])
-        hp = int(parts[2])
-        #log('nside %i, hp %i' % (nside, hp))
-        hps = get_neighbouring_healpixes(nside, hp)
-        tagtxts = ['hp:%i:%i' % (nside,hp) for (nside,hp) in hps]
-        tags = Tag.objects.all().filter(machineTag=True, text__in=tagtxts)
+        tags = nearby.get_tags_nearby(job)
+        if tags is None:
+            return HttpResponse('error getting nearby tags')
         N = tags.count()
         if not cols:
             cols = [ 'thumbnail', 'jobid', 'user' ]
@@ -481,24 +473,6 @@ def job_set_description(request):
     job.save()
     return HttpResponseRedirect(get_status_url(jobid))
 
-def get_neighbouring_healpixes(nside, hp):
-    hps = [ (nside, hp) ]
-    # neighbours at this scale.
-    neigh = healpix.get_neighbours(hp, nside)
-    for n in neigh:
-        hps.append((nside, n))
-    # the next bigger scale.
-    hps.append((nside-1, n/4))
-    # the next smaller scale, plus neighbours.
-    # (use a set because some of the neighbours are in common)
-    allneigh = set()
-    for i in range(4):
-        n = healpix.get_neighbours(hp*4 + i, nside+1)
-        allneigh.update(n)
-    for i in allneigh:
-        hps.append((nside+1, i))
-    return hps
-
 @wants_job_or_sub
 def jobstatus(request, jobid=None):
     log('jobstatus: jobid=', jobid)
@@ -507,7 +481,7 @@ def jobstatus(request, jobid=None):
     log('job is', job)
     log('sub is', sub)
     if sub:
-        jobs = submission.jobs.all()
+        jobs = sub.jobs.all()
         log('submission has %i jobs.' % len(jobs))
         if len(jobs) == 1:
             job = jobs[0]
@@ -515,7 +489,7 @@ def jobstatus(request, jobid=None):
             log('submission has one job:', jobid)
             return HttpResponseRedirect(get_status_url(jobid))
         else:
-            return submission_status(request, submission)
+            return submission_status(request, sub)
 
     if job is None:
         return HttpResponse('no such job')

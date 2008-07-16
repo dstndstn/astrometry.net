@@ -15,7 +15,6 @@ from astrometry.net.portal.log import log
 from astrometry.net.portal.wcs import *
 from astrometry.net.portal.convert import get_objs_in_field
 from astrometry.net.portal.models import UserPreferences
-
 from astrometry.util import healpix
 
 
@@ -450,6 +449,8 @@ class Job(models.Model):
         self.duplicate = (others.count() > 0) and (others[0] != self)
  
     def add_machine_tags(self):
+        from astrometry.net.portal import nearby
+
         # Find the list of objects in the field and add them as
         # machine tags to the Job.
         if self.solved():
@@ -461,23 +462,9 @@ class Job(models.Model):
                           text=obj,
                           addedtime=Job.timenow())
                 tag.save()
+
             # Add healpix machine tag.
-            # Find the field size:
-            wcs = self.get_tan_wcs()
-            radiusdeg = wcs.get_field_radius()
-            nside = healpix.get_closest_pow2_nside(radiusdeg)
-            #log('Field has radius %g deg.' % radiusdeg)
-            #log('Closest power-of-2 healpix Nside is %i.' % nside)
-            (ra,dec) = wcs.get_field_center()
-            #log('Field center: (%g, %g)' % (ra,dec))
-            hp = healpix.radectohealpix(ra, dec, nside)
-            #log('Healpix: %i' % hp)
-            tag = Tag(job=self,
-                      user=self.get_user(),
-                      machineTag=True,
-                      text='hp:%i:%i' % (nside, hp),
-                      addedtime=Job.timenow())
-            tag.save()
+            nearby.add_tags_to_job(self)
 
     def remove_all_machine_tags(self):
         Tag.objects.all().filter(job=self, machineTag=True,
