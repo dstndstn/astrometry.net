@@ -302,7 +302,6 @@ def real_handle_job(job):
         calib.save()
 
         job.calibration = calib
-
         job.add_machine_tags()
 
     else:

@@ -96,14 +96,11 @@ def convert(job, df, fn, args=None):
     if 'variant' in args:
         variant = int(args['variant'])
 
-    # Hack
-    #if exists and not variant:
     if exists and len(args) == 0:
         return fullfn
 
-    if fn == 'uncomp' or fn == 'uncomp-js':
+    if fn in [ 'uncomp', 'uncomp-js' ]:
         orig = df.get_path()
-        #log('convert uncomp: Field file is', orig)
         comp = image2pnm.uncompress_file(orig, fullfn)
         if comp:
             log('Input file compression: %s' % comp)
@@ -149,7 +146,7 @@ def convert(job, df, fn, args=None):
         run_convert_command(cmd)
         return fullfn
 
-    elif (fn == 'ppm') or (fn == 'ppm-8bit'):
+    elif fn in [ 'ppm', 'ppm-8bit' ]:
         eightbit = (fn == 'ppm-8bit')
         if job.is_input_fits() or job.is_input_text():
             # just create the red-circle plot.
@@ -200,7 +197,7 @@ def convert(job, df, fn, args=None):
         run_convert_command(cmd)
         return fullfn
 
-    elif fn == 'xyls' or fn == 'xyls-exists?':
+    elif fn in [ 'xyls', 'xyls-exists?' ]:
         check_exists = (fn == 'xyls-exists?')
         if variant:
             fn = 'xyls-%i' % variant
@@ -255,7 +252,7 @@ def convert(job, df, fn, args=None):
         run_convert_command(cmd)
         return fullfn
 
-    elif fn == 'xyls-sorted' or fn == 'xyls-half-sorted':
+    elif fn in [ 'xyls-sorted', 'xyls-half-sorted' ]:
         if fn == 'xyls-sorted':
             infn = convert(job, df, 'xyls')
         else:
@@ -301,7 +298,7 @@ def convert(job, df, fn, args=None):
         run_convert_command(cmd)
         return fullfn
 
-    elif fn == 'indexxyls' or fn == 'index.xy.fits':
+    elif fn in [ 'indexxyls', 'index.xy.fits' ]:
         wcsfn = job.get_filename('wcs.fits')
         indexrdfn = job.get_filename('index.rd.fits')
         if not (os.path.exists(wcsfn) and os.path.exists(indexrdfn)):
@@ -327,9 +324,7 @@ def convert(job, df, fn, args=None):
         run_convert_command(cmd)
         return fullfn
 
-    elif ((fn == 'pnm-small') or
-          (fn == 'pnm-medium') or
-          (fn == 'pnm-thumb')):
+    elif fn in [ 'pnm-small', 'pnm-medium', 'pnm-thumb' ]:
         small = (fn == 'pnm-small')
         thumb = (fn == 'pnm-thumb')
         imgfn = convert(job, df, 'pnm')
@@ -347,9 +342,8 @@ def convert(job, df, fn, args=None):
         run_convert_command(cmd)
         return fullfn
 
-    elif ((fn == 'ppm-small') or (fn == 'ppm-small-8bit') or
-          (fn == 'ppm-thumb') or (fn == 'ppm-thumb-8bit') or
-          (fn == 'ppm-medium') or (fn == 'ppm-medium-8bit')):
+    elif fn in [ 'ppm-small', 'ppm-thumb', 'ppm-medium',
+                 'ppm-small-8bit', 'ppm-thumb-8bit', 'ppm-medium-8bit' ]:
         eightbit = fn.endswith('-8bit')
         small = '-small' in fn
         thumb = '-thumb' in fn
