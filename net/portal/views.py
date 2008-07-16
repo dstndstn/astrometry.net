@@ -29,7 +29,7 @@ from astrometry.net.portal.convert import convert, get_objs_in_field
 from astrometry.net.portal.log import log
 from astrometry.net.portal import tags
 from astrometry.net.portal import nearby
-from astrometry.util.file import file_size
+from astrometry.util.file import file_size, read_file
 from astrometry.net import settings
 from astrometry.util import sip
 
@@ -574,6 +574,7 @@ def jobstatus(request, jobid=None):
                      'pixscale' : '%.4g' % float(wcsinfo['pixscale']),
                      'parity' : (float(wcsinfo['det']) > 0 and 'Positive' or 'Negative'),
                      'wcsurl' : get_file_url(job, 'wcs.fits'),
+                     'newfitsurl' : get_file_url(job, 'new.fits'),
                      'indexxyurl' : get_file_url(job, 'index.xy.fits'),
                      'indexrdurl' : get_file_url(job, 'index.rd.fits'),
                      'fieldxyurl' : get_file_url(job, 'field.xy.fits'),
@@ -661,6 +662,20 @@ def getdf(idstr):
     df = dfs[0]
     return df
 
+def send_file(filename, res=None, ctype='text/plain',
+              cdisposition='inline', cdownloadfn=None, clength=None):
+    if res is None:
+        res = HttpResponse()
+    if clength is None:
+        clength = file_size(filename)
+    if cdownloadfn is not None:
+        cdisposition = 'attachment; filename="' + cdownloadfn + '"'
+    res['Content-Type'] = ctype
+    res['Content-Disposition'] = cdisposition
+    res['Content-Length'] = clength
+    res.write(read_file(filename))
+    return res
+
 def getfield(request):
     if not 'fieldid' in request.GET:
         return HttpResponse('no fieldid')
@@ -671,19 +686,11 @@ def getfield(request):
         
     if not df.show():
         return HttpResponse('The owner of this field has not granted public access.')
-    #(' + field.user.username + ') 
 
-    res = HttpResponse()
-    ct = df.content_type()
-    res['Content-Type'] = ct or 'application/octet-stream'
     fn = df.get_path()
-    res['Content-Length'] = file_size(fn)
-    #res['Content-Disposition'] = 'attachment; filename="' + f + '"'
-    res['Content-Disposition'] = 'inline'
-    f = open(fn)
-    res.write(f.read())
-    f.close()
-    return res
+    ct = df.content_type() or 'application/octet-stream'
+
+    return send_file(fn, ctype=ct)
 
 @needs_job
 def getfile(request, jobid=None, filename=None):
@@ -693,8 +700,6 @@ def getfile(request, jobid=None, filename=None):
     anonymous = job.is_exposed()
     if not (jobowner or anonymous):
         return HttpResponse('The owner of this job (' + job.get_user().username + ') has not granted public access.')
-
-    res = HttpResponse()
 
     variant = 0
     if 'variant' in request.GET:
@@ -717,58 +722,35 @@ def getfile(request, jobid=None, filename=None):
 
     if filename in pngimages:
         fn = convert(job, job.diskfile, filename, convertargs)
-        res['Content-Type'] = 'image/png'
-        res['Content-Length'] = file_size(fn)
-        f = open(fn)
-        res.write(f.read())
-        f.close()
-        return res
+        return send_file(fn, ctype='image/png')
 
     binaryfiles = [ 'wcs.fits', 'match.fits', 'field.xy.fits', 'field.rd.fits',
-                    'index.xy.fits', 'index.rd.fits' ]
+                    'index.xy.fits', 'index.rd.fits', 'new.fits' ]
     if filename in binaryfiles:
         downloadfn = filename
         if filename == 'field.xy.fits':
             fn = job.get_axy_filename()
-        elif filename in [ 'index.xy.fits', 'field.rd.fits' ]:
+        elif filename in [ 'index.xy.fits', 'field.rd.fits', 'new.fits' ]:
             filename = convert(job, job.diskfile, filename, convertargs)
             fn = job.get_filename(filename)
         else:
             fn = job.get_filename(filename)
-        res['Content-Type'] = 'application/octet-stream'
-        res['Content-Disposition'] = 'attachment; filename="' + downloadfn + '"'
-        res['Content-Length'] = file_size(fn)
-        f = open(fn)
-        res.write(f.read())
-        f.close()
-        return res
+
+        return send_file(fn, ctype='application/octet-stream',
+                         cdownloadfn=downloadfn)
 
     textfiles = [ 'blind.log' ]
     if filename in textfiles:
         fn = job.get_filename(filename)
-        res['Content-Type'] = 'text/plain'
-        res['Content-Disposition'] = 'inline'
-        res['Content-Length'] = file_size(fn)
-        f = open(fn)
-        res.write(f.read())
-        f.close()
-        return res
+        return send_file(fn)
 
     if filename == 'origfile':
         if not job.is_exposed():
             return HttpResponse('access to this file is forbidden.')
         df = job.diskfile
-        res = HttpResponse()
-        ct = df.content_type()
-        res['Content-Type'] = ct or 'application/octet-stream'
+        ct = df.content_type() or 'application/octet-stream'
         fn = df.get_path()
-        res['Content-Length'] = file_size(fn)
-        # res['Content-Disposition'] = 'attachment; filename="' + f + '"'
-        res['Content-Disposition'] = 'inline'
-        f = open(fn)
-        res.write(f.read())
-        f.close()
-        return res
+        return send_file(fn, ctype=ct)
 
     return HttpResponse('bad f')
 

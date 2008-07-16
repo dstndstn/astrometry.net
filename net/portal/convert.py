@@ -83,6 +83,13 @@ def annotate_command(job):
         cmd += ' -D -d %s' % settings.HENRY_DRAPER_CAT
     return cmd
 
+def convert_new_fits(job, df, fn, args, fullfn):
+    fitsimg = convert(job, df, 'fitsimg')
+    wcs = job.get_filename('wcs.fits')
+    cmd = 'new-wcs -i %s -w %s -o %s -d' % (fitsimg, wcs, fullfn)
+    run_convert_command(cmd)
+    return fullfn
+
 def convert(job, df, fn, args=None):
     if args is None:
         args = {}
@@ -107,6 +114,9 @@ def convert(job, df, fn, args=None):
         if comp is None:
             return orig
         return fullfn
+
+    elif fn == 'new.fits':
+        return convert_new_fits(job, df, fn, args, fullfn)
 
     elif fn == 'pnm':
         infn = convert(job, df, 'uncomp')
