@@ -224,6 +224,176 @@ static int write_kmz(const augment_xylist_t* axy, const char* kmzfn,
     return 0;
 }
 
+static int plot_source_overlay(augment_xylist_t* axy, const char* me,
+                               const char* objsfn) {
+    // plotxy -i harvard.axy -I /tmp/pnm -C red -P -w 2 -N 50 | plotxy -w 2 -r 3 -I - -i harvard.axy -C red -n 50 > harvard-objs.png
+    sl* cmdline = sl_new(16);
+    char* cmd;
+    bool ctrlc;
+
+    append_executable(cmdline, "plotxy", me);
+    sl_append(cmdline, "-i");
+    append_escape(cmdline, axy->outfn);
+    if (axy->imagefn) {
+        sl_append(cmdline, "-I");
+        append_escape(cmdline, axy->pnmfn);
+    }
+    if (axy->xcol) {
+        sl_append(cmdline, "-X");
+        append_escape(cmdline, axy->xcol);
+    }
+    if (axy->ycol) {
+        sl_append(cmdline, "-Y");
+        append_escape(cmdline, axy->ycol);
+    }
+    sl_append(cmdline, "-P");
+    sl_append(cmdline, "-C red -w 2 -N 50 -x 1 -y 1");
+            
+    sl_append(cmdline, "|");
+
+    append_executable(cmdline, "plotxy", me);
+    sl_append(cmdline, "-i");
+    append_escape(cmdline, axy->outfn);
+    if (axy->xcol) {
+        sl_append(cmdline, "-X");
+        append_escape(cmdline, axy->xcol);
+    }
+    if (axy->ycol) {
+        sl_append(cmdline, "-Y");
+        append_escape(cmdline, axy->ycol);
+    }
+    sl_append(cmdline, "-I - -w 2 -r 3 -C red -n 50 -N 200 -x 1 -y 1");
+
+    sl_append(cmdline, ">");
+    append_escape(cmdline, objsfn);
+
+    cmd = sl_implode(cmdline, " ");
+    sl_free2(cmdline);
+
+    if (run_command(cmd, &ctrlc)) {
+        ERROR("Plotting command %s", (ctrlc ? "was cancelled" : "failed"));
+        if (!ctrlc) {
+            errors_print_stack(stdout);
+            errors_clear_stack();
+        }
+        free(cmd);
+        return -1;
+    }
+    free(cmd);
+    return 0;
+}
+
+static int plot_index_overlay(augment_xylist_t* axy, const char* me,
+                              const char* indxylsfn, const char* redgreenfn) {
+    sl* cmdline = sl_new(16);
+    char* cmd;
+    matchfile* mf;
+    MatchObj* mo;
+    int i;
+    bool ctrlc;
+
+    mf = matchfile_open(axy->matchfn);
+    if (!mf) {
+        ERROR("Failed to read matchfile %s", axy->matchfn);
+        return -1;
+    }
+    // just read the first match...
+    mo = matchfile_read_match(mf);
+    if (!mo) {
+        ERROR("Failed to read a match from matchfile %s", axy->matchfn);
+        return -1;
+    }
+
+    // sources + index overlay
+    append_executable(cmdline, "plotxy", me);
+    sl_append(cmdline, "-i");
+    append_escape(cmdline, axy->outfn);
+    if (axy->imagefn) {
+        sl_append(cmdline, "-I");
+        append_escape(cmdline, axy->pnmfn);
+    }
+    if (axy->xcol) {
+        sl_append(cmdline, "-X");
+        append_escape(cmdline, axy->xcol);
+    }
+    if (axy->ycol) {
+        sl_append(cmdline, "-Y");
+        append_escape(cmdline, axy->ycol);
+    }
+    sl_append(cmdline, "-P");
+    sl_append(cmdline, "-C red -w 2 -r 6 -N 200 -x 1 -y 1");
+    sl_append(cmdline, "|");
+    append_executable(cmdline, "plotxy", me);
+    sl_append(cmdline, "-i");
+    append_escape(cmdline, indxylsfn);
+    sl_append(cmdline, "-I - -w 2 -r 4 -C green -x 1 -y 1");
+
+    // if we solved by verifying an existing WCS, there is no quad.
+    if (mo->dimquads) {
+        sl_append(cmdline, " -P |");
+        append_executable(cmdline, "plotquad", me);
+        sl_append(cmdline, "-I -");
+        sl_append(cmdline, "-C green");
+        sl_append(cmdline, "-w 2");
+        sl_appendf(cmdline, "-d %i", mo->dimquads);
+        for (i=0; i<(2 * mo->dimquads); i++)
+            sl_appendf(cmdline, " %g", mo->quadpix[i]);
+    }
+
+    matchfile_close(mf);
+			
+    sl_append(cmdline, ">");
+    append_escape(cmdline, redgreenfn);
+    
+    cmd = sl_implode(cmdline, " ");
+    sl_free2(cmdline);
+    logverb("Running:\n  %s\n", cmd);
+    if (run_command(cmd, &ctrlc)) {
+        ERROR("Plotting commands %s; exiting.", (ctrlc ? "were cancelled" : "failed"));
+        return -1;
+    }
+    free(cmd);
+    return 0;
+}
+
+static int plot_annotations(augment_xylist_t* axy, const char* me, bool verbose,
+                            const char* annfn) {
+    sl* cmdline = sl_new(16);
+    char* cmd;
+    sl* lines;
+
+    append_executable(cmdline, "plot-constellations", me);
+    if (verbose)
+        sl_append(cmdline, "-v");
+    sl_append(cmdline, "-w");
+    append_escape(cmdline, axy->wcsfn);
+    sl_append(cmdline, "-i");
+    append_escape(cmdline, axy->pnmfn);
+    sl_append(cmdline, "-N");
+    sl_append(cmdline, "-C");
+    sl_append(cmdline, "-o");
+    append_escape(cmdline, annfn);
+    cmd = sl_implode(cmdline, " ");
+    sl_free2(cmdline);
+    logverb("Running:\n  %s\n", cmd);
+    if (run_command_get_outputs(cmd, &lines, NULL)) {
+        ERROR("plot-constellations failed");
+        return -1;
+    }
+    free(cmd);
+    if (lines && sl_size(lines)) {
+        int i;
+        if (strlen(sl_get(lines, 0))) {
+            logmsg("Your field contains:\n");
+            for (i=0; i<sl_size(lines); i++)
+                logmsg("  %s\n", sl_get(lines, i));
+        }
+    }
+    if (lines)
+        sl_free2(lines);
+    return 0;
+}
+
 int main(int argc, char** args) {
 	int c;
 	bool help = FALSE;
@@ -635,7 +805,6 @@ int main(int argc, char** args) {
 		if (axy->imagefn) {
             ppmfn = create_temp_file("ppm", tempdir);
             sl_append_nocopy(tempfiles, ppmfn);
-
             axy->pnmfn = ppmfn;
             axy->force_ppm = TRUE;
 		}
@@ -659,57 +828,8 @@ int main(int argc, char** args) {
         }
         if (makeplots) {
             // source extraction overlay
-            // plotxy -i harvard.axy -I /tmp/pnm -C red -P -w 2 -N 50 | plotxy -w 2 -r 3 -I - -i harvard.axy -C red -n 50 > harvard-objs.png
-            append_executable(cmdline, "plotxy", me);
-            sl_append(cmdline, "-i");
-            append_escape(cmdline, axy->outfn);
-            if (axy->imagefn) {
-                sl_append(cmdline, "-I");
-                append_escape(cmdline, ppmfn);
-            }
-            if (axy->xcol) {
-                sl_append(cmdline, "-X");
-                append_escape(cmdline, axy->xcol);
-            }
-            if (axy->ycol) {
-                sl_append(cmdline, "-Y");
-                append_escape(cmdline, axy->ycol);
-            }
-            sl_append(cmdline, "-P");
-            sl_append(cmdline, "-C red -w 2 -N 50 -x 1 -y 1");
-            
-            sl_append(cmdline, "|");
-
-            append_executable(cmdline, "plotxy", me);
-            sl_append(cmdline, "-i");
-            append_escape(cmdline, axy->outfn);
-            if (axy->xcol) {
-                sl_append(cmdline, "-X");
-                append_escape(cmdline, axy->xcol);
-            }
-            if (axy->ycol) {
-                sl_append(cmdline, "-Y");
-                append_escape(cmdline, axy->ycol);
-            }
-            sl_append(cmdline, "-I - -w 2 -r 3 -C red -n 50 -N 200 -x 1 -y 1");
-
-            sl_append(cmdline, ">");
-            append_escape(cmdline, objsfn);
-
-            cmd = sl_implode(cmdline, " ");
-            sl_remove_all(cmdline);
-            
-            if (run_command(cmd, &ctrlc)) {
-                ERROR("Plotting command %s",
-                      (ctrlc ? "was cancelled" : "failed"));
-                if (ctrlc)
-                    exit(-1);
-                // don't try any more plots...
-                errors_print_stack(stdout);
-                errors_clear_stack();
+            if (plot_source_overlay(axy, me, objsfn))
                 makeplots = FALSE;
-            }
-            free(cmd);
         }
 
 		append_escape(backendargs, axy->outfn);
@@ -729,8 +849,6 @@ int main(int argc, char** args) {
 			// boo hoo.
 			//printf("Field didn't solve.\n");
 		} else {
-			matchfile* mf;
-			MatchObj* mo;
             sip_t wcs;
             double ra, dec, fieldw, fieldh;
             char rastr[32], decstr[32];
@@ -766,107 +884,16 @@ int main(int argc, char** args) {
 
             if (makeplots) {
                 logmsg("Creating plots...\n");
-                // sources + index overlay
-                append_executable(cmdline, "plotxy", me);
-                sl_append(cmdline, "-i");
-                append_escape(cmdline, axy->outfn);
-                if (axy->imagefn) {
-                    sl_append(cmdline, "-I");
-                    append_escape(cmdline, ppmfn);
+                if (plot_index_overlay(axy, me, indxylsfn, redgreenfn)) {
+                    ERROR("Plot index overlay failed.");
                 }
-                if (axy->xcol) {
-                    sl_append(cmdline, "-X");
-                    append_escape(cmdline, axy->xcol);
-                }
-                if (axy->ycol) {
-                    sl_append(cmdline, "-Y");
-                    append_escape(cmdline, axy->ycol);
-                }
-                sl_append(cmdline, "-P");
-                sl_append(cmdline, "-C red -w 2 -r 6 -N 200 -x 1 -y 1");
-                sl_append(cmdline, "|");
-                append_executable(cmdline, "plotxy", me);
-                sl_append(cmdline, "-i");
-                append_escape(cmdline, indxylsfn);
-                sl_append(cmdline, "-I - -w 2 -r 4 -C green -x 1 -y 1");
-
-                mf = matchfile_open(axy->matchfn);
-                if (!mf) {
-                    ERROR("Failed to read matchfile %s", axy->matchfn);
-                    exit(-1);
-                }
-                // just read the first match...
-                mo = matchfile_read_match(mf);
-                if (!mo) {
-                    ERROR("Failed to read a match from matchfile %s", axy->matchfn);
-                    exit(-1);
-                }
-
-                // if we solved by verifying an existing WCS, there is no quad.
-                if (mo->dimquads) {
-                    sl_append(cmdline, " -P |");
-                    append_executable(cmdline, "plotquad", me);
-                    sl_append(cmdline, "-I -");
-                    sl_append(cmdline, "-C green");
-                    sl_append(cmdline, "-w 2");
-                    sl_appendf(cmdline, "-d %i", mo->dimquads);
-                    for (i=0; i<(2 * mo->dimquads); i++)
-                        sl_appendf(cmdline, " %g", mo->quadpix[i]);
-                }
-
-                matchfile_close(mf);
-			
-                sl_append(cmdline, ">");
-                append_escape(cmdline, redgreenfn);
-
-                cmd = sl_implode(cmdline, " ");
-                sl_remove_all(cmdline);
-                logverb("Running:\n  %s\n", cmd);
-                fflush(NULL);
-                if (run_command(cmd, &ctrlc)) {
-                    fflush(NULL);
-                    ERROR("Plotting commands %s; exiting.",
-                          (ctrlc ? "were cancelled" : "failed"));
-                    exit(-1);
-                }
-                free(cmd);
             }
 
             if (axy->imagefn && makeplots) {
-                sl* lines;
-
-                append_executable(cmdline, "plot-constellations", me);
-                if (verbose)
-                    sl_append(cmdline, "-v");
-				sl_append(cmdline, "-w");
-				append_escape(cmdline, axy->wcsfn);
-				sl_append(cmdline, "-i");
-				append_escape(cmdline, ppmfn);
-				sl_append(cmdline, "-N");
-				sl_append(cmdline, "-C");
-				sl_append(cmdline, "-o");
-				append_escape(cmdline, ngcfn);
-
-				cmd = sl_implode(cmdline, " ");
-				sl_remove_all(cmdline);
-                logverb("Running:\n  %s\n", cmd);
-                fflush(NULL);
-                if (run_command_get_outputs(cmd, &lines, NULL)) {
-                    fflush(NULL);
-                    ERROR("plot-constellations failed");
-                    exit(-1);
+                if (plot_annotations(axy, me, verbose, ngcfn)) {
+                    ERROR("Plot annotations failed.");
                 }
-				free(cmd);
-                if (lines && sl_size(lines)) {
-                    int i;
-                    if (strlen(sl_get(lines, 0))) {
-                        logmsg("Your field contains:\n");
-                        for (i=0; i<sl_size(lines); i++)
-                            logmsg("  %s\n", sl_get(lines, i));
-                    }
-                }
-                if (lines)
-                    sl_free2(lines);
+
 			}
 
             if (axy->imagefn && kmzfn) {
@@ -883,7 +910,8 @@ int main(int argc, char** args) {
 		}
         fflush(NULL);
 
-    nextfile:        // clean up and move on to the next file.
+        // clean up and move on to the next file.
+    nextfile:        
 		free(base);
         free(axy->fitsimgfn);
         free(axy->solvedinfn);
