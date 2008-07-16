@@ -149,10 +149,10 @@ bool index_is_file_index(const char* filename) {
 
 int index_get_meta(const char* filename, index_meta_t* meta) {
     index_t* ind = index_load(filename, 0);
-    if (!ind) {
+    if (!ind)
         return -1;
-    }
     memcpy(meta, &(ind->meta), sizeof(index_meta_t));
+    meta->indexname = strdup(meta->indexname);
     index_close(ind);
     return 0;
 }
