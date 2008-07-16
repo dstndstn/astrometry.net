@@ -31,7 +31,7 @@ from django.db import models
 from astrometry.net.portal.models import Job, Submission, DiskFile, Calibration, Tag
 from astrometry.net.upload.models import UploadedFile
 from astrometry.net.portal.log import log
-from astrometry.net.portal.convert import convert, is_tarball, get_objs_in_field, FileConversionError
+from astrometry.net.portal.convert import convert, is_tarball, FileConversionError
 from astrometry.net.portal.wcs import TanWCS
 from astrometry.util.run_command import run_command
 
@@ -70,11 +70,9 @@ def handle_job(job, sshconfig):
 
 def produce_alternate_xylists(job):
     log("I'm producing alternate xylists like nobody's bidness.")
-    df = job.diskfile
-
     for n in [1, 2, 3, 4]:
         log('Producing xyls variant %i...' % n)
-        convert(job, df, 'xyls', { 'variant': n })
+        convert(job, 'xyls', { 'variant': n })
 
 # Returns True if the job was processed successfully (ie it finished)
 def real_handle_job(job, sshconfig):
@@ -94,7 +92,7 @@ def real_handle_job(job, sshconfig):
     os.chdir(jobdir)
 
     # Handle compressed files.
-    uncomp = convert(job, df, 'uncomp')
+    uncomp = convert(job, 'uncomp')
     log('uncompressed file is %s' % uncomp)
 
     # Compute hash of uncompressed file.
@@ -109,7 +107,7 @@ def real_handle_job(job, sshconfig):
         log('source extraction...')
         userlog('Doing source extraction...')
 
-        convert(job, df, 'getimagesize')
+        convert(job, 'getimagesize')
         if (df.imagew * df.imageh) > 5000000:  # 5 MPixels
             userlog('Downsampling your image...')
             target = 'xyls-half-sorted'
@@ -118,7 +116,7 @@ def real_handle_job(job, sshconfig):
 
         try:
             log('image2xy...')
-            xylist = convert(job, df, target)
+            xylist = convert(job, target)
             log('xylist is', xylist)
         except FileConversionError,e:
             userlog('Source extraction failed.')
@@ -133,7 +131,7 @@ def real_handle_job(job, sshconfig):
             df.filetype = 'text'
             try:
                 userlog('Parsing your text file...')
-                xylist = convert(job, df, 'xyls')
+                xylist = convert(job, 'xyls')
                 log('xylist is', xylist)
             except FileConversionError,e:
                 userlog('Parsing your text file failed.')
@@ -144,7 +142,7 @@ def real_handle_job(job, sshconfig):
             df.filetype = 'xyls'
             try:
                 log('fits2fits...')
-                xylist = convert(job, df, 'xyls')
+                xylist = convert(job, 'xyls')
                 log('xylist is', xylist)
             except FileConversionError,e:
                 userlog('Sanitizing your FITS file failed.')
@@ -432,7 +430,7 @@ def main(sshconfig, joblink):
     submission.save()
 
     # Handle compressed files.
-    uncomp = convert(submission, submission.diskfile, 'uncomp-js')
+    uncomp = convert(submission, 'uncomp-js')
 
     # Handle tar files: add a Submission, create new Jobs.
     job = None

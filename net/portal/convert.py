@@ -6,6 +6,7 @@ import re
 from astrometry.net import settings
 from astrometry.util import image2pnm
 from astrometry.util import fits2fits
+from astrometry.util.file import read_file
 from astrometry.net.portal.log import log
 from astrometry.util.run_command import run_command
 from astrometry.util.filetype import filetype_short
@@ -13,7 +14,6 @@ from astrometry.util.filetype import filetype_short
 class FileConversionError(Exception):
     errstr = None
     def __init__(self, errstr):
-        #super(FileConversionError, self).__init__()
         self.errstr = errstr
     def __str__(self):
         return self.errstr
@@ -51,19 +51,14 @@ def run_pnmfile(fn):
 def is_tarball(fn):
     log('is_tarball: %s' % fn)
     types = filetype_short(fn)
-    #log('file type: "%s"' % typeinfo)
-    #return any([t.startswith('POSIX tar archive') for t in types])
     for t in types:
         if t.startswith('POSIX tar archive'):
             return True
     return False
 
-def get_objs_in_field(job, df):
-    objsfn = convert(job, df, 'objsinfield')
-    f = open(objsfn)
-    objtxt = f.read()
-    objtxt = objtxt.decode('utf_8')
-    f.close()
+def get_objs_in_field(job):
+    objsfn = convert(job, 'objsinfield')
+    objtxt = read_file(objsfn).decode('utf_8')
     objs = objtxt.strip()
     if len(objs):
         objs = objs.split('\n')
@@ -83,14 +78,14 @@ def annotate_command(job):
         cmd += ' -D -d %s' % settings.HENRY_DRAPER_CAT
     return cmd
 
-def convert_new_fits(job, df, fn, args, fullfn):
-    fitsimg = convert(job, df, 'fitsimg')
+def convert_new_fits(job, fn, args, fullfn):
+    fitsimg = convert(job, 'fitsimg')
     wcs = job.get_filename('wcs.fits')
     cmd = 'new-wcs -i %s -w %s -o %s -d' % (fitsimg, wcs, fullfn)
     run_convert_command(cmd)
     return fullfn
 
-def convert(job, df, fn, args=None):
+def convert(job, fn, args=None):
     if args is None:
         args = {}
     log('convert(%s, args=%s)' % (fn, str(args)))
@@ -98,6 +93,7 @@ def convert(job, df, fn, args=None):
     basename = os.path.join(tempdir, job.get_id() + '-')
     fullfn = basename + fn
     exists = os.path.exists(fullfn)
+    df = job.diskfile
 
     variant = 0
     if 'variant' in args:
@@ -116,10 +112,10 @@ def convert(job, df, fn, args=None):
         return fullfn
 
     elif fn == 'new.fits':
-        return convert_new_fits(job, df, fn, args, fullfn)
+        return convert_new_fits(job, fn, args, fullfn)
 
     elif fn == 'pnm':
-        infn = convert(job, df, 'uncomp')
+        infn = convert(job, 'uncomp')
         log('Converting %s to %s...\n' % (infn, fullfn))
         (filetype, errstr) = image2pnm.image2pnm(infn, fullfn, None, False, False, None, False)
         if errstr:
@@ -130,7 +126,7 @@ def convert(job, df, fn, args=None):
         return fullfn
 
     elif fn == 'getimagesize':
-        infn = convert(job, df, 'pnm')
+        infn = convert(job, 'pnm')
         x = run_pnmfile(infn)
         if x is None:
             raise FileConversionError('couldn\'t find file size')
@@ -142,7 +138,7 @@ def convert(job, df, fn, args=None):
 
     elif fn == 'pgm':
         # run 'pnmfile' on the pnm.
-        infn = convert(job, df, 'pnm')
+        infn = convert(job, 'pnm')
         x = run_pnmfile(infn)
         if x is None:
             raise FileConversionError('couldn\'t find file size')
@@ -166,7 +162,7 @@ def convert(job, df, fn, args=None):
             run_convert_command(cmd)
             return fullfn
 
-        imgfn = convert(job, df, 'pnm')
+        imgfn = convert(job, 'pnm')
         x = run_pnmfile(imgfn)
         if x is None:
             raise FileConversionError('pnmfile failed')
@@ -186,7 +182,7 @@ def convert(job, df, fn, args=None):
 
     elif fn == 'fitsimg':
         # check the uncompressed input image type...
-        infn = convert(job, df, 'uncomp')
+        infn = convert(job, 'uncomp')
         (df.filetype, cmd, errmsg) = image2pnm.get_image_type(infn)
         if errmsg:
             log(errmsg)
@@ -202,7 +198,7 @@ def convert(job, df, fn, args=None):
             return fullfn
 
         # else, convert to pgm and run pnm2fits.
-        infn = convert(job, df, 'pgm')
+        infn = convert(job, 'pgm')
         cmd = 'pnmtofits %s > %s' % (infn, fullfn)
         run_convert_command(cmd)
         return fullfn
@@ -221,14 +217,14 @@ def convert(job, df, fn, args=None):
             return None
 
         if job.is_input_text():
-            infn = convert(job, df, 'uncomp')
+            infn = convert(job, 'uncomp')
             cmd = 'xylist2fits %s %s' % (infn, fullfn)
             run_convert_command(cmd)
             return fullfn
 
         if job.is_input_fits():
             # For FITS bintable uploads: put it through fits2fits.
-            infn = convert(job, df, 'uncomp')
+            infn = convert(job, 'uncomp')
             errmsg = fits2fits.fits2fits(infn, fullfn, False)
             if errmsg:
                 log(errmsg)
@@ -250,13 +246,13 @@ def convert(job, df, fn, args=None):
             # HACK
             sxylog = '/tmp/alternate-xylist-%s.log' % variant
 
-        infn = convert(job, df, 'fitsimg')
+        infn = convert(job, 'fitsimg')
         cmd = 'image2xy -v %s-o %s %s >> %s 2>&1' % (extraargs, fullfn, infn, sxylog)
         run_convert_command(cmd)
         return fullfn
 
     elif fn == 'xyls-half':
-        infn = convert(job, df, 'fitsimg')
+        infn = convert(job, 'fitsimg')
         sxylog = 'blind.log'
         cmd = 'image2xy -H -o %s %s >> %s 2>&1' % (fullfn, infn, sxylog)
         run_convert_command(cmd)
@@ -264,9 +260,9 @@ def convert(job, df, fn, args=None):
 
     elif fn in [ 'xyls-sorted', 'xyls-half-sorted' ]:
         if fn == 'xyls-sorted':
-            infn = convert(job, df, 'xyls')
+            infn = convert(job, 'xyls')
         else:
-            infn = convert(job, df, 'xyls-half')
+            infn = convert(job, 'xyls-half')
         logfn = 'blind.log'
         cmd = 'resort-xylist -d %s %s 2>> %s' % (infn, fullfn, logfn)
         run_convert_command(cmd)
@@ -295,15 +291,13 @@ def convert(job, df, fn, args=None):
                    (xylist, df.imagew, df.imageh, fullfn))
             run_convert_command(cmd)
             return fullfn
-        infn = convert(job, df, 'pnm')
+        infn = convert(job, 'pnm')
         cmd = 'pnmtopng %s > %s' % (infn, fullfn)
         run_convert_command(cmd)
         return fullfn
 
     elif fn == 'jpeg-norm':
-        infn = convert(job, df, 'pnm')
-        #cmd = 'pnmtojpeg %s > %s' % (infn, fullfn)
-        #cmd = 'pnmnorm %s | pnmtojpeg > %s' % (infn, fullfn)
+        infn = convert(job, 'pnm')
         cmd = 'pnmnorm -keephues -wpercent 1 %s | pnmtojpeg > %s' % (infn, fullfn)
         run_convert_command(cmd)
         return fullfn
@@ -329,7 +323,7 @@ def convert(job, df, fn, args=None):
         return fullfn
 
     elif fn == 'thumbnail':
-        imgfn = convert(job, df, 'pnm-thumb')
+        imgfn = convert(job, 'pnm-thumb')
         cmd = 'pnmtopng %s > %s' % (imgfn, fullfn)
         run_convert_command(cmd)
         return fullfn
@@ -337,8 +331,7 @@ def convert(job, df, fn, args=None):
     elif fn in [ 'pnm-small', 'pnm-medium', 'pnm-thumb' ]:
         small = (fn == 'pnm-small')
         thumb = (fn == 'pnm-thumb')
-        imgfn = convert(job, df, 'pnm')
-        log('in convert(%s): df = %s' % (fn, str(df)))
+        imgfn = convert(job, 'pnm')
         if small:
             (scale, w, h) = df.get_small_scale()
         elif thumb:
@@ -347,7 +340,6 @@ def convert(job, df, fn, args=None):
             (scale, w, h) = df.get_medium_scale()
         if scale == 1:
             return imgfn
-        #cmd = 'pnmscale -reduce %g %s > %s' % (float(scale), imgfn, fullfn)
         cmd = 'pnmscale -width=%g -height=%g %s > %s' % (w, h, imgfn, fullfn)
         run_convert_command(cmd)
         return fullfn
@@ -367,9 +359,9 @@ def convert(job, df, fn, args=None):
                 (scale, dw, dh) = df.get_medium_scale()
             if scale == 1:
                 if eightbit:
-                    return convert(job, df, 'ppm-8bit')
+                    return convert(job, 'ppm-8bit')
                 else:
-                    return convert(job, df, 'ppm')
+                    return convert(job, 'ppm')
             xylist = job.get_axy_filename()
             cmd = ('plotxy -i %s -W %i -H %i -s %i -x 1 -y 1 -C brightred -w 2 -P > %s' %
                    (xylist, dw, dh, scale, fullfn))
@@ -377,11 +369,11 @@ def convert(job, df, fn, args=None):
             return fullfn
 
         if small:
-            imgfn = convert(job, df, 'pnm-small')
+            imgfn = convert(job, 'pnm-small')
         elif thumb:
-            imgfn = convert(job, df, 'pnm-thumb')
+            imgfn = convert(job, 'pnm-thumb')
         else:
-            imgfn = convert(job, df, 'pnm-medium')
+            imgfn = convert(job, 'pnm-medium')
         x = run_pnmfile(imgfn)
         if x is None:
             raise FileConversionError('pnmfile failed')
@@ -401,16 +393,16 @@ def convert(job, df, fn, args=None):
 
     elif fn.startswith('annotation'):
         if fn == 'annotation-big':
-            imgfn = convert(job, df, 'ppm-8bit')
+            imgfn = convert(job, 'ppm-8bit')
             scale = 1.0
         elif fn == 'annotation':
-            imgfn = convert(job, df, 'ppm-medium-8bit')
+            imgfn = convert(job, 'ppm-medium-8bit')
             (scale, dw, dh) = df.get_medium_scale()
         elif fn == 'annotation-small':
-            imgfn = convert(job, df, 'ppm-small-8bit')
+            imgfn = convert(job, 'ppm-small-8bit')
             (scale, dw, dh) = df.get_small_scale()
         elif fn == 'annotation-thumb':
-            imgfn = convert(job, df, 'ppm-thumb-8bit')
+            imgfn = convert(job, 'ppm-thumb-8bit')
             (scale, dw, dh) = df.get_thumbnail_scale()
 
 
@@ -448,15 +440,15 @@ def convert(job, df, fn, args=None):
             return fullfn
 
         if fn == 'redgreen':
-            imgfn = convert(job, df, 'ppm-medium-8bit')
+            imgfn = convert(job, 'ppm-medium-8bit')
             (dscale, dw, dh) = df.get_medium_scale()
             scale = 1.0 / float(dscale)
         else:
-            imgfn = convert(job, df, 'ppm-8bit')
+            imgfn = convert(job, 'ppm-8bit')
             scale = 1.0
         fxy = job.get_axy_filename()
         match = job.get_filename('match.fits')
-        ixy = convert(job, df, 'index-xy')
+        ixy = convert(job, 'index-xy')
         commonargs = ' -S %f -x %f -y %f -w 2' % (scale, scale, scale)
         logfn = 'blind.log'
         if 0:
@@ -479,13 +471,13 @@ def convert(job, df, fn, args=None):
         return fullfn
 
     elif fn == 'sources-small':
-        imgfn = convert(job, df, 'ppm-small-8bit')
+        imgfn = convert(job, 'ppm-small-8bit')
         if variant:
             fn = 'sources-small-%i' % variant
             fullfn = basename + fn
             if os.path.exists(fullfn):
                 return fullfn
-            xyls = convert(job, df, 'xyls', args)
+            xyls = convert(job, 'xyls', args)
         else:
             xyls = job.get_axy_filename()
         (dscale, dw, dh) = df.get_small_scale()
@@ -501,7 +493,7 @@ def convert(job, df, fn, args=None):
         return fullfn
 
     elif fn == 'sources-medium':
-        imgfn = convert(job, df, 'ppm-medium-8bit')
+        imgfn = convert(job, 'ppm-medium-8bit')
         xyls = job.get_axy_filename()
         (dscale, dw, dh) = df.get_medium_scale()
         scale = 1.0 / float(dscale)
@@ -515,7 +507,7 @@ def convert(job, df, fn, args=None):
         return fullfn
 
     elif fn == 'sources-big':
-        imgfn = convert(job, df, 'ppm-8bit')
+        imgfn = convert(job, 'ppm-8bit')
         xyls = job.get_axy_filename()
         commonargs = ('-i %s -x %g -y %g -w 2 -C red' %
                       (xyls, 1, 1))

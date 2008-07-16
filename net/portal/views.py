@@ -318,7 +318,7 @@ def joblist(request):
                 t = job.description or ''
             elif c == 'objsin':
                 if job.solved():
-                    objs = get_objs_in_field(job, job.diskfile)
+                    objs = get_objs_in_field(job)
                     t = ', '.join([
                         ('<a href="' + request.path + '?'
                          + urlescape(urlencode({'type': 'tag',
@@ -506,7 +506,7 @@ def jobstatus(request, jobid=None):
     # (image url, link url)
     #otherxylists.append(('test-image-url', 'test-link-url'))
     for n in (1,2,3,4):
-        fn = convert(job, df, 'xyls-exists?', { 'variant': n })
+        fn = convert(job, 'xyls-exists?', { 'variant': n })
         if fn is None:
             break
         otherxylists.append((get_file_url(job, 'sources-small', 'variant=%i' % n),
@@ -553,7 +553,7 @@ def jobstatus(request, jobid=None):
         }
 
     if job.solved():
-        wcsinfofn = convert(job, df, 'wcsinfo')
+        wcsinfofn = convert(job, 'wcsinfo')
         f = open(wcsinfofn)
         wcsinfotxt = f.read()
         f.close()
@@ -624,7 +624,7 @@ def jobstatus(request, jobid=None):
                           url + largestyle + urlargs])
 
         # HACK
-        fn = convert(job, df, 'fullsizepng')
+        fn = convert(job, 'fullsizepng')
         url = (reverse('astrometry.net.tile.views.index') +
                ('?zoom=%i&ra=%.3f&dec=%.3f&userimage=%s' %
                 (int(wcsinfo['merczoom']), float(wcsinfo['ra_center']),
@@ -721,7 +721,7 @@ def getfile(request, jobid=None, filename=None):
                 convertargs[x] = request.GET[x]
 
     if filename in pngimages:
-        fn = convert(job, job.diskfile, filename, convertargs)
+        fn = convert(job, filename, convertargs)
         return send_file(fn, ctype='image/png')
 
     binaryfiles = [ 'wcs.fits', 'match.fits', 'field.xy.fits', 'field.rd.fits',
@@ -731,7 +731,7 @@ def getfile(request, jobid=None, filename=None):
         if filename == 'field.xy.fits':
             fn = job.get_axy_filename()
         elif filename in [ 'index.xy.fits', 'field.rd.fits', 'new.fits' ]:
-            filename = convert(job, job.diskfile, filename, convertargs)
+            filename = convert(job, filename, convertargs)
             fn = job.get_filename(filename)
         else:
             fn = job.get_filename(filename)

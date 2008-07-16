@@ -11,7 +11,7 @@ from django.db import models
 
 from astrometry.net.portal.models import Job, Submission, DiskFile, Calibration, Tag
 from astrometry.net.portal.log import log
-from astrometry.net.portal.convert import convert, is_tarball, get_objs_in_field, FileConversionError
+from astrometry.net.portal.convert import convert, is_tarball, FileConversionError
 from astrometry.util.run_command import run_command
 
 # http://www.techcrunch.com/get-youtube-movie/
@@ -80,15 +80,15 @@ if __name__ == '__main__':
             ns += 1
             if render_ann:
                 print 'Job %i: creating annotation.' % (i+1)
-                annfn = convert(job, job.diskfile, 'annotation-big', ann_args)
+                annfn = convert(job, 'annotation-big', ann_args)
             if render_sky:
                 print 'Job %i: creating on-the-sky.' % (i+1)
-                skyfn = convert(job, job.diskfile, 'onsky-dot')
+                skyfn = convert(job, 'onsky-dot')
         else:
             nu += 1
             if render_ann:
                 print 'Job %i: getting original.' % (i+1)
-                annfn = convert(job, job.diskfile, 'fullsizepng')
+                annfn = convert(job, 'fullsizepng')
             if render_sky:
                 skyfn = None
 
