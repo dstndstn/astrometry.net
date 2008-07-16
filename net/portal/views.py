@@ -60,9 +60,20 @@ def get_job(jobid):
 # request.job
 def needs_job(handler):
     def handle_request(request, *args, **kwargs):
-        #log('Calling handler...')
+        #log('args is', args)
+        #log('kwargs is', kwargs)
+        if 'jobid' in kwargs:
+            jobid = kwargs['jobid']
+        elif request.GET:
+            jobid = request.GET.get('jobid')
+        elif request.POST:
+            jobid = request.POST.get('jobid')
+        #request.jobid = jobid
+        job = get_job(jobid)
+        if not job:
+            return HttpResponse('no job with jobid ' + jobid)
+        request.job = job
         rtn = handler(request, *args, **kwargs)
-        #log('Called handler.')
         return rtn
     return handle_request
 
@@ -446,13 +457,9 @@ def run_variant(request):
     return HttpResponse('Not implemented')
 
 @login_required
+@needs_job
 def job_set_description(request):
-    if not 'jobid' in request.POST:
-        return HttpResponse('no jobid')
-    jobid = request.POST['jobid']
-    job = get_job(jobid)
-    if not job:
-        return HttpResponse('no such jobid')
+    job = request.job
     if job.get_user() != request.user:
         return HttpResponse('not your job')
     if not 'desc' in request.POST:
@@ -480,7 +487,7 @@ def get_neighbouring_healpixes(nside, hp):
         hps.append((nside+1, i))
     return hps
 
-@needs_job
+#@needs_job
 def jobstatus(request, jobid=None):
     log('jobstatus: jobid=', jobid)
     job = get_job(jobid)
@@ -696,10 +703,9 @@ def getfield(request):
     f.close()
     return res
 
+@needs_job
 def getfile(request, jobid=None, filename=None):
-    job = get_job(jobid)
-    if not job:
-        return HttpResponse('no such job')
+    job = request.job
 
     jobowner = (job.get_user() == request.user)
     anonymous = job.is_exposed()
@@ -895,12 +901,9 @@ def changeperms(request):
     return HttpResponseRedirect(reverse(summary))
 
 @login_required
+@needs_job
 def publishtovo(request):
-    if not 'jobid' in request.POST:
-        return HttpResponse('no jobid')
-    job = get_job(request.POST['jobid'])
-    if not job:
-        return HttpResponse('no job')
+    job = request.job
     if job.submission.user != request.user:
         return HttpResponse('not your job')
     if not job.solved():
