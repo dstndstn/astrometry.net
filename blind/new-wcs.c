@@ -160,10 +160,9 @@ int new_wcs(const char* infn, const char* wcsfn, const char* outfn,
 			logverb("Regular expression matched: \"%s\", key \"%s\".\n", exclude_input[imatch], key);
 			snprintf(newkey, FITS_LINESZ+1, "Original key: \"%s\"", key);
 			qfits_header_append(outhdr, "COMMENT", newkey, NULL, NULL);
-            /*
-             snprintf(newkey, FITS_LINESZ+1, "_%.7s", key);
-             strcpy(key, newkey);
-             */
+            // Completely skip the END card, since _ND is not a valid line.
+            if (streq(key, "END"))
+                continue;
             line[0] = '_';
 		}
 
