@@ -58,9 +58,9 @@ static void get_filenames(const char* indexname,
         char* fits;
         if (file_readable(indexname)) {
             // assume single-file index.
-            *ckdtfn = strdup(indexname);
-            *skdtfn = strdup(indexname);
-            *quadfn = strdup(indexname);
+            if (ckdtfn) *ckdtfn = strdup(indexname);
+            if (skdtfn) *skdtfn = strdup(indexname);
+            if (quadfn) *quadfn = strdup(indexname);
             *singlefile = TRUE;
             return;
         }
@@ -68,9 +68,9 @@ static void get_filenames(const char* indexname,
         if (file_readable(fits)) {
             // assume single-file index.
             indexname = fits;
-            *ckdtfn = strdup(indexname);
-            *skdtfn = strdup(indexname);
-            *quadfn = strdup(indexname);
+            if (ckdtfn) *ckdtfn = strdup(indexname);
+            if (skdtfn) *skdtfn = strdup(indexname);
+            if (quadfn) *quadfn = strdup(indexname);
             *singlefile = TRUE;
             free(fits);
             return;
@@ -78,12 +78,21 @@ static void get_filenames(const char* indexname,
         free(fits);
         basename = strdup(indexname);
     }
-    asprintf(ckdtfn, "%s.ckdt.fits", basename);
-    asprintf(skdtfn, "%s.skdt.fits", basename);
-    asprintf(quadfn, "%s.quad.fits", basename);
+    if (ckdtfn) asprintf(ckdtfn, "%s.ckdt.fits", basename);
+    if (skdtfn) asprintf(skdtfn, "%s.skdt.fits", basename);
+    if (quadfn) asprintf(quadfn, "%s.quad.fits", basename);
     *singlefile = FALSE;
     free(basename);
     return;
+}
+
+char* index_get_quad_filename(const char* indexname) {
+    char* quadfn;
+    bool singlefile;
+    if (!index_is_file_index(indexname))
+        return NULL;
+    get_filenames(indexname, &quadfn, NULL, NULL, &singlefile);
+    return quadfn;
 }
 
 bool index_is_file_index(const char* filename) {
@@ -154,7 +163,7 @@ index_t* index_load(const char* indexname, int flags) {
 	char *codetreefname=NULL, *quadfname=NULL, *startreefname=NULL;
     bool singlefile;
 	index_t* index = calloc(1, sizeof(index_t));
-	index->meta.indexname = strdup(indexname);
+	//index->meta.indexname = strdup(indexname);
 
 	if (flags & INDEX_ONLY_LOAD_METADATA)
 		logverb("Loading metadata for %s...\n", indexname);
@@ -163,6 +172,8 @@ index_t* index_load(const char* indexname, int flags) {
     get_filenames(indexname, &quadfname, &codetreefname, &startreefname, &singlefile);
     gettimeofday(&tv2, NULL);
     debug("get_filenames took %g ms.\n", millis_between(&tv1, &tv2));
+
+	index->meta.indexname = strdup(quadfname);
 
 	// Read .skdt file...
 	logverb("Reading star KD tree from %s...\n", startreefname);

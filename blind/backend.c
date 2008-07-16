@@ -55,6 +55,24 @@ static int add_index(backend_t* backend, char* path) {
     index_t* ind = NULL;
     index_meta_t* meta;
     index_meta_t mymeta;
+    char* quadpath = index_get_quad_filename(path);
+    char* base = basename_safe(quadpath);
+    free(quadpath);
+
+    // check that an index with the same filename hasn't already been added.
+    for (k=0; k<bl_size(backend->indexmetas); k++) {
+        index_meta_t* m = bl_access(backend->indexmetas, k);
+        // m->indexname is a path to the quad filename; strip off directory component.
+        char* mbase = basename_safe(m->indexname);
+        bool eq = streq(base, mbase);
+        free(mbase);
+        if (eq) {
+            logverb("Skipping index because we've already seen an index with the same name: %s\n", m->indexname);
+            free(base);
+            return 0;
+        }
+    }
+    free(base);
 
     if (backend->inparallel) {
         struct timeval tv1, tv2;
@@ -432,6 +450,7 @@ int backend_run_job(backend_t* backend, job_t* job) {
             blind_clear_verify_wcses(bp);
             blind_clear_indexes(bp);
             blind_clear_solutions(bp);
+            blind_clear_indexes(bp);
             solver_clear_indexes(sp);
 
             if (blind_is_run_obsolete(bp, sp)) {

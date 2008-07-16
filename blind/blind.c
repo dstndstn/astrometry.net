@@ -118,6 +118,7 @@ void blind_clear_solutions(blind_t* bp) {
 
 void blind_clear_indexes(blind_t* bp) {
     sl_remove_all(bp->indexnames);
+    pl_remove_all(bp->indexes);
 }
 
 void blind_set_field_file(blind_t* bp, const char* fn) {
@@ -543,17 +544,25 @@ void blind_log_run_parameters(blind_t* bp) {
     N = n_indexes(bp);
     for (i=0; i<N; i++)
         logverb("  %s\n", get_index_name(bp, i));
-	logverb("fieldfname %s\n", bp->fieldfname);
+    if (bp->fieldfname)
+        logverb("fieldfname %s\n", bp->fieldfname);
 	for (i = 0; i < sl_size(bp->verify_wcsfiles); i++)
 		logverb("verify %s\n", sl_get(bp->verify_wcsfiles, i));
 	logverb("fieldid %i\n", bp->fieldid);
-	logverb("matchfname %s\n", bp->matchfname);
-	logverb("solved_in %s\n", bp->solved_in);
-	logverb("solved_out %s\n", bp->solved_out);
-	logverb("solvedserver %s\n", bp->solvedserver);
-	logverb("cancel %s\n", bp->cancelfname);
-	logverb("wcs %s\n", bp->wcs_template);
-	logverb("fieldid_key %s\n", bp->fieldid_key);
+    if (bp->matchfname)
+        logverb("matchfname %s\n", bp->matchfname);
+    if (bp->solved_in)
+        logverb("solved_in %s\n", bp->solved_in);
+    if (bp->solved_out)
+        logverb("solved_out %s\n", bp->solved_out);
+    if (bp->solvedserver)
+        logverb("solvedserver %s\n", bp->solvedserver);
+    if (bp->cancelfname)
+        logverb("cancel %s\n", bp->cancelfname);
+    if (bp->wcs_template)
+        logverb("wcs %s\n", bp->wcs_template);
+    if (bp->fieldid_key)
+        logverb("fieldid_key %s\n", bp->fieldid_key);
 	logverb("parity %i\n", sp->parity);
 	logverb("codetol %g\n", sp->codetol);
 	logverb("startdepth %i\n", sp->startobj);
@@ -561,8 +570,10 @@ void blind_log_run_parameters(blind_t* bp) {
 	logverb("fieldunits_lower %g\n", sp->funits_lower);
 	logverb("fieldunits_upper %g\n", sp->funits_upper);
 	logverb("verify_pix %g\n", sp->verify_pix);
-	logverb("xcolname %s\n", bp->xcolname);
-	logverb("ycolname %s\n", bp->ycolname);
+    if (bp->xcolname)
+        logverb("xcolname %s\n", bp->xcolname);
+    if (bp->ycolname)
+        logverb("ycolname %s\n", bp->ycolname);
 	logverb("maxquads %i\n", sp->maxquads);
 	logverb("maxmatches %i\n", sp->maxmatches);
 	logverb("cpulimit %f\n", bp->cpulimit);
