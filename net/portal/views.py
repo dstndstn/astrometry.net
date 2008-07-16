@@ -30,7 +30,6 @@ from astrometry.net.portal.log import log
 from astrometry.net.portal import tags
 from astrometry.net.portal import nearby
 from astrometry.util.file import file_size
-#from astrometry.net.vo.models import Image as voImage
 from astrometry.net import settings
 from astrometry.util import sip
 
