@@ -550,7 +550,7 @@ class Job(models.Model):
         stype = self.get_scaletype()
         if stype == 'ul':
             val = '%.2f to %.2f' % (self.get_scalelower(), self.get_scaleupper())
-        elif self.scaletype == 'ev':
+        elif stype == 'ev':
             val = '%.2f plus or minus %.2f%%' % (self.get_scaleest(), self.get_scaleerr())
 
         txt = None
