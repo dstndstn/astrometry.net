@@ -339,8 +339,7 @@ def get_tile(request):
 
                 if not os.path.exists(jpegfn):
                     logging.debug('Writing JPEG file ' + jpegfn)
-                    df = job.diskfile
-                    tmpjpeg = convert(job, df, 'jpeg-norm')
+                    tmpjpeg = convert(job, 'jpeg-norm')
                     shutil.copy(tmpjpeg, jpegfn)
 
                 filenames.append(fn)
