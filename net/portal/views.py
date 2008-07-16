@@ -56,26 +56,45 @@ def get_job(jobid):
     job = jobs[0]
     return job
 
+def get_job_and_sub(request, args, kwargs):
+    jobid = None
+    if 'jobid' in kwargs:
+        jobid = kwargs['jobid']
+    elif request.GET:
+        jobid = request.GET.get('jobid')
+    elif request.POST:
+        jobid = request.POST.get('jobid')
+    job = None
+    log('jobid', jobid)
+    if jobid:
+        job = get_job(jobid)
+    sub = None
+    subid = request.GET.get('subid')
+    if subid:
+        sub = get_submission(subid)
+    return (job, sub)
+
 # a decorator for calls that need a valid jobid; puts the job in
 # request.job
 def needs_job(handler):
     def handle_request(request, *args, **kwargs):
-        #log('args is', args)
-        #log('kwargs is', kwargs)
-        if 'jobid' in kwargs:
-            jobid = kwargs['jobid']
-        elif request.GET:
-            jobid = request.GET.get('jobid')
-        elif request.POST:
-            jobid = request.POST.get('jobid')
-        #request.jobid = jobid
-        job = get_job(jobid)
+        (job,sub) = get_job_and_sub(request, args, kwargs)
         if not job:
             return HttpResponse('no job with jobid ' + jobid)
         request.job = job
-        rtn = handler(request, *args, **kwargs)
-        return rtn
+        return handler(request, *args, **kwargs)
     return handle_request
+
+# a decorator for calls that need a valid jobid; puts the job in
+# request.job
+def wants_job_or_sub(handler):
+    def handle_request(request, *args, **kwargs):
+        (job,sub) = get_job_and_sub(request, args, kwargs)
+        request.job = job
+        request.sub = sub
+        return handler(request, *args, **kwargs)
+    return handle_request
+
 
 def get_submission(subid):
     if subid is None:
@@ -93,17 +112,11 @@ def getsessionjob(request):
     return get_job(jobid)
 
 @login_required
+@wants_job_or_sub
 def joblist(request):
     myargs = QueryDict('', mutable=True)
-
-    sub = None
-    subid = request.GET.get('subid')
-    if subid:
-        sub = get_submission(subid)
-    job = None
-    jobid = request.GET.get('jobid')
-    if jobid:
-        job = get_job(jobid)
+    job = request.job
+    sub = request.sub
     n = int(request.GET.get('n', '50'))
     start = int(request.GET.get('start', '0'))
     if n:
@@ -381,7 +394,6 @@ def joblist(request):
             'jobs' : jobs,
             'rjobs' : rjobs,
             'reload_time' : (len(jobs) < 2) and 2 or 15,
-            'statusurl' : get_status_url(''),
             'gmaps' : gmaps,
             'title' : title,
             })
@@ -487,29 +499,26 @@ def get_neighbouring_healpixes(nside, hp):
         hps.append((nside+1, i))
     return hps
 
-#@needs_job
+@wants_job_or_sub
 def jobstatus(request, jobid=None):
     log('jobstatus: jobid=', jobid)
-    job = get_job(jobid)
-    if not job:
-        log('job not found.')
-        submissions = Submission.objects.all().filter(subid=jobid)
-        log('found %i submissions.' % len(submissions))
-        if len(submissions):
-            submission = submissions[0]
-            log('submission: ', submission)
-            jobs = submission.jobs.all()
-            log('submission has %i jobs.' % len(jobs))
-            if len(jobs) == 1:
-                job = jobs[0]
-                jobid = job.jobid
-                log('submission has one job:', jobid)
-                return HttpResponseRedirect(get_status_url(jobid))
-            else:
-                return submission_status(request, submission)
+    job = request.job
+    sub = request.sub
+    log('job is', job)
+    log('sub is', sub)
+    if sub:
+        jobs = submission.jobs.all()
+        log('submission has %i jobs.' % len(jobs))
+        if len(jobs) == 1:
+            job = jobs[0]
+            jobid = job.jobid
+            log('submission has one job:', jobid)
+            return HttpResponseRedirect(get_status_url(jobid))
         else:
-            return HttpResponse('no job with jobid ' + jobid)
-    log('job found.')
+            return submission_status(request, submission)
+
+    if job is None:
+        return HttpResponse('no such job')
 
     jobowner = (job.submission.user == request.user)
     anonymous = job.allowanonymous()
@@ -868,6 +877,7 @@ def summary(request):
     return HttpResponse(t.render(c))
     
 @login_required
+@wants_job_or_sub
 def changeperms(request):
     if not request.POST:
         return HttpResponse('no POST')
@@ -876,25 +886,26 @@ def changeperms(request):
     log('changeperms:')
     for k,v in request.POST.items():
         log('  %s = %s' % (str(k), str(v)))
-    expose = int(request.POST.get('exposejob', '-1'))
-    if expose in [0, 1]:
-        job = get_job(request.POST.get('jobid'))
-        if job is None:
-            return HttpResponse('no jobid')
-        if job.get_user() != request.user:
-            return HttpResponse('not your job!')
-        log('exposejob = %i' % expose)
-        job.set_exposed(expose)
-        job.save()
-    exposeall = int(request.POST.get('exposeall', '-1'))
-    if exposeall in [0, 1]:
-        #jobs = Job.objects.all().filter(submission.user=request.user)
-        subs = Submission.objects.all().filter(user=request.user)
-        for sub in subs:
-            jobs = sub.jobs.all()
-            for job in jobs:
-                job.set_exposed(exposeall)
-                job.save()
+    if 'exposejob' in request.POST:
+        expose = int(request.POST.get('exposejob', '-1'))
+        if expose in [0, 1]:
+            job = request.job
+            if job is None:
+                return HttpResponse('no job')
+            if job.get_user() != request.user:
+                return HttpResponse('not your job!')
+            log('exposejob = %i' % expose)
+            job.set_exposed(expose)
+            job.save()
+    if 'exposeall' in request.POST:
+        exposeall = int(request.POST.get('exposeall', '-1'))
+        if exposeall in [0, 1]:
+            subs = Submission.objects.all().filter(user=request.user)
+            for sub in subs:
+                jobs = sub.jobs.all()
+                for job in jobs:
+                    job.set_exposed(exposeall)
+                    job.save()
 
     if 'HTTP_REFERER' in request.META:
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
