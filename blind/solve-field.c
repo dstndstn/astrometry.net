@@ -445,10 +445,8 @@ int main(int argc, char** args) {
         // Do %s replacement on --verify-wcs entries...
         if (sl_size(axy->verifywcs)) {
             sl* newlist = sl_new(4);
-            for (j=0; j<sl_size(axy->verifywcs); j++) {
+            for (j=0; j<sl_size(axy->verifywcs); j++)
                 sl_appendf(newlist, sl_get(axy->verifywcs, j), base);
-            }
-            sl_free2(axy->verifywcs);
             axy->verifywcs = newlist;
         }
 
@@ -882,6 +880,10 @@ int main(int argc, char** args) {
 			if (rmdir(fn))
 				SYSERROR("Failed to delete temp dir \"%s\"", fn);
 		}
+        // erm.
+        if (axy->verifywcs != allaxy->verifywcs)
+            sl_free2(axy->verifywcs);
+
         sl_free2(cmdline);
 		sl_free2(outfiles);
 		sl_free2(tempfiles);

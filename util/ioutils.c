@@ -311,7 +311,7 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 		}
 		if (errlines) {
 			close(errpipe[0]);
-			// bind stdout to the pipe.
+			// bind stderr to the pipe.
 			if (dup2(errpipe[1], STDERR_FILENO) == -1) {
                 SYSERROR("Failed to dup2 stderr");
 				_exit( -1);
@@ -481,8 +481,10 @@ sl* fid_get_lines(FILE* fid, bool include_newlines) {
 			sl_free2(list);
 			return NULL;
 		}
-        if (feof(fid) && line[0] == '\0')
+        if (feof(fid) && line[0] == '\0') {
+            free(line);
             break;
+        }
         sl_append_nocopy(list, line);
 		if (feof(fid))
 			break;

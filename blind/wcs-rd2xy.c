@@ -36,6 +36,7 @@ int wcs_rd2xy(const char* wcsfn, const char* rdlsfn, const char* xylsfn,
 	sip_t sip;
 	int i;
     bool alloced_fields = FALSE;
+    int rtn = -1;
 
 	// read WCS.
 	if (forcetan) {
@@ -131,12 +132,15 @@ int wcs_rd2xy(const char* wcsfn, const char* rdlsfn, const char* xylsfn,
 		ERROR("Failed to fix header of XYLS file");
         goto bailout;
 	}
+    xyls = NULL;
 
 	if (rdlist_close(rdls)) {
 		ERROR("Failed to close RDLS file");
         goto bailout;
 	}
-    return 0;
+    rdls = NULL;
+
+    rtn = 0;
 
  bailout:
     if (alloced_fields)
@@ -145,6 +149,6 @@ int wcs_rd2xy(const char* wcsfn, const char* rdlsfn, const char* xylsfn,
         rdlist_close(rdls);
     if (xyls)
         xylist_close(xyls);
-    return -1;
+    return rtn;
 }
 
