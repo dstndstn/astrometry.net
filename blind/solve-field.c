@@ -137,6 +137,93 @@ static void append_executable(sl* list, const char* fn, const char* me) {
     free(exec);
 }
 
+static int write_kmz(const augment_xylist_t* axy, const char* kmzfn,
+                     const char* tempdir, sl* tempdirs, sl* tempfiles) {
+    char* pngfn = NULL;
+    char* kmlfn = NULL;
+    char* warpedpngfn = NULL;
+    char* tmpdir;
+    char* cmd = NULL;
+    sl* cmdline = sl_new(16);
+            
+    tmpdir = create_temp_dir("kmz", tempdir);
+    if (!tmpdir) {
+        ERROR("Failed to create temp dir for KMZ output");
+        sl_free2(cmdline);
+        return -1;
+    }
+    sl_append_nocopy(tempdirs, tmpdir);
+
+    pngfn = create_temp_file("png", tempdir);
+    sl_append_nocopy(tempfiles, pngfn);
+
+    sl_append(cmdline, "pnmtopng");
+    append_escape(cmdline, axy->pnmfn);
+    sl_append(cmdline, ">");
+    append_escape(cmdline, pngfn);
+    // run it
+    cmd = sl_implode(cmdline, " ");
+    sl_remove_all(cmdline);
+    logverb("Running:\n  %s\n", cmd);
+    if (run_command_get_outputs(cmd, NULL, NULL)) {
+        ERROR("pnmtopng failed");
+        free(cmd);
+        sl_free2(cmdline);
+        return -1;
+    }
+    free(cmd);
+
+    kmlfn       = sl_appendf(tempfiles, "%s/%s", tmpdir, "doc.kml");
+    warpedpngfn = sl_appendf(tempfiles, "%s/%s", tmpdir, "warped.png");
+
+    logverb("Trying to run wcs2kml to generate KMZ output.\n");
+    sl_append(cmdline, "wcs2kml");
+    // FIXME - if parity?
+    sl_append(cmdline, "--input_image_origin_is_upper_left");
+    appendf_escape(cmdline, "--fitsfile=%s", axy->wcsfn);
+    appendf_escape(cmdline, "--imagefile=%s", pngfn);
+    appendf_escape(cmdline, "--kmlfile=%s", kmlfn);
+    appendf_escape(cmdline, "--outfile=%s", warpedpngfn);
+    // run it
+    cmd = sl_implode(cmdline, " ");
+    sl_remove_all(cmdline);
+    logverb("Running:\n  %s\n", cmd);
+    if (run_command_get_outputs(cmd, NULL, NULL)) {
+        ERROR("wcs2kml failed");
+        free(cmd);
+        sl_free2(cmdline);
+        return -1;
+    }
+    free(cmd);
+
+    sl_append(cmdline, "zip");
+    sl_append(cmdline, "-j"); // no paths, just filenames
+    //if (!verbose)
+    //sl_append(cmdline, "-q");
+    // pipe to stdout, because zip likes to add ".zip" to the
+    // output filename, and provides no way to turn off this
+    // behaviour.
+    sl_append(cmdline, "-");
+    appendf_escape(cmdline, "%s", warpedpngfn);
+    appendf_escape(cmdline, "%s", kmlfn);
+    sl_append(cmdline, ">");
+    append_escape(cmdline, kmzfn);
+
+    // run it
+    cmd = sl_implode(cmdline, " ");
+    sl_remove_all(cmdline);
+    logverb("Running:\n  %s\n", cmd);
+    if (run_command_get_outputs(cmd, NULL, NULL)) {
+        ERROR("zip failed");
+        free(cmd);
+        sl_free2(cmdline);
+        return -1;
+    }
+    free(cmd);
+    sl_free2(cmdline);
+    return 0;
+}
+
 int main(int argc, char** args) {
 	int c;
 	bool help = FALSE;
@@ -783,82 +870,12 @@ int main(int argc, char** args) {
 			}
 
             if (axy->imagefn && kmzfn) {
-                char* pngfn = NULL;
-                char* kmlfn = NULL;
-                char* warpedpngfn = NULL;
-                char* tmpdir;
                 char* realkmzfn;
-
                 asprintf(&realkmzfn, kmzfn, base);
-                
-                tmpdir = create_temp_dir("kmz", tempdir);
-                if (!tmpdir) {
-                    ERROR("Failed to create temp dir for KMZ output");
+                if (write_kmz(axy, realkmzfn, tempdir, tempdirs, tempfiles)) {
+                    ERROR("Failed to write KMZ.");
                     exit(-1);
                 }
-                sl_append_nocopy(tempdirs, tmpdir);
-
-                pngfn = create_temp_file("png", tempdir);
-                sl_append_nocopy(tempfiles, pngfn);
-
-                sl_append(cmdline, "pnmtopng");
-                append_escape(cmdline, axy->pnmfn);
-                sl_append(cmdline, ">");
-                append_escape(cmdline, pngfn);
-                // run it
-				cmd = sl_implode(cmdline, " ");
-				sl_remove_all(cmdline);
-                logverb("Running:\n  %s\n", cmd);
-                if (run_command_get_outputs(cmd, NULL, NULL)) {
-                    ERROR("pnmtopng failed");
-                    exit(-1);
-                }
-				free(cmd);
-
-                kmlfn       = sl_appendf(tempfiles, "%s/%s", tmpdir, "doc.kml");
-                warpedpngfn = sl_appendf(tempfiles, "%s/%s", tmpdir, "warped.png");
-
-                logverb("Trying to run wcs2kml to generate KMZ output.\n");
-                sl_append(cmdline, "wcs2kml");
-                // FIXME - if parity?
-                sl_append(cmdline, "--input_image_origin_is_upper_left");
-                appendf_escape(cmdline, "--fitsfile=%s", axy->wcsfn);
-                appendf_escape(cmdline, "--imagefile=%s", pngfn);
-                appendf_escape(cmdline, "--kmlfile=%s", kmlfn);
-                appendf_escape(cmdline, "--outfile=%s", warpedpngfn);
-                // run it
-				cmd = sl_implode(cmdline, " ");
-				sl_remove_all(cmdline);
-                logverb("Running:\n  %s\n", cmd);
-                if (run_command_get_outputs(cmd, NULL, NULL)) {
-                    ERROR("wcs2kml failed");
-                    exit(-1);
-                }
-				free(cmd);
-
-                sl_append(cmdline, "zip");
-                sl_append(cmdline, "-j"); // no paths, just filenames
-                if (!verbose)
-                    sl_append(cmdline, "-q");
-                // pipe to stdout, because zip likes to add ".zip" to the
-                // output filename, and provides no way to turn off this
-                // behaviour.
-                sl_append(cmdline, "-");
-                appendf_escape(cmdline, "%s", warpedpngfn);
-                appendf_escape(cmdline, "%s", kmlfn);
-                sl_append(cmdline, ">");
-                append_escape(cmdline, realkmzfn);
-
-                // run it
-				cmd = sl_implode(cmdline, " ");
-				sl_remove_all(cmdline);
-                logverb("Running:\n  %s\n", cmd);
-                if (run_command_get_outputs(cmd, NULL, NULL)) {
-                    ERROR("zip failed");
-                    exit(-1);
-                }
-				free(cmd);
-
                 free(realkmzfn);
             }
 

@@ -433,7 +433,7 @@ char* shell_escape(const char* str) {
     return result;
 }
 
-char* create_temp_file(char* fn, char* dir) {
+char* create_temp_file(const char* fn, const char* dir) {
     char* tempfile;
     int fid;
     asprintf_safe(&tempfile, "%s/tmp.%s.XXXXXX", dir, fn);
@@ -447,7 +447,7 @@ char* create_temp_file(char* fn, char* dir) {
     return tempfile;
 }
 
-char* create_temp_dir(char* name, char* dir) {
+char* create_temp_dir(const char* name, const char* dir) {
     char* tempdir;
     asprintf_safe(&tempdir, "%s/tmp.%s.XXXXXX", dir, name);
     if (!mkdtemp(tempdir)) {
