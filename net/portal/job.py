@@ -454,7 +454,7 @@ class Job(models.Model):
         # Find the list of objects in the field and add them as
         # machine tags to the Job.
         if self.solved():
-            objs = get_objs_in_field(self, self.diskfile)
+            objs = get_objs_in_field(self)
             for obj in objs:
                 tag = Tag(job=self,
                           user=self.get_user(),

@@ -581,7 +581,7 @@ def jobstatus(request, jobid=None):
                      'fieldrdurl' : get_file_url(job, 'field.rd.fits'),
                      })
 
-        ctxt['objsinfield'] = get_objs_in_field(job, df)
+        ctxt['objsinfield'] = get_objs_in_field(job)
 
         # deg
         fldsz = math.sqrt(df.imagew * df.imageh) * float(wcsinfo['pixscale']) / 3600.0
