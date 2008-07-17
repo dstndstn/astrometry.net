@@ -22,6 +22,7 @@
 
 #include "an-opts.h"
 #include "bl.h"
+#include "log.h"
 
 void opts_print_help(bl* opts, FILE* fid,
                      void (*special_case)(an_option_t* opt, bl* allopts, int index,
@@ -83,6 +84,8 @@ int opts_getopt(bl* opts, int argc, char** argv) {
         longoptions[j].val = opt->shortopt;
         j++;
     }
+
+    debug("optstring: \"%s\"\n", optstring);
 
     c = getopt_long(argc, argv, optstring, longoptions, NULL);
 

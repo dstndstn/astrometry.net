@@ -260,6 +260,8 @@ int fitstable_write_row(fitstable_t* table, ...);
 // Writes one row, with data drawn from the given structure.
 int fitstable_write_struct(fitstable_t* table, const void* struc);
 
+int fitstable_pad_with(fitstable_t* table, char pad);
+
 // Fills in one column, starting at "rowoffset" and of length "nrows",
 // by taking data from the given structure.
 // Leaves the file offset unchanged.

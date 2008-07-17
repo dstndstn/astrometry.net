@@ -410,7 +410,6 @@ int augment_xylist(augment_xylist_t* axy,
 		char *sanitizedfn;
 		char *pnmfn;				
 		sl* lines;
-		bool isfits;
         bool iscompressed;
 		char *fitsimgfn;
 		char* line;
@@ -450,12 +449,12 @@ int augment_xylist(augment_xylist_t* axy,
 
         lines = backtick(cmd, verbose);
 
-		isfits = FALSE;
+		axy->isfits = FALSE;
         iscompressed = FALSE;
 		for (i=0; i<sl_size(lines); i++) {
             logverb("  %s\n", sl_get(lines, i));
 			if (!strcmp("fits", sl_get(lines, i)))
-				isfits = TRUE;
+				axy->isfits = TRUE;
 			if (!strcmp("compressed", sl_get(lines, i)))
 				iscompressed = TRUE;
 		}
@@ -485,7 +484,7 @@ int augment_xylist(augment_xylist_t* axy,
 		}
 		sl_free2(lines);
 
-		if (isfits) {
+		if (axy->isfits) {
             if (axy->no_fits2fits) {
                 if (iscompressed)
                     fitsimgfn = uncompressedfn;

@@ -6,6 +6,10 @@
 #include "fitsioutils.h"
 #include "errors.h"
 
+int fitsfile_pad_with(FILE* fid, char pad) {
+    return fits_pad_file_with(fid, pad);
+}
+
 int fitsfile_write_header(FILE* fid, qfits_header* hdr,
                           off_t* start_offset, off_t* end_offset,
                           int ext, const char* fn) {

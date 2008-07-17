@@ -57,6 +57,9 @@ struct augment_xylist_s {
     bool keep_fitsimg;
     char* fitsimgfn;
 
+    // set during augment_xylist: is the input image or xyls FITS?
+    bool isfits;
+
     bool guess_scale;
     bool pnm;
     bool force_ppm;

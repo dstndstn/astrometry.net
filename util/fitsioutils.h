@@ -106,6 +106,8 @@ int fits_blocks_needed(int size);
 
 int fits_bytes_needed(int size);
 
+int fits_pad_file_with(FILE* fid, char pad);
+
 int fits_pad_file(FILE* fid);
 
 void fits_fill_endian_string(char* str);

@@ -23,6 +23,8 @@
 
 #include "qfits.h"
 
+int fitsfile_pad_with(FILE* fid, char pad);
+
 int fitsfile_write_primary_header(FILE* fid, qfits_header* hdr,
                                   off_t* end_offset, const char* fn);
 

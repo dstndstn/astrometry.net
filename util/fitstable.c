@@ -807,6 +807,10 @@ int fitstable_write_header(fitstable_t* t) {
                                  t->extension, t->fn);
 }
 
+int fitstable_pad_with(fitstable_t* t, char pad) {
+    return fitsfile_pad_with(t->fid, pad);
+}
+
 int fitstable_fix_header(fitstable_t* t) {
     // update NAXIS2 to reflect the number of rows written.
     fits_header_mod_int(t->header, "NAXIS2", t->table->nr, NULL);

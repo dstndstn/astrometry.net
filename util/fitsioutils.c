@@ -670,7 +670,7 @@ int fits_append_all_headers(const qfits_header* src, qfits_header* dest, char* t
     return copy_all_headers(src, dest, targetkey, TRUE);
 }
 
-int fits_pad_file(FILE* fid) {
+int fits_pad_file_with(FILE* fid, char pad) {
 	off_t offset;
 	int npad;
 	
@@ -678,16 +678,19 @@ int fits_pad_file(FILE* fid) {
 	offset = ftello(fid);
 	npad = (offset % FITS_BLOCK_SIZE);
 	if (npad) {
-		char nil = '\0';
 		int i;
 		npad = FITS_BLOCK_SIZE - npad;
 		for (i=0; i<npad; i++)
-			if (fwrite(&nil, 1, 1, fid) != 1) {
+			if (fwrite(&pad, 1, 1, fid) != 1) {
                 SYSERROR("Failed to pad FITS file");
 				return -1;
 			}
 	}
 	return 0;
+}
+
+int fits_pad_file(FILE* fid) {
+    return fits_pad_file_with(fid, 0);
 }
 
 int fits_get_atom_size(tfits_type type) {

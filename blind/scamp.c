@@ -31,7 +31,7 @@ int scamp_write_field(const qfits_header* imageheader,
     int i;
 
     if (!imageheader)
-        hdr = qfits_header_default();
+        hdr = qfits_table_prim_header_default();
     else
         hdr = qfits_header_copy(imageheader);
 

@@ -41,9 +41,9 @@ typedef struct scamp_catalog_object scamp_obj_t;
 
 scamp_cat_t* scamp_catalog_open_for_writing(const char* filename);
 
-int scamp_catalog_write_field_header(scamp_cat_t* scamp, qfits_header* hdr);
+int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr);
 
-int scamp_catalog_write_object(scamp_cat_t* scamp, scamp_obj_t* obj);
+int scamp_catalog_write_object(scamp_cat_t* scamp, const scamp_obj_t* obj);
 
 int scamp_catalog_close(scamp_cat_t* scamp);
 

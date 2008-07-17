@@ -804,7 +804,7 @@ int main(int argc, char** args) {
             axy->force_ppm = TRUE;
 		}
 
-        axy->keep_fitsimg = (newfits != NULL);
+        axy->keep_fitsimg = (newfits || scampfn);
 
         if (augment_xylist(axy, me)) {
             ERROR("augment-xylist failed");
@@ -902,10 +902,11 @@ int main(int argc, char** args) {
             }
 
             if (scampfn) {
+                char* hdrfile = NULL;
                 qfits_header* imageheader = NULL;
-                //starxy_t* xylist = augment_xylist_read_xylist(axy);
                 starxy_t* xy;
                 xylist_t* xyls = xylist_open(axy->outfn);
+
                 if (!xyls) {
                     ERROR("Failed to read xylist to write SCAMP catalog");
                     exit(-1);
@@ -919,11 +920,20 @@ int main(int argc, char** args) {
                 xy = xylist_read_field(xyls, NULL);
                 xylist_close(xyls);
 
+                if (axy->fitsimgfn)
+                    hdrfile = axy->fitsimgfn;
+                if (axy->xylsfn)
+                    hdrfile = axy->xylsfn;
+                if (hdrfile)
+                    imageheader = qfits_header_read(hdrfile);
+
                 if (scamp_write_field(imageheader, &wcs, xy, scampfn)) {
                     ERROR("Failed to write SCAMP catalog");
                     exit(-1);
                 }
                 starxy_free(xy);
+                if (imageheader)
+                    qfits_header_destroy(imageheader);
             }
 
 		}

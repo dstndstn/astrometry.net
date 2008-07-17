@@ -37,7 +37,7 @@ scamp_cat_t* scamp_catalog_open_for_writing(const char* filename) {
     return scamp;
 }
 
-int scamp_catalog_write_field_header(scamp_cat_t* scamp, qfits_header* hdr) {
+int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr) {
     int i, N;
     qfits_header* h;
     char* hdrstring;
@@ -79,7 +79,8 @@ int scamp_catalog_write_field_header(scamp_cat_t* scamp, qfits_header* hdr) {
     }
     free(hdrstring);
 
-    if (fitstable_fix_header(scamp->table)) {
+    if (fitstable_pad_with(scamp->table, ' ') ||
+        fitstable_fix_header(scamp->table)) {
         ERROR("Failed to fix scamp catalog header.\n");
         return -1;
     }
@@ -110,7 +111,7 @@ int scamp_catalog_write_field_header(scamp_cat_t* scamp, qfits_header* hdr) {
     return 0;
 }
 
-int scamp_catalog_write_object(scamp_cat_t* scamp, scamp_obj_t* obj) {
+int scamp_catalog_write_object(scamp_cat_t* scamp, const scamp_obj_t* obj) {
     return fitstable_write_struct(scamp->table, obj);
 }
 
