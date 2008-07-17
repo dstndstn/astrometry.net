@@ -847,6 +847,21 @@ int qfits_header_getboolean(
     return ret;
 }
 
+int qfits_header_write_line(const qfits_header* hdr, int line, char* result) {
+    keytuple* k;
+    int i;
+
+    k = hdr->first;
+    for (i=0; i<line; i++) {
+        k = k->next;
+        if (!k)
+            return -1;
+    }
+    qfits_header_makeline(result, k, 1);
+    return 0 ;
+}
+
+
 /*----------------------------------------------------------------------------*/
 /**
   @brief    Dump a FITS header to an opened file.
