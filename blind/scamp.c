@@ -57,7 +57,7 @@ int scamp_write_field(const qfits_header* imageheader,
         if (xy->flux)
             obj.flux = xy->flux[i];
         else
-            obj.flux = 0.0;
+            obj.flux = 1000.0;
         obj.err_flux = 1.0;
         obj.flags = 0;
         if (scamp_catalog_write_object(scamp, &obj)) {

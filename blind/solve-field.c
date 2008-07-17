@@ -915,7 +915,7 @@ int main(int argc, char** args) {
                     xylist_set_xname(xyls, axy->xcol);
                 if (axy->ycol)
                     xylist_set_yname(xyls, axy->ycol);
-                xylist_set_include_flux(xyls, FALSE);
+                //xylist_set_include_flux(xyls, FALSE);
                 xylist_set_include_background(xyls, FALSE);
                 xy = xylist_read_field(xyls, NULL);
                 xylist_close(xyls);
