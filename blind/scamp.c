@@ -37,7 +37,7 @@ int scamp_write_field(const qfits_header* imageheader,
 
     sip_add_to_header(hdr, wcs);
 
-    scamp = scamp_catalog_open_for_writing(filename);
+    scamp = scamp_catalog_open_for_writing(filename, FALSE);
     if (!scamp) {
         return -1;
     }
