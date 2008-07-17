@@ -73,12 +73,6 @@ void augment_xylist_free_contents(augment_xylist_t* axy) {
     il_free(axy->fields);
 }
 
-/*
- starxy_t* augment_xylist_read_xylist(augment_xylist_t* axy) {
- xylist_t* xyls = xylist_open(
- }
- */
-
 void augment_xylist_print_special_opts(an_option_t* opt, bl* opts, int index,
                                        FILE* fid, void* extra) {
     if (!strcmp(opt->name, "image")) {

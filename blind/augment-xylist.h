@@ -106,8 +106,6 @@ void augment_xylist_init(augment_xylist_t* args);
 
 void augment_xylist_free_contents(augment_xylist_t* args);
 
-//starxy_t* augment_xylist_read_xylist(augment_xylist_t* axy);
-
 void augment_xylist_print_help(FILE* fid);
 
 void augment_xylist_add_options(bl* opts);
