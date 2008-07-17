@@ -27,6 +27,27 @@ struct scamp_catalog {
 };
 typedef struct scamp_catalog scamp_cat_t;
 
+// These definitions are imported from SExtractor 2.5.0, and should
+// be OR'd together to form the "flags" field.
+
+// "The object has neighbours, bright and close enough to significantly bias
+// the photometry; or bad pixels.
+#define		SCAMP_FLAG_CROWDED	0x0001
+// The object was blended with another one.
+#define		SCAMP_FLAG_MERGED	0x0002
+// At least one pixel is saturated
+#define		SCAMP_FLAG_SATUR	0x0004
+// The object is too close to an image boundary
+#define		SCAMP_FLAG_TRUNC	0x0008
+// Aperture data incorrect
+#define		SCAMP_FLAG_APERT_PB	0x0010
+// Isophotal data incorrect
+#define		SCAMP_FLAG_ISO_PB	0x0020
+// Memory overflow during deblending (!)
+#define		SCAMP_FLAG_DOVERFLOW	0x0040
+// Memory overflow during extraction (!)
+#define		SCAMP_FLAG_OVERFLOW	0x0080
+
 struct scamp_catalog_object {
     double x;
     double y;
