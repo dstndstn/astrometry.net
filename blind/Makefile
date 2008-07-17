@@ -423,7 +423,10 @@ backend: backend-main.o $(BACKEND_LIB) \
 solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o \
 		image2xy-files.o resort-xylist.o tabsort.o \
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
+		scamp.o \
 		$(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
+ALL_OBJ += scamp.o
 
 augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scale.o \
 		image2xy-files.o resort-xylist.o blindutils.o \

@@ -49,6 +49,7 @@
 #include "sip-utils.h"
 #include "wcs-rd2xy.h"
 #include "new-wcs.h"
+#include "scamp.h"
 
 static an_option_t options[] = {
 	{'h', "help",		   no_argument, NULL,
@@ -65,8 +66,6 @@ static an_option_t options[] = {
      "read filenames to solve on stdin, one per line"},
 	{'p', "no-plots",       no_argument, NULL,
      "don't create any plots of the results"},
-    //{"solved-in-dir",  required_argument, 0, 'i'},
-    //directory containing input solved files  (-i)\n"
     {'G', "use-wget",       no_argument, NULL,
      "use wget instead of curl"},
   	{'O', "overwrite",      no_argument, NULL,
@@ -80,6 +79,8 @@ static an_option_t options[] = {
      "output filename of the new FITS file containing the WCS header; \"none\" to not create this file"},
     {'Z', "kmz",            required_argument, "filename",
      "create KMZ file for Google Sky.  (requires wcs2kml)\n"},
+    {'i', "SCAMP catalog",  required_argument, "filename",
+     "create image object catalog for SCAMP\n"},
 };
 
 static void print_help(const char* progname, bl* opts) {
@@ -128,10 +129,6 @@ static void append_executable(sl* list, const char* fn, const char* me) {
     if (!exec) {
         ERROR("Error, couldn't find executable \"%s\"", fn);
         exit(-1);
-        /*
-         sl_append(list, fn);
-         return;
-         */
     }
     sl_append_nocopy(list, shell_escape(exec));
     free(exec);
@@ -424,6 +421,7 @@ int main(int argc, char** args) {
     char* removeopts = "ixo\x01";
     char* newfits;
     char* kmzfn = NULL;
+    char* scampfn = NULL;
 
     errors_print_on_exit(stderr);
     fits_use_error_system();
@@ -475,12 +473,9 @@ int main(int argc, char** args) {
         if (c == -1)
             break;
         switch (c) {
-            /*
-             case 'i':
-             solvedindir = optarg;
-             break;
-             }
-             */
+        case 'i':
+            scampfn = optarg;
+            break;
         case 'Z':
             kmzfn = optarg;
             break;
@@ -906,7 +901,31 @@ int main(int argc, char** args) {
                 free(realkmzfn);
             }
 
-			// create field rdls?
+            if (scampfn) {
+                qfits_header* imageheader = NULL;
+                //starxy_t* xylist = augment_xylist_read_xylist(axy);
+                starxy_t* xy;
+                xylist_t* xyls = xylist_open(axy->outfn);
+                if (!xyls) {
+                    ERROR("Failed to read xylist to write SCAMP catalog");
+                    exit(-1);
+                }
+                if (axy->xcol)
+                    xylist_set_xname(xyls, axy->xcol);
+                if (axy->ycol)
+                    xylist_set_yname(xyls, axy->ycol);
+                xylist_set_include_flux(xyls, FALSE);
+                xylist_set_include_background(xyls, FALSE);
+                xy = xylist_read_field(xyls, NULL);
+                xylist_close(xyls);
+
+                if (scamp_write_field(imageheader, &wcs, xy, scampfn)) {
+                    ERROR("Failed to write SCAMP catalog");
+                    exit(-1);
+                }
+                starxy_free(xy);
+            }
+
 		}
         fflush(NULL);
 

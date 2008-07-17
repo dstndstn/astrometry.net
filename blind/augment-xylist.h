@@ -19,6 +19,7 @@
 #ifndef AUGMENT_XYLIST_H
 #define AUGMENT_XYLIST_H
 
+#include "starxy.h"
 #include "an-bool.h"
 #include "bl.h"
 #include "an-opts.h"
@@ -105,7 +106,7 @@ void augment_xylist_init(augment_xylist_t* args);
 
 void augment_xylist_free_contents(augment_xylist_t* args);
 
-// hmm, how should args work...
+//starxy_t* augment_xylist_read_xylist(augment_xylist_t* axy);
 
 void augment_xylist_print_help(FILE* fid);
 
