@@ -104,6 +104,9 @@ int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr
     fitstable_add_write_column_struct(scamp->table, i16, 1, offsetof(scamp_obj_t, flags),
                                       i16, "FLAGS", NULL);
 
+    h = fitstable_get_header(scamp->table);
+    qfits_header_add(h, "EXTNAME", "LDAC_OBJECTS", "", NULL);
+
     if (fitstable_write_header(scamp->table)) {
         ERROR("Failed to write scamp catalog object header.\n");
         return -1;
