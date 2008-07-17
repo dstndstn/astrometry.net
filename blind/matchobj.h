@@ -96,6 +96,9 @@ struct match_struct {
     double* indexrdls;
     int nindexrdls;
 
+    // in arcsec.
+    double index_jitter;
+
     il* corr_field;
     il* corr_index;
     dl* corr_field_xy;

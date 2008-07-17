@@ -519,6 +519,8 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     free(fn);
     blind_set_rdls_file    (bp, fn=fits_get_long_string(hdr, "ANRDLS"  ));
     free(fn);
+    blind_set_scamp_file   (bp, fn=fits_get_long_string(hdr, "ANSCAMP" ));
+    free(fn);
     blind_set_wcs_file     (bp, fn=fits_get_long_string(hdr, "ANWCS"   ));
     free(fn);
     blind_set_corr_file    (bp, fn=fits_get_long_string(hdr, "ANCORR"  ));
@@ -870,6 +872,11 @@ int job_set_base_dir(job_t* job, const char* dir) {
         path = resolve_path(bp->indexrdlsfname, dir);
         logverb("Changing %s to %s\n", bp->indexrdlsfname, path);
         blind_set_rdls_file(bp, path);
+    }
+    if (bp->scamp_fname) {
+        path = resolve_path(bp->scamp_fname, dir);
+        logverb("Changing %s to %s\n", bp->scamp_fname, path);
+        blind_set_scamp_file(bp, path);
     }
     if (bp->corr_fname) {
         path = resolve_path(bp->corr_fname, dir);

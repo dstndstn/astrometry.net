@@ -79,7 +79,7 @@ static an_option_t options[] = {
      "output filename of the new FITS file containing the WCS header; \"none\" to not create this file"},
     {'Z', "kmz",            required_argument, "filename",
      "create KMZ file for Google Sky.  (requires wcs2kml)\n"},
-    {'i', "SCAMP catalog",  required_argument, "filename",
+    {'i', "scamp",          required_argument, "filename",
      "create image object catalog for SCAMP\n"},
 };
 

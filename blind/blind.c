@@ -54,6 +54,7 @@
 #include "tic.h"
 #include "qfits_table.h"
 #include "errors.h"
+#include "scamp-catalog.h"
 
 static bool record_match_callback(MatchObj* mo, void* userdata);
 static time_t timer_callback(void* user_data);
@@ -154,6 +155,11 @@ void blind_set_match_file(blind_t* bp, const char* fn) {
 void blind_set_rdls_file(blind_t* bp, const char* fn) {
     free(bp->indexrdlsfname);
     bp->indexrdlsfname = strdup_safe(fn);
+}
+
+void blind_set_scamp_file(blind_t* bp, const char* fn) {
+    free(bp->scamp_fname);
+    bp->scamp_fname = strdup_safe(fn);
 }
 
 void blind_set_corr_file(blind_t* bp, const char* fn) {
@@ -599,6 +605,7 @@ void blind_cleanup(blind_t* bp) {
 	free(bp->fieldfname);
 	free(bp->fieldid_key);
 	free(bp->indexrdlsfname);
+	free(bp->scamp_fname);
 	free(bp->corr_fname);
 	free(bp->matchfname);
 	free(bp->solvedserver);
@@ -648,7 +655,9 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 
     logverb("Pixel scale: %g arcsec/pix.\n", mo->scale);
 
-    if (bp->do_tweak || bp->indexrdlsfname) {
+    mo->index_jitter = sp->index->meta.index_jitter;
+
+    if (bp->do_tweak || bp->indexrdlsfname || bp->scamp_fname) {
         // Gather stars that are within range.
         double* radec = NULL;
         int nstars;
@@ -663,7 +672,8 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
         if (bp->do_tweak)
             mo->sip = tweak(bp, &(mo->wcstan), radec, nstars);
 
-        if (bp->indexrdlsfname) {
+        // FIXME -- also gather mag, magerr, positional error ellipses...
+        if (bp->indexrdlsfname || bp->scamp_fname) {
             // steal this array...
             mo->indexrdls = radec;
             radec = NULL;
@@ -1164,6 +1174,54 @@ static int write_solutions(blind_t* bp) {
     }
 
     // Note that this follows the WCS output, so we've eliminated all but the best solution.
+
+    if (bp->scamp_fname) {
+        int i;
+        scamp_cat_t* scamp;
+        qfits_header* hdr = NULL;
+        MatchObj* mo;
+        tan_t fakewcs;
+
+        hdr = qfits_header_default();
+        fits_header_add_int(hdr, "BITPIX", 0, NULL);
+        fits_header_add_int(hdr, "NAXIS", 2, NULL);
+        fits_header_add_int(hdr, "NAXIS1", 0, NULL);
+        fits_header_add_int(hdr, "NAXIS2", 0, NULL);
+        qfits_header_add(hdr, "EXTEND", "T", "", NULL);
+        memset(&fakewcs, 0, sizeof(tan_t));
+        tan_add_to_header(hdr, &fakewcs);
+
+        scamp = scamp_catalog_open_for_writing(bp->scamp_fname, TRUE);
+        if (!scamp) {
+            logerr("Failed to open SCAMP reference catalog for writing.\n");
+            return -1;
+        }
+        if (scamp_catalog_write_field_header(scamp, hdr)) {
+            logerr("Failed to write SCAMP headers.\n");
+            return -1;
+        }
+        mo = bl_access(bp->solutions, 0);
+        for (i=0; i<mo->nindexrdls; i++) {
+            scamp_ref_t ref;
+            ref.ra  = mo->indexrdls[2*i + 0];
+            ref.dec = mo->indexrdls[2*i + 1];
+            ref.err_a = ref.err_b = arcsec2deg(mo->index_jitter);
+            // HACK
+            ref.mag = 10.0;
+            ref.err_mag = 0.1;
+
+            if (scamp_catalog_write_reference(scamp, &ref)) {
+                logerr("Failed to write SCAMP object.\n");
+                return -1;
+            }
+        }
+        if (scamp_catalog_close(scamp)) {
+            logerr("Failed to close SCAMP reference catalog.\n");
+            return -1;
+        }
+    }
+
+
     if (bp->corr_fname) {
         qfits_header* hdr;
         FILE* fid = fopen(bp->corr_fname, "wb");

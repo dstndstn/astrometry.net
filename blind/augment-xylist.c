@@ -135,6 +135,8 @@ static an_option_t options[] = {
      "output filename for match file"},
 	{'R', "rdls",		   required_argument, "filename",
      "output filename for RDLS file"},
+	{'j', "scamp-ref",	   required_argument, "filename",
+     "output filename for SCAMP reference catalog"},
     {'B', "corr",          required_argument, "filename",
      "output filename for correspondences"},
 	{'W', "wcs",		   required_argument, "filename",
@@ -337,6 +339,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         break;
     case 'R':
         axy->rdlsfn = optarg;
+        break;
+    case 'j':
+        axy->scampfn = optarg;
         break;
     case 'W':
         axy->wcsfn = optarg;
@@ -754,6 +759,8 @@ int augment_xylist(augment_xylist_t* axy,
 		fits_header_addf_longstring(hdr, "ANMATCH", "match output file", "%s", axy->matchfn);
 	if (axy->rdlsfn)
 		fits_header_addf_longstring(hdr, "ANRDLS", "ra-dec output file", "%s", axy->rdlsfn);
+	if (axy->scampfn)
+		fits_header_addf_longstring(hdr, "ANSCAMP", "SCAMP reference catalog output file", "%s", axy->scampfn);
 	if (axy->wcsfn)
 		fits_header_addf_longstring(hdr, "ANWCS", "WCS header output filename", "%s", axy->wcsfn);
 	if (axy->corrfn)

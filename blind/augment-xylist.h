@@ -49,6 +49,8 @@ struct augment_xylist_s {
     char* solvedfn;
     char* matchfn;
     char* rdlsfn;
+    // SCAMP reference catalog
+    char* scampfn;
     char* wcsfn;
     char* corrfn;
     char* keepxylsfn;

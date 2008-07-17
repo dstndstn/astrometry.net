@@ -47,6 +47,7 @@ struct blind_params {
 	char *matchfname;
     char *indexrdlsfname;
     char *corr_fname;
+    char* scamp_fname;
 
 	// WCS filename template (sprintf format with %i for field number)
 	char* wcs_template;
@@ -142,6 +143,7 @@ void blind_set_solvedin_file(blind_t* bp, const char* fn);
 void blind_set_solvedout_file(blind_t* bp, const char* fn);
 void blind_set_match_file(blind_t* bp, const char* fn);
 void blind_set_rdls_file(blind_t* bp, const char* fn);
+void blind_set_scamp_file(blind_t* bp, const char* fn);
 void blind_set_corr_file(blind_t* bp, const char* fn);
 void blind_set_wcs_file(blind_t* bp, const char* fn);
 void blind_set_xcol(blind_t* bp, const char* x);
