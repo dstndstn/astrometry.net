@@ -17,6 +17,7 @@
 */
 
 #include <stddef.h>
+#include <assert.h>
 
 #include "scamp-catalog.h"
 #include "fitstable.h"
@@ -25,7 +26,7 @@
 #include "errors.h"
 #include "log.h"
 
-scamp_cat_t* scamp_catalog_open_for_writing(const char* filename) {
+scamp_cat_t* scamp_catalog_open_for_writing(const char* filename, bool ref) {
     scamp_cat_t* scamp;
     scamp = calloc(1, sizeof(scamp_cat_t));
     scamp->table = fitstable_open_for_writing(filename);
@@ -34,6 +35,7 @@ scamp_cat_t* scamp_catalog_open_for_writing(const char* filename) {
         free(scamp);
         return NULL;
     }
+    scamp->ref = ref;
     return scamp;
 }
 
@@ -87,22 +89,37 @@ int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr
     fitstable_next_extension(scamp->table);
     fitstable_clear_table(scamp->table);
 
-    fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, x),
-                                      dubl, "X_IMAGE", "pixels");
-    fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, y),
-                                      dubl, "Y_IMAGE", "pixels");
-    fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, err_a),
-                                      dubl, "ERR_A", "pixels");
-    fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, err_b),
-                                      dubl, "ERR_B", "pixels");
-    fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, err_theta),
-                                      dubl, "ERR_THETA", "deg");
-    fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, flux),
-                                      dubl, "FLUX", NULL);
-    fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, err_flux),
-                                      dubl, "FLUX_ERR", NULL);
-    fitstable_add_write_column_struct(scamp->table, i16, 1, offsetof(scamp_obj_t, flags),
-                                      i16, "FLAGS", NULL);
+    if (scamp->ref) {
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_ref_t, ra),
+                                          dubl, "RA", "deg");
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_ref_t, dec),
+                                          dubl, "DEC", "deg");
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_ref_t, err_a),
+                                          dubl, "ERR_A", "pixels");
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_ref_t, err_b),
+                                          dubl, "ERR_B", "pixels");
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_ref_t, mag),
+                                          dubl, "MAG", "mag");
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_ref_t, err_mag),
+                                          dubl, "MAG_ERR", "mag");
+    } else {
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, x),
+                                          dubl, "X_IMAGE", "pixels");
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, y),
+                                          dubl, "Y_IMAGE", "pixels");
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, err_a),
+                                          dubl, "ERR_A", "pixels");
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, err_b),
+                                          dubl, "ERR_B", "pixels");
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, err_theta),
+                                          dubl, "ERR_THETA", "deg");
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, flux),
+                                          dubl, "FLUX", NULL);
+        fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, err_flux),
+                                          dubl, "FLUX_ERR", NULL);
+        fitstable_add_write_column_struct(scamp->table, i16, 1, offsetof(scamp_obj_t, flags),
+                                          i16, "FLAGS", NULL);
+    }
 
     h = fitstable_get_header(scamp->table);
     qfits_header_add(h, "EXTNAME", "LDAC_OBJECTS", "", NULL);
@@ -115,7 +132,13 @@ int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr
 }
 
 int scamp_catalog_write_object(scamp_cat_t* scamp, const scamp_obj_t* obj) {
+    assert(!scamp->ref);
     return fitstable_write_struct(scamp->table, obj);
+}
+
+int scamp_catalog_write_reference(scamp_cat_t* scamp, const scamp_ref_t* ref) {
+    assert(scamp->ref);
+    return fitstable_write_struct(scamp->table, ref);
 }
 
 int scamp_catalog_close(scamp_cat_t* scamp) {

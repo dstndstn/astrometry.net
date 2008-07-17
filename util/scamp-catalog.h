@@ -21,9 +21,11 @@
 
 #include "fitstable.h"
 #include "qfits.h"
+#include "an-bool.h"
 
 struct scamp_catalog {
     fitstable_t* table;
+    bool ref;
 };
 typedef struct scamp_catalog scamp_cat_t;
 
@@ -60,11 +62,26 @@ struct scamp_catalog_object {
 };
 typedef struct scamp_catalog_object scamp_obj_t;
 
-scamp_cat_t* scamp_catalog_open_for_writing(const char* filename);
+struct scamp_reference_object {
+    double ra;
+    double dec;
+    double err_a;
+    double err_b;
+    //double err_theta;
+    double mag;
+    double err_mag;
+    //int16_t flags;
+};
+typedef struct scamp_reference_object scamp_ref_t;
+
+scamp_cat_t* scamp_catalog_open_for_writing(const char* filename,
+                                            bool reference);
 
 int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr);
 
 int scamp_catalog_write_object(scamp_cat_t* scamp, const scamp_obj_t* obj);
+
+int scamp_catalog_write_reference(scamp_cat_t* scamp, const scamp_ref_t* ref);
 
 int scamp_catalog_close(scamp_cat_t* scamp);
 
