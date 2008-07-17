@@ -879,15 +879,12 @@ int qfits_header_dump(
         n_out ++;
         k=k->next;
     }
-    /* If printing out to a regular file, blank pad */
-    // WHY WOULD YOU DO THIS??! if (out!=stdout && out!=stderr) {
     /* Blank-pad the output */
     memset(line, ' ', 80);
     while (n_out % 36) {
         fwrite(line, 1, 80, out);
         n_out++ ;
     }
-    //}
     return 0 ;
 }
 
