@@ -92,7 +92,7 @@ ANFILES_OBJ :=
 ifndef NO_QFITS
 ANFILES_OBJ += starkd.o rdlist.o xylist.o starxy.o \
 	an-catalog.o qidxfile.o quadfile.o fitstable.o fitsbin.o \
-	fitsfile.o
+	fitsfile.o scamp-catalog.o
 ANFILES_DEPS += $(QFITS_LIB)
 endif
 
@@ -189,7 +189,7 @@ grab-stellarium-constellations: grab-stellarium-constellations.o \
 
 ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log test_ioutils \
-	test_dualtree_nn
+	test_dualtree_nn test_scamp_catalog
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -220,6 +220,8 @@ test_log: $(ANUTILS_LIB)
 test_ioutils: $(ANUTILS_LIB)
 
 test_dualtree_nn: $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
+test_scamp_catalog: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 ### /TESTS
 
