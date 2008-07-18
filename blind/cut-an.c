@@ -576,7 +576,7 @@ int main(int argc, char** args) {
 				ERROR("Couldn't open file \"%s\" as a catalog", infn);
 				exit(-1);
 			}
-			if (!cat->mags) {
+			if (!catalog_has_mag(cat)) {
 				ERROR("Catalog file \"%s\" doesn't contain magnitudes!  "
                       "These are required (use \"-g\" to include them).\n",
                       infn);
@@ -655,7 +655,7 @@ int main(int argc, char** args) {
 				double* xyz;
 				xyz = catalog_get_star(cat, i);
 				xyzarr2radecdeg(xyz, &sd.ra, &sd.dec);
-				sd.mag = cat->mags[i];
+				sd.mag = cat->mag[i];
                 if (doid)
                     sd.id = cat->starids[i];
                 if (domotion) {

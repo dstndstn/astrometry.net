@@ -25,6 +25,7 @@
 #include "qfits.h"
 #include "fitsbin.h"
 #include "bl.h"
+#include "an-bool.h"
 
 #define AN_FILETYPE_CATALOG "OBJS"
 
@@ -36,8 +37,9 @@ struct catalog {
 
 	double* stars;
 
-	// optional table: star magnitudes.
-	float* mags;
+	// optional table: star magnitudes and mag errors.
+	float* mag;
+	float* mag_err;
 
     // optional tables: positional error ellipses, proper motions
     float* sigma_radec;   // sigma_ra, sigma_dec
@@ -49,6 +51,7 @@ struct catalog {
 
     // while writing: storage for the extra fields.
     fl* maglist;
+    fl* magerrlist;
     fl* siglist;
     fl* pmlist;
     fl* sigpmlist;
@@ -78,7 +81,10 @@ qfits_header* catalog_get_header(catalog* cat);
 
 int catalog_fix_header(catalog* cat);
 
+bool catalog_has_mag(const catalog* cat);
+
 void catalog_add_mag(catalog* cat, float mag);
+void catalog_add_mag_err(catalog* cat, float magerr);
 void catalog_add_sigmas(catalog* cat, float sra, float sdec);
 void catalog_add_pms(catalog* cat, float sra, float sdec);
 void catalog_add_sigma_pms(catalog* cat, float sra, float sdec);
@@ -90,6 +96,8 @@ void catalog_add_id(catalog* cat, uint64_t id);
   to the file as an extra FITS table.
  */
 int catalog_write_mags(catalog* cat);
+
+int catalog_write_mag_errs(catalog* cat);
 
 int catalog_write_sigmas(catalog* cat);
 int catalog_write_pms(catalog* cat);

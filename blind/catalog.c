@@ -33,16 +33,20 @@
 
 #define CHUNK_XYZ    0
 #define CHUNK_MAG    1
-#define CHUNK_SIG    2
-#define CHUNK_PM     3
-#define CHUNK_SIGPM  4
-#define CHUNK_STARID 5
+#define CHUNK_MAG_ERR 2
+#define CHUNK_SIG    3
+#define CHUNK_PM     4
+#define CHUNK_SIGPM  5
+#define CHUNK_STARID 6
 
 static fitsbin_chunk_t* xyz_chunk(catalog* cat) {
     return fitsbin_get_chunk(cat->fb, CHUNK_XYZ);
 }
 static fitsbin_chunk_t* mag_chunk(catalog* cat) {
     return fitsbin_get_chunk(cat->fb, CHUNK_MAG);
+}
+static fitsbin_chunk_t* mag_err_chunk(catalog* cat) {
+    return fitsbin_get_chunk(cat->fb, CHUNK_MAG_ERR);
 }
 static fitsbin_chunk_t* get_chunk(catalog* cat, int i) {
     return fitsbin_get_chunk(cat->fb, i);
@@ -67,21 +71,7 @@ static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	return 0;
 }
 
-static int callback_read_mags(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
-	catalog* cat = chunk->userdata;
-    chunk->nrows = cat->numstars;
-	return 0;
-}
-
-static int callback_read_sigmas(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
-	catalog* cat = chunk->userdata;
-    chunk->nrows = cat->numstars;
-	return 0;
-}
-#define callback_read_pms callback_read_sigmas
-#define callback_read_sigma_pms callback_read_sigmas
-
-static int callback_read_ids(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
+static int callback_read_tagalong(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	catalog* cat = chunk->userdata;
     chunk->nrows = cat->numstars;
 	return 0;
@@ -107,6 +97,9 @@ static catalog* new_catalog(const char* fn, bool writing) {
 
     memset(&chunk, 0, sizeof(fitsbin_chunk_t));
 
+    // NOTE -- the order these are added MUST match the CHUNK_XYZ, CHUNK_MAG, etc
+    // ordering.
+
     // Star positions
     fitsbin_chunk_init(&chunk);
     chunk.tablename = "xyz";
@@ -118,9 +111,18 @@ static catalog* new_catalog(const char* fn, bool writing) {
     fitsbin_chunk_reset(&chunk);
 
     // Star magnitudes
-    chunk.tablename = "mags";
+    chunk.tablename = "mag";
     chunk.required = 0;
-    chunk.callback_read_header = callback_read_mags;
+    chunk.callback_read_header = callback_read_tagalong;
+    chunk.userdata = cat;
+    chunk.itemsize = sizeof(float);
+    fitsbin_add_chunk(cat->fb, &chunk);
+    fitsbin_chunk_reset(&chunk);
+
+    // Star magnitude errors
+    chunk.tablename = "mag_err";
+    chunk.required = 0;
+    chunk.callback_read_header = callback_read_tagalong;
     chunk.userdata = cat;
     chunk.itemsize = sizeof(float);
     fitsbin_add_chunk(cat->fb, &chunk);
@@ -129,7 +131,7 @@ static catalog* new_catalog(const char* fn, bool writing) {
     // Sigmas
     chunk.tablename = "sigma_radec";
     chunk.required = 0;
-    chunk.callback_read_header = callback_read_sigmas;
+    chunk.callback_read_header = callback_read_tagalong;
     chunk.userdata = cat;
     chunk.itemsize = 2 * sizeof(float);
     fitsbin_add_chunk(cat->fb, &chunk);
@@ -138,7 +140,7 @@ static catalog* new_catalog(const char* fn, bool writing) {
     // Motions
     chunk.tablename = "proper_motion";
     chunk.required = 0;
-    chunk.callback_read_header = callback_read_pms;
+    chunk.callback_read_header = callback_read_tagalong;
     chunk.userdata = cat;
     chunk.itemsize = 2 * sizeof(float);
     fitsbin_add_chunk(cat->fb, &chunk);
@@ -147,7 +149,7 @@ static catalog* new_catalog(const char* fn, bool writing) {
     // Sigma Motions
     chunk.tablename = "sigma_pm";
     chunk.required = 0;
-    chunk.callback_read_header = callback_read_pms;
+    chunk.callback_read_header = callback_read_tagalong;
     chunk.userdata = cat;
     chunk.itemsize = 2 * sizeof(float);
     fitsbin_add_chunk(cat->fb, &chunk);
@@ -156,13 +158,17 @@ static catalog* new_catalog(const char* fn, bool writing) {
     // Ids
     chunk.tablename = "starid";
     chunk.required = 0;
-    chunk.callback_read_header = callback_read_ids;
+    chunk.callback_read_header = callback_read_tagalong;
     chunk.userdata = cat;
     chunk.itemsize = sizeof(uint64_t);
     fitsbin_add_chunk(cat->fb, &chunk);
     fitsbin_chunk_clean(&chunk);
 
     return cat;
+}
+
+bool catalog_has_mag(const catalog* cat) {
+    return (cat->mag != NULL);
 }
 
 catalog* catalog_open(char* fn) {
@@ -175,8 +181,9 @@ catalog* catalog_open(char* fn) {
         ERROR("catalog: fitsbin_read() failed");
 		goto bailout;
 	}
-	cat->stars = xyz_chunk(cat)->data;
-    cat->mags  = mag_chunk(cat)->data;
+	cat->stars   = xyz_chunk(cat)->data;
+    cat->mag     = mag_chunk(cat)->data;
+    cat->mag_err = mag_err_chunk(cat)->data;
     cat->sigma_radec   = get_chunk(cat, CHUNK_SIG   )->data;
     cat->proper_motion = get_chunk(cat, CHUNK_PM    )->data;
     cat->sigma_pm      = get_chunk(cat, CHUNK_SIGPM )->data;
@@ -311,6 +318,10 @@ int catalog_write_mags(catalog* cat) {
     return write_floats(cat, CHUNK_MAG, "magnitude", cat->maglist, 1);
 }
 
+int catalog_write_mag_errs(catalog* cat) {
+    return write_floats(cat, CHUNK_MAG_ERR, "magnitude errors", cat->magerrlist, 1);
+}
+
 int catalog_write_sigmas(catalog* cat) {
     return write_floats(cat, CHUNK_SIG, "sigma", cat->siglist, 2);
 }
@@ -359,6 +370,9 @@ void addfloat(fl** list, float val) {
 void catalog_add_mag(catalog* cat, float mag) {
     addfloat(&(cat->maglist), mag);
 }
+void catalog_add_mag_err(catalog* cat, float magerr) {
+    addfloat(&(cat->magerrlist), magerr);
+}
 void catalog_add_sigmas(catalog* cat, float sra, float sdec) {
     addfloat(&(cat->siglist), sra);
     addfloat(&(cat->siglist), sdec);
@@ -382,6 +396,7 @@ int catalog_close(catalog* cat) {
 	if (!cat) return 0;
 	rtn = fitsbin_close(cat->fb);
     fl_free(cat->maglist);
+    fl_free(cat->magerrlist);
     fl_free(cat->siglist);
     fl_free(cat->pmlist);
     fl_free(cat->sigpmlist);
