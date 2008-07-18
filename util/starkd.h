@@ -41,9 +41,9 @@ struct startree_s {
     float* sigma_radec;
     float* proper_motion;
     float* sigma_pm;
-    // optional tables: flux and flux error
-    float* flux;
-    float* flux_err;
+    // optional tables: mag and mag error
+    float* mag;
+    float* mag_err;
     // optional table: star IDs
     uint64_t* starids;
 };
