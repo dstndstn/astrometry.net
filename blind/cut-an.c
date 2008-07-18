@@ -33,13 +33,14 @@
 #include "errors.h"
 #include "log.h"
 
-#define OPTIONS "ho:N:n:m:M:H:d:e:ARBJb:gj:ps:I"
+#define OPTIONS "ho:N:n:m:M:H:d:ARBJb:gj:ps:IE"
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
     printf("\nUsage: %s\n"
 		   "   -o <output-objs-template>    (eg, an-sdss-%%02i.objs.fits)\n"
 		   "  [-g]: include magnitudes in the output file\n"
+		   "  [-E]: include magnitude errors in the output file\n"
            "  [-p]: include proper motions in the output file\n"
            "  [-I]: include star IDs in the output file\n"
 		   "  [-H <big healpix>]  or  [-A] (all-sky)\n"
@@ -57,7 +58,6 @@ static void print_help(char* progname) {
 		   "  [-m <minimum-magnitude-to-use>]\n"
 		   "  [-M <maximum-magnitude-to-use>]\n"
 		   "  [-S <max-stars-per-(big)-healpix]         (ie, max number of stars in the cut)\n"
-		   "  [-e <Galex-epsilon>]\n"
 		   "  <input-file> [<input-file> ...]\n"
 		   "\n"
 		   "Input files must be Astrometry.net catalogs OR objs.fits catalogs with magnitude information.\n"
@@ -95,6 +95,7 @@ struct stardata {
 	double dec;
 	uint64_t id;
 	float mag;
+	float mag_err;
 
     float sigma_ra;
     float sigma_dec;
@@ -109,7 +110,6 @@ typedef struct stardata stardata;
 static bool cutred = FALSE;
 static bool cutblue = FALSE;
 static bool cutj = FALSE;
-static double epsilon = 0.0;
 
 
 static int sort_stardata_mag(const void* v1, const void* v2) {
@@ -164,92 +164,115 @@ static bool find_duplicate(stardata* sd, int hp, int Nside,
 }
 
 static int get_magnitude(an_entry* an,
-						 float* p_mag) {
+						 float* p_mag,
+                         float* p_sig) {
 	float redmag = 0.0;
-	int nred = 0;
+    float redsig = 0.0;
 	float bluemag = 0.0;
-	int nblue = 0;
+    float bluesig = 0.0;
 	int j;
-	float mag = 1e6;
+	float jmag = 1e6;
+    float jsig = 1e6;
 
-	// dumbass magnitude averaging!
+	float mag = 1e6;
+    float sig = 1e6;
+
+    bool blue, red, jband;
+
+    float s, m;
+    // accumulators.
+    float rsigacc = 0.0;
+    float rmagacc = 0.0;
+    float bsigacc = 0.0;
+    float bmagacc = 0.0;
+    float jsigacc = 0.0;
+    float jmagacc = 0.0;
+
+    // Assume the mags are Gaussian distributed and return the maximum-likelihood
+    // mean and sigma of the product of the individual distributions.
+
+    // sigacc = 1/s^2 = 1/s_1^2 + 1/s_2^2 + ...
+    // magacc = mu / s^2 = mu_1 / s_1^2 + mu_2 / s_2^2 + ...
+
+
+    for (j=0; j<an->nobs; j++) {
+        unsigned char band = an->obs[j].band;
+        uint8_t cat = an->obs[j].catalog;
+        blue = red = jband = FALSE;
+        s = an->obs[j].sigma_mag;
+        m = an->obs[j].mag;
+        if (cat == AN_SOURCE_USNOB) {
+            red = usnob_is_band_red(band);
+            blue = usnob_is_band_blue(band);
+        } else if (cat == AN_SOURCE_TYCHO2) {
+            // H band covers V and B.
+            // B is blue
+            // V is red.
+            red = (band == 'H' || band == 'V');
+            blue = (band == 'H' || band == 'B');
+        } else if (cat == AN_SOURCE_2MASS && band == 'J') {
+            jband = TRUE;
+        }
+        if (red) {
+            rsigacc += 1.0 / (s * s);
+            rmagacc += m   / (s * s);
+        }
+        if (blue) {
+            bsigacc += 1.0 / (s * s);
+            bmagacc += m   / (s * s);
+        }
+        if (jband) {
+            jsigacc += 1.0 / (s * s);
+            jmagacc += m   / (s * s);
+        }
+    }
+
+    blue = red = jband = FALSE;
+    if (rmagacc > 0) {
+        red = TRUE;
+        redmag = rmagacc / rsigacc;
+        redsig = sqrt(1.0 / rsigacc);
+    }
+    if (bmagacc > 0) {
+        blue = TRUE;
+        bluemag = bmagacc / bsigacc;
+        bluesig = sqrt(1.0 / bsigacc);
+    }
+    if (jmagacc > 0) {
+        jband = TRUE;
+        jmag = jmagacc / jsigacc;
+        jsig = sqrt(1.0 / jsigacc);
+    }
 
     if (cutred) {
-        for (j=0; j<an->nobs; j++) {
-            unsigned char band = an->obs[j].band;
-            if (an->obs[j].catalog == AN_SOURCE_USNOB) {
-                if (usnob_is_band_red(band)) {
-                    redmag += an->obs[j].mag;
-                    nred++;
-                }
-            } else if (an->obs[j].catalog == AN_SOURCE_TYCHO2) {
-                if (band == 'V' || band == 'H') {
-                    redmag += an->obs[j].mag;
-                    nred++;
-                }
-            }
-        }
-        if (!nred)
-            return 1;
-
-        redmag /= (double)nred;
-        mag = redmag;
-
-
-    } else if (cutblue) {
-        for (j=0; j<an->nobs; j++) {
-            unsigned char band = an->obs[j].band;
-            if (an->obs[j].catalog == AN_SOURCE_USNOB) {
-                if (usnob_is_band_blue(band)) {
-                    bluemag += an->obs[j].mag;
-                    nblue++;
-                } else if (usnob_is_band_red(band)) {
-                    redmag += an->obs[j].mag;
-                    nred++;
-                }
-            } else if (an->obs[j].catalog == AN_SOURCE_TYCHO2) {
-                if (band == 'B' || band == 'H') {
-                    bluemag += an->obs[j].mag;
-                    nblue++;
-                } else if (band == 'V') {
-                    redmag += an->obs[j].mag;
-                    nred++;
-                }
-            }
-        }
-		if (nred)
-			redmag /= (double)nred;
-		if (nblue)
-			bluemag /= (double)nblue;
-
-        if (nred) {
+        if (!red) {
+            return -1;
+        } else {
             mag = redmag;
-            if (epsilon > 0 && nblue)
-                mag += epsilon * (bluemag - redmag);
-        } else if (nblue)
+            sig = redsig;
+        }
+    }
+    if (cutblue) {
+        if (!blue) {
+            return -1;
+        } else {
             mag = bluemag;
-        else
-            return 1;
-
-
-	} else if (cutj) {
-		bool gotit = FALSE;
-		for (j=0; j<an->nobs; j++) {
-			if ((an->obs[j].catalog == AN_SOURCE_2MASS) &&
-				(an->obs[j].band == 'J')) {
-				gotit = TRUE;
-				mag = an->obs[j].mag;
-				break;
-			}
-		}
-		if (!gotit)
-			return 1;
-	} else
-		return -1;
-
-	if (p_mag)
-		*p_mag = mag;
-	return 0;
+            sig = bluesig;
+            // We tried this at one point but it didn't work too well...
+            //mag += epsilon * (bluemag - redmag);
+        }
+    }
+    if (cutj) {
+        if (!jband) {
+            return -1;
+        } else {
+            mag = jmag;
+            sig = jsig;
+        }
+    }
+    *p_mag = mag;
+    *p_sig = sig;
+    return 0;
 }
 
 // Used for debugging / drawing nice pictures.
@@ -299,6 +322,7 @@ int main(int argc, char** args) {
 	int* stararrayN;
 	int nmargin = 1;
 	bool domags = FALSE;
+	bool domagerrs = FALSE;
     bool domotion = FALSE;
     bool doid = FALSE;
 	double jitter = 1.0;
@@ -326,6 +350,9 @@ int main(int argc, char** args) {
 		case 'g':
 			domags = TRUE;
 			break;
+		case 'E':
+			domagerrs = TRUE;
+			break;
 		case 'b':
 			nmargin = atoi(optarg);
 			break;
@@ -340,9 +367,6 @@ int main(int argc, char** args) {
 			break;
 		case 'J':
 			cutj = TRUE;
-			break;
-		case 'e':
-			epsilon = atof(optarg);
 			break;
 		case 'd':
 			deduprad = atof(optarg);
@@ -582,6 +606,10 @@ int main(int argc, char** args) {
                       infn);
 				exit(-1);
 			}
+            if (domagerrs && !cat->mag_err) {
+                ERROR("Catalog file \"%s\" doesn't contain required "
+                      "magnitude errors table.  (Use -E to include it)", infn);
+            }
             if (domotion &&
                 !(cat->sigma_radec && cat->proper_motion && cat->sigma_pm)) {
                 ERROR("Catalog file \"%s\" doesn't contain required "
@@ -656,6 +684,8 @@ int main(int argc, char** args) {
 				xyz = catalog_get_star(cat, i);
 				xyzarr2radecdeg(xyz, &sd.ra, &sd.dec);
 				sd.mag = cat->mag[i];
+                if (domagerrs)
+                    sd.mag_err = cat->mag_err[i];
                 if (doid)
                     sd.id = cat->starids[i];
                 if (domotion) {
@@ -676,7 +706,7 @@ int main(int argc, char** args) {
 			}
 
 			if (ancat) {
-				if (get_magnitude(an, &sd.mag))
+				if (get_magnitude(an, &sd.mag, &sd.mag_err))
 					continue;
 			}
 
@@ -804,12 +834,13 @@ int main(int argc, char** args) {
 			radecdeg2xyzarr(sd->ra, sd->dec, xyz);
 
 			if (catalog_write_star(cat, xyz)) {
-				//(id && idfile_write_anid(id, sd->id))) {
 				ERROR("Failed to write star to catalog.");
 				exit(-1);
 			}
 			if (domags)
                 catalog_add_mag(cat, sd->mag);
+			if (domagerrs)
+                catalog_add_mag(cat, sd->mag_err);
             if (doid)
                 catalog_add_id(cat, sd->id);
             if (domotion) {
@@ -852,6 +883,13 @@ int main(int argc, char** args) {
         logmsg("Writing magnitudes...\n");
 		if (catalog_write_mags(cat)) {
             ERROR("Failed to write magnitudes");
+            exit(-1);
+        }
+    }
+	if (domagerrs) {
+        logmsg("Writing magnitude errors...\n");
+		if (catalog_write_mag_errs(cat)) {
+            ERROR("Failed to write magnitude errors");
             exit(-1);
         }
     }

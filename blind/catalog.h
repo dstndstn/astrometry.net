@@ -91,14 +91,12 @@ void catalog_add_sigma_pms(catalog* cat, float sra, float sdec);
 void catalog_add_id(catalog* cat, uint64_t id);
 
 /*
-  This should be called after writing all the star positions and
+ This should be called after writing all the star positions and
   calling catalog_fix_header().  It appends the data in "cat->mags"
   to the file as an extra FITS table.
  */
 int catalog_write_mags(catalog* cat);
-
 int catalog_write_mag_errs(catalog* cat);
-
 int catalog_write_sigmas(catalog* cat);
 int catalog_write_pms(catalog* cat);
 int catalog_write_sigma_pms(catalog* cat);
