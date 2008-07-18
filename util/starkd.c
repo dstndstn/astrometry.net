@@ -139,6 +139,28 @@ bl* get_chunks(startree_t* s, il* wordsizes) {
         il_append(wordsizes, sizeof(float));
 
     fitsbin_chunk_reset(&chunk);
+    chunk.tablename = "flux";
+    chunk.itemsize = sizeof(float);
+    chunk.nrows = kd->ndata;
+    chunk.data = s->flux;
+    chunk.userdata = &(s->flux);
+    chunk.required = FALSE;
+    bl_append(chunks, &chunk);
+    if (wordsizes)
+        il_append(wordsizes, sizeof(float));
+
+    fitsbin_chunk_reset(&chunk);
+    chunk.tablename = "flux_err";
+    chunk.itemsize = 1 * sizeof(float);
+    chunk.nrows = kd->ndata;
+    chunk.data = s->flux_err;
+    chunk.userdata = &(s->flux_err);
+    chunk.required = FALSE;
+    bl_append(chunks, &chunk);
+    if (wordsizes)
+        il_append(wordsizes, sizeof(float));
+
+    fitsbin_chunk_reset(&chunk);
     chunk.tablename = "starid";
     chunk.itemsize = sizeof(uint64_t);
     chunk.nrows = kd->ndata;
@@ -208,14 +230,6 @@ startree_t* startree_open(char* fn) {
     startree_close(s);
 	return NULL;
 }
-
-/*
- void startree_close_starids(startree_t* s) {
- }
-
- void startree_close_motions(startree_t* s) {
- }
- */
 
 uint64_t startree_get_starid(startree_t* s, int ind) {
     if (!s->starids)

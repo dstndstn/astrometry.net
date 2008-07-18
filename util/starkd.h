@@ -41,6 +41,9 @@ struct startree_s {
     float* sigma_radec;
     float* proper_motion;
     float* sigma_pm;
+    // optional tables: flux and flux error
+    float* flux;
+    float* flux_err;
     // optional table: star IDs
     uint64_t* starids;
 };
@@ -51,11 +54,6 @@ startree_t* startree_open(char* fn);
 
 void startree_search(startree_t* s, double* xyzcenter, double radius2,
                      double** xyzresults, double** radecresults, int* nresults);
-
-/*
- void startree_close_starids(startree_t* s);
- void startree_close_motions(startree_t* s);
- */
 
 uint64_t startree_get_starid(startree_t* s, int ind);
 
