@@ -112,7 +112,7 @@ class FullForm(forms.Form):
         attrs={'onfocus':'setFsEv()',
                'onkeyup':'scalechanged()',
                'size':'5',
-               }), required=False, min_value=0, max_value=100)
+               }), required=False, min_value=0, max_value=99)
 
     url = ForgivingURLField(initial='http://',
                             widget=forms.TextInput(
