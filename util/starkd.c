@@ -151,7 +151,7 @@ bl* get_chunks(startree_t* s, il* wordsizes) {
 
     fitsbin_chunk_reset(&chunk);
     chunk.tablename = "mag_err";
-    chunk.itemsize = 1 * sizeof(float);
+    chunk.itemsize = sizeof(float);
     chunk.nrows = kd->ndata;
     chunk.data = s->mag_err;
     chunk.userdata = &(s->mag_err);
