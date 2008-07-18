@@ -139,22 +139,22 @@ bl* get_chunks(startree_t* s, il* wordsizes) {
         il_append(wordsizes, sizeof(float));
 
     fitsbin_chunk_reset(&chunk);
-    chunk.tablename = "flux";
+    chunk.tablename = "mag";
     chunk.itemsize = sizeof(float);
     chunk.nrows = kd->ndata;
-    chunk.data = s->flux;
-    chunk.userdata = &(s->flux);
+    chunk.data = s->mag;
+    chunk.userdata = &(s->mag);
     chunk.required = FALSE;
     bl_append(chunks, &chunk);
     if (wordsizes)
         il_append(wordsizes, sizeof(float));
 
     fitsbin_chunk_reset(&chunk);
-    chunk.tablename = "flux_err";
+    chunk.tablename = "mag_err";
     chunk.itemsize = 1 * sizeof(float);
     chunk.nrows = kd->ndata;
-    chunk.data = s->flux_err;
-    chunk.userdata = &(s->flux_err);
+    chunk.data = s->mag_err;
+    chunk.userdata = &(s->mag_err);
     chunk.required = FALSE;
     bl_append(chunks, &chunk);
     if (wordsizes)
