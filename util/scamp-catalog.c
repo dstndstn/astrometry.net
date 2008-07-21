@@ -100,6 +100,7 @@ int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr
                                           dubl, "ERR_B", "pixels");
         fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_ref_t, mag),
                                           dubl, "MAG", "mag");
+        // Not used by Scamp!
         fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_ref_t, err_mag),
                                           dubl, "MAG_ERR", "mag");
     } else {
@@ -111,12 +112,14 @@ int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr
                                           dubl, "ERR_A", "pixels");
         fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, err_b),
                                           dubl, "ERR_B", "pixels");
+        // Scamp ignores this.
         fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, err_theta),
                                           dubl, "ERR_THETA", "deg");
         fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, flux),
                                           dubl, "FLUX", NULL);
         fitstable_add_write_column_struct(scamp->table, dubl, 1, offsetof(scamp_obj_t, err_flux),
                                           dubl, "FLUX_ERR", NULL);
+        // this column is optional.
         fitstable_add_write_column_struct(scamp->table, i16, 1, offsetof(scamp_obj_t, flags),
                                           i16, "FLAGS", NULL);
     }
