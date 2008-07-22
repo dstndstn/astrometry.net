@@ -24,6 +24,8 @@
    reasons why the executable file might be covered by the GNU General
    Public License.  */
 
+// This has been imported into Astrometry.net for ctmf.c
+
 #ifndef _MM_MALLOC_H_INCLUDED
 #define _MM_MALLOC_H_INCLUDED
 

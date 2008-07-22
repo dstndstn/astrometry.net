@@ -17,7 +17,6 @@
 */
 
 #include <string.h>
-#include <errno.h>
 #include <assert.h>
 #include <stdarg.h>
 #include <sys/param.h>

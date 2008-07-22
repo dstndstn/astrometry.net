@@ -29,7 +29,6 @@
 */
 
 #include <string.h>
-#include <errno.h>
 #include <limits.h>
 #include <math.h>
 

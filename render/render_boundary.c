@@ -2,7 +2,6 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include <errno.h>
 #include <string.h>
 
 #include <cairo.h>

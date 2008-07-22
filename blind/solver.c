@@ -18,7 +18,6 @@
 
 #include <stdio.h>
 #include <sys/param.h>
-#include <errno.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>

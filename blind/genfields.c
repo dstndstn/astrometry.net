@@ -17,6 +17,9 @@
 */
 
 #include <math.h>
+#include <string.h>
+#include <errno.h>
+
 #include "mathutil.h"
 #include "starutil.h"
 #include "kdtree.h"

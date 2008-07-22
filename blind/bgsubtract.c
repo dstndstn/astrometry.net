@@ -19,7 +19,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <math.h>
-#include <errno.h>
 #include <string.h>
 #include <stdint.h>
 

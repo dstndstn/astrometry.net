@@ -17,7 +17,6 @@
 */
 
 #include <math.h>
-#include <errno.h>
 #include <string.h>
 #include <stdint.h>
 #include <sys/param.h>

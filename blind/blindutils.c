@@ -18,7 +18,6 @@
 
 #include <string.h>
 #include <libgen.h>
-#include <errno.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <assert.h>

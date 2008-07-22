@@ -26,7 +26,6 @@
    Output: .qidx
  */
 
-#include <errno.h>
 #include <string.h>
 
 #include "starutil.h"

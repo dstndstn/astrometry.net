@@ -19,12 +19,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <errno.h>
 #include <math.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <string.h>
-#include <errno.h>
 #include <ctype.h>
 
 #include "an-bool.h"

@@ -18,7 +18,6 @@
 
 #include <assert.h>
 #include <stddef.h>
-#include <errno.h>
 #include <string.h>
 
 #include "tycho2-fits.h"

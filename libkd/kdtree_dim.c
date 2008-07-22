@@ -21,7 +21,6 @@
 #include <assert.h>
 #include <string.h>
 #include <math.h>
-#include <errno.h>
 
 #include "kdtree.h"
 #include "kdtree_internal.h"

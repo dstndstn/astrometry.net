@@ -20,7 +20,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/mman.h>
-#include <errno.h>
 #include <string.h>
 #include <assert.h>
 

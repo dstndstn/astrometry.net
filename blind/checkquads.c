@@ -20,7 +20,6 @@
   Checks the consistency of "quad" and "qidx" files.
 */
 
-#include <errno.h>
 #include <string.h>
 
 #include "starutil.h"

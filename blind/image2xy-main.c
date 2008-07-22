@@ -23,7 +23,6 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/param.h>
-#include <errno.h>
 #include <unistd.h>
 
 #include "image2xy-files.h"
