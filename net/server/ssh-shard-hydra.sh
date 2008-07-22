@@ -29,36 +29,27 @@ dd bs=1 count=$nbytes of=job.axy
 
 $BACKEND_CLIENT `pwd`/job.axy `pwd`/../cancel > backend.stdout &
 
-#pid=$!
 while [ 1 ]; do
     # Wait for a command from the master, with 1-second timeout...
-    echo "Reading..."
+    #echo "Reading..."
     read -t 1 command
-    echo "Got command: $command"
+    #echo "Got command: $command"
     if [ x$command != x ]; then
 	echo "Got command: $command"
+	echo "Killing job..."
+	kill %%
+	echo "Waiting..."
+	wait
 	break;
     fi
     # Check if the process finished.
-    #jobs -n $pid
-    #jobs $pid
-    #echo "jobs 1"
-    #jobs %${BACKEND_CLIENT}
-    #jobstat=$?
-    #echo "jobs command returned: $jobstat"
-    echo "jobs:"
-    jobs %%
+    jobs %% > /dev/null
     jobstat=$?
-    echo "jobs command returned: $jobstat"
+    #echo "jobs command returned: $jobstat"
     if [ $jobstat -ne 0 ]; then
 	break;
     fi
 done
-
-echo "Killing job..."
-kill %%
-echo "Waiting..."
-wait
 
 # Send back all the files we generated
 tar cf - --ignore-failed-read --exclude=job.axy * ../solved
