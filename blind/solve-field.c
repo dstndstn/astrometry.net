@@ -50,6 +50,8 @@
 #include "new-wcs.h"
 #include "scamp.h"
 
+// hvD:o:b:fpGOKJN:Z:i:L:H:u:d:l:rz:C:S:I:M:R:j:B:W:P:k:AV:ygTt:c:E:m:q:Q:F:w:e:2X:Y:s:an:
+
 static an_option_t options[] = {
 	{'h', "help",		   no_argument, NULL,
      "print this help message" },
@@ -77,9 +79,11 @@ static an_option_t options[] = {
     {'N', "new-fits",    required_argument, "filename",
      "output filename of the new FITS file containing the WCS header; \"none\" to not create this file"},
     {'Z', "kmz",            required_argument, "filename",
-     "create KMZ file for Google Sky.  (requires wcs2kml)\n"},
+     "create KMZ file for Google Sky.  (requires wcs2kml)"},
     {'i', "scamp",          required_argument, "filename",
-     "create image object catalog for SCAMP\n"},
+     "create image object catalog for SCAMP"},
+    {'n', "scamp-config",   required_argument, "filename",
+     "create SCAMP config file snippet"},
 };
 
 static void print_help(const char* progname, bl* opts) {
@@ -421,6 +425,7 @@ int main(int argc, char** args) {
     char* newfits;
     char* kmzfn = NULL;
     char* scampfn = NULL;
+    char* scampconfigfn = NULL;
 
     errors_print_on_exit(stderr);
     fits_use_error_system();
@@ -472,6 +477,9 @@ int main(int argc, char** args) {
         if (c == -1)
             break;
         switch (c) {
+        case 'n':
+            scampconfigfn = optarg;
+            break;
         case 'i':
             scampfn = optarg;
             break;
@@ -935,6 +943,12 @@ int main(int argc, char** args) {
                     qfits_header_destroy(imageheader);
             }
 
+            if (scampconfigfn) {
+                if (scamp_write_config_file(axy->scampfn, scampconfigfn)) {
+                    ERROR("Failed to write SCAMP config file snippet to %s", scampconfigfn);
+                    exit(-1);
+                }
+            }
 		}
         fflush(NULL);
 
