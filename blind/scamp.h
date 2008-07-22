@@ -28,4 +28,13 @@ int scamp_write_field(const qfits_header* imageheader,
                       const starxy_t* xy,
                       const char* filename);
 
+
+// Writes a Scamp config file snippet describing the reference and input catalogs
+// we generate.
+int scamp_write_config_file(const char* refcatfn, const char* outfn);
+
+// Returns a newly-allocated Scamp config file snippet describing the reference
+// and input catalogs we generate.
+char* scamp_get_config_options(const char* refcatfn);
+
 #endif
