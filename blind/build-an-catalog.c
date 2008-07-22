@@ -21,7 +21,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/mman.h>
 #include <assert.h>
 #include <math.h>
 

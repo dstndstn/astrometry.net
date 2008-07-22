@@ -22,11 +22,11 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
 #include <sys/mman.h>
-#include <netinet/in.h>
-#include <assert.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <assert.h>
 
 #include "usnob.h"
 #include "qfits.h"

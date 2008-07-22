@@ -17,7 +17,6 @@
 */
 
 #include <stdio.h>
-#include <sys/mman.h>
 #include <sys/param.h>
 #include <errno.h>
 #include <string.h>

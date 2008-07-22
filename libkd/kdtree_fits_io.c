@@ -22,7 +22,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <sys/mman.h>
 #include <sys/param.h>
 
 #include "kdtree_fits_io.h"

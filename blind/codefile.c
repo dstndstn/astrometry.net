@@ -19,7 +19,6 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/mman.h>
 #include <assert.h>
 
 #include "codefile.h"

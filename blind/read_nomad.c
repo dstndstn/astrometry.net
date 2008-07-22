@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
 #include <sys/mman.h>
 #include <endian.h>
 #include <netinet/in.h>

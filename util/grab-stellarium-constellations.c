@@ -21,8 +21,8 @@
 #include <stdint.h>
 #include <errno.h>
 #include <math.h>
-#include <sys/mman.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>

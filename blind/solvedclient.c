@@ -90,6 +90,7 @@ static int connect_to_server() {
 		return -1;
 	}
     assert(serveraddr_initialized);
+    // gcc with strict-aliasing warns about this cast but it should be okay.
 	if (connect(sock, (struct sockaddr*)&serveraddr, sizeof(serveraddr))) {
 		fprintf(stderr, "Couldn't connect to server: %s\n", strerror(errno));
 		if (fclose(fserver))

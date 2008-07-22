@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
-#include <sys/mman.h>
 #include <sys/types.h>
 #include <string.h>
 #include <errno.h>

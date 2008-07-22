@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/mman.h>
 
 #include "an-bool.h"
 #include "qfits.h"

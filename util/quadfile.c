@@ -20,7 +20,6 @@
 #include <math.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <assert.h>
 
 #include "qfits.h"
