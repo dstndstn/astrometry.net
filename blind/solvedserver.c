@@ -208,6 +208,8 @@ int main(int argc, char** args) {
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY;
 	addr.sin_port = htons(port);
+    // gcc with strict-aliasing warn about this cast but according to "the internet"
+    // it's okay because we're not dereferencing the cast pointer.
 	if (bind(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_in))) {
 		fprintf(stderr, "Error: couldn't bind socket: %s\n", strerror(errno));
 		exit(-1);
@@ -274,6 +276,7 @@ int main(int argc, char** args) {
 			}
 		}
 		if (FD_ISSET(sock, &rset)) {
+            // See comment about strict aliasing above.  Should be okay, despite gcc warning.
 			int s = accept(sock, (struct sockaddr*)&clientaddr, &addrsz);
 			if (s == -1) {
 				fprintf(stderr, "Error: failed to accept() on socket: %s\n", strerror(errno));
