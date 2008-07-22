@@ -82,7 +82,7 @@ int scamp_write_config_file(const char* refcatfn, const char* outfn) {
     }
     text = scamp_get_config_options(refcatfn);
     res = fprintf(fid, "%s", text);
-    free(text):
+    free(text);
     if (res < 0) {
         SYSERROR("Failed to write to Scamp config file %s", outfn);
         return -1;
