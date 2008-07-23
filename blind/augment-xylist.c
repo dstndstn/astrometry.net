@@ -202,12 +202,17 @@ void augment_xylist_add_options(bl* opts) {
 
 static int parse_fields_string(il* fields, const char* str);
 
+// "none" => NULL
+static char* none_is_null(const char* in) {
+    return streq(in, "none") ? NULL : in;
+}
+
 int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
     switch (argchar) {
     case 'B':
-        axy->corrfn = optarg;
+        axy->corrfn = none_is_null(optarg);
         break;
     case 'y':
         axy->try_verify = FALSE;
@@ -253,10 +258,10 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         sl_append(axy->verifywcs, optarg);
         break;
     case 'I':
-        axy->solvedinfn = optarg;
+        axy->solvedinfn = none_is_null(optarg);
         break;
     case 'k':
-        axy->keepxylsfn = optarg;
+        axy->keepxylsfn = none_is_null(optarg);
         break;
     case 's':
         axy->sortcol = optarg;
@@ -328,22 +333,22 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         axy->guess_scale = TRUE;
         break;
     case 'S':
-        axy->solvedfn = optarg;
+        axy->solvedfn = none_is_null(optarg);
         break;
     case 'C':
-        axy->cancelfn = optarg;
+        axy->cancelfn = none_is_null(optarg);
         break;
     case 'M':
-        axy->matchfn = optarg;
+        axy->matchfn = none_is_null(optarg);
         break;
     case 'R':
-        axy->rdlsfn = optarg;
+        axy->rdlsfn = none_is_null(optarg);
         break;
     case 'j':
-        axy->scampfn = optarg;
+        axy->scampfn = none_is_null(optarg);
         break;
     case 'W':
-        axy->wcsfn = optarg;
+        axy->wcsfn = none_is_null(optarg);
         break;
     default:
         return 1;
