@@ -50,7 +50,7 @@
 #include "new-wcs.h"
 #include "scamp.h"
 
-// hvD:o:b:fpGOKJN:Z:i:L:H:u:d:l:rz:C:S:I:M:R:j:B:W:P:k:AV:ygTt:c:E:m:q:Q:F:w:e:2X:Y:s:an:
+// hvD:o:b:fpGOKJN:Z:i:L:H:u:d:l:rz:C:S:I:M:R:j:B:W:P:k:AV:ygTt:c:E:m:q:Q:F:w:e:2X:Y:s:an:U:
 
 static an_option_t options[] = {
 	{'h', "help",		   no_argument, NULL,
@@ -85,7 +85,7 @@ static an_option_t options[] = {
     {'n', "scamp-config",   required_argument, "filename",
      "create SCAMP config file snippet"},
     {'U', "index-xyls",     required_argument, "filename",
-     "xylist containing the image coordinate of stars from the index},
+     "xylist containing the image coordinate of stars from the index"},
 };
 
 static void print_help(const char* progname, bl* opts) {
@@ -898,7 +898,7 @@ int main(int argc, char** args) {
 
             if (makeplots && !indxylsfn) {
                 // write index xyls to temp file for overlay plot.
-                indxyls = create_temp_file("indxyls", tempdir);
+                indxylsfn = create_temp_file("indxyls", tempdir);
                 sl_append_nocopy(tempfiles, indxylsfn);
             }
 
