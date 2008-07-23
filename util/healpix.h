@@ -285,7 +285,12 @@ Const double healpix_side_length_arcmin(int Nside);
 */
 int healpix_get_neighbours(int hp, int* neighbour, int Nside);
 
-
+/**
+ Finds the healpixes containing and neighbouring the given xyz position which are
+ within distance 'range' (in units of distance of the unit sphere).
+ Places the results in 'healpixes', which must have at least 9 elements.
+ Returns the number of 'healpixes' set.
+ */
 int healpix_get_neighbours_within_range(double* xyz, double range, int* healpixes,
 										//int maxNhealpixes,
 										int Nside);

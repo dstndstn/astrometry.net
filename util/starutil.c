@@ -38,8 +38,7 @@ static int parse_hms_string(const char* str,
     int nmatches = 6;
     regex_t re;
     regmatch_t* m;
-    char* s;
-    int i;
+    const char* s;
 
     const char* restr = 
         "^([+-])?([[:digit:]]{2}):"
@@ -53,13 +52,6 @@ static int parse_hms_string(const char* str,
     regfree(&re);
     if (!matched)
         return 1;
-
-    /*
-     for (i=0; i<nmatches; i++) {
-     printf("match %i: [%i,%i]: \"%.*s\"\n", i, matches[i].rm_so,
-     matches[i].rm_eo, matches[i].rm_eo - matches[i].rm_so, str + matches[i].rm_so);
-     }
-     */
 
     // sign
     m = matches + 1;
@@ -294,6 +286,10 @@ Const inline double arcsec2dist(double arcInArcSec) {
 // Degrees to distance on the unit sphere.
 Const inline double deg2dist(double arcInDegrees) {
     return arcsec2dist(deg2arcsec(arcInDegrees));
+}
+
+Const inline double arcmin2dist(double arcmin) {
+    return deg2dist(arcmin2deg(arcmin));
 }
 
 Const inline double dist2deg(double dist) {

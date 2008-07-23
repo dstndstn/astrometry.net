@@ -43,12 +43,22 @@ int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr
     int i, N;
     qfits_header* h;
     char* hdrstring;
+    qfits_header* freehdr = NULL;
     tfits_type dubl = fitscolumn_double_type();
     tfits_type i16  = fitscolumn_i16_type();
 
     if (fitstable_write_primary_header(scamp->table)) {
         ERROR("Failed to write scamp catalog primary header.\n");
         return -1;
+    }
+
+    if (!hdr) {
+        freehdr = qfits_header_default();
+        fits_header_add_int(freehdr, "BITPIX", 0, NULL);
+        fits_header_add_int(freehdr, "NAXIS", 2, NULL);
+        fits_header_add_int(freehdr, "NAXIS1", 0, NULL);
+        fits_header_add_int(freehdr, "NAXIS2", 0, NULL);
+        hdr = freehdr;
     }
 
     // Table is one row x one column (array of (N*80) characters)
@@ -75,6 +85,8 @@ int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr
             ERROR("Failed to get scamp catalog field header line %i", i);
             return -1;
         }
+    if (freehdr)
+        qfits_header_destroy(freehdr);
     if (fitstable_write_row(scamp->table, hdrstring)) {
         ERROR("Failed to write scamp catalog field header");
         return -1;
