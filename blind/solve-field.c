@@ -728,9 +728,9 @@ int main(int argc, char** args) {
         if (index_xyls_template)
             indxylsfn  = sl_appendf(outfiles, index_xyls_template, base);
         if (suffix)
-            downloadfn = sl_appendf(outfiles, "%s-downloaded.%s", base, suffix);
+            downloadfn = sl_appendf(outfiles, "%s.%s", base, suffix);
         else
-            downloadfn = sl_appendf(outfiles, "%s-downloaded", base);
+            downloadfn = sl_appendf(outfiles, "%s", base);
 
         // Do %s replacement on --verify-wcs entries...
         if (sl_size(axy->verifywcs)) {
