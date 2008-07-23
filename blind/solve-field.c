@@ -84,6 +84,8 @@ static an_option_t options[] = {
      "create image object catalog for SCAMP"},
     {'n', "scamp-config",   required_argument, "filename",
      "create SCAMP config file snippet"},
+    {'U', "index-xyls",     required_argument, "filename",
+     "xylist containing the image coordinate of stars from the index},
 };
 
 static void print_help(const char* progname, bl* opts) {
@@ -435,6 +437,7 @@ int main(int argc, char** args) {
     char* kmzfn = NULL;
     char* scampfn = NULL;
     char* scampconfigfn = NULL;
+    char* index_xyls_template;
 
     errors_print_on_exit(stderr);
     fits_use_error_system();
@@ -479,6 +482,7 @@ int main(int argc, char** args) {
     allaxy->wcsfn    = "%s.wcs";
     allaxy->corrfn   = "%s.corr";
     newfits          = "%s.new";
+    index_xyls_template = "%s-indx.xyls";
 
 	while (1) {
         int res;
@@ -486,6 +490,9 @@ int main(int argc, char** args) {
         if (c == -1)
             break;
         switch (c) {
+        case 'U':
+            index_xyls_template = optarg;
+            break;
         case 'n':
             scampconfigfn = optarg;
             break;
@@ -571,6 +578,7 @@ int main(int argc, char** args) {
     allaxy->wcsfn    = none_is_null(allaxy->wcsfn);
     allaxy->corrfn   = none_is_null(allaxy->corrfn);
     newfits          = none_is_null(newfits);
+    index_xyls_template = none_is_null(index_xyls_template);
 
 	if (outdir) {
         if (mkdir_p(outdir)) {
@@ -593,8 +601,8 @@ int main(int argc, char** args) {
 		char* base;
         char* basedir;
         char* basefile;
-		char *objsfn, *redgreenfn;
-		char *ngcfn, *ppmfn=NULL, *indxylsfn;
+		char *objsfn=NULL, *redgreenfn=NULL;
+		char *ngcfn=NULL, *ppmfn=NULL, *indxylsfn=NULL;
         char* newfitsfn = NULL;
         char* downloadfn;
         char* suffix = NULL;
@@ -694,11 +702,16 @@ int main(int argc, char** args) {
 		tempdirs = sl_new(4);
 
 		axy->outfn    = sl_appendf(outfiles, axy->outfn,       base);
-		axy->matchfn  = sl_appendf(outfiles, axy->matchfn,     base);
-		axy->rdlsfn   = sl_appendf(outfiles, axy->rdlsfn,      base);
-		axy->solvedfn = sl_appendf(outfiles, axy->solvedfn,    base);
-		axy->wcsfn    = sl_appendf(outfiles, axy->wcsfn,       base);
-		axy->corrfn   = sl_appendf(outfiles, axy->corrfn,      base);
+        if (axy->matchfn)
+            axy->matchfn  = sl_appendf(outfiles, axy->matchfn,     base);
+        if (axy->rdlsfn)
+            axy->rdlsfn   = sl_appendf(outfiles, axy->rdlsfn,      base);
+        if (axy->solvedfn)
+            axy->solvedfn = sl_appendf(outfiles, axy->solvedfn,    base);
+        if (axy->wcsfn)
+            axy->wcsfn    = sl_appendf(outfiles, axy->wcsfn,       base);
+        if (axy->corrfn)
+            axy->corrfn   = sl_appendf(outfiles, axy->corrfn,      base);
         if (newfits)
             newfitsfn  = sl_appendf(outfiles, newfits,  base);
         if (axy->cancelfn)
@@ -707,10 +720,13 @@ int main(int argc, char** args) {
             axy->keepxylsfn  = sl_appendf(outfiles, axy->keepxylsfn, base);
         if (axy->pnmfn)
             axy->pnmfn  = sl_appendf(outfiles, axy->pnmfn, base);
-		objsfn     = sl_appendf(outfiles, "%s-objs.png",  base);
-		redgreenfn = sl_appendf(outfiles, "%s-indx.png",  base);
-		ngcfn      = sl_appendf(outfiles, "%s-ngc.png",   base);
-		indxylsfn  = sl_appendf(outfiles, "%s-indx.xyls", base);
+        if (makeplots) {
+            objsfn     = sl_appendf(outfiles, "%s-objs.png",  base);
+            redgreenfn = sl_appendf(outfiles, "%s-indx.png",  base);
+            ngcfn      = sl_appendf(outfiles, "%s-ngc.png",   base);
+        }
+        if (index_xyls_template)
+            indxylsfn  = sl_appendf(outfiles, index_xyls_template, base);
         if (suffix)
             downloadfn = sl_appendf(outfiles, "%s-downloaded.%s", base, suffix);
         else
@@ -880,11 +896,19 @@ int main(int argc, char** args) {
                 }
             }
 
-			// index rdls to xyls.
-            if (wcs_rd2xy(axy->wcsfn, axy->rdlsfn, indxylsfn,
-                          NULL, NULL, FALSE, NULL)) {
-                ERROR("Failed to project index stars into field coordinates using wcs-rd2xy");
-                exit(-1);
+            if (makeplots && !indxylsfn) {
+                // write index xyls to temp file for overlay plot.
+                indxyls = create_temp_file("indxyls", tempdir);
+                sl_append_nocopy(tempfiles, indxylsfn);
+            }
+
+            if (indxylsfn) {
+                // index rdls to xyls.
+                if (wcs_rd2xy(axy->wcsfn, axy->rdlsfn, indxylsfn,
+                              NULL, NULL, FALSE, NULL)) {
+                    ERROR("Failed to project index stars into field coordinates using wcs-rd2xy");
+                    exit(-1);
+                }
             }
 
             // print info about the field.
