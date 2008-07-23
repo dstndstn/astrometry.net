@@ -425,10 +425,12 @@ int main(int argc, char** args) {
 
 	logmsg("Nside=%i, HP=%i, sweeps=%i, max number of stars = HP*sweeps = %i.\n", Nside, HP, sweeps, HP*sweeps);
 	logmsg("Healpix side length: %g arcmin.\n", healpix_side_length_arcmin(Nside));
-	if (bighp != -1)
-		logmsg("Writing big healpix %i.\n", bighp);
-	else
+
+	if (allsky) {
 		logmsg("Writing an all-sky catalog.\n");
+        bignside = 0;
+    } else
+		logmsg("Writing big healpix %i.\n", bighp);
 
 	if (deduprad > 0.0) {
 		logmsg("Deduplication radius %f arcsec.\n", deduprad);
@@ -439,7 +441,7 @@ int main(int argc, char** args) {
 
 	// find the set of small healpixes that this big healpix owns
 	// and add the margin.
-	if (bighp != -1) {
+	if (!allsky) {
 		il* q = il_new(32);
 		int hp;
 		int nowned = 0;
