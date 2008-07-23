@@ -63,6 +63,9 @@ typedef unsigned char uchar;
 #define xy2ra(x,y) ((atan2(y,x)>=0.0)?(atan2(y,x)):(2*(double)PIl+atan2(y,x)))
 #define z2dec(z) (asin(z))
 
+double atora(const char* str);
+double atodec(const char* str);
+
 double mag2flux(double mag);
 
 // RA,Dec in radians:
@@ -96,6 +99,9 @@ inline double dec2mercy(double dec);
 inline void ra2hms(double ra, int* h, int* m, double* s);
 // Dec in degrees to D:M:S
 inline void dec2dms(double dec, int* d, int* m, double* s);
+
+double hms2ra(int h, int m, double s);
+double dms2dec(int sgn, int d, int m, double s);
 
 inline void project_hammer_aitoff_x(double x, double y, double z, double* projx, double* projy);
 

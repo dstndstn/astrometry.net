@@ -211,3 +211,9 @@ void error_print_stack(err_t* e, FILE* f) {
 char* error_get_errs(err_t* e, const char* separator) {
     return sl_join_reverse(e->errstack, separator);
 }
+
+void errors_regex_error(int errcode, const regex_t* re) {
+    char str[256];
+    regerror(errcode, re, str, sizeof(str));
+    error_report(errors_get_state(), "regex", -1, NULL, "%s", str);
+}

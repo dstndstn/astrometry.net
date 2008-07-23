@@ -21,6 +21,8 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <regex.h>
 
 #include "an-bool.h"
 #include "bl.h"
@@ -81,6 +83,8 @@ void errors_start_logging_to_string();
  Returns a newly-allocated string which you must free().
  */
 char* errors_stop_logging_to_string(const char* separator);
+
+void errors_regex_error(int errcode, const regex_t* re);
 
 /***    End globals   ***/
 

@@ -189,7 +189,7 @@ grab-stellarium-constellations: grab-stellarium-constellations.o \
 
 ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log test_ioutils \
-	test_dualtree_nn test_scamp_catalog
+	test_dualtree_nn test_scamp_catalog test_starutil
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -222,6 +222,8 @@ test_ioutils: $(ANUTILS_LIB)
 test_dualtree_nn: $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 test_scamp_catalog: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
+test_starutil: $(ANUTILS_LIB)
 
 ### /TESTS
 

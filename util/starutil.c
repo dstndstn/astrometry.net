@@ -18,14 +18,118 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <regex.h>
 
 #include "starutil.h"
 #include "mathutil.h"
 #include "keywords.h"
+#include "errors.h"
 
 #define POGSON 2.51188643150958
 #define LOGP   0.92103403719762
+
+static int parse_hms_string(const char* str,
+                            int* sign, int* term1, int* term2, double* term3) {
+    bool matched;
+    regmatch_t matches[6];
+    int nmatches = 6;
+    regex_t re;
+    regmatch_t* m;
+    char* s;
+    int i;
+
+    const char* restr = 
+        "^([+-])?([[:digit:]]{2}):"
+        "([[:digit:]]{2}):"
+        "([[:digit:]]*(\\.[[:digit:]]*)?)$";
+    if (regcomp(&re, restr, REG_EXTENDED)) {
+        ERROR("Failed to compile H:M:S regex \"%s\"", restr);
+        return -1;
+    }
+    matched = (regexec(&re, str, nmatches, matches, 0) == 0);
+    regfree(&re);
+    if (!matched)
+        return 1;
+
+    /*
+     for (i=0; i<nmatches; i++) {
+     printf("match %i: [%i,%i]: \"%.*s\"\n", i, matches[i].rm_so,
+     matches[i].rm_eo, matches[i].rm_eo - matches[i].rm_so, str + matches[i].rm_so);
+     }
+     */
+
+    // sign
+    m = matches + 1;
+    s = str + m->rm_so;
+    if (m->rm_so == -1 || s[0] == '+')
+        *sign = 1;
+    else
+        *sign = -1;
+    // hrs / deg
+    m = matches + 2;
+    s = str + m->rm_so;
+    if (s[0] == '0')
+        s++;
+    *term1 = atoi(s);
+    // Min
+    m = matches + 3;
+    s = str + m->rm_so;
+    if (s[0] == '0')
+        s++;
+    *term2 = atoi(s);
+    // Sec
+    m = matches + 4;
+    s = str + m->rm_so;
+    *term3 = atof(s);
+    return 0;
+}
+
+double atora(const char* str) {
+    char* eptr;
+    double ra;
+    int sgn, hr, min;
+    double sec;
+    int rtn;
+
+    rtn = parse_hms_string(str, &sgn, &hr, &min, &sec);
+    if (rtn == -1) {
+        ERROR("Failed to run regex");
+        return HUGE_VAL;
+    }
+    if (rtn == 0)
+        return sgn * hms2ra(hr, min, sec);
+
+    ra = strtod(str, &eptr);
+    if (eptr == str)
+        // no conversion
+        return HUGE_VAL;
+    return ra;
+}
+
+double atodec(const char* str) {
+    char* eptr;
+    double dec;
+    int sgn, deg, min;
+    double sec;
+    int rtn;
+
+    rtn = parse_hms_string(str, &sgn, &deg, &min, &sec);
+    if (rtn == -1) {
+        ERROR("Failed to run regex");
+        return HUGE_VAL;
+    }
+    if (rtn == 0)
+        return dms2dec(sgn, deg, min, sec);
+
+    dec = strtod(str, &eptr);
+    if (eptr == str)
+        // no conversion
+        return HUGE_VAL;
+    return dec;
+}
 
 double mag2flux(double mag) {
 	return pow(POGSON, -mag);
@@ -238,6 +342,14 @@ inline double ra2mercx(double ra) {
 // Dec in degrees to Mercator Y coordinate [0, 1).
 inline double dec2mercy(double dec) {
 	return 0.5 + (asinh(tan(deg2rad(dec))) / (2.0 * M_PI));
+}
+
+double hms2ra(int h, int m, double s) {
+    return 15.0 * (h + ((m + (s / 60.0)) / 60.0));
+}
+
+double dms2dec(int sgn, int d, int m, double s) {
+    return sgn * (d + ((m + (s / 60.0)) / 60.0));
 }
 
 // RA in degrees to H:M:S

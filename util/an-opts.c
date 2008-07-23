@@ -85,6 +85,9 @@ int opts_getopt(bl* opts, int argc, char** argv) {
         j++;
     }
 
+    // DEBUG
+    //printf("%s\n", optstring);
+
     c = getopt_long(argc, argv, optstring, longoptions, NULL);
 
     free(optstring);
