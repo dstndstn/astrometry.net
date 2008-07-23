@@ -157,6 +157,12 @@ int usnob_get_index(usnob_entry* entry);
 
 int usnob_parse_entry(unsigned char* line, usnob_entry* usnob);
 
+// Returns 0 if this entry has a measured blue magnitude and sets 'mag';
+// returns -1 if it has no blue measurements.
+int usnob_get_blue_mag(usnob_entry* entry, float* mag);
+int usnob_get_red_mag(usnob_entry* entry, float* mag);
+int usnob_get_infrared_mag(usnob_entry* entry, float* mag);
+
 unsigned char usnob_get_survey_band(int survey);
 
 // returns 1 if the observation is first-epoch

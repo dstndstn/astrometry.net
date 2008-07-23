@@ -441,7 +441,7 @@ int backend_run_job(backend_t* backend, job_t* job) {
                 }
             }
 
-            logverb("Running blind");
+            logverb("Running blind solver:\n");
             blind_log_run_parameters(bp);
 
             blind_run(bp);

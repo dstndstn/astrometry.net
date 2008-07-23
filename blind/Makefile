@@ -59,7 +59,7 @@ CFITS_UTILS := tablist modhead fitscopy tabmerge fitstomatlab liststruc \
 FITS_UTILS := $(QFITS_UTILS) $(CFITS_UTILS)
 
 MISC_EXECS := project-usnob diffractionFlag_check \
-	hpgrid read_nomad tycho2tostellarium
+	hpgrid read_nomad tycho2tostellarium usnob-scamp-catalog
 
 UTIL_OBJS := boilerplate.o
 
@@ -553,6 +553,9 @@ bgsubtract: bgsubtract.o ctmf.o $(COMMON)/cairoutils.o $(UTIL_OBJS) $(ANUTILS_LI
 
 tycho2tostellarium: tycho2tostellarium.o tycho2-fits.o $(UTIL_OBJS) $(ANUTILS_LIB) \
 		$(QFITS_LIB)
+
+usnob-scamp-catalog: usnob-scamp-catalog.o usnob-fits.o usnob.o $(UTIL_OBJS) \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 DEP_OBJ := $(ALL_OBJ)
 DEP_PREREQS := $(QFITS_LIB)

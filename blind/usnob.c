@@ -80,6 +80,49 @@ unsigned char usnob_get_survey_band(int survey) {
 	}
 }
 
+int usnob_get_blue_mag(usnob_entry* entry, float* mag) {
+    float sum = 0.0;
+    int n = 0;
+    // Dumbass mag averaging.
+    if (usnob_is_observation_valid(entry->obs + OBS_BLUE1)) {
+        sum += entry->obs[OBS_BLUE1].mag;
+        n++;
+    }
+    if (usnob_is_observation_valid(entry->obs + OBS_BLUE2)) {
+        sum += entry->obs[OBS_BLUE2].mag;
+        n++;
+    }
+    if (n == 0)
+        return -1;
+    *mag = sum / (double)n;
+    return 0;
+}
+int usnob_get_red_mag(usnob_entry* entry, float* mag) {
+    float sum = 0.0;
+    int n = 0;
+    // Dumbass mag averaging.
+    if (usnob_is_observation_valid(entry->obs + OBS_RED1)) {
+        sum += entry->obs[OBS_RED1].mag;
+        n++;
+    }
+    if (usnob_is_observation_valid(entry->obs + OBS_RED2)) {
+        sum += entry->obs[OBS_RED2].mag;
+        n++;
+    }
+    if (n == 0)
+        return -1;
+    *mag = sum / (double)n;
+    return 0;
+}
+int usnob_get_infrared_mag(usnob_entry* entry, float* mag) {
+    if (usnob_is_observation_valid(entry->obs + OBS_N)) {
+        *mag = entry->obs[OBS_N].mag;
+        return 0;
+    }
+    return -1;
+}
+
+
 bool usnob_is_usnob_star(usnob_entry* entry) {
 	return (entry->ndetections >= 2);
 }

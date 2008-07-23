@@ -1182,6 +1182,7 @@ static int write_solutions(blind_t* bp) {
         MatchObj* mo;
         tan_t fakewcs;
 
+        // HACK -- just hdr = NULL?
         hdr = qfits_header_default();
         fits_header_add_int(hdr, "BITPIX", 0, NULL);
         fits_header_add_int(hdr, "NAXIS", 2, NULL);
