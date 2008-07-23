@@ -93,6 +93,10 @@ static void print_help(const char* progname, bl* opts) {
 	       "\n", progname);
     printf("Options include:\n");
     opts_print_help(opts, stdout, augment_xylist_print_special_opts, NULL);
+    printf("\n");
+    printf("Note that most output files can be disabled by setting the filename to \"none\".\n"
+           " (If you have a sick sense of humour and you really want to name your output file \"none\",\n"
+           "  you can use \"./none\" instead.)\n");
     printf("\n\n");
 }
 
@@ -394,6 +398,11 @@ static int plot_annotations(augment_xylist_t* axy, const char* me, bool verbose,
     return 0;
 }
 
+// "none" => NULL
+static char* none_is_null(char* in) {
+    return streq(in, "none") ? NULL : in;
+}
+
 int main(int argc, char** args) {
 	int c;
 	bool help = FALSE;
@@ -488,8 +497,6 @@ int main(int argc, char** args) {
             break;
         case 'N':
             newfits = optarg;
-            if (strcmp(newfits, "none") == 0)
-                newfits = NULL;
             break;
 		case 'h':
 			help = TRUE;
@@ -553,9 +560,17 @@ int main(int argc, char** args) {
     if (kmzfn && starts_with(kmzfn, "-")) {
         logmsg("Do you really want to save KMZ to the file named \"%s\" ??\n", kmzfn);
     }
-    if (newfits && starts_with(newfits, "-")) {
+    if (starts_with(newfits, "-")) {
         logmsg("Do you really want to save the new FITS file to the file named \"%s\" ??\n", newfits);
     }
+
+    // Allow (some of the) default filenames to be disabled by setting them to "none".
+    allaxy->matchfn  = none_is_null(allaxy->matchfn);
+    allaxy->rdlsfn   = none_is_null(allaxy->rdlsfn);
+    allaxy->solvedfn = none_is_null(allaxy->solvedfn);
+    allaxy->wcsfn    = none_is_null(allaxy->wcsfn);
+    allaxy->corrfn   = none_is_null(allaxy->corrfn);
+    newfits          = none_is_null(newfits);
 
 	if (outdir) {
         if (mkdir_p(outdir)) {
