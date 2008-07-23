@@ -116,6 +116,12 @@ static an_option_t options[] = {
     {'H', "scale-high",   required_argument, "scale",
      "upper bound of image scale estimate"},
 	{'u', "scale-units",    required_argument, "units", NULL},
+    {'3', "ra",             required_argument, "degrees or hh:mm:ss",
+     "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
+    {'4', "dec",            required_argument, "degrees or [+-]dd:mm:ss",
+     "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
+    {'5', "radius",         required_argument, "degrees",
+     "only search in indexes within 'radius' of the field center given by ('ra', 'dec')"},
 	{'d', "depth",		   required_argument, NULL, NULL},
     {'l', "cpulimit",       required_argument, "seconds",
      "give up solving after the specified number of seconds of CPU time"},
@@ -206,6 +212,23 @@ int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
     switch (argchar) {
+    case '3':
+        axy->ra_center = atora(optarg);
+        if (axy->ra_center == HUGE_VAL) {
+            ERROR("Couldn't understand your RA center argument \"%s\"", optarg);
+            return -1;
+        }
+        break;
+    case '4':
+        axy->dec_center = atodec(optarg);
+        if (axy->dec_center == HUGE_VAL) {
+            ERROR("Couldn't understand your Dec center argument \"%s\"", optarg);
+            return -1;
+        }
+        break;
+    case '5':
+        axy->search_radius = atof(optarg);
+        break;
     case 'B':
         axy->corrfn = optarg;
         break;
@@ -768,6 +791,14 @@ int augment_xylist(augment_xylist_t* axy,
 		fits_header_add_double(hdr, "ANCTOL", axy->codetol, "code tolerance");
     if (axy->pixelerr > 0.0)
 		fits_header_add_double(hdr, "ANPOSERR", axy->pixelerr, "star pos'n error (pixels)");
+
+    if ((axy->ra_center != HUGE_VAL) &&
+        (axy->dec_center != HUGE_VAL) &&
+        (axy->search_radius >= 0.0)) {
+        fits_header_add_double(hdr, "ANERA", axy->ra_center, "RA center estimate (deg)");
+        fits_header_add_double(hdr, "ANEDEC", axy->dec_center, "Dec center estimate (deg)");
+        fits_header_add_double(hdr, "ANERAD", axy->search_radius, "Search radius from estimated posn (deg)");
+    }
 
     for (i=0; i<il_size(axy->depths)/2; i++) {
         int depthlo, depthhi;

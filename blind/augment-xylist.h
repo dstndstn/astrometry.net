@@ -100,6 +100,11 @@ struct augment_xylist_s {
     // fractions
     double quadsize_min;
     double quadsize_max;
+
+    // for searching only within indexes that are near some estimated position.
+    double ra_center;
+    double dec_center;
+    double search_radius;
 };
 typedef struct augment_xylist_s augment_xylist_t;
 

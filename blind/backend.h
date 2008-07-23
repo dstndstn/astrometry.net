@@ -52,6 +52,10 @@ struct job_t {
 	dl* scales;
 	il* depths;
     bool include_default_scales;
+    double ra_center;
+    double dec_center;
+    double search_radius;
+    bool use_radec_center;
     blind_t bp;
 };
 typedef struct job_t job_t;

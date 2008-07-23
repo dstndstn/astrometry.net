@@ -49,6 +49,7 @@
 #include "errors.h"
 #include "backend.h"
 #include "tic.h"
+#include "healpix.h"
 
 static int add_index(backend_t* backend, char* path) {
     int k;
@@ -387,8 +388,8 @@ int backend_run_job(backend_t* backend, job_t* job) {
 		for (j=0; j<dl_size(job->scales) / 2; j++) {
 			double fmin, fmax;
 			double app_max, app_min;
-			int nused;
             int k;
+            il* indexlist;
 
 			// arcsec per pixel range
 			app_min = dl_get(job->scales, j * 2);
@@ -416,17 +417,16 @@ int backend_run_job(backend_t* backend, job_t* job) {
 			fmin = sp->quadsize_min * app_min;
 
 			// Select the indices that should be checked.
-			nused = 0;
+            indexlist = il_new(16);
 			for (k = 0; k < bl_size(backend->indexmetas); k++) {
 				index_meta_t* meta = bl_access(backend->indexmetas, k);
                 if (!index_meta_overlaps_scale_range(meta, fmin, fmax))
                     continue;
-                add_index_to_blind(backend, bp, k);
-				nused++;
+                il_append(indexlist, k);
 			}
 
 			// Use the (list of) smallest or largest indices if no other one fits.
-			if (!nused) {
+			if (!il_size(indexlist)) {
                 il* list = NULL;
                 if (fmin > backend->sizebiggest) {
                     list = backend->ibiggest;
@@ -435,11 +435,43 @@ int backend_run_job(backend_t* backend, job_t* job) {
                 } else {
                     assert(0);
                 }
-                for (k=0; k<il_size(list); k++) {
-                    int ii = il_get(list, k);
-                    add_index_to_blind(backend, bp, ii);
-                }
+                il_append_list(indexlist, list);
             }
+
+            for (k=0; k<il_size(indexlist); k++) {
+                int ii = il_get(indexlist, k);
+                index_meta_t* meta = bl_access(backend->indexmetas, ii);
+                bool inrange = FALSE;
+                if ((job->use_radec_center) &&
+                    (meta->hpnside >= 1 && meta->healpix > -1)) {
+                    // FIXME -- stupidly, we recompute the healpix neighbours every time
+                    // because Nside could be different and I haven't cached the results.
+                    double xyz[3];
+                    double range;
+                    int nn;
+                    int hps[9];
+                    int m;
+                    radecdeg2xyzarr(job->ra_center, job->dec_center, xyz);
+                    range = deg2dist(job->search_radius);
+                    nn = healpix_get_neighbours_within_range(xyz, range, hps, meta->hpnside);
+                    for (m=0; m<nn; m++)
+                        if (hps[m] == meta->healpix) {
+                            inrange = TRUE;
+                            break;
+                        }
+                } else
+                    // all-sky index; or we're not using RA,Dec estimate.
+                    inrange = TRUE;
+
+                if (!inrange)
+                    logverb("Not using index %s because it's not within %g degrees of (RA,Dec) = (%g,%g)\n",
+                            meta->indexname, job->search_radius, job->ra_center, job->dec_center);
+
+                if (inrange)
+                    add_index_to_blind(backend, bp, ii);
+            }
+
+            il_free(indexlist);
 
             logverb("Running blind solver:\n");
             blind_log_run_parameters(bp);
@@ -564,6 +596,13 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     val = qfits_header_getdouble(hdr, "ANQSFMAX", 0.0);
     if (val > 0.0)
         bp->quad_size_fraction_hi = val;
+
+    job->ra_center = qfits_header_getdouble(hdr, "ANERA", HUGE_VAL);
+    job->dec_center = qfits_header_getdouble(hdr, "ANEDEC", HUGE_VAL);
+    job->search_radius = qfits_header_getdouble(hdr, "ANERAD", HUGE_VAL);
+    job->use_radec_center = ((job->ra_center     != HUGE_VAL) &&
+                             (job->dec_center    != HUGE_VAL) &&
+                             (job->search_radius != HUGE_VAL));
 
 	n = 1;
 	while (1) {
