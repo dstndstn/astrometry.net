@@ -56,17 +56,19 @@ static struct option long_options[] =
 	    {"config",  required_argument, 0, 'c'},
 	    {"cancel",  required_argument, 0, 'C'},
         {"to-stderr", no_argument,     0, 'E'},
+        {"inputs-from", required_argument, 0, 'f'},
 	    {0, 0, 0, 0}
     };
 
-static const char* OPTIONS = "hc:i:vC:E";
+static const char* OPTIONS = "hc:i:vC:Ef:";
 
 static void print_help(const char* progname) {
 	printf("Usage:   %s [options] <augmented xylist>\n"
-	       "   [-c <backend config file>]  (default: \"backend.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable)\n"
-           "   [-C <cancel-filename>]: quit solving if the file <cancel-filename> appears.\n"
-           "   [-v]: verbose\n"
-           "   [-E]: send log messages to stderr\n"
+	       "   [-c or --config <backend config file>]  (default: \"backend.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable)\n"
+           "   [-C or --cancel <cancel-filename>]: quit solving if the file <cancel-filename> appears.\n"
+           "   [-v or --verbose]: verbose\n"
+           "   [-E or --to-stderr]: send log messages to stderr\n"
+           "   [-f or --inputs-from <filename>]: read input filenames from the given file, \"-\" for standard input (stdin)\n"
 	       "\n", progname);
 }
 
@@ -86,6 +88,9 @@ int main(int argc, char** args) {
     int loglvl = LOG_MSG;
     bool tostderr = FALSE;
     bool verbose = FALSE;
+    char* infn = NULL;
+    FILE* fin;
+    bool fromstdin;
 
 	while (1) {
 		int option_index = 0;
@@ -93,6 +98,10 @@ int main(int argc, char** args) {
 		if (c == -1)
 			break;
 		switch (c) {
+        case 'f':
+            infn = optarg;
+            fromstdin = streq(infn, "-");
+            break;
         case 'E':
             tostderr = TRUE;
             break;
@@ -117,7 +126,7 @@ int main(int argc, char** args) {
 		}
 	}
 
-	if (optind == argc) {
+	if (optind == argc && !infn) {
 		// Need extra args: filename
 		printf("You must specify at least one input file!\n\n");
 		help = TRUE;
@@ -130,6 +139,18 @@ int main(int argc, char** args) {
     log_init(loglvl);
     if (tostderr)
         log_to(stderr);
+
+    if (infn) {
+        logverb("Reading input filenames from %s\n", (fromstdin ? "stdin" : infn));
+        if (!fromstdin) {
+            fin = fopen(infn, "rb");
+            if (!fin) {
+                ERROR("Failed to open file %s for reading input filenames", infn);
+                exit(-1);
+            }
+        } else
+            fin = stdin;
+    }
 
 	backend = backend_new();
 
@@ -191,11 +212,23 @@ int main(int argc, char** args) {
 
     backend->cancelfn = cancelfn;
 
-	for (i = optind; i < argc; i++) {
+    i = optind;
+    while (1) {
 		char* jobfn;
         job_t* job;
 
-		jobfn = args[i];
+        if (infn) {
+            // Read name of next input file to be read.
+            logverb("\nWaiting for next input filename...\n");
+            jobfn = read_string_terminated(fin, "\n\r\0", 3, FALSE);
+            if (strlen(jobfn) == 0)
+                break;
+        } else {
+            if (i == argc)
+                break;
+            jobfn = args[i];
+            i++;
+        }
         logverb("Reading job file \"%s\"...\n", jobfn);
         job = backend_read_job_file(backend, jobfn);
         if (!job) {
@@ -211,6 +244,9 @@ int main(int argc, char** args) {
 
 	backend_free(backend);
     sl_free2(strings);
+
+    if (fin && !fromstdin)
+        fclose(fin);
 
     return 0;
 }
