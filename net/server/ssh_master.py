@@ -71,7 +71,7 @@ def solve(job, logfunc):
     while True:
         f = ([s.out for s in shards if s.running and not s.out.closed] +
              [s.err for s in shards if s.running and not s.err.closed])
-        log('selecting on %i files...' % len(f))
+        #log('selecting on %i files...' % len(f))
         if len(f) == 0:
             break
         (ready, nil1, nil2) = select.select(f, [], [], 1.)
@@ -125,14 +125,13 @@ def solve(job, logfunc):
                     firstsolved = s
 
                     # send cancel requests to others.
-
-                    # actually, if they share a filesystem then this isn't
-                    # necessary - they can use "cancel" or "solved" files.
+                    for j,ss in enumerate(shards):
+                        if i == j:
+                            continue
+                        ss.sin.write('cancel\n')
                 
                 # this proc is done!
                 s.running = False
-        # HACK
-        #time.sleep(1)
 
 
 
