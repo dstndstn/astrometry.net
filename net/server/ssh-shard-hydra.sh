@@ -31,22 +31,22 @@ $BACKEND_CLIENT `pwd`/job.axy `pwd`/../cancel > backend.stdout &
 
 while [ 1 ]; do
     # Wait for a command from the master, with 1-second timeout...
-    #echo "Reading..."
     read -t 1 command
-    #echo "Got command: $command"
     if [ x$command != x ]; then
-	echo "Got command: $command"
-	echo "Killing job..."
-	kill %%
-	echo "Waiting..."
+	echo "Got command: $command" 1>&2
+	#echo "Killing job..."
+	#kill %%
+	echo "Cancelling job..." 1>&2
+	touch `pwd`/../cancel
+	echo "Waiting..." 1>&2
 	wait
 	break;
     fi
     # Check if the process finished.
-    jobs %% > /dev/null
+    jobs %% > /dev/null 2>/dev/null
     jobstat=$?
-    #echo "jobs command returned: $jobstat"
     if [ $jobstat -ne 0 ]; then
+	echo "Job finished." 1>&2
 	break;
     fi
 done
