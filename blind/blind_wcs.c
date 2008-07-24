@@ -23,13 +23,14 @@
 #include "svd.h"
 #include "sip.h"
 #include "sip_qfits.h"
+#include "log.h"
 
-void blind_wcs_compute(double* starxyz,
-					   double* fieldxy,
-					   int N,
-					   // output:
-					   tan_t* tan,
-					   double* p_scale) {
+int blind_wcs_compute(double* starxyz,
+                      double* fieldxy,
+                      int N,
+                      // output:
+                      tan_t* tan,
+                      double* p_scale) {
 	int i, j, k;
 	double star_cm[3] = {0, 0, 0};
 	double field_cm[2] = {0, 0};
@@ -106,10 +107,19 @@ void blind_wcs_compute(double* starxyz,
 		tol = 1e-30;
 		svd(2, 2, 1, 1, eps, tol, pcov, S, pU, pV);
 	}
-	for (i=0; i<4; i++)
-        assert(isfinite(U[i]));
-	for (i=0; i<4; i++)
-        assert(isfinite(V[i]));
+
+    // FIXME -catch the case when the field stars are exactly
+    // colinear.  In principle we should still be able to
+    // solve this case, but it causes the S element to go to
+    // NaN, and also U.
+    if (!(isfinite(U[0]) && isfinite(U[1]) &&
+          isfinite(U[2]) && isfinite(U[3]) &&
+          isfinite(V[0]) && isfinite(V[1]) &&
+          isfinite(V[2]) && isfinite(V[3]) &&
+          isfinite(S[0]) && isfinite(S[1]))) {
+        debug("Bailing because U, V, or S elements are NaN.");
+        return -1;
+    }
 
 	// -compute rotation matrix R = V U'
 	for (i=0; i<4; i++)
@@ -201,5 +211,6 @@ void blind_wcs_compute(double* starxyz,
 
 	free(p);
 	free(f);
+    return 0;
 }
 

@@ -35,12 +35,12 @@
   If "p_scale" is specified, the scale of the field will be placed in it.
   It is in units of degrees per pixel, and equals sqrt(abs(det(CD))).
 */
-void blind_wcs_compute(double* starxyz,
-					   double* fieldxy,
-					   int nobjs,
-					   // output:
-					   tan_t* wcstan,
-					   double* p_scale);
+int blind_wcs_compute(double* starxyz,
+                      double* fieldxy,
+                      int nobjs,
+                      // output:
+                      tan_t* wcstan,
+                      double* p_scale);
 
 qfits_header* blind_wcs_get_header(tan_t* wcstan);
 

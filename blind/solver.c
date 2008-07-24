@@ -864,7 +864,10 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 		debug("]\n;");
 
 		// compute TAN projection from the matching quad alone.
-		blind_wcs_compute(starxyz, field, dimquads, &wcs, &scale);
+		if (blind_wcs_compute(starxyz, field, dimquads, &wcs, &scale)) {
+            // bad quad.
+            continue;
+        }
 		arcsecperpix = scale * 3600.0;
 
 		// FIXME - should there be scale fudge here?
