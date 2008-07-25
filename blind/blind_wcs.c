@@ -117,6 +117,9 @@ int blind_wcs_compute(double* starxyz,
           isfinite(V[0]) && isfinite(V[1]) &&
           isfinite(V[2]) && isfinite(V[3]) &&
           isfinite(S[0]) && isfinite(S[1]))) {
+
+        assert(0);
+
         debug("Bailing because U, V, or S elements are NaN.");
         return -1;
     }

@@ -225,7 +225,7 @@ test_scamp_catalog: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 test_starutil: $(ANUTILS_LIB)
 
-test_svd: $(ANUTILS_LIB)
+test_svd: $(ANUTILS_LIB) $(GSL_LIB)
 
 ### /TESTS
 
