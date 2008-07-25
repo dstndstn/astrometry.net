@@ -178,6 +178,9 @@
 #define ATOMIC_IO int
 #define ZERO 0
 #define ONE 1
+#ifdef __CHAR_UNSIGNED__
+#define UNSIGNED 1
+#endif
 
 #else
 #error unknown BASE_ directive in source.h

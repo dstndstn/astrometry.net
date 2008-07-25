@@ -4,11 +4,11 @@
  *
  * 03 May 2000: Modified for GSL by Brian Gough
  * 29 Jul 2005: Additions by Gerard Jungman
- * Copyright (C) 2000,2001, 2002, 2003, 2005 Brian Gough, Gerard Jungman
+ * Copyright (C) 2000,2001, 2002, 2003, 2005, 2007 Brian Gough, Gerard Jungman
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
- * Free Software Foundation; either version 2, or (at your option) any
+ * Free Software Foundation; either version 3, or (at your option) any
  * later version.
  *
  * This source is distributed in the hope that it will be useful, but WITHOUT

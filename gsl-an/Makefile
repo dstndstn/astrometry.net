@@ -25,7 +25,7 @@ include $(COMMON)/makefile.common
 
 CFLAGS := $(CFLAGS_DEF)
 CFLAGS += -I.
-CFLAGS += -DHAVE_INLINE
+#CFLAGS += -DHAVE_INLINE
 
 BLAS := \
 dtrmm.o \

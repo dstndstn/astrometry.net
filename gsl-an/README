@@ -53,8 +53,8 @@ GSL website above (thanks to Daisuke TOMINAGA).
 Reporting Bugs
 ==============
 
-A list of known bugs can be found in the BUGS file.  
-Details of compilation problems can be found in the INSTALL file.
+A list of known bugs can be found in the BUGS file.  Details of
+compilation problems can be found in the INSTALL file.
 
 If you find a bug which is not listed in these files please report it
 to bug-gsl@gnu.org.
@@ -77,6 +77,5 @@ Contributing to GSL
 ===================
 
 If you are interested in participating in GSL development, please see
-the developers' webpage at http://sources.redhat.com/gsl/devel.html
-
+the webpage at http://www.gnu.org/software/gsl/
 

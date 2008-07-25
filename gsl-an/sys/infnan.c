@@ -1,10 +1,10 @@
 /* sys/infnan.c
  * 
- * Copyright (C) 2001, 2004 Brian Gough
+ * Copyright (C) 2001, 2004, 2007 Brian Gough
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
+ * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful, but
@@ -75,28 +75,21 @@ gsl_finite (const double x)
 {
   return _finite(x);
 }
-#elif HAVE_IEEE_COMPARISONS
+#else
+
+# if HAVE_DECL_ISFINITE
 int
-gsl_isnan (const double x)
+gsl_finite (const double x)
 {
-  int status = (x != x);
-  return status;
+  return isfinite(x);
 }
-
+# elif HAVE_DECL_FINITE
 int
-gsl_isinf (const double x)
+gsl_finite (const double x)
 {
-  double y = x - x;
-  int s = (y != y);
-
-  if (s && x > 0)
-    return +1;
-  else if (s && x < 0)
-    return -1;
-  else
-    return 0;
+  return finite(x);
 }
-
+# elif HAVE_IEEE_COMPARISONS
 int
 gsl_finite (const double x)
 {
@@ -104,44 +97,44 @@ gsl_finite (const double x)
   int status = (y == y);
   return status;
 }
-#else
+# endif
 
-#if HAVE_DECL_ISNAN
+# if HAVE_DECL_ISNAN
 int
 gsl_isnan (const double x)
 {
   return isnan(x);
 }
-#endif
+#elif HAVE_IEEE_COMPARISONS
+int
+gsl_isnan (const double x)
+{
+  int status = (x != x);
+  return status;
+}
+# endif
 
-#if HAVE_DECL_ISINF
+# if HAVE_DECL_ISINF
 int
 gsl_isinf (const double x)
 {
     return isinf(x);
 }
-#else
+# else
+
 int
 gsl_isinf (const double x)
 {
-    return (! gsl_finite(x)) && (! gsl_isnan(x));
+  if (! gsl_finite(x) && ! gsl_isnan(x)) 
+    {
+      return (x > 0 ? +1 : -1); 
+    } 
+  else 
+    {
+      return 0;
+    }
 }
-#endif
 
-
-#if HAVE_DECL_FINITE
-int
-gsl_finite (const double x)
-{
-  return finite(x);
-}
-#elif HAVE_DECL_ISFINITE
-int
-gsl_finite (const double x)
-{
-  return isfinite(x);
-}
-#endif
-
+# endif
 #endif
 
