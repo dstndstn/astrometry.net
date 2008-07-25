@@ -166,6 +166,7 @@ $(GSL_LIB): config.h $(GSL_OBJS)
 
 config.h: configure config.h.in
 	./configure --enable-shared=no --prefix=`pwd`/stage
+	touch $@
 
 DEP_OBJ := $(GSL_OBJS)
 include $(COMMON)/makefile.deps
