@@ -128,6 +128,11 @@ def solve(job, logfunc):
                     for j,ss in enumerate(shards):
                         if i == j:
                             continue
+                        if not ss.running:
+                            continue
+                        # Needed?
+                        #if ss.sin.closed:
+                        #    continue
                         ss.sin.write('cancel\n')
                 
                 # this proc is done!
