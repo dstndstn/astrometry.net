@@ -6,12 +6,11 @@
 #include <gsl/gsl_matrix_double.h>
 
 int main() {
-	int ret;
 	gsl_matrix* A;
     gsl_matrix* V;
     gsl_vector* S;
     gsl_vector* work;
-    int i, j;
+    int i;
     int M, N;
 
     M = N = 2;
@@ -33,6 +32,18 @@ int main() {
         printf(" %g", gsl_vector_get(S, i));
     printf(" ]\n");
 
+
+    gsl_matrix_set(A, 0, 0, -0.93);
+    gsl_matrix_set(A, 0, 1,  1.80);
+    gsl_matrix_set(A, 1, 0,  0);
+    gsl_matrix_set(A, 1, 1,  0);
+
+    gsl_linalg_SV_decomp_jacobi(A, V, S);
+
+    printf("S = [");
+    for (i=0; i<N; i++)
+        printf(" %g", gsl_vector_get(S, i));
+    printf(" ]\n");
 
 	return 0;
 }
