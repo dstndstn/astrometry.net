@@ -7,7 +7,7 @@ First, the obvious ones:
   see cfitsio/License.txt for details; includes GPL code.
 
 -gsl-an/
-  GSL (the GNU Scientific Library) v1.9
+  GSL (the GNU Scientific Library) v1.11
   Licensed under the GPL, of course.
 
 -qfits-an/
@@ -17,9 +17,6 @@ Now, some miscellaneous files:
 
 -quads/qsort_reentrant.{c,h}
   Yoinked from FreeBSD.  Distributed under the BSD license, big surprise.
-
--quads/svd.c
-  (C) 2000, C. Bond.  http://www.crbond.com/download/misc/svd.c
 
 -quads/pyfits.py
   License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
