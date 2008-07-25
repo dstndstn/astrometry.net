@@ -27,7 +27,8 @@
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_linalg.h"
 
-void test_nullspace(CuTest* tc) {
+// This one fails!
+void tst_nullspace(CuTest* tc) {
     double cov[4] = {-0.93390448957619598, 1.8004204750064117, 0, 0};
 
     double U[4], V[4], S[2];
