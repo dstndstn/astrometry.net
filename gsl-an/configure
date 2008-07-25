@@ -10453,7 +10453,7 @@ CC="$lt_save_CC"
 
 
 
-        ac_config_commands="$ac_config_commands libtool"
+        ac_config_commands="$ac_config_commands"
 
 
 
@@ -12908,7 +12908,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files gsl-config gsl.pc gsl_version.h gsl.spec gsl/Makefile test/Makefile err/Makefile sys/Makefile utils/Makefile const/Makefile min/Makefile multimin/Makefile ieee-utils/Makefile fft/Makefile specfunc/Makefile dht/Makefile fit/Makefile multifit/Makefile bspline/Makefile statistics/Makefile sum/Makefile roots/Makefile multiroots/Makefile ntuple/Makefile poly/Makefile qrng/Makefile rng/Makefile randist/Makefile siman/Makefile integration/Makefile interpolation/Makefile doc/Makefile block/Makefile vector/Makefile matrix/Makefile histogram/Makefile monte/Makefile ode-initval/Makefile cblas/Makefile blas/Makefile linalg/Makefile eigen/Makefile permutation/Makefile combination/Makefile sort/Makefile complex/Makefile diff/Makefile deriv/Makefile cheb/Makefile cdf/Makefile wavelet/Makefile Makefile"
+ac_config_files="$ac_config_files gsl-config gsl.pc gsl_version.h gsl.spec"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
