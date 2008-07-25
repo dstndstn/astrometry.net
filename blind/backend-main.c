@@ -89,7 +89,7 @@ int main(int argc, char** args) {
     bool tostderr = FALSE;
     bool verbose = FALSE;
     char* infn = NULL;
-    FILE* fin;
+    FILE* fin = NULL;
     bool fromstdin;
 
 	while (1) {

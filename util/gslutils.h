@@ -56,4 +56,7 @@ int gslutils_solve_leastsquares(gsl_matrix* A, gsl_vector** B,
  */
 int gslutils_solve_leastsquares_v(gsl_matrix* A, int NB, ...);
 
+// C = A B
+void gslutils_matrix_multiply(gsl_matrix* C, const gsl_matrix* A, const gsl_matrix* B);
+
 #endif

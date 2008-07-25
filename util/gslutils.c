@@ -21,9 +21,15 @@
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_vector_double.h>
 #include <gsl/gsl_linalg.h>
+#include <gsl/gsl_blas.h>
 #include <stdarg.h>
 
 #include "gslutils.h"
+
+void gslutils_matrix_multiply(gsl_matrix* C,
+                              const gsl_matrix* A, const gsl_matrix* B) {
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, A, B, 0.0, C);
+}
 
 int gslutils_solve_leastsquares_v(gsl_matrix* A, int NB, ...) {
     int i, res;

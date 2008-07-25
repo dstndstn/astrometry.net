@@ -7,10 +7,11 @@
 
 int main() {
 	gsl_matrix* A;
+	gsl_matrix* U;
     gsl_matrix* V;
     gsl_vector* S;
     gsl_vector* work;
-    int i;
+    int i, j;
     int M, N;
 
     M = N = 2;
@@ -26,12 +27,30 @@ int main() {
     gsl_matrix_set(A, 1, 1,  0);
 
     gsl_linalg_SV_decomp(A, V, S, work);
+    U = A;
 
     printf("S = [");
     for (i=0; i<N; i++)
         printf(" %g", gsl_vector_get(S, i));
     printf(" ]\n");
 
+    printf("U = [");
+    for (j=0; j<M; j++) {
+        if (j)
+            printf("    [");
+        for (i=0; i<N; i++)
+            printf(" %g", gsl_matrix_get(U, j, i));
+        printf(" ]\n");
+    }
+
+    printf("V = [");
+    for (j=0; j<N; j++) {
+        if (j)
+            printf("    [");
+        for (i=0; i<N; i++)
+            printf(" %g", gsl_matrix_get(V, j, i));
+        printf(" ]\n");
+    }
 
     gsl_matrix_set(A, 0, 0, -0.93);
     gsl_matrix_set(A, 0, 1,  1.80);
@@ -44,6 +63,24 @@ int main() {
     for (i=0; i<N; i++)
         printf(" %g", gsl_vector_get(S, i));
     printf(" ]\n");
+
+    printf("U = [");
+    for (j=0; j<M; j++) {
+        if (j)
+            printf("    [");
+        for (i=0; i<N; i++)
+            printf(" %g", gsl_matrix_get(U, j, i));
+        printf(" ]\n");
+    }
+
+    printf("V = [");
+    for (j=0; j<N; j++) {
+        if (j)
+            printf("    [");
+        for (i=0; i<N; i++)
+            printf(" %g", gsl_matrix_get(V, j, i));
+        printf(" ]\n");
+    }
 
 	return 0;
 }

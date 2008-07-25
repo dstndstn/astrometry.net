@@ -446,7 +446,7 @@ whynot: whynot.o index.o codekd.o matchfile.o \
 		solvedclient.o solvedfile.o \
 		verify.o intmap.o blind_wcs.o \
 		$(UTIL_OBJS) \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
 quadcenters: quadcenters.o boilerplate.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)

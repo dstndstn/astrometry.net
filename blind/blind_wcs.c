@@ -20,7 +20,9 @@
 
 #include "blind_wcs.h"
 #include "mathutil.h"
-#include "svd.h"
+#include "gsl/gsl_matrix.h"
+#include "gsl/gsl_linalg.h"
+#include "gsl/gsl_blas.h"
 #include "sip.h"
 #include "sip_qfits.h"
 #include "log.h"
@@ -35,7 +37,6 @@ int blind_wcs_compute(double* starxyz,
 	double star_cm[3] = {0, 0, 0};
 	double field_cm[2] = {0, 0};
 	double cov[4] = {0, 0, 0, 0};
-	double U[4], V[4], S[2];
 	double R[4] = {0, 0, 0, 0};
 	double scale;
 	// projected star coordinates
@@ -43,6 +44,14 @@ int blind_wcs_compute(double* starxyz,
 	// relative field coordinates
 	double* f;
 	double pcm[2] = {0, 0};
+
+    gsl_matrix* A;
+    gsl_matrix* U;
+    gsl_matrix* V;
+    gsl_vector* S;
+    gsl_vector* work;
+    gsl_matrix_view vcov;
+    gsl_matrix_view vR;
 
 	// -get field & star centers-of-mass of the matching quad.
 	//  (this will become the tangent point)
@@ -57,7 +66,7 @@ int blind_wcs_compute(double* starxyz,
 	field_cm[1] /= (double)N;
 	normalize_3(star_cm);
 
-	// -allocate and fill "p" and "f" arrays.
+	// -allocate and fill "p" and "f" arrays. ("projected" and "field")
 	p = malloc(N * 2 * sizeof(double));
 	f = malloc(N * 2 * sizeof(double));
 	j = 0;
@@ -98,40 +107,32 @@ int blind_wcs_compute(double* starxyz,
         assert(isfinite(cov[i]));
 
 	// -run SVD
-	{
-		double* pcov[] = { cov, cov+2 };
-		double* pU[]   = { U,   U  +2 };
-		double* pV[]   = { V,   V  +2 };
-		double eps, tol;
-		eps = 1e-30;
-		tol = 1e-30;
-		svd(2, 2, 1, 1, eps, tol, pcov, S, pU, pV);
-	}
+    //A = gsl_matrix_alloc(2, 2);
+    V = gsl_matrix_alloc(2, 2);
+    S = gsl_vector_alloc(2);
+    work = gsl_vector_alloc(2);
+    vcov = gsl_matrix_view_array(cov, 2, 2);
+    vR   = gsl_matrix_view_array(R, 2, 2);
+    //gsl_matrix_memcpy(A, &(vcov.matrix));
+    A = &(vcov.matrix);
+    // The Jacobi version doesn't always compute an orthonormal U of S has zeros.
+    //gsl_linalg_SV_decomp_jacobi(A, V, S);
+    gsl_linalg_SV_decomp(A, V, S, work);
+    // the U result is written to A.
+    U = A;
+    A = NULL;
+    // R = V U'
+    gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, V, U, 0.0, &(vR.matrix));
 
-    // FIXME -catch the case when the field stars are exactly
-    // colinear.  In principle we should still be able to
-    // solve this case, but it causes the S element to go to
-    // NaN, and also U.
-    if (!(isfinite(U[0]) && isfinite(U[1]) &&
-          isfinite(U[2]) && isfinite(U[3]) &&
-          isfinite(V[0]) && isfinite(V[1]) &&
-          isfinite(V[2]) && isfinite(V[3]) &&
-          isfinite(S[0]) && isfinite(S[1]))) {
+    //logmsg("S[1] = %g\n", gsl_vector_get(S, 1));
+    /*
+     if (gsl_vector_get(S, 1) == 0.0)
+     assert(0);
+     */
+    gsl_matrix_free(V);
+    gsl_vector_free(S);
+    gsl_vector_free(work);
 
-        assert(0);
-
-        debug("Bailing because U, V, or S elements are NaN.");
-        return -1;
-    }
-
-	// -compute rotation matrix R = V U'
-	for (i=0; i<4; i++)
-		R[i] = 0.0;
-	for (i=0; i<2; i++)
-		for (j=0; j<2; j++)
-			for (k=0; k<2; k++)
-				R[i*2 + j] += V[i*2 + k] * U[j*2 + k];
-    
 	for (i=0; i<4; i++)
         assert(isfinite(R[i]));
 

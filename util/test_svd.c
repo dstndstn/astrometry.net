@@ -64,10 +64,9 @@ void test_nullspace_gsl(CuTest* tc) {
 
     vcov = gsl_matrix_view_array(cov, M, N);
     gsl_matrix_memcpy(A, &(vcov.matrix));
-    //A = &(vcov.matrix);
 
     gsl_linalg_SV_decomp_jacobi(A, V, S);
-    // the answer goes in A.
+    // the U result is written to A.
     U = A;
 
     printf("S = [");
@@ -95,5 +94,9 @@ void test_nullspace_gsl(CuTest* tc) {
 
     CuAssertDblEquals(tc, 0, gsl_vector_get(S, 1), 1e-6);
     CuAssertDblEquals(tc, 2.02822373, gsl_vector_get(S, 0), 1e-6);
+
+    gsl_matrix_free(A);
+    gsl_matrix_free(V);
+    gsl_vector_free(S);
 
 }
