@@ -90,7 +90,6 @@ int blind_wcs_compute(double* starxyz,
 	}
 	pcm[0] /= (double)N;
 	pcm[1] /= (double)N;
-	//printf("pcm=(%g, %g) pixels\n", pcm[0], pcm[1]);
 	for (i=0; i<N; i++) {
 		p[2*i + 0] -= pcm[0];
 		p[2*i + 1] -= pcm[1];
@@ -107,31 +106,22 @@ int blind_wcs_compute(double* starxyz,
         assert(isfinite(cov[i]));
 
 	// -run SVD
-    //A = gsl_matrix_alloc(2, 2);
     V = gsl_matrix_alloc(2, 2);
     S = gsl_vector_alloc(2);
     work = gsl_vector_alloc(2);
     vcov = gsl_matrix_view_array(cov, 2, 2);
     vR   = gsl_matrix_view_array(R, 2, 2);
-    //gsl_matrix_memcpy(A, &(vcov.matrix));
     A = &(vcov.matrix);
-    // The Jacobi version doesn't always compute an orthonormal U of S has zeros.
+    // The Jacobi version doesn't always compute an orthonormal U if S has zeros.
     //gsl_linalg_SV_decomp_jacobi(A, V, S);
     gsl_linalg_SV_decomp(A, V, S, work);
     // the U result is written to A.
     U = A;
-    A = NULL;
-    // R = V U'
-    gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, V, U, 0.0, &(vR.matrix));
-
-    //logmsg("S[1] = %g\n", gsl_vector_get(S, 1));
-    /*
-     if (gsl_vector_get(S, 1) == 0.0)
-     assert(0);
-     */
     gsl_matrix_free(V);
     gsl_vector_free(S);
     gsl_vector_free(work);
+    // R = V U'
+    gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, V, U, 0.0, &(vR.matrix));
 
 	for (i=0; i<4; i++)
         assert(isfinite(R[i]));

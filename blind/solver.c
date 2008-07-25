@@ -33,7 +33,6 @@
 #include "tic.h"
 #include "solvedclient.h"
 #include "solvedfile.h"
-#include "svd.h"
 #include "blind_wcs.h"
 #include "keywords.h"
 #include "log.h"

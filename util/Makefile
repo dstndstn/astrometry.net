@@ -58,9 +58,6 @@ CFLAGS += $(LIBKD_INC)
 endif
 CFLAGS += -I.
 
-# for _sip.so:
-#CFLAGS += -fPIC
-
 ANFILES_LIB := libanfiles.a
 ANUTILS_LIB := libanutils.a
 
@@ -75,7 +72,7 @@ ANUTILS_DEPS :=
 
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix.o permutedsort.o \
 	qsort_reentrant.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
-	gnu-specific.o an-endian.o errors.o an-opts.o svn.o svd.o tic.o log.o \
+	gnu-specific.o an-endian.o errors.o an-opts.o svn.o tic.o log.o \
 	gslutils.o
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o
