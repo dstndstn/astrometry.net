@@ -157,8 +157,14 @@ CHOL_OBJS := linalg/cholesky.o matrix/matrix.o matrix/rowcol.o \
 chol-demo: chol-demo.o $(GSL_LIB)
 	gcc -o $@ $^ -lm
 
+SVD_OBJS := linalg/svd.o linalg/bidiag.o sys/coerce.o vector/swap.o matrix/swap.o \
+		vector/oper.o
+
+svd-demo: svd-demo.o $(GSL_LIB)
+	gcc -o $@ $^ -lm
+
 # "sort" removes duplicates.
-GSL_OBJS := $(sort $(QR_OBJS) $(CHOL_OBJS))
+GSL_OBJS := $(sort $(QR_OBJS) $(CHOL_OBJS) $(SVD_OBJS))
 
 $(GSL_LIB): config.h $(GSL_OBJS)
 	$(AR) rc $@ $(GSL_OBJS)
