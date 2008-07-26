@@ -117,11 +117,11 @@ int blind_wcs_compute(double* starxyz,
     gsl_linalg_SV_decomp(A, V, S, work);
     // the U result is written to A.
     U = A;
-    gsl_matrix_free(V);
     gsl_vector_free(S);
     gsl_vector_free(work);
     // R = V U'
     gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, V, U, 0.0, &(vR.matrix));
+    gsl_matrix_free(V);
 
 	for (i=0; i<4; i++)
         assert(isfinite(R[i]));

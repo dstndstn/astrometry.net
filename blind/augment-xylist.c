@@ -63,6 +63,8 @@ void augment_xylist_init(augment_xylist_t* axy) {
     axy->verifywcs = sl_new(4);
     axy->try_verify = TRUE;
     axy->resort = TRUE;
+    axy->ra_center = HUGE_VAL;
+    axy->dec_center = HUGE_VAL;
 }
 
 void augment_xylist_free_contents(augment_xylist_t* axy) {
