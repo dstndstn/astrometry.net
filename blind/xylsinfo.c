@@ -27,11 +27,12 @@
 #include "boilerplate.h"
 #include "xylist.h"
 
-const char* OPTIONS = "h";
+const char* OPTIONS = "hX:Y:";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stderr);
 	fprintf(stderr, "\nUsage: %s <xyls-file>\n"
+            "  [-X <x-column-name> -Y <y-column-name>]\n"
 			"\n", progname);
 }
 
@@ -45,9 +46,17 @@ int main(int argc, char** args) {
 	int ninputfiles = 0;
 	xylist_t* xyls;
 	starxy_t* xy;
+    char* xcol = NULL;
+    char* ycol = NULL;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1) {
 		switch (argchar) {
+        case 'X':
+            xcol = optarg;
+            break;
+        case 'Y':
+            ycol = optarg;
+            break;
 		case 'h':
 		default:
 			printHelp(progname);
@@ -70,6 +79,11 @@ int main(int argc, char** args) {
 	}
     xylist_set_include_flux(xyls, FALSE);
     xylist_set_include_background(xyls, FALSE);
+    if (xcol)
+        xylist_set_xname(xyls, xcol);
+    if (ycol)
+        xylist_set_yname(xyls, ycol);
+            
 
 	xy = xylist_read_field(xyls, NULL);
 	if (!xy) {

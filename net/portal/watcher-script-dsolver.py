@@ -166,9 +166,15 @@ def real_handle_job(job):
 
         log('created xylist %s' % xylist)
 
-        cmd = 'xylsinfo %s' % xylist
+        cmd = 'xylsinfo'
+        if xcol:
+            cmd += ' -X %s' % xcol
+        if ycol:
+            cmd += ' -Y %s' % ycol
+        cmd += ' %s' % xylist
         (rtn, out, err) = run_command(cmd)
         if rtn:
+            log('command: ' + cmd)
             log('out: ' + out)
             log('err: ' + err)
             bailout(job, 'Getting xylist image size failed: ' + err)
@@ -196,10 +202,9 @@ def real_handle_job(job):
             '--height' : height,
             '--no-fits2fits' : None,
             })
-        width  = int(round(width ))
-        height = int(round(height))
-        df.imagew = width
-        df.imageh = height
+        df.imagew = int(round(width ))
+        df.imageh = int(round(height))
+        df.save()
 
     else:
         bailout(job, 'no filetype')
