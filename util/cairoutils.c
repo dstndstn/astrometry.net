@@ -371,10 +371,10 @@ static int streamout(FILE* fout, unsigned char* img, int W, int H, int format) {
         png_structp png_ptr;
         png_infop png_info;
         int n;
-        
+
         image_rows = malloc(sizeof(png_bytep)*H);
         for (n = 0; n < H; n++)
-            image_rows[n] = (unsigned char *) img + 4*n*W;
+            image_rows[n] = img + n*4*W;
         png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
         png_info = png_create_info_struct(png_ptr);
         png_init_io(png_ptr, fout);

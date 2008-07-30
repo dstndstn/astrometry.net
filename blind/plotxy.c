@@ -32,12 +32,13 @@
 #include "log.h"
 #include "errors.h"
 
-#define OPTIONS "hW:H:n:N:r:s:i:e:x:y:w:S:I:PC:X:Y:b:"
+#define OPTIONS "hW:H:n:N:r:s:i:e:x:y:w:S:I:PC:X:Y:b:o:"
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s [options] > output.png\n"
 		   "  -i <input-file>   Input file (xylist)\n"
+           "  [-o <output-file>] (default: stdout)\n"
            "  [-I <image>   ]   Input image on which plotting will occur; PPM format.\n"
 	       "  [-p]: Input image is PNG format, not PPM.\n"
            "  [-P]              Write PPM output instead of PNG.\n"
@@ -70,6 +71,7 @@ extern int optind, opterr, optopt;
 int main(int argc, char *args[]) {
 	int argchar;
 	char* progname = args[0];
+    char* outfn = "-";
     char* infn = NULL;
 	char* fname = NULL;
 	int W = 0, H = 0;
@@ -110,6 +112,9 @@ int main(int argc, char *args[]) {
                 fprintf(stderr, "I didn't understand color \"%s\".\n", optarg);
                 exit(-1);
             }
+            break;
+        case 'o':
+            outfn = optarg;
             break;
         case 'X':
             xcol = optarg;
@@ -302,12 +307,12 @@ int main(int argc, char *args[]) {
     cairoutils_argb32_to_rgba(img, W, H);
 
     if (pngoutput) {
-        if (cairoutils_stream_png(stdout, img, W, H)) {
+        if (cairoutils_write_png(outfn, img, W, H)) {
             fprintf(stderr, "Failed to write PNG.\n");
             exit(-1);
         }
     } else {
-        if (cairoutils_stream_ppm(stdout, img, W, H)) {
+        if (cairoutils_write_ppm(outfn, img, W, H)) {
             fprintf(stderr, "Failed to write PPM.\n");
             exit(-1);
         }
