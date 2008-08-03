@@ -359,6 +359,7 @@ def handle_tarball(basedir, filenames, submission):
             job.enqueuetime = submission.submittime
             job.set_is_duplicate()
             job.save()
+            submission.alljobsadded = True
             submission.save()
             # One file in tarball: convert straight to a Job.
             log('Single-file tarball.')
@@ -374,7 +375,9 @@ def handle_tarball(basedir, filenames, submission):
         submission.save()
         log('Enqueuing Job: ' + str(job))
         Job.submit_job_or_submission(job)
-
+    submission.alljobsadded = True
+    submission.save()
+    
 def main(joblink):
     if not os.path.islink(joblink):
         log('Expected second argument to be a symlink; "%s" isn\'t.' % joblink)
@@ -482,6 +485,7 @@ def main(joblink):
         job.enqueuetime = submission.submittime
         job.set_is_duplicate()
         job.save()
+        submission.alljobsadded = True
         submission.save()
         return handle_job(job)
 

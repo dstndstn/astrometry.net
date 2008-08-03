@@ -256,6 +256,10 @@ class Submission(models.Model):
     status = models.CharField(max_length=16)
     failurereason = models.CharField(max_length=256)
 
+    # have all jobs belonging to this submission been added
+    # to the database?
+    alljobsadded = models.BooleanField(default=False)
+
     url = models.URLField(blank=True, null=True)
 
     # The file that was submitted.

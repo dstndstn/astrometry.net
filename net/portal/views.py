@@ -235,8 +235,7 @@ def joblist(request):
         job = None
         jobs = sub.jobs.all().order_by('enqueuetime', 'starttime', 'jobid')
         N = jobs.count()
-        # FIXME -- and all jobs added to this submission
-        if 'onejobjump' in request.GET and N == 1:
+        if 'onejobjump' in request.GET and N == 1 and sub.alljobsadded:
             return HttpResponseRedirect(reverse(jobstatus, args=[jobs[0].jobid]))
 
         gmaps = (reverse('astrometry.net.tile.views.index') +
