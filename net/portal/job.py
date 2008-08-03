@@ -260,6 +260,9 @@ class Submission(models.Model):
     # to the database?
     alljobsadded = models.BooleanField(default=False)
 
+    # does this submission have multiple jobs?
+    multijob = models.BooleanField(default=False)
+
     url = models.URLField(blank=True, null=True)
 
     # The file that was submitted.

@@ -180,6 +180,7 @@ def joblist(request):
     title = None
     # allow duplicate DiskFiles?
     duplicates = False
+    reload_time = None
 
     if kind == 'user':
         uname = request.GET.get('user')
@@ -191,8 +192,12 @@ def joblist(request):
         user = users[0]
         myargs['user'] = user.username
 
-        jobs = Job.objects.all().filter(submission__user=user,
-                                        exposejob=True).order_by('-enqueuetime', '-starttime')
+        jobs = Job.objects.all().filter(submission__user=user).order_by('-enqueuetime', '-starttime')
+        if user != request.user:
+            jobs = jobs.filter(exposejob=True)
+
+        # find multi-job submissions from this user.
+        
         
         N = jobs.count()
         if not cols:
@@ -243,6 +248,11 @@ def joblist(request):
                  '&layers=tycho,grid,userboundary&arcsinh')
         if not cols:
             cols = [ 'jobid', 'status', 'starttime', 'finishtime' ]
+        if sub.status == 'Queued' or sub.status == 'Running':
+            if N == 1:
+                reload_time = 2
+            else:
+                reload_time = 15
         ajaxupdate = True
 
     myargs['cols'] = ','.join(cols)
@@ -387,7 +397,7 @@ def joblist(request):
             'submission' : sub,
             'jobs' : jobs,
             'rjobs' : rjobs,
-            'reload_time' : (len(jobs) < 2) and 2 or 15,
+            'reload_time' : reload_time,
             'gmaps' : gmaps,
             'title' : title,
             })

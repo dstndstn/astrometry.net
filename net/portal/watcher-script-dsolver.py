@@ -336,6 +336,10 @@ def handle_tarball(basedir, filenames, submission):
 
     log('Got %i paths.' % len(validpaths))
 
+    if len(validpaths) > 1:
+        submission.multijob = True
+        submission.save()
+
     for p in validpaths:
         origname = os.path.basename(p)
 
@@ -372,7 +376,6 @@ def handle_tarball(basedir, filenames, submission):
         job.set_is_duplicate()
         job.set_status('Queued')
         job.save()
-        submission.save()
         log('Enqueuing Job: ' + str(job))
         Job.submit_job_or_submission(job)
     submission.alljobsadded = True
