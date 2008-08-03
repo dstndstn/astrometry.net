@@ -204,7 +204,7 @@ def joblist(request):
     if kind in ['user', 'user-multi']:
         user = getuser(request)
         if not user:
-            return HttpResponse('no such user')
+            user = request.user
         myargs['user'] = user.username
         # find multi-job submissions from this user.
         multisubs = Submission.objects.all().filter(user=user, multijob=True)
@@ -810,43 +810,6 @@ def userprefs(request):
     c = RequestContext(request, ctxt)
     return HttpResponse(t.render(c))
 
-@login_required
-def summary(request):
-    prefs = UserPreferences.for_user(request.user)
-    submissions = Submission.objects.all().filter(user=request.user).order_by('-submittime')
-    subs = []
-    # keep track of multi-Job Submissions
-    for sub in submissions:
-        if len(sub.jobs.all()) > 1:
-            subs.append(sub)
-
-    jobs = []
-    for sub in submissions:
-        jobs += sub.jobs.all()
-
-    #voimgs = voImage.objects.all().filter(user=request.user)
-    voimgs = []
-
-    log('Jobs:')
-    for job in jobs:
-        log('  %s: is_exposed: %s' % (job.get_id(), job.is_exposed()))
-
-    for job in jobs:
-        job.origfileurl = get_file_url(job, 'origfile')
-        job.statusurl = get_status_url(job.jobid)
-
-    ctxt = {
-        'subs' : subs,
-        'jobs' : jobs,
-        'voimgs' : voimgs,
-        'prefs' : prefs,
-
-        'substatusurl' : reverse(joblist) + '?type=sub&subid=',
-        }
-    t = loader.get_template('portal/summary.html')
-    c = RequestContext(request, ctxt)
-    return HttpResponse(t.render(c))
-    
 @login_required
 @wants_job_or_sub
 def changeperms(request):
