@@ -13,7 +13,6 @@ urlpatterns = (patterns('astrometry.net.portal.newjob',
                         (r'^joblist/$',         'joblist'  ),
                         (r'^summary/$',         'summary'  ),
                         (r'^set_description/$', 'job_set_description'),
-                        (r'^substatusxml/$',    'submission_status_xml'),
                         (r'^changeperms/$',     'changeperms' ),
                         #(r'^publishtovo/$',    'publishtovo'),
                         # PLAY
