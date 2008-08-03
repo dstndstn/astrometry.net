@@ -235,6 +235,10 @@ def joblist(request):
         job = None
         jobs = sub.jobs.all().order_by('enqueuetime', 'starttime', 'jobid')
         N = jobs.count()
+        # FIXME -- and all jobs added to this submission
+        if 'onejobjump' in request.GET and N == 1:
+            return HttpResponseRedirect(reverse(jobstatus, args=[jobs[0].jobid]))
+
         gmaps = (reverse('astrometry.net.tile.views.index') +
                  '?submission=%s' % sub.get_id() +
                  '&layers=tycho,grid,userboundary&arcsinh')
@@ -488,7 +492,13 @@ def jobstatus(request, jobid=None):
             log('submission has one job:', jobid)
             return HttpResponseRedirect(get_status_url(jobid))
         else:
-            return submission_status(request, sub)
+            #return submission_status(request, sub)
+            args = QueryDict('', mutable=True)
+            args['subid'] = sub.subid
+            args['type'] = 'sub'
+            args['onejobjump'] = None
+            args['cols'] = 'jobid,status'
+            return HttpResponseRedirect(reverse(joblist) + '?' + args.urlencode())
 
     if job is None:
         return HttpResponse('no such job')

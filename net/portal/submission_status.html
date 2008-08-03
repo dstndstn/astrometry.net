@@ -4,7 +4,9 @@
 {% if submission.is_finished %}
 {% else %}
 
-{#  <meta http-equiv="refresh" content="{{ reload_time }}; URL=" />  #}
+{% if reload_time %}
+<meta http-equiv="refresh" content="{{ reload_time }}; URL=" />
+{% endif %}
 
 {% endif %}
 {% endblock extrahead %}

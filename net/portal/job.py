@@ -682,14 +682,22 @@ class Job(models.Model):
         return datetime.datetime.utcnow()
 
     @staticmethod
+    def is_default_time(t):
+        return t.year == 2000 and t.month == 1 and t.day == 1
+
+    @staticmethod
     def format_time(t):
         if not t:
+            return None
+        if Job.is_default_time(t):
             return None
         return t.strftime('%Y-%m-%d %H:%M:%S+Z')
     
     @staticmethod
     def format_time_brief(t):
         if not t:
+            return None
+        if Job.is_default_time(t):
             return None
         return t.strftime('%Y-%m-%d %H:%M')
 
