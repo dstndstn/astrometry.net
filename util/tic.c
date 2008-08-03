@@ -36,7 +36,7 @@ double timenow() {
         ERROR("Failed to get time of day");
         return -1.0;
     }
-    return (tv.tv_sec - 3600*24*365*30) + tv.tv_usec * 1e-6;
+    return (double)(tv.tv_sec - 3600*24*365*30) + tv.tv_usec * 1e-6;
 }
 
 double millis_between(struct timeval* tv1, struct timeval* tv2) {

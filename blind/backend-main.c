@@ -90,7 +90,7 @@ int main(int argc, char** args) {
     bool verbose = FALSE;
     char* infn = NULL;
     FILE* fin = NULL;
-    bool fromstdin;
+    bool fromstdin = FALSE;
 
 	while (1) {
 		int option_index = 0;
