@@ -158,6 +158,14 @@ function onUnload() {
 
 {% block content %}
 
+{% if links %}
+<ul>
+{% for text,url in links %}
+<li><a href="{{url}}">{{text}}</a></li>
+{% endfor %}
+</ul>
+{% endif %}
+
 <h3 class="c">
 {% if title %}
 {% autoescape off %}
@@ -169,7 +177,7 @@ Jobs {{ firstnum }} to {{ lastnum }} of {{ totalnum }}
 {% endif %}
 </h3>
 
-{% if jobs %}
+{% if jobs or subs %}
 {% include "portal/nextprev.html" %}
 
 {% if addcolumns %}
@@ -203,6 +211,20 @@ Add column:
 </tr>
 {% endfor %}
 
+{% for sub,subid,subn in rsubs %}
+<tr class="{% cycle even,odd %}">
+{% autoescape off %}
+{% for tdclass,col,val in sub %}
+<td class="{{ tdclass }}">
+<span id="sub-{{ subn }}-{{ col }}">
+{{ val }}
+</span>
+</td>
+{% endfor %}
+{% endautoescape %}
+</tr>
+{% endfor %}
+
 </table>
 
 {% include "portal/nextprev.html" %}
@@ -216,6 +238,7 @@ View this set of jobs in the Google Maps viewer
 </p>
 
 {% else %}
+
 <table id="summarytable">
 
 <tr>

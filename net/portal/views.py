@@ -21,6 +21,7 @@ from django.http import HttpResponse, HttpResponseRedirect, QueryDict
 from django.newforms import widgets, ValidationError, form_for_model
 from django.template import Context, RequestContext, loader
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ObjectDoesNotExist
 
 import astrometry.net.portal.mercator as merc
 from astrometry.net.portal.models import UserPreferences
@@ -112,6 +113,18 @@ def getsessionjob(request):
     jobid = request.session['jobid']
     return get_job(jobid)
 
+# looks for a user=xxx in the GET.
+def getuser(request):
+    uname = request.GET.get('user')
+    if not uname:
+        return None
+    try:
+        user = User.objects.get(username=uname)
+    except ObjectDoesNotExist:
+        return None
+    return user
+    
+
 @login_required
 @wants_job_or_sub
 def joblist(request):
@@ -128,7 +141,7 @@ def joblist(request):
     format = request.GET.get('format', 'html')
 
     kind = request.GET.get('type')
-    if not kind in [ 'user', 'nearby', 'tag', 'sub' ]:
+    if not kind in [ 'user', 'user-multi', 'nearby', 'tag', 'sub' ]:
         kind = 'user'
 
     if sub:
@@ -159,6 +172,10 @@ def joblist(request):
         'user' : 'User',
         # DEBUG
         'diskfile' : 'Diskfile',
+        # submissions
+        'subid': 'Submission',
+        'submittime': 'Submit Time',
+        'njobs': 'Number of Jobs',
         }
 
     allcols = colnames.keys()
@@ -181,28 +198,37 @@ def joblist(request):
     # allow duplicate DiskFiles?
     duplicates = False
     reload_time = None
+    links = []
+    subs = []
+
+    if kind in ['user', 'user-multi']:
+        user = getuser(request)
+        if not user:
+            return HttpResponse('no such user')
+        myargs['user'] = user.username
+        # find multi-job submissions from this user.
+        multisubs = Submission.objects.all().filter(user=user, multijob=True)
 
     if kind == 'user':
-        uname = request.GET.get('user')
-        if not uname:
-            return HttpResponse('no user')
-        users = User.objects.all().filter(username=uname)
-        if users.count() == 0:
-            return HttpResponse('no such user')
-        user = users[0]
-        myargs['user'] = user.username
-
         jobs = Job.objects.all().filter(submission__user=user).order_by('-enqueuetime', '-starttime')
         if user != request.user:
             jobs = jobs.filter(exposejob=True)
 
-        # find multi-job submissions from this user.
-        
+        if multisubs.count():
+            url = reverse(joblist) + '?' + urlencode({'type':'user-multi', 'user':user.username})
+            links.append(('Multi-job submissions by this user', url))
         
         N = jobs.count()
         if not cols:
             cols = [ 'thumbnail', 'jobid', 'status' ]
         title = 'Jobs submitted by <i>%s</i>' % user.username
+
+    elif kind == 'user-multi':
+        multisubs = multisubs.order_by('-submittime')
+        N = multisubs.count()
+        if not cols:
+            cols = [ 'subid', 'submittime', 'status', 'njobs' ]
+        title = 'Multi-job submissions from <i>%s</i>' % user.username
 
     elif kind == 'nearby':
         if job is None:
@@ -216,9 +242,6 @@ def joblist(request):
             title = 'Jobs near <i>%s</i>' % job.jobid
 
     elif kind == 'tag':
-        #if 'tag' in request.GET:
-        #    tagid = request.GET['tag']
-        #    tag = Tag.objects.all().filter(id=tagid)
         tagtxt = request.GET.get('tagtext')
         if not tagtxt:
             return HttpResponse('no tag')
@@ -255,6 +278,8 @@ def joblist(request):
                 reload_time = 15
         ajaxupdate = True
 
+        title = 'Jobs belonging to submission <i>' + sub.subid + '</i>'
+
     myargs['cols'] = ','.join(cols)
 
     if end > 0 and end < N:
@@ -276,8 +301,16 @@ def joblist(request):
     ctxt['lastnum']  = end == -1 and N or min(N, end)
     ctxt['totalnum']  = N
 
+    addcols = [c for c in allcols if c not in cols]
+
     if kind == 'user':
         jobs = jobs[start:end]
+
+    elif kind == 'user-multi':
+        multisubs = multisubs[start:end]
+        subs = multisubs
+        jobs = []
+        addcols = []
 
     elif kind == 'nearby':
         tags = tags[start:end]
@@ -291,8 +324,7 @@ def joblist(request):
     elif kind == 'sub':
         jobs = jobs[start:end]
 
-    addcols = [c for c in allcols if c not in cols]
-
+    # "rjobs": rendered jobs.
     rjobs = []
     for i, job in enumerate(jobs):
         rend = []
@@ -361,6 +393,30 @@ def joblist(request):
             rend.append((tdclass, c, t))
         rjobs.append((rend, job.jobid, jobn))
 
+    rsubs = []
+    for i, sub in enumerate(subs):
+        # this row.
+        rend = []
+        subn = start + i
+        for c in cols:
+            t = ''
+            tdclass = 'c'
+            if c == 'subid':
+                t = ('<a href="'
+                     + reverse(joblist) + urlescape('?type=sub&subid=' + sub.subid)
+                     + '">'
+                     + sub.subid
+                     + '</a>')
+            elif c == 'submittime':
+                t = sub.format_submittime_brief()
+            elif c == 'status':
+                t = sub.status
+            elif c == 'njobs':
+                t = sub.jobs.count()
+            rend.append((tdclass, c, t))
+        rsubs.append((rend, sub.subid, subn))
+        
+
     if format == 'xml':
         res = HttpResponse()
         res['Content-type'] = 'text/xml'
@@ -392,11 +448,14 @@ def joblist(request):
 
         ctxt.update({
             'thisurl' : request.path + '?' + myargs.urlencode(),
+            'links': links,
             'addcolumns' : addcolumns,
             'columns' : columns,
             'submission' : sub,
             'jobs' : jobs,
             'rjobs' : rjobs,
+            'subs': subs,
+            'rsubs' : rsubs,
             'reload_time' : reload_time,
             'gmaps' : gmaps,
             'title' : title,
