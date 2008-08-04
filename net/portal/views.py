@@ -726,6 +726,10 @@ def getfile(request, jobid=None, filename=None):
                   'redgreen', 'redgreen-big', 'thumbnail',
                   ]
 
+    res = HttpResponse()
+    t = datetime.datetime.utcnow() + datetime.timedelta(days=7)
+    res['Expires'] = t.strftime('%a, %d %b %Y %H:%M:%S UTC')
+
     convertargs = {}
     if variant:
         convertargs['variant'] = variant
@@ -738,7 +742,7 @@ def getfile(request, jobid=None, filename=None):
 
     if filename in pngimages:
         fn = convert(job, filename, convertargs)
-        return send_file(fn, ctype='image/png')
+        return send_file(fn, res=res, ctype='image/png')
 
     binaryfiles = [ 'wcs.fits', 'match.fits', 'field.xy.fits', 'field.rd.fits',
                     'index.xy.fits', 'index.rd.fits', 'new.fits' ]
@@ -752,13 +756,13 @@ def getfile(request, jobid=None, filename=None):
         else:
             fn = job.get_filename(filename)
 
-        return send_file(fn, ctype='application/octet-stream',
+        return send_file(fn, res=res, ctype='application/octet-stream',
                          cdownloadfn=downloadfn)
 
     textfiles = [ 'blind.log' ]
     if filename in textfiles:
         fn = job.get_filename(filename)
-        return send_file(fn)
+        return send_file(fn, res=res)
 
     if filename == 'origfile':
         if not job.is_exposed():
@@ -766,7 +770,7 @@ def getfile(request, jobid=None, filename=None):
         df = job.diskfile
         ct = df.content_type() or 'application/octet-stream'
         fn = df.get_path()
-        return send_file(fn, ctype=ct)
+        return send_file(fn, res=res, ctype=ct)
 
     return HttpResponse('bad f')
 
