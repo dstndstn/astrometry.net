@@ -134,6 +134,7 @@ class FullForm(forms.Form):
                                     max_value=10,
                                     widget=forms.TextInput(attrs={'size':'5'}))
 
+
     # How to clean an individual field:
     #def clean_scaletype(self):
     #   val = self.getclean('scaletype')
@@ -242,6 +243,64 @@ class FullForm(forms.Form):
 
         return self.cleaned_data
 
+class PlainFullForm(forms.Form):
+    
+    datasrc = forms.ChoiceField(choices=Submission.datasrc_CHOICES,
+                                initial='url',
+                                widget=forms.RadioSelect(attrs={'id':'datasrc'}))
+
+    filetype = forms.ChoiceField(choices=Submission.filetype_CHOICES,
+                                 initial='image',
+                                 widget=forms.Select())
+
+    file = forms.FileField(required=False)
+
+    url = ForgivingURLField(initial='http://',
+                            widget=forms.TextInput(attrs={'size':'50'}),
+                            required=False)
+
+    scaleunits = forms.ChoiceField(choices=Submission.scaleunits_CHOICES,
+                                   initial=Submission.scaleunits_default,
+                                   widget=forms.Select())
+
+    scaletype = forms.ChoiceField(choices=Submission.scaletype_CHOICES,
+                                  widget=forms.RadioSelect(attrs={'id':'scaletype'}),
+                                  initial='ul')
+
+    parity = forms.ChoiceField(choices=Submission.parity_CHOICES,
+                               initial=2)
+
+    description = forms.CharField(widget=forms.Textarea(attrs={'rows':2,}),
+                                  required=False)
+        
+    scalelower = forms.DecimalField(widget=forms.TextInput(attrs={'size':'5'}),
+                                    initial=0.1, required=False, min_value=0)
+
+    scaleupper = forms.DecimalField(widget=forms.TextInput(attrs={'size':'5'}),
+                                    initial=180, required=False, min_value=0)
+
+    scaleest = forms.DecimalField(widget=forms.TextInput(
+        attrs={'size':'5'}), required=False, min_value=0)
+
+    scaleerr = forms.DecimalField(widget=forms.TextInput(
+        attrs={'size':'5'}), required=False, min_value=0, max_value=99)
+
+    xcol = forms.CharField(initial='X',
+                           required=False,
+                           widget=forms.TextInput(attrs={'size':'10'}))
+    ycol = forms.CharField(initial='Y',
+                           required=False,
+                           widget=forms.TextInput(attrs={'size':'10'}))
+
+    tweak = forms.BooleanField(initial=True, required=False)
+
+    tweakorder = forms.IntegerField(initial=2, min_value=2,
+                                    max_value=10,
+                                    widget=forms.TextInput(attrs={'size':'5'}))
+
+
+
+
 def submit_submission(request, submission):
     log('submit_submission(): Submission is: ' + str(submission))
     submission.set_submittime_now()
@@ -279,13 +338,6 @@ def newurl(request):
         'actionurl': reverse(newurl),
         },
         context_instance = RequestContext(request))
-        
-    #t = loader.get_template('portal/newjoburl.html')
-    #c = RequestContext(request, {
-    #    'form' : form,
-    #    'urlerr' : urlerr,
-    #    })
-    #return HttpResponse(t.render(c))
 
 def uploadformurl():
     return (reverse(astrometry.net.upload.views.uploadform)
