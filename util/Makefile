@@ -121,7 +121,7 @@ _sip.so: sip-utils.o sip.o starutil.o mathutil.o sip_qfits.o \
 		errors.o $(QFITS_LIB)
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
-_healpix.so: healpix.o starutil.o mathutil.o
+_healpix.so: healpix.o starutil.o mathutil.o errors.o bl.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
 an-fitstopnm: an-fitstopnm.o $(ANUTILS_LIB) $(QFITS_LIB)

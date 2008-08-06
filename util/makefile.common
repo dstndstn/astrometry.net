@@ -150,10 +150,10 @@ FLAGS_DEF += -fPIC
 #FLAGS_DEF += -pg
 
 ## FIXME DEBUG
-FLAGS_DEF += -fstrict-aliasing -std=c99
+#FLAGS_DEF += -fstrict-aliasing -std=c99
 #FLAGS_DEF += -Wstrict-aliasing
 # More strict aliasing warnings; possible false positives.
-FLAGS_DEF += -Wstrict-aliasing=2
+#FLAGS_DEF += -Wstrict-aliasing=2
 
 # fold in the user's CFLAGS, if set...
 CFLAGS_DEF := $(CFLAGS) $(FLAGS_DEF)
