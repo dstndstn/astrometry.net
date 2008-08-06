@@ -152,6 +152,11 @@ release:
 tag-release:
 	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
 
+retag-release:
+	-svn rm svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER) \
+		-m "Remove old release tag in preparation for re-tagging"
+	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
+
 SNAPSHOT_SVN := svn+ssh://astrometry.net/svn/trunk/src/astrometry
 #SNAPSHOT_VER := $(shell date "+%Y-%m-%d")
 #SNAPSHOT_VER := $(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}')
