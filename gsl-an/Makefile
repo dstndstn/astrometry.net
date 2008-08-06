@@ -180,6 +180,8 @@ DEP_OBJ := $(GSL_OBJS)
 include $(COMMON)/makefile.deps
 
 clean:
-	-rm -f qr-demo chol-demo $(QR_OBJS) $(CHOL_OBJS) \
-		$(DEPS) deps $(GSL_LIB) qr-demo.o chol-demo.o
+	-rm -f $(GSL_OBJS) $(GSL_LIB) \
+		$(DEPS) deps \
+	qr-demo.o chol-demo.o svd-demo.o \
+	qr-demo   chol-demo   svd-demo
 

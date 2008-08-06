@@ -125,7 +125,9 @@ clean:
 		checktree checktree.o \
 		fix-bb fix-bb.o \
 		$(INTERNALS) $(INTERNALS_NOIO) $(LIBKD_NOIO) \
-		$(ALL_TESTS_CLEAN)
+		$(ALL_TESTS_CLEAN) \
+		$(PYSPHEREMATCH_OBJ) spherematch_c.so
+	-rm -Rf build
 
 realclean: clean
 	-rm *~ *.dep

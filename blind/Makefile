@@ -575,7 +575,8 @@ clean:
 	rm -f $(EXECS) $(EXTRA_EXECS) $(SOLVER_EXECS) $(MISC_EXECS) $(PROGS) \
 		$(PIPELINE) $(PROSPECTUS) $(DEPS) deps $(FITS_UTILS) $(ALL_OBJ) $(IMAGE2XY) \
 		$(NODEP_OBJS) plot-constellations fitsverify plotquad plotxy \
-		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN)
+		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN) \
+		$(BACKEND_LIB)
 
 
 
