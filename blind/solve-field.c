@@ -604,7 +604,7 @@ int main(int argc, char** args) {
 		char *objsfn=NULL, *redgreenfn=NULL;
 		char *ngcfn=NULL, *ppmfn=NULL, *indxylsfn=NULL;
         char* newfitsfn = NULL;
-        char* downloadfn;
+        char* downloadfn = NULL;
         char* suffix = NULL;
 		sl* outfiles;
 		sl* tempfiles;
@@ -727,10 +727,12 @@ int main(int argc, char** args) {
         }
         if (index_xyls_template)
             indxylsfn  = sl_appendf(outfiles, index_xyls_template, base);
-        if (suffix)
-            downloadfn = sl_appendf(outfiles, "%s.%s", base, suffix);
-        else
-            downloadfn = sl_appendf(outfiles, "%s", base);
+        if (isurl) {
+            if (suffix)
+                downloadfn = sl_appendf(outfiles, "%s.%s", base, suffix);
+            else
+                downloadfn = sl_appendf(outfiles, "%s", base);
+        }
 
         // Do %s replacement on --verify-wcs entries...
         if (sl_size(axy->verifywcs)) {
@@ -773,6 +775,18 @@ int main(int argc, char** args) {
                 } else {
                     logverb("File \"%s\" does not exist.\n", tocheck[j]);
                 }
+            }
+        }
+
+        // Check for overlap between input and output filenames
+		for (i = 0; i < sl_size(outfiles); i++) {
+			char* fn = sl_get(outfiles, i);
+            if (streq(fn, infile)) {
+                logmsg("Output filename \"%s\" is the same as your input file.\n"
+                       "Refusing to continue.\n"
+                       "You can either choose a different output filename, or\n"
+                       "rename your input file to have a different extension.\n", fn);
+                goto nextfile;
             }
         }
 
