@@ -74,7 +74,9 @@
 
 <script src="{{ gmaps_key }}" type="text/javascript"> </script>
 <script type="text/javascript">
-var CONFIG_TILE_URL = "{{ gmaps_tile_url }}"
+{% autoescape off %}
+var CONFIG_TILE_URLS = {{ gmaps_tile_urls }}
+{% endautoescape %}
 var CONFIG_IMAGE_URL = "{{ gmaps_image_url }}"
 var CONFIG_IMAGE_LIST_URL = "{{ gmaps_image_list_url }}"
 var CONFIG_BLACK_URL = "{{ gmaps_black_url }}"

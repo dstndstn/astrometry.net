@@ -81,7 +81,9 @@ function debug(txt) {
 var map;
 
 // URLs of tileserver.  These are defined in the HTML (map.php)
-var TILE_URL  = CONFIG_TILE_URL;
+var TILE_URLS  = CONFIG_TILE_URLS;
+// FIXME
+var TILE_URL = TILE_URLS[0];
 var IMAGE_URL  = CONFIG_IMAGE_URL;
 var IMAGE_LIST_URL  = CONFIG_IMAGE_LIST_URL;
 var BLACK_URL = CONFIG_BLACK_URL;
@@ -96,7 +98,7 @@ var passargs = [ 'imagefn', 'wcsfn', 'cc', 'arcsinh', 'arith', //'gain',
     'rdlsfn2', 'rdlsfield2', 'rdlsstyle2',
 				 'density',
 				 'submission',
-                 'joblist'
+                 'joblist', 'lw'
     ];
 
 var gotoform = document.getElementById("gotoform");

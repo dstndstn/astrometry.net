@@ -44,7 +44,9 @@ def index(request):
 		'gmaps_key' : ('http://maps.google.com/maps?file=api&v=2.x&key=' +
 					   settings.GMAPS_API_KEY),
 		'map_js_url' : reverse('astrometry.net.media') + 'map.js',
-		'gmaps_tile_url' : reverse(get_tile) + '?',
+		'gmaps_tile_urls' : ("[ '" +
+							 "', '".join([reverse(get_tile) + '?']) +
+							 "' ];"),
 		'gmaps_image_url' : reverse(get_image)+ '?',
 		'gmaps_image_list_url' : reverse(get_image_list) + '?',
 		'gmaps_black_url' : reverse('astrometry.net.media') + 'black.png',
