@@ -44,12 +44,6 @@ double vector_length_3(double* v);
 
 double vector_length_squared_3(double* v);
 
-Inline void cross_product(double* v1, double* v2, double* cross);
-
-inline void normalize(double* x, double* y, double* z);
-
-inline void normalize_3(double* xyz);
-
 double inverse_3by3(double *matrix);
 
 void image_to_xyz(double uu, double vv, double* s, double* transform);
@@ -60,17 +54,32 @@ double uniform_sample(double low, double high);
 
 double gaussian_sample(double mean, double stddev);
 
-Const Inline int imax(int a, int b);
 
-Const Inline int imin(int a, int b);
 
-Inline double distsq_exceeds(double* d1, double* d2, int D, double limit);
+Const InlineDeclare int imax(int a, int b);
 
-Const Inline double square(double d);
+Const InlineDeclare int imin(int a, int b);
 
-// note, this is cyclic
-Const Inline int inrange(double ra, double ralow, double rahigh);
+InlineDeclare double distsq_exceeds(double* d1, double* d2, int D, double limit);
 
-Inline double distsq(double* d1, double* d2, int D);
+Const InlineDeclare double square(double d);
+
+// note, this is function works on angles in degrees; it wraps around
+// at 360.
+Const InlineDeclare int inrange(double ra, double ralow, double rahigh);
+
+InlineDeclare double distsq(double* d1, double* d2, int D);
+
+InlineDeclare void cross_product(double* v1, double* v2, double* cross);
+
+InlineDeclare void normalize(double* x, double* y, double* z);
+
+InlineDeclare void normalize_3(double* xyz);
+
+
+#ifdef INCLUDE_INLINE_SOURCE
+#include "mathutil.inc"
+#endif
+
 
 #endif

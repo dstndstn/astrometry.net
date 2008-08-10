@@ -23,8 +23,8 @@
 #include <sys/types.h>
 #include <regex.h>
 
-#include "starutil.h"
 #include "mathutil.h"
+#include "starutil.h"
 #include "keywords.h"
 #include "errors.h"
 

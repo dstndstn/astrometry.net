@@ -22,9 +22,19 @@
 #include <assert.h>
 
 #include "mathutil.h"
+#include "keywords.h"
+
+//#ifndef INCLUDE_INLINE_SOURCE
+#define tmp_InlineDefine InlineDefine
+#undef InlineDefine
+#define InlineDefine
+#include "mathutil.inc"
+#undef InlineDefine
+#define InlineDefine tmp_InlineDefine
+//#endif
 
 // "borrowed" from <linux/bitops.h> from linux-2.4
-static Inline unsigned int my_hweight32(unsigned int w) {
+static unsigned int my_hweight32(unsigned int w) {
 	unsigned int res = (w & 0x55555555) + ((w >> 1) & 0x55555555);
 	res = (res & 0x33333333) + ((res >> 2) & 0x33333333);
 	res = (res & 0x0F0F0F0F) + ((res >> 4) & 0x0F0F0F0F);
@@ -123,73 +133,6 @@ void matrix_vector_3(double* m, double* v, double* result) {
 	result[2] = m[6]*v[0] + m[7]*v[1] + m[8]*v[2];
 }
 
-inline void normalize(double* x, double* y, double* z) {
-	double invl = 1.0 / sqrt((*x)*(*x) + (*y)*(*y) + (*z)*(*z));
-	*x *= invl;
-	*y *= invl;
-	*z *= invl;
-}
-
-inline void normalize_3(double* xyz) {
-	double invlen = 1.0 / sqrt(xyz[0]*xyz[0] + xyz[1]*xyz[1] + xyz[2]*xyz[2]);
-	xyz[0] *= invlen;
-	xyz[1] *= invlen;
-	xyz[2] *= invlen;
-}
-
-Inline void cross_product(double* a, double* b, double* cross) {
-	cross[0] = a[1] * b[2] - a[2] * b[1];
-	cross[1] = a[2] * b[0] - a[0] * b[2];
-	cross[2] = a[0] * b[1] - a[1] * b[0];
-}
-
-Inline int imax(int a, int b) {
-	return (a > b) ? a : b;
-}
-
-Inline int imin(int a, int b) {
-	return (a < b) ? a : b;
-}
-
-Inline double distsq_exceeds(double* d1, double* d2, int D, double limit) {
-    double dist2;
-    int i;
-    dist2 = 0.0;
-    for (i=0; i<D; i++) {
-		dist2 += square(d1[i] - d2[i]);
-		if (dist2 > limit)
-			return 1;
-    }
-	return 0;
-}
-
-Inline double distsq(double* d1, double* d2, int D) {
-    double dist2;
-    int i;
-    dist2 = 0.0;
-    for (i=0; i<D; i++) {
-		dist2 += square(d1[i] - d2[i]);
-    }
-    return dist2;
-}
-
-Inline double square(double d) {
-	return d*d;
-}
-
-Inline int inrange(double ra, double ralow, double rahigh) {
-    if (ralow < rahigh) {
-		if (ra >= ralow && ra <= rahigh)
-            return 1;
-        return 0;
-    }
-
-    /* handle wraparound properly */
-    //if (ra <= ralow && ra >= rahigh)
-    if (ra >= ralow || ra <= rahigh)
-        return 1;
-    return 0;
-}
 
 #define GAUSSIAN_SAMPLE_INVALID -1e300
 

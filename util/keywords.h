@@ -33,8 +33,18 @@
 
 #if GNUC_PREREQ (3, 0)
 
+#define INCLUDE_INLINE_SOURCE
+//#define InlineDeclare  inline extern
+//#define InlineDefine   
+
+//#define InlineDeclare  extern
+//#define InlineDefine   inline
+
+#define InlineDeclare  extern inline
+#define InlineDefine   extern inline
+
 //# define Inline inline __attribute__ ((always_inline))
-# define Inline        inline
+# define Inline           inline
 # define Pure             __attribute__ ((pure))
 # define Const            __attribute__ ((const))
 # define Noreturn         __attribute__ ((noreturn))

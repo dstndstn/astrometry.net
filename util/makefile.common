@@ -155,6 +155,11 @@ FLAGS_DEF += -fPIC
 # More strict aliasing warnings; possible false positives.
 #FLAGS_DEF += -Wstrict-aliasing=2
 
+# Put inlined function definitions in .o files.
+# FLAGS_DEF += -fkeep-inline-functions
+
+FLAGS_DEF += -Winline
+
 # fold in the user's CFLAGS, if set...
 CFLAGS_DEF := $(CFLAGS) $(FLAGS_DEF)
 CFLAGS_DEF += -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
