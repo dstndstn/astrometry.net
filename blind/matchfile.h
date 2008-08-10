@@ -25,6 +25,7 @@
 #include "starutil.h"
 #include "qfits.h"
 #include "fitstable.h"
+#include "bl.h"
 
 #define AN_FILETYPE_MATCH "MATCH"
 

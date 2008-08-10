@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -19,9 +19,8 @@
 #ifndef STARUTIL_H
 #define STARUTIL_H
 
-#include <unistd.h>
+#include <math.h>
 #include "an-bool.h"
-#include "bl.h"
 #include "keywords.h"
 
 #define DIM_STARS 3
@@ -34,34 +33,33 @@
 
 typedef unsigned char uchar;
 
-#define PIl          3.1415926535897932384626433832795029L  /* pi */
+InlineDeclare double rad2deg(double x);
+InlineDeclare double rad2arcmin(double x);
+InlineDeclare double rad2arcsec(double x);
 
-#define SIDX_MAX ULONG_MAX
-#define QIDX_MAX ULONG_MAX
+InlineDeclare double deg2rad(double x);
+InlineDeclare double deg2arcmin(double x);
+InlineDeclare double deg2arcsec(double x);
 
-#define DEFAULT_RAMIN 0.0
-#define DEFAULT_RAMAX (2.0*PIl)
-#define DEFAULT_DECMIN (-PIl/2.0)
-#define DEFAULT_DECMAX (+PIl/2.0)
+InlineDeclare double arcmin2rad(double x);
+InlineDeclare double arcmin2deg(double x);
+InlineDeclare double arcmin2arcsec(double x);
 
-#define rad2deg(r) (180.0*(r)/(double)PIl)
-#define deg2rad(d) ((d)*(double)PIl/180.0)
-#define deg2arcsec(d) ((d) * 3600.0)
-#define deg2arcmin(d) ((d) * 60.0)
-#define arcmin2deg(d) ((d) / 60.0)
-#define arcsec2deg(a) ((a) / 3600.0)
-#define arcsec2arcmin(a) ((a) / 60.0)
-#define arcmin2arcsec(a) ((a) * 60.0)
-#define rad2arcmin(r) (10800.0*(r)/(double)PIl)
-#define arcmin2rad(a) ((a)*(double)PIl/10800.0)
-#define rad2arcsec(r) (648000.0*(r)/(double)PIl)
-#define arcsec2rad(a) ((a)*(double)PIl/648000.0)
+InlineDeclare double arcsec2rad(double x);
+InlineDeclare double arcsec2deg(double x);
+InlineDeclare double arcsec2arcmin(double x);
+
+#ifdef INCLUDE_INLINE_SOURCE
+#define InlineDefine InlineDefineH
+#include "starutil.inc"
+#undef InlineDefine
+#endif
 
 // RA,Dec in radians:
 #define radec2x(r,d) (cos(d)*cos(r))
 #define radec2y(r,d) (cos(d)*sin(r))
 #define radec2z(r,d) (sin(d))
-#define xy2ra(x,y) ((atan2(y,x)>=0.0)?(atan2(y,x)):(2*(double)PIl+atan2(y,x)))
+#define xy2ra(x,y) ((atan2(y,x)>=0.0)?(atan2(y,x)):(2*(double)M_PI+atan2(y,x)))
 #define z2dec(z) (asin(z))
 
 double atora(const char* str);

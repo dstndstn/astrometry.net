@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "starutil.h"
 #include "pnmutils.h"

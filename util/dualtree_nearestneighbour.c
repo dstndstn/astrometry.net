@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include <math.h>
+#include <stdlib.h>
 #include <sys/param.h>
 
 #include "dualtree_nearestneighbour.h"

@@ -78,7 +78,9 @@ InlineDeclare void normalize_3(double* xyz);
 
 
 #ifdef INCLUDE_INLINE_SOURCE
+#define InlineDefine InlineDefineH
 #include "mathutil.inc"
+#undef InlineDefine
 #endif
 
 

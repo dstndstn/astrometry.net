@@ -34,6 +34,7 @@
 #include "cairoutils.h"
 #include "ioutils.h"
 #include "fitsioutils.h"
+#include "bl.h"
 
 #include "render_tycho.h"
 #include "render_gridlines.h"

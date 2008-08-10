@@ -24,6 +24,7 @@
 #include "starutil.h"
 #include "mathutil.h"
 #include "merc.h"
+#include "bl.h"
 
 struct render_args {
 	// In degrees

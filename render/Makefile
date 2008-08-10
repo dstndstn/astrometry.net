@@ -98,7 +98,7 @@ make-merctree: make-merctree.o merctree.o merc.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
 zoomout: zoomout.o pnmutils.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(NETPBM_LIB)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(ANUTILS_LIB) $(NETPBM_LIB)
 
 ppmnormrgb: ppmnormrgb.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(NETPBM_LIB)

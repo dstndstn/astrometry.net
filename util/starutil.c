@@ -31,6 +31,10 @@
 #define POGSON 2.51188643150958
 #define LOGP   0.92103403719762
 
+#define InlineDefine InlineDefineC
+#include "starutil.inc"
+#undef InlineDefine
+
 static int parse_hms_string(const char* str,
                             int* sign, int* term1, int* term2, double* term3) {
     bool matched;
@@ -248,12 +252,12 @@ void make_rand_star(double* star, double ramin, double ramax,
 	double decval, raval;
 	if (ramin < 0.0)
 		ramin = 0.0;
-	if (ramax > (2*PIl))
-		ramax = 2 * PIl;
-	if (decmin < -PIl / 2.0)
-		decmin = -PIl / 2.0;
-	if (decmax > PIl / 2.0)
-		decmax = PIl / 2.0;
+	if (ramax > (2*M_PI))
+		ramax = 2 * M_PI;
+	if (decmin < -M_PI / 2.0)
+		decmin = -M_PI / 2.0;
+	if (decmax > M_PI / 2.0)
+		decmax = M_PI / 2.0;
 
 	decval = asin(uniform_sample(sin(decmin), sin(decmax)));
 	raval = uniform_sample(ramin, ramax);

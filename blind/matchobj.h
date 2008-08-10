@@ -23,6 +23,7 @@
 
 #include "starutil.h"
 #include "sip.h"
+#include "bl.h"
 
 struct match_struct {
     unsigned int quadno;

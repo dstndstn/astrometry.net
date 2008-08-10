@@ -18,7 +18,9 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
+
 #include "sip.h"
 #include "starutil.h"
 #include "mathutil.h"

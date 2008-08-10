@@ -33,7 +33,7 @@
 
 #if GNUC_PREREQ (3, 0)
 
-#define INCLUDE_INLINE_SOURCE
+#define INCLUDE_INLINE_SOURCE 1
 //#define InlineDeclare  inline extern
 //#define InlineDefine   
 
@@ -41,7 +41,8 @@
 //#define InlineDefine   inline
 
 #define InlineDeclare  extern inline
-#define InlineDefine   extern inline
+#define InlineDefineH  extern inline
+#define InlineDefineC
 
 //# define Inline inline __attribute__ ((always_inline))
 # define Inline           inline

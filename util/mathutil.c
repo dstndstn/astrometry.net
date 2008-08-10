@@ -20,18 +20,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #include "mathutil.h"
 #include "keywords.h"
 
-//#ifndef INCLUDE_INLINE_SOURCE
-#define tmp_InlineDefine InlineDefine
-#undef InlineDefine
-#define InlineDefine
+#define InlineDefine InlineDefineC
 #include "mathutil.inc"
 #undef InlineDefine
-#define InlineDefine tmp_InlineDefine
-//#endif
 
 // "borrowed" from <linux/bitops.h> from linux-2.4
 static unsigned int my_hweight32(unsigned int w) {
