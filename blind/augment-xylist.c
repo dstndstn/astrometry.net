@@ -748,8 +748,10 @@ int augment_xylist(augment_xylist_t* axy,
 		dl_append(axy->scales, appu);
 	}
 
-	if ((dl_size(axy->scales) > 0) && guessed_scale)
-		qfits_header_add(hdr, "ANAPPDEF", "T", "try the default scale range too.", NULL);
+    /* Hmm, do we want this??
+     if ((dl_size(axy->scales) > 0) && guessed_scale)
+     qfits_header_add(hdr, "ANAPPDEF", "T", "try the default scale range too.", NULL);
+     */
 
 	for (i=0; i<dl_size(axy->scales)/2; i++) {
 		char key[64];
