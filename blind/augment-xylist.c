@@ -425,6 +425,7 @@ int augment_xylist(augment_xylist_t* axy,
     int orig_nheaders;
     bool addwh = TRUE;
     FILE* fout = NULL;
+    char *fitsimgfn = NULL;
 
     cmd = sl_new(16);
     tempfiles = sl_new(4);
@@ -440,7 +441,6 @@ int augment_xylist(augment_xylist_t* axy,
 		char *pnmfn;				
 		sl* lines;
         bool iscompressed;
-		char *fitsimgfn;
 		char* line;
 		char pnmtype;
 		int maxval;
@@ -521,19 +521,6 @@ int augment_xylist(augment_xylist_t* axy,
                     fitsimgfn = axy->imagefn;
             } else
                 fitsimgfn = sanitizedfn;
-
-			if (axy->guess_scale) {
-                dl* estscales = NULL;
-                fits_guess_scale(fitsimgfn, NULL, &estscales);
-				for (i=0; i<dl_size(estscales); i++) {
-					double scale = dl_get(estscales, i);
-                    logverb("Scale estimate: %g\n", scale);
-                    dl_append(axy->scales, scale * 0.99);
-                    dl_append(axy->scales, scale * 1.01);
-                    guessed_scale = TRUE;
-                }
-				dl_free(estscales);
-			}
 
             if (axy->try_verify) {
                 char* errstr;
@@ -639,6 +626,20 @@ int augment_xylist(augment_xylist_t* axy,
         }
 
 	}
+
+    if (axy->guess_scale && (fitsimgfn || !axy->imagefn)) {
+        dl* estscales = NULL;
+        char* infn = (fitsimgfn ? fitsimgfn : xylsfn);
+        fits_guess_scale(infn, NULL, &estscales);
+        for (i=0; i<dl_size(estscales); i++) {
+            double scale = dl_get(estscales, i);
+            logverb("Scale estimate: %g\n", scale);
+            dl_append(axy->scales, scale * 0.99);
+            dl_append(axy->scales, scale * 1.01);
+            guessed_scale = TRUE;
+        }
+        dl_free(estscales);
+    }
 
     if (dosort) {
         char* sortedxylsfn;
