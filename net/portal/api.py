@@ -22,22 +22,36 @@ def json2python(json):
         pass
     return None
 
+def python2json(py):
+    from simplejson import dumps
+    return dumps(py)
+
+
+class HttpResponseErrorJson(HttpResponseBadRequest):
+    def __init__(self, errstring):
+        args = { 'status': 'error',
+                 'errormessage': errstring }
+        doc = python2json(args)
+        super(HttpResponseBadRequest, self).__init__(doc)
+        #self['Content-type'] = 'application/json'
+        self['Content-type'] = 'text/plain'
+
 
 def login(request):
     json = request.POST.get('request-json')
     if not json:
-        return HttpResponseBadRequest('no json')
+        return HttpResponseErrorJson('no json')
     args = json2python(json)
     if args is None:
-        return HttpResponseBadRequest('failed to parse JSON: ', json)
+        return HttpResponseErrorJson('failed to parse JSON: ', json)
     uname = args.get('username')
     password = args.get('password')
     if uname is None or password is None:
-        return HttpResponseBadRequest('need "username" and "password".')
+        return HttpResponseErrorJson('need "username" and "password".')
 
     user = authenticate(username=uname, password=password)
     if user is None:
-        return HttpResponseBadRequest('incorrect username/password')
+        return HttpResponseErrorJson('incorrect username/password')
 
     return HttpResponse('authenticated user: ' + str(user.email))
 
