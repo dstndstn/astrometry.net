@@ -26,15 +26,19 @@ def python2json(py):
     from simplejson import dumps
     return dumps(py)
 
+json_type = 'text/plain' # 'application/json'
 
 class HttpResponseErrorJson(HttpResponseBadRequest):
     def __init__(self, errstring):
         args = { 'status': 'error',
                  'errormessage': errstring }
         doc = python2json(args)
-        super(HttpResponseBadRequest, self).__init__(doc)
-        #self['Content-type'] = 'application/json'
-        self['Content-type'] = 'text/plain'
+        super(HttpResponseErrorJson, self).__init__(doc, content_type=json_type)
+
+class HttpResponseJson(HttpResponse):
+    def __init__(self, args):
+        doc = python2json(args)
+        super(HttpResponseJson, self).__init__(doc, content_type=json_type)
 
 
 def login(request):
@@ -53,10 +57,9 @@ def login(request):
     if user is None:
         return HttpResponseErrorJson('incorrect username/password')
 
-    return HttpResponse('authenticated user: ' + str(user.email))
-
-    #return HttpResponse('json: ' + str(json) + '\nargs: ' + str(args))
-
+    return HttpResponseJson({ 'status': 'success',
+                              'message': 'authenticated user: ' + str(user.email),
+                              })
 
 def logout(request):
     return HttpResponse('Not implemented.')
