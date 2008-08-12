@@ -2,6 +2,9 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
+# from django.contrib.sessions.backends.db import SessionStore
+# from django.contrib.sessions.models import Session
+
 from django.http import HttpResponse, HttpResponseBadRequest #HttpResponseRedirect, QueryDict
 #from django.template import Context, RequestContext, loader
 from django.core.urlresolvers import reverse
