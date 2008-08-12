@@ -45,6 +45,7 @@ FIELD_DIR = '/home/gmaps/test/web-data/fields'
 #tileurl = gmaps_base + 'test/tile/get/'
 
 
+APPEND_SLASH=False
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

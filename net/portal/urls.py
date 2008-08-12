@@ -7,6 +7,10 @@ urlpatterns = (patterns('astrometry.net.portal.newjob',
                         (r'^newfile/$',         'newfile' ),
                         (r'^newlong/$',         'newlong' ),
                         ) +
+               #patterns('astrometry.net.portal.api',
+               #         (r'^api/login', 'login'),
+               #         (r'^api/logout', 'logout'),
+               #         ) +
                patterns('astrometry.net.portal.views',
                         (r'^status/(?P<jobid>' + jobpattern + r')', 'jobstatus'),
                         (r'^getfile/(?P<jobid>' + jobpattern + r')/(?P<filename>[a-z0-9.-]+)$', 'getfile'),
