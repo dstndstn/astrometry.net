@@ -120,10 +120,12 @@ int image2xy_image(uint8_t* u8image, float* fimage,
 	fullH = H;
 	if (downsample) {
 		logmsg("Downsampling by %i...\n", S);
-		fimage = upconvert(u8image, W, H);
+        if (!fimage) {
+            fimage = upconvert(u8image, W, H);
+            free_fimage = TRUE;
+        }
 		if (!fimage)
 			goto bailout;
-		free_fimage = TRUE;
 		rebin(&fimage, W, H, S, &newW, &newH);
 		W = newW;
 		H = newH;
