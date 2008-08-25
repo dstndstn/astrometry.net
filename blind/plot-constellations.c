@@ -870,6 +870,8 @@ int main(int argc, char** args) {
         fprintf(fout, "{ \"annotations\": [\n%s\n]}\n", annstr);
         free(annstr);
     }
+    sl_free2(json);
+    json = NULL;
 
 	if (justlist)
 		return 0;

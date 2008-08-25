@@ -46,12 +46,11 @@ static void bl_sort_rec(bl* list, void* pivot,
 	bl* greater;
 	int i;
     bl_node* node;
-	bl_node* next;
 
 	less = bl_new(list->blocksize, list->datasize);
 	equal = bl_new(list->blocksize, list->datasize);
 	greater = bl_new(list->blocksize, list->datasize);
-	for (node=list->head; node;) {
+	for (node=list->head; node; node=node->next) {
 		char* data = NODE_CHARDATA(node);
 		for (i=0; i<node->N; i++) {
 			int val = compare(data, pivot, userdata);
@@ -63,16 +62,21 @@ static void bl_sort_rec(bl* list, void* pivot,
 				bl_append(equal, data);
 			data += list->datasize;
 		}
+	}
+
+    // recurse before freeing anything...
+	bl_sort_with_userdata(less, compare, userdata);
+	bl_sort_with_userdata(greater, compare, userdata);
+
+	for (node=list->head; node;) {
+        bl_node* next;
 		next = node->next;
 		bl_free_node(node);
 		node = next;
-	}
+    }
 	list->head = NULL;
 	list->tail = NULL;
 	list->N = 0;
-
-	bl_sort_with_userdata(less, compare, userdata);
-	bl_sort_with_userdata(greater, compare, userdata);
 
 	if (less->N) {
 		list->head = less->head;
