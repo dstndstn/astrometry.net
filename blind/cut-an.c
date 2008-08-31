@@ -841,7 +841,7 @@ int main(int argc, char** args) {
 			if (domags)
                 catalog_add_mag(cat, sd->mag);
 			if (domagerrs)
-                catalog_add_mag(cat, sd->mag_err);
+                catalog_add_mag_err(cat, sd->mag_err);
             if (doid)
                 catalog_add_id(cat, sd->id);
             if (domotion) {
