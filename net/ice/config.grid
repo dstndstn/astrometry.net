@@ -6,7 +6,7 @@ IceGrid.InstanceName=SolverIceGrid
 #
 # The IceGrid locator proxy.
 #
-Ice.Default.Locator=DemoIceGrid/Locator:default -p 4061 -h cluster24.cs.toronto.edu
+Ice.Default.Locator=SolverIceGrid/Locator:default -p 4061 -h cluster24.cs.toronto.edu
 
 #
 # IceGrid registry configuration.
@@ -15,10 +15,10 @@ IceGrid.Registry.Client.Endpoints=default -p 4061
 IceGrid.Registry.Server.Endpoints=default
 IceGrid.Registry.Internal.Endpoints=default
 IceGrid.Registry.Data=db/registry
-IceGrid.Registry.PermissionsVerifier=DemoIceGrid/NullPermissionsVerifier
-IceGrid.Registry.AdminPermissionsVerifier=DemoIceGrid/NullPermissionsVerifier
-IceGrid.Registry.SSLPermissionsVerifier=DemoIceGrid/NullSSLPermissionsVerifier
-IceGrid.Registry.AdminSSLPermissionsVerifier=DemoIceGrid/NullSSLPermissionsVerifier
+IceGrid.Registry.PermissionsVerifier=SolverIceGrid/NullPermissionsVerifier
+IceGrid.Registry.AdminPermissionsVerifier=SolverIceGrid/NullPermissionsVerifier
+IceGrid.Registry.SSLPermissionsVerifier=SolverIceGrid/NullSSLPermissionsVerifier
+IceGrid.Registry.AdminSSLPermissionsVerifier=SolverIceGrid/NullSSLPermissionsVerifier
 
 # allow servers to register on startup.
 IceGrid.Registry.DynamicRegistration=1
