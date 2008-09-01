@@ -5,8 +5,7 @@
       <server id="Server-${index}" exe="python" activation="on-demand">
         <option>SolverServer.py</option>
         <adapter name="Solver" endpoints="tcp" replica-group="ReplicatedSolver"/>
-        <!--<property name="Identity" value="hello"/>
-          -->
+        <property name="Identity" value="Solver"/>
       </server>
     </server-template>
 
