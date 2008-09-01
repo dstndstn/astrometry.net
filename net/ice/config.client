@@ -1,0 +1,7 @@
+#
+# The IceGrid locator proxy.
+#
+Ice.Default.Locator=SolverIceGrid/Locator:default -p 4061 -h cluster24
+
+# Logger
+Callback.Client.Endpoints=tcp
