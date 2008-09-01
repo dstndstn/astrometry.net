@@ -32,7 +32,7 @@ class SolverClient(Ice.Application):
         try:
             p = comm.stringToProxy('Solver')
             print 'proxy is', p
-            server = SolverIce.SolverPrx.checkedCast(comm.stringToProxy("Solver"))
+            server = SolverIce.SolverPrx.checkedCast(p)
             print 'server is', server
         except Ice.NotRegisteredException, e:
             logfunc('Failed to find solver server:', e)
