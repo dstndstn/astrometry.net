@@ -14,7 +14,8 @@
 <!--
       <load-balancing type="adaptive" load-sample="5" n-replicas="2"/>
 -->
-      <object identity="Solver" type="::Solver::Solver"/>
+<!-- ::<module-name>::<class-name> -->
+      <object identity="Solver" type="::SolverIce::Solver"/>
     </replica-group>
 
     <node name="cluster60">
