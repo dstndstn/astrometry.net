@@ -18,6 +18,9 @@
       <object identity="Solver" type="::SolverIce::Solver"/>
     </replica-group>
 
+    <node name="cluster24">
+      <server-instance template="Server" index="24a"/>
+    </node>
     <node name="cluster60">
       <server-instance template="Server" index="60a"/>
     </node>
