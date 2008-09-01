@@ -351,7 +351,7 @@ class Watcher(object):
             submission.alljobsadded = True
             submission.save()
     
-    def run_link(joblink):
+    def run_link(self, joblink):
         if not os.path.islink(joblink):
             log('Expected second argument to be a symlink; "%s" isn\'t.' % joblink)
             return -1
