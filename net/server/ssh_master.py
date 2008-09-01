@@ -39,7 +39,6 @@ class ShardRequest(object):
 def solve(job, logfunc):
     log('ssh-master.solve', job.jobid)
     axypath = job.get_axy_filename()
-
     axy = read_file(axypath)
     
     shards = []
