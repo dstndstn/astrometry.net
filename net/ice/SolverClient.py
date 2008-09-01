@@ -1,9 +1,13 @@
+import sys
 import Ice
-import IceGrid
-
+#import IceGrid
 #Ice.loadSlice(settings.BASEDIR + 'astrometry/net/ice/Solver.ice')
+#Ice.loadSlice('Solver.ice')
 
-from astrometry.net.ice import SolverIce
+import SolverIce
+
+#from astrometry.net.ice import SolverIce
+
 
 class LoggerI(SolverIce.Logger):
     def __init__(self, logfunc):
@@ -12,12 +16,26 @@ class LoggerI(SolverIce.Logger):
         self.logfunc(msg)
 
 class SolverClient(Ice.Application):
-    def solve(self, jobid, axy, logfunc):
+    def __init__(self, jobid, axy, logfunc):
+        self.jobid = jobid
+        self.axy = axy
+        self.logfunc = logfunc
+        
+    #def solve(self, jobid, axy, logfunc):
+    def run(self, args):
+        jobid = self.jobid
+        axy = self.axy
+        logfunc = self.logfunc
+
         comm = self.communicator()
+        print 'comm is', comm
         try:
+            p = comm.stringToProxy('Solver')
+            print 'proxy is', p
             server = SolverIce.SolverPrx.checkedCast(comm.stringToProxy("Solver"))
+            print 'server is', server
         except Ice.NotRegisteredException, e:
-            logfunc('Failed to find solver server:, e)
+            logfunc('Failed to find solver server:', e)
             return -1
 
         properties = comm.getProperties()
@@ -28,3 +46,11 @@ class SolverClient(Ice.Application):
         myproxy = SolverIce.LoggerPrx.uncheckedCast(adapter.createProxy(myid))
         tardata = server.solve(jobid, axy, myproxy)
         return tardata
+
+
+if __name__ == '__main__':
+    def testlogfunc(msg):
+        print msg
+    c = SolverClient('testjobid', 'XXXXXXXXXX', testlogfunc)
+    #c.solve()
+    sys.exit(c.main(sys.argv, 'config.client'))
