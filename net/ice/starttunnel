@@ -1,0 +1,4 @@
+#! /bin/bash
+
+# connections to oven:4063 get forwarded to cluster24:9998
+ssh -L 4063:cluster24:9998 cluster24 -N
