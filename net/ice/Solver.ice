@@ -3,12 +3,23 @@
 
 module SolverIce {
 
+/*
+interface SolverHandle {
+    void cancel();
+    int  finished();
+};
+
+interface Solver {
+    SolverHandle* startsolver(string axypath);
+};
+*/
+
 interface Logger {
     void logmessage(string msg);
 };
 
 interface Solver {
-    string solve(string jobid, string axy, Logger* l);
+    ["ami"] string solve(string axypath, Logger* l);
     void shutdown();
 };
 

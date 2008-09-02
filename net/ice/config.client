@@ -1,16 +1,7 @@
-
-#Ice.Default.Router=Glacier2/router:tcp -h cluster24.cs.toronto.edu -p 4063
-
-Ice.Default.Router=Glacier2/router:tcp -h localhost -p 4063
-Ice.ACM.Client=0
-Ice.RetryIntervals=-1
-
 #
 # The IceGrid locator proxy.
 #
-
 Ice.Default.Locator=SolverIceGrid/Locator:default -p 4061 -h cluster24.ai.toronto.edu
 
 # Logger
 Callback.Client.Endpoints=tcp
-Callback.Router=Glacier2/router:tcp -h localhost -p 4063
