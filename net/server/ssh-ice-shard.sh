@@ -24,7 +24,8 @@ echo "Reading $nbytes bytes of input file..." 1>&2
 dd bs=1 count=$nbytes of=job.axy
 
 # stderr goes back over the ssh tunnel...
-$ICE_SOLVER $jobid job.axy > backend.stdout
+#$ICE_SOLVER $jobid job.axy > backend.stdout
+$ICE_SOLVER $jobid job.axy 1>&2
 
 # Send back all the files we generated!
 tar cf - --exclude=job.axy *
