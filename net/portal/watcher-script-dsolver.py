@@ -12,7 +12,6 @@ class WatcherDsolver(Watcher):
         tardata = ssh_master.solve(job, logfunc)
         return tardata
 
-
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         print 'Usage: %s <input-file>' % sys.argv[0]

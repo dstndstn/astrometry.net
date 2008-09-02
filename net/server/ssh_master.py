@@ -19,6 +19,8 @@ from astrometry.net.portal.job import Job
 # return the ssh config names of the shards.
 def get_shards():
     if True:
+        return ['iceshard']
+    elif False:
         return ['neuron0',
                 'neuron1',
                 'neuron2',
