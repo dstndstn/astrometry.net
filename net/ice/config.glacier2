@@ -1,3 +1,11 @@
+#IceGrid.InstanceName=SolverIceGrid
+
+
+# must match config.client: Ice.Default.Router=XXX/router
+# (and all other Glacier2 instances in this file)
+Glacier2.InstanceName=Glacier2
+
+
 # Nope
 #Glacier2.Client.Endpoints=tcp -h 128.100.20.164 -p 4063
 
@@ -5,10 +13,10 @@ Glacier2.Client.Endpoints=tcp -h cluster24.ai.toronto.edu -p 4063
 Glacier2.Server.Endpoints=tcp -h cluster24.ai.toronto.edu -p 9999
 
 Glacier2.SessionTimeout=60
-Glacier2.CryptPasswords=passwords
+
+Glacier2.PermissionsVerifier=Glacier2/NullPermissionsVerifier
+#Glacier2.CryptPasswords=passwords
 
 Ice.Default.Locator=SolverIceGrid/Locator:tcp -h cluster24.ai.toronto.edu -p 4061
 
 
-# must match config.client: Ice.Default.Router=XXX/router
-Glacier2.InstanceName=Glacier2
