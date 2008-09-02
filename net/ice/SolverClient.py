@@ -1,5 +1,6 @@
 import sys
 import Ice
+import Glacier2
 #import IceGrid
 #Ice.loadSlice(settings.BASEDIR + 'astrometry/net/ice/Solver.ice')
 #Ice.loadSlice('Solver.ice')
@@ -29,6 +30,21 @@ class SolverClient(Ice.Application):
 
         comm = self.communicator()
         print 'comm is', comm
+
+        print 'creating session with Glacier2...'
+        router = comm.getDefaultRouter()
+        if not router:
+            print 'no router.'
+            return -1
+        router = Glacier2.RouterPrx.checkedCast(router)
+        if not router:
+            print 'not a glacier2 router'
+            return -1
+        try:
+            router.createSession('test', 'test')
+        except Glacier2.PermissionDeniedException,ex:
+            print 'permission denied:', ex
+
         try:
             p = comm.stringToProxy('Solver')
             print 'proxy is', p
@@ -38,9 +54,12 @@ class SolverClient(Ice.Application):
             logfunc('Failed to find solver server:', e)
             return -1
 
+        category = router.getCategoryForClient()
+
         properties = comm.getProperties()
         adapter = comm.createObjectAdapter('Callback.Client')
         myid = comm.stringToIdentity('callbackReceiver')
+        myid.category = category
         adapter.add(LoggerI(logfunc), myid)
         adapter.activate()
         myproxy = SolverIce.LoggerPrx.uncheckedCast(adapter.createProxy(myid))
