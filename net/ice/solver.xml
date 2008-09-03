@@ -1,0 +1,37 @@
+<icegrid>
+  <application name="Solver">
+    <server-template id="Server">
+      <parameter name="index"/>
+      <server id="Server-${index}" exe="python" activation="on-demand">
+        <option>SolverServer.py</option>
+        <adapter name="Solver" endpoints="tcp" replica-group="ReplicatedSolver"/>
+        <property name="Identity" value="Solver"/>
+      </server>
+    </server-template>
+
+    <replica-group id="ReplicatedSolver">
+      <load-balancing type="round-robin"/>
+<!--
+      <load-balancing type="adaptive" load-sample="5" n-replicas="2"/>
+-->
+<!-- ::<module-name>::<class-name> -->
+      <object identity="Solver" type="::SolverIce::Solver"/>
+    </replica-group>
+
+    <node name="cluster24">
+      <server-instance template="Server" index="24a"/>
+    </node>
+    <node name="cluster60">
+      <server-instance template="Server" index="60a"/>
+    </node>
+    <node name="cluster59">
+      <server-instance template="Server" index="59a"/>
+    </node>
+    <node name="cluster58">
+      <server-instance template="Server" index="58a"/>
+    </node>
+
+
+  </application>
+
+</icegrid>

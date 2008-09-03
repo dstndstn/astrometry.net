@@ -1,0 +1,12 @@
+This directory contains an Ice setup like this:
+
+-the web service calls cluster24:go/dsolver/astrometry/net/server/ssh-ice-shard.sh
+-this creates and cd's to our job dir, extracts the job.axy file, and calls go/dsolver/astrometry/net/ice/IceSolver.py <jobid> <job.axy>, and finally tars up all the files in the dir and sends them back over the pipe.
+
+-IceSolver.py is a client to several SolverServer instances (with different index scales)
+
+-startreg is the registry
+-startnode runs on each server node.
+
+
+
