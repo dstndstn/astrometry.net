@@ -1,12 +1,22 @@
 import sys
+
 import Ice
-#import IceGrid
-#Ice.loadSlice(settings.BASEDIR + 'astrometry/net/ice/Solver.ice')
-#Ice.loadSlice('Solver.ice')
 
 import SolverIce
 
-#from astrometry.net.ice import SolverIce
+theice = None
+configfile = 'config.client'
+
+def initIce():
+    global theice
+    settings = Ice.InitializationData()
+    settings.properties = createProperties(None, settings.properties)
+    settings.properties.load(configfile)
+    theice = Ice.initialize(settings)
+def get_ice():
+    if not theice:
+        initIce()
+    return theice
 
 
 class LoggerI(SolverIce.Logger):
@@ -15,41 +25,19 @@ class LoggerI(SolverIce.Logger):
     def logmessage(self, msg, current=None):
         self.logfunc(msg)
 
-class SolverClient(Ice.Application):
-    def __init__(self, axy, logfunc):
-        self.axy = axy
-        self.logfunc = logfunc
-        
-    #def solve(self, jobid, axy, logfunc):
-    def run(self, args):
-        axy = self.axy
-        logfunc = self.logfunc
 
-        comm = self.communicator()
-        print 'comm is', comm
+def solve(jobid, axy, logfunc):
+    #axydata = read_file(job.get_axy_filename())
+    
+    ice = get_ice()
+    server = ice.stringToProxy('Solver')
+    server = SolverIce.SolverPrx.checkedCast(server)
+    props = ice.getProperties()
+    adapter = ice.createObjectAdapter('Callback.Client')
+    myid = ice.stringToIdentity('callbackReceiver')
+    adapter.add(LoggerI(logfunc), myid)
+    adapter.activate()
+    logproxy = SolverIce.LoggerPrx.uncheckedCast(adapter.createProxy(myid))
 
-        try:
-            p = comm.stringToProxy('Solver')
-            print 'proxy is', p
-            server = SolverIce.SolverPrx.checkedCast(p)
-            print 'server is', server
-        except Ice.NotRegisteredException, e:
-            logfunc('Failed to find solver server:', e)
-            return -1
+    tardata = server.solve(jobid, axy, logproxy)
 
-        properties = comm.getProperties()
-        adapter = comm.createObjectAdapter('Callback.Client')
-        myid = comm.stringToIdentity('callbackReceiver')
-        adapter.add(LoggerI(logfunc), myid)
-        adapter.activate()
-        myproxy = SolverIce.LoggerPrx.uncheckedCast(adapter.createProxy(myid))
-        tardata = server.solve(axy, myproxy)
-        return tardata
-
-
-if __name__ == '__main__':
-    def testlogfunc(msg):
-        print msg
-    c = SolverClient('/path/to/axy', testlogfunc)
-    #c.solve()
-    sys.exit(c.main(sys.argv, 'config.client'))

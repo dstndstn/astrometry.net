@@ -1,12 +1,12 @@
 This directory contains an Ice setup like this:
 
--the web service calls cluster24:go/dsolver/astrometry/net/server/ssh-ice-shard.sh
--this creates and cd's to our job dir, extracts the job.axy file, and calls go/dsolver/astrometry/net/ice/IceSolver.py <jobid> <job.axy>, and finally tars up all the files in the dir and sends them back over the pipe.
+-the web service calls a thin Ice client which contacts hydra.dgp
+-the hydra.dgp server is itself a client to servers on the hydra neurons.
 
--IceSolver.py is a client to several SolverServer instances (with different index scales)
+-does hydra have to run two registries?
+-the outward-facing one could be registryless.
+-startnode runs on each neuron.
 
--startreg is the registry
--startnode runs on each server node.
 
 
 

@@ -14,10 +14,9 @@ class SolverI(SolverIce.Solver):
     def __init__(self, name):
         self.name = name
 
-    def solve(self, axypath logger, current=None):
+    def solve(self, jobid, axy logger, current=None):
         print self.name + ' got a solve request.'
-        #print 'jobid', jobid, 'axy has length', len(axy)
-        print 'axypath is', axypath
+        print 'jobid', jobid, 'axy has length', len(axy)
         logger.logmessage('Hello logger.')
         time.sleep(1)
         logger.logmessage('Hello again.')
