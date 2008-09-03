@@ -206,7 +206,7 @@ int solvedfile_set(char* fn, int fieldnum) {
     fieldnum--;
 
 	// (file mode 777; umask will modify this, if set).
-	f = open(fn, O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
+	f = open(fn, O_WRONLY | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG | S_IRWXO);
 	if (f == -1) {
 		fprintf(stderr, "Error: failed to open file %s for writing: %s\n",
 				fn, strerror(errno));

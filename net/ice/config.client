@@ -6,6 +6,6 @@ Ice.Default.Locator=SolverIceGrid/Locator:default -p 4061 -h hydra.local
 # Logger
 Callback.Client.Endpoints=tcp
 
-Ice.Trace.Network=2
-Ice.Trace.Protocol=1
-Ice.Trace.Locator=2
+#Ice.Trace.Network=2
+#Ice.Trace.Protocol=1
+#Ice.Trace.Locator=2

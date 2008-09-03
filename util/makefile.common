@@ -125,8 +125,8 @@ X := $(shell rm $(TMPFILE))
 # linking.  CFLAGS_DEF are compile flags, LDFLAGS_DEF are link flags.
 
 # Do YOU wanna go fast?
-RICKY_BOBBY := no
-#RICKY_BOBBY := yes
+#RICKY_BOBBY := no
+RICKY_BOBBY := yes
 
 
 ifeq ($(RICKY_BOBBY),yes)

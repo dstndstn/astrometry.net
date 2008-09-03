@@ -19,7 +19,7 @@ interface Logger {
 };
 
 interface Solver {
-    ["ami"] string solve(string axypath, Logger* l);
+    ["ami"] string solve(string jobid, string axy, Logger* l);
     void shutdown();
 };
 

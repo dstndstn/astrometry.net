@@ -8,6 +8,8 @@
 
 ICE_SOLVER=/data1/dstn/dsolver/astrometry/net/ice/IceSolver.py
 
+## TODO: make "dsolver" appear in PYTHONPATH
+
 # Read jobid
 read -s jobid
 

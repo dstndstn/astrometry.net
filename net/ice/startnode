@@ -1,5 +1,5 @@
 #! /bin/bash
 
 icegridnode --Ice.Config=config.grid \
-    --IceGrid.Node.Name=`hostname` \
+    --IceGrid.Node.Name=`hostname -s` \
     --deploy solver.xml

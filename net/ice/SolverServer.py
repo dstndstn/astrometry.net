@@ -3,26 +3,70 @@
 import sys
 import traceback
 import time
+import socket
+import tempfile
+import ctypes
+import ctypes.util
+import os.path
+
 import Ice
 
-#Ice.loadSlice(settings.BASEDIR + 'astrometry/net/ice/Solver.ice')
-#Ice.loadSlice('Hello.ice')
-#from astrometry.net.ice import SolverIce
 import SolverIce
+from astrometry.util.file import *
+
+_backend = None
+_libname = ctypes.util.find_library('libbackend.so')
+if _libname:
+    _backend = ctypes.CDLL(_libname)
+else:
+    #p = os.path.join(os.path.dirname(__file__), 'libbackend.so')
+    # FIXME
+    p = '/data1/dstn/dsolver/astrometry/blind/libbackend.so'
+    _backend = ctypes.CDLL(p)
+
 
 class SolverI(SolverIce.Solver):
     def __init__(self, name):
         self.name = name
 
-    def solve(self, axypath logger, current=None):
+    def solve(self, jobid, axy, logger, current=None):
         print self.name + ' got a solve request.'
-        #print 'jobid', jobid, 'axy has length', len(axy)
-        print 'axypath is', axypath
+        print 'jobid', jobid, 'axy has length', len(axy)
         logger.logmessage('Hello logger.')
-        time.sleep(1)
-        logger.logmessage('Hello again.')
-        time.sleep(1)
-        return 'Goodbye, all done here.'
+
+        #time.sleep(1)
+        #logger.logmessage('Hello again.')
+        #time.sleep(1)
+
+        hostname = socket.gethostname().split('.')[0]
+        print 'I am host', hostname
+        configfn = '/data1/dstn/dsolver/backend-config/backend-%s.cfg' % hostname
+        print 'Reading config file', configfn
+        mydir = tempfile.mkdtemp()
+        print 'Working in temp directory', mydir
+        axyfn = os.path.join(mydir, 'job.axy')
+        write_file(axy, axyfn)
+
+        # BUG - should do this once, outside this func!
+        Backend = _backend
+        Backend.log_init(3)
+        Backend.log_set_thread_specific()
+        backend = Backend.backend_new()
+        if Backend.backend_parse_config_file(backend, configfn):
+            print 'Failed to initialize backend.'
+            sys.exit(-1)
+        #backend.log_to_fd(f.fileno())
+        job = Backend.backend_read_job_file(backend, axyfn)
+        if not job:
+            print 'Failed to read job.'
+            return
+        Backend.job_set_base_dir(job, mydir)
+        #backend.job_set_cancel_file(job, cancelfile)
+        Backend.backend_run_job(backend, job)
+        Backend.job_free(job)
+
+        tardata = 'Goodbye, all done here.'
+        return tardata
     
     def shutdown(self, current=None):
         print self.name + " shutting down..."

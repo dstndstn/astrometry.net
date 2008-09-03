@@ -1,6 +1,10 @@
 # TODO: set up security:
 #  http://www.zeroc.com/doc/Ice-3.3.0/manual/IceGrid.36.22.html
 
+#Ice.Trace.Network=2
+#Ice.Trace.Protocol=1
+#Ice.Trace.Locator=2
+
 IceGrid.InstanceName=SolverIceGrid
 
 #
