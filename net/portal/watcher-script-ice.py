@@ -15,6 +15,7 @@ class WatcherIce(Watcher):
             f.close()
 
         axy = read_file(job.get_axy_filename())
+
         client = SolverClient()
         tardata = client.solve(job.jobid, axy, userlog)
         return tardata
