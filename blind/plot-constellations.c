@@ -48,6 +48,7 @@
 #include "sip-utils.h"
 #include "errors.h"
 #include "log.h"
+#include "svn.h"
 
 const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:J";
 
@@ -869,7 +870,12 @@ int main(int argc, char** args) {
     if (json) {
         FILE* fout = stderr;
         char* annstr = sl_implode(json, ",\n");
-        fprintf(fout, "{ \"status\": \"solved\", \"annotations\": [\n%s\n]}\n", annstr);
+        fprintf(fout, "{ \n");
+        fprintf(fout, "  \"status\": \"solved\",\n");
+        fprintf(fout, "  \"svn-revision\": %i,\n", svn_revision());
+        fprintf(fout, "  \"svn-date\": \"%s\",\n", svn_date());
+        fprintf(fout, "  \"annotations\": [\n%s\n]\n", annstr);
+        fprintf(fout, "}\n");
         free(annstr);
     }
     sl_free2(json);
