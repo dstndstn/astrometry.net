@@ -214,8 +214,6 @@ int main(int argc, char** args) {
 
     sl* json = NULL;
 
-    fits_use_error_system();
-
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
         case 'h':
@@ -302,19 +300,32 @@ int main(int argc, char** args) {
     }
 
     if (!(outfn || justlist) || !wcsfn) {
-        fprintf(stderr, "Need (-o or -L) and -w args.\n");
-        print_help(args[0]);
+      logerr("Need (-o or -L) and -w args.\n");
+      print_help(args[0]);
+      exit(-1);
+    }
+
+    // read WCS.
+    logverb("Trying to parse SIP/TAN header from %s...\n", wcsfn);
+    if (!file_exists(wcsfn)) {
+      ERROR("No such file: \"%s\"", wcsfn);
+      exit(-1);
+    }
+    if (sip_read_header_file(wcsfn, &sip)) {
+	logverb("Got SIP header.\n");
+    } else {
+        ERROR("Failed to parse SIP/TAN header from %s", wcsfn);
         exit(-1);
+    }
+
+    if (!(NGC || constell || bright || HD || grid)) {
+      logerr("Neither constellations, bright stars, HD nor NGC/IC overlays selected!\n");
+      print_help(args[0]);
+      exit(-1);
     }
 
     if (gridspacing > 0.0)
         grid = TRUE;
-
-    if (!(NGC || constell || bright || HD || grid)) {
-        fprintf(stderr, "Neither constellations, bright stars, HD nor NGC/IC overlays selected!\n");
-        print_help(args[0]);
-        exit(-1);
-    }
 
     // adjust for scaling...
     lw /= scale;
@@ -324,15 +335,6 @@ int main(int argc, char** args) {
     endgap /= scale;
     fontsize /= scale;
     label_offset /= scale;
-
-    // read WCS.
-    logverb("Trying to parse SIP/TAN header from %s...\n", wcsfn);
-    if (sip_read_header_file(wcsfn, &sip)) {
-	logverb("Got SIP header.\n");
-    } else {
-        ERROR("Failed to parse SIP/TAN header from %s", wcsfn);
-        exit(-1);
-    }
 
 	if (!W || !H) {
 		W = sip.wcstan.imagew;
