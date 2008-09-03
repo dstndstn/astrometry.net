@@ -10,7 +10,7 @@ configfile = 'config.client'
 def initIce():
     global theice
     settings = Ice.InitializationData()
-    settings.properties = createProperties(None, settings.properties)
+    settings.properties = Ice.createProperties(None, settings.properties)
     settings.properties.load(configfile)
     theice = Ice.initialize(settings)
 def get_ice():
@@ -41,3 +41,11 @@ def solve(jobid, axy, logfunc):
 
     tardata = server.solve(jobid, axy, logproxy)
 
+
+
+
+if __name__ == '__main__':
+    def logfunc(msg):
+        print msg
+    solve('test-000000-abcdef', 'XXXXXXXXXX', logfunc)
+    
