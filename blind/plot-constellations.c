@@ -869,7 +869,7 @@ int main(int argc, char** args) {
     if (json) {
         FILE* fout = stderr;
         char* annstr = sl_implode(json, ",\n");
-        fprintf(fout, "{ \"solved\": true, \"annotations\": [\n%s\n]}\n", annstr);
+        fprintf(fout, "{ \"status\": \"solved\", \"annotations\": [\n%s\n]}\n", annstr);
         free(annstr);
     }
     sl_free2(json);
