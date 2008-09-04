@@ -20,14 +20,13 @@ IceSSL.Trace.Security=1
 
 Ice.Default.Locator=SolverIceGrid/Locator:tcp -h hydra.local -p 4061
 
-#Glacier2.SessionManager=SolverIceGrid/AdminSessionManager
-#Glacier2.SSLSessionManager=SolverIceGrid/AdminSSLSessionManager
-
 # The configures the session manager. If no external session manager
 # is used, sessions are only handled Glacier2 internally.
-#Glacier2.SessionManager=sessionmanager:tcp -h 127.0.0.1 -p 10001
+Glacier2.SessionManager=sessionmanager:tcp -h 127.0.0.1 -p 10001
 
-Glacier2.SessionManager=SolverIceGrid/SessionManager
+#Glacier2.SessionManager=SolverIceGrid/AdminSessionManager
+#Glacier2.SSLSessionManager=SolverIceGrid/AdminSSLSessionManager
+#Glacier2.SessionManager=SolverIceGrid/SessionManager
 #Glacier2.SSLSessionManager=SolverIceGrid/SSLSessionManager
 
 # Nope
