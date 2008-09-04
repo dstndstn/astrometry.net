@@ -1,0 +1,14 @@
+#
+# The IceGrid locator proxy.
+#
+Ice.Default.Locator=SolverIceGrid/Locator:default -p 4061 -h hydra.local
+
+# Logger
+Callback.Client.Endpoints=tcp
+
+Ice.ThreadPool.Server.SizeMax=10
+Ice.ThreadPool.Client.SizeMax=10
+
+#Ice.Trace.Network=2
+#Ice.Trace.Protocol=1
+#Ice.Trace.Locator=2

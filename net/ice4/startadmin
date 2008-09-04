@@ -1,0 +1,3 @@
+#! /bin/bash
+
+icegridadmin --Ice.Config=config.grid
