@@ -3,16 +3,22 @@
 import sys
 import time
 
+import Glacier2
 import Ice
 import IceGrid
+
+#print 'Glacier2 is', Glacier2
+#print 'Glacier2: ', Glacier2.__file__
+#print 'Glacier2: ', dir(Glacier2)
 
 import SolverIce
 
 from astrometry.util.file import *
+import astrometry.net.settings as settings
 
 theice = None
 # FIXME
-configfile = '/data1/dstn/dsolver/astrometry/net/ice/config.client'
+configfile = settings.BASEDIR + 'astrometry/net/ice/config.client'
 
 def initIce():
     global theice
@@ -20,6 +26,7 @@ def initIce():
     settings.properties = Ice.createProperties(None, settings.properties)
     settings.properties.load(configfile)
     theice = Ice.initialize(settings)
+
 def get_ice():
     if not theice:
         initIce()
@@ -50,6 +57,17 @@ class SolverResult(object):
 def solve(jobid, axy, logfunc):
     ice = get_ice()
 
+    router = theice.getDefaultRouter()
+    router = Glacier2.RouterPrx.checkedCast(router)
+    if not router:
+        print 'not a glacier2 router'
+        return -1
+    try:
+        session = router.createSession('test', 'test')
+    except Glacier2.PermissionDeniedException,ex:
+        print 'router session permission denied:', ex
+    category = router.getCategoryForClient()
+
     # IceGrid::Query findAllObjectsByType
     q = ice.stringToProxy('SolverIceGrid/Query')
     q = IceGrid.QueryPrx.checkedCast(q)
@@ -68,6 +86,7 @@ def solve(jobid, axy, logfunc):
     props = ice.getProperties()
     adapter = ice.createObjectAdapter('Callback.Client')
     myid = ice.stringToIdentity('callbackReceiver')
+    myid.category = category
     adapter.add(LoggerI(logfunc), myid)
     adapter.activate()
     logproxy = SolverIce.LoggerPrx.uncheckedCast(adapter.createProxy(myid))
