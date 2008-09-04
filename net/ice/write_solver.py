@@ -23,7 +23,8 @@ for scale in scales:
         <adapter name="OneSolver" endpoints="tcp"
          replica-group="RSolver-scale%i"/>
         <property name="Identity" value="Solver-scale%i"/>
-      </server>
+        <property name="Ice.ThreadPool.Server.SizeMax" value="10"/>
+        </server>
     </server-template>
 ''' % ((scale,)*5)
 

@@ -74,8 +74,10 @@ def solve(jobid, axy, logfunc):
 
     results = [SolverResult() for s in solvers]
 
-    for (s,r) in zip(solvers,results):
-        server.solve_async(r, jobid, axy, logproxy)
+    for (s,r) in zip(servers,results):
+        print 'Calling solve_async on ', s
+        s.solve_async(r, jobid, axy, logproxy)
+        print 'Called solve_async on ', s
 
     waiting = [r for r in results]
     tardata = None
@@ -112,5 +114,8 @@ if __name__ == '__main__':
 
     tardata = solve(jobid, axydata, logfunc)
 
-    print 'got %i bytes of tardata.' % len(tardata)
+    if tardata is None:
+        print 'got no tardata'
+    else:
+        print 'got %i bytes of tardata.' % len(tardata)
 

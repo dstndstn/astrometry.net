@@ -36,13 +36,7 @@ class SolverI(SolverIce.Solver):
     def solve(self, jobid, axy, logger, current=None):
         print self.name + ' got a solve request.'
         print 'jobid', jobid, 'axy has length', len(axy)
-        logger.logmessage('Hello logger.')
-
-        #time.sleep(1)
-        #logger.logmessage('Hello again.')
-        #time.sleep(1)
-
-        time.sleep(10)
+        logger.logmessage('Hello from %s' % self.name)
 
         hostname = socket.gethostname().split('.')[0]
         print 'I am host', hostname
@@ -62,7 +56,6 @@ class SolverI(SolverIce.Solver):
             fcntl.fcntl(p, fcntl.F_SETFL, os.O_NDELAY | os.O_NONBLOCK)
             f = os.fdopen(p)
             while not f.closed:
-                #(ready, nil1, nil2) = select.select([p], [], [], 1.)
                 try:
                     s = f.read()
                     print 'piping log messages:', s
@@ -77,12 +70,12 @@ class SolverI(SolverIce.Solver):
         thread.start_new_thread(pipe_log_messages, (rpipe, logger))
 
         backend = Backend.backend_new()
-        print 'backend is 0x%x' % backend
+        #print 'backend is 0x%x' % backend
         if Backend.backend_parse_config_file(backend, configfn):
             print 'Failed to initialize backend.'
             sys.exit(-1)
         job = Backend.backend_read_job_file(backend, axyfn)
-        print 'job is 0x%x' % job
+        #print 'job is 0x%x' % job
         if not job:
             print 'Failed to read job.'
             return

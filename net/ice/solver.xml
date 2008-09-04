@@ -14,7 +14,8 @@
         <adapter name="OneSolver" endpoints="tcp"
          replica-group="RSolver-scale10"/>
         <property name="Identity" value="Solver-scale10"/>
-      </server>
+        <property name="Ice.ThreadPool.Server.SizeMax" value="10"/>
+        </server>
     </server-template>
 
 
@@ -28,7 +29,8 @@
         <adapter name="OneSolver" endpoints="tcp"
          replica-group="RSolver-scale5"/>
         <property name="Identity" value="Solver-scale5"/>
-      </server>
+        <property name="Ice.ThreadPool.Server.SizeMax" value="10"/>
+        </server>
     </server-template>
 
 
@@ -42,7 +44,8 @@
         <adapter name="OneSolver" endpoints="tcp"
          replica-group="RSolver-scale4"/>
         <property name="Identity" value="Solver-scale4"/>
-      </server>
+        <property name="Ice.ThreadPool.Server.SizeMax" value="10"/>
+        </server>
     </server-template>
 
 
