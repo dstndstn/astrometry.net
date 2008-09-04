@@ -11,6 +11,8 @@ import os
 import os.path
 import thread
 import fcntl
+import tarfile
+from StringIO import StringIO
 
 import Ice
 
@@ -29,8 +31,9 @@ else:
 
 
 class SolverI(SolverIce.Solver):
-    def __init__(self, name):
+    def __init__(self, name, scale):
         self.name = name
+        self.scale = scale
         print 'SolverServer running: pid', os.getpid()
 
     def solve_ctypes(self, jobid, axy, logger, configfn, axyfn, mydir, current=None):
@@ -71,10 +74,6 @@ class SolverI(SolverIce.Solver):
         Backend.backend_run_job(backend, job)
         Backend.job_free(job)
 
-        tardata = 'Goodbye, all done here.'
-        return tardata
-
-
     def solve_subprocess(self, jobid, axy, logger, configfn, axyfn, mydir, current=None):
 
         def pipe_log_messages(f, logger):
@@ -82,24 +81,23 @@ class SolverI(SolverIce.Solver):
             while not f.closed:
                 try:
                     s = f.read()
-                    print 'piping log messages:', s
+                    #print 'piping log messages:', s
+                    print 'piping log messages (len %i)' % len(s)
                     logger.logmessage(s)
                 except IOError, e:
                     if e.errno != 11:
                         print 'io error:', e
                 except Exception, e:
                     print 'other error:', e
+                    break
                 time.sleep(1.)
 
+        cancelfn = '%s/%s.cancel' % (mydir, jobid)
         command = ('cd %s; /data1/dstn/dsolver/astrometry/blind/backend ' +
-                   '-v -c %s -d %s %s') % (mydir, configfn, mydir, axyfn)
+                   '-v -c %s -d %s -C %s %s') % (mydir, configfn, mydir, cancelfn, axyfn)
         (childin, childouterr) = os.popen4(command)
         childin.close()
-        #thread.start_new_thread(pipe_log_messages, (childouterr, logger))
         pipe_log_messages(childouterr, logger)
-
-        tardata = 'Goodbye, all done here.'
-        return tardata
 
     def solve(self, jobid, axy, logger, current=None):
         print self.name + ' got a solve request.'
@@ -107,15 +105,30 @@ class SolverI(SolverIce.Solver):
         logger.logmessage('Hello from %s' % self.name)
         hostname = socket.gethostname().split('.')[0]
         print 'I am host', hostname
-        configfn = '/data1/dstn/dsolver/backend-config/backend-%s.cfg' % hostname
+        configfn = '/data1/dstn/dsolver/backend-config/backend-scale%i.cfg' % self.scale
         print 'Reading config file', configfn
         mydir = tempfile.mkdtemp()
         print 'Working in temp directory', mydir
         axyfn = os.path.join(mydir, 'job.axy')
         write_file(axy, axyfn)
 
-        # return self.solve_ctypes(jobid, axy, logger, configfn, axyfn, mydir, current)
-        return self.solve_subprocess(jobid, axy, logger, configfn, axyfn, mydir, current)
+        # self.solve_ctypes(jobid, axy, logger, configfn, axyfn, mydir, current)
+        self.solve_subprocess(jobid, axy, logger, configfn, axyfn, mydir, current)
+
+        (sin,sout) = os.popen2('cd %s; tar c .' % (mydir))
+        sin.close()
+        tardata = sout.read()
+        sout.close()
+        return tardata
+    
+        #files = os.listdir(mydir)
+        #f = StringIO()
+        #tar = tarfile.open(name='', mode='w', fileobj=f)
+        #tar.close()
+        #tardata = f.getvalue()
+        #f.close()
+        #return tardata
+
 
     def shutdown(self, current=None):
         print self.name + " shutting down..."
@@ -132,7 +145,7 @@ class Server(Ice.Application):
         print 'myid is', myid
         progname = properties.getProperty("Ice.ProgramName")
         print 'programname is', progname
-        adapter.add(SolverI(progname), myid)
+        adapter.add(SolverI(progname, scale), myid)
         adapter.activate()
         ice.waitForShutdown()
         return 0

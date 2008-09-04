@@ -112,7 +112,7 @@ if __name__ == '__main__':
     print 'axyfile is %i bytes' % len(axydata)
 
     def logfunc(msg):
-        print msg
+        print msg,
 
     tardata = solve(jobid, axydata, logfunc)
 
