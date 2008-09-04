@@ -31,7 +31,7 @@ IceGrid.Registry.DynamicRegistration=1
 # IceGrid node configuration.
 #
 # This should be set on the command line.
-#IceGrid.Node.Name=localhost
+#IceGrid.Node.Name=
 IceGrid.Node.Endpoints=default
 IceGrid.Node.Data=db/node
 IceGrid.Node.CollocateRegistry=0

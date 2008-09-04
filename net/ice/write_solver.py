@@ -1,6 +1,23 @@
 #! /usr/bin/env python
 
-scales=[10,5,4]
+scales=[10,5,4,3,2]
+
+nodes = [
+    ('hydra', [10]),
+    ('neuron-0-0', [10, 5]),
+    ('neuron-0-1', [4]),
+    ('neuron-0-2', [3]),
+    ('neuron-0-3', [2]),
+    ('neuron-0-4', [10, 5]),
+    ('neuron-0-5', [4]),
+    ('neuron-0-6', [3]),
+    ('neuron-0-7', [2]),
+    ('neuron-0-8', [10, 5]),
+    ('neuron-0-9', [4]),
+    ('neuron-0-10', [3]),
+    ('neuron-0-11', [2]),
+    ]
+
 
 print '''
 <icegrid>
@@ -8,7 +25,9 @@ print '''
 
 '''
 
-# <server              activation="on-demand">
+# <server
+#              activation="on-demand">
+#              activation="always">
 
 
 for scale in scales:
@@ -35,17 +54,15 @@ for scale in scales:
       <object identity="Solver-scale%i" type="::SolverIce::Solver"/>
     </replica-group>
     ''' % ((scale,)*2)
-    
-print '''
-    <node name="hydra">
-'''
-for scale in scales:
-    print '''
-      <server-instance template="ServerTemplate-scale%i" index="hydra"/>
-      ''' % ((scale,)*1)
-print '''
-    </node>
 
+for (node, scales) in nodes:
+    print '<node name="%s">' % node
+    for scale in scales:
+        print ('  <server-instance template="ServerTemplate-scale%i" index="%s"/>'
+               % (scale, node))
+    print '</node>'
+
+print '''
   </application>
 
 </icegrid>
