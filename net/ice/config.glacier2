@@ -29,16 +29,8 @@ Glacier2.SessionManager=sessionmanager:tcp -h 127.0.0.1 -p 10001
 #Glacier2.SessionManager=SolverIceGrid/SessionManager
 #Glacier2.SSLSessionManager=SolverIceGrid/SSLSessionManager
 
-# Nope
-#Glacier2.Client.Endpoints=tcp -h 128.100.20.164 -p 4063
-#Glacier2.Client.Endpoints=tcp -h cluster24.ai.toronto.edu -p 4063
 
-# The client-visible endpoint of Glacier2. This should be an endpoint
-# visible from the public Internet, and it should be secure.
-Glacier2.Client.Endpoints=tcp -h hydra.dgp.toronto.edu -p 9998
-
-# The server-visible endpoint of Glacier2. This endpoint is only
-# required if callbacks are needed (leave empty otherwise).
+Glacier2.Client.Endpoints=tcp -h hydra.local -p 9998
 Glacier2.Server.Endpoints=tcp -h hydra.local -p 9999
 
 Glacier2.SessionTimeout=60

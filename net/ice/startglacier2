@@ -4,10 +4,10 @@
 cd /data1/dstn/dsolver/astrometry/net/ice
 
 killall glacier2router
-killall SessionServer.py
+#killall SessionServer.py
 
 ./SessionServer.py >> sessionserver.log 2>&1 &
-
+sleep 1
 glacier2router --Ice.Config=config.glacier2 >> glacier2.log 2>&1 &
 
 wait
