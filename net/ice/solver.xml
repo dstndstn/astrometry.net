@@ -1,27 +1,84 @@
+
 <icegrid>
   <application name="Solver">
-    <server-template id="Server">
+
+
+
+    <server-template id="ServerTemplate-scale10">
       <parameter name="index"/>
-      <server id="Server-${index}" exe="python" activation="on-demand">
+      <server id="Server-${index}-scale10"
+              exe="python"
+              activation="always">
         <option>SolverServer.py</option>
-        <adapter name="Solver" endpoints="tcp" replica-group="ReplicatedSolver"/>
-        <property name="Identity" value="Solver"/>
+        <option>10</option>
+        <adapter name="OneSolver" endpoints="tcp"
+         replica-group="RSolver-scale10"/>
+        <property name="Identity" value="Solver-scale10"/>
       </server>
     </server-template>
 
-    <replica-group id="ReplicatedSolver">
+
+    <server-template id="ServerTemplate-scale5">
+      <parameter name="index"/>
+      <server id="Server-${index}-scale5"
+              exe="python"
+              activation="always">
+        <option>SolverServer.py</option>
+        <option>5</option>
+        <adapter name="OneSolver" endpoints="tcp"
+         replica-group="RSolver-scale5"/>
+        <property name="Identity" value="Solver-scale5"/>
+      </server>
+    </server-template>
+
+
+    <server-template id="ServerTemplate-scale4">
+      <parameter name="index"/>
+      <server id="Server-${index}-scale4"
+              exe="python"
+              activation="always">
+        <option>SolverServer.py</option>
+        <option>4</option>
+        <adapter name="OneSolver" endpoints="tcp"
+         replica-group="RSolver-scale4"/>
+        <property name="Identity" value="Solver-scale4"/>
+      </server>
+    </server-template>
+
+
+    <replica-group id="RSolver-scale10">
       <load-balancing type="round-robin"/>
-<!--
-      <load-balancing type="adaptive" load-sample="5" n-replicas="2"/>
--->
-<!-- ::<module-name>::<class-name> -->
-      <object identity="Solver" type="::SolverIce::Solver"/>
+      <object identity="Solver-scale10" type="::SolverIce::Solver"/>
     </replica-group>
+    
+
+    <replica-group id="RSolver-scale5">
+      <load-balancing type="round-robin"/>
+      <object identity="Solver-scale5" type="::SolverIce::Solver"/>
+    </replica-group>
+    
+
+    <replica-group id="RSolver-scale4">
+      <load-balancing type="round-robin"/>
+      <object identity="Solver-scale4" type="::SolverIce::Solver"/>
+    </replica-group>
+    
 
     <node name="hydra">
-      <server-instance template="Server" index="hydra"/>
+
+
+      <server-instance template="ServerTemplate-scale10" index="hydra"/>
+      
+
+      <server-instance template="ServerTemplate-scale5" index="hydra"/>
+      
+
+      <server-instance template="ServerTemplate-scale4" index="hydra"/>
+      
+
     </node>
 
   </application>
 
 </icegrid>
+

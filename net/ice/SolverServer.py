@@ -68,7 +68,8 @@ class SolverI(SolverIce.Solver):
                     print 'piping log messages:', s
                     logger.logmessage(s)
                 except IOError, e:
-                    print 'caught io error:', e
+                    if e.errno != 11:
+                        print 'io error:', e
                 time.sleep(1.)
 
         (rpipe,wpipe) = os.pipe()
@@ -98,15 +99,19 @@ class SolverI(SolverIce.Solver):
         current.adapter.getCommunicator().shutdown()
 
 class Server(Ice.Application):
+    def __init__(self, scale):
+        self.scale = scale
     def run(self, args):
-        properties = self.communicator().getProperties()
-        adapter = self.communicator().createObjectAdapter("Solver")
-        myid = self.communicator().stringToIdentity(properties.getProperty("Identity"))
+        ice = self.communicator()
+        properties = ice.getProperties()
+        adapter = ice.createObjectAdapter("OneSolver")
+        myid = ice.stringToIdentity(properties.getProperty("Identity"))
         print 'myid is', myid
-        print 'programname is', properties.getProperty("Ice.ProgramName")
-        adapter.add(SolverI(properties.getProperty("Ice.ProgramName")), myid)
+        progname = properties.getProperty("Ice.ProgramName")
+        print 'programname is', progname
+        adapter.add(SolverI(progname), myid)
         adapter.activate()
-        self.communicator().waitForShutdown()
+        ice.waitForShutdown()
         return 0
 
 if __name__ == '__main__':
@@ -117,5 +122,8 @@ if __name__ == '__main__':
                 print msg,
         s.solve('fake-jobid', read_file('job.axy'), MyLogger())
         sys.exit(0)
-    app = Server()
+    print 'SolverServer.py args:', sys.argv
+    scale = int(sys.argv[1])
+    print 'scale %i' % scale
+    app = Server(scale)
     sys.exit(app.main(sys.argv, 'config.grid'))
