@@ -63,8 +63,10 @@ def solve(jobid, axy, logfunc):
         #server = SolverIce.SolverPrx.checkedCast(server)
         server = SolverIce.SolverPrx.checkedCast(s)
         servers.append(server)
-        
-    # FIXME -- may need to create one callback proxy per server.
+
+    # FIXME -- try making one logproxy per server.
+    #logproxies = []
+
     props = ice.getProperties()
     adapter = ice.createObjectAdapter('Callback.Client')
     myid = ice.stringToIdentity('callbackReceiver')
