@@ -19,7 +19,8 @@ interface Logger {
 };
 
 interface Solver {
-    ["ami"] string solve(string jobid, string axy, Logger* l);
+    ["ami"] string solve(string jobid, string axy, Logger* l,
+			out bool solved);
     void shutdown();
 };
 

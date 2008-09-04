@@ -267,7 +267,8 @@ class Watcher(object):
         log('Command finished.')
 
         # Record results in the job database.
-        if os.path.exists(job.get_filename('solved')):
+        #if os.path.exists(job.get_filename('solved')):
+        if os.path.exists(job.get_filename('wcs.fits')):
             job.set_status('Solved')
             # Add WCS to database.
             wcs = TanWCS(file=job.get_filename('wcs.fits'))

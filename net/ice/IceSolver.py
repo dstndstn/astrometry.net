@@ -11,7 +11,8 @@ import SolverIce
 from astrometry.util.file import *
 
 theice = None
-configfile = 'config.client'
+# FIXME
+configfile = '/data1/dstn/dsolver/astrometry/net/ice/config.client'
 
 def initIce():
     global theice
@@ -35,9 +36,11 @@ class SolverResult(object):
     def __init__(self):
         self.tardata = None
         self.failed = False
-    def ice_response(self, tardata):
-        print 'async response'
+        self.solved = False
+    def ice_response(self, tardata, solved):
+        print 'async response: ', (solved and 'solved' or 'did not solve')
         self.tardata = tardata
+        self.solved = solved
     def ice_exception(self, ex):
         print 'async exception:', ex
         self.failed = True
@@ -59,13 +62,8 @@ def solve(jobid, axy, logfunc):
     servers = []
     for s in solvers:
         print 'Resolving ', s
-        #server = ice.stringToProxy(s)
-        #server = SolverIce.SolverPrx.checkedCast(server)
         server = SolverIce.SolverPrx.checkedCast(s)
         servers.append(server)
-
-    # FIXME -- try making one logproxy per server.
-    #logproxies = []
 
     props = ice.getProperties()
     adapter = ice.createObjectAdapter('Callback.Client')
@@ -87,15 +85,16 @@ def solve(jobid, axy, logfunc):
         time.sleep(1)
         for r in waiting:
             if r.isdone():
-                if r.tardata is not None:
+                if r.tardata is not None and r.solved:
                     tardata = r.tardata
                     break
+        if tardata:
+            break
         waiting = [r for r in waiting if not r.isdone()]
 
-    if tardata is None:
-        print 'all servers failed.'
+    #if tardata is None:
+    #    print 'all servers failed.'
 
-    #tardata = server.solve(jobid, axy, logproxy)
     return tardata
 
 
@@ -120,4 +119,8 @@ if __name__ == '__main__':
         print 'got no tardata'
     else:
         print 'got %i bytes of tardata.' % len(tardata)
+        # extract tardata into this directory.
+        p = os.popen('tar x', 'w')
+        p.write(tardata)
+        p.close()
 

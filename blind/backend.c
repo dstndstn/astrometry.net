@@ -867,12 +867,18 @@ job_t* backend_read_job_file(backend_t* backend, const char* jobfn) {
 
     if (backend->cancelfn)
         blind_set_cancel_file(bp, backend->cancelfn);
+    if (backend->solvedfn)
+        blind_set_solved_file(bp, backend->solvedfn);
 
     return job;
 }
 
 void job_set_cancel_file(job_t* job, const char* fn) {
     blind_set_cancel_file(&(job->bp), fn);
+}
+
+void job_set_solved_file(job_t* job, const char* fn) {
+    blind_set_solved_file(&(job->bp), fn);
 }
 
 // Modify all filenames to be relative to "dir".

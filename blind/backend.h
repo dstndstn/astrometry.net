@@ -45,6 +45,7 @@ struct backend {
 	double maxwidth;
     float cpulimit;
     char* cancelfn;
+    char* solvedfn;
 };
 typedef struct backend backend_t;
 
@@ -67,6 +68,7 @@ int backend_parse_config_file(backend_t* backend, char* fn);
 job_t* backend_read_job_file(backend_t* backend, const char* jobfn);
 int job_set_base_dir(job_t* job, const char* dir);
 void job_set_cancel_file(job_t* job, const char* fn);
+void job_set_solved_file(job_t* job, const char* fn);
 int backend_run_job(backend_t* backend, job_t* job);
 void job_free(job_t* job);
 

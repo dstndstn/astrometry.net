@@ -36,7 +36,7 @@ class SolverI(SolverIce.Solver):
         self.scale = scale
         print 'SolverServer running: pid', os.getpid()
 
-    def solve_ctypes(self, jobid, axy, logger, configfn, axyfn, mydir, current=None):
+    def solve_ctypes(self, jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current=None):
         # BUG - should do this once, outside this func!
         Backend = _backend
         Backend.log_init(3)
@@ -74,27 +74,29 @@ class SolverI(SolverIce.Solver):
         Backend.backend_run_job(backend, job)
         Backend.job_free(job)
 
-    def solve_subprocess(self, jobid, axy, logger, configfn, axyfn, mydir, current=None):
+    def solve_subprocess(self, jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current=None):
 
         def pipe_log_messages(f, logger):
-            fcntl.fcntl(f.fileno(), fcntl.F_SETFL, os.O_NDELAY | os.O_NONBLOCK)
-            while not f.closed:
+            import select
+            fno = f.fileno()
+            while True:
+                time.sleep(1.)
                 try:
-                    s = f.read()
-                    #print 'piping log messages:', s
+                    (ready, nil1, nil2) = select.select([fno], [], [], 0.)
+                    if not len(ready):
+                        continue
+                    s = os.read(fno, 1000000)
+                    if len(s) == 0:
+                        # eof
+                        break
                     print 'piping log messages (len %i)' % len(s)
                     logger.logmessage(s)
-                except IOError, e:
-                    if e.errno != 11:
-                        print 'io error:', e
                 except Exception, e:
-                    print 'other error:', e
+                    print 'error:', e
                     break
-                time.sleep(1.)
 
-        cancelfn = '%s/%s.cancel' % (mydir, jobid)
         command = ('cd %s; /data1/dstn/dsolver/astrometry/blind/backend ' +
-                   '-v -c %s -d %s -C %s %s') % (mydir, configfn, mydir, cancelfn, axyfn)
+                   '-v -c %s -d %s -C %s -s %s %s') % (mydir, configfn, mydir, cancelfn, solvedfn, axyfn)
         (childin, childouterr) = os.popen4(command)
         childin.close()
         pipe_log_messages(childouterr, logger)
@@ -112,22 +114,24 @@ class SolverI(SolverIce.Solver):
         axyfn = os.path.join(mydir, 'job.axy')
         write_file(axy, axyfn)
 
-        # self.solve_ctypes(jobid, axy, logger, configfn, axyfn, mydir, current)
-        self.solve_subprocess(jobid, axy, logger, configfn, axyfn, mydir, current)
+        jid = jobid.replace('/', '-')
+        cancelfn = '/tmp/%s.cancel' % (jid)
+        solvedfn = '/tmp/%s.solved' % (jid)
+
+        # self.solve_ctypes(jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current)
+        self.solve_subprocess(jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current)
+
+        solved = os.path.exists(mydir + '/wcs.fits')
+        if solved:
+            # tell the other servers to stop...
+            #write_file('', cancelfn)
+            write_file('', solvedfn)
 
         (sin,sout) = os.popen2('cd %s; tar c .' % (mydir))
         sin.close()
         tardata = sout.read()
         sout.close()
-        return tardata
-    
-        #files = os.listdir(mydir)
-        #f = StringIO()
-        #tar = tarfile.open(name='', mode='w', fileobj=f)
-        #tar.close()
-        #tardata = f.getvalue()
-        #f.close()
-        #return tardata
+        return (tardata, solved)
 
 
     def shutdown(self, current=None):

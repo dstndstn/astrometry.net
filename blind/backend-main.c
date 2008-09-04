@@ -54,18 +54,22 @@ static struct option long_options[] =
 	    {"help",    no_argument,       0, 'h'},
         {"verbose", no_argument,       0, 'v'},
 	    {"config",  required_argument, 0, 'c'},
+	    {"base-dir",  required_argument, 0, 'd'},
 	    {"cancel",  required_argument, 0, 'C'},
+	    {"solved",  required_argument, 0, 's'},
         {"to-stderr", no_argument,     0, 'E'},
         {"inputs-from", required_argument, 0, 'f'},
 	    {0, 0, 0, 0}
     };
 
-static const char* OPTIONS = "hc:i:vC:Ef:";
+static const char* OPTIONS = "hc:i:vC:Ef:d:s:";
 
 static void print_help(const char* progname) {
 	printf("Usage:   %s [options] <augmented xylist>\n"
 	       "   [-c or --config <backend config file>]  (default: \"backend.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable)\n"
+	       "   [-d or --base-dir <directory>]: set base directory of all output filenames.\n"
            "   [-C or --cancel <cancel-filename>]: quit solving if the file <cancel-filename> appears.\n"
+	   "   [-s or --solved <solved-filename>]\n"
            "   [-v or --verbose]: verbose\n"
            "   [-E or --to-stderr]: send log messages to stderr\n"
            "   [-f or --inputs-from <filename>]: read input filenames from the given file, \"-\" for standard input (stdin)\n"
@@ -81,10 +85,12 @@ int main(int argc, char** args) {
 	int i;
 	backend_t* backend;
     char* mydir = NULL;
+    char* basedir = NULL;
     char* me;
     bool help = FALSE;
     sl* strings = sl_new(4);
     char* cancelfn = NULL;
+    char* solvedfn = NULL;
     int loglvl = LOG_MSG;
     bool tostderr = FALSE;
     bool verbose = FALSE;
@@ -98,6 +104,9 @@ int main(int argc, char** args) {
 		if (c == -1)
 			break;
 		switch (c) {
+		case 'd':
+		  basedir = optarg;
+		  break;
         case 'f':
             infn = optarg;
             fromstdin = streq(infn, "-");
@@ -112,6 +121,8 @@ int main(int argc, char** args) {
             loglvl++;
             verbose = TRUE;
             break;
+		case 's':
+		  solvedfn = optarg;
         case 'C':
             cancelfn = optarg;
             break;
@@ -211,6 +222,7 @@ int main(int argc, char** args) {
     }
 
     backend->cancelfn = cancelfn;
+    backend->solvedfn = solvedfn;
 
     i = optind;
     while (1) {
@@ -235,6 +247,11 @@ int main(int argc, char** args) {
             ERROR("Failed to read job file \"%s\"", jobfn);
             exit(-1);
         }
+
+	if (basedir) {
+	  logverb("Setting job's output base directory to %s\n", basedir);
+	  job_set_base_dir(job, basedir);
+	}
 
 		if (backend_run_job(backend, job))
 			logerr("Failed to run_job()\n");
