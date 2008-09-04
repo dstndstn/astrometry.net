@@ -7,10 +7,6 @@ import Glacier2
 import Ice
 import IceGrid
 
-#print 'Glacier2 is', Glacier2
-#print 'Glacier2: ', Glacier2.__file__
-#print 'Glacier2: ', dir(Glacier2)
-
 import SolverIce
 
 from astrometry.util.file import *

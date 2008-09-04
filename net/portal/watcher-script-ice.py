@@ -3,7 +3,8 @@
 from watcher_common import *
 from astrometry.net import settings
 
-from astrometry.net.ice import SolverClient
+#from astrometry.net.ice import IceSolver
+import IceSolver
 
 class WatcherIce(Watcher):
     def solve_job(self, job):
@@ -11,13 +12,12 @@ class WatcherIce(Watcher):
 
         def userlog(msg):
             f = open(blindlog, 'a')
-            f.write(' '.join(map(str, msg)) + '\n')
+            f.write(msg)
             f.close()
 
         axy = read_file(job.get_axy_filename())
 
-        client = SolverClient()
-        tardata = client.solve(job.jobid, axy, userlog)
+        tardata = IceSolver.solve(job.jobid, axy, userlog)
         return tardata
 
 if __name__ == '__main__':

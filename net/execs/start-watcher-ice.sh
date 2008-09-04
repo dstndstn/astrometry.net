@@ -9,7 +9,8 @@ rm queue
 
 umask 007
 
-export LD_LIBRARY_PATH=/home/gmaps/test/astrometry/util
+export LD_LIBRARY_PATH=/home/gmaps/test/astrometry/util:/home/dstn/software/ice-3.3.0/lib:/home/dstn/software/mcpp-2.7.1/lib
+export PYTHONPATH=${PYTHONPATH}:/home/gmaps/test/astrometry/net/ice
 
 /home/gmaps/test/astrometry/net/execs/watcher -D -n $Nthreads -c "$Cmd"
 

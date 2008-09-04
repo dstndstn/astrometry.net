@@ -63,20 +63,11 @@ void log_free(log_t* log) {
 	free(log);
 }
 
-// DEBUG
-#include "tic.h"
-
 static void loglvl(const log_t* logger, enum log_level level,
                    const char* format, va_list va) {
 	// FIXME: add pthread synchronization
 	if (level > logger->level)
 		return;
-	{
-	  static double t0 = 0.0;
-	  if (t0 == 0.0)
-	    t0 = timenow();
-	  fprintf(logger->f, "<%g> ", timenow() - t0);
-	}
 	vfprintf(logger->f, format, va);
 	fflush(logger->f);
 }
