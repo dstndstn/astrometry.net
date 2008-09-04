@@ -1,0 +1,9 @@
+#! /bin/bash
+
+# called via ssh from gmaps@oven.
+cd /data1/dstn/dsolver/astrometry/net/ice
+glacier2router --Ice.Config=config.glacier2 >> glacier2.log 2>&1 &
+
+wait
+
+
