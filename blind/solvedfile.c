@@ -205,6 +205,11 @@ int solvedfile_set(char* fn, int fieldnum) {
     // 1-index
     fieldnum--;
 
+#if defined(__APPLE__)
+    // MacOS 10.3 with gcc 3.3 doesn't have O_SYNC.
+    #define O_SYNC 0
+#endif
+
 	// (file mode 777; umask will modify this, if set).
 	f = open(fn, O_WRONLY | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG | S_IRWXO);
 	if (f == -1) {
