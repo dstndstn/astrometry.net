@@ -3,20 +3,17 @@
 from watcher_common import *
 from astrometry.net import settings
 
-#from astrometry.net.ice import IceSolver
 import IceSolver
 
 class WatcherIce(Watcher):
     def solve_job(self, job):
         blindlog = job.get_filename('blind.log')
-
         def userlog(msg):
             f = open(blindlog, 'a')
             f.write(msg)
             f.close()
 
         axy = read_file(job.get_axy_filename())
-
         tardata = IceSolver.solve(job.jobid, axy, userlog)
         return tardata
 

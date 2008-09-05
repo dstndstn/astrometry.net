@@ -252,22 +252,21 @@ class Watcher(object):
 
         tardata = self.solve_job(job)
 
-        # extract the resulting tarball...
-        f = StringIO(tardata)
-        tar = tarfile.open(name='', mode='r|', fileobj=f)
-        for tarinfo in tar:
-            log('  ', tarinfo.name, 'is', tarinfo.size, 'bytes in size')
-            tar.extract(tarinfo, job.get_job_dir())
-        tar.close()
-        f.close()
-        # chmod 664 *; chgrp www-data *
+        if tardata is not None:
+            # extract the resulting tarball...
+            f = StringIO(tardata)
+            tar = tarfile.open(name='', mode='r|', fileobj=f)
+            for tarinfo in tar:
+                log('  ', tarinfo.name, 'is', tarinfo.size, 'bytes in size')
+                tar.extract(tarinfo, job.get_job_dir())
+            tar.close()
+            f.close()
+            # chmod 664 *; chgrp www-data *
 
         job.set_finishtime_now()
         job.save()
-        log('Command finished.')
 
         # Record results in the job database.
-        #if os.path.exists(job.get_filename('solved')):
         if os.path.exists(job.get_filename('wcs.fits')):
             job.set_status('Solved')
             # Add WCS to database.
