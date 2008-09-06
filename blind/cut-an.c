@@ -575,6 +575,11 @@ int main(int argc, char** args) {
 		int i, N = 0;
 		an_catalog* ancat = NULL;
 		catalog* cat = NULL;
+        rdlist_t* rdls = NULL;
+        rd_t* rd = NULL;
+        float* mag_array = NULL;
+        float* magerr_array = NULL;
+        
 		int ndiscarded;
 		int nduplicates;
 		qfits_header* hdr;
@@ -622,6 +627,32 @@ int main(int argc, char** args) {
                       "starid table.  (Use -I to include it)", infn);
             }
 			N = cat->numstars;
+        } else if (valstr && strcasecmp(valstr, AN_FILETYPE_RDLS) == 0) {
+            logmsg("Looks like an RA,Dec list.\n");
+            rdls = rdlist_open(infn);
+            if (!rdls) {
+                ERROR("Couldn't open file \"%s\" as an RDlist.\n", infn);
+                exit(-1);
+            }
+            rd = rdlist_read_field(rdls, NULL);
+            if (!rd) {
+                ERROR("Failed to read a field from RDLS file \"%s\"\n", infn);
+                exit(-1);
+            }
+            mag_array = rdlist_read_tagalong_column(rdls, "MAG", fitscolumn_float_type());
+            if (domagerrs) {
+                magerr_array = rdlist_read_tagalong_column(rdls, "MAGERR", fitscolumn_float_type());
+                if (!magerr_array) {
+                    ERROR("Failed to read magnitude errors (column MAGERR) from \"%s\".\n", infn);
+                    exit(-1);
+                }
+            }
+            if (domotion || doid) {
+                ERROR("Unimplemented: motion and id flags for RDLS inputs.\n");
+                exit(-1);
+            }
+            N = rd_n(rd);
+
 		} else {
 			// "AN_CATALOG" gets truncated...
 			key = qfits_header_findmatch(hdr, "AN_CAT");
@@ -680,6 +711,14 @@ int main(int argc, char** args) {
                 sd.motion_dec       = an->motion_dec;
                 sd.sigma_motion_ra  = an->sigma_motion_ra;
                 sd.sigma_motion_dec = an->sigma_motion_dec;
+
+            } else if (rdls) {
+                sd.ra  = rd_getra (rd, i);
+                sd.dec = rd_getdec(rd, i);
+                sd.mag = mag_array[i];
+                if (magerr_array)
+                    sd.mag_err = magerr_array[i];
+
 			} else {
 				double* xyz;
 				xyz = catalog_get_star(cat, i);
@@ -764,7 +803,12 @@ int main(int argc, char** args) {
 
 		if (ancat)
 			an_catalog_close(ancat);
-		else
+        else if (rdls) {
+            rd_free(rd);
+            rdlist_close(rdls);
+            free(mag_array);
+            free(magerr_array);
+        } else
 			catalog_close(cat);
 			
 	}
