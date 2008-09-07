@@ -28,6 +28,19 @@ def get_ice():
         initIce()
     return theice
 
+def get_router_session(ice):
+    router = theice.getDefaultRouter()
+    router = Glacier2.RouterPrx.checkedCast(router)
+    if not router:
+        print 'not a glacier2 router'
+        return -1
+    session = None
+    try:
+        session = router.createSession('test', 'test')
+    except Glacier2.PermissionDeniedException,ex:
+        print 'router session permission denied:', ex
+    return (router, session)
+
 
 class LoggerI(SolverIce.Logger):
     def __init__(self, logfunc):
@@ -53,18 +66,9 @@ class SolverResult(object):
 def solve(jobid, axy, logfunc):
     ice = get_ice()
 
-    router = theice.getDefaultRouter()
-    router = Glacier2.RouterPrx.checkedCast(router)
-    if not router:
-        print 'not a glacier2 router'
-        return -1
-    try:
-        session = router.createSession('test', 'test')
-    except Glacier2.PermissionDeniedException,ex:
-        print 'router session permission denied:', ex
+    (router, session) = get_router_session(ice)
     category = router.getCategoryForClient()
 
-    # IceGrid::Query findAllObjectsByType
     q = ice.stringToProxy('SolverIceGrid/Query')
     q = IceGrid.QueryPrx.checkedCast(q)
     print 'q is', q
@@ -90,9 +94,7 @@ def solve(jobid, axy, logfunc):
     results = [SolverResult() for s in solvers]
 
     for (s,r) in zip(servers,results):
-        print 'Calling solve_async on ', s
         s.solve_async(r, jobid, axy, logproxy)
-        print 'Called solve_async on ', s
 
     waiting = [r for r in results]
     tardata = None
@@ -106,10 +108,6 @@ def solve(jobid, axy, logfunc):
         if tardata:
             break
         waiting = [r for r in waiting if not r.isdone()]
-
-    #if tardata is None:
-    #    print 'all servers failed.'
-
     return tardata
 
 

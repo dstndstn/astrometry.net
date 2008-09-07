@@ -1,6 +1,6 @@
 #! /bin/bash
 
-Nthreads=4
+Nthreads=20
 Log="/home/gmaps/test/portal.log"
 Cmd="/home/gmaps/test/astrometry/net/portal/watcher-script-ice.py %s 2>>$Log"
 

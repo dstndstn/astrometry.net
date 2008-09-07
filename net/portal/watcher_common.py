@@ -25,6 +25,7 @@ import urllib
 import urllib2
 import shutil
 import tarfile
+import re
 
 from urlparse import urlparse
 from urllib import urlencode
@@ -40,6 +41,7 @@ from astrometry.net.portal.convert import convert, is_tarball, FileConversionErr
 from astrometry.net.portal.wcs import TanWCS
 from astrometry.util.run_command import run_command
 from astrometry.util.file import *
+from astrometry.util.shell import *
 
 from astrometry.net.server import ssh_master
 
@@ -47,8 +49,21 @@ import astrometry.util.sip as sip
 
 blindlog = 'blind.log'
 
+def is_youtube_vid(url):
+    # http://www.youtube.com/watch?v=wyJYPIWF3-0
+    regex = re.compile(r'http://(www.)?youtube\.com/watch\?v=(.*)')
+    match = regex.match(url)
+    if match is None:
+        return False
+    log('YouTube regex matched: ', url, ' -- vid id', match.group(2))
+    return True
+
 class Watcher(object):
+    def __init__(self):
+        self.bailedout = False
+        
     def bailout(self, job, reason):
+        self.bailedout = True
         log('Bailing out:', reason)
         job.set_status('Failed', reason)
         job.save()
@@ -350,6 +365,60 @@ class Watcher(object):
             Job.submit_job_or_submission(job)
             submission.alljobsadded = True
             submission.save()
+
+    def download_url(self, submission, tmpfile):
+        self.userlog('Retrieving URL...')
+        log('Retrieving URL ' + submission.url + ' to file ' + tmpfile)
+
+        if is_youtube_vid(submission.url):
+            self.handle_youtube_vid(submission, tmpfile)
+            return None
+        
+        # download the URL to a new temp file.
+        try:
+            f = urlopen(submission.url)
+            fout = open(tmpfile, 'wb')
+            fout.write(f.read())
+            fout.close()
+            f.close()
+        except urllib2.HTTPError, e:
+            self.bailout(submission, 'Failed to retrieve URL: ' + str(e))
+            return False
+        log('URL info for %s:' % f.geturl())
+        for k,v in f.info().items():
+            log('  ',k,'=',v)
+        p = urlparse(submission.url)
+        p = p[2]
+        if p:
+            s = p.split('/')
+            basename = s[-1]
+
+    def handle_youtube_vid(self, submission, tmpfile):
+        self.userlog('Youtube video.')
+        cmd = 'youtube-dl -o %s \"%s\"' % (tmpfile, shell_escape_inside_quotes(submission.url))
+        log('running command: %s' % cmd)
+        (rtn, out, err) = run_command(cmd)
+        if rtn:
+            log('out: ' + out)
+            log('err: ' + err)
+            self.bailout(submission, 'Downloading youtube video failed: ' + err)
+            return None
+        # create temp dir to extract tarfile.
+        tempdir = tempfile.mkdtemp('', 'videoframes-')
+        log('writing frames to tempdir %s' % tempdir)
+        cmd = 'mplayer -vo pnm:outdir=%s %s' % (tempdir, tmpfile)
+        log('running command: %s' % cmd)
+        (rtn, out, err) = run_command(cmd)
+        if rtn:
+            log('out: ' + out)
+            log('err: ' + err)
+            self.bailout(submission, 'Extracting youtube video failed: ' + err)
+            return None
+        fns = os.listdir(tempdir)
+        # yoink
+        self.handle_tarball(tempdir, fns, submission)
+        shutil.rmtree(tempdir)
+        return None
     
     def run_link(self, joblink):
         if not os.path.islink(joblink):
@@ -378,28 +447,13 @@ class Watcher(object):
         basename = None
 
         if submission.datasrc == 'url':
-            # download the URL to a new temp file.
-            self.userlog('Retrieving URL...')
-            (fd, tmpfile) = tempfile.mkstemp('', 'download')
+            (fd, tmpfile) = tempfile.mkstemp('', 'download-')
             os.close(fd)
-            log('Retrieving URL ' + submission.url + ' to file ' + tmpfile)
-            try:
-                f = urlopen(submission.url)
-                fout = open(tmpfile, 'wb')
-                fout.write(f.read())
-                fout.close()
-                f.close()
-            except urllib2.HTTPError, e:
-                self.bailout(submission, 'Failed to retrieve URL: ' + str(e))
+            basename = self.download_url(submission, tmpfile)
+            if self.bailedout:
                 return False
-            log('URL info for %s:' % f.geturl())
-            for k,v in f.info().items():
-                log('  ',k,'=',v)
-            p = urlparse(submission.url)
-            p = p[2]
-            if p:
-                s = p.split('/')
-                basename = s[-1]
+            if basename is None:
+                return True
 
         elif submission.datasrc == 'file':
             tmpfile = submission.uploaded.get_filename()
