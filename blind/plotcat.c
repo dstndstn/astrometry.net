@@ -1,6 +1,6 @@
 /*
  This file is part of the Astrometry.net suite.
- Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+ Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -23,6 +23,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdint.h>
+#include <sys/param.h>
 
 #include "keywords.h"
 #include "starutil.h"
@@ -41,7 +42,7 @@
 #include "qfits.h"
 #include "log.h"
 
-#define OPTIONS "bhgN:f:tsSo:F"
+#define OPTIONS "bhgN:f:tsSo:Fm:"
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
@@ -49,6 +50,7 @@ static void printHelp(char* progname) {
 		   " <filename> [<filename> ...]"
            "  [-o <output-file.pgm>]  (default is to stdout)\n"
            "  [-F]: FITS image output\n"
+           "  [-m <maxval>]: scale all pixels so that 'maxval' is just saturated.\n"
 		   "  -h sets Hammer-Aitoff (default is an equal-area, positive-Z projection)\n"
 	       "  -S squishes Hammer-Aitoff projection to make an ellipse; height becomes N/2.\n"
 		   "  -b sets reverse (negative-Z projection)\n"
@@ -108,7 +110,6 @@ int main(int argc, char *argv[]) {
 	char* progname = argv[0];
 	int ii,jj,numstars=0;
 	int reverse=0, hammer=0, grid=0;
-	int maxval;
 	char* fname = NULL;
 	int argchar;
 	qfits_header* hdr = NULL;
@@ -126,6 +127,7 @@ int main(int argc, char *argv[]) {
 	int W = 3000, H;
 	unsigned char* img;
     double xyz[3];
+    int maxval = 0;
 
 	int fieldslow = -1;
 	int fieldshigh = -1;
@@ -147,6 +149,9 @@ int main(int argc, char *argv[]) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+        case 'm':
+          maxval = atoi(optarg);
+          break;
         case 'o':
             outfn = optarg;
             tostdout = FALSE;
@@ -441,11 +446,13 @@ int main(int argc, char *argv[]) {
     il_free(fields);
     logmsg("\n");
 
-    maxval = 0;
-    for (ii = 0; ii < (W*H); ii++)
+    if (!maxval) {
+      maxval = 0;
+      for (ii = 0; ii < (W*H); ii++)
         if (projection[ii] > maxval)
-            maxval = projection[ii];
-    logmsg("Maximum value is %i\n", maxval);
+          maxval = projection[ii];
+      logmsg("Maximum value is %i\n", maxval);
+    }
 
     if (grid) {
         /* Draw a line for ra=-160...+160 in 10 degree sections */
@@ -549,7 +556,7 @@ int main(int argc, char *argv[]) {
         if (imgmax == 255) {
             img = (unsigned char*)projection;
             for (ii=0; ii<(W*H); ii++)
-                img[ii] = (int)((double)imgmax * projection[ii] / (double)maxval);
+              img[ii] = MIN(255, (int)((double)imgmax * projection[ii] / (double)maxval));
             if (fwrite(img, 1, W*H, fout) != (W*H)) {
                 ERROR("Failed to write image: %s\n", strerror(errno));
                 exit(-1);
@@ -557,8 +564,8 @@ int main(int argc, char *argv[]) {
         } else {
             uint16_t* img = (uint16_t*)projection;
             for (ii=0; ii<(W*H); ii++) {
-                img[ii] = (int)((double)imgmax * projection[ii] / (double)maxval);
-                img[ii] = htons(img[ii]);
+              img[ii] = MIN(65535, (int)((double)imgmax * projection[ii] / (double)maxval));
+              img[ii] = htons(img[ii]);
             }
             if (fwrite(img, 2, W*H, fout) != (W*H)) {
                 ERROR("Failed to write image: %s\n", strerror(errno));

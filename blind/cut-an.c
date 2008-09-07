@@ -673,7 +673,7 @@ int main(int argc, char** args) {
 		}
         qfits_header_destroy(hdr);
 
-		if (!(ancat || cat)) {
+		if (!(ancat || cat || rdls)) {
 			fflush(stdout);
 			fprintf(stderr, "Couldn't open input file \"%s\".\n", infn);
 			exit(-1);
