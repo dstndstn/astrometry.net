@@ -392,6 +392,7 @@ class Watcher(object):
         if p:
             s = p.split('/')
             basename = s[-1]
+        return basename
 
     def handle_youtube_vid(self, submission, tmpfile):
         self.userlog('Youtube video.')
