@@ -58,8 +58,8 @@ void sip_get_radec_center_hms_string(const sip_t* wcs,
     int rah, ram, decd, decm;
     double ras, decs;
     sip_get_radec_center_hms(wcs, &rah, &ram, &ras, &decd, &decm, &decs);
-    sprintf(rastr, "%02i:%02i:%2.3g", rah, ram, ras);
-    sprintf(decstr, "%+02i:%02i:%2.3g", decd, decm, decs);
+    sprintf(rastr, "%02i:%02i:%02.3g", rah, ram, ras);
+    sprintf(decstr, "%+02i:%02i:%02.3g", decd, decm, decs);
 }
 
 void sip_get_field_size(const sip_t* wcs,
