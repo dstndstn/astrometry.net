@@ -64,6 +64,18 @@
  *
  */
 
+void simplexy2_set_defaults(simplexy_t* i) {
+    memset(i, 0, sizeof(simplexy_t));
+    i->dpsf      = SIMPLEXY_DEFAULT_DPSF;
+    i->plim      = SIMPLEXY_DEFAULT_PLIM;
+    i->dlim      = SIMPLEXY_DEFAULT_DLIM;
+    i->saddle    = SIMPLEXY_DEFAULT_SADDLE;
+    i->maxper    = SIMPLEXY_DEFAULT_MAXPER;
+    i->maxsize   = SIMPLEXY_DEFAULT_MAXSIZE;
+    i->halfbox   = SIMPLEXY_DEFAULT_HALFBOX;
+    i->maxnpeaks = SIMPLEXY_DEFAULT_MAXNPEAKS;
+}
+
 int simplexy2(simplexy_t* s) {
 	int i;
     int nx = s->nx;

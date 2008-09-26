@@ -20,6 +20,15 @@
 #ifndef SIMPLEXY2_H
 #define SIMPLEXY2_H
 
+#define SIMPLEXY_DEFAULT_DPSF        1.0
+#define SIMPLEXY_DEFAULT_PLIM        8.0
+#define SIMPLEXY_DEFAULT_DLIM        1.0
+#define SIMPLEXY_DEFAULT_SADDLE      5.0
+#define SIMPLEXY_DEFAULT_MAXPER     1000
+#define SIMPLEXY_DEFAULT_MAXSIZE    1000
+#define SIMPLEXY_DEFAULT_HALFBOX     100
+#define SIMPLEXY_DEFAULT_MAXNPEAKS 10000
+
 struct simplexy_t {
     /******
      Inputs
@@ -28,19 +37,19 @@ struct simplexy_t {
     unsigned char* image_u8;
     int nx;
     int ny;
-    /* gaussian psf width; 1 is usually fine */
+    /* gaussian psf width */
     float dpsf;
-    /* significance to keep; 8 is usually fine */
+    /* significance to keep */
     float plim;
-    /* closest two peaks can be; 1 is usually fine */
+    /* closest two peaks can be */
     float dlim;
-    /* saddle difference (in sig); 3 is usually fine */
+    /* saddle difference (in sig) */
     float saddle;
-    /* maximum number of peaks per object; 1000 */
+    /* maximum number of peaks per object */
     int maxper;
-    /* maximum number of peaks total; 100000 */
+    /* maximum number of peaks total */
     int maxnpeaks;
-    /* maximum size for extended objects: 150 */
+    /* maximum size for extended objects */
     int maxsize;
     /* size for sliding sky estimation box */
     int halfbox;
@@ -65,6 +74,8 @@ struct simplexy_t {
     float* smooth;
 };
 typedef struct simplexy_t simplexy_t;
+
+void simplexy2_set_defaults(simplexy_t* s);
 
 int simplexy2(simplexy_t* s);
 
