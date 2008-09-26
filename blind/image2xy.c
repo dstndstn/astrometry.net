@@ -34,6 +34,22 @@
 #include "errors.h"
 #include "log.h"
 
+void image2xy_set_defaults(image2xy_t* i) {
+    memset(i, 0, sizeof(image2xy_t));
+    i->dpsf      = IMAGE2XY_DEFAULT_DPSF;
+    i->plim      = IMAGE2XY_DEFAULT_PLIM;
+    i->dlim      = IMAGE2XY_DEFAULT_DLIM;
+    i->saddle    = IMAGE2XY_DEFAULT_SADDLE;
+    i->maxper    = IMAGE2XY_DEFAULT_MAXPER;
+    i->maxsize   = IMAGE2XY_DEFAULT_MAXSIZE;
+    i->halfbox   = IMAGE2XY_DEFAULT_HALFBOX;
+    i->maxnpeaks = IMAGE2XY_DEFAULT_MAXNPEAKS;
+}
+
+int image2xy_image2(image2xy_t* img);
+
+
+
 static float* upconvert(unsigned char* u8,
                         int nx, int ny) {
     int i;
