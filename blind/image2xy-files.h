@@ -23,6 +23,7 @@
 #include <stdint.h>
 
 #include "an-bool.h"
+#include "simplexy2.h"
 
 /**
  Reads an input FITS image (possibly multi-HDU), runs simplexy on each
@@ -31,5 +32,12 @@
 int image2xy_files(const char* infn, const char* outfn,
 				   bool do_u8, int downsample,
 				   int downsample_as_required);
+
+/*
+ int image2xy_files2(const char* infn, const char* outfn,
+ bool do_u8, int downsample,
+ int downsample_as_required,
+ simplexy_t* params);
+ */
 
 #endif

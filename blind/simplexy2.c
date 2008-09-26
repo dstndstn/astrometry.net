@@ -64,6 +64,13 @@
  *
  */
 
+void simplexy2_set_u8_defaults(simplexy_t* i) {
+    memset(i, 0, sizeof(simplexy_t));
+    simplexy2_set_defaults(i);
+    i->plim      = SIMPLEXY_U8_DEFAULT_PLIM;
+    i->saddle    = SIMPLEXY_U8_DEFAULT_SADDLE;
+}
+
 void simplexy2_set_defaults(simplexy_t* i) {
     memset(i, 0, sizeof(simplexy_t));
     i->dpsf      = SIMPLEXY_DEFAULT_DPSF;

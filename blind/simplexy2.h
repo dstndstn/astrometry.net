@@ -29,6 +29,9 @@
 #define SIMPLEXY_DEFAULT_HALFBOX     100
 #define SIMPLEXY_DEFAULT_MAXNPEAKS 10000
 
+#define SIMPLEXY_U8_DEFAULT_PLIM     4.0
+#define SIMPLEXY_U8_DEFAULT_SADDLE   2.0
+
 struct simplexy_t {
     /******
      Inputs
@@ -76,6 +79,9 @@ struct simplexy_t {
 typedef struct simplexy_t simplexy_t;
 
 void simplexy2_set_defaults(simplexy_t* s);
+
+// Really this is for limited-dynamic-range images, not u8...
+void simplexy2_set_u8_defaults(simplexy_t* i);
 
 int simplexy2(simplexy_t* s);
 

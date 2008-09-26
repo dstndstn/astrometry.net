@@ -66,12 +66,12 @@ int image2xy_files(const char* infn, const char* outfn,
 	fitsfile *ofptr = NULL;
 	int status = 0; // FIXME should have ostatus too
 	int naxis;
-	int maxnpeaks, npeaks;
+	int maxnpeaks=0, npeaks;
 	long naxisn[2];
 	int kk;
 	float sigma;
-	int nhdus,maxper,maxsize,halfbox,hdutype,nimgs;
-	float dpsf,plim,dlim,saddle;
+	int nhdus,maxper=0,maxsize=0,halfbox=0,hdutype,nimgs;
+	float dpsf=0,plim=0,dlim=0,saddle=0;
     char* str;
 
 	fits_open_file(&fptr, infn, READONLY, &status);
@@ -92,31 +92,6 @@ int image2xy_files(const char* infn, const char* outfn,
 	fits_write_key(ofptr, TSTRING, "SRCFN", (char*)infn, "Source image", &status);
 	/* Parameters for simplexy; save for debugging */
 	fits_write_comment(ofptr, "Parameters used for source extraction", &status);
-	/* gaussian psf width (pix) */
-	dpsf = IMAGE2XY_DEFAULT_DPSF;
-	/* significance to keep */
-	plim = IMAGE2XY_DEFAULT_PLIM;
-	/* closest two peaks can be */
-	dlim = IMAGE2XY_DEFAULT_DLIM;
-	/* saddle difference (in sig) */
-	saddle = IMAGE2XY_DEFAULT_SADDLE;
-	/* maximum number of peaks per object */
-	maxper = IMAGE2XY_DEFAULT_MAXPER;
-	/* maximum size for extended objects */
-	maxsize = IMAGE2XY_DEFAULT_MAXSIZE;
-	/* half-width for sliding sky median box */
-	halfbox = IMAGE2XY_DEFAULT_HALFBOX;
-	/* maximum number of peaks. */
-	maxnpeaks = IMAGE2XY_DEFAULT_MAXNPEAKS;
-
-	fits_write_key(ofptr, TFLOAT, "DPSF", &dpsf, "image2xy Assumed gaussian psf width", &status);
-	fits_write_key(ofptr, TFLOAT, "PLIM", &plim, "image2xy Significance to keep", &status);
-	fits_write_key(ofptr, TFLOAT, "DLIM", &dlim, "image2xy Closest two peaks can be", &status);
-	fits_write_key(ofptr, TFLOAT, "SADDLE", &saddle, "image2xy Saddle difference (in sig)", &status);
-	fits_write_key(ofptr, TINT, "MAXPER", &maxper, "image2xy Max num of peaks per object", &status);
-	fits_write_key(ofptr, TINT, "MAXPEAKS", &maxnpeaks, "image2xy Max num of peaks total", &status);
-	fits_write_key(ofptr, TINT, "MAXSIZE", &maxsize, "image2xy Max size for extended objects", &status);
-	fits_write_key(ofptr, TINT, "HALFBOX", &halfbox, "image2xy Half-size for sliding sky window", &status);
 
 	fits_write_history(ofptr, "Created by Astrometry.net's image2xy program.", &status);
     FITS_CHECK("Failed to write HISTORY headers");
@@ -203,7 +178,6 @@ int image2xy_files(const char* infn, const char* outfn,
 		free(fpixel);
         FITS_CHECK("Failed to read image pixels");
 
-
 		image2xy_image(theu8data, thedata, naxisn[0], naxisn[1],
 					   downsample, downsample_as_required,
 					   dpsf, plim, dlim, saddle, maxper, maxsize, halfbox,
@@ -256,6 +230,16 @@ int image2xy_files(const char* infn, const char* outfn,
 		fits_write_key(ofptr, TFLOAT, "ESTSIGMA", &sigma,
 				"Estimated source image variance", &status);
         FITS_CHECK("Failed to write ESTSIGMA");
+
+        fits_write_key(ofptr, TFLOAT, "DPSF", &dpsf, "image2xy Assumed gaussian psf width", &status);
+        fits_write_key(ofptr, TFLOAT, "PLIM", &plim, "image2xy Significance to keep", &status);
+        fits_write_key(ofptr, TFLOAT, "DLIM", &dlim, "image2xy Closest two peaks can be", &status);
+        fits_write_key(ofptr, TFLOAT, "SADDLE", &saddle, "image2xy Saddle difference (in sig)", &status);
+        fits_write_key(ofptr, TINT, "MAXPER", &maxper, "image2xy Max num of peaks per object", &status);
+        fits_write_key(ofptr, TINT, "MAXPEAKS", &maxnpeaks, "image2xy Max num of peaks total", &status);
+        fits_write_key(ofptr, TINT, "MAXSIZE", &maxsize, "image2xy Max size for extended objects", &status);
+        fits_write_key(ofptr, TINT, "HALFBOX", &halfbox, "image2xy Half-size for sliding sky window", &status);
+
 
 		fits_write_comment(ofptr,
 			"The X and Y points are specified assuming 1,1 is "

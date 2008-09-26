@@ -82,15 +82,10 @@ static void rebin(float** thedata,
     //*thedata = realloc(*thedata, (*newW) * (*newH) * sizeof(float));
 }
 
-int image2xy_image(uint8_t* u8image, float* fimage,
-				   int W, int H,
-				   int downsample, int downsample_as_required,
-				   double dpsf, double plim, double dlim, double saddle,
-				   int maxper, int maxsize, int halfbox, int maxnpeaks,
-				   float** x, float** y, float** flux, float** background,
-				   int* npeaks, float* sigma) {
+int image2xy_image2(simplexy_t* s,
+                    int downsample,
+                    int downsample_as_required) {
 	int fullW=-1, fullH=-1;
-	simplexy_t s;
 	int newW, newH;
 	bool did_downsample = FALSE;
 	bool free_fimage = FALSE;
@@ -98,81 +93,41 @@ int image2xy_image(uint8_t* u8image, float* fimage,
 	int S = downsample ? downsample : 1;
 	int jj;
     bool tryagain;
+    int rtn = -1;
 
-	if (dpsf == 0)
-		dpsf = IMAGE2XY_DEFAULT_DPSF;
-	if (plim == 0)
-		plim = IMAGE2XY_DEFAULT_PLIM;
-	if (dlim == 0)
-		dlim = IMAGE2XY_DEFAULT_DLIM;
-	if (saddle == 0)
-		saddle = IMAGE2XY_DEFAULT_SADDLE;
-	if (maxper == 0)
-		maxper = IMAGE2XY_DEFAULT_MAXPER;
-	if (maxsize == 0)
-		maxsize = IMAGE2XY_DEFAULT_MAXSIZE;
-	if (halfbox == 0)
-		halfbox = IMAGE2XY_DEFAULT_HALFBOX;
-	if (maxnpeaks == 0)
-		maxnpeaks = IMAGE2XY_DEFAULT_MAXNPEAKS;
-
-	fullW = W;
-	fullH = H;
+	fullW = s->nx;
+	fullH = s->ny;
 	if (downsample) {
 		logmsg("Downsampling by %i...\n", S);
-        if (!fimage) {
-            fimage = upconvert(u8image, W, H);
+        if (!s->image) {
+            s->image = upconvert(s->image_u8, s->nx, s->ny);
             free_fimage = TRUE;
         }
-		if (!fimage)
+		if (!s->image)
 			goto bailout;
-		rebin(&fimage, W, H, S, &newW, &newH);
-		W = newW;
-		H = newH;
+		rebin(&s->image, s->nx, s->ny, S, &newW, &newH);
+		s->nx = newW;
+		s->ny = newH;
 		did_downsample = TRUE;
 	}
 
 	do {
-		memset(&s, 0, sizeof(simplexy_t));
-		s.image = fimage;
-		s.image_u8 = u8image;
-		s.nx = W;
-		s.ny = H;
-
-		s.dpsf = dpsf;
-		s.plim = plim;
-		s.dlim = dlim;
-		s.saddle = saddle;
-		s.maxper = maxper;
-		s.maxnpeaks = maxnpeaks;
-		s.maxsize = maxsize;
-		s.halfbox = halfbox;
-        
-		simplexy2(&s);
-
-		*x = s.x;
-		*y = s.y;
-		*flux = s.flux;
-		*background = s.background;
-		*npeaks = s.npeaks;
-		*sigma = s.sigma;
+		simplexy2(s);
 
 		tryagain = FALSE;
-		if (s.npeaks == 0 &&
+		if (s->npeaks == 0 &&
 			downsample_as_required) {
 			logmsg("Downsampling by 2...\n");
-			if (u8image) {
-				fimage = upconvert(u8image, W, H);
-				if (!fimage)
+			if (s->image_u8) {
+				s->image = upconvert(s->image_u8, s->nx, s->ny);
+				if (!s->image)
 					goto bailout;
 				free_fimage = TRUE;
-				u8image = NULL;
-				s.image = fimage;
-				s.image_u8 = u8image;
+				s->image_u8 = NULL;
 			}
-			rebin(&fimage, W, H, 2, &newW, &newH);
-			W = newW;
-			H = newH;
+			rebin(&s->image, s->nx, s->ny, 2, &newW, &newH);
+			s->nx = newW;
+			s->ny = newH;
 			S *= 2;
 			tryagain = TRUE;
 			downsample_as_required--;
@@ -180,24 +135,71 @@ int image2xy_image(uint8_t* u8image, float* fimage,
 		}
 	} while (tryagain);
 
-	for (jj=0; jj<s.npeaks; jj++) {
-		assert(isfinite((*x)[jj]));
-		assert(isfinite((*y)[jj]));
+	for (jj=0; jj<s->npeaks; jj++) {
+		assert(isfinite((s->x)[jj]));
+		assert(isfinite((s->y)[jj]));
 		// if S=1, this just shifts the origin to (1,1); the FITS
 		// standard says the center of the lower-left pixel is (1,1).
-		(*x)[jj] = ((*x)[jj] + 0.5) * (double)S + 0.5;
-		(*y)[jj] = ((*y)[jj] + 0.5) * (double)S + 0.5;
+		(s->x)[jj] = ((s->x)[jj] + 0.5) * (double)S + 0.5;
+		(s->y)[jj] = ((s->y)[jj] + 0.5) * (double)S + 0.5;
 	}
 
-	if (free_fimage)
-		free(fimage);
-
 	dselip_cleanup();
-
-	return 0;
+    rtn = 0;
  bailout:
-	if (free_fimage)
-		free(fimage);
-	return -1;
+	if (free_fimage) {
+		free(s->image);
+        s->image = NULL;
+    }
+	return rtn;
+}
+
+int image2xy_image(uint8_t* u8image, float* fimage,
+				   int W, int H,
+				   int downsample, int downsample_as_required,
+				   double dpsf, double plim, double dlim, double saddle,
+				   int maxper, int maxsize, int halfbox, int maxnpeaks,
+				   float** x, float** y, float** flux, float** background,
+				   int* npeaks, float* sigma) {
+    simplexy_t s;
+    int rtn;
+
+    if (u8image)
+        simplexy2_set_u8_defaults(&s);
+    else
+        simplexy2_set_defaults(&s);
+
+    if (dpsf)
+        s.dpsf = dpsf;
+    if (plim)
+        s.plim = plim;
+    if (dlim)
+        s.dlim = dlim;
+    if (saddle)
+        s.saddle = saddle;
+    if (maxper)
+        s.maxper = maxper;
+    if (maxsize)
+        s.maxsize = maxsize;
+    if (halfbox)
+        s.halfbox = halfbox;
+    if (maxnpeaks)
+        s.maxnpeaks = maxnpeaks;
+
+    s.image = fimage;
+    s.image_u8 = u8image;
+    s.nx = W;
+    s.ny = H;
+
+    rtn = image2xy_image2(&s, downsample, downsample_as_required);
+
+    *x = s.x;
+    *y = s.y;
+    *flux = s.flux;
+    *background = s.background;
+    *npeaks = s.npeaks;
+    *sigma = s.sigma;
+
+    return rtn;
 }
 

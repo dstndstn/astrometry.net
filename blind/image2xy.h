@@ -23,6 +23,7 @@
 #include <stdint.h>
 
 #include "an-bool.h"
+#include "simplexy2.h"
 
 #define IMAGE2XY_DEFAULT_DPSF        1.0
 #define IMAGE2XY_DEFAULT_PLIM        8.0
@@ -42,5 +43,8 @@ int image2xy_image(uint8_t* u8image, float* fimage,
 				   int maxper, int maxsize, int halfbox, int maxnpeaks,
 				   float** x, float** y, float** flux, float** background,
 				   int* npeaks, float* sigma);
+
+int image2xy_image2(simplexy_t* s,
+                    int downsample, int downsample_as_required);
 
 #endif
