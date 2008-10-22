@@ -98,6 +98,8 @@ struct cairos_t {
     cairo_t* bg;
     cairo_t* shapes;
     cairo_t* shapesmask;
+    int imgW;
+    int imgH;
 };
 typedef struct cairos_t cairos_t;
 
@@ -118,6 +120,24 @@ static void add_text(cairos_t* cairos,
     r += margin + 1;
     b += margin + 1;
 
+    // move text away from the edges of the image.
+    if (l < 0) {
+        px += -l;
+        l = 0;
+    }
+    if (t < 0) {
+        py += -t;
+        t = 0;
+    }
+    if (r > cairos->imgW) {
+        px -= (r - cairos->imgW);
+        r = cairos->imgW;
+    }
+    if (b > cairos->imgH) {
+        py -= (b - cairos->imgH);
+        b = cairos->imgH;
+    }
+        
     // draw black text behind the white text, on the foreground layer.
     cairo_save(cairos->fg);
     cairo_set_source_rgba(cairos->fg, 0, 0, 0, 1);
@@ -434,6 +454,8 @@ int main(int argc, char** args) {
         cairos->fg = cairo;
         cairos->shapes = cairoshapes;
         cairos->shapesmask = cairoshapesmask;
+        cairos->imgW = (float)W/scale;
+        cairos->imgH = (float)H/scale;
     }
 
     if (grid) {
