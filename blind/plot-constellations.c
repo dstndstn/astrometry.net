@@ -50,7 +50,7 @@
 #include "log.h"
 #include "svn.h"
 
-const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:J";
+const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:JF:";
 
 void print_help(char* progname) {
   boilerplate_help_header(stdout);
@@ -63,6 +63,7 @@ void print_help(char* progname) {
 	 "   OR [-W <width> -H <height>] )\n"
 	 "   [-s <scale>]: scale image coordinates by this value before plotting.\n"
 	 "   [-N]: plot NGC objects\n"
+	 "   [-F <fraction>]: minimum NGC size, relative to image size (default 0.02)\n"
 	 "   [-C]: plot constellations\n"
 	 "   [-B]: plot named bright stars\n"
 	 "   [-D]: plot HD objects\n"
@@ -183,6 +184,8 @@ int main(int argc, char** args) {
   // circle linewidth.
   double cw = 2.0;
 
+  double ngc_fraction = 0.02;
+
   // NGC linewidth
   double nw = 2.0;
 
@@ -217,6 +220,9 @@ int main(int argc, char** args) {
 
   while ((c = getopt(argc, args, OPTIONS)) != -1) {
     switch (c) {
+    case 'F':
+      ngc_fraction = atof(optarg);
+      break;
     case 'h':
       print_help(args[0]);
       exit(0);
@@ -743,7 +749,7 @@ int main(int argc, char** args) {
 
       if (!ngc)
 	break;
-      if (ngc->size < imsize * 0.02)
+      if (ngc->size < imsize * ngc_fraction)
 	continue;
 
       if (ngcic_accurate_get_radec(ngc->is_ngc, ngc->id, &ara, &adec) == 0) {
