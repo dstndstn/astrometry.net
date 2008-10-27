@@ -27,3 +27,14 @@ int main() {
 }
 #endif
 
+#ifdef TEST_QSORT_R
+static int cmp(void* u, const void* a, const void* b) {
+    return 0;
+}
+int main() {
+    int array;
+    qsort_r(&array, 1, sizeof(int), NULL, cmp);
+    printf("#define NEED_QSORT_R 0\n");
+    return 0;
+}
+#endif

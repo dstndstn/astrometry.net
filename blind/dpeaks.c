@@ -23,7 +23,7 @@
 #include <math.h>
 
 #include "dimage.h"
-#include "qsort_reentrant.h"
+#include "gnu-specific.h" // for qsort_r
 #include "simplexy-common.h"
 
 /*

@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include "permutedsort.h"
-#include "qsort_reentrant.h"
+#include "gnu-specific.h" // for qsort_r
 
 void permutation_init(int* perm, int Nperm) {
 	int i;

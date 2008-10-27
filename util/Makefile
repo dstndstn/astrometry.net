@@ -71,7 +71,7 @@ all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS)
 ANUTILS_DEPS :=
 
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix.o permutedsort.o \
-	qsort_reentrant.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
+	ioutils.o sip.o sip-utils.o md5.o constellations.o \
 	gnu-specific.o an-endian.o errors.o an-opts.o svn.o tic.o log.o \
 	gslutils.o
 ifndef NO_QFITS
@@ -159,10 +159,14 @@ install: $(PYTHON_LIBS)
 	done
 
 gnu-specific-config.h: gnu-specific-test.c
-	(($(CC) -o gnu-specific-test-canonicalize \
+	((($(CC) -o gnu-specific-test-canonicalize \
 		$(CFLAGS) -DTEST_CANONICALIZE_FILE_NAME $(LDFLAGS) $^ && \
 	  ./gnu-specific-test-canonicalize) > /dev/null \
-	|| echo "#define NEED_CANONICALIZE_FILE_NAME 1") > $@
+	|| echo "#define NEED_CANONICALIZE_FILE_NAME 1"); \
+	 (($(CC) -o gnu-specific-test-qsort \
+		$(CFLAGS) -DTEST_QSORT_R $(LDFLAGS) $^ && \
+	  ./gnu-specific-test-qsort) > /dev/null \
+	|| echo "#define NEED_QSORT_R 1")) > $@
 
 ALL_OBJ += gnu-specific.o
 ALL_TARGETS := gnu-specific-test.o gnu-specific-test-canonicalize \
