@@ -898,7 +898,7 @@ int main(int argc, char** argv) {
 	quads->hpnside = hpnside;
 	codes->hpnside = hpnside;
 
-    if (Nside % hpnside) {
+    if (hpnside && Nside % hpnside) {
         fprintf(stderr, "Error: Nside (-n) must be a multiple of the star kdtree healpixelisation: %i\n", hpnside);
         exit(-1);
     }
