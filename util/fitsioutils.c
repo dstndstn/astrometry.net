@@ -981,7 +981,7 @@ int fits_find_table_column(const char* fn, const char* colname, int* pstart, int
 		if (pext) *pext = i;
 		return 0;
     }
-	logverb("searched %i extensions in file %s but didn't find a table with a column \"%s\".\n",
+	debug("searched %i extensions in file %s but didn't find a table with a column \"%s\".\n",
 		nextens, fn, colname);
     return -1;
 }
@@ -990,7 +990,7 @@ int fits_find_column(const qfits_table* table, const char* colname) {
 	int c;
 	for (c=0; c<table->nc; c++) {
 		qfits_col* col = table->col + c;
-		logverb("column: \"%s\"\n", col->tlabel);
+		debug("column: \"%s\"\n", col->tlabel);
 		if (strcasecmp(col->tlabel, colname) == 0)
 			return c;
 	}

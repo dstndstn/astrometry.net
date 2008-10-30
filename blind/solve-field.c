@@ -753,7 +753,7 @@ int main(int argc, char** args) {
             } else
                 asprintf(&axy->solvedinfn, dir, axy->solvedfn);
         }
-        if (axy->solvedinfn && (strcmp(axy->solvedfn, axy->solvedinfn) == 0)) {
+        if (axy->solvedinfn && axy->solvedfn && (strcmp(axy->solvedfn, axy->solvedinfn) == 0)) {
             // solved input and output files are the same: don't delete the input!
             sl_remove_string(outfiles, axy->solvedfn);
             free(axy->solvedfn);
@@ -1009,7 +1009,7 @@ int main(int argc, char** args) {
     nextfile:        
 		free(base);
         free(axy->fitsimgfn);
-        free(axy->solvedinfn);
+        //free(axy->solvedinfn);
 		for (i=0; i<sl_size(tempfiles); i++) {
 			char* fn = sl_get(tempfiles, i);
 			if (unlink(fn))
