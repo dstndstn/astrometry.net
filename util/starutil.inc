@@ -18,6 +18,10 @@
 
 #include <math.h>
 
+InlineDefine int dimquad2dimcode(int dimquad) {
+    return 2 * (dimquad - 2);
+}
+
 InlineDefine double rad2deg(double x) {
     return x * 180.0/M_PI;
 }

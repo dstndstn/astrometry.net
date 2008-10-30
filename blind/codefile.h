@@ -26,6 +26,15 @@
 #include "qfits.h"
 #include "fitsbin.h"
 
+
+// util:
+void codefile_compute_star_code(double* starxyz, double* code, int dimquads);
+
+void codefile_compute_field_code(double* xy, double* code, int dimquads);
+
+
+
+
 struct codefile {
 	int numcodes;
 	int numstars;

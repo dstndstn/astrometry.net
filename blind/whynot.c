@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 #include "kdtree.h"
 #include "starutil.h"
@@ -45,6 +46,8 @@
 #include "sip_qfits.h"
 #include "log.h"
 #include "fitsioutils.h"
+#include "blind_wcs.h"
+#include "codefile.h"
 
 const char* OPTIONS = "hx:w:i:v";
 
@@ -175,22 +178,43 @@ int main(int argc, char** args) {
 		int j;
 		qidxfile* qidx;
 		il* uniqquadlist;
-		il* quadlist;
-		il* fullquadlist;
+
+        // index stars that are inside the image.
 		il* starlist;
+
+        // quads that are at least partly-contained in the image.
+		il* quadlist;
+
+        // quads that are fully-contained in the image.
+		il* fullquadlist;
+
+        // index stars that are in partly-contained quads.
 		il* starsinquadslist;
+
+        // index stars that are in fully-contained quads.
 		il* starsinquadsfull;
-		dl* starxylist;
+
+        // index stars that are in quads and have correspondences.
 		il* corrstars;
+        // the corresponding field stars
+        il* corrfield;
+
+        // quads that are fully in the image and built from stars with correspondences.
+		il* corrfullquads;
+
+
+		dl* starxylist;
 		il* corrquads;
 		il* corruniqquads;
-		il* corrfullquads;
         starxy_t* xy;
+
+        // (x,y) positions of field stars.
 		double* fieldxy;
+
 		int Nfield;
 		kdtree_t* ftree;
 		int Nleaf = 5;
-        int dimquads;
+        int dimquads, dimcodes;
 
 		indx = pl_get(indexes, i);
 		qidx = pl_get(qidxes, i);
@@ -254,6 +278,7 @@ int main(int argc, char** args) {
 		fprintf(stderr, "Found %i quads fully contained in the field.\n", il_size(fullquadlist));
 
         dimquads = quadfile_dimquads(indx->quads);
+        dimcodes = dimquad2dimcode(dimquads);
 
 		// Find the stars that are in quads.
 		starsinquadslist = il_new(16);
@@ -290,13 +315,20 @@ int main(int argc, char** args) {
         starxy_free(xy);
 
 		// Build a tree out of the field objects (in pixel space)
-		ftree = kdtree_build(NULL, fieldxy, Nfield, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
+        // NOTE that fieldxy is permuted in this process!
+        {
+            double* fxycopy = malloc(Nfield * 2 * sizeof(double));
+            memcpy(fxycopy, fieldxy, Nfield * 2 * sizeof(double));
+            //ftree = kdtree_build(NULL, fieldxy, Nfield, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
+            ftree = kdtree_build(NULL, fxycopy, Nfield, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
+        }
 		if (!ftree) {
 			fprintf(stderr, "Failed to build kdtree.\n");
 			exit(-1);
 		}
 		// For each index object involved in quads, search for a correspondence.
 		corrstars = il_new(16);
+        corrfield = il_new(16);
 		for (j=0; j<il_size(starsinquadslist); j++) {
 			int star;
 			double sxyz[3];
@@ -318,7 +350,19 @@ int main(int argc, char** args) {
 			if (fres->nres > 1) {
 				fprintf(stderr, "%i matches for star %i.\n", fres->nres, star);
 			}
+
 			il_append(corrstars, star);
+            il_append(corrfield, fres->inds[0]); //kdtree_permute(ftree, fres->inds[0]));
+
+            {
+                double fx, fy;
+                int fi;
+                fi = il_get(corrfield, il_size(corrfield)-1);
+                fx = fieldxy[2*fi + 0];
+                fy = fieldxy[2*fi + 1];
+                fprintf(stderr, "star   %g,%g\n", sxy[0], sxy[1]);
+                fprintf(stderr, "field  %g,%g\n", fx, fy);
+            }
 		}
 		fprintf(stderr, "Found %i correspondences for stars involved in quads (partially contained).\n",
 				il_size(corrstars));
@@ -333,14 +377,11 @@ int main(int argc, char** args) {
 				fprintf(stderr, "Failed to get quads for star %i.\n", starnum);
 				exit(-1);
 			}
-			//fprintf(stderr, "star %i is involved in %i quads.\n", starnum, nquads);
 			for (k=0; k<nquads; k++) {
 				il_insert_ascending(corrquads, quads[k]);
 				il_insert_unique_ascending(corruniqquads, quads[k]);
 			}
 		}
-		// This number doesn't mean anything :)
-		//fprintf(stderr, "Found %i quads built from stars with correspondences.\n", il_size(corruniqquads));
 
 		// Find quads that are fully contained in the image.
 		corrfullquads = il_new(16);
@@ -360,16 +401,76 @@ int main(int argc, char** args) {
 			int k;
 			int ind;
 			double px,py;
+            double starxyz[3 * dimquads];
+            double starxy[2 * dimquads];
+
+            double realcode[dimcodes];
+            double starcode[dimcodes];
+            double fieldcode[dimcodes];
+
 			int quad = il_get(corrfullquads, j);
 			quadfile_get_stars(indx->quads, quad, stars);
+
+			fprintf(stderr, "  quad #%i: quad id %i.  stars", j, quad);
+			for (k=0; k<dimquads; k++)
+			  fprintf(stderr, " %i", stars[k]);
+			fprintf(stderr, "\n");
+
+            codetree_get(indx->codekd, quad, realcode);
+
+            for (k=0; k<dimquads; k++) {
+                int find;
+                // position of corresponding field star.
+                ind = il_index_of(corrstars, stars[k]);
+                assert(ind >= 0);
+                find = il_get(corrfield, ind);
+                starxy[k*2 + 0] = fieldxy[find*2 + 0];
+                starxy[k*2 + 1] = fieldxy[find*2 + 1];
+                // index star xyz.
+                startree_get(indx->starkd, stars[k], starxyz + 3*k);
+
+                {
+                    double sx, sy;
+                    sip_xyzarr2pixelxy(&sip, starxyz + 3*k, &sx, &sy);
+                    fprintf(stderr, "star  %g,%g\n", sx, sy);
+                    fprintf(stderr, "field %g,%g\n", starxy[k*2+0], starxy[k*2+1]);
+                }
+            }
+
+            codefile_compute_field_code(starxy, fieldcode, dimquads);
+            codefile_compute_star_code (starxyz, starcode, dimquads);
+
+            fprintf(stderr, "real code:");
+            for (k=0; k<dimcodes; k++)
+                fprintf(stderr, " %g", realcode[k]);
+            fprintf(stderr, "\n");
+
+            fprintf(stderr, "star code:");
+            for (k=0; k<dimcodes; k++)
+                fprintf(stderr, " %g", starcode[k]);
+            fprintf(stderr, "\n");
+
+            fprintf(stderr, "field code:");
+            for (k=0; k<dimcodes; k++)
+                fprintf(stderr, " %g", fieldcode[k]);
+            fprintf(stderr, "\n");
+
+
+            fprintf(stderr, "code distances: %g, %g\n",
+                    sqrt(distsq(realcode, starcode, dimcodes)),
+                    sqrt(distsq(realcode, fieldcode, dimcodes)));
+
+
 			// Gah! map...
-			for (k=0; k<dimquads; k++) {
-				ind = il_index_of(starlist, stars[k]);
-				px = dl_get(starxylist, ind*2+0);
-				py = dl_get(starxylist, ind*2+1);
-				printf("%g %g ", px, py);
-			}
-			printf("\n");
+            /*
+              for (k=0; k<dimquads; k++) {
+              ind = il_index_of(starlist, stars[k]);
+              px = dl_get(starxylist, ind*2+0);
+              py = dl_get(starxylist, ind*2+1);
+              printf("%g %g ", px, py);
+              }
+              printf("\n");
+            */
 		}
 
 		il_free(fullquadlist);

@@ -26,6 +26,82 @@
 #include "fitsioutils.h"
 #include "errors.h"
 
+void codefile_compute_field_code(double* xy, double* code, int dimquads) {
+	double Ax, Ay;
+	double Bx, By;
+	double ABx, ABy;
+	double scale, invscale;
+	double costheta, sintheta;
+    int i;
+
+    Ax = xy[2*0 + 0];
+    Ay = xy[2*0 + 1];
+    Bx = xy[2*1 + 0];
+    By = xy[2*1 + 1];
+	ABx = Bx - Ax;
+	ABy = By - Ay;
+	scale = (ABx * ABx) + (ABy * ABy);
+	invscale = 1.0 / scale;
+	costheta = (ABy + ABx) * invscale;
+	sintheta = (ABy - ABx) * invscale;
+
+	for (i=2; i<dimquads; i++) {
+        double Cx, Cy;
+        double x, y;
+        Cx = xy[2*i + 0];
+        Cy = xy[2*i + 1];
+		Cx -= Ax;
+		Cy -= Ay;
+		x =  Cx * costheta + Cy * sintheta;
+		y = -Cx * sintheta + Cy * costheta;
+		code[2*(i-2)+0] = x;
+		code[2*(i-2)+1] = y;
+    }
+}
+
+void codefile_compute_star_code(double* starxyz, double* code, int dimquads) {
+	double Ax, Ay;
+	double Bx, By;
+	double ABx, ABy;
+	double scale, invscale;
+	double costheta, sintheta;
+	double midAB[3];
+	bool ok;
+	int i;
+	double *sA, *sB;
+
+	sA = starxyz;
+	sB = starxyz + 3;
+	star_midpoint(midAB, sA, sB);
+	ok = star_coords(sA, midAB, &Ax, &Ay);
+	assert(ok);
+	ok = star_coords(sB, midAB, &Bx, &By);
+	assert(ok);
+	ABx = Bx - Ax;
+	ABy = By - Ay;
+	scale = (ABx * ABx) + (ABy * ABy);
+	invscale = 1.0 / scale;
+	costheta = (ABy + ABx) * invscale;
+	sintheta = (ABy - ABx) * invscale;
+
+	for (i=2; i<dimquads; i++) {
+        double* starpos;
+        double Dx, Dy;
+        double ADx, ADy;
+        double x, y;
+		starpos = starxyz + 3*i;
+		ok = star_coords(starpos, midAB, &Dx, &Dy);
+		assert(ok);
+		ADx = Dx - Ax;
+		ADy = Dy - Ay;
+		x =  ADx * costheta + ADy * sintheta;
+		y = -ADx * sintheta + ADy * costheta;
+		code[2*(i-2)+0] = x;
+		code[2*(i-2)+1] = y;
+	}
+}
+
+
 #define CHUNK_CODES 0
 
 static fitsbin_chunk_t* codes_chunk(codefile* cf) {

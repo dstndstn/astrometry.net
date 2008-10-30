@@ -31,6 +31,8 @@
 // upper bound of dimcodes value
 #define DCMAX 6
 
+InlineDeclare int dimquad2dimcode(int dimquad);
+
 typedef unsigned char uchar;
 
 InlineDeclare double rad2deg(double x);

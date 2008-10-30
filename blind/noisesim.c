@@ -135,7 +135,7 @@ int main(int argc, char** args) {
         fprintf(stderr, "Invalid dimquads: must be in [3, %i]\n", DQMAX);
         exit(-1);
     }
-    dimcodes = 2 * (dimquads - 2);
+	dimcodes = dimquad2dimcode(dimquads);
 
     realA = realxyz;
     realB = realxyz + 3;

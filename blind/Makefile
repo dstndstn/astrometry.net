@@ -442,7 +442,7 @@ blind: blind-main.o blind.o solver.o codekd.o matchfile.o \
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^
 	mv $@.tmp $@
 
-whynot: whynot.o index.o codekd.o matchfile.o \
+whynot: whynot.o index.o codekd.o matchfile.o codefile.o \
 		solvedclient.o solvedfile.o \
 		verify.o intmap.o blind_wcs.o \
 		$(UTIL_OBJS) \

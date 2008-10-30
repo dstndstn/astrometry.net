@@ -154,23 +154,8 @@ static bool add_quad(quad* q) {
 }
 
 static void compute_code(quad* q, double* code, int dimquads) {
+    int i;
 	double starxyz[3 * DQMAX];
-	double Bx, By;
-	double scale, invscale;
-	double ABx, ABy;
-	double* starpos;
-	double Dx, Dy;
-	double ADx, ADy;
-	double x, y;
-	double midAB[3];
-	double Ax, Ay;
-	double costheta, sintheta;
-	bool ok;
-	int i;
-	double *sA, *sB;
-
-	sA = starxyz;
-	sB = starxyz + 3;
 
 	for (i=0; i<dimquads; i++) {
 		if (startree_get(starkd, q->star[i], starxyz + 3*i)) {
@@ -179,29 +164,7 @@ static void compute_code(quad* q, double* code, int dimquads) {
 		}
 	}
 
-	star_midpoint(midAB, sA, sB);
-	ok = star_coords(sA, midAB, &Ax, &Ay);
-	assert(ok);
-	ok = star_coords(sB, midAB, &Bx, &By);
-	assert(ok);
-	ABx = Bx - Ax;
-	ABy = By - Ay;
-	scale = (ABx * ABx) + (ABy * ABy);
-	invscale = 1.0 / scale;
-	costheta = (ABy + ABx) * invscale;
-	sintheta = (ABy - ABx) * invscale;
-
-	for (i=2; i<dimquads; i++) {
-		starpos = starxyz + 3*i;
-		ok = star_coords(starpos, midAB, &Dx, &Dy);
-		assert(ok);
-		ADx = Dx - Ax;
-		ADy = Dy - Ay;
-		x =  ADx * costheta + ADy * sintheta;
-		y = -ADx * sintheta + ADy * costheta;
-		code[2*(i-2)+0] = x;
-		code[2*(i-2)+1] = y;
-	}
+    codefile_compute_star_code(starxyz, code, dimquads);
 }
 
 static Inline void drop_quad(quad* q, int dimquads) {
@@ -835,7 +798,7 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "Quad dimension %i exceeds compiled-in max %i.\n", dimquads, DQMAX);
 		exit(-1);
 	}
-	dimcodes = 2 * (dimquads - 2);
+	dimcodes = dimquad2dimcode(dimquads);
 
 	if (failedrdlsfn) {
 		failedrdls = rdlist_open_for_writing(failedrdlsfn);
