@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -90,8 +90,10 @@ qidxfile* qidxfile_open(const char* fn) {
 	if (!qf)
 		goto bailout;
 
-    if (fitsbin_read(qf->fb))
-        goto bailout;
+	if (fitsbin_read(qf->fb)) {
+	  ERROR("Failed to find qidx table.\n");
+	  goto bailout;
+	}
 
 	qf->index = fitsbin_get_chunk(qf->fb, CHUNK_QIDX)->data;
 	qf->heap  = qf->index + 2 * qf->numstars;
@@ -106,15 +108,18 @@ qidxfile* qidxfile_open(const char* fn) {
 int qidxfile_close(qidxfile* qf) {
     int rtn;
 	if (!qf) return 0;
+	if (fitsbin_get_fid(qf->fb))
+	  fits_pad_file(fitsbin_get_fid(qf->fb));
 	rtn = fitsbin_close(qf->fb);
 	free(qf);
     return rtn;
 }
 
+
+
 qidxfile* qidxfile_open_for_writing(const char* fn, int nstars, int nquads) {
 	qidxfile* qf;
 	qfits_header* hdr;
-
 	qf = new_qidxfile(fn, TRUE);
 	if (!qf)
 		goto bailout;

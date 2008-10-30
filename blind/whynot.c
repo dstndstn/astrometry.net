@@ -44,6 +44,7 @@
 #include "sip.h"
 #include "sip_qfits.h"
 #include "log.h"
+#include "fitsioutils.h"
 
 const char* OPTIONS = "hx:w:i:v";
 
@@ -79,6 +80,8 @@ int main(int argc, char** args) {
 	double pixr2 = 1.0;
 
     int loglvl = LOG_MSG;
+
+	fits_use_error_system();
 
 	indexnames = sl_new(8);
 

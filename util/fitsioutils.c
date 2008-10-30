@@ -31,6 +31,8 @@
 #include "an-endian.h"
 #include "errors.h"
 #include "qfits_error.h"
+#include "log.h"
+#include "errors.h"
 
 static void errfunc(char* errstr) {
     report_error("qfits", -1, "%s", errstr);
@@ -964,7 +966,7 @@ int fits_find_table_column(const char* fn, const char* colname, int* pstart, int
         int c;
         table = qfits_table_open(fn, i);
 		if (!table) {
-			//fprintf(stderr, "Couldn't read FITS table from file %s, extension %i.\n", fn, i);
+			ERROR("Couldn't read FITS table from file %s, extension %i.\n", fn, i);
 			continue;
 		}
 		c = fits_find_column(table, colname);
@@ -973,12 +975,14 @@ int fits_find_table_column(const char* fn, const char* colname, int* pstart, int
 			continue;
 		}
 		if (qfits_get_datinfo(fn, i, pstart, psize) == -1) {
-			fprintf(stderr, "error getting start/size for ext %i.\n", i);
+			ERROR("error getting start/size for ext %i in file %s.\n", i, fn);
             return -1;
         }
 		if (pext) *pext = i;
 		return 0;
     }
+	logverb("searched %i extensions in file %s but didn't find a table with a column \"%s\".\n",
+		nextens, fn, colname);
     return -1;
 }
 
@@ -986,6 +990,7 @@ int fits_find_column(const qfits_table* table, const char* colname) {
 	int c;
 	for (c=0; c<table->nc; c++) {
 		qfits_col* col = table->col + c;
+		logverb("column: \"%s\"\n", col->tlabel);
 		if (strcasecmp(col->tlabel, colname) == 0)
 			return c;
 	}
