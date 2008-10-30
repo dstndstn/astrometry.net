@@ -34,6 +34,25 @@ struct verify_field_t {
 };
 typedef struct verify_field_t verify_field_t;
 
+/*
+  Uses the following entries in the "mo" struct:
+  -wcs_valid
+  -wcstan
+  -center
+  -radius
+  -field[]
+  -star[]
+
+  Sets the following:
+  -nfield
+  -noverlap
+  -nconflict
+  -nindex
+  -(matchobj_compute_derived() values)
+  -logodds
+  -corr_field
+  -corr_index
+ */
 void verify_hit(startree_t* skdt,
                 MatchObj* mo,
                 sip_t* sip, // if non-NULL, verify this SIP WCS.

@@ -48,6 +48,7 @@
 #include "fitsioutils.h"
 #include "blind_wcs.h"
 #include "codefile.h"
+#include "solver.h"
 
 const char* OPTIONS = "hx:w:i:v";
 
@@ -312,7 +313,7 @@ int main(int argc, char** args) {
         }
         Nfield = starxy_n(xy);
         fieldxy = starxy_to_flat_array(xy, NULL);
-        starxy_free(xy);
+        //starxy_free(xy);
 
 		// Build a tree out of the field objects (in pixel space)
         // NOTE that fieldxy is permuted in this process!
@@ -354,15 +355,15 @@ int main(int argc, char** args) {
 			il_append(corrstars, star);
             il_append(corrfield, fres->inds[0]); //kdtree_permute(ftree, fres->inds[0]));
 
-            {
-                double fx, fy;
-                int fi;
-                fi = il_get(corrfield, il_size(corrfield)-1);
-                fx = fieldxy[2*fi + 0];
-                fy = fieldxy[2*fi + 1];
-                fprintf(stderr, "star   %g,%g\n", sxy[0], sxy[1]);
-                fprintf(stderr, "field  %g,%g\n", fx, fy);
-            }
+            /*{
+              double fx, fy;
+              int fi;
+              fi = il_get(corrfield, il_size(corrfield)-1);
+              fx = fieldxy[2*fi + 0];
+              fy = fieldxy[2*fi + 1];
+              fprintf(stderr, "star   %g,%g\n", sxy[0], sxy[1]);
+              fprintf(stderr, "field  %g,%g\n", fx, fy);
+              }*/
 		}
 		fprintf(stderr, "Found %i correspondences for stars involved in quads (partially contained).\n",
 				il_size(corrstars));
@@ -400,21 +401,30 @@ int main(int argc, char** args) {
 			unsigned int stars[dimquads];
 			int k;
 			int ind;
-			double px,py;
+			//double px,py;
             double starxyz[3 * dimquads];
             double starxy[2 * dimquads];
 
             double realcode[dimcodes];
-            double starcode[dimcodes];
+            //double starcode[dimcodes];
             double fieldcode[dimcodes];
 
+            tan_t wcs;
+
+            MatchObj mo;
+
 			int quad = il_get(corrfullquads, j);
+
+            memset(&mo, 0, sizeof(MatchObj));
+
 			quadfile_get_stars(indx->quads, quad, stars);
 
-			fprintf(stderr, "  quad #%i: quad id %i.  stars", j, quad);
-			for (k=0; k<dimquads; k++)
+			/*
+              fprintf(stderr, "quad #%i: quad id %i.  stars", j, quad);
+              for (k=0; k<dimquads; k++)
 			  fprintf(stderr, " %i", stars[k]);
-			fprintf(stderr, "\n");
+              fprintf(stderr, "\n");
+            */
 
             codetree_get(indx->codekd, quad, realcode);
 
@@ -429,36 +439,74 @@ int main(int argc, char** args) {
                 // index star xyz.
                 startree_get(indx->starkd, stars[k], starxyz + 3*k);
 
-                {
-                    double sx, sy;
-                    sip_xyzarr2pixelxy(&sip, starxyz + 3*k, &sx, &sy);
-                    fprintf(stderr, "star  %g,%g\n", sx, sy);
-                    fprintf(stderr, "field %g,%g\n", starxy[k*2+0], starxy[k*2+1]);
-                }
+                mo.star[k] = stars[k];
+                mo.field[k] = find;
+                /*
+                  {
+                  double sx, sy;
+                  sip_xyzarr2pixelxy(&sip, starxyz + 3*k, &sx, &sy);
+                  fprintf(stderr, "star  %g,%g\n", sx, sy);
+                  fprintf(stderr, "field %g,%g\n", starxy[k*2+0], starxy[k*2+1]);
+                  }
+                */
             }
 
+			fprintf(stderr, "quad #%i: stars\n", j);
+            for (k=0; k<dimquads; k++)
+                fprintf(stderr, " %i", mo.field[k]);
+            fprintf(stderr, "\n");
+
+
             codefile_compute_field_code(starxy, fieldcode, dimquads);
-            codefile_compute_star_code (starxyz, starcode, dimquads);
+            //codefile_compute_star_code (starxyz, starcode, dimquads);
 
-            fprintf(stderr, "real code:");
-            for (k=0; k<dimcodes; k++)
-                fprintf(stderr, " %g", realcode[k]);
-            fprintf(stderr, "\n");
-
-            fprintf(stderr, "star code:");
-            for (k=0; k<dimcodes; k++)
-                fprintf(stderr, " %g", starcode[k]);
-            fprintf(stderr, "\n");
-
-            fprintf(stderr, "field code:");
-            for (k=0; k<dimcodes; k++)
-                fprintf(stderr, " %g", fieldcode[k]);
-            fprintf(stderr, "\n");
-
-
-            fprintf(stderr, "code distances: %g, %g\n",
-                    sqrt(distsq(realcode, starcode, dimcodes)),
+            /*
+              fprintf(stderr, "real code:");
+              for (k=0; k<dimcodes; k++)
+              fprintf(stderr, " %g", realcode[k]);
+              fprintf(stderr, "\n");
+              fprintf(stderr, "star code:");
+              for (k=0; k<dimcodes; k++)
+              fprintf(stderr, " %g", starcode[k]);
+              fprintf(stderr, "\n");
+              fprintf(stderr, "field code:");
+              for (k=0; k<dimcodes; k++)
+              fprintf(stderr, " %g", fieldcode[k]);
+              fprintf(stderr, "\n");
+              fprintf(stderr, "code distances: %g, %g\n",
+              sqrt(distsq(realcode, starcode, dimcodes)),
+              sqrt(distsq(realcode, fieldcode, dimcodes)));
+            */
+            fprintf(stderr, "  code distance: %g\n",
                     sqrt(distsq(realcode, fieldcode, dimcodes)));
+
+            blind_wcs_compute(starxyz, starxy, dimquads, &wcs, NULL);
+
+            {
+                double llxyz[3];
+                verify_field_t* vf;
+                double verpix2 = DEFAULT_VERIFY_PIX;
+
+                mo.dimquads = dimquads;
+
+                sip_pixelxy2xyzarr(&sip, sip.wcstan.imagew, sip.wcstan.imageh, mo.center);
+                sip_pixelxy2xyzarr(&sip, 0, 0, llxyz);
+                mo.radius = sqrt(distsq(mo.center, llxyz, 3));
+
+                memcpy(&mo.wcstan, &wcs, sizeof(tan_t));
+                mo.wcs_valid = TRUE;
+
+                vf = verify_field_preprocess(xy);
+
+                verify_hit(indx->starkd, &mo, NULL, vf, verpix2,
+                           DEFAULT_DISTRACTOR_RATIO, sip.wcstan.imagew, sip.wcstan.imageh,
+                           log(-1e100), TRUE, dimquads, FALSE);
+
+                verify_field_free(vf);
+            }
+
+
+            fprintf(stderr, "Verify odds: %g\n", exp(mo.logodds));
 
 
 			// Gah! map...
