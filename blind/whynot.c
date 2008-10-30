@@ -43,8 +43,9 @@
 #include "boilerplate.h"
 #include "sip.h"
 #include "sip_qfits.h"
+#include "log.h"
 
-const char* OPTIONS = "hx:w:i:"; // r:
+const char* OPTIONS = "hx:w:i:v";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -52,6 +53,7 @@ void print_help(char* progname) {
 		   "   -w <WCS input file>\n"
 		   "   -x <xyls input file>\n"
 		   "   -i <index-name>\n"
+           "   -v: verbose\n"
 		   "\n", progname);
 }
 
@@ -76,6 +78,8 @@ int main(int argc, char** args) {
 
 	double pixr2 = 1.0;
 
+    int loglvl = LOG_MSG;
+
 	indexnames = sl_new(8);
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
@@ -92,6 +96,9 @@ int main(int argc, char** args) {
 		case 'w':
 			wcsfn = optarg;
 			break;
+        case 'v':
+            loglvl++;
+            break;
 		}
 	}
 	if (optind != argc) {
@@ -102,6 +109,7 @@ int main(int argc, char** args) {
 		print_help(args[0]);
 		exit(-1);
 	}
+    log_init(loglvl);
 
 	// read WCS.
 	fprintf(stderr, "Trying to parse SIP header from %s...\n", wcsfn);
