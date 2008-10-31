@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -35,11 +35,11 @@
 #include "fitsioutils.h"
 #include "boilerplate.h"
 
-#define OPTIONS "hf:F"
+#define OPTIONS "hFi:o:"
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
-	printf("\nUsage: %s -f <filename-template>\n"
+	printf("\nUsage: %s -i <quad input> -o <qidx output>\n"
 		   "\n", progname);
 }
 
@@ -68,10 +68,12 @@ int main(int argc, char *argv[]) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
-		case 'f':
-            asprintf(&idxfname, "%s.qidx.fits", optarg);
-            asprintf(&quadfname, "%s.quad.fits", optarg);
-			break;
+        case 'i':
+            quadfname = optarg;
+            break;
+        case 'o':
+            idxfname = optarg;
+            break;
 		case '?':
 			fprintf(stderr, "Unknown option `-%c'.\n", optopt);
 		case 'h':
@@ -193,8 +195,6 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Failed to close qidx file.\n");
 		exit(-1);
 	}
-	free(idxfname);
-	free(quadfname);
 
 	fprintf(stderr, "  done.\n");
 	return 0;
