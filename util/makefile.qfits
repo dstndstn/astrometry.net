@@ -28,7 +28,7 @@ QFITS_CFLAGS += -fPIC
 QFITS_LDFLAGS += -fPIC
 
 QFITS_CONFIGURE_FLAGS := --enable-memory-mode=0 --enable-shared=no \
-	--prefix=`pwd`/stage \
+	--prefix="`pwd`/stage" \
 	CFLAGS="$(QFITS_CFLAGS)" \
 	LDFLAGS="$(QFITS_LDFLAGS)"
 
