@@ -202,7 +202,7 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     kdtree_t *kd1, *kd2;
     int dims[2];
     PyArrayObject* inds;
-    PyArrayObject* dists;
+    PyArrayObject* dist2s;
     int *pinds;
     double *pdist2s;
     double rad;
