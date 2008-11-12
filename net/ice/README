@@ -1,15 +1,12 @@
 This directory contains an Ice setup like this:
 
--the web service calls ssh_master.py, which talks to
--hydra:dsolver/astrometry/net/server/ice-shard-hydra.sh
--this creates and cd's to our job dir, extracts the job.axy file, and calls:
-   -dsolver/astrometry/net/ice/IceSolver.py <jobid> <job.axy>
--ice-shard-hydra.sh, finally, tars up all the files in the dir and sends them back over the pipe.
+-the web service calls IceSolver.py, which sends requests to multiple Ice servers.
 
--IceSolver.py is a client to several SolverServer instances (with different index scales)
-
--startreg  runs on hydra, on the 10.x.x.x network
--startnode runs on each server node.
-
-
+-starttunnel, run from oven, set up ssh port-forwarding to the glacier2 router running on hydra.
+-starttunnel also starts the SessionServer on hydra.
+-startreg must be running on hydra.
+-servers are listed in write_solver.py
+-servers can be launched with startallnodes
+-the "daemon" program runs on each hydra neuron to keep icegridnode running
+-showendpoints lists active servers.
 
