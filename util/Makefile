@@ -118,7 +118,7 @@ SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
 _sip.so: sip-utils.o sip.o starutil.o mathutil.o sip_qfits.o \
 		fitsioutils.o ioutils.o bl.o gnu-specific.o an-endian.o \
-		errors.o $(QFITS_LIB)
+		errors.o log.o $(QFITS_LIB)
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
 _healpix.so: healpix.o starutil.o mathutil.o errors.o bl.o

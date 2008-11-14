@@ -257,6 +257,22 @@ class Sip(ctypes.Structure):
 				ctypes.pointer(fpy))
 		return fpx.value, fpy.value
 
+	def radec_bounds(self, stepsize=50):
+		ramin = ctypes.c_double(0)
+		ramax = ctypes.c_double(0)
+		decmin = ctypes.c_double(0)
+		decmax = ctypes.c_double(0)
+		step = ctypes.c_int(stepsize)
+		_sip.sip_get_radec_bounds(
+			ctypes.pointer(self),
+			step,
+			ctypes.pointer(ramin),
+			ctypes.pointer(ramax),
+			ctypes.pointer(decmin),
+			ctypes.pointer(decmax)
+			)
+		return (ramin.value, ramax.value, decmin.value, decmax.value)
+
 
 if __name__ == '__main__':
 	t= Tan()
