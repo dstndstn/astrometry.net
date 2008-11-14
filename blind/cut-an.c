@@ -59,8 +59,10 @@ static void print_help(char* progname) {
 		   "  [-S <max-stars-per-(big)-healpix]         (ie, max number of stars in the cut)\n"
 		   "  <input-file> [<input-file> ...]\n"
 		   "\n"
-		   "Input files must be Astrometry.net catalogs OR objs.fits catalogs with magnitude information.\n"
-		   "If no ID filename template is given, ID files will not be written.\n"
+		   "Input files must be:\n"
+           "  -Astrometry.net catalogs, OR\n"
+           "  -objs.fits catalogs with magnitude information, OR\n"
+           "  -ra,dec lists (FITS BINTABLE) with a MAG column.\n"
 		   "\n", progname);
 }
 
