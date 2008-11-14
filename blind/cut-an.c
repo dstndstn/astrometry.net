@@ -62,7 +62,8 @@ static void print_help(char* progname) {
 		   "Input files must be:\n"
            "  -Astrometry.net catalogs, OR\n"
            "  -objs.fits catalogs with magnitude information, OR\n"
-           "  -ra,dec lists (FITS BINTABLE) with a MAG column.\n"
+           "  -ra,dec lists (FITS BINTABLE) with RA,DEC, and MAG columns.\n"
+           "     (also:  AN_FILE = 'RDLS'  in the primary header)\n"
 		   "\n", progname);
 }
 
