@@ -88,6 +88,14 @@ want to add the INSTALL_DIR/bin directory to your path:
      $ setenv PATH "$PATH:/usr/local/astrometry/bin"
 
 
+MAC
+---
+To build everything, you need:
+-Developer Tools
+-MacPorts
+Then:
+> port install gawk cairo netpbm
+
 GETTING INDEXES
 ---------------
 Next, grab some pre-cooked indexes.  See the file GETTING-INDEXES for
