@@ -41,10 +41,15 @@ To compile everything and run with full functionality, you will need:
   * python (probably >= 2.4)
   * numpy
 
-On Ubuntu or Debian-like systems, the following should suffice:
+-> On Ubuntu or Debian-like systems, the following should suffice:
 
-  $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
-                       libpng12-dev libjpeg-dev python-numpy
+    $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
+                           libpng12-dev libjpeg-dev python-numpy
+
+-> On RHEL, you'll need something like:
+    $ sudo yum install cairo.x86_64 cairo-devel.x86_64 netpbm.x86_64 \
+                       netpbm-devel.x86_64 fontconfig-devel.x86_64 \
+                       libXrender-devel.x86_64 xorg-x11-proto-devel.x86_64
 
 If you don't have and can't get these libraries, you should still be
 able to compile and use the core parts of the solver, but you will
