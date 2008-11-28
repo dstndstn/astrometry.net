@@ -24,10 +24,13 @@ char* canonicalize_file_name(const char* fn);
 // This is actually in POSIX1b but may or may not be available.
 int fdatasync(int fd);
 
-// This is in some BSDs and Mandriva 2009.
+#if NEED_DECLARE_QSORT_R
+//// NOTE: this declaration must match gnu-specific-test.c .
+// This is in some BSDs, Mandriva 2009, and Ubuntu 8.10.
 void qsort_r(void *base, size_t nmemb, size_t sz,
              void *userdata,
              int (*compar)(void *, const void *, const void *));
+#endif
 
 // As suggested in http://gcc.gnu.org/onlinedocs/gcc-4.3.0/gcc/Function-Names.html
 #if __STDC_VERSION__ < 199901L

@@ -38,3 +38,19 @@ int main() {
     return 0;
 }
 #endif
+
+#ifdef TEST_DECLARE_QSORT_R
+// Test whether just declaring qsort_r as we do causes a compile failure.
+// This is seen on Ubuntu 8.10, where apparently they declared it in a
+// conflicting way in stdlib.h .  Way to go, guys.
+
+//// NOTE: this declaration must match gnu-specific-test.c .
+void qsort_r(void *base, size_t nmemb, size_t sz,
+             void *userdata,
+             int (*compar)(void *, const void *, const void *));
+
+int main() {
+    printf("#define NEED_DECLARE_QSORT_R 1\n");
+    return 0;
+}
+#endif

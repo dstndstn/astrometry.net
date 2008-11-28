@@ -159,17 +159,29 @@ install: $(PYTHON_LIBS)
 	done
 
 gnu-specific-config.h: gnu-specific-test.c
-	((($(CC) -o gnu-specific-test-canonicalize \
-		$(CFLAGS) -DTEST_CANONICALIZE_FILE_NAME $(LDFLAGS) $^ && \
-	  ./gnu-specific-test-canonicalize) > /dev/null \
-	|| echo "#define NEED_CANONICALIZE_FILE_NAME 1"); \
+	( \
+	(($(CC) -o gnu-specific-test-canonicalize \
+		$(CFLAGS) -DTEST_CANONICALIZE_FILE_NAME $(LDFLAGS) $^  > /dev/null && \
+	  ./gnu-specific-test-canonicalize) \
+	|| echo "#define NEED_CANONICALIZE_FILE_NAME 1") \
+	; \
+	 (($(CC) -o gnu-specific-test-declare-qsort \
+		$(CFLAGS) -DTEST_DECLARE_QSORT_R $(LDFLAGS) $^ > /dev/null && \
+	  ./gnu-specific-test-declare-qsort) \
+	|| echo "#define NEED_DECLARE_QSORT_R 0") \
+	; \
 	 (($(CC) -o gnu-specific-test-qsort \
-		$(CFLAGS) -DTEST_QSORT_R $(LDFLAGS) $^ && \
-	  ./gnu-specific-test-qsort) > /dev/null \
-	|| echo "#define NEED_QSORT_R 1")) > $@
+		$(CFLAGS) -DTEST_QSORT_R $(LDFLAGS) $^ > /dev/null && \
+	  ./gnu-specific-test-qsort) \
+	|| echo "#define NEED_QSORT_R 1") \
+	; \
+	echo) > $@
 
 ALL_OBJ += gnu-specific.o
-ALL_TARGETS := gnu-specific-test.o gnu-specific-test-canonicalize \
+ALL_TARGETS := gnu-specific-test.o \
+	gnu-specific-test-canonicalize \
+	gnu-specific-test-declare-qsort \
+	gnu-specific-test-qsort \
 	gnu-specific-config.h
 
 DEP_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
