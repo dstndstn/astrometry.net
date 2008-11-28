@@ -1,14 +1,17 @@
 #! /bin/bash
 
 # called via ssh from gmaps@oven.
+
+ICE=/data1/dstn/software/ice-3.3.0-hydra/bin
+LOG=/data1/dstn/dsolver/logs
+
 cd /data1/dstn/dsolver/astrometry/net/ice
 
 killall glacier2router
-#killall SessionServer.py
 
-./SessionServer.py >> sessionserver.log 2>&1 &
+./SessionServer.py >> ${LOG}/sessionserver.log 2>&1 &
 sleep 1
-glacier2router --Ice.Config=config.glacier2 >> glacier2.log 2>&1 &
+${ICE}/glacier2router --Ice.Config=config.glacier2 >> ${LOG}/glacier2.log 2>&1 &
 
 wait
 
