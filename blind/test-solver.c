@@ -78,9 +78,10 @@ void test_try_all_codes(pquad* pq,
 
 void test1() {
     double field[14];
-    int i=0;
+    int i=0, N;
     solver_t* solver;
     index_t index;
+    starxy_t* starxy;
     int wanted[][4] = { { 0,1,3,4 },
                          { 0,2,3,4 },
                          { 1,2,3,4 },
@@ -141,20 +142,27 @@ void test1() {
     field[i++] = 3.0;
     field[i++] = -1.0;
 
+    N = i/2;
+    starxy = starxy_new(N, FALSE, FALSE);
+    for (i=0; i<N; i++) {
+        starxy_setx(starxy, i, field[i*2+0]);
+        starxy_sety(starxy, i, field[i*2+1]);
+    }
+
     quadlist = bl_new(16, 4*sizeof(uint));
 
     solver = solver_new();
 
     memset(&index, 0, sizeof(index_t));
-    index.index_scale_lower = 1;
-    index.index_scale_upper = 10;
+    index.meta.index_scale_lower = 1;
+    index.meta.index_scale_upper = 10;
 
     solver->funits_lower = 0.1;
     solver->funits_upper = 10;
 
     solver_add_index(solver, &index);
-    solver->field = field;
-    solver->nfield = sizeof(field) / (2 * sizeof(double));
+
+    solver_set_field(solver, starxy);
 
     solver_preprocess_field(solver);
 
@@ -170,6 +178,8 @@ void test1() {
     }
 
     bl_free(quadlist);
+
+    starxy_free(starxy);
 }
 
 char* OPTIONS = "v";
