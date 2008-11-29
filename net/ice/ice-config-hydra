@@ -1,0 +1,13 @@
+# shared config for Ice scripts running on Hydra
+
+ICE=/data1/dstn/software/ice-3.3.0-hydra
+ICEBIN=${ICE}/bin
+ICEPY=${ICE}/python
+ICELD=${ICE}/lib64
+MCPPLD=/data1/dstn/software/mcpp-2.7.1/lib64
+export PYTHONPATH=${PYTHONPATH}:${ICEPY}
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ICELD}:${MCPPLD}
+
+LOG=/data1/dstn/dsolver/logs
+
+cd /data1/dstn/dsolver/astrometry/net/ice

@@ -1,16 +1,17 @@
 #! /bin/bash
 
-cd /data1/dstn/dsolver/astrometry/net/ice
+. /data1/dstn/dsolver/astrometry/net/ice/ice-config-hydra
+
 echo "Starting daemon..."
 daemon -d -d -v -v -n icegridnode \
-	-r -N -D `pwd` \
-	-F /tmp/icegridnode.pid \
-	-l `pwd`/server-`hostname -s`-l.log \
-	-b `pwd`/server-`hostname -s`-b.log \
-	-o `pwd`/server-`hostname -s`-o.log \
-	-O `pwd`/server-`hostname -s`-O.log \
-	-E `pwd`/server-`hostname -s`-E.log \
-	-- icegridnode --Ice.Config=config.grid \
-	--IceGrid.Node.Name=`hostname -s` \
-	--deploy solver.xml
+    -r -N -D `pwd` \
+    -F /tmp/icegridnode.pid \
+    -l ${LOG}/server-`hostname -s`-l.log \
+    -b ${LOG}/server-`hostname -s`-b.log \
+    -o ${LOG}/server-`hostname -s`-o.log \
+    -O ${LOG}/server-`hostname -s`-O.log \
+    -E ${LOG}/server-`hostname -s`-E.log \
+    -- ${ICEBIN}/icegridnode --Ice.Config=config.grid \
+    --IceGrid.Node.Name=`hostname -s` \
+    --deploy solver.xml
 echo "Daemon started."

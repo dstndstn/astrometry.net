@@ -2,16 +2,13 @@
 
 # called via ssh from gmaps@oven.
 
-ICE=/data1/dstn/software/ice-3.3.0-hydra/bin
-LOG=/data1/dstn/dsolver/logs
+. /data1/dstn/dsolver/astrometry/net/ice/ice-config-hydra
 
-cd /data1/dstn/dsolver/astrometry/net/ice
-
-killall glacier2router
+killall glacier2router >> ${LOG}/glacier2.log 2>&1
 
 ./SessionServer.py >> ${LOG}/sessionserver.log 2>&1 &
 sleep 1
-${ICE}/glacier2router --Ice.Config=config.glacier2 >> ${LOG}/glacier2.log 2>&1 &
+${ICEBIN}/glacier2router --Ice.Config=config.glacier2 >> ${LOG}/glacier2.log 2>&1 &
 
 wait
 

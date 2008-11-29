@@ -1,3 +1,6 @@
 #! /bin/bash
 
-icegridregistry --Ice.Config=config.grid
+. /data1/dstn/dsolver/astrometry/net/ice/ice-config-hydra
+
+${ICEBIN}/icegridregistry --Ice.Config=config.grid >> ${LOG}/registry.log 2>&1
+
