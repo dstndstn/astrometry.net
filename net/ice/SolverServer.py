@@ -137,7 +137,7 @@ class SolverI(SolverIce.Solver):
         sout.close()
         return (tardata, solved)
 
-    def status(self):
+    def status(self, current=None):
         configfn = self.get_config_file()
         return 'config file: %s' % configfn
 
