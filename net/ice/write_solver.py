@@ -2,7 +2,7 @@
 
 scales=[10,5,4,3,2]
 
-nodes = [
+OLDnodes = [
     ('hydra', [10]),
     ('neuron-0-0', [10, 5]),
     ('neuron-0-1', [4]),
@@ -16,6 +16,15 @@ nodes = [
     ('neuron-0-9', [4]),
     ('neuron-0-10', [3]),
     ('neuron-0-11', [2]),
+    ]
+
+nodes = [
+    ('neuron-0-0', [10]),
+    ('neuron-0-1', [5]),
+    ('neuron-0-2', [4]),
+    ('neuron-0-3', [3]),
+    ('neuron-0-4', [2]),
+    ('neuron-0-5', [10]),
     ]
 
 

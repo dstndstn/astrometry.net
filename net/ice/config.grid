@@ -5,6 +5,8 @@
 #Ice.Trace.Protocol=1
 #Ice.Trace.Locator=2
 
+IceGrid.Node.Trace.Activator=3
+
 IceGrid.InstanceName=SolverIceGrid
 
 #
@@ -39,7 +41,7 @@ IceGrid.Node.CollocateRegistry=0
 #
 # Trace properties.
 #
-IceGrid.Node.Trace.Activator=1
+#IceGrid.Node.Trace.Activator=1
 IceGrid.Node.Trace.Patch=1
 
 #
