@@ -101,13 +101,17 @@ class SolverI(SolverIce.Solver):
         childin.close()
         pipe_log_messages(childouterr, logger)
 
+    def get_config_file(self):
+        configfn = '/data1/dstn/dsolver/backend-config/backend-scale%i.cfg' % self.scale
+        return configfn
+
     def solve(self, jobid, axy, logger, current=None):
         print self.name + ' got a solve request.'
         print 'jobid', jobid, 'axy has length', len(axy)
         logger.logmessage('Hello from %s' % self.name)
         hostname = socket.gethostname().split('.')[0]
         print 'I am host', hostname
-        configfn = '/data1/dstn/dsolver/backend-config/backend-scale%i.cfg' % self.scale
+        configfn = self.get_config_file()
         print 'Reading config file', configfn
         mydir = tempfile.mkdtemp()
         print 'Working in temp directory', mydir
@@ -133,6 +137,9 @@ class SolverI(SolverIce.Solver):
         sout.close()
         return (tardata, solved)
 
+    def status(self):
+        configfn = self.get_config_file()
+        return 'config file: %s' % configfn
 
     def shutdown(self, current=None):
         print self.name + " shutting down..."
