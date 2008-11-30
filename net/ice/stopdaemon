@@ -1,3 +1,4 @@
 #! /bin/bash
 
-daemon --stop -n icegridnode
+daemon --stop -n icegridnode \
+  -F /tmp/icegridnode.pid   # PID is in this file.

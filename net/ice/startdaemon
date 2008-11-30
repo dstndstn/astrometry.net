@@ -3,15 +3,23 @@
 . /data1/dstn/dsolver/astrometry/net/ice/ice-config-hydra
 
 echo "Starting daemon..."
-daemon -d -d -v -v -n icegridnode \
-    -r -N -D `pwd` \
-    -F /tmp/icegridnode.pid \
-    -l ${LOG}/server-`hostname -s`-l.log \
-    -b ${LOG}/server-`hostname -s`-b.log \
-    -o ${LOG}/server-`hostname -s`-o.log \
-    -O ${LOG}/server-`hostname -s`-O.log \
-    -E ${LOG}/server-`hostname -s`-E.log \
-    -- ${ICEBIN}/icegridnode --Ice.Config=config.grid \
+DIR=`pwd`
+daemon -d -d \                # debug
+  -v -v \                     # verbose
+  -n icegridnode \            # name of this daemon
+  -r \                        # respawn
+  -N \                        # no system config
+  -D "$DIR" \                 # run in this dir.
+  -F /tmp/icegridnode.pid \   # put PID in this file.
+  -l ${LOG}/server-`hostname -s`-l.log \  # daemon's stdout
+  -b ${LOG}/server-`hostname -s`-b.log \  # daemon's debug
+  -o ${LOG}/server-`hostname -s`-o.log \  # client stdout
+  -E ${LOG}/server-`hostname -s`-E.log \  # client stderr
+  -- \  # start of client command-line.
+  ${ICEBIN}/icegridnode --Ice.Config=config.grid \
     --IceGrid.Node.Name=`hostname -s` \
     --deploy solver.xml
+
+#  -O ${LOG}/server-`hostname -s`-O.log \
+
 echo "Daemon started."
