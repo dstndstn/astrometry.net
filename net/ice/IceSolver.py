@@ -42,9 +42,6 @@ def get_router_session(ice):
     return (router, session)
 
 def find_all_solvers(ice):
-    (router, session) = get_router_session(ice)
-    category = router.getCategoryForClient()
-
     q = ice.stringToProxy('SolverIceGrid/Query')
     q = IceGrid.QueryPrx.checkedCast(q)
     print 'q is', q
@@ -84,12 +81,14 @@ class SolverResult(object):
 
 def solve(jobid, axy, logfunc):
     ice = get_ice()
+    (router, session) = get_router_session(ice)
 
     servers = find_all_solvers(ice)
 
     props = ice.getProperties()
     adapter = ice.createObjectAdapter('Callback.Client')
     myid = ice.stringToIdentity('callbackReceiver')
+    category = router.getCategoryForClient()
     myid.category = category
     adapter.add(LoggerI(logfunc), myid)
     adapter.activate()
@@ -116,6 +115,7 @@ def solve(jobid, axy, logfunc):
 
 def status():
     ice = get_ice()
+    (router, session) = get_router_session(ice)
     servers = find_all_solvers(ice)
     print 'Found %i servers.' % len(servers)
     for s in servers:
