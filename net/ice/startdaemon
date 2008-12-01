@@ -9,6 +9,7 @@ if `true`; then
 	--deploy solver.xml \
 	--checkdb \
 	--daemon --nochdir --noclose \
+	--pidfile ${PIDS}/icegridnode-`hostname -s`.pid \
 	< /dev/null \
 	>> ${LOG}/server-`hostname -s`.log \
 	2>&1
