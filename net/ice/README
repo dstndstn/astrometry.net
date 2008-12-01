@@ -2,11 +2,13 @@ This directory contains an Ice setup like this:
 
 -the web service calls IceSolver.py, which sends requests to multiple Ice servers.
 
--starttunnel, run from oven, set up ssh port-forwarding to the glacier2 router running on hydra.
--starttunnel also starts the SessionServer on hydra.
--startreg must be running on hydra.
--servers are listed in write_solver.py
--servers can be launched with startallnodes
--the "daemon" program runs on each hydra neuron to keep icegridnode running
--showendpoints lists active servers.
+
+-starttunnel, run from oven:
+   -sets up ssh port-forwarding to the glacier2 router running on hydra;
+   -starts the glacier2 router
+   -starts the registry
+   -starts the session server.
+
+-servers are listed in write_solver.py (which creates the solver.xml deployment file)
+-servers can be launched with "startallnodes", and stopped with "stopallnodes"
 

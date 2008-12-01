@@ -2,5 +2,5 @@
 
 . /data1/dstn/dsolver/astrometry/net/ice/ice-config-hydra
 
-${ICEBIN}/icegridregistry --Ice.Config=config.grid >> ${LOG}/registry.log 2>&1
+icegridregistry --Ice.Config=config.grid < /dev/null >> ${LOG}/registry.log 2>&1
 

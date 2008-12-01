@@ -126,6 +126,24 @@
 <node name="neuron-0-5">
   <server-instance template="ServerTemplate-scale10" index="neuron-0-5"/>
 </node>
+<node name="neuron-0-6">
+  <server-instance template="ServerTemplate-scale5" index="neuron-0-6"/>
+</node>
+<node name="neuron-0-7">
+  <server-instance template="ServerTemplate-scale4" index="neuron-0-7"/>
+</node>
+<node name="neuron-0-8">
+  <server-instance template="ServerTemplate-scale3" index="neuron-0-8"/>
+</node>
+<node name="neuron-0-9">
+  <server-instance template="ServerTemplate-scale2" index="neuron-0-9"/>
+</node>
+<node name="neuron-0-10">
+  <server-instance template="ServerTemplate-scale10" index="neuron-0-10"/>
+</node>
+<node name="neuron-0-11">
+  <server-instance template="ServerTemplate-scale5" index="neuron-0-11"/>
+</node>
 
   </application>
 

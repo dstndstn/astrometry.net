@@ -1,10 +1,3 @@
 #! /bin/bash
 
-#for x in 0 1 2 3 4 5 6 7 8 9 10 11; do
-#	echo $x
-#	ssh -f -x -T neuron-0-$x "/data1/dstn/dsolver/astrometry/net/ice/startdaemon"
-#done
-#wait
-
-#cluster-fork --bg --nodes neuron-0-%d:0-11 /data1/dstn/dsolver/astrometry/net/ice/startdaemon
-cluster-fork       --nodes neuron-0-%d:0-11 /data1/dstn/dsolver/astrometry/net/ice/startdaemon
+cluster-fork --nodes neuron-0-%d:0-11 /data1/dstn/dsolver/astrometry/net/ice/startdaemon

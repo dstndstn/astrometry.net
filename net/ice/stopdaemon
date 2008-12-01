@@ -1,4 +1,15 @@
 #! /bin/bash
 
-daemon --stop -n icegridnode \
-  -F /tmp/icegridnode.pid   # PID is in this file.
+. /data1/dstn/dsolver/astrometry/net/ice/ice-config-hydra
+
+# graceful...
+PIDFILE=${PIDS}/icegridnode-`hostname -s`.pid
+if [ -r $PIDFILE ]; then
+    KILLPID=`cat ${PIDFILE}`
+    echo "Killing pid ${KILLPID}..."
+    kill ${KILLPID}
+fi
+sleep 1
+# ... or not
+killall icegridnode python
+

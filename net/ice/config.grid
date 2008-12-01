@@ -12,7 +12,7 @@
 IceGrid.Node.Trace.Patch=1
 IceGrid.Node.Trace.Server=3
 IceGrid.Node.Trace.Activator=3
-IceGrid.Node.Trace.Replica=3
+#IceGrid.Node.Trace.Replica=3
 
 # on-demand?
 #Ice.ServerIdleTime=60

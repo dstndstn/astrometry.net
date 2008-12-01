@@ -2,58 +2,16 @@
 
 . /data1/dstn/dsolver/astrometry/net/ice/ice-config-hydra
 
-if `true`; then
-    echo "starting icegridnode..."
-    icegridnode --Ice.Config=config.grid \
-	--IceGrid.Node.Name=`hostname -s` \
-	--deploy solver.xml \
-	--checkdb \
-	--daemon --nochdir --noclose \
-	--pidfile ${PIDS}/icegridnode-`hostname -s`.pid \
-	< /dev/null \
-	>> ${LOG}/server-`hostname -s`.log \
-	2>&1
-    echo "started icegridnode."
-    exit 0
-fi
-
-
-
-echo "Starting daemon..."
-DIR=`pwd`
-                # debug
-                     # verbose
-            # name of this daemon
-                        # respawn
-                        # no system config
-                 # run in this dir.
-   # put PID in this file.
-  # daemon's stdout
-  # daemon's debug
-  # client stdout
-  # client stderr
-  # start of client command-line.
-
-# -d -d \
-#  -v -v \
-
-daemon \
-    -v -v \
- -d -d \
-  -n icegridnode \
-  -r \
-  -N \
-  -D "$DIR" \
-  -F /tmp/icegridnode.pid \
-  -l ${LOG}/server-`hostname -s`-l.log \
-  -b ${LOG}/server-`hostname -s`-b.log \
-  -o ${LOG}/server-`hostname -s`-o.log \
-  -E ${LOG}/server-`hostname -s`-E.log \
-  -- \
-  ${ICEBIN}/icegridnode --Ice.Config=config.grid \
+echo "killing existing icegridnode..."
+. stopdaemon
+echo "starting icegridnode..."
+icegridnode --Ice.Config=config.grid \
     --IceGrid.Node.Name=`hostname -s` \
-    --deploy solver.xml
-
-#  -O ${LOG}/server-`hostname -s`-O.log \
-
-echo "Daemon started."
+    --deploy solver.xml \
+    --checkdb \
+    --daemon --nochdir --noclose \
+    --pidfile ${PIDS}/icegridnode-`hostname -s`.pid \
+    < /dev/null \
+    >> ${LOG}/server-`hostname -s`.log \
+    2>&1
+echo "started icegridnode."

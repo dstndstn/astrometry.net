@@ -25,6 +25,21 @@ nodes = [
     ('neuron-0-3', [3]),
     ('neuron-0-4', [2]),
     ('neuron-0-5', [10]),
+    ('neuron-0-6', [5]),
+    ('neuron-0-7', [4]),
+    ('neuron-0-8', [3]),
+    ('neuron-0-9', [2]),
+    ('neuron-0-10', [10]),
+    ('neuron-0-11', [5]),
+    ]
+
+TEST_nodes = [
+    ('neuron-0-0', [10]),
+    ('neuron-0-1', [5]),
+    ('neuron-0-2', [4]),
+    ('neuron-0-3', [3]),
+    ('neuron-0-4', [2]),
+    ('neuron-0-5', [10]),
     ]
 
 
