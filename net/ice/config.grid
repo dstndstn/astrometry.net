@@ -15,7 +15,7 @@ IceGrid.Node.Trace.Activator=3
 IceGrid.Node.Trace.Replica=3
 
 # on-demand?
-Ice.ServerIdleTime=60
+#Ice.ServerIdleTime=60
 
 # seconds to wait for activation/deactivation (default 60)
 IceGrid.Node.WaitTime=10
