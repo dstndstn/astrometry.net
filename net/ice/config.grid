@@ -1,11 +1,24 @@
 # TODO: set up security:
 #  http://www.zeroc.com/doc/Ice-3.3.0/manual/IceGrid.36.22.html
 
+#
+# Trace properties.
+#
+#IceGrid.Node.Trace.Activator=1
 #Ice.Trace.Network=2
 #Ice.Trace.Protocol=1
 #Ice.Trace.Locator=2
 
+IceGrid.Node.Trace.Patch=1
+IceGrid.Node.Trace.Server=3
 IceGrid.Node.Trace.Activator=3
+IceGrid.Node.Trace.Replica=3
+
+# on-demand?
+Ice.ServerIdleTime=60
+
+# seconds to wait for activation/deactivation (default 60)
+IceGrid.Node.WaitTime=10
 
 IceGrid.InstanceName=SolverIceGrid
 
@@ -38,11 +51,6 @@ IceGrid.Node.Endpoints=default
 IceGrid.Node.Data=db/node
 IceGrid.Node.CollocateRegistry=0
 
-#
-# Trace properties.
-#
-#IceGrid.Node.Trace.Activator=1
-IceGrid.Node.Trace.Patch=1
 
 #
 # Dummy username and password for icegridadmin.

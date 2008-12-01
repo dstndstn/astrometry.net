@@ -1,0 +1,5 @@
+#! /bin/bash
+
+echo "Restarting daemon..."
+daemon -n icegridnode --restart \
+  -F /tmp/icegridnode.pid
