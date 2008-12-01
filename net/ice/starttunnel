@@ -1,4 +1,4 @@
 #! /bin/bash
 
-daemon -X "ssh -T glaciertunnel"
+daemon -X "ssh -N -T glaciertunnel"
 

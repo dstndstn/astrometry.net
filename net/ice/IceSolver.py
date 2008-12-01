@@ -41,6 +41,25 @@ def get_router_session(ice):
         print 'router session permission denied:', ex
     return (router, session)
 
+def find_all_solvers(ice):
+    (router, session) = get_router_session(ice)
+    category = router.getCategoryForClient()
+
+    q = ice.stringToProxy('SolverIceGrid/Query')
+    q = IceGrid.QueryPrx.checkedCast(q)
+    print 'q is', q
+    solvers = q.findAllObjectsByType('::SolverIce::Solver')
+    print 'Found %i solvers' % len(solvers)
+    for s in solvers:
+        print '  ', s
+
+    servers = []
+    for s in solvers:
+        print 'Resolving ', s
+        server = SolverIce.SolverPrx.checkedCast(s)
+        servers.append(server)
+
+    return servers
 
 class LoggerI(SolverIce.Logger):
     def __init__(self, logfunc):
@@ -66,22 +85,7 @@ class SolverResult(object):
 def solve(jobid, axy, logfunc):
     ice = get_ice()
 
-    (router, session) = get_router_session(ice)
-    category = router.getCategoryForClient()
-
-    q = ice.stringToProxy('SolverIceGrid/Query')
-    q = IceGrid.QueryPrx.checkedCast(q)
-    print 'q is', q
-    solvers = q.findAllObjectsByType('::SolverIce::Solver')
-    print 'Found %i solvers' % len(solvers)
-    for s in solvers:
-        print '  ', s
-
-    servers = []
-    for s in solvers:
-        print 'Resolving ', s
-        server = SolverIce.SolverPrx.checkedCast(s)
-        servers.append(server)
+    servers = find_all_solvers(ice)
 
     props = ice.getProperties()
     adapter = ice.createObjectAdapter('Callback.Client')
@@ -91,7 +95,7 @@ def solve(jobid, axy, logfunc):
     adapter.activate()
     logproxy = SolverIce.LoggerPrx.uncheckedCast(adapter.createProxy(myid))
 
-    results = [SolverResult() for s in solvers]
+    results = [SolverResult() for s in servers]
 
     for (s,r) in zip(servers,results):
         s.solve_async(r, jobid, axy, logproxy)
@@ -110,11 +114,24 @@ def solve(jobid, axy, logfunc):
         waiting = [r for r in waiting if not r.isdone()]
     return tardata
 
-
+def status():
+    ice = get_ice()
+    servers = find_all_solvers(ice)
+    print 'Found %i servers.' % len(servers)
+    for s in servers:
+        print 'Getting status for', s
+        st = s.status()
+        print 'Got status:', st
+    
 
 if __name__ == '__main__':
+    if len(sys.argv) == 2 and sys.argv[1] == 'status':
+        status()
+        sys.exit(0)
+
     if len(sys.argv) != 3:
-        print 'Usage: %s <jobid> <job.axy>' % sys.argv[0]
+        print 'Usage: %s <jobid> <job.axy>\n' % sys.argv[0]
+        print '   or: %s status\n' % sys.argv[0]
         sys.exit(-1)
 
     jobid = sys.argv[1]
