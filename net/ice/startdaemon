@@ -2,6 +2,8 @@
 
 . /data1/dstn/dsolver/astrometry/net/ice/ice-config-hydra
 
+mkdir -p /tmp/node
+
 echo "killing existing icegridnode..."
 . stopdaemon
 echo "starting icegridnode..."

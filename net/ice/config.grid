@@ -8,11 +8,11 @@
 #Ice.Trace.Network=2
 #Ice.Trace.Protocol=1
 #Ice.Trace.Locator=2
+#IceGrid.Node.Trace.Replica=3
 
 IceGrid.Node.Trace.Patch=1
 IceGrid.Node.Trace.Server=3
 IceGrid.Node.Trace.Activator=3
-#IceGrid.Node.Trace.Replica=3
 
 # on-demand?
 #Ice.ServerIdleTime=60
@@ -48,7 +48,8 @@ IceGrid.Registry.DynamicRegistration=1
 # This should be set on the command line.
 #IceGrid.Node.Name=
 IceGrid.Node.Endpoints=default
-IceGrid.Node.Data=db/node
+#IceGrid.Node.Data=db/node
+IceGrid.Node.Data=/tmp/node
 IceGrid.Node.CollocateRegistry=0
 
 
