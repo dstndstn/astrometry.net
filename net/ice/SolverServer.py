@@ -46,6 +46,8 @@ class SolverI(SolverIce.Solver):
         self.name = name
         self.scale = scale
         print 'SolverServer running: pid', os.getpid()
+        # HACK
+        self.dirs = {}
 
     def solve_ctypes(self, jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current=None):
         # BUG - should do this once, outside this func!
@@ -131,13 +133,19 @@ class SolverI(SolverIce.Solver):
         configfn = self.get_config_file()
         logmsg('Reading config file', configfn)
         mydir = tempfile.mkdtemp('', 'backend-'+jobid+'-')
+
+        self.dirs[jobid] = mydir
+
         logmsg('Working in temp directory', mydir)
         axyfn = os.path.join(mydir, 'job.axy')
         write_file(axy, axyfn)
 
-        jid = jobid.replace('/', '-')
-        cancelfn = '/tmp/%s.cancel' % (jid)
-        solvedfn = '/tmp/%s.solved' % (jid)
+        #jid = jobid.replace('/', '-')
+        #cancelfn = '/tmp/%s.cancel' % (jid)
+        #solvedfn = '/tmp/%s.solved' % (jid)
+
+        cancelfn = mydir + '/cancel'
+        solvedfn = mydir + '/solved'
 
         # self.solve_ctypes(jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current)
         self.solve_subprocess(jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current)
@@ -146,7 +154,7 @@ class SolverI(SolverIce.Solver):
         if solved:
             # tell the other servers to stop...
             #write_file('', cancelfn)
-            write_file('', solvedfn)
+            #write_file('', solvedfn)
             logmsg('Solved.')
         else:
             logmsg('Did not solve.')
@@ -156,6 +164,15 @@ class SolverI(SolverIce.Solver):
         tardata = sout.read()
         sout.close()
         return (tardata, solved)
+
+    def cancel(self, jobid, current=None):
+        if not jobid in self.dirs:
+            logmsg("Request to cancel a job I'm not working on: " + jobid)
+            return
+        mydir = self.dirs[jobid]
+        cancelfn = mydir + '/cancel'
+        write_file('', cancelfn)
+        logmsg('Cancelled job ' + jobid)
 
     def status(self, current=None):
         configfn = self.get_config_file()
