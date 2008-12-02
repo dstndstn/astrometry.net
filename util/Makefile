@@ -175,6 +175,11 @@ gnu-specific-config.h: gnu-specific-test.c
 	  ./gnu-specific-test-qsort) \
 	|| echo "#define NEED_QSORT_R 1") \
 	; \
+	 (($(CC) -o gnu-specific-test-swap-qsort \
+		$(CFLAGS) -DTEST_SWAP_QSORT_R $(LDFLAGS) $^ > /dev/null && \
+	  ./gnu-specific-test-swap-qsort) \
+	|| echo "#define NEED_SWAP_QSORT_R 0") \
+	; \
 	echo) > $@
 
 ALL_OBJ += gnu-specific.o

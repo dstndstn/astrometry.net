@@ -27,13 +27,36 @@ char* canonicalize_file_name(const char* fn);
 // This is actually in POSIX1b but may or may not be available.
 int fdatasync(int fd);
 
+/**
+   The qsort_r story:
+
+   -qsort_r appears in BSD (including Mac OSX)
+   -qsort_r appears in glibc 2.8, but with a different argument order.
+
+   We check a few things:
+   -is qsort_r declared?
+   -does qsort_r exist?
+   -do we need to swap the arguments?
+
+   Those using qsort_r in Astrometry.net should instead use the macro QSORT_R()
+   to take advantage of these tests.
+
+   Distributions including glibc 2.8 include:
+   -Mandriva 2009
+   -Ubuntu 8.10
+*/
+
 #if NEED_DECLARE_QSORT_R
 //// NOTE: this declaration must match gnu-specific-test.c .
-// This is in some BSDs, Mandriva 2009, and Ubuntu 8.10.
-// (glibc 2.8)
 void qsort_r(void *base, size_t nmemb, size_t sz,
              void *userdata,
              int (*compar)(void *, const void *, const void *));
+#endif
+
+#if NEED_SWAP_QSORT_R
+#define QSORT_R(a,b,c,d,e) qsort_r(a,b,c,e,d)
+#else
+#define QSORT_R qsort_r
 #endif
 
 // As suggested in http://gcc.gnu.org/onlinedocs/gcc-4.3.0/gcc/Function-Names.html

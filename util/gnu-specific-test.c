@@ -41,8 +41,6 @@ int main() {
 
 #ifdef TEST_DECLARE_QSORT_R
 // Test whether just declaring qsort_r as we do causes a compile failure.
-// This is seen on Ubuntu 8.10, where apparently they declared it in a
-// conflicting way in stdlib.h .  Way to go, guys.
 
 //// NOTE: this declaration must match gnu-specific-test.c .
 void qsort_r(void *base, size_t nmemb, size_t sz,
@@ -51,6 +49,28 @@ void qsort_r(void *base, size_t nmemb, size_t sz,
 
 int main() {
     printf("#define NEED_DECLARE_QSORT_R 1\n");
+    return 0;
+}
+#endif
+
+#ifdef TEST_SWAP_QSORT_R
+// Test whether qsort_r works when we swap the argument order.
+static int sortfunc(void* thunk, const void* v1, const void* v2) {
+    int* i1 = v1;
+    int* i2 = v2;
+    if (*i1 < *i2)
+        return -1;
+    if (*i1 > *i2)
+        return 1;
+    return 0;
+}
+int main() {
+    int array[] = { 4, 17, 88, 34, 12, 12, 17 };
+    int N = sizeof(array)/sizeof(int);
+    int mythunk = 42;
+    // glibc 2.8 swaps the last two args compared to BSD.
+    qsort_r(array, N, sizeof(int), sortfunc, &mythunk);
+    printf("#define NEED_SWAP_QSORT_R 1\n");
     return 0;
 }
 #endif

@@ -83,7 +83,7 @@ int* permuted_sort(const void* realarray, int array_stride,
     ps.data_array = realarray;
     ps.data_array_stride = array_stride;
 
-    qsort_r(perm, N, sizeof(int), &ps, compare_permuted);
+    QSORT_R(perm, N, sizeof(int), &ps, compare_permuted);
 
     return perm;
 }
