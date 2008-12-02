@@ -128,8 +128,9 @@ def solve(jobid, axy, logfunc):
 
         tnow = time.time()
         if tnow - lastping > pingperiod:
+            logfunc('Sending pings...')
             for r in waiting:
-                r.server.ping_async()
+                r.server.ice_oneway().ice_ping()
             lastping = tnow
 
     return tardata

@@ -21,7 +21,6 @@ interface Logger {
 interface Solver {
     ["ami"] string solve(string jobid, string axy, Logger* l,
 			out bool solved);
-    ["ami"] void ping();
     string status();
     void shutdown();
 };
