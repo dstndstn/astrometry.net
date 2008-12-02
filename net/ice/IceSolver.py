@@ -11,10 +11,20 @@ import SolverIce
 
 from astrometry.util.file import *
 import astrometry.net.settings as settings
+from astrometry.net.portal.log import log
 
 theice = None
 # FIXME
 configfile = settings.BASEDIR + 'astrometry/net/ice/config.client'
+
+printlog = False
+def logmsg(*msg):
+    if printlog:
+        print ' '.join([str(m) for m in msg])
+    else:
+        log(msg)
+        
+    
 
 def initIce():
     global theice
@@ -32,27 +42,26 @@ def get_router_session(ice):
     router = theice.getDefaultRouter()
     router = Glacier2.RouterPrx.checkedCast(router)
     if not router:
-        print 'not a glacier2 router'
+        logmsg('not a glacier2 router')
         return -1
     session = None
     try:
         session = router.createSession('test', 'test')
     except Glacier2.PermissionDeniedException,ex:
-        print 'router session permission denied:', ex
+        logmsg('router session permission denied:', ex)
     return (router, session)
 
 def find_all_solvers(ice):
     q = ice.stringToProxy('SolverIceGrid/Query')
     q = IceGrid.QueryPrx.checkedCast(q)
-    print 'q is', q
     solvers = q.findAllObjectsByType('::SolverIce::Solver')
-    print 'Found %i solvers' % len(solvers)
+    logmsg('Found %i solvers' % len(solvers))
     for s in solvers:
-        print '  ', s
+        logmsg('  ', s)
 
     servers = []
     for s in solvers:
-        print 'Resolving ', s
+        logmsg('Resolving ', s)
         server = SolverIce.SolverPrx.checkedCast(s)
         servers.append(server)
 
@@ -126,6 +135,8 @@ def status():
 
 if __name__ == '__main__':
     if len(sys.argv) == 2 and sys.argv[1] == 'status':
+        #global printlog
+        printlog = True
         status()
         sys.exit(0)
 
@@ -141,7 +152,7 @@ if __name__ == '__main__':
     print 'axyfile is %i bytes' % len(axydata)
 
     def logfunc(msg):
-        print msg,
+        logmsg(msg)
 
     tardata = solve(jobid, axydata, logfunc)
 
