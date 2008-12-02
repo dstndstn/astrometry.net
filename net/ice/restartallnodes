@@ -1,3 +1,0 @@
-#! /bin/bash
-
-cluster-fork       --nodes neuron-0-%d:0-11 /data1/dstn/dsolver/astrometry/net/ice/restartdaemon

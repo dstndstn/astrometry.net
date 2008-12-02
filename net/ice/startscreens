@@ -1,3 +1,0 @@
-for ((n=0; n<5; n++)); do
-	screen -R n$n "cd astrometry/net/ice; ./startdaemon"
-done

@@ -1,5 +1,0 @@
-#! /bin/bash
-
-daemon --running --verbose -n icegridnode \
-  -F /tmp/icegridnode.pid   # PID is in this file.
-echo "return val $?"
