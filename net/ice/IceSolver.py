@@ -123,7 +123,11 @@ def solve(jobid, axy, logfunc):
                     tardata = r.tardata
                     break
         if tardata:
-            break
+            for r in waiting:
+                if not r.isdone():
+                    logfunc('Cancelling ' + r.server)
+                    SolverIce.SolverPrx.uncheckedCast(r.server.ice_oneway()).cancel()
+            #break
         waiting = [r for r in waiting if not r.isdone()]
 
         tnow = time.time()
