@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Michael Blanton, Keir Mierle, David W. Hogg, Sam Roweis
+  Copyright 2006-2008 Michael Blanton, Keir Mierle, David W. Hogg, Sam Roweis
   and Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
@@ -23,7 +23,7 @@
 #include <math.h>
 
 #include "dimage.h"
-#include "gnu-specific.h" // for qsort_r
+#include "permutedsort.h"
 #include "simplexy-common.h"
 
 /*
@@ -33,25 +33,6 @@
  *
  * Mike Blanton
  * 1/2006 */
-
-
-struct dpeaks_cmp_data_s {
-  int* peaks;
-  float* smooth;
-};
-
-int dpeaks_compare(void* data_ptr, const void *first, const void *second)
-{
-        struct dpeaks_cmp_data_s* data = data_ptr;
-	float v1, v2;
-	v1 = data->smooth[data->peaks[*((int *) first)]];
-	v2 = data->smooth[data->peaks[*((int *) second)]];
-	if (v1 > v2)
-		return ( -1);
-	if (v1 < v2)
-		return (1);
-	return (0);
-}
 
 int dsmooth(float *image, int nx, int ny, float sigma, float *smooth);
 void dsmooth2(float *image, int nx, int ny, float sigma, float *smooth);
@@ -83,7 +64,6 @@ int dpeaks(float *image,
         int *mask = NULL;
         int *fullxcen = NULL;
         int *fullycen = NULL;
-		struct dpeaks_cmp_data_s cmpdata;
 
 	/* 1. smooth image */
 	smooth = (float *) malloc(sizeof(float) * nx * ny);
@@ -120,13 +100,14 @@ int dpeaks(float *image,
 
 	/* 2. sort peaks */
 	indx = (int *) malloc(sizeof(int) * (*npeaks));
-	for (i = 0;i < (*npeaks);i++)
-		indx[i] = i;
-        cmpdata.peaks = peaks;
-        cmpdata.smooth = smooth;
-	qsort_r((void *) indx, (size_t)(*npeaks), sizeof(int), &cmpdata, dpeaks_compare);
+	for (i=0; i<(*npeaks); i++)
+		indx[i] = peaks[i];
+
+    permuted_sort(smooth, sizeof(float), compare_floats_desc, indx, *npeaks);
+
 	if ((*npeaks) > maxnpeaks)
 		*npeaks = maxnpeaks;
+
 	fullxcen = (int *) malloc((*npeaks) * sizeof(int));
 	fullycen = (int *) malloc((*npeaks) * sizeof(int));
 	for (i = 0;i < (*npeaks);i++) {

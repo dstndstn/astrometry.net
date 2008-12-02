@@ -24,7 +24,7 @@
 #include <assert.h>
 
 #include "dimage.h"
-#include "gnu-specific.h" // for qsort_r
+#include "permutedsort.h"
 #include "simplexy-common.h"
 
 /*
@@ -40,18 +40,6 @@
  *
  * Mike Blanton
  * 1/2006 */
-
-static int objects_compare(void* dobject_ptr, const void *first, const void *second) {
-	float v1, v2;
-	int* dobject = dobject_ptr;
-	v1 = (float)dobject[*((int *) first)];
-	v2 = (float)dobject[*((int *) second)];
-	if (v1 > v2)
-		return (1);
-	if (v1 < v2)
-		return ( -1);
-	return (0);
-}
 
 /* Finds all peaks in the image by cutting a bounding box out around each one
  * */
@@ -91,9 +79,10 @@ int dallpeaks(float *image,
 	for (j = 0;j < ny;j++)
 		for (i = 0;i < nx;i++)
 			dobject[i + j*nx] = objects[i + j*nx];
-	for (i = 0;i < nx*ny;i++)
-		indx[i] = i;
-	qsort_r((void *) indx, (size_t) nx*ny, sizeof(int), dobject, objects_compare);
+
+    permutation_init(indx, nx*ny);
+    permuted_sort(dobject, sizeof(int), compare_ints_asc, indx, nx*ny);
+
 	/* skip over the uninformative pixels */
 	for (l = 0;l < nx*ny && dobject[indx[l]] == -1; l++)
 		;

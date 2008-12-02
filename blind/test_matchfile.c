@@ -39,20 +39,6 @@ void test_read_matchfile(CuTest* tc) {
     entry1.ids[3] = 0x12341234123412ULL;
     entry1.ids[4] = 0x1234123412341234ULL;
     entry1.code_err = 1e-6;
-    entry1.sMin[0] = -0.1;
-    entry1.sMin[1] = 0.3;
-    entry1.sMin[2] = 0.5;
-    entry1.sMax[0] = 0.1;
-    entry1.sMax[1] = 0.6;
-    entry1.sMax[2] = 0.4;
-    /* these don't go in the matchfile.
-     entry1.sMinMax[0] = 0.2;
-     entry1.sMinMax[1] = 0.5;
-     entry1.sMinMax[2] = 0.3;
-     entry1.sMaxMin[0] = 0.3;
-     entry1.sMaxMin[1] = 0.4;
-     entry1.sMaxMin[2] = 0.7;
-     */
     entry1.quadpix[0] = 1.0;
     entry1.quadpix[1] = 2.0;
     entry1.quadpix[2] = 3.0;
@@ -122,8 +108,6 @@ void test_read_matchfile(CuTest* tc) {
     SAMESAME(star);
     SAMESAME(field);
     SAMESAME(ids);
-    SAMESAME(sMin);
-    SAMESAME(sMax);
     SAMESAME(quadpix);
     SAMESAME(quadxyz);
     SAME(dimquads);

@@ -43,7 +43,7 @@ int resort_xylist(const char* infn, const char* outfn,
     fitstable_t* tab = NULL;
 
     if (ascending)
-        compare = compare_doubles;
+        compare = compare_doubles_asc;
     else
         compare = compare_doubles_desc;
 

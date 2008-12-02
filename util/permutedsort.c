@@ -88,7 +88,7 @@ int* permuted_sort(const void* realarray, int array_stride,
     return perm;
 }
 
-int compare_doubles(const void* v1, const void* v2) {
+int compare_doubles_asc(const void* v1, const void* v2) {
 	const double d1 = *(double*)v1;
 	const double d2 = *(double*)v2;
 	if (d1 < d2)
@@ -98,7 +98,17 @@ int compare_doubles(const void* v1, const void* v2) {
 	return 0;
 }
 
-int compare_floats(const void* v1, const void* v2) {
+int compare_ints_asc(const void* v1, const void* v2) {
+	const int d1 = *(int*)v1;
+	const int d2 = *(int*)v2;
+	if (d1 < d2)
+		return -1;
+	if (d1 > d2)
+		return 1;
+	return 0;
+}
+
+int compare_floats_asc(const void* v1, const void* v2) {
 	float f1 = *(float*)v1;
 	float f2 = *(float*)v2;
 	if (f1 < f2)
@@ -109,10 +119,15 @@ int compare_floats(const void* v1, const void* v2) {
 }
 
 int compare_doubles_desc(const void* v1, const void* v2) {
-    return compare_doubles(v2, v1);
+    // (note that v1,v2 are flipped)
+    return compare_doubles_asc(v2, v1);
+}
+
+int compare_ints_desc(const void* v1, const void* v2) {
+    return compare_ints_asc(v2, v1);
 }
 
 int compare_floats_desc(const void* v1, const void* v2) {
-    return compare_floats(v2, v1);
+    return compare_floats_asc(v2, v1);
 }
 

@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
 		int i;
 		int np = nx*ny;
 
-		perm = permuted_sort(img, sizeof(float), compare_floats, NULL, np);
+		perm = permuted_sort(img, sizeof(float), compare_floats_asc, NULL, np);
 
 		qfitsloader_free_buffers(&ldr);
 
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		// I'm lazy: just sort it, even though we just need two percentiles.
-		qsort(pix, np, sizeof(float), compare_floats);
+		qsort(pix, np, sizeof(float), compare_floats_asc);
 
         if (!invert) {
             // 25th percentile.

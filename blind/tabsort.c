@@ -105,14 +105,14 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
 			if (descending)
 				sort_func = compare_doubles_desc;
 			else
-				sort_func = compare_doubles;
+				sort_func = compare_doubles_asc;
 			break;
 		case TFITS_BIN_TYPE_E:
 			data = realloc(data, table->nr * sizeof(float));
 			if (descending)
 				sort_func = compare_floats_desc;
 			else
-				sort_func = compare_floats;
+				sort_func = compare_floats_asc;
 			break;
 		default:
 			ERROR("Column %s is neither FITS type D nor E.  Skipping.", colname);
