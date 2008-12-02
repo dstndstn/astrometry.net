@@ -74,10 +74,11 @@ class LoggerI(SolverIce.Logger):
         self.logfunc(msg)
 
 class SolverResult(object):
-    def __init__(self):
+    def __init__(self, server):
         self.tardata = None
         self.failed = False
         self.solved = False
+        self.server = server
     def ice_response(self, tardata, solved):
         print 'async response: ', (solved and 'solved' or 'did not solve')
         self.tardata = tardata
@@ -103,13 +104,17 @@ def solve(jobid, axy, logfunc):
     adapter.activate()
     logproxy = SolverIce.LoggerPrx.uncheckedCast(adapter.createProxy(myid))
 
-    results = [SolverResult() for s in servers]
+    results = [SolverResult(s) for s in servers]
 
     for (s,r) in zip(servers,results):
         s.solve_async(r, jobid, axy, logproxy)
 
     waiting = [r for r in results]
     tardata = None
+
+    lastping = time.time()
+    pingperiod = 30 # seconds
+
     while len(waiting):
         time.sleep(1)
         for r in waiting:
@@ -120,6 +125,13 @@ def solve(jobid, axy, logfunc):
         if tardata:
             break
         waiting = [r for r in waiting if not r.isdone()]
+
+        tnow = time.time()
+        if tnow - lastping > pingperiod:
+            for r in waiting:
+                r.server.ping_async()
+            lastping = tnow
+
     return tardata
 
 def status():
