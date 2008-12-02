@@ -126,8 +126,9 @@ def solve(jobid, axy, logfunc):
             for r in waiting:
                 if not r.isdone():
                     logfunc('Cancelling ' + str(r.server))
-                    oneway = SolverIce.SolverPrx.uncheckedCast(r.server.ice_oneway())
-                    oneway.cancel(jobid)
+                    #oneway = SolverIce.SolverPrx.uncheckedCast(r.server.ice_oneway())
+                    #oneway.cancel(jobid)
+                    r.server.cancel(jobid)
                     
             #break
         waiting = [r for r in waiting if not r.isdone()]
