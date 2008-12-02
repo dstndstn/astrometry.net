@@ -2,13 +2,15 @@
 
 . /data1/dstn/dsolver/astrometry/net/ice/ice-config-hydra
 
-mkdir -p /tmp/node
+NODEDIR=db/node-`hostname -s`
+mkdir -p ${NODEDIR}
 
 echo "killing existing icegridnode..."
 . stopdaemon
 echo "starting icegridnode..."
 icegridnode --Ice.Config=config.grid \
     --IceGrid.Node.Name=`hostname -s` \
+    --IceGrid.Node.Data=${NODEDIR} \
     --deploy solver.xml \
     --checkdb \
     --daemon --nochdir --noclose \

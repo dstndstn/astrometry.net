@@ -47,9 +47,10 @@ IceGrid.Registry.DynamicRegistration=1
 #
 # This should be set on the command line.
 #IceGrid.Node.Name=
+# This should also be set on the command line.
+# It must be unique for each node.
+#IceGrid.Node.Data=/tmp/node
 IceGrid.Node.Endpoints=default
-#IceGrid.Node.Data=db/node
-IceGrid.Node.Data=/tmp/node
 IceGrid.Node.CollocateRegistry=0
 
 
