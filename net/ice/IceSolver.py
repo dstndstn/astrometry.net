@@ -134,9 +134,8 @@ def status():
     
 
 if __name__ == '__main__':
+    printlog = True
     if len(sys.argv) == 2 and sys.argv[1] == 'status':
-        #global printlog
-        printlog = True
         status()
         sys.exit(0)
 

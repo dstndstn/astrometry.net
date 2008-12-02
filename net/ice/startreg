@@ -2,5 +2,12 @@
 
 . /data1/dstn/dsolver/astrometry/net/ice/ice-config-hydra
 
-icegridregistry --Ice.Config=config.grid < /dev/null >> ${LOG}/registry.log 2>&1
+NODEDIR=db/node-registry
+mkdir -p ${NODEDIR}
+
+icegridregistry \
+    --Ice.Config=config.grid \
+    --IceGrid.Node.Name=registry \
+    --IceGrid.Node.Data=${NODEDIR} \
+    < /dev/null >> ${LOG}/registry.log 2>&1
 
