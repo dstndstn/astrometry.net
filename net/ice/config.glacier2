@@ -33,6 +33,7 @@ Glacier2.SessionManager=sessionmanager:tcp -h 127.0.0.1 -p 10001
 Glacier2.Client.Endpoints=tcp -h hydra.local -p 9998
 Glacier2.Server.Endpoints=tcp -h hydra.local -p 9999
 
+### This must be long enough 
 Glacier2.SessionTimeout=60
 
 #

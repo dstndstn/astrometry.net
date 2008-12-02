@@ -19,16 +19,27 @@ import Ice
 import SolverIce
 from astrometry.util.file import *
 
-_backend = None
-_libname = ctypes.util.find_library('libbackend.so')
-if _libname:
-    _backend = ctypes.CDLL(_libname)
-else:
-    #p = os.path.join(os.path.dirname(__file__), 'libbackend.so')
-    # FIXME
-    p = '/data1/dstn/dsolver/astrometry/blind/libbackend.so'
-    _backend = ctypes.CDLL(p)
+import logging
+import socket
+logfile = 'logs/solver-%s.log' % (socket.gethostname().split('.')[0])
+logging.basicConfig(level=logging.DEBUG, format='%(message)s', filename=logfile)
+def logmsg(*msg):
+    logging.debug(' '.join([str(m).decode('latin_1', 'backslashreplace') for m in msg]))
 
+_backend = None
+def get_backend_lib():
+    global _backend
+    if _backend:
+        return _backend
+    _libname = ctypes.util.find_library('libbackend.so')
+    if _libname:
+        _backend = ctypes.CDLL(_libname)
+    else:
+        # p = os.path.join(os.path.dirname(__file__), 'libbackend.so')
+        # FIXME
+        p = '/data1/dstn/dsolver/astrometry/blind/libbackend.so'
+        _backend = ctypes.CDLL(p)
+    return _backend
 
 class SolverI(SolverIce.Solver):
     def __init__(self, name, scale):
@@ -38,7 +49,7 @@ class SolverI(SolverIce.Solver):
 
     def solve_ctypes(self, jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current=None):
         # BUG - should do this once, outside this func!
-        Backend = _backend
+        Backend = get_backend_lib()
         Backend.log_init(3)
         Backend.log_set_thread_specific()
 
@@ -75,6 +86,9 @@ class SolverI(SolverIce.Solver):
         Backend.job_free(job)
 
     def solve_subprocess(self, jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current=None):
+        logmsg('Solving jobid ', jobid)
+        t0 = time.time()
+        myname = socket.gethostname().split('.')[0]
 
         def pipe_log_messages(f, logger):
             import select
@@ -89,32 +103,35 @@ class SolverI(SolverIce.Solver):
                     if len(s) == 0:
                         # eof
                         break
-                    print 'piping log messages (len %i)' % len(s)
-                    logger.logmessage(s)
+                    logmsg('t', (time.time()-t0), 'piping log messages (len %i)' % len(s))
+                    logger.logmessage(myname + ':\n' + s)
                 except Exception, e:
-                    print 'error:', e
+                    logmsg('t', (time.time()-t0), 'error:', e)
                     break
 
         command = ('cd %s; /data1/dstn/dsolver/astrometry/blind/backend ' +
                    '-v -c %s -d %s -C %s -s %s %s') % (mydir, configfn, mydir, cancelfn, solvedfn, axyfn)
+        logmsg('Running command:', command)
         (childin, childouterr) = os.popen4(command)
         childin.close()
         pipe_log_messages(childouterr, logger)
+        logmsg('Solving command returned.')
 
     def get_config_file(self):
         configfn = '/data1/dstn/dsolver/backend-config/backend-scale%i.cfg' % self.scale
         return configfn
 
     def solve(self, jobid, axy, logger, current=None):
-        print self.name + ' got a solve request.'
-        print 'jobid', jobid, 'axy has length', len(axy)
+        logmsg(self.name + ' got a solve request.')
+        logmsg('jobid', jobid, 'axy has length', len(axy))
+
         logger.logmessage('Hello from %s' % self.name)
         hostname = socket.gethostname().split('.')[0]
-        print 'I am host', hostname
+        #print 'I am host', hostname
         configfn = self.get_config_file()
-        print 'Reading config file', configfn
-        mydir = tempfile.mkdtemp()
-        print 'Working in temp directory', mydir
+        logmsg('Reading config file', configfn)
+        mydir = tempfile.mkdtemp('', 'backend-'+jobid+'-')
+        logmsg('Working in temp directory', mydir)
         axyfn = os.path.join(mydir, 'job.axy')
         write_file(axy, axyfn)
 
@@ -130,6 +147,9 @@ class SolverI(SolverIce.Solver):
             # tell the other servers to stop...
             #write_file('', cancelfn)
             write_file('', solvedfn)
+            logmsg('Solved.')
+        else:
+            logmsg('Did not solve.')
 
         (sin,sout) = os.popen2('cd %s; tar c .' % (mydir))
         sin.close()
