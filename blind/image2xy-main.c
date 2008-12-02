@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
 			overwrite = 1;
 			break;
 		case 'o':
-			outfn = optarg;
+			outfn = strdup(optarg);
 			break;
 		case '?':
 		case 'h':
@@ -126,5 +126,6 @@ int main(int argc, char *argv[]) {
         ERROR("image2xy failed.");
         exit(-1);
     }
+    free(outfn);
 	return 0;
 }

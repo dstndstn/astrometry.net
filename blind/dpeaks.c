@@ -103,6 +103,8 @@ int dpeaks(float *image,
 	for (i=0; i<(*npeaks); i++)
 		indx[i] = peaks[i];
 
+	FREEVEC(peaks);
+
     permuted_sort(smooth, sizeof(float), compare_floats_desc, indx, *npeaks);
 
 	if ((*npeaks) > maxnpeaks)
@@ -111,9 +113,11 @@ int dpeaks(float *image,
 	fullxcen = (int *) malloc((*npeaks) * sizeof(int));
 	fullycen = (int *) malloc((*npeaks) * sizeof(int));
 	for (i = 0;i < (*npeaks);i++) {
-		fullxcen[i] = peaks[indx[i]] % nx;
-		fullycen[i] = peaks[indx[i]] / nx;
+		fullxcen[i] = indx[i] % nx;
+		fullycen[i] = indx[i] / nx;
 	}
+
+	FREEVEC(indx);
 
 	/* 3. trim close peaks and joined peaks */
 	mask = (int *) malloc(sizeof(int) * nx * ny);
@@ -161,9 +165,7 @@ int dpeaks(float *image,
 	(*npeaks) = tmpnpeaks;
 
 	FREEVEC(smooth);
-	FREEVEC(peaks);
 	FREEVEC(keep);
-	FREEVEC(indx);
 	FREEVEC(object);
 	FREEVEC(mask);
 	FREEVEC(fullxcen);
