@@ -125,8 +125,10 @@ def solve(jobid, axy, logfunc):
         if tardata:
             for r in waiting:
                 if not r.isdone():
-                    logfunc('Cancelling ' + r.server)
-                    SolverIce.SolverPrx.uncheckedCast(r.server.ice_oneway()).cancel()
+                    logfunc('Cancelling ' + str(r.server))
+                    oneway = SolverIce.SolverPrx.uncheckedCast(r.server.ice_oneway())
+                    oneway.cancel(jobid)
+                    
             #break
         waiting = [r for r in waiting if not r.isdone()]
 
