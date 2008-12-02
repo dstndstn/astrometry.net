@@ -267,7 +267,7 @@ int main(int argc, char *args[]) {
 							 dl_get(coords, i*(2*dimquads) + j*2 + 0)-cx);
 		}
 		permutation_init(perm, dimquads);
-		permuted_sort(theta, sizeof(double), compare_doubles, perm, dimquads);
+		permuted_sort(theta, sizeof(double), compare_doubles_asc, perm, dimquads);
 
         // hack.
         if (background) {
