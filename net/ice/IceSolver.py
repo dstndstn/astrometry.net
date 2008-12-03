@@ -137,6 +137,9 @@ def solve(jobid, axy, logfunc):
                 r.server.ice_oneway().ice_ping()
             lastping = tnow
 
+    # grace period to let servers send their last log messages.
+    time.sleep(3)
+
     return tardata
 
 def status():
