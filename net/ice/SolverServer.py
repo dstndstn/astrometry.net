@@ -12,6 +12,9 @@ import os.path
 import thread
 import fcntl
 import tarfile
+import subprocess
+import signal
+
 from StringIO import StringIO
 
 import Ice
@@ -111,13 +114,23 @@ class SolverI(SolverIce.Solver):
                     logmsg('t', (time.time()-t0), 'error:', e)
                     break
 
-        command = ('cd %s; /data1/dstn/dsolver/astrometry/blind/backend ' +
-                   '-v -c %s -d %s -C %s -s %s %s') % (mydir, configfn, mydir, cancelfn, solvedfn, axyfn)
+        command = ('/data1/dstn/dsolver/astrometry/blind/backend ' +
+                   '-v -c %s -d %s -C %s -s %s %s') % (configfn, mydir, cancelfn, solvedfn, axyfn)
         logmsg('Running command:', command)
-        (childin, childouterr) = os.popen4(command)
+        sub = subprocess.Popen(command, bufsize=1, shell=True, stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True, cwd=mydir)
+        (childin, childouterr) = (sub.stdin, sub.stdout)
+        #command = ('cd %s; /data1/dstn/dsolver/astrometry/blind/backend ' +
+        #           '-v -c %s -d %s -C %s -s %s %s') % (mydir, configfn, mydir, cancelfn, solvedfn, axyfn)
+        #(childin, childouterr) = os.popen4(command)
         childin.close()
         pipe_log_messages(childouterr, logger)
         logmsg('Solving command returned.')
+        if sub.poll() is None:
+            # pipe_log_messages bailed: probably client hung up on us.  kill sub.
+            os.kill(sub.pid, signal.SIGTERM)
+            time.sleep(1.)
+        logmsg('Solving command return value: ', sub.poll())
 
     def get_config_file(self):
         configfn = '/data1/dstn/dsolver/backend-config/backend-scale%i.cfg' % self.scale
