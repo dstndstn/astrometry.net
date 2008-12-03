@@ -7,6 +7,11 @@ urlpatterns = (patterns('astrometry.net.portal.newjob',
                         (r'^newfile/$',         'newfile' ),
                         (r'^newlong/$',         'newlong' ),
                         ) +
+               #patterns('astrometry.net.portal.json',
+               #         (r'^newjson/$',          'newjob'  ),
+               #
+               # These are in ../urls.py
+               #
                #patterns('astrometry.net.portal.api',
                #         (r'^api/login', 'login'),
                #         (r'^api/logout', 'logout'),

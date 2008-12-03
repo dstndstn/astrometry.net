@@ -25,13 +25,14 @@ urlpatterns = (patterns('',
                         #(r'^easy-gmaps', 'astrometry.net.portal.easy_gmaps.tile'),
                         #
                         (r'^$', 'astrometry.net.portal.newjob.newlong'),
-                        # This is a fake placeholder to allow {% url %} and reverse() to resolve an.media to /anmedia.
-                        # (see also media() in an/__init__.py)
+                        # These are fake placeholders to allow {% url %} and reverse() to resolve an.media to /anmedia.
+                        # They have corresponding fake definitions in astrometry/net/__init__.py
                         (r'^anmedia/', 'astrometry.net.media'),
                         (r'^logout/', 'astrometry.net.logout'),
                         (r'^login/', 'astrometry.net.login'),
                         (r'^changepassword/',  'astrometry.net.changepassword'),
                         (r'^resetpassword/',   'astrometry.net.resetpassword'),
+                        (r'^newaccount/',   'astrometry.net.newaccount'),
                         )
                +
                patterns('astrometry.net.portal.api',

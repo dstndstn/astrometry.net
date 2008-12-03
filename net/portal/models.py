@@ -4,7 +4,7 @@ import sha
 
 from django.db import models
 from django.contrib.auth.models import User
-from django.core import validators
+#from django.core import validators
 
 import astrometry.net.settings as settings
 from astrometry.net.portal.log import log

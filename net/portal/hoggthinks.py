@@ -2,9 +2,9 @@ import urllib
 import tempfile
 import os
 
-from django import newforms as forms
+from django import forms
 from django.http import HttpResponse, HttpResponseRedirect
-from django.newforms import widgets, ValidationError, form_for_model
+from django.forms import widgets, ValidationError, form_for_model
 from django.template import Context, RequestContext, loader
 from django.core.urlresolvers import reverse
 

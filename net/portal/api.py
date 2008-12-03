@@ -40,6 +40,10 @@ class HttpResponseJson(HttpResponse):
         doc = python2json(args)
         super(HttpResponseJson, self).__init__(doc, content_type=json_type)
 
+#def json_auth_token_decorator(func):
+
+def create_session():
+    pass
 
 def login(request):
     json = request.POST.get('request-json')

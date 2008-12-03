@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core import validators
+#from django.core import validators
 import sha
 import re
 import time
@@ -41,13 +41,13 @@ class UploadedFile(models.Model):
         self.default_base_dir = basedir
 
     # (this has to be defined before the "uploadid" member variable)
-    def validateId(self, field_data, all_data):
-        if not self.isValidId(field_data):
-            raise validators.ValidationError('Invalid upload ID')
+    #def validateId(self, field_data, all_data):
+    #    if not self.isValidId(field_data):
+    #        raise validators.ValidationError('Invalid upload ID')
 
     uploadid = models.CharField(max_length=100,
                                 primary_key=True,
-                                validator_list=[validateId],
+                                #validator_list=[validateId],
                                 )
     user = models.ForeignKey(User, editable=False,
                              blank=True, null=True)

@@ -1,8 +1,8 @@
 from django.http import *
 from django.template import Context, RequestContext, loader
-from django import newforms as forms
+from django import forms as forms
 from django.core.urlresolvers import reverse
-from django.newforms import ValidationError
+from django.forms import ValidationError
 
 from models import UploadedFile
 import logging

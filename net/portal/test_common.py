@@ -25,22 +25,10 @@ class PortalTestCase(TestCase):
     def login1(self):
         self.client.login(username=self.u1, password=self.p1)
 
-    def assertOldFormError(self, response, form, field, error):
-        for c in response.context:
-            if not form in c:
-                continue
-            f = c['form']
-            #print 'f is', f
-            if not field in f.error_dict:
-                continue
-            self.assert_(error in f.error_dict[field])
-            return
-        # error not found.
-        self.assert_(False)
-
     def validatePage(self, url):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
+        print 'W3C Validation url: ', settings.W3C_VALIDATOR_URL
         v = W3CValidator(settings.W3C_VALIDATOR_URL)
         ok = v.validateText(resp.content)
         if ok:

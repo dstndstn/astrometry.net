@@ -272,8 +272,7 @@ class Submission(models.Model):
     uploaded = models.ForeignKey(UploadedFile, null=True, blank=True)
 
     parity = models.PositiveSmallIntegerField(choices=parity_CHOICES,
-                                              default=2,
-                                              core=True)
+                                              default=2)
 
     # for FITS tables, the names of the X and Y columns.
     xcol = models.CharField(max_length=16, blank=True)

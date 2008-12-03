@@ -1,4 +1,4 @@
-from django import newforms as forms
+from django import forms
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import Context, RequestContext, loader
 

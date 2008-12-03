@@ -10,7 +10,7 @@ import time
 
 from urllib import urlencode
 
-from django import newforms as forms
+from django import forms as forms
 
 import django.contrib.auth as auth
 from django.contrib.auth.decorators import login_required
@@ -18,7 +18,8 @@ from django.contrib.auth.models import User
 
 from django.db import models
 from django.http import HttpResponse, HttpResponseRedirect, QueryDict
-from django.newforms import widgets, ValidationError, form_for_model
+from django.forms import widgets, ValidationError
+from django.forms import ModelForm
 from django.template import Context, RequestContext, loader
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
@@ -810,14 +811,17 @@ def printvals(request):
 		for k,v in request.FILES.items():
 			log('  %s = %s' % (str(k), str(v)))
 
+class UserPreferencesForm(ModelForm):
+    class Meta:
+        model = UserPreferences
+
 @login_required
 def userprefs(request):
 	prefs = UserPreferences.for_user(request.user)
-	PrefsForm = form_for_model(UserPreferences)
 	if request.POST:
-		form = PrefsForm(request.POST)
+		form = UserPreferencesForm(request.POST)
 	else:
-		form = PrefsForm({
+		form = UserPreferencesForm({
 			'exposejobs': prefs.exposejobs,
 			})
 

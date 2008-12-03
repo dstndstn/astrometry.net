@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
-import django.newforms as forms
+import django.forms as forms
 
 from astrometry.net.portal import views
 from astrometry.net.portal.test_common import PortalTestCase
@@ -35,25 +35,20 @@ class LoginTestCases(PortalTestCase):
 
     def testEmptyUsername(self):
         resp = self.login_with('', 'pass')
-        #self.assertFormError(resp, 'form', 'username', 'This field is required.')
-        self.assertOldFormError(resp, 'form', 'username', 'This field is required.')
+        self.assertFormError(resp, 'form', 'username', 'This field is required.')
 
     def testEmptyPassword(self):
         resp = self.login_with('bob', '')
-        #self.assertFormError(resp, 'form', 'password', 'This field is required.')
-        self.assertOldFormError(resp, 'form', 'password', 'This field is required.')
+        self.assertFormError(resp, 'form', 'password', 'This field is required.')
 
     def testEmptyBoth(self):
         resp = self.login_with('', '')
-        #self.assertFormError(resp, 'form', 'username', 'This field is required.')
-        #self.assertFormError(resp, 'form', 'password', 'This field is required.')
-        self.assertOldFormError(resp, 'form', 'username', 'This field is required.')
-        self.assertOldFormError(resp, 'form', 'password', 'This field is required.')
+        self.assertFormError(resp, 'form', 'username', 'This field is required.')
+        self.assertFormError(resp, 'form', 'password', 'This field is required.')
 
     def assertBadUsernamePasswordPair(self, resp):
-        #self.assertFormError(resp, 'form', None,#'__all__',
-        self.assertOldFormError(resp, 'form', 'username',
-                                'Please enter a correct username and password. Note that both fields are case-sensitive.')
+        self.assertFormError(resp, 'form', None,#'__all__',
+                             'Please enter a correct username and password. Note that both fields are case-sensitive.')
 
     def testBadUsername(self):
         resp = self.login_with('u', 'smeg')
@@ -73,7 +68,7 @@ class LoginTestCases(PortalTestCase):
 
     # FIXME - this should maybe move to test_job_summary:
     def testJobSummaryRedirects(self):
-        url = reverse('astrometry.net.portal.views.summary')
+        url = reverse('astrometry.net.portal.views.joblist')
         resp = self.client.get(url)
         redirurl = self.urlprefix + self.loginurl + '?next=' + url
         self.assertRedirects(resp, redirurl)
@@ -83,7 +78,7 @@ class LoginTestCases(PortalTestCase):
     # check that when a user is logged in, they don't get redirected to the
     # login page.
     def testLoggedInNoRedirect(self):
-        url = reverse('astrometry.net.portal.views.summary')
+        url = reverse('astrometry.net.portal.views.joblist')
         self.login1()
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)

@@ -18,3 +18,6 @@ def changedpassword():
 
 def resetpassword():
     pass
+
+def newaccount():
+    pass

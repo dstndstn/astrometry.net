@@ -3,18 +3,13 @@ from unittest import TestLoader, TestSuite
 from astrometry.net.portal.test_login import LoginTestCases
 from astrometry.net.portal.test_newjob import NewJobTestCases
 from astrometry.net.portal.test_diskfile import DiskFileTestCases
+from astrometry.net.portal.test_api import ApiTestCases
 
 def suite():
     all_suites = TestSuite()
 
-    for x in [ LoginTestCases, NewJobTestCases, DiskFileTestCases ]:
+    for x in [ LoginTestCases, NewJobTestCases, DiskFileTestCases, ApiTestCases ]:
         suite  = TestLoader().loadTestsFromTestCase(x)
         all_suites.addTest(suite)
-
-    #suite  = TestLoader().loadTestsFromTestCase(LoginTestCases)
-    #all_suites.addTest(suite)
-
-    #suite = TestLoader().loadTestsFromTestCase(NewJobTestCases)
-    #all_suites.addTest(suite)
 
     return all_suites
