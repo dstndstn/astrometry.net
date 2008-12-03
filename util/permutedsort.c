@@ -59,7 +59,7 @@ struct permuted_sort_t {
 typedef struct permuted_sort_t permsort_t;
 
 // This is the comparison function we use.
-static int compare_permuted(void* user, const void* v1, const void* v2) {
+static int QSORT_COMPARISON_FUNCTION(compare_permuted, void* user, const void* v1, const void* v2) {
     permsort_t* ps = user;
 	int i1 = *(int*)v1;
 	int i2 = *(int*)v2;
