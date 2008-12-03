@@ -42,6 +42,10 @@ def get_backend_lib():
         # FIXME
         p = '/data1/dstn/dsolver/astrometry/blind/libbackend.so'
         _backend = ctypes.CDLL(p)
+
+    Backend.log_init(3)
+    Backend.log_set_thread_specific()
+
     return _backend
 
 class SolverI(SolverIce.Solver):
@@ -53,10 +57,6 @@ class SolverI(SolverIce.Solver):
         self.dirs = {}
 
     def solve_ctypes(self, jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current=None):
-        # BUG - should do this once, outside this func!
-        Backend = get_backend_lib()
-        Backend.log_init(3)
-        Backend.log_set_thread_specific()
 
         def pipe_log_messages(p, logger):
             fcntl.fcntl(p, fcntl.F_SETFL, os.O_NDELAY | os.O_NONBLOCK)
@@ -71,12 +71,12 @@ class SolverI(SolverIce.Solver):
                         print 'io error:', e
                 time.sleep(1.)
 
+        Backend = get_backend_lib()
         (rpipe,wpipe) = os.pipe()
         Backend.log_to_fd(wpipe)
         thread.start_new_thread(pipe_log_messages, (rpipe, logger))
 
         backend = Backend.backend_new()
-        #print 'backend is 0x%x' % backend
         if Backend.backend_parse_config_file(backend, configfn):
             print 'Failed to initialize backend.'
             sys.exit(-1)
