@@ -2,8 +2,7 @@
 
 scales=[10,5,4,3,2]
 
-OLDnodes = [
-    ('hydra', [10]),
+all_nodes = [
     ('neuron-0-0', [10, 5]),
     ('neuron-0-1', [4]),
     ('neuron-0-2', [3]),
@@ -16,9 +15,21 @@ OLDnodes = [
     ('neuron-0-9', [4]),
     ('neuron-0-10', [3]),
     ('neuron-0-11', [2]),
+    ('neuron-0-12', [10, 5]),
+    ('neuron-0-13', [4]),
+    ('neuron-0-14', [3]),
+    ('neuron-0-15', [2]),
+    ('neuron-0-16', [10, 5]),
+    ('neuron-0-17', [4]),
+    ('neuron-0-18', [3]),
+    ('neuron-0-19', [2]),
+    ('neuron-0-20', [10, 5]),
+    ('neuron-0-21', [4]),
+    ('neuron-0-22', [3]),
+    ('neuron-0-23', [2]),
     ]
 
-nodes = [
+some_nodes = [
     ('neuron-0-0', [10]),
     ('neuron-0-1', [5]),
     ('neuron-0-2', [4]),
@@ -42,6 +53,7 @@ TEST_nodes = [
     ('neuron-0-5', [10]),
     ]
 
+nodes = all_nodes
 
 print '''
 <icegrid>
