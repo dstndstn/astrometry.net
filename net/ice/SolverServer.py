@@ -43,20 +43,42 @@ def get_backend_lib():
         p = '/data1/dstn/dsolver/astrometry/blind/libbackend.so'
         _backend = ctypes.CDLL(p)
 
-    Backend.log_init(3)
-    Backend.log_set_thread_specific()
-
     return _backend
 
 class SolverI(SolverIce.Solver):
     def __init__(self, name, scale):
         self.name = name
         self.scale = scale
+
+        # The libbackend.so library
+        self.Backend = None
+        # This object's backend object
+        self.backend = None
+
         print 'SolverServer running: pid', os.getpid()
         # HACK
         self.dirs = {}
 
-    def solve_ctypes(self, jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current=None):
+    def init_backend(self):
+        Backend = get_backend_lib()
+        Backend.log_init(3)
+        Backend.log_set_thread_specific()
+
+        configfn = self.get_config_file()
+
+        backend = Backend.backend_new()
+        logmsg('Reading config file ', configfn)
+        if Backend.backend_parse_config_file(backend, configfn):
+            print 'Failed to initialize backend.'
+            sys.exit(-1)
+        self.Backend = Backend
+        self.backend = backend
+
+    def solve_ctypes(self, jobid, axy, logger, axyfn, cancelfn, solvedfn, mydir, current=None):
+        if self.backend is None:
+            self.init_backend()
+        backend = self.backend
+        Backend = self.Backend
 
         def pipe_log_messages(p, logger):
             fcntl.fcntl(p, fcntl.F_SETFL, os.O_NDELAY | os.O_NONBLOCK)
@@ -71,26 +93,23 @@ class SolverI(SolverIce.Solver):
                         print 'io error:', e
                 time.sleep(1.)
 
-        Backend = get_backend_lib()
         (rpipe,wpipe) = os.pipe()
         Backend.log_to_fd(wpipe)
         thread.start_new_thread(pipe_log_messages, (rpipe, logger))
 
-        backend = Backend.backend_new()
-        if Backend.backend_parse_config_file(backend, configfn):
-            print 'Failed to initialize backend.'
-            sys.exit(-1)
         job = Backend.backend_read_job_file(backend, axyfn)
         #print 'job is 0x%x' % job
         if not job:
             print 'Failed to read job.'
             return
         Backend.job_set_base_dir(job, mydir)
-        #Backend.job_set_cancel_file(job, cancelfile)
+        Backend.job_set_cancel_file(job, cancelfn)
+        Backend.job_set_solved_file(job, solvedfn)
         Backend.backend_run_job(backend, job)
         Backend.job_free(job)
 
-    def solve_subprocess(self, jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current=None):
+    def solve_subprocess(self, jobid, axy, logger, axyfn, cancelfn, solvedfn, mydir, current=None):
+        configfn = self.get_config_file()
         logmsg('Solving jobid ', jobid)
         t0 = time.time()
         myname = socket.gethostname().split('.')[0]
@@ -140,8 +159,6 @@ class SolverI(SolverIce.Solver):
         logger.logmessage('Hello from %s' % self.name)
         hostname = socket.gethostname().split('.')[0]
         #print 'I am host', hostname
-        configfn = self.get_config_file()
-        logmsg('Reading config file', configfn)
         mydir = tempfile.mkdtemp('', 'backend-'+jobid+'-')
 
         self.dirs[jobid] = mydir
@@ -157,8 +174,8 @@ class SolverI(SolverIce.Solver):
         cancelfn = mydir + '/cancel'
         solvedfn = mydir + '/solved'
 
-        # self.solve_ctypes(jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current)
-        self.solve_subprocess(jobid, axy, logger, configfn, axyfn, cancelfn, solvedfn, mydir, current)
+        self.solve_ctypes(jobid, axy, logger, axyfn, cancelfn, solvedfn, mydir, current)
+        #self.solve_subprocess(jobid, axy, logger, axyfn, cancelfn, solvedfn, mydir, current)
 
         solved = os.path.exists(mydir + '/wcs.fits')
         if solved:

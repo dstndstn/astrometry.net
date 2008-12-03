@@ -3,10 +3,12 @@
 . /data1/dstn/dsolver/astrometry/net/ice/ice-config-hydra
 
 icegridadmin --Ice.Config=config.grid <<END
-application update solver.xml
+application remove Solver
+application add solver.xml
 application list
 node list
 server list
 END
 echo
 
+#application update solver.xml
