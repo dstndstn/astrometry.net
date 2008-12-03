@@ -133,7 +133,7 @@ char * qfits_query_hdr(const char * filename, const char * keyword)
 /*----------------------------------------------------------------------------*/
 char * qfits_query_ext(const char * filename, const char * keyword, int xtnum)
 {
-    char    *   exp_key ;
+    char        exp_key[FITS_LINESZ+1];
     char    *   where ;
     char    *   start ;
     char    *   value ;
@@ -153,7 +153,7 @@ char * qfits_query_ext(const char * filename, const char * keyword, int xtnum)
 	}
 
     /* Expand keyword */
-    exp_key = qfits_expand_keyword(keyword);
+    qfits_expand_keyword_r(keyword, exp_key);
 
     /*
      * Find out offsets to the required extension
@@ -498,7 +498,7 @@ char * qfits_query_card(
         const char  *   filename,
         const char  *   keyword) 
 {
-    char    *   exp_key ;
+    char        exp_key[FITS_LINESZ+1];
     int         fd ;
     char    *   buf ;
     char    *   buf2 ;
@@ -510,7 +510,7 @@ char * qfits_query_card(
     if (filename==NULL || keyword==NULL) return NULL ;
 
     /* Expand keyword */
-    exp_key = qfits_expand_keyword(keyword) ;
+    qfits_expand_keyword_r(keyword, exp_key);
 
     /* Memory-map the FITS header of the input file  */
 	hs = -1;
@@ -587,7 +587,7 @@ int qfits_replace_card(
         const char  *   keyword,
         const char  *   substitute)
 {
-    char    *   exp_key ;
+    char        exp_key[FITS_LINESZ+1];
     int         fd ;
     char    *   buf ;
     char    *   buf2 ;
@@ -599,7 +599,7 @@ int qfits_replace_card(
     if (filename==NULL || keyword==NULL || substitute==NULL) return -1 ;
 
     /* Expand keyword */
-    exp_key = qfits_expand_keyword(keyword);
+    qfits_expand_keyword_r(keyword, exp_key);
     /*
      * Memory-map the FITS header of the input file 
      */

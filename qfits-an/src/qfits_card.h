@@ -38,4 +38,6 @@ char * qfits_getvalue(const char *) ;
 char * qfits_getcomment(const char *) ;
 char * qfits_expand_keyword(const char *) ;
 
+char * qfits_expand_keyword_r(const char *, char*);
+
 #endif

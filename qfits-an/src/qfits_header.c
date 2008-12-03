@@ -33,7 +33,7 @@
  -----------------------------------------------------------------------------*/
 
 #include "qfits_header.h"
-
+#include "qfits_std.h"
 #include "qfits_tools.h"
 #include "qfits_card.h"
 #include "qfits_error.h"
@@ -329,11 +329,11 @@ void qfits_header_add_after(
 {
     keytuple    *   kreq;
     keytuple    *   k;
-    char        *   exp_after ;
+    char           exp_after[FITS_LINESZ+1] ;
 
     if (hdr==NULL || after==NULL || key==NULL) return ;
 
-    exp_after = qfits_expand_keyword(after);
+    qfits_expand_keyword_r(after, exp_after);
     /* Locate where the entry is requested */
     kreq = (keytuple*)(hdr->first) ;
     while (kreq!=NULL) {
@@ -405,11 +405,11 @@ void qfits_header_append(
 void qfits_header_del(qfits_header * hdr, const char * key)
 {
     keytuple    *   k ;
-    char        *   xkey ;
+    char            xkey[FITS_LINESZ];
 
     if (hdr==NULL || key==NULL) return ;
 
-    xkey = qfits_expand_keyword(key);
+    qfits_expand_keyword_r(key, xkey);
     k = (keytuple*)hdr->first ;
     while (k!=NULL) {
         if (!strcmp(k->key, xkey)) break ;
@@ -448,11 +448,11 @@ void qfits_header_mod(
         const char      *   com)
 {
     keytuple    *   k ;
-    char        *   xkey ;
+    char            xkey[FITS_LINESZ+1];
 
     if (hdr==NULL || key==NULL) return ;
 
-    xkey = qfits_expand_keyword(key);
+    qfits_expand_keyword_r(key, xkey);
     k = (keytuple*)hdr->first ;
     while (k!=NULL) {
         if (!strcmp(k->key, xkey)) break ;
@@ -613,11 +613,11 @@ void qfits_header_destroy(qfits_header * hdr)
 char * qfits_header_getstr(const qfits_header * hdr, const char * key)
 {
     keytuple    *   k ;
-    char        *   xkey ;
+    char            xkey[FITS_LINESZ+1] ;
 
     if (hdr==NULL || key==NULL) return NULL ;
 
-    xkey = qfits_expand_keyword(key);
+    qfits_expand_keyword_r(key, xkey);
     k = (keytuple*)hdr->first ;
     while (k!=NULL) {
         if (!strcmp(k->key, xkey)) break ;
@@ -731,11 +731,11 @@ int qfits_header_getitem(
 char * qfits_header_getcom(const qfits_header * hdr, const char * key)
 {
     keytuple    *   k ;
-    char        *   xkey ;
+    char            xkey[FITS_LINESZ+1] ;
 
     if (hdr==NULL || key==NULL) return NULL ;
 
-    xkey = qfits_expand_keyword(key);
+    qfits_expand_keyword_r(key, xkey);
     k = (keytuple*)hdr->first ;
     while (k!=NULL) {
         if (!strcmp(k->key, xkey)) break ;
@@ -954,6 +954,7 @@ static keytuple * keytuple_new(
         const char * com,
         const char * lin)
 {
+    char xkey[FITS_LINESZ+1];
     keytuple    *    k ;
 
     if (key==NULL) return NULL ;
@@ -961,8 +962,9 @@ static keytuple * keytuple_new(
     /* Allocate space for new structure */
     k = qfits_malloc(sizeof(keytuple));
     /* Hook a copy of the new key */
-    k->key = qfits_strdup(qfits_expand_keyword(key)) ;
-    /* Hook a copy of the value if defined */
+    qfits_expand_keyword_r(key, xkey);
+    k->key = qfits_strdup(xkey);
+    /* Hook a copy of th        e value if defined */
     k->val = NULL ;
     if (val!=NULL) {
         if (strlen(val)>0) k->val = qfits_strdup(val);

@@ -261,7 +261,7 @@ void blind_run(blind_t* bp) {
 	logverb("Reading fields file %s...", bp->fieldfname);
 	bp->xyls = xylist_open(bp->fieldfname);
 	if (!bp->xyls) {
-		logerr("Failed to read xylist.\n");
+		ERROR("Failed to read xylist.\n");
 		exit( -1);
 	}
 	xylist_set_xname(bp->xyls, bp->xcolname);

@@ -32,6 +32,8 @@
                                    Defines
  -----------------------------------------------------------------------------*/
 
+#define QFITS_THREAD_UNSAFE {}
+
 /* FITS header constants */
 
 /** FITS block size */

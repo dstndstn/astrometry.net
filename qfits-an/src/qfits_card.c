@@ -38,6 +38,7 @@
 #include <ctype.h>
 #include <unistd.h>
 
+#include "qfits_std.h"
 #include "qfits_card.h"
 #include "qfits_tools.h"
 #include "qfits_error.h"
@@ -449,27 +450,9 @@ char * qfits_getcomment(const char * line)
 
 /*----------------------------------------------------------------------------*/
 /**
-  @brief    Expand a keyword from shortFITS to HIERARCH notation.
-  @param    keyword        Keyword to expand.
-  @return    1 pointer to statically allocated string.
-
-  This function expands a given keyword from shortFITS to HIERARCH
-  notation, bringing it to uppercase at the same time.
-
-  Examples:
-
-  @verbatim
-  det.dit          expands to     HIERARCH ESO DET DIT
-  ins.filt1.id     expands to     HIERARCH ESO INS FILT1 ID
-  @endverbatim
-
-  If the input keyword is a regular FITS keyword (i.e. it contains
-  not dots '.') the result is identical to the input.
+   Thread-safe version of qfits_expand_keyword.
  */
-/*----------------------------------------------------------------------------*/
-char * qfits_expand_keyword(const char * keyword)
-{
-    static char expanded[81];
+char* qfits_expand_keyword_r(const char * keyword, char* expanded) {
     char        ws[81];
     char    *    token ;
 
@@ -489,10 +472,38 @@ char * qfits_expand_keyword(const char * keyword)
         strcat(expanded, token);
         token = strtok(NULL, ".");
     }
-    return expanded ;
+    return expanded;
 }
 
+
+/*----------------------------------------------------------------------------*/
+/**
+  @brief    Expand a keyword from shortFITS to HIERARCH notation.
+  @param    keyword        Keyword to expand.
+  @return    1 pointer to statically allocated string.
+
+  This function expands a given keyword from shortFITS to HIERARCH
+  notation, bringing it to uppercase at the same time.
+
+  Examples:
+
+  @verbatim
+  det.dit          expands to     HIERARCH ESO DET DIT
+  ins.filt1.id     expands to     HIERARCH ESO INS FILT1 ID
+  @endverbatim
+
+  If the input keyword is a regular FITS keyword (i.e. it contains
+  not dots '.') the result is identical to the input.
+ */
+/*----------------------------------------------------------------------------*/
+char * qfits_expand_keyword(const char * keyword) {
+    static char expanded[81];
+    QFITS_THREAD_UNSAFE;
+    qfits_expand_keyword_r(keyword, expanded);
+    return expanded;
+}
 /**@}*/
+
 
 /*----------------------------------------------------------------------------*/
 /**
