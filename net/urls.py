@@ -38,6 +38,7 @@ urlpatterns = (patterns('',
                patterns('astrometry.net.portal.api',
                         (r'^api/login', 'login'),
                         (r'^api/logout', 'logout'),
+                        (r'^api/amiloggedin', 'amiloggedin'),
                         )
                )
 

@@ -1,3 +1,4 @@
+from django.contrib import auth
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -42,8 +43,12 @@ class HttpResponseJson(HttpResponse):
 
 #def json_auth_token_decorator(func):
 
-def create_session():
-    pass
+def create_session(key):
+    from django.conf import settings
+    engine = __import__(settings.SESSION_ENGINE, {}, {}, [''])
+    sess = engine.SessionStore(key)
+    # sess.session_key creates a new key if necessary.
+    return sess
 
 def login(request):
     json = request.POST.get('request-json')
@@ -61,9 +66,46 @@ def login(request):
     if user is None:
         return HttpResponseErrorJson('incorrect username/password')
 
+    # User has successfully logged in.  Create session.
+    session = create_session(None)
+    #request.json_session = session
+
+    request.session = session
+    auth.login(request, user)
+    del request.session
+
+    session.save()
+
+    key = session.session_key
     return HttpResponseJson({ 'status': 'success',
                               'message': 'authenticated user: ' + str(user.email),
+                              'session': key,
                               })
+
+def amiloggedin(request):
+    json = request.POST.get('request-json')
+    if not json:
+        return HttpResponseErrorJson('no json')
+    args = json2python(json)
+    if args is None:
+        return HttpResponseErrorJson('failed to parse JSON: ', json)
+    if not 'session' in args:
+        return HttpResponseJson({ 'loggedin': False,
+                                  'reason': 'no session in args'})
+    key = args['session']
+    session = create_session(key)
+    if not session.exists(key):
+        return HttpResponseJson({ 'loggedin': False,
+                                  'reason': 'no such session with key: '+key})
+    request.session = session
+    user = auth.get_user(request)
+    del request.session
+
+    if not user.is_authenticated():
+        return HttpResponseJson({ 'loggedin': False,
+                                  'reason': 'user is not authenticated.'})
+    return HttpResponseJson({ 'loggedin': True,
+                              'username': user.username})
 
 def logout(request):
     return HttpResponse('Not implemented.')
