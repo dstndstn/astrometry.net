@@ -120,9 +120,6 @@ class SolverI(SolverIce.Solver):
         sub = subprocess.Popen(command, bufsize=1, shell=True, stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True, cwd=mydir)
         (childin, childouterr) = (sub.stdin, sub.stdout)
-        #command = ('cd %s; /data1/dstn/dsolver/astrometry/blind/backend ' +
-        #           '-v -c %s -d %s -C %s -s %s %s') % (mydir, configfn, mydir, cancelfn, solvedfn, axyfn)
-        #(childin, childouterr) = os.popen4(command)
         childin.close()
         pipe_log_messages(childouterr, logger)
         logmsg('Solving command returned.')
