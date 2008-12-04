@@ -24,24 +24,27 @@ class ApiTestCases(TestCase):
         for (e, p) in accts:
             User.objects.create_user(e, e, p).save()
 
+    def post_json(self, url, args):
+        json = python2json(args)
+        resp = self.client.post(url, { 'request-json': json })
+        resp.json = json2python(resp.content)
+        return resp
+
     def login_with(self, username, password):
         args = { 'username': username,
                  'password': password, }
-        json = python2json(args)
-        resp = self.client.post(self.loginurl, { 'request-json': json })
+        resp = self.post_json(self.loginurl, args)
         print 'response is', resp
         return resp
 
     def test_correct_login(self):
         resp = self.login_with(self.u1, self.p1)
-        py = json2python(resp.content)
-        print 'response args: ', py
-        self.assert_('session' in py)
-        key = py['session']
+        print 'response args: ', resp.json
+        self.assert_('session' in resp.json)
+        key = resp.json['session']
         args = {'session': key}
-        json = python2json(args)
-        r2 = self.client.post(reverse('astrometry.net.portal.api.amiloggedin'),
-                              { 'request-json': json})
+        r2 = self.post_json(reverse('astrometry.net.portal.api.amiloggedin'),
+                            args)
         print 'response is', r2
 
     def test_logout(self):
@@ -49,18 +52,18 @@ class ApiTestCases(TestCase):
         print 'test_logout: logging in.'
         print
         resp = self.login_with(self.u1, self.p1)
-        py = json2python(resp.content)
-        print 'response args: ', py
-        print 'cookies:', self.client.cookies
-
-        self.assert_('session' in py)
-        key = py['session']
+        print 'response args: ', resp.json
+        self.assert_('session' in resp.json)
+        key = resp.json['session']
         args = {'session': key}
-        json = python2json(args)
         print
         print 'test_logout: logging out.'
         print
-        r2 = self.client.post(reverse('astrometry.net.portal.api.logout'),
-                              { 'request-json': json})
+        r2 = self.post_json(reverse('astrometry.net.portal.api.logout'),
+                            args)
         print 'response is', r2
         print 'cookies:', self.client.cookies
+        print 'session:', self.client.session
+        
+        #self.assert_(
+            

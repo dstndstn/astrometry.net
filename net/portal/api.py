@@ -56,7 +56,7 @@ def create_session(key):
 # decorator for extracting JSON arguments from a POST.
 def requires_json_args(handler):
     def handle_request(request, *pargs, **kwargs):
-        print 'requires_json_args decorator running.'
+        #print 'requires_json_args decorator running.'
         json = request.POST.get('request-json')
         if not json:
             return HttpResponseErrorJson('no json')
@@ -64,7 +64,7 @@ def requires_json_args(handler):
         if args is None:
             return HttpResponseErrorJson('failed to parse JSON: ', json)
         request.json = args
-        print 'json:', request.json
+        #print 'json:', request.json
         return handler(request, *pargs, **kwargs)
     return handle_request
 
@@ -73,7 +73,7 @@ def requires_json_args(handler):
 # by the "requires_json_args" decorator.
 def requires_json_session(handler):
     def handle_request(request, *args, **kwargs):
-        print 'requires_json_session decorator running.'
+        #print 'requires_json_session decorator running.'
         if not 'session' in request.json:
             return HttpResponseErrorJson('no "session" in JSON.')
         key = request.json['session']
@@ -81,7 +81,7 @@ def requires_json_session(handler):
         if not session.exists(key):
             return HttpResponseErrorJson('no session with key "%s"' % key)
         request.session = session
-        print 'session:', request.session
+        #print 'session:', request.session
         resp = handler(request, *args, **kwargs)
         session.save()
         # remove the session from the request so that SessionMiddleware
@@ -92,23 +92,18 @@ def requires_json_session(handler):
 
 def requires_json_login(handler):
     def handle_request(request, *args, **kwargs):
-        print 'requires_json_login decorator running.'
+        #print 'requires_json_login decorator running.'
         user = auth.get_user(request)
-        print 'user:', request.session
+        #print 'user:', request.session
         if not user.is_authenticated():
             return HttpResponseErrorJson('user is not authenticated.')
         return handler(request, *args, **kwargs)
     return handle_request
     
+@requires_json_args
 def login(request):
-    json = request.POST.get('request-json')
-    if not json:
-        return HttpResponseErrorJson('no json')
-    args = json2python(json)
-    if args is None:
-        return HttpResponseErrorJson('failed to parse JSON: ', json)
-    uname = args.get('username')
-    password = args.get('password')
+    uname = request.json.get('username')
+    password = request.json.get('password')
     if uname is None or password is None:
         return HttpResponseErrorJson('need "username" and "password".')
 
@@ -118,34 +113,34 @@ def login(request):
 
     # User has successfully logged in.  Create session.
     session = create_session(None)
-    #request.json_session = session
 
     request.session = session
     auth.login(request, user)
     del request.session
 
-    # generate pubkey
-    keybits = 512
-    privkey = RSA.generate(keybits, os.urandom)
-    privkeystr = base64.encodestring(pickle.dumps(privkey.__getstate__()))
-    pubkey = privkey.publickey()
-    pubkeystr = base64.encodestring(pickle.dumps(pubkey.__getstate__()))
+    if False:
+        # generate pubkey
+        keybits = 512
+        privkey = RSA.generate(keybits, os.urandom)
+        privkeystr = base64.encodestring(pickle.dumps(privkey.__getstate__()))
+        pubkey = privkey.publickey()
+        pubkeystr = base64.encodestring(pickle.dumps(pubkey.__getstate__()))
 
-    # client encodes like this:
-    message = 'Mary had a little hash'
-    ckey = RSA.RSAobj()
-    ckey.__setstate__(pickle.loads(base64.decodestring(pubkeystr)))
-    secret = ckey.encrypt(message, K='')
-    logmsg('secret = ', secret)
+        # client encodes like this:
+        message = 'Mary had a little hash'
+        ckey = RSA.RSAobj()
+        ckey.__setstate__(pickle.loads(base64.decodestring(pubkeystr)))
+        secret = ckey.encrypt(message, K='')
+        logmsg('secret = ', secret)
 
-    # server decodes like this:
-    skey = RSA.RSAobj()
-    skey.__setstate__(pickle.loads(base64.decodestring(privkeystr)))
-    dmessage = skey.decrypt(secret)
-    logmsg('decrypted = ', dmessage)
+        # server decodes like this:
+        skey = RSA.RSAobj()
+        skey.__setstate__(pickle.loads(base64.decodestring(privkeystr)))
+        dmessage = skey.decrypt(secret)
+        logmsg('decrypted = ', dmessage)
 
-    session['private_key'] = privkeystr
-    session['public_key'] = pubkeystr
+        session['private_key'] = privkeystr
+        session['public_key'] = pubkeystr
 
     session.save()
 
@@ -153,7 +148,7 @@ def login(request):
     return HttpResponseJson({ 'status': 'success',
                               'message': 'authenticated user: ' + str(user.email),
                               'session': key,
-                              'pubkey': pubkeystr,
+                              #'pubkey': pubkeystr,
                               })
 
 @requires_json_args
@@ -181,4 +176,7 @@ def amiloggedin(request):
 @requires_json_session
 @requires_json_login
 def logout(request):
-    return HttpResponse('Not implemented.')
+    uname = request.user.username
+    auth.logout(request)
+    return HttpResponseJson({ 'status': 'Success',
+                              'message': 'User "%s" logged out.' % uname })
