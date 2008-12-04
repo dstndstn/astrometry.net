@@ -1,6 +1,6 @@
 from django.contrib import auth
 from django.contrib.auth import authenticate
-from django.contrib.auth.decorators import login_required
+#from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
 # from django.contrib.sessions.backends.db import SessionStore
@@ -46,8 +46,6 @@ class HttpResponseJson(HttpResponse):
         doc = python2json(args)
         super(HttpResponseJson, self).__init__(doc, content_type=json_type)
 
-#def json_auth_token_decorator(func):
-
 def create_session(key):
     from django.conf import settings
     engine = __import__(settings.SESSION_ENGINE, {}, {}, [''])
@@ -55,6 +53,53 @@ def create_session(key):
     # sess.session_key creates a new key if necessary.
     return sess
 
+# decorator for extracting JSON arguments from a POST.
+def requires_json_args(handler):
+    def handle_request(request, *pargs, **kwargs):
+        print 'requires_json_args decorator running.'
+        json = request.POST.get('request-json')
+        if not json:
+            return HttpResponseErrorJson('no json')
+        args = json2python(json)
+        if args is None:
+            return HttpResponseErrorJson('failed to parse JSON: ', json)
+        request.json = args
+        print 'json:', request.json
+        return handler(request, *pargs, **kwargs)
+    return handle_request
+
+# decorator for retrieving the user's session based on a session key in JSON.
+# requires "request.json" to exist: you probably need to precede this decorator
+# by the "requires_json_args" decorator.
+def requires_json_session(handler):
+    def handle_request(request, *args, **kwargs):
+        print 'requires_json_session decorator running.'
+        if not 'session' in request.json:
+            return HttpResponseErrorJson('no "session" in JSON.')
+        key = request.json['session']
+        session = create_session(key)
+        if not session.exists(key):
+            return HttpResponseErrorJson('no session with key "%s"' % key)
+        request.session = session
+        print 'session:', request.session
+        resp = handler(request, *args, **kwargs)
+        session.save()
+        # remove the session from the request so that SessionMiddleware
+        # doesn't try to set cookies.
+        del request.session
+        return resp
+    return handle_request
+
+def requires_json_login(handler):
+    def handle_request(request, *args, **kwargs):
+        print 'requires_json_login decorator running.'
+        user = auth.get_user(request)
+        print 'user:', request.session
+        if not user.is_authenticated():
+            return HttpResponseErrorJson('user is not authenticated.')
+        return handler(request, *args, **kwargs)
+    return handle_request
+    
 def login(request):
     json = request.POST.get('request-json')
     if not json:
@@ -111,17 +156,12 @@ def login(request):
                               'pubkey': pubkeystr,
                               })
 
+@requires_json_args
 def amiloggedin(request):
-    json = request.POST.get('request-json')
-    if not json:
-        return HttpResponseErrorJson('no json')
-    args = json2python(json)
-    if args is None:
-        return HttpResponseErrorJson('failed to parse JSON: ', json)
-    if not 'session' in args:
+    if not 'session' in request.json:
         return HttpResponseJson({ 'loggedin': False,
                                   'reason': 'no session in args'})
-    key = args['session']
+    key = request.json['session']
     session = create_session(key)
     if not session.exists(key):
         return HttpResponseJson({ 'loggedin': False,
@@ -136,5 +176,9 @@ def amiloggedin(request):
     return HttpResponseJson({ 'loggedin': True,
                               'username': user.username})
 
+
+@requires_json_args
+@requires_json_session
+@requires_json_login
 def logout(request):
     return HttpResponse('Not implemented.')

@@ -44,3 +44,23 @@ class ApiTestCases(TestCase):
                               { 'request-json': json})
         print 'response is', r2
 
+    def test_logout(self):
+        print
+        print 'test_logout: logging in.'
+        print
+        resp = self.login_with(self.u1, self.p1)
+        py = json2python(resp.content)
+        print 'response args: ', py
+        print 'cookies:', self.client.cookies
+
+        self.assert_('session' in py)
+        key = py['session']
+        args = {'session': key}
+        json = python2json(args)
+        print
+        print 'test_logout: logging out.'
+        print
+        r2 = self.client.post(reverse('astrometry.net.portal.api.logout'),
+                              { 'request-json': json})
+        print 'response is', r2
+        print 'cookies:', self.client.cookies
