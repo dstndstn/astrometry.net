@@ -12,8 +12,13 @@ from django.core.urlresolvers import reverse
 #from django.core.exceptions import ObjectDoesNotExist
 
 #from astrometry.net.portal.job import Job, Submission, DiskFile, Tag
-from astrometry.net.portal.log import log
+from astrometry.net.portal.log import log as logmsg
 from astrometry.net import settings
+
+import os
+import pickle
+import base64
+from Crypto.PublicKey import RSA
 
 def json2python(json):
     from simplejson import loads
@@ -74,12 +79,36 @@ def login(request):
     auth.login(request, user)
     del request.session
 
+    # generate pubkey
+    keybits = 512
+    privkey = RSA.generate(keybits, os.urandom)
+    privkeystr = base64.encodestring(pickle.dumps(privkey.__getstate__()))
+    pubkey = privkey.publickey()
+    pubkeystr = base64.encodestring(pickle.dumps(pubkey.__getstate__()))
+
+    # client encodes like this:
+    message = 'Mary had a little hash'
+    ckey = RSA.RSAobj()
+    ckey.__setstate__(pickle.loads(base64.decodestring(pubkeystr)))
+    secret = ckey.encrypt(message, K='')
+    logmsg('secret = ', secret)
+
+    # server decodes like this:
+    skey = RSA.RSAobj()
+    skey.__setstate__(pickle.loads(base64.decodestring(privkeystr)))
+    dmessage = skey.decrypt(secret)
+    logmsg('decrypted = ', dmessage)
+
+    session['private_key'] = privkeystr
+    session['public_key'] = pubkeystr
+
     session.save()
 
     key = session.session_key
     return HttpResponseJson({ 'status': 'success',
                               'message': 'authenticated user: ' + str(user.email),
                               'session': key,
+                              'pubkey': pubkeystr,
                               })
 
 def amiloggedin(request):
