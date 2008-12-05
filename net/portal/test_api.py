@@ -6,6 +6,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
 from astrometry.net.portal.api import json2python, python2json
+from astrometry.net.portal.job import Job, Tag
 
 # Run with:
 # cd ~/test/astrometry/net; python manage.py test portal.ApiTestCases
@@ -20,9 +21,8 @@ class ApiTestCases(TestCase):
         # temporary user database.
         self.u1 = 'test1@astrometry.net'
         self.p1 = 'password1'
-        accts = [ (self.u1, self.p1), ]
-        for (e, p) in accts:
-            User.objects.create_user(e, e, p).save()
+        self.user1 = User.objects.create_user(self.u1, self.u1, self.p1)
+        self.user1.save()
 
     def post_json(self, url, args):
         json = python2json(args)
@@ -67,3 +67,23 @@ class ApiTestCases(TestCase):
         
         #self.assert_(
             
+    def test_job_status(self):
+        j = Job(jobid='test-jobid-000', exposejob=True, status='Solved')
+        j.save()
+        t = Tag(job=j, machineTag=True, user=self.user1,
+                text='robot_loves_this', addedtime=Job.timenow())
+        t.save()
+        t = Tag(job=j, machineTag=False, user=self.user1,
+                text='nice shot', addedtime=Job.timenow())
+        t.save()
+
+        resp = self.login_with(self.u1, self.p1)
+        key = resp.json['session']
+        r2 = self.post_json(reverse('astrometry.net.portal.api.jobstatus'),
+                            {'session': key,
+                             'jobid': 'test-jobid-000',
+                             })
+        print 'response is', r2
+        print 'cookies:', self.client.cookies
+        print 'session:', self.client.session
+

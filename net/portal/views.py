@@ -532,10 +532,10 @@ def jobstatus(request, jobid=None):
 	if job is None:
 		return HttpResponse('no such job')
 
-	jobowner = (job.submission.user == request.user)
-	anonymous = job.allowanonymous()
-	if not (jobowner or anonymous):
-		return HttpResponse('The owner of this job (' + job.submission.user.username + ') has not granted public access.')
+	if not job.can_be_viewed_by(request.user):
+		return HttpResponse('The owner of this job (' + job.get_user().username + ') has not granted public access.')
+
+	jobowner = (job.get_user() == request.user)
 
 	df = job.diskfile
 	submission = job.submission
@@ -580,7 +580,7 @@ def jobstatus(request, jobid=None):
 		'redgreen_medium' : get_file_url(job, 'redgreen'),
 		'redgreen_big' : get_file_url(job, 'redgreen-big'),
 		#'otherxylists' : otherxylists,
-		'jobowner' : jobowner,
+		'jobowner' : job.get_user() == request.user,
 		'exposejob': job.is_exposed(),
 		'tags' : taglist,
 		'view_tagtxt_url' : reverse(joblist) + '?type=tag&tagtext=',
@@ -735,9 +735,7 @@ def getfield(request):
 def getfile(request, jobid=None, filename=None):
 	job = request.job
 
-	jobowner = (job.get_user() == request.user)
-	anonymous = job.is_exposed()
-	if not (jobowner or anonymous):
+	if not job.can_be_viewed_by(request.user):
 		return HttpResponse('The owner of this job (' + job.get_user().username + ') has not granted public access.')
 
 	variant = 0

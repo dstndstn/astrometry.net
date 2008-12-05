@@ -1,17 +1,12 @@
 from django.contrib import auth
 from django.contrib.auth import authenticate
-#from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-# from django.contrib.sessions.backends.db import SessionStore
-# from django.contrib.sessions.models import Session
-
-from django.http import HttpResponse, HttpResponseBadRequest #HttpResponseRedirect, QueryDict
-#from django.template import Context, RequestContext, loader
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.core.urlresolvers import reverse
-#from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist
 
-#from astrometry.net.portal.job import Job, Submission, DiskFile, Tag
+from astrometry.net.portal.job import Job, Tag
 from astrometry.net.portal.log import log as logmsg
 from astrometry.net import settings
 
@@ -180,3 +175,22 @@ def logout(request):
     auth.logout(request)
     return HttpResponseJson({ 'status': 'Success',
                               'message': 'User "%s" logged out.' % uname })
+
+@requires_json_args
+@requires_json_session
+@requires_json_login
+def jobstatus(request):
+    if not 'jobid' in request.json:
+        return HttpResponseErrorJson('no "jobid" in request args')
+    jobid = request.json['jobid']
+    try:
+        job = Job.objects.get(jobid=jobid)
+    except ObjectDoesNotExist:
+        return HttpResponseErrorJson('no job with id "%s"' % jobid)
+    if not job.can_be_viewed_by(request.user):
+        return HttpResponseErrorJson('permission denied')
+    return HttpResponseJson({ 'jobid': jobid,
+                              'status': job.format_status_full(),
+                              'user_tags': [ t.text for t in job.get_user_tags() ],
+                              'machine_tags': [ t.text for t in job.get_machine_tags() ],
+                              })

@@ -39,6 +39,7 @@ urlpatterns = (patterns('',
                         (r'^api/login', 'login'),
                         (r'^api/logout', 'logout'),
                         (r'^api/amiloggedin', 'amiloggedin'),
+                        (r'^api/jobstatus', 'jobstatus'),
                         )
                )
 

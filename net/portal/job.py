@@ -450,6 +450,15 @@ class Job(models.Model):
     def typestr(self):
         return 'Job'
 
+    def get_user_tags(self):
+        return self.tags.filter(machineTag=False)
+
+    def get_machine_tags(self):
+        return self.tags.filter(machineTag=True)
+
+    def can_be_viewed_by(self, user):
+        return self.is_exposed() or (self.get_user() == user)
+
     def set_is_duplicate(self):
         others = Job.objects.all().filter(diskfile=self.diskfile, status='Solved').order_by('enqueuetime')
         self.duplicate = (others.count() > 0) and (others[0] != self)
