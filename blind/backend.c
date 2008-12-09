@@ -51,6 +51,96 @@
 #include "tic.h"
 #include "healpix.h"
 
+void backend_add_search_path(backend_t* backend, char* path) {
+    sl_append(backend->index_paths, path);
+}
+
+char* backend_find_index(backend_t* backend, char* name) {
+    int j;
+
+    for (j=-1; j<sl_size(backend->index_paths); j++) {
+        char* path;
+        if (j == -1)
+            if (strlen(name) && name[0] == '/') {
+                // try as an absolute filename.
+                path = strdup(name);
+            } else {
+                continue;
+            }
+        else
+            asprintf(&path, "%s/%s", sl_get(backend->index_paths, j), name);
+        
+        logverb("Trying path %s...\n", path);
+        if (index_is_file_index(path))
+            return path;
+        free(path);
+    }
+    return NULL;
+}
+
+int backend_autoindex_search_paths(backend_t* backend) {
+    int i;
+    // Search the paths specified and add any indexes that are found.
+    for (i=0; i<sl_size(backend->index_paths); i++) {
+        char* path = sl_get(backend->index_paths, i);
+        DIR* dir = opendir(path);
+        sl* tryinds;
+        int j;
+        if (!dir) {
+            logerr("Warning: failed to open index directory: \"%s\"\n", path);
+            continue;
+        }
+        logverb("Auto-indexing directory \"%s\" ...\n", path);
+        tryinds = sl_new(16);
+        while (1) {
+            struct dirent* de;
+            char* name;
+            char* fullpath;
+            char* err;
+            bool ok;
+            errno = 0;
+            de = readdir(dir);
+            if (!de) {
+                if (errno)
+                    SYSERROR("Failed to read entry from directory \"%s\"", path);
+                break;
+            }
+            name = de->d_name;
+            asprintf(&fullpath, "%s/%s", path, name);
+            if (path_is_dir(fullpath)) {
+                logverb("Skipping directory %s\n", fullpath);
+                free(fullpath);
+                continue;
+            }
+
+            logverb("Checking file \"%s\"\n", fullpath);
+            errors_start_logging_to_string();
+            ok = index_is_file_index(fullpath);
+            err = errors_stop_logging_to_string(": ");
+            if (!ok) {
+                logverb("File is not an index: %s\n", err);
+                free(err);
+                free(fullpath);
+                continue;
+            }
+            free(err);
+
+            sl_insert_sorted_nocopy(tryinds, fullpath);
+        }
+        closedir(dir);
+
+        // add them in reverse order... (why?)
+        for (j=sl_size(tryinds)-1; j>=0; j--) {
+            char* path = sl_get(tryinds, j);
+            logverb("Trying to add index \"%s\".\n", path);
+            if (backend_add_index(backend, path))
+                logmsg("Failed to add index \"%s\".\n", path);
+        }
+        sl_free2(tryinds);
+    }
+    return 0;
+}
+
 int backend_add_index(backend_t* backend, char* path) {
     int k;
     index_t* ind = NULL;
@@ -211,7 +301,7 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
                 goto done;
             }
 		} else if (is_word(line, "add_path ", &nextword)) {
-			sl_append(backend->index_paths, nextword);
+            backend_add_search_path(backend, nextword);
 		} else {
 			ERROR("Didn't understand this config file line: \"%s\"", line);
 			// unknown config line is a firing offense
@@ -221,102 +311,22 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
 	}
 
     for (i=0; i<sl_size(indices); i++) {
-        int j;
         char* ind = sl_get(indices, i);
-        bool found = FALSE;
+        char* path;
         logverb("Trying index %s...\n", ind);
 
-        for (j=-1; j<sl_size(backend->index_paths); j++) {
-            char* path;
-            if (j == -1)
-                if (strlen(ind) && ind[0] == '/') {
-                    // try as an absolute filename.
-                    path = strdup(ind);
-                } else {
-                    continue;
-                }
-            else
-                asprintf(&path, "%s/%s", sl_get(backend->index_paths, j), ind);
-
-            logverb("Trying path %s...\n", path);
-            if (index_is_file_index(path)) {
-                if (backend_add_index(backend, path))
-                    logmsg("Failed to add index \"%s\".\n", path);
-                else {
-                    found = TRUE;
-                    free(path);
-                    break;
-                }
-            }
-            free(path);
-        }
-        if (!found) {
+        path = backend_find_index(backend, ind);
+        if (!path) {
             logmsg("Couldn't find index \"%s\".\n", ind);
             rtn = -1;
             goto done;
         }
+        if (backend_add_index(backend, path))
+            logmsg("Failed to add index \"%s\".\n", path);
     }
 
     if (auto_index) {
-        // Search the paths specified and add any indexes that are found.
-        for (i=0; i<sl_size(backend->index_paths); i++) {
-            char* path = sl_get(backend->index_paths, i);
-            DIR* dir = opendir(path);
-            sl* tryinds;
-            int j;
-            if (!dir) {
-                logerr("Warning: failed to open directory specified in backend.cfg: \"%s\"\n", path);
-                continue;
-            }
-            logverb("Auto-indexing directory \"%s\" ...\n", path);
-            tryinds = sl_new(16);
-            while (1) {
-                struct dirent* de;
-                char* name;
-                char* fullpath;
-                char* err;
-                bool ok;
-                errno = 0;
-                de = readdir(dir);
-                if (!de) {
-                    if (errno)
-                        SYSERROR("Failed to read entry from directory \"%s\"", path);
-                    break;
-                }
-                name = de->d_name;
-                asprintf(&fullpath, "%s/%s", path, name);
-                if (path_is_dir(fullpath)) {
-                    logverb("Skipping directory %s\n", fullpath);
-                    free(fullpath);
-                    continue;
-                }
-
-                logverb("Checking file \"%s\"\n", fullpath);
-                errors_start_logging_to_string();
-                ok = index_is_file_index(fullpath);
-                err = errors_stop_logging_to_string(": ");
-                if (!ok) {
-                    logverb("File is not an index: %s\n", err);
-                    free(err);
-                    free(fullpath);
-                    continue;
-                }
-                free(err);
-
-                sl_insert_sorted_nocopy(tryinds, fullpath);
-            }
-            closedir(dir);
-
-            // in reverse order...
-            for (j=sl_size(tryinds)-1; j>=0; j--) {
-                char* path = sl_get(tryinds, j);
-                logverb("Trying to add index \"%s\".\n", path);
-                if (backend_add_index(backend, path)) {
-                    logmsg("Failed to add index \"%s\".\n", path);
-                }
-            }
-            sl_free2(tryinds);
-        }
+        backend_autoindex_search_paths(backend);
     }
 
  done:

@@ -62,7 +62,12 @@ struct job_t {
 typedef struct job_t job_t;
 
 backend_t* backend_new();
+void backend_add_search_path(backend_t* backend, char* path);
+char* backend_find_index(backend_t*, char* name);
+// note that "path" must be a full path name.
 int backend_add_index(backend_t* backend, char* path);
+// look in all the search path directories for index files.
+int backend_autoindex_search_paths(backend_t* backend);
 int backend_parse_config_file_stream(backend_t* backend, FILE* fconf);
 int backend_parse_config_file(backend_t* backend, char* fn);
 int backend_run_job(backend_t* backend, job_t* job);
