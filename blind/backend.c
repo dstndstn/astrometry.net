@@ -51,7 +51,7 @@
 #include "tic.h"
 #include "healpix.h"
 
-static int add_index(backend_t* backend, char* path) {
+int backend_add_index(backend_t* backend, char* path) {
     int k;
     index_t* ind = NULL;
     index_meta_t* meta;
@@ -240,7 +240,7 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
 
             logverb("Trying path %s...\n", path);
             if (index_is_file_index(path)) {
-                if (add_index(backend, path))
+                if (backend_add_index(backend, path))
                     logmsg("Failed to add index \"%s\".\n", path);
                 else {
                     found = TRUE;
@@ -311,7 +311,7 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
             for (j=sl_size(tryinds)-1; j>=0; j--) {
                 char* path = sl_get(tryinds, j);
                 logverb("Trying to add index \"%s\".\n", path);
-                if (add_index(backend, path)) {
+                if (backend_add_index(backend, path)) {
                     logmsg("Failed to add index \"%s\".\n", path);
                 }
             }

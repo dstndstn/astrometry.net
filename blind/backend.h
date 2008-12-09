@@ -62,14 +62,17 @@ struct job_t {
 typedef struct job_t job_t;
 
 backend_t* backend_new();
-void backend_free(backend_t* backend);
+int backend_add_index(backend_t* backend, char* path);
 int backend_parse_config_file_stream(backend_t* backend, FILE* fconf);
 int backend_parse_config_file(backend_t* backend, char* fn);
+int backend_run_job(backend_t* backend, job_t* job);
+void backend_free(backend_t* backend);
+
 job_t* backend_read_job_file(backend_t* backend, const char* jobfn);
 int job_set_base_dir(job_t* job, const char* dir);
 void job_set_cancel_file(job_t* job, const char* fn);
 void job_set_solved_file(job_t* job, const char* fn);
-int backend_run_job(backend_t* backend, job_t* job);
 void job_free(job_t* job);
+
 
 #endif
