@@ -1,4 +1,4 @@
-/*
+B/*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
@@ -78,6 +78,5 @@ const char* svn_url() {
 // The Makefile automatically appends a blank comment line to the end
 // of this file every time libanutils.a gets built.
 //
-
 
 //
