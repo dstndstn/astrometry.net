@@ -277,6 +277,7 @@ demo_dsmooth: demo_dsmooth.o dsmooth.o \
 control-program: control-program.o \
 		$(BACKEND_OBJS) $(SIMPLEXY2_OBJ) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
+ALL_OBJ += control-program.o
 
 image2xy: image2xy-main.o image2xy-files.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
 
@@ -579,7 +580,7 @@ clean:
 		$(PIPELINE) $(PROSPECTUS) $(DEPS) deps $(FITS_UTILS) $(ALL_OBJ) $(IMAGE2XY) \
 		$(NODEP_OBJS) plot-constellations fitsverify plotquad plotxy \
 		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN) \
-		$(BACKEND_LIB)
+		$(BACKEND_LIB) $(BACKEND_SO)
 
 
 
