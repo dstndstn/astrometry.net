@@ -443,7 +443,9 @@ class Watcher(object):
             return False
         submission = submissions[0]
         log('Running submission: ' + str(submission))
+        return self.run_job_or_sub(job, submission)
 
+    def run_job_or_sub(self, job, submission):
         tmpfile = None
         basename = None
 

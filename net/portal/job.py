@@ -751,9 +751,15 @@ class Job(models.Model):
     def submit_job_or_submission(j):
         os.umask(07)
         j.create_job_dir()
-        # enqueue by creating a symlink in the job queue directory.
-        jobdir = j.get_job_dir()
-        link = settings.JOB_QUEUE_DIR + j.get_id()
-        if os.path.exists(link):
-            os.unlink(link)
-        os.symlink(jobdir, link)
+
+        from astrometry.net.portal.queue import *
+        QueuedJob.submit_job_or_submission(j)
+
+        # watcher-based
+        if False:
+            # enqueue by creating a symlink in the job queue directory.
+            jobdir = j.get_job_dir()
+            link = settings.JOB_QUEUE_DIR + j.get_id()
+            if os.path.exists(link):
+                os.unlink(link)
+            os.symlink(jobdir, link)

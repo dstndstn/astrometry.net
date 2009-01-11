@@ -2,7 +2,7 @@
 
 Nthreads=20
 Log="/home/gmaps/test/portal.log"
-Cmd="/home/gmaps/test/astrometry/net/portal/watcher-script-ice.py %s 2>>$Log"
+Cmd="/home/gmaps/test/astrometry/net/portal/watcher_script_ice.py %s 2>>$Log"
 
 cd /home/gmaps/test/job-queue
 rm queue

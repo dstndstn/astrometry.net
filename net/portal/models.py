@@ -39,3 +39,4 @@ class UserPreferences(models.Model):
 
 from astrometry.net.portal.job import *
 from astrometry.net.portal.wcs import *
+from astrometry.net.portal.queue import *
