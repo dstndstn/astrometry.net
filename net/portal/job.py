@@ -326,22 +326,33 @@ class Submission(models.Model):
         return 'Submission'
 
     def check_if_finished(self):
-        alljobs = self.jobs.all()
-        for job in alljobs:
-            if not job.is_finished():
+        #alljobs = self.jobs.all()
+        #for job in alljobs:
+        #    if not job.is_finished():
+        #        return
+        errors = self.jobs.all().filter(status='Error').count()
+        if errors > 0:
+            self.set_status('Error')
+            self.save()
+            return
+        for job in self.jobs.all():
+            if not job.finished_without_error():
                 return
         self.set_status('Finished')
         self.save()
+
+    def finished_without_error(self):
+        return self.is_finished()
 
     def is_finished(self):
         return self.status in [ 'Finished' ]
 
     def set_status(self, stat, reason=None):
-        if stat in ['Queued', 'Running', 'Failed', 'Finished']:
+        if stat in ['Queued', 'Running', 'Error', 'Finished']:
             self.status = stat
         else:
             raise ValueError('Invalid status "%s"' % stat)
-        if stat == 'Failed' and reason is not None:
+        if stat == 'Error' and reason is not None:
             self.failurereason = reason[:256]
 
     def format_status(self):
@@ -507,19 +518,24 @@ class Job(models.Model):
             s = s[:20] + '...'
         return s
 
-    # status is "Solved" or "Failed"
     def is_finished(self):
-        return self.status in ['Solved', 'Failed']
+        return self.status in ['Solved', 'Unsolved', 'Error']
+
+    def finished_without_error(self):
+        return self.status in ['Solved', 'Unsolved' ]
+
+    def set_error_status(self, reason):
+        return self.set_status('Error', reason)
 
     def set_status(self, stat, reason=None):
-        if stat in ['Queued', 'Running', 'Solved', 'Failed']:
+        if stat in ['Queued', 'Running', 'Solved', 'Unsolved', 'Error']:
             self.status = stat
         else:
             raise ValueError('Invalid status "%s"' % stat)
-        if stat == 'Failed' and reason is not None:
+        if stat == 'Error' and reason is not None:
             self.failurereason = reason[:256]
         self.save()
-        if stat == 'Solved' or stat == 'Failed':
+        if self.is_finished():
             self.submission.check_if_finished()
         if stat == 'Running':
             self.submission.set_status('Running')
@@ -752,7 +768,7 @@ class Job(models.Model):
         os.umask(07)
         j.create_job_dir()
 
-        from astrometry.net.portal.queue import *
+        from astrometry.net.portal.queue import QueuedJob
         QueuedJob.submit_job_or_submission(j)
 
         # watcher-based

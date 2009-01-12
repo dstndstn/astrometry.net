@@ -65,7 +65,7 @@ class Watcher(object):
     def bailout(self, job, reason):
         self.bailedout = True
         log('Bailing out:', reason)
-        job.set_status('Failed', reason)
+        job.set_error_status(reason)
         job.save()
 
     def userlog(self, *msg):
@@ -83,7 +83,7 @@ class Watcher(object):
             log('--------------')
             log(traceback.format_exc())
             log('--------------')
-            job.set_status('Failed', errstr)
+            job.set_error_status(errstr)
             job.save()
         return False
 
@@ -294,7 +294,7 @@ class Watcher(object):
             job.calibration = calib
             job.add_machine_tags()
         else:
-            job.set_status('Failed', 'Did not solve.')
+            job.set_status('Unsolved')
 
         job.save()
         return True

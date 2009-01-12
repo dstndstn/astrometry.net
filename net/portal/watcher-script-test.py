@@ -38,7 +38,7 @@ from astrometry.util.run_command import run_command
 import astrometry.util.sip as sip
 
 def bailout(job, reason):
-    job.set_status('Failed', reason)
+    job.set_error_status(reason)
     job.save()
 
 blindlog = 'blind.log'
@@ -64,7 +64,7 @@ def handle_job(job, sshconfig):
         log('--------------')
         log(traceback.format_exc())
         log('--------------')
-        job.set_status('Failed', errstr)
+        job.set_error_status(errstr)
         job.save()
     return False
 
@@ -303,7 +303,7 @@ def real_handle_job(job, sshconfig):
         job.add_machine_tags()
 
     else:
-        job.set_status('Failed', 'Did not solve.')
+        job.set_status('Unsolved')
 
     job.save()
     return True
