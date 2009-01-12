@@ -53,7 +53,6 @@ IceGrid.Registry.DynamicRegistration=1
 IceGrid.Node.Endpoints=default
 IceGrid.Node.CollocateRegistry=0
 
-
 #
 # Dummy username and password for icegridadmin.
 #

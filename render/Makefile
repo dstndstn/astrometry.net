@@ -89,7 +89,7 @@ tilerender: $(TILERENDER_OBJS) \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) \
 		$(COMMON)/cairoutils.o
 	$(MAKE) -C $(COMMON) cairoutils.o
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) $(NETPBM_LIB) $(JPEG_LIB) $(PNG_LIB)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) $(NETPBM_LIB) $(JPEG_LIB) $(PNG_LIB) -lz
 
 render-mercator: render-mercator.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)

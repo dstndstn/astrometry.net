@@ -1,4 +1,4 @@
-B/*
+/*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
 
