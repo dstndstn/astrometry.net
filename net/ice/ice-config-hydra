@@ -1,12 +1,14 @@
 # shared config for Ice scripts running on Hydra
 
-#ICE=/data1/dstn/software/ice-3.3.0-hydra
-#ICEBIN=${ICE}/bin
+ICE=/data1/dstn/software/ice-3.3.0-hydra
+ICEBIN=${ICE}/bin
 #ICEPY=${ICE}/python
 #ICELD=${ICE}/lib64
 #MCPPLD=/data1/dstn/software/mcpp-2.7.1/lib64
 #export PYTHONPATH=${PYTHONPATH}:${ICEPY}
 #export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ICELD}:${MCPPLD}
+
+export PATH=${PATH}:${ICEBIN}
 
 LOG=/data1/dstn/dsolver/logs
 PIDS=/data1/dstn/dsolver/pids
