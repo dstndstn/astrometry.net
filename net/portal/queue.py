@@ -27,6 +27,13 @@ class QueuedJob(models.Model):
             return 'Job ' + self.job.jobid
         return 'Submission ' + self.sub.subid
 
+    # how many times have we previously attempted to run this job?
+    def count_failures(self):
+        return self.runs.count()
+
+    def has_failed_before(self):
+        return self.count_failures() > 0
+
     #@transaction.commit_on_success
     @staticmethod
     def submit_job(job, priority=priority_normal):
