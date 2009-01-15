@@ -10,7 +10,7 @@
 {% endblock linkcss %}
 {% block inlinecssblock %}
 <style type="text/css">
-#logout { float:right; padding:5px; margin-top:0; margin-bottom:auto;}
+#menu { float:right; padding:0px; margin-top:0; margin-bottom:auto; font-size:75%; font-family:sans-serif; }
 .bigbutton { font-size:110%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
 {% block inlinecss %}
 {% endblock inlinecss %}
@@ -33,13 +33,7 @@
 
 {% block usernameblock %}
 <div id="username">
-{% if user.is_authenticated %}
-{% block loggedin %}
 {% include "portal/menu.html" %}
-{% endblock %}
-{% else %}
-{% block notloggedin %}{% endblock %}
-{% endif %}
 </div>
 {% endblock usernameblock %}
 

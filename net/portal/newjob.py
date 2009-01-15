@@ -308,7 +308,7 @@ def submit_submission(request, submission):
     request.session['jobid'] = submission.get_id()
     Job.submit_job_or_submission(submission)
 
-@login_required
+#@login_required
 def newurl(request):
     urlerr = None
     if len(request.POST):

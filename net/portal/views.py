@@ -35,6 +35,10 @@ from astrometry.util.file import file_size, read_file, write_file
 from astrometry.net import settings
 from astrometry.util import sip
 
+def logout(request):
+    auth.logout(request)
+    return HttpResponseRedirect(reverse('astrometry.net.portal.newjob.newurl'))
+
 def urlescape(s):
 	return s.replace('&', '&amp;')
 
