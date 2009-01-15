@@ -24,7 +24,10 @@ urlpatterns = (patterns('',
                         #(r'^hoggthinks', 'astrometry.net.portal.hoggthinks.form'),
                         #(r'^easy-gmaps', 'astrometry.net.portal.easy_gmaps.tile'),
                         #
-                        (r'^$', 'astrometry.net.portal.newjob.newlong'),
+
+                        (r'^$', 'astrometry.net.portal.newjob.newurl'),
+                        #(r'^$', 'astrometry.net.portal.newjob.newlong'),
+
                         # These are fake placeholders to allow {% url %} and reverse() to resolve an.media to /anmedia.
                         # They have corresponding fake definitions in astrometry/net/__init__.py
                         (r'^anmedia/', 'astrometry.net.media'),
