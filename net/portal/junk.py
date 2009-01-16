@@ -45,7 +45,7 @@ class JunkInTheTrunk(object):
         if self.forbidredist:
             return False
         if not prefs:
-            prefs = UserPreferences.for_user(self.user)
+            prefs = self.user.get_profile()
         return prefs.autoredistributable
 
     def compute_filehash(self, fn):

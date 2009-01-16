@@ -125,6 +125,8 @@ TEMPLATE_DIRS = (
     WEB_DIR,
 )
 
+AUTH_PROFILE_MODULE = 'portal.userprofile'
+
 INSTALLED_APPS = (
 	'django.contrib.auth',
     'django.contrib.contenttypes',

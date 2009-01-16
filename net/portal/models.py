@@ -9,36 +9,34 @@ from django.contrib.auth.models import User
 import astrometry.net.settings as settings
 from astrometry.net.portal.log import log
 
-class PendingAccount(models.Model):
-    user = models.ForeignKey(User, unique=True)
-    key = models.CharField(max_length=20)
+class UserProfile(models.Model):
+    user = models.ForeignKey(User, unique=True, related_name='profile',
+                             editable=False)
 
-class UserPreferences(models.Model):
-    user = models.ForeignKey(User, editable=False)
+    activated = models.BooleanField(default=False)
+    activation_key = models.CharField(max_length=20)
 
     # Automatically allow anonymous access to my job status pages?
     exposejobs = models.BooleanField(default=False)
 
-    def __str__(self):
-        s = ('<UserPreferences: ' + self.user.username +
-             ', expose jobs: ' + (self.exposejobs and 'T' or 'F'))
-        return s
-
-    @staticmethod
-    def for_user(user):
-        prefset = UserPreferences.objects.all().filter(user = user)
-        if not prefset or not len(prefset):
-            # no existing user prefs.
-            prefs = UserPreferences(user = user)
-        else:
-            prefs = prefset[0]
-        return prefs
+    def new_activation_key(self):
+        self.activation_key = User.objects.make_random_password(length=20)
+        self.save()
+        return self.activation_key
 
     def expose_jobs(self):
         return self.exposejobs
 
     def set_expose_jobs(self, tf):
         self.exposejobs = tf
+
+    @staticmethod
+    def for_user(user):
+        if user.profile.count() == 0:
+            # add new default profile.
+            pro = UserProfile(user=user)
+            pro.save()
+        return user.get_profile()
 
 
 from astrometry.net.portal.job import *

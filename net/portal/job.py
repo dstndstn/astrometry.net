@@ -14,7 +14,7 @@ from astrometry.net.upload.models import UploadedFile
 from astrometry.net.portal.log import log
 from astrometry.net.portal.wcs import *
 from astrometry.net.portal.convert import get_objs_in_field
-from astrometry.net.portal.models import UserPreferences
+from astrometry.net.portal.models import UserProfile
 from astrometry.util import healpix
 
 
@@ -440,7 +440,7 @@ class Job(models.Model):
         if self.exposejob is None:
             u = self.get_user()
             if u:
-                prefs = UserPreferences.for_user(u)
+                prefs = UserProfile.get_user(u)
                 if prefs:
                     self.exposejob = prefs.expose_jobs()
                 else:

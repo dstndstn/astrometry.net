@@ -27,7 +27,7 @@ from django.shortcuts import render_to_response
 from django.core.mail import send_mail
 
 import astrometry.net.portal.mercator as merc
-from astrometry.net.portal.models import UserPreferences, PendingAccount
+from astrometry.net.portal.models import UserProfile
 from astrometry.net.portal.job import Job, Submission, DiskFile, Tag
 from astrometry.net.portal.convert import convert, get_objs_in_field
 from astrometry.net.portal.log import log
@@ -39,9 +39,20 @@ from astrometry.util import sip
 
 class NonDuplicateEmailField(forms.EmailField):
     def clean(self, value):
-        if User.objects.filter(email=value.lower).count():
-            raise ValidationError('Your email address is already registered.')
-        return value.lower()
+        value = value.lower()
+        u = None
+        try:
+            u = User.objects.get(email=value)
+        except ObjectDoesNotExist:
+            # good, this email address doesn't exist yet
+            return value
+
+        # re-requesting an activation key is allowed.
+        if not UserProfile.for_user(u).activated:
+            return value
+
+        raise ValidationError('Your email address is already registered.')
+
 
 class NewAccountForm(forms.Form):
     name = forms.CharField(required=False)
@@ -54,23 +65,24 @@ def newaccount(request):
             email = form.cleaned_data['email']
             name = form.cleaned_data['name']
 
-            ## DO STUFF
-
             # -create User account with inactive password
-            user = User.objects.create_user(email, email, None)
+            if User.objects.filter(username=email).count():
+                user = User.objects.get(username=email)
+                user.set_unusable_password()
+            else:
+                user = User.objects.create_user(email, email, None)
             user.first_name = name
             user.save()
 
-            # -generate a random key, add it to a DB with username
-            rkey = User.objects.make_random_password(length=20)
-            pa = PendingAccount(user=user, key=rkey)
-            pa.save()
+            # -generate an activation key and save it
+            profile = UserProfile.for_user(user)
+            key = profile.new_activation_key()
 
             # -send an email
             send_mail('Your Astrometry.net account',
                       ('In order to activate your Astrometry.net account, please visit the URL below.'
                        + '\n\n'
-                       + '' + request.path + '?key=' + rkey
+                       + '' + request.path + '?key=' + key
                        + '\n\n'
                        + 'Thanks for trying Astrometry.net!'
                        ),
@@ -868,17 +880,17 @@ def printvals(request):
 		for k,v in request.FILES.items():
 			log('  %s = %s' % (str(k), str(v)))
 
-class UserPreferencesForm(ModelForm):
+class UserProfileForm(ModelForm):
     class Meta:
-        model = UserPreferences
+        model = UserProfile
 
 @login_required
 def userprefs(request):
-	prefs = UserPreferences.for_user(request.user)
+	prefs = UserProfile.for_user(request.user)
 	if request.POST:
-		form = UserPreferencesForm(request.POST)
+		form = UserProfileForm(request.POST)
 	else:
-		form = UserPreferencesForm({
+		form = UserProfileForm({
 			'exposejobs': prefs.exposejobs,
 			})
 
@@ -902,7 +914,7 @@ def userprefs(request):
 def changeperms(request):
 	if not request.POST:
 		return HttpResponse('no POST')
-	prefs = UserPreferences.for_user(request.user)
+	prefs = UserProfile.for_user(request.user)
 
 	log('changeperms:')
 	for k,v in request.POST.items():
