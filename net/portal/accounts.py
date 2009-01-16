@@ -3,7 +3,7 @@ import django.contrib.auth as auth
 from django import forms as forms
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.forms import ValidationError
+from django.forms import ValidationError, ModelForm
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render_to_response
 from django.core.mail import send_mail
@@ -130,6 +130,10 @@ def newaccount(request):
 def logout(request):
     auth.logout(request)
     return HttpResponseRedirect(reverse('astrometry.net.portal.newjob.newurl'))
+
+class UserProfileForm(ModelForm):
+    class Meta:
+        model = UserProfile
 
 @login_required
 def userprefs(request):

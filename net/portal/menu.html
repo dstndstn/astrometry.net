@@ -24,7 +24,7 @@
 {% if user.is_authenticated %}
 <a href="{% url astrometry.net.portal.views.joblist %}">My images</a>
  | 
-<a href="{% url astrometry.net.portal.views.userprefs %}">Set preferences</a>
+<a href="{% url astrometry.net.portal.accounts.userprefs %}">Set preferences</a>
  | 
 <a href="{% url astrometry.net.logout %}">Sign out</a>
 {% else %}

@@ -42,6 +42,7 @@ class AccountTestCases(PortalTestCase):
 
     def testNewAccount(self):
         e = 'newguy@astrometry.net'
+        self.e = e
         resp = self.client.post(self.url, { 'email': e })
         self.assertEqual(resp.status_code, 200)
         #print 'Templates:', [t.name for t in resp.template]
@@ -67,11 +68,53 @@ class AccountTestCases(PortalTestCase):
         self.assertEquals(msg.subject, 'Your Astrometry.net account')
         self.assertEquals(msg.to, [e])
         self.assertEquals(msg.from_email, 'Astrometry.net Accounts <alpha@astrometry.net>')
-        #print 'msg body:', msg.body
         #print 'key is', key
         keyurl = self.urlprefix + reverse('astrometry.net.portal.accounts.activateaccount') + '?key=' + key
         print 'looking for key url', keyurl
+        print 'msg body:', msg.body
         self.assert_(keyurl in msg.body)
-        #self.assertEquals(msg.subject, 'Your Astrometry.net account')
+        # save this url for the test below...
+        #self.activation_url = keyurl
+        self.key = key
 
-    
+        # user is authorized (in session)...?
+
+    #def testNewPassword(self):
+
+    def testNewAccountActivation(self):
+        self.testNewAccount()
+        resp = self.client.get(reverse('astrometry.net.portal.accounts.activateaccount'),
+                               { 'key': self.key})
+        print resp
+        seturl = reverse('astrometry.net.setpassword')
+        print 'seturl:', seturl
+        self.assertRedirects(resp, seturl)
+        pw = 'superSecret'
+
+        # password mismatch
+        resp = self.client.post(seturl, {'new_password1': pw,
+                                         'new_password2': pw + 'bad'})
+        self.assertNotContains(resp, "Password Set Successfully")
+        ctxt = resp.context[0]
+        form = ctxt['form']
+        self.assert_(not form.is_valid())
+        self.assert_(form.errors)
+
+        # password match
+        resp = self.client.post(seturl, {'new_password1': pw,
+                                         'new_password2': pw})
+        self.assertContains(resp, "Password Set Successfully")
+
+
+        print self.client.session
+        for k,v in self.client.session.items():
+            print k,'=',v
+
+        self.assert_(not self.client.session['allow_set_password'])
+
+        user = User.objects.get(username=self.e)
+        self.assert_(user)
+        pro = user.get_profile()
+        self.assert_(pro)
+        self.assert_(pro.activated)
+        self.assert_(not pro.activation_key)

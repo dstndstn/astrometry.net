@@ -811,10 +811,6 @@ def printvals(request):
 		for k,v in request.FILES.items():
 			log('  %s = %s' % (str(k), str(v)))
 
-class UserProfileForm(ModelForm):
-    class Meta:
-        model = UserProfile
-
 @login_required
 @wants_job_or_sub
 def changeperms(request):
