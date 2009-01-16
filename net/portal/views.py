@@ -36,9 +36,15 @@ from astrometry.util.file import file_size, read_file, write_file
 from astrometry.net import settings
 from astrometry.util import sip
 
+class NonDuplicateEmailField(forms.EmailField):
+    def clean(self, value):
+        if User.objects.filter(email=value.lower).count():
+            raise ValidationError('Your email address is already registered.')
+        return value.lower()
+
 class NewAccountForm(forms.Form):
-    email = forms.EmailField()
-    name = forms.CharField()
+    name = forms.CharField(required=False)
+    email = NonDuplicateEmailField()
 
 def newaccount(request):
     if len(request.POST):
@@ -46,9 +52,10 @@ def newaccount(request):
         if form.is_valid():
             email = form.cleaned_data['email']
             name = form.cleaned_data['name']
+
             ## DO STUFF
-            return HttpResponse('doing stuff for account name: ' +
-                                name + ', email ' + email)
+            return HttpResponse('doing stuff for ' + email +
+                                ', name ' + name)
     else:
         form = NewAccountForm()
 
