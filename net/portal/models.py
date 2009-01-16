@@ -19,6 +19,15 @@ class UserProfile(models.Model):
     # Automatically allow anonymous access to my job status pages?
     exposejobs = models.BooleanField(default=False)
 
+    def __str__(self):
+        s = ('UserProfile: user %s, activated: ' % self.user.username)
+        if self.activated:
+            s += 'yes'
+        else:
+            s += 'no, key=%s' % self.activation_key
+        return s
+    
+
     def new_activation_key(self):
         self.activation_key = User.objects.make_random_password(length=20)
         self.save()

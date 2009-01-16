@@ -11,6 +11,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
 from django.template import Context, RequestContext, loader
 
+from astrometry.net.portal.models import UserProfile
 
 class NonDuplicateEmailField(forms.EmailField):
     def clean(self, value):
@@ -25,7 +26,7 @@ class NonDuplicateEmailField(forms.EmailField):
         if not UserProfile.for_user(u).activated:
             return value
 
-        raise ValidationError('Your email address is already registered.')
+        raise ValidationError('That email address is already registered.')
 
 
 class NewAccountForm(forms.Form):

@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 
 from astrometry.util.w3c_validator import W3CValidator
 import astrometry.net.settings as settings
+from astrometry.net.portal.models import UserProfile
 
 class PortalTestCase(TestCase):
     def setUp(self):
@@ -18,7 +19,10 @@ class PortalTestCase(TestCase):
         accts = [ (self.u1, self.p1),
                   ('test2@astrometry.net', 'password2'), ]
         for (e, p) in accts:
-            User.objects.create_user(e, e, p).save()
+            u = User.objects.create_user(e, e, p)
+            u.save()
+            pro = UserProfile(user=u, activated=True)
+            pro.save()
         self.loginurl = reverse('astrometry.net.login')
         self.logouturl = reverse('astrometry.net.logout')
 
