@@ -25,7 +25,7 @@ urlpatterns = (patterns('',
                          {'template_name': 'portal/resetpassword.html'}),
                         )
                +
-               patterns('astrometry.net.portal.views',
+               patterns('astrometry.net.portal.accounts',
                         (r'^logout/', 'logout'),
                         (r'^userprefs/', 'userprefs'),
                         (r'^newaccount/activate', 'activateaccount'),

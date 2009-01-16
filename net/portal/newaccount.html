@@ -7,7 +7,7 @@ td.r {text-align:right; padding:10px;}
 
 {% block content %}
 
-<form method="post">
+<form method="post" action="{{ request.path }}">
 <table style="margin-left:auto; margin-right:auto;">
 
 {% if form.non_field_errors %}
