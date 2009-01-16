@@ -28,7 +28,9 @@ urlpatterns = (patterns('',
                patterns('astrometry.net.portal.views',
                         (r'^logout/', 'logout'),
                         (r'^userprefs/', 'userprefs'),
+                        (r'^newaccount/activate', 'activateaccount'),
                         (r'^newaccount/', 'newaccount'),
+                        (r'^setpassword/', 'setpassword'),
                         )
                +
                patterns('',
@@ -51,6 +53,7 @@ urlpatterns = (patterns('',
                         (r'^login/', 'astrometry.net.login'),
                         (r'^changepassword/',  'astrometry.net.changepassword'),
                         (r'^resetpassword/',   'astrometry.net.resetpassword'),
+                        (r'^setpassword/',   'astrometry.net.setpassword'),
                         (r'^newaccount/',   'astrometry.net.newaccount'),
                         )
                +

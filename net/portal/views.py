@@ -17,7 +17,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
 from django.db import models
-from django.http import HttpResponse, HttpResponseRedirect, QueryDict
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
 from django.forms import widgets, ValidationError
 from django.forms import ModelForm
 from django.template import Context, RequestContext, loader
@@ -40,7 +40,6 @@ from astrometry.util import sip
 class NonDuplicateEmailField(forms.EmailField):
     def clean(self, value):
         value = value.lower()
-        u = None
         try:
             u = User.objects.get(email=value)
         except ObjectDoesNotExist:
@@ -57,6 +56,54 @@ class NonDuplicateEmailField(forms.EmailField):
 class NewAccountForm(forms.Form):
     name = forms.CharField(required=False)
     email = NonDuplicateEmailField()
+
+def activateaccount(request):
+    key = request.GET.get('key')
+    if key is None:
+        return HttpResponseBadRequest('missing key')
+    try:
+        profile = UserProfile.objects.get(activation_key=key)
+    except ObjectDoesNotExist:
+        return HttpResponseBadRequest('no such key, or this key has already been used to activate this account')
+
+    user = profile.user
+    # log the user in and redirect to password-changing page.
+    pw = 'temp'+key
+    user.set_password(pw)
+    user.save()
+    user = auth.authenticate(username=user.username, password=pw)
+    auth.login(request, user)
+    user.set_unusable_password()
+    user.save()
+    request.session['allow_set_password'] = True
+    return HttpResponseRedirect(reverse('astrometry.net.setpassword'))
+
+def setpassword(request):
+    if not request.session.get('allow_set_password', False):
+        return HttpResponseRedirect(reverse('astrometry.net.changepassword'))
+    if request.POST:
+        form = auth.forms.SetPasswordForm(request.user, request.POST)
+        if form.is_valid():
+            request.user.set_password(form.cleaned_data['new_password1'])
+            request.user.save()
+            request.session['allow_set_password'] = False
+
+            profile = UserProfile.for_user(request.user)
+            profile.activated = True
+            profile.activation_key = ''
+            profile.save()
+
+            return render_to_response(
+                'portal/message.html',
+                { 'message': 'Password Set Successfully.  Use the menu above to start using the system.  Enjoy!' },
+                context_instance = RequestContext(request))
+    else:
+        form = auth.forms.SetPasswordForm(request.user)
+    return render_to_response(
+        'portal/setpassword.html',
+        { 'form': form },
+        context_instance = RequestContext(request))
+
 
 def newaccount(request):
     if len(request.POST):
@@ -82,7 +129,7 @@ def newaccount(request):
             send_mail('Your Astrometry.net account',
                       ('In order to activate your Astrometry.net account, please visit the URL below.'
                        + '\n\n'
-                       + '' + request.path + '?key=' + key
+                       + '' + request.build_absolute_uri(reverse(activateaccount)) + '?key=' + key
                        + '\n\n'
                        + 'Thanks for trying Astrometry.net!'
                        ),
@@ -90,8 +137,12 @@ def newaccount(request):
                       [email], fail_silently=False)
 
             # -tell the user what happened
-            return HttpResponse('doing stuff for ' + email +
-                                ', name ' + name)
+            return render_to_response(
+                'portal/message.html',
+                {
+                'message' : 'An email has been sent with instructions on how to activate your account.',
+                },
+                context_instance = RequestContext(request))
     else:
         form = NewAccountForm()
 

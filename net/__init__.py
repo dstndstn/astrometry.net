@@ -19,5 +19,8 @@ def changedpassword():
 def resetpassword():
     pass
 
+def setpassword():
+    pass
+
 def newaccount():
     pass
