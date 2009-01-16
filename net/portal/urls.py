@@ -6,16 +6,8 @@ urlpatterns = (patterns('astrometry.net.portal.newjob',
                         (r'^newurl/$',          'newurl'  ),
                         (r'^newfile/$',         'newfile' ),
                         (r'^newlong/$',         'newlong' ),
-                        ) +
-               #patterns('astrometry.net.portal.json',
-               #         (r'^newjson/$',          'newjob'  ),
-               #
-               # These are in ../urls.py
-               #
-               #patterns('astrometry.net.portal.api',
-               #         (r'^api/login', 'login'),
-               #         (r'^api/logout', 'logout'),
-               #         ) +
+                        )
+               +
                patterns('astrometry.net.portal.views',
                         (r'^status/(?P<jobid>' + jobpattern + r')', 'jobstatus'),
                         (r'^getfile/(?P<jobid>' + jobpattern + r')/(?P<filename>[a-z0-9.-]+)$', 'getfile'),
@@ -25,16 +17,19 @@ urlpatterns = (patterns('astrometry.net.portal.newjob',
                         #(r'^publishtovo/$',    'publishtovo'),
                         # PLAY
                         (r'^run-variant/$', 'run_variant' ),
-                        ) +
+                        )
+               +
                patterns('astrometry.net.portal.tags',
                         (r'^taglist/$',         'taglist'  ),
                         (r'^add_tag/$',         'job_add_tag' ),
                         (r'^remove_tag/$',      'job_remove_tag' ),
-                        ) +
+                        )
+               +
                patterns('astrometry.net.portal.redgreen',
                         (r'^redgreen$',     'redgreen'    ),
-                        ) +
-               patterns('astrometry.net.portal.legacy',
-                        (r'^status/$',          'jobstatus_old'),
                         )
+               #+
+               #patterns('astrometry.net.portal.legacy',
+               #         (r'^status/$',          'jobstatus_old'),
+               #         )
                )

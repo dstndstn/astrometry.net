@@ -1,0 +1,57 @@
+{% extends "portal/base.html" %}
+
+{% block inlinecss %}
+td.r {text-align:right; padding:10px;}
+{% endblock inlinecss %}
+
+
+{% block content %}
+
+<form method="post">
+<table style="margin-left:auto; margin-right:auto;">
+
+{% if form.non_field_errors %}
+<tr><td colspan="2">
+<div class="myerrors">
+{{ form.non_field_errors|join:", " }}
+</div>
+</td></tr>
+{% endif %}
+
+{% if form.name.errors %}
+<tr><td colspan="2">
+<div class="myerrors">
+{{ form.name.errors|join:", " }}
+</div>
+</td></tr>
+{% endif %}
+
+<tr>
+<td>Name:</td>
+<td> {{ form.name }} </td>
+</tr>
+
+{% if form.email.errors %}
+<tr><td colspan="2">
+<div class="myerrors">
+{{ form.email.errors|join:", " }}
+</div>
+</td></tr>
+{% endif %}
+
+<tr>
+<td>Email address:</td>
+<td> {{ form.email }} </td>
+</tr>
+
+<tr>
+<td colspan="2" style="text-align:center;">
+<input name="submit" value="Submit" type="submit" class="bigbutton" />
+</td>
+</tr>
+
+</table>
+</form>
+
+{% endblock content %}
+

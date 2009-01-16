@@ -48,7 +48,7 @@ def job_remove_tag(request):
     tag.delete()
     return HttpResponseRedirect(views.get_status_url(tag.job.jobid))
 
-@login_required
+#@login_required
 def taglist(request):
     from astrometry.net.portal import views
 

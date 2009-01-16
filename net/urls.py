@@ -3,20 +3,28 @@ from astrometry.net import settings
 
 urlpatterns = (patterns('',
                         (r'^tile/', include('astrometry.net.tile.urls')),
-                        #(r'^shard', include('astrometry.net.server.shardurls')),
-                        #(r'^master', include('astrometry.net.server.masterurls')),
                         (r'^upload/', include('astrometry.net.upload.urls')),
-                        (r'^login/', 'django.contrib.auth.views.login',
-                         {'template_name': 'portal/login.html'}),
-                        (r'^logout/', 'astrometry.net.portal.views.logout'),
-                        (r'^userprefs/', 'astrometry.net.portal.views.userprefs'),
-                        (r'^changepassword/$',  'django.contrib.auth.views.password_change',
-                         {'template_name': 'portal/changepassword.html'}),
-                        (r'^changepassword/done/', 'django.contrib.auth.views.password_change_done',
-                         {'template_name': 'portal/changedpassword.html'}),
-                        (r'^resetpassword/',   'django.contrib.auth.views.password_reset',
-                         {'template_name': 'portal/resetpassword.html'}),
                         (r'^job/', include('astrometry.net.portal.urls')),
+                        )
+               +
+               patterns('django.contrib.auth.views',
+                        (r'^login/', 'login',
+                         {'template_name': 'portal/login.html'}),
+                        (r'^changepassword/$',  'password_change',
+                         {'template_name': 'portal/changepassword.html'}),
+                        (r'^changepassword/done/', 'password_change_done',
+                         {'template_name': 'portal/changedpassword.html'}),
+                        (r'^resetpassword/',   'password_reset',
+                         {'template_name': 'portal/resetpassword.html'}),
+                        )
+               +
+               patterns('astrometry.net.portal.views',
+                        (r'^logout/', 'logout'),
+                        (r'^userprefs/', 'userprefs'),
+                        (r'^newaccount/', 'newaccount'),
+                        )
+               +
+               patterns('',
                         #(r'^vo/', include('astrometry.net.vo.urls')),
                         #(r'^testbed/', include('astrometry.net.testbed.urls')),
                         (r'^gmaps$', 'astrometry.net.tile.views.index'),
@@ -29,7 +37,8 @@ urlpatterns = (patterns('',
                         #(r'^$', 'astrometry.net.portal.newjob.newlong'),
 
                         # These are fake placeholders to allow {% url %} and reverse() to resolve an.media to /anmedia.
-                        # They have corresponding fake definitions in astrometry/net/__init__.py
+                        # -> They have corresponding fake definitions in astrometry/net/__init__.py
+                        # -> You also have to set the Apache url match.
                         (r'^anmedia/', 'astrometry.net.media'),
                         (r'^logout/', 'astrometry.net.logout'),
                         (r'^login/', 'astrometry.net.login'),

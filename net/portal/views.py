@@ -23,6 +23,7 @@ from django.forms import ModelForm
 from django.template import Context, RequestContext, loader
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import render_to_response
 
 import astrometry.net.portal.mercator as merc
 from astrometry.net.portal.models import UserPreferences
@@ -34,6 +35,29 @@ from astrometry.net.portal import nearby
 from astrometry.util.file import file_size, read_file, write_file
 from astrometry.net import settings
 from astrometry.util import sip
+
+class NewAccountForm(forms.Form):
+    email = forms.EmailField()
+    name = forms.CharField()
+
+def newaccount(request):
+    if len(request.POST):
+        form = NewAccountForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            name = form.cleaned_data['name']
+            ## DO STUFF
+            return HttpResponse('doing stuff for account name: ' +
+                                name + ', email ' + email)
+    else:
+        form = NewAccountForm()
+
+    return render_to_response(
+        'portal/newaccount.html',
+        {
+        'form' : form,
+        },
+        context_instance = RequestContext(request))
 
 def logout(request):
     auth.logout(request)

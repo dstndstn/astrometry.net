@@ -323,7 +323,7 @@ def newurl(request):
             submit_submission(request, submission)
             return HttpResponseRedirect(get_status_url(submission.subid))
         else:
-            urlerr = form['url'].erroros[0]
+            urlerr = form['url'].errors[0]
     else:
         if 'jobid' in request.session:
             del request.session['jobid']

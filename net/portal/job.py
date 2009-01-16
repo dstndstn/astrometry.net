@@ -205,6 +205,7 @@ class WebSubmission(models.Model):
     # All sorts of goodies like IP, HTTP headers, etc.
     pass
 
+
 class Submission(models.Model):
     scaleunits_CHOICES = (
         ('arcsecperpix', 'arcseconds per pixel'),
