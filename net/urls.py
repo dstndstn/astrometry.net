@@ -1,10 +1,17 @@
 from django.conf.urls.defaults import *
+from django.contrib import admin
+
 from astrometry.net import settings
+#from astrometry.net.portal.models import *
+import astrometry.net.portal.admin
+
+admin.autodiscover()
 
 urlpatterns = (patterns('',
                         (r'^tile/', include('astrometry.net.tile.urls')),
                         (r'^upload/', include('astrometry.net.upload.urls')),
                         (r'^job/', include('astrometry.net.portal.urls')),
+                        (r'^admin/(.*)', admin.site.root),
                         )
                +
                patterns('django.contrib.auth.views',
