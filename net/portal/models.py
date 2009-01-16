@@ -9,6 +9,10 @@ from django.contrib.auth.models import User
 import astrometry.net.settings as settings
 from astrometry.net.portal.log import log
 
+class PendingAccount(models.Model):
+    user = models.ForeignKey(User, unique=True)
+    key = models.CharField(max_length=20)
+
 class UserPreferences(models.Model):
     user = models.ForeignKey(User, editable=False)
 

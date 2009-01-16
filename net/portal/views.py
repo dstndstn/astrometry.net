@@ -24,9 +24,10 @@ from django.template import Context, RequestContext, loader
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render_to_response
+from django.core.mail import send_mail
 
 import astrometry.net.portal.mercator as merc
-from astrometry.net.portal.models import UserPreferences
+from astrometry.net.portal.models import UserPreferences, PendingAccount
 from astrometry.net.portal.job import Job, Submission, DiskFile, Tag
 from astrometry.net.portal.convert import convert, get_objs_in_field
 from astrometry.net.portal.log import log
@@ -54,6 +55,29 @@ def newaccount(request):
             name = form.cleaned_data['name']
 
             ## DO STUFF
+
+            # -create User account with inactive password
+            user = User.objects.create_user(email, email, None)
+            user.first_name = name
+            user.save()
+
+            # -generate a random key, add it to a DB with username
+            rkey = User.objects.make_random_password(length=20)
+            pa = PendingAccount(user=user, key=rkey)
+            pa.save()
+
+            # -send an email
+            send_mail('Your Astrometry.net account',
+                      ('In order to activate your Astrometry.net account, please visit the URL below.'
+                       + '\n\n'
+                       + '' + request.path + '?key=' + rkey
+                       + '\n\n'
+                       + 'Thanks for trying Astrometry.net!'
+                       ),
+                      'Astrometry.net Accounts <alpha@astrometry.net>',
+                      [email], fail_silently=False)
+
+            # -tell the user what happened
             return HttpResponse('doing stuff for ' + email +
                                 ', name ' + name)
     else:
