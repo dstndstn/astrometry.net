@@ -32,6 +32,9 @@ void printHelp(char* progname) {
 	fprintf(stderr, "Usage: %s\n"
 			"   -i <index-filename>\n"
             "   -o <output-filename>\n"
+            "\n"
+            "Given an index, writes FITS tables of the star (RA,Dec)s\n"
+            "  and the sets of stars that compose the quads.\n"
             "\n", progname);
 }
 
