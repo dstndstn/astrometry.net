@@ -669,10 +669,6 @@ int main(int argc, char** args) {
                 cpy = strdup(infile);
                 basedir = strdup(dirname(cpy));
                 free(cpy);
-                if (strlen(basedir) == 0) {
-                    free(basedir);
-                    basedir = strdup(".");
-                }
             }
         }
         //logverb("Base directory: %s\n", basedir);
@@ -691,6 +687,8 @@ int main(int argc, char** args) {
 		// trim .xx / .xxx / .xxxx
 		if (len >= 5) {
             for (j=3; j<=5; j++) {
+                if (base[len - j] == '/')
+                    break;
                 if (base[len - j] == '.') {
                     base[len - j] = '\0';
                     suffix = base + len - j + 1;
@@ -698,7 +696,7 @@ int main(int argc, char** args) {
                 }
             }
 		}
-        logverb("Base: %s, basefile %s, basedir %s, suffix %s\n", base, basefile, basedir, suffix);
+        logverb("Base: \"%s\", basefile \"%s\", basedir \"%s\", suffix \"%s\"\n", base, basefile, basedir, suffix);
 
 		// the output filenames.
 		outfiles = sl_new(16);
