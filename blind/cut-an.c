@@ -64,6 +64,7 @@ static void print_help(char* progname) {
            "  -objs.fits catalogs with magnitude information, OR\n"
            "  -ra,dec lists (FITS BINTABLE) with RA,DEC, and MAG columns.\n"
            "     (also:  AN_FILE = 'RDLS'  in the primary header)\n"
+           "     (and optionally MAGERR)\n"
 		   "\n", progname);
 }
 
