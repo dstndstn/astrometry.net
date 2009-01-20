@@ -669,6 +669,10 @@ int main(int argc, char** args) {
                 cpy = strdup(infile);
                 basedir = strdup(dirname(cpy));
                 free(cpy);
+                if (strlen(basedir) == 0) {
+                    free(basedir);
+                    basedir = strdup(".");
+                }
             }
         }
         //logverb("Base directory: %s\n", basedir);
