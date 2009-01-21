@@ -165,11 +165,9 @@ int main(int argc, char** args) {
                     snprintf(newline, FITS_LINESZ+1, "COMMENT %s", line);
                 } else {
                     snprintf(newline, FITS_LINESZ+1, "COMMENT %s%s%s%s%s",
-                             key ? key : "",
-                             key ? "=" : "",
-                             val ? val : "",
-                             val ? " " : "",
-                             comment ? comment : "");
+                             key, strlen(key) ? "=" : "",
+                             val, strlen(val) ? " " : "",
+                             comment);
                 }
             }
 
