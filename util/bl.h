@@ -283,6 +283,7 @@ void sl_append_contents(sl* dest, sl* src);
 // Searches the sl for the given string.  Comparisons use strcmp().
 // Returns -1 if the string is not found, or the first index where it was found.
 int sl_index_of(sl* lst, const char* str);
+int sl_last_index_of(sl* lst, const char* str);
 
 // Returns 0 if the string is not in the sl, 1 otherwise.
 // (same as sl_index_of(lst, str) > -1)
