@@ -155,18 +155,18 @@ qfits_header* tan_create_header(const tan_t* tan) {
 	return hdr;
 }
 
-static void* read_header_file(const char* fn, void* dest,
+static void* read_header_file(const char* fn, int ext, void* dest,
 							  void* (*readfunc)(const qfits_header*, void*)) {
 	qfits_header* hdr;
 	void* result;
-	hdr = qfits_header_read(fn);
+	hdr = qfits_header_readext(fn, ext);
 	if (!hdr) {
-		ERROR("Failed to read FITS header from file \"%s\"", fn);
+		ERROR("Failed to read FITS header from file \"%s\" extension %i", fn, ext);
 		return NULL;
 	}
 	result = readfunc(hdr, dest);
 	if (!result) {
-		ERROR("Failed to parse WCS header from file \"%s\"", fn);
+		ERROR("Failed to parse WCS header from file \"%s\" extension %i", fn, ext);
 	}
 	qfits_header_destroy(hdr);
 	return result;
@@ -177,14 +177,20 @@ static void* call_sip_read_header(const qfits_header* hdr, void* dest) {
 	return sip_read_header(hdr, dest);
 }
 sip_t* sip_read_header_file(const char* fn, sip_t* dest) {
-	return read_header_file(fn, dest, call_sip_read_header);
+	return read_header_file(fn, 0, dest, call_sip_read_header);
+}
+sip_t* sip_read_header_file(const char* fn, int ext, sip_t* dest) {
+	return read_header_file(fn, ext, dest, call_sip_read_header);
 }
 
 static void* call_tan_read_header(const qfits_header* hdr, void* dest) {
 	return tan_read_header(hdr, dest);
 }
 tan_t* tan_read_header_file(const char* fn, tan_t* dest) {
-	return read_header_file(fn, dest, call_tan_read_header);
+	return read_header_file(fn, 0, dest, call_tan_read_header);
+}
+tan_t* tan_read_header_file_ext(const char* fn, int ext, tan_t* dest) {
+	return read_header_file(fn, ext, dest, call_tan_read_header);
 }
 
 static bool read_polynomial(const qfits_header* hdr, const char* format,
