@@ -543,7 +543,7 @@ int augment_xylist(augment_xylist_t* axy,
                 // obviously this should be more flexible and robust.
                 errors_start_logging_to_string();
                 memset(&sip, 0, sizeof(sip_t));
-                ok = (sip_read_header_file(fitsimgfn, &sip) != NULL);
+                ok = (sip_read_header_file_ext(fitsimgfn, axy->extension, &sip) != NULL);
                 errstr = errors_stop_logging_to_string(": ");
                 if (ok) {
                     logmsg("Found an existing WCS header, will try to verify it.\n");
