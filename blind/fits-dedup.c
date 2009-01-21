@@ -17,23 +17,27 @@
 */
 
 #include <unistd.h>
+#include <stdio.h>
 
 #include "qfits.h"
 #include "ioutils.h"
 #include "bl.h"
 #include "log.h"
+#include "errors.h"
 
-char* OPTIONS = "hfl";
+char* OPTIONS = "hflk:b";
 
 void printHelp(char* progname) {
 	fprintf(stderr, "Usage:   %s [options] <input-file>\n"
             "   [-f]: keep first instance of each duplicate header card\n"
             "   [-l]: keep last  instance of each duplicate header card\n"
+            "   [-b]: blank out the duplicate line instead of COMMENT-ing out\n"
             "   [-k <keyword>]: look at only this header keyword\n"
             "\n"
             "Finds and removes duplicate FITS header cards.  The default is just to find\n"
             "and print duplicates.  Use -f or -l to remove all but the first / last\n"
             "instance of duplicate cards.  The duplicates will be turned into COMMENTs\n"
+            "(or blanked out if -b is included)\n"
             "so that the length of the header does not change and the replacement can be\n"
             "written in-place.\n"
             "\n", progname);
@@ -48,6 +52,7 @@ int main(int argc, char** args) {
     bool modify = FALSE;
     bool first = FALSE;
     bool last = FALSE;
+    bool blankout = FALSE;
     char* keyword = NULL;
     int i, Next;
 
@@ -67,9 +72,18 @@ int main(int argc, char** args) {
         case 'l':
             last = TRUE;
             break;
+        case 'b':
+            blankout = TRUE;
+            break;
         }
 
     log_init(LOG_MSG);
+
+    if (first && last) {
+        printHelp(args[0]);
+        logerr("You must specify only one of -f and -l\n");
+        exit(-1);
+    }
 
     modify = first | last;
 
@@ -82,18 +96,21 @@ int main(int argc, char** args) {
 
     Next = qfits_query_n_ext(infn);
     
-    for (i=0; i<Next; i++) {
+    for (i=0; i<=Next; i++) {
         qfits_header* hdr;
         int j, Ncards;
         sl* keylist;
         il* indlist;
+        bool modified = FALSE;
 
         hdr = qfits_header_readext(infn, i);
         Ncards = qfits_header_n(hdr);
 
-        printf("Old header:\n");
-        qfits_header_list(hdr, stdout);
-        printf("\n\n");
+        /*
+          printf("Old header:\n");
+          qfits_header_list(hdr, stdout);
+          printf("\n\n");
+        */
 
         keylist = sl_new(36);
         indlist = il_new(36);
@@ -130,6 +147,8 @@ int main(int argc, char** args) {
             if (!modify)
                 continue;
 
+            modified = TRUE;
+
             // replace a duplicate!
             memset(newline, ' ', FITS_LINESZ+1);
             if (first) {
@@ -139,15 +158,19 @@ int main(int argc, char** args) {
                 // keep the last instance, replace the previous card.
                 qfits_header_getitem(hdr, setind, key, val, comment, line);
             }
-            if (line[0]) {
-                snprintf(newline, FITS_LINESZ+1, "COMMENT %s", line);
+            if (blankout) {
+                newline[80] = '\0';
             } else {
-                snprintf(newline, FITS_LINESZ+1, "COMMENT %s%s%s%s%s",
-                         key ? key : "",
-                         key ? "=" : "",
-                         val ? val : "",
-                         val ? " " : "",
-                         comment ? comment : "");
+                if (line[0]) {
+                    snprintf(newline, FITS_LINESZ+1, "COMMENT %s", line);
+                } else {
+                    snprintf(newline, FITS_LINESZ+1, "COMMENT %s%s%s%s%s",
+                             key ? key : "",
+                             key ? "=" : "",
+                             val ? val : "",
+                             val ? " " : "",
+                             comment ? comment : "");
+                }
             }
 
             if (line[0]) {
@@ -162,13 +185,38 @@ int main(int argc, char** args) {
             qfits_header_setitem(hdr, setind, NULL, NULL, NULL, newline);
         }
 
-        printf("\n");
-        printf("Writing new header:\n");
-        qfits_header_list(hdr, stdout);
-        printf("\n\n");
+        /*
+          printf("\n");
+          printf("Writing new header:\n");
+          qfits_header_list(hdr, stdout);
+          printf("\n\n");
+        */
 
         sl_free2(keylist);
         il_free(indlist);
+
+        if (modified) {
+            FILE* fid;
+            int offset, len;
+            fid = fopen(infn, "r+");
+            if (!fid) {
+                SYSERROR("Failed to open file \"%s\"", infn);
+                exit(-1);
+            }
+            if (qfits_get_hdrinfo(infn, i, &offset, &len)) {
+                ERROR("Failed to find offset of header for extension %i in file \"%s\"", i, infn);
+                exit(-1);
+            }
+            if (fseek(fid, offset, SEEK_SET)) {
+                SYSERROR("Failed to seek to offset %i in \"%s\" to write updated header.", offset, infn);
+                exit(-1);
+            }
+            qfits_header_dump(hdr, fid);
+            if (fclose(fid)) {
+                SYSERROR("Failed to close file \"%s\" after updating header.\n", infn);
+                exit(-1);
+            }
+        }
 
         qfits_header_destroy(hdr);
     }
