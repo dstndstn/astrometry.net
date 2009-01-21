@@ -758,9 +758,11 @@ int qfits_header_setitem(
     else
         k->com = NULL;
 
-    if (lin)
-        k->lin = qfits_strdup(lin);
-    else
+    // the rest of the code expects this to be exactly 80 chars.
+    if (lin) {
+        k->lin = qfits_malloc(80);
+        memcpy(k->lin, lin, 80);
+    } else
         k->lin = NULL;
         
     return 0;

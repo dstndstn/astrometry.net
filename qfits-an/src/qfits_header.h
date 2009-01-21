@@ -86,7 +86,13 @@ char * qfits_header_getstr(const qfits_header *, const char *) ;
 int qfits_header_getitem(const qfits_header *, int, char *, char *, char *, 
         char *) ; 
 
-int qfits_header_setitem(qfits_header *, int, char *, char *, char *, char *);
+/*
+  Note, the "key", "val", "comment", args are copied with "strdup", while "line" is
+  copied with "memcpy(dest, line, 80)", so you must ensure that the string you pass in
+  has at least 80 chars.
+ */
+int qfits_header_setitem(qfits_header *, int, char* key, char* val, char* comment,
+                         char* line);
 
 char * qfits_header_getcom(const qfits_header *, const char *) ;
 int qfits_header_getint(const qfits_header *, const char *, int) ;
