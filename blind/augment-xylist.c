@@ -472,6 +472,10 @@ int augment_xylist(augment_xylist_t* axy,
             sl_append(cmd, "--sanitized-fits-outfile");
             append_escape(cmd, sanitizedfn);
         }
+        if (axy->extension) {
+            sl_append(cmd, "--extension");
+            sl_appendf(cmd, "%i", axy->extension);
+        }
         sl_append(cmd, "--infile");
         append_escape(cmd, axy->imagefn);
         sl_append(cmd, "--uncompressed-outfile");
