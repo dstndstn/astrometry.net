@@ -1,6 +1,6 @@
 /*
  This file is part of the Astrometry.net suite.
- Copyright 2008 Dustin Lang.
+ Copyright 2008-2009 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -58,6 +58,9 @@ struct augment_xylist_s {
 
     bool keep_fitsimg;
     char* fitsimgfn;
+
+    // FITS extension to read image from
+    int extension;
 
     // set during augment_xylist: is the input image or xyls FITS?
     bool isfits;

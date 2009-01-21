@@ -1,6 +1,6 @@
 /*
  This file is part of the Astrometry.net suite.
- Copyright 2007-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+ Copyright 2007-2009 Dustin Lang, Keir Mierle and Sam Roweis.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -130,6 +130,8 @@ static an_option_t options[] = {
     {'r', "resort",         no_argument, NULL,
      "sort the star brightnesses by background-subtracted flux; the default is to sort using a\n"
      "    compromise between background-subtracted and non-background-subtracted flux"},
+    {'6', "extension",      required_argument, "int",
+     "FITS extension to read image from."},
     {'z', "downsample",     required_argument, "int",
      "downsample the image by factor <int> before running source extraction"},
 	{'C', "cancel",		   required_argument, "filename",
@@ -230,6 +232,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         break;
     case '5':
         axy->search_radius = atof(optarg);
+        break;
+    case '6':
+        axy->extension = atoi(optarg);
         break;
     case 'B':
         axy->corrfn = optarg;

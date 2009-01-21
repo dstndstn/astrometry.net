@@ -36,6 +36,8 @@ fitsext = 'fits'
 pgmcmd = 'pgmtoppm rgbi:1/1/1 %s > %s'
 pgmext = 'pgm'
 
+an_fitstopnm_ext_cmd = 'an-fitstopnm -e %i -i %%s > %%s'
+
 imgcmds = {fitstype : (fitsext, 'an-fitstopnm -i %s > %s'),
            'JPEG image data'  : ('jpg',  'jpegtopnm %s > %s'),
            'PNG image data'   : ('png',  'pngtopnm %s > %s'),
@@ -129,8 +131,9 @@ def find_program(mydir, cmd):
     log('path', p, 'does not exist.')
     return None
 
-def image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits,
-              mydir, quiet):
+def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
+              no_fits2fits=False, extension=None, mydir=None,
+              quiet=False):
     """
     infile: input filename.
     outfile: output filename.
@@ -178,14 +181,19 @@ def image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits,
         if not quiet:
             log('temporary output file: ', outfile)
 
-    # Do the actual conversion
+    if ext == fitsext and extension:
+        cmd = an_fitstopnm_ext_cmd % extension
+
     if ext == fitsext and mydir:
         # an-fitstopnm: add explicit path...
         cmd = find_program(mydir, cmd)
         if cmd is None:
             return (None, 'Couldn\'t find the program "an-fitstopnm".')
+
     if quiet:
         cmd += ' 2>/dev/null'
+
+    # Do the actual conversion
     do_command(cmd % (shell_escape(infile), shell_escape(outfile)))
 
     if force_ppm:
@@ -204,7 +212,7 @@ def image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits,
     
 
 def convert_image(infile, outfile, uncompressed, sanitized,
-                  force_ppm, no_fits2fits, mydir, quiet):
+                  force_ppm, no_fits2fits, extension, mydir, quiet):
     tempfiles = []
     # if the caller didn't specify where to put the uncompressed file,
     # create a tempfile.
@@ -221,7 +229,7 @@ def convert_image(infile, outfile, uncompressed, sanitized,
         print comp
         infile = uncompressed
 
-    (imgtype, errstr) = image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits, mydir, quiet)
+    (imgtype, errstr) = image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits, extension, mydir, quiet)
 
     for fn in tempfiles:
         os.unlink(fn)
@@ -251,16 +259,19 @@ def main():
                       help='output pnm image FILE', metavar='FILE')
     parser.add_option('-p', '--ppm',
                       action='store_true', dest='force_ppm',
-                      help='convert the output to PPM');
+                      help='convert the output to PPM')
+    parser.add_option('-e', '--extension',
+                      dest='extension', type='int',
+                      help='FITS extension to read')
     parser.add_option('-2', '--no-fits2fits',
                       action='store_true', dest='no_fits2fits',
-                      help="don't sanitize FITS files");
+                      help="don't sanitize FITS files")
     parser.add_option('-q', '--quiet',
                       action='store_true', dest='quiet',
-                      help='only print errors');
+                      help='only print errors')
     parser.add_option('-v', '--verbose',
                       action='store_true', dest='verbose',
-                      help='be chatty');
+                      help='be chatty')
 
     (options, args) = parser.parse_args()
 
@@ -282,6 +293,7 @@ def main():
                          options.sanitized_outfile,
                          options.force_ppm,
                          options.no_fits2fits,
+                         options.extension,
                          mydir, options.quiet)
 
 if __name__ == '__main__':

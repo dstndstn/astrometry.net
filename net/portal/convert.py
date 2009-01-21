@@ -117,7 +117,7 @@ def convert(job, fn, args=None):
     elif fn == 'pnm':
         infn = convert(job, 'uncomp')
         log('Converting %s to %s...\n' % (infn, fullfn))
-        (filetype, errstr) = image2pnm.image2pnm(infn, fullfn, None, False, False, None, False)
+        (filetype, errstr) = image2pnm.image2pnm(infn, fullfn)
         if errstr:
             err = 'Error converting image file: %s' % errstr
             log(err)
