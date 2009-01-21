@@ -627,6 +627,26 @@ char * qfits_header_getstr(const qfits_header * hdr, const char * key)
     return k->val ;
 }
 
+static keytuple* get_keytuple(qfits_header* hdr, int idx) {
+    if (idx == 0) {
+	    hdr->current_idx = 0 ;
+	    hdr->current = hdr->first ;
+	    return hdr->current;
+	} else if (idx == hdr->current_idx + 1) {
+	    hdr->current = ((keytuple*) (hdr->current))->next ;
+	    hdr->current_idx++ ;
+	    return hdr->current ;
+	} else {
+        keytuple* k = (keytuple*)hdr->first;
+	    int count=0 ;
+	    while (count<idx) {
+            k = k->next ;
+            count++ ;
+        }
+        return k;
+	}
+}
+
 /*----------------------------------------------------------------------------*/
 /**
   @brief    Return the i-th key/val/com/line tuple in a header.
@@ -673,29 +693,12 @@ int qfits_header_getitem(
         char                *   lin)
 {
     keytuple    *   k ;
-    int             count ;
 
     if (hdr==NULL) return -1 ;
     if (key==NULL && val==NULL && com==NULL && lin==NULL) return 0 ;
     if (idx<0 || idx>=hdr->n) return -1 ;
 
-    /* Get pointer to keytuple */
-    if (idx == 0) {
-	    ((qfits_header *)hdr)->current_idx = 0 ;
-	    ((qfits_header *)hdr)->current = hdr->first ;
-	    k = hdr->current ;
-	} else if (idx == hdr->current_idx + 1) {
-	    ((qfits_header *)hdr)->current = ((keytuple*) (hdr->current))->next ;
-	    ((qfits_header *)hdr)->current_idx++ ;
-	    k = hdr->current ;
-	} else {
-	    count=0 ;
-	    k = (keytuple*)hdr->first ;
-	    while (count<idx) {
-            k = k->next ;
-            count++ ;
-        }
-	}
+    k = get_keytuple((qfits_header*)hdr, idx);
 
     /* Fill return values */
     if (key!=NULL) strcpy(key, k->key);
@@ -713,6 +716,56 @@ int qfits_header_getitem(
     }
     return 0 ;
 }
+
+int qfits_header_setitem(
+                         qfits_header  *   hdr,
+                         int                     idx,
+                         char                *   key,
+                         char                *   val,
+                         char                *   com,
+                         char                *   lin) {
+    keytuple    *   k ;
+
+    if (!hdr) return -1 ;
+    if (!key && !val && !com && !lin) return 0;
+    if (idx<0 || idx>=hdr->n) return -1;
+
+    k = get_keytuple(hdr, idx);
+
+    // free existing strings as per keytuple_del
+    if (k->key)
+        qfits_free(k->key);
+    if (k->val)
+        qfits_free(k->val);
+    if (k->com)
+        qfits_free(k->com);
+    if (k->lin)
+        qfits_free(k->lin);
+
+    // copy input strings.
+    if (key)
+        k->key = qfits_strdup(key);
+    else
+        k->key = NULL;
+
+    if (val)
+        k->val = qfits_strdup(val);
+    else
+        k->val = NULL;
+
+    if (com)
+        k->com = qfits_strdup(com);
+    else
+        k->com = NULL;
+
+    if (lin)
+        k->lin = qfits_strdup(lin);
+    else
+        k->lin = NULL;
+        
+    return 0;
+}
+
 
 /*----------------------------------------------------------------------------*/
 /**

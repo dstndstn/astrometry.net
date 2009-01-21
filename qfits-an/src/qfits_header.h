@@ -85,6 +85,9 @@ void qfits_header_destroy(qfits_header *) ;
 char * qfits_header_getstr(const qfits_header *, const char *) ;
 int qfits_header_getitem(const qfits_header *, int, char *, char *, char *, 
         char *) ; 
+
+int qfits_header_setitem(qfits_header *, int, char *, char *, char *, char *);
+
 char * qfits_header_getcom(const qfits_header *, const char *) ;
 int qfits_header_getint(const qfits_header *, const char *, int) ;
 double qfits_header_getdouble(const qfits_header *, const char *, double) ;
