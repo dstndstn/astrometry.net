@@ -30,7 +30,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hOo:8Hd:D:v";
+static const char* OPTIONS = "hOo:8Hd:D:ve:";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -39,6 +39,7 @@ static void printHelp() {
 			"Read a FITS file, find objects, and write out \n"
 			"X, Y, FLUX to   fitsname.xy.fits .\n"
 			"\n"
+            "   [-e <extension>]: read from a single FITS extension\n"
 			"   [-O]  overwrite existing output file.\n"
             "   [-8]  don't use optimization for byte (u8) images.\n"
             "   [-H]  downsample by a factor of 2 before running simplexy.\n"
@@ -65,9 +66,13 @@ int main(int argc, char *argv[]) {
     bool do_u8 = TRUE;
     int downsample = 0;
     int downsample_as_reqd = 0;
+    int extension;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+        case 'e':
+            extension = atoi(optarg);
+            break;
         case 'D':
             downsample_as_reqd = atoi(optarg);
             break;
@@ -122,7 +127,7 @@ int main(int argc, char *argv[]) {
     if (downsample)
         logverb("Downsampling by %i\n", downsample);
 
-    if (image2xy_files(infn, outfn, do_u8, downsample, downsample_as_reqd)) {
+    if (image2xy_files(infn, outfn, do_u8, downsample, downsample_as_reqd, extension)) {
         ERROR("image2xy failed.");
         exit(-1);
     }

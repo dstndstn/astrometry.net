@@ -61,7 +61,8 @@ goto bailout; \
 } while(0)
 
 int image2xy_files(const char* infn, const char* outfn,
-				   bool do_u8, int downsample, int downsample_as_required) {
+				   bool do_u8, int downsample, int downsample_as_required,
+                   int extension) {
 	fitsfile *fptr = NULL;
 	fitsfile *ofptr = NULL;
 	int status = 0; // FIXME should have ostatus too
@@ -82,6 +83,12 @@ int image2xy_files(const char* infn, const char* outfn,
     FITS_CHECK("Failed to read number of HDUs for input file %s", infn);
     logverb("nhdus=%d\n", nhdus);
 
+    if (extension > nhdus) {
+        logerr("Requested extension %i is greater than number of extensions (%i) in file %s\n",
+               extension, nhdus, infn);
+        return -1;
+    }
+
 	// Create output file
 	fits_create_file(&ofptr, outfn, &status);
     FITS_CHECK("Failed to open FITS output file %s", outfn);
@@ -90,6 +97,9 @@ int image2xy_files(const char* infn, const char* outfn,
     FITS_CHECK("Failed to create output image");
 
 	fits_write_key(ofptr, TSTRING, "SRCFN", (char*)infn, "Source image", &status);
+    if (extension)
+        fits_write_key(ofptr, TINT, "SRCEXT", &extension, "Source image extension", &status);
+
 	/* Parameters for simplexy; save for debugging */
 	fits_write_comment(ofptr, "Parameters used for source extraction", &status);
 
@@ -131,11 +141,17 @@ int image2xy_files(const char* infn, const char* outfn,
         float *flux;
         float* background;
 
+        if (extension && kk != extension)
+            continue;
+
 		fits_movabs_hdu(fptr, kk, &hdutype, &status);
 		fits_get_hdu_type(fptr, &hdutype, &status);
 
-		if (hdutype != IMAGE_HDU) 
+		if (hdutype != IMAGE_HDU) {
+            if (extension)
+                logerr("Requested extension %i in file %s is not an image.\n", extension, infn);
 			continue;
+        }
 
 		fits_get_img_dim(fptr, &naxis, &status);
         FITS_CHECK("Failed to find image dimensions for HDU %i", kk);
