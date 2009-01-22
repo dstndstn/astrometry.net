@@ -281,7 +281,7 @@ int augment_xylist_parse_option(char argchar, char* optarg,
     case 'v':
         axy->verbosity++;
         break;
-    case '\x02':
+    case '7':
         axy->no_delete_temp = TRUE;
         break;
     case 'V':
