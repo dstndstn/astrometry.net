@@ -21,6 +21,7 @@
 #include <string.h>
 #include <math.h>
 #include <sys/param.h>
+#include <assert.h>
 
 #include "sip_qfits.h"
 #include "an-bool.h"
@@ -67,6 +68,8 @@ int main(int argc, char** args) {
 	int i,j;
 
     double inxmin, inxmax, inymin, inymax;
+
+    double outpixmin, outpixmax;
 
     //float fa;
     //int a;
@@ -122,13 +125,15 @@ int main(int argc, char** args) {
     // read as floats
     qinimg.ptype = PTYPE_FLOAT;
 
-    if (qfitsloader_init(&qinimg)) {
+    if (qfitsloader_init(&qinimg) ||
+        qfits_loadpix(&qinimg)) {
         ERROR("Failed to read pixels from input FITS image \"%s\"", infitsfn);
         exit(-1);
     }
 
     // lx, ly, fbuf
     inimg = qinimg.fbuf;
+    assert(inimg);
     inW = qinimg.lx;
     inH = qinimg.ly;
 
@@ -207,6 +212,8 @@ int main(int argc, char** args) {
             pmax = MAX(pmax, outimg[i]);
         }
         logmsg("Output image bounds: %g to %g\n", pmin, pmax);
+        outpixmin = pmin;
+        outpixmax = pmax;
     }
 
     qfitsloader_free_buffers(&qinimg);
@@ -225,6 +232,9 @@ int main(int argc, char** args) {
         sip_add_to_header(hdr, &outwcs);
     else
         tan_add_to_header(hdr, &(outwcs.wcstan));
+
+    fits_header_add_double(hdr, "DATAMIN", outpixmin, "min pixel value");
+    fits_header_add_double(hdr, "DATAMAX", outpixmax, "max pixel value");
 
     fid = fopen(outfitsfn, "w");
     if (!fid) {
