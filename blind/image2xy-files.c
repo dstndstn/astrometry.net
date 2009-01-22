@@ -101,7 +101,7 @@ int image2xy_files(const char* infn, const char* outfn,
 
 	fits_write_key(ofptr, TSTRING, "SRCFN", (char*)infn, "Source image", &status);
     if (extension)
-        fits_write_key(ofptr, TINT, "SRCEXT", &extension, "Source image extension", &status);
+        fits_write_key(ofptr, TINT, "SRCEXT", &extension, "Source image extension (1=primary)", &status);
 
 	/* Parameters for simplexy; save for debugging */
 	fits_write_comment(ofptr, "Parameters used for source extraction", &status);

@@ -113,6 +113,8 @@ static an_option_t options[] = {
      "print this help message" },
 	{'v', "verbose",       no_argument, NULL,
      "be more chatty" },
+    {'\x02', "no-delete-temp", no_argument, NULL,
+     "don't delete temp files (for debugging)\n"},
 	{'L', "scale-low",	   required_argument, "scale",
      "lower bound of image scale estimate"},
     {'H', "scale-high",   required_argument, "scale",
@@ -278,6 +280,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         break;
     case 'v':
         axy->verbosity++;
+        break;
+    case '\x02':
+        axy->no_delete_temp = TRUE;
         break;
     case 'V':
         sl_append(axy->verifywcs, optarg);
@@ -590,7 +595,7 @@ int augment_xylist(augment_xylist_t* axy,
         xylsfn = create_temp_file("xyls", axy->tempdir);
         sl_append_nocopy(tempfiles, xylsfn);
 
-        logverb("Running image2xy: input=%s, output=%s\n", fitsimgfn, xylsfn);
+        logverb("Running image2xy: input=%s, output=%s, ext=%i\n", fitsimgfn, xylsfn, axy->extension);
 
         // we have to delete the temp file because otherwise image2xy is too timid to overwrite it.
         if (unlink(xylsfn)) {
@@ -947,12 +952,14 @@ int augment_xylist(augment_xylist_t* axy,
     fclose(fout);
 
  cleanup:
-	for (i=0; i<sl_size(tempfiles); i++) {
-		char* fn = sl_get(tempfiles, i);
-		if (unlink(fn)) {
-			SYSERROR("Failed to delete temp file \"%s\"", fn);
-		}
-	}
+    if (!axy->no_delete_temp) {
+        for (i=0; i<sl_size(tempfiles); i++) {
+            char* fn = sl_get(tempfiles, i);
+            if (unlink(fn)) {
+                SYSERROR("Failed to delete temp file \"%s\"", fn);
+            }
+        }
+    }
 
     sl_free2(cmd);
     sl_free2(tempfiles);

@@ -28,6 +28,7 @@ struct augment_xylist_s {
     char* tempdir;
 
     int verbosity;
+    bool no_delete_temp;
 
     dl* scales;
     // contains ranges of depths as pairs of ints.
