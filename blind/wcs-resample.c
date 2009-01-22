@@ -19,6 +19,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <sys/param.h>
 
 #include "sip_qfits.h"
 #include "an-bool.h"
@@ -64,6 +66,8 @@ int main(int argc, char** args) {
 
 	int i,j;
 
+    double inxmin, inxmax, inymin, inymax;
+
     //float fa;
     //int a;
 
@@ -87,7 +91,7 @@ int main(int argc, char** args) {
 	}
 
     infitsfn  = args[optind+0];
-    inwcsfn   = args[optind+1];
+    outwcsfn  = args[optind+1];
     outfitsfn = args[optind+2];
 
     if (!inwcsfn)
@@ -138,6 +142,11 @@ int main(int argc, char** args) {
     //fa = 3.0;
     //a = ceil(fa);
 
+    inxmax = -HUGE_VAL;
+    inymax = -HUGE_VAL;
+    inxmin =  HUGE_VAL;
+    inymin =  HUGE_VAL;
+
     for (j=0; j<outH; j++) {
         for (i=0; i<outW; i++) {
             double xyz[3];
@@ -153,6 +162,14 @@ int main(int argc, char** args) {
             // -1 for FITS pixel coordinates.
             x = round(inx - 1.0);
             y = round(iny - 1.0);
+
+            // keep track of the bounds of the requested pixels in the
+            // input image.
+            inxmax = MAX(inxmax, x);
+            inymax = MAX(inymax, y);
+            inxmin = MIN(inxmin, x);
+            inymin = MIN(inymin, y);
+
             if (x < 0 || x >= inW || y < 0 || y >= inH)
                 continue;
             outimg[j * outW + i] = inimg[y * inW + x];
@@ -170,8 +187,27 @@ int main(int argc, char** args) {
         }
     }
 
+    logmsg("Bounds of the pixels requested from the input image:\n");
+    logmsg("  x: %g to %g\n", inxmin, inxmax);
+    logmsg("  y: %g to %g\n", inymin, inymax);
 
-
+    {
+        double pmin, pmax;
+        pmin =  HUGE_VAL;
+        pmax = -HUGE_VAL;
+        for (i=0; i<(inW*inH); i++) {
+            pmin = MIN(pmin, inimg[i]);
+            pmax = MAX(pmax, inimg[i]);
+        }
+        logmsg("Input image bounds: %g to %g\n", pmin, pmax);
+        pmin =  HUGE_VAL;
+        pmax = -HUGE_VAL;
+        for (i=0; i<(outW*outH); i++) {
+            pmin = MIN(pmin, outimg[i]);
+            pmax = MAX(pmax, outimg[i]);
+        }
+        logmsg("Output image bounds: %g to %g\n", pmin, pmax);
+    }
 
     qfitsloader_free_buffers(&qinimg);
 
