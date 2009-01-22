@@ -75,6 +75,9 @@ int image2xy_files(const char* infn, const char* outfn,
 	float dpsf=0,plim=0,dlim=0,saddle=0;
     char* str;
 
+    // QFITS to CFITSIO extension convention switch
+    extension++;
+
 	fits_open_file(&fptr, infn, READONLY, &status);
     FITS_CHECK("Failed to open FITS input file %s", infn);
 

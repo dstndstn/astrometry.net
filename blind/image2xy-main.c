@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     bool do_u8 = TRUE;
     int downsample = 0;
     int downsample_as_reqd = 0;
-    int extension;
+    int extension = 0;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
