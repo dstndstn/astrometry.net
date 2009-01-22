@@ -113,7 +113,7 @@ static an_option_t options[] = {
      "print this help message" },
 	{'v', "verbose",       no_argument, NULL,
      "be more chatty" },
-    {'\x02', "no-delete-temp", no_argument, NULL,
+    {'7', "no-delete-temp", no_argument, NULL,
      "don't delete temp files (for debugging)\n"},
 	{'L', "scale-low",	   required_argument, "scale",
      "lower bound of image scale estimate"},
