@@ -216,6 +216,20 @@ int main(int argc, char** args) {
         outpixmax = pmax;
     }
 
+    /*
+    for (i=0; i<(outW*outH); i++) {
+        if (outimg[i] > 0) {
+            int b;
+            unsigned char c;
+            for (b=0; b<4; b++) {
+                c = *(((unsigned char*)(&outimg[i])) + b);
+                logmsg("byte %i: 0x%x\n", b, c);
+            }
+            break;
+        }
+    }
+     */
+
     qfitsloader_free_buffers(&qinimg);
 
     // prepare output image.
