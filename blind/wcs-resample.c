@@ -260,5 +260,17 @@ int main(int argc, char** args) {
     }
     free(outimg);
 
+    // FITS pad
+    fid = fopen(outfitsfn, "a");
+    if (!fid) {
+        SYSERROR("Failed to open file \"%s\" for padding", outfitsfn);
+        exit(-1);
+    }
+    if (fits_pad_file(fid) ||
+        fclose(fid)) {
+        SYSERROR("Failed to pad or close file \"%s\"", outfitsfn);
+        exit(-1);
+    }
+
 	return 0;
 }
