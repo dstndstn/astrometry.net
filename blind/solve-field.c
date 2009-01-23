@@ -148,9 +148,12 @@ static int write_kmz(const augment_xylist_t* axy, const char* kmzfn,
     char* pngfn = NULL;
     char* kmlfn = NULL;
     char* warpedpngfn = NULL;
+    char* basekmlfn = NULL;
+    char* basewarpedpngfn = NULL;
     char* tmpdir;
     char* cmd = NULL;
     sl* cmdline = sl_new(16);
+    char* wcsbase = NULL;
             
     tmpdir = create_temp_dir("kmz", tempdir);
     if (!tmpdir) {
@@ -179,17 +182,24 @@ static int write_kmz(const augment_xylist_t* axy, const char* kmzfn,
     }
     free(cmd);
 
-    kmlfn       = sl_appendf(tempfiles, "%s/%s", tmpdir, "doc.kml");
-    warpedpngfn = sl_appendf(tempfiles, "%s/%s", tmpdir, "warped.png");
+    basekmlfn       = "doc.kml";
+    basewarpedpngfn = "warped.png";
+    kmlfn       = sl_appendf(tempfiles, "%s/%s", tmpdir, basekmlfn);
+    warpedpngfn = sl_appendf(tempfiles, "%s/%s", tmpdir, basewarpedpngfn);
+    // delete the wcs we create with "cp" below.
+    wcsbase = basename_safe(axy->wcsfn);
+    sl_appendf(tempfiles, "%s/%s", tmpdir, wcsbase);
+    free(wcsbase);
 
     logverb("Trying to run wcs2kml to generate KMZ output.\n");
+    sl_appendf(cmdline, "cp %s %s; cd %s; ", axy->wcsfn, tmpdir, tmpdir);
     sl_append(cmdline, "wcs2kml");
     // FIXME - if parity?
     sl_append(cmdline, "--input_image_origin_is_upper_left");
     appendf_escape(cmdline, "--fitsfile=%s", axy->wcsfn);
     appendf_escape(cmdline, "--imagefile=%s", pngfn);
-    appendf_escape(cmdline, "--kmlfile=%s", kmlfn);
-    appendf_escape(cmdline, "--outfile=%s", warpedpngfn);
+    appendf_escape(cmdline, "--kmlfile=%s", basekmlfn);
+    appendf_escape(cmdline, "--outfile=%s", basewarpedpngfn);
     // run it
     cmd = sl_implode(cmdline, " ");
     sl_remove_all(cmdline);
