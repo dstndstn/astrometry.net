@@ -171,7 +171,9 @@ function onUnload() {
 {% autoescape off %}
 {{ title }}
 {% endautoescape %}
+{% if totalnum %}
 ({{ firstnum }} to {{ lastnum }} of {{ totalnum }})
+{% endif %}
 {% else %}
 Jobs {{ firstnum }} to {{ lastnum }} of {{ totalnum }}
 {% endif %}

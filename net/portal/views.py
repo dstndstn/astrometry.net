@@ -68,7 +68,7 @@ def get_job_and_sub(request, args, kwargs):
 	elif request.POST:
 		jobid = request.POST.get('jobid')
 	job = None
-	log('jobid', jobid)
+	#log('jobid', jobid)
 	if jobid:
 		job = get_job(jobid)
 	sub = None
@@ -283,6 +283,7 @@ def joblist(request):
 		ajaxupdate = True
 
 		title = 'Jobs belonging to submission <i>' + sub.subid + '</i>'
+		emptytitle = 'Submission <i>' + sub.subid + '</i>'
 
 
 	if 'gmaps' in request.GET:
@@ -343,6 +344,8 @@ def joblist(request):
 
 	elif kind == 'sub':
 		jobs = jobs[start:end]
+        if N == 0:
+            title = emptytitle
 
 	# "rjobs": rendered jobs.
 	rjobs = []
@@ -435,7 +438,7 @@ def joblist(request):
 				t = sub.jobs.count()
 			rend.append((tdclass, c, t))
 		rsubs.append((rend, sub.subid, subn))
-		
+
 
 	if format == 'xml':
 		res = HttpResponse()
@@ -575,6 +578,7 @@ def jobstatus(request, jobid=None):
 		'jobfile' : (submission.datasrc == 'file') and submission.uploaded.userfilename or None,
 		'jobscale' : job.friendly_scale(),
 		'jobparity' : job.friendly_parity(),
+        'diskfileurl': get_file_url(job, 'origfile'),
 		'needs_medium_scale' : job.diskfile.needs_medium_size(),
 		'sources' : get_file_url(job, 'sources-medium'),
 		'sources_big' : get_file_url(job, 'sources-big'),
@@ -788,8 +792,8 @@ def getfile(request, jobid=None, filename=None):
 		return send_file(fn, res=res)
 
 	if filename == 'origfile':
-		if not job.is_exposed():
-			return HttpResponse('access to this file is forbidden.')
+		#if not job.is_exposed():
+		#	return HttpResponse('access to this file is forbidden.')
 		df = job.diskfile
 		ct = df.content_type() or 'application/octet-stream'
 		fn = df.get_path()

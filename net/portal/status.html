@@ -276,12 +276,30 @@ switch to solving using that list of sources.</p>
 
 <tr><th colspan="2">Job Parameters</th></tr>
 
+{% if job.submission.multijob %}
+
+{% if joburl %}
+<tr><td> Parent URL: </td><td> <a href="{{ joburl }}">{{ joburl }}</a> </td></tr>
+{% endif %}
+{% if jobfile %}
+<tr><td> Parent File: </td><td> {{ jobfile }} </td></tr>
+{% endif %}
+
+{% if job.fileorigname %}
+<tr><td> Filename: </td><td> <a href="{{ diskfileurl }}">{{ job.fileorigname }}</a> </td></tr>
+{% endif %}
+
+{% else %}
+
 {% if joburl %}
 <tr><td> URL: </td><td> <a href="{{ joburl }}">{{ joburl }}</a> </td></tr>
 {% endif %}
 {% if jobfile %}
 <tr><td> File: </td><td> {{ jobfile }} </td></tr>
 {% endif %}
+
+{% endif %}
+
 <tr><td> Field scale: </td><td> {{ jobscale }} </td></tr>
 {% if submission.tweak %}
 <tr><td> Tweak order: </td><td> {{ submission.tweakorder }} </td></tr>

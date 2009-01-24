@@ -23,9 +23,12 @@ class QueuedJob(models.Model):
     ready = models.BooleanField()
 
     def __str__(self):
+        elems = []
         if self.job:
-            return 'Job ' + self.job.jobid
-        return 'Submission ' + self.sub.subid
+            elems.append('job=' + self.job.jobid)
+        if self.sub:
+            elems.append('sub=' + self.sub.subid)
+        return '<QJ: ' + ', '.join(elems) + '>'
 
     # how many times have we previously attempted to run this job?
     def count_failures(self):
@@ -38,9 +41,9 @@ class QueuedJob(models.Model):
     @staticmethod
     def submit_job(job, priority=priority_normal):
         from astrometry.net.portal.job import Job,Submission
-        qj = QueuedJob(job=job.get_user(),
+        qj = QueuedJob(job=job,
                        sub=None,
-                       user=job.user,
+                       user=job.get_user(),
                        queuedtime=Job.timenow(),
                        priority=priority,
                        ready=True)

@@ -440,7 +440,7 @@ class Job(models.Model):
         if self.exposejob is None:
             u = self.get_user()
             if u:
-                prefs = UserProfile.get_user(u)
+                prefs = UserProfile.for_user(u)
                 if prefs:
                     self.exposejob = prefs.expose_jobs()
                 else:

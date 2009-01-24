@@ -88,7 +88,7 @@ def convert_new_fits(job, fn, args, fullfn):
 def convert(job, fn, args=None):
     if args is None:
         args = {}
-    log('convert(%s, args=%s)' % (fn, str(args)))
+    #log('convert(%s, args=%s)' % (fn, str(args)))
     tempdir = settings.TEMPDIR
     basename = os.path.join(tempdir, job.get_id() + '-')
     fullfn = basename + fn

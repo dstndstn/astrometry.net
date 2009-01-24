@@ -213,19 +213,20 @@ class Watcher(object):
             self.bailout(job, 'no filetype')
             return False
 
-        rtnval = os.fork()
-        if rtnval == 0:
-            # I'm the child process
-            rtnval = os.EX_OK
-            try:
-                self.produce_alternate_xylists(job)
-            except:
-                log('Something bad happened at produce_alternate_xylists.')
-                rtnval = os.EX_SOFTWARE
-            os._exit(rtnval)
-        else:
-            # I'm the parent - carry on.
-            pass
+        if False:
+            rtnval = os.fork()
+            if rtnval == 0:
+                # I'm the child process
+                rtnval = os.EX_OK
+                try:
+                    self.produce_alternate_xylists(job)
+                except:
+                    log('Something bad happened at produce_alternate_xylists.')
+                    rtnval = os.EX_SOFTWARE
+                os._exit(rtnval)
+            else:
+                # I'm the parent - carry on.
+                pass
 
         (lower, upper) = job.get_scale_bounds()
         units = job.get_scaleunits()
@@ -443,9 +444,9 @@ class Watcher(object):
             return False
         submission = submissions[0]
         log('Running submission: ' + str(submission))
-        return self.run_job_or_sub(job, submission)
+        return self.run_sub(None, submission)
 
-    def run_job_or_sub(self, job, submission):
+    def run_sub(self, submission):
         tmpfile = None
         basename = None
 

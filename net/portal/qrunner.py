@@ -20,8 +20,11 @@ from astrometry.net.portal.log import log as logmsg
 def runjob(qj):
     logmsg('Running job:', qj)
     w = watcherclass()
-    w.run_job_or_sub(qj.job, qj.sub)
-    logmsg('Job finished:', qj)
+    if qj.job:
+        w.handle_job(qj.job)
+    else:
+        w.run_sub(qj.sub)
+    logmsg('QJob finished:', qj)
     logmsg('  job:', qj.job)
     logmsg('  sub:', qj.sub)
         
