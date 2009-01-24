@@ -1,5 +1,10 @@
 # must match config.client: Ice.Default.Router=XXX/router
 # (and all other Glacier2 instances in this file)
+# eg:
+# Glacier2.InstanceName=PublicRouter
+# Ice.Default.Router=PublicRouter/router:tcp -h 5.6.7.8 -p 8000
+# Section 43.3.5:
+# http://www.zeroc.com/doc/Ice-3.3.0-IceTouch/manual/Glacier2.44.3.html
 Glacier2.InstanceName=Glacier2
 
 # DEBUG
@@ -21,7 +26,7 @@ Ice.Default.Locator=SolverIceGrid/Locator:tcp -h hydra.local -p 4061
 
 # The configures the session manager. If no external session manager
 # is used, sessions are only handled Glacier2 internally.
-Glacier2.SessionManager=sessionmanager:tcp -h 127.0.0.1 -p 10001
+#Glacier2.SessionManager=sessionmanager:tcp -h 127.0.0.1 -p 10001
 
 #Glacier2.SessionManager=SolverIceGrid/AdminSessionManager
 #Glacier2.SSLSessionManager=SolverIceGrid/AdminSSLSessionManager
@@ -43,6 +48,7 @@ Glacier2.Client.ForwardContext=1
 Glacier2.Server.ForwardContext=1
 
 Glacier2.PermissionsVerifier=Glacier2/NullPermissionsVerifier
+# the above should make this unnecessary.
 #Glacier2.CryptPasswords=passwords
 
 

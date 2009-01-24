@@ -17,6 +17,9 @@ theice = None
 # FIXME
 configfile = settings.BASEDIR + 'astrometry/net/ice/config.client'
 
+username = 'foo'
+password = 'bar'
+
 printlog = False
 def logmsg(*msg):
     if printlog:
@@ -46,7 +49,7 @@ def get_router_session(ice):
         return -1
     session = None
     try:
-        session = router.createSession('test-%i' % int(time.time()), 'test')
+        session = router.createSession(username, password) #'test-%i' % int(time.time()), 'test')
     except Glacier2.PermissionDeniedException,ex:
         logmsg('router session permission denied:', ex)
     except Glacier2.CannotCreateSessionException,ex:
@@ -98,8 +101,10 @@ def solve(jobid, axy, logfunc):
     servers = find_all_solvers(ice)
 
     props = ice.getProperties()
+    # Or possibly createObjectAdapterWithRouter, see 43.4.4
     adapter = ice.createObjectAdapter('Callback.Client')
     myid = ice.stringToIdentity('callbackReceiver')
+    # 43.4.5
     category = router.getCategoryForClient()
     myid.category = category
     adapter.add(LoggerI(logfunc), myid)
@@ -141,6 +146,14 @@ def solve(jobid, axy, logfunc):
 
     # grace period to let servers send their last log messages.
     time.sleep(3)
+
+    try:
+        router.destroySession()
+    except Glacier2.SessionNotExistException, ex:
+        logmsg('Destroying session:', ex)
+    except Ice.ConnectionLostException:
+        # Expected: the router closed the connection.
+        pass
 
     return tardata
 
