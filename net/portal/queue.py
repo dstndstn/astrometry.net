@@ -28,6 +28,10 @@ class QueuedJob(models.Model):
             elems.append('job=' + self.job.jobid)
         if self.sub:
             elems.append('sub=' + self.sub.subid)
+        if self.ready:
+            elems.append('ready')
+        else:
+            elems.append('not ready')
         return '<QJ: ' + ', '.join(elems) + '>'
 
     # how many times have we previously attempted to run this job?

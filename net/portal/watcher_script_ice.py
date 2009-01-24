@@ -3,6 +3,8 @@
 from watcher_common import *
 from astrometry.net import settings
 
+from astrometry.net.portal.log import log as logmsg
+
 import IceSolver
 
 class WatcherIce(Watcher):
@@ -14,7 +16,9 @@ class WatcherIce(Watcher):
             f.close()
 
         axy = read_file(job.get_axy_filename())
+        logmsg('Calling IceSolver.solve()...')
         tardata = IceSolver.solve(job.jobid, axy, userlog)
+        logmsg('IceSolver.solve() returned')
         return tardata
 
 if __name__ == '__main__':

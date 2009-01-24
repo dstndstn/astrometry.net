@@ -25,7 +25,7 @@ def logmsg(*msg):
     if printlog:
         print ' '.join([str(m) for m in msg])
     else:
-        log(msg)
+        log('IceSolver:', *msg)
         
     
 
@@ -95,24 +95,56 @@ class SolverResult(object):
         return self.failed or self.tardata is not None
 
 def solve(jobid, axy, logfunc):
+    logmsg('get ice')
     ice = get_ice()
-    (router, session) = get_router_session(ice)
+    logmsg('ice is', ice)
 
+    #r = ice.propertyToProxy('Router')
+    #logmsg('r is', r)
+
+    logmsg('get session')
+    (router, session) = get_router_session(ice)
+    logmsg('router is', router)
+    logmsg('session is', session)
+
+    conid = Ice.generateUUID()
+    #r = ice.propertyToProxy('Router')
+    #logmsg('r is', r)
+    #logmsg('router is:', type(router))
+    #logmsg('dir:', dir(router))
+    logmsg('conid:', conid)
+    router.ice_connectionId(conid)
+
+    logmsg('get servers')
     servers = find_all_solvers(ice)
+    logmsg('servers:', servers)
 
     props = ice.getProperties()
     # Or possibly createObjectAdapterWithRouter, see 43.4.4
-    adapter = ice.createObjectAdapter('Callback.Client')
+    #adapter = ice.createObjectAdapterWithRouter('Callback.Client', router)
+
+    logmsg('creating adapter...')
+    #adapter = ice.createObjectAdapter('Callback.Client')
+    adapter = ice.createObjectAdapterWithRouter(conid, router)
+    logmsg('created adapter', adapter)
+
     myid = ice.stringToIdentity('callbackReceiver')
     # 43.4.5
     category = router.getCategoryForClient()
     myid.category = category
+    myid.name = Ice.generateUUID()
+    logmsg('my id:', myid)
     adapter.add(LoggerI(logfunc), myid)
     adapter.activate()
     logproxy = SolverIce.LoggerPrx.uncheckedCast(adapter.createProxy(myid))
 
+    logmsg('my category:', category)
+    logmsg('my adapter:', adapter)
+    logmsg('my logger:', logproxy)
+
     results = [SolverResult(s) for s in servers]
 
+    logmsg('making ICE calls...')
     for (s,r) in zip(servers,results):
         s.solve_async(r, jobid, axy, logproxy)
 
@@ -144,10 +176,13 @@ def solve(jobid, axy, logfunc):
                 r.server.ice_oneway().ice_ping()
             lastping = tnow
 
+    logmsg('all ICE calls have returned')
+
     # grace period to let servers send their last log messages.
     time.sleep(3)
 
     try:
+        logmsg('IceSolver: destroying session')
         router.destroySession()
     except Glacier2.SessionNotExistException, ex:
         logmsg('Destroying session:', ex)

@@ -93,7 +93,7 @@ if __name__ == '__main__':
         qjs[0].ready = True
         qjs[0].save()
 
-    nthreads = 1
+    nthreads = 2
 
     mainthread(nthreads)
     

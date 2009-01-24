@@ -12,6 +12,8 @@ if __name__ == '__main__':
         print '  <action> can be:'
         print '     "clear" - remove everything from the queue.'
         print '     "show"  - show the queue.'
+        print '     "ready" - make all jobs ready.'
+        print '         [n] - make "n" jobs ready'
         sys.exit(-1)
 
     action = sys.argv[1]
@@ -20,6 +22,18 @@ if __name__ == '__main__':
         print '%i queued jobs:' % qjs.count()
         for qj in qjs:
             print '  ', qj
+
+    elif action == 'ready':
+        n = -1
+        if len(sys.argv) >= 3:
+            n = int(sys.argv[2])
+        qjs = QueuedJob.objects.all().filter(ready=False)
+        if n > 0:
+            qjs = qjs[:n]
+        for qj in qjs:
+            qj.ready = True
+            qj.save()
+            print 'Made ready:', qj
 
     elif action == 'clear':
         print 'Deleting all queued jobs...'
