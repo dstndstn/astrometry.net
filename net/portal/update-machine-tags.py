@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 
-import os
-
-os.environ['DJANGO_SETTINGS_MODULE'] = 'an.settings'
+import astrometry.net.django_commandline
 
 from an.portal.job import Job
 
