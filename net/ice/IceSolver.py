@@ -46,9 +46,11 @@ def get_router_session(ice):
         return -1
     session = None
     try:
-        session = router.createSession('test', 'test')
+        session = router.createSession('test-%i' % int(time.time()), 'test')
     except Glacier2.PermissionDeniedException,ex:
         logmsg('router session permission denied:', ex)
+    except Glacier2.CannotCreateSessionException,ex:
+        logmsg('router session: cannot create:', ex)
     return (router, session)
 
 def find_all_solvers(ice):

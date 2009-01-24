@@ -1,3 +1,3 @@
 #! /bin/bash
 
-python SessionServer.py
+python SessionServer.py >> /data1/dstn/dsolver/logs/sessionserver.log
