@@ -355,6 +355,8 @@ class Submission(models.Model):
             raise ValueError('Invalid status "%s"' % stat)
         if stat == 'Error' and reason is not None:
             self.failurereason = reason[:256]
+        if stat != 'Error':
+            self.failurereason = ''
 
     def format_status(self):
         s = self.status
