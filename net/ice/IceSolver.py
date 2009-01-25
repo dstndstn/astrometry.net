@@ -14,6 +14,8 @@ import astrometry.net.settings as settings
 from astrometry.net.portal.log import log
 
 theice = None
+therouter = None
+thesession = None
 # FIXME
 configfile = settings.BASEDIR + 'astrometry/net/ice/config.client'
 
@@ -42,6 +44,9 @@ def get_ice():
     return theice
 
 def get_router_session(ice):
+    global therouter, thesession
+    if therouter:
+        return (therouter, thesession)
     router = theice.getDefaultRouter()
     router = Glacier2.RouterPrx.checkedCast(router)
     if not router:
@@ -54,6 +59,10 @@ def get_router_session(ice):
         logmsg('router session permission denied:', ex)
     except Glacier2.CannotCreateSessionException,ex:
         logmsg('router session: cannot create:', ex)
+
+    therouter = router
+    thesession = session
+
     return (router, session)
 
 def find_all_solvers(ice):
@@ -99,21 +108,14 @@ def solve(jobid, axy, logfunc):
     ice = get_ice()
     logmsg('ice is', ice)
 
-    #r = ice.propertyToProxy('Router')
-    #logmsg('r is', r)
-
     logmsg('get session')
     (router, session) = get_router_session(ice)
     logmsg('router is', router)
     logmsg('session is', session)
 
-    conid = Ice.generateUUID()
-    #r = ice.propertyToProxy('Router')
-    #logmsg('r is', r)
-    #logmsg('router is:', type(router))
-    #logmsg('dir:', dir(router))
-    logmsg('conid:', conid)
-    router.ice_connectionId(conid)
+    #conid = Ice.generateUUID()
+    #logmsg('conid:', conid)
+    #router.ice_connectionId(conid)
 
     logmsg('get servers')
     servers = find_all_solvers(ice)
@@ -125,6 +127,8 @@ def solve(jobid, axy, logfunc):
 
     logmsg('creating adapter...')
     #adapter = ice.createObjectAdapter('Callback.Client')
+    #adapter = ice.createObjectAdapter('Callback.Client')
+    conid = Ice.generateUUID()
     adapter = ice.createObjectAdapterWithRouter(conid, router)
     logmsg('created adapter', adapter)
 
@@ -132,7 +136,7 @@ def solve(jobid, axy, logfunc):
     # 43.4.5
     category = router.getCategoryForClient()
     myid.category = category
-    myid.name = Ice.generateUUID()
+    #myid.name = Ice.generateUUID()
     logmsg('my id:', myid)
     adapter.add(LoggerI(logfunc), myid)
     adapter.activate()
