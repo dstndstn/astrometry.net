@@ -40,26 +40,37 @@ void sip_free(sip_t* sip) {
 	free(sip);
 }
 
+static void sip_distortion(const sip_t* sip, double x, double y,
+                           double* X, double* Y) {
+	// Get pixel coordinates relative to reference pixel
+	double u = x - sip->wcstan.crpix[0];
+	double v = y - sip->wcstan.crpix[1];
+	sip_calc_distortion(sip, u, v, X, Y);
+	*X += sip->wcstan.crpix[0];
+	*Y += sip->wcstan.crpix[1];
+}
+
 // Pixels to RA,Dec in degrees.
 void sip_pixelxy2radec(const sip_t* sip, double px, double py,
 					   double *ra, double *dec)
 {
 	double U, V;
-	// Get pixel coordinates relative to reference pixel
-	double u = px - sip->wcstan.crpix[0];
-	double v = py - sip->wcstan.crpix[1];
-	sip_calc_distortion(sip, u, v, &U, &V);
-	U += sip->wcstan.crpix[0];
-	V += sip->wcstan.crpix[1];
+    sip_distortion(sip, px, py, &U, &V);
 	// Run a normal TAN conversion on the distorted pixel coords.
 	tan_pixelxy2radec(&(sip->wcstan), U, V, ra, dec);
 }
 
 // Pixels to XYZ unit vector.
 void sip_pixelxy2xyzarr(const sip_t* sip, double px, double py, double *xyz) {
-	double ra, dec;
-	sip_pixelxy2radec(sip, px, py, &ra, &dec);
-	radecdeg2xyzarr(ra, dec, xyz);
+    /*
+     double ra, dec;
+     sip_pixelxy2radec(sip, px, py, &ra, &dec);
+     radecdeg2xyzarr(ra, dec, xyz);
+     */
+	double U, V;
+    sip_distortion(sip, px, py, &U, &V);
+	// Run a normal TAN conversion on the distorted pixel coords.
+	tan_pixelxy2xyzarr(&(sip->wcstan), U, V, xyz);
 }
 
 // Pixels to RA,Dec in degrees.

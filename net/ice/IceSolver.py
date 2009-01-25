@@ -16,6 +16,8 @@ from astrometry.net.portal.log import log
 theice = None
 therouter = None
 thesession = None
+theadapter = None
+
 # FIXME
 configfile = settings.BASEDIR + 'astrometry/net/ice/config.client'
 
@@ -64,6 +66,19 @@ def get_router_session(ice):
     thesession = session
 
     return (router, session)
+
+def get_adapter(ice, router):
+    global theadapter
+    if theadapter:
+        return theadapter
+    logmsg('creating adapter...')
+    adapter = ice.createObjectAdapter('Callback.Client')
+    #adapter = ice.createObjectAdapter('Callback.Client')
+    #conid = Ice.generateUUID()
+    #adapter = ice.createObjectAdapterWithRouter(conid, router)
+    logmsg('created adapter', adapter)
+    theadapter = adapter
+    return theadapter
 
 def find_all_solvers(ice):
     q = ice.stringToProxy('SolverIceGrid/Query')
@@ -121,25 +136,24 @@ def solve(jobid, axy, logfunc):
     servers = find_all_solvers(ice)
     logmsg('servers:', servers)
 
-    props = ice.getProperties()
+    #props = ice.getProperties()
     # Or possibly createObjectAdapterWithRouter, see 43.4.4
     #adapter = ice.createObjectAdapterWithRouter('Callback.Client', router)
 
-    logmsg('creating adapter...')
-    #adapter = ice.createObjectAdapter('Callback.Client')
-    #adapter = ice.createObjectAdapter('Callback.Client')
-    conid = Ice.generateUUID()
-    adapter = ice.createObjectAdapterWithRouter(conid, router)
-    logmsg('created adapter', adapter)
+    logmsg('get adapter...')
+    adapter = get_adapter()
+    logmsg('adapter is', adapter)
 
-    myid = ice.stringToIdentity('callbackReceiver')
-    # 43.4.5
     category = router.getCategoryForClient()
+    #myid = ice.stringToIdentity('callbackReceiver')
+    myid = Ice.Identity()
     myid.category = category
-    #myid.name = Ice.generateUUID()
+    myid.name = Ice.generateUUID()
     logmsg('my id:', myid)
+
     adapter.add(LoggerI(logfunc), myid)
     adapter.activate()
+
     logproxy = SolverIce.LoggerPrx.uncheckedCast(adapter.createProxy(myid))
 
     logmsg('my category:', category)
