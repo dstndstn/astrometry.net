@@ -174,8 +174,8 @@ class SolverI(SolverIce.Solver):
         cancelfn = mydir + '/cancel'
         solvedfn = mydir + '/solved'
 
-        self.solve_ctypes(jobid, axy, logger, axyfn, cancelfn, solvedfn, mydir, current)
-        #self.solve_subprocess(jobid, axy, logger, axyfn, cancelfn, solvedfn, mydir, current)
+        #self.solve_ctypes(jobid, axy, logger, axyfn, cancelfn, solvedfn, mydir, current)
+        self.solve_subprocess(jobid, axy, logger, axyfn, cancelfn, solvedfn, mydir, current)
 
         solved = os.path.exists(mydir + '/wcs.fits')
         if solved:
