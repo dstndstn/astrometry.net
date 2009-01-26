@@ -3,6 +3,21 @@ from starutil import *
 
 import unittest
 
+import ctypes
+import os.path
+
+_lib = None
+_libname = ctypes.util.find_library('_healpix.so')
+if _libname:
+    _lib = ctypes.CDLL(_libname)
+if _lib is None:
+	p = os.path.join(os.path.dirname(__file__), '_healpix.so')
+	if os.path.exists(p):
+		_lib = ctypes.CDLL(p)
+if _lib is None:
+    throw IOError('_healpix.so library not found')
+
+
 # returns (base hp, x, y)
 def decompose_xy(hp, nside):
     finehp = hp % (nside**2)
@@ -252,109 +267,13 @@ def get_closest_pow2_nside(radius):
 def compose_xy(x, y, nside):
     return x*nside + y
 
-##### NOTE NOTE NOTE -- this is out of sync with the C version!
 def xyztohealpix(x, y, z, nside):
-    twothirds = 2. / 3.
-    twopi = 2. * pi
-
-    phi = atan2(y, x)
-    if phi < 0:
-        phi += twopi
-    phioverpi = phi / pi
-
-    # North or south pole
-    if (z >= twothirds) or (z <= -twothirds):
-        # Which pole?
-        if z >= twothirds:
-            north = True
-            zfactor = 1.
-        else:
-            north = False
-            zfactor = -1.
-
-        phit = fmod(phi, pi / 2.)
-        assert(phit >= 0)
-
-        root = (1. - z*zfactor) * 3. * (nside * (2. * phit - pi) / pi)**2
-        if root <= 0.0:
-            x = 1
-        else:
-            x = int(ceil(sqrt(root)))
-
-        assert(x >= 1)
-        assert(x <= nside)
-
-        root = (1. - z*zfactor) * 3. * (nside * 2. * phit / pi)**2
-        if root <= 0:
-            y = 1
-        else:
-            y = int(ceil(sqrt(root)))
-
-        assert(y >= 1)
-        assert(y <= nside)
-
-        x = nside - x
-        y = nside - y
-
-        if not north:
-            # swap x,y
-            (x,y) = (y,x)
-
-        pnprime = compose_xy(x, y, nside)
-
-        if not north:
-            pnprime = nside * nside - 1 - pnprime
-
-        column = int(phi / (pi / 2.))
-
-        if north:
-            basehp = column
-        else:
-            basehp = 8 + column
-
-        hp = basehp * (nside**2) + pnprime
-        return hp
-
-    # could be polar or equatorial.
-    phim = fmod(phi, pi / 2.)
-
-    # project into the unit square z=[-2/3, 2/3], phi=[0, pi/2]
-    zunits = (z + twothirds) / (4. / 3.)
-    phiunits = phim / (pi / 2.)
-    u1 = (zunits + phiunits) / 2.
-    u2 = (zunits - phiunits) / 2.
-    # x is the northeast direction, y is the northwest.
-    x = int(floor(u1 * 2.0 * nside))
-    y = int(floor(u2 * 2.0 * nside))
-    x %= nside
-    y %= nside
-    if x < 0:
-        x += nside
-    if y < 0:
-        y += nside
-    pnprime = compose_xy(x, y, nside)
-
-    # now compute which big healpix it's in.
-    offset = int(phioverpi * 2.)
-    phimod = phioverpi - offset * 0.5
-    offset = ((offset % 4) + 4) % 4
-    z1 = twothirds  - (8. / 3.) * phimod
-    z2 = -twothirds + (8. / 3.) * phimod
-    if (z >= z1) and (z >= z2):
-        # north polar
-        basehp = offset
-    elif (z <= z1) and (z <= z2):
-        # south polar
-        basehp = 8 + offset
-    elif phimod < 0.25:
-        # left equatorial
-        basehp = offset + 4
-    else:
-        # right equatorial
-        basehp = ((offset + 1) % 4) + 4
-
-    hp = basehp * (nside**2) + pnprime
-    return hp
+    cx = ctypes.c_double(x)
+    cy = ctypes.c_double(y)
+    cz = ctypes.c_double(z)
+    cns = ctypes.c_int(nside)
+    chp = _lib.xyztohealpix(cx, cy, cz, cns)
+    return int(chp.value)
 
 # ra, dec in degrees
 def radectohealpix(ra, dec, nside):
