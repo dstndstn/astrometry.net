@@ -87,9 +87,10 @@ for scale in scales:
 ''' % ((scale,)*5)
 
 for scale in scales:
+    #<load-balancing type="round-robin"/>
     print '''
     <replica-group id="RSolver-scale%i">
-      <load-balancing type="round-robin"/>
+    <load-balancing type="adaptive"/>
       <object identity="Solver-scale%i" type="::SolverIce::Solver"/>
     </replica-group>
     ''' % ((scale,)*2)
@@ -106,5 +107,4 @@ print '''
 
 </icegrid>
 '''
-#      <load-balancing type="adaptive" load-sample="5" n-replicas="2"/>
 
