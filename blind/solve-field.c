@@ -85,7 +85,7 @@ static an_option_t options[] = {
     {'n', "scamp-config",   required_argument, "filename",
      "create SCAMP config file snippet"},
     {'U', "index-xyls",     required_argument, "filename",
-     "xylist containing the image coordinate of stars from the index"},
+     "output filename for xylist containing the image coordinate of stars from the index"},
 };
 
 static void print_help(const char* progname, bl* opts) {
@@ -585,6 +585,7 @@ int main(int argc, char** args) {
     allaxy->matchfn  = none_is_null(allaxy->matchfn);
     allaxy->rdlsfn   = none_is_null(allaxy->rdlsfn);
     allaxy->solvedfn = none_is_null(allaxy->solvedfn);
+    allaxy->solvedinfn = none_is_null(allaxy->solvedinfn);
     allaxy->wcsfn    = none_is_null(allaxy->wcsfn);
     allaxy->corrfn   = none_is_null(allaxy->corrfn);
     newfits          = none_is_null(newfits);
@@ -928,7 +929,7 @@ int main(int argc, char** args) {
                 sl_append_nocopy(tempfiles, indxylsfn);
             }
 
-            if (indxylsfn) {
+            if (axy->wcsfn && indxylsfn) {
                 // index rdls to xyls.
                 if (wcs_rd2xy(axy->wcsfn, axy->rdlsfn, indxylsfn,
                               NULL, NULL, FALSE, NULL)) {
