@@ -250,6 +250,7 @@ int augment_xylist_parse_option(char argchar, char* optarg,
             ERROR("Couldn't understand your Parity argument \"%s\": must be \"pos\" or \"neg\"", optarg);
             return -1;
         }
+        break;
     case 'B':
         axy->corrfn = optarg;
         break;
