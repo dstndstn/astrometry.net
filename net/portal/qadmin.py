@@ -32,6 +32,10 @@ if __name__ == '__main__':
             qjs = qjs[:n]
         for qj in qjs:
             qj.ready = True
+            if qj.job:
+                qj.job.set_status('Queued')
+            if qj.sub:
+                qj.sub.set_status('Queued')
             qj.save()
             print 'Made ready:', qj
 

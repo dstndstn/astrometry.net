@@ -4,6 +4,7 @@ from starutil import *
 import unittest
 
 import ctypes
+import ctypes.util
 import os.path
 
 _lib = None
@@ -15,7 +16,7 @@ if _lib is None:
 	if os.path.exists(p):
 		_lib = ctypes.CDLL(p)
 if _lib is None:
-    throw IOError('_healpix.so library not found')
+    raise IOError('_healpix.so library not found')
 
 
 # returns (base hp, x, y)

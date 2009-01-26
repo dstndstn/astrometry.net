@@ -40,9 +40,15 @@ class SolverClient(object):
         settings.properties.load(configfile)
         ice = Ice.initialize(settings)
         self.ice = ice
+        self.initrouter()
+        logmsg('creating adapter...')
+        self.adapter = ice.createObjectAdapter('Callback.Client')
+        logmsg('created adapter', self.adapter)
+        self.adapter.activate()
 
-        logmsg('get session')
-        router = ice.getDefaultRouter()
+    def initrouter(self):
+        logmsg('get router')
+        router = self.ice.getDefaultRouter()
         router = Glacier2.RouterPrx.checkedCast(router)
         if not router:
             logmsg('not a glacier2 router')
@@ -61,11 +67,16 @@ class SolverClient(object):
         self.router = router
         self.session = session
 
-        logmsg('creating adapter...')
-        self.adapter = ice.createObjectAdapter('Callback.Client')
-        logmsg('created adapter', self.adapter)
-        self.adapter.activate()
-
+    # check that all my stuff is live...
+    def getready(self):
+        logmsg('Router is a', type(self.router))
+        try:
+            #category = self.router.getCategoryForClient()
+            self.router.ice_ping()
+        except Ice.ConnectionLostException,ex:
+            logmsg('Got ConnectionLostException on pinging router.  Reopening connection...')
+            self.initrouter()
+        
 
     # this will be called from multiple threads.
     def solve(self, jobid, axy, logfunc):
@@ -73,11 +84,11 @@ class SolverClient(object):
         myid = Ice.Identity()
         myid.category = category
         myid.name = Ice.generateUUID()
-        logmsg('my id:', myid)
+        #logmsg('my id:', myid)
 
         self.adapter.add(LoggerI(logfunc), myid)
         logproxy = SolverIce.LoggerPrx.uncheckedCast(self.adapter.createProxy(myid))
-        logmsg('my logger:', logproxy)
+        #logmsg('my logger:', logproxy)
 
         logmsg('get servers')
         servers = self.find_all_solvers()
@@ -168,6 +179,8 @@ def solve(jobid, axy, logfunc):
     if not theclient:
         theclient = SolverClient()
         theclient.init()
+    else:
+        theclient.getready()
     theclientlock.release()
 
     tardata = theclient.solve(jobid, axy, logfunc)

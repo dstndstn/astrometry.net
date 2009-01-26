@@ -537,6 +537,8 @@ class Job(models.Model):
             raise ValueError('Invalid status "%s"' % stat)
         if stat == 'Error' and reason is not None:
             self.failurereason = reason[:256]
+        if stat != 'Error':
+            self.failurereason = ''
         self.save()
         if self.is_finished():
             self.submission.check_if_finished()
