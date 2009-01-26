@@ -14,9 +14,6 @@ Ice.Default.Locator=SolverIceGrid/Locator:default -p 4061 -h hydra.local
 Callback.Client.Endpoints=tcp
 Callback.Router=Glacier2/router:tcp -h localhost -p 4063
 
-# 43.4.4 in the manual
-CallbackAdapter.Router=Glacier2/router:tcp -h localhost -p 4063
-
 #Ice.Trace.Network=2
 #Ice.Trace.Protocol=1
 #Ice.Trace.Locator=2
