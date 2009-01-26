@@ -38,7 +38,6 @@ struct augment_xylist_s {
 
     sl* verifywcs;
 
-
     // input files
     char* imagefn;
     char* xylsfn;
@@ -76,6 +75,8 @@ struct augment_xylist_s {
     double scalelo;
     double scalehi;
     char* scaleunits;
+
+    int parity;
 
     float cpulimit;
 

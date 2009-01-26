@@ -65,6 +65,7 @@ void augment_xylist_init(augment_xylist_t* axy) {
     axy->resort = TRUE;
     axy->ra_center = HUGE_VAL;
     axy->dec_center = HUGE_VAL;
+    axy->parity = PARITY_BOTH;
 }
 
 void augment_xylist_free_contents(augment_xylist_t* axy) {
@@ -120,6 +121,8 @@ static an_option_t options[] = {
     {'H', "scale-high",   required_argument, "scale",
      "upper bound of image scale estimate"},
 	{'u', "scale-units",    required_argument, "units", NULL},
+    {'7', "parity",         required_argument, "pos/neg",
+     "only check for matches with positive/negative parity (default: try both)"},
     {'3', "ra",             required_argument, "degrees or hh:mm:ss",
      "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
     {'4', "dec",            required_argument, "degrees or [+-]dd:mm:ss",
@@ -238,6 +241,15 @@ int augment_xylist_parse_option(char argchar, char* optarg,
     case '6':
         axy->extension = atoi(optarg);
         break;
+    case '7':
+        if (streq(optarg, "pos")) {
+            axy->parity = PARITY_POS;
+        } else if (streq(optarg, "neg")) {
+            axy->parity = PARITY_NEG;
+        } else {
+            ERROR("Couldn't understand your Parity argument \"%s\": must be \"pos\" or \"neg\"", optarg);
+            return -1;
+        }
     case 'B':
         axy->corrfn = optarg;
         break;

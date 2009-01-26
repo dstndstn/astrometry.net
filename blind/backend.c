@@ -550,12 +550,9 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     if (val > 0.0)
         sp->distractor_ratio = val;
 
-    blind_set_solved_file  (bp, fn=fits_get_long_string(hdr, "ANSOLVED"));
+    blind_set_solvedout_file  (bp, fn=fits_get_long_string(hdr, "ANSOLVED"));
     free(fn);
-    fn = fits_get_long_string(hdr, "ANSOLVIN");
-    if (fn)
-        // only set the input solved filename if it was set.
-        blind_set_solvedin_file(bp, fn);
+    blind_set_solvedin_file  (bp, fn=fits_get_long_string(hdr, "ANSOLVIN"));
     free(fn);
     blind_set_match_file   (bp, fn=fits_get_long_string(hdr, "ANMATCH" ));
     free(fn);
