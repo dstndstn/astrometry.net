@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 
+# Note, you'll also want to edit "startallnodes" to actually start up the icegridnode daemons
+# on the appropriate machines.
+
 scales=[10,5,4,3,2]
 
 all_nodes = [

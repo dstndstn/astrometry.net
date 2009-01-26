@@ -1,10 +1,5 @@
 #! /bin/bash
 
-cluster-fork --bg --nodes neuron-0-%d:0-11 /data1/dstn/dsolver/astrometry/net/ice/startdaemon
+cluster-fork --bg --nodes neuron-0-%d:0-23 /data1/dstn/dsolver/astrometry/net/ice/startdaemon
 exit 0
 
-for ((n=0; n<12; n++)); do
-    echo $n;
-    ssh neuron-0-$n astrometry/net/ice/startdaemon;
-    #sleep 1;
-done
