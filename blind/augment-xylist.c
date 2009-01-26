@@ -121,7 +121,7 @@ static an_option_t options[] = {
     {'H', "scale-high",   required_argument, "scale",
      "upper bound of image scale estimate"},
 	{'u', "scale-units",    required_argument, "units", NULL},
-    {'7', "parity",         required_argument, "pos/neg",
+    {'8', "parity",         required_argument, "pos/neg",
      "only check for matches with positive/negative parity (default: try both)"},
     {'3', "ra",             required_argument, "degrees or hh:mm:ss",
      "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
@@ -241,11 +241,11 @@ int augment_xylist_parse_option(char argchar, char* optarg,
     case '6':
         axy->extension = atoi(optarg);
         break;
-    case '7':
+    case '8':
         if (streq(optarg, "pos")) {
-            axy->parity = PARITY_POS;
+            axy->parity = PARITY_NORMAL;
         } else if (streq(optarg, "neg")) {
-            axy->parity = PARITY_NEG;
+            axy->parity = PARITY_FLIP;
         } else {
             ERROR("Couldn't understand your Parity argument \"%s\": must be \"pos\" or \"neg\"", optarg);
             return -1;
