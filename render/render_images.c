@@ -378,12 +378,6 @@ int render_images(unsigned char* img, render_args_t* args) {
 				ra  =  ravals[ir];
 				dec = decvals[id];
 				radecdeg2xyzarr(ra, dec, xyzA);
-				/*
-				  mx =  radeg2merc(ra);
-				  my = decdeg2merc(dec);
-				  raB  = merc2radeg (mx + args->xmercperpixel);
-				  decB = merc2decdeg(my + args->ymercperpixel);
-				*/
 				raB  = ravals [ir + ((ir == W-1) ? -1 : +1)];
 				decB = decvals[id + ((id == H-1) ? -1 : +1)];
 				radecdeg2xyzarr(raB, decB, xyzB);

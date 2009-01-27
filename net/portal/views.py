@@ -72,7 +72,7 @@ def get_job_and_sub(request, args, kwargs):
 	if jobid:
 		job = get_job(jobid)
 	sub = None
-	subid = request.GET.get('subid')
+	subid = request.REQUEST.get('subid')
 	if subid:
 		sub = get_submission(subid)
 	if sub is None and job is None and jobid is not None:
@@ -90,6 +90,15 @@ def needs_job(handler):
 		return handler(request, *args, **kwargs)
 	return handle_request
 
+def needs_sub(handler):
+	def handle_request(request, *args, **kwargs):
+		(job,sub) = get_job_and_sub(request, args, kwargs)
+		if not sub:
+			return HttpResponse('need subid')
+		request.sub = sub
+		return handler(request, *args, **kwargs)
+	return handle_request
+
 # a decorator for calls that need a valid jobid; puts the job in
 # request.job
 def wants_job_or_sub(handler):
@@ -99,7 +108,6 @@ def wants_job_or_sub(handler):
 		request.sub = sub
 		return handler(request, *args, **kwargs)
 	return handle_request
-
 
 def get_submission(subid):
 	if subid is None:
@@ -126,7 +134,42 @@ def getuser(request):
 	except ObjectDoesNotExist:
 		return None
 	return user
-	
+
+@login_required
+@needs_sub
+def sub_add_tag(request):
+	tag = request.REQUEST.get('tag', None)
+	if not tag:
+		return HttpResponse('no tag')
+
+	tagall = request.REQUEST.get('tagall')
+	tagsolved = request.REQUEST.get('tagsolved')
+
+	now = Job.timenow()
+	nadded = 0
+
+	jobs = request.sub.jobs.all()
+	if tagsolved:
+		jobs = jobs.filter(status='Solved')
+
+	for job in jobs:
+		if not job.can_add_tag(request.user):
+			return HttpResponse('not permitted')
+		t = Tag(job=job,
+				user=request.user,
+				machineTag=False,
+				text=tag,
+				addedtime=now)
+		if not t.is_duplicate():
+			t.save()
+			nadded += 1
+
+	request.user.message_set.create(message='Tag <i>%s</i> added to %i jobs' % (tag, nadded))
+
+	redir = request.REQUEST.get('redirect', None)
+	if redir:
+		return HttpResponseRedirect(redir)
+	return HttpResponse('Tag added')
 
 @login_required
 @wants_job_or_sub
@@ -160,6 +203,7 @@ def joblist(request):
 	myargs['type'] = kind
 
 	colnames = {
+		'mark': 'Selected',
 		'jobid' : 'Job Id',
 		'status' : 'Status',
 		'starttime' : 'Start Time',
@@ -266,7 +310,7 @@ def joblist(request):
 			return HttpResponse('no sub')
 		job = None
 		jobs = sub.jobs.all().order_by('enqueuetime', 'starttime', 'jobid')
-		subs = [sub]
+		#subs = [sub]
 		N = jobs.count()
 		if 'onejobjump' in request.GET and N == 1 and sub.alljobsadded:
 			return HttpResponseRedirect(reverse(jobstatus, args=[jobs[0].jobid]))
@@ -275,7 +319,7 @@ def joblist(request):
 				 '?submission=%s' % sub.get_id() +
 				 '&layers=tycho,grid,userboundary&arcsinh')
 		if not cols:
-			cols = [ 'jobid', 'status', 'starttime', 'finishtime' ]
+			cols = [ 'mark', 'jobid', 'status', 'starttime', 'finishtime' ]
 		if sub.status == 'Queued' or sub.status == 'Running':
 			if N == 1:
 				reload_time = 2
@@ -284,7 +328,7 @@ def joblist(request):
 		ajaxupdate = True
 
 		title = 'Jobs belonging to submission <i>' + sub.subid + '</i>'
-		emptytitle = 'Submission <i>' + sub.subid + '</i>'
+		subtitle = 'Submission <i>' + sub.subid + '</i>'
 
 
 	if 'gmaps' in request.GET:
@@ -346,7 +390,7 @@ def joblist(request):
 	elif kind == 'sub':
 		jobs = jobs[start:end]
 		if N == 0:
-			title = emptytitle
+			title = subtitle
 
 	# "rjobs": rendered jobs.
 	rjobs = []
@@ -362,6 +406,9 @@ def joblist(request):
 					 + '">'
 					 + job.jobid
 					 + '</a>')
+			elif c == 'mark':
+				t = ('<input type="checkbox" name="mark-job-%s" id="mark-%s" />' %
+					 (job.jobid, job.jobid))
 			elif c == 'starttime':
 				t = job.format_starttime_brief()
 			elif c == 'finishtime':
@@ -383,6 +430,8 @@ def joblist(request):
 			elif c == 'tags':
 				tags = job.tags.all().filter(machineTag=False).order_by('addedtime')
 				t = ', '.join([tag.text for tag in tags])
+				log('tags:', tags)
+				log('t:', t)
 			elif c == 'desc':
 				t = job.description or ''
 			elif c == 'objsin':
@@ -476,6 +525,7 @@ def joblist(request):
 			gmaps = thisurl + '&gmaps'
 
 		ctxt.update({
+			'kind': kind,
 			'thisurl' : thisurl,
 			'links': links,
 			'addcolumns' : addcolumns,

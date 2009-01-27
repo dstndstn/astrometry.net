@@ -2,6 +2,7 @@ import popen2
 import os
 import select
 
+# Returns (rtn, out, err)
 def run_command(cmd, timeout=None, callback=None):
     """
     Run a command and return the text written to stdout and stderr, plus

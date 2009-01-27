@@ -35,20 +35,10 @@ cachedir	   = settings.CACHEDIR
 rendercachedir = settings.RENDERCACHEDIR
 tempdir		   = settings.TEMPDIR
 
-logging.basicConfig(level=logging.DEBUG,
-					format='%(asctime)s %(levelname)s %(message)s',
-					filename=logfile,
-					)
-
 def index(request):
-	logmsg('tile url:', reverse(get_tile))
 	absurl = request.build_absolute_uri(reverse(get_tile)) + '?'
-	logmsg('abs:', absurl)
-
 	thishost = request.META['SERVER_NAME']
-	gmaps_urls = [absurl.replace(thishost, x)
-				  for x in settings.GMAPS_HOSTS]
-	logmsg('urls:', gmaps_urls)
+	gmaps_urls = [absurl.replace(thishost, x) for x in settings.GMAPS_HOSTS]
 
 	ctxt = {
 		'gmaps_key' : ('http://maps.google.com/maps?file=api&v=2.x&key=' +
@@ -89,7 +79,7 @@ def getbb(request):
 	return (ramin, ramax, decmin, decmax)
 
 def get_image(request):
-	logging.debug("get_image() starting")
+	logmsg("get_image() starting")
 	try:
 		fn = request.GET['filename']
 	except KeyError:
@@ -107,7 +97,7 @@ def get_image(request):
 	res = HttpResponse()
 	res['Content-Type'] = ctmap[img.origformat]
 	path = settings.imgdir + "/" + img.origfilename
-	logging.debug("Opening file " + path)
+	logmsg("Opening file " + path)
 	f = open(path, "rb")
 	res.write(f.read())
 	f.close()
@@ -135,12 +125,12 @@ def filename_ok(fn):
 	return True
 
 def get_image_list(request):
-	logging.debug("imagelist() starting")
+	logmsg("imagelist() starting")
 	try:
 		(ramin, ramax, decmin, decmax) = getbb(request)
 	except KeyError, x:
 		return HttpResponse(x)
-	logging.debug("Bounds: RA [%g, %g], Dec [%g, %g]." % (ramin, ramax, decmin, decmax))
+	logmsg("Bounds: RA [%g, %g], Dec [%g, %g]." % (ramin, ramax, decmin, decmax))
 	inbounds = get_overlapping_images(ramin, ramax, decmin, decmax)
 
 	# We have a query that isolates images that overlap.  We now want to order them by
@@ -182,17 +172,17 @@ def get_image_list(request):
 		overlap = max(dra1, dra2) * (min(decmax, img.decmax) - min(decmin, img.decmin))
 		a1 = ((img.ramax - img.ramin) * (img.decmax - img.decmin))
 		score = (overlap**2) / (a1 * a2)
-		logging.debug("Image " + img.filename + ": score %g (dra1=%g, dra2=%g))" %
+		logmsg("Image " + img.filename + ": score %g (dra1=%g, dra2=%g))" %
 					  (score, dra1, dra2))
 
 		wcsfn = settings.imgdir + '/' + img.filename + '.wcs'
 		try:
 			if not sip.libraryloaded():
 				fn = settings.sipso
-				logging.debug('Trying to load library %s' % fn)
+				logmsg('Trying to load library %s' % fn)
 				#sip.loadlibrary(fn)
 				lib = ctypes.CDLL(fn)
-				logging.debug('Lib is ' + str(lib))
+				logmsg('Lib is ' + str(lib))
 				sip._sip = lib
 
 			wcs = sip.Sip(filename=wcsfn)
@@ -229,7 +219,7 @@ def get_image_list(request):
 
 			poly = ','.join(map(str, poly))
 		except Exception, e:
-			logging.debug('Failed to read SIP header from %s: %s' % (wcsfn, e))
+			logmsg('Failed to read SIP header from %s: %s' % (wcsfn, e))
 			poly=''
 
 		#latmin = img.decmin
@@ -246,11 +236,11 @@ def get_image_list(request):
 		res.write(' />')
 
 	res.write('</imagelist>\n')
-	logging.debug("Returning %i files." % len(query))
+	logmsg("Returning %i files." % len(query))
 	return res
 
 def get_tile(request):
-	#logging.debug('query() starting')
+	#logmsg('query() starting')
 	try:
 		(ramin, ramax, decmin, decmax) = getbb(request)
 	except KeyError, x:
@@ -274,6 +264,8 @@ def get_tile(request):
 	if 'toright' in request.GET:
 		cmdline += ' -z'
 
+	justdates = 'dates' in request.GET
+
 	if 'lw' in request.GET:
 		lw = float(request.GET['lw'])
 		if lw:
@@ -296,7 +288,7 @@ def get_tile(request):
 		imgfns = request.GET['imagefn'].split(',')
 		for img in imgfns:
 			if not filename_ok(img):
-				logging.debug("Bad image filename: \"" + img + "\".")
+				logmsg("Bad image filename: \"" + img + "\".")
 				return HttpResponse('bad filename.')
 			cmdline += (" -i " + img)
 
@@ -304,7 +296,7 @@ def get_tile(request):
 		wcsfns = request.GET['wcsfn'].split(',')
 		for wcs in wcsfns:
 			if not filename_ok(wcs):
-				logging.debug("Bad WCS filename: \"" + wcs + "\".")
+				logmsg("Bad WCS filename: \"" + wcs + "\".")
 				return HttpResponse('bad filename.')
 			cmdline += (" -I " + wcs)
 
@@ -312,7 +304,7 @@ def get_tile(request):
 		rdlsfns = request.GET['rdlsfn'].split(',')
 		for rdls in rdlsfns:
 			if not filename_ok(rdls):
-				logging.debug("Bad RDLS filename: \"" + rdls + "\".");
+				logmsg("Bad RDLS filename: \"" + rdls + "\".");
 				return HttpResponse('bad filename.')
 			cmdline += (' -r ' + rdls)
 
@@ -320,6 +312,8 @@ def get_tile(request):
 		# filelist: -S
 
 		filenames = []
+		dates = []
+		jobswithdates = []
 
 		subid = request.GET.get('submission')
 		jlist = request.GET.get('joblist')
@@ -327,30 +321,25 @@ def get_tile(request):
 		if subid or jlist:
 
 			if subid:
-				# FIXME - get()
-				subs = Submission.objects.all().filter(subid=subid)
-				if len(subs) != 1:
-					logging.debug("Found %i submission matching id %s, expected 1.\n" % (len(subs), subid))
-					return HttpResponse('Got %i submissions.' % len(subs))
-				sub = subs[0]
+				sub = Submission.objects.get(subid=subid)
 				jobs = sub.jobs.all().filter(status='Solved')
-
-				# BIG HACK!
-				#if not sip.libraryloaded():
-				#	 sip.loadlibrary('/home/gmaps/test/an-common/_sip.so')
 
 			elif jlist:
 				jl = read_file(tempdir + '/' + jlist).split('\n')
 				try:
 					jobs = [Job.objects.get(jobid=j) for j in jl]
 				except ObjectDoesNotExist:
-					logging.debug('Failed to find one of the jobs in joblist.')
+					logmsg('Failed to find one of the jobs in joblist.')
 					jobs = []
 				jobs = [j for j in jobs if j.solved()]
-				logging.debug('Got ', len(jobs), ' jobs from the joblist file.')
+				logmsg('Got ', len(jobs), ' jobs from the joblist file.')
 
 			for job in jobs:
 				fn = tempdir + '/' + 'gmaps-' + job.jobid
+
+				if justdates:
+					fn += '-dates'
+
 				wcsfn = fn + '.wcs'
 				jpegfn = fn + '.jpg'
 
@@ -363,14 +352,45 @@ def get_tile(request):
 					tanwcs = tanwcs.to_tanwcs()
 					# write to .wcs file.
 					tanwcs.write_to_file(wcsfn)
-					logging.debug('Writing WCS file ' + wcsfn)
+					logmsg('Writing WCS file ' + wcsfn)
 
 				if not os.path.exists(jpegfn):
-					logging.debug('Writing JPEG file ' + jpegfn)
+					logmsg('Writing JPEG file ' + jpegfn)
 					tmpjpeg = convert(job, 'jpeg-norm')
 					shutil.copy(tmpjpeg, jpegfn)
 
-				filenames.append(fn)
+				if justdates:
+					from astrometry.util import EXIF
+					from datetime import datetime
+					# tags = EXIF.process_file(open(jpegfn))
+					thetime = None
+					if job.diskfile:
+						p = job.diskfile.get_path()
+						f = open(p)
+						format = '%Y:%m:%d %H:%M:%S'
+						if f:
+							tags = EXIF.process_file(open(p))
+							t = tags.get('EXIF DateTimeOriginal')
+							if t:
+								logmsg('File', p, 'orig time:', t)
+								thetime = datetime.strptime(str(t), format)
+							else:
+								t2 = tags.get('Image DateTime')
+								if t2:
+									logmsg('File', p, 'time:', t2)
+									thetime = datetime.strptime(str(t2), format)
+
+								#logmsg('File', p, 'EXIF tags:')
+								#for k,v in tags.items():
+								#	if not k in ['JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote']:
+								#		logmsg('  ',k,'=',v)
+					if thetime:
+						filenames.append(fn)
+						dates.append(thetime)
+						jobswithdates.append(job)
+
+				else:
+					filenames.append(fn)
 
 		else:
 			# Compute list of files via DB query
@@ -378,8 +398,54 @@ def get_tile(request):
 			# Get list of filenames
 			filenames = [img.filename for img in imgs]
 
+		if justdates:
+			from astrometry.util.hsv import hsvtorgb
+			from astrometry.util.run_command import run_command
+			import tempfile
+
+			logmsg("%i dates" % len(dates))
+			logmsg("earliest:", min(dates))
+			logmsg("latest:", max(dates))
+
+			#newfns = []
+
+			colorlist = ''
+			
+			day0 = min(dates)
+			dayrange = (max(dates) - day0).days + 2
+			for (d,j,fn) in zip(dates, jobswithdates,filenames):
+				dd = float((d - day0).days) / float(dayrange)
+				logmsg('  date', d, '->', dd)
+				### SICK :)
+				(r,g,b) = hsvtorgb(dd * 0.7, 1., 1.)
+
+				colorlist += ('%f %f %f\n' % (r,g,b))
+
+				# To produce filled images (weighted, etc):
+				if False:
+					imw = j.diskfile.imagew
+					imh = j.diskfile.imageh
+					tempfn = fn + '.jpg'
+					cmd = 'ppmmake %f,%f,%f %i %i' % (r,g,b,imw,imh)
+					cmd += (' | pnmtojpeg > %s' % tempfn)
+					logmsg('cmd:', cmd)
+					(rtn,out,err) = run_command(cmd)
+					logmsg('rtn:', rtn)
+					logmsg('out:', out)
+					logmsg('err:', err)
+
+				#newfns.append(tempfn)
+			#filenames = newfns
+
+			(f,clfn) = tempfile.mkstemp(prefix='tmp.colorlist.', dir=tempdir)
+			os.close(f)
+			f = open(clfn,'w')
+			f.write(colorlist)
+			f.close()
+			cmdline += (' -K ' + clfn)
+
 		files = "\n".join(filenames) + "\n"
-		logging.debug("For RA in [%f, %f] and Dec in [%f, %f], found %i files." %
+		logmsg("For RA in [%f, %f] and Dec in [%f, %f], found %i files." %
 					  (ramin, ramax, decmin, decmax, len(filenames)))
 
 		# Compute filename
@@ -399,6 +465,7 @@ def get_tile(request):
 	# Options with no args:
 	optflags = { 'jpeg'	  : '-J',
 				 'arcsinh': '-s',
+				 'heatmap': '-n',
 				 }
 	for opt,arg in optflags.iteritems():
 		if (opt in request.GET):
@@ -432,7 +499,7 @@ def get_tile(request):
 		res['Content-Type'] = 'image/jpeg'
 	else:
 		res['Content-Type'] = 'image/png'
-	#logging.debug('command-line is ' + cmdline)
+	#logmsg('command-line is ' + cmdline)
 
 	if ('tag' in request.GET):
 		tag = request.GET['tag']
@@ -452,17 +519,17 @@ def get_tile(request):
 		else:
 			fn += 'png'
 
-		logging.debug('tilecache file: ' + fn)
+		logmsg('tilecache file: ' + fn)
 		if not os.path.exists(fn):
 			# Run it!
 			cmd = cmdline + ' > ' + fn + ' 2>> ' + logfile
-			logging.debug('running: ' + cmd)
+			logmsg('running: ' + cmd)
 			rtn = os.system(cmd)
 			if not(os.WIFEXITED(rtn) and (os.WEXITSTATUS(rtn) == 0)):
 				if (os.WIFEXITED(rtn)):
-					logging.debug('exited with status %d' % os.WEXITSTATUS(rtn))
+					logmsg('exited with status %d' % os.WEXITSTATUS(rtn))
 				else:
-					logging.debug('command did not exit.')
+					logmsg('command did not exit.')
 				try:
 					os.remove(fn)
 				except (OSError):
@@ -470,24 +537,24 @@ def get_tile(request):
 				return HttpResponse('tilerender command failed.')
 		else:
 			# Cache hit!
-			logging.debug('cache hit!')
+			logmsg('cache hit!')
 			pass
 
-		logging.debug('reading cache file ' + fn)
+		logmsg('reading cache file ' + fn)
 		f = open(fn, 'rb')
 		res.write(f.read())
 		f.close()
 	else:
 		cmd = cmdline + ' 2>> ' + logfile
-		logging.debug('no caching: just running command ' + cmd)
+		logmsg('no caching: just running command ' + cmd)
 		(rtn, out) = commands.getstatusoutput(cmd)
 		if not(os.WIFEXITED(rtn) and (os.WEXITSTATUS(rtn) == 0)):
 			if (os.WIFEXITED(rtn)):
-				logging.debug('exited with status %d' % os.WEXITSTATUS(rtn))
+				logmsg('exited with status %d' % os.WEXITSTATUS(rtn))
 			else:
-				logging.debug('command did not exit.')
+				logmsg('command did not exit.')
 			return HttpResponse('tilerender command failed.')
 		res.write(out)
 
-	logging.debug('finished.')
+	logmsg('finished.')
 	return res

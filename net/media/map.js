@@ -100,7 +100,8 @@ var passargs = [ 'imagefn', 'wcsfn', 'cc', 'arcsinh', 'arith', //'gain',
     'rdlsfn2', 'rdlsfield2', 'rdlsstyle2',
 				 'density',
 				 'submission',
-                 'joblist', 'lw'
+                 'joblist', 'lw',
+                 'heatmap', 'dates'
     ];
 
 var gotoform = document.getElementById("gotoform");

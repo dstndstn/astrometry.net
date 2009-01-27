@@ -59,9 +59,12 @@ struct render_args {
     // The current layer we're rendering.
     char* currentlayer;
 
-    // render_images:
+    // render_images / render_boundary:
     char* filelist;
     bool density;
+
+    // render_boundary
+    char* colorlist;
 
 	// Args for render_image:
 	/*

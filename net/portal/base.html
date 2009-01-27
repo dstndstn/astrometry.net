@@ -11,6 +11,7 @@
 {% block inlinecssblock %}
 <style type="text/css">
 #menu { float:right; padding:0px; margin-top:0; margin-bottom:auto; font-size:75%; font-family:sans-serif; }
+#messages { font-size:150%; font-style:bold; margin-left:auto; margin-right:auto; text-align:center; }
 .bigbutton { font-size:110%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
 div.myerrors { font-size:110%; color:red; }
 {% block inlinecss %}
@@ -43,6 +44,12 @@ div.myerrors { font-size:110%; color:red; }
 {% include "logo.html" %}
 </div>
 {% endblock logo %}
+
+{% block messages %}
+<div id="messages">
+{% include "portal/messages.html" %}
+</div>
+{% endblock messages %}
 
 <div id="content">
 {% block content %}

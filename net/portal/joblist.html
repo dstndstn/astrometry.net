@@ -15,6 +15,9 @@
 #summarytable { margin-left:auto; margin-right:auto; border-collapse:collapse; border-style:solid; border-width:medium; border-color:black; }
 #summarytable td { padding-top:3px; padding-bottom:3px; padding-left:10px; padding-right:10px; border-style:none solid; border-width:thin; border-color:gray; }
 #summarytable th { padding-top:3px; padding-bottom:3px; padding-left:10px; padding-right:10px; border-style:solid; border-width:thin; border-color:gray; }
+#subtable { margin-left:auto; margin-right:auto; border-collapse:collapse; border-style:solid; border-width:medium; border-color:black; }
+#subtable td { padding-top:3px; padding-bottom:3px; padding-left:10px; padding-right:10px; border-style:none solid; border-width:thin; border-color:gray; }
+#subtable th { padding-top:3px; padding-bottom:3px; padding-left:10px; padding-right:10px; border-style:solid; border-width:thin; border-color:gray; }
 td.c { text-align:center; }
 tr.even td { background-color:#EEE; }
 tr.odd td {}
@@ -165,6 +168,31 @@ function onUnload() {
 {% endfor %}
 </ul>
 {% endif %}
+
+{% ifequal kind "sub" %}
+<h3 class="c">
+Submission <i>{{ submission.subid }}</i>
+</h3>
+
+<table id="subtable">
+<tr><td>Number of jobs:</td><td>{{ submission.jobs.count }}</td></tr>
+<tr><td>&nbsp;&nbsp;Queued:</td><td>{{ submission.njobs_queued  }}</td></tr>
+<tr><td>&nbsp;&nbsp;Solved:</td><td>{{ submission.njobs_solved }}</td></tr>
+<tr><td>&nbsp;&nbsp;Unsolved:</td><td>{{ submission.njobs_unsolved }}</td></tr>
+<tr><td>&nbsp;&nbsp;Failed with errors:</td><td>{{ submission.njobs_error }}</td></tr>
+</table>
+
+<form method="post" action="{% url astrometry.net.portal.views.sub_add_tag %}">
+<p align="center">
+<input type="hidden" name="redirect" value="{{ thisurl }}" />
+<input type="hidden" name="subid" value="{{ submission.subid }}" />
+<input type="text" name="tag" size="32" />
+<input type="submit" name="tagall" value="Tag all jobs" />
+<input type="submit" name="tagsolved" value="Tag solved jobs" />
+</p>
+</form>
+
+{% endifequal %}
 
 <h3 class="c">
 {% if title %}

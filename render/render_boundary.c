@@ -32,6 +32,7 @@ int render_boundary(unsigned char* img, render_args_t* args) {
 	cairo_surface_t* target;
 	double lw = args->linewidth;
 	sl* wcsfiles = NULL;
+	dl* colorlist = NULL;
 	bool fullfilename = TRUE;
 	double r, g, b;
 
@@ -40,6 +41,21 @@ int render_boundary(unsigned char* img, render_args_t* args) {
     g = 1.0;
 
 	logmsg("Starting.\n");
+
+    if (args->colorlist) {
+        sl* colorstrings = file_get_lines(args->colorlist, FALSE);
+        colorlist = dl_new(12);
+        for (i=0; i<sl_size(colorstrings); i++) {
+            float f1,f2,f3;
+            if (sscanf(sl_get(colorstrings, i), "%f %f %f", &f1, &f2, &f3) != 3) {
+                logmsg("Colorlist: couldn't parse string \"%s\"\n", sl_get(colorstrings, i));
+                return -1;
+            }
+            dl_append(colorlist, f1);
+            dl_append(colorlist, f2);
+            dl_append(colorlist, f3);
+        }
+    }
 
 	if (strcmp("boundaries", args->currentlayer) == 0) {
 		if (!args->filelist) {
@@ -137,6 +153,14 @@ int render_boundary(unsigned char* img, render_args_t* args) {
         }
         W = wcs.wcstan.imagew;
         H = wcs.wcstan.imageh;
+
+        if (colorlist) {
+            double rr,gg,bb;
+            rr = dl_get(colorlist, I*3+0);
+            gg = dl_get(colorlist, I*3+1);
+            bb = dl_get(colorlist, I*3+2);
+            cairo_set_source_rgb(cairo, rr, gg, bb);
+        }
 
 		if (strcmp("userdot", args->currentlayer) == 0) {
             double px, py;
@@ -268,6 +292,9 @@ int render_boundary(unsigned char* img, render_args_t* args) {
 	nextfile:
         sl_free2(triedwcs);
 	}
+
+    if (colorlist)
+        dl_free(colorlist);
 
 	sl_free2(wcsfiles);
 

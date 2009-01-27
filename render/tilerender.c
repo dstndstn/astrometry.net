@@ -68,7 +68,7 @@ uLong compressBound (uLong sourceLen) {
   The width and height in pixels are  -w <width> -h <height>
   */
 
-const char* OPTIONS = "ab:c:dg:h:i:k:l:npr:sw:x:y:zB:C:D:F:I:JL:MN:RS:V:W:X:Y:P";
+const char* OPTIONS = "ab:c:dg:h:i:k:l:npr:sw:x:y:zB:C:D:F:I:JL:MN:RS:V:W:X:Y:PK:";
 
 
 /* All render layers must go in here */
@@ -166,6 +166,9 @@ int main(int argc, char *argv[]) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+        case 'K':
+            args.colorlist = optarg;
+            break;
 		case 'b':
 			args.ubstyle = optarg;
 			break;
