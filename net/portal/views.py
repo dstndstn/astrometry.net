@@ -266,6 +266,7 @@ def joblist(request):
 			return HttpResponse('no sub')
 		job = None
 		jobs = sub.jobs.all().order_by('enqueuetime', 'starttime', 'jobid')
+		subs = [sub]
 		N = jobs.count()
 		if 'onejobjump' in request.GET and N == 1 and sub.alljobsadded:
 			return HttpResponseRedirect(reverse(jobstatus, args=[jobs[0].jobid]))
@@ -344,8 +345,8 @@ def joblist(request):
 
 	elif kind == 'sub':
 		jobs = jobs[start:end]
-        if N == 0:
-            title = emptytitle
+		if N == 0:
+			title = emptytitle
 
 	# "rjobs": rendered jobs.
 	rjobs = []
@@ -578,7 +579,7 @@ def jobstatus(request, jobid=None):
 		'jobfile' : (submission.datasrc == 'file') and submission.uploaded.userfilename or None,
 		'jobscale' : job.friendly_scale(),
 		'jobparity' : job.friendly_parity(),
-        'diskfileurl': get_file_url(job, 'origfile'),
+		'diskfileurl': get_file_url(job, 'origfile'),
 		'needs_medium_scale' : job.diskfile.needs_medium_size(),
 		'sources' : get_file_url(job, 'sources-medium'),
 		'sources_big' : get_file_url(job, 'sources-big'),
