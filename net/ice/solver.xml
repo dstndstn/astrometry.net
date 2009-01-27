@@ -80,88 +80,83 @@
 
 
     <replica-group id="RSolver-scale10">
-      <load-balancing type="round-robin"/>
+    <load-balancing type="adaptive"/>
       <object identity="Solver-scale10" type="::SolverIce::Solver"/>
     </replica-group>
     
 
     <replica-group id="RSolver-scale5">
-      <load-balancing type="round-robin"/>
+    <load-balancing type="adaptive"/>
       <object identity="Solver-scale5" type="::SolverIce::Solver"/>
     </replica-group>
     
 
     <replica-group id="RSolver-scale4">
-      <load-balancing type="round-robin"/>
+    <load-balancing type="adaptive"/>
       <object identity="Solver-scale4" type="::SolverIce::Solver"/>
     </replica-group>
     
 
     <replica-group id="RSolver-scale3">
-      <load-balancing type="round-robin"/>
+    <load-balancing type="adaptive"/>
       <object identity="Solver-scale3" type="::SolverIce::Solver"/>
     </replica-group>
     
 
     <replica-group id="RSolver-scale2">
-      <load-balancing type="round-robin"/>
+    <load-balancing type="adaptive"/>
       <object identity="Solver-scale2" type="::SolverIce::Solver"/>
     </replica-group>
     
 <node name="neuron-0-0">
   <server-instance template="ServerTemplate-scale10" index="neuron-0-0"/>
-  <server-instance template="ServerTemplate-scale5" index="neuron-0-0"/>
 </node>
 <node name="neuron-0-1">
-  <server-instance template="ServerTemplate-scale4" index="neuron-0-1"/>
+  <server-instance template="ServerTemplate-scale5" index="neuron-0-1"/>
 </node>
 <node name="neuron-0-2">
-  <server-instance template="ServerTemplate-scale3" index="neuron-0-2"/>
+  <server-instance template="ServerTemplate-scale4" index="neuron-0-2"/>
 </node>
 <node name="neuron-0-3">
-  <server-instance template="ServerTemplate-scale2" index="neuron-0-3"/>
+  <server-instance template="ServerTemplate-scale3" index="neuron-0-3"/>
 </node>
 <node name="neuron-0-4">
-  <server-instance template="ServerTemplate-scale10" index="neuron-0-4"/>
-  <server-instance template="ServerTemplate-scale5" index="neuron-0-4"/>
+  <server-instance template="ServerTemplate-scale2" index="neuron-0-4"/>
 </node>
 <node name="neuron-0-5">
-  <server-instance template="ServerTemplate-scale4" index="neuron-0-5"/>
+  <server-instance template="ServerTemplate-scale10" index="neuron-0-5"/>
 </node>
 <node name="neuron-0-6">
-  <server-instance template="ServerTemplate-scale3" index="neuron-0-6"/>
+  <server-instance template="ServerTemplate-scale5" index="neuron-0-6"/>
 </node>
 <node name="neuron-0-7">
-  <server-instance template="ServerTemplate-scale2" index="neuron-0-7"/>
+  <server-instance template="ServerTemplate-scale4" index="neuron-0-7"/>
 </node>
 <node name="neuron-0-8">
-  <server-instance template="ServerTemplate-scale10" index="neuron-0-8"/>
-  <server-instance template="ServerTemplate-scale5" index="neuron-0-8"/>
+  <server-instance template="ServerTemplate-scale3" index="neuron-0-8"/>
 </node>
 <node name="neuron-0-9">
-  <server-instance template="ServerTemplate-scale4" index="neuron-0-9"/>
+  <server-instance template="ServerTemplate-scale2" index="neuron-0-9"/>
 </node>
 <node name="neuron-0-10">
-  <server-instance template="ServerTemplate-scale3" index="neuron-0-10"/>
+  <server-instance template="ServerTemplate-scale10" index="neuron-0-10"/>
 </node>
 <node name="neuron-0-11">
-  <server-instance template="ServerTemplate-scale2" index="neuron-0-11"/>
+  <server-instance template="ServerTemplate-scale5" index="neuron-0-11"/>
 </node>
 <node name="neuron-0-12">
-  <server-instance template="ServerTemplate-scale10" index="neuron-0-12"/>
-  <server-instance template="ServerTemplate-scale5" index="neuron-0-12"/>
+  <server-instance template="ServerTemplate-scale4" index="neuron-0-12"/>
 </node>
 <node name="neuron-0-13">
-  <server-instance template="ServerTemplate-scale4" index="neuron-0-13"/>
+  <server-instance template="ServerTemplate-scale3" index="neuron-0-13"/>
 </node>
 <node name="neuron-0-14">
-  <server-instance template="ServerTemplate-scale3" index="neuron-0-14"/>
+  <server-instance template="ServerTemplate-scale2" index="neuron-0-14"/>
 </node>
 <node name="neuron-0-15">
-  <server-instance template="ServerTemplate-scale2" index="neuron-0-15"/>
+  <server-instance template="ServerTemplate-scale10" index="neuron-0-15"/>
 </node>
 <node name="neuron-0-16">
-  <server-instance template="ServerTemplate-scale10" index="neuron-0-16"/>
   <server-instance template="ServerTemplate-scale5" index="neuron-0-16"/>
 </node>
 <node name="neuron-0-17">
@@ -175,16 +170,18 @@
 </node>
 <node name="neuron-0-20">
   <server-instance template="ServerTemplate-scale10" index="neuron-0-20"/>
-  <server-instance template="ServerTemplate-scale5" index="neuron-0-20"/>
 </node>
 <node name="neuron-0-21">
-  <server-instance template="ServerTemplate-scale4" index="neuron-0-21"/>
+  <server-instance template="ServerTemplate-scale5" index="neuron-0-21"/>
 </node>
 <node name="neuron-0-22">
-  <server-instance template="ServerTemplate-scale3" index="neuron-0-22"/>
+  <server-instance template="ServerTemplate-scale4" index="neuron-0-22"/>
 </node>
 <node name="neuron-0-23">
-  <server-instance template="ServerTemplate-scale2" index="neuron-0-23"/>
+  <server-instance template="ServerTemplate-scale3" index="neuron-0-23"/>
+</node>
+<node name="neuron-0-24">
+  <server-instance template="ServerTemplate-scale2" index="neuron-0-24"/>
 </node>
 
   </application>

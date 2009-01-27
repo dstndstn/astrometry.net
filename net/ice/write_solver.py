@@ -5,7 +5,10 @@
 
 scales=[10,5,4,3,2]
 
-all_nodes = [
+#hosts = ['neuron-0-%i' for i in range(25)]
+all_nodes = [('neuron-0-%i' % i, [scales[i % len(scales)]]) for i in range(25)]
+
+all_nodes_OLD = [
     ('neuron-0-0', [10, 5]),
     ('neuron-0-1', [4]),
     ('neuron-0-2', [3]),

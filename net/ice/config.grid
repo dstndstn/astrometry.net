@@ -22,6 +22,8 @@ IceGrid.Node.WaitTime=10
 
 IceGrid.InstanceName=SolverIceGrid
 
+Ice.ThreadPool.Server.SizeMax = 20
+
 #
 # The IceGrid locator proxy.
 #
