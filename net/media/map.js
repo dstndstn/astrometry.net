@@ -28,7 +28,9 @@ CustomGetTileUrl = function(a,b,c) {
 	var lUL = G_NORMAL_MAP.getProjection().fromPixelToLatLng(lULP,b,c);
 	var lLR = G_NORMAL_MAP.getProjection().fromPixelToLatLng(lLRP,b,c);
 	var lBbox=lUL.x+","+lUL.y+","+lLR.x+","+lLR.y;
-	var lURL=this.myBaseURL;
+    var lURL = this.myBaseURLs[Math.floor(Math.random() * this.myBaseURLs.length)];
+	//var lURL=this.myBaseURL;
+    //alert('' + a.x + ',' + a.y + ' -> ' + (a.x%2) + ',' + (a.y%2))
 	lURL+='&layers=' + this.myLayers;
 	if (this.jpeg)
 		lURL += '&jpeg';
@@ -80,10 +82,10 @@ function debug(txt) {
 // The GMap2
 var map;
 
-// URLs of tileserver.  These are defined in the HTML (map.php)
+// URLs of tileserver.  These are defined in the HTML
 var TILE_URLS  = CONFIG_TILE_URLS;
 // FIXME
-var TILE_URL = TILE_URLS[0];
+//var TILE_URL = TILE_URLS[0];
 var IMAGE_URL  = CONFIG_IMAGE_URL;
 var IMAGE_LIST_URL  = CONFIG_IMAGE_LIST_URL;
 var BLACK_URL = CONFIG_BLACK_URL;
@@ -351,12 +353,15 @@ function toggleButton(overlayName) {
 	}
 }
 
-var tileSize = 128;
+var tileSize = 256;
 
 function makeOverlay(layers, tag) {
 	var newTile = new GTileLayer(new GCopyrightCollection(""), 1, 17);
 	newTile.myLayers=layers;
-	newTile.myBaseURL=TILE_URL + tag;
+    newTile.myBaseURLs = [];
+    for (var i=0; i<TILE_URLS.length; i++) {
+        newTile.myBaseURLs.push(TILE_URLS[i] + tag);
+    }
     newTile.myTileSize = tileSize;
 	newTile.getTileUrl=CustomGetTileUrl;
 	return new GTileLayerOverlay(newTile);
@@ -757,9 +762,14 @@ function startup() {
 	firstone = true;
 	for (var i=0; i<passargs.length; i++) {
 		if (passargs[i] in getdata) {
-			if (!firstone)
-				TILE_URL += "&";
-			TILE_URL += passargs[i] + "=" + getdata[passargs[i]];
+			if (!firstone) {
+                for (var j=0; j<TILE_URLS.length; j++) {
+                    TILE_URLS[j] += "&";
+                }
+            }
+            for (var j=0; j<TILE_URLS.length; j++) {
+                TILE_URLS[j] += passargs[i] + "=" + getdata[passargs[i]];
+            }
 			firstone = false;
 		}
 	}

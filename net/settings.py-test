@@ -2,6 +2,8 @@ import astrometry.net.secrets.django_db as secrets
 
 GMAPS_API_KEY = 'ABQIAAAA7dWWcc9pB-GTzZE7CvT6SRTpFHQyuc9zMeXV0wfLqFiAr83b_xQ02hHbHnV4CjuIf4L-3WI_XATmBQ'
 
+GMAPS_HOSTS = ['x%i.astrometry.net' % i for i in [1,2,3,4,5]]
+
 W3C_VALIDATOR_URL = 'http://oven.cosmo.fas.nyu.edu:8888/w3c-markup-validator/check'
 
 UPLOADER_URL = '/test/uploader'

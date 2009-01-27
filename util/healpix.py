@@ -274,7 +274,7 @@ def xyztohealpix(x, y, z, nside):
     cz = ctypes.c_double(z)
     cns = ctypes.c_int(nside)
     chp = _lib.xyztohealpix(cx, cy, cz, cns)
-    return int(chp.value)
+    return chp
 
 # ra, dec in degrees
 def radectohealpix(ra, dec, nside):

@@ -513,11 +513,11 @@ def job_set_description(request):
 
 @wants_job_or_sub
 def jobstatus(request, jobid=None):
-	log('jobstatus: jobid=', jobid)
+	#log('jobstatus: jobid=', jobid)
 	job = request.job
 	sub = request.sub
-	log('job is', job)
-	log('sub is', sub)
+	#log('job is', job)
+	#log('sub is', sub)
 	if sub:
 		jobs = sub.jobs.all()
 		log('submission has %i jobs.' % len(jobs))
@@ -544,7 +544,7 @@ def jobstatus(request, jobid=None):
 
 	df = job.diskfile
 	submission = job.submission
-	log('jobstatus: Job is: ' + str(job))
+	#log('jobstatus: Job is: ' + str(job))
 
 	otherxylists = []
 	# (image url, link url)
@@ -690,7 +690,7 @@ def jobstatus(request, jobid=None):
 			f.close()
 			lines = logfiletxt.split('\n')
 			lines = '\n'.join(lines[-16:])
-			log('job not solved')
+			#log('job not solved')
 
 			ctxt.update({
 				'logfile_tail' : lines,

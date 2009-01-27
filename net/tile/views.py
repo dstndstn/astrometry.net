@@ -27,6 +27,7 @@ from astrometry.util.file import *
 import ctypes
 
 import astrometry.net.settings as settings
+from astrometry.net.portal.log import log as logmsg
 
 logfile		   = settings.LOGFILE
 tilerender	   = settings.TILERENDER
@@ -40,12 +41,21 @@ logging.basicConfig(level=logging.DEBUG,
 					)
 
 def index(request):
+	logmsg('tile url:', reverse(get_tile))
+	absurl = request.build_absolute_uri(reverse(get_tile)) + '?'
+	logmsg('abs:', absurl)
+
+	thishost = request.META['SERVER_NAME']
+	gmaps_urls = [absurl.replace(thishost, x)
+				  for x in settings.GMAPS_HOSTS]
+	logmsg('urls:', gmaps_urls)
+
 	ctxt = {
 		'gmaps_key' : ('http://maps.google.com/maps?file=api&v=2.x&key=' +
 					   settings.GMAPS_API_KEY),
 		'map_js_url' : reverse('astrometry.net.media') + 'map.js',
 		'gmaps_tile_urls' : ("[ '" +
-							 "', '".join([reverse(get_tile) + '?']) +
+							 "', '".join(gmaps_urls) +
 							 "' ];"),
 		'gmaps_image_url' : reverse(get_image)+ '?',
 		'gmaps_image_list_url' : reverse(get_image_list) + '?',

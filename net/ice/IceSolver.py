@@ -94,7 +94,7 @@ class SolverClient(object):
         servers = self.find_all_solvers()
         logmsg('servers:', servers)
 
-        results = [SolverResult(s) for s in servers]
+        results = [SolverResult(s,jobid) for s in servers]
 
         logmsg('making ICE calls...')
         for (s,r) in zip(servers,results):
@@ -105,17 +105,19 @@ class SolverClient(object):
         lastping = time.time()
         pingperiod = 30 # seconds
         while len(waiting):
-            time.sleep(1)
+            time.sleep(5)
+            logmsg('Job', jobid, 'waiting for %i servers' % len(waiting))
             for r in waiting:
-                if r.isdone():
-                    if r.tardata is not None and r.solved:
-                        tardata = r.tardata
-                        break
+                if r.isdone() and r.tardata is not None and r.solved:
+                    logmsg('Job', jobid, 'solved by server', str(r.server))
+                    tardata = r.tardata
+                    break
             if tardata:
                 for r in waiting:
                     if not r.isdone():
+                        logmsg('Job', jobid, 'finished: sending cancel to', str(r.server))
                         logfunc('Cancelling ' + str(r.server))
-                        r.server.cancel(jobid)
+                        r.server.ice_oneway().cancel(jobid)
                 break
             waiting = [r for r in waiting if not r.isdone()]
 
@@ -126,7 +128,7 @@ class SolverClient(object):
                     r.server.ice_oneway().ice_ping()
                 lastping = tnow
 
-        logmsg('all ICE calls have returned')
+        logmsg('Received Ice response(s)')
 
         # grace period to let servers send their last log messages.
         time.sleep(3)
@@ -157,17 +159,18 @@ class LoggerI(SolverIce.Logger):
         self.logfunc(msg)
 
 class SolverResult(object):
-    def __init__(self, server):
+    def __init__(self, server, jobid):
         self.tardata = None
         self.failed = False
         self.solved = False
         self.server = server
+        self.jobid = jobid
     def ice_response(self, tardata, solved):
-        print 'async response: ', (solved and 'solved' or 'did not solve')
+        logmsg('async response from server', self.server, ', job', self.jobid, ': ', (solved and 'solved' or 'did not solve'))
         self.tardata = tardata
         self.solved = solved
     def ice_exception(self, ex):
-        print 'async exception:', ex
+        logmsg('async exception from server', self.server, ', job', self.jobid, ': ', ex)
         self.failed = True
     def isdone(self):
         return self.failed or self.tardata is not None
