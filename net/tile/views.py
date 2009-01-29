@@ -78,6 +78,35 @@ def getbb(request):
 		ramax += 360
 	return (ramin, ramax, decmin, decmax)
 
+def get_joblist(request):
+	subid = request.REQUEST.get('submission')
+	jlist = request.REQUEST.get('joblist')
+	if not subid and not jlist:
+		return None
+	if subid:
+		try:
+			jobs = Submission.objects.get(subid=subid).jobs.all()
+		except Exception,e:
+			errstr = str(e)
+			logmsg('Failed with exception: ', str(e))
+			logmsg('--------------')
+			logmsg(traceback.format_exc())
+			logmsg('--------------')
+			return None
+	elif jlist:
+		jl = read_file(tempdir + '/' + jlist).split('\n')
+		jobs = []
+		for jobid in jl:
+			try:
+				jobs.append(Job.objects.get(jobid=jobid))
+			except ObjectDoesNotExist:
+				logmsg('Failed to find jobid', jobid, 'from joblist', jlist)
+		#logmsg('Got ', len(jobs), ' jobs from the joblist file.')
+	jobs = [j for j in jobs if j.solved()]
+	return jobs
+
+
+
 def get_image(request):
 	logmsg("get_image() starting")
 	try:
@@ -177,14 +206,6 @@ def get_image_list(request):
 
 		wcsfn = settings.imgdir + '/' + img.filename + '.wcs'
 		try:
-			if not sip.libraryloaded():
-				fn = settings.sipso
-				logmsg('Trying to load library %s' % fn)
-				#sip.loadlibrary(fn)
-				lib = ctypes.CDLL(fn)
-				logmsg('Lib is ' + str(lib))
-				sip._sip = lib
-
 			wcs = sip.Sip(filename=wcsfn)
 			poly = []
 			steps = 4
@@ -315,83 +336,66 @@ def get_tile(request):
 		dates = []
 		jobswithdates = []
 
-		subid = request.GET.get('submission')
-		jlist = request.GET.get('joblist')
+		jobs = get_joblist(request)
 
-		if subid or jlist:
+		for job in jobs:
+			fn = tempdir + '/' + 'gmaps-' + job.jobid
 
-			if subid:
-				sub = Submission.objects.get(subid=subid)
-				jobs = sub.jobs.all().filter(status='Solved')
+			if justdates:
+				fn += '-dates'
 
-			elif jlist:
-				jl = read_file(tempdir + '/' + jlist).split('\n')
-				try:
-					jobs = [Job.objects.get(jobid=j) for j in jl]
-				except ObjectDoesNotExist:
-					logmsg('Failed to find one of the jobs in joblist.')
-					jobs = []
-				jobs = [j for j in jobs if j.solved()]
-				logmsg('Got ', len(jobs), ' jobs from the joblist file.')
+			wcsfn = fn + '.wcs'
+			jpegfn = fn + '.jpg'
 
-			for job in jobs:
-				fn = tempdir + '/' + 'gmaps-' + job.jobid
+			if not os.path.exists(wcsfn):
+				calib = job.calibration
+				tanwcs = calib.raw_tan
+				if not tanwcs:
+					continue
+				# convert to an_common.sip.Tan
+				tanwcs = tanwcs.to_tanwcs()
+				# write to .wcs file.
+				tanwcs.write_to_file(wcsfn)
+				logmsg('Writing WCS file ' + wcsfn)
 
-				if justdates:
-					fn += '-dates'
+			if not os.path.exists(jpegfn):
+				logmsg('Writing JPEG file ' + jpegfn)
+				#tmpjpeg = convert(job, 'jpeg-norm')
+				tmpjpeg = convert(job, 'jpeg')
+				shutil.copy(tmpjpeg, jpegfn)
 
-				wcsfn = fn + '.wcs'
-				jpegfn = fn + '.jpg'
+			if justdates:
+				from astrometry.util import EXIF
+				from datetime import datetime
+				# tags = EXIF.process_file(open(jpegfn))
+				thetime = None
+				if job.diskfile:
+					p = job.diskfile.get_path()
+					f = open(p)
+					format = '%Y:%m:%d %H:%M:%S'
+					if f:
+						tags = EXIF.process_file(open(p))
+						t = tags.get('EXIF DateTimeOriginal')
+						if t:
+							logmsg('File', p, 'orig time:', t)
+							thetime = datetime.strptime(str(t), format)
+						else:
+							t2 = tags.get('Image DateTime')
+							if t2:
+								logmsg('File', p, 'time:', t2)
+								thetime = datetime.strptime(str(t2), format)
 
-				if not os.path.exists(wcsfn):
-					calib = job.calibration
-					tanwcs = calib.raw_tan
-					if not tanwcs:
-						continue
-					# convert to an_common.sip.Tan
-					tanwcs = tanwcs.to_tanwcs()
-					# write to .wcs file.
-					tanwcs.write_to_file(wcsfn)
-					logmsg('Writing WCS file ' + wcsfn)
-
-				if not os.path.exists(jpegfn):
-					logmsg('Writing JPEG file ' + jpegfn)
-					#tmpjpeg = convert(job, 'jpeg-norm')
-					tmpjpeg = convert(job, 'jpeg')
-					shutil.copy(tmpjpeg, jpegfn)
-
-				if justdates:
-					from astrometry.util import EXIF
-					from datetime import datetime
-					# tags = EXIF.process_file(open(jpegfn))
-					thetime = None
-					if job.diskfile:
-						p = job.diskfile.get_path()
-						f = open(p)
-						format = '%Y:%m:%d %H:%M:%S'
-						if f:
-							tags = EXIF.process_file(open(p))
-							t = tags.get('EXIF DateTimeOriginal')
-							if t:
-								logmsg('File', p, 'orig time:', t)
-								thetime = datetime.strptime(str(t), format)
-							else:
-								t2 = tags.get('Image DateTime')
-								if t2:
-									logmsg('File', p, 'time:', t2)
-									thetime = datetime.strptime(str(t2), format)
-
-								#logmsg('File', p, 'EXIF tags:')
-								#for k,v in tags.items():
-								#	if not k in ['JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote']:
-								#		logmsg('  ',k,'=',v)
-					if thetime:
-						filenames.append(fn)
-						dates.append(thetime)
-						jobswithdates.append(job)
-
-				else:
+							#logmsg('File', p, 'EXIF tags:')
+							#for k,v in tags.items():
+							#	if not k in ['JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote']:
+							#		logmsg('  ',k,'=',v)
+				if thetime:
 					filenames.append(fn)
+					dates.append(thetime)
+					jobswithdates.append(job)
+
+			else:
+				filenames.append(fn)
 
 		else:
 			# Compute list of files via DB query

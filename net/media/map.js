@@ -94,15 +94,20 @@ var BLACK_URL = CONFIG_BLACK_URL;
 var getdata;
 
 // args that we pass on.
-var passargs = [ 'imagefn', 'wcsfn', 'cc', 'arcsinh', 'arith', //'gain',
-    'dashbox', 'cmap',
-    'rdlsfn', 'rdlsfield', 'rdlsstyle',
-    'rdlsfn2', 'rdlsfield2', 'rdlsstyle2',
-				 'density',
-				 'submission',
-                 'joblist', 'lw',
-                 'heatmap', 'dates'
+var passargs = [
+                'imagefn', 'wcsfn', 'cc', 'arcsinh', 'arith', //'gain',
+                'dashbox', 'cmap',
+                'rdlsfn', 'rdlsfield', 'rdlsstyle',
+                'rdlsfn2', 'rdlsfield2', 'rdlsstyle2',
+                'density',
+                'submission',
+                'joblist', 'lw',
+                'heatmap', 'dates'
     ];
+
+var imglistpass = [
+                   'joblist', 'submission',
+                   ];
 
 var gotoform = document.getElementById("gotoform");
 
@@ -707,7 +712,7 @@ function moveended() {
 	visImages = [];
 
 	if (imagesShowing || imageOutlinesShowing) {
-		url = IMAGE_LIST_URL + "?";
+		url = IMAGE_LIST_URL + "&";
 		bounds = map.getBounds();
 		sw = bounds.getSouthWest();
 		ne = bounds.getNorthEast();
@@ -721,6 +726,16 @@ function moveended() {
 			}
 		}
 		url += "bb=" + L + "," + sw.lat() + "," + R + "," + ne.lat();
+
+        for (var i=0; i<imglistpass.length; i++) {
+            if (imglistpass[i] in getdata) {
+                url += "&" + imglistpass[i];
+                if (getdata[imglistpass[i]] != undefined) {
+                    url += "=" + getdata[imglistpass[i]];
+                }
+            }
+        }
+
 		if (url == lastListUrl) {
 			debug('Not downloading identical image list (' + lastListUrl + ')');
 		} else {
