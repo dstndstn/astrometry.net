@@ -262,17 +262,17 @@ def get_closest_pow2_nside(radius):
     # in radians:
     baselen = sqrt(area)
     n = baselen / (radians(radius*2.))
-    p = int(round(log(n, 2.0)))
-    return 2**p
+    p = max(0, int(round(log(n, 2.0))))
+    return int(2**p)
 
 def compose_xy(x, y, nside):
     return x*nside + y
 
 def xyztohealpix(x, y, z, nside):
-    cx = ctypes.c_double(x)
-    cy = ctypes.c_double(y)
-    cz = ctypes.c_double(z)
-    cns = ctypes.c_int(nside)
+    cx = ctypes.c_double(float(x))
+    cy = ctypes.c_double(float(y))
+    cz = ctypes.c_double(float(z))
+    cns = ctypes.c_int(int(nside))
     chp = _lib.xyztohealpix(cx, cy, cz, cns)
     return chp
 

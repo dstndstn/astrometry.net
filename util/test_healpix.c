@@ -458,7 +458,7 @@ void print_healpix_grid(int Nside) {
 	fprintf(stderr, "x%i=[", Nside);
 	for (i=0; i<N; i++) {
 		for (j=0; j<N; j++) {
-			fprintf(stderr, "%i ", radectohealpix(i*2*PIl/N, PIl*(j-N/2)/N, Nside));
+			fprintf(stderr, "%i ", radectohealpix(i*2*M_PI/N, M_PI*(j-N/2)/N, Nside));
 		}
 		fprintf(stderr, ";");
 	}
@@ -474,7 +474,7 @@ void print_healpix_borders(int Nside) {
 	fprintf(stderr, "x%i=[", Nside);
 	for (i=0; i<N; i++) {
 		for (j=0; j<N; j++) {
-			fprintf(stderr, "%i ", radectohealpix(i*2*PIl/N, PIl*(j-N/2)/N, Nside));
+			fprintf(stderr, "%i ", radectohealpix(i*2*M_PI/N, M_PI*(j-N/2)/N, Nside));
 		}
 		fprintf(stderr, ";");
 	}
