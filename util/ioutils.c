@@ -39,6 +39,7 @@
 #include "ioutils.h"
 #include "gnu-specific.h"
 #include "errors.h"
+#include "log.h"
 
 uint32_t ENDIAN_DETECTOR = 0x01020304;
 
@@ -48,6 +49,23 @@ char* basename_safe(const char* path) {
 	char* res = strdup(basename(copy));
 	free(copy);
 	return res;
+}
+
+char* find_file_in_dirs(const char** dirs, int ndirs, const char* filename, bool allow_absolute) {
+    int i;
+    if (!filename) return NULL;
+    if (allow_absolute && filename[0] == '/') {
+        if (file_readable(filename))
+            return strdup(filename);
+    }
+    for (i=0; i<ndirs; i++) {
+        char* fn;
+        asprintf_safe(&fn, "%s/%s", dirs[i], filename);
+        if (file_readable(fn))
+            return fn;
+        free(fn);
+    }
+    return NULL;
 }
 
 float get_cpu_usage() {

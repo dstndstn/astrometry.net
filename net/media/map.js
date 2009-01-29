@@ -84,8 +84,6 @@ var map;
 
 // URLs of tileserver.  These are defined in the HTML
 var TILE_URLS  = CONFIG_TILE_URLS;
-// FIXME
-//var TILE_URL = TILE_URLS[0];
 var IMAGE_URL  = CONFIG_IMAGE_URL;
 var IMAGE_LIST_URL  = CONFIG_IMAGE_LIST_URL;
 var BLACK_URL = CONFIG_BLACK_URL;
@@ -102,11 +100,13 @@ var passargs = [
                 'density',
                 'submission',
                 'joblist', 'lw',
-                'heatmap', 'dates'
+                'heatmap', 'dates',
+                'imageset',
     ];
 
 var imglistpass = [
                    'joblist', 'submission',
+                   'imageset',
                    ];
 
 var gotoform = document.getElementById("gotoform");
@@ -637,16 +637,16 @@ function imageListLoaded(txt) {
 	visImages = [];
 	visBoxes = [];
 	for (var i=0; i<imgtags.length; i++) {
-		name = imgtags[i].getAttribute('name');
-		visImages.push(name);
+		//name = imgtags[i].getAttribute('name');
 		poly = mymap(parseFloat, imgtags[i].getAttribute('poly').split(','));
+		visImages.push(imgtags[i]);
 		visBoxes.push(poly);
 		debug("Found " + poly.length + " polygon points.");
 		debug("  " + poly.join(","));
 
 	}
-	debug('Selected images: [' + selectedImages.join(', ') + ']');
-	debug('Visible images: [' + visImages.join(', ') + ']');
+	//debug('Selected images: [' + selectedImages.join(', ') + ']');
+	//debug('Visible images: [' + visImages.join(', ') + ']');
 
 	// Remove selected images that are no longer visible.
 	for (var i=0; i<selectedImages.length; i++) {
@@ -663,11 +663,13 @@ function imageListLoaded(txt) {
 		}
 
 		img = visImages[i];
+        img.id = img.getAttribute('id');
+        img.filename = img.getAttribute('name');
 
 		link2 = document.createElement("a");
 		link2.setAttribute('href', '#');
-		link2.setAttribute('onclick', 'toggleSelectedImage("' + img + '")');
-		link2.setAttribute('id', 'showhide' + img);
+		link2.setAttribute('onclick', 'toggleSelectedImage("' + img.id + '")');
+		link2.setAttribute('id', 'showhide' + img.id);
 		if (indexOf(selectedImages, img) > -1) {
 			txt = '[outline]';
 			color = "white";
@@ -683,9 +685,10 @@ function imageListLoaded(txt) {
 		imglist.appendChild(document.createTextNode(" "));
 
 		link = document.createElement("a");
-		link.setAttribute('href', IMAGE_URL + "?filename=" + img);
-		link.setAttribute('id', 'imagename-' + img);
-		link.appendChild(document.createTextNode(img));
+        //link.setAttribute('href', IMAGE_URL + "?filename=" + img);
+        link.setAttribute('href', IMAGE_URL + "&id=" + img.id);
+		link.setAttribute('id', 'imagename-' + img.id);
+		link.appendChild(document.createTextNode(img.filename));
 		imglist.appendChild(link);
 	}
 

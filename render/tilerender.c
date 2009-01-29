@@ -68,7 +68,7 @@ uLong compressBound (uLong sourceLen) {
   The width and height in pixels are  -w <width> -h <height>
   */
 
-const char* OPTIONS = "ab:c:dg:h:i:k:l:npr:sw:x:y:zB:C:D:F:I:JL:MN:RS:V:W:X:Y:PK:";
+const char* OPTIONS = "ab:c:dg:h:i:k:l:npr:sw:x:y:zB:C:D:F:I:JL:MN:RS:V:W:X:Y:PK:A:";
 
 
 /* All render layers must go in here */
@@ -134,6 +134,34 @@ static void default_rdls_args(render_args_t* args) {
 		il_append(args->fieldnums, 0);
 }
 
+void get_string_args_of_type(render_args_t* args, const char* prefix, sl* lst) {
+    int i;
+    int skip = strlen(prefix);
+    if (!args->arglist)
+        return;
+    for (i=0; i<sl_size(args->arglist); i++) {
+        char* str = sl_get(args->arglist, i);
+        if (starts_with(str, prefix)) {
+            sl_append(lst, str + skip);
+        }
+    }
+}
+
+void get_double_args_of_type(render_args_t* args, const char* prefix, dl* lst) {
+    int i;
+    int skip = strlen(prefix);
+    if (!args->arglist)
+        return;
+    for (i=0; i<sl_size(args->arglist); i++) {
+        double d;
+        char* str = sl_get(args->arglist, i);
+        if (!starts_with(str, prefix))
+            continue;
+        d = atof(str + skip);
+        dl_append(lst, d);
+    }
+}
+
 extern char *optarg;
 extern int optind, opterr, optopt;
 
@@ -166,6 +194,9 @@ int main(int argc, char *argv[]) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+        case 'A':
+            args.argfilename = optarg;
+            break;
         case 'K':
             args.colorlist = optarg;
             break;
@@ -295,7 +326,6 @@ int main(int argc, char *argv[]) {
 
 	logmsg("tilecache: BEGIN TILECACHE\n");
 
-    // FIXME - hrm, should really log this...
     fits_use_error_system();
 
 	if (inmerc) {
@@ -324,66 +354,20 @@ int main(int argc, char *argv[]) {
 	args.xmercperpixel = 1.0 / args.xpixelpermerc;
 	args.ymercperpixel = 1.0 / args.ypixelpermerc;
 
-	// TEST
-	/*
-	  {
-	  double x, y;
-	  double mx, my;
-	  double ra, dec;
-	  double ra2, dec2;
-	  double mx2, my2;
-	  double x2, y2;
-	  double x3, y3;
-
-	  x = y = 0;
-	  mx = xpixel2mercf(x, &args);
-	  my = ypixel2mercf(y, &args);
-	  ra = merc2radeg(mx);
-	  dec = merc2decdeg(my);
-	  ra2 = pixel2ra(x, &args);
-	  dec2 = pixel2dec(y, &args);
-	  mx2 = radeg2merc(ra);
-	  my2 = decdeg2merc(dec);
-	  x2 = xmerc2pixelf(mx2, &args);
-	  y2 = ymerc2pixelf(my2, &args);
-	  x3 = ra2pixelf(ra, &args);
-	  y3 = dec2pixelf(dec, &args);
-
-	  logmsg("Pixel (%g,%g) -> Merc (%g, %g) -> RA,Dec (%g, %g) or (%g, %g)\n"
-	  "  -> Merc (%g, %g) -> Pixel (%g, %g) or (%g, %g).\n",
-	  x, y, mx, my, ra, dec, ra2, dec2, mx2, my2, x2, y2, x3, y3);
-
-	  x = y = 255;
-	  mx = xpixel2mercf(x, &args);
-	  my = ypixel2mercf(y, &args);
-	  ra = merc2radeg(mx);
-	  dec = merc2decdeg(my);
-	  ra2 = pixel2ra(x, &args);
-	  dec2 = pixel2dec(y, &args);
-	  mx2 = radeg2merc(ra);
-	  my2 = decdeg2merc(dec);
-	  x2 = xmerc2pixelf(mx2, &args);
-	  y2 = ymerc2pixelf(my2, &args);
-	  x3 = ra2pixelf(ra, &args);
-	  y3 = dec2pixelf(dec, &args);
-
-	  logmsg("Pixel (%g,%g) -> Merc (%g, %g) -> RA,Dec (%g, %g) or (%g, %g)\n"
-	  "  -> Merc (%g, %g) -> Pixel (%g, %g) or (%g, %g).\n",
-	  x, y, mx, my, ra, dec, ra2, dec2, mx2, my2, x2, y2, x3, y3);
-	  }
-	*/
-
 	xzoom = args.xpixelpermerc / 256.0;
 	args.zoomlevel = (int)rint(log(fabs(xzoom)) / log(2.0));
 	logmsg("tilecache: zoomlevel: %d\n", args.zoomlevel);
-
-	// Allocate a black image.
-	img = calloc(4 * args.W * args.H, 1);
 
 	// Rescue boneheads.
 	if (!sl_size(layers)) {
 		logmsg("tilecache: Do you maybe want to try rendering some layers?\n");
 	}
+
+    if (args.argfilename)
+        args.arglist = file_get_lines(args.argfilename, FALSE);
+
+	// Allocate a black image.
+	img = calloc(4 * args.W * args.H, 1);
 
 	for (i=0; i<sl_size(layers); i++) {
 		int j, k;

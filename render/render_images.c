@@ -1,6 +1,6 @@
 /*
    This file is part of the Astrometry.net suite.
-   Copyright 2007 Dustin Lang and Keir Mierle.
+   Copyright 2007-2009 Dustin Lang and Keir Mierle.
 
    The Astrometry.net suite is free software; you can redistribute
    it and/or modify it under the terms of the GNU General Public License
@@ -29,19 +29,13 @@
 #include "keywords.h"
 #include "md5.h"
 
-char* image_dir = "/home/gmaps/apod-solves";
-/*
-  char* image_dirs[] = {
-  "/home/gmaps/apod-solves",
-  "/data2/test/userimages",
-  }
-*/
-
-char* user_image_dirs[] = {
+const char* image_dirs[] = {
 	"/home/gmaps/ontheweb-data/",
 	"/home/gmaps/test/web-data/",
 	"/home/gmaps/gmaps-rdls/",
 };
+
+const char* cachedomain = "images";
 
 static void
 ATTRIB_FORMAT(printf,1,2)
@@ -81,74 +75,28 @@ static void add_ink(float* ink, float* counts, float* thisink, float* thiscounts
         counts[i] += thiscounts[i];
 }
 
-const char* cachedomain = "apod";
-
 int render_images(unsigned char* img, render_args_t* args) {
     int I;
     sl* imagefiles;
-	sl* wcsfiles = NULL;
+	sl* wcsfiles;
     float* counts;
     float* ink;
     int i, j, w;
     double *ravals, *decvals;
-	bool fullfilename = TRUE;
 
 	logmsg("starting.\n");
 
-	if (strcmp("images", args->currentlayer) == 0) {
-		if (!args->filelist) {
-			logmsg("Layer is \"images\" but no filelist was given.\n");
-			return -1;
-		}
-		fullfilename = FALSE;
-        imagefiles = file_get_lines(args->filelist, FALSE);
-        if (!imagefiles) {
-            logmsg("failed to read filelist \"%s\".\n", args->filelist);
-            return -1;
-        }
-        logmsg("read %i filenames from the file \"%s\".\n", sl_size(imagefiles), args->filelist);
-	} else if (strcmp("userimage", args->currentlayer) == 0) {
-		int j;
-		if (!(sl_size(args->imagefns) && sl_size(args->imwcsfns))) {
-			logmsg("both imagefn and imwcsfn are required.\n");
-			return -1;
-		}
-		imagefiles = sl_new(4);
-		wcsfiles = sl_new(4);
-		for (j=0; j<MIN(sl_size(args->imagefns), sl_size(args->imwcsfns)); j++) {
-			char* imgfn = sl_get(args->imagefns, j);
-			char* wcsfn = sl_get(args->imwcsfns, j);
-			for (i=0; i<sizeof(user_image_dirs)/sizeof(char*); i++) {
-				char* fn = sl_appendf(imagefiles, "%s/%s", user_image_dirs[i], imgfn);
-				if (!file_readable(fn)) {
-					sl_pop(imagefiles);
-					free(fn);
-					continue;
-				}
-				logmsg("Found user image %s.\n", fn);
-				break;
-			}
-			for (i=0; i<sizeof(user_image_dirs)/sizeof(char*); i++) {
-				char* fn = sl_appendf(wcsfiles, "%s/%s", user_image_dirs[i], wcsfn);
-				if (!file_readable(fn)) {
-					sl_pop(wcsfiles);
-					free(fn);
-					continue;
-				}
-				logmsg("Found user WCS %s.\n", fn);
-				break;
-			}
-			if (sl_size(imagefiles) != sl_size(wcsfiles)) {
-				logmsg("Failed to find user image or WCS file.\n");
-				return -1;
-			}
-		}
-	} else {
-		logmsg("Current layer is \"%s\", neither \"images\" nor \"userimage\".\n",
-			   args->currentlayer);
-		return -1;
-    }
+    imagefiles = sl_new(256);
+    wcsfiles = sl_new(256);
+    get_string_args_of_type(args, "jpegfn ", imagefiles);
+    get_string_args_of_type(args, "wcsfn ", wcsfiles);
 
+    if (sl_size(imagefiles) != sl_size(wcsfiles)) {
+        logmsg("Got %i jpeg files but %i wcs files.\n",
+               sl_size(imagefiles), sl_size(wcsfiles));
+        return -1;
+    }
+        
     w = args->W;
 
     counts = calloc(args->W * args->H, sizeof(float));
@@ -160,11 +108,9 @@ int render_images(unsigned char* img, render_args_t* args) {
     for (j=0; j<args->H; j++)
         decvals[j] = pixel2dec(j, args);
     for (I=0; I<sl_size(imagefiles); I++) {
-		char* basefn;
-		char* basepath;
-        char* imgfn;
-        char* wcsfn;
-        bool jpeg, png;
+		char* fn;
+        char* imgfn = NULL;
+        char* wcsfn = NULL;
         sip_t wcs;
         unsigned char* userimg = NULL;
         int W, H;
@@ -179,72 +125,18 @@ int render_images(unsigned char* img, render_args_t* args) {
         float* cached;
         int len;
 
-		imgfn = wcsfn = basepath = NULL;
-
-        basefn = sl_get(imagefiles, I);
-		if (!strlen(basefn)) {
-            logmsg("empty filename.\n");
+		imgfn = wcsfn = NULL;
+        fn = sl_get(imagefiles, I);
+        wcsfn = sl_get(wcsfiles, I);
+        imgfn = find_file_in_dirs(image_dirs, sizeof(image_dirs)/sizeof(char*),
+                                  fn, TRUE);
+        if (!imgfn) {
+            logmsg("Couldn't find image file \"%s\"\n", fn);
             continue;
-		}
-		logmsg("Base filename: \"%s\"\n", basefn);
-
-		if (args->filelist) {
-			// absolute path?
-			if (basefn[0] == '/') {
-				basepath = strdup(basefn);
-			} else {
-				asprintf_safe(&basepath, "%s/%s", image_dir, basefn);
-			}
-			basefn = basepath;
-			logmsg("Base path: \"%s\"\n", basefn);
-		}
-		if (fullfilename) {
-			// HACK - strip off the filename suffix... only to reappend it below...
-			char* dot = strrchr(basefn, '.');
-			if (!dot) {
-				logmsg("no filename suffix: %s\n", basefn);
-				continue;
-			}
-			*dot = '\0';
-		}
-
-		if (wcsfiles) {
-			wcsfn = sl_get(wcsfiles, I);
-		} else {
-			asprintf_safe(&wcsfn, "%s.wcs", basefn);
-			if (!file_readable(wcsfn)) {
-				logmsg("filename %s: WCS file %s not readable.\n", basefn, wcsfn);
-				goto nextimage;
-			}
-		}
-		logmsg("WCS: \"%s\"\n", wcsfn);
-
-		{
-			char* suffixes[] = { "jpeg", "jpg", "png" };
-			bool isjpegs[] = { TRUE,  TRUE,  FALSE };
-			bool ispngs[]  = { FALSE, FALSE, TRUE  };
-			bool gotit = FALSE;
-			for (i=0; i<sizeof(suffixes)/sizeof(char*); i++) {
-				asprintf_safe(&imgfn, "%s.%s", basefn, suffixes[i]);
-				if (file_readable(imgfn)) {
-					jpeg = isjpegs[i];
-					png = ispngs[i];
-					logmsg("Image: \"%s\"\n", imgfn);
-					gotit = TRUE;
-					break;
-				}
-				free(imgfn);
-			}
-			if (!gotit) {
-				logmsg("Found no image file for basename \"%s\".\n", basefn);
-				imgfn = NULL;
-				goto nextimage;
-			}
-		}
+        }
+        // FIXME - wcs files must be absolute paths.
 
         res = sip_read_header_file(wcsfn, &wcs);
-        free(wcsfn);
-		wcsfn = NULL;
         if (!res) {
             logmsg("failed to parse SIP header from %s\n", wcsfn);
 			goto nextimage;
@@ -349,6 +241,8 @@ int render_images(unsigned char* img, render_args_t* args) {
 				thisink = NULL;
 			} else {
 				/*
+                 // there used to be image pyramid handling here...
+
 				  In order to use an image pyramid, we need to have some idea of how many
 				  pixels in the original image will cover each pixel in the output image.
 				  In principle this could be quite different over the range of the image,
@@ -360,77 +254,14 @@ int render_images(unsigned char* img, render_args_t* args) {
 				  -to a change in RA,Dec (or distance on the unit sphere)
 				  -through the CD matrix to pixels in the input image.
 				*/
-				//double mx, my;
-				double xyzA[3];
-				double xyzB[3];
-				double raB, decB;
-				double arcsec;
-				double inpix;
-				double zoom;
-				int ir, id;
-				int izoom;
-				int zoomscale;
-				int zoomW, zoomH;
 
-				// find the RA,Dec at the middle of the range of output pixels...
-				ir = (xlo + xhi + 1) / 2;
-				id = (ylo + yhi + 1) / 2;
-				ra  =  ravals[ir];
-				dec = decvals[id];
-				radecdeg2xyzarr(ra, dec, xyzA);
-				raB  = ravals [ir + ((ir == W-1) ? -1 : +1)];
-				decB = decvals[id + ((id == H-1) ? -1 : +1)];
-				radecdeg2xyzarr(raB, decB, xyzB);
-				// divide distsq by half because I added one pixel in x and y.
-				arcsec = distsq2arcsec(distsq(xyzA, xyzB, 3) / 2.0);
-				inpix = arcsec / sip_pixel_scale(&wcs);
-				zoom = log(inpix) / log(2.0);
-				izoom = floor(zoom);
-
-				logmsg("One output pixel covers %g arcsec, %g input pixels (zoom %i)\n",
-					   arcsec, inpix, izoom);
-
-				userimg = NULL;
-				zoomscale = 1;
-				zoomW = W;
-
-				if (izoom > 0) {
-					char* pyrfn;
-					zoomscale = (1 << izoom);
-					// Look for image pyramid.
-					while (izoom > 0) {
-						asprintf_safe(&pyrfn, "%s-%i.jpg", basefn, izoom);
-						if (file_readable(pyrfn)) {
-							userimg = cairoutils_read_jpeg(pyrfn, &zoomW, &zoomH);
-							if (userimg)
-								break;
-							else
-								logmsg("failed to read image file %s\n", pyrfn);
-						} else
-							logmsg("no such file %s\n", pyrfn);
-						free(pyrfn);
-						izoom--;
-						zoomscale /= 2;
-					}
-					if (userimg) {
-						logmsg("Found pyramid image: %s, size %i x %i (full size %i x %i), zoom scale %i.\n",
-							   pyrfn, zoomW, zoomH, W, H, zoomscale);
-						free(pyrfn);
-					}
-				}
-
-				if (!userimg) {
-					logmsg("Opening image \"%s\".\n", imgfn);
-					if (jpeg)
-						userimg = cairoutils_read_jpeg(imgfn, &W, &H);
-					else if (png)
-						userimg = cairoutils_read_png(imgfn, &W, &H);
-					if (!userimg) {
-						logmsg("failed to read image file %s\n", imgfn);
-						goto nextimage;
-					}
-				}
-				//            logmsg("Image %s is %i x %i.\n", imgfn, W, H);
+                logmsg("Opening image \"%s\".\n", imgfn);
+                userimg = cairoutils_read_jpeg(imgfn, &W, &H);
+                if (!userimg) {
+                    logmsg("failed to read image file %s\n", imgfn);
+                    goto nextimage;
+                }
+				// logmsg("Image %s is %i x %i.\n", imgfn, W, H);
 				
 				//logmsg("Clamped to pixel range: (%i to %i, %i to %i)\n", xlo, xhi, ylo, yhi);
 				
@@ -447,11 +278,9 @@ int render_images(unsigned char* img, render_args_t* args) {
 						if (pppx < 0 || pppx >= W || pppy < 0 || pppy >= H)
 							continue;
 						// nearest neighbour. bilinear is for weenies.
-						pppx /= zoomscale;
-						pppy /= zoomscale;
-						thisink[3*(j*w + i) + 0] = userimg[4*(pppy*zoomW + pppx) + 0] * weight;
-						thisink[3*(j*w + i) + 1] = userimg[4*(pppy*zoomW + pppx) + 1] * weight;
-						thisink[3*(j*w + i) + 2] = userimg[4*(pppy*zoomW + pppx) + 2] * weight;
+						thisink[3*(j*w + i) + 0] = userimg[4*(pppy*W + pppx) + 0] * weight;
+						thisink[3*(j*w + i) + 1] = userimg[4*(pppy*W + pppx) + 1] * weight;
+						thisink[3*(j*w + i) + 2] = userimg[4*(pppy*W + pppx) + 2] * weight;
 						thiscounts[j*w + i] = weight;
 					}
 				}
@@ -467,15 +296,11 @@ int render_images(unsigned char* img, render_args_t* args) {
         }
 
 	nextimage:
-		free(wcsfn);
 		free(imgfn);
-		free(basepath);
-
     }
 
     sl_free2(imagefiles);
-	if (wcsfiles)
-		sl_free_nonrecursive(wcsfiles);
+    sl_free2(wcsfiles);
     free(ravals);
     free(decvals);
 

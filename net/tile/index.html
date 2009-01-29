@@ -1,6 +1,8 @@
-{% include "pageheader.html" %}
+{% extends "pageheader.html" %}
+
+{% block head %}
 <head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 {% include "favicon.html" %}
 <title>Astrometry.net Stellar Browser</title>
 <style type="text/css">
@@ -69,7 +71,9 @@
 	}
 </style>
 </head>
+{% endblock head %}
 
+{% block thebody %}
 <body onload="startup()" onunload="GUnload()">
 
 <script src="{{ gmaps_key }}" type="text/javascript"> </script>
@@ -119,4 +123,4 @@ Images in this view:
 <p><script src="{{ map_js_url }}" type="text/javascript"> </script></p>
 
 </body>
-</html>
+{% endblock thebody %}

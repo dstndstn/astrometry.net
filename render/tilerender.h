@@ -107,10 +107,21 @@ struct render_args {
 
     // caching
     char* cachedir;
+
+    // generic argument-passing:
+    // filename
+    char* argfilename;
+    // string list
+    sl* arglist;
+
 };
 typedef struct render_args render_args_t;
 
 typedef int (*render_func_t)(unsigned char* dest_img, render_args_t* args);
+
+void get_string_args_of_type(render_args_t* args, const char* prefix, sl* lst);
+
+void get_double_args_of_type(render_args_t* args, const char* prefix, dl* lst);
 
 int parse_color(char c, double* p_red, double* p_green, double* p_blue);
 

@@ -1,11 +1,14 @@
 from django.http import *
 from django.template import Context, RequestContext, loader
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 
-from astrometry.net.tile.models import Image
+from astrometry.util.file import *
+from astrometry.net.tile.models import *
 from astrometry.net.portal.job import Submission, Job, DiskFile
 from astrometry.net.portal.convert import convert
+from astrometry.net.portal.views import send_file
 
 import re
 import os.path
@@ -21,7 +24,7 @@ import logging
 import commands
 import shutil
 
-import astrometry.util.sip
+from astrometry.util import sip
 from astrometry.util.file import *
 
 import ctypes
@@ -78,62 +81,31 @@ def getbb(request):
 		ramax += 360
 	return (ramin, ramax, decmin, decmax)
 
-def get_joblist(request):
-	subid = request.REQUEST.get('submission')
-	jlist = request.REQUEST.get('joblist')
-	if not subid and not jlist:
+def get_imageset(request):
+	imgsetid = request.REQUEST.get('imageset')
+	try:
+		imgset = MapImageSet.objects.get(id=imgsetid)
+	except ObjectDoesNotExist:
+		logmsg("no such MapImageSet: ", imgsetid)
 		return None
-	if subid:
-		try:
-			jobs = Submission.objects.get(subid=subid).jobs.all()
-		except Exception,e:
-			errstr = str(e)
-			logmsg('Failed with exception: ', str(e))
-			logmsg('--------------')
-			logmsg(traceback.format_exc())
-			logmsg('--------------')
-			return None
-	elif jlist:
-		jl = read_file(tempdir + '/' + jlist).split('\n')
-		jobs = []
-		for jobid in jl:
-			try:
-				jobs.append(Job.objects.get(jobid=jobid))
-			except ObjectDoesNotExist:
-				logmsg('Failed to find jobid', jobid, 'from joblist', jlist)
-		#logmsg('Got ', len(jobs), ' jobs from the joblist file.')
-	jobs = [j for j in jobs if j.solved()]
-	return jobs
-
-
+	return imgset
 
 def get_image(request):
-	logmsg("get_image() starting")
+	imid = request.GET.get('id')
+	if not imid:
+		return HttpResponse('no id')
 	try:
-		fn = request.GET['filename']
-	except KeyError:
-		return HttpResponse('No filename specified.')
-	if not filename_ok(fn):
-		return HttpResponse('Bad filename')
-	q = list(Image.objects.filter(filename=fn))
-	if not len(q):
-		return HttpResponse('No such file.')
-	img = q[0]
+		img = MapImage.objects.get(id=imid)
+	except:
+		return HttpResponse('no such image')
 
-	# Content-type
-	ctmap = { 'jpeg':'image/jpeg' }
+	jpeg = convert(img.job, 'jpeg')
+	return send_file(jpeg, ctype='image/jpeg')
 
-	res = HttpResponse()
-	res['Content-Type'] = ctmap[img.origformat]
-	path = settings.imgdir + "/" + img.origfilename
-	logmsg("Opening file " + path)
-	f = open(path, "rb")
-	res.write(f.read())
-	f.close()
-	return res
-
-def get_overlapping_images(ramin, ramax, decmin, decmax):
-	dec_ok = Image.objects.filter(decmin__lte=decmax, decmax__gte=decmin)
+def get_overlapping_images(ramin, ramax, decmin, decmax, queryset=None):
+	if queryset is None:
+		queryset = MapImage.objects.all()
+	dec_ok = queryset.filter(decmin__lte=decmax, decmax__gte=decmin)
 	Q_normal = Q(ramin__lte=ramax) & Q(ramax__gte=ramin)
 	# In the database, any image that spans the RA=0 line has its bounds
 	# bumped up by 360; therefore every "ramin" value is > 0, but some
@@ -154,13 +126,17 @@ def filename_ok(fn):
 	return True
 
 def get_image_list(request):
-	logmsg("imagelist() starting")
 	try:
 		(ramin, ramax, decmin, decmax) = getbb(request)
 	except KeyError, x:
 		return HttpResponse(x)
-	logmsg("Bounds: RA [%g, %g], Dec [%g, %g]." % (ramin, ramax, decmin, decmax))
-	inbounds = get_overlapping_images(ramin, ramax, decmin, decmax)
+	imageset = get_imageset(request)
+	if not imageset:
+		return HttpResponse('no such imageset')
+	images = imageset.images
+	logmsg('imageset has %i images' % images.count())
+	images = get_overlapping_images(ramin,ramax,decmin,decmax, images)
+	logmsg('%i images overlap in ra,dec' % images.count())
 
 	# We have a query that isolates images that overlap.  We now want to order them by
 	# the proportion of overlap:
@@ -185,7 +161,7 @@ def get_image_list(request):
 			   (ramax, ramin, ramax+360, ramin+360, decmax, decmin))
 	a1 = '((ramax - ramin) * (decmax - decmin))'
 	#a2 = str((ramax - ramin) * (decmax - decmin))
-	sortbysize = inbounds.order_by_expression('-(' + overlap + '*' + overlap + ') / ' + a1)
+	sortbysize = images.order_by_expression('-(' + overlap + '*' + overlap + ') / ' + a1)
 
 	top20 = sortbysize[:20]
 	query = top20
@@ -201,10 +177,9 @@ def get_image_list(request):
 		overlap = max(dra1, dra2) * (min(decmax, img.decmax) - min(decmin, img.decmin))
 		a1 = ((img.ramax - img.ramin) * (img.decmax - img.decmin))
 		score = (overlap**2) / (a1 * a2)
-		logmsg("Image " + img.filename + ": score %g (dra1=%g, dra2=%g))" %
-					  (score, dra1, dra2))
+		#logmsg("Image " + img.filename + ": score %g (dra1=%g, dra2=%g))" % (score, dra1, dra2))
 
-		wcsfn = settings.imgdir + '/' + img.filename + '.wcs'
+		wcsfn = convert(img.job, 'wcs')
 		try:
 			wcs = sip.Sip(filename=wcsfn)
 			poly = []
@@ -243,15 +218,8 @@ def get_image_list(request):
 			logmsg('Failed to read SIP header from %s: %s' % (wcsfn, e))
 			poly=''
 
-		#latmin = img.decmin
-		#latmax = img.decmax
-		#longmin = 360-img.ramax
-		#longmax = 360-img.ramin
-		#poly = map(str, (longmin, latmin, longmin, latmax, longmax, latmax, longmax, latmin, longmin, latmin))
-		#if (score < 0.01**2):
-		#	continue
-		#res.write('<image name="%s" poly="%s" />\n' % (img.filename, ','.join(poly)))
-		res.write('<image name="%s"' % img.filename)
+		res.write('<image name="%s"' % img.get_orig_filename())
+		res.write(' id="%s"' % img.id)
 		if len(poly):
 			res.write(' poly="%s"' % poly)
 		res.write(' />')
@@ -261,7 +229,6 @@ def get_image_list(request):
 	return res
 
 def get_tile(request):
-	#logmsg('query() starting')
 	try:
 		(ramin, ramax, decmin, decmax) = getbb(request)
 	except KeyError, x:
@@ -330,142 +297,61 @@ def get_tile(request):
 			cmdline += (' -r ' + rdls)
 
 	if ('images' in layers) or ('boundaries' in layers):
-		# filelist: -S
+		from astrometry.util.hsv import hsvtorgb
 
-		filenames = []
-		dates = []
-		jobswithdates = []
+		imageset = get_imageset(request)
+		if not imageset:
+			return HttpResponse('no such imageset')
+		images = imageset.images
+		logmsg('imageset has %i images' % images.count())
+		arglist = []
 
-		jobs = get_joblist(request)
-
-		for job in jobs:
-			fn = tempdir + '/' + 'gmaps-' + job.jobid
-
-			if justdates:
-				fn += '-dates'
-
-			wcsfn = fn + '.wcs'
-			jpegfn = fn + '.jpg'
-
-			if not os.path.exists(wcsfn):
-				calib = job.calibration
-				tanwcs = calib.raw_tan
-				if not tanwcs:
-					continue
-				# convert to an_common.sip.Tan
-				tanwcs = tanwcs.to_tanwcs()
-				# write to .wcs file.
-				tanwcs.write_to_file(wcsfn)
-				logmsg('Writing WCS file ' + wcsfn)
-
-			if not os.path.exists(jpegfn):
-				logmsg('Writing JPEG file ' + jpegfn)
-				#tmpjpeg = convert(job, 'jpeg-norm')
-				tmpjpeg = convert(job, 'jpeg')
-				shutil.copy(tmpjpeg, jpegfn)
-
-			if justdates:
-				from astrometry.util import EXIF
-				from datetime import datetime
-				# tags = EXIF.process_file(open(jpegfn))
-				thetime = None
-				if job.diskfile:
-					p = job.diskfile.get_path()
-					f = open(p)
-					format = '%Y:%m:%d %H:%M:%S'
-					if f:
-						tags = EXIF.process_file(open(p))
-						t = tags.get('EXIF DateTimeOriginal')
-						if t:
-							logmsg('File', p, 'orig time:', t)
-							thetime = datetime.strptime(str(t), format)
-						else:
-							t2 = tags.get('Image DateTime')
-							if t2:
-								logmsg('File', p, 'time:', t2)
-								thetime = datetime.strptime(str(t2), format)
-
-							#logmsg('File', p, 'EXIF tags:')
-							#for k,v in tags.items():
-							#	if not k in ['JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote']:
-							#		logmsg('  ',k,'=',v)
-				if thetime:
-					filenames.append(fn)
-					dates.append(thetime)
-					jobswithdates.append(job)
-
-			else:
-				filenames.append(fn)
-
-		else:
-			# Compute list of files via DB query
-			imgs = get_overlapping_images(ramin, ramax, decmin, decmax)
-			# Get list of filenames
-			filenames = [img.filename for img in imgs]
+		# filter by RA,Dec range.
+		images = get_overlapping_images(ramin,ramax,decmin,decmax, images)
+		logmsg('%i images overlap in ra,dec' % images.count())
 
 		if justdates:
-			from astrometry.util.hsv import hsvtorgb
-			from astrometry.util.run_command import run_command
-			import tempfile
+			#imageset.cache_dates()
+			#Qorig = Q(exif_orig_date__isnull=False)
+			#Qdate = Q(exif_date__isnull=False)
+			#images = images.filter(Qorig | Qdate)
+			(datelo, datehi) = imageset.get_date_range()
+			dayrange = (datehi - datelo).days + 1
+			images = MapImage.have_dates(images)
 
-			logmsg("%i dates" % len(dates))
-			logmsg("earliest:", min(dates))
-			logmsg("latest:", max(dates))
+		for img in images:
+			job = img.job
+			fn = tempdir + '/' + 'gmaps-' + job.jobid
+			wcsfn = fn + '.wcs'
+			if not os.path.exists(wcsfn):
+				img.job.write_wcs_to_file(wcsfn)
+			arglist.append('wcsfn ' + wcsfn)
 
-			#newfns = []
+			jpeg = convert(job, 'jpeg')
+			arglist.append('jpegfn ' + jpeg)
 
-			colorlist = ''
-			
-			day0 = min(dates)
-			dayrange = (max(dates) - day0).days + 2
-			for (d,j,fn) in zip(dates, jobswithdates,filenames):
-				dd = float((d - day0).days) / float(dayrange)
-				logmsg('  date', d, '-> %.3f' % dd, ', job', j.jobid)
-				### SICK :)
+			if justdates:
+				date = img.get_date()
+				dd = float((date - datelo).days / float(dayrange))
+				dd = max(0, min(1., dd))
+				logmsg('  date', date, '-> %.3f' % dd, ', job', job.jobid)
 				(r,g,b) = hsvtorgb(dd * 0.7, 1., 1.)
+				for c in [r,g,b]:
+					arglist.append('color %f' % c)
+ 
+		#logmsg("For RA in [%f, %f] and Dec in [%f, %f], found %i files." %
+		#			  (ramin, ramax, decmin, decmax, len(filenames)))
 
-				colorlist += ('%f %f %f\n' % (r,g,b))
-
-				# To produce filled images (weighted, etc):
-				if False:
-					imw = j.diskfile.imagew
-					imh = j.diskfile.imageh
-					tempfn = fn + '.jpg'
-					cmd = 'ppmmake %f,%f,%f %i %i' % (r,g,b,imw,imh)
-					cmd += (' | pnmtojpeg > %s' % tempfn)
-					logmsg('cmd:', cmd)
-					(rtn,out,err) = run_command(cmd)
-					logmsg('rtn:', rtn)
-					logmsg('out:', out)
-					logmsg('err:', err)
-
-				#newfns.append(tempfn)
-			#filenames = newfns
-
-			(f,clfn) = tempfile.mkstemp(prefix='tmp.colorlist.', dir=tempdir)
-			os.close(f)
-			f = open(clfn,'w')
-			f.write(colorlist)
-			f.close()
-			cmdline += (' -K ' + clfn)
-
-		files = "\n".join(filenames) + "\n"
-		logmsg("For RA in [%f, %f] and Dec in [%f, %f], found %i files." %
-					  (ramin, ramax, decmin, decmax, len(filenames)))
-
-		# Compute filename
+		# Write the args to a file whose name is its hash
+		argstring = '\n'.join(arglist) + '\n'
 		m = sha.new()
-		m.update(files)
+		m.update(argstring)
 		digest = m.hexdigest()
 		fn = tempdir + '/' + digest
-		# Write to that filename
-		try:
-			f = open(fn, 'wb')
-			f.write(files)
-			f.close()
-		except (IOError):
-			return HttpResponse('Failed to write file list.')
-		cmdline += (" -S " + fn)
+		write_file(argstring, fn)
+		cmdline += (" -A " + fn)
+
+		logmsg('Wrote args file', fn)
 
 	# Options with no args:
 	optflags = { 'jpeg'	  : '-J',
@@ -515,7 +401,6 @@ def get_tile(request):
 			os.mkdir(tilecachedir)
 
 		# Compute filename
-		#m = hashlib.md5()
 		m = sha.new()
 		m.update(cmdline)
 		fn = tilecachedir + '/' + 'tile-' + m.hexdigest() + '.'

@@ -1,3 +1,20 @@
+/*
+   This file is part of the Astrometry.net suite.
+   Copyright 2009, Dustin Lang.
+
+   The Astrometry.net suite is free software; you can redistribute
+   it and/or modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation, version 2.
+
+   The Astrometry.net suite is distributed in the hope that it will be
+   useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with the Astrometry.net suite ; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+*/
 #include <stdio.h>
 #include <math.h>
 #include <stdint.h>
@@ -12,7 +29,7 @@
 #include "cairoutils.h"
 #include "ioutils.h"
 
-char* wcs_dirs[] = {
+const char* wcs_dirs[] = {
 	"/home/gmaps/ontheweb-data",
 	"/home/gmaps/test/web-data",
 	"/home/gmaps/apod-solves",
@@ -33,7 +50,6 @@ int render_boundary(unsigned char* img, render_args_t* args) {
 	double lw = args->linewidth;
 	sl* wcsfiles = NULL;
 	dl* colorlist = NULL;
-	bool fullfilename = TRUE;
 	double r, g, b;
 
 	//r = g = b = 1.0;
@@ -42,55 +58,24 @@ int render_boundary(unsigned char* img, render_args_t* args) {
 
 	logmsg("Starting.\n");
 
-    if (args->colorlist) {
-        sl* colorstrings = file_get_lines(args->colorlist, FALSE);
-        colorlist = dl_new(12);
-        for (i=0; i<sl_size(colorstrings); i++) {
-            float f1,f2,f3;
-            if (sscanf(sl_get(colorstrings, i), "%f %f %f", &f1, &f2, &f3) != 3) {
-                logmsg("Colorlist: couldn't parse string \"%s\"\n", sl_get(colorstrings, i));
-                return -1;
-            }
-            dl_append(colorlist, f1);
-            dl_append(colorlist, f2);
-            dl_append(colorlist, f3);
-        }
+    colorlist = dl_new(256);
+    get_double_args_of_type(args, "color ", colorlist);
+    if (!dl_size(colorlist)) {
+        dl_free(colorlist);
+        colorlist = NULL;
     }
 
-	if (strcmp("boundaries", args->currentlayer) == 0) {
-		if (!args->filelist) {
-			logmsg("Layer is \"boundaries\" but no filelist was given.\n");
-			return -1;
-		}
-		fullfilename = FALSE;
-        wcsfiles = file_get_lines(args->filelist, FALSE);
-        if (!wcsfiles) {
-            logmsg("failed to read filelist \"%s\".\n", args->filelist);
-            return -1;
-        }
-        logmsg("read %i filenames from the file \"%s\".\n", sl_size(wcsfiles), args->filelist);
-	} else if ((strcmp("userboundary", args->currentlayer) == 0) ||
-               (strcmp("userdot", args->currentlayer) == 0)) {
-		if (!sl_size(args->imwcsfns)) {
-			logmsg("Layer is \"%s\" but no imwcsfns were given.\n", args->currentlayer);
-			return -1;
-		}
-		wcsfiles = sl_new(4);
-		sl_append_contents(wcsfiles, args->imwcsfns);
-		fullfilename = TRUE;
-		if (args->ubstyle) {
-			//logmsg("Parsing userboundary style \"%s\".\n", args->ubstyle);
-			parse_color(args->ubstyle[0], &r, &g, &b);
-			//logmsg("Color %g, %g, %g\n", r, g, b);
-		}
-	} else {
-		logmsg("Unknown layer \"%s\".\n", args->currentlayer);
-		return -1;
-	}
+    wcsfiles = sl_new(256);
+    get_string_args_of_type(args, "wcsfn ", wcsfiles);
 	if (!sl_size(wcsfiles)) {
 		logmsg("No WCS files specified.\n");
 		return -1;
 	}
+    if (colorlist && dl_size(colorlist) != sl_size(wcsfiles)*3) {
+		logmsg("Color list has %i entries, expected 3 * WCS files (%i) = %i\n",
+               dl_size(colorlist), sl_size(wcsfiles), sl_size(wcsfiles)*3);
+		return -1;
+    }
 
 	target = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32,
 												 args->W, args->H, args->W*4);
@@ -101,56 +86,25 @@ int render_boundary(unsigned char* img, render_args_t* args) {
 	cairo_set_source_rgb(cairo, r, g, b);
 
     for (I=0; I<sl_size(wcsfiles); I++) {
-		char* basefn;
+		char* fn;
         char* wcsfn;
         sip_t* res;
 		sip_t wcs;
 		int W, H;
-		sl* triedwcs;
 
-        basefn = sl_get(wcsfiles, I);
-		if (!strlen(basefn)) {
-            logmsg("empty filename.\n");
+        fn = sl_get(wcsfiles, I);
+        wcsfn = find_file_in_dirs(wcs_dirs, sizeof(wcs_dirs)/sizeof(char*), fn, TRUE);
+        if (!wcsfn) {
+            logmsg("failed to find wcs file \"%s\"\n", fn);
             continue;
-		}
-		logmsg("Base filename: \"%s\"\n", basefn);
-
-		triedwcs = sl_new(4);
-		if (basefn[0] == '/') {
-			wcsfn = sl_appendf(triedwcs, "%s.wcs", basefn);
-			if (file_readable(wcsfn)) {
-            } else {
-                wcsfn = sl_append(triedwcs, basefn);
-                if (!file_readable(wcsfn)) {
-                    logmsg("Failed to read WCS file: tried\n");
-                    for (i=0; i<sl_size(triedwcs); i++) {
-                        logmsg("  %s\n", sl_get(triedwcs, i));
-                    }
-                    goto nextfile;
-                }
-            }
-		} else {
-			for (i=0; i<sizeof(wcs_dirs)/sizeof(char*); i++) {
-				wcsfn = sl_appendf(triedwcs, "%s/%s%s", wcs_dirs[i], basefn, (fullfilename ? "" : ".wcs"));
-				if (file_readable(wcsfn))
-					break;
-				wcsfn = NULL;
-			}
-			if (!wcsfn) {
-				logmsg("Failed to find WCS file with basename \"%s\".\n", basefn);
-				logmsg("Tried:\n");
-				for (i=0; i<sl_size(triedwcs); i++) {
-					logmsg("  %s\n", sl_get(triedwcs, i));
-				}
-				goto nextfile;
-			}
 		}
 
         res = sip_read_header_file(wcsfn, &wcs);
-        if (!res) {
+        if (!res)
             logmsg("failed to parse SIP header from %s\n", wcsfn);
-			goto nextfile;
-        }
+        free(wcsfn);
+        if (!res)
+            continue;
         W = wcs.wcstan.imagew;
         H = wcs.wcstan.imageh;
 
@@ -225,20 +179,6 @@ int render_boundary(unsigned char* img, render_args_t* args) {
 
 					if (wrapped)
 						thisvalid = FALSE;
-					/*
-					  if (!side && !i) {
-					  cairo_move_to(cairo, xout, yout);
-					  } else {
-					  cairo_line_to(cairo, xout, yout);
-					  }
-					*/
-					/*
-					  if ((thisvalid || lastvalid) && (side || i)) {
-					  cairo_move_to(cairo, lastx, lasty);
-					  cairo_line_to(cairo, xout, yout);
-					  cairo_stroke(cairo);
-					  }
-					*/
 					lastra = ra;
 					lastx = xout;
 					lasty = yout;
@@ -288,9 +228,6 @@ int render_boundary(unsigned char* img, render_args_t* args) {
 				cairo_stroke(cairo);
 			}
 		}
-
-	nextfile:
-        sl_free2(triedwcs);
 	}
 
     if (colorlist)

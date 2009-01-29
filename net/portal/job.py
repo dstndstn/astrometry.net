@@ -478,6 +478,27 @@ class Job(models.Model):
 	def typestr(self):
 		return 'Job'
 
+	def write_wcs_to_file(self, filename):
+		if not self.calibration:
+			return False
+		tan = None
+		sip = None
+		if self.calibration.sip:
+			sip = self.calibration.sip
+		elif self.calibration.tweaked_tan:
+			tan = self.calibration.tweaked_tan
+		elif self.calibration.raw_tan:
+			tan = self.calibration.raw_tan
+		else:
+			return False
+
+		# convert to astrometry.util.sip.Tan
+		if tan:
+			tan.to_tanwcs().write_to_file(filename)
+		if sip:
+			sip.to_sipwcs().write_to_file(filename)
+		return True
+
 	def get_user_tags(self):
 		return self.tags.filter(machineTag=False)
 
@@ -716,7 +737,7 @@ class Job(models.Model):
 		return Job.format_time_brief(self.finishtime)
 
 	def get_orig_file(self):
-		return self.fileorigname()
+		return self.fileorigname
 
 	def get_axy_filename(self):
 		return self.get_filename('job.axy')

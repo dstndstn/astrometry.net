@@ -184,6 +184,9 @@ def joblist(request):
 	else:
 		end = -1
 
+	# are we redirecting to gmaps?
+	togmaps = 'gmaps' in request.GET
+
 	format = request.GET.get('format', 'html')
 
 	kind = request.GET.get('type')
@@ -219,7 +222,6 @@ def joblist(request):
 		'user' : 'User',
 		# DEBUG
 		'diskfile' : 'Diskfile',
-		# submissions
 		'subid': 'Submission',
 		'submittime': 'Submit Time',
 		'njobs': 'Number of Jobs',
@@ -237,8 +239,6 @@ def joblist(request):
 		cols = okcols
 
 	ctxt = {}
-
-	gmaps = ''
 
 	ajaxupdate = False
 	title = None
@@ -310,14 +310,10 @@ def joblist(request):
 			return HttpResponse('no sub')
 		job = None
 		jobs = sub.jobs.all().order_by('enqueuetime', 'starttime', 'jobid')
-		#subs = [sub]
 		N = jobs.count()
 		if 'onejobjump' in request.GET and N == 1 and sub.alljobsadded:
 			return HttpResponseRedirect(reverse(jobstatus, args=[jobs[0].jobid]))
 
-		gmaps = (reverse('astrometry.net.tile.views.index') +
-				 '?submission=%s' % sub.get_id() +
-				 '&layers=tycho,grid,userboundary&arcsinh')
 		if not cols:
 			cols = [ 'mark', 'jobid', 'status', 'starttime', 'finishtime' ]
 		if sub.status == 'Queued' or sub.status == 'Running':
@@ -331,20 +327,34 @@ def joblist(request):
 		subtitle = 'Submission <i>' + sub.subid + '</i>'
 
 
-	if 'gmaps' in request.GET:
+	if togmaps:
+		from astrometry.net.tile.models import *
+
 		if kind == 'tag':
 			jobs = [t.job for t in tags]
 
-		# write this list of jobs to a temp file and redirect to gmaps.
-		jlist = '\n'.join([j.jobid for j in jobs])
-		m = sha.new()
-		m.update(jlist)
-		hsh = m.hexdigest()
-		fn = settings.TEMPDIR + '/' + hsh
-		write_file(jlist, fn)
-		log('wrote job list to ', fn)
+		jobset = MapImageSet()
+		jobset.save()
+		for job in jobs:
+			calib = job.calibration
+			if not calib:
+				continue
+
+			try:
+				img = MapImage.objects.get(job=job)
+			except ObjectDoesNotExist:
+				img = MapImage(job=job,
+							   ramin=calib.ramin,
+							   ramax=calib.ramax,
+							   decmin=calib.decmin,
+							   decmax=calib.decmax)
+				img.save()
+			jobset.images.add(img)
+
 		url = (reverse('astrometry.net.tile.views.index') +
-			   '?joblist=' + hsh + '&layers=tycho,grid,userboundary&arcsinh')
+			   ('?imageset=%i' % jobset.id) +
+			   '&layers=tycho,userimages&arcsinh')
+
 		return HttpResponseRedirect(url)
 
 	myargs['cols'] = ','.join(cols)
@@ -521,9 +531,6 @@ def joblist(request):
 
 		thisurl = request.path + '?' + myargs.urlencode()
 
-		if gmaps == '':
-			gmaps = thisurl + '&gmaps'
-
 		ctxt.update({
 			'kind': kind,
 			'thisurl' : thisurl,
@@ -536,7 +543,7 @@ def joblist(request):
 			'subs': subs,
 			'rsubs' : rsubs,
 			'reload_time' : reload_time,
-			'gmaps' : gmaps,
+			'gmaps' : thisurl + '&gmaps',
 			'title' : title,
 			})
 		if ajaxupdate:

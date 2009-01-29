@@ -41,6 +41,13 @@ char* basename_safe(const char* path);
 float get_cpu_usage();
 
 /*
+ Searches for the given "filename" in the given set of directories.
+ Returns a newly allocated string "dir/filename", or NULL if none of
+ the paths exists and is readable.
+ */
+char* find_file_in_dirs(const char** dirs, int ndirs, const char* filename, bool allow_absolute);
+
+/*
  Removes '.' and '..' references from a path.
  Collapses '//' to '/'.
  Does NOT care whether the file actually exists.
