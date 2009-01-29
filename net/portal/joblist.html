@@ -177,6 +177,7 @@ Submission <i>{{ submission.subid }}</i>
 <table id="subtable">
 <tr><td>Number of jobs:</td><td>{{ submission.jobs.count }}</td></tr>
 <tr><td>&nbsp;&nbsp;Queued:</td><td>{{ submission.njobs_queued  }}</td></tr>
+<tr><td>&nbsp;&nbsp;Running:</td><td>{{ submission.njobs_running }}</td></tr>
 <tr><td>&nbsp;&nbsp;Solved:</td><td>{{ submission.njobs_solved }}</td></tr>
 <tr><td>&nbsp;&nbsp;Unsolved:</td><td>{{ submission.njobs_unsolved }}</td></tr>
 <tr><td>&nbsp;&nbsp;Failed with errors:</td><td>{{ submission.njobs_error }}</td></tr>

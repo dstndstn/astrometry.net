@@ -356,7 +356,8 @@ def get_tile(request):
 
 				if not os.path.exists(jpegfn):
 					logmsg('Writing JPEG file ' + jpegfn)
-					tmpjpeg = convert(job, 'jpeg-norm')
+					#tmpjpeg = convert(job, 'jpeg-norm')
+					tmpjpeg = convert(job, 'jpeg')
 					shutil.copy(tmpjpeg, jpegfn)
 
 				if justdates:
@@ -415,7 +416,7 @@ def get_tile(request):
 			dayrange = (max(dates) - day0).days + 2
 			for (d,j,fn) in zip(dates, jobswithdates,filenames):
 				dd = float((d - day0).days) / float(dayrange)
-				logmsg('  date', d, '->', dd)
+				logmsg('  date', d, '-> %.3f' % dd, ', job', j.jobid)
 				### SICK :)
 				(r,g,b) = hsvtorgb(dd * 0.7, 1., 1.)
 

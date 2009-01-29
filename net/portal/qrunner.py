@@ -94,7 +94,7 @@ if __name__ == '__main__':
 		qjs[0].ready = True
 		qjs[0].save()
 
-	nthreads = 10
+	nthreads = 40
 
 	mainthread(nthreads)
 	

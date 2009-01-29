@@ -331,6 +331,8 @@ class Submission(models.Model):
 
 	def njobs_queued(self):
 		return self.jobs.filter(status='Queued').count()
+	def njobs_running(self):
+		return self.jobs.filter(status='Running').count()
 	def njobs_solved(self):
 		return self.jobs.filter(status='Solved').count()
 	def njobs_unsolved(self):

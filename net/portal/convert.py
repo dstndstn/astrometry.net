@@ -302,6 +302,12 @@ def convert(job, fn, args=None):
         run_convert_command(cmd)
         return fullfn
 
+    elif fn == 'jpeg':
+        infn = convert(job, 'pnm')
+        cmd = 'pnmtojpeg %s > %s' % (infn, fullfn)
+        run_convert_command(cmd)
+        return fullfn
+
     elif fn in [ 'indexxyls', 'index.xy.fits' ]:
         wcsfn = job.get_filename('wcs.fits')
         indexrdfn = job.get_filename('index.rd.fits')
