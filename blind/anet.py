@@ -39,8 +39,9 @@ import time
 __author__  = "J. S. Bloom"
 __version__ = "1.0"
 
-astrometry_username = "Joshua Bloom"
-astrometry_email    = "jbloom@astro.berkeley.edu"                  
+# Put your name and the email you registered with astrometry.net here.
+astrometry_username = "---Your Name Here---"
+astrometry_email    = "---Your Email Here---"                  
 
 
 ## some helper classes first.
