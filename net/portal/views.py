@@ -569,6 +569,10 @@ def job_set_description(request):
 	job.save()
 	return HttpResponseRedirect(get_status_url(jobid))
 
+@needs_job
+def jobstatus2(request):
+	return HttpResponseRedirect(get_status_url(request.job.jobid))
+
 @wants_job_or_sub
 def jobstatus(request, jobid=None):
 	#log('jobstatus: jobid=', jobid)

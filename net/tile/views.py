@@ -31,6 +31,7 @@ import ctypes
 
 import astrometry.net.settings as settings
 from astrometry.net.portal.log import log as logmsg
+from astrometry.net import portal
 
 logfile		   = settings.LOGFILE
 tilerender	   = settings.TILERENDER
@@ -50,6 +51,7 @@ def index(request):
 		'gmaps_tile_urls' : ("[ '" +
 							 "', '".join(gmaps_urls) +
 							 "' ];"),
+		'job_status_url' : reverse(portal.views.jobstatus2),
 		'gmaps_image_url' : reverse(get_image)+ '?',
 		'gmaps_image_list_url' : reverse(get_image_list) + '?',
 		'gmaps_black_url' : reverse('astrometry.net.media') + 'black.png',
@@ -220,6 +222,7 @@ def get_image_list(request):
 
 		res.write('<image name="%s"' % img.get_orig_filename())
 		res.write(' id="%s"' % img.id)
+		res.write(' jobid="%s"' % img.job.jobid)
 		if len(poly):
 			res.write(' poly="%s"' % poly)
 		res.write(' />')

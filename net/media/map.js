@@ -85,6 +85,7 @@ var map;
 // URLs of tileserver.  These are defined in the HTML
 var TILE_URLS  = CONFIG_TILE_URLS;
 var IMAGE_URL  = CONFIG_IMAGE_URL;
+var JOB_STATUS_URL  = CONFIG_JOB_STATUS_URL;
 var IMAGE_LIST_URL  = CONFIG_IMAGE_LIST_URL;
 var BLACK_URL = CONFIG_BLACK_URL;
 
@@ -664,6 +665,7 @@ function imageListLoaded(txt) {
 
 		img = visImages[i];
         img.id = img.getAttribute('id');
+        img.jobid = img.getAttribute('jobid');
         img.filename = img.getAttribute('name');
 
 		link2 = document.createElement("a");
@@ -689,6 +691,14 @@ function imageListLoaded(txt) {
         link.setAttribute('href', IMAGE_URL + "&id=" + img.id);
 		link.setAttribute('id', 'imagename-' + img.id);
 		link.appendChild(document.createTextNode(img.filename));
+		imglist.appendChild(link);
+
+		imglist.appendChild(document.createTextNode(" "));
+
+		link = document.createElement("a");
+        link.setAttribute('href', JOB_STATUS_URL + '?jobid=' + img.jobid);
+		link.setAttribute('id', 'job-' + img.jobid);
+		link.appendChild(document.createTextNode("[job]"));
 		imglist.appendChild(link);
 	}
 
