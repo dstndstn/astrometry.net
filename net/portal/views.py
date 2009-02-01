@@ -695,7 +695,7 @@ def jobstatus(request, jobid=None):
 
 		url = (reverse('astrometry.net.tile.views.get_tile') +
 			   '?layers=tycho,grid,userboundary' +
-			   '&arcsinh&wcsfn=%s' % job.get_relative_filename('wcs.fits'))
+			   '&arcsinh&jobid=%s' % job.jobid)
 		smallstyle = '&w=300&h=300&lw=3'
 		largestyle = '&w=1024&h=1024&lw=5'
 		steps = [ {				 'gain':0,	  'dashbox':0.1,   'center':False },

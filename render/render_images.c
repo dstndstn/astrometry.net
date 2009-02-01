@@ -235,6 +235,9 @@ int render_images(unsigned char* img, render_args_t* args) {
 						ra = ravals[i];
 						if (!sip_radec2pixelxy_check(&wcs, ra, dec, &imagex, &imagey))
 							continue;
+                        if (imagex < 0 || imagex >= W ||
+                            imagey < 0 || imagey >= H)
+                            continue;
 						thiscounts[j*w+i] = weight;
 					}
 				}

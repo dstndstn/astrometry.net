@@ -897,6 +897,8 @@ function startup() {
 
 	map.addControl(new GLargeMapControl());
 
+    map.addOverlay(get_holmes_path());
+
 	moveended();
 	mapzoomed(map.getZoom(), map.getZoom());
 }

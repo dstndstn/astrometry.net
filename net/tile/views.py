@@ -48,6 +48,7 @@ def index(request):
 		'gmaps_key' : ('http://maps.google.com/maps?file=api&v=2.x&key=' +
 					   settings.GMAPS_API_KEY),
 		'map_js_url' : reverse('astrometry.net.media') + 'map.js',
+		'holmes_js_url' : reverse('astrometry.net.media') + 'holmes.js',
 		'gmaps_tile_urls' : ("[ '" +
 							 "', '".join(gmaps_urls) +
 							 "' ];"),
@@ -299,6 +300,22 @@ def get_tile(request):
 				return HttpResponse('bad filename.')
 			cmdline += (' -r ' + rdls)
 
+	arglist = []
+
+	if ('userboundary' in layers):
+		jobid = request.GET.get('jobid')
+		if not jobid:
+			logmsg("userboundary layer but no jobid")
+			return HttpResponse("userboundary layer but no jobid")
+		try:
+			job = Job.objects.get(jobid=jobid)
+		except ObjectDoesNotExist:
+			return HttpResponse('no such jobid ', jobid)
+		wcsfn = convert(job, 'wcs')
+		arglist.append('wcsfn ' + wcsfn)
+
+		
+
 	if ('images' in layers) or ('boundaries' in layers):
 		from astrometry.util.hsv import hsvtorgb
 
@@ -307,7 +324,6 @@ def get_tile(request):
 			return HttpResponse('no such imageset')
 		images = imageset.images
 		logmsg('imageset has %i images' % images.count())
-		arglist = []
 
 		# filter by RA,Dec range.
 		images = get_overlapping_images(ramin,ramax,decmin,decmax, images)
@@ -324,10 +340,12 @@ def get_tile(request):
 
 		for img in images:
 			job = img.job
-			fn = tempdir + '/' + 'gmaps-' + job.jobid
-			wcsfn = fn + '.wcs'
-			if not os.path.exists(wcsfn):
-				img.job.write_wcs_to_file(wcsfn)
+			#fn = tempdir + '/' + 'gmaps-' + job.jobid
+			#wcsfn = fn + '.wcs'
+			#if not os.path.exists(wcsfn):
+			#	img.job.write_wcs_to_file(wcsfn)
+			wcsfn = convert(job, 'wcs')
+
 			arglist.append('wcsfn ' + wcsfn)
 
 			jpeg = convert(job, 'jpeg')
@@ -345,6 +363,7 @@ def get_tile(request):
 		#logmsg("For RA in [%f, %f] and Dec in [%f, %f], found %i files." %
 		#			  (ramin, ramax, decmin, decmax, len(filenames)))
 
+	if len(arglist):
 		# Write the args to a file whose name is its hash
 		argstring = '\n'.join(arglist) + '\n'
 		m = sha.new()
