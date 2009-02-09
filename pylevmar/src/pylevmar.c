@@ -115,6 +115,15 @@ _pylm_dlevmar_generic(PyObject *mod, PyObject *args, PyObject *kwds,
     double *c_lower = NULL, *c_upper = NULL;
     int max_iter = 0, run_iter = 0, i = 0, m = 0, n = 0;
     double c_info[LM_INFO_SZ];
+	int nopts;
+
+	// If finite-difference approximate Jacobians are used, we
+	// need 5 optional params; otherwise 4.
+	if (jacobian)
+		nopts = 4;
+	else
+		nopts = 5;
+
 
     // parse arguments
     if (!bounds) {
@@ -177,9 +186,13 @@ _pylm_dlevmar_generic(PyObject *mod, PyObject *args, PyObject *kwds,
         return NULL;
     }
 
-    if (opts && !PySequence_Check(opts) && (PySequence_Size(opts) < 4)) {
-        PyErr_SetString(PyExc_TypeError, "opts must be a sequence/tuple "
-                        "of length 4.");
+    if (opts && !PySequence_Check(opts) && (PySequence_Size(opts) != nopts)) {
+		if (nopts == 4)
+			PyErr_SetString(PyExc_TypeError,
+							"opts must be a sequence/tuple of length 4.");
+		else
+			PyErr_SetString(PyExc_TypeError,
+							"opts must be a sequence/tuple of length 5.");
         return NULL;
     }
 
@@ -239,8 +252,8 @@ _pylm_dlevmar_generic(PyObject *mod, PyObject *args, PyObject *kwds,
     }
 
     if (opts) {
-        c_opts = PyMem_Malloc(sizeof(double) * 4);
-        for (i = 0; i < 4; i++) {
+        c_opts = PyMem_Malloc(sizeof(double) * nopts);
+        for (i = 0; i < nopts; i++) {
             PyObject *r = PySequence_GetItem(opts, i);
             c_opts[i] = PyFloat_AsDouble(r);
             Py_XDECREF(r);
