@@ -154,7 +154,7 @@ static int write_kmz(const augment_xylist_t* axy, const char* kmzfn,
     char* cmd = NULL;
     sl* cmdline = sl_new(16);
     char* wcsbase = NULL;
-            
+
     tmpdir = create_temp_dir("kmz", tempdir);
     if (!tmpdir) {
         ERROR("Failed to create temp dir for KMZ output");
@@ -938,17 +938,19 @@ int main(int argc, char** args) {
                 }
             }
 
-            // print info about the field.
-            if (!sip_read_header_file(axy->wcsfn, &wcs)) {
-                ERROR("Failed to read WCS header from file %s", axy->wcsfn);
-                exit(-1);
-            }
-            sip_get_radec_center(&wcs, &ra, &dec);
-            sip_get_radec_center_hms_string(&wcs, rastr, decstr);
-            sip_get_field_size(&wcs, &fieldw, &fieldh, &fieldunits);
-            logmsg("Field center: (RA,Dec) = (%.4g, %.4g) deg.\n", ra, dec);
-            logmsg("Field center: (RA H:M:S, Dec D:M:S) = (%s, %s).\n", rastr, decstr);
-            logmsg("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
+            if (axy->wcsfn) {
+				// print info about the field.
+				if (!sip_read_header_file(axy->wcsfn, &wcs)) {
+					ERROR("Failed to read WCS header from file %s", axy->wcsfn);
+					exit(-1);
+				}
+				sip_get_radec_center(&wcs, &ra, &dec);
+				sip_get_radec_center_hms_string(&wcs, rastr, decstr);
+				sip_get_field_size(&wcs, &fieldw, &fieldh, &fieldunits);
+				logmsg("Field center: (RA,Dec) = (%.4g, %.4g) deg.\n", ra, dec);
+				logmsg("Field center: (RA H:M:S, Dec D:M:S) = (%s, %s).\n", rastr, decstr);
+				logmsg("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
+			}
 
             if (makeplots) {
                 logmsg("Creating plots...\n");
