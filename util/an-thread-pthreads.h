@@ -23,6 +23,16 @@
 
 #define AN_THREAD_DECLARE_ONCE(X) pthread_once_t X = PTHREAD_ONCE_INIT
 
+#define AN_THREAD_DECLARE_STATIC_ONCE(X) static pthread_once_t X = PTHREAD_ONCE_INIT
+
 #define AN_THREAD_CALL_ONCE(X, F) pthread_once(&X, F)
+
+#define AN_THREAD_DECLARE_MUTEX(X) pthread_mutex_t X = PTHREAD_MUTEX_INITIALIZER
+
+#define AN_THREAD_DECLARE_STATIC_MUTEX(X) static pthread_mutex_t X = PTHREAD_MUTEX_INITIALIZER
+
+#define AN_THREAD_LOCK(X) pthread_mutex_lock(&X)
+
+#define AN_THREAD_UNLOCK(X) pthread_mutex_unlock(&X)
 
 #endif

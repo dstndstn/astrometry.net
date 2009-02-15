@@ -50,7 +50,7 @@ static const char* date = "$Date$";
 static const char* url  = "$HeadURL$";
 static const char* rev  = "$Revision$";
 
-AN_THREAD_DECLARE_ONCE(svn_once);
+AN_THREAD_DECLARE_STATIC_ONCE(svn_once);
 
 static void runonce(void) {
     const char* cptr;
@@ -93,6 +93,7 @@ const char* svn_url() {
 // of this file every time libanutils.a gets built.
 //
 
+//
 //
 //
 //

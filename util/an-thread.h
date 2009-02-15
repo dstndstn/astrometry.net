@@ -38,6 +38,13 @@
 
  AN_THREAD_CALL_ONCE(name, void (*func)(void));
 
+--
+
+ AN_THREAD_DECLARE_MUTEX(name);
+
+ AN_THREAD_LOCK(name);
+ AN_THREAD_UNLOCK(name);
+
  */
 
 #include "an-thread-pthreads.h"

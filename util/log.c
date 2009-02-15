@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "log.h"
+#include "an-thread.h"
 
 static int g_thread_specific = 0;
 static log_t g_logger;
@@ -63,13 +64,16 @@ void log_free(log_t* log) {
 	free(log);
 }
 
+AN_THREAD_DECLARE_STATIC_MUTEX(loglock);
+
 static void loglvl(const log_t* logger, enum log_level level,
                    const char* format, va_list va) {
-	// FIXME: add pthread synchronization
+	AN_THREAD_LOCK(loglock);
 	if (level > logger->level)
 		return;
 	vfprintf(logger->f, format, va);
 	fflush(logger->f);
+	AN_THREAD_UNLOCK(loglock);
 }
 
 void loglevel(enum log_level level,
