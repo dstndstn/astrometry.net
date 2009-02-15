@@ -211,7 +211,7 @@ char * qfits_get_root_name(const char * filename)
         (!strcmp(lastdot, ".tfits")) || (!strcmp(lastdot, ".TFITS")) ||
         (!strcmp(lastdot, ".ascii")) || (!strcmp(lastdot, ".ASCII")))
     {
-        lastdot[0] = (char)0;
+        lastdot[0] = '\0';
     }
     return path ;
 }

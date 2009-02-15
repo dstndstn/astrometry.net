@@ -500,25 +500,25 @@ qfits_table * qfits_table_open(
         /* label <-> TTYPE     */
         sprintf(keyword, "TTYPE%d", i+1) ;
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
-            label[0] = (char)0 ;
+            label[0] = '\0' ;
         } else strcpy(label, qfits_pretty_string(str_val)) ;
         
         /* unit <-> TUNIT */
         sprintf(keyword, "TUNIT%d", i+1) ;
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
-            unit[0] = (char)0 ;
+            unit[0] = '\0' ;
         } else strcpy(unit, qfits_pretty_string(str_val)) ;
 
         /* disp <-> TDISP */
         sprintf(keyword, "TDISP%d", i+1) ;
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
-            disp[0] = (char)0 ;
+            disp[0] = '\0' ;
         } else strcpy(disp, qfits_pretty_string(str_val)) ;
 
         /* nullval <-> TNULL */
         sprintf(keyword, "TNULL%d", i+1) ;
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
-            nullval[0] = (char)0 ;
+            nullval[0] = '\0' ;
         } else strcpy(nullval, qfits_pretty_string(str_val)) ;
     
         /* atom_size, atom_nb, atom_dec_nb, atom_type    <-> TFORM */
@@ -1079,7 +1079,7 @@ void * qfits_query_column_data(
         for (i=0 ; i<nb_rows ; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]=(char)0 ;
+            field[col->atom_nb]='\0' ;
             /* Write the data in out_array */
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, qfits_strstrip(field))) {
@@ -1100,7 +1100,7 @@ void * qfits_query_column_data(
         for (i=0 ; i<nb_rows ; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]=(char)0 ;
+            field[col->atom_nb]='\0' ;
             /* Write the data in out_array */
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, qfits_strstrip(field))) {
@@ -1122,7 +1122,7 @@ void * qfits_query_column_data(
         for (i=0 ; i<nb_rows ; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]=(char)0 ;
+            field[col->atom_nb]='\0' ;
             /* Write the data in out_array */
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, field)) {
@@ -1170,7 +1170,7 @@ void * qfits_query_column_data(
         case TFITS_BIN_TYPE_B:
         out_array = (unsigned char*)qfits_query_column(th, colnum, selection) ;
         for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
-            if (((col->nullval)[0] != (char)0) && 
+            if (((col->nullval)[0] != '\0') && 
                 (atoi(col->nullval) == (int)((unsigned char*)out_array)[i])) {
                 ((unsigned char*)out_array)[i] = ucnull ;
             }
@@ -1180,7 +1180,7 @@ void * qfits_query_column_data(
         case TFITS_BIN_TYPE_I:
         out_array = (short*)qfits_query_column(th, colnum, selection) ;
         for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
-            if (((col->nullval)[0] != (char)0) &&
+            if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==(int)((short*)out_array)[i])) {     
                 ((short*)out_array)[i] = snull ;
             }
@@ -1190,7 +1190,7 @@ void * qfits_query_column_data(
         case TFITS_BIN_TYPE_J:
         out_array = (int*)qfits_query_column(th, colnum, selection) ;
         for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
-            if (((col->nullval)[0] != (char)0) &&
+            if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==((int*)out_array)[i])) {     
                 ((int*)out_array)[i] = inull ;
             }
@@ -1200,7 +1200,7 @@ void * qfits_query_column_data(
 	case TFITS_BIN_TYPE_K:
 		out_array = (int64_t*)qfits_query_column(th, colnum, selection) ;
 		for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
-			if (((col->nullval)[0] != (char)0) &&
+			if (((col->nullval)[0] != '\0') &&
                 (atoll(col->nullval)==((int64_t*)out_array)[i])) { 	
 				((int64_t*)out_array)[i] = inull ;
 			}
@@ -1288,7 +1288,7 @@ void * qfits_query_column_seq_data(
         for (i=0 ; i<nb_rows ; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]=(char)0 ;
+            field[col->atom_nb]='\0' ;
             /* Write the data in out_array */
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, qfits_strstrip(field))) {
@@ -1310,7 +1310,7 @@ void * qfits_query_column_seq_data(
         for (i=0 ; i<nb_rows ; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]=(char)0 ;
+            field[col->atom_nb]='\0' ;
             /* Write the data in out_array */
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, qfits_strstrip(field))) {
@@ -1333,7 +1333,7 @@ void * qfits_query_column_seq_data(
         for (i=0 ; i<nb_rows ; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]=(char)0 ;
+            field[col->atom_nb]='\0' ;
             /* Write the data in out_array */
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, qfits_strstrip(field))) {
@@ -1386,7 +1386,7 @@ void * qfits_query_column_seq_data(
         out_array = (unsigned char*)qfits_query_column_seq(th, colnum,
                 start_ind, nb_rows) ;
         for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
-            if (((col->nullval)[0] != (char)0) &&
+            if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)== (int)((unsigned char*)out_array)[i])) {
                 ((unsigned char*)out_array)[i] = ucnull ;
             }
@@ -1397,7 +1397,7 @@ void * qfits_query_column_seq_data(
         out_array = (short*)qfits_query_column_seq(th, colnum,
                 start_ind, nb_rows) ;
         for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
-            if (((col->nullval)[0] != (char)0) &&
+            if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==(int)((short*)out_array)[i])) {     
                 ((short*)out_array)[i] = snull ;
             }
@@ -1408,7 +1408,7 @@ void * qfits_query_column_seq_data(
         out_array = (int*)qfits_query_column_seq(th, colnum,
                 start_ind, nb_rows) ;
         for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
-            if (((col->nullval)[0] != (char)0) &&
+            if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==((int*)out_array)[i])) {     
                 ((int*)out_array)[i] = inull ;
             }
@@ -1419,7 +1419,7 @@ void * qfits_query_column_seq_data(
 		out_array = (int64_t*)qfits_query_column_seq(th, colnum,
 													 start_ind, nb_rows) ;
 		for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
-			if (((col->nullval)[0] != (char)0) &&
+			if (((col->nullval)[0] != '\0') &&
                 (atoll(col->nullval)==((int64_t*)out_array)[i])) { 	
 				((int64_t*)out_array)[i] = inull ;
 			}
@@ -1497,7 +1497,7 @@ int * qfits_query_column_nulls(
         for (i=0 ; i<nb_rows ; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]=(char)0 ;
+            field[col->atom_nb]='\0' ;
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, qfits_strstrip(field))) {
                 out_array[i] = 1 ;    
@@ -1557,7 +1557,7 @@ int * qfits_query_column_nulls(
         out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int)) ;
         *nb_vals = nb_rows * col->atom_nb ;
         for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
-            if (((col->nullval)[0] != (char)0) &&
+            if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==(int)((unsigned char*)tmp_array)[i])) {
                 out_array[i] = 1 ;
                 (*nb_nulls)++ ;
@@ -1571,7 +1571,7 @@ int * qfits_query_column_nulls(
         out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int)) ;
         *nb_vals = nb_rows * col->atom_nb ;
         for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
-            if (((col->nullval)[0] != (char)0) &&
+            if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==(int)((short*)tmp_array)[i])) {     
                 out_array[i] = 1 ;
                 (*nb_nulls)++ ;
@@ -1585,7 +1585,7 @@ int * qfits_query_column_nulls(
 			out_array = calloc(nb_rows * col->atom_nb, sizeof(int64_t)) ;
 			*nb_vals = nb_rows * col->atom_nb ;
 			for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
-				if (((col->nullval)[0] != (char)0) &&
+				if (((col->nullval)[0] != '\0') &&
 					(atoll(col->nullval)==((int64_t*)tmp_array)[i])) { 	
 					out_array[i] = 1 ;
 					(*nb_nulls)++ ;
@@ -1599,7 +1599,7 @@ int * qfits_query_column_nulls(
         out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int)) ;
         *nb_vals = nb_rows * col->atom_nb ;
         for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
-            if (((col->nullval)[0] != (char)0) &&
+            if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==((int*)tmp_array)[i])) {     
                 out_array[i] = 1 ;
                 (*nb_nulls)++ ;
@@ -1854,7 +1854,7 @@ static char * qfits_asciitable_field_to_string(
     if (table->tab_t != QFITS_ASCIITABLE) return NULL ;
     
     /* Initialize */
-    ctmp[0] = (char)0 ;
+    ctmp[0] = '\0' ;
 
     /* Set selection to select the requested row */
     selection = qfits_calloc(table->nr, sizeof(int)) ;
@@ -1872,14 +1872,14 @@ static char * qfits_asciitable_field_to_string(
     if (col->atom_nb > ELEMENT_MAX_DISPLAY_SIZE) field_size = col->atom_nb + 1 ;
     else field_size = ELEMENT_MAX_DISPLAY_SIZE ;
     stmp = qfits_malloc(field_size * sizeof(char)) ;
-    stmp[0] = (char)0 ;
+    stmp[0] = '\0' ;
  
     /* Get the string to write according to the type */
     switch(col->atom_type) {
         case TFITS_ASCII_TYPE_A:
             ccol = (char*)field ;
             strncpy(ctmp, ccol, col->atom_nb);
-            ctmp[col->atom_nb] = (char)0;
+            ctmp[col->atom_nb] = '\0';
             strcpy(stmp, ctmp);
             break ;
             
@@ -1965,7 +1965,7 @@ static char * qfits_bintable_field_to_string(
     if (table->tab_t != QFITS_BINTABLE) return NULL ;
 
    /* Initialize */
-    ctmp[0] = (char)0 ;
+    ctmp[0] = '\0' ;
     
     /* Set selection to select the requested row */
     selection = qfits_calloc(table->nr, sizeof(int)) ;
@@ -1985,14 +1985,14 @@ static char * qfits_bintable_field_to_string(
     /* Compute field size and allocate stmp */
     field_size = col->atom_nb * ELEMENT_MAX_DISPLAY_SIZE ;
     stmp = qfits_malloc(field_size * sizeof(char)) ;
-    stmp[0] = (char)0 ;
+    stmp[0] = '\0' ;
  
     /* Get the string to write according to the type */
     switch(col->atom_type) {
         case TFITS_BIN_TYPE_A:
         ccol = (char*)field ;
         strncpy(ctmp, ccol, col->atom_size * col->atom_nb) ;
-        ctmp[col->atom_size*col->atom_nb] = (char)0 ;
+        ctmp[col->atom_size*col->atom_nb] = '\0' ;
         strcpy(stmp, ctmp) ;
         break ;
 
@@ -2229,7 +2229,7 @@ static char * qfits_strstrip(const char * s)
             break ;
         last -- ;
     }
-    *last = (char)0;
+    *last = '\0';
 
     return (char*)l ;
 }
@@ -2370,7 +2370,7 @@ static char * qfits_build_format(const qfits_col * col)
                                        8*col->atom_nb) ; break ;
         default: return NULL ;
     }
-    sval[nb] = (char)0 ;
+    sval[nb] = '\0' ;
     return sval ;
 }
 
@@ -2506,24 +2506,24 @@ static int qfits_table_append_data(
                 switch(curr_col->atom_type) {
                     case TFITS_ASCII_TYPE_A :
                         strncpy(field, (char*)inbuf, curr_col->atom_nb) ;
-                        field[curr_col->atom_nb] = (char)0 ;
+                        field[curr_col->atom_nb] = '\0' ;
                         inbuf += curr_col->atom_nb ;
                         break ;
                     case TFITS_ASCII_TYPE_D :
                         memset(field, ' ', curr_col->atom_nb) ;
                         sprintf(field, "%g", ((double*)data[i])[j]) ;
-                        field[curr_col->atom_nb] = (char)0 ;
+                        field[curr_col->atom_nb] = '\0' ;
                         break ;
                     case TFITS_ASCII_TYPE_E :
                     case TFITS_ASCII_TYPE_F :
                         memset(field, ' ', curr_col->atom_nb) ;
                         sprintf(field, "%f", ((float*)data[i])[j]) ;
-                        field[curr_col->atom_nb] = (char)0 ;
+                        field[curr_col->atom_nb] = '\0' ;
                         break ;
                     case TFITS_ASCII_TYPE_I :
                         memset(field, ' ', curr_col->atom_nb) ;
                         sprintf(field, "%d", ((int*)data[i])[j]) ;
-                        field[curr_col->atom_nb] = (char)0 ;
+                        field[curr_col->atom_nb] = '\0' ;
                         break ;
                     default:
                         break ;
@@ -2562,7 +2562,7 @@ static int qfits_table_append_data(
             r = array[j] + field_size * i ;
             line = (char *)qfits_calloc (field_size+1, sizeof (char)) ;
             memcpy(line, r, field_size) ;
-            line[field_size] = (char)0 ;
+            line[field_size] = '\0' ;
             fwrite(line, 1, field_size, outfile) ;
             writt_char += field_size ;
             curr_col++ ;

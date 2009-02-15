@@ -1169,7 +1169,7 @@ static int qfits_header_makeline(
     if (conservative) {
         if (k->lin != NULL) {
             memcpy(line, k->lin, 80);
-            line[80]=(char)0;
+            line[80]='\0';
             return 0 ;
         }
     }
@@ -1178,11 +1178,11 @@ static int qfits_header_makeline(
     qfits_card_build(blankline, k->key, k->val, k->com);
     memset(line, ' ', 80);
     i=0 ;
-    while (blankline[i] != (char)0) {
+    while (blankline[i] != '\0') {
         line[i] = blankline[i] ;
         i++ ;
     }
-    line[80]=(char)0;
+    line[80]='\0';
     return 0;
 }
 

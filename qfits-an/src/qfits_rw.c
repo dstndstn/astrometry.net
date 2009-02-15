@@ -147,13 +147,13 @@ qfits_header * qfits_header_read_hdr(const char * filename)
         for (i=0 ; i<81 ; i++) {
             if (line[i] == '\n') {
                 for (j=i ; j<81 ; j++) line[j] = ' ' ;
-                line[80] = (char)0 ;
+                line[80] = '\0' ;
                 break ;
             }
         }
         if (!strcmp(line, "END")) {
             line[3] = ' ';
-            line[4] = (char)0 ;
+            line[4] = '\0' ;
         }
         
         /* Rule out blank lines */
@@ -228,17 +228,17 @@ qfits_header * qfits_header_read_hdr_string(
     ind = 0 ;
     while (ind <= nb_char - 80) {
         strncpy(line, (char*)hdr_str + ind, 80) ;
-        line[80] = (char)0 ;
+        line[80] = '\0' ;
         for (i=0 ; i<81 ; i++) {
             if (line[i] == '\n') {
                 for (j=i ; j<81 ; j++) line[j] = ' ' ;
-                line[80] = (char)0 ;
+                line[80] = '\0' ;
                 break ;
             }
         }
         if (!strcmp(line, "END")) {
             line[3] = ' ';
-            line[4] = (char)0 ;
+            line[4] = '\0' ;
         }
         
         /* Rule out blank lines */
@@ -336,7 +336,7 @@ qfits_header * qfits_header_readext(const char * filename, int xtnum)
     where = start ;
     while (1) {
         memcpy(line, where, 80);
-        line[80] = (char)0;
+        line[80] = '\0';
 
         /* Rule out blank lines */
         if (!is_blank_line(line)) {
@@ -438,7 +438,7 @@ int qfits_is_fits(const char * filename)
     magic = qfits_calloc(FITS_MAGIC_SZ+1, sizeof(char)) ;
     fread(magic, 1, FITS_MAGIC_SZ, fp) ;
     fclose(fp) ;
-    magic[FITS_MAGIC_SZ] = (char)0 ;
+    magic[FITS_MAGIC_SZ] = '\0' ;
     if (strstr(magic, FITS_MAGIC)!=NULL)
         isfits = 1 ;
     else

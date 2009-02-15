@@ -543,7 +543,7 @@ char * qfits_query_card(
     /* Apply search for the input keyword */
     buf2 = qfits_malloc(hs+1) ;
     memcpy(buf2, buf, hs) ;
-    buf2[hs] = (char)0 ;
+    buf2[hs] = '\0' ;
     where = buf2 ;
     do {
         where = strstr(where, exp_key);
@@ -561,7 +561,7 @@ char * qfits_query_card(
     /* Create the card */
     card = qfits_malloc(81*sizeof(char)) ;
     strncpy(card, where, 80) ;
-    card[80] = (char)0 ;
+    card[80] = '\0' ;
 
     /* Free and return */
     close(fd) ;
@@ -635,7 +635,7 @@ int qfits_replace_card(
     /* Apply search and replace for the input keyword lists */
     buf2 = qfits_malloc(hs+1) ;
     memcpy(buf2, buf, hs) ;
-    buf2[hs] = (char)0 ;
+    buf2[hs] = '\0' ;
     where = buf2 ;
     do {
         where = strstr(where, exp_key);

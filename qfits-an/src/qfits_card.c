@@ -130,8 +130,8 @@ void qfits_card_build(
     }
 
     /* Check for NULL values */
-    if (val==NULL) cval[0]=(char)0;
-    else if (strlen(val)<1) cval[0]=(char)0;
+    if (val==NULL) cval[0]='\0';
+    else if (strlen(val)<1) cval[0]='\0';
     else strcpy(cval, val);
 
     /* Check for NULL comments */
@@ -149,7 +149,7 @@ void qfits_card_build(
         if (hierarch) sprintf(safe_line, "%-29s= %s / %s", key, cval, ccom);
         else sprintf(safe_line, "%-8.8s= %20s / %-48s", key, cval, ccom);
         strncpy(line, safe_line, 80);
-        line[80]=(char)0;
+        line[80]='\0';
         return ;
     }
 
@@ -161,7 +161,7 @@ void qfits_card_build(
         sprintf(safe_line, "%-8.8s=                      / %-48s", key, ccom);
         }
         strncpy(line, safe_line, 80);
-        line[80]=(char)0;
+        line[80]='\0';
         return ;
     }
 
@@ -170,7 +170,7 @@ void qfits_card_build(
     strcpy(cval2, qfits_pretty_string(cval));
     j=0 ;
     i=0 ;
-    while (cval2[i] != (char)0) {
+    while (cval2[i] != '\0') {
         if (cval2[i]=='\'') {
             cval_q[j]='\'';
             j++ ;
@@ -192,7 +192,7 @@ void qfits_card_build(
     strncpy(line, safe_line, 80);
 
     /* Null-terminate in any case */
-    line[80]=(char)0;
+    line[80]='\0';
     return ;
 }
 
@@ -252,7 +252,7 @@ char* qfits_getkey_r(const char* line, char* key)
     /* Copy relevant characters into output buffer */
     strncpy(key, line, i) ;
     /* Null-terminate the string */
-    key[i+1] = (char)0;
+    key[i+1] = '\0';
     return key ;
 }
 
@@ -354,7 +354,7 @@ char* qfits_getvalue_r(const char* line, char* value) {
     /* Copy relevant characters into output buffer */
     strncpy(value, line+from, to-from+1);
     /* Null-terminate the string */
-    value[to-from+1] = (char)0;
+    value[to-from+1] = '\0';
     return value ;
 }
 
@@ -439,7 +439,7 @@ char* qfits_getcomment_r(const char* line, char* comment) {
     /* Copy relevant characters into output buffer */
     strncpy(comment, line+from, to-from+1);
     /* Null-terminate the string */
-    comment[to-from+1] = (char)0;
+    comment[to-from+1] = '\0';
     return comment ;
 }
 
