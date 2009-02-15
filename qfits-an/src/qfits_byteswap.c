@@ -66,7 +66,7 @@ unsigned short qfits_swap_bytes_16(unsigned short w)
     __asm("xchgb %b0,%h0" :
             "=q" (w) :
             "0" (w));
-    return w ;
+    return w;
 #else
     return (((w) & 0x00ff) << 8 | ((w) & 0xff00) >> 8);
 #endif
@@ -96,7 +96,7 @@ unsigned int qfits_swap_bytes_32(unsigned int dw)
         "=q" (dw)      :
 #endif
         "0" (dw));
-    return dw ;
+    return dw;
 #else
     return ((((dw) & 0xff000000) >> 24) | (((dw) & 0x00ff0000) >>  8) |
             (((dw) & 0x0000ff00) <<  8) | (((dw) & 0x000000ff) << 24));
@@ -117,15 +117,15 @@ unsigned int qfits_swap_bytes_32(unsigned int dw)
 /*----------------------------------------------------------------------------*/
 void qfits_swap_bytes(void * p, int s)
 {
-    unsigned char tmp, *a, *b ;
+    unsigned char tmp, *a, *b;
 
-    a = (unsigned char*)p ;
-    b = a + s ;
+    a = (unsigned char*)p;
+    b = a + s;
 
     while (a<b) {
-        tmp = *a ;
-        *a++ = *--b ;
-        *b = tmp ;
+        tmp = *a;
+        *a++ = *--b;
+        *b = tmp;
     }
 }
 

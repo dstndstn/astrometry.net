@@ -158,7 +158,7 @@ char * qfits_get_dir_name(const char * filename)
 /*----------------------------------------------------------------------------*/
 char * qfits_get_base_name(const char *filename)
 {
-    char *p ;
+    char *p;
     p = strrchr (filename, '/');
     return p ? p + 1 : (char *) filename;
 }
@@ -197,13 +197,13 @@ char * qfits_get_base_name(const char *filename)
 char * qfits_get_root_name(const char * filename)
 {
     static char path[MAXNAMESZ+1];
-    char * lastdot ;
+    char * lastdot;
 
-    if (strlen(filename)>MAXNAMESZ) return NULL ;
+    if (strlen(filename)>MAXNAMESZ) return NULL;
     memset(path, 0, MAXNAMESZ+1);
     strcpy(path, filename);
     lastdot = strrchr(path, '.');
-    if (lastdot == NULL) return path ;
+    if (lastdot == NULL) return path;
     if ((!strcmp(lastdot, ".fits")) || (!strcmp(lastdot, ".FITS")) ||
         (!strcmp(lastdot, ".paf")) || (!strcmp(lastdot, ".PAF")) ||
         (!strcmp(lastdot, ".dat")) || (!strcmp(lastdot, ".DAT")) ||
@@ -213,7 +213,7 @@ char * qfits_get_root_name(const char * filename)
     {
         lastdot[0] = '\0';
     }
-    return path ;
+    return path;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -241,7 +241,7 @@ char * qfits_get_ext_name(const char * filename)
 {
     char * p;
     p = strrchr(filename, '.');
-    return p ? p+1 : NULL ;
+    return p ? p+1 : NULL;
 }
 
 /**@}*/

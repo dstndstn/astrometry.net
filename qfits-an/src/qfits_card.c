@@ -91,26 +91,26 @@ void qfits_card_build(
         const char  *   val,
         const char  *   com)
 {
-    int     len ;
-    int     hierarch = 0 ;
+    int     len;
+    int     hierarch = 0;
     char    cval[81];
     char    cval2[81];
     char    cval_q[81];
     char    ccom[81];
     char    safe_line[512];
-    int     i, j ;
+    int     i, j;
 
-    if (line==NULL || key==NULL) return ;
+    if (line==NULL || key==NULL) return;
 
     /* Set the line with zeroes */
     memset(line, ' ', 80);
-    if (key==NULL) return ;
+    if (key==NULL) return;
 
     /* END keyword*/
     if (!strcmp(key, "END")) {
         /* Write key and return */
-        sprintf(line, "END") ;
-        return ;
+        sprintf(line, "END");
+        return;
     }
     /* HISTORY, COMMENT and blank keywords */
     if (!strcmp(key, "HISTORY") ||
@@ -119,14 +119,14 @@ void qfits_card_build(
         !strncmp(key, "        ", 8)) {
         /* Write key */
         sprintf(line, "%s ", key);
-        if (val==NULL) return ;
+        if (val==NULL) return;
 
         /* There is a value to write, copy it correctly */
         len = strlen(val);
         /* 72 is 80 (FITS line size) - 8 (sizeof COMMENT or HISTORY) */
-        if (len>72) len=72 ;
+        if (len>72) len=72;
         strncpy(line+8, val, len);
-        return ;
+        return;
     }
 
     /* Check for NULL values */
@@ -139,7 +139,7 @@ void qfits_card_build(
     else strcpy(ccom, com);
 
     /* Set hierarch flag */
-    if (!strncmp(key, "HIERARCH", 8)) hierarch ++ ;
+    if (!strncmp(key, "HIERARCH", 8)) hierarch ++;
 
     /* Boolean, int, float or complex */
     if (qfits_is_int(cval) ||
@@ -150,7 +150,7 @@ void qfits_card_build(
         else sprintf(safe_line, "%-8.8s= %20s / %-48s", key, cval, ccom);
         strncpy(line, safe_line, 80);
         line[80]='\0';
-        return ;
+        return;
     }
 
     /* Blank or NULL values */
@@ -162,24 +162,24 @@ void qfits_card_build(
         }
         strncpy(line, safe_line, 80);
         line[80]='\0';
-        return ;
+        return;
     }
 
     /* Can only be a string - Make simple quotes ['] as double [''] */
     memset(cval_q, 0, 81);
     qfits_pretty_string_r(cval, cval2);
-    j=0 ;
-    i=0 ;
+    j=0;
+    i=0;
     while (cval2[i] != '\0') {
         if (cval2[i]=='\'') {
             cval_q[j]='\'';
-            j++ ;
+            j++;
             cval_q[j]='\'';
         } else {
             cval_q[j] = cval2[i];
         }
-        i++ ;
-        j++ ;
+        i++;
+        j++;
     }
 
     if (hierarch) {
@@ -193,67 +193,67 @@ void qfits_card_build(
 
     /* Null-terminate in any case */
     line[80]='\0';
-    return ;
+    return;
 }
 
 // Thread-safe version.
 char* qfits_getkey_r(const char* line, char* key)
 {
-    int                i ;
+    int                i;
 
     if (line==NULL) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getkey: NULL input line\n");
 #endif
-        return NULL ;
+        return NULL;
     }
 
     /* Special case: blank keyword */
     if (!strncmp(line, "        ", 8)) {
         strcpy(key, "        ");
-        return key ;
+        return key;
     }
     /* Sort out special cases: HISTORY, COMMENT, END do not have = in line */
     if (!strncmp(line, "HISTORY ", 8)) {
         strcpy(key, "HISTORY");
-        return key ;
+        return key;
     }
     if (!strncmp(line, "COMMENT ", 8)) {
         strcpy(key, "COMMENT");
-        return key ;
+        return key;
     }
     if (!strncmp(line, "END ", 4)) {
         strcpy(key, "END");
-        return key ;
+        return key;
     }
 	/* Neither does CONTINUE. */
     if (!strncmp(line, "CONTINUE ", 9)) {
         strcpy(key, "CONTINUE");
-        return key ;
+        return key;
     }
 
     memset(key, 0, 81);
     /* General case: look for the first equal sign */
-    i=0 ;
-    while (line[i]!='=' && i<80) i++ ;
+    i=0;
+    while (line[i]!='=' && i<80) i++;
     if (i>=80) {
         qfits_error("qfits_getkey: cannot find equal sign in line: \"%s\"\n", line);
-        return NULL ;
+        return NULL;
     }
-    i-- ;
+    i--;
     /* Equal sign found, now backtrack on blanks */
-    while (line[i]==' ' && i>=0) i-- ;
+    while (line[i]==' ' && i>=0) i--;
     if (i<0) {
         qfits_error("qfits_getkey: error backtracking on blanks in line: \"%s\"\n", line);
-        return NULL ;
+        return NULL;
     }
-    i++ ;
+    i++;
 
     /* Copy relevant characters into output buffer */
-    strncpy(key, line, i) ;
+    strncpy(key, line, i);
     /* Null-terminate the string */
     key[i+1] = '\0';
-    return key ;
+    return key;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -274,22 +274,22 @@ char * qfits_getkey(const char * line) {
 
 // Thread-safe version of the below.
 char* qfits_getvalue_r(const char* line, char* value) {
-    int     i ;
-    int     from, to ;
-    int     inq ;
+    int     i;
+    int     from, to;
+    int     inq;
 
     if (line==NULL) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getvalue: NULL input line\n");
 #endif
-        return NULL ;
+        return NULL;
     }
 
     /* Special cases */
 
     /* END has no associated value */
     if (!strncmp(line, "END ", 4)) {
-        return NULL ;
+        return NULL;
     }
     /*
      * HISTORY has for value everything else on the line.
@@ -304,58 +304,58 @@ char* qfits_getvalue_r(const char* line, char* value) {
         return value;
     }
     /* General case - Get past the keyword */
-    i=0 ;
-    while (line[i]!='=' && i<80) i++ ;
+    i=0;
+    while (line[i]!='=' && i<80) i++;
     if (i>80) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getvalue: no equal sign found on line\n");
 #endif
-        return NULL ;
+        return NULL;
     }
-    i++ ;
-    while (line[i]==' ' && i<80) i++ ;
+    i++;
+    while (line[i]==' ' && i<80) i++;
     if (i>80) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getvalue: no value past the equal sign\n");
 #endif
-        return NULL ;
+        return NULL;
     }
     from=i;
 
     /* Now value section: Look for the first slash '/' outside a string */
-    inq = 0 ;
+    inq = 0;
     while (i<80) {
         if (line[i]=='\'')
-            inq=!inq ;
+            inq=!inq;
         if (line[i]=='/')
             if (!inq)
-                break ;
+                break;
         i++;
     }
-    i-- ;
+    i--;
 
     /* Backtrack on blanks */
-    while (line[i]==' ' && i>=0) i-- ;
+    while (line[i]==' ' && i>=0) i--;
     if (i<0) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getvalue: error backtracking on blanks\n");
 #endif
-        return NULL ;
+        return NULL;
     }
-    to=i ;
+    to=i;
 
     if (to<from) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getvalue: from>to?\n");
         printf("line=[%s]\n", line);
 #endif
-        return NULL ;
+        return NULL;
     }
     /* Copy relevant characters into output buffer */
     strncpy(value, line+from, to-from+1);
     /* Null-terminate the string */
     value[to-from+1] = '\0';
-    return value ;
+    return value;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -376,71 +376,71 @@ char* qfits_getvalue(const char* line) {
 }
 
 char* qfits_getcomment_r(const char* line, char* comment) {
-    int    i ;
-    int    from, to ;
-    int    inq ;
+    int    i;
+    int    from, to;
+    int    inq;
 
     if (line==NULL) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getcomment: null line in input\n");
 #endif
-        return NULL ;
+        return NULL;
     }
 
     /* Special cases: END, HISTORY, COMMENT and blank have no comment */
-    if (!strncmp(line, "END ", 4)) return NULL ;
-    if (!strncmp(line, "HISTORY ", 8)) return NULL ;
-    if (!strncmp(line, "COMMENT ", 8)) return NULL ;
-    if (!strncmp(line, "        ", 8)) return NULL ;
+    if (!strncmp(line, "END ", 4)) return NULL;
+    if (!strncmp(line, "HISTORY ", 8)) return NULL;
+    if (!strncmp(line, "COMMENT ", 8)) return NULL;
+    if (!strncmp(line, "        ", 8)) return NULL;
 
     memset(comment, 0, 81);
     /* Get past the keyword */
-    i=0 ;
-    while (line[i]!='=' && i<80) i++ ;
+    i=0;
+    while (line[i]!='=' && i<80) i++;
     if (i>=80) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getcomment: no equal sign on line\n");
 #endif
-        return NULL ;
+        return NULL;
     }
-    i++ ;
+    i++;
     
     /* Get past the value until the slash */
-    inq = 0 ;
+    inq = 0;
     while (i<80) {
         if (line[i]=='\'')
-            inq = !inq ;
+            inq = !inq;
         if (line[i]=='/')
             if (!inq)
-                break ;
-        i++ ;
+                break;
+        i++;
     }
     if (i>=80) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getcomment: no slash found on line\n");
 #endif
-        return NULL ;
+        return NULL;
     }
-    i++ ;
+    i++;
     /* Get past the first blanks */
-    while (line[i]==' ') i++ ;
-    from=i ;
+    while (line[i]==' ') i++;
+    from=i;
 
     /* Now backtrack from the end of the line to the first non-blank char */
-    to=79 ;
-    while (line[to]==' ') to-- ;
+    to=79;
+    while (line[to]==' ') to--;
 
     if (to<from) {
 #ifdef DEBUG_FITSHEADER
         printf("qfits_getcomment: from>to?\n");
 #endif
-        return NULL ;
+        return NULL;
     }
     /* Copy relevant characters into output buffer */
     strncpy(comment, line+from, to-from+1);
     /* Null-terminate the string */
     comment[to-from+1] = '\0';
-    return comment ;
+    return comment;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -466,10 +466,10 @@ char * qfits_getcomment(const char * line) {
  */
 char* qfits_expand_keyword_r(const char * keyword, char* expanded) {
     char        ws[81];
-    char    *    token ;
+    char    *    token;
 
     /* Bulletproof entries */
-    if (keyword==NULL) return NULL ;
+    if (keyword==NULL) return NULL;
     /* If regular keyword, copy the uppercased input and return */
     if (strstr(keyword, ".")==NULL) {
         expkey_strupc(keyword, expanded);
@@ -525,8 +525,8 @@ char * qfits_expand_keyword(const char * keyword) {
  */
 /*----------------------------------------------------------------------------*/
 static char * expkey_strupc(const char * s, char* l) {
-    int i ;
-    if (s==NULL) return NULL ;
+    int i;
+    if (s==NULL) return NULL;
     i=0;
     while (s[i]) {
         l[i] = (char)toupper((int)s[i]);

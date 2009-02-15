@@ -37,7 +37,7 @@
                                Function prototypes
  -----------------------------------------------------------------------------*/
 
-static void byteReverse(unsigned char *buf, unsigned longs) ;
+static void byteReverse(unsigned char *buf, unsigned longs);
 
 /*----------------------------------------------------------------------------*/
 /**

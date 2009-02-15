@@ -92,26 +92,26 @@ static qfits_lock_t cache_lock = QFITS_LOCK_INIT;
  */
 /*----------------------------------------------------------------------------*/
 typedef struct _qfits_cache_cell_ {
-    char    *    name ;    /* File name     */
-    ino_t       inode ; /* Inode */
+    char    *    name;    /* File name     */
+    ino_t       inode; /* Inode */
     time_t        mtime;  /* Last modification date */
     int            filesize; /* File size in bytes */
     time_t        ctime;  /* Last modification date */
 
-    int            exts ;    /* # of extensions in file */
+    int            exts;    /* # of extensions in file */
 
-    int        *    ohdr ;    /* Offsets to headers */
-    int        *    shdr ;    /* Header sizes */
-    int        *    data ;    /* Offsets to data */
-    int        *    dsiz ;    /* Data sizes */
+    int        *    ohdr;    /* Offsets to headers */
+    int        *    shdr;    /* Header sizes */
+    int        *    data;    /* Offsets to data */
+    int        *    dsiz;    /* Data sizes */
 
-    int         fsize ; /* File size in blocks (2880 bytes) */
-} qfits_cache_cell ;
+    int         fsize; /* File size in blocks (2880 bytes) */
+} qfits_cache_cell;
 
-static qfits_cache_cell qfits_cache[QFITS_CACHESZ] ;
-static int qfits_cache_last = -1 ;
-static int qfits_cache_entries = 0 ;
-static int qfits_cache_init = 0 ;
+static qfits_cache_cell qfits_cache[QFITS_CACHESZ];
+static int qfits_cache_last = -1;
+static int qfits_cache_entries = 0;
+static int qfits_cache_init = 0;
 
 /*-----------------------------------------------------------------------------
                             Functions prototypes
@@ -122,7 +122,7 @@ static int qfits_is_cached(const char * filename);
 static int qfits_cache_add(const char * name);
 
 #if QFITS_CACHE_DEBUG
-static void qfits_cache_dump(void) ;
+static void qfits_cache_dump(void);
 #endif
 
 /*----------------------------------------------------------------------------*/
@@ -155,21 +155,21 @@ static void qfits_cache_dump(void) ;
 /*----------------------------------------------------------------------------*/
 void qfits_cache_purge_impl(void)
 {
-    int    i ;
+    int    i;
 
     qdebug(
         printf("qfits: purging cache...\n");
     );
 
-    for (i=0 ; i<QFITS_CACHESZ; i++) {
+    for (i=0; i<QFITS_CACHESZ; i++) {
         if (qfits_cache[i].name!=NULL) {
             qfits_free(qfits_cache[i].name);
-            qfits_cache[i].name = NULL ;
+            qfits_cache[i].name = NULL;
             qfits_free(qfits_cache[i].ohdr);
             qfits_free(qfits_cache[i].data);
             qfits_free(qfits_cache[i].shdr);
             qfits_free(qfits_cache[i].dsiz);
-            qfits_cache_entries -- ;
+            qfits_cache_entries --;
         }
     }
     if (qfits_cache_entries!=0) {
@@ -178,8 +178,8 @@ void qfits_cache_purge_impl(void)
         );
         exit(-1);
     }
-    qfits_cache_last = -1 ;
-    return ;
+    qfits_cache_last = -1;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -241,9 +241,9 @@ void qfits_cache_purge_impl(void)
 /*----------------------------------------------------------------------------*/
 int qfits_query_impl(const char * filename, int what)
 {
-    int    rank ;
-    int    which ;
-    int    answer ;
+    int    rank;
+    int    which;
+    int    answer;
 
     qdebug(
         printf("qfits: cache req %s\n", filename);
@@ -255,13 +255,13 @@ int qfits_query_impl(const char * filename, int what)
         qdebug(
             printf("qfits: error adding %s to cache\n", filename);
         );
-        return -1 ;
+        return -1;
     }
 
     /* See what was requested */
-    answer=-1 ;
+    answer=-1;
     if (what & QFITS_QUERY_N_EXT) {
-        answer = qfits_cache[rank].exts ;
+        answer = qfits_cache[rank].exts;
         qdebug(
             printf("qfits: query n_exts\n");
             printf("qfits: -> %d\n", answer);
@@ -269,7 +269,7 @@ int qfits_query_impl(const char * filename, int what)
     } else if (what & QFITS_QUERY_HDR_START) {
         which = what & (~QFITS_QUERY_HDR_START);
         if (which>=0 && which<=qfits_cache[rank].exts) {
-            answer = qfits_cache[rank].ohdr[which] * FITS_BLOCK_SIZE ;
+            answer = qfits_cache[rank].ohdr[which] * FITS_BLOCK_SIZE;
         }
         qdebug(
             printf("qfits: query offset to header %d\n", which);
@@ -278,7 +278,7 @@ int qfits_query_impl(const char * filename, int what)
     } else if (what & QFITS_QUERY_DAT_START) {
         which = what & (~QFITS_QUERY_DAT_START);
         if (which>=0 && which<=qfits_cache[rank].exts) {
-            answer = qfits_cache[rank].data[which] * FITS_BLOCK_SIZE ;
+            answer = qfits_cache[rank].data[which] * FITS_BLOCK_SIZE;
         }
         qdebug(
             printf("qfits: query offset to data %d\n", which);
@@ -287,7 +287,7 @@ int qfits_query_impl(const char * filename, int what)
     } else if (what & QFITS_QUERY_HDR_SIZE) {
         which = what & (~QFITS_QUERY_HDR_SIZE);
         if (which>=0 && which<=qfits_cache[rank].exts) {
-            answer = qfits_cache[rank].shdr[which] * FITS_BLOCK_SIZE ;
+            answer = qfits_cache[rank].shdr[which] * FITS_BLOCK_SIZE;
         }
         qdebug(
             printf("qfits: query sizeof header %d\n", which);
@@ -296,14 +296,14 @@ int qfits_query_impl(const char * filename, int what)
     } else if (what & QFITS_QUERY_DAT_SIZE) {
         which = what & (~QFITS_QUERY_DAT_SIZE);
         if (which>=0 && which<=qfits_cache[rank].exts) {
-            answer = qfits_cache[rank].dsiz[which] * FITS_BLOCK_SIZE ;
+            answer = qfits_cache[rank].dsiz[which] * FITS_BLOCK_SIZE;
         }
         qdebug(
             printf("qfits: query sizeof data %d\n", which);
             printf("qfits: -> %d (%d bytes)\n", answer/2880, answer);
         );
     }
-    return answer ;
+    return answer;
 }
 
 /**@}*/
@@ -336,31 +336,31 @@ int qfits_query_impl(const char * filename, int what)
 /*----------------------------------------------------------------------------*/
 static int qfits_cache_add_impl(const char * filename)
 {
-    FILE    *    in ;
+    FILE    *    in;
 	int *off_hdr = NULL;
 	int *off_dat = NULL;
 	int off_size = QFITS_MAX_EXTS;
-    char        buf[FITS_BLOCK_SIZE] ;
+    char        buf[FITS_BLOCK_SIZE];
 	char getval_buf[FITS_LINESZ+1];
-    char    *    buf_c ;
-    int            n_blocks ;
-    int            found_it ;
-    int            xtend ;
-    int            naxis ;
-    char    *    read_val ;
-    int            last ;
-    int            end_of_file ;
-    int            data_bytes ;
-    int            skip_blocks ;
-    struct stat sta ;
-    int         seeked ;
-    int            i ;
+    char    *    buf_c;
+    int            n_blocks;
+    int            found_it;
+    int            xtend;
+    int            naxis;
+    char    *    read_val;
+    int            last;
+    int            end_of_file;
+    int            data_bytes;
+    int            skip_blocks;
+    struct stat sta;
+    int         seeked;
+    int            i;
 
-    qfits_cache_cell * qc ;
+    qfits_cache_cell * qc;
 
     /* Initialize cache if not done yet (done only once) */
     if (qfits_cache_init==0) {
-        qfits_cache_init++ ;
+        qfits_cache_init++;
         qfits_cache_activate();
     }
 
@@ -369,7 +369,7 @@ static int qfits_cache_add_impl(const char * filename)
         qdebug(
             printf("qfits: cannot stat file %s: %s\n", filename, strerror(errno));
         );
-        return -1 ;
+        return -1;
     }
 
     /* Open input file */
@@ -377,7 +377,7 @@ static int qfits_cache_add_impl(const char * filename)
         qdebug(
             printf("qfits: cannot open file %s: %s\n", filename, strerror(errno));
         );
-        return -1 ;
+        return -1;
     }
 
     /* Read first block in */
@@ -386,7 +386,7 @@ static int qfits_cache_add_impl(const char * filename)
             printf("qfits: error reading first block from %s: %s\n", filename, strerror(errno));
         );
         fclose(in);
-        return -1 ;
+        return -1;
     }
     /* Identify FITS magic number */
     if (buf[0]!='S' ||
@@ -402,7 +402,7 @@ static int qfits_cache_add_impl(const char * filename)
             printf("qfits: file %s is not FITS\n", filename);
         );
         fclose(in);
-        return -1 ;
+        return -1;
     }
 
     /*
@@ -416,11 +416,11 @@ static int qfits_cache_add_impl(const char * filename)
     rewind(in);
 
     /* Initialize all counters */
-    n_blocks = 0 ;
-    found_it = 0 ;
-    xtend = 0 ;
-    naxis = 0 ;
-    data_bytes = 1 ;
+    n_blocks = 0;
+    found_it = 0;
+    xtend = 0;
+    naxis = 0;
+    data_bytes = 1;
 
     /* Start looking for END card */
     while (found_it==0) {
@@ -430,12 +430,12 @@ static int qfits_cache_add_impl(const char * filename)
                 printf("qfits: error reading file %s\n", filename);
             );
             fclose(in);
-            return -1 ;
+            return -1;
         }
-        n_blocks ++ ;
+        n_blocks ++;
         /* Browse through current block */
-        buf_c = buf ;
-        for (i=0 ; i<FITS_NCARDS ; i++) {
+        buf_c = buf;
+        for (i=0; i<FITS_NCARDS; i++) {
 
             /* Look for BITPIX keyword */
             if (buf_c[0]=='B' &&
@@ -446,8 +446,8 @@ static int qfits_cache_add_impl(const char * filename)
                 buf_c[5]=='X' &&
                 buf_c[6]==' ') {
                 read_val = qfits_getvalue_r(buf_c, getval_buf);
-                data_bytes *= (int)atoi(read_val) / 8 ;
-                if (data_bytes<0) data_bytes *= -1 ;
+                data_bytes *= (int)atoi(read_val) / 8;
+                if (data_bytes<0) data_bytes *= -1;
             } else
             /* Look for NAXIS keyword */
             if (buf_c[0]=='N' &&
@@ -477,7 +477,7 @@ static int qfits_cache_add_impl(const char * filename)
                 /* The EXTEND keyword is present: might be some extensions */
                 read_val = qfits_getvalue_r(buf_c, getval_buf);
                 if (read_val[0]=='T' || read_val[0]=='1') {
-                    xtend=1 ;
+                    xtend=1;
                 }
             } else
             /* Look for END keyword */
@@ -485,49 +485,49 @@ static int qfits_cache_add_impl(const char * filename)
                 buf_c[1] == 'N' &&
                 buf_c[2] == 'D' &&
                 buf_c[3] == ' ') {
-                found_it = 1 ;
+                found_it = 1;
             }
-            buf_c += FITS_LINESZ ;
+            buf_c += FITS_LINESZ;
         }
     }
 
     /*
      * Prepare qfits cache for addition of a new entry
      */
-    qfits_cache_last++ ;
+    qfits_cache_last++;
     /* Rotate buffer if needed */
     if (qfits_cache_last >= QFITS_CACHESZ) {
-        qfits_cache_last = 0 ;
+        qfits_cache_last = 0;
     }
     /* Alias to current pointer in cache for easier reading */
     qc = &(qfits_cache[qfits_cache_last]);
 
     /* Clean cache cell if needed */
     if (qc->name!=NULL) {
-        qfits_free(qc->name) ;
-        qc->name = NULL ;
+        qfits_free(qc->name);
+        qc->name = NULL;
         qfits_free(qc->ohdr);
         qfits_free(qc->data);
         qfits_free(qc->shdr);
         qfits_free(qc->dsiz);
-        qfits_cache_entries -- ;
+        qfits_cache_entries --;
     }
     
     /* Initialize cache cell */
-    qc->exts=0 ;
+    qc->exts=0;
     qc->name = qfits_strdup(filename);
-    qc->inode= sta.st_ino ;
+    qc->inode= sta.st_ino;
 
     /* Set first HDU offsets */
 	off_hdr = malloc(off_size * sizeof(int));
 	off_dat = malloc(off_size * sizeof(int));
 	assert(off_hdr);
 	assert(off_dat);
-    off_hdr[0] = 0 ;
-    off_dat[0] = n_blocks ;
+    off_hdr[0] = 0;
+    off_dat[0] = n_blocks;
     
     /* Last is the pointer to the last added extension, plus one. */
-    last = 1 ;
+    last = 1;
 
     if (xtend) {
         /* Look for extensions */
@@ -538,16 +538,16 @@ static int qfits_cache_add_impl(const char * filename)
         /*
          * Register all extension offsets
          */
-        end_of_file = 0 ;
+        end_of_file = 0;
         while (end_of_file==0) {
             /*
              * Skip the previous data section if pixels were declared
              */
             if (naxis>0) {
                 /* Skip as many blocks as there are declared pixels */
-                skip_blocks = data_bytes/FITS_BLOCK_SIZE ;
+                skip_blocks = data_bytes/FITS_BLOCK_SIZE;
                 if ((data_bytes % FITS_BLOCK_SIZE)!=0) {
-                    skip_blocks ++ ;
+                    skip_blocks ++;
                 }
                 seeked = fseek(in, skip_blocks*FITS_BLOCK_SIZE, SEEK_CUR);
                 if (seeked<0) {
@@ -558,21 +558,21 @@ static int qfits_cache_add_impl(const char * filename)
 					free(off_hdr);
 					free(off_dat);
                     fclose(in);
-                    return -1 ;
+                    return -1;
                 }
                 /* Increase counter of current seen blocks. */
-                n_blocks += skip_blocks ;
+                n_blocks += skip_blocks;
             }
             
             /* Look for extension start */
-            found_it=0 ;
+            found_it=0;
             while ((found_it==0) && (end_of_file==0)) {
                 if (fread(buf,1,FITS_BLOCK_SIZE,in)!=FITS_BLOCK_SIZE) {
                     /* Reached end of file */
-                    end_of_file=1 ;
-                    break ;
+                    end_of_file=1;
+                    break;
                 }
-                n_blocks ++ ;
+                n_blocks ++;
                 /* Search for XTENSION at block top */
                 if (buf[0]=='X' &&
                     buf[1]=='T' &&
@@ -584,11 +584,11 @@ static int qfits_cache_add_impl(const char * filename)
                     buf[7]=='N' &&
                     buf[8]=='=') {
                     /* Got an extension */
-                    found_it=1 ;
-                    off_hdr[last] = n_blocks-1 ;
+                    found_it=1;
+                    off_hdr[last] = n_blocks-1;
                 }
             }
-            if (end_of_file) break ;
+            if (end_of_file) break;
 
             /*
              * Look for extension END
@@ -598,30 +598,30 @@ static int qfits_cache_add_impl(const char * filename)
             if (fseek(in, -FITS_BLOCK_SIZE, SEEK_CUR)==-1) {
                 qdebug(
                     printf("qfits: error fseeking file backwards\n");
-                ) ;
+                );
                 qfits_free(qc->name);
 				free(off_hdr);
 				free(off_dat);
                 fclose(in);
-                return -1 ;
+                return -1;
             }
-            n_blocks -- ;
-            found_it=0 ;
-            data_bytes = 1 ;
-            naxis = 0 ;
+            n_blocks --;
+            found_it=0;
+            data_bytes = 1;
+            naxis = 0;
             while ((found_it==0) && (end_of_file==0)) {
                 if (fread(buf,1,FITS_BLOCK_SIZE,in)!=FITS_BLOCK_SIZE) {
                     qdebug(
                     printf("qfits: XTENSION without END in %s\n", filename);
                     );
                     end_of_file=1;
-                    break ;
+                    break;
                 }
-                n_blocks++ ;
+                n_blocks++;
 
                 /* Browse current block */
-                buf_c = buf ;
-                for (i=0 ; i<FITS_NCARDS ; i++) {
+                buf_c = buf;
+                for (i=0; i<FITS_NCARDS; i++) {
                     /* Look for BITPIX keyword */
                     if (buf_c[0]=='B' &&
                         buf_c[1]=='I' &&
@@ -631,8 +631,8 @@ static int qfits_cache_add_impl(const char * filename)
                         buf_c[5]=='X' &&
                         buf_c[6]==' ') {
                         read_val = qfits_getvalue_r(buf_c, getval_buf);
-                        data_bytes *= (int)atoi(read_val) / 8 ;
-                        if (data_bytes<0) data_bytes *= -1 ;
+                        data_bytes *= (int)atoi(read_val) / 8;
+                        if (data_bytes<0) data_bytes *= -1;
                     } else
                     /* Look for NAXIS keyword */
                     if (buf_c[0]=='N' &&
@@ -657,11 +657,11 @@ static int qfits_cache_add_impl(const char * filename)
                         buf_c[2]=='D' &&
                         buf_c[3]==' ') {
                         /* Got the END card */
-                        found_it=1 ;
+                        found_it=1;
                         /* Update registered extension list */
-                        off_dat[last] = n_blocks ;
-                        last ++ ;
-                        qc->exts ++ ;
+                        off_dat[last] = n_blocks;
+                        last ++;
+                        qc->exts ++;
 						if (last >= off_size) {
 							off_size *= 2;
 							off_hdr = realloc(off_hdr, off_size * sizeof(int));
@@ -669,9 +669,9 @@ static int qfits_cache_add_impl(const char * filename)
 							assert(off_hdr);
 							assert(off_dat);
 						}
-                        break ;
+                        break;
                     }
-                    buf_c+=FITS_LINESZ ;
+                    buf_c+=FITS_LINESZ;
                 }
             }
         }
@@ -682,7 +682,7 @@ static int qfits_cache_add_impl(const char * filename)
 
     /* Check last */
     if (last >= QFITS_MAX_EXTS) {
-        return -1 ;
+        return -1;
     }
     
     /* Allocate buffers in cache */
@@ -691,25 +691,25 @@ static int qfits_cache_add_impl(const char * filename)
     qc->shdr = qfits_malloc(last * sizeof(int));
     qc->dsiz = qfits_malloc(last * sizeof(int));
     /* Store retrieved pointers in the cache */
-    for (i=0 ; i<last ; i++) {
+    for (i=0; i<last; i++) {
         /* Offsets to start */
         qc->ohdr[i] = off_hdr[i];
         qc->data[i] = off_dat[i];
 
         /* Sizes */
-        qc->shdr[i] = off_dat[i] - off_hdr[i]  ;
+        qc->shdr[i] = off_dat[i] - off_hdr[i] ;
         if (i==last-1) {    
-            qc->dsiz[i] = (sta.st_size/FITS_BLOCK_SIZE) - off_dat[i] ;
+            qc->dsiz[i] = (sta.st_size/FITS_BLOCK_SIZE) - off_dat[i];
         } else {
-            qc->dsiz[i] = off_hdr[i+1] - off_dat[i] ;
+            qc->dsiz[i] = off_hdr[i+1] - off_dat[i];
         }
     }
-    qc->fsize = sta.st_size / FITS_BLOCK_SIZE ;
+    qc->fsize = sta.st_size / FITS_BLOCK_SIZE;
     /* Add last modification date */
-    qc->mtime = sta.st_mtime ;
-    qc->filesize  = sta.st_size ;
-    qc->ctime = sta.st_ctime ;
-    qfits_cache_entries ++ ;
+    qc->mtime = sta.st_mtime;
+    qc->filesize  = sta.st_size;
+    qc->ctime = sta.st_ctime;
+    qfits_cache_entries ++;
 
     qdebug(
         qfits_cache_dump();
@@ -719,18 +719,18 @@ static int qfits_cache_add_impl(const char * filename)
 	free(off_dat);
 
     /* Return index of the added file in the cache */
-    return qfits_cache_last ;
+    return qfits_cache_last;
 }
 
 #if QFITS_CACHE_DEBUG
 static void qfits_cache_dump_impl(void)
 {
-    int i, j ;
+    int i, j;
 
     printf("qfits: dumping cache...\n");
 
     printf("cache contains %d entries\n", qfits_cache_entries);
-    for (i=0 ; i<QFITS_CACHESZ ; i++) {
+    for (i=0; i<QFITS_CACHESZ; i++) {
         if (qfits_cache[i].name!=NULL) {
             printf("qfits: -----> entry: %d\n", i);
             printf("qfits: name  %s\n", qfits_cache[i].name);
@@ -745,7 +745,7 @@ static void qfits_cache_dump_impl(void)
                    qfits_cache[i].data[0],
                    qfits_cache[i].dsiz[0]);
             if (qfits_cache[i].exts>0) {
-                for (j=1 ; j<=qfits_cache[i].exts ; j++) {
+                for (j=1; j<=qfits_cache[i].exts; j++) {
                     printf("qfits: %s [%d]\n", qfits_cache[i].name, j);
                     printf("qfits: ohdr  %d\n"
                            "qfits: shdr  %d\n"
@@ -759,7 +759,7 @@ static void qfits_cache_dump_impl(void)
             }
         }
     }
-    return ;
+    return;
 }
 #endif
 
@@ -770,17 +770,17 @@ static void qfits_cache_dump_impl(void)
 /*----------------------------------------------------------------------------*/
 static void qfits_cache_activate_impl(void)
 {
-    int i ;
+    int i;
     qdebug(
         printf("qfits: activating cache...\n");
     );
     /* Set all slots to NULL */
-    for (i=0 ; i<QFITS_CACHESZ ; i++) {
-        qfits_cache[i].name = NULL ;
+    for (i=0; i<QFITS_CACHESZ; i++) {
+        qfits_cache[i].name = NULL;
     }
     /* Register purge function with atexit */
     atexit(qfits_cache_purge);
-    return ;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -792,35 +792,35 @@ static void qfits_cache_activate_impl(void)
 /*----------------------------------------------------------------------------*/
 static int qfits_is_cached_impl(const char * filename)
 {
-    int            i, n ;
-    struct stat sta ;
+    int            i, n;
+    struct stat sta;
 
     /* Stat input file */
     if (stat(filename, &sta)!=0) {
-        return -1 ;
+        return -1;
     }
-    n=0 ;
+    n=0;
     /* Loop over all cache entries */
-    for (i=0 ; i<QFITS_CACHESZ ; i++) {
+    for (i=0; i<QFITS_CACHESZ; i++) {
         /* If entry is valid (name is not NULL) */
         if (qfits_cache[i].name!=NULL) {
             /* One more entry found */
-            n++ ;
+            n++;
             /* If inode is the same */
             if ((qfits_cache[i].inode == sta.st_ino) &&
                 (qfits_cache[i].mtime == sta.st_mtime) &&
                 (qfits_cache[i].filesize  == sta.st_size) &&
                 (qfits_cache[i].ctime == sta.st_ctime)) {
                 /* This is the requested file */
-                return i ;
+                return i;
             }
         }
         /* Early exit: all entries have been browsed */
         if (n>=qfits_cache_entries) {
-            return -1 ;
+            return -1;
         }
     }
-    return -1 ;
+    return -1;
 }
 
 

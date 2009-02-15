@@ -62,12 +62,12 @@ static void qfits_err_display_stderr(char * s)
 
 /* Static control structure, completely private */
 static struct {
-    qfits_err_dispfunc     disp[QFITS_ERR_MAXERRDISP] ;
-    int                 n ;
-    int                    active ;
-} qfits_err_control = {{qfits_err_display_stderr}, 1, 0} ;
+    qfits_err_dispfunc     disp[QFITS_ERR_MAXERRDISP];
+    int                 n;
+    int                    active;
+} qfits_err_control = {{qfits_err_display_stderr}, 1, 0};
 
-static void qfits_err_main_display(char *) ;
+static void qfits_err_main_display(char *);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -91,39 +91,39 @@ void qfits_err_remove_all(void) {
 /* Public warning/error functions */
 void qfits_warning(const char *fmt, ...)
 {
-    char msg[QFITS_ERR_MSGSIZE] ;
-    char all[QFITS_ERR_MSGSIZE] ;
-    va_list ap ;
+    char msg[QFITS_ERR_MSGSIZE];
+    char all[QFITS_ERR_MSGSIZE];
+    va_list ap;
 
     /* Check if display is activated */
     if (qfits_err_control.active==0) {
-        return ;
+        return;
     }
-    va_start(ap, fmt) ;
-    vsprintf(msg, fmt, ap) ;
+    va_start(ap, fmt);
+    vsprintf(msg, fmt, ap);
     va_end(ap);
 
     sprintf(all, "*** %s", msg);
     qfits_err_main_display(all);
-    return ;
+    return;
 }
 void qfits_error(const char *fmt, ...)
 {
-    char msg[QFITS_ERR_MSGSIZE] ;
-    char all[QFITS_ERR_MSGSIZE] ;
-    va_list ap ;
+    char msg[QFITS_ERR_MSGSIZE];
+    char all[QFITS_ERR_MSGSIZE];
+    va_list ap;
 
     /* Check if display is activated */
     if (qfits_err_control.active==0) {
-        return ;
+        return;
     }
-    va_start(ap, fmt) ;
-    vsprintf(msg, fmt, ap) ;
+    va_start(ap, fmt);
+    vsprintf(msg, fmt, ap);
     va_end(ap);
 
     sprintf(all, "error: %s", msg);
     qfits_err_main_display(all);
-    return ;
+    return;
 }
 /**@}*/
 
@@ -137,19 +137,19 @@ void qfits_error(const char *fmt, ...)
 /*----------------------------------------------------------------------------*/
 static void qfits_err_main_display(char * msg)
 {
-    int    i ;
+    int    i;
 
     /* Check if there is a message in input */
     if (msg==NULL)
-        return ;
+        return;
 
     /* Loop on all registered functions and call them */
-    for (i=0 ; i<qfits_err_control.n ; i++) {
+    for (i=0; i<qfits_err_control.n; i++) {
         if (qfits_err_control.disp[i]) {
             qfits_err_control.disp[i](msg);
         }
     }
-    return ;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -164,7 +164,7 @@ static void qfits_err_main_display(char * msg)
 /*----------------------------------------------------------------------------*/
 int qfits_err_statget(void)
 {
-    return qfits_err_control.active ;
+    return qfits_err_control.active;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -179,18 +179,18 @@ int qfits_err_statget(void)
   function silent on all its errors. Example:
 
   @code
-  int prev_stat = qfits_err_statset(0) ;
-  function_call() ;
+  int prev_stat = qfits_err_statset(0);
+  function_call();
   qfits_err_statset(prev_stat);
   @endcode
  */
 /*----------------------------------------------------------------------------*/
 int qfits_err_statset(int sta)
 {
-    int prev ;
-    prev = qfits_err_control.active ;
-    qfits_err_control.active=sta ;
-    return prev ;
+    int prev;
+    prev = qfits_err_control.active;
+    qfits_err_control.active=sta;
+    return prev;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -221,10 +221,10 @@ int qfits_err_register(qfits_err_dispfunc dispfn)
 {
     if (qfits_err_control.n==QFITS_ERR_MAXERRDISP) {
         /* Cannot register any more function */
-        return -1 ;
+        return -1;
     }
-    qfits_err_control.disp[qfits_err_control.n] = dispfn ;
-    qfits_err_control.n ++ ;
-    return 0 ;
+    qfits_err_control.disp[qfits_err_control.n] = dispfn;
+    qfits_err_control.n ++;
+    return 0;
 }
 

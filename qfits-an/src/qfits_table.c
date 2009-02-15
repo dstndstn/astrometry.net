@@ -65,18 +65,18 @@
 
 static char * qfits_bintable_field_to_string(const qfits_table *, int, int,int);
 static char * qfits_asciitable_field_to_string(const qfits_table *, int, int, 
-        int) ;
-static char * qfits_build_format(const qfits_col *) ;
+        int);
+static char * qfits_build_format(const qfits_col *);
 static int qfits_table_append_bin_xtension(FILE *, const qfits_table *, 
-        const void **) ;
+        const void **);
 static int qfits_table_append_ascii_xtension(FILE *, const qfits_table *, 
-        const void **) ;
-static int qfits_table_append_data(FILE *, const qfits_table *, const void **) ;
-static int qfits_table_get_field_size(int, const qfits_col *) ;
+        const void **);
+static int qfits_table_append_data(FILE *, const qfits_table *, const void **);
+static int qfits_table_get_field_size(int, const qfits_col *);
 static int qfits_table_interpret_type(const char *, int *, int*, tfits_type *, 
-        int) ;
+        int);
 static char * qfits_strstrip(const char *);
-static double qfits_str2dec(const char *, int) ;
+static double qfits_str2dec(const char *, int);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -101,13 +101,13 @@ static double qfits_str2dec(const char *, int) ;
 /*----------------------------------------------------------------------------*/
 int qfits_is_table(const char * filename, int xtnum)
 {
-    char    *    value ;
-    int            ttype ;
+    char    *    value;
+    int            ttype;
     char value2[FITS_LINESZ+1];
     
-    ttype = QFITS_INVALIDTABLE ;
+    ttype = QFITS_INVALIDTABLE;
     value = qfits_query_ext(filename, "XTENSION", xtnum);
-    if (value==NULL) return ttype ;
+    if (value==NULL) return ttype;
 
     qfits_pretty_string_r(value, value2);
 	value = value2;
@@ -127,17 +127,17 @@ int qfits_is_table(const char * filename, int xtnum)
 /*----------------------------------------------------------------------------*/
 qfits_header * qfits_table_prim_header_default(void)
 {
-    qfits_header    *    fh ;
+    qfits_header    *    fh;
 
-    fh = qfits_header_new() ;
+    fh = qfits_header_new();
 
-    qfits_header_append(fh, "SIMPLE", "T", "Standard FITS file", NULL) ;
-    qfits_header_append(fh, "BITPIX", "8", "ASCII or bytes array", NULL) ;
-    qfits_header_append(fh, "NAXIS", "0", "Minimal header", NULL) ;
+    qfits_header_append(fh, "SIMPLE", "T", "Standard FITS file", NULL);
+    qfits_header_append(fh, "BITPIX", "8", "ASCII or bytes array", NULL);
+    qfits_header_append(fh, "NAXIS", "0", "Minimal header", NULL);
     qfits_header_append(fh, "EXTEND", "T", "There may be FITS ext", NULL);
-    qfits_header_append(fh, "END", NULL, NULL, NULL) ;
+    qfits_header_append(fh, "END", NULL, NULL, NULL);
 
-    return fh ;
+    return fh;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -148,25 +148,25 @@ qfits_header * qfits_table_prim_header_default(void)
 /*----------------------------------------------------------------------------*/
 qfits_header * qfits_table_ext_header_default(const qfits_table * t) 
 {
-    qfits_header    *   fh ;
-    qfits_col       *   curr_col ;
-    char                str_val[FITS_LINESZ] ;
-    char                str_val2[FITS_LINESZ] ;
-    char            *   date ;
-    int                 tab_width ;
-    int                 col_pos ;
-    int                 i ;
+    qfits_header    *   fh;
+    qfits_col       *   curr_col;
+    char                str_val[FITS_LINESZ];
+    char                str_val2[FITS_LINESZ];
+    char            *   date;
+    int                 tab_width;
+    int                 col_pos;
+    int                 i;
 
     /* Compute the table width   */
     if ((tab_width = qfits_compute_table_width(t)) == -1) {
-        qfits_error("cannot get the table width") ;
-        return NULL ;
+        qfits_error("cannot get the table width");
+        return NULL;
     }
 
     /* Create fits header */
     if ((fh=qfits_header_new()) == NULL) {
-        qfits_error("cannot create new fits header") ;
-        return NULL ;
+        qfits_error("cannot create new fits header");
+        return NULL;
     }
 
     /* Check the kind of table */
@@ -174,50 +174,50 @@ qfits_header * qfits_table_ext_header_default(const qfits_table * t)
        
         /* Write extension header */
         qfits_header_append(fh, "XTENSION", "BINTABLE", 
-                "FITS Binary Table Extension", NULL) ;
+                "FITS Binary Table Extension", NULL);
         qfits_header_append(fh, "BITPIX", "8", "8-bits character format", NULL);
         qfits_header_append(fh, "NAXIS", "2","Tables are 2-D char. array",NULL);
-        sprintf(str_val, "%d", tab_width) ;
-        qfits_header_append(fh, "NAXIS1", str_val, "Bytes in row", NULL) ;
-        sprintf(str_val, "%d", (int)(t->nr)) ;        
+        sprintf(str_val, "%d", tab_width);
+        qfits_header_append(fh, "NAXIS1", str_val, "Bytes in row", NULL);
+        sprintf(str_val, "%d", (int)(t->nr));        
         qfits_header_append(fh, "NAXIS2", str_val, "No. of rows in table",NULL);
         qfits_header_append(fh, "PCOUNT", "0", "Parameter count always 0",NULL);
         qfits_header_append(fh, "GCOUNT", "1", "Group count always 1", NULL);
-        sprintf(str_val, "%d", (int)(t->nc)) ;
+        sprintf(str_val, "%d", (int)(t->nc));
         qfits_header_append(fh, "TFIELDS", str_val, "No. of col in table",NULL);
         /* Columns descriptors */
-        curr_col = t->col ;
-        for (i=0 ; i<t->nc ; i++) {
-            sprintf(str_val, "TFORM%d", i+1) ;
-            sprintf(str_val2, "'%s'", qfits_build_format(curr_col)) ;
+        curr_col = t->col;
+        for (i=0; i<t->nc; i++) {
+            sprintf(str_val, "TFORM%d", i+1);
+            sprintf(str_val2, "'%s'", qfits_build_format(curr_col));
             qfits_header_append(fh, str_val, str_val2, "Format of field", NULL);
                     
-            sprintf(str_val, "TTYPE%d", i+1) ;
-            sprintf(str_val2, "%s", curr_col->tlabel) ;
-            qfits_header_append(fh, str_val, str_val2, "Field label", NULL) ;
+            sprintf(str_val, "TTYPE%d", i+1);
+            sprintf(str_val2, "%s", curr_col->tlabel);
+            qfits_header_append(fh, str_val, str_val2, "Field label", NULL);
 
-            sprintf(str_val, "TUNIT%d", i+1) ;
-            sprintf(str_val2, "%s", curr_col->tunit) ;
+            sprintf(str_val, "TUNIT%d", i+1);
+            sprintf(str_val2, "%s", curr_col->tunit);
             qfits_header_append(fh, str_val, str_val2, "Physical unit of field",
-                    NULL) ;    
+                    NULL);    
             if (curr_col->zero_present) {
-                sprintf(str_val, "TZERO%d", i+1) ;
-                sprintf(str_val2, "%f", curr_col->zero) ;
+                sprintf(str_val, "TZERO%d", i+1);
+                sprintf(str_val2, "%f", curr_col->zero);
                 qfits_header_append(fh, str_val, str_val2, 
-                        "NULL value is defined", NULL) ;
+                        "NULL value is defined", NULL);
             }
             if (curr_col->scale_present) {
-                sprintf(str_val, "TSCAL%d", i+1) ;
-                sprintf(str_val2, "%f", curr_col->scale) ;
+                sprintf(str_val, "TSCAL%d", i+1);
+                sprintf(str_val2, "%f", curr_col->scale);
                 qfits_header_append(fh, str_val, str_val2, "Scaling applied", 
                         NULL);
             }
-            curr_col++ ;
+            curr_col++;
         }
         qfits_header_append(fh,"ORIGIN","ESO-QFITS", "Written by QFITS", NULL);
 
-        date = qfits_get_datetime_iso8601() ;
-        sprintf(str_val, "'%s'", date) ;
+        date = qfits_get_datetime_iso8601();
+        sprintf(str_val, "'%s'", date);
         qfits_header_append(fh, "DATE", str_val, "[UTC] Date of writing", NULL);
         qfits_header_append(fh, "END", NULL, NULL, NULL);
     
@@ -225,68 +225,68 @@ qfits_header * qfits_table_ext_header_default(const qfits_table * t)
     
         /* Write extension header */
         qfits_header_append(fh, "XTENSION", "TABLE",
-                        "FITS ASCII Table Extension", NULL) ;
+                        "FITS ASCII Table Extension", NULL);
         qfits_header_append(fh, "BITPIX", "8", "8-bits character format", NULL);
-        qfits_header_append(fh, "NAXIS", "2", "ASCII table has 2 axes", NULL) ;
+        qfits_header_append(fh, "NAXIS", "2", "ASCII table has 2 axes", NULL);
                
         /* Fill the header  */
-        sprintf(str_val, "%d", tab_width) ;
+        sprintf(str_val, "%d", tab_width);
         qfits_header_append(fh, "NAXIS1", str_val, "Characters in a row", NULL);
-        sprintf(str_val, "%d", (int)(t->nr)) ;        
+        sprintf(str_val, "%d", (int)(t->nr));        
         qfits_header_append(fh, "NAXIS2", str_val, "No. of rows in table",NULL);
-        qfits_header_append(fh, "PCOUNT", "0", "No group parameters", NULL) ;    
+        qfits_header_append(fh, "PCOUNT", "0", "No group parameters", NULL);    
         qfits_header_append(fh, "GCOUNT", "1", "Only one group", NULL);
-        sprintf(str_val, "%d", (int)(t->nc)) ;
+        sprintf(str_val, "%d", (int)(t->nc));
         qfits_header_append(fh, "TFIELDS", str_val, "No. of col in table",NULL);
         qfits_header_append(fh, "ORIGIN","ESO-QFITS","Written by QFITS",NULL);
-        date = qfits_get_datetime_iso8601() ;
-        sprintf(str_val, "'%s'", date) ;
+        date = qfits_get_datetime_iso8601();
+        sprintf(str_val, "'%s'", date);
         qfits_header_append(fh, "DATE", str_val, "[UTC] Date of writing", NULL);
 
         /* Columns descriptors */
-        curr_col = t->col ;
-        col_pos = 1 ;
-        for (i=0 ; i<t->nc ; i++) {
-            sprintf(str_val, "TTYPE%d", i+1) ;
-            sprintf(str_val2, "%s", curr_col->tlabel) ;
-            qfits_header_append(fh, str_val, str_val2, "Field label", NULL) ;
+        curr_col = t->col;
+        col_pos = 1;
+        for (i=0; i<t->nc; i++) {
+            sprintf(str_val, "TTYPE%d", i+1);
+            sprintf(str_val2, "%s", curr_col->tlabel);
+            qfits_header_append(fh, str_val, str_val2, "Field label", NULL);
             
-            sprintf(str_val, "TFORM%d", i+1) ;
-            sprintf(str_val2, "'%s'", qfits_build_format(curr_col)) ;
+            sprintf(str_val, "TFORM%d", i+1);
+            sprintf(str_val2, "'%s'", qfits_build_format(curr_col));
             qfits_header_append(fh, str_val, str_val2, "Format of field", NULL);
                     
-            sprintf(str_val, "TBCOL%d", i+1) ;
-            sprintf(str_val2, "%d", col_pos) ;
+            sprintf(str_val, "TBCOL%d", i+1);
+            sprintf(str_val2, "%d", col_pos);
             qfits_header_append(fh, str_val, str_val2,"Start column of field",
                     NULL);
-            col_pos += curr_col->atom_nb ;
+            col_pos += curr_col->atom_nb;
             
-            sprintf(str_val, "TUNIT%d", i+1) ;
-            sprintf(str_val2, "%s", curr_col->tunit) ;
+            sprintf(str_val, "TUNIT%d", i+1);
+            sprintf(str_val2, "%s", curr_col->tunit);
             qfits_header_append(fh, str_val, str_val2, "Physical unit of field",
-                    NULL) ;    
+                    NULL);    
             if (curr_col->zero_present) {
-                sprintf(str_val, "TZERO%d", i+1) ;
-                sprintf(str_val2, "%f", curr_col->zero) ;
+                sprintf(str_val, "TZERO%d", i+1);
+                sprintf(str_val2, "%f", curr_col->zero);
                 qfits_header_append(fh, str_val, str_val2, 
-                        "NULL value is defined", NULL) ;
+                        "NULL value is defined", NULL);
             }
             if (curr_col->scale_present) {
-                sprintf(str_val, "TSCAL%d", i+1) ;
-                sprintf(str_val2, "%f", curr_col->scale) ;
+                sprintf(str_val, "TSCAL%d", i+1);
+                sprintf(str_val2, "%f", curr_col->scale);
                 qfits_header_append(fh, str_val, str_val2, "Scaling applied", 
                         NULL);
             }
-            curr_col++ ;
+            curr_col++;
         }
         qfits_header_append(fh, "END", NULL, NULL, NULL);
 
     } else {
-        qfits_error("Table type not known") ;
-        qfits_header_destroy(fh) ;
-        return NULL ;
+        qfits_error("Table type not known");
+        qfits_header_destroy(fh);
+        return NULL;
     }
-    return fh ;
+    return fh;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -309,19 +309,19 @@ qfits_table * qfits_table_new(
         int             nb_cols,
         int             nb_raws)
 {
-    qfits_table    *    qt ;
-    qt = qfits_malloc(sizeof(qfits_table)) ;
-    (void)strcpy(qt->filename, filename) ;
-    qt->tab_t = table_type ;
-    qt->nc = nb_cols ;
-    qt->nr = nb_raws ;
+    qfits_table    *    qt;
+    qt = qfits_malloc(sizeof(qfits_table));
+    (void)strcpy(qt->filename, filename);
+    qt->tab_t = table_type;
+    qt->nc = nb_cols;
+    qt->nr = nb_raws;
     if (qt->nc)
-        qt->col = qfits_calloc(qt->nc, sizeof(qfits_col)) ;
+        qt->col = qfits_calloc(qt->nc, sizeof(qfits_col));
     else
         qt->col = NULL;
-    qt->tab_w = table_width ;
+    qt->tab_w = table_width;
     
-    return qt ;
+    return qt;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -365,42 +365,42 @@ int qfits_col_fill(
         int             offset_beg)
 {
     /* Number of atoms per column */
-    qc->atom_nb = atom_nb ;
+    qc->atom_nb = atom_nb;
    
     /* Number of decimals in a field in ASCII table (0 in BINTABLE) */
-    qc->atom_dec_nb = atom_dec_nb ;
+    qc->atom_dec_nb = atom_dec_nb;
     
     /* Size in bytes of an atom  */
-    qc->atom_size = atom_size ;
+    qc->atom_size = atom_size;
     
     /* Data type in the column */
-    qc->atom_type = atom_type ;
+    qc->atom_type = atom_type;
     
     /* Label of the column */
-    (void)strcpy(qc->tlabel, label) ;
+    (void)strcpy(qc->tlabel, label);
    
     /* Unit of the column data */
-    (void)strcpy(qc->tunit, unit) ;
+    (void)strcpy(qc->tunit, unit);
     
     /* Null value*/
-    (void)strcpy(qc->nullval, nullval) ;
+    (void)strcpy(qc->nullval, nullval);
 
     /* How to display the data */
-    (void)strcpy(qc->tdisp, disp) ;
+    (void)strcpy(qc->tdisp, disp);
 
     /* Default values for zero and scales */
-    qc->zero_present = zero_present ;
-    qc->scale_present = scale_present ;
-    qc->zero = zero ;
-    qc->scale = scale ;
+    qc->zero_present = zero_present;
+    qc->scale_present = scale_present;
+    qc->zero = zero;
+    qc->scale = scale;
 
     /* Number of bytes between two consecutive fields of the same column */
-    qc->off_beg = offset_beg ;
+    qc->off_beg = offset_beg;
     
     /* A column is a priori readable */
-    qc->readable = 1 ;
+    qc->readable = 1;
 
-    return 0 ;
+    return 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -418,73 +418,73 @@ qfits_table * qfits_table_open(
         const char  *   filename, 
         int             xtnum)
 {
-    qfits_table     *   tload ;
-    qfits_col       *   curr_col ;
-    char            *   str_val ;
-    char                keyword[FITSVALSZ] ;
+    qfits_table     *   tload;
+    qfits_col       *   curr_col;
+    char            *   str_val;
+    char                keyword[FITSVALSZ];
     /* Table infos  */
-    int                 table_type ;
-    int                 nb_col ;
-    int                 table_width ;
-    int                 nb_raws ;
+    int                 table_type;
+    int                 nb_col;
+    int                 table_width;
+    int                 nb_raws;
     /* Column infos */
-    char                label[FITSVALSZ] ;
-    char                unit[FITSVALSZ] ;
-    char                disp[FITSVALSZ] ;
-    char                nullval[FITSVALSZ] ;
-    int                 atom_nb ;
-    int                 atom_dec_nb ;
-    int                 atom_size ;
-    tfits_type          atom_type ;
-    int                 offset_beg ;
-    int                 data_size ;
-    int                 theory_size ;
-    int                 zero_present ;
-    int                 scale_present ;
-    float               zero ;
-    float               scale ;
+    char                label[FITSVALSZ];
+    char                unit[FITSVALSZ];
+    char                disp[FITSVALSZ];
+    char                nullval[FITSVALSZ];
+    int                 atom_nb;
+    int                 atom_dec_nb;
+    int                 atom_size;
+    tfits_type          atom_type;
+    int                 offset_beg;
+    int                 data_size;
+    int                 theory_size;
+    int                 zero_present;
+    int                 scale_present;
+    float               zero;
+    float               scale;
     
     /* For ASCII tables */
-    int                    col_pos ;    
-    int                    next_col_pos ;
+    int                    col_pos;    
+    int                    next_col_pos;
     
     /* For X type */
-    int                    nb_bits ;
+    int                    nb_bits;
         
-    int                    i ;
+    int                    i;
     
      /* See if 'filename' is a fits file  */
     if (qfits_is_fits(filename) != 1) {
-        qfits_error("[%s] is not FITS", filename) ;
-        return NULL ;
+        qfits_error("[%s] is not FITS", filename);
+        return NULL;
     }
         
     /* Identify a table and get the table type : ASCII or BIN */
 	if ((table_type = qfits_is_table(filename, xtnum))==QFITS_INVALIDTABLE) {
-        qfits_error("[%s] extension %d is not a table", filename, xtnum) ;
-        return NULL ;
+        qfits_error("[%s] extension %d is not a table", filename, xtnum);
+        return NULL;
     }
     
     /* Get number of columns and allocate them: nc <-> TFIELDS */
     if ((str_val = qfits_query_ext(filename, "TFIELDS", xtnum)) == NULL) {
-        qfits_error("cannot read TFIELDS in [%s]:[%d]", filename, xtnum) ;
-        return NULL ;
+        qfits_error("cannot read TFIELDS in [%s]:[%d]", filename, xtnum);
+        return NULL;
     }
-    nb_col = atoi(str_val) ;
+    nb_col = atoi(str_val);
 
     /* Get the width in bytes of the table */
     if ((str_val = qfits_query_ext(filename, "NAXIS1", xtnum)) == NULL) {
-        qfits_error("cannot read NAXIS1 in [%s]:[%d]", filename, xtnum) ;
-        return NULL ;
+        qfits_error("cannot read NAXIS1 in [%s]:[%d]", filename, xtnum);
+        return NULL;
     }
-    table_width = atoi(str_val) ;
+    table_width = atoi(str_val);
     
 	/* Get the number of rows */
     if ((str_val = qfits_query_ext(filename, "NAXIS2", xtnum)) == NULL) {
-        qfits_error("cannot read NAXIS2 in [%s]:[%d]", filename, xtnum) ;
-        return NULL ;
+        qfits_error("cannot read NAXIS2 in [%s]:[%d]", filename, xtnum);
+        return NULL;
     }
-    nb_raws = atoi(str_val) ;
+    nb_raws = atoi(str_val);
 
     /* Create the table object */
     tload = qfits_table_new(filename, table_type, table_width, nb_col, nb_raws);
@@ -493,45 +493,45 @@ qfits_table * qfits_table_open(
     if (qfits_get_datinfo(filename, xtnum, &offset_beg, &data_size)!=0) {
         qfits_error("cannot find data start in [%s]:[%d]", filename, xtnum);
         qfits_table_close(tload);
-        return NULL ;
+        return NULL;
     }
     
     /* Loop on all columns and get column descriptions  */
-    curr_col = tload->col ;
-    for (i=0 ; i<tload->nc ; i++) {
+    curr_col = tload->col;
+    for (i=0; i<tload->nc; i++) {
 		char str_val_2[FITS_LINESZ+1];
 
         /* label <-> TTYPE     */
-        sprintf(keyword, "TTYPE%d", i+1) ;
+        sprintf(keyword, "TTYPE%d", i+1);
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
-            label[0] = '\0' ;
+            label[0] = '\0';
         } else qfits_pretty_string_r(str_val, label);
         
         /* unit <-> TUNIT */
-        sprintf(keyword, "TUNIT%d", i+1) ;
+        sprintf(keyword, "TUNIT%d", i+1);
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
-            unit[0] = '\0' ;
+            unit[0] = '\0';
         } else qfits_pretty_string_r(str_val, unit);
 
         /* disp <-> TDISP */
-        sprintf(keyword, "TDISP%d", i+1) ;
+        sprintf(keyword, "TDISP%d", i+1);
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
-            disp[0] = '\0' ;
+            disp[0] = '\0';
         } else qfits_pretty_string_r(str_val, disp);
 
         /* nullval <-> TNULL */
-        sprintf(keyword, "TNULL%d", i+1) ;
+        sprintf(keyword, "TNULL%d", i+1);
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
-            nullval[0] = '\0' ;
+            nullval[0] = '\0';
         } else qfits_pretty_string_r(str_val, nullval);
     
         /* atom_size, atom_nb, atom_dec_nb, atom_type    <-> TFORM */
-        sprintf(keyword, "TFORM%d", i+1) ;
+        sprintf(keyword, "TFORM%d", i+1);
         if ((str_val=qfits_query_ext(filename, keyword, xtnum))==NULL) {
             qfits_error("cannot read [%s] in [%s]:[%d]", keyword, filename, 
                     xtnum);
             qfits_table_close(tload);
-            return NULL ;
+            return NULL;
         }
         /* Interpret the type in header */
 		qfits_pretty_string_r(str_val, str_val_2);
@@ -541,8 +541,8 @@ qfits_table * qfits_table_open(
                         &(atom_type), 
                         table_type) == -1) {
             qfits_error("cannot interpret the type: %s", str_val_2);
-            qfits_table_close(tload) ;
-            return NULL ;
+            qfits_table_close(tload);
+            return NULL;
         }
         
         /* Set atom_size */
@@ -550,113 +550,113 @@ qfits_table * qfits_table_open(
             case TFITS_BIN_TYPE_A:
             case TFITS_BIN_TYPE_L:
             case TFITS_BIN_TYPE_B:
-                atom_size = 1 ;
-                break ;
+                atom_size = 1;
+                break;
             case TFITS_BIN_TYPE_I:
-                atom_size = 2 ;
-                break ;
+                atom_size = 2;
+                break;
             case TFITS_BIN_TYPE_J:
             case TFITS_BIN_TYPE_E:
             case TFITS_ASCII_TYPE_I:
             case TFITS_ASCII_TYPE_E:
             case TFITS_ASCII_TYPE_F:
-                atom_size = 4 ;
-                break ;
+                atom_size = 4;
+                break;
             case TFITS_BIN_TYPE_C:
             case TFITS_BIN_TYPE_P:
-                atom_size = 4 ;
-                atom_nb *= 2 ;
-                break ;
+                atom_size = 4;
+                atom_nb *= 2;
+                break;
             case TFITS_BIN_TYPE_K:
             case TFITS_BIN_TYPE_D:
             case TFITS_ASCII_TYPE_D:
-                atom_size = 8 ;
-                break ;
+                atom_size = 8;
+                break;
             case TFITS_BIN_TYPE_M:
-                atom_size = 8 ;
-                atom_nb *= 2 ;
-                break ;
+                atom_size = 8;
+                atom_nb *= 2;
+                break;
             case TFITS_BIN_TYPE_X:
-                atom_size = 1 ;
-                nb_bits = atom_nb ;
-                atom_nb = (int)((nb_bits - 1)/ 8) + 1 ;
-                break ;
+                atom_size = 1;
+                nb_bits = atom_nb;
+                atom_nb = (int)((nb_bits - 1)/ 8) + 1;
+                break;
             case TFITS_ASCII_TYPE_A:
-                atom_size = atom_nb ;
-                break ;
+                atom_size = atom_nb;
+                break;
             default:
-                qfits_error("unrecognized type") ;
-                qfits_table_close(tload) ;
-                return NULL ;
-                break ;
+                qfits_error("unrecognized type");
+                qfits_table_close(tload);
+                return NULL;
+                break;
         }
     
         /* zero <-> TZERO */
-        sprintf(keyword, "TZERO%d", i+1) ;
+        sprintf(keyword, "TZERO%d", i+1);
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) != NULL) {
-            zero = (float)atof(str_val) ;
-            zero_present = 1 ;    
+            zero = (float)atof(str_val);
+            zero_present = 1;    
         } else {
-            zero = (float)0.0 ;
-            zero_present = 0 ;    
+            zero = (float)0.0;
+            zero_present = 0;    
         }
         
         /* scale <-> TSCAL */
-        sprintf(keyword, "TSCAL%d", i+1) ;
+        sprintf(keyword, "TSCAL%d", i+1);
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) != NULL) {
-            scale = (float)atof(str_val) ;
-            scale_present = 1 ;
+            scale = (float)atof(str_val);
+            scale_present = 1;
         } else {
-            scale = (float)1.0 ;
-            scale_present = 0 ;
+            scale = (float)1.0;
+            scale_present = 0;
         }
 
         /* Fill the current column object */
         qfits_col_fill(curr_col, atom_nb, atom_dec_nb, atom_size, atom_type, 
                 label, unit, nullval, disp, zero_present, zero, scale_present, 
-                scale, offset_beg) ;
+                scale, offset_beg);
         
         /* Compute offset_beg but for the last column */
         if (i < tload->nc - 1) {
             if (table_type == QFITS_ASCIITABLE) {
 				char str_val_2[FITS_LINESZ+1];
                 /* column width <-> TBCOLi and TBCOLi+1 */
-                sprintf(keyword, "TBCOL%d", i+1) ;
+                sprintf(keyword, "TBCOL%d", i+1);
                 if ((str_val=qfits_query_ext(filename, keyword, xtnum))==NULL) {
                     qfits_error("cannot read [%s] in [%s]", keyword, filename);
                     qfits_table_close(tload);
-                    return NULL ;
+                    return NULL;
                 }
 				qfits_pretty_string_r(str_val, str_val_2);
                 col_pos = atoi(str_val_2);
                 
                 sprintf(keyword, "TBCOL%d", i+2);
                 if ((str_val=qfits_query_ext(filename, keyword, xtnum))==NULL){
-                    qfits_error("cannot read [%s] in [%s]", keyword, filename) ;
-                    qfits_table_close(tload) ;
-                    return NULL ;
+                    qfits_error("cannot read [%s] in [%s]", keyword, filename);
+                    qfits_table_close(tload);
+                    return NULL;
                 }
 				qfits_pretty_string_r(str_val, str_val_2);
                 next_col_pos = atoi(str_val_2);
-                offset_beg += (int)(next_col_pos - col_pos) ;
+                offset_beg += (int)(next_col_pos - col_pos);
             } else if (table_type == QFITS_BINTABLE) {
-                offset_beg += atom_nb * atom_size ;
+                offset_beg += atom_nb * atom_size;
             }
         }
-        curr_col++ ;
+        curr_col++;
     }
 
     /* Check that the theoretical data size is not far from the measured */
     /* one by more than 2880 */
-    theory_size = qfits_compute_table_width(tload)*tload->nr ;
+    theory_size = qfits_compute_table_width(tload)*tload->nr;
     if (data_size < theory_size) {
-        qfits_error("Inconsistent data sizes") ;
-        qfits_table_close(tload) ;
-        return NULL ;
+        qfits_error("Inconsistent data sizes");
+        qfits_table_close(tload);
+        return NULL;
     }
     
     /* Return  */
-    return tload ;
+    return tload;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -669,10 +669,10 @@ qfits_table * qfits_table_open(
 /*----------------------------------------------------------------------------*/
 void qfits_table_close(qfits_table * t)
 {
-    if (t==NULL) return ;
-    if (t->nc>0) if (t->col!=NULL) qfits_free(t->col) ;
+    if (t==NULL) return;
+    if (t->nc>0) if (t->col!=NULL) qfits_free(t->col);
     qfits_free(t);
-    return ;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -705,41 +705,41 @@ unsigned char * qfits_query_column(
         int                     colnum,
         const int           *   selection)
 {
-    char            *    start ;
-    qfits_col       *   col ;
-    int                    field_size ;
-    unsigned char   *   array ;
-    unsigned char   *   r ;
-    unsigned char   *   inbuf ;
-    int                 table_width ;
-    int                 nb_rows ;
-    size_t              size ;
-    int                 i ;
+    char            *    start;
+    qfits_col       *   col;
+    int                    field_size;
+    unsigned char   *   array;
+    unsigned char   *   r;
+    unsigned char   *   inbuf;
+    int                 table_width;
+    int                 nb_rows;
+    size_t              size;
+    int                 i;
    
     if (th->tab_w == -1) {
         /* Compute the table width in bytes */
         if ((table_width = qfits_compute_table_width(th)) == -1) {
-            qfits_error("cannot compute the table width") ;
-            return NULL ;
+            qfits_error("cannot compute the table width");
+            return NULL;
         }
-    } else table_width = th->tab_w ;
+    } else table_width = th->tab_w;
    
     /* Compute the number of selected rows */
-    nb_rows = 0 ;
+    nb_rows = 0;
     if (selection == NULL) {
-        nb_rows = th->nr ;
+        nb_rows = th->nr;
     } else {
-        for (i=0 ; i<th->nr ; i++) if (selection[i] == 1) nb_rows++ ;
+        for (i=0; i<th->nr; i++) if (selection[i] == 1) nb_rows++;
     }
     
     /* Pointer to requested column */
-    col = th->col + colnum ;
+    col = th->col + colnum;
 
     /* Test if column is empty */
-    if (nb_rows * col->atom_size * col->atom_nb == 0) col->readable = 0 ;
+    if (nb_rows * col->atom_size * col->atom_nb == 0) col->readable = 0;
     
     /* Test if column is readable */
-    if (col->readable == 0)  return NULL ;
+    if (col->readable == 0)  return NULL;
 
     /* Compute the size in bytes of one field stored in the file */
     if ((field_size=qfits_table_get_field_size(th->tab_t,col))==-1) return NULL;
@@ -747,53 +747,53 @@ unsigned char * qfits_query_column(
     /* Load input file */
     if ((start=qfits_falloc((char *)(th->filename), 0, &size))==NULL) {
         qfits_error("cannot open table for query [%s]", th->filename);
-        return NULL ;
+        return NULL;
     }
    
     /* Allocate data array */
-    array = qfits_malloc(nb_rows * field_size * sizeof(char)) ; 
+    array = qfits_malloc(nb_rows * field_size * sizeof(char)); 
             
     /* Position the input pointer at the begining of the column data */
-    r = array ;
-    inbuf = (unsigned char*)start + col->off_beg ;
+    r = array;
+    inbuf = (unsigned char*)start + col->off_beg;
    
     /* Copy the values in array */
     if (selection == NULL) {
         /* No selection : get the complete column */
-        for (i=0 ; i<th->nr ; i++) {
+        for (i=0; i<th->nr; i++) {
             /* Copy all atoms on this field into array */
             memcpy(r, inbuf, field_size);
-            r += field_size ;
+            r += field_size;
             /* Jump to next line */
-            inbuf += table_width ;
+            inbuf += table_width;
         }
     } else {
         /* Get only the selected rows */
-        for (i=0 ; i<th->nr ; i++) {
+        for (i=0; i<th->nr; i++) {
             if (selection[i] == 1) {
                 /* Copy all atoms on this field into array */
                 memcpy(r, inbuf, field_size);
-                r += field_size ;
+                r += field_size;
             }
             /* Jump to next line */
-            inbuf += table_width ;
+            inbuf += table_width;
         }
     }
-    qfits_fdealloc(start, 0, size) ;
+    qfits_fdealloc(start, 0, size);
 
     /* SWAP the bytes if necessary */
 #ifndef WORDS_BIGENDIAN
     if ((th->tab_t == QFITS_BINTABLE) && (col->atom_size > 1)) {
-        r = array ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+        r = array;
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             qfits_swap_bytes(r, col->atom_size);
-            r += col->atom_size ;
+            r += col->atom_size;
         }
     }
 #endif
 
      /* Return allocated and converted array */
-    return array ;
+    return array;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -815,38 +815,38 @@ unsigned char * qfits_query_column_seq(
         int                     start_ind,
         int                     nb_rows)
 {
-    char            *   start ;
-    qfits_col       *   col ;
-    int                 field_size ;
-    unsigned char   *   array ;
-    unsigned char   *   r ;
-    unsigned char   *   inbuf ;
-    int                 table_width ;
-    size_t              size ;
-    int                 i ;
+    char            *   start;
+    qfits_col       *   col;
+    int                 field_size;
+    unsigned char   *   array;
+    unsigned char   *   r;
+    unsigned char   *   inbuf;
+    int                 table_width;
+    size_t              size;
+    int                 i;
    
     if (th->tab_w == -1) {
         /* Compute the table width in bytes */
         if ((table_width = qfits_compute_table_width(th)) == -1) {
-            qfits_error("cannot compute the table width") ;
-            return NULL ;
+            qfits_error("cannot compute the table width");
+            return NULL;
         }
-    } else table_width = th->tab_w ;
+    } else table_width = th->tab_w;
   
     /* Check the validity of start_ind and nb_rows */
     if ((start_ind<0) || (start_ind+nb_rows>th->nr)) { 
-        qfits_error("bad start index and number of rows") ;
-        return NULL ;
+        qfits_error("bad start index and number of rows");
+        return NULL;
     }
     
     /* Pointer to requested column */
-    col = th->col + colnum ;
+    col = th->col + colnum;
 
     /* Test if column is empty */
-    if (nb_rows * col->atom_size * col->atom_nb == 0) col->readable = 0 ;
+    if (nb_rows * col->atom_size * col->atom_nb == 0) col->readable = 0;
     
     /* Test if column is readable */
-    if (col->readable == 0)  return NULL ;
+    if (col->readable == 0)  return NULL;
 
     /* Compute the size in bytes of one field stored in the file */
     if ((field_size=qfits_table_get_field_size(th->tab_t,col))==-1) return NULL;
@@ -854,40 +854,40 @@ unsigned char * qfits_query_column_seq(
     /* Load input file */
     if ((start=qfits_falloc((char *)(th->filename), 0, &size))==NULL) {
         qfits_error("cannot open table for query [%s]", th->filename);
-        return NULL ;
+        return NULL;
     }
    
     /* Allocate data array */
-    array = qfits_malloc(nb_rows * field_size * sizeof(char)) ; 
+    array = qfits_malloc(nb_rows * field_size * sizeof(char)); 
             
     /* Position the input pointer at the begining of the column data */
-    r = array ;
-    inbuf = (unsigned char*)start + col->off_beg + table_width * start_ind ;
+    r = array;
+    inbuf = (unsigned char*)start + col->off_beg + table_width * start_ind;
    
     /* Copy the values in array */
     /* Get only the selected rows */
-    for (i=0 ; i<nb_rows ; i++) {
+    for (i=0; i<nb_rows; i++) {
         /* Copy all atoms on this field into array */
         memcpy(r, inbuf, field_size);
-        r += field_size ;
+        r += field_size;
         /* Jump to next line */
-        inbuf += table_width ;
+        inbuf += table_width;
     }
-    qfits_fdealloc(start, 0, size) ;
+    qfits_fdealloc(start, 0, size);
 
     /* SWAP the bytes if necessary */
 #ifndef WORDS_BIGENDIAN
     if ((th->tab_t == QFITS_BINTABLE) && (col->atom_size > 1)) {
-        r = array ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+        r = array;
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             qfits_swap_bytes(r, col->atom_size);
-            r += col->atom_size ;
+            r += col->atom_size;
         }
     }
 #endif
 
      /* Return allocated and converted array */
-    return array ;
+    return array;
 }
 
 
@@ -902,35 +902,35 @@ static int qfits_query_column_seq_to_array_endian(
 												  int                 dest_stride,
 												  int swap_endian)
 {
-	char			*	start ;
-    qfits_col       *   col ;
-	int					field_size ;
-	unsigned char   *   r ;
-    unsigned char   *   inbuf ;
-    int                 table_width ;
-    size_t              size ;
-	int                 i ;
+	char			*	start;
+    qfits_col       *   col;
+	int					field_size;
+	unsigned char   *   r;
+    unsigned char   *   inbuf;
+    int                 table_width;
+    size_t              size;
+	int                 i;
 	int do_swap;
    
     if (th->tab_w == -1) {
         /* Compute the table width in bytes */
         if ((table_width = qfits_compute_table_width(th)) == -1) {
-            qfits_error("cannot compute the table width") ;
+            qfits_error("cannot compute the table width");
             return -1;
         }
-    } else table_width = th->tab_w ;
+    } else table_width = th->tab_w;
   
     /* Check the validity of start_ind and nb_rows */
     if ((start_ind<0) || (start_ind+nb_rows>th->nr)) { 
-        qfits_error("bad start index and number of rows") ;
+        qfits_error("bad start index and number of rows");
         return -1;
     }
     
 	/* Pointer to requested column */
-	col = th->col + colnum ;
+	col = th->col + colnum;
 
 	/* Test if column is empty */
-	if (nb_rows * col->atom_size * col->atom_nb == 0) col->readable = 0 ;
+	if (nb_rows * col->atom_size * col->atom_nb == 0) col->readable = 0;
 	
 	/* Test if column is readable */
 	if (col->readable == 0)  return -1;
@@ -958,7 +958,7 @@ static int qfits_query_column_seq_to_array_endian(
 
     /* Copy the values in array */
     /* Get only the selected rows */
-    for (i=0 ; i<nb_rows ; i++) {
+    for (i=0; i<nb_rows; i++) {
         /* Copy all atoms on this field into array */
         memcpy(r, inbuf, field_size);
 
@@ -975,9 +975,9 @@ static int qfits_query_column_seq_to_array_endian(
 
         r += dest_stride;
         /* Jump to next line */
-        inbuf += table_width ;
+        inbuf += table_width;
 	}
-    qfits_fdealloc(start, 0, size) ;
+    qfits_fdealloc(start, 0, size);
 
 	return 0;
 }
@@ -1031,199 +1031,199 @@ void * qfits_query_column_data(
         const int           *   selection,
         const void          *    null_value)
 {
-    void            *    out_array ;
-    qfits_col       *   col ;
-    int                 nb_rows ;
-    unsigned char    *    in_array ;
-    char            *    field ;
+    void            *    out_array;
+    qfits_col       *   col;
+    int                 nb_rows;
+    unsigned char    *    in_array;
+    char            *    field;
 
-    unsigned char        ucnull ;
-    short                snull ;
-    int                 inull ;
-    double                dnull ;
-    float                fnull ;
+    unsigned char        ucnull;
+    short                snull;
+    int                 inull;
+    double                dnull;
+    float                fnull;
 
-    int                 i ;
+    int                 i;
     
     /* Initialize */
     if (null_value == NULL) {
-        inull  = (int)0 ;
-        snull  = (short)0 ;
-        ucnull = (unsigned char)0 ;
-        fnull  = (float)0.0 ;
-        dnull  = (double)0.0 ;
+        inull  = (int)0;
+        snull  = (short)0;
+        ucnull = (unsigned char)0;
+        fnull  = (float)0.0;
+        dnull  = (double)0.0;
     } else {
-        inull  = *(int*)null_value ;
-        snull  = *(short*)null_value ;
-        ucnull = *(unsigned char*)null_value ;
-        fnull  = *(float*)null_value ;
-        dnull  = *(double*)null_value ;
+        inull  = *(int*)null_value;
+        snull  = *(short*)null_value;
+        ucnull = *(unsigned char*)null_value;
+        fnull  = *(float*)null_value;
+        dnull  = *(double*)null_value;
     }
 
     /* Get the number of selected rows */
-    nb_rows = 0 ;
+    nb_rows = 0;
     if (selection == NULL) {
-        nb_rows = th->nr ;
+        nb_rows = th->nr;
     } else {
-        for (i=0 ; i<th->nr ; i++) if (selection[i] == 1) nb_rows++ ;
+        for (i=0; i<th->nr; i++) if (selection[i] == 1) nb_rows++;
     }
 
     /* Pointer to requested column */
-    col = th->col+colnum ;
+    col = th->col+colnum;
 
     /* Test if column is readable */
-    if (col->readable == 0) return NULL ;
+    if (col->readable == 0) return NULL;
     
     /* Handle each type separately */
     switch(col->atom_type) {
         case TFITS_ASCII_TYPE_A:
-        out_array = (char*)qfits_query_column(th, colnum, selection) ;
-        break ;
+        out_array = (char*)qfits_query_column(th, colnum, selection);
+        break;
 
         case TFITS_ASCII_TYPE_I:
-        in_array = (unsigned char*)qfits_query_column(th, colnum, selection) ;
+        in_array = (unsigned char*)qfits_query_column(th, colnum, selection);
         out_array = qfits_malloc(nb_rows*col->atom_size);
-        field = qfits_malloc((col->atom_nb+1)*sizeof(char)) ;
-        for (i=0 ; i<nb_rows ; i++) {
+        field = qfits_malloc((col->atom_nb+1)*sizeof(char));
+        for (i=0; i<nb_rows; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]='\0' ;
+            field[col->atom_nb]='\0';
             /* Write the data in out_array */
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, qfits_strstrip(field))) {
-                ((int*)out_array)[i] = inull ;
+                ((int*)out_array)[i] = inull;
             } else {
-                ((int*)out_array)[i] = (int)atoi(field) ; 
+                ((int*)out_array)[i] = (int)atoi(field); 
             }
         }
-        qfits_free(field) ;
-        qfits_free(in_array) ;
-        break ;
+        qfits_free(field);
+        qfits_free(in_array);
+        break;
             
         case TFITS_ASCII_TYPE_E:
         case TFITS_ASCII_TYPE_F:
-        in_array = (unsigned char*)qfits_query_column(th, colnum, selection) ;
+        in_array = (unsigned char*)qfits_query_column(th, colnum, selection);
         out_array = qfits_malloc(nb_rows*col->atom_size);
-        field = qfits_malloc((col->atom_nb+1)*sizeof(char)) ;
-        for (i=0 ; i<nb_rows ; i++) {
+        field = qfits_malloc((col->atom_nb+1)*sizeof(char));
+        for (i=0; i<nb_rows; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]='\0' ;
+            field[col->atom_nb]='\0';
             /* Write the data in out_array */
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, qfits_strstrip(field))) {
-                ((float*)out_array)[i] = fnull ;
+                ((float*)out_array)[i] = fnull;
             } else {
                 /* Add the decimal handling */
                 ((float*)out_array)[i]=(float)qfits_str2dec(field, 
-                                                             col->atom_dec_nb) ;
+                                                             col->atom_dec_nb);
             }
         }
-        qfits_free(field) ;
-        qfits_free(in_array) ;
-        break ;
+        qfits_free(field);
+        qfits_free(in_array);
+        break;
             
         case TFITS_ASCII_TYPE_D:
-        in_array = (unsigned char*)qfits_query_column(th, colnum, selection) ;
+        in_array = (unsigned char*)qfits_query_column(th, colnum, selection);
         out_array = qfits_malloc(nb_rows*col->atom_size);
-        field = qfits_malloc((col->atom_nb+1)*sizeof(char)) ;
-        for (i=0 ; i<nb_rows ; i++) {
+        field = qfits_malloc((col->atom_nb+1)*sizeof(char));
+        for (i=0; i<nb_rows; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]='\0' ;
+            field[col->atom_nb]='\0';
             /* Write the data in out_array */
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, field)) {
-                ((double*)out_array)[i] = dnull ;
+                ((double*)out_array)[i] = dnull;
             } else {
                 /* Add the decimal handling */
-                ((double*)out_array)[i]=qfits_str2dec(field, col->atom_dec_nb) ;
+                ((double*)out_array)[i]=qfits_str2dec(field, col->atom_dec_nb);
             }
         }
-        qfits_free(field) ;
-        qfits_free(in_array) ;
+        qfits_free(field);
+        qfits_free(in_array);
    
-        break ;
+        break;
         case TFITS_BIN_TYPE_A:
         case TFITS_BIN_TYPE_L:
-        out_array = (char*)qfits_query_column(th, colnum, selection) ;
-        break ;
+        out_array = (char*)qfits_query_column(th, colnum, selection);
+        break;
             
         case TFITS_BIN_TYPE_D:
         case TFITS_BIN_TYPE_M:
-        out_array = (double*)qfits_query_column(th, colnum, selection) ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+        out_array = (double*)qfits_query_column(th, colnum, selection);
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (qfits_isnan(((double*)out_array)[i]) || 
                     qfits_isinf(((double*)out_array)[i])) {
-                ((double*)out_array)[i] = dnull ;
+                ((double*)out_array)[i] = dnull;
             }
         }
-        break ;
+        break;
             
         case TFITS_BIN_TYPE_E:
         case TFITS_BIN_TYPE_C:
-        out_array = (float*)qfits_query_column(th, colnum, selection) ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+        out_array = (float*)qfits_query_column(th, colnum, selection);
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (qfits_isnan(((float*)out_array)[i]) || 
                     qfits_isinf(((float*)out_array)[i])) {
-                ((float*)out_array)[i] = fnull ;
+                ((float*)out_array)[i] = fnull;
             }
         }
-        break ;
+        break;
             
         case TFITS_BIN_TYPE_X:
-        out_array = (unsigned char*)qfits_query_column(th, colnum, selection) ;
-        break ;
+        out_array = (unsigned char*)qfits_query_column(th, colnum, selection);
+        break;
             
         case TFITS_BIN_TYPE_B:
-        out_array = (unsigned char*)qfits_query_column(th, colnum, selection) ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+        out_array = (unsigned char*)qfits_query_column(th, colnum, selection);
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (((col->nullval)[0] != '\0') && 
                 (atoi(col->nullval) == (int)((unsigned char*)out_array)[i])) {
-                ((unsigned char*)out_array)[i] = ucnull ;
+                ((unsigned char*)out_array)[i] = ucnull;
             }
         }
-        break ;
+        break;
             
         case TFITS_BIN_TYPE_I:
-        out_array = (short*)qfits_query_column(th, colnum, selection) ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+        out_array = (short*)qfits_query_column(th, colnum, selection);
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==(int)((short*)out_array)[i])) {     
-                ((short*)out_array)[i] = snull ;
+                ((short*)out_array)[i] = snull;
             }
         }
-        break ;
+        break;
 
         case TFITS_BIN_TYPE_J:
-        out_array = (int*)qfits_query_column(th, colnum, selection) ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+        out_array = (int*)qfits_query_column(th, colnum, selection);
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==((int*)out_array)[i])) {     
-                ((int*)out_array)[i] = inull ;
+                ((int*)out_array)[i] = inull;
             }
         }
-        break ;
+        break;
 
 	case TFITS_BIN_TYPE_K:
-		out_array = (int64_t*)qfits_query_column(th, colnum, selection) ;
-		for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+		out_array = (int64_t*)qfits_query_column(th, colnum, selection);
+		for (i=0; i<nb_rows * col->atom_nb; i++) {
 			if (((col->nullval)[0] != '\0') &&
                 (atoll(col->nullval)==((int64_t*)out_array)[i])) { 	
-				((int64_t*)out_array)[i] = inull ;
+				((int64_t*)out_array)[i] = inull;
 			}
 		}
-		break ;
+		break;
             
         case TFITS_BIN_TYPE_P:
-        out_array = (int*)qfits_query_column(th, colnum, selection) ;
-        break ;
+        out_array = (int*)qfits_query_column(th, colnum, selection);
+        break;
             
         default:
-        qfits_error("unrecognized data type") ;
-        return NULL ;
+        qfits_error("unrecognized data type");
+        return NULL;
     }
-    return out_array ;    
+    return out_array;    
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1247,203 +1247,203 @@ void * qfits_query_column_seq_data(
         int                     nb_rows,
         const void          *   null_value)
 {
-    void            *    out_array ;
-    qfits_col       *   col ;
-    unsigned char    *    in_array ;
-    char            *    field ;
+    void            *    out_array;
+    qfits_col       *   col;
+    unsigned char    *    in_array;
+    char            *    field;
 
-    unsigned char        ucnull ;
-    short                snull ;
-    int                 inull ;
-    double                dnull ;
-    float                fnull ;
+    unsigned char        ucnull;
+    short                snull;
+    int                 inull;
+    double                dnull;
+    float                fnull;
 
-    int                 i ;
+    int                 i;
     
     /* Initialize */
     if (null_value == NULL) {
-        inull  = (int)0 ;
-        snull  = (short)0 ;
-        ucnull = (unsigned char)0 ;
-        fnull  = (float)0.0 ;
-        dnull  = (double)0.0 ;
+        inull  = (int)0;
+        snull  = (short)0;
+        ucnull = (unsigned char)0;
+        fnull  = (float)0.0;
+        dnull  = (double)0.0;
     } else {
-        inull  = *(int*)null_value ;
-        snull  = *(short*)null_value ;
-        ucnull = *(unsigned char*)null_value ;
-        fnull  = *(float*)null_value ;
-        dnull  = *(double*)null_value ;
+        inull  = *(int*)null_value;
+        snull  = *(short*)null_value;
+        ucnull = *(unsigned char*)null_value;
+        fnull  = *(float*)null_value;
+        dnull  = *(double*)null_value;
     }
 
     /* Pointer to requested column */
-    col = th->col+colnum ;
+    col = th->col+colnum;
 
     /* Test if column is readable */
-    if (col->readable == 0) return NULL ;
+    if (col->readable == 0) return NULL;
     
     /* Handle each type separately */
     switch(col->atom_type) {
         case TFITS_ASCII_TYPE_A:
         out_array = (char*)qfits_query_column_seq(th, colnum, start_ind, 
-                nb_rows) ;
-        break ;
+                nb_rows);
+        break;
 
         case TFITS_ASCII_TYPE_I:
         in_array = (unsigned char*)qfits_query_column_seq(th, colnum, 
-                start_ind, nb_rows) ;
+                start_ind, nb_rows);
         out_array = qfits_malloc(nb_rows*col->atom_size);
-        field = qfits_malloc((col->atom_nb+1)*sizeof(char)) ;
-        for (i=0 ; i<nb_rows ; i++) {
+        field = qfits_malloc((col->atom_nb+1)*sizeof(char));
+        for (i=0; i<nb_rows; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]='\0' ;
+            field[col->atom_nb]='\0';
             /* Write the data in out_array */
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, qfits_strstrip(field))) {
-                ((int*)out_array)[i] = inull ;
+                ((int*)out_array)[i] = inull;
             } else {
-                ((int*)out_array)[i] = (int)atoi(field) ; 
+                ((int*)out_array)[i] = (int)atoi(field); 
             }
         }
-        qfits_free(field) ;
-        qfits_free(in_array) ;
-        break ;
+        qfits_free(field);
+        qfits_free(in_array);
+        break;
             
         case TFITS_ASCII_TYPE_E:
         case TFITS_ASCII_TYPE_F:
         in_array = (unsigned char*)qfits_query_column_seq(th, colnum,
-                start_ind, nb_rows) ;
+                start_ind, nb_rows);
         out_array = qfits_malloc(nb_rows*col->atom_size);
-        field = qfits_malloc((col->atom_nb+1)*sizeof(char)) ;
-        for (i=0 ; i<nb_rows ; i++) {
+        field = qfits_malloc((col->atom_nb+1)*sizeof(char));
+        for (i=0; i<nb_rows; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]='\0' ;
+            field[col->atom_nb]='\0';
             /* Write the data in out_array */
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, qfits_strstrip(field))) {
-                ((float*)out_array)[i] = fnull ;
+                ((float*)out_array)[i] = fnull;
             } else {
                 /* Add the decimal handling */
                 ((float*)out_array)[i]=(float)qfits_str2dec(field, 
-                                                            col->atom_dec_nb) ;
+                                                            col->atom_dec_nb);
             }
         }
-        qfits_free(field) ;
-        qfits_free(in_array) ;
-        break ;
+        qfits_free(field);
+        qfits_free(in_array);
+        break;
             
         case TFITS_ASCII_TYPE_D:
         in_array = (unsigned char*)qfits_query_column_seq(th, colnum,
-                start_ind, nb_rows) ;
+                start_ind, nb_rows);
         out_array = qfits_malloc(nb_rows*col->atom_size);
-        field = qfits_malloc((col->atom_nb+1)*sizeof(char)) ;
-        for (i=0 ; i<nb_rows ; i++) {
+        field = qfits_malloc((col->atom_nb+1)*sizeof(char));
+        for (i=0; i<nb_rows; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]='\0' ;
+            field[col->atom_nb]='\0';
             /* Write the data in out_array */
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, qfits_strstrip(field))) {
-                ((double*)out_array)[i] = dnull ;
+                ((double*)out_array)[i] = dnull;
             } else {
                 /* Add the decimal handling */
-                ((double*)out_array)[i]=qfits_str2dec(field, col->atom_dec_nb) ;
+                ((double*)out_array)[i]=qfits_str2dec(field, col->atom_dec_nb);
             }
         }
-        qfits_free(field) ;
-        qfits_free(in_array) ;
-        break ;
+        qfits_free(field);
+        qfits_free(in_array);
+        break;
             
         case TFITS_BIN_TYPE_A:
         case TFITS_BIN_TYPE_L:
         out_array = (char*)qfits_query_column_seq(th, colnum,
-                start_ind, nb_rows) ;
-        break ;
+                start_ind, nb_rows);
+        break;
             
         case TFITS_BIN_TYPE_D:
         case TFITS_BIN_TYPE_M:
         out_array = (double*)qfits_query_column_seq(th, colnum,
-                start_ind, nb_rows) ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+                start_ind, nb_rows);
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (qfits_isnan(((double*)out_array)[i]) || 
                     qfits_isinf(((double*)out_array)[i])) {
-                ((double*)out_array)[i] = dnull ;
+                ((double*)out_array)[i] = dnull;
             }
         }
-        break ;
+        break;
             
         case TFITS_BIN_TYPE_E:
         case TFITS_BIN_TYPE_C:
         out_array = (float*)qfits_query_column_seq(th, colnum,
-                start_ind, nb_rows) ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+                start_ind, nb_rows);
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (qfits_isnan(((float*)out_array)[i]) || 
                     qfits_isinf(((float*)out_array)[i])) {
-                ((float*)out_array)[i] = fnull ;
+                ((float*)out_array)[i] = fnull;
             }
         }
-        break ;
+        break;
             
         case TFITS_BIN_TYPE_X:
         out_array = (unsigned char*)qfits_query_column_seq(th, colnum,
-                start_ind, nb_rows) ;
-        break ;
+                start_ind, nb_rows);
+        break;
             
         case TFITS_BIN_TYPE_B:
         out_array = (unsigned char*)qfits_query_column_seq(th, colnum,
-                start_ind, nb_rows) ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+                start_ind, nb_rows);
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)== (int)((unsigned char*)out_array)[i])) {
-                ((unsigned char*)out_array)[i] = ucnull ;
+                ((unsigned char*)out_array)[i] = ucnull;
             }
         }
-        break ;
+        break;
             
         case TFITS_BIN_TYPE_I:
         out_array = (short*)qfits_query_column_seq(th, colnum,
-                start_ind, nb_rows) ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+                start_ind, nb_rows);
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==(int)((short*)out_array)[i])) {     
-                ((short*)out_array)[i] = snull ;
+                ((short*)out_array)[i] = snull;
             }
         }
-        break ;
+        break;
             
         case TFITS_BIN_TYPE_J:
         out_array = (int*)qfits_query_column_seq(th, colnum,
-                start_ind, nb_rows) ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+                start_ind, nb_rows);
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==((int*)out_array)[i])) {     
-                ((int*)out_array)[i] = inull ;
+                ((int*)out_array)[i] = inull;
             }
         }
-        break ;
+        break;
 
 	case TFITS_BIN_TYPE_K:
 		out_array = (int64_t*)qfits_query_column_seq(th, colnum,
-													 start_ind, nb_rows) ;
-		for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+													 start_ind, nb_rows);
+		for (i=0; i<nb_rows * col->atom_nb; i++) {
 			if (((col->nullval)[0] != '\0') &&
                 (atoll(col->nullval)==((int64_t*)out_array)[i])) { 	
-				((int64_t*)out_array)[i] = inull ;
+				((int64_t*)out_array)[i] = inull;
 			}
 		}
-		break ;
+		break;
             
         case TFITS_BIN_TYPE_P:
         out_array = (int*)qfits_query_column_seq(th, colnum,
-                start_ind, nb_rows) ;
-        break ;
+                start_ind, nb_rows);
+        break;
             
         default:
-        qfits_error("unrecognized data type") ;
-        return NULL ;
+        qfits_error("unrecognized data type");
+        return NULL;
     }
-    return out_array ;    
+    return out_array;    
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1465,31 +1465,31 @@ int * qfits_query_column_nulls(
         int                 *   nb_vals,
         int                 *   nb_nulls)
 {
-    int             *    out_array ;
-    qfits_col       *   col ;
-    unsigned char    *    in_array ;
-    void            *    tmp_array ;
-    char            *    field ;
-    int                 nb_rows ;
-    int                 i ;
+    int             *    out_array;
+    qfits_col       *   col;
+    unsigned char    *    in_array;
+    void            *    tmp_array;
+    char            *    field;
+    int                 nb_rows;
+    int                 i;
 
     /* Initialize */
-    *nb_nulls = 0 ;
-    *nb_vals = 0 ;
+    *nb_nulls = 0;
+    *nb_vals = 0;
 
     /* Get the number of selected rows */
-    nb_rows = 0 ;
+    nb_rows = 0;
     if (selection == NULL) {
-        nb_rows = th->nr ;
+        nb_rows = th->nr;
     } else {
-       for (i=0 ; i<th->nr ; i++) if (selection[i] == 1) nb_rows++ ; 
+       for (i=0; i<th->nr; i++) if (selection[i] == 1) nb_rows++; 
     }
     
     /* Pointer to requested column */
-    col = th->col+colnum ;
+    col = th->col+colnum;
         
     /* Test if column is readable */
-    if (col->readable == 0) return NULL ;
+    if (col->readable == 0) return NULL;
 
     /* Handle each type separately */
     switch(col->atom_type) {
@@ -1498,129 +1498,129 @@ int * qfits_query_column_nulls(
         case TFITS_ASCII_TYPE_E:
         case TFITS_ASCII_TYPE_F:
         case TFITS_ASCII_TYPE_I:
-        in_array = (unsigned char*)qfits_query_column(th, colnum, selection) ;
+        in_array = (unsigned char*)qfits_query_column(th, colnum, selection);
         out_array = qfits_calloc(nb_rows, sizeof(int));
-        *nb_vals = nb_rows ;
-        field = qfits_malloc((col->atom_nb+1)*sizeof(char)) ;
-        for (i=0 ; i<nb_rows ; i++) {
+        *nb_vals = nb_rows;
+        field = qfits_malloc((col->atom_nb+1)*sizeof(char));
+        for (i=0; i<nb_rows; i++) {
             /* Copy all atoms of the field into 'field' */
             memcpy(field, &in_array[i*col->atom_nb], col->atom_nb);
-            field[col->atom_nb]='\0' ;
+            field[col->atom_nb]='\0';
             /* Test if a NULL val is encoutered */
             if (!strcmp(col->nullval, qfits_strstrip(field))) {
-                out_array[i] = 1 ;    
-                (*nb_nulls)++ ;
+                out_array[i] = 1;    
+                (*nb_nulls)++;
             } 
         }
-        qfits_free(field) ;
-        if (in_array != NULL) qfits_free(in_array) ;
-        break ;
+        qfits_free(field);
+        if (in_array != NULL) qfits_free(in_array);
+        break;
             
         case TFITS_BIN_TYPE_A:
         /* No NULL values */
-        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int)) ;
-        *nb_vals = nb_rows * col->atom_nb ;
-        break ;
+        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int));
+        *nb_vals = nb_rows * col->atom_nb;
+        break;
         
         case TFITS_BIN_TYPE_L:
         case TFITS_BIN_TYPE_X:
         case TFITS_BIN_TYPE_P:
         /* No NULL values */
-        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int)) ;
-        *nb_vals = nb_rows * col->atom_nb ;
-        break ;
+        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int));
+        *nb_vals = nb_rows * col->atom_nb;
+        break;
             
         case TFITS_BIN_TYPE_D:
         case TFITS_BIN_TYPE_M:
-        tmp_array = (double*)qfits_query_column(th, colnum, selection) ;
-        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int)) ;
-        *nb_vals = nb_rows * col->atom_nb ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+        tmp_array = (double*)qfits_query_column(th, colnum, selection);
+        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int));
+        *nb_vals = nb_rows * col->atom_nb;
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (qfits_isnan(((double*)tmp_array)[i]) || 
                 qfits_isinf(((double*)tmp_array)[i])) {
-                out_array[i] = 1 ;
-                (*nb_nulls)++ ;
+                out_array[i] = 1;
+                (*nb_nulls)++;
             }
         }
-        if (tmp_array != NULL) qfits_free(tmp_array) ;
-        break ;
+        if (tmp_array != NULL) qfits_free(tmp_array);
+        break;
         
         case TFITS_BIN_TYPE_E:
         case TFITS_BIN_TYPE_C:
-        tmp_array = (float*)qfits_query_column(th, colnum, selection) ;
-        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int)) ;
-        *nb_vals = nb_rows * col->atom_nb ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+        tmp_array = (float*)qfits_query_column(th, colnum, selection);
+        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int));
+        *nb_vals = nb_rows * col->atom_nb;
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (qfits_isnan(((float*)tmp_array)[i]) || 
                 qfits_isinf(((float*)tmp_array)[i])) {
-                out_array[i] = 1 ;
-                (*nb_nulls)++ ;
+                out_array[i] = 1;
+                (*nb_nulls)++;
             }
         }
-        if (tmp_array != NULL) qfits_free(tmp_array) ;
-        break ;
+        if (tmp_array != NULL) qfits_free(tmp_array);
+        break;
         
         case TFITS_BIN_TYPE_B:
-        tmp_array = (unsigned char*)qfits_query_column(th, colnum, selection) ;
-        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int)) ;
-        *nb_vals = nb_rows * col->atom_nb ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+        tmp_array = (unsigned char*)qfits_query_column(th, colnum, selection);
+        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int));
+        *nb_vals = nb_rows * col->atom_nb;
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==(int)((unsigned char*)tmp_array)[i])) {
-                out_array[i] = 1 ;
-                (*nb_nulls)++ ;
+                out_array[i] = 1;
+                (*nb_nulls)++;
             }
         }
-        if (tmp_array != NULL) qfits_free(tmp_array) ;
-        break ;
+        if (tmp_array != NULL) qfits_free(tmp_array);
+        break;
             
         case TFITS_BIN_TYPE_I:
-        tmp_array = (short*)qfits_query_column(th, colnum, selection) ;
-        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int)) ;
-        *nb_vals = nb_rows * col->atom_nb ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+        tmp_array = (short*)qfits_query_column(th, colnum, selection);
+        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int));
+        *nb_vals = nb_rows * col->atom_nb;
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==(int)((short*)tmp_array)[i])) {     
-                out_array[i] = 1 ;
-                (*nb_nulls)++ ;
+                out_array[i] = 1;
+                (*nb_nulls)++;
             }
         }
-        if (tmp_array != NULL) qfits_free(tmp_array) ;
-        break ;
+        if (tmp_array != NULL) qfits_free(tmp_array);
+        break;
 
 		case TFITS_BIN_TYPE_K:
-			tmp_array = (int64_t*)qfits_query_column(th, colnum, selection) ;
-			out_array = calloc(nb_rows * col->atom_nb, sizeof(int64_t)) ;
-			*nb_vals = nb_rows * col->atom_nb ;
-			for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+			tmp_array = (int64_t*)qfits_query_column(th, colnum, selection);
+			out_array = calloc(nb_rows * col->atom_nb, sizeof(int64_t));
+			*nb_vals = nb_rows * col->atom_nb;
+			for (i=0; i<nb_rows * col->atom_nb; i++) {
 				if (((col->nullval)[0] != '\0') &&
 					(atoll(col->nullval)==((int64_t*)tmp_array)[i])) { 	
-					out_array[i] = 1 ;
-					(*nb_nulls)++ ;
+					out_array[i] = 1;
+					(*nb_nulls)++;
 				}
 			}
-			if (tmp_array != NULL) free(tmp_array) ;
-			break ;
+			if (tmp_array != NULL) free(tmp_array);
+			break;
             
         case TFITS_BIN_TYPE_J:
-        tmp_array = (int*)qfits_query_column(th, colnum, selection) ;
-        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int)) ;
-        *nb_vals = nb_rows * col->atom_nb ;
-        for (i=0 ; i<nb_rows * col->atom_nb ; i++) {
+        tmp_array = (int*)qfits_query_column(th, colnum, selection);
+        out_array = qfits_calloc(nb_rows * col->atom_nb, sizeof(int));
+        *nb_vals = nb_rows * col->atom_nb;
+        for (i=0; i<nb_rows * col->atom_nb; i++) {
             if (((col->nullval)[0] != '\0') &&
                 (atoi(col->nullval)==((int*)tmp_array)[i])) {     
-                out_array[i] = 1 ;
-                (*nb_nulls)++ ;
+                out_array[i] = 1;
+                (*nb_nulls)++;
             }
         }
-        if (tmp_array != NULL) qfits_free(tmp_array) ;
-        break ;
+        if (tmp_array != NULL) qfits_free(tmp_array);
+        break;
             
         default:
-        qfits_error("unrecognized data type") ;
-        return NULL ;
+        qfits_error("unrecognized data type");
+        return NULL;
     }
-    return out_array ;    
+    return out_array;    
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1637,52 +1637,52 @@ int qfits_save_table_hdrdump(
         const qfits_table   *   table,
         const qfits_header  *   fh)
 {
-    FILE        *   outfile ;
-    const char  *   md5hash ;
+    FILE        *   outfile;
+    const char  *   md5hash;
     char            md5card[81];
 
     /* Open the destination file */
     if ((outfile = fopen(table->filename, "w")) == NULL) {
 		qfits_error("cannot open file [%s]: %s", table->filename, strerror(errno));
-        return -1 ;
+        return -1;
     }
     /* Write the fits header in the file 'outname' */
     if (qfits_header_dump(fh, outfile) == -1) {
-        qfits_error("cannot dump header in file") ;
-        fclose(outfile) ;
-        return -1 ;
+        qfits_error("cannot dump header in file");
+        fclose(outfile);
+        return -1;
     }
     /* Append the extension */
     if (table->tab_t == QFITS_BINTABLE) {
         if (qfits_table_append_bin_xtension(outfile, table, array) == -1) {
-            qfits_error("in writing fits table") ;
-            fclose(outfile) ;
-            return -1 ;
+            qfits_error("in writing fits table");
+            fclose(outfile);
+            return -1;
         }
     } else if (table->tab_t == QFITS_ASCIITABLE) {
         if (qfits_table_append_ascii_xtension(outfile, table, array) == -1) {
-            qfits_error("in writing fits table") ;
-            fclose(outfile) ;
-            return -1 ;
+            qfits_error("in writing fits table");
+            fclose(outfile);
+            return -1;
         }
     } else {
-        qfits_error("Unrecognized table type") ;
-        fclose(outfile) ;
-        return -1 ;
+        qfits_error("Unrecognized table type");
+        fclose(outfile);
+        return -1;
     }
-    fclose(outfile) ;
+    fclose(outfile);
     /* Update MD5 keyword */
     if (strcmp(table->filename, "STDOUT")) {
         md5hash = qfits_datamd5(table->filename);
         if (md5hash==NULL) {
             qfits_error("computing MD5 signature for output file %s", 
                     table->filename);
-            return -1 ;
+            return -1;
         }
         sprintf(md5card, "DATAMD5 = '%s' / MD5 checksum", md5hash);
         qfits_replace_card(table->filename, "DATAMD5", md5card);
     }
-    return 0 ;
+    return 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1709,19 +1709,19 @@ int qfits_table_append_xtension(
     /* Append the extension */
     if (t->tab_t == QFITS_BINTABLE) {
         if (qfits_table_append_bin_xtension(outfile, t, data) == -1) {
-            qfits_error("in writing fits table") ;
-            return -1 ;
+            qfits_error("in writing fits table");
+            return -1;
         }
     } else if (t->tab_t == QFITS_ASCIITABLE) {
         if (qfits_table_append_ascii_xtension(outfile, t, data) == -1) {
-            qfits_error("in writing fits table") ;
-            return -1 ;
+            qfits_error("in writing fits table");
+            return -1;
         }
     } else {
-        qfits_error("Unrecognized table type") ;
-        return -1 ;
+        qfits_error("Unrecognized table type");
+        return -1;
     }
-    return 0 ;
+    return 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1748,12 +1748,12 @@ int qfits_table_append_xtension_hdr(
 {
     /* Write the fits header in the file  */
     if (qfits_header_dump(hdr, outfile) == -1) {
-        qfits_error("cannot dump header in file") ;
-        return -1 ;
+        qfits_error("cannot dump header in file");
+        return -1;
     }
 
     /* Append the data to the file */
-    return qfits_table_append_data(outfile, t, data) ;
+    return qfits_table_append_data(outfile, t, data);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1777,24 +1777,24 @@ char * qfits_table_field_to_string(
         int                     row_id,
         int                     use_zero_scale)
 {
-    char    *    str ;
+    char    *    str;
     
     switch (table->tab_t) {
         case QFITS_BINTABLE:
             str = qfits_bintable_field_to_string(table, col_id, row_id, 
-                    use_zero_scale) ;
-            break ;
+                    use_zero_scale);
+            break;
 
         case QFITS_ASCIITABLE:
             str = qfits_asciitable_field_to_string(table, col_id, row_id, 
-                    use_zero_scale) ;
-            break ;
+                    use_zero_scale);
+            break;
         default:
-            qfits_error("Table type not recognized") ;
-            return NULL ;
-            break ;
+            qfits_error("Table type not recognized");
+            return NULL;
+            break;
     }
-    return str ;
+    return str;
 }
 
 /**@}*/
@@ -1808,24 +1808,24 @@ char * qfits_table_field_to_string(
 /*----------------------------------------------------------------------------*/
 int qfits_compute_table_width(const qfits_table * th)
 {
-    int             width ;
-    qfits_col   *   curr_col ;
-    int             i ;
+    int             width;
+    qfits_col   *   curr_col;
+    int             i;
     
     /* Initialize */
-    width = 0 ;
+    width = 0;
     
     /* Loop on all columns and get column descriptions  */
-    curr_col = th->col ;
-    for (i=0 ; i<th->nc ; i++) {
+    curr_col = th->col;
+    for (i=0; i<th->nc; i++) {
         if (th->tab_t == QFITS_ASCIITABLE) {
-            width += curr_col->atom_nb ;
+            width += curr_col->atom_nb;
         } else if (th->tab_t == QFITS_BINTABLE) {
-            width += curr_col->atom_nb * curr_col->atom_size ;
+            width += curr_col->atom_nb * curr_col->atom_size;
         }
-        curr_col++ ;
+        curr_col++;
     }
-    return width ;
+    return width;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1847,91 +1847,91 @@ static char * qfits_asciitable_field_to_string(
         int                     row_id,
         int                     use_zero_scale)
 {
-    qfits_col       *       col ;
-    char            *       ccol ;
-    int             *       icol ;
-    float           *       fcol ;
-    double          *       dcol ;
+    qfits_col       *       col;
+    char            *       ccol;
+    int             *       icol;
+    float           *       fcol;
+    double          *       dcol;
     char                    ctmp[512];
-    char            *       stmp ;
-    int                     field_size ;
-    void            *        field ;
-    int             *       selection ;
+    char            *       stmp;
+    int                     field_size;
+    void            *        field;
+    int             *       selection;
     
     /* Test inputs */
-    if (table->tab_t != QFITS_ASCIITABLE) return NULL ;
+    if (table->tab_t != QFITS_ASCIITABLE) return NULL;
     
     /* Initialize */
-    ctmp[0] = '\0' ;
+    ctmp[0] = '\0';
 
     /* Set selection to select the requested row */
-    selection = qfits_calloc(table->nr, sizeof(int)) ;
-    selection[row_id] = 1 ;
+    selection = qfits_calloc(table->nr, sizeof(int));
+    selection[row_id] = 1;
     
     /* Load the column data */
     if ((field = qfits_query_column_data(table, col_id, selection, 
-                    NULL)) == NULL) return NULL ;
-    qfits_free(selection) ;
+                    NULL)) == NULL) return NULL;
+    qfits_free(selection);
     
     /* Set reference to the column */
-    col = table->col + col_id ;
+    col = table->col + col_id;
     
     /* Compute field size and allocate stmp */
-    if (col->atom_nb > ELEMENT_MAX_DISPLAY_SIZE) field_size = col->atom_nb + 1 ;
-    else field_size = ELEMENT_MAX_DISPLAY_SIZE ;
-    stmp = qfits_malloc(field_size * sizeof(char)) ;
-    stmp[0] = '\0' ;
+    if (col->atom_nb > ELEMENT_MAX_DISPLAY_SIZE) field_size = col->atom_nb + 1;
+    else field_size = ELEMENT_MAX_DISPLAY_SIZE;
+    stmp = qfits_malloc(field_size * sizeof(char));
+    stmp[0] = '\0';
  
     /* Get the string to write according to the type */
     switch(col->atom_type) {
         case TFITS_ASCII_TYPE_A:
-            ccol = (char*)field ;
+            ccol = (char*)field;
             strncpy(ctmp, ccol, col->atom_nb);
             ctmp[col->atom_nb] = '\0';
             strcpy(stmp, ctmp);
-            break ;
+            break;
             
         case TFITS_ASCII_TYPE_I:
-            icol = (int*)field ;
+            icol = (int*)field;
             /* Two cases: use col->zero and col->scale or not */
             if (col->zero_present && col->scale_present && use_zero_scale) {
                 sprintf(stmp, "%f", (float)(col->zero +
-                            (float)icol[0] * col->scale)) ;
+                            (float)icol[0] * col->scale));
             } else {    
                 sprintf(stmp, "%d", icol[0]);
             }
-            break ;
+            break;
             
         case TFITS_ASCII_TYPE_E:
         case TFITS_ASCII_TYPE_F:
-            fcol = (float*)field ;
+            fcol = (float*)field;
             /* Two cases: use col->zero and col->scale or not */
             if (col->zero_present && col->scale_present && use_zero_scale) {
                 sprintf(stmp, "%f", (float)(col->zero +
-                            fcol[0] * col->scale)) ;
+                            fcol[0] * col->scale));
             } else {
                 sprintf(stmp, "%f", fcol[0]);
             }
-            break ;
+            break;
             
         case TFITS_ASCII_TYPE_D:
-            dcol = (double*)field ;
+            dcol = (double*)field;
             /* Two cases: use col->zero and col->scale or not */
             if (col->zero_present && col->scale_present && use_zero_scale) {
                 sprintf(stmp, "%f", (float)(col->zero +
-                        (float)dcol[0] * col->scale)) ;
+                        (float)dcol[0] * col->scale));
             } else {
-                sprintf(stmp, "%g", dcol[0]) ;
+                sprintf(stmp, "%g", dcol[0]);
             }
-            break ;
+            break;
         default:
-            qfits_warning("Type not recognized") ;
-            break ;
+            qfits_warning("Type not recognized");
+            break;
     }
 
     /* Free and return */
-    qfits_free(field) ;
-    return stmp ;
+    qfits_free(field);
+    return stmp;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1953,257 +1953,257 @@ static char * qfits_bintable_field_to_string(
         int                     row_id,
         int                     use_zero_scale)
 {
-    qfits_col       *       col ;
-    unsigned char   *       uccol ;
-    char            *       ccol ;
-    int             *       icol ;
-    int64_t         *       kcol ;
-    short           *       scol ;
-    float           *       fcol ;
-    double          *       dcol ;
+    qfits_col       *       col;
+    unsigned char   *       uccol;
+    char            *       ccol;
+    int             *       icol;
+    int64_t         *       kcol;
+    short           *       scol;
+    float           *       fcol;
+    double          *       dcol;
     char                    ctmp[512];
-    char            *       stmp ;
-    int                     field_size ;
-    void            *        field ;
-    int             *       selection ;
+    char            *       stmp;
+    int                     field_size;
+    void            *        field;
+    int             *       selection;
 
-    int                     i ;
+    int                     i;
 
     /* Test inputs */
-    if (table->tab_t != QFITS_BINTABLE) return NULL ;
+    if (table->tab_t != QFITS_BINTABLE) return NULL;
 
    /* Initialize */
-    ctmp[0] = '\0' ;
+    ctmp[0] = '\0';
     
     /* Set selection to select the requested row */
-    selection = qfits_calloc(table->nr, sizeof(int)) ;
-    selection[row_id] = 1 ;
+    selection = qfits_calloc(table->nr, sizeof(int));
+    selection[row_id] = 1;
     
     /* Load the data column */
     if ((field = qfits_query_column_data(table, col_id, selection, 
                     NULL)) == NULL) {
-        qfits_free(selection) ;
-        return NULL ;
+        qfits_free(selection);
+        return NULL;
     }
-    qfits_free(selection) ;
+    qfits_free(selection);
     
     /* Set reference to the column */
-    col = table->col + col_id ;
+    col = table->col + col_id;
 
     /* Compute field size and allocate stmp */
-    field_size = col->atom_nb * ELEMENT_MAX_DISPLAY_SIZE ;
-    stmp = qfits_malloc(field_size * sizeof(char)) ;
-    stmp[0] = '\0' ;
+    field_size = col->atom_nb * ELEMENT_MAX_DISPLAY_SIZE;
+    stmp = qfits_malloc(field_size * sizeof(char));
+    stmp[0] = '\0';
  
     /* Get the string to write according to the type */
     switch(col->atom_type) {
         case TFITS_BIN_TYPE_A:
-        ccol = (char*)field ;
-        strncpy(ctmp, ccol, col->atom_size * col->atom_nb) ;
-        ctmp[col->atom_size*col->atom_nb] = '\0' ;
-        strcpy(stmp, ctmp) ;
-        break ;
+        ccol = (char*)field;
+        strncpy(ctmp, ccol, col->atom_size * col->atom_nb);
+        ctmp[col->atom_size*col->atom_nb] = '\0';
+        strcpy(stmp, ctmp);
+        break;
 
         case TFITS_BIN_TYPE_B:
-        uccol = (unsigned char*)field ;
+        uccol = (unsigned char*)field;
         /* Two cases: use col->zero and col->scale or not */
         if (col->zero_present && col->scale_present && use_zero_scale) {
             /* For each atom of the column */
-            for (i=0 ; i<col->atom_nb-1 ; i++) {
+            for (i=0; i<col->atom_nb-1; i++) {
                 sprintf(ctmp, "%f, ", (float)(col->zero +
-                        (float)uccol[i] * col->scale)) ;
-                strcat(stmp, ctmp) ;
+                        (float)uccol[i] * col->scale));
+                strcat(stmp, ctmp);
             }
             /* Handle the last atom differently: no ',' */
             sprintf(ctmp, "%f", (float)(col->zero +
-                (float)uccol[col->atom_nb-1]*col->scale)) ;
-            strcat(stmp, ctmp) ;
+                (float)uccol[col->atom_nb-1]*col->scale));
+            strcat(stmp, ctmp);
         } else {
             /* For each atom of the column */
-            for (i=0 ; i<col->atom_nb-1 ; i++) {
-                sprintf(ctmp, "%d, ", (int)uccol[i]) ;
-                strcat(stmp, ctmp) ;
+            for (i=0; i<col->atom_nb-1; i++) {
+                sprintf(ctmp, "%d, ", (int)uccol[i]);
+                strcat(stmp, ctmp);
             }
             /* Handle the last atom differently: no ',' */
             sprintf(ctmp,"%d",(int)uccol[col->atom_nb-1]);
-            strcat(stmp, ctmp) ;
+            strcat(stmp, ctmp);
         }
-        break ;
+        break;
 
         case TFITS_BIN_TYPE_D:
         case TFITS_BIN_TYPE_M:
-        dcol = (double*)field ;
+        dcol = (double*)field;
         /* Two cases: use col->zero and col->scale or not */
         if (col->zero_present && col->scale_present && use_zero_scale) {
             /* For each atom of the column */
-            for (i=0 ; i<col->atom_nb-1 ; i++) {
+            for (i=0; i<col->atom_nb-1; i++) {
                 sprintf(ctmp, "%g, ", (double)((double)col->zero +
-                        dcol[i] * (double)col->scale)) ;
-                strcat(stmp, ctmp) ;
+                        dcol[i] * (double)col->scale));
+                strcat(stmp, ctmp);
             }
             /* Handle the last atom differently: no ',' */
             sprintf(ctmp, "%g", (double)((double)col->zero +
                 dcol[col->atom_nb-1] * (double)col->scale));
-            strcat(stmp, ctmp) ;
+            strcat(stmp, ctmp);
         } else {
             /* For each atom of the column */
-            for (i=0 ; i<col->atom_nb-1 ; i++) {
-                sprintf(ctmp, "%g, ", dcol[i]) ;
-                strcat(stmp, ctmp) ;
+            for (i=0; i<col->atom_nb-1; i++) {
+                sprintf(ctmp, "%g, ", dcol[i]);
+                strcat(stmp, ctmp);
             }
             /* Handle the last atom differently: no ',' */
-            sprintf(ctmp, "%g", dcol[col->atom_nb-1]) ;
-            strcat(stmp, ctmp) ;
+            sprintf(ctmp, "%g", dcol[col->atom_nb-1]);
+            strcat(stmp, ctmp);
         }
-        break ;
+        break;
 
         case TFITS_BIN_TYPE_E:
         case TFITS_BIN_TYPE_C:
-        fcol = (float*)field ;
+        fcol = (float*)field;
         /* Two cases: use col->zero and col->scale or not */
         if (col->zero_present && col->scale_present && use_zero_scale) {
             /* For each atom of the column */
-            for (i=0 ; i<col->atom_nb-1 ; i++) {
+            for (i=0; i<col->atom_nb-1; i++) {
                 sprintf(ctmp, "%f, ", (float)(col->zero +
-                        (float)fcol[i] * col->scale)) ;
-                strcat(stmp, ctmp) ;
+                        (float)fcol[i] * col->scale));
+                strcat(stmp, ctmp);
             }
             /* Handle the last atom differently: no ',' */
             sprintf(ctmp, "%f", (float)(col->zero +
-                (float)fcol[col->atom_nb-1] * col->scale)) ;
-            strcat(stmp, ctmp) ;
+                (float)fcol[col->atom_nb-1] * col->scale));
+            strcat(stmp, ctmp);
         } else {
             /* For each atom of the column */
-            for (i=0 ; i<col->atom_nb-1 ; i++) {
-                sprintf(ctmp, "%f, ", fcol[i]) ;
-                strcat(stmp, ctmp) ;
+            for (i=0; i<col->atom_nb-1; i++) {
+                sprintf(ctmp, "%f, ", fcol[i]);
+                strcat(stmp, ctmp);
             }
             /* Handle the last atom differently: no ',' */
-            sprintf(ctmp, "%f", fcol[col->atom_nb-1]) ;
-            strcat(stmp, ctmp) ;
+            sprintf(ctmp, "%f", fcol[col->atom_nb-1]);
+            strcat(stmp, ctmp);
         }
-        break ;
+        break;
 
         case TFITS_BIN_TYPE_I:
-        scol = (short*)field ;
+        scol = (short*)field;
         /* Two cases: use col->zero and col->scale or not */
         if (col->zero_present && col->scale_present && use_zero_scale) {
             /* For each atom of the column */
-            for (i=0 ; i<col->atom_nb-1 ; i++) {
+            for (i=0; i<col->atom_nb-1; i++) {
                 sprintf(ctmp, "%f, ", (float)(col->zero +
-                        (float)scol[i] * col->scale)) ;
-                strcat(stmp, ctmp) ;
+                        (float)scol[i] * col->scale));
+                strcat(stmp, ctmp);
             }
             /* Handle the last atom differently: no ',' */
             sprintf(ctmp, "%f", (float)(col->zero +
-                (float)scol[col->atom_nb-1] * col->scale)) ;
-            strcat(stmp, ctmp) ;
+                (float)scol[col->atom_nb-1] * col->scale));
+            strcat(stmp, ctmp);
         } else {
             /* For each atom of the column */
-            for (i=0 ; i<col->atom_nb-1 ; i++) {
-                sprintf(ctmp, "%d, ", (int)scol[i]) ;
-                strcat(stmp, ctmp) ;
+            for (i=0; i<col->atom_nb-1; i++) {
+                sprintf(ctmp, "%d, ", (int)scol[i]);
+                strcat(stmp, ctmp);
             }
             /* Handle the last atom differently: no ',' */
             sprintf(ctmp, "%d",(int)scol[col->atom_nb-1]);
-            strcat(stmp, ctmp) ;
+            strcat(stmp, ctmp);
         }
-        break ;
+        break;
 
         case TFITS_BIN_TYPE_J:
-        icol = (int*)field ;
+        icol = (int*)field;
         /* Two cases: use col->zero and col->scale or not */
         if (col->zero_present && col->scale_present && use_zero_scale) {
             /* For each atom of the column */
-            for (i=0 ; i<col->atom_nb-1 ; i++) {
+            for (i=0; i<col->atom_nb-1; i++) {
                 sprintf(ctmp, "%f, ", (float)(col->zero +
-                        (float)icol[i] * col->scale)) ;
-                strcat(stmp, ctmp) ;
+                        (float)icol[i] * col->scale));
+                strcat(stmp, ctmp);
             }
             /* Handle the last atom differently: no ',' */
             sprintf(ctmp, "%f", (float)(col->zero +
-                (float)icol[col->atom_nb-1] * col->scale)) ;
-            strcat(stmp, ctmp) ;
+                (float)icol[col->atom_nb-1] * col->scale));
+            strcat(stmp, ctmp);
         } else {
             /* For each atom of the column */
-            for (i=0 ; i<col->atom_nb-1 ; i++) {
-                sprintf(ctmp, "%d, ", (int)icol[i]) ;
-                strcat(stmp, ctmp) ;
+            for (i=0; i<col->atom_nb-1; i++) {
+                sprintf(ctmp, "%d, ", (int)icol[i]);
+                strcat(stmp, ctmp);
             }
             /* Handle the last atom differently: no ',' */
             sprintf(ctmp, "%d",(int)icol[col->atom_nb-1]);
-            strcat(stmp, ctmp) ;
+            strcat(stmp, ctmp);
         }
-        break ;
+        break;
 
         case TFITS_BIN_TYPE_K:
-			kcol = (int64_t*)field ;
+			kcol = (int64_t*)field;
 			/* Two cases: use col->zero and col->scale or not */
 			if (col->zero_present && col->scale_present && use_zero_scale) {
 				/* For each atom of the column */
-				for (i=0 ; i<col->atom_nb-1 ; i++) {
+				for (i=0; i<col->atom_nb-1; i++) {
 					sprintf(ctmp, "%f, ", (float)(col->zero +
-												  (float)kcol[i] * col->scale)) ;
-					strcat(stmp, ctmp) ;
+												  (float)kcol[i] * col->scale));
+					strcat(stmp, ctmp);
 				}
 				/* Handle the last atom differently: no ',' */
 				sprintf(ctmp, "%f", (float)(col->zero +
-											(float)kcol[col->atom_nb-1] * col->scale)) ;
-				strcat(stmp, ctmp) ;
+											(float)kcol[col->atom_nb-1] * col->scale));
+				strcat(stmp, ctmp);
 			} else {
 				/* For each atom of the column */
-				for (i=0 ; i<col->atom_nb-1 ; i++) {
-					sprintf(ctmp, "%lld, ", (long long int)kcol[i]) ;
-					strcat(stmp, ctmp) ;
+				for (i=0; i<col->atom_nb-1; i++) {
+					sprintf(ctmp, "%lld, ", (long long int)kcol[i]);
+					strcat(stmp, ctmp);
 				}
 				/* Handle the last atom differently: no ',' */
 				sprintf(ctmp, "%lld", (long long int)kcol[col->atom_nb-1]);
-				strcat(stmp, ctmp) ;
+				strcat(stmp, ctmp);
 			}
-			break ;
+			break;
 
         case TFITS_BIN_TYPE_L:
-        ccol = (char*)field ;
+        ccol = (char*)field;
         /* For each atom of the column */
-        for (i=0 ; i<col->atom_nb-1 ; i++) {
-            sprintf(ctmp, "%c, ", ccol[i]) ;
-            strcat(stmp, ctmp) ;
+        for (i=0; i<col->atom_nb-1; i++) {
+            sprintf(ctmp, "%c, ", ccol[i]);
+            strcat(stmp, ctmp);
         }
         /* Handle the last atom differently: no ',' */
-        sprintf(ctmp, "%c", ccol[col->atom_nb-1]) ;
-        strcat(stmp, ctmp) ;
-        break ;
+        sprintf(ctmp, "%c", ccol[col->atom_nb-1]);
+        strcat(stmp, ctmp);
+        break;
 
         case TFITS_BIN_TYPE_X:
-        uccol = (unsigned char*)field ;
+        uccol = (unsigned char*)field;
         /* For each atom of the column */
-        for (i=0 ; i<col->atom_nb-1 ; i++) {
-            sprintf(ctmp, "%d, ", uccol[i]) ;
-            strcat(stmp, ctmp) ;
+        for (i=0; i<col->atom_nb-1; i++) {
+            sprintf(ctmp, "%d, ", uccol[i]);
+            strcat(stmp, ctmp);
         }
         /* Handle the last atom differently: no ',' */
-        sprintf(ctmp, "%d", uccol[col->atom_nb-1]) ;
-        strcat(stmp, ctmp) ;
-        break ;
+        sprintf(ctmp, "%d", uccol[col->atom_nb-1]);
+        strcat(stmp, ctmp);
+        break;
 
         case TFITS_BIN_TYPE_P:
-        icol = (int*)field ;
+        icol = (int*)field;
         /* For each atom of the column */
-        for (i=0 ; i<col->atom_nb-1 ; i++) {
-            sprintf(ctmp, "%d, ", (int)icol[i]) ;
-            strcat(stmp, ctmp) ;
+        for (i=0; i<col->atom_nb-1; i++) {
+            sprintf(ctmp, "%d, ", (int)icol[i]);
+            strcat(stmp, ctmp);
         }
         /* Handle the last atom differently: no ',' */
         sprintf(ctmp, "%d",(int)icol[col->atom_nb-1]);
-        strcat(stmp, ctmp) ;
-        break ;
+        strcat(stmp, ctmp);
+        break;
 
         default:
-        qfits_warning("Type not recognized") ;
-        break ;
+        qfits_warning("Type not recognized");
+        break;
     }
-    qfits_free(field) ;
-    return stmp ;
+    qfits_free(field);
+    return stmp;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -2223,9 +2223,9 @@ static char * qfits_bintable_field_to_string(
 static char * qfits_strstrip(const char * s)
 {
     static char l[1024+1];
-    char * last ;
+    char * last;
 
-    if (s==NULL) return NULL ;
+    if (s==NULL) return NULL;
 
     while (isspace((int)*s) && *s) s++;
 
@@ -2234,12 +2234,12 @@ static char * qfits_strstrip(const char * s)
     last = l + strlen(l);
     while (last > l) {
         if (!isspace((int)*(last-1)))
-            break ;
-        last -- ;
+            break;
+        last --;
     }
     *last = '\0';
 
-    return (char*)l ;
+    return (char*)l;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -2256,18 +2256,18 @@ static double qfits_str2dec(
         const char  *   to_format,
         int             nb_dec)
 {
-    double      val ;
-    int         i ;
+    double      val;
+    int         i;
     
     /* Test entries */
-    if (to_format == NULL) return 0.00 ;
+    if (to_format == NULL) return 0.00;
     
-    val = (double)atof(to_format) ;
+    val = (double)atof(to_format);
     /* First handle case where there are no decimals or the dot is there */
     if ((strstr(to_format, ".") == NULL) && (nb_dec > 0)) {
-        for (i=0 ; i<nb_dec ; i++) val /=10 ;
+        for (i=0; i<nb_dec; i++) val /=10;
     }
-    return val ;
+    return val;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -2290,51 +2290,51 @@ static int qfits_table_interpret_type(
         tfits_type  *   type,
         int             table_type)
 {
-    char        type_c ;
+    char        type_c;
      
-    *dec_nb = 0 ;
+    *dec_nb = 0;
     if (table_type == QFITS_BINTABLE) {
         if (sscanf(str, "%d%c", nb, &type_c) == 0) {
             /* nb is 1 by default */
             if (sscanf(str, "%c", &type_c) == 0) {
-                qfits_error("cannot interpret this type: %s", str) ;
-                return -1 ;
+                qfits_error("cannot interpret this type: %s", str);
+                return -1;
             }
-            *nb = 1 ;
+            *nb = 1;
         }
         switch(type_c) {
-            case 'A': *type = TFITS_BIN_TYPE_A ; break ;
-            case 'B': *type = TFITS_BIN_TYPE_B ; break ;
-            case 'C': *type = TFITS_BIN_TYPE_C ; break ;
-            case 'D': *type = TFITS_BIN_TYPE_D ; break ;
-            case 'E': *type = TFITS_BIN_TYPE_E ; break ;
-            case 'I': *type = TFITS_BIN_TYPE_I ; break ;
-            case 'J': *type = TFITS_BIN_TYPE_J ; break ;
-		    case 'K': *type = TFITS_BIN_TYPE_K ; break ;
-            case 'L': *type = TFITS_BIN_TYPE_L ; break ;
-            case 'M': *type = TFITS_BIN_TYPE_M ; break ;
-            case 'P': *type = TFITS_BIN_TYPE_P ; break ;
-            case 'X': *type = TFITS_BIN_TYPE_X ; break ;
-            default: return -1 ; 
+            case 'A': *type = TFITS_BIN_TYPE_A; break;
+            case 'B': *type = TFITS_BIN_TYPE_B; break;
+            case 'C': *type = TFITS_BIN_TYPE_C; break;
+            case 'D': *type = TFITS_BIN_TYPE_D; break;
+            case 'E': *type = TFITS_BIN_TYPE_E; break;
+            case 'I': *type = TFITS_BIN_TYPE_I; break;
+            case 'J': *type = TFITS_BIN_TYPE_J; break;
+		    case 'K': *type = TFITS_BIN_TYPE_K; break;
+            case 'L': *type = TFITS_BIN_TYPE_L; break;
+            case 'M': *type = TFITS_BIN_TYPE_M; break;
+            case 'P': *type = TFITS_BIN_TYPE_P; break;
+            case 'X': *type = TFITS_BIN_TYPE_X; break;
+            default: return -1; 
         }
     } else if (table_type == QFITS_ASCIITABLE) {
         if (sscanf(str, "%c%d.%d", &type_c, nb, dec_nb) == 0) {
-            qfits_error("cannot interpret this type: %s", str) ;
-            return -1 ;
+            qfits_error("cannot interpret this type: %s", str);
+            return -1;
         }
         switch(type_c) {
-            case 'A': *type = TFITS_ASCII_TYPE_A ; break ;
-            case 'D': *type = TFITS_ASCII_TYPE_D ; break ;
-            case 'E': *type = TFITS_ASCII_TYPE_E ; break ;
-            case 'F': *type = TFITS_ASCII_TYPE_F ; break ;
-            case 'I': *type = TFITS_ASCII_TYPE_I ; break ;
-            default: return -1 ;
+            case 'A': *type = TFITS_ASCII_TYPE_A; break;
+            case 'D': *type = TFITS_ASCII_TYPE_D; break;
+            case 'E': *type = TFITS_ASCII_TYPE_E; break;
+            case 'F': *type = TFITS_ASCII_TYPE_F; break;
+            case 'I': *type = TFITS_ASCII_TYPE_I; break;
+            default: return -1;
         }
     } else {
-        qfits_error("unrecognized table type") ;
-        return -1 ;
+        qfits_error("unrecognized table type");
+        return -1;
     }
-    return 0 ;
+    return 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -2346,40 +2346,40 @@ static int qfits_table_interpret_type(
 /*----------------------------------------------------------------------------*/
 static char * qfits_build_format(const qfits_col * col)
 {
-    static char sval[10] ;
-    int         nb ;
+    static char sval[10];
+    int         nb;
         
     switch (col->atom_type) {
         case TFITS_ASCII_TYPE_A: 
-            nb=sprintf(sval, "A%d.%d", col->atom_nb, col->atom_dec_nb) ; break ;
+            nb=sprintf(sval, "A%d.%d", col->atom_nb, col->atom_dec_nb); break;
         case TFITS_ASCII_TYPE_D: 
-            nb=sprintf(sval, "D%d.%d", col->atom_nb, col->atom_dec_nb) ; break ;
+            nb=sprintf(sval, "D%d.%d", col->atom_nb, col->atom_dec_nb); break;
         case TFITS_ASCII_TYPE_E: 
-            nb=sprintf(sval, "E%d.%d", col->atom_nb, col->atom_dec_nb) ; break ;
+            nb=sprintf(sval, "E%d.%d", col->atom_nb, col->atom_dec_nb); break;
         case TFITS_ASCII_TYPE_I: 
-            nb=sprintf(sval, "I%d.%d", col->atom_nb, col->atom_dec_nb) ; break ;
+            nb=sprintf(sval, "I%d.%d", col->atom_nb, col->atom_dec_nb); break;
         case TFITS_ASCII_TYPE_F: 
-            nb=sprintf(sval, "F%d.%d", col->atom_nb, col->atom_dec_nb) ; break ;
-        case TFITS_BIN_TYPE_D: nb=sprintf(sval, "%dD", col->atom_nb) ; break ;
-        case TFITS_BIN_TYPE_E: nb=sprintf(sval, "%dE", col->atom_nb) ; break ;
-        case TFITS_BIN_TYPE_I: nb=sprintf(sval, "%dI", col->atom_nb) ; break ;
-        case TFITS_BIN_TYPE_A: nb=sprintf(sval, "%dA", col->atom_nb) ; break ;
-        case TFITS_BIN_TYPE_B: nb=sprintf(sval, "%dB", col->atom_nb) ; break ;
+            nb=sprintf(sval, "F%d.%d", col->atom_nb, col->atom_dec_nb); break;
+        case TFITS_BIN_TYPE_D: nb=sprintf(sval, "%dD", col->atom_nb); break;
+        case TFITS_BIN_TYPE_E: nb=sprintf(sval, "%dE", col->atom_nb); break;
+        case TFITS_BIN_TYPE_I: nb=sprintf(sval, "%dI", col->atom_nb); break;
+        case TFITS_BIN_TYPE_A: nb=sprintf(sval, "%dA", col->atom_nb); break;
+        case TFITS_BIN_TYPE_B: nb=sprintf(sval, "%dB", col->atom_nb); break;
         case TFITS_BIN_TYPE_C: nb=sprintf(sval, "%dC", 
-                                       (int)(col->atom_nb/2)) ; break ;
-        case TFITS_BIN_TYPE_J: nb=sprintf(sval, "%dJ", col->atom_nb) ; break ;
-		case TFITS_BIN_TYPE_K: nb=sprintf(sval, "%dK", col->atom_nb) ; break ;
-        case TFITS_BIN_TYPE_L: nb=sprintf(sval, "%dL", col->atom_nb) ; break ;
+                                       (int)(col->atom_nb/2)); break;
+        case TFITS_BIN_TYPE_J: nb=sprintf(sval, "%dJ", col->atom_nb); break;
+		case TFITS_BIN_TYPE_K: nb=sprintf(sval, "%dK", col->atom_nb); break;
+        case TFITS_BIN_TYPE_L: nb=sprintf(sval, "%dL", col->atom_nb); break;
         case TFITS_BIN_TYPE_M: nb=sprintf(sval, "%dM", 
-                                       (int)(col->atom_nb/2)) ; break ;
+                                       (int)(col->atom_nb/2)); break;
         case TFITS_BIN_TYPE_P: nb=sprintf(sval, "%dP", 
-                                       (int)(col->atom_nb/2)) ; break ;
+                                       (int)(col->atom_nb/2)); break;
         case TFITS_BIN_TYPE_X: nb=sprintf(sval, "%dX", 
-                                       8*col->atom_nb) ; break ;
-        default: return NULL ;
+                                       8*col->atom_nb); break;
+        default: return NULL;
     }
-    sval[nb] = '\0' ;
-    return sval ;
+    sval[nb] = '\0';
+    return sval;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -2403,24 +2403,24 @@ static int qfits_table_append_bin_xtension(
         const qfits_table   *   t,
         const void          **  data)
 {
-    qfits_header    *    fh ;
+    qfits_header    *    fh;
 
     if ((fh=qfits_table_ext_header_default(t)) == NULL) {
-        qfits_error("cannot create new fits header") ;
-        return -1 ;
+        qfits_error("cannot create new fits header");
+        return -1;
     }
 
     /* Write the fits header in the file  */
     if (qfits_header_dump(fh, outfile) == -1) {
-        qfits_error("cannot dump header in file") ;
-        qfits_header_destroy(fh) ;
-        fclose(outfile) ;
-        return -1 ;
+        qfits_error("cannot dump header in file");
+        qfits_header_destroy(fh);
+        fclose(outfile);
+        return -1;
     }
-    qfits_header_destroy(fh) ;
+    qfits_header_destroy(fh);
 
     /* Append the data to the file */
-    return qfits_table_append_data(outfile, t, data) ;
+    return qfits_table_append_data(outfile, t, data);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -2446,23 +2446,23 @@ static int qfits_table_append_ascii_xtension(
         const qfits_table   *   t,
         const void          **  data)
 {
-    qfits_header    *    fh ;
+    qfits_header    *    fh;
     
     if ((fh=qfits_table_ext_header_default(t)) == NULL) {
-        qfits_error("cannot create new fits header") ;
-        return -1 ;
+        qfits_error("cannot create new fits header");
+        return -1;
     }
 
     /* Write the fits header in the file  */
     if (qfits_header_dump(fh, outfile) == -1) {
-        qfits_error("cannot dump header in file") ;
-        qfits_header_destroy(fh) ;
-        return -1 ;
+        qfits_error("cannot dump header in file");
+        qfits_header_destroy(fh);
+        return -1;
     }
-    qfits_header_destroy(fh) ;
+    qfits_header_destroy(fh);
     
     /* Append the data to the file */
-    return qfits_table_append_data(outfile, t, data) ;
+    return qfits_table_append_data(outfile, t, data);
 } 
 
 /*----------------------------------------------------------------------------*/
@@ -2483,113 +2483,113 @@ static int qfits_table_append_data(
         const qfits_table   *   t, 
         const void          **  data) 
 {
-    qfits_col       *   curr_col ;
-    char                field[1024] ;
-    char            *   line ;
-    unsigned char   **  array ;
-    unsigned char   *   r ;
-    unsigned char   *   inbuf ;
-    int                 writt_char ;
-    int                 nb_blanks ;
-    int                 field_size ;
-    int                 i, j ;
+    qfits_col       *   curr_col;
+    char                field[1024];
+    char            *   line;
+    unsigned char   **  array;
+    unsigned char   *   r;
+    unsigned char   *   inbuf;
+    int                 writt_char;
+    int                 nb_blanks;
+    int                 field_size;
+    int                 i, j;
 
     /* Write DATA */
-    array = qfits_malloc(t->nc*sizeof(unsigned char *)) ;
+    array = qfits_malloc(t->nc*sizeof(unsigned char *));
 
-    curr_col = t->col ;
-    for (i=0 ; i<t->nc ; i++) {
+    curr_col = t->col;
+    for (i=0; i<t->nc; i++) {
         /* Compute the field size */
-        field_size = qfits_table_get_field_size(t->tab_t, curr_col) ;
+        field_size = qfits_table_get_field_size(t->tab_t, curr_col);
 
         /* Copy data from data to array (unsigned char) */
-        array[i] = qfits_malloc(t->nr * field_size) ;
-        r = (unsigned char *)array[i] ;
-        inbuf = (unsigned char *)(data[i]) ;
+        array[i] = qfits_malloc(t->nr * field_size);
+        r = (unsigned char *)array[i];
+        inbuf = (unsigned char *)(data[i]);
 
         /* Copy the data */
         if (t->tab_t == QFITS_ASCIITABLE) {
             /* ASCII table */
-            for (j=0 ; j<t->nr ; j++) {
+            for (j=0; j<t->nr; j++) {
                 switch(curr_col->atom_type) {
                     case TFITS_ASCII_TYPE_A :
-                        strncpy(field, (char*)inbuf, curr_col->atom_nb) ;
-                        field[curr_col->atom_nb] = '\0' ;
-                        inbuf += curr_col->atom_nb ;
-                        break ;
+                        strncpy(field, (char*)inbuf, curr_col->atom_nb);
+                        field[curr_col->atom_nb] = '\0';
+                        inbuf += curr_col->atom_nb;
+                        break;
                     case TFITS_ASCII_TYPE_D :
-                        memset(field, ' ', curr_col->atom_nb) ;
-                        sprintf(field, "%g", ((double*)data[i])[j]) ;
-                        field[curr_col->atom_nb] = '\0' ;
-                        break ;
+                        memset(field, ' ', curr_col->atom_nb);
+                        sprintf(field, "%g", ((double*)data[i])[j]);
+                        field[curr_col->atom_nb] = '\0';
+                        break;
                     case TFITS_ASCII_TYPE_E :
                     case TFITS_ASCII_TYPE_F :
-                        memset(field, ' ', curr_col->atom_nb) ;
-                        sprintf(field, "%f", ((float*)data[i])[j]) ;
-                        field[curr_col->atom_nb] = '\0' ;
-                        break ;
+                        memset(field, ' ', curr_col->atom_nb);
+                        sprintf(field, "%f", ((float*)data[i])[j]);
+                        field[curr_col->atom_nb] = '\0';
+                        break;
                     case TFITS_ASCII_TYPE_I :
-                        memset(field, ' ', curr_col->atom_nb) ;
-                        sprintf(field, "%d", ((int*)data[i])[j]) ;
-                        field[curr_col->atom_nb] = '\0' ;
-                        break ;
+                        memset(field, ' ', curr_col->atom_nb);
+                        sprintf(field, "%d", ((int*)data[i])[j]);
+                        field[curr_col->atom_nb] = '\0';
+                        break;
                     default:
-                        break ;
+                        break;
                 }
-                memcpy(r, field, curr_col->atom_nb) ;
-                r += (curr_col->atom_nb) ;
+                memcpy(r, field, curr_col->atom_nb);
+                r += (curr_col->atom_nb);
             }
         } else if (t->tab_t == QFITS_BINTABLE) {
             /* BINARY table */
-            for (j=0 ; j<t->nr ; j++) {
-                memcpy(r, inbuf, field_size) ;
-                inbuf += field_size ;
-                r += field_size ;
+            for (j=0; j<t->nr; j++) {
+                memcpy(r, inbuf, field_size);
+                inbuf += field_size;
+                r += field_size;
             }
 
             /* Byte swapping needed if on a little-endian machine */
 #ifndef WORDS_BIGENDIAN
 			if (curr_col->atom_size > 1) {
-				r = array[i] ;
-				for (j=0 ; j<t->nr * curr_col->atom_nb ; j++) {
+				r = array[i];
+				for (j=0; j<t->nr * curr_col->atom_nb; j++) {
 					qfits_swap_bytes(r, curr_col->atom_size);
-					r += curr_col->atom_size ;
+					r += curr_col->atom_size;
 				}
 			}
 #endif
-        } else return -1 ;
-        curr_col++ ;
+        } else return -1;
+        curr_col++;
     }
 
     /* Write to the outfile */
-    writt_char = 0 ;
-    for (i=0 ; i<t->nr ; i++) {
-        curr_col = t->col ;
-        for (j=0 ; j<t->nc ; j++) {
-            field_size = qfits_table_get_field_size(t->tab_t, curr_col) ;
-            r = array[j] + field_size * i ;
-            line = (char *)qfits_calloc (field_size+1, sizeof (char)) ;
-            memcpy(line, r, field_size) ;
-            line[field_size] = '\0' ;
-            fwrite(line, 1, field_size, outfile) ;
-            writt_char += field_size ;
-            curr_col++ ;
-            qfits_free(line) ;
+    writt_char = 0;
+    for (i=0; i<t->nr; i++) {
+        curr_col = t->col;
+        for (j=0; j<t->nc; j++) {
+            field_size = qfits_table_get_field_size(t->tab_t, curr_col);
+            r = array[j] + field_size * i;
+            line = (char *)qfits_calloc (field_size+1, sizeof (char));
+            memcpy(line, r, field_size);
+            line[field_size] = '\0';
+            fwrite(line, 1, field_size, outfile);
+            writt_char += field_size;
+            curr_col++;
+            qfits_free(line);
         }
     }
 
     /* Complete with blanks to FITS_BLOCK_SIZE characters */
     if (writt_char % FITS_BLOCK_SIZE) {
-        nb_blanks = FITS_BLOCK_SIZE - (writt_char%FITS_BLOCK_SIZE) ;
-        for (i=1 ; i<=nb_blanks ; i++) fwrite(" ", 1, 1, outfile) ;
+        nb_blanks = FITS_BLOCK_SIZE - (writt_char%FITS_BLOCK_SIZE);
+        for (i=1; i<=nb_blanks; i++) fwrite(" ", 1, 1, outfile);
     }
 
     /* Free and return  */
-    for(i=0 ; i<t->nc ; i++) {
-        if (array[i] != NULL) qfits_free(array[i]) ;
+    for(i=0; i<t->nc; i++) {
+        if (array[i] != NULL) qfits_free(array[i]);
     }
-    qfits_free(array) ;
-    return  0 ;
+    qfits_free(array);
+    return  0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -2604,18 +2604,18 @@ static int qfits_table_get_field_size(
         int                 type,
         const qfits_col *   col)
 {
-    int     field_size ;
+    int     field_size;
 
     switch (type) {
         case QFITS_BINTABLE:
-            field_size = col->atom_nb * col->atom_size ;
-            break ;
+            field_size = col->atom_nb * col->atom_size;
+            break;
         case QFITS_ASCIITABLE:
-            field_size = col->atom_nb ;
-            break ;
+            field_size = col->atom_nb;
+            break;
         default:
-            qfits_warning("unrecognized table type") ;
-            field_size = -1 ;
+            qfits_warning("unrecognized table type");
+            field_size = -1;
     }
-    return field_size ;
+    return field_size;
 }

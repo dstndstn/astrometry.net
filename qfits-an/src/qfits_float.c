@@ -44,23 +44,23 @@ typedef union _ieee_double_pattern_ {
     struct {
         unsigned int lsw ;
         unsigned int msw ;
-    } p ;
-} ieee_double_pattern ;
+    } p;
+} ieee_double_pattern;
 #else
 /* Big endian ordering */
 typedef union _ieee_double_pattern_ {
-    double d ;
+    double d;
     struct {
-        unsigned int msw ;
-        unsigned int lsw ;
-    } p ;
-} ieee_double_pattern ;
+        unsigned int msw;
+        unsigned int lsw;
+    } p;
+} ieee_double_pattern;
 #endif
 
 typedef union _ieee_float_pattern_ {
-    float f ;
-    int   i ;
-} ieee_float_pattern ;
+    float f;
+    int   i;
+} ieee_float_pattern;
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -88,23 +88,23 @@ typedef union _ieee_float_pattern_ {
 
 int _qfits_isnanf(float f)
 {
-    ieee_float_pattern ip ;
-    int ix ;
+    ieee_float_pattern ip;
+    int ix;
 
-    ip.f = f ;
-    ix = ip.i ;
-    ix &= 0x7fffffff ;
-    ix = 0x7f800000 - ix ;
+    ip.f = f;
+    ix = ip.i;
+    ix &= 0x7fffffff;
+    ix = 0x7f800000 - ix;
     return (int)(((unsigned int)(ix))>>31);
 }
 
 int _qfits_isinff(float f)
 {
-    ieee_float_pattern ip ;
-    int ix, t ;
+    ieee_float_pattern ip;
+    int ix, t;
 
-    ip.f = f ;
-    ix = ip.i ;
+    ip.f = f;
+    ix = ip.i;
     t = ix & 0x7fffffff;
     t ^= 0x7f800000;
     t |= -t;
@@ -113,12 +113,12 @@ int _qfits_isinff(float f)
 
 int _qfits_isnand(double d)
 {
-    ieee_double_pattern id ;
-    int hx, lx ;
+    ieee_double_pattern id;
+    int hx, lx;
 
-    id.d = d ;
-    lx = id.p.lsw ;
-    hx = id.p.msw ;
+    id.d = d;
+    lx = id.p.lsw;
+    hx = id.p.msw;
 
     hx &= 0x7fffffff;
     hx |= (unsigned int)(lx|(-lx))>>31;
@@ -128,12 +128,12 @@ int _qfits_isnand(double d)
 
 int _qfits_isinfd(double d)
 {
-    ieee_double_pattern id ;
-    int hx, lx ;
+    ieee_double_pattern id;
+    int hx, lx;
 
-    id.d = d ;
-    lx = id.p.lsw ;
-    hx = id.p.msw ;
+    id.d = d;
+    lx = id.p.lsw;
+    hx = id.p.msw;
 
     lx |= (hx & 0x7fffffff) ^ 0x7ff00000;
     lx |= -lx;
@@ -174,14 +174,14 @@ static unsigned char dminf_pat[] = {0xff, 0xf0, 0, 0, 0, 0, 0, 0};
 
 static void hexdump(void * p, int s)
 {
-    unsigned char * c ;
-    int i ;
+    unsigned char * c;
+    int i;
 
-    c=(unsigned char*)p ;
+    c=(unsigned char*)p;
 #ifndef WORDS_BIGENDIAN
-    for (i=s-1 ; i>=0 ; i--) {
+    for (i=s-1; i>=0; i--) {
 #else
-    for (i=0 ; i<s ; i++) {
+    for (i=0; i<s; i++) {
 #endif
         printf("%02x", c[i]);
     }
@@ -190,8 +190,8 @@ static void hexdump(void * p, int s)
 
 int main(void)
 {
-    float   f ;
-    double  d ;
+    float   f;
+    double  d;
 
     printf("Testing Nan...\n");
     memcpy(&f, fnan_pat, 4);
@@ -235,7 +235,7 @@ int main(void)
         printf("d is (-)Inf\n");
     }
 
-    return 0 ;
+    return 0;
 }
 #endif
 
