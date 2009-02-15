@@ -21,15 +21,15 @@
 
 #include "qfits_thread.h"
 
-void qfits_lock_init(qfits_lock* lock) {
+void qfits_lock_init(qfits_lock_t* lock) {
 	pthread_mutex_init(&(lock->mutex), NULL);
 }
 
-void qfits_lock_lock(qfits_lock* lock) {
+void qfits_lock_lock(qfits_lock_t* lock) {
 	pthread_mutex_lock(&(lock->mutex));
 }
 
-void qfits_lock_unlock(qfits_lock* lock) {
+void qfits_lock_unlock(qfits_lock_t* lock) {
 	pthread_mutex_unlock(&(lock->mutex));
 }
 
