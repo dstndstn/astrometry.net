@@ -57,11 +57,17 @@
                               Function codes
  -----------------------------------------------------------------------------*/
 
+// NOT THREAD-SAFE
+char * qfits_pretty_string(const char *) ;
+
+
+void qfits_pretty_string_r(const char* in, char* out);
+
 char * qfits_query_hdr(const char *, const char *) ;
 char * qfits_query_ext(const char *, const char *, int) ;
 int qfits_query_n_ext(const char *) ;
 int qfits_query_nplanes(const char *, int) ;
-char * qfits_pretty_string(const char *) ;
+
 int qfits_is_boolean(const char *) ;
 int qfits_is_int(const char *) ;
 int qfits_is_float(const char *) ;

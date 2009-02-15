@@ -305,12 +305,10 @@ int qfits_query_nplanes(const char * filename, int extnum)
 
  */
 /*----------------------------------------------------------------------------*/
-char * qfits_pretty_string(const char * s)
-{
+char * qfits_pretty_string(const char * s) {
     static char     pretty_buf[PRETTY_STRING_STATICBUFS][81] ;
     static int      flip=0 ;
     char        *   pretty ;
-    int             i,j ;
 
     /* bulletproof */
     if (s==NULL) return NULL ;
@@ -321,20 +319,30 @@ char * qfits_pretty_string(const char * s)
     if (flip==PRETTY_STRING_STATICBUFS)
         flip=0 ;
     
-    pretty[0] = (char)0 ;
-    if (s[0]!='\'') return (char *)s ;
+	qfits_pretty_string_r(s, pretty);
+	return pretty;
+}
+#undef PRETTY_STRING_STATICBUFS
+
+void qfits_pretty_string_r(const char * s, char* pretty) {
+    int             i,j ;
+	int slen;
+    pretty[0] = '\0';
+	if (!s) return;
+    if (s[0] != '\'') strcpy(pretty, s);
+	slen = strlen(s);
 
     /* skip first quote */
     i=1 ;
     j=0 ;
     /* trim left-side blanks */
     while (s[i]==' ') {
-        if (i==(int)strlen(s)) break ;
+        if (i==slen) break ;
         i++ ;
     }
-    if (i>=(int)(strlen(s)-1)) return pretty ;
+    if (i >= (slen-1)) return;
     /* copy string, changing double quotes to single ones */
-    while (i<(int)strlen(s)) {
+    while (i<slen) {
         if (s[i]=='\'') {
             i++ ;
         }
@@ -343,14 +351,12 @@ char * qfits_pretty_string(const char * s)
         j++ ;
     }
     /* NULL-terminate the pretty string */
-    pretty[j+1]=(char)0;
+    pretty[j+1]='\0';
     /* trim right-side blanks */
     j = (int)strlen(pretty)-1;
     while (pretty[j]==' ') j-- ;
     pretty[j+1]=(char)0;
-    return pretty;
 }
-#undef PRETTY_STRING_STATICBUFS
 
 /*----------------------------------------------------------------------------*/
 /**
