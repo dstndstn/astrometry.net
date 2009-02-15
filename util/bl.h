@@ -67,6 +67,8 @@ void  bl_get(bl* list, int n, void* dest);
 // Returns a pointer to the nth element.
 void* bl_access(bl* list, int n);
 
+void* bl_access_const(const bl* list, int n);
+
 void* bl_push(bl* list, const void* data);
 // Pops a data item into the given "into" memory.
 void  bl_pop(bl* list, void* into);

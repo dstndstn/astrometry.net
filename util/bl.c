@@ -24,7 +24,7 @@
 
 #include "bl.h"
 
-static Inline bl_node* bl_find_node(bl* list, int n, int* rtn_nskipped);
+static Inline bl_node* bl_find_node(const bl* list, int n, int* rtn_nskipped);
 static bl_node* bl_new_node(bl* list);
 static void bl_free_node(bl_node* node);
 
@@ -523,7 +523,7 @@ void bl_get(bl* list, int n, void* dest) {
 }
 
 /* find the node in which element "n" can be found. */
-static Inline bl_node* bl_find_node(bl* list, int n,
+static Inline bl_node* bl_find_node(const bl* list, int n,
 									int* p_nskipped) {
 	bl_node* node;
 	int nskipped;
@@ -741,10 +741,18 @@ void bl_insert(bl* list, int index, void* data) {
 	}
 }
 
-void* bl_access(bl* list, int n) {
+void* bl_access_const(const bl* list, int n) {
 	bl_node* node;
 	int nskipped;
+	node = bl_find_node(list, n, &nskipped);
+	// grab the element.
+	return NODE_CHARDATA(node) + (n - nskipped) * list->datasize;
+}
+
+void* bl_access(bl* list, int n) {
 	void* rtn;
+	bl_node* node;
+	int nskipped;
 	node = bl_find_node(list, n, &nskipped);
 	// grab the element.
 	rtn = NODE_CHARDATA(node) + (n - nskipped) * list->datasize;

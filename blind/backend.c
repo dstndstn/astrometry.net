@@ -429,7 +429,8 @@ int backend_run_job(backend_t* backend, job_t* job) {
 			// Select the indices that should be checked.
             indexlist = il_new(16);
 			for (k = 0; k < bl_size(backend->indexmetas); k++) {
-				index_meta_t* meta = bl_access(backend->indexmetas, k);
+				// bl_access_const for thread-safety.
+				index_meta_t* meta = bl_access_const(backend->indexmetas, k);
                 if (!index_meta_overlaps_scale_range(meta, fmin, fmax))
                     continue;
                 il_append(indexlist, k);
