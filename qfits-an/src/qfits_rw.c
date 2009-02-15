@@ -117,6 +117,8 @@ qfits_header * qfits_header_read(const char * filename)
 qfits_header * qfits_header_read_hdr(const char * filename)
 {
 	char getval_buf[FITS_LINESZ+1];
+	char getkey_buf[FITS_LINESZ+1];
+	char getcom_buf[FITS_LINESZ+1];
     qfits_header    *   hdr ;
     FILE            *   in ;
     char                line[81];
@@ -158,9 +160,9 @@ qfits_header * qfits_header_read_hdr(const char * filename)
         if (!is_blank_line(line)) {
 
             /* Get key, value, comment for the current line */
-            key = qfits_getkey(line);
+            key = qfits_getkey_r(line, getkey_buf);
             val = qfits_getvalue_r(line, getval_buf);
-            com = qfits_getcomment(line);
+            com = qfits_getcomment_r(line, getcom_buf);
 
             /* If key or value cannot be found, trigger an error */
             if (key==NULL) {
@@ -203,6 +205,8 @@ qfits_header * qfits_header_read_hdr_string(
         int                     nb_char)
 {
 	char getval_buf[FITS_LINESZ+1];
+	char getkey_buf[FITS_LINESZ+1];
+	char getcom_buf[FITS_LINESZ+1];
     qfits_header    *   hdr ;
     char                line[81];
     char            *   key,
@@ -241,9 +245,9 @@ qfits_header * qfits_header_read_hdr_string(
         if (!is_blank_line(line)) {
 
             /* Get key, value, comment for the current line */
-            key = qfits_getkey(line);
+            key = qfits_getkey_r(line, getkey_buf);
             val = qfits_getvalue_r(line, getval_buf);
-            com = qfits_getcomment(line);
+            com = qfits_getcomment_r(line, getcom_buf);
 
             /* If key or value cannot be found, trigger an error */
             if (key==NULL) {
@@ -286,6 +290,8 @@ qfits_header * qfits_header_read_hdr_string(
 qfits_header * qfits_header_readext(const char * filename, int xtnum)
 {
 	char getval_buf[FITS_LINESZ+1];
+	char getkey_buf[FITS_LINESZ+1];
+	char getcom_buf[FITS_LINESZ+1];
     qfits_header*   hdr ;
     int             n_ext ;
     char            line[81];
@@ -336,9 +342,9 @@ qfits_header * qfits_header_readext(const char * filename, int xtnum)
         if (!is_blank_line(line)) {
 
             /* Get key, value, comment for the current line */
-            key = qfits_getkey(line);
+            key = qfits_getkey_r(line, getkey_buf);
             val = qfits_getvalue_r(line, getval_buf);
-            com = qfits_getcomment(line);
+            com = qfits_getcomment_r(line, getcom_buf);
 
             /* If key or value cannot be found, trigger an error */
             if (key==NULL) {

@@ -196,20 +196,9 @@ void qfits_card_build(
     return ;
 }
 
-/*----------------------------------------------------------------------------*/
-/**
-  @brief    Find the keyword in a key card (80 chars)    
-  @param    line allocated 80-char line from a FITS header
-  @return    statically allocated char *
-
-  Find out the part of a FITS line corresponding to the keyword.
-  Returns NULL in case of error. The returned pointer is statically
-  allocated in this function, so do not modify or try to free it.
- */
-/*----------------------------------------------------------------------------*/
-char * qfits_getkey(const char * line)
+// Thread-safe version.
+char* qfits_getkey_r(const char* line, char* key)
 {
-    static char     key[81];
     int                i ;
 
     if (line==NULL) {
@@ -265,6 +254,22 @@ char * qfits_getkey(const char * line)
     /* Null-terminate the string */
     key[i+1] = (char)0;
     return key ;
+}
+
+/*----------------------------------------------------------------------------*/
+/**
+  @brief    Find the keyword in a key card (80 chars)    
+  @param    line allocated 80-char line from a FITS header
+  @return    statically allocated char *
+
+  Find out the part of a FITS line corresponding to the keyword.
+  Returns NULL in case of error. The returned pointer is statically
+  allocated in this function, so do not modify or try to free it.
+ */
+/*----------------------------------------------------------------------------*/
+char * qfits_getkey(const char * line) {
+    static char     key[81];
+	return qfits_getkey_r(key);
 }
 
 // Thread-safe version of the below.
@@ -370,21 +375,7 @@ char* qfits_getvalue(const char* line) {
 	return qfits_getvalue_r(line, value);
 }
 
-/*----------------------------------------------------------------------------*/
-/**
-  @brief    Find the comment in a key card (80 chars)    
-  @param    line allocated 80-char line from a FITS header
-  @return    statically allocated char *
-
-  Find out the part of a FITS line corresponding to the comment.
-  Returns NULL in case of error, or if no comment can be found. The
-  returned pointer is statically allocated in this function, so do not
-  modify or try to free it.
- */
-/*----------------------------------------------------------------------------*/
-char * qfits_getcomment(const char * line)
-{
-    static char comment[81];
+char* qfits_getcomment_r(const char* line, char* comment) {
     int    i ;
     int    from, to ;
     int    inq ;
@@ -450,6 +441,23 @@ char * qfits_getcomment(const char * line)
     /* Null-terminate the string */
     comment[to-from+1] = (char)0;
     return comment ;
+}
+
+/*----------------------------------------------------------------------------*/
+/**
+  @brief    Find the comment in a key card (80 chars)    
+  @param    line allocated 80-char line from a FITS header
+  @return    statically allocated char *
+
+  Find out the part of a FITS line corresponding to the comment.
+  Returns NULL in case of error, or if no comment can be found. The
+  returned pointer is statically allocated in this function, so do not
+  modify or try to free it.
+ */
+/*----------------------------------------------------------------------------*/
+char * qfits_getcomment(const char * line) {
+    static char comment[81];
+	return qfits_getcomment_r(line, comment);
 }
 
 /*----------------------------------------------------------------------------*/
