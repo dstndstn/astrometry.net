@@ -311,7 +311,7 @@ qfits_table * qfits_table_new(
 {
     qfits_table    *    qt;
     qt = qfits_malloc(sizeof(qfits_table));
-    (void)strcpy(qt->filename, filename);
+    strcpy(qt->filename, filename);
     qt->tab_t = table_type;
     qt->nc = nb_cols;
     qt->nr = nb_raws;
@@ -377,16 +377,16 @@ int qfits_col_fill(
     qc->atom_type = atom_type;
     
     /* Label of the column */
-    (void)strcpy(qc->tlabel, label);
+    strcpy(qc->tlabel, label);
    
     /* Unit of the column data */
-    (void)strcpy(qc->tunit, unit);
+    strcpy(qc->tunit, unit);
     
     /* Null value*/
-    (void)strcpy(qc->nullval, nullval);
+    strcpy(qc->nullval, nullval);
 
     /* How to display the data */
-    (void)strcpy(qc->tdisp, disp);
+    strcpy(qc->tdisp, disp);
 
     /* Default values for zero and scales */
     qc->zero_present = zero_present;
