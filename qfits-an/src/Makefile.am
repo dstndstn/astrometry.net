@@ -35,7 +35,7 @@ include_HEADERS = qfits_cache.h \
     qfits_std.h \
     qfits_table.h \
     qfits_thread.h \
-    qfits_thread_pthread.h \
+    qfits_thread_pthreads.h \
     qfits_time.h \
     qfits_tools.h \
     qfits_error.h
@@ -44,7 +44,7 @@ noinst_HEADERS = qfits_byteswap.h \
     qfits_card.h \
     qfits_float.h \
     qfits_thread.h \
-    qfits_thread_pthread.h \
+    qfits_thread_pthreads.h \
     md5.h 
 
 libqfits_la_LDFLAGS = -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
