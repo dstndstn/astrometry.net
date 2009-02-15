@@ -45,9 +45,9 @@
 void qfits_warning(const char *fmt, ...);
 void qfits_error(const char *fmt, ...);
 
-int qfits_err_statget(void) ;
-int qfits_err_statset(int) ;
+int qfits_err_statget(void);
+int qfits_err_statset(int);
 void qfits_err_remove_all(void);
-int qfits_err_register( void (*dispfn)(char*) ) ;
+int qfits_err_register( void (*dispfn)(char*) );
 
 #endif

@@ -54,7 +54,7 @@
  -----------------------------------------------------------------------------*/
 
 /* Type of a display function only defined for legibility here */
-typedef void (*qfits_err_dispfunc)(char *) ;
+typedef void (*qfits_err_dispfunc)(char *);
 
 /* Default display function prints out msg to stderr */
 static void qfits_err_display_stderr(char * s)

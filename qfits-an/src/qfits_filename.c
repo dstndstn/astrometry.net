@@ -56,7 +56,7 @@
  * Example:
  * 
  * @code
- * char * s ;
+ * char * s;
  * s = qfits_get_dir_name("/mnt/cdrom/data/image.fits")
  * @endcode
  * 
@@ -112,7 +112,7 @@ char * qfits_get_dir_name(const char * filename)
     static char path[MAXNAMESZ];
     char *last_slash;
 
-    if (strlen(filename)>MAXNAMESZ) return NULL ;
+    if (strlen(filename)>MAXNAMESZ) return NULL;
     strcpy(path, filename);
     /* Find last '/'.  */
     last_slash = path != NULL ? strrchr (path, '/') : NULL;

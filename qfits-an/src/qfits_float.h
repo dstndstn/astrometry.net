@@ -77,9 +77,9 @@
                                Function prototypes
  -----------------------------------------------------------------------------*/
 
-int _qfits_isnanf(float) ;
-int _qfits_isinff(float) ;
-int _qfits_isnand(double) ;
-int _qfits_isinfd(double) ;
+int _qfits_isnanf(float);
+int _qfits_isinff(float);
+int _qfits_isnand(double);
+int _qfits_isinfd(double);
 
 #endif

@@ -81,7 +81,7 @@ typedef enum _TFITS_DATA_TYPE_ {
     TFITS_BIN_TYPE_P,
     TFITS_BIN_TYPE_X,
     TFITS_BIN_TYPE_UNKNOWN
-} tfits_type ;
+} tfits_type;
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -105,13 +105,13 @@ typedef struct qfits_col
      it is the number of characters. A field with two complex object will
      have atom_nb = 4.
     */
-    int            atom_nb ;
+    int            atom_nb;
 
     /**
      Number of decimals in a ASCII field. 
      This value is always 0 for BIN tables
     */
-    int         atom_dec_nb ;
+    int         atom_dec_nb;
 
     /** 
       Size of one element in bytes. In ASCII tables, atom_size is the size
@@ -132,26 +132,26 @@ typedef struct qfits_col
       conversion of the field is atom_size.
       In BIN tables, the size in bytes of a field is always atom_nb*atom_size.
      */
-    int            atom_size ;    
+    int            atom_size;    
     
     /** 
       Type of data in the column as specified in TFORM keyword 
       In ASCII tables : TFITS_ASCII_TYPE_* with *=A, I, F, E or D 
       In BIN tables : TFITS_BIN_TYPE_* with *=L, X, B, I, J, A, E, D, C, M or P 
     */
-    tfits_type    atom_type ;
+    tfits_type    atom_type;
 
     /** Label of the column */
-    char        tlabel[FITSVALSZ] ;
+    char        tlabel[FITSVALSZ];
 
     /** Unit of the data */
-    char        tunit[FITSVALSZ] ;
+    char        tunit[FITSVALSZ];
     
     /** Null value */
-    char        nullval[FITSVALSZ] ;
+    char        nullval[FITSVALSZ];
 
     /** Display format */
-    char        tdisp[FITSVALSZ] ;
+    char        tdisp[FITSVALSZ];
     
     /** 
       zero and scale are used when the quantity in the field does not     
@@ -159,18 +159,18 @@ typedef struct qfits_col
       when they are present: physical_value = zero + scale * field_value 
       They are read from TZERO and TSCAL in the header
      */
-    int            zero_present ;    
-    float        zero ;        
-    int            scale_present ;
-    float        scale ;   
+    int            zero_present;    
+    float        zero;        
+    int            scale_present;
+    float        scale;   
 
     /** Offset between the beg. of the table and the beg. of the column.
      NOTE, THIS IS NOT THE OFFSET FROM THE BEGINNING OF THE *ROW*! */
-    int            off_beg ;
+    int            off_beg;
     
     /** Flag to know if the column is readable. An empty col is not readable */
-    int            readable ;
-} qfits_col ;
+    int            readable;
+} qfits_col;
 
 
 /*----------------------------------------------------------------------------*/
@@ -185,21 +185,21 @@ typedef struct qfits_col
   @code
   int main(int argc, char* argv[])
   {
-      qfits_table     *   table ;
-     int                    n_ext ;
-    int                    i ;
+      qfits_table     *   table;
+     int                    n_ext;
+    int                    i;
 
     // Query the number of extensions
-    n_ext = qfits_query_n_ext(argv[1]) ;
+    n_ext = qfits_query_n_ext(argv[1]);
     
     // For each extension
-    for (i=0 ; i<n_ext ; i++) {
+    for (i=0; i<n_ext; i++) {
         // Read all the infos about the current table 
-        table = qfits_table_open(argv[1], i+1) ;
+        table = qfits_table_open(argv[1], i+1);
         // Display the current table 
-        dump_extension(table, stdout, '|', 1, 1) ;
+        dump_extension(table, stdout, '|', 1, 1);
     }
-    return ;
+    return;
   }
   @endcode
  */
@@ -209,40 +209,40 @@ typedef struct qfits_table
     /**
         Name of the file the table comes from or it is intended to end to
      */
-    char            filename[512] ;
+    char            filename[512];
     /** 
         Table type. 
         Possible values: QFITS_INVALIDTABLE, QFITS_BINTABLE, QFITS_ASCIITABLE
      */
-    int                tab_t ;
+    int                tab_t;
     /** Width in bytes of the table */
-    int                tab_w ;            
+    int                tab_w;            
     /** Number of columns */
-    int                nc ;            
+    int                nc;            
     /** Number of raws */
-    int                nr ;
+    int                nr;
     /** Array of qfits_col objects */
-    qfits_col    *    col ;            
-} qfits_table ;
+    qfits_col    *    col;            
+} qfits_table;
 
 /*-----------------------------------------------------------------------------
                                Function prototypes
  -----------------------------------------------------------------------------*/
 
-int qfits_is_table(const char * filename, int xtnum) ;
-qfits_header * qfits_table_prim_header_default(void) ;
-qfits_header * qfits_table_ext_header_default(const qfits_table *) ;
-qfits_table * qfits_table_new(const char *, int, int, int, int) ;
+int qfits_is_table(const char * filename, int xtnum);
+qfits_header * qfits_table_prim_header_default(void);
+qfits_header * qfits_table_ext_header_default(const qfits_table *);
+qfits_table * qfits_table_new(const char *, int, int, int, int);
 int qfits_col_fill(qfits_col *, int, int, int, tfits_type, const char *, 
-        const char *, const char *, const char *, int, float, int, float, int) ;
-qfits_table * qfits_table_open(const char *, int) ;
-void qfits_table_close(qfits_table *) ;
-unsigned char * qfits_query_column(const qfits_table *, int, const int *) ;
-unsigned char * qfits_query_column_seq(const qfits_table *, int, int, int) ;
+        const char *, const char *, const char *, int, float, int, float, int);
+qfits_table * qfits_table_open(const char *, int);
+void qfits_table_close(qfits_table *);
+unsigned char * qfits_query_column(const qfits_table *, int, const int *);
+unsigned char * qfits_query_column_seq(const qfits_table *, int, int, int);
 void * qfits_query_column_data(const qfits_table *, int, const int *, 
-        const void *) ;
+        const void *);
 void * qfits_query_column_seq_data(const qfits_table *, int, int, int, 
-        const void *) ;
+        const void *);
 
 int qfits_query_column_seq_to_array(const qfits_table	    *   th,
 									int                 colnum,
@@ -267,13 +267,13 @@ int * qfits_query_column_nulls(const qfits_table *, int, const int *, int *,
   @return   the width (-1 in error case)
  */
 /*----------------------------------------------------------------------------*/
-int qfits_compute_table_width(const qfits_table * th) ;
+int qfits_compute_table_width(const qfits_table * th);
 
 int qfits_save_table_hdrdump(const void **, const qfits_table *, 
-        const qfits_header *) ;
-int qfits_table_append_xtension(FILE *, const qfits_table *, const void **) ;
+        const qfits_header *);
+int qfits_table_append_xtension(FILE *, const qfits_table *, const void **);
 int qfits_table_append_xtension_hdr(FILE *, const qfits_table *, const void **,
-        const qfits_header *) ;
-char * qfits_table_field_to_string(const qfits_table *, int, int, int) ;
+        const qfits_header *);
+char * qfits_table_field_to_string(const qfits_table *, int, int, int);
 
 #endif

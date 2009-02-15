@@ -1,7 +1,7 @@
 #ifndef MD5_H
 #define MD5_H
 
-typedef unsigned int word32 ;
+typedef unsigned int word32;
 
 struct MD5Context {
     word32 buf[4];

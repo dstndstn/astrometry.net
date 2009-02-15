@@ -697,7 +697,7 @@ static int qfits_cache_add_impl(const char * filename)
         qc->data[i] = off_dat[i];
 
         /* Sizes */
-        qc->shdr[i] = off_dat[i] - off_hdr[i] ;
+        qc->shdr[i] = off_dat[i] - off_hdr[i];
         if (i==last-1) {    
             qc->dsiz[i] = (sta.st_size/FITS_BLOCK_SIZE) - off_dat[i];
         } else {

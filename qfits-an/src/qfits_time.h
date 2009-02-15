@@ -32,6 +32,6 @@
                         Function ANSI C prototypes
  -----------------------------------------------------------------------------*/
 
-char * qfits_get_datetime_iso8601(void) ;
+char * qfits_get_datetime_iso8601(void);
 
 #endif

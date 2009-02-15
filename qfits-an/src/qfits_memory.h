@@ -57,16 +57,16 @@
 
 /* *********************************************************************** */
 /* These functions have to be called by the assiciated macro defined above */
-void * qfits_memory_malloc(size_t, const char *, int) ;
-void * qfits_memory_calloc(size_t, size_t, const char *, int) ;
-void * qfits_memory_realloc(void *, size_t, const char *, int) ;
-void   qfits_memory_free(void *, const char *, int) ;
-char * qfits_memory_strdup(const char *, const char *, int) ;
-char * qfits_memory_falloc(const char *, size_t, size_t *, const char *, int) ;
-void qfits_memory_fdealloc(void *, size_t, size_t, const char *, int) ;
+void * qfits_memory_malloc(size_t, const char *, int);
+void * qfits_memory_calloc(size_t, size_t, const char *, int);
+void * qfits_memory_realloc(void *, size_t, const char *, int);
+void   qfits_memory_free(void *, const char *, int);
+char * qfits_memory_strdup(const char *, const char *, int);
+char * qfits_memory_falloc(const char *, size_t, size_t *, const char *, int);
+void qfits_memory_fdealloc(void *, size_t, size_t, const char *, int);
 /* *********************************************************************** */
 
-void qfits_memory_status(void) ;
-int qfits_memory_is_empty(void) ;
+void qfits_memory_status(void);
+int qfits_memory_is_empty(void);
 
 #endif

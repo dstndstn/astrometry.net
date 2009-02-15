@@ -32,7 +32,7 @@
                         Function ANSI C prototypes
  -----------------------------------------------------------------------------*/
 
-void qfits_card_build(char *, const char *, const char *, const char *) ;
+void qfits_card_build(char *, const char *, const char *, const char *);
 
 // NOT THREAD-SAFE
 char* qfits_getvalue(const char*);
@@ -42,9 +42,9 @@ char* qfits_getcomment(const char*);
 
 // Thread-safe versions:
 char* qfits_getvalue_r(const char *line, char* value);
-char* qfits_getkey_r(const char *line, char* key) ;
+char* qfits_getkey_r(const char *line, char* key);
 char* qfits_expand_keyword_r(const char* keyword, char* expanded);
-char* qfits_getcomment_r(const char * line, char* comment) ;
+char* qfits_getcomment_r(const char * line, char* comment);
 
 
 

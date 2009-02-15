@@ -119,10 +119,10 @@
  -----------------------------------------------------------------------------*/
 
 /* Initialization flag */
-static int  qfits_memory_initialized=0 ;
+static int  qfits_memory_initialized=0;
 
 /* Path to temporary directory */
-static char qfits_memory_tmpdirname[TMPDIRNAMESZ] = "." ;
+static char qfits_memory_tmpdirname[TMPDIRNAMESZ] = ".";
 
 /*----------------------------------------------------------------------------*/
 /*
@@ -132,76 +132,76 @@ static char qfits_memory_tmpdirname[TMPDIRNAMESZ] = "." ;
 /*----------------------------------------------------------------------------*/
 static struct {
     /* Number of active cells */
-    int                 ncells ;
+    int                 ncells;
     /* Total allocated memory in bytes */
-    size_t              alloc_total ;
+    size_t              alloc_total;
     /* Total allocated RAM in bytes */
-    size_t              alloc_ram ;
+    size_t              alloc_ram;
     /* Total allocated VM in bytes */
-    size_t              alloc_swap ;
+    size_t              alloc_swap;
     /* Peak allocation ever seen for diagnostics */
-    size_t              alloc_max ;
+    size_t              alloc_max;
     /* Peak number of pointers ever seen for diagnostics */
-    int                 max_cells ;
+    int                 max_cells;
 
     /* Current number of swap files */
-    int                 nswapfiles ;
+    int                 nswapfiles;
     /* Registration counter for swap files */
-    int                 file_reg ;
+    int                 file_reg;
 
     /* Current number of memory-mapped files */
-    int                 n_mm_files ;
+    int                 n_mm_files;
     /* Current number of mappings derived from files */
-    int                 n_mm_mappings ;
+    int                 n_mm_mappings;
 
 #ifdef __linux__
     /* Page size in bytes (Linux only) */
-    int                 pagesize ;
+    int                 pagesize;
     /* Value found for RLIMIT_DATA (Linux only) */
-    int                 rlimit_data ;
+    int                 rlimit_data;
 #endif
-} qfits_memory_table ;
+} qfits_memory_table;
 
 /* Various infos about the pointers */
 /* List of pointers (outside of cells for efficiency reason) */
-static void *   qfits_memory_p_val[QFITS_MEMORY_MAXPTRS] ;
+static void *   qfits_memory_p_val[QFITS_MEMORY_MAXPTRS];
 /* Pointed size in bytes */
-static size_t   qfits_memory_p_size[QFITS_MEMORY_MAXPTRS] ;
+static size_t   qfits_memory_p_size[QFITS_MEMORY_MAXPTRS];
 #if (QFITS_MEMORY_DEBUG>=1)
 /* Name of the source file where the alloc was requested */
-static char *   qfits_memory_p_filename[QFITS_MEMORY_MAXPTRS] ;
+static char *   qfits_memory_p_filename[QFITS_MEMORY_MAXPTRS];
 /* Line number where the alloc was requested */
-static int      qfits_memory_p_lineno[QFITS_MEMORY_MAXPTRS] ;
+static int      qfits_memory_p_lineno[QFITS_MEMORY_MAXPTRS];
 #endif
 /* Memory type: RAM, swap, or mapped file */
-static char     qfits_memory_p_memtype[QFITS_MEMORY_MAXPTRS] ;
+static char     qfits_memory_p_memtype[QFITS_MEMORY_MAXPTRS];
 /* Swap memory only */
 /* Swap file ID */
-static int      qfits_memory_p_swapfileid[QFITS_MEMORY_MAXPTRS] ;
+static int      qfits_memory_p_swapfileid[QFITS_MEMORY_MAXPTRS];
 /* Swap file descriptor */
-static int      qfits_memory_p_swapfd[QFITS_MEMORY_MAXPTRS] ;
+static int      qfits_memory_p_swapfd[QFITS_MEMORY_MAXPTRS];
 /* Mapped files only */
 /* Name of mapped file */
 static char     qfits_memory_p_mm_filename[QFITS_MEMORY_MAXPTRS][MAPFILENAMESZ];
 /* Hash of mapped file name for quick search */
-static unsigned qfits_memory_p_mm_hash[QFITS_MEMORY_MAXPTRS] ;
+static unsigned qfits_memory_p_mm_hash[QFITS_MEMORY_MAXPTRS];
 /* Reference counter for this pointer */
-static int      qfits_memory_p_mm_refcount[QFITS_MEMORY_MAXPTRS] ;
+static int      qfits_memory_p_mm_refcount[QFITS_MEMORY_MAXPTRS];
 
 /*-----------------------------------------------------------------------------
                     Private function prototypes 
  -----------------------------------------------------------------------------*/
 
-static unsigned qfits_memory_hash(const char *) ;
-static void qfits_memory_init(void) ;
+static unsigned qfits_memory_hash(const char *);
+static void qfits_memory_init(void);
 static void qfits_memory_cleanup(void);
 static int qfits_memory_addcell(void*, size_t, const char*, int, char, int, 
-        int, const char*) ;
-static int qfits_memory_remcell(int) ;
-static void qfits_memory_dumpcell(int, FILE*) ;
-static char * qfits_memory_tmpfilename(int) ;
-static char * strdup_(const char * str) ;
-void qfits_memory_status_(const char *, int) ;
+        int, const char*);
+static int qfits_memory_remcell(int);
+static void qfits_memory_dumpcell(int, FILE*);
+static char * qfits_memory_tmpfilename(int);
+static char * strdup_(const char * str);
+void qfits_memory_status_(const char *, int);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -245,31 +245,31 @@ void * qfits_memory_malloc(
         const char  *   filename, 
         int             lineno)
 {
-    void    *   ptr ;
-    char    *   fname ;
-    int         swapfileid ;
-    int         swapfd ;
-    char        wbuf[MEMPAGESZ] ;
-    int         nbufs ;
-    int         memtype ;
-    int         i ;
-    int         pos ;
+    void    *   ptr;
+    char    *   fname;
+    int         swapfileid;
+    int         swapfd;
+    char        wbuf[MEMPAGESZ];
+    int         nbufs;
+    int         memtype;
+    int         i;
+    int         pos;
 #ifdef __linux__
-    int         p ;
+    int         p;
 #endif
 
     /* If QFITS_MEMORY_MODE is 0 or 1, do not use the qfits_memory model  */
     if (QFITS_MEMORY_MODE == 0) return malloc(size);
     else if (QFITS_MEMORY_MODE == 1) {
         ptr = malloc(size);
-        if (ptr == NULL) exit(1) ;
-        else return ptr ;
+        if (ptr == NULL) exit(1);
+        else return ptr;
     }
     
     /* Initialize table if needed */
     if (qfits_memory_initialized==0) {
-        qfits_memory_init() ;
-        qfits_memory_initialized++ ;
+        qfits_memory_init();
+        qfits_memory_initialized++;
     }
 
     /* Protect the call */
@@ -278,7 +278,7 @@ void * qfits_memory_malloc(
             fprintf(stderr, "qfits_mem: malloc called with 0 size - %s (%d)\n",
                     filename, lineno);
         );
-        return NULL ;
+        return NULL;
     }
 
     /* Try to allocate in memory */
@@ -291,7 +291,7 @@ void * qfits_memory_malloc(
      * in this module. To avoid this, the RLIMIT_DATA value
      * is honored here with this test.
      */
-    ptr = NULL ;
+    ptr = NULL;
     if (qfits_memory_table.rlimit_data<1) {
         /* No limit set on RLIMIT_DATA: proceed with malloc */
         ptr = malloc(size);
@@ -310,7 +310,7 @@ void * qfits_memory_malloc(
         );
 
         /* Create swap file with rights: rw-rw-rw- */
-        swapfileid = ++ qfits_memory_table.file_reg ;
+        swapfileid = ++ qfits_memory_table.file_reg;
         fname = qfits_memory_tmpfilename(swapfileid);
         swapfd = open(fname, O_RDWR | O_CREAT);
         if (swapfd==-1) {
@@ -320,12 +320,12 @@ void * qfits_memory_malloc(
         fchmod(swapfd, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
 
         /* Compute number of passes to insert buffer */
-        nbufs = size / MEMPAGESZ ;
-        if (size % MEMPAGESZ != 0) nbufs ++ ;
+        nbufs = size / MEMPAGESZ;
+        if (size % MEMPAGESZ != 0) nbufs ++;
 
         /* Dump empty buffers into file */
         memset(wbuf, 0, MEMPAGESZ);
-        for (i=0 ; i<nbufs ; i++) {
+        for (i=0; i<nbufs; i++) {
             if (write(swapfd, wbuf, MEMPAGESZ)==-1) {
                 perror("write");
                 fprintf(stderr,
@@ -357,9 +357,9 @@ void * qfits_memory_malloc(
                 fname, (long)size);
         );
 
-        memtype = MEMTYPE_SWAP ;
-        qfits_memory_table.alloc_swap += size ;
-        qfits_memory_table.nswapfiles ++ ;
+        memtype = MEMTYPE_SWAP;
+        qfits_memory_table.alloc_swap += size;
+        qfits_memory_table.nswapfiles ++;
     } else {
         /* Memory allocation succeeded */
 #ifdef __linux__
@@ -373,19 +373,19 @@ void * qfits_memory_malloc(
         qfits_mem_debug(
             fprintf(stderr, "qfits_mem: touching memory (Linux)\n");
         );
-        for (p=0 ; p<(int)size ; p+=qfits_memory_table.pagesize) 
+        for (p=0; p<(int)size; p+=qfits_memory_table.pagesize) 
             ((char*)ptr)[p] = 0;
 #endif
-        swapfd = -1 ;
-        swapfileid = -1 ;
-        memtype = MEMTYPE_RAM ;
-        qfits_memory_table.alloc_ram   += size ;
+        swapfd = -1;
+        swapfileid = -1;
+        memtype = MEMTYPE_RAM;
+        qfits_memory_table.alloc_ram   += size;
     }
     
     /* Print out message in debug mode */
     qfits_mem_debug(
         fprintf(stderr, "qfits_mem: %p alloc(%ld) in %s (%d)\n",
-            ptr, (long)size, filename, lineno) ;
+            ptr, (long)size, filename, lineno);
     );
 
     /* Add cell into general table */
@@ -398,13 +398,13 @@ void * qfits_memory_malloc(
                             swapfd,
                             NULL);
     /* Adjust size */
-    qfits_memory_table.alloc_total += size ;
+    qfits_memory_table.alloc_total += size;
     /* Remember biggest allocated block */
     if (qfits_memory_table.alloc_total > qfits_memory_table.alloc_max)
-        qfits_memory_table.alloc_max = qfits_memory_table.alloc_total ;
+        qfits_memory_table.alloc_max = qfits_memory_table.alloc_total;
 
     /* Insert memory stamp */
-    return (void*)ptr ;
+    return (void*)ptr;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -430,18 +430,18 @@ void * qfits_memory_calloc(
         const char  *   filename, 
         int             lineno)
 {
-    void    *   ptr ;
+    void    *   ptr;
 
     /* If QFITS_MEMORY_MODE is 0 or 1, do not use the qfits_memory model  */
-    if (QFITS_MEMORY_MODE == 0) return calloc(nmemb, size) ;
+    if (QFITS_MEMORY_MODE == 0) return calloc(nmemb, size);
     else if (QFITS_MEMORY_MODE == 1) {
-        ptr = calloc(nmemb, size) ;
-        if (ptr == NULL) exit(1) ;
-        else return ptr ;
+        ptr = calloc(nmemb, size);
+        if (ptr == NULL) exit(1);
+        else return ptr;
     }
     
-    ptr = qfits_memory_malloc(nmemb * size, filename, lineno) ;
-    return memset(ptr, 0, nmemb * size) ;
+    ptr = qfits_memory_malloc(nmemb * size, filename, lineno);
+    return memset(ptr, 0, nmemb * size);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -473,17 +473,17 @@ char * qfits_memory_falloc(
         const char  *   srcname,
         int             srclin)
 {
-    unsigned        mm_hash ;
-    char        *   ptr ;
-    struct stat     sta ;
-    int             fd ;
-    int             nptrs ;
-    int             i ;
+    unsigned        mm_hash;
+    char        *   ptr;
+    struct stat     sta;
+    int             fd;
+    int             nptrs;
+    int             i;
 
     /* If QFITS_MEMORY_MODE is 0 or 1, do not use the qfits_memory model  */
     if ((QFITS_MEMORY_MODE == 0) || (QFITS_MEMORY_MODE == 1)) {
 
-        if (size!=NULL) *size = 0 ;
+        if (size!=NULL) *size = 0;
 
         /* Check file's existence and compute its size */
         if (stat(name, &sta)==-1) {
@@ -491,8 +491,8 @@ char * qfits_memory_falloc(
                 fprintf(stderr, "qfits_mem: cannot stat file %s - %s (%d)\n",
                         name, srcname, srclin);
             );
-            if (QFITS_MEMORY_MODE == 0) return NULL ;
-            else exit(1) ;
+            if (QFITS_MEMORY_MODE == 0) return NULL;
+            else exit(1);
         }
         /* Check offset request does not go past end of file */
         if (offs>=(size_t)sta.st_size) {
@@ -500,8 +500,8 @@ char * qfits_memory_falloc(
                 fprintf(stderr,
                     "qfits_mem: falloc offsets larger than file size");
             );
-            if (QFITS_MEMORY_MODE == 0) return NULL ;
-            else exit(1) ;
+            if (QFITS_MEMORY_MODE == 0) return NULL;
+            else exit(1);
         }
 
         /* Open file */
@@ -510,8 +510,8 @@ char * qfits_memory_falloc(
                 fprintf(stderr, "qfits_mem: cannot open file %s - (%s:%d): %s\n",
                         name, srcname, srclin, strerror(errno));
             );
-            if (QFITS_MEMORY_MODE == 0) return NULL ;
-            else exit(1) ;
+            if (QFITS_MEMORY_MODE == 0) return NULL;
+            else exit(1);
         }
 
         /* Memory-map input file */
@@ -525,8 +525,8 @@ char * qfits_memory_falloc(
                 perror("mmap");
                 fprintf(stderr, "qfits_mem: falloc cannot mmap file %s", name);
             );
-            if (QFITS_MEMORY_MODE == 0) return NULL ;
-            else exit(1) ;
+            if (QFITS_MEMORY_MODE == 0) return NULL;
+            else exit(1);
         }
 
         qfits_mem_debug(
@@ -535,18 +535,18 @@ char * qfits_memory_falloc(
                     name, srcname, srclin);
         );
 
-        if (size!=NULL) (*size) = sta.st_size ;
+        if (size!=NULL) (*size) = sta.st_size;
         
-        return ptr + offs ;
+        return ptr + offs;
     }
 
     /* Protect the call */
-    if (size!=NULL) *size = 0 ;
+    if (size!=NULL) *size = 0;
 
     /* Initialize table if needed */
     if (qfits_memory_initialized==0) {
-        qfits_memory_init() ;
-        qfits_memory_initialized++ ;
+        qfits_memory_init();
+        qfits_memory_initialized++;
     }
 
     if (qfits_memory_table.ncells>0) {
@@ -554,10 +554,10 @@ char * qfits_memory_falloc(
         /* Compute hash for this name */
         mm_hash = qfits_memory_hash(name);
         /* Loop over all memory cells */
-        nptrs=0 ;
-        for (i=0 ; i<QFITS_MEMORY_MAXPTRS ; i++) {
+        nptrs=0;
+        for (i=0; i<QFITS_MEMORY_MAXPTRS; i++) {
             if (qfits_memory_p_val[i]!=NULL)
-                nptrs++ ;
+                nptrs++;
             if ((qfits_memory_p_val[i]!=NULL) &&
                 (qfits_memory_p_mm_filename[i] != NULL) &&
                 (qfits_memory_p_mm_hash[i] == mm_hash)) {
@@ -570,10 +570,10 @@ char * qfits_memory_falloc(
                             fprintf(stderr,
                                 "qfits_mem: falloc offset larger than file sz");
                         );
-                        return NULL ;
+                        return NULL;
                     }
                     /* Increase reference counter */
-                    qfits_memory_p_mm_refcount[i] ++ ;
+                    qfits_memory_p_mm_refcount[i] ++;
                     qfits_mem_debug(
                         fprintf(stderr,
                                 "qfits_mem: incref on %s (%d mappings)\n",
@@ -581,18 +581,18 @@ char * qfits_memory_falloc(
                                 qfits_memory_p_mm_refcount[i]);
                     );
                     /* Increase number of mappings */
-                    qfits_memory_table.n_mm_mappings ++ ;
+                    qfits_memory_table.n_mm_mappings ++;
                     /* Build up return pointer */
-                    ptr = (char*)qfits_memory_p_val[i] + offs ;
+                    ptr = (char*)qfits_memory_p_val[i] + offs;
                     /* Available size is filesize minus offset */
                     if (size!=NULL) {
-                        *size = qfits_memory_p_size[i] - offs ;
+                        *size = qfits_memory_p_size[i] - offs;
                     }
                     /* Return constructed pointer as void * */
-                    return (void*)ptr ;
+                    return (void*)ptr;
                 }
             }
-            if (nptrs>=qfits_memory_table.ncells) break ;
+            if (nptrs>=qfits_memory_table.ncells) break;
         }
     }
 
@@ -603,7 +603,7 @@ char * qfits_memory_falloc(
             fprintf(stderr, "qfits_mem: cannot stat file %s - %s (%d)\n",
                     name, srcname, srclin);
         );
-        return NULL ;
+        return NULL;
     }
     /* Check offset request does not go past end of file */
     if (offs>=(size_t)sta.st_size) {
@@ -611,7 +611,7 @@ char * qfits_memory_falloc(
             fprintf(stderr,
                 "qfits_mem: falloc offsets larger than file size");
         );
-        return NULL ;
+        return NULL;
     }
 
     /* Open file */
@@ -620,7 +620,7 @@ char * qfits_memory_falloc(
             fprintf(stderr, "qfits_mem: cannot open file %s - %s (%d)\n",
                     name, srcname, srclin);
         );
-        return NULL ;
+        return NULL;
     }
 
     /* Memory-map input file */
@@ -633,11 +633,11 @@ char * qfits_memory_falloc(
             perror("mmap");
             fprintf(stderr, "qfits_mem: falloc cannot mmap file %s", name);
         );
-        return NULL ;
+        return NULL;
     }
 
-    qfits_memory_table.n_mm_files ++ ;
-    qfits_memory_table.n_mm_mappings ++ ;
+    qfits_memory_table.n_mm_files ++;
+    qfits_memory_table.n_mm_mappings ++;
     qfits_mem_debug(
         fprintf(stderr,
                 "qfits_mem: falloc mmap succeeded for [%s] - %s (%d)\n",
@@ -646,11 +646,11 @@ char * qfits_memory_falloc(
 
     /* Add cell into general table */
     (void) qfits_memory_addcell((void*)ptr, sta.st_size, srcname, srclin, 
-                           MEMTYPE_MMAP, -1, -1, name) ;
+                           MEMTYPE_MMAP, -1, -1, name);
 
-    if (size!=NULL) (*size) = sta.st_size ;
+    if (size!=NULL) (*size) = sta.st_size;
     
-    return ptr + offs ;
+    return ptr + offs;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -671,10 +671,10 @@ void qfits_memory_fdealloc(
         const char  *   filename, 
         int             lineno)
 {
-    int     i ;
-    int     pos ;
-    char *  swapname ;
-    int     nptrs ;
+    int     i;
+    int     pos;
+    char *  swapname;
+    int     nptrs;
     int     ii;
 
     /* Do nothing for a NULL pointer */
@@ -682,36 +682,36 @@ void qfits_memory_fdealloc(
         /* Output a warning */
         fprintf(stderr, "qfits_mem: free requested on NULL ptr -- %s (%d)\n",
                 filename, lineno);
-        return ;
+        return;
     }
     
     /* If QFITS_MEMORY_MODE is 0 or 1, do not use the qfits_memory model  */
     if ((QFITS_MEMORY_MODE == 0) || (QFITS_MEMORY_MODE == 1)) {
-        munmap((char*)(ptr)-offs, size) ;
-        return ;
+        munmap((char*)(ptr)-offs, size);
+        return;
     }
     
     /* Locate pointer in main table */
-    nptrs = 0 ;
-    pos = -1 ;
+    nptrs = 0;
+    pos = -1;
     i = PTR_HASH(ptr);
-    for (ii=0 ; ii<QFITS_MEMORY_MAXPTRS ; ii++) {
+    for (ii=0; ii<QFITS_MEMORY_MAXPTRS; ii++) {
         if (++i == QFITS_MEMORY_MAXPTRS) i = 0;
-        if (qfits_memory_p_val[i] == NULL) continue ;
-        nptrs++ ;
+        if (qfits_memory_p_val[i] == NULL) continue;
+        nptrs++;
         if (qfits_memory_p_val[i] == ptr) {
-            pos=i ;
-            break ;
+            pos=i;
+            break;
         }
         if (qfits_memory_p_memtype[i]==MEMTYPE_MMAP) {
             if (((char*)qfits_memory_p_val[i]<=(char*)ptr) &&
                 (((char*)qfits_memory_p_val[i] + 
                   qfits_memory_p_size[i]) >= (char*)ptr)) {
-                pos = i ;
-                break ;
+                pos = i;
+                break;
             }
         }
-        if (nptrs>=qfits_memory_table.ncells) break ;
+        if (nptrs>=qfits_memory_table.ncells) break;
     }
     if (pos==-1) {
         fprintf(stderr,
@@ -719,7 +719,7 @@ void qfits_memory_fdealloc(
                 filename, lineno, ptr);
         /* Pointer sent to system's free() function, maybe it should not? */
         free(ptr);
-        return ;
+        return;
     }
 
     /* Deallocate pointer */
@@ -728,8 +728,8 @@ void qfits_memory_fdealloc(
             /* --- RAM pointer */
             /* Free normal memory pointer */
             free(ptr);
-            qfits_memory_table.alloc_ram -= qfits_memory_p_size[pos] ;
-            break ;
+            qfits_memory_table.alloc_ram -= qfits_memory_p_size[pos];
+            break;
         case MEMTYPE_SWAP:
             /* --- SWAP pointer */
             swapname = qfits_memory_tmpfilename(qfits_memory_p_swapfileid[pos]);
@@ -749,15 +749,15 @@ void qfits_memory_fdealloc(
             if (remove(swapname)!=0) {
                 qfits_mem_debug( perror("remove"); );
             }
-            qfits_memory_table.alloc_swap -= qfits_memory_p_size[pos] ;
-            qfits_memory_table.nswapfiles -- ;
-            break ;
+            qfits_memory_table.alloc_swap -= qfits_memory_p_size[pos];
+            qfits_memory_table.nswapfiles --;
+            break;
         case MEMTYPE_MMAP:
             /* --- MEMORY-MAPPED pointer */
             /* Decrease reference count */
-            qfits_memory_p_mm_refcount[pos] -- ;
+            qfits_memory_p_mm_refcount[pos] --;
             /* Decrease total number of mappings */
-            qfits_memory_table.n_mm_mappings -- ;
+            qfits_memory_table.n_mm_mappings --;
             /* Non-null ref count means the file stays mapped */
             if (qfits_memory_p_mm_refcount[pos]>0) {
                 qfits_mem_debug(
@@ -765,7 +765,7 @@ void qfits_memory_fdealloc(
                             qfits_memory_p_mm_filename[pos],
                             qfits_memory_p_mm_refcount[pos]);
                 );
-                return ;
+                return;
             }
             /* Ref count reached zero: unmap the file */
             qfits_mem_debug(
@@ -776,18 +776,18 @@ void qfits_memory_fdealloc(
             munmap((char*)qfits_memory_p_val[pos],
                     qfits_memory_p_size[pos]);
             /* Decrease total number of mapped files */
-            qfits_memory_table.n_mm_files -- ;
-            break ;
+            qfits_memory_table.n_mm_files --;
+            break;
         default:
             qfits_mem_debug(
                     fprintf(stderr, "qfits_mem: unknown memory cell type???");
             );
-            break ;
+            break;
     }
 
     if (qfits_memory_p_memtype[pos]!=MEMTYPE_MMAP) {
         /* Adjust allocated totals */
-        qfits_memory_table.alloc_total -= qfits_memory_p_size[pos] ;
+        qfits_memory_table.alloc_total -= qfits_memory_p_size[pos];
 
         /* Print out message in debug mode */
         qfits_mem_debug(
@@ -799,8 +799,8 @@ void qfits_memory_fdealloc(
         );
     }
     /* Remove cell from main table */
-    qfits_memory_remcell(pos) ;
-    return ;
+    qfits_memory_remcell(pos);
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -821,16 +821,16 @@ void qfits_memory_free(
         const char  *   filename, 
         int             lineno)
 {
-    int     i ;
-    int     pos ;
-    char *  swapname ;
-    int     nptrs ;
+    int     i;
+    int     pos;
+    char *  swapname;
+    int     nptrs;
     int     ii;
 
     /* If QFITS_MEMORY_MODE is 0 or 1, do not use the qfits_memory model  */
     if ((QFITS_MEMORY_MODE == 0) || (QFITS_MEMORY_MODE == 1)) {
         free(ptr);
-        return ;
+        return;
     }
     
     /* Do nothing for a NULL pointer */
@@ -838,30 +838,30 @@ void qfits_memory_free(
         /* Output a warning */
         fprintf(stderr, "qfits_mem: free requested on NULL ptr -- %s (%d)\n",
                 filename, lineno);
-        return ;
+        return;
     }
 
     /* Locate pointer in main table */
-    nptrs = 0 ;
-    pos = -1 ;
+    nptrs = 0;
+    pos = -1;
     i = PTR_HASH(ptr);
-    for (ii=0 ; ii<QFITS_MEMORY_MAXPTRS ; ii++) {
+    for (ii=0; ii<QFITS_MEMORY_MAXPTRS; ii++) {
         if (++i == QFITS_MEMORY_MAXPTRS) i = 0;
-        if (qfits_memory_p_val[i] == NULL) continue ;
-        nptrs++ ;
+        if (qfits_memory_p_val[i] == NULL) continue;
+        nptrs++;
         if (qfits_memory_p_val[i] == ptr) {
-            pos=i ;
-            break ;
+            pos=i;
+            break;
         }
         if (qfits_memory_p_memtype[i]==MEMTYPE_MMAP) {
             if (((char*)qfits_memory_p_val[i]<=(char*)ptr) &&
                 (((char*)qfits_memory_p_val[i] + 
                   qfits_memory_p_size[i]) >= (char*)ptr)) {
-                pos = i ;
-                break ;
+                pos = i;
+                break;
             }
         }
-        if (nptrs>=qfits_memory_table.ncells) break ;
+        if (nptrs>=qfits_memory_table.ncells) break;
     }
     if (pos==-1) {
         fprintf(stderr,
@@ -869,7 +869,7 @@ void qfits_memory_free(
                 filename, lineno, ptr);
         /* Pointer sent to system's free() function, maybe it should not? */
         free(ptr);
-        return ;
+        return;
     }
 
     /* Deallocate pointer */
@@ -878,8 +878,8 @@ void qfits_memory_free(
             /* --- RAM pointer */
             /* Free normal memory pointer */
             free(ptr);
-            qfits_memory_table.alloc_ram -= qfits_memory_p_size[pos] ;
-            break ;
+            qfits_memory_table.alloc_ram -= qfits_memory_p_size[pos];
+            break;
         case MEMTYPE_SWAP:
             /* --- SWAP pointer */
             swapname = qfits_memory_tmpfilename(qfits_memory_p_swapfileid[pos]);
@@ -899,15 +899,15 @@ void qfits_memory_free(
             if (remove(swapname)!=0) {
                 qfits_mem_debug( perror("remove"); );
             }
-            qfits_memory_table.alloc_swap -= qfits_memory_p_size[pos] ;
-            qfits_memory_table.nswapfiles -- ;
-            break ;
+            qfits_memory_table.alloc_swap -= qfits_memory_p_size[pos];
+            qfits_memory_table.nswapfiles --;
+            break;
         case MEMTYPE_MMAP:
             /* --- MEMORY-MAPPED pointer */
             /* Decrease reference count */
-            qfits_memory_p_mm_refcount[pos] -- ;
+            qfits_memory_p_mm_refcount[pos] --;
             /* Decrease total number of mappings */
-            qfits_memory_table.n_mm_mappings -- ;
+            qfits_memory_table.n_mm_mappings --;
             /* Non-null ref count means the file stays mapped */
             if (qfits_memory_p_mm_refcount[pos]>0) {
                 qfits_mem_debug(
@@ -915,7 +915,7 @@ void qfits_memory_free(
                             qfits_memory_p_mm_filename[pos],
                             qfits_memory_p_mm_refcount[pos]);
                 );
-                return ;
+                return;
             }
             /* Ref count reached zero: unmap the file */
             qfits_mem_debug(
@@ -926,18 +926,18 @@ void qfits_memory_free(
             munmap((char*)qfits_memory_p_val[pos],
                     qfits_memory_p_size[pos]);
             /* Decrease total number of mapped files */
-            qfits_memory_table.n_mm_files -- ;
-            break ;
+            qfits_memory_table.n_mm_files --;
+            break;
         default:
             qfits_mem_debug(
                     fprintf(stderr, "qfits_mem: unknown memory cell type???");
             );
-            break ;
+            break;
     }
 
     if (qfits_memory_p_memtype[pos]!=MEMTYPE_MMAP) {
         /* Adjust allocated totals */
-        qfits_memory_table.alloc_total -= qfits_memory_p_size[pos] ;
+        qfits_memory_table.alloc_total -= qfits_memory_p_size[pos];
 
         /* Print out message in debug mode */
         qfits_mem_debug(
@@ -949,8 +949,8 @@ void qfits_memory_free(
         );
     }
     /* Remove cell from main table */
-    qfits_memory_remcell(pos) ;
-    return ;
+    qfits_memory_remcell(pos);
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -976,28 +976,28 @@ void * qfits_memory_realloc(
         const char  *   filename, 
         int             lineno)
 {
-    void    *   ptr2 ;
-    size_t      small_sz ;
-    size_t      ptr_sz ;
-    int         pos = -1 ;
-    int         i ;
+    void    *   ptr2;
+    size_t      small_sz;
+    size_t      ptr_sz;
+    int         pos = -1;
+    int         i;
     
     /* If QFITS_MEMORY_MODE is 0 or 1, do not use the qfits_memory model  */
-    if (QFITS_MEMORY_MODE == 0) return realloc(ptr, size) ;
+    if (QFITS_MEMORY_MODE == 0) return realloc(ptr, size);
     else if (QFITS_MEMORY_MODE == 1) {
-        ptr2 = realloc(ptr, size) ;
-        if (ptr2 == NULL) exit(1) ;
-        else return ptr2 ;
+        ptr2 = realloc(ptr, size);
+        if (ptr2 == NULL) exit(1);
+        else return ptr2;
     }
 
-    if (ptr == NULL) return qfits_memory_malloc(size, filename, lineno) ;
+    if (ptr == NULL) return qfits_memory_malloc(size, filename, lineno);
 
     /* Get the pointer size */
-    for (i=0 ; i<QFITS_MEMORY_MAXPTRS ; i++) {
-        if (qfits_memory_p_val[i] == NULL) continue ;
+    for (i=0; i<QFITS_MEMORY_MAXPTRS; i++) {
+        if (qfits_memory_p_val[i] == NULL) continue;
         if (qfits_memory_p_val[i] == ptr) {
-            pos = i ;
-            break ;
+            pos = i;
+            break;
         }
     }
     if (pos==-1) {
@@ -1005,24 +1005,24 @@ void * qfits_memory_realloc(
             "qfits_mem: %s (%d) realloc requested on unallocated ptr (%p)\n",
             filename, lineno, ptr);
         /* Pointer sent to system's realloc() function, maybe it should not? */
-        return realloc(ptr, size) ;
+        return realloc(ptr, size);
     }
-    ptr_sz = qfits_memory_p_size[pos] ;
+    ptr_sz = qfits_memory_p_size[pos];
     
     /* Compute the smaller size */
-    small_sz = size < ptr_sz ? size : ptr_sz ;
+    small_sz = size < ptr_sz ? size : ptr_sz;
     
     /* Allocate the new pointer */
-    ptr2 = qfits_memory_malloc(size, filename, lineno) ;
+    ptr2 = qfits_memory_malloc(size, filename, lineno);
     
     /* Copy the common data */
-    memcpy(ptr2, ptr, small_sz) ;
+    memcpy(ptr2, ptr, small_sz);
 
     /* Free the passed ptr */
-    qfits_memory_free(ptr, filename, lineno) ;
+    qfits_memory_free(ptr, filename, lineno);
     
     /* Return  */
-    return ptr2 ;
+    return ptr2;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1048,17 +1048,17 @@ char * qfits_memory_strdup(
         const char  *   filename, 
         int             lineno)
 {
-    char    *   t ;
+    char    *   t;
     
     /* If QFITS_MEMORY_MODE is 0 or 1, do not use the qfits_memory model  */
-    if (QFITS_MEMORY_MODE == 0) return strdup_(s) ;
+    if (QFITS_MEMORY_MODE == 0) return strdup_(s);
     else if (QFITS_MEMORY_MODE == 1) {
-        t = strdup_(s) ;
-        if (t == NULL) exit(1) ;
-        else return t ;
+        t = strdup_(s);
+        if (t == NULL) exit(1);
+        else return t;
     }
 
-    if (s==NULL) return NULL ;
+    if (s==NULL) return NULL;
     t = qfits_memory_malloc(1+strlen(s), filename, lineno);
     return strcpy(t, s);
 }
@@ -1075,13 +1075,13 @@ char * qfits_memory_strdup(
 /*----------------------------------------------------------------------------*/
 void qfits_memory_status(void)
 {
-    int     i ;
+    int     i;
 
     /* If QFITS_MEMORY_MODE is 0 or 1, do not use the qfits_memory model  */
-    if ((QFITS_MEMORY_MODE == 0) || (QFITS_MEMORY_MODE == 1)) return ;
+    if ((QFITS_MEMORY_MODE == 0) || (QFITS_MEMORY_MODE == 1)) return;
     
 #if (QFITS_MEMORY_DEBUG>=1)
-    fprintf(stderr, "#----- memory diagnostics -----\n") ;
+    fprintf(stderr, "#----- memory diagnostics -----\n");
 
     fprintf(stderr,
             "#- Peak memory usage\n"
@@ -1105,8 +1105,8 @@ void qfits_memory_status(void)
 #endif
 #endif
 
-    if (qfits_memory_table.ncells<1) return ;
-    fprintf(stderr, "#----- memory diagnostics -----\n") ;
+    if (qfits_memory_table.ncells<1) return;
+    fprintf(stderr, "#----- memory diagnostics -----\n");
 
     fprintf(stderr,
             "#- ALL status\n"
@@ -1144,10 +1144,10 @@ void qfits_memory_status(void)
     }
 
     fprintf(stderr, "#- pointer details\n");
-    for (i=0 ; i<QFITS_MEMORY_MAXPTRS; i++) {
+    for (i=0; i<QFITS_MEMORY_MAXPTRS; i++) {
         qfits_memory_dumpcell(i, stderr);
     }
-    return ;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1159,9 +1159,9 @@ void qfits_memory_status(void)
 /*----------------------------------------------------------------------------*/
 int qfits_memory_is_empty(void)
 {
-    if ((QFITS_MEMORY_MODE == 0) || (QFITS_MEMORY_MODE == 1)) return -1 ;
-    if (qfits_memory_table.ncells<1) return 1 ;
-    else return 0 ;
+    if ((QFITS_MEMORY_MODE == 0) || (QFITS_MEMORY_MODE == 1)) return -1;
+    if (qfits_memory_table.ncells<1) return 1;
+    else return 0;
 }
 
 /**@}*/
@@ -1182,7 +1182,7 @@ int qfits_memory_is_empty(void)
  */
 static char * strdup_(const char * str)
 {
-    char    *   p ;
+    char    *   p;
 
     if ((p = malloc(strlen(str)+1)) == NULL)
     return((char *) NULL);
@@ -1206,20 +1206,20 @@ static char * strdup_(const char * str)
 /*----------------------------------------------------------------------------*/
 static unsigned qfits_memory_hash(const char * key)
 {
-    int         len ;
-    unsigned    hash ;
-    int         i ;
+    int         len;
+    unsigned    hash;
+    int         i;
 
     len = strlen(key);
-    for (hash=0, i=0 ; i<len ; i++) {
-        hash += (unsigned)key[i] ;
+    for (hash=0, i=0; i<len; i++) {
+        hash += (unsigned)key[i];
         hash += (hash<<10);
-        hash ^= (hash>>6) ;
+        hash ^= (hash>>6);
     }
     hash += (hash <<3);
     hash ^= (hash >>11);
     hash += (hash <<15);
-    return hash ;
+    return hash;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1236,7 +1236,7 @@ static unsigned qfits_memory_hash(const char * key)
 /*----------------------------------------------------------------------------*/
 static void qfits_memory_init(void)
 {
-    struct rlimit rlim ;
+    struct rlimit rlim;
 
     qfits_mem_debug(
         fprintf(stderr,
@@ -1251,19 +1251,19 @@ static void qfits_memory_init(void)
     atexit(qfits_memory_cleanup);
         
     /* Increase number of descriptors to maximum */
-    getrlimit(RLIMIT_NOFILE, &rlim) ;
+    getrlimit(RLIMIT_NOFILE, &rlim);
     qfits_mem_debug(
         fprintf(stderr, "qfits_mem: increasing from %ld to %ld file handles\n",
                 (long)rlim.rlim_cur,
                 (long)rlim.rlim_max);
     );
-    rlim.rlim_cur = rlim.rlim_max ;
-    setrlimit(RLIMIT_NOFILE, &rlim) ;
+    rlim.rlim_cur = rlim.rlim_max;
+    setrlimit(RLIMIT_NOFILE, &rlim);
 
 #ifdef __linux__
     /* Get RLIMIT_DATA on Linux */
     getrlimit(RLIMIT_DATA, &rlim);
-    qfits_memory_table.rlimit_data = rlim.rlim_cur ;
+    qfits_memory_table.rlimit_data = rlim.rlim_cur;
     qfits_mem_debug(
         fprintf(stderr, "qfits_mem: got RLIMIT_DATA=%d\n",
                 qfits_memory_table.rlimit_data);
@@ -1272,7 +1272,7 @@ static void qfits_memory_init(void)
     qfits_memory_table.pagesize = getpagesize();
 
 #endif
-    return ;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1285,7 +1285,7 @@ static void qfits_memory_init(void)
 /*----------------------------------------------------------------------------*/
 static void qfits_memory_cleanup(void)
 {
-    int     reg ;
+    int     reg;
 
     if (qfits_memory_table.file_reg>0) {
         qfits_mem_debug(
@@ -1298,14 +1298,14 @@ static void qfits_memory_cleanup(void)
          * meant to be called also in cases of emergency (e.g. segfault),
          * so it should not rely on a correct memory table.
          */
-        for (reg=0 ; reg<qfits_memory_table.file_reg ; reg++) {
+        for (reg=0; reg<qfits_memory_table.file_reg; reg++) {
             remove(qfits_memory_tmpfilename(reg+1));
         }
         qfits_mem_debug(
             fprintf(stderr, "qfits_mem: done cleaning swap files\n");
         );
     }
-    return ;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1337,7 +1337,7 @@ static int qfits_memory_addcell(
         int             swapfd,
         const char        *   mm_filename)
 {
-    int pos, ii ;
+    int pos, ii;
     
     /* Check there is still some space left */
     if (qfits_memory_table.ncells >= QFITS_MEMORY_MAXPTRS) {
@@ -1347,41 +1347,41 @@ static int qfits_memory_addcell(
     }
     /* Find an available slot */
     pos = PTR_HASH(pointer);
-    for (ii = 0 ; ii<QFITS_MEMORY_MAXPTRS ; ii++) {
+    for (ii = 0; ii<QFITS_MEMORY_MAXPTRS; ii++) {
         if (++pos == QFITS_MEMORY_MAXPTRS) pos = 0;
-        if (qfits_memory_p_val[pos] == NULL) break ;
+        if (qfits_memory_p_val[pos] == NULL) break;
     }
     qfits_mem_debug(
             fprintf(stderr, "qfits_mem: freecell found at pos %d\n", pos);
             );
     
     /* Store information */
-    qfits_memory_p_val[pos] = pointer ;
-    qfits_memory_p_size[pos] = size ;
+    qfits_memory_p_val[pos] = pointer;
+    qfits_memory_p_size[pos] = size;
 
     /* Filename and line number */
 #if (QFITS_MEMORY_DEBUG>=1)
-    qfits_memory_p_filename[pos] = filename ;
-    qfits_memory_p_lineno[pos] = lineno ;
+    qfits_memory_p_filename[pos] = filename;
+    qfits_memory_p_lineno[pos] = lineno;
 #endif
     
-    qfits_memory_p_memtype[pos] = memtype ;
-    qfits_memory_p_swapfileid[pos] = swapfileid ;
-    qfits_memory_p_swapfd[pos] = swapfd ;
+    qfits_memory_p_memtype[pos] = memtype;
+    qfits_memory_p_swapfileid[pos] = swapfileid;
+    qfits_memory_p_swapfd[pos] = swapfd;
     
     if (mm_filename!=NULL) {
         strncpy(qfits_memory_p_mm_filename[pos], mm_filename,MAPFILENAMESZ);
         qfits_memory_p_mm_hash[pos] = qfits_memory_hash(mm_filename);
-        qfits_memory_p_mm_refcount[pos] = 1 ;
+        qfits_memory_p_mm_refcount[pos] = 1;
     } else {
-        qfits_memory_p_mm_filename[pos][0] = 0 ;
-        qfits_memory_p_mm_hash[pos] = 0 ;
-        qfits_memory_p_mm_refcount[pos] = 0 ;
+        qfits_memory_p_mm_filename[pos][0] = 0;
+        qfits_memory_p_mm_hash[pos] = 0;
+        qfits_memory_p_mm_refcount[pos] = 0;
     }
-    qfits_memory_table.ncells ++ ;
+    qfits_memory_table.ncells ++;
     if (qfits_memory_table.ncells > qfits_memory_table.max_cells)
-        qfits_memory_table.max_cells = qfits_memory_table.ncells ;
-    return pos ;
+        qfits_memory_table.max_cells = qfits_memory_table.ncells;
+    return pos;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1401,10 +1401,10 @@ static int qfits_memory_remcell(int pos)
         fprintf(stderr, "qfits_mem: removing cell from pos %d (cached)\n", pos);
     );
     /* Set pointer to NULL */
-    qfits_memory_p_val[pos] = NULL ;
+    qfits_memory_p_val[pos] = NULL;
     /* Decrement number of allocated pointers */
-    qfits_memory_table.ncells -- ;
-    return 0 ;
+    qfits_memory_table.ncells --;
+    return 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1425,8 +1425,8 @@ static void qfits_memory_dumpcell(
         int         pos, 
         FILE    *   out)
 {
-    if (pos<0 || pos>=QFITS_MEMORY_MAXPTRS) return ;
-    if (qfits_memory_p_val[pos]==NULL) return ;
+    if (pos<0 || pos>=QFITS_MEMORY_MAXPTRS) return;
+    if (qfits_memory_p_val[pos]==NULL) return;
 
     if (qfits_memory_p_memtype[pos] == MEMTYPE_MMAP) {
 #if (QFITS_MEMORY_DEBUG>=1)
@@ -1480,9 +1480,9 @@ static void qfits_memory_dumpcell(
 /*----------------------------------------------------------------------------*/
 static char * qfits_memory_tmpfilename(int reg)
 {
-    static char qfits_mem_tmpfilename[TMPFILENAMESZ] ;
+    static char qfits_mem_tmpfilename[TMPFILENAMESZ];
     /* Create file name using tmp directory as a base */
     sprintf(qfits_mem_tmpfilename, "%s/vmswap_%05ld_%05x", 
-            qfits_memory_tmpdirname, (long)getpid(), reg) ;
-    return qfits_mem_tmpfilename ;
+            qfits_memory_tmpdirname, (long)getpid(), reg);
+    return qfits_mem_tmpfilename;
 }

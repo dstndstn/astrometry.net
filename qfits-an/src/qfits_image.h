@@ -77,7 +77,7 @@
   for readability.
  */
 /*----------------------------------------------------------------------------*/
-typedef unsigned char byte ;
+typedef unsigned char byte;
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -110,15 +110,15 @@ typedef unsigned char byte ;
   @code
 int main(int argc, char * argv[])
 {
-    qfitsloader    ql ;
+    qfitsloader    ql;
 
-    ql.filename = argv[1] ;
-    ql.xtnum    = 0 ;
-    ql.pnum     = 0 ;
+    ql.filename = argv[1];
+    ql.xtnum    = 0;
+    ql.pnum     = 0;
 
     if (qfitsloader_init(&ql)!=0) {
         printf("cannot read info about %s\n", argv[1]);
-        return -1 ;
+        return -1;
     }
 
     printf(    "file         : %s\n"
@@ -145,7 +145,7 @@ int main(int argc, char * argv[])
             ql.seg_size,
             ql.bscale,
             ql.bzero);
-    return 0 ;
+    return 0;
 }
   @endcode
  */
@@ -153,49 +153,49 @@ int main(int argc, char * argv[])
 typedef struct qfitsloader {
 
     /** Private field to see if structure has been initialized */
-    int            _init ;
+    int            _init;
     
     /** input: Name of the file you want to read pixels from */
-    char    *    filename ;
+    char    *    filename;
     /** input: xtension number you want to read */
-    int            xtnum ;
+    int            xtnum;
     /** input: Index of the plane you want, from 0 to np-1 */
-    int            pnum ;
+    int            pnum;
     /** input: Pixel type you want (PTYPE_FLOAT, PTYPE_INT or PTYPE_DOUBLE) */
-    int            ptype ;
+    int            ptype;
     /** input: Guarantee file copy or allow file mapping */
-    int         map ;
+    int         map;
 
     /** output: Total number of extensions found in file */
-    int            exts ;
+    int            exts;
     /** output: Size in X of the requested plane */
-    int            lx ;
+    int            lx;
     /** output: Size in Y of the requested plane */
-    int            ly ;
+    int            ly;
     /** output: Number of planes present in this extension */
-    int            np ;
+    int            np;
     /** output: BITPIX for this extension */
-    int            bitpix ;
+    int            bitpix;
     /** output: Start of the data segment (in bytes) for your request */
-    int            seg_start ;
+    int            seg_start;
     /** output: Size of the data segment (in bytes) for your request */
-    int         seg_size ;
+    int         seg_size;
     /** output: BSCALE found for this extension */
-    double        bscale ;
+    double        bscale;
     /** output: BZERO found for this extension */
-    double        bzero ;
+    double        bzero;
 
     /** output: Pointer to pixel buffer loaded as integer values */
-    int        *    ibuf ;
+    int        *    ibuf;
     /** output: Pointer to pixel buffer loaded as float values */
-    float    *    fbuf ;
+    float    *    fbuf;
     /** output: Pointer to pixel buffer loaded as double values */
-    double    *    dbuf ;
+    double    *    dbuf;
 
 	// internal: allocated buffer.
 	void* pixbuffer;
 
-} qfitsloader ;
+} qfitsloader;
 
 
 /*----------------------------------------------------------------------------*/
@@ -213,23 +213,23 @@ typedef struct qfitsloader {
   case.
 
   @code
-    int   i, j ;
-    int * ibuf ;
-    qfitsdumper    qd ;
+    int   i, j;
+    int * ibuf;
+    qfitsdumper    qd;
 
     // Fill a buffer with 100x100 int pixels
     ibuf = malloc(100 * 100 * sizeof(int));
-    for (j=0 ; j<100 ; j++) {
-        for (i=0 ; i<100 ; i++) {
-            ibuf[i+j*100] = i+j ;
+    for (j=0; j<100; j++) {
+        for (i=0; i<100; i++) {
+            ibuf[i+j*100] = i+j;
         }
     }
 
-    qd.filename  = "out.fits" ;     // Output file name
-    qd.npix      = 100 * 100 ;      // Number of pixels
-    qd.ptype     = PTYPE_INT ;      // Input buffer type
-    qd.ibuf      = ibuf ;           // Set buffer pointer
-    qd.out_ptype = BPP_16_SIGNED ;  // Save with BITPIX=16
+    qd.filename  = "out.fits";     // Output file name
+    qd.npix      = 100 * 100;      // Number of pixels
+    qd.ptype     = PTYPE_INT;      // Input buffer type
+    qd.ibuf      = ibuf;           // Set buffer pointer
+    qd.out_ptype = BPP_16_SIGNED;  // Save with BITPIX=16
 
     // Dump buffer to file (error checking omitted for clarity)
     qfits_pixdump(&qd);
@@ -245,31 +245,31 @@ typedef struct qfitsloader {
 typedef struct qfitsdumper {
 
     /** Name of the file to dump to, "STDOUT" to dump to stdout */
-    char     *    filename ;
+    char     *    filename;
     /** Number of pixels in the buffer to dump */
-    int            npix ;
+    int            npix;
     /** Buffer type: PTYPE_FLOAT, PTYPE_INT or PTYPE_DOUBLE */
-    int            ptype ;
+    int            ptype;
 
     /** Pointer to input integer pixel buffer */
-    int        *    ibuf ;
+    int        *    ibuf;
     /** Pointer to input float pixel buffer */
-    float    *    fbuf ;
+    float    *    fbuf;
     /** Pointer to input double pixel buffer */
-    double    *    dbuf ;
+    double    *    dbuf;
 
     /** Requested BITPIX in output FITS file */
-    int            out_ptype ;
-} qfitsdumper ;
+    int            out_ptype;
+} qfitsdumper;
 
 /*-----------------------------------------------------------------------------
                                Function prototypes
  -----------------------------------------------------------------------------*/
 
-int qfitsloader_init(qfitsloader *) ;
-void qfitsloader_free_buffers(qfitsloader *) ;
-int qfits_loadpix(qfitsloader *) ;
-int qfits_loadpix_window(qfitsloader *, int, int, int, int) ;
-int qfits_pixdump(qfitsdumper *) ;
+int qfitsloader_init(qfitsloader *);
+void qfitsloader_free_buffers(qfitsloader *);
+int qfits_loadpix(qfitsloader *);
+int qfits_loadpix_window(qfitsloader *, int, int, int, int);
+int qfits_pixdump(qfitsdumper *);
 
 #endif

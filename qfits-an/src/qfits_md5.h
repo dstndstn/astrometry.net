@@ -40,6 +40,6 @@
                         Function ANSI prototypes
  -----------------------------------------------------------------------------*/
 
-const char * qfits_datamd5(const char *) ;
+const char * qfits_datamd5(const char *);
 
 #endif

@@ -40,12 +40,12 @@
 #include "qfits_memory.h"
 
 struct qfits_header {
-    void    *   first ;         /* Pointer to list start */
-    void    *   last ;          /* Pointer to list end */
-    int         n ;             /* Number of cards in list */
+    void    *   first;         /* Pointer to list start */
+    void    *   last;          /* Pointer to list end */
+    int         n;             /* Number of cards in list */
     /* For efficient looping internally */
-    void    *   current ;
-    int         current_idx ;
+    void    *   current;
+    int         current_idx;
 };
 
 
@@ -62,16 +62,16 @@ struct qfits_header {
 /*----------------------------------------------------------------------------*/
 typedef struct _keytuple_ {
 
-    char    *   key ;   /** Key: unique string in a list */
-    char    *   val ;   /** Value, always as a string */
-    char    *   com ;   /** Comment associated to key */
-    char    *   lin ;   /** Initial line in FITS header if applicable */
-    int         typ ;   /** Key type */
+    char    *   key;   /** Key: unique string in a list */
+    char    *   val;   /** Value, always as a string */
+    char    *   com;   /** Comment associated to key */
+    char    *   lin;   /** Initial line in FITS header if applicable */
+    int         typ;   /** Key type */
 
     /** Implemented as a doubly-linked list */
-    struct _keytuple_ * next ;
-    struct _keytuple_ * prev ;
-} keytuple ;
+    struct _keytuple_ * next;
+    struct _keytuple_ * prev;
+} keytuple;
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -136,7 +136,7 @@ typedef enum _keytype_ {
     keytype_continue           =600,
     /* END */
     keytype_end                =1000
-} keytype ;
+} keytype;
 
 /*-----------------------------------------------------------------------------
                         Private to this module
@@ -147,7 +147,7 @@ static keytuple * keytuple_new(const char *, const char *, const char *,
 static void keytuple_del(keytuple *);
 //static void keytuple_dmp(const keytuple *);
 static keytype keytuple_type(const char *);
-static int qfits_header_makeline(char *, const keytuple *, int) ;
+static int qfits_header_makeline(char *, const keytuple *, int);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -193,14 +193,14 @@ static int qfits_header_makeline(char *, const keytuple *, int) ;
 /*----------------------------------------------------------------------------*/
 qfits_header * qfits_header_new(void)
 {
-    qfits_header    *    h ;    
+    qfits_header    *    h;    
     h = qfits_malloc(sizeof(qfits_header));
-    h->first = NULL ;
-    h->last  = NULL ;
-    h->n = 0 ;
+    h->first = NULL;
+    h->last  = NULL;
+    h->n = 0;
 
-    h->current = NULL ;
-    h->current_idx = -1 ;
+    h->current = NULL;
+    h->current_idx = -1;
 
     return h;
 }
@@ -223,8 +223,8 @@ int qfits_header_n(const qfits_header* hdr) {
 /*----------------------------------------------------------------------------*/
 qfits_header * qfits_header_default(void)
 {
-    qfits_header    *    h ;
-    h = qfits_header_new() ;
+    qfits_header    *    h;
+    h = qfits_header_new();
     qfits_header_append(h, "SIMPLE", "T", "Fits format", NULL);
     qfits_header_append(h, "END", NULL, NULL, NULL);
     return h;
@@ -253,19 +253,19 @@ void qfits_header_add(
         const char      *   com,
         const char      *   lin)
 {
-    keytuple    *    k ;
-    keytuple    *    kbf ;
-    keytuple    *    first ;
-    keytuple    *    last ;
+    keytuple    *    k;
+    keytuple    *    kbf;
+    keytuple    *    first;
+    keytuple    *    last;
 
-    if (hdr==NULL || key==NULL) return ;
+    if (hdr==NULL || key==NULL) return;
     if (hdr->n<2) {
 		fprintf(stderr, "Caution: qfits thinks it knows better than you: %s:%i key=\"%s\"\n", __FILE__, __LINE__, key);
-		return ;
+		return;
 	}
 
-    first = (keytuple*)hdr->first ;
-    last  = (keytuple*)hdr->last ;
+    first = (keytuple*)hdr->first;
+    last  = (keytuple*)hdr->last;
 
     if (((keytype)first->typ != keytype_top) ||
         ((keytype)last->typ != keytype_end)) {
@@ -284,23 +284,23 @@ void qfits_header_add(
 
     /* Find the last keytuple with same key type */
     /* NO, DO WHAT THE DOCUMENTATION SAYS WE'RE SUPPOSED TO DO.
-     kbf = first ;
+     kbf = first;
      while (kbf!=NULL) {
-     if ((k->typ>=kbf->typ) && (kbf->next) && (k->typ<kbf->next->typ)) break ;
-     kbf = kbf->next ;
+     if ((k->typ>=kbf->typ) && (kbf->next) && (k->typ<kbf->next->typ)) break;
+     kbf = kbf->next;
      }
-     if (kbf==NULL) kbf = last->prev ;
+     if (kbf==NULL) kbf = last->prev;
      */
     kbf = last->prev;
 
     /* Hook it into list */
-    k->next = kbf->next ;
-    (kbf->next)->prev = k ;
-    kbf->next = k ;
-    k->prev = kbf ;
+    k->next = kbf->next;
+    (kbf->next)->prev = k;
+    kbf->next = k;
+    k->prev = kbf;
 
-    hdr->n ++ ;
-    return ;
+    hdr->n ++;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -329,26 +329,26 @@ void qfits_header_add_after(
 {
     keytuple    *   kreq;
     keytuple    *   k;
-    char           exp_after[FITS_LINESZ+1] ;
+    char           exp_after[FITS_LINESZ+1];
 
-    if (hdr==NULL || after==NULL || key==NULL) return ;
+    if (hdr==NULL || after==NULL || key==NULL) return;
 
     qfits_expand_keyword_r(after, exp_after);
     /* Locate where the entry is requested */
-    kreq = (keytuple*)(hdr->first) ;
+    kreq = (keytuple*)(hdr->first);
     while (kreq!=NULL) {
-        if (!strcmp(kreq->key, exp_after)) break ;
-        kreq = kreq->next ;
+        if (!strcmp(kreq->key, exp_after)) break;
+        kreq = kreq->next;
     }
-    if (kreq==NULL) return ;
+    if (kreq==NULL) return;
     k = keytuple_new(key, val, com, lin);
 
-    k->next = kreq->next ;
-    kreq->next->prev = k ;
-    kreq->next = k ;
-    k->prev = kreq ;
-    hdr->n ++ ;
-    return ;
+    k->next = kreq->next;
+    kreq->next->prev = k;
+    kreq->next = k;
+    k->prev = kreq;
+    hdr->n ++;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -373,22 +373,22 @@ void qfits_header_append(
         const char      *   lin)
 {
     keytuple    *    k;
-    keytuple    *    last ;
+    keytuple    *    last;
 
-    if (hdr==NULL || key==NULL) return ;
+    if (hdr==NULL || key==NULL) return;
 
     k = keytuple_new(key, val, com, lin);
     if (hdr->n==0) {
-        hdr->first = hdr->last = k ;
-        hdr->n = 1 ;
-        return ;
+        hdr->first = hdr->last = k;
+        hdr->n = 1;
+        return;
     }
-    last  = (keytuple*)hdr->last ;
-    last->next = k ;
-    k->prev = last ;
-    hdr->last = k ;
-    hdr->n++ ;
-    return ;
+    last  = (keytuple*)hdr->last;
+    last->next = k;
+    k->prev = last;
+    hdr->last = k;
+    hdr->n++;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -404,27 +404,27 @@ void qfits_header_append(
 /*----------------------------------------------------------------------------*/
 void qfits_header_del(qfits_header * hdr, const char * key)
 {
-    keytuple    *   k ;
+    keytuple    *   k;
     char            xkey[FITS_LINESZ];
 
-    if (hdr==NULL || key==NULL) return ;
+    if (hdr==NULL || key==NULL) return;
 
     qfits_expand_keyword_r(key, xkey);
-    k = (keytuple*)hdr->first ;
+    k = (keytuple*)hdr->first;
     while (k!=NULL) {
-        if (!strcmp(k->key, xkey)) break ;
-        k = k->next ;
+        if (!strcmp(k->key, xkey)) break;
+        k = k->next;
     }
     if (k==NULL)
-        return ;
+        return;
     if(k == hdr->first) {
-        hdr->first = k->next ;
+        hdr->first = k->next;
     } else {
-        k->prev->next = k->next ;
-        k->next->prev = k->prev ;
+        k->prev->next = k->next;
+        k->next->prev = k->prev;
     }
     keytuple_del(k);
-    return ;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -447,32 +447,32 @@ void qfits_header_mod(
         const char      *   val,
         const char      *   com)
 {
-    keytuple    *   k ;
+    keytuple    *   k;
     char            xkey[FITS_LINESZ+1];
 
-    if (hdr==NULL || key==NULL) return ;
+    if (hdr==NULL || key==NULL) return;
 
     qfits_expand_keyword_r(key, xkey);
-    k = (keytuple*)hdr->first ;
+    k = (keytuple*)hdr->first;
     while (k!=NULL) {
-        if (!strcmp(k->key, xkey)) break ;
-        k=k->next ;
+        if (!strcmp(k->key, xkey)) break;
+        k=k->next;
     }
-    if (k==NULL) return ;
+    if (k==NULL) return;
     
     if (k->val) qfits_free(k->val);
     if (k->com) qfits_free(k->com);
     if (k->lin) qfits_free(k->lin);
-    k->val = NULL ;
-    k->com = NULL ;
-    k->lin = NULL ;
+    k->val = NULL;
+    k->com = NULL;
+    k->lin = NULL;
     if (val) {
         if (strlen(val)>0) k->val = qfits_strdup(val);
     }
     if (com) {
         if (strlen(com)>0) k->com = qfits_strdup(com);
     }
-    return ;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -484,64 +484,64 @@ void qfits_header_mod(
 /*----------------------------------------------------------------------------*/
 int qfits_header_sort(qfits_header ** hdr) 
 {
-    qfits_header    *   sorted ;
-    keytuple        *   k ;
-    keytuple        *   kbf ;
-    keytuple        *   next ;
-    keytuple        *   last ;
+    qfits_header    *   sorted;
+    keytuple        *   k;
+    keytuple        *   kbf;
+    keytuple        *   next;
+    keytuple        *   last;
 
     /* Test entries */
-    if (hdr == NULL) return -1 ;
-    if (*hdr == NULL) return -1 ;
-    if ((*hdr)->n < 2) return 0 ;
+    if (hdr == NULL) return -1;
+    if (*hdr == NULL) return -1;
+    if ((*hdr)->n < 2) return 0;
     
     /* Create the new FITS header */
-    sorted = qfits_header_new() ;
+    sorted = qfits_header_new();
 
     /* Move the first keytuple to the sorted empty header */
-    k = (keytuple*)(*hdr)->first ;
-    next = k->next ;
-    sorted->first = sorted->last = k ;
-    k->next = k->prev = NULL ;
-    sorted->n = 1 ;
+    k = (keytuple*)(*hdr)->first;
+    next = k->next;
+    sorted->first = sorted->last = k;
+    k->next = k->prev = NULL;
+    sorted->n = 1;
     
     /* Loop over the other tuples */
     while (next != NULL) {
-        k = next ;
-        next = k->next ;
+        k = next;
+        next = k->next;
 
         /* Find k's place in sorted */
-        kbf = (keytuple*)sorted->first ;
+        kbf = (keytuple*)sorted->first;
         while (kbf!=NULL) {
-            if (k->typ < kbf->typ) break ;
-            kbf = kbf->next ;
+            if (k->typ < kbf->typ) break;
+            kbf = kbf->next;
         }
         
         /* Hook k into sorted list */
         if (kbf == NULL) {
             /* k is last in sorted */
-            last = sorted->last ;
-            sorted->last = k ;
-            k->next = NULL ;
-            k->prev = last ;
-            last->next = k ;
+            last = sorted->last;
+            sorted->last = k;
+            k->next = NULL;
+            k->prev = last;
+            last->next = k;
         } else {
             /* k goes just before kbf */
-            k->next = kbf ;
-            k->prev = kbf->prev ;
-            if (kbf->prev != NULL) (kbf->prev)->next = k ;
-            else sorted->first = k ;
-            kbf->prev = k ;
+            k->next = kbf;
+            k->prev = kbf->prev;
+            if (kbf->prev != NULL) (kbf->prev)->next = k;
+            else sorted->first = k;
+            kbf->prev = k;
         }
-        (sorted->n) ++ ;
+        (sorted->n) ++;
     }
 
     /* Replace the input header by the sorted one */
-    (*hdr)->first = (*hdr)->last = NULL ;
-    qfits_header_destroy(*hdr) ;
-    *hdr = sorted ;
+    (*hdr)->first = (*hdr)->last = NULL;
+    qfits_header_destroy(*hdr);
+    *hdr = sorted;
     
-    return 0 ;
+    return 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -556,18 +556,18 @@ int qfits_header_sort(qfits_header ** hdr)
 /*----------------------------------------------------------------------------*/
 qfits_header * qfits_header_copy(const qfits_header * src)
 {
-    qfits_header    *   fh_copy ;
-    keytuple        *   k ;
+    qfits_header    *   fh_copy;
+    keytuple        *   k;
 
-    if (src==NULL) return NULL ;
+    if (src==NULL) return NULL;
 
     fh_copy = qfits_header_new();
-    k = (keytuple*)src->first ;
+    k = (keytuple*)src->first;
     while (k!=NULL) {
-        qfits_header_append(fh_copy, k->key, k->val, k->com, k->lin) ;
-        k = k->next ;
+        qfits_header_append(fh_copy, k->key, k->val, k->com, k->lin);
+        k = k->next;
     }
-    return fh_copy ;
+    return fh_copy;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -581,19 +581,19 @@ qfits_header * qfits_header_copy(const qfits_header * src)
 /*----------------------------------------------------------------------------*/
 void qfits_header_destroy(qfits_header * hdr)
 {
-    keytuple * k ;
-    keytuple * kn ;
+    keytuple * k;
+    keytuple * kn;
 
-    if (hdr==NULL) return ;
+    if (hdr==NULL) return;
 
-    k = (keytuple*)hdr->first ;
+    k = (keytuple*)hdr->first;
     while (k!=NULL) {
-        kn = k->next ;
+        kn = k->next;
         keytuple_del(k);
-        k = kn ;
+        k = kn;
     }
     qfits_free(hdr);
-    return ;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -612,36 +612,36 @@ void qfits_header_destroy(qfits_header * hdr)
 /*----------------------------------------------------------------------------*/
 char * qfits_header_getstr(const qfits_header * hdr, const char * key)
 {
-    keytuple    *   k ;
-    char            xkey[FITS_LINESZ+1] ;
+    keytuple    *   k;
+    char            xkey[FITS_LINESZ+1];
 
-    if (hdr==NULL || key==NULL) return NULL ;
+    if (hdr==NULL || key==NULL) return NULL;
 
     qfits_expand_keyword_r(key, xkey);
-    k = (keytuple*)hdr->first ;
+    k = (keytuple*)hdr->first;
     while (k!=NULL) {
-        if (!strcmp(k->key, xkey)) break ;
-        k=k->next ;
+        if (!strcmp(k->key, xkey)) break;
+        k=k->next;
     }
-    if (k==NULL) return NULL ;
-    return k->val ;
+    if (k==NULL) return NULL;
+    return k->val;
 }
 
 static keytuple* get_keytuple(qfits_header* hdr, int idx) {
     if (idx == 0) {
-	    hdr->current_idx = 0 ;
-	    hdr->current = hdr->first ;
+	    hdr->current_idx = 0;
+	    hdr->current = hdr->first;
 	    return hdr->current;
 	} else if (idx == hdr->current_idx + 1) {
-	    hdr->current = ((keytuple*) (hdr->current))->next ;
-	    hdr->current_idx++ ;
-	    return hdr->current ;
+	    hdr->current = ((keytuple*) (hdr->current))->next;
+	    hdr->current_idx++;
+	    return hdr->current;
 	} else {
         keytuple* k = (keytuple*)hdr->first;
-	    int count=0 ;
+	    int count=0;
 	    while (count<idx) {
-            k = k->next ;
-            count++ ;
+            k = k->next;
+            count++;
         }
         return k;
 	}
@@ -666,13 +666,13 @@ static keytuple* get_keytuple(qfits_header* hdr, int idx) {
   given field.
 
   @code
-  int i ;
-  char key[FITS_LINESZ+1] ;
-  char val[FITS_LINESZ+1] ;
-  char com[FITS_LINESZ+1] ;
-  char lin[FITS_LINESZ+1] ;
+  int i;
+  char key[FITS_LINESZ+1];
+  char val[FITS_LINESZ+1];
+  char com[FITS_LINESZ+1];
+  char lin[FITS_LINESZ+1];
 
-  for (i=0 ; i<hdr->n ; i++) {
+  for (i=0; i<hdr->n; i++) {
       qfits_header_getitem(hdr, i, key, val, com, lin);
     printf("card[%d] key[%s] val[%s] com[%s]\n", i, key, val, com);
   }
@@ -692,11 +692,11 @@ int qfits_header_getitem(
         char                *   com,
         char                *   lin)
 {
-    keytuple    *   k ;
+    keytuple    *   k;
 
-    if (hdr==NULL) return -1 ;
-    if (key==NULL && val==NULL && com==NULL && lin==NULL) return 0 ;
-    if (idx<0 || idx>=hdr->n) return -1 ;
+    if (hdr==NULL) return -1;
+    if (key==NULL && val==NULL && com==NULL && lin==NULL) return 0;
+    if (idx<0 || idx>=hdr->n) return -1;
 
     k = get_keytuple((qfits_header*)hdr, idx);
 
@@ -704,17 +704,17 @@ int qfits_header_getitem(
     if (key!=NULL) strcpy(key, k->key);
     if (val!=NULL) {
         if (k->val!=NULL) strcpy(val, k->val);
-        else val[0]=0 ;
+        else val[0]=0;
     }
     if (com!=NULL) {
         if (k->com!=NULL) strcpy(com, k->com);
-        else com[0]=0 ;
+        else com[0]=0;
     }
     if (lin!=NULL) {
         if (k->lin!=NULL) strcpy(lin, k->lin);
-        else lin[0]=0 ;
+        else lin[0]=0;
     }
-    return 0 ;
+    return 0;
 }
 
 int qfits_header_setitem(
@@ -724,9 +724,9 @@ int qfits_header_setitem(
                          char                *   val,
                          char                *   com,
                          char                *   lin) {
-    keytuple    *   k ;
+    keytuple    *   k;
 
-    if (!hdr) return -1 ;
+    if (!hdr) return -1;
     if (!key && !val && !com && !lin) return 0;
     if (idx<0 || idx>=hdr->n) return -1;
 
@@ -785,19 +785,19 @@ int qfits_header_setitem(
 /*----------------------------------------------------------------------------*/
 char * qfits_header_getcom(const qfits_header * hdr, const char * key)
 {
-    keytuple    *   k ;
-    char            xkey[FITS_LINESZ+1] ;
+    keytuple    *   k;
+    char            xkey[FITS_LINESZ+1];
 
-    if (hdr==NULL || key==NULL) return NULL ;
+    if (hdr==NULL || key==NULL) return NULL;
 
     qfits_expand_keyword_r(key, xkey);
-    k = (keytuple*)hdr->first ;
+    k = (keytuple*)hdr->first;
     while (k!=NULL) {
-        if (!strcmp(k->key, xkey)) break ;
-        k=k->next ;
+        if (!strcmp(k->key, xkey)) break;
+        k=k->next;
     }
-    if (k==NULL) return NULL ;
-    return k->com ;
+    if (k==NULL) return NULL;
+    return k->com;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -818,15 +818,15 @@ int qfits_header_getint(
         const char          *   key, 
         int                     errval)
 {
-    char    *   c ;
-    int         d ;
+    char    *   c;
+    int         d;
 
-    if (hdr==NULL || key==NULL) return errval ;
+    if (hdr==NULL || key==NULL) return errval;
 
     c = qfits_header_getstr(hdr, key);
-    if (c==NULL) return errval ;
-    if (sscanf(c, "%d", &d)!=1) return errval ;
-    return d ;
+    if (c==NULL) return errval;
+    if (sscanf(c, "%d", &d)!=1) return errval;
+    return d;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -847,12 +847,12 @@ double qfits_header_getdouble(
         const char          *   key, 
         double                  errval)
 {
-    char    *    c ;
+    char    *    c;
 
-    if (hdr==NULL || key==NULL) return errval ;
+    if (hdr==NULL || key==NULL) return errval;
 
     c = qfits_header_getstr(hdr, key);
-    if (c==NULL) return errval ;
+    if (c==NULL) return errval;
     return atof(c);
 }
 
@@ -883,21 +883,21 @@ int qfits_header_getboolean(
         const char          *   key, 
         int                     errval)
 {
-    char    *    c ;
-    int            ret ;
+    char    *    c;
+    int            ret;
 
-    if (hdr==NULL || key==NULL) return errval ;
+    if (hdr==NULL || key==NULL) return errval;
 
     c = qfits_header_getstr(hdr, key);
-    if (c==NULL) return errval ;
-    if (strlen(c)<1) return errval ;
+    if (c==NULL) return errval;
+    if (strlen(c)<1) return errval;
 
     if (c[0]=='y' || c[0]=='Y' || c[0]=='1' || c[0]=='t' || c[0]=='T') {
-        ret = 1 ;
+        ret = 1;
     } else if (c[0]=='n' || c[0]=='N' || c[0]=='0' || c[0]=='f' || c[0]=='F') {
-        ret = 0 ;
+        ret = 0;
     } else {
-        ret = errval ;
+        ret = errval;
     }
     return ret;
 }
@@ -913,7 +913,7 @@ int qfits_header_write_line(const qfits_header* hdr, int line, char* result) {
             return -1;
     }
     qfits_header_makeline(result, k, 1);
-    return 0 ;
+    return 0;
 }
 
 
@@ -930,21 +930,21 @@ int qfits_header_dump(
         const qfits_header  *   hdr,
         FILE                *   out)
 {
-    keytuple    *   k ;
+    keytuple    *   k;
     char            line[81];
-    int             n_out ;    
+    int             n_out;    
 
-    if (hdr==NULL) return -1 ;
-    if (out==NULL) out=stdout ;
+    if (hdr==NULL) return -1;
+    if (out==NULL) out=stdout;
 
-    k = (keytuple*)hdr->first ;
-    n_out = 0 ;
+    k = (keytuple*)hdr->first;
+    n_out = 0;
     while (k!=NULL) {
         /* Make line from information in the node */
         qfits_header_makeline(line, k, 1);
         if ((fwrite(line, 1, 80, out))!=80) {
             fprintf(stderr, "error dumping FITS header");
-            return -1 ;
+            return -1;
         }
         n_out ++;
         k=k->next;
@@ -953,9 +953,9 @@ int qfits_header_dump(
     memset(line, ' ', 80);
     while (n_out % 36) {
         fwrite(line, 1, 80, out);
-        n_out++ ;
+        n_out++;
     }
-    return 0 ;
+    return 0;
 }
 
 
@@ -963,27 +963,27 @@ int qfits_header_list(
         const qfits_header  *   hdr,
         FILE                *   out)
 {
-    keytuple    *   k ;
+    keytuple    *   k;
     char            line[81];
-    int             n_out ;    
+    int             n_out;    
 
-    if (hdr==NULL) return -1 ;
-    if (out==NULL) out=stdout ;
+    if (hdr==NULL) return -1;
+    if (out==NULL) out=stdout;
 
-    k = (keytuple*)hdr->first ;
-    n_out = 0 ;
+    k = (keytuple*)hdr->first;
+    n_out = 0;
     while (k!=NULL) {
         /* Make line from information in the node */
         qfits_header_makeline(line, k, 1);
         if ((fwrite(line, 1, 80, out))!=80) {
             fprintf(stderr, "error dumping FITS header");
-            return -1 ;
+            return -1;
         }
         fprintf(out, "\n");
         n_out ++;
         k=k->next;
     }
-    return 0 ;
+    return 0;
 }
 
 /**@}*/
@@ -1010,9 +1010,9 @@ static keytuple * keytuple_new(
         const char * lin)
 {
     char xkey[FITS_LINESZ+1];
-    keytuple    *    k ;
+    keytuple    *    k;
 
-    if (key==NULL) return NULL ;
+    if (key==NULL) return NULL;
 
     /* Allocate space for new structure */
     k = qfits_malloc(sizeof(keytuple));
@@ -1020,22 +1020,22 @@ static keytuple * keytuple_new(
     qfits_expand_keyword_r(key, xkey);
     k->key = qfits_strdup(xkey);
     /* Hook a copy of th        e value if defined */
-    k->val = NULL ;
+    k->val = NULL;
     if (val!=NULL) {
         if (strlen(val)>0) k->val = qfits_strdup(val);
     }
     /* Hook a copy of the comment if defined */
-    k->com = NULL ;
+    k->com = NULL;
     if (com!=NULL) {
-        if (strlen(com)>0) k->com = qfits_strdup(com) ;
+        if (strlen(com)>0) k->com = qfits_strdup(com);
     }
     /* Hook a copy of the initial line if defined */
-    k->lin = NULL ;
+    k->lin = NULL;
     if (lin!=NULL) {
         if (strlen(lin)>0) k->lin = qfits_strdup(lin);
     }
-    k->next = NULL ;
-    k->prev = NULL ;
+    k->next = NULL;
+    k->prev = NULL;
     k->typ = keytuple_type(key);
 
     return k;
@@ -1055,42 +1055,42 @@ static keytuple * keytuple_new(
 /*----------------------------------------------------------------------------*/
 static keytype keytuple_type(const char * key)
 {
-    keytype kt ;
+    keytype kt;
 
-    kt = keytype_undef ;
+    kt = keytype_undef;
     /* Assign type to key tuple */
-    if (!strcmp(key, "SIMPLE") || !strcmp(key, "XTENSION")) kt = keytype_top ;
-    else if (!strcmp(key, "END"))                   kt = keytype_end ;
-    else if (!strcmp(key, "BITPIX"))                kt = keytype_bitpix ;
-    else if (!strcmp(key, "NAXIS"))                 kt = keytype_naxis ;
-    else if (!strcmp(key, "NAXIS1"))                kt = keytype_naxis1 ;
-    else if (!strcmp(key, "NAXIS2"))                kt = keytype_naxis2 ;
-    else if (!strcmp(key, "NAXIS3"))                kt = keytype_naxis3 ;
-    else if (!strcmp(key, "NAXIS4"))                kt = keytype_naxis4 ;
-    else if (!strncmp(key, "NAXIS", 5))             kt = keytype_naxisi ;
-    else if (!strcmp(key, "GROUP"))                 kt = keytype_group ;
-    else if (!strcmp(key, "PCOUNT"))                kt = keytype_pcount ;
-    else if (!strcmp(key, "GCOUNT"))                kt = keytype_gcount ;
-    else if (!strcmp(key, "EXTEND"))                kt = keytype_extend ;
-    else if (!strcmp(key, "BSCALE"))                kt = keytype_bscale ;
-    else if (!strcmp(key, "BZERO"))                 kt = keytype_bzero ;
-    else if (!strcmp(key, "TFIELDS"))               kt = keytype_tfields ;
-    else if (!strncmp(key, "TBCOL", 5))             kt = keytype_tbcoli ;
-    else if (!strncmp(key, "TFORM", 5))             kt = keytype_tformi ;
-    else if (!strncmp(key, "HIERARCH ESO DPR", 16)) kt = keytype_hierarch_dpr ;
-    else if (!strncmp(key, "HIERARCH ESO OBS", 16)) kt = keytype_hierarch_obs ;
-    else if (!strncmp(key, "HIERARCH ESO TPL", 16)) kt = keytype_hierarch_tpl ;
-    else if (!strncmp(key, "HIERARCH ESO GEN", 16)) kt = keytype_hierarch_gen ;
-    else if (!strncmp(key, "HIERARCH ESO TEL", 16)) kt = keytype_hierarch_tel ;
-    else if (!strncmp(key, "HIERARCH ESO INS", 16)) kt = keytype_hierarch_ins ;
-    else if (!strncmp(key, "HIERARCH ESO LOG", 16)) kt = keytype_hierarch_log ;
-    else if (!strncmp(key, "HIERARCH ESO PRO", 16)) kt = keytype_hierarch_pro ;
-    else if (!strncmp(key, "HIERARCH", 8))          kt = keytype_hierarch ;
-    else if (!strcmp(key, "HISTORY"))               kt = keytype_history ;
-    else if (!strcmp(key, "COMMENT"))               kt = keytype_comment ;
-    else if (!strcmp(key, "CONTINUE"))              kt = keytype_continue ;
-    else if ((int)strlen(key)<9)                    kt = keytype_primary ;
-    return kt ;
+    if (!strcmp(key, "SIMPLE") || !strcmp(key, "XTENSION")) kt = keytype_top;
+    else if (!strcmp(key, "END"))                   kt = keytype_end;
+    else if (!strcmp(key, "BITPIX"))                kt = keytype_bitpix;
+    else if (!strcmp(key, "NAXIS"))                 kt = keytype_naxis;
+    else if (!strcmp(key, "NAXIS1"))                kt = keytype_naxis1;
+    else if (!strcmp(key, "NAXIS2"))                kt = keytype_naxis2;
+    else if (!strcmp(key, "NAXIS3"))                kt = keytype_naxis3;
+    else if (!strcmp(key, "NAXIS4"))                kt = keytype_naxis4;
+    else if (!strncmp(key, "NAXIS", 5))             kt = keytype_naxisi;
+    else if (!strcmp(key, "GROUP"))                 kt = keytype_group;
+    else if (!strcmp(key, "PCOUNT"))                kt = keytype_pcount;
+    else if (!strcmp(key, "GCOUNT"))                kt = keytype_gcount;
+    else if (!strcmp(key, "EXTEND"))                kt = keytype_extend;
+    else if (!strcmp(key, "BSCALE"))                kt = keytype_bscale;
+    else if (!strcmp(key, "BZERO"))                 kt = keytype_bzero;
+    else if (!strcmp(key, "TFIELDS"))               kt = keytype_tfields;
+    else if (!strncmp(key, "TBCOL", 5))             kt = keytype_tbcoli;
+    else if (!strncmp(key, "TFORM", 5))             kt = keytype_tformi;
+    else if (!strncmp(key, "HIERARCH ESO DPR", 16)) kt = keytype_hierarch_dpr;
+    else if (!strncmp(key, "HIERARCH ESO OBS", 16)) kt = keytype_hierarch_obs;
+    else if (!strncmp(key, "HIERARCH ESO TPL", 16)) kt = keytype_hierarch_tpl;
+    else if (!strncmp(key, "HIERARCH ESO GEN", 16)) kt = keytype_hierarch_gen;
+    else if (!strncmp(key, "HIERARCH ESO TEL", 16)) kt = keytype_hierarch_tel;
+    else if (!strncmp(key, "HIERARCH ESO INS", 16)) kt = keytype_hierarch_ins;
+    else if (!strncmp(key, "HIERARCH ESO LOG", 16)) kt = keytype_hierarch_log;
+    else if (!strncmp(key, "HIERARCH ESO PRO", 16)) kt = keytype_hierarch_pro;
+    else if (!strncmp(key, "HIERARCH", 8))          kt = keytype_hierarch;
+    else if (!strcmp(key, "HISTORY"))               kt = keytype_history;
+    else if (!strcmp(key, "COMMENT"))               kt = keytype_comment;
+    else if (!strcmp(key, "CONTINUE"))              kt = keytype_continue;
+    else if ((int)strlen(key)<9)                    kt = keytype_primary;
+    return kt;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -1103,7 +1103,7 @@ static keytype keytuple_type(const char * key)
 /*----------------------------------------------------------------------------*/
 static void keytuple_del(keytuple * k)
 {
-    if (k==NULL) return ;
+    if (k==NULL) return;
     if (k->key) qfits_free(k->key);
     if (k->val) qfits_free(k->val);
     if (k->com) qfits_free(k->com);
@@ -1122,13 +1122,13 @@ static void keytuple_del(keytuple * k)
  */
 /*----------------------------------------------------------------------------*/
 static void keytuple_dmp(const keytuple * k) {
-    if (!k) return ;
+    if (!k) return;
     printf("[%s]=[", k->key); 
     if (k->val) printf("%s", k->val);
     printf("]");
     if (k->com) printf("/[%s]", k->com);
     printf("\n");
-    return ;
+    return;
 }
 
 void qfits_header_debug_dump(const qfits_header* hdr) {
@@ -1161,26 +1161,26 @@ static int qfits_header_makeline(
         int                 conservative)
 {
     char blankline[81];
-    int     i ;
+    int     i;
 
-    if (line==NULL || k==NULL) return -1 ;
+    if (line==NULL || k==NULL) return -1;
 
     /* If a previous line information is there, use it as is */
     if (conservative) {
         if (k->lin != NULL) {
             memcpy(line, k->lin, 80);
             line[80]='\0';
-            return 0 ;
+            return 0;
         }
     }
     /* Got to build keyword from scratch */
     memset(blankline, 0, 81);
     qfits_card_build(blankline, k->key, k->val, k->com);
     memset(line, ' ', 80);
-    i=0 ;
+    i=0;
     while (blankline[i] != '\0') {
-        line[i] = blankline[i] ;
-        i++ ;
+        line[i] = blankline[i];
+        i++;
     }
     line[80]='\0';
     return 0;
@@ -1210,15 +1210,15 @@ static int qfits_header_makeline(
 /*----------------------------------------------------------------------------*/
 char * qfits_header_findmatch(const qfits_header * hdr, const char * key)
 {
-	keytuple    *   k ;
+	keytuple    *   k;
 
-	if (hdr==NULL || key==NULL) return NULL ;
+	if (hdr==NULL || key==NULL) return NULL;
 
-	k = (keytuple*)hdr->first ;
+	k = (keytuple*)hdr->first;
 	while (k!=NULL) {
-		if (!strncmp(k->key, key, (int)strlen(key))) break ;
-		k=k->next ;
+		if (!strncmp(k->key, key, (int)strlen(key))) break;
+		k=k->next;
 	}
-	if (k==NULL) return NULL ;
-	return k->key ;
+	if (k==NULL) return NULL;
+	return k->key;
 }

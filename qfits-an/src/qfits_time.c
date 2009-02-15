@@ -83,10 +83,10 @@
                             Private to this module
  -----------------------------------------------------------------------------*/
 
-static long timer_to_date(time_t time_secs) ;
-static long timer_to_time(time_t time_secs) ;
-static long qfits_time_now(void) ;
-static long qfits_date_now (void) ;
+static long timer_to_date(time_t time_secs);
+static long timer_to_time(time_t time_secs);
+static long qfits_time_now(void);
+static long qfits_date_now (void);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -114,12 +114,12 @@ static long qfits_date_now (void) ;
 /*----------------------------------------------------------------------------*/
 char * qfits_get_datetime_iso8601(void)
 {
-    static char date_iso8601[20] ;
-    long        curdate ;
-    long        curtime ;
+    static char date_iso8601[20];
+    long        curdate;
+    long        curtime;
 
-    curdate  = qfits_date_now() ;
-    curtime  = qfits_time_now() ;
+    curdate  = qfits_date_now();
+    curtime  = qfits_time_now();
 
     sprintf(date_iso8601, "%04d-%02d-%02dT%02d:%02d:%02d",
             GET_CCYEAR(curdate),
@@ -128,7 +128,7 @@ char * qfits_get_datetime_iso8601(void)
             GET_HOUR(curtime),
             GET_MINUTE(curtime),
             GET_SECOND(curtime));
-    return date_iso8601 ;
+    return date_iso8601;
 }
 
 /**@}*/

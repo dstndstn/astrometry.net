@@ -80,27 +80,27 @@
 /*----------------------------------------------------------------------------*/
 const char * qfits_datamd5(const char * filename)
 {
-    static char         datamd5[MD5HASHSZ+1] ;
-    struct MD5Context    ctx ;
-    unsigned char         digest[16] ;
-    FILE             *    in ;
+    static char         datamd5[MD5HASHSZ+1];
+    struct MD5Context    ctx;
+    unsigned char         digest[16];
+    FILE             *    in;
     char                 buf[FITS_BLOCK_SIZE];
-    char            *    buf_c ;
-    int                    i ;
-    int                    in_header ;
-    int                    check_fits ;
+    char            *    buf_c;
+    int                    i;
+    int                    in_header;
+    int                    check_fits;
 
     /* Check entries */
-    if (filename==NULL) return NULL ;
+    if (filename==NULL) return NULL;
     /* Open input file */
     if ((in=fopen(filename, "r"))==NULL) {
         qfits_error("cannot open file %s", filename);
-        return NULL ;
+        return NULL;
     }
     /* Initialize all variables */
     MD5Init(&ctx);
-    in_header=1 ;
-    check_fits=0 ;
+    in_header=1;
+    check_fits=0;
     /* Loop over input file */
     while (fread(buf, 1, FITS_BLOCK_SIZE, in)==FITS_BLOCK_SIZE) {
         /* First time in the loop: check the file is FITS */
@@ -117,22 +117,22 @@ const char * qfits_datamd5(const char * filename)
                 buf[8]!='=') {
                 qfits_error("file [%s] is not FITS\n", filename);
                 fclose(in);
-                return NULL ;
+                return NULL;
             } else {
-                check_fits=1 ;
+                check_fits=1;
             }
         }
         if (in_header) {
-            buf_c = buf ;
-            for (i=0 ; i<FITS_NCARDS ; i++) {
+            buf_c = buf;
+            for (i=0; i<FITS_NCARDS; i++) {
                 if (buf_c[0]=='E' &&
                     buf_c[1]=='N' &&
                     buf_c[2]=='D' &&
                     buf_c[3]==' ') {
-                    in_header=0 ;
-                    break ;
+                    in_header=0;
+                    break;
                 }
-                buf_c += FITS_LINESZ ;
+                buf_c += FITS_LINESZ;
             }
         } else {
             /* If current block is a data block */
@@ -146,9 +146,9 @@ const char * qfits_datamd5(const char * filename)
                 buf[6]=='O' &&
                 buf[7]=='N' &&
                 buf[8]=='=') {
-                in_header=1 ;
-                buf_c = buf ;
-                for (i=0 ; i<FITS_NCARDS ; i++) {
+                in_header=1;
+                buf_c = buf;
+                for (i=0; i<FITS_NCARDS; i++) {
                     /* Try to find an END marker in this block */
                     if (buf_c[0]=='E' &&
                         buf_c[1]=='N' &&
@@ -156,9 +156,9 @@ const char * qfits_datamd5(const char * filename)
                         buf_c[3]==' ') {
                         /* Found END marker in same block as XTENSION */
                         in_header=0;
-                        break ;
+                        break;
                     }
-                    buf_c += FITS_LINESZ ;
+                    buf_c += FITS_LINESZ;
                 }
             } else {
                 MD5Update(&ctx, (unsigned char *)buf, FITS_BLOCK_SIZE);
@@ -169,7 +169,7 @@ const char * qfits_datamd5(const char * filename)
     if (check_fits==0) {
         /* Never went through the read loop: file is not FITS */
         qfits_error("file [%s] is not FITS", filename);
-        return NULL ;
+        return NULL;
     }
     /* Got to the end of file: summarize */
     MD5Final(digest, &ctx);
@@ -192,7 +192,7 @@ const char * qfits_datamd5(const char * filename)
     digest[13],
     digest[14],
     digest[15]);
-    return datamd5 ;
+    return datamd5;
 }
 
 /**@}*/

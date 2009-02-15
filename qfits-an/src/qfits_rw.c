@@ -62,7 +62,7 @@
                         Private to this module  
  -----------------------------------------------------------------------------*/
 
-static int is_blank_line(const char *) ;
+static int is_blank_line(const char *);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -119,41 +119,41 @@ qfits_header * qfits_header_read_hdr(const char * filename)
 	char getval_buf[FITS_LINESZ+1];
 	char getkey_buf[FITS_LINESZ+1];
 	char getcom_buf[FITS_LINESZ+1];
-    qfits_header    *   hdr ;
-    FILE            *   in ;
+    qfits_header    *   hdr;
+    FILE            *   in;
     char                line[81];
     char            *   key,
                     *   val,
-                    *   com ;
-    int                 i, j ;
+                    *   com;
+    int                 i, j;
 
     /* Check input */
-    if (filename==NULL) return NULL ;
+    if (filename==NULL) return NULL;
 
     /* Initialise */
-    key = val = com = NULL ; 
+    key = val = com = NULL; 
 
     /* Open the file */
     if ((in=fopen(filename, "r"))==NULL) {
-        qfits_error("cannot read [%s]", filename) ;
-        return NULL ;
+        qfits_error("cannot read [%s]", filename);
+        return NULL;
     }
     
     /* Create the header */
-    hdr = qfits_header_new() ;
+    hdr = qfits_header_new();
     
     /* Go through the file */
     while (fgets(line, 81, in)!=NULL) {
-        for (i=0 ; i<81 ; i++) {
+        for (i=0; i<81; i++) {
             if (line[i] == '\n') {
-                for (j=i ; j<81 ; j++) line[j] = ' ' ;
-                line[80] = '\0' ;
-                break ;
+                for (j=i; j<81; j++) line[j] = ' ';
+                line[80] = '\0';
+                break;
             }
         }
         if (!strcmp(line, "END")) {
             line[3] = ' ';
-            line[4] = '\0' ;
+            line[4] = '\0';
         }
         
         /* Rule out blank lines */
@@ -167,26 +167,26 @@ qfits_header * qfits_header_read_hdr(const char * filename)
             /* If key or value cannot be found, trigger an error */
             if (key==NULL) {
                 qfits_header_destroy(hdr);
-                fclose(in) ;
-                return NULL ;
+                fclose(in);
+                return NULL;
             }
             /* Append card to linked-list */
             qfits_header_append(hdr, key, val, com, NULL);
         }
     }
-    fclose(in) ;
+    fclose(in);
 
     /* The last key should be 'END' */
     if (strlen(key)!=3) {
         qfits_header_destroy(hdr);
-        return NULL ;
+        return NULL;
     } 
     if (key[0]!='E' || key[1]!='N' || key[2]!='D') {
         qfits_header_destroy(hdr);
-        return NULL ;
+        return NULL;
     }
     
-    return hdr ;
+    return hdr;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -207,38 +207,38 @@ qfits_header * qfits_header_read_hdr_string(
 	char getval_buf[FITS_LINESZ+1];
 	char getkey_buf[FITS_LINESZ+1];
 	char getcom_buf[FITS_LINESZ+1];
-    qfits_header    *   hdr ;
+    qfits_header    *   hdr;
     char                line[81];
     char            *   key,
                     *   val,
-                    *   com ;
-    int                 ind ;
-    int                 i, j ;
+                    *   com;
+    int                 ind;
+    int                 i, j;
 
     /* Check input */
-    if (hdr_str==NULL) return NULL ;
+    if (hdr_str==NULL) return NULL;
 
     /* Initialise */
-    key = val = com = NULL ; 
+    key = val = com = NULL; 
 
     /* Create the header */
-    hdr = qfits_header_new() ;
+    hdr = qfits_header_new();
     
     /* Go through the file */
-    ind = 0 ;
+    ind = 0;
     while (ind <= nb_char - 80) {
-        strncpy(line, (char*)hdr_str + ind, 80) ;
-        line[80] = '\0' ;
-        for (i=0 ; i<81 ; i++) {
+        strncpy(line, (char*)hdr_str + ind, 80);
+        line[80] = '\0';
+        for (i=0; i<81; i++) {
             if (line[i] == '\n') {
-                for (j=i ; j<81 ; j++) line[j] = ' ' ;
-                line[80] = '\0' ;
-                break ;
+                for (j=i; j<81; j++) line[j] = ' ';
+                line[80] = '\0';
+                break;
             }
         }
         if (!strcmp(line, "END")) {
             line[3] = ' ';
-            line[4] = '\0' ;
+            line[4] = '\0';
         }
         
         /* Rule out blank lines */
@@ -252,25 +252,25 @@ qfits_header * qfits_header_read_hdr_string(
             /* If key or value cannot be found, trigger an error */
             if (key==NULL) {
                 qfits_header_destroy(hdr);
-                return NULL ;
+                return NULL;
             }
             /* Append card to linked-list */
             qfits_header_append(hdr, key, val, com, NULL);
         }
-        ind += 80 ;
+        ind += 80;
     }
 
     /* The last key should be 'END' */
     if (strlen(key)!=3) {
         qfits_header_destroy(hdr);
-        return NULL ;
+        return NULL;
     } 
     if (key[0]!='E' || key[1]!='N' || key[2]!='D') {
         qfits_header_destroy(hdr);
-        return NULL ;
+        return NULL;
     }
     
-    return hdr ;
+    return hdr;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -292,22 +292,22 @@ qfits_header * qfits_header_readext(const char * filename, int xtnum)
 	char getval_buf[FITS_LINESZ+1];
 	char getkey_buf[FITS_LINESZ+1];
 	char getcom_buf[FITS_LINESZ+1];
-    qfits_header*   hdr ;
-    int             n_ext ;
+    qfits_header*   hdr;
+    int             n_ext;
     char            line[81];
-    char        *   where ;
-    char        *   start ;
+    char        *   where;
+    char        *   start;
     char        *   key,
                 *   val,
-                *   com ;
-    int             seg_start ;
-    int             seg_size ;
-    size_t          size ;
+                *   com;
+    int             seg_start;
+    int             seg_size;
+    size_t          size;
 
     /* Check input */
     if (filename==NULL || xtnum<0) {
 		qfits_error("null string or invalid ext num.");
-        return NULL ;
+        return NULL;
 	}
 
     /* Check that there are enough extensions */
@@ -315,25 +315,25 @@ qfits_header * qfits_header_readext(const char * filename, int xtnum)
         n_ext = qfits_query_n_ext(filename);
         if (xtnum>n_ext) {
 			qfits_error("invalid ext num: %i > %i.", xtnum, n_ext);
-            return NULL ;
+            return NULL;
         }
     }
 
     /* Get offset to the extension header */
     if (qfits_get_hdrinfo(filename, xtnum, &seg_start, &seg_size)!=0) {
 		qfits_error("qfits_get_hdrinfo failed.");
-        return NULL ;
+        return NULL;
     }
 
     /* Memory-map the input file */
-    start = qfits_falloc((char *)filename, seg_start, &size) ;
+    start = qfits_falloc((char *)filename, seg_start, &size);
     if (start==NULL) {
 		qfits_error("qfits_falloc failed; maybe you're out of memory (or address space)?");
-		return NULL ;
+		return NULL;
 	}
 
-    hdr   = qfits_header_new() ;
-    where = start ;
+    hdr   = qfits_header_new();
+    where = start;
     while (1) {
         memcpy(line, where, 80);
         line[80] = '\0';
@@ -349,8 +349,8 @@ qfits_header * qfits_header_readext(const char * filename, int xtnum)
             /* If key or value cannot be found, trigger an error */
             if (key==NULL) {
                 qfits_header_destroy(hdr);
-                hdr = NULL ;
-                break ;
+                hdr = NULL;
+                break;
             }
             /* Append card to linked-list */
             qfits_header_append(hdr, key, val, com, line);
@@ -359,18 +359,18 @@ qfits_header * qfits_header_readext(const char * filename, int xtnum)
                 if (key[0]=='E' &&
                     key[1]=='N' &&
                     key[2]=='D')
-                    break ;
+                    break;
         }
-        where += 80 ;
+        where += 80;
         /* If reaching the end of file, trigger an error */
         if ((int)(where-start)>=(int)(seg_size+80)) {
             qfits_header_destroy(hdr);
-            hdr = NULL ;
-            break ;
+            hdr = NULL;
+            break;
         }
     }
-    qfits_fdealloc(start, seg_start, size) ;
-    return hdr ;
+    qfits_fdealloc(start, seg_start, size);
+    return hdr;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -385,32 +385,32 @@ qfits_header * qfits_header_readext(const char * filename, int xtnum)
 /*----------------------------------------------------------------------------*/
 void qfits_zeropad(const char * filename)
 {
-    struct stat sta ;
-    int         size ;
+    struct stat sta;
+    int         size;
     int         remaining;
-    FILE    *   out ;
+    FILE    *   out;
     char    *   buf;
 
-    if (filename==NULL) return ;
+    if (filename==NULL) return;
 
     /* Get file size in bytes */
     if (stat(filename, &sta)!=0) {
-        return ;
+        return;
     }
-    size = (int)sta.st_size ;
+    size = (int)sta.st_size;
     /* Compute number of zeros to pad */
-    remaining = size % FITS_BLOCK_SIZE ;
-    if (remaining==0) return ;
-    remaining = FITS_BLOCK_SIZE - remaining ;
+    remaining = size % FITS_BLOCK_SIZE;
+    if (remaining==0) return;
+    remaining = FITS_BLOCK_SIZE - remaining;
 
     /* Open file, dump zeros, exit */
     if ((out=fopen(filename, "a"))==NULL)
-        return ;
+        return;
     buf = qfits_calloc(remaining, sizeof(char));
     fwrite(buf, 1, remaining, out);
     fclose(out);
     qfits_free(buf);
-    return ;
+    return;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -425,26 +425,26 @@ void qfits_zeropad(const char * filename)
 /*----------------------------------------------------------------------------*/
 int qfits_is_fits(const char * filename)
 {
-    FILE  *   fp ;
-    char  *   magic ;
-    int       isfits ;
+    FILE  *   fp;
+    char  *   magic;
+    int       isfits;
 
-    if (filename==NULL) return -1 ;
+    if (filename==NULL) return -1;
     if ((fp = fopen(filename, "r"))==NULL) {
-        qfits_error("cannot open file [%s]: %s", filename, strerror(errno)) ;
-        return -1 ;
+        qfits_error("cannot open file [%s]: %s", filename, strerror(errno));
+        return -1;
     }
 
-    magic = qfits_calloc(FITS_MAGIC_SZ+1, sizeof(char)) ;
-    fread(magic, 1, FITS_MAGIC_SZ, fp) ;
-    fclose(fp) ;
-    magic[FITS_MAGIC_SZ] = '\0' ;
+    magic = qfits_calloc(FITS_MAGIC_SZ+1, sizeof(char));
+    fread(magic, 1, FITS_MAGIC_SZ, fp);
+    fclose(fp);
+    magic[FITS_MAGIC_SZ] = '\0';
     if (strstr(magic, FITS_MAGIC)!=NULL)
-        isfits = 1 ;
+        isfits = 1;
     else
-        isfits = 0 ;
-    qfits_free(magic) ;
-    return isfits ;
+        isfits = 0;
+    qfits_free(magic);
+    return isfits;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -473,19 +473,19 @@ int qfits_get_hdrinfo(
         int         *   seg_size)
 {
     if (filename==NULL || xtnum<0 || (seg_start==NULL && seg_size==NULL)) {
-        return -1 ;
+        return -1;
     }
     if (seg_start!=NULL) {
         *seg_start = qfits_query(filename, QFITS_QUERY_HDR_START | xtnum);
         if (*seg_start<0)
-            return -1 ;
+            return -1;
     }
     if (seg_size!=NULL) {
         *seg_size = qfits_query(filename, QFITS_QUERY_HDR_SIZE | xtnum);
         if (*seg_size<0)
-            return -1 ;
+            return -1;
     }
-    return 0 ;
+    return 0;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -514,29 +514,29 @@ int qfits_get_datinfo(
         int         *   seg_size)
 {
     if (filename==NULL || xtnum<0 || (seg_start==NULL && seg_size==NULL)) {
-        return -1 ;
+        return -1;
     }
     if (seg_start!=NULL) {
         *seg_start = qfits_query(filename, QFITS_QUERY_DAT_START | xtnum);
         if (*seg_start<0)
-            return -1 ;
+            return -1;
     }
     if (seg_size!=NULL) {
         *seg_size = qfits_query(filename, QFITS_QUERY_DAT_SIZE | xtnum);
         if (*seg_size<0)
-            return -1 ;
+            return -1;
     }
-    return 0 ;  
+    return 0;  
 }
 
 /**@}*/
 
 static int is_blank_line(const char * s)
 {
-    int     i ;
+    int     i;
 
-    for (i=0 ; i<(int)strlen(s) ; i++) {
-        if (s[i]!=' ') return 0 ;
+    for (i=0; i<(int)strlen(s); i++) {
+        if (s[i]!=' ') return 0;
     }
-    return 1 ;
+    return 1;
 }   

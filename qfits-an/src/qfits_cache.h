@@ -49,7 +49,7 @@
 /** Query data size in bytes */
 #define QFITS_QUERY_DAT_SIZE    (1<<26)
 
-void qfits_cache_purge(void) ;
-int qfits_query(const char *, int) ;
+void qfits_cache_purge(void);
+int qfits_query(const char *, int);
 
 #endif

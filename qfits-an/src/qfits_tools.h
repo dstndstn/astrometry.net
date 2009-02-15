@@ -58,24 +58,24 @@
  -----------------------------------------------------------------------------*/
 
 // NOT THREAD-SAFE
-char * qfits_pretty_string(const char *) ;
+char * qfits_pretty_string(const char *);
 
 
 void qfits_pretty_string_r(const char* in, char* out);
 
-char * qfits_query_hdr(const char *, const char *) ;
-char * qfits_query_ext(const char *, const char *, int) ;
-int qfits_query_n_ext(const char *) ;
-int qfits_query_nplanes(const char *, int) ;
+char * qfits_query_hdr(const char *, const char *);
+char * qfits_query_ext(const char *, const char *, int);
+int qfits_query_n_ext(const char *);
+int qfits_query_nplanes(const char *, int);
 
-int qfits_is_boolean(const char *) ;
-int qfits_is_int(const char *) ;
-int qfits_is_float(const char *) ;
-int qfits_is_complex(const char *) ;
-int qfits_is_string(const char *) ;
-int qfits_get_type(const char *) ;
-char * qfits_query_card(const char *, const char *) ;
-int qfits_replace_card(const char *, const char *, const char *) ;
-const char * qfits_version(void) ;
+int qfits_is_boolean(const char *);
+int qfits_is_int(const char *);
+int qfits_is_float(const char *);
+int qfits_is_complex(const char *);
+int qfits_is_string(const char *);
+int qfits_get_type(const char *);
+char * qfits_query_card(const char *, const char *);
+int qfits_replace_card(const char *, const char *, const char *);
+const char * qfits_version(void);
 
 #endif

@@ -40,10 +40,10 @@
 #ifndef WORDS_BIGENDIAN
 /* Little endian ordering */
 typedef union _ieee_double_pattern_ {
-    double d ;
+    double d;
     struct {
-        unsigned int lsw ;
-        unsigned int msw ;
+        unsigned int lsw;
+        unsigned int msw;
     } p;
 } ieee_double_pattern;
 #else

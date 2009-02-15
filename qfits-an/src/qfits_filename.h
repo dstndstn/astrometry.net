@@ -32,9 +32,9 @@
                         Function ANSI C prototypes
  -----------------------------------------------------------------------------*/
 
-char * qfits_get_dir_name(const char *) ;
-char * qfits_get_base_name(const char *) ;
-char * qfits_get_root_name(const char *) ;
-char * qfits_get_ext_name(const char *) ;
+char * qfits_get_dir_name(const char *);
+char * qfits_get_base_name(const char *);
+char * qfits_get_root_name(const char *);
+char * qfits_get_ext_name(const char *);
 
 #endif

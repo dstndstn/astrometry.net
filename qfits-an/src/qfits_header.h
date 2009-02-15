@@ -68,23 +68,23 @@ int qfits_header_list(const qfits_header* hdr, FILE* out);
                       
 
 
-qfits_header * qfits_header_new(void) ;
-qfits_header * qfits_header_default(void) ;
+qfits_header * qfits_header_new(void);
+qfits_header * qfits_header_default(void);
 int qfits_header_n(const qfits_header*);
 void qfits_header_add(qfits_header *, const char *, const char *, const char *,
-        const char *) ;
+        const char *);
 void qfits_header_add_after(qfits_header *, const char *, const char *, 
-        const char *, const char *, const char *) ;
+        const char *, const char *, const char *);
 void qfits_header_append(qfits_header *, const char *, const char *,
-        const char *, const char *) ;
-void qfits_header_del(qfits_header *, const char *) ;
-int qfits_header_sort(qfits_header **) ;
-qfits_header * qfits_header_copy(const qfits_header *) ;
+        const char *, const char *);
+void qfits_header_del(qfits_header *, const char *);
+int qfits_header_sort(qfits_header **);
+qfits_header * qfits_header_copy(const qfits_header *);
 void qfits_header_mod(qfits_header *, const char *, const char *, const char *);
-void qfits_header_destroy(qfits_header *) ;
-char * qfits_header_getstr(const qfits_header *, const char *) ;
+void qfits_header_destroy(qfits_header *);
+char * qfits_header_getstr(const qfits_header *, const char *);
 int qfits_header_getitem(const qfits_header *, int, char *, char *, char *, 
-        char *) ; 
+        char *); 
 
 /*
   Note, the "key", "val", "comment", args are copied with "strdup", while "line" is
@@ -94,12 +94,12 @@ int qfits_header_getitem(const qfits_header *, int, char *, char *, char *,
 int qfits_header_setitem(qfits_header *, int, char* key, char* val, char* comment,
                          char* line);
 
-char * qfits_header_getcom(const qfits_header *, const char *) ;
-int qfits_header_getint(const qfits_header *, const char *, int) ;
-double qfits_header_getdouble(const qfits_header *, const char *, double) ;
-int qfits_header_getboolean(const qfits_header *, const char *, int) ;
-int qfits_header_dump(const qfits_header *, FILE *) ;
-char * qfits_header_findmatch(const qfits_header * hdr, const char * key) ;
+char * qfits_header_getcom(const qfits_header *, const char *);
+int qfits_header_getint(const qfits_header *, const char *, int);
+double qfits_header_getdouble(const qfits_header *, const char *, double);
+int qfits_header_getboolean(const qfits_header *, const char *, int);
+int qfits_header_dump(const qfits_header *, FILE *);
+char * qfits_header_findmatch(const qfits_header * hdr, const char * key);
 
 int qfits_header_write_line(const qfits_header* hdr, int line, char* result);
 
