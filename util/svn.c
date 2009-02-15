@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "svn.h"
+#include "an-thread.h"
 
 /***
 FIXME - consider using this recipe from the SVN book instead.
@@ -40,38 +41,51 @@ svn_version.c: FORCE
 ##
  ***/
 
-
-
 static char date_rtnval[256];
 static char url_rtnval[256];
+static int  rev_rtnval;
 
 /* Ditto for "headurlstr". */
 static const char* date = "$Date$";
 static const char* url  = "$HeadURL$";
 static const char* rev  = "$Revision$";
 
-const char* svn_date() {
+AN_THREAD_DECLARE_ONCE(svn_once);
+
+static void runonce(void) {
+    const char* cptr;
+    const char* str;
+
 	// (trim off the first seven and last two characters.)
     strncpy(date_rtnval, date + 7, strlen(date) - 9);
-    return date_rtnval;
-}
 
-int svn_revision() {
-	int revnum;
 	// rev+1 to avoid having "$" in the format string - otherwise svn seems to
 	// consider it close enough to the Revision keyword anchor to do replacement!
-    if (sscanf(rev + 1, "Revision: %i $", &revnum) != 1)
-        return -1;
-    return revnum;
-}
+    if (sscanf(rev + 1, "Revision: %i $", &rev_rtnval) != 1)
+        rev_rtnval = -1;
 
-const char* svn_url() {
-    char* cptr;
-    char* str = (char*)url + 10;
+	//str = (char*)url + 10;
+	str = url + 10;
     cptr = str + strlen(str) - 1;
     // chomp off the filename...
     while (cptr > str && *cptr != '/') cptr--;
     strncpy(url_rtnval, str, cptr - str + 1);
+
+}
+
+
+const char* svn_date() {
+	AN_THREAD_CALL_ONCE(svn_once, runonce);
+    return date_rtnval;
+}
+
+int svn_revision() {
+	AN_THREAD_CALL_ONCE(svn_once, runonce);
+	return rev_rtnval;
+}
+
+const char* svn_url() {
+	AN_THREAD_CALL_ONCE(svn_once, runonce);
     return url_rtnval;
 }
 
@@ -79,6 +93,8 @@ const char* svn_url() {
 // of this file every time libanutils.a gets built.
 //
 
+//
+//
 //
 //
 //

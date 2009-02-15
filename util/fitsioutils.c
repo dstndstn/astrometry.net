@@ -31,6 +31,7 @@
 #include "an-endian.h"
 #include "errors.h"
 #include "qfits_error.h"
+#include "qfits_std.h"
 #include "log.h"
 #include "errors.h"
 
@@ -1030,12 +1031,16 @@ int fits_check_double_size(const qfits_header* header) {
 int fits_check_endian(const qfits_header* header) {
     char* filestr;
     char* localstr;
+	char pretty[FITS_LINESZ+1];
 
-	filestr = qfits_pretty_string(qfits_header_getstr(header, "ENDIAN"));
+	filestr = qfits_header_getstr(header, "ENDIAN");
     if (!filestr) {
         // No ENDIAN header found.
         return 1;
     }
+	qfits_pretty_string_r(filestr, pretty);
+	filestr = pretty;
+
     localstr = fits_get_endian_string();
 	if (strcmp(filestr, localstr)) {
 		fprintf(stderr, "File was written with endianness %s, this machine has endianness %s.\n", filestr, localstr);
