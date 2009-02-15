@@ -133,6 +133,7 @@ char * qfits_query_hdr(const char * filename, const char * keyword)
 /*----------------------------------------------------------------------------*/
 char * qfits_query_ext(const char * filename, const char * keyword, int xtnum)
 {
+	char getval_buf[FITS_LINESZ+1];
     char        exp_key[FITS_LINESZ+1];
     char    *   where ;
     char    *   start ;
@@ -215,7 +216,7 @@ char * qfits_query_ext(const char * filename, const char * keyword, int xtnum)
     }
 
     /* Found the keyword, now get its value */
-    value = qfits_getvalue(where);
+    value = qfits_getvalue_r(where, getval_buf);
     qfits_fdealloc(start, seg_start, size) ;
     return value;
 }

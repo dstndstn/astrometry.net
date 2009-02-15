@@ -116,6 +116,7 @@ qfits_header * qfits_header_read(const char * filename)
 /*----------------------------------------------------------------------------*/
 qfits_header * qfits_header_read_hdr(const char * filename)
 {
+	char getval_buf[FITS_LINESZ+1];
     qfits_header    *   hdr ;
     FILE            *   in ;
     char                line[81];
@@ -158,7 +159,7 @@ qfits_header * qfits_header_read_hdr(const char * filename)
 
             /* Get key, value, comment for the current line */
             key = qfits_getkey(line);
-            val = qfits_getvalue(line);
+            val = qfits_getvalue_r(line, getval_buf);
             com = qfits_getcomment(line);
 
             /* If key or value cannot be found, trigger an error */
@@ -201,6 +202,7 @@ qfits_header * qfits_header_read_hdr_string(
         const unsigned char *   hdr_str,
         int                     nb_char)
 {
+	char getval_buf[FITS_LINESZ+1];
     qfits_header    *   hdr ;
     char                line[81];
     char            *   key,
@@ -240,7 +242,7 @@ qfits_header * qfits_header_read_hdr_string(
 
             /* Get key, value, comment for the current line */
             key = qfits_getkey(line);
-            val = qfits_getvalue(line);
+            val = qfits_getvalue_r(line, getval_buf);
             com = qfits_getcomment(line);
 
             /* If key or value cannot be found, trigger an error */
@@ -283,6 +285,7 @@ qfits_header * qfits_header_read_hdr_string(
 /*----------------------------------------------------------------------------*/
 qfits_header * qfits_header_readext(const char * filename, int xtnum)
 {
+	char getval_buf[FITS_LINESZ+1];
     qfits_header*   hdr ;
     int             n_ext ;
     char            line[81];
@@ -334,7 +337,7 @@ qfits_header * qfits_header_readext(const char * filename, int xtnum)
 
             /* Get key, value, comment for the current line */
             key = qfits_getkey(line);
-            val = qfits_getvalue(line);
+            val = qfits_getvalue_r(line, getval_buf);
             com = qfits_getcomment(line);
 
             /* If key or value cannot be found, trigger an error */

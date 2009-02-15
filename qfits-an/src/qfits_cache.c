@@ -336,6 +336,7 @@ static int qfits_cache_add(const char * filename)
 	int *off_dat = NULL;
 	int off_size = QFITS_MAX_EXTS;
     char        buf[FITS_BLOCK_SIZE] ;
+	char getval_buf[FITS_LINESZ+1];
     char    *    buf_c ;
     int            n_blocks ;
     int            found_it ;
@@ -439,7 +440,7 @@ static int qfits_cache_add(const char * filename)
                 buf_c[4]=='I' &&
                 buf_c[5]=='X' &&
                 buf_c[6]==' ') {
-                read_val = qfits_getvalue(buf_c);
+                read_val = qfits_getvalue_r(buf_c, getval_buf);
                 data_bytes *= (int)atoi(read_val) / 8 ;
                 if (data_bytes<0) data_bytes *= -1 ;
             } else
@@ -452,11 +453,11 @@ static int qfits_cache_add(const char * filename)
 
                 if (buf_c[5]==' ') {
                     /* NAXIS keyword */
-                    read_val = qfits_getvalue(buf_c);
+                    read_val = qfits_getvalue_r(buf_c, getval_buf);
                     naxis = (int)atoi(read_val);
                 } else {
                     /* NAXIS?? keyword (axis size) */
-                    read_val = qfits_getvalue(buf_c);
+                    read_val = qfits_getvalue_r(buf_c, getval_buf);
                     data_bytes *= (int)atoi(read_val);
                 }
             } else
@@ -469,7 +470,7 @@ static int qfits_cache_add(const char * filename)
                 buf_c[5]=='D' &&
                 buf_c[6]==' ') {
                 /* The EXTEND keyword is present: might be some extensions */
-                read_val = qfits_getvalue(buf_c);
+                read_val = qfits_getvalue_r(buf_c, getval_buf);
                 if (read_val[0]=='T' || read_val[0]=='1') {
                     xtend=1 ;
                 }
@@ -624,7 +625,7 @@ static int qfits_cache_add(const char * filename)
                         buf_c[4]=='I' &&
                         buf_c[5]=='X' &&
                         buf_c[6]==' ') {
-                        read_val = qfits_getvalue(buf_c);
+                        read_val = qfits_getvalue_r(buf_c, getval_buf);
                         data_bytes *= (int)atoi(read_val) / 8 ;
                         if (data_bytes<0) data_bytes *= -1 ;
                     } else
@@ -637,11 +638,11 @@ static int qfits_cache_add(const char * filename)
 
                         if (buf_c[5]==' ') {
                             /* NAXIS keyword */
-                            read_val = qfits_getvalue(buf_c);
+                            read_val = qfits_getvalue_r(buf_c, getval_buf);
                             naxis = (int)atoi(read_val);
                         } else {
                             /* NAXIS?? keyword (axis size) */
-                            read_val = qfits_getvalue(buf_c);
+                            read_val = qfits_getvalue_r(buf_c, getval_buf);
                             data_bytes *= (int)atoi(read_val);
                         }
                     } else
