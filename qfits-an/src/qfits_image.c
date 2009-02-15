@@ -49,6 +49,7 @@
 #include "qfits_tools.h"
 #include "qfits_error.h"
 #include "qfits_memory.h"
+#include "qfits_std.h"
 
 /*-----------------------------------------------------------------------------
                                 Defines
@@ -119,6 +120,7 @@ int qfitsloader_init(qfitsloader * ql)
     int     seg_size ;
     int     bitpix, naxis, naxis1, naxis2, naxis3 ;
     char *  xt_type ;
+    char xt_type_2[FITS_LINESZ+1];
     char *  sval ;
     struct stat sta ;
 
@@ -212,13 +214,13 @@ int qfitsloader_init(qfitsloader * ql)
             qfits_header_destroy(fh);
             return -1 ;
         }
-        xt_type = qfits_pretty_string(xt_type);
-        if (strcmp(xt_type, "IMAGE")) {
+        qfits_pretty_string_r(xt_type, xt_type_2);
+        if (strcmp(xt_type_2, "IMAGE")) {
             qfits_error(
                 "pixio: not an image -- extension %d in %s has type [%s]",
                 ql->xtnum,
                 ql->filename,
-                xt_type);
+                xt_type_2);
             qfits_header_destroy(fh);
             return -1 ;
         }

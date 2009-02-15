@@ -103,12 +103,14 @@ int qfits_is_table(const char * filename, int xtnum)
 {
     char    *    value ;
     int            ttype ;
+    char value2[FITS_LINESZ+1];
     
     ttype = QFITS_INVALIDTABLE ;
     value = qfits_query_ext(filename, "XTENSION", xtnum);
     if (value==NULL) return ttype ;
-    
-    value = qfits_pretty_string(value);
+
+    qfits_pretty_string_r(value, value2);
+	value = value2;
     if (!strcmp(value, "TABLE")) {
         ttype = QFITS_ASCIITABLE;
     } else if (!strcmp(value, "BINTABLE")) {
@@ -497,29 +499,31 @@ qfits_table * qfits_table_open(
     /* Loop on all columns and get column descriptions  */
     curr_col = tload->col ;
     for (i=0 ; i<tload->nc ; i++) {
+		char str_val_2[FITS_LINESZ+1];
+
         /* label <-> TTYPE     */
         sprintf(keyword, "TTYPE%d", i+1) ;
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
             label[0] = '\0' ;
-        } else strcpy(label, qfits_pretty_string(str_val)) ;
+        } else qfits_pretty_string_r(str_val, label);
         
         /* unit <-> TUNIT */
         sprintf(keyword, "TUNIT%d", i+1) ;
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
             unit[0] = '\0' ;
-        } else strcpy(unit, qfits_pretty_string(str_val)) ;
+        } else qfits_pretty_string_r(str_val, unit);
 
         /* disp <-> TDISP */
         sprintf(keyword, "TDISP%d", i+1) ;
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
             disp[0] = '\0' ;
-        } else strcpy(disp, qfits_pretty_string(str_val)) ;
+        } else qfits_pretty_string_r(str_val, disp);
 
         /* nullval <-> TNULL */
         sprintf(keyword, "TNULL%d", i+1) ;
         if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
             nullval[0] = '\0' ;
-        } else strcpy(nullval, qfits_pretty_string(str_val)) ;
+        } else qfits_pretty_string_r(str_val, nullval);
     
         /* atom_size, atom_nb, atom_dec_nb, atom_type    <-> TFORM */
         sprintf(keyword, "TFORM%d", i+1) ;
@@ -530,12 +534,13 @@ qfits_table * qfits_table_open(
             return NULL ;
         }
         /* Interpret the type in header */
-        if (qfits_table_interpret_type(qfits_pretty_string(str_val), 
+		qfits_pretty_string_r(str_val, str_val_2);
+        if (qfits_table_interpret_type(str_val_2,
                         &(atom_nb), 
                         &(atom_dec_nb),
                         &(atom_type), 
                         table_type) == -1) {
-            qfits_error("cannot interpret the type: %s", str_val) ;
+            qfits_error("cannot interpret the type: %s", str_val_2);
             qfits_table_close(tload) ;
             return NULL ;
         }
@@ -614,6 +619,7 @@ qfits_table * qfits_table_open(
         /* Compute offset_beg but for the last column */
         if (i < tload->nc - 1) {
             if (table_type == QFITS_ASCIITABLE) {
+				char str_val_2[FITS_LINESZ+1];
                 /* column width <-> TBCOLi and TBCOLi+1 */
                 sprintf(keyword, "TBCOL%d", i+1) ;
                 if ((str_val=qfits_query_ext(filename, keyword, xtnum))==NULL) {
@@ -621,15 +627,17 @@ qfits_table * qfits_table_open(
                     qfits_table_close(tload);
                     return NULL ;
                 }
-                col_pos = atoi(qfits_pretty_string(str_val)) ;
+				qfits_pretty_string_r(str_val, str_val_2);
+                col_pos = atoi(str_val_2);
                 
-                sprintf(keyword, "TBCOL%d", i+2) ;
+                sprintf(keyword, "TBCOL%d", i+2);
                 if ((str_val=qfits_query_ext(filename, keyword, xtnum))==NULL){
                     qfits_error("cannot read [%s] in [%s]", keyword, filename) ;
                     qfits_table_close(tload) ;
                     return NULL ;
                 }
-                next_col_pos = atoi(qfits_pretty_string(str_val)) ;
+				qfits_pretty_string_r(str_val, str_val_2);
+                next_col_pos = atoi(str_val_2);
                 offset_beg += (int)(next_col_pos - col_pos) ;
             } else if (table_type == QFITS_BINTABLE) {
                 offset_beg += atom_nb * atom_size ;

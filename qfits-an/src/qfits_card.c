@@ -167,7 +167,7 @@ void qfits_card_build(
 
     /* Can only be a string - Make simple quotes ['] as double [''] */
     memset(cval_q, 0, 81);
-    strcpy(cval2, qfits_pretty_string(cval));
+    qfits_pretty_string_r(cval, cval2);
     j=0 ;
     i=0 ;
     while (cval2[i] != '\0') {
