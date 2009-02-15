@@ -16,15 +16,15 @@
  along with the Astrometry.net suite ; if not, write to the Free Software
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  */
+#ifndef QFITS_THREAD_H
+#define QFITS_THREAD_H
 
 #include "qfits_thread_pthreads.h"
 
-typedef struct qfits_lock qfits_lock;
+void qfits_lock_init(qfits_lock_t* lock);
 
-void qfits_lock_init(qfits_lock* lock);
+void qfits_lock_lock(qfits_lock_t* lock);
 
-void qfits_lock_lock(qfits_lock* lock);
+void qfits_lock_unlock(qfits_lock_t* lock);
 
-void qfits_lock_unlock(qfits_lock* lock);
-
-
+#endif

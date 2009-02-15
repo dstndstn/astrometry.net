@@ -46,6 +46,11 @@
 #include "qfits_card.h"
 #include "qfits_std.h"
 #include "qfits_memory.h"
+#include "qfits_thread.h"
+
+
+static qfits_lock_t cache_lock = QFITS_LOCK_INIT;
+
 
 /*-----------------------------------------------------------------------------
                                    Defines
@@ -148,7 +153,7 @@ static void qfits_cache_dump(void) ;
   fairly small, you should not need to care too much about this.
  */
 /*----------------------------------------------------------------------------*/
-void qfits_cache_purge(void)
+void qfits_cache_purge_impl(void)
 {
     int    i ;
 
@@ -234,7 +239,7 @@ void qfits_cache_purge(void)
   of the FITS file.
  */
 /*----------------------------------------------------------------------------*/
-int qfits_query(const char * filename, int what)
+int qfits_query_impl(const char * filename, int what)
 {
     int    rank ;
     int    which ;
@@ -329,7 +334,7 @@ int qfits_query(const char * filename, int what)
     and extension data start.
  */
 /*----------------------------------------------------------------------------*/
-static int qfits_cache_add(const char * filename)
+static int qfits_cache_add_impl(const char * filename)
 {
     FILE    *    in ;
 	int *off_hdr = NULL;
@@ -718,7 +723,7 @@ static int qfits_cache_add(const char * filename)
 }
 
 #if QFITS_CACHE_DEBUG
-static void qfits_cache_dump(void)
+static void qfits_cache_dump_impl(void)
 {
     int i, j ;
 
@@ -763,7 +768,7 @@ static void qfits_cache_dump(void)
   @brief    initialize cache buffer with minimum size
  */
 /*----------------------------------------------------------------------------*/
-static void qfits_cache_activate(void)
+static void qfits_cache_activate_impl(void)
 {
     int i ;
     qdebug(
@@ -785,7 +790,7 @@ static void qfits_cache_activate(void)
   @return   int 1 if in the cache, 0 if not
  */
 /*----------------------------------------------------------------------------*/
-static int qfits_is_cached(const char * filename)
+static int qfits_is_cached_impl(const char * filename)
 {
     int            i, n ;
     struct stat sta ;
@@ -817,4 +822,56 @@ static int qfits_is_cached(const char * filename)
     }
     return -1 ;
 }
+
+
+
+
+
+
+
+
+int qfits_query(const char * filename, int what) {
+	int rtn;
+	qfits_lock_lock(&cache_lock);
+	rtn = qfits_query_impl(filename, what);
+	qfits_lock_unlock(&cache_lock);
+	return rtn;
+}
+
+void qfits_cache_purge(void) {
+	qfits_lock_lock(&cache_lock);
+	qfits_cache_purge_impl();
+	qfits_lock_unlock(&cache_lock);
+}
+
+static int qfits_cache_add(const char * filename) {
+	int rtn;
+	qfits_lock_lock(&cache_lock);
+	rtn = qfits_cache_add_impl(filename);
+	qfits_lock_unlock(&cache_lock);
+	return rtn;
+}
+
+#if QFITS_CACHE_DEBUG
+static void qfits_cache_dump(void) {
+	qfits_lock_lock(&cache_lock);
+	qfits_cache_dump_impl();
+	qfits_lock_unlock(&cache_lock);
+}
+#endif
+
+static void qfits_cache_activate(void) {
+	qfits_lock_lock(&cache_lock);
+	qfits_cache_activate_impl();
+	qfits_lock_unlock(&cache_lock);
+}
+
+static int qfits_is_cached(const char * filename) {
+	int rtn;
+	qfits_lock_lock(&cache_lock);
+	rtn = qfits_is_cached_impl(filename);
+	qfits_lock_unlock(&cache_lock);
+	return rtn;
+}
+
 

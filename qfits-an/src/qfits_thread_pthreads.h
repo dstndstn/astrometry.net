@@ -17,9 +17,23 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
+#ifndef QFITS_THREAD_PHTREADS_H
+#define QFITS_THREAD_PHTREADS_H
+
 #include <pthread.h>
 
-struct qfits_lock {
-	pthread_mutex_t mutex;
-};
+/*
+ struct qfits_lock_s {
+ pthread_mutex_t mutex;
+ };
+ typedef struct qfits_lock_s qfits_lock_t;
+//#define QFITS_LOCK_INIT
+//#define QFITS_LOCK_INIT { PTHREAD_MUTEX_INITIALIZER }
+ */
 
+typedef pthread_mutex_t qfits_lock_t;
+
+#define QFITS_LOCK_INIT PTHREAD_MUTEX_INITIALIZER
+
+
+#endif
