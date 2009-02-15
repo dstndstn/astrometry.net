@@ -34,7 +34,12 @@
 
 void qfits_card_build(char *, const char *, const char *, const char *) ;
 char * qfits_getkey(const char *) ;
+
+// NOT THREAD-SAFE
 char * qfits_getvalue(const char *) ;
+
+char* qfits_getvalue_r(const char *line, char* value);
+
 char * qfits_getcomment(const char *) ;
 char * qfits_expand_keyword(const char *) ;
 

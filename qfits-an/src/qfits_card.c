@@ -267,21 +267,8 @@ char * qfits_getkey(const char * line)
     return key ;
 }
 
-/*----------------------------------------------------------------------------*/
-/**
-  @brief    Find the value in a key card (80 chars)    
-  @param    line allocated 80-char line from a FITS header
-  @return    statically allocated char *
-
-  Find out the part of a FITS line corresponding to the value.
-  Returns NULL in case of error, or if no value can be found. The
-  returned pointer is statically allocated in this function, so do not
-  modify or try to free it.
- */
-/*----------------------------------------------------------------------------*/
-char * qfits_getvalue(const char * line)
-{
-    static char value[81] ;
+// Thread-safe version of the below.
+char* qfits_getvalue_r(const char* line, char* value) {
     int     i ;
     int     from, to ;
     int     inq ;
@@ -364,6 +351,23 @@ char * qfits_getvalue(const char * line)
     /* Null-terminate the string */
     value[to-from+1] = (char)0;
     return value ;
+}
+
+/*----------------------------------------------------------------------------*/
+/**
+  @brief    Find the value in a key card (80 chars)    
+  @param    line allocated 80-char line from a FITS header
+  @return    statically allocated char *
+
+  Find out the part of a FITS line corresponding to the value.
+  Returns NULL in case of error, or if no value can be found. The
+  returned pointer is statically allocated in this function, so do not
+  modify or try to free it.
+ */
+/*----------------------------------------------------------------------------*/
+char* qfits_getvalue(const char* line) {
+    static char value[81];
+	return qfits_getvalue_r(line, value);
 }
 
 /*----------------------------------------------------------------------------*/
