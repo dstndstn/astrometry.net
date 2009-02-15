@@ -269,7 +269,7 @@ char* qfits_getkey_r(const char* line, char* key)
 /*----------------------------------------------------------------------------*/
 char * qfits_getkey(const char * line) {
     static char     key[81];
-	return qfits_getkey_r(key);
+	return qfits_getkey_r(key, line);
 }
 
 // Thread-safe version of the below.
