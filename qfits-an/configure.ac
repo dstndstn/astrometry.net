@@ -40,6 +40,9 @@ AC_CHECK_LIB([m], [main])
 # check qfits lib, we want to create it.
 #AC_CHECK_LIB([qfits], [main])
 
+# Defined in m4macros/acx_pthread.m4
+ACX_PTHREAD
+
 # Defined in the m4macros/qfits_memory.m4
 QFITS_CHECK_MEMORY
 
