@@ -22,14 +22,14 @@
 #include "qfits_thread.h"
 
 void qfits_lock_init(qfits_lock_t* lock) {
-	pthread_mutex_init(&(lock->mutex), NULL);
+	pthread_mutex_init(lock, NULL);
 }
 
 void qfits_lock_lock(qfits_lock_t* lock) {
-	pthread_mutex_lock(&(lock->mutex));
+	pthread_mutex_lock(lock);
 }
 
 void qfits_lock_unlock(qfits_lock_t* lock) {
-	pthread_mutex_unlock(&(lock->mutex));
+	pthread_mutex_unlock(lock);
 }
 
