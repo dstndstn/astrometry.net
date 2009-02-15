@@ -54,7 +54,7 @@
                               Static functions
  -----------------------------------------------------------------------------*/
 
-static char * expkey_strupc(const char *) ;
+static char* expkey_strupc(const char *, char* buf);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -269,7 +269,7 @@ char* qfits_getkey_r(const char* line, char* key)
 /*----------------------------------------------------------------------------*/
 char * qfits_getkey(const char * line) {
     static char     key[81];
-	return qfits_getkey_r(key, line);
+	return qfits_getkey_r(line, key);
 }
 
 // Thread-safe version of the below.
@@ -472,12 +472,12 @@ char* qfits_expand_keyword_r(const char * keyword, char* expanded) {
     if (keyword==NULL) return NULL ;
     /* If regular keyword, copy the uppercased input and return */
     if (strstr(keyword, ".")==NULL) {
-        strcpy(expanded, expkey_strupc(keyword));
-        return expanded ;
+        expkey_strupc(keyword, expanded);
+        return expanded;
     }
     /* Regular shortFITS keyword */
     sprintf(expanded, "HIERARCH ESO");
-    strcpy(ws, expkey_strupc(keyword));
+    expkey_strupc(keyword, ws);
     token = strtok(ws, ".");
     while (token!=NULL) {
         strcat(expanded, " ");
@@ -524,19 +524,15 @@ char * qfits_expand_keyword(const char * keyword) {
   @return   string
  */
 /*----------------------------------------------------------------------------*/
-static char * expkey_strupc(const char * s)
-{
-    static char l[1024+1];
+static char * expkey_strupc(const char * s, char* l) {
     int i ;
-
     if (s==NULL) return NULL ;
-    memset(l, 0, 1024+1);
-    i=0 ;
-    while (s[i] && i<1024) {
+    i=0;
+    while (s[i]) {
         l[i] = (char)toupper((int)s[i]);
-        i++ ;
+        i++;
     }
-    l[1024]=(char)0;
-    return l ;
+    l[i] = '\0';
+    return l;
 }
 
