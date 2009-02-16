@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# $Id$
+# $Id: NA_pyfits.py 329 2007-07-06 13:11:54Z jtaylor2 $
 
 """
 A module for reading and writing FITS files and manipulating their contents.
@@ -41,12 +41,16 @@ import urllib
 import tempfile
 import gzip
 import zipfile
-import numpy as np
-from numpy import char as chararray
-import rec
-from numpy import memmap as Memmap
+import numarray as num
+import numarray.generic as ndarray
+import numarray.strings as chararray
+import numarray.records as rec
+import numarray.objects as objects
+import numarray.memmap as Memmap
 from string import maketrans
-import types
+import copy
+import signal
+import threading
 
 # Module variables
 _blockLen = 2880         # the FITS block size
@@ -60,7 +64,7 @@ _INDENT = "   "
 DELAYED = "delayed"     # used for lazy instantiation of data
 ASCIITNULL = 0          # value for ASCII table cell with value = TNULL
                         # this can be reset by user.
-_isInt = "isinstance(val, (int, long, np.integer))"
+_isInt = "isinstance(val, (int, long))"
 
 
 # Functions
@@ -163,7 +167,7 @@ class _Verify:
         x = str(self._verify(_option)).rstrip()
         if _option in ['fix', 'silentfix'] and x.find('Unfixable') != -1:
             raise VerifyError, '\n'+x
-        if (_option != "silentfix"and _option != 'exception') and x:
+        if (_option != "silentfix") and x:
             print 'Output verification result:'
             print x
         if _option == 'exception' and x:
@@ -350,8 +354,7 @@ class Card(_Verify):
     def _setvalue(self, val):
         """Set the value attribute."""
 
-        if isinstance(val, (str, int, long, float, complex, bool, Undefined,
-                            np.floating, np.integer, np.complexfloating)):
+        if isinstance(val, (str, int, long, float, complex, bool, Undefined)):
             if isinstance(val, str):
                 self._checkText(val)
             self.__dict__['_valueModified'] = 1
@@ -428,18 +431,18 @@ class Card(_Verify):
                 valStr = "'%-8s'" % _expValStr
                 valStr = '%-20s' % valStr
         # must be before int checking since bool is also int
-        elif isinstance(self.value ,(bool,np.bool_)):
+        elif isinstance(self.value , bool):
             valStr = '%20s' % `self.value`[0]
-        elif isinstance(self.value , (int, long, np.integer)):
+        elif isinstance(self.value , (int, long)):
             valStr = '%20d' % self.value
 
         # XXX need to consider platform dependence of the format (e.g. E-009 vs. E-09)
-        elif isinstance(self.value, (float, np.floating)):
+        elif isinstance(self.value, float):
             if self._valueModified:
                 valStr = '%20s' % _floatFormat(self.value)
             else:
                 valStr = '%20s' % self._valuestring
-        elif isinstance(self.value, (complex,np.complexfloating)):
+        elif isinstance(self.value, complex):
             if self._valueModified:
                 _tmp = '(' + _floatFormat(self.value.real) + ', ' + _floatFormat(self.value.imag) + ')'
                 valStr = '%20s' % _tmp
@@ -859,12 +862,12 @@ class _Card_with_continue(Card):
         arr = chararray.array(input+' ', itemsize=1)
 
         # locations of the blanks
-        blank_loc = np.nonzero(arr == ' ')[0]
+        blank_loc = num.nonzero(arr == ' ')[0]
         offset = 0
         xoffset = 0
         for i in range(nmax):
             try:
-                loc = np.nonzero(blank_loc >= strlen+offset)[0][0]
+                loc = num.nonzero(blank_loc >= strlen+offset)[0][0]
                 offset = blank_loc[loc-1] + 1
                 if loc == 0:
                     offset = -1
@@ -1333,7 +1336,7 @@ class CardList(list):
                      If backward = 1, search from the end.
         """
 
-        if isinstance(key, (int, long,np.integer)):
+        if isinstance(key, (int, long)):
             return key
         elif isinstance(key, str):
             _key = key.strip().upper()
@@ -1403,7 +1406,7 @@ class _CorruptedHDU(_AllHDU):
         self.header = header
         self.data = data
         self.name = None
-        
+
     def size(self):
         """Returns the size (in bytes) of the HDU's data part."""
         self._file.seek(0, 2)
@@ -1747,7 +1750,7 @@ class _ExtensionHDU(_ValidHDU):
 
 # 0.8.8
 def _iswholeline(indx, naxis):
-    if isinstance(indx, (int, long,np.integer)):
+    if isinstance(indx, (int, long)):
         if indx >= 0 and indx < naxis:
             if naxis > 1:
                 return _SinglePoint(1, indx)
@@ -1783,7 +1786,7 @@ def _normalize_slice(input, naxis):
     _start = input.start
     if _start is None:
         _start = 0
-    elif isinstance(_start, (int, long,np.integer)):
+    elif isinstance(_start, (int, long)):
         _start = _normalize(_start, naxis)
     else:
         raise IndexError, 'Illegal slice %s, start must be integer.' % input
@@ -1791,7 +1794,7 @@ def _normalize_slice(input, naxis):
     _stop = input.stop
     if _stop is None:
         _stop = naxis
-    elif isinstance(_stop, (int, long,np.integer)):
+    elif isinstance(_stop, (int, long)):
         _stop = _normalize(_stop, naxis)
     else:
         raise IndexError, 'Illegal slice %s, stop must be integer.' % input
@@ -1802,7 +1805,7 @@ def _normalize_slice(input, naxis):
     _step = input.step
     if _step is None:
         _step = 1
-    elif isinstance(_step, (int, long, np.integer)):
+    elif isinstance(_step, (int, long)):
         if _step <= 0:
             raise IndexError, 'Illegal slice %s, step must be positive.' % input
     else:
@@ -1888,17 +1891,12 @@ class Section:
         _bitpix = self.hdu.header['BITPIX']
         code = _ImageBaseHDU.NumCode[_bitpix]
         self.hdu._file.seek(self.hdu._datLoc+offset*abs(_bitpix)/8)
-        nelements = 1
-        for dim in dims: 
-            nelements = nelements*dim
-        raw_data = np.fromfile(self.hdu._file, dtype=code, count=nelements, sep="")
-        raw_data.shape = dims
-#        raw_data._byteorder = 'big'
-        raw_data.dtype = raw_data.dtype.newbyteorder(">")
+        raw_data = num.fromfile(self.hdu._file, type=code, shape=dims)
+        raw_data._byteorder = 'big'
         return raw_data
 
 
-class _py_ImageBaseHDU(_ValidHDU):
+class _ImageBaseHDU(_ValidHDU):
     """FITS image HDU base class."""
 
     """Attributes:
@@ -1907,13 +1905,11 @@ class _py_ImageBaseHDU(_ValidHDU):
          _file:  file associated with array          (None)
          _datLoc:  starting byte location of data block in file (None)
     """
-    
-    # mappings between FITS and numpy typecodes
-#    NumCode = {8:'int8', 16:'int16', 32:'int32', 64:'int64', -32:'float32', -64:'float64'}
-#    ImgCode = {'<i2':8, '<i4':16, '<i8':32, '<i16':64, '<f8':-32, '<f16':-64}
-    NumCode = {8:'uint8', 16:'int16', 32:'int32', 64:'int64', -32:'float32', -64:'float64'}
-    ImgCode = {'uint8':8, 'int16':16, 'int32':32, 'int64':64, 'float32':-32, 'float64':-64}
-    
+
+    # mappings between FITS and numarray typecodes
+    NumCode = {8:'UInt8', 16:'Int16', 32:'Int32', 64:'Int64', -32:'Float32', -64:'Float64'}
+    ImgCode = {'UInt8':8, 'Int16':16, 'Int32':32, 'Int64':64, 'Float32':-32, 'Float64':-64}
+
     def __init__(self, data=None, header=None):
         self._file, self._datLoc = None, None
 
@@ -1979,14 +1975,14 @@ class _py_ImageBaseHDU(_ValidHDU):
         old_naxis = self.header.get('NAXIS', 0)
 
         if isinstance(self.data, GroupData):
-            self.header['BITPIX'] = _ImageBaseHDU.ImgCode[self.data.dtype.name]
+            self.header['BITPIX'] = _ImageBaseHDU.ImgCode[self.data.data.type()]
             axes = list(self.data.data.getshape())[1:]
             axes.reverse()
             axes = [0] + axes
 
-        elif isinstance(self.data, np.ndarray):
-            self.header['BITPIX'] = _ImageBaseHDU.ImgCode[self.data.dtype.name]
-            axes = list(self.data.shape)
+        elif isinstance(self.data, num.NumArray):
+            self.header['BITPIX'] = _ImageBaseHDU.ImgCode[self.data.type()]
+            axes = list(self.data.getshape())
             axes.reverse()
 
         elif self.data is None:
@@ -2046,27 +2042,20 @@ class _py_ImageBaseHDU(_ValidHDU):
                 else:
                     dims = self._dimShape()
 
+
                 code = _ImageBaseHDU.NumCode[self.header['BITPIX']]
 
                 if self._ffile.memmap:
                     _mmap = self._ffile._mm[self._datLoc:self._datLoc+self._datSpan]
-                    raw_data = _mmap.view(code)
-                    raw_data = raw_data.reshape(dims)
+                    raw_data = num.array(_mmap, type=code, shape=dims)
                 else:
+                    raw_data = num.fromfile(self._file, type=code, shape=dims)
 
-                    nelements = 1
-                    for x in range(len(dims)):
-                        nelements = nelements * dims[x]                    
-                    raw_data = np.fromfile(self._file, dtype=code, count=nelements,sep="")
-                    raw_data.shape=dims
-                    
-#                print "raw_data.shape: ",raw_data.shape
-#                raw_data._byteorder = 'big'
-                raw_data.dtype = raw_data.dtype.newbyteorder('>')
+                raw_data._byteorder = 'big'
 
                 if (self._bzero != 0 or self._bscale != 1):
                     if _bitpix > 0:  # scale integers to Float32
-                        self.data = np.array(raw_data, dtype=np.float32)
+                        self.data = num.array(raw_data, type=num.Float32)
                     else:  # floating point cases
                         if self._ffile.memmap:
                             self.data = raw_data.copy()
@@ -2075,14 +2064,14 @@ class _py_ImageBaseHDU(_ValidHDU):
                             self.data = raw_data
 
                     if self._bscale != 1:
-                        np.multiply(self.data, self._bscale, self.data)
+                        num.multiply(self.data, self._bscale, self.data)
                     if self._bzero != 0:
                         self.data += self._bzero
 
                     # delete the keywords BSCALE and BZERO after scaling
                     del self.header['BSCALE']
                     del self.header['BZERO']
-                    self.header['BITPIX'] = _ImageBaseHDU.ImgCode[self.data.dtype.name]
+                    self.header['BITPIX'] = _ImageBaseHDU.ImgCode[self.data.type()]
                 else:
                     self.data = raw_data
         try:
@@ -2097,7 +2086,6 @@ class _py_ImageBaseHDU(_ValidHDU):
         for j in range(naxis):
             axes[j] = self.header['NAXIS'+`j+1`]
         axes.reverse()
-#        print "axes in _dimShape line 2081:",axes
         return tuple(axes)
 
     def _summary(self):
@@ -2114,11 +2102,11 @@ class _py_ImageBaseHDU(_ValidHDU):
                 # the shape will be in the order of NAXIS's which is the
                 # reverse of the numarray shape
                 if isinstance(self, GroupsHDU):
-                    _shape = list(self.data.data.shape)[1:]
-                    _format = `self.data._parent.field(0).dtype.name`
+                    _shape = list(self.data.data.getshape())[1:]
+                    _format = `self.data._parent.field(0).type()`
                 else:
-                    _shape = list(self.data.shape)
-                    _format = `self.data.dtype.name`
+                    _shape = list(self.data.getshape())
+                    _format = `self.data.type()`
                 _shape.reverse()
                 _shape = tuple(_shape)
                 _format = _format[_format.rfind('.')+1:]
@@ -2163,7 +2151,7 @@ class _py_ImageBaseHDU(_ValidHDU):
         if self.data is None:
             return
 
-        # Determine the destination (numpy) data type
+        # Determine the destination (numarray) data type
         if type is None:
             type = self.NumCode[self._bitpix]
         _type = getattr(num, type)
@@ -2178,7 +2166,7 @@ class _py_ImageBaseHDU(_ValidHDU):
                 _scale = self._bscale
                 _zero = self._bzero
             elif option == 'minmax':
-                if isinstance(_type, np.floating):
+                if isinstance(_type, num.FloatingType):
                     _scale = 1
                     _zero = 0
                 else:
@@ -2186,8 +2174,8 @@ class _py_ImageBaseHDU(_ValidHDU):
                     # flat the shape temporarily to save memory
                     dims = self.data.getshape()
                     self.data.setshape(self.data.nelements())
-                    min = np.minimum.reduce(self.data)
-                    max = np.maximum.reduce(self.data)
+                    min = num.minimum.reduce(self.data)
+                    max = num.maximum.reduce(self.data)
                     self.data.setshape(dims)
 
                     if `_type` == 'UInt8':  # UInt8 case
@@ -2213,71 +2201,7 @@ class _py_ImageBaseHDU(_ValidHDU):
             del self.header['BSCALE']
 
         if self.data._type != _type:
-            self.data = np.array(np.around(self.data), dtype=_type) #0.7.7.1
-
-class _st_ImageBaseHDU(_py_ImageBaseHDU):
-    """A class that extends the _py_ImageBaseHDU class to extend its behavior
-       to implement STScI specific extensions to Pyfits.
-    """
-
-    def __getattr__(self, attr):
-        """Extend pyfits._ImageBaseHDU.__getattr__ to support STScI specific
-           extensions to pyfits.  Currently, these extensions include Constant
-           Value Data Arrays.
-        """
-
-        if (attr == 'data' and self.header.has_key('PIXVALUE') and
-           self.header['NAXIS'] > 0):
-            self.__dict__[attr] = None
-            _bitpix = self.header['BITPIX']
-            if isinstance(self, GroupsHDU):
-                dims = self.size()*8/abs(_bitpix)
-            else:
-                dims = self._dimShape()
-
-            code = _ImageBaseHDU.NumCode[_bitpix]
-            pixVal = self.header['PIXVALUE']
-
-            if code in ['uint8','int16','int32','int64']:
-               pixVal = long(pixVal)
-
-            raw_data = np.zeros(shape=dims,dtype=code) + pixVal
-            raw_data = raw_data.byteswap()
-            raw_data.dtype = raw_data.dtype.newbyteorder('>')
-
-            if (self._bzero != 0 or self._bscale != 1):
-                if _bitpix > 0:  # scale integers to Float32
-                    self.data = np.array(raw_data, dtype=np.float32)
-                else:  # floating point cases
-                    self.data = raw_data
-
-                if self._bscale != 1:
-                    np.multiply(self.data, self._bscale, self.data)
-                if self._bzero != 0:
-                    self.data += self._bzero
-
-                # delete the keywords BSCALE and BZERO after scaling
-                del self.header['BSCALE']
-                del self.header['BZERO']
-                self.header['BITPIX'] = _ImageBaseHDU.ImgCode[self.data.dtype.name]
-            else:
-                self.data = raw_data
-
-            rtn_value = self.data
-        else:
-#
-#           This is not a STScI extenstion so call the base class
-#           method.
-#
-            rtn_value = _py_ImageBaseHDU.__getattr__(self, attr)
-
-        return rtn_value
-
-#
-# Define _ImageBaseHDU class to use the version that handles STScI
-# extensions.
-#
-_ImageBaseHDU = _st_ImageBaseHDU
+            self.data = num.array(num.around(self.data), type=_type) #0.7.7.1
 
 class PrimaryHDU(_ImageBaseHDU):
     """FITS primary HDU class."""
@@ -2380,7 +2304,7 @@ class GroupsHDU(PrimaryHDU):
                 _pnames.append(self.header['PTYPE'+`i+1`].lower())
                 _cols.append(Column(name='c'+`i+1`, format = _format, bscale = _bscale, bzero = _bzero))
             data_shape = self._dimShape()[:-1]
-            dat_format = `int(np.array(data_shape).sum())` + _format
+            dat_format = `int(num.array(data_shape).sum())` + _format
 
             _bscale = self.header.get('BSCALE', 1)
             _bzero = self.header.get('BZERO', 0)
@@ -2446,7 +2370,7 @@ class GroupsHDU(PrimaryHDU):
 _commonNames = ['name', 'format', 'unit', 'null', 'bscale', 'bzero', 'disp', 'start', 'dim']
 _keyNames = ['TTYPE', 'TFORM', 'TUNIT', 'TNULL', 'TSCAL', 'TZERO', 'TDISP', 'TBCOL', 'TDIM']
 
-# mapping from TFORM data type to numpy data type (code)
+# mapping from TFORM data type to numarray data type (code)
 
 _booltype = 'i1'
 _fits2rec = {'L':_booltype, 'B':'u1', 'I':'i2', 'E':'f4', 'D':'f8', 'J':'i4', 'A':'a', 'C':'c8', 'M':'c16', 'K':'i8'}
@@ -2573,7 +2497,7 @@ def _get_index(nameList, key):
         this field.
     """
 
-    if isinstance(key, (int, long,np.integer)):
+    if isinstance(key, (int, long)):
         indx = int(key)
     elif isinstance(key, str):
 
@@ -2611,7 +2535,7 @@ def _unwrapx(input, output, nx):
         _min = i*8
         _max = min((i+1)*8, nx)
         for j in range(_min, _max):
-            np.bitwise_and(input[...,i], pow2[j-i*8], output[...,j])
+            num.bitwise_and(input[...,i], pow2[j-i*8], output[...,j])
 
 def _wrapx(input, output, nx):
     """Wrap the X format column Boolean array into an UInt8 array.
@@ -2629,11 +2553,11 @@ def _wrapx(input, output, nx):
         _max = min((i+1)*8, nx)
         for j in range(_min, _max):
             if j != _min:
-                np.left_shift(output[...,i], 1, output[...,i])
-            np.add(output[...,i], input[...,j], output[...,i])
+                num.lshift(output[...,i], 1, output[...,i])
+            num.add(output[...,i], input[...,j], output[...,i])
 
     # shift the unused bits
-    np.left_shift(output[...,i], unused, output[...,i])
+    num.lshift(output[...,i], unused, output[...,i])
 
 def _makep(input, desp_output, dtype):
     """Construct the P format column array, both the data descriptors and
@@ -2655,13 +2579,13 @@ def _makep(input, desp_output, dtype):
     if dtype == 'a':
         _nbytes = 1
     else:
-        _nbytes = np.getType(dtype).bytes
+        _nbytes = num.getType(dtype).bytes
 
     for i in range(len(input)):
         if dtype == 'a':
             data_output[i] = chararray.array(input[i], itemsize=1)
         else:
-            data_output[i] = np.array(input[i], type=dtype)
+            data_output[i] = num.array(input[i], type=dtype)
 
         desp_output[i,0] = len(data_output[i])
         desp_output[i,1] = _offset
@@ -2669,36 +2593,31 @@ def _makep(input, desp_output, dtype):
 
     return data_output
 
-class _VLF(np.ndarray):
-    """variable length field object."""
 
-    def __new__(subtype, input):
+class _VLF(objects.ObjectArray):
+    """variable length field object."""
+    def __init__(self, input):
         """
             input: a sequence of variable-sized elements.
         """
-        self = np.ndarray.__new__(subtype, shape=(len(input)), dtype=np.object)
-        self._max = 0
-        return self
 
-    def __array_finalize__(self,obj):
-        if obj is None:
-            return 
-        self._max = obj._max
-        
+        objects.ObjectArray.__init__(self, input)
+        self._max = 0
+
     def __setitem__(self, key, value):
         """To make sure the new item has consistent data type to avoid
            misalignment.
         """
 
-        if isinstance(value, np.ndarray) and value.dtype == self.dtype:
+        if isinstance(value, num.NumArray) and value.type() == self._dtype:
             pass
-        elif isinstance(value, chararray.chararray) and value.itemsize == 1:
+        elif isinstance(value, chararray.CharArray) and value.itemsize() == 1:
             pass
         elif self._dtype == 'a':
             value = chararray.array(value, itemsize=1)
         else:
-            value = np.array(value, type=self._dtype)
-        np.ndarray.__setitem__(self, key, value)
+            value = num.array(value, type=self._dtype)
+        objects.ObjectArray.__setitem__(self, key, value)
         self._max = max(self._max, len(value))
 
 
@@ -2736,8 +2655,8 @@ class Column:
             else:
                 setattr(self, cname, value)
 
-        # if the column data is not ndarray, make it to be one, i.e.
-        # input arrays can be just list or tuple, not required to be ndarray
+        # if the column data is not NDarray, make it to be one, i.e.
+        # input arrays can be just list or tuple, not required to be NDArray
         if format is not None:
             # check format
             try:
@@ -2746,7 +2665,7 @@ class Column:
                 recfmt = _convert_format(format)
             except:
                 try:
-                    # legit recarray format?
+                    # legit RecArray format?
                     recfmt = format
                     format = _convert_format(recfmt, reverse=1)
                 except:
@@ -2756,10 +2675,9 @@ class Column:
 
             # does not include Object array because there is no guarantee
             # the elements in the object array are consistent.
-            if not isinstance(array, (np.ndarray, chararray.chararray, Delayed)):
-                try: # try to convert to a ndarray first
-                    if array is not None:
-                        array = np.array(array)
+            if not isinstance(array, (num.NumArray, chararray.CharArray, Delayed)):
+                try: # try to convert to a numarray first
+                    array = num.array(array)
                 except:
                     try: # then try to conver it to a strings array
                         array = chararray.array(array, itemsize=eval(recfmt[1:]))
@@ -2768,7 +2686,7 @@ class Column:
                     except:
                         if isinstance(recfmt, _FormatP):
                             try:
-                                _func = lambda x: np.array(x, type=recfmt._dtype)
+                                _func = lambda x: num.array(x, type=recfmt._dtype)
                                 array = _VLF(map(_func, array))
                             except:
                                 try:
@@ -2786,12 +2704,13 @@ class Column:
             raise ValueError, "Must specify format to construct Column"
 
         # scale the array back to storage values if there is bscale/bzero
-        if isinstance(array, np.ndarray):
+        if isinstance(array, num.NumArray):
 
             # boolean needs to be scaled too
             if recfmt == _booltype:
-                _out = np.zeros(array.shape, dtype=recfmt)
-                array = np.where(array==0, ord('F'), ord('T'))
+                _out = num.zeros(array.shape, type=recfmt)
+                num.where(array==0, ord('F'), ord('T'), _out)
+                array = _out
 
             # make a copy if scaled, so as not to corrupt the original array
             if bzero not in ['', None, 0] or bscale not in ['', None, 1]:
@@ -2800,29 +2719,8 @@ class Column:
                     array += -bzero
                 if bscale not in ['', None, 1]:
                     array /= bscale
-        
-        array = self.__checkValidDataType(array,self.format)
         self.array = array
 
-    def __checkValidDataType(self,array,format):
-        # Convert the format to a type we understand
-        if isinstance(array,Delayed):
-            return array
-        elif (array is None):
-            return array
-        else:
-            if (format.find('A') != -1):
-                numpyFormat = _convert_format(format)
-                return array.astype(numpyFormat)                
-            elif (format.find('X') == -1 and format.find('P') == -1):
-                (repeat, fmt, option) = _parse_tformat(format)
-                numpyFormat = _convert_format(fmt)
-                return array.astype(numpyFormat)
-            elif (format.find('X') !=-1):
-                return array.astype(np.uint8)
-            else:
-                return array
-    
     def __repr__(self):
         text = ''
         for cname in _commonNames:
@@ -2856,7 +2754,9 @@ class ColDefs(object):
             self.data = [col.copy() for col in input.data]
 
         # if the input is a list of Columns
-        elif isinstance(input, (list, tuple)):            
+        elif isinstance(input, (list, tuple)):
+
+
             for col in input:
                 if not isinstance(col, Column):
                     raise "Element %d in the ColDefs input is not a Column." % input.index(col)
@@ -2962,7 +2862,7 @@ class ColDefs(object):
 
     def __getitem__(self, key):
         x = self.data[key]
-        if isinstance(key, (int, long, np.integer)):
+        if isinstance(key, (int, long)):
             return x
         else:
             return ColDefs(x)
@@ -3081,13 +2981,12 @@ def _get_tbdata(hdu):
 
     if hdu._ffile.memmap:
         _mmap = hdu._ffile._mm[hdu._datLoc:hdu._datLoc+hdu._datSpan]
-        _data = rec.recarray(_mmap, formats=tmp._recformats, names=tmp.names, shape=tmp._shape)
+        _data = rec.RecArray(_mmap, formats=tmp._recformats, names=tmp.names, shape=tmp._shape)
     else:
-        _data = rec.array(hdu._file, formats=",".join(tmp._recformats), names=tmp.names, shape=tmp._shape)
+        _data = rec.array(hdu._file, formats=tmp._recformats, names=tmp.names, shape=tmp._shape)
 
     if isinstance(hdu._ffile, _File):
-#        _data._byteorder = 'big'
-        _data.dtype = _data.dtype.newbyteorder(">")
+        _data._byteorder = 'big'
 
     # pass datLoc, for P format
     _data._heapoffset = hdu._theap + hdu._datLoc
@@ -3134,13 +3033,13 @@ def new_table (input, header=None, nrows=0, fill=0, tbtype='BinTableHDU'):
     for i in range(len(tmp)):
         _arr = tmp._arrays[i]
         if isinstance(_arr, Delayed):
-            tmp._arrays[i] = rec.recarray.field(_arr.hdu.data,i)
+            tmp._arrays[i] = _arr.hdu.data._parent.field(_arr.field)
 
     # use the largest column shape as the shape of the record
     if nrows == 0:
         for arr in tmp._arrays:
-            if (arr is not None):
-                dim = arr.shape[0]
+            if arr is not None:
+                dim = arr._shape[0]
             else:
                 dim = 0
             if dim > nrows:
@@ -3155,7 +3054,7 @@ def new_table (input, header=None, nrows=0, fill=0, tbtype='BinTableHDU'):
         hdu.data = FITS_rec(rec.array(' '*_itemsize*nrows, formats=_formats[:-1], names=tmp.names, shape=nrows))
 
     else:
-        hdu.data = FITS_rec(rec.array(None, formats=",".join(tmp._recformats), names=tmp.names, shape=nrows))
+        hdu.data = FITS_rec(rec.array(None, formats=tmp._recformats, names=tmp.names, shape=nrows))
 
     hdu.data._coldefs = hdu.columns
 
@@ -3175,19 +3074,19 @@ def new_table (input, header=None, nrows=0, fill=0, tbtype='BinTableHDU'):
         if n > 0:
             if isinstance(tmp._recformats[i], _FormatX):
                 if tmp._arrays[i][:n].shape[-1] == tmp._recformats[i]._nx:
-                    _wrapx(tmp._arrays[i][:n], rec.recarray.field(hdu.data,i)[:n], tmp._recformats[i]._nx)
+                    _wrapx(tmp._arrays[i][:n], hdu.data._parent.field(i)[:n], tmp._recformats[i]._nx)
                 else: # from a table parent data, just pass it
-                    rec.recarray.field(hdu.data,i)[:n] = tmp._arrays[i][:n]
+                    hdu.data._parent.field(i)[:n] = tmp._arrays[i][:n]
             elif isinstance(tmp._recformats[i], _FormatP):
-                hdu.data._convert[i] = _makep(tmp._arrays[i][:n], rec.recarray.field(hdu.data,i)[:n], tmp._recformats[i]._dtype)
+                hdu.data._convert[i] = _makep(tmp._arrays[i][:n], hdu.data._parent.field(i)[:n], tmp._recformats[i]._dtype)
             else:
                 if tbtype == 'TableHDU':
 
                     # string no need to convert,
                     if isinstance(tmp._arrays[i], chararray.CharArray):
-                        rec.recarray.field(hdu.data,i)[:n] = tmp._arrays[i][:n]
+                        hdu.data._parent.field(i)[:n] = tmp._arrays[i][:n]
                     else:
-                        hdu.data._convert[i] = np.zeros(nrows, type=tmp._arrays[i].type())
+                        hdu.data._convert[i] = num.zeros(nrows, type=tmp._arrays[i].type())
                         if _scale or _zero:
                             _arr = tmp._arrays[i].copy()
                         else:
@@ -3198,92 +3097,45 @@ def new_table (input, header=None, nrows=0, fill=0, tbtype='BinTableHDU'):
                             _arr += bzero
                         hdu.data._convert[i][:n] = _arr
                 else:
-                    rec.recarray.field(hdu.data,i)[:n] = tmp._arrays[i][:n]
+                    hdu.data._parent.field(i)[:n] = tmp._arrays[i][:n]
 
         if n < nrows:
             if tbtype == 'BinTableHDU':
-                if isinstance(rec.recarray.field(hdu.data,i), np.ndarray):
+                if isinstance(hdu.data._parent.field(i), num.NumArray):
 
                     # make the scaled data = 0, not the stored data
-                    rec.recarray.field(hdu.data,i)[n:] = -bzero/bscale
+                    hdu.data._parent.field(i)[n:] = -bzero/bscale
                 else:
-                    rec.recarray.field(hdu.data,i)[n:] = ''
+                    hdu.data._parent.field(i)[n:] = ''
 
     hdu.update()
     return hdu
 
-class FITS_record(object):
-    """FITS record class.  FITS record class is used to access records of
-       the FITS_rec object.  This will allow us to deal with scaled columns.
-       The FITS_record class expects a FITS_rec object as input
-    """    
-    def __init__(self, input, row=0):
-        self.array = input
-        self.row = row
 
-    def field(self, fieldName):
-        """Get the field data of the record."""
-
-        return self.array.field(fieldName)[self.row]
-
-    def setfield(self, fieldName, value):
-        """Set the field data of the record."""
-
-        self.array.field(fieldName)[self.row] = value
-
-    def __str__(self):
-        """Print one row."""
-
-        outlist = []
-        for i in range(self.array._nfields):
-            outlist.append(`self.array.field(i)[self.row]`)
-        return "(" + ", ".join(outlist) + ")"
-                
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __getitem__(self,key):
-
-        return self.array.field(key)[self.row]
-        
-    def __setitem__(self,fieldname,value):
-        
-        self.array.field(fieldName)[self.row] = value
-
-class FITS_rec(rec.recarray):
+class FITS_rec(rec.RecArray):
     """FITS record array class.  FITS record array is the data part of a
-       table HDU's data part.  This is a layer over the recarray, so we
+       table HDU's data part.  This is a layer over the RecArray, so we
        can deal with scaled columns.
     """
 
-    def __new__(subtype, input):
-        """Construct a FITS record array from a recarray."""
+    def __init__(self, input):
+        """Construct a FITS record array from a RecArray."""
         # input should be a record array
-        if input.dtype.subdtype is None:
-            self = rec.recarray.__new__(subtype, input.shape, input.dtype, 
-                                        buf=input.data,heapoffset=input._heapoffset,file=input._file)
-        else:
-            self = rec.recarray.__new__(subtype, input.shape, input.dtype, 
-                                        buf=input.data, strides=input.strides,heapoffset=input._heapoffset,file=input._file)
+        self.__setstate__(input.__getstate__())
 
-        self._nfields = len(self.dtype.names)
-        self._convert = [None]*len(self.dtype.names)
-        self._coldefs = None
-        self._gap = 0
-        self.names = self.dtype.names
-        self._names = self.dtype.names # This attribute added for backward compatibility with numarray version of FITS_rec
-        return self
+        # _parent is the original (storage) array,
+        # _convert is the scaled (physical) array.
+        self._parent = input
+        self._convert = [None]*self._nfields
+        self.names = self._names
 
-    def __array_finalize__(self,obj):
-        if obj is None:
-            return 
-        self._convert = obj._convert
-        self._coldefs = obj._coldefs
-        self._nfields = obj._nfields
-        self.names = obj.names
-        self._names = obj._names
-        self._gap = obj._gap
+    def copy(self):
+        r  = rec.RecArray.copy(self)
+        r.__class__ = rec.RecArray
+        r._coldefs = self._coldefs
+        f = FITS_rec(r)
+        f._convert = copy.deepcopy(self._convert)
+        return f
         
     def _clone(self, shape):
         """Overload this to make mask array indexing work properly."""
@@ -3291,37 +3143,34 @@ class FITS_rec(rec.recarray):
         return hdu.data
 
     def __repr__(self):
-        tmp = rec.recarray.__repr__(self)
+        tmp = rec.RecArray.__repr__(self)
         loc = tmp.rfind('\nnames=')
         tmp = tmp[:loc+7] + `self._coldefs.names` + ')'
         return tmp
 
+    # synchronize the sliced FITS_rec and its ._parent
     def __getitem__(self, key):
-        tmp = rec.recarray.__getitem__(self, key)
+        tmp = rec.RecArray.__getitem__(self, key)
 
-        if isinstance(key, slice) or isinstance(key,np.ndarray):
+        if isinstance(key, slice):
             out = tmp
-            out._convert = [None]*len(self.dtype.names)
-            for i in range(len(self.dtype.names)):
+            out._parent = rec.RecArray.__getitem__(self._parent, key)
+            out._convert = [None]*self._nfields
+            for i in range(self._nfields):
 
                 # touch all fields to expand the original ._convert list
                 # so the sliced FITS_rec will view the same scaled columns as
                 # the original
                 dummy = self.field(i)
                 if self._convert[i] is not None:
-                    out._convert[i] = np.ndarray.__getitem__(self._convert[i], key)
+                    out._convert[i] = ndarray.NDArray.__getitem__(self._convert[i], key)
             del dummy
             return out
 
         # if not a slice, do this because Record has no __getstate__.
         # also more efficient.
         else:
-            newrecord = FITS_record(self,key)
-            return newrecord
-    
-    def __setitem__(self,row,value):
-        for i in range(self._nfields):
-            self.field(self.names[i])[row] = value.field(self.names[i])
+            return tmp
 
     def _get_scale_factors(self, indx):
         """
@@ -3357,8 +3206,8 @@ class FITS_rec(rec.recarray):
             # for X format
             if isinstance(self._coldefs._recformats[indx], _FormatX):
                 _nx = self._coldefs._recformats[indx]._nx
-                dummy = np.zeros(self.shape+(_nx,), dtype=np.bool_)
-                _unwrapx(rec.recarray.field(self,indx), dummy, _nx)
+                dummy = num.zeros(self._parent.shape+(_nx,), type=num.Bool)
+                _unwrapx(self._parent.field(indx), dummy, _nx)
                 self._convert[indx] = dummy
                 return self._convert[indx]
 
@@ -3366,61 +3215,60 @@ class FITS_rec(rec.recarray):
 
             # for P format
             if isinstance(self._coldefs._recformats[indx], _FormatP):
-                dummy = _VLF([None]*len(self))
+                dummy = _VLF([None]*len(self._parent))
                 dummy._dtype = self._coldefs._recformats[indx]._dtype
-                for i in range(len(self)):
-                    _offset = rec.recarray.field(self,indx)[i,1] + self._heapoffset
+                for i in range(len(self._parent)):
+                    _offset = self._parent.field(indx)[i,1] + self._heapoffset
                     self._file.seek(_offset)
                     if self._coldefs._recformats[indx]._dtype is 'a':
-                        dummy[i] = chararray.array(self._file, itemsize=rec.recarray.field(self,indx)[i,0], shape=1)
+                        dummy[i] = chararray.array(self._file, itemsize=self._parent.field(indx)[i,0], shape=1)
                     else:
-                        dummy[i] = np.array(self._file, dtype=self._coldefs._recformats[indx]._dtype)
-                        dummy[i] = dummy[i].reshape(rec.recarray.field(self,indx)[i,0])
-                        dummy[i].dtype = dummy[i].dtype.newbyteorder(">")
+                        dummy[i] = num.array(self._file, type=self._coldefs._recformats[indx]._dtype, shape=self._parent.field(indx)[i,0])
+                        dummy[i]._byteorder = 'big'
 
                 # scale by TSCAL and TZERO
                 if _scale or _zero:
-                    for i in range(len(self)):
+                    for i in range(len(self._parent)):
                         dummy[i][:] = dummy[i]*bscale+bzero
 
                 # Boolean (logical) column
                 if self._coldefs._recformats[indx]._dtype is _booltype:
-                    for i in range(len(self)):
-                        dummy[i] = np.equal(dummy[i], ord('T'))
+                    for i in range(len(self._parent)):
+                        dummy[i] = num.equal(dummy[i], ord('T'))
 
                 self._convert[indx] = dummy
                 return self._convert[indx]
 
             if _str:
-                return rec.recarray.field(self,indx)
+                return self._parent.field(indx)
 
             # ASCII table, convert strings to numbers
             if self._coldefs._tbtype == 'TableHDU':
-                _dict = {'I':np.int32, 'F':np.float32, 'E':np.float32, 'D':np.float64}
+                _dict = {'I':num.Int32, 'F':num.Float32, 'E':num.Float32, 'D':num.Float64}
                 _type = _dict[self._coldefs._Formats[indx][0]]
 
                 # if the string = TNULL, return ASCIITNULL
                 nullval = self._coldefs.nulls[indx].strip()
-                dummy = np.zeros(len(self), dtype=_type)
+                dummy = num.zeros(len(self._parent), type=_type)
                 dummy[:] = ASCIITNULL
                 self._convert[indx] = dummy
-                for i in range(len(self)):
-                    if rec.recarray.field(self,indx)[i].strip() != nullval:
-                        dummy[i] = float(rec.recarray.field(self,indx)[i].replace('D', 'E'))
+                for i in range(len(self._parent)):
+                    if self._parent.field(indx)[i].strip() != nullval:
+                        dummy[i] = float(self._parent.field(indx)[i].replace('D', 'E'))
             else:
-                dummy = rec.recarray.field(self,indx)
+                dummy = self._parent.field(indx)
 
             # further conversion for both ASCII and binary tables
             if _number and (_scale or _zero):
 
                 # only do the scaling the first time and store it in _convert
-                self._convert[indx] = np.array(dummy, dtype=np.float64)
+                self._convert[indx] = num.array(dummy, type=num.Float64)
                 if _scale:
-                    np.multiply(self._convert[indx], bscale, self._convert[indx])
+                    num.multiply(self._convert[indx], bscale, self._convert[indx])
                 if _zero:
                     self._convert[indx] += bzero
             elif _bool:
-                self._convert[indx] = np.equal(dummy, ord('T'))
+                self._convert[indx] = num.equal(dummy, ord('T'))
             else:
                 return dummy
 
@@ -3434,15 +3282,15 @@ class FITS_rec(rec.recarray):
         if self._coldefs._tbtype == 'TableHDU':
             _loc = [1]
             _width = []
-            for i in range(len(self.dtype.names)):
-                _loc.append(_loc[-1]+rec.recarray.field(self,i).itemsize())
+            for i in range(self._nfields):
+                _loc.append(_loc[-1]+self._parent.field(i).itemsize())
                 _width.append(_convert_ASCII_format(self._coldefs._Formats[i])[1])
 
         self._heapsize = 0
-        for indx in range(len(self.dtype.names)):
+        for indx in range(self._nfields):
             if (self._convert[indx] is not None):
                 if isinstance(self._coldefs._recformats[indx], _FormatX):
-                    _wrapx(self._convert[indx], rec.recarray.field(self,indx), self._coldefs._recformats[indx]._nx)
+                    _wrapx(self._convert[indx], self._parent.field(indx), self._coldefs._recformats[indx]._nx)
                     continue
 
                 (_str, _bool, _number, _scale, _zero, bscale, bzero) = self._get_scale_factors(indx)
@@ -3450,12 +3298,12 @@ class FITS_rec(rec.recarray):
                 # add the location offset of the heap area for each
                 # variable length column
                 if isinstance(self._coldefs._recformats[indx], _FormatP):
-                    desc = rec.recarray.field(self,indx)
+                    desc = self._parent.field(indx)
                     desc[:] = 0 # reset
                     _npts = map(len, self._convert[indx])
                     desc[:len(_npts),0] = _npts
-                    _dtype = np.getType(self._coldefs._recformats[indx]._dtype)
-                    desc[1:,1] = np.add.accumulate(desc[:-1,0])*_dtype.bytes
+                    _dtype = num.getType(self._coldefs._recformats[indx]._dtype)
+                    desc[1:,1] = num.add.accumulate(desc[:-1,0])*_dtype.bytes
 
                     desc[:,1][:] += self._heapsize
                     self._heapsize += desc[:,0].sum()*_dtype.bytes
@@ -3495,24 +3343,22 @@ class FITS_rec(rec.recarray):
                             if len(x) > (_loc[indx+1]-_loc[indx]):
                                 raise ValueError, "number `%s` does not fit into the output's itemsize of %s" % (x, _width[indx])
                             else:
-                                rec.recarray.field(self,indx)[i] = x
+                                self._parent.field(indx)[i] = x
                         if 'D' in _format:
-                            rec.recarray.field(self,indx).sub('E', 'D')
+                            self._parent.field(indx).sub('E', 'D')
 
 
                     # binary table
                     else:
-                        if isinstance(rec.recarray.field(self,indx)[0], np.integer):
-                            dummy = np.around(dummy)
-                        rec.recarray.field(self,indx)[:] = dummy.astype(rec.recarray.field(self,indx).dtype)
+                        if isinstance(self._parent.field(indx)._type, num.IntegralType):
+                            dummy = num.around(dummy)
+                        self._parent.field(indx)[:] = dummy
 
                     del dummy
 
                 # ASCII table does not have Boolean type
                 elif _bool:
-                    rec.recarray.field(self,indx)[:] = np.choose(self._convert[indx], 
-                                                    (np.array([ord('F')],dtype=np.int8)[0],
-                                                    np.array([ord('T')],dtype=np.int8)[0]))
+                    self._parent.field(indx)[:] = num.choose(self._convert[indx], (ord('F'),ord('T')))
 
 
 class GroupData(FITS_rec):
@@ -3521,7 +3367,7 @@ class GroupData(FITS_rec):
     Allows structured access to FITS Group data in a manner analogous to tables
     """
 
-    def __new__(subtype, input=None, bitpix=None, pardata=None, parnames=[],
+    def __init__(self, input=None, bitpix=None, pardata=None, parnames=[],
                  bscale=None, bzero=None, parbscales=None, parbzeros=None):
         """input: input data, either the group data itself (a numarray) or
                   a record array (FITS_rec) which will contain both group
@@ -3543,7 +3389,7 @@ class GroupData(FITS_rec):
            parbzeros: list of bzeros for the parameters
         """
 
-        if not isinstance(input, FITS_rec):
+        if isinstance(input, num.NumArray):
             _formats = ''
             _cols = []
             if pardata is None:
@@ -3557,7 +3403,7 @@ class GroupData(FITS_rec):
                 parbzeros = [None]*npars
 
             if bitpix is None:
-                bitpix = _ImageBaseHDU.ImgCode[input.dtype.name]
+                bitpix = _ImageBaseHDU.ImgCode[input.type()]
             fits_fmt = GroupsHDU._dict[bitpix] # -32 -> 'E'
             _fmt = _fits2rec[fits_fmt] # 'E' -> 'f4'
             _formats = (_fmt+',') * npars
@@ -3567,43 +3413,23 @@ class GroupData(FITS_rec):
             for i in range(npars):
                 _cols.append(Column(name='c'+`i+1`, format = fits_fmt, bscale = parbscales[i], bzero = parbzeros[i]))
             _cols.append(Column(name='data', format = fits_fmt, bscale = bscale, bzero = bzero))
-            subtype._coldefs = ColDefs(_cols)
-            subtype.parnames = [i.lower() for i in parnames]
-            
-            # need to inherit from FITS rec.  What is being done here?
- #           tmp = FITS_rec(rec.array(None, formats=_formats, shape=gcount, names= self._coldefs.names))
- #           self.__setstate__(tmp.__getstate__())
-            
-            self = FITS_rec(rec.array(None, formats=_formats, names=self._coldefs.names, shape=gcount))
-            
+            self._coldefs = ColDefs(_cols)
+            self.parnames = [i.lower() for i in parnames]
+            tmp = FITS_rec(rec.array(None, formats=_formats, shape=gcount, names= self._coldefs.names))
+            self.__setstate__(tmp.__getstate__())
             for i in range(npars):
                 (_scale, _zero)  = self._get_scale_factors(i)[3:5]
                 if _scale or _zero:
                     self._convert[i] = pardata[i]
                 else:
-#                    self._parent.field(i)[:] = pardata[i]
-                    rec.recarray.field(self,i)[:] = pardata[i]
+                    self._parent.field(i)[:] = pardata[i]
             (_scale, _zero)  = self._get_scale_factors(npars)[3:5]
             if _scale or _zero:
                 self._convert[npars] = input
             else:
-#                self._parent.field(npars)[:] = input
-                rec.recarray.field(self,npars)[:] = input
+                self._parent.field(npars)[:] = input
         else:
-#            self.__setstate__(input.__getstate__())
-             self = FITS_rec.__new__(subtype,input)
-        return self
-
-    def __str__(self):
-
-        # Byteswap temporarily the byte order for presentation (if needed)
-        outlist = []
-        for i in self:
-            outlist.append(FITS_record.__str__(i))
-
-        # When finished, restore the byte order (if needed)
-        return "RecArray[ \n" + ",\n".join(outlist) + "\n]"
-
+            self.__setstate__(input.__getstate__())
 
     def __getattr__(self, attr):
         if attr == 'data':
@@ -3625,7 +3451,7 @@ class GroupData(FITS_rec):
     def par(self, parName):
         """Get the group parameter values."""
 
-        if isinstance(parName, (int, long, np.integer)):
+        if isinstance(parName, (int, long)):
             result = self.field(parName)
         else:
             indx = self._unique[parName.lower()]
@@ -3643,7 +3469,7 @@ class GroupData(FITS_rec):
     def setpar(self, parName, value):
         """Set the group parameter values."""
 
-        if isinstance(parName, (int, long, np.integer)):
+        if isinstance(parName, (int, long)):
             self.field(parName)[:] = value
         else:
             indx = self._unique[parName]
@@ -3664,7 +3490,7 @@ class GroupData(FITS_rec):
         return _Group(self, row)
 
 
-class _Group(rec.record):
+class _Group(rec.Record):
     """One group of the random group data."""
 
     def __init__(self, input, row=0):
@@ -3729,9 +3555,9 @@ class _TableBaseHDU(_ExtensionHDU):
             self.header = Header(_list)
 
         if (data is not DELAYED):
-            if isinstance(data, rec.recarray):
-                self.header['NAXIS1'] = data.itemsize
-                self.header['NAXIS2'] = data.shape[0]
+            if isinstance(data, rec.RecArray):
+                self.header['NAXIS1'] = data._itemsize
+                self.header['NAXIS2'] = data._shape[0]
                 self.header['TFIELDS'] = data._nfields
                 self.data = data
                 self.columns = data._coldefs
@@ -3754,7 +3580,6 @@ class _TableBaseHDU(_ExtensionHDU):
                 self._file.seek(self._datLoc)
                 data = _get_tbdata(self)
                 data._coldefs = self.columns
-#                print "Got data?"
             else:
                 data = None
             self.__dict__[attr] = data
@@ -3814,8 +3639,8 @@ class _TableBaseHDU(_ExtensionHDU):
         _update = self.header.update
         _append = self.header.ascard.append
         _cols = self.columns
-        _update('naxis1', self.data.itemsize, after='naxis')
-        _update('naxis2', self.data.shape[0], after='naxis1')
+        _update('naxis1', self.data._itemsize, after='naxis')
+        _update('naxis2', self.data._shape[0], after='naxis1')
         _update('tfields', len(_cols), after='gcount')
 
         # Wipe out the old table definition keywords.  Mark them first,
@@ -3933,6 +3758,215 @@ class BinTableHDU(_TableBaseHDU):
             hdr[0] = self._xtn
             hdr.ascard[0].comment = 'binary table extension'
 
+class StreamingHDU:
+    """
+    A class that provides the capability to stream data to a FITS file
+    instead of requiring data to all be written at once.
+
+    The following psudo code illustrates its use:
+
+    header = pyfits.Header()
+
+    for all the cards you need in the header:
+        header.update(key,value,comment)
+
+    shdu = pyfits.StreamingHDU('filename.fits',header)
+
+    for each piece of data:
+        shdu.write(data)
+
+    shdu.close()
+    """
+
+    def __init__(self, name, header):
+        """
+        Construct a StreamingHDU object given a file name and a header.
+
+        :Parameters:
+          name : string
+              The name of the file to which the header and data will be
+              streamed.
+
+          header : Header
+              The header object associated with the data to be written
+              to the file.
+
+        :Returns:
+          None
+
+        Notes
+        -----
+
+        The file will be opened and the header appended to the end of
+        the file.  If the file does not already exist, it will be created
+        and if the header represents a Primary header, it will be written
+        to the beginning of the file.  If the file does not exist and the
+        provided header is not a Primary header, a default Primary HDU will
+        be inserted at the beginning of the file and the provided header
+        will be added as the first extension.  If the file does already
+        exist, but the provided header represents a Primary header, the
+        header will be modified to an image extension header and appended
+        to the end of the file.
+        """
+
+        self.header = header.copy()
+#
+#       Check if the file already exists.  If it does not, check to see
+#       if we were provided with a Primary Header.  If not we will need
+#       to prepend a default PrimaryHDU to the file before writing the
+#       given header.
+#
+        if not os.path.exists(name):
+            if not self.header.has_key('SIMPLE'):
+                hdulist = HDUList([PrimaryHDU()])
+                hdulist.writeto(name, 'exception')
+        else:
+            if self.header.has_key('SIMPLE') and os.path.getsize(name) > 0:
+#
+#               This will not be the first extension in the file so we
+#               must change the Primary header provided into an image
+#               extension header.
+#
+                self.header.update('XTENSION','IMAGE','Image extension',
+                                   after='SIMPLE')
+                del self.header['SIMPLE']
+
+                if not self.header.has_key('PCOUNT'):
+                    dim = self.header['NAXIS']
+       
+                    if dim == 0:
+                        dim = ''
+                    else:
+                        dim = str(dim)
+
+                    self.header.update('PCOUNT', 0, 'number of parameters',
+                                       after='NAXIS'+dim)
+
+                if not self.header.has_key('GCOUNT'):
+                    self.header.update('GCOUNT', 1, 'number of groups',
+                                       after='PCOUNT')
+
+        self._ffo = _File(name, 'append')
+        self._ffo.getfile().seek(0,2)
+
+        self._hdrLoc = self._ffo.writeHDUheader(self)
+        self._datLoc = self._ffo.getfile().tell()
+        self._size = self.size()
+
+        if self._size != 0:
+            self.writeComplete = 0
+        else:
+            self.writeComplete = 1
+
+    def write(self,data):
+        """
+        Write the given data to the stream.
+
+        :Parameters:
+          data : NumArray
+              Data to stream to the file.
+
+        :Returns:
+
+          writeComplete : integer
+              Flag that when true indicates that all of the required data
+              has been written to the stream.
+
+        Notes
+        -----
+
+        Only the amount of data specified in the header provided to the
+        class constructor may be written to the stream.  If the provided
+        data would cause the stream to overflow, an IOError exception is
+        raised and the data is not written.  Once sufficient data has been
+        written to the stream to satisfy the amount specified in the header,
+        the stream is padded to fill a complete FITS block and no more data
+        will be accepted.  An attempt to write more data after the stream
+        has been filled will raise an IOError exception.  If the dtype of
+        the input data does not match what is expected by the header, a
+        TypeError exception is raised.
+        """
+
+        if self.writeComplete:
+            raise IOError, "The stream is closed and can no longer be written"
+
+        curDataSize = self._ffo.getfile().tell() - self._datLoc
+
+        if curDataSize + data.itemsize()*data._size > self._size:
+            raise IOError, "Supplied data will overflow the stream"
+
+        if _ImageBaseHDU.NumCode[self.header['BITPIX']] != data.type():
+            raise TypeError, "Supplied data is not the correct type."
+
+        if data._byteorder != 'big':
+#
+#           byteswap little endian arrays before writing
+#
+            output = data.byteswapped()
+        else:
+            output = data
+
+        output.tofile(self._ffo.getfile())
+
+        if self._ffo.getfile().tell() - self._datLoc == self._size:
+#
+#           the stream is full so pad the data to the next FITS block
+#
+            self._ffo.getfile().write(_padLength(self._size)*'\0')
+            self.writeComplete = 1
+
+        self._ffo.getfile().flush()
+
+        return self.writeComplete
+
+    def size(self):
+        """
+        Return the size (in bytes) of the data portion of the HDU.
+
+        :Parameters:
+          None
+
+        :Returns:
+          size : integer
+              The number of bytes of data required to fill the stream
+              per the header provided in the constructor.
+        """
+
+        size = 0
+        naxis = self.header.get('NAXIS', 0)
+
+        if naxis > 0:
+            simple = self.header.get('SIMPLE','F')
+            randomGroups = self.header.get('GROUPS','F')
+
+            if simple == 'T' and randomGroups == 'T':
+                groups = 1
+            else:
+                groups = 0
+
+            size = 1
+
+            for j in range(groups,naxis):
+                size = size * self.header['NAXIS'+`j+1`]
+            bitpix = self.header['BITPIX']
+            gcount = self.header.get('GCOUNT', 1)
+            pcount = self.header.get('PCOUNT', 0)
+            size = abs(bitpix) * gcount * (pcount + size) / 8
+        return size
+
+    def close(self):
+        """
+        Close the 'physical' FITS file.
+
+        :Parameters:
+          None
+
+        :Returns:
+          None
+        """
+
+        self._ffo.close()
+
 
 class ErrorURLopener(urllib.FancyURLopener):
     """A class to use with urlretrieve to allow IOError exceptions to be
@@ -3945,7 +3979,7 @@ urllib._urlopener = ErrorURLopener() # Assign the locally subclassed opener
 urllib._urlopener.tempcache = {} # Initialize tempcache with an empty
                                  # dictionary to enable file cacheing
 
-class _py_File:
+class _File:
     """A file I/O class"""
 
     def __init__(self, name, mode='copyonwrite', memmap=0):
@@ -3959,7 +3993,7 @@ class _py_File:
 
         self.mode = mode
         self.memmap = memmap
-        
+
         if memmap and mode not in ['readonly', 'copyonwrite', 'update']:
             raise "Memory mapping is not implemented for mode `%s`." % mode
         else:
@@ -3998,7 +4032,7 @@ class _py_File:
     def __getattr__(self, attr):
         """Get the _mm attribute."""
         if attr == '_mm':
-            self.__dict__[attr] = Memmap(self.name, mode=_memmap_mode[self.mode])
+            self.__dict__[attr] = Memmap.open(self.name, mode=_memmap_mode[self.mode])
         try:
             return self.__dict__[attr]
         except KeyError:
@@ -4113,39 +4147,53 @@ class _py_File:
             # if image, need to deal with byte order
             if isinstance(hdu, _ImageBaseHDU):
 
-#               if the data is bigendian
-                if hdu.data.dtype.str[0] != '>':
-                    hdu.data = hdu.data.byteswap()
-                    _byteorder = 'little'
+
+                if hdu.data._byteorder != 'big':
+                    output = hdu.data.byteswapped()
                 else:
-                    _byteorder = 'big'
+                    output = hdu.data
 
             # Binary table byteswap
             elif isinstance(hdu, BinTableHDU):
                 for i in range(hdu.data._nfields):
                     coldata = hdu.data.field(i)
-                    
-                    if not isinstance(coldata, chararray.chararray):
+                    coldata2 = hdu.data._parent.field(i)
+
+                    if not isinstance(coldata, chararray.CharArray):
+
                             # only swap unswapped
                             # deal with var length table
                         if isinstance(coldata, _VLF):
                             for i in coldata:
-                                if not isinstance(i, chararray.chararray):
-                                    if hdu.data.field(i).itemsize > 1:
-                                        if hdu.data.field(i).dtype.str[0] != '>':
-                                            hdu.data.field(i)[:] = hdu.data.field(i).byteswap()
+                                if not isinstance(i, chararray.CharArray):
+                                    if i._type.bytes > 1:
+                                        if i._byteorder != 'big':
+                                            i.byteswap()
+                                            i._byteorder = 'big'
                         else:
-                            if coldata.itemsize > 1:
-                                if hdu.data.field(i).dtype.str[0] != '>':
-                                    hdu.data.field(i)[:] = hdu.data.field(i).byteswap()
+                            if coldata._type.bytes > 1:
+                                if coldata._byteorder != 'big':
+                                    coldata.byteswap()
+                                    coldata._byteorder = 'big'
+
+                        if coldata2._type.bytes > 1:
+
+                            # do the _parent too, otherwise the _parent
+                            # of a scaled column may have wrong byteorder
+                            if coldata2._byteorder != 'big':
+                                coldata2.byteswap()
+                                coldata2._byteorder = 'big'
 
                 # In case the FITS_rec was created in a LittleEndian machine
-                hdu.data.dtype = hdu.data.dtype.newbyteorder('>')
-
-            output = hdu.data
+                hdu.data._byteorder = 'big'
+                hdu.data._parent._byteorder = 'big'
+                output = hdu.data
+            else:
+                output = hdu.data
+             
 
             output.tofile(self.__file)
-            _size = output.size * output.itemsize
+            _size = output.nelements() * output._itemsize
 
             # write out the heap of variable length array columns
             # this has to be done after the "regular" data is written (above)
@@ -4171,11 +4219,6 @@ class _py_File:
         # flush, to make sure the content is written
         self.__file.flush()
 
-        # unswap the data for image
-        if hdu.data is not None and isinstance(hdu, _ImageBaseHDU):
-            if _byteorder == 'little':
-                hdu.data = hdu.data.byteswap()
-
         # return both the location and the size of the data area
         return loc, _size+_padLength(_size)
 
@@ -4183,168 +4226,6 @@ class _py_File:
         """Close the 'physical' FITS file."""
 
         self.__file.close()
-
-class _st_File(_py_File):
-    """A class that extends the _py_File class to extend its behavior to
-       implement STScI specific extensions to Pyfits.
-    """
-
-    def _readHDU(self):
-        """Extend _py_File._readHDU to support STScI specific extensions to
-           pyfits.  Currently, these extensions include Constant Value Data
-           Arrays.
-        """
-#
-#       Call base class _readHDU to perform generic reading of header
-#
-        hdu = _py_File._readHDU(self)
-#
-#       Convert header for HDU's with constant value data arrays
-#
-        pixvalue_RE = re.compile('PIXVALUE=')
-        mo = pixvalue_RE.search(hdu._raw)
-
-        if mo:
-#
-#           Add NAXISn keywords for each NPIXn keyword in the raw header
-#           and remove the NPIXx keyword
-#
-            naxis_RE = re.compile('NAXIS   = ')
-            mo = naxis_RE.search(hdu._raw)
-            naxis_sidx = mo.start()
-
-            npixn_RE = re.compile(r'NPIX(\d+)\s*=\s*(\d+)')
-            iterator = npixn_RE.finditer(hdu._raw)
-            numAxis = 0
-
-            for mo in iterator:
-                numAxis = numAxis + 1
-                sidx = mo.start()
-                nAxisStr = 'NAXIS' + str(numAxis) + \
-                           (3-len(str(numAxis)))*' ' + \
-                           hdu._raw[sidx+8:sidx+80]
-                hdu._raw = hdu._raw[:naxis_sidx+(80*numAxis)] + nAxisStr + \
-                           (80-len(nAxisStr))*' ' + \
-                           hdu._raw[naxis_sidx+(80*numAxis):sidx] + \
-                           hdu._raw[sidx+80:]
-#
-#           Replace NAXIS=0 keywords with NAZIS=n keywords where n is the
-#           number of NPIXn keywords
-#
-            numAxisS = '%d'%numAxis
-            lstr = len(numAxisS)
-
-            naxis_RE = re.compile('NAXIS   = ')
-            mo = naxis_RE.search(hdu._raw)
-            sidx = mo.start()
-
-            if lstr == 1:
-                naxisVal_RE = re.compile('0')
-            elif lstr == 2:
-                naxisVal_RE = re.compile('[ 0]|[0 ]')
-            elif lstr == 3:
-                naxisVal_RE = re.compile('[  0]|[ 0 ]|[0  ]')
-            else:
-                raise \
-                   "More than 999 NPIXn keywords in constant data value header"
-
-            tmpRaw, nSub = naxisVal_RE.subn(numAxisS, hdu._raw[sidx+10:],1)
-
-            if nSub != 1:
-                raise "Unable to substitute NAXISn for NPIXn in the header"
-
-            hdu._raw = hdu._raw[:sidx+10] + tmpRaw
-        return hdu
-
-    def writeHDUheader(self, hdu):
-        """Extend _st_File.writeHDUheader to support STScI specific
-           extensions to pyfits.  Currently, these extensions include Constant
-           Value Data Arrays.
-        """
-
-        if (hdu.header.has_key('PIXVALUE') and hdu.header['NAXIS'] > 0):
-#
-#           This is a Constant Value Data Array.  Verify that the data actually
-#           matches the PIXVALUE.
-#
-            pixVal = hdu.header['PIXVALUE']
-            arrayVal = np.reshape(hdu.data,(hdu.data.size,))[0]
-
-            if hdu.header['BITPIX'] > 0:
-               pixVal = long(pixVal)
-
-            if np.all(hdu.data == arrayVal):
-                st_ext = True
-                if arrayVal != pixVal:
-                    hdu.header['PIXVALUE'] = arrayVal
-
-                newHeader = hdu.header.copy()
-                naxis = hdu.header['NAXIS']
-                newHeader['NAXIS'] = 0
-
-                for n in range(naxis,0,-1):
-                    axisval = hdu.header['NAXIS'+str(n)]
-                    newHeader.update('NPIX'+str(n), axisval,
-                                     'length of constant array axis '+str(n),
-                                     after='PIXVALUE')
-                    del newHeader['NAXIS'+str(n)]
-                blocks = repr(newHeader.ascard)
-                blocks = blocks + _pad('END')
-                blocks = blocks + _padLength(len(blocks))*' '
-
-                if len(blocks)%_blockLen != 0:
-                    raise IOError
-                self._py_File__file.flush()
-                loc = self._py_File__file.tell()
-                self._py_File__file.write(blocks)
-
-                # flush, to make sure the content is written
-                self._py_File__file.flush()
-            else:
-#
-#               All elements in array are not the same value.
-#               so this is no longer a constant data value array
-#
-                del hdu.header['PIXVALUE']
-                st_ext = False
-        else:
-            st_ext = False
-
-        if not st_ext:
-#
-#          This is not a STScI extension so call the base class method
-#          to write the header.
-#
-           loc = _py_File.writeHDUheader(self,hdu)
-
-        return loc
-
-    def writeHDUdata(self, hdu):
-        """Extend pyfits._File.writeHDUdata to support STScI specific
-           extensions to pyfits.  Currently, these extensions include Constant
-           Value Data Arrays.
-        """
-
-        if (hdu.header.has_key('PIXVALUE')):
-#
-#           This is a Constant Value Data Array.
-#
-            self._py_File__file.flush()
-            loc = self._py_File__file.tell()
-            _size = 0
-        else:
-#
-#          This is not a STScI extension so call the base class method
-#          to write the data.
-#
-            loc, _size =  _py_File.writeHDUdata(self,hdu)
-
-        # return both the location and the size of the data area
-        return loc, _size+_padLength(_size)
-#
-# Define _File class to be the one that handles STScI extensions.
-#
-_File = _st_File
 
 class HDUList(list, _Verify):
     """HDU list class.  This is the top-level FITS object.  When a FITS
@@ -4395,7 +4276,7 @@ class HDUList(list, _Verify):
         """Set an HDU to the HDUList, indexed by number or name."""
         _key = self.index_of(key)
         if isinstance(hdu, (slice, list)):
-            if isinstance(_key, (int,np.integer)):
+            if isinstance(_key, int):
                 raise ValueError, "An element in the HDUList must be an HDU."
             for item in hdu:
                 if not isinstance(item, _AllHDU):
@@ -4465,7 +4346,7 @@ class HDUList(list, _Verify):
            integer, a string, or a tuple of (string, integer).
         """
 
-        if isinstance(key, (int, np.integer,slice)):
+        if isinstance(key, (int, slice)):
             return key
         elif isinstance(key, tuple):
             _key = key[0]
@@ -4547,6 +4428,20 @@ class HDUList(list, _Verify):
            verbose: print out verbose messages? default = 0.
         """
 
+        # Get the name of the current thread and determine if this is a single treaded application
+        threadName = threading.currentThread()
+        singleThread = (threading.activeCount() == 1) and (threadName.getName() == 'MainThread')
+
+        if singleThread:
+            # Define new signal interput handler
+            keyboardInterruptSent = False
+            def New_SIGINT(*args):
+                print "KeyboardInterrupt ignored until flush is complete!"
+                keyboardInterruptSent = True
+    
+            # Install new handler
+            signal.signal(signal.SIGINT,New_SIGINT)
+
         if self.__file.mode not in ('append', 'update'):
             print "flush for '%s' mode is not supported." % self.__file.mode
             return
@@ -4589,7 +4484,7 @@ class HDUList(list, _Verify):
                         continue
                     if hdu.data is None:
                         continue
-                    _bytes = hdu.data.nbytes
+                    _bytes = hdu.data._itemsize*hdu.data.nelements()
                     _bytes = _bytes + _padLength(_bytes)
                     if _bytes != hdu._datSpan:
                         self._resize = 1
@@ -4649,6 +4544,12 @@ class HDUList(list, _Verify):
                 for hdu in self:
                     hdu.header._mod = 0
                     hdu.header.ascard._mod = 0
+
+        if singleThread:
+            if keyboardInterruptSent:
+                raise KeyboardInterrupt
+            
+            signal.signal(signal.SIGINT,signal.getsignal(signal.SIGINT))
 
     def update_extend(self):
         """Make sure if the primary header needs the keyword EXTEND or if
@@ -4794,7 +4695,7 @@ def _getext(filename, mode, *ext1, **ext2):
         if n_ext2 == 0:
             ext = ext1[0]
         else:
-            if isinstance(ext1[0], (int, np.integer, tuple)):
+            if isinstance(ext1[0], (int, tuple)):
                 raise KeyError, 'Redundant/conflicting keyword argument(s): %s' % ext2
             if isinstance(ext1[0], str):
                 if n_ext2 == 1 and 'extver' in keys:
@@ -4929,7 +4830,7 @@ def getval(filename, key, *ext, **extkeys):
 
 def _makehdu(data, header):
     if header is None:
-        if isinstance(data, np.ndarray):
+        if isinstance(data, num.NumArray):
             hdu = ImageHDU(data)
         elif isinstance(data, FITS_rec):
             hdu = BinTableHDU(data)
@@ -5016,7 +4917,7 @@ def update(filename, data, *ext, **extkeys):
         if isinstance(ext[0], Header):
             header = ext[0]
             ext = ext[1:]
-        elif not isinstance(ext[0], (int, long, np.integer, str, tuple)):
+        elif not isinstance(ext[0], (int, long, str, tuple)):
             raise KeyError, 'Input argument has wrong data type.'
 
     if 'header' in extkeys:
