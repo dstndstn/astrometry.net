@@ -30,7 +30,6 @@ struct augment_xylist_s {
     int verbosity;
     bool no_delete_temp;
 
-    dl* scales;
     // contains ranges of depths as pairs of ints.
     il* depths;
     // contains ranges of fields as pairs of ints.

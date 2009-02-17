@@ -59,7 +59,6 @@ void augment_xylist_init(augment_xylist_t* axy) {
     axy->tweakorder = 2;
     axy->depths = il_new(4);
     axy->fields = il_new(16);
-	axy->scales = dl_new(16);
     axy->verifywcs = sl_new(4);
     axy->try_verify = TRUE;
     axy->resort = TRUE;
@@ -70,7 +69,6 @@ void augment_xylist_init(augment_xylist_t* axy) {
 
 void augment_xylist_free_contents(augment_xylist_t* axy) {
     sl_free2(axy->verifywcs);
-    dl_free(axy->scales);
     il_free(axy->depths);
     il_free(axy->fields);
 }
@@ -449,9 +447,11 @@ int augment_xylist(augment_xylist_t* axy,
     bool addwh = TRUE;
     FILE* fout = NULL;
     char *fitsimgfn = NULL;
+	dl* scales;
 
     cmd = sl_new(16);
     tempfiles = sl_new(4);
+	scales = dl_new(4);
 
 	if (axy->imagefn) {
 		// if --image is given:
@@ -661,8 +661,8 @@ int augment_xylist(augment_xylist_t* axy,
         for (i=0; i<dl_size(estscales); i++) {
             double scale = dl_get(estscales, i);
             logverb("Scale estimate: %g\n", scale);
-            dl_append(axy->scales, scale * 0.99);
-            dl_append(axy->scales, scale * 1.01);
+            dl_append(scales, scale * 0.99);
+            dl_append(scales, scale * 1.01);
             guessed_scale = TRUE;
         }
         dl_free(estscales);
@@ -773,8 +773,8 @@ int augment_xylist(augment_xylist_t* axy,
 		} else
 			exit(-1);
 
-		dl_append(axy->scales, appl);
-		dl_append(axy->scales, appu);
+		dl_append(scales, appl);
+		dl_append(scales, appu);
 	}
 
     /* Hmm, do we want this??
@@ -782,10 +782,10 @@ int augment_xylist(augment_xylist_t* axy,
      qfits_header_add(hdr, "ANAPPDEF", "T", "try the default scale range too.", NULL);
      */
 
-	for (i=0; i<dl_size(axy->scales)/2; i++) {
+	for (i=0; i<dl_size(scales)/2; i++) {
 		char key[64];
-        double lo = dl_get(axy->scales, 2*i);
-        double hi = dl_get(axy->scales, 2*i + 1);
+        double lo = dl_get(scales, 2*i);
+        double hi = dl_get(scales, 2*i + 1);
         if (lo > 0.0) {
             sprintf(key, "ANAPPL%i", i+1);
             fits_header_add_double(hdr, key, lo, "scale: arcsec/pixel min");
@@ -976,6 +976,7 @@ int augment_xylist(augment_xylist_t* axy,
         }
     }
 
+	dl_free(scales);
     sl_free2(cmd);
     sl_free2(tempfiles);
     return 0;
