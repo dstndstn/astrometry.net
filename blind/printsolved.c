@@ -116,7 +116,7 @@ int main(int argc, char** args) {
 		if (percent) {
 			int nt = solvedfile_getsize(inputfiles[i]);
 			int nc = il_size(list);
-			printf("  %i/%i (%f %%) %ssolved", nc, nt, (100.0 * nc / (double)nt), unsolved ? "un":"");
+			printf("  %i/%i (%f %%) %ssolved\n", nc, nt, (100.0 * nc / (double)nt), unsolved ? "un":"");
 			ncounted += nc;
 			ntotal += nt;
 		}
@@ -138,7 +138,7 @@ int main(int argc, char** args) {
 		printf("];\n");
 
 	if (percent) {
-		printf("Total: %i/%i (%f %%) %ssolved", ncounted, ntotal, (100.0 * ncounted / (double)ntotal), unsolved ? "un":"");
+		printf("Total: %i/%i (%f %%) %ssolved\n", ncounted, ntotal, (100.0 * ncounted / (double)ntotal), unsolved ? "un":"");
 	}
 
 	return 0;
