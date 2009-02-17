@@ -59,13 +59,13 @@ Malloc bl*  bl_new(int blocksize, int datasize);
 void bl_init(bl* l, int blocksize, int datasize);
 void bl_free(bl* list);
 void  bl_remove_all(bl* list);
-Pure Inline int  bl_size(const bl* list);
+Pure InlineDeclare int  bl_size(const bl* list);
 /** Appends an element, returning the location whereto it was copied. */
 void* bl_append(bl* list, const void* data);
 // Copies the nth element into the destination location.
 void  bl_get(bl* list, int n, void* dest);
 // Returns a pointer to the nth element.
-void* bl_access(bl* list, int n);
+InlineDeclare void* bl_access(bl* list, int n);
 
 void* bl_access_const(const bl* list, int n);
 
@@ -143,7 +143,7 @@ int   bl_check_sorted(bl* list, int (*compare)(const void* v1, const void* v2), 
 ///////////////////////////////////////////////
 typedef bl il;
 Malloc il*  il_new(int blocksize);
-Pure Inline int il_size(const il* list);
+Pure InlineDeclare int il_size(const il* list);
 void il_new_existing(il* list, int blocksize);
 void il_init(il* list, int blocksize);
 void il_reverse(il* list);
@@ -158,7 +158,7 @@ void il_push(il* list, int data);
 int  il_pop(il* list);
 int  il_contains(il* list, int data);
 int  il_index_of(il* list, int data);
-Inline int  il_get(il* list, const int n);
+InlineDeclare int  il_get(il* list, const int n);
 void il_copy(il* list, int start, int length, int* vdest);
 il*  il_dupe(il* list);
 void il_print(il* list);
@@ -375,5 +375,13 @@ sl_insert_sortedf(sl* list, const char* format, ...);
 char*
 ATTRIB_FORMAT(printf,3,4)
 sl_insertf(sl* list, int index, const char* format, ...);
+
+
+#ifdef INCLUDE_INLINE_SOURCE
+#define InlineDefine InlineDefineH
+#include "bl.inc"
+#undef InlineDefine
+#endif
+
 
 #endif

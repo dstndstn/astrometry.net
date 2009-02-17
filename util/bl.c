@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2009 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -24,15 +24,25 @@
 
 #include "bl.h"
 
-static Inline bl_node* bl_find_node(const bl* list, int n, int* rtn_nskipped);
+#include "keywords.h"
+
+#include "bl.ph"
+
 static bl_node* bl_new_node(bl* list);
 static void bl_free_node(bl_node* node);
 
-// data follows the bl_node*.
-#define NODE_DATA(node) ((void*)(((bl_node*)(node)) + 1))
-#define NODE_CHARDATA(node) ((char*)(((bl_node*)(node)) + 1))
-#define NODE_INTDATA(node) ((int*)(((bl_node*)(node)) + 1))
-#define NODE_DOUBLEDATA(node) ((double*)(((bl_node*)(node)) + 1))
+// Defined in bl.ph (private header):
+// free_node
+// NODE_DATA
+// NODE_CHARDATA
+// NODE_INTDATA
+// NODE_DOUBLEDATA
+
+// Defined in bl.inc (inlined functions):
+// bl_size
+// bl_access
+// il_size
+// il_get
 
 static void bl_sort_with_userdata(bl* list,
 								  int (*compare)(const void* v1, const void* v2, const void* userdata),
@@ -135,13 +145,13 @@ void bl_split(bl* src, bl* dest, int split) {
     int nskipped;
     int ind;
     int ntaken = src->N - split;
-    node = bl_find_node(src, split, &nskipped);
+    node = find_node(src, split, &nskipped);
     ind = split - nskipped;
     if (ind == 0) {
         // this whole node belongs to "dest".
         if (split) {
             // we need to get the previous node...
-            bl_node* last = bl_find_node(src, split-1, NULL);
+            bl_node* last = find_node(src, split-1, NULL);
             last->next = NULL;
             src->tail = last;
         } else {
@@ -429,10 +439,6 @@ void bl_append_list(bl* list1, bl* list2) {
 	clear_list(list2);
 }
 
-int bl_size(const bl* list) {
-	return list->N;
-}
-
 static void bl_free_node(bl_node* node) {
 	free(node);
 }
@@ -520,35 +526,6 @@ void bl_print_structure(bl* list) {
 void bl_get(bl* list, int n, void* dest) {
 	char* src = bl_access(list, n);
 	memcpy(dest, src, list->datasize);
-}
-
-/* find the node in which element "n" can be found. */
-static Inline bl_node* bl_find_node(const bl* list, int n,
-									int* p_nskipped) {
-	bl_node* node;
-	int nskipped;
-	if (list->last_access && n >= list->last_access_n) {
-		// take the shortcut!
-		nskipped = list->last_access_n;
-		node = list->last_access;
-	} else {
-		node = list->head;
-		nskipped = 0;
-	}
-
-	for (; node;) {
-		if (n < (nskipped + node->N))
-			break;
-		nskipped += node->N;
-		node = node->next;
-	}
-
-	assert(node);
-
-	if (p_nskipped)
-		*p_nskipped = nskipped;
-
-	return node;
 }
 
 static void bl_find_ind_and_element(bl* list, void* data,
@@ -652,7 +629,7 @@ void bl_set(bl* list, int index, const void* data) {
 	int nskipped;
 	void* dataloc;
 
-	node = bl_find_node(list, index, &nskipped);
+	node = find_node(list, index, &nskipped);
 	dataloc = NODE_CHARDATA(node) + (index - nskipped) * list->datasize;
 	memcpy(dataloc, data, list->datasize);
 	// update the last_access member...
@@ -674,7 +651,7 @@ void bl_insert(bl* list, int index, void* data) {
 		return;
 	}
 
-	node = bl_find_node(list, index, &nskipped);
+	node = find_node(list, index, &nskipped);
 
 	list->last_access = node;
 	list->last_access_n = nskipped;
@@ -744,22 +721,9 @@ void bl_insert(bl* list, int index, void* data) {
 void* bl_access_const(const bl* list, int n) {
 	bl_node* node;
 	int nskipped;
-	node = bl_find_node(list, n, &nskipped);
+	node = find_node(list, n, &nskipped);
 	// grab the element.
 	return NODE_CHARDATA(node) + (n - nskipped) * list->datasize;
-}
-
-void* bl_access(bl* list, int n) {
-	void* rtn;
-	bl_node* node;
-	int nskipped;
-	node = bl_find_node(list, n, &nskipped);
-	// grab the element.
-	rtn = NODE_CHARDATA(node) + (n - nskipped) * list->datasize;
-	// update the last_access member...
-	list->last_access = node;
-	list->last_access_n = nskipped;
-	return rtn;
 }
 
 void bl_copy(bl* list, int start, int length, void* vdest) {
@@ -768,7 +732,7 @@ void bl_copy(bl* list, int start, int length, void* vdest) {
 	char* dest;
 	if (length <= 0)
 		return;
-	node = bl_find_node(list, start, &nskipped);
+	node = find_node(list, start, &nskipped);
 
 	// we've found the node containing "start".  keep copying elements and
 	// moving down the list until we've copied all "length" elements.
@@ -1023,10 +987,6 @@ int il_check_sorted_descending(il* list,
 	return bl_check_sorted(list, bl_compare_ints_descending, isunique);
 }
 
-int il_size(const il* list) {
-    return bl_size(list);
-}
-
 void il_remove(il* ilist, int index) {
     bl_remove_index(ilist, index);
 }
@@ -1112,11 +1072,6 @@ void il_append_list(il* list, il* list2) {
 
 void il_merge_lists(il* list1, il* list2) {
 	bl_append_list(list1, list2);
-}
-
-int il_get(il* list, int n) {
-	int* ptr = bl_access(list, n);
-	return *ptr;
 }
 
 int il_insert_ascending(il* list, int n) {
@@ -1902,3 +1857,8 @@ char* sl_insert_sorted(sl* list, const char* string) {
 void* bl_extend(bl* list) {
 	return bl_append(list, NULL);
 }
+
+#define InlineDefine InlineDefineC
+#include "bl.inc"
+#undef InlineDefine
+
