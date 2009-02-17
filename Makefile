@@ -58,7 +58,6 @@ install: report.txt
 	cp CREDITS GETTING-INDEXES LICENSE README $(INSTALL_DIR)/doc
 	cp report.txt $(INSTALL_DIR)/doc
 	cp demo/* $(INSTALL_DIR)/examples
-	#cp blind/flip $(INSTALL_DIR)/bin
 	$(MAKE) -C util  install
 	$(MAKE) -C libkd install
 	$(MAKE) -C blind install
@@ -158,9 +157,6 @@ retag-release:
 	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
 
 SNAPSHOT_SVN := svn+ssh://astrometry.net/svn/trunk/src/astrometry
-#SNAPSHOT_VER := $(shell date "+%Y-%m-%d")
-#SNAPSHOT_VER := $(shell svn info $(SNAPSHOT_SVN) | $(AWK) -F": " /^Revision/'{print $$2}')
-#SNAPSHOT_DIR := astrometry.net-$(SNAPSHOT_VER)
 SNAPSHOT_SUBDIRS := $(RELEASE_SUBDIRS)
 
 snapshot:
