@@ -64,16 +64,16 @@ void log_free(log_t* log) {
 	free(log);
 }
 
-AN_THREAD_DECLARE_STATIC_MUTEX(loglock);
+//AN_THREAD_DECLARE_STATIC_MUTEX(loglock);
 
 static void loglvl(const log_t* logger, enum log_level level,
                    const char* format, va_list va) {
-	AN_THREAD_LOCK(loglock);
+	//AN_THREAD_LOCK(loglock);
 	if (level > logger->level)
 		return;
 	vfprintf(logger->f, format, va);
 	fflush(logger->f);
-	AN_THREAD_UNLOCK(loglock);
+	//AN_THREAD_UNLOCK(loglock);
 }
 
 void loglevel(enum log_level level,
