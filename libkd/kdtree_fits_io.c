@@ -1,6 +1,6 @@
 /*
   This file is part of libkd.
-  Copyright 2006-2008 Dustin Lang and Keir Mierle.
+  Copyright 2006-2009 Dustin Lang and Keir Mierle.
 
   libkd is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -49,7 +49,8 @@ int kdtree_fits_column_is_kdtree(char* columnname) {
 static int is_tree_header_ok(qfits_header* header, int* ndim, int* ndata,
                              int* nnodes, unsigned int* treetype, int oldstyle) {
 	unsigned int ext_type, int_type, data_type;
-    char* str;
+	char str[FITS_LINESZ+1];
+
     if (oldstyle) {
         *ndim   = qfits_header_getint(header, "NDIM", -1);
         *ndata  = qfits_header_getint(header, "NDATA", -1);
@@ -59,11 +60,11 @@ static int is_tree_header_ok(qfits_header* header, int* ndim, int* ndata,
         *ndata  = qfits_header_getint(header, "KDT_NDAT", -1);
         *nnodes = qfits_header_getint(header, "KDT_NNOD", -1);
     }
-    str = qfits_pretty_string(qfits_header_getstr(header, "KDT_EXT"));
+	qfits_pretty_string_r(qfits_header_getstr(header, "KDT_EXT"), str);
     ext_type = kdtree_kdtype_parse_ext_string(str);
-    str = qfits_pretty_string(qfits_header_getstr(header, "KDT_INT"));
+    qfits_pretty_string_r(qfits_header_getstr(header, "KDT_INT"), str);
     int_type = kdtree_kdtype_parse_tree_string(str);
-    str = qfits_pretty_string(qfits_header_getstr(header, "KDT_DATA"));
+    qfits_pretty_string_r(qfits_header_getstr(header, "KDT_DATA"), str);
     data_type = kdtree_kdtype_parse_data_string(str);
 
     // default: external world is doubles.

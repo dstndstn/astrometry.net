@@ -224,7 +224,14 @@ void fits_copy_non_table_headers(qfits_header* dest, const qfits_header* src) {
 }
 
 char* fits_get_dupstring(qfits_header* hdr, const char* key) {
-	return strdup_safe(qfits_pretty_string(qfits_header_getstr(hdr, key)));
+	// qfits_pretty_string() never increases the length of the string
+	char pretty[FITS_LINESZ+1];
+	char* val;
+	val = qfits_header_getstr(hdr, key);
+	if (!val)
+		return NULL;
+	qfits_pretty_string_r(val, pretty);
+	return strdup_safe(pretty);
 }
 
 void fits_header_addf(qfits_header* hdr, const char* key, const char* comment,
