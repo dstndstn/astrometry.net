@@ -329,7 +329,10 @@ void qfits_pretty_string_r(const char * s, char* pretty) {
 	int slen;
     pretty[0] = '\0';
 	if (!s) return;
-    if (s[0] != '\'') strcpy(pretty, s);
+    if (s[0] != '\'') {
+		strcpy(pretty, s);
+		return;
+	}
 	slen = strlen(s);
 
     /* skip first quote */
