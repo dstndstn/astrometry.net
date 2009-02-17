@@ -451,7 +451,7 @@ int backend_run_job(backend_t* backend, job_t* job) {
 
             for (k=0; k<il_size(indexlist); k++) {
                 int ii = il_get(indexlist, k);
-                index_meta_t* meta = bl_access(backend->indexmetas, ii);
+                index_meta_t* meta = bl_access_const(backend->indexmetas, ii);
                 bool inrange = FALSE;
                 if ((job->use_radec_center) &&
                     (meta->hpnside >= 1 && meta->healpix > -1)) {
