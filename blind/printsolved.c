@@ -27,11 +27,12 @@
 #include "bl.h"
 #include "solvedfile.h"
 
-const char* OPTIONS = "hum:SM:j";
+const char* OPTIONS = "hum:SM:jwp";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stderr);
 	fprintf(stderr, "\nUsage: %s <solved-file> ...\n"
+			"    [-p]: print percent solved\n"
 			"    [-u]: print UNsolved fields\n"
 			"    [-j]: just the field numbers, no headers, etc.\n"
 			"    [-m <max-field>]: for unsolved mode, max field number.\n"
@@ -54,9 +55,16 @@ int main(int argc, char** args) {
 	bool wiki = FALSE;
 	char* matlab = NULL;
 	bool justnums = FALSE;
+	bool percent = FALSE;
+	bool printinfo = FALSE;
+	int ncounted = 0;
+	int ntotal = 0;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1) {
 		switch (argchar) {
+		case 'p':
+			percent = TRUE;
+			break;
 		case 'j':
 			justnums = TRUE;
 			break;
@@ -86,6 +94,8 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 
+	printinfo = (!matlab && !justnums);
+
 	if (matlab)
 		printf("%s=[", matlab);
 
@@ -93,7 +103,7 @@ int main(int argc, char** args) {
 		int j;
 		il* list;
 
-		if (!matlab && !justnums)
+		if (printinfo)
 			printf("File %s\n", inputfiles[i]);
 		if (wiki)
 			printf("|| %i || ", i+1);
@@ -102,6 +112,14 @@ int main(int argc, char** args) {
 			list = solvedfile_getall(inputfiles[i], 1, maxfield, 0);
 		else
 			list = solvedfile_getall_solved(inputfiles[i], 1, maxfield, 0);
+
+		if (percent) {
+			int nt = solvedfile_getsize(inputfiles[i]);
+			int nc = il_size(list);
+			printf("  %i/%i (%f %%) %ssolved", nc, nt, (100.0 * nc / (double)nt), unsolved ? "un":"");
+			ncounted += nc;
+			ntotal += nt;
+		}
 
 		if (!list) {
 			fprintf(stderr, "Failed to get list of fields.\n");
@@ -118,6 +136,10 @@ int main(int argc, char** args) {
 	}
 	if (matlab)
 		printf("];\n");
+
+	if (percent) {
+		printf("Total: %i/%i (%f %%) %ssolved", ncounted, ntotal, (100.0 * ncounted / (double)ntotal), unsolved ? "un":"");
+	}
 
 	return 0;
 }
