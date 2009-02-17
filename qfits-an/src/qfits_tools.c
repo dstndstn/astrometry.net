@@ -113,31 +113,21 @@ static char regex_cmp[] =
   Returns NULL in case the requested keyword cannot be found.
  */
 /*----------------------------------------------------------------------------*/
-char * qfits_query_hdr(const char * filename, const char * keyword)
-{
+char * qfits_query_hdr(const char * filename, const char * keyword) {
     return qfits_query_ext(filename, keyword, 0);
 }
 
-/*----------------------------------------------------------------------------*/
-/**
-  @brief    Retrieve the value of a keyin a FITS extension header.
-  @param    filename    name of the FITS file to browse.
-  @param    keyword     name of the FITS key to look for.
-  @param    xtnum       xtension number
-  @return   pointer to statically allocated character string
+int qfits_query_hdr_r(const char * filename, const char * keyword, char* out_value) {
+    return qfits_query_ext_r(filename, keyword, 0, out_value);
+}
 
-  Same as qfits_query_hdr but for extensions. xtnum starts from 1 to
-  the number of extensions. If xtnum is zero, this function is 
-  strictly identical to qfits_query_hdr().
- */
-/*----------------------------------------------------------------------------*/
-char * qfits_query_ext(const char * filename, const char * keyword, int xtnum)
-{
-	char getval_buf[FITS_LINESZ+1];
+int qfits_query_ext_r(const char* filename,
+					  const char* keyword,
+					  int xtnum,
+					  char* out_value) {
     char        exp_key[FITS_LINESZ+1];
     char    *   where;
     char    *   start;
-    char    *   value;
     char        test1, test2;
     int         i;
     int         len;
@@ -146,11 +136,12 @@ char * qfits_query_ext(const char * filename, const char * keyword, int xtnum)
     int         seg_size;
     long        bufcount;
     size_t      size;
-
+	int rtnval = -1;
+	
     /* Bulletproof entries */
     if (filename==NULL || keyword==NULL || xtnum<0) {
-		qfits_error("qfits_query_ext: filename, keyword or xtn invalid.");
-		return NULL;
+		qfits_error("qfits_query_ext_r: filename, keyword or xtn invalid.");
+		return rtnval;
 	}
 
     /* Expand keyword */
@@ -161,7 +152,7 @@ char * qfits_query_ext(const char * filename, const char * keyword, int xtnum)
      * Record the xtension start and stop offsets
      */
     if (qfits_get_hdrinfo(filename, xtnum, &seg_start, &seg_size)==-1) {
-        return NULL;
+        return rtnval;
     }
 
     /*
@@ -169,7 +160,7 @@ char * qfits_query_ext(const char * filename, const char * keyword, int xtnum)
      */
 
     start = qfits_falloc((char *)filename, seg_start, &size);
-    if (start==NULL) return NULL;
+    if (start==NULL) return rtnval;
 
     /*
      * Look for keyword in header
@@ -203,7 +194,7 @@ char * qfits_query_ext(const char * filename, const char * keyword, int xtnum)
             (where[3]==' ')) {
             /* Detected header end */
             qfits_fdealloc(start, seg_start, size);
-            return NULL;
+            return rtnval;
         }
         /* Forward one line */
         where += 80;
@@ -211,14 +202,36 @@ char * qfits_query_ext(const char * filename, const char * keyword, int xtnum)
         if (bufcount>seg_size) {
             /* File is damaged or not FITS: bailout */
             qfits_fdealloc(start, seg_start, size);
-            return NULL;
+            return rtnval;
         }
     }
 
     /* Found the keyword, now get its value */
-    value = qfits_getvalue_r(where, getval_buf);
+	out_value[0] = '\0';
+	if (qfits_getvalue_r(where, out_value))
+		rtnval = 0;
     qfits_fdealloc(start, seg_start, size);
-    return value;
+    return rtnval;
+}
+
+/*----------------------------------------------------------------------------*/
+/**
+  @brief    Retrieve the value of a keyin a FITS extension header.
+  @param    filename    name of the FITS file to browse.
+  @param    keyword     name of the FITS key to look for.
+  @param    xtnum       xtension number
+  @return   pointer to statically allocated character string
+
+  Same as qfits_query_hdr but for extensions. xtnum starts from 1 to
+  the number of extensions. If xtnum is zero, this function is 
+  strictly identical to qfits_query_hdr().
+ */
+/*----------------------------------------------------------------------------*/
+char * qfits_query_ext(const char * filename, const char * keyword, int xtnum) {
+	static char val[FITS_LINESZ+1];
+	if (qfits_query_ext_r(filename, keyword, xtnum, val))
+		return NULL;
+	return val;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -247,7 +260,7 @@ int qfits_query_n_ext(const char * filename)
 /*----------------------------------------------------------------------------*/
 int qfits_query_nplanes(const char * filename, int extnum)
 {
-    char    *    sval;
+	char sval[FITS_LINESZ+1];
     int            next;
     int            naxes;
     int            nplanes;
@@ -263,7 +276,7 @@ int qfits_query_nplanes(const char * filename, int extnum)
 
     /* Find the number of axes  */
     naxes = 0;
-    if ((sval = qfits_query_ext(filename, "NAXIS", extnum)) == NULL) {
+    if (qfits_query_ext_r(filename, "NAXIS", extnum, sval)) {
         qfits_error("missing key in header: NAXIS");
         return -1;
     }
@@ -276,7 +289,7 @@ int qfits_query_nplanes(const char * filename, int extnum)
     if (naxes == 2) nplanes = 1;
     else {
         /* For 3D cubes, get the third dimension size   */
-        if ((sval = qfits_query_ext(filename, "NAXIS3", extnum))==NULL) {
+        if (qfits_query_ext_r(filename, "NAXIS3", extnum, sval)) {
             qfits_error("missing key in header: NAXIS3");
             return -1;
         }

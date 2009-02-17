@@ -101,16 +101,15 @@ static double qfits_str2dec(const char *, int);
 /*----------------------------------------------------------------------------*/
 int qfits_is_table(const char * filename, int xtnum)
 {
-    char    *    value;
     int            ttype;
-    char value2[FITS_LINESZ+1];
+    char valueA[FITS_LINESZ+1];
+    char value[FITS_LINESZ+1];
     
     ttype = QFITS_INVALIDTABLE;
-    value = qfits_query_ext(filename, "XTENSION", xtnum);
-    if (value==NULL) return ttype;
+    if (qfits_query_ext_r(filename, "XTENSION", xtnum, valueA))
+		return ttype;
 
-    qfits_pretty_string_r(value, value2);
-	value = value2;
+    qfits_pretty_string_r(valueA, value);
     if (!strcmp(value, "TABLE")) {
         ttype = QFITS_ASCIITABLE;
     } else if (!strcmp(value, "BINTABLE")) {
@@ -420,7 +419,7 @@ qfits_table * qfits_table_open(
 {
     qfits_table     *   tload;
     qfits_col       *   curr_col;
-    char            *   str_val;
+	char str_val[FITS_LINESZ+1];
     char                keyword[FITSVALSZ];
     /* Table infos  */
     int                 table_type;
@@ -466,21 +465,21 @@ qfits_table * qfits_table_open(
     }
     
     /* Get number of columns and allocate them: nc <-> TFIELDS */
-    if ((str_val = qfits_query_ext(filename, "TFIELDS", xtnum)) == NULL) {
+    if (qfits_query_ext_r(filename, "TFIELDS", xtnum, str_val)) {
         qfits_error("cannot read TFIELDS in [%s]:[%d]", filename, xtnum);
         return NULL;
     }
     nb_col = atoi(str_val);
 
     /* Get the width in bytes of the table */
-    if ((str_val = qfits_query_ext(filename, "NAXIS1", xtnum)) == NULL) {
+    if (qfits_query_ext_r(filename, "NAXIS1", xtnum, str_val)) {
         qfits_error("cannot read NAXIS1 in [%s]:[%d]", filename, xtnum);
         return NULL;
     }
     table_width = atoi(str_val);
     
 	/* Get the number of rows */
-    if ((str_val = qfits_query_ext(filename, "NAXIS2", xtnum)) == NULL) {
+    if (qfits_query_ext_r(filename, "NAXIS2", xtnum, str_val)) {
         qfits_error("cannot read NAXIS2 in [%s]:[%d]", filename, xtnum);
         return NULL;
     }
@@ -503,33 +502,33 @@ qfits_table * qfits_table_open(
 
         /* label <-> TTYPE     */
         sprintf(keyword, "TTYPE%d", i+1);
-        if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
+        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
             label[0] = '\0';
         } else qfits_pretty_string_r(str_val, label);
         
         /* unit <-> TUNIT */
         sprintf(keyword, "TUNIT%d", i+1);
-        if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
+        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
             unit[0] = '\0';
         } else qfits_pretty_string_r(str_val, unit);
 
         /* disp <-> TDISP */
         sprintf(keyword, "TDISP%d", i+1);
-        if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
+        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
             disp[0] = '\0';
         } else qfits_pretty_string_r(str_val, disp);
 
         /* nullval <-> TNULL */
         sprintf(keyword, "TNULL%d", i+1);
-        if ((str_val=qfits_query_ext(filename, keyword, xtnum)) == NULL) {
+        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
             nullval[0] = '\0';
         } else qfits_pretty_string_r(str_val, nullval);
     
         /* atom_size, atom_nb, atom_dec_nb, atom_type    <-> TFORM */
         sprintf(keyword, "TFORM%d", i+1);
-        if ((str_val=qfits_query_ext(filename, keyword, xtnum))==NULL) {
+        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
             qfits_error("cannot read [%s] in [%s]:[%d]", keyword, filename, 
-                    xtnum);
+						xtnum);
             qfits_table_close(tload);
             return NULL;
         }
@@ -593,7 +592,7 @@ qfits_table * qfits_table_open(
     
         /* zero <-> TZERO */
         sprintf(keyword, "TZERO%d", i+1);
-        if ((str_val=qfits_query_ext(filename, keyword, xtnum)) != NULL) {
+        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
             zero = (float)atof(str_val);
             zero_present = 1;    
         } else {
@@ -603,7 +602,7 @@ qfits_table * qfits_table_open(
         
         /* scale <-> TSCAL */
         sprintf(keyword, "TSCAL%d", i+1);
-        if ((str_val=qfits_query_ext(filename, keyword, xtnum)) != NULL) {
+        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
             scale = (float)atof(str_val);
             scale_present = 1;
         } else {
@@ -622,7 +621,7 @@ qfits_table * qfits_table_open(
 				char str_val_2[FITS_LINESZ+1];
                 /* column width <-> TBCOLi and TBCOLi+1 */
                 sprintf(keyword, "TBCOL%d", i+1);
-                if ((str_val=qfits_query_ext(filename, keyword, xtnum))==NULL) {
+                if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
                     qfits_error("cannot read [%s] in [%s]", keyword, filename);
                     qfits_table_close(tload);
                     return NULL;
@@ -631,7 +630,7 @@ qfits_table * qfits_table_open(
                 col_pos = atoi(str_val_2);
                 
                 sprintf(keyword, "TBCOL%d", i+2);
-                if ((str_val=qfits_query_ext(filename, keyword, xtnum))==NULL){
+                if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
                     qfits_error("cannot read [%s] in [%s]", keyword, filename);
                     qfits_table_close(tload);
                     return NULL;

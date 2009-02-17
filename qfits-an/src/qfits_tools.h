@@ -59,12 +59,17 @@
 
 // NOT THREAD-SAFE
 char * qfits_pretty_string(const char *);
+char * qfits_query_ext(const char *, const char *, int);
+char * qfits_query_hdr(const char *, const char *);
 
 
 void qfits_pretty_string_r(const char* in, char* out);
+int qfits_query_ext_r(const char* filename,
+					  const char* keyword,
+					  int extension,
+					  char* out_value);
+int qfits_query_hdr_r(const char * filename, const char * keyword, char* out_value);
 
-char * qfits_query_hdr(const char *, const char *);
-char * qfits_query_ext(const char *, const char *, int);
 int qfits_query_n_ext(const char *);
 int qfits_query_nplanes(const char *, int);
 
