@@ -3763,7 +3763,7 @@ class _TableBaseHDU(_ExtensionHDU):
                 self.header['NAXIS2'] = self.data.shape[0]
                 self.header['TFIELDS'] = self.data._nfields
 
-                if self.data._coldefs == None:
+                if self.data._coldefs is None:
                     #
                     # The data does not have a _coldefs attribute so 
                     # create one from the underlying recarray.
