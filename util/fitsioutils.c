@@ -434,7 +434,7 @@ char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
     N = qfits_header_n(hdr);
     for (i=0; i<N; i++) {
         int j;
-        char* str;
+        char str[FITS_LINESZ+1];
         int len;
         sl* slist;
         char key[FITS_LINESZ+1];
@@ -447,7 +447,7 @@ char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
          */
         if (strcmp(key, thekey))
             continue;
-        str = qfits_pretty_string(val);
+        qfits_pretty_string_r(val, str);
         len = strlen(str);
         if (len < 1 || str[len-1] != '&')
             return strdup(str);

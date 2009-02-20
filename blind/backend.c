@@ -232,7 +232,7 @@ static void add_index_to_blind(backend_t* backend, blind_t* bp,
         index = pl_get(backend->indexes, i);
         blind_add_loaded_index(bp, index);
     } else {
-        index_meta_t* meta = bl_access(backend->indexmetas, i);
+        index_meta_t* meta = bl_access_const(backend->indexmetas, i);
         blind_add_index(bp, meta->indexname);
     }
 }

@@ -27,11 +27,12 @@
 #include "bl.h"
 #include "solvedfile.h"
 
-const char* OPTIONS = "hum:SM:jwp";
+const char* OPTIONS = "hum:SM:jwps";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stderr);
 	fprintf(stderr, "\nUsage: %s <solved-file> ...\n"
+			"    [-s]: just summary info, no field numbers\n"
 			"    [-p]: print percent solved\n"
 			"    [-u]: print UNsolved fields\n"
 			"    [-j]: just the field numbers, no headers, etc.\n"
@@ -57,11 +58,16 @@ int main(int argc, char** args) {
 	bool justnums = FALSE;
 	bool percent = FALSE;
 	bool printinfo = FALSE;
+	bool printnums = FALSE;
+	bool summary = FALSE;
 	int ncounted = 0;
 	int ntotal = 0;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1) {
 		switch (argchar) {
+		case 's':
+			summary = TRUE;
+			break;
 		case 'p':
 			percent = TRUE;
 			break;
@@ -95,6 +101,7 @@ int main(int argc, char** args) {
 	}
 
 	printinfo = (!matlab && !justnums);
+	printnums = !summary;
 
 	if (matlab)
 		printf("%s=[", matlab);
@@ -125,8 +132,10 @@ int main(int argc, char** args) {
 			fprintf(stderr, "Failed to get list of fields.\n");
 			exit(-1);
 		}
-		for (j=0; j<il_size(list); j++)
-			printf("%i ", il_get(list, j));
+		if (printnums) {
+			for (j=0; j<il_size(list); j++)
+				printf("%i ", il_get(list, j));
+		}
 		il_free(list);
 
 		if (wiki)
