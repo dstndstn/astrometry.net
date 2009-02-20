@@ -437,6 +437,7 @@ char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
         char str[FITS_LINESZ+1];
         int len;
         sl* slist;
+		char* cptr;
         char key[FITS_LINESZ+1];
         char val[FITS_LINESZ+1];
         qfits_header_getitem(hdr, i, key, val, NULL, NULL);
@@ -471,21 +472,20 @@ char* fits_get_long_string(const qfits_header* hdr, const char* thekey) {
             //printf("Trimmed val = \"%s\"\n", val);
             if (!pretty_continue_string(val))
                 break;
-            str = val;
-            //printf("Pretty val = \"%s\"\n", str);
-            sl_append(slist, str);
-            len = strlen(str);
-            if (len < 1 || str[len-1] != '&')
+            //printf("Pretty val = \"%s\"\n", val);
+            sl_append(slist, val);
+            len = strlen(val);
+            if (len < 1 || val[len-1] != '&')
                 break;
         }
         // On all but the last string, strip the trailing "&".
         for (j=0; j<sl_size(slist)-1; j++) {
-            str = sl_get(slist, j);
-            str[strlen(str)-1] = '\0';
+            cptr = sl_get(slist, j);
+            cptr[strlen(cptr)-1] = '\0';
         }
-        str = sl_join(slist, "");
+        cptr = sl_join(slist, "");
         sl_free2(slist);
-        return str;
+        return cptr;
     }
     // keyword not found.
     return NULL;
