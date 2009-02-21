@@ -305,13 +305,22 @@ def get_tile(request):
 	if ('userboundary' in layers):
 		jobid = request.GET.get('jobid')
 		if not jobid:
-			logmsg("userboundary layer but no jobid")
-			return HttpResponse("userboundary layer but no jobid")
-		try:
-			job = Job.objects.get(jobid=jobid)
-		except ObjectDoesNotExist:
-			return HttpResponse('no such jobid ', jobid)
-		wcsfn = convert(job, 'wcs')
+			# COMPATIBILITY for php-based test site
+			if 'wcsfn' in request.GET:
+				wcsfn = request.GET.get('wcsfn')
+				if '..' in wcsfn:
+					return HttpResponse('bad wcsfn')
+				# HACK
+				wcsfn = '/home/gmaps/ontheweb-data/' + wcsfn
+			else:
+				logmsg("userboundary layer but no jobid")
+				return HttpResponse("userboundary layer but no jobid")
+		else:
+			try:
+				job = Job.objects.get(jobid=jobid)
+				wcsfn = convert(job, 'wcs')
+			except ObjectDoesNotExist:
+				return HttpResponse('no such jobid ', jobid)
 		arglist.append('wcsfn ' + wcsfn)
 
 		

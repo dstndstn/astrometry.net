@@ -71,8 +71,11 @@ class SolverClient(object):
     def getready(self):
         logmsg('Router is a', type(self.router))
         try:
-            #category = self.router.getCategoryForClient()
-            self.router.ice_ping()
+			logmsg('Pinging router...')
+			self.router.ice_ping()
+			logmsg('Getting category from router...')
+			category = self.router.getCategoryForClient()
+			logmsg('Router ready to go')
         except Ice.ConnectionLostException,ex:
             logmsg('Got ConnectionLostException on pinging router.  Reopening connection...')
             self.initrouter()

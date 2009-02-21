@@ -478,6 +478,24 @@ class Job(models.Model):
 	def typestr(self):
 		return 'Job'
 
+	# (ra,dec) in degrees or None
+	def get_radec_center(self):
+		if not self.calibration:
+			return None
+		tan = self.calibration.raw_tan
+		if not tan:
+			return None
+		return tan.get_field_center()
+
+	# returns bounding radius in degrees.
+	def get_field_radius(self):
+		if not self.calibration:
+			return None
+		tan = self.calibration.raw_tan
+		if not tan:
+			return None
+		return tan.get_field_bounding_radius()
+
 	def write_wcs_to_file(self, filename):
 		if not self.calibration:
 			return False

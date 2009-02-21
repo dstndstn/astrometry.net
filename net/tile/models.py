@@ -33,7 +33,7 @@ class MapImage(models.Model):
 	decmax = models.FloatField()
 
 	def __str__(self):
-		return self.origfilename
+		return self.get_orig_filename()
 
 	def get_date(self):
 		return (self.exif_orig_date or self.exif_date) or None
