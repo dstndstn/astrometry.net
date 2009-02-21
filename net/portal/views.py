@@ -171,7 +171,7 @@ def sub_add_tag(request):
 		return HttpResponseRedirect(redir)
 	return HttpResponse('Tag added')
 
-@login_required
+#@login_required
 @wants_job_or_sub
 def joblist(request):
 	myargs = QueryDict('', mutable=True)

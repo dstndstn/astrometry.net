@@ -147,7 +147,7 @@ class Tag(models.Model):
 	job = models.ForeignKey('Job', related_name='tags')
 
 	# Who added this tag?
-	user = models.ForeignKey(User)
+	user = models.ForeignKey(User, null=True)
 
 	# Machine tag or human-readable?
 	machineTag = models.BooleanField(default=False)
@@ -243,7 +243,8 @@ class Submission(models.Model):
 
 	subid = models.CharField(max_length=32, unique=True, primary_key=True)
 
-	user = models.ForeignKey(User, related_name='submissions')
+	# User, or None for anonymous.
+	user = models.ForeignKey(User, related_name='submissions', null=True)
 
 	# Only one of these should be set...
 	batch = models.ForeignKey(BatchSubmission, null=True)
@@ -307,7 +308,12 @@ class Submission(models.Model):
 		super(Submission, self).__init__(*args, **kwargs)
 
 	def __str__(self):
-		s = '<Submission %s, status %s, user %s' % (self.get_id(), self.status, self.user.username)
+		s = '<Submission %s, status %s' % (self.get_id(), self.status)
+		if self.user:
+			s += ', user %s' % self.user.username
+		else:
+			s += ', user anonymous'
+
 		if self.datasrc == 'url':
 			s += ', url ' + str(self.url)
 		elif self.datasrc == 'file':
@@ -462,7 +468,8 @@ class Job(models.Model):
 				else:
 					log('No preferences found for user %s' % str(u))
 			else:
-				log('No user found for new Job')
+				# Anonymous users have their jobs exposed.
+				self.exposejob = True
 
 	def __str__(self):
 		s = '<Job %s, ' % self.get_id()
@@ -701,6 +708,11 @@ class Job(models.Model):
 
 	def get_relative_job_dir(self):
 		return Job.s_get_relative_job_dir(self.get_id())
+
+	def get_username(self):
+		if self.get_user() is None:
+			return 'anonymous'
+		return self.get_user().username
 
 	def get_user(self):
 		return self.submission.user
