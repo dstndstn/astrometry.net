@@ -224,7 +224,6 @@ void verify_hit(startree_t* skdt,
 		// I don't know HOW this happens - at the very least, the four stars
 		// belonging to the quad that generated this hit should lie in the
 		// proposed field - but I've seen it happen!
-		//fprintf(stderr, "Freakishly, NI=0.\n");
 		mo->nfield = 0;
 		mo->noverlap = 0;
 		matchobj_compute_derived(mo);
@@ -248,6 +247,7 @@ void verify_hit(startree_t* skdt,
 	bestprob = malloc(NF * sizeof(double));
 	for (i=0; i<NF; i++)
 		bestprob[i] = -HUGE_VAL;
+	// If we're verifying an existing WCS solution, then there is no match quad.
     if (!fake_match) {
         for (i=0; i<dimquads; i++) {
             assert(mo->field[i] >= 0);
@@ -256,6 +256,8 @@ void verify_hit(startree_t* skdt,
         }
     }
 
+	// If we're verifying an existing WCS solution, then don't increase the variance
+	// away from the center of the matched quad.
     if (fake_match)
         do_gamma = FALSE;
 
@@ -282,9 +284,9 @@ void verify_hit(startree_t* skdt,
 	debug("log(p(background)) = %g\n", logprob_background);
 	debug("log(p(distractor)) = %g\n", logprob_distractor);
 
+    // add correspondences for the matched quad.
     corr_field = il_new(16);
     corr_index = il_new(16);
-    // add correspondences for the matched quad.
     if (!fake_match) {
         for (i=0; i<dimquads; i++) {
             il_append(corr_field, mo->field[i]);

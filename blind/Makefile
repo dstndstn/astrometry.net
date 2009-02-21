@@ -424,6 +424,11 @@ threadtest: threadtest.o $(BACKEND_LIB) \
 backend: backend-main.o $(BACKEND_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
+verify: verify-main.o matchfile.o index.o codekd.o \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
+
+ALL_OBJ += verify-main.o
+
 solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o \
 		image2xy-files.o resort-xylist.o tabsort.o \
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
