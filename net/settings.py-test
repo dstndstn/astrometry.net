@@ -74,9 +74,13 @@ DATABASE_HOST     = secrets.DATABASE_HOST
 DATABASE_PORT     = secrets.DATABASE_PORT
 
 # Django's internal site id.
-(site,created) = Site.objects.get_or_create(name='Astrometry.net',
-											defaults={'domain':BASE_URL})
-SITE_ID = site.id
+#### FIXME
+#(site,created) = Site.objects.get_or_create(name='Astrometry.net',
+#											defaults={'domain':BASE_URL})
+#SITE_ID = site.id
+SITE_ID = 1
+
+DEFAULT_FROM_EMAIL = 'Astrometry.net <alpha@astrometry.net>'
 
 # Local time zone for this installation. Choices can be found here:
 # http://www.postgresql.org/docs/8.1/static/datetime-keywords.html#DATETIME-TIMEZONE-SET-TABLE
