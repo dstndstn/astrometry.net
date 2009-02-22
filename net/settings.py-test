@@ -72,13 +72,8 @@ DATABASE_PASSWORD = secrets.DATABASE_PASSWORD
 DATABASE_HOST     = secrets.DATABASE_HOST
 DATABASE_PORT     = secrets.DATABASE_PORT
 
-# Django's internal site id.
-#### FIXME
-#from django.contrib.sites.models import Site
-#(site,created) = Site.objects.get_or_create(name='Astrometry.net',
-#											defaults={'domain':BASE_URL})
-#SITE_ID = site.id
-SITE_ID = 1
+## --> see astrometry/net/fixtures/site.json
+SITE_ID = 2
 
 DEFAULT_FROM_EMAIL = 'Astrometry.net <alpha@astrometry.net>'
 
