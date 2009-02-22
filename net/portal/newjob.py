@@ -367,7 +367,6 @@ def newfile(request):
 # Note, if there are *ANY* errors in the form, it will have no
 # 'cleaned_data' array.
 
-@login_required
 def newlong(request):
 	if request.POST:
 		form = FullForm(request.POST, request.FILES)

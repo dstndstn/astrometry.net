@@ -27,17 +27,28 @@ urlpatterns = (patterns('',
 			   patterns('django.contrib.auth.views',
 						(r'^login/', 'login',
 						 {'template_name': 'portal/login.html'}),
+
 						(r'^changepassword/$',	'password_change',
 						 {'template_name': 'portal/changepassword.html'}),
+
 						(r'^changepassword/done/', 'password_change_done',
 						 {'template_name': 'portal/changedpassword.html'}),
+
 						(r'^resetpassword/',   'password_reset',
 						 {'template_name': 'portal/resetpassword.html',
 						  'email_template_name': 'portal/resetpasswordemail.html'}),
+
 						(r'^resetpassworddone/', 'password_reset_done',
 						 {'template_name': 'portal/resetpassworddone.html'}),
+
 						(r'^resetpasswordconfirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$',
-						 'password_reset_confirm'),
+						 'password_reset_confirm',
+						 {'template_name': 'portal/resetpasswordconfirm.html'}),
+						# To login session try:
+						#   post_reset_redirect =
+						#   set_password_form = <subclass of django.contrib.auth.forms.SetPasswordForm>
+						#     override save()
+
 						(r'^resetpasswordcomplete/', 'password_reset_complete'),
 						)
 			   +
