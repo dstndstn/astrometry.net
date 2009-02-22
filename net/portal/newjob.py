@@ -334,10 +334,7 @@ def newurl(request):
 		context_instance = RequestContext(request))
 
 def uploadformurl():
-	return (reverse(astrometry.net.upload.views.uploadform)
-			+ '?onload=parent.uploadframeloaded()'
-			+ '&onload2=parent.uploadFinished()'
-			)
+	return reverse(astrometry.net.upload.views.uploadform)
 
 def newfile(request):
 	if len(request.POST):

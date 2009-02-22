@@ -90,28 +90,17 @@ function uploadFinished() {
 </script>
 {% endblock javascript %}
 
-
-{% comment %}
-##############################
-<div id="progressholder" style="visibility:hidden; height:0px;">
-##############################
-{% endcomment %}
-
 {% block newjobcontent %}
 <form method="post" id="mainform" onsubmit="return onSubmitForm();" action="">
 <p style="text-align:center">
 
-<iframe 
-{% comment %}
-onload="uploadframeloaded()"
-{% endcomment %}
-src="{{ uploadform }}" scrolling="no" frameborder="0" id="uploadframe"
-style="width:25em; height:2em; vertical-align:top;">
+<iframe src="{{ uploadform }}" scrolling="no" frameborder="0" id="uploadframe"
+style="width:50em; height:3em; vertical-align:top;">
   [Your user agent does not support iframes]
 </iframe>
-
+<br />
 {{ form.upload_id }}
-<input name="sub" value="Submit" type="submit" style="vertical-align:top;" />
+<input name="sub" value="Submit" type="submit" class="bigbutton" style="vertical-align:top;" />
 </p>
 </form>
 

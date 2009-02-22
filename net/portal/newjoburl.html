@@ -1,5 +1,9 @@
 {% extends "portal/newjob.html" %}
 
+{% block moreinlinecss %}
+#id_url { font-size:100%; }
+{% endblock %}
+
 {% block newjobcontent %}
 <form enctype="multipart/form-data" method="post" action="{{ actionurl }}">
 
@@ -7,9 +11,9 @@
 <div class="err"> {{ urlerr }} </div>
 {% endif %}
 
-<p style="text-align:center">
+<p style="text-align:center; vertical-align:middle;">
 {{ form.url }}
-<input name="submit" value="Submit" type="submit" />
+<input name="submit" value="Submit" type="submit" class="bigbutton" />
 </p>
 
 <div id="switch_views">

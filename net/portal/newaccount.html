@@ -1,14 +1,12 @@
 {% extends "portal/base.html" %}
 
-{% block inlinecss %}
-td.r {text-align:right; padding:10px;}
-{% endblock inlinecss %}
-
+{% block title %}
+Create New Account
+{% endblock %}
 
 {% block content %}
-
 <form method="post" action="{{ request.path }}">
-<table style="margin-left:auto; margin-right:auto;">
+<table class="boxedtable">
 
 {% if form.non_field_errors %}
 <tr><td colspan="2">
@@ -27,7 +25,7 @@ td.r {text-align:right; padding:10px;}
 {% endif %}
 
 <tr>
-<td>Name (optional):</td>
+<td class="r">Name (optional):</td>
 <td> {{ form.name }} </td>
 </tr>
 
@@ -40,7 +38,7 @@ td.r {text-align:right; padding:10px;}
 {% endif %}
 
 <tr>
-<td>Email address:</td>
+<td class="r">Email address:</td>
 <td> {{ form.email }} </td>
 </tr>
 

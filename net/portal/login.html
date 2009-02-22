@@ -1,32 +1,18 @@
 {% extends "portal/base.html" %}
 
-{% block inlinecss %}
-#logo {margin-left:auto; margin-right:auto; text-align:center;}
-div.c {margin-left:auto; margin-right:auto; text-align:center;}
-h2.c {margin-left:auto; margin-right:auto; text-align:center;}
-table.c {margin-left:auto; margin-right:auto;}
-td.r {text-align:right; padding:10px;}
-td.c {text-align:center;}
-#logintable {padding:15px; padding-left:30px; padding-right:30px; margin-right:auto; margin-left:auto; border-style:solid; border-color:gray; border-width:thin;}
-#loginbutton { font-size:110%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
-#fineprint { font-size:85%; text-align:center; color:#888; margin-left:auto; margin-right:auto; }
-#fineprint a { color:#999; }
-{% endblock inlinecss %}
-
+{% block pagetitle %}
+Astrometry.net Login
+{% endblock %}
 
 {% block title %}
-Astrometry.net Login
-{% endblock title %}
-
-{% block usernameblock %}
-{% endblock usernameblock %}
+Login
+{% endblock %}
 
 {% block content %}
-
 <form id="login" action="" method="post">
 <div id="loginbox">
 
-<table id="logintable" border="0">
+<table class="boxedtable" border="0">
 
 {% if form.non_field_errors %}
 <tr><td colspan="2">
@@ -65,7 +51,7 @@ Astrometry.net Login
 <tr>
 <td colspan="2" class="c">
 <input type="hidden" name="next" value="{{ next }}" />
-<input type="submit" name="login" value="Login" id="loginbutton" />
+<input type="submit" name="login" value="Login" class="bigbutton" />
 </td>
 
 </tr>
@@ -73,7 +59,7 @@ Astrometry.net Login
 </div> <!-- end loginbox -->
 </form>
 
-<div id="fineprint">
+<div class="fineprint">
 <a href="{% url astrometry.net.resetpassword %}">Forgot your password?</a>
 &nbsp; &nbsp;
 <a href="{% url astrometry.net.newaccount %}">Sign up!</a>

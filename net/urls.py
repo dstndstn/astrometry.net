@@ -9,9 +9,19 @@ admin.autodiscover()
 
 urlpatterns = (patterns('',
 						(r'^tile/', include('astrometry.net.tile.urls')),
-						(r'^upload/', include('astrometry.net.upload.urls')),
+						#(r'^upload/', include('astrometry.net.upload.urls')),
 						(r'^job/', include('astrometry.net.portal.urls')),
 						(r'^admin/(.*)', admin.site.root),
+						)
+			   +
+			   patterns('astrometry.net.upload.views',
+						(r'^upload/form/', 'uploadform',
+						 {'template_name': 'portal/uploadfile.html',
+						  'onload': 'parent.uploadframeloaded()',
+						  'target': settings.UPLOADER_URL + '?onload=parent.uploadFinished()',
+						  }),
+						(r'^upload/progress_ajax/$', 'progress_ajax'),
+						(r'^upload/xml/$',           'progress_xml' ),
 						)
 			   +
 			   patterns('django.contrib.auth.views',
