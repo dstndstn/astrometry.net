@@ -171,7 +171,34 @@ def sub_add_tag(request):
 		return HttpResponseRedirect(redir)
 	return HttpResponse('Tag added')
 
-#@login_required
+def view_jobs_in_gmaps(jobs):
+	from astrometry.net.tile.models import *
+
+	jobset = MapImageSet()
+	jobset.save()
+	for job in jobs:
+		calib = job.calibration
+		if not calib:
+			continue
+
+		try:
+			img = MapImage.objects.get(job=job)
+		except ObjectDoesNotExist:
+			img = MapImage(job=job,
+						   ramin=calib.ramin,
+						   ramax=calib.ramax,
+						   decmin=calib.decmin,
+						   decmax=calib.decmax)
+			img.save()
+		jobset.images.add(img)
+
+	url = (reverse('astrometry.net.tile.views.index') +
+		   ('?imageset=%i' % jobset.id) +
+		   '&show=tycho,images,imageOutlines&arcsinh')
+	#'&layers=tycho,userimages&arcsinh')
+	#url += '&userimage'
+	return url
+
 @wants_job_or_sub
 def joblist(request):
 	myargs = QueryDict('', mutable=True)
@@ -251,9 +278,11 @@ def joblist(request):
 
 	if kind in ['user', 'user-multi']:
 		user = getuser(request)
-		if not user:
-			user = request.user
-		myargs['user'] = user.username
+		if user:
+			username = user.username
+			myargs['user'] = user.username
+		else:
+			username = 'anonymous'
 		# find multi-job submissions from this user.
 		multisubs = Submission.objects.all().filter(user=user, multijob=True)
 
@@ -263,13 +292,13 @@ def joblist(request):
 			jobs = jobs.filter(exposejob=True)
 
 		if multisubs.count():
-			url = reverse(joblist) + '?' + urlencode({'type':'user-multi', 'user':user.username})
+			url = reverse(joblist) + '?' + urlencode({'type':'user-multi', 'user':username})
 			links.append(('Multi-job submissions by this user', url))
 		
 		N = jobs.count()
 		if not cols:
 			cols = [ 'thumbnail', 'jobid', 'status' ]
-		title = 'Jobs submitted by <i>%s</i>' % user.username
+		title = 'Jobs submitted by <i>%s</i>' % username
 
 	elif kind == 'user-multi':
 		multisubs = multisubs.order_by('-submittime')
@@ -298,8 +327,12 @@ def joblist(request):
 		if tags.count() == 0:
 			return HttpResponse('no such tag')
 
-		tags = tags.filter(job__duplicate=False)
+		log('tag "%s": %i tags' % (tagtxt, tags.count()))
+		# This isn't right -- need to eliminate duplicates *within* the
+		# tagged set.
+		#tags = tags.filter(job__duplicate=False)
 		N = tags.count()
+		#log('%i non-duplicates' % tags.count())
 
 		if not cols:
 			cols = [ 'thumbnail', 'jobid', 'user' ]
@@ -328,33 +361,10 @@ def joblist(request):
 
 
 	if togmaps:
-		from astrometry.net.tile.models import *
-
 		if kind == 'tag':
 			jobs = [t.job for t in tags]
 
-		jobset = MapImageSet()
-		jobset.save()
-		for job in jobs:
-			calib = job.calibration
-			if not calib:
-				continue
-
-			try:
-				img = MapImage.objects.get(job=job)
-			except ObjectDoesNotExist:
-				img = MapImage(job=job,
-							   ramin=calib.ramin,
-							   ramax=calib.ramax,
-							   decmin=calib.decmin,
-							   decmax=calib.decmax)
-				img.save()
-			jobset.images.add(img)
-
-		url = (reverse('astrometry.net.tile.views.index') +
-			   ('?imageset=%i' % jobset.id) +
-			   '&layers=tycho,userimages&arcsinh')
-
+		url = view_jobs_in_gmaps(jobs)
 		return HttpResponseRedirect(url)
 
 	myargs['cols'] = ','.join(cols)
@@ -465,9 +475,9 @@ def joblist(request):
 			elif c == 'user':
 				t = ('<a href="'
 					 + reverse(joblist) + urlescape('?type=user&user='
-					 + job.get_user().username)
+					 + job.get_username())
 					 + '">'
-					 + job.get_user().username
+					 + job.get_username()
 					 + '</a>')
 			# DEBUG
 			elif c == 'diskfile':
@@ -731,11 +741,17 @@ def jobstatus(request, jobid=None):
 						  url + largestyle + urlargs])
 
 		# HACK
-		fn = convert(job, 'fullsizepng')
-		url = (reverse('astrometry.net.tile.views.index') +
-			   ('?zoom=%i&ra=%.3f&dec=%.3f&userimage=%s' %
-				(int(wcsinfo['merczoom']), float(wcsinfo['ra_center']),
-				 float(wcsinfo['dec_center']), job.get_relative_job_dir())))
+		#fn = convert(job, 'fullsizepng')
+		#url = (reverse('astrometry.net.tile.views.index') +
+		#	   ('?zoom=%i&ra=%.3f&dec=%.3f&userimage=%s' %
+		#		(int(wcsinfo['merczoom']), float(wcsinfo['ra_center']),
+		#		 float(wcsinfo['dec_center']), job.get_relative_job_dir())))
+
+		url = view_jobs_in_gmaps([job])
+		url += ('&zoom=%i&ra=%.3f&dec=%.3f' %
+				(int(wcsinfo['merczoom']),
+				 float(wcsinfo['ra_center']),
+				 float(wcsinfo['dec_center'])))
 
 		ctxt.update({
 			'gmapslink' : url,

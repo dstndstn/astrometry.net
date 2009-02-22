@@ -1,4 +1,5 @@
 import astrometry.net.secrets.django_db as secrets
+from django.contrib.sites.models import Site
 
 GMAPS_API_KEY = 'ABQIAAAA7dWWcc9pB-GTzZE7CvT6SRTpFHQyuc9zMeXV0wfLqFiAr83b_xQ02hHbHnV4CjuIf4L-3WI_XATmBQ'
 
@@ -17,6 +18,8 @@ UTIL_DIR = ANDIR + 'util/'
 BLIND_DIR = ANDIR + 'blind/'
 WEB_DIR = ANDIR + 'net/'
 JOB_QUEUE_DIR = BASEDIR + 'job-queue/'
+
+BASE_URL = 'http://oven.cosmo.fas.nyu.edu:8888/'
 
 # for astrometry.net.server
 MAIN_SERVER = 'http://oven.cosmo.fas.nyu.edu:8888'
@@ -71,7 +74,9 @@ DATABASE_HOST     = secrets.DATABASE_HOST
 DATABASE_PORT     = secrets.DATABASE_PORT
 
 # Django's internal site id.
-SITE_ID = 1
+(site,created) = Site.objects.get_or_create(name='Astrometry.net',
+											defaults={'domain':BASE_URL})
+SITE_ID = site.id
 
 # Local time zone for this installation. Choices can be found here:
 # http://www.postgresql.org/docs/8.1/static/datetime-keywords.html#DATETIME-TIMEZONE-SET-TABLE

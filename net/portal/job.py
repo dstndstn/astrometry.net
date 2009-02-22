@@ -161,6 +161,11 @@ class Tag(models.Model):
 	def __str__(self):
 		return self.text
 
+	def username(self):
+		if self.user:
+			return self.user.username
+		return 'anonymous'
+
 	def can_remove_tag(self, user):
 		return user in [self.user, self.job.get_user()]
 
@@ -305,6 +310,10 @@ class Submission(models.Model):
 				del kwargs[k]
 		if not 'subid' in kwargs:
 			kwargs['subid'] = Job.generate_jobid()
+		if 'user' in kwargs:
+			if not kwargs['user'].is_authenticated():
+				# set anonymous users to None.
+				kwargs['user'] = None
 		super(Submission, self).__init__(*args, **kwargs)
 
 	def __str__(self):

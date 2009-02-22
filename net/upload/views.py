@@ -51,8 +51,6 @@ def get_ajax_javascript(name=''):
     return t.render(Context(ctxt))
 
 def progress_ajax(request):
-    if not request.user.is_authenticated():
-        return HttpResponse('not authenticated')
     if not request.GET:
         return HttpResponse('no GET')
     if not 'upload_id' in request.GET:
@@ -89,8 +87,6 @@ def get_uploadform_body(onload=None):
     return t.render(c)
 
 def uploadform(request):
-    if not request.user.is_authenticated():
-        return HttpResponse('not authenticated')
     logging.debug("Upload form request.");
 
     onload = request.GET.get('onload', None)
@@ -107,8 +103,6 @@ def uploadform(request):
 
 def progress_xml(request):
     logging.debug('XML request')
-    if not request.user.is_authenticated():
-        return HttpResponseForbidden('not authenticated')
     if not request.GET:
         return HttpResponseBadRequest('no GET')
     if not 'upload_id' in request.GET:

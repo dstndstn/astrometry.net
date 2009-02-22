@@ -60,7 +60,7 @@ class Upload(multipart.FileMultipart):
 
     def set_basedir(self, bdir):
         from astrometry.net.upload.models import UploadedFile
-        log('Upload: setting base dir to %s' % bdir)
+        #log('Upload: setting base dir to %s' % bdir)
         self.basedir = bdir
         UploadedFile.set_default_base_dir(self.basedir)
         if self.upload:
@@ -289,7 +289,6 @@ def handler(req):
                 continue
             log('    ' + str(k) +  '=' + str(v))
 
-    #for p in up.parts:
     formvals = up.get_form_values()
     log('form values:')
     for k,v in formvals.items():
@@ -344,21 +343,12 @@ if __name__ == '__main__':
         upload_id_field = 'upload_id'
 
     up = Upload()
-    #up.blocksize = 1
     up.set_basedir(upload_base_dir)
     up.set_id_field(upload_id_field)
 
     while up.readmore():
         up.update_progress()
 
-    #while True:
-    #print 'reading...'
-    #ok = up.readmore()
-    #if not ok:
-    #    break
-    #print 'writing progress...'
-    #sys.stdout.flush()
-    #up.update_progress()
     if up.error:
         log('Parser failed.')
         up.abort()

@@ -310,11 +310,7 @@ def newurl(request):
 		form = SimpleURLForm(request.POST)
 		if form.is_valid():
 			url = form.cleaned_data['url']
-			# set anonymous users to None.
-			user = request.user
-			if not user.is_authenticated():
-				user = None
-			submission = Submission(user = user,
+			submission = Submission(user = request.user,
 							filetype = 'image',
 							datasrc = 'url',
 							url = url)
@@ -343,11 +339,11 @@ def uploadformurl():
 			+ '&onload2=parent.uploadFinished()'
 			)
 
-@login_required
 def newfile(request):
 	if len(request.POST):
 		form = SimpleFancyFileForm(request.POST)
 		if form.is_valid():
+			
 			submission = Submission(user = request.user,
 							filetype = 'image',
 							datasrc = 'file',
