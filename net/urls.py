@@ -41,15 +41,21 @@ urlpatterns = (patterns('',
 						(r'^resetpassworddone/', 'password_reset_done',
 						 {'template_name': 'portal/resetpassworddone.html'}),
 
-						(r'^resetpasswordconfirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$',
-						 'password_reset_confirm',
-						 {'template_name': 'portal/resetpasswordconfirm.html'}),
+						#(r'^resetpasswordconfirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$',
+						# 'password_reset_confirm',
+						# {'template_name': 'portal/resetpasswordconfirm.html'}),
 						# To login session try:
 						#   post_reset_redirect =
 						#   set_password_form = <subclass of django.contrib.auth.forms.SetPasswordForm>
 						#     override save()
 
 						(r'^resetpasswordcomplete/', 'password_reset_complete'),
+						)
+			   +
+			   patterns('astrometry.net.portal.passwordreset',
+						(r'^resetpasswordconfirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$',
+						 'password_reset_confirm',
+						 {'template_name': 'portal/resetpasswordconfirm.html'}),
 						)
 			   +
 			   patterns('astrometry.net.portal.accounts',
