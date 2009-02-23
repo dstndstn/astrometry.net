@@ -397,11 +397,7 @@ function scalechanged() {
 <td style="padding-top:2px; vertical-align:top;"> 
 {{form.upload_id}}
 {{ datasrc_file }} File
-<iframe 
-{% comment %}
-onload="uploadframeloaded()"
-{% endcomment %}
-src="{{ uploadform }}" scrolling="no" frameborder="0" id="uploadframe" style="width:25em; height:2em; vertical-align:top;">
+<iframe src="{{ uploadform }}" scrolling="no" frameborder="0" id="uploadframe" style="width:25em; height:2em; vertical-align:top;">
   [Your user agent does not support iframes]
 </iframe>
 <div id="progressholder" style="visibility:hidden; height:0px;">
