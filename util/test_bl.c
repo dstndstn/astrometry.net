@@ -25,6 +25,20 @@
 
 #include "bl.h"
 
+void test_il_remove_index_range_1(CuTest* tc) {
+	il* lst = il_new(4);
+	il_append(lst, 0);
+	il_append(lst, 1);
+	il_append(lst, 2);
+	il_append(lst, 3);
+	il_append(lst, 4);
+	il_append(lst, 5);
+	il_remove_index_range(lst, 2, 2);
+	// [0 1 2 3 4 5] -> [0 1 4 5]
+	CuAssertIntEquals(tc, 4, il_size(lst));
+	CuAssertIntEquals(tc, 4, il_get(lst, 2));
+}
+
 void test_sl_split_1(CuTest* tc) {
     sl* s = sl_split(NULL, "hello world this is a test", " ");
     CuAssertPtrNotNull(tc, s);

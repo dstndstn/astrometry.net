@@ -157,6 +157,8 @@ void il_merge_lists(il* list1, il* list2);
 void il_push(il* list, int data);
 int  il_pop(il* list);
 int  il_contains(il* list, int data);
+// Returns the index in the list of the given integer, or -1 if it
+// is not found.
 int  il_index_of(il* list, int data);
 InlineDeclare int  il_get(il* list, const int n);
 void il_copy(il* list, int start, int length, int* vdest);

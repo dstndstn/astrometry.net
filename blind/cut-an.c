@@ -124,35 +124,82 @@ static int sort_stardata_mag(const void* v1, const void* v2) {
 	return 1;
 }
 
+struct starlists {
+	il* hps;
+	pl* lists;
+	int size;
+};
+typedef struct starlists starlists_t;
+
+starlists_t* starlists_new(int nside, int size) {
+	starlists_t* sl = malloc(sizeof(starlists_t));
+	sl->hps = il_new(256);
+	sl->lists = pl_new(256);
+	sl->size = (size ? size : 10);
+	return sl;
+}
+
+void starlists_free(starlists_t* sl) {
+	int i;
+	for (i=0; i<pl_size(sl->lists); i++) {
+		bl* lst = pl_get(sl->lists, i);
+		bl_free(lst);
+	}
+	il_free(sl->hps);
+	pl_free(sl->lists);
+	free(sl);
+}
+
+bl* starlists_get(starlists_t* sl, int hp, bool create) {
+	int ind = il_index_of(sl->hps, hp);
+	if (ind == -1) {
+		if (!create)
+			return NULL;
+		bl* lst = bl_new(sl->size, sizeof(stardata));
+		pl_append(sl->lists, lst);
+		il_append(sl->hps, hp);
+		return lst;
+	}
+	return pl_get(sl->lists, ind);
+}
+
+int starlists_N_nonempty(starlists_t* sl) {
+	return il_size(sl->hps);
+}
+
+bool starlists_get_nonempty(starlists_t* sl, int i,
+							int* php, bl** plist) {
+	if (i >= il_size(sl->hps))
+		return FALSE;
+	if (php)
+		*php = il_get(sl->hps, i);
+	if (plist)
+		*plist = pl_get(sl->lists, i);
+	return TRUE;
+}
+
 static bool find_duplicate(stardata* sd, int hp, int Nside,
-						   bl** starlists, double dedupr2,
+						   starlists_t* starlists, double dedupr2,
 						   int* duphp, int* dupindex) {
 	double xyz[3];
-	int neigh[8];
+	int neigh[9];
 	int nn;
 	double xyz2[3];
 	int j, k;
 	radecdeg2xyzarr(sd->ra, sd->dec, xyz);
+
 	// Check this healpix...
-	for (j=0; j<bl_size(starlists[hp]); j++) {
-		stardata* sd2 = bl_access(starlists[hp], j);
-		radecdeg2xyzarr(sd2->ra, sd2->dec, xyz2);
-		if (!distsq_exceeds(xyz, xyz2, 3, dedupr2)) {
-			if (duphp)
-				*duphp = hp;
-			if (dupindex)
-				*dupindex = j;
-			return TRUE;
-		}
-	}
-	// Check neighbouring healpixes...
-	nn = healpix_get_neighbours(hp, neigh, Nside);
+	neigh[0] = hp;
+	// Check neighbouring healpixes... (+1 is to skip over this hp)
+	nn = 1 + healpix_get_neighbours(hp, neigh+1, Nside);
+
 	for (k=0; k<nn; k++) {
 		int nhp = neigh[k];
-		if (!starlists[nhp])
+		bl* lst = starlists_get(starlists, nhp, FALSE);
+		if (!lst)
 			continue;
-		for (j=0; j<bl_size(starlists[nhp]); j++) {
-			stardata* sd2 = bl_access(starlists[nhp], j);
+		for (j=0; j<bl_size(lst); j++) {
+			stardata* sd2 = bl_access(lst, j);
 			radecdeg2xyzarr(sd2->ra, sd2->dec, xyz2);
 			if (!distsq_exceeds(xyz, xyz2, 3, dedupr2)) {
 				if (duphp)
@@ -303,7 +350,7 @@ int main(int argc, char** args) {
 	int startoptind;
 	int i, k, HP;
 	int Nside = 100;
-	bl** starlists;
+	starlists_t* starlists;
 	int sweeps = 0;
 	int nkeep;
 	double minmag = -1.0;
@@ -321,8 +368,6 @@ int main(int argc, char** args) {
 	bool allsky = FALSE;
 	stardata* sweeplist;
 	int npix;
-	stardata** stararrays;
-	int* stararrayN;
 	int nmargin = 1;
 	bool domags = FALSE;
 	bool domagerrs = FALSE;
@@ -441,7 +486,7 @@ int main(int argc, char** args) {
 		dedupr2 = arcsec2distsq(deduprad);
 	}
 
-	starlists = calloc(HP, sizeof(bl*));
+	starlists = starlists_new(Nside, nkeep);
 
 	// find the set of small healpixes that this big healpix owns
 	// and add the margin.
@@ -692,6 +737,7 @@ int main(int argc, char** args) {
 			stardata sd;
 			int hp;
 			an_entry* an = NULL;
+			bl* lst;
 
 			if ((i * 80 / N) != lastgrass) {
 				logmsg(".");
@@ -759,33 +805,35 @@ int main(int argc, char** args) {
 			if (sd.mag > maxmag)
 				continue;
 
-			if (!starlists[hp])
-				starlists[hp] = bl_new(nkeep ? nkeep : 10, sizeof(stardata));
+			lst = starlists_get(starlists, hp, TRUE);
 
-			if (nkeep && (bl_size(starlists[hp]) >= nkeep)) {
-				// is this list full?
-				stardata* last = bl_access(starlists[hp], nkeep-1);
+			// is this list full?
+			if (nkeep && (bl_size(lst) >= nkeep)) {
+				// is this new star dimmer than the last one in the list?
+				stardata* last = bl_access(lst, nkeep-1);
 				if (sd.mag > last->mag)
-					// this new star is dimmer than the "nkeep"th one in the list...
 					continue;
 			}
 			if (dedupr2 > 0.0) {
 				int duphp=-1, dupindex=-1;
 				stardata* dupsd;
+				bl* duplist;
 				if (find_duplicate(&sd, hp, Nside, starlists,
 								   dedupr2, &duphp, &dupindex)) {
 					nduplicates++;
 					// Which one is brighter?
-					dupsd = bl_access(starlists[duphp], dupindex);
+					duplist = starlists_get(starlists, duphp, FALSE);
+					assert(duplist);
+					dupsd = bl_access(duplist, dupindex);
 					if (dupsd->mag <= sd.mag)
 						// The existing star is brighter; just skip this star.
 						continue;
 					else
 						// Remove the old star.
-						bl_remove_index(starlists[duphp], dupindex);
+						bl_remove_index(duplist, dupindex);
 				}
 			}
-			bl_insert_sorted(starlists[hp], &sd, sort_stardata_mag);
+			bl_insert_sorted(lst, &sd, sort_stardata_mag);
 		}
 		logmsg("\n");
 
@@ -794,15 +842,15 @@ int main(int argc, char** args) {
 		logmsg("Discarded %i duplicate stars.\n", nduplicates);
 
 		if (nkeep)
-			for (i=0; i<HP; i++) {
+			for (i=0;; i++) {
 				int size;
 				stardata* d;
-				if (!starlists[i]) continue;
-				size = bl_size(starlists[i]);
-				if (size)
-					d = bl_access(starlists[i], size-1);
-				if (size < nkeep) continue;
-				bl_remove_index_range(starlists[i], nkeep, size-nkeep);
+				bl* lst;
+				if (!starlists_get_nonempty(starlists, i, NULL, &lst))
+					break;
+				size = bl_size(lst);
+				if (size <= nkeep) continue;
+				bl_remove_index_range(lst, nkeep, size-nkeep);
 			}
 
 		if (ancat)
@@ -818,34 +866,11 @@ int main(int argc, char** args) {
 	}
 	free(owned);
 
-	// compact the stars into arrays.
-	npix = 0;
-	for (i=0; i<HP; i++)
-		if (starlists[i]) {
-			starlists[npix] = starlists[i];
-			npix++;
-		}
-	starlists = realloc(starlists, npix * sizeof(bl*));
-	// (reuse the bl* storage as stardata* storage; see below)
-	stararrays = (stardata**)starlists;
 
-	stararrayN = malloc(npix * sizeof(int));
 
-	for (i=0; i<npix; i++) {
-		bl* list;
-		int n;
-		// reusing storage: here we save the bl*
-		list = starlists[i];
-		n = bl_size(list);
-		if (sweeps && sweeps < n)
-			n = sweeps;
-		// then store the stardata* in it.
-		stararrays[i] = malloc(n * sizeof(stardata));
-		// then copy the bl's data.
-		bl_copy(list, 0, n, stararrays[i]);
-		bl_free(list);
-		stararrayN[i] = n;
-	}
+
+
+	npix = starlists_N_nonempty(starlists);
 
 	sweeplist = malloc(npix * sizeof(stardata));
 
@@ -858,15 +883,13 @@ int main(int argc, char** args) {
 		for (i=0; i<npix; i++) {
 			stardata* sd;
 			int N;
-			if (!stararrays[i])
+			bl* lst;
+			starlists_get_nonempty(starlists, i, NULL, &lst);
+			if (k >= bl_size(lst))
+				// FIXME -- done with this list, could free it...
 				continue;
-			N = stararrayN[i];
-			if (k >= N) {
-				free(stararrays[i]);
-				stararrays[i] = NULL;
-				continue;
-			}
-			sd = stararrays[i] + k;
+
+			sd = bl_access(lst, k);
 			memcpy(sweeplist + nsweep, sd, sizeof(stardata));
 			nsweep++;
 		}
@@ -918,11 +941,10 @@ int main(int argc, char** args) {
 	}
 	logmsg("Made %i sweeps through the healpixes.\n", k);
 
+	///////////// FIXME!!! //////////////
+
 	free(sweeplist);
-	free(stararrayN);
-	for (i=0; i<npix; i++)
-		free(stararrays[i]);
-	free(stararrays);
+	starlists_free(starlists);
 
 	if (catalog_fix_header(cat)) {
 		fprintf(stderr, "Failed to fix catalog header.\n");
