@@ -55,7 +55,8 @@ urlpatterns = (patterns('',
 			   patterns('astrometry.net.portal.passwordreset',
 						(r'^resetpasswordconfirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$',
 						 'password_reset_confirm',
-						 {'template_name': 'portal/resetpasswordconfirm.html'}),
+						 {'template_name': 'portal/resetpasswordconfirm.html',
+						  'post_reset_redirect': settings.LOGIN_REDIRECT_URL}),
 						)
 			   +
 			   patterns('astrometry.net.portal.accounts',

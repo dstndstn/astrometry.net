@@ -44,11 +44,6 @@ SITE_NAME = 'test'
 JOB_DIR = BASEDIR + 'web-data/'
 FIELD_DIR = '/home/gmaps/test/web-data/fields'
 
-#gmaps_base = 'http://oven.cosmo.fas.nyu.edu/'
-#gmaps_url = gmaps_base + 'tilecache2/'
-#tileurl = gmaps_base + 'test/tile/get/'
-
-
 APPEND_SLASH=False
 
 DEBUG = True
