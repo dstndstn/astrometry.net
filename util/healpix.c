@@ -906,6 +906,10 @@ int xyzarrtohealpix(double* xyz, int Nside) {
 	return xyztohealpix(xyz[0], xyz[1], xyz[2], Nside);
 }
 
+int64_t xyzarrtohealpixl(double* xyz, int Nside) {
+	return xyztohealpixl(xyz[0], xyz[1], xyz[2], Nside);
+}
+
 int xyzarrtohealpixf(double* xyz,int Nside, double* p_dx, double* p_dy) {
     return xyztohealpixf(xyz[0], xyz[1], xyz[2], Nside, p_dx, p_dy);
 }

@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2009 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -43,8 +43,9 @@
 #include "starkd.h"
 #include "pnpoly.h"
 #include "boilerplate.h"
+#include "errors.h"
 
-#define OPTIONS "hi:u:l:n:I:r:x:y:F:RHL:bc:q:d:"
+#define OPTIONS "hi:u:l:n:I:r:x:y:F:RHL:bc:q:d:E"
 
 static void print_help(char* progname)
 {
@@ -68,6 +69,7 @@ static void print_help(char* progname)
 		   "     [-I <unique-id>] set the unique ID of this index\n\n"
 		   "     [-F <failed-rdls-file>] write the centers of the healpixes in which quads can't be made.\n"
 		   "     [-H]: print histograms.\n"
+		   "     [-E]: scan through the catalog, checking which healpixes are occupied.\n"
 		   "\nReads skdt, writes {code, quad}.\n\n"
 	       , progname);
 }
@@ -670,7 +672,7 @@ int main(int argc, char** argv) {
 	char *quadfname = NULL;
 	char *codefname = NULL;
 	char *skdtfname = NULL;
-	int HEALPIXES;
+	int64_t HEALPIXES;
 	int Nside = 501;
 	int i;
 	char* failedrdlsfn = NULL;
@@ -683,8 +685,7 @@ int main(int argc, char** argv) {
 	int Nreuse = 3;
 	double radius2;
 	int lastgrass = 0;
-	int* hptotry;
-	int Nhptotry;
+	ll* hptotry;
 	int nquads;
 	double rads;
 	double hprad;
@@ -709,12 +710,16 @@ int main(int argc, char** argv) {
 	qfits_header* chdr;
 
 	bool boundary = FALSE;
+	bool scanoccupied = FALSE;
 
 	int dimquads = 4;
 	int dimcodes;
 	
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'E':
+			scanoccupied = TRUE;
+			break;
 		case 'd':
 			dimquads = atoi(optarg);
 			break;
@@ -814,9 +819,9 @@ int main(int argc, char** argv) {
 	if (loosenmax)
 		loosenhps = malloc(xpasses * ypasses * sizeof(il*));
 
-	HEALPIXES = 12 * Nside * Nside;
-	printf("Nside=%i.  Nside^2=%i.  Number of healpixes=%i.  Healpix side length ~ %g arcmin.\n",
-		   Nside, Nside*Nside, HEALPIXES, healpix_side_length_arcmin(Nside));
+	HEALPIXES = 12L * (int64_t)Nside * (int64_t)Nside;
+	printf("Nside=%i.  Nside^2=%lli.  Number of healpixes=%lli.  Healpix side length ~ %g arcmin.\n",
+		   Nside, (int64_t)Nside*(int64_t)Nside, HEALPIXES, healpix_side_length_arcmin(Nside));
 
 	tic();
 
@@ -909,43 +914,58 @@ int main(int argc, char** argv) {
 		   distsq2arcsec(quadscale*quadscale),
 		   distsq2arcsec(radius2));
 
-	if (hp == -1) {
-        // Try all healpixes.
-		hptotry = malloc(HEALPIXES * sizeof(int));
-		for (i=0; i<HEALPIXES; i++)
-			hptotry[i] = i;
-		Nhptotry = HEALPIXES;
-    } else {
-        // The star kdtree may itself be healpixed
-        int starhp, starx, stary;
-        // In that case, the healpixes we are interested in form a rectangle
-        // within a big healpix.  These are the coords (in [0, Nside)) of
-        // that rectangle.
-        int x0, x1, y0, y1;
-        int x, y;
-        int i, nhp;
 
-        healpix_decompose_xy(hp, &starhp, &starx, &stary, hpnside);
-        x0 =  starx    * (Nside / hpnside);
-        x1 = (starx+1) * (Nside / hpnside);
-        y0 =  stary    * (Nside / hpnside);
-        y1 = (stary+1) * (Nside / hpnside);
+	hptotry = ll_new(256);
 
-		Nhptotry = (Nside/hpnside) * (Nside/hpnside);
-		hptotry = malloc(Nhptotry * sizeof(int));
+	if (scanoccupied) {
+		int i, N;
+		N = startree_N(starkd);
+		printf("Scanning %i input stars...\n", N);
+		for (i=0; i<N; i++) {
+			double xyz[3];
+			int64_t j;
+			if (startree_get(starkd, i, xyz)) {
+				ERROR("Failed to get star %i", i);
+				exit(-1);
+			}
+			j = xyzarrtohealpixl(xyz, Nside);
+			ll_insert_unique_ascending(hptotry, j);
+		}
+		printf("Will check %i healpixes.\n", ll_size(hptotry));
+	} else {
+		if (hp == -1) {
+			int64_t j;
+			// Try all healpixes.
+			for (j=0; j<HEALPIXES; j++)
+				ll_append(hptotry, j);
+		} else {
+			// The star kdtree may itself be healpixed
+			int starhp, starx, stary;
+			// In that case, the healpixes we are interested in form a rectangle
+			// within a big healpix.  These are the coords (in [0, Nside)) of
+			// that rectangle.
+			int x0, x1, y0, y1;
+			int x, y;
+			int nhp;
 
-        nhp = 0;
-        for (y=y0; y<y1; y++) {
-            for (x=x0; x<x1; x++) {
-                i = healpix_compose_xy(starhp, x, y, Nside);
-                hptotry[nhp] = i;
-                nhp++;
-            }
-        }
-        assert(nhp == Nhptotry);
+			healpix_decompose_xy(hp, &starhp, &starx, &stary, hpnside);
+			x0 =  starx    * (Nside / hpnside);
+			x1 = (starx+1) * (Nside / hpnside);
+			y0 =  stary    * (Nside / hpnside);
+			y1 = (stary+1) * (Nside / hpnside);
+
+			nhp = 0;
+			for (y=y0; y<y1; y++) {
+				for (x=x0; x<x1; x++) {
+					int64_t j = healpix_compose_xyl(starhp, x, y, Nside);
+					ll_append(hptotry, j);
+				}
+			}
+			assert(ll_size(hptotry) == (Nside/hpnside) * (Nside/hpnside));
+		}
 	}
 
-	quadlist = malloc(Nhptotry * sizeof(quad));
+	quadlist = malloc(ll_size(hptotry) * sizeof(quad));
 
 	if (noreuse_pass)
 		noreuse_hps = il_new(1024);
@@ -995,20 +1015,20 @@ int main(int argc, char** argv) {
 			nabok = 0;
 			ndupquads = 0;
 
-			printf("Trying %i healpixes.\n", Nhptotry);
+			printf("Trying %i healpixes.\n", ll_size(hptotry));
 
-			for (i=0; i<Nhptotry; i++) {
+			for (i=0; i<ll_size(hptotry); i++) {
 				double radec[2];
 				int N;
 				bool ok;
 				bool failed_nostars;
 
-				hp = hptotry[i];
+				hp = ll_get(hptotry, i);
 
-				if ((i * 80 / Nhptotry) != lastgrass) {
+				if ((i * 80 / ll_size(hptotry)) != lastgrass) {
 					printf(".");
 					fflush(stdout);
-					lastgrass = i * 80 / Nhptotry;
+					lastgrass = i * 80 / ll_size(hptotry);
 				}
 
 				failed_nostars = FALSE;
@@ -1094,7 +1114,7 @@ int main(int argc, char** argv) {
 				   nstarstotal / (double)ncounted);
 
 			printf("Made %i quads (out of %i healpixes) this pass.\n",
-				   nthispass, Nhptotry);
+				   nthispass, ll_size(hptotry));
 			printf("  %i healpixes had no stars.\n", nnostars);
 			printf("  %i healpixes had only stars that had been overused.\n", nnounused);
 			printf("  %i healpixes had some stars.\n", nyesstars);
@@ -1239,7 +1259,7 @@ int main(int argc, char** argv) {
 
 		}
 	}
-	free(hptotry);
+	ll_free(hptotry);
 
 
 	if (loosenmax) {

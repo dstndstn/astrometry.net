@@ -247,6 +247,8 @@ int64_t xyztohealpixlf(double x, double y, double z, int Nside,
 */
 int xyzarrtohealpix(double* xyz, int Nside);
 
+int64_t xyzarrtohealpixl(double* xyz, int Nside);
+
 int xyzarrtohealpixf(double* xyz,int Nside, double* p_dx, double* p_dy);
 
 /**

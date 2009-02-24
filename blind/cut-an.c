@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2006-2009 Dustin Lang, Keir Mierle and Sam Roweis.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -125,7 +125,7 @@ static int sort_stardata_mag(const void* v1, const void* v2) {
 }
 
 struct starlists {
-	il* hps;
+	ll* hps;
 	pl* lists;
 	int size;
 };
@@ -133,7 +133,7 @@ typedef struct starlists starlists_t;
 
 starlists_t* starlists_new(int nside, int size) {
 	starlists_t* sl = malloc(sizeof(starlists_t));
-	sl->hps = il_new(256);
+	sl->hps = ll_new(256);
 	sl->lists = pl_new(256);
 	sl->size = (size ? size : 10);
 	return sl;
@@ -145,44 +145,44 @@ void starlists_free(starlists_t* sl) {
 		bl* lst = pl_get(sl->lists, i);
 		bl_free(lst);
 	}
-	il_free(sl->hps);
+	ll_free(sl->hps);
 	pl_free(sl->lists);
 	free(sl);
 }
 
-bl* starlists_get(starlists_t* sl, int hp, bool create) {
-	int ind = il_index_of(sl->hps, hp);
+bl* starlists_get(starlists_t* sl, int64_t hp, bool create) {
+	int ind = ll_index_of(sl->hps, hp);
 	if (ind == -1) {
 		if (!create)
 			return NULL;
 		bl* lst = bl_new(sl->size, sizeof(stardata));
 		pl_append(sl->lists, lst);
-		il_append(sl->hps, hp);
+		ll_append(sl->hps, hp);
 		return lst;
 	}
 	return pl_get(sl->lists, ind);
 }
 
 int starlists_N_nonempty(starlists_t* sl) {
-	return il_size(sl->hps);
+	return ll_size(sl->hps);
 }
 
 bool starlists_get_nonempty(starlists_t* sl, int i,
-							int* php, bl** plist) {
-	if (i >= il_size(sl->hps))
+							int64_t* php, bl** plist) {
+	if (i >= ll_size(sl->hps))
 		return FALSE;
 	if (php)
-		*php = il_get(sl->hps, i);
+		*php = ll_get(sl->hps, i);
 	if (plist)
 		*plist = pl_get(sl->lists, i);
 	return TRUE;
 }
 
-static bool find_duplicate(stardata* sd, int hp, int Nside,
+static bool find_duplicate(stardata* sd, int64_t hp, int Nside,
 						   starlists_t* starlists, double dedupr2,
-						   int* duphp, int* dupindex) {
+						   int64_t* duphp, int* dupindex) {
 	double xyz[3];
-	int neigh[9];
+	int64_t neigh[9];
 	int nn;
 	double xyz2[3];
 	int j, k;
@@ -191,10 +191,10 @@ static bool find_duplicate(stardata* sd, int hp, int Nside,
 	// Check this healpix...
 	neigh[0] = hp;
 	// Check neighbouring healpixes... (+1 is to skip over this hp)
-	nn = 1 + healpix_get_neighbours(hp, neigh+1, Nside);
+	nn = 1 + healpix_get_neighboursl(hp, neigh+1, Nside);
 
 	for (k=0; k<nn; k++) {
-		int nhp = neigh[k];
+		int64_t nhp = neigh[k];
 		bl* lst = starlists_get(starlists, nhp, FALSE);
 		if (!lst)
 			continue;
@@ -348,14 +348,14 @@ int main(int argc, char** args) {
 	char* outfn = NULL;
 	int c;
 	int startoptind;
-	int i, k, HP;
+	int i, k;
+	int64_t HP;
 	int Nside = 100;
 	starlists_t* starlists;
 	int sweeps = 0;
 	int nkeep = 0;
 	double minmag = -1.0;
 	double maxmag = 30.0;
-	bool* owned;
 	int maxperbighp = 0;
     int bignside = 1;
 	int bighp = -1;
@@ -376,6 +376,11 @@ int main(int argc, char** args) {
 	double jitter = 1.0;
     qfits_header* catheader;
     int loglvl = LOG_MSG;
+	ll* owned = NULL;
+
+	// Where is "bighp" in the "bignside" healpixelization?
+	int bigbighp; // one of 12
+	int bighpx, bighpy;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
@@ -470,9 +475,9 @@ int main(int argc, char** args) {
         exit(-1);
     }
 
-	HP = 12 * Nside * Nside;
+	HP = 12L * (int64_t)Nside * (int64_t)Nside;
 
-	logmsg("Nside=%i, HP=%i, sweeps=%i, max number of stars = HP*sweeps = %i.\n", Nside, HP, sweeps, HP*sweeps);
+	logmsg("Nside=%i, HP=%lli, sweeps=%i, max number of stars = HP*sweeps = %lli.\n", Nside, HP, sweeps, HP*sweeps);
 	logmsg("Healpix side length: %g arcmin.\n", healpix_side_length_arcmin(Nside));
 
 	if (allsky) {
@@ -491,28 +496,27 @@ int main(int argc, char** args) {
 	// find the set of small healpixes that this big healpix owns
 	// and add the margin.
 	if (!allsky) {
-		il* q = il_new(32);
-		int hp;
-		int nowned = 0;
-        int bigbighp; // one of 12
-        int bighpx, bighpy;
+		ll* q = ll_new(32);
+		int64_t hp;
         int ninside;
 
-        healpix_decompose_xy(bighp, &bigbighp, &bighpx, &bighpy, bignside);
-        
-		owned = calloc(HP, sizeof(bool));
+        healpix_decompose_xyl(bighp, &bigbighp, &bighpx, &bighpy, bignside);
 
-		for (i=0; i<(Nside / bignside); i++) {
-			for (k=0; k<(Nside / bignside); k++) {
-                int xx = i + bighpx * (Nside / bignside);
-                int yy = k + bighpy * (Nside / bignside);
-				hp = healpix_compose_xy(bigbighp, xx, yy, Nside);
-				owned[hp] = 1;
-				nowned++;
-			}
-		}
-        ninside = nowned;
-        logmsg("Number of fine healpixes owned: %i\n", nowned);
+		owned = ll_new(256);
+
+		/*
+		 for (i=0; i<(Nside / bignside); i++) {
+		 for (k=0; k<(Nside / bignside); k++) {
+		 int xx = i + bighpx * (Nside / bignside);
+		 int yy = k + bighpy * (Nside / bignside);
+		 hp = healpix_compose_xyl(bigbighp, xx, yy, Nside);
+		 ll_insert_unique_ascending(owned, hp);
+		 }
+		 }
+		 ninside = ll_size(owned);
+		 logmsg("Number of fine healpixes owned: %i\n", ninside);
+		 */
+		ninside = (Nside/bignside)*(Nside/bignside);
 
         //write_radeclist(owned, Nside, "step0.rdls");
 
@@ -532,43 +536,48 @@ int main(int argc, char** args) {
             assert(y0 < Nside);
             assert(y1 < Nside);
 
-			hp = healpix_compose_xy(bigbighp, xx, y0, Nside);
-            assert(owned[hp]);
-			il_append(q, hp);
-			hp = healpix_compose_xy(bigbighp, xx, y1, Nside);
-            assert(owned[hp]);
-			il_append(q, hp);
-			hp = healpix_compose_xy(bigbighp, x0, yy, Nside);
-            assert(owned[hp]);
-			il_append(q, hp);
-			hp = healpix_compose_xy(bigbighp, x1, yy, Nside);
-            assert(owned[hp]);
-			il_append(q, hp);
+			hp = healpix_compose_xyl(bigbighp, xx, y0, Nside);
+            //assert(ll_sorted_contains(owned, hp));
+			ll_append(q, hp);
+			hp = healpix_compose_xyl(bigbighp, xx, y1, Nside);
+            //assert(ll_sorted_contains(owned, hp));
+			ll_append(q, hp);
+			hp = healpix_compose_xyl(bigbighp, x0, yy, Nside);
+            //assert(ll_sorted_contains(owned, hp));
+			ll_append(q, hp);
+			hp = healpix_compose_xyl(bigbighp, x1, yy, Nside);
+            //assert(ll_sorted_contains(owned, hp));
+			ll_append(q, hp);
 		}
         logmsg("Number of boundary healpixes on the primed queue: %i\n",
-               il_size(q));
+               ll_size(q));
 
 		// Now we want to add "nmargin" levels of neighbours.
 		for (k=0; k<nmargin; k++) {
-			int Q = il_size(q);
+			int Q = ll_size(q);
 			for (i=0; i<Q; i++) {
 				int j;
-				int nn, neigh[8];
-				hp = il_get(q, i);
+				int nn;
+				int64_t neigh[8];
+				hp = ll_get(q, i);
 				// grab the neighbours...
-				nn = healpix_get_neighbours(hp, neigh, Nside);
+				nn = healpix_get_neighboursl(hp, neigh, Nside);
 				for (j=0; j<nn; j++) {
+					// ignore neighbours that are inside the big hp.
+					int bhp, bx, by;
+					healpix_decompose_xyl(neigh[j], &bhp, &bx, &by, Nside);
+					if (bhp == bigbighp && bx == bighpx && by == bighpy)
+						continue;
 					// for any neighbour we haven't already looked at...
-					if (!owned[neigh[j]]) {
+					if (!ll_sorted_contains(owned, neigh[j])) {
 						// add it to the queue
-						il_append(q, neigh[j]);
+						ll_append(q, neigh[j]);
 						// mark it as fair game.
-						owned[neigh[j]] = 1;
-						nowned++;
+						ll_insert_unique_ascending(owned, neigh[j]);
 					}
 				}
 			}
-			il_remove_index_range(q, 0, Q);
+			ll_remove_index_range(q, 0, Q);
 
             /*
              char fn[16];
@@ -576,12 +585,12 @@ int main(int argc, char** args) {
              write_radeclist(owned, Nside, fn);
              */
 		}
-		il_free(q);
+		ll_free(q);
 
         //write_radeclist(owned, Nside, "final.rdls");
 
 		logmsg("%i healpixes in this big healpix, plus %i boundary make %i total.\n",
-               ninside, nowned - ninside, nowned);
+               ninside, ll_size(owned), ninside + ll_size(owned));
 
 	} else
 		owned = NULL;
@@ -735,7 +744,7 @@ int main(int argc, char** args) {
 		lastgrass = 0;
 		for (i=0; i<N; i++) {
 			stardata sd;
-			int hp;
+			int64_t hp;
 			an_entry* an = NULL;
 			bl* lst;
 
@@ -788,11 +797,22 @@ int main(int argc, char** args) {
                 }
 			}
 
-			hp = radecdegtohealpix(sd.ra, sd.dec, Nside);
+			hp = radecdegtohealpixl(sd.ra, sd.dec, Nside);
 
-			if (owned && !owned[hp]) {
-				ndiscarded++;
-				continue;
+			if (owned) {
+				int bhp, bx, by;
+				healpix_decompose_xyl(hp, &bhp, &bx, &by, Nside);
+				bx /= (Nside / bignside);
+				by /= (Nside / bignside);
+				// not in this big hp
+				if (!((bhp == bigbighp) &&
+					  (bx == bighpx) &&
+					  (by == bighpy)) &&
+					// not in the margin...
+					!ll_sorted_contains(owned, hp)) {
+					ndiscarded++;
+					continue;
+				}
 			}
 
 			if (ancat) {
@@ -815,7 +835,8 @@ int main(int argc, char** args) {
 					continue;
 			}
 			if (dedupr2 > 0.0) {
-				int duphp=-1, dupindex=-1;
+				int64_t duphp=-1;
+				int dupindex=-1;
 				stardata* dupsd;
 				bl* duplist;
 				if (find_duplicate(&sd, hp, Nside, starlists,
@@ -863,7 +884,7 @@ int main(int argc, char** args) {
 			catalog_close(cat);
 			
 	}
-	free(owned);
+	ll_free(owned);
 
 
 
