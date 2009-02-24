@@ -177,6 +177,20 @@ void NLF(set)(nl* list, int index, number value) {
 	bl_set(list, index, &value);
 }
 
+/*
+ void dl_set(dl* list, int index, double value) {
+ int i;
+ int nadd = (index+1) - list->N;
+ if (nadd > 0) {
+ // enlarge the list to hold 'nadd' more entries.
+ for (i=0; i<nadd; i++) {
+ dl_append(list, 0.0);
+ }
+ }
+ bl_set(list, index, &value);
+ }
+ */
+
 nl* NLF(new)(int blocksize) {
 	return bl_new(blocksize, sizeof(number));
 }
@@ -212,7 +226,7 @@ void NLF(merge_lists)(nl* list1, nl* list2) {
 	bl_append_list(list1, list2);
 }
 
-int NLF(insert_ascending)(nl* list, int n) {
+int NLF(insert_ascending)(nl* list, number n) {
 	bl_node *node;
 	number* iarray;
 	int lower, upper;
@@ -258,7 +272,7 @@ int NLF(insert_ascending)(nl* list, int n) {
 	return nskipped + lower + 1;
 }
 
-int NLF(insert_descending)(nl* list, int n) {
+int NLF(insert_descending)(nl* list, number n) {
     return bl_insert_sorted(list, &n, NLF(compare_descending));
 }
 

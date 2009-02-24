@@ -47,7 +47,7 @@ int NLF(contains)(nl* list, number data);
 // Returns the index in the list of the given number, or -1 if it
 // is not found.
 int  NLF(index_of)(nl* list, number data);
-InlineDeclare number  NLF(get)(nl* list, const number n);
+InlineDeclare number  NLF(get)(nl* list, int n);
 void NLF(copy)(nl* list, int start, int length, number* vdest);
 nl*  NLF(dupe)(nl* list);
 void NLF(print)(nl* list);

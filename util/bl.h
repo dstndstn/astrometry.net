@@ -169,46 +169,6 @@ void  pl_merge_lists(pl* list1, pl* list2);
 #define pl_clear pl_remove_all
 
 ///////////////////////////////////////////////
-// special-case functions for double lists. //
-///////////////////////////////////////////////
-typedef bl dl;
-dl*    dl_new(int blocksize);
-void   dl_init(dl* list, int blocksize);
-void   dl_free(dl* list);
-int    dl_size(dl* list);
-void dl_reverse(dl* list);
-double* dl_append(dl* list, double data);
-void   dl_push(dl* list, double data);
-double dl_pop(dl* list);
-double dl_get(dl* list, int n);
-void   dl_set(dl* list, int n, double val);
-void   dl_copy(dl* list, int start, int length, double* vdest);
-dl*    dl_dupe(dl* list);
-int    dl_check_consistency(dl* list);
-void   dl_insert(dl* list, int indx, double data);
-void   dl_remove_all(dl* list);
-void   dl_merge_lists(dl* list1, dl* list2);
-void   dl_print(dl* list);
-
-///////////////////////////////////////////////
-// special-case functions for float lists. //
-///////////////////////////////////////////////
-typedef bl fl;
-fl*    fl_new(int blocksize);
-void   fl_init(fl* list, int blocksize);
-void   fl_free(fl* list);
-int    fl_size(fl* list);
-float* fl_append(fl* list, float data);
-float* fl_access(fl* list, int i);
-void   fl_push(fl* list, float data);
-float fl_pop(fl* list);
-float fl_get(fl* list, int n);
-void   fl_set(fl* list, int n, float val);
-void   fl_insert(fl* list, int indx, float data);
-void   fl_remove_all(fl* list);
-void   fl_copy(fl* list, int start, int length, float* dest);
-
-///////////////////////////////////////////////
 // special-case functions for string lists.  //
 ///////////////////////////////////////////////
 /*
@@ -341,23 +301,45 @@ sl_insertf(sl* list, int index, const char* format, ...);
 
 #define nl il
 #define number int
-//#define compare_numbers_ascending bl_compare_ints_ascending
-//#define compare_numbers_descending bl_compare_ints_descending
-//#define NL_PRINTF "%i"
 #include "bl-nl.h"
+#undef nl
+#undef number
+
+#define nl dl
+#define number double
+#include "bl-nl.h"
+#undef nl
+#undef number
+
+#define nl fl
+#define number float
+#include "bl-nl.h"
+#undef nl
+#undef number
 
 #ifdef INCLUDE_INLINE_SOURCE
 #define InlineDefine InlineDefineH
-#include "bl-nl.inc"
-#undef InlineDefine
-#endif
 
+#define nl il
+#define number int
+#include "bl-nl.inc"
 #undef nl
 #undef number
-//#undef NL_PRINTF
-//#undef compare_numbers_ascending
-//#undef compare_numbers_descending
 
+#define nl dl
+#define number double
+#include "bl-nl.inc"
+#undef nl
+#undef number
+
+#define nl fl
+#define number float
+#include "bl-nl.inc"
+#undef nl
+#undef number
+
+#undef InlineDefine
+#endif
 
 
 #endif

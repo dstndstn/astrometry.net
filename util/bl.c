@@ -48,15 +48,36 @@ static void bl_remove_from_node(bl* list, bl_node* node,
 
 #define nl il
 #define number int
-#define compare_numbers_ascending bl_compare_ints_ascending
-#define compare_numbers_descending bl_compare_ints_descending
+//#define compare_numbers_ascending  bl_compare_ints_ascending
+//#define compare_numbers_descending bl_compare_ints_descending
 #define NL_PRINTF "%i"
 #include "bl-nl.c"
 #undef nl
 #undef number
 #undef NL_PRINTF
-#undef compare_numbers_ascending
-#undef compare_numbers_descending
+
+#define nl fl
+#define number float
+//#define compare_numbers_ascending  bl_compare_ints_ascending
+//#define compare_numbers_descending bl_compare_ints_descending
+#define NL_PRINTF "%f"
+#include "bl-nl.c"
+#undef nl
+#undef number
+#undef NL_PRINTF
+
+#define nl dl
+#define number double
+//#define compare_numbers_ascending  bl_compare_ints_ascending
+//#define compare_numbers_descending bl_compare_ints_descending
+#define NL_PRINTF "%g"
+#include "bl-nl.c"
+#undef nl
+#undef number
+#undef NL_PRINTF
+
+//#undef compare_numbers_ascending
+//#undef compare_numbers_descending
 
 static void bl_sort_with_userdata(bl* list,
 								  int (*compare)(const void* v1, const void* v2, const void* userdata),
@@ -905,6 +926,11 @@ void bl_reverse(bl* list) {
 	list->last_access_n = 0;
 }
 
+void* bl_extend(bl* list) {
+	return bl_append(list, NULL);
+}
+
+
 
 // special-case pointer list accessors...
 int bl_compare_pointers_ascending(const void* v1, const void* v2) {
@@ -1079,153 +1105,6 @@ void pl_print(pl* list) {
 int   pl_size(pl* list) {
 	return bl_size(list);
 }
-
-// special-case double list accessors...
-void  dl_remove_all(dl* list) {
-	bl_remove_all(list);
-}
-
-void dl_reverse(dl* list) {
-	bl_reverse(list);
-}
-
-void dl_init(dl* list, int blocksize) {
-	bl_init(list, blocksize, sizeof(double));
-}
-
-void   dl_insert(dl* list, int indx, double data) {
-	bl_insert(list, indx, &data);
-}
-
-dl* dl_new(int blocksize) {
-	return bl_new(blocksize, sizeof(double));
-}
-
-void dl_free(dl* list) {
-	bl_free(list);
-}
-
-int   dl_size(dl* list) {
-	return bl_size(list);
-}
-
-int dl_check_consistency(dl* list) {
-	return bl_check_consistency(list);
-}
-
-void dl_push(dl* list, double data) {
-	bl_append(list, &data);
-}
-
-double* dl_append(dl* list, double data) {
-	return bl_append(list, &data);
-}
-
-double dl_pop(dl* list) {
-    double ret = dl_get(list, list->N-1);
-    bl_remove_index(list, list->N-1);
-    return ret;
-}
-
-double dl_get(dl* list, int n) {
-	double* ptr;
-	ptr = bl_access(list, n);
-	return *ptr;
-}
-
-void dl_set(dl* list, int index, double value) {
-	int i;
-	int nadd = (index+1) - list->N;
-	if (nadd > 0) {
-		// enlarge the list to hold 'nadd' more entries.
-		for (i=0; i<nadd; i++) {
-			dl_append(list, 0.0);
-		}
-	}
-	bl_set(list, index, &value);
-}
-
-void dl_copy(bl* list, int start, int length, double* vdest) {
-	bl_copy(list, start, length, vdest);
-}
-
-dl* dl_dupe(dl* dlist) {
-    dl* ret = dl_new(dlist->blocksize);
-    int i;
-    for (i=0; i<dlist->N; i++)
-        dl_push(ret, dl_get(dlist, i));
-    return ret; 
-}
-
-void   dl_merge_lists(dl* list1, dl* list2) {
-	bl_append_list(list1, list2);
-}
-
-
-void dl_print(dl* list) {
-	bl_node* n;
-	int i;
-	for (n=list->head; n; n=n->next) {
-		printf("[ ");
-		for (i=0; i<n->N; i++)
-			printf("%g, ", NODE_DOUBLEDATA(n)[i]);
-		printf("] ");
-	}
-}
-
-fl*    fl_new(int blocksize) {
-	return bl_new(blocksize, sizeof(float));
-}
-void   fl_init(fl* list, int blocksize) {
-	bl_init(list, blocksize, sizeof(float));
-}
-void   fl_free(fl* list) {
-    bl_free(list);
-}
-int    fl_size(fl* list) {
-    return bl_size(list);
-}
-float* fl_append(fl* list, float data) {
-    return bl_append(list, &data);
-}
-void   fl_push(fl* list, float data) {
-    fl_append(list, data);
-}
-float fl_pop(fl* list) {
-    float ret;
-    bl_pop(list, &ret);
-    return ret;
-}
-float fl_get(fl* list, int n) {
-	float* ptr;
-	ptr = bl_access(list, n);
-	return *ptr;
-}
-float* fl_access(fl* list, int i) {
-    return bl_access(list, i);
-}
-void   fl_set(fl* list, int n, float val) {
-	int i;
-	int nadd = (n+1) - list->N;
-	if (nadd > 0) {
-		// enlarge the list to hold 'nadd' more entries.
-		for (i=0; i<nadd; i++) {
-			fl_append(list, 0.0);
-		}
-	}
-	bl_set(list, n, &val);
-}
-void   fl_insert(fl* list, int indx, float data) {
-	bl_insert(list, indx, &data);
-}
-void   fl_remove_all(fl* list) {
-	bl_remove_all(list);
-}
-void   fl_copy(fl* list, int start, int length, float* dest) {
-    bl_copy(list, start, length, dest);
-}
-
-
 
 sl* sl_new(int blocksize) {
 	pl* lst = pl_new(blocksize);
@@ -1534,10 +1413,6 @@ char* sl_insert_sorted(sl* list, const char* string) {
     char* copy = strdup(string);
     pl_insert_sorted(list, copy, bl_compare_strings_ascending);
     return copy;
-}
-
-void* bl_extend(bl* list) {
-	return bl_append(list, NULL);
 }
 
 #define InlineDefine InlineDefineC
