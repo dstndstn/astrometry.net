@@ -20,6 +20,7 @@
 #define HEALPIX_H
 
 #include <sys/types.h>
+#include <stdint.h>
 
 #include "keywords.h"
 
@@ -197,12 +198,15 @@ Const int healpix_compose_ring(int ring, int longind, int Nside);
 */
 void healpix_decompose_xy(int finehp, int* bighp, int* x, int* y, int Nside);
 
+void healpix_decompose_xyl(int64_t finehp, int* bighp, int* x, int* y, int Nside);
+
 /**
    Composes an XY index given the "base healpix" and "x" and "y" coordinates
    within that healpix.
 */
 Const int healpix_compose_xy(int bighp, int x, int y, int Nside);
 
+Const int64_t healpix_compose_xyl(int bighp, int x, int y, int Nside);
 
 
 
@@ -211,12 +215,16 @@ Const int healpix_compose_xy(int bighp, int x, int y, int Nside);
 */
 Const int radectohealpix(double ra, double dec, int Nside);
 
+Const int64_t radectohealpixl(double ra, double dec, int Nside);
+
 int radectohealpixf(double ra, double dec, int Nside, double* dx, double* dy);
 
 /**
    Converts (RA, DEC) coordinates (in degrees) to healpix index.
 */
 Const int radecdegtohealpix(double ra, double dec, int Nside);
+
+Const int64_t radecdegtohealpixl(double ra, double dec, int Nside);
 
 int radecdegtohealpixf(double ra, double dec, int Nside, double* dx, double* dy);
 
@@ -225,8 +233,13 @@ int radecdegtohealpixf(double ra, double dec, int Nside, double* dx, double* dy)
  */
 Const int xyztohealpix(double x, double y, double z, int Nside);
 
+Const int64_t xyztohealpixl(double x, double y, double z, int Nside);
+
 int xyztohealpixf(double x, double y, double z, int Nside,
                   double* p_dx, double* p_dy);
+
+int64_t xyztohealpixlf(double x, double y, double z, int Nside,
+					   double* p_dx, double* p_dy);
 
 /**
    Converts (x,y,z) coordinates (stored in an array) on the unit sphere into
@@ -284,6 +297,11 @@ Const double healpix_side_length_arcmin(int Nside);
    pixels near the edges can have fewer.
 */
 int healpix_get_neighbours(int hp, int* neighbour, int Nside);
+
+/**
+ Same as above, but for Nsides big enough that it overflows 32-bit int.
+ */
+int healpix_get_neighboursl(int64_t pix, int64_t* neighbour, int Nside);
 
 /**
  Finds the healpixes containing and neighbouring the given xyz position which are

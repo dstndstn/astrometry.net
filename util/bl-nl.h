@@ -45,6 +45,9 @@ void NLF(merge_lists)(nl* list1, nl* list2);
 void NLF(push)(nl* list, const number data);
 number  NLF(pop)(nl* list);
 int NLF(contains)(nl* list, const number data);
+// Assuming the list is sorted in ascending order,
+// does it contain the given number?
+int NLF(sorted_contains)(nl* list, const number data);
 // Returns the index in the list of the given number, or -1 if it
 // is not found.
 int  NLF(index_of)(nl* list, const number data);

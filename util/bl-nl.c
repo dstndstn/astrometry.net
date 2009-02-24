@@ -376,5 +376,42 @@ int NLF(contains)(nl* list, const number data) {
 	return (NLF(index_of)(list, data) != -1);
 }
 
+// FIXME - efficiency.
+int NLF(sorted_contains)(nl* list, const number n) {
+	bl_node *node;
+	number* iarray;
+	int lower, upper;
+	int nskipped;
+
+	// find the first node for which n <= the last element.
+	if (list->last_access && list->last_access->N &&
+		(n >= *NODE_NUMDATA(list->last_access))) {
+		node = list->last_access;
+		nskipped = list->last_access_n;
+	} else {
+		node = list->head;
+		nskipped = 0;
+	}
+	for (; node && (n > NODE_NUMDATA(node)[node->N-1]);
+		 node=node->next)
+		nskipped += node->N;
+	if (!node)
+		return 0;
+
+	// find within the node...
+	iarray = NODE_NUMDATA(node);
+	lower = -1;
+	upper = node->N;
+	while (lower < (upper-1)) {
+		int mid;
+		mid = (upper + lower) / 2;
+		if (n >= iarray[mid])
+			lower = mid;
+		else
+			upper = mid;
+	}
+	return (lower >= 0 && n == iarray[lower]);
+}
+
 #undef NLF
 #undef NODE_NUMDATA

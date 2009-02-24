@@ -34,7 +34,21 @@ struct hp_s {
 };
 typedef struct hp_s hp_t;
 
-//static void hp_decompose_xy(hp_t hp, int* base, int* x, int* y, int Nside)
+static int64_t hptointl(hp_t hp, int Nside) {
+	return healpix_compose_xyl(hp.bighp, hp.x, hp.y, Nside);	
+}
+
+static int hptoint(hp_t hp, int Nside) {
+	return healpix_compose_xy(hp.bighp, hp.x, hp.y, Nside);	
+}
+
+static void intltohp(int64_t pix, hp_t* hp, int Nside) {
+	healpix_decompose_xyl(pix, &hp->bighp, &hp->x, &hp->y, Nside);
+}
+
+static void inttohp(int pix, hp_t* hp, int Nside) {
+	healpix_decompose_xy(pix, &hp->bighp, &hp->x, &hp->y, Nside);
+}
 
 
 // I've had troubles with rounding functions being declared properly
@@ -315,7 +329,7 @@ Const int healpix_xy_to_ring(int hp, int Nside) {
 
 Const double healpix_side_length_arcmin(int Nside) {
 	return sqrt((4.0 * M_PI * mysquare(180.0 * 60.0 / M_PI)) /
-				(double)(12 * Nside * Nside));
+				(12.0 * Nside * Nside));
 }
 
 static Inline void swap(int* i1, int* i2) {
@@ -364,6 +378,11 @@ int healpix_compose_xy(int bighp, int x, int y, int Nside) {
 	return (bighp * Nside * Nside) + compose_xy(x, y, Nside);
 }
 
+int64_t healpix_compose_xyl(int bighp, int x, int y, int Nside) {
+	int64_t ns = Nside;
+	return ((((int64_t)bighp * ns) + x) * ns) + y;
+}
+
 void healpix_decompose_xy(int finehp, int* pbighp, int* px, int* py, int Nside) {
 	int hp;
 	if (pbighp) {
@@ -371,6 +390,22 @@ void healpix_decompose_xy(int finehp, int* pbighp, int* px, int* py, int Nside) 
 		*pbighp = bighp;
 	}
 	hp = finehp % (Nside * Nside);
+	if (px)
+		*px = hp / Nside;
+	if (py)
+		*py = hp % Nside;
+}
+
+void healpix_decompose_xyl(int64_t finehp,
+						   int* pbighp, int* px, int* py,
+						   int Nside) {
+	int64_t hp;
+	int64_t ns2 = Nside * Nside;
+	if (pbighp) {
+		int bighp   = finehp / ns2;
+		*pbighp = bighp;
+	}
+	hp = finehp % ns2;
 	if (px)
 		*px = hp / Nside;
 	if (py)
@@ -635,19 +670,27 @@ int healpix_get_neighbours(int pix, int* neighbour, int Nside) {
 	hp_t hp;
 	int nn;
 	int i;
-	healpix_decompose_xy(pix, &hp.bighp, &hp.x, &hp.y, Nside);
+	inttohp(pix, &hp, Nside);
 	nn = get_neighbours(hp, neigh, Nside);
 	for (i=0; i<nn; i++)
-		neighbour[i] = healpix_compose_xy(neigh[i].bighp, neigh[i].x, neigh[i].y, Nside);
+		neighbour[i] = hptoint(neigh[i], Nside);
 	return nn;
 }
 
-int xyztohealpix(double x, double y, double z, int Nside) {
-    return xyztohealpixf(x, y, z, Nside, NULL, NULL);
+int healpix_get_neighboursl(int64_t pix, int64_t* neighbour, int Nside) {
+	hp_t neigh[8];
+	hp_t hp;
+	int nn;
+	int i;
+	intltohp(pix, &hp, Nside);
+	nn = get_neighbours(hp, neigh, Nside);
+	for (i=0; i<nn; i++)
+		neighbour[i] = hptointl(neigh[i], Nside);
+	return nn;
 }
 
-int xyztohealpixf(double x, double y, double z, int Nside,
-				  double* p_dx, double* p_dy) {
+static hp_t xyztohp(double vx, double vy, double vz, int Nside,
+					double* p_dx, double* p_dy) {
 	double phi;
 	double twothirds = 2.0 / 3.0;
 	double pi = M_PI;
@@ -655,32 +698,32 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 	double halfpi = 0.5 * M_PI;
     double dx, dy;
     int basehp;
-    int hp;
-    int pnprime;
+	int x, y;
 	double sector;
 	int offset;
 	double phi_t;
+	hp_t hp;
 
-	//double EPS = 1e-8;
+	// only used in asserts()
+	double EPS = 1e-8;
 
 	/* Convert our point into cylindrical coordinates for middle ring */
-	phi = atan2(y, x);
+	phi = atan2(vy, vx);
 	if (phi < 0.0)
 		phi += twopi;
 	phi_t = fmod(phi, halfpi);
 	assert (phi_t >= 0.0);
 
 	// North or south polar cap.
-	if ((z >= twothirds) || (z <= -twothirds)) {
+	if ((vz >= twothirds) || (vz <= -twothirds)) {
 		double zfactor;
 		bool north;
-		int x, y;
 		int column;
 		double root;
 		double xx, yy, kx, ky;
 
 		// Which pole?
-		if (z >= twothirds) {
+		if (vz >= twothirds) {
 			north = TRUE;
 			zfactor = 1.0;
 		} else {
@@ -689,11 +732,11 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 		}
 
         // solve eqn 20: k = Ns - xx (in the northern hemi)
-		root = (1.0 - z*zfactor) * 3.0 * mysquare(Nside * (2.0 * phi_t - pi) / pi);
+		root = (1.0 - vz*zfactor) * 3.0 * mysquare(Nside * (2.0 * phi_t - pi) / pi);
 		kx = (root <= 0.0) ? 0.0 : sqrt(root);
 
         // solve eqn 19 for k = Ns - yy
-		root = (1.0 - z*zfactor) * 3.0 * mysquare(Nside * 2.0 * phi_t / pi);
+		root = (1.0 - vz*zfactor) * 3.0 * mysquare(Nside * 2.0 * phi_t / pi);
 		ky = (root <= 0.0) ? 0.0 : sqrt(root);
 
 		if (north) {
@@ -716,9 +759,6 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 		dx = xx - x;
 		dy = yy - y;
 
-		pnprime = compose_xy(x, y, Nside);
-		assert(pnprime < Nside*Nside);
-
 		sector = (phi - phi_t) / (halfpi);
 		offset = (int)round(sector);
 		assert(fabs(sector - offset) < EPS);
@@ -738,11 +778,10 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 		int offset;
 		double u1, u2;
 		double zunits, phiunits;
-		int x, y;
         double xx, yy;
 
 		// project into the unit square z=[-2/3, 2/3], phi=[0, pi/2]
-		zunits = (z + twothirds) / (4.0 / 3.0);
+		zunits = (vz + twothirds) / (4.0 / 3.0);
 		phiunits = phi_t / halfpi;
 		// convert into diagonal units
 		// (add 1 to u2 so that they both cover the range [0,2].
@@ -806,11 +845,11 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 		assert(y >= 0);
 		assert(y < Nside);
 		dy = yy - y;
-
-		pnprime = compose_xy(x, y, Nside);
-		assert(pnprime < Nside*Nside);
 	}
-    hp = basehp * Nside * Nside + pnprime;
+
+    hp.bighp = basehp;
+	hp.x = x;
+	hp.y = y;
 
     if (p_dx) *p_dx = dx;
     if (p_dy) *p_dy = dy;
@@ -818,8 +857,32 @@ int xyztohealpixf(double x, double y, double z, int Nside,
     return hp;
 }
 
+int xyztohealpix(double x, double y, double z, int Nside) {
+    return xyztohealpixf(x, y, z, Nside, NULL, NULL);
+}
+
+int64_t xyztohealpixl(double x, double y, double z, int Nside) {
+    return xyztohealpixlf(x, y, z, Nside, NULL, NULL);
+}
+
+int64_t xyztohealpixlf(double x, double y, double z, int Nside,
+					   double* p_dx, double* p_dy) {
+	hp_t hp = xyztohp(x,y,z, Nside, p_dx,p_dy);
+	return hptointl(hp, Nside);
+}
+
+int xyztohealpixf(double x, double y, double z, int Nside,
+				  double* p_dx, double* p_dy) {
+	hp_t hp = xyztohp(x,y,z, Nside, p_dx,p_dy);
+	return hptoint(hp, Nside);
+}
+
 int radectohealpix(double ra, double dec, int Nside) {
     return xyztohealpix(radec2x(ra,dec), radec2y(ra,dec), radec2z(ra,dec), Nside);
+}
+
+int64_t radectohealpixl(double ra, double dec, int Nside) {
+    return xyztohealpixl(radec2x(ra,dec), radec2y(ra,dec), radec2z(ra,dec), Nside);
 }
 
 int radectohealpixf(double ra, double dec, int Nside, double* dx, double* dy) {
@@ -829,6 +892,10 @@ int radectohealpixf(double ra, double dec, int Nside, double* dx, double* dy) {
  
 Const int radecdegtohealpix(double ra, double dec, int Nside) {
 	return radectohealpix(deg2rad(ra), deg2rad(dec), Nside);
+}
+
+Const int64_t radecdegtohealpixl(double ra, double dec, int Nside) {
+	return radectohealpixl(deg2rad(ra), deg2rad(dec), Nside);
 }
 
 int radecdegtohealpixf(double ra, double dec, int Nside, double* dx, double* dy) {

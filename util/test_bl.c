@@ -25,6 +25,23 @@
 
 #include "bl.h"
 
+void test_ll_sorted_contains_1(CuTest* tc) {
+	int i;
+	ll* lst = ll_new(32);
+	for (i=0; i<10000; i++)
+		ll_append(lst, i*i);
+	CuAssertIntEquals(tc, 0, ll_sorted_contains(lst, -1));
+	CuAssertIntEquals(tc, 1, ll_sorted_contains(lst, 0));
+	CuAssertIntEquals(tc, 1, ll_sorted_contains(lst, 1));
+	CuAssertIntEquals(tc, 1, ll_sorted_contains(lst, 4));
+	CuAssertIntEquals(tc, 0, ll_sorted_contains(lst, 960));
+	CuAssertIntEquals(tc, 1, ll_sorted_contains(lst, 961));
+	CuAssertIntEquals(tc, 0, ll_sorted_contains(lst, 962));
+	CuAssertIntEquals(tc, 0, ll_sorted_contains(lst, 1023));
+	CuAssertIntEquals(tc, 1, ll_sorted_contains(lst, 1024));
+	CuAssertIntEquals(tc, 0, ll_sorted_contains(lst, 1025));
+}
+
 void test_il_remove_index_range_1(CuTest* tc) {
 	il* lst = il_new(4);
 	il_append(lst, 0);
@@ -73,7 +90,6 @@ void test_sl_split_2(CuTest* tc) {
 }
 
 void test_sl_split_3(CuTest* tc) {
-    int i;
     sl* s, *s2;
     s = sl_new(1);
     sl_append(s, "guard");
