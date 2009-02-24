@@ -30,6 +30,8 @@
 
 static bl_node* bl_new_node(bl* list);
 static void bl_free_node(bl_node* node);
+static void bl_remove_from_node(bl* list, bl_node* node,
+								bl_node* prev, int index_in_node);
 
 // Defined in bl.ph (private header):
 // free_node
@@ -43,6 +45,18 @@ static void bl_free_node(bl_node* node);
 // bl_access
 // il_size
 // il_get
+
+#define nl il
+#define number int
+#define compare_numbers_ascending bl_compare_ints_ascending
+#define compare_numbers_descending bl_compare_ints_descending
+#define NL_PRINTF "%i"
+#include "bl-nl.c"
+#undef nl
+#undef number
+#undef NL_PRINTF
+#undef compare_numbers_ascending
+#undef compare_numbers_descending
 
 static void bl_sort_with_userdata(bl* list,
 								  int (*compare)(const void* v1, const void* v2, const void* userdata),
@@ -838,22 +852,6 @@ int bl_check_sorted(bl* list,
 	return 0;
 }
 
-int bl_compare_ints_ascending(const void* v1, const void* v2) {
-    int i1 = *(int*)v1;
-    int i2 = *(int*)v2;
-    if (i1 > i2) return 1;
-    else if (i1 < i2) return -1;
-    else return 0;
-}
-
-int bl_compare_ints_descending(const void* v1, const void* v2) {
-    int i1 = *(int*)v1;
-    int i2 = *(int*)v2;
-    if (i1 > i2) return -1;
-    else if (i1 < i2) return 1;
-    else return 0;
-}
-
 static void memswap(void* v1, void* v2, int len) {
 	unsigned char tmp;
 	unsigned char* c1 = v1;
@@ -907,322 +905,6 @@ void bl_reverse(bl* list) {
 	list->last_access_n = 0;
 }
 
-
-// integer list functions:
-
-void il_reverse(il* list) {
-	bl_reverse(list);
-}
-
-void il_append_array(il* list, int* data, int ndata) {
-	int i;
-	for (i=0; i<ndata; i++)
-		il_append(list, data[i]);
-}
-
-il* il_merge_ascending(il* list1, il* list2) {
-	il* res;
-	int i1, i2, N1, N2, v1, v2;
-	unsigned char getv1, getv2;
-	if (!list1)
-		return il_dupe(list2);
-	if (!list2)
-		return il_dupe(list1);
-	if (!il_size(list1))
-		return il_dupe(list2);
-	if (!il_size(list2))
-		return il_dupe(list1);
-
-	res = il_new(list1->blocksize);
-	N1 = il_size(list1);
-	N2 = il_size(list2);
-	i1 = i2 = 0;
-	v1 = v2 = -1; // to make gcc happy
-	getv1 = getv2 = 1;
-	while (i1 < N1 && i2 < N2) {
-		if (getv1) {
-			v1 = il_get(list1, i1);
-			getv1 = 0;
-		}
-		if (getv2) {
-			getv2 = 0;
-			v2 = il_get(list2, i2);
-		}
-		if (v1 <= v2) {
-			il_append(res, v1);
-			i1++;
-			getv1 = 1;
-		} else {
-			il_append(res, v2);
-			i2++;
-			getv2 = 1;
-		}
-	}
-	for (; i1<N1; i1++)
-		il_append(res, il_get(list1, i1));
-	for (; i2<N2; i2++)
-		il_append(res, il_get(list2, i2));
-	return res;
-}
-
-void il_remove_all_reuse(il* list) {
-	bl_remove_all_but_first(list);
-}
-
-int  il_find_index_ascending(il* list, int value) {
-	return bl_find_index(list, &value, bl_compare_ints_ascending);
-}
-
-int il_check_consistency(il* list) {
-	return bl_check_consistency(list);
-}
-
-int il_check_sorted_ascending(il* list,
-							  int isunique) {
-	return bl_check_sorted(list, bl_compare_ints_ascending, isunique);
-}
-
-int il_check_sorted_descending(il* list,
-							   int isunique) {
-	return bl_check_sorted(list, bl_compare_ints_descending, isunique);
-}
-
-void il_remove(il* ilist, int index) {
-    bl_remove_index(ilist, index);
-}
-
-int il_pop(il* ilist) {
-    int ret = il_get(ilist, ilist->N-1);
-    bl_remove_index(ilist, ilist->N-1);
-    return ret;
-}
-
-il* il_dupe(il* ilist) {
-    il* ret = il_new(ilist->blocksize);
-    int i;
-    for (i=0; i<ilist->N; i++)
-        il_push(ret, il_get(ilist, i));
-    return ret;
-}
-
-int il_remove_value(il* ilist, int value) {
-    bl* list = ilist;
-	bl_node *node, *prev;
-	int istart = 0;
-	for (node=list->head, prev=NULL;
-		 node;
-		 prev=node, node=node->next) {
-		int i;
-		int* idat;
-		idat = NODE_DATA(node);
-		for (i=0; i<node->N; i++)
-			if (idat[i] == value) {
-				bl_remove_from_node(list, node, prev, i);
-				list->last_access = prev;
-				list->last_access_n = istart;
-				return istart + i;
-			}
-		istart += node->N;
-	}
-	return -1;
-}
-
-void il_remove_all(il* list) {
-	bl_remove_all(list);
-}
-
-void il_remove_index_range(il* list, int start, int length) {
-	bl_remove_index_range(list, start, length);
-}
-
-void il_set(il* list, int index, int value) {
-	bl_set(list, index, &value);
-}
-
-il* il_new(int blocksize) {
-	return bl_new(blocksize, sizeof(int));
-}
-
-void il_new_existing(il* list, int blocksize) {
-	bl_init(list, blocksize, sizeof(int));
-}
-
-void il_init(il* list, int blocksize) {
-	bl_init(list, blocksize, sizeof(int));
-}
-
-void il_free(il* list) {
-	bl_free(list);
-}
-
-void il_push(il* list, int data) {
-	bl_append(list, &data);
-}
-
-int* il_append(il* list, int data) {
-	return bl_append(list, &data);
-}
-
-void il_append_list(il* list, il* list2) {
-    int i, N;
-    N = il_size(list2);
-    for (i=0; i<N; i++)
-        il_append(list, il_get(list2, i));
-}
-
-void il_merge_lists(il* list1, il* list2) {
-	bl_append_list(list1, list2);
-}
-
-int il_insert_ascending(il* list, int n) {
-	bl_node *node;
-	int* iarray;
-	int lower, upper;
-	int nskipped;
-	// find the first node for which n <= the last element.
-	// we will insert n into that node.
-	if (list->last_access && list->last_access->N &&
-		(n >= NODE_INTDATA(list->last_access)[0])) {
-		node = list->last_access;
-		nskipped = list->last_access_n;
-	} else {
-		node = list->head;
-		nskipped = 0;
-	}
-	for (; node && (n > NODE_INTDATA(node)[node->N-1]);
-		 node=node->next)
-		nskipped += node->N;
-	if (!node) {
-		// either we're adding the first element, or we're appending since
-		// n is bigger than the largest element in the list.
-		il_append(list, n);
-		return list->N-1;
-	}
-
-	// find where in the node it should be inserted...
-	iarray = NODE_INTDATA(node);
-	lower = -1;
-	upper = node->N;
-	while (lower < (upper-1)) {
-		int mid;
-		mid = (upper + lower) / 2;
-		if (n >= iarray[mid])
-			lower = mid;
-		else
-			upper = mid;
-	}
-
-	// set the jump accessors...
-	list->last_access = node;
-	list->last_access_n = nskipped;
-	// ... so that this runs in O(1).
-	bl_insert(list, nskipped + lower + 1, &n);
-	return nskipped + lower + 1;
-}
-
-int il_insert_descending(il* list, int n) {
-    return bl_insert_sorted(list, &n, bl_compare_ints_descending);
-}
-
-int il_insert_unique_ascending(il* list, int n) {
-	bl_node *node;
-	int* iarray;
-	int lower, upper;
-	int nskipped;
-
-	// find the first node for which n <= the last element.
-	// we will insert n into that node.
-	if (list->last_access && list->last_access->N &&
-		(n >= NODE_INTDATA(list->last_access)[0])) {
-		node = list->last_access;
-		nskipped = list->last_access_n;
-	} else {
-		node = list->head;
-		nskipped = 0;
-	}
-	for (; node && (n > NODE_INTDATA(node)[node->N-1]);
-		 node=node->next)
-		nskipped += node->N;
-	if (!node) {
-		// either we're adding the first element, or we're appending since
-		// n is bigger than the largest element in the list.
-		il_append(list, n);
-		return list->N-1;
-	}
-
-	// find where in the node it should be inserted...
-	iarray = NODE_INTDATA(node);
-	lower = -1;
-	upper = node->N;
-	while (lower < (upper-1)) {
-		int mid;
-		mid = (upper + lower) / 2;
-		if (n >= iarray[mid])
-			lower = mid;
-		else
-			upper = mid;
-	}
-
-    // check if it's a duplicate...
-    // --if it's the smallest element in this node, "lower" ends up being -1,
-    //   hence the ">= 0" check.
-	if (lower >= 0 && n == iarray[lower])
-		return -1;
-
-	// set the jump accessors...
-	list->last_access = node;
-	list->last_access_n = nskipped;
-	// ... so that the insert runs in O(1).
-    bl_insert(list, nskipped + lower + 1, &n);
-	return nskipped + lower + 1;
-}
-
-void   il_insert(il* list, int indx, int data) {
-	bl_insert(list, indx, &data);
-}
-
-void il_copy(il* list, int start, int length, int* vdest) {
-	bl_copy(list, start, length, vdest);
-}
-
-void il_print(bl* list) {
-	bl_node* n;
-	int i;
-	for (n=list->head; n; n=n->next) {
-		printf("[ ");
-		for (i=0; i<n->N; i++)
-			printf("%i, ", NODE_INTDATA(n)[i]);
-		printf("] ");
-	}
-}
-
-int il_contains(il* list, int data) {
-	bl_node* n;
-	int i;
-	int* idata;
-	for (n=list->head; n; n=n->next) {
-		idata = NODE_INTDATA(n);
-		for (i=0; i<n->N; i++)
-			if (idata[i] == data)
-				return 1;
-	}
-	return 0;
-}
-
-int  il_index_of(il* list, int data) {
-	bl_node* n;
-	int i;
-	int* idata;
-	int npast = 0;
-	for (n=list->head; n; n=n->next) {
-		idata = NODE_INTDATA(n);
-		for (i=0; i<n->N; i++)
-			if (idata[i] == data)
-				return npast + i;
-		npast += n->N;
-	}
-	return -1;
-}
 
 // special-case pointer list accessors...
 int bl_compare_pointers_ascending(const void* v1, const void* v2) {

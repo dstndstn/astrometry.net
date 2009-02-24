@@ -139,52 +139,6 @@ int   bl_check_consistency(bl* list);
 int   bl_check_sorted(bl* list, int (*compare)(const void* v1, const void* v2), int isunique);
 
 ///////////////////////////////////////////////
-// special-case functions for integer lists. //
-///////////////////////////////////////////////
-typedef bl il;
-Malloc il*  il_new(int blocksize);
-Pure InlineDeclare int il_size(const il* list);
-void il_new_existing(il* list, int blocksize);
-void il_init(il* list, int blocksize);
-void il_reverse(il* list);
-void il_remove_all(il* list);
-void il_remove_all_reuse(il* list);
-void il_free(il* list);
-int* il_append(il* list, int data);
-void il_append_list(il* list, il* list2);
-void il_append_array(il* list, int* data, int ndata);
-void il_merge_lists(il* list1, il* list2);
-void il_push(il* list, int data);
-int  il_pop(il* list);
-int  il_contains(il* list, int data);
-// Returns the index in the list of the given integer, or -1 if it
-// is not found.
-int  il_index_of(il* list, int data);
-InlineDeclare int  il_get(il* list, const int n);
-void il_copy(il* list, int start, int length, int* vdest);
-il*  il_dupe(il* list);
-void il_print(il* list);
-void   il_insert(il* list, int indx, int data);
-int il_insert_ascending(il* list, int n);
-int il_insert_descending(il* list, int n);
-int  il_insert_unique_ascending(il* list, int p);
-void il_set(il* list, int ind, int value);
-void il_remove(il* list, int ind);
-void il_remove_index_range(il* list, int start, int length);
-int  il_find_index_ascending(il* list, int value);
-
-il* il_merge_ascending(il* list1, il* list2);
-
-// returns the index of the removed value, or -1 if it didn't
-// exist in the list.
-int il_remove_value(il* list, int value);
-
-int il_check_consistency(il* list);
-int il_check_sorted_ascending(il* list, int isunique);
-int il_check_sorted_descending(il* list, int isunique);
-
-
-///////////////////////////////////////////////
 // special-case functions for pointer lists. //
 ///////////////////////////////////////////////
 typedef bl pl;
@@ -384,6 +338,26 @@ sl_insertf(sl* list, int index, const char* format, ...);
 #include "bl.inc"
 #undef InlineDefine
 #endif
+
+#define nl il
+#define number int
+//#define compare_numbers_ascending bl_compare_ints_ascending
+//#define compare_numbers_descending bl_compare_ints_descending
+//#define NL_PRINTF "%i"
+#include "bl-nl.h"
+
+#ifdef INCLUDE_INLINE_SOURCE
+#define InlineDefine InlineDefineH
+#include "bl-nl.inc"
+#undef InlineDefine
+#endif
+
+#undef nl
+#undef number
+//#undef NL_PRINTF
+//#undef compare_numbers_ascending
+//#undef compare_numbers_descending
+
 
 
 #endif

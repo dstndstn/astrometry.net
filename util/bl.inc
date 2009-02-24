@@ -65,18 +65,7 @@ void* bl_access(bl* list, int n) {
 }
 
 InlineDefine
-int il_get(il* list, int n) {
-	int* ptr = bl_access(list, n);
-	return *ptr;
-}
-
-InlineDefine
 int bl_size(const bl* list) {
 	return list->N;
-}
-
-InlineDefine
-int il_size(const il* list) {
-    return bl_size(list);
 }
 
