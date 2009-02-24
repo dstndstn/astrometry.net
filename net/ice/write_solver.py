@@ -5,7 +5,7 @@
 
 scales=[10,5,4,3,2]
 
-### TEMP - avoid nodes 12-15.
+### TEMP - avoid nodes 12-15. (until Mar 11/2009)
 #nodes = [('neuron-0-%i' % i, [scales[i % len(scales)]]) for i in range(25)]
 #hosts = ['neuron-0-%i' for i in range(25)]
 
