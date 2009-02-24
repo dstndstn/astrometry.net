@@ -560,18 +560,18 @@ fitstable_t* fitstable_open(const char* fn) {
     fitstable_t* tab;
     tab = fitstable_new();
     if (!tab) {
-		ERROR("Failed to allocate new FITS table structure.");
+		ERROR("Failed to allocate new FITS table structure");
         goto bailout;
 	}
     tab->extension = 1;
     tab->fn = strdup_safe(fn);
     tab->primheader = qfits_header_read(fn);
     if (!tab->primheader) {
-        ERROR("Failed to read primary FITS header from %s.", fn);
+        ERROR("Failed to read primary FITS header from %s", fn);
         goto bailout;
     }
     if (fitstable_open_extension(tab, tab->extension)) {
-        ERROR("Failed to open extension %i in file %s.", tab->extension, fn);
+        ERROR("Failed to open extension %i in file %s", tab->extension, fn);
         goto bailout;
     }
 	return tab;

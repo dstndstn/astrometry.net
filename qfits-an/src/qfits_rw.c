@@ -135,7 +135,7 @@ qfits_header * qfits_header_read_hdr(const char * filename)
 
     /* Open the file */
     if ((in=fopen(filename, "r"))==NULL) {
-        qfits_error("cannot read [%s]", filename);
+        qfits_error("cannot read file \"%s\"", filename);
         return NULL;
     }
     

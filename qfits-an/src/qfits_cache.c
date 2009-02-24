@@ -47,7 +47,7 @@
 #include "qfits_std.h"
 #include "qfits_memory.h"
 #include "qfits_thread.h"
-
+#include "qfits_error.h"
 
 static qfits_lock_t cache_lock = QFITS_LOCK_INIT;
 
@@ -252,9 +252,7 @@ int qfits_query_impl(const char * filename, int what)
         rank = qfits_cache_add(filename);
     }
     if (rank==-1) {
-        qdebug(
-            printf("qfits: error adding %s to cache\n", filename);
-        );
+        qfits_error("error adding file \"%s\" to cache", filename);
         return -1;
     }
 
@@ -366,25 +364,19 @@ static int qfits_cache_add(const char * filename)
 
     /* Stat file to get its size */
     if (stat(filename, &sta)!=0) {
-        qdebug(
-            printf("qfits: cannot stat file %s: %s\n", filename, strerror(errno));
-        );
+        qfits_error("cannot stat file \"%s\": %s", filename, strerror(errno));
         return -1;
     }
 
     /* Open input file */
     if ((in=fopen(filename, "r"))==NULL) {
-        qdebug(
-            printf("qfits: cannot open file %s: %s\n", filename, strerror(errno));
-        );
+        qfits_error("cannot open file \"%s\": %s", filename, strerror(errno));
         return -1;
     }
 
     /* Read first block in */
     if (fread(buf, 1, FITS_BLOCK_SIZE, in)!=FITS_BLOCK_SIZE) {
-        qdebug(
-            printf("qfits: error reading first block from %s: %s\n", filename, strerror(errno));
-        );
+        qfits_error("error reading first block from \"%s\": %s\n", filename, strerror(errno));
         fclose(in);
         return -1;
     }
@@ -398,9 +390,7 @@ static int qfits_cache_add(const char * filename)
         buf[6]!=' ' ||
         buf[7]!=' ' ||
         buf[8]!='=') {
-        qdebug(
-            printf("qfits: file %s is not FITS\n", filename);
-        );
+        qfits_error("file \"%s\" is not FITS (does not start with \"SIMPLE  =\")", filename);
         fclose(in);
         return -1;
     }
@@ -426,9 +416,7 @@ static int qfits_cache_add(const char * filename)
     while (found_it==0) {
         /* Read one FITS block */
         if (fread(buf, 1, FITS_BLOCK_SIZE, in)!=FITS_BLOCK_SIZE) {
-            qdebug(
-                printf("qfits: error reading file %s\n", filename);
-            );
+			qfits_error("error reading file %s\n", filename);
             fclose(in);
             return -1;
         }
@@ -551,9 +539,7 @@ static int qfits_cache_add(const char * filename)
                 }
                 seeked = fseek(in, skip_blocks*FITS_BLOCK_SIZE, SEEK_CUR);
                 if (seeked<0) {
-                    qdebug(
-                        printf("qfits: error seeking file %s\n", filename);
-                    );
+                    qfits_error("error seeking file \"%s\"\n", filename);
                     qfits_free(qc->name);
 					free(off_hdr);
 					free(off_dat);
@@ -596,9 +582,7 @@ static int qfits_cache_add(const char * filename)
              * XTENSION start.
              */
             if (fseek(in, -FITS_BLOCK_SIZE, SEEK_CUR)==-1) {
-                qdebug(
-                    printf("qfits: error fseeking file backwards\n");
-                );
+                qfits_error("error fseeking file \"%s\" backwards\n", filename);
                 qfits_free(qc->name);
 				free(off_hdr);
 				free(off_dat);
@@ -611,9 +595,7 @@ static int qfits_cache_add(const char * filename)
             naxis = 0;
             while ((found_it==0) && (end_of_file==0)) {
                 if (fread(buf,1,FITS_BLOCK_SIZE,in)!=FITS_BLOCK_SIZE) {
-                    qdebug(
-                    printf("qfits: XTENSION without END in %s\n", filename);
-                    );
+                    qfits_error("XTENSION without END in %s\n", filename);
                     end_of_file=1;
                     break;
                 }
@@ -680,11 +662,6 @@ static int qfits_cache_add(const char * filename)
     /* Close file */
     fclose(in);
 
-    /* Check last */
-    if (last >= QFITS_MAX_EXTS) {
-        return -1;
-    }
-    
     /* Allocate buffers in cache */
     qc->ohdr = qfits_malloc(last * sizeof(int));
     qc->data = qfits_malloc(last * sizeof(int));
@@ -719,7 +696,7 @@ static int qfits_cache_add(const char * filename)
 	free(off_dat);
 
     /* Return index of the added file in the cache */
-    return qfits_cache_last;
+	return qfits_cache_last;
 }
 
 #if QFITS_CACHE_DEBUG
