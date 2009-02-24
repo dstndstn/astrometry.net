@@ -54,6 +54,14 @@ static void bl_remove_from_node(bl* list, bl_node* node,
 #undef number
 #undef NL_PRINTF
 
+#define nl ll
+#define number int64_t
+#define NL_PRINTF "%lli"
+#include "bl-nl.c"
+#undef nl
+#undef number
+#undef NL_PRINTF
+
 #define nl pl
 #define number void*
 #define NL_PRINTF "%p"

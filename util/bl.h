@@ -275,6 +275,12 @@ sl_insertf(sl* list, int index, const char* format, ...);
 #undef nl
 #undef number
 
+#define nl ll
+#define number int64_t
+#include "bl-nl.h"
+#undef nl
+#undef number
+
 #define nl pl
 #define number void*
 #include "bl-nl.h"
@@ -306,6 +312,12 @@ int pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1, 
 
 #define nl il
 #define number int
+#include "bl-nl.inc"
+#undef nl
+#undef number
+
+#define nl ll
+#define number int64_t
 #include "bl-nl.inc"
 #undef nl
 #undef number
