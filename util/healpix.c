@@ -1,6 +1,6 @@
 /*
  This file is part of the Astrometry.net suite.
- Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+ Copyright 2006-2009 Dustin Lang, Keir Mierle and Sam Roweis.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -25,6 +25,17 @@
 #include "mathutil.h"
 #include "starutil.h"
 #include "keywords.h"
+
+// Internal type
+struct hp_s {
+	int bighp;
+	int x;
+	int y;
+};
+typedef struct hp_s hp_t;
+
+//static void hp_decompose_xy(hp_t hp, int* base, int* x, int* y, int Nside)
+
 
 // I've had troubles with rounding functions being declared properly
 // in other contexts...  Declare it here so the compiler complains if
@@ -400,16 +411,16 @@ static int healpix_get_neighbour(int hp, int dx, int dy)
 	return -1;
 }
 
-int healpix_get_neighbours(int pix, int* neighbour, int Nside)
-{
+static int get_neighbours(hp_t hp, hp_t* neighbour, int Nside) {
 	int base;
 	int x, y;
 	int nn = 0;
 	int nbase;
-	int Ns2 = Nside * Nside;
 	int nx, ny;
 
-	healpix_decompose_xy(pix, &base, &x, &y, Nside);
+	base = hp.bighp;
+	x = hp.x;
+	y = hp.y;
 
 	// ( + , 0 )
 	nx = (x + 1) % Nside;
@@ -423,10 +434,10 @@ int healpix_get_neighbours(int pix, int* neighbour, int Nside)
 	} else
 		nbase = base;
 
-	//printf("(+ 0): nbase=%i, nx=%i, ny=%i, pix=%i\n", nbase, nx, ny, nbase*Ns2+xy_to_pnprime(nx,ny,Nside));
-	neighbour[nn] = nbase * Ns2 + compose_xy(nx, ny, Nside);
+	neighbour[nn].bighp = nbase;
+	neighbour[nn].x = nx;
+	neighbour[nn].y = ny;
 	nn++;
-
 
 	// ( + , + )
 	nx = (x + 1) % Nside;
@@ -455,11 +466,11 @@ int healpix_get_neighbours(int pix, int* neighbour, int Nside)
 	//printf("(+ +): nbase=%i, nx=%i, ny=%i, pix=%i\n", nbase, nx, ny, nbase*Ns2+xy_to_pnprime(nx,ny,Nside));
 
 	if (nbase != -1) {
-		neighbour[nn] = nbase * Ns2 + compose_xy(nx, ny, Nside);
+		neighbour[nn].bighp = nbase;
+		neighbour[nn].x = nx;
+		neighbour[nn].y = ny;
 		nn++;
 	}
-
-
 
 	// ( 0 , + )
 	nx = x;
@@ -475,10 +486,10 @@ int healpix_get_neighbours(int pix, int* neighbour, int Nside)
     
 	//printf("(0 +): nbase=%i, nx=%i, ny=%i, pix=%i\n", nbase, nx, ny, nbase*Ns2+xy_to_pnprime(nx,ny,Nside));
 
-	neighbour[nn] = nbase * Ns2 + compose_xy(nx, ny, Nside);
+	neighbour[nn].bighp = nbase;
+	neighbour[nn].x = nx;
+	neighbour[nn].y = ny;
 	nn++;
-
-
 
 	// ( - , + )
 	nx = (x + Nside - 1) % Nside;
@@ -506,10 +517,11 @@ int healpix_get_neighbours(int pix, int* neighbour, int Nside)
 	//printf("(- +): nbase=%i, nx=%i, ny=%i, pix=%i\n", nbase, nx, ny, nbase*Ns2+xy_to_pnprime(nx,ny,Nside));
 
 	if (nbase != -1) {
-		neighbour[nn] = nbase * Ns2 + compose_xy(nx, ny, Nside);
+		neighbour[nn].bighp = nbase;
+		neighbour[nn].x = nx;
+		neighbour[nn].y = ny;
 		nn++;
 	}
-
 
 	// ( - , 0 )
 	nx = (x + Nside - 1) % Nside;
@@ -525,10 +537,10 @@ int healpix_get_neighbours(int pix, int* neighbour, int Nside)
 
 	//printf("(- 0): nbase=%i, nx=%i, ny=%i, pix=%i\n", nbase, nx, ny, nbase*Ns2+xy_to_pnprime(nx,ny,Nside));
 
-	neighbour[nn] = nbase * Ns2 + compose_xy(nx, ny, Nside);
+	neighbour[nn].bighp = nbase;
+	neighbour[nn].x = nx;
+	neighbour[nn].y = ny;
 	nn++;
-
-
 
 	// ( - , - )
 	nx = (x + Nside - 1) % Nside;
@@ -557,10 +569,11 @@ int healpix_get_neighbours(int pix, int* neighbour, int Nside)
 	//printf("(- -): nbase=%i, nx=%i, ny=%i, pix=%i\n", nbase, nx, ny, nbase*Ns2+xy_to_pnprime(nx,ny,Nside));
 
 	if (nbase != -1) {
-		neighbour[nn] = nbase * Ns2 + compose_xy(nx, ny, Nside);
+		neighbour[nn].bighp = nbase;
+		neighbour[nn].x = nx;
+		neighbour[nn].y = ny;
 		nn++;
 	}
-
 
 	// ( 0 , - )
 	ny = (y + Nside - 1) % Nside;
@@ -576,9 +589,10 @@ int healpix_get_neighbours(int pix, int* neighbour, int Nside)
 
 	//printf("(0 -): nbase=%i, nx=%i, ny=%i, pix=%i\n", nbase, nx, ny, nbase*Ns2+xy_to_pnprime(nx,ny,Nside));
 
-	neighbour[nn] = nbase * Ns2 + compose_xy(nx, ny, Nside);
+	neighbour[nn].bighp = nbase;
+	neighbour[nn].x = nx;
+	neighbour[nn].y = ny;
 	nn++;
-
 
 	// ( + , - )
 	nx = (x + 1) % Nside;
@@ -607,10 +621,24 @@ int healpix_get_neighbours(int pix, int* neighbour, int Nside)
 	//printf("(+ -): nbase=%i, nx=%i, ny=%i, pix=%i\n", nbase, nx, ny, nbase*Ns2+xy_to_pnprime(nx,ny,Nside));
 
 	if (nbase != -1) {
-		neighbour[nn] = nbase * Ns2 + compose_xy(nx, ny, Nside);
+		neighbour[nn].bighp = nbase;
+		neighbour[nn].x = nx;
+		neighbour[nn].y = ny;
 		nn++;
 	}
 
+	return nn;
+}
+
+int healpix_get_neighbours(int pix, int* neighbour, int Nside) {
+	hp_t neigh[8];
+	hp_t hp;
+	int nn;
+	int i;
+	healpix_decompose_xy(pix, &hp.bighp, &hp.x, &hp.y, Nside);
+	nn = get_neighbours(hp, neigh, Nside);
+	for (i=0; i<nn; i++)
+		neighbour[i] = healpix_compose_xy(neigh[i].bighp, neigh[i].x, neigh[i].y, Nside);
 	return nn;
 }
 
@@ -633,7 +661,7 @@ int xyztohealpixf(double x, double y, double z, int Nside,
 	int offset;
 	double phi_t;
 
-	double EPS = 1e-8;
+	//double EPS = 1e-8;
 
 	/* Convert our point into cylindrical coordinates for middle ring */
 	phi = atan2(y, x);
