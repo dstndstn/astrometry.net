@@ -5,61 +5,12 @@
 
 scales=[10,5,4,3,2]
 
+### TEMP - avoid nodes 12-15.
+#nodes = [('neuron-0-%i' % i, [scales[i % len(scales)]]) for i in range(25)]
 #hosts = ['neuron-0-%i' for i in range(25)]
-all_nodes = [('neuron-0-%i' % i, [scales[i % len(scales)]]) for i in range(25)]
 
-all_nodes_OLD = [
-    ('neuron-0-0', [10, 5]),
-    ('neuron-0-1', [4]),
-    ('neuron-0-2', [3]),
-    ('neuron-0-3', [2]),
-    ('neuron-0-4', [10, 5]),
-    ('neuron-0-5', [4]),
-    ('neuron-0-6', [3]),
-    ('neuron-0-7', [2]),
-    ('neuron-0-8', [10, 5]),
-    ('neuron-0-9', [4]),
-    ('neuron-0-10', [3]),
-    ('neuron-0-11', [2]),
-    ('neuron-0-12', [10, 5]),
-    ('neuron-0-13', [4]),
-    ('neuron-0-14', [3]),
-    ('neuron-0-15', [2]),
-    ('neuron-0-16', [10, 5]),
-    ('neuron-0-17', [4]),
-    ('neuron-0-18', [3]),
-    ('neuron-0-19', [2]),
-    ('neuron-0-20', [10, 5]),
-    ('neuron-0-21', [4]),
-    ('neuron-0-22', [3]),
-    ('neuron-0-23', [2]),
-    ]
-
-some_nodes = [
-    ('neuron-0-0', [10]),
-    ('neuron-0-1', [5]),
-    ('neuron-0-2', [4]),
-    ('neuron-0-3', [3]),
-    ('neuron-0-4', [2]),
-    ('neuron-0-5', [10]),
-    ('neuron-0-6', [5]),
-    ('neuron-0-7', [4]),
-    ('neuron-0-8', [3]),
-    ('neuron-0-9', [2]),
-    ('neuron-0-10', [10]),
-    ('neuron-0-11', [5]),
-    ]
-
-TEST_nodes = [
-    ('neuron-0-0', [10]),
-    ('neuron-0-1', [5]),
-    ('neuron-0-2', [4]),
-    ('neuron-0-3', [3]),
-    ('neuron-0-4', [2]),
-    ('neuron-0-5', [10]),
-    ]
-
-nodes = all_nodes
+hosts = ['neuron-0-%i' % i for i in (range(12) + range(16, 25))]
+nodes = [(h, [scales[i % len(scales)]]) for i,h in enumerate(hosts)]
 
 print '''
 <icegrid>
