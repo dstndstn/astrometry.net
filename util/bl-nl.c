@@ -22,6 +22,14 @@
  --nl
  --number
  --NL_PRINTF (eg "%i")
+
+ Note:
+ --You can't declare multiple "number" variables like this:
+     number n1, n2;
+   Instead, do:
+     number n1;
+     number n2;
+   This is because "number" may be a pointer type.
  */
 
 #include "bl-nl.ph"
@@ -52,7 +60,7 @@ void NLF(reverse)(nl* list) {
 	bl_reverse(list);
 }
 
-void NLF(append_array)(nl* list, number* data, int ndata) {
+void NLF(append_array)(nl* list, const number* data, int ndata) {
 	int i;
 	for (i=0; i<ndata; i++)
 		NLF(append)(list, data[i]);
@@ -60,7 +68,9 @@ void NLF(append_array)(nl* list, number* data, int ndata) {
 
 nl* NLF(merge_ascending)(nl* list1, nl* list2) {
 	nl* res;
-	int i1, i2, N1, N2, v1, v2;
+	int i1, i2, N1, N2;
+	number v1 = 0;
+	number v2 = 0;
 	unsigned char getv1, getv2;
 	if (!list1)
 		return NLF(dupe)(list2);
@@ -75,7 +85,6 @@ nl* NLF(merge_ascending)(nl* list1, nl* list2) {
 	N1 = NLF(size)(list1);
 	N2 = NLF(size)(list2);
 	i1 = i2 = 0;
-	v1 = v2 = -1; // to make gcc happy
 	getv1 = getv2 = 1;
 	while (i1 < N1 && i2 < N2) {
 		if (getv1) {
@@ -107,7 +116,7 @@ void NLF(remove_all_reuse)(nl* list) {
 	bl_remove_all_but_first(list);
 }
 
-int  NLF(find_index_ascending)(nl* list, number value) {
+int  NLF(find_index_ascending)(nl* list, const number value) {
 	return bl_find_index(list, &value, NLF(compare_ascending));
 }
 
@@ -143,7 +152,7 @@ nl* NLF(dupe)(nl* nlist) {
     return ret;
 }
 
-int NLF(remove_value)(nl* nlist, number value) {
+int NLF(remove_value)(nl* nlist, const number value) {
     bl* list = nlist;
 	bl_node *node, *prev;
 	int istart = 0;
@@ -173,7 +182,7 @@ void NLF(remove_index_range)(nl* list, int start, int length) {
 	bl_remove_index_range(list, start, length);
 }
 
-void NLF(set)(nl* list, int index, number value) {
+void NLF(set)(nl* list, int index, const number value) {
 	bl_set(list, index, &value);
 }
 
@@ -207,11 +216,11 @@ void NLF(free)(nl* list) {
 	bl_free(list);
 }
 
-void NLF(push)(nl* list, number data) {
+void NLF(push)(nl* list, const number data) {
 	bl_append(list, &data);
 }
 
-number* NLF(append)(nl* list, number data) {
+number* NLF(append)(nl* list, const number data) {
 	return bl_append(list, &data);
 }
 
@@ -226,7 +235,7 @@ void NLF(merge_lists)(nl* list1, nl* list2) {
 	bl_append_list(list1, list2);
 }
 
-int NLF(insert_ascending)(nl* list, number n) {
+int NLF(insert_ascending)(nl* list, const number n) {
 	bl_node *node;
 	number* iarray;
 	int lower, upper;
@@ -272,11 +281,11 @@ int NLF(insert_ascending)(nl* list, number n) {
 	return nskipped + lower + 1;
 }
 
-int NLF(insert_descending)(nl* list, number n) {
+int NLF(insert_descending)(nl* list, const number n) {
     return bl_insert_sorted(list, &n, NLF(compare_descending));
 }
 
-int NLF(insert_unique_ascending)(nl* list, number n) {
+int NLF(insert_unique_ascending)(nl* list, const number n) {
 	bl_node *node;
 	number* iarray;
 	int lower, upper;
@@ -329,7 +338,7 @@ int NLF(insert_unique_ascending)(nl* list, number n) {
 	return nskipped + lower + 1;
 }
 
-void   NLF(insert)(nl* list, int indx, number data) {
+void   NLF(insert)(nl* list, int indx, const number data) {
 	bl_insert(list, indx, &data);
 }
 
@@ -348,7 +357,7 @@ void NLF(print)(nl* list) {
 	}
 }
 
-int  NLF(index_of)(nl* list, number data) {
+int  NLF(index_of)(nl* list, const number data) {
 	bl_node* n;
 	int i;
 	number* idata;
@@ -363,7 +372,7 @@ int  NLF(index_of)(nl* list, number data) {
 	return -1;
 }
 
-int NLF(contains)(nl* list, number data) {
+int NLF(contains)(nl* list, const number data) {
 	return (NLF(index_of)(list, data) != -1);
 }
 

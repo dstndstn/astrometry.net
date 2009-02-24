@@ -352,7 +352,7 @@ int main(int argc, char** args) {
 	int Nside = 100;
 	starlists_t* starlists;
 	int sweeps = 0;
-	int nkeep;
+	int nkeep = 0;
 	double minmag = -1.0;
 	double maxmag = 30.0;
 	bool* owned;
@@ -844,7 +844,6 @@ int main(int argc, char** args) {
 		if (nkeep)
 			for (i=0;; i++) {
 				int size;
-				stardata* d;
 				bl* lst;
 				if (!starlists_get_nonempty(starlists, i, NULL, &lst))
 					break;
@@ -882,8 +881,7 @@ int main(int argc, char** args) {
 		// gather up the stars that will be used in this sweep...
 		for (i=0; i<npix; i++) {
 			stardata* sd;
-			int N;
-			bl* lst;
+			bl* lst = NULL;
 			starlists_get_nonempty(starlists, i, NULL, &lst);
 			if (k >= bl_size(lst))
 				// FIXME -- done with this list, could free it...

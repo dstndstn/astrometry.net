@@ -48,9 +48,15 @@ static void bl_remove_from_node(bl* list, bl_node* node,
 
 #define nl il
 #define number int
-//#define compare_numbers_ascending  bl_compare_ints_ascending
-//#define compare_numbers_descending bl_compare_ints_descending
 #define NL_PRINTF "%i"
+#include "bl-nl.c"
+#undef nl
+#undef number
+#undef NL_PRINTF
+
+#define nl pl
+#define number void*
+#define NL_PRINTF "%p"
 #include "bl-nl.c"
 #undef nl
 #undef number
@@ -58,8 +64,6 @@ static void bl_remove_from_node(bl* list, bl_node* node,
 
 #define nl fl
 #define number float
-//#define compare_numbers_ascending  bl_compare_ints_ascending
-//#define compare_numbers_descending bl_compare_ints_descending
 #define NL_PRINTF "%f"
 #include "bl-nl.c"
 #undef nl
@@ -68,16 +72,12 @@ static void bl_remove_from_node(bl* list, bl_node* node,
 
 #define nl dl
 #define number double
-//#define compare_numbers_ascending  bl_compare_ints_ascending
-//#define compare_numbers_descending bl_compare_ints_descending
 #define NL_PRINTF "%g"
 #include "bl-nl.c"
 #undef nl
 #undef number
 #undef NL_PRINTF
 
-//#undef compare_numbers_ascending
-//#undef compare_numbers_descending
 
 static void bl_sort_with_userdata(bl* list,
 								  int (*compare)(const void* v1, const void* v2, const void* userdata),
@@ -563,7 +563,7 @@ void bl_get(bl* list, int n, void* dest) {
 	memcpy(dest, src, list->datasize);
 }
 
-static void bl_find_ind_and_element(bl* list, void* data,
+static void bl_find_ind_and_element(bl* list, const void* data,
 									int (*compare)(const void* v1, const void* v2),
 									void** presult, int* pindex) {
 	int lower, upper;
@@ -595,7 +595,7 @@ static void bl_find_ind_and_element(bl* list, void* data,
  * returns zero when passed the given 'data' pointer
  * and elements from the list.
  */
-void* bl_find(bl* list, void* data,
+void* bl_find(bl* list, const void* data,
 			  int (*compare)(const void* v1, const void* v2)) {
 	void* rtn;
 	int ind;
@@ -603,7 +603,7 @@ void* bl_find(bl* list, void* data,
 	return rtn;
 }
 
-int bl_find_index(bl* list, void* data,
+int bl_find_index(bl* list, const void* data,
 				  int (*compare)(const void* v1, const void* v2)) {
 	void* val;
 	int ind;
@@ -611,7 +611,7 @@ int bl_find_index(bl* list, void* data,
 	return ind;
 }
 
-int bl_insert_sorted(bl* list, void* data,
+int bl_insert_sorted(bl* list, const void* data,
 					 int (*compare)(const void* v1, const void* v2)) {
 	int lower, upper;
 	lower = -1;
@@ -631,7 +631,7 @@ int bl_insert_sorted(bl* list, void* data,
 	return lower+1;
 }
 
-int bl_insert_unique_sorted(bl* list, void* data,
+int bl_insert_unique_sorted(bl* list, const void* data,
 							int (*compare)(const void* v1, const void* v2)) {
 	// This is just straightforward binary search - really should
 	// use the block structure...
@@ -677,7 +677,7 @@ void bl_set(bl* list, int index, const void* data) {
  * All elements that previously had indices "index" and above are moved
  * one position to the right.
  */
-void bl_insert(bl* list, int index, void* data) {
+void bl_insert(bl* list, int index, const void* data) {
 	bl_node* node;
 	int nskipped;
 
@@ -948,31 +948,7 @@ void  pl_free_elements(pl* list) {
 	}
 }
 
-void pl_reverse(pl* list) {
-	bl_reverse(list);
-}
-
-pl*   pl_dup(pl* list) {
-	pl* newlist = pl_new(list->blocksize);
-	bl_node* newnode;
-	bl_node* node;
-	for (node=list->head; node; node=node->next) {
-		newnode = bl_new_node(newlist);
-		memcpy(NODE_DATA(newnode), NODE_DATA(node), list->datasize * node->N);
-		newnode->N = node->N;
-		bl_append_node(newlist, newnode);
-	}
-	return newlist;
-}
-
-void  pl_merge_lists(pl* list1, pl* list2) {
-	bl_append_list(list1, list2);
-}
-
-int pl_insert_unique_ascending(bl* list, void* p) {
-    return bl_insert_unique_sorted(list, &p, bl_compare_pointers_ascending);
-}
-
+// dereference one level...
 static int sort_helper_pl(const void* v1, const void* v2, const void* userdata) {
 	const void* p1 = *((const void**)v1);
 	const void* p2 = *((const void**)v2);
@@ -982,10 +958,6 @@ static int sort_helper_pl(const void* v1, const void* v2, const void* userdata) 
 
 void  pl_sort(pl* list, int (*compare)(const void* v1, const void* v2)) {
 	bl_sort_with_userdata(list, sort_helper_pl, compare);
-}
-
-void  pl_remove_index_range(pl* list, int start, int length) {
-	bl_remove_index_range(list, start, length);
 }
 
 int pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1, const void* v2)) {
@@ -1010,101 +982,19 @@ int pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1, 
 	return lower+1;
 }
 
-pl* pl_new(int blocksize) {
-    return bl_new(blocksize, sizeof(void*));
-}
-
-void  pl_init(pl* l, int blocksize) {
-    bl_init(l, blocksize, sizeof(void*));
-}
-
-void pl_free(pl* list) {
-    bl_free(list);
-}
-
-void  pl_remove(pl* list, int index) {
-	bl_remove_index(list, index);
-}
-
-int pl_remove_value(pl* plist, const void* value) {
-    bl* list = plist;
-	bl_node *node, *prev;
-	int istart = 0;
-	for (node=list->head, prev=NULL;
-		 node;
-		 prev=node, node=node->next) {
-		int i;
-		void** pdat;
-		pdat = NODE_DATA(node);
-		for (i=0; i<node->N; i++)
-			if (pdat[i] == value) {
-				bl_remove_from_node(list, node, prev, i);
-				list->last_access = prev;
-				list->last_access_n = istart;
-				return istart + i;
-			}
-		istart += node->N;
-	}
-	return -1;
-}
-
-void  pl_remove_all(pl* list) {
-	bl_remove_all(list);
-}
-
-void pl_set(pl* list, int index, void* data) {
-	int i;
-	int nadd = (index+1) - list->N;
-	if (nadd > 0) {
-		// enlarge the list to hold 'nadd' more entries.
-		for (i=0; i<nadd; i++) {
-			pl_append(list, NULL);
-		}
-	}
-	bl_set(list, index, &data);
-}
-
-void  pl_insert(pl* list, int indx, void* data) {
-	bl_insert(list, indx, &data);
-}
-
-void pl_append(pl* list, const void* data) {
-    bl_append(list, &data);
-}
-
-void pl_push(pl* list, const void* data) {
-	pl_append(list, data);
-}
-
-void* pl_pop(pl* list) {
-	void* rtn = pl_get(list, list->N-1);
-	bl_remove_index(list, list->N-1);
-	return rtn;
-}
-
-void* pl_get(pl* list, int n) {
-    void** ptr = bl_access(list, n);
-    return *ptr;
-}
-
-void pl_copy(pl* list, int start, int length, void** vdest) {
-    bl_copy(list, start, length, vdest);
-}
-
-void pl_print(pl* list) {
-    bl_node* n;
-    int i;
-    for (n=list->head; n; n=n->next) {
-		printf("[ ");
-		for (i=0; i<n->N; i++)
-			printf("%p ", ((void**)NODE_DATA(n))[i]);
-		printf("] ");
-    }
-}
-
-int   pl_size(pl* list) {
-	return bl_size(list);
-}
+/*
+ void pl_set(pl* list, int index, void* data) {
+ int i;
+ int nadd = (index+1) - list->N;
+ if (nadd > 0) {
+ // enlarge the list to hold 'nadd' more entries.
+ for (i=0; i<nadd; i++) {
+ pl_append(list, NULL);
+ }
+ }
+ bl_set(list, index, &data);
+ }
+ */
 
 sl* sl_new(int blocksize) {
 	pl* lst = pl_new(blocksize);

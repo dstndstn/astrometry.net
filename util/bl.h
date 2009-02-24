@@ -89,7 +89,7 @@ void bl_reverse(bl* list);
  * from "list2".
  */
 void bl_append_list(bl* list1, bl* list2);
-void bl_insert(bl* list, int indx, void* data);
+void bl_insert(bl* list, int indx, const void* data);
 void bl_set(bl* list, int indx, const void* data);
 /**
  * Inserts the given datum into the list in such a way that the list
@@ -106,14 +106,14 @@ void bl_set(bl* list, int indx, const void* data);
  *
  * The index where the element was inserted is returned.
  */
-int bl_insert_sorted(bl* list, void* data, int (*compare)(const void* v1, const void* v2));
+int bl_insert_sorted(bl* list, const void* data, int (*compare)(const void* v1, const void* v2));
 
 /**
    If the item already existed in the list (ie, the compare function
    returned zero), then -1 is returned.  Otherwise, the index at which
    the item was inserted is returned.
  */
-int bl_insert_unique_sorted(bl* list, void* data,
+int bl_insert_unique_sorted(bl* list, const void* data,
                             int (*compare)(const void* v1, const void* v2));
 
 void bl_sort(bl* list, int (*compare)(const void* v1, const void* v2));
@@ -129,8 +129,8 @@ void  bl_copy(bl* list, int start, int length, void* vdest);
 void  bl_remove_all_but_first(bl* list);
 void  bl_remove_index(bl* list, int indx);
 void  bl_remove_index_range(bl* list, int start, int length);
-void* bl_find(bl* list, void* data, int (*compare)(const void* v1, const void* v2));
-int   bl_find_index(bl* list, void* data, int (*compare)(const void* v1, const void* v2));
+void* bl_find(bl* list, const void* data, int (*compare)(const void* v1, const void* v2));
+int   bl_find_index(bl* list, const void* data, int (*compare)(const void* v1, const void* v2));
 
 // returns 0 if okay, 1 if an error is detected.
 int   bl_check_consistency(bl* list);
@@ -141,32 +141,8 @@ int   bl_check_sorted(bl* list, int (*compare)(const void* v1, const void* v2), 
 ///////////////////////////////////////////////
 // special-case functions for pointer lists. //
 ///////////////////////////////////////////////
-typedef bl pl;
-pl*   pl_new(int blocksize);
-void  pl_init(pl* l, int blocksize);
-void  pl_free(pl* list);
-void  pl_free_elements(pl* list);
-int   pl_size(pl* list);
-void* pl_get(pl* list, int n);
-void  pl_set(pl* list, int ind, void* data);
-void pl_reverse(pl* list);
-void  pl_insert(pl* list, int indx, void* data);
-void  pl_append(pl* list, const void* data);
-void  pl_push(pl* list, const void* data);
-void* pl_pop(pl* list);
-void  pl_copy(pl* list, int start, int length, void** dest);
-pl*   pl_dup(pl* list);
-void  pl_print(pl* list);
-int   pl_insert_unique_ascending(pl* list, void* p);
-int   pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1, const void* v2));
-void  pl_sort(pl* list, int (*compare)(const void* v1, const void* v2));
-void  pl_remove(pl* list, int ind);
-void  pl_remove_index_range(pl* list, int start, int length);
-// Returns the index where the value was found, or -1 if it wasn't found.
-int   pl_remove_value(pl* list, const void* value);
-void  pl_remove_all(pl* list);
-void  pl_merge_lists(pl* list1, pl* list2);
-#define pl_clear pl_remove_all
+//pl*   pl_dup(pl* list);
+//#define pl_clear pl_remove_all
 
 ///////////////////////////////////////////////
 // special-case functions for string lists.  //
@@ -293,14 +269,14 @@ ATTRIB_FORMAT(printf,3,4)
 sl_insertf(sl* list, int index, const char* format, ...);
 
 
-#ifdef INCLUDE_INLINE_SOURCE
-#define InlineDefine InlineDefineH
-#include "bl.inc"
-#undef InlineDefine
-#endif
-
 #define nl il
 #define number int
+#include "bl-nl.h"
+#undef nl
+#undef number
+
+#define nl pl
+#define number void*
 #include "bl-nl.h"
 #undef nl
 #undef number
@@ -317,11 +293,25 @@ sl_insertf(sl* list, int index, const char* format, ...);
 #undef nl
 #undef number
 
+//////// Special functions ////////
+void  pl_free_elements(pl* list);
+void  pl_sort(pl* list, int (*compare)(const void* v1, const void* v2));
+int pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1, const void* v2));
+
+
 #ifdef INCLUDE_INLINE_SOURCE
 #define InlineDefine InlineDefineH
 
+#include "bl.inc"
+
 #define nl il
 #define number int
+#include "bl-nl.inc"
+#undef nl
+#undef number
+
+#define nl pl
+#define number void*
 #include "bl-nl.inc"
 #undef nl
 #undef number

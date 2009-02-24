@@ -28,43 +28,44 @@
 
 typedef bl nl;
 
-void NLF(new_existing)(nl* list, int blocksize);
+// The "const number"s in here are mostly for pl.
 
 Malloc nl*  NLF(new)(int blocksize);
 Pure InlineDeclare int NLF(size)(const nl* list);
+void NLF(new_existing)(nl* list, int blocksize);
 void NLF(init)(nl* list, int blocksize);
 void NLF(reverse)(nl* list);
 void NLF(remove_all)(nl* list);
 void NLF(remove_all_reuse)(nl* list);
 void NLF(free)(nl* list);
-number* NLF(append)(nl* list, number data);
+number* NLF(append)(nl* list, const number data);
 void NLF(append_list)(nl* list, nl* list2);
-void NLF(append_array)(nl* list, number* data, int ndata);
+void NLF(append_array)(nl* list, const number* data, int ndata);
 void NLF(merge_lists)(nl* list1, nl* list2);
-void NLF(push)(nl* list, number data);
+void NLF(push)(nl* list, const number data);
 number  NLF(pop)(nl* list);
-int NLF(contains)(nl* list, number data);
+int NLF(contains)(nl* list, const number data);
 // Returns the index in the list of the given number, or -1 if it
 // is not found.
-int  NLF(index_of)(nl* list, number data);
+int  NLF(index_of)(nl* list, const number data);
 InlineDeclare number  NLF(get)(nl* list, int n);
 void NLF(copy)(nl* list, int start, int length, number* vdest);
 nl*  NLF(dupe)(nl* list);
 void NLF(print)(nl* list);
-void   NLF(insert)(nl* list, int indx, number data);
-int NLF(insert_ascending)(nl* list, number n);
-int NLF(insert_descending)(nl* list, number n);
-int  NLF(insert_unique_ascending)(nl* list, number p);
-void NLF(set)(nl* list, int ind, number value);
+void   NLF(insert)(nl* list, int indx, const number data);
+int NLF(insert_ascending)(nl* list, const number n);
+int NLF(insert_descending)(nl* list, const number n);
+int  NLF(insert_unique_ascending)(nl* list, const number p);
+void NLF(set)(nl* list, int ind, const number value);
 void NLF(remove)(nl* list, int ind);
 void NLF(remove_index_range)(nl* list, int start, int length);
-int  NLF(find_index_ascending)(nl* list, number value);
+int  NLF(find_index_ascending)(nl* list, const number value);
 
 nl* NLF(merge_ascending)(nl* list1, nl* list2);
 
 // returns the index of the removed value, or -1 if it didn't
 // exist in the list.
-int NLF(remove_value)(nl* list, number value);
+int NLF(remove_value)(nl* list, const number value);
 
 int NLF(check_consistency)(nl* list);
 int NLF(check_sorted_ascending)(nl* list, int isunique);
