@@ -355,17 +355,17 @@ class Watcher(object):
             submission.alljobsadded = True
             submission.save()
 
-    def download_url(self, submission, tmpfile):
+    def download_url(self, submission, url, tmpfile):
         self.userlog('Retrieving URL...')
-        log('Retrieving URL ' + submission.url + ' to file ' + tmpfile)
+        log('Retrieving URL ' + url + ' to file ' + tmpfile)
 
-        if is_youtube_vid(submission.url):
-            self.handle_youtube_vid(submission, tmpfile)
+        if is_youtube_vid(url):
+            self.handle_youtube_vid(submission, url, tmpfile)
             return None
         
         # download the URL to a new temp file.
         try:
-            f = urlopen(submission.url)
+            f = urlopen(url)
             fout = open(tmpfile, 'wb')
             fout.write(f.read())
             fout.close()
@@ -376,16 +376,17 @@ class Watcher(object):
         log('URL info for %s:' % f.geturl())
         for k,v in f.info().items():
             log('  ',k,'=',v)
-        p = urlparse(submission.url)
+        p = urlparse(url)
         p = p[2]
+		basename = None
         if p:
             s = p.split('/')
             basename = s[-1]
         return basename
 
-    def handle_youtube_vid(self, submission, tmpfile):
+    def handle_youtube_vid(self, submission, url, tmpfile):
         self.userlog('Youtube video.')
-        cmd = 'youtube-dl -o %s \"%s\"' % (tmpfile, shell_escape_inside_quotes(submission.url))
+        cmd = 'youtube-dl -o %s \"%s\"' % (tmpfile, shell_escape_inside_quotes(url))
         log('running command: %s' % cmd)
         (rtn, out, err) = run_command(cmd)
         if rtn:
@@ -441,7 +442,7 @@ class Watcher(object):
         if submission.datasrc == 'url':
             (fd, tmpfile) = tempfile.mkstemp('', 'download-')
             os.close(fd)
-            basename = self.download_url(submission, tmpfile)
+            basename = self.download_url(submission, submission.url, tmpfile)
             if self.bailedout:
                 return False
             if basename is None:
@@ -482,20 +483,34 @@ class Watcher(object):
             shutil.rmtree(tempdir)
             return True
 
-        else:
-            # Not a tarball.
-            job = Job(
-                submission = submission,
-                jobid = submission.subid,
-                fileorigname = submission.fileorigname,
-                diskfile = submission.diskfile,
-                )
-            job.enqueuetime = submission.submittime
-            job.set_is_duplicate()
-            job.save()
-            submission.alljobsadded = True
-            submission.save()
-            return self.handle_job(job)
+		#if is_list_of_urls(uncomp):
+		#	log('file is a list of urls.')
+		#	urls = open(uncomp).read().trim().split('\n')
+		#	paths = []
+		#	for i,url in enumerate(urls):
+		#		(fd, tmpfile) = tempfile.mkstemp('', 'download-')
+		#		os.close(fd)
+		#		log('downloading url', url)
+		#		basename = self.download_url(submission, url, tmpfile)
+		#		if self.bailedout:
+		#			log('download failed')
+		#			return False
+		#		if basename is None:
+		#			basename = 'url-%i' % i
+
+		# Normal job.
+		job = Job(
+			submission = submission,
+			jobid = submission.subid,
+			fileorigname = submission.fileorigname,
+			diskfile = submission.diskfile,
+			)
+		job.enqueuetime = submission.submittime
+		job.set_is_duplicate()
+		job.save()
+		submission.alljobsadded = True
+		submission.save()
+		return self.handle_job(job)
 
 
     def main(self, joblink):
