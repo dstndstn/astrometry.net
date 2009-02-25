@@ -1,6 +1,6 @@
 all: Solver_ice.py solver.xml SolverServer
 
-ICE_DIR = /usr/local/Ice-3.3.0
+ICE_DIR ?= /usr/local/Ice-3.3.0
 ICE_I = $(ICE_DIR)/include
 ICE_L = $(ICE_DIR)/lib
 

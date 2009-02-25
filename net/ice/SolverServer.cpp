@@ -45,9 +45,37 @@ void SolverI::shutdown(const ::Ice::Current& current) {
 }
 
 
-int
-main(int argc, char* argv[]) {
-    int status = 0;
+class Server : virtual public Ice::Application {
+public:
+    virtual int run(int x, char* y[]) {
+		cout << "run() called.  x=" << x << endl;
+		//cout << "y=" << y << endl;
+		for (int i=0; i<x; i++)
+			cout << "  y[" << i << "] = " << y[i] << endl;
+		Ice::CommunicatorPtr ic = this->communicator();
+        Ice::ObjectAdapterPtr adapter
+            = ic->createObjectAdapterWithEndpoints
+			("SimplePrinterAdapter", "default -p 10000");
+        Ice::ObjectPtr object = new SolverI;
+        adapter->add(object,
+                     ic->stringToIdentity("SimplePrinter"));
+        adapter->activate();
+        ic->waitForShutdown();
+        return 0;
+    }
+};
+
+int main(int argc, char* argv[]) {
+    cout << "SolverServer starting.  Command-line args:" << endl;
+	for (int i=0; i<argc; i++) 
+		cout << "  " << argv[i] << endl;
+
+    Server s;
+    return s.main(argc, argv);
+}
+
+/*
+	int status = 0;
     Ice::CommunicatorPtr ic;
     try {
         ic = Ice::initialize(argc, argv);
@@ -77,3 +105,4 @@ main(int argc, char* argv[]) {
     return status;
 }
 
+ */
