@@ -66,10 +66,11 @@ class SolverI(SolverIce.Solver):
 
     def init_backend(self):
         Backend = get_backend_lib()
-        Backend.log_init(3)
-        Backend.log_set_thread_specific()
+		log_level ll = 3;
+        Backend.log_init(ll);
+        Backend.log_set_thread_specific();
 
-        configfn = self.get_config_file()
+        configfn = self.get_config_file();
 
         backend = Backend.backend_new()
         logmsg('Reading config file ', configfn)
