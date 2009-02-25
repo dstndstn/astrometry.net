@@ -254,18 +254,7 @@ class Watcher(object):
 		job.set_starttime_now()
 		job.save()
 
-		tardata = self.solve_job(job)
-
-		if tardata is not None:
-			# extract the resulting tarball...
-			f = StringIO(tardata)
-			tar = tarfile.open(name='', mode='r|', fileobj=f)
-			for tarinfo in tar:
-				log('  ', tarinfo.name, 'is', tarinfo.size, 'bytes in size')
-				tar.extract(tarinfo, job.get_job_dir())
-			tar.close()
-			f.close()
-			# chmod 664 *; chgrp www-data *
+		self.solve_job_and_write_files(job)
 
 		job.set_finishtime_now()
 		job.save()
@@ -287,6 +276,21 @@ class Watcher(object):
 
 		job.save()
 		return True
+
+	def solve_job_and_write_files(self, job):
+		tardata = self.solve_job(job)
+
+		if tardata is not None:
+			# extract the resulting tarball...
+			f = StringIO(tardata)
+			tar = tarfile.open(name='', mode='r|', fileobj=f)
+			for tarinfo in tar:
+				log('  ', tarinfo.name, 'is', tarinfo.size, 'bytes in size')
+				tar.extract(tarinfo, job.get_job_dir())
+			tar.close()
+			f.close()
+			# chmod 664 *; chgrp www-data *
+
 
 	def handle_tarball(self, basedir, filenames, submission):
 		validpaths = []
