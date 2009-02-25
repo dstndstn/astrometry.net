@@ -59,6 +59,11 @@ class SolverI(SolverIce.Solver):
         # HACK
         self.dirs = {}
 
+        ### If running ctypes version:
+        print 'SolverServer initializing backend...'
+        self.init_backend()
+        print 'SolverServer initialized backend.'
+
     def init_backend(self):
         Backend = get_backend_lib()
         Backend.log_init(3)

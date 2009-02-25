@@ -18,7 +18,8 @@ IceGrid.Node.Trace.Activator=3
 #Ice.ServerIdleTime=60
 
 # seconds to wait for activation/deactivation (default 60)
-IceGrid.Node.WaitTime=10
+## This has to be long if we're reading the config file (ie loading indices) on startup.
+IceGrid.Node.WaitTime=300
 
 IceGrid.InstanceName=SolverIceGrid
 
