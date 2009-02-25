@@ -7,6 +7,8 @@ using namespace SolverIce;
 
 class SolverI : public Solver {
 public:
+	SolverI(const string& progname, int scale);
+
     virtual string solve(const string& jobid,
 						 const string& axy,
 						 const LoggerPrx& logger,
@@ -19,7 +21,20 @@ public:
     virtual string status(const ::Ice::Current& current);
 
     virtual void shutdown(const ::Ice::Current& current);
+
+private:
+	string configfn;
 };
+
+SolverI::SolverI(const string& progname, int scale) {
+	cout << "Solver constructor: name " << progname << ", scale " << scale << endl;
+
+	char configfnbuf[256];
+	sprintf(configfnbuf, "/data1/dstn/dsolver/backend-config/backend-scale%i.cfg", scale);
+	
+	configfn = string(configfnbuf);
+	cout << "Using config file " << configfn << endl;
+}
 
 string SolverI::status(const ::Ice::Current& current) {
 	cout << "status() called." << endl;
@@ -47,21 +62,40 @@ void SolverI::shutdown(const ::Ice::Current& current) {
 
 class Server : virtual public Ice::Application {
 public:
-    virtual int run(int x, char* y[]) {
-		cout << "run() called.  x=" << x << endl;
-		//cout << "y=" << y << endl;
-		for (int i=0; i<x; i++)
-			cout << "  y[" << i << "] = " << y[i] << endl;
+    virtual int run(int argc, char* args[]) {
+		cout << "run() called." << endl;
+		cout << "Args:" << endl;
+		for (int i=0; i<argc; i++)
+			cout << "  " << args[i] << endl;
+
+		if (argc != 2) {
+			cout << "Need one arg: index scale." << endl;
+			return -1;
+		}
+
+		int scale = atoi(args[1]);
+
 		Ice::CommunicatorPtr ic = this->communicator();
-        Ice::ObjectAdapterPtr adapter
-            = ic->createObjectAdapterWithEndpoints
-			("SimplePrinterAdapter", "default -p 10000");
-        Ice::ObjectPtr object = new SolverI;
-        adapter->add(object,
-                     ic->stringToIdentity("SimplePrinter"));
-        adapter->activate();
+		Ice::PropertiesPtr props = ic->getProperties();
+		Ice::ObjectAdapterPtr adapter = ic->createObjectAdapter("OneSolver");
+		string idstr = props->getProperty("Identity");
+		Ice::Identity myid = ic->stringToIdentity(idstr);
+		string progname = props->getProperty("Ice.ProgramName");
+		SolverPtr solver = new SolverI(progname, scale);
+		adapter->add(solver, myid);
+		adapter->activate();
         ic->waitForShutdown();
-        return 0;
+		return 0;
+		/*
+		 Ice::ObjectAdapterPtr adapter
+		 = ic->createObjectAdapterWithEndpoints
+		 ("SimplePrinterAdapter", "default -p 10000");
+		 Ice::ObjectPtr object = new SolverI;
+		 adapter->add(object,
+		 ic->stringToIdentity("SimplePrinter"));
+		 adapter->activate();
+		 return 0;
+		 */
     }
 };
 
