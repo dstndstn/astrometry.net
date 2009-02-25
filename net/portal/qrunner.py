@@ -70,6 +70,7 @@ def mainthread(nthreads):
 
 		#logmsg('Getting next job...')
 		nextjob = QueuedJob.next_job()
+		logmsg('Next job:', nextjob);
 		if nextjob is None:
 			time.sleep(10)
 			continue

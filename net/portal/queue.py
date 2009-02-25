@@ -1,8 +1,8 @@
-
+import random
 
 from django.db import models
 from django.db import transaction
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AnonymousUser
 
 #from astrometry.net.portal.job import Job,Submission
 from astrometry.net.portal.job import *
@@ -87,21 +87,35 @@ class QueuedJob(models.Model):
 		logmsg('Top priority is', toppriority)
 		#toppriority = q.priority
 		#users = QueuedJob.objects.filter(ready=True, priority=toppriority).values_list('job_user', 'sub_user')
-		users = QueuedJob.objects.filter(ready=True, priority=toppriority).values_list('user', flat=True).distinct()
-		logmsg('Users with queued jobs:', users)
-		user = users[random.randint(0, users.count())]
-		logmsg('User', user)
-		qj = QueuedJob.objects.filter(ready=True, priority=toppriority, user=user).order_by('queuedtime')[0]
+		userids = QueuedJob.objects.filter(ready=True, priority=toppriority).values_list('user', flat=True).distinct()
+		logmsg('User ids of users with queued jobs:', userids)
+		# debug
+		if True:
+			users = [uid and User.objects.get(id=uid) or AnonymousUser() for uid in userids]
+			logmsg('Users with queued jobs:', users)
+		### NOTE, random.randint and numpy.random.randint work differently!
+		## random.randint includes the endpoints, numpy does not.
+		I = random.randint(0, userids.count()-1)
+		logmsg('%i users, selected index %i' % (userids.count(), I))
+		uid = userids[I]
+		logmsg('selected userid', uid)
+		if True:
+			if uid is None:
+				user = AnonymousUser()
+			else:
+				user = User.objects.get(id=uid)
+			logmsg('Selected user', user)
+		qj = QueuedJob.objects.filter(ready=True, priority=toppriority, user__id=uid).order_by('queuedtime')[0]
 		qj.ready = False
 		qj.save()
 		return qj
 
 # need this???
-class RunFailure(models.Model):
-	qjob = models.ForeignKey('QueuedJob', related_name='runs')
-	starttime = models.DateTimeField()
-	endtime = models.DateTimeField()
-	status = models.CharField(max_length=16)
-	failurereason = models.CharField(max_length=256)
+#class RunFailure(models.Model):
+#	qjob = models.ForeignKey('QueuedJob', related_name='runs')
+#	starttime = models.DateTimeField()
+#	endtime = models.DateTimeField()
+#	status = models.CharField(max_length=16)
+#	failurereason = models.CharField(max_length=256)
 
 
