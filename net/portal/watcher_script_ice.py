@@ -9,17 +9,17 @@ from astrometry.util.file import *
 import IceSolver
 
 class WatcherIce(Watcher):
-    def solve_job_and_write_files(self, job):
-        blindlog = job.get_filename('blind.log')
-        def userlog(msg):
-            f = open(blindlog, 'a')
-            f.write(msg)
-            f.close()
+	def solve_job_and_write_files(self, job):
+		blindlog = job.get_filename('blind.log')
+		def userlog(msg):
+			f = open(blindlog, 'a')
+			f.write(msg)
+			f.close()
 
-        axy = read_file(job.get_axy_filename())
-        logmsg('Calling IceSolver.solve()...')
-        files = IceSolver.solve(job.jobid, axy, userlog)
-        logmsg('IceSolver.solve() returned')
+		axy = read_file(job.get_axy_filename())
+		logmsg('Calling IceSolver.solve()...')
+		files = IceSolver.solve(job.jobid, axy, userlog)
+		logmsg('IceSolver.solve() returned')
 
 		if files is not None:
 			logmsg('Writing files...')
@@ -32,10 +32,10 @@ class WatcherIce(Watcher):
 			logmsg('Field unsolved.')
 			
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print 'Usage: %s <input-file>' % sys.argv[0]
-        sys.exit(-1)
-    joblink = sys.argv[1]
-    w = WatcherIce()
-    sys.exit(w.main(joblink))
+	if len(sys.argv) != 2:
+		print 'Usage: %s <input-file>' % sys.argv[0]
+		sys.exit(-1)
+	joblink = sys.argv[1]
+	w = WatcherIce()
+	sys.exit(w.main(joblink))
 

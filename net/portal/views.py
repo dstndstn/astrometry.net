@@ -281,6 +281,10 @@ def joblist(request):
 		if user:
 			username = user.username
 			myargs['user'] = user.username
+		elif request.user.is_authenticated():
+			user = request.user
+			username = user.username
+			myargs['user'] = username
 		else:
 			username = 'anonymous'
 		# find multi-job submissions from this user.
