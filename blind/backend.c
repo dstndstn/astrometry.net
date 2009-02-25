@@ -237,7 +237,7 @@ static void add_index_to_blind(backend_t* backend, blind_t* bp,
     }
 }
 
-int backend_parse_config_file(backend_t* backend, char* fn) {
+int backend_parse_config_file(backend_t* backend, const char* fn) {
 	FILE* fconf;
     int rtn;
 	fconf = fopen(fn, "r");

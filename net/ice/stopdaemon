@@ -11,5 +11,5 @@ if [ -r $PIDFILE ]; then
 fi
 sleep 1
 # ... or not
-killall icegridnode python
+killall icegridnode python SolverServer
 

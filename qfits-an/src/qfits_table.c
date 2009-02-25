@@ -649,7 +649,7 @@ qfits_table * qfits_table_open(
     /* one by more than 2880 */
     theory_size = qfits_compute_table_width(tload)*tload->nr;
     if (data_size < theory_size) {
-        qfits_error("Inconsistent data sizes");
+        qfits_error("Inconsistent data sizes: found %i, expected %i.", data_size, theory_size);
         qfits_table_close(tload);
         return NULL;
     }

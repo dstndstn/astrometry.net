@@ -42,6 +42,11 @@ private:
 	backend_t* backend;
 };
 
+// FIXME - this should be a class static in SolverI
+map<string, string> solverdirs;
+
+
+
 SolverI::SolverI(const string& progname, int scale) {
 	cout << "Solver constructor: name " << progname << ", scale " << scale << endl;
 
@@ -83,7 +88,6 @@ public:
 			char buf[1024];
 			int nread;
 			if (quitNow) {
-				cout << "Quitting at user request" << endl;
 				break;
 			}
 			nread = read(rpipe, buf, sizeof(buf));
@@ -95,13 +99,14 @@ public:
 				cout << "Error reading from log message pipe: " << strerror(errno) << endl;
 				break;
 			}
-			cout << "Read " << nread << " bytes from log message pipe." << endl;
-			cout << "Sending to remote logger..." << endl;
+			//cout << "Read " << nread << " bytes from log message pipe." << endl;
+			//cout << "Sending to remote logger..." << endl;
 			string logstr = string(buf, nread);
 			logger->logmessage(logstr);
-			cout << "Sent to remote logger." << endl;
+			//cout << "Sent to remote logger." << endl;
 			sleep(1);
 		}
+		cout << "log message piper finished." << endl;
     }
 
 	void quit() {
@@ -139,6 +144,8 @@ Fileset SolverI::solve(const string& jobid,
 	char templ[256];
 	sprintf(templ, "%s/backend-%s-XXXXXX", tempdir, jobid.c_str());
 	char* mydir = mkdtemp(templ);
+
+	solverdirs[jobid] = string(mydir);
 
 	string cancelfn = string(mydir) + "/cancel";
 	string axyfn = string(mydir) + "/job.axy";
@@ -184,6 +191,8 @@ Fileset SolverI::solve(const string& jobid,
 	backend_run_job(backend, job);
 	cout << "backend_run_job() done!" << endl;
 
+	solverdirs.erase(jobid);
+
 	job_free(job);
 
 	cout << "cleaning up logging thread..." << endl;
@@ -213,8 +222,10 @@ Fileset SolverI::solve(const string& jobid,
 			return fs;
 		}
 		Filedata fd;
-		for (size_t j=0; j<len; j++)
-			fd.push_back(data[j]);
+		for (size_t j=0; j<len; j++) {
+			Ice::Byte ib = data[j];
+			fd.push_back(ib);
+		}
 
 		File f;
 		f.name = string(name);
@@ -231,7 +242,20 @@ Fileset SolverI::solve(const string& jobid,
 
 void SolverI::cancel(const string& jobid,
 					 const ::Ice::Current& current) {
-	cout << "cancel() called." << endl;
+	cout << "cancel(jobid=" << jobid << ") called." << endl;
+	map<string,string>::iterator it = solverdirs.find(jobid);
+	if (it == solverdirs.end()) {
+		cout << "jobid " << jobid << " not found." << endl;
+	}
+	string dir = it->second;
+	cout << "directory: " << dir << endl;
+	string cancelfn = dir + "/cancel";
+	FILE* f = fopen(cancelfn.c_str(), "w");
+	if (!f || fclose(f)) {
+		cout << "Failed to write cancel file: " << cancelfn << ":" << strerror(errno) << endl;
+		return;
+	}
+	cout << "Wrote cancel file " << cancelfn << endl;
 }
 
 void SolverI::shutdown(const ::Ice::Current& current) {

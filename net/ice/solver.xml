@@ -7,9 +7,8 @@
     <server-template id="ServerTemplate-scale10">
       <parameter name="index"/>
       <server id="Server-${index}-scale10"
-              exe="python"
+              exe="/data1/dstn/astrometry/net/ice/SolverServer"
               activation="always">
-        <option>SolverServer.py</option>
         <option>10</option>
         <adapter name="OneSolver" endpoints="tcp"
          replica-group="RSolver-scale10"/>
@@ -22,9 +21,8 @@
     <server-template id="ServerTemplate-scale5">
       <parameter name="index"/>
       <server id="Server-${index}-scale5"
-              exe="python"
+              exe="/data1/dstn/astrometry/net/ice/SolverServer"
               activation="always">
-        <option>SolverServer.py</option>
         <option>5</option>
         <adapter name="OneSolver" endpoints="tcp"
          replica-group="RSolver-scale5"/>
@@ -37,9 +35,8 @@
     <server-template id="ServerTemplate-scale4">
       <parameter name="index"/>
       <server id="Server-${index}-scale4"
-              exe="python"
+              exe="/data1/dstn/astrometry/net/ice/SolverServer"
               activation="always">
-        <option>SolverServer.py</option>
         <option>4</option>
         <adapter name="OneSolver" endpoints="tcp"
          replica-group="RSolver-scale4"/>
@@ -52,9 +49,8 @@
     <server-template id="ServerTemplate-scale3">
       <parameter name="index"/>
       <server id="Server-${index}-scale3"
-              exe="python"
+              exe="/data1/dstn/astrometry/net/ice/SolverServer"
               activation="always">
-        <option>SolverServer.py</option>
         <option>3</option>
         <adapter name="OneSolver" endpoints="tcp"
          replica-group="RSolver-scale3"/>
@@ -67,9 +63,8 @@
     <server-template id="ServerTemplate-scale2">
       <parameter name="index"/>
       <server id="Server-${index}-scale2"
-              exe="python"
+              exe="/data1/dstn/astrometry/net/ice/SolverServer"
               activation="always">
-        <option>SolverServer.py</option>
         <option>2</option>
         <adapter name="OneSolver" endpoints="tcp"
          replica-group="RSolver-scale2"/>

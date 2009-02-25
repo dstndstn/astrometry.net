@@ -48,43 +48,43 @@ static void bl_remove_from_node(bl* list, bl_node* node,
 
 #define nl il
 #define number int
-#define NL_PRINTF "%i"
+#define NL_PRINT(x) printf("%i", x)
 #include "bl-nl.c"
 #undef nl
 #undef number
-#undef NL_PRINTF
+#undef NL_PRINT
 
 #define nl ll
 #define number int64_t
-#define NL_PRINTF "%lli"
+#define NL_PRINT(x) printf("%lli", (long long int)x)
 #include "bl-nl.c"
 #undef nl
 #undef number
-#undef NL_PRINTF
+#undef NL_PRINT
 
 #define nl pl
 #define number void*
-#define NL_PRINTF "%p"
+#define NL_PRINT(x) printf("%p", x)
 #include "bl-nl.c"
 #undef nl
 #undef number
-#undef NL_PRINTF
+#undef NL_PRINT
 
 #define nl fl
 #define number float
-#define NL_PRINTF "%f"
+#define NL_PRINT(x) printf("%f", (float)x)
 #include "bl-nl.c"
 #undef nl
 #undef number
-#undef NL_PRINTF
+#undef NL_PRINT
 
 #define nl dl
 #define number double
-#define NL_PRINTF "%g"
+#define NL_PRINT(x) printf("%g", x)
 #include "bl-nl.c"
 #undef nl
 #undef number
-#undef NL_PRINTF
+#undef NL_PRINT
 
 
 static void bl_sort_with_userdata(bl* list,

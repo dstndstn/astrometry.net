@@ -12,6 +12,8 @@ scales=[10,5,4,3,2]
 hosts = ['neuron-0-%i' % i for i in (range(12) + range(16, 25))]
 nodes = [(h, [scales[i % len(scales)]]) for i,h in enumerate(hosts)]
 
+exe = '/data1/dstn/astrometry/net/ice/SolverServer'
+
 print '''
 <icegrid>
   <application name="Solver">
@@ -28,9 +30,8 @@ for scale in scales:
     <server-template id="ServerTemplate-scale%i">
       <parameter name="index"/>
       <server id="Server-${index}-scale%i"
-              exe="python"
+              exe="%s"
               activation="always">
-        <option>SolverServer.py</option>
         <option>%i</option>
         <adapter name="OneSolver" endpoints="tcp"
          replica-group="RSolver-scale%i"/>
@@ -38,7 +39,7 @@ for scale in scales:
         <property name="Ice.ThreadPool.Server.SizeMax" value="20"/>
         </server>
     </server-template>
-''' % ((scale,)*5)
+''' % (scale,scale, exe, scale,scale,scale)
 
 for scale in scales:
     #<load-balancing type="round-robin"/>

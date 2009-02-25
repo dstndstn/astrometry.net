@@ -20,7 +20,7 @@
 
 InlineDefine
 number NLF(get)(nl* list, int n) {
-	number* ptr = bl_access(list, n);
+	number* ptr = (number*)bl_access(list, n);
 	return *ptr;
 }
 

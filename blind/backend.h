@@ -69,7 +69,7 @@ int backend_add_index(backend_t* backend, char* path);
 // look in all the search path directories for index files.
 int backend_autoindex_search_paths(backend_t* backend);
 int backend_parse_config_file_stream(backend_t* backend, FILE* fconf);
-int backend_parse_config_file(backend_t* backend, char* fn);
+int backend_parse_config_file(backend_t* backend, const char* fn);
 int backend_run_job(backend_t* backend, job_t* job);
 void backend_free(backend_t* backend);
 

@@ -21,7 +21,7 @@
 
  --nl
  --number
- --NL_PRINTF (eg "%i")
+ --NL_PRINT(x)  prints number 'x'
 
  Note:
  --You can't declare multiple "number" variables like this:
@@ -351,8 +351,11 @@ void NLF(print)(nl* list) {
 	int i;
 	for (n=list->head; n; n=n->next) {
 		printf("[ ");
-		for (i=0; i<n->N; i++)
-			printf(NL_PRINTF ", ", NODE_NUMDATA(n)[i]);
+		for (i=0; i<n->N; i++) {
+			if (i > 0)
+				printf(", ");
+			NL_PRINT(NODE_NUMDATA(n)[i]);
+		}
 		printf("] ");
 	}
 }
@@ -376,7 +379,6 @@ int NLF(contains)(nl* list, const number data) {
 	return (NLF(index_of)(list, data) != -1);
 }
 
-// FIXME - efficiency.
 int NLF(sorted_contains)(nl* list, const number n) {
 	bl_node *node;
 	number* iarray;
