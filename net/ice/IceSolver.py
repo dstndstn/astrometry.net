@@ -164,12 +164,18 @@ class LoggerI(SolverIce.Logger):
 class SolverResult(object):
     def __init__(self, server, jobid):
         self.tardata = None
+		self.files = None
+		self.errmsg = None
         self.failed = False
         self.solved = False
         self.server = server
         self.jobid = jobid
-    def ice_response(self, tardata, solved):
-        logmsg('async response from server', self.server, ', job', self.jobid, ': ', (solved and 'solved' or 'did not solve'))
+    def ice_response(self, files, solved, errmsg):
+        #logmsg('async response from server', self.server, ', job', self.jobid, ': ', (solved and 'solved' or 'did not solve'))
+        logmsg('async response from server', self.server, ', job', self.jobid, ': ')
+		logmsg('solved:', solved)
+		logmsg('errmsg:', errmsg)
+		logmsg('files:', files)
         self.tardata = tardata
         self.solved = solved
     def ice_exception(self, ex):

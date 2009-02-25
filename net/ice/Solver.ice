@@ -3,24 +3,22 @@
 
 module SolverIce {
 
-/*
-interface SolverHandle {
-    void cancel();
-    int  finished();
-};
-
-interface Solver {
-    SolverHandle* startsolver(string axypath);
-};
-*/
-
 interface Logger {
     void logmessage(string msg);
 };
 
+sequence<byte> Filedata;
+
+struct File {
+	string name;
+	Filedata data;
+};
+
+sequence<File> Fileset;
+
 interface Solver {
-    ["ami"] string solve(string jobid, string axy, Logger* l,
-		out bool solved);
+	["ami"] Fileset solve(string jobid, Filedata axy, Logger* l,
+						         out bool solved, out string errmsg);
     ["ami"] void cancel(string jobid);
     string status();
     void shutdown();

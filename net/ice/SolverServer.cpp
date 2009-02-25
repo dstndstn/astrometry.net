@@ -11,6 +11,7 @@ extern "C" {
 #include "backend.h"
 #include "log.h"
 #include "fitsioutils.h"
+#include "ioutils.h"
 }
 
 using namespace std;
@@ -22,10 +23,11 @@ public:
 
 	int init();
 
-    virtual string solve(const string& jobid,
-						 const string& axy,
+    virtual Fileset solve(const string& jobid,
+						 const Filedata& axy,
 						 const LoggerPrx& logger,
 						 bool& solved,
+						  string& errmsg,
 						 const ::Ice::Current& current);
 
     virtual void cancel(const string& jobid,
@@ -112,13 +114,25 @@ private:
 	bool quitNow;
 };
 
-string SolverI::solve(const string& jobid,
-					  const string& axydata,
-					  const LoggerPrx& logger,
-					  bool& solved,
-					  const ::Ice::Current& current) {
+Fileset SolverI::solve(const string& jobid,
+					   const Filedata& axy,
+					   const LoggerPrx& logger,
+					   bool& solved,
+					   string& errmsg,
+					   const ::Ice::Current& current) {
 	cout << "solve() called." << endl;
 	cout << "  jobid = " << jobid << endl;
+
+	Fileset fs;
+	solved = false;
+	errmsg = string();
+
+	int Naxy = axy.size();
+	unsigned char* axydata = new unsigned char[Naxy];
+	for (int i=0; i<Naxy; i++)
+		axydata[i] = axy[i];
+
+	cout << "axy is " << Naxy << " bytes" << endl;
 
 	char* tempdir = "/tmp";
 
@@ -128,19 +142,22 @@ string SolverI::solve(const string& jobid,
 
 	string cancelfn = string(mydir) + "/cancel";
 	string axyfn = string(mydir) + "/job.axy";
-	FILE* f = fopen(axyfn.c_str(), "w");
-	if (fwrite(axydata.c_str(), 1, axydata.length(), f) != axydata.length() ||
+	FILE* f = fopen(axyfn.c_str(), "wb");
+	if ((fwrite(axydata, 1, Naxy, f) != Naxy) ||
 		fclose(f)) {
 		cout << "Failed to write axy data to file " << axyfn << endl;
-		return "failed to write axy data";
+		errmsg = "failed to write axy data";
+		return fs;
 	}
 	cout << "Wrote axyfn = " << axyfn << endl;
 
+	delete(axydata);
 
 	int pipes[2];
 	if (pipe(pipes)) {
 		cout << "Error creating pipe for log messages." << endl;
-		return "Error creating pipe for log messages.";
+		errmsg = "Error creating pipe for log messages.";
+		return fs;
 	}
 	/*
 	 long flags = fcntl(pipes[0], F_GETFL);
@@ -156,7 +173,8 @@ string SolverI::solve(const string& jobid,
 	job_t* job = backend_read_job_file(backend, axyfn.c_str());
 	if (!job) {
 		cout << "Failed to read job file " << axyfn << endl;
-		return "failed to read job file";
+		errmsg = "failed to read job file";
+		return fs;
 	}
 
 	job_set_base_dir(job, mydir);
@@ -174,7 +192,41 @@ string SolverI::solve(const string& jobid,
 	if (t->isAlive()) {
 		t->quit();
 	}
-	return "OK";
+
+	// Read output files.
+	sl* outfiles = dir_get_contents(mydir, NULL, TRUE, TRUE);
+	for (int i=0; i<sl_size(outfiles); i++) {
+		char* path = sl_get(outfiles, i);
+		size_t len;
+		unsigned char* data = (unsigned char*)file_get_contents(path, &len, FALSE);
+		char* name = basename_safe(path);
+		if (streq(name, "wcs.fits")) {
+			solved = true;
+		}
+		if (streq(name, "job.axy")) {
+			free(name);
+			continue;
+		}
+		if (!data) {
+			cout << "Failed to read output file " << path << endl;
+			errmsg = "failed to read output file";
+			return fs;
+		}
+		Filedata fd;
+		for (size_t j=0; j<len; j++)
+			fd.push_back(data[j]);
+
+		File f;
+		f.name = string(name);
+		f.data = fd;
+		fs.push_back(f);
+
+		free(name);
+		free(data);
+	}
+	sl_free2(outfiles);
+
+	return fs;
 }
 
 void SolverI::cancel(const string& jobid,
