@@ -80,31 +80,40 @@ public:
 		quitNow = false;
 		rpipe = therpipe;
 		logger = thelogger;
-		logger->logmessage("Hello from LogMessagePiper.\n");
+		//logger->logmessage("Hello from LogMessagePiper.\n");
 	}
 
 	virtual void run() {
-		for (;;) {
-			char buf[1024];
-			int nread;
-			if (quitNow) {
-				break;
+		try {
+			for (;;) {
+				char buf[1024];
+				int nread;
+				if (quitNow) {
+					break;
+				}
+				nread = read(rpipe, buf, sizeof(buf));
+				if (nread == 0) {
+					cout << "Hit end-of-file on log message pipe." << endl;
+					break;
+				}
+				if (nread == -1) {
+					cout << "Error reading from log message pipe: " << strerror(errno) << endl;
+					break;
+				}
+				//cout << "Read " << nread << " bytes from log message pipe." << endl;
+				//cout << "Sending to remote logger..." << endl;
+				string logstr = string(buf, nread);
+				try {
+					logger->logmessage(logstr);
+				} catch (Ice::ConnectionRefusedException cre) {
+					cout << "Remote logger connection refused.  Logger quitting." << endl;
+					break;
+				}
+				//cout << "Sent to remote logger." << endl;
+				sleep(1);
 			}
-			nread = read(rpipe, buf, sizeof(buf));
-			if (nread == 0) {
-				cout << "Hit end-of-file on log message pipe." << endl;
-				break;
-			}
-			if (nread == -1) {
-				cout << "Error reading from log message pipe: " << strerror(errno) << endl;
-				break;
-			}
-			//cout << "Read " << nread << " bytes from log message pipe." << endl;
-			//cout << "Sending to remote logger..." << endl;
-			string logstr = string(buf, nread);
-			logger->logmessage(logstr);
-			//cout << "Sent to remote logger." << endl;
-			sleep(1);
+		} catch (...) {
+			cout << "log message piper: caught generic exception." << endl;
 		}
 		cout << "log message piper finished." << endl;
     }
