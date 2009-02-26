@@ -85,7 +85,9 @@ def uploadform(request, template_name='upload/upload.html', onload=None,
 	c = Context(ctxt)
 	return HttpResponse(t.render(c))
 
-uploadformsmall = uploadform
+def uploadformsmall(*args, **kwargs):
+	return uploadform(*args, **kwargs)
+#uploadformsmall = uploadform
 
 def progress_xml(request):
 	logging.debug('XML request')

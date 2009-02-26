@@ -334,9 +334,6 @@ def newurl(request):
 		},
 		context_instance = RequestContext(request))
 
-def uploadformurl():
-	return reverse(astrometry.net.upload.views.uploadform)
-
 def newfile(request):
 	if len(request.POST):
 		form = SimpleFancyFileForm(request.POST)
@@ -360,7 +357,7 @@ def newfile(request):
 	t = loader.get_template('portal/newjobfile.html')
 	c = RequestContext(request, {
 		'form' : form,
-		'uploadform' : uploadformurl(),
+		'uploadform' : reverse(astrometry.net.upload.views.uploadform),
 		'progressform' : reverse(astrometry.net.upload.views.progress_ajax) + '?upload_id='
 		})
 	return HttpResponse(t.render(c))
@@ -457,7 +454,7 @@ def newlong(request):
 		'form' : form,
 		'imgurlinput': imgurlinput,
 		'fitsurlinput': fitsurlinput,
-		'uploadform' : uploadformurl(),
+		'uploadform' : reverse(astrometry.net.upload.views.uploadformsmall),
 		'progressform' : progressform,
 		'myurl' : reverse(astrometry.net.portal.newjob.newlong),
 		'scale_ul' : r0txt,
