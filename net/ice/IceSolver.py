@@ -139,6 +139,7 @@ class SolverClient(object):
 
 	def find_all_solvers(self):
 		q = self.ice.stringToProxy('SolverIceGrid/Query')
+		logmsg('Q is', q)
 		q = IceGrid.QueryPrx.checkedCast(q)
 		solvers = q.findAllObjectsByType('::SolverIce::Solver')
 		logmsg('Found %i solvers' % len(solvers))
