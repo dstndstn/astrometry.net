@@ -3,7 +3,7 @@
     "pk": 2,
     "model": "sites.site",
     "fields": {
-      "domain": "use.astrometry.net",
+      "domain": "edge.astrometry.net",
       "name": "Astrometry.net"
     }
   }

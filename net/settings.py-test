@@ -6,7 +6,8 @@ GMAPS_HOSTS = ['x%i.astrometry.net' % i for i in [1,2,3,4,5]]
 
 W3C_VALIDATOR_URL = 'http://oven.cosmo.fas.nyu.edu:8888/w3c-markup-validator/check'
 
-UPLOADER_URL = '/test/uploader'
+#UPLOADER_URL = '/test/uploader'
+UPLOADER_URL = '/uploader'
 
 UPLOAD_DIR = '/data2/TEMP-test'
 
@@ -40,7 +41,8 @@ CACHEDIR = '/data2/test-tilecache'
 RENDERCACHEDIR = '/data2/test-rendercache/'
 TEMPDIR = '/tmp'
 
-SITE_NAME = 'test'
+#SITE_NAME = 'test'
+SITE_NAME = 'edge'
 JOB_DIR = BASEDIR + 'web-data/'
 FIELD_DIR = '/home/gmaps/test/web-data/fields'
 
@@ -130,8 +132,8 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'astrometry.net.root-urls-test'
 
-LOGIN_URL = '/test/login/'
-LOGIN_REDIRECT_URL = '/test/job/newurl/'
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/job/newurl/'
 
 TEMPLATE_DIRS = (
     WEB_DIR,
