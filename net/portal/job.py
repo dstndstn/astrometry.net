@@ -344,16 +344,27 @@ class Submission(models.Model):
 	def typestr(self):
 		return 'Submission'
 
+	def jobs_queued(self):
+		return self.jobs.filter(status='Queued')
+	def jobs_running(self):
+		return self.jobs.filter(status='Running')
+	def jobs_solved(self):
+		return self.jobs.filter(status='Solved')
+	def jobs_unsolved(self):
+		return self.jobs.filter(status='Unsolved')
+	def jobs_error(self):
+		return self.jobs.filter(status='Error')
+
 	def njobs_queued(self):
-		return self.jobs.filter(status='Queued').count()
+		return self.jobs_queued().count()
 	def njobs_running(self):
-		return self.jobs.filter(status='Running').count()
+		return self.jobs_running().count()
 	def njobs_solved(self):
-		return self.jobs.filter(status='Solved').count()
+		return self.jobs_solved().count()
 	def njobs_unsolved(self):
-		return self.jobs.filter(status='Unsolved').count()
+		return self.jobs_unsolved().count()
 	def njobs_error(self):
-		return self.jobs.filter(status='Error').count()
+		return self.jobs_error().count()
 
 	def check_if_finished(self):
 		#alljobs = self.jobs.all()

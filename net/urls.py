@@ -104,6 +104,8 @@ urlpatterns = (patterns('',
 						(r'^api/logout', 'logout'),
 						(r'^api/amiloggedin', 'amiloggedin'),
 						(r'^api/jobstatus', 'jobstatus'),
+						(r'^api/substatus', 'substatus'),
+						(r'^api/submit_url', 'submit_url'),
 						)
 			   )
 
