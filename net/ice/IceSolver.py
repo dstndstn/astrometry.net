@@ -79,7 +79,18 @@ class SolverClient(object):
 		except Ice.ConnectionLostException,ex:
 			logmsg('Got ConnectionLostException on pinging router.	Reopening connection...')
 			self.initrouter()
-		
+
+	def server_status(self):
+		logmsg('get servers')
+		servers = self.find_all_solvers()
+		logmsg('servers:', servers)
+		rtn = []
+		for s in servers:
+			logmsg('getting status for', s)
+			stat = s.status()
+			logmsg('status:', stat)
+			rtn.append((s,stat))
+		return rtn
 
 	# this will be called from multiple threads.
 	def solve(self, jobid, axy, logfunc):
@@ -141,6 +152,7 @@ class SolverClient(object):
 		q = self.ice.stringToProxy('SolverIceGrid/Query')
 		logmsg('Q is', q)
 		q = IceGrid.QueryPrx.checkedCast(q)
+		logmsg('Q is', q)
 		solvers = q.findAllObjectsByType('::SolverIce::Solver')
 		logmsg('Found %i solvers' % len(solvers))
 		for s in solvers:
@@ -212,14 +224,17 @@ def solve(jobid, axy, logfunc):
 	return files
 
 def status():
-	ice = get_ice()
-	(router, session) = get_router_session(ice)
-	servers = find_all_solvers(ice)
-	print 'Found %i servers.' % len(servers)
-	for s in servers:
-		print 'Getting status for', s
-		st = s.status()
-		print 'Got status:', st
+	global theclient
+	
+	theclientlock.acquire()
+	if not theclient:
+		theclient = SolverClient()
+		theclient.init()
+	else:
+		theclient.getready()
+	theclientlock.release()
+
+	stats = theclient.server_status()
 	
 
 if __name__ == '__main__':

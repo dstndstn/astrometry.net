@@ -4,6 +4,11 @@ Ice.Default.Router=Glacier2/router:tcp -h localhost -p 4063
 Ice.ACM.Client=0
 Ice.RetryIntervals=-1
 
+Ice.Trace.Retry=3
+#Ice.Trace.Network=2
+#Ice.Trace.Protocol=1
+Ice.Trace.Locator=3
+
 #
 # The IceGrid locator proxy.
 #
@@ -14,6 +19,3 @@ Ice.Default.Locator=SolverIceGrid/Locator:default -p 4061 -h hydra.local
 Callback.Client.Endpoints=tcp
 Callback.Router=Glacier2/router:tcp -h localhost -p 4063
 
-#Ice.Trace.Network=2
-#Ice.Trace.Protocol=1
-#Ice.Trace.Locator=2
