@@ -36,6 +36,7 @@
 #include "ioutils.h"
 #include "fitsioutils.h"
 #include "bl.h"
+#include "log.h"
 
 #include "render_tycho.h"
 #include "render_gridlines.h"
@@ -46,6 +47,7 @@
 #include "render_messier.h"
 #include "render_solid.h"
 #include "render_images.h"
+#include "render_cairo.h"
 
 // Ugh, zlib before 1.2.0 didn't include compressBound()...
 // And ZLIB_VERNUM wasn't defined until 1.2.0.2
@@ -69,7 +71,7 @@ uLong compressBound (uLong sourceLen) {
   The width and height in pixels are  -w <width> -h <height>
   */
 
-const char* OPTIONS = "ab:c:de:g:h:i:k:l:npqr:sw:x:y:zA:B:C:D:F:I:JL:MN:RS:V:W:X:Y:PK:";
+const char* OPTIONS = "ab:c:de:g:h:i:k:l:npqr:svw:x:y:zA:B:C:D:F:I:JL:MN:RS:V:W:X:Y:PK:";
 
 struct renderer {
 	char* name;
@@ -95,19 +97,8 @@ static renderer_t renderers[] = {
 	{ "boundaries",render_boundary,     NULL },
 	{ "userboundary", render_boundary,  NULL },
 	{ "userdot",   render_boundary,     NULL },
+	{ "cairo",     NULL,                render_cairo },
 };
-
-
-
-static void
-ATTRIB_FORMAT(printf,1,2)
-logmsg(char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    fprintf(stderr, "tilerender: ");
-    vfprintf(stderr, format, args);
-    va_end(args);
-}
 
 static void default_rdls_args(render_args_t* args) {
 	// Set the other RDLS-related args if they haven't been set already.
@@ -160,6 +151,7 @@ int main(int argc, char *argv[]) {
 	int i;
 	bool inmerc = 0;
     bool writejpeg = FALSE;
+	int loglvl = LOG_MSG;
 
 	memset(&args, 0, sizeof(render_args_t));
 
@@ -179,6 +171,9 @@ int main(int argc, char *argv[]) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'v':
+			loglvl++;
+			break;
         case 'A':
             args.argfilename = optarg;
             break;
@@ -295,6 +290,8 @@ int main(int argc, char *argv[]) {
 				goth = TRUE;
 				break;
 		}
+	log_init(loglvl);
+	log_to(stderr);
 
 	if (!(gotx && goty && gotX && gotY && gotw && goth)) {
 		logmsg("tilecache: Invalid inputs: need ");
