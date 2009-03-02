@@ -118,6 +118,7 @@ struct render_args {
 typedef struct render_args render_args_t;
 
 typedef int (*render_func_t)(unsigned char* dest_img, render_args_t* args);
+typedef int (*render_cairo_func_t)(cairo_t* cr, render_args_t* args);
 
 void get_string_args_of_type(render_args_t* args, const char* prefix, sl* lst);
 

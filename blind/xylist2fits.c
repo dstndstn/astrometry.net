@@ -116,7 +116,7 @@ int main(int argc, char** args) {
         xylist_set_ytype(ls, TFITS_BIN_TYPE_D);
     }
     if (antype)
-        ls->antype = antype;
+        xylist_set_antype(ls, antype);
 
     hdr = xylist_get_primary_header(ls);
     qfits_header_add(hdr, "WRITER", basename(args[0]), "This file was written by the program...", NULL);

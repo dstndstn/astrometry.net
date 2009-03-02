@@ -33,6 +33,7 @@ const char* image_dirs[] = {
 	"/home/gmaps/ontheweb-data/",
 	"/home/gmaps/test/web-data/",
 	"/home/gmaps/gmaps-rdls/",
+	"./",
 };
 
 const char* cachedomain = "images";
@@ -322,9 +323,15 @@ int render_images(unsigned char* img, render_args_t* args) {
 
                 //den = log(counts[j*w + i]);
                 //den = counts[j*w + i];
-                den = sqrt(counts[j*w + i]);
+
+				if (args->arc) {
+					den = asinh(counts[j*w + i]);
+				} else {
+					den = sqrt(counts[j*w + i]);
+				}
                 den *= pow(4.0, args->zoomlevel);
                 den *= exp(args->gain * log(4.0));
+
 				//den = log(den);
                 if (den > maxden)
                     maxden = den;

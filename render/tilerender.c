@@ -27,6 +27,7 @@
 #include <stdarg.h>
 
 #include <zlib.h>
+#include <cairo.h>
 
 #include "an-bool.h"
 #include "tilerender.h"
@@ -68,51 +69,35 @@ uLong compressBound (uLong sourceLen) {
   The width and height in pixels are  -w <width> -h <height>
   */
 
-const char* OPTIONS = "ab:c:dg:h:i:k:l:npr:sw:x:y:zB:C:D:F:I:JL:MN:RS:V:W:X:Y:PK:A:";
+const char* OPTIONS = "ab:c:dg:h:i:k:l:npr:sw:x:y:zA:B:C:D:F:I:JL:MN:RS:V:W:X:Y:PK:";
 
+struct renderer {
+	char* name;
+	render_func_t imgrender;
+	render_cairo_func_t cairorender;
+	// don't change the order of these fields!
+};
+typedef struct renderer renderer_t;
 
 /* All render layers must go in here */
-char* layernames[] = {
-	"tycho",
-	"grid",
-	"usnob",
-	"rdls",
-	"constellation",
-	"messier",
-
-	"clean",
-	"dirty",
-	"solid",
-
-	"images",
-	"userimage",
-
-	"boundaries",
-	"userboundary",
-
-    "userdot",
+static renderer_t renderers[] = {
+	{ "tycho",     render_tycho,        NULL },
+	{ "grid",      render_gridlines,    NULL },
+	{ "usnob",     render_usnob,        NULL },
+	{ "rdls",      render_rdls,         NULL },
+	{ "constellation", render_constellation, NULL },
+	{ "messier",   render_messier,      NULL },
+	{ "clean",     render_usnob,        NULL },
+	{ "dirty",     render_usnob,        NULL },
+	{ "solid",     render_solid,        NULL },
+	{ "images",    render_images,       NULL },
+	{ "userimage", render_images,       NULL },
+	{ "boundaries",render_boundary,     NULL },
+	{ "userboundary", render_boundary,  NULL },
+	{ "userdot",   render_boundary,     NULL },
 };
 
-render_func_t renderers[] = {
-	render_tycho,
-	render_gridlines,
-	render_usnob,
-	render_rdls,
-	render_constellation,
-	render_messier,
 
-	render_usnob,
-	render_usnob,
-	render_solid,
-
-	render_images,
-	render_images,
-
-	render_boundary,
-	render_boundary,
-
-    render_boundary,
-};
 
 static void
 ATTRIB_FORMAT(printf,1,2)
@@ -371,22 +356,40 @@ int main(int argc, char *argv[]) {
 
 	for (i=0; i<sl_size(layers); i++) {
 		int j, k;
-		int NR = sizeof(layernames) / sizeof(char*);
+		int NR = sizeof(renderers) / sizeof(renderer_t);
 		char* layer = sl_get(layers, i);
 		bool gotit = FALSE;
 		uchar* thisimg = calloc(4 * args.W * args.H, 1);
 
 		for (j=0; j<NR; j++) {
-			if (!strcmp(layer, layernames[j])) {
-				args.currentlayer = layernames[j];
-				if (renderers[j](thisimg, &args)) {
-					logmsg("tilecache: Renderer \"%s\" failed.\n", layernames[j]);
-				} else {
-					logmsg("tilecache: Renderer \"%s\" succeeded.\n", layernames[j]);
-				}
-				gotit = TRUE;
-				break;
+			renderer_t* r = renderers + j;
+			int res = -1;
+			if (!streq(layer, r->name))
+				continue;
+			args.currentlayer = r->name;
+			if (r->cairorender) {
+				// hacky... we really should do the compositing in cairo.
+				cairo_t* cairo;
+				cairo_surface_t* target;
+				target = cairo_image_surface_create_for_data(thisimg, CAIRO_FORMAT_ARGB32, args.W, args.H, args.W*4);
+				cairo = cairo_create(target);
+				res = r->cairorender(cairo, &args);
+				cairoutils_argb32_to_rgba(thisimg, args.W, args.H);
+				cairo_surface_destroy(target);
+				cairo_destroy(cairo);
+			} else if (r->imgrender) {
+				res = r->imgrender(thisimg, &args);
+			} else {
+				logmsg("tilecache: neither 'imgrender' nor 'cairorender' is defined for renderer \"%s\"\n", r->name);
+				continue;
 			}
+			if (res) {
+				logmsg("tilecache: Renderer \"%s\" failed.\n", r->name);
+			} else {
+				logmsg("tilecache: Renderer \"%s\" succeeded.\n", r->name);
+			}
+			gotit = TRUE;
+			break;
 		}
 		// Save a different kind of bonehead.
 		if (!gotit) {

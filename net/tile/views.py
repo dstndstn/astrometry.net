@@ -354,7 +354,6 @@ def get_tile(request):
 			#if not os.path.exists(wcsfn):
 			#	img.job.write_wcs_to_file(wcsfn)
 			wcsfn = convert(job, 'wcs')
-
 			arglist.append('wcsfn ' + wcsfn)
 
 			jpeg = convert(job, 'jpeg')
