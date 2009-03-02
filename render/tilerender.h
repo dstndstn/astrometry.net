@@ -77,8 +77,10 @@ struct render_args {
 	// Args for render_tycho:
 	double colorcor;
 	bool arc;
+	bool sqrt;
 	bool arith;
 	double gain;
+	double nlscale;
 
 	// Args for render_usnob:
 	char* cmap;

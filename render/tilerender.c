@@ -69,7 +69,7 @@ uLong compressBound (uLong sourceLen) {
   The width and height in pixels are  -w <width> -h <height>
   */
 
-const char* OPTIONS = "ab:c:dg:h:i:k:l:npr:sw:x:y:zA:B:C:D:F:I:JL:MN:RS:V:W:X:Y:PK:";
+const char* OPTIONS = "ab:c:de:g:h:i:k:l:npqr:sw:x:y:zA:B:C:D:F:I:JL:MN:RS:V:W:X:Y:PK:";
 
 struct renderer {
 	char* name;
@@ -252,6 +252,12 @@ int main(int argc, char *argv[]) {
 			case 's':
 				args.arc = TRUE;
 				break;
+		case 'q':
+			args.sqrt = TRUE;
+			break;
+		case 'e':
+			args.nlscale = atof(optarg);
+			break;
 			case 'a':
 				args.arith = TRUE;
 				break;

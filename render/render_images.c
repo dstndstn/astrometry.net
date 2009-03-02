@@ -125,6 +125,7 @@ int render_images(unsigned char* img, render_args_t* args) {
         char cachekey[33];
         float* cached;
         int len;
+		int expectlen;
 
 		imgfn = wcsfn = NULL;
         fn = sl_get(imagefiles, I);
@@ -196,15 +197,28 @@ int render_images(unsigned char* img, render_args_t* args) {
             md5_update(&md5, &(args->H), sizeof(int));
             md5_finish_hex(&md5, cachekey);
         }
-        cached = cache_load(args, cachedomain, cachekey, &len);
-        if (cached && (len != (args->W * args->H * 4 * sizeof(float)))) {
+		if (args->density) {
+			cached = cache_load(args, "density", cachekey, &len);
+			expectlen = args->W * args->H * 1 * sizeof(float);
+		} else {
+			cached = cache_load(args, cachedomain, cachekey, &len);
+			expectlen = args->W * args->H * 4 * sizeof(float);
+		}
+        if (cached && (len != expectlen)) {
             logmsg("Cached object (%s/%s) was wrong size.\n", cachedomain, cachekey);
             free(cached);
             cached = NULL;
         }
         if (cached) {
-            float* thisink = cached;
-            float* thiscounts = cached + args->W * args->H * 3;
+            float* thisink;
+            float* thiscounts;
+			if (args->density) {
+				thisink = NULL;
+				thiscounts = cached;
+			} else {
+				thisink = cached;
+				thiscounts = cached + args->W * args->H * 3;
+			}
             logmsg("Cache hit: %s/%s.\n", cachedomain, cachekey);
             add_ink(ink, counts, thisink, thiscounts, args->W, args->H);
             free(cached);
@@ -295,6 +309,8 @@ int render_images(unsigned char* img, render_args_t* args) {
 			if (thisink && thiscounts) {
 				logmsg("Caching: %s/%s (%d bytes).\n", cachedomain, cachekey, sz);
 				cache_save(args, cachedomain, cachekey, chunk, sz);
+			} else if (args->density && thiscounts) {
+				cache_save(args, "density", cachekey, thiscounts, args->W * args->H * sizeof(float));
 			}
             free(chunk);
         }
@@ -312,6 +328,8 @@ int render_images(unsigned char* img, render_args_t* args) {
 		double mincounts = 1e100;
 		double maxcounts = 0;
         double maxden = -1e100;
+		double scale = (pow(4.0, args->zoomlevel) *
+						pow(4.0, args->gain));
         for (j=0; j<args->H; j++) {
             for (i=0; i<w; i++) {
                 uchar* pix;
@@ -321,18 +339,17 @@ int render_images(unsigned char* img, render_args_t* args) {
                 mincounts = MIN(counts[j*w + i], mincounts);
                 maxcounts = MAX(counts[j*w + i], maxcounts);
 
-                //den = log(counts[j*w + i]);
-                //den = counts[j*w + i];
+                den = counts[j*w + i];
+				if (args->nlscale != 0.0)
+					den /= args->nlscale;
+				den *= scale;
+				if (args->arc)
+					den = asinh(den);
+				else if (args->sqrt)
+					den = sqrt(den);
+				if (args->nlscale != 0.0)
+					den *= args->nlscale;
 
-				if (args->arc) {
-					den = asinh(counts[j*w + i]);
-				} else {
-					den = sqrt(counts[j*w + i]);
-				}
-                den *= pow(4.0, args->zoomlevel);
-                den *= exp(args->gain * log(4.0));
-
-				//den = log(den);
                 if (den > maxden)
                     maxden = den;
                 if (den > 0.0) {
