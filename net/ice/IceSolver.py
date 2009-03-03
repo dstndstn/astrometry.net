@@ -240,6 +240,10 @@ def status():
 if __name__ == '__main__':
 	printlog = True
 	if len(sys.argv) == 2 and sys.argv[1] == 'status':
+		#while True:
+		#	status()
+		status()
+		time.sleep(30)
 		status()
 		sys.exit(0)
 

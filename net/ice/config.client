@@ -2,7 +2,8 @@
 # http://www.zeroc.com/doc/Ice-3.3.0-IceTouch/manual/Glacier2.44.3.html
 Ice.Default.Router=Glacier2/router:tcp -h localhost -p 4063
 Ice.ACM.Client=0
-Ice.RetryIntervals=-1
+#Ice.RetryIntervals=-1
+Ice.RetryIntervals=1000 2000 3000 4000 5000
 
 Ice.Trace.Retry=3
 #Ice.Trace.Network=2

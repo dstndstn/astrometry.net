@@ -165,6 +165,9 @@ function colorimagelinks(latlng) {
 
 	for (var i=0; i<visBoxes.length; i++) {
 		var link = document.getElementById('imagename-' + visImages[i]);
+        if (link == null) {
+            continue;
+        }
 		if (visImages[i] == selectedImage) {
 			link.style.color = '#00FF88';
 		} else if (inPoly(visBoxes[i], lng, lat)) {

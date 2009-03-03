@@ -87,7 +87,7 @@ urlpatterns = (patterns('',
 						# These are fake placeholders to allow {% url %} and reverse() to resolve an.media to /anmedia.
 						# -> They have corresponding fake definitions in astrometry/net/__init__.py
 						# -> You also have to set the Apache url match.
-						(r'^anmedia/', 'astrometry.net.media'),
+						(r'^media/', 'astrometry.net.media'),
 						(r'^logout/', 'astrometry.net.logout'),
 						(r'^login/', 'astrometry.net.login'),
 						(r'^changepassword/',  'astrometry.net.changepassword'),

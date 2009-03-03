@@ -170,9 +170,12 @@ function onUnload() {
 {% endif %}
 
 {% ifequal kind "sub" %}
+{% if submission.jobs.count %}
+
 <h3 class="c">
 Submission <i>{{ submission.subid }}</i>
 </h3>
+
 
 <table id="subtable">
 <tr><td>Number of jobs:</td><td>{{ submission.jobs.count }}</td></tr>
@@ -192,6 +195,8 @@ Submission <i>{{ submission.subid }}</i>
 <input type="submit" name="tagsolved" value="Tag solved jobs" />
 </p>
 </form>
+
+{% endif %}
 
 {% endifequal %}
 
