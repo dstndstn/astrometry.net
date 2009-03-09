@@ -8,6 +8,61 @@
 #include "render_gridlines.h"
 #include "cairoutils.h"
 
+static void add_text(cairo_t* cairo, double x, double y,
+					 const char* txt, render_args_t* args) {
+	float ex,ey;
+	float l,r,t,b;
+	cairo_text_extents_t ext;
+	double textmargin = 2.0;
+	cairo_text_extents(cairo, txt, &ext);
+	// x center
+	x -= (ext.width + ext.x_bearing)/2.0;
+	// y center
+	y -= ext.y_bearing/2.0;
+
+	l = x + ext.x_bearing;
+	r = l + ext.width;
+	t = y + ext.y_bearing;
+	b = t + ext.height;
+	l -= textmargin;
+	r += (textmargin + 1);
+	t -= textmargin;
+	b += (textmargin + 1);
+
+	// Move away from edges...
+	ex = ey = 0.0;
+	if (l < 0)
+		ex = -l;
+	if (t < 0)
+		ey = -t;
+	if (r > args->W)
+		ex = -(r - args->W);
+	if (b > args->H)
+		ey = -(b - args->H);
+	x += ex;
+	l += ex;
+	r += ex;
+	y += ey;
+	t += ey;
+	b += ey;
+
+	cairo_save(cairo);
+	// blank out underneath the text...
+	cairo_set_source_rgba(cairo, 0, 0, 0, 0.8);
+	cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
+	cairo_move_to(cairo, l, t);
+	cairo_line_to(cairo, l, b);
+	cairo_line_to(cairo, r, b);
+	cairo_line_to(cairo, r, t);
+	cairo_close_path(cairo);
+	cairo_fill(cairo);
+	cairo_stroke(cairo);
+	cairo_restore(cairo);
+
+	cairo_move_to(cairo, x, y);
+	cairo_show_text(cairo, txt);
+}
+
 int render_gridlines(cairo_t* c2, render_args_t* args) {
 	double rastep, decstep;
 	int ind;
@@ -15,10 +70,7 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 					   15.0/60.0, 10.0/60.0, 5.0/60.0, 2./60.0 };
 	double ra, dec;
 	cairo_t* cairo;
-	cairo_surface_t* target;
-	double x0, y0;
-	cairo_text_extents_t ext;
-	double textmargin = 1.0;
+	cairo_surface_t* mask;
 	double ralabelstep, declabelstep;
 
 	ind = MAX(1, args->zoomlevel);
@@ -33,19 +85,13 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	 In order to properly do the transparency and text, we render onto a
 	 mask image, then squish paint through this mask onto the given image.
 	 */
-	//target = cairo_image_surface_create(CAIRO_FORMAT_A8, args->W, args->H);
-	target = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, args->W, args->H);
-   	cairo = cairo_create(target);
+	mask = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, args->W, args->H);
+   	cairo = cairo_create(mask);
 	cairo_set_line_width(cairo, 1.0);
 	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
-	//cairo_set_source_rgb(cairo, 1.0, 1.0, 1.0);
-	cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 0.6);
+	cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 0.7);
 	cairo_select_font_face(cairo, "DejaVu Sans Mono Book", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-	//cairo_set_font_size(cairo, 16);
-	cairo_set_font_size(cairo, 14);
-	cairo_text_extents(cairo, "0", &ext);
-	y0 = ext.height + 2.0 * textmargin;
-	x0 = ext.width * 3;
+	cairo_set_font_size(cairo, 18);
 
 	for (ra = rastep * floor(args->ramin / rastep);
 		 ra <= rastep * ceil(args->ramax / rastep);
@@ -56,7 +102,8 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 		// draw the grid line on the nearest pixel... cairo pixel centers are at 0.5
 		x = 0.5 + round(x-0.5);
 		cairo_move_to(cairo, x, 0);
-		cairo_line_to(cairo, x, args->H - y0);
+		//cairo_line_to(cairo, x, args->H - y0);
+		cairo_line_to(cairo, x, args->H);
 	}
 	for (dec = decstep * floor(args->decmin / decstep);
 		 dec <= decstep * ceil(args->decmax / decstep);
@@ -65,50 +112,42 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 		if (!in_image(0, (int)round(y), args))
 			continue;
 		y = 0.5 + round(y-0.5);
-		cairo_move_to(cairo, x0 + 2.0*textmargin, y);
+		cairo_move_to(cairo, 0, y);
 		cairo_line_to(cairo, args->W, y);
 	}
 	cairo_stroke(cairo);
 	
-	cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 1.0);
-
-	/*
-	 cairo_select_font_face(c2, "DejaVu Sans Mono Book", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-	 cairo_set_font_size(c2, 16);
-	 cairo_set_source_rgba(c2, 0.8, 0.8, 1.0, 1.0);
-	 */
+	cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 8.0);
 	for (ra = ralabelstep * floor(args->ramin / ralabelstep);
 		 ra <= ralabelstep * ceil(args->ramax / ralabelstep);
 		 ra += ralabelstep) {
 		char buf[32];
 		float x = ra2pixelf(ra, args);
+		float y = args->H;
 		if (!in_image((int)round(x+0.5), 0, args))
 			continue;
 		sprintf(buf, "%i", (int)ra);
-		cairo_text_extents(cairo, buf, &ext);
-		cairo_move_to(cairo, x - (ext.width - ext.x_bearing)/2, args->H - (ext.height + ext.y_bearing) - textmargin);
-		cairo_show_text(cairo, buf);
+		add_text(cairo, x, y, buf, args);
 	}
 	for (dec = declabelstep * floor(args->decmin / declabelstep);
 		 dec <= declabelstep * ceil(args->decmax / declabelstep);
 		 dec += declabelstep) {
 		char buf[32];
 		float y = dec2pixelf(dec, args);
+		float x = 0;
 		// yep, it can wrap around :)
 		if ((dec > 90) || (dec < -90))
 			continue;
 		if (!in_image(0, (int)round(y+0.5), args))
 			continue;
 		sprintf(buf, "%i", (int)dec);
-		cairo_text_extents(cairo, buf, &ext);
-		cairo_move_to(cairo, textmargin, y - ext.y_bearing/2.0);
-		cairo_show_text(cairo, buf);
+		add_text(cairo, x, y, buf, args);
 	}
 
-	cairo_set_source_rgba(c2, 0.8, 0.8, 1.0, 0.8);
-	cairo_mask_surface(c2, target, 0, 0);
-
-	cairo_surface_destroy(target);
+	cairo_set_source_surface(c2, mask, 0, 0);
+	cairo_mask_surface(c2, mask, 0, 0);
+ 
+	cairo_surface_destroy(mask);
 	cairo_destroy(cairo);
 
 	return 0;
