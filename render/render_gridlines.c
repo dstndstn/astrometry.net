@@ -158,6 +158,9 @@ int render_gridlines(unsigned char* img, render_args_t* args) {
 				 dec += declabelstep) {
 				char buf[32];
 				float y = dec2pixelf(dec, args);
+				// yep, it can wrap around :)
+				if ((dec > 90) || (dec < -90))
+					continue;
 				if (!in_image(0, (int)round(y+0.5), args))
 					continue;
 				sprintf(buf, "%i", (int)dec);
