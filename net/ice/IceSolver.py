@@ -42,12 +42,11 @@ class SolverClient(object):
 		self.ice = ice
 		self.router = None
 		self.initrouter()
-		#self.getready()
 
 	def getsession(self, router):
 		session = None
 		try:
-			session = router.createSession(username, password) #'test-%i' % int(time.time()), 'test')
+			session = router.createSession(username, password)
 		except Glacier2.PermissionDeniedException,ex:
 			logmsg('router session permission denied:', ex)
 			raise ex
@@ -60,13 +59,17 @@ class SolverClient(object):
 
 	def getadapter(self, router):
 		#adapter = self.ice.createObjectAdapter('Callback.Client')			
+		logmsg('creating object adapter with router', router)
 		adapter = self.ice.createObjectAdapterWithRouter('Callback.Client', router)
+		logmsg('adapter is', adapter)
 		return adapter
 
 	def initrouter(self):
 		logmsg('initrouter()')
 		router = self.ice.getDefaultRouter()
+		logmsg('got default router:', router)
 		router = Glacier2.RouterPrx.checkedCast(router)
+		logmsg('cast router:', router)
 		if not router:
 			logmsg('not a glacier2 router')
 			raise 'not a glacier2 router'
@@ -76,6 +79,7 @@ class SolverClient(object):
 			# http://www.zeroc.com/forums/help-center/4207-recovery-after-router-failure.html
 			# register and then unregister the client to clear
 			# the router's cache.
+			logmsg('workaround: flushing router cache')
 			session = self.getsession(router)
 			adapter = self.getadapter(router)
 			try:
@@ -85,6 +89,7 @@ class SolverClient(object):
 			adapter.destroy()
 
 		session = self.getsession(router)
+		logmsg('got session:', session)
 
 		self.router = router
 		self.session = session
@@ -92,6 +97,7 @@ class SolverClient(object):
 		logmsg('creating adapter...')
 		self.adapter = self.getadapter(self.router)
 		logmsg('created adapter', self.adapter)
+		logmsg('activating adapter...')
 		self.adapter.activate()
 
 	# check that all my stuff is live...
