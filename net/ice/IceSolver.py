@@ -96,6 +96,8 @@ class SolverClient(object):
 	# check that all my stuff is live...
 	def getready(self):
 		logmsg('Router is a', type(self.router))
+		if self.router is None:
+			self.initrouter()
 		try:
 			logmsg('Pinging router...')
 			self.router.ice_ping()
