@@ -84,7 +84,7 @@ typedef struct renderer renderer_t;
 /* All render layers must go in here */
 static renderer_t renderers[] = {
 	{ "tycho",     render_tycho,        NULL },
-	{ "grid",      render_gridlines,    NULL },
+	{ "grid",      NULL,                render_gridlines },
 	{ "usnob",     render_usnob,        NULL },
 	{ "rdls",      render_rdls,         NULL },
 	{ "constellation", render_constellation, NULL },

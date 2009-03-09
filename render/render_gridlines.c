@@ -8,7 +8,7 @@
 #include "render_gridlines.h"
 #include "cairoutils.h"
 
-int render_gridlines(unsigned char* img, render_args_t* args) {
+int render_gridlines(cairo_t* c2, render_args_t* args) {
 	double rastep, decstep;
 	int ind;
 	double steps[] = { 1, 20.0, 10.0, 6.0, 4.0, 2.5, 1.0, 30./60.0,
@@ -16,7 +16,6 @@ int render_gridlines(unsigned char* img, render_args_t* args) {
 	double ra, dec;
 	cairo_t* cairo;
 	cairo_surface_t* target;
-	//double lw = args->linewidth;
 	double x0, y0;
 	cairo_text_extents_t ext;
 	double textmargin = 1.0;
@@ -67,10 +66,6 @@ int render_gridlines(unsigned char* img, render_args_t* args) {
 	cairo_stroke(cairo);
 	
 	{
-		cairo_t* c2;
-		cairo_surface_t* t2;
-		t2 = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, args->W, args->H, args->W*4);
-		c2 = cairo_create(t2);
 		cairo_set_source_rgba(c2, 0.8, 0.8, 1.0, 0.6);
 		cairo_mask_surface(c2, target, 0, 0);
 		{
@@ -107,11 +102,8 @@ int render_gridlines(unsigned char* img, render_args_t* args) {
 				cairo_show_text(c2, buf);
 			}
 		}
-		cairo_surface_destroy(t2);
-		cairo_destroy(c2);
 	}
 
-    cairoutils_argb32_to_rgba(img, args->W, args->H);
 	cairo_surface_destroy(target);
 	cairo_destroy(cairo);
 

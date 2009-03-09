@@ -3,6 +3,6 @@
 
 #include "tilerender.h"
 
-int render_gridlines(unsigned char* img, render_args_t* args);
+int render_gridlines(cairo_t* c2, render_args_t* args);
 
 #endif
