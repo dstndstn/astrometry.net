@@ -40,19 +40,10 @@ class SolverClient(object):
 		settings.properties.load(configfile)
 		ice = Ice.initialize(settings)
 		self.ice = ice
-		self.initrouter()
-		logmsg('creating adapter...')
-		self.adapter = ice.createObjectAdapter('Callback.Client')
-		logmsg('created adapter', self.adapter)
-		self.adapter.activate()
+		self.router = None
+		self.getready()
 
-	def initrouter(self):
-		logmsg('get router')
-		router = self.ice.getDefaultRouter()
-		router = Glacier2.RouterPrx.checkedCast(router)
-		if not router:
-			logmsg('not a glacier2 router')
-			raise 'not a glacier2 router'
+	def getsession(self, router):
 		session = None
 		try:
 			session = router.createSession(username, password) #'test-%i' % int(time.time()), 'test')
@@ -64,8 +55,43 @@ class SolverClient(object):
 			raise ex
 		logmsg('router is', router)
 		logmsg('session is', session)
+		return session
+
+	def getadapter(self, router):
+		#adapter = self.ice.createObjectAdapter('Callback.Client')			
+		adapter = self.ice.createObjectAdapterWithRouter('Callback.Client', router)
+		return adapter
+
+	def initrouter(self):
+		logmsg('get router')
+		router = self.ice.getDefaultRouter()
+		router = Glacier2.RouterPrx.checkedCast(router)
+		if not router:
+			logmsg('not a glacier2 router')
+			raise 'not a glacier2 router'
+
+		if self.router is not None:
+			# Workaround as per:
+			# http://www.zeroc.com/forums/help-center/4207-recovery-after-router-failure.html
+			# register and then unregister the client to clear
+			# the router's cache.
+			session = self.getsession(router)
+			adapter = self.getadapter(router)
+			try:
+				router.destroySession()
+			except:
+				pass
+			adapter.destroy()
+
+		session = self.getsession(router)
+
 		self.router = router
 		self.session = session
+
+		logmsg('creating adapter...')
+		self.adapter = self.getadapter(self.router)
+		logmsg('created adapter', self.adapter)
+		self.adapter.activate()
 
 	# check that all my stuff is live...
 	def getready(self):
