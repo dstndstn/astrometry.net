@@ -41,7 +41,8 @@ class SolverClient(object):
 		ice = Ice.initialize(settings)
 		self.ice = ice
 		self.router = None
-		self.getready()
+		self.initrouter()
+		#self.getready()
 
 	def getsession(self, router):
 		session = None
@@ -63,7 +64,7 @@ class SolverClient(object):
 		return adapter
 
 	def initrouter(self):
-		logmsg('get router')
+		logmsg('initrouter()')
 		router = self.ice.getDefaultRouter()
 		router = Glacier2.RouterPrx.checkedCast(router)
 		if not router:
