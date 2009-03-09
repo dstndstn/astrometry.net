@@ -19,10 +19,13 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	double x0, y0;
 	cairo_text_extents_t ext;
 	double textmargin = 1.0;
+	double ralabelstep, declabelstep;
 
 	ind = MAX(1, args->zoomlevel);
 	ind = MIN(ind, sizeof(steps)/sizeof(double)-1);
 	rastep = decstep = steps[ind];
+	ralabelstep = 2. * rastep;
+	declabelstep = 2. * decstep;
 
 	fprintf(stderr, "render_gridlines: step %g\n", rastep);
 
@@ -65,43 +68,37 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	}
 	cairo_stroke(cairo);
 	
-	{
-		cairo_set_source_rgba(c2, 0.8, 0.8, 1.0, 0.6);
-		cairo_mask_surface(c2, target, 0, 0);
-		{
-			double ralabelstep = 2. * rastep;
-			double declabelstep = 2. * decstep;
-			cairo_select_font_face(c2, "DejaVu Sans Mono Book", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-			cairo_set_font_size(c2, 16);
-			cairo_set_source_rgba(c2, 0.8, 0.8, 1.0, 1.0);
-			for (ra = ralabelstep * floor(args->ramin / ralabelstep);
-				 ra <= ralabelstep * ceil(args->ramax / ralabelstep);
-				 ra += ralabelstep) {
-				char buf[32];
-				float x = ra2pixelf(ra, args);
-				if (!in_image((int)round(x+0.5), 0, args))
-					continue;
-				sprintf(buf, "%i", (int)ra);
-				cairo_text_extents(c2, buf, &ext);
-				cairo_move_to(c2, x - (ext.width - ext.x_bearing)/2, args->H - (ext.height + ext.y_bearing) - textmargin);
-				cairo_show_text(c2, buf);
-			}
-			for (dec = declabelstep * floor(args->decmin / declabelstep);
-				 dec <= declabelstep * ceil(args->decmax / declabelstep);
-				 dec += declabelstep) {
-				char buf[32];
-				float y = dec2pixelf(dec, args);
-				// yep, it can wrap around :)
-				if ((dec > 90) || (dec < -90))
-					continue;
-				if (!in_image(0, (int)round(y+0.5), args))
-					continue;
-				sprintf(buf, "%i", (int)dec);
-				cairo_text_extents(c2, buf, &ext);
-				cairo_move_to(c2, textmargin, y - ext.y_bearing/2.0);
-				cairo_show_text(c2, buf);
-			}
-		}
+	cairo_set_source_rgba(c2, 0.8, 0.8, 1.0, 0.6);
+	cairo_mask_surface(c2, target, 0, 0);
+	cairo_select_font_face(c2, "DejaVu Sans Mono Book", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+	cairo_set_font_size(c2, 16);
+	cairo_set_source_rgba(c2, 0.8, 0.8, 1.0, 1.0);
+	for (ra = ralabelstep * floor(args->ramin / ralabelstep);
+		 ra <= ralabelstep * ceil(args->ramax / ralabelstep);
+		 ra += ralabelstep) {
+		char buf[32];
+		float x = ra2pixelf(ra, args);
+		if (!in_image((int)round(x+0.5), 0, args))
+			continue;
+		sprintf(buf, "%i", (int)ra);
+		cairo_text_extents(c2, buf, &ext);
+		cairo_move_to(c2, x - (ext.width - ext.x_bearing)/2, args->H - (ext.height + ext.y_bearing) - textmargin);
+		cairo_show_text(c2, buf);
+	}
+	for (dec = declabelstep * floor(args->decmin / declabelstep);
+		 dec <= declabelstep * ceil(args->decmax / declabelstep);
+		 dec += declabelstep) {
+		char buf[32];
+		float y = dec2pixelf(dec, args);
+		// yep, it can wrap around :)
+		if ((dec > 90) || (dec < -90))
+			continue;
+		if (!in_image(0, (int)round(y+0.5), args))
+			continue;
+		sprintf(buf, "%i", (int)dec);
+		cairo_text_extents(c2, buf, &ext);
+		cairo_move_to(c2, textmargin, y - ext.y_bearing/2.0);
+		cairo_show_text(c2, buf);
 	}
 
 	cairo_surface_destroy(target);
