@@ -2258,6 +2258,10 @@ class CardList(list):
 class _AllHDU(object):
     """Base class for all HDU (header data unit) classes."""
 
+    def __init__(self, data=None, header=None):
+        self._header = header
+        self.data = data
+
     def __getattr__(self, attr):
         if attr == 'header':
             return self.__dict__['_header']
@@ -2290,9 +2294,8 @@ class _CorruptedHDU(_AllHDU):
     """
 
     def __init__(self, data=None, header=None):
+        super(_CorruptedHDU, self).__init__(data, header)
         self._file, self._offset, self._datLoc = None, None, None
-        self._header = header
-        self.data = data
         self.name = None
         
     def size(self):
@@ -2593,27 +2596,25 @@ class _TempHDU(_ValidHDU):
                 break
 
         # construct the Header object, using the cards.
-        try:
-            header = Header(CardList(_cardList, keylist=_keyList))
+        header = Header(CardList(_cardList, keylist=_keyList))
 
-            if classExtensions.has_key(header._hdutype):
-                header._hdutype = classExtensions[header._hdutype]
+        if classExtensions.has_key(header._hdutype):
+            header._hdutype = classExtensions[header._hdutype]
 
-            hdu = header._hdutype(data=DELAYED, header=header)
+        hdu = header._hdutype(data=DELAYED, header=header)
 
-            # pass these attributes
-            hdu._file = self._file
-            hdu._hdrLoc = self._hdrLoc
-            hdu._datLoc = self._datLoc
-            hdu._datSpan = self._datSpan
-            hdu._ffile = self._ffile
-            hdu.name = self.name
-            hdu._extver = self._extver
-            hdu._new = 0
-            hdu.header._mod = 0
-            hdu.header.ascard._mod = 0
-        except:
-            pass
+        # set attributes.
+        # FIXME - this violates object encapsulation.
+        hdu._file = self._file
+        hdu._hdrLoc = self._hdrLoc
+        hdu._datLoc = self._datLoc
+        hdu._datSpan = self._datSpan
+        hdu._ffile = self._ffile
+        hdu.name = self.name
+        hdu._extver = self._extver
+        hdu._new = 0
+        hdu.header._mod = 0
+        hdu.header.ascard._mod = 0
 
         return hdu
 
@@ -6749,8 +6750,8 @@ class _File:
         else:
             self.__file.seek(hdu._datSpan, 1)
 
-            if self.__file.tell() > self._size:
-                warnings.warn('Warning: File size is smaller than specified data size.  File may have been truncated.')
+            if self._size < self.__file.tell():
+                warnings.warn('Warning: File may have been truncated: actual file length (%i) is smaller than the expected size (%i)'  % (self._size, self.__file.tell()))
 
         return hdu
 
