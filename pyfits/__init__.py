@@ -9,13 +9,13 @@
 #If only one array package is installed, that package's version of pyfits
 #will be imported.  If both packages are installed the NUMERIX value is
 #used to decide between the packages.  If no NUMERIX value is set then 
-#the numarray version of pyfits will be imported.
+#the numpy version of pyfits will be imported.
 
 #Anything else is an exception.
 
 import os
 
-__version__ = '1.3'
+__version__ = '2.0.1dev417'
 
 # Check the environment variables for NUMERIX
 try:
@@ -29,8 +29,8 @@ if (numerix == 'numarray'):
         from NA_pyfits import *
         import NA_pyfits as core
         __doc__ = NA_pyfits.__doc__
-    except ImportError:
-        raise ImportError, "Cannot import numarray version of PyFITS!"
+    except ImportError, e:
+        raise ImportError, `e` + ".  Cannot import numarray version of PyFITS!"
 else:
     try:
         try:
@@ -42,10 +42,10 @@ else:
                 from NA_pyfits import *
                 import NA_pyfits as core
                 doc__ = NA_pyfits.__doc__
-            except ImportError:
-                raise ImportError, "Cannot import either numpy or numarray."
-    except:
-        raise ImportError, "No usable array package has been found.  Cannot import either numpy or numarray."
+            except ImportError, e:
+                raise ImportError, `e` + ".  Cannot import either numpy or numarray."
+    except Exception, e:
+        raise ImportError, `e` + ".  No usable array package has been found.  Cannot import either numpy or numarray."
     
 _locals = locals().keys()
 for n in _locals[::-1]:

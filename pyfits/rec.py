@@ -7,6 +7,7 @@ import numpy.core.numerictypes as nt
 import types
 import os
 import sys
+import warnings
 
 ndarray = sb.ndarray
 
@@ -92,8 +93,21 @@ class format_parser:
         # check for redundant names
         _dup = find_duplicate(self._names)
         if _dup:
-            raise ValueError, "Duplicate field names: %s" % _dup
+            warnings.warn('Warning, duplicate field names: %s in table.' % _dup)
+            warnings.warn('Names will be made unique in internal record array.')
 
+            for dupName in _dup:
+                first = True
+                count = 0
+
+                for i in range(len(self._names)):
+                    if dupName == self._names[i]:
+                        if first:
+                            first = False
+                        else:
+                           self._names[i] = self._names[i] + str(count)
+                        count += 1
+                       
         if (titles):
             self._titles = [n.strip() for n in titles[:self._nfields]]
         else:
