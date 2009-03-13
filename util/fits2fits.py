@@ -64,13 +64,7 @@ def fits2fits(infile, outfile, verbose):
 		fitsout.info()
 
 	try:
-		fitsout.writeto(outfile)
-	except IOError:
-		# File probably exists
-		if verbose:
-			print 'File %s appears to already exist; deleting!' % outfile
-		os.unlink(outfile)
-		fitsout.writeto(outfile)
+		fitsout.writeto(outfile, clobber=True)
 	except pyfits.VerifyError, ve:
 		return ('Verification of output file failed: your FITS file is probably too broken to automatically fix.' +
 				'  Error message is:' + str(ve))
