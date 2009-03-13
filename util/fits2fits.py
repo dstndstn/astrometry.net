@@ -64,7 +64,8 @@ def fits2fits(infile, outfile, verbose):
 		fitsout.info()
 
 	try:
-		fitsout.writeto(outfile, clobber=True)
+		#fitsout.writeto(outfile, clobber=True)
+		fitsout.writeto(outfile, clobber=True, output_verify='warn')
 	except pyfits.VerifyError, ve:
 		return ('Verification of output file failed: your FITS file is probably too broken to automatically fix.' +
 				'  Error message is:' + str(ve))

@@ -6774,8 +6774,12 @@ class _File:
 
         # If the data is unsigned int 16 add BSCALE/BZERO cards to header
 
-        if 'data' in dir(hdu) and hdu.data is not None \
-        and hdu.data.dtype == np.uint16:
+        isuint16 = ('data' in dir(hdu)
+                    and hdu.data is not None
+                    and hdu.data is not DELAYED
+                    and hdu.data.dtype == np.uint16)
+
+        if isuint16:
             hdu._header.update('BSCALE',1,
                               after='NAXIS'+`hdu.header.get('NAXIS')`)
             hdu._header.update('BZERO',32768,after='BSCALE')
@@ -6794,8 +6798,7 @@ class _File:
 
         # If data is unsigned integer 16 remove the BSCALE/BZERO cards
 
-        if 'data' in dir(hdu) and hdu.data is not None \
-        and hdu.data.dtype == np.uint16:
+        if isuint16:
             del hdu._header['BSCALE']
             del hdu._header['BZERO']
 
