@@ -7,13 +7,6 @@ from numpy import *
 from numpy.random import rand
 from pylab import hist, find
 
-## DEBUG
-from pylab import *
-
-logging.basicConfig(level=logging.DEBUG)
-
-logverb = logging.debug
-
 def hist_remove_lines(x, binwidth, binoffset, logcut):
     bins = -binoffset + arange(0, max(x)+binwidth, binwidth)
     (counts, thebins, p) = hist(x, bins)
@@ -32,27 +25,18 @@ def hist_remove_lines(x, binwidth, binoffset, logcut):
     return (badpoints == 0)
 
 def removelines(infile, outfile, **kwargs):
-    logverb('Reading xylist from file', infile)
     p = pyfits.open(infile)
     xy = p[1].data
     hdr = p[1].header
     x = xy.field('X')
     y = xy.field('Y')
 
-    if False:
-        W = int(hdr.get('IMAGEW', '0'))
-        if W <= 0:
-            W = floor(max(x))
-        H = int(hdr.get('IMAGEH', '0'))
-        if H <= 0:
-            H = floor(max(y))
-        logverb('Image width %i, height %i' % (W,H))
-
     ix = hist_remove_lines(x, 1, 0.5, -100)
     iy = hist_remove_lines(y, 1, 0.5, -100)
     I = ix * iy
     xc = x[I]
     yc = y[I]
+    print 'removelines.py: Removed %i sources' % (len(x) - len(xc))
 
     p[1].header.add_history('This xylist was filtered by the "removelines.py" program')
     p[1].header.add_history('to remove horizontal and vertical lines of sources')
