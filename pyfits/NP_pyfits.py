@@ -2630,9 +2630,8 @@ class _ExtensionHDU(_ValidHDU):
     """
 
     def __init__(self, data=None, header=None):
+        super(_ExtensionHDU, self).__init__(data, header)
         self._file, self._offset, self._datLoc = None, None, None
-        self._header = header
-        self.data = data
         self._xtn = ' '
 
     def __setattr__(self, attr, value):
