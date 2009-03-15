@@ -105,22 +105,22 @@ int dsigma(float *image,
 	 * to the top and only affect the final value very slightly, because they
 	 * are a small fraction of the total entries in diff (or so we hope!) */
 
-    // DEBUG
-    /*{
-        int nzero = 0;
-        for (i=0; i<ndiff; i++) {
-            if (diff[i] == 0.0)
-                nzero++;
-        }
-        logverb("%i of %i diffs are zero.\n", nzero, ndiff);
-     }*/
-
     {
-        double s1 = dselip((int)floor(ndiff * 0.68), ndiff, diff) / sqrt(2.);
-        double s2 = dselip((int)floor(ndiff * 0.95), ndiff, diff) / (2.0 * sqrt(2.));
-        logverb("s1=%g, s2=%g\n", s1, s2);
-        *sigma = MAX(s1, s2);
+		double Nsigma=0.7;
+		double s = 0.0;
+		while (s == 0.0) {
+			int k = (int)floor(ndiff * erf(Nsigma/sqrt(2.0)));
+			if (k == ndiff) {
+				logerr("Failed to estimate the image noise.  Setting sigma=1.  Expect the worst.\n");
+			    s = 1.0;
+				break;
+			}
+			s = dselip(k, ndiff, diff) / (Nsigma * sqrt(2.));
+			logverb("Nsigma=%g, s=%g\n", Nsigma, s);
+		}
+        *sigma = s;
     }
+
     if (*sigma == 0.0) {
         int nzero = 0;
         int NS = ndiff;
