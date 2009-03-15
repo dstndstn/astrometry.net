@@ -6,6 +6,7 @@ import pyfits
 from numpy import *
 from numpy.random import rand
 
+# Returns a numpy array of booleans
 def hist_remove_lines(x, binwidth, binoffset, logcut):
     bins = -binoffset + arange(0, max(x)+binwidth, binwidth)
     (counts, thebins) = histogram(x, bins)
@@ -17,6 +18,9 @@ def hist_remove_lines(x, binwidth, binoffset, logcut):
     mean = sum(k) / float(noccupied)
     logpoisson = k*log(mean) - mean - array([sum(arange(kk)) for kk in k])
     badbins = occupied[logpoisson < logcut]
+    if len(badbins) == 0:
+        return array([True] * len(x))
+
     badleft = bins[badbins]
     badright = badleft + binwidth
 
