@@ -111,7 +111,7 @@ static void add_text(cairos_t* cairos,
     int dx, dy;
 
     cairo_text_extents(cairos->fg, txt, &textents);
-    l = px - textents.x_bearing;
+    l = px + textents.x_bearing;
     r = l + textents.width + textents.x_bearing;
     t = py + textents.y_bearing;
     b = t + textents.height;
