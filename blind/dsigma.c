@@ -117,6 +117,7 @@ int dsigma(float *image,
 			}
 			s = dselip(k, ndiff, diff) / (Nsigma * sqrt(2.));
 			logverb("Nsigma=%g, s=%g\n", Nsigma, s);
+			Nsigma += 0.1;
 		}
         *sigma = s;
     }
