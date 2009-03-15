@@ -5,14 +5,13 @@ import pyfits
 
 from numpy import *
 from numpy.random import rand
-from pylab import hist, find
 
 def hist_remove_lines(x, binwidth, binoffset, logcut):
     bins = -binoffset + arange(0, max(x)+binwidth, binwidth)
-    (counts, thebins, p) = hist(x, bins)
+    (counts, thebins) = histogram(x, bins)
 
     # We're ignoring empty bins.
-    occupied = find(counts > 0)
+    occupied = nonzero(counts > 0)[0]
     noccupied = len(occupied)
     k = (counts[occupied] - 1) 
     mean = sum(k) / float(noccupied)
@@ -48,11 +47,12 @@ def removelines(infile, outfile, **kwargs):
     return 0
 
 if __name__ == '__main__':
-	if (len(sys.argv) == 3):
-		infile = sys.argv[1]
-		outfile = sys.argv[2]
-		verbose = False
+    if (len(sys.argv) == 3):
+        infile = sys.argv[1]
+        outfile = sys.argv[2]
+        verbose = False
         rtncode = removelines(infile, outfile)
         sys.exit(rtncode)
-
+    else:
+        print 'Usage: %s <input-file> <output-file>' % sys.args[0]
 
