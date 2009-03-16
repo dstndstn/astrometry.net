@@ -19,10 +19,13 @@ if __name__ == '__main__':
 
 import pyfits
 
-def fits2fits(infile, outfile, verbose=False):
+def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 	"""
 	Returns: error string, or None on success.
 	"""
+	if fix_idr:
+		from astrometry.util.fix_sdss_idr import fix_sdss_idr
+
 	# Read input file.
 	fitsin = pyfits.open(infile)
 	# Print out info about input file.
@@ -30,10 +33,12 @@ def fits2fits(infile, outfile, verbose=False):
 		fitsin.info()
 
 	for i, hdu in enumerate(fitsin):
+		if fix_idr:
+			hdu = fitsin[i] = fix_sdss_idr(hdu)
 		# verify() fails when a keywords contains invalid characters,
 		# so go through the primary header and fix them by converting invalid
 		# characters to '_'
-		hdr = fitsin[i].header
+		hdr = hdu.header
 		cards = hdr.ascardlist()
 		# allowed charactors (FITS standard section 5.1.2.1)
 		pat = re.compile(r'[^A-Z0-9_\-]')
@@ -49,7 +54,7 @@ def fits2fits(infile, outfile, verbose=False):
 				del hdr[c]
 
 		# Fix input header
-		fitsin[i].verify('fix')
+		hdu.verify('fix')
 
 	# Describe output file we're about to write...
 	if verbose:
@@ -70,6 +75,9 @@ def main():
 	parser.add_option('-v', '--verbose',
 					  action='store_true', dest='verbose',
 					  help='be chatty')
+	parser.add_option('-s', '--fix-sdss',
+					  action='store_true', dest='fix_idr',
+					  help='fix SDSS idR files')
 	(options, args) = parser.parse_args()
 	#verbose = options.verbose
 
@@ -79,7 +87,7 @@ def main():
 
 	infn = args[0]
 	outfn = args[1]
-	errmsg = fits2fits(infn, outfn, options.verbose)
+	errmsg = fits2fits(infn, outfn, verbose=options.verbose, fix_idr=options.fix_idr)
 	if errmsg is not None:
 		print 'fits2fits.py failed:', errmsg
 		return -1
