@@ -2828,15 +2828,14 @@ class _ImageBaseHDU(_ValidHDU):
     ImgCode = {'uint8':8, 'int16':16, 'uint16':16, 'int32':32, 'int64':64, 'float32':-32, 'float64':-64}
     
     def __init__(self, data=None, header=None):
+        super(_ImageBaseHDU, self).__init__(data=data, header=header)
         self._file, self._datLoc = None, None
 
         if header is not None:
             if not isinstance(header, Header):
                 raise ValueError, "header must be a Header object"
 
-
         if data is DELAYED:
-
             # this should never happen
             if header is None:
                 raise ValueError, "No header to setup HDU."
@@ -2845,8 +2844,9 @@ class _ImageBaseHDU(_ValidHDU):
             else:
                 self._header = header
         else:
-
             # construct a list of cards of minimal header
+            # FIXME - "isinstance" should not be used here.
+            # Let the HDU class hierarchy handle this!
             if isinstance(self, _ExtensionHDU):
                 c0 = Card('XTENSION', 'IMAGE', 'Image extension')
             else:
@@ -2871,18 +2871,24 @@ class _ImageBaseHDU(_ValidHDU):
 
             self._header = Header(_list)
 
+        # FIXME - this violates DRY and sets you up for inconsistency.
         self._bzero = self._header.get('BZERO', 0)
         self._bscale = self._header.get('BSCALE', 1)
 
-        if (data is DELAYED): return
+        if data is DELAYED:
+            return
 
         self.data = data
 
         # update the header
         self.update_header()
+        # FIXME - DRY violation.
         self._bitpix = self._header['BITPIX']
 
         # delete the keywords BSCALE and BZERO
+        # FIXME - is there some reason this happens here rather than
+        # right after the "self._bzero = " lines?  (Which shouldn't
+        # be there anyway!)
         del self._header['BSCALE']
         del self._header['BZERO']
 
@@ -2968,6 +2974,7 @@ class _ImageBaseHDU(_ValidHDU):
                     raw_data = self._ffile._mm
                 else:
 
+                    # FIXME - use numpy.product() !
                     nelements = 1
                     for x in range(len(dims)):
                         nelements = nelements * dims[x]                    
