@@ -191,7 +191,7 @@ def convert(job, fn, args=None):
 		# fits image: fits2fits it.
 		log('image filetype: ', df.filetype)
 		if df.filetype == image2pnm.fitsext:
-			errmsg = fits2fits.fits2fits(infn, fullfn, False)
+			errmsg = fits2fits.fits2fits(infn, fullfn)
 			if errmsg:
 				log(errmsg)
 				raise FileConversionError(errmsg)
@@ -225,7 +225,7 @@ def convert(job, fn, args=None):
 		if job.is_input_fits():
 			# For FITS bintable uploads: put it through fits2fits.
 			infn = convert(job, 'uncomp')
-			errmsg = fits2fits.fits2fits(infn, fullfn, False)
+			errmsg = fits2fits.fits2fits(infn, fullfn)
 			if errmsg:
 				log(errmsg)
 				raise FileConversionError(errmsg)

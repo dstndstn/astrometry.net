@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
 import pyfits
 
-def fits2fits(infile, outfile, verbose):
+def fits2fits(infile, outfile, verbose=False):
 	"""
 	Returns: error string, or None on success.
 	"""
