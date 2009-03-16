@@ -20,45 +20,25 @@ def fix_sdss_idr(hdu):
 		print 'No SDSS header card: not an SDSS idR file.'
 		return hdu
 		
-	if (hdr.get('UNSIGNED', None) == pyfits.UNDEFINED
-		and (not 'BSCALE' in hdr) and (not 'BZERO' in hdr)):
+	if hdr.get('UNSIGNED', None) == pyfits.UNDEFINED:
 		print 'Setting UNSIGNED = True'
 		hdr['UNSIGNED'] = True
-		#print 'Adding BZERO = 32768 card'
-		#hdr.update('BZERO', 32768, 'Unsigned -> signed')
 	else:
-		print 'No UNSIGNED header card, or unexpected BSCALE or BZERO card: not an SDSS idR file.'
+		print 'No UNSIGNED header card: not an SDSS idR file.'
 		return hdu
 
 	hdr._updateHDUtype()
 	newhdu = hdr._hdutype(data=pyfits.DELAYED, header=hdr)
-	#print 'newhdu:', newhdu
 	## HACK - encapsulation violation
 	newhdu._file = hdu._file
 	newhdu._ffile = hdu._ffile
 	newhdu._datLoc = hdu._datLoc
-	#newhdu.__getattr__('data')
-	#newhdu.data = newhdu.data.astype(numpy.float32)
+
 	newhdu.data = newhdu.data.astype(int)
 	newhdu.data[newhdu.data < 0] += 2**16
-	print 'data:', type(newhdu.data)
-	print 'data:', newhdu.data.dtype
+	print 'data type:', newhdu.data.dtype
 	print 'data range:', newhdu.data.min(), 'to', newhdu.data.max()
-
-	from pylab import *
-	clf()
-	hist(newhdu.data.ravel(), 100)
-	savefig('hist.png')
-
 	return newhdu
-
-	#newhdu2 = pyfits.PrimaryHDU(data=pyfits.DELAYED, header=hdr)
-	#newhdu2 = newhdu2.setupHDU()
-	#print 'newhdu2:', newhdu2
-	#print 'data:', type(newhdu2.data)
-	#print 'data:', newhdu2.data.dtype
-	#print 'data range:', newhdu2.data.min(), 'to', newhdu2.data.max()
-
 
 
 if __name__ == '__main__':
@@ -68,6 +48,8 @@ if __name__ == '__main__':
 	infile = sys.argv[1]
 	outfile = sys.argv[2]
 
+	print 'Reading', infile
 	newhdu = fix_sdss_idr(pyfits.open(infile)[0])
+	print 'Writing', outfile
 	newhdu.writeto(outfile, clobber=True)
 
