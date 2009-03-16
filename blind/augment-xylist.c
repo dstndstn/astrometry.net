@@ -137,6 +137,10 @@ static an_option_t options[] = {
      "FITS extension to read image from."},
     {'z', "downsample",     required_argument, "int",
      "downsample the image by factor <int> before running source extraction"},
+	{'9', "no-remove-lines", no_argument, NULL,
+	 "don't remove horizontal and vertical overdensities of sources."},
+	{'0', "no-fix-sdss",    no_argument, NULL,
+	 "don't try to fix SDSS idR files."},
 	{'C', "cancel",		   required_argument, "filename",
      "filename whose creation signals the process to stop"},
 	{'S', "solved",		   required_argument, "filename",
@@ -219,6 +223,12 @@ int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
     switch (argchar) {
+	case '9':
+		axy->no_removelines = TRUE;
+		break;
+	case '0':
+		axy->no_fix_sdss = TRUE;
+		break;
     case '3':
         axy->ra_center = atora(optarg);
         if (axy->ra_center == HUGE_VAL) {
@@ -448,8 +458,6 @@ int augment_xylist(augment_xylist_t* axy,
     FILE* fout = NULL;
     char *fitsimgfn = NULL;
 	dl* scales;
-	bool removelines = TRUE;
-	bool fix_sdss = TRUE;
 
     cmd = sl_new(16);
     tempfiles = sl_new(4);
@@ -492,7 +500,7 @@ int augment_xylist(augment_xylist_t* axy,
             sl_append(cmd, "--sanitized-fits-outfile");
             append_escape(cmd, sanitizedfn);
         }
-		if (fix_sdss)
+		if (!axy->no_fix_sdss)
 			sl_append(cmd, "--fix-sdss");
         if (axy->extension) {
             sl_append(cmd, "--extension");
@@ -672,7 +680,7 @@ int augment_xylist(augment_xylist_t* axy,
         dl_free(estscales);
     }
 
-	if (removelines) {
+	if (!axy->no_removelines) {
 		// input is "xylsfn"
 		// output is a temp file
 		char* nolinesfn;

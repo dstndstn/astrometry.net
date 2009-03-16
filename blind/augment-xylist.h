@@ -83,6 +83,8 @@ struct augment_xylist_s {
     int tweakorder;
 
     bool no_fits2fits;
+	bool no_removelines;
+	bool no_fix_sdss;
 
     char* xcol;
     char* ycol;
