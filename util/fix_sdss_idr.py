@@ -1,6 +1,18 @@
 import sys
 import pyfits
 
+def is_sdss_idr(hdu):
+	hdr = hdu.header
+	return (hdr.get('SIMPLE', True) == False
+			and hdr.get('SDSS', None) == pyfits.UNDEFINED
+			and hdr.get('UNSIGNED', None) == pyfits.UNDEFINED)
+
+def is_sdss_idr_file(infile):
+	p = pyfits.open(infile)
+	rtn = is_sdss_idr(p[0])
+	p.close()
+	return rtn
+
 # Takes a pyfits HDU object (which is unchanged) and returns a new
 # pyfits object containing the fixed file.
 def fix_sdss_idr(hdu):
@@ -39,6 +51,12 @@ def fix_sdss_idr(hdu):
 	print 'data range:', newhdu.data.min(), 'to', newhdu.data.max()
 	return newhdu
 
+def fix_sdss_idr_file(infile, outfile):
+	print 'Reading', infile
+	newhdu = fix_sdss_idr(pyfits.open(infile)[0])
+	print 'Writing', outfile
+	newhdu.writeto(outfile, clobber=True)
+
 
 if __name__ == '__main__':
 	if len(sys.argv) != 3:
@@ -47,8 +65,5 @@ if __name__ == '__main__':
 	infile = sys.argv[1]
 	outfile = sys.argv[2]
 
-	print 'Reading', infile
-	newhdu = fix_sdss_idr(pyfits.open(infile)[0])
-	print 'Writing', outfile
-	newhdu.writeto(outfile, clobber=True)
-
+	fix_sdss_idr_file(infile, outfile)
+	sys.exit(0)
