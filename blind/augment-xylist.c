@@ -17,8 +17,8 @@
  */
 
 /**
- * Accepts an xylist and command-line options, and produces an augmented
- * xylist.
+ * Accepts an image or xylist, plus command-line options, and produces
+ * an augmented xylist.
  */
 
 #include <stdio.h>
@@ -448,6 +448,8 @@ int augment_xylist(augment_xylist_t* axy,
     FILE* fout = NULL;
     char *fitsimgfn = NULL;
 	dl* scales;
+	bool removelines = TRUE;
+	bool fix_sdss = TRUE;
 
     cmd = sl_new(16);
     tempfiles = sl_new(4);
@@ -490,6 +492,8 @@ int augment_xylist(augment_xylist_t* axy,
             sl_append(cmd, "--sanitized-fits-outfile");
             append_escape(cmd, sanitizedfn);
         }
+		if (fix_sdss)
+			sl_append(cmd, "--fix-sdss");
         if (axy->extension) {
             sl_append(cmd, "--extension");
             sl_appendf(cmd, "%i", axy->extension);
@@ -667,6 +671,22 @@ int augment_xylist(augment_xylist_t* axy,
         }
         dl_free(estscales);
     }
+
+	if (removelines) {
+		// input is "xylsfn"
+		// output is a temp file
+		char* nolinesfn;
+		nolinesfn = create_temp_file("removelines", axy->tempdir);
+		sl_append_nocopy(tempfiles, nolinesfn);
+		logverb("Removing lines of (spurious) sources from xylist \"%s\", writing to \"%s\"\n",
+				xylsfn, nolinesfn);
+
+		append_executable(cmd, "removelines.py", me);
+		append_escape(cmd, xylsfn);
+		append_escape(cmd, nolinesfn);
+		run(cmd, verbose);
+		xylsfn = nolinesfn;
+	}
 
     if (dosort) {
         char* sortedxylsfn;

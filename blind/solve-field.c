@@ -1,6 +1,6 @@
 /*
  This file is part of the Astrometry.net suite.
- Copyright 2007-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+ Copyright 2007-2009 Dustin Lang, Keir Mierle and Sam Roweis.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -49,8 +49,6 @@
 #include "wcs-rd2xy.h"
 #include "new-wcs.h"
 #include "scamp.h"
-
-// hvD:o:b:fpGOKJN:Z:i:L:H:u:d:l:rz:C:S:I:M:R:j:B:W:P:k:AV:ygTt:c:E:m:q:Q:F:w:e:2X:Y:s:an:U:
 
 static an_option_t options[] = {
 	{'h', "help",		   no_argument, NULL,
