@@ -3157,8 +3157,7 @@ class PrimaryHDU(_ImageBaseHDU):
            header: the header to be used (as a template), default=None.
                    If header=None, a minimal Header will be provided.
         """
-
-        _ImageBaseHDU.__init__(self, data=data, header=header)
+        super(PrimaryHDU, self).__init__(data=data, header=header)
         self.name = 'PRIMARY'
 
         # insert the keywords EXTEND
