@@ -31,8 +31,6 @@ def fits2fits(infile, outfile, verbose):
 	# Print out info about input file.
 	if verbose:
 		fitsin.info()
-	# Create output list of HDUs
-	fitsout = pyfits.HDUList()
 
 	for i, hdu in enumerate(fitsin):
 		# verify() fails when a keywords contains invalid characters,
@@ -55,17 +53,15 @@ def fits2fits(infile, outfile, verbose):
 
 		# Fix input header
 		fitsin[i].verify('fix')
-		# Copy fixed input header to output
-		fitsout.append(fitsin[i])
 
 	# Describe output file we're about to write...
 	if verbose:
 		print 'Outputting:'
-		fitsout.info()
+		fitsin.info()
 
 	try:
 		#fitsout.writeto(outfile, clobber=True)
-		fitsout.writeto(outfile, clobber=True, output_verify='warn')
+		fitsin.writeto(outfile, clobber=True, output_verify='warn')
 	except pyfits.VerifyError, ve:
 		return ('Verification of output file failed: your FITS file is probably too broken to automatically fix.' +
 				'  Error message is:' + str(ve))
