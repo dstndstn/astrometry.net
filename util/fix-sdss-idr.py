@@ -6,12 +6,9 @@ def fix_sdss_idr(fits):
 	if hdr['SIMPLE'] is False:
 		hdr.update('SIMPLE', True, 'FITS compliant (fix-sdss-idr.py)')
 
-	#if ('SDSS' in hdr and
-	#	hdr['SDSS'] == pyfits.UNDEFINED):
 	if hdr.get('SDSS', None) == pyfits.UNDEFINED:
 		hdr['SDSS'] = True
 		print 'Set SDSS to True'
-
 
 	print 'UNSIGNED in hdr?', ('UNSIGNED' in hdr)
 	print hdr.get('UNSIGNED', None)
@@ -24,9 +21,6 @@ def fix_sdss_idr(fits):
 	print hdr[6]
 
 	if hdr.get('UNSIGNED', None) == pyfits.UNDEFINED:
-		#if ('UNSIGNED' in hdr and
-		#hdr['UNSIGNED'] == pyfits.UNDEFINED):
-		
 		hdr['UNSIGNED'] = True
 		print 'Set UNSIGNED to True'
 		if (not 'BSCALE' in hdr) and (not 'BZERO' in hdr):
@@ -43,7 +37,6 @@ def fix_sdss_idr(fits):
 	fits[0].header._updateHDUtype()
 
 	print 'hdu type:', fits[0].header._hdutype
-
 	data = fits[0].data
 	print 'data type:', type(data)
 	print 'data:', data
@@ -58,7 +51,8 @@ def fix_sdss_idr(fits):
 	print 'data:', type(newhdu.data)
 	print 'data:', newhdu.data.dtype
 	print 'data range:', newhdu.data.min(), 'to', newhdu.data.max()
-	#print newhdu.header.ascardlist()
+
+	newhdu.writeto('out.fits', clobber=True)
 
 # _File._readHDU
 #  -> _TempHDU()
