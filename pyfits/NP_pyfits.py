@@ -1522,6 +1522,7 @@ class Header:
     def items(self):
         """Return a list of all keyword-value pairs from the CardList."""
 
+        # FIXME - use list comprehension here.
         pairs = []
         for card in self.ascard:
             pairs.append((card.key, card.value))
@@ -1959,7 +1960,8 @@ class Header:
         # update the hdu type of the header to match the parameters read in
         self._updateHDUtype()
 
-
+# FIXME - explain why you need a separate CardList and Header class.
+# Isn't a header just a list of cards?
 class CardList(list):
     """FITS header card list class."""
 
