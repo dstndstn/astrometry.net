@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     char *val, value[1000], nullstr[]="*";
     char keyword[FLEN_KEYWORD], colname[FLEN_VALUE];
     int status = 0;   /*  CFITSIO status value MUST be initialized to zero!  */
-    int hdunum, hdutype, ncols, ii, anynul, dispwidth[1000];
+    int hdunum, hdutype = ANY_HDU, ncols, ii, anynul, dispwidth[1000];
     long nelements[1000];
     int firstcol, lastcol = 1, linewidth;
     int elem, firstelem, lastelem = 0, nelems;
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 	else
 		fits_get_hdu_type(fptr, &hdutype, &status); /* Get the HDU type */
 
-	if (hdutype == IMAGE_HDU) {
+	if (!(hdutype == ASCII_TBL || hdutype == BINARY_TBL)) {
 		printf("Error: this program only displays tables, not images\n");
 		return -1;
 	}

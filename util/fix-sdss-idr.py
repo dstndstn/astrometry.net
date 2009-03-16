@@ -31,14 +31,14 @@ def fix_sdss_idr(hdu):
 
 	hdr._updateHDUtype()
 	newhdu = hdr._hdutype(data=pyfits.DELAYED, header=hdr)
-	print 'newhdu:', newhdu
+	#print 'newhdu:', newhdu
 	## HACK - encapsulation violation
 	newhdu._file = hdu._file
 	newhdu._ffile = hdu._ffile
 	newhdu._datLoc = hdu._datLoc
 	newhdu.__getattr__('data')
-	print 'data:', type(newhdu.data)
-	print 'data:', newhdu.data.dtype
+	#print 'data:', type(newhdu.data)
+	#print 'data:', newhdu.data.dtype
 	print 'data range:', newhdu.data.min(), 'to', newhdu.data.max()
 	return newhdu
 
