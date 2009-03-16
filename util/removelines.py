@@ -54,7 +54,6 @@ if __name__ == '__main__':
     if (len(sys.argv) == 3):
         infile = sys.argv[1]
         outfile = sys.argv[2]
-        verbose = False
         rtncode = removelines(infile, outfile)
         sys.exit(rtncode)
     else:
