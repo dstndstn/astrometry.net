@@ -2830,7 +2830,8 @@ class _ImageBaseHDU(_ValidHDU):
     ImgCode = {'uint8':8, 'int16':16, 'uint16':16, 'int32':32, 'int64':64, 'float32':-32, 'float64':-64}
     
     def __init__(self, data=None, header=None):
-        super(_ImageBaseHDU, self).__init__(data=data, header=header)
+		## FIXME - calling this superclass constructor causes test cases to fail!
+        #super(_ImageBaseHDU, self).__init__(data=data, header=header)
         self._file, self._datLoc = None, None
 
         if header is not None:
