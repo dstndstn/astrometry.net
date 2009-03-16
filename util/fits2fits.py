@@ -9,9 +9,9 @@ if __name__ == '__main__':
 	except ImportError,ie:
 		print 'failed to import pyfits:', ie
 		me = sys.argv[0]
-		print 'i am', me
+		#print 'i am', me
 		path = os.path.realpath(me)
-		print 'my real path is', path
+		#print 'my real path is', path
 		utildir = os.path.dirname(path)
 		assert(os.path.basename(utildir) == 'util')
 		andir = os.path.dirname(utildir)
@@ -71,21 +71,25 @@ def fits2fits(infile, outfile, verbose):
 				'  Error message is:' + str(ve))
 	return None
 
-if __name__ == '__main__':
-	if (len(sys.argv) == 3):
-		infile = sys.argv[1]
-		outfile = sys.argv[2]
-		verbose = False
-	elif (len(sys.argv) == 4) and (sys.argv[1] == '--verbose'):
-		verbose = True
-		infile = sys.argv[2]
-		outfile = sys.argv[3]
-	else:
-		print 'Usage: fits2fits.py [--verbose] input.fits output.fits'
-		sys.exit()
+def main():
+	from optparse import OptionParser
+	parser = OptionParser()
+	parser.add_option('-v', '--verbose',
+					  action='store_true', dest='verbose',
+					  help='be chatty')
+	(options, args) = parser.parse_args()
+	#verbose = options.verbose
 
-	errstr = fits2fits(infile, outfile, verbose)
-	if errstr:
-		print errstr
-		sys.exit(-1)
-	sys.exit(0)
+	if len(args) != 2:
+		print 'Usage: fits2fits.py [--verbose] input.fits output.fits'
+		return -1
+
+	infn = args[0]
+	outfn = args[1]
+	if fits2fits(infn, outfn, options.verbose):
+		return -1
+	return 0
+
+if __name__ == '__main__':
+	sys.exit(main())
+

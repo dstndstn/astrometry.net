@@ -1,6 +1,5 @@
 import sys
 import pyfits
-import numpy
 
 # Takes a pyfits HDU object (which is unchanged) and returns a new
 # pyfits object containing the fixed file.
@@ -19,7 +18,7 @@ def fix_sdss_idr(hdu):
 	else:
 		print 'No SDSS header card: not an SDSS idR file.'
 		return hdu
-		
+
 	if hdr.get('UNSIGNED', None) == pyfits.UNDEFINED:
 		print 'Setting UNSIGNED = True'
 		hdr['UNSIGNED'] = True
