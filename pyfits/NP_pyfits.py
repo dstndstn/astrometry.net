@@ -7026,7 +7026,7 @@ class HDUList(list, _Verify):
 
         # the first (0th) element must be a primary HDU
         if len(self) > 0 and (not isinstance(self[0], PrimaryHDU)):
-            err_text = "HDUList's 0th element is not a primary HDU."
+            err_text = "HDUList's 0th element is not a primary HDU (it's a " + str(type(self[0])) + ")"
             fix_text = 'Fixed by inserting one as 0th HDU.'
             fix = "self.insert(0, PrimaryHDU())"
             _text = self.run_option(option, err_text=err_text, fix_text=fix_text, fix=fix)

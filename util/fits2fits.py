@@ -4,21 +4,18 @@ import sys
 import re
 
 if __name__ == '__main__':
-	try:
-		import pyfits
-	except ImportError,ie:
-		print 'failed to import pyfits:', ie
-		me = sys.argv[0]
-		#print 'i am', me
-		path = os.path.realpath(me)
-		#print 'my real path is', path
-		utildir = os.path.dirname(path)
-		assert(os.path.basename(utildir) == 'util')
-		andir = os.path.dirname(utildir)
-		assert(os.path.basename(andir) == 'astrometry')
-		rootdir = os.path.dirname(andir)
-		#print 'adding path', rootdir
-		sys.path += [rootdir]
+	# According to the python sys.path documentation, the directory containing
+	# the main script appears as sys.path[0].
+	utildir = sys.path[0]
+	assert(os.path.basename(utildir) == 'util')
+	andir = os.path.dirname(utildir)
+	assert(os.path.basename(andir) == 'astrometry')
+	rootdir = os.path.dirname(andir)
+	# Here we put the "astrometry" and "astrometry/.." directories at the front
+	# of the path: astrometry to pick up pyfits, and .. to pick up astrometry itself.
+	sys.path.insert(1, andir)
+	sys.path.insert(2, rootdir)
+	import pyfits
 
 import pyfits
 
@@ -82,7 +79,9 @@ def main():
 
 	infn = args[0]
 	outfn = args[1]
-	if fits2fits(infn, outfn, options.verbose):
+	errmsg = fits2fits(infn, outfn, options.verbose)
+	if errmsg is not None:
+		print 'fits2fits.py failed:', errmsg
 		return -1
 	return 0
 
