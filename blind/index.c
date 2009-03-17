@@ -95,6 +95,30 @@ char* index_get_quad_filename(const char* indexname) {
     return quadfn;
 }
 
+char* index_get_qidx_filename(const char* indexname) {
+    char* quadfn;
+    char* qidxfn = NULL;
+    bool singlefile;
+    if (!index_is_file_index(indexname))
+        return NULL;
+    get_filenames(indexname, &quadfn, NULL, NULL, &singlefile);
+    if (singlefile) {
+        if (ends_with(quadfn, ".fits")) {
+            asprintf(&qidxfn, "%.*s.qidx.fits", strlen(quadfn)-5, quadfn);
+        } else {
+            asprintf(&qidxfn, "%s.qidx.fits", quadfn);
+        }
+    } else {
+        if (ends_with(quadfn, ".quad.fits")) {
+            asprintf(&qidxfn, "%.*s.qidx.fits", strlen(quadfn)-10, quadfn);
+        } else {
+            asprintf(&qidxfn, "%s.qidx.fits", quadfn);
+        }
+    }
+    free(quadfn);
+    return qidxfn;
+}
+
 bool index_is_file_index(const char* filename) {
     char* ckdtfn, *skdtfn, *quadfn;
     bool singlefile;

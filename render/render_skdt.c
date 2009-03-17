@@ -26,7 +26,6 @@ int render_skdt(cairo_t* cairo, render_args_t* args) {
 	double r2;
 	double p1[3], p2[3];
 
-	logmsg("hello world.\n");
 	fns = sl_new(256);
 	get_string_args_of_type(args, "skdt ", fns);
 

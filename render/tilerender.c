@@ -49,6 +49,7 @@
 #include "render_images.h"
 #include "render_cairo.h"
 #include "render_skdt.h"
+#include "render_quads.h"
 
 // Ugh, zlib before 1.2.0 didn't include compressBound()...
 // And ZLIB_VERNUM wasn't defined until 1.2.0.2
@@ -100,6 +101,7 @@ static renderer_t renderers[] = {
 	{ "userdot",   render_boundary,     NULL },
 	{ "cairo",     NULL,                render_cairo },
 	{ "skdt",      NULL,                render_skdt },
+	{ "quads",     NULL,                render_quads },
 };
 
 static void default_rdls_args(render_args_t* args) {

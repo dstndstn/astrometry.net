@@ -84,6 +84,8 @@ bool index_is_file_index(const char* filename);
 
 char* index_get_quad_filename(const char* indexname);
 
+char* index_get_qidx_filename(const char* indexname);
+
 int index_get_meta(const char* filename, index_meta_t* meta);
 
 bool index_has_ids(index_t* index);

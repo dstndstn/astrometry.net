@@ -158,22 +158,11 @@ int main(int argc, char** args) {
 
 		logmsg("Index name: %s\n", indx->meta.indexname);
 
-        asprintf(&qidxfn, "%s.qidx.fits", name);
+        qidxfn = index_get_qidx_filename(indx->meta.indexname);
 		qidx = qidxfile_open(qidxfn);
 		if (!qidx) {
 			logmsg("Failed to open qidxfile \"%s\".\n", qidxfn);
-
-			// HACK
-			if (ends_with(name, ".fits")) {
-				free(qidxfn);
-				asprintf(&qidxfn, "%.*s.qidx.fits", strlen(name)-5, name);
-				qidx = qidxfile_open(qidxfn);
-				if (!qidx) {
-					logmsg("Failed to open qidxfile \"%s\".\n", qidxfn);
-				}
-			}
-			if (!qidx)
-				exit(-1);
+            exit(-1);            
 		}
 		free(qidxfn);
 		pl_append(qidxes, qidx);

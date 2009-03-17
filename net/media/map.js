@@ -102,7 +102,7 @@ var passargs = [
                 'submission',
                 'joblist', 'lw',
                 'heatmap', 'dates',
-                'imageset', 'skdt',
+                'imageset', 'index',
     ];
 
 var imglistpass = [
@@ -347,6 +347,7 @@ var constellationShowing = 0;
 var tychoShowing = 0;
 var usnobShowing = 0;
 var skdtShowing = 0;
+var quadsShowing = 0;
 var imagesShowing = 0;
 var imageOutlinesShowing = 0;
 var userImageShowing = 0;
@@ -417,6 +418,8 @@ function restackOverlays() {
 		newOverlays.push(usnobOverlay);
 	if (skdtShowing)
 		newOverlays.push(skdtOverlay);
+	if (quadsShowing)
+		newOverlays.push(quadsOverlay);
 	if (imagesShowing || imageOutlinesShowing)
 		newOverlays.push(imagesOverlay);
 	if (userImageShowing || userOutlineShowing || userRdlsShowing)
@@ -549,6 +552,11 @@ function updateUsnob() {
 function updateSkdt() {
 	var tag = "&tag=skdt";
 	skdtOverlay = makeOverlay('skdt', tag);
+}
+
+function updateQuads() {
+	var tag = "&tag=quads";
+	quadsOverlay = makeOverlay('quads', tag);
 }
 
 function updateSelectedImage() {
@@ -871,6 +879,7 @@ function startup() {
 	updateTycho();
 	updateUsnob();
 	updateSkdt();
+	updateQuads();
 
 	if ('gain' in getdata) {
 		gotoform.gain.value = getdata['gain'];
@@ -884,7 +893,7 @@ function startup() {
 		for (var i=0; i<ss.length; i++)
 			show[ss[i]] = 1;
 
-		var layers = [ 'tycho', 'usnob', 'images', 'imageOutlines', 'skdt', 'grid', 'constellation', 'messier', 'userImage', 'userOutline', 'userRdls' ];
+		var layers = [ 'tycho', 'usnob', 'images', 'imageOutlines', 'skdt', 'quads', 'grid', 'constellation', 'messier', 'userImage', 'userOutline', 'userRdls' ];
 		for (var i=0; i<layers.length; i++)
 			if (layers[i] in show)
 				toggleButton(layers[i]);

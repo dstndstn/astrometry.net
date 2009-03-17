@@ -369,25 +369,29 @@ def get_tile(request):
 		#logmsg("For RA in [%f, %f] and Dec in [%f, %f], found %i files." %
 		#			  (ramin, ramax, decmin, decmax, len(filenames)))
 
-	if 'skdt' in layers:
-		skdts = request.GET.get('skdt')
-		if skdts:
-			skdts = skdts.split(',')
-			logmsg('Got skdts:', skdts)
+	if 'skdt' in layers or 'quads' in layers:
+		inds = request.GET.get('index')
+		if inds:
+			inds = inds.split(',')
+			logmsg('Got indexes:', inds)
 			searchdirs = ['/data1/indexes/']
-			skdtpaths = []
-			for skdt in skdts:
-				if '..' in skdt:
-					logmsg('rejecting skdt filename', skdt)
+			indpaths = []
+			for ind in inds:
+				if '..' in ind:
+					logmsg('rejecting index filename', ind)
 					continue
 				for d in searchdirs:
-					path = os.path.join(d, skdt)
+					path = os.path.join(d, ind)
 					if os.path.exists(path):
-						skdtpaths.append(path)
+						indpaths.append(path)
 						break
-			logmsg('Got skdt paths:', skdtpaths)
-			for p in skdtpaths:
-				arglist.append('skdt ' + p)
+			logmsg('Got index paths:', indpaths)
+			if 'skdt' in layers:
+				for p in indpaths:
+					arglist.append('skdt ' + p)
+			if 'quads' in layers:
+				for p in indpaths:
+					arglist.append('index ' + p)
 
 
 	if len(arglist):
