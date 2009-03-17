@@ -44,6 +44,9 @@ typedef struct qidxfile qidxfile;
 
 int qidxfile_close(qidxfile* qf);
 
+// Sets "quads" to a pointer within the qidx's data block.
+// DO NOT free this pointer!
+// It is valid until the qidxfile is closed.
 int qidxfile_get_quads(const qidxfile* qf, int starid, uint32_t** quads, int* nquads);
 
 int qidxfile_write_star(qidxfile* qf, int* quads, int nquads);

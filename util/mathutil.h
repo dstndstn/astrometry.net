@@ -64,7 +64,7 @@ InlineDeclare double distsq_exceeds(double* d1, double* d2, int D, double limit)
 
 Const InlineDeclare double square(double d);
 
-// note, this is function works on angles in degrees; it wraps around
+// note, this function works on angles in degrees; it wraps around
 // at 360.
 Const InlineDeclare int inrange(double ra, double ralow, double rahigh);
 

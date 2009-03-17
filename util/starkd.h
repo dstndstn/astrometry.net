@@ -52,6 +52,10 @@ typedef struct startree_s startree_t;
 
 startree_t* startree_open(char* fn);
 
+void startree_search_for(startree_t* s, double* xyzcenter, double radius2,
+						 double** xyzresults, double** radecresults,
+						 int** starinds, int* nresults);
+
 void startree_search(startree_t* s, double* xyzcenter, double radius2,
                      double** xyzresults, double** radecresults, int* nresults);
 
@@ -66,6 +70,8 @@ int startree_D(startree_t* s);
 qfits_header* startree_header(startree_t* s);
 
 int startree_get(startree_t* s, int starid, double* posn);
+
+int startree_get_radec(startree_t* s, int starid, double* ra, double* dec);
 
 int startree_close(startree_t* s);
 

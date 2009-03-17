@@ -49,6 +49,10 @@ typedef struct quadfile quadfile;
 
 int quadfile_close(quadfile* qf);
 
+// Copies the star ids of the stars that comprise quad "quadid".
+// There will be qf->dimquads such stars.
+// (this will be less than starutil.h : DQMAX, for ease of static
+// allocation of arrays that will hold quads of stars)
 int quadfile_get_stars(const quadfile* qf, unsigned int quadid,
                        unsigned int* stars);
 

@@ -38,20 +38,27 @@ static startree_t* startree_alloc() {
 	return s;
 }
 
-void startree_search(startree_t* s, double* xyzcenter, double radius2,
-                     double** xyzresults, double** radecresults, int* nresults) {
+void startree_search_for(startree_t* s, double* xyzcenter, double radius2,
+						 double** xyzresults, double** radecresults,
+						 int** starinds, int* nresults) {
     kdtree_qres_t* res = NULL;
+	int opts;
     double* xyz;
     int i, N;
 
-    res = kdtree_rangesearch_options(s->tree, xyzcenter, radius2,
-                                     KD_OPTIONS_SMALL_RADIUS |
-                                     KD_OPTIONS_RETURN_POINTS);
+	opts = KD_OPTIONS_SMALL_RADIUS;
+	if (xyzresults || radecresults)
+		opts |= KD_OPTIONS_RETURN_POINTS;
+
+	res = kdtree_rangesearch_options(s->tree, xyzcenter, radius2, opts);
+	
     if (!res || !res->nres) {
         if (xyzresults)
             *xyzresults = NULL;
         if (radecresults)
             *radecresults = NULL;
+        if (starinds)
+			*starinds = NULL;
         *nresults = 0;
         return;
     }
@@ -70,7 +77,18 @@ void startree_search(startree_t* s, double* xyzcenter, double radius2,
         *xyzresults = xyz;
         res->results.d = NULL;
     }
+	if (starinds) {
+		*starinds = malloc(res->nres * sizeof(int));
+		for (i=0; i<N; i++)
+			(*starinds)[i] = res->inds[i];
+    }
     kdtree_free_query(res);
+}
+
+
+void startree_search(startree_t* s, double* xyzcenter, double radius2,
+                     double** xyzresults, double** radecresults, int* nresults) {
+	startree_search_for(s, xyzcenter, radius2, xyzresults, radecresults, NULL, nresults);
 }
 
 int startree_N(startree_t* s) {
@@ -284,6 +302,16 @@ int startree_get(startree_t* s, int starid, double* posn) {
 		kdtree_copy_data_double(s->tree, starid, 1, posn);
 	}
 	return 0;
+}
+
+int startree_get_radec(startree_t* s, int starid, double* ra, double* dec) {
+	double xyz[3];
+	int rtn;
+	rtn = startree_get(s, starid, xyz);
+	if (rtn)
+		return rtn;
+	xyzarr2radecdeg(xyz, ra, dec);
+	return rtn;
 }
 
 startree_t* startree_new() {
