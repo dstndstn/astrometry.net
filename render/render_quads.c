@@ -38,8 +38,6 @@ int render_quads(cairo_t* cairo, render_args_t* args) {
 	star_midpoint(center, p1, p2);
 	r2 = distsq(p1, center, 3);
 
-	cairo_set_source_rgba(cairo, 0.5,0.8,0.8,0.3);
-
 	for (i=0; i<sl_size(fns); i++) {
 		char* fn;
         index_t* index;
@@ -47,11 +45,9 @@ int render_quads(cairo_t* cairo, render_args_t* args) {
         qidxfile* qidx;
 		double* radec;
 		int j, nstars;
-		double crad = 3.0;
 		int* starids;
-		bool* starsinbounds;
 		il* quadids;
-		int nin;
+        double quadr2;
 
 		fn = sl_get(fns, i);
         index = index_load(fn, 0);
@@ -67,36 +63,15 @@ int render_quads(cairo_t* cairo, render_args_t* args) {
             exit(-1);            
 		}
 
-		// FIXME - there could be a quad that partially appears in
-		// this image but whose stars would not be detected by this
-		// search.  Technically we should expand the radius by the
-		// quad radius or so.
-
-		startree_search_for(index->starkd, center, r2, NULL, &radec, &starids, &nstars);
+        quadr2 = arcsec2distsq(index->meta.index_scale_upper);
+		startree_search_for(index->starkd, center, r2+quadr2, NULL, &radec, &starids, &nstars);
 		logmsg("found %i stars in the search radius\n", nstars);
-
-		starsinbounds = malloc(sizeof(bool) * nstars);
-		nin = 0;
-		for (j=0; j<nstars; j++) {
-			double px, py;
-			px =  ra2pixelf(radec[2*j+0], args);
-			py = dec2pixelf(radec[2*j+1], args);
-            // cairo coords.
-            px += 0.5;
-            py += 0.5;
-			starsinbounds[j] = in_image(px, py, args);
-			if (starsinbounds[j])
-				nin++;
-		}
-		logmsg("found %i stars inside the image bounds\n", nin);
 
 		quadids = il_new(256);
 		for (j=0; j<nstars; j++) {
 			uint32_t* quads;
 			int nquads;
 			int k;
-			if (!starsinbounds[j])
-				continue;
 			qidxfile_get_quads(qidx, starids[j], &quads, &nquads);
 			for (k=0; k<nquads; k++)
 				il_insert_unique_ascending(quadids, quads[k]);
@@ -105,13 +80,14 @@ int render_quads(cairo_t* cairo, render_args_t* args) {
 
 		for (j=0; j<il_size(quadids); j++) {
 			int quadid;
-			int qstarids[DQMAX];
+			unsigned int qstarids[DQMAX];
 			int DQ;
 			int k;
 			double starxy[DQMAX*2];
 			double angles[DQMAX];
 			double cx, cy;
 			int perm[DQMAX];
+            double r,g,b;
 			quadid = il_get(quadids, j);
 			quadfile_get_stars(index->quads, quadid, qstarids);
 			DQ = index_get_quad_dim(index);
@@ -130,6 +106,13 @@ int render_quads(cairo_t* cairo, render_args_t* args) {
 				angles[k] = atan2(starxy[k*2 + 1] - cy, starxy[k*2 + 0] - cx);
 			permutation_init(perm, DQ);
 			permuted_sort(angles, sizeof(double), compare_doubles_asc, perm, DQ);
+
+            srand(quadid);
+            r = ((rand() % 128) + 127)/255.0;
+            g = ((rand() % 128) + 127)/255.0;
+            b = ((rand() % 128) + 127)/255.0;
+            cairo_set_source_rgba(cairo, r,g,b, 0.3);
+
 			for (k=0; k<DQ; k++) {
 				double px, py;
 				px = starxy[perm[k]*2+0];
@@ -155,8 +138,6 @@ int render_quads(cairo_t* cairo, render_args_t* args) {
 		}
 
 		free(starids);
-		free(starsinbounds);
-
         qidxfile_close(qidx);
         index_close(index);
 	}

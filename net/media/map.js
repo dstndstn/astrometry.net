@@ -416,10 +416,10 @@ function restackOverlays() {
 		newOverlays.push(tychoOverlay);
 	if (usnobShowing)
 		newOverlays.push(usnobOverlay);
-	if (skdtShowing)
-		newOverlays.push(skdtOverlay);
 	if (quadsShowing)
 		newOverlays.push(quadsOverlay);
+	if (skdtShowing)
+		newOverlays.push(skdtOverlay);
 	if (imagesShowing || imageOutlinesShowing)
 		newOverlays.push(imagesOverlay);
 	if (userImageShowing || userOutlineShowing || userRdlsShowing)
