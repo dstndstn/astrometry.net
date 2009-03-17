@@ -75,7 +75,7 @@ ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix.o permutedsort.o \
 	gnu-specific.o an-endian.o errors.o an-opts.o svn.o tic.o log.o \
 	gslutils.o
 ifndef NO_QFITS
-ANUTILS_OBJ += fitsioutils.o sip_qfits.o
+ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o 
 ANUTILS_DEPS += $(QFITS_LIB)
 endif
 ifndef NO_KDTREE
@@ -88,8 +88,7 @@ ANFILES_DEPS :=
 ANFILES_OBJ := 
 ifndef NO_QFITS
 ANFILES_OBJ += index.o codekd.o starkd.o rdlist.o xylist.o \
-	starxy.o an-catalog.o qidxfile.o quadfile.o fitstable.o \
-	fitsbin.o fitsfile.o scamp-catalog.o
+	starxy.o an-catalog.o qidxfile.o quadfile.o scamp-catalog.o
 ANFILES_DEPS += $(QFITS_LIB)
 endif
 

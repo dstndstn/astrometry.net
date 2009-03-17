@@ -87,6 +87,8 @@ PROGS := backend image2xy control-program
 PROSPECTUS := quadidx codeprojections quadlocations quadscales quadsperstar \
 	whynot quadcenters startree2rdls
 
+ANLIBS := $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
 BACKEND_LIB := libbackend.a
 
 BACKEND_SO := libbackend.so
@@ -407,7 +409,7 @@ unpermute-stars: unpermute-stars.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 unpermute-quads: unpermute-quads.o \
-		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 merge-index: merge-index.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
@@ -526,8 +528,7 @@ plotxy: plotxy.o $(COMMON)/cairoutils.o boilerplate.o $(ANFILES_LIB) $(ANUTILS_L
 
 quadidx: quadidx.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-codeprojections: codeprojections.o \
-		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+codeprojections: codeprojections.o $(UTIL_OBJS) $(ANLIBS)
 
 quadlocations: quadlocations.o catalog.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
