@@ -64,9 +64,9 @@ MISC_EXECS := project-usnob diffractionFlag_check \
 UTIL_OBJS := boilerplate.o
 
 OTHER_OBJS := usnob.o usnob-fits.o tycho2.o tycho2-fits.o catalog.o \
-	codefile.o histogram.o codekd.o verify.o \
+	codefile.o histogram.o verify.o \
 	solver.o matchfile.o solvedclient.o solvedfile.o intmap.o pnpoly.o \
-	blind_wcs.o index.o tweak.o blind-main.o \
+	blind_wcs.o tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	brightstars.o ngcic-accurate.o nomad.o nomad-fits.o \
 	ngc2000.o noisesim.o noise.o blindutils.o hd.o \
@@ -92,9 +92,9 @@ BACKEND_LIB := libbackend.a
 BACKEND_SO := libbackend.so
 
 BACKEND_OBJS := \
-		backend.o blindutils.o blind.o solver.o codekd.o \
+		backend.o blindutils.o blind.o solver.o \
 		matchfile.o solvedclient.o solvedfile.o verify.o \
-		boilerplate.o blind_wcs.o index.o tweak.o
+		boilerplate.o blind_wcs.o tweak.o
 
 $(BACKEND_LIB): $(BACKEND_OBJS)
 	-rm -f $@
@@ -113,7 +113,7 @@ OLDEXECS := plotquads rawstartree checkquads
 CAIROEXECS := plotquad plotxy plot-constellations add-text
 
 OLDEXECS_OBJS := catalog.o histogram.o verify.o intmap.o matchfile.o \
-	codekd.o $(UTIL_OBJS)
+	$(UTIL_OBJS)
 
 PIPELINE_MAIN_OBJ := $(addsuffix .o,$(PIPELINE))
 PROSPECTUS_MAIN_OBJ := $(addsuffix .o,$(PROSPECTUS))
@@ -184,7 +184,7 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 	done
 
 test-solver: test-solver.o solver_test.o blind_wcs.o verify.o \
-		matchfile.o index.o codekd.o \
+		matchfile.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 
 NODEP_OBJS += solver_test.o
@@ -400,22 +400,22 @@ startree: startree.o catalog.o \
 hpquads: hpquads.o codefile.o pnpoly.o histogram.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-codetree: codetree.o codekd.o codefile.o \
+codetree: codetree.o codefile.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 unpermute-stars: unpermute-stars.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-unpermute-quads: unpermute-quads.o codekd.o \
+unpermute-quads: unpermute-quads.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-merge-index: merge-index.o codekd.o \
+merge-index: merge-index.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-index-to-table: index-to-table.o index.o codekd.o \
+index-to-table: index-to-table.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-endian-flip-index: endian-flip-index.o codekd.o \
+endian-flip-index: endian-flip-index.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 threadtest: threadtest.o $(BACKEND_LIB) \
@@ -424,7 +424,7 @@ threadtest: threadtest.o $(BACKEND_LIB) \
 backend: backend-main.o $(BACKEND_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
-verify: verify-main.o matchfile.o index.o codekd.o \
+verify: verify-main.o matchfile.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
 ALL_OBJ += verify-main.o
@@ -443,15 +443,15 @@ augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scal
 
 ALL_OBJ += augment-xylist-main.o
 
-blind: blind-main.o blind.o solver.o codekd.o matchfile.o \
+blind: blind-main.o blind.o solver.o matchfile.o \
 		solvedclient.o solvedfile.o verify.o \
-		intmap.o blind_wcs.o index.o histogram.o tweak.o \
+		intmap.o blind_wcs.o histogram.o tweak.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^
 	mv $@.tmp $@
 
-whynot: whynot.o index.o codekd.o matchfile.o codefile.o \
+whynot: whynot.o matchfile.o codefile.o \
 		solvedclient.o solvedfile.o \
 		verify.o intmap.o blind_wcs.o \
 		$(UTIL_OBJS) \
@@ -526,7 +526,7 @@ plotxy: plotxy.o $(COMMON)/cairoutils.o boilerplate.o $(ANFILES_LIB) $(ANUTILS_L
 
 quadidx: quadidx.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-codeprojections: codeprojections.o codekd.o \
+codeprojections: codeprojections.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 quadlocations: quadlocations.o catalog.o \
