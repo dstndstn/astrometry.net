@@ -87,6 +87,7 @@ int render_cairo(cairo_t* cairo, render_args_t* args) {
 		}
 		sl_free2(words);
 	}
+	sl_free2(cmds);
 	cairo_stroke(cairo);
 	return 0;
 }
