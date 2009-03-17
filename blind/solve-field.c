@@ -821,6 +821,12 @@ int main(int argc, char** args) {
 			}
 		}
 
+		// if we're making plots, or if the index xyls file is requested, we need wcs.
+		if ((makeplots || indxylsfn) && !axy->wcsfn) {
+            axy->wcsfn = create_temp_file("wcs", tempdir);
+            sl_append_nocopy(tempfiles, axy->wcsfn);
+		}
+
         // Download URL...
         if (isurl) {
 
@@ -927,7 +933,8 @@ int main(int argc, char** args) {
                 sl_append_nocopy(tempfiles, indxylsfn);
             }
 
-            if (axy->wcsfn && indxylsfn) {
+            if (indxylsfn) {
+				assert(axy->wcsfn);
                 // index rdls to xyls.
                 if (wcs_rd2xy(axy->wcsfn, axy->rdlsfn, indxylsfn,
                               NULL, NULL, FALSE, NULL)) {
