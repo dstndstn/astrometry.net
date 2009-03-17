@@ -102,7 +102,7 @@ var passargs = [
                 'submission',
                 'joblist', 'lw',
                 'heatmap', 'dates',
-                'imageset',
+                'imageset', 'skdt',
     ];
 
 var imglistpass = [
@@ -263,6 +263,8 @@ function linktohere() {
 		show.push("tycho");
 	if (usnobShowing)
 		show.push("usnob");
+    if (skdtShowing)
+        show.push("skdt");
 	if (imagesShowing)
 		show.push("images");
 	if (imageOutlinesShowing)
@@ -334,6 +336,7 @@ function buttonStyleCommon(button) {
 var lineOverlay;
 var tychoOverlay;
 var usnobOverlay;
+var skdtOverlay;
 var imagesOverlay;
 var userImageOverlay;
 var selectedImageOverlay;
@@ -343,6 +346,7 @@ var messierShowing = 0;
 var constellationShowing = 0;
 var tychoShowing = 0;
 var usnobShowing = 0;
+var skdtShowing = 0;
 var imagesShowing = 0;
 var imageOutlinesShowing = 0;
 var userImageShowing = 0;
@@ -411,6 +415,8 @@ function restackOverlays() {
 		newOverlays.push(tychoOverlay);
 	if (usnobShowing)
 		newOverlays.push(usnobOverlay);
+	if (skdtShowing)
+		newOverlays.push(skdtOverlay);
 	if (imagesShowing || imageOutlinesShowing)
 		newOverlays.push(imagesOverlay);
 	if (userImageShowing || userOutlineShowing || userRdlsShowing)
@@ -538,6 +544,11 @@ function updateUsnob() {
 		tag += "&arcsinh";
 	}
 	usnobOverlay = makeOverlay('usnob', tag);
+}
+
+function updateSkdt() {
+	var tag = "&tag=skdt";
+	skdtOverlay = makeOverlay('skdt', tag);
 }
 
 function updateSelectedImage() {
@@ -859,6 +870,7 @@ function startup() {
 
 	updateTycho();
 	updateUsnob();
+	updateSkdt();
 
 	if ('gain' in getdata) {
 		gotoform.gain.value = getdata['gain'];
@@ -872,7 +884,7 @@ function startup() {
 		for (var i=0; i<ss.length; i++)
 			show[ss[i]] = 1;
 
-		var layers = [ 'tycho', 'usnob', 'images', 'imageOutlines', 'grid', 'constellation', 'messier', 'userImage', 'userOutline', 'userRdls' ];
+		var layers = [ 'tycho', 'usnob', 'images', 'imageOutlines', 'skdt', 'grid', 'constellation', 'messier', 'userImage', 'userOutline', 'userRdls' ];
 		for (var i=0; i<layers.length; i++)
 			if (layers[i] in show)
 				toggleButton(layers[i]);

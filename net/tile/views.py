@@ -323,8 +323,6 @@ def get_tile(request):
 				return HttpResponse('no such jobid ', jobid)
 		arglist.append('wcsfn ' + wcsfn)
 
-		
-
 	if ('images' in layers) or ('boundaries' in layers):
 		from astrometry.util.hsv import hsvtorgb
 
@@ -371,6 +369,27 @@ def get_tile(request):
 		#logmsg("For RA in [%f, %f] and Dec in [%f, %f], found %i files." %
 		#			  (ramin, ramax, decmin, decmax, len(filenames)))
 
+	if 'skdt' in layers:
+		skdts = request.GET.get('skdt')
+		if skdts:
+			skdts = skdts.split(',')
+			logmsg('Got skdts:', skdts)
+			searchdirs = ['/data1/indexes/']
+			skdtpaths = []
+			for skdt in skdts:
+				if '..' in skdt:
+					logmsg('rejecting skdt filename', skdt)
+					continue
+				for d in searchdirs:
+					path = os.path.join(d, skdt)
+					if os.path.exists(path):
+						skdtpaths.append(path)
+						break
+			logmsg('Got skdt paths:', skdtpaths)
+			for p in skdtpaths:
+				arglist.append('skdt ' + p)
+
+
 	if len(arglist):
 		# Write the args to a file whose name is its hash
 		argstring = '\n'.join(arglist) + '\n'
@@ -412,6 +431,17 @@ def get_tile(request):
 			if (val in valid):
 				arg = choice['arg']
 				cmdline += (' ' + arg + ' ' + val)
+
+	# Options with regex args.
+	optre = [ ('rdlsstyle', '-k', r'^[rbmygcwoph#+]*$'),
+			  ]
+	for (opt,arg,regex) in optre:
+		if opt in request.GET:
+			val = request.GET[opt]
+			logmsg('Checking arg %s = %s again regex "%s"' % (opt, val, regex))
+			if re.match(regex, val):
+				cmdline += (' ' + arg + ' ' + val)
+				logmsg('match!')
 
 	jpeg = ('jpeg' in request.GET)
 

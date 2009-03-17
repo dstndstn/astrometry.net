@@ -32,7 +32,8 @@ int render_rdls(unsigned char* img, render_args_t* args)
 	cairo_surface_t* target;
 
 	// draw black outline?
-	bool outline = TRUE;
+	//bool outline = TRUE;
+	bool outline = FALSE;
 
 	target = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32,
 												 args->W, args->H, args->W*4);
@@ -54,7 +55,9 @@ int render_rdls(unsigned char* img, render_args_t* args)
         rd_t* rd;
 
 		cairo_set_line_width(cairo, lw);
-		r = g = b = 1.0;
+		//r = g = b = 1.0;
+		r = 1.0;
+        g = b = 0.0;
 
 		for (j=0; color && j<strlen(color); j++) {
 			if (parse_color(color[j], &r, &g, &b) == 0)

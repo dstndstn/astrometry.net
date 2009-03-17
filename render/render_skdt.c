@@ -28,14 +28,16 @@ int render_skdt(cairo_t* cairo, render_args_t* args) {
 
 	logmsg("hello world.\n");
 	fns = sl_new(256);
-	get_string_args_of_type(args, "skdt", fns);
+	get_string_args_of_type(args, "skdt ", fns);
+
+    logmsg("got %i skdt files.\n", sl_size(fns));
 
 	radecdeg2xyzarr(args->ramin, args->decmin, p1);
 	radecdeg2xyzarr(args->ramax, args->decmax, p2);
 	star_midpoint(center, p1, p2);
 	r2 = distsq(p1, center, 3);
 
-	cairo_set_source_rgba(cairo, 1,0,0,1);
+	cairo_set_source_rgba(cairo, 0,1,0,1);
 
 	for (i=0; i<sl_size(fns); i++) {
 		char* fn;
@@ -58,11 +60,15 @@ int render_skdt(cairo_t* cairo, render_args_t* args) {
 			double px, py;
 			px =  ra2pixelf(radec[2*j+0], args);
 			py = dec2pixelf(radec[2*j+1], args);
+            // cairo coords.
+            px += 0.5;
+            py += 0.5;
 			if (!in_image_margin(px, py, crad, args))
 				continue;
+            cairo_move_to(cairo, px+crad, py);
 			cairo_arc(cairo, px, py, crad, 0.0, 2.0*M_PI);
 		}
-		cairo_stroke(cairo);
+        cairo_stroke(cairo);
 
 		free(radec);
 		startree_close(skdt);
