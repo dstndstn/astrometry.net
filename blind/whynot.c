@@ -50,7 +50,7 @@
 #include "codefile.h"
 #include "solver.h"
 
-const char* OPTIONS = "hx:w:i:v";
+const char* OPTIONS = "hx:w:i:v"; //q:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -58,6 +58,7 @@ void print_help(char* progname) {
 		   "   -w <WCS input file>\n"
 		   "   -x <xyls input file>\n"
 		   "   -i <index-name>\n"
+		   //"   [-q <qidx-name>]\n"
            "   -v: verbose\n"
 		   "\n", progname);
 }
@@ -119,15 +120,15 @@ int main(int argc, char** args) {
     log_init(loglvl);
 
 	// read WCS.
-	fprintf(stderr, "Trying to parse SIP header from %s...\n", wcsfn);
+	logmsg("Trying to parse SIP header from %s...\n", wcsfn);
 	if (!sip_read_header_file(wcsfn, &sip)) {
-		fprintf(stderr, "Failed to parse SIP header from %s.\n", wcsfn);
+		logmsg("Failed to parse SIP header from %s.\n", wcsfn);
 	}
 	// image W, H
 	W = sip.wcstan.imagew;
 	H = sip.wcstan.imageh;
 	if ((W == 0.0) || (H == 0.0)) {
-		fprintf(stderr, "WCS file %s didn't contain IMAGEW and IMAGEH headers.\n", wcsfn);
+		logmsg("WCS file %s didn't contain IMAGEW and IMAGEH headers.\n", wcsfn);
 		// FIXME - use bounds of xylist?
 		exit(-1);
 	}
@@ -135,7 +136,7 @@ int main(int argc, char** args) {
 	// read XYLS.
 	xyls = xylist_open(xylsfn);
 	if (!xyls) {
-		fprintf(stderr, "Failed to read an xylist from file %s.\n", xylsfn);
+		logmsg("Failed to read an xylist from file %s.\n", xylsfn);
 		exit(-1);
 	}
 
@@ -147,19 +148,32 @@ int main(int argc, char** args) {
 		index_t* indx;
 		char* qidxfn;
 		qidxfile* qidx;
-		fprintf(stderr, "Loading index from %s...\n", name);
+		logmsg("Loading index from %s...\n", name);
 		indx = index_load(name, 0);
 		if (!indx) {
-			fprintf(stderr, "Failed to read index \"%s\".\n", name);
+			logmsg("Failed to read index \"%s\".\n", name);
 			exit(-1);
 		}
 		pl_append(indexes, indx);
 
+		logmsg("Index name: %s\n", indx->meta.indexname);
+
         asprintf(&qidxfn, "%s.qidx.fits", name);
 		qidx = qidxfile_open(qidxfn);
 		if (!qidx) {
-			fprintf(stderr, "Failed to open qidxfile \"%s\".\n", qidxfn);
-			exit(-1);
+			logmsg("Failed to open qidxfile \"%s\".\n", qidxfn);
+
+			// HACK
+			if (ends_with(name, ".fits")) {
+				free(qidxfn);
+				asprintf(&qidxfn, "%.*s.qidx.fits", strlen(name)-5, name);
+				qidx = qidxfile_open(qidxfn);
+				if (!qidx) {
+					logmsg("Failed to open qidxfile \"%s\".\n", qidxfn);
+				}
+			}
+			if (!qidx)
+				exit(-1);
 		}
 		free(qidxfn);
 		pl_append(qidxes, qidx);
@@ -224,10 +238,10 @@ int main(int argc, char** args) {
 		res = kdtree_rangesearch_options(indx->starkd->tree, xyzcenter, fieldrad2*1.05,
 										 KD_OPTIONS_SMALL_RADIUS | KD_OPTIONS_RETURN_POINTS);
 		if (!res || !res->nres) {
-			fprintf(stderr, "No index stars found.\n");
+			logmsg("No index stars found.\n");
 			exit(-1);
 		}
-		fprintf(stderr, "Found %i index stars in range.\n", res->nres);
+		logmsg("Found %i index stars in range.\n", res->nres);
 
 		starlist = il_new(16);
 		starxylist = dl_new(16);
@@ -244,7 +258,7 @@ int main(int argc, char** args) {
 			dl_append(starxylist, x);
 			dl_append(starxylist, y);
 		}
-		fprintf(stderr, "Found %i index stars inside the field.\n", il_size(starlist));
+		logmsg("Found %i index stars inside the field.\n", il_size(starlist));
 
 		uniqquadlist = il_new(16);
 		quadlist = il_new(16);
@@ -254,16 +268,16 @@ int main(int argc, char** args) {
 			int k;
 			int starnum = il_get(starlist, j);
 			if (qidxfile_get_quads(qidx, starnum, &quads, &nquads)) {
-				fprintf(stderr, "Failed to get quads for star %i.\n", starnum);
+				logmsg("Failed to get quads for star %i.\n", starnum);
 				exit(-1);
 			}
-			//fprintf(stderr, "star %i is involved in %i quads.\n", starnum, nquads);
+			//logmsg("star %i is involved in %i quads.\n", starnum, nquads);
 			for (k=0; k<nquads; k++) {
 				il_insert_ascending(quadlist, quads[k]);
 				il_insert_unique_ascending(uniqquadlist, quads[k]);
 			}
 		}
-		fprintf(stderr, "Found %i quads partially contained in the field.\n", il_size(uniqquadlist));
+		logmsg("Found %i quads partially contained in the field.\n", il_size(uniqquadlist));
 
 		// Find quads that are fully contained in the image.
 		fullquadlist = il_new(16);
@@ -276,7 +290,7 @@ int main(int argc, char** args) {
 				continue;
 			il_append(fullquadlist, quad);
 		}
-		fprintf(stderr, "Found %i quads fully contained in the field.\n", il_size(fullquadlist));
+		logmsg("Found %i quads fully contained in the field.\n", il_size(fullquadlist));
 
         dimquads = quadfile_dimquads(indx->quads);
         dimcodes = dimquad2dimcode(dimquads);
@@ -291,7 +305,7 @@ int main(int argc, char** args) {
             for (k=0; k<dimquads; k++)
                 il_insert_unique_ascending(starsinquadslist, stars[k]);
 		}
-		fprintf(stderr, "Found %i stars involved in quads (partially contained).\n", il_size(starsinquadslist));
+		logmsg("Found %i stars involved in quads (partially contained).\n", il_size(starsinquadslist));
 
 		// Find the stars that are in quads that are completely contained.
 		starsinquadsfull = il_new(16);
@@ -303,12 +317,12 @@ int main(int argc, char** args) {
             for (k=0; k<dimquads; k++)
                 il_insert_unique_ascending(starsinquadsfull, stars[k]);
 		}
-		fprintf(stderr, "Found %i stars involved in quads (fully contained).\n", il_size(starsinquadsfull));
+		logmsg("Found %i stars involved in quads (fully contained).\n", il_size(starsinquadsfull));
 
 		// Now find correspondences between index objects and field objects.
         xy = xylist_read_field(xyls, NULL);
         if (!xy) {
-			fprintf(stderr, "Failed to read xyls entries.\n");
+			logmsg("Failed to read xyls entries.\n");
 			exit(-1);
         }
         Nfield = starxy_n(xy);
@@ -324,7 +338,7 @@ int main(int argc, char** args) {
             ftree = kdtree_build(NULL, fxycopy, Nfield, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
         }
 		if (!ftree) {
-			fprintf(stderr, "Failed to build kdtree.\n");
+			logmsg("Failed to build kdtree.\n");
 			exit(-1);
 		}
 		// For each index object involved in quads, search for a correspondence.
@@ -337,11 +351,11 @@ int main(int argc, char** args) {
 			kdtree_qres_t* fres;
 			star = il_get(starsinquadslist, j);
 			if (startree_get(indx->starkd, star, sxyz)) {
-				fprintf(stderr, "Failed to get position for star %i.\n", star);
+				logmsg("Failed to get position for star %i.\n", star);
 				exit(-1);
 			}
 			if (!sip_xyzarr2pixelxy(&sip, sxyz, sxy, sxy+1)) {
-				fprintf(stderr, "SIP backward for star %i.\n", star);
+				logmsg("SIP backward for star %i.\n", star);
 				exit(-1);
 			}
 			fres = kdtree_rangesearch_options(ftree, sxy, pixr2,
@@ -349,7 +363,7 @@ int main(int argc, char** args) {
 			if (!fres || !fres->nres)
 				continue;
 			if (fres->nres > 1) {
-				fprintf(stderr, "%i matches for star %i.\n", fres->nres, star);
+				logmsg("%i matches for star %i.\n", fres->nres, star);
 			}
 
 			il_append(corrstars, star);
@@ -361,11 +375,11 @@ int main(int argc, char** args) {
               fi = il_get(corrfield, il_size(corrfield)-1);
               fx = fieldxy[2*fi + 0];
               fy = fieldxy[2*fi + 1];
-              fprintf(stderr, "star   %g,%g\n", sxy[0], sxy[1]);
-              fprintf(stderr, "field  %g,%g\n", fx, fy);
+              logmsg("star   %g,%g\n", sxy[0], sxy[1]);
+              logmsg("field  %g,%g\n", fx, fy);
               }*/
 		}
-		fprintf(stderr, "Found %i correspondences for stars involved in quads (partially contained).\n",
+		logmsg("Found %i correspondences for stars involved in quads (partially contained).\n",
 				il_size(corrstars));
 
 		// Find quads built only from stars with correspondences.
@@ -375,7 +389,7 @@ int main(int argc, char** args) {
 			int k;
 			int starnum = il_get(corrstars, j);
 			if (qidxfile_get_quads(qidx, starnum, &quads, &nquads)) {
-				fprintf(stderr, "Failed to get quads for star %i.\n", starnum);
+				logmsg("Failed to get quads for star %i.\n", starnum);
 				exit(-1);
 			}
 			for (k=0; k<nquads; k++) {
@@ -395,7 +409,7 @@ int main(int argc, char** args) {
 				continue;
 			il_append(corrfullquads, quad);
 		}
-		fprintf(stderr, "Found %i quads built from stars with correspondencs, fully contained in the field.\n", il_size(corrfullquads));
+		logmsg("Found %i quads built from stars with correspondencs, fully contained in the field.\n", il_size(corrfullquads));
 
 		for (j=0; j<il_size(corrfullquads); j++) {
 			unsigned int stars[dimquads];
@@ -420,10 +434,10 @@ int main(int argc, char** args) {
 			quadfile_get_stars(indx->quads, quad, stars);
 
 			/*
-              fprintf(stderr, "quad #%i: quad id %i.  stars", j, quad);
+              logmsg("quad #%i: quad id %i.  stars", j, quad);
               for (k=0; k<dimquads; k++)
-			  fprintf(stderr, " %i", stars[k]);
-              fprintf(stderr, "\n");
+			  logmsg(" %i", stars[k]);
+              logmsg("\n");
             */
 
             codetree_get(indx->codekd, quad, realcode);
@@ -445,39 +459,39 @@ int main(int argc, char** args) {
                   {
                   double sx, sy;
                   sip_xyzarr2pixelxy(&sip, starxyz + 3*k, &sx, &sy);
-                  fprintf(stderr, "star  %g,%g\n", sx, sy);
-                  fprintf(stderr, "field %g,%g\n", starxy[k*2+0], starxy[k*2+1]);
+                  logmsg("star  %g,%g\n", sx, sy);
+                  logmsg("field %g,%g\n", starxy[k*2+0], starxy[k*2+1]);
                   }
                 */
             }
 
-			fprintf(stderr, "quad #%i: stars\n", j);
+			logmsg("quad #%i: stars\n", j);
             for (k=0; k<dimquads; k++)
-                fprintf(stderr, " %i", mo.field[k]);
-            fprintf(stderr, "\n");
+                logmsg(" %i", mo.field[k]);
+            logmsg("\n");
 
 
             codefile_compute_field_code(starxy, fieldcode, dimquads);
             //codefile_compute_star_code (starxyz, starcode, dimquads);
 
             /*
-              fprintf(stderr, "real code:");
+              logmsg("real code:");
               for (k=0; k<dimcodes; k++)
-              fprintf(stderr, " %g", realcode[k]);
-              fprintf(stderr, "\n");
-              fprintf(stderr, "star code:");
+              logmsg(" %g", realcode[k]);
+              logmsg("\n");
+              logmsg("star code:");
               for (k=0; k<dimcodes; k++)
-              fprintf(stderr, " %g", starcode[k]);
-              fprintf(stderr, "\n");
-              fprintf(stderr, "field code:");
+              logmsg(" %g", starcode[k]);
+              logmsg("\n");
+              logmsg("field code:");
               for (k=0; k<dimcodes; k++)
-              fprintf(stderr, " %g", fieldcode[k]);
-              fprintf(stderr, "\n");
-              fprintf(stderr, "code distances: %g, %g\n",
+              logmsg(" %g", fieldcode[k]);
+              logmsg("\n");
+              logmsg("code distances: %g, %g\n",
               sqrt(distsq(realcode, starcode, dimcodes)),
               sqrt(distsq(realcode, fieldcode, dimcodes)));
             */
-            fprintf(stderr, "  code distance: %g\n",
+            logmsg("  code distance: %g\n",
                     sqrt(distsq(realcode, fieldcode, dimcodes)));
 
             blind_wcs_compute(starxyz, starxy, dimquads, &wcs, NULL);
@@ -506,7 +520,7 @@ int main(int argc, char** args) {
             }
 
 
-            fprintf(stderr, "Verify odds: %g\n", exp(mo.logodds));
+            logmsg("Verify odds: %g\n", exp(mo.logodds));
 
 
 			// Gah! map...
@@ -528,7 +542,7 @@ int main(int argc, char** args) {
 	}
 
 	if (xylist_close(xyls)) {
-		fprintf(stderr, "Failed to close XYLS file.\n");
+		logmsg("Failed to close XYLS file.\n");
 	}
 	return 0;
 }

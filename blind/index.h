@@ -25,8 +25,9 @@
 #include "an-bool.h"
 
 /*
- * These routines handle loading and closing indexes which consist of several
- * files rather than a single large fire.
+ * These routines handle loading of index files, which can consist of
+ * several files rather (.skdt.fits , .ckdt.fits, .quad.fits), or a
+ * single large file (.fits).
  */
 
 #define DEFAULT_INDEX_JITTER 1.0  // arcsec
