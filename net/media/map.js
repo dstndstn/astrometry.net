@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2006, 2007 Dustin Lang and Keir Mierle.
+  Copyright 2006-2009 Dustin Lang and Keir Mierle.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -878,8 +878,8 @@ function startup() {
 
 	updateTycho();
 	updateUsnob();
-	updateSkdt();
 	updateQuads();
+	updateSkdt();
 
 	if ('gain' in getdata) {
 		gotoform.gain.value = getdata['gain'];
