@@ -41,7 +41,6 @@ static void print_help(const char* progname) {
 
 int main(int argc, char** args) {
 	int argchar;
-    bool help = FALSE;
 	int loglvl = LOG_MSG;
 	char* indexfn = NULL;
 	char* matchfn = NULL;
@@ -56,7 +55,7 @@ int main(int argc, char** args) {
 
 	double pix2 = 1.0;
 	double distractors = 0.25;
-	double fieldW, fieldH;
+	double fieldW=0, fieldH=0;
 	double logbail = -1e100;
 	bool growvariance = TRUE;
 	bool fake = FALSE;
@@ -105,6 +104,8 @@ int main(int argc, char** args) {
 		ERROR("Failed to open xylist %s", xyfn);
 		exit(-1);
 	}
+	fieldW = xylist_get_imagew(xyls);
+	fieldH = xylist_get_imageh(xyls);
 
 	mo = matchfile_read_match(mf);
 	if (!mo) {

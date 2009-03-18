@@ -29,6 +29,16 @@
 #include "keywords.h"
 
 
+int xylist_get_imagew(xylist_t* ls) {
+	qfits_header* hdr = xylist_get_header(ls);
+	return qfits_header_getint(hdr, "IMAGEW", 0);
+}
+
+int xylist_get_imageh(xylist_t* ls) {
+	qfits_header* hdr = xylist_get_header(ls);
+	return qfits_header_getint(hdr, "IMAGEH", 0);
+}
+
 bool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* ycolumn,
                            char** reason) {
     int rtn;

@@ -108,6 +108,9 @@ qfits_header* xylist_get_primary_header(xylist_t* ls);
 
 qfits_header* xylist_get_header(xylist_t* ls);
 
+int xylist_get_imagew(xylist_t* ls);
+int xylist_get_imageh(xylist_t* ls);
+
 int xylist_n_fields(xylist_t* ls);
 
 // Is the given filename an xylist?
