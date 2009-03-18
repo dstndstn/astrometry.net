@@ -142,8 +142,8 @@ void verify_hit(startree_t* skdt,
     fieldcenter = mo->center;
     fieldr2 = square(mo->radius);
 
-    logmsg("Field center %g,%g,%g, radius2 %g\n",
-           fieldcenter[0], fieldcenter[1], fieldcenter[2], fieldr2);
+    debug("Field center %g,%g,%g, radius2 %g\n",
+          fieldcenter[0], fieldcenter[1], fieldcenter[2], fieldr2);
 
 	if (DEBUGVERIFY) {
 		debug("\nVerifying a match.\n");
@@ -165,8 +165,8 @@ void verify_hit(startree_t* skdt,
 	res = kdtree_rangesearch_options(startree, fieldcenter, fieldr2 * 1.01, options);
 	assert(res);
 
-    logmsg("Found %i index stars.\n", res->nres);
-
+    debug("Found %i index stars.\n", res->nres);
+    
 	// Project index stars into pixel space.
 	indexpix = malloc(res->nres * 2 * sizeof(double));
 	NI = 0;
@@ -206,7 +206,7 @@ void verify_hit(startree_t* skdt,
 	}
 	indexpix = realloc(indexpix, NI * 2 * sizeof(double));
 
-    logmsg("Found %i index stars in the field.\n", NI);
+    debug("Found %i index stars in the field.\n", NI);
 
     NF = starxy_n(vf->field);
 
