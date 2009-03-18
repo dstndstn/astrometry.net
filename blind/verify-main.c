@@ -27,6 +27,7 @@
 #include "xylist.h"
 #include "log.h"
 #include "errors.h"
+#include "mathutil.h"
 
 static const char* OPTIONS = "hvi:m:f:";
 
@@ -114,6 +115,8 @@ int main(int argc, char** args) {
 		ERROR("Failed to read object from match file.");
 		exit(-1);
 	}
+    mo->wcstan.imagew = fieldW;
+    mo->wcstan.imageh = fieldH;
 
 	fieldxy = xylist_read_field(xyls, NULL);
 	if (!fieldxy) {
@@ -122,6 +125,8 @@ int main(int argc, char** args) {
 	}
 
 	vf = verify_field_preprocess(fieldxy);
+
+    pix2 += square(index->meta.index_jitter / mo->scale);
 
     mo->logodds = 0.0;
 	verify_hit(index->starkd, mo, NULL, vf,
