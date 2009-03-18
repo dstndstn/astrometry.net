@@ -1,6 +1,6 @@
 /*
  This file is part of the Astrometry.net suite.
- Copyright 2009 Dustin Lang.
+ Copyright 2009 Dustin Lang, David W. Hogg.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -30,12 +30,12 @@
 
 static const char* OPTIONS = "hvi:m:f:";
 
-
 static void print_help(const char* progname) {
-	printf("Usage:   %s [options]\n"
-	       "   [-m <match-file>]\n"
-		   "   [-i <index-file>]\n"
-		   "   [-f <xylist-file>]\n"
+	printf("Usage:   %s\n"
+	       "   -m <match-file>\n"
+		   "   -i <index-file>\n"
+		   "   -f <xylist-file>\n"
+           "   [-v]: verbose\n"
 	       "\n", progname);
 }
 
@@ -107,6 +107,8 @@ int main(int argc, char** args) {
 	fieldW = xylist_get_imagew(xyls);
 	fieldH = xylist_get_imageh(xyls);
 
+    logmsg("Field W,H = %g, %g\n", fieldW, fieldH);
+
 	mo = matchfile_read_match(mf);
 	if (!mo) {
 		ERROR("Failed to read object from match file.");
@@ -121,10 +123,13 @@ int main(int argc, char** args) {
 
 	vf = verify_field_preprocess(fieldxy);
 
+    mo->logodds = 0.0;
 	verify_hit(index->starkd, mo, NULL, vf,
 			   pix2, distractors, fieldW, fieldH,
 			   logbail, growvariance,
 			   index_get_quad_dim(index), fake);
+    logmsg("Logodds: %g\n", mo->logodds);
+    logmsg("Odds: %g\n", exp(mo->logodds));
 
 	verify_field_free(vf);
 
