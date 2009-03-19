@@ -654,6 +654,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 		return FALSE;
 
     logverb("Pixel scale: %g arcsec/pix.\n", mo->scale);
+    logverb("Parity: %s.\n", (mo->parity ? "neg" : "pos"));
 
     mo->index_jitter = sp->index->meta.index_jitter;
 

@@ -84,6 +84,8 @@ static an_option_t options[] = {
      "create SCAMP config file snippet"},
     {'U', "index-xyls",     required_argument, "filename",
      "output filename for xylist containing the image coordinate of stars from the index"},
+	{'@', "just-augment",   no_argument, NULL,
+	 "just write the augmented xylist files; don't run backend."},
 };
 
 static void print_help(const char* progname, bl* opts) {
@@ -446,6 +448,7 @@ int main(int argc, char** args) {
     char* scampfn = NULL;
     char* scampconfigfn = NULL;
     char* index_xyls_template;
+	bool just_augment = FALSE;
 
     errors_print_on_exit(stderr);
     fits_use_error_system();
@@ -498,6 +501,9 @@ int main(int argc, char** args) {
         if (c == -1)
             break;
         switch (c) {
+		case '@':
+			just_augment = TRUE;
+			break;
         case 'U':
             index_xyls_template = optarg;
             break;
@@ -879,6 +885,9 @@ int main(int argc, char** args) {
             ERROR("augment-xylist failed");
             exit(-1);
         }
+
+		if (just_augment)
+			goto nextfile;
 
         if (makeplots) {
             // Check that the plotting executables were built...

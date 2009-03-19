@@ -854,6 +854,13 @@ int augment_xylist(augment_xylist_t* axy,
     if (axy->pixelerr > 0.0)
 		fits_header_add_double(hdr, "ANPOSERR", axy->pixelerr, "star pos'n error (pixels)");
 
+	if (axy->parity != PARITY_BOTH) {
+		if (axy->parity == PARITY_NORMAL)
+			qfits_header_add(hdr, "ANPARITY", "POS", "det(CD) > 0", NULL);
+		else if (axy->parity == PARITY_FLIP)
+			qfits_header_add(hdr, "ANPARITY", "NEG", "det(CD) < 0", NULL);
+	}
+
     if ((axy->ra_center != HUGE_VAL) &&
         (axy->dec_center != HUGE_VAL) &&
         (axy->search_radius >= 0.0)) {

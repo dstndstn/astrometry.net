@@ -30,11 +30,14 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/time.h>
+#include <time.h>
 #include <libgen.h>
 #include <getopt.h>
 #include <dirent.h>
 #include <assert.h>
 
+#include "tic.h"
 #include "ioutils.h"
 #include "bl.h"
 #include "an-bool.h"
@@ -228,6 +231,7 @@ int main(int argc, char** args) {
     while (1) {
 		char* jobfn;
         job_t* job;
+		struct timeval tv1, tv2;
 
         if (infn) {
             // Read name of next input file to be read.
@@ -241,6 +245,7 @@ int main(int argc, char** args) {
             jobfn = args[i];
             i++;
         }
+        gettimeofday(&tv1, NULL);
         logverb("Reading job file \"%s\"...\n", jobfn);
         job = backend_read_job_file(backend, jobfn);
         if (!job) {
@@ -257,6 +262,8 @@ int main(int argc, char** args) {
 			logerr("Failed to run_job()\n");
 
 		job_free(job);
+        gettimeofday(&tv2, NULL);
+		logverb("Spent %g seconds on this field.\n", millis_between(&tv1, &tv2)/1000.0);
 	}
 
 	backend_free(backend);

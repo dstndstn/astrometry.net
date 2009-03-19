@@ -209,6 +209,44 @@ static bool* deduplicate_field_stars(verify_field_t* vf, double* sigma2s) {
 }
 
 
+static void compute_sigma2s(verify_field_t* vf, MatchObj* mo,
+							double verify_pix2, double** p_sigma2s) {
+	double* sigma2s;
+    int NF, i;
+
+	NF = starxy_n(vf->field);
+    sigma2s = malloc(NF * sizeof(double));
+
+	if (!do_gamma) {
+		for (i=0; i<NF; i++)
+            sigma2s[i] = verify_pix2;
+	} else {
+		// If we're modelling the expected noise as a Gaussian whose variance grows
+		// away from the quad center, compute the required quantities...
+        double Axy[2], Bxy[2];
+        // Find the midpoint of AB of the quad in pixel space.
+        starxy_get(vf->field, mo->field[0], Axy);
+        starxy_get(vf->field, mo->field[1], Bxy);
+        qc[0] = 0.5 * (Axy[0] + Bxy[0]);
+        qc[1] = 0.5 * (Axy[1] + Bxy[1]);
+        // Find the radius-squared of the quad = distsq(qc, A)
+        rquad2 = distsq(Axy, qc, 2);
+        debug("Quad radius = %g pixels\n", sqrt(rquad2));
+
+		// Compute individual positional variances for every field star.
+		for (i=0; i<NF; i++) {
+            double sxy[2];
+            double R2, sigma2;
+            starxy_get(vf->field, i, sxy);
+            // Distance from the quad center of this field star:
+            R2 = distsq(sxy, qc, 2);
+            // Variance of a field star at that distance from the quad center:
+            sigma2s[i] = verify_pix2 * (1.0 + R2/rquad2);
+        }
+	}
+	*p_sigma2s = sigma2s;
+}
+
 void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
                 double verify_pix2, double distractors,
                 double fieldW, double fieldH,
@@ -269,39 +307,7 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
     if (fake_match)
         do_gamma = FALSE;
 
-    // If we're modelling the expected noise as a Gaussian whose variance grows
-    // away from the quad center, compute the required quantities...
-	if (do_gamma) {
-        double Axy[2], Bxy[2];
-        // Find the midpoint of AB of the quad in pixel space.
-        starxy_get(vf->field, mo->field[0], Axy);
-        starxy_get(vf->field, mo->field[1], Bxy);
-        qc[0] = 0.5 * (Axy[0] + Bxy[0]);
-        qc[1] = 0.5 * (Axy[1] + Bxy[1]);
-        // Find the radius-squared of the quad = distsq(qc, A)
-        rquad2 = distsq(Axy, qc, 2);
-        debug("Quad radius = %g pixels\n", sqrt(rquad2));
-	}
-    logmsg("do_gamma: %s\n", (do_gamma ? "T" : "F"));
-    logmsg("verify_pix2 = %g\n", verify_pix2);
-
-    // Compute individual positional variances for every field star.
-    sigma2s = malloc(NF * sizeof(double));
-    for (i=0; i<NF; i++) {
-        if (do_gamma) {
-            double sxy[2];
-            double R2, sigma2;
-            starxy_get(vf->field, i, sxy);
-            // Distance from the quad center of this field star:
-            R2 = distsq(sxy, qc, 2);
-            // Variance of a field star at that distance from the quad center:
-            sigma2 = verify_pix2 * (1.0 + R2/rquad2);
-            sigma2s[i] = sigma2;
-        } else {
-            sigma2s[i] = verify_pix2;
-        }
-    }
-
+	compute_sigma2s(vf, mo, verify_pix2, &sigma2s);
 
     // Reduce the number of index stars so that the "radius of relevance" is bigger
     // than the field.
