@@ -833,6 +833,12 @@ int main(int argc, char** args) {
             sl_append_nocopy(tempfiles, axy->wcsfn);
 		}
 
+		// if we're making plots we need rdls.
+		if (makeplots && !axy->rdlsfn) {
+            axy->rdlsfn = create_temp_file("rdls", tempdir);
+            sl_append_nocopy(tempfiles, axy->rdlsfn);
+		}
+
         // Download URL...
         if (isurl) {
 
