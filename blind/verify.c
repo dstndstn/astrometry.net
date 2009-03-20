@@ -1,6 +1,7 @@
 /*
  This file is part of the Astrometry.net suite.
  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+ Copyright 2009 Dustin Lang, David W. Hogg.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -210,9 +211,12 @@ static bool* deduplicate_field_stars(verify_field_t* vf, double* sigma2s) {
 
 
 static void compute_sigma2s(verify_field_t* vf, MatchObj* mo,
-							double verify_pix2, double** p_sigma2s) {
+							double verify_pix2, bool do_gamma, double** p_sigma2s) {
 	double* sigma2s;
     int NF, i;
+	double qc[2];
+	double rquad2;
+	double R2;
 
 	NF = starxy_n(vf->field);
     sigma2s = malloc(NF * sizeof(double));
@@ -236,7 +240,6 @@ static void compute_sigma2s(verify_field_t* vf, MatchObj* mo,
 		// Compute individual positional variances for every field star.
 		for (i=0; i<NF; i++) {
             double sxy[2];
-            double R2, sigma2;
             starxy_get(vf->field, i, sxy);
             // Distance from the quad center of this field star:
             R2 = distsq(sxy, qc, 2);
@@ -263,9 +266,6 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
     int NF;
 
 	double* bestprob = NULL;
-	// quad center and radius
-	double qc[2];
-	double rquad2 = 0.0;
 	double logprob_distractor;
 	double logprob_background;
 	double logodds = 0.0;
@@ -307,19 +307,18 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
     if (fake_match)
         do_gamma = FALSE;
 
-	compute_sigma2s(vf, mo, verify_pix2, &sigma2s);
+	compute_sigma2s(vf, mo, verify_pix2, do_gamma, &sigma2s);
 
     // Reduce the number of index stars so that the "radius of relevance" is bigger
     // than the field.
     //trim_index_stars(&indexpix, &starids, &NI);
 
-
     // Deduplicate field stars based on positional variance and rank.
-    bool* keepers = NULL;
-    keepers = deduplicate_field_stars(vf, sigma2s);
-
-    free(keepers);
-    free(sigma2s);
+	/*
+	 bool* keepers = NULL;
+	 keepers = deduplicate_field_stars(vf, sigma2s);
+	 free(keepers);
+	 */
 
     // Prime the array where we store conflicting-match info:
     // any match is an improvement, except for stars that form the matched quad.
@@ -362,7 +361,6 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
     for (i=0; i<NI; i++) {
         double bestd2;
         double sigma2;
-        double R2 = 0.0;
         double logprob = -HUGE_VAL;
         int ind;
         int starid;
@@ -389,22 +387,7 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
         assert(fldind >= 0);
         assert(fldind < NF);
 
-        if (do_gamma) {
-            double sxy[2];
-            starxy_get(vf->field, fldind, sxy);
-            // Distance from the quad center of this field star:
-            R2 = distsq(sxy, qc, 2);
-            // Variance of a field star at that distance from the quad center:
-            sigma2 = verify_pix2 * (1.0 + R2/rquad2);
-        } else
-            sigma2 = verify_pix2;
-
-        if (DEBUGVERIFY) {
-            if (do_gamma)
-                debug("\nIndex star %i: rad %g pixels (%g quads) => sigma = %g.\n", i, sqrt(R2), sqrt(R2/rquad2), sqrt(sigma2));
-            debug("Index star is at (%g,%g) pixels.\n", indexpix[i*2], indexpix[i*2+1]);
-            debug("NN dist: %5.1f pix, %g sigmas\n", sqrt(bestd2), sqrt(bestd2/sigma2));
-        }
+		sigma2 = sigma2s[fldind];
 
         if (log((1.0 - distractors) / (2.0 * M_PI * sigma2 * NF)) < logprob_background) {
             debug("This Gaussian is nearly uninformative.\n");
@@ -470,6 +453,7 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
 		}
 	}
 
+    free(sigma2s);
 	free(bestprob);
 
 	free(indexpix);

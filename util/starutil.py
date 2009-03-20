@@ -1,4 +1,37 @@
-from math import pi,cos,sin,radians,asin,atan2,sqrt,acos
+from math import pi,cos,sin,radians,asin,atan2,sqrt,acos,floor
+
+# RA in degrees
+def ra2hms(ra):
+	h = ra * 24. / 360.
+	hh = int(floor(h))
+	m = (h - hh) * 60.
+	mm = int(floor(m))
+	s = (m - mm) * 60.
+	return (hh, mm, s)
+
+# Dec in degrees
+def dec2dms(dec):
+	sgn = (dec > 0) and 1. or -1.
+	d = dec * sgn
+	dd = int(floor(d))
+	m = (d - dd) * 60.
+	mm = int(floor(m))
+	s = (m - mm) * 60.
+	return (sgn*d, m, s)
+
+# RA in degrees
+def ra2hmsstring(ra, separator=' '):
+	(h,m,s) = ra2hms(ra)
+	ss = int(floor(s))
+	ds = int(round((s - ss) * 1000.0))
+	return separator.join(['%0.2i' % h, '%0.2i' % m, '%0.2i.%0.3i' % (ss,ds)])
+
+# Dec in degrees
+def dec2dmsstring(dec, separator=' '):
+	(d,m,s) = dec2dms(dec)
+	ss = int(floor(s))
+	ds = int(round((s - ss) * 1000.0))
+	return ' '.join(['%+0.2i' % d, '%0.2i' % m, '%0.2i.%0.3i' % (ss,ds)])
 
 # RA, Dec in degrees
 def radectoxyz(ra, dec):
