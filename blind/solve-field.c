@@ -827,14 +827,20 @@ int main(int argc, char** args) {
 			}
 		}
 
-		// if we're making plots, or if the index xyls file is requested, we need wcs.
-		if ((makeplots || indxylsfn) && !axy->wcsfn) {
+		// if we're making plots, we need the index xylist.
+		if (makeplots && !indxylsfn) {
+			indxylsfn = create_temp_file("indxyls", tempdir);
+			sl_append_nocopy(tempfiles, indxylsfn);
+		}
+
+		// if index xyls file is needed, we need wcs...
+		if (indxylsfn && !axy->wcsfn) {
             axy->wcsfn = create_temp_file("wcs", tempdir);
             sl_append_nocopy(tempfiles, axy->wcsfn);
 		}
 
-		// if we're making plots we need rdls.
-		if (makeplots && !axy->rdlsfn) {
+		// ... and rdls.
+		if (indxylsfn && !axy->rdlsfn) {
             axy->rdlsfn = create_temp_file("rdls", tempdir);
             sl_append_nocopy(tempfiles, axy->rdlsfn);
 		}
@@ -942,14 +948,9 @@ int main(int argc, char** args) {
                 }
             }
 
-            if (makeplots && !indxylsfn) {
-                // write index xyls to temp file for overlay plot.
-                indxylsfn = create_temp_file("indxyls", tempdir);
-                sl_append_nocopy(tempfiles, indxylsfn);
-            }
-
             if (indxylsfn) {
 				assert(axy->wcsfn);
+				assert(axy->rdlsfn);
                 // index rdls to xyls.
                 if (wcs_rd2xy(axy->wcsfn, axy->rdlsfn, indxylsfn,
                               NULL, NULL, FALSE, NULL)) {
