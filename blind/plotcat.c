@@ -230,6 +230,7 @@ int main(int argc, char *argv[]) {
 	for (; optind<argc; optind++) {
 		int i;
         char* filetype;
+		qfits_header* hdr1 = NULL;
 
 		cat = NULL;
 		skdt = NULL;
@@ -250,6 +251,15 @@ int main(int argc, char *argv[]) {
 		}
 		// look for AN_FILE (Astrometry.net filetype) in the FITS header.
 		filetype = qfits_pretty_string(qfits_header_getstr(hdr, "AN_FILE"));
+
+		if (!filetype) {
+			// look in the first extension header (SKDTs)
+			hdr1 = qfits_header_readext(fname, 1);
+			if (hdr1) {
+				filetype = qfits_pretty_string(qfits_header_getstr(hdr1, "AN_FILE"));
+			} else
+				logverb("Failed to read header from extension 1.\n");
+		}
 
 		if (filetype)
 			logmsg("Astrometry.net file type: \"%s\".\n", filetype);
@@ -373,6 +383,8 @@ int main(int argc, char *argv[]) {
         }
 
         qfits_header_destroy(hdr);
+		if (hdr1)
+			qfits_header_destroy(hdr1);
         if (!(cat || skdt || ancat || usnob || nomad || twomass || tycho || rd)) {
             ERROR("I can't figure out what kind of file %s is.\n", fname);
             exit(-1);
