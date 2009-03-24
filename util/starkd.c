@@ -38,7 +38,7 @@ static startree_t* startree_alloc() {
 	return s;
 }
 
-void startree_search_for(startree_t* s, double* xyzcenter, double radius2,
+void startree_search_for(const startree_t* s, const double* xyzcenter, double radius2,
 						 double** xyzresults, double** radecresults,
 						 int** starinds, int* nresults) {
     kdtree_qres_t* res = NULL;
@@ -86,7 +86,7 @@ void startree_search_for(startree_t* s, double* xyzcenter, double radius2,
 }
 
 
-void startree_search(startree_t* s, double* xyzcenter, double radius2,
+void startree_search(const startree_t* s, const double* xyzcenter, double radius2,
                      double** xyzresults, double** radecresults, int* nresults) {
 	startree_search_for(s, xyzcenter, radius2, xyzresults, radecresults, NULL, nresults);
 }

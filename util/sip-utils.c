@@ -17,10 +17,85 @@
 */
 #include <math.h>
 #include <sys/param.h>
+#include <stdlib.h>
+#include <assert.h>
 
 #include "sip-utils.h"
 #include "starutil.h"
 #include "mathutil.h"
+
+int* sip_filter_stars_in_field(const sip_t* sip, const tan_t* tan,
+							   const double* xyz, const double* radec,
+							   int N, double** p_xy, int* inds, int* p_Ngood) {
+	int i, Ngood;
+	int W, H;
+	double* xy = NULL;
+	bool allocd = FALSE;
+	
+	assert(sip || tan);
+	assert(xyz || radec);
+	assert(p_Ngood);
+
+	Ngood = 0;
+	if (!inds) {
+		inds = malloc(N * sizeof(int));
+		allocd = TRUE;
+	}
+
+	if (p_xy)
+		xy = malloc(N * 2 * sizeof(double));
+
+	if (sip) {
+		W = sip->wcstan.imagew;
+		H = sip->wcstan.imageh;
+	} else {
+		W = tan->imagew;
+		H = tan->imageh;
+	}
+
+	for (i=0; i<N; i++) {
+		double x, y;
+		if (xyz) {
+			if (sip) {
+				if (!sip_xyzarr2pixelxy(sip, xyz + i*3, &x, &y))
+					continue;
+			} else {
+				if (!tan_xyzarr2pixelxy(tan, xyz + i*3, &x, &y))
+					continue;
+			}
+		} else {
+			if (sip) {
+				if (!sip_radec2pixelxy(sip, radec[i*2], radec[i*2+1], &x, &y))
+					continue;
+			} else {
+				if (!tan_radec2pixelxy(tan, radec[i*2], radec[i*2+1], &x, &y))
+					continue;
+			}
+		}
+		// FIXME -- check half- and one-pixel FITS issues.
+		if ((x < 0) || (y < 0) || (x >= W) || (y >= H))
+			continue;
+
+		inds[Ngood] = i;
+		if (xy) {
+			xy[Ngood * 2 + 0] = x;
+			xy[Ngood * 2 + 1] = y;
+		}
+		Ngood++;
+	}
+
+	if (allocd)
+		inds = realloc(inds, Ngood * sizeof(int));
+
+	if (xy)
+		xy = realloc(xy, Ngood * 2 * sizeof(double));
+	if (p_xy)
+		*p_xy = xy;
+
+	*p_Ngood = Ngood;
+	
+	return inds;
+}
 
 static double fmod_pos(double a, double b) {
     double fm = fmod(a, b);

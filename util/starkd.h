@@ -52,11 +52,13 @@ typedef struct startree_s startree_t;
 
 startree_t* startree_open(char* fn);
 
-void startree_search_for(startree_t* s, double* xyzcenter, double radius2,
+//uint8_t startree_get_sweep(startree_t* s, int starnum);
+
+void startree_search_for(const startree_t* s, const double* xyzcenter, double radius2,
 						 double** xyzresults, double** radecresults,
 						 int** starinds, int* nresults);
 
-void startree_search(startree_t* s, double* xyzcenter, double radius2,
+void startree_search(const startree_t* s, const double* xyzcenter, double radius2,
                      double** xyzresults, double** radecresults, int* nresults);
 
 uint64_t startree_get_starid(startree_t* s, int ind);

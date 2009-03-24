@@ -169,7 +169,7 @@ bool   tan_radec2pixelxy(const tan_t* wcs_tan, double ra, double dec, double *px
 
 // xyz unit vector to Pixels.
 WarnUnusedResult
-bool   tan_xyzarr2pixelxy(const tan_t* wcs_tan, double* xyz, double *px, double *py);
+bool   tan_xyzarr2pixelxy(const tan_t* wcs_tan, const double* xyz, double *px, double *py);
 
 void   sip_print(const sip_t*);
 

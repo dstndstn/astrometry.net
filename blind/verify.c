@@ -28,6 +28,7 @@
 #include "mathutil.h"
 #include "keywords.h"
 #include "log.h"
+#include "sip-utils.h"
 
 #define DEBUGVERIFY 1
 #if DEBUGVERIFY
@@ -90,74 +91,61 @@ static int get_index_stars(const double* fieldcenter, double fieldr2,
                            const startree_t* skdt, const sip_t* sip, const tan_t* tan,
                            double fieldW, double fieldH,
                            double** p_indexpix, int** p_starids, int* p_nindex) {
-    int options = 0;
-	kdtree_qres_t* res;
+	double* indxyz;
 	double* indexpix;
-    int i, NI;
+    int i, N, NI;
     int* sweep;
-    int* perm;
     int* starid;
+	int* inbounds;
 
 	assert(skdt->sweep);
 
-    // kdtree search options
-    options |= KD_OPTIONS_SMALL_RADIUS;
-    options |= KD_OPTIONS_USE_SPLIT;
+	// Find all index stars within the bounding circle of the field.
+	startree_search_for(skdt, fieldcenter, fieldr2, &indxyz, NULL, &starid, &N);
 
-	// find all the index stars that are inside the circle that bounds the field.
-	// 1.01 is a little safety factor.
-	res = kdtree_rangesearch_options(skdt->tree, fieldcenter, fieldr2 * 1.01, options);
-	assert(res);
-    debug("Found %i index stars.\n", res->nres);
-    
-	// Project index stars into pixel space.
-	indexpix = malloc(res->nres * 2 * sizeof(double));
-	NI = 0;
-	for (i=0; i<res->nres; i++) {
-		double x, y;
-        if (sip) {
-            if (!sip_xyzarr2pixelxy(sip, res->results.d + i*3, &x, &y))
-                continue;
-        } else {
-            if (!tan_xyzarr2pixelxy(tan, res->results.d + i*3, &x, &y))
-                continue;
-        }
-		if ((x < 0) || (y < 0) || (x >= fieldW) || (y >= fieldH))
-			continue;
+	// Find index stars within the rectangular field.
+	inbounds = sip_filter_stars_in_field(sip, tan, indxyz, NULL, N, &indexpix,
+										 NULL, &NI);
+	/* could apply the permutation now, or after the sweep sort.
+	 permutation_apply(inbounds, NI, indxyz, indxyz, 3 * sizeof(double));
+	 ...
+	 */
 
-		// Here we compact the "res" arrays so that when we're done,
-		// the NI indices that are inside the field are in the first
-		// NI elements of the res->{results,inds} arrays.
-		res->inds[NI] = res->inds[i];
-		indexpix[NI*2  ] = x;
-		indexpix[NI*2+1] = y;
-		NI++;
-	}
-	indexpix = realloc(indexpix, NI * 2 * sizeof(double));
-    debug("Found %i index stars in the field.\n", NI);
-
-    if (!NI) {
-		kdtree_free_query(res);
-		free(indexpix);
-        return -1;
-    }
+	free(indxyz);
 
     // Each index star has a "sweep number" assigned during index building;
-    // it roughly represents a local brightness ordering.
-	sweep = malloc(NI * sizeof(int));
-	for (i=0; i<NI; i++)
-		sweep[i] = skdt->sweep[res->inds[i]];
+    // it roughly represents a local brightness ordering.  Use this to sort the
+	// index stars.
+	// Note: here we grab all N, rather than NI, in order to avoid having to
+	// permuting the arrays multiple times; in the permuted_sort call we start with
+	// the "inbounds" array.
+	sweep = malloc(N * sizeof(int));
+	for (i=0; i<N; i++)
+		sweep[i] = skdt->sweep[starid[i]];
 
-    perm = permuted_sort(sweep, sizeof(int), compare_ints_asc, NULL, NI);
+    permuted_sort(sweep, sizeof(int), compare_ints_asc, inbounds, NI);
 
-    starid = malloc(NI * sizeof(int));
+	//permutation_apply(inbounds, NI, indxyz, indxyz, 3 * sizeof(double));
+    permutation_apply(inbounds, NI, starid, starid, sizeof(int));
+    permutation_apply(inbounds, NI, indexpix, indexpix, 2 * sizeof(double));
 
-    permutation_apply(perm, NI, indexpix, indexpix, 2 * sizeof(double));
-    permutation_apply(perm, NI, res->inds, starid, sizeof(int));
+	// CHECK
+	/*{
+		printf("sorted by sweep:");
+		for (i=0; i<NI; i++) {
+			printf(" %i", skdt->sweep[starid[i]]);
+		}
+		printf("\n");
+	 }*/
 
-    kdtree_free_query(res);
-    free(sweep);
-    free(perm);
+	starid = realloc(starid, NI * sizeof(int));
+	//indxyz = realloc(indxyz, NI * 3 * sizeof(double));
+	indexpix = realloc(indexpix, NI * 2 * sizeof(double));
+
+	free(sweep);
+	free(inbounds);
+
+    //debug("Found %i index stars in the field.\n", NI);
 
     *p_indexpix = indexpix;
     *p_starids = starid;

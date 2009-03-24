@@ -21,6 +21,28 @@
 
 #include "sip.h"
 
+/*
+ Finds stars that are inside the bounds of a given field (wcs).
+
+ One of "sip" or "tan" must be non-NULL; if "sip" is non-NULL it is used.
+
+ One of "xyz" or "radec" must be non-NULL.  If both are non-NULL, xyz is used.
+ "N" indicates how many elements are in these arrays.  "radec" are in degrees.
+
+ If "inds" is non-NULL, the indices of stars that are inside the field are
+ put there; otherwise a new int array is allocated and returned; it should
+ be free()'d.
+
+ The pixel (xy) positions are placed into a newly-allocated array at "xy",
+ unless "xy" is NULL.
+
+ The number of good stars is placed in Ngood, which must be non-NULL.
+ */
+int* sip_filter_stars_in_field(const sip_t* sip, const tan_t* tan,
+							   const double* xyz, const double* radec,
+							   int N,
+							   double** xy, int* inds, int* Ngood);
+
 void sip_get_radec_bounds(const sip_t* wcs, int stepsize,
                           double* pramin, double* pramax,
                           double* pdecmin, double* pdecmax);

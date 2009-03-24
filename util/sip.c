@@ -199,8 +199,7 @@ bool sip_xyzarr2pixelxy(const sip_t* sip, const double* xyz, double *px, double 
 }
 
 // xyz unit vector to Pixels.
-bool   tan_xyzarr2pixelxy(const tan_t* tan, double* xyzpt, double *px, double *py)
-{
+bool   tan_xyzarr2pixelxy(const tan_t* tan, const double* xyzpt, double *px, double *py) {
 	double x,y,U,V;
 	double xyzcrval[3];
 	double cdi[2][2];

@@ -9,7 +9,7 @@ if __name__ == '__main__':
 	utildir = sys.path[0]
 	assert(os.path.basename(utildir) == 'util')
 	andir = os.path.dirname(utildir)
-	assert(os.path.basename(andir) == 'astrometry')
+	#assert(os.path.basename(andir) == 'astrometry')
 	rootdir = os.path.dirname(andir)
 	# Here we put the "astrometry" and "astrometry/.." directories at the front
 	# of the path: astrometry to pick up pyfits, and .. to pick up astrometry itself.
@@ -40,18 +40,18 @@ def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 		# characters to '_'
 		hdr = hdu.header
 		cards = hdr.ascardlist()
-		# allowed charactors (FITS standard section 5.1.2.1)
+		# allowed characters (FITS standard section 5.1.2.1)
 		pat = re.compile(r'[^A-Z0-9_\-]')
-		for c in cards.keys():
+		for k in cards.keys():
 			# new keyword:
-			cnew = pat.sub('_', c)
-			if (c != cnew):
+			knew = pat.sub('_', k)
+			if k != knew:
 				if verbose:
-					print 'Replacing illegal keyword ', c, ' by ', cnew
+					print 'Replacing illegal keyword ', k, ' by ', knew
 				# add the new header card
-				hdr.update(cnew, cards[c].value, cards[c].comment, after=c)
+				hdr.update(knew, cards[k].value, cards[k].comment, after=k)
 				# remove the old one.
-				del hdr[c]
+				del hdr[k]
 
 		# Fix input header
 		hdu.verify('fix')
