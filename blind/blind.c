@@ -932,9 +932,9 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 
 	cleanup:
         starxy_free(sp->fieldxy);
+		sp->fieldxy = NULL;
 	}
 
-    sp->fieldxy = NULL;
 }
 
 static bool is_field_solved(blind_t* bp, int fieldnum) {
