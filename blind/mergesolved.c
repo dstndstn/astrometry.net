@@ -96,12 +96,9 @@ int main(int argc, char** args) {
 			solved[il_get(slist, j)] = (char)1;
 		il_free(slist);
 	}
-	for (i=0; i<N; i++) {
-		if (solved[i])
-			if (solvedfile_set(outfile, i)) {
-				fprintf(stderr, "Failed to set value in output file.\n");
-				exit(-1);
-			}
+	if (solvedfile_set_array(outfile, solved, N)) {
+		fprintf(stderr, "Failed to set values in output file.\n");
+		exit(-1);
 	}
 
 	free(solved);

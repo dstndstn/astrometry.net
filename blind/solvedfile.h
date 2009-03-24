@@ -20,6 +20,14 @@
 #define SOLVEDFILE_H
 
 #include "bl.h"
+#include "an-bool.h"
+
+/**
+ All field numbers are 1-indexed.
+
+ The solvedfiles themselves are 0-indexed, but this module handles
+ that.
+ */
 
 int solvedfile_get(char* fn, int fieldnum);
 
@@ -38,6 +46,14 @@ il* solvedfile_getall(char* fn, int firstfield, int lastfield, int maxfields);
 il* solvedfile_getall_solved(char* fn, int firstfield, int lastfield, int maxfields);
 
 int solvedfile_set(char* fn, int fieldnum);
+
+/*
+ Set an array of fields.  Note that the "vals" array is 0-indexed;
+ vals[0] corresponds to field 1.
+ This *only sets* elements, it does *not* reset (clear) values in
+ the file.
+ */
+int solvedfile_set_array(char* fn, bool* vals, int N);
 
 int solvedfile_setsize(char* fn, int fieldnum);
 

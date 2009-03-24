@@ -197,6 +197,45 @@ int solvedfile_setsize(char* fn, int sz) {
 	return 0;
 }
 
+int solvedfile_set_array(char* fn, bool* vals, int N) {
+	int f;
+	unsigned char val;
+	off_t off;
+	int i;
+
+	solvedfile_setsize(fn, N);
+
+#if defined(__APPLE__)
+    // MacOS 10.3 with gcc 3.3 doesn't have O_SYNC.
+    #define O_SYNC 0
+#endif
+
+	// (file mode 777; umask will modify this, if set).
+	f = open(fn, O_WRONLY | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG | S_IRWXO);
+	if (f == -1) {
+		fprintf(stderr, "Error: failed to open file %s for writing: %s\n",
+				fn, strerror(errno));
+		return -1;
+	}
+	val = 1;
+	for (i=0; i<N; i++) {
+		if (!vals[i])
+			continue;
+		if ((lseek(f, (off_t)i, SEEK_SET) == -1) ||
+			(write(f, &val, 1) != 1)) {
+			fprintf(stderr, "Error: seeking or writing file %s: %s\n",
+					fn, strerror(errno));
+			return -1;
+		}
+	}
+	if (close(f)) {
+		fprintf(stderr, "Error closing file %s: %s\n",
+				fn, strerror(errno));
+		return -1;
+	}
+	return 0;
+}
+
 int solvedfile_set(char* fn, int fieldnum) {
 	int f;
 	unsigned char val;
