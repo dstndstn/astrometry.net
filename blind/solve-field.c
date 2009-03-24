@@ -435,8 +435,6 @@ int main(int argc, char** args) {
     bool verbose = FALSE;
     int loglvl = LOG_MSG;
     char* outbase = NULL;
-    char* solvedin = NULL;
-    char* solvedindir = NULL;
 	bool usecurl = TRUE;
     bl* opts;
     augment_xylist_t theallaxy;
@@ -751,6 +749,9 @@ int main(int argc, char** args) {
                 downloadfn = sl_appendf(outfiles, "%s", base);
         }
 
+        if (axy->solvedinfn)
+            asprintf(&axy->solvedinfn, axy->solvedinfn, base);
+
         // Do %s replacement on --verify-wcs entries...
         if (sl_size(axy->verifywcs)) {
             sl* newlist = sl_new(4);
@@ -759,17 +760,6 @@ int main(int argc, char** args) {
             axy->verifywcs = newlist;
         }
 
-        if (solvedin || solvedindir) {
-            char* dir = (solvedindir ? solvedindir : basedir);
-            if (solvedin) {
-                // "solvedin" might contain "%s"...
-                char* tmpstr;
-                asprintf(&tmpstr, "%s/%s", dir, solvedin);
-                asprintf(&axy->solvedinfn, tmpstr, base);
-                free(tmpstr);
-            } else
-                asprintf(&axy->solvedinfn, dir, axy->solvedfn);
-        }
         if (axy->solvedinfn && axy->solvedfn && (strcmp(axy->solvedfn, axy->solvedinfn) == 0)) {
             // solved input and output files are the same: don't delete the input!
             sl_remove_string(outfiles, axy->solvedfn);
@@ -1045,7 +1035,7 @@ int main(int argc, char** args) {
     nextfile:        
 		free(base);
         free(axy->fitsimgfn);
-        //free(axy->solvedinfn);
+        free(axy->solvedinfn);
 		for (i=0; i<sl_size(tempfiles); i++) {
 			char* fn = sl_get(tempfiles, i);
 			if (unlink(fn))
