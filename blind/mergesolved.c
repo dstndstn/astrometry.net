@@ -23,6 +23,7 @@
 
 #include "boilerplate.h"
 #include "solvedfile.h"
+#include "an-bool.h"
 
 const char* OPTIONS = "ho:e";
 
@@ -44,7 +45,7 @@ int main(int argc, char** args) {
 	int i;
 	char* outfile = NULL;
 	int N;
-	char* solved;
+	bool* solved;
 	int noerr = 0;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1) {
@@ -86,14 +87,14 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 
-	solved = calloc(N, 1);
+	solved = calloc(N, sizeof(bool));
 	
 	for (i=0; i<ninputfiles; i++) {
 		il* slist;
 		int j;
 		slist = solvedfile_getall_solved(inputfiles[i], 1, N, 0);
 		for (j=0; j<il_size(slist); j++)
-			solved[il_get(slist, j)] = (char)1;
+			solved[il_get(slist, j) - 1] = TRUE;
 		il_free(slist);
 	}
 	if (solvedfile_set_array(outfile, solved, N)) {
