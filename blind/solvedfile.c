@@ -200,7 +200,6 @@ int solvedfile_setsize(char* fn, int sz) {
 int solvedfile_set_array(char* fn, bool* vals, int N) {
 	int f;
 	unsigned char val;
-	off_t off;
 	int i;
 
 	solvedfile_setsize(fn, N);
