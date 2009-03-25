@@ -87,16 +87,17 @@ void verify_field_free(verify_field_t* vf) {
     return;
 }
 
-static int get_index_stars(const double* fieldcenter, double fieldr2,
-                           const startree_t* skdt, const sip_t* sip, const tan_t* tan,
-                           double fieldW, double fieldH,
-                           double** p_indexpix, int** p_starids, int* p_nindex) {
+void verify_get_index_stars(const double* fieldcenter, double fieldr2,
+							const startree_t* skdt, const sip_t* sip, const tan_t* tan,
+							double fieldW, double fieldH,
+							double** p_indexradec,
+							double** indexpix, int** p_starids, int* p_nindex) {
 	double* indxyz;
-	double* indexpix;
     int i, N, NI;
     int* sweep;
     int* starid;
 	int* inbounds;
+	int* perm;
 
 	assert(skdt->sweep);
 
@@ -104,54 +105,47 @@ static int get_index_stars(const double* fieldcenter, double fieldr2,
 	startree_search_for(skdt, fieldcenter, fieldr2, &indxyz, NULL, &starid, &N);
 
 	// Find index stars within the rectangular field.
-	inbounds = sip_filter_stars_in_field(sip, tan, indxyz, NULL, N, &indexpix,
+	inbounds = sip_filter_stars_in_field(sip, tan, indxyz, NULL, N, indexpix,
 										 NULL, &NI);
-	/* could apply the permutation now, or after the sweep sort.
-	 permutation_apply(inbounds, NI, indxyz, indxyz, 3 * sizeof(double));
-	 ...
-	 */
+	// Apply the permutation now, so that "indexpix" and "starid" stay in sync:
+	// indexpix is already in the "inbounds" ordering.
+	permutation_apply(inbounds, NI, starid, starid, sizeof(int));
 
+	// Compute index RA,Decs if requested.
+	if (p_indexradec) {
+		double* radec = malloc(2 * NI * sizeof(double));
+		for (i=0; i<NI; i++)
+			// note that the "inbounds" permutation is applied to "indxyz" here.
+			xyzarr2radecdegarr(indxyz + 3*inbounds[i], radec + 2*i);
+		*p_indexradec = radec;
+	}
 	free(indxyz);
+	free(inbounds);
 
     // Each index star has a "sweep number" assigned during index building;
     // it roughly represents a local brightness ordering.  Use this to sort the
 	// index stars.
-	// Note: here we grab all N, rather than NI, in order to avoid having to
-	// permuting the arrays multiple times; in the permuted_sort call we start with
-	// the "inbounds" array.
-	sweep = malloc(N * sizeof(int));
-	for (i=0; i<N; i++)
+	sweep = malloc(NI * sizeof(int));
+	for (i=0; i<NI; i++)
 		sweep[i] = skdt->sweep[starid[i]];
-
-    permuted_sort(sweep, sizeof(int), compare_ints_asc, inbounds, NI);
-
-	//permutation_apply(inbounds, NI, indxyz, indxyz, 3 * sizeof(double));
-    permutation_apply(inbounds, NI, starid, starid, sizeof(int));
-    permutation_apply(inbounds, NI, indexpix, indexpix, 2 * sizeof(double));
-
-	// CHECK
-	/*{
-		printf("sorted by sweep:");
-		for (i=0; i<NI; i++) {
-			printf(" %i", skdt->sweep[starid[i]]);
-		}
-		printf("\n");
-	 }*/
-
-	starid = realloc(starid, NI * sizeof(int));
-	//indxyz = realloc(indxyz, NI * 3 * sizeof(double));
-	indexpix = realloc(indexpix, NI * 2 * sizeof(double));
-
+    perm = permuted_sort(sweep, sizeof(int), compare_ints_asc, NULL, NI);
 	free(sweep);
-	free(inbounds);
 
-    //debug("Found %i index stars in the field.\n", NI);
+	if (indexpix) {
+		permutation_apply(perm, NI, *indexpix, *indexpix, 2 * sizeof(double));
+		*indexpix = realloc(*indexpix, NI * 2 * sizeof(double));
+	}
 
-    *p_indexpix = indexpix;
-    *p_starids = starid;
+	if (p_starids) {
+		permutation_apply(perm, NI, starid, starid, sizeof(int));
+		starid = realloc(starid, NI * sizeof(int));
+		*p_starids = starid;
+	} else
+		free(starid);
+
+	free(perm);
+
     *p_nindex = NI;
-
-    return 0;
 }
 
 //static void trim_index_stars()
@@ -274,8 +268,9 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
     debug("Field center %g,%g,%g, radius2 %g\n", fieldcenter[0], fieldcenter[1], fieldcenter[2], fieldr2);
 
     // find index stars and project them into pixel coordinates.
-    if (get_index_stars(fieldcenter, fieldr2, skdt, sip, &(mo->wcstan),
-                        fieldW, fieldH, &indexpix, &starids, &NI)) {
+    verify_get_index_stars(fieldcenter, fieldr2, skdt, sip, &(mo->wcstan),
+						   fieldW, fieldH, NULL, &indexpix, &starids, &NI);
+	if (!NI) {
 		// I don't know HOW this happens - at the very least, the four stars
 		// belonging to the quad that generated this hit should lie in the
 		// proposed field - but I've seen it happen!

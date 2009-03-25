@@ -760,7 +760,7 @@ int main(int argc, char** args) {
             axy->verifywcs = newlist;
         }
 
-        if (axy->solvedinfn && axy->solvedfn && (strcmp(axy->solvedfn, axy->solvedinfn) == 0)) {
+        if (axy->solvedinfn && axy->solvedfn && streq(axy->solvedfn, axy->solvedinfn)) {
             // solved input and output files are the same: don't delete the input!
             sl_remove_string(outfiles, axy->solvedfn);
             free(axy->solvedfn);

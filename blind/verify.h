@@ -70,4 +70,10 @@ verify_field_t* verify_field_preprocess(const starxy_t* fieldxy);
 
 void verify_field_free(verify_field_t* vf);
 
+void verify_get_index_stars(const double* fieldcenter, double fieldr2,
+							const startree_t* skdt, const sip_t* sip, const tan_t* tan,
+							double fieldW, double fieldH,
+							double** p_indexradec,
+							double** p_indexpix, int** p_starids, int* p_nindex);
+
 #endif

@@ -659,16 +659,15 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
     mo->index_jitter = sp->index->meta.index_jitter;
 
     if (bp->do_tweak || bp->indexrdlsfname || bp->scamp_fname) {
-        // Gather stars that are within range.
-        double* radec = NULL;
         int nstars;
-        double rad2, safety;
+        double* radec = NULL;
 
-        // add a small margin.
-        safety = 1.05;
-        rad2 = square(safety * mo->radius);
-
-        startree_search(sp->index->starkd, mo->center, rad2, NULL, &radec, &nstars);
+		// FIXME - hmm, for tweak you *might* want to keep index
+		// objects slightly outside the field.
+		verify_get_index_stars(mo->center, square(mo->radius),
+							   sp->index->starkd, NULL, &(mo->wcstan),
+							   mo->wcstan.imagew, mo->wcstan.imageh,
+							   &radec, NULL, NULL, &nstars);
 
         if (bp->do_tweak)
             mo->sip = tweak(bp, &(mo->wcstan), radec, nstars);
@@ -677,12 +676,11 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
         if (bp->indexrdlsfname || bp->scamp_fname) {
             // steal this array...
             mo->indexrdls = radec;
-            radec = NULL;
             mo->nindexrdls = nstars;
-        }
-
-        free(radec);
-    }
+        } else {
+			free(radec);
+		}
+	}
 
     ind = bl_insert_sorted(bp->solutions, mo, compare_matchobjs);
     ourmo = bl_access(bp->solutions, ind);
