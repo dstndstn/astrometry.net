@@ -210,12 +210,18 @@ int main(int argc, char *argv[]) {
 	fprintf(stderr, "Writing output to %s ...\n", treefname);
 	fflush(stderr);
     hdr = startree_header(starkd);
-	fits_header_add_int(hdr, "NLEAF", Nleaf, "Target number of points in leaves.");
-	fits_header_add_int(hdr, "KEEP", nkeep, "Number of stars kept (0=no limit).");
 	fits_copy_header(catheader, hdr, "HEALPIX");
 	fits_copy_header(catheader, hdr, "HPNSIDE");
 	fits_copy_header(catheader, hdr, "ALLSKY");
 	fits_copy_header(catheader, hdr, "JITTER");
+	fits_copy_header(catheader, hdr, "CUTNSIDE");
+	fits_copy_header(catheader, hdr, "CUTMARG");
+	fits_copy_header(catheader, hdr, "CUTBAND");
+	fits_copy_header(catheader, hdr, "CUTDEDUP");
+	fits_copy_header(catheader, hdr, "CUTNSWEP");
+	fits_copy_header(catheader, hdr, "CUTMINMG");
+	fits_copy_header(catheader, hdr, "CUTMAXMG");
+
 	boilerplate_add_fits_headers(hdr);
 	qfits_header_add(hdr, "HISTORY", "This file was created by the program \"startree\".", NULL, NULL);
 	qfits_header_add(hdr, "HISTORY", "startree command line:", NULL, NULL);

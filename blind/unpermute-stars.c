@@ -210,6 +210,14 @@ int main(int argc, char **args) {
 	fits_copy_header(startree_header(treein), startree_header(treeout), "HPNSIDE");
 	fits_copy_header(startree_header(treein), startree_header(treeout), "ALLSKY");
 	fits_copy_header(startree_header(treein), startree_header(treeout), "JITTER");
+	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTNSIDE");
+	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTMARG");
+	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTBAND");
+	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTDEDUP");
+	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTNSWEP");
+	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTMINMG");
+	fits_copy_header(startree_header(treein), startree_header(treeout), "CUTMAXMG");
+
 	qfits_header_add(startree_header(treeout), "HISTORY", "unpermute-stars command line:", NULL, NULL);
 	fits_add_args(startree_header(treeout), args, argc);
 	qfits_header_add(startree_header(treeout), "HISTORY", "(end of unpermute-stars command line)", NULL, NULL);

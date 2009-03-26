@@ -179,7 +179,7 @@ gnu-specific-config.h: gnu-specific-test.c
 	  ./gnu-specific-test-swap-qsort) \
 	|| echo "#define NEED_SWAP_QSORT_R 0") \
 	; \
-	echo) > $@ 2> gnu-specific-tests.stderr
+	echo) | grep -v "Segmentation" > $@
 
 ALL_OBJ += gnu-specific.o
 ALL_TARGETS := gnu-specific-test.o \
