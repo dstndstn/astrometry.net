@@ -218,7 +218,7 @@ static void get_cut_params(index_t* index) {
 				meta->cutdedup = i500dd[i];
 			if (meta->cutmargin == 0)
 				meta->cutmargin = 5;
-			if (meta->cutband == 0)
+			if (!meta->cutband)
 				meta->cutband = strdup("R");
 		}
 	}
