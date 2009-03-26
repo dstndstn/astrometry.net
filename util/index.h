@@ -26,7 +26,7 @@
 
 /*
  * These routines handle loading of index files, which can consist of
- * several files rather (.skdt.fits , .ckdt.fits, .quad.fits), or a
+ * several files (.skdt.fits , .ckdt.fits, .quad.fits), or a
  * single large file (.fits).
  */
 
@@ -42,6 +42,13 @@ struct index_meta_s {
 
 	// Jitter in the index, in arcseconds.
 	double index_jitter;
+
+	// cut-an parameters:
+	int cutnside;
+	int cutnsweep;
+	double cutdedup;
+	char* cutband;
+	int cutmargin;
 
 	// Does the index have the CIRCLE header - (codes live in the circle, not the box)?
 	bool circle;

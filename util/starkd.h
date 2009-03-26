@@ -65,6 +65,7 @@ void startree_search(const startree_t* s, const double* xyzcenter, double radius
  */
 // healpix nside, or -1
 int startree_get_cut_nside(const startree_t* s);
+int startree_get_cut_nsweeps(const startree_t* s);
 // in arcsec; 0 if none.
 double startree_get_cut_dedup(const startree_t* s);
 // band (one of several static strings), or NULL
@@ -72,6 +73,7 @@ char* startree_get_cut_band(const startree_t* s);
 // margin, in healpix, or -1
 int startree_get_cut_margin(const startree_t* s);
 
+double startree_get_jitter(const startree_t* s);
 
 
 uint64_t startree_get_starid(const startree_t* s, int ind);

@@ -181,6 +181,22 @@ int index_get_meta(const char* filename, index_meta_t* meta) {
     return 0;
 }
 
+static void get_cut_params(index_t* index) {
+	index_meta_t* meta = &(index->meta);
+	meta->index_jitter = startree_get_jitter(index->starkd);
+	if (meta->index_jitter == 0.0)
+		meta->index_jitter = DEFAULT_INDEX_JITTER;
+
+	meta->cutnside = startree_get_cut_nside(index->starkd);
+	meta->cutnsweep = startree_get_cut_nsweeps(index->starkd);
+	meta->cutdedup = startree_get_cut_dedup(index->starkd);
+	meta->cutband = strdup(startree_get_cut_band(index->starkd));
+	meta->cutmargin = startree_get_cut_margin(index->starkd);
+
+	// FIXME -- fill in known values for old index files that are missing these headers??
+	// ticket:839
+}
+
 index_t* index_load(const char* indexname, int flags) {
     struct timeval tv1, tv2;
 
@@ -211,7 +227,8 @@ index_t* index_load(const char* indexname, int flags) {
 	}
 	free(startreefname);
     startreefname = NULL;
-	index->meta.index_jitter = qfits_header_getdouble(index->starkd->header, "JITTER", DEFAULT_INDEX_JITTER);
+
+	get_cut_params(index);
 
 	if (flags & INDEX_ONLY_LOAD_SKDT)
 		return index;
@@ -285,6 +302,7 @@ index_t* index_load(const char* indexname, int flags) {
 void index_close(index_t* index) {
 	if (!index) return;
 	free(index->meta.indexname);
+	free(index->meta.cutband);
 	if (index->starkd)
 		startree_close(index->starkd);
 	if (index->codekd)

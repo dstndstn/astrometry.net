@@ -291,6 +291,10 @@ int startree_get_cut_nside(const startree_t* s) {
 	return qfits_header_getint(s->header, "CUTNSIDE", -1);
 }
 
+int startree_get_cut_nsweeps(const startree_t* s) {
+	return qfits_header_getint(s->header, "CUTNSWEP", -1);
+}
+
 double startree_get_cut_dedup(const startree_t* s) {
 	return qfits_header_getdouble(s->header, "CUTDEDUP", 0.0);
 }
@@ -315,6 +319,11 @@ char* startree_get_cut_band(const startree_t* s) {
 int startree_get_cut_margin(const startree_t* s) {
 	return qfits_header_getint(s->header, "CUTMARG", -1);
 }
+
+double startree_get_jitter(const startree_t* s) {
+	return qfits_header_getdouble(s->header, "JITTER", 0.0);
+}
+
 
 /*
  int startree_get_sweep(const startree_t* s, int ind) {
