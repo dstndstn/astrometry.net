@@ -581,6 +581,8 @@ int main(int argc, char** args) {
 	qfits_header_add(catheader, "CUTBAND", cutband, "cut-an: band on which the cut was made", NULL);
 	fits_header_add_double(catheader, "CUTDEDUP", deduprad, "cut-an: deduplication radius [arcsec]");
 	fits_header_add_int(catheader, "CUTNSWEP", sweeps, "cut-an: number of sweeps");
+	fits_header_add_double(catheader, "CUTMINMG", minmag, "cut-an: minimum magnitude");
+	fits_header_add_double(catheader, "CUTMAXMG", maxmag, "cut-an: maximum magnitude");
 
 	// add placeholders...
 	for (k=0; k< (sweeps ? sweeps : 100); k++) {
