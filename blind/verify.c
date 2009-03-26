@@ -373,7 +373,7 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
 		sigma2 = sigma2s[fldind];
 
         if (log((1.0 - distractors) / (2.0 * M_PI * sigma2 * NF)) < logprob_background) {
-            debug("This Gaussian is nearly uninformative.\n");
+            debug("This Gaussian is uninformative.\n");
             continue;
         }
 
@@ -385,7 +385,6 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
         } else {
             double oldprob;
             debug("Match (field star %i), logprob %g (background=%g, distractor=%g)\n", fldind, logprob, logprob_background, logprob_distractor);
-            logprob = log(exp(logprob) + distractors/(fieldW*fieldH));
 
             oldprob = bestprob[fldind];
             if (oldprob != -HUGE_VAL) {
@@ -399,15 +398,18 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
                 // Allow an improved match (except to the stars composing the quad, because they are initialized to HUGE_VAL)
                 if (logprob > oldprob) {
                     int ind;
-                    oldprob = logprob;
-                    logodds += (logprob - oldprob);
+					// The old match becomes a distractor.
+                    logodds += (logprob_distractor - oldprob);
                     bestprob[fldind] = logprob;
                     // Replace the correspondence.
                     ind = il_index_of(corr_field, fldind);
                     il_set(corr_index, ind, starid);
-                }
-                continue;
+                } else {
+					// This match must be counted as a distractor.
+					logprob = logprob_distractor;
+				}
             } else {
+				// new match.
                 bestprob[fldind] = logprob;
                 nmatch++;
                 il_append(corr_field, fldind);

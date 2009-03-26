@@ -477,7 +477,7 @@ int main(int argc, char** args) {
 
 	HP = 12L * (int64_t)Nside * (int64_t)Nside;
 
-	logmsg("Nside=%i, HP=%lli, sweeps=%i, max number of stars = HP*sweeps = %lli.\n", Nside, HP, sweeps, HP*sweeps);
+	logmsg("Nside=%i, HP=%lli, sweeps=%i, max number of stars = HP*sweeps = %lli.\n", Nside, (long long int)HP, sweeps, (long long int)HP*sweeps);
 	logmsg("Healpix side length: %g arcmin.\n", healpix_side_length_arcmin(Nside));
 
 	if (allsky) {

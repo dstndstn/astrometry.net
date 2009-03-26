@@ -104,13 +104,13 @@ char* index_get_qidx_filename(const char* indexname) {
     get_filenames(indexname, &quadfn, NULL, NULL, &singlefile);
     if (singlefile) {
         if (ends_with(quadfn, ".fits")) {
-            asprintf(&qidxfn, "%.*s.qidx.fits", strlen(quadfn)-5, quadfn);
+            asprintf(&qidxfn, "%.*s.qidx.fits", (int)(strlen(quadfn)-5), quadfn);
         } else {
             asprintf(&qidxfn, "%s.qidx.fits", quadfn);
         }
     } else {
         if (ends_with(quadfn, ".quad.fits")) {
-            asprintf(&qidxfn, "%.*s.qidx.fits", strlen(quadfn)-10, quadfn);
+            asprintf(&qidxfn, "%.*s.qidx.fits", (int)(strlen(quadfn)-10), quadfn);
         } else {
             asprintf(&qidxfn, "%s.qidx.fits", quadfn);
         }

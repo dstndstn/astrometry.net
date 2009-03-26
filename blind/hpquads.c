@@ -821,7 +821,8 @@ int main(int argc, char** argv) {
 
 	HEALPIXES = 12L * (int64_t)Nside * (int64_t)Nside;
 	printf("Nside=%i.  Nside^2=%lli.  Number of healpixes=%lli.  Healpix side length ~ %g arcmin.\n",
-		   Nside, (int64_t)Nside*(int64_t)Nside, HEALPIXES, healpix_side_length_arcmin(Nside));
+		   Nside, (long long int)((int64_t)Nside*(int64_t)Nside),
+		   (long long int)HEALPIXES, healpix_side_length_arcmin(Nside));
 
 	tic();
 
