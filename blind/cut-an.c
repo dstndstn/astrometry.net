@@ -483,21 +483,7 @@ int main(int argc, char** args) {
         int ninside;
 
         healpix_decompose_xyl(bighp, &bigbighp, &bighpx, &bighpy, bignside);
-
 		owned = ll_new(256);
-
-		/*
-		 for (i=0; i<(Nside / bignside); i++) {
-		 for (k=0; k<(Nside / bignside); k++) {
-		 int xx = i + bighpx * (Nside / bignside);
-		 int yy = k + bighpy * (Nside / bignside);
-		 hp = healpix_compose_xyl(bigbighp, xx, yy, Nside);
-		 ll_insert_unique_ascending(owned, hp);
-		 }
-		 }
-		 ninside = ll_size(owned);
-		 logmsg("Number of fine healpixes owned: %i\n", ninside);
-		 */
 		ninside = (Nside/bignside)*(Nside/bignside);
 
         //write_radeclist(owned, Nside, "step0.rdls");
@@ -519,16 +505,12 @@ int main(int argc, char** args) {
             assert(y1 < Nside);
 
 			hp = healpix_compose_xyl(bigbighp, xx, y0, Nside);
-            //assert(ll_sorted_contains(owned, hp));
 			ll_append(q, hp);
 			hp = healpix_compose_xyl(bigbighp, xx, y1, Nside);
-            //assert(ll_sorted_contains(owned, hp));
 			ll_append(q, hp);
 			hp = healpix_compose_xyl(bigbighp, x0, yy, Nside);
-            //assert(ll_sorted_contains(owned, hp));
 			ll_append(q, hp);
 			hp = healpix_compose_xyl(bigbighp, x1, yy, Nside);
-            //assert(ll_sorted_contains(owned, hp));
 			ll_append(q, hp);
 		}
         logmsg("Number of boundary healpixes on the primed queue: %i\n",
@@ -560,12 +542,6 @@ int main(int argc, char** args) {
 				}
 			}
 			ll_remove_index_range(q, 0, Q);
-
-            /*
-             char fn[16];
-             sprintf(fn, "step%02i.rdls", k+1);
-             write_radeclist(owned, Nside, fn);
-             */
 		}
 		ll_free(q);
 
@@ -962,8 +938,6 @@ int main(int argc, char** args) {
 			break;
 	}
 	logmsg("Made %i sweeps through the healpixes.\n", k);
-
-	///////////// FIXME!!! //////////////
 
 	free(sweeplist);
 	starlists_free(starlists);
