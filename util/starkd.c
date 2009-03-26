@@ -28,6 +28,8 @@
 #include "errors.h"
 #include "tic.h"
 #include "log.h"
+#include "ioutils.h"
+#include "fitsioutils.h"
 
 static startree_t* startree_alloc() {
 	startree_t* s = calloc(1, sizeof(startree_t));
@@ -91,19 +93,19 @@ void startree_search(const startree_t* s, const double* xyzcenter, double radius
 	startree_search_for(s, xyzcenter, radius2, xyzresults, radecresults, NULL, nresults);
 }
 
-int startree_N(startree_t* s) {
+int startree_N(const startree_t* s) {
 	return s->tree->ndata;
 }
 
-int startree_nodes(startree_t* s) {
+int startree_nodes(const startree_t* s) {
 	return s->tree->nnodes;
 }
 
-int startree_D(startree_t* s) {
+int startree_D(const startree_t* s) {
 	return s->tree->ndim;
 }
 
-qfits_header* startree_header(startree_t* s) {
+qfits_header* startree_header(const startree_t* s) {
 	return s->header;
 }
 
@@ -249,7 +251,7 @@ startree_t* startree_open(char* fn) {
 	return NULL;
 }
 
-uint64_t startree_get_starid(startree_t* s, int ind) {
+uint64_t startree_get_starid(const startree_t* s, int ind) {
     if (!s->starids)
         return 0;
     return s->starids[ind];
@@ -271,7 +273,7 @@ int startree_close(startree_t* s) {
 	return 0;
 }
 
-static int Ndata(startree_t* s) {
+static int Ndata(const startree_t* s) {
 	return s->tree->ndata;
 }
 
@@ -284,6 +286,43 @@ void startree_compute_inverse_perm(startree_t* s) {
 	}
 	kdtree_inverse_permutation(s->tree, s->inverse_perm);
 }
+
+int startree_get_cut_nside(const startree_t* s) {
+	return qfits_header_getint(s->header, "CUTNSIDE", -1);
+}
+
+double startree_get_cut_dedup(const startree_t* s) {
+	return qfits_header_getdouble(s->header, "CUTDEDUP", 0.0);
+}
+
+char* startree_get_cut_band(const startree_t* s) {
+	static char* bands[] = { "R", "B", "J" };
+	int i;
+	char* str = fits_get_dupstring(s->header, "CUTBAND");
+	char* rtn = NULL;
+	if (!str)
+		return NULL;
+	for (i=0; i<sizeof(bands) / sizeof(char*); i++) {
+		if (streq(str, bands[i])) {
+			rtn = bands[i];
+			break;
+		}
+	}
+	free(str);
+	return rtn;
+}
+
+int startree_get_cut_margin(const startree_t* s) {
+	return qfits_header_getint(s->header, "CUTMARG", -1);
+}
+
+/*
+ int startree_get_sweep(const startree_t* s, int ind) {
+ if (ind < 0 || ind >= Ndata(s) || !s->sweep)
+ return -1;
+ return s->sweep[ind];
+ }
+ */
 
 int startree_get(startree_t* s, int starid, double* posn) {
 	if (s->tree->perm && !s->inverse_perm) {
