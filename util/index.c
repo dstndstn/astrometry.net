@@ -193,8 +193,36 @@ static void get_cut_params(index_t* index) {
 	meta->cutband = strdup(startree_get_cut_band(index->starkd));
 	meta->cutmargin = startree_get_cut_margin(index->starkd);
 
-	// FIXME -- fill in known values for old index files that are missing these headers??
-	// ticket:839
+	// HACK - fill in values that are missing in old index files.
+	{
+		// The 200-series and 500-series have the same params:
+		int i500hp[] = { 1760, 1245, 880, 622, 440, 312, 220, 156, 110, 78,
+						 55, 39, 28, 20, 14, 10, 7, 5, 4, 3 };
+		int i500n[] = { 6, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+						9, 9, 9, 9, 9, 9, 9, 9, 9, 9 };
+		double i500dd[] = { 8, 8, 8, 8, 8, 9.6, 13.2, 18.0, 25.2, 36,
+							51, 72, 102, 144, 204, 288, 408, 600, 840, 1200 };
+		int id, i = -1;
+
+		id = meta->indexid;
+		if ((id >= 200 && id < 220) ||
+			(id >= 500 && id < 520)) {
+			i = id % 100;
+		}
+		if (i >= 0) {
+			if (meta->cutnside == 0)
+				meta->cutnside = i500hp[i];
+			if (meta->cutnsweep == 0)
+				meta->cutnsweep = i500n[i];
+			if (meta->cutdedup == 0)
+				meta->cutdedup = i500dd[i];
+			if (meta->cutmargin == 0)
+				meta->cutmargin = 5;
+			if (meta->cutband == 0)
+				meta->cutband = strdup("R");
+		}
+	}
+
 }
 
 index_t* index_load(const char* indexname, int flags) {
@@ -228,8 +256,6 @@ index_t* index_load(const char* indexname, int flags) {
 	free(startreefname);
     startreefname = NULL;
 
-	get_cut_params(index);
-
 	if (flags & INDEX_ONLY_LOAD_SKDT)
 		return index;
 
@@ -253,6 +279,10 @@ index_t* index_load(const char* indexname, int flags) {
 	index->meta.dimquads = index->quads->dimquads;
 	index->meta.nquads = index->quads->numquads;
 	index->meta.nstars = index->quads->numstars;
+
+	// This must get called after meta.indexid is set: otherwise we won't be
+	// able to fill in values that are missing in old index files.
+	get_cut_params(index);
 
 	logverb("Index scale: [%g, %g] arcmin, [%g, %g] arcsec\n",
             index->meta.index_scale_lower / 60.0, index->meta.index_scale_upper / 60.0,
