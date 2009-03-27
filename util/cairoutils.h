@@ -60,6 +60,13 @@ const char* cairoutils_get_color_name(int i);
 
 int cairoutils_parse_marker(const char* name);
 
+#define CAIROUTIL_MARKER_CIRCLE 0
+#define CAIROUTIL_MARKER_CROSSHAIR 1
+#define CAIROUTIL_MARKER_SQUARE 2
+#define CAIROUTIL_MARKER_DIAMOND 3
+#define CAIROUTIL_MARKER_X 4
+#define CAIROUTIL_MARKER_XCROSSHAIR 5
+
 void cairoutils_draw_marker(cairo_t* cairo, int id, double x, double y, double radius);
 
 const char* cairoutils_get_marker_name(int i);

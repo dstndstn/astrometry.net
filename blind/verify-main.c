@@ -129,7 +129,7 @@ int main(int argc, char** args) {
     pix2 += square(index->meta.index_jitter / mo->scale);
 
     mo->logodds = 0.0;
-	verify_hit(index->starkd, mo, NULL, vf,
+	verify_hit(index, mo, NULL, vf,
 			   pix2, distractors, fieldW, fieldH,
 			   logbail, growvariance,
 			   index_get_quad_dim(index), fake);
