@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <sys/param.h>
 
-#include "verify.h"
+#include "verify2.h"
 #include "permutedsort.h"
 #include "mathutil.h"
 #include "keywords.h"

@@ -23,7 +23,7 @@
 #include "matchfile.h"
 #include "matchobj.h"
 #include "index.h"
-#include "verify.h"
+#include "verify2.h"
 #include "xylist.h"
 #include "log.h"
 #include "errors.h"
