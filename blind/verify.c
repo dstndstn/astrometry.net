@@ -100,6 +100,8 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 	int* perm;
 
 	assert(skdt->sweep);
+	assert(p_nindex);
+	assert(sip || tan);
 
 	// Find all index stars within the bounding circle of the field.
 	startree_search_for(skdt, fieldcenter, fieldr2, &indxyz, NULL, &starid, &N);

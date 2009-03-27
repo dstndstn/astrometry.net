@@ -190,7 +190,7 @@ static void get_cut_params(index_t* index) {
 	meta->cutnside = startree_get_cut_nside(index->starkd);
 	meta->cutnsweep = startree_get_cut_nsweeps(index->starkd);
 	meta->cutdedup = startree_get_cut_dedup(index->starkd);
-	meta->cutband = strdup(startree_get_cut_band(index->starkd));
+	meta->cutband = strdup_safe(startree_get_cut_band(index->starkd));
 	meta->cutmargin = startree_get_cut_margin(index->starkd);
 
 	// HACK - fill in values that are missing in old index files.
