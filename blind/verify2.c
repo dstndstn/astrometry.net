@@ -354,6 +354,29 @@ static void add_gaussian_to_image(double* img, int W, int H,
 	
 }
 
+/*
+void verify_star_lists(double* refxy, int NR,
+					   double* testxy, double* testsigmas, int NT,
+					   int W, int H,
+					   double distractors) {
+	int i;
+	double logodds;
+	double logprob_distractor;
+	double logprob_background;
+	double matchnsigma = 5.0;
+
+	logprob_background = log(1.0 / (W * H));
+	logprob_distractor = log(distractors / (W * H));
+
+	logodds = 0.0;
+	for (i=0; i<NT; i++) {
+		testi = testxy + 2*i;
+		
+	}
+}
+ */
+
+
 void verify_hit(index_t* index,
 				MatchObj* mo, sip_t* sip, verify_field_t* vf,
                 double verify_pix2, double distractors,
@@ -461,18 +484,16 @@ void verify_hit(index_t* index,
 	double* idensity = calloc(W * H, sizeof(double));
 	double* fdensity = calloc(W * H, sizeof(double));
 
-	double iscale = 2. * sqrt((double)(W * H) / NI);
-	double fscale = 2. * sqrt((double)(W * H) / NF);
+	double iscale = 2. * sqrt((double)(W * H) / (NI * M_PI));
+	double fscale = 2. * sqrt((double)(W * H) / (NF * M_PI));
 	logverb("NI = %i; iscale = %g\n", NI, iscale);
 	logverb("NF = %i; fscale = %g\n", NF, fscale);
 	logverb("computing density images...\n");
 	for (i=0; i<NI; i++)
-		add_gaussian_to_image(idensity, W, H, indexpix[i*2 + 0], indexpix[i*2 + 1], iscale, 1.0, 3.0, 0);
-	for (i=0; i<NF; i++) {
-		double fxy[2];
-		starxy_get(vf->field, i, fxy);
-		add_gaussian_to_image(fdensity, W, H, fxy[0], fxy[1], fscale, 1.0, 3.0, 0);
-	}
+		add_gaussian_to_image(idensity, W, H, indexpix[i*2 + 0], indexpix[i*2 + 1], iscale, 1.0, 3.0, 1);
+	for (i=0; i<NF; i++)
+		add_gaussian_to_image(fdensity, W, H, starxy_getx(vf->field, i), starxy_gety(vf->field, i), fscale, 1.0, 3.0, 1);
+
 	double idmax=0, fdmax=0;
 	for (i=0; i<(W*H); i++) {
 		idmax = MAX(idmax, idensity[i]);
