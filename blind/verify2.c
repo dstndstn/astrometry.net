@@ -244,7 +244,76 @@ static void compute_sigma2s(verify_field_t* vf, MatchObj* mo,
 #include "fitsioutils.h"
 #include "errors.h"
 #include "cairoutils.h"	
-	
+
+static int get_bin(verify_field_t* vf, int starnum,
+				   double fieldW, double fieldH,
+				   int nw, int nh) {
+	double fxy[2];
+	int ix, iy;
+	starxy_get(vf->field, starnum, fxy);
+	ix = (int)floor(nw * fxy[0] / fieldW);
+	ix = MAX(0, MIN(nw-1, ix));
+	iy = (int)floor(nh * fxy[1] / fieldH);
+	iy = MAX(0, MIN(nh-1, iy));
+	return iy * nw + ix;
+}
+
+static void uniformize_field(verify_field_t* vf,
+							 double fieldW, double fieldH,
+							 int nw, int nh,
+							 int** p_perm,
+							 int** p_bincounts) {
+	il** lists;
+	int i,j,k,p;
+	int* perm;
+	int* bincounts;
+    int NF;
+
+	NF = starxy_n(vf->field);
+	perm = malloc(NF * sizeof(int));
+
+	bincounts = malloc(nw * nh * sizeof(int));
+
+	lists = malloc(nw * nh * sizeof(il*));
+	for (i=0; i<(nw*nh); i++)
+		lists[i] = il_new(16);
+
+	// put the stars in the appropriate bins.
+	for (i=0; i<NF; i++) {
+		int bin = get_bin(vf, i, fieldW, fieldH, nw, nh);
+		il_append(lists[bin], i);
+	}
+
+	// note the bin occupancies.
+	for (i=0; i<(nw*nh); i++) {
+		bincounts[i] = il_size(lists[i]);
+		logverb("bin %i has %i stars\n", i, bincounts[i]);
+	}
+
+	// make sweeps through the bins, grabbing one star from each.
+	p=0;
+	for (k=0;; k++) {
+		for (j=0; j<nh; j++) {
+			for (i=0; i<nw; i++) {
+				il* lst = lists[j*nw + i];
+				if (k >= il_size(lst))
+					continue;
+				perm[p] = il_get(lst, k);
+				p++;
+			}
+		}
+		if (p == NF)
+			break;
+	}
+
+	for (i=0; i<(nw*nh); i++)
+		il_free(lists[i]);
+	free(lists);
+
+	*p_perm = perm;
+	*p_bincounts = bincounts;
+}
+
 void verify_hit(index_t* index,
 				MatchObj* mo, sip_t* sip, verify_field_t* vf,
                 double verify_pix2, double distractors,
@@ -315,16 +384,29 @@ void verify_hit(index_t* index,
 	// FIXME - can do this (possibly at several scales) in preprocessing.
 	
 	int cutnside;
-	double cutarcsec;
+	double cutarcsec, cutpix;
 	
 	cutnside = index->meta.cutnside;
 	cutarcsec = healpix_side_length_arcmin(cutnside) * 60.0;
+	cutpix = cutarcsec / mo->scale;
 
 	logverb("cut nside: %i\n", cutnside);
 	logverb("cut scale: %g arcsec\n", cutarcsec);
 	logverb("match scale: %g arcsec/pix\n", mo->scale);
-	logverb("cut scale: %g pixels\n", cutarcsec / mo->scale);
+	logverb("cut scale: %g pixels\n", cutpix);
 
+	int cutnw = MAX(1, (int)round(fieldW / cutpix));
+	int cutnh = MAX(1, (int)round(fieldH / cutpix));
+
+	logverb("cut blocks: %i x %i\n", cutnw, cutnh);
+
+	int* cutperm;
+	int* bincounts;
+	uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, &cutperm, &bincounts);
+
+
+	free(cutperm);
+	free(bincounts);
 
 
 	// index star weights.
