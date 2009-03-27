@@ -314,6 +314,46 @@ static void uniformize_field(verify_field_t* vf,
 	*p_bincounts = bincounts;
 }
 
+static void add_gaussian_to_image(double* img, int W, int H,
+								  double cx, double cy, double sigma,
+								  double scale,
+								  double nsigma, int boundary) {
+	int x, y;
+	if (boundary == 0) {
+		// truncate.
+		for (y = MAX(0, cy - nsigma*sigma); y <= MIN(H-1, cy + nsigma * sigma); y++) {
+			for (x = MAX(0, cx - nsigma*sigma); x <= MIN(W-1, cx + nsigma * sigma); x++) {
+				img[y*W + x] += scale * exp(-(square(y-cy)+square(x-cx)) / (2.0 * square(sigma)));
+			}
+		}
+
+	} else if (boundary == 1) {
+		// mirror.
+		int mx, my;
+		for (y=MAX(-(H-1), floor(cy - nsigma * sigma));
+			 y<=MIN(2*H-1, ceil(cy + nsigma * sigma)); y++) {
+			if (y < 0)
+				my = -1 - y;
+			else if (y >= H)
+				my = 2*H - 1 - y;
+			else
+				my = y;
+			for (x=MAX(-(W-1), floor(cx - nsigma * sigma));
+				 x<=MIN(2*W-1, ceil(cx + nsigma * sigma)); x++) {
+				if (x < 0)
+					mx = -1 - x;
+				else if (x >= W)
+					mx = 2*W - 1 - x;
+				else
+					mx = x;
+				img[my*W + mx] += scale * exp(-(square(y-cy)+square(x-cx)) / (2.0 * square(sigma)));
+			}
+		}
+
+	}
+	
+}
+
 void verify_hit(index_t* index,
 				MatchObj* mo, sip_t* sip, verify_field_t* vf,
                 double verify_pix2, double distractors,
@@ -409,6 +449,57 @@ void verify_hit(index_t* index,
 	free(bincounts);
 
 
+	int W, H;
+	int x, y;
+
+	W = fieldW;
+	H = fieldH;
+
+	unsigned char* img = malloc(4*W*H);
+
+	// draw images of index and field densities.
+	double* idensity = calloc(W * H, sizeof(double));
+	double* fdensity = calloc(W * H, sizeof(double));
+
+	double iscale = 2. * sqrt((double)(W * H) / NI);
+	double fscale = 2. * sqrt((double)(W * H) / NF);
+	logverb("NI = %i; iscale = %g\n", NI, iscale);
+	logverb("NF = %i; fscale = %g\n", NF, fscale);
+	logverb("computing density images...\n");
+	for (i=0; i<NI; i++)
+		add_gaussian_to_image(idensity, W, H, indexpix[i*2 + 0], indexpix[i*2 + 1], iscale, 1.0, 3.0, 0);
+	for (i=0; i<NF; i++) {
+		double fxy[2];
+		starxy_get(vf->field, i, fxy);
+		add_gaussian_to_image(fdensity, W, H, fxy[0], fxy[1], fscale, 1.0, 3.0, 0);
+	}
+	double idmax=0, fdmax=0;
+	for (i=0; i<(W*H); i++) {
+		idmax = MAX(idmax, idensity[i]);
+		fdmax = MAX(fdmax, fdensity[i]);
+	}
+	for (i=0; i<(W*H); i++) {
+		unsigned char val = 255.5 * idensity[i] / idmax;
+		img[i*4+0] = val;
+		img[i*4+1] = val;
+		img[i*4+2] = val;
+		img[i*4+3] = 255;
+	}
+	cairoutils_write_png("idensity.png", img, W, H);
+	for (i=0; i<(W*H); i++) {
+		unsigned char val = 255.5 * fdensity[i] / fdmax;
+		img[i*4+0] = val;
+		img[i*4+1] = val;
+		img[i*4+2] = val;
+		img[i*4+3] = 255;
+	}
+	cairoutils_write_png("fdensity.png", img, W, H);
+
+	free(idensity);
+	free(fdensity);
+
+
+
 	// index star weights.
 	double* iweights = malloc(NI * sizeof(double));
 	for (i=0; i<NI; i++)
@@ -425,12 +516,7 @@ void verify_hit(index_t* index,
 	for (i=0; i<Nrankprobs; i++)
 		rankprobs[i] = exp(-(double)(i*i) / (2. * ranksigma * ranksigma));
 
-	int W, H;
-	int x, y;
 	double qc[2], qr2;
-
-	W = fieldW;
-	H = fieldH;
 
 	get_quad_center(vf, mo, qc, &qr2);
 
@@ -505,7 +591,6 @@ void verify_hit(index_t* index,
 			psum += pmap[j];
 		logverb("Probability sum: %g\n", psum);
 
-		unsigned char* img = malloc(4*W*H);
 		char* fn;
 
 		printf("Writing probability image %i\n", i);
