@@ -210,13 +210,13 @@ static void get_cut_params(index_t* index) {
 			i = id % 100;
 		}
 		if (i >= 0) {
-			if (meta->cutnside == 0)
+			if (meta->cutnside == -1)
 				meta->cutnside = i500hp[i];
 			if (meta->cutnsweep == 0)
 				meta->cutnsweep = i500n[i];
 			if (meta->cutdedup == 0)
 				meta->cutdedup = i500dd[i];
-			if (meta->cutmargin == 0)
+			if (meta->cutmargin == -1)
 				meta->cutmargin = 5;
 			if (!meta->cutband)
 				meta->cutband = strdup("R");
