@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# $Id: NP_pyfits.py 417 2009-03-05 22:50:42Z jtaylor2 $
+# $Id: NP_pyfits.py 424 2009-03-26 19:20:56Z jtaylor2 $
 
 """
 A module for reading and writing FITS files and manipulating their contents.
@@ -73,6 +73,19 @@ ASCIITNULL = 0          # value for ASCII table cell with value = TNULL
                         # this can be reset by user.
 _isInt = "isinstance(val, (int, long, np.integer))"
     
+# The following variable and function are used to support case sensitive
+# values for the value of a EXTNAME card in an extension header.  By default,
+# pyfits converts the value of EXTNAME cards to upper case when reading from
+# a file.  By calling setExtensionNameCaseSensitive() the user may circumvent
+# this process so that the EXTNAME value remains in the same case as it is
+# in the file.
+
+_extensionNameCaseSensitive = False
+
+def setExtensionNameCaseSensitive(value=True):
+    global _extensionNameCaseSensitive 
+    _extensionNameCaseSensitive = value
+
 # Warnings routines
 
 _showwarning = warnings.showwarning
@@ -1407,9 +1420,49 @@ class _Card_with_continue(Card):
 
         return list
 
+class _Header_iter:
+    """Iterator class for a FITS header object.
+
+       Returns the key values of the cards in the header.  Duplicate
+       key values are not returned.
+    """
+
+    def __init__(self, header):
+        self._lastIndex = -1  # last index into the card list
+                              # accessed by the class iterator
+        self.keys = header.keys()  # the unique keys from the header
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        self._lastIndex += 1
+
+        if self._lastIndex >= len(self.keys):
+            self._lastIndex = -1
+            raise StopIteration()
+
+        return self.keys[self._lastIndex]
+
 
 class Header:
-    """FITS header class."""
+    """FITS header class.  The behavior of this class is to present the
+       header like a dictionary as opposed to a list of cards.  The attribute
+       ascard supplies the header like a list of cards.  The header
+       class uses the card's keyword as the dictionary key and the cards
+       value is the dictionary value.   The has_key, get, and keys methods
+       are implemented to provide the corresponding dictionary functionality.
+       The header may be indexed by keyword value and like a dictionary,
+       the associated value will be returned.  When the header contains
+       cards with duplicate keywords, only the value of the first card with
+       the given keyword will be returned.  The header may also be indexed
+       by card list index number.  In that case the value of the card at the
+       given index in the card list will be returned.  A delete method has
+       been implemented to allow deletion from the header.  When del is called
+       all cards with the given keyword are deleted from the header.  The
+       Header class has an associated iterator class _Header_iter which will
+       allow iteration over the unique keywords in the header dictionary.
+    """
 
     def __init__(self, cards=[], txtfile=None):
         """Construct a Header from a CardList and/or text file.
@@ -1440,8 +1493,10 @@ class Header:
                     self._hdutype = GroupsHDU
                 elif cards[0].value == True:
                     self._hdutype = PrimaryHDU
+                elif cards[0].value == False:
+                    self._hdutype = _NonstandardHDU
                 else:
-                    self._hdutype = _ValidHDU
+                    self._hdutype = _CorruptedHDU
             elif cards[0].key == 'XTENSION':
                 xtension = cards[0].value.rstrip()
                 if xtension == 'TABLE':
@@ -1474,6 +1529,12 @@ class Header:
                 self._hdutype = _ValidHDU
         except:
             self._hdutype = _CorruptedHDU
+
+    def __contains__(self, item):
+        return self.has_key(item)
+
+    def __iter__(self):
+        return _Header_iter(self)
 
     def __getitem__ (self, key):
         """Get a header keyword value."""
@@ -1522,7 +1583,6 @@ class Header:
     def items(self):
         """Return a list of all keyword-value pairs from the CardList."""
 
-        # FIXME - use list comprehension here.
         pairs = []
         for card in self.ascard:
             pairs.append((card.key, card.value))
@@ -1572,6 +1632,18 @@ class Header:
 #        self.ascard[_index].__dict__['key']=newkey
 #        self.ascard[_index].ascardimage()
 #        self.ascard._keylist[_index] = newkey
+
+    def keys(self):
+        """ Return a list of keys with duplicates removed
+        """
+
+        rtnVal = []
+
+        for key in self.ascard.keys():
+            if not key in rtnVal:
+                rtnVal.append(key)
+
+        return rtnVal
 
     def get(self, key, default=None):
         """Get a keyword value from the CardList.
@@ -1960,8 +2032,7 @@ class Header:
         # update the hdu type of the header to match the parameters read in
         self._updateHDUtype()
 
-# FIXME - explain why you need a separate CardList and Header class.
-# Isn't a header just a list of cards?
+
 class CardList(list):
     """FITS header card list class."""
 
@@ -2262,7 +2333,11 @@ class _AllHDU(object):
 
     def __init__(self, data=None, header=None):
         self._header = header
-        self.data = data
+
+        if (data is DELAYED):
+            return
+        else:
+            self.data = data
 
     def __getattr__(self, attr):
         if attr == 'header':
@@ -2312,11 +2387,84 @@ class _CorruptedHDU(_AllHDU):
         pass
 
 
-class _ValidHDU(_AllHDU, _Verify):
-    """Base class for all HDUs which are not corrupted."""
+class _NonstandardHDU(_AllHDU, _Verify):
+    """
+    A Non-standard HDU class.
+
+    This class is used for a Primary HDU when the SIMPLE Card has a value
+    of False.  A non-standard HDU comes from a file that resembles
+    a FITS file but departs from the standards in some significant way.  One
+    example would be files where the numbers are in the DEC VAX internal
+    storage format rather than the standard FITS most significant byte first.
+    The header for this HDU should be valid.  The data for this HDU is read
+    from the file as a byte stream that begins at the first byte after the
+    header END card and continues until the end of the file.
+    """
+
+    def __init__(self, data=None, header=None):
+        super(_NonstandardHDU, self).__init__(data, header)
+        self._file, self._offset, self._datLoc = None, None, None
+        self.name = None
+
+    def size(self):
+        """Returns the size (in bytes) of the HDU's data part."""
+        self._file.seek(0, 2)
+        return self._file.tell() - self._datLoc
 
     def _summary(self):
-        return "%-10s  %-11s" % (self.name, "ValidHDU")
+        return "%-7s  %-11s  %5d" % (self.name, "NonstandardHDU",
+                                     len(self._header.ascard))
+
+    def __getattr__(self, attr):
+        """Get the data attribute."""
+        if attr == 'data':
+            self.__dict__[attr] = None
+            self._file.seek(self._datLoc)
+            self.data = self._file.read()
+        else:
+            return _AllHDU.__getattr__(self, attr)
+
+        try:
+            return self.__dict__[attr]
+        except KeyError:
+            raise AttributeError(attr)
+
+    def _verify(self, option='warn'):
+        _err = _ErrList([], unit='Card')
+
+        # verify each card
+        for _card in self._header.ascard:
+            _err.append(_card._verify(option))
+
+        return _err
+
+    def writeto(self, name, output_verify='exception', clobber=False,
+                classExtensions={}):
+        """Write the HDU to a new file.  This is a convenience method
+           to provide a user easier output interface if only one HDU
+           needs to be written to a file.
+
+           name:  output FITS file name to be written to, file object, or
+                  file like object (if opened must be opened for append (ab+)).
+           output_verify:  output verification option, default='exception'.
+           clobber:  Overwrite the output file if exists, default = False.
+           classExtensions: A dictionary that maps pyfits classes to extensions
+                            of those classes.  When present in the dictionary,
+                            the extension class will be constructed in place of
+                            the pyfits class.
+        """
+
+        if classExtensions.has_key(HDUList):
+            hdulist = classExtensions[HDUList]([self])
+        else:
+            hdulist = HDUList([self])
+
+        hdulist.writeto(name, output_verify, clobber=clobber,
+                        classExtensions=classExtensions)
+
+
+class _ValidHDU(_AllHDU, _Verify):
+    """Base class for all HDUs which are not corrupted."""
 
     # 0.6.5.5
     def size(self):
@@ -2601,25 +2749,27 @@ class _TempHDU(_ValidHDU):
                 break
 
         # construct the Header object, using the cards.
-        header = Header(CardList(_cardList, keylist=_keyList))
+        try:
+            header = Header(CardList(_cardList, keylist=_keyList))
 
-        if classExtensions.has_key(header._hdutype):
-            header._hdutype = classExtensions[header._hdutype]
+            if classExtensions.has_key(header._hdutype):
+                header._hdutype = classExtensions[header._hdutype]
 
-        hdu = header._hdutype(data=DELAYED, header=header)
+            hdu = header._hdutype(data=DELAYED, header=header)
 
-        # set attributes.
-        # FIXME - this violates object encapsulation.
-        hdu._file = self._file
-        hdu._hdrLoc = self._hdrLoc
-        hdu._datLoc = self._datLoc
-        hdu._datSpan = self._datSpan
-        hdu._ffile = self._ffile
-        hdu.name = self.name
-        hdu._extver = self._extver
-        hdu._new = 0
-        hdu.header._mod = 0
-        hdu.header.ascard._mod = 0
+            # pass these attributes
+            hdu._file = self._file
+            hdu._hdrLoc = self._hdrLoc
+            hdu._datLoc = self._datLoc
+            hdu._datSpan = self._datSpan
+            hdu._ffile = self._ffile
+            hdu.name = self.name
+            hdu._extver = self._extver
+            hdu._new = 0
+            hdu.header._mod = 0
+            hdu.header.ascard._mod = 0
+        except:
+            pass
 
         return hdu
 
@@ -2642,7 +2792,8 @@ class _ExtensionHDU(_ValidHDU):
         if attr == 'name' and value:
             if not isinstance(value, str):
                 raise TypeError, 'bad value type'
-            value = value.upper()
+            if not _extensionNameCaseSensitive:
+                value = value.upper()
             if self._header.has_key('EXTNAME'):
                 self._header['EXTNAME'] = value
             else:
@@ -2830,15 +2981,15 @@ class _ImageBaseHDU(_ValidHDU):
     ImgCode = {'uint8':8, 'int16':16, 'uint16':16, 'int32':32, 'int64':64, 'float32':-32, 'float64':-64}
     
     def __init__(self, data=None, header=None):
-		## FIXME - calling this superclass constructor causes test cases to fail!
-        #super(_ImageBaseHDU, self).__init__(data=data, header=header)
         self._file, self._datLoc = None, None
 
         if header is not None:
             if not isinstance(header, Header):
                 raise ValueError, "header must be a Header object"
 
+
         if data is DELAYED:
+
             # this should never happen
             if header is None:
                 raise ValueError, "No header to setup HDU."
@@ -2847,9 +2998,8 @@ class _ImageBaseHDU(_ValidHDU):
             else:
                 self._header = header
         else:
+
             # construct a list of cards of minimal header
-            # FIXME - "isinstance" should not be used here.
-            # Let the HDU class hierarchy handle this!
             if isinstance(self, _ExtensionHDU):
                 c0 = Card('XTENSION', 'IMAGE', 'Image extension')
             else:
@@ -2874,24 +3024,18 @@ class _ImageBaseHDU(_ValidHDU):
 
             self._header = Header(_list)
 
-        # FIXME - this violates DRY and sets you up for inconsistency.
         self._bzero = self._header.get('BZERO', 0)
         self._bscale = self._header.get('BSCALE', 1)
 
-        if data is DELAYED:
-            return
+        if (data is DELAYED): return
 
         self.data = data
 
         # update the header
         self.update_header()
-        # FIXME - DRY violation.
         self._bitpix = self._header['BITPIX']
 
         # delete the keywords BSCALE and BZERO
-        # FIXME - is there some reason this happens here rather than
-        # right after the "self._bzero = " lines?  (Which shouldn't
-        # be there anyway!)
         del self._header['BSCALE']
         del self._header['BZERO']
 
@@ -2977,7 +3121,6 @@ class _ImageBaseHDU(_ValidHDU):
                     raw_data = self._ffile._mm
                 else:
 
-                    # FIXME - use numpy.product() !
                     nelements = 1
                     for x in range(len(dims)):
                         nelements = nelements * dims[x]                    
@@ -3167,7 +3310,8 @@ class PrimaryHDU(_ImageBaseHDU):
            header: the header to be used (as a template), default=None.
                    If header=None, a minimal Header will be provided.
         """
-        super(PrimaryHDU, self).__init__(data=data, header=header)
+
+        _ImageBaseHDU.__init__(self, data=data, header=header)
         self.name = 'PRIMARY'
 
         # insert the keywords EXTEND
@@ -5432,17 +5576,28 @@ if compressionSupported:
     # If compression object library imports properly then define the
     # CompImageHDU class.
 
+    # Default compression parameter values
+
+    def_compressionType = 'RICE_1'
+    def_quantizeLevel = 16.
+    def_hcompScale = 0.
+    def_hcompSmooth = 0
+    def_blockSize = 32
+    def_bytePix = 4
+
     class CompImageHDU(BinTableHDU):
         """Compressed Image HDU class."""
    
         def __init__(self, data=None, header=None, name=None,
-                     compressionType='RICE_1',
+                     compressionType=def_compressionType,
                      tileSize=None,
-                     noiseBits=4,
-                     hcompScale=1,
-                     hcompSmooth=0):
+                     hcompScale=def_hcompScale,
+                     hcompSmooth=def_hcompSmooth,
+                     quantizeLevel=def_quantizeLevel):
             """data:            data of the image
-               header:          header to be associated with the image
+               header:          header to be associated with the image; when
+                                 reading the HDU from a file (data=DELAYED),
+                                 the header read from the file
                name:            the EXTNAME value; if this value is None, then
                                  the name from the input image header will be
                                  used; if there is no name in the input image
@@ -5452,10 +5607,151 @@ if compressionSupported:
                                  'GZIP_1', 'HCOMPRESS_1'
                tileSize:        compression tile sizes default treats each row
                                  of image as a tile
-               noiseBits:       number of noise bits for floating point
-                                 quantization
                hcompScale:      HCOMPRESS scale parameter
                hcompSmooth:     HCOMPRESS smooth parameter
+               quantizeLevel:   floating point quantization level; see note
+                                 below 
+
+               :Notes:
+                   The pyfits module supports 2 methods of image compression.
+
+                   1) The entire FITS file may be externally compressed with
+                      the gzip or pkzip utility programs, producing a *.gz or
+                      *.zip file, respectively.  When reading compressed files
+                      of this type, pyfits first uncompresses the entire file
+                      into a temporary file before performing the requested
+                      read operations.  The pyfits module does not support
+                      writing to these types of compressed files.  This type
+                      of compression is supported in the _File class, not in
+                      the CompImageHDU class.  The file compression type is
+                      recognized by the .gz or .zip file name extension.
+
+                   2) The CompImageHDU class supports the FITS tiled image
+                      compression convention in which the image is subdivided 
+                      into a grid of rectangular tiles, and each tile of 
+                      pixels is individually compressed.  The details of this
+                      FITS compression convention are described at the FITS
+                      Support Office web site at
+                      http://fits.gsfc.nasa.gov/registry/tilecompression.html.
+                      Basically, the compressed image tiles are stored in rows
+                      of a variable length arrray column in a FITS binary 
+                      table.  The pyfits module recognizes that this binary 
+                      table extension contains an image and treats it as if it
+                      were an image extension.  Under this tile-compression
+                      format, FITS header keywords remain uncompressed.  At 
+                      this time, pyfits does not support the ability to extract
+                      and uncompress sections of the image without having to
+                      uncompress the entire image.
+
+                      The pyfits module supports 3 general purpose compression
+                      algorithms plus one other special-purpose compression
+                      technique that is designed for data masks with positive
+                      integer pixel values.  The 3 general purpose algorithms
+                      are GZIP, Rice, and HCOMPRESS, and the special-purpose
+                      technique is the IRAF pixel list compression technique
+                      (PLIO).   The compressionType parameter defines the 
+                      compression algorithm to be used. 
+
+                      The FITS image can be subdivided into any desired
+                      rectangular grid of compression tiles.  With the GZIP,
+                      Rice, and PLIO algorithms, the default is to take each
+                      row of the image as a tile.  The HCOMPRESS algorithm
+                      is inherently 2-dimensional in nature, so the default
+                      in this case is to take 16 rows of the image per tile.
+                      In most cases it makes little difference what tiling
+                      pattern is used, so the default tiles are usually
+                      adequate.  In the case of very small images, it could 
+                      be more efficient to compress the whole image as a 
+                      single tile.  Note that the image dimensions are not
+                      required to be an integer multiple of the tile dimensions;
+                      if not, then the tiles at the edges of the image will
+                      be smaller than the other tiles.  The tileSize parameter
+                      may be provided as a list of tile sizes, one for each
+                      dimension in the image.  For example a tileSize value of
+                      [100,100] would divide a 300 X 300 image into 9 100 X 100
+                      tiles.
+
+                      The 4 supported image compression algorithms are all 
+                      'loss-less' when applied to integer FITS images; the
+                      pixel values are preserved exactly with no loss of
+                      information during the compression and uncompression
+                      process.  In addition, the HCOMPRESS algorithm supports
+                      a 'lossy' compression mode that will produce larger
+                      amount of image compression.  This is achieved by
+                      specifying a non-zero value for the hcompScale parameter.
+                      Since the amount of compression that is achieved depends
+                      directly on the RMS noise in the image, it is usually
+                      more convenient to specify the hcompScale factor
+                      relative to the RMS noise.  Setting hcompScale = 2.5
+                      means use a scale factor that is 2.5 times the calculated
+                      RMS noise in the image tile.  In some cases it may be
+                      desireable to specify the exact scaling to be used,
+                      instead of specifying it relative to the calculated noise
+                      value.  This may be done by specifying the negative of
+                      the desired scale value (typically in the range -2 to
+                      -100).
+
+                      Very high compression factors (of 100 or more) can be
+                      achieved by using large hcompScale values, however, this
+                      can produce undesireable 'blocky' artifacts in the 
+                      compressed image.  A variation of the HCOMPRESS algorithm
+                      (called HSCOMPRESS) can be used in this case to apply
+                      a small amount of smoothing of the image when it is
+                      uncompressed to help cover up these artifacts.  This 
+                      smoothing is purely cosmetic and does not cause any
+                      significant change to the image pixel values.  Setting
+                      the hcompSmooth parameter to 1 will engage the smoothing
+                      algorithm.
+
+                      Floating point FITS images (which have BITPIX = -32 or
+                      -64) usually contain too much 'noise' in the least
+                      significant bits of the mantissa of the pixel values to
+                      be effectively compressed with any lossless algorithm.
+                      Consequently, floating point images are first quantized
+                      into scaled integer pixel values (and thus throwing away
+                      much of the noise) before being compressed with the
+                      specified algorithm (either GZIP, RICE, or HCOMPRESS).
+                      This technique produces much higher compression factors
+                      than simply using the GZIP utility to externally compress
+                      the whole FITS file, but it also means that the original
+                      floating point value pixel values are not exactly
+                      perserved.  When done properly, this integer scaling
+                      technique will only discards the insignificant noise
+                      while still preserving all the real imformation in the
+                      image.  The amount of precision that is retained in the
+                      pixel values is controlled by the quantizeLevel parameter.
+                      Larger values will result in compressed images whose
+                      pixels more closely match the floating point pixel
+                      values, but at the same time the amount of compression
+                      that is achieved will be reduced.  Users should
+                      experiment with different values for this parameter to
+                      determine the optimal value that preserves all the useful
+                      information in the image, without needlessly preserving
+                      all the 'noise' which will hurt the compression
+                      efficiency.
+
+                      The default value for the quantizeLevel scale factor is 
+                      16, which means that scaled integer pixel values will be
+                      quantized such that the difference between adjacent
+                      integer values will be 1/16th of the noise level in the
+                      image background.  An optimized algorithm is used to
+                      accurately estimate the noise in the image.  As an
+                      example, if the RMS noise in the background pixels of an
+                      image = 32.0, then the spacing between adjacent scaled
+                      integer pixel values will equal 2.0 by default.  Note
+                      that the RMS noise is independently calculated for each
+                      tile of the image, so the resulting integer scaling
+                      factor may fluctuate slightly for each tile.  In some
+                      cases it may be desireable to specify the exact
+                      quantization level to be used, instead of specifying it
+                      relative to the calculated noise value.  This may be done
+                      by specifying the negative of desired quantization level
+                      for the value of quantizeLevel.  In the previous example,
+                      one could specify quantizeLevel=-2.0 so that the
+                      quantized integer levels differ by 2.0.  Larger negative
+                      values for quantizeLevel means that the levels are more
+                      coursely spaced, and will produce higher compression
+                      factors.
             """
    
             self._file, self._datLoc = None, None
@@ -5478,8 +5774,8 @@ if compressionSupported:
                 # data; Create the initially empty table data array to 
                 # hold the compressed data.
                 self.updateHeaderData(header, name, compressionType,
-                                                  tileSize, noiseBits,
-                                                  hcompScale, hcompSmooth)
+                                      tileSize, hcompScale, hcompSmooth,
+                                      quantizeLevel)
 
             # store any scale factors from the table header
             self._bzero = self._header.get('BZERO', 0)
@@ -5492,11 +5788,11 @@ if compressionSupported:
    
         def updateHeaderData(self, imageHeader, 
                              name=None,
-                             compressionType='RICE_1',
+                             compressionType=None,
                              tileSize=None,
-                             noiseBits=4,
-                             hcompScale=1,
-                             hcompSmooth=0):
+                             hcompScale=None,
+                             hcompSmooth=None,
+                             quantizeLevel=None):
             """
             Update the table header (_header) to the compressed image format
             and to match the input data (if any).  Create the image header 
@@ -5515,22 +5811,32 @@ if compressionSupported:
                               header then the default name 'COMPRESSED_IMAGE'
                               is used
             compressionType: compression algorithm 'RICE_1', 'PLIO_1', 
-                              'GZIP_1', 'HCOMPRESS_1'
-            tileSize:        compression tile sizes default treats each row
-                              of image as a tile
-            noiseBits:       number of noise bits for floating point
-                              quantization
-            hcompScale:      HCOMPRESS scale parameter
-            hcompSmooth:     HCOMPRESS smooth parameter
+                              'GZIP_1', 'HCOMPRESS_1'; if this value is None,
+                              use value already in the header; if no value
+                              already in the header, use 'RICE_1'
+            tileSize:        compression tile sizes as a list; if this value is
+                              None, use value already in the header; if no
+                              value already in the header, treat each row of
+                              image as a tile
+            hcompScale:      HCOMPRESS scale parameter; if this value is None,
+                              use the value already in the header; if no value
+                              already in the header, use 1
+            hcompSmooth:     HCOMPRESS smooth parameter; if this value is None,
+                              use the value already in the header; if no value
+                              already in the header, use 0
+            quantizeLevel:   floating point quantization level; if this value
+                              is None, use the value already in the header; if
+                              no value already in header, use 16
             """
 
-            # Construct a _ImageBaseHDU object using the input header
+            # Construct an ImageBaseHDU object using the input header
             # and data so that we can ensure that the input image header
             # matches the input image data.  Store the header from this
             # temporary HDU object as the image header for this object.
 
             self._imageHeader = \
-              _ImageBaseHDU(data=self.data, header=imageHeader).header
+              ImageHDU(data=self.data, header=imageHeader).header
+            self._imageHeader._tableHeader = self._header
 
             # Update the extension name in the table header
 
@@ -5545,18 +5851,35 @@ if compressionSupported:
             else:
                 self.name = self._header['EXTNAME']
 
+            # Set the compression type in the table header.
+
+            if compressionType:
+                if compressionType not in ['RICE_1','GZIP_1','PLIO_1',
+                                           'HCOMPRESS_1']:
+                    warnings.warn('Warning: Unknown compression type provided.'+
+                                  '  Default RICE_1 compression used.')
+                    compressionType = 'RICE_1'
+
+                self._header.update('ZCMPTYPE', compressionType,
+                                    'compression algorithm',
+                                    after='TFIELDS')
+            else:
+                compressionType = self._header.get('ZCMPTYPE', 'RICE_1')
+
             # If the input image header had BSCALE/BZERO cards, then insert
-            # them in the table header.  Note that they will not be in the
-            # image header because the image data will be provided in scaled
-            # format.
+            # them in the table header. 
 
             if imageHeader:
                 bzero = imageHeader.get('BZERO', 0.0)
                 bscale = imageHeader.get('BSCALE', 1.0)
+                afterCard = 'EXTNAME'
 
-                if bscale != 1.0 or bzero != 0.0:
-                    self._header.update('BSCALE',bscale,after='EXTNAME')
-                    self._header.update('BZERO',bzero,after='BSCALE')
+                if bscale != 1.0:
+                    self._header.update('BSCALE',bscale,after=afterCard)
+                    afterCard = 'BSCALE'
+
+                if bzero != 0.0:
+                    self._header.update('BZERO',bzero,after=afterCard)
 
             # Set the label for the first column in the table
 
@@ -5565,12 +5888,6 @@ if compressionSupported:
 
             # Set the data format for the first column.  It is dependent
             # on the requested compression type.
-
-            if compressionType not in ['RICE_1','GZIP_1','PLIO_1',
-                                       'HCOMPRESS_1']:
-                warnings.warn('Warning: Unknown compression type provided.' + 
-                              '  Default RICE_1 compression used.')
-                compressionType = 'RICE_1'
 
             if compressionType == 'PLIO_1':
                 tform1 = '1PI'
@@ -5636,6 +5953,14 @@ if compressionSupported:
                 ncols = 1
                 after = 'TFORM1'
 
+                # remove any header cards for the additional columns that
+                # may be left over from the previous data
+                keyList = ['TTYPE2', 'TFORM2', 'TTYPE3', 'TFORM3', 'TTYPE4',
+                           'TFORM4']
+       
+                for k in keyList:
+                    del self._header[k]
+
                 # Create the ColDefs object for the table
                 cols = ColDefs([col1])
 
@@ -5656,6 +5981,19 @@ if compressionSupported:
                                 'dimension of original image',
                                 after = 'ZBITPIX')
 
+            # Strip the table header of all the ZNAZISn and ZTILEn keywords
+            # that may be left over from the previous data
+
+            i = 1
+            
+            while 1:
+                try:
+                    del self._header.ascardlist()['ZNAXIS'+`i`]
+                    del self._header.ascardlist()['ZTILE'+`i`]
+                    i += 1
+                except KeyError:
+                    break
+
             # Verify that any input tile size parameter is the appropriate
             # size to match the HDU's data.
 
@@ -5666,39 +6004,103 @@ if compressionSupported:
                               'for the data.  Default tile size will be used.')
                 tileSize = []
 
-            # Set default tile dimensions for HCOMPRESS_1 if no tile size was
-            # provided.
+            # Set default tile dimensions for HCOMPRESS_1 
 
-            if not tileSize and compressionType == 'HCOMPRESS_1':
+            if compressionType == 'HCOMPRESS_1':
+                if self._imageHeader['NAXIS'] < 2:
+                    raise ValueError, 'Hcompress cannot be used with ' + \
+                                      '1-dimensional images.'
+                elif self._imageHeader['NAXIS1'] < 4 or \
+                self._imageHeader['NAXIS2'] < 4:
+                    raise ValueError, 'Hcompress minimum image dimension is' + \
+                                      ' 4 pixels'
+                elif tileSize and (tileSize[0] < 4 or tileSize[1] < 4):
+                    # user specified tile size is too small
+                    raise ValueError, 'Hcompress minimum tile dimension is' + \
+                                      ' 4 pixels'
 
-                for i in range(0, min(2,self._imageHeader['NAXIS'])):
-                    if self._imageHeader['NAXIS'+`i+1`] <= 600:
-                        # use the full dimension of the image as the 
-                        # tile dimension
-              
-                        tileSize.append(self._imageHeader['NAXIS'+`i+1`])
+                if tileSize and (tileSize[0] == 0 and tileSize[1] == 0):
+                    #compress the whole image as a single tile
+                    tileSize[0] = self._imageHeader['NAXIS1']
+                    tileSize[1] = self._imageHeader['NAXIS2']
+
+                    for i in range(2, self._imageHeader['NAXIS']):
+                        # set all higher tile dimensions = 1
+                        tileSize[i] = 1
+                elif not tileSize:
+                    # The Hcompress algorithm is inherently 2D in nature, so
+                    # the row by row tiling that is used for other compression
+                    # algorithms is not appropriate.  If the image has less
+                    # than 30 rows, then the entire image will be compressed
+                    # as a single tile.  Otherwise the tiles will consist of 
+                    # 16 rows of the image.  This keeps the tiles to a 
+                    # reasonable size, and it also includes enough rows to
+                    # allow good compression efficiency.  It the last tile of
+                    # the image happens to contain less than 4 rows, then find
+                    # another tile size with between 14 and 30 rows 
+                    # (preferably even), so that the last tile has at least
+                    # 4 rows.
+
+                    # 1st tile dimension is the row length of the image
+                    tileSize.append(self._imageHeader['NAXIS1'])
+
+                    if self._imageHeader['NAXIS2'] <= 30:
+                        tileSize.append(self._imageHeader['NAXIS1'])
                     else:
-                        # find an even tile size in the range 200 - 600
+                        # look for another good tile dimension
+                        if self._imageHeader['NAXIS2'] % 16 == 0 or \
+                        self._imageHeader['NAXIS2'] % 16 > 3:
+                            tileSize.append(16)
+                        elif self._imageHeader['NAXIS2'] % 24 == 0 or \
+                        self._imageHeader['NAXIS2'] % 24 > 3:
+                            tileSize.append(24)
+                        elif self._imageHeader['NAXIS2'] % 20 == 0 or \
+                        self._imageHeader['NAXIS2'] % 20 > 3:
+                            tileSize.append(20)
+                        elif self._imageHeader['NAXIS2'] % 30 == 0 or \
+                        self._imageHeader['NAXIS2'] % 30 > 3:
+                            tileSize.append(30)
+                        elif self._imageHeader['NAXIS2'] % 28 == 0 or \
+                        self._imageHeader['NAXIS2'] % 28 > 3:
+                            tileSize.append(28)
+                        elif self._imageHeader['NAXIS2'] % 26 == 0 or \
+                        self._imageHeader['NAXIS2'] % 26 > 3:
+                            tileSize.append(26)
+                        elif self._imageHeader['NAXIS2'] % 22 == 0 or \
+                        self._imageHeader['NAXIS2'] % 22 > 3:
+                            tileSize.append(22)
+                        elif self._imageHeader['NAXIS2'] % 18 == 0 or \
+                        self._imageHeader['NAXIS2'] % 18 > 3:
+                            tileSize.append(18)
+                        elif self._imageHeader['NAXIS2'] % 14 == 0 or \
+                        self._imageHeader['NAXIS2'] % 14 > 3:
+                            tileSize.append(14)
+                        else:
+                            tileSize.append(17)
+                # check if requested tile size causes the last tile to have
+                # less than 4 pixels
 
-                        minspace = self._imageHeader['NAXIS'+`i+1`]
-                        tempsize = self._imageHeader['NAXIS'+`i+1`]
+                remain = self._imageHeader['NAXIS1'] % tileSize[0] # 1st dimen
 
-                        for jj in range(600,199,-2):
-                            remain = self._imageHeader['NAXIS'+`i+1`] % jj
+                if remain > 0 and remain < 4:
+                    tileSize[0] += 1 # try increasing tile size by 1
 
-                            if not remain:
-                                # found an even multiple tile size
-                                tempsize = jj
-                                break
-                            else:
-                                leftspace = jj - remain
+                    remain = self._imageHeader['NAXIS1'] % tileSize[0] 
 
-                                if leftspace < minspace:
-                                    # save the best case found so far
-                                    minspace = leftspace
-                                    tempsize = jj
+                    if remain > 0 and remain < 4:
+                        raise ValueError, 'Last tile along 1st dimension ' + \
+                                          'has less than 4 pixels'
 
-                        tileSize.append(tempsize) 
+                remain = self._imageHeader['NAXIS2'] % tileSize[1] # 2nd dimen
+
+                if remain > 0 and remain < 4:
+                    tileSize[1] += 1 # try increasing tile size by 1
+
+                    remain = self._imageHeader['NAXIS2'] % tileSize[1] 
+
+                    if remain > 0 and remain < 4:
+                        raise ValueError, 'Last tile along 2nd dimension ' + \
+                                          'has less than 4 pixels'
 
             # Set up locations for writing the next cards in the header.
             after = 'ZNAXIS'
@@ -5715,12 +6117,14 @@ if compressionSupported:
             for i in range(0, self._imageHeader['NAXIS']):
                 if tileSize:
                     ts = tileSize[i]
-                else:
+                elif not self._header.has_key('ZTILE'+`i+1`):
                     # Default tile size
                     if not i:
                         ts = self._imageHeader['NAXIS1']
                     else:
                         ts = 1
+                else:
+                    ts = self._header['ZTILE'+`i+1`]
 
                 naxisn = self._imageHeader['NAXIS'+`i+1`]
                 nrows = nrows * ((naxisn - 1) / ts + 1)
@@ -5758,31 +6162,79 @@ if compressionSupported:
                                             rec.recarray.field(self.compData,i),
                                             self.columns._recformats[i]._dtype)
 
-            # Set the compression type in the table header.
-            self._header.update('ZCMPTYPE', compressionType,
-                                'compression algorithm',
-                                after=after1)
-
             # Set the compression parameters in the table header.
+
+            # First, setup the values to be used for the compression parameters
+            # in case none were passed in.  This will be either the value
+            # already in the table header for that parameter or the default
+            # value.
+            i = 1
+
+            while self._header.has_key('ZNAME'+`i`):
+                if self._header['ZNAME'+`i`] == 'NOISEBIT':
+                    if quantizeLevel == None:
+                        quantizeLevel = self._header['ZVAL'+`i`]
+                if self._header['ZNAME'+`i`] == 'SCALE   ':
+                    if hcompScale == None:
+                        hcompScale = self._header['ZVAL'+`i`]
+                if self._header['ZNAME'+`i`] == 'SMOOTH  ':
+                    if hcompSmooth == None:
+                        hcompSmooth = self._header['ZVAL'+`i`]
+                i += 1
+
+            if quantizeLevel == None:
+                quantizeLevel = def_quantizeLevel
+
+            if hcompScale == None:
+                hcompScale = def_hcompScale
+
+            if hcompSmooth == None:
+                hcompSmooth = def_hcompScale
+                    
+            # Next, strip the table header of all the ZNAMEn and ZVALn keywords
+            # that may be left over from the previous data
+
+            i = 1
+            
+            while self._header.has_key('ZNAME'+`i`):
+                del self._header.ascardlist()['ZNAME'+`i`]
+                del self._header.ascardlist()['ZVAL'+`i`]
+                i += 1
+
+            # Finally, put the appropriate keywords back based on the 
+            # compression type.
+
+            afterCard = 'ZCMPTYPE'
+            i = 1
+
             if compressionType == 'RICE_1':
                 self._header.update('ZNAME1', 'BLOCKSIZE',
                                     'compression block size',
-                                    after='ZCMPTYPE')
-                self._header.update('ZVAL1', 32,
+                                    after=afterCard)
+                self._header.update('ZVAL1', def_blockSize,
                                     'pixels per block',
                                     after='ZNAME1')
 
-                if self._imageHeader['BITPIX'] < 0:  # floating point image
-                    self._header.update('ZNAME2', 'NOISEBIT',
-                                        'floating point quantization level',
-                                        after='ZVAL1')
-                    self._header.update('ZVAL2', noiseBits,
-                                        'floating point quantization level',
+                self._header.update('ZNAME2', 'BYTEPIX',
+                                    'bytes per pixel (1, 2, 4, or 8)',
+                                    after='ZVAL1')
+
+                if self._header['ZBITPIX'] == 8:
+                    bytepix = 1
+                elif self._header['ZBITPIX'] == 16:
+                    bytepix = 2
+                else:
+                    bytepix = def_bytePix
+
+                self._header.update('ZVAL2', bytepix,
+                                    'bytes per pixel (1, 2, 4, or 8)',
                                         after='ZNAME2')
+                afterCard = 'ZVAL2'
+                i = 3
             elif compressionType == 'HCOMPRESS_1':
                 self._header.update('ZNAME1', 'SCALE',
                                     'HCOMPRESS scale factor',
-                                    after='ZCMPTYPE')
+                                    after=afterCard)
                 self._header.update('ZVAL1', hcompScale,
                                     'HCOMPRESS scale factor',
                                     after='ZNAME1')
@@ -5792,22 +6244,16 @@ if compressionSupported:
                 self._header.update('ZVAL2', hcompSmooth,
                                     'HCOMPRESS smooth option',
                                     after='ZNAME2')
- 
-                if self._imageHeader['BITPIX'] < 0:  # floating point image
-                    self._header.update('ZNAME3', 'NOISEBIT',
-                                        'floating point quantization level',
-                                        after='ZVAL2')
-                    self._header.update('ZVAL3', noiseBits,
-                                        'floating point quantization level',
-                                        after='ZNAME3')
-            else:
-                if self._imageHeader['BITPIX'] < 0:  # floating point image
-                    self._header.update('ZNAME1', 'NOISEBIT',
-                                        'floating point quantization level',
-                                        after='ZCMPTYPE')
-                    self._header.update('ZVAL1', noiseBits,
-                                        'floating point quantization level',
-                                        after='ZNAME1')
+                afterCard = 'ZVAL2'
+                i = 3
+
+            if self._imageHeader['BITPIX'] < 0:   # floating point image
+                self._header.update('ZNAME'+`i`, 'NOISEBIT',
+                                    'floating point quantization level',
+                                    after=afterCard)
+                self._header.update('ZVAL'+`i`, quantizeLevel,
+                                    'floating point quantization level',
+                                    after='ZNAME'+`i`)
 
         def __getattr__(self, attr):
             """ Get an HDU attribute. """
@@ -5855,15 +6301,17 @@ if compressionSupported:
                 # Set up an array holding the linear scale factor values
                 # This could come from the ZSCALE column from the table, or 
                 # from the ZSCALE header card (if no ZSCALE column (all 
-                # linear scale factor values are the same for each tile)),
-                # or from the BSCALE header card.
+                # linear scale factor values are the same for each tile)).
+
+                if self._header.has_key('BSCALE'):
+                    self._bscale = self._header['BSCALE']
+                    del self._header['BSCALE']
+                else:
+                    self._bscale = 1.
+
                 if not 'ZSCALE' in self.compData.names:
                     if self._header.has_key('ZSCALE'):
                         zScaleVals = np.array(self._header['ZSCALE'],
-                                              dtype='float64')
-                        cn_zscale = -1 # scale value is a constant
-                    elif self._header.has_key('BSCALE'):
-                        zScaleVals = np.array(self._header['BSCALE'],
                                               dtype='float64')
                         cn_zscale = -1 # scale value is a constant
                     else:
@@ -5881,15 +6329,17 @@ if compressionSupported:
                 # Set up an array holding the zero point offset values
                 # This could come from the ZZERO column from the table, or 
                 # from the ZZERO header card (if no ZZERO column (all 
-                # zero point offset values are the same for each tile)),
-                # or from the BZERO header card.
+                # zero point offset values are the same for each tile)).
+
+                if self._header.has_key('BZERO'):
+                    self._bzero = self._header['BZERO']
+                    del self._header['BZERO']
+                else:
+                    self._bzero = 0.
+
                 if not 'ZZERO' in self.compData.names:
                     if self._header.has_key('ZZERO'):
                         zZeroVals = np.array(self._header['ZZERO'],
-                                             dtype='float64')
-                        cn_zzero = -1 # zero value is a constant
-                    elif self._header.has_key('BZERO'):
-                        zZeroVals = np.array(self._header['BZERO'],
                                              dtype='float64')
                         cn_zzero = -1 # zero value is a constant
                     else:
@@ -5943,24 +6393,57 @@ if compressionSupported:
                     tileSizeList.append(self._header['ZTILE'+`i+1`])
                     nelem = nelem * self._header['ZNAXIS'+`i+1`]
    
-                # Create a list of image compression parameters.  
-                # The contents of this list is dependent on the compression
-                # type.
+                # Create a list for the compression parameters.  The contents
+                # of the list is dependent on the compression type.
+
                 if self._header['ZCMPTYPE'] == 'RICE_1':
-                    if self._header['ZNAME1'] == 'BLOCKSIZE':
-                        zvalList.append(self._header['ZVAL1'])
-                    if cn_zscale > 0 and self._header['ZNAME2'] == 'NOISEBIT':
-                        zvalList.append(self._header['ZVAL2'])
+                    i = 1
+                    blockSize = def_blockSize
+                    bytePix = def_bytePix
+  
+                    while self._header.has_key('ZNAME'+`i`):
+                        if self._header['ZNAME'+`i`] == 'BLOCKSIZE':
+                            blockSize = self._header['ZVAL'+`i`]
+                        if self._header['ZNAME'+`i`] == 'BYTEPIX':
+                            bytePix = self._header['ZVAL'+`i`]
+                        i += 1
+
+                    zvalList.append(blockSize)
+                    zvalList.append(bytePix)
                 elif self._header['ZCMPTYPE'] == 'HCOMPRESS_1':
-                    if self._header['ZNAME1'] == 'SCALE   ':
-                        zvalList.append(self._header['ZVAL1'])
-                    if self._header['ZNAME2'] == 'SMOOTH  ':
-                        zvalList.append(self._header['ZVAL2'])
-                    if cn_zscale > 0 and self._header['ZNAME3'] == 'NOISEBIT':
-                        zvalList.append(self._header['ZVAL2'])
-                elif cn_zscale > 0 and self._header['ZNAME1'] == 'NOISEBIT':
-                    zvalList.append(self._header['ZVAL1'])
-   
+                    i = 1
+                    hcompSmooth = def_hcompSmooth 
+  
+                    while self._header.has_key('ZNAME'+`i`):
+                        if self._header['ZNAME'+`i`] == 'SMOOTH':
+                            hcompSmooth = self._header['ZVAL'+`i`]
+                        i += 1
+
+                    zvalList.append(hcompSmooth)
+
+                # Treat the NOISEBIT and SCALE parameters separately because
+                # they are floats instead of integers
+
+                quantizeLevel = def_quantizeLevel
+
+                if self._header['ZBITPIX'] < 0:
+                    i = 1
+  
+                    while self._header.has_key('ZNAME'+`i`):
+                        if self._header['ZNAME'+`i`] == 'NOISEBIT':
+                            quantizeLevel = self._header['ZVAL'+`i`]
+                        i += 1
+
+                hcompScale = def_hcompScale
+
+                if self._header['ZCMPTYPE'] == 'HCOMPRESS_1':
+                    i = 1
+  
+                    while self._header.has_key('ZNAME'+`i`):
+                        if self._header['ZNAME'+`i`] == 'SCALE':
+                            hcompScale = self._header['ZVAL'+`i`]
+                        i += 1
+
                 # Call the C decompression routine to decompress the data.
                 # Note that any errors in this routine will raise an 
                 # exception.
@@ -5972,15 +6455,23 @@ if compressionSupported:
                                                  nullDvals, cn_zblank,
                                                  uncompressedDataList,
                                                  cn_uncompressed,
+                                                 quantizeLevel,
+                                                 hcompScale,
                                                  zvalList,
                                                  self._header['ZCMPTYPE'],
-                                                 self.header['BITPIX'], 1,
+                                                 self._header['ZBITPIX'], 1,
                                                  nelem, 0.0)
                    
                 # Convert the decompressed data list into an array.  Assign
                 # this to the 'data' class attribute.
                 data = np.array(decompDataList,
                              dtype=_ImageBaseHDU.NumCode[self.header['BITPIX']])
+
+                if self._bscale != 1:
+                    np.multiply(data, self._bscale, data)
+                if self._bzero != 0:
+                    data += self._bzero
+
                 naxesList.reverse()
                 data.shape= tuple(naxesList)
                 self.__dict__[attr] = data
@@ -6082,7 +6573,7 @@ if compressionSupported:
                         try:
                             del cardList['ZNAME'+`i`]
                             del cardList['ZVAL'+`i`]
-                            i = i + 1
+                            i += 1
                         except KeyError:
                             break
    
@@ -6200,21 +6691,53 @@ if compressionSupported:
             # Create a list for the compression parameters.  The contents
             # of the list is dependent on the compression type.
             if self._header['ZCMPTYPE'] == 'RICE_1':
-                if self._header['ZNAME1'] == 'BLOCKSIZE':
-                    zvalList.append(self._header['ZVAL1'])
-                if cn_zscale > 0 and self._header['ZNAME2'] == 'NOISEBIT':
-                    zvalList.append(self._header['ZVAL2'])
+                i = 1
+                blockSize = def_blockSize
+                bytePix = def_bytePix
+  
+                while self._header.has_key('ZNAME'+`i`):
+                    if self._header['ZNAME'+`i`] == 'BLOCKSIZE':
+                        blockSize = self._header['ZVAL'+`i`]
+                    if self._header['ZNAME'+`i`] == 'BYTEPIX':
+                        bytePix = self._header['ZVAL'+`i`]
+                    i += 1
+
+                zvalList.append(blockSize)
+                zvalList.append(bytePix)
             elif self._header['ZCMPTYPE'] == 'HCOMPRESS_1':
-                if self._header['ZNAME1'] == 'SCALE   ':
-                    zvalList.append(self._header['ZVAL1'])
-                if self._header['ZNAME2'] == 'SMOOTH  ':
-                    zvalList.append(self._header['ZVAL2'])
-                if cn_zscale > 0 and self._header['ZNAME3'] == 'NOISEBIT':
-                    zvalList.append(self._header['ZVAL3'])
-            else:
-                if cn_zscale > 0 and self._header['ZNAME1'] == 'NOISEBIT':
-                    zvalList.append(self._header['ZVAL1'])
-               
+                i = 1
+                hcompSmooth = def_hcompSmooth 
+  
+                while self._header.has_key('ZNAME'+`i`):
+                    if self._header['ZNAME'+`i`] == 'SMOOTH':
+                        hcompSmooth = self._header['ZVAL'+`i`]
+                    i += 1
+
+                zvalList.append(hcompSmooth)
+
+            # Treat the NOISEBIT and SCALE parameters separately because
+            # they are floats instead of integers
+
+            quantizeLevel = def_quantizeLevel
+
+            if self._header['ZBITPIX'] < 0:
+                i = 1
+ 
+                while self._header.has_key('ZNAME'+`i`):
+                    if self._header['ZNAME'+`i`] == 'NOISEBIT':
+                        quantizeLevel = self._header['ZVAL'+`i`]
+                    i += 1
+
+            hcompScale = def_hcompScale
+
+            if self._header['ZCMPTYPE'] == 'HCOMPRESS_1':
+                i = 1
+  
+                while self._header.has_key('ZNAME'+`i`):
+                    if self._header['ZNAME'+`i`] == 'SCALE':
+                        hcompScale = self._header['ZVAL'+`i`]
+                    i += 1
+
             # Indicate if the null value is a constant or if no null value
             # is provided.
             if self._header.has_key('ZBLANK'):
@@ -6254,7 +6777,10 @@ if compressionSupported:
                                            naxesList, tileSizeList,
                                            cn_zblank, zblank, 
                                            cn_bscale, cn_bzero, cn_zscale,
-                                           cn_zzero, cn_uncompressed, zvalList,
+                                           cn_zzero, cn_uncompressed,
+                                           quantizeLevel,
+                                           hcompScale,
+                                           zvalList,
                                            self._header['ZCMPTYPE'],
                                            self.header['BITPIX'], 1,
                                            self.data.size)
@@ -6269,7 +6795,7 @@ if compressionSupported:
                 raise RuntimeError, 'Unable to write compressed image'
    
             # Convert the compressed data from a list of byte strings to 
-            # an array and set it in the COMPRESSED_DATA filed of the table.
+            # an array and set it in the COMPRESSED_DATA field of the table.
             colDType = 'uint8'
    
             if self._header['ZCMPTYPE'] == 'PLIO_1':
@@ -6327,6 +6853,127 @@ if compressionSupported:
                     key = self._header['TFORM'+`i+1`]
                     self._header['TFORM'+`i+1`] = key[:key.find('(')+1] + \
                                               `hdu.compData.field(i)._max` + ')'
+            # Insure that for RICE_1 that the BLOCKSIZE and BYTEPIX cards
+            # are present and set to the hard coded values used by the
+            # compression algorithm.
+            if self._header['ZCMPTYPE'] == 'RICE_1':
+                self._header.update('ZNAME1', 'BLOCKSIZE',
+                                    'compression block size',
+                                    after='ZCMPTYPE')
+                self._header.update('ZVAL1', def_blockSize,
+                                    'pixels per block',
+                                    after='ZNAME1')
+
+                self._header.update('ZNAME2', 'BYTEPIX',
+                                    'bytes per pixel (1, 2, 4, or 8)',
+                                    after='ZVAL1')
+
+                if self._header['ZBITPIX'] == 8:
+                    bytepix = 1
+                elif self._header['ZBITPIX'] == 16:
+                    bytepix = 2
+                else:
+                    bytepix = def_bytePix
+
+                self._header.update('ZVAL2', bytepix,
+                                    'bytes per pixel (1, 2, 4, or 8)',
+                                        after='ZNAME2')
+
+        def scale(self, type=None, option="old", bscale=1, bzero=0):
+            """Scale image data by using BSCALE/BZERO.
+
+            Call to this method will scale self.data and update the keywords
+            of BSCALE and BZERO in self._header and self._imageHeader.  This
+            method should only be used right before writing to the output file,
+            as the data will be scaled and is therefore not very usable after
+            the call.
+
+            type (string): destination data type, use numpy attribute format,
+                           (e.g. 'uint8', 'int16', 'float32' etc.).  If is 
+                           None, use the current data type.
+
+            option: how to scale the data: if "old", use the original BSCALE
+                    and BZERO values when the data was read/created. If
+                    "minmax", use the minimum and maximum of the data to scale.
+                    The option will be overwritten by any user specified
+                    bscale/bzero values.
+
+            bscale/bzero:  user specified BSCALE and BZERO values.
+            """
+
+            if self.data is None:
+                return
+  
+            # Determine the destination (numpy) data type
+            if type is None:
+                type = self.NumCode[self._bitpix]
+            _type = getattr(np, type)
+  
+            # Determine how to scale the data
+            # bscale and bzero takes priority
+            if (bscale != 1 or bzero !=0):
+                _scale = bscale
+                _zero = bzero
+            else:
+                if option == 'old':
+                    _scale = self._bscale
+                    _zero = self._bzero
+                elif option == 'minmax':
+                    if isinstance(_type, np.floating):
+                        _scale = 1
+                        _zero = 0
+                    else:
+
+                        # flat the shape temporarily to save memory
+                        dims = self.data.shape
+                        self.data.shape = self.data.size
+                        min = np.minimum.reduce(self.data)
+                        max = np.maximum.reduce(self.data)
+                        self.data.shape = dims
+
+                        if _type == np.uint8:  # uint8 case
+                            _zero = min
+                            _scale = (max - min) / (2.**8 - 1)
+                        else:
+                            _zero = (max + min) / 2.
+
+                            # throw away -2^N
+                            _scale = (max - min) / (2.**(8*_type.bytes) - 2)
+
+            # Do the scaling
+            if _zero != 0:
+                self.data += -_zero # 0.9.6.3 to avoid out of range error for
+                                    # BZERO = +32768
+  
+            if _scale != 1:
+                self.data /= _scale
+
+            if self.data.dtype.type != _type:
+                self.data = np.array(np.around(self.data), dtype=_type) #0.7.7.1
+            #
+            # Update the BITPIX Card to match the data
+            #
+            self.header['BITPIX']=_ImageBaseHDU.ImgCode[self.data.dtype.name]
+
+            #
+            # Update the table header to match the scaled data
+            #
+            self.updateHeaderData(self.header)
+
+            #
+            # Set the BSCALE/BZERO header cards
+            #
+            if _zero != 0:
+                self.header.update('BZERO', _zero)
+            else:
+                del self.header['BZERO']
+  
+            if _scale != 1:
+                self.header.update('BSCALE', _scale)
+            else:
+                del self.header['BSCALE']
+
+ 
 else:
     # Compression object library failed to import so define it as an
     # empty BinTableHDU class.  This way the code will run when the object
@@ -6761,7 +7408,7 @@ class _File:
         else:
             self.__file.seek(hdu._datSpan, 1)
 
-            if self._size < self.__file.tell():
+            if self.__file.tell() > self._size:
                 warnings.warn('Warning: File may have been truncated: actual file length (%i) is smaller than the expected size (%i)'  % (self._size, self.__file.tell()))
 
         return hdu
@@ -6782,12 +7429,9 @@ class _File:
 
         # If the data is unsigned int 16 add BSCALE/BZERO cards to header
 
-        isuint16 = ('data' in dir(hdu)
-                    and hdu.data is not None
-                    and hdu.data is not DELAYED
-                    and hdu.data.dtype == np.uint16)
-
-        if isuint16:
+        if 'data' in dir(hdu) and hdu.data is not None \
+        and not isinstance(hdu, _NonstandardHDU) \
+        and hdu.data.dtype == np.uint16:
             hdu._header.update('BSCALE',1,
                               after='NAXIS'+`hdu.header.get('NAXIS')`)
             hdu._header.update('BZERO',32768,after='BSCALE')
@@ -6806,7 +7450,9 @@ class _File:
 
         # If data is unsigned integer 16 remove the BSCALE/BZERO cards
 
-        if isuint16:
+        if 'data' in dir(hdu) and hdu.data is not None \
+        and not isinstance(hdu, _NonstandardHDU) \
+        and hdu.data.dtype == np.uint16:
             del hdu._header['BSCALE']
             del hdu._header['BZERO']
 
@@ -6819,7 +7465,15 @@ class _File:
         self.__file.flush()
         loc = self.__file.tell()
         _size = 0
-        if hdu.data is not None:
+        if isinstance(hdu, _NonstandardHDU) and hdu.data is not None:
+            self.__file.write(hdu.data)
+
+            # flush, to make sure the content is written
+            self.__file.flush()
+
+            # return both the location and the size of the data area
+            return loc, len(hdu.data)
+        elif hdu.data is not None:
 
             # deal with unsigned integer 16 data
             if hdu.data.dtype == np.uint16:
@@ -7025,8 +7679,9 @@ class HDUList(list, _Verify):
         _err = _ErrList([], unit='HDU')
 
         # the first (0th) element must be a primary HDU
-        if len(self) > 0 and (not isinstance(self[0], PrimaryHDU)):
-            err_text = "HDUList's 0th element is not a primary HDU (it's a " + str(type(self[0])) + ")"
+        if len(self) > 0 and (not isinstance(self[0], PrimaryHDU)) and \
+                             (not isinstance(self[0], _NonstandardHDU)):
+            err_text = "HDUList's 0th element is not a primary HDU."
             fix_text = 'Fixed by inserting one as 0th HDU.'
             fix = "self.insert(0, PrimaryHDU())"
             _text = self.run_option(option, err_text=err_text, fix_text=fix_text, fix=fix)
