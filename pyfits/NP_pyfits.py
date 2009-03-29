@@ -2466,6 +2466,9 @@ class _NonstandardHDU(_AllHDU, _Verify):
 class _ValidHDU(_AllHDU, _Verify):
     """Base class for all HDUs which are not corrupted."""
 
+    def _summary(self):
+        return "%-10s  %-11s" % (self.name, "ValidHDU")
+
     # 0.6.5.5
     def size(self):
         """Size (in bytes) of the data portion of the HDU."""
