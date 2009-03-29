@@ -175,7 +175,7 @@ For big-endian machines, you must do the following:
 
 cd /usr/local/astrometry/data
 for f in index-*.fits; do
-  fits-flip-endian -i $f -o flip-$f -e 1 -s 4 -e 3 -s 4 -e 4 -s 4 -e 5 -s 8 -e 6 -s 2 -e 8 -s 4 -e 9 -s 4 -e 10 -s 8 -e 11 -s 4
+  fits-flip-endian -i $f -o flip-$f -e 1 -s 4 -e 3 -s 4 -e 4 -s 2 -e 5 -s 8 -e 6 -s 2 -e 8 -s 4 -e 9 -s 4 -e 10 -s 8 -e 11 -s 4
   for e in 0 2 7; do
     modhead flip-$f"[$e]" ENDIAN 01:02:03:04
   done
