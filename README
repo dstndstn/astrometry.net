@@ -187,13 +187,14 @@ assuming "fits-flip-endian" and "modhead" are in your path.  The files
 If that worked, you can swap the flipped ones into place (while
 saving the originals) with:
 
+cd /usr/local/astrometry/data
+mkdir -p orig
 for f in index-*.fits; do
   echo "backing up $f"
-  mv -n $f orig-$f
+  mv -n $f orig/$f
   echo "moving $f into place"
   mv -n flip-$f $f
 done
-
 
 SOLVING
 -------
