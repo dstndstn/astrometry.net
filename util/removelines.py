@@ -1,8 +1,31 @@
 #! /usr/bin/env python
+import os
 import sys
 import logging
-import pyfits
 
+if __name__ == '__main__':
+	try:
+		import pyfits
+		import astrometry
+		from astrometry.util.shell import shell_escape
+		from astrometry.util.filetype import filetype_short
+	except ImportError:
+		me = sys.argv[0]
+		#print 'i am', me
+		path = os.path.realpath(me)
+		#print 'my real path is', path
+		utildir = os.path.dirname(path)
+		assert(os.path.basename(utildir) == 'util')
+		andir = os.path.dirname(utildir)
+		#assert(os.path.basename(andir) == 'astrometry')
+		rootdir = os.path.dirname(andir)
+		#print 'adding path', rootdir
+		#sys.path += [rootdir]
+		sys.path.insert(1, andir)
+		sys.path.insert(2, rootdir)
+
+import numpy
+import pyfits
 from numpy import *
 from numpy.random import rand
 

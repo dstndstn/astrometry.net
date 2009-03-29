@@ -141,7 +141,7 @@ index-200.tar.bz2             2.0  -  2.8              10,058
 --------------------------------------------------------------
 
 Download the indexes you need and put them in the top-level
-(astrometry-0.2) source directory.
+(astrometry-VERSION) source directory.
 
 Install them:
    $ make install-indexes
@@ -170,11 +170,10 @@ directory.
 BIG-ENDIAN MACHINES
 -------------------
 
-[caution, these instructions have not been verified.]
-
 The index files we are distributing are for little-endian machines.
 For big-endian machines, you must do the following:
 
+cd /usr/local/astrometry/data
 for f in index-*.fits; do
   fits-flip-endian -i $f -o flip-$f -e 1 -s 4 -e 3 -s 4 -e 4 -s 4 -e 5 -s 8 -e 6 -s 2 -e 8 -s 4 -e 9 -s 4 -e 10 -s 8 -e 11 -s 4
   for e in 0 2 7; do
@@ -184,6 +183,17 @@ done
 
 assuming "fits-flip-endian" and "modhead" are in your path.  The files
 "flip-index-*.fits" will contain the flipped index files.
+
+If that worked, you can swap the flipped ones into place (while
+saving the originals) with:
+
+for f in index-*.fits; do
+  echo "backing up $f"
+  mv -n $f orig-$f
+  echo "moving $f into place"
+  mv -n flip-$f $f
+done
+
 
 SOLVING
 -------
