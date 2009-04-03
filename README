@@ -477,6 +477,141 @@ code.  Here are some things you can do to make the code run faster:
 
     http://gcc.gnu.org/onlinedocs/gcc-4.3.0/gcc/i386-and-x86_002d64-Options.html#i386-and-x86_002d64-Options
 
+
+WHAT ARE ALL THESE PROGRAMS?
+----------------------------
+
+When you "make install", you'll get a bunch of programs in
+/usr/local/astrometry/bin.  Here's a brief synopsis of what each one
+does.  For more details, run the program without arguments (most of
+them give at least a brief summary of what they do).
+
+Image-solving programs
+----------------------
+  * solve-field: main high-level command-line user interface.
+
+  * backend: higher-level solver that reads "augmented xylists";
+called by solve-field.
+
+  * augment-xylist: creates "augmented xylists" from images, which
+include star positions and hints and instructions for solving.
+
+  * blind: low-level command-line solver.
+
+  * image2xy: source extractor.
+
+Plotting programs
+-----------------
+  * plotxy: plots circles, crosses, etc over images.
+
+  * plotquad: draws polygons over images.
+
+  * plot-constellations: annotates images with constellations, bright
+stars, Messier/NGC objects, Henry Draper catalog stars, etc.
+
+  * plotcat: produces density plots given lists of stars.
+
+WCS utilities
+-------------
+  * new-wcs: merge a WCS solution with existing FITS header cards; can
+be used to create a new image file containing the WCS headers.
+
+  * fits-guess-scale: try to guess the scale of an image based on FITS
+headers.
+
+  * wcsinfo: print simple properties of WCS headers (scale, rotation, etc)
+
+  * wcs-xy2rd, wcs-rd2xy: convert between lists of pixel (x,y) and
+(RA,Dec) positions.
+
+  * wcs-resample: projects one FITS image onto another image.  
+
+  * wcs-grab/get-wcs: try to interpret an existing WCS header.
+
+Miscellany:
+-----------
+  * an-fitstopnm: converts FITS images into ugly PNM images.
+
+  * get-healpix: which healpix covers a given RA,Dec?
+
+  * hpowned: which small healpixels are inside a big healpixel?
+
+  * control-program: sample code for how you might use astrometry.net
+code in your own software.
+
+  * xylist2fits: converts a text list of x,y positions to a FITS
+binary table.
+
+  * rdlsinfo: print stats about a list of RA,Dec positions (rdlist).
+
+  * xylsinfo: print stats about a list of x,y positions (xylist).
+
+FITS utilities
+--------------
+  * tablist: list values in a FITS binary table.
+
+  * modhead: print or modify FITS header cards.
+
+  * fitscopy: general FITS image / table copier.
+
+  * tabmerge: combines rows in two FITS tables.
+
+  * fitstomatlab: prints out FITS binary tables in a silly format.
+
+  * liststruc: shows the structure of a FITS file.
+
+  * listhead: prints FITS header cards.
+
+  * imcopy: copies FITS images.
+
+  * imarith: does (very) simple arithmetic on FITS images.
+
+  * imstat: computes statistics on FITS images.
+
+  * fitsgetext: pull out individual header or data blocks from
+multi-HDU FITS files.
+
+  * subtable: pull out a set of columns from a many-column FITS binary
+table.
+
+  * tabsort: sort a FITS binary table based on values in one column.
+
+  * column-merge: create a FITS binary table that includes columns
+from two input tables.
+
+  * add-healpix-column: given a FITS binary table containing RA and
+DEC columns, compute the HEALPIX and add it as a column.
+
+  * resort-xylist: used by solve-field to sort a list of stars using a
+compromise between background-subtracted and non-background-subtracted
+flux (because our source extractor sometimes messes up the background
+subtraction).
+
+  * fits-flip-endian: does endian-swapping of FITS binary tables.
+
+  * fits-dedup: removes duplicate header cards.
+
+Index-building programs
+-----------------------
+  * usnobtofits, tycho2tofits, nomadtofits, 2masstofits: convert
+catalogs into FITS binary tables.
+
+  * build-an-catalog: convert input catalogs into a standard FITS
+binary table format.
+
+  * cut-an: grab a bright, uniform subset of stars from a catalog.
+
+  * startree: build a star kdtree from a catalog.
+
+  * hpquads: find a bright, uniform set of N-star features.
+
+  * codetree: build a kdtree from N-star shape descriptors.
+
+  * unpermute-quads, unpermute-stars: reorder index files for
+efficiency.
+
+
+
 XYLISTS
 -------
 
