@@ -128,12 +128,14 @@ int render_images(unsigned char* img, render_args_t* args) {
         int len;
 		int expectlen;
 
-		imgfn = wcsfn = NULL;
-        fn = sl_get(imagefiles, I);
+		imgfn = wcsfn = fn = NULL;
         wcsfn = sl_get(wcsfiles, I);
-        imgfn = find_file_in_dirs(image_dirs, sizeof(image_dirs)/sizeof(char*),
-                                  fn, TRUE);
-        if (!imgfn) {
+		if (I < sl_size(imagefiles)) {
+			fn = sl_get(imagefiles, I);
+			imgfn = find_file_in_dirs(image_dirs, sizeof(image_dirs)/sizeof(char*),
+									  fn, TRUE);
+		}
+		if (!args->density && !imgfn) {
             logmsg("Couldn't find image file \"%s\"\n", fn);
             continue;
         }
