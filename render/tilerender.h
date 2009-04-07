@@ -112,9 +112,9 @@ struct render_args {
     char* cachedir;
 
     // generic argument-passing:
-    // filename
-    char* argfilename;
-    // string list
+    // argument filenames
+    sl* argfilenames;
+    // a list of all the lines in all the files.
     sl* arglist;
 
 };

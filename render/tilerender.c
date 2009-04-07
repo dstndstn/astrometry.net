@@ -98,6 +98,14 @@ static void print_help(char* prog) {
 		   "  [-R]: write a raw floating-point image\n"
 		   "\n"
 		   "\n"
+		   "     Argument files: in order to pass a large number of filenames or other arguments,\n"
+		   "     you can pass a file containing:\n"
+		   "          <keyword> <arguments>\n"
+		   "          <keyword> <arguments>\n"
+		   "          ...\n"
+		   "  [-A <argument-file>]\n"
+		   "\n"
+		   "\n"
 		   "     Layers: the output image is rendered one layer at a time, in the specified order.\n"
 		   "             Each rendering layer takes its own arguments, listed below.\n"
 		   "  -l <layer-name> [-l <layer-name> ...]\n"
@@ -114,7 +122,19 @@ static void print_help(char* prog) {
 		   "    [-e <scale>]: apply nonlinearities at the given scale\n"
 		   "    [-g <gain>]: apply this gain factor to brightnesses (makes the stars brighter)\n"
 		   "\n"
-		   "  -l \n"
+		   "  -l images  -- Renders images.\n"
+		   "    [-n]: plot pixel density, not the pixels themselves.\n"
+		   "    [-s, -e, -g]: as above.\n"
+		   "                Reads from argument file (-A):\n"
+		   "     wcsfn <wcs-file>\n"
+		   "     jpegfn <jpeg-file>\n"
+		   "\n"
+		   "  -l cairo   -- Renders cairo commands.\n"
+		   "                Reads from argument file (-A):\n"
+		   "     cairo color <r> <g> <b> [<a>]\n"
+		   "     cairo moveto <ra> <dec>\n"
+		   "     cairo lineto <ra> <dec>\n"
+		   "     cairo stroke\n"
 		   "\n"
 		   "\n", prog);
 }
@@ -220,6 +240,7 @@ int main(int argc, char *argv[]) {
 	args.fieldnums = il_new(4);
 	args.imagefns = sl_new(4);
 	args.imwcsfns = sl_new(4);
+	args.argfilenames = sl_new(4);
 
 	layers = sl_new(16);
 	gotx = goty = gotX = gotY = gotw = goth = FALSE;
@@ -233,7 +254,7 @@ int main(int argc, char *argv[]) {
 			loglvl++;
 			break;
         case 'A':
-            args.argfilename = optarg;
+            sl_append(args.argfilenames, optarg);
             break;
         case 'K':
             args.colorlist = optarg;
@@ -409,8 +430,17 @@ int main(int argc, char *argv[]) {
 		logmsg("tilecache: Do you maybe want to try rendering some layers?\n");
 	}
 
-    if (args.argfilename)
-        args.arglist = file_get_lines(args.argfilename, FALSE);
+	for (i=0; i<sl_size(args.argfilenames); i++) {
+		sl* lines;
+		char* fn = sl_get(args.argfilenames, i);
+        lines = file_get_lines(fn, FALSE);
+		if (!args.arglist)
+			args.arglist = lines;
+		else {
+			sl_merge_lists(args.arglist, lines);
+			sl_free2(lines);
+		}
+	}
 
 	// Allocate a black image.
 	img = calloc(4 * args.W * args.H, 1);
@@ -487,6 +517,7 @@ int main(int argc, char *argv[]) {
 
 	free(img);
 
+	sl_free2(args.arglist);
 	sl_free2(args.rdlsfns);
 	sl_free2(args.rdlscolors);
 	sl_free2(args.imagefns);
