@@ -1,6 +1,7 @@
 /*
    This file is part of the Astrometry.net suite.
    Copyright 2007 Keir Mierle and Dustin Lang.
+   Copyright 2009 Dustin Lang.
 
    The Astrometry.net suite is free software; you can redistribute
    it and/or modify it under the terms of the GNU General Public License
@@ -65,15 +66,60 @@ uLong compressBound (uLong sourceLen) {
 #endif
 
 /**
-  This program gets called by "tile.php" in response to a client requesting a map
-  tile.  The coordinates of the tile are specified as a range of RA and DEC values.
+  This program gets called by "tile.php"/django in response to a
+  client requesting a Google maps tile.  The coordinates of the tile
+  are specified as a range of RA and DEC values.
 
   The RA coordinates are passed as    -x <lower-RA> -X <upper-RA>
   The DEC coordinates are             -y <lower-DEC> -Y <upper-DEC>
   The width and height in pixels are  -w <width> -h <height>
   */
 
-const char* OPTIONS = "ab:c:de:g:h:i:k:l:npqr:svw:x:y:zA:B:C:D:F:I:JL:MN:RS:V:W:X:Y:PK:";
+static void print_help(char* prog) {
+	printf("Usage: %s\n"
+		   "\n"
+		   "     These four flags are required: they specify the rectangle in RA,Dec space\n"
+		   "     that this tile will cover.\n"
+		   "  -x <lower-RA>\n"
+		   "  -X <upper-RA>\n"
+		   "  -y <lower-Dec>\n"
+		   "  -Y <upper-Dec>\n"
+		   "\n"
+		   "     If you use this flag, the coordinates are instead interpreted as Mercator\n"
+		   "     coordinates in the unit square.\n"
+		   "  [-M]: in Mercator coords\n"
+		   "\n"
+		   "     These two flags are required: they specify the output image size.\n"
+		   "  -w <image-width>\n"
+		   "  -h <image-height>\n"
+		   "\n"
+		   "     Output options: the default is to write a PNG image to standard out.\n"
+		   "  [-J]: write jpeg\n"
+		   "  [-R]: write a raw floating-point image\n"
+		   "\n"
+		   "\n"
+		   "     Layers: the output image is rendered one layer at a time, in the specified order.\n"
+		   "             Each rendering layer takes its own arguments, listed below.\n"
+		   "  -l <layer-name> [-l <layer-name> ...]\n"
+		   "\n"
+		   "  -l solid   -- Renders a solid, opaque, black background.\n"
+		   "                By default the background is black but transparent.\n"
+		   "\n"
+		   "  -l tycho   -- Renders Tycho-2 stars.\n"
+		   "    -T <tycho-mkdt-file>: path to the Tycho-2 Mercator-kdtree data file.\n"
+		   "                          This file can be created with \"make-merctree\".\n"
+		   "    [-c]: apply Hogg's color-correction\n"
+		   "    [-s]: apply arcsinh brightness mapping\n"
+		   "    [-q]: apply sqrt brightness mapping\n"
+		   "    [-e <scale>]: apply nonlinearities at the given scale\n"
+		   "    [-g <gain>]: apply this gain factor to brightnesses (makes the stars brighter)\n"
+		   "\n"
+		   "  -l \n"
+		   "\n"
+		   "\n", prog);
+}
+
+const char* OPTIONS = "ab:c:de:g:h:i:k:l:npqr:svw:x:y:zA:B:C:D:F:I:JL:MN:RS:T:V:W:X:Y:PK:";
 
 struct renderer {
 	char* name;
@@ -157,6 +203,11 @@ int main(int argc, char *argv[]) {
     bool writejpeg = FALSE;
 	int loglvl = LOG_MSG;
 
+	if (argc == 1) {
+		print_help(argv[0]);
+		exit(0);
+	}
+
 	memset(&args, 0, sizeof(render_args_t));
 
 	// default args:
@@ -175,6 +226,9 @@ int main(int argc, char *argv[]) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'T':
+			args.tycho_mkdt = optarg;
+			break;
 		case 'v':
 			loglvl++;
 			break;

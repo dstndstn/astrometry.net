@@ -92,7 +92,7 @@ int render_images(unsigned char* img, render_args_t* args) {
     get_string_args_of_type(args, "jpegfn ", imagefiles);
     get_string_args_of_type(args, "wcsfn ", wcsfiles);
 
-    if (sl_size(imagefiles) != sl_size(wcsfiles)) {
+    if (!args->density && (sl_size(imagefiles) != sl_size(wcsfiles))) {
         logmsg("Got %i jpeg files but %i wcs files.\n",
                sl_size(imagefiles), sl_size(wcsfiles));
         return -1;
@@ -353,7 +353,6 @@ int render_images(unsigned char* img, render_args_t* args) {
                 if (den > maxden)
                     maxden = den;
                 if (den > 0.0) {
-                    //pix[0] = pix[1] = pix[2] = MAX(0, MIN(255, den));
 					heatmap(den, pix);
                     pix[3] = 255;
                 }

@@ -11,10 +11,6 @@
 #include "keywords.h"
 #include "mercrender.h"
 
-static char* merc_files[] = {
-	"/data2/test-merc/tycho.mkdt.fits",
-};
-
 static void logmsg(char* format, ...) {
 	va_list args;
 	va_start(args, format);
@@ -28,16 +24,14 @@ int render_tycho(unsigned char* img, render_args_t* args) {
 	float amp = 0.0;
 	int i, j;
 
-	logmsg("begin.\n");
-
-	for (i=0; i<sizeof(merc_files)/sizeof(char*); i++) {
-		logmsg("trying mercfile %s.\n", merc_files[i]);
-		fluximg = mercrender_file(merc_files[i], args, RENDERSYMBOL_psf);
-		if (fluximg) 
-			break;
+	if (!args->tycho_mkdt) {
+		logmsg("Required argument '-T <tycho-mkdt-path>' was not specified!");
+		return -1;
 	}
+
+	fluximg = mercrender_file(args->tycho_mkdt, args, RENDERSYMBOL_psf);
 	if (!fluximg) {
-		logmsg("failed to find Tycho mercfile.\n");
+		logmsg("failed to read Tycho mkdt file \"%s\".\n", args->tycho_mkdt);
 		return -1;
 	}
 

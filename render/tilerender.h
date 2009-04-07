@@ -75,6 +75,7 @@ struct render_args {
 	sl* imwcsfns;
 
 	// Args for render_tycho:
+	char* tycho_mkdt;
 	double colorcor;
 	bool arc;
 	bool sqrt;
