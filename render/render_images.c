@@ -191,7 +191,10 @@ int render_images(unsigned char* img, render_args_t* args) {
         {
             md5_context md5;
             md5_starts(&md5);
-            md5_update(&md5, imgfn, strlen(imgfn));
+			if (imgfn)
+				md5_update(&md5, imgfn, strlen(imgfn));
+			if (wcsfn)
+				md5_update(&md5, wcsfn, strlen(wcsfn));
             md5_update(&md5, &(args->ramin), sizeof(double));
             md5_update(&md5, &(args->ramax), sizeof(double));
             md5_update(&md5, &(args->decmin), sizeof(double));
