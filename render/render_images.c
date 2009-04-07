@@ -92,6 +92,7 @@ int render_images(unsigned char* img, render_args_t* args) {
     get_string_args_of_type(args, "jpegfn ", imagefiles);
     get_string_args_of_type(args, "wcsfn ", wcsfiles);
 
+	// When plotting density, we only need the WCS files.
     if (!args->density && (sl_size(imagefiles) != sl_size(wcsfiles))) {
         logmsg("Got %i jpeg files but %i wcs files.\n",
                sl_size(imagefiles), sl_size(wcsfiles));
@@ -108,7 +109,7 @@ int render_images(unsigned char* img, render_args_t* args) {
         ravals[i] = pixel2ra(i, args);
     for (j=0; j<args->H; j++)
         decvals[j] = pixel2dec(j, args);
-    for (I=0; I<sl_size(imagefiles); I++) {
+    for (I=0; I<sl_size(wcsfiles); I++) {
 		char* fn;
         char* imgfn = NULL;
         char* wcsfn = NULL;
