@@ -52,6 +52,7 @@ if __name__ == '__main__':
                + ' -x %f -X %f -y %f -Y %f' % (ramin, ramax, decmin, decmax)
                + ' -w %i -h %i' % (w, h)
                + ''.join((' -l ' + l) for l in layers)
+			   + ' -T %s' % settings.TYCHO_MKDT
                + ' -s' # arcsinh
                + ' -g %g' % gain
                + ' > %s' % blankskyfn

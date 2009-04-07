@@ -268,9 +268,12 @@ def get_tile(request):
 	# layers: -l
 	layerexp = re.compile(r'^\w+$')
 	#cmdline += (" -l %s" % lay) for lay in layers if layerexp.match(lay)
-	for lay in layers:
-		if layerexp.match(lay):
-			cmdline += (" -l " + lay)
+	layers = [layer for layer in layers if layerexp.match(layer)]
+
+	cmdline += ''.join([(" -l " + lay) for lay in layers])
+
+	if 'tycho' in layers:
+		cmdline += " -T " + settings.TYCHO_MKDT
 
 	if ('ubstyle' in request.GET):
 		style = request.GET['ubstyle']

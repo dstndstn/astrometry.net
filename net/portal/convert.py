@@ -537,6 +537,7 @@ def convert(job, fn, args=None):
 			   + ' -w %i -h %i' % (w, h)
 			   + ' -L %g' % lw
 			   + ''.join((' -l ' + l) for l in layers)
+			   + ' -T %s' % settings.TYCHO_MKDT
 			   + ' -I %s' % wcsfn
 			   + ' -s' # arcsinh
 			   + ' -g %g' % gain

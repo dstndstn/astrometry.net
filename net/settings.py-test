@@ -36,6 +36,7 @@ PORTAL_LOGFILE = LOG_DIR + 'portal.log'
 VO_LOGFILE = LOG_DIR + 'vo.log'
 
 HENRY_DRAPER_CAT = ANDIR + 'data/hd.fits'
+TYCHO_MKDT = ANDIR + 'data/tycho.mkdt.fits'
 
 TILERENDER = ANDIR + 'render/tilerender'
 SIPSO = ANDIR + 'util/_sip.so'
