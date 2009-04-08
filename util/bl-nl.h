@@ -48,6 +48,9 @@ int NLF(contains)(nl* list, const number data);
 // Assuming the list is sorted in ascending order,
 // does it contain the given number?
 int NLF(sorted_contains)(nl* list, const number data);
+// Or -1 if not found.
+int NLF(sorted_index_of)(nl* list, const number data);
+
 // Returns the index in the list of the given number, or -1 if it
 // is not found.
 int  NLF(index_of)(nl* list, const number data);
@@ -58,10 +61,12 @@ void NLF(print)(nl* list);
 void   NLF(insert)(nl* list, int indx, const number data);
 int NLF(insert_ascending)(nl* list, const number n);
 int NLF(insert_descending)(nl* list, const number n);
+// Returns the index at which the element was added, or -1 if it's a duplicate.
 int  NLF(insert_unique_ascending)(nl* list, const number p);
 void NLF(set)(nl* list, int ind, const number value);
 void NLF(remove)(nl* list, int ind);
 void NLF(remove_index_range)(nl* list, int start, int length);
+// See also sorted_index_of, which should be faster.
 int  NLF(find_index_ascending)(nl* list, const number value);
 
 nl* NLF(merge_ascending)(nl* list1, nl* list2);

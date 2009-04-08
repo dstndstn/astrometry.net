@@ -325,7 +325,7 @@ int NLF(insert_unique_ascending)(nl* list, const number n) {
 	}
 
     // check if it's a duplicate...
-    // --if it's the smallest element in this node, "lower" ends up being -1,
+    // --if it's equal to the smallest element in this node, "lower" ends up being -1,
     //   hence the ">= 0" check.
 	if (lower >= 0 && n == iarray[lower])
 		return -1;
@@ -380,6 +380,10 @@ int NLF(contains)(nl* list, const number data) {
 }
 
 int NLF(sorted_contains)(nl* list, const number n) {
+	return NLF(sorted_index_of)(list, n) != -1;
+}
+
+int NLF(sorted_index_of)(nl* list, const number n) {
 	bl_node *node;
 	number* iarray;
 	int lower, upper;
@@ -398,7 +402,11 @@ int NLF(sorted_contains)(nl* list, const number n) {
 		 node=node->next)
 		nskipped += node->N;
 	if (!node)
-		return 0;
+		return -1;
+
+	// update jump accessors...
+	list->last_access = node;
+	list->last_access_n = nskipped;
 
 	// find within the node...
 	iarray = NODE_NUMDATA(node);
@@ -412,7 +420,9 @@ int NLF(sorted_contains)(nl* list, const number n) {
 		else
 			upper = mid;
 	}
-	return (lower >= 0 && n == iarray[lower]);
+	if (lower >= 0 && n == iarray[lower])
+		return nskipped + lower;
+	return -1;
 }
 
 #undef NLF

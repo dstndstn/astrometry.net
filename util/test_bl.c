@@ -28,18 +28,53 @@
 void test_ll_sorted_contains_1(CuTest* tc) {
 	int i;
 	ll* lst = ll_new(32);
+	// Fill the list with L[i] = i^2
 	for (i=0; i<10000; i++)
 		ll_append(lst, i*i);
+	//ll_print(lst);
 	CuAssertIntEquals(tc, 0, ll_sorted_contains(lst, -1));
 	CuAssertIntEquals(tc, 1, ll_sorted_contains(lst, 0));
 	CuAssertIntEquals(tc, 1, ll_sorted_contains(lst, 1));
 	CuAssertIntEquals(tc, 1, ll_sorted_contains(lst, 4));
+	// 961 = 31^2
 	CuAssertIntEquals(tc, 0, ll_sorted_contains(lst, 960));
 	CuAssertIntEquals(tc, 1, ll_sorted_contains(lst, 961));
 	CuAssertIntEquals(tc, 0, ll_sorted_contains(lst, 962));
+	// 1024 = 32^2
 	CuAssertIntEquals(tc, 0, ll_sorted_contains(lst, 1023));
 	CuAssertIntEquals(tc, 1, ll_sorted_contains(lst, 1024));
 	CuAssertIntEquals(tc, 0, ll_sorted_contains(lst, 1025));
+}
+
+void test_ll_sorted_index_of_1(CuTest* tc) {
+	int i;
+	ll* lst = ll_new(32);
+	// Fill the list with L[i] = i^2
+	for (i=0; i<=10000; i++)
+		ll_append(lst, i*i);
+	CuAssertIntEquals(tc, -1, ll_sorted_index_of(lst, -1));
+	CuAssertIntEquals(tc, 0, ll_sorted_index_of(lst, 0));
+	CuAssertIntEquals(tc, 1, ll_sorted_index_of(lst, 1));
+	CuAssertIntEquals(tc, -1, ll_sorted_index_of(lst, 2));
+	CuAssertIntEquals(tc, -1, ll_sorted_index_of(lst, 3));
+	CuAssertIntEquals(tc, 2, ll_sorted_index_of(lst, 4));
+	CuAssertIntEquals(tc, -1, ll_sorted_index_of(lst, 5));
+	CuAssertIntEquals(tc, -1, ll_sorted_index_of(lst, 960));
+	CuAssertIntEquals(tc, 31, ll_sorted_index_of(lst, 961));
+	CuAssertIntEquals(tc, -1, ll_sorted_index_of(lst, 962));
+	CuAssertIntEquals(tc, -1, ll_sorted_index_of(lst, 1023));
+	CuAssertIntEquals(tc, 32, ll_sorted_index_of(lst, 1024));
+	CuAssertIntEquals(tc, -1, ll_sorted_index_of(lst, 1025));
+	CuAssertIntEquals(tc, -1, ll_sorted_index_of(lst, 9999));
+	CuAssertIntEquals(tc, 100, ll_sorted_index_of(lst, 10000));
+	CuAssertIntEquals(tc, -1, ll_sorted_index_of(lst, 10001));
+	CuAssertIntEquals(tc, -1,    ll_sorted_index_of(lst, 10000 * 10000 - 1));
+	CuAssertIntEquals(tc, 10000, ll_sorted_index_of(lst, 10000 * 10000    ));
+	CuAssertIntEquals(tc, -1,    ll_sorted_index_of(lst, 10000 * 10000 + 1));
+	// test again (jump accessors)
+	CuAssertIntEquals(tc, -1,    ll_sorted_index_of(lst, 10000 * 10000 - 1));
+	CuAssertIntEquals(tc, 10000, ll_sorted_index_of(lst, 10000 * 10000    ));
+	CuAssertIntEquals(tc, -1,    ll_sorted_index_of(lst, 10000 * 10000 + 1));
 }
 
 void test_il_remove_index_range_1(CuTest* tc) {
