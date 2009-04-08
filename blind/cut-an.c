@@ -129,13 +129,13 @@ void starlists_free(starlists_t* sl) {
 }
 
 bl* starlists_get(starlists_t* sl, int64_t hp, bool create) {
-	int ind = ll_index_of(sl->hps, hp);
+	int ind = ll_sorted_index_of(sl->hps, hp);
 	if (ind == -1) {
 		if (!create)
 			return NULL;
 		bl* lst = bl_new(sl->size, sizeof(stardata));
-		pl_append(sl->lists, lst);
-		ll_append(sl->hps, hp);
+		ind = ll_insert_unique_ascending(sl->hps, hp);
+		pl_insert(sl->lists, ind, lst);
 		return lst;
 	}
 	return pl_get(sl->lists, ind);
