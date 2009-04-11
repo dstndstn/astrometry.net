@@ -208,7 +208,7 @@ ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log test_ioutils \
 	test_dualtree_nn test_scamp_catalog test_starutil test_svd
 ALL_TEST_EXTRA_OBJS = 
-ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 
 include $(COMMON)/makefile.tests
 
