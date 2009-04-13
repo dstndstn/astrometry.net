@@ -130,7 +130,7 @@ static an_option_t options[] = {
     {'Q', "quad-size-max",  required_argument, "fraction",
      "maximum size of quads to try, as a fraction of the image hypotenuse, default 1.0"},
 	{'[', "odds-to-solve",  required_argument, "odds",
-	 "odds ratio to consider a field solved (default 1e12)"},
+	 "odds ratio to consider a field solved (default 1e9)"},
     {'3', "ra",             required_argument, "degrees or hh:mm:ss",
      "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
     {'4', "dec",            required_argument, "degrees or [+-]dd:mm:ss",
@@ -252,7 +252,7 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         axy->extension = atoi(optarg);
         break;
 	case '[':
-		axy->odds_to_solve = log(atof(optarg));
+		axy->odds_to_solve = atof(optarg);
 		break;
     case '8':
         if (streq(optarg, "pos")) {
