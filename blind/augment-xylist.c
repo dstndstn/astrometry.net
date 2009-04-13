@@ -121,6 +121,16 @@ static an_option_t options[] = {
 	{'u', "scale-units",    required_argument, "units", NULL},
     {'8', "parity",         required_argument, "pos/neg",
      "only check for matches with positive/negative parity (default: try both)"},
+    {'c', "code-tolerance", required_argument, "distance",
+     "matching distance for quads, default 0.01"},
+    {'E', "pixel-error",    required_argument, "pixels",
+     "for verification, size of pixel positional error, default 1"},
+    {'q', "quad-size-min",  required_argument, "fraction",
+     "minimum size of quads to try, as a fraction of the smaller image dimension, default 0.1"},
+    {'Q', "quad-size-max",  required_argument, "fraction",
+     "maximum size of quads to try, as a fraction of the image hypotenuse, default 1.0"},
+	{'[', "odds-to-solve",  required_argument, "odds",
+	 "odds ratio to consider a field solved (default 1e12)"},
     {'3', "ra",             required_argument, "degrees or hh:mm:ss",
      "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
     {'4', "dec",            required_argument, "degrees or [+-]dd:mm:ss",
@@ -175,16 +185,8 @@ static an_option_t options[] = {
      "don't fine-tune WCS by computing a SIP polynomial"},
 	{'t', "tweak-order",    required_argument, "int",
      "polynomial order of SIP WCS corrections"},
-    {'c', "code-tolerance", required_argument, "distance",
-     "matching distance for quads, default 0.01"},
-    {'E', "pixel-error",    required_argument, "pixels",
-     "for verification, size of pixel positional error, default 1"},
 	{'m', "temp-dir",       required_argument, "dir",
      "where to put temp files, default /tmp"},
-    {'q', "quad-size-min",  required_argument, "fraction",
-     "minimum size of quads to try, as a fraction of the smaller image dimension, default 0.1"},
-    {'Q', "quad-size-max",  required_argument, "fraction",
-     "maximum size of quads to try, as a fraction of the image hypotenuse, default 1.0"},
     // placeholder for printing "The following are for xylist inputs only"
     {'\0', "xylist-only", no_argument, NULL, NULL},
     {'F', "fields",         required_argument, NULL, NULL},
@@ -249,6 +251,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
     case '6':
         axy->extension = atoi(optarg);
         break;
+	case '[':
+		axy->logodds_to_solve = log(atof(optarg));
+		break;
     case '8':
         if (streq(optarg, "pos")) {
             axy->parity = PARITY_NORMAL;
@@ -786,6 +791,9 @@ int augment_xylist(augment_xylist_t* axy,
         qfits_header_add(hdr, "ANXCOL", axy->xcol, "Name of column containing X coords", NULL);
     if (axy->ycol)
         qfits_header_add(hdr, "ANYCOL", axy->ycol, "Name of column containing Y coords", NULL);
+
+	if (axy->logodds_to_solve)
+		fits_header_add_double(hdr, "ANODDSSL", axy->logodds_to_solve, "Log of odds ratio to consider a field solve");
 
 	if ((axy->scalelo > 0.0) || (axy->scalehi > 0.0)) {
 		double appu, appl;
