@@ -96,7 +96,7 @@ struct augment_xylist_s {
     double codetol;
     double pixelerr;
 
-	double logodds_to_solve;
+	double odds_to_solve;
 
     int downsample;
 

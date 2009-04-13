@@ -252,7 +252,7 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         axy->extension = atoi(optarg);
         break;
 	case '[':
-		axy->logodds_to_solve = log(atof(optarg));
+		axy->odds_to_solve = log(atof(optarg));
 		break;
     case '8':
         if (streq(optarg, "pos")) {
@@ -792,8 +792,8 @@ int augment_xylist(augment_xylist_t* axy,
     if (axy->ycol)
         qfits_header_add(hdr, "ANYCOL", axy->ycol, "Name of column containing Y coords", NULL);
 
-	if (axy->logodds_to_solve)
-		fits_header_add_double(hdr, "ANODDSSL", axy->logodds_to_solve, "Log of odds ratio to consider a field solve");
+	if (axy->odds_to_solve)
+		fits_header_add_double(hdr, "ANODDSSL", axy->odds_to_solve, "Odds ratio to consider a field solved");
 
 	if ((axy->scalelo > 0.0) || (axy->scalehi > 0.0)) {
 		double appu, appl;
