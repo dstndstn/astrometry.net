@@ -65,7 +65,8 @@ void verify_hit(index_t* index,
                 double logratio_tobail,
                 bool distance_from_quad_bonus,
 				int dimquads,
-                bool fake_match);
+                bool fake_match,
+				double logodds_tokeep);
 
 verify_field_t* verify_field_preprocess(const starxy_t* fieldxy);
 

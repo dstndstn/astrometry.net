@@ -57,7 +57,8 @@ int main(int argc, char** args) {
 	double pix2 = 1.0;
 	double distractors = 0.25;
 	double fieldW=0, fieldH=0;
-	double logbail = -1e100;
+	double logbail = log(-1e100);
+	double logkeep = log(1e12);
 	bool growvariance = TRUE;
 	bool fake = FALSE;
 
@@ -83,7 +84,7 @@ int main(int argc, char** args) {
 	log_init(loglvl);
 
 	if (!indexfn || !matchfn || !xyfn) {
-		logerr("You must specify index (-i) and matchfile (-m) and xylist (-x).\n");
+		logerr("You must specify index (-i) and matchfile (-m) and field xylist (-f).\n");
 		print_help(args[0]);
 		exit(-1);
 	}
@@ -132,7 +133,8 @@ int main(int argc, char** args) {
 	verify_hit(index, mo, NULL, vf,
 			   pix2, distractors, fieldW, fieldH,
 			   logbail, growvariance,
-			   index_get_quad_dim(index), fake);
+			   index_get_quad_dim(index), fake,
+			   logkeep);
     logmsg("Logodds: %g\n", mo->logodds);
     logmsg("Odds: %g\n", exp(mo->logodds));
 
