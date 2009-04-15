@@ -126,7 +126,7 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 		float y = args->H;
 		if (!in_image((int)round(x+0.5), 0, args))
 			continue;
-		sprintf(buf, "%i", (int)ra);
+		sprintf(buf, "%.2f", ra);
 		add_text(cairo, x, y, buf, args);
 	}
 	for (dec = declabelstep * floor(args->decmin / declabelstep);
@@ -140,7 +140,7 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 			continue;
 		if (!in_image(0, (int)round(y+0.5), args))
 			continue;
-		sprintf(buf, "%i", (int)dec);
+		sprintf(buf, "%.2f", dec);
 		add_text(cairo, x, y, buf, args);
 	}
 

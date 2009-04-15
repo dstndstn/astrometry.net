@@ -394,8 +394,9 @@ double verify_star_lists(const double* refxys, int NR,
 						 const double* testxys, const double* testsigma2s, int NT,
 						 double effective_area,
 						 double distractors,
-						 double logodds_bail, //double logodds_accept,
-						 int** p_matches, int* p_besti) {
+						 double logodds_bail,
+						 int** p_matches, int* p_besti,
+						 double** p_all_logodds, int** p_theta) {
 	int i;
 	double bestlogodds;
 	int besti;
@@ -408,6 +409,8 @@ double verify_star_lists(const double* refxys, int NR,
 	int Nleaf = 10;
 	int* rmatches;
 	double* rprobs;
+	double* all_logodds = NULL;
+	int* theta = NULL;
 
 	// Build a tree out of the index stars in pixel space...
 	// kdtree scrambles the data array so make a copy first.
@@ -428,6 +431,17 @@ double verify_star_lists(const double* refxys, int NR,
 
 	bestlogodds = -HUGE_VAL;
 	besti = -1;
+
+	if (p_all_logodds) {
+		all_logodds = calloc(NT, sizeof(double));
+		*p_all_logodds = all_logodds;
+	}
+	if (p_theta) {
+		theta = malloc(NT * sizeof(double));
+		for (i=0; i<NT; i++)
+			theta[i] = -1;
+		*p_theta = theta;
+	}
 
 	logodds = 0.0;
 	for (i=0; i<NT; i++) {
@@ -473,6 +487,7 @@ double verify_star_lists(const double* refxys, int NR,
 		if (logfg < logd) {
 			logfg = logd;
 			logverb("  Distractor.\n");
+
 		} else {
 			// duplicate match?
 			if (rmatches[refi] != -1) {
@@ -486,9 +501,17 @@ double verify_star_lists(const double* refxys, int NR,
                     logodds += (logd - oldfg);
 					logverb("  Switching old match to distractor: logodds change %.1f, now %.1f\n",
 							(logd - oldfg), logodds);
+
+					if (theta) {
+						int oldi = rmatches[refi];
+						theta[oldi] = -1;
+						theta[i] = refi;
+					}
+
 					// record this new match.
 					rmatches[refi] = i;
 					rprobs[refi] = logfg;
+
 				} else {
 					// old match was better: this match becomes a distractor.
 					logverb("  Conflict: not upgrading.  logprob was %.1f, now %.1f.\n", oldfg, logfg);
@@ -500,11 +523,17 @@ double verify_star_lists(const double* refxys, int NR,
 				// new match.
 				rmatches[refi] = i;
 				rprobs[refi] = logfg;
+
+				if (theta)
+					theta[i] = refi;
 			}
 		}
 
         logodds += (logfg - logbg);
         logverb("  Logodds: change %.1f, now %.1f\n", (logfg - logbg), logodds);
+
+		if (all_logodds)
+			all_logodds[i] = logodds;
 
         if (logodds < logodds_bail)
             break;
@@ -722,7 +751,7 @@ void verify_hit(index_t* index,
 
 	logodds = verify_star_lists(indexpix, NI, testxy, sigma2s, NF,
 								fieldW*fieldH, distractors, logratio_tobail,
-								NULL, &besti);
+								NULL, &besti, NULL, NULL);
 	mo->logodds = logodds;
 
 	if (logodds > logodds_tokeep) {
@@ -731,7 +760,7 @@ void verify_hit(index_t* index,
 		// Stop after "besti" test objects.
 		verify_star_lists(indexpix, NI, testxy, sigma2s, besti + 1,
 						  fieldW*fieldH, distractors, logratio_tobail,
-						  &rmatches, NULL);
+						  &rmatches, NULL, NULL, NULL);
 
 		// FIXME - save mo->corr_*
 		// (using 'rmatches', 'cutperm' and 'starids')

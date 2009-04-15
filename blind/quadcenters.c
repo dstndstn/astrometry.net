@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -22,6 +23,7 @@
 #include <math.h>
 #include <assert.h>
 
+#include "index.h"
 #include "quadfile.h"
 #include "kdtree.h"
 #include "starutil.h"
@@ -42,10 +44,11 @@ void print_help(char* progname)
 	boilerplate_help_header(stderr);
 	fprintf(stderr, "Usage: %s\n"
 			"   -r <rdls-output-file>\n"
-            "   [-R]: add quad radius to RDLS file.\n"
+            "   [-R]: add quad radius columns to the RDLS file.\n"
 			"   [-h]: help\n"
 			"   <base-name> [<base-name> ...]\n\n"
-			"Reads .quad and .skdt files.  Writes an RDLS containing the quad centers (midpoints of AB), one field per input file.\n\n",
+			"Reads index (.quad and .skdt or merged index) files.\n"
+			"Writes an RDLS containing the quad centers (midpoints of AB), one field per input file.\n\n",
 	        progname);
 }
 
@@ -53,7 +56,7 @@ int main(int argc, char** args) {
     int argchar;
 	char* basename;
 	char* outfn = NULL;
-	char* fn;
+	index_t* index;
 	quadfile* qf;
     rdlist_t* rdls;
 	startree_t* skdt = NULL;
@@ -102,21 +105,14 @@ int main(int argc, char** args) {
 		basename = args[optind];
 		printf("Reading files with basename %s\n", basename);
 
-        asprintf(&fn, "%s.quad.fits", basename);
-		qf = quadfile_open(fn);
-		if (!qf) {
-			fprintf(stderr, "Failed to open quad file %s.\n", fn);
-            exit(-1);
+		index = index_load(basename, 0);
+		if (!index) {
+			fprintf(stderr, "Failed to read index with base name \"%s\"\n", basename);
+			exit(-1);
 		}
-		free(fn);
 
-        asprintf(&fn, "%s.skdt.fits", basename);
-        printf("Trying to open star kdtree %s...\n", fn);
-        skdt = startree_open(fn);
-        if (!skdt) {
-            fprintf(stderr, "Failed to read star kdtree %s.\n", fn);
-            exit(-1);
-        }
+		qf = index->quads;
+        skdt = index->starkd;
         Nstars = startree_N(skdt);
         
         if (rdlist_write_header(rdls)) {
@@ -157,8 +153,7 @@ int main(int argc, char** args) {
 		}
 		printf("\n");
 
-        startree_close(skdt);
-		quadfile_close(qf);
+		index_close(index);
 
         if (rdlist_fix_header(rdls)) {
             fprintf(stderr, "Failed to fix RDLS field header.\n");

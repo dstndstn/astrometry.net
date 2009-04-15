@@ -287,7 +287,7 @@ int main(int argc, char** args) {
 				k++;
 			}
 			NT = k;
-			logmsg("After removing %i/%i irrelevant bins: %i test stars.\n", Ngoodbins, cutnw*cutnh, NT);
+			logmsg("After removing %i/%i irrelevant bins: %i test stars.\n", (cutnw*cutnh)-Ngoodbins, cutnw*cutnh, NT);
 
 			// Effective area: A * proportion of good bins.
 			effA = A * Ngoodbins / (double)(cutnw * cutnh);
@@ -340,10 +340,59 @@ int main(int argc, char** args) {
 
 		logmsg("Test stars: %i\n", NT);
 
+		FILE* f = stderr;
+
+		fprintf(f, "quadxy = array([");
+		for (i=0; i<=mo->dimquads; i++)
+			fprintf(f, "[%g,%g],", mo->quadpix[2*(i % mo->dimquads)+0], mo->quadpix[2*(i % mo->dimquads)+1]);
+		fprintf(f, "])\n");
+
+		fprintf(f, "testxy = array([");
+		for (i=0; i<NT; i++)
+			fprintf(f, "[%g,%g],", testxy[2*i+0], testxy[2*i+1]);
+		fprintf(f, "])\n");
+
+		fprintf(f, "sigmas = array([");
+		for (i=0; i<NT; i++)
+			fprintf(f, "%g,", sqrt(sigma2s[i]));
+		fprintf(f, "])\n");
+
+		fprintf(f, "refxy = array([");
+		for (i=0; i<NR; i++)
+			fprintf(f, "[%g,%g],", refxy[2*i+0], refxy[2*i+1]);
+		fprintf(f, "])\n");
+
+		fprintf(f, "cutx = array([");
+		for (i=0; i<=cutnw; i++)
+			fprintf(f, "%g,", i * fieldW / (float)cutnw);
+		fprintf(f, "])\n");
+
+		fprintf(f, "cuty = array([");
+		for (i=0; i<=cutnh; i++)
+			fprintf(f, "%g,", i * fieldH / (float)cutnh);
+		fprintf(f, "])\n");
+
+		fprintf(f, "W=%i\nH=%i\n", (int)fieldW, (int)fieldH);
+
+		double* all_logodds;
+		int* theta;
+
 		logodds = verify_star_lists(refxy, NR, testxy, sigma2s, NT,
 									effA, distractors, logbail,
-									NULL, NULL);
+									NULL, NULL, &all_logodds, &theta);
 
+		fprintf(f, "logodds = array([");
+		for (i=0; i<NT; i++)
+			fprintf(f, "%g,", all_logodds[i]);
+		fprintf(f, "])\n");
+
+		fprintf(f, "theta = array([");
+		for (i=0; i<NT; i++)
+			fprintf(f, "%i,", theta[i]);
+		fprintf(f, "])\n");
+
+		free(theta);
+		free(all_logodds);
 		free(sigma2s);
 		free(testxy);
 		free(refxy);
