@@ -208,8 +208,8 @@ static double get_sigma2_at_radius(double verify_pix2, double r2, double quadr2)
 	return verify_pix2 * (1.0 + r2/quadr2);
 }
 
-static void compute_sigma2s(verify_field_t* vf, MatchObj* mo,
-							double verify_pix2, bool do_gamma, double** p_sigma2s) {
+double* verify_compute_sigma2s(verify_field_t* vf, MatchObj* mo,
+							   double verify_pix2, bool do_gamma) {
 	double* sigma2s;
     int NF, i;
 	double qc[2];
@@ -238,7 +238,7 @@ static void compute_sigma2s(verify_field_t* vf, MatchObj* mo,
             sigma2s[i] = get_sigma2_at_radius(verify_pix2, R2, rquad2);
         }
 	}
-	*p_sigma2s = sigma2s;
+	return sigma2s;
 }
 
 #include "fitsioutils.h"
@@ -258,7 +258,23 @@ static int get_bin(verify_field_t* vf, int starnum,
 	return iy * nw + ix;
 }
 
-static void uniformize_field(verify_field_t* vf,
+
+void verify_get_uniformize_scale(int cutnside, double scale, int W, int H, int* cutnw, int* cutnh) {
+	double cutarcsec, cutpix;
+	cutarcsec = healpix_side_length_arcmin(cutnside) * 60.0;
+	cutpix = cutarcsec / scale;
+	logverb("cut nside: %i\n", cutnside);
+	logverb("cut scale: %g arcsec\n", cutarcsec);
+	logverb("match scale: %g arcsec/pix\n", scale);
+	logverb("cut scale: %g pixels\n", cutpix);
+	if (cutnw)
+		*cutnw = MAX(1, (int)round(W / cutpix));
+	if (cutnh)
+		*cutnh = MAX(1, (int)round(H / cutpix));
+}
+
+
+void verify_uniformize_field(verify_field_t* vf,
 							 double fieldW, double fieldH,
 							 int nw, int nh,
 							 int** p_perm,
@@ -266,13 +282,11 @@ static void uniformize_field(verify_field_t* vf,
 	il** lists;
 	int i,j,k,p;
 	int* perm;
-	int* bincounts;
+	int* bincounts = NULL;
     int NF;
 
 	NF = starxy_n(vf->field);
 	perm = malloc(NF * sizeof(int));
-
-	bincounts = malloc(nw * nh * sizeof(int));
 
 	lists = malloc(nw * nh * sizeof(il*));
 	for (i=0; i<(nw*nh); i++)
@@ -284,10 +298,14 @@ static void uniformize_field(verify_field_t* vf,
 		il_append(lists[bin], i);
 	}
 
-	// note the bin occupancies.
-	for (i=0; i<(nw*nh); i++) {
-		bincounts[i] = il_size(lists[i]);
-		logverb("bin %i has %i stars\n", i, bincounts[i]);
+	if (p_bincounts) {
+		// note the bin occupancies.
+		bincounts = malloc(nw * nh * sizeof(int));
+		for (i=0; i<(nw*nh); i++) {
+			bincounts[i] = il_size(lists[i]);
+			logverb("bin %i has %i stars\n", i, bincounts[i]);
+		}
+		*p_bincounts = bincounts;
 	}
 
 	// make sweeps through the bins, grabbing one star from each.
@@ -311,7 +329,6 @@ static void uniformize_field(verify_field_t* vf,
 	free(lists);
 
 	*p_perm = perm;
-	*p_bincounts = bincounts;
 }
 
 static void add_gaussian_to_image(double* img, int W, int H,
@@ -543,31 +560,18 @@ void verify_hit(index_t* index,
     if (fake_match)
         do_gamma = FALSE;
 
-	compute_sigma2s(vf, mo, verify_pix2, do_gamma, &sigma2s);
+	sigma2s = verify_compute_sigma2s(vf, mo, verify_pix2, do_gamma);
 
 	// Uniformize field stars.
 	// FIXME - can do this (possibly at several scales) in preprocessing.
-	
-	int cutnside;
-	double cutarcsec, cutpix;
-	
-	cutnside = index->meta.cutnside;
-	cutarcsec = healpix_side_length_arcmin(cutnside) * 60.0;
-	cutpix = cutarcsec / mo->scale;
+	int cutnw, cutnh;
 
-	logverb("cut nside: %i\n", cutnside);
-	logverb("cut scale: %g arcsec\n", cutarcsec);
-	logverb("match scale: %g arcsec/pix\n", mo->scale);
-	logverb("cut scale: %g pixels\n", cutpix);
-
-	int cutnw = MAX(1, (int)round(fieldW / cutpix));
-	int cutnh = MAX(1, (int)round(fieldH / cutpix));
-
+	verify_get_uniformize_scale(index->meta.cutnside, mo->scale, fieldW, fieldH, &cutnw, &cutnh);
 	logverb("cut blocks: %i x %i\n", cutnw, cutnh);
-
+	
 	int* cutperm;
 	int* bincounts;
-	uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, &cutperm, &bincounts);
+	verify_uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, &cutperm, &bincounts);
 
 	int W, H;
 

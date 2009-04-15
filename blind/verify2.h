@@ -68,6 +68,14 @@ void verify_hit(index_t* index,
                 bool fake_match,
 				double logodds_tokeep);
 
+double verify_star_lists(const double* refxys, int NR,
+						 const double* testxys, const double* testsigma2s, int NT,
+						 int W, int H,
+						 double distractors,
+						 double logodds_bail,
+						 int** p_matches, int* p_besti);
+
+
 verify_field_t* verify_field_preprocess(const starxy_t* fieldxy);
 
 void verify_field_free(verify_field_t* vf);
@@ -77,5 +85,16 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 							double fieldW, double fieldH,
 							double** p_indexradec,
 							double** p_indexpix, int** p_starids, int* p_nindex);
+
+double* verify_compute_sigma2s(verify_field_t* vf, MatchObj* mo,
+							   double verify_pix2, bool do_gamma);
+
+void verify_get_uniformize_scale(int cutnside, double scale, int W, int H, int* cutnw, int* cutnh);
+
+void verify_uniformize_field(verify_field_t* vf,
+							 double fieldW, double fieldH,
+							 int nw, int nh,
+							 int** p_perm,
+							 int** p_bincounts);
 
 #endif

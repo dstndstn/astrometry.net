@@ -181,6 +181,40 @@ int index_get_meta(const char* filename, index_meta_t* meta) {
     return 0;
 }
 
+int index_get_missing_cut_params(int indexid, int* hpnside, int* nsweep,
+								 double* dedup, int* margin, char** band) {
+	// The 200-series and 500-series have the same params:
+	int i500hp[] = { 1760, 1245, 880, 622, 440, 312, 220, 156, 110, 78,
+					 55, 39, 28, 20, 14, 10, 7, 5, 4, 3 };
+	int i500n[] = { 6, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+					9, 9, 9, 9, 9, 9, 9, 9, 9, 9 };
+	double i500dd[] = { 8, 8, 8, 8, 8, 9.6, 13.2, 18.0, 25.2, 36,
+						51, 72, 102, 144, 204, 288, 408, 600, 840, 1200 };
+	int i500margin = 5;
+
+	int i = -1;
+
+	if ((indexid >= 200 && indexid < 220) ||
+		(indexid >= 500 && indexid < 520)) {
+		i = indexid % 100;
+	}
+	if (i >= 0) {
+		if (hpnside)
+			*hpnside = i500hp[i];
+		if (nsweep)
+			*nsweep = i500n[i];
+		if (dedup)
+			*dedup = i500dd[i];
+		if (margin)
+			*margin = i500margin;
+		if (band)
+			*band = strdup("R");
+		return 0;
+	}
+
+	return -1;
+}
+
 static void get_cut_params(index_t* index) {
 	index_meta_t* meta = &(index->meta);
 	meta->index_jitter = startree_get_jitter(index->starkd);
@@ -195,32 +229,22 @@ static void get_cut_params(index_t* index) {
 
 	// HACK - fill in values that are missing in old index files.
 	{
-		// The 200-series and 500-series have the same params:
-		int i500hp[] = { 1760, 1245, 880, 622, 440, 312, 220, 156, 110, 78,
-						 55, 39, 28, 20, 14, 10, 7, 5, 4, 3 };
-		int i500n[] = { 6, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-						9, 9, 9, 9, 9, 9, 9, 9, 9, 9 };
-		double i500dd[] = { 8, 8, 8, 8, 8, 9.6, 13.2, 18.0, 25.2, 36,
-							51, 72, 102, 144, 204, 288, 408, 600, 840, 1200 };
-		int id, i = -1;
+		int *nside = NULL, *nsweep = NULL, *margin = NULL;
+		char** band = NULL;
+		double* dedup = NULL;
 
-		id = meta->indexid;
-		if ((id >= 200 && id < 220) ||
-			(id >= 500 && id < 520)) {
-			i = id % 100;
-		}
-		if (i >= 0) {
-			if (meta->cutnside == -1)
-				meta->cutnside = i500hp[i];
-			if (meta->cutnsweep == 0)
-				meta->cutnsweep = i500n[i];
-			if (meta->cutdedup == 0)
-				meta->cutdedup = i500dd[i];
-			if (meta->cutmargin == -1)
-				meta->cutmargin = 5;
-			if (!meta->cutband)
-				meta->cutband = strdup("R");
-		}
+		if (meta->cutnside == -1)
+			nside = &(meta->cutnside);
+		if (meta->cutnsweep == 0)
+			nsweep = &(meta->cutnsweep);
+		if (meta->cutmargin == -1)
+			margin = &(meta->cutmargin);
+		if (meta->cutdedup == 0)
+			dedup = &(meta->cutdedup);
+		if (!meta->cutband)
+			band = &(meta->cutband);
+
+		index_get_missing_cut_params(meta->indexid, nside, nsweep, dedup, margin, band);
 	}
 
 }

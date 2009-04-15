@@ -129,4 +129,8 @@ index_t* index_load(const char* indexname, int flags);
  */
 void index_close(index_t* index);
 
+
+int index_get_missing_cut_params(int indexid, int* hpnside, int* nsweep,
+								 double* dedup, int* margin, char** band);
+
 #endif // _INDEX_H
