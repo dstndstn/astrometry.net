@@ -95,6 +95,8 @@ void verify_uniformize_field(verify_field_t* vf,
 							 double fieldW, double fieldH,
 							 int nw, int nh,
 							 int** p_perm,
-							 int** p_bincounts);
+							 int** p_bincounts,
+							 double** p_bincenters,
+							 int** p_binids);
 
 #endif

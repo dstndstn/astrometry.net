@@ -182,37 +182,58 @@ int index_get_meta(const char* filename, index_meta_t* meta) {
 }
 
 int index_get_missing_cut_params(int indexid, int* hpnside, int* nsweep,
-								 double* dedup, int* margin, char** band) {
-	// The 200-series and 500-series have the same params:
-	int i500hp[] = { 1760, 1245, 880, 622, 440, 312, 220, 156, 110, 78,
-					 55, 39, 28, 20, 14, 10, 7, 5, 4, 3 };
-	int i500n[] = { 6, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-					9, 9, 9, 9, 9, 9, 9, 9, 9, 9 };
-	double i500dd[] = { 8, 8, 8, 8, 8, 9.6, 13.2, 18.0, 25.2, 36,
-						51, 72, 102, 144, 204, 288, 408, 600, 840, 1200 };
-	int i500margin = 5;
-
+								 double* dedup, int* margin, char** pband) {
+	// The 200-series indices use cut 100
+	// The 500-series indices use cut 100
+	// The 700-series indices use cut 400
 	int i = -1;
+	int ns, n, marg;
+	double dd;
+	char* band;
 
 	if ((indexid >= 200 && indexid < 220) ||
 		(indexid >= 500 && indexid < 520)) {
+		// Cut 100 params:
+		int cut100hp[] = { 1760, 1245, 880, 622, 440, 312, 220, 156, 110, 78, 55, 39, 28, 20, 14, 10, 7, 5, 4, 3 };
+		int cut100n[] = { 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9 };
+		double cut100dd[] = { 8, 8, 8, 8, 8, 9.6, 13.2, 18.0, 25.2, 36, 51, 72, 102, 144, 204, 288, 408, 600, 840, 1200 };
+		int cut100margin = 5;
+
 		i = indexid % 100;
-	}
-	if (i >= 0) {
-		if (hpnside)
-			*hpnside = i500hp[i];
-		if (nsweep)
-			*nsweep = i500n[i];
-		if (dedup)
-			*dedup = i500dd[i];
-		if (margin)
-			*margin = i500margin;
-		if (band)
-			*band = strdup("R");
-		return 0;
+		ns = cut100hp[i];
+		n = cut100n[i];
+		dd = cut100dd[i];
+		marg = cut100margin;
+		band = "R";
+
+	} else if (indexid >= 700 && indexid < 720) {
+		// Cut 400 params:
+		int cut400hp[] = { 1760, 1246, 880, 624, 440, 312, 220, 156, 110, 78, 55, 39, 28, 20, 14, 10, 7, 5, 4, 3 };
+		int cut400n = 10;
+		double cut400dd = 8.0;
+		int cut400margin = 10;
+
+		i = indexid % 100;
+		ns = cut400hp[i];
+		n = cut400n;
+		dd = cut400dd;
+		marg = cut400margin;
+		band = "R";
+	} else {
+		return -1;
 	}
 
-	return -1;
+	if (hpnside)
+		*hpnside = ns;
+	if (nsweep)
+		*nsweep = n;
+	if (dedup)
+		*dedup = dd;
+	if (margin)
+		*margin = marg;
+	if (pband)
+		*pband = strdup(band);
+	return 0;
 }
 
 static void get_cut_params(index_t* index) {

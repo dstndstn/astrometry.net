@@ -51,7 +51,7 @@ int main(int argc, char** args) {
 	char* xyfn = NULL;
 	char* rdfn = NULL;
 
-	index_t* index;
+	index_t* index = NULL;
 	matchfile* mf;
 	MatchObj* mo;
 	verify_field_t* vf;
@@ -151,6 +151,8 @@ int main(int argc, char** args) {
 		pix2 += square(indexjitter / mo->scale);
 	}
 
+	logmsg("Pixel jitter: %g pix\n", sqrt(pix2));
+
 	vf = verify_field_preprocess(fieldxy);
 
 	if (index) {
@@ -177,6 +179,8 @@ int main(int argc, char** args) {
 		int i, j, k, NT, NR;
 		double* sigma2s;
 		rd_t* rd;
+		double* bincenters;
+		int* binids;
 
 		// -get reference stars
 		rd = rdlist_read_field(rdls, NULL);
@@ -217,6 +221,11 @@ int main(int argc, char** args) {
 			NR--;
 		}
 
+		logmsg("Reference stars: %i\n", NR);
+
+		// -compute sigma2s
+		sigma2s = verify_compute_sigma2s(vf, mo, pix2, !fake);
+
 		// -uniformize field stars
 		indexid = mo->indexid;
 		if (index_get_missing_cut_params(indexid, &cutnside, &cutnsweeps, NULL, NULL, NULL)) {
@@ -224,13 +233,55 @@ int main(int argc, char** args) {
 			exit(-1);
 		}
 		verify_get_uniformize_scale(cutnside, mo->scale, fieldW, fieldH, &cutnw, &cutnh);
-		verify_uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, &cutperm, NULL);
+		logmsg("Uniformizing test stars into %i x %i bins.\n", cutnw, cutnh);
+		verify_uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, &cutperm, NULL, &bincenters, &binids);
+		NT = starxy_n(vf->field);
 
-		// -compute sigma2s
-		sigma2s = verify_compute_sigma2s(vf, mo, pix2, !fake);
+		// get_quad_center
+		{
+			double Axy[2], Bxy[2], cen[2], Q2;
+			starxy_get(vf->field, mo->field[0], Axy);
+			starxy_get(vf->field, mo->field[1], Bxy);
+			cen[0] = 0.5 * (Axy[0] + Bxy[0]);
+			cen[1] = 0.5 * (Axy[1] + Bxy[1]);
+			// Find the radius-squared of the quad = distsq(qc, A)
+			Q2 = distsq(Axy, cen, 2);
+			logmsg("Quad center is (%.1f, %.1f), radius %.1f pix\n", cen[0], cen[1], sqrt(Q2));
+
+			double A = fieldW * fieldH;
+			double ror = sqrt(Q2 * (1 + A*(1 - distractors) / (2. * M_PI * NR * pix2)));
+			logmsg("Radius of relevance is %.1f\n", ror);
+
+			// Approximate cutting up the image by measuring distance to the bin centers.
+			bool* goodbins = malloc(cutnw * cutnh * sizeof(bool));
+			int Ngoodbins = 0;
+
+			for (i=0; i<(cutnw * cutnh); i++) {
+				double binr = sqrt(distsq(bincenters + 2*i, cen, 2));
+				//logmsg("Bin %i (%.1f, %.1f) is %.1f away\n", i, bincenters[2*i], bincenters[2*i+1], binr);
+				goodbins[i] = (binr < ror);
+				if (goodbins[i])
+					Ngoodbins++;
+				//if (binr > ror) logmsg("Irrelevant bin!\n");
+			}
+			// Remove test stars in irrelevant bins...
+			k = 0;
+			for (i=0; i<NT; i++) {
+				if (!goodbins[binids[i]])
+					continue;
+				cutperm[k] = cutperm[i];
+				k++;
+			}
+			NT = k;
+
+			logmsg("After removing %i/%i irrelevant bins: %i test stars.\n", Ngoodbins, cutnw*cutnh, NT);
+
+			free(goodbins);
+		}
+		free(binids);
+		free(bincenters);
 
 		// -remove test quad stars
-		NT = starxy_n(vf->field);
 		testxy = malloc(2 * NT * sizeof(double));
 		k = 0;
 		for (i=0; i<NT; i++) {
@@ -253,11 +304,11 @@ int main(int argc, char** args) {
 		}
 		NT = k;
 
+		logmsg("Test stars: %i\n", NT);
 
 		logodds = verify_star_lists(refxy, NR, testxy, sigma2s, NT,
 									fieldW, fieldH, distractors, logbail,
 									NULL, NULL);
-
 
 		free(sigma2s);
 		free(testxy);

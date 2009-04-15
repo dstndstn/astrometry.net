@@ -278,19 +278,36 @@ void verify_uniformize_field(verify_field_t* vf,
 							 double fieldW, double fieldH,
 							 int nw, int nh,
 							 int** p_perm,
-							 int** p_bincounts) {
+							 int** p_bincounts,
+							 double** p_bincenters,
+							 int** p_binids) {
 	il** lists;
 	int i,j,k,p;
 	int* perm;
 	int* bincounts = NULL;
     int NF;
+	int* binids = NULL;
 
 	NF = starxy_n(vf->field);
 	perm = malloc(NF * sizeof(int));
+	if (p_binids) {
+		binids = malloc(NF * sizeof(int));
+		*p_binids = binids;
+	}
 
 	lists = malloc(nw * nh * sizeof(il*));
 	for (i=0; i<(nw*nh); i++)
 		lists[i] = il_new(16);
+
+	if (p_bincenters) {
+		double* bxy = malloc(nw * nh * 2 * sizeof(double));
+		for (j=0; j<nh; j++)
+			for (i=0; i<nw; i++) {
+				bxy[(j * nw + i)*2 +0] = (i + 0.5) * fieldW / (double)nw;
+				bxy[(j * nw + i)*2 +1] = (j + 0.5) * fieldH / (double)nh;
+			}
+		*p_bincenters = bxy;
+	}
 
 	// put the stars in the appropriate bins.
 	for (i=0; i<NF; i++) {
@@ -317,6 +334,8 @@ void verify_uniformize_field(verify_field_t* vf,
 				if (k >= il_size(lst))
 					continue;
 				perm[p] = il_get(lst, k);
+				if (binids)
+					binids[p] = j*nw + i;
 				p++;
 			}
 		}
@@ -423,7 +442,7 @@ double verify_star_lists(const double* refxys, int NR,
 		sig2 = testsigma2s[i];
 
 		logverb("\n");
-		logverb("test star %i: (%.1f,%.1f)\n", i, testxy[0], testxy[1]);
+		logverb("test star %i: (%.1f,%.1f), sigma: %.1f\n", i, testxy[0], testxy[1], sqrt(sig2));
 
 		// find nearest ref star (within 5 sigma)
         tmpi = kdtree_nearest_neighbour_within(rtree, testxy, sig2 * 25.0, &d2);
@@ -441,6 +460,8 @@ double verify_star_lists(const double* refxys, int NR,
 			loggmax = log((1.0 - distractors) / (2.0 * M_PI * sig2 * NR));
 
 			// FIXME - uninformative?
+			if (loggmax < logbg)
+				logverb("  This star is uninformative: peak %.1f, bg %.1f.\n", loggmax, logbg);
 
 			// value of the Gaussian
 			logfg = loggmax - d2 / (2.0 * sig2);
@@ -571,7 +592,7 @@ void verify_hit(index_t* index,
 	
 	int* cutperm;
 	int* bincounts;
-	verify_uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, &cutperm, &bincounts);
+	verify_uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, &cutperm, &bincounts, NULL, NULL);
 
 	int W, H;
 
