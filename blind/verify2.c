@@ -392,7 +392,7 @@ static void add_gaussian_to_image(double* img, int W, int H,
 
 double verify_star_lists(const double* refxys, int NR,
 						 const double* testxys, const double* testsigma2s, int NT,
-						 int W, int H,
+						 double effective_area,
 						 double distractors,
 						 double logodds_bail, //double logodds_accept,
 						 int** p_matches, int* p_besti) {
@@ -423,8 +423,8 @@ double verify_star_lists(const double* refxys, int NR,
 	for (i=0; i<NR; i++)
 		rprobs[i] = -HUGE_VAL;
 
-	logbg = log(1.0 / (W * H));
-	logd  = log(distractors / (W * H));
+	logbg = log(1.0 / effective_area);
+	logd  = log(distractors / effective_area);
 
 	bestlogodds = -HUGE_VAL;
 	besti = -1;
@@ -721,7 +721,7 @@ void verify_hit(index_t* index,
 	int besti;
 
 	logodds = verify_star_lists(indexpix, NI, testxy, sigma2s, NF,
-								W, H, distractors, logratio_tobail,
+								fieldW*fieldH, distractors, logratio_tobail,
 								NULL, &besti);
 	mo->logodds = logodds;
 
@@ -730,7 +730,7 @@ void verify_hit(index_t* index,
 		// Run again, saving results.
 		// Stop after "besti" test objects.
 		verify_star_lists(indexpix, NI, testxy, sigma2s, besti + 1,
-						  W, H, distractors, logratio_tobail,
+						  fieldW*fieldH, distractors, logratio_tobail,
 						  &rmatches, NULL);
 
 		// FIXME - save mo->corr_*

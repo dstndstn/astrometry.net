@@ -70,7 +70,7 @@ void verify_hit(index_t* index,
 
 double verify_star_lists(const double* refxys, int NR,
 						 const double* testxys, const double* testsigma2s, int NT,
-						 int W, int H,
+						 double effective_area,
 						 double distractors,
 						 double logodds_bail,
 						 int** p_matches, int* p_besti);

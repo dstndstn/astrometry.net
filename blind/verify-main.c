@@ -19,6 +19,7 @@
 /**
  Runs the verification procedure in stand-alone mode.
  */
+#include <sys/param.h>
 
 #include "matchfile.h"
 #include "matchobj.h"
@@ -42,6 +43,18 @@ static void print_help(const char* progname) {
            "   [-v]: verbose\n"
 	       "\n", progname);
 }
+
+static int get_xy_bin(double x, double y,
+					  double fieldW, double fieldH,
+					  int nw, int nh) {
+	int ix, iy;
+	ix = (int)floor(nw * x / fieldW);
+	ix = MAX(0, MIN(nw-1, ix));
+	iy = (int)floor(nh * y / fieldH);
+	iy = MAX(0, MIN(nh-1, iy));
+	return iy * nw + ix;
+}
+
 
 int main(int argc, char** args) {
 	int argchar;
@@ -181,6 +194,7 @@ int main(int argc, char** args) {
 		rd_t* rd;
 		double* bincenters;
 		int* binids;
+		double effA;
 
 		// -get reference stars
 		rd = rdlist_read_field(rdls, NULL);
@@ -273,8 +287,28 @@ int main(int argc, char** args) {
 				k++;
 			}
 			NT = k;
-
 			logmsg("After removing %i/%i irrelevant bins: %i test stars.\n", Ngoodbins, cutnw*cutnh, NT);
+
+			// Effective area: A * proportion of good bins.
+			effA = A * Ngoodbins / (double)(cutnw * cutnh);
+
+			// -remove reference stars in bad bins.
+			k = 0;
+			for (i=0; i<NR; i++) {
+				int binid = get_xy_bin(refxy[2*i], refxy[2*i+1], fieldW, fieldH, cutnw, cutnh);
+				if (!goodbins[binid])
+					continue;
+				if (i == k)
+					continue;
+				memcpy(refxy + 2*k, refxy + 2*i, 2*sizeof(double));
+				k++;
+			}
+			NR = k;
+			logmsg("After removing irrelevant ref stars: %i ref stars.\n", NR);
+
+			// New ROR is...
+			double newror = sqrt(Q2 * (1 + effA*(1 - distractors) / (2. * M_PI * NR * pix2)));
+			logmsg("ROR changed from %g to %g\n", ror, newror);
 
 			free(goodbins);
 		}
@@ -307,7 +341,7 @@ int main(int argc, char** args) {
 		logmsg("Test stars: %i\n", NT);
 
 		logodds = verify_star_lists(refxy, NR, testxy, sigma2s, NT,
-									fieldW, fieldH, distractors, logbail,
+									effA, distractors, logbail,
 									NULL, NULL);
 
 		free(sigma2s);
