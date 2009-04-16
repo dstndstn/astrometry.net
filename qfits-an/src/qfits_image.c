@@ -70,9 +70,9 @@
 static float * qfits_pixin_float(byte *, int, int, double, double);
 static int * qfits_pixin_int(byte *, int, int, double, double);
 static double * qfits_pixin_double(byte *, int, int, double, double);
-static byte * qfits_pixdump_float(float *, int, int);
-static byte * qfits_pixdump_int(int *, int, int);
-static byte * qfits_pixdump_double(double *, int, int);
+static byte * qfits_pixdump_float(const float *, int, int);
+static byte * qfits_pixdump_int(const int *, int, int);
+static byte * qfits_pixdump_double(const double *, int, int);
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -584,7 +584,7 @@ int qfits_loadpix_window(
   will be performed to stdout.
  */
 /*----------------------------------------------------------------------------*/
-int qfits_pixdump(qfitsdumper * qd)
+int qfits_pixdump(const qfitsdumper * qd)
 {
     FILE    *   f_out;
     byte    *   buf_out;
@@ -702,7 +702,7 @@ int qfits_pixdump(qfitsdumper * qd)
   using the qfits_free() function.
  */
 /*----------------------------------------------------------------------------*/
-static byte * qfits_pixdump_float(float * buf, int npix, int ptype)
+static byte * qfits_pixdump_float(const float * buf, int npix, int ptype)
 {
     byte    *   buf_out;
     register byte * op;
@@ -815,7 +815,7 @@ static byte * qfits_pixdump_float(float * buf, int npix, int ptype)
   using the qfits_free() function.
  */
 /*----------------------------------------------------------------------------*/
-static byte * qfits_pixdump_int(int * buf, int npix, int ptype)
+static byte * qfits_pixdump_int(const int * buf, int npix, int ptype)
 {
     byte    *   buf_out;
     register byte * op;
@@ -916,7 +916,7 @@ static byte * qfits_pixdump_int(int * buf, int npix, int ptype)
   using the qfits_free() function.
  */
 /*----------------------------------------------------------------------------*/
-static byte * qfits_pixdump_double(double * buf, int npix, int ptype)
+static byte * qfits_pixdump_double(const double * buf, int npix, int ptype)
 {
     byte    *   buf_out;
     register byte  * op;

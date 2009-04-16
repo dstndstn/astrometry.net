@@ -245,18 +245,18 @@ typedef struct qfitsloader {
 typedef struct qfitsdumper {
 
     /** Name of the file to dump to, "STDOUT" to dump to stdout */
-    char     *    filename;
+    const char     *    filename;
     /** Number of pixels in the buffer to dump */
     int            npix;
     /** Buffer type: PTYPE_FLOAT, PTYPE_INT or PTYPE_DOUBLE */
     int            ptype;
 
     /** Pointer to input integer pixel buffer */
-    int        *    ibuf;
+    const int        *    ibuf;
     /** Pointer to input float pixel buffer */
-    float    *    fbuf;
+    const float    *    fbuf;
     /** Pointer to input double pixel buffer */
-    double    *    dbuf;
+    const double    *    dbuf;
 
     /** Requested BITPIX in output FITS file */
     int            out_ptype;
@@ -270,6 +270,6 @@ int qfitsloader_init(qfitsloader *);
 void qfitsloader_free_buffers(qfitsloader *);
 int qfits_loadpix(qfitsloader *);
 int qfits_loadpix_window(qfitsloader *, int, int, int, int);
-int qfits_pixdump(qfitsdumper *);
+int qfits_pixdump(const qfitsdumper *);
 
 #endif
