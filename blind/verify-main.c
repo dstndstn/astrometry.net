@@ -311,17 +311,8 @@ int main(int argc, char** args) {
 		free(binids);
 		free(bincenters);
 
-		logmsg("Quad stars are: ");
-		for (j=0; j<mo->dimquads; j++)
-			logmsg("%i ", mo->field[j]);
-		logmsg("\n");
-
-		logmsg("Before removing quad stars:\n");
-		for (i=0; i<MIN(50, NT); i++)
-			logmsg("%i ", cutperm[i]);
-		logmsg("\n");
-
-		// -remove test quad stars
+		// -remove test quad stars, and grab xy positions
+		testxy = malloc(2 * NT * sizeof(double));
 		k = 0;
 		for (i=0; i<NT; i++) {
 			int starindex = cutperm[i];
@@ -335,58 +326,16 @@ int main(int argc, char** args) {
 				if (inquad)
 					continue;
 			}
-			cutperm[k] = cutperm[i];
+			//cutperm[k] = cutperm[i];
+			starxy_get(vf->field, cutperm[i], testxy + 2*k);
 			k++;
 		}
 		NT = k;
 
-		logmsg("After removing quad stars:\n");
-		for (i=0; i<MIN(50, NT); i++)
-			logmsg("%i ", cutperm[i]);
-		logmsg("\n");
-
-		testxy = malloc(2 * NT * sizeof(double));
-		for (i=0; i<NT; i++) {
-			int starindex = cutperm[i];
-			starxy_get(vf->field, starindex, testxy + 2*i);
-			// store their original indices in cutperm so we can look-back.
-			//cutperm[k] = starindex;
-		}
+		free(cutperm);
 
 		// -compute sigma2s
 		sigma2s = verify_compute_sigma2s_arr(testxy, NT, qc, Q2, pix2, !fake);
-
-		// CHECK
-		for (i=0; i<10; i++) {
-			double xy[2], R2, sig2, s2;
-			xy[0] = testxy[2*i + 0];
-			xy[1] = testxy[2*i + 1];
-			R2 = distsq(xy, qc, 2);
-			sig2 = pix2 * (1.0 + R2 / Q2);
-			s2 = sigma2s[i];
-			logmsg("xy: %.1f, %.1f, s2 %g, %g\n", xy[0], xy[1], sqrt(sig2), sqrt(s2));
-			if (fabs(s2 - sig2) > 1e-6) {
-				ERROR("sigma2s don't match.\n");
-				exit(-1);
-			}
-		}
-
-
-		// CHECK that the sigma2s still match.
-		for (i=0; i<NT; i++) {
-			double xy[2], R2, sig2, s2;
-			xy[0] = testxy[2*i + 0];
-			xy[1] = testxy[2*i + 1];
-			R2 = distsq(xy, qc, 2);
-			sig2 = pix2 * (1.0 + R2 / Q2);
-			s2 = sigma2s[i];
-			logmsg("sig: %g vs %g\n", sqrt(sig2), sqrt(s2));
-			if (fabs(s2 - sig2) > 1e-6) {
-				ERROR("sigma2s don't match.\n");
-				exit(-1);
-			}
-		}
-
 
 		logmsg("Test stars: %i\n", NT);
 
@@ -450,6 +399,7 @@ int main(int argc, char** args) {
 		free(testxy);
 		free(refxy);
 
+		rd_free(rd);
 		rdlist_close(rdls);
 	}
 	
