@@ -121,30 +121,17 @@ PIPELINE_MAIN_OBJ := $(addsuffix .o,$(PIPELINE))
 PROSPECTUS_MAIN_OBJ := $(addsuffix .o,$(PROSPECTUS))
 FITS_UTILS_MAIN_OBJ := $(addsuffix .o,$(FITS_UTILS))
 
-SIMPLEXY_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o dpeaks.o \
-	dselip.o dsigma.o dsmooth.o image2xy.o simplexy.o radix.o \
-	ctmf.o
+SIMPLEXY2_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o \
+	dpeaks.o dselip.o dsigma.o dsmooth.o image2xy.o simplexy2.o radix.o ctmf.o
 
-SIMPLEXY2_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o dpeaks.o \
-	dselip.o dsigma.o dsmooth.o image2xy.o simplexy2.o radix.o \
-	ctmf.o
-
-SIMPLEXY_SHARED_OBJ := simplexy.o dsigma.o dmedsmooth.o dallpeaks.o dpeaks.o \
-	dobjects.o dselip.o dsmooth.o dcen3x3.o dfind.o radix.o
-
-FIXAXIS_OBJ := fixaxis.o
-
-TEST_DFIND_OBJ := dfind.o test_dfind.o
-
-IMAGE2XY := image2xy fixaxis test_dfind
+IMAGE2XY := image2xy
 
 INSTALL_EXECS := $(FITS_UTILS) $(PIPELINE) $(PROGS)
 INSTALL_CAIRO_EXECS := $(CAIROEXECS)
 
 ALL_OBJ := $(UTIL_OBJS) $(KDTREE_OBJS) $(QFITS_OBJ) \
 	$(PIPELINE_MAIN_OBJ) $(PROSPECTUS_MAIN_OBJ) $(FITS_UTILS_MAIN_OBJ) \
-	$(OTHER_OBJS) $(2MASSOBJ) $(SIMPLEXY_OBJ) $(SIMPLEXY_SHARED_OBJ) $(FIXAXIS_OBJ) \
-	$(TEST_DFIND_OBJ) $(SIMPLEXY2_OBJ)
+	$(OTHER_OBJS) $(2MASSOBJ) $(SIMPLEXY2_OBJ)
 ALL_EXECS :=
 
 all: $(QFITS_LIB) $(CFITS_LIB) $(LIBKD_LIB) \
@@ -201,7 +188,6 @@ solver_test.o: solver.c
 ALL_TEST_FILES = test_dfind test_ctmf test_dsmooth test_2mass \
 	test_tycho2 test_usnob test_nomad test_matchfile test_blindutils \
 	test_dcen3x3
-# test_simplexy 
 # test_hd depends on hd.fits...
 
 ALL_TEST_EXTRA_OBJS :=
@@ -215,12 +201,6 @@ test_dfind: $(TEST_DFIND_OBJS) $(ANUTILS_LIB)
 TEST_CTMF_OBJS := ctmf.o
 ALL_TEST_EXTRA_OBJS += $(TEST_CTMF_OBJS)
 test_ctmf: $(TEST_CTMF_OBJS)
-
-#TEST_SIMPLEXY_OBJS := simplexy.o ctmf.o dsigma.o dobjects.o dselip.o \
-#		dallpeaks.o radix.o dsmooth.o dfind.o \
-#		dmedsmooth.o dpeaks.o dcen3x3.o
-#ALL_TEST_EXTRA_OBJS += $(TEST_SIMPLEXY_OBJS)
-#test_simplexy: $(TEST_SIMPLEXY_OBJS) $(ANUTILS_LIB)
 
 TEST_DSMOOTH_OBJS := dsmooth.o
 ALL_TEST_EXTRA_OBJS += $(TEST_DSMOOTH_OBJS)
@@ -264,12 +244,6 @@ ALL_EXECS += $(ALL_TEST_FILES) test
 # END OF KEIR'S SUPER SIMPLE TESTING FRAMEWORK
 ######################################################
 
-# This is Jon ignoring the awesome testing framework
-demo_simplexy: demo_simplexy.o dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o dpeaks.o ctmf.o\
-	dselip.o dsigma.o dsmooth.o simplexy.o radix.o \
-	$(COMMON)/cairoutils.o boilerplate.o $(ANUTILS_LIB) $(QFITS_LIB) 
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg
-
 demo_dsmooth: demo_dsmooth.o dsmooth.o \
 	$(COMMON)/cairoutils.o boilerplate.o $(ANUTILS_LIB) $(QFITS_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg
@@ -285,14 +259,6 @@ ALL_OBJ += control-program.o
 image2xy: image2xy-main.o image2xy-files.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
 
 ALL_OBJ += image2xy-main.o image2xy-files.o
-
-PNG2XY_OBJ := dallpeaks.o dcen3x3.o dfind.o dmedsmooth.o dobjects.o dpeaks.o \
-	dselip.o dsigma.o dsmooth.o png2xy.o simplexy.o radix.o \
-	ctmf.o $(COMMON)/cairoutils.o
-png2xy: $(PNG2XY_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg
-
-fixaxis: $(FIXAXIS_OBJ) $(ANUTILS_LIB) $(CFITS_LIB)
 
 simplexy_shared: _simplexy.so
 .PHONY: simplexy_shared
