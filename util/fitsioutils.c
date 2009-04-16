@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -37,6 +38,45 @@
 
 static void errfunc(char* errstr) {
     report_error("qfits", -1, "%s", errstr);
+}
+
+int fits_write_header_and_image(const qfits_header* hdr, const qfitsdumper* qd) {
+	FILE* fid;
+	const char* fn = qd->filename;
+
+    fid = fopen(fn, "w");
+    if (!fid) {
+        SYSERROR("Failed to open file \"%s\" for output", fn);
+        return -1;
+    }
+    if (qfits_header_dump(hdr, fid)) {
+        ERROR("Failed to write image header to file \"%s\"", fn);
+        return -1;
+    }
+    // the qfits pixel dumper appends to the given filename, so close
+    // the file here.
+    if (fits_pad_file(fid) ||
+        fclose(fid)) {
+        SYSERROR("Failed to pad or close file \"%s\"", fn);
+        return -1;
+    }
+    // write data.
+    if (qfits_pixdump(qd)) {
+        ERROR("Failed to write image data to file \"%s\"", fn);
+        return -1;
+    }
+    // FITS pad
+    fid = fopen(fn, "a");
+    if (!fid) {
+        SYSERROR("Failed to open file \"%s\" for padding", fn);
+        return -1;
+    }
+    if (fits_pad_file(fid) ||
+        fclose(fid)) {
+        SYSERROR("Failed to pad or close file \"%s\"", fn);
+        return -1;
+    }
+	return 0;
 }
 
 qfits_header* fits_get_header_for_image(qfitsdumper* qd, int W,

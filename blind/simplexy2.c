@@ -64,6 +64,30 @@
  *
  */
 
+#include "fitsioutils.h"
+#include "qfits.h"
+
+static void write_fits_float_image(const float* img, int nx, int ny,
+								   const char* fn) {
+    qfitsdumper qoutimg;
+	qfits_header* hdr;
+
+    memset(&qoutimg, 0, sizeof(qoutimg));
+    qoutimg.filename = fn;
+    qoutimg.npix = nx * ny;
+    qoutimg.ptype = PTYPE_FLOAT;
+    qoutimg.fbuf = img;
+    qoutimg.out_ptype = BPP_IEEE_FLOAT;
+
+    // write header.
+    hdr = fits_get_header_for_image(&qoutimg, nx, NULL);
+
+	if (fits_write_header_and_image(hdr, &qoutimg)) {
+		ERROR("Failed to write FITS image to file \"%s\"", fn);
+		exit(-1);
+	}
+}
+
 void simplexy2_set_u8_defaults(simplexy_t* i) {
     memset(i, 0, sizeof(simplexy_t));
     simplexy2_set_defaults(i);
@@ -83,10 +107,33 @@ void simplexy2_set_defaults(simplexy_t* i) {
     i->maxnpeaks = SIMPLEXY_DEFAULT_MAXNPEAKS;
 }
 
+void simplexy2_free_contents(simplexy_t* s) {
+	free(s->image);
+	s->image = NULL;
+	free(s->image_u8);
+	s->image_u8 = NULL;
+	free(s->x);
+	s->x = NULL;
+	free(s->y);
+	s->y = NULL;
+	free(s->flux);
+	s->flux = NULL;
+	free(s->background);
+	s->background = NULL;
+	free(s->simage);
+	s->simage = NULL;
+	free(s->oimage);
+	s->oimage = NULL;
+	free(s->smooth);
+	s->smooth = NULL;
+}
+
 int simplexy2(simplexy_t* s) {
 	int i;
     int nx = s->nx;
     int ny = s->ny;
+	float smoothsigma;
+    float limit;
 
     /* Exactly one of s->image and s->image_u8 should be non-NULL.*/
     assert(s->image || s->image_u8);
@@ -107,47 +154,68 @@ int simplexy2(simplexy_t* s) {
             s->simage[i] = s->image[i] - s->simage[i];
 
     } else {
-        // u8 image
+        // u8 image: run faster ctmf() median-smoother.
+		unsigned char* smoothed_u8;
+
         logverb("simplexy: median smoothing...\n");
-        if (MIN(nx,ny) < 2*s->halfbox+1) {
+        if (MIN(nx,ny) < 2*s->halfbox+1)
             s->halfbox = floor(((float)MIN(nx,ny) - 1.0) / 2.0);
-        }
         assert(MIN(nx,ny) >= 2*s->halfbox+1);
 
-        s->simage_u8 = malloc(nx * ny * sizeof(unsigned char));
-        ctmf(s->image_u8, s->simage_u8, nx, ny, nx, nx, s->halfbox, 1, 512*1024);
-	
+        smoothed_u8 = malloc(nx * ny * sizeof(unsigned char));
+        ctmf(s->image_u8, smoothed_u8, nx, ny, nx, nx, s->halfbox, 1, 512*1024);
+
+		// Background-subtracted image.
         s->simage = malloc(nx * ny * sizeof(float));
-        for (i=0; i<nx*ny; i++)
-            s->simage[i] = (float)s->image_u8[i] - (float)s->simage_u8[i];
-        FREEVEC(s->simage_u8);
-
+		// Float image.
         s->image = malloc(nx * ny * sizeof(float));
-        for (i=0; i<nx*ny; i++)
-            s->image[i] = s->image_u8[i];
+
+        for (i=0; i<nx*ny; i++) {
+			// original image
+			s->image[i] = s->image_u8[i];
+			// smooth-background-subtracted
+            s->simage[i] = s->image[i] - (float)smoothed_u8[i];
+		}
+        free(smoothed_u8);
     }
 
-	// estimate the noise in the image (sigma)
-    logverb("simplexy: measuring image noise (sigma)...\n");
-	dsigma(s->image, nx, ny, 5, 0, &(s->sigma));
-    logverb("simplexy: found sigma=%g.\n", s->sigma);
-    if (s->sigma == 0.0) {
-        logverb("simplexy: re-estimating sigma with a finer grid...\n");
-        dsigma(s->image, nx, ny, 5, 5, &(s->sigma));
-        logverb("simplexy: found sigma=%g.\n", s->sigma);
-        if (s->sigma == 0.0) {
-            logverb("simplexy: re-estimating sigma with a finer grid...\n");
-            dsigma(s->image, nx, ny, 5, 1, &(s->sigma));
-            logverb("simplexy: found sigma=%g.\n", s->sigma);
-        }
-    }
+	if (s->bgsubimgfn) {
+		logverb("Writing background-subtracted image \"%s\"\n", s->bgsubimgfn);
+		write_fits_float_image(s->simage, nx, ny, s->bgsubimgfn);
+	}
 
 	/* find objects */
 	s->smooth = malloc(nx * ny * sizeof(float));
 	s->oimage = malloc(nx * ny * sizeof(int));
+
+	//// Pulled in from dobjects ////
+	/* smooth by the point spread function  */
+	dsmooth2(s->image, nx, ny, s->dpsf, s->smooth);
+
+	/* check how much noise is left in the psf-smoothed image. */
+	dsigma(s->smooth, nx, ny, (int)(10*s->dpsf), 0, &smoothsigma);
+	logverb("simplexy: noise in smoothed image: %g\n", smoothsigma);
+
     logverb("simplexy: finding objects...\n");
-	dobjects(s->simage, s->smooth, nx, ny, s->dpsf, s->plim, s->oimage);
+	limit = smoothsigma * s->plim;
+	dobjects(s->smooth, nx, ny, limit, s->dpsf, s->oimage);
+	//dobjects(s->simage, s->smooth, nx, ny, s->dpsf, s->plim, s->oimage);
 	FREEVEC(s->smooth);
+
+	// estimate the noise in the image (sigma)
+	logverb("simplexy: measuring image noise (sigma)...\n");
+	dsigma(s->image, nx, ny, 5, 0, &(s->sigma));
+	logverb("simplexy: found sigma=%g.\n", s->sigma);
+	if (s->sigma == 0.0) {
+		logverb("simplexy: re-estimating sigma with a finer grid...\n");
+		dsigma(s->image, nx, ny, 5, 5, &(s->sigma));
+		logverb("simplexy: found sigma=%g.\n", s->sigma);
+		if (s->sigma == 0.0) {
+			logverb("simplexy: re-estimating sigma with a finer grid...\n");
+			dsigma(s->image, nx, ny, 5, 1, &(s->sigma));
+			logverb("simplexy: found sigma=%g.\n", s->sigma);
+		}
+	}
 
     s->x = malloc(s->maxnpeaks * sizeof(float));
     s->y = malloc(s->maxnpeaks * sizeof(float));

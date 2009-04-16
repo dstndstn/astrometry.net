@@ -67,11 +67,16 @@ struct simplexy_t {
     float *background;
     int npeaks;
 
+	/***
+	 Debug
+	 ***/
+	// The filename for saving the background-subtracted FITS image.
+	const char* bgsubimgfn;
+
     /******
      Internal
      ******/
     float* simage;
-    unsigned char* simage_u8;
 
     int* oimage;
     float* smooth;
@@ -84,6 +89,8 @@ void simplexy2_set_defaults(simplexy_t* s);
 void simplexy2_set_u8_defaults(simplexy_t* i);
 
 int simplexy2(simplexy_t* s);
+
+void simplexy2_free_contents(simplexy_t* s);
 
 void simplexy2_clean_cache();
 

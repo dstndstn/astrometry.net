@@ -256,7 +256,8 @@ control-program: control-program.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 ALL_OBJ += control-program.o
 
-image2xy: image2xy-main.o image2xy-files.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTILS_LIB)
+# qfits is only needed for writing debugging images...
+image2xy: image2xy-main.o image2xy-files.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 ALL_OBJ += image2xy-main.o image2xy-files.o
 

@@ -74,7 +74,6 @@ int DFIND2(IMGTYPE* image,
                     if (maxlabel == LABEL_MAX) {
                         ERROR("Ran out of labels.");
                         exit(-1);
-                        //return -1;
                     }
 				}
 			}

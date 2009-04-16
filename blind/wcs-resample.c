@@ -60,7 +60,6 @@ int main(int argc, char** args) {
     float* inimg;
     float* outimg;
     qfits_header* hdr;
-    FILE* fid;
 
     int outW, outH;
     int inW, inH;
@@ -226,7 +225,6 @@ int main(int argc, char** args) {
     qoutimg.fbuf = outimg;
     qoutimg.out_ptype = BPP_IEEE_FLOAT;
 
-    // write header.
     hdr = fits_get_header_for_image(&qoutimg, outW, NULL);
     if (outwcs.a_order)
         sip_add_to_header(hdr, &outwcs);
@@ -236,41 +234,11 @@ int main(int argc, char** args) {
     fits_header_add_double(hdr, "DATAMIN", outpixmin, "min pixel value");
     fits_header_add_double(hdr, "DATAMAX", outpixmax, "max pixel value");
 
-    fid = fopen(outfitsfn, "w");
-    if (!fid) {
-        SYSERROR("Failed to open file \"%s\" for output", outfitsfn);
+	if (fits_write_header_and_image(hdr, &qoutimg)) {
+        ERROR("Failed to write image to file \"%s\"", outfitsfn);
         exit(-1);
-    }
-    if (qfits_header_dump(hdr, fid)) {
-        ERROR("Failed to write image header to file \"%s\"", outfitsfn);
-        exit(-1);
-    }
-    // the qfits pixel dumper appends to the given filename, so close
-    // the file here.
-    if (fits_pad_file(fid) ||
-        fclose(fid)) {
-        SYSERROR("Failed to pad or close file \"%s\"", outfitsfn);
-        exit(-1);
-    }
-
-    // write data.
-    if (qfits_pixdump(&qoutimg)) {
-        ERROR("Failed to write image data to fil \"%s\"", outfitsfn);
-        exit(-1);
-    }
+	}
     free(outimg);
-
-    // FITS pad
-    fid = fopen(outfitsfn, "a");
-    if (!fid) {
-        SYSERROR("Failed to open file \"%s\" for padding", outfitsfn);
-        exit(-1);
-    }
-    if (fits_pad_file(fid) ||
-        fclose(fid)) {
-        SYSERROR("Failed to pad or close file \"%s\"", outfitsfn);
-        exit(-1);
-    }
 
 	return 0;
 }

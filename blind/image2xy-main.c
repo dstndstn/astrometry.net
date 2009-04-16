@@ -2,6 +2,7 @@
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Michael Blanton, Keir Mierle, David W. Hogg,
   Sam Roweis and Dustin Lang.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -30,7 +31,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hOo:8Hd:D:ve:";
+static const char* OPTIONS = "hOo:8Hd:D:ve:B:";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -47,6 +48,7 @@ static void printHelp() {
             "   [-D <downsample-factor>] downsample, if necessary, by this many factors of two.\n"
 			"   [-o <output-filename>]  write XYlist to given filename.\n"
             "   [-v] verbose - repeat for more and more verboseness\n"
+			"   [-B <background-subtracted image>]: save background-subtracted image to this filename (FITS float image)\n"
 			"\n"
 			"   image2xy 'file.fits[1]'   - process first extension.\n"
 			"   image2xy 'file.fits[2]'   - process second extension \n"
@@ -67,9 +69,13 @@ int main(int argc, char *argv[]) {
     int downsample = 0;
     int downsample_as_reqd = 0;
     int extension = 0;
+	char* bgimg = NULL;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'B':
+			bgimg = optarg;
+			break;
         case 'e':
             extension = atoi(optarg);
             break;
@@ -127,7 +133,7 @@ int main(int argc, char *argv[]) {
     if (downsample)
         logverb("Downsampling by %i\n", downsample);
 
-    if (image2xy_files(infn, outfn, do_u8, downsample, downsample_as_reqd, extension)) {
+    if (image2xy_files(infn, outfn, do_u8, downsample, downsample_as_reqd, extension, bgimg)) {
         ERROR("image2xy failed.");
         exit(-1);
     }

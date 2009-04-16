@@ -34,11 +34,6 @@
  * Mike Blanton
  * 1/2006 */
 
-int dsmooth(float *image, int nx, int ny, float sigma, float *smooth);
-void dsmooth2(float *image, int nx, int ny, float sigma, float *smooth);
-
-int dfind(int *image, int nx, int ny, int *object);
-
 int dpeaks(float *image,
            int nx,
            int ny,

@@ -33,7 +33,6 @@ int dfluxes(float *image, float *templates, float *weights, int nx, int ny,
             float sigma);
 int dweights(float *image, float *invvar, int nx, int ny, int ntemplates,
              float *templates, int nonneg, float *weights);
-int dfind(int *image, int nx, int ny, int *object);
 
 int dfind2(int *image, int nx, int ny, int *object);
 int dfind2_u8(unsigned char *image, int nx, int ny, int *object);
@@ -43,8 +42,14 @@ void dselip_cleanup();
 
 int dsmooth(float *image, int nx, int ny, float sigma, float *smooth);
 void dsmooth2(float *image, int nx, int ny, float sigma, float *smooth);
-int dobjects(float *image, float *smooth, int nx, int ny,
-             float dpsf, float plim, int *objects);
+
+/*
+ int dobjects(float *image, float *smooth, int nx, int ny,
+ float dpsf, float plim, int *objects);
+ */
+int dobjects(float *smooth, int nx, int ny, float limit,
+			 float dpsf, int *objects);
+
 int dnonneg(float *xx, float *invcovar, float *bb, float offset,
             int nn, float tolerance, int maxiter, int *niter, float *chi2,
             int verbose);

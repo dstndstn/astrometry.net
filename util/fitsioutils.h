@@ -147,6 +147,8 @@ int fits_add_column(qfits_table* table, int column, tfits_type type,
 qfits_header* fits_get_header_for_image(qfitsdumper* qd, int W,
                                         qfits_header* addtoheader);
 
+int fits_write_header_and_image(const qfits_header* hdr, const qfitsdumper* qd);
+
 /**
  Converts data between different FITS types.
 
