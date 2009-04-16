@@ -32,7 +32,6 @@
 #include "ioutils.h"
 #include "simplexy2.h"
 #include "svn.h"
-#include "dimage.h"
 #include "errors.h"
 #include "log.h"
 
@@ -288,7 +287,7 @@ int image2xy_files(const char* infn, const char* outfn,
     FITS_CHECK("Failed to close FITS output file");
 
     // for valgrind
-    dselip_cleanup();
+	simplexy2_clean_cache();
 
 	return 0;
 

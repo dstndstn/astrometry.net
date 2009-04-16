@@ -23,8 +23,6 @@
 
 #include <stdint.h>
 
-#include "simplexy.h"
-
 // this is only really included here so that it can be tested :)
 typedef uint16_t label_t;
 #define LABEL_MAX UINT16_MAX

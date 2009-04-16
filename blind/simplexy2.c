@@ -189,3 +189,7 @@ int simplexy2(simplexy_t* s) {
 	return 1;
 }
 
+void simplexy2_clean_cache() {
+	dselip_cleanup();
+}
+
