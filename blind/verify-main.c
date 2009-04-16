@@ -252,6 +252,11 @@ int main(int argc, char** args) {
 		cutperm = verify_uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, NULL, &bincenters, &binids);
 		NT = starxy_n(vf->field);
 
+		logmsg("Uniform order:");
+		for(i=0; i<NT; i++)
+			logmsg("%i ", cutperm[i]);
+		logmsg("\n");
+
 		// get_quad_center
 		{
 			double Axy[2], Bxy[2];
@@ -310,6 +315,9 @@ int main(int argc, char** args) {
 		free(goodbins);
 		free(binids);
 		free(bincenters);
+
+		// Predicted optimal number of reference stars:
+		//int mmax = 
 
 		// -remove test quad stars, and grab xy positions
 		testxy = malloc(2 * NT * sizeof(double));
