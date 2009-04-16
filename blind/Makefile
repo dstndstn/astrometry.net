@@ -84,7 +84,7 @@ PIPELINE := usnobtofits tycho2tofits build-an-catalog hpowned cut-an \
 
 PROGS := backend image2xy control-program
 
-PROSPECTUS := quadidx codeprojections quadlocations quadscales quadsperstar \
+PROSPECTUS := quadidx codeprojections quadscales quadsperstar \
 	whynot quadcenters startree2rdls
 
 ANLIBS := $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
@@ -492,10 +492,6 @@ plotxy: plotxy.o $(COMMON)/cairoutils.o boilerplate.o $(ANFILES_LIB) $(ANUTILS_L
 quadidx: quadidx.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 codeprojections: codeprojections.o $(UTIL_OBJS) $(ANLIBS)
-
-quadlocations: quadlocations.o catalog.o \
-		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
-		$(QFITS_LIB)
 
 quadscales: quadscales.o histogram.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
