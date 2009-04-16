@@ -260,12 +260,6 @@ image2xy: image2xy-main.o image2xy-files.o $(SIMPLEXY2_OBJ) $(CFITS_LIB) $(ANUTI
 
 ALL_OBJ += image2xy-main.o image2xy-files.o
 
-simplexy_shared: _simplexy.so
-.PHONY: simplexy_shared
-
-_simplexy.so: $(SIMPLEXY_SHARED_OBJ)
-	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
-
 new-wcs: new-wcs-main.o new-wcs.o $(ANUTILS_LIB) $(QFITS_LIB)
 
 ALL_OBJ += new-wcs-main.o
