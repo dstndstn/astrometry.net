@@ -192,7 +192,7 @@ static bool* deduplicate_field_stars(verify_field_t* vf, double* sigma2s) {
     return keepers;
 }
 
-static void get_quad_center(verify_field_t* vf, MatchObj* mo, double* centerpix,
+static void get_quad_center(const verify_field_t* vf, const MatchObj* mo, double* centerpix,
 							double* quadr2) {
 	double Axy[2], Bxy[2];
 	// Find the midpoint of AB of the quad in pixel space.
@@ -208,38 +208,54 @@ static double get_sigma2_at_radius(double verify_pix2, double r2, double quadr2)
 	return verify_pix2 * (1.0 + r2/quadr2);
 }
 
-double* verify_compute_sigma2s(verify_field_t* vf, MatchObj* mo,
+static double* compute_sigma2s(const verify_field_t* vf,
+							   const double* xy, int NF,
+							   const double* qc, double Q2,
 							   double verify_pix2, bool do_gamma) {
 	double* sigma2s;
-    int NF, i;
-	double qc[2];
-	double rquad2;
+    int i;
 	double R2;
 
-	NF = starxy_n(vf->field);
     sigma2s = malloc(NF * sizeof(double));
-
 	if (!do_gamma) {
 		for (i=0; i<NF; i++)
             sigma2s[i] = verify_pix2;
 	} else {
-		// If we're modelling the expected noise as a Gaussian whose variance grows
-		// away from the quad center, compute the required quantities...
-		get_quad_center(vf, mo, qc, &rquad2);
-        debug("Quad radius = %g pixels\n", sqrt(rquad2));
-
-		// Compute individual positional variances for every field star.
+		// Compute individual positional variances for every field
+		// star.
 		for (i=0; i<NF; i++) {
-            double sxy[2];
-            starxy_get(vf->field, i, sxy);
-            // Distance from the quad center of this field star:
-            R2 = distsq(sxy, qc, 2);
+			if (vf) {
+				double sxy[2];
+				starxy_get(vf->field, i, sxy);
+				// Distance from the quad center of this field star:
+				R2 = distsq(sxy, qc, 2);
+			} else
+				R2 = distsq(xy + 2*i, qc, 2);
+
             // Variance of a field star at that distance from the quad center:
-            sigma2s[i] = get_sigma2_at_radius(verify_pix2, R2, rquad2);
+            sigma2s[i] = get_sigma2_at_radius(verify_pix2, R2, Q2);
         }
 	}
 	return sigma2s;
 }
+
+double* verify_compute_sigma2s(const verify_field_t* vf, const MatchObj* mo,
+							   double verify_pix2, bool do_gamma) {
+	int NF;
+	double qc[2];
+	double Q2;
+	NF = starxy_n(vf->field);
+	get_quad_center(vf, mo, qc, &Q2);
+	debug("Quad radius = %g pixels\n", sqrt(Q2));
+	return compute_sigma2s(vf, NULL, NF, qc, Q2, verify_pix2, do_gamma);
+}
+
+double* verify_compute_sigma2s_arr(const double* xy, int NF,
+								   const double* qc, double Q2,
+								   double verify_pix2, bool do_gamma) {
+	return compute_sigma2s(NULL, xy, NF, qc, Q2, verify_pix2, do_gamma);
+}
+
 
 #include "fitsioutils.h"
 #include "errors.h"
@@ -274,10 +290,9 @@ void verify_get_uniformize_scale(int cutnside, double scale, int W, int H, int* 
 }
 
 
-void verify_uniformize_field(verify_field_t* vf,
+int* verify_uniformize_field(verify_field_t* vf,
 							 double fieldW, double fieldH,
 							 int nw, int nh,
-							 int** p_perm,
 							 int** p_bincounts,
 							 double** p_bincenters,
 							 int** p_binids) {
@@ -330,12 +345,13 @@ void verify_uniformize_field(verify_field_t* vf,
 	for (k=0;; k++) {
 		for (j=0; j<nh; j++) {
 			for (i=0; i<nw; i++) {
-				il* lst = lists[j*nw + i];
+				int binid = j*nw + i;
+				il* lst = lists[binid];
 				if (k >= il_size(lst))
 					continue;
 				perm[p] = il_get(lst, k);
 				if (binids)
-					binids[p] = j*nw + i;
+					binids[p] = binid;
 				p++;
 			}
 		}
@@ -347,7 +363,7 @@ void verify_uniformize_field(verify_field_t* vf,
 		il_free(lists[i]);
 	free(lists);
 
-	*p_perm = perm;
+	return perm;
 }
 
 static void add_gaussian_to_image(double* img, int W, int H,
@@ -621,7 +637,7 @@ void verify_hit(index_t* index,
 	
 	int* cutperm;
 	int* bincounts;
-	verify_uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, &cutperm, &bincounts, NULL, NULL);
+	cutperm = verify_uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, &bincounts, NULL, NULL);
 
 	int W, H;
 

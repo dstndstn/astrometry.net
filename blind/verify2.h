@@ -86,15 +86,35 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 							double** p_indexradec,
 							double** p_indexpix, int** p_starids, int* p_nindex);
 
-double* verify_compute_sigma2s(verify_field_t* vf, MatchObj* mo,
+
+double* verify_compute_sigma2s(const verify_field_t* vf, const MatchObj* mo,
 							   double verify_pix2, bool do_gamma);
+
+double* verify_compute_sigma2s_arr(const double* xy, int NF,
+								   const double* qc, double Q2,
+								   double verify_pix2, bool do_gamma);
 
 void verify_get_uniformize_scale(int cutnside, double scale, int W, int H, int* cutnw, int* cutnh);
 
-void verify_uniformize_field(verify_field_t* vf,
+/**
+
+ -if p_bincenters in non-NULL, it gets the x,y positions of the nw*nh
+  bin centers
+
+ -if p_bincounts is non-NULL, it gets the number of stars in each of
+  the nw*nh bins.
+
+ -if p_binids is non-NULL, it gets the bin index of each star.  The
+ array is in the same order as the return value.  The bin index can be
+ used to reference the "p_bincounts" or "p_bincenters" arrays.
+
+ -returns: an array of indices into the original field array, in the
+  uniformized order.
+
+ */
+int* verify_uniformize_field(verify_field_t* vf,
 							 double fieldW, double fieldH,
 							 int nw, int nh,
-							 int** p_perm,
 							 int** p_bincounts,
 							 double** p_bincenters,
 							 int** p_binids);

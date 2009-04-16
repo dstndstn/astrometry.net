@@ -30,6 +30,7 @@
 #include "log.h"
 #include "errors.h"
 #include "mathutil.h"
+#include "permutedsort.h"
 
 static const char* OPTIONS = "hvi:m:f:r:";
 
@@ -195,6 +196,10 @@ int main(int argc, char** args) {
 		double* bincenters;
 		int* binids;
 		double effA;
+		double qc[2], Q2;
+		double ror, newror;
+		bool* goodbins = NULL;
+		int Ngoodbins;
 
 		// -get reference stars
 		rd = rdlist_read_field(rdls, NULL);
@@ -248,75 +253,114 @@ int main(int argc, char** args) {
 		}
 		verify_get_uniformize_scale(cutnside, mo->scale, fieldW, fieldH, &cutnw, &cutnh);
 		logmsg("Uniformizing test stars into %i x %i bins.\n", cutnw, cutnh);
-		verify_uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, &cutperm, NULL, &bincenters, &binids);
+		cutperm = verify_uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, NULL, &bincenters, &binids);
 		NT = starxy_n(vf->field);
 
 		// get_quad_center
 		{
-			double Axy[2], Bxy[2], cen[2], Q2;
+			double Axy[2], Bxy[2];
 			starxy_get(vf->field, mo->field[0], Axy);
 			starxy_get(vf->field, mo->field[1], Bxy);
-			cen[0] = 0.5 * (Axy[0] + Bxy[0]);
-			cen[1] = 0.5 * (Axy[1] + Bxy[1]);
+			qc[0] = 0.5 * (Axy[0] + Bxy[0]);
+			qc[1] = 0.5 * (Axy[1] + Bxy[1]);
 			// Find the radius-squared of the quad = distsq(qc, A)
-			Q2 = distsq(Axy, cen, 2);
-			logmsg("Quad center is (%.1f, %.1f), radius %.1f pix\n", cen[0], cen[1], sqrt(Q2));
-
-			double A = fieldW * fieldH;
-			double ror = sqrt(Q2 * (1 + A*(1 - distractors) / (2. * M_PI * NR * pix2)));
-			logmsg("Radius of relevance is %.1f\n", ror);
-
-			// Approximate cutting up the image by measuring distance to the bin centers.
-			bool* goodbins = malloc(cutnw * cutnh * sizeof(bool));
-			int Ngoodbins = 0;
-
-			for (i=0; i<(cutnw * cutnh); i++) {
-				double binr = sqrt(distsq(bincenters + 2*i, cen, 2));
-				//logmsg("Bin %i (%.1f, %.1f) is %.1f away\n", i, bincenters[2*i], bincenters[2*i+1], binr);
-				goodbins[i] = (binr < ror);
-				if (goodbins[i])
-					Ngoodbins++;
-				//if (binr > ror) logmsg("Irrelevant bin!\n");
-			}
-			// Remove test stars in irrelevant bins...
-			k = 0;
-			for (i=0; i<NT; i++) {
-				if (!goodbins[binids[i]])
-					continue;
-				cutperm[k] = cutperm[i];
-				k++;
-			}
-			NT = k;
-			logmsg("After removing %i/%i irrelevant bins: %i test stars.\n", (cutnw*cutnh)-Ngoodbins, cutnw*cutnh, NT);
-
-			// Effective area: A * proportion of good bins.
-			effA = A * Ngoodbins / (double)(cutnw * cutnh);
-
-			// -remove reference stars in bad bins.
-			k = 0;
-			for (i=0; i<NR; i++) {
-				int binid = get_xy_bin(refxy[2*i], refxy[2*i+1], fieldW, fieldH, cutnw, cutnh);
-				if (!goodbins[binid])
-					continue;
-				if (i == k)
-					continue;
-				memcpy(refxy + 2*k, refxy + 2*i, 2*sizeof(double));
-				k++;
-			}
-			NR = k;
-			logmsg("After removing irrelevant ref stars: %i ref stars.\n", NR);
-
-			// New ROR is...
-			double newror = sqrt(Q2 * (1 + effA*(1 - distractors) / (2. * M_PI * NR * pix2)));
-			logmsg("ROR changed from %g to %g\n", ror, newror);
-
-			free(goodbins);
+			Q2 = distsq(Axy, qc, 2);
+			logmsg("Quad center is (%.1f, %.1f), radius %.1f pix\n", qc[0], qc[1], sqrt(Q2));
 		}
+		ror = sqrt(Q2 * (1 + fieldW*fieldH*(1 - distractors) / (2. * M_PI * NR * pix2)));
+		logmsg("Radius of relevance is %.1f\n", ror);
+
+
+		// CHECK that the sigma2s still match.
+		for (i=0; i<NT; i++) {
+			int ind = cutperm[i];
+			double xy[2], R2, sig2, s2;
+			starxy_get(vf->field, ind, xy);
+			R2 = distsq(xy, qc, 2);
+			sig2 = pix2 * (1.0 + R2 / Q2);
+			s2 = sigma2s[ind];
+			//logmsg("sig: %g vs %g\n", sqrt(sig2), sqrt(s2));
+			if (fabs(s2 - sig2) > 1e-6) {
+				ERROR("sigma2s don't match.\n");
+				exit(-1);
+			}
+		}
+
+		// Approximate cutting up the image by measuring distance to the bin centers.
+		goodbins = malloc(cutnw * cutnh * sizeof(bool));
+		Ngoodbins = 0;
+
+		for (i=0; i<(cutnw * cutnh); i++) {
+			double binr = sqrt(distsq(bincenters + 2*i, qc, 2));
+			goodbins[i] = (binr < ror);
+			if (goodbins[i])
+				Ngoodbins++;
+		}
+		// Remove test stars in irrelevant bins...
+		k = 0;
+		for (i=0; i<NT; i++) {
+			if (!goodbins[binids[i]])
+				continue;
+			cutperm[k] = cutperm[i];
+			k++;
+		}
+		NT = k;
+		logmsg("After removing %i/%i irrelevant bins: %i test stars.\n", (cutnw*cutnh)-Ngoodbins, cutnw*cutnh, NT);
+
+
+
+		// CHECK that the sigma2s still match.
+		for (i=0; i<NT; i++) {
+			int ind = cutperm[i];
+			double xy[2], R2, sig2, s2;
+			starxy_get(vf->field, ind, xy);
+			R2 = distsq(xy, qc, 2);
+			sig2 = pix2 * (1.0 + R2 / Q2);
+			s2 = sigma2s[ind];
+			//logmsg("sig: %g vs %g\n", sqrt(sig2), sqrt(s2));
+			if (fabs(s2 - sig2) > 1e-6) {
+				ERROR("sigma2s don't match.\n");
+				exit(-1);
+			}
+		}
+
+
+
+		// Effective area: A * proportion of good bins.
+		effA = fieldW * fieldH * Ngoodbins / (double)(cutnw * cutnh);
+
+		// -remove reference stars in bad bins.
+		k = 0;
+		for (i=0; i<NR; i++) {
+			int binid = get_xy_bin(refxy[2*i], refxy[2*i+1], fieldW, fieldH, cutnw, cutnh);
+			if (!goodbins[binid])
+				continue;
+			if (i != k)
+				memcpy(refxy + 2*k, refxy + 2*i, 2*sizeof(double));
+			k++;
+		}
+		NR = k;
+		logmsg("After removing irrelevant ref stars: %i ref stars.\n", NR);
+
+		// New ROR is...
+		newror = sqrt(Q2 * (1 + effA*(1 - distractors) / (2. * M_PI * NR * pix2)));
+		logmsg("ROR changed from %g to %g\n", ror, newror);
+
+		free(goodbins);
 		free(binids);
 		free(bincenters);
 
+		logmsg("Quad stars are: ");
+		for (j=0; j<mo->dimquads; j++)
+			logmsg("%i ", mo->field[j]);
+		logmsg("\n");
+
+		logmsg("Before removing quad stars:\n");
+		for (i=0; i<MIN(50, NT); i++)
+			logmsg("%i ", cutperm[i]);
+		logmsg("\n");
+
 		// -remove test quad stars
-		testxy = malloc(2 * NT * sizeof(double));
 		k = 0;
 		for (i=0; i<NT; i++) {
 			int starindex = cutperm[i];
@@ -330,6 +374,88 @@ int main(int argc, char** args) {
 				if (inquad)
 					continue;
 			}
+			cutperm[k] = cutperm[i];
+			k++;
+		}
+		NT = k;
+
+		logmsg("After removing quad stars:\n");
+		for (i=0; i<MIN(50, NT); i++)
+			logmsg("%i ", cutperm[i]);
+		logmsg("\n");
+
+		// CHECK that the sigma2s still match.
+		for (i=0; i<NT; i++) {
+			int ind = cutperm[i];
+			double xy[2], R2, sig2, s2;
+			starxy_get(vf->field, ind, xy);
+			R2 = distsq(xy, qc, 2);
+			sig2 = pix2 * (1.0 + R2 / Q2);
+			s2 = sigma2s[ind];
+			//logmsg("sig: %g vs %g\n", sqrt(sig2), sqrt(s2));
+			if (fabs(s2 - sig2) > 1e-6) {
+				ERROR("sigma2s don't match.\n");
+				exit(-1);
+			}
+		}
+
+		// CHECK
+		for (i=0; i<10; i++) {
+			int ind = cutperm[i];
+			double xy[2], R2, sig2, s2;
+			starxy_get(vf->field, ind, xy);
+			R2 = distsq(xy, qc, 2);
+			sig2 = pix2 * (1.0 + R2 / Q2);
+			s2 = sigma2s[ind];
+			logmsg("xy: %.1f, %.1f, s2 %g, %g\n", xy[0], xy[1], sqrt(sig2), sqrt(s2));
+			if (fabs(s2 - sig2) > 1e-6) {
+				ERROR("sigma2s don't match.\n");
+				exit(-1);
+			}
+		}
+
+
+		testxy = malloc(2 * NT * sizeof(double));
+		for (i=0; i<NT; i++) {
+			int starindex = cutperm[i];
+			starxy_get(vf->field, starindex, testxy + 2*i);
+			//sigma2s[i] = sigma2s[starindex];
+			// store their original indices in cutperm so we can look-back.
+			//cutperm[k] = starindex;
+		}
+		permutation_apply(cutperm, NT, sigma2s, sigma2s, sizeof(double));
+
+		// CHECK
+		for (i=0; i<10; i++) {
+			double xy[2], R2, sig2, s2;
+			xy[0] = testxy[2*i + 0];
+			xy[1] = testxy[2*i + 1];
+			R2 = distsq(xy, qc, 2);
+			sig2 = pix2 * (1.0 + R2 / Q2);
+			s2 = sigma2s[i];
+			logmsg("xy: %.1f, %.1f, s2 %g, %g\n", xy[0], xy[1], sqrt(sig2), sqrt(s2));
+			if (fabs(s2 - sig2) > 1e-6) {
+				ERROR("sigma2s don't match.\n");
+				exit(-1);
+			}
+		}
+
+
+		/*
+		 testxy = malloc(2 * NT * sizeof(double));
+		 k = 0;
+		 for (i=0; i<NT; i++) {
+		 int starindex = cutperm[i];
+		 if (!fake) {
+		 bool inquad = FALSE;
+		 for (j=0; j<mo->dimquads; j++)
+		 if (starindex == mo->field[j]) {
+		 inquad = TRUE;
+		 break;
+		 }
+				if (inquad)
+					continue;
+			}
 			starxy_get(vf->field, starindex, testxy + 2*k);
 			sigma2s[k] = sigma2s[starindex];
 			// store their original indices in cutperm so we can look-back.
@@ -337,14 +463,31 @@ int main(int argc, char** args) {
 			k++;
 		}
 		NT = k;
+		 */
+
+		// CHECK that the sigma2s still match.
+		for (i=0; i<NT; i++) {
+			double xy[2], R2, sig2, s2;
+			xy[0] = testxy[2*i + 0];
+			xy[1] = testxy[2*i + 1];
+			R2 = distsq(xy, qc, 2);
+			sig2 = pix2 * (1.0 + R2 / Q2);
+			s2 = sigma2s[i];
+			logmsg("sig: %g vs %g\n", sqrt(sig2), sqrt(s2));
+			if (fabs(s2 - sig2) > 1e-6) {
+				ERROR("sigma2s don't match.\n");
+				exit(-1);
+			}
+		}
+
 
 		logmsg("Test stars: %i\n", NT);
 
 		FILE* f = stderr;
 
 		fprintf(f, "quadxy = array([");
-		for (i=0; i<=mo->dimquads; i++)
-			fprintf(f, "[%g,%g],", mo->quadpix[2*(i % mo->dimquads)+0], mo->quadpix[2*(i % mo->dimquads)+1]);
+		for (i=0; i<mo->dimquads; i++)
+			fprintf(f, "[%g,%g],", mo->quadpix[2*i+0], mo->quadpix[2*i+1]);
 		fprintf(f, "])\n");
 
 		fprintf(f, "testxy = array([");
@@ -376,10 +519,13 @@ int main(int argc, char** args) {
 
 		double* all_logodds;
 		int* theta;
+		int besti;
 
 		logodds = verify_star_lists(refxy, NR, testxy, sigma2s, NT,
 									effA, distractors, logbail,
-									NULL, NULL, &all_logodds, &theta);
+									NULL, &besti, &all_logodds, &theta);
+
+		fprintf(f, "besti = %i\n", besti);
 
 		fprintf(f, "logodds = array([");
 		for (i=0; i<NT; i++)

@@ -68,7 +68,7 @@ Const InlineDeclare double square(double d);
 // at 360.
 Const InlineDeclare int inrange(double ra, double ralow, double rahigh);
 
-InlineDeclare double distsq(double* d1, double* d2, int D);
+InlineDeclare double distsq(const double* d1, const double* d2, int D);
 
 InlineDeclare void cross_product(double* v1, double* v2, double* cross);
 

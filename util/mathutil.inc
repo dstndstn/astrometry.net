@@ -58,7 +58,7 @@ InlineDefine double distsq_exceeds(double* d1, double* d2, int D, double limit) 
 	return 0;
 }
 
-InlineDefine double distsq(double* d1, double* d2, int D) {
+InlineDefine double distsq(const double* d1, const double* d2, int D) {
     double dist2;
     int i;
     dist2 = 0.0;
