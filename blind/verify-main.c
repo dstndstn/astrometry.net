@@ -30,7 +30,6 @@
 #include "log.h"
 #include "errors.h"
 #include "mathutil.h"
-#include "permutedsort.h"
 
 static const char* OPTIONS = "hvi:m:f:r:";
 
@@ -191,7 +190,7 @@ int main(int argc, char** args) {
 		double* testxy;
 		double* refxy;
 		int i, j, k, NT, NR;
-		double* sigma2s;
+		double* sigma2s = NULL;
 		rd_t* rd;
 		double* bincenters;
 		int* binids;
@@ -242,9 +241,6 @@ int main(int argc, char** args) {
 
 		logmsg("Reference stars: %i\n", NR);
 
-		// -compute sigma2s
-		sigma2s = verify_compute_sigma2s(vf, mo, pix2, !fake);
-
 		// -uniformize field stars
 		indexid = mo->indexid;
 		if (index_get_missing_cut_params(indexid, &cutnside, &cutnsweeps, NULL, NULL, NULL)) {
@@ -270,22 +266,6 @@ int main(int argc, char** args) {
 		ror = sqrt(Q2 * (1 + fieldW*fieldH*(1 - distractors) / (2. * M_PI * NR * pix2)));
 		logmsg("Radius of relevance is %.1f\n", ror);
 
-
-		// CHECK that the sigma2s still match.
-		for (i=0; i<NT; i++) {
-			int ind = cutperm[i];
-			double xy[2], R2, sig2, s2;
-			starxy_get(vf->field, ind, xy);
-			R2 = distsq(xy, qc, 2);
-			sig2 = pix2 * (1.0 + R2 / Q2);
-			s2 = sigma2s[ind];
-			//logmsg("sig: %g vs %g\n", sqrt(sig2), sqrt(s2));
-			if (fabs(s2 - sig2) > 1e-6) {
-				ERROR("sigma2s don't match.\n");
-				exit(-1);
-			}
-		}
-
 		// Approximate cutting up the image by measuring distance to the bin centers.
 		goodbins = malloc(cutnw * cutnh * sizeof(bool));
 		Ngoodbins = 0;
@@ -306,25 +286,6 @@ int main(int argc, char** args) {
 		}
 		NT = k;
 		logmsg("After removing %i/%i irrelevant bins: %i test stars.\n", (cutnw*cutnh)-Ngoodbins, cutnw*cutnh, NT);
-
-
-
-		// CHECK that the sigma2s still match.
-		for (i=0; i<NT; i++) {
-			int ind = cutperm[i];
-			double xy[2], R2, sig2, s2;
-			starxy_get(vf->field, ind, xy);
-			R2 = distsq(xy, qc, 2);
-			sig2 = pix2 * (1.0 + R2 / Q2);
-			s2 = sigma2s[ind];
-			//logmsg("sig: %g vs %g\n", sqrt(sig2), sqrt(s2));
-			if (fabs(s2 - sig2) > 1e-6) {
-				ERROR("sigma2s don't match.\n");
-				exit(-1);
-			}
-		}
-
-
 
 		// Effective area: A * proportion of good bins.
 		effA = fieldW * fieldH * Ngoodbins / (double)(cutnw * cutnh);
@@ -384,46 +345,16 @@ int main(int argc, char** args) {
 			logmsg("%i ", cutperm[i]);
 		logmsg("\n");
 
-		// CHECK that the sigma2s still match.
-		for (i=0; i<NT; i++) {
-			int ind = cutperm[i];
-			double xy[2], R2, sig2, s2;
-			starxy_get(vf->field, ind, xy);
-			R2 = distsq(xy, qc, 2);
-			sig2 = pix2 * (1.0 + R2 / Q2);
-			s2 = sigma2s[ind];
-			//logmsg("sig: %g vs %g\n", sqrt(sig2), sqrt(s2));
-			if (fabs(s2 - sig2) > 1e-6) {
-				ERROR("sigma2s don't match.\n");
-				exit(-1);
-			}
-		}
-
-		// CHECK
-		for (i=0; i<10; i++) {
-			int ind = cutperm[i];
-			double xy[2], R2, sig2, s2;
-			starxy_get(vf->field, ind, xy);
-			R2 = distsq(xy, qc, 2);
-			sig2 = pix2 * (1.0 + R2 / Q2);
-			s2 = sigma2s[ind];
-			logmsg("xy: %.1f, %.1f, s2 %g, %g\n", xy[0], xy[1], sqrt(sig2), sqrt(s2));
-			if (fabs(s2 - sig2) > 1e-6) {
-				ERROR("sigma2s don't match.\n");
-				exit(-1);
-			}
-		}
-
-
 		testxy = malloc(2 * NT * sizeof(double));
 		for (i=0; i<NT; i++) {
 			int starindex = cutperm[i];
 			starxy_get(vf->field, starindex, testxy + 2*i);
-			//sigma2s[i] = sigma2s[starindex];
 			// store their original indices in cutperm so we can look-back.
 			//cutperm[k] = starindex;
 		}
-		permutation_apply(cutperm, NT, sigma2s, sigma2s, sizeof(double));
+
+		// -compute sigma2s
+		sigma2s = verify_compute_sigma2s_arr(testxy, NT, qc, Q2, pix2, !fake);
 
 		// CHECK
 		for (i=0; i<10; i++) {
@@ -440,30 +371,6 @@ int main(int argc, char** args) {
 			}
 		}
 
-
-		/*
-		 testxy = malloc(2 * NT * sizeof(double));
-		 k = 0;
-		 for (i=0; i<NT; i++) {
-		 int starindex = cutperm[i];
-		 if (!fake) {
-		 bool inquad = FALSE;
-		 for (j=0; j<mo->dimquads; j++)
-		 if (starindex == mo->field[j]) {
-		 inquad = TRUE;
-		 break;
-		 }
-				if (inquad)
-					continue;
-			}
-			starxy_get(vf->field, starindex, testxy + 2*k);
-			sigma2s[k] = sigma2s[starindex];
-			// store their original indices in cutperm so we can look-back.
-			//cutperm[k] = starindex;
-			k++;
-		}
-		NT = k;
-		 */
 
 		// CHECK that the sigma2s still match.
 		for (i=0; i<NT; i++) {
