@@ -198,9 +198,10 @@ solver_test.o: solver.c
 #######################################
 
 # Add the basename of your test sources here...
-ALL_TEST_FILES = test_dfind test_ctmf test_simplexy test_dsmooth test_2mass \
+ALL_TEST_FILES = test_dfind test_ctmf test_dsmooth test_2mass \
 	test_tycho2 test_usnob test_nomad test_matchfile test_blindutils \
 	test_dcen3x3
+# test_simplexy 
 # test_hd depends on hd.fits...
 
 ALL_TEST_EXTRA_OBJS :=
@@ -215,11 +216,11 @@ TEST_CTMF_OBJS := ctmf.o
 ALL_TEST_EXTRA_OBJS += $(TEST_CTMF_OBJS)
 test_ctmf: $(TEST_CTMF_OBJS)
 
-TEST_SIMPLEXY_OBJS := simplexy.o ctmf.o dsigma.o dobjects.o dselip.o \
-		dallpeaks.o radix.o dsmooth.o dfind.o \
-		dmedsmooth.o dpeaks.o dcen3x3.o
-ALL_TEST_EXTRA_OBJS += $(TEST_SIMPLEXY_OBJS)
-test_simplexy: $(TEST_SIMPLEXY_OBJS) $(ANUTILS_LIB)
+#TEST_SIMPLEXY_OBJS := simplexy.o ctmf.o dsigma.o dobjects.o dselip.o \
+#		dallpeaks.o radix.o dsmooth.o dfind.o \
+#		dmedsmooth.o dpeaks.o dcen3x3.o
+#ALL_TEST_EXTRA_OBJS += $(TEST_SIMPLEXY_OBJS)
+#test_simplexy: $(TEST_SIMPLEXY_OBJS) $(ANUTILS_LIB)
 
 TEST_DSMOOTH_OBJS := dsmooth.o
 ALL_TEST_EXTRA_OBJS += $(TEST_DSMOOTH_OBJS)

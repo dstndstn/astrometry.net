@@ -127,9 +127,7 @@ int simplexy2(simplexy_t* s) {
             s->image[i] = s->image_u8[i];
     }
 
-	/* determine an estimate of the noise in the image (sigma) assuming the
-	 * noise is iid gaussian, by sampling at regular intervals, and comparing
-	 * the difference between pixels separated by a 5-pixel diagonal gap. */
+	// estimate the noise in the image (sigma)
     logverb("simplexy: measuring image noise (sigma)...\n");
 	dsigma(s->image, nx, ny, 5, 0, &(s->sigma));
     logverb("simplexy: found sigma=%g.\n", s->sigma);
