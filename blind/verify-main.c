@@ -145,7 +145,7 @@ int main(int argc, char** args) {
 	double pix2 = 1.0;
 	double distractors = 0.25;
 	double fieldW=0, fieldH=0;
-	double logbail = log(-1e100);
+	double logbail = log(1e-100);
 	double logkeep = log(1e12);
 	bool growvariance = TRUE;
 	bool fake = FALSE;

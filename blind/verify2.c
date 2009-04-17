@@ -530,12 +530,6 @@ double verify_star_lists(const double* refxys, int NR,
 	for (i=0; i<NR; i++)
 		rprobs[i] = -HUGE_VAL;
 
-	logbg = log(1.0 / effective_area);
-	logd  = log(distractors / effective_area);
-
-	bestlogodds = -HUGE_VAL;
-	besti = -1;
-
 	if (p_all_logodds) {
 		all_logodds = calloc(NT, sizeof(double));
 		*p_all_logodds = all_logodds;
@@ -546,6 +540,12 @@ double verify_star_lists(const double* refxys, int NR,
 			theta[i] = -1;
 		*p_theta = theta;
 	}
+
+	logbg = log(1.0 / effective_area);
+	logd  = log(distractors / effective_area);
+
+	bestlogodds = -HUGE_VAL;
+	besti = -1;
 
 	logodds = 0.0;
 	for (i=0; i<NT; i++) {
@@ -585,7 +585,7 @@ double verify_star_lists(const double* refxys, int NR,
 			logfg = loggmax - d2 / (2.0 * sig2);
 			
 			logverb("  NN: ref star %i, dist %.2f, sigmas: %.3f, logfg: %.1f (%.1f above distractor, %.1f above bg)\n",
-				  refi, sqrt(d2), sqrt(d2 / sig2), logfg, logfg - logd, logfg - logbg);
+					refi, sqrt(d2), sqrt(d2 / sig2), logfg, logfg - logd, logfg - logbg);
 		}
 
 		if (logfg < logd) {
