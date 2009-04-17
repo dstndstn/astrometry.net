@@ -401,7 +401,7 @@ int main(int argc, char** args) {
 				}
 			}
 
-			NR = 2 * i + 10;
+			NR = MIN(NR, 2 * i + 10);
 			logmsg("Setting NR to %i\n", NR);
 		}
 

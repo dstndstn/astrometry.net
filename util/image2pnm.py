@@ -32,6 +32,7 @@ from astrometry.util.filetype import filetype_short
 
 fitstype = 'FITS image data'
 fitsext = 'fits'
+tiffext = 'tiff'
 
 pgmcmd = 'pgmtoppm rgbi:1/1/1 %s > %s'
 pgmext = 'pgm'
@@ -105,14 +106,23 @@ def uncompress_file(infile, uncompressed, typeinfo=None, quiet=True):
 	do_command(cmd % (shell_escape(infile), shell_escape(uncompressed)))
 	return ext
 
+def is_raw(fn):
+	rtn = os.system(raw_id_cmd % shell_escape(fn))
+	logverb('ran dcraw: return value %i' % rtn)
+	return os.WIFEXITED(rtn) and (os.WEXITSTATUS(rtn) == 0)
+
 # Returns (extension, command, error)
 def get_image_type(infile):
 	typeinfo = filetype_short(infile)
 	(ext,cmd) = get_cmd(typeinfo, imgcmds)
+	logverb('ext:', ext)
+	# "file" recognizes some RAWs as TIFF, but tifftopnm can't read them...
+	# run "dcraw" here if the type is TIFF.
+	if ext == tiffext and is_raw(infile):
+		(ext, cmd) = imgcmds['raw']
 	if ext is not None:
 		return (ext, cmd, None)
-	rtn = os.system(raw_id_cmd % shell_escape(infile))
-	if os.WIFEXITED(rtn) and (os.WEXITSTATUS(rtn) == 0):
+	if ext != tiffext and is_raw(infile):
 		# it's a RAW image.
 		(ext, cmd) = imgcmds['raw']
 		return (ext, cmd, None)
@@ -230,7 +240,7 @@ def convert_image(infile, outfile, uncompressed, sanitized,
 	# create a tempfile.
 	if not uncompressed:
 		(outfile_dir, outfile_file) = os.path.split(outfile)
-		(f, uncompressed) = tempfile.mkstemp(None, 'uncomp', outdir)
+		(f, uncompressed) = tempfile.mkstemp('', 'uncomp', outfile_dir)
 		os.close(f)
 		tempfiles.append(uncompressed)
 
