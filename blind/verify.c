@@ -107,6 +107,12 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 	// Find all index stars within the bounding circle of the field.
 	startree_search_for(skdt, fieldcenter, fieldr2, &indxyz, NULL, &starid, &N);
 
+	if (!indxyz) {
+		// no stars in range.
+		*p_nindex = 0;
+		return;
+	}
+
 	// Find index stars within the rectangular field.
 	inbounds = sip_filter_stars_in_field(sip, tan, indxyz, NULL, N, indexpix,
 										 NULL, &NI);
