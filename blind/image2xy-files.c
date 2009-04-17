@@ -38,7 +38,8 @@
 
 int image2xy_files(const char* infn, const char* outfn,
 				   bool do_u8, int downsample, int downsample_as_required,
-                   int extension, const char* bgimg) {
+                   int extension,
+				   const char* bgimg, const char* bgsubimg, const char* maskimg) {
 	fitsfile *fptr = NULL;
 	fitsfile *ofptr = NULL;
 	int status = 0; // FIXME should have ostatus too
@@ -168,7 +169,9 @@ int image2xy_files(const char* infn, const char* outfn,
 		free(fpixel);
         CFITS_CHECK("Failed to read image pixels");
 
-		s.bgsubimgfn = bgimg;
+		s.bgsubimgfn = bgsubimg;
+		s.bgimgfn = bgimg;
+		s.maskimgfn = maskimg;
 		s.nx = naxisn[0];
 		s.ny = naxisn[1];
 

@@ -47,8 +47,11 @@ void dsmooth2(float *image, int nx, int ny, float sigma, float *smooth);
  int dobjects(float *image, float *smooth, int nx, int ny,
  float dpsf, float plim, int *objects);
  */
-int dobjects(float *smooth, int nx, int ny, float limit,
+int dobjects(float *image, int nx, int ny, float limit,
 			 float dpsf, int *objects);
+
+int dmask(float *image, int nx, int ny, float limit,
+		  float dpsf, uint8_t* mask);
 
 int dnonneg(float *xx, float *invcovar, float *bb, float offset,
             int nn, float tolerance, int maxiter, int *niter, float *chi2,

@@ -31,7 +31,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hOo:8Hd:D:ve:B:";
+static const char* OPTIONS = "hOo:8Hd:D:ve:B:S:M:";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -48,7 +48,10 @@ static void printHelp() {
             "   [-D <downsample-factor>] downsample, if necessary, by this many factors of two.\n"
 			"   [-o <output-filename>]  write XYlist to given filename.\n"
             "   [-v] verbose - repeat for more and more verboseness\n"
-			"   [-B <background-subtracted image>]: save background-subtracted image to this filename (FITS float image)\n"
+			"\n"
+			"   [-S <background-subtracted image>]: save background-subtracted image to this filename (FITS float image)\n"
+			"   [-B <background image>]: save background image to filename\n"
+			"   [-M <mask image>]: save mask image to filename\n"
 			"\n"
 			"   image2xy 'file.fits[1]'   - process first extension.\n"
 			"   image2xy 'file.fits[2]'   - process second extension \n"
@@ -69,13 +72,23 @@ int main(int argc, char *argv[]) {
     int downsample = 0;
     int downsample_as_reqd = 0;
     int extension = 0;
+
 	char* bgimg = NULL;
+	char* bgsubimg = NULL;
+	char* maskimg = NULL;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
 		case 'B':
 			bgimg = optarg;
 			break;
+		case 'S':
+			bgsubimg = optarg;
+			break;
+		case 'M':
+			maskimg = optarg;
+			break;
+
         case 'e':
             extension = atoi(optarg);
             break;
@@ -133,7 +146,8 @@ int main(int argc, char *argv[]) {
     if (downsample)
         logverb("Downsampling by %i\n", downsample);
 
-    if (image2xy_files(infn, outfn, do_u8, downsample, downsample_as_reqd, extension, bgimg)) {
+    if (image2xy_files(infn, outfn, do_u8, downsample, downsample_as_reqd, extension,
+					   bgimg, bgsubimg, maskimg)) {
         ERROR("image2xy failed.");
         exit(-1);
     }

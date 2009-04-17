@@ -71,6 +71,8 @@ struct simplexy_t {
 	 Debug
 	 ***/
 	// The filename for saving the background-subtracted FITS image.
+	const char* bgimgfn;
+	const char* maskimgfn;
 	const char* bgsubimgfn;
 
     /******

@@ -134,6 +134,7 @@ int simplexy2(simplexy_t* s) {
     int ny = s->ny;
 	float smoothsigma;
     float limit;
+	uint8_t* mask;
 
     /* Exactly one of s->image and s->image_u8 should be non-NULL.*/
     assert(s->image || s->image_u8);
@@ -183,6 +184,14 @@ int simplexy2(simplexy_t* s) {
 		logverb("Writing background-subtracted image \"%s\"\n", s->bgsubimgfn);
 		write_fits_float_image(s->simage, nx, ny, s->bgsubimgfn);
 	}
+	if (s->bgimgfn) {
+		float* bgimg = malloc(nx * ny * sizeof(float));
+		for (i=0; i<nx*ny; i++)
+			bgimg[i] = s->image[i] - s->simage[i];
+		logverb("Writing background image \"%s\"\n", s->bgimgfn);
+		write_fits_float_image(bgimg, nx, ny, s->bgimgfn);
+		free(bgimg);
+	}
 
 	/* find objects */
 	s->smooth = malloc(nx * ny * sizeof(float));
@@ -198,9 +207,27 @@ int simplexy2(simplexy_t* s) {
 
     logverb("simplexy: finding objects...\n");
 	limit = smoothsigma * s->plim;
-	dobjects(s->smooth, nx, ny, limit, s->dpsf, s->oimage);
+	//dobjects(s->smooth, nx, ny, limit, s->dpsf, s->oimage);
 	//dobjects(s->simage, s->smooth, nx, ny, s->dpsf, s->plim, s->oimage);
+
+	mask = malloc(nx*ny);
+	if (!dmask(s->smooth, nx, ny, limit, s->dpsf, mask)) {
+		free(s->smooth);
+		return 0;
+	}
 	FREEVEC(s->smooth);
+
+	if (s->maskimgfn) {
+		float* maskedimg = malloc(nx * ny * sizeof(float));
+		logverb("Writing masked image \"%s\"\n", s->maskimgfn);
+		for (i=0; i<nx*ny; i++)
+			maskedimg[i] = mask[i] * s->image[i];
+		write_fits_float_image(maskedimg, nx, ny, s->maskimgfn);
+		free(maskedimg);
+	}
+
+	dfind2_u8(mask, nx, ny, s->oimage);
+	FREEVEC(mask);
 
 	// estimate the noise in the image (sigma)
 	logverb("simplexy: measuring image noise (sigma)...\n");
