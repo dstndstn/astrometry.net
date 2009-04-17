@@ -119,4 +119,15 @@ int* verify_uniformize_field(verify_field_t* vf,
 							 double** p_bincenters,
 							 int** p_binids);
 
+
+
+void verify_get_all_matches(const double* refxys, int NR,
+							const double* testxys, const double* testsigma2s, int NT,
+							double effective_area,
+							double distractors,
+							double nsigma,
+							double limit,
+							il*** p_reflist,
+							dl*** p_problist);
+
 #endif

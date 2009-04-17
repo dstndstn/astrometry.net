@@ -406,6 +406,94 @@ static void add_gaussian_to_image(double* img, int W, int H,
 	
 }
 
+void verify_get_all_matches(const double* refxys, int NR,
+							const double* testxys, const double* testsigma2s, int NT,
+							double effective_area,
+							double distractors,
+							double nsigma,
+							double limit,
+							il*** p_reflist,
+							dl*** p_problist) {
+	double* refcopy;
+	kdtree_t* rtree;
+	int Nleaf = 10;
+	int i,j;
+	double logd;
+	double logbg;
+	double loglimit;
+
+	il** reflist;
+	dl** problist;
+
+	reflist  = calloc(NT, sizeof(il*));
+	problist = calloc(NT, sizeof(dl*));
+
+	// Build a tree out of the index stars in pixel space...
+	// kdtree scrambles the data array so make a copy first.
+	refcopy = malloc(2 * NR * sizeof(double));
+	memcpy(refcopy, refxys, 2 * NR * sizeof(double));
+	rtree = kdtree_build(NULL, refcopy, NR, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
+
+	logbg = log(1.0 / effective_area);
+	logd  = log(distractors / effective_area);
+	loglimit = log(distractors / effective_area / limit);
+
+	for (i=0; i<NT; i++) {
+		const double* testxy;
+		double sig2;
+		kdtree_qres_t* res;
+
+		testxy = testxys + 2*i;
+		sig2 = testsigma2s[i];
+
+		logverb("\n");
+		logverb("test star %i: (%.1f,%.1f), sigma: %.1f\n", i, testxy[0], testxy[1], sqrt(sig2));
+
+		// find all ref stars within nsigma.
+		res = kdtree_rangesearch_options(rtree, testxy, sig2*nsigma*nsigma,
+										 KD_OPTIONS_SORT_DISTS | KD_OPTIONS_SMALL_RADIUS);
+
+		if (res->nres == 0) {
+			kdtree_free_query(res);
+			continue;
+		}
+
+		reflist[i] = il_new(4);
+		problist[i] = dl_new(4);
+
+		for (j=0; j<res->nres; j++) {
+			double d2;
+			int refi;
+			double loggmax, logfg;
+
+			d2 = res->sdists[j];
+			refi = res->inds[j];
+
+			// peak value of the Gaussian
+			loggmax = log((1.0 - distractors) / (2.0 * M_PI * sig2 * NR));
+			// value of the Gaussian
+			logfg = loggmax - d2 / (2.0 * sig2);
+
+			if (logfg < loglimit)
+				continue;
+
+			logverb("  ref star %i, dist %.2f, sigmas: %.3f, logfg: %.1f (%.1f above distractor, %.1f above bg)\n",
+					refi, sqrt(d2), sqrt(d2 / sig2), logfg, logfg - logd, logfg - logbg);
+
+			il_append(reflist[i], refi);
+			dl_append(problist[i], logfg);
+		}
+
+		kdtree_free_query(res);
+	}
+	kdtree_free(rtree);
+	free(refcopy);
+
+	*p_reflist  = reflist;
+	*p_problist = problist;
+}
+
+
 double verify_star_lists(const double* refxys, int NR,
 						 const double* testxys, const double* testsigma2s, int NT,
 						 double effective_area,

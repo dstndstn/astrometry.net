@@ -55,6 +55,76 @@ static int get_xy_bin(double x, double y,
 	return iy * nw + ix;
 }
 
+int Npaths = 0;
+
+static void explore_path(il** reflists, dl** problists, int i, int NT, int NR,
+						 int* theta, double* logprobs, 
+						 bool* refused, int mu,
+						 double distractor, double logbg) {
+	int j;
+	double logprob;
+	FILE* f = stderr;
+	double logd = log(distractor + (1.0-distractor)*mu / (double)NR) + logbg;
+
+	if (i == NT) {
+
+		/*
+		 fprintf(f, "allpaths.append(array([");
+		 for (j=0; j<NT; j++)
+		 fprintf(f, "%g,", logprobs[j]);
+		 fprintf(f, "]))\n");
+		 */
+		fprintf(f, "alllogprobs.append(%g)\n", logprobs[i-1]);
+		Npaths++;
+		return;
+	}
+
+	if (i == 0)
+		logprob = 0.0;
+	else
+		logprob = logprobs[i-1];
+
+	for (j=0; reflists[i] && j<il_size(reflists[i]); j++) {
+		int refi;
+		//int k;
+		//bool used = FALSE;
+		refi = il_get(reflists[i], j);
+		// has been used already?
+		/*
+		 for (k=0; k<i; k++)
+		 if (theta[k] == refi) {
+		 used = TRUE;
+		 break;
+		 }
+		 if (used)
+		 continue;
+		 */
+		if (refused[refi])
+			continue;
+
+		logprobs[i] = logprob + dl_get(problists[i], j) - logbg;
+		theta[i] = refi;
+		//fprintf(f, "plot([%i, %i], [%g, %g], 'r-')\n", i, i+1, logprob, logprobs[i]);
+		//fprintf(f, "pathsx.append(%i)\npathsy.append(%g)\n", i+1, logprobs[i]);
+		fprintf(f, "pathsx.append([%i, %i])\npathsy.append([%g, %g])\n", i, i+1, logprob, logprobs[i]);
+		refused[refi] = TRUE;
+		explore_path(reflists, problists, i+1, NT, NR, theta, logprobs,
+					 refused, mu+1, distractor, logbg);
+		refused[refi] = FALSE;
+	}
+
+	logprobs[i] = logprob + logd - logbg;
+	theta[i] = -1;
+	//fprintf(f, "plot([%i, %i], [%g, %g], 'r-')\n", i, i+1, logprob, logprobs[i]);
+	//fprintf(f, "pathsx.append(%i)\npathsy.append(%g)\n", i+1, logprobs[i]);
+	fprintf(f, "pathsx.append([%i, %i])\npathsy.append([%g, %g])\n", i, i+1, logprob, logprobs[i]);
+	explore_path(reflists, problists, i+1, NT, NR, theta, logprobs,
+				 refused, mu, distractor, logbg);
+	//if (!reflists[i])
+	//return;
+
+}
+
 
 int main(int argc, char** args) {
 	int argchar;
@@ -252,11 +322,6 @@ int main(int argc, char** args) {
 		cutperm = verify_uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, NULL, &bincenters, &binids);
 		NT = starxy_n(vf->field);
 
-		logmsg("Uniform order:");
-		for(i=0; i<NT; i++)
-			logmsg("%i ", cutperm[i]);
-		logmsg("\n");
-
 		// get_quad_center
 		{
 			double Axy[2], Bxy[2];
@@ -381,6 +446,8 @@ int main(int argc, char** args) {
 
 		fprintf(f, "W=%i\nH=%i\n", (int)fieldW, (int)fieldH);
 
+
+
 		double* all_logodds;
 		int* theta;
 		int besti;
@@ -400,6 +467,55 @@ int main(int argc, char** args) {
 		for (i=0; i<NT; i++)
 			fprintf(f, "%i,", theta[i]);
 		fprintf(f, "])\n");
+
+
+		{
+			il** reflist;
+			dl** problist;
+
+			NT = besti+1;
+			
+			verify_get_all_matches(refxy, NR, testxy, sigma2s, NT,
+								   effA, distractors, 5.0, 0.5,
+								   &reflist, &problist);
+
+			double np;
+			np = 1.0;
+			for (i=0; i<NT; i++) {
+				if (!reflist[i])
+					continue;
+				np *= (1.0 + il_size(reflist[i]));
+			}
+			printf("Number of paths: about %g\n", np);
+
+			fprintf(f, "allpaths=[]\n");
+			fprintf(f, "clf()\n");
+			fprintf(f, "alllogprobs = []\n");
+			fprintf(f, "pathsx = []\n");
+			fprintf(f, "pathsy = []\n");
+
+			int theta[NT];
+			double logprobs[NT];
+			bool refused[NR];
+			for (i=0; i<NR; i++)
+				refused[i] = FALSE;
+
+			Npaths = 0;
+			explore_path(reflist, problist, 0, NT, NR, theta, logprobs, refused, 0, distractors, log(1.0/effA));
+			printf("Number of paths: %i\n", Npaths);
+
+			//fprintf(f, "axis([0, %i, -100, 100])\n", NT);
+
+			for (i=0; i<NT; i++) {
+				il_free(reflist[i]);
+				dl_free(problist[i]);
+			}
+			free(reflist);
+			free(problist);
+
+		}
+
+
 
 		free(theta);
 		free(all_logodds);
