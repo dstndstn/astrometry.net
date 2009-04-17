@@ -105,8 +105,8 @@ static void explore_path(il** reflists, dl** problists, int i, int NT, int NR,
 		logprobs[i] = logprob + dl_get(problists[i], j) - logbg;
 		theta[i] = refi;
 		//fprintf(f, "plot([%i, %i], [%g, %g], 'r-')\n", i, i+1, logprob, logprobs[i]);
-		//fprintf(f, "pathsx.append(%i)\npathsy.append(%g)\n", i+1, logprobs[i]);
-		fprintf(f, "pathsx.append([%i, %i])\npathsy.append([%g, %g])\n", i, i+1, logprob, logprobs[i]);
+		fprintf(f, "pathsx.append(%i)\npathsy.append(%g)\n", i+1, logprobs[i]);
+		//fprintf(f, "pathsx.append([%i, %i])\npathsy.append([%g, %g])\n", i, i+1, logprob, logprobs[i]);
 		refused[refi] = TRUE;
 		explore_path(reflists, problists, i+1, NT, NR, theta, logprobs,
 					 refused, mu+1, distractor, logbg);
@@ -116,8 +116,8 @@ static void explore_path(il** reflists, dl** problists, int i, int NT, int NR,
 	logprobs[i] = logprob + logd - logbg;
 	theta[i] = -1;
 	//fprintf(f, "plot([%i, %i], [%g, %g], 'r-')\n", i, i+1, logprob, logprobs[i]);
-	//fprintf(f, "pathsx.append(%i)\npathsy.append(%g)\n", i+1, logprobs[i]);
-	fprintf(f, "pathsx.append([%i, %i])\npathsy.append([%g, %g])\n", i, i+1, logprob, logprobs[i]);
+	fprintf(f, "pathsx.append(%i)\npathsy.append(%g)\n", i+1, logprobs[i]);
+	//fprintf(f, "pathsx.append([%i, %i])\npathsy.append([%g, %g])\n", i, i+1, logprob, logprobs[i]);
 	explore_path(reflists, problists, i+1, NT, NR, theta, logprobs,
 				 refused, mu, distractor, logbg);
 	//if (!reflists[i])
