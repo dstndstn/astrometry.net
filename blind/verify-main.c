@@ -381,8 +381,32 @@ int main(int argc, char** args) {
 		free(binids);
 		free(bincenters);
 
-		// Predicted optimal number of reference stars:
-		//int mmax = 
+		{
+			double d = distractors;
+			// Predicted optimal number of reference stars:
+			int mmax = (int)round(exp(log(effA*(1-d)/(2*M_PI*pix2)) + d*log(d)/(1-d) + (M_PI*Q2 + 1)/effA * log(M_PI*Q2 / (M_PI*Q2 + effA))));
+			logmsg("mmax = %i\n", mmax);
+			logmsg("first term: %g\n", effA*(1-d)/(2*M_PI*pix2));
+			logmsg("second term: %g\n", exp(d*log(d) / (1-d)));
+			logmsg("third term: %g\n", exp((M_PI*Q2 + 1)/effA * log(M_PI*Q2 / (M_PI*Q2 + effA))));
+
+			// Predicted number of reference stars to allow the
+			// accept threshold to be reached.
+			double t1 = d*log(d) + (1-d)*(log(effA*(1-d)/(2*M_PI*pix2)) + (M_PI*Q2 + 1)/effA * log(M_PI*Q2 / (M_PI*Q2 + effA)));
+			for (i=1; i<1000000; i++) {
+				double logM = i*t1 - i*(1-d)*log(i);
+				if (logM > logkeep) {
+					logmsg("m = %i: M = %g\n", i, exp(logM));
+					break;
+				}
+			}
+
+			NR = 2 * i + 10;
+			logmsg("Setting NR to %i\n", NR);
+		}
+
+		
+
 
 		// -remove test quad stars, and grab xy positions
 		testxy = malloc(2 * NT * sizeof(double));
@@ -501,7 +525,7 @@ int main(int argc, char** args) {
 				refused[i] = FALSE;
 
 			Npaths = 0;
-			explore_path(reflist, problist, 0, NT, NR, theta, logprobs, refused, 0, distractors, log(1.0/effA));
+			//explore_path(reflist, problist, 0, NT, NR, theta, logprobs, refused, 0, distractors, log(1.0/effA));
 			printf("Number of paths: %i\n", Npaths);
 
 			//fprintf(f, "axis([0, %i, -100, 100])\n", NT);

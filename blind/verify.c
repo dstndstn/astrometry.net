@@ -98,6 +98,7 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
     int* starid;
 	int* inbounds;
 	int* perm;
+	double* radec = NULL;
 
 	assert(skdt->sweep);
 	assert(p_nindex);
@@ -115,9 +116,10 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 
 	// Compute index RA,Decs if requested.
 	if (p_indexradec) {
-		double* radec = malloc(2 * NI * sizeof(double));
+		radec = malloc(2 * NI * sizeof(double));
 		for (i=0; i<NI; i++)
 			// note that the "inbounds" permutation is applied to "indxyz" here.
+			// we will apply the sweep permutation below.
 			xyzarr2radecdegarr(indxyz + 3*inbounds[i], radec + 2*i);
 		*p_indexradec = radec;
 	}
@@ -144,6 +146,9 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 		*p_starids = starid;
 	} else
 		free(starid);
+
+	if (p_indexradec)
+		permutation_apply(perm, NI, radec, radec, 2 * sizeof(double));
 
 	free(perm);
 
