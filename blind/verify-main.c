@@ -31,6 +31,8 @@
 #include "errors.h"
 #include "mathutil.h"
 
+#define SIGN(x) (((x) >= 0) ? (1) : (-1))
+
 static const char* OPTIONS = "hvi:m:f:r:";
 
 static void print_help(const char* progname) {
@@ -491,6 +493,150 @@ int main(int argc, char** args) {
 		for (i=0; i<NT; i++)
 			fprintf(f, "%i,", theta[i]);
 		fprintf(f, "])\n");
+
+
+		{
+			// What is the ML correction to rotation and scaling?
+			// (shear, translation?  distortion?)
+			// -> may need all matches, not just nearest neighbour, to
+			//    do this correctly.
+			double racc = 0, tacc = 0;
+			int mu = 0;
+
+			for (i=0; i<NT; i++) {
+				double dxy[2];
+				double rdir[2];
+				double R2, ddotr;
+				double dr[2];
+				double dt[2];
+				double fr, ft;
+
+				if (theta[i] == -1)
+					continue;
+				mu++;
+
+				// jitter vector
+				dxy[0] = testxy[2*i+0] - refxy[2*theta[i]+0];
+				dxy[1] = testxy[2*i+1] - refxy[2*theta[i]+1];
+				// radial vector (this should perhaps be to the ref star, not test)
+				rdir[0] = testxy[2*i+0] - qc[0];
+				rdir[1] = testxy[2*i+1] - qc[1];
+				// 
+				R2 = rdir[0]*rdir[0] + rdir[1]*rdir[1];
+				ddotr = (dxy[0]*rdir[0] + dxy[1]*rdir[1]);
+				// jitter vector projected onto radial vector.
+				dr[0] = ddotr * rdir[0] / R2;
+				dr[1] = ddotr * rdir[1] / R2;
+				// tangential
+				dt[0] = dxy[0] - dr[0];
+				dt[1] = dxy[1] - dr[1];
+
+				assert(fabs(dr[0] + dt[0] - dxy[0]) < 1e-10);
+				assert(fabs(dr[1] + dt[1] - dxy[1]) < 1e-10);
+
+				// fractional change in radial, tangential components.
+				fr = SIGN(ddotr) * sqrt((dr[0]*dr[0] + dr[1]*dr[1]) / R2);
+				ft = SIGN(rdir[0]*dt[1] - rdir[1]*dt[0]) * sqrt((dt[0]*dt[0] + dt[1]*dt[1]) / R2);
+
+				racc += fr;
+				tacc += ft;
+			}
+			racc /= (double)mu;
+			tacc /= (double)mu;
+
+			logmsg("Radial correction: %g\n", racc);
+			logmsg("Tangential correction: %g\n", tacc);
+
+			// Rotate and scale the test stars...
+			double* t2xy = malloc(NT * 2 * sizeof(double));
+			for (i=0; i<NT; i++) {
+				double rdir[2];
+				// radial vector
+				rdir[0] = testxy[2*i+0] - qc[0];
+				rdir[1] = testxy[2*i+1] - qc[1];
+				/*
+				 t2xy[2*i+0] = testxy[2*i+0] - racc * rdir[0] + tacc * rdir[1];
+				 t2xy[2*i+1] = testxy[2*i+1] - racc * rdir[1] - tacc * rdir[0];
+				 */
+				t2xy[2*i+0] = testxy[2*i+0] - racc * rdir[0];
+				t2xy[2*i+1] = testxy[2*i+1] - racc * rdir[1];
+			}
+			double logodds2 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
+										 effA, distractors, logbail,
+										 NULL, NULL, NULL, NULL);
+			logmsg("Log-odds 2: %g\n", logodds2);
+
+			for (i=0; i<NT; i++) {
+				double rdir[2];
+				// radial vector
+				rdir[0] = testxy[2*i+0] - qc[0];
+				rdir[1] = testxy[2*i+1] - qc[1];
+				t2xy[2*i+0] = testxy[2*i+0] + tacc * rdir[1];
+				t2xy[2*i+1] = testxy[2*i+1] - tacc * rdir[0];
+			}
+			double logodds3 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
+												effA, distractors, logbail,
+												NULL, NULL, NULL, NULL);
+			logmsg("Log-odds 3: %g\n", logodds3);
+
+			for (i=0; i<NT; i++) {
+				double rdir[2];
+				// radial vector
+				rdir[0] = testxy[2*i+0] - qc[0];
+				rdir[1] = testxy[2*i+1] - qc[1];
+				t2xy[2*i+0] = testxy[2*i+0] - racc * rdir[0] + tacc * rdir[1];
+				t2xy[2*i+1] = testxy[2*i+1] - racc * rdir[1] - tacc * rdir[0];
+			}
+			double logodds4 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
+										 effA, distractors, logbail,
+										 NULL, NULL, NULL, NULL);
+			logmsg("Log-odds 4: %g\n", logodds4);
+
+
+			for (i=0; i<NT; i++) {
+				double rdir[2];
+				// radial vector
+				rdir[0] = testxy[2*i+0] - qc[0];
+				rdir[1] = testxy[2*i+1] - qc[1];
+				t2xy[2*i+0] = testxy[2*i+0] + racc * rdir[0];
+				t2xy[2*i+1] = testxy[2*i+1] + racc * rdir[1];
+			}
+			double logodds5 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
+										 effA, distractors, logbail,
+										 NULL, NULL, NULL, NULL);
+			logmsg("Log-odds 5: %g\n", logodds5);
+
+			for (i=0; i<NT; i++) {
+				double rdir[2];
+				// radial vector
+				rdir[0] = testxy[2*i+0] - qc[0];
+				rdir[1] = testxy[2*i+1] - qc[1];
+				t2xy[2*i+0] = testxy[2*i+0] - tacc * rdir[1];
+				t2xy[2*i+1] = testxy[2*i+1] + tacc * rdir[0];
+			}
+			double logodds6 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
+												effA, distractors, logbail,
+												NULL, NULL, NULL, NULL);
+			logmsg("Log-odds 6: %g\n", logodds6);
+
+			for (i=0; i<NT; i++) {
+				double rdir[2];
+				// radial vector
+				rdir[0] = testxy[2*i+0] - qc[0];
+				rdir[1] = testxy[2*i+1] - qc[1];
+				t2xy[2*i+0] = testxy[2*i+0] + racc * rdir[0] - tacc * rdir[1];
+				t2xy[2*i+1] = testxy[2*i+1] + racc * rdir[1] + tacc * rdir[0];
+			}
+			double logodds7 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
+										 effA, distractors, logbail,
+										 NULL, NULL, NULL, NULL);
+			logmsg("Log-odds 7: %g\n", logodds7);
+
+
+
+			free(t2xy);
+
+		}
 
 
 		{
