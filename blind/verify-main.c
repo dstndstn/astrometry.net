@@ -33,7 +33,7 @@
 
 #define SIGN(x) (((x) >= 0) ? (1) : (-1))
 
-static const char* OPTIONS = "hvi:m:f:r:";
+static const char* OPTIONS = "hvi:m:f:r:p";
 
 static void print_help(const char* progname) {
 	printf("Usage:   %s\n"
@@ -88,27 +88,16 @@ static void explore_path(il** reflists, dl** problists, int i, int NT, int NR,
 
 	for (j=0; reflists[i] && j<il_size(reflists[i]); j++) {
 		int refi;
-		//int k;
-		//bool used = FALSE;
 		refi = il_get(reflists[i], j);
-		// has been used already?
-		/*
-		 for (k=0; k<i; k++)
-		 if (theta[k] == refi) {
-		 used = TRUE;
-		 break;
-		 }
-		 if (used)
-		 continue;
-		 */
 		if (refused[refi])
 			continue;
 
 		logprobs[i] = logprob + dl_get(problists[i], j) - logbg;
 		theta[i] = refi;
 		//fprintf(f, "plot([%i, %i], [%g, %g], 'r-')\n", i, i+1, logprob, logprobs[i]);
-		fprintf(f, "pathsx.append(%i)\npathsy.append(%g)\n", i+1, logprobs[i]);
-		//fprintf(f, "pathsx.append([%i, %i])\npathsy.append([%g, %g])\n", i, i+1, logprob, logprobs[i]);
+		//fprintf(f, "pathsx.append(%i)\npathsy.append(%g)\n", i+1, logprobs[i]);
+		fprintf(f, "pathsx.append([%i, %i])\npathsy.append([%g, %g])\n", i, i+1, logprob, logprobs[i]);
+		fprintf(f, "pathst.append(%i)\n", refi);
 		refused[refi] = TRUE;
 		explore_path(reflists, problists, i+1, NT, NR, theta, logprobs,
 					 refused, mu+1, distractor, logbg);
@@ -118,13 +107,11 @@ static void explore_path(il** reflists, dl** problists, int i, int NT, int NR,
 	logprobs[i] = logprob + logd - logbg;
 	theta[i] = -1;
 	//fprintf(f, "plot([%i, %i], [%g, %g], 'r-')\n", i, i+1, logprob, logprobs[i]);
-	fprintf(f, "pathsx.append(%i)\npathsy.append(%g)\n", i+1, logprobs[i]);
-	//fprintf(f, "pathsx.append([%i, %i])\npathsy.append([%g, %g])\n", i, i+1, logprob, logprobs[i]);
+	//fprintf(f, "pathsx.append(%i)\npathsy.append(%g)\n", i+1, logprobs[i]);
+	fprintf(f, "pathsx.append([%i, %i])\npathsy.append([%g, %g])\n", i, i+1, logprob, logprobs[i]);
+	fprintf(f, "pathst.append(%i)\n", -1);
 	explore_path(reflists, problists, i+1, NT, NR, theta, logprobs,
 				 refused, mu, distractor, logbg);
-	//if (!reflists[i])
-	//return;
-
 }
 
 static void add_radial_and_tangential_correction(const double* in,
@@ -168,9 +155,13 @@ int main(int argc, char** args) {
 	bool growvariance = TRUE;
 	bool fake = FALSE;
 	double logodds;
+	bool do_paths = FALSE;
 
 	while ((argchar = getopt(argc, args, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'p':
+			do_paths = TRUE;
+			break;
 		case 'r':
 			rdfn = optarg;
 			break;
@@ -603,12 +594,14 @@ int main(int argc, char** args) {
 		}
 
 
-		if (FALSE) {
+		if (do_paths) {
 			il** reflist;
 			dl** problist;
 
 			NT = besti+1;
-			
+
+			logmsg("Finding all matches...\n");
+
 			verify_get_all_matches(refxy, NR, testxy, sigma2s, NT,
 								   effA, distractors, 5.0, 0.5,
 								   &reflist, &problist);
@@ -620,13 +613,14 @@ int main(int argc, char** args) {
 					continue;
 				np *= (1.0 + il_size(reflist[i]));
 			}
-			printf("Number of paths: about %g\n", np);
+			logmsg("Number of paths: about %g\n", np);
 
 			fprintf(f, "allpaths=[]\n");
 			fprintf(f, "clf()\n");
 			fprintf(f, "alllogprobs = []\n");
 			fprintf(f, "pathsx = []\n");
 			fprintf(f, "pathsy = []\n");
+			fprintf(f, "pathst = []\n");
 
 			int theta[NT];
 			double logprobs[NT];
@@ -635,8 +629,9 @@ int main(int argc, char** args) {
 				refused[i] = FALSE;
 
 			Npaths = 0;
+			logmsg("Finding all paths...\n");
 			explore_path(reflist, problist, 0, NT, NR, theta, logprobs, refused, 0, distractors, log(1.0/effA));
-			printf("Number of paths: %i\n", Npaths);
+			logmsg("Number of paths: %i\n", Npaths);
 
 			//fprintf(f, "axis([0, %i, -100, 100])\n", NT);
 

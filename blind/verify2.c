@@ -436,7 +436,7 @@ void verify_get_all_matches(const double* refxys, int NR,
 
 	logbg = log(1.0 / effective_area);
 	logd  = log(distractors / effective_area);
-	loglimit = log(distractors / effective_area / limit);
+	loglimit = log(distractors / effective_area * limit);
 
 	for (i=0; i<NT; i++) {
 		const double* testxy;
@@ -477,8 +477,8 @@ void verify_get_all_matches(const double* refxys, int NR,
 			if (logfg < loglimit)
 				continue;
 
-			logverb("  ref star %i, dist %.2f, sigmas: %.3f, logfg: %.1f (%.1f above distractor, %.1f above bg)\n",
-					refi, sqrt(d2), sqrt(d2 / sig2), logfg, logfg - logd, logfg - logbg);
+			logverb("  ref star %i, dist %.2f, sigmas: %.3f, logfg: %.1f (%.1f above distractor, %.1f above bg, %.1f above keep-limit)\n",
+					refi, sqrt(d2), sqrt(d2 / sig2), logfg, logfg - logd, logfg - logbg, logfg - loglimit);
 
 			il_append(reflist[i], refi);
 			dl_append(problist[i], logfg);
