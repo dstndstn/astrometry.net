@@ -127,6 +127,22 @@ static void explore_path(il** reflists, dl** problists, int i, int NT, int NR,
 
 }
 
+static void add_radial_and_tangential_correction(const double* in,
+												 double r, double t,
+												 const double* qc,
+												 double* out,
+												 int N) {
+	int i;
+	for (i=0; i<N; i++) {
+		double rdir[2];
+		// radial vector
+		rdir[0] = in[2*i+0] - qc[0];
+		rdir[1] = in[2*i+1] - qc[1];
+		out[2*i+0] = in[2*i+0] - r * rdir[0] + t * rdir[1];
+		out[2*i+1] = in[2*i+1] - r * rdir[1] - t * rdir[0];
+	}
+}
+
 
 int main(int argc, char** args) {
 	int argchar;
@@ -194,6 +210,9 @@ int main(int argc, char** args) {
 		ERROR("Failed to open xylist %s", xyfn);
 		exit(-1);
 	}
+	// don't need these...
+	xylist_set_include_flux(xyls, FALSE);
+	xylist_set_include_background(xyls, FALSE);
 	fieldW = xylist_get_imagew(xyls);
 	fieldH = xylist_get_imageh(xyls);
 
@@ -298,6 +317,7 @@ int main(int argc, char** args) {
 				ERROR("quad star projects to wrong side of sphere!");
 				exit(-1);
 			}
+			logmsg("Ref quad star %i is at (%.1f, %.1f)\n", i, qxy[0], qxy[1]);
 			for (j=0; j<NR; j++) {
 				double d2 = distsq(qxy, refxy + 2*j, 2);
 				if (d2 < bestd2) {
@@ -305,6 +325,7 @@ int main(int argc, char** args) {
 					besti = j;
 				}
 			}
+			logmsg("Ref star %i is closest: (%.1f, %.1f)\n", besti, refxy[2*besti+0], refxy[2*besti+1]);
 			// remove it!
 			memmove(refxy + 2*besti, refxy + 2*(besti + 1),
 					2*(NR - besti - 1) * sizeof(double));
@@ -403,8 +424,8 @@ int main(int argc, char** args) {
 				}
 			}
 
-			NR = MIN(NR, 2 * i + 10);
-			logmsg("Setting NR to %i\n", NR);
+			//NR = MIN(NR, 2 * i + 10);
+			//logmsg("Setting NR to %i\n", NR);
 		}
 
 		
@@ -494,8 +515,22 @@ int main(int argc, char** args) {
 			fprintf(f, "%i,", theta[i]);
 		fprintf(f, "])\n");
 
+		// compare observed sigmas to expected...
+		fprintf(f, "obssigmas=array([");
+		for (i=0; i<NT; i++) {
+			double d2;
+			if (theta[i] == -1)
+				continue;
+			d2 = distsq(testxy + 2*i, refxy + 2*theta[i], 2);
+			fprintf(f, "[%g,%g],", sigma2s[i], d2);
+		}
+		fprintf(f, "])\n");
+
 
 		{
+			// introduce known radial and tangential terms and see if we can recover them...
+			//add_radial_and_tangential_correction(testxy, -0.01, -0.01, qc, testxy, NT);
+
 			// What is the ML correction to rotation and scaling?
 			// (shear, translation?  distortion?)
 			// -> may need all matches, not just nearest neighbour, to
@@ -547,99 +582,28 @@ int main(int argc, char** args) {
 			logmsg("Radial correction: %g\n", racc);
 			logmsg("Tangential correction: %g\n", tacc);
 
+			logmsg("Log-odds: %g\n", logodds);
+
 			// Rotate and scale the test stars...
 			double* t2xy = malloc(NT * 2 * sizeof(double));
-			for (i=0; i<NT; i++) {
-				double rdir[2];
-				// radial vector
-				rdir[0] = testxy[2*i+0] - qc[0];
-				rdir[1] = testxy[2*i+1] - qc[1];
-				/*
-				 t2xy[2*i+0] = testxy[2*i+0] - racc * rdir[0] + tacc * rdir[1];
-				 t2xy[2*i+1] = testxy[2*i+1] - racc * rdir[1] - tacc * rdir[0];
-				 */
-				t2xy[2*i+0] = testxy[2*i+0] - racc * rdir[0];
-				t2xy[2*i+1] = testxy[2*i+1] - racc * rdir[1];
-			}
+			add_radial_and_tangential_correction(testxy, racc, tacc, qc, t2xy, NT);
 			double logodds2 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
-										 effA, distractors, logbail,
-										 NULL, NULL, NULL, NULL);
+												effA, distractors, logbail,
+												NULL, NULL, NULL, NULL);
 			logmsg("Log-odds 2: %g\n", logodds2);
 
-			for (i=0; i<NT; i++) {
-				double rdir[2];
-				// radial vector
-				rdir[0] = testxy[2*i+0] - qc[0];
-				rdir[1] = testxy[2*i+1] - qc[1];
-				t2xy[2*i+0] = testxy[2*i+0] + tacc * rdir[1];
-				t2xy[2*i+1] = testxy[2*i+1] - tacc * rdir[0];
-			}
-			double logodds3 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
-												effA, distractors, logbail,
-												NULL, NULL, NULL, NULL);
-			logmsg("Log-odds 3: %g\n", logodds3);
 
-			for (i=0; i<NT; i++) {
-				double rdir[2];
-				// radial vector
-				rdir[0] = testxy[2*i+0] - qc[0];
-				rdir[1] = testxy[2*i+1] - qc[1];
-				t2xy[2*i+0] = testxy[2*i+0] - racc * rdir[0] + tacc * rdir[1];
-				t2xy[2*i+1] = testxy[2*i+1] - racc * rdir[1] - tacc * rdir[0];
-			}
-			double logodds4 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
-										 effA, distractors, logbail,
-										 NULL, NULL, NULL, NULL);
-			logmsg("Log-odds 4: %g\n", logodds4);
-
-
-			for (i=0; i<NT; i++) {
-				double rdir[2];
-				// radial vector
-				rdir[0] = testxy[2*i+0] - qc[0];
-				rdir[1] = testxy[2*i+1] - qc[1];
-				t2xy[2*i+0] = testxy[2*i+0] + racc * rdir[0];
-				t2xy[2*i+1] = testxy[2*i+1] + racc * rdir[1];
-			}
-			double logodds5 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
-										 effA, distractors, logbail,
-										 NULL, NULL, NULL, NULL);
-			logmsg("Log-odds 5: %g\n", logodds5);
-
-			for (i=0; i<NT; i++) {
-				double rdir[2];
-				// radial vector
-				rdir[0] = testxy[2*i+0] - qc[0];
-				rdir[1] = testxy[2*i+1] - qc[1];
-				t2xy[2*i+0] = testxy[2*i+0] - tacc * rdir[1];
-				t2xy[2*i+1] = testxy[2*i+1] + tacc * rdir[0];
-			}
-			double logodds6 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
-												effA, distractors, logbail,
-												NULL, NULL, NULL, NULL);
-			logmsg("Log-odds 6: %g\n", logodds6);
-
-			for (i=0; i<NT; i++) {
-				double rdir[2];
-				// radial vector
-				rdir[0] = testxy[2*i+0] - qc[0];
-				rdir[1] = testxy[2*i+1] - qc[1];
-				t2xy[2*i+0] = testxy[2*i+0] + racc * rdir[0] - tacc * rdir[1];
-				t2xy[2*i+1] = testxy[2*i+1] + racc * rdir[1] + tacc * rdir[0];
-			}
-			double logodds7 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
-										 effA, distractors, logbail,
-										 NULL, NULL, NULL, NULL);
-			logmsg("Log-odds 7: %g\n", logodds7);
-
-
+			fprintf(f, "t2xy = array([");
+			for (i=0; i<NT; i++)
+				fprintf(f, "[%g,%g],", t2xy[2*i+0], t2xy[2*i+1]);
+			fprintf(f, "])\n");
 
 			free(t2xy);
 
 		}
 
 
-		{
+		if (FALSE) {
 			il** reflist;
 			dl** problist;
 
@@ -671,7 +635,7 @@ int main(int argc, char** args) {
 				refused[i] = FALSE;
 
 			Npaths = 0;
-			//explore_path(reflist, problist, 0, NT, NR, theta, logprobs, refused, 0, distractors, log(1.0/effA));
+			explore_path(reflist, problist, 0, NT, NR, theta, logprobs, refused, 0, distractors, log(1.0/effA));
 			printf("Number of paths: %i\n", Npaths);
 
 			//fprintf(f, "axis([0, %i, -100, 100])\n", NT);
@@ -682,7 +646,6 @@ int main(int argc, char** args) {
 			}
 			free(reflist);
 			free(problist);
-
 		}
 
 

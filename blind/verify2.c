@@ -501,7 +501,7 @@ double verify_star_lists(const double* refxys, int NR,
 						 double logodds_bail,
 						 int** p_matches, int* p_besti,
 						 double** p_all_logodds, int** p_theta) {
-	int i;
+	int i, j;
 	double bestlogodds;
 	int besti;
 	double logodds;
@@ -639,8 +639,12 @@ double verify_star_lists(const double* refxys, int NR,
 		if (all_logodds)
 			all_logodds[i] = logodds;
 
-        if (logodds < logodds_bail)
+        if (logodds < logodds_bail) {
+			if (all_logodds)
+				for (j=i+1; j<NT; j++)
+					all_logodds[j] = logodds;
             break;
+		}
 
         if (logodds > bestlogodds) {
 			bestlogodds = logodds;
