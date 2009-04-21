@@ -615,6 +615,25 @@ int main(int argc, char** args) {
 								   effA, distractors, 5.0, 0.5,
 								   &reflist, &problist);
 
+			/*
+			 --reflist contains one list per test star, containing the
+			 indices of reference stars within nsigma and within
+			 limit of the distractor rate.
+
+			 -a "regular" conflict occurs when one reference star
+			 appears in more than one list.
+
+			 -a "ref" conflict occurs when a list has more than one
+              element in it.
+
+			 -each star has some "clique" of stars that it can
+              interact with (transitive connectivity of the 'nearby'
+              graph).  These will usually be small, but might not
+              be...  We can compute analytically the sums over small,
+              simple groups, but more complex ones will be very hairy.
+
+			 */
+
 			double np;
 			np = 1.0;
 			for (i=0; i<NT; i++) {

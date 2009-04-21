@@ -493,6 +493,9 @@ void verify_get_all_matches(const double* refxys, int NR,
 	*p_problist = problist;
 }
 
+static double logd_at(double distractor, int mu, int NR, double logbg) {
+	return log(distractor + (1.0-distractor)*mu / (double)NR) + logbg;
+}
 
 double verify_star_lists(const double* refxys, int NR,
 						 const double* testxys, const double* testsigma2s, int NT,
@@ -534,12 +537,10 @@ double verify_star_lists(const double* refxys, int NR,
 		all_logodds = calloc(NT, sizeof(double));
 		*p_all_logodds = all_logodds;
 	}
-	if (p_theta) {
-		theta = malloc(NT * sizeof(double));
-		for (i=0; i<NT; i++)
-			theta[i] = -1;
-		*p_theta = theta;
-	}
+
+	theta = malloc(NT * sizeof(double));
+	for (i=0; i<NT; i++)
+		theta[i] = -1;
 
 	logbg = log(1.0 / effective_area);
 	logd  = log(distractors / effective_area);
@@ -599,10 +600,46 @@ double verify_star_lists(const double* refxys, int NR,
 
 				//logverb("Conflict: odds was %g, now %g.\n", oldfg, logfg);
 
+				// Conflict.  Compute probabilities of old vs new theta.
+
+				// old: this match is a distractor.
+				double oldlogodds = logodds + (logd - logbg);
+
+				// new: the old match becomes a distractor, and all distractors change in value.
+				int oldj = rmatches[refi];
+				int muj = 0;
+				for (j=0; j<oldj; j++)
+					if (theta[j] != -1)
+						muj++;
+				// new point is a match...
+				double newlogodds = logodds + (logfg - logbg);
+				logverb("  Conflict: accepting new match: %.1f change in logodds\n", (logfg - logbg));
+				// old point is a distractor...
+				newlogodds += (logd_at(distractors, muj, NR, logbg) -
+							   oldfg);
+				logverb("  oldj is %i, muj is %i.\n", oldj, muj);
+				logverb("  changing old point to distractor: %.1f change in logodds\n",
+						(logd_at(distractors, muj, NR, logbg) - oldfg));
+				for (; j<i; j++)
+					if (theta[j] == -1) {
+						// any intervening distractors change value...
+						newlogodds += (logd_at(distractors, muj, NR, logbg) -
+									   logd_at(distractors, muj+1, NR, logbg));
+						logverb("  adjusting distractor %i: %g change in logodds\n",
+								j, (logd_at(distractors, muj, NR, logbg) -
+									logd_at(distractors, muj+1, NR, logbg)));
+					} else
+						muj++;
+
+				logmsg("  Conflict: keeping   old match, logodds would be %.1f\n", oldlogodds);
+				logmsg("  Conflict: accepting new match, logodds would be %.1f\n", newlogodds);
+
+
+
 				if (logfg > oldfg) {
 					// upgrade: old match becomes a distractor.
 					logverb("  Conflict: upgrading.  logprob was %.1f, now %.1f.\n", oldfg, logfg);
-                    logodds += (logd - oldfg);
+					logodds += (logd - oldfg);
 					logverb("  Switching old match to distractor: logodds change %.1f, now %.1f\n",
 							(logd - oldfg), logodds);
 
@@ -615,13 +652,14 @@ double verify_star_lists(const double* refxys, int NR,
 					// record this new match.
 					rmatches[refi] = i;
 					rprobs[refi] = logfg;
-
+					
 				} else {
 					// old match was better: this match becomes a distractor.
 					logverb("  Conflict: not upgrading.  logprob was %.1f, now %.1f.\n", oldfg, logfg);
-
 					logfg = logd;
 				}
+
+
 
 			} else {
 				// new match.
@@ -656,6 +694,11 @@ double verify_star_lists(const double* refxys, int NR,
 		*p_matches = rmatches;
 	else
 		free(rmatches);
+
+	if (p_theta)
+		*p_theta = theta;
+	else
+		free(theta);
 
 	if (p_besti)
 		*p_besti = besti;
