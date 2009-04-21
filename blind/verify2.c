@@ -518,6 +518,7 @@ double verify_star_lists(const double* refxys, int NR,
 	double* rprobs;
 	double* all_logodds = NULL;
 	int* theta = NULL;
+	int mu;
 
 	// Build a tree out of the index stars in pixel space...
 	// kdtree scrambles the data array so make a copy first.
@@ -543,12 +544,12 @@ double verify_star_lists(const double* refxys, int NR,
 		theta[i] = -1;
 
 	logbg = log(1.0 / effective_area);
-	logd  = log(distractors / effective_area);
 
 	bestlogodds = -HUGE_VAL;
 	besti = -1;
 
 	logodds = 0.0;
+	mu = 0;
 	for (i=0; i<NT; i++) {
 		const double* testxy;
 		double sig2;
@@ -559,6 +560,8 @@ double verify_star_lists(const double* refxys, int NR,
 
 		testxy = testxys + 2*i;
 		sig2 = testsigma2s[i];
+
+		logd = logd_at(distractors, mu, NR, logbg);
 
 		logverb("\n");
 		logverb("test star %i: (%.1f,%.1f), sigma: %.1f\n", i, testxy[0], testxy[1], sqrt(sig2));
@@ -601,73 +604,64 @@ double verify_star_lists(const double* refxys, int NR,
 				//logverb("Conflict: odds was %g, now %g.\n", oldfg, logfg);
 
 				// Conflict.  Compute probabilities of old vs new theta.
+				// keep the old one: the new star is a distractor
+				double keepfg = logd;
 
-				// old: this match is a distractor.
-				double oldlogodds = logodds + (logd - logbg);
-
-				// new: the old match becomes a distractor, and all distractors change in value.
+				// switch to the new one: the new star is a match...
+				double switchfg = logfg;
+				// ... and the old one becomes a distractor...
 				int oldj = rmatches[refi];
 				int muj = 0;
 				for (j=0; j<oldj; j++)
 					if (theta[j] != -1)
 						muj++;
-				// new point is a match...
-				double newlogodds = logodds + (logfg - logbg);
-				logverb("  Conflict: accepting new match: %.1f change in logodds\n", (logfg - logbg));
-				// old point is a distractor...
-				newlogodds += (logd_at(distractors, muj, NR, logbg) -
-							   oldfg);
+				switchfg += (logd_at(distractors, muj, NR, logbg) - oldfg);
+				// ... and the intervening distractors become worse.
 				logverb("  oldj is %i, muj is %i.\n", oldj, muj);
 				logverb("  changing old point to distractor: %.1f change in logodds\n",
 						(logd_at(distractors, muj, NR, logbg) - oldfg));
 				for (; j<i; j++)
 					if (theta[j] == -1) {
-						// any intervening distractors change value...
-						newlogodds += (logd_at(distractors, muj, NR, logbg) -
-									   logd_at(distractors, muj+1, NR, logbg));
+						switchfg += (logd_at(distractors, muj, NR, logbg) -
+									 logd_at(distractors, muj+1, NR, logbg));
 						logverb("  adjusting distractor %i: %g change in logodds\n",
 								j, (logd_at(distractors, muj, NR, logbg) -
 									logd_at(distractors, muj+1, NR, logbg)));
 					} else
 						muj++;
-
-				logmsg("  Conflict: keeping   old match, logodds would be %.1f\n", oldlogodds);
-				logmsg("  Conflict: accepting new match, logodds would be %.1f\n", newlogodds);
-
-
-
-				if (logfg > oldfg) {
+				logmsg("  Conflict: keeping   old match, logfg would be %.1f\n", keepfg);
+				logmsg("  Conflict: accepting new match, logfg would be %.1f\n", switchfg);
+				
+				if (switchfg > keepfg) {
 					// upgrade: old match becomes a distractor.
-					logverb("  Conflict: upgrading.  logprob was %.1f, now %.1f.\n", oldfg, logfg);
-					logodds += (logd - oldfg);
-					logverb("  Switching old match to distractor: logodds change %.1f, now %.1f\n",
-							(logd - oldfg), logodds);
+					logverb("  Conflict: upgrading.\n");
+					//logodds += (logd - oldfg);
+					//logverb("  Switching old match to distractor: logodds change %.1f, now %.1f\n",
+					//(logd - oldfg), logodds);
 
-					if (theta) {
-						int oldi = rmatches[refi];
-						theta[oldi] = -1;
-						theta[i] = refi;
-					}
-
+					theta[oldj] = -1;
+					theta[i] = refi;
 					// record this new match.
 					rmatches[refi] = i;
 					rprobs[refi] = logfg;
-					
+
+					// "switchfg" incorporates the cost of adjusting the previous probabilities.
+					logfg = switchfg;
+
 				} else {
 					// old match was better: this match becomes a distractor.
-					logverb("  Conflict: not upgrading.  logprob was %.1f, now %.1f.\n", oldfg, logfg);
-					logfg = logd;
+					logverb("  Conflict: not upgrading.\n"); //  logprob was %.1f, now %.1f.\n", oldfg, logfg);
+					logfg = keepfg;
 				}
-
+				// no change in mu.
 
 
 			} else {
 				// new match.
 				rmatches[refi] = i;
 				rprobs[refi] = logfg;
-
-				if (theta)
-					theta[i] = refi;
+				theta[i] = refi;
+				mu++;
 			}
 		}
 
