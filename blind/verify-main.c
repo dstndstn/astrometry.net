@@ -467,6 +467,13 @@ int main(int argc, char** args) {
 			fprintf(f, "%g,", sqrt(sigma2s[i]));
 		fprintf(f, "])\n");
 
+		double* rs2 = verify_compute_sigma2s_arr(refxy, NR, qc, Q2, pix2, !fake);
+		fprintf(f, "refsigmas = array([");
+		for (i=0; i<NT; i++)
+			fprintf(f, "%g,", sqrt(rs2[i]));
+		fprintf(f, "])\n");
+		free(rs2);
+
 		fprintf(f, "refxy = array([");
 		for (i=0; i<NR; i++)
 			fprintf(f, "[%g,%g],", refxy[2*i+0], refxy[2*i+1]);
@@ -495,6 +502,8 @@ int main(int argc, char** args) {
 									NULL, &besti, &all_logodds, &theta);
 
 		fprintf(f, "besti = %i\n", besti);
+
+		fprintf(f, "distractor = %g\n", distractors);
 
 		fprintf(f, "logodds = array([");
 		for (i=0; i<NT; i++)
