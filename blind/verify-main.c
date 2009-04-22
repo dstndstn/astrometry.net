@@ -152,6 +152,7 @@ int main(int argc, char** args) {
 	double fieldW=0, fieldH=0;
 	double logbail = log(1e-100);
 	double logkeep = log(1e12);
+	double logaccept = HUGE_VAL;
 	bool growvariance = TRUE;
 	bool fake = FALSE;
 	double logodds;
@@ -452,6 +453,8 @@ int main(int argc, char** args) {
 
 		FILE* f = stderr;
 
+		fprintf(f, "distractor = %g\n", distractors);
+
 		fprintf(f, "quadxy = array([");
 		for (i=0; i<mo->dimquads; i++)
 			fprintf(f, "[%g,%g],", mo->quadpix[2*i+0], mo->quadpix[2*i+1]);
@@ -491,19 +494,18 @@ int main(int argc, char** args) {
 
 		fprintf(f, "W=%i\nH=%i\n", (int)fieldW, (int)fieldH);
 
-
-
 		double* all_logodds;
 		int* theta;
 		int besti;
+		double worst;
 
 		logodds = verify_star_lists(refxy, NR, testxy, sigma2s, NT,
-									effA, distractors, logbail,
-									NULL, &besti, &all_logodds, &theta);
+									effA, distractors, logbail, logaccept,
+									NULL, &besti, &all_logodds, &theta, &worst);
 
 		fprintf(f, "besti = %i\n", besti);
 
-		fprintf(f, "distractor = %g\n", distractors);
+		fprintf(f, "worstlogodds = %g\n", worst);
 
 		fprintf(f, "logodds = array([");
 		for (i=0; i<NT; i++)
@@ -588,8 +590,8 @@ int main(int argc, char** args) {
 			double* t2xy = malloc(NT * 2 * sizeof(double));
 			add_radial_and_tangential_correction(testxy, racc, tacc, qc, t2xy, NT);
 			double logodds2 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
-												effA, distractors, logbail,
-												NULL, NULL, NULL, NULL);
+												effA, distractors, logbail, logaccept,
+												NULL, NULL, NULL, NULL, NULL);
 			logmsg("Log-odds 2: %g\n", logodds2);
 
 

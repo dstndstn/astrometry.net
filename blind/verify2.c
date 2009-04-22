@@ -502,9 +502,13 @@ double verify_star_lists(const double* refxys, int NR,
 						 double effective_area,
 						 double distractors,
 						 double logodds_bail,
+						 double logodds_accept,
 						 int** p_matches, int* p_besti,
-						 double** p_all_logodds, int** p_theta) {
+						 double** p_all_logodds, int** p_theta,
+						 double* p_worstlogodds) {
 	int i, j;
+	double worstlogodds;
+	double bestworstlogodds;
 	double bestlogodds;
 	int besti;
 	double logodds;
@@ -545,6 +549,7 @@ double verify_star_lists(const double* refxys, int NR,
 
 	logbg = log(1.0 / effective_area);
 
+	worstlogodds = HUGE_VAL;
 	bestlogodds = -HUGE_VAL;
 	besti = -1;
 
@@ -678,10 +683,17 @@ double verify_star_lists(const double* refxys, int NR,
             break;
 		}
 
+		worstlogodds = MIN(worstlogodds, logodds);
+
         if (logodds > bestlogodds) {
 			bestlogodds = logodds;
 			besti = i;
+			// Record the worst log-odds we've seen up to this point.
+			bestworstlogodds = worstlogodds;
 		}
+
+		if (logodds > logodds_accept)
+			break;
 	}
 
 	if (p_matches)
@@ -696,6 +708,9 @@ double verify_star_lists(const double* refxys, int NR,
 
 	if (p_besti)
 		*p_besti = besti;
+
+	if (p_worstlogodds)
+		*p_worstlogodds = bestworstlogodds;
 
 	free(rprobs);
 
@@ -895,8 +910,8 @@ void verify_hit(index_t* index,
 	int besti;
 
 	logodds = verify_star_lists(indexpix, NI, testxy, sigma2s, NF,
-								fieldW*fieldH, distractors, logratio_tobail,
-								NULL, &besti, NULL, NULL);
+								fieldW*fieldH, distractors, logratio_tobail, HUGE_VAL,
+								NULL, &besti, NULL, NULL, NULL);
 	mo->logodds = logodds;
 
 	if (logodds > logodds_tokeep) {
@@ -904,8 +919,8 @@ void verify_hit(index_t* index,
 		// Run again, saving results.
 		// Stop after "besti" test objects.
 		verify_star_lists(indexpix, NI, testxy, sigma2s, besti + 1,
-						  fieldW*fieldH, distractors, logratio_tobail,
-						  &rmatches, NULL, NULL, NULL);
+						  fieldW*fieldH, distractors, logratio_tobail, HUGE_VAL,
+						  &rmatches, NULL, NULL, NULL, NULL);
 
 		// FIXME - save mo->corr_*
 		// (using 'rmatches', 'cutperm' and 'starids')

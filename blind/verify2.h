@@ -73,8 +73,10 @@ double verify_star_lists(const double* refxys, int NR,
 						 double effective_area,
 						 double distractors,
 						 double logodds_bail,
+						 double logodds_accept,
 						 int** p_matches, int* p_besti,
-						 double** p_all_logodds, int** p_theta);
+						 double** p_all_logodds, int** p_theta,
+						 double* p_worstlogodds);
 
 verify_field_t* verify_field_preprocess(const starxy_t* fieldxy);
 
