@@ -48,8 +48,9 @@ deg|deg|
  http://trac.astrometry.net/browser/binary/henry-draper/henry-draper.tsv
 
 
- Dude, use
- http://cdsarc.u-strasbg.fr/viz-bin/Cat?IV/25        
+ HOWEVER, the positions aren't very accurate, so this program has the capability of
+ reading a Tycho2-to-HD cross-reference catalog:
+     http://cdsarc.u-strasbg.fr/viz-bin/Cat?IV/25        
 
 */
 

@@ -244,6 +244,21 @@ ALL_EXECS += $(ALL_TEST_FILES) test
 # END OF KEIR'S SUPER SIMPLE TESTING FRAMEWORK
 ######################################################
 
+hd1.fits: henry-draper.tsv build-hd-tree
+	build-hd-tree -s -R 16 henry-draper.tsv $@
+
+hd2.fits: henry-draper.tsv build-hd-tree tycho2.fits tyc2_hd.dat
+	build-hd-tree -s -R 16 -T tycho2.fits -X tyc2_hd.dat henry-draper.tsv $@
+
+tyc2_hd.dat: tyc2_hd.dat.gz
+	gunzip $<
+
+tyc2_hd.dat.gz:
+	wget "ftp://cdsarc.u-strasbg.fr/pub/cats/IV/25/tyc2_hd.dat.gz"
+
+henry-draper.tsv:
+	wget "http://trac.astrometry.net/browser/binary/henry-draper/henry-draper.tsv?format=txt" -O $@
+
 demo_dsmooth: demo_dsmooth.o dsmooth.o \
 	$(COMMON)/cairoutils.o boilerplate.o $(ANUTILS_LIB) $(QFITS_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg
