@@ -250,15 +250,16 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
                 double fieldW, double fieldH,
                 double logratio_tobail,
                 bool do_gamma, int dimquads, bool fake_match) {
-	int i;
+	int i,j,k;
 	double* fieldcenter;
 	double fieldr2;
-	// number of stars in the index that are within the bounds of the field.
-	int NI;
+	// number of reference stars
+	int NR;
 	double* indexpix;
     int* starids;
 
-    int NF;
+    int NT;
+	bool* keepers = NULL;
 
 	double* bestprob = NULL;
 	double logprob_distractor;
@@ -282,8 +283,8 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
 
     // find index stars and project them into pixel coordinates.
     verify_get_index_stars(fieldcenter, fieldr2, skdt, sip, &(mo->wcstan),
-						   fieldW, fieldH, NULL, &indexpix, &starids, &NI);
-	if (!NI) {
+						   fieldW, fieldH, NULL, &indexpix, &starids, &NR);
+	if (!NR) {
 		// I don't know HOW this happens - at the very least, the four stars
 		// belonging to the quad that generated this hit should lie in the
 		// proposed field - but I've seen it happen!
@@ -294,38 +295,70 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
 		return;
     }
 
-    NF = starxy_n(vf->field);
-	debug("Number of field stars: %i\n", NF);
-	debug("Number of index stars: %i\n", NI);
+	// remove reference stars that are part of the quad.
+	k = 0;
+	if (!fake_match) {
+		for (i=0; i<NR; i++) {
+			bool inquad = FALSE;
+			for (j=0; j<dimquads; j++)
+				if (starids[i] == mo->star[j]) {
+					inquad = TRUE;
+					break;
+				}
+			if (inquad)
+				continue;
+			if (i != k) {
+				memcpy(indexpix + 2*k, indexpix + 2*i, 2*sizeof(double));
+				starids[k] = starids[i];
+			}
+			k++;
+		}
+		assert(k == NR - dimquads);
+		NR = k;
+	}
+
+    NT = starxy_n(vf->field);
+	debug("Number of test stars: %i\n", NT);
+	debug("Number of reference stars: %i\n", NR);
 
 	// If we're verifying an existing WCS solution, then don't increase the variance
 	// away from the center of the matched quad.
     if (fake_match)
         do_gamma = FALSE;
 
-	compute_sigma2s(vf, mo, verify_pix2, do_gamma, &sigma2s);
-
     // Reduce the number of index stars so that the "radius of relevance" is bigger
     // than the field.
-    //trim_index_stars(&indexpix, &starids, &NI);
+    //trim_index_stars(&indexpix, &starids, &NR);
 
-    // Deduplicate field stars based on positional variance and rank.
-	/*
-	 bool* keepers = NULL;
-	 keepers = deduplicate_field_stars(vf, sigma2s);
-	 free(keepers);
-	 */
+
+	compute_sigma2s(vf, mo, verify_pix2, do_gamma, &sigma2s);
+
+	// Deduplicate test stars.  This could be done (approximately) in preprocessing.
+	keepers = deduplicate_field_stars(vf, sigma2s);
+
+	// Remove quad stars from the test stars
+    if (!fake_match) {
+		for (i=0; i<dimquads; i++) {
+            assert(mo->field[i] >= 0);
+            assert(mo->field[i] < NT);
+            keepers[mo->field[i]] = FALSE;
+		}
+	}
+
+	// Uniformize test stars
+
+
 
     // Prime the array where we store conflicting-match info:
     // any match is an improvement, except for stars that form the matched quad.
-	bestprob = malloc(NF * sizeof(double));
-	for (i=0; i<NF; i++)
+	bestprob = malloc(NT * sizeof(double));
+	for (i=0; i<NT; i++)
 		bestprob[i] = -HUGE_VAL;
 	// If we're verifying an existing WCS solution, then there is no match quad.
     if (!fake_match) {
         for (i=0; i<dimquads; i++) {
             assert(mo->field[i] >= 0);
-            assert(mo->field[i] < NF);
+            assert(mo->field[i] < NT);
             bestprob[mo->field[i]] = HUGE_VAL;
         }
     }
@@ -354,7 +387,7 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
 	nmatch = nnomatch = nconflict = 0;
 
 	// Add index stars.
-    for (i=0; i<NI; i++) {
+    for (i=0; i<NR; i++) {
         double bestd2;
         double sigma2;
         double logprob = -HUGE_VAL;
@@ -381,16 +414,16 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
         ind = kdtree_nearest_neighbour(vf->ftree, indexpix+i*2, &bestd2);
         fldind = vf->ftree->perm[ind];
         assert(fldind >= 0);
-        assert(fldind < NF);
+        assert(fldind < NT);
 
 		sigma2 = sigma2s[fldind];
 
-        if (log((1.0 - distractors) / (2.0 * M_PI * sigma2 * NF)) < logprob_background) {
+        if (log((1.0 - distractors) / (2.0 * M_PI * sigma2 * NT)) < logprob_background) {
             debug("This Gaussian is uninformative.\n");
             continue;
         }
 
-        logprob = log((1.0 - distractors) / (2.0 * M_PI * sigma2 * NF)) - (bestd2 / (2.0 * sigma2));
+        logprob = log((1.0 - distractors) / (2.0 * M_PI * sigma2 * NT)) - (bestd2 / (2.0 * sigma2));
         if (logprob < logprob_distractor) {
             debug("Distractor.\n");
             logprob = logprob_distractor;
@@ -451,6 +484,7 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
 		}
 	}
 
+	free(keepers);
     free(sigma2s);
 	free(bestprob);
 
@@ -467,7 +501,7 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
 	mo->noverlap = bestnmatch;
 	mo->nconflict = bestnconflict;
 	mo->nfield = bestnmatch + bestnnomatch + bestnconflict;
-	mo->nindex = NI;
+	mo->nindex = NR;
     matchobj_compute_derived(mo);
 
     if (mo->logodds > log(1e9)) {

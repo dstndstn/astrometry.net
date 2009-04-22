@@ -861,8 +861,8 @@ void verify_hit(index_t* index,
 
 	// remove ref stars that are part of the matched quad.
 	k = 0;
-	for (i=0; i<NI; i++) {
-		if (!fake_match) {
+	if (!fake_match) {
+		for (i=0; i<NI; i++) {
 			bool inquad = FALSE;
 			for (j=0; j<dimquads; j++)
 				if (starids[i] == mo->star[j]) {
@@ -871,14 +871,14 @@ void verify_hit(index_t* index,
 				}
 			if (inquad)
 				continue;
+			if (i != k) {
+				memcpy(indexpix + 2*k, indexpix + 2*i, 2*sizeof(double));
+				starids[k] = starids[i];
+			}
+			k++;
 		}
-		if (i != k) {
-			memcpy(indexpix + 2*k, indexpix + 2*i, 2*sizeof(double));
-			starids[k] = starids[i];
-		}
-		k++;
+		NI = k;
 	}
-	NI = k;
 
 	// remove test stars that are part of the quad.
 	double* testxy = malloc(2 * NF * sizeof(double));

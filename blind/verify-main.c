@@ -454,6 +454,8 @@ int main(int argc, char** args) {
 		FILE* f = stderr;
 
 		fprintf(f, "distractor = %g\nNR=%i\nNT=%i\n", distractors, NR, NT);
+		fprintf(f, "W=%i\nH=%i\n", (int)fieldW, (int)fieldH);
+		fprintf(f, "effA=%g\n", effA);
 
 		fprintf(f, "quadxy = array([");
 		for (i=0; i<mo->dimquads; i++)
@@ -472,7 +474,7 @@ int main(int argc, char** args) {
 
 		double* rs2 = verify_compute_sigma2s_arr(refxy, NR, qc, Q2, pix2, !fake);
 		fprintf(f, "refsigmas = array([");
-		for (i=0; i<NT; i++)
+		for (i=0; i<NR; i++)
 			fprintf(f, "%g,", sqrt(rs2[i]));
 		fprintf(f, "])\n");
 		free(rs2);
@@ -491,8 +493,6 @@ int main(int argc, char** args) {
 		for (i=0; i<=cutnh; i++)
 			fprintf(f, "%g,", i * fieldH / (float)cutnh);
 		fprintf(f, "])\n");
-
-		fprintf(f, "W=%i\nH=%i\n", (int)fieldW, (int)fieldH);
 
 		double* all_logodds;
 		int* theta;
