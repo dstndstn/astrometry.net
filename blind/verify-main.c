@@ -453,7 +453,7 @@ int main(int argc, char** args) {
 
 		FILE* f = stderr;
 
-		fprintf(f, "distractor = %g\n", distractors);
+		fprintf(f, "distractor = %g\nNR=%i\nNT=%i\n", distractors, NR, NT);
 
 		fprintf(f, "quadxy = array([");
 		for (i=0; i<mo->dimquads; i++)
@@ -662,6 +662,8 @@ int main(int argc, char** args) {
 			logmsg("Finding all paths...\n");
 			explore_path(reflist, problist, 0, NT, NR, theta, logprobs, refused, 0, distractors, log(1.0/effA));
 			logmsg("Number of paths: %i\n", Npaths);
+
+			fprintf(f, "pathsx = array(pathsx)\npathsy = array(pathsy)\n");
 
 			//fprintf(f, "axis([0, %i, -100, 100])\n", NT);
 
