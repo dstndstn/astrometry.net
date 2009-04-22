@@ -170,37 +170,38 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 
  Returns an array indicating which field stars should be kept.
  */
-static bool* deduplicate_field_stars(verify_field_t* vf, double* sigma2s) {
+static bool* deduplicate_field_stars(verify_field_t* vf, double* sigma2s, double nsigmas) {
     bool* keepers = NULL;
     int i, j, N;
     kdtree_qres_t* res;
+	double nsig2 = nsigmas*nsigmas;
 
     N = starxy_n(vf->field);
     keepers = malloc(N * sizeof(bool));
+    for (i=0; i<N; i++)
+		keepers[i] = TRUE;
     for (i=0; i<N; i++) {
         double sxy[2];
-        // free parameter!
-        double nsigma2 = 1.0;
-        keepers[i] = TRUE;
+		if (!keepers[i])
+			continue;
         starxy_get(vf->field, i, sxy);
-        res = kdtree_rangesearch_nosort(vf->ftree, sxy, nsigma2 * sigma2s[i]);
+        res = kdtree_rangesearch_nosort(vf->ftree, sxy, nsig2 * sigma2s[i]);
         for (j=0; j<res->nres; j++) {
-            if (res->inds[j] < i) {
-                keepers[i] = FALSE;
+			int ind = res->inds[j];
+            if (ind > i) {
+                keepers[ind] = FALSE;
                 // DEBUG
                 /*
                  double otherxy[2];
-                 starxy_get(vf->field, res->inds[j], otherxy);
+                 starxy_get(vf->field, ind, otherxy);
                  logverb("Field star %i at %g,%g: is close to field star %i at %g,%g.  dist is %g, sigma is %g\n",
-                 i, sxy[0], sxy[1], res->inds[j], otherxy[0], otherxy[1],
-                 sqrt(distsq(sxy, otherxy, 2)), sqrt(nsigma2 * sigma2s[i]));
+                 i, sxy[0], sxy[1], ind, otherxy[0], otherxy[1],
+                 sqrt(distsq(sxy, otherxy, 2)), sqrt(nsig2 * sigma2s[i]));
                  */
-                break;
             }
         }
         kdtree_free_query(res);
     }
-
     return keepers;
 }
 
@@ -334,7 +335,7 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
 	compute_sigma2s(vf, mo, verify_pix2, do_gamma, &sigma2s);
 
 	// Deduplicate test stars.  This could be done (approximately) in preprocessing.
-	keepers = deduplicate_field_stars(vf, sigma2s);
+	keepers = deduplicate_field_stars(vf, sigma2s, 1.0);
 
 	// Remove quad stars from the test stars
     if (!fake_match) {
