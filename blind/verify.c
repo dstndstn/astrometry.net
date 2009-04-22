@@ -29,6 +29,7 @@
 #include "keywords.h"
 #include "log.h"
 #include "sip-utils.h"
+#include "healpix.h"
 
 #define DEBUGVERIFY 1
 #if DEBUGVERIFY
@@ -60,11 +61,12 @@ verify_field_t* verify_field_preprocess(const starxy_t* fieldxy) {
     // Make a copy of the field objects, because we're going to build a
     // kdtree out of them and that shuffles their order.
     vf->fieldcopy = starxy_copy_xy(fieldxy);
-    if (!vf->fieldcopy) {
+    vf->xy = starxy_copy_xy(fieldxy);
+    if (!vf->fieldcopy || !vf->xy) {
         fprintf(stderr, "Failed to copy the field.\n");
-        free(vf);
         return NULL;
     }
+
 
     // Build a tree out of the field objects (in pixel space)
     vf->ftree = kdtree_build(NULL, vf->fieldcopy, starxy_n(vf->field),
@@ -82,6 +84,7 @@ void verify_field_free(verify_field_t* vf) {
     if (!vf)
         return;
     kdtree_free(vf->ftree);
+	free(vf->xy);
     free(vf->fieldcopy);
     free(vf);
     return;
@@ -206,74 +209,197 @@ static bool* deduplicate_field_stars(verify_field_t* vf, double* sigma2s, double
 }
 
 
-static void compute_sigma2s(verify_field_t* vf, MatchObj* mo,
-							double verify_pix2, bool do_gamma, double** p_sigma2s) {
+static double get_sigma2_at_radius(double verify_pix2, double r2, double quadr2) {
+	return verify_pix2 * (1.0 + r2/quadr2);
+}
+
+static double* compute_sigma2s(const verify_field_t* vf,
+							   const double* xy, int NF,
+							   const double* qc, double Q2,
+							   double verify_pix2, bool do_gamma) {
 	double* sigma2s;
-    int NF, i;
-	double qc[2];
-	double rquad2;
+    int i;
 	double R2;
 
-	NF = starxy_n(vf->field);
     sigma2s = malloc(NF * sizeof(double));
-
 	if (!do_gamma) {
 		for (i=0; i<NF; i++)
             sigma2s[i] = verify_pix2;
 	} else {
-		// If we're modelling the expected noise as a Gaussian whose variance grows
-		// away from the quad center, compute the required quantities...
-        double Axy[2], Bxy[2];
-        // Find the midpoint of AB of the quad in pixel space.
-        starxy_get(vf->field, mo->field[0], Axy);
-        starxy_get(vf->field, mo->field[1], Bxy);
-        qc[0] = 0.5 * (Axy[0] + Bxy[0]);
-        qc[1] = 0.5 * (Axy[1] + Bxy[1]);
-        // Find the radius-squared of the quad = distsq(qc, A)
-        rquad2 = distsq(Axy, qc, 2);
-        debug("Quad radius = %g pixels\n", sqrt(rquad2));
-
-		// Compute individual positional variances for every field star.
+		// Compute individual positional variances for every field
+		// star.
 		for (i=0; i<NF; i++) {
-            double sxy[2];
-            starxy_get(vf->field, i, sxy);
-            // Distance from the quad center of this field star:
-            R2 = distsq(sxy, qc, 2);
+			if (vf) {
+				double sxy[2];
+				starxy_get(vf->field, i, sxy);
+				// Distance from the quad center of this field star:
+				R2 = distsq(sxy, qc, 2);
+			} else
+				R2 = distsq(xy + 2*i, qc, 2);
+
             // Variance of a field star at that distance from the quad center:
-            sigma2s[i] = verify_pix2 * (1.0 + R2/rquad2);
+            sigma2s[i] = get_sigma2_at_radius(verify_pix2, R2, Q2);
         }
 	}
-	*p_sigma2s = sigma2s;
+	return sigma2s;
 }
 
-void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
-                double verify_pix2, double distractors,
+static void get_quad_center(const verify_field_t* vf, const MatchObj* mo, double* centerpix,
+							double* quadr2) {
+	double Axy[2], Bxy[2];
+	// Find the midpoint of AB of the quad in pixel space.
+	starxy_get(vf->field, mo->field[0], Axy);
+	starxy_get(vf->field, mo->field[1], Bxy);
+	centerpix[0] = 0.5 * (Axy[0] + Bxy[0]);
+	centerpix[1] = 0.5 * (Axy[1] + Bxy[1]);
+	// Find the radius-squared of the quad = distsq(qc, A)
+	*quadr2 = distsq(Axy, centerpix, 2);
+}
+
+double* verify_compute_sigma2s(const verify_field_t* vf, const MatchObj* mo,
+							   double verify_pix2, bool do_gamma) {
+	int NF;
+	double qc[2];
+	double Q2;
+	NF = starxy_n(vf->field);
+	if (do_gamma) {
+		get_quad_center(vf, mo, qc, &Q2);
+		debug("Quad radius = %g pixels\n", sqrt(Q2));
+	}
+	return compute_sigma2s(vf, NULL, NF, qc, Q2, verify_pix2, do_gamma);
+}
+
+double* verify_compute_sigma2s_arr(const double* xy, int NF,
+								   const double* qc, double Q2,
+								   double verify_pix2, bool do_gamma) {
+	return compute_sigma2s(NULL, xy, NF, qc, Q2, verify_pix2, do_gamma);
+}
+
+static int get_xy_bin(const double* xy,
+					  double fieldW, double fieldH,
+					  int nw, int nh) {
+	int ix, iy;
+	ix = (int)floor(nw * xy[0] / fieldW);
+	ix = MAX(0, MIN(nw-1, ix));
+	iy = (int)floor(nh * xy[1] / fieldH);
+	iy = MAX(0, MIN(nh-1, iy));
+	return iy * nw + ix;
+}
+
+void verify_get_uniformize_scale(int cutnside, double scale, int W, int H, int* cutnw, int* cutnh) {
+	double cutarcsec, cutpix;
+	cutarcsec = healpix_side_length_arcmin(cutnside) * 60.0;
+	cutpix = cutarcsec / scale;
+	logverb("cut nside: %i\n", cutnside);
+	logverb("cut scale: %g arcsec\n", cutarcsec);
+	logverb("match scale: %g arcsec/pix\n", scale);
+	logverb("cut scale: %g pixels\n", cutpix);
+	if (cutnw)
+		*cutnw = MAX(1, (int)round(W / cutpix));
+	if (cutnh)
+		*cutnh = MAX(1, (int)round(H / cutpix));
+}
+
+static void uniformize(const double* xy,
+					   int* perm,
+					   int N,
+					   double fieldW, double fieldH,
+					   int nw, int nh,
+					   int** p_bincounts,
+					   double** p_bincenters,
+					   int** p_binids) {
+	il** lists;
+	int i,j,k,p;
+	int* bincounts = NULL;
+	int* binids = NULL;
+
+	if (p_bincenters) {
+		double* bxy = malloc(nw * nh * 2 * sizeof(double));
+		for (j=0; j<nh; j++)
+			for (i=0; i<nw; i++) {
+				bxy[(j * nw + i)*2 +0] = (i + 0.5) * fieldW / (double)nw;
+				bxy[(j * nw + i)*2 +1] = (j + 0.5) * fieldH / (double)nh;
+			}
+		*p_bincenters = bxy;
+	}
+
+	if (p_binids) {
+		binids = malloc(N * sizeof(int));
+		*p_binids = binids;
+	}
+
+	lists = malloc(nw * nh * sizeof(il*));
+	for (i=0; i<(nw*nh); i++)
+		lists[i] = il_new(16);
+
+	// put the stars in the appropriate bins.
+	for (i=0; i<N; i++) {
+		int ind;
+		int bin;
+		ind = perm[i];
+		bin = get_xy_bin(xy + 2*ind, fieldW, fieldH, nw, nh);
+		il_append(lists[bin], ind);
+	}
+
+	if (p_bincounts) {
+		// note the bin occupancies.
+		bincounts = malloc(nw * nh * sizeof(int));
+		for (i=0; i<(nw*nh); i++) {
+			bincounts[i] = il_size(lists[i]);
+			//logverb("bin %i has %i stars\n", i, bincounts[i]);
+		}
+		*p_bincounts = bincounts;
+	}
+
+	// make sweeps through the bins, grabbing one star from each.
+	p=0;
+	for (k=0;; k++) {
+		for (j=0; j<nh; j++) {
+			for (i=0; i<nw; i++) {
+				int binid = j*nw + i;
+				il* lst = lists[binid];
+				if (k >= il_size(lst))
+					continue;
+				perm[p] = il_get(lst, k);
+				if (binids)
+					binids[p] = binid;
+				p++;
+			}
+		}
+		if (p == N)
+			break;
+	}
+	assert(p == N);
+
+	for (i=0; i<(nw*nh); i++)
+		il_free(lists[i]);
+	free(lists);
+}
+
+
+void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, verify_field_t* vf,
+                double pix2, double distractors,
                 double fieldW, double fieldH,
-                double logratio_tobail,
+                double logbail, double logaccept,
                 bool do_gamma, int dimquads, bool fake_match) {
 	int i,j,k;
 	double* fieldcenter;
 	double fieldr2;
 	// number of reference stars
 	int NR;
-	double* indexpix;
+	double* refxy;
     int* starids;
-
     int NT;
 	bool* keepers = NULL;
-
-	double* bestprob = NULL;
-	double logprob_distractor;
-	double logprob_background;
-	double logodds = 0.0;
-	int nmatch, nnomatch, nconflict;
-	double bestlogodds;
-	int bestnmatch, bestnnomatch, bestnconflict;
-    il* corr_field;
-    il* corr_index;
-    il* best_corr_field = NULL;
-    il* best_corr_index = NULL;
     double* sigma2s;
+	int uni_nw, uni_nh;
+	int* perm;
+	double effA;
+	double qc[2], Q2;
+	double* testxy;
+	double K;
+	double worst;
+	int besti;
 
 	assert(mo->wcs_valid || sip);
 
@@ -284,7 +410,7 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
 
     // find index stars and project them into pixel coordinates.
     verify_get_index_stars(fieldcenter, fieldr2, skdt, sip, &(mo->wcstan),
-						   fieldW, fieldH, NULL, &indexpix, &starids, &NR);
+						   fieldW, fieldH, NULL, &refxy, &starids, &NR);
 	if (!NR) {
 		// I don't know HOW this happens - at the very least, the four stars
 		// belonging to the quad that generated this hit should lie in the
@@ -309,7 +435,7 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
 			if (inquad)
 				continue;
 			if (i != k) {
-				memcpy(indexpix + 2*k, indexpix + 2*i, 2*sizeof(double));
+				memcpy(refxy + 2*k, refxy + 2*i, 2*sizeof(double));
 				starids[k] = starids[i];
 			}
 			k++;
@@ -327,17 +453,16 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
     if (fake_match)
         do_gamma = FALSE;
 
-    // Reduce the number of index stars so that the "radius of relevance" is bigger
-    // than the field.
-    //trim_index_stars(&indexpix, &starids, &NR);
+	sigma2s = verify_compute_sigma2s(vf, mo, pix2, do_gamma);
 
-
-	compute_sigma2s(vf, mo, verify_pix2, do_gamma, &sigma2s);
+	if (!fake_match)
+		get_quad_center(vf, mo, qc, &Q2);
 
 	// Deduplicate test stars.  This could be done (approximately) in preprocessing.
 	keepers = deduplicate_field_stars(vf, sigma2s, 1.0);
 
-	// Remove quad stars from the test stars
+	// Remove test quad stars.  Do this after deduplication so we
+	// don't end up with test stars near the quad stars.
     if (!fake_match) {
 		for (i=0; i<dimquads; i++) {
             assert(mo->field[i] >= 0);
@@ -347,166 +472,328 @@ void verify_hit(startree_t* skdt, MatchObj* mo, sip_t* sip, verify_field_t* vf,
 	}
 
 	// Uniformize test stars
+	// FIXME - can do this (possibly at several scales) in preprocessing.
 
+	// -first apply the deduplication and removal of test stars by computing an
+	// initial permutation array.
+	perm = malloc(NT * sizeof(int));
+	k = 0;
+	for (i=0; i<NT; i++) {
+		if (!keepers[i])
+			continue;
+		perm[k] = i;
+		k++;
+	}
+	NT = k;
+	free(keepers);
 
+	// -get uniformization scale.
+	verify_get_uniformize_scale(index_cutnside, mo->scale, fieldW, fieldH, &uni_nw, &uni_nh);
+	logverb("uniformizing into %i x %i blocks.\n", uni_nw, uni_nh);
 
-    // Prime the array where we store conflicting-match info:
-    // any match is an improvement, except for stars that form the matched quad.
-	bestprob = malloc(NT * sizeof(double));
-	for (i=0; i<NT; i++)
-		bestprob[i] = -HUGE_VAL;
-	// If we're verifying an existing WCS solution, then there is no match quad.
-    if (!fake_match) {
-        for (i=0; i<dimquads; i++) {
-            assert(mo->field[i] >= 0);
-            assert(mo->field[i] < NT);
-            bestprob[mo->field[i]] = HUGE_VAL;
-        }
-    }
+	// uniformize!
+	if (uni_nw > 1 || uni_nh > 1) {
+		double* bincenters;
+		int* binids;
+		double ror2;
+		bool* goodbins = NULL;
+		int Ngoodbins;
 
-	// p(background) = 1/(W*H) of the image.
-	logprob_background = -log(fieldW * fieldH);
+		uniformize(vf->xy, perm, NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &bincenters, &binids);
 
-	// p(distractor) = D / (W*H)
-	logprob_distractor = log(distractors / (fieldW * fieldH));
-
-	debug("log(p(background)) = %g\n", logprob_background);
-	debug("log(p(distractor)) = %g\n", logprob_distractor);
-
-    // add correspondences for the matched quad.
-    corr_field = il_new(16);
-    corr_index = il_new(16);
-    if (!fake_match) {
-        for (i=0; i<dimquads; i++) {
-            il_append(corr_field, mo->field[i]);
-            il_append(corr_index, mo->star[i]);
-        }
-    }
-
-	bestlogodds = -HUGE_VAL;
-	bestnmatch = bestnnomatch = bestnconflict = -1;
-	nmatch = nnomatch = nconflict = 0;
-
-	// Add index stars.
-    for (i=0; i<NR; i++) {
-        double bestd2;
-        double sigma2;
-        double logprob = -HUGE_VAL;
-        int ind;
-        int starid;
-        int fldind;
-        int j;
-        bool cont;
-
-        // Skip stars that are part of the quad:
-        starid = starids[i];
-        if (!fake_match) {
-            cont = FALSE;
-            for (j=0; j<dimquads; j++)
-                if (starid == mo->star[j]) {
-                    cont = TRUE;
-                    break;
-                }
-            if (cont)
-                continue;
-        }
-
-        // Find nearest field star.
-        ind = kdtree_nearest_neighbour(vf->ftree, indexpix+i*2, &bestd2);
-        fldind = vf->ftree->perm[ind];
-        assert(fldind >= 0);
-        assert(fldind < NT);
-
-		sigma2 = sigma2s[fldind];
-
-        if (log((1.0 - distractors) / (2.0 * M_PI * sigma2 * NT)) < logprob_background) {
-            debug("This Gaussian is uninformative.\n");
-            continue;
-        }
-
-        logprob = log((1.0 - distractors) / (2.0 * M_PI * sigma2 * NT)) - (bestd2 / (2.0 * sigma2));
-        if (logprob < logprob_distractor) {
-            debug("Distractor.\n");
-            logprob = logprob_distractor;
-            nnomatch++;
-        } else {
-            double oldprob;
-            debug("Match (field star %i), logprob %g (background=%g, distractor=%g)\n", fldind, logprob, logprob_background, logprob_distractor);
-
-            oldprob = bestprob[fldind];
-            if (oldprob != -HUGE_VAL) {
-                nconflict++;
-                // There was a previous match to this field object.
-                if (oldprob == HUGE_VAL) {
-                    debug("Conflicting match to one of the stars in the quad.\n");
-                } else {
-                    debug("Conflict: odds was %g, now %g.\n", oldprob, logprob);
-                }
-                // Allow an improved match (except to the stars composing the quad, because they are initialized to HUGE_VAL)
-                if (logprob > oldprob) {
-                    int ind;
-					// The old match becomes a distractor.
-                    logodds += (logprob_distractor - oldprob);
-                    bestprob[fldind] = logprob;
-                    // Replace the correspondence.
-                    ind = il_index_of(corr_field, fldind);
-                    il_set(corr_index, ind, starid);
-                } else {
-					// This match must be counted as a distractor.
-					logprob = logprob_distractor;
-				}
-            } else {
-				// new match.
-                bestprob[fldind] = logprob;
-                nmatch++;
-                il_append(corr_field, fldind);
-                il_append(corr_index, starid);
-            }
-        }
-
-        logodds += (logprob - logprob_background);
-        debug("Logodds now %g\n", logodds);
-
-        if (logodds < logratio_tobail)
-            break;
-
-		if (logodds > bestlogodds) {
-			bestlogodds = logodds;
-			bestnmatch = nmatch;
-			bestnnomatch = nnomatch;
-			bestnconflict = nconflict;
-
-            if (best_corr_field)
-                il_free(best_corr_field);
-            if (best_corr_index)
-                il_free(best_corr_index);
-            best_corr_field = il_dupe(corr_field);
-            best_corr_index = il_dupe(corr_index);
+		ror2 = Q2 * (1 + fieldW*fieldH*(1 - distractors) / (2. * M_PI * NR * pix2));
+		logverb("Radius of relevance is %.1f\n", sqrt(ror2));
+		goodbins = malloc(uni_nw * uni_nh * sizeof(bool));
+		Ngoodbins = 0;
+		for (i=0; i<(uni_nw * uni_nh); i++) {
+			double binr2 = distsq(bincenters + 2*i, qc, 2);
+			goodbins[i] = (binr2 < ror2);
+			if (goodbins[i])
+				Ngoodbins++;
 		}
+		// Remove test stars in irrelevant bins...
+		k = 0;
+		for (i=0; i<NT; i++) {
+			if (!goodbins[binids[i]])
+				continue;
+			perm[k] = perm[i];
+			k++;
+		}
+		NT = k;
+		logverb("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, NT);
+
+		// Effective area: A * proportion of good bins.
+		effA = fieldW * fieldH * Ngoodbins / (double)(uni_nw * uni_nh);
+
+		// Remove reference stars in bad bins.
+		k = 0;
+		for (i=0; i<NR; i++) {
+			int binid = get_xy_bin(refxy + 2*i, fieldW, fieldH, uni_nw, uni_nh);
+			if (!goodbins[binid])
+				continue;
+			if (i != k)
+				memcpy(refxy + 2*k, refxy + 2*i, 2*sizeof(double));
+			k++;
+		}
+		NR = k;
+		logmsg("After removing irrelevant ref stars: %i ref stars.\n", NR);
+
+		// New ROR is...
+		logverb("ROR changed from %g to %g\n", sqrt(ror2),
+				sqrt(Q2 * (1 + effA*(1 - distractors) / (2. * M_PI * NR * pix2))));
+
+		free(goodbins);
+		free(bincenters);
+		free(binids);
+	} else {
+		effA = fieldW * fieldH;
 	}
 
-	free(keepers);
-    free(sigma2s);
-	free(bestprob);
 
-	free(indexpix);
-    free(starids);
+	testxy = malloc(NT * 2 * sizeof(double));
 
-    mo->corr_field = best_corr_field;
-    mo->corr_index = best_corr_index;
+	permutation_apply(perm, NT, vf->xy, testxy, 2*sizeof(double));
+	permutation_apply(perm, NT, sigma2s, sigma2s, 2*sizeof(double));
 
-    il_free(corr_field);
-    il_free(corr_index);
+	free(perm);
 
-	mo->logodds = bestlogodds;
-	mo->noverlap = bestnmatch;
-	mo->nconflict = bestnconflict;
-	mo->nfield = bestnmatch + bestnnomatch + bestnconflict;
+	K = verify_star_lists(refxy, NR, testxy, sigma2s, NT, effA, distractors,
+						  logbail, logaccept, &besti, NULL, NULL, &worst);
+
+	// FIXME - mo->corr_*, mo->nmatch, nnomatch, nconflict.
+	mo->logodds = K;
+	mo->noverlap = 0;
+	mo->nconflict = 0;
+	mo->nfield = 0;
 	mo->nindex = NR;
     matchobj_compute_derived(mo);
 
-    if (mo->logodds > log(1e9)) {
-        logverb("breakpoint ahoy!\n");
-    }
+	free(testxy);
+    free(sigma2s);
+	free(refxy);
+    free(starids);
 }
 
+static double logd_at(double distractor, int mu, int NR, double logbg) {
+	return log(distractor + (1.0-distractor)*mu / (double)NR) + logbg;
+}
+
+double verify_star_lists(const double* refxys, int NR,
+						 const double* testxys, const double* testsigma2s, int NT,
+						 double effective_area,
+						 double distractors,
+						 double logodds_bail,
+						 double logodds_accept,
+						 int* p_besti,
+						 double** p_all_logodds, int** p_theta,
+						 double* p_worstlogodds) {
+	int i, j;
+	double worstlogodds;
+	double bestworstlogodds;
+	double bestlogodds;
+	int besti;
+	double logodds;
+	double logbg;
+	double logd;
+	//double matchnsigma = 5.0;
+	double* refcopy;
+	kdtree_t* rtree;
+	int Nleaf = 10;
+	int* rmatches;
+	double* rprobs;
+	double* all_logodds = NULL;
+	int* theta = NULL;
+	int mu;
+
+	// Build a tree out of the index stars in pixel space...
+	// kdtree scrambles the data array so make a copy first.
+	refcopy = malloc(2 * NR * sizeof(double));
+	memcpy(refcopy, refxys, 2 * NR * sizeof(double));
+	rtree = kdtree_build(NULL, refcopy, NR, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
+
+	rmatches = malloc(NR * sizeof(int));
+	for (i=0; i<NR; i++)
+		rmatches[i] = -1;
+
+	rprobs = malloc(NR * sizeof(double));
+	for (i=0; i<NR; i++)
+		rprobs[i] = -HUGE_VAL;
+
+	if (p_all_logodds) {
+		all_logodds = calloc(NT, sizeof(double));
+		*p_all_logodds = all_logodds;
+	}
+
+	theta = malloc(NT * sizeof(double));
+	for (i=0; i<NT; i++)
+		theta[i] = -1;
+
+	logbg = log(1.0 / effective_area);
+
+	worstlogodds = HUGE_VAL;
+	bestlogodds = -HUGE_VAL;
+	besti = -1;
+
+	logodds = 0.0;
+	mu = 0;
+	for (i=0; i<NT; i++) {
+		const double* testxy;
+		double sig2;
+		int refi;
+		int tmpi;
+		double d2;
+		double logfg;
+
+		testxy = testxys + 2*i;
+		sig2 = testsigma2s[i];
+
+		logd = logd_at(distractors, mu, NR, logbg);
+
+		logverb("\n");
+		logverb("test star %i: (%.1f,%.1f), sigma: %.1f\n", i, testxy[0], testxy[1], sqrt(sig2));
+
+		// find nearest ref star (within 5 sigma)
+        tmpi = kdtree_nearest_neighbour_within(rtree, testxy, sig2 * 25.0, &d2);
+		if (tmpi == -1) {
+			// no nearest neighbour within range.
+			logverb("  No nearest neighbour.\n");
+			refi = -1;
+			logfg = -HUGE_VAL;
+		} else {
+			double loggmax;
+
+			refi = kdtree_permute(rtree, tmpi);
+
+			// peak value of the Gaussian
+			loggmax = log((1.0 - distractors) / (2.0 * M_PI * sig2 * NR));
+
+			// FIXME - uninformative?
+			if (loggmax < logbg)
+				logverb("  This star is uninformative: peak %.1f, bg %.1f.\n", loggmax, logbg);
+
+			// value of the Gaussian
+			logfg = loggmax - d2 / (2.0 * sig2);
+			
+			logverb("  NN: ref star %i, dist %.2f, sigmas: %.3f, logfg: %.1f (%.1f above distractor, %.1f above bg)\n",
+					refi, sqrt(d2), sqrt(d2 / sig2), logfg, logfg - logd, logfg - logbg);
+		}
+
+		if (logfg < logd) {
+			logfg = logd;
+			logverb("  Distractor.\n");
+
+		} else {
+			// duplicate match?
+			if (rmatches[refi] != -1) {
+				double oldfg = rprobs[refi];
+
+				//logverb("Conflict: odds was %g, now %g.\n", oldfg, logfg);
+
+				// Conflict.  Compute probabilities of old vs new theta.
+				// keep the old one: the new star is a distractor
+				double keepfg = logd;
+
+				// switch to the new one: the new star is a match...
+				double switchfg = logfg;
+				// ... and the old one becomes a distractor...
+				int oldj = rmatches[refi];
+				int muj = 0;
+				for (j=0; j<oldj; j++)
+					if (theta[j] != -1)
+						muj++;
+				switchfg += (logd_at(distractors, muj, NR, logbg) - oldfg);
+				// ... and the intervening distractors become worse.
+				logverb("  oldj is %i, muj is %i.\n", oldj, muj);
+				logverb("  changing old point to distractor: %.1f change in logodds\n",
+						(logd_at(distractors, muj, NR, logbg) - oldfg));
+				for (; j<i; j++)
+					if (theta[j] == -1) {
+						switchfg += (logd_at(distractors, muj, NR, logbg) -
+									 logd_at(distractors, muj+1, NR, logbg));
+						logverb("  adjusting distractor %i: %g change in logodds\n",
+								j, (logd_at(distractors, muj, NR, logbg) -
+									logd_at(distractors, muj+1, NR, logbg)));
+					} else
+						muj++;
+				logmsg("  Conflict: keeping   old match, logfg would be %.1f\n", keepfg);
+				logmsg("  Conflict: accepting new match, logfg would be %.1f\n", switchfg);
+				
+				if (switchfg > keepfg) {
+					// upgrade: old match becomes a distractor.
+					logverb("  Conflict: upgrading.\n");
+					//logodds += (logd - oldfg);
+					//logverb("  Switching old match to distractor: logodds change %.1f, now %.1f\n",
+					//(logd - oldfg), logodds);
+
+					theta[oldj] = -1;
+					theta[i] = refi;
+					// record this new match.
+					rmatches[refi] = i;
+					rprobs[refi] = logfg;
+
+					// "switchfg" incorporates the cost of adjusting the previous probabilities.
+					logfg = switchfg;
+
+				} else {
+					// old match was better: this match becomes a distractor.
+					logverb("  Conflict: not upgrading.\n"); //  logprob was %.1f, now %.1f.\n", oldfg, logfg);
+					logfg = keepfg;
+				}
+				// no change in mu.
+
+
+			} else {
+				// new match.
+				rmatches[refi] = i;
+				rprobs[refi] = logfg;
+				theta[i] = refi;
+				mu++;
+			}
+		}
+
+        logodds += (logfg - logbg);
+        logverb("  Logodds: change %.1f, now %.1f\n", (logfg - logbg), logodds);
+
+		if (all_logodds)
+			all_logodds[i] = logodds;
+
+        if (logodds < logodds_bail) {
+			if (all_logodds)
+				for (j=i+1; j<NT; j++)
+					all_logodds[j] = logodds;
+            break;
+		}
+
+		worstlogodds = MIN(worstlogodds, logodds);
+
+        if (logodds > bestlogodds) {
+			bestlogodds = logodds;
+			besti = i;
+			// Record the worst log-odds we've seen up to this point.
+			bestworstlogodds = worstlogodds;
+		}
+
+		if (logodds > logodds_accept)
+			break;
+	}
+
+	free(rmatches);
+
+	if (p_theta)
+		*p_theta = theta;
+	else
+		free(theta);
+
+	if (p_besti)
+		*p_besti = besti;
+
+	if (p_worstlogodds)
+		*p_worstlogodds = bestworstlogodds;
+
+	free(rprobs);
+
+	kdtree_free(rtree);
+	free(refcopy);
+
+	return bestlogodds;
+}

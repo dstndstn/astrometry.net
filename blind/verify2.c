@@ -245,8 +245,10 @@ double* verify_compute_sigma2s(const verify_field_t* vf, const MatchObj* mo,
 	double qc[2];
 	double Q2;
 	NF = starxy_n(vf->field);
-	get_quad_center(vf, mo, qc, &Q2);
-	debug("Quad radius = %g pixels\n", sqrt(Q2));
+	if (do_gamma) {
+		get_quad_center(vf, mo, qc, &Q2);
+		debug("Quad radius = %g pixels\n", sqrt(Q2));
+	}
 	return compute_sigma2s(vf, NULL, NF, qc, Q2, verify_pix2, do_gamma);
 }
 
@@ -503,7 +505,7 @@ double verify_star_lists(const double* refxys, int NR,
 						 double distractors,
 						 double logodds_bail,
 						 double logodds_accept,
-						 int** p_matches, int* p_besti,
+						 int* p_besti,
 						 double** p_all_logodds, int** p_theta,
 						 double* p_worstlogodds) {
 	int i, j;
@@ -696,10 +698,7 @@ double verify_star_lists(const double* refxys, int NR,
 			break;
 	}
 
-	if (p_matches)
-		*p_matches = rmatches;
-	else
-		free(rmatches);
+	free(rmatches);
 
 	if (p_theta)
 		*p_theta = theta;
@@ -911,11 +910,10 @@ void verify_hit(index_t* index,
 
 	logodds = verify_star_lists(indexpix, NI, testxy, sigma2s, NF,
 								fieldW*fieldH, distractors, logratio_tobail, HUGE_VAL,
-								NULL, &besti, NULL, NULL, NULL);
+								&besti, NULL, NULL, NULL);
 	mo->logodds = logodds;
 
 	if (logodds > logodds_tokeep) {
-		int* rmatches;
 		// Run again, saving results.
 		// Stop after "besti" test objects.
 		verify_star_lists(indexpix, NI, testxy, sigma2s, besti + 1,
@@ -926,8 +924,6 @@ void verify_hit(index_t* index,
 		// (using 'rmatches', 'cutperm' and 'starids')
 		for (i=0; i<NF; i++) {
 		}
-
-		free(rmatches);
 	}
 
 	free(cutperm);

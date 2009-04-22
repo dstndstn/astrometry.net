@@ -29,6 +29,9 @@
 
 struct verify_field_t {
     const starxy_t* field;
+	// this copy is normal.
+    double* xy;
+	// this copy is permuted by the kdtree
     double* fieldcopy;
     kdtree_t* ftree;
 };
@@ -54,6 +57,7 @@ typedef struct verify_field_t verify_field_t;
   -corr_index
  */
 void verify_hit(startree_t* skdt,
+				int index_cutnside,
                 MatchObj* mo,
                 sip_t* sip, // if non-NULL, verify this SIP WCS.
                 verify_field_t* vf,
@@ -62,9 +66,20 @@ void verify_hit(startree_t* skdt,
                 double fieldW,
                 double fieldH,
                 double logratio_tobail,
+                double logratio_toaccept,
                 bool distance_from_quad_bonus,
 				int dimquads,
                 bool fake_match);
+
+double verify_star_lists(const double* refxys, int NR,
+						 const double* testxys, const double* testsigma2s, int NT,
+						 double effective_area,
+						 double distractors,
+						 double logodds_bail,
+						 double logodds_accept,
+						 int* p_besti,
+						 double** p_all_logodds, int** p_theta,
+						 double* p_worstlogodds);
 
 verify_field_t* verify_field_preprocess(const starxy_t* fieldxy);
 

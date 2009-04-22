@@ -941,9 +941,11 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 
 	dimquads = quadfile_dimquads(sp->index->quads);
 
-	verify_hit(sp->index->starkd, mo, sip, sp->vf, match_distance_in_pixels2,
+	verify_hit(sp->index->starkd, sp->index->meta.cutnside,
+			   mo, sip, sp->vf, match_distance_in_pixels2,
 	           sp->distractor_ratio, sp->field_maxx, sp->field_maxy,
-	           sp->logratio_bail_threshold, sp->distance_from_quad_bonus,
+	           sp->logratio_bail_threshold, HUGE_VAL,
+			   sp->distance_from_quad_bonus,
 			   dimquads, fake_match);
 	mo->nverified = sp->num_verified++;
 

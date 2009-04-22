@@ -501,7 +501,7 @@ int main(int argc, char** args) {
 
 		logodds = verify_star_lists(refxy, NR, testxy, sigma2s, NT,
 									effA, distractors, logbail, logaccept,
-									NULL, &besti, &all_logodds, &theta, &worst);
+									&besti, &all_logodds, &theta, &worst);
 
 		fprintf(f, "besti = %i\n", besti);
 
@@ -591,7 +591,7 @@ int main(int argc, char** args) {
 			add_radial_and_tangential_correction(testxy, racc, tacc, qc, t2xy, NT);
 			double logodds2 = verify_star_lists(refxy, NR, t2xy, sigma2s, NT,
 												effA, distractors, logbail, logaccept,
-												NULL, NULL, NULL, NULL, NULL);
+												NULL, NULL, NULL, NULL);
 			logmsg("Log-odds 2: %g\n", logodds2);
 
 
