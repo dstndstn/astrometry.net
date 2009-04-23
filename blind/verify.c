@@ -545,7 +545,7 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 			k++;
 		}
 		NR = k;
-		logmsg("After removing irrelevant ref stars: %i ref stars.\n", NR);
+		logverb("After removing irrelevant ref stars: %i ref stars.\n", NR);
 
 		// New ROR is...
 		logverb("ROR changed from %g to %g\n", sqrt(ror2),
@@ -740,8 +740,8 @@ double verify_star_lists(const double* refxys, int NR,
 									logd_at(distractors, muj+1, NR, logbg)));
 					} else
 						muj++;
-				logmsg("  Conflict: keeping   old match, logfg would be %.1f\n", keepfg);
-				logmsg("  Conflict: accepting new match, logfg would be %.1f\n", switchfg);
+				logverb("  Conflict: keeping   old match, logfg would be %.1f\n", keepfg);
+				logverb("  Conflict: accepting new match, logfg would be %.1f\n", switchfg);
 				
 				if (switchfg > keepfg) {
 					// upgrade: old match becomes a distractor.
