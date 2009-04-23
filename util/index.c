@@ -185,6 +185,7 @@ int index_get_missing_cut_params(int indexid, int* hpnside, int* nsweep,
 								 double* dedup, int* margin, char** pband) {
 	// The 200-series indices use cut 100
 	// The 500-series indices use cut 100
+	// The 600-series indices use cut 300
 	// The 700-series indices use cut 400
 	int i = -1;
 	int ns, n, marg;
@@ -205,6 +206,20 @@ int index_get_missing_cut_params(int indexid, int* hpnside, int* nsweep,
 		dd = cut100dd[i];
 		marg = cut100margin;
 		band = "R";
+
+	} else if (indexid >= 602 && indexid < 620) {
+		// Cut 300 params:
+		int cut300hp[] = { 0, 0, 880, 624, 440, 312, 220, 156, 110, 78, 56, 40, 28, 20, 14, 10, 8, 6, 4, 4 };
+		int cut300n = 10;
+		double cut300dd = 8.0;
+		int cut300margin = 10;
+
+		i = indexid % 100;
+		ns = cut300hp[i];
+		n = cut300n;
+		dd = cut300dd;
+		marg = cut300margin;
+		band = "J";
 
 	} else if (indexid >= 700 && indexid < 720) {
 		// Cut 400 params:
