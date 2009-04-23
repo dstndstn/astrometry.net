@@ -547,7 +547,7 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	testxy = malloc(NT * 2 * sizeof(double));
 
 	permutation_apply(perm, NT, vf->xy, testxy, 2*sizeof(double));
-	permutation_apply(perm, NT, sigma2s, sigma2s, 2*sizeof(double));
+	permutation_apply(perm, NT, sigma2s, sigma2s, sizeof(double));
 
 	free(perm);
 
