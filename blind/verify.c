@@ -564,8 +564,6 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	permutation_apply(perm, NT, vf->xy, testxy, 2*sizeof(double));
 	permutation_apply(perm, NT, sigma2s, sigma2s, sizeof(double));
 
-	free(perm);
-
 	K = verify_star_lists(refxy, NR, testxy, sigma2s, NT, effA, distractors,
 						  logbail, logstoplooking, &besti, NULL, &theta, &worst);
 
@@ -587,9 +585,18 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 			else
 				mo->nmatch++;
 		}
+		mo->corr_field = il_new(16);
+		mo->corr_index = il_new(16);
+		for (i=0; i<=besti; i++) {
+			if (theta[i] < 0)
+				continue;
+			il_append(mo->corr_field, perm[i]);
+			il_append(mo->corr_index, starids[theta[i]]);
+		}
 		matchobj_compute_derived(mo);
 	}
 
+	free(perm);
 	free(theta);
 	free(testxy);
     free(sigma2s);
