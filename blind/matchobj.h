@@ -58,12 +58,18 @@ struct match_struct {
     // (only counts a single ABCD permutation)
     int16_t quad_npeers;
 
-	int16_t noverlap;
+	int16_t nmatch;
+	int16_t ndistractor;
 	int16_t nconflict;
 	int16_t nfield;
 	int16_t nindex;
 
+	// nbest = besti+1 = nmatch + ndistractor + nconflict <= nfield
+	int16_t nbest;
+
 	float logodds;
+
+	float worstlogodds;
 
 	// how many other matches agreed with this one *at the time it was found*
 	int16_t nagree;

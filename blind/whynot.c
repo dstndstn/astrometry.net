@@ -503,7 +503,7 @@ int main(int argc, char** args) {
 
                 verify_hit(indx->starkd, indx->meta.cutnside, &mo, NULL, vf, verpix2,
                            DEFAULT_DISTRACTOR_RATIO, sip.wcstan.imagew, sip.wcstan.imageh,
-                           log(-1e100), HUGE_VAL, TRUE, dimquads, FALSE);
+                           log(-1e100), HUGE_VAL, HUGE_VAL, TRUE, dimquads, FALSE);
 
                 verify_field_free(vf);
             }

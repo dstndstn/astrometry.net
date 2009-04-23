@@ -944,7 +944,8 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	verify_hit(sp->index->starkd, sp->index->meta.cutnside,
 			   mo, sip, sp->vf, match_distance_in_pixels2,
 	           sp->distractor_ratio, sp->field_maxx, sp->field_maxy,
-	           sp->logratio_bail_threshold, HUGE_VAL,
+	           sp->logratio_bail_threshold, sp->logratio_record_threshold,
+			   HUGE_VAL,
 			   sp->distance_from_quad_bonus,
 			   dimquads, fake_match);
 	mo->nverified = sp->num_verified++;
@@ -958,6 +959,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
         //free_best_match_extras(sp);
 
 		//print_match(bp, mo);
+		// FIXME -- set logodds_toaccept to this so that the mo is valid here?
 		memcpy(&(sp->best_match), mo, sizeof(MatchObj));
 		sp->have_best_match = TRUE;
 		sp->best_index = sp->index;

@@ -67,9 +67,15 @@ void verify_hit(startree_t* skdt,
                 double fieldH,
                 double logratio_tobail,
                 double logratio_toaccept,
+                double logratio_tostoplooking,
                 bool distance_from_quad_bonus,
 				int dimquads,
                 bool fake_match);
+
+// Distractor
+#define THETA_DISTRACTOR -1
+// Conflict
+#define THETA_CONFLICT -2
 
 double verify_star_lists(const double* refxys, int NR,
 						 const double* testxys, const double* testsigma2s, int NT,

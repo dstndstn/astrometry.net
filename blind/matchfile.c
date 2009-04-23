@@ -70,11 +70,13 @@ static void add_columns(fitstable_t* tab, bool write) {
     ADDARR(d,  d,   "QUADXYZ",         nil, quadxyz, 3*DQMAX);
     ADDARR(d,  d,   "CENTERXYZ",       nil, center, 3);
     ADDCOL(d,  d,   "RADIUS",          "DEG", radius_deg);
-    ADDCOL(i16,i16, "NOVERLAP",        nil, noverlap);
+    ADDCOL(i16,i16, "NMATCH",          nil, nmatch);
+    ADDCOL(i16,i16, "NDISTRACT",       nil, ndistractor);
     ADDCOL(i16,i16, "NCONFLICT",       nil, nconflict);
     ADDCOL(i16,i16, "NFIELD",          nil, nfield);
     ADDCOL(i16,i16, "NINDEX",          nil, nindex);
     ADDCOL(i16,i16, "NAGREE",          nil, nagree);
+    //ADDCOL(i16,i16, "BESTI",           nil, besti);
     ADDARR(d,  d,   "CRVAL",           nil, wcstan.crval, 2);
     ADDARR(d,  d,   "CRPIX",           nil, wcstan.crpix, 2);
     ADDARR(d,  d,   "CD",              nil, wcstan.cd, 4);
@@ -93,6 +95,7 @@ static void add_columns(fitstable_t* tab, bool write) {
     ADDCOL(i,i32,   "NVERIFIED",       nil, nverified);
     ADDCOL(f,  f,   "TIMEUSED",        "s", timeused);
     ADDCOL(f,  f,   "LOGODDS",         nil, logodds);
+    ADDCOL(f,  f,   "WORSTLOGODDS",    nil, worstlogodds);
 }
 #undef ADDCOL
 #undef ADDARR
@@ -184,6 +187,7 @@ void matchobj_compute_derived(MatchObj* mo) {
 	if (mo->wcs_valid)
 		mo->scale = tan_pixel_scale(&(mo->wcstan));
     mo->radius = deg2dist(mo->radius_deg);
+	mo->nbest = mo->nmatch + mo->ndistractor + mo->nconflict;
 }
 
 pl* matchfile_get_matches_for_field(matchfile* mf, int field) {

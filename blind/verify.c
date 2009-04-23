@@ -39,9 +39,9 @@
 #endif
 
 /*
- This gets called once for each field before verification begins.
- We build a kdtree out of the field stars (in pixel space) which will be
- used during verification to find nearest-neighbours.
+ This gets called once for each field before verification begins.  We
+ build a kdtree out of the field stars (in pixel space) which will be
+ used during deduplication.
  */
 verify_field_t* verify_field_preprocess(const starxy_t* fieldxy) {
     verify_field_t* vf;
@@ -52,12 +52,9 @@ verify_field_t* verify_field_preprocess(const starxy_t* fieldxy) {
         fprintf(stderr, "Failed to allocate space for a verify_field_t().\n");
         return NULL;
     }
-
     vf->field = fieldxy;
-
-    // Note: kdtree type: I tried U32 (duu) but it was marginally slower.
+    // Note on kdtree type: I tried U32 (duu) but it was marginally slower.
     // I didn't try U16 (dss) because we need a fair bit of accuracy here.
-
     // Make a copy of the field objects, because we're going to build a
     // kdtree out of them and that shuffles their order.
     vf->fieldcopy = starxy_copy_xy(fieldxy);
@@ -66,12 +63,9 @@ verify_field_t* verify_field_preprocess(const starxy_t* fieldxy) {
         fprintf(stderr, "Failed to copy the field.\n");
         return NULL;
     }
-
-
     // Build a tree out of the field objects (in pixel space)
     vf->ftree = kdtree_build(NULL, vf->fieldcopy, starxy_n(vf->field),
                              2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
-
     return vf;
 }
 
@@ -87,7 +81,6 @@ void verify_field_free(verify_field_t* vf) {
 	free(vf->xy);
     free(vf->fieldcopy);
     free(vf);
-    return;
 }
 
 void verify_get_index_stars(const double* fieldcenter, double fieldr2,
@@ -380,7 +373,7 @@ static void uniformize(const double* xy,
 void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, verify_field_t* vf,
                 double pix2, double distractors,
                 double fieldW, double fieldH,
-                double logbail, double logaccept,
+                double logbail, double logaccept, double logstoplooking,
                 bool do_gamma, int dimquads, bool fake_match) {
 	int i,j,k;
 	double* fieldcenter;
@@ -400,6 +393,7 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	double K;
 	double worst;
 	int besti;
+	int* theta;
 
 	assert(mo->wcs_valid || sip);
 
@@ -416,7 +410,7 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 		// belonging to the quad that generated this hit should lie in the
 		// proposed field - but I've seen it happen!
 		mo->nfield = 0;
-		mo->noverlap = 0;
+		mo->nmatch = 0;
 		matchobj_compute_derived(mo);
 		mo->logodds = -HUGE_VAL;
 		return;
@@ -558,16 +552,30 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	free(perm);
 
 	K = verify_star_lists(refxy, NR, testxy, sigma2s, NT, effA, distractors,
-						  logbail, logaccept, &besti, NULL, NULL, &worst);
+						  logbail, logstoplooking, &besti, NULL, &theta, &worst);
 
 	// FIXME - mo->corr_*, mo->nmatch, nnomatch, nconflict.
 	mo->logodds = K;
-	mo->noverlap = 0;
-	mo->nconflict = 0;
-	mo->nfield = 0;
+	mo->worstlogodds = worst;
+	mo->nfield = NT;
 	mo->nindex = NR;
-    matchobj_compute_derived(mo);
 
+	if (K >= logaccept) {
+		mo->nmatch = 0;
+		mo->nconflict = 0;
+		mo->ndistractor = 0;
+		for (i=0; i<=besti; i++) {
+			if (theta[i] == THETA_DISTRACTOR)
+				mo->ndistractor++;
+			else if (theta[i] == THETA_CONFLICT)
+				mo->nconflict++;
+			else
+				mo->nmatch++;
+		}
+		matchobj_compute_derived(mo);
+	}
+
+	free(theta);
 	free(testxy);
     free(sigma2s);
 	free(refxy);
@@ -583,7 +591,7 @@ double verify_star_lists(const double* refxys, int NR,
 						 double effective_area,
 						 double distractors,
 						 double logodds_bail,
-						 double logodds_accept,
+						 double logodds_stoplooking,
 						 int* p_besti,
 						 double** p_all_logodds, int** p_theta,
 						 double* p_worstlogodds) {
@@ -624,9 +632,7 @@ double verify_star_lists(const double* refxys, int NR,
 		*p_all_logodds = all_logodds;
 	}
 
-	theta = malloc(NT * sizeof(double));
-	for (i=0; i<NT; i++)
-		theta[i] = -1;
+	theta = malloc(NT * sizeof(int));
 
 	logbg = log(1.0 / effective_area);
 
@@ -681,6 +687,7 @@ double verify_star_lists(const double* refxys, int NR,
 		if (logfg < logd) {
 			logfg = logd;
 			logverb("  Distractor.\n");
+			theta[i] = THETA_DISTRACTOR;
 
 		} else {
 			// duplicate match?
@@ -699,15 +706,18 @@ double verify_star_lists(const double* refxys, int NR,
 				int oldj = rmatches[refi];
 				int muj = 0;
 				for (j=0; j<oldj; j++)
-					if (theta[j] != -1)
+					if (theta[j] >= 0)
 						muj++;
 				switchfg += (logd_at(distractors, muj, NR, logbg) - oldfg);
+
+				// FIXME - could estimate/bound the distractor change and avoid computing it...
+
 				// ... and the intervening distractors become worse.
 				logverb("  oldj is %i, muj is %i.\n", oldj, muj);
 				logverb("  changing old point to distractor: %.1f change in logodds\n",
 						(logd_at(distractors, muj, NR, logbg) - oldfg));
 				for (; j<i; j++)
-					if (theta[j] == -1) {
+					if (theta[j] < 0) {
 						switchfg += (logd_at(distractors, muj, NR, logbg) -
 									 logd_at(distractors, muj+1, NR, logbg));
 						logverb("  adjusting distractor %i: %g change in logodds\n",
@@ -725,7 +735,7 @@ double verify_star_lists(const double* refxys, int NR,
 					//logverb("  Switching old match to distractor: logodds change %.1f, now %.1f\n",
 					//(logd - oldfg), logodds);
 
-					theta[oldj] = -1;
+					theta[oldj] = THETA_CONFLICT;
 					theta[i] = refi;
 					// record this new match.
 					rmatches[refi] = i;
@@ -738,6 +748,7 @@ double verify_star_lists(const double* refxys, int NR,
 					// old match was better: this match becomes a distractor.
 					logverb("  Conflict: not upgrading.\n"); //  logprob was %.1f, now %.1f.\n", oldfg, logfg);
 					logfg = keepfg;
+					theta[i] = THETA_CONFLICT;
 				}
 				// no change in mu.
 
@@ -773,7 +784,7 @@ double verify_star_lists(const double* refxys, int NR,
 			bestworstlogodds = worstlogodds;
 		}
 
-		if (logodds > logodds_accept)
+		if (logodds > logodds_stoplooking)
 			break;
 	}
 

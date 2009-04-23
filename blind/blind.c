@@ -633,10 +633,8 @@ static sip_t* tweak(const blind_t* bp, const tan_t* wcs, const double* starradec
 }
 
 static void print_match(blind_t* bp, MatchObj* mo) {
-	int Nmin = MIN(mo->nindex, mo->nfield);
-	int ndropout = Nmin - mo->noverlap - mo->nconflict;
-	logverb("  logodds ratio %g (%g), %i match, %i conflict, %i dropout, %i index.\n",
-	       mo->logodds, exp(mo->logodds), mo->noverlap, mo->nconflict, ndropout, mo->nindex);
+	logverb("  logodds ratio %g (%g), %i match, %i conflict, %i distractors, %i index.\n",
+			mo->logodds, exp(mo->logodds), mo->nmatch, mo->nconflict, mo->ndistractor, mo->nindex);
 }
 
 static bool record_match_callback(MatchObj* mo, void* userdata) {
@@ -1146,7 +1144,7 @@ static int write_solutions(blind_t* bp) {
             fits_add_long_comment(hdr, "stars: %i,%i,%i,%i", mo->star[0], mo->star[1], mo->star[2], mo->star[3]);
             fits_add_long_comment(hdr, "field: %i,%i,%i,%i", mo->field[0], mo->field[1], mo->field[2], mo->field[3]);
             fits_add_long_comment(hdr, "code error: %g", sqrt(mo->code_err));
-            fits_add_long_comment(hdr, "noverlap: %i", mo->noverlap);
+            fits_add_long_comment(hdr, "nmatch: %i", mo->nmatch);
             fits_add_long_comment(hdr, "nconflict: %i", mo->nconflict);
             fits_add_long_comment(hdr, "nfield: %i", mo->nfield);
             fits_add_long_comment(hdr, "nindex: %i", mo->nindex);
