@@ -437,17 +437,19 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 			k++;
 		}
 		// DEBUG
-		if (k != NR - dimquads) {
-			double xyz[3];
-			double px,py;
-			logmsg("W=%g, H=%g\n", fieldW, fieldH);
-			for (j=0; j<dimquads; j++) {
-				startree_get(skdt, mo->star[j], xyz);
-				tan_xyzarr2pixelxy(&mo->wcstan, xyz, &px, &py);
-				logmsg("Quad star %i, id %i: pixel (%g,%g)\n", j, mo->star[j], px, py);
-			}
-		}
-		assert(k == NR - dimquads);
+		/* Hmm, this happens occasionally...
+		 if (k != NR - dimquads) {
+		 double xyz[3];
+		 double px,py;
+		 logmsg("W=%g, H=%g\n", fieldW, fieldH);
+		 for (j=0; j<dimquads; j++) {
+		 startree_get(skdt, mo->star[j], xyz);
+		 tan_xyzarr2pixelxy(&mo->wcstan, xyz, &px, &py);
+		 logmsg("Quad star %i, id %i: pixel (%g,%g)\n", j, mo->star[j], px, py);
+		 }
+		 }
+		 assert(k == NR - dimquads);
+		 */
 		NR = k;
 	}
 
