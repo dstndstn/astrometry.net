@@ -8,14 +8,7 @@ class tabledata(object):
 
 def table_fields(data):
 	colnames = data.dtype.names
-	#fields = {}
-	#fields = object()
 	fields = tabledata()
 	for c in colnames:
-		#print 'Adding field', c.lower()
-		#fields[c.lower()] = data.field(c)
-		#fields.__dict__[c.lower()] = data.field(c)
-		#object.__setattr__(fields, c.lower(), data.field(c))
 		fields.set(c.lower(), data.field(c))
-		#fields.__setattr__(c.lower(), data.field(c))
 	return fields
