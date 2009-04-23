@@ -17,4 +17,5 @@ def table_fields(data):
 		#fields.__dict__[c.lower()] = data.field(c)
 		#object.__setattr__(fields, c.lower(), data.field(c))
 		fields.set(c.lower(), data.field(c))
+		#fields.__setattr__(c.lower(), data.field(c))
 	return fields

@@ -658,7 +658,7 @@ double verify_star_lists(const double* refxys, int NR,
 
 	logbg = log(1.0 / effective_area);
 
-	worstlogodds = HUGE_VAL;
+	worstlogodds = 0;
 	bestlogodds = -HUGE_VAL;
 	besti = -1;
 
