@@ -24,12 +24,14 @@
 #include "matchfile.h"
 #include "matchobj.h"
 #include "index.h"
-#include "verify2.h"
 #include "xylist.h"
 #include "rdlist.h"
 #include "log.h"
 #include "errors.h"
 #include "mathutil.h"
+
+#include "verify.h"
+//#include "verify2.h"
 
 #define SIGN(x) (((x) >= 0) ? (1) : (-1))
 
@@ -254,11 +256,11 @@ int main(int argc, char** args) {
 	if (index) {
 		mo->logodds = 0.0;
 
-		verify_hit(index, mo, NULL, vf,
+		verify_hit(index->starkd, index->meta.cutnside,
+				   mo, NULL, vf,
 				   pix2, distractors, fieldW, fieldH,
-				   logbail, growvariance,
-				   index_get_quad_dim(index), fake,
-				   logkeep);
+				   logbail, logkeep, logaccept, growvariance,
+				   index_get_quad_dim(index), fake);
 
 		logodds = mo->logodds;
 
@@ -268,8 +270,8 @@ int main(int argc, char** args) {
 		int cutnside;
 		int cutnsweeps;
 		int indexid;
-		int cutnw, cutnh;
-		int* cutperm;
+		int uni_nw, uni_nh;
+		int* perm;
 		double* testxy;
 		double* refxy;
 		int i, j, k, NT, NR;
@@ -323,8 +325,22 @@ int main(int argc, char** args) {
 					2*(NR - besti - 1) * sizeof(double));
 			NR--;
 		}
-
 		logmsg("Reference stars: %i\n", NR);
+
+		indexid = mo->indexid;
+		if (index_get_missing_cut_params(indexid, &cutnside, &cutnsweeps, NULL, NULL, NULL)) {
+			ERROR("Failed to get index cut parameters for index id %i", indexid);
+			exit(-1);
+		}
+
+		/*
+		 verify_hit2(refxy, NULL, NR, cutnside, mo, NULL, vf,
+		 pix2, distractors, fieldW, fieldH,
+		 logbail, logaccept, HUGE_VAL, grow_variance);
+		 */
+
+		NT = verify_get_test_stars(vf, mo, pix2, do_gamma, fake,
+								   &sigma2s, &perm);
 
 		// -uniformize field stars
 		indexid = mo->indexid;
@@ -332,30 +348,23 @@ int main(int argc, char** args) {
 			ERROR("Failed to get index cut parameters for index id %i", indexid);
 			exit(-1);
 		}
-		verify_get_uniformize_scale(cutnside, mo->scale, fieldW, fieldH, &cutnw, &cutnh);
-		logmsg("Uniformizing test stars into %i x %i bins.\n", cutnw, cutnh);
-		cutperm = verify_uniformize_field(vf, fieldW, fieldH, cutnw, cutnh, NULL, &bincenters, &binids);
-		NT = starxy_n(vf->field);
+		verify_get_uniformize_scale(cutnside, mo->scale, fieldW, fieldH, &uni_nw, &uni_nh);
+		logmsg("Uniformizing test stars into %i x %i bins.\n", uni_nw, uni_nh);
+		verify_uniformize_field(vf->xy, perm, NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &binids);
+		bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
+		verify_get_quad_center(vf, mo, qc, &Q2);
 
-		// get_quad_center
-		{
-			double Axy[2], Bxy[2];
-			starxy_get(vf->field, mo->field[0], Axy);
-			starxy_get(vf->field, mo->field[1], Bxy);
-			qc[0] = 0.5 * (Axy[0] + Bxy[0]);
-			qc[1] = 0.5 * (Axy[1] + Bxy[1]);
-			// Find the radius-squared of the quad = distsq(qc, A)
-			Q2 = distsq(Axy, qc, 2);
-			logmsg("Quad center is (%.1f, %.1f), radius %.1f pix\n", qc[0], qc[1], sqrt(Q2));
-		}
 		ror = sqrt(Q2 * (1 + fieldW*fieldH*(1 - distractors) / (2. * M_PI * NR * pix2)));
 		logmsg("Radius of relevance is %.1f\n", ror);
 
+		verify_apply_radius_of_relevance(ror, uni_nw, uni_nh, 
+										 //qc, Q2, fieldW, fieldH, distractors, NR, pix2,
+
 		// Approximate cutting up the image by measuring distance to the bin centers.
-		goodbins = malloc(cutnw * cutnh * sizeof(bool));
+		goodbins = malloc(uni_nw * uni_nh * sizeof(bool));
 		Ngoodbins = 0;
 
-		for (i=0; i<(cutnw * cutnh); i++) {
+		for (i=0; i<(uni_nw * uni_nh); i++) {
 			double binr = sqrt(distsq(bincenters + 2*i, qc, 2));
 			goodbins[i] = (binr < ror);
 			if (goodbins[i])
@@ -370,15 +379,15 @@ int main(int argc, char** args) {
 			k++;
 		}
 		NT = k;
-		logmsg("After removing %i/%i irrelevant bins: %i test stars.\n", (cutnw*cutnh)-Ngoodbins, cutnw*cutnh, NT);
+		logmsg("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, NT);
 
 		// Effective area: A * proportion of good bins.
-		effA = fieldW * fieldH * Ngoodbins / (double)(cutnw * cutnh);
+		effA = fieldW * fieldH * Ngoodbins / (double)(uni_nw * uni_nh);
 
 		// -remove reference stars in bad bins.
 		k = 0;
 		for (i=0; i<NR; i++) {
-			int binid = get_xy_bin(refxy[2*i], refxy[2*i+1], fieldW, fieldH, cutnw, cutnh);
+			int binid = get_xy_bin(refxy[2*i], refxy[2*i+1], fieldW, fieldH, uni_nw, uni_nh);
 			if (!goodbins[binid])
 				continue;
 			if (i != k)
@@ -485,13 +494,13 @@ int main(int argc, char** args) {
 		fprintf(f, "])\n");
 
 		fprintf(f, "cutx = array([");
-		for (i=0; i<=cutnw; i++)
-			fprintf(f, "%g,", i * fieldW / (float)cutnw);
+		for (i=0; i<=uni_nw; i++)
+			fprintf(f, "%g,", i * fieldW / (float)uni_nw);
 		fprintf(f, "])\n");
 
 		fprintf(f, "cuty = array([");
-		for (i=0; i<=cutnh; i++)
-			fprintf(f, "%g,", i * fieldH / (float)cutnh);
+		for (i=0; i<=uni_nh; i++)
+			fprintf(f, "%g,", i * fieldH / (float)uni_nh);
 		fprintf(f, "])\n");
 
 		double* all_logodds;

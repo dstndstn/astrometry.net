@@ -166,7 +166,7 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 
  Returns an array indicating which field stars should be kept.
  */
-static bool* deduplicate_field_stars(verify_field_t* vf, double* sigma2s, double nsigmas) {
+bool* verify_deduplicate_field_stars(verify_field_t* vf, double* sigma2s, double nsigmas) {
     bool* keepers = NULL;
     int i, j, N;
     kdtree_qres_t* res;
@@ -237,7 +237,7 @@ static double* compute_sigma2s(const verify_field_t* vf,
 	return sigma2s;
 }
 
-static void get_quad_center(const verify_field_t* vf, const MatchObj* mo, double* centerpix,
+void verify_get_quad_center(const verify_field_t* vf, const MatchObj* mo, double* centerpix,
 							double* quadr2) {
 	double Axy[2], Bxy[2];
 	// Find the midpoint of AB of the quad in pixel space.
@@ -256,7 +256,7 @@ double* verify_compute_sigma2s(const verify_field_t* vf, const MatchObj* mo,
 	double Q2;
 	NF = starxy_n(vf->field);
 	if (do_gamma) {
-		get_quad_center(vf, mo, qc, &Q2);
+		verify_get_quad_center(vf, mo, qc, &Q2);
 		debug("Quad radius = %g pixels\n", sqrt(Q2));
 	}
 	return compute_sigma2s(vf, NULL, NF, qc, Q2, verify_pix2, do_gamma);
@@ -293,28 +293,17 @@ void verify_get_uniformize_scale(int cutnside, double scale, int W, int H, int* 
 		*cutnh = MAX(1, (int)round(H / cutpix));
 }
 
-static void uniformize(const double* xy,
-					   int* perm,
-					   int N,
-					   double fieldW, double fieldH,
-					   int nw, int nh,
-					   int** p_bincounts,
-					   double** p_bincenters,
-					   int** p_binids) {
+void verify_uniformize_field(const double* xy,
+							 int* perm,
+							 int N,
+							 double fieldW, double fieldH,
+							 int nw, int nh,
+							 int** p_bincounts,
+							 int** p_binids) {
 	il** lists;
 	int i,j,k,p;
 	int* bincounts = NULL;
 	int* binids = NULL;
-
-	if (p_bincenters) {
-		double* bxy = malloc(nw * nh * 2 * sizeof(double));
-		for (j=0; j<nh; j++)
-			for (i=0; i<nw; i++) {
-				bxy[(j * nw + i)*2 +0] = (i + 0.5) * fieldW / (double)nw;
-				bxy[(j * nw + i)*2 +1] = (j + 0.5) * fieldH / (double)nh;
-			}
-		*p_bincenters = bxy;
-	}
 
 	if (p_binids) {
 		binids = malloc(N * sizeof(int));
@@ -369,12 +358,75 @@ static void uniformize(const double* xy,
 	free(lists);
 }
 
+int verify_get_test_stars(verify_field_t* vf, MatchObj* mo,
+						  double pix2, bool do_gamma,
+						  bool fake_match,
+						  double** p_sigma2s, int** p_perm) {
+	int* perm;
+    double* sigma2s;
+	bool* keepers = NULL;
+	int i, k, NT;
+
+	sigma2s = verify_compute_sigma2s(vf, mo, pix2, do_gamma);
+
+	// Deduplicate test stars.  This could be done (approximately) in preprocessing.
+	keepers = verify_deduplicate_field_stars(vf, sigma2s, 1.0);
+
+	// Remove test quad stars.  Do this after deduplication so we
+	// don't end up with test stars near the quad stars.
+    NT = starxy_n(vf->field);
+    if (!fake_match) {
+		for (i=0; i<mo->dimquads; i++) {
+            assert(mo->field[i] >= 0);
+            assert(mo->field[i] < NT);
+            keepers[mo->field[i]] = FALSE;
+		}
+	}
+
+	// Uniformize test stars
+	// FIXME - can do this (possibly at several scales) in preprocessing.
+
+	// -first apply the deduplication and removal of test stars by computing an
+	// initial permutation array.
+	perm = malloc(NT * sizeof(int));
+	k = 0;
+	for (i=0; i<NT; i++) {
+		if (!keepers[i])
+			continue;
+		perm[k] = i;
+		k++;
+	}
+	NT = k;
+	free(keepers);
+	if (p_sigma2s)
+		*p_sigma2s = sigma2s;
+	else
+		free(sigma2s);
+	if (p_perm)
+		*p_perm = perm;
+	else
+		free(perm);
+	return NT;
+}
+
+double* verify_uniformize_bin_centers(double fieldW, double fieldH,
+									  int nw, int nh) {
+	int i,j;
+	double* bxy = malloc(nw * nh * 2 * sizeof(double));
+	for (j=0; j<nh; j++)
+		for (i=0; i<nw; i++) {
+			bxy[(j * nw + i)*2 +0] = (i + 0.5) * fieldW / (double)nw;
+			bxy[(j * nw + i)*2 +1] = (j + 0.5) * fieldH / (double)nh;
+		}
+	return bxy;
+}
+
 
 void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, verify_field_t* vf,
                 double pix2, double distractors,
                 double fieldW, double fieldH,
                 double logbail, double logaccept, double logstoplooking,
-                bool do_gamma, int dimquads, bool fake_match) {
+                bool do_gamma, bool fake_match) {
 	int i,j,k;
 	double* fieldcenter;
 	double fieldr2;
@@ -382,18 +434,6 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	int NR;
 	double* refxy;
     int* starids;
-    int NT;
-	bool* keepers = NULL;
-    double* sigma2s;
-	int uni_nw, uni_nh;
-	int* perm;
-	double effA;
-	double qc[2], Q2;
-	double* testxy;
-	double K;
-	double worst;
-	int besti;
-	int* theta;
 
 	assert(mo->wcs_valid || sip);
 
@@ -421,7 +461,7 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	if (!fake_match) {
 		for (i=0; i<NR; i++) {
 			bool inquad = FALSE;
-			for (j=0; j<dimquads; j++)
+			for (j=0; j<mo->dimquads; j++)
 				if (starids[i] == mo->star[j]) {
 					inquad = TRUE;
 					logverb("Skipping ref star index %i, starid %i: quad star %i.  k=%i\n",
@@ -453,48 +493,58 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 		NR = k;
 	}
 
-    NT = starxy_n(vf->field);
-	debug("Number of test stars: %i\n", NT);
-	debug("Number of reference stars: %i\n", NR);
+	verify_hit2(refxy, starids, NR, index_cutnside, mo, sip, vf,
+				pix2, distractors, fieldW, fieldH,
+				logbail, logaccept, logstoplooking,
+				do_gamma, fake_match);
+	free(refxy);
+    free(starids);
+}
+
+
+void verify_hit2(double* refxy, int* starids, int NR,
+				 int index_cutnside,
+				 MatchObj* mo,
+				 sip_t* sip, // if non-NULL, verify this SIP WCS.
+				 verify_field_t* vf,
+				 double pix2,
+				 double distractors,
+				 double fieldW,
+				 double fieldH,
+				 double logbail, double logaccept, double logstoplooking,
+				 bool do_gamma, bool fake_match
+				 /*
+				  ,int* p_NR,
+				  double** p_testxy, double** p_sigma2s,
+				  int* p_NT*/
+				 ) {
+				 
+	int i, k;
+    int NT;
+    double* sigma2s;
+	int uni_nw, uni_nh;
+	int* perm;
+	double effA;
+	double qc[2], Q2;
+	double* testxy;
+	double K;
+	double worst;
+	int besti;
+	int* theta;
 
 	// If we're verifying an existing WCS solution, then don't increase the variance
 	// away from the center of the matched quad.
     if (fake_match)
         do_gamma = FALSE;
 
-	sigma2s = verify_compute_sigma2s(vf, mo, pix2, do_gamma);
+	NT = verify_get_test_stars(vf, mo, pix2, do_gamma, fake_match,
+							   &sigma2s, &perm);
+
+	debug("Number of test stars: %i\n", NT);
+	debug("Number of reference stars: %i\n", NR);
 
 	if (!fake_match)
-		get_quad_center(vf, mo, qc, &Q2);
-
-	// Deduplicate test stars.  This could be done (approximately) in preprocessing.
-	keepers = deduplicate_field_stars(vf, sigma2s, 1.0);
-
-	// Remove test quad stars.  Do this after deduplication so we
-	// don't end up with test stars near the quad stars.
-    if (!fake_match) {
-		for (i=0; i<dimquads; i++) {
-            assert(mo->field[i] >= 0);
-            assert(mo->field[i] < NT);
-            keepers[mo->field[i]] = FALSE;
-		}
-	}
-
-	// Uniformize test stars
-	// FIXME - can do this (possibly at several scales) in preprocessing.
-
-	// -first apply the deduplication and removal of test stars by computing an
-	// initial permutation array.
-	perm = malloc(NT * sizeof(int));
-	k = 0;
-	for (i=0; i<NT; i++) {
-		if (!keepers[i])
-			continue;
-		perm[k] = i;
-		k++;
-	}
-	NT = k;
-	free(keepers);
+		verify_get_quad_center(vf, mo, qc, &Q2);
 
 	// -get uniformization scale.
 	verify_get_uniformize_scale(index_cutnside, mo->scale, fieldW, fieldH, &uni_nw, &uni_nh);
@@ -508,7 +558,8 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 		bool* goodbins = NULL;
 		int Ngoodbins;
 
-		uniformize(vf->xy, perm, NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &bincenters, &binids);
+		verify_uniformize_field(vf->xy, perm, NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &binids);
+		bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
 
 		ror2 = Q2 * (1 + fieldW*fieldH*(1 - distractors) / (2. * M_PI * NR * pix2));
 		logverb("Radius of relevance is %.1f\n", sqrt(ror2));
@@ -540,8 +591,11 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 			int binid = get_xy_bin(refxy + 2*i, fieldW, fieldH, uni_nw, uni_nh);
 			if (!goodbins[binid])
 				continue;
-			if (i != k)
+			if (i != k) {
 				memcpy(refxy + 2*k, refxy + 2*i, 2*sizeof(double));
+				if (starids)
+					starids[k] = starids[i];
+			}
 			k++;
 		}
 		NR = k;
@@ -558,7 +612,6 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 		effA = fieldW * fieldH;
 	}
 
-
 	testxy = malloc(NT * 2 * sizeof(double));
 
 	permutation_apply(perm, NT, vf->xy, testxy, 2*sizeof(double));
@@ -567,7 +620,6 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	K = verify_star_lists(refxy, NR, testxy, sigma2s, NT, effA, distractors,
 						  logbail, logstoplooking, &besti, NULL, &theta, &worst);
 
-	// FIXME - mo->corr_*, mo->nmatch, nnomatch, nconflict.
 	mo->logodds = K;
 	mo->worstlogodds = worst;
 	mo->nfield = NT;
@@ -585,13 +637,15 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 			else
 				mo->nmatch++;
 		}
-		mo->corr_field = il_new(16);
-		mo->corr_index = il_new(16);
-		for (i=0; i<=besti; i++) {
-			if (theta[i] < 0)
-				continue;
-			il_append(mo->corr_field, perm[i]);
-			il_append(mo->corr_index, starids[theta[i]]);
+		if (starids) {
+			mo->corr_field = il_new(16);
+			mo->corr_index = il_new(16);
+			for (i=0; i<=besti; i++) {
+				if (theta[i] < 0)
+					continue;
+				il_append(mo->corr_field, perm[i]);
+				il_append(mo->corr_index, starids[theta[i]]);
+			}
 		}
 		matchobj_compute_derived(mo);
 	}
@@ -600,8 +654,6 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	free(theta);
 	free(testxy);
     free(sigma2s);
-	free(refxy);
-    free(starids);
 }
 
 static double logd_at(double distractor, int mu, int NR, double logbg) {

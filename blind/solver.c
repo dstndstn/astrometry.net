@@ -928,7 +928,6 @@ void solver_inject_match(solver_t* solver, MatchObj* mo, sip_t* sip) {
 static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_match) {
 	double match_distance_in_pixels2;
     bool solved;
-	int dimquads;
 
 	mo->indexid = sp->index->meta.indexid;
 	mo->healpix = sp->index->meta.healpix;
@@ -939,15 +938,15 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	match_distance_in_pixels2 = square(sp->verify_pix) +
 		square(sp->index->meta.index_jitter / mo->scale);
 
-	dimquads = quadfile_dimquads(sp->index->quads);
+	mo->dimquads = quadfile_dimquads(sp->index->quads);
 
 	verify_hit(sp->index->starkd, sp->index->meta.cutnside,
 			   mo, sip, sp->vf, match_distance_in_pixels2,
 	           sp->distractor_ratio, sp->field_maxx, sp->field_maxy,
 	           sp->logratio_bail_threshold, sp->logratio_record_threshold,
 			   HUGE_VAL,
-			   sp->distance_from_quad_bonus,
-			   dimquads, fake_match);
+			   sp->distance_from_quad_bonus, fake_match);
+
 	mo->nverified = sp->num_verified++;
 
 	if (mo->logodds >= sp->best_logodds)
