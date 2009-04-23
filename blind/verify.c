@@ -424,6 +424,8 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 			for (j=0; j<dimquads; j++)
 				if (starids[i] == mo->star[j]) {
 					inquad = TRUE;
+					logverb("Skipping ref star index %i, starid %i: quad star %i.  k=%i\n",
+							i, starids[i], j, k);
 					break;
 				}
 			if (inquad)
