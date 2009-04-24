@@ -403,7 +403,7 @@ threadtest: threadtest.o $(BACKEND_LIB) \
 backend: backend-main.o $(BACKEND_LIB) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
-verify: verify-main.o verifyx.o matchfile.o $(COMMON)/cairoutils.o \
+verify: verify-main.o verify.o verify2.o matchfile.o $(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 

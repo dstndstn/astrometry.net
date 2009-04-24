@@ -77,20 +77,17 @@ void verify_hit(startree_t* skdt,
 // Conflict
 #define THETA_CONFLICT -2
 
-void verify_hit2(double* refxy, int* starids, int NR,
-				 int index_cutnside,
-				 MatchObj* mo,
-				 sip_t* sip, // if non-NULL, verify this SIP WCS.
-				 verify_field_t* vf,
-				 double verify_pix2,
-				 double distractors,
-				 double fieldW,
-				 double fieldH,
-				 double logratio_tobail,
-				 double logratio_toaccept,
-				 double logratio_tostoplooking,
-				 bool distance_from_quad_bonus,
-				 bool fake_match);
+void verify_apply_ror(double* refxy, int* starids, int* p_NR,
+					  int index_cutnside,
+					  MatchObj* mo,
+					  verify_field_t* vf,
+					  double pix2,
+					  double distractors,
+					  double fieldW,
+					  double fieldH,
+					  bool do_gamma, bool fake_match,
+					  double** p_testxy, double** p_sigma2s,
+					  int* p_NT, int** p_perm, double* p_effA);
 
 double verify_star_lists(const double* refxys, int NR,
 						 const double* testxys, const double* testsigma2s, int NT,
@@ -132,5 +129,9 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 							double** p_indexpix, int** p_starids, int* p_nindex);
 
 bool* verify_deduplicate_field_stars(verify_field_t* vf, double* sigma2s, double nsigmas);
+
+double* verify_compute_sigma2s_arr(const double* xy, int NF,
+								   const double* qc, double Q2,
+								   double verify_pix2, bool do_gamma);
 
 #endif

@@ -31,7 +31,7 @@
 #include "mathutil.h"
 
 #include "verify.h"
-//#include "verify2.h"
+#include "verify2.h"
 
 #define SIGN(x) (((x) >= 0) ? (1) : (-1))
 
@@ -46,17 +46,6 @@ static void print_help(const char* progname) {
 		   "  )\n"
            "   [-v]: verbose\n"
 	       "\n", progname);
-}
-
-static int get_xy_bin(double x, double y,
-					  double fieldW, double fieldH,
-					  int nw, int nh) {
-	int ix, iy;
-	ix = (int)floor(nw * x / fieldW);
-	ix = MAX(0, MIN(nw-1, ix));
-	iy = (int)floor(nh * y / fieldH);
-	iy = MAX(0, MIN(nh-1, iy));
-	return iy * nw + ix;
 }
 
 int Npaths = 0;
@@ -255,12 +244,12 @@ int main(int argc, char** args) {
 
 	if (index) {
 		mo->logodds = 0.0;
-
+		mo->dimquads = index_get_quad_dim(index);
 		verify_hit(index->starkd, index->meta.cutnside,
 				   mo, NULL, vf,
 				   pix2, distractors, fieldW, fieldH,
 				   logbail, logkeep, logaccept, growvariance,
-				   index_get_quad_dim(index), fake);
+				   fake);
 
 		logodds = mo->logodds;
 
@@ -274,16 +263,11 @@ int main(int argc, char** args) {
 		int* perm;
 		double* testxy;
 		double* refxy;
-		int i, j, k, NT, NR;
+		int i, j, NT, NR;
 		double* sigma2s = NULL;
 		rd_t* rd;
-		double* bincenters;
-		int* binids;
 		double effA;
 		double qc[2], Q2;
-		double ror, newror;
-		bool* goodbins = NULL;
-		int Ngoodbins;
 
 		// -get reference stars
 		rd = rdlist_read_field(rdls, NULL);
@@ -333,79 +317,12 @@ int main(int argc, char** args) {
 			exit(-1);
 		}
 
-		/*
-		 verify_hit2(refxy, NULL, NR, cutnside, mo, NULL, vf,
-		 pix2, distractors, fieldW, fieldH,
-		 logbail, logaccept, HUGE_VAL, grow_variance);
-		 */
+		verify_apply_ror(refxy, NULL, &NR, cutnside, mo,
+						 vf, pix2, distractors, fieldW, fieldH,
+						 growvariance, fake,
+						 &testxy, &sigma2s, &NT, &perm, &effA);
 
-		NT = verify_get_test_stars(vf, mo, pix2, do_gamma, fake,
-								   &sigma2s, &perm);
-
-		// -uniformize field stars
-		indexid = mo->indexid;
-		if (index_get_missing_cut_params(indexid, &cutnside, &cutnsweeps, NULL, NULL, NULL)) {
-			ERROR("Failed to get index cut parameters for index id %i", indexid);
-			exit(-1);
-		}
-		verify_get_uniformize_scale(cutnside, mo->scale, fieldW, fieldH, &uni_nw, &uni_nh);
-		logmsg("Uniformizing test stars into %i x %i bins.\n", uni_nw, uni_nh);
-		verify_uniformize_field(vf->xy, perm, NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &binids);
-		bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
-		verify_get_quad_center(vf, mo, qc, &Q2);
-
-		ror = sqrt(Q2 * (1 + fieldW*fieldH*(1 - distractors) / (2. * M_PI * NR * pix2)));
-		logmsg("Radius of relevance is %.1f\n", ror);
-
-		verify_apply_radius_of_relevance(ror, uni_nw, uni_nh, 
-										 //qc, Q2, fieldW, fieldH, distractors, NR, pix2,
-
-		// Approximate cutting up the image by measuring distance to the bin centers.
-		goodbins = malloc(uni_nw * uni_nh * sizeof(bool));
-		Ngoodbins = 0;
-
-		for (i=0; i<(uni_nw * uni_nh); i++) {
-			double binr = sqrt(distsq(bincenters + 2*i, qc, 2));
-			goodbins[i] = (binr < ror);
-			if (goodbins[i])
-				Ngoodbins++;
-		}
-		// Remove test stars in irrelevant bins...
-		k = 0;
-		for (i=0; i<NT; i++) {
-			if (!goodbins[binids[i]])
-				continue;
-			cutperm[k] = cutperm[i];
-			k++;
-		}
-		NT = k;
-		logmsg("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, NT);
-
-		// Effective area: A * proportion of good bins.
-		effA = fieldW * fieldH * Ngoodbins / (double)(uni_nw * uni_nh);
-
-		// -remove reference stars in bad bins.
-		k = 0;
-		for (i=0; i<NR; i++) {
-			int binid = get_xy_bin(refxy[2*i], refxy[2*i+1], fieldW, fieldH, uni_nw, uni_nh);
-			if (!goodbins[binid])
-				continue;
-			if (i != k)
-				memcpy(refxy + 2*k, refxy + 2*i, 2*sizeof(double));
-			k++;
-		}
-		NR = k;
-		logmsg("After removing irrelevant ref stars: %i ref stars.\n", NR);
-
-		// New ROR is...
-		newror = sqrt(Q2 * (1 + effA*(1 - distractors) / (2. * M_PI * NR * pix2)));
-		logmsg("ROR changed from %g to %g\n", ror, newror);
-
-		free(goodbins);
-		free(binids);
-		free(bincenters);
-
-		{
+		/*{
 			double d = distractors;
 			// Predicted optimal number of reference stars:
 			int mmax = (int)round(exp(log(effA*(1-d)/(2*M_PI*pix2)) + d*log(d)/(1-d) + (M_PI*Q2 + 1)/effA * log(M_PI*Q2 / (M_PI*Q2 + effA))));
@@ -424,42 +341,10 @@ int main(int argc, char** args) {
 					break;
 				}
 			}
-
 			//NR = MIN(NR, 2 * i + 10);
 			//logmsg("Setting NR to %i\n", NR);
-		}
-
+		 }*/
 		
-
-
-		// -remove test quad stars, and grab xy positions
-		testxy = malloc(2 * NT * sizeof(double));
-		k = 0;
-		for (i=0; i<NT; i++) {
-			int starindex = cutperm[i];
-			if (!fake) {
-				bool inquad = FALSE;
-				for (j=0; j<mo->dimquads; j++)
-					if (starindex == mo->field[j]) {
-						inquad = TRUE;
-						break;
-					}
-				if (inquad)
-					continue;
-			}
-			//cutperm[k] = cutperm[i];
-			starxy_get(vf->field, cutperm[i], testxy + 2*k);
-			k++;
-		}
-		NT = k;
-
-		free(cutperm);
-
-		// -compute sigma2s
-		sigma2s = verify_compute_sigma2s_arr(testxy, NT, qc, Q2, pix2, !fake);
-
-		logmsg("Test stars: %i\n", NT);
-
 		FILE* f = stderr;
 
 		fprintf(f, "distractor = %g\nNR=%i\nNT=%i\n", distractors, NR, NT);
@@ -536,7 +421,6 @@ int main(int argc, char** args) {
 			fprintf(f, "[%g,%g],", sigma2s[i], d2);
 		}
 		fprintf(f, "])\n");
-
 
 		{
 			// introduce known radial and tangential terms and see if we can recover them...

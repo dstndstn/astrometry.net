@@ -431,9 +431,15 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	double* fieldcenter;
 	double fieldr2;
 	// number of reference stars
-	int NR;
+	int NR, NT;
 	double* refxy;
     int* starids;
+	double* testxy;
+    double* sigma2s;
+	double effA, K, worst;
+	int besti;
+	int* theta;
+	int* perm;
 
 	assert(mo->wcs_valid || sip);
 
@@ -493,44 +499,74 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 		NR = k;
 	}
 
-	verify_hit2(refxy, starids, NR, index_cutnside, mo, sip, vf,
-				pix2, distractors, fieldW, fieldH,
-				logbail, logaccept, logstoplooking,
-				do_gamma, fake_match);
+	verify_apply_ror(refxy, starids, &NR, index_cutnside, mo,
+					 vf, pix2, distractors, fieldW, fieldH,
+					 do_gamma, fake_match,
+					 &testxy, &sigma2s, &NT, &perm, &effA);
+
+	K = verify_star_lists(refxy, NR, testxy, sigma2s, NT, effA, distractors,
+						  logbail, logstoplooking, &besti, NULL, &theta, &worst);
+
+	mo->logodds = K;
+	mo->worstlogodds = worst;
+	mo->nfield = NT;
+	mo->nindex = NR;
+
+	if (K >= logaccept) {
+		mo->nmatch = 0;
+		mo->nconflict = 0;
+		mo->ndistractor = 0;
+		for (i=0; i<=besti; i++) {
+			if (theta[i] == THETA_DISTRACTOR)
+				mo->ndistractor++;
+			else if (theta[i] == THETA_CONFLICT)
+				mo->nconflict++;
+			else
+				mo->nmatch++;
+		}
+		if (starids) {
+			mo->corr_field = il_new(16);
+			mo->corr_index = il_new(16);
+			for (i=0; i<=besti; i++) {
+				if (theta[i] < 0)
+					continue;
+				il_append(mo->corr_field, perm[i]);
+				il_append(mo->corr_index, starids[theta[i]]);
+			}
+		}
+		matchobj_compute_derived(mo);
+	}
+
+	free(perm);
+	free(theta);
+	free(testxy);
+    free(sigma2s);
 	free(refxy);
     free(starids);
 }
 
 
-void verify_hit2(double* refxy, int* starids, int NR,
-				 int index_cutnside,
-				 MatchObj* mo,
-				 sip_t* sip, // if non-NULL, verify this SIP WCS.
-				 verify_field_t* vf,
-				 double pix2,
-				 double distractors,
-				 double fieldW,
-				 double fieldH,
-				 double logbail, double logaccept, double logstoplooking,
-				 bool do_gamma, bool fake_match
-				 /*
-				  ,int* p_NR,
-				  double** p_testxy, double** p_sigma2s,
-				  int* p_NT*/
-				 ) {
-				 
+void verify_apply_ror(double* refxy, int* starids, int* p_NR,
+					  int index_cutnside,
+					  MatchObj* mo,
+					  verify_field_t* vf,
+					  double pix2,
+					  double distractors,
+					  double fieldW,
+					  double fieldH,
+					  bool do_gamma, bool fake_match,
+					  double** p_testxy, double** p_sigma2s,
+					  int* p_NT, int** p_perm, double* p_effA) {
 	int i, k;
-    int NT;
+    int NR, NT;
     double* sigma2s;
 	int uni_nw, uni_nh;
 	int* perm;
 	double effA;
 	double qc[2], Q2;
 	double* testxy;
-	double K;
-	double worst;
-	int besti;
-	int* theta;
+
+	NR = *p_NR;
 
 	// If we're verifying an existing WCS solution, then don't increase the variance
 	// away from the center of the matched quad.
@@ -617,43 +653,12 @@ void verify_hit2(double* refxy, int* starids, int NR,
 	permutation_apply(perm, NT, vf->xy, testxy, 2*sizeof(double));
 	permutation_apply(perm, NT, sigma2s, sigma2s, sizeof(double));
 
-	K = verify_star_lists(refxy, NR, testxy, sigma2s, NT, effA, distractors,
-						  logbail, logstoplooking, &besti, NULL, &theta, &worst);
-
-	mo->logodds = K;
-	mo->worstlogodds = worst;
-	mo->nfield = NT;
-	mo->nindex = NR;
-
-	if (K >= logaccept) {
-		mo->nmatch = 0;
-		mo->nconflict = 0;
-		mo->ndistractor = 0;
-		for (i=0; i<=besti; i++) {
-			if (theta[i] == THETA_DISTRACTOR)
-				mo->ndistractor++;
-			else if (theta[i] == THETA_CONFLICT)
-				mo->nconflict++;
-			else
-				mo->nmatch++;
-		}
-		if (starids) {
-			mo->corr_field = il_new(16);
-			mo->corr_index = il_new(16);
-			for (i=0; i<=besti; i++) {
-				if (theta[i] < 0)
-					continue;
-				il_append(mo->corr_field, perm[i]);
-				il_append(mo->corr_index, starids[theta[i]]);
-			}
-		}
-		matchobj_compute_derived(mo);
-	}
-
-	free(perm);
-	free(theta);
-	free(testxy);
-    free(sigma2s);
+	*p_perm = perm;
+	*p_testxy = testxy;
+	*p_sigma2s = sigma2s;
+	*p_NT = NT;
+	*p_NR = NR;
+	*p_effA = effA;
 }
 
 static double logd_at(double distractor, int mu, int NR, double logbg) {
