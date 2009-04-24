@@ -183,10 +183,10 @@ int index_get_meta(const char* filename, index_meta_t* meta) {
 
 int index_get_missing_cut_params(int indexid, int* hpnside, int* nsweep,
 								 double* dedup, int* margin, char** pband) {
-	// The 200-series indices use cut 100
-	// The 500-series indices use cut 100
-	// The 600-series indices use cut 300
-	// The 700-series indices use cut 400
+	// The 200-series indices use cut 100 (usnob)
+	// The 500-series indices use cut 100 (usnob)
+	// The 600-series indices use cut 300 (2mass)
+	// The 700-series indices use cut 400 (usnob)
 	int i = -1;
 	int ns, n, marg;
 	double dd;
@@ -212,6 +212,7 @@ int index_get_missing_cut_params(int indexid, int* hpnside, int* nsweep,
 		int cut300hp[] = { 0, 0, 880, 624, 440, 312, 220, 156, 110, 78, 56, 40, 28, 20, 14, 10, 8, 6, 4, 4 };
 		int cut300n = 10;
 		double cut300dd = 8.0;
+		//double cut300dd[] = { 8, 8, 8, 8, 8, 9.6, 13.2, 18.0, 25.2, 36, 51, 72, 102, 144, 204, 288, 408, 600, 840, 1200 };
 		int cut300margin = 10;
 
 		i = indexid % 100;
@@ -223,14 +224,16 @@ int index_get_missing_cut_params(int indexid, int* hpnside, int* nsweep,
 
 	} else if (indexid >= 700 && indexid < 720) {
 		// Cut 400 params:
+		// (cut 400 used cut 200 as input: it had dedup=8, and n=6,10,10,...)
 		int cut400hp[] = { 1760, 1246, 880, 624, 440, 312, 220, 156, 110, 78, 55, 39, 28, 20, 14, 10, 7, 5, 4, 3 };
-		int cut400n = 10;
+		int cut400n[] = { 6, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 };
 		double cut400dd = 8.0;
+		//double cut400dd[] = { 8, 8, 8, 8, 8, 9.6, 13.2, 18.0, 25.2, 36, 51, 72, 102, 144, 204, 288, 408, 600, 840, 1200 };
 		int cut400margin = 10;
 
 		i = indexid % 100;
 		ns = cut400hp[i];
-		n = cut400n;
+		n = cut400n[i];
 		dd = cut400dd;
 		marg = cut400margin;
 		band = "R";

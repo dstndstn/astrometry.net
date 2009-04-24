@@ -370,6 +370,10 @@ int verify_get_test_stars(verify_field_t* vf, MatchObj* mo,
 	sigma2s = verify_compute_sigma2s(vf, mo, pix2, do_gamma);
 
 	// Deduplicate test stars.  This could be done (approximately) in preprocessing.
+	// FIXME -- this should be at the reference deduplication radius, not relative to sigma!
+	// -- this requires the match scale
+	// -- can perhaps distretize dedup to nearest power-of-sqrt(2) pixel radius and cache it.
+	// -- we can compute sigma much later
 	keepers = verify_deduplicate_field_stars(vf, sigma2s, 1.0);
 
 	// Remove test quad stars.  Do this after deduplication so we
@@ -597,7 +601,7 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 		verify_uniformize_field(vf->xy, perm, NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &binids);
 		bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
 
-		ror2 = Q2 * (1 + fieldW*fieldH*(1 - distractors) / (2. * M_PI * NR * pix2));
+		ror2 = Q2 * MIN(1, (fieldW*fieldH*(1 - distractors) / (2. * M_PI * NR * pix2) - 1));
 		logverb("Radius of relevance is %.1f\n", sqrt(ror2));
 		goodbins = malloc(uni_nw * uni_nh * sizeof(bool));
 		Ngoodbins = 0;
