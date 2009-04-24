@@ -30,7 +30,7 @@
 #include "mathutil.h"
 
 // This is a naughty preprocessor function because it uses variables
-// declared in the scope from which it is called.
+// declared in the calling scope.
 #define ADDARR(ctype, ftype, col, units, member, arraysize)             \
     if (write) {                                                        \
         fitstable_add_column_struct                                     \
@@ -38,9 +38,11 @@
              ftype, col, units, TRUE);                                  \
     } else {                                                            \
         fitstable_add_column_struct                                     \
-            (tab, ctype, arraysize, offsetof(MatchObj, member),     \
-             any, col, units, TRUE);                                    \
+            (tab, ctype, arraysize, offsetof(MatchObj, member),			\
+             any, col, units, FALSE); \
     }
+
+//TRUE);
 
 #define ADDCOL(ctype, ftype, col, units, member) \
 ADDARR(ctype, ftype, col, units, member, 1)
