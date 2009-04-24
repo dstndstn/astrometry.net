@@ -159,12 +159,14 @@ void find_cd_correction(const double* testxy, const double* sigma2s, int NT,
 
 	mu = 0;
 	for (i=0; i<NT; i++) {
+		double w;
 		if (theta[i] < 0)
 			continue;
-		gsl_matrix_set(A, mu, 0, testxy[2*i]   - crpix[0]);
-		gsl_matrix_set(A, mu, 1, testxy[2*i+1] - crpix[1]);
-		gsl_vector_set(B1, mu, refxy[2*theta[i]]   - crpix[0]);
-		gsl_vector_set(B2, mu, refxy[2*theta[i]+1] - crpix[1]);
+		w = 1.0 / sqrt(sigma2s[i]);
+		gsl_matrix_set(A, mu, 0, w * (testxy[2*i]   - crpix[0]));
+		gsl_matrix_set(A, mu, 1, w * (testxy[2*i+1] - crpix[1]));
+		gsl_vector_set(B1, mu, w * (refxy[2*theta[i]]   - crpix[0]));
+		gsl_vector_set(B2, mu, w * (refxy[2*theta[i]+1] - crpix[1]));
 		mu++;
 	}
 
