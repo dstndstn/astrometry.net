@@ -122,6 +122,71 @@ static void add_radial_and_tangential_correction(const double* in,
 }
 
 
+#include <gsl/gsl_matrix_double.h>
+#include <gsl/gsl_vector_double.h>
+#include "gslutils.h"
+
+
+void find_cd_correction(const double* testxy, const double* sigma2s, int NT,
+						const int* theta, const double* refxy, int NR,
+						const double* crpix) {
+	gsl_matrix *A;
+	gsl_vector *B1, *B2, *X1, *X2;
+	int M, N;
+	int mu;
+	int i;
+
+	/*
+	   solve min(|B - A*X|^2) for X
+
+	 B: (refxy - crpix)_{x,y} / sigma
+	 X: CD matrix elements (a,b) and (c,d)
+	 A: (testxy - crpix)_{x,y} / sigma
+	 */
+
+	mu = 0;
+	for (i=0; i<NT; i++)
+		if (theta[i] >= 0)
+			mu++;
+	// number of samples
+	M = mu;
+	// number of coefficients
+	N = 2;
+
+	A = gsl_matrix_alloc(M, N);
+	B1 = gsl_vector_alloc(M);
+	B2 = gsl_vector_alloc(M);
+
+	mu = 0;
+	for (i=0; i<NT; i++) {
+		if (theta[i] < 0)
+			continue;
+		gsl_matrix_set(A, mu, 0, testxy[2*i]   - crpix[0]);
+		gsl_matrix_set(A, mu, 1, testxy[2*i+1] - crpix[1]);
+		gsl_vector_set(B1, mu, refxy[2*theta[i]]   - crpix[0]);
+		gsl_vector_set(B2, mu, refxy[2*theta[i]+1] - crpix[1]);
+		mu++;
+	}
+
+    if (gslutils_solve_leastsquares_v(A, 2, B1, &X1, NULL, B2, &X2, NULL)) {
+        ERROR("Failed to solve CD matrix correction\n");
+        return;
+    }
+
+	logmsg("CD matrix:\n");
+	logmsg("  %g\n", gsl_vector_get(X1, 0));
+	logmsg("  %g\n", gsl_vector_get(X1, 1));
+	logmsg("  %g\n", gsl_vector_get(X2, 0));
+	logmsg("  %g\n", gsl_vector_get(X2, 1));
+
+	gsl_matrix_free(A);
+	gsl_vector_free(B1);
+	gsl_vector_free(B2);
+	gsl_vector_free(X1);
+	gsl_vector_free(X2);
+}
+
+
 int main(int argc, char** args) {
 	int argchar;
 	int loglvl = LOG_MSG;
@@ -421,6 +486,9 @@ int main(int argc, char** args) {
 			fprintf(f, "[%g,%g],", sigma2s[i], d2);
 		}
 		fprintf(f, "])\n");
+
+
+		find_cd_correction(testxy, sigma2s, NT, theta, refxy, NR, qc);
 
 		{
 			// introduce known radial and tangential terms and see if we can recover them...
