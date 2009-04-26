@@ -384,10 +384,12 @@ int main(int argc, char** args) {
 			exit(-1);
 		}
 
+		verify_get_quad_center(vf, mo, qc, &Q2);
+
 		verify_apply_ror(refxy, NULL, &NR, cutnside, mo,
 						 vf, pix2, distractors, fieldW, fieldH,
 						 growvariance, fake,
-						 &testxy, &sigma2s, &NT, &perm, &effA);
+						 &testxy, &sigma2s, &NT, &perm, &effA, &uni_nw, &uni_nh);
 
 		/*{
 			double d = distractors;
@@ -417,6 +419,7 @@ int main(int argc, char** args) {
 		fprintf(f, "distractor = %g\nNR=%i\nNT=%i\n", distractors, NR, NT);
 		fprintf(f, "W=%i\nH=%i\n", (int)fieldW, (int)fieldH);
 		fprintf(f, "effA=%g\n", effA);
+		fprintf(f, "sig2=%g\n", pix2);
 
 		fprintf(f, "quadxy = array([");
 		for (i=0; i<mo->dimquads; i++)
@@ -481,11 +484,12 @@ int main(int argc, char** args) {
 		// compare observed sigmas to expected...
 		fprintf(f, "obssigmas=array([");
 		for (i=0; i<NT; i++) {
-			double d2;
-			if (theta[i] == -1)
+			double d2, r2;
+			if (theta[i] < 0)
 				continue;
 			d2 = distsq(testxy + 2*i, refxy + 2*theta[i], 2);
-			fprintf(f, "[%g,%g],", sigma2s[i], d2);
+			r2 = distsq(testxy + 2*i, qc, 2);
+			fprintf(f, "[%g,%g,%g],", sigma2s[i], d2, r2/Q2);
 		}
 		fprintf(f, "])\n");
 

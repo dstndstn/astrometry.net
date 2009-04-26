@@ -506,7 +506,7 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	verify_apply_ror(refxy, starids, &NR, index_cutnside, mo,
 					 vf, pix2, distractors, fieldW, fieldH,
 					 do_gamma, fake_match,
-					 &testxy, &sigma2s, &NT, &perm, &effA);
+					 &testxy, &sigma2s, &NT, &perm, &effA, NULL, NULL);
 
 	K = verify_star_lists(refxy, NR, testxy, sigma2s, NT, effA, distractors,
 						  logbail, logstoplooking, &besti, NULL, &theta, &worst);
@@ -560,7 +560,8 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 					  double fieldH,
 					  bool do_gamma, bool fake_match,
 					  double** p_testxy, double** p_sigma2s,
-					  int* p_NT, int** p_perm, double* p_effA) {
+					  int* p_NT, int** p_perm, double* p_effA,
+					  int* p_uninw, int* p_uninh) {
 	int i, k;
     int NR, NT;
     double* sigma2s;
@@ -601,7 +602,8 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 		verify_uniformize_field(vf->xy, perm, NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &binids);
 		bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
 
-		ror2 = Q2 * MIN(1, (fieldW*fieldH*(1 - distractors) / (2. * M_PI * NR * pix2) - 1));
+		logverb("Quad radius = %g\n", sqrt(Q2));
+		ror2 = Q2 * MAX(1, (fieldW*fieldH*(1 - distractors) / (2. * M_PI * NR * pix2) - 1));
 		logverb("Radius of relevance is %.1f\n", sqrt(ror2));
 		goodbins = malloc(uni_nw * uni_nh * sizeof(bool));
 		Ngoodbins = 0;
@@ -663,6 +665,10 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 	*p_NT = NT;
 	*p_NR = NR;
 	*p_effA = effA;
+	if (p_uninw)
+		*p_uninw = uni_nw;
+	if (p_uninh)
+		*p_uninh = uni_nh;
 }
 
 static double logd_at(double distractor, int mu, int NR, double logbg) {

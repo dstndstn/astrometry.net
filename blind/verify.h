@@ -87,7 +87,8 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 					  double fieldH,
 					  bool do_gamma, bool fake_match,
 					  double** p_testxy, double** p_sigma2s,
-					  int* p_NT, int** p_perm, double* p_effA);
+					  int* p_NT, int** p_perm, double* p_effA,
+					  int* p_uninw, int* p_uninh);
 
 double verify_star_lists(const double* refxys, int NR,
 						 const double* testxys, const double* testsigma2s, int NT,
