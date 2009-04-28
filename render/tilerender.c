@@ -386,7 +386,7 @@ int main(int argc, char *argv[]) {
 
 	default_rdls_args(&args);
 
-    if (args.W > 1024 || args.H > 1024) {
+    if (args.W > 4096 || args.H > 4096) {
         logmsg("tilecache: Width or height too large (limit 1024)\n");
         exit(-1);
     }

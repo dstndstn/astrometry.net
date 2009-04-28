@@ -12,8 +12,9 @@
 #include "cairoutils.h"
 
 char* rdls_dirs[] = {
-    "/home/gmaps/gmaps-rdls/",
-    "/home/gmaps/ontheweb-data/",
+    "/home/gmaps/gmaps-rdls",
+    "/home/gmaps/ontheweb-data",
+    ".",
 };
 
 static void logmsg(char* format, ...) {

@@ -32,7 +32,7 @@
 #include "log.h"
 #include "errors.h"
 
-#define OPTIONS "hW:H:n:N:r:s:i:e:x:y:w:S:I:PC:X:Y:b:o:"
+#define OPTIONS "hW:H:n:N:r:s:i:e:x:y:w:S:I:PC:X:Y:b:o:p"
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
