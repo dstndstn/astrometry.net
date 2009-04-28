@@ -83,6 +83,10 @@ class Tan(ctypes.Structure):
 				ctypes.pointer(dec))
 		return ra.value, dec.value
 
+	def containsradec(self, RA, Dec):
+		(x, y) = self.radec2pixelxy(RA, Dec)
+		return 0.5 <= x <= self.imagew + 0.5 and 0.5 <= y <= self.imageh + 0.5
+
 	def radec2pixelxy(self, RA, Dec):
 		'Return px,py of ra,dec'
 		ra = ctypes.c_double(RA)
