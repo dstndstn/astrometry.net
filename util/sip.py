@@ -39,6 +39,7 @@ else:
 		#	 print 'loaded', p
 	else:
 		print 'file does not exist:', p
+_sip.qfits_err_statset(1)
 
 def loadlibrary(fn):
 	global _sip
