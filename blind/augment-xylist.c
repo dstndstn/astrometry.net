@@ -634,7 +634,7 @@ int augment_xylist(augment_xylist_t* axy,
         }
         // MAGIC 3: downsample by a factor of 2, up to 3 times.
         if (image2xy_files(fitsimgfn, xylsfn, TRUE, axy->downsample, 3, axy->extension,
-						   NULL, NULL, NULL)) {
+						   NULL, NULL, NULL, 0, 0, 0)) {
             ERROR("Source extraction failed");
             exit(-1);
         }

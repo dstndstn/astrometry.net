@@ -228,7 +228,7 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     pinds  = PyArray_DATA(inds);
     pdist2s = PyArray_DATA(dist2s);
 
-    dualtree_nearestneighbour(kd1, kd2, rad, &pdist2s, &pinds);
+    dualtree_nearestneighbour(kd1, kd2, rad*rad, &pdist2s, &pinds);
 
     return Py_BuildValue("(OO)", inds, dist2s);
 }

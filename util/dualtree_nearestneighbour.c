@@ -41,7 +41,7 @@ static bool rs_within_range(void* params, kdtree_t* searchtree, int searchnode,
 static void rs_handle_result(void* extra, kdtree_t* searchtree, int searchnode,
 							 kdtree_t* querytree, int querynode);
 
-void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist,
+void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2,
                                double** nearest_d2, int** nearest_ind) {
     int i, NY, NNY;
 
@@ -66,10 +66,10 @@ void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist,
         params.nearest_d2 = *nearest_d2;
     else
         params.nearest_d2 = malloc(NY * sizeof(double));
-    if (maxdist == 0.0)
-        maxdist = HUGE_VAL;
+    if (maxdist2 == 0.0)
+        maxdist2 = HUGE_VAL;
     for (i=0; i<NY; i++)
-        params.nearest_d2[i] = maxdist;
+        params.nearest_d2[i] = maxdist2;
 
     if (*nearest_ind)
         params.nearest_ind = *nearest_ind;
@@ -81,7 +81,7 @@ void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist,
     NNY = kdtree_nnodes(ytree);
     params.node_nearest_d2 = malloc(NNY * sizeof(double));
     for (i=0; i<NNY; i++)
-        params.node_nearest_d2[i] = maxdist;
+        params.node_nearest_d2[i] = maxdist2;
     
     dualtree_search(xtree, ytree, &callbacks);
 

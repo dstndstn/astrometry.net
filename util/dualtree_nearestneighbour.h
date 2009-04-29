@@ -21,7 +21,7 @@
 
 #include "kdtree.h"
 
-void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist,
+void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2,
                                double** nearest_d2, int** nearest_ind);
 
 #endif
