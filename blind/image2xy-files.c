@@ -39,7 +39,8 @@
 int image2xy_files(const char* infn, const char* outfn,
 				   bool do_u8, int downsample, int downsample_as_required,
                    int extension,
-				   const char* bgimg, const char* bgsubimg, const char* maskimg) {
+				   const char* bgimg, const char* bgsubimg, const char* maskimg,
+				   double plim, int halfbox) {
 	fitsfile *fptr = NULL;
 	fitsfile *ofptr = NULL;
 	int status = 0; // FIXME should have ostatus too
@@ -174,6 +175,11 @@ int image2xy_files(const char* infn, const char* outfn,
 		s.maskimgfn = maskimg;
 		s.nx = naxisn[0];
 		s.ny = naxisn[1];
+
+		if (plim > 0)
+			s.plim = plim;
+		if (halfbox > 0)
+			s.halfbox = halfbox;
 
 		image2xy_image2(&s, downsample, downsample_as_required);
 

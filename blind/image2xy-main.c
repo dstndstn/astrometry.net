@@ -31,7 +31,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hOo:8Hd:D:ve:B:S:M:";
+static const char* OPTIONS = "hOo:8Hd:D:ve:B:S:M:s:p:";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -48,6 +48,8 @@ static void printHelp() {
             "   [-D <downsample-factor>] downsample, if necessary, by this many factors of two.\n"
 			"   [-o <output-filename>]  write XYlist to given filename.\n"
             "   [-v] verbose - repeat for more and more verboseness\n"
+			"   [-s <smoothing-scale>]\n"
+			"   [-p <sigmas>]\n"
 			"\n"
 			"   [-S <background-subtracted image>]: save background-subtracted image to this filename (FITS float image)\n"
 			"   [-B <background image>]: save background image to filename\n"
@@ -72,6 +74,8 @@ int main(int argc, char *argv[]) {
     int downsample = 0;
     int downsample_as_reqd = 0;
     int extension = 0;
+	double plim = 0;
+	int halfbox = 0;
 
 	char* bgimg = NULL;
 	char* bgsubimg = NULL;
@@ -79,6 +83,12 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 's':
+			halfbox = atoi(optarg);
+			break;
+		case 'p':
+			plim = atof(optarg);
+			break;
 		case 'B':
 			bgimg = optarg;
 			break;
@@ -147,7 +157,7 @@ int main(int argc, char *argv[]) {
         logverb("Downsampling by %i\n", downsample);
 
     if (image2xy_files(infn, outfn, do_u8, downsample, downsample_as_reqd, extension,
-					   bgimg, bgsubimg, maskimg)) {
+					   bgimg, bgsubimg, maskimg, plim, halfbox)) {
         ERROR("image2xy failed.");
         exit(-1);
     }
