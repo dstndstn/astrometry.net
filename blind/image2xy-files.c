@@ -40,7 +40,7 @@ int image2xy_files(const char* infn, const char* outfn,
 				   bool do_u8, int downsample, int downsample_as_required,
                    int extension,
 				   const char* bgimg, const char* bgsubimg, const char* maskimg,
-				   double plim, int halfbox) {
+				   double plim, int halfbox, int plane) {
 	fitsfile *fptr = NULL;
 	fitsfile *ofptr = NULL;
 	int status = 0; // FIXME should have ostatus too
@@ -134,15 +134,23 @@ int image2xy_files(const char* infn, const char* outfn,
 
         logverb("Got naxis=%d, na1=%lu, na2=%lu\n", naxis, naxisn[0], naxisn[1]);
 
-		if (naxis > 2)
-            logmsg("This looks like a multi-color image: processing the first image plane only.  (NAXIS=%i)\n", naxis);
-
         fits_get_img_type(fptr, &bitpix, &status);
         CFITS_CHECK("Failed to get FITS image type");
 
 		fpixel = malloc(naxis * sizeof(long));
 		for (a=0; a<naxis; a++)
 			fpixel[a] = 1;
+
+		if (plane && naxis == 3) {
+			if (plane <= naxisn[2]) {
+				logmsg("Grabbing image plane %i\n", plane);
+				fpixel[2] = plane;
+			} else
+				logerr("Requested plane %i but only %i are available.\n", plane, (int)naxisn[2]);
+		} else if (plane)
+			logmsg("Plane %i requested but this image has NAXIS = %i (not 3).\n", plane, naxis);
+		else if (naxis > 2)
+            logmsg("This looks like a multi-color image: processing the first image plane only.  (NAXIS=%i)\n", naxis);
 
         if (bitpix == 8 && do_u8 && !downsample) {
 			simplexy2_set_u8_defaults(&s);
