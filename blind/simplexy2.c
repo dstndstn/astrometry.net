@@ -199,7 +199,7 @@ int simplexy2(simplexy_t* s) {
 
 	//// Pulled in from dobjects ////
 	/* smooth by the point spread function  */
-	dsmooth2(s->image, nx, ny, s->dpsf, s->smooth);
+	dsmooth2(s->simage, nx, ny, s->dpsf, s->smooth);
 
 	/* check how much noise is left in the psf-smoothed image. */
 	dsigma(s->smooth, nx, ny, (int)(10*s->dpsf), 0, &smoothsigma);
