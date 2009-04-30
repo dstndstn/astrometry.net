@@ -49,7 +49,7 @@ static void printHelp() {
 			"   [-o <output-filename>]  write XYlist to given filename.\n"
             "   [-v] verbose - repeat for more and more verboseness\n"
 			"   [-s <smoothing-scale>]\n"
-			"   [-p <sigmas>]\n"
+			"   [-p <sigmas>]: set significance level of peaks: defailt 8\n"
 			"   [-P <image plane>]\n"
 			"   [-b]: don't do background subtraction\n"
 			"\n"

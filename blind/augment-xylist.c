@@ -82,7 +82,7 @@ void augment_xylist_print_special_opts(an_option_t* opt, bl* opts, int index,
     } else if (!strcmp(opt->name, "scale-units")) {
         fprintf(fid, "%s",
                 "  -u / --scale-units <units>: in what units are the lower and upper bound specified?\n"
-                "     choices:  \"degwidth\"    : width of the image, in degrees\n"
+                "     choices:  \"degwidth\"    : width of the image, in degrees (default)\n"
                 "               \"arcminwidth\" : width of the image, in arcminutes\n"
                 "               \"arcsecperpix\": arcseconds per pixel\n"
                 );

@@ -11,7 +11,7 @@
 #include "mercrender.h"
 #include "cairoutils.h"
 
-char* rdls_dirs[] = {
+const char* rdls_dirs[] = {
     "/home/gmaps/gmaps-rdls",
     "/home/gmaps/ontheweb-data",
     ".",
@@ -42,6 +42,8 @@ int render_rdls(unsigned char* img, render_args_t* args)
 	cairo_set_line_join(cairo, CAIRO_LINE_JOIN_BEVEL);
 	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 
+	logmsg("Rendering %i rdls files\n", pl_size(args->rdlsfns));
+
 	for (r=0; r<pl_size(args->rdlsfns); r++) {
 		char* rdlsfn = pl_get(args->rdlsfns, r);
 		char* color = pl_get(args->rdlscolors, r);
@@ -54,6 +56,7 @@ int render_rdls(unsigned char* img, render_args_t* args)
 		double r, g, b;
         rdlist_t* rdls;
         rd_t* rd;
+		char* path;
 
 		cairo_set_line_width(cairo, lw);
 		//r = g = b = 1.0;
@@ -78,17 +81,15 @@ int render_rdls(unsigned char* img, render_args_t* args)
 			}
 		}
 		cairo_set_source_rgb(cairo, r, g, b);
-
 		
 		/* Search in the rdls paths */
-		for (i=0; i<sizeof(rdls_dirs)/sizeof(char*); i++) {
-			char fn[256];
-			snprintf(fn, sizeof(fn), "%s/%s", rdls_dirs[i], rdlsfn);
-			logmsg("Trying file: %s\n", fn);
-			rdls = rdlist_open(fn);
-			if (rdls)
-				break;
+		path = find_file_in_dirs(rdls_dirs, sizeof(rdls_dirs)/sizeof(char*), rdlsfn, TRUE);
+		if (!path) {
+			logmsg("Failed to find RDLS file \"%s\"\n", rdlsfn);
+			return -1;
 		}
+		rdls = rdlist_open(path);
+		free(path);
 		if (!rdls) {
 			logmsg("Failed to open RDLS file \"%s\".\n", rdlsfn);
 			return -1;

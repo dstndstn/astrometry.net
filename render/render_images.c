@@ -157,8 +157,12 @@ int render_images(unsigned char* img, render_args_t* args) {
 			   ramin, ramax, decmin, decmax);
 
         // increasing DEC -> decreasing Y pixel coord
-        ylo = floor(dec2pixelf(decmax, args));
-        yhi = ceil (dec2pixelf(decmin, args));
+		/*
+		 ylo = floor(dec2pixelf(MAX(decmax, decmin), args));
+		 yhi = ceil (dec2pixelf(MIN(decmax, decmin), args));
+		 */
+		ylo = floor(dec2pixelf(decmax, args));
+		yhi = ceil (dec2pixelf(decmin, args));
         if ((yhi < 0) || (ylo >= args->H)) {
             // No need to read the image!
 			logmsg("No overlap between this image and the requested RA,Dec region (Y pixel range %i to %i).\n", ylo, yhi);
@@ -166,10 +170,17 @@ int render_images(unsigned char* img, render_args_t* args) {
 		}
 
 		// min ra -> max merc -> max pixel
+		/* FIXME - It would be nice if we could handle requests for flipped regions!!
+		 xmerclo = radeg2merc(MAX(ramax, ramin));
+		 xmerchi = radeg2merc(MIN(ramin, ramax));
+		 xlo = floor(xmerc2pixelf(MAX(xmerclo, xmerchi), args));
+		 xhi =  ceil(xmerc2pixelf(MIN(xmerchi, xmerclo), args));
+		 */
 		xmerclo = radeg2merc(ramax);
 		xmerchi = radeg2merc(ramin);
 		xlo = floor(xmerc2pixelf(xmerclo, args));
 		xhi =  ceil(xmerc2pixelf(xmerchi, args));
+		logmsg("x range: %i, %i\n", xlo, xhi);
 		if ((xhi < 0) || (xlo >= args->W)) {
 			if (xmerclo < 0.5) {
 				xwraplo = floor(xmerc2pixelf(xmerclo + 1.0, args));
