@@ -2,6 +2,12 @@ import spherematch_c
 from math import *
 from numpy import *
 
+'''
+match(x1, x2, radius):
+
+
+
+'''
 def match(x1, x2, radius):
     (N1,D1) = x1.shape
     (N2,D2) = x2.shape
