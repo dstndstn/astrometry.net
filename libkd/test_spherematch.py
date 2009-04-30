@@ -45,3 +45,9 @@ print 'Indices equal:', ok
 
 ok = array_equal(truedists[order], dists.ravel())
 print 'Dists equal:', ok
+
+
+t0 = time()
+(inds,dists) = spherematch.nearest(x1, x2, r)
+dt = time() - t0
+

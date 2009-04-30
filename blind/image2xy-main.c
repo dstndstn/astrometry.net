@@ -31,7 +31,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hOo:8Hd:D:ve:B:S:M:s:p:P:";
+static const char* OPTIONS = "hOo:8Hd:D:ve:B:S:M:s:p:P:b";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -51,6 +51,7 @@ static void printHelp() {
 			"   [-s <smoothing-scale>]\n"
 			"   [-p <sigmas>]\n"
 			"   [-P <image plane>]\n"
+			"   [-b]: don't do background subtraction\n"
 			"\n"
 			"   [-S <background-subtracted image>]: save background-subtracted image to this filename (FITS float image)\n"
 			"   [-B <background image>]: save background image to filename\n"
@@ -78,6 +79,7 @@ int main(int argc, char *argv[]) {
 	double plim = 0;
 	int halfbox = 0;
 	int plane = 0;
+	bool nobgsub = FALSE;
 
 	char* bgimg = NULL;
 	char* bgsubimg = NULL;
@@ -85,6 +87,9 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'b':
+			nobgsub = TRUE;
+			break;
 		case 'P':
 			plane = atoi(optarg);
 			break;
@@ -161,7 +166,7 @@ int main(int argc, char *argv[]) {
         logverb("Downsampling by %i\n", downsample);
 
     if (image2xy_files(infn, outfn, do_u8, downsample, downsample_as_reqd, extension,
-					   bgimg, bgsubimg, maskimg, plim, halfbox, plane)) {
+					   bgimg, bgsubimg, maskimg, plim, halfbox, plane, nobgsub)) {
         ERROR("image2xy failed.");
         exit(-1);
     }

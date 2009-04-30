@@ -41,7 +41,7 @@ int image2xy_files(const char* infn, const char* outfn,
                    int extension,
 				   const char* bgimg, const char* bgsubimg,
 				   const char* maskimg,
-				   double plim, int halfbox, int plane);
+				   double plim, int halfbox, int plane, bool nobgsub);
 
 /*
  int image2xy_files2(const char* infn, const char* outfn,

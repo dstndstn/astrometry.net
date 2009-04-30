@@ -20,6 +20,8 @@
 #ifndef SIMPLEXY2_H
 #define SIMPLEXY2_H
 
+#include "an-bool.h"
+
 #define SIMPLEXY_DEFAULT_DPSF        1.0
 #define SIMPLEXY_DEFAULT_PLIM        8.0
 #define SIMPLEXY_DEFAULT_DLIM        1.0
@@ -57,6 +59,9 @@ struct simplexy_t {
     /* size for sliding sky estimation box */
     int halfbox;
 
+	// don't do background subtraction.
+	bool nobgsub;
+
     /******
      Outputs
      ******/
@@ -78,7 +83,7 @@ struct simplexy_t {
     /******
      Internal
      ******/
-    float* simage;
+    //float* simage;
 
     int* oimage;
     float* smooth;
