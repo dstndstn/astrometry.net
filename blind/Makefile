@@ -549,6 +549,9 @@ tycho2tostellarium: tycho2tostellarium.o tycho2-fits.o $(UTIL_OBJS) $(ANUTILS_LI
 usnob-scamp-catalog: usnob-scamp-catalog.o usnob-fits.o usnob.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
+create-scamp-catalog: create-scamp-catalog.o \
+		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
 DEP_OBJ := $(ALL_OBJ)
 DEP_PREREQS := $(QFITS_LIB)
 
