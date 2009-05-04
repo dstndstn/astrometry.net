@@ -283,10 +283,10 @@ void verify_get_uniformize_scale(int cutnside, double scale, int W, int H, int* 
 	double cutarcsec, cutpix;
 	cutarcsec = healpix_side_length_arcmin(cutnside) * 60.0;
 	cutpix = cutarcsec / scale;
-	logverb("cut nside: %i\n", cutnside);
-	logverb("cut scale: %g arcsec\n", cutarcsec);
-	logverb("match scale: %g arcsec/pix\n", scale);
-	logverb("cut scale: %g pixels\n", cutpix);
+	debug("cut nside: %i\n", cutnside);
+	debug("cut scale: %g arcsec\n", cutarcsec);
+	debug("match scale: %g arcsec/pix\n", scale);
+	debug("cut scale: %g pixels\n", cutpix);
 	if (cutnw)
 		*cutnw = MAX(1, (int)round(W / cutpix));
 	if (cutnh)
@@ -455,16 +455,6 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
     // find index stars and project them into pixel coordinates.
     verify_get_index_stars(fieldcenter, fieldr2, skdt, sip, &(mo->wcstan),
 						   fieldW, fieldH, NULL, &refxy, &starids, &NR);
-	if (!NR) {
-		// I don't know HOW this happens - at the very least, the four stars
-		// belonging to the quad that generated this hit should lie in the
-		// proposed field - but I've seen it happen!
-		mo->nfield = 0;
-		mo->nmatch = 0;
-		matchobj_compute_derived(mo);
-		mo->logodds = -HUGE_VAL;
-		return;
-    }
 
 	// remove reference stars that are part of the quad.
 	k = 0;
@@ -474,7 +464,7 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 			for (j=0; j<mo->dimquads; j++)
 				if (starids[i] == mo->star[j]) {
 					inquad = TRUE;
-					logverb("Skipping ref star index %i, starid %i: quad star %i.  k=%i\n",
+					debug("Skipping ref star index %i, starid %i: quad star %i.  k=%i\n",
 							i, starids[i], j, k);
 					break;
 				}
@@ -502,6 +492,14 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 		 */
 		NR = k;
 	}
+
+	if (!NR) {
+		mo->nfield = 0;
+		mo->nmatch = 0;
+		matchobj_compute_derived(mo);
+		mo->logodds = -HUGE_VAL;
+		return;
+    }
 
 	verify_apply_ror(refxy, starids, &NR, index_cutnside, mo,
 					 vf, pix2, distractors, fieldW, fieldH,
@@ -589,7 +587,7 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 
 	// -get uniformization scale.
 	verify_get_uniformize_scale(index_cutnside, mo->scale, fieldW, fieldH, &uni_nw, &uni_nh);
-	logverb("uniformizing into %i x %i blocks.\n", uni_nw, uni_nh);
+	debug("uniformizing into %i x %i blocks.\n", uni_nw, uni_nh);
 
 	// uniformize!
 	if (uni_nw > 1 || uni_nh > 1) {
@@ -602,9 +600,9 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 		verify_uniformize_field(vf->xy, perm, NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &binids);
 		bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
 
-		logverb("Quad radius = %g\n", sqrt(Q2));
+		debug("Quad radius = %g\n", sqrt(Q2));
 		ror2 = Q2 * MAX(1, (fieldW*fieldH*(1 - distractors) / (2. * M_PI * NR * pix2) - 1));
-		logverb("Radius of relevance is %.1f\n", sqrt(ror2));
+		debug("Radius of relevance is %.1f\n", sqrt(ror2));
 		goodbins = malloc(uni_nw * uni_nh * sizeof(bool));
 		Ngoodbins = 0;
 		for (i=0; i<(uni_nw * uni_nh); i++) {
@@ -622,7 +620,7 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 			k++;
 		}
 		NT = k;
-		logverb("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, NT);
+		debug("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, NT);
 
 		// Effective area: A * proportion of good bins.
 		effA = fieldW * fieldH * Ngoodbins / (double)(uni_nw * uni_nh);
@@ -641,10 +639,10 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 			k++;
 		}
 		NR = k;
-		logverb("After removing irrelevant ref stars: %i ref stars.\n", NR);
+		debug("After removing irrelevant ref stars: %i ref stars.\n", NR);
 
 		// New ROR is...
-		logverb("ROR changed from %g to %g\n", sqrt(ror2),
+		debug("ROR changed from %g to %g\n", sqrt(ror2),
 				sqrt(Q2 * (1 + effA*(1 - distractors) / (2. * M_PI * NR * pix2))));
 
 		free(goodbins);
@@ -744,14 +742,14 @@ double verify_star_lists(const double* refxys, int NR,
 
 		logd = logd_at(distractors, mu, NR, logbg);
 
-		logverb("\n");
-		logverb("test star %i: (%.1f,%.1f), sigma: %.1f\n", i, testxy[0], testxy[1], sqrt(sig2));
+		debug("\n");
+		debug("test star %i: (%.1f,%.1f), sigma: %.1f\n", i, testxy[0], testxy[1], sqrt(sig2));
 
 		// find nearest ref star (within 5 sigma)
         tmpi = kdtree_nearest_neighbour_within(rtree, testxy, sig2 * 25.0, &d2);
 		if (tmpi == -1) {
 			// no nearest neighbour within range.
-			logverb("  No nearest neighbour.\n");
+			debug("  No nearest neighbour.\n");
 			refi = -1;
 			logfg = -HUGE_VAL;
 		} else {
@@ -764,18 +762,18 @@ double verify_star_lists(const double* refxys, int NR,
 
 			// FIXME - uninformative?
 			if (loggmax < logbg)
-				logverb("  This star is uninformative: peak %.1f, bg %.1f.\n", loggmax, logbg);
+				debug("  This star is uninformative: peak %.1f, bg %.1f.\n", loggmax, logbg);
 
 			// value of the Gaussian
 			logfg = loggmax - d2 / (2.0 * sig2);
 			
-			logverb("  NN: ref star %i, dist %.2f, sigmas: %.3f, logfg: %.1f (%.1f above distractor, %.1f above bg)\n",
+			debug("  NN: ref star %i, dist %.2f, sigmas: %.3f, logfg: %.1f (%.1f above distractor, %.1f above bg)\n",
 					refi, sqrt(d2), sqrt(d2 / sig2), logfg, logfg - logd, logfg - logbg);
 		}
 
 		if (logfg < logd) {
 			logfg = logd;
-			logverb("  Distractor.\n");
+			debug("  Distractor.\n");
 			theta[i] = THETA_DISTRACTOR;
 
 		} else {
@@ -783,7 +781,7 @@ double verify_star_lists(const double* refxys, int NR,
 			if (rmatches[refi] != -1) {
 				double oldfg = rprobs[refi];
 
-				//logverb("Conflict: odds was %g, now %g.\n", oldfg, logfg);
+				//debug("Conflict: odds was %g, now %g.\n", oldfg, logfg);
 
 				// Conflict.  Compute probabilities of old vs new theta.
 				// keep the old one: the new star is a distractor
@@ -802,26 +800,26 @@ double verify_star_lists(const double* refxys, int NR,
 				// FIXME - could estimate/bound the distractor change and avoid computing it...
 
 				// ... and the intervening distractors become worse.
-				logverb("  oldj is %i, muj is %i.\n", oldj, muj);
-				logverb("  changing old point to distractor: %.1f change in logodds\n",
+				debug("  oldj is %i, muj is %i.\n", oldj, muj);
+				debug("  changing old point to distractor: %.1f change in logodds\n",
 						(logd_at(distractors, muj, NR, logbg) - oldfg));
 				for (; j<i; j++)
 					if (theta[j] < 0) {
 						switchfg += (logd_at(distractors, muj, NR, logbg) -
 									 logd_at(distractors, muj+1, NR, logbg));
-						logverb("  adjusting distractor %i: %g change in logodds\n",
+						debug("  adjusting distractor %i: %g change in logodds\n",
 								j, (logd_at(distractors, muj, NR, logbg) -
 									logd_at(distractors, muj+1, NR, logbg)));
 					} else
 						muj++;
-				logverb("  Conflict: keeping   old match, logfg would be %.1f\n", keepfg);
-				logverb("  Conflict: accepting new match, logfg would be %.1f\n", switchfg);
+				debug("  Conflict: keeping   old match, logfg would be %.1f\n", keepfg);
+				debug("  Conflict: accepting new match, logfg would be %.1f\n", switchfg);
 				
 				if (switchfg > keepfg) {
 					// upgrade: old match becomes a distractor.
-					logverb("  Conflict: upgrading.\n");
+					debug("  Conflict: upgrading.\n");
 					//logodds += (logd - oldfg);
-					//logverb("  Switching old match to distractor: logodds change %.1f, now %.1f\n",
+					//debug("  Switching old match to distractor: logodds change %.1f, now %.1f\n",
 					//(logd - oldfg), logodds);
 
 					theta[oldj] = THETA_CONFLICT;
@@ -835,7 +833,7 @@ double verify_star_lists(const double* refxys, int NR,
 
 				} else {
 					// old match was better: this match becomes a distractor.
-					logverb("  Conflict: not upgrading.\n"); //  logprob was %.1f, now %.1f.\n", oldfg, logfg);
+					debug("  Conflict: not upgrading.\n"); //  logprob was %.1f, now %.1f.\n", oldfg, logfg);
 					logfg = keepfg;
 					theta[i] = THETA_CONFLICT;
 				}
@@ -852,7 +850,7 @@ double verify_star_lists(const double* refxys, int NR,
 		}
 
         logodds += (logfg - logbg);
-        logverb("  Logodds: change %.1f, now %.1f\n", (logfg - logbg), logodds);
+        debug("  Logodds: change %.1f, now %.1f\n", (logfg - logbg), logodds);
 
 		if (all_logodds)
 			all_logodds[i] = logodds;
