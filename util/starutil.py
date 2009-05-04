@@ -40,6 +40,10 @@ def radectoxyz(ra, dec):
     cosd = cos(decrad)
     return (cosd * cos(rarad), cosd * sin(rarad), sin(decrad))
 
+# RA, Dec in degrees
+def xyztoradec(x,y,z):
+	return (degrees(xy2ra(x, y)), degrees(z2dec(z)))
+
 def rad2deg(r):    return 180.0*r/pi
 def deg2rad(d):    return d*pi/180.0
 def rad2arcmin(r): return 10800.0*r/pi
