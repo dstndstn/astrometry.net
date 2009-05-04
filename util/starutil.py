@@ -1,4 +1,4 @@
-from math import pi,cos,sin,radians,asin,atan2,sqrt,acos,floor
+from math import pi,cos,sin,radians,degrees,asin,atan2,sqrt,acos,floor
 
 # RA in degrees
 def ra2hms(ra):
@@ -44,6 +44,9 @@ def radectoxyz(ra, dec):
 def xyztoradec(x,y,z):
 	return (degrees(xy2ra(x, y)), degrees(z2dec(z)))
 
+def xyzarrtoradec(xyz):
+	return (degrees(xy2ra(xyz[0], xyz[1])), degrees(z2dec(xyz[2])))
+
 def rad2deg(r):    return 180.0*r/pi
 def deg2rad(d):    return d*pi/180.0
 def rad2arcmin(r): return 10800.0*r/pi
@@ -57,7 +60,7 @@ def z2dec(z):      return asin(z)     # result in radians
 def xy2ra(x,y):
     "Convert x,y to ra in radians"
     r = atan2(y,x)
-    r += 2*pi*(r>=0.00)
+    r += 2*pi*(r<0.)
     return r
 
 def rad2distsq(rad):
