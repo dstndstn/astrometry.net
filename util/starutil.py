@@ -1,5 +1,31 @@
 from math import pi,cos,sin,radians,degrees,asin,atan2,sqrt,acos,floor
 
+def hms2ra(h, m, s):
+	return 15. * (h + (m + s/60.)/60.)
+
+def tokenize_hms(s):
+	s = s.strip()
+	tokens = s.split()
+	tokens = reduce(list.__add__, [t.split(':') for t in tokens])
+	h = len(tokens) >= 1 and float(tokens[0]) or 0
+	m = len(tokens) >= 2 and float(tokens[1]) or 0
+	s = len(tokens) >= 3 and float(tokens[2]) or 0
+	return (h,m,s)
+
+def hmsstring2ra(st):
+	(h,m,s) = tokenize_hms(st)
+	return hms2ra(h, m, s)
+
+def dms2dec(sign, d, m, s):
+	return sign * (d + (m + s/60.)/60.)
+
+def dmsstring2dec(s):
+	sign = (s[0] == '-') and -1.0 or 1.0
+	if s[0] == '-' or s[0] == '+':
+		s = s[1:]
+	(d,m,s) = tokenize_hms(s)
+	return dms2dec(sign, d, m, s)
+
 # RA in degrees
 def ra2hms(ra):
 	h = ra * 24. / 360.

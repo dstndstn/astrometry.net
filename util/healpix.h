@@ -306,13 +306,14 @@ int healpix_get_neighbours(int hp, int* neighbour, int Nside);
 int healpix_get_neighboursl(int64_t pix, int64_t* neighbour, int Nside);
 
 /**
- Finds the healpixes containing and neighbouring the given xyz position which are
- within distance 'range' (in units of distance of the unit sphere).
- Places the results in 'healpixes', which must have at least 9 elements.
- Returns the number of 'healpixes' set.
+ Finds the healpixes containing and neighbouring the given xyz
+ position which are within distance 'range' (in units of distance of
+ the unit sphere).  Places the results in 'healpixes', which must have
+ at least 9 elements.  Returns the number of 'healpixes' set.
+
+ Returns -1 if "Nside" < 0.
  */
 int healpix_get_neighbours_within_range(double* xyz, double range, int* healpixes,
-										//int maxNhealpixes,
 										int Nside);
 
 #endif

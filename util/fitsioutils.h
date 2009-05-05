@@ -49,6 +49,7 @@ void fits_copy_non_table_headers(qfits_header* dest, const qfits_header* src);
 /*
  Retrieves the value of the header card "key" as a string,
  returning a newly-allocated string which should be free()'d.
+ It will be "prettied" via qfits_pretty_string_r.
  */
 char* fits_get_dupstring(qfits_header* hdr, const char* key);
 

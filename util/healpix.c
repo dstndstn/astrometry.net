@@ -25,6 +25,7 @@
 #include "mathutil.h"
 #include "starutil.h"
 #include "keywords.h"
+#include "log.h"
 
 // Internal type
 struct hp_s {
@@ -707,6 +708,8 @@ static hp_t xyztohp(double vx, double vy, double vz, int Nside,
 	// only used in asserts()
 	double EPS = 1e-8;
 
+	assert(Nside > 0);
+
 	/* Convert our point into cylindrical coordinates for middle ring */
 	phi = atan2(vy, vx);
 	if (phi < 0.0)
@@ -1076,6 +1079,12 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
 
     // HACK -- temp array to avoid cleverly avoiding duplicates
     int healpixes[100];
+
+	//assert(Nside > 0);
+	if (Nside <= 0) {
+		logerr("healpix_get_neighbours_within_range: Nside must be > 0.\n");
+		return -1;
+	}
 
 	hp = xyzarrtohealpixf(xyz, Nside, &fx, &fy);
 	healpixes[nhp] = hp;
