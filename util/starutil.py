@@ -79,6 +79,7 @@ def rad2arcmin(r): return 10800.0*r/pi
 def arcmin2rad(a): return a*pi/10800.0
 def rad2arcsec(r): return 648000.0*r/pi
 def arcsec2rad(a): return a*pi/648000.0
+def arcsec2deg(a): return rad2deg(arcsec2rad(a))
 def radec2x(r,d):  return cos(d)*cos(r) # r,d in radians
 def radec2y(r,d):  return cos(d)*sin(r) # r,d in radians
 def radec2z(r,d):  return sin(d)        # r,d in radians
@@ -88,6 +89,16 @@ def xy2ra(x,y):
     r = atan2(y,x)
     r += 2*pi*(r<0.)
     return r
+
+def degrees_between(ra1, dec1, ra2, dec2):
+	return arcsec2deg(arcsec_between(ra1, dec1, ra2, dec2))
+
+# RA,Decs in degrees.
+def arcsec_between(ra1, dec1, ra2, dec2):
+	xyz1 = radectoxyz(ra1, dec1)
+	xyz2 = radectoxyz(ra2, dec2)
+	d2 = sum([(a-b)**2 for (a,b) in zip(xyz1, xyz2)])
+	return distsq2arcsec(d2)
 
 def rad2distsq(rad):
     return 2. * (1. - cos(rad))
