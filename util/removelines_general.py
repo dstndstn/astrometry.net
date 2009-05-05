@@ -6,6 +6,51 @@ from numpy import *
 from pylab import *
 from scipy.ndimage.filters import *
 
+def normalized_hough(x, y, imgw, imgh, rlo, rhi, tlo, thi, nr, nt):
+	houghimg = zeros((nr, nt)).astype(int)
+
+	tstep = (thi - tlo) / float(nt)
+	rstep = (rhi - rlo) / float(nr)
+	tt = tlo + (arange(nt) + 0.5) * tstep
+	cost = cos(tt)
+	sint = sin(tt)
+
+	# For each point, accumulate into the Hough transform image...
+	for (xi,yi) in zip(x, y):
+		rr = xi * cost + yi * sint
+		ri = floor((rr - rlo) / rstep).astype(int)
+		I = (ri >= 0) * (ri < nr)
+		houghimg[ri[I], I] += 1
+
+	houghnorm = zeros((nr, nt)).astype(float)
+	rr = rlo + (arange(0, nr) + 0.5) * rstep
+	for ti in range(nt):
+		t = tlo + (ti + 0.5) * tstep
+		(x0,x1,y0,y1) = clip_to_image(rr, t, imgw, imgh)
+		dist = sqrt((x0 - x1)**2 + (y0 - y1)**2)
+		houghnorm[:, ti] = dist
+
+	# expected number of points... rstep is the width of the slice; len(x)/A is the source density.
+	houghnorm *= (rstep * len(x) / (imgw*imgh))
+
+	return (houghimg, houghnorm, rr, tt)
+
+
+def clip_to_image(r, t, imgw, imgh):
+	m = -cos(t)/sin(t)
+	b = r/sin(t)
+	#x0 = zeros(*r.shape)
+	#x1 = imgw * ones(*r.shape)
+	x0 = 0
+	x1 = imgw
+	y0 = clip(b + m*x0, 0, imgh)
+	y1 = clip(b + m*x1, 0, imgh)
+	x0 = clip((y0 - b) / m, 0, imgw)
+	x1 = clip((y1 - b) / m, 0, imgw)
+	y0 = clip(b + m*x0, 0, imgh)
+	y1 = clip(b + m*x1, 0, imgh)
+	return (x0, x1, y0, y1)
+
 def removelines_general(infile, outfile, **kwargs):
 	p = pyfits.open(infile)
 	xy = p[1].data
@@ -32,21 +77,8 @@ def removelines_general(infile, outfile, **kwargs):
 
 	Rmax = sqrt(imgw**2 + imgh**2)
 	Rmin = -Rmax
-	tstep = pi / float(nt)
-	rstep = (Rmax-Rmin) / float(nr)
 
-	ti = arange(nt)
-	thetas = (ti+0.5) * tstep
-	cost = cos(thetas)
-	sint = sin(thetas)
-
-	houghimg = zeros((nr, nt)).astype(float)
-
-	# For each point, accumulate into the Hough transform image...
-	for (xi,yi) in zip(x, y):
-		rr = xi * cost + yi * sint
-		ri = floor((rr - Rmin) / rstep).astype(int)
-		houghimg[ri, ti] += 1.
+	(houghimg, houghnorm, rr, tt) = normalized_hough(x, y, imgw, imgh, Rmin, Rmax, 0, pi, nr, nt)
 
 	clf()
 	imshow(houghimg, **imshowargs)
@@ -55,33 +87,14 @@ def removelines_general(infile, outfile, **kwargs):
 	colorbar()
 	savefig('hough.png')
 
-	# computing the exact image area covered by each hough bin is hard,
-	# but approximating it by the center is easier.
-	houghnorm2 = zeros((nr, nt)).astype(float)
-	r = Rmin + (arange(0, nr) + 0.5) * rstep
-	for ti in range(nt):
-		t = (ti+0.5) * tstep
-		m = -cos(t)/sin(t)
-		b = r/sin(t)
-		x0 = zeros(*r.shape)
-		x1 = imgw * ones(*r.shape)
-		y0 = clip(b + m*x0, 0, imgh)
-		y1 = clip(b + m*x1, 0, imgh)
-		x0 = clip((y0 - b) / m, 0, imgw)
-		x1 = clip((y1 - b) / m, 0, imgw)
-		y0 = clip(b + m*x0, 0, imgh)
-		y1 = clip(b + m*x1, 0, imgh)
-		dist = sqrt((x0 - x1)**2 + (y0 - y1)**2)
-		houghnorm2[:, ti] = dist;
-
-	# expected number of points... rstep is the width of the slice; len(x)/A is the source density.
-	houghnorm2 *= (rstep / (imgw*imgh) * len(x))
 	clf()
-	imshow(houghnorm2, **imshowargs)
+	imshow(houghnorm, **imshowargs)
+	xlabel('Theta')
+	ylabel('Radius')
 	colorbar()
 	savefig('norm.png')
 
-	hnorm = houghimg / maximum(houghnorm2, 1)
+	hnorm = houghimg / maximum(houghnorm, 1)
 	clf()
 	imshow(hnorm, **imshowargs)
 	xlabel('Theta')
@@ -89,30 +102,61 @@ def removelines_general(infile, outfile, **kwargs):
 	colorbar()
 	savefig('hnorm.png')
 
+
 	clf()
 	plot(x,y,'r.')
-	k = 10
+
+	k = 9
 	I = argsort(hnorm.ravel())[-k:]
-	ri = I / nt
-	ti = I % nt
-	print ri, ti
-	rr = Rmin + (ri + 0.5) * rstep
-	tt = (ti+0.5) * tstep
+	bestri = I / nt
+	bestti = I % nt
+	#print ri, ti
 
-	for (r,t) in zip(rr,tt):
-		m = -cos(t)/sin(t)
-		b = r/sin(t)
-		x0 = 0
-		x1 = imgw
-		y0 = clip(b + m*x0, 0, imgh)
-		y1 = clip(b + m*x1, 0, imgh)
-		x0 = clip((y0 - b) / m, 0, imgw)
-		x1 = clip((y1 - b) / m, 0, imgw)
-		y0 = clip(b + m*x0, 0, imgh)
-		y1 = clip(b + m*x1, 0, imgh)
+	for (ri,ti) in zip(bestri,bestti):
+		r = rr[ri]
+		t = tt[ti]
+		(x0,x1,y0,y1) = clip_to_image(r, t, imgw, imgh)
 		plot([x0,x1],[y0,y1], 'b-')
-
 	savefig('xy2.png')
+
+	nr2 = 25
+	nt2 = 25
+	boxsize = 2
+
+	clf()
+	bestrt = []
+	xys = []
+	for i,(ri,ti) in enumerate(zip(bestri,bestti)):
+		r = rr[ri]
+		t = tt[ti]
+		(subh, subhnorm, subrr, subtt) = normalized_hough(x, y, imgw, imgh,
+														  rr[max(ri-boxsize, 0)], rr[min(ri+boxsize,nr-1)],
+														  tt[max(ti-boxsize, 0)], tt[min(ti+boxsize,nt-1)],
+														  nr2, nt2)
+		subplot(3,3,i+1)
+		imshow(subh / maximum(subhnorm,1), **imshowargs)
+
+		I = argmax((subh / maximum(subhnorm,1)).ravel())
+		bestsubri = I / nt2
+		bestsubti = I % nt2
+		
+		X = clip_to_image(subrr[bestsubri], subtt[bestsubti], imgw, imgh)
+		xys.append(X)
+		bestrt.append((subrr[bestsubri], subtt[bestsubti]))
+	savefig('subhough.png')
+
+	bestrt = list(set(bestrt))
+	bestrt.sort()
+	print 'In finer Hough grid: bests are', bestrt
+
+	clf()
+	subplot(1,1,1)
+	plot(x,y,'r.')
+	for (x0,x1,y0,y1) in xys:
+		plot([x0,x1],[y0,y1],'b-')
+	savefig('xy3.png')
+
+
 
 
 def exact_hough_normalization():
