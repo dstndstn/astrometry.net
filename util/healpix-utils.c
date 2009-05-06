@@ -23,7 +23,7 @@
 
 il* healpix_approx_rangesearch(double* xyz, double radius, int Nside, il* hps) {
 	int hp;
-	double hprad = arcmin2dist(healpix_side_length_arcmin(Nside));
+	double hprad = arcmin2dist(healpix_side_length_arcmin(Nside)) * sqrt(2);
 	il* frontier = il_new(256);
 	il* bad = il_new(256);
 	if (!hps)
@@ -54,6 +54,9 @@ il* healpix_approx_rangesearch(double* xyz, double radius, int Nside, il* hps) {
 				il_append(bad, neighbours[i]);
 		}
 	}
+
+	il_free(bad);
+	il_free(frontier);
 
 	return hps;
 }

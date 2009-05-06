@@ -9,6 +9,7 @@
 #include "cairoutils.h"
 #include "healpix.h"
 #include "healpix-utils.h"
+#include "starutil.h"
 #include "log.h"
 
 int render_healpixes(cairo_t* cairo, render_args_t* args) {
@@ -25,6 +26,7 @@ int render_healpixes(cairo_t* cairo, render_args_t* args) {
 		nside = 1;
 	ra  = pixel2ra (args->W/2.0, args);
 	dec = pixel2dec(args->H/2.0, args);
+	logmsg("RA,Dec = (%g, %g)\n", ra, dec);
 	radecdeg2xyzarr(ra, dec, xyz);
 	r = 0;
 	// check distance to each corner of the image...

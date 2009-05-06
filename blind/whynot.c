@@ -226,6 +226,7 @@ int main(int argc, char** args) {
         int dimquads, dimcodes;
 		int ncorr, nindexcorr;
 		double pixr2;
+		il* indstarswithcorrs;
 
 		indx = pl_get(indexes, i);
 		qidx = pl_get(qidxes, i);
@@ -286,6 +287,7 @@ int main(int argc, char** args) {
 		// Search for correspondences with any stars.
 		ncorr = 0;
 		nindexcorr = 0;
+		indstarswithcorrs = il_new(16);
 		for (j=0; j<dl_size(starxylist)/2; j++) {
 			double xy[2];
 			kdtree_qres_t* res;
@@ -316,9 +318,42 @@ int main(int argc, char** args) {
 			ncorr += res->nres;
 			nindexcorr++;
 			kdtree_free_query(res);
+			il_append(indstarswithcorrs, j);
 		}
 		logmsg("Found %i index stars with corresponding field stars.\n", nindexcorr);
-		logmsg("Found %i total index stars correspondences\n", ncorr);
+		logmsg("Found %i total index star correspondences\n", ncorr);
+
+		{
+			// See what quads could be built from the index stars with correspondences.
+			double* corrxy;
+			int k, N = il_size(indstarswithcorrs);
+			corrxy = malloc(N * 2 * sizeof(double));
+			for (j=0; j<N; j++) {
+				int ind = il_get(indstarswithcorrs, j);
+				corrxy[2*j+0] = dl_get(starxylist, ind*2+0);
+				corrxy[2*j+1] = dl_get(starxylist, ind*2+1);
+			}
+			for (j=0; j<N; j++) {
+				for (k=0; k<j; k++) {
+					int m;
+					double q2 = distsq(corrxy + j*2, corrxy + k*2, 2);
+					double qc[2];
+					int nvalid;
+					qc[0] = (corrxy[j*2+0] + corrxy[k*2+0]) / 2.0;
+					qc[1] = (corrxy[j*2+1] + corrxy[k*2+1]) / 2.0;
+					nvalid = 0;
+					for (m=0; m<N; m++) {
+						if (m == j || m == k)
+							continue;
+						if (distsq(qc, corrxy + m*2, 2) < q2/4.0)
+							nvalid++;
+					}
+					logverb("Quad diameter: %g pix (%g arcmin): %i stars in the circle.\n",
+							sqrt(q2), sqrt(q2) * wcsscale / 60.0, nvalid);
+				}
+			}
+			free(corrxy);
+		}
 
 		uniqquadlist = il_new(16);
 		quadlist = il_new(16);
