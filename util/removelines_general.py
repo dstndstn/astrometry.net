@@ -9,9 +9,9 @@ from scipy.ndimage.filters import *
 def normalized_hough(x, y, imgw, imgh, rlo, rhi, tlo, thi, nr, nt):
 	houghimg = zeros((nr, nt)).astype(int)
 
-	tstep = (thi - tlo) / float(nt-1)
-	rstep = (rhi - rlo) / float(nr-1)
-	tt = tlo + arange(nt) * tstep
+	tstep = (thi - tlo) / float(nt)
+	rstep = (rhi - rlo) / float(nr)
+	tt = tlo + (arange(nt) + 0.5) * tstep
 	cost = cos(tt)
 	sint = sin(tt)
 
@@ -23,10 +23,10 @@ def normalized_hough(x, y, imgw, imgh, rlo, rhi, tlo, thi, nr, nt):
 		houghimg[ri[I], I] += 1
 
 	houghnorm = zeros((nr, nt)).astype(float)
-	rr = rlo + arange(nr) * rstep
+	rr = rlo + (arange(nr) + 0.5) * rstep
 	for ti in range(nt):
-		t = tlo + ti * tstep
-		print 'ti=', ti, 't=', t
+		t = tlo + (ti + 0.5) * tstep
+		#print 'ti=', ti, 't=', t
 		(x0,x1,y0,y1) = clip_to_image(rr, t, imgw, imgh)
 		dist = sqrt((x0 - x1)**2 + (y0 - y1)**2)
 		houghnorm[:, ti] = dist
@@ -34,15 +34,11 @@ def normalized_hough(x, y, imgw, imgh, rlo, rhi, tlo, thi, nr, nt):
 	# expected number of points... rstep is the width of the slice; len(x)/A is the source density.
 	houghnorm *= (rstep * len(x) / (imgw*imgh))
 
-	return (houghimg, houghnorm, rr, tt)
+	return (houghimg, houghnorm, rr, tt, rstep, tstep)
 
 
 def clip_to_image(r, t, imgw, imgh):
 	eps = 1e-9
-	#if abs(t) < eps:
-	#	t = eps
-	#if abs(t - pi) < eps:
-	#	t = pi - eps
 	if abs(t) < eps or abs(t-pi) < eps:
 		# near-vertical.
 		s = (abs(t) < eps) and 1 or -1
@@ -52,11 +48,11 @@ def clip_to_image(r, t, imgw, imgh):
 		return (x0, x1, y0, y1)
 	m = -cos(t)/sin(t)
 	b = r/sin(t)
-	print 'clip:'
-	print 'r=', r
-	print 't=', t
-	print 'm=', m
-	print 'b=', b
+	#print 'clip:'
+	#print 'r=', r
+	#print 't=', t
+	#print 'm=', m
+	#print 'b=', b
 	x0 = 0
 	x1 = imgw
 	y0 = clip(b + m*x0, 0, imgh)
@@ -65,7 +61,7 @@ def clip_to_image(r, t, imgw, imgh):
 	x1 = clip((y1 - b) / m, 0, imgw)
 	y0 = clip(b + m*x0, 0, imgh)
 	y1 = clip(b + m*x1, 0, imgh)
-	print 'got:', (x0, x1, y0, y1)
+	#print 'got:', (x0, x1, y0, y1)
 	return (x0, x1, y0, y1)
 
 def removelines_general(infile, outfile, **kwargs):
@@ -91,13 +87,11 @@ def removelines_general(infile, outfile, **kwargs):
 	#nr = 360
 	nt = 180
 	nr = 180
-	#nt = 5
-	#nr = 5
 
 	Rmax = sqrt(imgw**2 + imgh**2)
 	Rmin = -Rmax
 
-	(houghimg, houghnorm, rr, tt) = normalized_hough(x, y, imgw, imgh, Rmin, Rmax, 0, pi, nr, nt)
+	(houghimg, houghnorm, rr, tt, rstep, tstep) = normalized_hough(x, y, imgw, imgh, Rmin, Rmax, 0, pi, nr, nt)
 
 	clf()
 	imshow(houghimg, **imshowargs)
@@ -121,7 +115,6 @@ def removelines_general(infile, outfile, **kwargs):
 	colorbar()
 	savefig('hnorm.png')
 
-
 	clf()
 	plot(x,y,'r.')
 
@@ -129,7 +122,6 @@ def removelines_general(infile, outfile, **kwargs):
 	I = argsort(hnorm.ravel())[-k:]
 	bestri = I / nt
 	bestti = I % nt
-	#print ri, ti
 
 	for (ri,ti) in zip(bestri,bestti):
 		r = rr[ri]
@@ -138,36 +130,41 @@ def removelines_general(infile, outfile, **kwargs):
 		plot([x0,x1],[y0,y1], 'b-')
 	savefig('xy2.png')
 
-	#boxsize = 2
-	#nr2 = (boxsize * 2) * 5 + 1
-	#nt2 = nr2
-
-	boxsize = 1
-	nr2 = (boxsize * 2) * 2 + 1
+	boxsize = 2
+	nr2 = (boxsize * 2) * 10 + 2
 	nt2 = nr2
 
 	clf()
 	bestrt = []
 	xys = []
 	for i,(ri,ti) in enumerate(zip(bestri,bestti)):
+		#print 'ri=',ri, 'ti=', ti
 		r = rr[ri]
 		t = tt[ti]
-		print 'r=', r, 't=', t
-		print 'testing r range', rr[max(ri-boxsize, 0)], 'to', rr[min(ri+boxsize,nr-1)]
-		print 'testing t range', tt[max(ti-boxsize, 0)], 'to', tt[min(ti+boxsize,nt-1)]
+		#print 'r=', r, 't=', t
+		#print 'testing r range', rr[max(ri-boxsize, 0)], 'to', rr[min(ri+boxsize,nr-1)]
+		#print 'testing t range', tt[max(ti-boxsize, 0)], 'to', tt[min(ti+boxsize,nt-1)]
 		
-		(subh, subhnorm, subrr, subtt) = normalized_hough(x, y, imgw, imgh,
-														  rr[max(ri-boxsize, 0)], rr[min(ri+boxsize,nr-1)],
-														  tt[max(ti-boxsize, 0)], tt[min(ti+boxsize,nt-1)],
-														  nr2, nt2)
+		(subh, subhnorm, subrr, subtt, subrstep,
+		 subtstep) = normalized_hough(x, y, imgw, imgh,
+									  rr[max(ri-boxsize, 0)], rr[min(ri+boxsize,nr-1)],
+									  tt[max(ti-boxsize, 0)], tt[min(ti+boxsize,nt-1)],
+									  nr2, nt2)
 
-		print 'tried r values', subrr
-		print 'tried t values', subtt
+		#print 'tried r values', subrr
+		#print 'tried t values', subtt
+		#print 'total r range', rr[min(ri+boxsize,nr-1)] - rr[max(ri-boxsize, 0)]
+		#print 'tried r range', subrr.max() - subrr.min()
+		#print 'total t range', tt[min(ti+boxsize,nt-1)] - tt[max(ti-boxsize, 0)]
+		#print 'tried t range', subtt.max() - subtt.min()
+
+		subnormed = subh / maximum(subhnorm,1)
 
 		subplot(3,3,i+1)
-		imshow(subh / maximum(subhnorm,1), vmin=0, **imshowargs)
+		imshow(subnormed, vmin=0, **imshowargs)
 
-		I = argmax((subh / maximum(subhnorm,1)).ravel())
+		I = argmax(subnormed).ravel()
+		print 'max:', subnormed.ravel()[I]
 		bestsubri = I / nt2
 		bestsubti = I % nt2
 		
@@ -176,9 +173,12 @@ def removelines_general(infile, outfile, **kwargs):
 		bestrt.append((subrr[bestsubri], subtt[bestsubti]))
 	savefig('subhough.png')
 
+	bestrt = [(1e-3 * int(r*1e3), 1e-5 * int(t*1e5)) for (r,t) in bestrt]
 	bestrt = list(set(bestrt))
 	bestrt.sort()
 	print 'In finer Hough grid: bests are', bestrt
+
+	print 'Found %i peaks' % len(bestrt)
 
 	clf()
 	subplot(1,1,1)
@@ -187,7 +187,20 @@ def removelines_general(infile, outfile, **kwargs):
 		plot([x0,x1],[y0,y1],'b-')
 	savefig('xy3.png')
 
+	clf()
+	plot(x,y,'r.')
+	tt = array([t for (r,t) in bestrt])
+	rr = array([r for (r,t) in bestrt])
+	cost = cos(tt)
+	sint = sin(tt)
+	keep = []
+	for i,(xi,yi) in enumerate(zip(x, y)):
+		thisr = xi * cost + yi * sint
+		keep.append(not any(abs(thisr - rr) < rstep/2.))
+	keep = array(keep)
 
+	plot(x[keep == False], y[keep == False], 'b.')
+	savefig('xy4.png')
 
 
 def exact_hough_normalization():
