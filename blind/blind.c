@@ -827,9 +827,10 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
         }
 		fieldhdr = xylist_get_header(bp->xyls);
 		if (fieldhdr) {
-			char* idstr = qfits_pretty_string(qfits_header_getstr(fieldhdr, bp->fieldid_key));
+			char* idstr = fits_get_dupstring(fieldhdr, bp->fieldid_key);
 			if (idstr)
 				strncpy(template.fieldname, idstr, sizeof(template.fieldname) - 1);
+			free(idstr);
 		}
 
 		// Has the field already been solved?

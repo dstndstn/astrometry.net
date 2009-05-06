@@ -85,6 +85,7 @@ struct augment_xylist_s {
     bool no_fits2fits;
 	bool no_removelines;
 	bool no_fix_sdss;
+	bool no_bg_subtraction;
 
     char* xcol;
     char* ycol;

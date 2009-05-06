@@ -134,7 +134,7 @@ def removelines_general(infile, outfile, **kwargs):
 														  tt[max(ti-boxsize, 0)], tt[min(ti+boxsize,nt-1)],
 														  nr2, nt2)
 		subplot(3,3,i+1)
-		imshow(subh / maximum(subhnorm,1), **imshowargs)
+		imshow(subh / maximum(subhnorm,1), vmin=0, **imshowargs)
 
 		I = argmax((subh / maximum(subhnorm,1)).ravel())
 		bestsubri = I / nt2

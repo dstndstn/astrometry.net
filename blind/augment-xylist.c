@@ -147,6 +147,8 @@ static an_option_t options[] = {
      "FITS extension to read image from."},
     {'z', "downsample",     required_argument, "int",
      "downsample the image by factor <int> before running source extraction"},
+	{']', "no-background-subtraction", no_argument, NULL,
+	 "don't try to estimate a smoothly-varying sky background during source extraction."},
 	{'9', "no-remove-lines", no_argument, NULL,
 	 "don't remove horizontal and vertical overdensities of sources."},
 	{'0', "no-fix-sdss",    no_argument, NULL,
@@ -253,6 +255,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         break;
 	case '[':
 		axy->odds_to_solve = atof(optarg);
+		break;
+	case ']':
+		axy->no_bg_subtraction = TRUE;
 		break;
     case '8':
         if (streq(optarg, "pos")) {
@@ -634,7 +639,7 @@ int augment_xylist(augment_xylist_t* axy,
         }
         // MAGIC 3: downsample by a factor of 2, up to 3 times.
         if (image2xy_files(fitsimgfn, xylsfn, TRUE, axy->downsample, 3, axy->extension,
-						   NULL, NULL, NULL, 0, 0, 0, FALSE)) {
+						   NULL, NULL, NULL, 0, 0, 0, axy->no_bg_subtraction)) {
             ERROR("Source extraction failed");
             exit(-1);
         }
