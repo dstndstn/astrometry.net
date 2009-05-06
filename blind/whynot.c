@@ -191,6 +191,9 @@ int main(int argc, char** args) {
         // index stars that are inside the image.
 		il* starlist;
 
+		// index stars that have correspondences.
+		il* corrstarlist;
+
         // quads that are at least partly-contained in the image.
 		il* quadlist;
 
@@ -210,6 +213,7 @@ int main(int argc, char** args) {
 
         // quads that are fully in the image and built from stars with correspondences.
 		il* corrfullquads;
+
 
 
 		dl* starxylist;
@@ -255,6 +259,7 @@ int main(int argc, char** args) {
 		logmsg("Found %i index stars in range.\n", res->nres);
 
 		starlist = il_new(16);
+		corrstarlist = il_new(16);
 		starxylist = dl_new(16);
 
 		// Find which ones in range are inside the image rectangle.
@@ -309,7 +314,7 @@ int main(int argc, char** args) {
 			 */
 
 			nn = kdtree_nearest_neighbour(ftree, xy, &nnd2);
-			logverb("Index star at (%.1f, %.1f): nearest field star is %g away.\n",
+			logverb("  Index star at (%.1f, %.1f): nearest field star is %g away.\n",
 					xy[0], xy[1], sqrt(nnd2));
 
 			res = kdtree_rangesearch_options(ftree, xy, pixr2, KD_OPTIONS_SMALL_RADIUS);
@@ -319,11 +324,13 @@ int main(int argc, char** args) {
 			nindexcorr++;
 			kdtree_free_query(res);
 			il_append(indstarswithcorrs, j);
+
+			il_append(corrstarlist, il_get(starlist, j));
 		}
 		logmsg("Found %i index stars with corresponding field stars.\n", nindexcorr);
 		logmsg("Found %i total index star correspondences\n", ncorr);
 
-		{
+		if (log_get_level() >= LOG_VERB) {
 			// See what quads could be built from the index stars with correspondences.
 			double* corrxy;
 			int k, N = il_size(indstarswithcorrs);
@@ -348,7 +355,7 @@ int main(int argc, char** args) {
 						if (distsq(qc, corrxy + m*2, 2) < q2/4.0)
 							nvalid++;
 					}
-					logverb("Quad diameter: %g pix (%g arcmin): %i stars in the circle.\n",
+					logverb("  Quad diameter: %g pix (%g arcmin): %i stars in the circle.\n",
 							sqrt(q2), sqrt(q2) * wcsscale / 60.0, nvalid);
 				}
 			}
@@ -383,7 +390,8 @@ int main(int argc, char** args) {
 			int quad = il_get(uniqquadlist, j);
 			int ind = il_index_of(quadlist, quad);
 			if (log_get_level() >= LOG_VERB) {
-				int k, nin=0;
+				int k, nin=0, ncorr=0;
+				unsigned int stars[dimquads];
 				for (k=0; k<dimquads; k++) {
 					if (ind+k >= il_size(quadlist))
 						break;
@@ -391,7 +399,11 @@ int main(int argc, char** args) {
 						break;
 					nin++;
 				}
-				logverb("Quad %i has %i stars in the field.\n", quad, nin);
+				quadfile_get_stars(indx->quads, quad, stars);
+				for (k=0; k<dimquads; k++)
+					if (il_contains(corrstarlist, stars[k]))
+						ncorr++;
+				logverb("Quad %i has %i stars in the field (%i with correspondences).\n", quad, nin, ncorr);
 			}
 			if (ind + (dimquads-1) >= il_size(quadlist))
 				continue;
@@ -623,6 +635,7 @@ int main(int argc, char** args) {
 		il_free(uniqquadlist);
 		il_free(quadlist);
 		il_free(starlist);
+		il_free(corrstarlist);
 	}
 
 	if (xylist_close(xyls)) {
