@@ -43,9 +43,10 @@
 #include "starkd.h"
 #include "pnpoly.h"
 #include "boilerplate.h"
+#include "log.h"
 #include "errors.h"
 
-static const char* OPTIONS = "hi:c:q:bn:u:l:d:x:y:r:L:RI:F:HE";
+static const char* OPTIONS = "hi:c:q:bn:u:l:d:x:y:r:L:RI:F:HEv";
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -69,6 +70,7 @@ static void print_help(char* progname) {
 		   "     [-F <failed-rdls-file>] write the centers of the healpixes in which quads can't be made.\n"
 		   "     [-H]: print histograms.\n"
 		   "     [-E]: scan through the catalog, checking which healpixes are occupied.\n"
+		   "     [-v]: verbose\n"
 		   "\nReads skdt, writes {code, quad}.\n\n"
 	       , progname);
 }
@@ -142,7 +144,7 @@ static void compute_code(quad* q, double* code, int dimquads) {
 
 	for (i=0; i<dimquads; i++) {
 		if (startree_get(starkd, q->star[i], starxyz + 3*i)) {
-			fprintf(stderr, "Failed to get stars belonging to a quad.\n");
+			ERROR("Failed to get stars belonging to a quad.\n");
 			exit(-1);
 		}
 	}
@@ -393,7 +395,7 @@ static int create_quad(double* stars, int* starinds, int Nstars,
 		cq_inbox =  malloc(Nstars * sizeof(int));
 		cq_pquads = malloc(Nstars * Nstars * sizeof(pquad));
 		if (!cq_inbox || !cq_pquads) {
-			fprintf(stderr, "hpquads: failed to malloc cq_inbox or cq_pquads.  Nstars=%i.\n", Nstars);
+			ERROR("hpquads: failed to malloc cq_inbox or cq_pquads.  Nstars=%i.\n", Nstars);
 			exit(-1);
 		}
 	}
@@ -448,7 +450,7 @@ static int create_quad(double* stars, int* starinds, int Nstars,
 
 			pq->inbox = malloc(Nstars * sizeof(int));
 			if (!pq->inbox) {
-				fprintf(stderr, "hpquads: failed to malloc pq->inbox.\n");
+				ERROR("hpquads: failed to malloc pq->inbox.\n");
 				exit(-1);
 			}
 			pq->ninbox = ninbox;
@@ -650,9 +652,9 @@ static void add_headers(qfits_header* hdr, char** argv, int argc,
 
 int main(int argc, char** argv) {
 	int argchar;
-	char *quadfname = NULL;
-	char *codefname = NULL;
-	char *skdtfname = NULL;
+	char *quadfn = NULL;
+	char *codefn = NULL;
+	char *skdtfn = NULL;
 	int64_t HEALPIXES;
 	int Nside = 501;
 	int i;
@@ -695,9 +697,13 @@ int main(int argc, char** argv) {
 
 	int dimquads = 4;
 	int dimcodes;
+	int loglvl = LOG_MSG;
 	
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'v':
+			loglvl++;
+			break;
 		case 'E':
 			scanoccupied = TRUE;
 			break;
@@ -735,13 +741,13 @@ int main(int argc, char** argv) {
 			print_help(argv[0]);
 			exit(0);
 		case 'i':
-            skdtfname = optarg;
+            skdtfn = optarg;
 			break;
 		case 'c':
-            codefname = optarg;
+            codefn = optarg;
             break;
         case 'q':
-            quadfname = optarg;
+            quadfn = optarg;
             break;
 		case 'u':
 			rads = arcmin2rad(atof(optarg));
@@ -760,8 +766,10 @@ int main(int argc, char** argv) {
 			return -1;
 		}
 
-	if (!skdtfname || !codefname || !quadfname) {
-		fprintf(stderr, "Specify in & out filenames, bonehead!\n");
+	log_init(loglvl);
+
+	if (!skdtfn || !codefn || !quadfn) {
+		printf("Specify in & out filenames, bonehead!\n");
 		print_help(argv[0]);
 		exit( -1);
 	}
@@ -776,12 +784,11 @@ int main(int argc, char** argv) {
         exit(-1);
     }
 
-	if (!id) {
-		fprintf(stderr, "Warning: you should set the unique-id for this index (-i).\n");
-	}
+	if (!id)
+		logmsg("Warning: you should set the unique-id for this index (-i).\n");
 
 	if (dimquads > DQMAX) {
-		fprintf(stderr, "Quad dimension %i exceeds compiled-in max %i.\n", dimquads, DQMAX);
+		ERROR("Quad dimension %i exceeds compiled-in max %i.\n", dimquads, DQMAX);
 		exit(-1);
 	}
 	dimcodes = dimquad2dimcode(dimquads);
@@ -789,11 +796,11 @@ int main(int argc, char** argv) {
 	if (failedrdlsfn) {
 		failedrdls = rdlist_open_for_writing(failedrdlsfn);
 		if (!failedrdls) {
-			fprintf(stderr, "Failed to open file %s to write failed-quads RDLS.\n", failedrdlsfn);
+			ERROR("Failed to open file %s to write failed-quads RDLS.\n", failedrdlsfn);
 			exit(-1);
 		}
 		if (rdlist_write_primary_header(failedrdls)) {
-			fprintf(stderr, "Failed to write header of failed RDLS file.\n");
+			ERROR("Failed to write header of failed RDLS file.\n");
 		}
 	}
 
@@ -807,24 +814,24 @@ int main(int argc, char** argv) {
 
 	tic();
 
-	printf("Reading star kdtree %s ...\n", skdtfname);
-	starkd = startree_open(skdtfname);
+	printf("Reading star kdtree %s ...\n", skdtfn);
+	starkd = startree_open(skdtfn);
 	if (!starkd) {
-		fprintf(stderr, "Failed to open star kdtree %s\n", skdtfname);
+		ERROR("Failed to open star kdtree %s\n", skdtfn);
 		exit( -1);
 	}
 	printf("Star tree contains %i objects.\n", startree_N(starkd));
 
-	printf("Will write to quad file %s and code file %s\n", quadfname, codefname);
+	printf("Will write to quad file %s and code file %s\n", quadfn, codefn);
 
-    quads = quadfile_open_for_writing(quadfname);
+    quads = quadfile_open_for_writing(quadfn);
 	if (!quads) {
-		fprintf(stderr, "Couldn't open file %s to write quads.\n", quadfname);
+		ERROR("Couldn't open file %s to write quads.\n", quadfn);
 		exit(-1);
 	}
-    codes = codefile_open_for_writing(codefname);
+    codes = codefile_open_for_writing(codefn);
 	if (!codes) {
-		fprintf(stderr, "Couldn't open file %s to write codes.\n", quadfname);
+		ERROR("Couldn't open file %s to write codes.\n", quadfn);
 		exit(-1);
 	}
 
@@ -839,7 +846,7 @@ int main(int argc, char** argv) {
 	// get the "HEALPIX" header from the skdt and put it in the code and quad headers.
 	hp = qfits_header_getint(startree_header(starkd), "HEALPIX", -1);
 	if (hp == -1) {
-		fprintf(stderr, "Warning: skdt does not contain \"HEALPIX\" header.  Code and quad files will not contain this header either.\n");
+		logmsg("Warning: skdt does not contain \"HEALPIX\" header.  Code and quad files will not contain this header either.\n");
 	}
 	quads->healpix = hp;
 	codes->healpix = hp;
@@ -849,7 +856,7 @@ int main(int argc, char** argv) {
 	codes->hpnside = hpnside;
 
     if (hpnside && Nside % hpnside) {
-        fprintf(stderr, "Error: Nside (-n) must be a multiple of the star kdtree healpixelisation: %i\n", hpnside);
+        logerr("Error: Nside (-n) must be a multiple of the star kdtree healpixelisation: %i\n", hpnside);
         exit(-1);
     }
 
@@ -860,11 +867,11 @@ int main(int argc, char** argv) {
 	add_headers(chdr, argv, argc, startree_header(starkd), circle, xpasses*ypasses);
 
     if (quadfile_write_header(quads)) {
-        fprintf(stderr, "Couldn't write headers to quads file %s\n", quadfname);
+        ERROR("Couldn't write headers to quads file %s\n", quadfn);
         exit(-1);
     }
     if (codefile_write_header(codes)) {
-        fprintf(stderr, "Couldn't write headers to code file %s\n", codefname);
+        ERROR("Couldn't write headers to code file %s\n", codefn);
         exit(-1);
     }
 
@@ -879,7 +886,7 @@ int main(int argc, char** argv) {
 	bigquadlist = bt_new(sizeof(quad), 256);
 
 	if (Nreuse > 255) {
-		fprintf(stderr, "Error, reuse (-r) must be less than 256.\n");
+		ERROR("Error, reuse (-r) must be less than 256.\n");
 		exit(-1);
 	}
 	nuses = malloc(startree_N(starkd) * sizeof(unsigned char));
@@ -1133,7 +1140,7 @@ int main(int argc, char** argv) {
                      }
                      */
 					if (rdlist_write_header(failedrdls)) {
-						fprintf(stderr, "Failed to write a field in failed RDLS file.\n");
+						ERROR("Failed to write a field in failed RDLS file.\n");
 						exit(-1);
 					}
 
@@ -1146,13 +1153,13 @@ int main(int argc, char** argv) {
                      radec[0] = dl_get(list, j);
                      radec[1] = dl_get(list, j+1);
                      if (rdlist_write_entries(failedrdls, radec, 1)) {
-                     fprintf(stderr, "Failed to write failed-RDLS entries.\n");
+                     ERROR("Failed to write failed-RDLS entries.\n");
                      exit(-1);
                      }
                      }
                      */
 					if (rdlist_fix_header(failedrdls)) {
-						fprintf(stderr, "Failed to fix a field in failed RDLS file.\n");
+						ERROR("Failed to fix a field in failed RDLS file.\n");
 						exit(-1);
 					}
                     rdlist_next_field(failedrdls);
@@ -1167,7 +1174,7 @@ int main(int argc, char** argv) {
 				lastgrass = -1;
 				if (failedrdls) {
 					if (rdlist_write_header(failedrdls)) {
-						fprintf(stderr, "Failed to start a new field in failed RDLS file.\n");
+						ERROR("Failed to start a new field in failed RDLS file.\n");
 						exit(-1);
 					}
 				}
@@ -1209,7 +1216,7 @@ int main(int argc, char** argv) {
                             rd.ra  = &ra;
                             rd.dec = &dec;
 							if (rdlist_write_field(failedrdls, &rd)) {
-								fprintf(stderr, "Failed to write failed-RDLS entries.\n");
+								ERROR("Failed to write failed-RDLS entries.\n");
 								exit(-1);
 							}
 						}
@@ -1224,7 +1231,7 @@ int main(int argc, char** argv) {
 				}
 				if (failedrdls) {
 					if (rdlist_fix_header(failedrdls)) {
-						fprintf(stderr, "Failed to fix a field in failed RDLS file.\n");
+						ERROR("Failed to fix a field in failed RDLS file.\n");
 						exit(-1);
 					}
 				}
@@ -1352,19 +1359,19 @@ int main(int argc, char** argv) {
 	// fix output file headers.
 	if (quadfile_fix_header(quads) ||
 		quadfile_close(quads)) {
-		fprintf(stderr, "Couldn't write quad output file: %s\n", strerror(errno));
+		ERROR("Couldn't write quad output file: %s\n", strerror(errno));
 		exit( -1);
 	}
 	if (codefile_fix_header(codes) ||
 		codefile_close(codes)) {
-		fprintf(stderr, "Couldn't write code output file: %s\n", strerror(errno));
+		ERROR("Couldn't write code output file: %s\n", strerror(errno));
 		exit( -1);
 	}
 
 	if (failedrdls) {
 		if (rdlist_fix_primary_header(failedrdls) ||
 			rdlist_close(failedrdls)) {
-			fprintf(stderr, "Failed to fix header of failed RDLS file.\n");
+			ERROR("Failed to fix header of failed RDLS file.\n");
 		}
 	}
 
