@@ -107,16 +107,6 @@ static unsigned char* nuses;
 
 static bool hists = FALSE;
 
-static void* mymalloc(unsigned int n, int linenum) {
-	void* rtn = malloc(n);
-	if (!rtn) {
-		fprintf(stderr, "mymalloc failed: line number %i: %u bytes.\n", linenum, n);
-		assert(0);
-		exit(-1);
-	}
-	return rtn;
-}
-
 static int compare_ints(const void* v1, const void* v2) {
 	int i1 = *(int*)v1;
 	int i2 = *(int*)v2;
@@ -602,9 +592,9 @@ static bool find_stars_and_vectors(int hp, int Nside, double radius2,
 		free(perm);
 		free(inds);
 		free(stars);
-		perm  = mymalloc(N * sizeof(int), __LINE__);
-		inds  = mymalloc(N * sizeof(int), __LINE__);
-		stars = mymalloc(N * 3 * sizeof(double), __LINE__);
+		perm  = malloc(N * sizeof(int));
+		inds  = malloc(N * sizeof(int));
+		stars = malloc(N * 3 * sizeof(double));
 		Nhighwater = N;
 	}
 	// find permutation that sorts by index...
@@ -901,7 +891,7 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "Error, reuse (-r) must be less than 256.\n");
 		exit(-1);
 	}
-	nuses = mymalloc(startree_N(starkd) * sizeof(unsigned char), __LINE__);
+	nuses = malloc(startree_N(starkd) * sizeof(unsigned char));
 	for (i=0; i<startree_N(starkd); i++)
 		nuses[i] = 0;
 
