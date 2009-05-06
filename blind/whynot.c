@@ -50,7 +50,7 @@
 #include "codefile.h"
 #include "solver.h"
 
-const char* OPTIONS = "hx:w:i:v"; //q:";
+const char* OPTIONS = "hx:w:i:vj:"; //q:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -59,7 +59,8 @@ void print_help(char* progname) {
 		   "   -x <xyls input file>\n"
 		   "   -i <index-name>\n"
 		   //"   [-q <qidx-name>]\n"
-           "   -v: verbose\n"
+           "   [-v]: verbose\n"
+		   "   [-j <pixel-jitter>]: set pixel jitter (default 1.0)\n"
 		   "\n", progname);
 }
 
@@ -81,10 +82,9 @@ int main(int argc, char** args) {
 	int W, H;
 	double xyzcenter[3];
 	double fieldrad2;
-
-	double pixr2 = 1.0;
-
+	double pixeljitter = 1.0;
     int loglvl = LOG_MSG;
+	double wcsscale;
 
 	fits_use_error_system();
 
@@ -92,6 +92,9 @@ int main(int argc, char** args) {
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'j':
+			pixeljitter = atof(optarg);
+			break;
         case 'h':
 			print_help(args[0]);
 			exit(0);
@@ -132,6 +135,8 @@ int main(int argc, char** args) {
 		// FIXME - use bounds of xylist?
 		exit(-1);
 	}
+	wcsscale = sip_pixel_scale(&sip);
+	logmsg("WCS scale: %g arcsec/pixel\n", wcsscale);
 
 	// read XYLS.
 	xyls = xylist_open(xylsfn);
@@ -219,9 +224,25 @@ int main(int argc, char** args) {
 		kdtree_t* ftree;
 		int Nleaf = 5;
         int dimquads, dimcodes;
+		int ncorr, nindexcorr;
+		double pixr2;
 
 		indx = pl_get(indexes, i);
 		qidx = pl_get(qidxes, i);
+
+		logmsg("Index jitter: %g arcsec (%g pixels)\n", indx->meta.index_jitter, indx->meta.index_jitter / wcsscale);
+		pixr2 = square(indx->meta.index_jitter / wcsscale) + square(pixeljitter);
+		logmsg("Total jitter: %g pixels\n", sqrt(pixr2));
+
+		// Read field
+        xy = xylist_read_field(xyls, NULL);
+        if (!xy) {
+			logmsg("Failed to read xyls entries.\n");
+			exit(-1);
+        }
+        Nfield = starxy_n(xy);
+        fieldxy = starxy_to_xy_array(xy, NULL);
+		logmsg("Found %i field objects\n", Nfield);
 
 		// Find index stars.
 		res = kdtree_rangesearch_options(indx->starkd->tree, xyzcenter, fieldrad2*1.05,
@@ -249,6 +270,56 @@ int main(int argc, char** args) {
 		}
 		logmsg("Found %i index stars inside the field.\n", il_size(starlist));
 
+		// Now find correspondences between index objects and field objects.
+		// Build a tree out of the field objects (in pixel space)
+        // We make a copy of fieldxy because the copy gets permuted in this process.
+        {
+            double* fxycopy = malloc(Nfield * 2 * sizeof(double));
+            memcpy(fxycopy, fieldxy, Nfield * 2 * sizeof(double));
+            ftree = kdtree_build(NULL, fxycopy, Nfield, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
+        }
+		if (!ftree) {
+			logmsg("Failed to build kdtree.\n");
+			exit(-1);
+		}
+
+		// Search for correspondences with any stars.
+		ncorr = 0;
+		nindexcorr = 0;
+		for (j=0; j<dl_size(starxylist)/2; j++) {
+			double xy[2];
+			kdtree_qres_t* res;
+			int nn;
+			double nnd2;
+			xy[0] = dl_get(starxylist, j*2+0);
+			xy[1] = dl_get(starxylist, j*2+1);
+
+			// kdtree check.
+			/*
+			 int k;
+			for (k=0; k<Nfield; k++) {
+				double d2 = distsq(fieldxy + 2*k, xy, 2);
+				if (d2 < pixr2) {
+					logverb("  index star at (%.1f, %.1f) and field star at (%.1f, %.1f)\n", xy[0], xy[1],
+							fieldxy[2*k+0], fieldxy[2*k+1]);
+				}
+			}
+			 */
+
+			nn = kdtree_nearest_neighbour(ftree, xy, &nnd2);
+			logverb("Index star at (%.1f, %.1f): nearest field star is %g away.\n",
+					xy[0], xy[1], sqrt(nnd2));
+
+			res = kdtree_rangesearch_options(ftree, xy, pixr2, KD_OPTIONS_SMALL_RADIUS);
+			if (!res || !res->nres)
+				continue;
+			ncorr += res->nres;
+			nindexcorr++;
+			kdtree_free_query(res);
+		}
+		logmsg("Found %i index stars with corresponding field stars.\n", nindexcorr);
+		logmsg("Found %i total index stars correspondences\n", ncorr);
+
 		uniqquadlist = il_new(16);
 		quadlist = il_new(16);
 
@@ -268,21 +339,32 @@ int main(int argc, char** args) {
 		}
 		logmsg("Found %i quads partially contained in the field.\n", il_size(uniqquadlist));
 
+        dimquads = quadfile_dimquads(indx->quads);
+        dimcodes = dimquad2dimcode(dimquads);
+
 		// Find quads that are fully contained in the image.
 		fullquadlist = il_new(16);
 		for (j=0; j<il_size(uniqquadlist); j++) {
 			int quad = il_get(uniqquadlist, j);
 			int ind = il_index_of(quadlist, quad);
-			if (ind + 3 >= il_size(quadlist))
+			if (log_get_level() >= LOG_VERB) {
+				int k, nin=0;
+				for (k=0; k<dimquads; k++) {
+					if (ind+k >= il_size(quadlist))
+						break;
+					if (il_get(quadlist, ind+k) != quad)
+						break;
+					nin++;
+				}
+				logverb("Quad %i has %i stars in the field.\n", quad, nin);
+			}
+			if (ind + (dimquads-1) >= il_size(quadlist))
 				continue;
-			if (il_get(quadlist, ind+3) != quad)
+			if (il_get(quadlist, ind+(dimquads-1)) != quad)
 				continue;
 			il_append(fullquadlist, quad);
 		}
 		logmsg("Found %i quads fully contained in the field.\n", il_size(fullquadlist));
-
-        dimquads = quadfile_dimquads(indx->quads);
-        dimcodes = dimquad2dimcode(dimquads);
 
 		// Find the stars that are in quads.
 		starsinquadslist = il_new(16);
@@ -294,7 +376,7 @@ int main(int argc, char** args) {
             for (k=0; k<dimquads; k++)
                 il_insert_unique_ascending(starsinquadslist, stars[k]);
 		}
-		logmsg("Found %i stars involved in quads (partially contained).\n", il_size(starsinquadslist));
+		logmsg("Found %i stars involved in quads (with at least one star contained in the image).\n", il_size(starsinquadslist));
 
 		// Find the stars that are in quads that are completely contained.
 		starsinquadsfull = il_new(16);
@@ -306,30 +388,8 @@ int main(int argc, char** args) {
             for (k=0; k<dimquads; k++)
                 il_insert_unique_ascending(starsinquadsfull, stars[k]);
 		}
-		logmsg("Found %i stars involved in quads (fully contained).\n", il_size(starsinquadsfull));
+		logmsg("Found %i stars involved in quads (fully contained in the image).\n", il_size(starsinquadsfull));
 
-		// Now find correspondences between index objects and field objects.
-        xy = xylist_read_field(xyls, NULL);
-        if (!xy) {
-			logmsg("Failed to read xyls entries.\n");
-			exit(-1);
-        }
-        Nfield = starxy_n(xy);
-        fieldxy = starxy_to_flat_array(xy, NULL);
-        //starxy_free(xy);
-
-		// Build a tree out of the field objects (in pixel space)
-        // NOTE that fieldxy is permuted in this process!
-        {
-            double* fxycopy = malloc(Nfield * 2 * sizeof(double));
-            memcpy(fxycopy, fieldxy, Nfield * 2 * sizeof(double));
-            //ftree = kdtree_build(NULL, fieldxy, Nfield, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
-            ftree = kdtree_build(NULL, fxycopy, Nfield, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
-        }
-		if (!ftree) {
-			logmsg("Failed to build kdtree.\n");
-			exit(-1);
-		}
 		// For each index object involved in quads, search for a correspondence.
 		corrstars = il_new(16);
         corrfield = il_new(16);
@@ -368,7 +428,7 @@ int main(int argc, char** args) {
               logmsg("field  %g,%g\n", fx, fy);
               }*/
 		}
-		logmsg("Found %i correspondences for stars involved in quads (partially contained).\n",
+		logmsg("Found %i correspondences for stars involved in quads (with at least one star in the field).\n",
 				il_size(corrstars));
 
 		// Find quads built only from stars with correspondences.
@@ -392,9 +452,9 @@ int main(int argc, char** args) {
 		for (j=0; j<il_size(corruniqquads); j++) {
 			int quad = il_get(corruniqquads, j);
 			int ind = il_index_of(corrquads, quad);
-			if (ind + 3 >= il_size(corrquads))
+			if (ind + (dimquads-1) >= il_size(corrquads))
 				continue;
-			if (il_get(corrquads, ind+3) != quad)
+			if (il_get(corrquads, ind+(dimquads-1)) != quad)
 				continue;
 			il_append(corrfullquads, quad);
 		}

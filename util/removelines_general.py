@@ -138,7 +138,7 @@ def removelines_general(infile, outfile, nt=180, nr=180, thresh1=2.,
 							  rr[max(ri-boxsize, 0)], rr[min(ri+boxsize, nr-1)],
 							  tt[max(ti-boxsize, 0)], tt[min(ti+boxsize, nt-1)],
 							  nr2, nt2)
-		print '  median normalization:', median(subnorm)
+		#print '  median normalization:', median(subnorm)
 		subhnorm = subh / maximum(subnorm,1)
 		I = find((subhnorm).ravel() >= thresh2)
 		for i in I:
@@ -147,7 +147,7 @@ def removelines_general(infile, outfile, nt=180, nr=180, thresh1=2.,
 			r = subrr[bestsubri]
 			t = subtt[bestsubti]
 			bestrt.append((r,t))
-			print '  (r=%.1f, t=%.1f): factor %.1f above expected' % (r, t*180/pi, subhnorm.ravel()[i])
+			#print '  (r=%.1f, t=%.1f): factor %.1f above expected' % (r, t*180/pi, subhnorm.ravel()[i])
 			thisr = x * cos(t) + y * sin(t)
 			keep *= (abs(thisr - r) > subrstep/2.)
 

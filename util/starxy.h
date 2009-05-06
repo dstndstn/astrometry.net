@@ -59,6 +59,9 @@ double* starxy_copy_x(const starxy_t* xy);
 double* starxy_copy_y(const starxy_t* xy);
 double* starxy_copy_xy(const starxy_t* xy);
 
+// Returns a flat array of [x0, y0, x1, y1, ...]
+double* starxy_to_xy_array(starxy_t* xy, double* arr);
+
 double* starxy_to_flat_array(starxy_t* xy, double* arr);
 
 void starxy_alloc_data(starxy_t* f, int N, bool flux, bool back);

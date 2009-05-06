@@ -182,6 +182,17 @@ double* starxy_to_flat_array(starxy_t* xy, double* arr) {
     return arr;
 }
 
+double* starxy_to_xy_array(starxy_t* xy, double* arr) {
+    int i;
+    if (!arr)
+        arr = malloc(2 * starxy_n(xy) * sizeof(double));
+    for (i=0; i<starxy_n(xy); i++) {
+        arr[2*i]   = xy->x[i];
+        arr[2*i+1] = xy->y[i];
+    }
+    return arr;
+}
+
 void starxy_from_dl(starxy_t* xy, dl* l, bool flux, bool back) {
     int i;
     int nr = 2;
