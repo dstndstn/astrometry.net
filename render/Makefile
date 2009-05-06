@@ -84,7 +84,8 @@ TILERENDER_OBJS := tilerender.o mercrender.o merctree.o merc.o \
 		render_images.o \
 		render_cairo.o \
 		render_skdt.o \
-		render_quads.o
+		render_quads.o \
+		render_healpixes.o
 
 MISC_OBJS := merctree.o pnmutils.o
 

@@ -51,6 +51,7 @@
 #include "render_cairo.h"
 #include "render_skdt.h"
 #include "render_quads.h"
+#include "render_healpixes.h"
 
 // Ugh, zlib before 1.2.0 didn't include compressBound()...
 // And ZLIB_VERNUM wasn't defined until 1.2.0.2
@@ -140,10 +141,13 @@ static void print_help(char* prog) {
 		   "     cairo lineto <ra> <dec>\n"
 		   "     cairo stroke\n"
 		   "\n"
+		   "  -l healpix -- Renders healpix boundaries.\n"
+		   "     [-f <nside>]: default 1\n"
+		   "\n"
 		   "\n", prog);
 }
 
-const char* OPTIONS = "ab:c:de:g:h:i:k:l:npqr:svw:x:y:zA:B:C:D:F:I:JL:MN:RS:T:V:W:X:Y:PK:";
+const char* OPTIONS = "ab:c:de:f:g:h:i:k:l:npqr:svw:x:y:zA:B:C:D:F:I:JK:L:MN:PRS:T:V:W:X:Y:";
 
 struct renderer {
 	char* name;
@@ -157,6 +161,7 @@ typedef struct renderer renderer_t;
 static renderer_t renderers[] = {
 	{ "tycho",     render_tycho,        NULL },
 	{ "grid",      NULL,                render_gridlines },
+	{ "healpix",   NULL,                render_healpixes },
 	{ "usnob",     render_usnob,        NULL },
 	{ "rdls",      render_rdls,         NULL },
 	{ "constellation", render_constellation, NULL },
@@ -251,6 +256,9 @@ int main(int argc, char *argv[]) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'f':
+			args.nside = atoi(optarg);
+			break;
 		case 'T':
 			args.tycho_mkdt = optarg;
 			break;

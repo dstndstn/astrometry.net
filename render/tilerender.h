@@ -106,6 +106,9 @@ struct render_args {
 	bool zoomdown;
 	char* ubstyle;
 
+	// Args for render_healpixes
+	int nside;
+
 	char* constfn;
 
     // caching
