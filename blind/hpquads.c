@@ -45,10 +45,9 @@
 #include "boilerplate.h"
 #include "errors.h"
 
-#define OPTIONS "hi:u:l:n:I:r:x:y:F:RHL:bc:q:d:E"
+static const char* OPTIONS = "hi:c:q:bn:u:l:d:x:y:r:L:RI:F:HE";
 
-static void print_help(char* progname)
-{
+static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
 	       "      -i <input-filename>    (star kdtree (skdt.fits) input file)\n"
