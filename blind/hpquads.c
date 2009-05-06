@@ -263,6 +263,14 @@ check_inbox(pquad* pq, int* inds, int ninds, double* stars, bool circle) {
 	return destind;
 }
 
+/**
+ inbox, ninbox: the stars we have to work with.
+ starinds: the star identifiers (indexed by the contents of 'inbox')
+ - ie, starinds[inbox[0]] is an externally-recognized star identifier.
+ q: where we record the star identifiers
+ starnum: which star we're adding: eg, A=0, B=1, C=2, ... dimquads-1.
+ beginning: the first index in "inbox" to assign to star 'starnum'.
+ */
 static int add_interior_stars(int ninbox, int* inbox, quad* q, int* starinds,
 							  int starnum, int dimquads, int beginning) {
 	int i;

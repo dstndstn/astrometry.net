@@ -1344,11 +1344,13 @@ kdtree_qres_t* MANGLE(kdtree_rangesearch_options)
 
 				} else {
 					// query is on "right" side.
-					assert(POINT_TE(kd, dim, split) <= query[dim]);
+					//assert(POINT_TE(kd, dim, split) <= query[dim]);
+					assert(POINT_TE(kd, dim, split) <= query[dim] + kd->invscale/2.0);
 					stackpos++;
 					nodestack[stackpos] = KD_CHILD_RIGHT(nodeid);
 					if (tquery[dim] - split <= tlinf) {
-						assert(query[dim] - POINT_TE(kd, dim, split) >= 0.0);
+						//assert(query[dim] - POINT_TE(kd, dim, split) >= 0.0);
+						assert((query[dim] - POINT_TE(kd, dim, split)) >= -kd->invscale/2.0);
                         // This may fail due to rounding?
 						//assert(query[dim] - POINT_TE(kd, dim, split) <= maxdist);
 						stackpos++;
