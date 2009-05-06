@@ -79,10 +79,6 @@ static void print_help(char* progname) {
 extern char *optarg;
 extern int optind, opterr, optopt;
 
-static quadfile* quads;
-static codefile* codes;
-static startree_t* starkd;
-
 // bounds of quad scale, in distance between AB on the sphere.
 static double quad_dist2_upper;
 static double quad_dist2_lower;
@@ -431,7 +427,7 @@ static bool find_stars_and_vectors(int hp, int Nside, double radius2,
 								   double* xpts, double* ypts,
 								   bool* p_failed_nostars,
 								   int R,
-								   int dimquads) {
+								   int dimquads, startree_t* starkd) {
 	static int Nhighwater = 0;
 	double origin[3];
 	double dx[3];
@@ -572,6 +568,10 @@ static void add_headers(qfits_header* hdr, char** argv, int argc,
 
 int main(int argc, char** argv) {
 	int argchar;
+
+	quadfile* quads;
+	codefile* codes;
+
 	char *quadfn = NULL;
 	char *codefn = NULL;
 	char *skdtfn = NULL;
@@ -594,6 +594,7 @@ int main(int argc, char** argv) {
 	double quadscale;
 	bool noreuse_pass = FALSE;
 	il* noreuse_hps = NULL;
+	startree_t* starkd;
 
 	dl* nostars_radec = NULL;
 	dl* noreuse_radec = NULL;
@@ -945,7 +946,7 @@ int main(int argc, char** argv) {
 											&N, centre, vx, vy,
 											boxx, boxy,
 											&failed_nostars,
-											Nreuse, dimquads);
+											Nreuse, dimquads, starkd);
 
 				if (failedrdls) {
 					xyz2radec(centre[0], centre[1], centre[2], radec, radec+1);
@@ -1112,7 +1113,7 @@ int main(int argc, char** argv) {
 													NULL, NULL, NULL, NULL, NULL,
 													&N, centre, vx, vy,
 													boxx, boxy,
-													NULL, INT_MAX, dimquads)) {
+													NULL, INT_MAX, dimquads, starkd)) {
 							nfailed1++;
 							goto failedhp2;
 						}
@@ -1204,7 +1205,7 @@ int main(int argc, char** argv) {
 													NULL, NULL, NULL, NULL, NULL,
 													&N, centre, vx, vy,
 													boxx, boxy,
-													NULL, mx, dimquads)) {
+													NULL, mx, dimquads, starkd)) {
 							il_append(newlist, hp);
 							continue;
 						}
