@@ -70,8 +70,8 @@ all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS)
 # Things that it depends on but which aren't linked in
 ANUTILS_DEPS :=
 
-ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix.o permutedsort.o \
-	ioutils.o sip.o sip-utils.o md5.o constellations.o \
+ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
+	permutedsort.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
 	gnu-specific.o an-endian.o errors.o an-opts.o svn.o tic.o log.o \
 	gslutils.o
 ifndef NO_QFITS
