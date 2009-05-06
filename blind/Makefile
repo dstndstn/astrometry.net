@@ -376,7 +376,7 @@ build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
 startree: startree.o catalog.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-hpquads: hpquads.o codefile.o pnpoly.o histogram.o \
+hpquads: hpquads.o quad-utils.o codefile.o pnpoly.o histogram.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 codetree: codetree.o codefile.o \

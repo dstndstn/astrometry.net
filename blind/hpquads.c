@@ -45,6 +45,7 @@
 #include "boilerplate.h"
 #include "log.h"
 #include "errors.h"
+#include "quad-utils.h"
 
 static const char* OPTIONS = "hi:c:q:bn:u:l:d:x:y:r:L:RI:F:HEv";
 
@@ -103,6 +104,20 @@ static int nabok = 0;
 static unsigned char* nuses;
 
 static bool hists = FALSE;
+static bool firstpass;
+
+struct potential_quad {
+	double midAB[3];
+	double Ax, Ay;
+	double costheta, sintheta;
+	int iA, iB;
+	int staridA, staridB;
+	int* inbox;
+	int ninbox;
+	bool scale_ok;
+};
+typedef struct potential_quad pquad;
+
 
 static int compare_quads(const void* v1, const void* v2) {
 	const quad* q1 = v1;
@@ -120,8 +135,6 @@ static int compare_quads(const void* v1, const void* v2) {
 	return 0;
 }
 
-static bool firstpass;
-
 static bool add_quad(quad* q) {
 	if (!firstpass) {
 		bool dup = bt_contains(bigquadlist, q, compare_quads);
@@ -134,100 +147,11 @@ static bool add_quad(quad* q) {
 	return TRUE;
 }
 
-static void compute_code(quad* q, double* code, int dimquads) {
-    int i;
-	double starxyz[3 * DQMAX];
-
-	for (i=0; i<dimquads; i++) {
-		if (startree_get(starkd, q->star[i], starxyz + 3*i)) {
-			ERROR("Failed to get stars belonging to a quad.\n");
-			exit(-1);
-		}
-	}
-
-    codefile_compute_star_code(starxyz, code, dimquads);
-}
-
 static Inline void drop_quad(quad* q, int dimquads) {
 	int i;
 	for (i=0; i<dimquads; i++)
 		nuses[q->star[i]]++;
 }
-
-static void write_quad(codefile* codes, quadfile* quads,
-					   quad* q, int dimquads, int dimcodes) {
-	double code[DCMAX];
-	double sum;
-	int i;
-
-	compute_code(q, code, dimquads);
-
-	// here we add the invariant that (cx + dx + ...) / (dimquads-2) <= 1/2
-	sum = 0.0;
-	for (i=0; i<(dimquads-2); i++)
-		sum += code[2*i];
-	sum /= (dimquads-2);
-	if (sum > 0.5) {
-		// swap the labels of A,B.
-		int tmp = q->star[0];
-		q->star[0] = q->star[1];
-		q->star[1] = tmp;
-
-		// rotate the code 180 degrees.
-		for (i=0; i<dimcodes; i++)
-			code[i] = 1.0 - code[i];
-	}
-
-	// here we add the invariant that cx <= dx <= ....
-	for (i=0; i<(dimquads-2); i++) {
-		int j;
-		int jsmallest;
-		double smallest;
-		double x1;
-		double dtmp;
-		int tmp;
-
-		x1 = code[2*i];
-		jsmallest = -1;
-		smallest = x1;
-		for (j=i+1; j<(dimquads-2); j++) {
-			double x2 = code[2*j];
-			if (x2 < smallest) {
-				smallest = x2;
-				jsmallest = j;
-			}
-		}
-		if (jsmallest == -1)
-			continue;
-		j = jsmallest;
-		// swap the labels.
-		tmp = q->star[i+2];
-		q->star[i+2] = q->star[j+2];
-		q->star[j+2] = tmp;
-		// swap the code values.
-		dtmp = code[2*i];
-		code[2*i] = code[2*j];
-		code[2*j] = dtmp;
-		dtmp = code[2*i+1];
-		code[2*i+1] = code[2*j+1];
-		code[2*j+1] = dtmp;
-	}
-
-	codefile_write_code(codes, code);
-	quadfile_write_quad(quads, q->star);
-}
-
-struct potential_quad {
-	double midAB[3];
-	double Ax, Ay;
-	double costheta, sintheta;
-	int iA, iB;
-	int staridA, staridB;
-	int* inbox;
-	int ninbox;
-	bool scale_ok;
-};
-typedef struct potential_quad pquad;
 
 // is the AB distance right?
 // is the midpoint of AB inside the healpix?
@@ -792,6 +716,7 @@ int main(int argc, char** argv) {
 		}
 		if (rdlist_write_primary_header(failedrdls)) {
 			ERROR("Failed to write header of failed RDLS file.\n");
+			exit(-1);
 		}
 	}
 
@@ -1336,12 +1261,12 @@ int main(int argc, char** argv) {
 	nquads = bt_size(bigquadlist);
 	for (i=0; i<nquads; i++) {
 		quad* q = bt_access(bigquadlist, i);
-		write_quad(codes, quads, q, dimquads, dimcodes);
+		quad_write(codes, quads, q->star, starkd, dimquads, dimcodes);
 	}
 	// add the quads that were made during the final round.
 	for (i=0; i<Nquads; i++) {
 		quad* q = quadlist + i;
-		write_quad(codes, quads, q, dimquads, dimcodes);
+		quad_write(codes, quads, q->star, starkd, dimquads, dimcodes);
 	}
 	free(quadlist);
 
