@@ -9,9 +9,9 @@ from scipy.ndimage.filters import *
 def normalized_hough(x, y, imgw, imgh, rlo, rhi, tlo, thi, nr, nt):
 	houghimg = zeros((nr, nt)).astype(int)
 
-	tstep = (thi - tlo) / float(nt)
-	rstep = (rhi - rlo) / float(nr)
-	tt = tlo + (arange(nt) + 0.5) * tstep
+	tstep = (thi - tlo) / float(nt-1)
+	rstep = (rhi - rlo) / float(nr-1)
+	tt = tlo + arange(nt) * tstep
 	cost = cos(tt)
 	sint = sin(tt)
 
@@ -23,9 +23,10 @@ def normalized_hough(x, y, imgw, imgh, rlo, rhi, tlo, thi, nr, nt):
 		houghimg[ri[I], I] += 1
 
 	houghnorm = zeros((nr, nt)).astype(float)
-	rr = rlo + (arange(0, nr) + 0.5) * rstep
+	rr = rlo + arange(nr) * rstep
 	for ti in range(nt):
-		t = tlo + (ti + 0.5) * tstep
+		t = tlo + ti * tstep
+		print 'ti=', ti, 't=', t
 		(x0,x1,y0,y1) = clip_to_image(rr, t, imgw, imgh)
 		dist = sqrt((x0 - x1)**2 + (y0 - y1)**2)
 		houghnorm[:, ti] = dist
@@ -37,10 +38,25 @@ def normalized_hough(x, y, imgw, imgh, rlo, rhi, tlo, thi, nr, nt):
 
 
 def clip_to_image(r, t, imgw, imgh):
+	eps = 1e-9
+	#if abs(t) < eps:
+	#	t = eps
+	#if abs(t - pi) < eps:
+	#	t = pi - eps
+	if abs(t) < eps or abs(t-pi) < eps:
+		# near-vertical.
+		s = (abs(t) < eps) and 1 or -1
+		y0 = 0
+		y1 = ((r*s >= 0) * (r*s < imgw)) * imgh
+		x0 = x1 = clip(r, 0, imgw)
+		return (x0, x1, y0, y1)
 	m = -cos(t)/sin(t)
 	b = r/sin(t)
-	#x0 = zeros(*r.shape)
-	#x1 = imgw * ones(*r.shape)
+	print 'clip:'
+	print 'r=', r
+	print 't=', t
+	print 'm=', m
+	print 'b=', b
 	x0 = 0
 	x1 = imgw
 	y0 = clip(b + m*x0, 0, imgh)
@@ -49,6 +65,7 @@ def clip_to_image(r, t, imgw, imgh):
 	x1 = clip((y1 - b) / m, 0, imgw)
 	y0 = clip(b + m*x0, 0, imgh)
 	y1 = clip(b + m*x1, 0, imgh)
+	print 'got:', (x0, x1, y0, y1)
 	return (x0, x1, y0, y1)
 
 def removelines_general(infile, outfile, **kwargs):
@@ -70,10 +87,12 @@ def removelines_general(infile, outfile, **kwargs):
 	plot(x,y,'r.')
 	savefig('xy.png')
 
-	nt = 360
-	nr = 360
-	#nt = 180
-	#nr = 180
+	#nt = 360
+	#nr = 360
+	nt = 180
+	nr = 180
+	#nt = 5
+	#nr = 5
 
 	Rmax = sqrt(imgw**2 + imgh**2)
 	Rmin = -Rmax
@@ -119,9 +138,13 @@ def removelines_general(infile, outfile, **kwargs):
 		plot([x0,x1],[y0,y1], 'b-')
 	savefig('xy2.png')
 
-	nr2 = 25
-	nt2 = 25
-	boxsize = 2
+	#boxsize = 2
+	#nr2 = (boxsize * 2) * 5 + 1
+	#nt2 = nr2
+
+	boxsize = 1
+	nr2 = (boxsize * 2) * 2 + 1
+	nt2 = nr2
 
 	clf()
 	bestrt = []
@@ -129,10 +152,18 @@ def removelines_general(infile, outfile, **kwargs):
 	for i,(ri,ti) in enumerate(zip(bestri,bestti)):
 		r = rr[ri]
 		t = tt[ti]
+		print 'r=', r, 't=', t
+		print 'testing r range', rr[max(ri-boxsize, 0)], 'to', rr[min(ri+boxsize,nr-1)]
+		print 'testing t range', tt[max(ti-boxsize, 0)], 'to', tt[min(ti+boxsize,nt-1)]
+		
 		(subh, subhnorm, subrr, subtt) = normalized_hough(x, y, imgw, imgh,
 														  rr[max(ri-boxsize, 0)], rr[min(ri+boxsize,nr-1)],
 														  tt[max(ti-boxsize, 0)], tt[min(ti+boxsize,nt-1)],
 														  nr2, nt2)
+
+		print 'tried r values', subrr
+		print 'tried t values', subtt
+
 		subplot(3,3,i+1)
 		imshow(subh / maximum(subhnorm,1), vmin=0, **imshowargs)
 
