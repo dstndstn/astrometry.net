@@ -106,14 +106,6 @@ static unsigned char* nuses;
 
 static bool hists = FALSE;
 
-static int compare_ints(const void* v1, const void* v2) {
-	int i1 = *(int*)v1;
-	int i2 = *(int*)v2;
-	if (i1 < i2) return -1;
-	if (i1 > i2) return 1;
-	return 0;
-}
-
 static int compare_quads(const void* v1, const void* v2) {
 	const quad* q1 = v1;
 	const quad* q2 = v2;
@@ -598,7 +590,7 @@ static bool find_stars_and_vectors(int hp, int Nside, double radius2,
 	}
 	// find permutation that sorts by index...
 	permutation_init(perm, N);
-	permuted_sort(res->inds, sizeof(int), compare_ints, perm, N);
+	permuted_sort(res->inds, sizeof(int), compare_ints_asc, perm, N);
 	// apply the permutation...
 	permutation_apply(perm, N, res->inds, inds, sizeof(int));
 	permutation_apply(perm, N, res->results.d, stars, 3 * sizeof(double));
