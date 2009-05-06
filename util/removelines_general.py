@@ -115,14 +115,22 @@ def removelines_general(infile, outfile, **kwargs):
 	colorbar()
 	savefig('hnorm.png')
 
-	clf()
-	plot(x,y,'r.')
+	thresh1 = 2.
+	thresh2 = 10.
 
-	k = 9
-	I = argsort(hnorm.ravel())[-k:]
+	I = find(hnorm.ravel() >= thresh1)
+	print '%i peaks are above the coarse threshold' % len(I)
 	bestri = I / nt
 	bestti = I % nt
 
+	a=axis()
+	for (ri,ti) in zip(bestri,bestti):
+		plot([ti-2, ti-2, ti+2, ti+2, ti-2], [ri-2, ri+2, ri+2, ri-2, ri-2], 'r-')
+	axis(a)
+	savefig('zooms.png')
+
+	clf()
+	plot(x,y,'r.')
 	for (ri,ti) in zip(bestri,bestti):
 		r = rr[ri]
 		t = tt[ti]
@@ -131,26 +139,24 @@ def removelines_general(infile, outfile, **kwargs):
 	savefig('xy2.png')
 
 	boxsize = 2
-	nr2 = (boxsize * 2) * 10 + 2
+	nr2 = (boxsize * 2) * 5 + 2
 	nt2 = nr2
 
-	clf()
+	#clf()
 	bestrt = []
 	xys = []
-	for i,(ri,ti) in enumerate(zip(bestri,bestti)):
+	for (ri,ti) in zip(bestri,bestti):
 		#print 'ri=',ri, 'ti=', ti
 		r = rr[ri]
 		t = tt[ti]
 		#print 'r=', r, 't=', t
 		#print 'testing r range', rr[max(ri-boxsize, 0)], 'to', rr[min(ri+boxsize,nr-1)]
 		#print 'testing t range', tt[max(ti-boxsize, 0)], 'to', tt[min(ti+boxsize,nt-1)]
-		
 		(subh, subhnorm, subrr, subtt, subrstep,
 		 subtstep) = normalized_hough(x, y, imgw, imgh,
 									  rr[max(ri-boxsize, 0)], rr[min(ri+boxsize,nr-1)],
 									  tt[max(ti-boxsize, 0)], tt[min(ti+boxsize,nt-1)],
 									  nr2, nt2)
-
 		#print 'tried r values', subrr
 		#print 'tried t values', subtt
 		#print 'total r range', rr[min(ri+boxsize,nr-1)] - rr[max(ri-boxsize, 0)]
@@ -160,19 +166,19 @@ def removelines_general(infile, outfile, **kwargs):
 
 		subnormed = subh / maximum(subhnorm,1)
 
-		subplot(3,3,i+1)
-		imshow(subnormed, vmin=0, **imshowargs)
+		#subplot(3,3,i+1)
+		#imshow(subnormed, vmin=0, **imshowargs)
 
-		I = argmax(subnormed).ravel()
-		print 'max:', subnormed.ravel()[I]
-		bestsubri = I / nt2
-		bestsubti = I % nt2
-		
-		X = clip_to_image(subrr[bestsubri], subtt[bestsubti], imgw, imgh)
-		xys.append(X)
-		bestrt.append((subrr[bestsubri], subtt[bestsubti]))
-	savefig('subhough.png')
+		I = find((subnormed).ravel() >= thresh2)
+		for i in I:
+			bestsubri = i / nt2
+			bestsubti = i % nt2
+			X = clip_to_image(subrr[bestsubri], subtt[bestsubti], imgw, imgh)
+			xys.append(X)
+			bestrt.append((subrr[bestsubri], subtt[bestsubti]))
+	#savefig('subhough.png')
 
+	# truncate to remove duplicates...
 	bestrt = [(1e-3 * int(r*1e3), 1e-5 * int(t*1e5)) for (r,t) in bestrt]
 	bestrt = list(set(bestrt))
 	bestrt.sort()
