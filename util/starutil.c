@@ -266,6 +266,7 @@ void make_rand_star(double* star, double ramin, double ramax,
 	star[2] = radec2z(raval, decval);
 }
 
+// arc in radians
 Const inline double arc2distsq(double arcInRadians) {
 	// inverse of distsq2arc; cosine law.
 	return 2.0 * (1.0 - cos(arcInRadians));
@@ -293,7 +294,11 @@ Const inline double deg2dist(double arcInDegrees) {
 }
 
 Const inline double arcmin2dist(double arcmin) {
-    return deg2dist(arcmin2deg(arcmin));
+    return rad2dist(arcmin2rad(arcmin));
+}
+
+Const inline double arcmin2distsq(double arcmin) {
+    return arc2distsq(arcmin2rad(arcmin));
 }
 
 Const inline double dist2deg(double dist) {

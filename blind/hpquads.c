@@ -82,10 +82,6 @@ static quadfile* quads;
 static codefile* codes;
 static startree_t* starkd;
 
-// bounds of quad scale (in radians^2)
-static double quad_scale_upper2;
-static double quad_scale_lower2;
-
 // bounds of quad scale, in distance between AB on the sphere.
 static double quad_dist2_upper;
 static double quad_dist2_lower;
@@ -670,7 +666,6 @@ int main(int argc, char** argv) {
 	int lastgrass = 0;
 	ll* hptotry;
 	int nquads;
-	double rads;
 	double hprad;
 	double quadscale;
 	bool noreuse_pass = FALSE;
@@ -750,14 +745,10 @@ int main(int argc, char** argv) {
             quadfn = optarg;
             break;
 		case 'u':
-			rads = arcmin2rad(atof(optarg));
-			quad_scale_upper2 = square(rads);
-			quad_dist2_upper = square(tan(rads));
+			quad_dist2_upper = arcmin2distsq(atof(optarg));
 			break;
 		case 'l':
-			rads = arcmin2rad(atof(optarg));
-			quad_scale_lower2 = square(rads);
-			quad_dist2_lower = square(tan(rads));
+			quad_dist2_lower = arcmin2distsq(atof(optarg));
 			break;
 		case 'H':
 			hists = TRUE;
@@ -876,12 +867,12 @@ int main(int argc, char** argv) {
     }
 
     codes->numstars = startree_N(starkd);
-    codes->index_scale_upper = sqrt(quad_scale_upper2);
-    codes->index_scale_lower = sqrt(quad_scale_lower2);
+    codes->index_scale_upper = distsq2rad(quad_dist2_upper);
+    codes->index_scale_lower = distsq2rad(quad_dist2_lower);
 
-    quads->numstars = startree_N(starkd);
-    quads->index_scale_upper = sqrt(quad_scale_upper2);
-    quads->index_scale_lower = sqrt(quad_scale_lower2);
+	quads->numstars = codes->numstars;
+    quads->index_scale_upper = codes->index_scale_upper;
+    quads->index_scale_lower = codes->index_scale_lower;
 
 	bigquadlist = bt_new(sizeof(quad), 256);
 

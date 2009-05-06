@@ -150,6 +150,8 @@ Const inline double deg2dist(double arcInDegrees);
 
 Const inline double arcmin2dist(double arcmin);
 
+Const inline double arcmin2distsq(double arcmin);
+
 // Distance on the unit sphere to degrees.
 Const inline double dist2deg(double dist);
 
