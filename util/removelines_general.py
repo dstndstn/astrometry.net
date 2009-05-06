@@ -53,8 +53,8 @@ def clip_to_image(r, t, imgw, imgh):
 	y1 = clip(b + m*x1, 0, imgh)
 	return (x0, x1, y0, y1)
 
-def removelines_general(infile, outfile, nt=180, nr=180, thresh1 = 2.,
-						thresh2 = 10., plots=False):
+def removelines_general(infile, outfile, nt=180, nr=180, thresh1=2.,
+						thresh2=5., plots=False):
 	p = pyfits.open(infile)
 	xy = p[1].data
 	hdr = p[1].header
@@ -123,45 +123,42 @@ def removelines_general(infile, outfile, nt=180, nr=180, thresh1 = 2.,
 			plot([x0,x1],[y0,y1], 'b-')
 		savefig('xy2.png')
 
-	boxsize = 2
-	nr2 = (boxsize * 2) * 5 + 2
+	# how big a search area around each peak?
+	boxsize = 1
+	# how much more finely to grid.
+	finer = 3
+	nr2 = (boxsize * 2)*finer + 1
 	nt2 = nr2
 
 	bestrt = []
-	xys = []
+	keep = array([True] * len(x))
 	for (ri,ti) in zip(bestri,bestti):
-		r = rr[ri]
-		t = tt[ti]
 		(subh, subnorm, subrr, subtt, subrstep, subtstep
 		 ) = normalized_hough(x, y, imgw, imgh,
-							  rr[max(ri-boxsize, 0)], rr[min(ri+boxsize,nr-1)],
-							  tt[max(ti-boxsize, 0)], tt[min(ti+boxsize,nt-1)],
+							  rr[max(ri-boxsize, 0)], rr[min(ri+boxsize, nr-1)],
+							  tt[max(ti-boxsize, 0)], tt[min(ti+boxsize, nt-1)],
 							  nr2, nt2)
+		print '  median normalization:', median(subnorm)
 		subhnorm = subh / maximum(subnorm,1)
 		I = find((subhnorm).ravel() >= thresh2)
 		for i in I:
 			bestsubri = i / nt2
 			bestsubti = i % nt2
-			X = clip_to_image(subrr[bestsubri], subtt[bestsubti], imgw, imgh)
-			xys.append(X)
-			bestrt.append((subrr[bestsubri], subtt[bestsubti]))
+			r = subrr[bestsubri]
+			t = subtt[bestsubti]
+			bestrt.append((r,t))
+			print '  (r=%.1f, t=%.1f): factor %.1f above expected' % (r, t*180/pi, subhnorm.ravel()[i])
+			thisr = x * cos(t) + y * sin(t)
+			keep *= (abs(thisr - r) > subrstep/2.)
 
 	print 'In finer grid: found %i peaks' % len(bestrt)
-	tt = array([t for (r,t) in bestrt])
-	rr = array([r for (r,t) in bestrt])
-	cost = cos(tt)
-	sint = sin(tt)
-	keep = []
-	for i,(xi,yi) in enumerate(zip(x, y)):
-		thisr = xi * cost + yi * sint
-		keep.append(not any(abs(thisr - rr) < rstep/2.))
-	keep = array(keep)
 
 	if plots:
 		clf()
 		subplot(1,1,1)
 		plot(x,y,'r.')
-		for (x0,x1,y0,y1) in xys:
+		for (r,t) in bestrt:
+			(x0,x1,y0,y1) =  clip_to_image(r, t, imgw, imgh)
 			plot([x0,x1],[y0,y1],'b-')
 		savefig('xy3.png')
 
@@ -194,11 +191,19 @@ def exact_hough_normalization():
 
 
 if __name__ == '__main__':
-	if (len(sys.argv) == 3):
-		infile = sys.argv[1]
-		outfile = sys.argv[2]
-		rtncode = removelines_general(infile, outfile)
-		sys.exit(rtncode)
-	else:
-		print 'Usage: %s <input-file> <output-file>' % sys.args[0]
+	args = sys.argv[1:]
+	plots = False
+	if '-p' in args:
+		plots = True
+		args.remove('-p')
+
+	if len(args) != 2:
+		print 'Usage: %s [options] <input-file> <output-file>' % sys.args[0]
+		print '   [-p]: create plots'
+		exit(-1)
+
+	infile = args[0]
+	outfile = args[1]
+	rtncode = removelines_general(infile, outfile, plots=plots)
+	sys.exit(rtncode)
 
