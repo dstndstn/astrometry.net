@@ -102,6 +102,130 @@ void tst_1(CuTest* ct) {
 	kdtree_free(kd);
 }
 
+static void compute_splitbits(int ndim, uint32_t* dimmask, uint32_t* dimbits, uint32_t* splitmask) {
+	int D;
+	int bits;
+	uint32_t val;
+	D = ndim;
+	bits = 0;
+	val = 1;
+	while (val < D) {
+		bits++;
+		val *= 2;
+	}
+	*dimmask = val - 1;
+	*dimbits = bits;
+	*splitmask = ~(*dimmask);
+}
+
+void test_splitbits(CuTest* ct) {
+	uint32_t dmask, dbits, smask;
+	int dim;
+
+	compute_splitbits(1, &dmask, &dbits, &smask);
+	CuAssertIntEquals(ct, 0x0, dbits);
+	CuAssertIntEquals(ct, 0x0, dmask);
+	CuAssertIntEquals(ct,~0x0, smask);
+
+	compute_splitbits(2, &dmask, &dbits, &smask);
+	CuAssertIntEquals(ct, 0x1, dbits);
+	CuAssertIntEquals(ct, 0x1, dmask);
+	CuAssertIntEquals(ct,~0x1, smask);
+
+	for (dim=3; dim<=4; dim++) {
+		compute_splitbits(dim, &dmask, &dbits, &smask);
+		CuAssertIntEquals(ct, 0x2, dbits);
+		CuAssertIntEquals(ct, 0x3, dmask);
+		CuAssertIntEquals(ct,~0x3, smask);
+	}
+
+	for (dim=5; dim<=8; dim++) {
+		compute_splitbits(dim, &dmask, &dbits, &smask);
+		CuAssertIntEquals(ct, 0x3, dbits);
+		CuAssertIntEquals(ct, 0x7, dmask);
+		CuAssertIntEquals(ct,~0x7, smask);
+	}
+
+	for (dim=9; dim<=16; dim++) {
+		compute_splitbits(dim, &dmask, &dbits, &smask);
+		CuAssertIntEquals(ct, 0x4, dbits);
+		CuAssertIntEquals(ct, 0xF, dmask);
+		CuAssertIntEquals(ct,~0xF, smask);
+	}
+}
+
+void tst_short_partition(CuTest* ct) {
+	kdtree_t* kd;
+	double* data;
+    int N = 21;
+    int Nleaf = 16;
+    int D = 2;
+	int i;
+	double minval[D], maxval[D];
+	uint16_t cdata[] = { 12669, 12669, 12669, 12669, 12669, 12669, 
+						 12669, 12669, 12669, 12669, 12669, 12669,
+						 13860, 13913, 14164, 14557, 15283, 17130,
+						 17130, 17130, 17130 };
+
+
+	minval[0] = -0.20710678118654757;
+	minval[1] = -0.20710678118654757;
+	maxval[0] =  1.2071067811865475;
+	maxval[1] =  1.2071067811865475;
+
+	kd = kdtree_new(N, D, Nleaf);
+	kd->minval = minval;
+	kd->maxval = maxval;
+	kd->treetype = KDTT_DSS;
+
+	data = calloc(N*D, sizeof(double));
+	kdtree_convert_data(kd, data, N, D, Nleaf, kd->treetype);
+
+	for (i=0; i<N; i++)
+		kd->data.s[2*i] = cdata[i];
+
+	kdtree_build(kd, kd->data.s, N, D, Nleaf, kd->treetype, KD_BUILD_SPLIT);
+	kdtree_free(kd);
+	free(data);
+}
+
+void test_empty_node(CuTest* ct) {
+	kdtree_t* kd;
+	double* data;
+    int N = 21;
+    int Nleaf = 16;
+    int D = 2;
+	int i, ok;
+	double minval[D], maxval[D];
+
+	minval[0] = 0;
+	minval[1] = 0;
+	maxval[0] = 1;
+	maxval[1] = 1;
+
+	kd = kdtree_new(N, D, Nleaf);
+	kd->minval = minval;
+	kd->maxval = maxval;
+	kd->treetype = KDTT_DSS;
+
+	data = calloc(N*D, sizeof(double));
+	kdtree_convert_data(kd, data, N, D, Nleaf, kd->treetype);
+
+	for (i=0; i<N; i++)
+		// any ODD value.
+		kd->data.s[2*i+1] = 3;
+
+	kdtree_build(kd, kd->data.s, N, D, Nleaf, kd->treetype, KD_BUILD_SPLIT);
+
+	ok = kdtree_check(kd);
+	CuAssertIntEquals(ct, 1, ok);
+
+	kd->minval = NULL;
+	kd->maxval = NULL;
+	kdtree_free(kd);
+	free(data);
+}
+
 static inline u8 node_level(int nodeid) {
 	int val = (nodeid + 1) >> 1;
 	u8 level = 0;
@@ -375,7 +499,7 @@ void run_test_lr(CuTest* tc, int D, int Nleaf, int treetype, int treeopts) {
     int i;
     kdtree_t* kd;
     double* treedata;
-    unsigned int* lr;
+    uint32_t* lr;
     int N;
     for (N=100; N<=1000; N+=9) {
         treedata = random_points_d(N, D);
