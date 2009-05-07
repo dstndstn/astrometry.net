@@ -499,7 +499,7 @@ void run_test_lr(CuTest* tc, int D, int Nleaf, int treetype, int treeopts) {
     int i;
     kdtree_t* kd;
     double* treedata;
-    uint32_t* lr;
+    int32_t* lr;
     int N;
     for (N=100; N<=1000; N+=9) {
         treedata = random_points_d(N, D);

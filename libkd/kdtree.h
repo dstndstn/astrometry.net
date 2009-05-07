@@ -198,9 +198,9 @@ struct kdtree {
 	kdtree_node_t *nodes;   /* Flat tree storing nodes and
                              bounding boxes. */
 
-	u32* lr;            /* Points owned by leaf nodes, stored and manipulated
-                         in a way that's too complicated to explain in this comment.
-                         (nbottom) */
+	int32_t* lr;            /* Points owned by leaf nodes, stored and manipulated
+							 in a way that's too complicated to explain in this comment.
+							 (nbottom) */
                
 	u32* perm;           /* Permutation index / hairstyle from the 80s
                           (ndata) */

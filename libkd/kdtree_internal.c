@@ -2172,7 +2172,7 @@ kdtree_t* MANGLE(kdtree_build)
 	for (i = 0;i < N;i++)
 		kd->perm[i] = i;
 
-	kd->lr = MALLOC(kd->nbottom * sizeof(u32));
+	kd->lr = MALLOC(kd->nbottom * sizeof(int32_t));
 	assert(kd->lr);
 
 	if (options & KD_BUILD_BBOX) {

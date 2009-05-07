@@ -76,7 +76,7 @@ static int get_data_size(int treetype) {
 }
 
 size_t kdtree_sizeof_lr(const kdtree_t* kd) {
-    return sizeof(u32) * kd->nbottom;
+    return sizeof(int32_t) * kd->nbottom;
 }
 
 size_t kdtree_sizeof_perm(const kdtree_t* kd) {
@@ -118,7 +118,7 @@ void kdtree_memory_report(kdtree_t* kd) {
 
     if (kd->lr) {
         n = kd->nbottom;
-        sz = sizeof(u32);
+        sz = sizeof(int32_t);
         mem = n*sz;
         printf(fmt, "lr", n, "leaves", sz, mem, 1e-6*mem);
         total += mem;
@@ -457,6 +457,8 @@ int kdtree_leaf_right(const kdtree_t* kd, int nodeid) {
         return kd->lr[leafid];
     return calculate_R(kd, leafid);
 }
+
+
 
 int kdtree_left(const kdtree_t* kd, int nodeid) {
 	if (unlikely(kd->nodes)) {
