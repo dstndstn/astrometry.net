@@ -1748,14 +1748,26 @@ static int kdtree_check_node(const kdtree_t* kd, int nodeid) {
 	L = kdtree_left (kd, nodeid);
 	R = kdtree_right(kd, nodeid);
 
-	assert(L < kd->ndata);
-	assert(R < kd->ndata);
-	assert(L >= 0);
-	assert(R >= 0);
-	assert(L <= R);
-	if (L >= kd->ndata || R >= kd->ndata || L < 0 || R < 0 || L > R) {
-		ERROR("kdtree_check: L,R out of range");
-		return -1;
+	if (kdtree_is_node_empty(kd, nodeid)) {
+		assert(L == (R+1));
+		assert(L >= 0);
+		assert(L <= kd->ndata);
+		assert(R >= -1);
+		assert(R < kd->ndata);
+		if (!((L == (R+1)) && (L >= -1) && (L <= kd->ndata) && (R >= -1) && (R < kd->ndata))) {
+			ERROR("kdtree_check: L,R out of range for empty node");
+			return -1;
+		}
+	} else {
+		assert(L < kd->ndata);
+		assert(R < kd->ndata);
+		assert(L >= 0);
+		assert(R >= 0);
+		assert(L <= R);
+		if (!((L < kd->ndata) && (R < kd->ndata) && (L >= 0) && (R >= 0) && (L <= R))) {
+			ERROR("kdtree_check: L,R out of range for non-empty node");
+			return -1;
+		}
 	}
 
 	// if it's the root node, make sure that each value in the permutation
@@ -2209,7 +2221,7 @@ kdtree_t* MANGLE(kdtree_build)
 	 * are at the first element of the lr array. */
 	for (i = 0; i < kd->ninterior; i++) {
 		unsigned int d;
-		unsigned int left, right;
+		int left, right;
 		dtype maxrange;
 		ttype s;
 		unsigned int c;
@@ -2312,11 +2324,11 @@ kdtree_t* MANGLE(kdtree_build)
 
 			/* Play games to make sure we properly partition the data */
 			while (m < right && data[D*m+d] < qsplit) m++;
-			while (left < (m-1) && qsplit < data[D*(m-1)+d]) m--;
+			while (left < m  && qsplit < data[D*(m-1)+d]) m--;
 
 			/* Even more sanity */
-			assert(m != 0);
-			assert(left <= (m-1));
+			assert(m >= -1);
+			assert(left <= m);
 			assert(m <= right);
 			for (xx=left; m && xx<=m-1; xx++)
 				assert(data[D*xx+d] <= qsplit);
@@ -2341,9 +2353,9 @@ kdtree_t* MANGLE(kdtree_build)
 			assert(m != 0);
 			assert(left <= (m-1));
 			assert(m <= right);
-			for (xx=left; m && xx<=m-1; xx++)
+			for (xx=left; xx<=m-1; xx++)
 				assert(data[D*xx+d] <= data[D*m+d]);
-			for (xx=left; m && xx<=m-1; xx++)
+			for (xx=left; xx<=m-1; xx++)
 				assert(data[D*xx+d] <= s);
 			for (xx=m; xx<=right; xx++)
 				assert(data[D*m+d] <= data[D*xx+d]);

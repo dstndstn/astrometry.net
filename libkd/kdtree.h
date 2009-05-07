@@ -251,12 +251,12 @@ struct kdtree {
 	double scale;    /* kdtype per real */
 	double invscale; /* real per kdtype */
 
-	unsigned int ndata;     /* Number of items */
-	unsigned int ndim;      /* Number of dimensions */
-	unsigned int nnodes;    /* Number of nodes */
-	unsigned int nbottom;   /* Number of leaf nodes */
-	unsigned int ninterior; /* Number of internal nodes */
-	unsigned int nlevels;
+	int ndata;     /* Number of items */
+	int ndim;      /* Number of dimensions */
+	int nnodes;    /* Number of nodes */
+	int nbottom;   /* Number of leaf nodes */
+	int ninterior; /* Number of internal nodes */
+	int nlevels;
 
     bool has_linear_lr;
 
@@ -357,6 +357,10 @@ void kdtree_free_query(kdtree_qres_t *kd);
 
 /* Free a tree; does not free kd->data */
 void kdtree_free(kdtree_t *kd);
+
+int kdtree_is_node_empty(const kdtree_t* kd, int nodeid);
+
+int kdtree_is_leaf_node_empty(const kdtree_t* kd, int nodeid);
 
 /* The leftmost point owned by this node. */
 int kdtree_left(const kdtree_t* kd, int nodeid);

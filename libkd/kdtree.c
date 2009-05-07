@@ -494,6 +494,20 @@ int kdtree_right(const kdtree_t* kd, int nodeid) {
 	}
 }
 
+int kdtree_is_leaf_node_empty(const kdtree_t* kd, int nodeid) {
+	int L, R;
+	L = kdtree_leaf_left (kd, nodeid);
+	R = kdtree_leaf_right(kd, nodeid);
+	return (L == R+1);
+}
+
+int kdtree_is_node_empty(const kdtree_t* kd, int nodeid) {
+	int L, R;
+	L = kdtree_left (kd, nodeid);
+	R = kdtree_right(kd, nodeid);
+	return (L == R+1);
+}
+
 int kdtree_npoints(const kdtree_t* kd, int nodeid) {
 	return 1 + kdtree_right(kd, nodeid) - kdtree_left(kd, nodeid);
 }

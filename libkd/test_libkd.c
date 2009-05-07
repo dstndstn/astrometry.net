@@ -154,7 +154,7 @@ void test_splitbits(CuTest* ct) {
 	}
 }
 
-void tst_short_partition(CuTest* ct) {
+void test_short_partition(CuTest* ct) {
 	kdtree_t* kd;
 	double* data;
     int N = 21;
@@ -185,6 +185,11 @@ void tst_short_partition(CuTest* ct) {
 		kd->data.s[2*i] = cdata[i];
 
 	kdtree_build(kd, kd->data.s, N, D, Nleaf, kd->treetype, KD_BUILD_SPLIT);
+
+	CuAssertIntEquals(ct, 0, kdtree_check(kd));
+
+	kd->minval = NULL;
+	kd->maxval = NULL;
 	kdtree_free(kd);
 	free(data);
 }
@@ -218,7 +223,7 @@ void test_empty_node(CuTest* ct) {
 	kdtree_build(kd, kd->data.s, N, D, Nleaf, kd->treetype, KD_BUILD_SPLIT);
 
 	ok = kdtree_check(kd);
-	CuAssertIntEquals(ct, 1, ok);
+	CuAssertIntEquals(ct, 0, ok);
 
 	kd->minval = NULL;
 	kd->maxval = NULL;
