@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import sys
 import pyfits
 
@@ -58,8 +60,8 @@ def removelines_general(infile, outfile, nt=180, nr=180, thresh1=2.,
 	p = pyfits.open(infile)
 	xy = p[1].data
 	hdr = p[1].header
-	x = xy.field('X')
-	y = xy.field('Y')
+	x = xy.field('X').copy()
+	y = xy.field('Y').copy()
 
 	imshowargs = { 'interpolation':'nearest', 'origin':'lower' }
 
@@ -198,7 +200,7 @@ if __name__ == '__main__':
 		args.remove('-p')
 
 	if len(args) != 2:
-		print 'Usage: %s [options] <input-file> <output-file>' % sys.args[0]
+		print 'Usage: %s [options] <input-file> <output-file>' % sys.argv[0]
 		print '   [-p]: create plots'
 		exit(-1)
 
