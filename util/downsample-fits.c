@@ -32,12 +32,13 @@
 #include "fitsioutils.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hvs:";
+static const char* OPTIONS = "hvs:e:";
 
 static void printHelp(char* progname) {
 	printf("%s  [options]  <input-file> <output-file>\n"
 		   "    use \"-\" to write to stdout.\n"
 		   "      [-s <scale>]: downsample scale (default: 2): integer\n"
+		   "      [-e <extension>]: read extension (default: 0)\n"
 		   "      [-v]: verbose\n"
 		   "\n", progname);
 }
@@ -57,13 +58,15 @@ int main(int argc, char *argv[]) {
 	float* img;
 	int loglvl = LOG_MSG;
 	int scale = 2;
-	int window = 1024;
+	int winw;
+	int winh;
 	int plane;
 	int out_bitpix = -32;
 	float* outimg;
 	int outw, outh;
 	int edge = EDGE_TRUNCATE;
 	int ext = 0;
+	int npixout = 0;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
@@ -72,6 +75,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 's':
 			scale = atoi(optarg);
+			break;
+		case 'e':
+			ext = atoi(optarg);
 			break;
         case '?':
         case 'h':
@@ -94,8 +100,6 @@ int main(int argc, char *argv[]) {
 
 	infn = argv[optind];
 	outfn = argv[optind+1];
-
-	window = (int)ceil(window / (float)scale) * scale;
 
 	if (streq(outfn, "-")) {
 		tostdout = TRUE;
@@ -146,25 +150,33 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 	qfits_header_destroy(hdr);
+	// qfits pixel dumping works by re-opening the file and appending to it... ugh...
+	if (!tostdout && fclose(fout)) {
+		ERROR("Failed to pad or close output file");
+		exit(-1);
+	}
 
-	outimg = malloc((int)ceil(window/scale)*(int)ceil(window/scale) * sizeof(float));
+	winw = load.lx;
+	winh = (int)ceil(ceil(1024*1024 / (float)winw) / (float)scale) * scale;
+
+	outimg = malloc((int)ceil(winw/scale)*(int)ceil(winh/scale) * sizeof(float));
 			
 	logmsg("Image is %i x %i x %i\n", load.lx, load.ly, load.np);
 	logmsg("Output will be %i x %i x %i\n", outw, outh, load.np);
-	logverb("Reading in blocks of %i x %i\n", window, window);
+	logverb("Reading in blocks of %i x %i\n", winw, winh);
 	for (plane=0; plane<load.np; plane++) {
 		int bx, by;
 		int nx, ny;
 		load.pnum = plane;
-		for (by=0; by<(int)ceil(load.ly / (float)window); by++) {
-			for (bx=0; bx<(int)ceil(load.lx / (float)window); bx++) {
+		for (by=0; by<(int)ceil(load.ly / (float)winh); by++) {
+			for (bx=0; bx<(int)ceil(load.lx / (float)winw); bx++) {
 				int lox, loy, hix, hiy, outw, outh;
-				nx = MIN(window, load.lx-1 - bx*window);
-				ny = MIN(window, load.ly-1 - by*window);
-				lox = 1 + bx*window;
-				loy = 1 + by*window;
-				hix = lox + nx;
-				hiy = loy + ny;
+				nx = MIN(winw, load.lx - bx*winw);
+				ny = MIN(winh, load.ly - by*winh);
+				lox = 1 + bx*winw;
+				loy = 1 + by*winh;
+				hix = lox + nx - 1;
+				hiy = loy + ny - 1;
 				logverb("  reading %i,%i + %i,%i\n", lox, loy, nx, ny);
 				if (qfits_loadpix_window(&load, lox, loy, hix, hiy)) {
 					ERROR("Failed to load pixels.");
@@ -174,6 +186,11 @@ int main(int argc, char *argv[]) {
 
 				average_image_f(img, nx, ny, scale, edge,
 								&outw, &outh, outimg);
+				qfitsloader_free_buffers(&load);
+
+				logverb("  writing %i x %i\n", outw, outh);
+				if (outw * outh == 0)
+					continue;
 
 				dump.fbuf = outimg;
 				dump.npix = outw * outh;
@@ -181,14 +198,25 @@ int main(int argc, char *argv[]) {
 					ERROR("Failed to write pixels.\n");
 					exit(-1);
 				}
-				qfitsloader_free_buffers(&load);
+				npixout += dump.npix;
 			}
 		}
 	}
 	free(outimg);
 
-	if (!tostdout)
-		fclose(fout);
+	if (tostdout) {
+		// pad.
+		int N;
+		char pad[2880];
+		N = (npixout * (abs(out_bitpix) / 8)) % 2880;
+		memset(pad, 0, 2880);
+		fwrite(pad, 1, N, fout);
+	} else
+		if (fits_pad_file_name(outfn)) {
+			ERROR("Failed to pad output file");
+			exit(-1);
+		}
+
 	logverb("Done!\n");
 	return 0;
 }

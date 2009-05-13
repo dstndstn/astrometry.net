@@ -115,6 +115,8 @@ int fits_pad_file_with(FILE* fid, char pad);
 
 int fits_pad_file(FILE* fid);
 
+int fits_pad_file_name(char* filename);
+
 void fits_fill_endian_string(char* str);
 
 char* fits_get_endian_string();

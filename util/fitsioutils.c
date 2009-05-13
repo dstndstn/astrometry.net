@@ -748,6 +748,17 @@ int fits_pad_file(FILE* fid) {
     return fits_pad_file_with(fid, 0);
 }
 
+int fits_pad_file_name(char* filename) {
+	int rtn;
+	FILE* fid = fopen(filename, "ab");
+	rtn = fits_pad_file(fid);
+	if (!rtn && fclose(fid)) {
+		SYSERROR("Failed to close file after padding it.");
+		return -1;
+	}
+	return rtn;
+}
+
 int fits_get_atom_size(tfits_type type) {
 	int atomsize = -1;
 	switch (type) {

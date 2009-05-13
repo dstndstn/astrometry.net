@@ -42,7 +42,7 @@ int get_output_image_size(int W, int H, int S,
 	if (edgehandling == 0) {
 		// truncate.
 		outw = W / S;
-		outh = W / S;
+		outh = H / S;
 	} else if (edgehandling == 1) {
 		// average
 		outw = (W + S-1) / S;
