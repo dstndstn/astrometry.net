@@ -123,7 +123,6 @@ int main(int argc, char *argv[]) {
 		dump.filename = "STDOUT";
 	else
 		dump.filename = outfn;
-	dump.npix = window * window;
 	dump.ptype = PTYPE_FLOAT;
 	dump.out_ptype = out_bitpix;
 
@@ -158,7 +157,7 @@ int main(int argc, char *argv[]) {
 		load.pnum = plane;
 		for (by=0; by<(int)ceil(load.ly / (float)window); by++) {
 			for (bx=0; bx<(int)ceil(load.lx / (float)window); bx++) {
-				int lox, loy, hix, hiy;
+				int lox, loy, hix, hiy, outw, outh;
 				nx = MIN(window, load.lx - bx*window);
 				ny = MIN(window, load.ly - by*window);
 				lox = 1 + bx*window;
@@ -173,8 +172,10 @@ int main(int argc, char *argv[]) {
 				img = load.fbuf;
 
 				average_image_f(img, nx, ny, scale, edge,
-								NULL, NULL, outimg);
+								&outw, &outh, outimg);
+
 				dump.fbuf = outimg;
+				dump.npix = outw * outh;
 				if (qfits_pixdump(&dump)) {
 					ERROR("Failed to write pixels.\n");
 					exit(-1);
