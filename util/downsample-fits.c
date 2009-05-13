@@ -158,11 +158,15 @@ int main(int argc, char *argv[]) {
 		load.pnum = plane;
 		for (by=0; by<(int)ceil(load.ly / (float)window); by++) {
 			for (bx=0; bx<(int)ceil(load.lx / (float)window); bx++) {
+				int lox, loy, hix, hiy;
 				nx = MIN(window, load.lx - bx*window);
 				ny = MIN(window, load.ly - by*window);
-				logverb("  reading %i,%i + %i,%i\n", 1+bx*window, 1+by*window, nx, ny);
-				if (qfits_loadpix_window(&load, 1 + bx*window, 1 + by*window,
-										 1 + bx*window + nx, 1+by*window + ny)) {
+				lox = 1 + bx*window;
+				loy = 1 + by*window;
+				hix = lox + nx;
+				hiy = loy + ny;
+				logverb("  reading %i,%i + %i,%i\n", lox, loy, nx, ny);
+				if (qfits_loadpix_window(&load, lox, loy, hix, hiy)) {
 					ERROR("Failed to load pixels.");
 					exit(-1);
 				}
