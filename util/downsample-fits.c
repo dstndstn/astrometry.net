@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 	infn = argv[optind];
 	outfn = argv[optind+1];
 
-	window = (int)round(window / (float)scale);
+	window = (int)ceil(window / (float)scale) * scale;
 
 	if (streq(outfn, "-")) {
 		tostdout = TRUE;
