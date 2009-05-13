@@ -145,6 +145,7 @@ int main(int argc, char *argv[]) {
 		ERROR("Failed to write FITS header to \"%s\"", outfn);
 		exit(-1);
 	}
+	qfits_header_destroy(hdr);
 
 	outimg = malloc((int)ceil(window/scale)*(int)ceil(window/scale) * sizeof(float));
 			
@@ -180,10 +181,10 @@ int main(int argc, char *argv[]) {
 					ERROR("Failed to write pixels.\n");
 					exit(-1);
 				}
+				qfitsloader_free_buffers(&load);
 			}
 		}
 	}
-	qfitsloader_free_buffers(&load);
 	free(outimg);
 
 	if (!tostdout)
