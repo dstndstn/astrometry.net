@@ -68,7 +68,14 @@ static void add_interior_stars(unsigned int* quad, int starnum, int firstindex,
 		quad[starnum] = il_get(starsC, i);
 		// Did we just add the last star?
 		if (starnum == dimquads-1) {
-			quad_write(codes, quads, quad, starkd, dimquads, dimcodes);
+			if (log_get_level() >= LOG_VERB) {
+				int k;
+				logverb("  quad: ");
+				for (k=0; k<dimquads; k++)
+					logverb("%-6i ", quad[k]);
+				logverb("\n");
+			}
+			quad_write_const(codes, quads, quad, starkd, dimquads, dimcodes);
 		} else {
 			// Recurse.
 			add_interior_stars(quad, starnum+1, i+1, starsC, dimquads,
@@ -245,6 +252,7 @@ int main(int argc, char** argv) {
 
 
 	N = startree_N(starkd);
+	// star A = i
 	for (i=0; i<N; i++) {
 		double xyzA[3];
 		int* inds;
@@ -264,6 +272,7 @@ int main(int argc, char** argv) {
 
 		nq = quads->numquads;
 
+		// star B = inds[j]
 		for (j=0; j<NR; j++) {
 			double xyzB[3];
 			double mid[3];
@@ -277,6 +286,7 @@ int main(int argc, char** argv) {
 			qr2 = distsq(xyzA, xyzB, 3);
 			if (qr2 < quad_dist2_lower)
 				continue;
+			assert(qr2 < quad_dist2_upper);
 
 			// quad center
 			star_midpoint(mid, xyzA, xyzB);
@@ -284,6 +294,7 @@ int main(int argc, char** argv) {
 			qr2 /= 4;
 
 			indsC = il_new(32);
+			// stars C = inds[k]: subset of inds that are inside the quad circle.
 			for (k=0; k<NR; k++) {
 				double xyzC[3];
 				double d2;

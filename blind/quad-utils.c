@@ -36,6 +36,25 @@ int quad_compute_code(const unsigned int* quad, int dimquads, startree_t* starkd
 	return 0;
 }
 
+bool quad_obeys_invariants(unsigned int* quad, double* code,
+						   int dimquads, int dimcodes) {
+	double sum;
+	int i;
+	// check the invariant that (cx + dx + ...) / (dimquads-2) <= 1/2
+	sum = 0.0;
+	for (i=0; i<(dimquads-2); i++)
+		sum += code[2*i];
+	sum /= (dimquads-2);
+	if (sum > 0.5)
+		return FALSE;
+
+	// check the invariant that cx <= dx <= ....
+	for (i=0; i<(dimquads-3); i++)
+		if (code[2*i] > code[2*(i+1)])
+			return FALSE;
+	return TRUE;
+}
+
 void quad_enforce_invariants(unsigned int* quad, double* code,
 							 int dimquads, int dimcodes) {
 	double sum;
@@ -96,10 +115,19 @@ void quad_write(codefile* codes, quadfile* quads,
 				unsigned int* quad, startree_t* starkd,
 				int dimquads, int dimcodes) {
 	double code[DCMAX];
-
 	quad_compute_code(quad, dimquads, starkd, code);
 	quad_enforce_invariants(quad, code, dimquads, dimcodes);
 	codefile_write_code(codes, code);
 	quadfile_write_quad(quads, quad);
+}
+
+void quad_write_const(codefile* codes, quadfile* quads,
+					  const unsigned int* quad, startree_t* starkd,
+					  int dimquads, int dimcodes) {
+	int k;
+	unsigned int quadcopy[DQMAX];
+	for (k=0; k<dimquads; k++)
+		quadcopy[k] = quad[k];
+	quad_write(codes, quads, quadcopy, starkd, dimquads, dimcodes);
 }
 

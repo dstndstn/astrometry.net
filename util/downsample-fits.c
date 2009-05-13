@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
 	load.xtnum = ext;
 	load.pnum = 0;
 	load.ptype = PTYPE_FLOAT;
-	load.map = 1;
+	load.map = 0;
 
 	if (qfitsloader_init(&load)) {
 		ERROR("Failed to read input file info: \"%s\"", infn);

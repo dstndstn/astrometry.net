@@ -86,6 +86,8 @@ int main(int argc, char** args) {
     int loglvl = LOG_MSG;
 	double wcsscale;
 
+	double nsigma = 3.0;
+
 	fits_use_error_system();
 
 	indexnames = sl_new(8);
@@ -317,7 +319,7 @@ int main(int argc, char** args) {
 			logverb("  Index star at (%.1f, %.1f): nearest field star is %g away.\n",
 					xy[0], xy[1], sqrt(nnd2));
 
-			res = kdtree_rangesearch_options(ftree, xy, pixr2, KD_OPTIONS_SMALL_RADIUS);
+			res = kdtree_rangesearch_options(ftree, xy, pixr2 * nsigma*nsigma, KD_OPTIONS_SMALL_RADIUS);
 			if (!res || !res->nres)
 				continue;
 			ncorr += res->nres;
@@ -403,7 +405,7 @@ int main(int argc, char** args) {
 				for (k=0; k<dimquads; k++)
 					if (il_contains(corrstarlist, stars[k]))
 						ncorr++;
-				logverb("Quad %i has %i stars in the field (%i with correspondences).\n", quad, nin, ncorr);
+				debug("Quad %i has %i stars in the field (%i with correspondences).\n", quad, nin, ncorr);
 			}
 			if (ind + (dimquads-1) >= il_size(quadlist))
 				continue;
@@ -454,8 +456,8 @@ int main(int argc, char** args) {
 				logmsg("SIP backward for star %i.\n", star);
 				exit(-1);
 			}
-			fres = kdtree_rangesearch_options(ftree, sxy, pixr2,
-											  KD_OPTIONS_SMALL_RADIUS);
+			fres = kdtree_rangesearch_options(ftree, sxy, pixr2 * nsigma*nsigma,
+											  KD_OPTIONS_SMALL_RADIUS | KD_OPTIONS_SORT_DISTS);
 			if (!fres || !fres->nres)
 				continue;
 			if (fres->nres > 1) {
@@ -464,6 +466,8 @@ int main(int argc, char** args) {
 
 			il_append(corrstars, star);
             il_append(corrfield, fres->inds[0]); //kdtree_permute(ftree, fres->inds[0]));
+
+			logverb("  star %i: dist %g to field star %i\n", star, sqrt(fres->sdists[0]), fres->inds[0]);
 
             /*{
               double fx, fy;
@@ -495,10 +499,24 @@ int main(int argc, char** args) {
 		}
 
 		// Find quads that are fully contained in the image.
+		logverb("Looking at quads built from stars with correspondences...\n");
 		corrfullquads = il_new(16);
 		for (j=0; j<il_size(corruniqquads); j++) {
 			int quad = il_get(corruniqquads, j);
 			int ind = il_index_of(corrquads, quad);
+
+			if (log_get_level() >= LOG_VERB) {
+				int k, nin=0;
+				for (k=0; k<dimquads; k++) {
+					if (ind+k >= il_size(corrquads))
+						break;
+					if (il_get(corrquads, ind+k) != quad)
+						break;
+					nin++;
+				}
+				debug("  Quad %i has %i stars with correspondences.\n", quad, nin);
+			}
+
 			if (ind + (dimquads-1) >= il_size(corrquads))
 				continue;
 			if (il_get(corrquads, ind+(dimquads-1)) != quad)
@@ -511,16 +529,9 @@ int main(int argc, char** args) {
 			unsigned int stars[dimquads];
 			int k;
 			int ind;
-			//double px,py;
-            double starxyz[3 * dimquads];
-            double starxy[2 * dimquads];
-
             double realcode[dimcodes];
-            //double starcode[dimcodes];
             double fieldcode[dimcodes];
-
             tan_t wcs;
-
             MatchObj mo;
 
 			int quad = il_get(corrfullquads, j);
@@ -528,13 +539,6 @@ int main(int argc, char** args) {
             memset(&mo, 0, sizeof(MatchObj));
 
 			quadfile_get_stars(indx->quads, quad, stars);
-
-			/*
-              logmsg("quad #%i: quad id %i.  stars", j, quad);
-              for (k=0; k<dimquads; k++)
-			  logmsg(" %i", stars[k]);
-              logmsg("\n");
-            */
 
             codetree_get(indx->codekd, quad, realcode);
 
@@ -544,91 +548,81 @@ int main(int argc, char** args) {
                 ind = il_index_of(corrstars, stars[k]);
                 assert(ind >= 0);
                 find = il_get(corrfield, ind);
-                starxy[k*2 + 0] = fieldxy[find*2 + 0];
-                starxy[k*2 + 1] = fieldxy[find*2 + 1];
+                mo.quadpix[k*2 + 0] = fieldxy[find*2 + 0];
+                mo.quadpix[k*2 + 1] = fieldxy[find*2 + 1];
                 // index star xyz.
-                startree_get(indx->starkd, stars[k], starxyz + 3*k);
+                startree_get(indx->starkd, stars[k], mo.quadxyz + 3*k);
 
                 mo.star[k] = stars[k];
                 mo.field[k] = find;
-                /*
-                  {
-                  double sx, sy;
-                  sip_xyzarr2pixelxy(&sip, starxyz + 3*k, &sx, &sy);
-                  logmsg("star  %g,%g\n", sx, sy);
-                  logmsg("field %g,%g\n", starxy[k*2+0], starxy[k*2+1]);
-                  }
-                */
             }
 
-			logmsg("quad #%i: stars\n", j);
+			logmsg("quad #%i (quad id %i): stars\n", j, quad);
             for (k=0; k<dimquads; k++)
                 logmsg(" %i", mo.field[k]);
             logmsg("\n");
 
 
-            codefile_compute_field_code(starxy, fieldcode, dimquads);
-            //codefile_compute_star_code (starxyz, starcode, dimquads);
+            codefile_compute_field_code(mo.quadpix, fieldcode, dimquads);
 
-            /*
-              logmsg("real code:");
-              for (k=0; k<dimcodes; k++)
-              logmsg(" %g", realcode[k]);
-              logmsg("\n");
-              logmsg("star code:");
-              for (k=0; k<dimcodes; k++)
-              logmsg(" %g", starcode[k]);
-              logmsg("\n");
-              logmsg("field code:");
-              for (k=0; k<dimcodes; k++)
-              logmsg(" %g", fieldcode[k]);
-              logmsg("\n");
-              logmsg("code distances: %g, %g\n",
-              sqrt(distsq(realcode, starcode, dimcodes)),
-              sqrt(distsq(realcode, fieldcode, dimcodes)));
-            */
             logmsg("  code distance: %g\n",
                     sqrt(distsq(realcode, fieldcode, dimcodes)));
 
-            blind_wcs_compute(starxyz, starxy, dimquads, &wcs, NULL);
+            blind_wcs_compute(mo.quadxyz, mo.quadpix, dimquads, &wcs, NULL);
+			wcs.imagew = W;
+			wcs.imageh = H;
+
+			logverb("Distances between corresponding stars:\n");
+            for (k=0; k<il_size(corrstars); k++) {
+				int star = il_get(corrstars, k);
+				int field = il_get(corrfield, k);
+				double* fxy;
+				double xyz[2];
+				double sxy[2];
+				double d;
+
+				startree_get(indx->starkd, star, xyz);
+				tan_xyzarr2pixelxy(&wcs, xyz, sxy, sxy+1);
+				fxy = fieldxy + 2*field;
+				d = sqrt(distsq(fxy, sxy, 2));
+
+				logverb("  correspondence: field star %i: distance %g pix\n", field, d);
+			}
+
+
+			logmsg("  running verify() with the found WCS:\n");
+
+			//log_set_level(LOG_ALL);
+			log_set_level(log_get_level() + 1);
 
             {
                 double llxyz[3];
                 verify_field_t* vf;
-                double verpix2 = DEFAULT_VERIFY_PIX;
+                double verpix2 = pixr2;
 
-                mo.dimquads = dimquads;
-
-                sip_pixelxy2xyzarr(&sip, sip.wcstan.imagew, sip.wcstan.imageh, mo.center);
-                sip_pixelxy2xyzarr(&sip, 0, 0, llxyz);
+                tan_pixelxy2xyzarr(&wcs, W/2.0, H/2.0, mo.center);
+                tan_pixelxy2xyzarr(&wcs, 0, 0, llxyz);
                 mo.radius = sqrt(distsq(mo.center, llxyz, 3));
-
+				mo.radius_deg = dist2deg(mo.radius);
+				mo.scale = tan_pixel_scale(&wcs);
+                mo.dimquads = dimquads;
                 memcpy(&mo.wcstan, &wcs, sizeof(tan_t));
                 mo.wcs_valid = TRUE;
 
                 vf = verify_field_preprocess(xy);
 
                 verify_hit(indx->starkd, indx->meta.cutnside, &mo, NULL, vf, verpix2,
-                           DEFAULT_DISTRACTOR_RATIO, sip.wcstan.imagew, sip.wcstan.imageh,
+                           DEFAULT_DISTRACTOR_RATIO, W, H,
                            log(-1e100), HUGE_VAL, HUGE_VAL, TRUE, FALSE);
 
                 verify_field_free(vf);
             }
 
+			log_set_level(loglvl);
 
-            logmsg("Verify odds: %g\n", exp(mo.logodds));
 
+            logmsg("Verify log-odds %g (odds %g)\n", mo.logodds, exp(mo.logodds));
 
-			// Gah! map...
-            /*
-              for (k=0; k<dimquads; k++) {
-              ind = il_index_of(starlist, stars[k]);
-              px = dl_get(starxylist, ind*2+0);
-              py = dl_get(starxylist, ind*2+1);
-              printf("%g %g ", px, py);
-              }
-              printf("\n");
-            */
 		}
 
 		il_free(fullquadlist);

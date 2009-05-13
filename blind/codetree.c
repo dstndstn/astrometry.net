@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Failed to build code kdtree.\n");
 		exit(-1);
 	}
-    fprintf(stderr, "done (%d nodes)\n", codetree_N(codekd));
+    fprintf(stderr, "done (%d codes)\n", codetree_N(codekd));
 
     codekd->tree->name = strdup(CODETREE_NAME);
 

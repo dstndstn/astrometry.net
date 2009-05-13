@@ -455,6 +455,7 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
     // find index stars and project them into pixel coordinates.
     verify_get_index_stars(fieldcenter, fieldr2, skdt, sip, &(mo->wcstan),
 						   fieldW, fieldH, NULL, &refxy, &starids, &NR);
+	debug("Found %i reference stars.\n", NR);
 
 	// remove reference stars that are part of the quad.
 	k = 0;
@@ -492,6 +493,7 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 		 */
 		NR = k;
 	}
+	debug("After removing stars in the quad: %i reference stars.\n", NR);
 
 	if (!NR) {
 		mo->nfield = 0;
