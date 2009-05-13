@@ -159,8 +159,8 @@ int main(int argc, char *argv[]) {
 		for (by=0; by<(int)ceil(load.ly / (float)window); by++) {
 			for (bx=0; bx<(int)ceil(load.lx / (float)window); bx++) {
 				int lox, loy, hix, hiy, outw, outh;
-				nx = MIN(window, load.lx - bx*window);
-				ny = MIN(window, load.ly - by*window);
+				nx = MIN(window, load.lx-1 - bx*window);
+				ny = MIN(window, load.ly-1 - by*window);
 				lox = 1 + bx*window;
 				loy = 1 + by*window;
 				hix = lox + nx;
