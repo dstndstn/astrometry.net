@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	outimg = malloc((int)ceil(window/scale)*(int)ceil(window/scale) + sizeof(float));
+	outimg = malloc((int)ceil(window/scale)*(int)ceil(window/scale) * sizeof(float));
 			
 	logmsg("Image is %i x %i x %i\n", load.lx, load.ly, load.np);
 	logmsg("Output will be %i x %i x %i\n", outw, outh, load.np);
