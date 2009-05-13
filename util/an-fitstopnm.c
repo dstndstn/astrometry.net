@@ -191,8 +191,7 @@ int main(int argc, char *argv[]) {
 	log_init(loglvl);
 	log_to(stderr);
 	errors_log_to(stderr);
-	// turn on QFITS error reporting.
-	qfits_err_statset(1);
+	fits_use_error_system();
 
 	if (outfn) {
 		fout = fopen(outfn, "wb");

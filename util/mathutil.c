@@ -24,10 +24,82 @@
 
 #include "mathutil.h"
 #include "keywords.h"
+#include "log.h"
+#include "errors.h"
 
 #define InlineDefine InlineDefineC
 #include "mathutil.inc"
 #undef InlineDefine
+
+int get_output_image_size(int W, int H, int S,
+						  int edgehandling,
+						  int* newW, int* newH) {
+	int outw, outh;
+	if (S < 2) {
+		logerr("Need scale >= 2");
+		return -1;
+	}
+	if (edgehandling == 0) {
+		// truncate.
+		outw = W / S;
+		outh = W / S;
+	} else if (edgehandling == 1) {
+		// average
+		outw = (W + S-1) / S;
+		outh = (H + S-1) / S;
+	} else {
+		logerr("Unknown edge handling code %i", edgehandling);
+		return -1;
+	}
+	if (newW)
+		*newW = outw;
+	if (newH)
+		*newH = outh;
+	return 0;
+}
+
+float* average_image_f(const float* image, int W, int H,
+					   int S, int edgehandling,
+					   int* newW, int* newH,
+					   float* output) {
+	int outw, outh;
+	int i,j;
+
+	if (get_output_image_size(W, H, S, edgehandling, &outw, &outh))
+		return NULL;
+
+	if (output == NULL) {
+		output = malloc(outw * outh * sizeof(float));
+		if (!output) {
+			SYSERROR("Failed to allocate %i x %i floats", outw, outh);
+			return NULL;
+		}
+	}
+
+    for (j=0; j<outh; j++) {
+        for (i=0; i<outw; i++) {
+            float sum = 0.0;
+            int I, J, N = 0;
+            for (J=0; J<S; J++) {
+                if (j*S + J >= H)
+                    break;
+                for (I=0; I<S; I++) {
+                    if (i*S + I >= W)
+                        break;
+                    sum += image[(j*S + J)*W + (i*S + I)];
+                    N++;
+                }
+            }
+            output[j * outw + i] = sum / (float)N;
+        }
+    }
+	if (newW)
+		*newW = outw;
+	if (newH)
+		*newH = outh;
+	return output;
+}
+
 
 // "borrowed" from <linux/bitops.h> from linux-2.4
 static unsigned int my_hweight32(unsigned int w) {

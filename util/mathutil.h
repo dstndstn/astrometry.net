@@ -54,7 +54,25 @@ double uniform_sample(double low, double high);
 
 double gaussian_sample(double mean, double stddev);
 
+// just drop partial blocks off the end.
+#define EDGE_TRUNCATE 0
+// just average the pixels in partial blocks.
+#define EDGE_AVERAGE  1
 
+int get_output_image_size(int W, int H, int blocksize, int edgehandling,
+						  int* outw, int* outh);
+
+/**
+ Average the image in "blocksize" x "blocksize" blocks, placing the
+ output in the "output" image.  The output image will have size
+ "*newW" by "*newH".  If you pass "output = NULL", memory will be
+ allocated for the output image.  It is valid to pass in "output" =
+ "image".  The output image is returned.
+ */
+float* average_image_f(const float* image, int W, int H,
+					   int blocksize, int edgehandling,
+					   int* newW, int* newH,
+					   float* output);
 
 Const InlineDeclare int imax(int a, int b);
 

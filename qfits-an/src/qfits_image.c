@@ -1046,6 +1046,10 @@ static float * qfits_pixin_float(
     
 
     baseptr = p_dest = qfits_malloc(npix * sizeof(float));
+	if (!baseptr) {
+		qfits_error("Failed to allocate a buffer to convert the image to float format.\n");
+		return NULL;
+	}
     switch (bitpix) {
 
         case 8:

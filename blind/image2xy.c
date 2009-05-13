@@ -33,6 +33,7 @@
 #include "dimage.h"
 #include "errors.h"
 #include "log.h"
+#include "mathutil.h"
 
 static float* upconvert(unsigned char* u8,
                         int nx, int ny) {
@@ -51,35 +52,17 @@ static void rebin(float** thedata,
                   int W, int H, int S,
                   int* newW, int* newH) {
     float sigma = S;
-    int i, j, I, J;
 
-    *newW = (W + S-1) / S;
-    *newH = (H + S-1) / S;
+	get_output_image_size(W, H, S, EDGE_AVERAGE, newW, newH);
 
     // Gaussian smooth in-place.
     dsmooth2(*thedata, W, H, sigma, *thedata);
 
     // Average SxS blocks, placing the result in the bottom (newW * newH) first pixels.
-    for (j=0; j<*newH; j++) {
-        for (i=0; i<*newW; i++) {
-            float sum = 0.0;
-            int N = 0;
-            for (J=0; J<S; J++) {
-                if (j*S + J >= H)
-                    break;
-                for (I=0; I<S; I++) {
-                    if (i*S + I >= W)
-                        break;
-                    sum += (*thedata)[(j*S + J)*W + (i*S + I)];
-                    N++;
-                }
-            }
-            (*thedata)[j * (*newW) + i] = sum / (float)N;
-        }
-    }
-
-    // save some memory...
-    //*thedata = realloc(*thedata, (*newW) * (*newH) * sizeof(float));
+	if (!average_image_f(*thedata, W, H, S, EDGE_AVERAGE, newW, newH, *thedata)) {
+		ERROR("Averaging the image failed.");
+		return;
+	}
 }
 
 int image2xy_image2(simplexy_t* s,

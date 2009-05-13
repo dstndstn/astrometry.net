@@ -11,8 +11,13 @@ if __name__ == '__main__':
 	ra  = float(args[0])
 	dec = float(args[1])
 
+	rastr  = ra2hmsstring(ra).replace(' ','h',1).replace(' ','m',1).replace(' ','s',1)
+	decstr = dec2dmsstring(dec).replace(' ','d',1).replace(' ','m',1).replace(' ','s',1)
+
 	print '            %-20s   %-20s' % ('RA', 'Dec')
 	print 'in:         %-20f   %-20f' % (ra, dec)
 	print 'out:        %-20s   %-20s' % (ra2hmsstring(ra), dec2dmsstring(dec))
+	print 'out:        %-20s   %-20s' % (ra2hmsstring(ra,':'), dec2dmsstring(dec, ':'))
+	print 'out:        %-20s   %-20s' % (rastr, decstr)
 
 	

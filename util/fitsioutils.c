@@ -79,18 +79,23 @@ int fits_write_header_and_image(const qfits_header* hdr, const qfitsdumper* qd) 
 	return 0;
 }
 
-qfits_header* fits_get_header_for_image(qfitsdumper* qd, int W,
-                                        qfits_header* addtoheader) {
+qfits_header* fits_get_header_for_image2(int W, int H, int bitpix,
+										 qfits_header* addtoheader) {
     qfits_header* hdr;
     if (addtoheader)
         hdr = addtoheader;
     else
         hdr = qfits_header_default();
-    fits_header_add_int(hdr, "BITPIX", qd->out_ptype, "bits per pixel");
+    fits_header_add_int(hdr, "BITPIX", bitpix, "bits per pixel");
     fits_header_add_int(hdr, "NAXIS", 2, "number of axes");
     fits_header_add_int(hdr, "NAXIS1", W, "image width");
-    fits_header_add_int(hdr, "NAXIS2", qd->npix / W, "image height");
+    fits_header_add_int(hdr, "NAXIS2", H, "image height");
     return hdr;
+}
+
+qfits_header* fits_get_header_for_image(qfitsdumper* qd, int W,
+                                        qfits_header* addtoheader) {
+	return fits_get_header_for_image2(W, qd->npix / W, qd->out_ptype, addtoheader);
 }
 
 void fits_use_error_system() {
