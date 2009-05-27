@@ -215,6 +215,10 @@ report:
 	-python -V
 	@echo "PYTHONPATH: $${PYTHONPATH}"
 	@echo "PATH: $${PATH}"
+	@echo "pkg-config --cflags cairo:"
+	-pkg-config --cflags cairo
+	@echo "pkg-config --libs cairo: "
+	-pkg-config --libs cairo
 
 report.txt: Makefile
 	$(MAKE) report > $@
