@@ -603,8 +603,8 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 		bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
 
 		debug("Quad radius = %g\n", sqrt(Q2));
-		ror2 = Q2 * MAX(1, (fieldW*fieldH*(1 - distractors) / (2. * M_PI * NR * pix2) - 1));
-		debug("Radius of relevance is %.1f\n", sqrt(ror2));
+		ror2 = Q2 * MAX(1, (fieldW*fieldH*(1 - distractors) / (4. * M_PI * NR * pix2) - 1));
+		debug("(strong) Radius of relevance is %.1f\n", sqrt(ror2));
 		goodbins = malloc(uni_nw * uni_nh * sizeof(bool));
 		Ngoodbins = 0;
 		for (i=0; i<(uni_nw * uni_nh); i++) {
@@ -645,7 +645,7 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 
 		// New ROR is...
 		debug("ROR changed from %g to %g\n", sqrt(ror2),
-				sqrt(Q2 * (1 + effA*(1 - distractors) / (2. * M_PI * NR * pix2))));
+				sqrt(Q2 * (1 + effA*(1 - distractors) / (4. * M_PI * NR * pix2))));
 
 		free(goodbins);
 		free(bincenters);
