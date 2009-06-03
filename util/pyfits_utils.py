@@ -5,6 +5,8 @@ class tabledata(object):
 		object.__setattr__(self, name, val)
 	def set(self, name,val):
 		self.__setattr__(name, val)
+	def getcolumn(self, name):
+		return self.__getattr__(name)
 
 def table_fields(dataorfn):
 	pf = None
