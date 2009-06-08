@@ -33,6 +33,7 @@ const char* wcs_dirs[] = {
 	"/home/gmaps/ontheweb-data",
 	"/home/gmaps/test/web-data",
 	"/home/gmaps/apod-solves",
+	"."
 };
 
 static void logmsg(char* format, ...) {
@@ -43,16 +44,13 @@ static void logmsg(char* format, ...) {
 	va_end(args);
 }
 
-int render_boundary(unsigned char* img, render_args_t* args) {
+int render_boundary(cairo_t* cairo, render_args_t* args) {
 	int i, I;
-	cairo_t* cairo;
-	cairo_surface_t* target;
 	double lw = args->linewidth;
 	sl* wcsfiles = NULL;
 	dl* colorlist = NULL;
 	double r, g, b;
 
-	//r = g = b = 1.0;
 	r = b = 0;
     g = 1.0;
 
@@ -66,7 +64,7 @@ int render_boundary(unsigned char* img, render_args_t* args) {
     }
 
     wcsfiles = sl_new(256);
-    get_string_args_of_type(args, "wcsfn ", wcsfiles);
+    get_string_args_of_type(args, "bwcsfn ", wcsfiles);
 	if (!sl_size(wcsfiles)) {
 		logmsg("No WCS files specified.\n");
 		return -1;
@@ -77,9 +75,6 @@ int render_boundary(unsigned char* img, render_args_t* args) {
 		return -1;
     }
 
-	target = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32,
-												 args->W, args->H, args->W*4);
-	cairo = cairo_create(target);
 	cairo_set_line_width(cairo, lw);
 	cairo_set_line_join(cairo, CAIRO_LINE_JOIN_ROUND);
 	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
@@ -234,11 +229,6 @@ int render_boundary(unsigned char* img, render_args_t* args) {
         dl_free(colorlist);
 
 	sl_free2(wcsfiles);
-
-    cairoutils_argb32_to_rgba(img, args->W, args->H);
-
-	cairo_surface_destroy(target);
-	cairo_destroy(cairo);
 
 	return 0;
 }

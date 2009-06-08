@@ -3,6 +3,6 @@
 
 #include "tilerender.h"
 
-int render_boundary(unsigned char* img, render_args_t* args);
+int render_boundary(cairo_t* cairo, render_args_t* args);
 
 #endif
