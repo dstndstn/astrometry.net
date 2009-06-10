@@ -202,6 +202,40 @@ void get_string_args_of_type(render_args_t* args, const char* prefix, sl* lst) {
     }
 }
 
+int get_int_arg(const char* arg, int def) {
+	char* c = index(arg, ' ');
+	char* endp;
+	int val;
+	if (!c) return def;
+	val = strtol(c+1, &endp, 0);
+	if (endp == c) return def;
+	return val;
+}
+
+double get_double_arg(const char* arg, double def) {
+	char* c = index(arg, ' ');
+	char* endp;
+	double val;
+	if (!c) return def;
+	c++;
+	val = strtod(c, &endp);
+	if (endp == c) return def;
+	return val;
+}
+
+void get_double_args(const char* arg, dl* lst) {
+	char* c = index(arg, ' ');
+	char* endp;
+	double val;
+	if (!c) return;
+	while (c && *c) {
+		c++;
+		val = strtod(c, &endp);
+		if (endp == c) break;
+		c = endp;
+	}
+}
+
 void get_double_args_of_type(render_args_t* args, const char* prefix, dl* lst) {
     int i;
     int skip = strlen(prefix);

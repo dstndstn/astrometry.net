@@ -130,6 +130,12 @@ void get_string_args_of_type(render_args_t* args, const char* prefix, sl* lst);
 
 void get_double_args_of_type(render_args_t* args, const char* prefix, dl* lst);
 
+int get_int_arg(const char* arg, int def);
+
+double get_double_arg(const char* arg, double def);
+
+void get_double_args(const char* arg, dl* lst);
+
 int parse_color(char c, double* p_red, double* p_green, double* p_blue);
 
 // to RA in degrees
