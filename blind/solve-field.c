@@ -949,7 +949,7 @@ int main(int argc, char** args) {
                 }
             }
 
-            if (axy->wcsfn) {
+            if (axy->wcsfn && file_exists(axy->wcsfn)) {
 				// print info about the field.
 				if (!sip_read_header_file(axy->wcsfn, &wcs)) {
 					ERROR("Failed to read WCS header from file %s", axy->wcsfn);
