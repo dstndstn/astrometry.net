@@ -915,8 +915,8 @@ int main(int argc, char** argv) {
 				loosen = loosenhps[xpass * ypasses + ypass] = il_new(1024);
 			}
 
-			dxfrac = xpass / (double)xpasses;
-			dyfrac = ypass / (double)ypasses;
+			dxfrac = (xpass + 0.5) / (double)xpasses;
+			dyfrac = (ypass + 0.5) / (double)ypasses;
 
 			printf("Pass %i of %i.\n", xpass * ypasses + ypass + 1, xpasses * ypasses);
 			nthispass = 0;
