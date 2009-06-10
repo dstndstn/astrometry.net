@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <math.h>
 #include <sys/param.h>
+#include <string.h>
 
 #include <cairo.h>
 
 #include "tilerender.h"
 #include "render_gridlines.h"
 #include "cairoutils.h"
+#include "ioutils.h"
 
 static void add_text(cairo_t* cairo, double x, double y,
 					 const char* txt, render_args_t* args) {
@@ -79,7 +81,13 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	ralabelstep = 2. * rastep;
 	declabelstep = 2. * decstep;
 
-	fprintf(stderr, "render_gridlines: step %g\n", rastep);
+	rastep = get_double_arg_of_type(args, "gridrastep ", rastep);
+	ralabelstep = get_double_arg_of_type(args, "gridlabelrastep ", decstep);
+	decstep = get_double_arg_of_type(args, "griddecstep ", ralabelstep);
+	declabelstep = get_double_arg_of_type(args, "gridlabeldecstep ", declabelstep);
+
+	logmsg("Grid step: RA %g, Dec %g.\n", rastep, decstep);
+	logmsg("Grid label step: RA %g, Dec %g.\n", ralabelstep, declabelstep);
 
 	/*
 	 In order to properly do the transparency and text, we render onto a
@@ -127,6 +135,9 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 		if (!in_image((int)round(x+0.5), 0, args))
 			continue;
 		sprintf(buf, "%.2f", ra);
+		// Trim off ".00"
+		if (ends_with(buf, ".00"))
+			buf[strlen(buf) - 3] = '\0';
 		add_text(cairo, x, y, buf, args);
 	}
 	for (dec = declabelstep * floor(args->decmin / declabelstep);
@@ -141,6 +152,9 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 		if (!in_image(0, (int)round(y+0.5), args))
 			continue;
 		sprintf(buf, "%.2f", dec);
+		// Trim off ".00"
+		if (ends_with(buf, ".00"))
+			buf[strlen(buf) - 3] = '\0';
 		add_text(cairo, x, y, buf, args);
 	}
 

@@ -251,6 +251,18 @@ void get_double_args_of_type(render_args_t* args, const char* prefix, dl* lst) {
     }
 }
 
+double get_double_arg_of_type(render_args_t* args, const char* name, double def) {
+	double rtn;
+	dl* lst = dl_new(4);
+	get_double_args_of_type(args, name, lst);
+	if (dl_size(lst) == 0)
+		rtn = def;
+	else
+		rtn = dl_get(lst, 0);
+	dl_free(lst);
+	return rtn;
+}
+
 extern char *optarg;
 extern int optind, opterr, optopt;
 

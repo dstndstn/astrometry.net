@@ -130,6 +130,9 @@ void get_string_args_of_type(render_args_t* args, const char* prefix, sl* lst);
 
 void get_double_args_of_type(render_args_t* args, const char* prefix, dl* lst);
 
+// Returns the first argument of the given name.
+double get_double_arg_of_type(render_args_t* args, const char* name, double def);
+
 int get_int_arg(const char* arg, int def);
 
 double get_double_arg(const char* arg, double def);
