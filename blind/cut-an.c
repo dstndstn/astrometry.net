@@ -880,6 +880,8 @@ int main(int argc, char** args) {
 		char key[64];
 		char val[64];
 		int nsweep = 0;
+		if (sweeps && (k >= sweeps))
+			break;
 		// gather up the stars that will be used in this sweep...
 		for (i=0; i<npix; i++) {
 			stardata* sd;
