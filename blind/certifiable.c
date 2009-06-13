@@ -254,6 +254,7 @@ int main(int argc, char *argv[]) {
 
                 r2 = square(mo->radius);
                 arc = deg2arcmin(mo->radius_deg);
+				xyzarr2radec(mo->center, &rac, &decc);
 
                 for (k=0; k<nrd; k++) {
                     double xyz[3];
