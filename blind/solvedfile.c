@@ -27,6 +27,7 @@
 #include <fcntl.h>
 
 #include "solvedfile.h"
+#include "errors.h"
 
 int solvedfile_getsize(char* fn) {
 	FILE* f;
@@ -230,6 +231,28 @@ int solvedfile_set_array(char* fn, bool* vals, int N) {
 	if (close(f)) {
 		fprintf(stderr, "Error closing file %s: %s\n",
 				fn, strerror(errno));
+		return -1;
+	}
+	return 0;
+}
+
+int solvedfile_set_file(char* fn, bool* vals, int N) {
+	FILE* f;
+	int i;
+
+	// Ensure the array contains values 0, 1.
+	for (i=0; i<N; i++)
+		if (vals[i]) vals[i] = TRUE;
+		else vals[i] = FALSE;
+
+	f = fopen(fn, "wb");
+	if (!f) {
+		SYSERROR("Failed to open file \"%s\" for writing", fn);
+		return -1;
+	}
+	if ((fwrite(vals, 1, N, f) != N) ||
+		fclose(f)) {
+		SYSERROR("Failed to write solved file \"%s\"", fn);
 		return -1;
 	}
 	return 0;

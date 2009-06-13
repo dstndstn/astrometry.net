@@ -82,13 +82,7 @@ int main(int argc, char** args) {
 		if (n > N) N = n;
 	}
 
-	if (solvedfile_setsize(outfile, N)) {
-		fprintf(stderr, "Failed to set size of output file.\n");
-		exit(-1);
-	}
-
 	solved = calloc(N, sizeof(bool));
-	
 	for (i=0; i<ninputfiles; i++) {
 		il* slist;
 		int j;
@@ -97,7 +91,7 @@ int main(int argc, char** args) {
 			solved[il_get(slist, j) - 1] = TRUE;
 		il_free(slist);
 	}
-	if (solvedfile_set_array(outfile, solved, N)) {
+	if (solvedfile_set_file(outfile, solved, N)) {
 		fprintf(stderr, "Failed to set values in output file.\n");
 		exit(-1);
 	}
