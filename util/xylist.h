@@ -44,7 +44,7 @@
 
    xylist_fix_header()
 
-   xylist_next_field
+   xylist_next_field()
  }
 
  xylist_fix_primary_header()

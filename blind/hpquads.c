@@ -41,7 +41,6 @@
 #include "rdlist.h"
 #include "histogram.h"
 #include "starkd.h"
-#include "pnpoly.h"
 #include "boilerplate.h"
 #include "log.h"
 #include "errors.h"
@@ -153,26 +152,19 @@ static Inline void drop_quad(quad* q, int dimquads) {
 // is the midpoint of AB inside the healpix?
 static void
 check_scale_and_midpoint(pquad* pq, double* stars, int* starids, int Nstars,
-						 double* origin, double* vx, double* vy,
-						 double* boxx, double* boxy) {
+						 int Nside, int hp) {
 	double *sA, *sB;
 	double Bx, By;
 	double invscale;
 	double ABx, ABy;
-	double px, py;
 	double s2;
-	int d;
-	double avgAB[3];
-	double invlen;
 	bool ok;
 
 	sA = stars + pq->iA * 3;
 	sB = stars + pq->iB * 3;
 
 	// s2: squared AB dist
-	s2 = 0.0;
-	for (d=0; d<3; d++)
-		s2 += (sA[d] - sB[d])*(sA[d] - sB[d]);
+	s2 = distsq(sA, sB, 3);
 	if ((s2 > quad_dist2_upper) ||
 		(s2 < quad_dist2_lower)) {
 		pq->scale_ok = 0;
@@ -180,22 +172,8 @@ check_scale_and_midpoint(pquad* pq, double* stars, int* starids, int Nstars,
 		return;
 	}
 
-	// avgAB: mean of A,B.  (note, it's NOT on the sphere, and that's okay
-	// because we're projecting it into the ~tangent plane of the target
-	// healpix)
-	for (d=0; d<3; d++)
-		avgAB[d] = 0.5 * (sA[d] + sB[d]);
-
-	px = 
-		(avgAB[0] - origin[0]) * vx[0] +
-		(avgAB[1] - origin[1]) * vx[1] +
-		(avgAB[2] - origin[2]) * vx[2];
-	py =
-		(avgAB[0] - origin[0]) * vy[0] +
-		(avgAB[1] - origin[1]) * vy[1] +
-		(avgAB[2] - origin[2]) * vy[2];
-
-	if (!point_in_poly(boxx, boxy, 4, px, py)) {
+	star_midpoint(pq->midAB, sA, sB);
+	if (xyzarrtohealpix(pq->midAB, Nside) != hp) {
 		pq->scale_ok = 0;
 		nbadcenter++;
 		return;
@@ -205,10 +183,6 @@ check_scale_and_midpoint(pquad* pq, double* stars, int* starids, int Nstars,
 	pq->staridA = starids[pq->iA];
 	pq->staridB = starids[pq->iB];
 
-	invlen = 1.0 / sqrt(avgAB[0]*avgAB[0] + avgAB[1]*avgAB[1] + avgAB[2]*avgAB[2]);
-	pq->midAB[0] = avgAB[0] * invlen;
-	pq->midAB[1] = avgAB[1] * invlen;
-	pq->midAB[2] = avgAB[2] * invlen;
 	ok = star_coords(sA, pq->midAB, &pq->Ax, &pq->Ay);
 	assert(ok);
 	ok = star_coords(sB, pq->midAB, &Bx, &By);
@@ -296,10 +270,8 @@ static pquad* cq_pquads = NULL;
 static int* cq_inbox = NULL;
 
 static int create_quad(double* stars, int* starinds, int Nstars,
-					   bool circle,
-					   double* origin, double* vx, double* vy,
-					   double* boxx, double* boxy,
-					   bool count_uses, int dimquads) {
+					   int Nside, int hp,
+					   bool circle, bool count_uses, int dimquads) {
 	int iA=0, iB, iC, iD, newpoint;
 	int rtn = 0;
 	int ninbox;
@@ -349,7 +321,7 @@ static int create_quad(double* stars, int* starinds, int Nstars,
 			pq->iA = iA;
 			pq->iB = iB;
 			check_scale_and_midpoint(pq, stars, starinds, Nstars,
-									 origin, vx, vy, boxx, boxy);
+									 Nside, hp);
 			if (!pq->scale_ok)
 				continue;
 
@@ -425,38 +397,22 @@ static int* perm = NULL;
 static int* inds = NULL;
 static double* stars = NULL;
 
-static bool find_stars_and_vectors(int hp, int Nside, double radius2,
-								   double dxfrac, double dyfrac,
-								   int* p_nostars, int* p_yesstars,
-								   int* p_nounused, int* p_nstarstotal,
-								   int* p_ncounted,
-								   int* p_N,
-								   double* centre, double* vx, double* vy,
-								   double* xpts, double* ypts,
-								   bool* p_failed_nostars,
-								   int R,
-								   int dimquads, startree_t* starkd) {
+static bool find_stars(int hp, int Nside, double radius2,
+					   int* p_nostars, int* p_yesstars,
+					   int* p_nounused, int* p_nstarstotal,
+					   int* p_ncounted,
+					   int* p_N,
+					   double* centre,
+					   bool* p_failed_nostars,
+					   int R,
+					   int dimquads, startree_t* starkd) {
 	static int Nhighwater = 0;
-	double origin[3];
-	double dx[3];
-	double dy[3];
-	double dxy[3];
-	double normal[3];
 	int d;
 	kdtree_qres_t* res;
 	int j, N;
 	int destind;
 
-	healpix_to_xyzarr(hp, Nside, 0.0, 0.0, origin);
-	healpix_to_xyzarr(hp, Nside, 1.0, 0.0, dx);
-	healpix_to_xyzarr(hp, Nside, 0.0, 1.0, dy);
-	healpix_to_xyzarr(hp, Nside, 1.0, 1.0, dxy);
-	for (d=0; d<3; d++) {
-		dx[d] -= origin[d];
-		dy[d] -= origin[d];
-		dxy[d] -= origin[d];
-		centre[d] = origin[d] + dxfrac*dx[d] + dyfrac*dy[d];
-	}
+	healpix_to_xyzarr(hp, Nside, 0.5, 0.5, centre);
 
 	res = kdtree_rangesearch_nosort(starkd->tree, centre, radius2);
 
@@ -521,24 +477,6 @@ static bool find_stars_and_vectors(int hp, int Nside, double radius2,
 	permutation_apply(perm, N, res->inds, inds, sizeof(int));
 	permutation_apply(perm, N, res->results.d, stars, 3 * sizeof(double));
 	kdtree_free_query(res);
-
-	// compute the projection vectors
-	cross_product(dx, dy, normal);
-	normalize_3(normal);
-	cross_product(normal, dx, vy);
-	normalize_3(vy);
-	cross_product(vy, normal, vx);
-	// (this should already be normalized!)
-	normalize_3(vx);
-
-	xpts[0] = 0.0;
-	ypts[0] = 0.0;
-	xpts[1] = dot_product_3(vx, dx);
-	ypts[1] = dot_product_3(vy, dx);
-	xpts[2] = dot_product_3(vx, dxy);
-	ypts[2] = dot_product_3(vy, dxy);
-	xpts[3] = dot_product_3(vx, dy);
-	ypts[3] = dot_product_3(vy, dy);
 
 	if (p_N) *p_N = N;
 	return TRUE;
@@ -611,10 +549,7 @@ int main(int argc, char** argv) {
 	int loosenmax = 0;
 	il** loosenhps = NULL;
 
-	double dxfrac, dyfrac;
 	double centre[3];
-	double vx[3], vy[3];
-	double boxx[4], boxy[4];
 	int hp, hpnside;
 
 	qfits_header* qhdr;
@@ -818,7 +753,8 @@ int main(int argc, char** argv) {
 	for (i=0; i<startree_N(starkd); i++)
 		nuses[i] = 0;
 
-	hprad = sqrt(0.5 * arcsec2distsq(healpix_side_length_arcmin(Nside) * 60.0));
+	// hprad = sqrt(2) * (healpix side length / 2.)
+	hprad = arcmin2dist(healpix_side_length_arcmin(Nside)) * M_SQRT1_2;
 	quadscale = 0.5 * sqrt(quad_dist2_upper);
 	// 1.01 for a bit of safety.  we'll look at a few extra stars.
 	radius2 = square(1.01 * (hprad + quadscale));
@@ -828,8 +764,7 @@ int main(int argc, char** argv) {
 		   distsq2arcsec(quadscale*quadscale),
 		   distsq2arcsec(radius2));
 
-
-	hptotry = ll_new(256);
+	hptotry = ll_new(1024);
 
 	if (scanoccupied) {
 		int i, N;
@@ -915,9 +850,6 @@ int main(int argc, char** argv) {
 				loosen = loosenhps[xpass * ypasses + ypass] = il_new(1024);
 			}
 
-			dxfrac = (xpass + 0.5) / (double)xpasses;
-			dyfrac = (ypass + 0.5) / (double)ypasses;
-
 			printf("Pass %i of %i.\n", xpass * ypasses + ypass + 1, xpasses * ypasses);
 			nthispass = 0;
 			nnostars = 0;
@@ -946,15 +878,13 @@ int main(int argc, char** argv) {
 				}
 
 				failed_nostars = FALSE;
-				ok = find_stars_and_vectors(hp, Nside, radius2,
-											dxfrac, dyfrac,
-											&nnostars, &nyesstars,
-											&nnounused, &nstarstotal,
-											&ncounted,
-											&N, centre, vx, vy,
-											boxx, boxy,
-											&failed_nostars,
-											Nreuse, dimquads, starkd);
+				ok = find_stars(hp, Nside, radius2,
+								&nnostars, &nyesstars,
+								&nnounused, &nstarstotal,
+								&ncounted,
+								&N, centre,
+								&failed_nostars,
+								Nreuse, dimquads, starkd);
 
 				if (failedrdls) {
 					xyz2radec(centre[0], centre[1], centre[2], radec, radec+1);
@@ -984,8 +914,8 @@ int main(int argc, char** argv) {
 					continue;
 				}
 
-				if (create_quad(stars, inds, N, circle,
-								centre, vx, vy, boxx, boxy, TRUE, dimquads)) {
+				if (create_quad(stars, inds, N, Nside, hp, circle,
+								TRUE, dimquads)) {
 					if (histnstars)
 						histogram_add(histnstars, (double)N);
 					nthispass++;
@@ -1116,17 +1046,15 @@ int main(int argc, char** argv) {
 							lastgrass = i * 80 / il_size(noreuse_hps);
 						}
 
-						if (!find_stars_and_vectors(hp, Nside, radius2,
-													dxfrac, dyfrac,
-													NULL, NULL, NULL, NULL, NULL,
-													&N, centre, vx, vy,
-													boxx, boxy,
-													NULL, INT_MAX, dimquads, starkd)) {
+						if (!find_stars(hp, Nside, radius2,
+										NULL, NULL, NULL, NULL, NULL,
+										&N, centre,
+										NULL, INT_MAX, dimquads, starkd)) {
 							nfailed1++;
 							goto failedhp2;
 						}
-						if (!create_quad(stars, inds, N, circle,
-										 centre, vx, vy, boxx, boxy, FALSE, dimquads)) {
+						if (!create_quad(stars, inds, N, Nside, hp, circle,
+										 FALSE, dimquads)) {
 							nfailed2++;
 							goto failedhp2;
 						}
@@ -1195,8 +1123,6 @@ int main(int argc, char** argv) {
 						continue;
 
 					alldone = 0;
-					dxfrac = xpass / (double)xpasses;
-					dyfrac = ypass / (double)ypasses;
 
 					printf("Pass %i of %i.\n", xpass * ypasses + ypass + 1, xpasses * ypasses);
 					printf("Trying %i healpixes.\n", il_size(loosen));
@@ -1208,17 +1134,15 @@ int main(int argc, char** argv) {
 						int N;
 						hp = il_get(loosen, i);
 
-						if (!find_stars_and_vectors(hp, Nside, radius2,
-													dxfrac, dyfrac,
-													NULL, NULL, NULL, NULL, NULL,
-													&N, centre, vx, vy,
-													boxx, boxy,
-													NULL, mx, dimquads, starkd)) {
+						if (!find_stars(hp, Nside, radius2,
+										NULL, NULL, NULL, NULL, NULL,
+										&N, centre,
+										NULL, mx, dimquads, starkd)) {
 							il_append(newlist, hp);
 							continue;
 						}
-						if (!create_quad(stars, inds, N, circle,
-										 centre, vx, vy, boxx, boxy, TRUE, dimquads)) {
+						if (!create_quad(stars, inds, N, Nside, hp, circle,
+										 TRUE, dimquads)) {
 							il_append(newlist, hp);
 							continue;
 						}
