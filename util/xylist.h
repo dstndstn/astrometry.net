@@ -24,6 +24,33 @@
 
 #define AN_FILETYPE_XYLS "XYLS"
 
+/**
+ Writing:
+
+ xylist_open_for_writing()
+ xylist_write_primary_header()
+
+ for (each extension) {
+   // optionally:
+   xylist_add_tagalong_column()
+
+   xylist_write_header()
+ 
+   // either:
+   xylist_write_one_row()
+   xylist_write_field()
+   // optionally:
+   xylist_write_tagalong_column()
+
+   xylist_fix_header()
+
+   xylist_next_field
+ }
+
+ xylist_fix_primary_header()
+ xylist_close()
+ */
+
 /*
   One table per field.
   One row per star.

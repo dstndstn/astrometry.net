@@ -159,6 +159,8 @@ int main(int argc, char** args) {
             fprintf(stderr, "Failed to fix RDLS field header.\n");
             exit(-1);
         }
+
+		rdlist_next_field(rdls);
 	}
 
     if (rdlist_fix_primary_header(rdls) ||

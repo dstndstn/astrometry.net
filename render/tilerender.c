@@ -38,6 +38,7 @@
 #include "fitsioutils.h"
 #include "bl.h"
 #include "log.h"
+#include "errors.h"
 
 #include "render_tycho.h"
 #include "render_gridlines.h"
@@ -232,6 +233,7 @@ void get_double_args(const char* arg, dl* lst) {
 		c++;
 		val = strtod(c, &endp);
 		if (endp == c) break;
+		dl_append(lst, val);
 		c = endp;
 	}
 }
@@ -492,6 +494,10 @@ int main(int argc, char *argv[]) {
 		sl* lines;
 		char* fn = sl_get(args.argfilenames, i);
         lines = file_get_lines(fn, FALSE);
+		if (!lines) {
+			ERROR("Failed to read args file: \"%s\"", fn);
+			return -1;
+		}
 		if (!args.arglist)
 			args.arglist = lines;
 		else {
