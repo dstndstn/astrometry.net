@@ -52,4 +52,6 @@
 void qfits_cache_purge(void);
 int qfits_query(const char *, int);
 
+size_t qfits_query_long(const char *, int);
+
 #endif

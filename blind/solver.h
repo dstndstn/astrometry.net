@@ -48,6 +48,7 @@ enum {
 #define DEFAULT_TWEAK_ABPORDER 3
 #define DEFAULT_DISTRACTOR_RATIO 0.25
 #define DEFAULT_VERIFY_PIX 1.0
+#define DEFAULT_BAIL_THRESHOLD 1e-100
 
 struct verify_field_t;
 struct solver_t {

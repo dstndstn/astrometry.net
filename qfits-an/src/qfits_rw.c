@@ -488,6 +488,27 @@ int qfits_get_hdrinfo(
     return 0;
 }
 
+int qfits_get_hdrinfo_long(
+        const char  *   filename,
+        int             xtnum,
+        off_t       *   seg_start,
+        size_t      *   seg_size) {
+    if (filename==NULL || xtnum<0 || (seg_start==NULL && seg_size==NULL)) {
+        return -1;
+    }
+    if (seg_start!=NULL) {
+        *seg_start = qfits_query_long(filename, QFITS_QUERY_HDR_START | xtnum);
+        if (*seg_start<0)
+            return -1;
+    }
+    if (seg_size!=NULL) {
+        *seg_size = qfits_query_long(filename, QFITS_QUERY_HDR_SIZE | xtnum);
+        if (*seg_size<0)
+            return -1;
+    }
+    return 0;
+}
+
 /*----------------------------------------------------------------------------*/
 /**
   @brief    Retrieve offset to start and size of a data section in a file.
@@ -528,6 +549,29 @@ int qfits_get_datinfo(
     }
     return 0;  
 }
+
+int qfits_get_datinfo_long(
+        const char  *   filename,
+        int             xtnum, 
+        off_t       *   seg_start,
+        size_t      *   seg_size)
+{
+    if (filename==NULL || xtnum<0 || (seg_start==NULL && seg_size==NULL)) {
+        return -1;
+    }
+    if (seg_start!=NULL) {
+        *seg_start = qfits_query_long(filename, QFITS_QUERY_DAT_START | xtnum);
+        if (*seg_start<0)
+            return -1;
+    }
+    if (seg_size!=NULL) {
+        *seg_size = qfits_query_long(filename, QFITS_QUERY_DAT_SIZE | xtnum);
+        if (*seg_size<0)
+            return -1;
+    }
+    return 0;  
+}
+
 
 /**@}*/
 

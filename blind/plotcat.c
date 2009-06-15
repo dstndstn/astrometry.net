@@ -42,7 +42,7 @@
 #include "qfits.h"
 #include "log.h"
 
-#define OPTIONS "bhgN:f:tsSo:Fm:"
+#define OPTIONS "bhgN:f:tsSo:Fm:L:H:"
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);

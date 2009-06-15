@@ -578,6 +578,14 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     bp->logratio_toprint = log(qfits_header_getdouble(hdr, "ANODDSPR", default_odds_toprint));
     bp->logratio_tokeep = log(qfits_header_getdouble(hdr, "ANODDSKP", default_odds_tokeep));
     bp->logratio_tosolve = log(qfits_header_getdouble(hdr, "ANODDSSL", default_odds_tosolve));
+	logverb("Set odds ratio to solve to %g (log = %g)\n", exp(bp->logratio_tosolve), bp->logratio_tosolve);
+
+	// gotta keep it to solve it!
+	bp->logratio_tokeep = MIN(bp->logratio_tokeep, bp->logratio_tosolve);
+	// gotta print it to keep it (so what if that doesn't make sense)!
+	bp->logratio_toprint = MIN(bp->logratio_toprint, bp->logratio_tokeep);
+
+    sp->logratio_bail_threshold = log(qfits_header_getdouble(hdr, "ANODDSBL", DEFAULT_BAIL_THRESHOLD));
     bp->best_hit_only = TRUE;
 
 	// job->image_fraction = qfits_header_getdouble(hdr, "ANIMFRAC", job->image_fraction);

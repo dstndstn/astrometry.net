@@ -47,4 +47,16 @@ int qfits_is_fits(const char *);
 int qfits_get_hdrinfo(const char *, int, int *, int *);
 int qfits_get_datinfo(const char *, int, int *, int *);
 
+int qfits_get_hdrinfo_long(
+        const char  *   filename,
+        int             xtnum,
+        off_t       *   seg_start,
+        size_t      *   seg_size);
+
+int qfits_get_datinfo_long(
+        const char  *   filename,
+        int             xtnum, 
+        off_t       *   seg_start,
+        size_t      *   seg_size);
+
 #endif

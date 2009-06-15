@@ -132,8 +132,8 @@ int qfits_query_ext_r(const char* filename,
     int         i;
     int         len;
     int         different;
-    int         seg_start;
-    int         seg_size;
+    off_t       seg_start;
+    size_t      seg_size;
     long        bufcount;
     size_t      size;
 	int rtnval = -1;
@@ -151,7 +151,7 @@ int qfits_query_ext_r(const char* filename,
      * Find out offsets to the required extension
      * Record the xtension start and stop offsets
      */
-    if (qfits_get_hdrinfo(filename, xtnum, &seg_start, &seg_size)==-1) {
+    if (qfits_get_hdrinfo_long(filename, xtnum, &seg_start, &seg_size)==-1) {
         return rtnval;
     }
 

@@ -239,15 +239,12 @@ void qfits_cache_purge_impl(void)
   of the FITS file.
  */
 /*----------------------------------------------------------------------------*/
-int qfits_query_impl(const char * filename, int what)
-{
+size_t qfits_query_impl_long(const char * filename, int what) {
     int    rank;
     int    which;
-    int    answer;
+    size_t answer;
 
-    qdebug(
-        printf("qfits: cache req %s\n", filename);
-    );
+    qdebug(printf("qfits: cache req %s\n", filename););
     if ((rank=qfits_is_cached(filename))==-1) {
         rank = qfits_cache_add(filename);
     }
@@ -267,7 +264,7 @@ int qfits_query_impl(const char * filename, int what)
     } else if (what & QFITS_QUERY_HDR_START) {
         which = what & (~QFITS_QUERY_HDR_START);
         if (which>=0 && which<=qfits_cache[rank].exts) {
-            answer = qfits_cache[rank].ohdr[which] * FITS_BLOCK_SIZE;
+            answer = ((size_t)qfits_cache[rank].ohdr[which]) * FITS_BLOCK_SIZE;
         }
         qdebug(
             printf("qfits: query offset to header %d\n", which);
@@ -276,7 +273,7 @@ int qfits_query_impl(const char * filename, int what)
     } else if (what & QFITS_QUERY_DAT_START) {
         which = what & (~QFITS_QUERY_DAT_START);
         if (which>=0 && which<=qfits_cache[rank].exts) {
-            answer = qfits_cache[rank].data[which] * FITS_BLOCK_SIZE;
+            answer = ((size_t)qfits_cache[rank].data[which]) * FITS_BLOCK_SIZE;
         }
         qdebug(
             printf("qfits: query offset to data %d\n", which);
@@ -285,7 +282,7 @@ int qfits_query_impl(const char * filename, int what)
     } else if (what & QFITS_QUERY_HDR_SIZE) {
         which = what & (~QFITS_QUERY_HDR_SIZE);
         if (which>=0 && which<=qfits_cache[rank].exts) {
-            answer = qfits_cache[rank].shdr[which] * FITS_BLOCK_SIZE;
+            answer = ((size_t)qfits_cache[rank].shdr[which]) * FITS_BLOCK_SIZE;
         }
         qdebug(
             printf("qfits: query sizeof header %d\n", which);
@@ -294,7 +291,7 @@ int qfits_query_impl(const char * filename, int what)
     } else if (what & QFITS_QUERY_DAT_SIZE) {
         which = what & (~QFITS_QUERY_DAT_SIZE);
         if (which>=0 && which<=qfits_cache[rank].exts) {
-            answer = qfits_cache[rank].dsiz[which] * FITS_BLOCK_SIZE;
+            answer = ((size_t)qfits_cache[rank].dsiz[which]) * FITS_BLOCK_SIZE;
         }
         qdebug(
             printf("qfits: query sizeof data %d\n", which);
@@ -303,6 +300,18 @@ int qfits_query_impl(const char * filename, int what)
     }
     return answer;
 }
+
+int qfits_query_impl(const char * filename, int what) {
+	int ires;
+	size_t res = qfits_query_impl_long(filename, what);
+	ires = (int)res;
+	if (res != (size_t)res) {
+		qfits_error("Warning: long return value %lli will get truncated to %i in qfits_query_impl()",
+					(long long int)res, ires);
+	}
+	return ires;
+}
+
 
 /**@}*/
 
@@ -811,6 +820,14 @@ int qfits_query(const char * filename, int what) {
 	int rtn;
 	qfits_lock_lock(&cache_lock);
 	rtn = qfits_query_impl(filename, what);
+	qfits_lock_unlock(&cache_lock);
+	return rtn;
+}
+
+size_t qfits_query_long(const char * filename, int what) {
+	size_t rtn;
+	qfits_lock_lock(&cache_lock);
+	rtn = qfits_query_impl_long(filename, what);
 	qfits_lock_unlock(&cache_lock);
 	return rtn;
 }

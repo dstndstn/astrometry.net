@@ -106,15 +106,19 @@ int qfits_is_table(const char * filename, int xtnum)
     char value[FITS_LINESZ+1];
     
     ttype = QFITS_INVALIDTABLE;
-    if (qfits_query_ext_r(filename, "XTENSION", xtnum, valueA))
+    if (qfits_query_ext_r(filename, "XTENSION", xtnum, valueA)) {
+		qfits_error("failed to find keyword \"XTENSION\" in filename \"%s\" extension %i", filename, xtnum);
 		return ttype;
+	}
 
     qfits_pretty_string_r(valueA, value);
     if (!strcmp(value, "TABLE")) {
         ttype = QFITS_ASCIITABLE;
     } else if (!strcmp(value, "BINTABLE")) {
         ttype = QFITS_BINTABLE;
-    }
+    } else {
+		qfits_error("Filename \"%s\" extension %i is not a FITS table: XTENSION = \"%s\" / \"%s\"", filename, xtnum, valueA, value);
+	}
     return ttype;
 }    
 
@@ -435,8 +439,8 @@ qfits_table * qfits_table_open(
     int                 atom_dec_nb;
     int                 atom_size;
     tfits_type          atom_type;
-    int                 offset_beg;
-    int                 data_size;
+    off_t               offset_beg;
+    size_t              data_size;
     int                 theory_size;
     int                 zero_present;
     int                 scale_present;
@@ -489,7 +493,7 @@ qfits_table * qfits_table_open(
     tload = qfits_table_new(filename, table_type, table_width, nb_col, nb_raws);
     
     /* Initialize offset_beg */
-    if (qfits_get_datinfo(filename, xtnum, &offset_beg, &data_size)!=0) {
+    if (qfits_get_datinfo_long(filename, xtnum, &offset_beg, &data_size)!=0) {
         qfits_error("cannot find data start in [%s]:[%d]", filename, xtnum);
         qfits_table_close(tload);
         return NULL;

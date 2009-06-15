@@ -98,6 +98,7 @@ struct augment_xylist_s {
     double pixelerr;
 
 	double odds_to_solve;
+	double odds_to_bail;
 
     int downsample;
 
