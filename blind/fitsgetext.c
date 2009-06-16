@@ -27,7 +27,7 @@
 #include "bl.h"
 #include "ioutils.h"
 
-char* OPTIONS = "he:i:o:baDH";
+char* OPTIONS = "he:i:o:baDHM";
 
 void printHelp(char* progname) {
 	fprintf(stderr, "%s    -i <input-file>\n"
@@ -35,6 +35,7 @@ void printHelp(char* progname) {
 		   "      [-a]: write out ALL extensions; the output filename should be\n"
 		   "            a \"sprintf\" pattern such as  \"extension-%%04i\".\n"
 		   "      [-b]: print sizes and offsets in FITS blocks (of 2880 bytes)\n"
+			"      [-M]: print sizes in megabytes (using floor(), not round()!)\n"
             "      [-D]: data blocks only\n"
             "      [-H]: header blocks only\n"
 		   "      -e <extension-number> ...\n\n",
@@ -55,7 +56,8 @@ int main(int argc, char *argv[]) {
 	il* exts;
 	int i;
 	char* progname = argv[0];
-	int inblocks = 0;
+	bool inblocks = FALSE;
+	bool inmegs = FALSE;
 	int allexts = 0;
 	int Next = -1;
     bool dataonly = FALSE;
@@ -75,7 +77,10 @@ int main(int argc, char *argv[]) {
 			allexts = 1;
 			break;
 		case 'b':
-			inblocks = 1;
+			inblocks = TRUE;
+			break;
+		case 'M':
+			inmegs = TRUE;
 			break;
         case 'e':
 			il_append(exts, atoi(optarg));
@@ -99,6 +104,11 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
+	if (inblocks && inmegs) {
+		fprintf(stderr, "Can't write sizes in FITS blocks and megabytes.\n");
+		exit(-1);
+	}
+
 	if (infn) {
 		Next = qfits_query_n_ext(infn);
 		if (Next == -1) {
@@ -121,6 +131,11 @@ int main(int argc, char *argv[]) {
 				fprintf(stderr, "Extension %i : header start %i , length %i ; data start %i , length %i blocks.\n",
 					   i, hdrstart/FITS_BLOCK_SIZE, hdrlen/FITS_BLOCK_SIZE,
 					   datastart/FITS_BLOCK_SIZE, datalen/FITS_BLOCK_SIZE);
+			} else if (inmegs) {
+				int meg = 1024*1024;
+				fprintf(stderr, "Extension %i : header start %i , length %i ; data start %i , length %i megabytes.\n",
+						i, hdrstart/meg, hdrlen/meg,
+						datastart/meg, datalen/meg);
 			} else {
 				fprintf(stderr, "Extension %i : header start %i , length %i ; data start %i , length %i .\n",
 					   i, hdrstart, hdrlen, datastart, datalen);
@@ -188,7 +203,11 @@ int main(int argc, char *argv[]) {
 		if (inblocks)
 			fprintf(stderr, "Writing extension %i: header start %i, length %i, data start %i, length %i blocks.\n",
 				   ext, hdrstart/FITS_BLOCK_SIZE, hdrlen/FITS_BLOCK_SIZE, datastart/FITS_BLOCK_SIZE, datalen/FITS_BLOCK_SIZE);
-		else
+		else if (inmegs) {
+			int meg = 1024*1024;
+			fprintf(stderr, "Writing extension %i: header start %i, length %i, data start %i, length %i megabytes.\n",
+					ext, hdrstart/meg, hdrlen/meg, datastart/meg, datalen/meg);
+		} else
 			fprintf(stderr, "Writing extension %i: header start %i, length %i, data start %i, length %i.\n",
 				   ext, hdrstart, hdrlen, datastart, datalen);
 
