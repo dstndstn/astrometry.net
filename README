@@ -56,9 +56,9 @@ able to compile and use the core parts of the solver, but you will
 miss out on some eye-candy.
 
 Grab the code:
-  $ wget http://astrometry.net/downloads/astrometry.net-0.2.tar.bz2
-  $ tar xjf astrometry.net-0.2.tar.bz2
-  $ cd astrometry.net-0.2
+  $ wget http://astrometry.net/downloads/astrometry.net-0.25.tar.bz2
+  $ tar xjf astrometry.net-0.25.tar.bz2
+  $ cd astrometry.net-0.25
 
 Build the solving system:
   $ make
