@@ -6,7 +6,7 @@ class tabledata(object):
 	def set(self, name,val):
 		self.__setattr__(name, val)
 	def getcolumn(self, name):
-		return self.__dict__[name]
+		return self.__dict__[name.lower()]
 
 def table_fields(dataorfn):
 	pf = None
