@@ -43,6 +43,36 @@
 
 uint32_t ENDIAN_DETECTOR = 0x01020304;
 
+int pad_fid(FILE* fid, size_t len, char pad) {
+	off_t offset;
+	size_t npad;
+	size_t i;
+	// pad with zeros up to a multiple of 2880 bytes.
+	offset = ftello(fid);
+	npad = len - offset;
+	for (i=0; i<npad; i++)
+		if (fwrite(&pad, 1, 1, fid) != 1) {
+			SYSERROR("Failed to pad file");
+			return -1;
+		}
+	return 0;
+}
+
+int pad_file(char* filename, size_t len, char pad) {
+	int rtn;
+	FILE* fid = fopen(filename, "ab");
+	if (!fid) {
+		SYSERROR("Failed to open file \"%s\" for padding", filename);
+		return -1;
+	}
+	rtn = pad_file(fid, len, pad);
+	if (!rtn && fclose(fid)) {
+		SYSERROR("Failed to close file \"%s\" after padding it", filename);
+		return -1;
+	}
+	return rtn;
+}
+
 Malloc
 char* basename_safe(const char* path) {
 	char* copy = strdup(path);

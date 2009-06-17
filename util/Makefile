@@ -63,7 +63,7 @@ ANUTILS_LIB := libanutils.a
 
 PYTHON_LIBS := _sip.so _healpix.so
 
-PROGS := an-fitstopnm downsample-fits
+PROGS := an-fitstopnm downsample-fits pad-file
 
 all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS)
 
@@ -122,6 +122,8 @@ _sip.so: sip-utils.o sip.o starutil.o mathutil.o sip_qfits.o \
 
 _healpix.so: healpix.o starutil.o mathutil.o errors.o bl.o log.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
+
+pad-file: pad-file.o $(ANUTILS_LIB)
 
 an-fitstopnm: an-fitstopnm.o $(ANUTILS_LIB) $(QFITS_LIB)
 

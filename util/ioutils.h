@@ -29,6 +29,9 @@
 
 extern uint32_t ENDIAN_DETECTOR;
 
+int pad_fid(FILE* fid, size_t len, char pad);
+int pad_file(char* filename, size_t len, char pad);
+
 /*
  The "basename" function may overwrite its arg and may return a pointer
  to static memory... both undesirable.  This replacement returns a newly-
