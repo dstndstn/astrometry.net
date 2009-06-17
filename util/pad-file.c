@@ -28,7 +28,7 @@
 const char* OPTIONS = "hv:c:";
 
 void printHelp(char* progname) {
-	fprintf(stderr, "\nUsage: %s <desired-length> <input file>\n"
+	fprintf(stderr, "\nUsage: %s <desired-length> <input file> [<input file> ...]\n"
 			"    The file will be padded in-place.\n"
 			"\n"
 			"    By default, the file is padded with zeros, but:\n"
@@ -44,9 +44,10 @@ int main(int argc, char** args) {
     int argchar;
 	char* progname = args[0];
 	char* infn;
-	int N;
+	size_t padtolen;
 	char padchar = '\0';
 	int nargs;
+	int i;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1) {
 		switch (argchar) {
@@ -68,18 +69,19 @@ int main(int argc, char** args) {
 		nargs = argc - optind;
 		args += optind;
 	}
-	if (nargs != 2) {
+	if (nargs < 2) {
 		printHelp(progname);
 		exit(-1);
 	}
-	N = atoi(args[0]);
-	infn = args[1];
+	padtolen = atol(args[0]);
 
-	printf("Padding file \"%s\" to length %i.\n", infn, N);
-
-	if (pad_file(infn, N, padchar)) {
-		ERROR("Failed to pad file");
-		exit(-1);
+	for (i=1; i<nargs; i++) {
+		infn = args[i];
+		printf("Padding file \"%s\" to length %lli.\n", infn, (long long int)padtolen);
+		if (pad_file(infn, padtolen, padchar)) {
+			ERROR("Failed to pad file");
+			exit(-1);
+		}
 	}
 	return 0;
 }

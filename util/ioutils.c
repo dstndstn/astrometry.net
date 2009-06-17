@@ -65,7 +65,7 @@ int pad_file(char* filename, size_t len, char pad) {
 		SYSERROR("Failed to open file \"%s\" for padding", filename);
 		return -1;
 	}
-	rtn = pad_file(fid, len, pad);
+	rtn = pad_fid(fid, len, pad);
 	if (!rtn && fclose(fid)) {
 		SYSERROR("Failed to close file \"%s\" after padding it", filename);
 		return -1;
