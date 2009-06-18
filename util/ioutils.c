@@ -35,6 +35,7 @@
 #include <libgen.h>
 #include <dirent.h>
 #include <time.h>
+#include <sys/param.h>
 
 #include "ioutils.h"
 #include "gnu-specific.h"
@@ -47,14 +48,20 @@ int pad_fid(FILE* fid, size_t len, char pad) {
 	off_t offset;
 	size_t npad;
 	size_t i;
-	// pad with zeros up to a multiple of 2880 bytes.
+	char buf[1024];
 	offset = ftello(fid);
+	if (len <= offset)
+		return 0;
 	npad = len - offset;
-	for (i=0; i<npad; i++)
-		if (fwrite(&pad, 1, 1, fid) != 1) {
+	// pad in blocks.
+	memset(buf, pad, sizeof(buf));
+	for (i=0; i<npad; i+=sizeof(buf)) {
+		size_t n = MIN(sizeof(buf), npad-i);
+		if (fwrite(buf, 1, n, fid) != n) {
 			SYSERROR("Failed to pad file");
 			return -1;
 		}
+	}
 	return 0;
 }
 
