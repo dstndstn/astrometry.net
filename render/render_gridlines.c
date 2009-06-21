@@ -9,6 +9,7 @@
 #include "render_gridlines.h"
 #include "cairoutils.h"
 #include "ioutils.h"
+#include "log.h"
 
 static void add_text(cairo_t* cairo, double x, double y,
 					 const char* txt, render_args_t* args) {

@@ -128,6 +128,8 @@ typedef int (*render_cairo_func_t)(cairo_t* cr, render_args_t* args);
 
 void get_string_args_of_type(render_args_t* args, const char* prefix, sl* lst);
 
+void get_string_args_of_types(render_args_t* args, const char* prefixes[], int Nprefixes, sl* lst, sl* matched_prefixes);
+
 void get_double_args_of_type(render_args_t* args, const char* prefix, dl* lst);
 
 // Returns the first argument of the given name.

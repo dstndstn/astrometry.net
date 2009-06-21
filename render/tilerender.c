@@ -190,6 +190,21 @@ static void default_rdls_args(render_args_t* args) {
 		il_append(args->fieldnums, 0);
 }
 
+void get_string_args_of_types(render_args_t* args, const char* prefixes[], int Nprefixes, sl* lst, sl* matched_prefixes) {
+    int i, j;
+    if (!args->arglist)
+        return;
+    for (i=0; i<sl_size(args->arglist); i++) {
+        char* str = sl_get(args->arglist, i);
+		for (j=0; j<Nprefixes; j++)
+			if (starts_with(str, prefixes[j])) {
+				sl_append(lst, str + strlen(prefixes[j]));
+				if (matched_prefixes)
+					sl_append(matched_prefixes, prefixes[j]);
+			}
+    }
+}
+
 void get_string_args_of_type(render_args_t* args, const char* prefix, sl* lst) {
     int i;
     int skip = strlen(prefix);

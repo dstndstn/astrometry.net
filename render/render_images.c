@@ -79,17 +79,21 @@ static void add_ink(float* ink, float* counts, float* thisink, float* thiscounts
 int render_images(unsigned char* img, render_args_t* args) {
     int I;
     sl* imagefiles;
+	sl* imagetypes;
 	sl* wcsfiles;
     float* counts;
     float* ink;
     int i, j, w;
     double *ravals, *decvals;
+	const char* imgtypes[] = {"jpegfn ", "pngfn "};
 
 	logmsg("starting.\n");
 
     imagefiles = sl_new(256);
+    imagetypes = sl_new(256);
     wcsfiles = sl_new(256);
-    get_string_args_of_type(args, "jpegfn ", imagefiles);
+    get_string_args_of_types(args, imgtypes, 2,
+							 imagefiles, imagetypes);
     get_string_args_of_type(args, "wcsfn ", wcsfiles);
 
 	// When plotting density, we only need the WCS files.
@@ -112,6 +116,7 @@ int render_images(unsigned char* img, render_args_t* args) {
     for (I=0; I<sl_size(wcsfiles); I++) {
 		char* fn;
         char* imgfn = NULL;
+        char* imgtype = NULL;
         char* wcsfn = NULL;
         sip_t wcs;
         unsigned char* userimg = NULL;
@@ -132,6 +137,7 @@ int render_images(unsigned char* img, render_args_t* args) {
         wcsfn = sl_get(wcsfiles, I);
 		if (I < sl_size(imagefiles)) {
 			fn = sl_get(imagefiles, I);
+			imgtype = sl_get(imagetypes, I);
 			imgfn = find_file_in_dirs(image_dirs, sizeof(image_dirs)/sizeof(char*),
 									  fn, TRUE);
 		}
@@ -291,7 +297,11 @@ int render_images(unsigned char* img, render_args_t* args) {
 				*/
 
                 logmsg("Opening image \"%s\".\n", imgfn);
-                userimg = cairoutils_read_jpeg(imgfn, &W, &H);
+				if (starts_with(imgtype, "jpeg")) {
+					userimg = cairoutils_read_jpeg(imgfn, &W, &H);
+				} else if (starts_with(imgtype, "png")) {
+					userimg = cairoutils_read_png(imgfn, &W, &H);
+				}
                 if (!userimg) {
                     logmsg("failed to read image file %s\n", imgfn);
                     goto nextimage;
@@ -305,6 +315,7 @@ int render_images(unsigned char* img, render_args_t* args) {
 					dec = decvals[j];
 					for (i=xlo; i<=xhi; i++) {
 						int pppx,pppy;
+						float thisw;
 						ra = ravals[i];
 						if (!sip_radec2pixelxy_check(&wcs, ra, dec, &imagex, &imagey))
 							continue;
@@ -312,11 +323,13 @@ int render_images(unsigned char* img, render_args_t* args) {
 						pppy = lround(imagey-1);
 						if (pppx < 0 || pppx >= W || pppy < 0 || pppy >= H)
 							continue;
-						// nearest neighbour. bilinear is for weenies.
-						thisink[3*(j*w + i) + 0] = userimg[4*(pppy*W + pppx) + 0] * weight;
-						thisink[3*(j*w + i) + 1] = userimg[4*(pppy*W + pppx) + 1] * weight;
-						thisink[3*(j*w + i) + 2] = userimg[4*(pppy*W + pppx) + 2] * weight;
-						thiscounts[j*w + i] = weight;
+						// combine "weight" with this image's alpha channel.
+						thisw = weight * (float)userimg[4*(pppy*W + pppx) + 3] / 255.0;
+						// nearest neighbour.
+						thisink[3*(j*w + i) + 0] = userimg[4*(pppy*W + pppx) + 0] * thisw;
+						thisink[3*(j*w + i) + 1] = userimg[4*(pppy*W + pppx) + 1] * thisw;
+						thisink[3*(j*w + i) + 2] = userimg[4*(pppy*W + pppx) + 2] * thisw;
+						thiscounts[j*w + i] = thisw;
 					}
 				}
 				free(userimg);
@@ -336,6 +349,7 @@ int render_images(unsigned char* img, render_args_t* args) {
 		free(imgfn);
     }
 
+    sl_free2(imagetypes);
     sl_free2(imagefiles);
     sl_free2(wcsfiles);
     free(ravals);
