@@ -25,9 +25,16 @@ int render_skdt(cairo_t* cairo, render_args_t* args) {
 	double center[3];
 	double r2;
 	double p1[3], p2[3];
+	double rgba[4];
 
 	fns = sl_new(256);
 	get_string_args_of_type(args, "skdt ", fns);
+
+	if (!get_first_rgba_arg_of_type(args, "skdtrgba ", rgba)) {
+		cairo_set_source_rgba(cairo, rgba[0], rgba[1], rgba[2], rgba[3]);
+	} else {
+		cairo_set_source_rgba(cairo, 0,1,0,1);
+	}
 
     logmsg("got %i skdt files.\n", sl_size(fns));
 
@@ -35,8 +42,6 @@ int render_skdt(cairo_t* cairo, render_args_t* args) {
 	radecdeg2xyzarr(args->ramax, args->decmax, p2);
 	star_midpoint(center, p1, p2);
 	r2 = distsq(p1, center, 3);
-
-	cairo_set_source_rgba(cairo, 0,1,0,1);
 
 	for (i=0; i<sl_size(fns); i++) {
 		char* fn;

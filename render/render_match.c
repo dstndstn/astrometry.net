@@ -27,8 +27,8 @@
 
 int render_match(cairo_t* cairo, render_args_t* args) {
 	int i, I;
-
-	cairo_set_source_rgba(cairo, 0,1,0,1);
+	double edge_rgba[] = { 0,1,0,1 };
+	double face_rgba[] = { 1,1,1,0 };
 
 	for (I=0; I<sl_size(args->arglist); I++) {
 		char* arg = sl_get(args->arglist, I);
@@ -50,16 +50,25 @@ int render_match(cairo_t* cairo, render_args_t* args) {
 				for (i=0; i<mo->dimquads; i++)
 					xyzarr2radecdegarr(mo->quadxyz + 3*i, radec + 2*i);
 				quad_radec_to_xy(args, radec, xy, mo->dimquads);
+
 				cairoutils_draw_path(cairo, xy, mo->dimquads);
 				cairo_close_path(cairo);
+				cairo_set_source_rgba(cairo, face_rgba[0], face_rgba[1], face_rgba[2], face_rgba[3]);
+				cairo_fill(cairo);
+
+				cairoutils_draw_path(cairo, xy, mo->dimquads);
+				cairo_close_path(cairo);
+				cairo_set_source_rgba(cairo, edge_rgba[0], edge_rgba[1], edge_rgba[2], edge_rgba[3]);
 				cairo_stroke(cairo);
 			}
-		} else if (starts_with(arg, "matchrgba ")) {
-			double rgba[4];
-			if (parse_rgba_arg(arg, rgba)) {
+		} else if (starts_with(arg, "match_edge_rgba ")) {
+			if (parse_rgba_arg(arg, edge_rgba)) {
 				return -1;
 			}
-			cairo_set_source_rgba(cairo, rgba[0], rgba[1], rgba[2], rgba[3]);
+		} else if (starts_with(arg, "match_face_rgba ")) {
+			if (parse_rgba_arg(arg, face_rgba)) {
+				return -1;
+			}
 		}
 	}
 	return 0;

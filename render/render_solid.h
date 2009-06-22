@@ -20,6 +20,6 @@
 
 #include "tilerender.h"
 
-int render_solid(unsigned char* img, render_args_t* args);
+int render_solid(cairo_t* cairo, render_args_t* args);
 
 #endif

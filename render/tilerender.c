@@ -170,7 +170,7 @@ static renderer_t renderers[] = {
 	{ "messier",   render_messier,      NULL },
 	{ "clean",     render_usnob,        NULL },
 	{ "dirty",     render_usnob,        NULL },
-	{ "solid",     render_solid,        NULL },
+	{ "solid",     NULL,                render_solid },
 	{ "images",    render_images,       NULL },
 	{ "userimage", render_images,       NULL },
 	{ "boundaries",NULL,                render_boundary },
