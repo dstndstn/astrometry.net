@@ -55,6 +55,10 @@ int NLF(sorted_index_of)(nl* list, const number data);
 // is not found.
 int  NLF(index_of)(nl* list, const number data);
 InlineDeclare number  NLF(get)(nl* list, int n);
+/**
+ Copy from the list, starting at index "start" for length "length",
+ into the provided array.
+ */
 void NLF(copy)(nl* list, int start, int length, number* vdest);
 nl*  NLF(dupe)(nl* list);
 void NLF(print)(nl* list);

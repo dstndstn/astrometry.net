@@ -27,6 +27,7 @@ CFLAGS := $(CFLAGS)
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.utils
 include $(COMMON)/makefile.anfiles
+include $(COMMON)/makefile.blind
 include $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.libkd
 include $(COMMON)/makefile.cairo
@@ -42,6 +43,7 @@ CFLAGS += $(QFITS_INC)
 CFLAGS += $(LIBKD_INC)
 CFLAGS += $(ANUTILS_INC)
 CFLAGS += $(ANFILES_INC)
+CFLAGS += $(BLIND_INC)
 CFLAGS  += $(CAIRO_INC)
 CFLAGS  += $(NETPBM_INC)
 CFLAGS  += $(PNG_INC)
@@ -85,13 +87,14 @@ TILERENDER_OBJS := tilerender.o mercrender.o merctree.o merc.o \
 		render_cairo.o \
 		render_skdt.o \
 		render_quads.o \
-		render_healpixes.o
+		render_healpixes.o \
+		render_match.o
 
 MISC_OBJS := merctree.o pnmutils.o
 
 tilerender: $(TILERENDER_OBJS) \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) \
-		$(COMMON)/cairoutils.o
+		$(COMMON)/cairoutils.o $(BLIND_DIR)/matchfile.o
 	$(MAKE) -C $(COMMON) cairoutils.o
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) $(NETPBM_LIB) $(JPEG_LIB) $(PNG_LIB) -lz
 

@@ -21,15 +21,44 @@ static void logmsg(char* format, ...) {
 	va_end(args);
 }
 
+void quad_radec_to_xy(render_args_t* args, const double* radecs,
+					  double* xys, int DQ) {
+	int k;
+	double angles[DQMAX];
+	double cx, cy;
+	int perm[DQMAX];
+	for (k=0; k<DQ; k++) {
+		xys[2*k + 0] =  ra2pixelf(radecs[2*k + 0], args);
+		xys[2*k + 1] = dec2pixelf(radecs[2*k + 1], args);
+	}
+	cx = (xys[0*2 + 0] + xys[1*2 + 0]) / 2.0;
+	cy = (xys[0*2 + 1] + xys[1*2 + 1]) / 2.0;
+	for (k=0; k<DQ; k++)
+		angles[k] = atan2(xys[k*2 + 1] - cy, xys[k*2 + 0] - cx);
+	permutation_init(perm, DQ);
+	permuted_sort(angles, sizeof(double), compare_doubles_asc, perm, DQ);
+	permutation_apply(perm, DQ, xys, xys, 2*sizeof(double));
+}
+
 int render_quads(cairo_t* cairo, render_args_t* args) {
 	sl* fns;
 	int i;
 	double center[3];
 	double r2;
 	double p1[3], p2[3];
+	double edge_rgba[4];
+	double face_rgba[4];
+	bool edge_set = FALSE;
+	bool face_set = FALSE;
+	double alpha = 0.3;
 
 	fns = sl_new(256);
 	get_string_args_of_type(args, "index ", fns);
+
+	if (!get_first_rgba_arg_of_type(args, "quadedgergba ", edge_rgba))
+		edge_set = TRUE;
+	if (!get_first_rgba_arg_of_type(args, "quadfacergba ", face_rgba))
+		face_set = TRUE;
 
     logmsg("got %i index files.\n", sl_size(fns));
 
@@ -84,55 +113,40 @@ int render_quads(cairo_t* cairo, render_args_t* args) {
 			int DQ;
 			int k;
 			double starxy[DQMAX*2];
-			double angles[DQMAX];
-			double cx, cy;
-			int perm[DQMAX];
+			double quadradec[DQMAX*2];
             double r,g,b;
 			quadid = il_get(quadids, j);
 			quadfile_get_stars(index->quads, quadid, qstarids);
 			DQ = index_get_quad_dim(index);
 			for (k=0; k<DQ; k++) {
-				double ra, dec;
-				double px, py;
-				startree_get_radec(index->starkd, qstarids[k], &ra, &dec);
-				px =  ra2pixelf(ra , args);
-				py = dec2pixelf(dec, args);
-				starxy[k*2 + 0] = px;
-				starxy[k*2 + 1] = py;
+				startree_get_radec(index->starkd, qstarids[k],
+								   quadradec+2*k, quadradec+2*k+1);
 			}
-			cx = (starxy[0*2 + 0] + starxy[1*2 + 0]) / 2.0;
-			cy = (starxy[0*2 + 1] + starxy[1*2 + 1]) / 2.0;
-			for (k=0; k<DQ; k++)
-				angles[k] = atan2(starxy[k*2 + 1] - cy, starxy[k*2 + 0] - cx);
-			permutation_init(perm, DQ);
-			permuted_sort(angles, sizeof(double), compare_doubles_asc, perm, DQ);
+			quad_radec_to_xy(args, quadradec, starxy, DQ);
 
-            srand(quadid);
-            r = ((rand() % 128) + 127)/255.0;
-            g = ((rand() % 128) + 127)/255.0;
-            b = ((rand() % 128) + 127)/255.0;
-            cairo_set_source_rgba(cairo, r,g,b, 0.3);
-
-			for (k=0; k<DQ; k++) {
-				double px, py;
-				px = starxy[perm[k]*2+0];
-				py = starxy[perm[k]*2+1];
-				if (k == 0)
-					cairo_move_to(cairo, px, py);
-				else
-					cairo_line_to(cairo, px, py);
+			if (face_set)
+				cairo_set_source_rgba(cairo, face_rgba[0], face_rgba[1], face_rgba[2], face_rgba[3]);
+			else {
+				srand(quadid);
+				r = ((rand() % 128) + 127)/255.0;
+				g = ((rand() % 128) + 127)/255.0;
+				b = ((rand() % 128) + 127)/255.0;
+				cairo_set_source_rgba(cairo, r,g,b,alpha);
 			}
+			cairoutils_draw_path(cairo, starxy, DQ);
 			cairo_close_path(cairo);
 			cairo_fill(cairo);
-			for (k=0; k<DQ; k++) {
-				double px, py;
-				px = starxy[perm[k]*2+0];
-				py = starxy[perm[k]*2+1];
-				if (k == 0)
-					cairo_move_to(cairo, px, py);
-				else
-					cairo_line_to(cairo, px, py);
+
+			if (edge_set)
+				cairo_set_source_rgba(cairo, edge_rgba[0], edge_rgba[1], edge_rgba[2], edge_rgba[3]);
+			else {
+				srand(quadid);
+				r = ((rand() % 128) + 127)/255.0;
+				g = ((rand() % 128) + 127)/255.0;
+				b = ((rand() % 128) + 127)/255.0;
+				cairo_set_source_rgba(cairo, r,g,b,alpha);
 			}
+			cairoutils_draw_path(cairo, starxy, DQ);
 			cairo_close_path(cairo);
 			cairo_stroke(cairo);
 		}

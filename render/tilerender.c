@@ -52,6 +52,7 @@
 #include "render_cairo.h"
 #include "render_skdt.h"
 #include "render_quads.h"
+#include "render_match.h"
 #include "render_healpixes.h"
 
 // Ugh, zlib before 1.2.0 didn't include compressBound()...
@@ -178,6 +179,7 @@ static renderer_t renderers[] = {
 	{ "cairo",     NULL,                render_cairo },
 	{ "skdt",      NULL,                render_skdt },
 	{ "quads",     NULL,                render_quads },
+	{ "match",     NULL,                render_match },
 };
 
 static void default_rdls_args(render_args_t* args) {
@@ -216,6 +218,39 @@ void get_string_args_of_type(render_args_t* args, const char* prefix, sl* lst) {
             sl_append(lst, str + skip);
         }
     }
+}
+
+int parse_rgba_arg(const char* argstr, double* rgba) {
+	dl* dlst;
+	dlst = dl_new(4);
+	get_double_args(argstr, dlst);
+	if (dl_size(dlst) != 4) {
+		logmsg("Argument: \"%s\": expected 4 numbers, got %i.\n", argstr, dl_size(dlst));
+		return -1;
+	}
+	dl_copy(dlst, 0, 4, rgba);
+	dl_free(dlst);
+	return 0;
+}
+
+int get_first_rgba_arg_of_type(render_args_t* args, const char* prefix, double* rgba) {
+	const char* argstr;
+	argstr = get_first_arg_of_type(args, prefix);
+	if (!argstr)
+		return -1;
+	return parse_rgba_arg(argstr, rgba);
+}
+
+const char* get_first_arg_of_type(render_args_t* args, const char* prefix) {
+    int i;
+    if (!args->arglist)
+        return NULL;
+    for (i=0; i<sl_size(args->arglist); i++) {
+        char* str = sl_get(args->arglist, i);
+        if (starts_with(str, prefix))
+			return str;
+    }
+	return NULL;
 }
 
 int get_int_arg(const char* arg, int def) {

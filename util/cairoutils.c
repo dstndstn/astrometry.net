@@ -66,6 +66,19 @@ const char* cairoutils_get_color_name(int i) {
     return mycolors[i].name;
 }
 
+void cairoutils_draw_path(cairo_t* c, const double* xy, int N) {
+	int i;
+	for (i=0; i<N; i++) {
+		double px, py;
+		px = xy[2*i+0];
+		py = xy[2*i+1];
+		if (i == 0)
+			cairo_move_to(c, px, py);
+		else
+			cairo_line_to(c, px, py);
+	}
+}
+
 static int hexval(char c) {
     if ((c >= '0') && (c <= '9'))
         return c - '0';
