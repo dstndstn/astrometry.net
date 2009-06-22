@@ -98,6 +98,8 @@ int startree_close(startree_t* s);
 
 void startree_compute_inverse_perm(startree_t* s);
 
+int startree_check_inverse_perm(startree_t* s);
+
 // for writing
 startree_t* startree_new();
 

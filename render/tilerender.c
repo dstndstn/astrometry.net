@@ -263,6 +263,13 @@ int get_int_arg(const char* arg, int def) {
 	return val;
 }
 
+double get_first_double_arg_of_type(render_args_t* args, const char* prefix, double def) {
+	const char* arg = get_first_arg_of_type(args, prefix);
+	if (!arg)
+		return def;
+	return get_double_arg(arg, def);
+}
+
 double get_double_arg(const char* arg, double def) {
 	char* c = index(arg, ' ');
 	char* endp;

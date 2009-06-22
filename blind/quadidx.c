@@ -34,12 +34,17 @@
 #include "bl.h"
 #include "fitsioutils.h"
 #include "boilerplate.h"
+#include "log.h"
+#include "errors.h"
 
-#define OPTIONS "hFi:o:"
+static const char* OPTIONS = "hFi:o:cv";
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s -i <quad input> -o <qidx output>\n"
+		   "\n"
+		   "    [-c]: run quadfile_check()\n"
+		   "    [-v]: add to verboseness\n"
 		   "\n", progname);
 }
 
@@ -60,6 +65,8 @@ int main(int argc, char *argv[]) {
 	qfits_header* quadhdr;
 	qfits_header* qidxhdr;
 	int dimquads;
+	bool check = FALSE;
+	int loglvl = LOG_MSG;
 	
 	if (argc <= 2) {
 		printHelp(progname);
@@ -68,6 +75,12 @@ int main(int argc, char *argv[]) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'c':
+			check = TRUE;
+			break;
+		case 'v':
+			loglvl++;
+			break;
         case 'i':
             quadfname = optarg;
             break;
@@ -83,6 +96,8 @@ int main(int argc, char *argv[]) {
 			return (OPT_ERR);
 		}
 
+	log_init(loglvl);
+
 	if (optind < argc) {
 		for (argidx = optind; argidx < argc; argidx++)
 			fprintf (stderr, "Non-option argument %s\n", argv[argidx]);
@@ -90,23 +105,32 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	fprintf(stderr, "quadidx: indexing quads in %s...\n",
-	        quadfname);
-
-	fprintf(stderr, "will write to file %s .\n", idxfname);
+	logmsg("quadidx: indexing quads in \"%s\"...\n", quadfname);
+	logmsg("will write to file \"%s\".\n", idxfname);
 
 	quads = quadfile_open(quadfname);
 	if (!quads) {
-		fprintf(stderr, "Couldn't open quads file %s.\n", quadfname);
+		ERROR("Couldn't open quads file \"%s\"", quadfname);
+		exit(-1);
+	}
+	logmsg("%u quads, %u stars.\n", quads->numquads, quads->numstars);
+
+	if (check) {
+		logmsg("Running quadfile_check()...\n");
+		if (quadfile_check(quads)) {
+			ERROR("quadfile_check() failed");
+			exit(-1);
+		}
+		logmsg("Check passed.\n");
+	}
+
+	quadlist = calloc(quads->numstars, sizeof(il*));
+	if (!quadlist) {
+		SYSERROR("Failed to allocate list of quad contents");
 		exit(-1);
 	}
 
-	fprintf(stderr, "%u quads, %u stars.\n", quads->numquads, quads->numstars);
-
-	quadlist = calloc(quads->numstars, sizeof(il*));
-
 	dimquads = quadfile_dimquads(quads);
-
 	for (q=0; q<quads->numquads; q++) {
 		unsigned int inds[dimquads];
 		quadfile_get_stars(quads, q, inds);
@@ -133,11 +157,11 @@ int main(int argc, char *argv[]) {
 		if (!list) continue;
 		numused++;
 	}
-	printf("%u stars used\n", numused);
+	logmsg("%u stars used\n", numused);
 
 	qidx = qidxfile_open_for_writing(idxfname, quads->numstars, quads->numquads);
 	if (!qidx) {
- 		fprintf(stderr, "Couldn't open outfile qidx file %s.\n", idxfname);
+ 		logmsg("Couldn't open outfile qidx file %s.\n", idxfname);
 		exit(-1);
 	}
 
@@ -158,7 +182,7 @@ int main(int argc, char *argv[]) {
 	qfits_header_add(qidxhdr, "HISTORY", "** End of history entries.", NULL, NULL);
 
 	if (qidxfile_write_header(qidx)) {
- 		fprintf(stderr, "Couldn't write qidx header (%s).\n", idxfname);
+ 		logmsg("Couldn't write qidx header (%s).\n", idxfname);
 		exit(-1);
 	}
 
@@ -178,7 +202,7 @@ int main(int argc, char *argv[]) {
 		thisstar = i;
 
 		if (qidxfile_write_star(qidx,  stars, thisnumq)) {
-			fprintf(stderr, "Couldn't write star to qidx file (%s).\n", idxfname);
+			logmsg("Couldn't write star to qidx file (%s).\n", idxfname);
 			exit(-1);
 		}
 
@@ -192,11 +216,11 @@ int main(int argc, char *argv[]) {
 	quadfile_close(quads);
 
 	if (qidxfile_close(qidx)) {
-		fprintf(stderr, "Failed to close qidx file.\n");
+		logmsg("Failed to close qidx file.\n");
 		exit(-1);
 	}
 
-	fprintf(stderr, "  done.\n");
+	logmsg("  done.\n");
 	return 0;
 }
 

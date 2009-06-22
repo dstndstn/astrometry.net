@@ -47,7 +47,15 @@ struct quadfile {
 };
 typedef struct quadfile quadfile;
 
+quadfile* quadfile_open(const char* fname);
+
+quadfile* quadfile_open_for_writing(const char* quadfname);
+
 int quadfile_close(quadfile* qf);
+
+// Look at each quad, and ensure that the star ids it contains are all
+// less than the number of stars ("numstars").  Returns 0=ok, -1=problem
+int quadfile_check(const quadfile* qf);
 
 // Copies the star ids of the stars that comprise quad "quadid".
 // There will be qf->dimquads such stars.
@@ -69,10 +77,6 @@ int quadfile_write_header(quadfile* qf);
 double quadfile_get_index_scale_upper_arcsec(const quadfile* qf);
 
 double quadfile_get_index_scale_lower_arcsec(const quadfile* qf);
-
-quadfile* quadfile_open(const char* fname);
-
-quadfile* quadfile_open_for_writing(const char* quadfname);
 
 qfits_header* quadfile_get_header(const quadfile* qf);
 

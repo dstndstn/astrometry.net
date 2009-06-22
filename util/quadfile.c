@@ -94,6 +94,28 @@ static quadfile* new_quadfile(const char* fn, bool writing) {
 	return qf;
 }
 
+int quadfile_check(const quadfile* qf) {
+	int q, i;
+	if (qf->dimquads < 3 || qf->dimquads > DQMAX) {
+		ERROR("Dimquads has illegal value %i", qf->dimquads);
+		return -1;
+	}
+	for (q=0; q<qf->numquads; q++) {
+		unsigned int stars[DQMAX];
+		if (quadfile_get_stars(qf, q, stars)) {
+			ERROR("Failed to get quad %i of %i", q, qf->numquads);
+			return -1;
+		}
+		for (i=0; i<qf->dimquads; i++) {
+			if (stars[i] >= qf->numstars) {
+				ERROR("Star ID %i is out of bounds: num stars %i", stars[i], qf->numstars);
+				return -1;
+			}
+		}
+	}
+	return 0;
+}
+
 int quadfile_dimquads(const quadfile* qf) {
     return qf->dimquads;
 }

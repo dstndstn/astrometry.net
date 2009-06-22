@@ -26,9 +26,11 @@ int render_skdt(cairo_t* cairo, render_args_t* args) {
 	double r2;
 	double p1[3], p2[3];
 	double rgba[4];
+	double crad = 3.0;
 
 	fns = sl_new(256);
 	get_string_args_of_type(args, "skdt ", fns);
+    logmsg("got %i skdt files.\n", sl_size(fns));
 
 	if (!get_first_rgba_arg_of_type(args, "skdtrgba ", rgba)) {
 		cairo_set_source_rgba(cairo, rgba[0], rgba[1], rgba[2], rgba[3]);
@@ -36,7 +38,8 @@ int render_skdt(cairo_t* cairo, render_args_t* args) {
 		cairo_set_source_rgba(cairo, 0,1,0,1);
 	}
 
-    logmsg("got %i skdt files.\n", sl_size(fns));
+	crad = get_first_double_arg_of_type(args, "skdt_rad ", crad);
+	logmsg("set skdt radius to %f\n", crad);
 
 	radecdeg2xyzarr(args->ramin, args->decmin, p1);
 	radecdeg2xyzarr(args->ramax, args->decmax, p2);
@@ -48,7 +51,6 @@ int render_skdt(cairo_t* cairo, render_args_t* args) {
 		startree_t* skdt;
 		double* radec;
 		int j, nstars;
-		double crad = 3.0;
 
 		fn = sl_get(fns, i);
 		skdt = startree_open(fn);

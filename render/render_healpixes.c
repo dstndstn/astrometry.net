@@ -20,6 +20,10 @@ int render_healpixes(cairo_t* cairo, render_args_t* args) {
 	double xyz[3];
 	double r;
 	double corners[] = { 0,0, 0,1, 1,1, 1,0 };
+	double rgba[] = { 1,1,1,0.8 };
+
+	get_first_rgba_arg_of_type(args, "healpix_rgba ", rgba);
+	cairo_set_source_rgba(cairo, rgba[0], rgba[1], rgba[2], rgba[3]);
 
 	nside = args->nside;
 	if (nside == 0)
@@ -41,7 +45,6 @@ int render_healpixes(cairo_t* cairo, render_args_t* args) {
 	hps = healpix_approx_rangesearch(xyz, r, nside, NULL);
 	logmsg("Found %i healpixes within range.\n", il_size(hps));
 
-	cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 8.0);
 	for (i=0; i<il_size(hps); i++) {
 		hp = il_get(hps, i);
 		for (j=0; j<4; j++) {

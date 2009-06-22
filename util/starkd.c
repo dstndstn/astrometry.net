@@ -277,6 +277,23 @@ static int Ndata(const startree_t* s) {
 	return s->tree->ndata;
 }
 
+int startree_check_inverse_perm(startree_t* s) {
+	// ensure that each value appears exactly once.
+	int i, N;
+	uint8_t* counts;
+	N = Ndata(s);
+	counts = calloc(Ndata(s), sizeof(uint8_t));
+	for (i=0; i<Ndata(s); i++) {
+		assert(s->inverse_perm[i] >= 0);
+		assert(s->inverse_perm[i] < N);
+		counts[s->inverse_perm[i]]++;
+	}
+	for (i=0; i<Ndata(s); i++) {
+		assert(counts[i] == 1);
+	}
+	return 0;
+}
+
 void startree_compute_inverse_perm(startree_t* s) {
 	// compute inverse permutation vector.
 	s->inverse_perm = malloc(Ndata(s) * sizeof(int));
@@ -284,7 +301,21 @@ void startree_compute_inverse_perm(startree_t* s) {
 		fprintf(stderr, "Failed to allocate star kdtree inverse permutation vector.\n");
 		return;
 	}
+#ifndef NDEBUG
+	{
+		int i;
+		for (i=0; i<Ndata(s); i++)
+			s->inverse_perm[i] = -1;
+	}
+#endif
 	kdtree_inverse_permutation(s->tree, s->inverse_perm);
+#ifndef NDEBUG
+	{
+		int i;
+		for (i=0; i<Ndata(s); i++)
+			assert(s->inverse_perm[i] != -1);
+	}
+#endif
 }
 
 int startree_get_cut_nside(const startree_t* s) {

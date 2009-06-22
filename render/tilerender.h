@@ -141,6 +141,8 @@ double get_double_arg(const char* arg, double def);
 
 void get_double_args(const char* arg, dl* lst);
 
+double get_first_double_arg_of_type(render_args_t* args, const char* prefix, double def);
+
 const char* get_first_arg_of_type(render_args_t* args, const char* prefix);
 
 int get_first_rgba_arg_of_type(render_args_t* args, const char* prefix, double* rgba);

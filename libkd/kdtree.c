@@ -29,6 +29,7 @@
 #include "keywords.h"
 #include "an-fls.h"
 #include "errors.h"
+#include "log.h"
 
 int kdtree_n(const kdtree_t* kd) {
     return kd->ndata;
@@ -261,8 +262,11 @@ void kdtree_inverse_permutation(const kdtree_t* tree, int* invperm) {
 		for (i=0; i<tree->ndata; i++)
 			invperm[i] = i;
 	} else {
-		for (i=0; i<tree->ndata; i++)
+		for (i=0; i<tree->ndata; i++) {
+			assert((int)(tree->perm[i]) >= 0);
+			assert((int)(tree->perm[i]) < tree->ndata);
 			invperm[tree->perm[i]] = i;
+		}
 	}
 }
 
