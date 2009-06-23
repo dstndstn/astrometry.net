@@ -8,6 +8,7 @@ import types
 import os
 import sys
 import warnings
+import numpy as np
 
 ndarray = sb.ndarray
 
@@ -515,10 +516,9 @@ def fromfile(fd, dtype=None, shape=None, offset=0, formats=None,
                 "Not enough bytes left in file for specified shape and type")
 
     # create the array
-    _array = recarray(shape, descr)
-    nbytesread = fd.readinto(_array.data)
-    if nbytesread != nbytes:
-        raise IOError("Didn't read as many bytes as expected")
+    arr = np.fromfile(fd,dtype=descr,count=shape[0]) 
+    _array = recarray(shape, descr, arr.data)
+
     if name:
         fd.close()
 
