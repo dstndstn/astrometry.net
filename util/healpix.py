@@ -291,6 +291,19 @@ def healpix_to_radec(hp, nside, dx=0.5, dy=0.5):
 	cfunc(hp, nside, dx, dy, byref(ra), byref(dec))
 	return (float(ra.value), float(dec.value))
 
+# Returns True if the given healpix *may* overlap the given RA,Dec range.
+# RAs should be in 0,360
+def healpix_may_overlap_radec_range(hp, nside, ralo, rahi, declo, dechi):
+	# check the four corners
+	rds = [healpix.healpix_to_radec(hp, nside, dx, dy)
+		   for (dx,dy) in [(0,0),(0,1),(1,1),(1,0)]]
+	hpralo = min([r for (r,d) in rds])
+	hprahi = max([r for (r,d) in rds])
+	hpdeclo = min([d for (r,d) in rds])
+	hpdechi = max([d for (r,d) in rds])
+	return ((hpralo <= rahi) and (hprahi >= ralo) and
+			(hpdeclo <= dechi) and (hpdechi >= declo))
+
 
 class testhealpix(unittest.TestCase):
     def check_neighbours(self, hp, nside, truen):
