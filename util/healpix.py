@@ -295,7 +295,7 @@ def healpix_to_radec(hp, nside, dx=0.5, dy=0.5):
 # RAs should be in 0,360
 def healpix_may_overlap_radec_range(hp, nside, ralo, rahi, declo, dechi):
 	# check the four corners
-	rds = [healpix.healpix_to_radec(hp, nside, dx, dy)
+	rds = [healpix_to_radec(hp, nside, dx, dy)
 		   for (dx,dy) in [(0,0),(0,1),(1,1),(1,0)]]
 	hpralo = min([r for (r,d) in rds])
 	hprahi = max([r for (r,d) in rds])
