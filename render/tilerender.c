@@ -165,7 +165,7 @@ static renderer_t renderers[] = {
 	{ "grid",      NULL,                render_gridlines },
 	{ "healpix",   NULL,                render_healpixes },
 	{ "usnob",     render_usnob,        NULL },
-	{ "rdls",      render_rdls,         NULL },
+	{ "rdls",      NULL,                render_rdls },
 	{ "constellation", render_constellation, NULL },
 	{ "messier",   render_messier,      NULL },
 	{ "clean",     render_usnob,        NULL },
@@ -685,6 +685,9 @@ int parse_color(char c, double* p_r, double* p_g, double* p_b) {
 		break;
 	case 'w': // white
 		r = g = b = 1.0;
+		break;
+	case 'k': // black
+		r = g = b = 0.0;
 		break;
 	default:
 		return -1;

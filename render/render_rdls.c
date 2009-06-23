@@ -25,20 +25,13 @@ static void logmsg(char* format, ...) {
 	va_end(args);
 }
 
-int render_rdls(unsigned char* img, render_args_t* args)
-{
+int render_rdls(cairo_t* cairo, render_args_t* args) {
     int i, j, Nstars, Nib=0;
 	int r;
-	cairo_t* cairo;
-	cairo_surface_t* target;
 
 	// draw black outline?
-	//bool outline = TRUE;
 	bool outline = FALSE;
 
-	target = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32,
-												 args->W, args->H, args->W*4);
-	cairo = cairo_create(target);
 	cairo_set_line_join(cairo, CAIRO_LINE_JOIN_BEVEL);
 	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 
@@ -51,7 +44,7 @@ int render_rdls(unsigned char* img, render_args_t* args)
 		int maxstars = il_get(args->Nstars, r);
 		//double lw = dl_get(args->rdlslws, r);
 		double lw = 2.0;
-		double rad = 3.0;
+		double rad = get_first_double_arg_of_type(args, "rdls_rad ", 3.0);
 		char style = 'o';
 		double r, g, b;
         rdlist_t* rdls;
@@ -59,7 +52,6 @@ int render_rdls(unsigned char* img, render_args_t* args)
 		char* path;
 
 		cairo_set_line_width(cairo, lw);
-		//r = g = b = 1.0;
 		r = 1.0;
         g = b = 0.0;
 
@@ -74,6 +66,9 @@ int render_rdls(unsigned char* img, render_args_t* args)
 			case 'h':
 			case '#': // box
 				style = '#';
+				break;
+			case 'x': // x
+				style = 'x';
 				break;
 			case 'o': // circle
 				style = 'o';
@@ -150,6 +145,14 @@ int render_rdls(unsigned char* img, render_args_t* args)
 				cairo_line_to(cairo, px+rad, py-rad);
 				cairo_line_to(cairo, px-rad, py-rad);
 				break;
+
+			case 'x':
+				cairo_move_to(cairo, px-rad, py-rad);
+				cairo_line_to(cairo, px+rad, py+rad);
+				cairo_move_to(cairo, px+rad, py-rad);
+				cairo_line_to(cairo, px-rad, py+rad);
+				break;
+
 			}
 
 			cairo_stroke(cairo);
@@ -162,11 +165,5 @@ int render_rdls(unsigned char* img, render_args_t* args)
 
     }
     logmsg("%i stars inside image bounds.\n", Nib);
-
-    cairoutils_argb32_to_rgba(img, args->W, args->H);
-	
-	cairo_surface_destroy(target);
-	cairo_destroy(cairo);
-
     return 0;
 }
