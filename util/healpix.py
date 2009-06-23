@@ -6,6 +6,7 @@ import unittest
 import ctypes
 import ctypes.util
 import os.path
+from ctypes import *
 
 _lib = None
 _libname = ctypes.util.find_library('_healpix.so')
@@ -281,7 +282,14 @@ def radectohealpix(ra, dec, nside):
     (x,y,z) = radectoxyz(ra, dec)
     return xyztohealpix(x,y,z, nside)
 
-
+# returns (ra,dec) in degrees.
+def healpix_to_radec(hp, nside, dx=0.5, dy=0.5):
+	cfunc = _lib.healpix_to_radecdeg
+	ra  = c_double(0.)
+	dec = c_double(0.)
+	cfunc.argtypes = [c_int, c_int, c_double, c_double, c_void_p, c_void_p]
+	cfunc(hp, nside, dx, dy, byref(ra), byref(dec))
+	return (float(ra.value), float(dec.value))
 
 
 class testhealpix(unittest.TestCase):
