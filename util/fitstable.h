@@ -245,6 +245,10 @@ void fitstable_add_write_column_array_convert(fitstable_t* tab,
 
 int fitstable_remove_column(fitstable_t* tab, const char* name);
 
+int fitstable_read_column_into(const fitstable_t* tab,
+							   const char* colname, tfits_type read_as_type,
+							   void* dest, int stride);
+
 void* fitstable_read_column(const fitstable_t* tab,
                             const char* colname, tfits_type t);
 

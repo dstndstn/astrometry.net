@@ -453,16 +453,22 @@ void fitstable_clear_table(fitstable_t* tab) {
     bl_remove_all(tab->cols);
 }
 
-static void* read_array(const fitstable_t* tab,
-                        const char* colname, tfits_type ctype,
-                        bool array_ok, int offset, int Nread) {
+static void* read_array_into(const fitstable_t* tab,
+							 const char* colname, tfits_type ctype,
+							 bool array_ok, int offset, int Nread,
+							 void* dest, int deststride) {
     int colnum;
     qfits_col* col;
     int fitssize;
     int csize;
     int fitstype;
     int arraysize;
-    void* data;
+
+	void* tempdata = NULL;
+    void* cdata;
+	void* fitsdata;
+	int cstride;
+	int fitsstride;
     int N;
 
     colnum = fits_find_column(tab->table, colname);
@@ -486,28 +492,65 @@ static void* read_array(const fitstable_t* tab,
         Nread = N;
     if (offset == -1)
         offset = 0;
-    data = calloc(MAX(csize, fitssize), Nread * arraysize);
 
-    qfits_query_column_seq_to_array(tab->table, colnum, offset, Nread, data, 
-                                    fitssize * arraysize);
+	if (dest)
+		cdata = dest;
+	else
+		cdata = calloc(csize, Nread * arraysize);
 
-    if (fitstype != ctype) {
-        if (csize <= fitssize) {
-            fits_convert_data(data, csize * arraysize, ctype,
-                              data, fitssize * arraysize, fitstype,
-                              arraysize, Nread);
-            if (csize < fitssize)
-                data = realloc(data, csize * Nread * arraysize);
-        } else if (csize > fitssize) {
-            // HACK - stride backwards from the end of the array
-            fits_convert_data(((char*)data) + ((Nread*arraysize)-1) * csize,
+	if (dest && deststride > -1)
+		cstride = deststride;
+	else
+		cstride = csize * arraysize;
+
+	if (csize < fitssize) {
+		// Need to allocate a bigger temp array and down-convert the data.
+		// HACK - could set data=tempdata and realloc after (if 'dest' is NULL)
+		tempdata = calloc(fitssize, Nread * arraysize);
+		fitsdata = tempdata;
+		fitsstride = fitssize * arraysize;
+	} else {
+		fitsdata = cdata;
+		fitsstride = cstride;
+	}
+
+	qfits_query_column_seq_to_array(tab->table, colnum, offset, Nread,
+									fitsdata, fitsstride);
+
+	if (fitstype != ctype) {
+		if (csize <= fitssize) {
+			// work forward
+			fits_convert_data(cdata, cstride, ctype,
+							  fitsdata, fitsstride, fitstype,
+							  arraysize, Nread);
+		} else {
+			// work backward from the end of the array
+            fits_convert_data(((char*)cdata) + ((Nread*arraysize)-1) * csize,
                               -csize, ctype,
-                              ((char*)data) + ((Nread*arraysize)-1) * fitssize,
+                              ((char*)fitsdata) + ((Nread*arraysize)-1) * fitssize,
                               -fitssize, fitstype,
                               1, Nread * arraysize);
-        }
-    }
-	return data;
+		}
+	}
+
+	free(tempdata);
+	return cdata;
+}
+
+static void* read_array(const fitstable_t* tab,
+                        const char* colname, tfits_type ctype,
+                        bool array_ok, int offset, int Nread) {
+	return read_array_into(tab, colname, ctype, array_ok, offset, Nread, NULL, -1);
+}
+
+int fitstable_read_column_into(const fitstable_t* tab,
+							   const char* colname, tfits_type read_as_type,
+							   void* dest, int stride) {
+	void* res;
+	res = read_array_into(tab, colname, read_as_type, FALSE, 0, -1, dest, stride);
+	if (!res)
+		return -1;
+	return 0;
 }
 
 void* fitstable_read_column(const fitstable_t* tab,
