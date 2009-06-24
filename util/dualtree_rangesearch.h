@@ -40,9 +40,11 @@ void dualtree_rangesearch(kdtree_t* xtree, kdtree_t* ytree,
 						  progress_callback progress,
 						  void* progress_param);
 
-void dualtree_rangecount(kdtree_t* x, kdtree_t* y,
-						 double mindist, double maxdist,
-						 dist2_function distsquared,
-						 int* counts);
+/*
+ void dualtree_rangecount(kdtree_t* x, kdtree_t* y,
+ double mindist, double maxdist,
+ dist2_function distsquared,
+ int* counts);
+ */
 
 #endif

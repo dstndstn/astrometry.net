@@ -195,6 +195,18 @@ typedef u32 bigint;
 #define MYGLUE2(a, b) a ## b
 #define DIST_FUNC_MANGLE(x, suffix) MYGLUE2(x, suffix)
 
+static void split_dim_and_value(kdtree_t* kd, int node,
+								uint8_t* splitdim, ttype* splitval) {
+	if (kd->splitdim) {
+		*splitdim = kd->splitdim[node];
+		*splitval = *KD_SPLIT(kd, nodeid);
+	} else {
+        bigint tmpsplit = *KD_SPLIT(kd, nodeid);
+        *splitdim = (uint8_t)(tmpsplit & kd->dimmask);
+		*splitval = (ttype)(tmpsplit & kd->splitmask);
+	}
+}
+
 /* min/maxdist functions. */
 #define CAN_OVERFLOW 0
 #undef  DELTAMAX
@@ -230,6 +242,8 @@ typedef u32 bigint;
 #undef FUNC_SUFFIX
 
 #undef CAN_OVERFLOW
+
+
 
 void MANGLE(kdtree_update_funcs)(kdtree_t* kd);
 

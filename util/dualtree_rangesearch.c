@@ -126,7 +126,8 @@ static bool rs_within_range(void* vparams,
 							kdtree_t* xtree, int xnode,
 							kdtree_t* ytree, int ynode) {
     rs_params* p = (rs_params*)vparams;
-	//printf("rs_within_range: %i / %i\n", xnode, ynode);
+	printf("rs_within_range: x node %i (parent %i) / y node %i (parent %i)\n",
+		   xnode, KD_PARENT(xnode), ynode, KD_PARENT(ynode));
     if (p->usemax &&
 		kdtree_node_node_mindist2_exceeds(xtree, xnode, ytree, ynode,
 										  p->maxdistsq))
@@ -185,6 +186,7 @@ static void rs_handle_result(void* vparams,
 }
 
 
+/*
 void dualtree_rangecount(kdtree_t* x, kdtree_t* y,
 						 double mindist, double maxdist,
 						 dist2_function distsquared,
@@ -192,7 +194,6 @@ void dualtree_rangecount(kdtree_t* x, kdtree_t* y,
 	printf("HACK - implement dualtree_rangecount.\n");
 }
 
-/*
   bool rc_should_recurse(void* vparams, kdtree_node_t* xnode, kdtree_node_t* ynode);
   void rc_handle_result(void* params, kdtree_node_t* search, kdtree_node_t* query);
   void rc_self_handle_result(void* vparams, kdtree_node_t* xnode, kdtree_node_t* ynode);
