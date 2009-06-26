@@ -31,6 +31,7 @@
 #include <jpeglib.h>
 
 #include "cairoutils.h"
+#include "errors.h"
 
 enum imgformat {
     PPM,
@@ -64,6 +65,41 @@ const char* cairoutils_get_color_name(int i) {
     if ((i < 0)  || (i >= nmycolors))
         return NULL;
     return mycolors[i].name;
+}
+
+int cairoutils_surface_status_errors(cairo_surface_t* surf) {
+	int st = cairo_surface_status(surf);
+	switch (st) {
+	case CAIRO_STATUS_SUCCESS:
+		return 0;
+	case CAIRO_STATUS_NULL_POINTER:
+		ERROR("Cairo null pointer");
+		break;
+	case CAIRO_STATUS_NO_MEMORY:
+		ERROR("Cairo no memory");
+		break;
+	case CAIRO_STATUS_READ_ERROR:
+		ERROR("Cairo read error");
+		break;
+	case CAIRO_STATUS_INVALID_CONTENT:
+		ERROR("Cairo invalid content");
+		break;
+	case CAIRO_STATUS_INVALID_FORMAT:
+		ERROR("Cairo invalid format");
+		break;
+	case CAIRO_STATUS_INVALID_VISUAL:
+		ERROR("Cairo invalid visual");
+		break;
+	}
+	return -1;
+}
+
+int cairoutils_cairo_status_errors(cairo_t* c) {
+	cairo_status_t st = cairo_status(c);
+	if (st == CAIRO_STATUS_SUCCESS)
+		return 0;
+	ERROR("Cairo: %s", cairo_status_to_string(st));
+	return -1;
 }
 
 void cairoutils_draw_path(cairo_t* c, const double* xy, int N) {

@@ -29,6 +29,7 @@
 
 #include <zlib.h>
 #include <cairo.h>
+#include <cairo-pdf.h>
 
 #include "an-bool.h"
 #include "tilerender.h"
@@ -98,6 +99,7 @@ static void print_help(char* prog) {
 		   "\n"
 		   "     Output options: the default is to write a PNG image to standard out.\n"
 		   "  [-J]: write jpeg\n"
+		   "  [-j]: write PDF\n"
 		   "  [-R]: write a raw floating-point image\n"
 		   "\n"
 		   "\n"
@@ -149,7 +151,7 @@ static void print_help(char* prog) {
 		   "\n", prog);
 }
 
-const char* OPTIONS = "ab:c:de:f:g:h:i:k:l:npqr:svw:x:y:zA:B:C:D:F:I:JK:L:MN:PRS:T:V:W:X:Y:";
+const char* OPTIONS = "ab:c:de:f:g:h:i:jk:l:npqr:svw:x:y:zA:B:C:D:F:I:JK:L:MN:PRS:T:V:W:X:Y:";
 
 struct renderer {
 	char* name;
@@ -322,6 +324,17 @@ double get_double_arg_of_type(render_args_t* args, const char* name, double def)
 	return rtn;
 }
 
+static cairo_status_t write_func_for_cairo(void *closure,
+										   const unsigned char *data,
+										   unsigned int length) {
+	FILE* fid = closure;
+	if (fwrite(data, 1, length, fid) != length) {
+		SYSERROR("Failed to write cairo data");
+		return CAIRO_STATUS_WRITE_ERROR;
+	}
+	return CAIRO_STATUS_SUCCESS;
+}
+
 extern char *optarg;
 extern int optind, opterr, optopt;
 
@@ -329,13 +342,16 @@ int main(int argc, char *argv[]) {
 	int argchar;
 	int gotx, goty, gotX, gotY, gotw, goth;
 	double xzoom;
-	unsigned char* img;
+	unsigned char* img = NULL;
 	render_args_t args;
 	sl* layers;
 	int i;
 	bool inmerc = 0;
     bool writejpeg = FALSE;
 	int loglvl = LOG_MSG;
+	bool writepdf = FALSE;
+	cairo_t* cairo;
+	cairo_surface_t* target;
 
 	if (argc == 1) {
 		print_help(argv[0]);
@@ -382,6 +398,9 @@ int main(int argc, char *argv[]) {
         case 'J':
             writejpeg = TRUE;
             break;
+		case 'j':
+			writepdf = TRUE;
+			break;
         case 'S':
 				args.filelist = strdup(optarg);
 				break;
@@ -504,9 +523,14 @@ int main(int argc, char *argv[]) {
 	default_rdls_args(&args);
 
     if (args.W > 4096 || args.H > 4096) {
-        logmsg("tilecache: Width or height too large (limit 1024)\n");
+        logmsg("tilecache: Width or height too large (limit 4096)\n");
         exit(-1);
     }
+
+	if (writejpeg && writepdf) {
+		logmsg("Can't write both JPEG and PDF.\n");
+		exit(-1);
+	}
 
 	logmsg("tilecache: BEGIN TILECACHE\n");
 
@@ -563,15 +587,32 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	// Allocate a black image.
-	img = calloc(4 * args.W * args.H, 1);
+	if (writepdf) {
+		cairo_write_func_t wfunc = write_func_for_cairo;
+		target = cairo_pdf_surface_create_for_stream(wfunc, stdout, args.W, args.H);
+		if (!target) {
+			ERROR("Failed to create cairo surface for PDF");
+			exit(-1);
+		}
+		logmsg("Image size: %ix%i pixels\n",
+			   cairo_image_surface_get_width(target),
+			   cairo_image_surface_get_height(target));
+	} else {
+		// Allocate a black image.
+		img = calloc(4 * args.W * args.H, 1);
+		target = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, args.W, args.H, args.W*4);
+	}
+	cairo = cairo_create(target);
+
+	cairoutils_surface_status_errors(target);
+	cairoutils_cairo_status_errors(cairo);
+
 
 	for (i=0; i<sl_size(layers); i++) {
-		int j, k;
+		int j;
 		int NR = sizeof(renderers) / sizeof(renderer_t);
 		char* layer = sl_get(layers, i);
 		bool gotit = FALSE;
-		uchar* thisimg = calloc(4 * args.W * args.H, 1);
 
 		for (j=0; j<NR; j++) {
 			renderer_t* r = renderers + j;
@@ -580,17 +621,53 @@ int main(int argc, char *argv[]) {
 				continue;
 			args.currentlayer = r->name;
 			if (r->cairorender) {
-				// hacky... we really should do the compositing in cairo.
-				cairo_t* cairo;
-				cairo_surface_t* target;
-				target = cairo_image_surface_create_for_data(thisimg, CAIRO_FORMAT_ARGB32, args.W, args.H, args.W*4);
-				cairo = cairo_create(target);
 				res = r->cairorender(cairo, &args);
-				cairoutils_argb32_to_rgba(thisimg, args.W, args.H);
-				cairo_surface_destroy(target);
-				cairo_destroy(cairo);
 			} else if (r->imgrender) {
+				//cairo_t* thiscairo;
+				cairo_surface_t* thissurf;
+				cairo_pattern_t* pat;
+				uchar* thisimg = calloc(4 * args.W * args.H, 1);
 				res = r->imgrender(thisimg, &args);
+				thissurf = cairo_image_surface_create_for_data(thisimg, CAIRO_FORMAT_ARGB32, args.W, args.H, args.W*4);
+				//thiscairo = cairo_create(target);
+				pat = cairo_pattern_create_for_surface(thissurf);
+				
+				/*
+				 Sweet, you can control how images are resized with:
+
+				 void                cairo_pattern_set_filter            (cairo_pattern_t *pattern,
+				 cairo_filter_t filter);
+
+				 Check out also:
+
+				 void                cairo_pattern_set_matrix            (cairo_pattern_t *pattern,
+                                                         const cairo_matrix_t *matrix);
+				 */
+
+				cairo_set_source(cairo, pat);
+
+				cairo_paint(cairo);
+
+				cairo_pattern_destroy(pat);
+				cairo_surface_destroy(thissurf);
+				free(thisimg);
+
+				/*
+				 // Composite.
+				 for (j=0; j<args.H; j++) {
+				 for (k=0; k<args.W; k++) {
+				 float alpha;
+				 uchar* newpix = pixel(k, j, thisimg, &args);
+				 uchar* accpix = pixel(k, j, img, &args);
+				 alpha = newpix[3] / 255.0;
+				 accpix[0] = accpix[0]*(1.0 - alpha) + newpix[0] * alpha;
+				 accpix[1] = accpix[1]*(1.0 - alpha) + newpix[1] * alpha;
+				 accpix[2] = accpix[2]*(1.0 - alpha) + newpix[2] * alpha;
+				 accpix[3] = MIN(255, accpix[3] + newpix[3]);
+				 }
+				 }
+				 */
+
 			} else {
 				logmsg("tilecache: neither 'imgrender' nor 'cairorender' is defined for renderer \"%s\"\n", r->name);
 				continue;
@@ -608,32 +685,24 @@ int main(int argc, char *argv[]) {
 			logmsg("tilecache: No renderer found for layer \"%s\".\n", layer);
 		}
 
-		// Composite.
-		for (j=0; j<args.H; j++) {
-			for (k=0; k<args.W; k++) {
-				float alpha;
-				uchar* newpix = pixel(k, j, thisimg, &args);
-				uchar* accpix = pixel(k, j, img, &args);
-				alpha = newpix[3] / 255.0;
-
-				accpix[0] = accpix[0]*(1.0 - alpha) + newpix[0] * alpha;
-				accpix[1] = accpix[1]*(1.0 - alpha) + newpix[1] * alpha;
-				accpix[2] = accpix[2]*(1.0 - alpha) + newpix[2] * alpha;
-				accpix[3] = MIN(255, accpix[3] + newpix[3]);
-			}
-		}
-
-		free(thisimg);
+		cairoutils_surface_status_errors(target);
+		cairoutils_cairo_status_errors(cairo);
 	}
 
-	if (args.makerawfloatimg) {
-		fwrite(args.rawfloatimg, sizeof(float), args.W * args.H * 3, stdout);
-		free(args.rawfloatimg);
+	if (writepdf) {
+		cairo_surface_flush(target);
+		cairo_surface_finish(target);
 	} else {
-        if (writejpeg)
-            cairoutils_stream_jpeg(stdout, img, args.W, args.H);
-		else
-            cairoutils_stream_png(stdout, img, args.W, args.H);
+		if (args.makerawfloatimg) {
+			fwrite(args.rawfloatimg, sizeof(float), args.W * args.H * 3, stdout);
+			free(args.rawfloatimg);
+		} else {
+			cairoutils_argb32_to_rgba(img, args.W, args.H);
+			if (writejpeg)
+				cairoutils_stream_jpeg(stdout, img, args.W, args.H);
+			else
+				cairoutils_stream_png(stdout, img, args.W, args.H);
+		}
 	}
 
 	free(img);
@@ -652,6 +721,12 @@ int main(int argc, char *argv[]) {
 	free(args.cmap);
 
 	logmsg("tilecache: END TILECACHE\n");
+
+	cairoutils_surface_status_errors(target);
+	cairoutils_cairo_status_errors(cairo);
+
+	cairo_surface_destroy(target);
+	cairo_destroy(cairo);
 
 	return 0;
 }

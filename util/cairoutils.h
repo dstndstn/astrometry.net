@@ -23,6 +23,13 @@
 
 #include <cairo.h>
 
+/**
+ Reports any cairo error for the given surface.  Returns 0 for ok, -1 on error.
+ */
+int cairoutils_surface_status_errors(cairo_surface_t* surf);
+
+int cairoutils_cairo_status_errors(cairo_t* c);
+
 void cairoutils_draw_path(cairo_t* c, const double* xy, int N);
 
 void cairoutils_argb32_to_rgba(unsigned char* img, int W, int H);
