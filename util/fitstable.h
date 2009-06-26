@@ -249,6 +249,10 @@ int fitstable_read_column_into(const fitstable_t* tab,
 							   const char* colname, tfits_type read_as_type,
 							   void* dest, int stride);
 
+int fitstable_read_column_offset_into(const fitstable_t* tab,
+									  const char* colname, tfits_type read_as_type,
+									  void* dest, int stride, int start, int N);
+
 void* fitstable_read_column(const fitstable_t* tab,
                             const char* colname, tfits_type t);
 
@@ -259,6 +263,7 @@ void* fitstable_read_column_offset(const fitstable_t* tab,
                                    const char* colname, tfits_type ctype,
                                    int offset, int N);
 
+// Note, you must call this with *pointers* to the data to write.
 int fitstable_write_row(fitstable_t* table, ...);
 
 // Writes one row, with data drawn from the given structure.

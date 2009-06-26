@@ -195,17 +195,19 @@ typedef u32 bigint;
 #define MYGLUE2(a, b) a ## b
 #define DIST_FUNC_MANGLE(x, suffix) MYGLUE2(x, suffix)
 
-static void split_dim_and_value(kdtree_t* kd, int node,
-								uint8_t* splitdim, ttype* splitval) {
-	if (kd->splitdim) {
-		*splitdim = kd->splitdim[node];
-		*splitval = *KD_SPLIT(kd, nodeid);
-	} else {
-        bigint tmpsplit = *KD_SPLIT(kd, nodeid);
-        *splitdim = (uint8_t)(tmpsplit & kd->dimmask);
-		*splitval = (ttype)(tmpsplit & kd->splitmask);
-	}
-}
+/*
+ static void split_dim_and_value(kdtree_t* kd, int node,
+ uint8_t* splitdim, ttype* splitval) {
+ if (kd->splitdim) {
+ *splitdim = kd->splitdim[node];
+ *splitval = *KD_SPLIT(kd, node);
+ } else {
+ bigint tmpsplit = *KD_SPLIT(kd, node);
+ *splitdim = (uint8_t)(tmpsplit & kd->dimmask);
+ *splitval = (ttype)(tmpsplit & kd->splitmask);
+ }
+ }
+ */
 
 /* min/maxdist functions. */
 #define CAN_OVERFLOW 0
@@ -2597,6 +2599,10 @@ double MANGLE(kdtree_node_node_maxdist2)
 		ERROR("Error: kdtree_node_node_maxdist2: kdtree does not have bounding boxes!");
 		return FALSE;
 	}
+	// Since the two trees can have different conversion factors,
+	// we have to convert both to the external type.
+	// FIXME - we do assume that POINT_TE works for both of them --
+	// ie, ~we assume they are the same treetype.
 	for (d=0; d<D; d++) {
 		etype alo, ahi, blo, bhi;
 		etype delta1, delta2, delta;

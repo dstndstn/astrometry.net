@@ -76,7 +76,7 @@ void toc() {
 	endtime = time(NULL);
 	dtime = (int)(endtime - starttime);
 	if (!get_resource_stats(&utime, &stime, &rss)) {
-		logverb("Used %g s user, %g s system (%g s total), %i s wall time, max rss %li\n",
-                utime, stime, utime + stime, dtime, rss);
+		logmsg("Used %g s user, %g s system (%g s total), %i s wall time, max rss %li\n",
+			   utime, stime, utime + stime, dtime, rss);
 	}
 }

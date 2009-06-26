@@ -543,6 +543,16 @@ static void* read_array(const fitstable_t* tab,
 	return read_array_into(tab, colname, ctype, array_ok, offset, Nread, NULL, -1);
 }
 
+int fitstable_read_column_offset_into(const fitstable_t* tab,
+									  const char* colname, tfits_type read_as_type,
+									  void* dest, int stride, int start, int N) {
+	void* res;
+	res = read_array_into(tab, colname, read_as_type, FALSE, start, N, dest, stride);
+	if (!res)
+		return -1;
+	return 0;
+}
+
 int fitstable_read_column_into(const fitstable_t* tab,
 							   const char* colname, tfits_type read_as_type,
 							   void* dest, int stride) {

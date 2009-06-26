@@ -248,7 +248,7 @@ struct kdtree {
 
 	double* minval;
 	double* maxval;
-	double scale;    /* kdtype per real */
+	double scale;    /* kdtype per real -- isotropic */
 	double invscale; /* real per kdtype */
 
 	int ndata;     /* Number of items */
@@ -289,6 +289,8 @@ int kdtree_n(const kdtree_t* kd);
 int kdtree_nnodes(const kdtree_t* kd);
 
 bool kdtree_has_old_bb(const kdtree_t* kd);
+
+double kdtree_get_conservative_query_radius(const kdtree_t* kd, double radius);
 
 /* These functions return the number of bytes each entry in the kdtree is
  expected to have.  These return positive values EVEN IF THE ACTUAL array

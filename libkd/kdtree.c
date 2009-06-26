@@ -373,6 +373,13 @@ void kdtree_set_limits(kdtree_t* kd, double* low, double* high) {
 	memcpy(kd->maxval, high, D * sizeof(double));
 }
 
+double kdtree_get_conservative_query_radius(const kdtree_t* kd, double radius) {
+	if (!kd->minval) {
+		return radius;
+	}
+	return sqrt(radius* radius + kd->ndim * 0.25 * kd->invscale*kd->invscale);
+}
+
 KD_DECLARE(kdtree_convert_data, kdtree_t*, (kdtree_t* kd, void* data, int N, int D, int Nleaf));
 
 kdtree_t* kdtree_convert_data(kdtree_t* kd, void *data,

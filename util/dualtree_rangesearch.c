@@ -90,8 +90,16 @@ void dualtree_rangesearch(kdtree_t* xtree, kdtree_t* ytree,
     if (maxdist == RANGESEARCH_NO_LIMIT) {
 		params.usemax = FALSE;
     } else {
+		double d = maxdist;
+		/*
+		 printf("Original distance %.16g\n", d);
+		 d = kdtree_get_conservative_query_radius(xtree, d);
+		 printf("Conservative distance in tree 1: %.16g\n", d);
+		 d = kdtree_get_conservative_query_radius(ytree, d);
+		 printf("Conservative distance in tree 2: %.16g\n", d);
+		 */
 		params.usemax = TRUE;
-		params.maxdistsq = maxdist * maxdist;
+		params.maxdistsq = d*d;
     }
 
     if (distsquared)
@@ -126,8 +134,7 @@ static bool rs_within_range(void* vparams,
 							kdtree_t* xtree, int xnode,
 							kdtree_t* ytree, int ynode) {
     rs_params* p = (rs_params*)vparams;
-	printf("rs_within_range: x node %i (parent %i) / y node %i (parent %i)\n",
-		   xnode, KD_PARENT(xnode), ynode, KD_PARENT(ynode));
+	//printf("rs_within_range: x node %i (parent %i) / y node %i (parent %i)\n", xnode, KD_PARENT(xnode), ynode, KD_PARENT(ynode));
     if (p->usemax &&
 		kdtree_node_node_mindist2_exceeds(xtree, xnode, ytree, ynode,
 										  p->maxdistsq))
@@ -158,7 +165,8 @@ static void rs_handle_result(void* vparams,
 	yr = kdtree_right(ytree, ynode);
 
 	for (y=yl; y<=yr; y++) {
-		void* py = kdtree_get_data(ytree, y);
+		double py[D];
+		kdtree_copy_data_double(ytree, y, 1, py);
 		// check if we can eliminate the whole box for this point...
 		// HACK - can only do this if leaf nodes have bounding-boxes!
 		if (!KD_IS_LEAF(xtree, xnode)) {
@@ -173,7 +181,8 @@ static void rs_handle_result(void* vparams,
 		}
 		for (x=xl; x<=xr; x++) {
 			double d2;
-			void* px = kdtree_get_data(xtree, x);
+			double px[D];
+			kdtree_copy_data_double(xtree, x, 1, px);
 			d2 = p->distsquared(px, py, D);
 			//printf("eliminated point.\n");
 			if ((p->usemax) && (d2 > p->maxdistsq))

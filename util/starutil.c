@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <sys/types.h>
+#include <sys/param.h>
 #include <regex.h>
 
 #include "mathutil.h"
@@ -34,6 +35,38 @@
 #define InlineDefine InlineDefineC
 #include "starutil.inc"
 #undef InlineDefine
+
+void radecrange2xyzrange(double ralo, double declo, double rahi, double dechi,
+						 double* minxyz, double* maxxyz) {
+	double minmult, maxmult;
+	double uxlo, uxhi, uylo, uyhi;
+	// Dec only affects z, and is monotonic (z = sin(dec))
+	minxyz[2] = radec2z(0, declo);
+	maxxyz[2] = radec2z(0, dechi);
+
+	// min,max of cos(dec).  cos(dec) is concave down.
+	minmult = MIN(cos(deg2rad(declo)), cos(deg2rad(dechi)));
+	maxmult = MAX(cos(deg2rad(declo)), cos(deg2rad(dechi)));
+	if (declo < 0 && dechi > 0)
+		maxmult = 1.0;
+	// unscaled x (ie, cos(ra))
+	uxlo = MIN(cos(deg2rad(ralo)), cos(deg2rad(rahi)));
+	if (ralo < 180 && rahi > 180)
+		uxlo = -1.0;
+	uxhi = MAX(cos(deg2rad(ralo)), cos(deg2rad(rahi)));
+	minxyz[0] = MIN(uxlo * minmult, uxlo * maxmult);
+	maxxyz[0] = MAX(uxhi * minmult, uxhi * maxmult);
+	// unscaled y (ie, sin(ra))
+	uylo = MIN(sin(deg2rad(ralo)), sin(deg2rad(rahi)));
+	if (ralo < 270 && rahi > 270)
+		uylo = -1.0;
+	uyhi = MAX(sin(deg2rad(ralo)), sin(deg2rad(rahi)));
+	if (ralo < 90 && rahi > 90)
+		uyhi = -1.0;
+	minxyz[1] = MIN(uylo * minmult, uylo * maxmult);
+	maxxyz[1] = MAX(uyhi * minmult, uyhi * maxmult);
+}
+
 
 static int parse_hms_string(const char* str,
                             int* sign, int* term1, int* term2, double* term3) {

@@ -128,15 +128,15 @@ static void dualtree_recurse(kdtree_t* xtree, kdtree_t* ytree,
 		}
 	}
 
-	printf("dualtree: start left child of y node %i is %i\n", ynode, KD_CHILD_LEFT(ynode));
+	//printf("dualtree: start left child of y node %i is %i\n", ynode, KD_CHILD_LEFT(ynode));
 	// recurse on the Y children!
 	dualtree_recurse(xtree, ytree, childnodes, leaves,
 					 KD_CHILD_LEFT(ynode), callbacks);
-	printf("dualtree: done left child of y node %i is %i\n", ynode, KD_CHILD_LEFT(ynode));
-	printf("dualtree: start right child of y node %i is %i\n", ynode, KD_CHILD_RIGHT(ynode));
+	//printf("dualtree: done left child of y node %i is %i\n", ynode, KD_CHILD_LEFT(ynode));
+	//printf("dualtree: start right child of y node %i is %i\n", ynode, KD_CHILD_RIGHT(ynode));
 	dualtree_recurse(xtree, ytree, childnodes, leaves,
 					 KD_CHILD_RIGHT(ynode), callbacks);
-	printf("dualtree: done right child of y node %i is %i\n", ynode, KD_CHILD_LEFT(ynode));
+	//printf("dualtree: done right child of y node %i is %i\n", ynode, KD_CHILD_LEFT(ynode));
 
 	// put the "leaves" list back the way it was...
 	il_remove_index_range(leaves, leafmarker, il_size(leaves)-leafmarker);
