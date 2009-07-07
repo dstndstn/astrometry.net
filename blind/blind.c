@@ -1096,6 +1096,7 @@ static int write_solutions(blind_t* bp) {
                 logerr("Failed to fix index RDLS field header.\n");
                 return -1;
             }
+			rdlist_next_field(bp->indexrdls);
         }
 
 		if (rdlist_fix_primary_header(bp->indexrdls) ||
