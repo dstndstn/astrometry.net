@@ -552,10 +552,16 @@ int main(int argc, char *argv[]) {
 	args.ymercmin = decdeg2merc(args.decmin);
 	args.ymercmax = decdeg2merc(args.decmax);
 
+	logverb("RA range: [%g, %g] deg\n", args.ramin, args.ramax);
+	logverb("Dec range: [%g, %g] deg\n", args.decmin, args.decmax);
+	logverb("RA merc: [%g, %g]\n", args.xmercmin, args.xmercmax);
+	logverb("Dec merc: [%g, %g]\n", args.ymercmin, args.ymercmax);
+
 	// The y mercator position can end up *near* but not exactly
 	// equal to the boundary conditions... clamp.
 	args.ymercmin = MAX(0.0, args.ymercmin);
 	args.ymercmax = MIN(1.0, args.ymercmax);
+	logverb("After clamping: Dec merc: [%g, %g]\n", args.ymercmin, args.ymercmax);
 
 	args.xpixelpermerc = (double)args.W / (args.xmercmax - args.xmercmin);
 	args.ypixelpermerc = (double)args.H / (args.ymercmax - args.ymercmin);
@@ -623,15 +629,18 @@ int main(int argc, char *argv[]) {
 			if (r->cairorender) {
 				res = r->cairorender(cairo, &args);
 			} else if (r->imgrender) {
-				//cairo_t* thiscairo;
 				cairo_surface_t* thissurf;
 				cairo_pattern_t* pat;
 				uchar* thisimg = calloc(4 * args.W * args.H, 1);
 				res = r->imgrender(thisimg, &args);
 				thissurf = cairo_image_surface_create_for_data(thisimg, CAIRO_FORMAT_ARGB32, args.W, args.H, args.W*4);
-				//thiscairo = cairo_create(target);
 				pat = cairo_pattern_create_for_surface(thissurf);
-				
+				cairo_set_source(cairo, pat);
+				cairo_paint(cairo);
+				cairo_pattern_destroy(pat);
+				cairo_surface_destroy(thissurf);
+				free(thisimg);
+
 				/*
 				 Sweet, you can control how images are resized with:
 
@@ -643,31 +652,6 @@ int main(int argc, char *argv[]) {
 				 void                cairo_pattern_set_matrix            (cairo_pattern_t *pattern,
                                                          const cairo_matrix_t *matrix);
 				 */
-
-				cairo_set_source(cairo, pat);
-
-				cairo_paint(cairo);
-
-				cairo_pattern_destroy(pat);
-				cairo_surface_destroy(thissurf);
-				free(thisimg);
-
-				/*
-				 // Composite.
-				 for (j=0; j<args.H; j++) {
-				 for (k=0; k<args.W; k++) {
-				 float alpha;
-				 uchar* newpix = pixel(k, j, thisimg, &args);
-				 uchar* accpix = pixel(k, j, img, &args);
-				 alpha = newpix[3] / 255.0;
-				 accpix[0] = accpix[0]*(1.0 - alpha) + newpix[0] * alpha;
-				 accpix[1] = accpix[1]*(1.0 - alpha) + newpix[1] * alpha;
-				 accpix[2] = accpix[2]*(1.0 - alpha) + newpix[2] * alpha;
-				 accpix[3] = MIN(255, accpix[3] + newpix[3]);
-				 }
-				 }
-				 */
-
 			} else {
 				logmsg("tilecache: neither 'imgrender' nor 'cairorender' is defined for renderer \"%s\"\n", r->name);
 				continue;

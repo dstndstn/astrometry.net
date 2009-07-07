@@ -27,6 +27,7 @@ int render_skdt(cairo_t* cairo, render_args_t* args) {
 	double p1[3], p2[3];
 	double rgba[4];
 	double crad = 3.0;
+	double clw = 2.0;
 
 	fns = sl_new(256);
 	get_string_args_of_type(args, "skdt ", fns);
@@ -38,8 +39,13 @@ int render_skdt(cairo_t* cairo, render_args_t* args) {
 		cairo_set_source_rgba(cairo, 0,1,0,1);
 	}
 
+	clw = get_first_double_arg_of_type(args, "skdt_lw ", clw);
+	logmsg("set skdt linewidth to %f\n", clw);
+	cairo_set_line_width(cairo, clw);
+
 	crad = get_first_double_arg_of_type(args, "skdt_rad ", crad);
 	logmsg("set skdt radius to %f\n", crad);
+
 
 	radecdeg2xyzarr(args->ramin, args->decmin, p1);
 	radecdeg2xyzarr(args->ramax, args->decmax, p2);

@@ -56,7 +56,7 @@ int main(int argc, char** args) {
     double pixscale;
     double fldw, fldh;
     double ramin, ramax, decmin, decmax;
-	//double mxlo, mxhi, mylo, myhi;
+	double mxlo, mxhi, mylo, myhi;
 	double dm;
 	int merczoom;
     char rastr[32];
@@ -148,15 +148,18 @@ int main(int argc, char** args) {
     printf("ramax %g\n", ramax);
 
 	// merc zoom level
-	/*
-	  mxlo = ra2mercx(ramax);
-	  mxhi = ra2mercx(ramin);
-	  mylo = dec2mercy(decmax);
-	  myhi = dec2mercy(decmin);
-	*/
-	dm = MAX(fabs(ra2mercx(ramax) - ra2mercx(ramin)), fabs(dec2mercy(decmax) - dec2mercy(decmin)));
+	mxlo = ra2mercx(ramax);
+	mxhi = ra2mercx(ramin);
+	mylo = dec2mercy(decmax);
+	myhi = dec2mercy(decmin);
+	printf("ra_min_merc %g\n", mxlo);
+	printf("ra_max_merc %g\n", mxhi);
+	printf("dec_min_merc %g\n", mylo);
+	printf("dec_max_merc %g\n", myhi);
+
+	dm = MAX(fabs(mxlo - mxhi), fabs(mylo - myhi));
+	printf("merc_diff %g\n", dm);
 	merczoom = 0 - (int)floor(log(dm) / log(2.0));
-	//printf("dm %g\n", dm);
 	printf("merczoom %i\n", merczoom);
 	return 0;
 }
