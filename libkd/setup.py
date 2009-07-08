@@ -13,8 +13,9 @@ c_module = Extension('spherematch_c',
 #                     extra_objects = ['libkd-noio.a',
                      extra_objects = ['libkd.a',
                                       '../util/libanfiles.a',
+                                      '../util/libanutils.a',
                                       '../qfits-an/stage/lib/libqfits.a',
-                                      '../util/libanutils.a' ])
+									  ])
 
 setup(name = 'Kdtree matching in Python',
       version = '1.0',
