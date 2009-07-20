@@ -1,3 +1,4 @@
+import numpy
 
 def write_pnm_to(img, f, maxval=255):
 	if len(img.shape) == 1:
@@ -5,9 +6,9 @@ def write_pnm_to(img, f, maxval=255):
 	elif len(img.shape) == 2:
 		#pnmtype = 'G'
 		pnmcode = 5
-		(w,h) = img.shape
+		(h,w) = img.shape
 	elif len(img.shape) == 3:
-		(w,h,planes) = img.shape
+		(h,w,planes) = img.shape
 		#pnmtype = 'P'
 		pnmcode = 6
 		if planes != 3:
@@ -27,11 +28,11 @@ def write_pnm_to(img, f, maxval=255):
 	if maxval < 0:
 		raise 'write_pnm: maxval must be positive'
 
-	f.write('P%i %i %i %i ' % pnmcode, w, h, maxval)
+	f.write('P%i %i %i %i ' % (pnmcode, w, h, maxval))
 	if maxval <= 255:
-		f.write(img.astype(uint8).data)
-	else maxval <= 255:
-		f.write(img.astype(uint16).data)
+		f.write(img.astype(numpy.uint8).data)
+	else:
+		f.write(img.astype(numpy.uint16).data)
 
 
 def write_pnm(img, filename, maxval=255):

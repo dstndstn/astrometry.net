@@ -12,7 +12,7 @@ class tabledata(object):
 	def __len__(self):
 		return self._length
 
-def table_fields(dataorfn):
+def table_fields(dataorfn, rows=None):
 	pf = None
 	if isinstance(dataorfn, str):
 		pf = pyfits.open(dataorfn)
@@ -23,7 +23,91 @@ def table_fields(dataorfn):
 	colnames = data.dtype.names
 	fields = tabledata()
 	for c in colnames:
-		fields.set(c.lower(), data.field(c))
+		col = data.field(c)
+		if rows is not None:
+			col = col[rows]
+		fields.set(c.lower(), col)
+	fields._length = len(data)
+	if pf:
+		pf.close()
+	return fields
+
+# ultra-brittle text table parsing.
+def text_table_fields(forfn):
+	f = None
+	if isinstance(forfn, str):
+		f = open(forfn)
+		data = f.read()
+		f.close()
+	else:
+		data = forfn.read()
+
+	txtrows = data.split('\n')
+
+	# column names are in the first line.
+	header = txtrows.pop(0)
+	header = header.split()
+	assert(header[0] == '#')
+	assert(len(header) > 1)
+	colnames = header[1:]
+
+	fields = tabledata()
+	txtrows = [r for r in txtrows if not r.startswith('#')]
+	coldata = [[] for x in colnames]
+	for r in txtrows:
+		cols = r.split()
+		if len(cols) == 0:
+			continue
+		assert(len(cols) == len(colnames))
+		for i,c in enumerate(cols):
+			coldata[i].append(c)
+
+	print coldata
+
+	for i,col in enumerate(coldata):
+		isint = True
+		isfloat = True
+		print 'col is', col
+		for x in col:
+			print 'x is', x
+			try:
+				float(x)
+			except:
+				isfloat = False
+				isint = False
+				break
+			try:
+				int(x)
+			except:
+				isint = False
+				break
+
+
+
+			try:
+				s = str(int(float(x)))
+				if s != x:
+					if isint:
+						print 'column', colnames[i], 'is not int:', s, x
+					isint = False
+			except Exception,e:
+				if isfloat:
+					print 'column', colnames[i], 'is not float:', x
+				isint = False
+				isfloat = False
+				break
+		if isint:
+			isfloat = False
+		print 'column', colnames[i], 'isint:', isint, 'isfloat:', isfloat
+
+	return
+
+def junk():
+	for c in colnames:
+		col = data.field(c)
+		if rows is not None:
+			col = col[rows]
+		fields.set(c.lower(), col)
 	fields._length = len(data)
 	if pf:
 		pf.close()
