@@ -18,7 +18,7 @@ from astrometry.util.run_command import run_command
 # will get any youtube video as a local ".flv" download.
 # mplayer -vo png foo.flv
 # mencoder -o sky.avi -ovc lavc -lavcopts vcodec=mpeg4:keyint=50:autoaspect mf://sky-0*.png -mf fps=10:type=png
-# mencoder -o ann.avi -ovc lavc -lavcopts vcodec=mpeg4:keyint=50:autoaspect mf://ann-*.png -mf fps=10:type=png
+# Mencoder -o ann.avi -ovc lavc -lavcopts vcodec=mpeg4:keyint=50:autoaspect mf://ann-*.png -mf fps=10:type=png
 
 if __name__ == '__main__':
 

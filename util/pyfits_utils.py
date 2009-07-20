@@ -1,4 +1,5 @@
 import pyfits
+from numpy import array
 
 class tabledata(object):
 	def __init__(self):
@@ -62,14 +63,10 @@ def text_table_fields(forfn):
 		for i,c in enumerate(cols):
 			coldata[i].append(c)
 
-	print coldata
-
 	for i,col in enumerate(coldata):
 		isint = True
 		isfloat = True
-		print 'col is', col
 		for x in col:
-			print 'x is', x
 			try:
 				float(x)
 			except:
@@ -81,34 +78,17 @@ def text_table_fields(forfn):
 			except:
 				isint = False
 				break
-
-
-
-			try:
-				s = str(int(float(x)))
-				if s != x:
-					if isint:
-						print 'column', colnames[i], 'is not int:', s, x
-					isint = False
-			except Exception,e:
-				if isfloat:
-					print 'column', colnames[i], 'is not float:', x
-				isint = False
-				isfloat = False
-				break
 		if isint:
 			isfloat = False
-		print 'column', colnames[i], 'isint:', isint, 'isfloat:', isfloat
 
-	return
+		if isint:
+			vals = [int(x) for x in col]
+		elif isfloat:
+			vals = [float(x) for x in col]
+		else:
+			vals = col
 
-def junk():
-	for c in colnames:
-		col = data.field(c)
-		if rows is not None:
-			col = col[rows]
-		fields.set(c.lower(), col)
-	fields._length = len(data)
-	if pf:
-		pf.close()
+		fields.set(colnames[i].lower(), array(vals))
+		fields._length = len(vals)
+
 	return fields
