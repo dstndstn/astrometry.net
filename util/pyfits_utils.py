@@ -10,8 +10,18 @@ class tabledata(object):
 		self.__setattr__(name, val)
 	def getcolumn(self, name):
 		return self.__dict__[name.lower()]
+	def columns(self):
+		return self.__dict__.keys()
 	def __len__(self):
 		return self._length
+	def __getitem__(self, I):
+		rtn = tabledata()
+		for name,val in self.__dict__.items():
+			if name == '_length':
+				continue
+			rtn.set(name, val[I])
+			rtn._length = len(val[I])
+		return rtn
 
 def table_fields(dataorfn, rows=None):
 	pf = None
