@@ -66,5 +66,5 @@ def set_image_color_percentiles(image, plo, phi):
 	mn = I[max(0, int(round(plo * N / 100.)))]
 	mx = I[min(N-1, int(round(phi * N / 100.)))]
 	gci().set_clim(mn, mx)
-
+	return (mn,mx)
 

@@ -3,28 +3,42 @@ from math import pi,cos,sin,radians,degrees,asin,atan2,sqrt,acos,floor
 def hms2ra(h, m, s):
 	return 15. * (h + (m + s/60.)/60.)
 
+def dms2dec(sign, d, m, s):
+	return sign * (d + (m + s/60.)/60.)
+
 def tokenize_hms(s):
 	s = s.strip()
+	# split on whitespace
 	tokens = s.split()
+	# also split on colons
 	tokens = reduce(list.__add__, [t.split(':') for t in tokens])
+	assert(len(tokens) < 4)
+	assert(len(tokens) > 0)
 	h = len(tokens) >= 1 and float(tokens[0]) or 0
 	m = len(tokens) >= 2 and float(tokens[1]) or 0
 	s = len(tokens) >= 3 and float(tokens[2]) or 0
 	return (h,m,s)
 
-def hmsstring2ra(st):
+def hmsstring2hms(st):
 	(h,m,s) = tokenize_hms(st)
-	return hms2ra(h, m, s)
+	return (h,m,s)
 
-def dms2dec(sign, d, m, s):
-	return sign * (d + (m + s/60.)/60.)
+def hmsstring2ra(st):
+	return hms2ra(*hmsstring2hms(st))
 
-def dmsstring2dec(s):
-	sign = (s[0] == '-') and -1.0 or 1.0
-	if s[0] == '-' or s[0] == '+':
+# returns (sign, deg, minutes, second)
+def dmsstring2dms(s):
+	sign = 1.0
+	if s[0] == '-':
+		sign = -1.0
+		s = s[1:]
+	elif s[0] == '+':
 		s = s[1:]
 	(d,m,s) = tokenize_hms(s)
-	return dms2dec(sign, d, m, s)
+	return (sign, d, m, s)
+
+def dmsstring2dec(s):
+	return dms2dec(*dmsstring2dms(s))
 
 # RA in degrees
 def ra2hms(ra):
@@ -36,14 +50,15 @@ def ra2hms(ra):
 	return (hh, mm, s)
 
 # Dec in degrees
+# returns (sign, degrees, minutes, seconds)
 def dec2dms(dec):
-	sgn = (dec > 0) and 1. or -1.
+	sgn = (dec > 0) and 1 or -1
 	d = dec * sgn
 	dd = int(floor(d))
 	m = (d - dd) * 60.
 	mm = int(floor(m))
 	s = (m - mm) * 60.
-	return (sgn*d, m, s)
+	return (sgn, d, m, s)
 
 # RA in degrees
 def ra2hmsstring(ra, separator=' '):
@@ -54,10 +69,16 @@ def ra2hmsstring(ra, separator=' '):
 
 # Dec in degrees
 def dec2dmsstring(dec, separator=' '):
-	(d,m,s) = dec2dms(dec)
+	(sign,d,m,s) = dec2dms(dec)
+	# whole number of seconds
 	ss = int(floor(s))
+	# milliseconds
 	ds = int(round((s - ss) * 1000.0))
-	return ' '.join(['%+0.2i' % d, '%0.2i' % m, '%0.2i.%0.3i' % (ss,ds)])
+	# fix rounding errors...
+	if ds >= 1000:
+		ds -= 1000
+		ss += 1
+	return separator.join(['%+0.2i' % int(d*sign), '%0.2i' % m, '%0.2i.%0.3i' % (ss,ds)])
 
 # RA, Dec in degrees
 def radectoxyz(ra, dec):

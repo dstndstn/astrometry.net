@@ -196,6 +196,7 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     return Py_BuildValue("(OO)", inds, dists);
 }
 
+
 static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     int NY;
     long p1, p2;
