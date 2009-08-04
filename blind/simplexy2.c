@@ -266,13 +266,13 @@ int simplexy2(simplexy_t* s) {
         assert(iy >= 0);
         assert(ix < nx);
         assert(iy < ny);
+		// "theimage" is background-subtracted.
         s->flux[i]       = theimage[ix + iy * nx];
-        s->background[i] = s->image [ix + iy * nx] - theimage[ix + iy * nx];
+        s->background[i] = s->image[ix + iy * nx] - theimage[ix + iy * nx];
     }
 
 	if (!s->nobgsub)
 		FREEVEC(theimage);
-
     // for u8 images, we allocate a temporary float image in s->image.
     if (s->image_u8)
         FREEVEC(s->image);
