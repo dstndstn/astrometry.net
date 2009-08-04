@@ -324,7 +324,7 @@ def get_tile(request):
 				wcsfn = convert(job, 'wcs')
 			except ObjectDoesNotExist:
 				return HttpResponse('no such jobid ', jobid)
-		arglist.append('wcsfn ' + wcsfn)
+		arglist.append('bwcsfn ' + wcsfn)
 
 	if ('images' in layers) or ('boundaries' in layers):
 		from astrometry.util.hsv import hsvtorgb
