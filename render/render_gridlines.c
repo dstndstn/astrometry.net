@@ -99,7 +99,7 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
    	cairo = cairo_create(mask);
 	cairo_set_line_width(cairo, 1.0);
 	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
-	cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 0.7);
+	cairo_set_source_rgba(cairo, 0.8, 0.8, 0.8, 0.8);
 
 	for (ra = rastep * floor(args->ramin / rastep);
 		 ra <= rastep * ceil(args->ramax / rastep);
