@@ -76,19 +76,19 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	cairo_surface_t* mask;
 	double ralabelstep, declabelstep;
 
-	ind = MAX(1, args->zoomlevel);
-	ind = MIN(ind, sizeof(steps)/sizeof(double)-1);
-	rastep = decstep = steps[ind];
-	ralabelstep = 2. * rastep;
-	declabelstep = 2. * decstep;
-
-	rastep = get_double_arg_of_type(args, "gridrastep ", rastep);
-	ralabelstep = get_double_arg_of_type(args, "gridlabelrastep ", decstep);
-	decstep = get_double_arg_of_type(args, "griddecstep ", ralabelstep);
-	declabelstep = get_double_arg_of_type(args, "gridlabeldecstep ", declabelstep);
-
-	logmsg("Grid step: RA %g, Dec %g.\n", rastep, decstep);
-	logmsg("Grid label step: RA %g, Dec %g.\n", ralabelstep, declabelstep);
+	if (args->gridlabel) {
+		ind = MAX(1, args->zoomlevel);
+		ind = MIN(ind, sizeof(steps)/sizeof(double)-1);
+		rastep = decstep = steps[ind];
+		ralabelstep = 2. * rastep;
+		declabelstep = 2. * decstep;
+		rastep = get_double_arg_of_type(args, "gridrastep ", rastep);
+		ralabelstep = get_double_arg_of_type(args, "gridlabelrastep ", decstep);
+		decstep = get_double_arg_of_type(args, "griddecstep ", ralabelstep);
+		declabelstep = get_double_arg_of_type(args, "gridlabeldecstep ", declabelstep);
+		logmsg("Grid step: RA %g, Dec %g.\n", rastep, decstep);
+		logmsg("Grid label step: RA %g, Dec %g.\n", ralabelstep, declabelstep);
+	}
 
 	/*
 	 In order to properly do the transparency and text, we render onto a
@@ -99,8 +99,6 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	cairo_set_line_width(cairo, 1.0);
 	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 	cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 0.7);
-	cairo_select_font_face(cairo, "DejaVu Sans Mono Book", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-	cairo_set_font_size(cairo, 18);
 
 	for (ra = rastep * floor(args->ramin / rastep);
 		 ra <= rastep * ceil(args->ramax / rastep);
@@ -126,42 +124,47 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	}
 	cairo_stroke(cairo);
 	
-	cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 8.0);
-	for (ra = ralabelstep * floor(args->ramin / ralabelstep);
-		 ra <= ralabelstep * ceil(args->ramax / ralabelstep);
-		 ra += ralabelstep) {
-		char buf[32];
-		float x = ra2pixelf(ra, args);
-		float y = args->H;
-		if (!in_image((int)round(x+0.5), 0, args))
-			continue;
-		sprintf(buf, "%.2f", ra);
-		// Trim off ".00"
-		if (ends_with(buf, ".00"))
-			buf[strlen(buf) - 3] = '\0';
-		add_text(cairo, x, y, buf, args);
-	}
-	for (dec = declabelstep * floor(args->decmin / declabelstep);
-		 dec <= declabelstep * ceil(args->decmax / declabelstep);
-		 dec += declabelstep) {
-		char buf[32];
-		float y = dec2pixelf(dec, args);
-		float x = 0;
-		// yep, it can wrap around :)
-		if ((dec > 90) || (dec < -90))
-			continue;
-		if (!in_image(0, (int)round(y+0.5), args))
-			continue;
-		sprintf(buf, "%.2f", dec);
-		// Trim off ".00"
-		if (ends_with(buf, ".00"))
-			buf[strlen(buf) - 3] = '\0';
-		add_text(cairo, x, y, buf, args);
+	if (args->gridlabel) {
+		cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 8.0);
+		cairo_select_font_face(cairo, "DejaVu Sans Mono Book", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+		cairo_set_font_size(cairo, 18);
+		for (ra = ralabelstep * floor(args->ramin / ralabelstep);
+			 ra <= ralabelstep * ceil(args->ramax / ralabelstep);
+			 ra += ralabelstep) {
+			char buf[32];
+			float x = ra2pixelf(ra, args);
+			float y = args->H;
+			if (!in_image((int)round(x+0.5), 0, args))
+				continue;
+			sprintf(buf, "%.2f", ra);
+			// Trim off ".00"
+			if (ends_with(buf, ".00"))
+				buf[strlen(buf) - 3] = '\0';
+			add_text(cairo, x, y, buf, args);
+		}
+		for (dec = declabelstep * floor(args->decmin / declabelstep);
+			 dec <= declabelstep * ceil(args->decmax / declabelstep);
+			 dec += declabelstep) {
+			char buf[32];
+			float y = dec2pixelf(dec, args);
+			float x = 0;
+			// yep, it can wrap around :)
+			if ((dec > 90) || (dec < -90))
+				continue;
+			if (!in_image(0, (int)round(y+0.5), args))
+				continue;
+			sprintf(buf, "%.2f", dec);
+			// Trim off ".00"
+			if (ends_with(buf, ".00"))
+				buf[strlen(buf) - 3] = '\0';
+			add_text(cairo, x, y, buf, args);
+		}
 	}
 
+	// squish paint through mask
 	cairo_set_source_surface(c2, mask, 0, 0);
 	cairo_mask_surface(c2, mask, 0, 0);
- 
+
 	cairo_surface_destroy(mask);
 	cairo_destroy(cairo);
 

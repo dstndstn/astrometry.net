@@ -148,10 +148,20 @@ static void print_help(char* prog) {
 		   "  -l healpix -- Renders healpix boundaries.\n"
 		   "     [-f <nside>]: default 1\n"
 		   "\n"
+		   "  -l grid -- Renders RA,Dec grid lines.\n"
+		   "     [-G]: label grid lines.\n"
+		   "               Args:\n"
+		   "     gridrastep <deg>\n"
+		   "     griddecstep <deg>\n"
+		   "         --grid spacing\n"
+		   "     gridlabelrastep <deg>\n"
+		   "     gridlabeldecstep <deg>\n"
+		   "         --grid label spacing\n"
+		   "\n"
 		   "\n", prog);
 }
 
-const char* OPTIONS = "ab:c:de:f:g:h:i:jk:l:npqr:svw:x:y:zA:B:C:D:F:I:JK:L:MN:PRS:T:V:W:X:Y:";
+const char* OPTIONS = "ab:c:de:f:g:h:i:jk:l:npqr:svw:x:y:zA:B:C:D:F:GI:JK:L:MN:PRS:T:V:W:X:Y:";
 
 struct renderer {
 	char* name;
@@ -377,6 +387,9 @@ int main(int argc, char *argv[]) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'G':
+			args.gridlabel = TRUE;
+			break;
 		case 'f':
 			args.nside = atoi(optarg);
 			break;

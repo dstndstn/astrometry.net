@@ -14,6 +14,7 @@ def match(x1, x2, radius):
     if D1 != D2:
         raise ValueError, 'Arrays must have the same dimensionality'
     kd1 = spherematch_c.kdtree_build(x1)
+	#if x1 is x2:
     kd2 = spherematch_c.kdtree_build(x2)
     (inds,dists) = spherematch_c.match(kd1, kd2, radius)
     spherematch_c.kdtree_free(kd1)

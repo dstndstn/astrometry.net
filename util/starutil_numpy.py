@@ -37,7 +37,11 @@ def xyztoradec(xyz):
 # x can be an array of shape (N,D)
 # returns an array of shape (N,1)
 def norm(x):
-	return sqrt(sum(x**2, axis=1))[:,newaxis]
+	if len(x.shape) == 2:
+		return sqrt(sum(x**2, axis=1))[:,newaxis]
+	else:
+		return sqrt(sum(x**2))
+		
 
 # proper motion (dl, db, dra, or ddec) in mas/yr
 # dist in kpc

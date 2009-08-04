@@ -11,6 +11,7 @@ antigray = LinearSegmentedColormap('antigray',
 									'green': ((0., 1, 1), (1., 0, 0)),
 									'blue':  ((0., 1, 1), (1., 0, 0))})
 
+# You probably want to set radius=R
 def circle(xy=None, x=None, y=None, **kwargs):
 	if xy is None:
 		if x is None or y is None:
