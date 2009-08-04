@@ -238,16 +238,6 @@ int simplexy2(simplexy_t* s) {
 	logverb("simplexy: measuring image noise (sigma)...\n");
 	dsigma(s->image, nx, ny, 5, 0, &(s->sigma));
 	logverb("simplexy: found sigma=%g.\n", s->sigma);
-	if (s->sigma == 0.0) {
-		logverb("simplexy: re-estimating sigma with a finer grid...\n");
-		dsigma(s->image, nx, ny, 5, 5, &(s->sigma));
-		logverb("simplexy: found sigma=%g.\n", s->sigma);
-		if (s->sigma == 0.0) {
-			logverb("simplexy: re-estimating sigma with a finer grid...\n");
-			dsigma(s->image, nx, ny, 5, 1, &(s->sigma));
-			logverb("simplexy: found sigma=%g.\n", s->sigma);
-		}
-	}
 
     s->x = malloc(s->maxnpeaks * sizeof(float));
     s->y = malloc(s->maxnpeaks * sizeof(float));
