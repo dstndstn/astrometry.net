@@ -55,7 +55,7 @@ int dsigma(float *image,
 	}
 
     if (gridsize == 0)
-        gridsize = 50;
+        gridsize = 20;
 
 	dx = gridsize;
 	if (dx > nx / 4)

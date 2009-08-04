@@ -41,8 +41,8 @@
  * Mike Blanton
  * 1/2006 */
 
-/* Finds all peaks in the image by cutting a bounding box out around each one
- * */
+/* Finds all peaks in the image by cutting a bounding box out around
+ each one */
 
 int dallpeaks(float *image,
               int nx,
@@ -88,7 +88,7 @@ int dallpeaks(float *image,
 		;
 
 	nobj = 0;
-	(*npeaks) = 0;
+	*npeaks = 0;
 	oimage = (float *) malloc(sizeof(float) * nx * ny);
 	simage = (float *) malloc(sizeof(float) * nx * ny);
 	xc = (int *) malloc(sizeof(int) * maxper);

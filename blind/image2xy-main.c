@@ -31,7 +31,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hOo:8Hd:D:ve:B:S:M:s:p:P:b";
+static const char* OPTIONS = "hi:Oo:8Hd:D:ve:B:S:M:s:p:P:b";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -48,9 +48,10 @@ static void printHelp() {
             "   [-D <downsample-factor>] downsample, if necessary, by this many factors of two.\n"
 			"   [-o <output-filename>]  write XYlist to given filename.\n"
             "   [-v] verbose - repeat for more and more verboseness\n"
-			"   [-s <smoothing-scale>]\n"
-			"   [-p <sigmas>]: set significance level of peaks: defailt 8\n"
-			"   [-P <image plane>]\n"
+			"   [-s <median-filtering scale>]: set median-filter box size (default 100 pixels)\n"
+			//"   [-i <sigma-value>]: \n"
+			"   [-p <sigmas>]: set significance level of peaks (default 8 sigmas)\n"
+			"   [-P <image plane>]: pull out a single plane of a multi-color image (default: first plane)\n"
 			"   [-b]: don't do background subtraction\n"
 			"\n"
 			"   [-S <background-subtracted image>]: save background-subtracted image to this filename (FITS float image)\n"

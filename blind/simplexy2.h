@@ -79,14 +79,6 @@ struct simplexy_t {
 	const char* bgimgfn;
 	const char* maskimgfn;
 	const char* bgsubimgfn;
-
-    /******
-     Internal
-     ******/
-    //float* simage;
-
-    int* oimage;
-    float* smooth;
 };
 typedef struct simplexy_t simplexy_t;
 
