@@ -76,17 +76,18 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	cairo_surface_t* mask;
 	double ralabelstep, declabelstep;
 
+	ind = MAX(1, args->zoomlevel);
+	ind = MIN(ind, sizeof(steps)/sizeof(double)-1);
+	rastep = decstep = steps[ind];
+	rastep = get_double_arg_of_type(args, "gridrastep ", rastep);
+	decstep = get_double_arg_of_type(args, "griddecstep ", ralabelstep);
+	logmsg("Grid step: RA %g, Dec %g.\n", rastep, decstep);
+
 	if (args->gridlabel) {
-		ind = MAX(1, args->zoomlevel);
-		ind = MIN(ind, sizeof(steps)/sizeof(double)-1);
-		rastep = decstep = steps[ind];
 		ralabelstep = 2. * rastep;
 		declabelstep = 2. * decstep;
-		rastep = get_double_arg_of_type(args, "gridrastep ", rastep);
 		ralabelstep = get_double_arg_of_type(args, "gridlabelrastep ", decstep);
-		decstep = get_double_arg_of_type(args, "griddecstep ", ralabelstep);
 		declabelstep = get_double_arg_of_type(args, "gridlabeldecstep ", declabelstep);
-		logmsg("Grid step: RA %g, Dec %g.\n", rastep, decstep);
 		logmsg("Grid label step: RA %g, Dec %g.\n", ralabelstep, declabelstep);
 	}
 
