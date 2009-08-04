@@ -80,7 +80,7 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	ind = MIN(ind, sizeof(steps)/sizeof(double)-1);
 	rastep = decstep = steps[ind];
 	rastep = get_double_arg_of_type(args, "gridrastep ", rastep);
-	decstep = get_double_arg_of_type(args, "griddecstep ", ralabelstep);
+	decstep = get_double_arg_of_type(args, "griddecstep ", decstep);
 	logmsg("Grid step: RA %g, Dec %g.\n", rastep, decstep);
 
 	if (args->gridlabel) {
