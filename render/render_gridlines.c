@@ -163,6 +163,7 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	}
 
 	// squish paint through mask
+	cairo_set_source_rgba(c2, 0.8, 0.8, 0.8, 0.8);
 	cairo_set_source_surface(c2, mask, 0, 0);
 	cairo_mask_surface(c2, mask, 0, 0);
 
