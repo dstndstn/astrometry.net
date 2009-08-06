@@ -1,5 +1,5 @@
 import pyfits
-from numpy import array
+from numpy import array, isscalar
 
 class tabledata(object):
 	def __init__(self):
@@ -14,13 +14,18 @@ class tabledata(object):
 		return self.__dict__.keys()
 	def __len__(self):
 		return self._length
+	def delete_column(self, c):
+		del self.__dict__[c]
 	def __getitem__(self, I):
 		rtn = tabledata()
 		for name,val in self.__dict__.items():
 			if name == '_length':
 				continue
 			rtn.set(name, val[I])
-			rtn._length = len(val[I])
+			if isscalar(I):
+				rtn._length = 1
+			else:
+				rtn._length = len(val[I])
 		return rtn
 
 def table_fields(dataorfn, rows=None):

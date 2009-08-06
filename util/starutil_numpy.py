@@ -1,5 +1,20 @@
 from numpy import *
 
+# scalars (racenter, deccenter) in deg
+# scalar radius in deg
+# arrays (ra,dec) in deg
+# returns array of booleans
+def points_within_radius(racenter, deccenter, radius, ra, dec):
+	return radecdotproducts(racenter, deccenter, ra, dec) >= cos(deg2rad(radius))
+
+# scalars (racenter, deccenter) in deg
+# arrays (ra,dec) in deg
+# returns array of cosines
+def radecdotproducts(racenter, deccenter, ra, dec):
+	xyzc = radectoxyz(racenter, deccenter).T
+	xyz = radectoxyz(ra, dec)
+	return dot(xyz, xyzc)[:,0]
+
 # RA, Dec in degrees
 # returns xyz of shape (N,3)
 def radectoxyz(ra_deg, dec_deg):
@@ -160,6 +175,9 @@ def galactic_unit_vectors():
 
 
 
+
+
+
 def hms2ra(h, m, s):
 	return 15. * (h + (m + s/60.)/60.)
 
@@ -239,15 +257,6 @@ def xy2ra(x,y):
     r += 2*pi*(r<0.)
     return r
 
-def degrees_between(ra1, dec1, ra2, dec2):
-	return arcsec2deg(arcsec_between(ra1, dec1, ra2, dec2))
-
-# RA,Decs in degrees.
-def arcsec_between(ra1, dec1, ra2, dec2):
-	xyz1 = radectoxyz(ra1, dec1)
-	xyz2 = radectoxyz(ra2, dec2)
-	d2 = sum([(a-b)**2 for (a,b) in zip(xyz1, xyz2)])
-	return distsq2arcsec(d2)
 
 def rad2distsq(rad):
     return 2. * (1. - cos(rad))
@@ -266,3 +275,16 @@ def distsq2arcsec(dist2):
 
 def distsq2rad(dist2):
     return acos(1. - dist2 / 2.)
+
+# RA,Decs in degrees.
+def arcsec_between(ra1, dec1, ra2, dec2):
+	xyz1 = radectoxyz(ra1, dec1)
+	xyz2 = radectoxyz(ra2, dec2)
+	
+	d2 = sum([(a-b)**2 for (a,b) in zip(xyz1, xyz2)])
+	return distsq2arcsec(d2)
+
+
+def degrees_between(ra1, dec1, ra2, dec2):
+	return arcsec2deg(arcsec_between(ra1, dec1, ra2, dec2))
+

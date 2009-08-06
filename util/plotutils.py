@@ -1,6 +1,6 @@
 #import matplotlib
 from matplotlib.patches import Circle, Ellipse
-from pylab import gca,gcf,gci
+from pylab import gca, gcf, gci, axis
 from numpy import array
 
 from matplotlib.colors import LinearSegmentedColormap
@@ -10,6 +10,15 @@ antigray = LinearSegmentedColormap('antigray',
 								   {'red':   ((0., 1, 1), (1., 0, 0)),
 									'green': ((0., 1, 1), (1., 0, 0)),
 									'blue':  ((0., 1, 1), (1., 0, 0))})
+
+bluegrayred = LinearSegmentedColormap('bluegrayred',
+									  {'red':   ((0., -1, 0),
+												 (1., 1, -1)),
+									   'green': ((0., -1,   0),
+												 (0.5,0.5, 0.5),
+												 (1., 0, -1)),
+									   'blue':  ((0., -1, 1),
+												 (1., 0, -1))})
 
 # You probably want to set radius=R
 def circle(xy=None, x=None, y=None, **kwargs):
@@ -33,7 +42,8 @@ def ellipse(xy=None, x=None, y=None, **kwargs):
 	c.set_clip_box(a.bbox)
 	a.add_artist(c)
 	return c
-	
+
+# return (pixel width, pixel height) of the axes area.
 def get_axes_pixel_size():
 	dpi = gcf().get_dpi()
 	figsize = gcf().get_size_inches()
@@ -58,6 +68,12 @@ def get_axes_pixel_size():
 		savefig('imtest.png')
 		sys.exit(0)
 
+# returns (x data units per pixel, y data units per pixel)
+# given the current plot range, figure size, and axes position.
+def get_pixel_scales():
+	a = axis()
+	(pixw, pixh) = get_axes_pixel_size()
+	return ((a[1]-a[0])/float(pixw), (a[3]-a[2])/float(pixh))
 
 def set_image_color_percentiles(image, plo, phi):
 	# hackery...
