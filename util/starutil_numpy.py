@@ -7,6 +7,10 @@ from numpy import *
 def points_within_radius(racenter, deccenter, radius, ra, dec):
 	return radecdotproducts(racenter, deccenter, ra, dec) >= cos(deg2rad(radius))
 
+def points_within_radius_range(racenter, deccenter, radiuslo, radiushi, ra, dec):
+	d = radecdotproducts(racenter, deccenter, ra, dec)
+	return (d <= cos(deg2rad(radiuslo))) * (d >= cos(deg2rad(radiushi)))
+
 # scalars (racenter, deccenter) in deg
 # arrays (ra,dec) in deg
 # returns array of cosines
@@ -18,8 +22,8 @@ def radecdotproducts(racenter, deccenter, ra, dec):
 # RA, Dec in degrees
 # returns xyz of shape (N,3)
 def radectoxyz(ra_deg, dec_deg):
-    ra  = radians(ra_deg)
-    dec = radians(dec_deg)
+    ra  = deg2rad(ra_deg)
+    dec = deg2rad(dec_deg)
     cosd = cos(dec)
     return vstack((cosd * cos(ra),
 				   cosd * sin(ra),
@@ -28,8 +32,8 @@ def radectoxyz(ra_deg, dec_deg):
 # RA,Dec in degrees
 # returns (dxyz_dra, dxyz_ddec)
 def derivatives_at_radec(ra_deg, dec_deg):
-    ra  = radians(ra_deg)
-    dec = radians(dec_deg)
+    ra  = deg2rad(ra_deg)
+    dec = deg2rad(dec_deg)
     cosd = cos(dec)
     nsd = -sin(dec)
     return (180./pi * vstack((cosd * -sin(ra),
