@@ -862,6 +862,9 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 			debug("%s%i", (i?" ":""), star[i]);
 		debug("]\n;");
 
+		// FIXME - could compute approximate scale here, before running
+		// blind_wcs_compute
+
 		// compute TAN projection from the matching quad alone.
 		if (blind_wcs_compute(starxyz, field, dimquads, &wcs, &scale)) {
             // bad quad.
@@ -944,7 +947,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 			   mo, sip, sp->vf, match_distance_in_pixels2,
 	           sp->distractor_ratio, sp->field_maxx, sp->field_maxy,
 	           sp->logratio_bail_threshold, sp->logratio_record_threshold,
-			   HUGE_VAL,
+			   sp->logratio_stoplooking,
 			   sp->distance_from_quad_bonus, fake_match);
 
 	mo->nverified = sp->num_verified++;
@@ -954,10 +957,6 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 
 	if (!sp->have_best_match || (mo->logodds > sp->best_match.logodds)) {
 		logverb("Got a new best match: logodds %g.\n", mo->logodds);
-
-        //free_best_match_extras(sp);
-
-		//print_match(bp, mo);
 		// FIXME -- set logodds_toaccept to this so that the mo is valid here?
 		memcpy(&(sp->best_match), mo, sizeof(MatchObj));
 		sp->have_best_match = TRUE;
@@ -993,6 +992,7 @@ void solver_set_default_values(solver_t* solver) {
 	solver->indexes = pl_new(16);
 	solver->funits_upper = HUGE_VAL;
 	solver->logratio_bail_threshold = log(1e-100);
+	solver->logratio_stoplooking = HUGE_VAL;
 	solver->parity = DEFAULT_PARITY;
 	solver->codetol = DEFAULT_CODE_TOL;
     solver->distractor_ratio = DEFAULT_DISTRACTOR_RATIO;

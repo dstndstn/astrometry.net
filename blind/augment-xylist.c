@@ -133,6 +133,8 @@ static an_option_t options[] = {
 	 "odds ratio at which to consider a field solved (default 1e9)"},
 	{'#', "odds-to-reject",   required_argument, "odds",
 	 "odds ratio at which to reject a hypothesis (default 1e-100)"},
+	{'%', "odds-to-stop-looking", required_argument, "odds",
+	 "odds ratio at which to stop adding stars when evaluating a hypothesis (default: HUGE_VAL)"},
     {'3', "ra",             required_argument, "degrees or hh:mm:ss",
      "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
     {'4', "dec",            required_argument, "degrees or [+-]dd:mm:ss",
@@ -260,6 +262,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
 		break;
 	case '#':
 		axy->odds_to_bail = atof(optarg);
+		break;
+	case '%':
+		axy->odds_to_stoplooking = atof(optarg);
 		break;
 	case ']':
 		axy->no_bg_subtraction = TRUE;
@@ -807,6 +812,8 @@ int augment_xylist(augment_xylist_t* axy,
 		fits_header_add_double(hdr, "ANODDSSL", axy->odds_to_solve, "Odds ratio to consider a field solved");
 	if (axy->odds_to_bail)
 		fits_header_add_double(hdr, "ANODDSBL", axy->odds_to_bail, "Odds ratio to consider a hypothesis rejected");
+	if (axy->odds_to_stoplooking)
+		fits_header_add_double(hdr, "ANODDSST", axy->odds_to_stoplooking, "Odds ratio to stop trying to improve the odds ratio");
 
 	if ((axy->scalelo > 0.0) || (axy->scalehi > 0.0)) {
 		double appu, appl;

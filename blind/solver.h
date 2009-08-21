@@ -107,6 +107,11 @@ struct solver_t {
 	// assume it's not a match.  Default log(1e-100).
 	double logratio_bail_threshold;
 
+	// During verification, if the log-odds ratio rises above this level, we accept the
+	// match and bail out.  Default: HUGE_VAL (ie, don't bail out: keep going to find the
+	// maximum Bayes factor value).
+	double logratio_stoplooking;
+
 	// Number of field quads to try or zero for no limit.
 	int maxquads;
 	// Number of quad matches to try or zero for no limit.

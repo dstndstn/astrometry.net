@@ -684,12 +684,14 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
     ourmo = bl_access(bp->solutions, ind);
 
 	solver_resolve_correspondences(sp, ourmo);
-	// drop references to these arrays: they'll be free by "mo".
+	// drop references to these arrays: they'll be freed by "mo".
     ourmo->corr_field = NULL;
     ourmo->corr_index = NULL;
 
 	if (mo->logodds < bp->logratio_tosolve)
 		return FALSE;
+
+	// this match is considered a solution.
 
     bp->nsolves_sofar++;
     if (bp->nsolves_sofar >= bp->nsolves) {

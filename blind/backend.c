@@ -586,6 +586,9 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 	bp->logratio_toprint = MIN(bp->logratio_toprint, bp->logratio_tokeep);
 
     sp->logratio_bail_threshold = log(qfits_header_getdouble(hdr, "ANODDSBL", DEFAULT_BAIL_THRESHOLD));
+	val = qfits_header_getdouble(hdr, "ANODDSST", 0.0);
+	if (val > 0.0)
+		sp->logratio_stoplooking = log(val);
     bp->best_hit_only = TRUE;
 
 	// job->image_fraction = qfits_header_getdouble(hdr, "ANIMFRAC", job->image_fraction);

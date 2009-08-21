@@ -99,6 +99,7 @@ struct augment_xylist_s {
 
 	double odds_to_solve;
 	double odds_to_bail;
+	double odds_to_stoplooking;
 
     int downsample;
 
