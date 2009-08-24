@@ -102,7 +102,6 @@ struct render_args {
 	il* fieldnums;
 
 	// Args for render_boundary
-	char* wcsfn;
 	double linewidth;
 	double dashbox;
 	bool zoomright;

@@ -102,6 +102,9 @@ static void print_help(char* prog) {
 		   "  [-j]: write PDF\n"
 		   "  [-R]: write a raw floating-point image\n"
 		   "\n"
+		   //"\n"
+		   //"  [-W <wcs file>]: render into this WCS.\n"
+		   //"\n"
 		   "\n"
 		   "     Argument files: in order to pass a large number of filenames or other arguments,\n"
 		   "     you can pass a file containing:\n"
@@ -161,7 +164,7 @@ static void print_help(char* prog) {
 		   "\n", prog);
 }
 
-const char* OPTIONS = "ab:c:de:f:g:h:i:jk:l:npqr:svw:x:y:zA:B:C:D:F:GI:JK:L:MN:PRS:T:V:W:X:Y:";
+const char* OPTIONS = "ab:c:de:f:g:h:i:jk:l:npqr:svw:x:y:zA:B:C:D:F:GI:JK:L:MN:PRS:T:V:X:Y:";
 
 struct renderer {
 	char* name;
@@ -463,9 +466,8 @@ int main(int argc, char *argv[]) {
 			case 'i':
 				sl_append(args.imagefns, optarg);
 				break;
-			case 'W':
-				args.wcsfn = strdup(optarg);
-				break;
+				//case 'W':
+				//break;
 			case 'I':
 				sl_append(args.imwcsfns, optarg);
 				break;
@@ -714,7 +716,6 @@ int main(int argc, char *argv[]) {
 	il_free(args.Nstars);
 	il_free(args.fieldnums);
 
-	free(args.wcsfn);
 	free(args.cmap);
 
 	logmsg("tilecache: END TILECACHE\n");
