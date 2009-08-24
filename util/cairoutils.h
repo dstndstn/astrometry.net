@@ -24,6 +24,14 @@
 #include <cairo.h>
 
 /**
+ A cairo_write_func_t for use with, eg, cairo_pdf_surface_create_for_stream.
+ The "closure" arg must be a FILE*.
+ */
+cairo_status_t cairoutils_file_write_func(void *closure,
+										  const unsigned char *data,
+										  unsigned int length);
+
+/**
  Reports any cairo error for the given surface.  Returns 0 for ok, -1 on error.
  */
 int cairoutils_surface_status_errors(cairo_surface_t* surf);
@@ -36,6 +44,10 @@ void cairoutils_argb32_to_rgba(unsigned char* img, int W, int H);
 
 void cairoutils_rgba_to_argb32(unsigned char* img, int W, int H);
 
+/**
+ All the following cairoutils_read_* function return a newly-allocated image buffer
+ of size W * H * 4, containing R,G,B, and alpha.
+ */
 unsigned char* cairoutils_read_png_stream(FILE* fid, int* pW, int *pH);
 
 unsigned char* cairoutils_read_jpeg_stream(FILE* fid, int* pW, int* pH);

@@ -355,6 +355,11 @@ int render_images(unsigned char* img, render_args_t* args) {
     free(ravals);
     free(decvals);
 
+	/***
+	 FIXME -- the ordering of r,g,b,a here *happens* to coincide with Cairo's ARGB32 format
+	 *ON LITTLE-ENDIAN MACHINES ONLY*.
+	 ***/
+
     if (args->density) {
 		double mincounts = 1e100;
 		double maxcounts = 0;

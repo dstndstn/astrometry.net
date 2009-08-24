@@ -337,17 +337,6 @@ double get_double_arg_of_type(render_args_t* args, const char* name, double def)
 	return rtn;
 }
 
-static cairo_status_t write_func_for_cairo(void *closure,
-										   const unsigned char *data,
-										   unsigned int length) {
-	FILE* fid = closure;
-	if (fwrite(data, 1, length, fid) != length) {
-		SYSERROR("Failed to write cairo data");
-		return CAIRO_STATUS_WRITE_ERROR;
-	}
-	return CAIRO_STATUS_SUCCESS;
-}
-
 extern char *optarg;
 extern int optind, opterr, optopt;
 
@@ -609,15 +598,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (writepdf) {
-		cairo_write_func_t wfunc = write_func_for_cairo;
+		cairo_write_func_t wfunc = cairoutils_file_write_func;
 		target = cairo_pdf_surface_create_for_stream(wfunc, stdout, args.W, args.H);
 		if (!target) {
 			ERROR("Failed to create cairo surface for PDF");
 			exit(-1);
 		}
-		logmsg("Image size: %ix%i pixels\n",
-			   cairo_image_surface_get_width(target),
-			   cairo_image_surface_get_height(target));
 	} else {
 		// Allocate a black image.
 		img = calloc(4 * args.W * args.H, 1);

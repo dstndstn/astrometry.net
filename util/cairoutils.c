@@ -61,6 +61,17 @@ static mycolor mycolors[] = {
 };
 static const int nmycolors = sizeof(mycolors)/sizeof(mycolor);
 
+cairo_status_t cairoutils_file_write_func(void *closure,
+										  const unsigned char *data,
+										  unsigned int length) {
+	FILE* fid = closure;
+	if (fwrite(data, 1, length, fid) != length) {
+		SYSERROR("Failed to write cairo data");
+		return CAIRO_STATUS_WRITE_ERROR;
+	}
+	return CAIRO_STATUS_SUCCESS;
+}
+
 const char* cairoutils_get_color_name(int i) {
     if ((i < 0)  || (i >= nmycolors))
         return NULL;

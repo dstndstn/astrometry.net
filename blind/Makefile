@@ -487,6 +487,10 @@ plotquad: plotquad.o matchfile.o $(COMMON)/cairoutils.o boilerplate.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 
+plot-xy-and-quad: plot-xy-and-quad.o matchfile.o $(COMMON)/cairoutils.o boilerplate.o \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) 
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
+
 plot-constellations.o: plot-constellations.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
