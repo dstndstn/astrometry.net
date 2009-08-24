@@ -84,10 +84,10 @@ static double quad_dist2_lower;
 struct quad {
 	unsigned int star[DQMAX];
 };
-typedef struct quad quad;
+typedef struct quad quad_t;
 
 static int Nquads;
-static quad* quadlist;
+static quad_t* quadlist;
 static bt* bigquadlist;
 
 static int ndupquads = 0;
@@ -114,8 +114,8 @@ typedef struct potential_quad pquad;
 
 
 static int compare_quads(const void* v1, const void* v2) {
-	const quad* q1 = v1;
-	const quad* q2 = v2;
+	const quad_t* q1 = v1;
+	const quad_t* q2 = v2;
 	int i;
 	// Hmm... I thought about having a static global "dimquads" here, but
 	// instead just ensured that are quad is always initialized to zero so that
@@ -129,7 +129,7 @@ static int compare_quads(const void* v1, const void* v2) {
 	return 0;
 }
 
-static bool add_quad(quad* q) {
+static bool add_quad(quad_t* q) {
 	if (!firstpass) {
 		bool dup = bt_contains(bigquadlist, q, compare_quads);
 		if (dup) {
@@ -141,7 +141,7 @@ static bool add_quad(quad* q) {
 	return TRUE;
 }
 
-static Inline void drop_quad(quad* q, int dimquads) {
+static Inline void drop_quad(quad_t* q, int dimquads) {
 	int i;
 	for (i=0; i<dimquads; i++)
 		nuses[q->star[i]]++;
@@ -244,7 +244,7 @@ check_inbox(pquad* pq, int* inds, int ninds, double* stars, bool circle) {
  starnum: which star we're adding: eg, A=0, B=1, C=2, ... dimquads-1.
  beginning: the first index in "inbox" to assign to star 'starnum'.
  */
-static int add_interior_stars(int ninbox, int* inbox, quad* q, int* starinds,
+static int add_interior_stars(int ninbox, int* inbox, quad_t* q, int* starinds,
 							  int starnum, int dimquads, int beginning) {
 	int i;
 	for (i=beginning; i<ninbox; i++) {
@@ -278,7 +278,7 @@ static int create_quad(double* stars, int* starinds, int Nstars,
 	int* inbox;
 	pquad* pquads;
 	int iAalloc;
-	quad q;
+	quad_t q;
 
 	// ensure the arrays are large enough...
 	if (Nstars > Ncq) {
@@ -307,7 +307,7 @@ static int create_quad(double* stars, int* starinds, int Nstars,
 	  Note that we keep the invariants iA < iB and iC < iD.
 	*/
 
-	memset(&q, 0, sizeof(quad));
+	memset(&q, 0, sizeof(quad_t));
 
 	for (newpoint=0; newpoint<Nstars; newpoint++) {
 		pquad* pq;
@@ -735,7 +735,7 @@ int main(int argc, char** argv) {
     quads->index_scale_upper = codes->index_scale_upper;
     quads->index_scale_lower = codes->index_scale_lower;
 
-	bigquadlist = bt_new(sizeof(quad), 256);
+	bigquadlist = bt_new(sizeof(quad_t), 256);
 
 	if (Nreuse > 255) {
 		ERROR("Error, reuse (-r) must be less than 256.\n");
@@ -806,7 +806,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	quadlist = malloc(ll_size(hptotry) * sizeof(quad));
+	quadlist = malloc(ll_size(hptotry) * sizeof(quad_t));
 
 	if (noreuse_pass)
 		noreuse_hps = il_new(1024);
@@ -1045,7 +1045,7 @@ int main(int argc, char** argv) {
 
 		printf("Merging quads...\n");
 		for (i=0; i<Nquads; i++) {
-			quad* q = quadlist + i;
+			quad_t* q = quadlist + i;
 			bt_insert(bigquadlist, q, FALSE, compare_quads);
 		}
 		Nquads = 0;
@@ -1083,7 +1083,7 @@ int main(int argc, char** argv) {
 			printf("Merging quads...\n");
 			fflush(stdout);
 			for (i=0; i<Nquads; i++) {
-				quad* q = quadlist + i;
+				quad_t* q = quadlist + i;
 				bt_insert(bigquadlist, q, FALSE, compare_quads);
 			}
 			Nquads = 0;
@@ -1122,12 +1122,12 @@ int main(int argc, char** argv) {
 	// add the quads from the big-quadlist
 	nquads = bt_size(bigquadlist);
 	for (i=0; i<nquads; i++) {
-		quad* q = bt_access(bigquadlist, i);
+		quad_t* q = bt_access(bigquadlist, i);
 		quad_write(codes, quads, q->star, starkd, dimquads, dimcodes);
 	}
 	// add the quads that were made during the final round.
 	for (i=0; i<Nquads; i++) {
-		quad* q = quadlist + i;
+		quad_t* q = quadlist + i;
 		quad_write(codes, quads, q->star, starkd, dimquads, dimcodes);
 	}
 	free(quadlist);
