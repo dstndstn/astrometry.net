@@ -66,6 +66,31 @@ static void add_text(cairo_t* cairo, double x, double y,
 	cairo_show_text(cairo, txt);
 }
 
+static void pretty_label(double x, char* buf) {
+	int i;
+	sprintf(buf, "%.2f", x);
+	logverb("label: \"%s\"\n", buf);
+	// Look for decimal point.
+	if (!strchr(buf, '.')) {
+		logverb("no decimal point\n");
+		return;
+	}
+	// Trim trailing zeroes (after the decimal point)
+	i = strlen(buf)-1;
+	while (buf[i] == '0') {
+		buf[i] = '\0';
+		logverb("trimming trailing zero at %i: \"%s\"\n", i, buf);
+		i--;
+		assert(i > 0);
+	}
+	// Trim trailing decimal point, if it exists.
+	i = strlen(buf)-1;
+	if (buf[i] == '.') {
+		buf[i] = '\0';
+		logverb("trimming trailing decimal point at %i: \"%s\"\n", i, buf);
+	}
+}
+
 int render_gridlines(cairo_t* c2, render_args_t* args) {
 	double rastep, decstep;
 	int ind;
@@ -110,7 +135,6 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 		// draw the grid line on the nearest pixel... cairo pixel centers are at 0.5
 		x = 0.5 + round(x-0.5);
 		cairo_move_to(cairo, x, 0);
-		//cairo_line_to(cairo, x, args->H - y0);
 		cairo_line_to(cairo, x, args->H);
 	}
 	for (dec = decstep * floor(args->decmin / decstep);
@@ -126,27 +150,24 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	cairo_stroke(cairo);
 	
 	if (args->gridlabel) {
+		char buf[32];
 		cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 8.0);
 		cairo_select_font_face(cairo, "DejaVu Sans Mono Book", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
 		cairo_set_font_size(cairo, 18);
 		for (ra = ralabelstep * floor(args->ramin / ralabelstep);
 			 ra <= ralabelstep * ceil(args->ramax / ralabelstep);
 			 ra += ralabelstep) {
-			char buf[32];
 			float x = ra2pixelf(ra, args);
 			float y = args->H;
 			if (!in_image((int)round(x+0.5), 0, args))
 				continue;
-			sprintf(buf, "%.2f", ra);
-			// Trim off ".00"
-			if (ends_with(buf, ".00"))
-				buf[strlen(buf) - 3] = '\0';
+			pretty_label(ra, buf);
+			logverb("Adding label ra=\"%s\"\n", buf);
 			add_text(cairo, x, y, buf, args);
 		}
 		for (dec = declabelstep * floor(args->decmin / declabelstep);
 			 dec <= declabelstep * ceil(args->decmax / declabelstep);
 			 dec += declabelstep) {
-			char buf[32];
 			float y = dec2pixelf(dec, args);
 			float x = 0;
 			// yep, it can wrap around :)
@@ -154,10 +175,8 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 				continue;
 			if (!in_image(0, (int)round(y+0.5), args))
 				continue;
-			sprintf(buf, "%.2f", dec);
-			// Trim off ".00"
-			if (ends_with(buf, ".00"))
-				buf[strlen(buf) - 3] = '\0';
+			pretty_label(dec, buf);
+			logverb("Adding label dec=\"%s\"\n", buf);
 			add_text(cairo, x, y, buf, args);
 		}
 	}
