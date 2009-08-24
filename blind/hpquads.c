@@ -884,7 +884,7 @@ int main(int argc, char** argv) {
 					if (noreuse_pass)
 						il_append(noreuse_hps, hp);
 					if (loosenhps)
-						il_append(loosenhps, hp);
+						il_insert_unique_ascending(loosenhps, hp);
 					if (failedrdls) {
 						dl_append(noreuse_radec, radec[0]);
 						dl_append(noreuse_radec, radec[1]);
@@ -903,7 +903,7 @@ int main(int argc, char** argv) {
 				if (noreuse_pass)
 					il_append(noreuse_hps, hp);
 				if (loosenhps)
-					il_append(loosenhps, hp);
+					il_insert_unique_ascending(loosenhps, hp);
 				if (failedrdls) {
 					dl_append(noquads_radec, radec[0]);
 					dl_append(noquads_radec, radec[1]);
@@ -1054,6 +1054,14 @@ int main(int argc, char** argv) {
 	}
 	ll_free(hptotry);
 
+
+	/*
+	 We force "loosenhps" to not have duplicates, but we might want to change this,
+	 because we might want to make several quads (because we failed to make quads during
+	 more than one pass), rather than just one.  Can do this by making "loosenhps" not be
+	 unique and sorted, but also have to reallocate "quadlist" to ensure it is big enough
+	 (>= il_size(loosenhps)).
+	 */
 
 	if (loosenhps) {
 		int mx;
