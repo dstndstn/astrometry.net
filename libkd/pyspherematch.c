@@ -1,6 +1,6 @@
 /*
   This file is part of libkd.
-  Copyright 2008 Dustin Lang.
+  Copyright 2008, 2009 Dustin Lang.
 
   libkd is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -175,9 +175,10 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     N = il_size(dtresults.inds1);
     dims[0] = N;
     dims[1] = 2;
-    inds = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_INT);
+
+    inds = (PyArrayObject*)PyArray_SimpleNew(2, dims, PyArray_INT);
     dims[1] = 1;
-    dists = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_DOUBLE);
+    dists = (PyArrayObject*)PyArray_SimpleNew(2, dims, PyArray_DOUBLE);
     for (i=0; i<N; i++) {
         int* iptr;
         double* dptr;
