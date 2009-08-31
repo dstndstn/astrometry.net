@@ -684,10 +684,11 @@ int main(int argc, char** argv) {
 	hpnside = qfits_header_getint(startree_header(starkd), "HPNSIDE", 1);
 
 	if (!scanoccupied && (startree_N(starkd)*(hp == -1 ? 1 : hpnside*hpnside*12) < HEALPIXES)) {
-		logmsg(" ");
+		logmsg("\n\n");
 		logmsg("NOTE, your star kdtree is sparse (has only a fraction of the stars expected)\n");
-		logmsg("  so you probably will get much faster results by setting the \"-E\" command-line flag.\n");
-		logmsg(" ");
+		logmsg("  so you probably will get much faster results by setting the \"-E\" command-line\n");
+		logmsg("  flag.\n");
+		logmsg("\n\n");
 	}
 
 	printf("Will write to quad file %s and code file %s\n", quadfn, codefn);
