@@ -519,7 +519,7 @@ int main(int argc, char** argv) {
 	char *quadfn = NULL;
 	char *codefn = NULL;
 	char *skdtfn = NULL;
-	int64_t HEALPIXES;
+	int HEALPIXES;
 	int Nside = 501;
 	int i;
 	char* failedrdlsfn = NULL;
@@ -531,7 +531,7 @@ int main(int argc, char** argv) {
 	int Nreuse = 3;
 	double radius2;
 	int lastgrass = 0;
-	ll* hptotry;
+	il* hptotry;
 	int Nhptotry;
 	int nquads;
 	double hprad;
@@ -647,6 +647,15 @@ int main(int argc, char** argv) {
 	}
 	dimcodes = dimquad2dimcode(dimquads);
 
+	if (Nside > 13377) {
+		// 12 * (13377+1)^2  >  2^31, so healpix arithmetic will fail.
+		// This corresponds to about 0.26 arcmin side length -- pretty tiny...
+		// Careful use of unsignedness (uint32_t) would bring this to:
+		//   Nside = 18918, side length 0.19 arcmin.
+		ERROR("Error: maximum healpix Nside = 13377.\n");
+		exit(-1);
+	}
+
 	if (failedrdlsfn) {
 		failedrdls = rdlist_open_for_writing(failedrdlsfn);
 		if (!failedrdls) {
@@ -659,10 +668,9 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	HEALPIXES = 12L * (int64_t)Nside * (int64_t)Nside;
-	printf("Nside=%i.  Nside^2=%lli.  Number of healpixes=%lli.  Healpix side length ~ %g arcmin.\n",
-		   Nside, (long long int)((int64_t)Nside*(int64_t)Nside),
-		   (long long int)HEALPIXES, healpix_side_length_arcmin(Nside));
+	HEALPIXES = 12 * Nside * Nside;
+	printf("Nside=%i.  Nside^2=%i.  Number of healpixes=%i.  Healpix side length ~ %g arcmin.\n",
+		   Nside, Nside*Nside, HEALPIXES, healpix_side_length_arcmin(Nside));
 
 	tic();
 
@@ -767,7 +775,7 @@ int main(int argc, char** argv) {
 		   distsq2arcsec(quadscale*quadscale),
 		   distsq2arcsec(radius2));
 
-	hptotry = ll_new(1024);
+	hptotry = il_new(1024);
 
 	if (scanoccupied) {
 		int i, N;
@@ -775,19 +783,19 @@ int main(int argc, char** argv) {
 		printf("Scanning %i input stars...\n", N);
 		for (i=0; i<N; i++) {
 			double xyz[3];
-			int64_t j;
+			int j;
 			if (startree_get(starkd, i, xyz)) {
 				ERROR("Failed to get star %i", i);
 				exit(-1);
 			}
-			j = xyzarrtohealpixl(xyz, Nside);
-			ll_insert_unique_ascending(hptotry, j);
+			j = xyzarrtohealpix(xyz, Nside);
+			il_insert_unique_ascending(hptotry, j);
 		}
-		printf("Will check %i healpixes.\n", ll_size(hptotry));
+		printf("Will check %i healpixes.\n", il_size(hptotry));
 	} else {
 		if (hp == -1) {
 			// Try all healpixes.
-			ll_free(hptotry);
+			il_free(hptotry);
 			hptotry = NULL;
 			Nhptotry = HEALPIXES;
 		} else {
@@ -809,15 +817,15 @@ int main(int argc, char** argv) {
 			nhp = 0;
 			for (y=y0; y<y1; y++) {
 				for (x=x0; x<x1; x++) {
-					int64_t j = healpix_compose_xyl(starhp, x, y, Nside);
-					ll_append(hptotry, j);
+					int j = healpix_compose_xy(starhp, x, y, Nside);
+					il_append(hptotry, j);
 				}
 			}
-			assert(ll_size(hptotry) == (Nside/hpnside) * (Nside/hpnside));
+			assert(il_size(hptotry) == (Nside/hpnside) * (Nside/hpnside));
 		}
 	}
 	if (hptotry)
-		Nhptotry = ll_size(hptotry);
+		Nhptotry = il_size(hptotry);
 
 	quadlist = bl_new(65536, sizeof(quad));
 	if (noreuse_pass)
@@ -876,7 +884,7 @@ int main(int argc, char** argv) {
 			}
 
 			if (hptotry)
-				hp = ll_get(hptotry, i);
+				hp = il_get(hptotry, i);
 			else
 				hp = i;
 			failed_nostars = FALSE;
@@ -1067,7 +1075,7 @@ int main(int argc, char** argv) {
 		firstpass = FALSE;
 	}
 	if (hptotry)
-		ll_free(hptotry);
+		il_free(hptotry);
 
 	if (loosenhps) {
 		int mx;
