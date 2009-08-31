@@ -532,6 +532,7 @@ int main(int argc, char** argv) {
 	double radius2;
 	int lastgrass = 0;
 	ll* hptotry;
+	int Nhptotry;
 	int nquads;
 	double hprad;
 	double quadscale;
@@ -785,10 +786,10 @@ int main(int argc, char** argv) {
 		printf("Will check %i healpixes.\n", ll_size(hptotry));
 	} else {
 		if (hp == -1) {
-			int64_t j;
 			// Try all healpixes.
-			for (j=0; j<HEALPIXES; j++)
-				ll_append(hptotry, j);
+			ll_free(hptotry);
+			hptotry = NULL;
+			Nhptotry = HEALPIXES;
 		} else {
 			// The star kdtree may itself be healpixed
 			int starhp, starx, stary;
@@ -815,6 +816,8 @@ int main(int argc, char** argv) {
 			assert(ll_size(hptotry) == (Nside/hpnside) * (Nside/hpnside));
 		}
 	}
+	if (hptotry)
+		Nhptotry = ll_size(hptotry);
 
 	quadlist = bl_new(65536, sizeof(quad));
 	if (noreuse_pass)
@@ -858,21 +861,24 @@ int main(int argc, char** argv) {
 		nabok = 0;
 		ndupquads = 0;
 
-		printf("Trying %i healpixes.\n", ll_size(hptotry));
+		printf("Trying %i healpixes.\n", Nhptotry);
 
-		for (i=0; i<ll_size(hptotry); i++) {
+		for (i=0; i<Nhptotry; i++) {
 			double radec[2];
 			int N;
 			bool ok;
 			bool failed_nostars;
 
-			if ((i * 80 / ll_size(hptotry)) != lastgrass) {
+			if ((i * 80 / Nhptotry) != lastgrass) {
 				printf(".");
 				fflush(stdout);
-				lastgrass = i * 80 / ll_size(hptotry);
+				lastgrass = i * 80 / Nhptotry;
 			}
 
-			hp = ll_get(hptotry, i);
+			if (hptotry)
+				hp = ll_get(hptotry, i);
+			else
+				hp = i;
 			failed_nostars = FALSE;
 			ok = find_stars(hp, Nside, radius2, &nnostars, &nyesstars,
 							&nnounused, &nstarstotal, &ncounted,
@@ -946,7 +952,7 @@ int main(int argc, char** argv) {
 			   nstarstotal / (double)ncounted);
 
 		printf("Made %i quads (out of %i healpixes) this pass.\n",
-			   nthispass, ll_size(hptotry));
+			   nthispass, Nhptotry);
 		printf("  %i healpixes had no stars.\n", nnostars);
 		printf("  %i healpixes had only stars that had been overused.\n", nnounused);
 		printf("  %i healpixes had some stars.\n", nyesstars);
@@ -1060,7 +1066,8 @@ int main(int argc, char** argv) {
 
 		firstpass = FALSE;
 	}
-	ll_free(hptotry);
+	if (hptotry)
+		ll_free(hptotry);
 
 	if (loosenhps) {
 		int mx;
