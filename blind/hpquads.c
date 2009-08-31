@@ -86,8 +86,7 @@ struct quad {
 };
 typedef struct quad quad;
 
-static int Nquads;
-static quad* quadlist;
+static bl* quadlist;
 static bt* bigquadlist;
 
 static int ndupquads = 0;
@@ -137,7 +136,7 @@ static bool add_quad(quad* q) {
 			return FALSE;
 		}
 	}
-	quadlist[Nquads++] = *q;
+	bl_append(quadlist, q);
 	return TRUE;
 }
 
@@ -674,6 +673,23 @@ int main(int argc, char** argv) {
 	}
 	printf("Star tree contains %i objects.\n", startree_N(starkd));
 
+	// get the "HEALPIX" header from the skdt...
+	hp = qfits_header_getint(startree_header(starkd), "HEALPIX", -1);
+	if (hp == -1) {
+		if (!qfits_header_getboolean(startree_header(starkd), "ALLSKY", FALSE)) {
+			logmsg("Warning: skdt does not contain \"HEALPIX\" header.  Code and quad files will not contain this header either.\n");
+		}
+	}
+    // likewise "HPNSIDE"
+	hpnside = qfits_header_getint(startree_header(starkd), "HPNSIDE", 1);
+
+	if (!scanoccupied && (startree_N(starkd)*(hp == -1 ? 1 : hpnside*hpnside*12) < HEALPIXES)) {
+		logmsg(" ");
+		logmsg("NOTE, your star kdtree is sparse (has only a fraction of the stars expected)\n");
+		logmsg("  so you probably will get much faster results by setting the \"-E\" command-line flag.\n");
+		logmsg(" ");
+	}
+
 	printf("Will write to quad file %s and code file %s\n", quadfn, codefn);
 
     quads = quadfile_open_for_writing(quadfn);
@@ -695,15 +711,8 @@ int main(int argc, char** argv) {
 		codes->indexid = id;
 	}
 
-	// get the "HEALPIX" header from the skdt and put it in the code and quad headers.
-	hp = qfits_header_getint(startree_header(starkd), "HEALPIX", -1);
-	if (hp == -1) {
-		logmsg("Warning: skdt does not contain \"HEALPIX\" header.  Code and quad files will not contain this header either.\n");
-	}
 	quads->healpix = hp;
 	codes->healpix = hp;
-    // likewise "HPNSIDE"
-	hpnside = qfits_header_getint(startree_header(starkd), "HPNSIDE", 1);
 	quads->hpnside = hpnside;
 	codes->hpnside = hpnside;
 
@@ -806,8 +815,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	quadlist = malloc(ll_size(hptotry) * sizeof(quad));
-
+	quadlist = bl_new(65536, sizeof(quad));
 	if (noreuse_pass)
 		noreuse_hps = il_new(1024);
 
@@ -818,7 +826,6 @@ int main(int argc, char** argv) {
 	}
 
 	firstpass = TRUE;
-	Nquads = 0;
 
 	if (loosenmax)
 		loosenhps = il_new(1024);
@@ -956,7 +963,7 @@ int main(int argc, char** argv) {
 
 		// HACK - sort the quads in "quadlist", then insert them into "bigquadlist"?
 
-		printf("Made %i quads so far.\n", bt_size(bigquadlist) + Nquads);
+		printf("Made %i quads so far.\n", bt_size(bigquadlist) + bl_size(quadlist));
 
 		if (failedrdls) {
 			dl* lists[] = { nostars_radec, noreuse_radec, noquads_radec };
@@ -1044,11 +1051,11 @@ int main(int argc, char** argv) {
 		}
 
 		printf("Merging quads...\n");
-		for (i=0; i<Nquads; i++) {
-			quad* q = quadlist + i;
+		for (i=0; i<bl_size(quadlist); i++) {
+			quad* q = bl_access(quadlist, i);
 			bt_insert(bigquadlist, q, FALSE, compare_quads);
 		}
-		Nquads = 0;
+		bl_remove_all(quadlist);
 
 		firstpass = FALSE;
 	}
@@ -1090,11 +1097,11 @@ int main(int argc, char** argv) {
 			printf("Made %i quads.\n", nmade);
 			printf("Merging quads...\n");
 			fflush(stdout);
-			for (i=0; i<Nquads; i++) {
-				quad* q = quadlist + i;
+			for (i=0; i<bl_size(quadlist); i++) {
+				quad* q = bl_access(quadlist, i);
 				bt_insert(bigquadlist, q, FALSE, compare_quads);
 			}
-			Nquads = 0;
+			bl_remove_all(quadlist);
 
 			il_free(loosenhps);
 			loosenhps = NULL;
@@ -1134,11 +1141,11 @@ int main(int argc, char** argv) {
 		quad_write(codes, quads, q->star, starkd, dimquads, dimcodes);
 	}
 	// add the quads that were made during the final round.
-	for (i=0; i<Nquads; i++) {
-		quad* q = quadlist + i;
+	for (i=0; i<bl_size(quadlist); i++) {
+		quad* q = bl_access(quadlist, i);
 		quad_write(codes, quads, q->star, starkd, dimquads, dimcodes);
 	}
-	free(quadlist);
+	bl_free(quadlist);
 
 	startree_close(starkd);
 
