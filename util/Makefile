@@ -133,7 +133,7 @@ ALL_OBJ += an-fitstopnm.o
 
 PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
 	shell.py __init__.py file.py run_command.py w3c_validator.py \
-	filetype.py pyfits_utils.py \
+	filetype.py pyfits_utils.py fix_sdss_idr.py \
 	$(PYTHON_LIBS)
 
 PYTHON_EXECS := fits2fits.py image2pnm.py
