@@ -212,6 +212,7 @@ bool starlists_get_nonempty(starlists_t* sl, int i,
 			*php = i;
 		if (plist)
 			*plist = sl->dlists[i];
+		return TRUE;
 		/*
 		 int j;
 		 int n;
