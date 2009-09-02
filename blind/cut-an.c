@@ -32,7 +32,7 @@
 #include "errors.h"
 #include "log.h"
 
-#define OPTIONS "ho:N:n:m:M:H:d:ARBJb:gj:ps:IE"
+#define OPTIONS "ho:N:n:m:M:H:d:ARBJb:gj:ps:IED"
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -57,6 +57,7 @@ static void print_help(char* progname) {
 		   "  [-m <minimum-magnitude-to-use>]\n"
 		   "  [-M <maximum-magnitude-to-use>]\n"
 		   "  [-S <max-stars-per-(big)-healpix]         (ie, max number of stars in the cut)\n"
+		   "  [-D]: assume that all healpixels will be used (allocate big arrays)\n"
 		   "  <input-file> [<input-file> ...]\n"
 		   "\n"
 		   "Input files must be:\n"
@@ -103,73 +104,128 @@ static int sort_stardata_mag(const void* v1, const void* v2) {
 }
 
 struct starlists {
+	// !dense:
 	il* ihps;
 	ll* lhps;
 	pl* lists;
+	// dense:
+	bl** dlists;
+	int NHP;
+	// common:
 	int size;
 };
 typedef struct starlists starlists_t;
 
-starlists_t* starlists_new(int nside, int size) {
+starlists_t* starlists_new(int nside, int size, bool dense) {
 	starlists_t* sl = calloc(1, sizeof(starlists_t));
-	if (nside <= 13377)
-		sl->ihps = il_new(4096);
-	else
-		sl->lhps = ll_new(4096);
-	sl->lists = pl_new(4096);
+	if (dense) {
+		sl->NHP = 12 * nside * nside;
+		sl->dlists = calloc(sl->NHP, sizeof(bl*));
+	} else {
+		if (nside <= 13377)
+			sl->ihps = il_new(4096);
+		else
+			sl->lhps = ll_new(4096);
+		sl->lists = pl_new(4096);
+	}
 	sl->size = (size ? size : 10);
 	return sl;
 }
 
 void starlists_free(starlists_t* sl) {
 	int i;
-	for (i=0; i<pl_size(sl->lists); i++) {
-		bl* lst = pl_get(sl->lists, i);
-		bl_free(lst);
+	if (sl->lists) {
+		for (i=0; i<pl_size(sl->lists); i++) {
+			bl* lst = pl_get(sl->lists, i);
+			bl_free(lst);
+		}
+		pl_free(sl->lists);
+	} else {
+		for (i=0; i<sl->NHP; i++) {
+			bl* lst = sl->dlists[i];
+			if (!lst)
+				continue;
+			bl_free(lst);
+		}
+		free(sl->dlists);
 	}
 	if (sl->ihps)
 		il_free(sl->ihps);
 	if (sl->lhps)
 		ll_free(sl->lhps);
-	pl_free(sl->lists);
 	free(sl);
 }
 
 bl* starlists_get(starlists_t* sl, int64_t hp, bool create) {
 	int ind;
-	if (sl->ihps)
-		ind = il_sorted_index_of(sl->ihps, hp);
-	else
-		ind = ll_sorted_index_of(sl->lhps, hp);
-	if (ind == -1) {
-		if (!create)
-			return NULL;
-		bl* lst = bl_new(sl->size, sizeof(stardata));
+	if (!sl->dlists) {
 		if (sl->ihps)
-			ind = il_insert_unique_ascending(sl->ihps, hp);
+			ind = il_sorted_index_of(sl->ihps, hp);
+		else if (sl->lhps)
+			ind = ll_sorted_index_of(sl->lhps, hp);
 		else
-			ind = ll_insert_unique_ascending(sl->lhps, hp);
-		pl_insert(sl->lists, ind, lst);
+			assert(0);
+		if (ind == -1) {
+			if (!create)
+				return NULL;
+			bl* lst = bl_new(sl->size, sizeof(stardata));
+			if (sl->ihps)
+				ind = il_insert_unique_ascending(sl->ihps, hp);
+			else
+				ind = ll_insert_unique_ascending(sl->lhps, hp);
+			pl_insert(sl->lists, ind, lst);
+			return lst;
+		}
+		return pl_get(sl->lists, ind);
+	} else {
+		bl* lst = sl->dlists[hp];
+		if (lst)
+			return lst;
+		if (!create)
+			return lst;
+		lst = sl->dlists[hp] = bl_new(sl->size, sizeof(stardata));
 		return lst;
 	}
-	return pl_get(sl->lists, ind);
 }
 
 int starlists_N_nonempty(starlists_t* sl) {
+	int i, n;
 	if (sl->ihps)
 		return il_size(sl->ihps);
-	else
+	else if (sl->lhps)
 		return ll_size(sl->lhps);
+	for (i=0, n=0; i<sl->NHP; i++)
+		if (sl->dlists[i])
+			n++;
+	return n;
 }
 
 bool starlists_get_nonempty(starlists_t* sl, int i,
 							int64_t* php, bl** plist) {
 	if (i >= starlists_N_nonempty(sl))
 		return FALSE;
+	if (sl->dlists) {
+		int j;
+		int n;
+		for (j=0, n=0; j<sl->NHP; j++) {
+			if (!sl->dlists[j])
+				continue;
+			if (i == n) {
+				break;
+			}
+			n++;
+		}
+		if (php)
+			*php = j;
+		if (plist)
+			*plist = sl->dlists[j];
+		return TRUE;
+	}
+
 	if (php) {
 		if (sl->ihps)
 			*php = il_get(sl->ihps, i);
-		else
+		else if (sl->lhps)
 			*php = ll_get(sl->lhps, i);
 	}
 	if (plist)
@@ -377,6 +433,7 @@ int main(int argc, char** args) {
     int loglvl = LOG_MSG;
 	ll* owned = NULL;
 	char* cutband = NULL;
+	bool dense = FALSE;
 
 	// Where is "bighp" in the "bignside" healpixelization?
 	int bigbighp; // one of 12
@@ -388,6 +445,9 @@ int main(int argc, char** args) {
         case 'h':
 			print_help(args[0]);
 			exit(0);
+		case 'D':
+			dense = TRUE;
+			break;
         case 's':
             bignside = atoi(optarg);
             break;
@@ -494,7 +554,7 @@ int main(int argc, char** args) {
 		dedupr2 = arcsec2distsq(deduprad);
 	}
 
-	starlists = starlists_new(Nside, nkeep);
+	starlists = starlists_new(Nside, nkeep, dense);
 
 	// find the set of small healpixes that this big healpix owns
 	// and add the margin.
