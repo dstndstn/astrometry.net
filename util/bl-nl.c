@@ -235,14 +235,33 @@ void NLF(merge_lists)(nl* list1, nl* list2) {
 	bl_append_list(list1, list2);
 }
 
-int NLF(insert_ascending)(nl* list, const number n) {
+static int NLF(binarysearch)(bl_node* node, const number n) {
+	number* iarray = NODE_NUMDATA(node);
+	int lower = -1;
+	int upper = node->N;
+	int mid;
+	while (lower < (upper-1)) {
+		mid = (upper + lower) / 2;
+		if (n >= iarray[mid])
+			lower = mid;
+		else
+			upper = mid;
+	}
+	return lower;
+}
+
+// find the first node for which n <= the last element.
+static bl_node* NLF(findnodecontainingsorted)(const nl* list, const number n,
+											  int* p_nskipped) {
 	bl_node *node;
-	number* iarray;
-	int lower, upper;
 	int nskipped;
-	// find the first node for which n <= the last element.
-	// we will insert n into that node.
+	//bl_node *prev;
+	//int prevnskipped;
+
+	// check if we can use the jump accessor or if we have to start at
+	// the beginning...
 	if (list->last_access && list->last_access->N &&
+		// is the value we're looking for >= the first element?
 		(n >= *NODE_NUMDATA(list->last_access))) {
 		node = list->last_access;
 		nskipped = list->last_access_n;
@@ -250,8 +269,57 @@ int NLF(insert_ascending)(nl* list, const number n) {
 		node = list->head;
 		nskipped = 0;
 	}
-	for (; node && (n > NODE_NUMDATA(node)[node->N-1]);
-		 node=node->next)
+
+	/*
+	 // find the first node for which n < the first element.  The
+	 // previous node will contain the value (if it exists).
+	 for (prev=node, prevnskipped=nskipped;
+	 node && (n < *NODE_NUMDATA(node));) {
+	 prev=node;
+	 prevnskipped=nskipped;
+	 nskipped+=node->N;
+	 node=node->next;
+	 }
+	 if (prev && n <= NODE_NUMDATA(prev)[prev->N-1]) {
+	 if (p_nskipped)
+	 *p_nskipped = prevnskipped;
+	 return prev;
+	 }
+	 if (node && n <= NODE_NUMDATA(node)[node->N-1]) {
+	 if (p_nskipped)
+	 *p_nskipped = nskipped;
+	 return node;
+	 }
+	 return NULL;
+	 */
+	/*
+	 if (!node && prev && n > NODE_NUMDATA(prev)[prev->N-1])
+	 return NULL;
+	 if (p_nskipped)
+	 *p_nskipped = prevnskipped;
+	 return prev;
+	 */
+
+	for (; node && (n > NODE_NUMDATA(node)[node->N-1]); node=node->next)
+		nskipped += node->N;
+	if (p_nskipped)
+		*p_nskipped = nskipped;
+	return node;
+}
+
+static int NLF(insertascending)(nl* list, const number n, int unique) {
+	bl_node *node;
+	int ind;
+	int nskipped;
+
+	node = NLF(findnodecontainingsorted)(list, n, &nskipped);
+	if (!node) {
+		NLF(append)(list, n);
+		return list->N-1;
+	}
+
+	/*
+	for (; node && (n > NODE_NUMDATA(node)[node->N-1]); node=node->next)
 		nskipped += node->N;
 	if (!node) {
 		// either we're adding the first element, or we're appending since
@@ -259,86 +327,36 @@ int NLF(insert_ascending)(nl* list, const number n) {
 		NLF(append)(list, n);
 		return list->N-1;
 	}
+	 */
 
 	// find where in the node it should be inserted...
-	iarray = NODE_NUMDATA(node);
-	lower = -1;
-	upper = node->N;
-	while (lower < (upper-1)) {
-		int mid;
-		mid = (upper + lower) / 2;
-		if (n >= iarray[mid])
-			lower = mid;
-		else
-			upper = mid;
-	}
+	ind = 1 + NLF(binarysearch)(node, n);
+
+    // check if it's a duplicate...
+	if (unique && ind > 0 && (n == NODE_NUMDATA(node)[ind-1]))
+		return -1;
 
 	// set the jump accessors...
 	list->last_access = node;
 	list->last_access_n = nskipped;
 	// ... so that this runs in O(1).
-	bl_insert(list, nskipped + lower + 1, &n);
-	return nskipped + lower + 1;
+	bl_insert(list, nskipped + ind, &n);
+	return nskipped + ind;
+}
+
+int NLF(insert_ascending)(nl* list, const number n) {
+	return NLF(insertascending)(list, n, 0);
+}
+
+int NLF(insert_unique_ascending)(nl* list, const number n) {
+	return NLF(insertascending)(list, n, 1);
 }
 
 int NLF(insert_descending)(nl* list, const number n) {
     return bl_insert_sorted(list, &n, NLF(compare_descending));
 }
 
-int NLF(insert_unique_ascending)(nl* list, const number n) {
-	bl_node *node;
-	number* iarray;
-	int lower, upper;
-	int nskipped;
-
-	// find the first node for which n <= the last element.
-	// we will insert n into that node.
-	if (list->last_access && list->last_access->N &&
-		(n >= *NODE_NUMDATA(list->last_access))) {
-		node = list->last_access;
-		nskipped = list->last_access_n;
-	} else {
-		node = list->head;
-		nskipped = 0;
-	}
-	for (; node && (n > NODE_NUMDATA(node)[node->N-1]);
-		 node=node->next)
-		nskipped += node->N;
-	if (!node) {
-		// either we're adding the first element, or we're appending since
-		// n is bigger than the largest element in the list.
-		NLF(append)(list, n);
-		return list->N-1;
-	}
-
-	// find where in the node it should be inserted...
-	iarray = NODE_NUMDATA(node);
-	lower = -1;
-	upper = node->N;
-	while (lower < (upper-1)) {
-		int mid;
-		mid = (upper + lower) / 2;
-		if (n >= iarray[mid])
-			lower = mid;
-		else
-			upper = mid;
-	}
-
-    // check if it's a duplicate...
-    // --if it's equal to the smallest element in this node, "lower" ends up being -1,
-    //   hence the ">= 0" check.
-	if (lower >= 0 && n == iarray[lower])
-		return -1;
-
-	// set the jump accessors...
-	list->last_access = node;
-	list->last_access_n = nskipped;
-	// ... so that the insert runs in O(1).
-    bl_insert(list, nskipped + lower + 1, &n);
-	return nskipped + lower + 1;
-}
-
-void   NLF(insert)(nl* list, int indx, const number data) {
+void NLF(insert)(nl* list, int indx, const number data) {
 	bl_insert(list, indx, &data);
 }
 
@@ -385,45 +403,32 @@ int NLF(sorted_contains)(nl* list, const number n) {
 
 int NLF(sorted_index_of)(nl* list, const number n) {
 	bl_node *node;
-	number* iarray;
-	int lower, upper;
+	int lower;
 	int nskipped;
 
-	// check if we can use the jump accessor or if we have to start at
-	// the beginning...
-	if (list->last_access && list->last_access->N &&
-		// is the value we're looking for >= the first element?
-		(n >= *NODE_NUMDATA(list->last_access))) {
-		node = list->last_access;
-		nskipped = list->last_access_n;
-	} else {
-		node = list->head;
-		nskipped = 0;
-	}
-	// find the first node for which n <= the last element.  That node
-	// will contain the value (if it exists)
-	for (; node && (n > NODE_NUMDATA(node)[node->N-1]); node=node->next)
-		nskipped += node->N;
+	node = NLF(findnodecontainingsorted)(list, n, &nskipped);
 	if (!node)
 		return -1;
+	//if (!node && (n > NODE_NUMDATA(prev)[prev->N-1]))
+	//return -1;
+	//node = prev;
+
+	 /*
+	 // find the first node for which n <= the last element.  That node
+	 // will contain the value (if it exists)
+	 for (; node && (n > NODE_NUMDATA(node)[node->N-1]); node=node->next)
+	 nskipped += node->N;
+	 if (!node)
+	 return -1;
+	 */
 
 	// update jump accessors...
 	list->last_access = node;
 	list->last_access_n = nskipped;
 
 	// find within the node...
-	iarray = NODE_NUMDATA(node);
-	lower = -1;
-	upper = node->N;
-	while (lower < (upper-1)) {
-		int mid;
-		mid = (upper + lower) / 2;
-		if (n >= iarray[mid])
-			lower = mid;
-		else
-			upper = mid;
-	}
-	if (lower >= 0 && n == iarray[lower])
+	lower = NLF(binarysearch)(node, n);
+	if (lower >= 0 && n == NODE_NUMDATA(node)[lower])
 		return nskipped + lower;
 	return -1;
 }
