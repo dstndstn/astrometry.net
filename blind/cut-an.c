@@ -189,39 +189,50 @@ bl* starlists_get(starlists_t* sl, int64_t hp, bool create) {
 }
 
 int starlists_N_nonempty(starlists_t* sl) {
-	int i, n;
 	if (sl->ihps)
 		return il_size(sl->ihps);
 	else if (sl->lhps)
 		return ll_size(sl->lhps);
-	for (i=0, n=0; i<sl->NHP; i++)
-		if (sl->dlists[i])
-			n++;
-	return n;
+	return sl->NHP;
+	/*
+	 int i, n;
+	 for (i=0, n=0; i<sl->NHP; i++)
+	 if (sl->dlists[i])
+	 n++;
+	 return n;
+	 */
 }
 
 bool starlists_get_nonempty(starlists_t* sl, int i,
 							int64_t* php, bl** plist) {
-	if (i >= starlists_N_nonempty(sl))
-		return FALSE;
 	if (sl->dlists) {
-		int j;
-		int n;
-		for (j=0, n=0; j<sl->NHP; j++) {
-			if (!sl->dlists[j])
-				continue;
-			if (i == n) {
-				break;
-			}
-			n++;
-		}
+		if (i >= sl->NHP)
+			return FALSE;
 		if (php)
-			*php = j;
+			*php = i;
 		if (plist)
-			*plist = sl->dlists[j];
-		return TRUE;
+			*plist = sl->dlists[i];
+		/*
+		 int j;
+		 int n;
+		 for (j=0, n=0; j<sl->NHP; j++) {
+		 if (!sl->dlists[j])
+		 continue;
+		 if (i == n) {
+		 break;
+		 }
+		 n++;
+		 }
+		 if (php)
+		 *php = j;
+		 if (plist)
+		 *plist = sl->dlists[j];
+		 return TRUE;
+		 */
 	}
 
+	if (i >= starlists_N_nonempty(sl))
+		return FALSE;
 	if (php) {
 		if (sl->ihps)
 			*php = il_get(sl->ihps, i);
@@ -930,6 +941,8 @@ int main(int argc, char** args) {
 				bl* lst;
 				if (!starlists_get_nonempty(starlists, i, NULL, &lst))
 					break;
+				if (!lst)
+					continue;
 				size = bl_size(lst);
 				if (size <= nkeep) continue;
 				bl_remove_index_range(lst, nkeep, size-nkeep);
@@ -968,6 +981,8 @@ int main(int argc, char** args) {
 			stardata* sd;
 			bl* lst = NULL;
 			starlists_get_nonempty(starlists, i, NULL, &lst);
+			if (!lst)
+				continue;
 			if (k >= bl_size(lst))
 				// FIXME -- done with this list, could free it...
 				continue;
