@@ -133,10 +133,10 @@ ALL_OBJ += an-fitstopnm.o
 
 PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
 	shell.py __init__.py file.py run_command.py w3c_validator.py \
-	filetype.py pyfits_utils.py fix_sdss_idr.py \
+	filetype.py pyfits_utils.py fix_sdss_idr.py removelines.py \
 	$(PYTHON_LIBS)
 
-PYTHON_EXECS := fits2fits.py image2pnm.py
+PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py
 
 PY_INSTALL_DIR := $(INSTALL_DIR)/python/astrometry/util
 BIN_INSTALL_DIR := $(INSTALL_DIR)/bin

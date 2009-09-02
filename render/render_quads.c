@@ -62,6 +62,7 @@ int render_quads(cairo_t* cairo, render_args_t* args) {
 
     logmsg("got %i index files.\n", sl_size(fns));
 
+	//// FIXME -- this fails for all-sky (eg ramin=0, ramax=360) because it underestimates!
 	radecdeg2xyzarr(args->ramin, args->decmin, p1);
 	radecdeg2xyzarr(args->ramax, args->decmax, p2);
 	star_midpoint(center, p1, p2);

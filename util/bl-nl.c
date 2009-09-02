@@ -389,8 +389,10 @@ int NLF(sorted_index_of)(nl* list, const number n) {
 	int lower, upper;
 	int nskipped;
 
-	// find the first node for which n <= the last element.
+	// check if we can use the jump accessor or if we have to start at
+	// the beginning...
 	if (list->last_access && list->last_access->N &&
+		// is the value we're looking for >= the first element?
 		(n >= *NODE_NUMDATA(list->last_access))) {
 		node = list->last_access;
 		nskipped = list->last_access_n;
@@ -398,8 +400,9 @@ int NLF(sorted_index_of)(nl* list, const number n) {
 		node = list->head;
 		nskipped = 0;
 	}
-	for (; node && (n > NODE_NUMDATA(node)[node->N-1]);
-		 node=node->next)
+	// find the first node for which n <= the last element.  That node
+	// will contain the value (if it exists)
+	for (; node && (n > NODE_NUMDATA(node)[node->N-1]); node=node->next)
 		nskipped += node->N;
 	if (!node)
 		return -1;

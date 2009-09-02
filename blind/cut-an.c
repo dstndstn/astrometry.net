@@ -111,8 +111,8 @@ typedef struct starlists starlists_t;
 
 starlists_t* starlists_new(int nside, int size) {
 	starlists_t* sl = malloc(sizeof(starlists_t));
-	sl->hps = ll_new(256);
-	sl->lists = pl_new(256);
+	sl->hps = ll_new(4096);
+	sl->lists = pl_new(4096);
 	sl->size = (size ? size : 10);
 	return sl;
 }
