@@ -103,15 +103,19 @@ static int sort_stardata_mag(const void* v1, const void* v2) {
 }
 
 struct starlists {
-	ll* hps;
+	il* ihps;
+	ll* lhps;
 	pl* lists;
 	int size;
 };
 typedef struct starlists starlists_t;
 
 starlists_t* starlists_new(int nside, int size) {
-	starlists_t* sl = malloc(sizeof(starlists_t));
-	sl->hps = ll_new(4096);
+	starlists_t* sl = calloc(1, sizeof(starlists_t));
+	if (nside <= 13377)
+		sl->ihps = il_new(4096);
+	else
+		sl->lhps = ll_new(4096);
 	sl->lists = pl_new(4096);
 	sl->size = (size ? size : 10);
 	return sl;
@@ -123,18 +127,28 @@ void starlists_free(starlists_t* sl) {
 		bl* lst = pl_get(sl->lists, i);
 		bl_free(lst);
 	}
-	ll_free(sl->hps);
+	if (sl->ihps)
+		il_free(sl->ihps);
+	if (sl->lhps)
+		ll_free(sl->lhps);
 	pl_free(sl->lists);
 	free(sl);
 }
 
 bl* starlists_get(starlists_t* sl, int64_t hp, bool create) {
-	int ind = ll_sorted_index_of(sl->hps, hp);
+	int ind;
+	if (sl->ihps)
+		ind = il_sorted_index_of(sl->ihps, hp);
+	else
+		ind = ll_sorted_index_of(sl->lhps, hp);
 	if (ind == -1) {
 		if (!create)
 			return NULL;
 		bl* lst = bl_new(sl->size, sizeof(stardata));
-		ind = ll_insert_unique_ascending(sl->hps, hp);
+		if (sl->ihps)
+			ind = il_insert_unique_ascending(sl->ihps, hp);
+		else
+			ind = ll_insert_unique_ascending(sl->lhps, hp);
 		pl_insert(sl->lists, ind, lst);
 		return lst;
 	}
@@ -142,15 +156,22 @@ bl* starlists_get(starlists_t* sl, int64_t hp, bool create) {
 }
 
 int starlists_N_nonempty(starlists_t* sl) {
-	return ll_size(sl->hps);
+	if (sl->ihps)
+		return il_size(sl->ihps);
+	else
+		return ll_size(sl->lhps);
 }
 
 bool starlists_get_nonempty(starlists_t* sl, int i,
 							int64_t* php, bl** plist) {
-	if (i >= ll_size(sl->hps))
+	if (i >= starlists_N_nonempty(sl))
 		return FALSE;
-	if (php)
-		*php = ll_get(sl->hps, i);
+	if (php) {
+		if (sl->ihps)
+			*php = il_get(sl->ihps, i);
+		else
+			*php = ll_get(sl->lhps, i);
+	}
 	if (plist)
 		*plist = pl_get(sl->lists, i);
 	return TRUE;
