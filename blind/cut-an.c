@@ -194,13 +194,6 @@ int starlists_N_nonempty(starlists_t* sl) {
 	else if (sl->lhps)
 		return ll_size(sl->lhps);
 	return sl->NHP;
-	/*
-	 int i, n;
-	 for (i=0, n=0; i<sl->NHP; i++)
-	 if (sl->dlists[i])
-	 n++;
-	 return n;
-	 */
 }
 
 bool starlists_get_nonempty(starlists_t* sl, int i,
@@ -213,23 +206,6 @@ bool starlists_get_nonempty(starlists_t* sl, int i,
 		if (plist)
 			*plist = sl->dlists[i];
 		return TRUE;
-		/*
-		 int j;
-		 int n;
-		 for (j=0, n=0; j<sl->NHP; j++) {
-		 if (!sl->dlists[j])
-		 continue;
-		 if (i == n) {
-		 break;
-		 }
-		 n++;
-		 }
-		 if (php)
-		 *php = j;
-		 if (plist)
-		 *plist = sl->dlists[j];
-		 return TRUE;
-		 */
 	}
 
 	if (i >= starlists_N_nonempty(sl))
