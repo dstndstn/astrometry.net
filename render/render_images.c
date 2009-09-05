@@ -86,6 +86,7 @@ int render_images(unsigned char* img, render_args_t* args) {
     int i, j, w;
     double *ravals, *decvals;
 	const char* imgtypes[] = {"jpegfn ", "pngfn "};
+	double nilval = -1e100;
 
 	logmsg("starting.\n");
 
@@ -95,6 +96,9 @@ int render_images(unsigned char* img, render_args_t* args) {
     get_string_args_of_types(args, imgtypes, 2,
 							 imagefiles, imagetypes);
     get_string_args_of_type(args, "wcsfn ", wcsfiles);
+
+	nilval = get_double_arg_of_type(args, "nilval ", nilval);
+	// FIXME -- we don't do anything with this...
 
 	// When plotting density, we only need the WCS files.
     if (!args->density && (sl_size(imagefiles) != sl_size(wcsfiles))) {
@@ -355,10 +359,7 @@ int render_images(unsigned char* img, render_args_t* args) {
     free(ravals);
     free(decvals);
 
-	/***
-	 FIXME -- the ordering of r,g,b,a here *happens* to coincide with Cairo's ARGB32 format
-	 *ON LITTLE-ENDIAN MACHINES ONLY*.
-	 ***/
+	// We produce RGBA images here, which get converted to cairo ordering in tilerender.c
 
     if (args->density) {
 		double mincounts = 1e100;

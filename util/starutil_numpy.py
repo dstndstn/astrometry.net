@@ -225,6 +225,9 @@ def dec2dms(dec):
 	m = (d - dd) * 60.
 	mm = int(floor(m))
 	s = (m - mm) * 60.
+	if s >= 60.:
+		m += 1.
+		s -= 60.
 	return (sgn*d, m, s)
 
 # RA in degrees

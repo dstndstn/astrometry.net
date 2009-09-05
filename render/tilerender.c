@@ -120,6 +120,8 @@ static void print_help(char* prog) {
 		   "\n"
 		   "  -l solid   -- Renders a solid, opaque, black background.\n"
 		   "                By default the background is black but transparent.\n"
+		   "                Args:\n"
+		   "     solid_rgba <r> <g> <b> <a>\n"
 		   "\n"
 		   "  -l tycho   -- Renders Tycho-2 stars.\n"
 		   "    -T <tycho-mkdt-file>: path to the Tycho-2 Mercator-kdtree data file.\n"
@@ -160,6 +162,12 @@ static void print_help(char* prog) {
 		   "     gridlabelrastep <deg>\n"
 		   "     gridlabeldecstep <deg>\n"
 		   "         --grid label spacing\n"
+		   "\n"
+		   "  -l rdls -- Renders RA,Dec lists of points.\n"
+		   "     [-k <color>]: color and shape of markers (eg 'rx', 'bs')\n"
+		   "     [-r <rdlsfn>]: filename\n"
+		   "               Args:\n"
+		   "     rdls_rad <radius>\n"
 		   "\n"
 		   "\n", prog);
 }
@@ -634,6 +642,8 @@ int main(int argc, char *argv[]) {
 				cairo_pattern_t* pat;
 				uchar* thisimg = calloc(4 * args.W * args.H, 1);
 				res = r->imgrender(thisimg, &args);
+				// convert from RGBA to ARGB32
+				cairoutils_rgba_to_argb32(thisimg, args.W, args.H);
 				thissurf = cairo_image_surface_create_for_data(thisimg, CAIRO_FORMAT_ARGB32, args.W, args.H, args.W*4);
 				pat = cairo_pattern_create_for_surface(thissurf);
 				cairo_set_source(cairo, pat);

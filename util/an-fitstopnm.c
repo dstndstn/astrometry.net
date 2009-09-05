@@ -32,8 +32,9 @@
 #include "qfits_error.h"
 #include "log.h"
 #include "errors.h"
+#include "fitsioutils.h"
 
-static const char* OPTIONS = "hi:o:Oe:p:m:IX:N:xnrsv";
+static const char* OPTIONS = "hi:o:Oe:p:m:IX:N:xnrsvM";
 
 static void printHelp(char* progname) {
 	printf("%s    -i <input-file>\n"
@@ -50,6 +51,7 @@ static void printHelp(char* progname) {
 		   "      [-r]: same as -x -n: set min and max to observed data range.\n"
 		   "      [-s]: write 16-bit output\n"
 		   "      [-v]: verbose\n"
+		   "      [-M]: compute & print median value\n"
 		   "\n", progname);
 }
 
@@ -127,6 +129,7 @@ int main(int argc, char *argv[]) {
 	bool sixteenbit = FALSE;
 	int maxpix;
 	int loglvl = LOG_MSG;
+	bool median = FALSE;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
@@ -174,6 +177,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'm':
 			margin = atoi(optarg);
+			break;
+		case 'M':
+			median = TRUE;
 			break;
         case '?':
         case 'h':
@@ -225,6 +231,12 @@ int main(int argc, char *argv[]) {
 	img = ldr.fbuf;
 	nx = ldr.lx;
 	ny = ldr.ly;
+
+	if (median) {
+		int* perm = permuted_sort(img, sizeof(float), compare_floats_asc, NULL, nx*ny);
+		logmsg("Median value: %g\n", img[perm[(nx*ny)/2]]);
+		free(perm);
+	}
 
 	if (ordinal) {
 		int* perm;
