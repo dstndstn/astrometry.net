@@ -12,7 +12,7 @@
 #include "log.h"
 
 static void add_text(cairo_t* cairo, double x, double y,
-					 const char* txt, render_args_t* args) {
+					 const char* txt, render_args_t* args, double* bgrgba) {
 	float ex,ey;
 	float l,r,t,b;
 	cairo_text_extents_t ext;
@@ -51,8 +51,8 @@ static void add_text(cairo_t* cairo, double x, double y,
 
 	cairo_save(cairo);
 	// blank out underneath the text...
-	cairo_set_source_rgba(cairo, 0, 0, 0, 0.8);
-	cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
+	cairo_set_source_rgba(cairo, bgrgba[0], bgrgba[1], bgrgba[2], bgrgba[3]);
+	//cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
 	cairo_move_to(cairo, l, t);
 	cairo_line_to(cairo, l, b);
 	cairo_line_to(cairo, r, b);
@@ -101,6 +101,8 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	cairo_surface_t* mask;
 	double ralabelstep=0, declabelstep=0;
 	double gridrgba[] = { 0.8,0.8,0.8,0.8 };
+	double textrgba[] = { 0.8,0.8,0.8,0.8 };
+	double textbgrgba[] = { 0,0,0,0.8 };
 
 	ind = MAX(1, args->zoomlevel);
 	ind = MIN(ind, sizeof(steps)/sizeof(double)-1);
@@ -129,6 +131,9 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	get_first_rgba_arg_of_type(args, "grid_rgba ", gridrgba);
 	cairo_set_source_rgba(cairo, gridrgba[0], gridrgba[1], gridrgba[2], gridrgba[3]);
 
+	get_first_rgba_arg_of_type(args, "grid_textrgba ", textrgba);
+	get_first_rgba_arg_of_type(args, "grid_textbgrgba ", textbgrgba);
+
 	for (ra = rastep * floor(args->ramin / rastep);
 		 ra <= rastep * ceil(args->ramax / rastep);
 		 ra += rastep) {
@@ -154,7 +159,8 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	
 	if (args->gridlabel) {
 		char buf[32];
-		cairo_set_source_rgba(cairo, 1.0, 1.0, 1.0, 8.0);
+		
+		cairo_set_source_rgba(cairo, textrgba[0], textrgba[1], textrgba[2], textrgba[3]);
 		cairo_select_font_face(cairo, "DejaVu Sans Mono Book", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
 		cairo_set_font_size(cairo, 18);
 		for (ra = ralabelstep * floor(args->ramin / ralabelstep);
@@ -166,7 +172,7 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 				continue;
 			pretty_label(ra, buf);
 			logverb("Adding label ra=\"%s\"\n", buf);
-			add_text(cairo, x, y, buf, args);
+			add_text(cairo, x, y, buf, args, textbgrgba);
 		}
 		for (dec = declabelstep * floor(args->decmin / declabelstep);
 			 dec <= declabelstep * ceil(args->decmax / declabelstep);
@@ -180,14 +186,15 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 				continue;
 			pretty_label(dec, buf);
 			logverb("Adding label dec=\"%s\"\n", buf);
-			add_text(cairo, x, y, buf, args);
+			add_text(cairo, x, y, buf, args, textbgrgba);
 		}
 	}
 
 	// squish paint through mask
-	cairo_set_source_rgba(c2, 0.8, 0.8, 0.8, 0.8);
+	//cairo_set_source_rgba(c2, 0.8, 0.8, 0.8, 0.8);
 	cairo_set_source_surface(c2, mask, 0, 0);
-	cairo_mask_surface(c2, mask, 0, 0);
+	//cairo_mask_surface(c2, mask, 0, 0);
+	cairo_paint(c2);
 
 	cairo_surface_destroy(mask);
 	cairo_destroy(cairo);
