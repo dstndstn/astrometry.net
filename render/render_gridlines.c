@@ -99,7 +99,7 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	double ra, dec;
 	cairo_t* cairo;
 	cairo_surface_t* mask;
-	double ralabelstep, declabelstep;
+	double ralabelstep=0, declabelstep=0;
 	double gridrgba[] = { 0.8,0.8,0.8,0.8 };
 
 	ind = MAX(1, args->zoomlevel);

@@ -284,14 +284,14 @@ int main(int argc, char *argv[]) {
 			for (i=0; i<(nx*ny); i++)
 				minval = MIN(minval, img[i]);
 			minval_set = TRUE;
-			logverb("Minimum value: %g\n", minval);
+			logverb("Minimum pixel value: %g\n", minval);
 		}
 		if (find_max) {
 			maxval = -HUGE_VALF;
 			for (i=0; i<(nx*ny); i++)
 				maxval = MAX(maxval, img[i]);
 			maxval_set = TRUE;
-			logverb("Maximum value: %g\n", maxval);
+			logverb("Maximum pixel value: %g\n", maxval);
 		}
 
 		if (!(minval_set && maxval_set)) {
@@ -319,6 +319,7 @@ int main(int argc, char *argv[]) {
 		} else
 			scale = ((float)maxpix / (maxval - minval));
 
+		logverb("Mapping input pixel range [%f, %f]\n", minval, maxval);
 		logverb("Writing output..\n");
 		fprintf(fout, "P5 %i %i %i\n", nx, ny, maxpix);
 		i = 0;
@@ -328,8 +329,7 @@ int main(int argc, char *argv[]) {
 			if (sixteenbit) {
 				uint16_t buf[NBUF];
 				for (j=0; j<n; j++)
-					buf[j] = htons(MIN(65535, MAX(0, (img[i+j] - minval) * scale)));
-
+					buf[j] = htons(MIN(65535, MAX(0, round((img[i+j] - minval) * scale))));
 				if (fwrite(buf, 2, n, fout) != n) {
 					fprintf(stderr, "Failed to write output image: %s\n", strerror(errno));
 					exit(-1);
@@ -338,7 +338,7 @@ int main(int argc, char *argv[]) {
 			} else {
 				uint8_t buf[NBUF];
 				for (j=0; j<n; j++)
-					buf[j] = MIN(255, MAX(0, (img[i+j] - minval) * scale));
+					buf[j] = MIN(255, MAX(0, round((img[i+j] - minval) * scale)));
 				if (fwrite(buf, 1, n, fout) != n) {
 					fprintf(stderr, "Failed to write output image: %s\n", strerror(errno));
 					exit(-1);

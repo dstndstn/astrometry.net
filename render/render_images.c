@@ -98,7 +98,6 @@ int render_images(unsigned char* img, render_args_t* args) {
     get_string_args_of_type(args, "wcsfn ", wcsfiles);
 
 	nilval = get_double_arg_of_type(args, "nilval ", nilval);
-	// FIXME -- we don't do anything with this...
 
 	// When plotting density, we only need the WCS files.
     if (!args->density && (sl_size(imagefiles) != sl_size(wcsfiles))) {
@@ -326,6 +325,9 @@ int render_images(unsigned char* img, render_args_t* args) {
 						pppx = lround(imagex-1); // The -1 is because FITS uses 1-indexing for pixels. DOH
 						pppy = lround(imagey-1);
 						if (pppx < 0 || pppx >= W || pppy < 0 || pppy >= H)
+							continue;
+						// FIXME -- just look at red channel...
+						if (userimg[4*(pppy*W + pppx) + 0] == nilval)
 							continue;
 						// combine "weight" with this image's alpha channel.
 						thisw = weight * (float)userimg[4*(pppy*W + pppx) + 3] / 255.0;
