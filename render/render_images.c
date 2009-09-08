@@ -87,6 +87,7 @@ int render_images(unsigned char* img, render_args_t* args) {
     double *ravals, *decvals;
 	const char* imgtypes[] = {"jpegfn ", "pngfn "};
 	double nilval = -1e100;
+	double alpha = 1.0;
 
 	logmsg("starting.\n");
 
@@ -98,7 +99,9 @@ int render_images(unsigned char* img, render_args_t* args) {
     get_string_args_of_type(args, "wcsfn ", wcsfiles);
 
 	nilval = get_double_arg_of_type(args, "nilval ", nilval);
-
+	//args->layeralpha = get_double_arg_of_type(args, "image_alpha ", alpha);
+	alpha = get_double_arg_of_type(args, "image_alpha ", alpha);
+	
 	// When plotting density, we only need the WCS files.
     if (!args->density && (sl_size(imagefiles) != sl_size(wcsfiles))) {
         logmsg("Got %i jpeg files but %i wcs files.\n",
@@ -400,6 +403,7 @@ int render_images(unsigned char* img, render_args_t* args) {
         logmsg("range of counts: [%g, %g]\n", mincounts, maxcounts);
         logmsg("max density value: %g\n", maxden);
     } else {
+		uchar al = MAX(0, MIN(255, round(255.0 * alpha)));
         for (j=0; j<args->H; j++) {
             for (i=0; i<w; i++) {
                 uchar* pix;
@@ -408,10 +412,13 @@ int render_images(unsigned char* img, render_args_t* args) {
                     pix[0] = MAX(0, MIN(255, ink[3 * (j*w + i) + 0] / counts[j*w + i]));
                     pix[1] = MAX(0, MIN(255, ink[3 * (j*w + i) + 1] / counts[j*w + i]));
                     pix[2] = MAX(0, MIN(255, ink[3 * (j*w + i) + 2] / counts[j*w + i]));
-                    pix[3] = 255;
+                    pix[3] = al;
+                    //pix[3] = 255;
                 }
             }
         }
+		if (al != 255)
+			cairoutils_premultiply_alpha_rgba(img, args->W, args->H);
     }
 
     free(counts);

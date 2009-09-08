@@ -112,6 +112,7 @@ static void print_help(char* prog) {
 		   "          <keyword> <arguments>\n"
 		   "          ...\n"
 		   "  [-A <argument-file>]\n"
+		   "  [-t <arg string>]\n"
 		   "\n"
 		   "\n"
 		   "     Layers: the output image is rendered one layer at a time, in the specified order.\n"
@@ -172,7 +173,7 @@ static void print_help(char* prog) {
 		   "\n", prog);
 }
 
-const char* OPTIONS = "ab:c:de:f:g:h:i:jk:l:npqr:svw:x:y:zA:B:C:D:F:GI:JK:L:MN:PRS:T:V:X:Y:";
+const char* OPTIONS = "ab:c:de:f:g:h:i:jk:l:npqr:st:vw:x:y:zA:B:C:D:F:GI:JK:L:MN:PRS:T:V:X:Y:";
 
 struct renderer {
 	char* name;
@@ -381,12 +382,16 @@ int main(int argc, char *argv[]) {
 	args.imagefns = sl_new(4);
 	args.imwcsfns = sl_new(4);
 	args.argfilenames = sl_new(4);
+	args.arglist = sl_new(256);
 
 	layers = sl_new(16);
 	gotx = goty = gotX = gotY = gotw = goth = FALSE;
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 't':
+			sl_append(args.arglist, optarg);
+			break;
 		case 'G':
 			args.gridlabel = TRUE;
 			break;
@@ -597,12 +602,8 @@ int main(int argc, char *argv[]) {
 			ERROR("Failed to read args file: \"%s\"", fn);
 			return -1;
 		}
-		if (!args.arglist)
-			args.arglist = lines;
-		else {
-			sl_merge_lists(args.arglist, lines);
-			sl_free2(lines);
-		}
+		sl_merge_lists(args.arglist, lines);
+		sl_free2(lines);
 	}
 
 	if (writepdf) {
@@ -635,6 +636,7 @@ int main(int argc, char *argv[]) {
 			if (!streq(layer, r->name))
 				continue;
 			args.currentlayer = r->name;
+			args.layeralpha = 1.0;
 			if (r->cairorender) {
 				res = r->cairorender(cairo, &args);
 			} else if (r->imgrender) {
@@ -647,7 +649,10 @@ int main(int argc, char *argv[]) {
 				thissurf = cairo_image_surface_create_for_data(thisimg, CAIRO_FORMAT_ARGB32, args.W, args.H, args.W*4);
 				pat = cairo_pattern_create_for_surface(thissurf);
 				cairo_set_source(cairo, pat);
-				cairo_paint(cairo);
+				logverb("Painting with alpha %f\n", args.layeralpha);
+				cairo_paint_with_alpha(cairo, args.layeralpha);
+				//cairo_paint(cairo);
+				//cairo_mask_surface(cairo, thissurf, 0, 0);
 				cairo_pattern_destroy(pat);
 				cairo_surface_destroy(thissurf);
 				free(thisimg);

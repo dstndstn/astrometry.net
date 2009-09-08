@@ -538,6 +538,20 @@ int cairoutils_stream_jpeg(FILE* fout, unsigned char* img, int W, int H) {
     return streamout(fout, img, W, H, JPEG);
 }
 
+void cairoutils_premultiply_alpha_rgba(unsigned char* img, int W, int H) {
+    int i;
+    for (i=0; i<(H*W); i++) {
+        unsigned char r,g,b,a;
+        r = img[4*i + 0];
+        g = img[4*i + 1];
+        b = img[4*i + 2];
+        a = img[4*i + 3];
+		img[4*i + 0] = (a * r) / 255;
+		img[4*i + 1] = (a * g) / 255;
+		img[4*i + 2] = (a * b) / 255;
+	}
+}
+
 void cairoutils_argb32_to_rgba(unsigned char* img, int W, int H) {
     int i;
     for (i=0; i<(H*W); i++) {

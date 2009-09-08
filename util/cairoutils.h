@@ -44,6 +44,8 @@ void cairoutils_argb32_to_rgba(unsigned char* img, int W, int H);
 
 void cairoutils_rgba_to_argb32(unsigned char* img, int W, int H);
 
+void cairoutils_premultiply_alpha_rgba(unsigned char* img, int W, int H);
+
 /**
  All the following cairoutils_read_* function return a newly-allocated image buffer
  of size W * H * 4, containing R,G,B, and alpha.

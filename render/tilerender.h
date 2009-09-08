@@ -59,6 +59,9 @@ struct render_args {
     // The current layer we're rendering.
     char* currentlayer;
 
+	// the alpha level at which this layer will be painted: only valid for "imgrender" rendereres.
+	double layeralpha;
+
 	// render_gridlines
 	bool gridlabel;
 
