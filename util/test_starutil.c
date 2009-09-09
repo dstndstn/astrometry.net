@@ -17,9 +17,26 @@
 */
 
 #include <unistd.h>
+#include <stdio.h>
 
 #include "starutil.h"
 #include "cutest.h"
+
+void test_hammer_aitoff(CuTest* tc) {
+	double xyz[3];
+	double px, py;
+	double ras [] = { 0,  0,  0,   0,   0, 45, 90, 135, 180, 225, 270, 315, 360};
+	double decs[] = { 0, 45, 90, -45, -89,  0,  0,   0,   0,   0,   0,   0,   0};
+	int i;
+	for (i=0; i<sizeof(ras)/sizeof(double); i++) {
+		double ra, dec;
+		ra  = ras [i];
+		dec = decs[i];
+		radecdeg2xyzarr(ra, dec, xyz);
+		project_hammer_aitoff_x(xyz[0], xyz[1], xyz[2], &px, &py);
+		printf("RA,Dec (%f,%f) => (%g, %g)\n", ra, dec, px, py);
+	}
+}
 
 void test_atora(CuTest* tc) {
     CuAssertDblEquals(tc, 0.0, atora("00:00:00.0"), 1e-6);
