@@ -36,8 +36,10 @@ def table_fields(dataorfn, rows=None):
 	else:
 		data = dataorfn
 
-	colnames = data.dtype.names
+	if data is None:
+		return None
 	fields = tabledata()
+	colnames = data.dtype.names
 	for c in colnames:
 		col = data.field(c)
 		if rows is not None:
