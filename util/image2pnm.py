@@ -212,8 +212,8 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 		if cmd is None:
 			return (None, 'Couldn\'t find the program "an-fitstopnm".')
 
-	if quiet:
-		cmd += ' 2>/dev/null'
+	#if quiet:
+	#	cmd += ' 2>/dev/null'
 
 	# Do the actual conversion
 	do_command(cmd % (shell_escape(infile), shell_escape(outfile)))

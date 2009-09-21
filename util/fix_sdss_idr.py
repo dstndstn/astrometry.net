@@ -45,7 +45,7 @@ def fix_sdss_idr(hdu):
 	newhdu._ffile = hdu._ffile
 	newhdu._datLoc = hdu._datLoc
 
-	newhdu.data = newhdu.data.astype(int)
+	newhdu.data = newhdu.data.astype(int32)
 	newhdu.data[newhdu.data < 0] += 2**16
 	print 'data type:', newhdu.data.dtype
 	print 'data range:', newhdu.data.min(), 'to', newhdu.data.max()
