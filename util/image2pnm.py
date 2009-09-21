@@ -2,7 +2,7 @@
 """
 Convert an image in a variety of formats into a pnm file
 
-Copyright Keir Mierle 2007, Dustin Lang 2008
+Copyright Keir Mierle 2007, Dustin Lang 2008,2009
 """
 import sys
 import os
@@ -54,6 +54,7 @@ imgcmds = {fitstype : (fitsext, 'an-fitstopnm -i %s > %s'),
 		   }
 
 compcmds = {'gzip compressed data'	  : ('gz',	'gunzip -c %s > %s'),
+			"compress'd data 16 bits" : ('gz',	'gunzip -c %s > %s'),
 			'bzip2 compressed data'	  : ('bz2', 'bunzip2 -k -c %s > %s')
 		   }
 

@@ -1,5 +1,6 @@
 import sys
 import pyfits
+import numpy
 
 def is_sdss_idr(hdu):
 	hdr = hdu.header
@@ -45,7 +46,7 @@ def fix_sdss_idr(hdu):
 	newhdu._ffile = hdu._ffile
 	newhdu._datLoc = hdu._datLoc
 
-	newhdu.data = newhdu.data.astype(int32)
+	newhdu.data = newhdu.data.astype(numpy.int32)
 	newhdu.data[newhdu.data < 0] += 2**16
 	print 'data type:', newhdu.data.dtype
 	print 'data range:', newhdu.data.min(), 'to', newhdu.data.max()
