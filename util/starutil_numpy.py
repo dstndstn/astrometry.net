@@ -252,6 +252,8 @@ def deg2rad(d):    return d*pi/180.0
 def rad2arcmin(r): return 10800.0*r/pi
 def arcmin2rad(a): return a*pi/10800.0
 def rad2arcsec(r): return 648000.0*r/pi
+def arcmin2deg(a): return a/60.
+def arcmin2rad(a): return deg2rad(arcmin2deg(a))
 def arcsec2rad(a): return a*pi/648000.0
 def arcsec2deg(a): return rad2deg(arcsec2rad(a))
 def radec2x(r,d):  return cos(d)*cos(r) # r,d in radians
@@ -273,6 +275,12 @@ def arcsec2distsq(arcsec):
 
 def arcsec2dist(arcsec):
     return sqrt(arcsec2distsq(arcsec))
+
+def arcmin2distsq(arcmin):
+    return rad2distsq(arcmin2rad(arcmin))
+
+def arcmin2dist(arcmin):
+    return sqrt(arcmin2distsq(arcmin))
 
 def dist2arcsec(dist):
     return distsq2arcsec(dist**2)
