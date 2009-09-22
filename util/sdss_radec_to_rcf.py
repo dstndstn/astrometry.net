@@ -1,7 +1,6 @@
 import pyfits
 from astrometry.util.pyfits_utils import *
 from astrometry.util.starutil_numpy import *
-#from numpy import *
 from os.path import basename,dirname
 
 # RA,Dec are either scalars or iterables.
