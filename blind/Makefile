@@ -294,6 +294,15 @@ ngc2000.o: ngc2000.c ngc2000names.c ngc2000entries.c
 ngc2000names.c: parse-ngc2000names.awk $(DATA)/ngc2000names.dat
 	$(AWK) -f parse-ngc2000names.awk < $(DATA)/ngc2000names.dat  > $@
 
+ngc2000entries.py: parse-ngc2000-py.awk $(DATA)/ngc2000.dat
+	$(AWK) -f parse-ngc2000-py.awk < $(DATA)/ngc2000.dat  > $@
+
+ngc2000accurate.py: parse-ngcic-accurate-py.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
+	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate-py.awk > $@
+
+ngc2000.py: ngc2000-pre.py ngc2000entries.py ngc2000-mid.py ngc2000accurate.py ngc2000-post.py
+	cat $^ > $@
+
 ngc2000entries.c: parse-ngc2000.awk $(DATA)/ngc2000.dat
 	$(AWK) -f parse-ngc2000.awk < $(DATA)/ngc2000.dat  > $@
 
