@@ -6,10 +6,10 @@ def sdss_das_get_rcf(run, camcol, field, band, outfn=None, reruns=[40,41,42]):
 		url = ('http://das.sdss.org/imaging/%i/%i/corr/%i/fpC-%06i-%s%i-%04i.fit.gz' %
 			   (run, rerun, camcol, run, band, camcol, field))
 		if outfn:
-			outfn = outfn % { 'run'=run, 'camcol'=camcol, 'field'=field, 'band'=band }
+			outfn = outfn % { 'run':run, 'camcol':camcol, 'field':field, 'band':band }
 		cmd = 'wget --continue -nv '
 		if outfn:
-			cmd += '-O %s' % outfn
+			cmd += '-O %s ' % outfn
 		cmd += '\"%s\"' % url
 		print 'Running:', cmd
 		(rtn, out, err) = run_command(cmd)
