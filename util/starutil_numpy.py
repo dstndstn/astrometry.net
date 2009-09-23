@@ -249,6 +249,8 @@ def xyzarrtoradec(xyz):
 
 def rad2deg(r):    return 180.0*r/pi
 def deg2rad(d):    return d*pi/180.0
+def deg2arcmin(d): return d * 60.
+def deg2arcsec(d): return d * 3600.
 def rad2arcmin(r): return 10800.0*r/pi
 def arcmin2rad(a): return a*pi/10800.0
 def rad2arcsec(r): return 648000.0*r/pi
