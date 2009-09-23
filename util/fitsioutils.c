@@ -268,7 +268,7 @@ void fits_copy_non_table_headers(qfits_header* dest, const qfits_header* src) {
     }
 }
 
-char* fits_get_dupstring(qfits_header* hdr, const char* key) {
+char* fits_get_dupstring(const qfits_header* hdr, const char* key) {
 	// qfits_pretty_string() never increases the length of the string
 	char pretty[FITS_LINESZ+1];
 	char* val;

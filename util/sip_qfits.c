@@ -298,32 +298,41 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 	return dest;
 }
 
+static int check_tan_ctypes(char* ct1, char* ct2) {
+	const char* ra = "RA---TAN";
+	const char* dec = "DEC--TAN";
+	int NC = 8;
+	if (!ct1 || !ct2)
+		return -1;
+	if (strlen(ct1) < NC || strlen(ct2) < NC)
+		return -1;
+	if ((strncmp(ct1, ra, NC) == 0) && (strncmp(ct2, dec, NC) == 0))
+		return 0;
+	if ((strncmp(ct1, dec, NC) == 0) && (strncmp(ct2, ra, NC) == 0))
+		return 1;
+	return -1;
+}
+
 tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
-	char* str;
-	const char* key;
-	const char* expect;
 	tan_t tan;
 	double nil = -1e300;
+	char* ct1;
+	char* ct2;
+	int swap;
 
 	memset(&tan, 0, sizeof(tan_t));
 
-	key = "CTYPE1";
-	expect = "RA---TAN";
-	str = qfits_header_getstr(hdr, key);
-	str = qfits_pretty_string(str);
-	if (!str || strncmp(str, expect, strlen(expect))) {
-		ERROR("TAN header: incorrect key \"%s\": expected \"%s\", got \"%s\"", key, expect, str);
-		return NULL;
+	ct1 = fits_get_dupstring(hdr, "CTYPE1");
+	ct2 = fits_get_dupstring(hdr, "CTYPE2");
+	swap = check_tan_ctypes(ct1, ct2);
+	if (swap == -1) {
+		ERROR("TAN header: expected CTYPE1 = RA---TAN, CTYPE2 = DEC--TAN (or vice versa), get CTYPE1 = \"%s\", CYTPE2 = \"%s\"\n",
+			  ct1, ct2);
 	}
-
-	key = "CTYPE2";
-	expect = "DEC--TAN";
-	str = qfits_header_getstr(hdr, key);
-	str = qfits_pretty_string(str);
-	if (!str || strncmp(str, expect, strlen(expect))) {
-		ERROR("TAN header: invalid \"%s\": expected \"%s\", got \"%s\"", key, expect, str);
+	free(ct1);
+	free(ct2);
+	if (swap == -1)
 		return NULL;
-	}
 
     tan.imagew = qfits_header_getint(hdr, "IMAGEW", 0);
     tan.imageh = qfits_header_getint(hdr, "IMAGEH", 0);
@@ -342,13 +351,28 @@ tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
 						   &(tan.cd[1][0]), &(tan.cd[1][1]) };
 		int i;
 
-		for (i=0; i<8; i++) {
+		for (i=0; i<sizeof(keys)/sizeof(char*); i++) {
 			*(vals[i]) = qfits_header_getdouble(hdr, keys[i], nil);
 			if (*(vals[i]) == nil) {
 				ERROR("TAN header: missing or invalid value for \"%s\"", keys[i]);
 				return NULL;
 			}
 		}
+	}
+
+	if (swap == 1) {
+		double tmp;
+		tmp = tan.crval[0];
+		tan.crval[0] = tan.crval[1];
+		tan.crval[1] = tmp;
+		// swap CD1_1 <-> CD2_1
+		tmp = tan.cd[0][0];
+		tan.cd[0][0] = tan.cd[1][0];
+		tan.cd[1][0] = tmp;
+		// swap CD1_2 <-> CD2_2
+		tmp = tan.cd[0][1];
+		tan.cd[0][1] = tan.cd[1][1];
+		tan.cd[1][1] = tmp;
 	}
 
 	if (!dest)
