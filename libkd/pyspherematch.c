@@ -46,7 +46,7 @@ static PyObject* spherematch_kdtree_build(PyObject* self, PyObject* args) {
         return NULL;
     }
     if (PyArray_TYPE(x) != PyArray_DOUBLE) {
-        PyErr_SetString(PyExc_ValueError, "array must contain floats");
+        PyErr_SetString(PyExc_ValueError, "array must contain doubles");
         return NULL;
     }
 
