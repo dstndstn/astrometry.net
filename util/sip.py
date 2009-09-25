@@ -78,6 +78,13 @@ class Tan(ctypes.Structure):
 						('IMAGEW', self.imagew), ('IMAGEH', self.imageh)]:
 			hdr.update(key, val)
 
+	def update_extra_pyfits_headers(self, hdr):
+		for key,val in [('CUNIT1', 'deg'), ('CUNIT2', 'deg'),
+				('LATPOLE', 0.0), ('LONPOLE', 180),
+				('WCSAXES', 2), ('EQUINOX', 2000),
+				('CTYPE1', 'RA---TAN'), ('CTYPE2', 'DEC--TAN')]:
+			hdr.update(key, val)
+
 	# returns (ra,dec) in degrees.
 	def pixelxy2radec(self, px,py):
 		'Return ra,dec of px,py'
