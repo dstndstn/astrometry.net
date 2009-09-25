@@ -3,6 +3,8 @@ from astrometry.util.pyfits_utils import *
 
 # Produces a (cut-out of) the inverse-variance noise image, from columns
 # [x0,x1] and rows [y0,y1] (inclusive).  Default is the whole image.
+# "fpC" is a numpy array of the image (eg, pyfits.open(fpcfn)[0].data )
+# "mask" is a pyfits object (eg, pyfits.open(maskfn) )
 def sdss_noise_invvar(fpC, mask, x0=0, x1=None, y0=0, y1=None):
 	if x1 is None:
 		x1 = fpC.shape[1]-1

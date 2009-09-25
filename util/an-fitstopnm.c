@@ -34,7 +34,7 @@
 #include "errors.h"
 #include "fitsioutils.h"
 
-static const char* OPTIONS = "hi:o:Oe:p:m:IX:N:xnrsvM";
+static const char* OPTIONS = "hi:o:Oe:p:m:IX:N:xnrsvML:H:";
 
 static void printHelp(char* progname) {
 	printf("%s    -i <input-file>\n"
@@ -43,7 +43,9 @@ static void printHelp(char* progname) {
 		   "      [-p <plane-number>]      Image plane number (default 0)\n"
 		   "      [-m <margin>]            Number of pixels to avoid at the image edges (default 0)\n"
 		   "      [-O]: do ordinal transform (default: map 25-95 percentile)\n"
-           "      [-I]: invert black-on-white image\n"
+	       "      [-L <low-percentile>]: set percentile that becomes black (default 25)\n"
+	       "      [-H <high-percentile>]: set percentile that becomes white (default 95)\n"
+	       "      [-I]: invert black-on-white image\n"
 		   "      [-X <max>]: set the input value that will become white\n"
 		   "      [-N <min>]: set the input value that will become black\n"
 		   "      [-x]: set max to the observed maximum value\n"
@@ -130,9 +132,17 @@ int main(int argc, char *argv[]) {
 	int maxpix;
 	int loglvl = LOG_MSG;
 	bool median = FALSE;
+	double lop = 0.25;
+	double hip = 0.95;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+	case 'L':
+	  lop = 0.01 * atof(optarg);
+	  break;
+	case 'H':
+	  hip = 0.01 * atof(optarg);
+	  break;
 		case 'v':
 			loglvl++;
 			break;
@@ -295,16 +305,13 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (!(minval_set && maxval_set)) {
-			float lop, hip;
 			int NPIX = 10000;
 
 			// percentiles.
 			if (invert) {
-				lop = 0.05;
-				hip = 0.75;
-			} else {
-				lop = 0.25;
-				hip = 0.95;
+			  double tmp = 1 - hip;
+			  hip = 1 - lop;
+			  lop = tmp;
 			}
 
 			logverb("Computing image percentiles...\n");
