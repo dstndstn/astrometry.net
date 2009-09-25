@@ -1,3 +1,12 @@
+from numpy import sin
+from math import pi
+
+def lanczos_filter(order, x):
+	filt = order * sin(pi * x) * sin(pi * x / order) / ((pi * x)**2)
+	filt[x == 0] = 1
+	filt[x > order] = 0
+	return filt
+
 # Given a range of integer coordinates that you want to, eg, cut out
 # of an image, [xlo, xhi], and bounds for the image [xmin, xmax],
 # returns the range of coordinates that are in-bounds, and the
