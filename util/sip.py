@@ -70,6 +70,14 @@ class Tan(ctypes.Structure):
 				' Image size (%f, %f)>' % (self.imagew, self.imageh)
 				)
 
+	def update_pyfits_header(self, hdr):
+		for key,val in [('CRVAL1', self.crval[0]), ('CRVAL2', self.crval[1]),
+						('CRPIX1', self.crpix[0]), ('CRPIX2', self.crpix[1]),						
+						('CD1_1', self.cd[0]), ('CD1_2', self.cd[1]),
+						('CD2_1', self.cd[2]), ('CD2_2', self.cd[3]),
+						('IMAGEW', self.imagew), ('IMAGEH', self.imageh)]:
+			hdr.update(key, val)
+
 	# returns (ra,dec) in degrees.
 	def pixelxy2radec(self, px,py):
 		'Return ra,dec of px,py'
@@ -116,7 +124,6 @@ class Tan(ctypes.Structure):
 		sip.ap_order = 0
 		sip.bp_order = 0
 		_sip.sip_get_radec_bounds(
-			#ctypes.pointer(self),
 			ctypes.pointer(sip),
 			step,
 			ctypes.pointer(ramin),
