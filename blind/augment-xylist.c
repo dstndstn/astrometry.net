@@ -680,6 +680,13 @@ int augment_xylist(augment_xylist_t* axy,
 				}
 				sl_appendf(cmd, "-PARAMETERS_NAME %s", paramfn);
 
+				// VERBOSE_TYPE = FULL
+
+				axy->xcol = "X_IMAGE";
+				axy->ycol = "Y_IMAGE";
+				axy->sortcol = "MAG_AUTO";
+				axy->sort_ascending = TRUE;
+
 				filterfn = create_temp_file("filter", axy->tempdir);
 				sl_append_nocopy(tempfiles, filterfn);
 				filterstr = "CONV NORM\n"
@@ -702,9 +709,6 @@ int augment_xylist(augment_xylist_t* axy,
 
 			logverb("Running SExtractor: output file is %s\n", xylsfn);
 			run(cmd, verbose);
-
-			if (!axy->sortcol)
-				axy->sortcol = "MAG_AUTO";
 
 		} else {
 			logverb("Running image2xy: input=%s, output=%s, ext=%i\n", fitsimgfn, xylsfn, axy->extension);
