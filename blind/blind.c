@@ -542,16 +542,16 @@ void blind_log_run_parameters(blind_t* bp) {
 	int i, N;
 
     logverb("blind solver run parameters:\n");
-	logverb("fields ");
-	for (i = 0; i < il_size(bp->fieldlist); i++)
-		logverb("%i ", il_get(bp->fieldlist, i));
-	logverb("\n");
 	logverb("indexes:\n");
     N = n_indexes(bp);
     for (i=0; i<N; i++)
         logverb("  %s\n", get_index_name(bp, i));
     if (bp->fieldfname)
         logverb("fieldfname %s\n", bp->fieldfname);
+	logverb("fields ");
+	for (i = 0; i < il_size(bp->fieldlist); i++)
+		logverb("%i ", il_get(bp->fieldlist, i));
+	logverb("\n");
 	for (i = 0; i < sl_size(bp->verify_wcsfiles); i++)
 		logverb("verify %s\n", sl_get(bp->verify_wcsfiles, i));
 	logverb("fieldid %i\n", bp->fieldid);
@@ -569,6 +569,8 @@ void blind_log_run_parameters(blind_t* bp) {
         logverb("wcs %s\n", bp->wcs_template);
     if (bp->fieldid_key)
         logverb("fieldid_key %s\n", bp->fieldid_key);
+	if (bp->indexrdlsfname)
+        logverb("indexrdlsfname %s\n", bp->indexrdlsfname);
 	logverb("parity %i\n", sp->parity);
 	logverb("codetol %g\n", sp->codetol);
 	logverb("startdepth %i\n", sp->startobj);
@@ -1018,6 +1020,11 @@ static void remove_duplicate_solutions(blind_t* bp) {
 
 static int write_solutions(blind_t* bp) {
     int i;
+	bool got_solutions = (bl_size(bp->solutions) > 0);
+
+	// If we found no solution, don't write empty output files!
+	if (!got_solutions)
+		return 0;
 
 	if (bp->matchfname) {
 		bp->mf = matchfile_open_for_writing(bp->matchfname);

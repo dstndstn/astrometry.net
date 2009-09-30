@@ -922,9 +922,10 @@ int main(int argc, char** args) {
         fflush(NULL);
 
 		if (!file_exists(axy->solvedfn)) {
-			// boo hoo.
 			//printf("Field didn't solve.\n");
-		} else {
+			goto nextfile;
+		}
+		{
             sip_t wcs;
             double ra, dec, fieldw, fieldh;
             char rastr[32], decstr[32];
