@@ -68,6 +68,10 @@ struct augment_xylist_s {
     bool pnm;
     bool force_ppm;
 
+	bool use_sextractor;
+	char* sextractor_path;
+	char* sextractor_config;
+
     int W;
     int H;
 

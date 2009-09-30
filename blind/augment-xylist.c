@@ -135,6 +135,14 @@ static an_option_t options[] = {
 	 "odds ratio at which to reject a hypothesis (default 1e-100)"},
 	{'%', "odds-to-stop-looking", required_argument, "odds",
 	 "odds ratio at which to stop adding stars when evaluating a hypothesis (default: HUGE_VAL)"},
+	{'^', "use-sextractor", no_argument, NULL,
+	 "use SExtractor rather than built-in image2xy to find sources"},
+	{'&', "sextractor-config", required_argument, "filename",
+	 "use the given SExtractor config file (default: etc/sextractor.conf).\n"
+	 "    Note that CATALOG_NAME and CATALOG_TYPE values will be over-ridden by command-line values"},
+	{'*', "sextractor-path", optional_argument, "filename",
+	 "use the given path to the SExtractor executable.  Default: just 'sex', assumed to be in your PATH.\n"
+	 "    Note that you can give command-line args here too, eg: '--sextractor-path sex -DETECT_TYPE CCD'"},
     {'3', "ra",             required_argument, "degrees or hh:mm:ss",
      "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
     {'4', "dec",            required_argument, "degrees or [+-]dd:mm:ss",
@@ -231,6 +239,15 @@ int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
     switch (argchar) {
+	case '^':
+		axy->use_sextractor = TRUE;
+		break;
+	case '&':
+		axy->sextractor_config = optarg;
+		break;
+	case '*':
+		axy->sextractor_path = optarg;
+		break;
 	case '9':
 		axy->no_removelines = TRUE;
 		break;
@@ -640,20 +657,70 @@ int augment_xylist(augment_xylist_t* axy,
         xylsfn = create_temp_file("xyls", axy->tempdir);
         sl_append_nocopy(tempfiles, xylsfn);
 
-        logverb("Running image2xy: input=%s, output=%s, ext=%i\n", fitsimgfn, xylsfn, axy->extension);
+		if (axy->use_sextractor) {
+			if (axy->sextractor_path)
+				sl_append(cmd, axy->sextractor_path);
+			else
+				sl_append(cmd, "sex");
 
-        // we have to delete the temp file because otherwise image2xy is too timid to overwrite it.
-        if (unlink(xylsfn)) {
-            SYSERROR("Failed to delete temp file %s", xylsfn);
-            exit(-1);
-        }
-        // MAGIC 3: downsample by a factor of 2, up to 3 times.
-        if (image2xy_files(fitsimgfn, xylsfn, TRUE, axy->downsample, 3, axy->extension,
-						   NULL, NULL, NULL, 0, 0, 0, axy->no_bg_subtraction)) {
-            ERROR("Source extraction failed");
-            exit(-1);
-        }
+			if (axy->sextractor_config)
+				sl_appendf(cmd, "-c %s", axy->sextractor_config);
+			else {
+				char* paramfn;
+				char* paramstr;
+				char* filterfn;
+				char* filterstr;
 
+				paramfn = create_temp_file("param", axy->tempdir);
+				sl_append_nocopy(tempfiles, paramfn);
+				paramstr = "X_IMAGE\nY_IMAGE\nMAG_AUTO\n";
+				if (write_file(paramfn, paramstr, strlen(paramstr))) {
+					ERROR("Failed to write SExtractor parameters to temp file \"%s\"", paramfn);
+					exit(-1);
+				}
+				sl_appendf(cmd, "-PARAMETERS_NAME %s", paramfn);
+
+				filterfn = create_temp_file("filter", axy->tempdir);
+				sl_append_nocopy(tempfiles, filterfn);
+				filterstr = "CONV NORM\n"
+					"# 5x5 convolution mask of a gaussian PSF with FWHM = 2.0 pixels.\n"
+					"0.006319 0.040599 0.075183 0.040599 0.006319\n"
+					"0.040599 0.260856 0.483068 0.260856 0.040599\n"
+					"0.075183 0.483068 0.894573 0.483068 0.075183\n"
+					"0.040599 0.260856 0.483068 0.260856 0.040599\n"
+					"0.006319 0.040599 0.075183 0.040599 0.006319\n";
+				if (write_file(filterfn, filterstr, strlen(filterstr))) {
+					ERROR("Failed to write SExtractor convolution filter to temp file \"%s\"", filterfn);
+					exit(-1);
+				}
+				sl_appendf(cmd, "-FILTER_NAME %s", filterfn);
+			}
+
+			sl_append(cmd, "-CATALOG_TYPE FITS_1.0");
+			sl_appendf(cmd, "-CATALOG_NAME %s", xylsfn);
+			append_escape(cmd, fitsimgfn);
+
+			logverb("Running SExtractor: output file is %s\n", xylsfn);
+			run(cmd, verbose);
+
+			if (!axy->sortcol)
+				axy->sortcol = "MAG_AUTO";
+
+		} else {
+			logverb("Running image2xy: input=%s, output=%s, ext=%i\n", fitsimgfn, xylsfn, axy->extension);
+
+			// we have to delete the temp file because otherwise image2xy is too timid to overwrite it.
+			if (unlink(xylsfn)) {
+				SYSERROR("Failed to delete temp file %s", xylsfn);
+				exit(-1);
+			}
+			// MAGIC 3: downsample by a factor of 2, up to 3 times.
+			if (image2xy_files(fitsimgfn, xylsfn, TRUE, axy->downsample, 3, axy->extension,
+							   NULL, NULL, NULL, 0, 0, 0, axy->no_bg_subtraction)) {
+				ERROR("Source extraction failed");
+				exit(-1);
+			}
+		}
         dosort = TRUE;
 
 	} else {

@@ -44,6 +44,23 @@
 
 uint32_t ENDIAN_DETECTOR = 0x01020304;
 
+int write_file(const char* fn, char* data, int len) {
+	FILE* fid = fopen(fn, "wb");
+	if (!fid) {
+		SYSERROR("Failed to open file \"%s\"", fn);
+		return -1;
+	}
+	if (fwrite(data, 1, len, fid) != len) {
+		SYSERROR("Failed to write %i bytes to file \"%s\"", len, fn);
+		return -1;
+	}
+	if (fclose(fid)) {
+		SYSERROR("Failed to close file \"%s\"", fn);
+		return -1;
+	}
+	return 0;
+}
+
 int pad_fid(FILE* fid, size_t len, char pad) {
 	off_t offset;
 	size_t npad;
