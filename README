@@ -689,27 +689,48 @@ The "Source Extractor" aka "SExtractor" program by Emmanuel Bertin can
 be used to do source extraction if you don't want to use our own
 bundled "image2xy" program.
 
-You can use the following configuration entries to produce an "xylist"
-which can be fed to solve-field:
+You can tell solve-field to use SExtractor like this:
 
-   CATALOG_TYPE     FITS_1.0
-   # this is the output filename:
-   CATALOG_NAME     out.xyls
-   PARAMETERS_NAME  xylist.param
+  $ solve-field --use-sextractor ...
 
-In the file "xylist.param", include:
+By default we use almost all SExtractor's default settings.  The
+exceptions are:
 
-   X_IMAGE
-   Y_IMAGE
-   MAG_ISO
-   # or MAG_ISOCOR or MAG_AUTO
+  1) We write a PARAMETERS_NAME file containing:
+         X_IMAGE
+         Y_IMAGE
+         MAG_AUTO
 
-After running SExtractor on your image, you can feed the resulting
-file straight to solve-field:
+  2) We write a FILTER_NAME file containing a Gaussian PSF with FWHM
+     of 2 pixels.  (See blind/augment-xylist.c "filterstr" for the
+     exact string.)
 
-   $ solve-field out.xyls --x-column X_IMAGE --y-column Y_IMAGE \
-          --sort-column MAG_ISO --sort-ascending --overwrite \
-          --width 496 --height 340
+  3) We set CATALOG_TYPE FITS_1.0
+
+  4) We set CATALOG_NAME to a temp filename.
+
+
+If you want to override any of the settings we use, you can use:
+
+  $ solve-field --use-sextractor --sextractor-config <sex.conf>
+
+In order to reproduce the default behavior, you must:
+
+  1) Create a parameters file like the one we make, and set
+     PARAMETERS_NAME to its filename
+
+  2) Set:
+  $ solve-field --x-column X_IMAGE --y-column Y_IMAGE \
+       --sort-column MAG_AUTO --sort-ascending
+
+  3) Create a filter file like the one we make, and set FILTER_NAME to
+     its filename
+
+
+Note that you can tell solve-field where to find SExtractor with
+
+  $ solve-field --use-sextractor --sextractor-path <path-to-sex-executable>
+
 
 
 WORKAROUNDS
@@ -791,5 +812,6 @@ GETTING-INDEXES for details.
 
 CONTACT
 -------
-Please send inquires and bug reports to code@astrometry.net .
+Please send inquires and bug reports to the email address "code" at
+the domain "astrometry.net".
 
