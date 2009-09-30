@@ -2,6 +2,7 @@
 import os
 import sys
 import logging
+from optparse import OptionParser
 
 if __name__ == '__main__':
 	try:
@@ -50,12 +51,12 @@ def hist_remove_lines(x, binwidth, binoffset, logcut):
     badpoints = sum(array([(x >= L)*(x < R) for (L,R) in zip(badleft, badright)]), 0)
     return (badpoints == 0)
 
-def removelines(infile, outfile, **kwargs):
+def removelines(infile, outfile, xcol='X', ycol='Y', **kwargs):
     p = pyfits.open(infile)
     xy = p[1].data
     hdr = p[1].header
-    x = xy.field('X')
-    y = xy.field('Y')
+    x = xy.field(xcol)
+    y = xy.field(ycol)
 
     ix = hist_remove_lines(x, 1, 0.5, -100)
     iy = hist_remove_lines(y, 1, 0.5, -100)
@@ -75,11 +76,22 @@ def removelines(infile, outfile, **kwargs):
 
 
 if __name__ == '__main__':
-    if (len(sys.argv) == 3):
-        infile = sys.argv[1]
-        outfile = sys.argv[2]
-        rtncode = removelines(infile, outfile)
-        sys.exit(rtncode)
-    else:
-        print 'Usage: %s <input-file> <output-file>' % sys.args[0]
+	parser = OptionParser(usage='%prog [options] <input-xylist> <output-xylist>')
+
+	parser.add_option('-X', dest='xcol', help='Name of X column in input table')
+	parser.add_option('-Y', dest='ycol', help='Name of Y column in input table')
+	parser.set_defaults(xcol='X', ycol='Y')
+
+	(opt, args) = parser.parse_args()
+	
+	if len(args) != 2:
+		parser.print_help()
+		print
+		print 'Got arguments:', args
+		sys.exit(-1)
+
+	infile = args[0]
+	outfile = args[1]
+	rtncode = removelines(infile, outfile, xcol=opt.xcol, ycol=opt.ycol)
+	sys.exit(rtncode)
 

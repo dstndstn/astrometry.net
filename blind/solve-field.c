@@ -523,6 +523,7 @@ int main(int argc, char** args) {
         case 'v':
             sl_append(backendargs, "--verbose");
             verbose = TRUE;
+			allaxy->verbosity++;
             loglvl++;
             break;
 		case 'D':

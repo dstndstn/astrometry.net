@@ -679,8 +679,8 @@ int augment_xylist(augment_xylist_t* axy,
 					exit(-1);
 				}
 				sl_appendf(cmd, "-PARAMETERS_NAME %s", paramfn);
-
-				// VERBOSE_TYPE = FULL
+				if (verbose)
+					sl_append(cmd, "-VERBOSE_TYPE FULL");
 
 				axy->xcol = "X_IMAGE";
 				axy->ycol = "Y_IMAGE";
@@ -782,6 +782,10 @@ int augment_xylist(augment_xylist_t* axy,
 				xylsfn, nolinesfn);
 
 		append_executable(cmd, "removelines.py", me);
+		if (axy->xcol)
+			sl_appendf(cmd, "-X %s", axy->xcol);
+		if (axy->ycol)
+			sl_appendf(cmd, "-Y %s", axy->ycol);
 		append_escape(cmd, xylsfn);
 		append_escape(cmd, nolinesfn);
 		run(cmd, verbose);
