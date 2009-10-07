@@ -31,19 +31,10 @@ static double square(double x) {
 }
 
 static void add_plot_xyz_point(double* xyz) {
-    double a,b;
-    /*
-     if (xyz[2] < 0) {
-     a = xyz[0];
-     b = xyz[1];
-     fprintf(stderr, "xp.append(%g)\n", a);
-     fprintf(stderr, "yp.append(%g)\n", b);
-     }
-     */
-    a = xy2ra(xyz[0], xyz[1]) / (2.0*M_PI);
-    b = z2dec(xyz[2]) / M_PI;
-    fprintf(stderr, "xp.append(%g)\n", a);
-    fprintf(stderr, "yp.append(%g)\n", b);
+	double ra,dec;
+	xyzarr2radecdeg(xyz, &ra, &dec);
+	fprintf(stderr, "xp.append(%g)\n", ra);
+	fprintf(stderr, "yp.append(%g)\n", dec);
 }
 
 static void add_plot_point(int hp, int nside, double dx, double dy) {
@@ -66,25 +57,25 @@ void plot_xyz_point(double* xyz, char* style) {
 	fprintf(stderr, "plot(xp, yp, '%s')\n", style);
 }
 
-static void plot_hp_boundary(int hp, int nside, double step, char* style) {
+static void plot_hp_boundary(int hp, int nside, double start, double step, char* style) {
 	double dx, dy;
 	fprintf(stderr, "xp=[]\n");
 	fprintf(stderr, "yp=[]\n");
 	dy = 0.0;
-	for (dx=0.0; dx<=1.0; dx+=step)
+	for (dx=start; dx<=1.0; dx+=step)
 		add_plot_point(hp, nside, dx, dy);
 	dx = 1.0;
-	for (dy=0.0; dy<=1.0; dy+=step)
+	for (dy=start; dy<=1.0; dy+=step)
 		add_plot_point(hp, nside, dx, dy);
 	dy = 1.0;
-	for (dx=1.0; dx>=0.0; dx-=step)
+	for (dx=1.0-start; dx>=0.0; dx-=step)
 		add_plot_point(hp, nside, dx, dy);
 	dx = 0.0;
-	for (dy=1.0; dy>=0.0; dy-=step)
+	for (dy=1.0-start; dy>=0.0; dy-=step)
 		add_plot_point(hp, nside, dx, dy);
 	dy = 0.0;
 	add_plot_point(hp, nside, dx, dy);
-	fprintf(stderr, "plot(xp, yp, '%s')\n", style);
+	fprintf(stderr, "xp,yp = wrapxy(xp,yp)\nplot(xp, yp, '%s')\n", style);
 }
 
 void test_within_range(CuTest* ct) {
@@ -97,8 +88,25 @@ void test_within_range(CuTest* ct) {
 	int hp;
 	double dx, dy;
 
-    fprintf(stderr, "%s", "from pylab import plot,text,savefig,clf,axis\n");
-	fprintf(stderr, "clf()\n");
+    fprintf(stderr, "%s", "from pylab import *\n");
+	fprintf(stderr, "clf()\n"
+			"def wrapxy(x,y):\n"
+			"    lastx = x[0]\n"
+			"    lasty = y[0]\n"
+			"    outx = [lastx]\n"
+			"    outy = [lasty]\n"
+			"    for xx,yy in zip(x[1:],y[1:]):\n"
+			"        if (xx-lastx)**2 + (yy - lasty)**2 > 1.:\n"
+			"            if xx < 180:\n"
+			"                xx += 360\n"
+			"            else:\n"
+			"                xx -= 360\n"
+			"        outx.append(xx)\n"
+			"        outy.append(yy)\n"
+			"        lastx = xx\n"
+			"        lasty = yy\n"
+			"    return (array(outx),array(outy))\n"
+			);
 
 	// pick a point on the edge.
     //hp = 8;
@@ -115,22 +123,32 @@ void test_within_range(CuTest* ct) {
 	healpix_to_xyzarr(hp, nside, dx, dy, xyz);
 
 	for (i=0; i<12*nside*nside; i++) {
-		plot_hp_boundary(i, nside, 0.01, "r--");
+		plot_hp_boundary(i, nside, 0.005, 0.01, "b-");
 	}
 
 	nhp = healpix_get_neighbours_within_range(xyz, range, hps, nside);
 	assert(nhp >= 1);
 	assert(nhp <= 9);
 
-	for (i=0; i<nhp; i++) {
-		printf("in range: %i\n", hps[i]);
-		plot_hp_boundary(hps[i], nside, 0.01, "b-");
+	/*
+	 for (i=0; i<nhp; i++) {
+	 printf("in range: %i\n", hps[i]);
+	 plot_hp_boundary(hps[i], nside, 0.005, 0.01, "b-");
+	 }
+	 plot_hp_boundary(hp, nside, 0.005, 0.01, "k-");
+	 plot_point(hp, nside, dx, dy, "r.");
+	 */
+
+	for (i=0; i<12*nside*nside; i++) {
+		fprintf(stderr, "xp=[]; yp=[]\n");
+		add_plot_point(i, nside, 0.5, 0.5);
+		fprintf(stderr, "text(xp[0], yp[0], '%i', color='b')\n", i);
 	}
 
-	plot_hp_boundary(hp, nside, 0.01, "k-");
-	plot_point(hp, nside, dx, dy, "r.");
-
-    //fprintf(stderr, "axis((-1, 1, -1, 1))\n");
+    fprintf(stderr, "axis((360, 0, -90, 90))\n");
+    fprintf(stderr, "xlabel('RA (deg)')\n");
+    fprintf(stderr, "ylabel('Dec (deg)')\n");
+    fprintf(stderr, "title('healpixels')\n");
     fprintf(stderr, "savefig('range.png')\n");
 	fprintf(stderr, "clf()\n");
 }
