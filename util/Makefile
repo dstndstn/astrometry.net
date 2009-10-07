@@ -80,7 +80,7 @@ ANUTILS_DEPS :=
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	permutedsort.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
 	gnu-specific.o an-endian.o errors.o an-opts.o svn.o tic.o log.o \
-	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o hd.o \
+	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
 	boilerplate.o tycho2.o
 
 #build-hd-tree.o
@@ -100,7 +100,8 @@ ANFILES_DEPS :=
 ANFILES_OBJ := 
 ifndef NO_QFITS
 ANFILES_OBJ += index.o codekd.o starkd.o rdlist.o xylist.o \
-	starxy.o an-catalog.o qidxfile.o quadfile.o scamp-catalog.o
+	starxy.o an-catalog.o qidxfile.o quadfile.o scamp-catalog.o \
+	hd.o
 ANFILES_DEPS += $(QFITS_LIB)
 endif
 
