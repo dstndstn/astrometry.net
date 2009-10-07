@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2008 Dustin Lang.
+  Copyright 2008, 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -21,6 +21,20 @@
 
 #include "kdtree.h"
 #include "bl.h"
+
+/**
+
+ This code allows easy access to the Henry Draper catalog stored in
+ kd-tree format.  Get the required hd.fits file either by the easy way:
+
+ wget http://trac.astrometry.net/export/13120/binary/henry-draper/hd.fits
+
+ Or the hard way (which involves downloading > 500 MB from Denmark):
+
+ make hd.fits   (in the astrometry.net util/ directory; you will also need )
+
+ **/
+
 
 struct hd_entry {
     // J2000.0 degrees

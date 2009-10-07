@@ -64,7 +64,6 @@ deg|deg|
 #include "kdtree.h"
 #include "kdtree_fits_io.h"
 #include "starutil.h"
-//#include "catalog.h"
 #include "fitsioutils.h"
 #include "starkd.h"
 #include "boilerplate.h"
@@ -169,9 +168,8 @@ int main(int argc, char** args) {
     int Ntyc = 0;
 
 	int exttype  = KDT_EXT_DOUBLE;
-	int datatype = KDT_DATA_NULL;
-	int treetype = KDT_TREE_NULL;
-	bool convert = FALSE;
+	int datatype = KDT_DATA_U32;
+	int treetype = KDT_TREE_U32;
 	int tt;
 	int buildopts = 0;
 	int i, N, D;
@@ -248,6 +246,7 @@ int main(int argc, char** args) {
         tycho2_fits* tyc;
         FILE* f;
         int nx, nox;
+		int lastgrass = 0;
 
         tyc = tycho2_fits_open(tychofn);
         if (!tyc) {
@@ -260,7 +259,14 @@ int main(int argc, char** args) {
         tycstars = calloc(N, sizeof(tycstar_t));
 
         for (i=0; i<N; i++) {
-            tycho2_entry* te = tycho2_fits_read_entry(tyc);
+            tycho2_entry* te;
+			int grass = (i*80 / N);
+			if (grass != lastgrass) {
+				printf(".");
+				fflush(stdout);
+				lastgrass = grass;
+			}
+			te = tycho2_fits_read_entry(tyc);
             tycstars[i].tyc1 = te->tyc1;
             tycstars[i].tyc2 = te->tyc2;
             tycstars[i].tyc3 = te->tyc3;
@@ -320,15 +326,6 @@ int main(int argc, char** args) {
         printf("Sorting...\n");
         qsort(tycstars, N, sizeof(tycstar_t), compare_hds);
     }
-
-	// defaults
-	if (!datatype)
-		datatype = KDT_DATA_U32;
-	if (!treetype)
-		treetype = KDT_TREE_U32;
-	// the outside world works in doubles.
-	if (datatype != KDT_DATA_DOUBLE)
-		convert = TRUE;
 
     f = fopen(infn, "rb");
     if (!f) {
@@ -417,19 +414,15 @@ int main(int argc, char** args) {
 
 	tt = kdtree_kdtypes_to_treetype(exttype, treetype, datatype);
 	D = 3;
-	if (convert) {
+	{
+		// limits of the kdtree...
         double lo[] = {-1.0, -1.0, -1.0};
         double hi[] = { 1.0,  1.0,  1.0};
-		printf("Converting data...\n");
         kd = kdtree_new(N, D, Nleaf);
         kdtree_set_limits(kd, lo, hi);
-        kd = kdtree_convert_data(kd, xyz, N, D, Nleaf, tt);
-		printf("Building tree...\n");
-		kd = kdtree_build(kd, kd->data.any, N, D, Nleaf, tt, buildopts);
-	} else {
-		printf("Building tree...\n");
-		kd = kdtree_build(NULL, xyz, N, D, Nleaf, tt, buildopts);
 	}
+	printf("Building tree...\n");
+	kd = kdtree_build(kd, xyz, N, D, Nleaf, tt, buildopts);
 
     hdr = qfits_header_default();
     qfits_header_add(hdr, "AN_FILE", "HDTREE", "Henry Draper catalog kdtree", NULL);

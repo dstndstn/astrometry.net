@@ -154,7 +154,7 @@ tycho2_fits* tycho2_fits_open(char* fn) {
     if (!cat)
         return NULL;
     add_columns(cat, FALSE);
-    fitstable_use_buffered_reading(cat, sizeof(tycho2_entry), 1000);
+    fitstable_use_buffered_reading(cat, sizeof(tycho2_entry), 10000);
     cat->postprocess_read_structs = postprocess_read_structs;
     if (fitstable_read_extension(cat, 1)) {
         fprintf(stderr, "tycho2-fits: table in extension 1 didn't contain the required columns.\n");
