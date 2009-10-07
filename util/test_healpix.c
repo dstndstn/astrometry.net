@@ -78,35 +78,14 @@ static void plot_hp_boundary(int hp, int nside, double start, double step, char*
 	fprintf(stderr, "xp,yp = wrapxy(xp,yp)\nplot(xp, yp, '%s')\n", style);
 }
 
-void test_within_range(CuTest* ct) {
+static void hpmap(int nside, const char* fn) {
 	int nhp;
-	int nside = 1;
 	double xyz[3];
 	double range;
 	int hps[9];
 	int i;
 	int hp;
 	double dx, dy;
-
-    fprintf(stderr, "%s", "from pylab import *\n");
-	fprintf(stderr, "clf()\n"
-			"def wrapxy(x,y):\n"
-			"    lastx = x[0]\n"
-			"    lasty = y[0]\n"
-			"    outx = [lastx]\n"
-			"    outy = [lasty]\n"
-			"    for xx,yy in zip(x[1:],y[1:]):\n"
-			"        if (xx-lastx)**2 + (yy - lasty)**2 > 1.:\n"
-			"            if xx < 180:\n"
-			"                xx += 360\n"
-			"            else:\n"
-			"                xx -= 360\n"
-			"        outx.append(xx)\n"
-			"        outy.append(yy)\n"
-			"        lastx = xx\n"
-			"        lasty = yy\n"
-			"    return (array(outx),array(outy))\n"
-			);
 
 	// pick a point on the edge.
     //hp = 8;
@@ -142,16 +121,42 @@ void test_within_range(CuTest* ct) {
 	for (i=0; i<12*nside*nside; i++) {
 		fprintf(stderr, "xp=[]; yp=[]\n");
 		add_plot_point(i, nside, 0.5, 0.5);
-		fprintf(stderr, "text(xp[0], yp[0], '%i', color='b')\n", i);
+		fprintf(stderr, "text(xp[0], yp[0], '%i', color='b', horizontalalignment='center', verticalalignment='center', bbox=dict(facecolor='w', edgecolor='w'))\n", i);
 	}
 
     fprintf(stderr, "axis((360, 0, -90, 90))\n");
     fprintf(stderr, "xlabel('RA (deg)')\n");
     fprintf(stderr, "ylabel('Dec (deg)')\n");
-    fprintf(stderr, "title('healpixels')\n");
-    fprintf(stderr, "savefig('range.png')\n");
+    fprintf(stderr, "title('healpixels: nside=%i')\n", nside);
+    fprintf(stderr, "savefig('%s')\n", fn);
 	fprintf(stderr, "clf()\n");
 }
+
+void test_make_map(CuTest* ct) {
+    fprintf(stderr, "%s", "from pylab import *\n");
+	fprintf(stderr, "clf()\n"
+			"def wrapxy(x,y):\n"
+			"    lastx = x[0]\n"
+			"    lasty = y[0]\n"
+			"    outx = [lastx]\n"
+			"    outy = [lasty]\n"
+			"    for xx,yy in zip(x[1:],y[1:]):\n"
+			"        if (xx-lastx)**2 + (yy - lasty)**2 > 1.:\n"
+			"            if xx < 180:\n"
+			"                xx += 360\n"
+			"            else:\n"
+			"                xx -= 360\n"
+			"        outx.append(xx)\n"
+			"        outy.append(yy)\n"
+			"        lastx = xx\n"
+			"        lasty = yy\n"
+			"    return (array(outx),array(outy))\n"
+			);
+
+	hpmap(1, "hp.png");
+	hpmap(2, "hp2.png");
+}
+
 
 int tst_xyztohpf(CuTest* ct,
 				 int hp, int nside, double dx, double dy) {
