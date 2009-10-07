@@ -149,17 +149,19 @@ _healpix.so: healpix.o starutil.o mathutil.o errors.o bl.o log.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
 pad-file: pad-file.o $(ANUTILS_LIB)
+ALL_OBJ += pad-file.o
 
 an-fitstopnm: an-fitstopnm.o $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += an-fitstopnm.o
 
 downsample-fits: downsample-fits.o $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += downsample-fits.o
 
-ALL_OBJ += an-fitstopnm.o
 
 PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
 	shell.py __init__.py file.py run_command.py w3c_validator.py \
 	filetype.py pyfits_utils.py fix_sdss_idr.py removelines.py \
-	$(PYTHON_LIBS)
+	ngc2000.py $(PYTHON_LIBS)
 
 PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py
 
