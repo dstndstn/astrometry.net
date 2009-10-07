@@ -21,9 +21,6 @@ DATA := $(BASEDIR)/data
 .PHONY: all
 all:
 
-$(DATA)/%.txt: ;
-$(DATA)/%.dat: ;
-
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.utils
 include $(COMMON)/makefile.anfiles
@@ -68,8 +65,8 @@ OTHER_OBJS := usnob.o usnob-fits.o tycho2.o tycho2-fits.o catalog.o \
 	solver.o matchfile.o solvedclient.o solvedfile.o intmap.o pnpoly.o \
 	blind_wcs.o tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
-	brightstars.o ngcic-accurate.o nomad.o nomad-fits.o \
-	ngc2000.o noisesim.o noise.o blindutils.o hd.o \
+	nomad.o nomad-fits.o \
+	noisesim.o noise.o blindutils.o hd.o \
 	backend-main.o backend.o build-hd-tree.o plotquad.o plotxy.o add-text.o
 
 2MASSOBJ := 2masstofits.o 2mass-fits.o 2mass.o
@@ -289,26 +286,6 @@ rdlstohealpix: rdlstohealpix.o \
 xylist2fits: xylist2fits.o boilerplate.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-ngc2000.o: ngc2000.c ngc2000names.c ngc2000entries.c
-
-ngc2000names.c: parse-ngc2000names.awk $(DATA)/ngc2000names.dat
-	$(AWK) -f parse-ngc2000names.awk < $(DATA)/ngc2000names.dat  > $@
-
-ngc2000entries.py: parse-ngc2000-py.awk $(DATA)/ngc2000.dat
-	$(AWK) -f parse-ngc2000-py.awk < $(DATA)/ngc2000.dat  > $@
-
-ngc2000accurate.py: parse-ngcic-accurate-py.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
-	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate-py.awk > $@
-
-ngc2000.py: ngc2000-pre.py ngc2000entries.py ngc2000-mid.py ngc2000accurate.py ngc2000-post.py
-	cat $^ > $@
-
-ngc2000entries.c: parse-ngc2000.awk $(DATA)/ngc2000.dat
-	$(AWK) -f parse-ngc2000.awk < $(DATA)/ngc2000.dat  > $@
-
-ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
-	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate.awk > $@
-
 certifiable: certifiable.o histogram.o matchfile.o solvedfile.o \
 		$(UTILS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -320,9 +297,8 @@ ALL_OBJ += fits-guess-scale-main.o
 get-wcs: get-wcs.o \
 		$(ANUTILS_LIB) $(QFITS_LIB)
 
-wcs-annotate: wcs-annotate.o ngc2000.o \
-		$(UTIL_OBJS) \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+wcs-annotate: wcs-annotate.o \
+		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 wcs-xy2rd: wcs-xy2rd.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
@@ -504,8 +480,7 @@ plot-constellations.o: plot-constellations.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
 plot-constellations: plot-constellations.o $(COMMON)/cairoutils.o \
-		ngc2000.o ngcic-accurate.o brightstars.o boilerplate.o \
-		hd.o \
+		boilerplate.o hd.o \
 		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB)
 

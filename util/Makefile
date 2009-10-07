@@ -1,5 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+# Copyright 2008, 2009 Dustin Lang.
 #
 # The Astrometry.net suite is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License
@@ -16,6 +17,10 @@
 
 BASEDIR := ..
 COMMON := .
+DATA := $(BASEDIR)/data
+
+$(DATA)/%.txt: ;
+$(DATA)/%.dat: ;
 
 all:
 .PHONY: all
@@ -73,7 +78,7 @@ ANUTILS_DEPS :=
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	permutedsort.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
 	gnu-specific.o an-endian.o errors.o an-opts.o svn.o tic.o log.o \
-	gslutils.o
+	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o 
 ANUTILS_DEPS += $(QFITS_LIB)
@@ -102,6 +107,26 @@ SVN_C_DEPS := $(subst .o,.c,$(SVN_C_DEPS)) $(subst .o,.h,$(SVN_C_DEPS))
 
 svn.c: $(SVN_C_DEPS)
 	echo "//" >> svn.c
+
+ngc2000.o: ngc2000.c ngc2000names.c ngc2000entries.c
+
+ngc2000names.c: parse-ngc2000names.awk $(DATA)/ngc2000names.dat
+	$(AWK) -f parse-ngc2000names.awk < $(DATA)/ngc2000names.dat  > $@
+
+ngc2000entries.py: parse-ngc2000-py.awk $(DATA)/ngc2000.dat
+	$(AWK) -f parse-ngc2000-py.awk < $(DATA)/ngc2000.dat  > $@
+
+ngc2000accurate.py: parse-ngcic-accurate-py.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
+	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate-py.awk > $@
+
+ngc2000.py: ngc2000-pre.py ngc2000entries.py ngc2000-mid.py ngc2000accurate.py ngc2000-post.py
+	cat $^ > $@
+
+ngc2000entries.c: parse-ngc2000.awk $(DATA)/ngc2000.dat
+	$(AWK) -f parse-ngc2000.awk < $(DATA)/ngc2000.dat  > $@
+
+ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
+	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate.awk > $@
 
 $(ANUTILS_LIB): $(ANUTILS_OBJ) $(ANUTILS_DEPS) 
 	-rm -f $@
