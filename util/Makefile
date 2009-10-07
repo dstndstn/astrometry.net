@@ -68,7 +68,9 @@ ANUTILS_LIB := libanutils.a
 
 PYTHON_LIBS := _sip.so _healpix.so
 
-PROGS := an-fitstopnm downsample-fits pad-file
+PROGS := an-fitstopnm downsample-fits pad-file tycho2tofits
+
+# tycho2tostellarium build-hd-tree
 
 all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS)
 
@@ -78,9 +80,14 @@ ANUTILS_DEPS :=
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	permutedsort.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
 	gnu-specific.o an-endian.o errors.o an-opts.o svn.o tic.o log.o \
-	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o
+	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o hd.o \
+	boilerplate.o tycho2.o
+
+#build-hd-tree.o
+
 ifndef NO_QFITS
-ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o 
+ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
+	tycho2-fits.o
 ANUTILS_DEPS += $(QFITS_LIB)
 endif
 ifndef NO_KDTREE
@@ -127,6 +134,11 @@ ngc2000entries.c: parse-ngc2000.awk $(DATA)/ngc2000.dat
 
 ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
 	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate.awk > $@
+
+tycho2tofits: tycho2tofits.o \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
+tycho2tostellarium: tycho2tostellarium.o $(ANUTILS_LIB) $(QFITS_LIB)
 
 $(ANUTILS_LIB): $(ANUTILS_OBJ) $(ANUTILS_DEPS) 
 	-rm -f $@
@@ -233,17 +245,41 @@ grab-stellarium-constellations: grab-stellarium-constellations.o \
 		starutil.o mathutil.o bl.o an-endian.o
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ -lm
 
+hd1.fits: henry-draper.tsv build-hd-tree
+	build-hd-tree -s -R 16 henry-draper.tsv $@
+
+hd.fits: henry-draper.tsv build-hd-tree tycho2.fits tyc2_hd.dat
+	build-hd-tree -s -R 16 -T tycho2.fits -X tyc2_hd.dat henry-draper.tsv $@
+
+tyc2_hd.dat: tyc2_hd.dat.gz
+	gunzip $<
+
+tyc2_hd.dat.gz:
+	wget "ftp://cdsarc.u-strasbg.fr/pub/cats/IV/25/tyc2_hd.dat.gz"
+
+henry-draper.tsv:
+	wget "http://trac.astrometry.net/browser/binary/henry-draper/henry-draper.tsv?format=txt" -O $@
+
+build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
+		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
 ### TESTS
 
 ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log test_ioutils \
-	test_dualtree_nn test_scamp_catalog test_starutil test_svd
+	test_dualtree_nn test_scamp_catalog test_starutil test_svd test_hd \
+	test_tycho2
+# test_hd depends on hd.fits...
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 
 include $(COMMON)/makefile.tests
 
 DEP_OBJ += $(ALL_TEST_FILES_O)
+
+test_tycho2: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
+test_hd: $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 test_fitstable: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 

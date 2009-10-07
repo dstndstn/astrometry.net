@@ -56,22 +56,22 @@ CFITS_UTILS := tablist modhead fitscopy tabmerge fitstomatlab liststruc \
 FITS_UTILS := $(QFITS_UTILS) $(CFITS_UTILS)
 
 MISC_EXECS := project-usnob diffractionFlag_check \
-	hpgrid read_nomad tycho2tostellarium usnob-scamp-catalog
+	hpgrid read_nomad usnob-scamp-catalog
 
-UTIL_OBJS := boilerplate.o
+UTIL_OBJS := 
 
-OTHER_OBJS := usnob.o usnob-fits.o tycho2.o tycho2-fits.o catalog.o \
+OTHER_OBJS := usnob.o usnob-fits.o catalog.o \
 	codefile.o histogram.o verify.o \
 	solver.o matchfile.o solvedclient.o solvedfile.o intmap.o pnpoly.o \
 	blind_wcs.o tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	nomad.o nomad-fits.o \
-	noisesim.o noise.o blindutils.o hd.o \
-	backend-main.o backend.o build-hd-tree.o plotquad.o plotxy.o add-text.o
+	noisesim.o noise.o blindutils.o \
+	backend-main.o backend.o plotquad.o plotxy.o add-text.o
 
 2MASSOBJ := 2masstofits.o 2mass-fits.o 2mass.o
 
-PIPELINE := usnobtofits tycho2tofits build-an-catalog hpowned cut-an \
+PIPELINE := usnobtofits build-an-catalog hpowned cut-an \
 	startree hpquads codetree unpermute-quads unpermute-stars blind \
 	solvedserver printsolved xylist2fits mergesolved rdlsinfo xylsinfo \
 	wcsinfo wcs-grab fits-guess-scale agreeable new-wcs get-wcs \
@@ -93,7 +93,7 @@ BACKEND_SO := libbackend.so
 BACKEND_OBJS := \
 		backend.o blindutils.o blind.o solver.o \
 		matchfile.o solvedclient.o solvedfile.o verify.o \
-		boilerplate.o blind_wcs.o tweak.o
+		blind_wcs.o tweak.o
 
 $(BACKEND_LIB): $(BACKEND_OBJS)
 	-rm -f $@
@@ -183,9 +183,8 @@ solver_test.o: solver.c
 
 # Add the basename of your test sources here...
 ALL_TEST_FILES = test_dfind test_ctmf test_dsmooth test_2mass \
-	test_tycho2 test_usnob test_nomad test_matchfile test_blindutils \
+	test_usnob test_nomad test_matchfile test_blindutils \
 	test_dcen3x3
-# test_hd depends on hd.fits...
 
 ALL_TEST_EXTRA_OBJS :=
 ALL_TEST_LIBS :=
@@ -206,9 +205,6 @@ test_dsmooth: $(TEST_DSMOOTH_OBJS)
 test_2mass: 2mass.o 2mass-fits.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_TEST_EXTRA_OBJS += 2mass-fits.o 2mass.o
 
-test_tycho2: tycho2-fits.o tycho2.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-ALL_TEST_EXTRA_OBJS += tycho2-fits.o tycho2.o
-
 test_usnob: usnob-fits.o usnob.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_TEST_EXTRA_OBJS += usnob-fits.o usnob.o
 
@@ -217,9 +213,6 @@ ALL_TEST_EXTRA_OBJS += nomad-fits.o nomad.o
 
 test_matchfile: matchfile.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_TEST_EXTRA_OBJS += matchfile.o
-
-test_hd: hd.o $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-ALL_TEST_EXTRA_OBJS += hd.o
 
 test_blindutils: blindutils.o $(ANUTILS_LIB)
 ALL_TEST_EXTRA_OBJS += blindutils.o
@@ -241,27 +234,9 @@ ALL_EXECS += $(ALL_TEST_FILES) test
 # END OF KEIR'S SUPER SIMPLE TESTING FRAMEWORK
 ######################################################
 
-hd1.fits: henry-draper.tsv build-hd-tree
-	build-hd-tree -s -R 16 henry-draper.tsv $@
-
-hd2.fits: henry-draper.tsv build-hd-tree tycho2.fits tyc2_hd.dat
-	build-hd-tree -s -R 16 -T tycho2.fits -X tyc2_hd.dat henry-draper.tsv $@
-
-tyc2_hd.dat: tyc2_hd.dat.gz
-	gunzip $<
-
-tyc2_hd.dat.gz:
-	wget "ftp://cdsarc.u-strasbg.fr/pub/cats/IV/25/tyc2_hd.dat.gz"
-
-henry-draper.tsv:
-	wget "http://trac.astrometry.net/browser/binary/henry-draper/henry-draper.tsv?format=txt" -O $@
-
 demo_dsmooth: demo_dsmooth.o dsmooth.o \
-	$(COMMON)/cairoutils.o boilerplate.o $(ANUTILS_LIB) $(QFITS_LIB) 
+	$(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg
-
-#control-program: control-program.o $(BACKEND_SO)
-#	$(CC) $(LDFLAGS) -o $@ control-program.o -L. -lbackend -lm
 
 control-program: control-program.o \
 		$(BACKEND_OBJS) $(SIMPLEXY2_OBJ) \
@@ -283,7 +258,7 @@ rdls2hpls: rdls2hpls.o \
 rdlstohealpix: rdlstohealpix.o \
 		$(ANUTILS_LIB) $(QFITS_LIB)
 
-xylist2fits: xylist2fits.o boilerplate.o \
+xylist2fits: xylist2fits.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 certifiable: certifiable.o histogram.o matchfile.o solvedfile.o \
@@ -343,20 +318,14 @@ project-usnob: project-usnob.o usnob-fits.o usnob.o \
 usnobtofits: usnobtofits.o usnob-fits.o usnob.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-tycho2tofits: tycho2tofits.o tycho2-fits.o tycho2.o \
-		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+hpowned: hpowned.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 
-hpowned: hpowned.o boilerplate.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
-
-build-an-catalog: build-an-catalog.o usnob-fits.o tycho2-fits.o \
-		tycho2.o usnob.o 2mass-fits.o 2mass.o \
+build-an-catalog: build-an-catalog.o usnob-fits.o usnob.o \
+		2mass-fits.o 2mass.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 cut-an: cut-an.o catalog.o usnob.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-
-build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
-		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 startree: startree.o catalog.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
@@ -426,10 +395,10 @@ whynot: whynot.o matchfile.o codefile.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
-quadcenters: quadcenters.o boilerplate.o \
+quadcenters: quadcenters.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
-startree2rdls: startree2rdls.o boilerplate.o \
+startree2rdls: startree2rdls.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
 agreeable: agreeable.o matchfile.o solvedfile.o solvedclient.o \
@@ -455,7 +424,7 @@ solvedserver: solvedserver.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) \
 		$(QFITS_LIB)
 	$(CC) $(CFLAGS) -o $@ $^ -lm
 
-plotcat: plotcat.o 2mass-fits.o 2mass.o nomad-fits.o nomad.o catalog.o tycho2-fits.o tycho2.o usnob-fits.o usnob.o \
+plotcat: plotcat.o 2mass-fits.o 2mass.o nomad-fits.o nomad.o catalog.o usnob-fits.o usnob.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB)
 
@@ -468,11 +437,11 @@ $(COMMON)/cairoutils.o:
 onepixel: onepixel.o $(COMMON)/cairoutils.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 
-plotquad: plotquad.o matchfile.o $(COMMON)/cairoutils.o boilerplate.o \
+plotquad: plotquad.o matchfile.o $(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 
-plot-xy-and-quad: plot-xy-and-quad.o matchfile.o $(COMMON)/cairoutils.o boilerplate.o \
+plot-xy-and-quad: plot-xy-and-quad.o matchfile.o $(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 
@@ -480,11 +449,10 @@ plot-constellations.o: plot-constellations.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
 plot-constellations: plot-constellations.o $(COMMON)/cairoutils.o \
-		boilerplate.o hd.o \
 		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB)
 
-catalog-dists: catalog-dists.o 2mass-fits.o usnob-fits.o usnob.o tycho2-fits.o tycho2.o \
+catalog-dists: catalog-dists.o 2mass-fits.o usnob-fits.o usnob.o \
 		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)
@@ -493,7 +461,7 @@ add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)
 plotxy.o: plotxy.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
-plotxy: plotxy.o $(COMMON)/cairoutils.o boilerplate.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+plotxy: plotxy.o $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 
 quadidx: quadidx.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
@@ -512,7 +480,7 @@ fitsgetext: fitsgetext.o $(ANUTILS_LIB) $(QFITS_LIB)
 
 fits-dedup: fits-dedup.o $(ANUTILS_LIB) $(QFITS_LIB)
 
-wcs-resample: wcs-resample.o boilerplate.o $(ANUTILS_LIB) $(QFITS_LIB)
+wcs-resample: wcs-resample.o $(ANUTILS_LIB) $(QFITS_LIB)
 
 fits-flip-endian: fits-flip-endian.o $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -533,9 +501,6 @@ ALL_OBJ += resort-xylist-main.o
 
 bgsubtract: bgsubtract.o ctmf.o $(COMMON)/cairoutils.o $(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
-
-tycho2tostellarium: tycho2tostellarium.o tycho2-fits.o $(UTIL_OBJS) $(ANUTILS_LIB) \
-		$(QFITS_LIB)
 
 usnob-scamp-catalog: usnob-scamp-catalog.o usnob-fits.o usnob.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)

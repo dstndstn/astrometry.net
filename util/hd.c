@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2008 Dustin Lang.
+  Copyright 2008, 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -57,19 +57,9 @@ bl* henry_draper_get(hd_catalog_t* hdcat,
         return NULL;
     }
 
-    /*
-     fprintf(stderr, "%i results\n", q->nres);
-     for (i=0; i<q->nres; i++) {
-     double* pt = q->results.d + i*3;
-     fprintf(stderr, "(%g,%g,%g)\n", pt[0], pt[1], pt[2]);
-     }
-     fprintf(stderr, "\n");
-     */
     res = bl_new(256, sizeof(hd_entry_t));
-
     for (i=0; i<q->nres; i++) {
         double* pt = q->results.d + i*3;
-        //fprintf(stderr, "(%g,%g,%g)\n", pt[0], pt[1], pt[2]);
         xyzarr2radecdeg(pt, &(hd.ra), &(hd.dec));
         hd.hd = q->inds[i] + 1;
         bl_append(res, &hd);
