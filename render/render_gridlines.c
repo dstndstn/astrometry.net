@@ -111,14 +111,6 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	decstep = get_double_arg_of_type(args, "griddecstep ", decstep);
 	logmsg("Grid step: RA %g, Dec %g.\n", rastep, decstep);
 
-	if (args->gridlabel) {
-		ralabelstep = 2. * rastep;
-		declabelstep = 2. * decstep;
-		ralabelstep = get_double_arg_of_type(args, "gridlabelrastep ", decstep);
-		declabelstep = get_double_arg_of_type(args, "gridlabeldecstep ", declabelstep);
-		logmsg("Grid label step: RA %g, Dec %g.\n", ralabelstep, declabelstep);
-	}
-
 	/*
 	 In order to properly do the transparency and text, we render onto a
 	 mask image, then squish paint through this mask onto the given image.
@@ -128,11 +120,26 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	cairo_set_line_width(cairo, 1.0);
 	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 
+	if (args->gridlabel) {
+		ralabelstep = 2. * rastep;
+		declabelstep = 2. * decstep;
+		ralabelstep = get_double_arg_of_type(args, "gridlabelrastep ", decstep);
+		declabelstep = get_double_arg_of_type(args, "gridlabeldecstep ", declabelstep);
+		logmsg("Grid label step: RA %g, Dec %g.\n", ralabelstep, declabelstep);
+	}
+
 	get_first_rgba_arg_of_type(args, "grid_rgba ", gridrgba);
 	cairo_set_source_rgba(cairo, gridrgba[0], gridrgba[1], gridrgba[2], gridrgba[3]);
 
 	get_first_rgba_arg_of_type(args, "grid_textrgba ", textrgba);
 	get_first_rgba_arg_of_type(args, "grid_textbgrgba ", textbgrgba);
+	if (args->gridlabel) {
+		int fontsize = 18;
+		cairo_select_font_face(cairo, "DejaVu Sans Mono Book", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+		fontsize = get_int_arg(get_first_arg_of_type(args, "grid_textfontsize "), fontsize);
+		logmsg("Grid label font size: %i\n", fontsize);
+		cairo_set_font_size(cairo, fontsize);
+	}
 
 	for (ra = rastep * floor(args->ramin / rastep);
 		 ra <= rastep * ceil(args->ramax / rastep);
@@ -161,8 +168,6 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 		char buf[32];
 		
 		cairo_set_source_rgba(cairo, textrgba[0], textrgba[1], textrgba[2], textrgba[3]);
-		cairo_select_font_face(cairo, "DejaVu Sans Mono Book", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-		cairo_set_font_size(cairo, 18);
 		for (ra = ralabelstep * floor(args->ramin / ralabelstep);
 			 ra <= ralabelstep * ceil(args->ramax / ralabelstep);
 			 ra += ralabelstep) {

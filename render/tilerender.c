@@ -278,9 +278,11 @@ const char* get_first_arg_of_type(render_args_t* args, const char* prefix) {
 }
 
 int get_int_arg(const char* arg, int def) {
-	char* c = index(arg, ' ');
+	char* c;
 	char* endp;
 	int val;
+	if (!arg) return def;
+	c = index(arg, ' ');
 	if (!c) return def;
 	val = strtol(c+1, &endp, 0);
 	if (endp == c) return def;
