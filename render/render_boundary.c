@@ -53,6 +53,7 @@ static void logmsg(char* format, ...) {
  balpha <a>
  bfill <0/1>          -- 1=fill; 0=outline.
  bwcsfn <fn>          -- render the wcs file with current settings.
+ bnsteps <int>        -- number of steps per image side
 
  */
 int render_boundary(cairo_t* cairo, render_args_t* args) {
@@ -62,6 +63,7 @@ int render_boundary(cairo_t* cairo, render_args_t* args) {
 	double alpha;
 	bool fill = FALSE;
 	dl* dargs = dl_new(4);
+	int nsteps = 20;
 
 	r = b = 0;
     g = 1.0;
@@ -114,18 +116,28 @@ int render_boundary(cairo_t* cairo, render_args_t* args) {
 
 			{
 				// bottom, right, top, left, close.
-				int offsetx[] = { 0, W, W, 0, 0 };
-				int offsety[] = { 0, 0, H, H, 0 };
-				int stepx[] = { 10, 0, -10, 0, 0 };
-				int stepy[] = { 0, 10, 0, -10, 0 };
-				int Nsteps[] = { W/10, H/10, W/10, H/10, 1 };
+				int offsetx[] = { 0, W, W, 0 };
+				int offsety[] = { 0, 0, H, H };
+				double stepx[] = { 1, 0, -1, 0 };
+				double stepy[] = { 0, 1, 0, -1 };
 				int side;
 				double lastx=0, lasty=0;
 				double lastra = 180.0;
 				bool lastvalid = FALSE;
-				for (side=0; side<5; side++) {
-					for (i=0; i<Nsteps[side]; i++) {
-						int xin, yin;
+				double sx, sy;
+				int nsides = 4;
+
+				sx = W / (double)nsteps;
+				sy = H / (double)nsteps;
+				
+				for (i=0; i<nsides; i++) {
+					stepx[i] *= sx;
+					stepy[i] *= sy;
+				}
+
+				for (side=0; side<nsides; side++) {
+					for (i=0; i<nsteps; i++) {
+ 						double xin, yin;
 						double xout, yout;
 						double ra, dec;
 						bool first = (!side && !i);
@@ -160,6 +172,7 @@ int render_boundary(cairo_t* cairo, render_args_t* args) {
 					}
 				}
 			}
+			cairo_close_path(cairo);
 			if (fill)
 				cairo_fill(cairo);
 			else
@@ -203,7 +216,9 @@ int render_boundary(cairo_t* cairo, render_args_t* args) {
 				}
 			}
 
-			
+		} else if (starts_with(arg, "bnsteps ")) {
+			nsteps = get_int_arg(arg, nsteps);
+			logmsg("Set nsteps = %i\n", nsteps);
 		} else if (starts_with(arg, "bcolor ")) {
 			get_double_args(arg, dargs);
 			if (dl_size(dargs) != 3) {
