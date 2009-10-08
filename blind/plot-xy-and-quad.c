@@ -67,6 +67,11 @@ int main(int argc, char *args[]) {
 	char* bgimgfn = "m88-bw.jpg";
 	char* xylsfn = "m88.xy";
 	char* matchfn = "m88-9702.match";
+
+	log_init(LOG_MSG);
+	log_to(stderr);
+	errors_log_to(stderr);
+
 	Nstars = 100;
 	xoff = yoff = 1.0;
 	r = g = b = 0.0;
@@ -109,7 +114,7 @@ int main(int argc, char *args[]) {
 	{
 		cairo_surface_t* thissurf;
 		cairo_pattern_t* pat;
-		// should have to do: cairoutils_rgba_to_argb32(img, W, H);
+		cairoutils_rgba_to_argb32(img, W, H);
 		thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
 		pat = cairo_pattern_create_for_surface(thissurf);
 		cairo_set_source(cairo, pat);
@@ -126,13 +131,17 @@ int main(int argc, char *args[]) {
 	// Find number of entries in xylist.
     xy = xylist_read_field_num(xyls, ext, NULL);
     if (!xy) {
-		fprintf(stderr, "Failed to read FITS extension %i from file %s.\n", ext, xylsfn);
+		ERROR("Failed to read FITS extension %i from file %s", ext, xylsfn);
 		exit(-1);
 	}
     Nxy = starxy_n(xy);
+	logmsg("Xylist contains %i stars\n", Nxy);
 	// If N is specified, apply it as a max.
-    if (Nstars)
+    if (Nstars) {
+		if (Nstars < Nxy)
+			logmsg("Keeping %i stars.\n", Nstars);
         Nxy = MIN(Nxy, Nstars);
+	}
 
 	cairo_set_source_rgb(cairo, r, g, b);
 
@@ -164,7 +173,7 @@ int main(int argc, char *args[]) {
         matchfile* mf = matchfile_open(matchfn);
         MatchObj* mo;
         if (!mf) {
-            fprintf(stderr, "Failed to open matchfile \"%s\".\n", matchfn);
+            ERROR("Failed to open matchfile \"%s\"", matchfn);
             exit(-1);
         }
         while (1) {
