@@ -37,16 +37,17 @@
 #include "log.h"
 #include "errors.h"
 
-static const char* OPTIONS = "hvj:x:m:W:H:";
+static const char* OPTIONS = "hvj:x:m:W:H:s:";
 
 static void printHelp(char* progname) {
 	fprintf(stderr, "\nUsage: %s [options] > output.pdf\n"
-		   "   -j <jpeg filename>\n"
-		   "   -x <xylist filename>\n"
-		   "   -m <match filename>\n"
-		   "  [-W <output width (points)>]\n"
-		   "  [-H <output height (points)>]\n"
-		   "\n", progname);
+			"   -j <jpeg filename>\n"
+			"   -x <xylist filename>\n"
+			"   -m <match filename>\n"
+			"  [-W <output width (points)>]\n"
+			"  [-H <output height (points)>]\n"
+			"  [-s <xylist-sale-factor>]\n"
+			"\n", progname);
 }
 
 extern char *optarg;
@@ -67,6 +68,7 @@ int main(int argc, char *args[]) {
 	int Nstars;
 	int ext = 1;
 	double xoff, yoff;
+	double scalexy = 1.0;
     float br, bg, bb;
     float r, g, b;
 	double rad;
@@ -77,6 +79,7 @@ int main(int argc, char *args[]) {
 	int dimquads = 4;
 	dl* coords;
 	int loglvl = LOG_MSG;
+	double sx, sy;
 
 	/*
 	 #	| plotxy -i m88.xy -I - -x 1 -y 1 -b white -C black -N 100 -r 10 -w 2 -P \
@@ -103,6 +106,9 @@ int main(int argc, char *args[]) {
 			break;
 		case 'H':
 			outH = atoi(optarg);
+			break;
+		case 's':
+			scalexy = atof(optarg);
 			break;
 		case 'h':
 			printHelp(progname);
@@ -160,6 +166,10 @@ int main(int argc, char *args[]) {
 		exit(-1);
 	}
 	cairo = cairo_create(target);
+
+	sx = outW/(float)W;
+	sy = outH/(float)H;
+
 	cairo_set_line_width(cairo, lw);
 	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 
@@ -173,8 +183,14 @@ int main(int argc, char *args[]) {
 		cairoutils_rgba_to_argb32(img, W, H);
 		thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
 		pat = cairo_pattern_create_for_surface(thissurf);
+
+		logmsg("Scaling image by factors %g, %g\n", sx, sy);
+		cairo_save(cairo);
+		cairo_scale(cairo, sx, sy);
 		cairo_set_source(cairo, pat);
 		cairo_paint(cairo);
+		cairo_restore(cairo);
+
 		cairo_pattern_destroy(pat);
 		cairo_surface_destroy(thissurf);
 	}
@@ -206,8 +222,8 @@ int main(int argc, char *args[]) {
 	cairo_set_line_width(cairo, lw+2.0);
 	cairo_set_source_rgba(cairo, br, bg, bb, 0.75);
 	for (i=0; i<Nxy; i++) {
-		double x = starxy_getx(xy, i) + 0.5 - xoff;
-		double y = starxy_gety(xy, i) + 0.5 - yoff;
+		double x = (starxy_getx(xy, i) - xoff) * sx * scalexy + 0.5;
+		double y = (starxy_gety(xy, i) - yoff) * sy * scalexy + 0.5;
 		cairoutils_draw_marker(cairo, marker, x, y, rad);
 		cairo_stroke(cairo);
 	}
@@ -215,8 +231,8 @@ int main(int argc, char *args[]) {
 
 	// Draw markers.
 	for (i=0; i<Nxy; i++) {
-		double x = starxy_getx(xy, i) + 0.5 - xoff;
-		double y = starxy_gety(xy, i) + 0.5 - yoff;
+		double x = (starxy_getx(xy, i) - xoff) * sx * scalexy + 0.5;
+		double y = (starxy_gety(xy, i) - yoff) * sy * scalexy + 0.5;
         cairoutils_draw_marker(cairo, marker, x, y, rad);
 		cairo_stroke(cairo);
 	}
@@ -269,8 +285,10 @@ int main(int argc, char *args[]) {
 		for (j=0; j<dimquads; j++) {
 			((j==0) ? cairo_move_to : cairo_line_to)
                 (cairo,
-                 dl_get(coords, i*(2*dimquads) + perm[j]*2),
-                 dl_get(coords, i*(2*dimquads) + perm[j]*2 + 1));
+                 (dl_get(coords, i*(2*dimquads) + perm[j]*2)
+				  - xoff) * sx * scalexy + 0.5,
+                 (dl_get(coords, i*(2*dimquads) + perm[j]*2 + 1)
+				  - yoff) * sy * scalexy + 0.5);
 		}
 		cairo_close_path(cairo);
 		cairo_stroke(cairo);
