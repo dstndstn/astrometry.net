@@ -21,9 +21,14 @@ int render_healpixes(cairo_t* cairo, render_args_t* args) {
 	double r;
 	double corners[] = { 0,0, 0,1, 1,1, 1,0 };
 	double rgba[] = { 1,1,1,0.8 };
+	double lw = 2.0;
 
 	get_first_rgba_arg_of_type(args, "healpix_rgba ", rgba);
 	cairo_set_source_rgba(cairo, rgba[0], rgba[1], rgba[2], rgba[3]);
+
+	lw = get_first_double_arg_of_type(args, "healpix_lw ", lw);
+	logmsg("set healpix linewidth to %f\n", lw);
+	cairo_set_line_width(cairo, lw);
 
 	nside = args->nside;
 	if (nside == 0)

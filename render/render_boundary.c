@@ -54,6 +54,7 @@ static void logmsg(char* format, ...) {
  bfill <0/1>          -- 1=fill; 0=outline.
  bwcsfn <fn>          -- render the wcs file with current settings.
  bnsteps <int>        -- number of steps per image side
+ blw <float>          -- line width
 
  */
 int render_boundary(cairo_t* cairo, render_args_t* args) {
@@ -113,6 +114,8 @@ int render_boundary(cairo_t* cairo, render_args_t* args) {
 				cairo_fill(cairo);
 				continue;
 			}
+
+			cairo_set_line_width(cairo, lw);
 
 			{
 				// bottom, right, top, left, close.
@@ -237,6 +240,9 @@ int render_boundary(cairo_t* cairo, render_args_t* args) {
 		} else if (starts_with(arg, "bfill ")) {
 			fill = (get_int_arg(arg, 0) == 1);
 			logmsg("Set fill %s\n", (fill ? "on" : "off"));
+		} else if (starts_with(arg, "blw ")) {
+			lw = get_double_arg(arg, lw);
+			logmsg("Set lw %g\n", lw);
 		}
 	}
 
