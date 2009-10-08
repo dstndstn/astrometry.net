@@ -45,13 +45,13 @@ int main(int argc, char *args[]) {
 	xylist_t* xyls;
 	starxy_t* xy;
 	int Nxy;
-	int Nstars = 0;
+	int Nstars;
 	int ext = 1;
-	double xoff = 0.0, yoff = 0.0;
-    float br=0.0, bg=0.0, bb=0.0;
-    float r=1.0, g=1.0, b=1.0;
-	double rad = 5.0;
-	double lw = 1.0;
+	double xoff, yoff;
+    float br, bg, bb;
+    float r, g, b;
+	double rad;
+	double lw;
     int marker;
 	int i;
 	int nquads;
@@ -76,7 +76,7 @@ int main(int argc, char *args[]) {
 	xoff = yoff = 1.0;
 	r = g = b = 0.0;
 	br = bg = bb = 1.0;
-	rad = 10;
+	rad = 6;
 	lw = 2;
 	marker = CAIROUTIL_MARKER_CIRCLE;
 
