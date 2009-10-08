@@ -37,7 +37,26 @@
 #include "log.h"
 #include "errors.h"
 
+static const char* OPTIONS = "hvj:x:m:W:H:";
+
+static void printHelp(char* progname) {
+	fprintf(stderr, "\nUsage: %s [options] > output.pdf\n"
+		   "   -j <jpeg filename>\n"
+		   "   -x <xylist filename>\n"
+		   "   -m <match filename>\n"
+		   "  [-W <output width (points)>]\n"
+		   "  [-H <output height (points)>]\n"
+		   "\n", progname);
+}
+
+extern char *optarg;
+extern int optind, opterr, optopt;
+
 int main(int argc, char *args[]) {
+	int argchar;
+	char* progname = args[0];
+
+	int outW=0, outH=0;
 	int W, H;
 	unsigned char* img = NULL;
 	cairo_t* cairo;
@@ -57,20 +76,51 @@ int main(int argc, char *args[]) {
 	int nquads;
 	int dimquads = 4;
 	dl* coords;
+	int loglvl = LOG_MSG;
 
 	/*
 	 #	| plotxy -i m88.xy -I - -x 1 -y 1 -b white -C black -N 100 -r 10 -w 2 -P \
 	 #	| plotquad -I - -C black -m m88-${I2}.match -P \
 	 */
 
-	// HACK -- hard-coded args.
-	char* bgimgfn = "m88-bw.jpg";
-	char* xylsfn = "m88.xy";
-	char* matchfn = "m88-9702.match";
+	char* bgimgfn = NULL;
+	char* xylsfn = NULL;
+	char* matchfn = NULL;
+
+	while ((argchar = getopt(argc, args, OPTIONS)) != -1)
+		switch (argchar) {
+		case 'j':
+			bgimgfn = optarg;
+			break;
+		case 'x':
+			xylsfn = optarg;
+			break;
+		case 'm':
+			matchfn = optarg;
+			break;
+		case 'W':
+			outW = atoi(optarg);
+			break;
+		case 'H':
+			outH = atoi(optarg);
+			break;
+		case 'h':
+			printHelp(progname);
+            exit(0);
+		case 'v':
+			loglvl++;
+			break;
+		}
 
 	log_init(LOG_MSG);
 	log_to(stderr);
 	errors_log_to(stderr);
+
+	if (!(bgimgfn && xylsfn && matchfn)) {
+		ERROR("Must specify background jpeg, xyls, and match filenames.\n");
+		printHelp(progname);
+		exit(-1);
+	}
 
 	Nstars = 100;
 	xoff = yoff = 1.0;
@@ -79,7 +129,6 @@ int main(int argc, char *args[]) {
 	rad = 6;
 	lw = 2;
 	marker = CAIROUTIL_MARKER_CIRCLE;
-
 	W = H = -1;
 	coords = dl_new(16);
 
@@ -97,8 +146,15 @@ int main(int argc, char *args[]) {
 		exit(-1);
 	}
 
+	if (!outW)
+		outW = W;
+	if (!outH)
+		outH = H;
+
+	logmsg("Background image aspect ratio %g; output file aspect ratio %g.\n", W/(float)H, outW/(float)outH);
+
 	// create output buffer.
-	target = cairo_pdf_surface_create_for_stream(cairoutils_file_write_func, stdout, W, H);
+	target = cairo_pdf_surface_create_for_stream(cairoutils_file_write_func, stdout, outW, outH);
 	if (!target) {
 		ERROR("Failed to create cairo surface for PDF");
 		exit(-1);
