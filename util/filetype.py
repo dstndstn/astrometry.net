@@ -1,6 +1,7 @@
 import os
 
 from astrometry.util.shell import shell_escape
+from astrometry.util.run_command import run_command
 
 # DEBUG
 import logging
@@ -16,12 +17,15 @@ def filetype(fn):
     filecmd = 'file -b -N -L -k -r %s'
 
     cmd = filecmd % shell_escape(fn)
-    #logverb('Running: "%s"' % cmd)
-    (filein, fileout) = os.popen2(cmd)
-    out = fileout.read().strip()
+	(rtn,out,err) = run_command(cmd)
+	if rtn:
+		logverb('"file" command failed.  Command: "%s"' % cmd)
+		logverb('output:', out)
+		logverb('error:', err)
+		return None
 
+    out = out.strip()
     logverb('File: "%s"' % out)
-
     parts = [line.split(', ', 1) for line in out.split('\n- ')]
     lst = []
     for p in parts:
@@ -29,8 +33,6 @@ def filetype(fn):
             lst.append(tuple(p))
         else:
             lst.append((p[0], ''))
-    #lst = [tuple(line.split(', ', 1)) for line in out.split('\n- ')]
-    #logverb('Trimmed: "%s"' % typeinfo)
     return lst
 
 # Returns a list (usually with just one element) of filetypes:
