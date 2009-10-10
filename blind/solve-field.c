@@ -61,6 +61,8 @@ static an_option_t options[] = {
      "name the output files with this base name"},
     {'b', "backend-config", required_argument, "filename",
      "use this config file for the \"backend\" program"},
+	{'(', "backend-batch",  no_argument, NULL,
+	 "run backend once, rather than once per input file"},
 	{'f', "files-on-stdin", no_argument, NULL,
      "read filenames to solve on stdin, one per line"},
 	{'p', "no-plots",       no_argument, NULL,
@@ -415,6 +417,165 @@ static char* none_is_null(char* in) {
     return streq(in, "none") ? NULL : in;
 }
 
+static void run_backend(sl* backendargs) {
+	char* cmd;
+	cmd = sl_implode(backendargs, " ");
+	logmsg("Solving...\n");
+	logverb("Running:\n  %s\n", cmd);
+	fflush(NULL);
+	if (run_command_get_outputs(cmd, NULL, NULL)) {
+		ERROR("backend failed.  Command that failed was:\n  %s", cmd);
+		exit(-1);
+	}
+	free(cmd);
+	fflush(NULL);
+}
+
+struct solve_field_args {
+	char* newfitsfn;
+	char* indxylsfn;
+	char* redgreenfn;
+	char* ngcfn;
+	char* kmzfn;
+	char* scampfn;
+	char* scampconfigfn;
+};
+typedef struct solve_field_args solve_field_args_t;
+
+
+// This runs after "backend" is run on the file.
+static void after_solved(augment_xylist_t* axy,
+						 solve_field_args_t* sf,
+						 bool makeplots,
+						 const char* me,
+						 bool verbose,
+						 const char* tempdir,
+						 sl* tempdirs,
+						 sl* tempfiles) {
+	sip_t wcs;
+	double ra, dec, fieldw, fieldh;
+	char rastr[32], decstr[32];
+	char* fieldunits;
+
+	if (!file_exists(axy->solvedfn))
+		return;
+
+	// create new FITS file...
+	if (axy->fitsimgfn && sf->newfitsfn) {
+		logmsg("Creating new FITS file \"%s\"...\n", sf->newfitsfn);
+		if (new_wcs(axy->fitsimgfn, axy->wcsfn, sf->newfitsfn, TRUE)) {
+			ERROR("Failed to create FITS image with new WCS headers");
+			exit(-1);
+		}
+	}
+
+	// write list of index stars in image coordinates
+	if (sf->indxylsfn) {
+		assert(axy->wcsfn);
+		assert(axy->rdlsfn);
+		// index rdls to xyls.
+		if (wcs_rd2xy(axy->wcsfn, axy->rdlsfn, sf->indxylsfn,
+					  NULL, NULL, FALSE, NULL)) {
+			ERROR("Failed to project index stars into field coordinates using wcs-rd2xy");
+			exit(-1);
+		}
+	}
+
+	// print info about the field.
+	if (axy->wcsfn && file_exists(axy->wcsfn)) {
+		if (!sip_read_header_file(axy->wcsfn, &wcs)) {
+			ERROR("Failed to read WCS header from file %s", axy->wcsfn);
+			exit(-1);
+		}
+		sip_get_radec_center(&wcs, &ra, &dec);
+		sip_get_radec_center_hms_string(&wcs, rastr, decstr);
+		sip_get_field_size(&wcs, &fieldw, &fieldh, &fieldunits);
+		logmsg("Field center: (RA,Dec) = (%.4g, %.4g) deg.\n", ra, dec);
+		logmsg("Field center: (RA H:M:S, Dec D:M:S) = (%s, %s).\n", rastr, decstr);
+		logmsg("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
+	}
+
+	if (makeplots) {
+		logmsg("Creating plots...\n");
+		if (plot_index_overlay(axy, me, sf->indxylsfn, sf->redgreenfn)) {
+			ERROR("Plot index overlay failed.");
+		}
+	}
+
+	if (axy->imagefn && makeplots) {
+		if (plot_annotations(axy, me, verbose, sf->ngcfn)) {
+			ERROR("Plot annotations failed.");
+		}
+	}
+
+	if (axy->imagefn && sf->kmzfn) {
+		if (write_kmz(axy, sf->kmzfn, tempdir, tempdirs, tempfiles)) {
+			ERROR("Failed to write KMZ.");
+			exit(-1);
+		}
+	}
+
+	if (sf->scampfn) {
+		char* hdrfile = NULL;
+		qfits_header* imageheader = NULL;
+		starxy_t* xy;
+		xylist_t* xyls;
+
+		xyls = xylist_open(axy->outfn);
+		if (!xyls) {
+			ERROR("Failed to read xylist to write SCAMP catalog");
+			exit(-1);
+		}
+		if (axy->xcol)
+			xylist_set_xname(xyls, axy->xcol);
+		if (axy->ycol)
+			xylist_set_yname(xyls, axy->ycol);
+		//xylist_set_include_flux(xyls, FALSE);
+		xylist_set_include_background(xyls, FALSE);
+		xy = xylist_read_field(xyls, NULL);
+		xylist_close(xyls);
+
+		if (axy->fitsimgfn)
+			hdrfile = axy->fitsimgfn;
+		if (axy->xylsfn)
+			hdrfile = axy->xylsfn;
+		if (hdrfile)
+			imageheader = qfits_header_read(hdrfile);
+
+		if (scamp_write_field(imageheader, &wcs, xy, sf->scampfn)) {
+			ERROR("Failed to write SCAMP catalog");
+			exit(-1);
+		}
+		starxy_free(xy);
+		if (imageheader)
+			qfits_header_destroy(imageheader);
+	}
+
+	if (sf->scampconfigfn) {
+		if (scamp_write_config_file(axy->scampfn, sf->scampconfigfn)) {
+			ERROR("Failed to write SCAMP config file snippet to %s", sf->scampconfigfn);
+			exit(-1);
+		}
+	}
+}
+
+static void delete_temp_files(sl* tempfiles, sl* tempdirs) {
+	int i;
+	for (i=0; i<sl_size(tempfiles); i++) {
+		char* fn = sl_get(tempfiles, i);
+		if (unlink(fn))
+			SYSERROR("Failed to delete temp file \"%s\"", fn);
+	}
+	for (i=0; i<sl_size(tempdirs); i++) {
+		char* fn = sl_get(tempdirs, i);
+		if (rmdir(fn))
+			SYSERROR("Failed to delete temp dir \"%s\"", fn);
+	}
+	sl_remove_all(tempfiles);
+	sl_remove_all(tempdirs);
+}
+
+
 int main(int argc, char** args) {
 	int c;
 	bool help = FALSE;
@@ -442,11 +603,17 @@ int main(int argc, char** args) {
     int nmyopts;
     char* removeopts = "ixo\x01";
     char* newfits;
-    char* kmzfn = NULL;
-    char* scampfn = NULL;
-    char* scampconfigfn = NULL;
-    char* index_xyls_template;
+    char* kmz = NULL;
+    char* scamp = NULL;
+    char* scampconfig = NULL;
+    char* index_xyls;
 	bool just_augment = FALSE;
+	bool backend_batch = FALSE;
+	bl* batchaxy = NULL;
+	bl* batchsf = NULL;
+	sl* outfiles;
+	sl* tempfiles;
+	sl* tempdirs;
 
     errors_print_on_exit(stderr);
     fits_use_error_system();
@@ -455,6 +622,11 @@ int main(int argc, char** args) {
 
 	backendargs = sl_new(16);
 	append_executable(backendargs, "backend", me);
+
+	// output filenames.
+	outfiles = sl_new(16);
+	tempfiles = sl_new(4);
+	tempdirs = sl_new(4);
 
 	rtn = 0;
 
@@ -491,7 +663,7 @@ int main(int argc, char** args) {
     allaxy->wcsfn    = "%s.wcs";
     allaxy->corrfn   = "%s.corr";
     newfits          = "%s.new";
-    index_xyls_template = "%s-indx.xyls";
+    index_xyls = "%s-indx.xyls";
 
 	while (1) {
         int res;
@@ -499,20 +671,23 @@ int main(int argc, char** args) {
         if (c == -1)
             break;
         switch (c) {
+		case '(':
+			backend_batch = TRUE;
+			break;
 		case '@':
 			just_augment = TRUE;
 			break;
         case 'U':
-            index_xyls_template = optarg;
+            index_xyls = optarg;
             break;
         case 'n':
-            scampconfigfn = optarg;
+            scampconfig = optarg;
             break;
         case 'i':
-            scampfn = optarg;
+            scamp = optarg;
             break;
         case 'Z':
-            kmzfn = optarg;
+            kmz = optarg;
             break;
         case 'N':
             newfits = optarg;
@@ -577,12 +752,17 @@ int main(int argc, char** args) {
 
     log_init(loglvl);
 
-    if (kmzfn && starts_with(kmzfn, "-")) {
-        logmsg("Do you really want to save KMZ to the file named \"%s\" ??\n", kmzfn);
-    }
+    if (kmz && starts_with(kmz, "-"))
+        logmsg("Do you really want to save KMZ to the file named \"%s\" ??\n", kmz);
+
     if (starts_with(newfits, "-")) {
         logmsg("Do you really want to save the new FITS file to the file named \"%s\" ??\n", newfits);
     }
+
+	if (backend_batch) {
+		batchaxy = bl_new(16, sizeof(augment_xylist_t));
+		batchsf  = bl_new(16, sizeof(solve_field_args_t));
+	}
 
     // Allow (some of the) default filenames to be disabled by setting them to "none".
     allaxy->matchfn  = none_is_null(allaxy->matchfn);
@@ -592,7 +772,7 @@ int main(int argc, char** args) {
     allaxy->wcsfn    = none_is_null(allaxy->wcsfn);
     allaxy->corrfn   = none_is_null(allaxy->corrfn);
     newfits          = none_is_null(newfits);
-    index_xyls_template = none_is_null(index_xyls_template);
+    index_xyls = none_is_null(index_xyls);
 
 	if (outdir) {
         if (mkdir_p(outdir)) {
@@ -615,23 +795,23 @@ int main(int argc, char** args) {
 		char* base;
         char* basedir;
         char* basefile;
-		char *objsfn=NULL, *redgreenfn=NULL;
-		char *ngcfn=NULL, *ppmfn=NULL, *indxylsfn=NULL;
-        char* newfitsfn = NULL;
+		char *objsfn=NULL;
+		char *ppmfn=NULL;
         char* downloadfn = NULL;
         char* suffix = NULL;
-		sl* outfiles;
-		sl* tempfiles;
-		sl* tempdirs;
 		sl* cmdline;
         bool ctrlc;
         bool isurl;
         augment_xylist_t theaxy;
         augment_xylist_t* axy = &theaxy;
         int j;
+		solve_field_args_t thesf;
+		solve_field_args_t* sf = &thesf;
 
         // reset augment-xylist args.
         memcpy(axy, allaxy, sizeof(augment_xylist_t));
+
+		memset(sf, 0, sizeof(solve_field_args_t));
 
 		if (fromstdin) {
             char fnbuf[1024];
@@ -712,11 +892,6 @@ int main(int argc, char** args) {
 		}
         logverb("Base: \"%s\", basefile \"%s\", basedir \"%s\", suffix \"%s\"\n", base, basefile, basedir, suffix);
 
-		// the output filenames.
-		outfiles = sl_new(16);
-		tempfiles = sl_new(4);
-		tempdirs = sl_new(4);
-
 		axy->outfn    = sl_appendf(outfiles, axy->outfn,       base);
         if (axy->matchfn)
             axy->matchfn  = sl_appendf(outfiles, axy->matchfn,     base);
@@ -728,21 +903,27 @@ int main(int argc, char** args) {
             axy->wcsfn    = sl_appendf(outfiles, axy->wcsfn,       base);
         if (axy->corrfn)
             axy->corrfn   = sl_appendf(outfiles, axy->corrfn,      base);
-        if (newfits)
-            newfitsfn  = sl_appendf(outfiles, newfits,  base);
         if (axy->cancelfn)
             axy->cancelfn  = sl_appendf(outfiles, axy->cancelfn, base);
         if (axy->keepxylsfn)
             axy->keepxylsfn  = sl_appendf(outfiles, axy->keepxylsfn, base);
         if (axy->pnmfn)
             axy->pnmfn  = sl_appendf(outfiles, axy->pnmfn, base);
+        if (newfits)
+            sf->newfitsfn  = sl_appendf(outfiles, newfits,  base);
+		if (kmz)
+			sf->kmzfn = sl_appendf(outfiles, kmz, base);
+        if (index_xyls)
+            sf->indxylsfn  = sl_appendf(outfiles, index_xyls, base);
+		if (scamp)
+			sf->scampfn = sl_appendf(outfiles, scamp, base);
+		if (scampconfig)
+			sf->scampconfigfn = sl_appendf(outfiles, scampconfig, base);
         if (makeplots) {
             objsfn     = sl_appendf(outfiles, "%s-objs.png",  base);
-            redgreenfn = sl_appendf(outfiles, "%s-indx.png",  base);
-            ngcfn      = sl_appendf(outfiles, "%s-ngc.png",   base);
+            sf->redgreenfn = sl_appendf(outfiles, "%s-indx.png",  base);
+            sf->ngcfn      = sl_appendf(outfiles, "%s-ngc.png",   base);
         }
-        if (index_xyls_template)
-            indxylsfn  = sl_appendf(outfiles, index_xyls_template, base);
         if (isurl) {
             if (suffix)
                 downloadfn = sl_appendf(outfiles, "%s.%s", base, suffix);
@@ -819,19 +1000,19 @@ int main(int argc, char** args) {
 		}
 
 		// if we're making plots, we need the index xylist.
-		if (makeplots && !indxylsfn) {
-			indxylsfn = create_temp_file("indxyls", tempdir);
-			sl_append_nocopy(tempfiles, indxylsfn);
+		if (makeplots && !sf->indxylsfn) {
+			sf->indxylsfn = create_temp_file("indxyls", tempdir);
+			sl_append_nocopy(tempfiles, sf->indxylsfn);
 		}
 
 		// if index xyls file is needed, we need wcs...
-		if (indxylsfn && !axy->wcsfn) {
+		if (sf->indxylsfn && !axy->wcsfn) {
             axy->wcsfn = create_temp_file("wcs", tempdir);
             sl_append_nocopy(tempfiles, axy->wcsfn);
 		}
 
 		// ... and rdls.
-		if (indxylsfn && !axy->rdlsfn) {
+		if (sf->indxylsfn && !axy->rdlsfn) {
             axy->rdlsfn = create_temp_file("rdls", tempdir);
             sl_append_nocopy(tempfiles, axy->rdlsfn);
 		}
@@ -882,7 +1063,7 @@ int main(int argc, char** args) {
             axy->force_ppm = TRUE;
 		}
 
-        axy->keep_fitsimg = (newfits || scampfn);
+        axy->keep_fitsimg = (newfits || scamp);
 
         if (augment_xylist(axy, me)) {
             ERROR("augment-xylist failed");
@@ -909,162 +1090,63 @@ int main(int argc, char** args) {
         }
 
 		append_escape(backendargs, axy->outfn);
-		cmd = sl_implode(backendargs, " ");
 
-        logmsg("Solving...\n");
-        logverb("Running:\n  %s\n", cmd);
-        fflush(NULL);
-        if (run_command_get_outputs(cmd, NULL, NULL)) {
-            ERROR("backend failed.  Command that failed was:\n  %s", cmd);
-			exit(-1);
-		}
-        free(cmd);
-        fflush(NULL);
-
-		if (!file_exists(axy->solvedfn)) {
-			//printf("Field didn't solve.\n");
-			goto nextfile;
-		}
-		{
-            sip_t wcs;
-            double ra, dec, fieldw, fieldh;
-            char rastr[32], decstr[32];
-            char* fieldunits;
-
-            // create new FITS file...
-            if (axy->fitsimgfn && newfitsfn) {
-                logmsg("Creating new FITS file \"%s\"...\n", newfitsfn);
-                if (new_wcs(axy->fitsimgfn, axy->wcsfn, newfitsfn, TRUE)) {
-                    ERROR("Failed to create FITS image with new WCS headers");
-                    exit(-1);
-                }
-            }
-
-            if (indxylsfn) {
-				assert(axy->wcsfn);
-				assert(axy->rdlsfn);
-                // index rdls to xyls.
-                if (wcs_rd2xy(axy->wcsfn, axy->rdlsfn, indxylsfn,
-                              NULL, NULL, FALSE, NULL)) {
-                    ERROR("Failed to project index stars into field coordinates using wcs-rd2xy");
-                    exit(-1);
-                }
-            }
-
-            if (axy->wcsfn && file_exists(axy->wcsfn)) {
-				// print info about the field.
-				if (!sip_read_header_file(axy->wcsfn, &wcs)) {
-					ERROR("Failed to read WCS header from file %s", axy->wcsfn);
-					exit(-1);
-				}
-				sip_get_radec_center(&wcs, &ra, &dec);
-				sip_get_radec_center_hms_string(&wcs, rastr, decstr);
-				sip_get_field_size(&wcs, &fieldw, &fieldh, &fieldunits);
-				logmsg("Field center: (RA,Dec) = (%.4g, %.4g) deg.\n", ra, dec);
-				logmsg("Field center: (RA H:M:S, Dec D:M:S) = (%s, %s).\n", rastr, decstr);
-				logmsg("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
-			}
-
-            if (makeplots) {
-                logmsg("Creating plots...\n");
-                if (plot_index_overlay(axy, me, indxylsfn, redgreenfn)) {
-                    ERROR("Plot index overlay failed.");
-                }
-            }
-
-            if (axy->imagefn && makeplots) {
-                if (plot_annotations(axy, me, verbose, ngcfn)) {
-                    ERROR("Plot annotations failed.");
-                }
-
-			}
-
-            if (axy->imagefn && kmzfn) {
-                char* realkmzfn;
-                asprintf(&realkmzfn, kmzfn, base);
-                if (write_kmz(axy, realkmzfn, tempdir, tempdirs, tempfiles)) {
-                    ERROR("Failed to write KMZ.");
-                    exit(-1);
-                }
-                free(realkmzfn);
-            }
-
-            if (scampfn) {
-                char* hdrfile = NULL;
-                qfits_header* imageheader = NULL;
-                starxy_t* xy;
-                xylist_t* xyls = xylist_open(axy->outfn);
-
-                if (!xyls) {
-                    ERROR("Failed to read xylist to write SCAMP catalog");
-                    exit(-1);
-                }
-                if (axy->xcol)
-                    xylist_set_xname(xyls, axy->xcol);
-                if (axy->ycol)
-                    xylist_set_yname(xyls, axy->ycol);
-                //xylist_set_include_flux(xyls, FALSE);
-                xylist_set_include_background(xyls, FALSE);
-                xy = xylist_read_field(xyls, NULL);
-                xylist_close(xyls);
-
-                if (axy->fitsimgfn)
-                    hdrfile = axy->fitsimgfn;
-                if (axy->xylsfn)
-                    hdrfile = axy->xylsfn;
-                if (hdrfile)
-                    imageheader = qfits_header_read(hdrfile);
-
-                if (scamp_write_field(imageheader, &wcs, xy, scampfn)) {
-                    ERROR("Failed to write SCAMP catalog");
-                    exit(-1);
-                }
-                starxy_free(xy);
-                if (imageheader)
-                    qfits_header_destroy(imageheader);
-            }
-
-            if (scampconfigfn) {
-                if (scamp_write_config_file(axy->scampfn, scampconfigfn)) {
-                    ERROR("Failed to write SCAMP config file snippet to %s", scampconfigfn);
-                    exit(-1);
-                }
-            }
+		if (!backend_batch) {
+			run_backend(backendargs);
+			after_solved(axy, sf, makeplots, me, verbose,
+						 tempdir, tempdirs, tempfiles);
+		} else {
+			bl_append(batchaxy, axy);
+			bl_append(batchsf,  sf );
 		}
         fflush(NULL);
 
         // clean up and move on to the next file.
     nextfile:        
 		free(base);
-        free(axy->fitsimgfn);
-        free(axy->solvedinfn);
-		for (i=0; i<sl_size(tempfiles); i++) {
-			char* fn = sl_get(tempfiles, i);
-			if (unlink(fn))
-				SYSERROR("Failed to delete temp file \"%s\"", fn);
-		}
-		for (i=0; i<sl_size(tempdirs); i++) {
-			char* fn = sl_get(tempdirs, i);
-			if (rmdir(fn))
-				SYSERROR("Failed to delete temp dir \"%s\"", fn);
-		}
-        // erm.
-        if (axy->verifywcs != allaxy->verifywcs)
-            sl_free2(axy->verifywcs);
-
         sl_free2(cmdline);
-		sl_free2(outfiles);
-		sl_free2(tempfiles);
-		sl_free2(tempdirs);
 
+		if (!backend_batch) {
+			free(axy->fitsimgfn);
+			free(axy->solvedinfn);
+			// erm.
+			if (axy->verifywcs != allaxy->verifywcs)
+				sl_free2(axy->verifywcs);
+			sl_remove_all(outfiles);
+			delete_temp_files(tempfiles, tempdirs);
+		}
         errors_print_stack(stdout);
         errors_clear_stack();
         logmsg("\n");
 	}
 
+	if (backend_batch) {
+		for (i=0; i<bl_size(batchaxy); i++) {
+			augment_xylist_t* axy = bl_access(batchaxy, i);
+			solve_field_args_t* sf = bl_access(batchsf, i);
+
+			after_solved(axy, sf, makeplots, me, verbose,
+						 tempdir, tempdirs, tempfiles);
+			errors_print_stack(stdout);
+			errors_clear_stack();
+			logmsg("\n");
+
+			free(axy->fitsimgfn);
+			free(axy->solvedinfn);
+			// erm.
+			if (axy->verifywcs != allaxy->verifywcs)
+				sl_free2(axy->verifywcs);
+		}
+		delete_temp_files(tempfiles, tempdirs);
+		bl_free(batchaxy);
+		bl_free(batchsf);
+	}
+
+	sl_free2(outfiles);
+	sl_free2(tempfiles);
+	sl_free2(tempdirs);
 	sl_free2(backendargs);
     free(me);
-
     augment_xylist_free_contents(allaxy);
 
 	return 0;
