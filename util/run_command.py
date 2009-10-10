@@ -12,9 +12,9 @@ def run_command(cmd, timeout=None, callback=None):
     Returns: (int return value, string out, string err)
     """
     #child = popen2.Popen3(cmd, True)
-	#(fout, fin, ferr) = (child.fromchild, child.tochild, child.childerr)
-	p = subprocess.Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
-	(fin, fout, ferr) = (p.stdin, p.stdout, p.stderr)
+    #(fout, fin, ferr) = (child.fromchild, child.tochild, child.childerr)
+    p = subprocess.Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+    (fin, fout, ferr) = (p.stdin, p.stdout, p.stderr)
 
     fin.close()
     stdout = fout.fileno()
