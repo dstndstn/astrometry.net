@@ -1121,6 +1121,7 @@ int main(int argc, char** args) {
 	}
 
 	if (backend_batch) {
+		run_backend(backendargs);
 		for (i=0; i<bl_size(batchaxy); i++) {
 			augment_xylist_t* axy = bl_access(batchaxy, i);
 			solve_field_args_t* sf = bl_access(batchsf, i);
