@@ -837,8 +837,10 @@ int main(int argc, char** args) {
 
         cmdline = sl_new(16);
 
-        // Remove arguments that might have been added in previous trips through this loop
-		sl_remove_from(backendargs,  nbeargs);
+		if (!backend_batch) {
+			// Remove arguments that might have been added in previous trips through this loop
+			sl_remove_from(backendargs,  nbeargs);
+		}
 
 		// Choose the base path/filename for output files.
         if (outbase)
