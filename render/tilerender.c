@@ -561,6 +561,9 @@ int main(int argc, char *argv[]) {
 
 	logmsg("tilecache: BEGIN TILECACHE\n");
 
+	logverb("Cairo version at compile time: %s\n", CAIRO_VERSION_STRING);
+	logverb("Cairo version at run time: %s\n", cairo_version_string());
+
     fits_use_error_system();
 
 	if (inmerc) {
