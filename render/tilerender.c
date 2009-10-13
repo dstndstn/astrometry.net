@@ -30,6 +30,7 @@
 #include <zlib.h>
 #include <cairo.h>
 #include <cairo-pdf.h>
+#include <cairo-ps.h>
 
 #include "an-bool.h"
 #include "tilerender.h"
@@ -100,6 +101,7 @@ static void print_help(char* prog) {
 		   "     Output options: the default is to write a PNG image to standard out.\n"
 		   "  [-J]: write jpeg\n"
 		   "  [-j]: write PDF\n"
+		   "  [-E]: write EPS\n"
 		   "  [-R]: write a raw floating-point image\n"
 		   "\n"
 		   //"\n"
@@ -173,7 +175,7 @@ static void print_help(char* prog) {
 		   "\n", prog);
 }
 
-const char* OPTIONS = "ab:c:de:f:g:h:i:jk:l:npqr:st:vw:x:y:zA:B:C:D:F:GI:JK:L:MN:PRS:T:V:X:Y:";
+const char* OPTIONS = "ab:c:de:f:g:h:i:jk:l:npqr:st:vw:x:y:zA:B:C:D:EF:GI:JK:L:MN:PRS:T:V:X:Y:";
 
 struct renderer {
 	char* name;
@@ -360,9 +362,12 @@ int main(int argc, char *argv[]) {
 	sl* layers;
 	int i;
 	bool inmerc = 0;
+
     bool writejpeg = FALSE;
-	int loglvl = LOG_MSG;
 	bool writepdf = FALSE;
+	bool writeeps = FALSE;
+
+	int loglvl = LOG_MSG;
 	cairo_t* cairo;
 	cairo_surface_t* target;
 
@@ -391,6 +396,9 @@ int main(int argc, char *argv[]) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'E':
+			writeeps = TRUE;
+			break;
 		case 't':
 			sl_append(args.arglist, optarg);
 			break;
@@ -546,8 +554,8 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
-	if (writejpeg && writepdf) {
-		logmsg("Can't write both JPEG and PDF.\n");
+	if ((writejpeg ? 1 : 0) + (writepdf ? 1 : 0) + (writeeps ? 1 : 0) > 1) {
+		logmsg("You must choose one format of PNG (default), JPEG, PDF, or EPS.\n");
 		exit(-1);
 	}
 
@@ -615,6 +623,14 @@ int main(int argc, char *argv[]) {
 			ERROR("Failed to create cairo surface for PDF");
 			exit(-1);
 		}
+	} else if (writeeps) {
+		cairo_write_func_t wfunc = cairoutils_file_write_func;
+		target = cairo_ps_surface_create_for_stream(wfunc, stdout, args.W, args.H);
+		if (!target) {
+			ERROR("Failed to create cairo surface for EPS");
+			exit(-1);
+		}
+		cairo_ps_surface_set_eps(target, TRUE);
 	} else {
 		// Allocate a black image.
 		img = calloc(4 * args.W * args.H, 1);
@@ -691,7 +707,7 @@ int main(int argc, char *argv[]) {
 		cairoutils_cairo_status_errors(cairo);
 	}
 
-	if (writepdf) {
+	if (writepdf || writeeps) {
 		cairo_surface_flush(target);
 		cairo_surface_finish(target);
 	} else {
