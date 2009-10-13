@@ -2,6 +2,7 @@
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Michael Blanton, Keir Mierle, David W. Hogg,
   Sam Roweis and Dustin Lang.
+ Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -38,18 +39,22 @@
 
 int image2xy_files(const char* infn, const char* outfn,
 				   bool do_u8, int downsample, int downsample_as_required,
-                   int extension,
-				   const char* bgimg, const char* bgsubimg, const char* maskimg,
-				   double plim, int halfbox, int plane, bool nobgsub) {
+                   int extension, int plane,
+				   simplexy_t* params) {
 	fitsfile *fptr = NULL;
 	fitsfile *ofptr = NULL;
 	int status = 0; // FIXME should have ostatus too
 	int naxis;
 	long naxisn[2];
 	int kk;
-	int nhdus,hdutype,nimgs;
-	simplexy_t s;
+	int nhdus, hdutype, nimgs;
     char* str;
+	simplexy_t myparams;
+
+	if (params == NULL) {
+		memset(&myparams, 0, sizeof(simplexy_t));
+		params = &myparams;
+	}
 
     // QFITS to CFITSIO extension convention switch
     extension++;
@@ -151,61 +156,52 @@ int image2xy_files(const char* infn, const char* outfn,
 			logmsg("Plane %i requested but this image has NAXIS = %i (not 3).\n", plane, naxis);
 		else if (naxis > 2)
             logmsg("This looks like a multi-color image: processing the first image plane only.  (NAXIS=%i)\n", naxis);
-
+		
         if (bitpix == 8 && do_u8 && !downsample) {
-			simplexy2_set_u8_defaults(&s);
+			simplexy2_fill_in_defaults_u8(params);
 
             // u8 image.
-            s.image_u8 = malloc(naxisn[0] * naxisn[1]);
-            if (!s.image_u8) {
+            params->image_u8 = malloc(naxisn[0] * naxisn[1]);
+            if (!params->image_u8) {
                 SYSERROR("Failed to allocate u8 image array");
                 goto bailout;
             }
             fits_read_pix(fptr, TBYTE, fpixel, naxisn[0]*naxisn[1], NULL,
-                          s.image_u8, NULL, &status);
+                          params->image_u8, NULL, &status);
 
         } else {
-			simplexy2_set_defaults(&s);
+			simplexy2_fill_in_defaults(params);
 
-            s.image = malloc(naxisn[0] * naxisn[1] * sizeof(float));
-            if (!s.image) {
+            params->image = malloc(naxisn[0] * naxisn[1] * sizeof(float));
+            if (!params->image) {
                 SYSERROR("Failed to allocate image array");
                 goto bailout;
             }
             fits_read_pix(fptr, TFLOAT, fpixel, naxisn[0]*naxisn[1], NULL,
-                          s.image, NULL, &status);
+                          params->image, NULL, &status);
         }
 		free(fpixel);
         CFITS_CHECK("Failed to read image pixels");
 
-		s.bgsubimgfn = bgsubimg;
-		s.bgimgfn = bgimg;
-		s.maskimgfn = maskimg;
-		s.nx = naxisn[0];
-		s.ny = naxisn[1];
-		s.nobgsub = nobgsub;
+		params->nx = naxisn[0];
+		params->ny = naxisn[1];
 
-		if (plim > 0)
-			s.plim = plim;
-		if (halfbox > 0)
-			s.halfbox = halfbox;
+		image2xy_image2(params, downsample, downsample_as_required);
 
-		image2xy_image2(&s, downsample, downsample_as_required);
-
-		fits_create_tbl(ofptr, BINARY_TBL, s.npeaks, 4, ttype, tform,
+		fits_create_tbl(ofptr, BINARY_TBL, params->npeaks, 4, ttype, tform,
                         tunit, "SOURCES", &status);
         CFITS_CHECK("Failed to create output table");
 
-		fits_write_col(ofptr, TFLOAT, 1, 1, 1, s.npeaks, s.x, &status);
+		fits_write_col(ofptr, TFLOAT, 1, 1, 1, params->npeaks, params->x, &status);
         CFITS_CHECK("Failed to write X column");
 
-		fits_write_col(ofptr, TFLOAT, 2, 1, 1, s.npeaks, s.y, &status);
+		fits_write_col(ofptr, TFLOAT, 2, 1, 1, params->npeaks, params->y, &status);
         CFITS_CHECK("Failed to write Y column");
 
-		fits_write_col(ofptr, TFLOAT, 3, 1, 1, s.npeaks, s.flux, &status);
+		fits_write_col(ofptr, TFLOAT, 3, 1, 1, params->npeaks, params->flux, &status);
         CFITS_CHECK("Failed to write FLUX column");
 
-		fits_write_col(ofptr, TFLOAT, 4, 1, 1, s.npeaks, s.background, &status);
+		fits_write_col(ofptr, TFLOAT, 4, 1, 1, params->npeaks, params->background, &status);
         CFITS_CHECK("Failed to write BACKGROUND column");
 
 		fits_modify_comment(ofptr, "TTYPE1", "X coordinate", &status);
@@ -232,18 +228,18 @@ int image2xy_files(const char* infn, const char* outfn,
 		fits_write_key(ofptr, TINT, "IMAGEH", &h, "Input image height", &status);
         CFITS_CHECK("Failed to write IMAGEH");
 
-		fits_write_key(ofptr, TFLOAT, "ESTSIGMA", &(s.sigma),
+		fits_write_key(ofptr, TFLOAT, "ESTSIGMA", &(params->sigma),
 				"Estimated source image variance", &status);
         CFITS_CHECK("Failed to write ESTSIGMA");
 
-        fits_write_key(ofptr, TFLOAT, "DPSF", &(s.dpsf), "image2xy Assumed gaussian psf width", &status);
-        fits_write_key(ofptr, TFLOAT, "PLIM", &(s.plim), "image2xy Significance to keep", &status);
-        fits_write_key(ofptr, TFLOAT, "DLIM", &(s.dlim), "image2xy Closest two peaks can be", &status);
-        fits_write_key(ofptr, TFLOAT, "SADDLE", &(s.saddle), "image2xy Saddle difference (in sig)", &status);
-        fits_write_key(ofptr, TINT, "MAXPER", &(s.maxper), "image2xy Max num of peaks per object", &status);
-        fits_write_key(ofptr, TINT, "MAXPEAKS", &(s.maxnpeaks), "image2xy Max num of peaks total", &status);
-        fits_write_key(ofptr, TINT, "MAXSIZE", &(s.maxsize), "image2xy Max size for extended objects", &status);
-        fits_write_key(ofptr, TINT, "HALFBOX", &(s.halfbox), "image2xy Half-size for sliding sky window", &status);
+        fits_write_key(ofptr, TFLOAT, "DPSF", &(params->dpsf), "image2xy Assumed gaussian psf width", &status);
+        fits_write_key(ofptr, TFLOAT, "PLIM", &(params->plim), "image2xy Significance to keep", &status);
+        fits_write_key(ofptr, TFLOAT, "DLIM", &(params->dlim), "image2xy Closest two peaks can be", &status);
+        fits_write_key(ofptr, TFLOAT, "SADDLE", &(params->saddle), "image2xy Saddle difference (in sig)", &status);
+        fits_write_key(ofptr, TINT, "MAXPER", &(params->maxper), "image2xy Max num of peaks per object", &status);
+        fits_write_key(ofptr, TINT, "MAXPEAKS", &(params->maxnpeaks), "image2xy Max num of peaks total", &status);
+        fits_write_key(ofptr, TINT, "MAXSIZE", &(params->maxsize), "image2xy Max size for extended objects", &status);
+        fits_write_key(ofptr, TINT, "HALFBOX", &(params->halfbox), "image2xy Half-size for sliding sky window", &status);
 
 
 		fits_write_comment(ofptr,
@@ -252,7 +248,7 @@ int image2xy_files(const char* infn, const char* outfn,
 			"image in accordance with the FITS standard.", &status);
         CFITS_CHECK("Failed to write comments");
 
-		simplexy2_free_contents(&s);
+		simplexy2_free_contents(params);
 	}
 
 	// Put in the optional NEXTEND keywoard

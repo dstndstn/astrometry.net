@@ -711,6 +711,7 @@ int augment_xylist(augment_xylist_t* axy,
 			run(cmd, verbose);
 
 		} else {
+			simplexy_t sxyparams;
 			logverb("Running image2xy: input=%s, output=%s, ext=%i\n", fitsimgfn, xylsfn, axy->extension);
 
 			// we have to delete the temp file because otherwise image2xy is too timid to overwrite it.
@@ -718,9 +719,13 @@ int augment_xylist(augment_xylist_t* axy,
 				SYSERROR("Failed to delete temp file %s", xylsfn);
 				exit(-1);
 			}
+
+			memset(&sxyparams, 0, sizeof(simplexy_t));
+			sxyparams.nobgsub = axy->no_bg_subtraction;
+
 			// MAGIC 3: downsample by a factor of 2, up to 3 times.
 			if (image2xy_files(fitsimgfn, xylsfn, TRUE, axy->downsample, 3, axy->extension,
-							   NULL, NULL, NULL, 0, 0, 0, axy->no_bg_subtraction)) {
+							   0, &sxyparams)) {
 				ERROR("Source extraction failed");
 				exit(-1);
 			}

@@ -88,23 +88,41 @@ static void write_fits_float_image(const float* img, int nx, int ny,
 	}
 }
 
-void simplexy2_set_u8_defaults(simplexy_t* i) {
-    memset(i, 0, sizeof(simplexy_t));
-    simplexy2_set_defaults(i);
-    i->plim      = SIMPLEXY_U8_DEFAULT_PLIM;
-    i->saddle    = SIMPLEXY_U8_DEFAULT_SADDLE;
+void simplexy2_fill_in_defaults(simplexy_t* s) {
+	if (s->dpsf == 0)
+		s->dpsf = SIMPLEXY_DEFAULT_DPSF;
+    if (s->plim == 0)
+		s->plim = SIMPLEXY_DEFAULT_PLIM;
+    if (s->dlim == 0)
+		s->dlim = SIMPLEXY_DEFAULT_DLIM;
+	if (s->saddle == 0)
+		s->saddle = SIMPLEXY_DEFAULT_SADDLE;
+    if (s->maxper == 0)
+		s->maxper = SIMPLEXY_DEFAULT_MAXPER;
+	if (s->maxsize == 0)
+		s->maxsize = SIMPLEXY_DEFAULT_MAXSIZE;
+	if (s->halfbox == 0)
+		s->halfbox = SIMPLEXY_DEFAULT_HALFBOX;
+	if (s->maxnpeaks == 0)
+		s->maxnpeaks = SIMPLEXY_DEFAULT_MAXNPEAKS;
 }
 
-void simplexy2_set_defaults(simplexy_t* i) {
-    memset(i, 0, sizeof(simplexy_t));
-    i->dpsf      = SIMPLEXY_DEFAULT_DPSF;
-    i->plim      = SIMPLEXY_DEFAULT_PLIM;
-    i->dlim      = SIMPLEXY_DEFAULT_DLIM;
-    i->saddle    = SIMPLEXY_DEFAULT_SADDLE;
-    i->maxper    = SIMPLEXY_DEFAULT_MAXPER;
-    i->maxsize   = SIMPLEXY_DEFAULT_MAXSIZE;
-    i->halfbox   = SIMPLEXY_DEFAULT_HALFBOX;
-    i->maxnpeaks = SIMPLEXY_DEFAULT_MAXNPEAKS;
+void simplexy2_fill_in_defaults_u8(simplexy_t* s) {
+	if (s->plim == 0)
+		s->plim = SIMPLEXY_U8_DEFAULT_PLIM;
+	if (s->saddle == 0)
+		s->saddle = SIMPLEXY_U8_DEFAULT_SADDLE;
+	simplexy2_fill_in_defaults(s);
+}
+
+void simplexy2_set_u8_defaults(simplexy_t* s) {
+    memset(s, 0, sizeof(simplexy_t));
+    simplexy2_fill_in_defaults_u8(s);
+}
+
+void simplexy2_set_defaults(simplexy_t* s) {
+    memset(s, 0, sizeof(simplexy_t));
+    simplexy2_fill_in_defaults(s);
 }
 
 void simplexy2_free_contents(simplexy_t* s) {

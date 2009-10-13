@@ -77,37 +77,36 @@ int main(int argc, char *argv[]) {
     int downsample = 0;
     int downsample_as_reqd = 0;
     int extension = 0;
-	double plim = 0;
-	int halfbox = 0;
 	int plane = 0;
-	bool nobgsub = FALSE;
 
-	char* bgimg = NULL;
-	char* bgsubimg = NULL;
-	char* maskimg = NULL;
+	simplexy_t sparams;
+	simplexy_t* params = &sparams;
+
+    memset(params, 0, sizeof(simplexy_t));
+	//simplexy2_set_default(&sparams);
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
 		case 'b':
-			nobgsub = TRUE;
+			params->nobgsub = TRUE;
 			break;
 		case 'P':
 			plane = atoi(optarg);
 			break;
 		case 's':
-			halfbox = atoi(optarg);
+			params->halfbox = atoi(optarg);
 			break;
 		case 'p':
-			plim = atof(optarg);
+			params->plim = atof(optarg);
 			break;
 		case 'B':
-			bgimg = optarg;
+			params->bgimgfn = optarg;
 			break;
 		case 'S':
-			bgsubimg = optarg;
+			params->bgsubimgfn = optarg;
 			break;
 		case 'M':
-			maskimg = optarg;
+			params->maskimgfn = optarg;
 			break;
         case 'e':
             extension = atoi(optarg);
@@ -166,8 +165,8 @@ int main(int argc, char *argv[]) {
     if (downsample)
         logverb("Downsampling by %i\n", downsample);
 
-    if (image2xy_files(infn, outfn, do_u8, downsample, downsample_as_reqd, extension,
-					   bgimg, bgsubimg, maskimg, plim, halfbox, plane, nobgsub)) {
+    if (image2xy_files(infn, outfn, do_u8, downsample, downsample_as_reqd,
+					   extension, plane, params)) {
         ERROR("image2xy failed.");
         exit(-1);
     }

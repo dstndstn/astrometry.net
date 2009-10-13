@@ -66,8 +66,7 @@ static void rebin(float** thedata,
 }
 
 int image2xy_image2(simplexy_t* s,
-                    int downsample,
-                    int downsample_as_required) {
+                    int downsample, int downsample_as_required) {
 	int fullW=-1, fullH=-1;
 	int newW, newH;
 	bool did_downsample = FALSE;
@@ -135,54 +134,5 @@ int image2xy_image2(simplexy_t* s,
         s->image = NULL;
     }
 	return rtn;
-}
-
-int image2xy_image(uint8_t* u8image, float* fimage,
-				   int W, int H,
-				   int downsample, int downsample_as_required,
-				   double dpsf, double plim, double dlim, double saddle,
-				   int maxper, int maxsize, int halfbox, int maxnpeaks,
-				   float** x, float** y, float** flux, float** background,
-				   int* npeaks, float* sigma) {
-    simplexy_t s;
-    int rtn;
-
-    if (u8image)
-        simplexy2_set_u8_defaults(&s);
-    else
-        simplexy2_set_defaults(&s);
-
-    if (dpsf)
-        s.dpsf = dpsf;
-    if (plim)
-        s.plim = plim;
-    if (dlim)
-        s.dlim = dlim;
-    if (saddle)
-        s.saddle = saddle;
-    if (maxper)
-        s.maxper = maxper;
-    if (maxsize)
-        s.maxsize = maxsize;
-    if (halfbox)
-        s.halfbox = halfbox;
-    if (maxnpeaks)
-        s.maxnpeaks = maxnpeaks;
-
-    s.image = fimage;
-    s.image_u8 = u8image;
-    s.nx = W;
-    s.ny = H;
-
-    rtn = image2xy_image2(&s, downsample, downsample_as_required);
-
-    *x = s.x;
-    *y = s.y;
-    *flux = s.flux;
-    *background = s.background;
-    *npeaks = s.npeaks;
-    *sigma = s.sigma;
-
-    return rtn;
 }
 

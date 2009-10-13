@@ -76,8 +76,7 @@ static void get_next_field(char* fits_image_fn,
 						   double* ra, double* dec) {
 	int i, N;
 	int W, H;
-	float *x, *y, *bg, *flux;
-	float sigma;
+	simplexy_t simxy;
 	// For this sample program I'm just going to read from a FITS image,
 	// but you probably want to grab data fresh from the CCD...
 	qfitsloader qimg;
@@ -101,24 +100,21 @@ static void get_next_field(char* fits_image_fn,
         exit(-1);
     }
 
-	image2xy_image(NULL, qimg.fbuf, W, H, 0, 0,
-				   0, 0, 0, 0, 0, 0, 0, 0,
-				   &x, &y, &flux, &bg, &N, &sigma);
+	simplexy2_set_defaults(&simxy);
 
+	image2xy_image2(&simxy, 0, 0);
+
+	N = simxy.npeaks;
 	*nstars = N;
 	*starx = malloc(N * sizeof(double));
 	*stary = malloc(N * sizeof(double));
 	*starflux = malloc(N * sizeof(double));
 	for (i=0; i<N; i++) {
-		(*starx)[i] = x[i];
-		(*stary)[i] = y[i];
-		(*starflux)[i] = flux[i];
+		(*starx)[i] = simxy.x[i];
+		(*stary)[i] = simxy.y[i];
+		(*starflux)[i] = simxy.flux[i];
 	}
-
-	free(x);
-	free(y);
-	free(flux);
-	free(bg);
+	simplexy2_free_contents(&simxy);
     qfitsloader_free_buffers(&qimg);
 
 	// Try reading SIP header...
