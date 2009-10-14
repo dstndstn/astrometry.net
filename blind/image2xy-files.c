@@ -186,7 +186,7 @@ int image2xy_files(const char* infn, const char* outfn,
 		params->nx = naxisn[0];
 		params->ny = naxisn[1];
 
-		image2xy_image2(params, downsample, downsample_as_required);
+		image2xy_run(params, downsample, downsample_as_required);
 
 		fits_create_tbl(ofptr, BINARY_TBL, params->npeaks, 4, ttype, tform,
                         tunit, "SOURCES", &status);

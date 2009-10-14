@@ -102,7 +102,7 @@ static void get_next_field(char* fits_image_fn,
 
 	simplexy_set_defaults(&simxy);
 
-	image2xy_image2(&simxy, 0, 0);
+	image2xy_run(&simxy, 0, 0);
 
 	N = simxy.npeaks;
 	*nstars = N;

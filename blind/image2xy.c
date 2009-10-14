@@ -65,8 +65,8 @@ static void rebin(float** thedata,
 	}
 }
 
-int image2xy_image2(simplexy_t* s,
-                    int downsample, int downsample_as_required) {
+int image2xy_run(simplexy_t* s,
+				 int downsample, int downsample_as_required) {
 	int fullW=-1, fullH=-1;
 	int newW, newH;
 	bool did_downsample = FALSE;

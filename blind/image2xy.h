@@ -25,7 +25,7 @@
 #include "an-bool.h"
 #include "simplexy.h"
 
-int image2xy_image2(simplexy_t* s,
-                    int downsample, int downsample_as_required);
+int image2xy_run(simplexy_t* s,
+				 int downsample, int downsample_as_required);
 
 #endif
