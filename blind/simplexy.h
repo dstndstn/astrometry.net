@@ -82,19 +82,19 @@ struct simplexy_t {
 };
 typedef struct simplexy_t simplexy_t;
 
-void simplexy2_set_defaults(simplexy_t* s);
+void simplexy_set_defaults(simplexy_t* s);
 
 // Really this is for limited-dynamic-range images, not u8 as such...
-void simplexy2_set_u8_defaults(simplexy_t* i);
+void simplexy_set_u8_defaults(simplexy_t* i);
 
 // Set default values for any fields that are zero.
-void simplexy2_fill_in_defaults(simplexy_t* s);
-void simplexy2_fill_in_defaults_u8(simplexy_t* s);
+void simplexy_fill_in_defaults(simplexy_t* s);
+void simplexy_fill_in_defaults_u8(simplexy_t* s);
 
-int simplexy2(simplexy_t* s);
+int simplexy_run(simplexy_t* s);
 
-void simplexy2_free_contents(simplexy_t* s);
+void simplexy_free_contents(simplexy_t* s);
 
-void simplexy2_clean_cache();
+void simplexy_clean_cache();
 
 #endif

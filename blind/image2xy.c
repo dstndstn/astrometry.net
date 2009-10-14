@@ -94,7 +94,7 @@ int image2xy_image2(simplexy_t* s,
 	}
 
 	do {
-		simplexy2(s);
+		simplexy_run(s);
 
 		tryagain = FALSE;
 		if (s->npeaks == 0 &&

@@ -88,7 +88,7 @@ static void write_fits_float_image(const float* img, int nx, int ny,
 	}
 }
 
-void simplexy2_fill_in_defaults(simplexy_t* s) {
+void simplexy_fill_in_defaults(simplexy_t* s) {
 	if (s->dpsf == 0)
 		s->dpsf = SIMPLEXY_DEFAULT_DPSF;
     if (s->plim == 0)
@@ -107,25 +107,25 @@ void simplexy2_fill_in_defaults(simplexy_t* s) {
 		s->maxnpeaks = SIMPLEXY_DEFAULT_MAXNPEAKS;
 }
 
-void simplexy2_fill_in_defaults_u8(simplexy_t* s) {
+void simplexy_fill_in_defaults_u8(simplexy_t* s) {
 	if (s->plim == 0)
 		s->plim = SIMPLEXY_U8_DEFAULT_PLIM;
 	if (s->saddle == 0)
 		s->saddle = SIMPLEXY_U8_DEFAULT_SADDLE;
-	simplexy2_fill_in_defaults(s);
+	simplexy_fill_in_defaults(s);
 }
 
-void simplexy2_set_u8_defaults(simplexy_t* s) {
+void simplexy_set_u8_defaults(simplexy_t* s) {
     memset(s, 0, sizeof(simplexy_t));
-    simplexy2_fill_in_defaults_u8(s);
+    simplexy_fill_in_defaults_u8(s);
 }
 
-void simplexy2_set_defaults(simplexy_t* s) {
+void simplexy_set_defaults(simplexy_t* s) {
     memset(s, 0, sizeof(simplexy_t));
-    simplexy2_fill_in_defaults(s);
+    simplexy_fill_in_defaults(s);
 }
 
-void simplexy2_free_contents(simplexy_t* s) {
+void simplexy_free_contents(simplexy_t* s) {
 	free(s->image);
 	s->image = NULL;
 	free(s->image_u8);
@@ -140,7 +140,7 @@ void simplexy2_free_contents(simplexy_t* s) {
 	s->background = NULL;
 }
 
-int simplexy2(simplexy_t* s) {
+int simplexy_run(simplexy_t* s) {
 	int i;
     int nx = s->nx;
     int ny = s->ny;
@@ -298,7 +298,7 @@ int simplexy2(simplexy_t* s) {
 	return 1;
 }
 
-void simplexy2_clean_cache() {
+void simplexy_clean_cache() {
 	dselip_cleanup();
 }
 

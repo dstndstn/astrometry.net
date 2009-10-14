@@ -100,7 +100,7 @@ static void get_next_field(char* fits_image_fn,
         exit(-1);
     }
 
-	simplexy2_set_defaults(&simxy);
+	simplexy_set_defaults(&simxy);
 
 	image2xy_image2(&simxy, 0, 0);
 
@@ -114,7 +114,7 @@ static void get_next_field(char* fits_image_fn,
 		(*stary)[i] = simxy.y[i];
 		(*starflux)[i] = simxy.flux[i];
 	}
-	simplexy2_free_contents(&simxy);
+	simplexy_free_contents(&simxy);
     qfitsloader_free_buffers(&qimg);
 
 	// Try reading SIP header...

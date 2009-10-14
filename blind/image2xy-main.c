@@ -83,7 +83,6 @@ int main(int argc, char *argv[]) {
 	simplexy_t* params = &sparams;
 
     memset(params, 0, sizeof(simplexy_t));
-	//simplexy2_set_default(&sparams);
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {

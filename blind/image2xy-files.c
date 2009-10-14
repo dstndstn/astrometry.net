@@ -158,7 +158,7 @@ int image2xy_files(const char* infn, const char* outfn,
             logmsg("This looks like a multi-color image: processing the first image plane only.  (NAXIS=%i)\n", naxis);
 		
         if (bitpix == 8 && do_u8 && !downsample) {
-			simplexy2_fill_in_defaults_u8(params);
+			simplexy_fill_in_defaults_u8(params);
 
             // u8 image.
             params->image_u8 = malloc(naxisn[0] * naxisn[1]);
@@ -170,7 +170,7 @@ int image2xy_files(const char* infn, const char* outfn,
                           params->image_u8, NULL, &status);
 
         } else {
-			simplexy2_fill_in_defaults(params);
+			simplexy_fill_in_defaults(params);
 
             params->image = malloc(naxisn[0] * naxisn[1] * sizeof(float));
             if (!params->image) {
@@ -248,7 +248,7 @@ int image2xy_files(const char* infn, const char* outfn,
 			"image in accordance with the FITS standard.", &status);
         CFITS_CHECK("Failed to write comments");
 
-		simplexy2_free_contents(params);
+		simplexy_free_contents(params);
 	}
 
 	// Put in the optional NEXTEND keywoard
@@ -267,7 +267,7 @@ int image2xy_files(const char* infn, const char* outfn,
     CFITS_CHECK("Failed to close FITS output file");
 
     // for valgrind
-	simplexy2_clean_cache();
+	simplexy_clean_cache();
 
 	return 0;
 
