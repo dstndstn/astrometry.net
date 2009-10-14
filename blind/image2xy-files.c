@@ -31,7 +31,7 @@
 #include "image2xy.h"
 #include "fitsio.h"
 #include "ioutils.h"
-#include "simplexy2.h"
+#include "simplexy.h"
 #include "svn.h"
 #include "errors.h"
 #include "log.h"

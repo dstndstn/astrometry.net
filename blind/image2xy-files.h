@@ -23,7 +23,7 @@
 #include <stdint.h>
 
 #include "an-bool.h"
-#include "simplexy2.h"
+#include "simplexy.h"
 
 /**
  Reads an input FITS image (possibly multi-HDU), runs simplexy on each

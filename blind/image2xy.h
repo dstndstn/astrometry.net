@@ -23,7 +23,7 @@
 #include <stdint.h>
 
 #include "an-bool.h"
-#include "simplexy2.h"
+#include "simplexy.h"
 
 int image2xy_image2(simplexy_t* s,
                     int downsample, int downsample_as_required);

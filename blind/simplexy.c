@@ -25,7 +25,7 @@
 #include <sys/param.h>
 #include <assert.h>
 
-#include "simplexy2.h"
+#include "simplexy.h"
 #include "ctmf.h"
 #include "dimage.h"
 #include "simplexy-common.h"
