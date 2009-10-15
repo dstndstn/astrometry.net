@@ -102,35 +102,19 @@ int GLUE(dsigma, DSIGMA_SUFF)(IMGTYPE *image,
 		double s = 0.0;
 		// Sample the sorted list of squared differences at different
 		// percentiles (starting at ~50th)
-		/*
-		 while (s == 0.0) {
-		 int k = (int)floor(ndiff * erf(Nsigma / M_SQRT2));
-		 if (k >= ndiff) {
-		 logerr("Failed to estimate the image noise.  Setting sigma=1.  Expect the worst.\n");
-		 // FIXME - Could try a finer grid of sample points...
-		 s = 1.0;
-		 break;
-		 }
-		 s = dselip(k, ndiff, diff) / (Nsigma * M_SQRT2);
-		 logverb("Nsigma=%g, s=%g\n", Nsigma, s);
-		 Nsigma += 0.1;
-		 }
-		 *sigma = s;
-		 */
-
-		int gotit = 0;
-		for (Nsigma=0.7;; Nsigma+=0.1) {
+		while (s == 0.0) {
 			int k = (int)floor(ndiff * erf(Nsigma / M_SQRT2));
-			if (k >= ndiff) {
+			if (k >=  ndiff) {
+				logerr("Failed to estimate the image noise.  Setting sigma=1.  Expect the worst.\n");
+				// FIXME - Could try a finer grid of sample points...
+				s = 1.0;
 				break;
 			}
 			s = dselip(k, ndiff, diff) / (Nsigma * M_SQRT2);
 			logverb("Nsigma=%g, s=%g\n", Nsigma, s);
-			if (!gotit) {
-				*sigma = s;
-				gotit = 1;
-			}
+			Nsigma += 0.1;
 		}
+		*sigma = s;
     }
     rtn = 1;
 
