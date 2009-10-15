@@ -94,7 +94,6 @@ int dsigma(float *image, int nx, int ny, int sp, int gridsize, float *sigma);
 int dsigma_u8(uint8_t *image, int nx, int ny, int sp, int gridsize, float *sigma);
 
 int dmedsmooth(float *image,
-//	       float invvar,
 	       int nx, int ny, int halfbox, float *smooth);
 
 int dallpeaks(float *image, int nx, int ny, int *objects, float *xcen,

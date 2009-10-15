@@ -36,13 +36,12 @@
 float dselip(unsigned long k, unsigned long n, float *arr);
 
 int dmedsmooth(float *image,
-//               float invvar,
                int nx,
                int ny,
                int halfbox,
                float *smooth)
 {
-	int i, j, ip, jp, ist, jst, nxt, nyt, nb, ind, jnd, sp;
+	int i, j, ip, jp, ist, jst, nb, ind, jnd, sp;
 	int xoff, yoff, nm, nxgrid, nygrid;
 	int ypsize, ymsize, xpsize, xmsize;
 	float dx, dy, xkernel, ykernel;
@@ -99,31 +98,20 @@ int dmedsmooth(float *image,
 
 	arr = (float *) malloc((size_t)((sp * 2 + 5) * (sp * 2 + 5)) * sizeof(float));
 
-	for (j = 0;j < nygrid;j++) {
-//		printf("j=%d over nygrid\n", j);
-		jst = ylo[j];
-		jnd = yhi[j];
-		nyt = jnd - jst + 1;
-		for (i = 0;i < nxgrid;i++) {
-//			printf("i=%d over nxgrid\n", i);
-		  ist = xlo[i];
-		  ind = xhi[i];
-		  nxt = ind - ist + 1;
-		  nb = 0;
-//		  if (invvar > 0.) {
-		    for (jp = jst;jp <= jnd;jp++)
-		      for (ip = ist;ip <= ind;ip++) {
-			arr[nb] = image[ip + jp * nx];
-			nb++;
-		      }
-//		  }
-//			printf("j=%d over nygrid i=%d over nxgrid\n", j, i);
-		  if (nb > 1) {
-		    nm = nb / 2;
-		    grid[i + j*nxgrid] = dselip(nm, nb, arr);
-		  } else {
-		    grid[i + j*nxgrid] = image[(long) xlo[i] + ((long) ylo[j]) * nx];
-		  }
+	for (j=0; j<nygrid; j++) {
+		for (i=0; i<nxgrid; i++) {
+			nb = 0;
+			for (jp=ylo[j]; jp<=yhi[j]; jp++)
+				for (ip=xlo[i]; ip<=xhi[i]; ip++) {
+					arr[nb] = image[ip + jp * nx];
+					nb++;
+				}
+			if (nb > 1) {
+				nm = nb / 2;
+				grid[i + j*nxgrid] = dselip(nm, nb, arr);
+			} else {
+				grid[i + j*nxgrid] = image[(long) xlo[i] + ((long) ylo[j]) * nx];
+			}
 		}
 	}
 
