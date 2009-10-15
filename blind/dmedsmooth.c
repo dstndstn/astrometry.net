@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <sys/param.h>
 
 #include "simplexy-common.h"
 
@@ -59,21 +60,22 @@ int dmedsmooth(float *image,
 	/* get grids */
 	sp = halfbox;
 	nxgrid = nx / sp + 2;
+
+	// "xgrid" are the centers.
+	// "xlo" are the (inclusive) lower-bounds
+	// "xhi" are the (inclusive) upper-bounds
+	// the grid cells may overlap.
+	xgrid = (int *) malloc((size_t)nxgrid * sizeof(int));
 	xlo = (int *) malloc((size_t)nxgrid * sizeof(int));
 	xhi = (int *) malloc((size_t)nxgrid * sizeof(int));
-	xgrid = (int *) malloc((size_t)nxgrid * sizeof(int));
 	xoff = (nx - 1 - (nxgrid - 3) * sp) / 2;
 	for (i = 1;i < nxgrid - 1;i++)
 		xgrid[i] = (i - 1) * sp + xoff;
 	xgrid[0] = xgrid[1] - sp;
 	xgrid[nxgrid - 1] = xgrid[nxgrid - 2] + sp;
 	for (i = 0;i < nxgrid;i++) {
-		xlo[i] = xgrid[i] - sp;
-		if (xlo[i] < 0)
-			xlo[i] = 0;
-		xhi[i] = xgrid[i] + sp;
-		if (xhi[i] > nx - 1)
-			xhi[i] = nx - 1;
+		xlo[i] = MAX(xgrid[i] - sp, 0);
+		xhi[i] = MIN(xgrid[i] + sp, nx-1);
 	}
 
 	nygrid = ny / sp + 2;
@@ -87,14 +89,11 @@ int dmedsmooth(float *image,
 	ygrid[nygrid - 1] = ygrid[nygrid - 2] + sp;
 
 	for (i = 0;i < nygrid;i++) {
-		ylo[i] = ygrid[i] - sp;
-		if (ylo[i] < 0)
-			ylo[i] = 0;
-		yhi[i] = ygrid[i] + sp;
-		if (yhi[i] > ny - 1)
-			yhi[i] = ny - 1;
+		ylo[i] = MAX(ygrid[i] - sp, 0);
+		yhi[i] = MIN(ygrid[i] + sp, ny-1);
 	}
 
+	// the median-filtered image (subsampled on a grid).
 	grid = (float *) malloc((size_t)(nxgrid * nygrid) * sizeof(float));
 
 	arr = (float *) malloc((size_t)((sp * 2 + 5) * (sp * 2 + 5)) * sizeof(float));
@@ -115,6 +114,11 @@ int dmedsmooth(float *image,
 			}
 		}
 	}
+	FREEVEC(xlo);
+	FREEVEC(ylo);
+	FREEVEC(xhi);
+	FREEVEC(yhi);
+	FREEVEC(arr);
 
 	for (j = 0;j < ny;j++)
 		for (i = 0;i < nx;i++)
@@ -182,14 +186,9 @@ int dmedsmooth(float *image,
 		}
 	}
 
-	FREEVEC(arr);
 	FREEVEC(grid);
 	FREEVEC(xgrid);
 	FREEVEC(ygrid);
-	FREEVEC(xlo);
-	FREEVEC(ylo);
-	FREEVEC(xhi);
-	FREEVEC(yhi);
 
 	return 1;
 }
