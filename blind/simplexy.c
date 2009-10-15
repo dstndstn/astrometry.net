@@ -200,7 +200,7 @@ int simplexy_run(simplexy_t* s) {
 			// Background-subtracted image.
 			bgsub_u8 = malloc(nx * ny);
 			for (i=0; i<nx*ny; i++)
-				bgsub[i] = MAX(0, s->image_u8[i] - medianfiltered_u8[i]);
+				bgsub_u8[i] = MAX(0, s->image_u8[i] - medianfiltered_u8[i]);
 			free(medianfiltered_u8);
 		}
 
@@ -299,14 +299,13 @@ int simplexy_run(simplexy_t* s) {
         assert(iy >= 0);
         assert(ix < nx);
         assert(iy < ny);
-		if (bgsub)
+		if (bgsub) {
 			s->flux[i]       = bgsub[ix + iy * nx];
-		else
-			s->flux[i]       = bgsub_u8[ix + iy * nx];
-		if (s->image_u8)
-			s->background[i] = s->image_u8[ix + iy * nx] - bgsub[ix + iy * nx];
-		else
 			s->background[i] = s->image[ix + iy * nx] - bgsub[ix + iy * nx];
+		} else {
+			s->flux[i]       = bgsub_u8[ix + iy * nx];
+			s->background[i] = s->image_u8[ix + iy * nx] - bgsub_u8[ix + iy * nx];
+		}
     }
 
 	if (!s->nobgsub) {

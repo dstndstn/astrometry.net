@@ -138,7 +138,7 @@ int fits_write_u8_image(const uint8_t* img, int nx, int ny, const char* fn) {
     memset(&qoutimg, 0, sizeof(qoutimg));
     qoutimg.filename = fn;
     qoutimg.npix = nx * ny;
-    qoutimg.ptype = PTYPE_FLOAT;
+    qoutimg.ptype = PTYPE_UINT8;
     qoutimg.vbuf = img;
     qoutimg.out_ptype = BPP_8_UNSIGNED;
 	rtn = fits_write_header_and_image(NULL, &qoutimg, nx);
