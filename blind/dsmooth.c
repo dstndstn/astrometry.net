@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 #include <sys/param.h>
@@ -34,88 +35,17 @@
  * 1/2006 
  */
 
-// Optimize version of dsmooth, with a separated Gaussian convolution.
-void dsmooth2(float *image,
-            int nx,
-            int ny,
-            float sigma,
-            float *smooth)
-{
-	int i, j, npix, half, start, end, sample;
-	float neghalfinvvar, total, scale, dx, sum;
-	float* kernel1D;
-    float* kernel_shifted;
-	float* smooth_temp;
+#define IMGTYPE float
+#define SUFFIX
+#include "dsmooth.inc"
+#undef SUFFIX
+#undef IMGTYPE
 
-	// make the kernel
-	npix = 2 * ((int) ceilf(3. * sigma)) + 1;
-	half = npix / 2;
-	kernel1D =  malloc(npix * sizeof(float));
-	neghalfinvvar = -1.0 / (2.0 * sigma * sigma);
-	for (i=0; i<npix; i++) {
-        dx = ((float) i - 0.5 * ((float)npix - 1.));
-        kernel1D[i] = exp((dx * dx) * neghalfinvvar);
-	}
-
-	// normalize the kernel
-	total = 0.0;
-	for (i=0; i<npix; i++)
-        total += kernel1D[i];
-	scale = 1. / total;
-	for (i=0; i<npix; i++)
-        kernel1D[i] *= scale;
-
-	smooth_temp = malloc(sizeof(float) * MAX(nx, ny));
-
-    // Here's some trickery: we set "kernel_shifted" to be an array where:
-    //   kernel_shifted[0] is the middle of the array,
-    //   kernel_shifted[-half] is the left edge (ie the first sample),
-    //   kernel_shifted[half] is the right edge (last sample)
-	kernel_shifted = kernel1D + half;
-
-	// convolve in x direction, dumping results into smooth_temp
-	for (j=0; j<ny; j++) {
-        float* imagerow = image + j*nx;
-        for (i=0; i<nx; i++) {
-            /*
-             The outer loops are over OUTPUT pixels;
-             the "sample" loop is over INPUT pixels.
-
-             We're summing over the input pixels that contribute to the value
-             of the output pixel.
-             */
-            start = i - half;
-            start = MAX(start, 0);
-            end = i + half;
-            end = MIN(end, nx-1);
-            sum = 0.0;
-            for (sample=start; sample <= end; sample++)
-                sum += imagerow[sample] * kernel_shifted[sample - i];
-            smooth_temp[i] = sum;
-        }
-        memcpy(smooth + j*nx, smooth_temp, nx * sizeof(float));
-    }
-
-	// convolve in the y direction, dumping results into smooth
-	for (i=0; i<nx; i++) {
-        float* imagecol = smooth + i;
-        for (j=0; j<ny; j++) {
-            start = j - half;
-            start = MAX(start, 0);
-            end = j + half;
-            end = MIN(end, ny-1);
-            sum = 0.0;
-            for (sample=start; sample<=end; sample++)
-                sum += imagecol[sample*nx] * kernel_shifted[sample - j];
-            smooth_temp[j] = sum;
-        }
-        for (j=0; j<ny; j++)
-            smooth[i + j*nx] = smooth_temp[j];
-	}
-
-	FREEVEC(smooth_temp);
-	FREEVEC(kernel1D);
-} /* end dsmooth2 */
+#define IMGTYPE uint8_t
+#define SUFFIX _u8
+#include "dsmooth.inc"
+#undef IMGTYPE
+#undef SUFFIX
 
 
 // Original version of dsmooth, non-separated kernel.

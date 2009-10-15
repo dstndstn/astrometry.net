@@ -41,7 +41,9 @@ float dselip(unsigned long k, unsigned long n, const float *arr);
 void dselip_cleanup();
 
 int dsmooth(float *image, int nx, int ny, float sigma, float *smooth);
+
 void dsmooth2(float *image, int nx, int ny, float sigma, float *smooth);
+void dsmooth2_u8(uint8_t *image, int nx, int ny, float sigma, float *smooth);
 
 /*
  int dobjects(float *image, float *smooth, int nx, int ny,

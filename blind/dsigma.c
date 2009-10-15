@@ -47,4 +47,5 @@
 #define DSIGMA_SUFF _u8
 #include "dsigma.inc"
 #undef IMGTYPE
+#undef DSIGMA_SUFF
 

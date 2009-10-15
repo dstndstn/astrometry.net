@@ -26,6 +26,10 @@ int GLUE(dsigma, DSIGMA_SUFF)(IMGTYPE *image,
 							  int sp,
 							  int gridsize,
 							  float *sigma) {
+
+#undef GLUE
+#undef GLUE2
+
 	float *diff = NULL;
 	float tot;
 	int i, j, n, dx, dy, ndiff;
