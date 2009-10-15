@@ -52,8 +52,10 @@ int qfits_pixel_ctype_size(int ctype) {
 		return sizeof(float);
 	case PTYPE_INT:
 		return sizeof(int);
+	case PTYPE_INT16:
+		return sizeof(int16_t);
 	case PTYPE_UINT8:
-		return 1;
+		return sizeof(uint8_t);
 	}
 	return -1;
 }
@@ -71,6 +73,7 @@ int qfits_pixel_ctofits(int ctype, int fitstype,
 	const double* idouble;
 	const int* iint;
 	const uint8_t* iu8;
+	const int16_t* ii16;
 
 	switch (ctype) {
 	case PTYPE_DOUBLE:
@@ -93,6 +96,13 @@ int qfits_pixel_ctofits(int ctype, int fitstype,
 		// This generates warnings about "comparison always false due to limited range of data".
 		// These warnings are harmless.
 		FITSOUTPUTPIXEL(fitstype, *iu8, fitsval);
+		break;
+
+	case PTYPE_INT16:
+		ii16 = cval;
+		// This generates warnings about "comparison always false due to limited range of data".
+		// These warnings are harmless.
+		FITSOUTPUTPIXEL(fitstype, *ii16, fitsval);
 		break;
 
 	default:

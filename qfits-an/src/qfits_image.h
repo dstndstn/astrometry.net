@@ -49,6 +49,7 @@
 #define PTYPE_INT          1
 #define PTYPE_DOUBLE       2
 #define PTYPE_UINT8        3  /** Astrometry.net only */
+#define PTYPE_INT16        4  /** Astrometry.net only */
 
 /* FITS pixel depths */
 /* FITS BITPIX=8 */
