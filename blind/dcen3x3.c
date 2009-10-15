@@ -38,8 +38,9 @@
  * Mike Blanton
  * 1/2006 */
 
-int dcen3a(float f0, float f1, float f2, float *xcen)
-{
+int dcen3a(float f0, float f1, float f2, float *xcen,
+		   float* maxval
+		   ) {
 	float s, d, aa, sod, kk;
 
 	kk = (4.0/3.0);
@@ -60,14 +61,19 @@ int dcen3a(float f0, float f1, float f2, float *xcen)
 }
 
 /* given points at (0, f0), (1, f1), (2, f2), assume there is a
- quadratic passing through the three points; return the peak of
- the quadratic:
+ quadratic passing through the three points; return the peak position
+ and value of the quadratic:
 
  f = a x^2 + b x + c
 
  df/dx = 2ax + b = 0  =>  x* = -b/2a
+
+ f* = a x*^2 + b x* + c
+
  */
-int dcen3b(float f0, float f1, float f2, float *xcen) {
+int dcen3b(float f0, float f1, float f2, float *xcen
+		   //float *maxval
+		   ) {
     float a, b;
     /*
      f0 = c
@@ -81,6 +87,7 @@ int dcen3b(float f0, float f1, float f2, float *xcen) {
     *xcen = -0.5 * b / a;
     if ((*xcen < 0.0) || (*xcen > 2.0))
         return 0;
+	//*maxval = a * (*xcen)*(*xcen) + b * (*xcen) + f0;
     return 1;
 }
 
@@ -93,23 +100,26 @@ int dcen3x3(float *image, float *xcen, float *ycen)
 	float bx, by, mx , my;
 	int badcen = 0;
 
+	// Find the peak of the quadratic along each rows...
 	badcen += dcen3(image[0 + 3*0], image[1 + 3*0], image[2 + 3*0], &mx0);
 	badcen += dcen3(image[0 + 3*1], image[1 + 3*1], image[2 + 3*1], &mx1);
 	badcen += dcen3(image[0 + 3*2], image[1 + 3*2], image[2 + 3*2], &mx2);
 
+	// Now along each column...
 	badcen += dcen3(image[0 + 3*0], image[0 + 3*1], image[0 + 3*2], &my0);
 	badcen += dcen3(image[1 + 3*0], image[1 + 3*1], image[1 + 3*2], &my1);
 	badcen += dcen3(image[2 + 3*0], image[2 + 3*1], image[2 + 3*2], &my2);
 
 	/* are we not okay? */
-	if (badcen != 6) {
-	  return (0);
-	}
+	if (badcen != 6)
+		return 0;
 
+	// Fit straight line to peak positions along the rows...
 	/* x = (y-1) mx + bx */
 	bx = (mx0 + mx1 + mx2) / 3.;
 	mx = (mx2 - mx0) / 2.;
 
+	// ... and along the columns...
 	/* y = (x-1) my + by */
 	by = (my0 + my1 + my2) / 3.;
 	my = (my2 - my0) / 2.;

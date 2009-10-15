@@ -75,6 +75,8 @@ an-fitstopnm -N 0 -X 255 -i bgsub.fits | pnmtopng > bgsub-u8.png
 an-fitstopnm -N 0 -X 255 -i bg.fits | pnmtopng > bg-u8.png
 an-fitstopnm -N 0 -X 255 -i mask.fits | pnmtopng > mask-u8.png
 an-fitstopnm -N 0 -X 255 -i smooth-u8.fits | pnmtopng > smooth-u8.png
+tabsort -d FLUX img-u8.xy sorted-u8.xy
+pngtopnm img.png | plotxy -i sorted-u8.xy -I - -x 1 -y 1 -N 100 -C red -P | plotxy -i sorted-u8.xy -I - -x 1 -y 1 -n 100 -C red -r 2 -o objs-u8.png
 
 image2xy -8 -O -p 5 -o img.xy -v -S bgsub.fits -B bg.fits -M mask.fits -U smooth-f.fits img.fits 
 an-fitstopnm -N 0 -X 255 -i bgsub.fits | pnmtopng > bgsub-f.png
@@ -368,10 +370,10 @@ int simplexy_run(simplexy_t* s) {
         assert(iy < ny);
 		if (bgsub) {
 			s->flux[i]       = bgsub[ix + iy * nx];
-			s->background[i] = s->image[ix + iy * nx] - bgsub[ix + iy * nx];
+			s->background[i] = s->image[ix + iy * nx] - s->flux[i];
 		} else {
 			s->flux[i]       = bgsub_i16[ix + iy * nx];
-			s->background[i] = (float)s->image_u8[ix + iy * nx] - (float)bgsub_i16[ix + iy * nx];
+			s->background[i] = (float)s->image_u8[ix + iy * nx] - s->flux[i];
 		}
     }
 
