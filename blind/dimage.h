@@ -44,6 +44,7 @@ int dsmooth(float *image, int nx, int ny, float sigma, float *smooth);
 
 void dsmooth2(float *image, int nx, int ny, float sigma, float *smooth);
 void dsmooth2_u8(uint8_t *image, int nx, int ny, float sigma, float *smooth);
+void dsmooth2_i16(int16_t *image, int nx, int ny, float sigma, float *smooth);
 
 /*
  int dobjects(float *image, float *smooth, int nx, int ny,
@@ -104,6 +105,10 @@ int dallpeaks_u8(uint8_t *image, int nx, int ny, int *objects, float *xcen,
 				 float *ycen, int *npeaks, float dpsf, float sigma,
 				 float dlim, float saddle,
 				 int maxper, int maxnpeaks, float minpeak, int maxsize);
+int dallpeaks_i16(int16_t *image, int nx, int ny, int *objects, float *xcen,
+				  float *ycen, int *npeaks, float dpsf, float sigma,
+				  float dlim, float saddle,
+				  int maxper, int maxnpeaks, float minpeak, int maxsize);
 
 int dtemplates(float *image, int nx, int ny, int *ntemplates, int *xcen,
                int *ycen, float *templates, float sigma, float parallel);

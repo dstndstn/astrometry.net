@@ -47,6 +47,12 @@
 #undef IMGTYPE
 #undef SUFFIX
 
+#define IMGTYPE int16_t
+#define SUFFIX _i16
+#include "dsmooth.inc"
+#undef IMGTYPE
+#undef SUFFIX
+
 
 // Original version of dsmooth, non-separated kernel.
 int dsmooth(float *image,

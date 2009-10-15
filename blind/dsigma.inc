@@ -2,6 +2,7 @@
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Michael Blanton, Keir Mierle, David W. Hogg, Sam Roweis
   and Dustin Lang.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -64,11 +65,13 @@ int GLUE(dsigma, DSIGMA_SUFF)(IMGTYPE *image,
         return rtn;
 	}
 
+	logverb("Sampling sigma at %i points\n", ndiff);
 	diff = malloc(ndiff * sizeof(float));
 	n = 0;
 	for (j = 0; j < ny-sp; j += dy) {
 		for (i = 0; i < nx-sp; i += dx) {
-			diff[n] = fabs(image[i + j * nx] - image[i + sp + (j + sp) * nx]);
+			//diff[n] = fabs(image[i + j * nx] - image[i + sp + (j + sp) * nx]);
+			diff[n] = fabs((float)image[i + j * nx] - (float)image[i + sp + (j + sp) * nx]);
 			n++;
 		}
 	}
@@ -99,19 +102,35 @@ int GLUE(dsigma, DSIGMA_SUFF)(IMGTYPE *image,
 		double s = 0.0;
 		// Sample the sorted list of squared differences at different
 		// percentiles (starting at ~50th)
-		while (s == 0.0) {
+		/*
+		 while (s == 0.0) {
+		 int k = (int)floor(ndiff * erf(Nsigma / M_SQRT2));
+		 if (k >= ndiff) {
+		 logerr("Failed to estimate the image noise.  Setting sigma=1.  Expect the worst.\n");
+		 // FIXME - Could try a finer grid of sample points...
+		 s = 1.0;
+		 break;
+		 }
+		 s = dselip(k, ndiff, diff) / (Nsigma * M_SQRT2);
+		 logverb("Nsigma=%g, s=%g\n", Nsigma, s);
+		 Nsigma += 0.1;
+		 }
+		 *sigma = s;
+		 */
+
+		int gotit = 0;
+		for (Nsigma=0.7;; Nsigma+=0.1) {
 			int k = (int)floor(ndiff * erf(Nsigma / M_SQRT2));
 			if (k >= ndiff) {
-				logerr("Failed to estimate the image noise.  Setting sigma=1.  Expect the worst.\n");
-				// FIXME - Could try a finer grid of sample points...
-			    s = 1.0;
 				break;
 			}
 			s = dselip(k, ndiff, diff) / (Nsigma * M_SQRT2);
 			logverb("Nsigma=%g, s=%g\n", Nsigma, s);
-			Nsigma += 0.1;
+			if (!gotit) {
+				*sigma = s;
+				gotit = 1;
+			}
 		}
-        *sigma = s;
     }
     rtn = 1;
 

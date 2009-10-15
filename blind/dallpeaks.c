@@ -57,3 +57,8 @@
 #undef IMGTYPE
 #undef SUFFIX
 
+#define IMGTYPE int16_t
+#define SUFFIX _i16
+#include "dallpeaks.inc"
+#undef IMGTYPE
+#undef SUFFIX

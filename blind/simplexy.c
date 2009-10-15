@@ -79,6 +79,12 @@ static void write_fits_u8_image(const uint8_t* img, int nx, int ny,
 	if (fits_write_u8_image(img, nx, ny, fn))
 		exit(-1);
 }
+static void write_fits_i16_image(const int16_t* img, int nx, int ny,
+								const char* fn) {
+	if (fits_write_i16_image(img, nx, ny, fn))
+		exit(-1);
+}
+
 
 void simplexy_fill_in_defaults(simplexy_t* s) {
 	if (s->dpsf == 0)
@@ -141,7 +147,7 @@ int simplexy_run(simplexy_t* s) {
 	uint8_t* mask;
 	// background-subtracted image.
 	float* bgsub = NULL;
-	uint8_t* bgsub_u8 = NULL;
+	int16_t* bgsub_i16 = NULL;
 	// PSF-smoothed image.
 	float* smoothed = NULL;
 	// Connected-components image.
@@ -158,8 +164,13 @@ int simplexy_run(simplexy_t* s) {
             s->maxper, s->maxnpeaks, s->maxsize, s->halfbox);
 
 	if (s->nobgsub) {
-		bgsub_u8 = s->image_u8;
-		bgsub = s->image;
+		if (s->image)
+			bgsub = s->image;
+		else {
+			bgsub_i16 = malloc(nx * ny * sizeof(int16_t));
+			for (i=0; i<nx*ny; i++)
+				bgsub_i16[i] = s->image_u8[i];
+		}
 
 	} else {
 		// background subtraction via median smoothing.
@@ -198,9 +209,10 @@ int simplexy_run(simplexy_t* s) {
 			}
 
 			// Background-subtracted image.
-			bgsub_u8 = malloc(nx * ny);
+			bgsub_i16 = malloc(nx * ny * sizeof(int16_t));
 			for (i=0; i<nx*ny; i++)
-				bgsub_u8[i] = MAX(0, s->image_u8[i] - medianfiltered_u8[i]);
+				//bgsub_i16[i] = (int16_t)s->image_u8[i] - (int16_t)medianfiltered_u8[i];
+				bgsub_i16[i] = s->image_u8[i] - medianfiltered_u8[i];
 			free(medianfiltered_u8);
 		}
 
@@ -209,7 +221,7 @@ int simplexy_run(simplexy_t* s) {
 			if (bgsub)
 				write_fits_float_image(bgsub, nx, ny, s->bgsubimgfn);
 			else
-				write_fits_u8_image(bgsub_u8, nx, ny, s->bgsubimgfn);
+				write_fits_i16_image(bgsub_i16, nx, ny, s->bgsubimgfn);
 		}
 	}
 
@@ -220,7 +232,7 @@ int simplexy_run(simplexy_t* s) {
 	if (bgsub)
 		dsmooth2(bgsub, nx, ny, s->dpsf, smoothed);
 	else
-		dsmooth2_u8(bgsub_u8, nx, ny, s->dpsf, smoothed);
+		dsmooth2_i16(bgsub_i16, nx, ny, s->dpsf, smoothed);
 
 	if (s->smoothimgfn) {
 		logverb("Writing smoothed background-subtracted image \"%s\"\n", s->smoothimgfn);
@@ -282,8 +294,8 @@ int simplexy_run(simplexy_t* s) {
 		dallpeaks(bgsub, nx, ny, ccimg, s->x, s->y, &(s->npeaks), s->dpsf,
 				  s->sigma, s->dlim, s->saddle, s->maxper, s->maxnpeaks, s->sigma, s->maxsize);
 	else
-		dallpeaks_u8(bgsub_u8, nx, ny, ccimg, s->x, s->y, &(s->npeaks), s->dpsf,
-					 s->sigma, s->dlim, s->saddle, s->maxper, s->maxnpeaks, s->sigma, s->maxsize);
+		dallpeaks_i16(bgsub_i16, nx, ny, ccimg, s->x, s->y, &(s->npeaks), s->dpsf,
+					  s->sigma, s->dlim, s->saddle, s->maxper, s->maxnpeaks, s->sigma, s->maxsize);
     logmsg("simplexy: found %i sources.\n", s->npeaks);
 	FREEVEC(ccimg);
 
@@ -308,14 +320,14 @@ int simplexy_run(simplexy_t* s) {
 			s->flux[i]       = bgsub[ix + iy * nx];
 			s->background[i] = s->image[ix + iy * nx] - bgsub[ix + iy * nx];
 		} else {
-			s->flux[i]       = bgsub_u8[ix + iy * nx];
-			s->background[i] = s->image_u8[ix + iy * nx] - bgsub_u8[ix + iy * nx];
+			s->flux[i]       = bgsub_i16[ix + iy * nx];
+			s->background[i] = (float)s->image_u8[ix + iy * nx] - (float)bgsub_i16[ix + iy * nx];
 		}
     }
 
 	if (!s->nobgsub) {
 		FREEVEC(bgsub);
-		FREEVEC(bgsub_u8);
+		FREEVEC(bgsub_i16);
 	}
 
 	return 1;
