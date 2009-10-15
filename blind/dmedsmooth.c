@@ -27,7 +27,8 @@
 /*
  * dmedsmooth.c
  *
- * Median smooth an image
+ * Median smooth an image -- actually, compute median values for a grid of points,
+ * then interpolate.
  *
  * Mike Blanton
  * 1/2006 */
@@ -181,12 +182,6 @@ int dmedsmooth(float *image,
 		}
 	}
 
-#if 0
-	for (j = 0;j < nygrid;j++)
-		for (i = 0;i < nxgrid;i++)
-			smooth[i + j*nx] = grid[i + j * nxgrid];
-#endif
-
 	FREEVEC(arr);
 	FREEVEC(grid);
 	FREEVEC(xgrid);
@@ -196,5 +191,5 @@ int dmedsmooth(float *image,
 	FREEVEC(xhi);
 	FREEVEC(yhi);
 
-	return (1);
-} /* end dmedsmooth */
+	return 1;
+}
