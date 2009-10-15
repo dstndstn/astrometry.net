@@ -22,6 +22,7 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#include <sys/param.h>
 
 #include "dimage.h"
 #include "permutedsort.h"
@@ -67,6 +68,7 @@ int dallpeaks(float *image,
 	int *indx = NULL;
 	float *oimage = NULL;
 	float *simage = NULL;
+	int npix = 0;
 	int *xc = NULL;
 	int *yc = NULL;
 
@@ -104,96 +106,96 @@ int dallpeaks(float *image,
 		for (lobj = l;lobj < nx*ny && dobject[indx[lobj]] == current;lobj++) {
 			xcurr = indx[lobj] % nx;
 			ycurr = indx[lobj] / nx;
-			if (xcurr < xmin)
-				xmin = xcurr;
-			if (xcurr > xmax)
-				xmax = xcurr;
-			if (ycurr < ymin)
-				ymin = ycurr;
-			if (ycurr > ymax)
-				ymax = ycurr;
+			xmin = MIN(xmin, xcurr);
+			xmax = MAX(xmax, xcurr);
+			ymin = MIN(ymin, ycurr);
+			ymax = MAX(ymax, ycurr);
 		}
 
-		if (xmax - xmin > 2 && xmax - xmin < maxsize &&
-            ymax - ymin > 2 && ymax - ymin < maxsize &&
-            *npeaks < maxnpeaks) {
+		if (!(xmax - xmin > 2 && xmax - xmin < maxsize &&
+			  ymax - ymin > 2 && ymax - ymin < maxsize &&
+			  *npeaks < maxnpeaks))
+			continue;
 
-			/* make object cutout (if it is 3x3 or bigger) */
-			onx = xmax - xmin + 1;
-			ony = ymax - ymin + 1;
-			for (oj = 0;oj < ony;oj++)
-				for (oi = 0;oi < onx;oi++) {
-					oimage[oi + oj*onx] = 0.;
-					i = oi + xmin;
-					j = oj + ymin;
-					/* if the object number of this pixel matches the current
-					 * object, then copy the pixel into our cutout. */
-					if (dobject[i + j*nx] == nobj) {
-						oimage[oi + oj*onx] = image[i + j * nx];
-					}
-				}
+		/* make object cutout (if it is 3x3 or bigger) */
+		onx = xmax - xmin + 1;
+		ony = ymax - ymin + 1;
 
-			/* find peaks in cutout */
-			/* note that despite oimage and simage being sizeof(image), they
-			 * are only used as big buffers; only a portion of each are used */
-			dsmooth2(oimage, onx, ony, dpsf, simage);
-			dpeaks(simage, onx, ony, &nc, xc, yc,
-			       sigma, dlim, saddle, maxper, 0, 1, minpeak);
-			imore = 0;
-			for (i = 0;i < nc;i++) {
-				if (xc[i] > 0 && xc[i] < onx - 1 &&
-                    yc[i] > 0 && yc[i] < ony - 1 &&
-                    imore < (maxnpeaks - (*npeaks))) {
+		if (onx * ony > npix) {
+			free(oimage);
+			free(simage);
+			npix = onx * ony;
+			oimage = malloc(npix * sizeof(float));
+			simage = malloc(npix * sizeof(float));
+		}
 
-					/* install default centroid to begin */
-					xcen[imore + (*npeaks)] = (float)(xc[i] + xmin);
-					ycen[imore + (*npeaks)] = (float)(yc[i] + ymin);
-                    assert(isfinite(xcen[imore + *npeaks]));
-                    assert(isfinite(ycen[imore + *npeaks]));
+		for (oj=0; oj<ony; oj++)
+			for (oi=0; oi<onx; oi++) {
+				oimage[oi + oj*onx] = 0.;
+				i = oi + xmin;
+				j = oj + ymin;
+				/* if the object number of this pixel matches the current
+				 * object, then copy the pixel into our cutout. */
+				if (dobject[i + j*nx] == nobj)
+					oimage[oi + oj*onx] = image[i + j * nx];
+			}
 
-					/* try to get centroid in the 3 x 3 box */
-					for (oi = -1;oi <= 1;oi++)
-						for (oj = -1;oj <= 1;oj++)
-							three[oi + 1 + (oj + 1)*3] =
-							    simage[oi + xc[i] + (oj + yc[i]) * onx];
-					if (dcen3x3(three, &tmpxc, &tmpyc)) {
-                        assert(isfinite(tmpxc));
-                        assert(isfinite(tmpyc));
-						xcen[imore + (*npeaks)] = tmpxc
-                            + (float)(xc[i] + xmin - 1);
-						ycen[imore + (*npeaks)] = tmpyc
-                            + (float)(yc[i] + ymin - 1);
-                        assert(isfinite(xcen[imore + *npeaks]));
-                        assert(isfinite(ycen[imore + *npeaks]));
+		/* find peaks in cutout */
+		dsmooth2(oimage, onx, ony, dpsf, simage);
+		dpeaks(simage, onx, ony, &nc, xc, yc,
+			   sigma, dlim, saddle, maxper, 0, 1, minpeak);
+		imore = 0;
+		for (i = 0;i < nc;i++) {
+			if (!(xc[i] > 0 && xc[i] < onx - 1 &&
+				  yc[i] > 0 && yc[i] < ony - 1 &&
+				  imore < (maxnpeaks - (*npeaks))))
+				continue;
 
-					} else if (xc[i] > 1 && xc[i] < onx - 2 &&
-					           yc[i] > 1 && yc[i] < ony - 2 &&
-					           imore < (maxnpeaks - (*npeaks))) {
+			/* install default centroid to begin */
+			xcen[imore + (*npeaks)] = (float)(xc[i] + xmin);
+			ycen[imore + (*npeaks)] = (float)(yc[i] + ymin);
+			assert(isfinite(xcen[imore + *npeaks]));
+			assert(isfinite(ycen[imore + *npeaks]));
 
-						/* try to get centroid in the 5 x 5 box */
-						/* FIXME: Hogg check index logic here (2s) */
-						for (oi = -1;oi <= 1;oi++)
-							for (oj = -1;oj <= 1;oj++)
-								three[oi + 1 + (oj + 1)*3] =
-								    simage[2*oi + xc[i] + (2 * oj + yc[i]) * onx];
-						if (dcen3x3(three, &tmpxc, &tmpyc)) {
-							xcen[imore + (*npeaks)] = 2.0 * tmpxc
-                                + (float)(xc[i] + xmin - 2);
-							ycen[imore + (*npeaks)] = 2.0 * tmpyc
-                                + (float)(yc[i] + ymin - 2);
+			/* try to get centroid in the 3 x 3 box */
+			for (oi=-1; oi<=1; oi++)
+				for (oj=-1; oj<=1; oj++)
+					three[oi + 1 + (oj + 1)*3] =
+						simage[oi + xc[i] + (oj + yc[i]) * onx];
+			if (dcen3x3(three, &tmpxc, &tmpyc)) {
+				assert(isfinite(tmpxc));
+				assert(isfinite(tmpyc));
+				xcen[imore + (*npeaks)] = tmpxc
+					+ (float)(xc[i] + xmin - 1);
+				ycen[imore + (*npeaks)] = tmpyc
+					+ (float)(yc[i] + ymin - 1);
+				assert(isfinite(xcen[imore + *npeaks]));
+				assert(isfinite(ycen[imore + *npeaks]));
 
-                            assert(isfinite(xcen[imore + *npeaks]));
-                            assert(isfinite(ycen[imore + *npeaks]));
-						} else {
-                            // don't add this peak.
-                            continue;
-                        }
-					}
-					imore++;
+			} else if (xc[i] > 1 && xc[i] < onx - 2 &&
+					   yc[i] > 1 && yc[i] < ony - 2 &&
+					   imore < (maxnpeaks - (*npeaks))) {
+				/* try to get centroid in the 5 x 5 box */
+				/* FIXME: Hogg check index logic here (2s) */
+				for (oi=-1; oi<=1; oi++)
+					for (oj=-1; oj<=1; oj++)
+						three[oi + 1 + (oj + 1)*3] =
+							simage[2*oi + xc[i] + (2 * oj + yc[i]) * onx];
+				if (dcen3x3(three, &tmpxc, &tmpyc)) {
+					xcen[imore + (*npeaks)] = 2.0 * tmpxc
+						+ (float)(xc[i] + xmin - 2);
+					ycen[imore + (*npeaks)] = 2.0 * tmpyc
+						+ (float)(yc[i] + ymin - 2);
+					assert(isfinite(xcen[imore + *npeaks]));
+					assert(isfinite(ycen[imore + *npeaks]));
+				} else {
+					// don't add this peak.
+					continue;
 				}
 			}
-			(*npeaks) += imore;
+			imore++;
 		}
+		(*npeaks) += imore;
 
 		l = lobj;
 		nobj++;
@@ -206,6 +208,6 @@ int dallpeaks(float *image,
 	FREEVEC(xc);
 	FREEVEC(yc);
 
-	return (1);
+	return 1;
 
 } /* end dallpeaks */
