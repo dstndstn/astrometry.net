@@ -234,7 +234,7 @@ int main(int argc, char** args) {
     fits_header_add_double(hdr, "DATAMIN", outpixmin, "min pixel value");
     fits_header_add_double(hdr, "DATAMAX", outpixmax, "max pixel value");
 
-	if (fits_write_header_and_image(hdr, &qoutimg)) {
+	if (fits_write_header_and_image(hdr, &qoutimg, 0)) {
         ERROR("Failed to write image to file \"%s\"", outfitsfn);
         exit(-1);
 	}

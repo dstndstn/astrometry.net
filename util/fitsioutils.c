@@ -36,23 +36,47 @@
 #include "log.h"
 #include "errors.h"
 
+int fits_write_float_image(const float* img, int nx, int ny,
+						   const char* fn) {
+	int rtn;
+    qfitsdumper qoutimg;
+    memset(&qoutimg, 0, sizeof(qoutimg));
+    qoutimg.filename = fn;
+    qoutimg.npix = nx * ny;
+    qoutimg.ptype = PTYPE_FLOAT;
+    qoutimg.fbuf = img;
+    qoutimg.out_ptype = BPP_IEEE_FLOAT;
+
+	rtn = fits_write_header_and_image(NULL, &qoutimg, nx);
+	if (rtn)
+		ERROR("Failed to write FITS image to file \"%s\"", fn);
+	return rtn;
+}
+
 static void errfunc(char* errstr) {
     report_error("qfits", -1, "%s", errstr);
 }
 
-int fits_write_header_and_image(const qfits_header* hdr, const qfitsdumper* qd) {
+int fits_write_header_and_image(const qfits_header* hdr, const qfitsdumper* qd, int W) {
 	FILE* fid;
 	const char* fn = qd->filename;
+	qfits_header* freehdr = NULL;
 
     fid = fopen(fn, "w");
     if (!fid) {
         SYSERROR("Failed to open file \"%s\" for output", fn);
         return -1;
     }
+	if (!hdr) {
+		freehdr = fits_get_header_for_image(qd, W, NULL);
+		hdr = freehdr;
+	}
     if (qfits_header_dump(hdr, fid)) {
         ERROR("Failed to write image header to file \"%s\"", fn);
         return -1;
     }
+	if (freehdr)
+		qfits_header_destroy(freehdr);
     // the qfits pixel dumper appends to the given filename, so close
     // the file here.
     if (fits_pad_file(fid) ||
@@ -93,7 +117,7 @@ qfits_header* fits_get_header_for_image2(int W, int H, int bitpix,
     return hdr;
 }
 
-qfits_header* fits_get_header_for_image(qfitsdumper* qd, int W,
+qfits_header* fits_get_header_for_image(const qfitsdumper* qd, int W,
                                         qfits_header* addtoheader) {
 	return fits_get_header_for_image2(W, qd->npix / W, qd->out_ptype, addtoheader);
 }

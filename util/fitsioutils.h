@@ -25,6 +25,25 @@
 
 void fits_use_error_system();
 
+int fits_write_float_image(const float* img, int nx, int ny,
+						   const char* fn);
+
+/** Creates a FITS header for the image described in "qd". */
+qfits_header* fits_get_header_for_image(const qfitsdumper* qd, int W,
+                                        qfits_header* addtoheader);
+
+qfits_header* fits_get_header_for_image2(int W, int H, int bitpix,
+										 qfits_header* addtoheader);
+
+/** Writes the given FITS header and image.
+
+ If "hdr" is null, a standard image header will be written; "W" must be the image width.
+
+ Of "hdr" is non-null, "W" is ignored.
+ */
+int fits_write_header_and_image(const qfits_header* hdr, const qfitsdumper* qd, int W);
+
+
 double fits_get_double_val(const qfits_table* table, int column,
                            const void* rowdata);
 
@@ -146,14 +165,6 @@ qfits_table* fits_get_table_column(const char* fn, const char* colname, int* pco
 
 int fits_add_column(qfits_table* table, int column, tfits_type type,
 					int ncopies, const char* units, const char* label);
-
-qfits_header* fits_get_header_for_image(qfitsdumper* qd, int W,
-                                        qfits_header* addtoheader);
-
-qfits_header* fits_get_header_for_image2(int W, int H, int bitpix,
-										 qfits_header* addtoheader);
-
-int fits_write_header_and_image(const qfits_header* hdr, const qfitsdumper* qd);
 
 /**
  Converts data between different FITS types.

@@ -2,7 +2,8 @@
  This file is part of the Astrometry.net suite.
  Copyright 2007 Michael Blanton, Keir Mierle, David W. Hogg,
  Sam Roweis and Dustin Lang.
- 
+ Copyright 2008, 2009 Dustin Lang.
+
  The Astrometry.net suite is free software; you can redistribute it
  and/or modify it under the terms of the GNU General Public License
  as published by the Free Software Foundation, version 2.
@@ -69,23 +70,8 @@
 
 static void write_fits_float_image(const float* img, int nx, int ny,
 								   const char* fn) {
-    qfitsdumper qoutimg;
-	qfits_header* hdr;
-
-    memset(&qoutimg, 0, sizeof(qoutimg));
-    qoutimg.filename = fn;
-    qoutimg.npix = nx * ny;
-    qoutimg.ptype = PTYPE_FLOAT;
-    qoutimg.fbuf = img;
-    qoutimg.out_ptype = BPP_IEEE_FLOAT;
-
-    // write header.
-    hdr = fits_get_header_for_image(&qoutimg, nx, NULL);
-
-	if (fits_write_header_and_image(hdr, &qoutimg)) {
-		ERROR("Failed to write FITS image to file \"%s\"", fn);
+	if (fits_write_float_image(img, nx, ny, fn))
 		exit(-1);
-	}
 }
 
 void simplexy_fill_in_defaults(simplexy_t* s) {
