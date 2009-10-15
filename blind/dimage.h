@@ -96,10 +96,15 @@ int dsigma_u8(uint8_t *image, int nx, int ny, int sp, int gridsize, float *sigma
 int dmedsmooth(float *image,
 //	       float invvar,
 	       int nx, int ny, int halfbox, float *smooth);
+
 int dallpeaks(float *image, int nx, int ny, int *objects, float *xcen,
               float *ycen, int *npeaks, float dpsf, float sigma,
-	      float dlim, float saddle,
+			  float dlim, float saddle,
               int maxper, int maxnpeaks, float minpeak, int maxsize);
+int dallpeaks_u8(uint8_t *image, int nx, int ny, int *objects, float *xcen,
+				 float *ycen, int *npeaks, float dpsf, float sigma,
+				 float dlim, float saddle,
+				 int maxper, int maxnpeaks, float minpeak, int maxsize);
 
 int dtemplates(float *image, int nx, int ny, int *ntemplates, int *xcen,
                int *ycen, float *templates, float sigma, float parallel);
