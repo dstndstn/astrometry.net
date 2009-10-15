@@ -58,7 +58,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libqfits_la_DEPENDENCIES =
 am_libqfits_la_OBJECTS = qfits_byteswap.lo qfits_cache.lo \
 	qfits_card.lo qfits_error.lo qfits_filename.lo qfits_float.lo \
-	qfits_header.lo qfits_image.lo qfits_memory.lo qfits_md5.lo \
+	qfits_header.lo qfits_image.lo qfits_convert.lo qfits_memory.lo qfits_md5.lo \
 	qfits_rw.lo qfits_table.lo qfits_thread_pthreads.lo \
 	qfits_time.lo qfits_tools.lo md5.lo
 libqfits_la_OBJECTS = $(am_libqfits_la_OBJECTS)
@@ -217,6 +217,7 @@ libqfits_la_SOURCES = \
     qfits_float.c \
     qfits_header.c \
     qfits_image.c \
+    qfits_convert.c \
     qfits_memory.c \
     qfits_md5.c \
     qfits_rw.c \
@@ -230,6 +231,7 @@ include_HEADERS = qfits_cache.h \
     qfits_filename.h \
     qfits_header.h \
     qfits_image.h \
+    qfits_convert.h \
     qfits_memory.h \
     qfits_md5.h \
     qfits_rw.h \
@@ -328,6 +330,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_float.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_header.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_image.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_convert.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_md5.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_memory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_rw.Plo@am__quote@

@@ -56,12 +56,6 @@
  -----------------------------------------------------------------------------*/
 
 #define QFITSLOADERINIT_MAGIC   0xcafe
-/* Compute the number of bytes per pixel for a given BITPIX value */
-#define BYTESPERPIXEL(x)    (   ((x) == BPP_8_UNSIGNED) ?     1 : \
-                                ((x) == BPP_16_SIGNED)  ?     2 : \
-                                ((x) == BPP_32_SIGNED)  ?     4 : \
-                                ((x) == BPP_IEEE_FLOAT) ?     4 : \
-                                ((x) == BPP_IEEE_DOUBLE) ?    8 : 0 ) 
 
 /*-----------------------------------------------------------------------------
                             Function prototypes

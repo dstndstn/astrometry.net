@@ -16,6 +16,7 @@ libqfits_la_SOURCES = \
     qfits_float.c \
     qfits_header.c \
     qfits_image.c \
+    qfits_convert.c \
     qfits_memory.c \
     qfits_md5.c \
     qfits_rw.c \
@@ -29,6 +30,7 @@ include_HEADERS = qfits_cache.h \
     qfits_filename.h \
     qfits_header.h \
     qfits_image.h \
+    qfits_convert.h \
     qfits_memory.h \
     qfits_md5.h \
     qfits_rw.h \

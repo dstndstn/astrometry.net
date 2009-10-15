@@ -44,12 +44,11 @@
                                    Defines
  -----------------------------------------------------------------------------*/
 
-/** Symbol to set returned pixel type to float */
+/** C pixel types. */
 #define PTYPE_FLOAT        0
-/** Symbol to set returned pixel type to int */
-#define PTYPE_INT        1
-/** Symbol to set returned pixel type to double */
-#define PTYPE_DOUBLE    2
+#define PTYPE_INT          1
+#define PTYPE_DOUBLE       2
+#define PTYPE_UINT8        3  /** Astrometry.net only */
 
 /* FITS pixel depths */
 /* FITS BITPIX=8 */
@@ -64,6 +63,13 @@
 #define BPP_IEEE_DOUBLE     (-64)
 /* Default BITPIX for output */
 #define BPP_DEFAULT         BPP_IEEE_FLOAT
+
+/* Compute the number of bytes per pixel for a given BITPIX value */
+#define BYTESPERPIXEL(x)    (   ((x) == BPP_8_UNSIGNED) ?     1 : \
+                                ((x) == BPP_16_SIGNED)  ?     2 : \
+                                ((x) == BPP_32_SIGNED)  ?     4 : \
+                                ((x) == BPP_IEEE_FLOAT) ?     4 : \
+                                ((x) == BPP_IEEE_DOUBLE) ?    8 : 0 ) 
 
 /*-----------------------------------------------------------------------------
                                    New types
@@ -257,6 +263,9 @@ typedef struct qfitsdumper {
     const float    *    fbuf;
     /** Pointer to input double pixel buffer */
     const double    *    dbuf;
+
+	/** Pointer to generic pixel buffer. */
+	const void* vbuf;
 
     /** Requested BITPIX in output FITS file */
     int            out_ptype;
