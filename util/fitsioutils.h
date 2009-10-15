@@ -27,11 +27,11 @@
 
 void fits_use_error_system();
 
-int fits_write_float_image(const float* img, int nx, int ny,
-						   const char* fn);
+int fits_write_float_image(const float* img, int nx, int ny, const char* fn);
 
-int fits_write_u8_image(const uint8_t* img, int nx, int ny,
-						const char* fn);
+int fits_write_u8_image(const uint8_t* img, int nx, int ny, const char* fn);
+
+int fits_write_i16_image(const int16_t* img, int nx, int ny, const char* fn);
 
 /** Creates a FITS header for the image described in "qd". */
 qfits_header* fits_get_header_for_image(const qfitsdumper* qd, int W,

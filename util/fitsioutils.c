@@ -66,6 +66,7 @@ int fits_pixdump(const qfitsdumper * qd) {
 		if (!vbuf) vbuf = qd->dbuf;
 		break;
 	case PTYPE_UINT8:
+	case PTYPE_INT16:
 		// ok
 		break;
 	default:
@@ -141,6 +142,21 @@ int fits_write_u8_image(const uint8_t* img, int nx, int ny, const char* fn) {
     qoutimg.ptype = PTYPE_UINT8;
     qoutimg.vbuf = img;
     qoutimg.out_ptype = BPP_8_UNSIGNED;
+	rtn = fits_write_header_and_image(NULL, &qoutimg, nx);
+	if (rtn)
+		ERROR("Failed to write FITS image to file \"%s\"", fn);
+	return rtn;
+}
+
+int fits_write_i16_image(const int16_t* img, int nx, int ny, const char* fn) {
+	int rtn;
+    qfitsdumper qoutimg;
+    memset(&qoutimg, 0, sizeof(qoutimg));
+    qoutimg.filename = fn;
+    qoutimg.npix = nx * ny;
+    qoutimg.ptype = PTYPE_INT16;
+    qoutimg.vbuf = img;
+    qoutimg.out_ptype = BPP_16_SIGNED;
 	rtn = fits_write_header_and_image(NULL, &qoutimg, nx);
 	if (rtn)
 		ERROR("Failed to write FITS image to file \"%s\"", fn);
