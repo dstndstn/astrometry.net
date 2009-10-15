@@ -222,6 +222,11 @@ int simplexy_run(simplexy_t* s) {
 	else
 		dsmooth2_u8(bgsub_u8, nx, ny, s->dpsf, smoothed);
 
+	if (s->smoothimgfn) {
+		logverb("Writing smoothed background-subtracted image \"%s\"\n", s->smoothimgfn);
+		write_fits_float_image(smoothed, nx, ny, s->smoothimgfn);
+	}
+
 	/* measure the noise level in the psf-smoothed image. */
 	dsigma(smoothed, nx, ny, (int)(10*s->dpsf), 0, &smoothsigma);
 	logverb("simplexy: noise in smoothed image: %g\n", smoothsigma);

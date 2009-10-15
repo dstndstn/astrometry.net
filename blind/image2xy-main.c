@@ -31,7 +31,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hi:Oo:8Hd:D:ve:B:S:M:s:p:P:b";
+static const char* OPTIONS = "hi:Oo:8Hd:D:ve:B:S:M:s:p:P:bU:";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -49,13 +49,13 @@ static void printHelp() {
 			"   [-o <output-filename>]  write XYlist to given filename.\n"
             "   [-v] verbose - repeat for more and more verboseness\n"
 			"   [-s <median-filtering scale>]: set median-filter box size (default 100 pixels)\n"
-			//"   [-i <sigma-value>]: \n"
 			"   [-p <sigmas>]: set significance level of peaks (default 8 sigmas)\n"
 			"   [-P <image plane>]: pull out a single plane of a multi-color image (default: first plane)\n"
 			"   [-b]: don't do background subtraction\n"
 			"\n"
 			"   [-S <background-subtracted image>]: save background-subtracted image to this filename (FITS float image)\n"
 			"   [-B <background image>]: save background image to filename\n"
+			"   [-U <smoothed background-subtracted image>]: save smoothed background-subtracted image to filename\n"
 			"   [-M <mask image>]: save mask image to filename\n"
 			"\n"
 			"   image2xy 'file.fits[1]'   - process first extension.\n"
@@ -106,6 +106,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'M':
 			params->maskimgfn = optarg;
+			break;
+		case 'U':
+			params->smoothimgfn = optarg;
 			break;
         case 'e':
             extension = atoi(optarg);

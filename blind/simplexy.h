@@ -79,6 +79,7 @@ struct simplexy_t {
 	const char* bgimgfn;
 	const char* maskimgfn;
 	const char* bgsubimgfn;
+	const char* smoothimgfn;
 };
 typedef struct simplexy_t simplexy_t;
 
