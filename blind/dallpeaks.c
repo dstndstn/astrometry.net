@@ -91,8 +91,6 @@ int dallpeaks(float *image,
 
 	nobj = 0;
 	*npeaks = 0;
-	oimage = (float *) malloc(sizeof(float) * nx * ny);
-	simage = (float *) malloc(sizeof(float) * nx * ny);
 	xc = (int *) malloc(sizeof(int) * maxper);
 	yc = (int *) malloc(sizeof(int) * maxper);
 	for (;l < nx*ny;) {
