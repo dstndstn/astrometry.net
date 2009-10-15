@@ -18,14 +18,16 @@
 */
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
-#include <assert.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include <errno.h>
+#include <assert.h>
 #include <math.h>
 #include <sys/param.h>
 
 #include "qfits.h"
+#include "qfits_convert.h"
+
 #include "fitsioutils.h"
 #include "ioutils.h"
 #include "keywords.h"
@@ -36,8 +38,86 @@
 #include "log.h"
 #include "errors.h"
 
-int fits_write_float_image(const float* img, int nx, int ny,
-						   const char* fn) {
+int fits_pixdump(const qfitsdumper * qd) {
+    FILE* f_out;
+	const void* vbuf;
+	bool tostdout;
+	int i;
+	int isize;
+	int osize;
+
+	if (!qd) return -1;
+	if (!qd->filename) return -1;
+	if (qd->npix < 0) {
+		ERROR("Negative number of pixels specified.");
+		return -1;
+	}
+
+	// accept
+	vbuf = qd->vbuf;
+	switch (qd->ptype) {
+	case PTYPE_FLOAT:
+		if (!vbuf) vbuf = qd->fbuf;
+		break;
+	case PTYPE_INT:
+		if (!vbuf) vbuf = qd->ibuf;
+		break;
+	case PTYPE_DOUBLE:
+		if (!vbuf) vbuf = qd->dbuf;
+		break;
+	case PTYPE_UINT8:
+		// ok
+		break;
+	default:
+		ERROR("Invalid input pixel type %i", qd->ptype);
+		return -1;
+	}
+
+	if (!vbuf) {
+		ERROR("No pixel buffer supplied");
+		return -1;
+	}
+
+    tostdout = streq(qd->filename, "STDOUT");
+	if (tostdout)
+        f_out = stdout;
+	else
+        f_out = fopen(qd->filename, "a");
+
+    if (!f_out) {
+		SYSERROR("Failed to open output file \"%s\" for writing", qd->filename);
+		return -1;
+	}
+
+	isize = qfits_pixel_ctype_size(qd->ptype);
+	osize = qfits_pixel_fitstype_size(qd->out_ptype);
+
+	for (i=0; i<qd->npix; i++) {
+		char buf[8];
+		if (qfits_pixel_ctofits(qd->ptype, qd->out_ptype, vbuf, buf)) {
+			ERROR("Failed to convert pixel value to FITS");
+			return -1;
+		}
+		if (fwrite(buf, osize, 1, f_out) != 1) {
+			SYSERROR("Failed to write FITS pixel value to file \"%s\"", qd->filename);
+			return -1;
+		}
+		vbuf += isize;
+	}
+
+	if (!tostdout)
+		if (fclose(f_out)) {
+			SYSERROR("Failed to close FITS outptu file \"%s\"", qd->filename);
+			return -1;
+		}
+    return 0;
+}
+
+
+
+
+
+int fits_write_float_image(const float* img, int nx, int ny, const char* fn) {
 	int rtn;
     qfitsdumper qoutimg;
     memset(&qoutimg, 0, sizeof(qoutimg));
@@ -46,7 +126,21 @@ int fits_write_float_image(const float* img, int nx, int ny,
     qoutimg.ptype = PTYPE_FLOAT;
     qoutimg.fbuf = img;
     qoutimg.out_ptype = BPP_IEEE_FLOAT;
+	rtn = fits_write_header_and_image(NULL, &qoutimg, nx);
+	if (rtn)
+		ERROR("Failed to write FITS image to file \"%s\"", fn);
+	return rtn;
+}
 
+int fits_write_u8_image(const uint8_t* img, int nx, int ny, const char* fn) {
+	int rtn;
+    qfitsdumper qoutimg;
+    memset(&qoutimg, 0, sizeof(qoutimg));
+    qoutimg.filename = fn;
+    qoutimg.npix = nx * ny;
+    qoutimg.ptype = PTYPE_FLOAT;
+    qoutimg.vbuf = img;
+    qoutimg.out_ptype = BPP_8_UNSIGNED;
 	rtn = fits_write_header_and_image(NULL, &qoutimg, nx);
 	if (rtn)
 		ERROR("Failed to write FITS image to file \"%s\"", fn);
@@ -85,7 +179,7 @@ int fits_write_header_and_image(const qfits_header* hdr, const qfitsdumper* qd, 
         return -1;
     }
     // write data.
-    if (qfits_pixdump(qd)) {
+    if (fits_pixdump(qd)) {
         ERROR("Failed to write image data to file \"%s\"", fn);
         return -1;
     }

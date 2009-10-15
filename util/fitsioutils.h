@@ -19,6 +19,8 @@
 #ifndef FITSIO_UTILS_H
 #define FITSIO_UTILS_H
 
+#include <stdint.h>
+
 #include "qfits.h"
 #include "keywords.h"
 #include "an-bool.h"
@@ -27,6 +29,9 @@ void fits_use_error_system();
 
 int fits_write_float_image(const float* img, int nx, int ny,
 						   const char* fn);
+
+int fits_write_u8_image(const uint8_t* img, int nx, int ny,
+						const char* fn);
 
 /** Creates a FITS header for the image described in "qd". */
 qfits_header* fits_get_header_for_image(const qfitsdumper* qd, int W,
