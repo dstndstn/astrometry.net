@@ -65,6 +65,56 @@
  *
  */
 
+/** Some testing:
+
+wget "http://antwrp.gsfc.nasa.gov/apod/image/0910/pleiades_andreo.jpg"
+jpegtopnm pleiades_andreo.jpg | pnmcut 0 0 500 400 | ppmtopgm | pnmtofits > img.fits
+an-fitstopnm -N 0 -X 255 -i img.fits | pnmtopng > img.png
+image2xy -O -p 5 -o img-u8.xy -v -S bgsub.fits -B bg.fits -M mask.fits -U smooth-u8.fits img.fits 
+an-fitstopnm -N 0 -X 255 -i bgsub.fits | pnmtopng > bgsub-u8.png
+an-fitstopnm -N 0 -X 255 -i bg.fits | pnmtopng > bg-u8.png
+an-fitstopnm -N 0 -X 255 -i mask.fits | pnmtopng > mask-u8.png
+an-fitstopnm -N 0 -X 255 -i smooth-u8.fits | pnmtopng > smooth-u8.png
+
+image2xy -8 -O -p 5 -o img.xy -v -S bgsub.fits -B bg.fits -M mask.fits -U smooth-f.fits img.fits 
+an-fitstopnm -N 0 -X 255 -i bgsub.fits | pnmtopng > bgsub-f.png
+an-fitstopnm -N 0 -X 255 -i bg.fits | pnmtopng > bg-f.png
+an-fitstopnm -N 0 -X 255 -i mask.fits | pnmtopng > mask-f.png
+an-fitstopnm -N 0 -X 255 -i smooth-f.fits | pnmtopng > smooth-f.png
+
+opython <<EOF
+import pyfits
+import sys
+from pylab import *
+
+figure(figsize=(5,4))
+for infn,outfn in [('smooth-f.fits', 'deltas-f.png'),
+                   ('smooth-u8.fits', 'deltas-u8.png')]:
+    p=pyfits.open(infn)
+    img = p[0].data
+    (h,w) = img.shape
+    sp = 10
+    gridsize = 20
+    deltas = (img[sp:h:gridsize, sp:w:gridsize]
+              - img[0:h-sp:gridsize, 0:w-sp:gridsize]).ravel()
+    clf()
+    subplot(2,1,1)
+    hist(deltas, bins=arange(0, 50, 1))
+    title('pixel differences sampled by dsigma()')
+    xticks([],[])
+    gridsize = 1
+    deltas2 = (img[sp:h:gridsize, sp:w:gridsize]
+              - img[0:h-sp:gridsize, 0:w-sp:gridsize]).ravel()
+    subplot(2,1,2)
+    hist(deltas2, bins=arange(0, 50, 1))
+    title('all pixel differences')
+    savefig(outfn)
+EOF
+
+ */
+
+
+
 #include "fitsioutils.h"
 #include "qfits.h"
 
