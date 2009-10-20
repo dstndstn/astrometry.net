@@ -28,6 +28,7 @@
 
 #include <cairo.h>
 #include <cairo-pdf.h>
+#include <cairo-ps.h>
 
 #include "xylist.h"
 #include "matchfile.h"
@@ -37,7 +38,7 @@
 #include "log.h"
 #include "errors.h"
 
-static const char* OPTIONS = "hvj:x:m:W:H:s:";
+static const char* OPTIONS = "hvj:x:m:W:H:s:E";
 
 static void printHelp(char* progname) {
 	fprintf(stderr, "\nUsage: %s [options] > output.pdf\n"
@@ -47,6 +48,7 @@ static void printHelp(char* progname) {
 			"  [-W <output width (points)>]\n"
 			"  [-H <output height (points)>]\n"
 			"  [-s <xylist-sale-factor>]\n"
+			"  [-E]: EPS output\n"
 			"\n", progname);
 }
 
@@ -80,6 +82,7 @@ int main(int argc, char *args[]) {
 	dl* coords;
 	int loglvl = LOG_MSG;
 	double sx, sy;
+	bool eps = FALSE;
 
 	/*
 	 #	| plotxy -i m88.xy -I - -x 1 -y 1 -b white -C black -N 100 -r 10 -w 2 -P \
@@ -92,6 +95,9 @@ int main(int argc, char *args[]) {
 
 	while ((argchar = getopt(argc, args, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'E':
+			eps = TRUE;
+			break;
 		case 'j':
 			bgimgfn = optarg;
 			break;
@@ -160,9 +166,14 @@ int main(int argc, char *args[]) {
 	logmsg("Background image aspect ratio %g; output file aspect ratio %g.\n", W/(float)H, outW/(float)outH);
 
 	// create output buffer.
-	target = cairo_pdf_surface_create_for_stream(cairoutils_file_write_func, stdout, outW, outH);
+	if (eps) {
+		target = cairo_ps_surface_create_for_stream(cairoutils_file_write_func, stdout, outW, outH);
+		cairo_ps_surface_set_eps(target, TRUE);
+	} else {
+		target = cairo_pdf_surface_create_for_stream(cairoutils_file_write_func, stdout, outW, outH);
+	}
 	if (!target) {
-		ERROR("Failed to create cairo surface for PDF");
+		ERROR("Failed to create cairo surface");
 		exit(-1);
 	}
 	cairo = cairo_create(target);
@@ -220,7 +231,8 @@ int main(int argc, char *args[]) {
 	// render background markers.
 	cairo_save(cairo);
 	cairo_set_line_width(cairo, lw+2.0);
-	cairo_set_source_rgba(cairo, br, bg, bb, 0.75);
+	//cairo_set_source_rgba(cairo, br, bg, bb, 0.75);
+	cairo_set_source_rgba(cairo, br, bg, bb, 1.0);
 	for (i=0; i<Nxy; i++) {
 		double x = (starxy_getx(xy, i) - xoff) * sx * scalexy + 0.5;
 		double y = (starxy_gety(xy, i) - yoff) * sy * scalexy + 0.5;
