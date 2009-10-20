@@ -28,8 +28,10 @@
 #include "starkd.h"
 #include "boilerplate.h"
 #include "rdlist.h"
+#include "log.h"
+#include "errors.h"
 
-#define OPTIONS "hr:"
+static const char* OPTIONS = "hr:m";
 
 extern char *optarg;
 extern int optind, opterr, optopt;
@@ -39,6 +41,7 @@ void print_help(char* progname)
 	boilerplate_help_header(stderr);
 	fprintf(stderr, "Usage: %s\n"
 			"   -r <rdls-output-file>\n"
+			"   [-m]: add mags\n"
 			"   [-h]: help\n"
 			"   <skdt> [<skdt> ...]\n\n"
 			"Reads .skdt files.  Writes an RDLS containing the star locations.\n",
@@ -52,11 +55,15 @@ int main(int argc, char** args) {
     rdlist_t* rdls;
 	startree_t* skdt = NULL;
 	int i;
+	bool add_mags = FALSE;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
         switch (argchar) {
 		case 'r':
 			outfn = optarg;
+			break;
+		case 'm':
+			add_mags = TRUE;
 			break;
 		case 'h':
 			print_help(args[0]);
@@ -80,6 +87,7 @@ int main(int argc, char** args) {
 
 	for (; optind<argc; optind++) {
 		int Nstars;
+		int magcol = -1;
         fn = args[optind];
         printf("Trying to open star kdtree %s...\n", fn);
         skdt = startree_open(fn);
@@ -88,6 +96,15 @@ int main(int argc, char** args) {
             exit(-1);
         }
         Nstars = startree_N(skdt);
+
+		if (add_mags) {
+			if (!skdt->mag) {
+				logmsg("Requested adding MAG column to output, but star kdtree %s does not include mags.\n", fn);
+				magcol = -1;
+			} else {
+				magcol = rdlist_add_tagalong_column(rdls, TFITS_BIN_TYPE_E, 1, TFITS_BIN_TYPE_E, "MAG", "mag");
+			}
+		}
 
         if (rdlist_write_header(rdls)) {
             fprintf(stderr, "Failed to write new RDLS field header.\n");
@@ -108,6 +125,13 @@ int main(int argc, char** args) {
                 fprintf(stderr, "Failed to write a RA,Dec entry.\n");
                 exit(-1);
             }
+		}
+		if (magcol != -1) {
+			if (rdlist_write_tagalong_column(rdls, magcol, 0, Nstars,
+											 skdt->mag, sizeof(float))) {
+				ERROR("Failed to write MAG column");
+				exit(-1);
+			}
 		}
 		printf("\n");
 

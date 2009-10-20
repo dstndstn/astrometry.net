@@ -84,7 +84,7 @@ an-fitstopnm -N 0 -X 255 -i bg.fits | pnmtopng > bg-f.png
 an-fitstopnm -N 0 -X 255 -i mask.fits | pnmtopng > mask-f.png
 an-fitstopnm -N 0 -X 255 -i smooth-f.fits | pnmtopng > smooth-f.png
 
-opython <<EOF
+python <<EOF
 import pyfits
 import sys
 from pylab import *
@@ -120,21 +120,14 @@ EOF
 #include "fitsioutils.h"
 #include "qfits.h"
 
-static void write_fits_float_image(const float* img, int nx, int ny,
-								   const char* fn) {
-	if (fits_write_float_image(img, nx, ny, fn))
-		exit(-1);
+static void write_fits_float_image(const float* img, int nx, int ny, const char* fn) {
+	if (fits_write_float_image(img, nx, ny, fn)) exit(-1);
 }
-
-static void write_fits_u8_image(const uint8_t* img, int nx, int ny,
-								const char* fn) {
-	if (fits_write_u8_image(img, nx, ny, fn))
-		exit(-1);
+static void write_fits_u8_image(const uint8_t* img, int nx, int ny, const char* fn) {
+	if (fits_write_u8_image(img, nx, ny, fn)) exit(-1);
 }
-static void write_fits_i16_image(const int16_t* img, int nx, int ny,
-								const char* fn) {
-	if (fits_write_i16_image(img, nx, ny, fn))
-		exit(-1);
+static void write_fits_i16_image(const int16_t* img, int nx, int ny, const char* fn) {
+	if (fits_write_i16_image(img, nx, ny, fn)) exit(-1);
 }
 
 

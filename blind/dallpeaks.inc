@@ -93,12 +93,13 @@ int GLUE(dallpeaks, SUFFIX)(IMGTYPE *image,
 			ymax = MAX(ymax, ycurr);
 		}
 
+		/* skip if it is smaller than 3x3. */
 		if (!(xmax - xmin > 2 && xmax - xmin < maxsize &&
 			  ymax - ymin > 2 && ymax - ymin < maxsize &&
 			  *npeaks < maxnpeaks))
 			continue;
 
-		/* make object cutout (if it is 3x3 or bigger) */
+		/* make object cutout */
 		onx = xmax - xmin + 1;
 		ony = ymax - ymin + 1;
 
