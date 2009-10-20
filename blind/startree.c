@@ -247,6 +247,9 @@ int main(int argc, char *argv[]) {
     starkd->sigma_pm = cat->sigma_pm;
     starkd->starids = cat->starids;
 
+	starkd->mag = cat->mag;
+	starkd->mag_err = cat->mag_err;
+
 	if (startree_write_to_file(starkd, treefname)) {
 		fprintf(stderr, "Failed to write star kdtree.\n");
 		exit(-1);
