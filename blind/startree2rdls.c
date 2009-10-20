@@ -42,6 +42,7 @@ void print_help(char* progname)
 	fprintf(stderr, "Usage: %s\n"
 			"   -r <rdls-output-file>\n"
 			"   [-m]: add mags\n"
+			"   [-v]: more verbose\n"
 			"   [-h]: help\n"
 			"   <skdt> [<skdt> ...]\n\n"
 			"Reads .skdt files.  Writes an RDLS containing the star locations.\n",
@@ -56,9 +57,13 @@ int main(int argc, char** args) {
 	startree_t* skdt = NULL;
 	int i;
 	bool add_mags = FALSE;
+	int loglvl = LOG_MSG;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
         switch (argchar) {
+		case 'v':
+			loglvl++;
+			break;
 		case 'r':
 			outfn = optarg;
 			break;
@@ -70,6 +75,7 @@ int main(int argc, char** args) {
 			exit(0);
 		}
 
+	log_init(loglvl);
 	if (!outfn || (optind == argc)) {
 		print_help(args[0]);
 		exit(-1);
@@ -77,11 +83,11 @@ int main(int argc, char** args) {
 
     rdls = rdlist_open_for_writing(outfn);
     if (!rdls) {
-        fprintf(stderr, "Failed to open RDLS file %s for output.\n", outfn);
+        ERROR("Failed to open RDLS file %s for output", outfn);
         exit(-1);
     }
     if (rdlist_write_primary_header(rdls)) {
-        fprintf(stderr, "Failed to write RDLS header.\n");
+        ERROR("Failed to write RDLS header");
         exit(-1);
     }
 
@@ -89,10 +95,10 @@ int main(int argc, char** args) {
 		int Nstars;
 		int magcol = -1;
         fn = args[optind];
-        printf("Trying to open star kdtree %s...\n", fn);
+        logmsg("Opening star kdtree %s...\n", fn);
         skdt = startree_open(fn);
         if (!skdt) {
-            fprintf(stderr, "Failed to read star kdtree %s.\n", fn);
+            ERROR("Failed to read star kdtree %s", fn);
             exit(-1);
         }
         Nstars = startree_N(skdt);
@@ -107,11 +113,11 @@ int main(int argc, char** args) {
 		}
 
         if (rdlist_write_header(rdls)) {
-            fprintf(stderr, "Failed to write new RDLS field header.\n");
+            ERROR("Failed to write new RDLS field header");
             exit(-1);
         }
 
-		printf("Reading stars...\n");
+		logmsg("Reading stars...\n");
 		for (i=0; i<Nstars; i++) {
             double xyz[3];
             double radec[2];
@@ -122,7 +128,7 @@ int main(int argc, char** args) {
             startree_get(skdt, i, xyz);
             xyzarr2radecdegarr(xyz, radec);
             if (rdlist_write_one_radec(rdls, radec[0], radec[1])) {
-                fprintf(stderr, "Failed to write a RA,Dec entry.\n");
+                ERROR("Failed to write a RA,Dec entry");
                 exit(-1);
             }
 		}
@@ -138,14 +144,14 @@ int main(int argc, char** args) {
         startree_close(skdt);
 
         if (rdlist_fix_header(rdls)) {
-            fprintf(stderr, "Failed to fix RDLS field header.\n");
+            ERROR("Failed to fix RDLS field header");
             exit(-1);
         }
 	}
 
     if (rdlist_fix_primary_header(rdls) ||
         rdlist_close(rdls)) {
-        fprintf(stderr, "Failed to close RDLS file.\n");
+        ERROR("Failed to close RDLS file");
         exit(-1);
     }
 
