@@ -12,7 +12,9 @@
 #include "log.h"
 
 static void add_text(cairo_t* cairo, double x, double y,
-					 const char* txt, render_args_t* args, double* bgrgba) {
+					 const char* txt, render_args_t* args,
+					 double* bgrgba, double* textrgba,
+					 float* width, float* height) {
 	float ex,ey;
 	float l,r,t,b;
 	cairo_text_extents_t ext;
@@ -63,6 +65,11 @@ static void add_text(cairo_t* cairo, double x, double y,
 
 	cairo_move_to(cairo, x, y);
 	cairo_show_text(cairo, txt);
+
+	if (width)
+		*width = (r - l);
+	if (height)
+		*height = (b - t);
 }
 
 static void pretty_label(double x, char* buf) {
@@ -100,6 +107,8 @@ int render_gridlines(cairo_t* cairo, render_args_t* args) {
 	double gridrgba[] = { 0.8,0.8,0.8,0.8 };
 	double textrgba[] = { 0.8,0.8,0.8,0.8 };
 	double textbgrgba[] = { 0,0,0,0.8 };
+	double lw = 1.0;
+	double nextlabelra, nextlabeldec;
 
 	ind = MAX(1, args->zoomlevel);
 	ind = MIN(ind, sizeof(steps)/sizeof(double)-1);
@@ -107,7 +116,9 @@ int render_gridlines(cairo_t* cairo, render_args_t* args) {
 	rastep = get_double_arg_of_type(args, "gridrastep ", rastep);
 	decstep = get_double_arg_of_type(args, "griddecstep ", decstep);
 	logmsg("Grid step: RA %g, Dec %g.\n", rastep, decstep);
-	cairo_set_line_width(cairo, 1.0);
+	lw = get_double_arg_of_type(args, "gridlw ", lw);
+	logmsg("Setting line width to %g\n", lw);
+	cairo_set_line_width(cairo, lw);
 	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 
 	if (args->gridlabel) {
@@ -131,57 +142,56 @@ int render_gridlines(cairo_t* cairo, render_args_t* args) {
 		cairo_set_font_size(cairo, fontsize);
 	}
 
+	// Assume the label points are = or a superset of the grid line points.
+	nextlabelra = ralabelstep * floor(args->ramin / ralabelstep);
+	nextlabeldec = declabelstep * floor(args->decmin / declabelstep);
+
 	for (ra = rastep * floor(args->ramin / rastep);
 		 ra <= rastep * ceil(args->ramax / rastep);
 		 ra += rastep) {
 		float x = ra2pixelf(ra, args);
+		float y0 = 0;
 		if (!in_image((int)round(x), 0, args))
 			continue;
+		while (args->gridlabel && nextlabelra < (ra - 1e-6))
+			nextlabelra += ralabelstep;
+		// Draw label first (so we know how big the text will be)
+		if (args->gridlabel && fabs(nextlabelra - ra) < 1e-6) {
+			char buf[32];
+			pretty_label(ra, buf);
+			logverb("Adding label ra=\"%s\"\n", buf);
+			add_text(cairo, x, args->H, buf, args, textbgrgba, textrgba, NULL, &y0);
+			logverb("y0=%g\n", y0);
+		}
 		// draw the grid line on the nearest pixel... cairo pixel centers are at 0.5
 		x = 0.5 + round(x-0.5);
 		cairo_move_to(cairo, x, 0);
-		cairo_line_to(cairo, x, args->H);
+		cairo_line_to(cairo, x, args->H - y0);
+		cairo_stroke(cairo);
 	}
+
 	for (dec = decstep * floor(args->decmin / decstep);
 		 dec <= decstep * ceil(args->decmax / decstep);
 		 dec += decstep) {
+		float x0 = 0;
 		float y = dec2pixelf(dec, args);
+		// yep, it can wrap around :)
+		if ((dec > 90) || (dec < -90))
+			continue;
 		if (!in_image(0, (int)round(y), args))
 			continue;
-		y = 0.5 + round(y-0.5);
-		cairo_move_to(cairo, 0, y);
-		cairo_line_to(cairo, args->W, y);
-	}
-	cairo_stroke(cairo);
-	
-	if (args->gridlabel) {
-		char buf[32];
-		cairo_set_source_rgba(cairo, textrgba[0], textrgba[1], textrgba[2], textrgba[3]);
-		for (ra = ralabelstep * floor(args->ramin / ralabelstep);
-			 ra <= ralabelstep * ceil(args->ramax / ralabelstep);
-			 ra += ralabelstep) {
-			float x = ra2pixelf(ra, args);
-			float y = args->H;
-			if (!in_image((int)round(x+0.5), 0, args))
-				continue;
-			pretty_label(ra, buf);
-			logverb("Adding label ra=\"%s\"\n", buf);
-			add_text(cairo, x, y, buf, args, textbgrgba);
-		}
-		for (dec = declabelstep * floor(args->decmin / declabelstep);
-			 dec <= declabelstep * ceil(args->decmax / declabelstep);
-			 dec += declabelstep) {
-			float y = dec2pixelf(dec, args);
-			float x = 0;
-			// yep, it can wrap around :)
-			if ((dec > 90) || (dec < -90))
-				continue;
-			if (!in_image(0, (int)round(y+0.5), args))
-				continue;
+		while (args->gridlabel && nextlabeldec < (dec - 1e-6))
+			nextlabeldec += declabelstep;
+		// Draw label first (so we know how big the text will be)
+		if (args->gridlabel && fabs(nextlabeldec - dec) < 1e-6) {
+			char buf[32];
 			pretty_label(dec, buf);
 			logverb("Adding label dec=\"%s\"\n", buf);
-			add_text(cairo, x, y, buf, args, textbgrgba);
+			add_text(cairo, 0, y, buf, args, textbgrgba, textrgba, &x0, NULL);
 		}
+		y = 0.5 + round(y-0.5);
+		cairo_move_to(cairo, x0, y);
+		cairo_line_to(cairo, args->W, y);
 		cairo_stroke(cairo);
 	}
 	return 0;
