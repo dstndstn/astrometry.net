@@ -52,7 +52,6 @@ static void add_text(cairo_t* cairo, double x, double y,
 	cairo_save(cairo);
 	// blank out underneath the text...
 	cairo_set_source_rgba(cairo, bgrgba[0], bgrgba[1], bgrgba[2], bgrgba[3]);
-	//cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
 	cairo_move_to(cairo, l, t);
 	cairo_line_to(cairo, l, b);
 	cairo_line_to(cairo, r, b);
@@ -91,14 +90,12 @@ static void pretty_label(double x, char* buf) {
 	}
 }
 
-int render_gridlines(cairo_t* c2, render_args_t* args) {
+int render_gridlines(cairo_t* cairo, render_args_t* args) {
 	double rastep, decstep;
 	int ind;
 	double steps[] = { 1, 20.0, 10.0, 6.0, 4.0, 2.5, 1.0, 30./60.0,
 					   15.0/60.0, 10.0/60.0, 5.0/60.0, 2./60.0 };
 	double ra, dec;
-	cairo_t* cairo;
-	cairo_surface_t* mask;
 	double ralabelstep=0, declabelstep=0;
 	double gridrgba[] = { 0.8,0.8,0.8,0.8 };
 	double textrgba[] = { 0.8,0.8,0.8,0.8 };
@@ -110,13 +107,6 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	rastep = get_double_arg_of_type(args, "gridrastep ", rastep);
 	decstep = get_double_arg_of_type(args, "griddecstep ", decstep);
 	logmsg("Grid step: RA %g, Dec %g.\n", rastep, decstep);
-
-	/*
-	 In order to properly do the transparency and text, we render onto a
-	 mask image, then squish paint through this mask onto the given image.
-	 */
-	mask = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, args->W, args->H);
-   	cairo = cairo_create(mask);
 	cairo_set_line_width(cairo, 1.0);
 	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 
@@ -166,7 +156,6 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 	
 	if (args->gridlabel) {
 		char buf[32];
-		
 		cairo_set_source_rgba(cairo, textrgba[0], textrgba[1], textrgba[2], textrgba[3]);
 		for (ra = ralabelstep * floor(args->ramin / ralabelstep);
 			 ra <= ralabelstep * ceil(args->ramax / ralabelstep);
@@ -193,16 +182,7 @@ int render_gridlines(cairo_t* c2, render_args_t* args) {
 			logverb("Adding label dec=\"%s\"\n", buf);
 			add_text(cairo, x, y, buf, args, textbgrgba);
 		}
+		cairo_stroke(cairo);
 	}
-
-	// squish paint through mask
-	//cairo_set_source_rgba(c2, 0.8, 0.8, 0.8, 0.8);
-	cairo_set_source_surface(c2, mask, 0, 0);
-	//cairo_mask_surface(c2, mask, 0, 0);
-	cairo_paint(c2);
-
-	cairo_surface_destroy(mask);
-	cairo_destroy(cairo);
-
 	return 0;
 }
