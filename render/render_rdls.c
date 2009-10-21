@@ -82,9 +82,6 @@ int render_rdls(cairo_t* cairo, render_args_t* args) {
 	// draw outline behind markers?
 	bool outline = FALSE;
 
-	cairo_set_line_join(cairo, CAIRO_LINE_JOIN_BEVEL);
-	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
-
 	logmsg("Rendering %i rdls files\n", pl_size(args->rdlsfns));
 
 	for (r=0; r<pl_size(args->rdlsfns); r++) {

@@ -73,8 +73,6 @@ int render_boundary(cairo_t* cairo, render_args_t* args) {
 	logmsg("Starting.\n");
 
 	cairo_set_line_width(cairo, lw);
-	cairo_set_line_join(cairo, CAIRO_LINE_JOIN_ROUND);
-	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 	cairo_set_source_rgba(cairo, r, g, b, alpha);
 
 	for (I=0; I<sl_size(args->arglist); I++) {

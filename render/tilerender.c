@@ -644,6 +644,9 @@ int main(int argc, char *argv[]) {
 	cairoutils_surface_status_errors(target);
 	cairoutils_cairo_status_errors(cairo);
 
+	cairo_set_line_join(cairo, CAIRO_LINE_JOIN_BEVEL);
+	//cairo_set_line_join(cairo, CAIRO_LINE_JOIN_ROUND);
+	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 
 	for (i=0; i<sl_size(layers); i++) {
 		int j;

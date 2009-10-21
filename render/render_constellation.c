@@ -49,8 +49,6 @@ int render_constellation(unsigned char* img, render_args_t* args) {
 	target = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, args->W, args->H, args->W*4);
 	cairo = cairo_create(target);
 	cairo_set_line_width(cairo, lw);
-	cairo_set_line_join(cairo, CAIRO_LINE_JOIN_BEVEL);
-	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 	cairo_set_source_rgb(cairo, 1.0, 1.0, 1.0);
 
     N = constellations_n();

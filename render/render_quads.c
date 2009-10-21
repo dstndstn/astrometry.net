@@ -55,6 +55,8 @@ int render_quads(cairo_t* cairo, render_args_t* args) {
 	fns = sl_new(256);
 	get_string_args_of_type(args, "index ", fns);
 
+	cairo_set_line_join(cairo, CAIRO_LINE_JOIN_ROUND);
+
 	if (!get_first_rgba_arg_of_type(args, "quadedgergba ", edge_rgba))
 		edge_set = TRUE;
 	if (!get_first_rgba_arg_of_type(args, "quadfacergba ", face_rgba))

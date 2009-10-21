@@ -12,3 +12,8 @@ rc('legend', fontsize='medium', numpoints=1) # default: large
 rc('axes', titlesize='medium')
 rc('image', interpolation='nearest', cmap='gray', origin='lower',
    resample=False)
+
+def savefig(fn, **kwargs):
+	from pylab import savefig as sf
+	sf(fn, **kwargs)
+	print 'Wrote figure', fn

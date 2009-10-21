@@ -119,7 +119,6 @@ int render_gridlines(cairo_t* cairo, render_args_t* args) {
 	lw = get_double_arg_of_type(args, "gridlw ", lw);
 	logmsg("Setting line width to %g\n", lw);
 	cairo_set_line_width(cairo, lw);
-	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 
 	if (args->gridlabel) {
 		ralabelstep = 2. * rastep;
