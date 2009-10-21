@@ -425,6 +425,12 @@ double* verify_uniformize_bin_centers(double fieldW, double fieldH,
 	return bxy;
 }
 
+static void set_null_mo(MatchObj* mo) {
+	mo->nfield = 0;
+	mo->nmatch = 0;
+	matchobj_compute_derived(mo);
+	mo->logodds = -HUGE_VAL;
+}
 
 void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, verify_field_t* vf,
                 double pix2, double distractors,
@@ -495,11 +501,8 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	}
 	debug("After removing stars in the quad: %i reference stars.\n", NR);
 
-	if (!NR) {
-		mo->nfield = 0;
-		mo->nmatch = 0;
-		matchobj_compute_derived(mo);
-		mo->logodds = -HUGE_VAL;
+	if (!NR || !NT) {
+		set_null_mo(mo);
 		return;
     }
 
@@ -507,6 +510,12 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 					 vf, pix2, distractors, fieldW, fieldH,
 					 do_gamma, fake_match,
 					 &testxy, &sigma2s, &NT, &perm, &effA, NULL, NULL);
+
+	if (!NR) {
+		logerr("After applying ROR, NR = 0!\n");
+		set_null_mo(mo);
+		return;
+    }
 
 	K = verify_star_lists(refxy, NR, testxy, sigma2s, NT, effA, distractors,
 						  logbail, logstoplooking, &besti, NULL, &theta, &worst);
@@ -701,6 +710,11 @@ double verify_star_lists(const double* refxys, int NR,
 	double* all_logodds = NULL;
 	int* theta = NULL;
 	int mu;
+
+	if (!NR || !NT) {
+		logerr("verify_star_lists: NR=%i, NT=%i\n", NR, NT);
+		return -1e100;
+	}
 
 	// Build a tree out of the index stars in pixel space...
 	// kdtree scrambles the data array so make a copy first.

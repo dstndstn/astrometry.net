@@ -906,6 +906,11 @@ void MANGLE(kdtree_nn)(const kdtree_t* kd, const void* vquery,
 	int ibest = *p_ibest;
     const etype* query = vquery;
 
+	if (!kd) {
+		WARNING("kdtree_nn: null tree!\n");
+		return;
+	}
+
     // Bounding boxes
     if (!kd->split.any) {
         kdtree_nn_bb(kd, query, p_bestd2, p_ibest);

@@ -90,6 +90,9 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 					  int* p_NT, int** p_perm, double* p_effA,
 					  int* p_uninw, int* p_uninh);
 
+/**
+ Returns the best log-odds encountered.
+ */
 double verify_star_lists(const double* refxys, int NR,
 						 const double* testxys, const double* testsigma2s, int NT,
 						 double effective_area,
