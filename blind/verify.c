@@ -517,6 +517,8 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 		return;
     }
 
+	theta = NULL;
+	worst = -HUGE_VAL;
 	K = verify_star_lists(refxy, NR, testxy, sigma2s, NT, effA, distractors,
 						  logbail, logstoplooking, &besti, NULL, &theta, &worst);
 
@@ -713,7 +715,7 @@ double verify_star_lists(const double* refxys, int NR,
 
 	if (!NR || !NT) {
 		logerr("verify_star_lists: NR=%i, NT=%i\n", NR, NT);
-		return -1e100;
+		return -HUGE_VAL;
 	}
 
 	// Build a tree out of the index stars in pixel space...
@@ -741,6 +743,7 @@ double verify_star_lists(const double* refxys, int NR,
 
 	worstlogodds = 0;
 	bestlogodds = -HUGE_VAL;
+	bestworstlogodds = -HUGE_VAL;
 	besti = -1;
 
 	logodds = 0.0;
