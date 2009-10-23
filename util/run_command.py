@@ -1,6 +1,7 @@
 import subprocess
 import os
 import select
+from subprocess import PIPE
 
 # Returns (rtn, out, err)
 def run_command(cmd, timeout=None, callback=None):
@@ -10,8 +11,8 @@ def run_command(cmd, timeout=None, callback=None):
 
     Returns: (int return value, string out, string err)
     """
-    p = subprocess.Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
-    (fin, fout, ferr) = (p.stdin, p.stdout, p.stderr)
+    child = subprocess.Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+    (fin, fout, ferr) = (child.stdin, child.stdout, child.stderr)
 
     fin.close()
     stdout = fout.fileno()

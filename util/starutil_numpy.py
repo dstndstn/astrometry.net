@@ -17,17 +17,22 @@ def points_within_radius_range(racenter, deccenter, radiuslo, radiushi, ra, dec)
 def radecdotproducts(racenter, deccenter, ra, dec):
 	xyzc = radectoxyz(racenter, deccenter).T
 	xyz = radectoxyz(ra, dec)
+	print 'xyzc', xyzc.shape
+	print 'xyz', xyz.shape
 	return dot(xyz, xyzc)[:,0]
 
-# RA, Dec in degrees
+# RA, Dec in degrees: scalars or 1-d arrays.
 # returns xyz of shape (N,3)
 def radectoxyz(ra_deg, dec_deg):
     ra  = deg2rad(ra_deg)
     dec = deg2rad(dec_deg)
     cosd = cos(dec)
-    return vstack((cosd * cos(ra),
-				   cosd * sin(ra),
-				   sin(dec))).T
+    xyz = vstack((cosd * cos(ra),
+		  cosd * sin(ra),
+		  sin(dec))).T
+    print 'xyz', xyz.shape
+    assert(xyz.shape[1] == 3)
+    return xyz
 
 # RA,Dec in degrees
 # returns (dxyz_dra, dxyz_ddec)
@@ -46,6 +51,7 @@ def derivatives_at_radec(ra_deg, dec_deg):
 # returns (RA, Dec) in degrees
 # xyz can be an array of shape (N,3)
 def xyztoradec(xyz):
+	xyz = atleast_2d(xyz)
 	(nil,three) = xyz.shape
 	assert(three == 3)
 	ra = arctan2(xyz[:,1], xyz[:,0])

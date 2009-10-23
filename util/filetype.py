@@ -17,12 +17,12 @@ def filetype(fn):
     filecmd = 'file -b -N -L -k -r %s'
 
     cmd = filecmd % shell_escape(fn)
-	(rtn,out,err) = run_command(cmd)
-	if rtn:
-		logverb('"file" command failed.  Command: "%s"' % cmd)
-		logverb('output:', out)
-		logverb('error:', err)
-		return None
+    (rtn,out,err) = run_command(cmd)
+    if rtn:
+        logverb('"file" command failed.  Command: "%s"' % cmd)
+        logverb('output:', out)
+        logverb('error:', err)
+        return None
 
     out = out.strip()
     logverb('File: "%s"' % out)
