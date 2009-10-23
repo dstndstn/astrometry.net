@@ -17,8 +17,6 @@ def points_within_radius_range(racenter, deccenter, radiuslo, radiushi, ra, dec)
 def radecdotproducts(racenter, deccenter, ra, dec):
 	xyzc = radectoxyz(racenter, deccenter).T
 	xyz = radectoxyz(ra, dec)
-	print 'xyzc', xyzc.shape
-	print 'xyz', xyz.shape
 	return dot(xyz, xyzc)[:,0]
 
 # RA, Dec in degrees: scalars or 1-d arrays.
@@ -28,9 +26,8 @@ def radectoxyz(ra_deg, dec_deg):
     dec = deg2rad(dec_deg)
     cosd = cos(dec)
     xyz = vstack((cosd * cos(ra),
-		  cosd * sin(ra),
-		  sin(dec))).T
-    print 'xyz', xyz.shape
+				  cosd * sin(ra),
+				  sin(dec))).T
     assert(xyz.shape[1] == 3)
     return xyz
 
@@ -48,10 +45,35 @@ def derivatives_at_radec(ra_deg, dec_deg):
 							  nsd * sin(ra),
 							  cosd)).T)
 
-# returns (RA, Dec) in degrees
-# xyz can be an array of shape (N,3)
 def xyztoradec(xyz):
-	xyz = atleast_2d(xyz)
+	'''
+	Converts positions on the unit sphere to RA,Dec in degrees.
+
+	'xyz' must be a numpy array, either of shape (3,) or (N,3)
+
+	Returns a tuple (RA,Dec).
+
+	If 'xyz' is a scalar, RA,Dec are scalars.
+
+	If 'xyz' is shape (N,3), RA,Dec are shape (N,).
+
+	>>> xyztoradec(array([1,0,0]))
+	(0.0, 0.0)
+
+	>>> xyztoradec(array([ [1,0,0], [0,1,0], [0,0,1]]))
+	(array([  0.,  90.,   0.]), array([  0.,   0.,  90.]))
+
+	>>> xyztoradec(array([0,1,0]))
+	(90.0, 0.0)
+
+	>>> xyztoradec(array([0,0,1]))
+	(0.0, 90.0)
+
+	'''
+	if len(xyz.shape) == 1:
+		# HACK!
+		rs,ds = xyztoradec(xyz[newaxis,:])
+		return (rs[0], ds[0])
 	(nil,three) = xyz.shape
 	assert(three == 3)
 	ra = arctan2(xyz[:,1], xyz[:,0])
@@ -311,3 +333,8 @@ def arcsec_between(ra1, dec1, ra2, dec2):
 def degrees_between(ra1, dec1, ra2, dec2):
 	return arcsec2deg(arcsec_between(ra1, dec1, ra2, dec2))
 
+
+
+if __name__ == '__main__':
+	import doctest
+	doctest.testmod()
