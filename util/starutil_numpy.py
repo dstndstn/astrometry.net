@@ -81,6 +81,67 @@ def xyztoradec(xyz):
 	dec = arcsin(xyz[:,2] / norm(xyz)[:,0])
 	return (rad2deg(ra), rad2deg(dec))
 
+
+#####################
+
+# RA,Decs in degrees.
+def arcsec_between(ra1, dec1, ra2, dec2):
+	'''
+	Computes the angle between two (arrays of) RA,Decs.
+
+	>>> from numpy import round
+	>>> print round(arcsec_between(0, 0, 1, 0), 6)
+	3600.0
+
+	>>> print round(arcsec_between(array([0, 1]), array([0, 0]), 1, 0), 6)
+	[ 3600.     0.]
+
+	>>> print round(arcsec_between(1, 0, array([0, 1]), array([0, 0])), 6)
+	[ 3600.     0.]
+
+	>>> print round(arcsec_between(array([0, 1]), array([0, 0]), array([0, 1]), array([0, 0])), 6)
+	[[    0.  3600.]
+	 [ 3600.     0.]]
+
+	'''
+	xyz1 = radectoxyz(ra1, dec1)
+	xyz2 = radectoxyz(ra2, dec2)
+	# (n,3) (m,3)
+
+	s0 = xyz1.shape[0]
+	s1 = xyz2.shape[0]
+	d2 = zeros((s0,s1))
+	for s in range(s0):
+		d2[s,:] = sum((xyz1[s,:] - xyz2)**2, axis=1)
+	if s0 == 1 and s1 == 1:
+		d2 = d2[0,0]
+	elif s0 == 1:
+		d2 = d2[0,:]
+	elif s1 == 1:
+		d2 = d2[:,0]
+	return distsq2arcsec(d2)
+
+def degrees_between(ra1, dec1, ra2, dec2):
+	return arcsec2deg(arcsec_between(ra1, dec1, ra2, dec2))
+
+
+def distsq2rad(dist2):
+    return arccos(1. - dist2 / 2.)
+def distsq2arcsec(dist2):
+    return rad2arcsec(distsq2rad(dist2))
+
+def rad2deg(r):
+    return 180.0*r/pi
+def rad2arcsec(r):
+    return 648000.0*r/pi
+
+def arcsec2rad(a):
+    return a*pi/648000.0
+def arcsec2deg(a):
+    return rad2deg(arcsec2rad(a))
+
+
+
 # x can be an array of shape (N,D)
 # returns an array of shape (N,1)
 def norm(x):
@@ -275,17 +336,13 @@ def dec2dmsstring(dec, separator=' '):
 def xyzarrtoradec(xyz):
 	return (degrees(xy2ra(xyz[0], xyz[1])), degrees(z2dec(xyz[2])))
 
-def rad2deg(r):    return 180.0*r/pi
 def deg2rad(d):    return d*pi/180.0
 def deg2arcmin(d): return d * 60.
 def deg2arcsec(d): return d * 3600.
 def rad2arcmin(r): return 10800.0*r/pi
 def arcmin2rad(a): return a*pi/10800.0
-def rad2arcsec(r): return 648000.0*r/pi
 def arcmin2deg(a): return a/60.
 def arcmin2rad(a): return deg2rad(arcmin2deg(a))
-def arcsec2rad(a): return a*pi/648000.0
-def arcsec2deg(a): return rad2deg(arcsec2rad(a))
 def radec2x(r,d):  return cos(d)*cos(r) # r,d in radians
 def radec2y(r,d):  return cos(d)*sin(r) # r,d in radians
 def radec2z(r,d):  return sin(d)        # r,d in radians
@@ -315,23 +372,7 @@ def arcmin2dist(arcmin):
 def dist2arcsec(dist):
     return distsq2arcsec(dist**2)
 
-def distsq2arcsec(dist2):
-    return rad2arcsec(distsq2rad(dist2))
 
-def distsq2rad(dist2):
-    return acos(1. - dist2 / 2.)
-
-# RA,Decs in degrees.
-def arcsec_between(ra1, dec1, ra2, dec2):
-	xyz1 = radectoxyz(ra1, dec1)
-	xyz2 = radectoxyz(ra2, dec2)
-	
-	d2 = sum([(a-b)**2 for (a,b) in zip(xyz1, xyz2)])
-	return distsq2arcsec(d2)
-
-
-def degrees_between(ra1, dec1, ra2, dec2):
-	return arcsec2deg(arcsec_between(ra1, dec1, ra2, dec2))
 
 
 
