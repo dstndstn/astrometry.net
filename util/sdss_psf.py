@@ -30,7 +30,6 @@ def sdss_psf_at_points(hdu, x, y):
 		nrb = psf.nrow_b[k]
 		ncb = psf.ncol_b[k]
 
-		#print 'c shape:', psf.c[k].shape
 		c = psf.c[k].reshape(5, 5)
 		c = c[:nrb,:ncb]
 
