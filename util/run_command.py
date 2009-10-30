@@ -45,8 +45,10 @@ def run_command(cmd, timeout=None, callback=None):
     fout.close()
     ferr.close()
     w = child.wait()
+    out = ''.join(outbl)
+    err = ''.join(errbl)
     if not os.WIFEXITED(w):
         return (-100, out, err)
     rtn = os.WEXITSTATUS(w)
-    return (rtn, ''.join(outbl), ''.join(errbl))
+    return (rtn, out, err)
 

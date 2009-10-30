@@ -17,10 +17,14 @@ def sdss_filename(filetype, run, camcol, field, band=None, rerun=None):
 def sdss_path(filetype, run, camcol, field, band=None, rerun=None):
 	x = dict(run=run, band=band, camcol=camcol, field=field, rerun=rerun)
 	y = (run, camcol, field, band, rerun)
-	if filetype == 'fpC':
+	if filetype in ['fpC']:
 		return '%(run)i/%(rerun)i/corr/%(camcol)i/' % x + sdss_filename(filetype, *y)
-	elif filetype == 'psField':
+	elif filetype in ['fpM']:
 		return '%(run)i/%(rerun)i/objcs/%(camcol)i/' % x + sdss_filename(filetype, *y)
+	elif filetype in ['psField', 'fpObjc']:
+		return '%(run)i/%(rerun)i/objcs/%(camcol)i/' % x + sdss_filename(filetype, *y)
+	else:
+		return None
 
 def sdss_find_file(filetype, run, camcol, field, band=None, reruns=None, datadir=None, reduxdir=None):
 	if filetype == 'psField':
