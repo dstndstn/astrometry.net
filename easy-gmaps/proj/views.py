@@ -8,7 +8,14 @@ from django.core.urlresolvers import reverse
 from proj.utils import get_bb, get_imagesize
 from proj.run_command import run_command
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG,
+					format='%(message)s',
+					filename='/home/gmaps/test/astrometry/easy-gmaps/django.log')
+
 def get_tile(request):
+    logging.debug('Hello.')
     try:
         (xmin, xmax, ymin, ymax) = get_bb(request)
         (imw, imh) = get_imagesize(request)
@@ -19,6 +26,7 @@ def get_tile(request):
         if 'seedy' in request.GET:
             sy = float(request.GET['seedy'])
     except Exception, x:
+        logging.debug('Exception:')
         return HttpResponse(str(x))
 
     newymax = 1. - ymin
@@ -33,7 +41,7 @@ def get_tile(request):
         cmdline += ' -S %g' % sy
 
     cmdline += ' | pnmtopng'
-
+    logging.debug('Command-line:' + cmdline)
 
     cache = True
 
