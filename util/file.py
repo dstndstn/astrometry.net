@@ -16,7 +16,7 @@ def write_file(data, fn):
 def pickle_to_file(data, fn):
 	f = open(fn, 'wb')
 	# MAGIC -1: highest pickle protocol
-	pickle.dumps(data, f, -1)
+	pickle.dump(data, f, -1)
 	f.close()
 
 def unpickle_from_file(fn):
