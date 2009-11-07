@@ -1,7 +1,7 @@
 #import matplotlib
 from matplotlib.patches import Circle, Ellipse
-from pylab import gca, gcf, gci, axis
-from numpy import array
+from pylab import gca, gcf, gci, axis, histogram2d
+from numpy import array, append, flatnonzero
 
 from matplotlib.colors import LinearSegmentedColormap
 
@@ -53,8 +53,6 @@ def hist2d_with_outliers(x, y, xbins, ybins, nout):
 	'''
 	# returns (density image, indices of outliers)
 	(H,xe,ye) = histogram2d(x, y, (xbins,ybins))
-	#print 'xbins:', xbins[:4]
-	#print 'ybins:', ybins[:4]
 	Out = array([]).astype(int)
 	for i in range(len(xe)-1):
 		for j in range(len(ye)-1):
