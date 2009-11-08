@@ -45,6 +45,10 @@
 #define InlineDefineC
 
 //# define Inline inline __attribute__ ((always_inline))
+
+// See:
+//   http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
+
 # define Inline           inline
 # define Pure             __attribute__ ((pure))
 # define Const            __attribute__ ((const))
@@ -52,10 +56,12 @@
 # define Malloc           __attribute__ ((malloc))
 # define Used             __attribute__ ((used))
 # define Unused           __attribute__ ((unused))
+# define VarUnused        __attribute__ ((unused))
 # define Packed           __attribute__ ((packed))
 # define likely(x)        __builtin_expect (!!(x), 1)
 # define unlikely(x)      __builtin_expect (!!(x), 0)
 # define Noinline         __attribute__ ((noinline))
+// alloc_size
 
 // new in gcc-3.1:
 #if GNUC_PREREQ (3, 1)
@@ -73,6 +79,13 @@
 # define WarnUnusedResult
 #endif
 
+// new in gcc-4.1:
+#if GNUC_PREREQ (4, 1)
+# define Flatten          __attribute__ (( flatten))
+#else
+# define Flatten
+#endif
+
 #else
 
 # define Inline
@@ -84,11 +97,13 @@
 # define Deprecated
 # define Used
 # define Unused
+# define VarUnused
 # define Packed
 # define likely(x)	(x)
 # define unlikely(x)	(x)
 # define Noinline
 # define WarnUnusedResult
+# define Flatten
 
 #endif
 

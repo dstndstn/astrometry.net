@@ -30,7 +30,7 @@ void permutation_init(int* perm, int Nperm) {
 
 void permutation_apply(const int* perm, int Nperm, const void* inarray,
 					   void* outarray, int elemsize) {
-	void* temparr;
+	void* temparr = NULL;
 	int i;
 	const char* cinput;
 	char* coutput;

@@ -83,8 +83,6 @@ ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
 	boilerplate.o tycho2.o
 
-#build-hd-tree.o
-
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
 	tycho2-fits.o
@@ -138,6 +136,7 @@ ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DAT
 
 tycho2tofits: tycho2tofits.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += tycho2tofits.o
 
 tycho2tostellarium: tycho2tostellarium.o $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -270,6 +269,7 @@ suppl_1.dat:
 
 build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
 		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += build-hd-tree.o
 
 ### TESTS
 

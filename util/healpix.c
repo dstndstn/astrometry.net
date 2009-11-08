@@ -706,7 +706,7 @@ static hp_t xyztohp(double vx, double vy, double vz, int Nside,
 	hp_t hp;
 
 	// only used in asserts()
-	double EPS = 1e-8;
+	VarUnused double EPS = 1e-8;
 
 	assert(Nside > 0);
 

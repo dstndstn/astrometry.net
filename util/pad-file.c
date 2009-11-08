@@ -46,7 +46,7 @@ int main(int argc, char** args) {
 	char* infn;
 	size_t padtolen;
 	char padchar = '\0';
-	int nargs;
+	int nargs = 0;
 	int i;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1) {

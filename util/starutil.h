@@ -35,21 +35,46 @@ InlineDeclare int dimquad2dimcode(int dimquad);
 
 typedef unsigned char uchar;
 
-InlineDeclare double rad2deg(double x);
-InlineDeclare double rad2arcmin(double x);
-InlineDeclare double rad2arcsec(double x);
+#define ONE_OVER_SIXTY 0.016666666666666666
 
-InlineDeclare double deg2rad(double x);
-InlineDeclare double deg2arcmin(double x);
-InlineDeclare double deg2arcsec(double x);
+// pi / 180.
+#define RAD_PER_DEG 0.017453292519943295
+// pi / (180. * 60.)
+#define RAD_PER_ARCMIN 0.00029088820866572158
+// pi / (180. * 60. * 60.)
+#define RAD_PER_ARCSEC 4.8481368110953598e-06
 
-InlineDeclare double arcmin2rad(double x);
-InlineDeclare double arcmin2deg(double x);
-InlineDeclare double arcmin2arcsec(double x);
+// 180. / pi
+#define DEG_PER_RAD 57.295779513082323
+#define DEG_PER_ARCMIN ONE_OVER_SIXTY
+// 1./3600.
+#define DEG_PER_ARCSEC 0.00027777777777777778
 
-InlineDeclare double arcsec2rad(double x);
-InlineDeclare double arcsec2deg(double x);
-InlineDeclare double arcsec2arcmin(double x);
+// 60. * 180. / pi
+#define ARCMIN_PER_RAD 3437.7467707849396
+#define ARCMIN_PER_DEG 60.0
+#define ARCMIN_PER_ARCSEC ONE_OVER_SIXTY
+
+// 60. * 60. * 180. / pi
+#define ARCSEC_PER_RAD 206264.80624709636
+#define ARCSEC_PER_DEG 3600.0
+#define ARCSEC_PER_ARCMIN 60.0
+
+InlineDeclare Const double rad2deg(double x);
+InlineDeclare Const double rad2arcmin(double x);
+InlineDeclare Const double rad2arcsec(double x);
+
+InlineDeclare Const double deg2rad(double x);
+InlineDeclare Const double deg2arcmin(double x);
+InlineDeclare Const double deg2arcsec(double x);
+
+InlineDeclare Const double arcmin2rad(double x);
+InlineDeclare Const double arcmin2deg(double x);
+InlineDeclare Const double arcmin2arcsec(double x);
+
+InlineDeclare Const double arcsec2rad(double x);
+InlineDeclare Const double arcsec2deg(double x);
+InlineDeclare Const double arcsec2arcmin(double x);
 
 #ifdef INCLUDE_INLINE_SOURCE
 #define InlineDefine InlineDefineH
@@ -61,8 +86,8 @@ InlineDeclare double arcsec2arcmin(double x);
 #define radec2x(r,d) (cos(d)*cos(r))
 #define radec2y(r,d) (cos(d)*sin(r))
 #define radec2z(r,d) (sin(d))
-#define xy2ra(x,y) ((atan2(y,x)>=0.0)?(atan2(y,x)):(2*(double)M_PI+atan2(y,x)))
-#define z2dec(z) (asin(z))
+InlineDeclare Const double xy2ra(double x, double y);
+InlineDeclare Const double z2dec(double z);
 
 double atora(const char* str);
 double atodec(const char* str);
@@ -76,18 +101,18 @@ void radecrange2xyzrange(double ralow, double declow, double rahigh, double dech
 						 double* xyzlow, double* xyzhigh);
 
 // RA,Dec in radians:
-inline void radec2xyz(double ra, double dec, double* x, double* y, double* z);
-inline void xyz2radec(double x, double y, double z, double *ra, double *dec);
-inline void xyzarr2radec(const double* xyz, double *ra, double *dec);
+InlineDeclare void radec2xyz(double ra, double dec, double* x, double* y, double* z);
+InlineDeclare Flatten void xyz2radec(double x, double y, double z, double *ra, double *dec);
+InlineDeclare Flatten void xyzarr2radec(const double* xyz, double *ra, double *dec);
 inline void xyzarr2radecarr(const double* xyz, double *radec);
-inline void radec2xyzarr(double ra, double dec, double* xyz);
+InlineDeclare void radec2xyzarr(double ra, double dec, double* xyz);
 inline void radec2xyzarrmany(double *ra, double *dec, double* xyz, int n);
 
 // RA,Dec in degrees:
-inline void radecdeg2xyz(double ra, double dec, double* x, double* y, double* z);
-inline void xyzarr2radecdeg(const double* xyz, double *ra, double *dec);
-inline void xyzarr2radecdegarr(double* xyz, double *radec);
-inline void radecdeg2xyzarr(double ra, double dec, double* xyz);
+InlineDeclare void radecdeg2xyz(double ra, double dec, double* x, double* y, double* z);
+InlineDeclare void xyzarr2radecdeg(const double* xyz, double *ra, double *dec);
+InlineDeclare void xyzarr2radecdegarr(double* xyz, double *radec);
+InlineDeclare void radecdeg2xyzarr(double ra, double dec, double* xyz);
 inline void radecdegarr2xyzarr(double* radec, double* xyz);
 inline void radecdeg2xyzarrmany(double *ra, double *dec, double* xyz, int n);
 
@@ -103,9 +128,9 @@ inline double ra2mercx(double ra);
 inline double dec2mercy(double dec);
 
 // RA in degrees to H:M:S
-inline void ra2hms(double ra, int* h, int* m, double* s);
+void ra2hms(double ra, int* h, int* m, double* s);
 // Dec in degrees to D:M:S
-inline void dec2dms(double dec, int* d, int* m, double* s);
+void dec2dms(double dec, int* d, int* m, double* s);
 
 double hms2ra(int h, int m, double s);
 double dms2dec(int sgn, int d, int m, double s);
@@ -133,20 +158,16 @@ Const inline double distsq2arcsec(double dist2);
 // Distance on the unit sphere to arcseconds
 Const inline double dist2arcsec(double dist);
 
-// Converts an angle (in radians) into the distance-squared
-// between two points on the unit sphere separated by that angle.
-Const inline double arc2distsq(double arcInRadians);
-
 // Radians to distance^2 on the unit sphere.
 // (alias of arc2distsq)
-Const inline double rad2distsq(double arcInRadians);
+InlineDeclare Const double rad2distsq(double arcInRadians);
 
 // Radians to distance on the unit sphere.
-Const inline double rad2dist(double arcInRadians);
+InlineDeclare Const double rad2dist(double arcInRadians);
 
 // Converts an angle (in arcseconds) into the distance-squared
 // between two points on the unit sphere separated by that angle.
-Const inline double arcsec2distsq(double arcInArcSec);
+InlineDeclare Const double arcsec2distsq(double arcInArcSec);
 
 // Arcseconds to distance on the unit sphere.
 Const inline double arcsec2dist(double arcInArcSec);
@@ -154,9 +175,9 @@ Const inline double arcsec2dist(double arcInArcSec);
 // Degrees to distance on the unit sphere.
 Const inline double deg2dist(double arcInDegrees);
 
-Const inline double arcmin2dist(double arcmin);
+InlineDeclare Const double arcmin2dist(double arcmin);
 
-Const inline double arcmin2distsq(double arcmin);
+InlineDeclare Const double arcmin2distsq(double arcmin);
 
 // Distance on the unit sphere to degrees.
 Const inline double dist2deg(double dist);
@@ -167,9 +188,18 @@ Const inline double dist2deg(double dist);
 void make_rand_star(double* star, double ramin, double ramax,
 					double decmin, double decmax);
 
-/* computes the 2D coordinates (x,y)  that star s would have in a
-   TANGENTIAL PROJECTION defined by (centred at) star r.     */
-WarnUnusedResult inline bool star_coords(const double *s, const double *r, double *x, double *y);
+/* 
+ Computes the 2D coordinates (x,y) (in units of a celestial sphere of
+ radius 1) that star s would have in a TANGENTIAL PROJECTION defined
+ by (centred at) star r.  s and r are both given in xyz coordinates,
+ the parameters are pointers to arrays of size3.
+
+ WARNING -- this code assumes s and r are UNIT vectors (ie normalized
+ to have length 1), the resulting x direction is increasing DEC, the
+ resulting y direction is increasing RA, which might not be the normal
+ convention.
+*/
+WarnUnusedResult InlineDeclare bool star_coords(const double *s, const double *r, double *x, double *y);
 
 inline void star_midpoint(double* mid, const double* A, const double* B);
 
