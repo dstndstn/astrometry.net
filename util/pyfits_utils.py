@@ -51,15 +51,17 @@ def table_fields(dataorfn, rows=None):
 	return fields
 
 # ultra-brittle text table parsing.
-def text_table_fields(forfn):
-	f = None
-	if isinstance(forfn, str):
-		f = open(forfn)
-		data = f.read()
-		f.close()
+def text_table_fields(forfn, text=None):
+	if text is None:
+		f = None
+		if isinstance(forfn, str):
+			f = open(forfn)
+			data = f.read()
+			f.close()
+		else:
+			data = forfn.read()
 	else:
-		data = forfn.read()
-
+		data = text
 	txtrows = data.split('\n')
 
 	# column names are in the first line.
