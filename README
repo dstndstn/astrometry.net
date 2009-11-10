@@ -33,27 +33,31 @@ INSTALLING
 ----------
 
 To compile everything and run with full functionality, you will need:
-  * gcc
+  * GNU build tools (gcc, make, etc.)
   * cairo
   * netpbm
   * libpng
   * libjpeg
+  * libz
   * python (probably >= 2.4)
   * numpy
 
 -> On Ubuntu or Debian-like systems, the following should suffice:
 
     $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
-                           libpng12-dev libjpeg-dev python-numpy
+                           libpng12-dev libjpeg-dev python-numpy \
+						   zlib1g-dev
 
 -> On RHEL, you'll need something like:
     $ sudo yum install cairo.x86_64 cairo-devel.x86_64 netpbm.x86_64 \
                        netpbm-devel.x86_64 fontconfig-devel.x86_64 \
-                       libXrender-devel.x86_64 xorg-x11-proto-devel.x86_64
+                       libXrender-devel.x86_64 xorg-x11-proto-devel.x86_64 \
+					   zlib-devel
 
 -> On Mac OS X, possibly the easiest way is to install Fink
    (www.finkproject.org), and then use apt-get install as per the
-   Debian instructions above.  Note that to use Fink you will need to
+   Debian instructions above (leaving out "zlib1g-dev" because it's
+   already included with OSX).  Note that to use Fink you will need to
    add something like this in your ~/.profile or ~/.bashrc file:
 
 . /sw/bin/init.sh

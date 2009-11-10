@@ -65,6 +65,7 @@ def radec_to_sdss_rcf(ra, dec, spherematch=True):
 #  rm g.fits a.fits
 
 if __name__ == '__main__':
-	rcfs = radec_to_sdss_rcf([236.1, 236.4], [0,0])
+	#rcfs = radec_to_sdss_rcf([236.1, 236.4], [0,0])
+	rcfs = radec_to_sdss_rcf(10.632, 41.257)
 	print 'rcfs:', rcfs
 
