@@ -28,11 +28,11 @@ class tabledata(object):
 				rtn._length = len(val[I])
 		return rtn
 
-def table_fields(dataorfn, rows=None):
+def table_fields(dataorfn, rows=None, hdunum=1):
 	pf = None
 	if isinstance(dataorfn, str):
 		pf = pyfits.open(dataorfn)
-		data = pf[1].data
+		data = pf[hdunum].data
 	else:
 		data = dataorfn
 

@@ -30,11 +30,12 @@
 #include "mathutil.h"
 #include "boilerplate.h"
 
-const char* OPTIONS = "h";
+const char* OPTIONS = "he:";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stderr);
-	fprintf(stderr, "\nUsage: %s <wcs-file>\n"
+	fprintf(stderr, "\nUsage: %s [options] <wcs-file>\n"
+			"\n  [-e <extension>]  Read from given HDU (default 0 = primary)\n"
 			"\n", progname);
 }
 
@@ -46,6 +47,7 @@ int main(int argc, char** args) {
 	char* progname = args[0];
 	char** inputfiles = NULL;
 	int ninputfiles = 0;
+	int ext = 0;
 	sip_t wcs;
 	double imw, imh;
 	double rac, decc;
@@ -64,6 +66,9 @@ int main(int argc, char** args) {
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1) {
 		switch (argchar) {
+		case 'e':
+			ext = atoi(optarg);
+			break;
 		case 'h':
 		default:
 			printHelp(progname);
@@ -79,8 +84,8 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 
-	if (!sip_read_header_file(inputfiles[0], &wcs)) {
-		fprintf(stderr, "failed to read WCS header from file %s.\n", inputfiles[0]);
+	if (!sip_read_header_file_ext(inputfiles[0], ext, &wcs)) {
+		fprintf(stderr, "failed to read WCS header from file %s, extension %i.\n", inputfiles[0], ext);
 		return -1;
 	}
 
@@ -90,6 +95,11 @@ int main(int argc, char** args) {
 		fprintf(stderr, "failed to find IMAGE{W,H} in WCS file.\n");
 		return -1;
 	}
+
+	printf("crpix0 %.12g\n", wcs.wcstan.crpix[0]);
+	printf("crpix1 %.12g\n", wcs.wcstan.crpix[1]);
+	printf("crval0 %.12g\n", wcs.wcstan.crval[0]);
+	printf("crval1 %.12g\n", wcs.wcstan.crval[1]);
 
     printf("imagew %.12g\n", imw);
     printf("imageh %.12g\n", imh);

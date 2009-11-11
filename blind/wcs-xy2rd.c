@@ -29,17 +29,22 @@
 #include "rdlist.h"
 #include "boilerplate.h"
 
-const char* OPTIONS = "hi:o:w:f:X:Y:t";
+const char* OPTIONS = "hi:o:w:f:X:Y:tx:y:e:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
 		   "   -w <WCS input file>\n"
+		   "   [-e <extension>] FITS HDU number to read WCS from (default 0 = primary)\n"
 		   "   -i <xyls input file>\n"
 		   "   -o <rdls output file>\n"
 		   "  [-f <xyls field index>] (default: all)\n"
 		   "  [-X <x-column-name> -Y <y-column-name>]\n"
 		   "  [-t]: just use TAN projection, even if SIP extension exists.\n"
+		   "\n"
+		   "You can also specify a single point to convert (result is printed to stdout):\n"
+		   "  [-x <pixel>]\n"
+		   "  [-y <pixel>]\n"
 		   "\n", progname);
 }
 
@@ -48,23 +53,35 @@ extern int optind, opterr, optopt;
 
 int main(int argc, char** args) {
 	int c;
+	double x, y;
 	char* xylsfn = NULL;
 	char* wcsfn = NULL;
 	char* rdlsfn = NULL;
 	char* xcol = NULL;
 	char* ycol = NULL;
 	bool forcetan = FALSE;
+	int ext = 0;
 
 	rdlist_t* rdls = NULL;
 	xylist_t* xyls = NULL;
 	il* fields;
 	sip_t sip;
 	int i;
+	x = y = HUGE_VAL;
 
 	fields = il_new(16);
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'e':
+			ext = atoi(optarg);
+			break;
+		case 'x':
+			x = atof(optarg);
+			break;
+		case 'y':
+			y = atof(optarg);
+			break;
         case 'h':
 			print_help(args[0]);
 			exit(0);
@@ -97,7 +114,7 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 
-	if (!rdlsfn || !xylsfn || !wcsfn) {
+	if (!(wcsfn && ((rdlsfn && xylsfn) || ((x != HUGE_VAL) && (y != HUGE_VAL))))) {
 		print_help(args[0]);
 		exit(-1);
 	}
@@ -105,15 +122,23 @@ int main(int argc, char** args) {
 	// read WCS.
 	if (forcetan) {
 		memset(&sip, 0, sizeof(sip_t));
-		if (!tan_read_header_file(wcsfn, &(sip.wcstan))) {
-			fprintf(stderr, "Failed to parse TAN header from %s.\n", wcsfn);
+		if (!tan_read_header_file_ext(wcsfn, ext, &(sip.wcstan))) {
+			fprintf(stderr, "Failed to parse TAN header from file %s, extension %i.\n", wcsfn, ext);
 			exit(-1);
 		}
 	} else {
-		if (!sip_read_header_file(wcsfn, &sip)) {
-			printf("Failed to parse SIP header from %s.\n", wcsfn);
+		if (!sip_read_header_file_ext(wcsfn, ext, &sip)) {
+			printf("Failed to parse SIP header from file %s, extension %i.\n", wcsfn, ext);
 			exit(-1);
 		}
+	}
+
+	if (!xylsfn) {
+		// convert immediately.
+		double ra,dec;
+		sip_pixelxy2radec(&sip, x, y, &ra, &dec);
+		printf("Pixel (%f, %f) -> RA,Dec (%f, %f)\n", x, y, ra, dec);
+		exit(0);
 	}
 
 	// read XYLS.
