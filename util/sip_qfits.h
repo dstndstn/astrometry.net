@@ -22,6 +22,8 @@
 #include "qfits.h"
 #include "sip.h"
 
+sip_t* sip_read_tan_or_sip_header_file_ext(const char* fn, int ext, sip_t* dest, bool forcetan);
+
 qfits_header* sip_create_header(const sip_t* sip);
 
 qfits_header* tan_create_header(const tan_t* tan);

@@ -24,6 +24,27 @@
 #include "fitsioutils.h"
 #include "errors.h"
 
+sip_t* sip_read_tan_or_sip_header_file_ext(const char* wcsfn, int ext, sip_t* dest, bool forcetan) {
+	sip_t* rtn;
+	if (forcetan) {
+		sip_t sip;
+		memset(&sip, 0, sizeof(sip_t));
+		if (!tan_read_header_file_ext(wcsfn, ext, &(sip.wcstan))) {
+			ERROR("Failed to parse TAN header from file %s, extension %i", wcsfn, ext);
+			return NULL;
+		}
+		if (!dest)
+			dest = malloc(sizeof(sip_t));
+		memcpy(dest, &sip, sizeof(sip_t));
+		return dest;
+	} else {
+		rtn = sip_read_header_file_ext(wcsfn, ext, dest);
+		if (!rtn)
+			ERROR("Failed to parse SIP header from file %s, extension %i", wcsfn, ext);
+		return rtn;
+	}
+}
+
 int sip_write_to_file(const sip_t* sip, const char* fn) {
 	FILE* fid;
 	qfits_header* hdr;

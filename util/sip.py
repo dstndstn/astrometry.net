@@ -170,10 +170,10 @@ class Sip(ctypes.Structure):
 				('ap', c_double*(SIP_MAXORDER**2)),
 				('bp', c_double*(SIP_MAXORDER**2)),]
 
-	def __init__(self, filename=None):
+	def __init__(self, filename=None, ext=0):
 		if not filename is None:
 			cfn = c_char_p(filename)
-			rtn = _sip.sip_read_header_file(cfn, ctypes.pointer(self))
+			rtn = _sip.sip_read_header_file_ext(cfn, ext, ctypes.pointer(self))
 			if not rtn:
 				raise Exception, 'Failed to parse SIP header from file "%s"' % filename
 

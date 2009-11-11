@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -28,7 +29,8 @@
 #include "rdlist.h"
 #include "errors.h"
 
-int wcs_rd2xy(const char* wcsfn, const char* rdlsfn, const char* xylsfn,
+int wcs_rd2xy(const char* wcsfn, int wcsext,
+			  const char* rdlsfn, const char* xylsfn,
               const char* racol, const char* deccol, bool forcetan,
               il* fields) {
 	xylist_t* xyls = NULL;
@@ -39,17 +41,9 @@ int wcs_rd2xy(const char* wcsfn, const char* rdlsfn, const char* xylsfn,
     int rtn = -1;
 
 	// read WCS.
-	if (forcetan) {
-		memset(&sip, 0, sizeof(sip_t));
-		if (!tan_read_header_file(wcsfn, &(sip.wcstan))) {
-			ERROR("Failed to parse TAN header from %s", wcsfn);
-			return -1;
-		}
-	} else {
-		if (!sip_read_header_file(wcsfn, &sip)) {
-			ERROR("Failed to parse SIP header from %s", wcsfn);
-            return -1;
-		}
+	if (!sip_read_tan_or_sip_header_file_ext(wcsfn, wcsext, &sip, forcetan)) {
+		ERROR("Failed to read WCS");
+		return -1;
 	}
 
 	// read RDLS.

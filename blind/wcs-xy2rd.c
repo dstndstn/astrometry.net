@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2008, 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -28,6 +29,7 @@
 #include "xylist.h"
 #include "rdlist.h"
 #include "boilerplate.h"
+#include "errors.h"
 
 const char* OPTIONS = "hi:o:w:f:X:Y:tx:y:e:";
 
@@ -120,17 +122,9 @@ int main(int argc, char** args) {
 	}
 
 	// read WCS.
-	if (forcetan) {
-		memset(&sip, 0, sizeof(sip_t));
-		if (!tan_read_header_file_ext(wcsfn, ext, &(sip.wcstan))) {
-			fprintf(stderr, "Failed to parse TAN header from file %s, extension %i.\n", wcsfn, ext);
-			exit(-1);
-		}
-	} else {
-		if (!sip_read_header_file_ext(wcsfn, ext, &sip)) {
-			printf("Failed to parse SIP header from file %s, extension %i.\n", wcsfn, ext);
-			exit(-1);
-		}
+	if (!sip_read_tan_or_sip_header_file_ext(wcsfn, ext, &sip, forcetan)) {
+		ERROR("Failed to read WCS file");
+		exit(-1);
 	}
 
 	if (!xylsfn) {

@@ -21,7 +21,8 @@
 
 #include "bl.h"
 
-int wcs_rd2xy(const char* wcsfn, const char* rdlsfn, const char* xylsfn,
+int wcs_rd2xy(const char* wcsfn, int wcsext,
+			  const char* rdlsfn, const char* xylsfn,
               const char* racol, const char* deccol, bool forcetan,
               il* fields);
 
