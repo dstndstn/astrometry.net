@@ -117,6 +117,11 @@ sl* dir_get_contents(const char* path, sl* result, bool filesonly, bool recursiv
 int file_get_last_modified_string(const char* fn, const char* timeformat,
                                   bool utc, char* output, size_t outsize);
 
+// Split a string on the first instance of "splitstr".
+// Places the addresses of (newly-allocated) copies of the first and seconds parts of the string.
+// Returns 1 if the string is found.
+int split_string_once(const char* str, const char* splitstr, char** first, char** second);
+
 /**
    If "cmdline" starts with "keyword", returns 1 and places the address of
    the start of the next word in "p_next_word".

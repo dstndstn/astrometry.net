@@ -44,6 +44,31 @@
 
 uint32_t ENDIAN_DETECTOR = 0x01020304;
 
+int split_string_once(const char* str, const char* splitstr,
+					  char** first, char** second) {
+	char* start = strstr(str, splitstr);
+	int n;
+	if (!start) {
+		if (first) *first = NULL;
+		if (second) *second = NULL;
+		return 0;
+	}
+	if (first) {
+		n = start - str;
+		*first = malloc(1 + n);
+		memcpy(first, str, n);
+		first[n] = '\0';
+	}
+	if (second) {
+		char* sec = start + strlen(splitstr);
+		n = strlen(sec);
+		*second = malloc(1 + n);
+		memcpy(second, sec, n);
+		second[n] = '\0';
+	}
+	return 1;
+}
+
 int write_file(const char* fn, char* data, int len) {
 	FILE* fid = fopen(fn, "wb");
 	if (!fid) {

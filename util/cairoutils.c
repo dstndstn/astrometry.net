@@ -155,6 +155,39 @@ int cairoutils_parse_color(const char* color, float* r, float* g, float* b) {
     return -1;
 }
 
+int cairoutils_parse_rgba(const char* str, float* r, float* g, float* b, float* a) {
+	sl* words = sl_split(NULL, str, " ");
+	char* endp;
+	char* s;
+	if (!((sl_size(words) == 3) || (sl_size(words) == 4))) {
+		return -1;
+	}
+	assert(r);
+	assert(g);
+	assert(b);
+	s = sl_get(words, 0);
+	*r = strtof(s, &endp);
+	if (endp == s) goto bailout;
+	s = sl_get(words, 1);
+	*g = strtof(s, &endp);
+	if (endp == s) goto bailout;
+	s = sl_get(words, 2);
+	*b = strtof(s, &endp);
+	if (endp == s) goto bailout;
+
+	if ((sl_size(words) == 4) && a) {
+		s = sl_get(words, 3);
+		*a = strtof(s, &endp);
+		if (endp == s) goto bailout;
+	}
+	sl_free2(words);
+	return 0;
+
+	bailout:
+	sl_free2(words);
+	return -1;
+}
+
 struct mymarker {
     const char* name;
     void (*drawit)(cairo_t* cairo, double x, double y, double rad, const char* name);

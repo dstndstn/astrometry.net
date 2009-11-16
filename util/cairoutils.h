@@ -79,6 +79,10 @@ int cairoutils_stream_jpeg(FILE* fout, unsigned char* img, int W, int H);
 
 int cairoutils_parse_color(const char* color, float* r, float* g, float* b);
 
+// Parses a space-separated list of floating-point rgb(a) values.
+// Parses alpha if "a" is non-null and str contains four terms.
+int cairoutils_parse_rgba(const char* str, float* r, float* g, float* b, float* a);
+
 const char* cairoutils_get_color_name(int i);
 
 int cairoutils_parse_marker(const char* name);

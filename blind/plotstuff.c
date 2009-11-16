@@ -68,6 +68,7 @@
 #include "plotstuff.h"
 
 #include "plotxy.h"
+#include "plotimage.h"
 
 #include "boilerplate.h"
 #include "cairoutils.h"
@@ -76,6 +77,12 @@
 #include "errors.h"
 
 static const char* OPTIONS = "hW:H:o:JP";
+
+int parse_color(const char* color, float* r, float* g, float* b, float* a) {
+	if (a) *a = 1.0;
+	return (cairoutils_parse_rgba(color, r, g, b, a) &&
+			cairoutils_parse_color(color, r, g, b));
+}
 
 
 static void plot_builtin_apply(cairo_t* cairo, plot_args_t* args) {
@@ -107,11 +114,9 @@ static int plot_builtin_command(const char* command, cairo_t* cairo,
 	logmsg("Command \"%s\", args \"%s\"\n", cmd, cmdargs);
 
 	if (streq(cmd, "plot_color")) {
-		if (cairoutils_parse_rgba(cmdargs, &(plotargs->r), &(plotargs->g), &(plotargs->b), &(plotargs->a))) {
-			if (cairoutils_parse_color(cmdargs, &(plotargs->r), &(plotargs->g), &(plotargs->b))) {
-				ERROR("Failed to parse plot_color: \"%s\"", cmdargs);
-				return -1;
-			}
+		if (parse_color(cmdargs, &(plotargs->r), &(plotargs->g), &(plotargs->b), &(plotargs->a))) {
+			ERROR("Failed to parse plot_color: \"%s\"", cmdargs);
+			return -1;
 		}
 
 	} else if (streq(cmd, "plot_alpha")) {
@@ -157,7 +162,7 @@ typedef struct plotter plotter_t;
 static plotter_t plotters[] = {
 	{ "plot", plot_builtin_init, plot_builtin_command, plot_builtin_free, (void*)NULL },
 	{ "xy", plot_xy_init, plot_xy_command, plot_xy_free, NULL },
-	//{ "image", plot_image_init, plot_image_command, plot_image_free, NULL },
+	{ "image", plot_image_init, plot_image_command, plot_image_free, NULL },
 };
 
 
@@ -176,6 +181,7 @@ extern char *optarg;
 extern int optind, opterr, optopt;
 
 int main(int argc, char *args[]) {
+	int loglvl = LOG_MSG;
 	int argchar;
 	char* progname = args[0];
     char* outfn = "-";
@@ -207,6 +213,9 @@ int main(int argc, char *args[]) {
 		case 'H':
 			H = atoi(optarg);
 			break;
+		case 'v':
+			loglvl++;
+			break;
 		case 'h':
 			printHelp(progname);
             exit(0);
@@ -222,6 +231,8 @@ int main(int argc, char *args[]) {
 	}
 
 	assert(W && H);
+
+	log_init(loglvl);
 
     // log errors to stderr, not stdout.
     errors_log_to(stderr);
