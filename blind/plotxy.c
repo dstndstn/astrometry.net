@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -22,6 +23,7 @@
 #include <sys/param.h>
 
 #include <cairo.h>
+#include <cairo-pdf.h>
 #ifndef ASTROMETRY_NO_PPM
 #include <ppm.h>
 #endif
@@ -32,7 +34,7 @@
 #include "log.h"
 #include "errors.h"
 
-#define OPTIONS "hW:H:n:N:r:s:i:e:x:y:w:S:I:PC:X:Y:b:o:p"
+#define OPTIONS "hW:H:n:N:r:s:i:e:x:y:w:S:I:PC:X:Y:b:o:pJ"
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
@@ -42,6 +44,7 @@ static void printHelp(char* progname) {
            "  [-I <image>   ]   Input image on which plotting will occur; PPM format.\n"
 	       "  [-p]: Input image is PNG format, not PPM.\n"
            "  [-P]              Write PPM output instead of PNG.\n"
+		   "  [-J]              Write PDF output.\n"
 		   "  [-W <width>   ]   Width of output image (default: data-dependent).\n"
 		   "  [-H <height>  ]   Height of output image (default: data-dependent).\n"
 		   "  [-x <x-offset>]   X offset: position of the bottom-left pixel.\n"
@@ -86,9 +89,11 @@ int main(int argc, char *args[]) {
 	int Nxy;
 	int i;
 	double scale = 1.0;
-    bool pngoutput = TRUE;
+    bool ppmoutput = FALSE;
+    bool pdfoutput = FALSE;
+
     bool pnginput = FALSE;
-    unsigned char* img;
+    unsigned char* img = NULL;
 	cairo_t* cairo;
 	cairo_surface_t* target;
     float r=1.0, g=1.0, b=1.0;
@@ -123,8 +128,11 @@ int main(int argc, char *args[]) {
             ycol = optarg;
             break;
         case 'P':
-            pngoutput = FALSE;
+            ppmoutput = TRUE;
             break;
+		case 'J':
+			pdfoutput = TRUE;
+			break;
 		case 'p':
 		  pnginput = TRUE;
             break;
@@ -261,16 +269,33 @@ int main(int argc, char *args[]) {
             exit(-1);
         }
         cairoutils_rgba_to_argb32(img, W, H);
-    } else {
-        // Allocate a black image.
-        img = calloc(4 * W * H, 1);
     }
 
 	//fprintf(stderr, "Image size %i x %i.\n", W, H);
 
-	// Allocate image.
-    target = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
-	cairo = cairo_create(target);
+	// Allocate cairo surface
+	if (pdfoutput) {
+		cairo_surface_t* thissurf;
+		cairo_pattern_t* pat;
+		target = cairo_pdf_surface_create_for_stream(cairoutils_file_write_func, stdout, W, H);
+		// render the background image.
+		thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
+		pat = cairo_pattern_create_for_surface(thissurf);
+		cairo = cairo_create(target);
+		cairo_set_source(cairo, pat);
+		cairo_paint(cairo);
+		cairo_pattern_destroy(pat);
+		cairo_surface_destroy(thissurf);
+		free(img);
+		img = NULL;
+	} else {
+		if (!img)
+			// Allocate a black image.
+			img = calloc(4 * W * H, 1);
+		target = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
+		cairo = cairo_create(target);
+	}
+
 	cairo_set_line_width(cairo, lw);
 	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 	cairo_set_source_rgb(cairo, r, g, b);
@@ -304,16 +329,23 @@ int main(int argc, char *args[]) {
 	}
 
     // Convert image for output...
-    cairoutils_argb32_to_rgba(img, W, H);
+	if (img)
+		cairoutils_argb32_to_rgba(img, W, H);
 
-    if (pngoutput) {
-        if (cairoutils_write_png(outfn, img, W, H)) {
-            fprintf(stderr, "Failed to write PNG.\n");
-            exit(-1);
-        }
-    } else {
+	if (ppmoutput) {
         if (cairoutils_write_ppm(outfn, img, W, H)) {
             fprintf(stderr, "Failed to write PPM.\n");
+            exit(-1);
+        }
+	} else if (pdfoutput) {
+		cairo_surface_flush(target);
+		cairo_surface_finish(target);
+		cairoutils_surface_status_errors(target);
+		cairoutils_cairo_status_errors(cairo);
+	} else {
+		// PNG
+        if (cairoutils_write_png(outfn, img, W, H)) {
+            fprintf(stderr, "Failed to write PNG.\n");
             exit(-1);
         }
     }
