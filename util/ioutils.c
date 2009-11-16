@@ -56,15 +56,15 @@ int split_string_once(const char* str, const char* splitstr,
 	if (first) {
 		n = start - str;
 		*first = malloc(1 + n);
-		memcpy(first, str, n);
-		first[n] = '\0';
+		memcpy(*first, str, n);
+		(*first)[n] = '\0';
 	}
 	if (second) {
 		char* sec = start + strlen(splitstr);
 		n = strlen(sec);
 		*second = malloc(1 + n);
-		memcpy(second, sec, n);
-		second[n] = '\0';
+		memcpy(*second, sec, n);
+		(*second)[n] = '\0';
 	}
 	return 1;
 }

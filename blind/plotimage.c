@@ -80,7 +80,7 @@ int plot_image_command(const char* command, cairo_t* cairo,
 		if (streq(cmd, "image_file")) {
 			free(args->fn);
 			args->fn = strdup(cmdargs);
-		} else if (streq(cmd, "image_ext")) {
+		} else if (streq(cmd, "image_format")) {
 			free(args->format);
 			args->format = strdup(cmdargs);
 		} else {

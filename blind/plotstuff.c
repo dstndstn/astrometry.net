@@ -184,7 +184,8 @@ int main(int argc, char *args[]) {
 	int loglvl = LOG_MSG;
 	int argchar;
 	char* progname = args[0];
-    char* outfn = "-";
+    char* outfn = NULL;
+	FILE* fout = stdout;
 	int W = 0, H = 0;
     bool ppmoutput = FALSE;
     bool pdfoutput = FALSE;
@@ -239,7 +240,14 @@ int main(int argc, char *args[]) {
 
 	// Allocate cairo surface
 	if (pdfoutput) {
-		target = cairo_pdf_surface_create_for_stream(cairoutils_file_write_func, stdout, W, H);
+		if (outfn) {
+			fout = fopen(outfn, "wb");
+			if (!fout) {
+				SYSERROR("Failed to open output file \"%s\"", outfn);
+				exit(-1);
+			}
+		}
+		target = cairo_pdf_surface_create_for_stream(cairoutils_file_write_func, fout, W, H);
 	} else {
 		target = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, W, H);
 	}
@@ -257,11 +265,17 @@ int main(int argc, char *args[]) {
 	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
 
 	for (;;) {
-		char* cmd = read_string_terminated(stdin, "\n\r\0", 3, FALSE);
+		char* cmd;
 		int res;
 		bool matched = FALSE;
-		if (!cmd)
+		cmd = read_string_terminated(stdin, "\n\r\0", 3, FALSE);
+		logmsg("command: \"%s\"\n", cmd);
+		if (!cmd || feof(stdin))
 			break;
+		if (strlen(cmd) == 0)
+			continue;
+		if (cmd[0] == '#')
+			continue;
 		for (i=0; i<NR; i++) {
 			if (starts_with(cmd, plotters[i].name)) {
 				res = plotters[i].command(cmd, cairo, &plotargs, plotters[i].baton);
@@ -291,6 +305,12 @@ int main(int argc, char *args[]) {
 		cairo_surface_finish(target);
 		cairoutils_surface_status_errors(target);
 		cairoutils_cairo_status_errors(cairo);
+		if (fout != stdout) {
+			if (fclose(fout)) {
+				SYSERROR("Failed to close output file \"%s\"", outfn);
+				exit(-1);
+			}
+		}
 	} else {
 		unsigned char* img = cairo_image_surface_get_data(target);
 		// Convert image for output...
