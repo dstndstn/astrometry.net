@@ -17,43 +17,6 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-
-/**
-
- Reads a plot control file that contains instructions on what to plot
- and how to plot it.
-
- There are a few plotting module that understand different commands
- and plot different kinds of things.
-
- Common plotting:
-
- plot_color <r> <g> <b> <a>
- plot_lw <linewidth>
- plot_marker <marker-shape>
- plot_markersize <radius>
-
- Image:
-
- image_file <fn>
- image_format <format>
- image
-
- Xy:
-
- xy_file <xylist>
- xy_ext <fits-extension>
- xy_xcol <column-name>
- xy_ycol <column-name>
- xy_xoff <pixel-offset>
- xy_yoff <pixel-offset>
- xy_firstobj <obj-num>
- xy_nobjs <n>
- xy_scale <factor>
- xy_bgcolor <r> <g> <b> <a>
- xy
-
- */
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
@@ -70,20 +33,16 @@
 #include "plotxy.h"
 #include "plotimage.h"
 
-#include "boilerplate.h"
 #include "cairoutils.h"
 #include "ioutils.h"
 #include "log.h"
 #include "errors.h"
-
-static const char* OPTIONS = "hW:H:o:JP";
 
 int parse_color(const char* color, float* r, float* g, float* b, float* a) {
 	if (a) *a = 1.0;
 	return (cairoutils_parse_rgba(color, r, g, b, a) &&
 			cairoutils_parse_color(color, r, g, b));
 }
-
 
 static void plot_builtin_apply(cairo_t* cairo, plot_args_t* args) {
 	cairo_set_source_rgba(cairo, args->r, args->g, args->b, args->a);
@@ -146,8 +105,6 @@ static int plot_builtin_command(const char* command, cairo_t* cairo,
 static void plot_builtin_free(plot_args_t* args, void* baton) {
 }
 
-
-
 struct plotter {
 	// don't change the order of these fields!
 	char* name;
@@ -165,173 +122,130 @@ static plotter_t plotters[] = {
 	{ "image", plot_image_init, plot_image_command, plot_image_free, NULL },
 };
 
-
-static void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
-	printf("\nUsage: %s [options] > output.png\n"
-           "  [-o <output-file>] (default: stdout)\n"
-           "  [-P]              Write PPM output instead of PNG.\n"
-		   "  [-J]              Write PDF output.\n"
-		   "  [-W <width>   ]   Width of output image (default: data-dependent).\n"
-		   "  [-H <height>  ]   Height of output image (default: data-dependent).\n",
-           progname);
-}
-
-extern char *optarg;
-extern int optind, opterr, optopt;
-
-int main(int argc, char *args[]) {
-	int loglvl = LOG_MSG;
-	int argchar;
-	char* progname = args[0];
-    char* outfn = NULL;
-	FILE* fout = stdout;
-	int W = 0, H = 0;
-    bool ppmoutput = FALSE;
-    bool pdfoutput = FALSE;
-
-	cairo_t* cairo;
-	cairo_surface_t* target;
-
-	int i;
-	int NR;
-	plot_args_t plotargs;
-
-	while ((argchar = getopt(argc, args, OPTIONS)) != -1)
-		switch (argchar) {
-        case 'o':
-            outfn = optarg;
-            break;
-        case 'P':
-            ppmoutput = TRUE;
-            break;
-		case 'J':
-			pdfoutput = TRUE;
-			break;
-		case 'W':
-			W = atoi(optarg);
-			break;
-		case 'H':
-			H = atoi(optarg);
-			break;
-		case 'v':
-			loglvl++;
-			break;
-		case 'h':
-			printHelp(progname);
-            exit(0);
-		case '?':
-		default:
-			printHelp(progname);
-            exit(-1);
-		}
-
-	if (optind != argc) {
-		printHelp(progname);
-		exit(-1);
-	}
-
-	assert(W && H);
-
-	log_init(loglvl);
-
-    // log errors to stderr, not stdout.
-    errors_log_to(stderr);
+int plotstuff_init(plot_args_t* pargs) {
+	int i, NR;
 
 	// Allocate cairo surface
-	if (pdfoutput) {
-		if (outfn) {
-			fout = fopen(outfn, "wb");
-			if (!fout) {
-				SYSERROR("Failed to open output file \"%s\"", outfn);
-				exit(-1);
+	switch (pargs->outformat) {
+	case PLOTSTUFF_FORMAT_PDF:
+		if (pargs->outfn) {
+			pargs->fout = fopen(pargs->outfn, "wb");
+			if (!pargs->fout) {
+				SYSERROR("Failed to open output file \"%s\"", pargs->outfn);
+				return -1;
 			}
 		}
-		target = cairo_pdf_surface_create_for_stream(cairoutils_file_write_func, fout, W, H);
-	} else {
-		target = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, W, H);
+		pargs->target = cairo_pdf_surface_create_for_stream(cairoutils_file_write_func, pargs->fout, pargs->W, pargs->H);
+		break;
+	case PLOTSTUFF_FORMAT_JPG:
+	case PLOTSTUFF_FORMAT_PPM:
+	case PLOTSTUFF_FORMAT_PNG:
+		pargs->target = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, pargs->W, pargs->H);
+		break;
+	default:
+		ERROR("Unknown output format %i", pargs->outformat);
+		return -1;
+		break;
 	}
-	cairo = cairo_create(target);
-
-	memset(&plotargs, 0, sizeof(plotargs));
+	pargs->cairo = cairo_create(pargs->target);
 
 	NR = sizeof(plotters) / sizeof(plotter_t);
 	for (i=0; i<NR; i++) {
-		plotters[i].baton = plotters[i].init(&plotargs);
+		plotters[i].baton = plotters[i].init(pargs);
 	}
-
-	plot_builtin_apply(cairo, &plotargs);
+	plot_builtin_apply(pargs->cairo, pargs);
 	// Inits that aren't in "plot_builtin"
-	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
-
-	for (;;) {
-		char* cmd;
-		int res;
-		bool matched = FALSE;
-		cmd = read_string_terminated(stdin, "\n\r\0", 3, FALSE);
-		logmsg("command: \"%s\"\n", cmd);
-		if (!cmd || feof(stdin))
-			break;
-		if (strlen(cmd) == 0)
-			continue;
-		if (cmd[0] == '#')
-			continue;
-		for (i=0; i<NR; i++) {
-			if (starts_with(cmd, plotters[i].name)) {
-				res = plotters[i].command(cmd, cairo, &plotargs, plotters[i].baton);
-				if (res) {
-					ERROR("Plotter \"%s\" failed on command \"%s\"", plotters[i].name, cmd);
-					exit(-1);
-				}
-				matched = TRUE;
-			}
-			if (matched)
-				break;
-		}
-		if (!matched) {
-			ERROR("Did not find a plotter for command \"%s\"", cmd);
-			exit(-1);
-		}
-		free(cmd);
-	}
-
-	for (i=0; i<NR; i++) {
-		plotters[i].free(&plotargs, plotters[i].baton);
-	}
-
-
-	if (pdfoutput) {
-		cairo_surface_flush(target);
-		cairo_surface_finish(target);
-		cairoutils_surface_status_errors(target);
-		cairoutils_cairo_status_errors(cairo);
-		if (fout != stdout) {
-			if (fclose(fout)) {
-				SYSERROR("Failed to close output file \"%s\"", outfn);
-				exit(-1);
-			}
-		}
-	} else {
-		unsigned char* img = cairo_image_surface_get_data(target);
-		// Convert image for output...
-		cairoutils_argb32_to_rgba(img, W, H);
-		if (ppmoutput) {
-			if (cairoutils_write_ppm(outfn, img, W, H)) {
-				fprintf(stderr, "Failed to write PPM.\n");
-				exit(-1);
-			}
-		} else {
-			// PNG
-			if (cairoutils_write_png(outfn, img, W, H)) {
-				fprintf(stderr, "Failed to write PNG.\n");
-				exit(-1);
-			}
-		}
-		free(img);
-	}
-
-	cairo_surface_destroy(target);
-	cairo_destroy(cairo);
-
+	cairo_set_antialias(pargs->cairo, CAIRO_ANTIALIAS_GRAY);
 	return 0;
 }
+
+int plotstuff_run_command(const char* cmd, plot_args_t* pargs) {
+	int i, NR;
+	bool matched = FALSE;
+	if (!cmd || (strlen(cmd) == 0) || (cmd[0] == '#')) {
+		return 0;
+	}
+	NR = sizeof(plotters) / sizeof(plotter_t);
+	for (i=0; i<NR; i++) {
+		if (starts_with(cmd, plotters[i].name)) {
+			if (plotters[i].command(cmd, pargs->cairo, pargs, plotters[i].baton)) {
+				ERROR("Plotter \"%s\" failed on command \"%s\"", plotters[i].name, cmd);
+				return -1;
+			}
+			matched = TRUE;
+		}
+		if (matched)
+			break;
+	}
+	if (!matched) {
+		ERROR("Did not find a plotter for command \"%s\"", cmd);
+		return -1;
+	}
+	return 0;
+}
+
+int plotstuff_read_and_run_command(FILE* f, plot_args_t* pargs) {
+	char* cmd;
+	int rtn;
+	cmd = read_string_terminated(stdin, "\n\r\0", 3, FALSE);
+	logmsg("command: \"%s\"\n", cmd);
+	if (!cmd || feof(f)) {
+		free(cmd);
+		return -1;
+	}
+	rtn = plotstuff_run_command(cmd, pargs);
+	free(cmd);
+	return rtn;
+}
+
+int plotstuff_output(plot_args_t* pargs) {
+	switch (pargs->outformat) {
+	case PLOTSTUFF_FORMAT_PDF:
+		cairo_surface_flush(pargs->target);
+		cairo_surface_finish(pargs->target);
+		cairoutils_surface_status_errors(pargs->target);
+		cairoutils_cairo_status_errors(pargs->cairo);
+		if (pargs->outfn) {
+			if (fclose(pargs->fout)) {
+				SYSERROR("Failed to close output file \"%s\"", pargs->outfn);
+				return -1;
+			}
+		}
+		break;
+
+	case PLOTSTUFF_FORMAT_JPG:
+	case PLOTSTUFF_FORMAT_PPM:
+	case PLOTSTUFF_FORMAT_PNG:
+		{
+			int res;
+			unsigned char* img = cairo_image_surface_get_data(pargs->target);
+			// Convert image for output...
+			cairoutils_argb32_to_rgba(img, pargs->W, pargs->H);
+			if (pargs->outformat == PLOTSTUFF_FORMAT_JPG) {
+				res = cairoutils_write_jpeg(pargs->outfn, img, pargs->W, pargs->H);
+			} else if (pargs->outformat == PLOTSTUFF_FORMAT_PPM) {
+				res = cairoutils_write_ppm(pargs->outfn, img, pargs->W, pargs->H);
+			} else if (pargs->outformat == PLOTSTUFF_FORMAT_PNG) {
+				res = cairoutils_write_ppm(pargs->outfn, img, pargs->W, pargs->H);
+			}
+			free(img);
+			if (res)
+				ERROR("Failed to write output image");
+			return res;
+		}
+		break;
+	}
+	ERROR("Unknown output format.");
+	return -1;
+}
+
+void plotstuff_free(plot_args_t* pargs) {
+	int i, NR;
+	NR = sizeof(plotters) / sizeof(plotter_t);
+	for (i=0; i<NR; i++) {
+		plotters[i].free(pargs, plotters[i].baton);
+	}
+	cairo_surface_destroy(pargs->target);
+	cairo_destroy(pargs->cairo);
+}
+

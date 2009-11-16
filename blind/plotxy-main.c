@@ -201,6 +201,26 @@ int main(int argc, char *args[]) {
     // log errors to stderr, not stdout.
     errors_log_to(stderr);
 
+	
+
+	/**
+# bg image
+image_file ngc3521-bw.jpg
+image_format jpg
+image
+xy_file ngc3521.xy
+xy_nobjs 100
+xy_xoff 1
+xy_yoff 1
+plot_color black
+xy_bgcolor white
+xy
+xy_file ngc3521-index.xy
+plot_marker crosshair
+xy_bglw 2
+xy
+	 */
+
 	// Open xylist.
 	xyls = xylist_open(fname);
 	if (!xyls) {
