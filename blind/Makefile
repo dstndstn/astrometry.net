@@ -109,7 +109,7 @@ $(BACKEND_SO): $(BACKEND_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 # old and miscellaneous executables that aren't part of the pipeline.
 OLDEXECS := plotquads rawstartree checkquads
 
-CAIROEXECS := plotquad plotxy plot-constellations add-text
+CAIROEXECS := plotquad plotxy plot-constellations add-text plotstuff
 
 OLDEXECS_OBJS := catalog.o histogram.o verify.o intmap.o matchfile.o \
 	$(UTIL_OBJS)
@@ -458,7 +458,13 @@ catalog-dists: catalog-dists.o 2mass-fits.o usnob-fits.o usnob.o \
 add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB)
 
-plotxy.o: plotxy.c
+plotstuff.o: plotstuff.c
+	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
+
+plotstuff: plotstuff.o plotxy.o $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
+
+plotxy.o: plotxy-main.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
 plotxy: plotxy.o $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
