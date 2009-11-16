@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <cairo.h>
 
+#include "keywords.h"
+
 #define PLOTSTUFF_FORMAT_JPG 0
 #define PLOTSTUFF_FORMAT_PNG 1
 #define PLOTSTUFF_FORMAT_PPM 2
@@ -31,8 +33,13 @@ typedef void  (*plot_func_free_t)(plot_args_t* args, void* baton);
 int parse_color(const char* color, float* r, float* g, float* b, float* a);
 
 int plotstuff_init(plot_args_t* plotargs);
-int plotstuff_read_and_run_command(FILE* f, plot_args_t* pargs);
-int plotstuff_run_command(const char* cmd, plot_args_t* pargs);
+int plotstuff_read_and_run_command(plot_args_t* pargs, FILE* f);
+int plotstuff_run_command(plot_args_t* pargs, const char* cmd);
+
+int
+ATTRIB_FORMAT(printf,2,3)
+plotstuff_run_commandf(plot_args_t* pargs, const char* fmt, ...);
+
 int plotstuff_output(plot_args_t* pargs);
 void plotstuff_free(plot_args_t* pargs);
 

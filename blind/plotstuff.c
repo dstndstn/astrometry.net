@@ -159,7 +159,23 @@ int plotstuff_init(plot_args_t* pargs) {
 	return 0;
 }
 
-int plotstuff_run_command(const char* cmd, plot_args_t* pargs) {
+int
+ATTRIB_FORMAT(printf,2,3)
+plotstuff_run_commandf(plot_args_t* pargs, const char* format, ...) {
+	char* str;
+    va_list va;
+	int rtn;
+    va_start(va, format);
+    if (vasprintf(&str, format, va) == -1) {
+		ERROR("Failed to allocate temporary string to hold command");
+		return -1;
+	}
+	rtn = plotstuff_run_command(pargs, str);
+    va_end(va);
+	return rtn;
+}
+
+int plotstuff_run_command(plot_args_t* pargs, const char* cmd) {
 	int i, NR;
 	bool matched = FALSE;
 	if (!cmd || (strlen(cmd) == 0) || (cmd[0] == '#')) {
@@ -184,7 +200,7 @@ int plotstuff_run_command(const char* cmd, plot_args_t* pargs) {
 	return 0;
 }
 
-int plotstuff_read_and_run_command(FILE* f, plot_args_t* pargs) {
+int plotstuff_read_and_run_command(plot_args_t* pargs, FILE* f) {
 	char* cmd;
 	int rtn;
 	cmd = read_string_terminated(stdin, "\n\r\0", 3, FALSE);
@@ -193,7 +209,7 @@ int plotstuff_read_and_run_command(FILE* f, plot_args_t* pargs) {
 		free(cmd);
 		return -1;
 	}
-	rtn = plotstuff_run_command(cmd, pargs);
+	rtn = plotstuff_run_command(pargs, cmd);
 	free(cmd);
 	return rtn;
 }
@@ -234,9 +250,11 @@ int plotstuff_output(plot_args_t* pargs) {
 			return res;
 		}
 		break;
+	default:
+		ERROR("Unknown output format.");
+		return -1;
 	}
-	ERROR("Unknown output format.");
-	return -1;
+	return 0;
 }
 
 void plotstuff_free(plot_args_t* pargs) {

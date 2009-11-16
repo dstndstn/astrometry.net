@@ -28,6 +28,7 @@
 #include <ppm.h>
 #endif
 
+#include "plotstuff.h"
 #include "xylist.h"
 #include "boilerplate.h"
 #include "cairoutils.h"
@@ -74,52 +75,37 @@ extern int optind, opterr, optopt;
 int main(int argc, char *args[]) {
 	int argchar;
 	char* progname = args[0];
-    char* outfn = "-";
     char* infn = NULL;
 	char* fname = NULL;
-	int W = 0, H = 0;
 	int n = 0, N = 0;
 	double xoff = 0.0, yoff = 0.0;
 	int ext = 1;
 	double rad = 5.0;
 	double lw = 1.0;
 	char* shape = "circle";
-	xylist_t* xyls;
-	starxy_t* xy;
-	int Nxy;
-	int i;
 	double scale = 1.0;
-    bool ppmoutput = FALSE;
-    bool pdfoutput = FALSE;
-
     bool pnginput = FALSE;
-    unsigned char* img = NULL;
-	cairo_t* cairo;
-	cairo_surface_t* target;
-    float r=1.0, g=1.0, b=1.0;
     char* xcol = NULL;
     char* ycol = NULL;
-    int marker;
-    bool background = FALSE;
-    float br=0.0, bg=0.0, bb=0.0;
+
+	plot_args_t pargs;
+	char* fgcolor = NULL;
+	char* bgcolor = NULL;
+
+	memset(&pargs, 0, sizeof(pargs));
+	pargs.fout = stdout;
+	pargs.outformat = PLOTSTUFF_FORMAT_PNG;
 
 	while ((argchar = getopt(argc, args, OPTIONS)) != -1)
 		switch (argchar) {
         case 'C':
-            if (cairoutils_parse_color(optarg, &r, &g, &b)) {
-                fprintf(stderr, "I didn't understand color \"%s\".\n", optarg);
-                exit(-1);
-            }
+			fgcolor = optarg;
             break;
         case 'b':
-            background = TRUE;
-            if (cairoutils_parse_color(optarg, &br, &bg, &bb)) {
-                fprintf(stderr, "I didn't understand color \"%s\".\n", optarg);
-                exit(-1);
-            }
+			bgcolor = optarg;
             break;
         case 'o':
-            outfn = optarg;
+            pargs.outfn = optarg;
             break;
         case 'X':
             xcol = optarg;
@@ -128,13 +114,13 @@ int main(int argc, char *args[]) {
             ycol = optarg;
             break;
         case 'P':
-            ppmoutput = TRUE;
+            pargs.outformat = PLOTSTUFF_FORMAT_PPM;
             break;
 		case 'J':
-			pdfoutput = TRUE;
+            pargs.outformat = PLOTSTUFF_FORMAT_PDF;
 			break;
 		case 'p':
-		  pnginput = TRUE;
+			pnginput = TRUE;
             break;
         case 'I':
             infn = optarg;
@@ -152,10 +138,10 @@ int main(int argc, char *args[]) {
 			yoff = atof(optarg);
 			break;
 		case 'W':
-			W = atoi(optarg);
+			pargs.W = atoi(optarg);
 			break;
 		case 'H':
-			H = atoi(optarg);
+			pargs.H = atoi(optarg);
 			break;
 		case 'n':
 			n = atoi(optarg);
@@ -188,7 +174,7 @@ int main(int argc, char *args[]) {
 		printHelp(progname);
 		exit(-1);
 	}
-    if (infn && (W || H)) {
+    if (infn && (pargs.W || pargs.H)) {
         printf("Error: if you specify an input file, you can't give -W or -H (width or height) arguments.\n\n");
         printHelp(progname);
         exit(-1);
@@ -201,179 +187,56 @@ int main(int argc, char *args[]) {
     // log errors to stderr, not stdout.
     errors_log_to(stderr);
 
-	
-
-	/**
-# bg image
-image_file ngc3521-bw.jpg
-image_format jpg
-image
-xy_file ngc3521.xy
-xy_nobjs 100
-xy_xoff 1
-xy_yoff 1
-plot_color black
-xy_bgcolor white
-xy
-xy_file ngc3521-index.xy
-plot_marker crosshair
-xy_bglw 2
-xy
-	 */
-
-	// Open xylist.
-	xyls = xylist_open(fname);
-	if (!xyls) {
-		ERROR("Failed to open xylist from file \"%s\"", fname);
-		exit(-1);
-	}
-    // we don't care about FLUX and BACKGROUND columns.
-    xylist_set_include_flux(xyls, FALSE);
-    xylist_set_include_background(xyls, FALSE);
-    if (xcol)
-        xylist_set_xname(xyls, xcol);
-    if (ycol)
-        xylist_set_yname(xyls, ycol);
-
-	// Find number of entries in xylist.
-    xy = xylist_read_field_num(xyls, ext, NULL);
-    if (!xy) {
-		fprintf(stderr, "Failed to read FITS extension %i from file %s.\n", ext, fname);
-		exit(-1);
-	}
-    Nxy = starxy_n(xy);
-
-	// If N is specified, apply it as a max.
-    if (N)
-        Nxy = MIN(Nxy, N);
-
-	// Scale xylist entries.
-	if (scale != 1.0) {
-		for (i=0; i<Nxy; i++) {
-			starxy_setx(xy, i, scale * starxy_getx(xy, i));
-			starxy_sety(xy, i, scale * starxy_gety(xy, i));
+	if (infn) {
+		// HACK -- open the image file to get W,H
+		unsigned char* img = NULL;
+		if (pnginput) {
+			img = cairoutils_read_png(infn, &(pargs.W), &(pargs.H));
+		} else {
+			logmsg("Reading PPM from \"%s\"\n", infn);
+			img = cairoutils_read_ppm(infn, &(pargs.W), &(pargs.H));
+		}
+		if (!img) {
+			ERROR("Failed to read image to get image W,H.");
+			exit(-1);
 		}
 	}
 
-	xylist_close(xyls);
-
-	// if required, scan data for max X,Y
-	if (!W) {
-		double maxX = 0.0;
-		for (i=n; i<Nxy; i++)
-            maxX = MAX(maxX, starxy_getx(xy, i));
-		W = ceil(maxX + rad - xoff);
-	}
-	if (!H) {
-		double maxY = 0.0;
-		for (i=n; i<Nxy; i++)
-            maxY = MAX(maxY, starxy_gety(xy, i));
-		H = ceil(maxY + rad - yoff);
+	plotstuff_init(&pargs);
+	if (infn) {
+		plotstuff_run_commandf(&pargs, "image_file %s", infn);
+		if (pnginput)
+			plotstuff_run_command(&pargs, "image_format png");
+		else
+			plotstuff_run_command(&pargs, "image_format ppm");
+		plotstuff_run_command(&pargs, "image");
 	}
 
-    if (infn) {
-#ifdef ASTROMETRY_NO_PPM
-	pnginput = TRUE;
-#endif
-      if (pnginput) {
-	img = cairoutils_read_png(infn, &W, &H);
-      }
-#ifndef ASTROMETRY_NO_PPM
-      else {
-	ppm_init(&argc, args);
-	img = cairoutils_read_ppm(infn, &W, &H);
-      }
-#endif // ASTROMETRY_NO_PPM
-        if (!img) {
-            fprintf(stderr, "Failed to read input image %s.\n", infn);
-            exit(-1);
-        }
-        cairoutils_rgba_to_argb32(img, W, H);
-    }
+	plotstuff_run_commandf(&pargs, "xy_file %s", fname);
+	plotstuff_run_commandf(&pargs, "xy_ext %i", ext);
+	if (xcol)
+		plotstuff_run_commandf(&pargs, "xy_xcol %s", xcol);
+	if (ycol)
+		plotstuff_run_commandf(&pargs, "xy_xcol %s", ycol);
+	if (N)
+		plotstuff_run_commandf(&pargs, "xy_nobjs %i", N);
+	if (n)
+		plotstuff_run_commandf(&pargs, "xy_firstobj %i", n);
+	plotstuff_run_commandf(&pargs, "xy_xoff %g", xoff);
+	plotstuff_run_commandf(&pargs, "xy_yoff %g", yoff);
 
-	//fprintf(stderr, "Image size %i x %i.\n", W, H);
+	if (fgcolor)
+		plotstuff_run_commandf(&pargs, "plot_color %s", fgcolor);
+	if (bgcolor)
+		plotstuff_run_commandf(&pargs, "xy_bgcolor %s", bgcolor);
+	plotstuff_run_commandf(&pargs, "plot_marker %s", shape);
+	plotstuff_run_commandf(&pargs, "plot_markersize %g", rad);
+	plotstuff_run_commandf(&pargs, "plot_lw %g", lw);
+	plotstuff_run_commandf(&pargs, "xy_scale %g", scale);
+	plotstuff_run_command(&pargs, "xy");
 
-	// Allocate cairo surface
-	if (pdfoutput) {
-		cairo_surface_t* thissurf;
-		cairo_pattern_t* pat;
-		target = cairo_pdf_surface_create_for_stream(cairoutils_file_write_func, stdout, W, H);
-		// render the background image.
-		thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
-		pat = cairo_pattern_create_for_surface(thissurf);
-		cairo = cairo_create(target);
-		cairo_set_source(cairo, pat);
-		cairo_paint(cairo);
-		cairo_pattern_destroy(pat);
-		cairo_surface_destroy(thissurf);
-		free(img);
-		img = NULL;
-	} else {
-		if (!img)
-			// Allocate a black image.
-			img = calloc(4 * W * H, 1);
-		target = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
-		cairo = cairo_create(target);
-	}
-
-	cairo_set_line_width(cairo, lw);
-	cairo_set_antialias(cairo, CAIRO_ANTIALIAS_GRAY);
-	cairo_set_source_rgb(cairo, r, g, b);
-    
-    marker = cairoutils_parse_marker(shape);
-    if (marker == -1) {
-        fprintf(stderr, "No such marker: %s\n", shape);
-        marker = 0;
-    }
-
-    //
-    if (background) {
-        cairo_save(cairo);
-        cairo_set_line_width(cairo, lw+2.0);
-        cairo_set_source_rgba(cairo, br, bg, bb, 0.75);
-        for (i=n; i<Nxy; i++) {
-            double x = starxy_getx(xy, i) + 0.5 - xoff;
-            double y = starxy_gety(xy, i) + 0.5 - yoff;
-            cairoutils_draw_marker(cairo, marker, x, y, rad);
-            cairo_stroke(cairo);
-        }
-        cairo_restore(cairo);
-    }
-
-	// Draw markers.
-	for (i=n; i<Nxy; i++) {
-		double x = starxy_getx(xy, i) + 0.5 - xoff;
-		double y = starxy_gety(xy, i) + 0.5 - yoff;
-        cairoutils_draw_marker(cairo, marker, x, y, rad);
-		cairo_stroke(cairo);
-	}
-
-    // Convert image for output...
-	if (img)
-		cairoutils_argb32_to_rgba(img, W, H);
-
-	if (ppmoutput) {
-        if (cairoutils_write_ppm(outfn, img, W, H)) {
-            fprintf(stderr, "Failed to write PPM.\n");
-            exit(-1);
-        }
-	} else if (pdfoutput) {
-		cairo_surface_flush(target);
-		cairo_surface_finish(target);
-		cairoutils_surface_status_errors(target);
-		cairoutils_cairo_status_errors(cairo);
-	} else {
-		// PNG
-        if (cairoutils_write_png(outfn, img, W, H)) {
-            fprintf(stderr, "Failed to write PNG.\n");
-            exit(-1);
-        }
-    }
-
-    starxy_free(xy);
-	cairo_surface_destroy(target);
-	cairo_destroy(cairo);
-    free(img);
+	plotstuff_output(&pargs);
+	plotstuff_free(&pargs);
 
 	return 0;
 }

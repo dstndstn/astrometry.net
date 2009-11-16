@@ -30,6 +30,7 @@
 #endif
 #include <jpeglib.h>
 
+#include "ioutils.h"
 #include "cairoutils.h"
 #include "errors.h"
 
@@ -517,7 +518,7 @@ static int streamout(FILE* fout, unsigned char* img, int W, int H, int format) {
 static int writeout(const char* outfn, unsigned char* img, int W, int H, int format) {
     FILE* fout;
     int rtn;
-    int outstdout = !strcmp(outfn, "-");
+    int outstdout = (!outfn || streq(outfn, "-"));
     if (outstdout) {
         fout = stdout;
     } else {
@@ -664,7 +665,7 @@ unsigned char* cairoutils_read_ppm(const char* infn, int* pW, int* pH) {
     int fromstdin;
     unsigned char* img;
 
-    fromstdin = !strcmp(infn, "-");
+    fromstdin = (infn == NULL) || streq(infn, "-");
     if (!fromstdin) {
         fin = fopen(infn, "rb");
         if (!fin) {

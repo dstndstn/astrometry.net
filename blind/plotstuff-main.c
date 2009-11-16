@@ -135,7 +135,7 @@ int main(int argc, char *args[]) {
 		exit(-1);
 
 	for (;;) {
-		if (plotstuff_read_and_run_command(stdin, &pargs))
+		if (plotstuff_read_and_run_command(&pargs, stdin))
 			break;
 	}
 
