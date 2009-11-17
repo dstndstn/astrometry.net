@@ -36,3 +36,46 @@ def sdss_das_get_mask(run, camcol, field, band, outfn=None, reruns=None):
 	return sdss_das_get('fpM', outfn, run, camcol, field, band, reruns)
 
 
+if __name__ == '__main__':
+	from optparse import OptionParser
+	import sys
+
+	parser = OptionParser(usage=('%prog <options> <file types>\n\n' +
+								 'file types include: fpC, fpM, fpObjc, psField'))
+
+	parser.add_option('-r', '--run', dest='run', type='int')
+	parser.add_option('-f', '--field', dest='field', type='int')
+	parser.add_option('-c', '--camcol', dest='camcol', type='int')
+	parser.add_option('-b', '--band', dest='band')
+
+	parser.set_defaults(run=None, field=None, camcol=None, band='r')
+
+	(opt, args) = parser.parse_args()
+	if not len(args):
+		parser.print_help()
+		print
+		print 'Must specify types of data desired'
+		sys.exit(-1)
+
+	run = opt.run
+	field = opt.field
+	camcol = opt.camcol
+	band = opt.band
+	
+	if run is None or field is None or camcol is None:
+		parser.print_help()
+		print
+		print 'Must supply --run, --field, --camcol'
+		sys.exit(-1)
+
+	if 'fpC' in args or 'fpc' in args:
+		sdss_das_get_fpc(run, camcol, field, band)
+
+	if 'psField' in args or 'psfield' in args:
+		sdss_das_get('psField', None, run, camcol, field)
+		
+	if 'fpObjc' in args or 'fpobjc' in args:
+		sdss_das_get('fpObjc', None, run, camcol, field)
+
+	if 'fpM' in args or 'fpm' in args:
+		sdss_das_get('fpM', None, run, camcol, field, band)
