@@ -76,7 +76,7 @@ PIPELINE := usnobtofits build-an-catalog hpowned cut-an \
 	solvedserver printsolved xylist2fits mergesolved rdlsinfo xylsinfo \
 	wcsinfo wcs-grab fits-guess-scale agreeable new-wcs get-wcs \
 	augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
-	certifiable wcs-annotate get-healpix 2masstofits nomadtofits \
+	certifiable get-healpix 2masstofits nomadtofits \
 	merge-index index-to-table endian-flip-index setsolved
 
 PROGS := backend image2xy control-program
@@ -271,9 +271,6 @@ ALL_OBJ += fits-guess-scale-main.o
 
 get-wcs: get-wcs.o \
 		$(ANUTILS_LIB) $(QFITS_LIB)
-
-wcs-annotate: wcs-annotate.o \
-		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 wcs-xy2rd: wcs-xy2rd.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
