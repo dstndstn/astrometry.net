@@ -10,4 +10,6 @@ int plot_image_command(const char* command, cairo_t* cr,
 
 void plot_image_free(plot_args_t* args, void* baton);
 
+void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H);
+
 #endif

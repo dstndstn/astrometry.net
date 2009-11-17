@@ -35,6 +35,20 @@ void* plot_image_init(plot_args_t* plotargs) {
 	return args;
 }
 
+void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H) {
+	cairo_surface_t* thissurf;
+	cairo_pattern_t* pat;
+	cairoutils_rgba_to_argb32(img, W, H);
+	thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
+	pat = cairo_pattern_create_for_surface(thissurf);
+	cairo_save(cairo);
+	cairo_set_source(cairo, pat);
+	cairo_paint(cairo);
+	cairo_pattern_destroy(pat);
+	cairo_surface_destroy(thissurf);
+	cairo_restore(cairo);
+}
+
 int plot_image_command(const char* command, cairo_t* cairo,
 					   plot_args_t* plotargs, void* baton) {
 	plotimage_t* args = (plotimage_t*)baton;
@@ -42,8 +56,6 @@ int plot_image_command(const char* command, cairo_t* cairo,
 	if (streq(command, "image")) {
 		// Plot it!
 		unsigned char* img = NULL;
-		cairo_surface_t* thissurf;
-		cairo_pattern_t* pat;
 		int W, H;
 
 		// FIXME -- guess format from filename.
@@ -57,15 +69,7 @@ int plot_image_command(const char* command, cairo_t* cairo,
 			ERROR("You must set the image format with \"image_format <png|jpg|ppm>\"");
 			return -1;
 		}
-        cairoutils_rgba_to_argb32(img, W, H);
-		thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
-		pat = cairo_pattern_create_for_surface(thissurf);
-		cairo_save(cairo);
-		cairo_set_source(cairo, pat);
-		cairo_paint(cairo);
-		cairo_pattern_destroy(pat);
-		cairo_surface_destroy(thissurf);
-		cairo_restore(cairo);
+		plot_image_rgba_data(cairo, img, W, H);
 		free(img);
 
 	} else {

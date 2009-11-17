@@ -29,6 +29,7 @@
 #endif
 
 #include "plotstuff.h"
+#include "plotimage.h"
 #include "xylist.h"
 #include "boilerplate.h"
 #include "cairoutils.h"
@@ -87,6 +88,7 @@ int main(int argc, char *args[]) {
     bool pnginput = FALSE;
     char* xcol = NULL;
     char* ycol = NULL;
+	unsigned char* img = NULL;
 
 	plot_args_t pargs;
 	char* fgcolor = NULL;
@@ -189,7 +191,6 @@ int main(int argc, char *args[]) {
 
 	if (infn) {
 		// HACK -- open the image file to get W,H
-		unsigned char* img = NULL;
 		if (pnginput) {
 			img = cairoutils_read_png(infn, &(pargs.W), &(pargs.H));
 		} else {
@@ -203,14 +204,8 @@ int main(int argc, char *args[]) {
 	}
 
 	plotstuff_init(&pargs);
-	if (infn) {
-		plotstuff_run_commandf(&pargs, "image_file %s", infn);
-		if (pnginput)
-			plotstuff_run_command(&pargs, "image_format png");
-		else
-			plotstuff_run_command(&pargs, "image_format ppm");
-		plotstuff_run_command(&pargs, "image");
-	}
+
+	plot_image_rgba_data(pargs.cairo, img, pargs.W, pargs.H);
 
 	plotstuff_run_commandf(&pargs, "xy_file %s", fname);
 	plotstuff_run_commandf(&pargs, "xy_ext %i", ext);
