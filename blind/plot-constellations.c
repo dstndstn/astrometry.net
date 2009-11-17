@@ -787,7 +787,7 @@ int main(int argc, char** args) {
             str = sl_new(4);
             sl_appendf(str, "%s %i", (ngc->is_ngc ? "NGC" : "IC"), ngc->id);
 
-            names = ngc_get_names(ngc);
+            names = ngc_get_names(ngc, NULL);
             if (names) {
                 int n;
                 for (n=0; n<sl_size(names); n++) {
