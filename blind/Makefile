@@ -461,14 +461,19 @@ add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)
 plotstuff.o: plotstuff.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
-plotstuff: plotstuff-main.o plotstuff.o plotxy.o plotimage.o $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+PLOTSTUFF := plotstuff.o plotxy.o plotimage.o plotannotations.o
+ALL_OBJ += $(PLOTSTUFF)
+
+plotstuff: plotstuff-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
+ALL_OBJ += plotstuff-main.o
 
 plotxy.o: plotxy.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) -c -o $@ $<
 
-plotxy: plotxy-main.o plotstuff.o plotimage.o plotxy.o $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+plotxy: plotxy-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
+ALL_OBJ += plotxy-main.o
 
 quadidx: quadidx.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 

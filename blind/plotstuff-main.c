@@ -27,10 +27,11 @@
 
  Common plotting:
 
- plot_color <r> <g> <b> <a>
+ plot_color (<r> <g> <b> <a> or color name)
  plot_lw <linewidth>
  plot_marker <marker-shape>
  plot_markersize <radius>
+ plot_wcs <filename>
 
  Image:
 
@@ -51,6 +52,13 @@
  xy_scale <factor>
  xy_bgcolor <r> <g> <b> <a>
  xy
+
+ Annotations:
+
+ annotations
+ annotations_bgcolor
+ annotations_fontsize
+ annotations_font
 
  */
 

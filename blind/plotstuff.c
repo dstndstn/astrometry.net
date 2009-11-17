@@ -29,14 +29,17 @@
 #endif
 
 #include "plotstuff.h"
-
 #include "plotxy.h"
 #include "plotimage.h"
+#include "plotannotations.h"
 
+#include "sip_qfits.h"
+#include "sip.h"
 #include "cairoutils.h"
 #include "ioutils.h"
 #include "log.h"
 #include "errors.h"
+
 
 int parse_color(const char* color, float* r, float* g, float* b, float* a) {
 	if (a) *a = 1.0;
@@ -44,16 +47,36 @@ int parse_color(const char* color, float* r, float* g, float* b, float* a) {
 			cairoutils_parse_color(color, r, g, b));
 }
 
+int parse_color_rgba(const char* color, float* rgba) {
+	return parse_color(color, rgba, rgba+1, rgba+2, rgba+3);
+}
+
+void cairo_set_rgba(cairo_t* cairo, const float* rgba) {
+	cairo_set_source_rgba(cairo, rgba[0], rgba[1], rgba[2], rgba[3]);
+}
+
+int cairo_set_color(cairo_t* cairo, const char* color) {
+	float rgba[4];
+	int res;
+	res = parse_color_rgba(color, rgba);
+	if (res) {
+		ERROR("Failed to parse color \"%s\"", color);
+		return res;
+	}
+	cairo_set_rgba(cairo, rgba);
+	return res;
+}
+
 static void plot_builtin_apply(cairo_t* cairo, plot_args_t* args) {
-	cairo_set_source_rgba(cairo, args->r, args->g, args->b, args->a);
+	cairo_set_rgba(cairo, args->rgba);
 	cairo_set_line_width(cairo, args->lw);
 }
 
 static void* plot_builtin_init(plot_args_t* args) {
-	args->r = 0.0;
-	args->g = 0.0;
-	args->b = 0.0;
-	args->a = 1.0;
+	args->rgba[0] = 0;
+	args->rgba[1] = 0;
+	args->rgba[2] = 0;
+	args->rgba[3] = 1;
 	args->lw = 1.0;
 	args->marker = CAIROUTIL_MARKER_CIRCLE;
 	args->markersize = 5.0;
@@ -62,7 +85,7 @@ static void* plot_builtin_init(plot_args_t* args) {
 }
 
 static int plot_builtin_command(const char* command, cairo_t* cairo,
-								plot_args_t* plotargs, void* baton) {
+								plot_args_t* pargs, void* baton) {
 	char* cmd;
 	char* cmdargs;
 	if (!split_string_once(command, " ", &cmd, &cmdargs)) {
@@ -73,36 +96,43 @@ static int plot_builtin_command(const char* command, cairo_t* cairo,
 	logmsg("Command \"%s\", args \"%s\"\n", cmd, cmdargs);
 
 	if (streq(cmd, "plot_color")) {
-		if (parse_color(cmdargs, &(plotargs->r), &(plotargs->g), &(plotargs->b), &(plotargs->a))) {
+		if (parse_color_rgba(cmdargs, pargs->rgba)) {
 			ERROR("Failed to parse plot_color: \"%s\"", cmdargs);
 			return -1;
 		}
 
 	} else if (streq(cmd, "plot_alpha")) {
 		// FIXME -- add checking.
-		plotargs->a = atof(cmdargs);
+		pargs->rgba[3] = atof(cmdargs);
 	} else if (streq(cmd, "plot_lw")) {
-		plotargs->lw = atof(cmdargs);
+		pargs->lw = atof(cmdargs);
 	} else if (streq(cmd, "plot_marker")) {
 		int m = cairoutils_parse_marker(cmdargs);
 		if (m == -1) {
 			ERROR("Failed to parse plot_marker \"%s\"", cmdargs);
 			return -1;
 		}
-		plotargs->marker = m;
+		pargs->marker = m;
 	} else if (streq(cmd, "plot_markersize")) {
-		plotargs->markersize = atof(cmdargs);
+		pargs->markersize = atof(cmdargs);
+	} else if (streq(cmd, "plot_wcs")) {
+		pargs->wcs = sip_read_tan_or_sip_header_file_ext(cmdargs, 0, NULL, FALSE);
+		if (!pargs->wcs) {
+			ERROR("Failed to read WCS file \"%s\"", cmdargs);
+			return -1;
+		}
 	} else {
 		ERROR("Did not understand command: \"%s\"", cmd);
 		return -1;
 	}
-	plot_builtin_apply(cairo, plotargs);
+	plot_builtin_apply(cairo, pargs);
 	free(cmd);
 	free(cmdargs);
 	return 0;
 }
 
-static void plot_builtin_free(plot_args_t* args, void* baton) {
+static void plot_builtin_free(plot_args_t* pargs, void* baton) {
+	free(pargs->wcs);
 }
 
 struct plotter {
@@ -120,7 +150,26 @@ static plotter_t plotters[] = {
 	{ "plot", plot_builtin_init, plot_builtin_command, plot_builtin_free, (void*)NULL },
 	{ "xy", plot_xy_init, plot_xy_command, plot_xy_free, NULL },
 	{ "image", plot_image_init, plot_image_command, plot_image_free, NULL },
+	{ "annotations", plot_annotations_init, plot_annotations_command, plot_annotations_free, NULL },
 };
+
+double plotstuff_pixel_scale(plot_args_t* pargs) {
+	if (!pargs->wcs) {
+		ERROR("plotstuff_pixel_scale: No WCS defined!");
+		return 0.0;
+	}
+	return sip_pixel_scale(pargs->wcs);
+}
+
+int plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
+					   double* x, double* y) {
+	if (!pargs->wcs) {
+		ERROR("No WCS defined!");
+		return -1;
+	}
+	return sip_radec2pixelxy(pargs->wcs, ra, dec, x, y);
+}
+
 
 int plotstuff_init(plot_args_t* pargs) {
 	int i, NR;

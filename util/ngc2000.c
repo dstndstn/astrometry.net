@@ -38,6 +38,16 @@ ngc_entry ngc_entries[] = {
 #include "ngc2000entries.c"
 };
 
+ngc_entry* ngc_get_entry_accurate(int i) {
+	float ra, dec;
+	ngc_entry* ngc = ngc_get_entry(i);
+	if (ngcic_accurate_get_radec(ngc->is_ngc, ngc->id, &ra, &dec) == 0) {
+		ngc->ra  = ra;
+		ngc->dec = dec;
+	}
+	return ngc;
+}
+
 int ngc_num_entries() {
 	return sizeof(ngc_entries) / sizeof(ngc_entry);
 }
@@ -64,16 +74,25 @@ char* ngc_get_name(ngc_entry* entry, int num) {
 	return NULL;
 }
 
-sl* ngc_get_names(ngc_entry* entry) {
+sl* ngc_get_names(ngc_entry* entry, sl* lst) {
 	int i;
-	sl* list = NULL;
+	if (!lst)
+		lst = sl_new(4);
+	sl_appendf(lst, "%s %i", (entry->is_ngc ? "NGC" : "IC"), entry->id);
 	for (i=0; i<sizeof(ngc_names)/sizeof(ngc_name); i++) {
 		if ((entry->is_ngc == ngc_names[i].is_ngc) &&
 			(entry->id == ngc_names[i].id)) {
-			if (!list)
-				list = sl_new(4);
-			sl_append(list, ngc_names[i].name);
+			sl_append(lst, ngc_names[i].name);
 		}
 	}
-	return list;
+	return lst;
 }
+
+char* ngc_get_name_list(ngc_entry* entry, const char* separator) {
+	char* str;
+	sl* lst = ngc_get_names(entry, NULL);
+	str = sl_implode(lst, separator);
+	sl_free2(lst);
+	return str;
+}
+

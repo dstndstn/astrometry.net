@@ -87,19 +87,17 @@ int plot_xy_command(const char* command, cairo_t* cairo,
 		if (args->nobjs)
 			Nxy = MIN(Nxy, args->nobjs);
 
-		// FIXME -- do this with cairo scaling?
-		// FIXME -- how does this interact with xoff,yoff?
-		// Scale xylist entries.
-		if (args->scale != 1.0) {
-			for (i=0; i<Nxy; i++) {
-				starxy_setx(xy, i, args->scale * starxy_getx(xy, i));
-				starxy_sety(xy, i, args->scale * starxy_gety(xy, i));
-			}
-		}
+		// Shift and scale xylist entries.
 		if (args->xoff != 0.0 || args->yoff != 0.0) {
 			for (i=0; i<Nxy; i++) {
 				starxy_setx(xy, i, starxy_getx(xy, i) - args->xoff);
 				starxy_sety(xy, i, starxy_gety(xy, i) - args->yoff);
+			}
+		}
+		if (args->scale != 1.0) {
+			for (i=0; i<Nxy; i++) {
+				starxy_setx(xy, i, args->scale * starxy_getx(xy, i));
+				starxy_sety(xy, i, args->scale * starxy_gety(xy, i));
 			}
 		}
 
