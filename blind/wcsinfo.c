@@ -51,7 +51,7 @@ int main(int argc, char** args) {
 	sip_t wcs;
 	double imw, imh;
 	double rac, decc;
-	double det, T, A, parity, orient;
+	double det, T, A, parity, orient, orientc;
     int rah, ram, decd, decm;
     double ras, decs;
     char* units;
@@ -100,6 +100,10 @@ int main(int argc, char** args) {
 	printf("crpix1 %.12g\n", wcs.wcstan.crpix[1]);
 	printf("crval0 %.12g\n", wcs.wcstan.crval[0]);
 	printf("crval1 %.12g\n", wcs.wcstan.crval[1]);
+	printf("ra_tangent %.12g\n", wcs.wcstan.crval[0]);
+	printf("dec_tangent %.12g\n", wcs.wcstan.crval[1]);
+	printf("pixx_tangent %.12g\n", wcs.wcstan.crpix[0]);
+	printf("pixy_tangent %.12g\n", wcs.wcstan.crpix[1]);
 
     printf("imagew %.12g\n", imw);
     printf("imageh %.12g\n", imh);
@@ -124,6 +128,10 @@ int main(int argc, char** args) {
     sip_get_radec_center(&wcs, &rac, &decc);
 	printf("ra_center %.12g\n", rac);
 	printf("dec_center %.12g\n", decc);
+
+	// contributed by Rob Johnson, user rob at the domain whim.org, Nov 13, 2009
+	orientc = orient + rad2deg(atan(tan(deg2rad(rac - wcs.wcstan.crval[0])) * sin(deg2rad(wcs.wcstan.crval[1]))));
+	printf("orientation_center %.8g\n", orientc);
 
     sip_get_radec_center_hms(&wcs, &rah, &ram, &ras, &decd, &decm, &decs);
     printf("ra_center_h %i\n", rah);
