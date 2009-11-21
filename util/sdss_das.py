@@ -21,10 +21,13 @@ def get_urls(urls, outfn):
 def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, suffix=''):
 	if reruns is None:
 		reruns = [40,41,42,44]
-	urls = ['http://das.sdss.org/imaging/' +
-			sdss_path(filetype, run, camcol, field, band, rerun) +
-			suffix
-			for rerun in reruns]
+	urls = []
+	for rerun in reruns:
+		path = sdss_path(filetype, run, camcol, field, band, rerun)
+		if path is None:
+			print 'Unknown SDSS filetype', filetype
+			return False
+		urls.append('http://das.sdss.org/imaging/' + path + suffix)
 	if outfn:
 		outfn = outfn % { 'run':run, 'camcol':camcol, 'field':field, 'band':band }
 	return get_urls(urls, outfn)
@@ -48,7 +51,7 @@ if __name__ == '__main__':
 	parser.add_option('-c', '--camcol', dest='camcol', type='int')
 	parser.add_option('-b', '--band', dest='band')
 
-	parser.set_defaults(run=None, field=None, camcol=None, band='r')
+	parser.set_defaults(run=None, field=None, camcol=None, band=None)
 
 	(opt, args) = parser.parse_args()
 	if not len(args):
@@ -61,21 +64,18 @@ if __name__ == '__main__':
 	field = opt.field
 	camcol = opt.camcol
 	band = opt.band
-	
+
 	if run is None or field is None or camcol is None:
 		parser.print_help()
 		print
 		print 'Must supply --run, --field, --camcol'
 		sys.exit(-1)
 
-	if 'fpC' in args or 'fpc' in args:
-		sdss_das_get_fpc(run, camcol, field, band)
+	argdict = {}
+	if band is not None:
+		argdict['band'] = band
 
-	if 'psField' in args or 'psfield' in args:
-		sdss_das_get('psField', None, run, camcol, field)
-		
-	if 'fpObjc' in args or 'fpobjc' in args:
-		sdss_das_get('fpObjc', None, run, camcol, field)
+	for filetype in args:
+		print 'Retrieving', filetype, '...'
+		sdss_das_get(filetype, None, run, camcol, field, **argdict)
 
-	if 'fpM' in args or 'fpm' in args:
-		sdss_das_get('fpM', None, run, camcol, field, band)

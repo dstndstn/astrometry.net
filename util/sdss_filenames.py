@@ -5,6 +5,7 @@ def sdss_filename(filetype, run, camcol, field, band=None, rerun=None):
 	x = dict(run=run, band=band, camcol=camcol, field=field, rerun=rerun)
 	ftmap = {
 		'fpC': 'fpC-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit',
+		'fpAtlas': 'fpAtlas-%(run)06i-%(camcol)i-%(field)04i.fit',
 		'fpM': 'fpM-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit',
 		'fpObjc': 'fpObjc-%(run)06i-%(camcol)i-%(field)04i.fit',
 		'psField': 'psField-%(run)06i-%(camcol)i-%(field)04i.fit',
@@ -20,7 +21,7 @@ def sdss_path(filetype, run, camcol, field, band=None, rerun=None):
 	y = (run, camcol, field, band, rerun)
 	if filetype in ['fpC']:
 		return '%(run)i/%(rerun)i/corr/%(camcol)i/' % x + sdss_filename(filetype, *y)
-	elif filetype in ['psField', 'fpObjc', 'fpM']:
+	elif filetype in ['psField', 'fpAtlas', 'fpObjc', 'fpM']:
 		return '%(run)i/%(rerun)i/objcs/%(camcol)i/' % x + sdss_filename(filetype, *y)
 	elif filetype in ['tsObj']:
 		return '%(run)i/%(rerun)i/calibChunks/%(camcol)i/' % x + sdss_filename(filetype, *y)
