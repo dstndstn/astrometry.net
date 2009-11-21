@@ -84,23 +84,13 @@ static void* plot_builtin_init(plot_args_t* args) {
 	return NULL;
 }
 
-static int plot_builtin_command(const char* command, cairo_t* cairo,
+static int plot_builtin_command(const char* cmd, const char* cmdargs, cairo_t* cairo,
 								plot_args_t* pargs, void* baton) {
-	char* cmd;
-	char* cmdargs;
-	if (!split_string_once(command, " ", &cmd, &cmdargs)) {
-		ERROR("Failed to split command \"%s\" into words\n", command);
-		return -1;
-	}
-
-	logmsg("Command \"%s\", args \"%s\"\n", cmd, cmdargs);
-
 	if (streq(cmd, "plot_color")) {
 		if (parse_color_rgba(cmdargs, pargs->rgba)) {
 			ERROR("Failed to parse plot_color: \"%s\"", cmdargs);
 			return -1;
 		}
-
 	} else if (streq(cmd, "plot_alpha")) {
 		// FIXME -- add checking.
 		pargs->rgba[3] = atof(cmdargs);
@@ -126,8 +116,6 @@ static int plot_builtin_command(const char* command, cairo_t* cairo,
 		return -1;
 	}
 	plot_builtin_apply(cairo, pargs);
-	free(cmd);
-	free(cmdargs);
 	return 0;
 }
 
@@ -140,6 +128,7 @@ struct plotter {
 	char* name;
 	plot_func_init_t init;
 	plot_func_command_t command;
+	plot_func_plot_t doplot;
 	plot_func_free_t free;
 	void* baton;
 };
@@ -147,10 +136,10 @@ typedef struct plotter plotter_t;
 
 /* All render layers must go in here */
 static plotter_t plotters[] = {
-	{ "plot", plot_builtin_init, plot_builtin_command, plot_builtin_free, (void*)NULL },
-	{ "xy", plot_xy_init, plot_xy_command, plot_xy_free, NULL },
-	{ "image", plot_image_init, plot_image_command, plot_image_free, NULL },
-	{ "annotations", plot_annotations_init, plot_annotations_command, plot_annotations_free, NULL },
+	{ "plot", plot_builtin_init, plot_builtin_command, NULL, plot_builtin_free, NULL },
+	{ "xy", plot_xy_init, plot_xy_command, plot_xy_plot, plot_xy_free, NULL },
+	{ "image", plot_image_init, plot_image_command, plot_image_plot, plot_image_free, NULL },
+	{ "annotations", plot_annotations_init, plot_annotations_command, plot_annotations_plot, plot_annotations_free, NULL },
 };
 
 double plotstuff_pixel_scale(plot_args_t* pargs) {
@@ -232,15 +221,31 @@ int plotstuff_run_command(plot_args_t* pargs, const char* cmd) {
 	}
 	NR = sizeof(plotters) / sizeof(plotter_t);
 	for (i=0; i<NR; i++) {
-		if (starts_with(cmd, plotters[i].name)) {
-			if (plotters[i].command(cmd, pargs->cairo, pargs, plotters[i].baton)) {
+		if (streq(cmd, plotters[i].name)) {
+			if (plotters[i].doplot) {
+				if (plotters[i].doplot(cmd, pargs->cairo, pargs, plotters[i].baton)) {
+					ERROR("Plotter \"%s\" failed on command \"%s\"", plotters[i].name, cmd);
+					return -1;
+				}
+			}
+		} else if (starts_with(cmd, plotters[i].name)) {
+			char* cmdcmd;
+			char* cmdargs;
+			if (!split_string_once(cmd, " ", &cmdcmd, &cmdargs)) {
+				ERROR("Failed to split command \"%s\" into words\n", cmd);
+				return -1;
+			}
+			logmsg("Command \"%s\", args \"%s\"\n", cmdcmd, cmdargs);
+			if (plotters[i].command(cmdcmd, cmdargs, pargs->cairo, pargs, plotters[i].baton)) {
 				ERROR("Plotter \"%s\" failed on command \"%s\"", plotters[i].name, cmd);
 				return -1;
 			}
-			matched = TRUE;
-		}
-		if (matched)
-			break;
+			free(cmdcmd);
+			free(cmdargs);
+		} else
+			continue;
+		matched = TRUE;
+		break;
 	}
 	if (!matched) {
 		ERROR("Did not find a plotter for command \"%s\"", cmd);

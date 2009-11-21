@@ -49,48 +49,42 @@ void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H) {
 	cairo_restore(cairo);
 }
 
-int plot_image_command(const char* command, cairo_t* cairo,
+int plot_image_plot(const char* command,
+					cairo_t* cairo, plot_args_t* plotargs, void* baton) {
+	plotimage_t* args = (plotimage_t*)baton;
+	// Plot it!
+	unsigned char* img = NULL;
+	int W, H;
+
+	// FIXME -- guess format from filename.
+	if (streq(args->format, "png")) {
+		img = cairoutils_read_png(args->fn, &W, &H);
+	} else if (streq(args->format, "jpg")) {
+		img = cairoutils_read_jpeg(args->fn, &W, &H);
+	} else if (streq(args->format, "ppm")) {
+		img = cairoutils_read_ppm(args->fn, &W, &H);
+	} else {
+		ERROR("You must set the image format with \"image_format <png|jpg|ppm>\"");
+		return -1;
+	}
+	plot_image_rgba_data(cairo, img, W, H);
+	free(img);
+	return 0;
+}
+
+int plot_image_command(const char* cmd, const char* cmdargs,
+					   cairo_t* cairo,
 					   plot_args_t* plotargs, void* baton) {
 	plotimage_t* args = (plotimage_t*)baton;
-
-	if (streq(command, "image")) {
-		// Plot it!
-		unsigned char* img = NULL;
-		int W, H;
-
-		// FIXME -- guess format from filename.
-		if (streq(args->format, "png")) {
-			img = cairoutils_read_png(args->fn, &W, &H);
-		} else if (streq(args->format, "jpg")) {
-			img = cairoutils_read_jpeg(args->fn, &W, &H);
-		} else if (streq(args->format, "ppm")) {
-			img = cairoutils_read_ppm(args->fn, &W, &H);
-		} else {
-			ERROR("You must set the image format with \"image_format <png|jpg|ppm>\"");
-			return -1;
-		}
-		plot_image_rgba_data(cairo, img, W, H);
-		free(img);
-
+	if (streq(cmd, "image_file")) {
+		free(args->fn);
+		args->fn = strdup(cmdargs);
+	} else if (streq(cmd, "image_format")) {
+		free(args->format);
+		args->format = strdup(cmdargs);
 	} else {
-		char* cmd;
-		char* cmdargs;
-		if (!split_string_once(command, " ", &cmd, &cmdargs)) {
-			ERROR("Failed to split command \"%s\" into words\n", command);
-			return -1;
-		}
-		logmsg("Command \"%s\", args \"%s\"\n", cmd, cmdargs);
-
-		if (streq(cmd, "image_file")) {
-			free(args->fn);
-			args->fn = strdup(cmdargs);
-		} else if (streq(cmd, "image_format")) {
-			free(args->format);
-			args->format = strdup(cmdargs);
-		} else {
-			ERROR("Did not understand command \"%s\"", cmd);
-			return -1;
-		}
+		ERROR("Did not understand command \"%s\"", cmd);
+		return -1;
 	}
 	return 0;
 }

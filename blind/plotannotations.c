@@ -64,7 +64,6 @@ struct annotation_args {
 	bl* cairocmds;
 	float fontsize;
 	char* fontname;
-	//char* bgcolor;
 	float bg_rgba[4];
 };
 typedef struct annotation_args ann_t;
@@ -113,7 +112,6 @@ static void add_text(plot_args_t* pargs, ann_t* ann, cairo_t* cairo,
 	memcpy(cmd.rgba, ann->bg_rgba, sizeof(cmd.rgba));
     for (dy=-1; dy<=1; dy++) {
         for (dx=-1; dx<=1; dx++) {
-			//cmd.color = strdup("black");
 			cmd.text = strdup(txt);
 			cmd.x = px + dx;
 			cmd.y = py + dy;
@@ -122,7 +120,6 @@ static void add_text(plot_args_t* pargs, ann_t* ann, cairo_t* cairo,
 	}
 
 	cmd.layer = 3;
-	//cmd.color = strdup("white");
 	memcpy(cmd.rgba, pargs->rgba, sizeof(cmd.rgba));
 	cmd.text = strdup(txt);
     cmd.x = px;
@@ -174,9 +171,6 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 		double px, py;
 		memset(&cmd, 0, sizeof(cmd));
 
-		//double black[4] = { 0, 0, 0, 1 };
-		//double white[4] = { 1, 1, 1, 1 };
-
 		if (!ngc)
 			break;
 		if (ngc->size < imsize * ann->ngc_fraction)
@@ -199,7 +193,6 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 		cmd.x = px;
 		cmd.y = py;
 		cmd.radius = pixrad + 1.0;
-		//cmd.color = strdup("black");
 		memcpy(cmd.rgba, ann->bg_rgba, sizeof(cmd.rgba));
 		bl_append(ann->cairocmds, &cmd);
 
@@ -208,8 +201,6 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 
 		cmd.layer = 1;
 		cmd.radius = pixrad;
-		//memcpy(cmd.rgba, white, sizeof(white));
-		//cmd.color = strdup("white");
 		memcpy(cmd.rgba, pargs->rgba, sizeof(cmd.rgba));
 		bl_append(ann->cairocmds, &cmd);
 
@@ -241,94 +232,82 @@ void* plot_annotations_init(plot_args_t* args) {
 	ann->cairocmds = bl_new(256, sizeof(cairocmd_t));
 	ann->ngc_fraction = 0.02;
 	ann->fontname = strdup("DejaVu Sans Mono Book");
-	//ann->bgcolor = strdup("black");
 	parse_color_rgba("black", ann->bg_rgba);
 	ann->fontsize = 14.0;
 	return ann;
 }
 
-int plot_annotations_command(const char* command, cairo_t* cairo,
+int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 							 plot_args_t* pargs, void* baton) {
 	ann_t* ann = (ann_t*)baton;
-	if (streq(command, "annotations")) {
-		int i;
-		int layer;
-		bool morelayers;
+	int i;
+	int layer;
+	bool morelayers;
 
-		// Set fonts, etc, before calling plotting routines
-        cairo_select_font_face(cairo, ann->fontname, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-        cairo_set_font_size(cairo, ann->fontsize);
+	// Set fonts, etc, before calling plotting routines
+	cairo_select_font_face(cairo, ann->fontname, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+	cairo_set_font_size(cairo, ann->fontsize);
 
-		plot_ngc(cairo, pargs, ann);
+	plot_ngc(cairo, pargs, ann);
 
-		morelayers = TRUE;
-		for (layer=0;; layer++) {
-			if (!morelayers)
-				break;
-			morelayers = FALSE;
-			for (i=0; i<bl_size(ann->cairocmds); i++) {
-				cairocmd_t* cmd = bl_access(ann->cairocmds, i);
-				if (cmd->layer > layer)
-					morelayers = TRUE;
-				if (cmd->layer != layer)
-					continue;
-				//cairo_set_color(cairo, cmd->color);
-				cairo_set_rgba(cairo, cmd->rgba);
-				switch (cmd->type) {
-				case CIRCLE:
-					cairo_move_to(cairo, cmd->x + cmd->radius, cmd->y);
-					cairo_arc(cairo, cmd->x, cmd->y, cmd->radius, 0, 2*M_PI);
-					break;
-				case TEXT:
-					cairo_move_to(cairo, cmd->x, cmd->y);
-					cairo_show_text(cairo, cmd->text);
-					break;
-				case LINE:
-				case RECTANGLE:
-					ERROR("Unimplemented!");
-					return -1;
-				}
-				cairo_stroke(cairo);
-			}
-		}
+	morelayers = TRUE;
+	for (layer=0;; layer++) {
+		if (!morelayers)
+			break;
+		morelayers = FALSE;
 		for (i=0; i<bl_size(ann->cairocmds); i++) {
 			cairocmd_t* cmd = bl_access(ann->cairocmds, i);
-			//free(cmd->color);
-			free(cmd->text);
+			if (cmd->layer > layer)
+				morelayers = TRUE;
+			if (cmd->layer != layer)
+				continue;
+			cairo_set_rgba(cairo, cmd->rgba);
+			switch (cmd->type) {
+			case CIRCLE:
+				cairo_move_to(cairo, cmd->x + cmd->radius, cmd->y);
+				cairo_arc(cairo, cmd->x, cmd->y, cmd->radius, 0, 2*M_PI);
+				break;
+			case TEXT:
+				cairo_move_to(cairo, cmd->x, cmd->y);
+				cairo_show_text(cairo, cmd->text);
+				break;
+			case LINE:
+			case RECTANGLE:
+				ERROR("Unimplemented!");
+				return -1;
+			}
+			cairo_stroke(cairo);
 		}
-		bl_remove_all(ann->cairocmds);
-
-		return 0;
-	} else {
-		char* cmd;
-		char* cmdargs;
-		if (!split_string_once(command, " ", &cmd, &cmdargs)) {
-			ERROR("Failed to split command \"%s\" into words\n", command);
-			return -1;
-		}
-		logmsg("Command \"%s\", args \"%s\"\n", cmd, cmdargs);
-		if (streq(cmd, "annotations_fontsize")) {
-			ann->fontsize = atoi(cmdargs);
-		} else if (streq(cmd, "annotations_font")) {
-			free(ann->fontname);
-			ann->fontname = strdup(cmdargs);
-		} else if (streq(cmd, "annotations_bgcolor")) {
-			//free(ann->bgcolor);
-			//ann->bgcolor = strdup(cmdargs);
-			parse_color_rgba(cmdargs, ann->bg_rgba);
-		} else {
-			ERROR("Unknown command \"%s\"", command);
-			return -1;
-		}
-		return 0;
 	}
-	return -1;
+	for (i=0; i<bl_size(ann->cairocmds); i++) {
+		cairocmd_t* cmd = bl_access(ann->cairocmds, i);
+		free(cmd->text);
+	}
+	bl_remove_all(ann->cairocmds);
+
+	return 0;
+}
+
+int plot_annotations_command(const char* cmd, const char* cmdargs, cairo_t* cairo,
+							 plot_args_t* pargs, void* baton) {
+	ann_t* ann = (ann_t*)baton;
+	if (streq(cmd, "annotations_fontsize")) {
+		ann->fontsize = atoi(cmdargs);
+	} else if (streq(cmd, "annotations_font")) {
+		free(ann->fontname);
+		ann->fontname = strdup(cmdargs);
+	} else if (streq(cmd, "annotations_bgcolor")) {
+		parse_color_rgba(cmdargs, ann->bg_rgba);
+	} else {
+		ERROR("Unknown command \"%s\"", cmd);
+		return -1;
+	}
+	return 0;
 }
 
 void plot_annotations_free(plot_args_t* args, void* baton) {
 	ann_t* ann = (ann_t*)baton;
 	bl_free(ann->cairocmds);
-	//free(ann->bgcolor);
 	free(ann->fontname);
 	free(ann);
 }

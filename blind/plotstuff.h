@@ -31,7 +31,8 @@ struct plot_args {
 typedef struct plot_args plot_args_t;
 
 typedef void* (*plot_func_init_t)(plot_args_t* args);
-typedef int   (*plot_func_command_t)(const char* command, cairo_t* cr, plot_args_t* args, void* baton);
+typedef int   (*plot_func_command_t)(const char* command, const char* cmdargs, cairo_t* cr, plot_args_t* args, void* baton);
+typedef int   (*plot_func_plot_t)(const char* command, cairo_t* cr, plot_args_t* args, void* baton);
 typedef void  (*plot_func_free_t)(plot_args_t* args, void* baton);
 
 int parse_color(const char* color, float* r, float* g, float* b, float* a);
