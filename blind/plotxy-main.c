@@ -198,7 +198,7 @@ int main(int argc, char *args[]) {
 			img = cairoutils_read_ppm(infn, &(pargs.W), &(pargs.H));
 		}
 		if (!img) {
-			ERROR("Failed to read image to get image W,H.");
+			ERROR("Failed to read image \"%\"", infn);
 			exit(-1);
 		}
 	}

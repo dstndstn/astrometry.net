@@ -31,9 +31,22 @@ struct plot_args {
 typedef struct plot_args plot_args_t;
 
 typedef void* (*plot_func_init_t)(plot_args_t* args);
-typedef int   (*plot_func_command_t)(const char* command, const char* cmdargs, cairo_t* cr, plot_args_t* args, void* baton);
+typedef int   (*plot_func_init2_t)(plot_args_t* args, void* baton);
+typedef int   (*plot_func_command_t)(const char* command, const char* cmdargs, plot_args_t* args, void* baton);
 typedef int   (*plot_func_plot_t)(const char* command, cairo_t* cr, plot_args_t* args, void* baton);
 typedef void  (*plot_func_free_t)(plot_args_t* args, void* baton);
+
+struct plotter {
+	// don't change the order of these fields!
+	char* name;
+	plot_func_init_t init;
+	plot_func_init2_t init2;
+	plot_func_command_t command;
+	plot_func_plot_t doplot;
+	plot_func_free_t free;
+	void* baton;
+};
+typedef struct plotter plotter_t;
 
 int parse_color(const char* color, float* r, float* g, float* b, float* a);
 int parse_color_rgba(const char* color, float* rgba);

@@ -29,6 +29,14 @@
 #include "log.h"
 #include "errors.h"
 
+const plotter_t plotter_annotations = {
+	.name = "annotations",
+	.init = plot_annotations_init,
+	.command = plot_annotations_command,
+	.doplot = plot_annotations_plot,
+	.free = plot_annotations_free
+};
+
 enum cmdtype {
 	CIRCLE,
 	TEXT,
@@ -288,7 +296,7 @@ int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 	return 0;
 }
 
-int plot_annotations_command(const char* cmd, const char* cmdargs, cairo_t* cairo,
+int plot_annotations_command(const char* cmd, const char* cmdargs,
 							 plot_args_t* pargs, void* baton) {
 	ann_t* ann = (ann_t*)baton;
 	if (streq(cmd, "annotations_fontsize")) {

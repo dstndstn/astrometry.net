@@ -24,6 +24,16 @@
 #include "log.h"
 #include "errors.h"
 
+const plotter_t plotter_xy = {
+	"xy", 
+	plot_xy_init,
+	NULL,
+	plot_xy_command,
+	plot_xy_plot,
+	plot_xy_free,
+	NULL
+};
+
 void* plot_xy_init(plot_args_t* plotargs) {
 	plotxy_t* args = calloc(1, sizeof(plotxy_t));
 	args->ext = 1;
@@ -113,7 +123,7 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	return 0;
 }
 
-int plot_xy_command(const char* cmd, const char* cmdargs, cairo_t* cairo,
+int plot_xy_command(const char* cmd, const char* cmdargs,
 					plot_args_t* plotargs, void* baton) {
 	plotxy_t* args = (plotxy_t*)baton;
 	if (streq(cmd, "xy_file")) {

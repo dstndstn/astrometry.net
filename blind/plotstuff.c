@@ -80,11 +80,17 @@ static void* plot_builtin_init(plot_args_t* args) {
 	args->lw = 1.0;
 	args->marker = CAIROUTIL_MARKER_CIRCLE;
 	args->markersize = 5.0;
-	//plot_builtin_apply(args);
 	return NULL;
 }
 
-static int plot_builtin_command(const char* cmd, const char* cmdargs, cairo_t* cairo,
+static int plot_builtin_init2(plot_args_t* pargs, void* baton) {
+	plot_builtin_apply(pargs->cairo, pargs);
+	// Inits that aren't in "plot_builtin"
+	cairo_set_antialias(pargs->cairo, CAIRO_ANTIALIAS_GRAY);
+	return 0;
+}
+
+static int plot_builtin_command(const char* cmd, const char* cmdargs,
 								plot_args_t* pargs, void* baton) {
 	if (streq(cmd, "plot_color")) {
 		if (parse_color_rgba(cmdargs, pargs->rgba)) {
@@ -115,7 +121,8 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs, cairo_t* c
 		ERROR("Did not understand command: \"%s\"", cmd);
 		return -1;
 	}
-	plot_builtin_apply(cairo, pargs);
+	if (pargs->cairo)
+		plot_builtin_apply(pargs->cairo, pargs);
 	return 0;
 }
 
@@ -123,44 +130,47 @@ static void plot_builtin_free(plot_args_t* pargs, void* baton) {
 	free(pargs->wcs);
 }
 
-struct plotter {
-	// don't change the order of these fields!
-	char* name;
-	plot_func_init_t init;
-	plot_func_command_t command;
-	plot_func_plot_t doplot;
-	plot_func_free_t free;
-	void* baton;
-};
-typedef struct plotter plotter_t;
-
 /* All render layers must go in here */
+/*
 static plotter_t plotters[] = {
-	{ "plot", plot_builtin_init, plot_builtin_command, NULL, plot_builtin_free, NULL },
-	{ "xy", plot_xy_init, plot_xy_command, plot_xy_plot, plot_xy_free, NULL },
-	{ "image", plot_image_init, plot_image_command, plot_image_plot, plot_image_free, NULL },
-	{ "annotations", plot_annotations_init, plot_annotations_command, plot_annotations_plot, plot_annotations_free, NULL },
+	{ "plot", plot_builtin_init, NULL, plot_builtin_command, NULL, plot_builtin_free, NULL },
+	plotter_xy,
+	//{ "xy", plot_xy_init, plot_xy_command, plot_xy_plot, plot_xy_free, NULL },
+	{ "image", plot_image_init, NULL, plot_image_command, plot_image_plot, plot_image_free, NULL },
+	{ "annotations", plot_annotations_init, NULL, plot_annotations_command, plot_annotations_plot, plot_annotations_free, NULL },
 };
+ */
 
-double plotstuff_pixel_scale(plot_args_t* pargs) {
-	if (!pargs->wcs) {
-		ERROR("plotstuff_pixel_scale: No WCS defined!");
-		return 0.0;
-	}
-	return sip_pixel_scale(pargs->wcs);
-}
+static const plotter_t builtin = { "plot", plot_builtin_init, plot_builtin_init2, plot_builtin_command, NULL, plot_builtin_free, NULL };
 
-int plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
-					   double* x, double* y) {
-	if (!pargs->wcs) {
-		ERROR("No WCS defined!");
-		return -1;
-	}
-	return sip_radec2pixelxy(pargs->wcs, ra, dec, x, y);
-}
-
+/*
+ static plotter_t* plotters[] = {
+ &builtin,
+ &plotter_xy,
+ //{ "xy", plot_xy_init, plot_xy_command, plot_xy_plot, plot_xy_free, NULL },
+ //{ "image", plot_image_init, NULL, plot_image_command, plot_image_plot, plot_image_free, NULL },
+ //{ "annotations", plot_annotations_init, NULL, plot_annotations_command, plot_annotations_plot, plot_annotations_free, NULL },
+ };
+ */
+static plotter_t plotters[4];
 
 int plotstuff_init(plot_args_t* pargs) {
+	int i, NR;
+
+	plotters[0] = builtin;
+	plotters[1] = plotter_xy;
+	plotters[2] = plotter_image;
+	plotters[3] = plotter_annotations;
+
+	NR = sizeof(plotters) / sizeof(plotter_t);
+
+	// First init
+	for (i=0; i<NR; i++)
+		plotters[i].baton = plotters[i].init(pargs);
+	return 0;
+}
+
+int plotstuff_init2(plot_args_t* pargs) {
 	int i, NR;
 
 	// Allocate cairo surface
@@ -187,15 +197,34 @@ int plotstuff_init(plot_args_t* pargs) {
 	}
 	pargs->cairo = cairo_create(pargs->target);
 
-	NR = sizeof(plotters) / sizeof(plotter_t);
 	for (i=0; i<NR; i++) {
-		plotters[i].baton = plotters[i].init(pargs);
+		if (plotters[i].init2 &&
+			plotters[i].init2(pargs, plotters[i].baton)) {
+			ERROR("Plot initializer failed");
+			exit(-1);
+		}
 	}
-	plot_builtin_apply(pargs->cairo, pargs);
-	// Inits that aren't in "plot_builtin"
-	cairo_set_antialias(pargs->cairo, CAIRO_ANTIALIAS_GRAY);
 	return 0;
 }
+
+double plotstuff_pixel_scale(plot_args_t* pargs) {
+	if (!pargs->wcs) {
+		ERROR("plotstuff_pixel_scale: No WCS defined!");
+		return 0.0;
+	}
+	return sip_pixel_scale(pargs->wcs);
+}
+
+int plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
+					   double* x, double* y) {
+	if (!pargs->wcs) {
+		ERROR("No WCS defined!");
+		return -1;
+	}
+	return sip_radec2pixelxy(pargs->wcs, ra, dec, x, y);
+}
+
+
 
 int
 ATTRIB_FORMAT(printf,2,3)
@@ -222,6 +251,11 @@ int plotstuff_run_command(plot_args_t* pargs, const char* cmd) {
 	NR = sizeof(plotters) / sizeof(plotter_t);
 	for (i=0; i<NR; i++) {
 		if (streq(cmd, plotters[i].name)) {
+			if (!pargs->cairo) {
+				if (plotstuff_init2(pargs)) {
+					return -1;
+				}
+			}
 			if (plotters[i].doplot) {
 				if (plotters[i].doplot(cmd, pargs->cairo, pargs, plotters[i].baton)) {
 					ERROR("Plotter \"%s\" failed on command \"%s\"", plotters[i].name, cmd);
@@ -236,7 +270,7 @@ int plotstuff_run_command(plot_args_t* pargs, const char* cmd) {
 				return -1;
 			}
 			logmsg("Command \"%s\", args \"%s\"\n", cmdcmd, cmdargs);
-			if (plotters[i].command(cmdcmd, cmdargs, pargs->cairo, pargs, plotters[i].baton)) {
+			if (plotters[i].command(cmdcmd, cmdargs, pargs, plotters[i].baton)) {
 				ERROR("Plotter \"%s\" failed on command \"%s\"", plotters[i].name, cmd);
 				return -1;
 			}

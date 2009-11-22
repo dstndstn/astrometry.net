@@ -23,12 +23,13 @@
 #include "log.h"
 #include "errors.h"
 
-struct plotimage_args {
-	char* fn;
-	char* format;
-	// FIXME -- alpha?
+const plotter_t plotter_image = {
+	.name = "image",
+	.init = plot_image_init,
+	.command = plot_image_command,
+	.doplot = plot_image_plot,
+	.free = plot_image_free
 };
-typedef struct plotimage_args plotimage_t;
 
 void* plot_image_init(plot_args_t* plotargs) {
 	plotimage_t* args = calloc(1, sizeof(plotimage_t));
@@ -49,32 +50,39 @@ void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H) {
 	cairo_restore(cairo);
 }
 
-int plot_image_plot(const char* command,
-					cairo_t* cairo, plot_args_t* plotargs, void* baton) {
-	plotimage_t* args = (plotimage_t*)baton;
-	// Plot it!
-	unsigned char* img = NULL;
-	int W, H;
-
+int plot_image_read(plotimage_t* args) {
 	// FIXME -- guess format from filename.
 	if (streq(args->format, "png")) {
-		img = cairoutils_read_png(args->fn, &W, &H);
+		args->img = cairoutils_read_png(args->fn, &(args->W), &(args->H));
 	} else if (streq(args->format, "jpg")) {
-		img = cairoutils_read_jpeg(args->fn, &W, &H);
+		args->img = cairoutils_read_jpeg(args->fn, &(args->W), &(args->H));
 	} else if (streq(args->format, "ppm")) {
-		img = cairoutils_read_ppm(args->fn, &W, &H);
+		args->img = cairoutils_read_ppm(args->fn, &(args->W), &(args->H));
 	} else {
 		ERROR("You must set the image format with \"image_format <png|jpg|ppm>\"");
 		return -1;
 	}
-	plot_image_rgba_data(cairo, img, W, H);
-	free(img);
+	return 0;
+}
+
+int plot_image_plot(const char* command,
+					cairo_t* cairo, plot_args_t* plotargs, void* baton) {
+	plotimage_t* args = (plotimage_t*)baton;
+	// Plot it!
+	if (!args->img) {
+		if (plot_image_read(args)) {
+			return -1;
+		}
+	}
+	plot_image_rgba_data(cairo, args->img, args->W, args->H);
+	// ?
+	free(args->img);
+	args->img = NULL;
 	return 0;
 }
 
 int plot_image_command(const char* cmd, const char* cmdargs,
-					   cairo_t* cairo,
-					   plot_args_t* plotargs, void* baton) {
+					   plot_args_t* pargs, void* baton) {
 	plotimage_t* args = (plotimage_t*)baton;
 	if (streq(cmd, "image_file")) {
 		free(args->fn);
@@ -82,6 +90,14 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 	} else if (streq(cmd, "image_format")) {
 		free(args->format);
 		args->format = strdup(cmdargs);
+	} else if (streq(cmd, "image_setsize")) {
+		if (!args->img) {
+			if (plot_image_read(args)) {
+				return -1;
+			}
+		}
+		pargs->W = args->W;
+		pargs->H = args->H;
 	} else {
 		ERROR("Did not understand command \"%s\"", cmd);
 		return -1;
