@@ -90,6 +90,16 @@ static int plot_builtin_init2(plot_args_t* pargs, void* baton) {
 	return 0;
 }
 
+int plotstuff_set_marker(plot_args_t* pargs, const char* name) {
+	int m = cairoutils_parse_marker(name);
+	if (m == -1) {
+		ERROR("Failed to parse plot_marker \"%s\"", name);
+		return -1;
+	}
+	pargs->marker = m;
+	return 0;
+}
+
 static int plot_builtin_command(const char* cmd, const char* cmdargs,
 								plot_args_t* pargs, void* baton) {
 	if (streq(cmd, "plot_color")) {
@@ -103,12 +113,9 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 	} else if (streq(cmd, "plot_lw")) {
 		pargs->lw = atof(cmdargs);
 	} else if (streq(cmd, "plot_marker")) {
-		int m = cairoutils_parse_marker(cmdargs);
-		if (m == -1) {
-			ERROR("Failed to parse plot_marker \"%s\"", cmdargs);
+		if (plotstuff_set_marker(pargs, cmdargs)) {
 			return -1;
 		}
-		pargs->marker = m;
 	} else if (streq(cmd, "plot_markersize")) {
 		pargs->markersize = atof(cmdargs);
 	} else if (streq(cmd, "plot_wcs")) {
@@ -130,29 +137,46 @@ static void plot_builtin_free(plot_args_t* pargs, void* baton) {
 	free(pargs->wcs);
 }
 
-/* All render layers must go in here */
-/*
-static plotter_t plotters[] = {
-	{ "plot", plot_builtin_init, NULL, plot_builtin_command, NULL, plot_builtin_free, NULL },
-	plotter_xy,
-	//{ "xy", plot_xy_init, plot_xy_command, plot_xy_plot, plot_xy_free, NULL },
-	{ "image", plot_image_init, NULL, plot_image_command, plot_image_plot, plot_image_free, NULL },
-	{ "annotations", plot_annotations_init, NULL, plot_annotations_command, plot_annotations_plot, plot_annotations_free, NULL },
-};
- */
-
 static const plotter_t builtin = { "plot", plot_builtin_init, plot_builtin_init2, plot_builtin_command, NULL, plot_builtin_free, NULL };
 
-/*
- static plotter_t* plotters[] = {
- &builtin,
- &plotter_xy,
- //{ "xy", plot_xy_init, plot_xy_command, plot_xy_plot, plot_xy_free, NULL },
- //{ "image", plot_image_init, NULL, plot_image_command, plot_image_plot, plot_image_free, NULL },
- //{ "annotations", plot_annotations_init, NULL, plot_annotations_command, plot_annotations_plot, plot_annotations_free, NULL },
- };
- */
+/* All render layers must go in here */
 static plotter_t plotters[4];
+
+/*
+ plotxy_t* plotstuff_get_xy(plot_args_t* pargs) {
+ return plotters[1];
+ }
+ plotimage_t* plotstuff_get_image(plot_args_t* pargs) {
+ return plotters[2];
+ }
+ */
+
+int parse_image_format(const char* fmt) {
+	if (streq(fmt, "png")) {
+		return PLOTSTUFF_FORMAT_PNG;
+	} else if (streq(fmt, "jpg")) {
+		return PLOTSTUFF_FORMAT_JPG;
+	} else if (streq(fmt, "ppm")) {
+		return PLOTSTUFF_FORMAT_PPM;
+	} else if (streq(fmt, "pdf")) {
+		return PLOTSTUFF_FORMAT_PDF;
+	}
+	ERROR("Unknown image format \"%s\"", fmt);
+	return -1;
+}
+
+int plotstuff_set_color(plot_args_t* pargs, const char* name) {
+	return parse_color_rgba(name, pargs->rgba);
+}
+
+void* plotstuff_get_config(plot_args_t* pargs, const char* name) {
+	int i, NR;
+	NR = sizeof(plotters) / sizeof(plotter_t);
+	for (i=0; i<NR; i++)
+		if (streq(plotters[i].name, name))
+			return plotters[i].baton;
+	return NULL;
+}
 
 int plotstuff_init(plot_args_t* pargs) {
 	int i, NR;

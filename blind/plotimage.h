@@ -5,7 +5,8 @@
 
 struct plotimage_args {
 	char* fn;
-	char* format;
+	int format; // PLOTSTUFF_FORMAT_*
+	//char* format;
 	// FIXME -- alpha?
 
 	unsigned char* img;
@@ -13,6 +14,8 @@ struct plotimage_args {
 	int H;
 };
 typedef struct plotimage_args plotimage_t;
+
+//plotimage_t* plotstuff_get_image(plot_args_t* pargs);
 
 void* plot_image_init(plot_args_t* args);
 
@@ -23,6 +26,10 @@ int plot_image_plot(const char* command, cairo_t* cr,
 					plot_args_t* args, void* baton);
 
 void plot_image_free(plot_args_t* args, void* baton);
+
+int plot_image_set_filename(plotimage_t* args, const char* fn);
+
+int plot_image_setsize(plot_args_t* pargs, plotimage_t* args);
 
 void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H);
 

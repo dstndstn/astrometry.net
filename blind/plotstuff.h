@@ -8,17 +8,20 @@
 #include "sip.h"
 #include "bl.h"
 
-#define PLOTSTUFF_FORMAT_JPG 0
-#define PLOTSTUFF_FORMAT_PNG 1
-#define PLOTSTUFF_FORMAT_PPM 2
-#define PLOTSTUFF_FORMAT_PDF 3
+#define PLOTSTUFF_FORMAT_JPG 1
+#define PLOTSTUFF_FORMAT_PNG 2
+#define PLOTSTUFF_FORMAT_PPM 3
+#define PLOTSTUFF_FORMAT_PDF 4
 
 struct plot_args {
     char* outfn;
 	FILE* fout;
 	int outformat;
+
 	cairo_t* cairo;
 	cairo_surface_t* target;
+
+	//bl* plotters;
 
 	sip_t* wcs;
 
@@ -48,6 +51,9 @@ struct plotter {
 };
 typedef struct plotter plotter_t;
 
+// return PLOTSTUFF_FORMAT_*, or -1 on error
+int parse_image_format(const char* fmt);
+
 int parse_color(const char* color, float* r, float* g, float* b, float* a);
 int parse_color_rgba(const char* color, float* rgba);
 int cairo_set_color(cairo_t* cairo, const char* color);
@@ -56,6 +62,12 @@ void cairo_set_rgba(cairo_t* cairo, const float* rgba);
 int plotstuff_init(plot_args_t* plotargs);
 int plotstuff_read_and_run_command(plot_args_t* pargs, FILE* f);
 int plotstuff_run_command(plot_args_t* pargs, const char* cmd);
+
+void* plotstuff_get_config(plot_args_t* pargs, const char* name);
+
+int plotstuff_set_color(plot_args_t* pargs, const char* name);
+
+int plotstuff_set_marker(plot_args_t* pargs, const char* name);
 
 int
 ATTRIB_FORMAT(printf,2,3)

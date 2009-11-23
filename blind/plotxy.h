@@ -13,15 +13,23 @@ struct plotxy_args {
 	int nobjs;
 	double scale;
 	double bglw;
-	float bgr, bgg, bgb, bga;
+	//float bgr, bgg, bgb, bga;
+	float bgrgba[4];
 };
 typedef struct plotxy_args plotxy_t;
+
+//plotxy_t* plotstuff_get_xy(plot_args_t* pargs);
 
 // Called prior to cairo surface initialization.
 void* plot_xy_init(plot_args_t* args);
 
 // Called post cairo surface initialization.
 int plot_xy_init2(plot_args_t* args, void* baton);
+
+int plot_xy_set_bg(plotxy_t* args, const char* color);
+void plot_xy_set_xcol(plotxy_t* args, const char* col);
+void plot_xy_set_ycol(plotxy_t* args, const char* col);
+void plot_xy_set_filename(plotxy_t* args, const char* fn);
 
 int plot_xy_command(const char* command, const char* cmdargs,
 					plot_args_t* args, void* baton);

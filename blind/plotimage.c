@@ -51,17 +51,30 @@ void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H) {
 }
 
 int plot_image_read(plotimage_t* args) {
-	// FIXME -- guess format from filename.
-	if (streq(args->format, "png")) {
-		args->img = cairoutils_read_png(args->fn, &(args->W), &(args->H));
-	} else if (streq(args->format, "jpg")) {
+	// FIXME -- guess format from filename?
+	switch (args->format) {
+	case PLOTSTUFF_FORMAT_JPG:
 		args->img = cairoutils_read_jpeg(args->fn, &(args->W), &(args->H));
-	} else if (streq(args->format, "ppm")) {
+		break;
+	case PLOTSTUFF_FORMAT_PNG:
+		args->img = cairoutils_read_png(args->fn, &(args->W), &(args->H));
+		break;
+	case PLOTSTUFF_FORMAT_PPM:
 		args->img = cairoutils_read_ppm(args->fn, &(args->W), &(args->H));
-	} else {
+		break;
+	case PLOTSTUFF_FORMAT_PDF:
+		ERROR("PDF format not supported");
+		return -1;
+	default:
 		ERROR("You must set the image format with \"image_format <png|jpg|ppm>\"");
 		return -1;
 	}
+	return 0;
+}
+
+int plot_image_set_filename(plotimage_t* args, const char* fn) {
+	free(args->fn);
+	args->fn = strdup_safe(fn);
 	return 0;
 }
 
@@ -81,23 +94,29 @@ int plot_image_plot(const char* command,
 	return 0;
 }
 
+int plot_image_setsize(plot_args_t* pargs, plotimage_t* args) {
+	if (!args->img) {
+		if (plot_image_read(args)) {
+			return -1;
+		}
+	}
+	pargs->W = args->W;
+	pargs->H = args->H;
+	return 0;
+}
+
 int plot_image_command(const char* cmd, const char* cmdargs,
 					   plot_args_t* pargs, void* baton) {
 	plotimage_t* args = (plotimage_t*)baton;
 	if (streq(cmd, "image_file")) {
-		free(args->fn);
-		args->fn = strdup(cmdargs);
+		plot_image_set_filename(args, cmdargs);
 	} else if (streq(cmd, "image_format")) {
-		free(args->format);
-		args->format = strdup(cmdargs);
+		args->format = parse_image_format(cmdargs);
+		if (args->format == -1)
+			return -1;
 	} else if (streq(cmd, "image_setsize")) {
-		if (!args->img) {
-			if (plot_image_read(args)) {
-				return -1;
-			}
-		}
-		pargs->W = args->W;
-		pargs->H = args->H;
+		if (plot_image_setsize(pargs, args))
+			return -1;
 	} else {
 		ERROR("Did not understand command \"%s\"", cmd);
 		return -1;
@@ -108,7 +127,6 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 void plot_image_free(plot_args_t* plotargs, void* baton) {
 	plotimage_t* args = (plotimage_t*)baton;
 	free(args->fn);
-	free(args->format);
 	free(args);
 }
 

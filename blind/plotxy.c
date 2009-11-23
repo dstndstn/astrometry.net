@@ -95,14 +95,14 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 		}
 	}
 
-	if (args->bga != 0.0) {
+	if (args->bgrgba[3] != 0.0) {
 		// Plot background.
 		cairo_save(cairo);
 		if (args->bglw)
 			cairo_set_line_width(cairo, args->bglw);
 		else
 			cairo_set_line_width(cairo, plotargs->lw + 2.0);
-		cairo_set_source_rgba(cairo, args->bgr, args->bgg, args->bgb, args->bga);
+		cairo_set_rgba(cairo, args->bgrgba);
 		for (i=args->firstobj; i<Nxy; i++) {
 			double x = starxy_getx(xy, i) + 0.5;
 			double y = starxy_gety(xy, i) + 0.5;
@@ -123,17 +123,36 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	return 0;
 }
 
+int plot_xy_set_bg(plotxy_t* args, const char* color) {
+	return parse_color_rgba(color, args->bgrgba);
+}
+
+void plot_xy_set_xcol(plotxy_t* args, const char* col) {
+	free(args->xcol);
+	args->xcol = strdup_safe(col);
+}
+
+void plot_xy_set_ycol(plotxy_t* args, const char* col) {
+	free(args->ycol);
+	args->ycol = strdup_safe(col);
+}
+
+void plot_xy_set_filename(plotxy_t* args, const char* fn) {
+	free(args->fn);
+	args->fn = strdup_safe(fn);
+}
+
 int plot_xy_command(const char* cmd, const char* cmdargs,
 					plot_args_t* plotargs, void* baton) {
 	plotxy_t* args = (plotxy_t*)baton;
 	if (streq(cmd, "xy_file")) {
-		args->fn = strdup(cmdargs);
+		plot_xy_set_filename(args, cmdargs);
 	} else if (streq(cmd, "xy_ext")) {
 		args->ext = atoi(cmdargs);
 	} else if (streq(cmd, "xy_xcol")) {
-		args->xcol = strdup(cmdargs);
+		plot_xy_set_xcol(args, cmdargs);
 	} else if (streq(cmd, "xy_ycol")) {
-		args->ycol = strdup(cmdargs);
+		plot_xy_set_ycol(args, cmdargs);
 	} else if (streq(cmd, "xy_xoff")) {
 		args->xoff = atof(cmdargs);
 	} else if (streq(cmd, "xy_yoff")) {
@@ -145,7 +164,7 @@ int plot_xy_command(const char* cmd, const char* cmdargs,
 	} else if (streq(cmd, "xy_scale")) {
 		args->scale = atof(cmdargs);
 	} else if (streq(cmd, "xy_bgcolor")) {
-		parse_color(cmdargs, &(args->bgr), &(args->bgg), &(args->bgb), &(args->bga));
+		plot_xy_set_bg(args, cmdargs);
 	} else if (streq(cmd, "xy_bglw")) {
 		args->bglw = atof(cmdargs);
 	} else {

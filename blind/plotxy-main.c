@@ -29,6 +29,7 @@
 #endif
 
 #include "plotstuff.h"
+#include "plotxy.h"
 #include "plotimage.h"
 #include "xylist.h"
 #include "boilerplate.h"
@@ -76,44 +77,42 @@ extern int optind, opterr, optopt;
 int main(int argc, char *args[]) {
 	int argchar;
 	char* progname = args[0];
-    char* infn = NULL;
-	char* fname = NULL;
-	int n = 0, N = 0;
-	double xoff = 0.0, yoff = 0.0;
-	int ext = 1;
-	double rad = 5.0;
-	double lw = 1.0;
-	char* shape = "circle";
-	double scale = 1.0;
-    bool pnginput = FALSE;
-    char* xcol = NULL;
-    char* ycol = NULL;
-	unsigned char* img = NULL;
 
 	plot_args_t pargs;
-	char* fgcolor = NULL;
-	char* bgcolor = NULL;
+	plotxy_t* xy;
+	plotimage_t* img;
+
+    // log errors to stderr, not stdout.
+    errors_log_to(stderr);
 
 	memset(&pargs, 0, sizeof(pargs));
 	pargs.fout = stdout;
 	pargs.outformat = PLOTSTUFF_FORMAT_PNG;
 
+	plotstuff_init(&pargs);
+	xy = plotstuff_get_config(&pargs, "xy");
+	img = plotstuff_get_config(&pargs, "image");
+	assert(xy);
+	assert(img);
+	
+	img->format = PLOTSTUFF_FORMAT_PPM;
+
 	while ((argchar = getopt(argc, args, OPTIONS)) != -1)
 		switch (argchar) {
         case 'C':
-			fgcolor = optarg;
+			plotstuff_set_color(&pargs, optarg);
             break;
         case 'b':
-			bgcolor = optarg;
+			plot_xy_set_bg(xy, optarg);
             break;
         case 'o':
             pargs.outfn = optarg;
             break;
         case 'X':
-            xcol = optarg;
+			plot_xy_set_xcol(xy, optarg);
             break;
         case 'Y':
-            ycol = optarg;
+			plot_xy_set_ycol(xy, optarg);
             break;
         case 'P':
             pargs.outformat = PLOTSTUFF_FORMAT_PPM;
@@ -122,22 +121,22 @@ int main(int argc, char *args[]) {
             pargs.outformat = PLOTSTUFF_FORMAT_PDF;
 			break;
 		case 'p':
-			pnginput = TRUE;
+			img->format = PLOTSTUFF_FORMAT_PNG;
             break;
         case 'I':
-            infn = optarg;
+			plot_image_set_filename(img, optarg);
             break;
 		case 'S':
-			scale = atof(optarg);
+			xy->scale = atof(optarg);
 			break;
 		case 'i':
-			fname = optarg;
+			plot_xy_set_filename(xy, optarg);
 			break;
 		case 'x':
-			xoff = atof(optarg);
+			xy->xoff = atof(optarg);
 			break;
 		case 'y':
-			yoff = atof(optarg);
+			xy->yoff = atof(optarg);
 			break;
 		case 'W':
 			pargs.W = atoi(optarg);
@@ -146,22 +145,22 @@ int main(int argc, char *args[]) {
 			pargs.H = atoi(optarg);
 			break;
 		case 'n':
-			n = atoi(optarg);
+			xy->firstobj = atoi(optarg);
 			break;
 		case 'N':
-			N = atoi(optarg);
+			xy->nobjs = atoi(optarg);
 			break;
 		case 'e':
-			ext = atoi(optarg);
+			xy->ext = atoi(optarg);
 			break;
 		case 'r':
-			rad = atof(optarg);
+			pargs.markersize = atof(optarg);
 			break;
 		case 'w':
-			lw = atof(optarg);
+			pargs.lw = atof(optarg);
 			break;
 		case 's':
-			shape = optarg;
+			plotstuff_set_marker(&pargs, optarg);
 			break;
 		case 'h':
 			printHelp(progname);
@@ -176,6 +175,7 @@ int main(int argc, char *args[]) {
 		printHelp(progname);
 		exit(-1);
 	}
+	/*
     if (infn && (pargs.W || pargs.H)) {
         printf("Error: if you specify an input file, you can't give -W or -H (width or height) arguments.\n\n");
         printHelp(progname);
@@ -185,10 +185,12 @@ int main(int argc, char *args[]) {
 		printHelp(progname);
 		exit(-1);
 	}
-
-    // log errors to stderr, not stdout.
-    errors_log_to(stderr);
-
+	 */
+	if (!xy->fn) {
+		printHelp(progname);
+		exit(-1);
+	}
+	/*
 	if (infn) {
 		// HACK -- open the image file to get W,H
 		if (pnginput) {
@@ -202,11 +204,25 @@ int main(int argc, char *args[]) {
 			exit(-1);
 		}
 	}
+	 */
 
-	plotstuff_init(&pargs);
 
+	//xy = plotstuff_get_xy(&pargs);
+	//img = plotstuff_get_image(&pargs);
+
+
+	if (img->fn) {
+		if (plot_image_setsize(&pargs, img)) {
+			ERROR("Failed to set plot size from image");
+			exit(-1);
+		}
+	}
+
+	plotstuff_run_command(&pargs, "image");
+	plotstuff_run_command(&pargs, "xy");
+
+	/*
 	plot_image_rgba_data(pargs.cairo, img, pargs.W, pargs.H);
-
 	plotstuff_run_commandf(&pargs, "xy_file %s", fname);
 	plotstuff_run_commandf(&pargs, "xy_ext %i", ext);
 	if (xcol)
@@ -229,6 +245,7 @@ int main(int argc, char *args[]) {
 	plotstuff_run_commandf(&pargs, "plot_lw %g", lw);
 	plotstuff_run_commandf(&pargs, "xy_scale %g", scale);
 	plotstuff_run_command(&pargs, "xy");
+	 */
 
 	plotstuff_output(&pargs);
 	plotstuff_free(&pargs);
