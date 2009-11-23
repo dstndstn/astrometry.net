@@ -139,18 +139,6 @@ static void plot_builtin_free(plot_args_t* pargs, void* baton) {
 
 static const plotter_t builtin = { "plot", plot_builtin_init, plot_builtin_init2, plot_builtin_command, NULL, plot_builtin_free, NULL };
 
-/* All render layers must go in here */
-static plotter_t plotters[4];
-
-/*
- plotxy_t* plotstuff_get_xy(plot_args_t* pargs) {
- return plotters[1];
- }
- plotimage_t* plotstuff_get_image(plot_args_t* pargs) {
- return plotters[2];
- }
- */
-
 int parse_image_format(const char* fmt) {
 	if (streq(fmt, "png")) {
 		return PLOTSTUFF_FORMAT_PNG;
@@ -169,14 +157,8 @@ int plotstuff_set_color(plot_args_t* pargs, const char* name) {
 	return parse_color_rgba(name, pargs->rgba);
 }
 
-void* plotstuff_get_config(plot_args_t* pargs, const char* name) {
-	int i, NR;
-	NR = sizeof(plotters) / sizeof(plotter_t);
-	for (i=0; i<NR; i++)
-		if (streq(plotters[i].name, name))
-			return plotters[i].baton;
-	return NULL;
-}
+/* All render layers must go in here */
+static plotter_t plotters[4];
 
 int plotstuff_init(plot_args_t* pargs) {
 	int i, NR;
@@ -187,7 +169,6 @@ int plotstuff_init(plot_args_t* pargs) {
 	plotters[3] = plotter_annotations;
 
 	NR = sizeof(plotters) / sizeof(plotter_t);
-
 	// First init
 	for (i=0; i<NR; i++)
 		plotters[i].baton = plotters[i].init(pargs);
@@ -229,6 +210,15 @@ int plotstuff_init2(plot_args_t* pargs) {
 		}
 	}
 	return 0;
+}
+
+void* plotstuff_get_config(plot_args_t* pargs, const char* name) {
+	int i, NR;
+	NR = sizeof(plotters) / sizeof(plotter_t);
+	for (i=0; i<NR; i++)
+		if (streq(plotters[i].name, name))
+			return plotters[i].baton;
+	return NULL;
 }
 
 double plotstuff_pixel_scale(plot_args_t* pargs) {
@@ -354,9 +344,9 @@ int plotstuff_output(plot_args_t* pargs) {
 			} else if (pargs->outformat == PLOTSTUFF_FORMAT_PPM) {
 				res = cairoutils_write_ppm(pargs->outfn, img, pargs->W, pargs->H);
 			} else if (pargs->outformat == PLOTSTUFF_FORMAT_PNG) {
-				res = cairoutils_write_ppm(pargs->outfn, img, pargs->W, pargs->H);
+				res = cairoutils_write_png(pargs->outfn, img, pargs->W, pargs->H);
 			}
-			free(img);
+			//free(img);
 			if (res)
 				ERROR("Failed to write output image");
 			return res;
@@ -375,7 +365,7 @@ void plotstuff_free(plot_args_t* pargs) {
 	for (i=0; i<NR; i++) {
 		plotters[i].free(pargs, plotters[i].baton);
 	}
-	cairo_surface_destroy(pargs->target);
 	cairo_destroy(pargs->cairo);
+	cairo_surface_destroy(pargs->target);
 }
 

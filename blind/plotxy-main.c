@@ -94,6 +94,9 @@ int main(int argc, char *args[]) {
 	img = plotstuff_get_config(&pargs, "image");
 	assert(xy);
 	assert(img);
+
+	plotstuff_set_color(&pargs, "white");
+	plot_xy_set_bg(xy, "black");
 	
 	img->format = PLOTSTUFF_FORMAT_PPM;
 
@@ -175,42 +178,10 @@ int main(int argc, char *args[]) {
 		printHelp(progname);
 		exit(-1);
 	}
-	/*
-    if (infn && (pargs.W || pargs.H)) {
-        printf("Error: if you specify an input file, you can't give -W or -H (width or height) arguments.\n\n");
-        printHelp(progname);
-        exit(-1);
-    }
-	if (!fname) {
-		printHelp(progname);
-		exit(-1);
-	}
-	 */
 	if (!xy->fn) {
 		printHelp(progname);
 		exit(-1);
 	}
-	/*
-	if (infn) {
-		// HACK -- open the image file to get W,H
-		if (pnginput) {
-			img = cairoutils_read_png(infn, &(pargs.W), &(pargs.H));
-		} else {
-			logmsg("Reading PPM from \"%s\"\n", infn);
-			img = cairoutils_read_ppm(infn, &(pargs.W), &(pargs.H));
-		}
-		if (!img) {
-			ERROR("Failed to read image \"%\"", infn);
-			exit(-1);
-		}
-	}
-	 */
-
-
-	//xy = plotstuff_get_xy(&pargs);
-	//img = plotstuff_get_image(&pargs);
-
-
 	if (img->fn) {
 		if (plot_image_setsize(&pargs, img)) {
 			ERROR("Failed to set plot size from image");
@@ -220,32 +191,6 @@ int main(int argc, char *args[]) {
 
 	plotstuff_run_command(&pargs, "image");
 	plotstuff_run_command(&pargs, "xy");
-
-	/*
-	plot_image_rgba_data(pargs.cairo, img, pargs.W, pargs.H);
-	plotstuff_run_commandf(&pargs, "xy_file %s", fname);
-	plotstuff_run_commandf(&pargs, "xy_ext %i", ext);
-	if (xcol)
-		plotstuff_run_commandf(&pargs, "xy_xcol %s", xcol);
-	if (ycol)
-		plotstuff_run_commandf(&pargs, "xy_xcol %s", ycol);
-	if (N)
-		plotstuff_run_commandf(&pargs, "xy_nobjs %i", N);
-	if (n)
-		plotstuff_run_commandf(&pargs, "xy_firstobj %i", n);
-	plotstuff_run_commandf(&pargs, "xy_xoff %g", xoff);
-	plotstuff_run_commandf(&pargs, "xy_yoff %g", yoff);
-
-	if (fgcolor)
-		plotstuff_run_commandf(&pargs, "plot_color %s", fgcolor);
-	if (bgcolor)
-		plotstuff_run_commandf(&pargs, "xy_bgcolor %s", bgcolor);
-	plotstuff_run_commandf(&pargs, "plot_marker %s", shape);
-	plotstuff_run_commandf(&pargs, "plot_markersize %g", rad);
-	plotstuff_run_commandf(&pargs, "plot_lw %g", lw);
-	plotstuff_run_commandf(&pargs, "xy_scale %g", scale);
-	plotstuff_run_command(&pargs, "xy");
-	 */
 
 	plotstuff_output(&pargs);
 	plotstuff_free(&pargs);
