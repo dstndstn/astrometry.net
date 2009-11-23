@@ -1,6 +1,7 @@
 /*
  This file is part of the Astrometry.net suite.
  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+ Copyright 2009 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -121,7 +122,8 @@ static void hpmap(int nside, const char* fn) {
 	for (i=0; i<12*nside*nside; i++) {
 		fprintf(stderr, "xp=[]; yp=[]\n");
 		add_plot_point(i, nside, 0.5, 0.5);
-		fprintf(stderr, "text(xp[0], yp[0], '%i', color='b', horizontalalignment='center', verticalalignment='center', bbox=dict(facecolor='w', edgecolor='w'))\n", i);
+		//fprintf(stderr, "text(xp[0], yp[0], '%i', color='b', horizontalalignment='center', verticalalignment='center', bbox=dict(facecolor='w', edgecolor='w'))\n", i);
+		fprintf(stderr, "text(xp[0], yp[0], '%i', color='b', horizontalalignment='center', verticalalignment='center')\n", i);
 	}
 
     fprintf(stderr, "axis((360, 0, -90, 90))\n");
@@ -132,7 +134,7 @@ static void hpmap(int nside, const char* fn) {
 	fprintf(stderr, "clf()\n");
 }
 
-void test_make_map(CuTest* ct) {
+void DISABLED_test_make_map(CuTest* ct) {
     fprintf(stderr, "%s", "from pylab import *\n");
 	fprintf(stderr, "clf()\n"
 			"def wrapxy(x,y):\n"
@@ -332,6 +334,81 @@ void print_node(double z, double phi, int Nside) {
 	}
 }
 
+void test_healpix_distance_to_radec(CuTest *ct) {
+	double d;
+	double xyz[3];
+	double ra,dec;
+
+	d = healpix_distance_to_radec(4, 1, 0, 0, NULL);
+    CuAssertDblEquals(ct, 0, d, 0);
+	d = healpix_distance_to_radec(4, 1, 45, 0, NULL);
+    CuAssertDblEquals(ct, 0, d, 0);
+	d = healpix_distance_to_radec(4, 1, 45+1, 0, NULL);
+    CuAssertDblEquals(ct, 1, d, 1e-9);
+	d = healpix_distance_to_radec(4, 1, 45+1, 0+1, NULL);
+    CuAssertDblEquals(ct, 1.414, d, 1e-3);
+
+	d = healpix_distance_to_radec(4, 1, 45+10, 0, NULL);
+    CuAssertDblEquals(ct, 10, d, 1e-9);
+
+	// top corner
+	d = healpix_distance_to_radec(4, 1, 0, rad2deg(asin(2.0/3.0)), NULL);
+    CuAssertDblEquals(ct, 0, d, 1e-9);
+
+	d = healpix_distance_to_radec(4, 1, 0, 1 + rad2deg(asin(2.0/3.0)), NULL);
+    CuAssertDblEquals(ct, 1, d, 1e-9);
+
+	d = healpix_distance_to_radec(4, 1, -45-10, -10, NULL);
+    CuAssertDblEquals(ct, 14.106044, d, 1e-6);
+
+	d = healpix_distance_to_radec(10, 1, 225, 5, NULL);
+    CuAssertDblEquals(ct, 5, d, 1e-6);
+
+	d = healpix_distance_to_radec(44, 2, 300, -50, NULL);
+    CuAssertDblEquals(ct, 3.007643, d, 1e-6);
+
+	d = healpix_distance_to_radec(45, 2, 310, -50, NULL);
+    CuAssertDblEquals(ct, 1.873942, d, 1e-6);
+
+	// south-polar hp, north pole.
+	d = healpix_distance_to_radec(36, 2, 180, 90, NULL);
+	// The hp corner is -41.8 deg; add 90.
+    CuAssertDblEquals(ct, 131.810, d, 1e-3);
+
+	// just south of equator to nearly across the sphere
+	d = healpix_distance_to_radec(35, 2, 225, 20, NULL);
+	// this one actually has the midpoint further than A and B.
+    CuAssertDblEquals(ct, 158.189685, d, 1e-6);
+
+	d = healpix_distance_to_radec(4, 1, 0, 0, xyz);
+	xyzarr2radecdeg(xyz, &ra, &dec);
+    CuAssertDblEquals(ct, 0, ra, 0);
+    CuAssertDblEquals(ct, 0, dec, 0);
+
+	d = healpix_distance_to_radec(4, 1, 45, 0, xyz);
+	xyzarr2radecdeg(xyz, &ra, &dec);
+    CuAssertDblEquals(ct, 45, ra, 0);
+    CuAssertDblEquals(ct, 0, dec, 0);
+
+	d = healpix_distance_to_radec(4, 1, 45+1, 0, xyz);
+	xyzarr2radecdeg(xyz, &ra, &dec);
+    CuAssertDblEquals(ct, 45, ra, 0);
+    CuAssertDblEquals(ct, 0, dec, 0);
+
+	d = healpix_distance_to_radec(4, 1, 45+1, 0+1, xyz);
+	xyzarr2radecdeg(xyz, &ra, &dec);
+    CuAssertDblEquals(ct, 45, ra, 0);
+    CuAssertDblEquals(ct, 0, dec, 0);
+	// really??
+
+	d = healpix_distance_to_radec(4, 1, 20, 25, xyz);
+    CuAssertDblEquals(ct, d, 2.297298, 1e-6);
+	xyzarr2radecdeg(xyz, &ra, &dec);
+    CuAssertDblEquals(ct, 18.200995, ra, 1e-6);
+    CuAssertDblEquals(ct, 23.392159, dec, 1e-6);
+
+}
+
 void test_healpix_neighbours(CuTest *ct) {
 	int n0[] = { 1,3,2,71,69,143,90,91 };
 	int n5[] = { 26,27,7,6,4,94,95 };
@@ -516,6 +593,7 @@ int main(int argc, char** args) {
 	SUITE_ADD_TEST(suite, test_healpix_neighbours);
 	SUITE_ADD_TEST(suite, test_healpix_pnprime_to_xy);
 	SUITE_ADD_TEST(suite, test_healpix_xy_to_pnprime);
+	SUITE_ADD_TEST(suite, test_healpix_distance_to_radec);
 
 	/* Run the suite, collect results and display */
 	CuSuiteRun(suite);

@@ -20,11 +20,13 @@
 #include <assert.h>
 #include <stdio.h>
 #include <sys/param.h>
+#include <string.h>
 
 #include "healpix.h"
 #include "mathutil.h"
 #include "starutil.h"
 #include "keywords.h"
+#include "permutedsort.h"
 #include "log.h"
 
 // Internal type
@@ -1203,4 +1205,97 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
 	return nhp;
 }
 
+double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
+								 double* closestxyz) {
+	int thehp;
+	double xyz[3];
+	// corners
+	double cdx[4], cdy[4];
+	double cdists[4];
+	int corder[4];
+	int i;
+	double dxA,dxB,dyA,dyB;
+	double dxmid, dymid;
+	double dist2A, dist2B;
+	double midxyz[3];
+	double dist2mid;
+
+	double EPS = 1e-16;
+
+	// If the point is actually inside the healpix, dist = 0.
+	thehp = radecdegtohealpix(ra, dec, Nside);
+	if (thehp == hp) {
+		if (closestxyz)
+			radecdeg2xyzarr(ra, dec, closestxyz);
+		return 0;
+	}
+
+	// Find two nearest corners.
+	radecdeg2xyzarr(ra, dec, xyz);
+	for (i=0; i<4; i++) {
+		double cxyz[3];
+		cdx[i] = i/2;
+		cdy[i] = i%2;
+		healpix_to_xyzarr(hp, Nside, cdx[i], cdy[i], cxyz);
+		cdists[i] = distsq(xyz, cxyz, 3);
+	}
+	permutation_init(corder, 4);
+	permuted_sort(cdists, sizeof(double), compare_doubles_asc, corder, 4);
+	// now "corder" [0] and [1] are the indices of the two nearest corners.
+	
+	// Binary search for closest dx,dy.
+	dxA = cdx[corder[0]];
+	dyA = cdy[corder[0]];
+	dist2A = cdists[corder[0]];
+	dxB = cdx[corder[1]];
+	dyB = cdy[corder[1]];
+	dist2B = cdists[corder[1]];
+	// the closest two points should share an edge... unless we're in some
+	// weird configuration like the opposite side of the sphere.
+	assert(dxA == dxB || dyA == dyB);
+	assert(dist2A <= dist2B);
+
+	//printf("Start binary search\n");
+	while (1) {
+		dxmid = (dxA + dxB) / 2.0;
+		dymid = (dyA + dyB) / 2.0;
+		/*
+		 // converged to machine precision?
+		 if ((dxA != dxB && (dxmid == dxA || dxmid == dxB)) ||
+		 (dyA != dyB && (dymid == dyA || dymid == dyB)))
+		 */
+		// converged to EPS?
+		if ((dxA != dxB && (fabs(dxmid - dxA) < EPS || fabs(dxmid - dxB) < EPS)) ||
+			(dyA != dyB && (fabs(dymid - dyA) < EPS || fabs(dymid - dyB) < EPS)))
+			break;
+		healpix_to_xyzarr(hp, Nside, dxmid, dymid, midxyz);
+		dist2mid = distsq(xyz, midxyz, 3);
+		//printf("  dx,dy (%g,%g) %g  (%g,%g) %g  (%g,%g) %g\n", dxA, dyA, dist2A, dxmid, dymid, dist2mid, dxB, dyB, dist2B);
+		//assert(dist2mid <= (dist2A+1e-12) || dist2mid <= (dist2B+1e-12));
+		if ((dist2mid >= dist2A) && (dist2mid >= dist2B))
+			break;
+		if (dist2A < dist2B) {
+			dist2B = dist2mid;
+			dxB = dxmid;
+			dyB = dymid;
+		} else {
+			dist2A = dist2mid;
+			dxA = dxmid;
+			dyA = dymid;
+		}
+	}
+
+	// Check whether endpoint A is actually closer.
+	dist2A = cdists[corder[0]];
+	if (dist2A < dist2mid) {
+		dxA = cdx[corder[0]];
+		dyA = cdy[corder[0]];
+		healpix_to_xyzarr(hp, Nside, dxA, dyA, midxyz);
+		dist2mid = dist2A;
+	}
+
+	if (closestxyz)
+		memcpy(closestxyz, midxyz, 3*sizeof(double));
+	return distsq2deg(dist2mid);
+}
 

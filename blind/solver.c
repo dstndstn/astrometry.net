@@ -428,12 +428,13 @@ void solver_run(solver_t* solver) {
     double tol2;
     int field[DQMAX];
 
+	get_resource_stats(&usertime, &systime, NULL);
+
 	if (!solver->vf)
 		solver_preprocess_field(solver);
 
 	memset(field, 0, sizeof(field));
 
-	get_resource_stats(&usertime, &systime, NULL);
 	solver->starttime = usertime + systime;
 
 	numxy = starxy_n(solver->fieldxy);

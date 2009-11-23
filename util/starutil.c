@@ -294,6 +294,10 @@ Const inline double distsq2rad(double dist2) {
 	return distsq2arc(dist2);
 }
 
+Const inline double distsq2deg(double dist2) {
+	return rad2deg(distsq2rad(dist2));
+}
+
 Const inline double dist2rad(double dist) {
 	return distsq2arc(dist*dist);
 }

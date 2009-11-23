@@ -149,6 +149,8 @@ Const inline double distsq2arc(double dist2);
 // (alias of distsq2arc)
 Const inline double distsq2rad(double dist2);
 
+Const inline double distsq2deg(double dist2);
+
 // Distance on the unit sphere to radians.
 Const inline double dist2rad(double dist);
 
