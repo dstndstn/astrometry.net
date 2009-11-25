@@ -132,6 +132,9 @@ void starxy_set_flux_array(starxy_t* s, const double* f) {
 	memcpy(s->flux, f, s->N * sizeof(double));
 }
 
+void starxy_set_bg_array(starxy_t* s, const double* f) {
+	memcpy(s->background, f, s->N * sizeof(double));
+}
 
 starxy_t* starxy_new(int N, bool flux, bool back) {
     starxy_t* xy = calloc(1, sizeof(starxy_t));

@@ -45,9 +45,11 @@ void starxy_get(const starxy_t* f, int i, double* xy);
 void starxy_setx(starxy_t* f, int i, double x);
 void starxy_sety(starxy_t* f, int i, double y);
 
+// Copies from the given arrays into the starxy_t.
 void starxy_set_x_array(starxy_t* s, const double* x);
 void starxy_set_y_array(starxy_t* s, const double* y);
 void starxy_set_flux_array(starxy_t* s, const double* f);
+void starxy_set_bg_array(starxy_t* s, const double* f);
 
 void starxy_sort_by_flux(starxy_t* f);
 

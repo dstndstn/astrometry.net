@@ -215,6 +215,13 @@ int xylist_write_one_row(xylist_t* ls, starxy_t* fld, int row) {
                                ls->include_background ? fld->background + row : NULL);
 }
 
+int xylist_write_one_row_data(xylist_t* ls, double x, double y,
+							  double flux, double bg) {
+    return fitstable_write_row(ls->table, &x, &y,
+                               ls->include_flux ? &flux : NULL,
+                               ls->include_background ? &bg : NULL);
+}
+
 int xylist_write_field(xylist_t* ls, starxy_t* fld) {
     int i;
     assert(fld);
@@ -318,7 +325,10 @@ qfits_header* xylist_get_header(xylist_t* ls) {
                                                fitscolumn_double_type(),
                                                "FLUX", "fluxunits");
         if (ls->include_background)
-            assert(0);
+            fitstable_add_write_column_convert(ls->table,
+                                               fitscolumn_double_type(),
+                                               fitscolumn_double_type(),
+                                               "BACKGROUND", "fluxunits");
 
         fitstable_new_table(ls->table);
     }

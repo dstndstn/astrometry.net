@@ -66,7 +66,7 @@ void test_read_matchfile(CuTest* tc) {
     entry1.quadxyz[14] = 155.0;
     entry1.dimquads = 5;
     entry1.quad_npeers = 2;
-    entry1.noverlap = 10;
+    //entry1.noverlap = 10;
     entry1.nconflict = 1;
     entry1.nfield = 20;
     entry1.nindex = 100;
@@ -112,7 +112,7 @@ void test_read_matchfile(CuTest* tc) {
     SAMESAME(quadxyz);
     SAME(dimquads);
     SAME(quad_npeers);
-    SAME(noverlap);
+    //SAME(noverlap);
     SAME(nconflict);
     SAME(nfield);
     SAME(nindex);

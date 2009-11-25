@@ -122,6 +122,8 @@ int xylist_write_field(xylist_t* ls, starxy_t* fld);
 
 int xylist_write_one_row(xylist_t* ls, starxy_t* fld, int row);
 
+int xylist_write_one_row_data(xylist_t* ls, double x, double y, double flux, double bg);
+
 // (input starxy_t* is optional; if not given, a new one is allocated and returned.)
 starxy_t* xylist_read_field(xylist_t* ls, starxy_t* fld);
 

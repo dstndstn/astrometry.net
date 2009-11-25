@@ -22,6 +22,7 @@
 
 #include "dimage.h"
 #include "cutest.h"
+#include "simplexy-common.h"
 
 extern int initial_max_groups;
 
@@ -173,7 +174,7 @@ int compare_inputs(int *test_data, int nx, int ny) {
 	unsigned char* u8img;
 
 	dfind2(test_data, nx,ny,test_outs_keir);
-	dfind(test_data, nx,ny,test_outs_blanton);
+	old_dfind(test_data, nx,ny,test_outs_blanton);
 
 	u8img = malloc(nx * ny);
 	for (i=0; i<(nx*ny); i++)
