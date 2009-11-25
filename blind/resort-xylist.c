@@ -22,6 +22,9 @@
 #include <string.h>
 #include <assert.h>
 
+// DEBUG
+#include <sys/mman.h>
+
 #include "qfits.h"
 #include "ioutils.h"
 #include "fitsioutils.h"
@@ -29,6 +32,7 @@
 #include "an-bool.h"
 #include "fitstable.h"
 #include "errors.h"
+#include "log.h"
 
 int resort_xylist(const char* infn, const char* outfn,
                   const char* fluxcol, const char* backcol,
@@ -122,6 +126,10 @@ int resort_xylist(const char* infn, const char* outfn,
             goto bailout;
         }
 
+		debug("First 10 rows of input table:\n");
+		for (i=0; i<10; i++)
+			debug("flux %g, background %g\n", flux[i], back[i]);
+
         N = fitstable_nrows(tab);
 
         // set back = flux + back (ie, non-background-subtracted flux)
@@ -153,6 +161,7 @@ int resort_xylist(const char* infn, const char* outfn,
             int inds[] = { perm1[i], perm2[i] };
             for (j=0; j<2; j++) {
                 int index = inds[j];
+				assert(index < N);
                 if (used[index])
                     continue;
                 used[index] = TRUE;

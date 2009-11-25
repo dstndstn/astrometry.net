@@ -503,15 +503,15 @@ static void* read_array_into(const fitstable_t* tab,
 	else
 		cstride = csize * arraysize;
 
+	fitsstride = fitssize * arraysize;
 	if (csize < fitssize) {
 		// Need to allocate a bigger temp array and down-convert the data.
 		// HACK - could set data=tempdata and realloc after (if 'dest' is NULL)
 		tempdata = calloc(fitssize, Nread * arraysize);
 		fitsdata = tempdata;
-		fitsstride = fitssize * arraysize;
 	} else {
+		// We'll read the data into the first fraction of the output array.
 		fitsdata = cdata;
-		fitsstride = cstride;
 	}
 
 	qfits_query_column_seq_to_array(tab->table, colnum, offset, Nread,

@@ -25,16 +25,18 @@
 #include "qfits.h"
 #include "an-bool.h"
 #include "resort-xylist.h"
-#include "errors.h"
 #include "fitsioutils.h"
+#include "errors.h"
+#include "log.h"
 
-const char* OPTIONS = "hdf:b:";
+const char* OPTIONS = "hdf:b:v";
 
 static void printHelp(char* progname) {
     printf("Usage:   %s  <input> <output>\n"
 		   "      -f <flux-column-name>  (default: FLUX) \n"
 		   "      -b <background-column-name>  (default: BACKGROUND)\n"
 		   "      [-d]: sort in descending order (default is ascending)\n"
+		   "      [-v]: add verboseness.\n"
            "\n", progname);
 }
 
@@ -49,6 +51,7 @@ int main(int argc, char** args) {
     char* fluxcol = NULL;
     char* backcol = NULL;
     bool ascending = TRUE;
+	int loglvl = LOG_MSG;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
         switch (argchar) {
@@ -61,6 +64,9 @@ int main(int argc, char** args) {
         case 'd':
             ascending = FALSE;
             break;
+		case 'v':
+			loglvl++;
+			break;
         case '?':
         case 'h':
 			printHelp(progname);
@@ -68,6 +74,7 @@ int main(int argc, char** args) {
         default:
             return -1;
         }
+	log_init(loglvl);
 
     if (optind != argc-2) {
         printHelp(progname);
