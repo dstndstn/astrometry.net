@@ -156,6 +156,7 @@ int resort_xylist(const char* infn, const char* outfn,
                 if (used[index])
                     continue;
                 used[index] = TRUE;
+				debug("adding index %i: %s %g\n", index, j==0 ? "flux" : "bgsub", j==0 ? flux[index] : back[index]);
                 if (pipe_file_offset(fin, datstart + index * rowsize, rowsize, fout)) {
                     ERROR("Failed to copy row %i", index);
                     goto bailout;

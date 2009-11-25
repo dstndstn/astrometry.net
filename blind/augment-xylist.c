@@ -816,7 +816,7 @@ int augment_xylist(augment_xylist_t* axy,
         if (axy->resort) {
             char* err;
             int rtn;
-            logverb("Sorting file \"%s\" to \"%s\" using columns flux (%s) and background (%s), %sscending",
+            logverb("Sorting file \"%s\" to \"%s\" using columns flux (%s) and background (%s), %sscending\n",
                     xylsfn, sortedxylsfn, axy->sortcol, axy->bgcol, axy->sort_ascending?"a":"de");
             errors_start_logging_to_string();
             rtn = resort_xylist(xylsfn, sortedxylsfn, axy->sortcol, axy->bgcol, axy->sort_ascending);
