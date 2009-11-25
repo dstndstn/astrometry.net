@@ -29,6 +29,8 @@ if __name__ == '__main__':
 
 from astrometry.util.shell import shell_escape
 from astrometry.util.filetype import filetype_short
+import logging
+
 
 fitstype = 'FITS image data'
 fitsext = 'fits'
@@ -63,20 +65,15 @@ raw_id_cmd = 'dcraw -i %s >/dev/null 2> /dev/null'
 
 verbose = False
 
-def log(*x):
-	print >> sys.stderr, 'image2pnm:', ' '.join(x)
-
-def logverb(*x):
-	if verbose:
-		print >> sys.stderr, 'image2pnm:', ' '.join(x)
-
 def do_command(cmd):
-	logverb('Running: "%s"' % cmd)
+	logging.debug('Running: "%s"' % cmd)
 	if os.system(cmd) != 0:
 		print >>sys.stderr, 'Command failed: %s' % cmd
 		sys.exit(-1)
 
 def get_cmd(types, cmds):
+	if types is None:
+		return None
 	ext=None
 	cmd=None
 	for t in types:
@@ -97,26 +94,30 @@ def uncompress_file(infile, uncompressed, typeinfo=None, quiet=True):
 	"""
 	if typeinfo is None:
 		typeinfo = filetype_short(infile)
-
+		if typeinfo is None:
+			logging.debug('Could not determine file type of "%s"' % infile)
+			return None
 	(ext,cmd) = get_cmd(typeinfo, compcmds)
 	if ext is None:
-		logverb('File is not compressed: "%s"' % '/'.join(typeinfo))
+		logging.debug('File is not compressed: "%s"' % '/'.join(typeinfo))
 		return None
 	assert uncompressed != infile
-	logverb('Compressed file (type %s), dumping to: "%s"' % (ext, uncompressed))
+	logging.debug('Compressed file (type %s), dumping to: "%s"' % (ext, uncompressed))
 	do_command(cmd % (shell_escape(infile), shell_escape(uncompressed)))
 	return ext
 
 def is_raw(fn):
 	rtn = os.system(raw_id_cmd % shell_escape(fn))
-	logverb('ran dcraw: return value %i' % rtn)
+	logging.debug('ran dcraw: return value %i' % rtn)
 	return os.WIFEXITED(rtn) and (os.WEXITSTATUS(rtn) == 0)
 
 # Returns (extension, command, error)
 def get_image_type(infile):
 	typeinfo = filetype_short(infile)
+	if typeinfo is None:
+		return (None, None, 'Could not determine file type (does the file exist?): %s' % infile)
 	(ext,cmd) = get_cmd(typeinfo, imgcmds)
-	logverb('ext:', ext)
+	logging.debug('ext:', ext)
 	# "file" recognizes some RAWs as TIFF, but tifftopnm can't read them...
 	# run "dcraw" here if the type is TIFF.
 	if ext == tiffext and is_raw(infile):
@@ -139,7 +140,7 @@ def find_program(mydir, cmd):
 	p = os.path.join(mydir, prog)
 	if os.path.exists(p):
 		return ' '.join([p, parts[1]])
-	log('path', p, 'does not exist.')
+	logging.info('path', p, 'does not exist.')
 	return None
 
 def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
@@ -201,8 +202,7 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 		# we might rename this file later, so don't add it to the list of
 		# tempfiles to delete until later...
 		os.close(f)
-		if not quiet:
-			log('temporary output file: ', outfile)
+		logging.debug('temporary output file: ', outfile)
 
 	if ext == fitsext and extension:
 		cmd = an_fitstopnm_ext_cmd % extension
@@ -258,7 +258,7 @@ def convert_image(infile, outfile, uncompressed, sanitized,
 		os.unlink(fn)
 
 	if errstr:
-		log('ERROR: %s' % errstr)
+		logging.error('ERROR: %s' % errstr)
 		return -1
 	print imgtype
 	return 0
@@ -314,6 +314,13 @@ def main():
 	global verbose
 	verbose = options.verbose
 
+	logformat = '%(message)s'
+	if verbose:
+		logging.basicConfig(level=logging.INFO, format=logformat)
+	else:
+		logging.basicConfig(level=logging.DEBUG, format=logformat)
+	logging.raiseExceptions = False
+		
 	return convert_image(options.infile, options.outfile,
 						 options.uncompressed_outfile,
 						 options.sanitized_outfile,

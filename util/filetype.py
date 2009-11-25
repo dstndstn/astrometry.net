@@ -20,8 +20,8 @@ def filetype(fn):
     (rtn,out,err) = run_command(cmd)
     if rtn:
         logverb('"file" command failed.  Command: "%s"' % cmd)
-        logverb('output:', out)
-        logverb('error:', err)
+        logverb('  ', out)
+        logverb('  ', err)
         return None
 
     out = out.strip()
@@ -35,8 +35,11 @@ def filetype(fn):
             lst.append((p[0], ''))
     return lst
 
-# Returns a list (usually with just one element) of filetypes:
+# Returns a list (usually with just one element) of filetypes, or None if no filetypes are found:
 # eg
 #  [ 'Minix filesystem', 'JPEG image data' ]
 def filetype_short(fn):
-    return [t for (t,nil) in filetype(fn)]
+    ft = filetype(fn)
+    if ft is None:
+        return None
+    return [t for (t,nil) in ft]
