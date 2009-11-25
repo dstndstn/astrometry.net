@@ -94,6 +94,7 @@ struct augment_xylist_s {
     char* xcol;
     char* ycol;
     char* sortcol;
+	char* bgcol;
 
     bool sort_ascending;
     bool resort;

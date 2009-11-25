@@ -56,10 +56,10 @@ class Tan(ctypes.Structure):
 				("imagew", c_double),
 				("imageh", c_double)]
 
-	def __init__(self, filename=None):
+	def __init__(self, filename=None, ext=0):
 		if filename is not None:
 			cfn = c_char_p(filename)
-			rtn = _sip.tan_read_header_file(cfn, ctypes.pointer(self))
+			rtn = _sip.tan_read_header_file_ext(cfn, ext, ctypes.pointer(self))
 			if not rtn:
 				raise Exception, 'Failed to parse TAN header from file "%s"' % filename
 

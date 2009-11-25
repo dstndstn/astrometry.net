@@ -94,13 +94,13 @@ int resort_xylist(const char* infn, const char* outfn,
             goto bailout;
         }
 		if (!qfits_is_table(infn, ext)) {
-            ERROR("Extention %i isn't a table. Skipping.\n", ext);
+            ERROR("Extention %i isn't a table. Skipping", ext);
 			continue;
 		}
         // Copy the header as-is.
         if (pipe_file_offset(fin, hdrstart, hdrsize, fout)) {
-            fprintf(stderr, "Failed to copy the header of extension %i\n", ext);
-            exit(-1);
+            ERROR("Failed to copy the header of extension %i", ext);
+			goto bailout;
         }
 
         if (fitstable_read_extension(tab, ext)) {
@@ -124,8 +124,6 @@ int resort_xylist(const char* infn, const char* outfn,
 
         N = fitstable_nrows(tab);
 
-        used    = malloc(N * sizeof(bool));
-
         // set back = flux + back (ie, non-background-subtracted flux)
 		for (i=0; i<N; i++)
             back[i] += flux[i];
@@ -136,7 +134,19 @@ int resort_xylist(const char* infn, const char* outfn,
         // Sort by non-background-subtracted flux...
 		perm2 = permuted_sort(back, sizeof(double), compare, NULL, N);
 
+        used = malloc(N * sizeof(bool));
         memset(used, 0, N * sizeof(bool));
+
+		// Check sort...
+        for (i=0; i<N-1; i++) {
+			if (ascending) {
+				assert(flux[perm1[i]] <= flux[perm1[i+1]]);
+				assert(back[perm2[i]] <= back[perm2[i+1]]);
+			} else {
+				assert(flux[perm1[i]] >= flux[perm1[i+1]]);
+				assert(back[perm2[i]] >= back[perm2[i+1]]);
+			}
+		}
 
         for (i=0; i<N; i++) {
             int j;
@@ -152,7 +162,10 @@ int resort_xylist(const char* infn, const char* outfn,
                 }
             }
         }
-        
+
+        for (i=0; i<N; i++)
+			assert(used[i]);
+
 		if (fits_pad_file(fout)) {
 			ERROR("Failed to add padding to extension %i", ext);
             goto bailout;

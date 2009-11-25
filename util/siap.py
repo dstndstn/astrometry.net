@@ -3,7 +3,7 @@ from numpy import *
 from astrometry.util.pyfits_utils import *
 
 def siap_parse_result(fn=None):
-	dom1 = minidom.parse('res1.xml')
+	dom1 = minidom.parse(fn)
 
 	tables = dom1.getElementsByTagName('TABLE')
 	assert(len(tables) == 1)
