@@ -457,8 +457,8 @@ static void after_solved(augment_xylist_t* axy,
 	char rastr[32], decstr[32];
 	char* fieldunits;
 
-	if (!file_exists(axy->solvedfn))
-		return;
+	//if (!file_exists(axy->solvedfn))
+	//return;
 
 	// create new FITS file...
 	if (axy->fitsimgfn && sf->newfitsfn) {
@@ -1018,6 +1018,13 @@ int main(int argc, char** args) {
             axy->rdlsfn = create_temp_file("rdls", tempdir);
             sl_append_nocopy(tempfiles, axy->rdlsfn);
 		}
+
+		/*
+		 if (axy->newfitsfn && !axy->solvedfn) {
+		 axy->solvedfn = create_temp_file("solved", tempdir);
+		 sl_append_nocopy(tempfiles, axy->solvedfn);
+		 }
+		 */
 
         // Download URL...
         if (isurl) {
