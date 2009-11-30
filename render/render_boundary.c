@@ -45,18 +45,6 @@ static void logmsg(char* format, ...) {
 	va_end(args);
 }
 
-/**
- 
- Parses args in sequence.
-
- bcolor <r> <g> <b>   -- sets the color
- balpha <a>
- bfill <0/1>          -- 1=fill; 0=outline.
- bwcsfn <fn>          -- render the wcs file with current settings.
- bnsteps <int>        -- number of steps per image side
- blw <float>          -- line width
-
- */
 int render_boundary(cairo_t* cairo, render_args_t* args) {
 	int i, I;
 	double lw = args->linewidth;

@@ -145,6 +145,8 @@ static void print_help(char* prog) {
 		   "  -l quads   -- Renders Astrometry.net index qudas\n"
 		   "                Reads from argument file (-A):\n"
 		   "     index <index-filename>\n"
+		   "     quadedgergba <rgba>\n"
+		   "     quadfacergba <rgba>\n"
 		   "\n"
 		   "  -l cairo   -- Renders cairo commands.\n"
 		   "                Reads from argument file (-A):\n"

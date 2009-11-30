@@ -173,6 +173,7 @@ clean:
 	-$(MAKE) -C qfits-an distclean
 	-rm qfits-an/Makefile
 	-rm -R qfits-an/stage
+	-rm __init__.pyc
 	$(MAKE) -C gsl-an clean
 	$(MAKE) -C libkd clean
 	$(MAKE) -C blind clean
@@ -183,7 +184,9 @@ realclean:
 	$(MAKE) -C util realclean
 	-$(MAKE) -C cfitsio distclean
 	-$(MAKE) -C qfits-an distclean
+	-rm qfits-an/Makefile
 	-rm -R qfits-an/stage
+	-rm __init__.pyc
 	$(MAKE) -C gsl-an clean
 	$(MAKE) -C libkd realclean
 	$(MAKE) -C blind realclean

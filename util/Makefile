@@ -46,6 +46,9 @@ include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.netpbm
 include $(COMMON)/makefile.gsl
 
+# for wcs-pv2sip
+include $(COMMON)/makefile.wcslib
+
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(CAIRO_INC)
 CFLAGS += $(NETPBM_INC)
@@ -168,7 +171,6 @@ ALL_OBJ += an-fitstopnm.o
 
 downsample-fits: downsample-fits.o $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += downsample-fits.o
-
 
 PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
 	shell.py __init__.py file.py run_command.py w3c_validator.py \
