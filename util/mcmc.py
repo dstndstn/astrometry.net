@@ -1,54 +1,56 @@
 from numpy import *
 
-def mcmc(data, params, proposal, lnposterior, step_info,
-		 prior_info, nlinks, beta=1.,
-		 record=None, record_info=None, keepchain=False,
-		 verbose=True):
+def metropolis(data, model, nlinks, beta=1., keepchain=True):
+	'''
+	p = model.get_params()
+	-- this must return an *independent copy* of the parameters.
 
-	OUTPUTPERIOD = 100
-	lnp = lnposterior(data, params, prior_info)
-	if verbose:
-		print 'starting lnp=', lnp
-	oldlnp = lnp
-	oldparams = params
+	model.set_params(p)
+
+	p = model.propose_params()
+
+	model.tally(accept, linknumber)   accept: boolean
+
+	lnp = model.lnposterior(data)
+
+	'''
+	oldparams = model.get_params()
+	oldlnp = model.lnposterior(data)
+
 	bestparams = oldparams
 	bestlnp = oldlnp
-	if verbose:
-		print 'doing', nlinks, 'links of MCMC...'
-	naccept = 0
 
 	chain = []
-
 	for link in range(nlinks):
-		(newparams, step_info) = proposal(oldparams, step_info)
-		lnp = lnposterior(data, newparams, prior_info)
+
+		newparams = model.propose_params()
+		model.set_params(newparams)
+		newlnp = model.lnposterior(data)
+
 		randnum = random.uniform()
-		accept = (beta * (lnp - oldlnp)) > log(randnum)
-		if record is not None:
-			record_info = record(oldparams, oldlnp, newparams, lnp, randnum,
-								 accept, link, nlinks, record_info)
+		accept = (beta * (newlnp - oldlnp)) > log(randnum)
+
+		model.tally(accept, link)
+
 		if accept:
 			# keep new parameters
 			if keepchain:
-				chain.append((lnp, newparams))
-
+				chain.append((newlnp, newparams))
 			oldparams = newparams
-			oldlnp = lnp
-			naccept += 1
-			if lnp > bestlnp:
+			oldlnp = newlnp
+			#naccept += 1
+			if newlnp > bestlnp:
 				bestlnp = lnp
 				bestparams = newparams
 		else:
 			# keep old parameters
 			if keepchain:
 				chain.append((oldlnp, oldparams))
+			model.set_params(oldparams)
 
-			pass
-		if verbose and ((link % OUTPUTPERIOD == 0) or link == nlinks-1):
-			print link, float(naccept)/(link+1), bestlnp, bestparams
-	return (bestparams, bestlnp, chain, step_info, naccept)
+	return (bestlnp, bestparams, chain)
 
-
+'''
 def cycle_proposals(oldparams, stepinfo):
 	(stepnum, sigmas, lastip) = stepinfo
 	NZ = array([i for i,s in enumerate(sigmas) if s != 0])
@@ -65,3 +67,4 @@ def quadratic_to_linear(sig2, linsig):
 	sig2[lin] = -linsig**2 + 2.*linsig * sqrt(sig2[lin])
 	return sig2
 
+'''
