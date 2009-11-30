@@ -92,7 +92,8 @@ PV2_10  =  -4.717653697970E-04 /      + PV2_10* x**3
 int wcs_pv2sip(const char* wcsinfn, int ext,
 			   const char* wcsoutfn,
 			   bool scamp_head_file,
-			   double* xy, int Nxy) {
+			   double* xy, int Nxy,
+			   int imageW, int imageH) {
 	qfits_header* hdr = NULL;
 	double* radec = NULL;
 	int rtn = -1;
@@ -100,7 +101,7 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	double x,y, px,py;
 	double xyz[3];
 	//double ra,dec;
-	double dpx, dpy;
+	//double dpx, dpy;
 
 	double* xorig;
 	double* yorig;
@@ -185,31 +186,31 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 		pv2[i] = qfits_header_getdouble(hdr, key, 0.0);
 	}
 
-	tan_pixelxy2iwc(&tanwcs, 100, 100, &x, &y);
-	r = sqrt(x*x + y*y);
-	xpows[0] = ypows[0] = rpows[0] = 1.0;
-	for (i=1; i<sizeof(xpows)/sizeof(double); i++) {
-		xpows[i] = xpows[i-1]*x;
-		ypows[i] = ypows[i-1]*y;
-		rpows[i] = rpows[i-1]*r;
-	}
-	px = py = 0;
-	for (i=0; i<sizeof(xp)/sizeof(int); i++) {
-		//if (pv1[i] != 0.0)
-		//printf("PV1_%i = %g, x^%i y^%i r^%i\n", i, pv1[i], xp[i], yp[i], rp[i]);
-		//if (pv2[i] != 0.0)
-		//printf("PV2_%i = %g, x^%i y^%i r^%i\n", i, pv2[i], yp[i], xp[i], rp[i]);
-		px += pv1[i] * xpows[xp[i]] * ypows[yp[i]] * rpows[rp[i]];
-		py += pv2[i] * ypows[xp[i]] * xpows[yp[i]] * rpows[rp[i]];
-		//printf("i=%i, px=%g, py=%g\n", i, px, py);
-		printf("%i (%i,%i,%i): px=%g, py=%g\n", i, xp[i], yp[i], rp[i], px,py);
-	}
-	printf("x,y (%g,%g), px,py (%g,%g)\n", x,y, px,py);
-	// raw_to_pv: in (-0.0154408,-0.00816145), out (-0.0154607,-0.00827274)
-
-	tan_iwc2pixelxy(&tanwcs, px, py, &dpx, &dpy);
-
-	printf("distorted pixels: (%g,%g)\n", dpx, dpy);
+	/*{
+	 tan_pixelxy2iwc(&tanwcs, 100, 100, &x, &y);
+	 r = sqrt(x*x + y*y);
+	 xpows[0] = ypows[0] = rpows[0] = 1.0;
+	 for (i=1; i<sizeof(xpows)/sizeof(double); i++) {
+	 xpows[i] = xpows[i-1]*x;
+	 ypows[i] = ypows[i-1]*y;
+	 rpows[i] = rpows[i-1]*r;
+	 }
+	 px = py = 0;
+	 for (i=0; i<sizeof(xp)/sizeof(int); i++) {
+	 //if (pv1[i] != 0.0)
+	 //printf("PV1_%i = %g, x^%i y^%i r^%i\n", i, pv1[i], xp[i], yp[i], rp[i]);
+	 //if (pv2[i] != 0.0)
+	 //printf("PV2_%i = %g, x^%i y^%i r^%i\n", i, pv2[i], yp[i], xp[i], rp[i]);
+	 px += pv1[i] * xpows[xp[i]] * ypows[yp[i]] * rpows[rp[i]];
+	 py += pv2[i] * ypows[xp[i]] * xpows[yp[i]] * rpows[rp[i]];
+	 //printf("i=%i, px=%g, py=%g\n", i, px, py);
+	 //printf("%i (%i,%i,%i): px=%g, py=%g\n", i, xp[i], yp[i], rp[i], px,py);
+	 }
+	 //printf("x,y (%g,%g), px,py (%g,%g)\n", x,y, px,py);
+	 // raw_to_pv: in (-0.0154408,-0.00816145), out (-0.0154607,-0.00827274)
+	 tan_iwc2pixelxy(&tanwcs, px, py, &dpx, &dpy);
+	 printf("distorted pixels: (%g,%g)\n", dpx, dpy);
+	 }*/
 
 	xorig = malloc(Nxy * sizeof(double));
 	yorig = malloc(Nxy * sizeof(double));
@@ -273,17 +274,13 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 		tweak_push_image_xy(t, &sxy);
 		tweak_push_correspondence_indices(t, imgi, refi, NULL, NULL);
 		tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
-
+		if (imageW)
+			t->sip->wcstan.imagew = imageW;
+		if (imageH)
+			t->sip->wcstan.imageh = imageH;
 		sip_write_to_file(t->sip, wcsoutfn);
-
 		tweak_free(t);
 	}
-
-	/*
-	 tan_iwc2xyzarr(&tanwcs, px, py, xyz);
-	 xyzarr2radecdeg(xyz, &ra, &dec);
-	 */
-
 	rtn = 0;
 
  bailout:
@@ -438,7 +435,7 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 #include "boilerplate.h"
 #include "bl.h"
 
-const char* OPTIONS = "hve:sx:X:y:Y:a:b:";
+const char* OPTIONS = "hve:sx:X:y:Y:a:b:W:H:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -446,6 +443,9 @@ void print_help(char* progname) {
 		   "   [-e <extension>] FITS HDU number to read WCS from (default 0 = primary)\n"
 		   "   [-s]: treat input as Scamp .head file\n"
 		   "   [-v]: +verboseness\n"
+		   " Set the IMAGEW, IMAGEH in the output file:\n"
+		   "   [-W <int>]\n"
+		   "   [-H <int>]\n"
 		   " Set the pixel values used to compute the distortion polynomials with:\n"
 		   "   [-x <x-low>] (default: 1)\n"
 		   "   [-y <y-low>] (default: 1)\n"
@@ -480,9 +480,18 @@ int main(int argc, char** args) {
 	double x,y;
 	double* xy;
 	int Nxy;
+	int W, H;
+
+	W = H = 0;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'W':
+			W = atoi(optarg);
+			break;
+		case 'H':
+			H = atoi(optarg);
+			break;
 		case 'x':
 			xlo = atof(optarg);
 			break;
@@ -556,7 +565,7 @@ int main(int argc, char** args) {
 	xy = dl_to_array(xylst);
 	dl_free(xylst);
 
-	if (wcs_pv2sip(wcsinfn, ext, wcsoutfn, scamp, xy, Nxy)) {
+	if (wcs_pv2sip(wcsinfn, ext, wcsoutfn, scamp, xy, Nxy, W, H)) {
 		exit(-1);
 	}
 
