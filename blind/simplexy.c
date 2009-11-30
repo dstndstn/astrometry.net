@@ -187,7 +187,6 @@ int simplexy_run(simplexy_t* s) {
 	int i;
     int nx = s->nx;
     int ny = s->ny;
-	float smoothsigma;
     float limit;
 	uint8_t* mask;
 	// background-subtracted image.
@@ -197,6 +196,7 @@ int simplexy_run(simplexy_t* s) {
 	float* smoothed = NULL;
 	// Connected-components image.
 	int* ccimg = NULL;
+	int nblobs;
  
     /* Exactly one of s->image and s->image_u8 should be non-NULL.*/
     assert(s->image || s->image_u8);
@@ -284,12 +284,26 @@ int simplexy_run(simplexy_t* s) {
 		write_fits_float_image(smoothed, nx, ny, s->smoothimgfn);
 	}
 
-	/* measure the noise level in the psf-smoothed image. */
-	dsigma(smoothed, nx, ny, (int)(10*s->dpsf), 0, &smoothsigma);
-	logverb("simplexy: noise in smoothed image: %g\n", smoothsigma);
+	// estimate the noise in the image (sigma)
+	if (s->sigma == 0.0) {
+		logverb("simplexy: measuring image noise (sigma)...\n");
+		if (s->image_u8)
+			dsigma_u8(s->image_u8, nx, ny, 5, 0, &(s->sigma));
+		else
+			dsigma(s->image, nx, ny, 5, 0, &(s->sigma));
+		logverb("simplexy: found sigma=%g.\n", s->sigma);
+	} else {
+		logverb("simplexy: assuming sigma=%g.\n", s->sigma);
+	}
 
+	/* The noise in the psf-smoothed image is (approximately) 
+	 *    sigma / (2 * sqrt(pi) * dpsf)
+	 * This ignores the pixelization, replacing the sum by integral.
+	 *    The difference is only significant for small sigma, which
+	 *    would mean your image is undersampled anyway.
+	 */
     logverb("simplexy: finding objects...\n");
-	limit = smoothsigma * s->plim;
+	limit = (s->sigma / (2.0 * sqrt(M_PI) * s->dpsf)) * s->plim;
 
 	/* find pixels above the noise level, and flag a box of pixels around each one. */
 	mask = malloc(nx*ny);
@@ -319,16 +333,36 @@ int simplexy_run(simplexy_t* s) {
 
 	/* find connected-components in the mask image. */
 	ccimg = malloc(nx * ny * sizeof(int));
-	dfind2_u8(mask, nx, ny, ccimg);
+	dfind2_u8(mask, nx, ny, ccimg, &nblobs);
 	FREEVEC(mask);
+	logverb("simplexy: found %i blobs\n", nblobs);
 
-	// estimate the noise in the image (sigma)
-	logverb("simplexy: measuring image noise (sigma)...\n");
-	if (s->image_u8)
-		dsigma_u8(s->image_u8, nx, ny, 5, 0, &(s->sigma));
-	else
-		dsigma(s->image, nx, ny, 5, 0, &(s->sigma));
-	logverb("simplexy: found sigma=%g.\n", s->sigma);
+	if (s->blobimgfn) {
+		int j;
+		uint8_t* blobimg = malloc(nx * ny);
+		logverb("Writing blob image \"%s\"\n", s->blobimgfn);
+		memset(blobimg, 0, sizeof(uint8_t) * nx*ny);
+		for (j=0; j<ny; j++) {
+			for (i=0; i<nx; i++) {
+				bool edge = FALSE;
+				int ii = j * nx + i;
+				if (i > 0 && (ccimg[ii] != ccimg[ii - 1]))
+					edge = TRUE;
+				if (i < (nx-1) && (ccimg[ii] != ccimg[ii + 1]))
+					edge = TRUE;
+				if (j > 0 && (ccimg[ii] != ccimg[ii - nx]))
+					edge = TRUE;
+				if (j < (ny-1) && (ccimg[ii] != ccimg[ii + nx]))
+					edge = TRUE;
+				if (edge)
+					blobimg[ii] = 255;
+				else if (ccimg[ii] != -1)
+					blobimg[ii] = 127;
+			}
+		}
+		write_fits_u8_image(blobimg, nx, ny, s->blobimgfn);
+		free(blobimg);
+	}
 
     s->x = malloc(s->maxnpeaks * sizeof(float));
     s->y = malloc(s->maxnpeaks * sizeof(float));

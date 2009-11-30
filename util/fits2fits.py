@@ -2,6 +2,7 @@
 import os
 import sys
 import re
+import logging
 
 if __name__ == '__main__':
 	# According to the python sys.path documentation, the directory containing
@@ -46,8 +47,7 @@ def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 			# new keyword:
 			knew = pat.sub('_', k)
 			if k != knew:
-				if verbose:
-					print 'Replacing illegal keyword ', k, ' by ', knew
+				logging.debug('Replacing illegal keyword %s by %s' % (k, knew))
 				# add the new header card
 				hdr.update(knew, cards[k].value, cards[k].comment, after=k)
 				# remove the old one.
@@ -79,15 +79,21 @@ def main():
 					  action='store_true', dest='fix_idr',
 					  help='fix SDSS idR files')
 	(options, args) = parser.parse_args()
-	#verbose = options.verbose
 
 	if len(args) != 2:
 		print 'Usage: fits2fits.py [--verbose] input.fits output.fits'
 		return -1
 
+	logformat = '%(message)s'
+	if options.verbose:
+		logging.basicConfig(level=logging.DEBUG, format=logformat)
+	else:
+		logging.basicConfig(level=logging.INFO, format=logformat)
+	logging.raiseExceptions = False
+
 	infn = args[0]
 	outfn = args[1]
-	errmsg = fits2fits(infn, outfn, verbose=options.verbose, fix_idr=options.fix_idr)
+	errmsg = fits2fits(infn, outfn, fix_idr=options.fix_idr)
 	if errmsg is not None:
 		print 'fits2fits.py failed:', errmsg
 		return -1

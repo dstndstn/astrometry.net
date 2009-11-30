@@ -195,7 +195,7 @@ bl* get_chunks(startree_t* s, il* wordsizes) {
     return chunks;
 }
 
-startree_t* startree_open(char* fn) {
+startree_t* startree_open(const char* fn) {
     struct timeval tv1, tv2;
 	startree_t* s;
     bl* chunks;
@@ -406,7 +406,7 @@ startree_t* startree_new() {
 	return s;
 }
 
-static int write_to_file(startree_t* s, char* fn, bool flipped) {
+static int write_to_file(startree_t* s, const char* fn, bool flipped) {
     bl* chunks;
     il* wordsizes = NULL;
     int i;
@@ -451,11 +451,11 @@ static int write_to_file(startree_t* s, char* fn, bool flipped) {
 }
 
 
-int startree_write_to_file(startree_t* s, char* fn) {
+int startree_write_to_file(startree_t* s, const char* fn) {
     return write_to_file(s, fn, FALSE);
 }
 
-int startree_write_to_file_flipped(startree_t* s, char* fn) {
+int startree_write_to_file_flipped(startree_t* s, const char* fn) {
     return write_to_file(s, fn, TRUE);
 }
 

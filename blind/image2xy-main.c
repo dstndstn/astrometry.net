@@ -31,7 +31,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hi:Oo:8Hd:D:ve:B:S:M:s:p:P:bU:";
+static const char* OPTIONS = "hi:Oo:8Hd:D:ve:B:S:M:s:p:P:bU:g:C:m:";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -42,21 +42,25 @@ static void printHelp() {
 			"\n"
             "   [-e <extension>]: read from a single FITS extension\n"
 			"   [-O]  overwrite existing output file.\n"
+			"   [-o <output-filename>]  write XYlist to given filename.\n"
             "   [-8]  don't use optimization for byte (u8) images.\n"
             "   [-H]  downsample by a factor of 2 before running simplexy.\n"
             "   [-d <downsample-factor>]  downsample by an integer factor before running simplexy.\n"
             "   [-D <downsample-factor>] downsample, if necessary, by this many factors of two.\n"
-			"   [-o <output-filename>]  write XYlist to given filename.\n"
-            "   [-v] verbose - repeat for more and more verboseness\n"
 			"   [-s <median-filtering scale>]: set median-filter box size (default 100 pixels)\n"
+			"   [-g <sigma>]: set image noise level\n"
 			"   [-p <sigmas>]: set significance level of peaks (default 8 sigmas)\n"
 			"   [-P <image plane>]: pull out a single plane of a multi-color image (default: first plane)\n"
 			"   [-b]: don't do background subtraction\n"
+			"   [-m]: set maximum extended object size for deblending (default 1000 pixels)\n"
 			"\n"
 			"   [-S <background-subtracted image>]: save background-subtracted image to this filename (FITS float image)\n"
 			"   [-B <background image>]: save background image to filename\n"
 			"   [-U <smoothed background-subtracted image>]: save smoothed background-subtracted image to filename\n"
 			"   [-M <mask image>]: save mask image to filename\n"
+			"   [-C <blob-image>]: save connected-components image to filename\n"
+			"\n"
+            "   [-v] verbose - repeat for more and more verboseness\n"
 			"\n"
 			"   image2xy 'file.fits[1]'   - process first extension.\n"
 			"   image2xy 'file.fits[2]'   - process second extension \n"
@@ -86,6 +90,12 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'm':
+			params->maxsize = atoi(optarg);
+			break;
+		case 'g':
+			params->sigma = atof(optarg);
+			break;
 		case 'b':
 			params->nobgsub = TRUE;
 			break;
@@ -109,6 +119,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'U':
 			params->smoothimgfn = optarg;
+			break;
+		case 'C':
+			params->blobimgfn = optarg;
 			break;
         case 'e':
             extension = atoi(optarg);

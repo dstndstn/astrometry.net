@@ -54,7 +54,7 @@ int codetree_get_permuted(codetree* s, int index) {
 	else return index;
 }
 
-codetree* codetree_open(char* fn) {
+codetree* codetree_open(const char* fn) {
 	codetree* s;
     kdtree_fits_t* io;
     char* treename = CODETREE_NAME;
@@ -138,10 +138,10 @@ codetree* codetree_new() {
 	return s;
 }
 
-int codetree_write_to_file(codetree* s, char* fn) {
+int codetree_write_to_file(codetree* s, const char* fn) {
 	return kdtree_fits_write(s->tree, fn, s->header);
 }
 
-int codetree_write_to_file_flipped(codetree* s, char* fn) {
+int codetree_write_to_file_flipped(codetree* s, const char* fn) {
 	return kdtree_fits_write_flipped(s->tree, fn, s->header);
 }

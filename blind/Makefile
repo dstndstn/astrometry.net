@@ -184,7 +184,7 @@ solver_test.o: solver.c
 # Add the basename of your test sources here...
 ALL_TEST_FILES = test_dfind test_ctmf test_dsmooth test_2mass \
 	test_usnob test_nomad test_matchfile test_blindutils \
-	test_dcen3x3 test_resort-xylist
+	test_dcen3x3 test_resort-xylist test_simplexy
 
 ALL_TEST_EXTRA_OBJS :=
 ALL_TEST_LIBS :=
@@ -219,6 +219,9 @@ ALL_TEST_EXTRA_OBJS += blindutils.o
 
 test_dcen3x3: dcen3x3.o
 ALL_TEST_EXTRA_OBJS += dcen3x3.o
+
+test_simplexy: $(SIMPLEXY_OBJ) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_TEST_EXTRA_OBJS += $(SIMPLEXY_OBJ)
 
 test_resort-xylist: resort-xylist.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_TEST_EXTRA_OBJS += resort-xylist.o
@@ -275,13 +278,17 @@ ALL_OBJ += fits-guess-scale-main.o
 get-wcs: get-wcs.o \
 		$(ANUTILS_LIB) $(QFITS_LIB)
 
-wcs-xy2rd: wcs-xy2rd.o $(UTIL_OBJS) \
+wcs-xy2rd: wcs-xy2rd-main.o wcs-xy2rd.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += wcs-xy2rd-main.o
 
 wcs-rd2xy: wcs-rd2xy-main.o wcs-rd2xy.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-
 ALL_OBJ += wcs-rd2xy-main.o
+
+wcs-pv2sip: wcs-pv2sip.o tweak.o \
+		$(ANLIBS) $(GSL_LIB)
+ALL_OBJ += wcs-pv2sip.o
 
 noisesim: noisesim.o noise.o $(ANUTILS_LIB)
 
@@ -330,23 +337,31 @@ cut-an: cut-an.o catalog.o usnob.o \
 startree: startree.o catalog.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-hpquads: hpquads.o quad-utils.o codefile.o pnpoly.o histogram.o \
+hpquads: hpquads.o quad-builder.o quad-utils.o codefile.o pnpoly.o histogram.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-allquads: allquads.o quad-utils.o codefile.o \
+allquads: allquads-main.o allquads.o quad-builder.o quad-utils.o codefile.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 codetree: codetree.o codefile.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-unpermute-stars: unpermute-stars.o \
+unpermute-stars: unpermute-stars-main.o unpermute-stars.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += unpermute-stars-main.o
 
-unpermute-quads: unpermute-quads.o \
+unpermute-quads: unpermute-quads-main.o unpermute-quads.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += unpermute-quads-main.o
 
-merge-index: merge-index.o \
+merge-index: merge-index-main.o merge-index.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += merge-index-main.o
+
+local-index: local-index.o merge-index.o unpermute-quads.o unpermute-stars.o \
+		allquads.o quad-builder.o quad-utils.o codefile.o wcs-xy2rd.o \
+		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += local-index.o
 
 index-to-table: index-to-table.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)

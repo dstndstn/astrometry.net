@@ -39,301 +39,244 @@
 #include "errors.h"
 #include "log.h"
 #include "quad-utils.h"
+#include "quad-builder.h"
+#include "allquads.h"
 
-#define OPTIONS "hi:c:q:u:l:d:I:v"
-
-static void print_help(char* progname) {
-	boilerplate_help_header(stdout);
-	printf("\nUsage: %s\n"
-	       "      -i <input-filename>    (star kdtree (skdt.fits) input file)\n"
-		   "      -c <codes-output-filename>    (codes file (code.fits) output file)\n"
-           "      -q <quads-output-filename>    (quads file (quad.fits) output file)\n"
-	       "     [-u <scale>]    upper bound of quad scale (arcmin)\n"
-	       "     [-l <scale>]    lower bound of quad scale (arcmin)\n"
-		   "     [-d <dimquads>] number of stars in a \"quad\".\n"
-		   "     [-I <unique-id>] set the unique ID of this index\n\n"
-		   "\nReads skdt, writes {code, quad}.\n\n"
-	       , progname);
+allquads_t* allquads_init() {
+	allquads_t* aq = calloc(1, sizeof(allquads_t));
+	aq->dimquads = 4;
+	return aq;
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
+void allquads_free(allquads_t* aq) {
+	free(aq);
+}
 
+static void add_quad(quadbuilder_t* qb, unsigned int* quad, void* token) {
+	allquads_t* aq = token;
+	if (log_get_level() > LOG_VERB) {
+		int k;
+		debug("quad: ");
+		for (k=0; k<qb->dimquads; k++)
+			debug("%-6i ", quad[k]);
+		logverb("\n");
+	}
+	quad_write_const(aq->codes, aq->quads, quad, aq->starkd, qb->dimquads, aq->dimcodes);
+}
 
-static void add_interior_stars(unsigned int* quad, int starnum, int firstindex,
-							   il* starsC, int dimquads, int dimcodes,
-							   startree_t* starkd, codefile* codes, quadfile* quads) {
-	int i;
-	for (i=firstindex; i<il_size(starsC); i++) {
-		quad[starnum] = il_get(starsC, i);
-		// Did we just add the last star?
-		if (starnum == dimquads-1) {
-			if (log_get_level() >= LOG_VERB) {
-				int k;
-				logverb("  quad: ");
-				for (k=0; k<dimquads; k++)
-					logverb("%-6i ", quad[k]);
-				logverb("\n");
+static bool check_AB(quadbuilder_t* qb, pquad_t* pq, void* token) {
+	allquads_t* aq = token;
+	debug("check_AB: iA=%i, iB=%i, aq->starA=%i\n", pq->iA, pq->iB, aq->starA);
+	return (pq->iA == aq->starA);
+}
+
+/*
+ #include "codefile.h"
+ static bool check_full_quad(quadbuilder_t* qb, unsigned int* quad, int nstars, void* token) {
+ allquads_t* aq = token;
+ double code[4];
+ double xyz[12];
+ double R1, R2;
+ startree_get(aq->starkd, quad[0], xyz+0);
+ startree_get(aq->starkd, quad[1], xyz+3);
+ startree_get(aq->starkd, quad[2], xyz+6);
+ startree_get(aq->starkd, quad[3], xyz+9);
+ codefile_compute_star_code(xyz, code, 4);
+ logmsg("Code: %g, %g, %g, %g\n", code[0], code[1], code[2], code[3]);
+ R1 = hypot(code[0] - 0.5, code[1] - 0.5);
+ R2 = hypot(code[2] - 0.5, code[3] - 0.5);
+ logmsg("Radii %g, %g\n", R1, R2);
+ return TRUE;
+ }
+ */
+
+int allquads_create_quads(allquads_t* aq) {
+	quadbuilder_t* qb;
+	int i, N;
+	double* xyz;
+
+	qb = quadbuilder_init();
+
+	qb->quadd2_high = aq->quad_d2_upper;
+	qb->quadd2_low  = aq->quad_d2_lower;
+	qb->check_scale_high = aq->use_d2_upper;
+	qb->check_scale_low  = aq->use_d2_lower;
+
+	qb->dimquads = aq->dimquads;
+	qb->add_quad = add_quad;
+	qb->add_quad_token = aq;
+
+	N = startree_N(aq->starkd);
+
+	if (!qb->check_scale_high) {
+		int* inds;
+		inds = malloc(N * sizeof(int));
+		for (i=0; i<N; i++)
+			inds[i] = i;
+		xyz = malloc(3 * N * sizeof(double));
+		kdtree_copy_data_double(aq->starkd->tree, 0, N, xyz);
+
+		qb->starxyz = xyz;
+		qb->starinds = inds;
+		qb->Nstars = N;
+
+		quadbuilder_create(qb);
+
+		free(xyz);
+		free(inds);
+	} else {
+		int nq;
+		int lastgrass = 0;
+
+		/*
+		 xyz = malloc(3 * N * sizeof(double));
+		 kdtree_copy_data_double(aq->starkd->tree, 0, N, xyz);
+		 */
+
+		// star A = i
+		nq = aq->quads->numquads;
+		for (i=0; i<N; i++) {
+			double xyzA[3];
+			int* inds;
+			int NR;
+
+			int grass = (i*80 / N);
+			if (grass != lastgrass) {
+				printf(".");
+				fflush(stdout);
+				lastgrass = grass;
 			}
-			quad_write_const(codes, quads, quad, starkd, dimquads, dimcodes);
-		} else {
-			// Recurse.
-			add_interior_stars(quad, starnum+1, i+1, starsC, dimquads,
-							   dimcodes, starkd, codes, quads);
+
+			startree_get(aq->starkd, i, xyzA);
+
+			startree_search_for(aq->starkd, xyzA, aq->quad_d2_upper,
+								&xyz, NULL, &inds, &NR);
+
+			/*
+			 startree_search_for(aq->starkd, xyzA, aq->quad_d2_upper,
+			 NULL, NULL, &inds, &NR);
+			 */
+
+			logverb("Star %i of %i: found %i stars in range\n", i+1, N, NR);
+			aq->starA = i;
+			qb->starxyz = xyz;
+			qb->starinds = inds;
+			qb->Nstars = NR;
+			qb->check_AB_stars = check_AB;
+			qb->check_AB_stars_token = aq;
+			//qb->check_full_quad = check_full_quad;
+			//qb->check_full_quad_token = aq;
+
+			quadbuilder_create(qb);
+
+			logverb("Star %i of %i: wrote %i quads for this star, total %i so far.\n", i+1, N, aq->quads->numquads - nq, aq->quads->numquads);
+			free(inds);
+			free(xyz);
 		}
+		//
+		//free(xyz);
+
+		printf("\n");
 	}
+
+	quadbuilder_free(qb);
+	return 0;
 }
 
+int allquads_close(allquads_t* aq) {
+	startree_close(aq->starkd);
 
-static void build_all_quads(int starA, int starB, il* starsC,
-							startree_t* starkd, int dimquads, int dimcodes,
-							codefile* codes, quadfile* quads) {
-	unsigned int quad[DQMAX];
-	quad[0] = starA;
-	quad[1] = starB;
-	add_interior_stars(quad, 2, 0, starsC, dimquads, dimcodes, starkd, codes, quads);
+	// fix output file headers.
+	if (quadfile_fix_header(aq->quads) ||
+		quadfile_close(aq->quads)) {
+		ERROR("Couldn't write quad output file");
+		return -1;
+	}
+	if (codefile_fix_header(aq->codes) ||
+		codefile_close(aq->codes)) {
+		ERROR("Couldn't write code output file");
+		return -1;
+	}
+	return 0;
 }
 
-int main(int argc, char** argv) {
-	int argchar;
-
-	startree_t* starkd;
-	quadfile* quads;
-	codefile* codes;
-
-	double quad_dist2_upper = HUGE_VAL;
-	double quad_dist2_lower = 0.0;
-
-	char *quadfn = NULL;
-	char *codefn = NULL;
-	char *skdtfn = NULL;
-
-	qfits_header* qhdr;
-	qfits_header* chdr;
-
-	int dimquads = 4;
-	int dimcodes;
-	int loglvl = LOG_MSG;
-
-	int id = 0;
-	int i, j, k, N;
-	int lastgrass = 0;
+int allquads_open_outputs(allquads_t* aq) {
 	int hp, hpnside;
+	qfits_header* hdr;
 
-	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
-		switch (argchar) {
-		case 'v':
-			loglvl++;
-			break;
-		case 'd':
-			dimquads = atoi(optarg);
-			break;
-		case 'I':
-			id = atoi(optarg);
-			break;
-		case 'h':
-			print_help(argv[0]);
-			exit(0);
-		case 'i':
-            skdtfn = optarg;
-			break;
-		case 'c':
-            codefn = optarg;
-            break;
-        case 'q':
-            quadfn = optarg;
-            break;
-		case 'u':
-			quad_dist2_upper = arcmin2distsq(atof(optarg));
-			break;
-		case 'l':
-			quad_dist2_lower = arcmin2distsq(atof(optarg));
-			break;
-		default:
-			return -1;
-		}
+	printf("Reading star kdtree %s ...\n", aq->skdtfn);
+	aq->starkd = startree_open(aq->skdtfn);
+	if (!aq->starkd) {
+		ERROR("Failed to open star kdtree %s\n", aq->skdtfn);
+		return -1;
+	}
+	printf("Star tree contains %i objects.\n", startree_N(aq->starkd));
 
-	log_init(loglvl);
-
-	if (!skdtfn || !codefn || !quadfn) {
-		printf("Specify in & out filenames, bonehead!\n");
-		print_help(argv[0]);
-		exit( -1);
+	printf("Will write to quad file %s and code file %s\n", aq->quadfn, aq->codefn);
+    aq->quads = quadfile_open_for_writing(aq->quadfn);
+	if (!aq->quads) {
+		ERROR("Couldn't open file %s to write quads.\n", aq->quadfn);
+		return -1;
+	}
+    aq->codes = codefile_open_for_writing(aq->codefn);
+	if (!aq->codes) {
+		ERROR("Couldn't open file %s to write codes.\n", aq->quadfn);
+		return -1;
 	}
 
-    if (optind != argc) {
-        print_help(argv[0]);
-        printf("\nExtra command-line args were given: ");
-        for (i=optind; i<argc; i++) {
-            printf("%s ", argv[i]);
-        }
-        printf("\n");
-        exit(-1);
-    }
+	aq->quads->dimquads = aq->dimquads;
+	aq->codes->dimcodes = aq->dimcodes;
 
-	if (!id)
-		logmsg("Warning: you should set the unique-id for this index (-i).\n");
-
-	if (dimquads > DQMAX) {
-		ERROR("Quad dimension %i exceeds compiled-in max %i.\n", dimquads, DQMAX);
-		exit(-1);
-	}
-	dimcodes = dimquad2dimcode(dimquads);
-
-	printf("Reading star kdtree %s ...\n", skdtfn);
-	starkd = startree_open(skdtfn);
-	if (!starkd) {
-		ERROR("Failed to open star kdtree %s\n", skdtfn);
-		exit( -1);
-	}
-	printf("Star tree contains %i objects.\n", startree_N(starkd));
-
-	printf("Will write to quad file %s and code file %s\n", quadfn, codefn);
-    quads = quadfile_open_for_writing(quadfn);
-	if (!quads) {
-		ERROR("Couldn't open file %s to write quads.\n", quadfn);
-		exit(-1);
-	}
-    codes = codefile_open_for_writing(codefn);
-	if (!codes) {
-		ERROR("Couldn't open file %s to write codes.\n", quadfn);
-		exit(-1);
-	}
-
-	quads->dimquads = dimquads;
-	codes->dimcodes = dimcodes;
-
-	if (id) {
-		quads->indexid = id;
-		codes->indexid = id;
+	if (aq->id) {
+		aq->quads->indexid = aq->id;
+		aq->codes->indexid = aq->id;
 	}
 
 	// get the "HEALPIX" header from the skdt and put it in the code and quad headers.
-	hp = qfits_header_getint(startree_header(starkd), "HEALPIX", -1);
+	hp = qfits_header_getint(startree_header(aq->starkd), "HEALPIX", -1);
 	if (hp == -1) {
 		logmsg("Warning: skdt does not contain \"HEALPIX\" header.  Code and quad files will not contain this header either.\n");
 	}
-	quads->healpix = hp;
-	codes->healpix = hp;
+	aq->quads->healpix = hp;
+	aq->codes->healpix = hp;
     // likewise "HPNSIDE"
-	hpnside = qfits_header_getint(startree_header(starkd), "HPNSIDE", 1);
-	quads->hpnside = hpnside;
-	codes->hpnside = hpnside;
+	hpnside = qfits_header_getint(startree_header(aq->starkd), "HPNSIDE", 1);
+	aq->quads->hpnside = hpnside;
+	aq->codes->hpnside = hpnside;
 
-	qhdr = quadfile_get_header(quads);
-	chdr = codefile_get_header(codes);
+	hdr = quadfile_get_header(aq->quads);
+	qfits_header_add(hdr, "CXDX", "T", "All codes have the property cx<=dx.", NULL);
+	qfits_header_add(hdr, "CXDXLT1", "T", "All codes have the property cx+dx<=1.", NULL);
+	qfits_header_add(hdr, "MIDHALF", "T", "All codes have the property cx+dx<=1.", NULL);
+	qfits_header_add(hdr, "CIRCLE", "T", "Codes live in the circle, not the box.", NULL);
 
-	qfits_header_add(qhdr, "CXDX", "T", "All codes have the property cx<=dx.", NULL);
-	qfits_header_add(qhdr, "CXDXLT1", "T", "All codes have the property cx+dx<=1.", NULL);
-	qfits_header_add(qhdr, "MIDHALF", "T", "All codes have the property cx+dx<=1.", NULL);
-	qfits_header_add(qhdr, "CIRCLE", "T", "Codes live in the circle, not the box.", NULL);
+	hdr = codefile_get_header(aq->codes);
+	qfits_header_add(hdr, "CXDX", "T", "All codes have the property cx<=dx.", NULL);
+	qfits_header_add(hdr, "CXDXLT1", "T", "All codes have the property cx+dx<=1.", NULL);
+	qfits_header_add(hdr, "MIDHALF", "T", "All codes have the property cx+dx<=1.", NULL);
+	qfits_header_add(hdr, "CIRCLE", "T", "Codes live in the circle, not the box.", NULL);
 
-	qfits_header_add(chdr, "CXDX", "T", "All codes have the property cx<=dx.", NULL);
-	qfits_header_add(chdr, "CXDXLT1", "T", "All codes have the property cx+dx<=1.", NULL);
-	qfits_header_add(chdr, "MIDHALF", "T", "All codes have the property cx+dx<=1.", NULL);
-	qfits_header_add(chdr, "CIRCLE", "T", "Codes live in the circle, not the box.", NULL);
-
-    if (quadfile_write_header(quads)) {
-        ERROR("Couldn't write headers to quads file %s\n", quadfn);
-        exit(-1);
+    if (quadfile_write_header(aq->quads)) {
+        ERROR("Couldn't write headers to quads file %s\n", aq->quadfn);
+		return -1;
     }
-    if (codefile_write_header(codes)) {
-        ERROR("Couldn't write headers to code file %s\n", codefn);
-        exit(-1);
+    if (codefile_write_header(aq->codes)) {
+        ERROR("Couldn't write headers to code file %s\n", aq->codefn);
+		return -1;
     }
 
-    codes->numstars = startree_N(starkd);
-    codes->index_scale_upper = distsq2rad(quad_dist2_upper);
-    codes->index_scale_lower = distsq2rad(quad_dist2_lower);
+	if (!aq->use_d2_lower)
+		aq->quad_d2_lower = 0.0;
+	if (!aq->use_d2_upper)
+		aq->quad_d2_upper = 10.0;
 
-	quads->numstars = codes->numstars;
-    quads->index_scale_upper = codes->index_scale_upper;
-    quads->index_scale_lower = codes->index_scale_lower;
+    aq->codes->numstars = startree_N(aq->starkd);
+    aq->codes->index_scale_upper = distsq2rad(aq->quad_d2_upper);
+    aq->codes->index_scale_lower = distsq2rad(aq->quad_d2_lower);
 
-
-	N = startree_N(starkd);
-	// star A = i
-	for (i=0; i<N; i++) {
-		double xyzA[3];
-		int* inds;
-		int NR;
-		int nq;
-
-		int grass = (i*80 / N);
-		if (grass != lastgrass) {
-			printf(".");
-			fflush(stdout);
-			lastgrass = grass;
-		}
-
-		startree_get(starkd, i, xyzA);
-		startree_search_for(starkd, xyzA, quad_dist2_upper,
-							NULL, NULL, &inds, &NR);
-
-		nq = quads->numquads;
-
-		// star B = inds[j]
-		for (j=0; j<NR; j++) {
-			double xyzB[3];
-			double mid[3];
-			double qr2;
-			il* indsC;
-
-			if (inds[j] <= i)
-				continue;
-
-			startree_get(starkd, inds[j], xyzB);
-			qr2 = distsq(xyzA, xyzB, 3);
-			if (qr2 < quad_dist2_lower)
-				continue;
-			assert(qr2 < quad_dist2_upper);
-
-			// quad center
-			star_midpoint(mid, xyzA, xyzB);
-			// quad diameter -> radius
-			qr2 /= 4;
-
-			indsC = il_new(32);
-			// stars C = inds[k]: subset of inds that are inside the quad circle.
-			for (k=0; k<NR; k++) {
-				double xyzC[3];
-				double d2;
-				if (k == j)
-					continue;
-				if (inds[k] == i)
-					continue;
-				startree_get(starkd, inds[k], xyzC);
-				d2 = distsq(mid, xyzC, 3);
-				if (d2 > qr2)
-					continue;
-				il_append(indsC, inds[k]);
-			}
-
-			build_all_quads(i, inds[j], indsC, starkd, dimquads, dimcodes,
-							codes, quads);
-
-			il_free(indsC);
-		}
-
-		logverb("Star %i of %i: wrote %i quads for this star, total %i so far.\n",
-				i+1, N, quads->numquads - nq, quads->numquads);
-	}
-
-	startree_close(starkd);
-
-	// fix output file headers.
-	if (quadfile_fix_header(quads) ||
-		quadfile_close(quads)) {
-		ERROR("Couldn't write quad output file: %s\n", strerror(errno));
-		exit( -1);
-	}
-	if (codefile_fix_header(codes) ||
-		codefile_close(codes)) {
-		ERROR("Couldn't write code output file: %s\n", strerror(errno));
-		exit( -1);
-	}
-
-	printf("Done.\n");
+	aq->quads->numstars = aq->codes->numstars;
+    aq->quads->index_scale_upper = aq->codes->index_scale_upper;
+    aq->quads->index_scale_lower = aq->codes->index_scale_lower;
 	return 0;
 }
 

@@ -82,12 +82,11 @@ def get_cmd(types, cmds):
 			break
 	return (ext,cmd)
 
-def uncompress_file(infile, uncompressed, typeinfo=None, quiet=True):
+def uncompress_file(infile, uncompressed, typeinfo=None):
 	"""
 	infile: input filename.
 	uncompressed: output filename.
 	typeinfo: output from the 'file' command; if None we'll run 'file'.
-	quiet: don't print any informational messages.
 
 	Returns: comptype
 	comptype: None if the file wasn't compressed, or 'gz' or 'bz2'.
@@ -145,7 +144,7 @@ def find_program(mydir, cmd):
 
 def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 			  no_fits2fits=False, extension=None, mydir=None,
-			  quiet=False, fix_sdss=False):
+			  fix_sdss=False):
 	"""
 	infile: input filename.
 	outfile: output filename.
@@ -190,7 +189,7 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 			tempfiles.append(sanitized)
 		else:
 			assert sanitized != infile
-		errstr = fits2fits(infile, sanitized, verbose=not quiet, fix_idr=fix_sdss)
+		errstr = fits2fits(infile, sanitized, fix_idr=fix_sdss)
 		if errstr:
 			return (None, errstr)
 		infile = sanitized
@@ -213,9 +212,6 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 		if cmd is None:
 			return (None, 'Couldn\'t find the program "an-fitstopnm".')
 
-	#if quiet:
-	#	cmd += ' 2>/dev/null'
-
 	# Do the actual conversion
 	do_command(cmd % (shell_escape(infile), shell_escape(outfile)))
 
@@ -234,25 +230,26 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 	return (ext, None)
 	
 
-def convert_image(infile, outfile, uncompressed, sanitized,
-				  force_ppm, no_fits2fits, extension, mydir, quiet, fix_sdss=False):
+def convert_image(infile, outfile, uncompressed=None, sanitized=None,
+				  force_ppm=False, no_fits2fits=False, extension=None,
+				  mydir=None, fix_sdss=False):
 	tempfiles = []
 	# if the caller didn't specify where to put the uncompressed file,
 	# create a tempfile.
-	if not uncompressed:
+	if uncompressed is None:
 		(outfile_dir, outfile_file) = os.path.split(outfile)
 		(f, uncompressed) = tempfile.mkstemp('', 'uncomp', outfile_dir)
 		os.close(f)
 		tempfiles.append(uncompressed)
 
-	comp = uncompress_file(infile, uncompressed, quiet=quiet)
+	comp = uncompress_file(infile, uncompressed)
 						   
 	if comp:
 		print 'compressed'
 		print comp
 		infile = uncompressed
 
-	(imgtype, errstr) = image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits, extension, mydir, quiet, fix_sdss)
+	(imgtype, errstr) = image2pnm(infile, outfile, sanitized, force_ppm, no_fits2fits, extension, mydir, fix_sdss)
 
 	for fn in tempfiles:
 		os.unlink(fn)
@@ -292,9 +289,6 @@ def main():
 	parser.add_option('-S', '--fix-sdss',
 					  action='store_true', dest='fix_sdss',
 					  help="fix SDSS idR files")
-	parser.add_option('-q', '--quiet',
-					  action='store_true', dest='quiet',
-					  help='only print errors')
 	parser.add_option('-v', '--verbose',
 					  action='store_true', dest='verbose',
 					  help='be chatty')
@@ -316,9 +310,9 @@ def main():
 
 	logformat = '%(message)s'
 	if verbose:
-		logging.basicConfig(level=logging.INFO, format=logformat)
-	else:
 		logging.basicConfig(level=logging.DEBUG, format=logformat)
+	else:
+		logging.basicConfig(level=logging.INFO, format=logformat)
 	logging.raiseExceptions = False
 		
 	return convert_image(options.infile, options.outfile,
@@ -327,7 +321,7 @@ def main():
 						 options.force_ppm,
 						 options.no_fits2fits,
 						 options.extension,
-						 mydir, options.quiet, fix_sdss=options.fix_sdss)
+						 mydir, fix_sdss=options.fix_sdss)
 
 if __name__ == '__main__':
 	sys.exit(main())

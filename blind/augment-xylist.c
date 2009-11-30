@@ -161,6 +161,8 @@ static an_option_t options[] = {
      "downsample the image by factor <int> before running source extraction"},
 	{']', "no-background-subtraction", no_argument, NULL,
 	 "don't try to estimate a smoothly-varying sky background during source extraction."},
+	{'{', "sigma", required_argument, "float",
+	 "set the noise level in the image"},
 	{'9', "no-remove-lines", no_argument, NULL,
 	 "don't remove horizontal and vertical overdensities of sources."},
 	{'0', "no-fix-sdss",    no_argument, NULL,
@@ -239,6 +241,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
     switch (argchar) {
+	case '{':
+		axy->image_sigma = atof(optarg);
+		break;
 	case '^':
 		axy->use_sextractor = TRUE;
 		break;
@@ -529,8 +534,8 @@ int augment_xylist(augment_xylist_t* axy,
         }
 
         append_executable(cmd, "image2pnm.py", me);
-        if (!verbose)
-            sl_append(cmd, "--quiet");
+        //if (!verbose)
+		//sl_append(cmd, "--quiet");
         if (axy->no_fits2fits)
             sl_append(cmd, "--no-fits2fits");
         else {
@@ -721,7 +726,9 @@ int augment_xylist(augment_xylist_t* axy,
 			}
 
 			memset(&sxyparams, 0, sizeof(simplexy_t));
+			// The other params get set to defaults for float or u8 images.
 			sxyparams.nobgsub = axy->no_bg_subtraction;
+			sxyparams.sigma = axy->image_sigma;
 
 			// MAGIC 3: downsample by a factor of 2, up to 3 times.
 			if (image2xy_files(fitsimgfn, xylsfn, TRUE, axy->downsample, 3, axy->extension,
@@ -1115,6 +1122,7 @@ int augment_xylist(augment_xylist_t* axy,
     if (!axy->no_delete_temp) {
         for (i=0; i<sl_size(tempfiles); i++) {
             char* fn = sl_get(tempfiles, i);
+			logverb("Deleting temp file %s\n", fn);
             if (unlink(fn)) {
                 SYSERROR("Failed to delete temp file \"%s\"", fn);
             }

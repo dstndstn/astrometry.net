@@ -55,3 +55,13 @@ void test_atodec(CuTest* tc) {
     CuAssertDblEquals(tc, -(1.0 + 1.0/60.0), atodec("-01:01:00.0"), 1e-6);
 }
 
+void test_xtodistsq(CuTest* tc) {
+	double distsq = 1e-4;
+	double x;
+
+	x = distsq2rad(distsq);
+	CuAssertDblEquals(tc, distsq, rad2distsq(x), 1e-8);
+
+	x = distsq2arcsec(distsq);
+	CuAssertDblEquals(tc, distsq, arcsec2distsq(x), 1e-8);
+}

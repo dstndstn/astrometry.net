@@ -25,10 +25,11 @@
 #include "errors.h"
 #include "log.h"
 
-int DFIND2(IMGTYPE* image,
+int DFIND2(const IMGTYPE* image,
            int nx,
            int ny,
-           int *object) {
+           int* object,
+		   int* pnobjects) {
 	int ix, iy, i;
 	int maxgroups = initial_max_groups;
 	label_t *equivs = malloc(sizeof(label_t) * maxgroups);
@@ -113,6 +114,8 @@ int DFIND2(IMGTYPE* image,
 	/* Re-label the groups before returning */
     maxlabel = relabel_image(on_pixels, maxlabel, equivs, object);
     //logverb("After final relabelling, %i labels were used.\n", maxlabel);
+	if (pnobjects)
+		*pnobjects = maxlabel;
 
 	free(equivs);
 	il_free(on_pixels);

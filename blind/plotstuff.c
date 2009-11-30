@@ -202,6 +202,7 @@ int plotstuff_init2(plot_args_t* pargs) {
 	}
 	pargs->cairo = cairo_create(pargs->target);
 
+	NR = sizeof(plotters) / sizeof(plotter_t);
 	for (i=0; i<NR; i++) {
 		if (plotters[i].init2 &&
 			plotters[i].init2(pargs, plotters[i].baton)) {

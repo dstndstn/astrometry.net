@@ -84,4 +84,3 @@ void test_dcen3x3_3(CuTest* tc) {
     printf("(%g,%g) -> (%g,%g)\n", XX, YY, xc, yc);
 }
 
-

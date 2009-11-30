@@ -34,8 +34,8 @@ int dfluxes(float *image, float *templates, float *weights, int nx, int ny,
 int dweights(float *image, float *invvar, int nx, int ny, int ntemplates,
              float *templates, int nonneg, float *weights);
 
-int dfind2(int *image, int nx, int ny, int *object);
-int dfind2_u8(unsigned char *image, int nx, int ny, int *object);
+int dfind2(const int* image, int nx, int ny, int* objectimg, int* p_nobjects);
+int dfind2_u8(const unsigned char* image, int nx, int ny, int* objectimg, int* p_nobjects);
 
 float dselip(unsigned long k, unsigned long n, const float *arr);
 void dselip_cleanup();

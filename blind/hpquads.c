@@ -45,6 +45,7 @@
 #include "log.h"
 #include "errors.h"
 #include "quad-utils.h"
+#include "quad-builder.h"
 
 static const char* OPTIONS = "hi:c:q:bn:u:l:d:p:r:L:RI:F:HEv";
 
@@ -81,11 +82,6 @@ extern int optind, opterr, optopt;
 static double quad_dist2_upper;
 static double quad_dist2_lower;
 
-struct quad {
-	unsigned int star[DQMAX];
-};
-typedef struct quad quad;
-
 static bl* quadlist;
 static bt* bigquadlist;
 
@@ -99,296 +95,26 @@ static unsigned char* nuses;
 static bool hists = FALSE;
 static bool firstpass;
 
-struct potential_quad {
-	double midAB[3];
-	double Ax, Ay;
-	double costheta, sintheta;
-	int iA, iB;
-	int staridA, staridB;
-	int* inbox;
-	int ninbox;
-	bool scale_ok;
-};
-typedef struct potential_quad pquad;
-
-
 static int compare_quads(const void* v1, const void* v2) {
-	const quad* q1 = v1;
-	const quad* q2 = v2;
+	const unsigned int* q1 = v1;
+	const unsigned int* q2 = v2;
 	int i;
 	// Hmm... I thought about having a static global "dimquads" here, but
 	// instead just ensured that are quad is always initialized to zero so that
 	// "star" values between dimquads and DQMAX are always equal.
 	for (i=0; i<DQMAX; i++) {
-		if (q1->star[i] > q2->star[i])
+		if (q1[i] > q2[i])
 			return 1;
-		if (q1->star[i] < q2->star[i])
+		if (q1[i] < q2[i])
 			return -1;
 	}
 	return 0;
 }
 
-static bool add_quad(quad* q) {
-	if (!firstpass) {
-		bool dup = bt_contains(bigquadlist, q, compare_quads);
-		if (dup) {
-			ndupquads++;
-			return FALSE;
-		}
-	}
-	bl_append(quadlist, q);
-	return TRUE;
-}
-
-static Inline void drop_quad(quad* q, int dimquads) {
+static Inline void drop_quad(unsigned int* stars, int dimquads) {
 	int i;
 	for (i=0; i<dimquads; i++)
-		nuses[q->star[i]]++;
-}
-
-// is the AB distance right?
-// is the midpoint of AB inside the healpix?
-static void
-check_scale_and_midpoint(pquad* pq, double* stars, int* starids, int Nstars,
-						 int Nside, int hp) {
-	double *sA, *sB;
-	double Bx, By;
-	double invscale;
-	double ABx, ABy;
-	double s2;
-	bool ok;
-
-	sA = stars + pq->iA * 3;
-	sB = stars + pq->iB * 3;
-
-	// s2: squared AB dist
-	s2 = distsq(sA, sB, 3);
-	if ((s2 > quad_dist2_upper) ||
-		(s2 < quad_dist2_lower)) {
-		pq->scale_ok = 0;
-		nbadscale++;
-		return;
-	}
-
-	star_midpoint(pq->midAB, sA, sB);
-	if (xyzarrtohealpix(pq->midAB, Nside) != hp) {
-		pq->scale_ok = 0;
-		nbadcenter++;
-		return;
-	}
-
-	pq->scale_ok = 1;
-	pq->staridA = starids[pq->iA];
-	pq->staridB = starids[pq->iB];
-
-	ok = star_coords(sA, pq->midAB, &pq->Ax, &pq->Ay);
-	assert(ok);
-	ok = star_coords(sB, pq->midAB, &Bx, &By);
-	assert(ok);
-	ABx = Bx - pq->Ax;
-	ABy = By - pq->Ay;
-	invscale = 1.0 / (ABx*ABx + ABy*ABy);
-	pq->costheta = (ABy + ABx) * invscale;
-	pq->sintheta = (ABy - ABx) * invscale;
-
-	nabok++;
-}
-
-static int
-check_inbox(pquad* pq, int* inds, int ninds, double* stars, bool circle) {
-	int i, ind;
-	double* starpos;
-	double Dx, Dy;
-	double ADx, ADy;
-	double x, y;
-	int destind = 0;
-	bool ok;
-	for (i=0; i<ninds; i++) {
-		ind = inds[i];
-		starpos = stars + ind*3;
-		ok = star_coords(starpos, pq->midAB, &Dx, &Dy);
-		if (!ok)
-			continue;
-		ADx = Dx - pq->Ax;
-		ADy = Dy - pq->Ay;
-		x =  ADx * pq->costheta + ADy * pq->sintheta;
-		y = -ADx * pq->sintheta + ADy * pq->costheta;
-		if (circle) {
-			// make sure it's in the circle centered at (0.5, 0.5)...
-			// (x-1/2)^2 + (y-1/2)^2   <=   r^2
-			// x^2-x+1/4 + y^2-y+1/4   <=   (1/sqrt(2))^2
-			// x^2-x + y^2-y + 1/2     <=   1/2
-			// x^2-x + y^2-y           <=   0
-			double r = (x*x - x) + (y*y - y);
-			if (r > 0.0)
-				continue;
-		} else {
-			// make sure it's in the box...
-			if ((x > 1.0) || (x < 0.0) ||
-				(y > 1.0) || (y < 0.0)) {
-				continue;
-			}
-		}
-		inds[destind] = ind;
-		destind++;
-	}
-	return destind;
-}
-
-/**
- inbox, ninbox: the stars we have to work with.
- starinds: the star identifiers (indexed by the contents of 'inbox')
- - ie, starinds[inbox[0]] is an externally-recognized star identifier.
- q: where we record the star identifiers
- starnum: which star we're adding: eg, A=0, B=1, C=2, ... dimquads-1.
- beginning: the first index in "inbox" to assign to star 'starnum'.
- */
-static int add_interior_stars(int ninbox, int* inbox, quad* q, int* starinds,
-							  int starnum, int dimquads, int beginning) {
-	int i;
-	for (i=beginning; i<ninbox; i++) {
-		int iC = inbox[i];
-		q->star[starnum] = starinds[iC];
-		// Did we just add the last star?
-		if (starnum == dimquads-1) {
-			if (add_quad(q))
-				return 1;
-		} else {
-			// Recurse.
-			if (add_interior_stars(ninbox, inbox, q, starinds, starnum+1,
-								   dimquads, i+1))
-				return 1;
-		}
-	}
-	return 0;
-}
-
-static int Ncq = 0;
-static pquad* cq_pquads = NULL;
-static int* cq_inbox = NULL;
-
-static int create_quad(double* stars, int* starinds, int Nstars,
-					   int Nside, int hp,
-					   bool circle, bool count_uses, int dimquads) {
-	int iA=0, iB, iC, iD, newpoint;
-	int rtn = 0;
-	int ninbox;
-	int i, j;
-	int* inbox;
-	pquad* pquads;
-	int iAalloc;
-	quad q;
-
-	// ensure the arrays are large enough...
-	if (Nstars > Ncq) {
-		// (free and malloc rather than realloc because we don't care about
-		//  the previous contents)
-		free(cq_inbox);
-		free(cq_pquads);
-		Ncq = Nstars;
-		cq_inbox =  malloc(Nstars * sizeof(int));
-		cq_pquads = malloc(Nstars * Nstars * sizeof(pquad));
-		if (!cq_inbox || !cq_pquads) {
-			ERROR("hpquads: failed to malloc cq_inbox or cq_pquads.  Nstars=%i.\n", Nstars);
-			exit(-1);
-		}
-	}
-	inbox = cq_inbox;
-	pquads = cq_pquads;
-
-	/*
-	  Each time through the "for" loop below, we consider a new
-	  star ("newpoint").  First, we try building all quads that
-	  have the new star on the diagonal (star B).  Then, we try
-	  building all quads that have the star not on the diagonal
-	  (star D).
-
-	  Note that we keep the invariants iA < iB and iC < iD.
-	*/
-
-	memset(&q, 0, sizeof(quad));
-
-	for (newpoint=0; newpoint<Nstars; newpoint++) {
-		pquad* pq;
-		// quads with the new star on the diagonal:
-		iB = newpoint;
-		for (iA = 0; iA < newpoint; iA++) {
-			pq = pquads + iA*Nstars + iB;
-			pq->inbox = NULL;
-			pq->ninbox = 0;
-			pq->iA = iA;
-			pq->iB = iB;
-			check_scale_and_midpoint(pq, stars, starinds, Nstars,
-									 Nside, hp);
-			if (!pq->scale_ok)
-				continue;
-
-			ninbox = 0;
-			for (iC = 0; iC < newpoint; iC++) {
-				if ((iC == iA) || (iC == iB))
-					continue;
-				inbox[ninbox] = iC;
-				ninbox++;
-			}
-			ninbox = check_inbox(pq, inbox, ninbox, stars, circle);
-
-			q.star[0] = pq->staridA;
-			q.star[1] = pq->staridB;
-
-			if (add_interior_stars(ninbox, inbox, &q, starinds, 2, dimquads, 0)) {
-				if (count_uses)
-					drop_quad(&q, dimquads);
-				rtn = 1;
-				goto theend;
-			}
-
-			pq->inbox = malloc(Nstars * sizeof(int));
-			if (!pq->inbox) {
-				ERROR("hpquads: failed to malloc pq->inbox.\n");
-				exit(-1);
-			}
-			pq->ninbox = ninbox;
-			memcpy(pq->inbox, inbox, ninbox * sizeof(int));
-		}
-		iAalloc = iA;
-
-		// quads with the new star not on the diagonal:
-		iD = newpoint;
-		for (iA = 0; iA < newpoint; iA++) {
-			for (iB = iA + 1; iB < newpoint; iB++) {
-				pq = pquads + iA*Nstars + iB;
-				if (!pq->scale_ok)
-					continue;
-				inbox[0] = iD;
-				if (!check_inbox(pq, inbox, 1, stars, circle))
-					continue;
-				pq->inbox[pq->ninbox] = iD;
-				pq->ninbox++;
-				ninbox = pq->ninbox;
-
-				q.star[0] = pq->staridA;
-				q.star[1] = pq->staridB;
-
-				if (add_interior_stars(ninbox, pq->inbox, &q, starinds,
-									   2, dimquads, 0)) {
-					if (count_uses)
-						drop_quad(&q, dimquads);
-					rtn = 1;
-					iA = iAalloc;
-					goto theend;
-				}
-			}
-		}
-	}
- theend:
-	for (i=0; i<imin(Nstars, newpoint+1); i++) {
-		int lim = (i == newpoint) ? iA : i;
-		for (j=0; j<lim; j++) {
-			pquad* pq = pquads + j*Nstars + i;
-			free(pq->inbox);
-		}
-	}
-	return rtn;
+		nuses[stars[i]]++;
 }
 
 static int* perm = NULL;
@@ -480,6 +206,74 @@ static bool find_stars(int hp, int Nside, double radius2,
 	return TRUE;
 }
 
+struct qb_token {
+	int hp_nside;
+	int hp;
+	bool created;
+	bool count_uses;
+};
+typedef struct qb_token qb_token_t;
+
+static bool check_midpoint(quadbuilder_t* qb, pquad_t* pq, void* vtoken) {
+	qb_token_t* token = vtoken;
+	return (xyzarrtohealpix(pq->midAB, token->hp_nside) == token->hp);
+}
+
+static bool check_full_quad(quadbuilder_t* qb, unsigned int* quad, int nstars, void* vtoken) {
+	//qb_token_t* token = vtoken;
+	bool dup;
+	if (firstpass)
+		return TRUE;
+	dup = bt_contains(bigquadlist, quad, compare_quads);
+	if (!dup)
+		return TRUE;
+	ndupquads++;
+	return FALSE;
+}
+
+static void add_quad(quadbuilder_t* qb, unsigned int* stars, void* vtoken) {
+	qb_token_t* token = vtoken;
+	bl_append(quadlist, stars);
+	if (token->count_uses)
+		drop_quad(stars, qb->dimquads);
+	qb->stop_creating = TRUE;
+	token->created = TRUE;
+}
+
+static bool create_quad(double* stars, int* starinds, int Nstars,
+						int Nside, int hp,
+						bool circle, bool count_uses, int dimquads) {
+	quadbuilder_t* qb;
+	qb_token_t token;
+
+	qb = quadbuilder_init();
+
+	qb->starxyz = stars;
+	qb->starinds = starinds;
+	qb->Nstars = Nstars;
+	qb->dimquads = dimquads;
+	qb->quadd2_low = quad_dist2_lower;
+	qb->quadd2_high = quad_dist2_upper;
+	qb->check_scale_low = TRUE;
+	qb->check_scale_high = TRUE;
+	qb->check_AB_stars = check_midpoint;
+	qb->check_AB_stars_token = &token;
+	token.hp = hp;
+	token.hp_nside = Nside;
+	qb->check_full_quad = check_full_quad;
+	qb->check_full_quad_token = &token;
+	qb->add_quad = add_quad;
+	qb->add_quad_token = &token;
+	token.created = FALSE;
+	token.count_uses = count_uses;
+
+	quadbuilder_create(qb);
+	quadbuilder_free(qb);
+
+	return token.created;
+}
+
+
 static void add_headers(qfits_header* hdr, char** argv, int argc,
 						qfits_header* startreehdr, bool circle,
 						int npasses) {
@@ -559,6 +353,8 @@ int main(int argc, char** argv) {
 	int dimquads = 4;
 	int dimcodes;
 	int loglvl = LOG_MSG;
+
+	int quadsize;
 	
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
@@ -646,6 +442,8 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 	dimcodes = dimquad2dimcode(dimquads);
+
+	quadsize = sizeof(unsigned int) * dimquads;
 
 	if (Nside > 13377) {
 		// 12 * (13377+1)^2  >  2^31, so healpix arithmetic will fail.
@@ -754,7 +552,7 @@ int main(int argc, char** argv) {
     quads->index_scale_upper = codes->index_scale_upper;
     quads->index_scale_lower = codes->index_scale_lower;
 
-	bigquadlist = bt_new(sizeof(quad), 256);
+	bigquadlist = bt_new(quadsize, 256);
 
 	if (Nreuse > 255) {
 		ERROR("Error, reuse (-r) must be less than 256.\n");
@@ -827,7 +625,7 @@ int main(int argc, char** argv) {
 	if (hptotry)
 		Nhptotry = il_size(hptotry);
 
-	quadlist = bl_new(65536, sizeof(quad));
+	quadlist = bl_new(65536, quadsize);
 	if (noreuse_pass)
 		noreuse_hps = il_new(1024);
 
@@ -1067,7 +865,7 @@ int main(int argc, char** argv) {
 
 		printf("Merging quads...\n");
 		for (i=0; i<bl_size(quadlist); i++) {
-			quad* q = bl_access(quadlist, i);
+			void* q = bl_access(quadlist, i);
 			bt_insert(bigquadlist, q, FALSE, compare_quads);
 		}
 		bl_remove_all(quadlist);
@@ -1105,7 +903,7 @@ int main(int argc, char** argv) {
 			printf("Merging quads...\n");
 			fflush(stdout);
 			for (i=0; i<bl_size(quadlist); i++) {
-				quad* q = bl_access(quadlist, i);
+				void* q = bl_access(quadlist, i);
 				bt_insert(bigquadlist, q, FALSE, compare_quads);
 			}
 			bl_remove_all(quadlist);
@@ -1131,9 +929,6 @@ int main(int argc, char** argv) {
 	if (noreuse_hps)
 		il_free(noreuse_hps);
 
-	free(cq_pquads);
-	free(cq_inbox);
-
 	free(stars);
 	free(inds);
 	free(perm);
@@ -1144,13 +939,13 @@ int main(int argc, char** argv) {
 	// add the quads from the big-quadlist
 	nquads = bt_size(bigquadlist);
 	for (i=0; i<nquads; i++) {
-		quad* q = bt_access(bigquadlist, i);
-		quad_write(codes, quads, q->star, starkd, dimquads, dimcodes);
+		unsigned int* q = bt_access(bigquadlist, i);
+		quad_write(codes, quads, q, starkd, dimquads, dimcodes);
 	}
 	// add the quads that were made during the final round.
 	for (i=0; i<bl_size(quadlist); i++) {
-		quad* q = bl_access(quadlist, i);
-		quad_write(codes, quads, q->star, starkd, dimquads, dimcodes);
+		unsigned int* q = bl_access(quadlist, i);
+		quad_write(codes, quads, q, starkd, dimquads, dimcodes);
 	}
 	bl_free(quadlist);
 

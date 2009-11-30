@@ -194,6 +194,7 @@ int main(int argc, char *argv[]) {
 
 				dump.fbuf = outimg;
 				dump.npix = outw * outh;
+				logverb("  ptype: %i\n", dump.ptype);
 				if (qfits_pixdump(&dump)) {
 					ERROR("Failed to write pixels.\n");
 					exit(-1);

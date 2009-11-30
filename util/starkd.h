@@ -50,7 +50,7 @@ struct startree_s {
 typedef struct startree_s startree_t;
 
 
-startree_t* startree_open(char* fn);
+startree_t* startree_open(const char* fn);
 
 void startree_search_for(const startree_t* s, const double* xyzcenter, double radius2,
 						 double** xyzresults, double** radecresults,
@@ -103,8 +103,8 @@ int startree_check_inverse_perm(startree_t* s);
 // for writing
 startree_t* startree_new();
 
-int startree_write_to_file(startree_t* s, char* fn);
+int startree_write_to_file(startree_t* s, const char* fn);
 
-int startree_write_to_file_flipped(startree_t* s, char* fn);
+int startree_write_to_file_flipped(startree_t* s, const char* fn);
 
 #endif

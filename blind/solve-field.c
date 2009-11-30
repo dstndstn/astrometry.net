@@ -189,6 +189,7 @@ static int write_kmz(const augment_xylist_t* axy, const char* kmzfn,
     kmlfn       = sl_appendf(tempfiles, "%s/%s", tmpdir, basekmlfn);
     warpedpngfn = sl_appendf(tempfiles, "%s/%s", tmpdir, basewarpedpngfn);
     // delete the wcs we create with "cp" below.
+	assert(axy->wcsfn);
     wcsbase = basename_safe(axy->wcsfn);
     sl_appendf(tempfiles, "%s/%s", tmpdir, wcsbase);
     free(wcsbase);
@@ -310,6 +311,7 @@ static int plot_index_overlay(augment_xylist_t* axy, const char* me,
     int i;
     bool ctrlc;
 
+	assert(axy->matchfn);
     mf = matchfile_open(axy->matchfn);
     if (!mf) {
         ERROR("Failed to read matchfile %s", axy->matchfn);
@@ -384,12 +386,15 @@ static int plot_annotations(augment_xylist_t* axy, const char* me, bool verbose,
     if (verbose)
         sl_append(cmdline, "-v");
     sl_append(cmdline, "-w");
+	assert(axy->wcsfn);
     append_escape(cmdline, axy->wcsfn);
     sl_append(cmdline, "-i");
+	assert(axy->pnmfn);
     append_escape(cmdline, axy->pnmfn);
     sl_append(cmdline, "-N");
     sl_append(cmdline, "-C");
     sl_append(cmdline, "-o");
+	assert(annfn);
     append_escape(cmdline, annfn);
     cmd = sl_implode(cmdline, " ");
     sl_free2(cmdline);
@@ -457,9 +462,6 @@ static void after_solved(augment_xylist_t* axy,
 	char rastr[32], decstr[32];
 	char* fieldunits;
 
-	//if (!file_exists(axy->solvedfn))
-	//return;
-
 	// create new FITS file...
 	if (axy->fitsimgfn && sf->newfitsfn) {
 		logmsg("Creating new FITS file \"%s\"...\n", sf->newfitsfn);
@@ -470,7 +472,7 @@ static void after_solved(augment_xylist_t* axy,
 	}
 
 	// write list of index stars in image coordinates
-	if (sf->indxylsfn) {
+	if (sf->indxylsfn && file_exists(axy->wcsfn) && file_exists(axy->rdlsfn)) {
 		assert(axy->wcsfn);
 		assert(axy->rdlsfn);
 		// index rdls to xyls.
@@ -482,7 +484,7 @@ static void after_solved(augment_xylist_t* axy,
 	}
 
 	// print info about the field.
-	if (axy->wcsfn && file_exists(axy->wcsfn)) {
+	if (file_exists(axy->wcsfn)) {
 		if (!sip_read_header_file(axy->wcsfn, &wcs)) {
 			ERROR("Failed to read WCS header from file %s", axy->wcsfn);
 			exit(-1);
@@ -495,28 +497,30 @@ static void after_solved(augment_xylist_t* axy,
 		logmsg("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
 	}
 
-	if (makeplots) {
-		logmsg("Creating plots...\n");
+	if (makeplots && file_exists(sf->indxylsfn) && file_readable(axy->matchfn) && file_readable(axy->wcsfn)) {
+		logmsg("Creating index object overlay plot...\n");
 		if (plot_index_overlay(axy, me, sf->indxylsfn, sf->redgreenfn)) {
 			ERROR("Plot index overlay failed.");
 		}
 	}
 
-	if (axy->imagefn && makeplots) {
+	if (makeplots && axy->imagefn && file_exists(axy->wcsfn) && axy->pnmfn) {
+		logmsg("Creating annotation plot...\n");
 		if (plot_annotations(axy, me, verbose, sf->ngcfn)) {
 			ERROR("Plot annotations failed.");
 		}
 	}
 
-	if (axy->imagefn && sf->kmzfn) {
+	if (axy->imagefn && sf->kmzfn && file_exists(axy->wcsfn)) {
+		logmsg("Writing kmz file...\n");
 		if (write_kmz(axy, sf->kmzfn, tempdir, tempdirs, tempfiles)) {
 			ERROR("Failed to write KMZ.");
 			exit(-1);
 		}
 	}
 
-	if (sf->scampfn) {
-		char* hdrfile = NULL;
+	if (sf->scampfn && file_exists(axy->wcsfn)) {
+		//char* hdrfile = NULL;
 		qfits_header* imageheader = NULL;
 		starxy_t* xy;
 		xylist_t* xyls;
@@ -535,12 +539,19 @@ static void after_solved(augment_xylist_t* axy,
 		xy = xylist_read_field(xyls, NULL);
 		xylist_close(xyls);
 
-		if (axy->fitsimgfn)
-			hdrfile = axy->fitsimgfn;
-		if (axy->xylsfn)
-			hdrfile = axy->xylsfn;
-		if (hdrfile)
-			imageheader = qfits_header_read(hdrfile);
+		if (axy->fitsimgfn) {
+			//hdrfile = axy->fitsimgfn;
+			imageheader = qfits_header_read(axy->fitsimgfn);
+		}
+		if (axy->xylsfn) {
+			//hdrfile = axy->xylsfn;
+			imageheader = qfits_header_read(axy->xylsfn);
+			// Set NAXIS=2, NAXIS1=IMAGEW, NAXIS2=IMAGEH
+			fits_header_mod_int(imageheader, "NAXIS", 2, NULL);
+			fits_header_add_int(imageheader, "NAXIS1", axy->W, NULL);
+			fits_header_add_int(imageheader, "NAXIS2", axy->H, NULL);
+			logverb("Using NAXIS 1,2 = %i,%i\n", axy->W, axy->H);
+		}
 
 		if (scamp_write_field(imageheader, &wcs, xy, sf->scampfn)) {
 			ERROR("Failed to write SCAMP catalog");
@@ -563,11 +574,13 @@ static void delete_temp_files(sl* tempfiles, sl* tempdirs) {
 	int i;
 	for (i=0; i<sl_size(tempfiles); i++) {
 		char* fn = sl_get(tempfiles, i);
+		logverb("Deleting temp file %s\n", fn);
 		if (unlink(fn))
 			SYSERROR("Failed to delete temp file \"%s\"", fn);
 	}
 	for (i=0; i<sl_size(tempdirs); i++) {
 		char* fn = sl_get(tempdirs, i);
+		logverb("Deleting temp dir %s\n", fn);
 		if (rmdir(fn))
 			SYSERROR("Failed to delete temp dir \"%s\"", fn);
 	}
@@ -1001,30 +1014,33 @@ int main(int argc, char** args) {
 			}
 		}
 
-		// if we're making plots, we need the index xylist.
-		if (makeplots && !sf->indxylsfn) {
-			sf->indxylsfn = create_temp_file("indxyls", tempdir);
-			sl_append_nocopy(tempfiles, sf->indxylsfn);
+		// if we're making "redgreen" plot, we need:
+		if (sf->redgreenfn) {
+			// -- index xylist
+			if (!sf->indxylsfn) {
+				sf->indxylsfn = create_temp_file("indxyls", tempdir);
+				sl_append_nocopy(tempfiles, sf->indxylsfn);
+			}
+			// -- match file.
+			if (!axy->matchfn) {
+				axy->matchfn = create_temp_file("match", tempdir);
+				sl_append_nocopy(tempfiles, axy->matchfn);
+			}
 		}
 
-		// if index xyls file is needed, we need wcs...
-		if (sf->indxylsfn && !axy->wcsfn) {
-            axy->wcsfn = create_temp_file("wcs", tempdir);
-            sl_append_nocopy(tempfiles, axy->wcsfn);
+		// if index xyls file is needed, we need:
+		if (sf->indxylsfn) {
+			// -- wcs
+			if (!axy->wcsfn) {
+				axy->wcsfn = create_temp_file("wcs", tempdir);
+				sl_append_nocopy(tempfiles, axy->wcsfn);
+			}
+			// -- rdls
+			if (!axy->rdlsfn) {
+				axy->rdlsfn = create_temp_file("rdls", tempdir);
+				sl_append_nocopy(tempfiles, axy->rdlsfn);
+			}
 		}
-
-		// ... and rdls.
-		if (sf->indxylsfn && !axy->rdlsfn) {
-            axy->rdlsfn = create_temp_file("rdls", tempdir);
-            sl_append_nocopy(tempfiles, axy->rdlsfn);
-		}
-
-		/*
-		 if (axy->newfitsfn && !axy->solvedfn) {
-		 axy->solvedfn = create_temp_file("solved", tempdir);
-		 sl_append_nocopy(tempfiles, axy->solvedfn);
-		 }
-		 */
 
         // Download URL...
         if (isurl) {
@@ -1122,7 +1138,8 @@ int main(int argc, char** args) {
 			if (axy->verifywcs != allaxy->verifywcs)
 				sl_free2(axy->verifywcs);
 			sl_remove_all(outfiles);
-			delete_temp_files(tempfiles, tempdirs);
+			if (!axy->no_delete_temp)
+				delete_temp_files(tempfiles, tempdirs);
 		}
         errors_print_stack(stdout);
         errors_clear_stack();
@@ -1147,7 +1164,8 @@ int main(int argc, char** args) {
 			if (axy->verifywcs != allaxy->verifywcs)
 				sl_free2(axy->verifywcs);
 		}
-		delete_temp_files(tempfiles, tempdirs);
+		if (!allaxy->no_delete_temp)
+			delete_temp_files(tempfiles, tempdirs);
 		bl_free(batchaxy);
 		bl_free(batchsf);
 	}

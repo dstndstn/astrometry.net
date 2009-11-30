@@ -119,6 +119,8 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 		cairoutils_draw_marker(cairo, plotargs->marker, x, y, plotargs->markersize);
 		cairo_stroke(cairo);
 	}
+
+	starxy_free(xy);
 		
 	return 0;
 }

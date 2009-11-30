@@ -91,6 +91,8 @@ struct augment_xylist_s {
 	bool no_fix_sdss;
 	bool no_bg_subtraction;
 
+	float image_sigma;
+
     char* xcol;
     char* ycol;
     char* sortcol;

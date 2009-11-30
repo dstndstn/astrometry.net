@@ -367,8 +367,8 @@ int main(int argc, char** args) {
         W = sip.wcstan.imagew;
         H = sip.wcstan.imageh;
     }
-    if (!W || !H) {
-        logerr("Image width/height unknown.\n");
+    if (!(infn || (W && H))) {
+        logerr("Image width/height unspecified, and no input image given.\n");
         exit(-1);
     }
 
@@ -471,7 +471,10 @@ int main(int argc, char** args) {
         cairo_set_source_rgba(cairo, 0.2, 0.2, 0.2, 1.0);
 
         sip_get_radec_bounds(&sip, 100, &ramin, &ramax, &decmin, &decmax);
+		logverb("Plotting grid lines from RA=%g to %g in steps of %g; Dec=%g to %g in steps of %g\n",
+				ramin, ramax, rastep, decmin, decmax, decstep);
         for (dec = decstep * floor(decmin / decstep); dec<=decmax; dec+=decstep) {
+			logverb("  dec=%g\n", dec);
             for (i=0; i<=N; i++) {
                 ra = ramin + ((double)i / (double)N) * (ramax - ramin);
                 if (!sip_radec2pixelxy(&sip, ra, dec, &px, &py))
@@ -483,6 +486,7 @@ int main(int argc, char** args) {
         }
         for (ra = rastep * floor(ramin / rastep); ra <= ramax; ra += rastep) {
             //for (dec=decmin; dec<=decmax; dec += (decmax - decmin)/(double)N) {
+			logverb("  ra=%g\n", ra);
             for (i=0; i<=N; i++) {
                 dec = decmin + ((double)i / (double)N) * (decmax - decmin);
                 if (!sip_radec2pixelxy(&sip, ra, dec, &px, &py))

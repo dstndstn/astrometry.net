@@ -515,6 +515,14 @@ static void dtrs_match_callback(void* extra, int image_ind, int ref_ind, double 
 		dl_append(t->weight, exp(-dist2 / (2.0 * t->jitterd2)));
 }
 
+void tweak_push_correspondence_indices(tweak_t* t, il* image, il* ref, dl* distsq, dl* weight) {
+	t->image = image;
+	t->ref = ref;
+	t->dist2 = distsq;
+	t->weight = weight;
+	t->state |= TWEAK_HAS_CORRESPONDENCES;
+}
+
 // The jitter is in radians
 static void find_correspondences(tweak_t* t, double jitter) {
 	double dist;
@@ -558,7 +566,7 @@ static void find_correspondences(tweak_t* t, double jitter) {
 	free(data_image);
 	free(data_ref);
 
-	logverb("Number of correspondences: %d\n", dl_size(t->dist2));
+	logverb("Number of correspondences: %d\n", il_size(t->image));
 }
 
 static double correspondences_rms_arcsec(tweak_t* t, int weighted) {

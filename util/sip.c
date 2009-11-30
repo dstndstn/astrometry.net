@@ -81,14 +81,27 @@ void tan_pixelxy2radec(const tan_t* tan, double px, double py, double *ra, doubl
 	xyzarr2radecdeg(xyz, ra,dec);
 }
 
-// Pixels to XYZ unit vector.
-void tan_pixelxy2xyzarr(const tan_t* tan, double px, double py, double *xyz)
-{
-	double rx, ry, rz;
-	double ix,iy,norm;
-	double jx,jy,jz;
-	double wx,wy,wz;
+void tan_iwc2pixelxy(const tan_t* tan, double x, double y,
+					 double *px, double* py) {
+	double U,V;
+	int r;
+	double cdi[2][2];
 
+	// Invert CD
+    r = invert_2by2_arr((const double*)tan->cd, (double*)cdi);
+	assert(r == 0);
+
+	// Linear pixel coordinates
+	U = cdi[0][0]*x + cdi[0][1]*y;
+	V = cdi[1][0]*x + cdi[1][1]*y;
+
+	// Re-add crpix to get pixel coordinates
+	*px = U + tan->crpix[0];
+	*py = V + tan->crpix[1];
+}
+
+void tan_pixelxy2iwc(const tan_t* tan, double px, double py, double *iwcx, double* iwcy)
+{
 	// Get pixel coordinates relative to reference pixel
 	double U = px - tan->crpix[0];
 	double V = py - tan->crpix[1];
@@ -96,7 +109,19 @@ void tan_pixelxy2xyzarr(const tan_t* tan, double px, double py, double *xyz)
 	// Get intermediate world coordinates
 	double x = tan->cd[0][0] * U + tan->cd[0][1] * V;
 	double y = tan->cd[1][0] * U + tan->cd[1][1] * V;
-	//	printf("x=%lf y=%lf\n",x,y);
+
+	if (iwcx)
+		*iwcx = x;
+	if (iwcy)
+		*iwcy = y;
+}
+
+void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz)
+{
+	double rx, ry, rz;
+	double ix,iy,norm;
+	double jx,jy,jz;
+	double wx,wy,wz;
 
 	// Mysterious! Who knows, but negating these coordinates makes WCStools match with SIP. 
 	x = -deg2rad(x);
@@ -137,6 +162,14 @@ void tan_pixelxy2xyzarr(const tan_t* tan, double px, double py, double *xyz)
 	xyz[0] = wx;
 	xyz[1] = wy;
 	xyz[2] = wz;
+}
+
+// Pixels to XYZ unit vector.
+void tan_pixelxy2xyzarr(const tan_t* tan, double px, double py, double *xyz)
+{
+	double x,y;
+	tan_pixelxy2iwc(tan, px, py, &x, &y);
+	tan_iwc2xyzarr(tan, x, y, xyz);
 }
 
 // RA,Dec in degrees to Pixels.
@@ -201,26 +234,7 @@ bool sip_xyzarr2pixelxy(const sip_t* sip, const double* xyz, double *px, double 
 // xyz unit vector to Pixels.
 bool tan_xyzarr2pixelxy(const tan_t* tan, const double* xyzpt, double *px, double *py) {
 	double x=0, y=0;
-	double U,V;
 	double xyzcrval[3];
-	double cdi[2][2];
-	int r;
-
-	// Invert CD
-    r = invert_2by2_arr((const double*)tan->cd, (double*)cdi);
-	assert(r == 0);
-
-	/*
-	printf(":: %lf\n",  (tan->cd[0][0]*cdi[0][0] + tan->cd[0][1]*cdi[1][0] ));
-	printf(":: %lf\n",  (tan->cd[0][0]*cdi[0][1] + tan->cd[0][1]*cdi[1][1] ));
-	printf(":: %lf\n",  (tan->cd[1][0]*cdi[0][0] + tan->cd[1][1]*cdi[1][0] ));
-	printf(":: %lf\n",  (tan->cd[1][0]*cdi[0][1] + tan->cd[1][1]*cdi[1][1] ));
-	*/
-
-	//assert( (tan->cd[0][0]*cdi[0][0] + tan->cd[0][1]*cdi[1][0] ) == 1.0);
-	//assert( (tan->cd[0][0]*cdi[0][1] + tan->cd[0][1]*cdi[1][1] ) == 0.0);
-	//assert( (tan->cd[1][0]*cdi[0][0] + tan->cd[1][1]*cdi[1][0] ) == 0.0);
-	//assert( (tan->cd[1][0]*cdi[0][1] + tan->cd[1][1]*cdi[1][1] ) == 1.0);
 
 	// FIXME be robust near the poles
 	// Calculate intermediate world coordinates (x,y) on the tangent plane
@@ -232,13 +246,8 @@ bool tan_xyzarr2pixelxy(const tan_t* tan, const double* xyzpt, double *px, doubl
 	x = rad2deg(x);
 	y = rad2deg(y);
 
-	// Linear pixel coordinates
-	U = cdi[0][0]*x + cdi[0][1]*y;
-	V = cdi[1][0]*x + cdi[1][1]*y;
+	tan_iwc2pixelxy(tan, x, y, px, py);
 
-	// Re-add crpix to get pixel coordinates
-	*px = U + tan->crpix[0];
-	*py = V + tan->crpix[1];
 	return TRUE;
 }
 

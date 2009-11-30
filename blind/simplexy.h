@@ -42,7 +42,7 @@ struct simplexy_t {
     unsigned char* image_u8;
     int nx;
     int ny;
-    /* gaussian psf width */
+    /* gaussian psf width (sigma, not FWHM) */
     float dpsf;
     /* significance to keep */
     float plim;
@@ -62,10 +62,13 @@ struct simplexy_t {
 	// don't do background subtraction.
 	bool nobgsub;
 
+	// If set to non-zero, the given sigma value will be used;
+	// otherwise a value will be estimated.
+    float sigma;
+
     /******
      Outputs
      ******/
-    float sigma;
     float *x;
     float *y;
     float *flux;
@@ -78,6 +81,7 @@ struct simplexy_t {
 	// The filename for saving the background-subtracted FITS image.
 	const char* bgimgfn;
 	const char* maskimgfn;
+	const char* blobimgfn;
 	const char* bgsubimgfn;
 	const char* smoothimgfn;
 };

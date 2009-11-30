@@ -51,6 +51,8 @@ int NLF(sorted_contains)(nl* list, const number data);
 // Or -1 if not found.
 int NLF(sorted_index_of)(nl* list, const number data);
 
+Malloc number* NLF(to_array)(nl* list);
+
 // Returns the index in the list of the given number, or -1 if it
 // is not found.
 int  NLF(index_of)(nl* list, const number data);

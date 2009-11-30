@@ -36,6 +36,17 @@
 
 #define NODE_NUMDATA(node) ((number*)NODE_DATA(node))
 
+number* NLF(to_array)(nl* list) {
+	number* arr;
+	int N;
+	if (!list)
+		return NULL;
+	N = NLF(size)(list);
+	arr = malloc(N * sizeof(number));
+	bl_copy(list, 0, N, arr);
+	return arr;
+}
+
 static int NLF(compare_ascending)(const void* v1, const void* v2) {
     number i1 = *(number*)v1;
     number i2 = *(number*)v2;

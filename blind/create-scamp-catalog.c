@@ -32,6 +32,13 @@ const char* OPTIONS = "hv";
 
 void print_help(char* progname) {
     printf("Usage: %s <input-FITS-table> <output-scamp-catalog>\n"
+		   "  Input table must contain columns:\n"
+		   "      RA\n"
+		   "      RA_ERR\n"
+		   "      DEC\n"
+		   "      DEC_ERR\n"
+		   "      MAG\n"
+		   "      MAG_ERR\n"
            "  [-v]: verbose\n"
            "\n", progname);
 }

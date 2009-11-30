@@ -104,6 +104,7 @@ void tweak_push_ref_xyz(tweak_t* t, const double* xyz, int n);
 void tweak_push_ref_ad(tweak_t* t, const double* a, const double *d, int n);
 void tweak_push_ref_ad_array(tweak_t* t, const double* ad, int n);
 void tweak_push_image_xy(tweak_t* t, const starxy_t* xy);
+void tweak_push_correspondence_indices(tweak_t* t, il* image, il* ref, dl* distsq, dl* weight);
 
 unsigned int tweak_advance_to(tweak_t* t, unsigned int flag);
 void tweak_clear(tweak_t* t);

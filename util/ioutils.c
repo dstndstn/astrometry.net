@@ -685,15 +685,15 @@ int file_get_last_modified_string(const char* fn, const char* timeformat,
 }
 
 bool file_exists(const char* fn) {
-    return (access(fn, F_OK) == 0);
+    return fn && (access(fn, F_OK) == 0);
 }
 
 bool file_readable(const char* fn) {
-    return (access(fn, R_OK) == 0);
+    return fn && (access(fn, R_OK) == 0);
 }
 
 bool file_executable(const char* fn) {
-    return (access(fn, X_OK) == 0);
+    return fn && (access(fn, X_OK) == 0);
 }
 
 bool path_is_dir(const char* path) {

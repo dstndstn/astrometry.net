@@ -187,9 +187,9 @@ int main(int argc, char *args[]) {
 			ERROR("Failed to set plot size from image");
 			exit(-1);
 		}
+		plotstuff_run_command(&pargs, "image");
 	}
 
-	plotstuff_run_command(&pargs, "image");
 	plotstuff_run_command(&pargs, "xy");
 
 	plotstuff_output(&pargs);

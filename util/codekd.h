@@ -34,7 +34,7 @@ struct codetree {
 typedef struct codetree codetree;
 
 
-codetree* codetree_open(char* fn);
+codetree* codetree_open(const char* fn);
 
 int codetree_get(codetree* s, unsigned int codeid, double* code);
 
@@ -53,8 +53,8 @@ int codetree_close(codetree* s);
 // for writing
 codetree* codetree_new();
 
-int codetree_write_to_file(codetree* s, char* fn);
+int codetree_write_to_file(codetree* s, const char* fn);
 
-int codetree_write_to_file_flipped(codetree* s, char* fn);
+int codetree_write_to_file_flipped(codetree* s, const char* fn);
 
 #endif

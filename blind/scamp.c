@@ -103,6 +103,7 @@ char* scamp_get_config_options(const char* refcatfn) {
         "# The following decribe the reference catalog:\n"
         "# Read from a local file.\n"
         "ASTREF_CATALOG    FILE\n"
+		"# You can also set this to: USNO-B1, SDSS-R7, 2MASS, etc\n"
         "# The reference catalog file name is:\n"
         "ASTREFCAT_NAME    %s\n"
         "# The reference catalog (RA,Dec) in degrees: column names in file\n"
@@ -124,6 +125,9 @@ char* scamp_get_config_options(const char* refcatfn) {
         "PHOTFLUX_KEY      FLUX\n"
         "# The flux error: column name\n"
         "PHOTFLUXERR_KEY   FLUX_ERR\n"
+		"# Don't run Scamp's matching procedure to get initial WCS\n"
+		"# (use the Astrometry.net solution!)\n"
+		"MATCH N\n"
         "#\n"
         "## End of Astrometry.net Scamp integration config items\n"
         ;

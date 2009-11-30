@@ -16,16 +16,6 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-/**
-   \file Applies a code kdtree permutation array to the corresponding
-   .quad file to produce new .quad and .ckdt files that are
-   consistent and don't require permutation.
-
-   In:  .quad, .ckdt
-   Out: .quad, .ckdt
-
-   Original author: dstn
-*/
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,34 +28,17 @@
 #include "fitsioutils.h"
 #include "codekd.h"
 #include "qfits.h"
+#include "log.h"
+#include "errors.h"
 #include "boilerplate.h"
 
-#define OPTIONS "hq:c:Q:C:"
-
-static void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
-	printf("\nUsage: %s\n"
-           "   -q <input-quad-filename>\n"
-           "   -c <input-code-kdtree-filename>\n"
-           "   -Q <output-quad-filename>\n"
-           "   -C <output-code-kdtree-filename>\n"
-		   "\n", progname);
-}
-
-extern char *optarg;
-extern int optind, opterr, optopt;
-
-int main(int argc, char **args) {
-    int argchar;
+int unpermute_quads(const char* quadinfn, const char* ckdtinfn,
+					const char* quadoutfn, const char* ckdtoutfn,
+					char** args, int argc) {
     quadfile* quadin;
 	quadfile* quadout;
 	codetree* treein;
 	codetree* treeout;
-	char* progname = args[0];
-	char* quadinfn = NULL;
-	char* quadoutfn = NULL;
-	char* ckdtinfn = NULL;
-	char* ckdtoutfn = NULL;
 	int i;
 	qfits_header* codehdr;
 	qfits_header* hdr;
@@ -75,66 +48,37 @@ int main(int argc, char **args) {
 	qfits_header* qouthdr;
 	qfits_header* qinhdr;
 
-    while ((argchar = getopt (argc, args, OPTIONS)) != -1)
-        switch (argchar) {
-        case 'q':
-            quadinfn = optarg;
-            break;
-        case 'c':
-            ckdtinfn = optarg;
-            break;
-        case 'Q':
-            quadoutfn = optarg;
-            break;
-        case 'C':
-            ckdtoutfn = optarg;
-            break;
-        case '?':
-            fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-        case 'h':
-			printHelp(progname);
-            return 0;
-        default:
-            return -1;
-        }
-
-	if (!(quadinfn && quadoutfn && ckdtinfn && ckdtoutfn)) {
-		printHelp(progname);
-        fprintf(stderr, "\nYou must specify all filenames (-q, -c, -Q, -C)\n");
-		exit(-1);
-	}
-
-	printf("Reading code tree from %s ...\n", ckdtinfn);
+	logmsg("Reading code tree from %s ...\n", ckdtinfn);
 	treein = codetree_open(ckdtinfn);
 	if (!treein) {
-		fprintf(stderr, "Failed to read code kdtree from %s.\n", ckdtinfn);
-		exit(-1);
+		ERROR("Failed to read code kdtree from %s", ckdtinfn);
+		return -1;
 	}
 	codehdr = codetree_header(treein);
 
-	printf("Reading quads from %s ...\n", quadinfn);
+	logmsg("Reading quads from %s ...\n", quadinfn);
 	quadin = quadfile_open(quadinfn);
 	if (!quadin) {
-		fprintf(stderr, "Failed to read quads from %s.\n", quadinfn);
-		exit(-1);
+		ERROR("Failed to read quads from %s", quadinfn);
+		return -1;
 	}
 
 	healpix = quadin->healpix;
 	hpnside = quadin->hpnside;
 	codehp = qfits_header_getint(codehdr, "HEALPIX", -1);
 	if (codehp == -1)
-		fprintf(stderr, "Warning, input code kdtree didn't have a HEALPIX header.\n");
+		ERROR("Warning, input code kdtree didn't have a HEALPIX header");
 	else if (codehp != healpix) {
-		fprintf(stderr, "Quadfile says it's healpix %i, but code kdtree says %i.\n",
+		ERROR("Quadfile says it's healpix %i, but code kdtree says %i",
 				healpix, codehp);
-		exit(-1);
+		return -1;
 	}
 
-	printf("Writing quads to %s ...\n", quadoutfn);
+	logmsg("Writing quads to %s ...\n", quadoutfn);
 	quadout = quadfile_open_for_writing(quadoutfn);
 	if (!quadout) {
-		fprintf(stderr, "Failed to write quads to %s.\n", quadoutfn);
-		exit(-1);
+		ERROR("Failed to write quads to %s", quadoutfn);
+		return -1;
 	}
 
 	quadout->healpix = healpix;
@@ -164,27 +108,27 @@ int main(int argc, char **args) {
 	fits_copy_header(qinhdr, qouthdr, "CIRCLE");
 
 	if (quadfile_write_header(quadout)) {
-		fprintf(stderr, "Failed to write quadfile header.\n");
-		exit(-1);
+		ERROR("Failed to write quadfile header");
+		return -1;
 	}
 
 	for (i=0; i<codetree_N(treein); i++) {
 		unsigned int stars[quadin->dimquads];
 		int ind = codetree_get_permuted(treein, i);
 		if (quadfile_get_stars(quadin, ind, stars)) {
-			fprintf(stderr, "Failed to read quad entry.\n");
-			exit(-1);
+			ERROR("Failed to read quad entry");
+			return -1;
         }
 		if (quadfile_write_quad(quadout, stars)) {
-			fprintf(stderr, "Failed to write quad entry.\n");
-			exit(-1);
+			ERROR("Failed to write quad entry");
+			return -1;
 		}
 	}
 
 	if (quadfile_fix_header(quadout) ||
 		quadfile_close(quadout)) {
-		fprintf(stderr, "Failed to close output quadfile.\n");
-		exit(-1);
+		ERROR("Failed to close output quadfile");
+		return -1;
 	}
 
 	treeout = codetree_new();
@@ -212,18 +156,15 @@ int main(int argc, char **args) {
 
 	quadfile_close(quadin);
 
-	printf("Writing code kdtree to %s ...\n", ckdtoutfn);
+	logmsg("Writing code kdtree to %s ...\n", ckdtoutfn);
 	if (codetree_write_to_file(treeout, ckdtoutfn) ||
 		codetree_close(treeout)) {
-		fprintf(stderr, "Failed to write code kdtree.\n");
-		exit(-1);
+		ERROR("Failed to write code kdtree");
+		return -1;
 	}
 
     free(treein->tree);
     treein->tree = NULL;
     codetree_close(treein);
-
-	printf("Done!\n");
-
 	return 0;
 }

@@ -171,6 +171,11 @@ bool   tan_radec2pixelxy(const tan_t* wcs_tan, double ra, double dec, double *px
 WarnUnusedResult
 bool   tan_xyzarr2pixelxy(const tan_t* wcs_tan, const double* xyz, double *px, double *py);
 
+void tan_iwc2pixelxy(const tan_t* tan, double iwcx, double iwcy,
+					 double *px, double* py);
+void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz);
+void tan_pixelxy2iwc(const tan_t* tan, double px, double py, double *iwcx, double* iwcy);
+
 void   sip_print(const sip_t*);
 
 void   sip_print_to(const sip_t*, FILE* fid);

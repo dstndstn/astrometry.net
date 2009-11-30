@@ -788,7 +788,7 @@ static byte * qfits_pixdump_float(const float * buf, int npix, int ptype)
         break;
 
         default:
-        qfits_error("not supported yet");
+			qfits_error("Pixel type %i not supported yet", ptype);
         buf_out = NULL;
         break;
     }
@@ -889,7 +889,7 @@ static byte * qfits_pixdump_int(const int * buf, int npix, int ptype)
         break; 
 
         default:
-        qfits_error("not supported yet");
+			qfits_error("Pixel type %i not supported yet", ptype);
         buf_out = NULL;
         break;
     }
@@ -996,7 +996,7 @@ static byte * qfits_pixdump_double(const double * buf, int npix, int ptype)
         break; 
 
         default:
-        qfits_error("not supported yet");
+			qfits_error("pixel type %i not supported yet", ptype);
         buf_out = NULL;
         break;
     }

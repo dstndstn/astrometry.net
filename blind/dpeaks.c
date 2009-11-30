@@ -131,7 +131,7 @@ int dpeaks(float *image,
 			for (jp = 0;jp < ny;jp++)
 				for (ip = 0;ip < nx;ip++)
 					mask[ip + jp*nx] = smooth[ip + jp * nx] > level;
-			dfind2(mask, nx, ny, object);
+			dfind2(mask, nx, ny, object, NULL);
 			for (j = i - 1;j >= 0;j--)
 				if (object[ fullxcen[j] + fullycen[j]*nx] ==
 				        object[ fullxcen[i] + fullycen[i]*nx] ||

@@ -16,17 +16,6 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-/**
- \file Applies a star kdtree permutation array to all files that depend on
- the ordering of the stars:   .quad and .skdt .
- The new files are consistent and don't require the star kdtree to have a
- permutation array.
-
-   In:  .quad, .skdt
-   Out: .quad, .skdt
-
-   Original author: dstn
-*/
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,92 +32,28 @@
 #include "log.h"
 #include "errors.h"
 
-static const char* OPTIONS = "hs:q:S:Q:wcv";
-
-void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
-	printf("\nUsage: %s\n"
-           "    -s <input-star-kdtree-filename>\n"
-           "    -q <input-quads-filename>\n"
-           "    -S <output-star-kdtree-filename>\n"
-           "    -Q <output-quads-filename>\n"
-		   "   [-w]: store sweep number in output star kdtree file.\n"
-		   "   [-c]: check values\n"
-		   "   [-v]: more verbose\n"
-		   "\n", progname);
-}
-
-extern char *optarg;
-extern int optind, opterr, optopt;
-
-int main(int argc, char **args) {
-    int argchar;
+int unpermute_stars(const char* skdtinfn, const char* quadinfn,
+					const char* skdtoutfn, const char* quadoutfn,
+					bool dosweeps, bool check,
+					char** args, int argc) {
     quadfile* qfin;
 	quadfile* qfout;
 	startree_t* treein;
 	startree_t* treeout;
-	char* progname = args[0];
-    char* quadinfn = NULL;
-    char* skdtinfn = NULL;
-    char* quadoutfn = NULL;
-    char* skdtoutfn = NULL;
 	int i;
 	int N;
 	int healpix;
     int hpnside;
 	int starhp;
 	int lastgrass;
-	bool dosweeps = FALSE;
-	bool check = FALSE;
-	int loglvl = LOG_MSG;
 	qfits_header* qouthdr;
 	qfits_header* qinhdr;
-
-    while ((argchar = getopt (argc, args, OPTIONS)) != -1)
-        switch (argchar) {
-		case 'c':
-			check = TRUE;
-			break;
-		case 'v':
-			loglvl++;
-			break;
-		case 'q':
-			quadinfn = optarg;
-			break;
-		case 'Q':
-			quadoutfn = optarg;
-			break;
-        case 's':
-            skdtinfn = optarg;
-            break;
-        case 'S':
-            skdtoutfn = optarg;
-            break;
-		case 'w':
-			dosweeps = TRUE;
-			break;
-        case '?':
-            ERROR("Unknown option `-%c'.\n", optopt);
-        case 'h':
-			printHelp(progname);
-            return 0;
-        default:
-            return -1;
-        }
-
-	log_init(loglvl);
-
-	if (!(quadinfn && quadoutfn && skdtinfn && skdtoutfn)) {
-		printHelp(progname);
-        ERROR("\nMust include all filenames (-q, -Q, -s, -S)\n");
-		exit(-1);
-	}
 
 	logmsg("Reading star tree from %s ...\n", skdtinfn);
 	treein = startree_open(skdtinfn);
 	if (!treein) {
 		ERROR("Failed to read star kdtree from %s.\n", skdtinfn);
-		exit(-1);
+		return -1;
 	}
 	N = startree_N(treein);
 
@@ -136,7 +61,7 @@ int main(int argc, char **args) {
 	qfin = quadfile_open(quadinfn);
 	if (!qfin) {
 		ERROR("Failed to read quadfile from %s.\n", quadinfn);
-		exit(-1);
+		return -1;
 	}
 
 	starhp = qfits_header_getint(startree_header(treein), "HEALPIX", -1);
@@ -149,7 +74,7 @@ int main(int argc, char **args) {
 	qfout = quadfile_open_for_writing(quadoutfn);
 	if (!qfout) {
 		ERROR("Failed to write quadfile to %s.\n", quadoutfn);
-		exit(-1);
+		return -1;
 	}
 
 	qfout->healpix = healpix;
@@ -177,7 +102,7 @@ int main(int argc, char **args) {
 
 	if (quadfile_write_header(qfout)) {
 		ERROR("Failed to write quadfile header.\n");
-		exit(-1);
+		return -1;
 	}
 
 	logmsg("Writing quads...\n");
@@ -188,20 +113,20 @@ int main(int argc, char **args) {
 		logmsg("Running quadfile_check()...\n");
 		if (quadfile_check(qfin)) {
 			ERROR("quadfile_check() failed");
-			exit(-1);
+			return -1;
 		}
 		logmsg("Check passed.\n");
 
 		logmsg("Checking inverse permutation...\n");
 		if (startree_check_inverse_perm(treein)) {
 			ERROR("check failed!");
-			exit(-1);
+			return -1;
 		}
 
 		logmsg("Running startree kdtree_check()...\n");
 		if (kdtree_check(treein->tree)) {
 			ERROR("kdtree_check() failed");
-			exit(-1);
+			return -1;
 		}
 		logmsg("Check passed.\n");
 	}
@@ -218,13 +143,13 @@ int main(int argc, char **args) {
 		}
 		if (quadfile_get_stars(qfin, i, stars)) {
 			ERROR("Failed to read quadfile entry.\n");
-			exit(-1);
+			return -1;
         }
 		for (j=0; j<qfin->dimquads; j++)
 			stars[j] = treein->inverse_perm[stars[j]];
 		if (quadfile_write_quad(qfout, stars)) {
 			ERROR("Failed to write quadfile entry.\n");
-			exit(-1);
+			return -1;
 		}
 	}
 	logmsg("\n");
@@ -234,7 +159,7 @@ int main(int argc, char **args) {
 	if (quadfile_fix_header(qfout) ||
 		quadfile_close(qfout)) {
 		ERROR("Failed to close output quadfile.\n");
-		exit(-1);
+		return -1;
 	}
 
 	treeout = startree_new();
@@ -318,7 +243,7 @@ int main(int argc, char **args) {
 	logmsg("Writing star kdtree to %s ...\n", skdtoutfn);
 	if (startree_write_to_file(treeout, skdtoutfn)) {
 		ERROR("Failed to write star kdtree.\n");
-		exit(-1);
+		return -1;
 	}
 
     free(treeout->sigma_radec);

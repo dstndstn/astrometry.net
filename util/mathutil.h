@@ -62,6 +62,8 @@ double gaussian_sample(double mean, double stddev);
 int get_output_image_size(int W, int H, int blocksize, int edgehandling,
 						  int* outw, int* outh);
 
+#define SIGN(x) (((x) == 0) ? 0.0 : (((x) > 0) ? 1.0 : -1.0))
+
 /**
  Average the image in "blocksize" x "blocksize" blocks, placing the
  output in the "output" image.  The output image will have size

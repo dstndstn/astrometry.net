@@ -161,6 +161,7 @@ int cairoutils_parse_rgba(const char* str, float* r, float* g, float* b, float* 
 	char* endp;
 	char* s;
 	if (!((sl_size(words) == 3) || (sl_size(words) == 4))) {
+		sl_free2(words);
 		return -1;
 	}
 	assert(r);

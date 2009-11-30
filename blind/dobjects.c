@@ -114,7 +114,7 @@ int dobjects(float *smooth,
 	 * image that have statistically significant 'events', aka sources. */
 
 	/* now run connected component analysis to find and number each blob */
-	dfind2_u8(mask, nx, ny, objects);
+	dfind2_u8(mask, nx, ny, objects, NULL);
 
 	free(mask);
 

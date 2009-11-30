@@ -2140,6 +2140,10 @@ kdtree_t* MANGLE(kdtree_build)
     dtype hi[D], lo[D];
     dtype* data = NULL;
 
+	dtype nullbb[D];
+	for (i=0; i<D; i++)
+		nullbb[i] = 0;
+
 	maxlevel = kdtree_compute_levels(N, Nleaf);
 
 	assert(maxlevel > 0);
@@ -2265,6 +2269,20 @@ kdtree_t* MANGLE(kdtree_build)
 		right = kd->lr[i];
 
 		assert(right != (unsigned int)-1);
+
+		if (left >= right) {
+			//debug("Empty node %i: left=right=%i\n", i, left);
+			if (options & KD_BUILD_BBOX)
+				save_bb(kd, i, nullbb, nullbb);
+			if (kd->splitdim)
+				kd->splitdim[i] = 0;
+			c = 2*i;
+			if (level == maxlevel - 2)
+				c -= kd->ninterior;
+			kd->lr[c+1] = right;
+			kd->lr[c+2] = right;
+			continue;
+		}
 
 		/* More sanity */
 		assert(0 <= left);

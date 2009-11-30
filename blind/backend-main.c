@@ -246,7 +246,7 @@ int main(int argc, char** args) {
             i++;
         }
         gettimeofday(&tv1, NULL);
-        logverb("Reading job file \"%s\"...\n", jobfn);
+        logmsg("Reading file \"%s\"...\n", jobfn);
         job = backend_read_job_file(backend, jobfn);
         if (!job) {
             ERROR("Failed to read job file \"%s\"", jobfn);
