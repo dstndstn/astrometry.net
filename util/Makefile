@@ -68,7 +68,7 @@ ANUTILS_LIB := libanutils.a
 
 PYTHON_LIBS := _sip.so _healpix.so
 
-PROGS := an-fitstopnm downsample-fits pad-file tycho2tofits
+PROGS := an-fitstopnm downsample-fits pad-file tycho2tofits fits-flip-endian
 
 # tycho2tostellarium build-hd-tree
 
@@ -168,6 +168,9 @@ ALL_OBJ += an-fitstopnm.o
 
 downsample-fits: downsample-fits.o $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += downsample-fits.o
+
+fits-flip-endian: fits-flip-endian.o $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += fits-flip-endian.o
 
 PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
 	shell.py __init__.py file.py run_command.py w3c_validator.py \

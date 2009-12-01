@@ -450,7 +450,6 @@ static int write_to_file(startree_t* s, const char* fn, bool flipped) {
     return 0;
 }
 
-
 int startree_write_to_file(startree_t* s, const char* fn) {
     return write_to_file(s, fn, FALSE);
 }
