@@ -77,7 +77,7 @@ PIPELINE := usnobtofits build-an-catalog hpowned cut-an \
 	wcsinfo wcs-grab fits-guess-scale agreeable new-wcs get-wcs \
 	augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
 	certifiable get-healpix 2masstofits nomadtofits \
-	merge-index index-to-table endian-flip-index setsolved
+	merge-index index-to-table setsolved
 
 PROGS := backend image2xy control-program
 
@@ -368,9 +368,6 @@ local-index: local-index.o merge-index.o unpermute-quads.o unpermute-stars.o \
 ALL_OBJ += local-index.o
 
 index-to-table: index-to-table.o \
-		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-
-endian-flip-index: endian-flip-index.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 threadtest: threadtest.o $(BACKEND_LIB) \
