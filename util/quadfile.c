@@ -21,9 +21,9 @@
 #include <string.h>
 #include <assert.h>
 
+#include "quadfile.h"
 #include "qfits.h"
 #include "fitsioutils.h"
-#include "quadfile.h"
 #include "starutil.h"
 #include "ioutils.h"
 #include "errors.h"
@@ -275,19 +275,3 @@ int quadfile_get_stars(const quadfile* qf, unsigned int quadid, unsigned int* st
 
 
 
-int quadfile_write_quad_flipped(quadfile* qf, unsigned int* stars) {
-	uint32_t ustars[qf->dimquads];
-	int i;
-	fitsbin_chunk_t* chunk = quads_chunk(qf);
-
-    for (i=0; i<qf->dimquads; i++) {
-        ustars[i] = stars[i];
-        endian_swap(ustars+i, sizeof(uint32_t));
-	}
-    if (fitsbin_write_item(qf->fb, chunk, ustars)) {
-		ERROR("Failed to write a quad");
-		return -1;
-	}
-	qf->numquads++;
-	return 0;
-}

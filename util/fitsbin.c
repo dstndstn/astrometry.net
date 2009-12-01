@@ -33,6 +33,15 @@
 #include "tic.h"
 #include "log.h"
 
+// For in-memory: storage of previously-written extensions.
+struct fitsext {
+	qfits_header* header;
+	char* tablename;
+	bl* items;
+};
+typedef struct fitsext fitsext_t;
+
+
 FILE* fitsbin_get_fid(fitsbin_t* fb) {
     return fb->fid;
 }
@@ -60,9 +69,18 @@ static fitsbin_t* new_fitsbin(const char* fn) {
 	if (!fb)
 		return NULL;
     fb->chunks = bl_new(4, sizeof(fitsbin_chunk_t));
-    fb->filename = strdup(fn);
+	if (!fn)
+		// Can't make it NULL or qfits freaks out.
+		fb->filename = strdup("");
+	else
+		fb->filename = strdup(fn);
 	return fb;
 }
+
+static bool in_memory(fitsbin_t* fb) {
+	return fb->inmemory;
+}
+
 
 static void free_chunk(fitsbin_chunk_t* chunk) {
     if (!chunk) return;
@@ -113,7 +131,6 @@ int fitsbin_close(fitsbin_t* fb) {
     int rtn = 0;
 	if (!fb) return rtn;
     if (fb->fid) {
-		//fits_pad_file(fb->fid);
 		if (fclose(fb->fid)) {
 			SYSERROR("Error closing fitsbin file");
             rtn = -1;
@@ -121,16 +138,33 @@ int fitsbin_close(fitsbin_t* fb) {
     }
     if (fb->primheader)
         qfits_header_destroy(fb->primheader);
-    for (i=0; i<nchunks(fb); i++)
+    for (i=0; i<nchunks(fb); i++) {
+		if (in_memory(fb)) {
+			free(get_chunk(fb, i)->data);
+		}
         free_chunk(get_chunk(fb, i));
+	}
     free(fb->filename);
     if (fb->chunks)
         bl_free(fb->chunks);
+
+	if (in_memory(fb)) {
+		for (i=0; i<bl_size(fb->extensions); i++) {
+			fitsext_t* ext = bl_access(fb->extensions, i);
+			bl_free(ext->items);
+			qfits_header_destroy(ext->header);
+			free(ext->tablename);
+		}
+		bl_free(fb->extensions);
+		bl_free(fb->items);
+	}
+
 	free(fb);
     return rtn;
 }
 
 int fitsbin_write_primary_header(fitsbin_t* fb) {
+	if (in_memory(fb)) return 0;
     return fitsfile_write_primary_header(fb->fid, fb->primheader,
                                          &fb->primheader_end, fb->filename);
 }
@@ -140,6 +174,7 @@ qfits_header* fitsbin_get_primary_header(const fitsbin_t* fb) {
 }
 
 int fitsbin_fix_primary_header(fitsbin_t* fb) {
+	if (in_memory(fb)) return 0;
     return fitsfile_fix_primary_header(fb->fid, fb->primheader,
                                        &fb->primheader_end, fb->filename);
 }
@@ -153,6 +188,9 @@ qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 
     if (chunk->header)
         return chunk->header;
+
+	// Create the new header.
+
     if (fb)
         fn = fb->filename;
 	// the table header
@@ -218,6 +256,7 @@ int fitsbin_write_chunk_flipped(fitsbin_t* fb, fitsbin_chunk_t* chunk,
 int fitsbin_write_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     qfits_header* hdr;
     hdr = fitsbin_get_chunk_header(fb, chunk);
+	if (in_memory(fb)) return 0;
     if (fitsfile_write_header(fb->fid, hdr,
                               &chunk->header_start, &chunk->header_end,
                               -1, fb->filename)) {
@@ -229,6 +268,25 @@ int fitsbin_write_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 int fitsbin_fix_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     // update NAXIS2 to reflect the number of rows written.
     fits_header_mod_int(chunk->header, "NAXIS2", chunk->nrows, NULL);
+	//if (in_memory(fb)) return 0;
+
+	// HACK -- leverage the fact that this is the last function called for each chunk...
+	if (in_memory(fb)) {
+		// Save this chunk.
+		fitsext_t ext;
+		// table, header, items
+		if (!fb->extensions)
+			fb->extensions = bl_new(4, sizeof(fitsext_t));
+
+		//ext.table = 
+		ext.header = qfits_header_copy(chunk->header);
+		ext.items = fb->items;
+		ext.tablename = strdup(chunk->tablename);
+		bl_append(fb->extensions, &ext);
+		fb->items = NULL;
+		return 0;
+	}
+
     if (fitsfile_fix_header(fb->fid, chunk->header,
                             &chunk->header_start, &chunk->header_end,
                             -1, fb->filename)) {
@@ -238,10 +296,21 @@ int fitsbin_fix_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 }
 
 int fitsbin_write_items(fitsbin_t* fb, fitsbin_chunk_t* chunk, void* data, int N) {
-    if (fwrite(data, chunk->itemsize, N, fb->fid) != N) {
-        SYSERROR("Failed to write %i items", N);
-        return -1;
-    }
+	if (in_memory(fb)) {
+		int i;
+		char* src = data;
+		if (!fb->items)
+			fb->items = bl_new(1024, chunk->itemsize);
+		for (i=0; i<N; i++) {
+			bl_append(fb->items, src);
+			src += chunk->itemsize;
+		}
+	} else {
+		if (fwrite(data, chunk->itemsize, N, fb->fid) != N) {
+			SYSERROR("Failed to write %i items", N);
+			return -1;
+		}
+	}
     chunk->nrows += N;
     return 0;
 }
@@ -260,28 +329,51 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     qfits_table* table;
     int table_nrows;
     int table_rowsize;
+	fitsext_t* inmemext = NULL;
 
-    gettimeofday(&tv1, NULL);
-    if (fits_find_table_column(fb->filename, chunk->tablename,
-                               &tabstart, &tabsize, &ext)) {
-        if (chunk->required)
-            ERROR("Couldn't find table \"%s\" in file \"%s\"",
-                  chunk->tablename, fb->filename);
-        return -1;
-    }
-    gettimeofday(&tv2, NULL);
-    debug("fits_find_table_column(%s) took %g ms\n", chunk->tablename, millis_between(&tv1, &tv2));
+	if (in_memory(fb)) {
+		int i;
+		bool gotit = FALSE;
+		for (i=0; i<bl_size(fb->extensions); i++) {
+			inmemext = bl_access(fb->extensions, i);
+			if (strcasecmp(inmemext->tablename, chunk->tablename))
+				continue;
+			// found it!
+			gotit = TRUE;
+			break;
+		}
+		if (!gotit && chunk->required) {
+			ERROR("Couldn't find table \"%s\"", chunk->tablename);
+			return -1;
+		}
+		table_nrows = bl_size(inmemext->items);
+		table_rowsize = bl_datasize(inmemext->items);
+		chunk->header = qfits_header_copy(inmemext->header);
 
-    chunk->header = qfits_header_readext(fb->filename, ext);
-    if (!chunk->header) {
-        ERROR("Couldn't read FITS header from file \"%s\" extension %i", fb->filename, ext);
-        return -1;
-    }
+	} else {
 
-    table = qfits_table_open(fb->filename, ext);
-    table_nrows = table->nr;
-    table_rowsize = table->tab_w;
-    qfits_table_close(table);
+		gettimeofday(&tv1, NULL);
+		if (fits_find_table_column(fb->filename, chunk->tablename,
+								   &tabstart, &tabsize, &ext)) {
+			if (chunk->required)
+				ERROR("Couldn't find table \"%s\" in file \"%s\"",
+					  chunk->tablename, fb->filename);
+			return -1;
+		}
+		gettimeofday(&tv2, NULL);
+		debug("fits_find_table_column(%s) took %g ms\n", chunk->tablename, millis_between(&tv1, &tv2));
+
+		chunk->header = qfits_header_readext(fb->filename, ext);
+		if (!chunk->header) {
+			ERROR("Couldn't read FITS header from file \"%s\" extension %i", fb->filename, ext);
+			return -1;
+		}
+
+		table = qfits_table_open(fb->filename, ext);
+		table_nrows = table->nr;
+		table_rowsize = table->tab_w;
+		qfits_table_close(table);
+	}
 
     if (!chunk->itemsize)
         chunk->itemsize = table_rowsize;
@@ -307,24 +399,35 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     }
 
     expected = chunk->itemsize * chunk->nrows;
-    if (fits_bytes_needed(expected) != tabsize) {
-        ERROR("Expected table size (%i => %i FITS blocks) is not equal to "
-              "size of table \"%s\" (%i FITS blocks).",
-              (int)expected, fits_blocks_needed(expected),
-              chunk->tablename, tabsize / FITS_BLOCK_SIZE);
-        return -1;
-    }
+	if (in_memory(fb)) {
+		int i;
+		chunk->data = malloc(expected);
+		for (i=0; i<chunk->nrows; i++) {
+			memcpy(((char*)chunk->data) + i * chunk->itemsize,
+				   bl_access(inmemext->items, i), chunk->itemsize);
+		}
+		// delete inmemext->items ?
 
-    get_mmap_size(tabstart, tabsize, &mapstart, &(chunk->mapsize), &mapoffset);
-    mode = PROT_READ;
-    flags = MAP_SHARED;
-    chunk->map = mmap(0, chunk->mapsize, mode, flags, fileno(fb->fid), mapstart);
-    if (chunk->map == MAP_FAILED) {
-        SYSERROR("Couldn't mmap file \"%s\"", fb->filename);
-        chunk->map = NULL;
-        return -1;
-    }
-    chunk->data = chunk->map + mapoffset;
+	} else {
+
+		if (fits_bytes_needed(expected) != tabsize) {
+			ERROR("Expected table size (%i => %i FITS blocks) is not equal to "
+				  "size of table \"%s\" (%i FITS blocks).",
+				  (int)expected, fits_blocks_needed(expected),
+				  chunk->tablename, tabsize / FITS_BLOCK_SIZE);
+			return -1;
+		}
+		get_mmap_size(tabstart, tabsize, &mapstart, &(chunk->mapsize), &mapoffset);
+		mode = PROT_READ;
+		flags = MAP_SHARED;
+		chunk->map = mmap(0, chunk->mapsize, mode, flags, fileno(fb->fid), mapstart);
+		if (chunk->map == MAP_FAILED) {
+			SYSERROR("Couldn't mmap file \"%s\"", fb->filename);
+			chunk->map = NULL;
+			return -1;
+		}
+		chunk->data = chunk->map + mapoffset;
+	}
     return 0;
 }
 
@@ -374,6 +477,21 @@ fitsbin_t* fitsbin_open(const char* fn) {
  bailout:
     fitsbin_close(fb);
     return NULL;
+}
+
+fitsbin_t* fitsbin_open_in_memory() {
+    fitsbin_t* fb;
+
+    fb = new_fitsbin(NULL);
+    if (!fb)
+        return NULL;
+    fb->primheader = qfits_table_prim_header_default();
+	fb->inmemory = TRUE;
+	return fb;
+}
+
+int fitsbin_switch_to_reading(fitsbin_t* fb) {
+	return 0;
 }
 
 fitsbin_t* fitsbin_open_for_writing(const char* fn) {

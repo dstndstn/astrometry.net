@@ -23,6 +23,7 @@
 
 #include "qfits.h"
 #include "bl.h"
+#include "an-bool.h"
 
 /**
  "fitsbin" is our abuse of FITS binary tables to hold raw binary data,
@@ -138,6 +139,12 @@ struct fitsbin_t {
     // Writing:
     FILE* fid;
 
+	// only used for in_memory():
+	bool inmemory;
+	bl* items;
+	bl* extensions;
+	//fitsbin_chunk_t* lastchunk;
+
     // The primary FITS header
     qfits_header* primheader;
     off_t primheader_end;
@@ -162,6 +169,10 @@ void fitsbin_chunk_reset(fitsbin_chunk_t* chunk);
 fitsbin_t* fitsbin_open(const char* fn);
 
 fitsbin_t* fitsbin_open_for_writing(const char* fn);
+
+fitsbin_t* fitsbin_open_in_memory();
+
+int fitsbin_switch_to_reading(fitsbin_t* fb);
 
 int fitsbin_read(fitsbin_t* fb);
 

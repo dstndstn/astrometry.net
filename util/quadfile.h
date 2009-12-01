@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -41,7 +42,6 @@ struct quadfile {
     int hpnside;
 
 	fitsbin_t* fb;
-
 	// when reading:
 	uint32_t* quadarray;
 };
@@ -79,8 +79,5 @@ double quadfile_get_index_scale_upper_arcsec(const quadfile* qf);
 double quadfile_get_index_scale_lower_arcsec(const quadfile* qf);
 
 qfits_header* quadfile_get_header(const quadfile* qf);
-
-
-int quadfile_write_quad_flipped(quadfile* qf, unsigned int* stars);
 
 #endif
