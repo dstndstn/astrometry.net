@@ -32,6 +32,8 @@
 
  Some example usage scenarios:
 
+ // Writing:
+
  char* filename = "/tmp/xxx";
  fitstable_t* tab = fitstable_open_for_writing(filename);
  // Add column "X", a scalar double (FITS type D)
@@ -81,6 +83,8 @@
  }
 
 
+ // Reading:
+
  char* filename = "/tmp/xxx";
  fitstable_t* tab = fitstable_open(filename);
  // Read the primary header.
@@ -123,6 +127,13 @@ struct fitstable_t {
 
     int extension;
 
+	// when working in-memory:
+	bool inmemory;
+	// rows of the current table, in FITS format but un-endian-flipped
+	bl* rows;
+	// other extensions that are available.
+	bl* extensions;
+
     // When writing:
 	char* fn;
     FILE* fid;
@@ -161,6 +172,12 @@ tfits_type fitscolumn_bool_type();
 
 // When reading: allow this column to match to any FITS type.
 tfits_type fitscolumn_any_type();
+
+fitstable_t* fitstable_open_in_memory();
+
+// for in-memory tables: done writing, start reading.
+int fitstable_switch_to_reading(fitstable_t* tab);
+
 
 fitstable_t* fitstable_open(const char* fn);
 

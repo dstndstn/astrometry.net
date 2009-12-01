@@ -60,6 +60,7 @@ void bl_init(bl* l, int blocksize, int datasize);
 void bl_free(bl* list);
 void  bl_remove_all(bl* list);
 Pure InlineDeclare int  bl_size(const bl* list);
+Pure int  bl_datasize(const bl* list);
 /** Appends an element, returning the location whereto it was copied. */
 void* bl_append(bl* list, const void* data);
 // Copies the nth element into the destination location.

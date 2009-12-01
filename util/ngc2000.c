@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "ngc2000.h"
+#include "ngcic-accurate.h"
 #include "bl.h"
 
 struct ngc_name {

@@ -210,6 +210,7 @@ int xylist_n_fields(xylist_t* ls) {
 }
 
 int xylist_write_one_row(xylist_t* ls, starxy_t* fld, int row) {
+	// FIXME -- does this work if you're using background but not flux?
     return fitstable_write_row(ls->table, fld->x + row, fld->y + row,
                                ls->include_flux ? fld->flux + row : NULL,
                                ls->include_background ? fld->background + row : NULL);

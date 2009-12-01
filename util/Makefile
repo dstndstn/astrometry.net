@@ -46,9 +46,6 @@ include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.netpbm
 include $(COMMON)/makefile.gsl
 
-# for wcs-pv2sip
-include $(COMMON)/makefile.wcslib
-
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(CAIRO_INC)
 CFLAGS += $(NETPBM_INC)

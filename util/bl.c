@@ -87,6 +87,12 @@ static void bl_remove_from_node(bl* list, bl_node* node,
 #undef NL_PRINT
 
 
+Pure int bl_datasize(const bl* list) {
+	if (!list)
+		return 0;
+	return list->datasize;
+}
+
 static void bl_sort_with_userdata(bl* list,
 								  int (*compare)(const void* v1, const void* v2, const void* userdata),
 								  void* userdata);

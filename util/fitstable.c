@@ -46,37 +46,23 @@ struct fitscol_t {
     bool in_struct;
     int coffset;
 
-    /*
-     // Called to retrieve data to be written to the output file.
-     //void (*get_data_callback)(void* data, int offset, int N, fitscol_t* col, void* user);
-     //void* get_data_user;
-     // Called when data has been read from the input file.
-     //void (*put_data_callback)(void* data, int offset, int N, fitscol_t* col, void* user);
-     //void* put_data_user;
-     // Where to read/write data from/to.
-     void* cdata;
-     int cdata_stride;
-     */
-
     // column number of the FITS table.
     int col;
 };
 typedef struct fitscol_t fitscol_t;
 
+// For in-memory: storage of previously-written extensions.
+struct fitsext {
+	qfits_header* header;
+	qfits_table* table;
+	bl* rows;
+};
+typedef struct fitsext fitsext_t;
+
+
 static void fitstable_add_columns(fitstable_t* tab, fitscol_t* cols, int Ncols);
 static void fitstable_add_column(fitstable_t* tab, fitscol_t* col);
 static void fitstable_create_table(fitstable_t* tab);
-
-/*
- int fitstable_read_array(const fitstable_t* tab,
- //const fitscol_t* cols, int Ncols,
- int offset, int N,
- void* data, int stride);
-
- int fitstable_write_array(const fitstable_t* tab,
- int offset, int N,
- const void* data, int stride);
- */
 
 static int ncols(const fitstable_t* t) {
     return bl_size(t->cols);
@@ -87,6 +73,10 @@ static fitscol_t* getcol(const fitstable_t* t, int i) {
 
 bool is_writing(const fitstable_t* t) {
     return t->fid ? TRUE : FALSE;
+}
+
+bool in_memory(const fitstable_t* t) {
+	return t->inmemory;
 }
 
 tfits_type fitscolumn_int_type() {
@@ -148,6 +138,18 @@ int fitscolumn_get_size(fitscol_t* col) {
 
 int fitstable_ncols(fitstable_t* t) {
     return ncols(t);
+}
+
+static int offset_of_column(const fitstable_t* table, int colnum) {
+	int i;
+	int offset = 0;
+	assert(colnum <= bl_size(table->cols));
+	for (i=0; i<colnum; i++) {
+		fitscol_t* col;
+		col = bl_access(table->cols, i);
+		offset += col->fitssize * col->arraysize;
+	}
+	return offset;
 }
 
 int fitstable_row_size(fitstable_t* t) {
@@ -289,8 +291,25 @@ int fitstable_read_structs(fitstable_t* tab, void* struc,
             stride = finalstride;
         }
 
-        // Read from FITS file...
-        qfits_query_column_seq_to_array(tab->table, col->col, offset, N, dest, stride);
+		if (in_memory(tab)) {
+			int j;
+			int off = offset_of_column(tab, i);
+			if (!tab->rows) {
+				ERROR("No data has been written to this fitstable");
+				return -1;
+			}
+			if (offset + N > bl_size(tab->rows)) {
+				ERROR("Number of data items requested exceeds number of rows: offset %i, n %i, nrows %i", offset, N, bl_size(tab->rows));
+				return -1;
+			}
+			for (j=0; j<N; j++)
+				memcpy(((char*)dest) + j * stride,
+					   ((char*)bl_access(tab->rows, offset+j)) + off,
+					   col->fitssize * col->arraysize);
+		} else {
+			// Read from FITS file...
+			qfits_query_column_seq_to_array(tab->table, col->col, offset, N, dest, stride);
+		}
 
         if (col->fitstype != col->ctype) {
             fits_convert_data(finaldest, finalstride, col->ctype,
@@ -310,22 +329,47 @@ int fitstable_read_struct(fitstable_t* tab, int offset, void* struc) {
     return fitstable_read_structs(tab, struc, 0, offset, 1);
 }
 
-int fitstable_write_struct(fitstable_t* table, const void* struc) {
+// One of "struc" or "ap" should be non-null.
+static int write_one(fitstable_t* table, const void* struc, va_list ap) {
     int i;
     char* buf = NULL;
     int Nbuf = 0;
 	int ret = 0;
+	int nc = ncols(table);
 
-    for (i=0; i<ncols(table); i++) {
+	char* thisrow = NULL;
+	int rowoff = 0;
+
+	if (in_memory(table)) {
+		if (!table->rows) {
+			// how big are the rows?
+			int rowsize = offset_of_column(table, bl_size(table->cols));
+			table->rows = bl_new(1024, rowsize);
+		}
+		// FIXME? -- could keep a buffer in fitstable_t... but that would be thread-unsafe
+		thisrow = calloc(1, bl_datasize(table->rows));
+	}
+
+    for (i=0; i<nc; i++) {
         fitscol_t* col;
-        void* columndata;
+        const char* columndata;
         col = getcol(table, i);
-        if (!col->in_struct)
-            // Set "columndata" to NULL, which causes fits_write_data_array
-            // to skip the required number of bytes.
-            columndata = NULL;
-        else
-            columndata = ((char*)struc) + col->coffset;
+		if (col->in_struct) {
+			if (struc)
+				columndata = struc + col->coffset;
+			else
+				columndata = NULL;
+		} else {
+			if (struc)
+				columndata = NULL;
+			else
+				columndata = va_arg(ap, void *);
+		}
+		// If "columndata" is NULL, fits_write_data_array
+		// skips the required number of bytes.
+		// This allows both structs and normal columns to coexist
+		// (in theory -- is this ever used?)
+
         if (columndata && col->fitstype != col->ctype) {
             int sz = MAX(256, MAX(col->csize, col->fitssize) * col->arraysize);
             if (sz > Nbuf) {
@@ -337,13 +381,38 @@ int fitstable_write_struct(fitstable_t* table, const void* struc) {
                               col->arraysize, 1);
             columndata = buf;
         }
-        ret = fits_write_data_array(table->fid, columndata,
-                                    col->fitstype, col->arraysize);
-        if (ret)
-            break;
+		
+		if (in_memory(table)) {
+			int nb = col->fitssize * col->arraysize;
+			memcpy(thisrow + rowoff, columndata, nb);
+			rowoff += nb;
+		} else {
+			ret = fits_write_data_array(table->fid, columndata,
+										col->fitstype, col->arraysize);
+			if (ret)
+				break;
+		}
     }
     free(buf);
+	if (in_memory(table))
+		bl_append(table->rows, thisrow);
+	free(thisrow);
     table->table->nr++;
+    return ret;
+}
+
+
+int fitstable_write_struct(fitstable_t* table, const void* struc) {
+	va_list nil;
+	return write_one(table, struc, nil);
+}
+
+int fitstable_write_row(fitstable_t* table, ...) {
+	int ret;
+	va_list ap;
+	va_start(ap, table);
+	ret = write_one(table, NULL, ap);
+	va_end(ap);
     return ret;
 }
 
@@ -355,26 +424,23 @@ int fitstable_write_one_column(fitstable_t* table, int colnum,
     int i;
     char* buf = NULL;
     fitscol_t* col;
+	int off;
 
-    foffset = ftello(table->fid);
-
-    // jump to row start...
-    start = table->end_table_offset + table->table->tab_w * rowoffset;
-    // + column start
-    for (i=0; i<colnum; i++) {
-        col = getcol(table, i);
-        start += col->fitssize * col->arraysize;
-    }
-
-    if (fseeko(table->fid, start, SEEK_SET)) {
-        SYSERROR("Failed to fseeko() to the start of the file.");
-        return -1;
-    }
+	off = offset_of_column(table, colnum);
+	if (!in_memory(table)) {
+		foffset = ftello(table->fid);
+		// jump to row start...
+		start = table->end_table_offset +
+			table->table->tab_w * rowoffset + off;
+		if (fseeko(table->fid, start, SEEK_SET)) {
+			SYSERROR("Failed to fseeko() to the start of the file.");
+			return -1;
+		}
+	}
 
     col = getcol(table, colnum);
     if (col->fitstype != col->ctype) {
-        int sz;
-        sz = col->fitssize * col->arraysize * nrows;
+		int sz = col->fitssize * col->arraysize * nrows;
         buf = malloc(sz);
         fits_convert_data(buf, col->fitssize * col->arraysize, col->fitstype,
                           src, src_stride, col->ctype,
@@ -383,64 +449,31 @@ int fitstable_write_one_column(fitstable_t* table, int colnum,
         src_stride = col->fitssize * col->arraysize;
     }
 
-    for (i=0; i<nrows; i++) {
-        if (fseeko(table->fid, start + i * table->table->tab_w, SEEK_SET) ||
-            fits_write_data_array(table->fid, src, col->fitstype, col->arraysize)) {
-            SYSERROR("Failed to write row %i of column %i", rowoffset+i, colnum);
-            return -1;
-        }
-        src = ((const char*)src) + src_stride;
-    }
+	if (in_memory(table)) {
+		for (i=0; i<nrows; i++) {
+			memcpy(((char*)bl_access(table->rows, rowoffset + i)) + off,
+				   src, col->fitssize * col->arraysize);
+			src = ((const char*)src) + src_stride;
+		}
+	} else {
+		for (i=0; i<nrows; i++) {
+			if (fseeko(table->fid, start + i * table->table->tab_w, SEEK_SET) ||
+				fits_write_data_array(table->fid, src, col->fitstype, col->arraysize)) {
+				SYSERROR("Failed to write row %i of column %i", rowoffset+i, colnum);
+				return -1;
+			}
+			src = ((const char*)src) + src_stride;
+		}
+	}
     free(buf);
 
-    if (fseeko(table->fid, foffset, SEEK_SET)) {
-        SYSERROR("Failed to restore file offset.");
-        return -1;
-    }
+	if (!in_memory(table)) {
+		if (fseeko(table->fid, foffset, SEEK_SET)) {
+			SYSERROR("Failed to restore file offset.");
+			return -1;
+		}
+	}
     return 0;
-}
-
-int fitstable_write_row(fitstable_t* table, ...) {
-	va_list ap;
-	int ncols = fitstable_ncols(table);
-	int i;
-    char* buf = NULL;
-    int Nbuf = 0;
-	int ret = 0;
-
-	va_start(ap, table);
-	for (i=0; i<ncols; i++) {
-		fitscol_t* col;
-        col = bl_access(table->cols, i);
-		void *columndata;
-        if (col->in_struct) {
-            // Set "columndata" to NULL, which causes fits_write_data_array
-            // to skip the required number of bytes.
-            columndata = NULL;
-        } else {
-            columndata = va_arg(ap, void *);
-        }
-
-        if (columndata && col->fitstype != col->ctype) {
-            int sz = MAX(256, MAX(col->csize, col->fitssize) * col->arraysize);
-            if (sz > Nbuf) {
-                free(buf);
-                buf = malloc(sz);
-            }
-            fits_convert_data(buf, col->fitssize, col->fitstype,
-                              columndata, col->csize, col->ctype,
-                              col->arraysize, 1);
-            columndata = buf;
-        }
-        ret = fits_write_data_array(table->fid, columndata,
-                                    col->fitstype, col->arraysize);
-        if (ret)
-            break;
-    }
-	va_end(ap);
-    free(buf);
-    table->table->nr++;
-    return ret;
 }
 
 void fitstable_clear_table(fitstable_t* tab) {
@@ -464,9 +497,9 @@ static void* read_array_into(const fitstable_t* tab,
     int fitstype;
     int arraysize;
 
-	void* tempdata = NULL;
-    void* cdata;
-	void* fitsdata;
+	char* tempdata = NULL;
+    char* cdata;
+	char* fitsdata;
 	int cstride;
 	int fitsstride;
     int N;
@@ -514,8 +547,26 @@ static void* read_array_into(const fitstable_t* tab,
 		fitsdata = cdata;
 	}
 
-	qfits_query_column_seq_to_array(tab->table, colnum, offset, Nread,
-									fitsdata, fitsstride);
+	if (in_memory(tab)) {
+		int i;
+		int off;
+		if (!tab->rows) {
+			ERROR("No data has been written to this fitstable");
+			return NULL;
+		}
+		if (offset + Nread > bl_size(tab->rows)) {
+			ERROR("Number of data items requested exceeds number of rows: offset %i, n %i, nrows %i", offset, Nread, bl_size(tab->rows));
+			return NULL;
+		}
+		off = fits_offset_of_column(tab->table, colnum);
+		for (i=0; i<Nread; i++)
+			memcpy(fitsdata + i * fitsstride,
+				   ((char*)bl_access(tab->rows, offset+i)) + off,
+				   fitssize * arraysize);
+	} else {
+		qfits_query_column_seq_to_array(tab->table, colnum, offset, Nread,
+										(unsigned char*)fitsdata, fitsstride);
+	}
 
 	if (fitstype != ctype) {
 		if (csize <= fitssize) {
@@ -525,11 +576,11 @@ static void* read_array_into(const fitstable_t* tab,
 							  arraysize, Nread);
 		} else {
 			// work backward from the end of the array
-            fits_convert_data(((char*)cdata) + ((Nread*arraysize)-1) * csize,
-                              -csize, ctype,
-                              ((char*)fitsdata) + ((Nread*arraysize)-1) * fitssize,
-                              -fitssize, fitstype,
-                              1, Nread * arraysize);
+            fits_convert_data(cdata + ((Nread*arraysize)-1) * csize,
+							  -csize, ctype,
+							  fitsdata + ((Nread*arraysize)-1) * fitssize,
+							  -fitssize, fitstype,
+							  1, Nread * arraysize);
 		}
 	}
 
@@ -593,8 +644,20 @@ qfits_header* fitstable_get_header(fitstable_t* t) {
 void fitstable_next_extension(fitstable_t* tab) {
     if (tab->fid)
         fits_pad_file(tab->fid);
-    qfits_table_close(tab->table);
-    qfits_header_destroy(tab->header);
+
+	if (in_memory(tab)) {
+		fitsext_t ext;
+		if (!tab->table)
+			return;
+		ext.table = tab->table;
+		ext.header = tab->header;
+		ext.rows = tab->rows;
+		bl_append(tab->extensions, &ext);
+		tab->rows = NULL;
+	} else {
+		qfits_table_close(tab->table);
+		qfits_header_destroy(tab->header);
+	}
     tab->extension++;
     tab->table = NULL;
     tab->header = NULL;
@@ -607,6 +670,38 @@ static fitstable_t* fitstable_new() {
         return tab;
     tab->cols = bl_new(8, sizeof(fitscol_t));
     return tab;
+}
+
+fitstable_t* fitstable_open_in_memory() {
+    fitstable_t* tab;
+    tab = fitstable_new();
+    if (!tab) {
+		ERROR("Failed to allocate new FITS table structure");
+        goto bailout;
+	}
+    tab->fn = NULL;
+    tab->fid = NULL;
+	tab->primheader = qfits_table_prim_header_default();
+	tab->inmemory = TRUE;
+	tab->extensions = bl_new(16, sizeof(fitsext_t));
+    return tab;
+
+ bailout:
+    if (tab) {
+        fitstable_close(tab);
+    }
+    return NULL;
+}
+
+int fitstable_switch_to_reading(fitstable_t* table) {
+	assert(in_memory(table));
+	// store the current extension.
+	fitstable_next_extension(table);
+	// This resets all the meta-data about the table, meaning a reader
+	// can then re-add columns it is interested in.
+	fitstable_clear_table(table);
+	table->extension = 1;
+	return fitstable_open_extension(table, table->extension);
 }
 
 fitstable_t* fitstable_open(const char* fn) {
@@ -683,6 +778,21 @@ int fitstable_close(fitstable_t* tab) {
         buffered_read_free(tab->br);
         free(tab->br);
     }
+	if (tab->rows) {
+		bl_free(tab->rows);
+	}
+	if (tab->extensions) {
+		for (i=0; i<bl_size(tab->extensions); i++) {
+			fitsext_t* ext = bl_access(tab->extensions, i);
+			if (ext->rows != tab->rows)
+				bl_free(ext->rows);
+			if (ext->header != tab->header)
+				qfits_header_destroy(ext->header);
+			if (ext->table != tab->table)
+				qfits_table_close(ext->table);
+		}
+		bl_free(tab->extensions);
+	}
     free(tab);
     return rtn;
 }
@@ -726,21 +836,35 @@ int fitstable_open_next_extension(fitstable_t* tab) {
 }
 
 int fitstable_open_extension(fitstable_t* tab, int ext) {
-    if (tab->table) {
-        qfits_table_close(tab->table);
-    }
-	tab->table = qfits_table_open(tab->fn, ext);
-	if (!tab->table) {
-		ERROR("FITS extension %i in file %s is not a table (or there was an error opening the file)", ext, tab->fn);
-		return -1;
-	}
-    if (tab->header) {
-        qfits_header_destroy(tab->header);
-    }
-    tab->header = qfits_header_readext(tab->fn, ext);
-	if (!tab->header) {
-		ERROR("Couldn't get header for FITS extension %i in file %s", ext, tab->fn);
-		return -1;
+	if (in_memory(tab)) {
+		fitsext_t* theext;
+		if (ext > bl_size(tab->extensions)) {
+			ERROR("Table has only %i extensions, but you requested #%i",
+				  bl_size(tab->extensions), ext);
+			return -1;
+		}
+		theext = bl_access(tab->extensions, ext-1);
+		tab->table = theext->table;
+		tab->header = theext->header;
+		tab->rows = theext->rows;
+
+	} else {
+		if (tab->table) {
+			qfits_table_close(tab->table);
+		}
+		tab->table = qfits_table_open(tab->fn, ext);
+		if (!tab->table) {
+			ERROR("FITS extension %i in file %s is not a table (or there was an error opening the file)", ext, tab->fn);
+			return -1;
+		}
+		if (tab->header) {
+			qfits_header_destroy(tab->header);
+		}
+		tab->header = qfits_header_readext(tab->fn, ext);
+		if (!tab->header) {
+			ERROR("Couldn't get header for FITS extension %i in file %s", ext, tab->fn);
+			return -1;
+		}
 	}
     return 0;
 }
@@ -749,22 +873,9 @@ int fitstable_read_extension(fitstable_t* tab, int ext) {
     int i;
     int ok = 1;
 
-    if (tab->table) {
-        qfits_table_close(tab->table);
-    }
-	tab->table = qfits_table_open(tab->fn, ext);
-	if (!tab->table) {
-		ERROR("FITS extension %i in file %s is not a table (or there was an error opening the file)", ext, tab->fn);
+	if (fitstable_open_extension(tab, ext))
 		return -1;
-	}
-    if (tab->header) {
-        qfits_header_destroy(tab->header);
-    }
-    tab->header = qfits_header_readext(tab->fn, ext);
-	if (!tab->header) {
-		ERROR("Couldn't get header for FITS extension %i in file %s", ext, tab->fn);
-		return -1;
-	}
+
     for (i=0; i<ncols(tab); i++) {
         fitscol_t* col = getcol(tab, i);
         qfits_col* qcol;
@@ -788,19 +899,10 @@ int fitstable_read_extension(fitstable_t* tab, int ext) {
         col->fitssize = fits_get_atom_size(col->fitstype);
 
         if (col->arraysize) {
-            /*
-             if (col->fitstype == TFITS_BIN_TYPE_X) {
-             if (((col->arraysize + 7)/8) != qcol->atom_nb) {
-             col->col = -1;
-             continue;
-             }
-             } else {
-             */
             if (col->arraysize != qcol->atom_nb) {
                 col->col = -1;
                 continue;
             }
-            //}
         }
         if (col->fitstype == TFITS_BIN_TYPE_X) {
             col->arraysize = 8 * qcol->atom_nb;
@@ -826,11 +928,13 @@ int fitstable_read_extension(fitstable_t* tab, int ext) {
 }
 
 int fitstable_write_primary_header(fitstable_t* t) {
+	if (in_memory(t)) return 0;
     return fitsfile_write_primary_header(t->fid, t->primheader,
                                          &t->end_header_offset, t->fn);
 }
 
 int fitstable_fix_primary_header(fitstable_t* t) {
+	if (in_memory(t)) return 0;
     return fitsfile_fix_primary_header(t->fid, t->primheader,
                                        &t->end_header_offset, t->fn);
 }
@@ -854,6 +958,8 @@ int fitstable_write_header(fitstable_t* t) {
             return -1;
         }
     }
+	if (in_memory(t)) return 0;
+
     return fitsfile_write_header(t->fid, t->header,
                                  &t->table_offset, &t->end_table_offset,
                                  t->extension, t->fn);
@@ -866,6 +972,8 @@ int fitstable_pad_with(fitstable_t* t, char pad) {
 int fitstable_fix_header(fitstable_t* t) {
     // update NAXIS2 to reflect the number of rows written.
     fits_header_mod_int(t->header, "NAXIS2", t->table->nr, NULL);
+
+	if (in_memory(t)) return 0;
 
     if (fitsfile_fix_header(t->fid, t->header,
                             &t->table_offset, &t->end_table_offset,
@@ -904,7 +1012,6 @@ void fitstable_print_missing(fitstable_t* tab, FILE* f) {
             fprintf(f, "%s ", col->colname);
         }
     }
-    //fprintf(f, "\n");
 }
 
 void fitstable_error_report_missing(fitstable_t* tab) {
@@ -944,7 +1051,6 @@ static void fitstable_create_table(fitstable_t* tab) {
 
 static int refill_buffer(void* userdata, void* buffer, unsigned int offset, unsigned int n) {
     fitstable_t* tab = userdata;
-	//memset((char*)buffer + tab->br->elementsize * offset, 0, tab->br->elementsize * n);
     if (fitstable_read_structs(tab, buffer, tab->br->elementsize, offset, n)) {
         ERROR("Error refilling FITS table read buffer");
         return -1;

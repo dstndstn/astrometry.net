@@ -24,63 +24,15 @@
 #include "qfits.h"
 #include "bl.h"
 
-struct fitsbin_t;
-
-struct fitsbin_chunk_t {
-	char* tablename;
-
-    // internal use: pointer to strdup'd name.
-    char* tablename_copy;
-
-	// The data (NULL if the table was not found)
-	void* data;
-
-	// The size of a single row in bytes.
-	int itemsize;
-
-	// The number of items (rows)
-	int nrows;
-
-	// abort if this table isn't found?
-	int required;
-
-    // Reading:
-    int (*callback_read_header)(struct fitsbin_t* fb, struct fitsbin_chunk_t* chunk);
-    void* userdata;
-
-    qfits_header* header;
-
-    // Writing:
-    off_t header_start;
-    off_t header_end;
-
-	// Internal use:
-	// The mmap'ed address
-	char* map;
-	// The mmap'ed size.
-	size_t mapsize;
-};
-typedef struct fitsbin_chunk_t fitsbin_chunk_t;
-
-
-struct fitsbin_t {
-	char* filename;
-
-    bl* chunks;
-
-    // Writing:
-    FILE* fid;
-
-    // The primary FITS header
-    qfits_header* primheader;
-    off_t primheader_end;
-
-    // for use by callback_read_header().
-    void* userdata;
-};
-typedef struct fitsbin_t fitsbin_t;
-
 /**
+ "fitsbin" is our abuse of FITS binary tables to hold raw binary data,
+ *without endian flips*, by storing the data as characters/bytes.
+ This has the advantage that they can be directly mmap()'d, but of
+ course means that they aren't endian-independent.  We accept that
+ tradeoff in the interest of speed and the recognition that x86 is
+ pretty much all we care about.
+
+
  Typical usage patterns:
 
  -Reading:
@@ -138,6 +90,62 @@ typedef struct fitsbin_t fitsbin_t;
  fitsbin_close(fb);
 
  */
+
+struct fitsbin_t;
+
+struct fitsbin_chunk_t {
+	char* tablename;
+
+    // internal use: pointer to strdup'd name.
+    char* tablename_copy;
+
+	// The data (NULL if the table was not found)
+	void* data;
+
+	// The size of a single row in bytes.
+	int itemsize;
+
+	// The number of items (rows)
+	int nrows;
+
+	// abort if this table isn't found?
+	int required;
+
+    // Reading:
+    int (*callback_read_header)(struct fitsbin_t* fb, struct fitsbin_chunk_t* chunk);
+    void* userdata;
+
+    qfits_header* header;
+
+    // Writing:
+    off_t header_start;
+    off_t header_end;
+
+	// Internal use:
+	// The mmap'ed address
+	char* map;
+	// The mmap'ed size.
+	size_t mapsize;
+};
+typedef struct fitsbin_chunk_t fitsbin_chunk_t;
+
+
+struct fitsbin_t {
+	char* filename;
+
+    bl* chunks;
+
+    // Writing:
+    FILE* fid;
+
+    // The primary FITS header
+    qfits_header* primheader;
+    off_t primheader_end;
+
+    // for use by callback_read_header().
+    void* userdata;
+};
+typedef struct fitsbin_t fitsbin_t;
 
 // Initializes a chunk to default values
 void fitsbin_chunk_init(fitsbin_chunk_t* chunk);

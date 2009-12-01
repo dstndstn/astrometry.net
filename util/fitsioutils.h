@@ -171,6 +171,8 @@ qfits_table* fits_get_table_column(const char* fn, const char* colname, int* pco
 int fits_add_column(qfits_table* table, int column, tfits_type type,
 					int ncopies, const char* units, const char* label);
 
+int fits_offset_of_column(qfits_table* table, int colnum);
+
 /**
  Converts data between different FITS types.
 

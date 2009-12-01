@@ -939,6 +939,20 @@ int fits_add_column(qfits_table* table, int column, tfits_type type,
 	return 0;
 }
 
+int fits_offset_of_column(qfits_table* table, int colnum) {
+	int off = 0;
+	int i;
+	// from qfits_table.c : qfits_compute_table_width()
+	for (i=0; i<colnum; i++) {
+        if (table->tab_t == QFITS_ASCIITABLE) {
+            off += table->col[i].atom_nb;
+        } else if (table->tab_t == QFITS_BINTABLE) {
+            off += table->col[i].atom_nb * table->col[i].atom_size;
+        }
+	}
+	return off;
+}
+
 int fits_write_data_D(FILE* fid, double value) {
 	assert(sizeof(double) == 8);
 	v64_hton(&value);
