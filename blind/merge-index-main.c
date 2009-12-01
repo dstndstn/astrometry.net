@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2008 Dustin Lang.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -28,6 +28,7 @@
 #include "errors.h"
 #include "boilerplate.h"
 #include "ioutils.h"
+#include "merge-index.h"
 
 #define OPTIONS "hq:c:s:o:"
 

@@ -28,6 +28,7 @@
 #include "sip_qfits.h"
 #include "sip.h"
 #include "errors.h"
+#include "wcs-xy2rd.h"
 
 const char* OPTIONS = "hi:o:w:f:R:D:te:x:y:";
 

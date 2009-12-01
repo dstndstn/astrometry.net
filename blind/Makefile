@@ -337,6 +337,10 @@ cut-an: cut-an.o catalog.o usnob.o \
 startree: startree.o catalog.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
+startree2: startree2-main.o startree2.o \
+		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += startree2-main.o startree2.o
+
 hpquads: hpquads.o quad-builder.o quad-utils.o codefile.o pnpoly.o histogram.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
