@@ -25,7 +25,46 @@
 #include "fitsioutils.h"
 #include "boilerplate.h"
 
-startree_t* build_startree(fitstable_t* intable,
+int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
+								  const char* racol, const char* deccol) {
+	int i, R, NB, N;
+	char* buf;
+	
+	fitstable_add_fits_columns_as_struct(intab);
+	fitstable_copy_columns(intab, outtab);
+	if (!racol)
+		racol = "RA";
+	if (!deccol)
+		deccol = "DEC";
+	fitstable_remove_column(outtab, racol);
+	fitstable_remove_column(outtab, deccol);
+    fitstable_read_extension(intab, 1);
+	if (fitstable_write_header(outtab)) {
+		ERROR("Failed to write tag-along data header");
+		return -1;
+	}
+	R = fitstable_row_size(intab);
+	NB = 1000;
+	logverb("Row size: %i\n", R);
+	buf = malloc(NB * R);
+	N = fitstable_nrows(intab);
+	for (i=0; i<N; i+=NB) {
+		int nr = NB;
+		if (i+NB > N)
+			nr = N - i;
+		if (fitstable_read_structs(intab, buf, R, 0, nr)) {
+			ERROR("Failed to read tag-along data from catalog");
+			return -1;
+		}
+		if (fitstable_write_structs(outtab, buf, R, nr)) {
+			ERROR("Failed to write tag-along data");
+			return -1;
+		}
+	}
+	return 0;
+}
+
+startree_t* startree_build(fitstable_t* intable,
 						   const char* racol, const char* deccol,
 						   // keep RA,Dec in the tag-along table?
 						   //bool keep_radec,

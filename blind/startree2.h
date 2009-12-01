@@ -31,10 +31,8 @@
 #include "fitstable.h"
 #include "an-bool.h"
 
-startree_t* build_startree(fitstable_t* intable,
+startree_t* startree_build(fitstable_t* intable,
 						   const char* racol, const char* deccol,
-						   // keep RA,Dec in the tag-along table?
-						   //bool keep_radec,
 						   // KDT_DATA_*, KDT_TREE_*
 						   int datatype, int treetype,
 						   // KD_BUILD_*
@@ -42,5 +40,8 @@ startree_t* build_startree(fitstable_t* intable,
 						   int Nleaf,
 						   char** args, int argc);
 
+
+int startree_write_tagalong_table(fitstable_t* intable, fitstable_t* outtable,
+								  const char* racol, const char* deccol);
 
 #endif

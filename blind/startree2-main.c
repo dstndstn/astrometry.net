@@ -68,8 +68,6 @@ int main(int argc, char *argv[]) {
 	int treetype = 0;
 	int buildopts = 0;
 	bool checktree = FALSE;
-	int i, R, NB, N;
-	char* buf;
 
     if (argc <= 2) {
 		printHelp(progname);
@@ -148,7 +146,7 @@ int main(int argc, char *argv[]) {
     }
 	logmsg("Got %i stars\n", fitstable_nrows(cat));
 
-	starkd = build_startree(cat, racol, deccol, datatype, treetype,
+	starkd = startree_build(cat, racol, deccol, datatype, treetype,
 							buildopts, Nleaf, argv, argc);
 	if (!starkd) {
 		ERROR("Failed to create star kdtree");
@@ -168,45 +166,14 @@ int main(int argc, char *argv[]) {
     startree_close(starkd);
 
 	// Append tag-along table.
+	logmsg("Writing tag-along data...\n");
 	tag = fitstable_open_for_appending(skdtfn);
-	fitstable_add_fits_columns_as_struct(cat);
-	fitstable_copy_columns(cat, tag);
-	if (!racol)
-		racol = "RA";
-	if (!deccol)
-		deccol = "DEC";
-	logmsg("output fitstable has %i columns\n", fitstable_ncols(tag));
-	fitstable_remove_column(tag, racol);
-	fitstable_remove_column(tag, deccol);
-	logmsg("output fitstable has %i columns\n", fitstable_ncols(tag));
-	// Repeated read_struct, write_struct calls?
 
-	//fitstable_use_buffered_reading(cat, fitstable_row_size(cat), 1000);
-    fitstable_read_extension(cat, 1);
-
-	if (fitstable_write_header(tag)) {
-		ERROR("Failed to write tag-along data header");
+	if (startree_write_tagalong_table(cat, tag, racol, deccol)) {
+		ERROR("Failed to write tag-along table");
 		exit(-1);
 	}
 
-	R = fitstable_row_size(cat);
-	NB = 1000;
-	logverb("row size: %i\n", R);
-	buf = malloc(NB * R);
-	N = fitstable_nrows(cat);
-	for (i=0; i<N; i+=NB) {
-		int nr = NB;
-		if (i+NB > N)
-			nr = N - i;
-		if (fitstable_read_structs(cat, buf, R, 0, nr)) {
-			ERROR("Failed to read tag-along data from catalog");
-			exit(-1);
-		}
-		if (fitstable_write_structs(tag, buf, R, nr)) {
-			ERROR("Failed to write tag-along data");
-			exit(-1);
-		}
-	}
 	if (fitstable_fix_header(tag) ||
 		fitstable_close(tag)) {
 		ERROR("Failed to fix or close tag-along data");
