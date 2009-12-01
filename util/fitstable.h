@@ -183,6 +183,12 @@ fitstable_t* fitstable_open(const char* fn);
 
 fitstable_t* fitstable_open_for_writing(const char* fn);
 
+fitstable_t* fitstable_open_for_appending(const char* fn);
+
+void fitstable_copy_columns(const fitstable_t* src, fitstable_t* dest);
+
+void fitstable_add_fits_columns_as_struct(fitstable_t* dest);
+
 // reading...
 int fitstable_open_extension(fitstable_t* tab, int ext);
 
@@ -285,6 +291,8 @@ int fitstable_write_row(fitstable_t* table, ...);
 
 // Writes one row, with data drawn from the given structure.
 int fitstable_write_struct(fitstable_t* table, const void* struc);
+
+int fitstable_write_structs(fitstable_t* table, const void* struc, int stride, int N);
 
 int fitstable_pad_with(fitstable_t* table, char pad);
 

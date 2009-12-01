@@ -166,6 +166,20 @@ int fitstable_row_size(fitstable_t* t) {
      */
 }
 
+void fitstable_copy_columns(const fitstable_t* src, fitstable_t* dest) {
+	int i;
+	for (i=0; i<ncols(src); i++) {
+		fitscol_t* col = getcol(src, i);
+		char* name = col->colname;
+		char* units = col->units;
+		col->colname = strdup_safe(col->colname);
+		col->units   = strdup_safe(col->units);
+		fitstable_add_column(dest, col);
+		col->colname = name;
+		col->units = units;
+	}
+}
+
 void fitstable_add_write_column(fitstable_t* tab, tfits_type t,
                                 const char* name, const char* units) {
     fitstable_add_write_column_array_convert(tab, t, t, 1, name, units);
@@ -214,6 +228,19 @@ void fitstable_add_write_column_struct(fitstable_t* tab,
                                 fits_type, name, units, FALSE);
 }
 
+void fitstable_add_fits_columns_as_struct(fitstable_t* tab) {
+	int i;
+	int off = 0;
+	for (i=0; i<tab->table->nc; i++) {
+		qfits_col* qcol = tab->table->col + i;
+		// atom_type, atom_size, atom_nb
+		fitstable_add_read_column_struct(tab, qcol->atom_type, qcol->atom_nb,
+										 off, qcol->atom_type, qcol->tlabel, TRUE);
+		off += fitscolumn_get_size(getcol(tab, ncols(tab)-1));
+	}
+}
+
+
 void fitstable_add_read_column_struct(fitstable_t* tab,
                                       tfits_type c_type,
                                       int arraysize,
@@ -250,7 +277,9 @@ int fitstable_remove_column(fitstable_t* tab, const char* name) {
     int i;
     for (i=0; i<ncols(tab); i++) {
         fitscol_t* col = getcol(tab, i);
-        if (strcmp(name, col->colname) == 0) {
+        if (strcasecmp(name, col->colname) == 0) {
+			free(col->colname);
+			free(col->units);
             bl_remove_index(tab->cols, i);
             return 0;
         }
@@ -404,12 +433,30 @@ static int write_one(fitstable_t* table, const void* struc, va_list ap) {
 
 int fitstable_write_struct(fitstable_t* table, const void* struc) {
 	va_list nil;
+	//if (!table->table)
+	//fitstable_create_table(table);
 	return write_one(table, struc, nil);
+}
+
+int fitstable_write_structs(fitstable_t* table, const void* struc, int stride, int N) {
+	int i;
+	char* s = (char*)struc;
+	//if (!table->table)
+	//fitstable_create_table(table);
+	for (i=0; i<N; i++) {
+		if (fitstable_write_struct(table, s)) {
+			return -1;
+		}
+		s += stride;
+	}
+	return 0;
 }
 
 int fitstable_write_row(fitstable_t* table, ...) {
 	int ret;
 	va_list ap;
+	if (!table->table)
+		fitstable_create_table(table);
 	va_start(ap, table);
 	ret = write_one(table, NULL, ap);
 	va_end(ap);
@@ -730,25 +777,49 @@ fitstable_t* fitstable_open(const char* fn) {
     return NULL;
 }
 
-fitstable_t* fitstable_open_for_writing(const char* fn) {
+static fitstable_t* open_for_writing(const char* fn, const char* mode) {
     fitstable_t* tab;
     tab = fitstable_new();
     if (!tab)
         goto bailout;
     tab->fn = strdup_safe(fn);
-    tab->fid = fopen(fn, "wb");
+    tab->fid = fopen(fn, mode);
 	if (!tab->fid) {
 		SYSERROR("Couldn't open output file %s for writing", fn);
 		goto bailout;
 	}
-	tab->primheader = qfits_table_prim_header_default();
     return tab;
-
  bailout:
     if (tab) {
         fitstable_close(tab);
     }
     return NULL;
+}
+
+fitstable_t* fitstable_open_for_writing(const char* fn) {
+	fitstable_t* tab = open_for_writing(fn, "wb");
+	if (!tab)
+		return tab;
+	tab->primheader = qfits_table_prim_header_default();
+	return tab;
+}
+
+fitstable_t* fitstable_open_for_appending(const char* fn) {
+	fitstable_t* tab = open_for_writing(fn, "r+b");
+	if (!tab)
+		return tab;
+	if (fseeko(tab->fid, 0, SEEK_END)) {
+		SYSERROR("Failed to seek to end of file");
+		fitstable_close(tab);
+		return NULL;
+	}
+    tab->primheader = qfits_header_read(fn);
+    if (!tab->primheader) {
+        ERROR("Failed to read primary FITS header from %s", fn);
+		fitstable_close(tab);
+		return NULL;
+    }
+	return tab;
 }
 
 int fitstable_close(fitstable_t* tab) {
