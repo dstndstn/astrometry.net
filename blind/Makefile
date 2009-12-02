@@ -341,8 +341,9 @@ startree2: startree2-main.o startree2.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += startree2-main.o startree2.o
 
-hpquads: hpquads.o quad-builder.o quad-utils.o codefile.o pnpoly.o histogram.o \
+hpquads: hpquads-main.o hpquads.o quad-builder.o quad-utils.o codefile.o pnpoly.o histogram.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += hpquads-main.o quad-builder.o hpquads.o
 
 allquads: allquads-main.o allquads.o quad-builder.o quad-utils.o codefile.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
