@@ -188,14 +188,46 @@ quadfile* quadfile_open_for_writing(const char* fn) {
 	return NULL;
 }
 
+static void add_to_header(qfits_header* hdr, quadfile* qf) {
+	fits_header_mod_int(hdr, "DIMQUADS", qf->dimquads, "Number of stars in a quad.");
+	fits_header_mod_int(hdr, "NQUADS", qf->numquads, "Number of quads.");
+	fits_header_mod_int(hdr, "NSTARS", qf->numstars, "Number of stars.");
+	fits_header_mod_double(hdr, "SCALE_U", qf->index_scale_upper, "Upper-bound index scale (radians).");
+	fits_header_mod_double(hdr, "SCALE_L", qf->index_scale_lower, "Lower-bound index scale (radians).");
+	fits_header_mod_int(hdr, "INDEXID", qf->indexid, "Index unique ID.");
+	fits_header_mod_int(hdr, "HEALPIX", qf->healpix, "Healpix of this index.");
+	fits_header_mod_int(hdr, "HPNSIDE", qf->hpnside, "Nside of the healpixelization");
+}
+
 int quadfile_write_header(quadfile* qf) {
 	fitsbin_t* fb = qf->fb;
 	fitsbin_chunk_t* chunk = quads_chunk(qf);
+	qfits_header* hdr;
     chunk->itemsize = qf->dimquads * sizeof(uint32_t);
 	chunk->nrows = qf->numquads;
 
+	hdr = fitsbin_get_primary_header(fb);
+	add_to_header(hdr, qf);
+
 	if (fitsbin_write_primary_header(fb) ||
 		fitsbin_write_chunk_header(fb, chunk)) {
+		ERROR("Failed to write quadfile header");
+		return -1;
+	}
+	return 0;
+}
+
+int quadfile_write_header_to(quadfile* qf, FILE* fid) {
+	fitsbin_t* fb = qf->fb;
+	fitsbin_chunk_t* chunk = quads_chunk(qf);
+	qfits_header* hdr;
+    chunk->itemsize = qf->dimquads * sizeof(uint32_t);
+	chunk->nrows = qf->numquads;
+	hdr = fitsbin_get_primary_header(fb);
+	add_to_header(hdr, qf);
+
+	if (fitsbin_write_primary_header_to(fb, fid) ||
+		fitsbin_write_chunk_header_to(fb, chunk, fid)) {
 		ERROR("Failed to write quadfile header");
 		return -1;
 	}
@@ -223,6 +255,15 @@ int quadfile_write_quad(quadfile* qf, unsigned int* stars) {
 	return 0;
 }
 
+int quadfile_write_all_quads_to(quadfile* qf, FILE* fid) {
+	fitsbin_chunk_t* chunk = quads_chunk(qf);
+	if (fitsbin_write_items_to(chunk, qf->quadarray, quadfile_nquads(qf), fid)) {
+		ERROR("Failed to write %i quads", quadfile_nquads(qf));
+		return -1;
+	}
+	return 0;
+}
+
 int quadfile_fix_header(quadfile* qf) {
 	qfits_header* hdr;
 	fitsbin_t* fb = qf->fb;
@@ -232,16 +273,7 @@ int quadfile_fix_header(quadfile* qf) {
 	chunk->nrows = qf->numquads;
 
 	hdr = fitsbin_get_primary_header(fb);
-
-	// fill in the real values...
-	fits_header_mod_int(hdr, "DIMQUADS", qf->dimquads, "Number of stars in a quad.");
-	fits_header_mod_int(hdr, "NQUADS", qf->numquads, "Number of quads.");
-	fits_header_mod_int(hdr, "NSTARS", qf->numstars, "Number of stars.");
-	fits_header_mod_double(hdr, "SCALE_U", qf->index_scale_upper, "Upper-bound index scale (radians).");
-	fits_header_mod_double(hdr, "SCALE_L", qf->index_scale_lower, "Lower-bound index scale (radians).");
-	fits_header_mod_int(hdr, "INDEXID", qf->indexid, "Index unique ID.");
-	fits_header_mod_int(hdr, "HEALPIX", qf->healpix, "Healpix of this index.");
-	fits_header_mod_int(hdr, "HPNSIDE", qf->hpnside, "Nside of the healpixelization");
+	add_to_header(hdr, qf);
 
 	if (fitsbin_fix_primary_header(fb) ||
 		fitsbin_fix_chunk_header(fb, chunk)) {

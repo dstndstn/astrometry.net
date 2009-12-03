@@ -80,4 +80,8 @@ double quadfile_get_index_scale_lower_arcsec(const quadfile* qf);
 
 qfits_header* quadfile_get_header(const quadfile* qf);
 
+int quadfile_write_header_to(quadfile* qf, FILE* fid);
+
+int quadfile_write_all_quads_to(quadfile* qf, FILE* fid);
+
 #endif

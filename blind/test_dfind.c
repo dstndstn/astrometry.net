@@ -173,13 +173,13 @@ int compare_inputs(int *test_data, int nx, int ny) {
 	int ix, iy, i;
 	unsigned char* u8img;
 
-	dfind2(test_data, nx,ny,test_outs_keir);
+	dfind2(test_data, nx,ny,test_outs_keir, NULL);
 	old_dfind(test_data, nx,ny,test_outs_blanton);
 
 	u8img = malloc(nx * ny);
 	for (i=0; i<(nx*ny); i++)
 		u8img[i] = test_data[i];
-	dfind2_u8(u8img, nx, ny, test_outs_u8);
+	dfind2_u8(u8img, nx, ny, test_outs_u8, NULL);
 
 	for(iy=0; iy<ny; iy++) {
 		for (ix=0; ix<nx; ix++) {

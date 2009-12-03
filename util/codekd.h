@@ -53,6 +53,8 @@ int codetree_close(codetree* s);
 // for writing
 codetree* codetree_new();
 
+int codetree_append_to(codetree* s, FILE* fid);
+
 int codetree_write_to_file(codetree* s, const char* fn);
 
 int codetree_write_to_file_flipped(codetree* s, const char* fn);

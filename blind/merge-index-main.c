@@ -84,7 +84,7 @@ int main(int argc, char **args) {
 
     fits_use_error_system();
 
-	if (merge_index(quadfn, codefn, starfn, outfn)) {
+	if (merge_index_files(quadfn, codefn, starfn, outfn)) {
 		exit(-1);
 	}
 	return 0;

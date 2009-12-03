@@ -406,26 +406,40 @@ startree_t* startree_new() {
 	return s;
 }
 
-static int write_to_file(startree_t* s, const char* fn, bool flipped) {
+static int write_to_file(startree_t* s, const char* fn, bool flipped,
+						 FILE* fid) {
     bl* chunks;
     il* wordsizes = NULL;
     int i;
-    kdtree_fits_t* io;
-    io = kdtree_fits_open_for_writing(fn);
-    if (!io) {
-        ERROR("Failed to open file \"%s\" for writing kdtree", fn);
-        return -1;
-    }
+    kdtree_fits_t* io = NULL;
+
+	// just haven't bothered...
+	assert(!(flipped && fid));
+
+	if (fn) {
+		io = kdtree_fits_open_for_writing(fn);
+		if (!io) {
+			ERROR("Failed to open file \"%s\" for writing kdtree", fn);
+			return -1;
+		}
+	}
     if (flipped) {
         if (kdtree_fits_write_tree_flipped(io, s->tree, s->header)) {
             ERROR("Failed to write (flipped) kdtree to file \"%s\"", fn);
             return -1;
         }
     } else {
-        if (kdtree_fits_write_tree(io, s->tree, s->header)) {
-            ERROR("Failed to write kdtree to file \"%s\"", fn);
-            return -1;
-        }
+		if (fid) {
+			if (kdtree_fits_append_tree_to(s->tree, s->header, fid)) {
+				ERROR("Failed to write star kdtree");
+				return -1;
+			}
+		} else {
+			if (kdtree_fits_write_tree(io, s->tree, s->header)) {
+				ERROR("Failed to write kdtree to file \"%s\"", fn);
+				return -1;
+			}
+		}
     }
 
     if (flipped)
@@ -438,23 +452,33 @@ static int write_to_file(startree_t* s, const char* fn, bool flipped) {
             continue;
         if (flipped)
             kdtree_fits_write_chunk_flipped(io, chunk, il_get(wordsizes, i));
-        else
-            kdtree_fits_write_chunk(io, chunk);
-    }
-    bl_free(chunks);
+        else {
+			if (fid) {
+				kdtree_fits_write_chunk_to(chunk, fid);
+			} else {
+				kdtree_fits_write_chunk(io, chunk);
+			}
+		}
+	}
+	bl_free(chunks);
 
     if (flipped)
         il_free(wordsizes);
     
-    kdtree_fits_io_close(io);
+	if (io)
+		kdtree_fits_io_close(io);
     return 0;
 }
 
 int startree_write_to_file(startree_t* s, const char* fn) {
-    return write_to_file(s, fn, FALSE);
+    return write_to_file(s, fn, FALSE, NULL);
 }
 
 int startree_write_to_file_flipped(startree_t* s, const char* fn) {
-    return write_to_file(s, fn, TRUE);
+    return write_to_file(s, fn, TRUE, NULL);
+}
+
+int startree_append_to(startree_t* s, FILE* fid) {
+	return write_to_file(s, NULL, FALSE, fid);
 }
 

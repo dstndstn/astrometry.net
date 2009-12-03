@@ -33,6 +33,10 @@ static codetree* codetree_alloc() {
 	return s;
 }
 
+int codetree_append_to(codetree* s, FILE* fid) {
+	return kdtree_fits_append_tree_to(s->tree, s->header, fid);
+}
+
 int codetree_N(codetree* s) {
 	return s->tree->ndata;
 }

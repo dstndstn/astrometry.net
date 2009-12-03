@@ -20,6 +20,8 @@
 #define STAR_KD_H
 
 #include <stdint.h>
+#include <stdio.h>
+
 #include "kdtree.h"
 #include "qfits.h"
 #include "kdtree_fits_io.h"
@@ -106,5 +108,7 @@ startree_t* startree_new();
 int startree_write_to_file(startree_t* s, const char* fn);
 
 int startree_write_to_file_flipped(startree_t* s, const char* fn);
+
+int startree_append_to(startree_t* s, FILE* fid);
 
 #endif

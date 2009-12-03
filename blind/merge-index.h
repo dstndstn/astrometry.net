@@ -19,10 +19,17 @@
 #ifndef MERGE_INDEX_H
 #define MERGE_INDEX_H
 
+#include "quadfile.h"
+#include "codekd.h"
+#include "starkd.h"
+
 /**
  Merges .quad, .ckdt, and .skdt files to produce a .index file.
  */
-int merge_index(const char* quadfn, const char* ckdtfn, const char* skdtfn,
+int merge_index_files(const char* quadfn, const char* ckdtfn, const char* skdtfn,
+					  const char* indexfn);
+
+int merge_index(quadfile* quads, codetree* codekd, startree_t* starkd,
 				const char* indexfn);
 
 #endif
