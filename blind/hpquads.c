@@ -271,20 +271,19 @@ static int build_quads(hpquads_t* me, int Nhptotry, il* hptotry, int R) {
 	return nthispass;
 }
 
-	
-int hpquads_files(const char* skdtfn,
-				  const char* codefn,
-				  const char* quadfn,
-				  int Nside,
-				  double scale_min_arcmin,
-				  double scale_max_arcmin,
-				  int dimquads,
-				  int passes,
-				  int Nreuses,
-				  int Nloosen,
-				  int id,
-				  bool scanoccupied,
-				  char** args, int argc) {
+int hpquads(startree_t* starkd,
+			codefile* codes,
+			quadfile* quads,
+			int Nside,
+			double scale_min_arcmin,
+			double scale_max_arcmin,
+			int dimquads,
+			int passes,
+			int Nreuses,
+			int Nloosen,
+			int id,
+			bool scanoccupied,
+			char** args, int argc) {
 	hpquads_t myhpquads;
 	hpquads_t* me = &myhpquads;
 
@@ -307,9 +306,6 @@ int hpquads_files(const char* skdtfn,
 	int dimcodes;
 	int quadsize;
 	int NHP;
-
-	quadfile* quads;
-	codefile* codes;
 
 	memset(me, 0, sizeof(hpquads_t));
 
@@ -335,12 +331,7 @@ int hpquads_files(const char* skdtfn,
 		   me->Nside, me->Nside*me->Nside, NHP, healpix_side_length_arcmin(me->Nside));
 
 	tic();
-	logmsg("Reading star kdtree %s ...\n", skdtfn);
-	me->starkd = startree_open(skdtfn);
-	if (!me->starkd) {
-		ERROR("Failed to open star kdtree %s\n", skdtfn);
-		return -1;
-	}
+	me->starkd = starkd;
 	N = startree_N(me->starkd);
 	logmsg("Star tree contains %i objects.\n", N);
 
@@ -367,18 +358,6 @@ int hpquads_files(const char* skdtfn,
 		logmsg("\n\n");
 	}
 
-	logmsg("Will write to quad file %s and code file %s\n", quadfn, codefn);
-
-    quads = quadfile_open_for_writing(quadfn);
-	if (!quads) {
-		ERROR("Couldn't open file %s to write quads.\n", quadfn);
-		return -1;
-	}
-    codes = codefile_open_for_writing(codefn);
-	if (!codes) {
-		ERROR("Couldn't open file %s to write codes.\n", codefn);
-		return -1;
-	}
 	quads->dimquads = me->dimquads;
 	codes->dimcodes = dimcodes;
 	quads->healpix = skhp;
@@ -397,11 +376,11 @@ int hpquads_files(const char* skdtfn,
 	add_headers(chdr, args, argc, startree_header(me->starkd), circle, passes);
 
     if (quadfile_write_header(quads)) {
-        ERROR("Couldn't write headers to quads file %s\n", quadfn);
+        ERROR("Couldn't write headers to quad file");
 		return -1;
     }
     if (codefile_write_header(codes)) {
-        ERROR("Couldn't write headers to code file %s\n", codefn);
+        ERROR("Couldn't write headers to code file");
 		return -1;
     }
 
@@ -552,23 +531,76 @@ int hpquads_files(const char* skdtfn,
 	}
 
 	// fix output file headers.
-	if (quadfile_fix_header(quads) ||
-		quadfile_close(quads)) {
-		ERROR("Couldn't write quad output file");
+	if (quadfile_fix_header(quads)) {
+		ERROR("Failed to fix quadfile headers");
 		return -1;
 	}
-	if (codefile_fix_header(codes) ||
-		codefile_close(codes)) {
-		ERROR("Couldn't write code output file");
+	if (codefile_fix_header(codes)) {
+		ERROR("Failed to fix codefile headers");
 		return -1;
 	}
-	
+
 	bl_free(me->quadlist);
 	bt_free(me->bigquadlist);
-	startree_close(me->starkd);
 
 	toc();
 	logmsg("Done.\n");
 	return 0;
 }
 
+int hpquads_files(const char* skdtfn,
+				  const char* codefn,
+				  const char* quadfn,
+				  int Nside,
+				  double scale_min_arcmin,
+				  double scale_max_arcmin,
+				  int dimquads,
+				  int passes,
+				  int Nreuses,
+				  int Nloosen,
+				  int id,
+				  bool scanoccupied,
+				  char** args, int argc) {
+	quadfile* quads;
+	codefile* codes;
+	startree_t* starkd;
+	int rtn;
+
+	logmsg("Reading star kdtree %s ...\n", skdtfn);
+	starkd = startree_open(skdtfn);
+	if (!starkd) {
+		ERROR("Failed to open star kdtree %s\n", skdtfn);
+		return -1;
+	}
+
+	logmsg("Will write to quad file %s and code file %s\n", quadfn, codefn);
+    quads = quadfile_open_for_writing(quadfn);
+	if (!quads) {
+		ERROR("Couldn't open file %s to write quads.\n", quadfn);
+		return -1;
+	}
+    codes = codefile_open_for_writing(codefn);
+	if (!codes) {
+		ERROR("Couldn't open file %s to write codes.\n", codefn);
+		return -1;
+	}
+
+	rtn = hpquads(starkd, codes, quads, Nside,
+				  scale_min_arcmin, scale_max_arcmin,
+				  dimquads, passes, Nreuses, Nloosen, id,
+				  scanoccupied, args, argc);
+	if (rtn)
+		return rtn;
+
+	if (quadfile_close(quads)) {
+		ERROR("Couldn't write quad output file");
+		return -1;
+	}
+	if (codefile_close(codes)) {
+		ERROR("Couldn't write code output file");
+		return -1;
+	}
+	startree_close(starkd);
+
+	return rtn;
+}

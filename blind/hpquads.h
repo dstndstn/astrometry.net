@@ -20,6 +20,23 @@
 #define HPQUADS_H
 
 #include "an-bool.h"
+#include "starkd.h"
+#include "codefile.h"
+#include "quadfile.h"
+
+int hpquads(startree_t* starkd,
+			codefile* codes,
+			quadfile* quads,
+			int Nside,
+			double scale_min_arcmin,
+			double scale_max_arcmin,
+			int dimquads,
+			int passes,
+			int Nreuses,
+			int Nloosen,
+			int id,
+			bool scanoccupied,
+			char** args, int argc);
 
 int hpquads_files(const char* skdtfn,
 				  const char* codefn,
