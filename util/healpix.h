@@ -215,18 +215,22 @@ Const int64_t healpix_compose_xyl(int bighp, int x, int y, int Nside);
 */
 Const int radectohealpix(double ra, double dec, int Nside);
 
+int radectohealpixf(double ra, double dec, int Nside, double* dx, double* dy);
+
 Const int64_t radectohealpixl(double ra, double dec, int Nside);
 
-int radectohealpixf(double ra, double dec, int Nside, double* dx, double* dy);
+int64_t radectohealpixlf(double ra, double dec, int Nside, double* dx, double* dy);
 
 /**
    Converts (RA, DEC) coordinates (in degrees) to healpix index.
 */
 Const int radecdegtohealpix(double ra, double dec, int Nside);
 
+int radecdegtohealpixf(double ra, double dec, int Nside, double* dx, double* dy);
+
 Const int64_t radecdegtohealpixl(double ra, double dec, int Nside);
 
-int radecdegtohealpixf(double ra, double dec, int Nside, double* dx, double* dy);
+int64_t radecdegtohealpixlf(double ra, double dec, int Nside, double* dx, double* dy);
 
 /**
    Converts (x,y,z) coordinates on the unit sphere into a healpix index.
@@ -275,6 +279,9 @@ void healpix_to_radec(int hp, int Nside, double dx, double dy,
 
 void healpix_to_radecdeg(int hp, int Nside, double dx, double dy,
                          double* ra, double* dec);
+
+void healpixl_to_radecdeg(int64_t hp, int Nside, double dx, double dy,
+						  double* ra, double* dec);
 
 /**
    Same as healpix_to_radec, but (RA,DEC) are stored in an array.

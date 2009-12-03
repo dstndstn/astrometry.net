@@ -53,6 +53,14 @@ static void inttohp(int pix, hp_t* hp, int Nside) {
 	healpix_decompose_xy(pix, &hp->bighp, &hp->x, &hp->y, Nside);
 }
 
+static void hp_decompose(hp_t* hp, int* php, int* px, int* py) {
+	if (php)
+		*php = hp->bighp;
+	if (px)
+		*px = hp->x;
+	if (py)
+		*py = hp->y;
+}
 
 // I've had troubles with rounding functions being declared properly
 // in other contexts...  Declare it here so the compiler complains if
@@ -403,7 +411,7 @@ void healpix_decompose_xyl(int64_t finehp,
 						   int* pbighp, int* px, int* py,
 						   int Nside) {
 	int64_t hp;
-	int64_t ns2 = Nside * Nside;
+	int64_t ns2 = (int64_t)Nside * (int64_t)Nside;
 	if (pbighp) {
 		int bighp   = finehp / ns2;
 		*pbighp = bighp;
@@ -886,6 +894,10 @@ int radectohealpix(double ra, double dec, int Nside) {
     return xyztohealpix(radec2x(ra,dec), radec2y(ra,dec), radec2z(ra,dec), Nside);
 }
 
+int64_t radectohealpixlf(double ra, double dec, int Nside, double* dx, double* dy) {
+    return xyztohealpixlf(radec2x(ra,dec), radec2y(ra,dec), radec2z(ra,dec), Nside, dx, dy);
+}
+
 int64_t radectohealpixl(double ra, double dec, int Nside) {
     return xyztohealpixl(radec2x(ra,dec), radec2y(ra,dec), radec2z(ra,dec), Nside);
 }
@@ -901,6 +913,10 @@ Const int radecdegtohealpix(double ra, double dec, int Nside) {
 
 Const int64_t radecdegtohealpixl(double ra, double dec, int Nside) {
 	return radectohealpixl(deg2rad(ra), deg2rad(dec), Nside);
+}
+
+int64_t radecdegtohealpixlf(double ra, double dec, int Nside, double* dx, double* dy) {
+	return radectohealpixlf(deg2rad(ra), deg2rad(dec), Nside, dx, dy);
 }
 
 int radecdegtohealpixf(double ra, double dec, int Nside, double* dx, double* dy) {
@@ -919,9 +935,9 @@ int xyzarrtohealpixf(double* xyz,int Nside, double* p_dx, double* p_dy) {
     return xyztohealpixf(xyz[0], xyz[1], xyz[2], Nside, p_dx, p_dy);
 }
 
-void healpix_to_xyz(int hp, int Nside,
-					double dx, double dy, 
-					double* rx, double *ry, double *rz) {
+static void hp_to_xyz(hp_t* hp, int Nside,
+					  double dx, double dy, 
+					  double* rx, double *ry, double *rz) {
 	int chp;
 	bool equatorial = TRUE;
 	double zfactor = 1.0;
@@ -930,7 +946,7 @@ void healpix_to_xyz(int hp, int Nside,
 	double pi = M_PI, phi;
 	double rad;
 
-	healpix_decompose_xy(hp, &chp, &xp, &yp, Nside);
+	hp_decompose(hp, &chp, &xp, &yp);
 
 	// this is x,y position in the healpix reference frame
 	x = xp + dx;
@@ -1029,10 +1045,29 @@ void healpix_to_xyz(int hp, int Nside,
 	*rz = z;
 }
 
-void healpix_to_xyzarr(int hp, int Nside,
+void healpix_to_xyz(int ihp, int Nside,
+					double dx, double dy, 
+					double* px, double *py, double *pz) {
+	hp_t hp;
+	inttohp(ihp, &hp, Nside);
+	hp_to_xyz(&hp, Nside, dx, dy, px, py, pz);
+}
+
+void healpixl_to_radecdeg(int64_t ihp, int Nside, double dx, double dy,
+						  double* ra, double* dec) {
+	hp_t hp;
+	double xyz[3];
+	intltohp(ihp, &hp, Nside);
+	hp_to_xyz(&hp, Nside, dx, dy, xyz, xyz+1, xyz+2);
+	xyzarr2radecdeg(xyz, ra, dec);
+}
+
+void healpix_to_xyzarr(int ihp, int Nside,
 					   double dx, double dy,
 					   double* xyz) {
-	healpix_to_xyz(hp, Nside, dx, dy, xyz, xyz+1, xyz+2);
+	hp_t hp;
+	inttohp(ihp, &hp, Nside);
+	hp_to_xyz(&hp, Nside, dx, dy, xyz, xyz+1, xyz+2);
 }
 
 void healpix_to_radec(int hp, int Nside,

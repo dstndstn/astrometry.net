@@ -582,6 +582,43 @@ void print_healpix_borders(int Nside) {
 	fflush(stderr);
 }
 
+void test_big_nside(CuTest* ct) {
+	double ra1, dec1, ra2, dec2;
+	int Nside = 2097152;
+	int64_t hp;
+	double dx, dy;
+
+	// just a random val...
+	ra1 = 43.7;
+	dec1 = -38.4;
+
+	hp = radecdegtohealpixl(ra1, dec1, Nside);
+	healpixl_to_radecdeg(hp, Nside, 0, 0, &ra2, &dec2);
+
+	CuAssertDblEquals(ct, ra1, ra2, arcsec2deg(0.1));
+	CuAssertDblEquals(ct, dec1, dec2, arcsec2deg(0.1));
+
+	// another random val...
+	ra1 = 0.0003;
+	dec1 = 75.3;
+
+	dx = dy = -1.0;
+	hp = radecdegtohealpixlf(ra1, dec1, Nside, &dx, &dy);
+	CuAssert(ct, "dx", dx >= 0.0);
+	CuAssert(ct, "dx", dx <= 1.0);
+	CuAssert(ct, "dy", dy >= 0.0);
+	CuAssert(ct, "dy", dy <= 1.0);
+	healpixl_to_radecdeg(hp, Nside, dx, dy, &ra2, &dec2);
+
+	CuAssertDblEquals(ct, ra1, ra2, arcsec2deg(1e-10));
+	CuAssertDblEquals(ct, dec1, dec2, arcsec2deg(1e-10));
+
+	printf("RA,Dec difference: %g, %g arcsec\n", deg2arcsec(ra2-ra1), deg2arcsec(dec2-dec1));
+}
+
+
+
+
 #if defined(TEST_HEALPIX_MAIN)
 int main(int argc, char** args) {
 
