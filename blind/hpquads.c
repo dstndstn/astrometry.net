@@ -268,6 +268,7 @@ static int build_quads(hpquads_t* me, int Nhptotry, il* hptotry, int R) {
 			// FIXME -- could also track which hps are worth visiting in a future pass
 		}
 	}
+	printf("\n");
 	return nthispass;
 }
 
@@ -385,13 +386,12 @@ int hpquads(startree_t* starkd,
     }
 
     quads->numstars = codes->numstars = N;
+	me->quad_dist2_upper = arcmin2distsq(scale_max_arcmin);
+	me->quad_dist2_lower = arcmin2distsq(scale_min_arcmin);
     codes->index_scale_upper = quads->index_scale_upper = distsq2rad(me->quad_dist2_upper);
     codes->index_scale_lower = quads->index_scale_lower = distsq2rad(me->quad_dist2_lower);
 	
 	me->nuses = calloc(N, sizeof(unsigned char));
-
-	me->quad_dist2_upper = arcmin2distsq(scale_max_arcmin);
-	me->quad_dist2_lower = arcmin2distsq(scale_min_arcmin);
 
 	// hprad = sqrt(2) * (healpix side length / 2.)
 	hprad = arcmin2dist(healpix_side_length_arcmin(Nside)) * M_SQRT1_2;

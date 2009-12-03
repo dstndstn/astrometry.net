@@ -198,6 +198,8 @@ qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 
     if (fb)
         fn = fb->filename;
+	if (!fn)
+		fn = "";
 	// the table header
 	tablesize = chunk->itemsize * chunk->nrows * ncols;
 	table = qfits_table_new(fn, QFITS_BINTABLE, tablesize, ncols, chunk->nrows);
