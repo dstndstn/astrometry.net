@@ -225,4 +225,15 @@ int fitsbin_write_item(fitsbin_t* fb, fitsbin_chunk_t* chunk, void* data);
 
 int fitsbin_write_items(fitsbin_t* fb, fitsbin_chunk_t* chunk, void* data, int N);
 
+
+// direct FILE* output:
+
+int fitsbin_write_primary_header_to(fitsbin_t* fb, FILE* fid);
+
+int fitsbin_write_chunk_header_to(fitsbin_t* fb, fitsbin_chunk_t* chunk, FILE* fid);
+
+int fitsbin_write_items_to(fitsbin_chunk_t* chunk, void* data, int N, FILE* fid);
+
+int fitsbin_write_chunk_to(fitsbin_t* fb, fitsbin_chunk_t* chunk, FILE* fid);
+
 #endif

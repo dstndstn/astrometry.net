@@ -169,6 +169,11 @@ int fitsbin_write_primary_header(fitsbin_t* fb) {
                                          &fb->primheader_end, fb->filename);
 }
 
+int fitsbin_write_primary_header_to(fitsbin_t* fb, FILE* fid) {
+	off_t end;
+	return fitsfile_write_primary_header(fid, fb->primheader, &end, "");
+}
+
 qfits_header* fitsbin_get_primary_header(const fitsbin_t* fb) {
     return fb->primheader;
 }
@@ -248,6 +253,13 @@ int fitsbin_write_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     return write_chunk(fb, chunk, 0);
 }
 
+int fitsbin_write_chunk_to(fitsbin_t* fb, fitsbin_chunk_t* chunk, FILE* fid) {
+    if (fitsbin_write_chunk_header_to(fb, chunk, fid) ||
+		fitsbin_write_items_to(chunk, chunk->data, chunk->nrows, fid))
+        return -1;
+	return 0;
+}
+
 int fitsbin_write_chunk_flipped(fitsbin_t* fb, fitsbin_chunk_t* chunk,
                                 int wordsize) {
     return write_chunk(fb, chunk, wordsize);
@@ -262,6 +274,15 @@ int fitsbin_write_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
                               -1, fb->filename)) {
         return -1;
     }
+	return 0;
+}
+
+int fitsbin_write_chunk_header_to(fitsbin_t* fb, fitsbin_chunk_t* chunk, FILE* fid) {
+	off_t start, end;
+    qfits_header* hdr;
+    hdr = fitsbin_get_chunk_header(fb, chunk);
+    if (fitsfile_write_header(fid, hdr, &start, &end, -1, ""))
+        return -1;
 	return 0;
 }
 
@@ -295,6 +316,14 @@ int fitsbin_fix_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	return 0;
 }
 
+int fitsbin_write_items_to(fitsbin_chunk_t* chunk, void* data, int N, FILE* fid) {
+	if (fwrite(data, chunk->itemsize, N, fid) != N) {
+		SYSERROR("Failed to write %i items", N);
+		return -1;
+	}
+    return 0;
+}
+
 int fitsbin_write_items(fitsbin_t* fb, fitsbin_chunk_t* chunk, void* data, int N) {
 	if (in_memory(fb)) {
 		int i;
@@ -306,10 +335,8 @@ int fitsbin_write_items(fitsbin_t* fb, fitsbin_chunk_t* chunk, void* data, int N
 			src += chunk->itemsize;
 		}
 	} else {
-		if (fwrite(data, chunk->itemsize, N, fb->fid) != N) {
-			SYSERROR("Failed to write %i items", N);
+		if (fitsbin_write_items_to(chunk, data, N, fb->fid))
 			return -1;
-		}
 	}
     chunk->nrows += N;
     return 0;
