@@ -47,14 +47,8 @@
 
 struct hpquads {
 	int dimquads;
-	int dimcodes;
-	int quadsize;
 	int Nside;
-	int NHP;
 	startree_t* starkd;
-	quadfile* quads;
-	codefile* codes;
-
 
 	// bounds of quad scale, in distance between AB on the sphere.
 	double quad_dist2_upper;
@@ -66,7 +60,6 @@ struct hpquads {
 	bt* bigquadlist;
 
 	unsigned char* nuses;
-	//int Nuses;
 
 	// from find_stars():
 	kdtree_qres_t* res;
@@ -311,14 +304,19 @@ int hpquads_files(const char* skdtfn,
 	qfits_header* chdr;
 
 	int N;
+	int dimcodes;
+	int quadsize;
+	int NHP;
+
+	quadfile* quads;
+	codefile* codes;
 
 	memset(me, 0, sizeof(hpquads_t));
 
 	if (Nside > 13377) {
-		// 12 * (13377+1)^2  >  2^31, so healpix arithmetic will fail.
+		// 12 * (13377+1)^2 > 2^31, so healpix arithmetic will fail
+		// (since we use ints)
 		// This corresponds to about 0.26 arcmin side length -- pretty tiny...
-		// Careful use of unsignedness (uint32_t) would bring this to:
-		//   Nside = 18918, side length 0.19 arcmin.
 		ERROR("Error: maximum healpix Nside = 13377.\n");
 		return -1;
 	}
@@ -329,24 +327,22 @@ int hpquads_files(const char* skdtfn,
 
 	me->Nside = Nside;
 	me->dimquads = dimquads;
-	//me->Nuses = Nreuses;
+	NHP = 12 * Nside * Nside;
+	dimcodes = dimquad2dimcode(dimquads);
+	quadsize = sizeof(unsigned int) * dimquads;
 
-	me->NHP = 12 * Nside * Nside;
-	me->dimcodes = dimquad2dimcode(dimquads);
-	me->quadsize = sizeof(unsigned int) * dimquads;
-
-	printf("Nside=%i.  Nside^2=%i.  Number of healpixes=%i.  Healpix side length ~ %g arcmin.\n",
-		   me->Nside, me->Nside*me->Nside, me->NHP, healpix_side_length_arcmin(me->Nside));
+	logmsg("Nside=%i.  Nside^2=%i.  Number of healpixes=%i.  Healpix side length ~ %g arcmin.\n",
+		   me->Nside, me->Nside*me->Nside, NHP, healpix_side_length_arcmin(me->Nside));
 
 	tic();
-	printf("Reading star kdtree %s ...\n", skdtfn);
+	logmsg("Reading star kdtree %s ...\n", skdtfn);
 	me->starkd = startree_open(skdtfn);
 	if (!me->starkd) {
 		ERROR("Failed to open star kdtree %s\n", skdtfn);
 		return -1;
 	}
 	N = startree_N(me->starkd);
-	printf("Star tree contains %i objects.\n", N);
+	logmsg("Star tree contains %i objects.\n", N);
 
 	// get the "HEALPIX" header from the skdt...
 	skhp = qfits_header_getint(startree_header(me->starkd), "HEALPIX", -1);
@@ -363,7 +359,7 @@ int hpquads_files(const char* skdtfn,
 		return -1;
     }
 
-	if (!scanoccupied && (N*(skhp == -1 ? 1 : sknside*sknside*12) < me->NHP)) {
+	if (!scanoccupied && (N*(skhp == -1 ? 1 : sknside*sknside*12) < NHP)) {
 		logmsg("\n\n");
 		logmsg("NOTE, your star kdtree is sparse (has only a fraction of the stars expected)\n");
 		logmsg("  so you probably will get much faster results by setting the \"-E\" command-line\n");
@@ -371,47 +367,47 @@ int hpquads_files(const char* skdtfn,
 		logmsg("\n\n");
 	}
 
-	printf("Will write to quad file %s and code file %s\n", quadfn, codefn);
+	logmsg("Will write to quad file %s and code file %s\n", quadfn, codefn);
 
-    me->quads = quadfile_open_for_writing(quadfn);
-	if (!me->quads) {
+    quads = quadfile_open_for_writing(quadfn);
+	if (!quads) {
 		ERROR("Couldn't open file %s to write quads.\n", quadfn);
 		return -1;
 	}
-    me->codes = codefile_open_for_writing(codefn);
-	if (!me->codes) {
+    codes = codefile_open_for_writing(codefn);
+	if (!codes) {
 		ERROR("Couldn't open file %s to write codes.\n", codefn);
 		return -1;
 	}
-	me->quads->dimquads = me->dimquads;
-	me->codes->dimcodes = me->dimcodes;
-	me->quads->healpix = skhp;
-	me->codes->healpix = skhp;
-	me->quads->hpnside = sknside;
-	me->codes->hpnside = sknside;
+	quads->dimquads = me->dimquads;
+	codes->dimcodes = dimcodes;
+	quads->healpix = skhp;
+	codes->healpix = skhp;
+	quads->hpnside = sknside;
+	codes->hpnside = sknside;
 	if (id) {
-		me->quads->indexid = id;
-		me->codes->indexid = id;
+		quads->indexid = id;
+		codes->indexid = id;
 	}
 
-	qhdr = quadfile_get_header(me->quads);
-	chdr = codefile_get_header(me->codes);
+	qhdr = quadfile_get_header(quads);
+	chdr = codefile_get_header(codes);
 
 	add_headers(qhdr, args, argc, startree_header(me->starkd), circle, passes);
 	add_headers(chdr, args, argc, startree_header(me->starkd), circle, passes);
 
-    if (quadfile_write_header(me->quads)) {
+    if (quadfile_write_header(quads)) {
         ERROR("Couldn't write headers to quads file %s\n", quadfn);
 		return -1;
     }
-    if (codefile_write_header(me->codes)) {
+    if (codefile_write_header(codes)) {
         ERROR("Couldn't write headers to code file %s\n", codefn);
 		return -1;
     }
 
-    me->quads->numstars = me->codes->numstars = N;
-    me->codes->index_scale_upper = me->quads->index_scale_upper = distsq2rad(me->quad_dist2_upper);
-    me->codes->index_scale_lower = me->quads->index_scale_lower = distsq2rad(me->quad_dist2_lower);
+    quads->numstars = codes->numstars = N;
+    codes->index_scale_upper = quads->index_scale_upper = distsq2rad(me->quad_dist2_upper);
+    codes->index_scale_lower = quads->index_scale_lower = distsq2rad(me->quad_dist2_lower);
 	
 	me->nuses = calloc(N, sizeof(unsigned char));
 
@@ -425,7 +421,7 @@ int hpquads_files(const char* skdtfn,
 	radius2 = square(1.01 * (hprad + quadscale));
 	me->radius2 = radius2;
 
-	printf("Healpix radius %g arcsec, quad scale %g arcsec, total %g arcsec\n",
+	logmsg("Healpix radius %g arcsec, quad scale %g arcsec, total %g arcsec\n",
 		   distsq2arcsec(hprad*hprad),
 		   distsq2arcsec(quadscale*quadscale),
 		   distsq2arcsec(radius2));
@@ -433,7 +429,7 @@ int hpquads_files(const char* skdtfn,
 	hptotry = il_new(1024);
 
 	if (scanoccupied) {
-		printf("Scanning %i input stars...\n", N);
+		logmsg("Scanning %i input stars...\n", N);
 		for (i=0; i<N; i++) {
 			double xyz[3];
 			int j;
@@ -444,13 +440,13 @@ int hpquads_files(const char* skdtfn,
 			j = xyzarrtohealpix(xyz, Nside);
 			il_insert_unique_ascending(hptotry, j);
 		}
-		printf("Will check %i healpixes.\n", il_size(hptotry));
+		logmsg("Will check %i healpixes.\n", il_size(hptotry));
 	} else {
 		if (skhp == -1) {
 			// Try all healpixes.
 			il_free(hptotry);
 			hptotry = NULL;
-			Nhptotry = me->NHP;
+			Nhptotry = NHP;
 		} else {
 			// The star kdtree may itself be healpixed
 			int starhp, starx, stary;
@@ -480,7 +476,7 @@ int hpquads_files(const char* skdtfn,
 	if (hptotry)
 		Nhptotry = il_size(hptotry);
 
-	me->quadlist = bl_new(65536, me->quadsize);
+	me->quadlist = bl_new(65536, quadsize);
 
 	if (Nloosen)
 		me->retryhps = il_new(1024);
@@ -489,21 +485,21 @@ int hpquads_files(const char* skdtfn,
 		char key[64];
 		int nthispass;
 
-		printf("Pass %i of %i.\n", pass+1, passes);
-		printf("Trying %i healpixes.\n", Nhptotry);
+		logmsg("Pass %i of %i.\n", pass+1, passes);
+		logmsg("Trying %i healpixes.\n", Nhptotry);
 
 		nthispass = build_quads(me, Nhptotry, hptotry, Nreuses);
 
-		printf("Made %i quads (out of %i healpixes) this pass.\n", nthispass, Nhptotry);
-		printf("Made %i quads so far.\n", (me->bigquadlist ? bt_size(me->bigquadlist) : 0) + bl_size(me->quadlist));
+		logmsg("Made %i quads (out of %i healpixes) this pass.\n", nthispass, Nhptotry);
+		logmsg("Made %i quads so far.\n", (me->bigquadlist ? bt_size(me->bigquadlist) : 0) + bl_size(me->quadlist));
 
 		sprintf(key, "PASS%i", pass+1);
 		fits_header_mod_int(chdr, key, nthispass, "quads created in this pass");
 		fits_header_mod_int(qhdr, key, nthispass, "quads created in this pass");
 
-		printf("Merging quads...\n");
+		logmsg("Merging quads...\n");
 		if (!me->bigquadlist)
-			me->bigquadlist = bt_new(me->quadsize, 256);
+			me->bigquadlist = bt_new(quadsize, 256);
 		for (i=0; i<bl_size(me->quadlist); i++) {
 			void* q = bl_access(me->quadlist, i);
 			bt_insert(me->bigquadlist, q, FALSE, compare_quads);
@@ -517,15 +513,15 @@ int hpquads_files(const char* skdtfn,
 			il* trylist;
 			int nthispass;
 
-			printf("Loosening reuse maximum to %i...\n", R);
-			printf("Trying %i healpixes.\n", il_size(me->retryhps));
+			logmsg("Loosening reuse maximum to %i...\n", R);
+			logmsg("Trying %i healpixes.\n", il_size(me->retryhps));
 			if (!il_size(me->retryhps))
 				break;
 
 			trylist = me->retryhps;
 			me->retryhps = il_new(1024);
 			nthispass = build_quads(me, il_size(trylist), trylist, R);
-			printf("Made %i quads (out of %i healpixes) this pass.\n", nthispass, il_size(trylist));
+			logmsg("Made %i quads (out of %i healpixes) this pass.\n", nthispass, il_size(trylist));
 			for (i=0; i<bl_size(me->quadlist); i++) {
 				void* q = bl_access(me->quadlist, i);
 				bt_insert(me->bigquadlist, q, FALSE, compare_quads);
@@ -541,28 +537,28 @@ int hpquads_files(const char* skdtfn,
 	me->inds = NULL;
 	me->stars = NULL;
 
-	printf("Writing quads...\n");
+	logmsg("Writing quads...\n");
 
 	// add the quads from the big-quadlist
 	nquads = bt_size(me->bigquadlist);
 	for (i=0; i<nquads; i++) {
 		unsigned int* q = bt_access(me->bigquadlist, i);
-		quad_write(me->codes, me->quads, q, me->starkd, me->dimquads, me->dimcodes);
+		quad_write(codes, quads, q, me->starkd, me->dimquads, dimcodes);
 	}
 	// add the quads that were made during the final round.
 	for (i=0; i<bl_size(me->quadlist); i++) {
 		unsigned int* q = bl_access(me->quadlist, i);
-		quad_write(me->codes, me->quads, q, me->starkd, me->dimquads, me->dimcodes);
+		quad_write(codes, quads, q, me->starkd, me->dimquads, dimcodes);
 	}
 
 	// fix output file headers.
-	if (quadfile_fix_header(me->quads) ||
-		quadfile_close(me->quads)) {
+	if (quadfile_fix_header(quads) ||
+		quadfile_close(quads)) {
 		ERROR("Couldn't write quad output file");
 		return -1;
 	}
-	if (codefile_fix_header(me->codes) ||
-		codefile_close(me->codes)) {
+	if (codefile_fix_header(codes) ||
+		codefile_close(codes)) {
 		ERROR("Couldn't write code output file");
 		return -1;
 	}
@@ -572,7 +568,7 @@ int hpquads_files(const char* skdtfn,
 	startree_close(me->starkd);
 
 	toc();
-	printf("Done.\n");
+	logmsg("Done.\n");
 	return 0;
 }
 

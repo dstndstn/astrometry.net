@@ -163,14 +163,6 @@ int main(int argc, char** argv) {
 		ERROR("Quad dimension %i exceeds compiled-in max %i.\n", dimquads, DQMAX);
 		exit(-1);
 	}
-	if (Nside > 13377) {
-		// 12 * (13377+1)^2  >  2^31, so healpix arithmetic will fail.
-		// This corresponds to about 0.26 arcmin side length -- pretty tiny...
-		// Careful use of unsignedness (uint32_t) would bring this to:
-		//   Nside = 18918, side length 0.19 arcmin.
-		ERROR("Error: maximum healpix Nside = 13377.\n");
-		exit(-1);
-	}
 	if (scale_max_arcmin == 0.0) {
 		ERROR("Must specify maximum quad scale: -u <scale>");
 		exit(-1);
