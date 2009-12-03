@@ -32,13 +32,10 @@
 #include "log.h"
 #include "errors.h"
 
-int unpermute_stars(const char* skdtinfn, const char* quadinfn,
-					const char* skdtoutfn, const char* quadoutfn,
+int unpermute_stars(startree_t* treein, quadfile* qfin,
+					startree_t** p_treeout, quadfile* qfout,
 					bool dosweeps, bool check,
 					char** args, int argc) {
-    quadfile* qfin;
-	quadfile* qfout;
-	startree_t* treein;
 	startree_t* treeout;
 	int i;
 	int N;
@@ -49,33 +46,13 @@ int unpermute_stars(const char* skdtinfn, const char* quadinfn,
 	qfits_header* qouthdr;
 	qfits_header* qinhdr;
 
-	logmsg("Reading star tree from %s ...\n", skdtinfn);
-	treein = startree_open(skdtinfn);
-	if (!treein) {
-		ERROR("Failed to read star kdtree from %s.\n", skdtinfn);
-		return -1;
-	}
+	assert(p_treeout);
 	N = startree_N(treein);
-
-	logmsg("Reading quadfile from %s ...\n", quadinfn);
-	qfin = quadfile_open(quadinfn);
-	if (!qfin) {
-		ERROR("Failed to read quadfile from %s.\n", quadinfn);
-		return -1;
-	}
-
 	starhp = qfits_header_getint(startree_header(treein), "HEALPIX", -1);
 	if (starhp == -1)
 		ERROR("Warning, input star kdtree didn't have a HEALPIX header.\n");
     healpix = starhp;
 	hpnside = qfits_header_getint(startree_header(treein), "HPNSIDE", 1);
-
-	logmsg("Writing quadfile to %s ...\n", quadoutfn);
-	qfout = quadfile_open_for_writing(quadoutfn);
-	if (!qfout) {
-		ERROR("Failed to write quadfile to %s.\n", quadoutfn);
-		return -1;
-	}
 
 	qfout->healpix = healpix;
     qfout->hpnside = hpnside;
@@ -154,11 +131,9 @@ int unpermute_stars(const char* skdtinfn, const char* quadinfn,
 	}
 	logmsg("\n");
 
-	quadfile_close(qfin);
 
-	if (quadfile_fix_header(qfout) ||
-		quadfile_close(qfout)) {
-		ERROR("Failed to close output quadfile.\n");
+	if (quadfile_fix_header(qfout)) {
+		ERROR("Failed to fix quadfile header");
 		return -1;
 	}
 
@@ -240,6 +215,51 @@ int unpermute_stars(const char* skdtinfn, const char* quadinfn,
             treeout->starids[i] = treein->starids[ind];
     }
 
+	*p_treeout = treeout;
+	return 0;
+}
+
+int unpermute_stars_files(const char* skdtinfn, const char* quadinfn,
+						  const char* skdtoutfn, const char* quadoutfn,
+						  bool dosweeps, bool check,
+						  char** args, int argc) {
+    quadfile* qfin;
+	quadfile* qfout;
+	startree_t* treein;
+	startree_t* treeout;
+	int rtn;
+
+	logmsg("Reading star tree from %s ...\n", skdtinfn);
+	treein = startree_open(skdtinfn);
+	if (!treein) {
+		ERROR("Failed to read star kdtree from %s.\n", skdtinfn);
+		return -1;
+	}
+
+	logmsg("Reading quadfile from %s ...\n", quadinfn);
+	qfin = quadfile_open(quadinfn);
+	if (!qfin) {
+		ERROR("Failed to read quadfile from %s.\n", quadinfn);
+		return -1;
+	}
+
+	logmsg("Writing quadfile to %s ...\n", quadoutfn);
+	qfout = quadfile_open_for_writing(quadoutfn);
+	if (!qfout) {
+		ERROR("Failed to write quadfile to %s.\n", quadoutfn);
+		return -1;
+	}
+
+	rtn = unpermute_stars(treein, qfin, &treeout, qfout,
+						  dosweeps, check, args, argc);
+	if (rtn)
+		return rtn;
+
+	if (quadfile_close(qfout)) {
+		ERROR("Failed to close output quadfile.\n");
+		return -1;
+	}
+
 	logmsg("Writing star kdtree to %s ...\n", skdtoutfn);
 	if (startree_write_to_file(treeout, skdtoutfn)) {
 		ERROR("Failed to write star kdtree.\n");
@@ -251,6 +271,7 @@ int unpermute_stars(const char* skdtinfn, const char* quadinfn,
     free(treeout->sigma_pm);
     free(treeout->starids);
 
+	quadfile_close(qfin);
 	startree_close(treein);
 	free(treeout->sweep);
     free(treeout->tree);

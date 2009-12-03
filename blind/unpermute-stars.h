@@ -20,6 +20,9 @@
 #ifndef UNPERMUTE_STARS_H
 #define UNPERMUTE_STARS_H
 
+#include "starkd.h"
+#include "quadfile.h"
+
 /**
  \file Applies a star kdtree permutation array to all files that depend on
  the ordering of the stars:   .quad and .skdt .
@@ -31,8 +34,13 @@
 
    Original author: dstn
 */
-int unpermute_stars(const char* skdtinfn, const char* quadinfn,
-					const char* skdtoutfn, const char* quadoutfn,
+int unpermute_stars_files(const char* skdtinfn, const char* quadinfn,
+						  const char* skdtoutfn, const char* quadoutfn,
+						  bool sweep, bool check,
+						  char** args, int argc);
+
+int unpermute_stars(startree_t* starkdin, quadfile* quadin,
+					startree_t** starkdout, quadfile* quadout,
 					bool sweep, bool check,
 					char** args, int argc);
 

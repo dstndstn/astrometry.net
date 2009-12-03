@@ -102,8 +102,8 @@ int main(int argc, char **args) {
 		exit(-1);
 	}
 
-	if (unpermute_stars(skdtinfn, quadinfn, skdtoutfn, quadoutfn,
-						dosweeps, check, args, argc)) {
+	if (unpermute_stars_files(skdtinfn, quadinfn, skdtoutfn, quadoutfn,
+							  dosweeps, check, args, argc)) {
 		exit(-1);
 	}
 	return 0;
