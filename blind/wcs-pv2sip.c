@@ -17,9 +17,6 @@
 */
 #include <math.h>
 
-#include <gsl/gsl_matrix_double.h>
-#include <gsl/gsl_vector_double.h>
-
 #include "fitsioutils.h"
 #include "ioutils.h"
 #include "qfits.h"
@@ -100,16 +97,10 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	tan_t tanwcs;
 	double x,y, px,py;
 	double xyz[3];
-	//double ra,dec;
-	//double dpx, dpy;
 
-	double* xorig;
-	double* yorig;
-	/*
-	 double* xdist;
-	 double* ydist;
-	 */
-	double* rddist;
+	double* xorig = NULL;
+	double* yorig = NULL;
+	double* rddist = NULL;
 	int i, j;
 
 	//           1  x  y  r x2 xy y2 x3 x2y xy2 y3 r3 x4 x3y x2y2 xy3 y4
@@ -140,7 +131,7 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 		unsigned char* txthdr;
 		sl* lines;
 		int i;
-		txt = file_get_contents(wcsinfn, &sz, FALSE);
+		txt = file_get_contents(wcsinfn, &sz, TRUE);
 		if (!txt) {
 			ERROR("Failed to read file %s", wcsinfn);
 			goto bailout;
@@ -152,8 +143,6 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 			"NAXIS   =                    0 / Minimal header                                 "
 			"EXTEND  =                    T / There may be FITS ext                          "
 			"WCSAXES =                    2 /                                                ";
-			//"LONPOLE =                180.0 /                                                "
-			//"LATPOLE =                  0.0 /                                                ";
 		np = strlen(prefix);
 		nt = np + FITS_LINESZ * sl_size(lines);
 		txthdr = malloc(nt);
@@ -175,9 +164,6 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	
 	tan_read_header(hdr, &tanwcs);
 
-	// a = PV1
-	// b = PV2
-
 	for (i=0; i<sizeof(pv1)/sizeof(double); i++) {
 		char key[10];
 		sprintf(key, "PV1_%i", i);
@@ -186,38 +172,8 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 		pv2[i] = qfits_header_getdouble(hdr, key, 0.0);
 	}
 
-	/*{
-	 tan_pixelxy2iwc(&tanwcs, 100, 100, &x, &y);
-	 r = sqrt(x*x + y*y);
-	 xpows[0] = ypows[0] = rpows[0] = 1.0;
-	 for (i=1; i<sizeof(xpows)/sizeof(double); i++) {
-	 xpows[i] = xpows[i-1]*x;
-	 ypows[i] = ypows[i-1]*y;
-	 rpows[i] = rpows[i-1]*r;
-	 }
-	 px = py = 0;
-	 for (i=0; i<sizeof(xp)/sizeof(int); i++) {
-	 //if (pv1[i] != 0.0)
-	 //printf("PV1_%i = %g, x^%i y^%i r^%i\n", i, pv1[i], xp[i], yp[i], rp[i]);
-	 //if (pv2[i] != 0.0)
-	 //printf("PV2_%i = %g, x^%i y^%i r^%i\n", i, pv2[i], yp[i], xp[i], rp[i]);
-	 px += pv1[i] * xpows[xp[i]] * ypows[yp[i]] * rpows[rp[i]];
-	 py += pv2[i] * ypows[xp[i]] * xpows[yp[i]] * rpows[rp[i]];
-	 //printf("i=%i, px=%g, py=%g\n", i, px, py);
-	 //printf("%i (%i,%i,%i): px=%g, py=%g\n", i, xp[i], yp[i], rp[i], px,py);
-	 }
-	 //printf("x,y (%g,%g), px,py (%g,%g)\n", x,y, px,py);
-	 // raw_to_pv: in (-0.0154408,-0.00816145), out (-0.0154607,-0.00827274)
-	 tan_iwc2pixelxy(&tanwcs, px, py, &dpx, &dpy);
-	 printf("distorted pixels: (%g,%g)\n", dpx, dpy);
-	 }*/
-
 	xorig = malloc(Nxy * sizeof(double));
 	yorig = malloc(Nxy * sizeof(double));
-	/*
-	 xdist = malloc(Nxy * sizeof(double));
-	 ydist = malloc(Nxy * sizeof(double));
-	 */
 	rddist = malloc(2 * Nxy * sizeof(double));
 
 	for (j=0; j<Nxy; j++) {
@@ -237,11 +193,6 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 			px += pv1[i] * xpows[xp[i]] * ypows[yp[i]] * rpows[rp[i]];
 			py += pv2[i] * ypows[xp[i]] * xpows[yp[i]] * rpows[rp[i]];
 		}
-		/*
-		 tan_iwc2pixelxy(&tanwcs, px, py, &dpx, &dpy);
-		 xdist[i] = dpx;
-		 ydist[i] = dpy;
-		 */
 		tan_iwc2xyzarr(&tanwcs, px, py, xyz);
 		xyzarr2radecdeg(xyz, rddist+2*j, rddist+2*j+1);
 	}
@@ -284,6 +235,9 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 	rtn = 0;
 
  bailout:
+	free(xorig);
+	free(yorig);
+	free(rddist);
 	qfits_header_destroy(hdr);
 	free(radec);
 	return rtn;
@@ -331,101 +285,6 @@ int wcs_pv2sip(const char* wcsinfn, int ext,
 		 xp += *(a++)*y7; //a38
 		 xp += *a*(r7=r5*r*r); //a39
 		 */
-
-
-
-#if 0
-// From wcslib:
-#include "wcs.h"
-#include "wcshdr.h"
-#include "wcsfix.h"
-
-/*
- Reads a WCS file with PV distortion coefficients.
- Write a WCS file with SIP distortion coefficients.
- */
-int wcs_pv2sip(const char* wcsinfn, int ext,
-			   const char* wcsoutfn,
-			   bool scamp_head_file,
-			   double* xy, int Nxy) {
-	int hdrstart, hdrlen;
-	char* hdr = NULL;
-	int nrej;
-	int nwcs = 0;
-	struct wcsprm* wcses = NULL;
-	struct wcsprm* thewcs = NULL;
-	double* radec = NULL;
-	int rtn = -1;
-	int r;
-
-	if (scamp_head_file) {
-		size_t sz = 0;
-		hdr = file_get_contents(wcsinfn, &sz, FALSE);
-		hdrlen = sz;
-		if (!hdr) {
-			ERROR("Failed to read file %s", wcsinfn);
-			goto bailout;
-		}
-	} else {
-		if (qfits_get_hdrinfo(wcsinfn, ext, &hdrstart, &hdrlen)) {
-			ERROR("Failed to find the size of the FITS header of file %s, ext %i", wcsinfn, ext);
-			goto bailout;
-		}
-		hdr = file_get_contents_offset(wcsinfn, hdrstart, hdrlen);
-		if (!hdr) {
-			ERROR("Failed to read header: file %s, offset %i, length %i\n", wcsinfn, hdrstart, hdrlen);
-			goto bailout;
-		}
-	}
-	// Parse image header.
-
-	// WCSHDR_PROJPn
-
-	if (wcspih(hdr, hdrlen/FITS_LINESZ, WCSHDR_all, 2, &nrej, &nwcs, &wcses)) {
-		ERROR("Failed to parse WCS header");
-		goto bailout;
-	}
-	logmsg("Found %i WCS headers\n", nwcs);
-
-	// Use the first one.
-	thewcs = wcses + 0;
-
-	r = wcsset(thewcs);
-	if (r) {
-		ERROR("Failed to set up first WCS entry: code %i", r);
-		goto bailout;
-	}
-
-	{
-		int stats[NWCSFIX];
-		r = wcsfix(1, NULL, thewcs, stats);
-		if (r) {
-			ERROR("Failed to wcsfix(): code %i", r);
-			ERROR("CDFIX %i", stats[CDFIX]);
-			ERROR("DATFIX %i", stats[DATFIX]);
-			ERROR("UNITFIX %i", stats[UNITFIX]);
-			ERROR("CELFIX %i", stats[CELFIX]);
-			ERROR("SPCFIX %i", stats[SPCFIX]);
-			ERROR("CYLFIX %i", stats[CYLFIX]);
-			goto bailout;
-		}
-	}
-
-	// Pixel-to-(RA,Dec)
-	r = wcsp2s(thewcs, Nxy, 2, xy, NULL, NULL, NULL, radec, NULL);
-	if (r) {
-		ERROR("Failed to convert pixel x,y values to RA,Dec using wcslib: code %i", r);
-		goto bailout;
-	}
-	rtn = 0;
-
- bailout:
-	wcsvfree(&nwcs, &wcses);
-	free(hdr);
-	free(radec);
-	return rtn;
-}
-#endif
 
 
 #include <stdlib.h>
