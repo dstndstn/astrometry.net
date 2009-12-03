@@ -616,7 +616,42 @@ void test_big_nside(CuTest* ct) {
 	printf("RA,Dec difference: %g, %g arcsec\n", deg2arcsec(ra2-ra1), deg2arcsec(dec2-dec1));
 }
 
+void test_distortion_at_pole(CuTest* ct) {
+	// not really a test of the code, more of healpix itself...
+	double ra1, dec1, ra2, dec2, ra3, dec3, ra4, dec4;
+	int Nside = 2097152;
+	int64_t hp;
+	double d1, d2, d3, d4, d5, d6;
+	double testras [] = {  0.0, 45.0,  0.0, 0.0 };
+	double testdecs[] = { 90.0, 50.0, 40.0, 0.0 };
+	char* testnames[] = { "north pole", "mid-polar", "mid-equatorial",
+						  "equator" };
+	double ra, dec;
+	int i;
 
+	for (i=0; i<sizeof(testras)/sizeof(double); i++) {
+		ra = testras[i];
+		dec = testdecs[i];
+
+		hp = radecdegtohealpixl(ra, dec, Nside);
+
+		healpixl_to_radecdeg(hp, Nside, 0, 0, &ra1, &dec1);
+		healpixl_to_radecdeg(hp, Nside, 0, 1, &ra2, &dec2);
+		healpixl_to_radecdeg(hp, Nside, 1, 1, &ra3, &dec3);
+		healpixl_to_radecdeg(hp, Nside, 1, 0, &ra4, &dec4);
+
+		// sides
+		d1 = arcsec_between_radecdeg(ra1, dec1, ra2, dec2);
+		d2 = arcsec_between_radecdeg(ra2, dec2, ra3, dec3);
+		d3 = arcsec_between_radecdeg(ra3, dec3, ra4, dec4);
+		d4 = arcsec_between_radecdeg(ra4, dec4, ra1, dec1);
+		// diagonals
+		d5 = arcsec_between_radecdeg(ra1, dec1, ra3, dec3);
+		d6 = arcsec_between_radecdeg(ra2, dec2, ra4, dec4);
+		
+		printf("%-15s (%4.1f, %4.1f): %-5.3f, %-5.3f, %-5.3f, %-5.3f / %-5.3f, %-5.3f\n", testnames[i], ra, dec, d1, d2, d3, d4, d5, d6);
+	}
+}
 
 
 #if defined(TEST_HEALPIX_MAIN)

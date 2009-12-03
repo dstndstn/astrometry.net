@@ -272,14 +272,19 @@ Const inline double dist2deg(double dist) {
 }
 
 Const inline double distsq2arcsec(double dist2) {
-	return rad2arcsec(distsq2arc(dist2));
+	return rad2arcsec(distsq2rad(dist2));
 }
 
 Const inline double dist2arcsec(double dist) {
 	return distsq2arcsec(dist*dist);
 }
 
+// DEPRECATED
 Const inline double distsq2arc(double dist2) {
+	return distsq2rad(dist2);
+}
+
+Const inline double distsq2rad(double dist2) {
 	// cosine law: c^2 = a^2 + b^2 - 2 a b cos C
 	// c^2 is dist2.  We want C.
 	// a = b = 1
@@ -288,10 +293,6 @@ Const inline double distsq2arc(double dist2) {
 	// 1 - (dist2 / 2) = cos C
 	// C = acos(1 - dist2 / 2)
 	return acos(1.0 - dist2 / 2.0);
-}
-
-Const inline double distsq2rad(double dist2) {
-	return distsq2arc(dist2);
 }
 
 Const inline double distsq2deg(double dist2) {
