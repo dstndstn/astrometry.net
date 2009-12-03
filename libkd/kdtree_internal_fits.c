@@ -175,7 +175,9 @@ do { \
       return -1; \
     } \
   } else { \
-    if (fitsbin_write_chunk(fb, &chunk)) { \
+    if (fid ? \
+		fitsbin_write_chunk_to(fb, &chunk, fid) :	\
+		fitsbin_write_chunk(fb, &chunk)) {	 \
       ERROR("Failed to write kdtree chunk"); \
       fitsbin_chunk_clean(&chunk); \
       return -1; \
@@ -184,11 +186,15 @@ do { \
 } while (0)
 
 int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd, 
-                              const qfits_header* inhdr, bool flip_endian) {
+                              const qfits_header* inhdr, bool flip_endian,
+							  FILE* fid) {
     fitsbin_chunk_t chunk;
     fitsbin_t* fb = kdtree_fits_get_fitsbin(io);
     qfits_header* hdr;
     int wordsize = 0;
+
+	// haven't bothered to support this.
+	assert(!(flip_endian && fid));
 
     fitsbin_chunk_init(&chunk);
 
@@ -403,7 +409,6 @@ int MANGLE(kdtree_write_fits)(kdtree_fits_t* io, const kdtree_t* kd,
         WRITE_CHUNK();
         fitsbin_chunk_reset(&chunk);
 	}
-
     return 0;
 }
 #undef WRITE_CHUNK

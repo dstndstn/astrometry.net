@@ -177,7 +177,8 @@ int kdtree_fits_read_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
 // declarations
 KD_DECLARE(kdtree_read_fits, int, (kdtree_fits_t* io, kdtree_t* kd));
 KD_DECLARE(kdtree_write_fits, int, (kdtree_fits_t* io, const kdtree_t* kd,
-                                    const qfits_header* inhdr, bool flip_endian));
+                                    const qfits_header* inhdr, bool flip_endian,
+									FILE* fid));
 /*
  sl* kdtree_fits_list_trees(kdtree_fits_t* io) {
     sl* s = sl_new(4);
@@ -359,6 +360,14 @@ int kdtree_fits_write_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
     return 0;
 }
 
+int kdtree_fits_write_chunk_to(fitsbin_chunk_t* chunk, FILE* fid) {
+    if (fitsbin_write_chunk_to(NULL, chunk, fid)) {
+        ERROR("Failed to write kdtree extra chunk");
+        return -1;
+    }
+    return 0;
+}
+
 int kdtree_fits_write_chunk_flipped(kdtree_fits_t* io, fitsbin_chunk_t* chunk,
                                     int wordsize) {
     fitsbin_t* fb = kdtree_fits_get_fitsbin(io);
@@ -373,14 +382,22 @@ int kdtree_fits_write_chunk_flipped(kdtree_fits_t* io, fitsbin_chunk_t* chunk,
 int kdtree_fits_append_tree(kdtree_fits_t* io, const kdtree_t* kd,
                             const qfits_header* inhdr) {
     int rtn = -1;
-	KD_DISPATCH(kdtree_write_fits, kd->treetype, rtn = , (io, kd, inhdr, FALSE));
+	KD_DISPATCH(kdtree_write_fits, kd->treetype, rtn = , (io, kd, inhdr, FALSE, NULL));
+    return rtn;
+}
+
+int kdtree_fits_append_tree_to(kdtree_t* kd,
+							   const qfits_header* inhdr,
+							   FILE* fid) {
+    int rtn = -1;
+	KD_DISPATCH(kdtree_write_fits, kd->treetype, rtn = , (NULL, kd, inhdr, FALSE, fid));
     return rtn;
 }
 
 int kdtree_fits_append_tree_flipped(kdtree_fits_t* io, const kdtree_t* kd,
                                     const qfits_header* inhdr) {
     int rtn = -1;
-	KD_DISPATCH(kdtree_write_fits, kd->treetype, rtn = , (io, kd, inhdr, TRUE));
+	KD_DISPATCH(kdtree_write_fits, kd->treetype, rtn = , (io, kd, inhdr, TRUE, NULL));
     return rtn;
 }
 

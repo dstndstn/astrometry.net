@@ -23,7 +23,6 @@
 
 #include "kdtree.h"
 #include "fitsbin.h"
-//#include "bl.h"
 
 /**
  Usage patterns:
@@ -99,14 +98,18 @@ int kdtree_fits_write_tree(kdtree_fits_t* io, const kdtree_t* kd,
 int kdtree_fits_append_tree(kdtree_fits_t* io, const kdtree_t* kd,
                             const qfits_header* add_headers);
 
-// just writes the tree, no primary header.
+
+int kdtree_fits_append_tree_to(kdtree_t* kd,
+							   const qfits_header* inhdr,
+							   FILE* fid);
+
+
 int kdtree_fits_write_primary_header(kdtree_fits_t* io,
                                      const qfits_header* add_headers);
 
 int kdtree_fits_write_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk);
 
-int kdtree_fits_write_chunk_flipped(kdtree_fits_t* io, fitsbin_chunk_t* chunk,
-                                    int wordsize);
+int kdtree_fits_write_chunk_to(fitsbin_chunk_t* chunk, FILE* fid);
 
 int kdtree_fits_close(kdtree_t* io);
 
@@ -115,6 +118,9 @@ int kdtree_fits_io_close(kdtree_fits_t* io);
 
 
 // flipped-endian writing...
+int kdtree_fits_write_chunk_flipped(kdtree_fits_t* io, fitsbin_chunk_t* chunk,
+                                    int wordsize);
+
 int kdtree_fits_write_flipped(const kdtree_t* kdtree, const char* fn,
                               const qfits_header* hdr);
 int kdtree_fits_write_tree_flipped(kdtree_fits_t* io, const kdtree_t* kd,
