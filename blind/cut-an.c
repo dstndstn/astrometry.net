@@ -598,6 +598,7 @@ int main(int argc, char** args) {
 				for (j=0; j<nn; j++) {
 					// ignore neighbours that are inside the big hp.
 					int bhp, bx, by;
+					///// FIXME -- BUGCHECK -- does this actually make sense?!
 					healpix_decompose_xyl(neigh[j], &bhp, &bx, &by, Nside);
 					if (bhp == bigbighp && bx == bighpx && by == bighpy)
 						continue;

@@ -310,15 +310,12 @@ int hpquads(startree_t* starkd,
 
 	memset(me, 0, sizeof(hpquads_t));
 
-	if (Nside > 13377) {
-		// 12 * (13377+1)^2 > 2^31, so healpix arithmetic will fail
-		// (since we use ints)
-		// This corresponds to about 0.26 arcmin side length -- pretty tiny...
-		ERROR("Error: maximum healpix Nside = 13377.\n");
+	if (Nside > HP_MAX_INT_NSIDE) {
+		ERROR("Error: maximum healpix Nside = %i", HP_MAX_INT_NSIDE);
 		return -1;
 	}
 	if (Nreuses > 255) {
-		ERROR("Error, reuse (-r) must be less than 256.\n");
+		ERROR("Error, reuse (-r) must be less than 256");
 		return -1;
 	}
 
