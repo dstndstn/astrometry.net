@@ -382,29 +382,76 @@ static Inline bool issouthpolar(int healpix)
 }
 
 static int compose_xy(int x, int y, int Nside) {
+	assert(Nside > 0);
+	assert(x >= 0);
+	assert(x < Nside);
+	assert(y >= 0);
+	assert(y < Nside);
 	return (x * Nside) + y;
 }
 
 int healpix_compose_xy(int bighp, int x, int y, int Nside) {
+	assert(bighp >= 0);
+	assert(bighp < 12);
 	return (bighp * Nside * Nside) + compose_xy(x, y, Nside);
 }
 
 int64_t healpix_compose_xyl(int bighp, int x, int y, int Nside) {
 	int64_t ns = Nside;
+	assert(Nside > 0);
+	assert(bighp >= 0);
+	assert(bighp < 12);
+	assert(x >= 0);
+	assert(x < Nside);
+	assert(y >= 0);
+	assert(y < Nside);
 	return ((((int64_t)bighp * ns) + x) * ns) + y;
+}
+
+void healpix_convert_xy_nside(int x, int y, int nside, int outnside,
+							  int* outx, int* outy) {
+	double fx, fy;
+	int ox, oy;
+	assert(x >= 0);
+	assert(x < nside);
+	assert(y >= 0);
+	assert(y < nside);
+
+	// MAGIC 0.5: assume center of pixel...
+	fx = (x + 0.5) / (double)nside;
+	fy = (y + 0.5) / (double)nside;
+
+	ox = floor(fx * outnside);
+	oy = floor(fy * outnside);
+
+	if (outx)
+		*outx = ox;
+	if (outy)
+		*outy = oy;
 }
 
 void healpix_decompose_xy(int finehp, int* pbighp, int* px, int* py, int Nside) {
 	int hp;
+	assert(Nside > 0);
+	assert(finehp < (12 * Nside * Nside));
+	assert(finehp >= 0);
 	if (pbighp) {
 		int bighp   = finehp / (Nside * Nside);
+		assert(bighp >= 0);
+		assert(bighp < 12);
 		*pbighp = bighp;
 	}
 	hp = finehp % (Nside * Nside);
-	if (px)
+	if (px) {
 		*px = hp / Nside;
-	if (py)
+		assert(*px >= 0);
+		assert(*px < Nside);
+	}
+	if (py) {
 		*py = hp % Nside;
+		assert(*py >= 0);
+		assert(*py < Nside);
+	}
 }
 
 void healpix_decompose_xyl(int64_t finehp,
@@ -412,15 +459,26 @@ void healpix_decompose_xyl(int64_t finehp,
 						   int Nside) {
 	int64_t hp;
 	int64_t ns2 = (int64_t)Nside * (int64_t)Nside;
+	assert(Nside > 0);
+	assert(finehp < (12L * ns2));
+	assert(finehp >= 0);
 	if (pbighp) {
 		int bighp   = finehp / ns2;
+		assert(bighp >= 0);
+		assert(bighp < 12);
 		*pbighp = bighp;
 	}
 	hp = finehp % ns2;
-	if (px)
+	if (px) {
 		*px = hp / Nside;
-	if (py)
+		assert(*px >= 0);
+		assert(*px < Nside);
+	}
+	if (py) {
 		*py = hp % Nside;
+		assert(*py >= 0);
+		assert(*py < Nside);
+	}
 }
 
 /**

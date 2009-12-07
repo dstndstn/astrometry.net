@@ -13,23 +13,23 @@ First, the obvious ones:
 -qfits-an/
   QFITS library v6.2, licensed under the GPL.
 
+-pyfits/pyfits.py
+  License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
+
 Now, some miscellaneous files:
 
 -quads/qsort_reentrant.{c,h}
   Yoinked from FreeBSD.  Distributed under the BSD license, big surprise.
 
--quads/pyfits.py
-  License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
-
--quads/bt.c
+-util/bt.c
   AVL code was yoinked from GNU libavl which is under the GPL.
 
--quads/cutest.{c,h} and quads/make-tests.sh
+-util/cutest.{c,h} and util/make-tests.sh
   Imported from cutest-1.4.  Patches sent upstream 24-01-2008.
   http://cutest.sourceforge.net/
   zlib/libpng license.
 
--quads/{tablist,modhead,fitscopy,tabmerge,fitstomatlab,liststruc,listhead,
+-blind/{tablist,modhead,fitscopy,tabmerge,fitstomatlab,liststruc,listhead,
         imcopy,imarith,imstat}.c
   From the CFITSIO utilities web page.
   http://heasarc.gsfc.nasa.gov/docs/software/fitsio/cexamples.html

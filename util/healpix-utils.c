@@ -21,6 +21,63 @@
 #include "mathutil.h"
 #include "starutil.h"
 
+il* healpix_region_search(int seed, il* seeds, int Nside,
+						  il* accepted, il* rejected,
+						  int (*accept)(int hp, void* token),
+						  void* token, int depth) {
+	il* frontier;
+	bool allocd_rej = FALSE;
+	int d;
+
+	if (!accepted)
+		accepted = il_new(256);
+	if (!rejected) {
+		rejected = il_new(256);
+		allocd_rej = TRUE;
+	}
+
+	if (seeds)
+		//frontier = seeds;
+		frontier = il_dupe(seeds);
+	else {
+		frontier = il_new(256);
+		il_append(frontier, seed);
+	}
+
+	for (d=0; !depth || d<depth; d++) {
+		int j, N;
+		N = il_size(frontier);
+		if (N == 0)
+			break;
+		for (j=0; j<N; j++) {
+			int hp;
+			int i, nn, neigh[8];
+			hp = il_get(frontier, j);
+			nn = healpix_get_neighbours(hp, neigh, Nside);
+			for (i=0; i<nn; i++) {
+				if (il_contains(frontier, neigh[i]))
+					continue;
+				if (il_contains(rejected, neigh[i]))
+					continue;
+				if (il_contains(accepted, neigh[i]))
+					continue;
+				if (accept(neigh[i], token)) {
+					il_append(accepted, neigh[i]);
+					il_append(frontier, neigh[i]);
+				} else
+					il_append(rejected, neigh[i]);
+			}
+			il_remove_index_range(frontier, 0, N);
+		}
+	}
+
+	il_free(frontier);
+	if (allocd_rej)
+		il_free(rejected);
+	return accepted;
+}
+
+
 il* healpix_approx_rangesearch(double* xyz, double radius, int Nside, il* hps) {
 	int hp;
 	double hprad = arcmin2dist(healpix_side_length_arcmin(Nside)) * sqrt(2);

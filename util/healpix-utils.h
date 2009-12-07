@@ -16,9 +16,38 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  */
 
+#ifndef HEALPIX_UTILS_H
+#define HEALPIX_UTILS_H
+
 #include "bl.h"
 
-/*
+/**
  Returns healpixes that may be within range of the given point.
  */
 il* healpix_approx_rangesearch(double* xyz, double radius, int Nside, il* hps);
+
+/**
+ Starting from a "seed" or list of "seeds" healpixes, grows a region
+ by looking at healpix neighbours.  Accepts healpixes for which the
+ "accept" function returns 1.  Returns the healpixes that are
+ accepted.  The accepted results are placed in "accepted", if
+ non-NULL, or in a newly-allocated list.
+
+ If "rejected" is non-NULL, the healpixes that are rejected will be
+ put there.
+
+ If "depth" is non-zero, that number of neighbour steps will be taken.
+ Zero means no limit.
+
+ NOTE that any existing entries in the "accepted" list will be treated
+ as having already been accepted: when the search reaches them, their
+ neighbours will not be added to the frontier to explore.
+ */
+il* healpix_region_search(int seed, il* seeds, int Nside,
+						  il* accepted, il* rejected,
+						  int (*accept)(int hp, void* token),
+						  void* token,
+						  int depth);
+
+
+#endif

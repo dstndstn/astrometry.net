@@ -155,6 +155,10 @@
    .   healpix_nested_to_xy
 */
 
+// The maximum healpix Nside that leads to int-sized healpix indices.
+// 12 * (13377+1)^2 > 2^31 (since we use signed ints)
+// This corresponds to about 16 arcsec side length.
+#define HP_MAX_INT_NSIDE 13377
 
 /**
    Converts a healpix index from the XY scheme to the RING scheme.
@@ -208,7 +212,13 @@ Const int healpix_compose_xy(int bighp, int x, int y, int Nside);
 
 Const int64_t healpix_compose_xyl(int bighp, int x, int y, int Nside);
 
-
+/**
+ Given (x,y) coordinates of resolution "nside" within a base-level
+ healpixel, and an output resolution "outnside", returns the output
+ (x,y) coordinates at the output resolution.
+ */
+void healpix_convert_xy_nside(int x, int y, int nside, int outnside,
+							  int* outx, int* outy);
 
 /**
    Converts (RA, DEC) coordinates (in radians) to healpix index.
