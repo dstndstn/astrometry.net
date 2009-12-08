@@ -62,7 +62,7 @@ UTIL_OBJS :=
 
 OTHER_OBJS := usnob.o usnob-fits.o catalog.o \
 	codefile.o histogram.o verify.o \
-	solver.o matchfile.o solvedclient.o solvedfile.o intmap.o pnpoly.o \
+	solver.o matchfile.o solvedclient.o solvedfile.o pnpoly.o \
 	blind_wcs.o tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	nomad.o nomad-fits.o \
@@ -111,7 +111,7 @@ OLDEXECS := plotquads rawstartree checkquads
 
 CAIROEXECS := plotquad plotxy plot-constellations add-text plotstuff
 
-OLDEXECS_OBJS := catalog.o histogram.o verify.o intmap.o matchfile.o \
+OLDEXECS_OBJS := catalog.o histogram.o verify.o matchfile.o \
 	$(UTIL_OBJS)
 
 PIPELINE_MAIN_OBJ := $(addsuffix .o,$(PIPELINE))
@@ -341,6 +341,10 @@ startree2: startree2-main.o startree2.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += startree2-main.o startree2.o
 
+uniformize-catalog: uniformize-catalog-main.o uniformize-catalog.o \
+		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += uniformize-catalog-main.o uniformize-catalog.o
+
 hpquads: hpquads-main.o hpquads.o quad-builder.o quad-utils.o codefile.o pnpoly.o histogram.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += hpquads-main.o quad-builder.o hpquads.o
@@ -400,7 +404,7 @@ ALL_OBJ += augment-xylist-main.o
 
 blind: blind-main.o blind.o solver.o matchfile.o \
 		solvedclient.o solvedfile.o verify.o \
-		intmap.o blind_wcs.o histogram.o tweak.o \
+		blind_wcs.o histogram.o tweak.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^
@@ -408,7 +412,7 @@ blind: blind-main.o blind.o solver.o matchfile.o \
 
 whynot: whynot.o matchfile.o codefile.o \
 		solvedclient.o solvedfile.o \
-		verify.o intmap.o blind_wcs.o \
+		verify.o blind_wcs.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
