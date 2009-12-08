@@ -67,8 +67,8 @@ il* healpix_region_search(int seed, il* seeds, int Nside,
 				} else
 					il_append(rejected, neigh[i]);
 			}
-			il_remove_index_range(frontier, 0, N);
 		}
+		il_remove_index_range(frontier, 0, N);
 	}
 
 	il_free(frontier);

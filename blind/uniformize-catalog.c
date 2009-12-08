@@ -163,6 +163,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		int ninside;
 		il* seeds = il_new(256);
 		struct oh_token token;
+		logverb("Finding healpixes in range...\n");
         healpix_decompose_xy(bighp, &bigbighp, &bighpx, &bighpy, bignside);
 		ninside = (Nside/bignside)*(Nside/bignside);
 		// Prime the queue with the fine healpixes that are on the
@@ -205,6 +206,10 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	if (myhps)
 		il_sort(myhps, TRUE);
 
+	// DEBUG
+	il_check_consistency(myhps);
+	il_check_sorted_ascending(myhps, TRUE);
+
 	dedupr2 = arcsec2distsq(dedup_radius);
 	starlists = intmap_new(sizeof(int32_t), nkeep, 0, dense);
 
@@ -228,6 +233,11 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		if (myhps) {
 			if (outside_healpix(hp, &token) ||
 				!il_sorted_contains(myhps, hp)) {
+				noob++;
+				continue;
+			}
+		} else if (!allsky) {
+			if (outside_healpix(hp, &token)) {
 				noob++;
 				continue;
 			}
