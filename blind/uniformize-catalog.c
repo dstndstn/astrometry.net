@@ -187,15 +187,14 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 
 		myhps = healpix_region_search(-1, seeds, Nside, NULL, NULL,
 									  outside_healpix, &token, nmargin);
+		logmsg("Number of margin healpixes: %i\n", il_size(myhps));
 		il_free(seeds);
-	}
 
-	if (myhps)
 		il_sort(myhps, TRUE);
-
-	// DEBUG
-	il_check_consistency(myhps);
-	il_check_sorted_ascending(myhps, TRUE);
+		// DEBUG
+		il_check_consistency(myhps);
+		il_check_sorted_ascending(myhps, TRUE);
+	}
 
 	dedupr2 = arcsec2distsq(dedup_radius);
 	starlists = intmap_new(sizeof(int32_t), nkeep, 0, dense);
@@ -213,7 +212,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		hp = radecdegtohealpix(ra[j], dec[j], Nside);
 		// in bounds?
 		if (myhps) {
-			if (outside_healpix(hp, &token) ||
+			if (outside_healpix(hp, &token) &&
 				!il_sorted_contains(myhps, hp)) {
 				noob++;
 				continue;

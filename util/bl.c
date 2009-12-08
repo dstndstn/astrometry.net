@@ -25,6 +25,8 @@
 #include "bl.h"
 
 #include "keywords.h"
+// for qsort_r
+#include "gnu-specific.h"
 
 #include "bl.ph"
 
@@ -99,17 +101,41 @@ Pure int bl_datasize(const bl* list) {
 }
 
 static void bl_sort_with_userdata(bl* list,
-								  int (*compare)(const void* v1, const void* v2, const void* userdata),
+								  int (*compare)(const void* v1, const void* v2, void* userdata),
 								  void* userdata);
 
+struct funcandtoken {
+	int (*compare)(const void* v1, const void* v2, void* userdata);
+	void* userdata;
+};
+static int QSORT_COMPARISON_FUNCTION(qcompare, void* token, const void* v1, const void* v2) {
+	struct funcandtoken* ft = token;
+	return ft->compare(v1, v2, ft->userdata);
+}
+
 static void bl_sort_rec(bl* list, void* pivot,
-						int (*compare)(const void* v1, const void* v2, const void* userdata),
+						int (*compare)(const void* v1, const void* v2, void* userdata),
 						void* userdata) {
 	bl* less;
 	bl* equal;
 	bl* greater;
 	int i;
     bl_node* node;
+
+	// Empty case
+	if (!list->head)
+		return;
+
+	// Base case: list with only one block.
+	if (list->head == list->tail) {
+		bl_node* node;
+		struct funcandtoken ft;
+		ft.compare = compare;
+		ft.userdata = userdata;
+		node = list->head;
+		QSORT_R(NODE_DATA(node), node->N, list->datasize, &ft, qcompare);
+		return;
+	}
 
 	less = bl_new(list->blocksize, list->datasize);
 	equal = bl_new(list->blocksize, list->datasize);
@@ -141,6 +167,8 @@ static void bl_sort_rec(bl* list, void* pivot,
 	list->head = NULL;
 	list->tail = NULL;
 	list->N = 0;
+	list->last_access = NULL;
+	list->last_access_n = 0;
 
 	if (less->N) {
 		list->head = less->head;
@@ -167,14 +195,15 @@ static void bl_sort_rec(bl* list, void* pivot,
 		}
 		list->N += greater->N;
 	}
-	// note, these are supposed to be "free", not "bl_free"...
+	// note, these are supposed to be "free", not "bl_free"; we've stolen
+	// the blocks, we're just freeing the headers.
 	free(less);
 	free(equal);
 	free(greater);
 }
 
 static void bl_sort_with_userdata(bl* list,
-								  int (*compare)(const void* v1, const void* v2, const void* userdata),
+								  int (*compare)(const void* v1, const void* v2, void* userdata),
 								  void* userdata) {
 	int ind;
 	int N = list->N;
@@ -185,7 +214,7 @@ static void bl_sort_with_userdata(bl* list,
 	bl_sort_rec(list, bl_access(list, ind), compare, userdata);
 }
 
-static int sort_helper_bl(const void* v1, const void* v2, const void* userdata) {
+static int sort_helper_bl(const void* v1, const void* v2, void* userdata) {
 	int (*compare)(const void* v1, const void* v2) = userdata;
 	return compare(v1, v2);
 }
@@ -968,7 +997,7 @@ void  pl_free_elements(pl* list) {
 }
 
 // dereference one level...
-static int sort_helper_pl(const void* v1, const void* v2, const void* userdata) {
+static int sort_helper_pl(const void* v1, const void* v2, void* userdata) {
 	const void* p1 = *((const void**)v1);
 	const void* p2 = *((const void**)v2);
 	int (*compare)(const void* p1, const void* p2) = userdata;

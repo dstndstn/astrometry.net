@@ -41,6 +41,16 @@ int fdatasync(int fd);
    Those using qsort_r in Astrometry.net should instead use the macro QSORT_R()
    to take advantage of these tests.
 
+   QSORT_R(void* base, size_t nmembers, size_t member_size, void* token,
+           comparison_function);
+
+   You should define the "comparison" function like this:
+
+   static int QSORT_COMPARISON_FUNCTION(my_comparison, void* token, const void* v1, const void* v2) {
+     ...
+   }
+
+
    Distributions including glibc 2.8 include:
    -Mandriva 2009
    -Ubuntu 8.10
@@ -54,15 +64,11 @@ void qsort_r(void *base, size_t nmemb, size_t sz,
 #endif
 
 #if NEED_SWAP_QSORT_R
-
 #define QSORT_R(a,b,c,d,e) qsort_r(a,b,c,e,d)
-
 #define QSORT_COMPARISON_FUNCTION(func, thunk, v1, v2) func(v1, v2, thunk)
 
 #else
-
 #define QSORT_R qsort_r
-
 #define QSORT_COMPARISON_FUNCTION(func, thunk, v1, v2) func(thunk, v1, v2)
 
 #endif
