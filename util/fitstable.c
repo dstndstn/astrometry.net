@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2008 Dustin Lang.
+  Copyright 2008, 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -26,6 +26,8 @@
 #include "fitsioutils.h"
 #include "fitsfile.h"
 #include "ioutils.h"
+
+#include "log.h"
 
 struct fitscol_t {
     char* colname;
@@ -161,7 +163,13 @@ tfits_type fitscolumn_any_type() {
 }
 
 int fitscolumn_get_size(fitscol_t* col) {
-    return col->fitssize * col->arraysize;
+	/*
+	 if (col->fitstype == TFITS_BIN_TYPE_X) {
+	 // UGLY HACK!
+	 return (7 + col->fitssize * col->arraysize) / 8;
+	 } else
+	 */
+	return col->fitssize * col->arraysize;
 }
 
 int fitstable_ncols(fitstable_t* t) {
@@ -308,6 +316,10 @@ void fitstable_add_fits_columns_as_struct(fitstable_t* tab) {
 	for (i=0; i<tab->table->nc; i++) {
 		qfits_col* qcol = tab->table->col + i;
 		// atom_type, atom_size, atom_nb
+		/*
+		 if (qcol->atom_type == TFITS_BIN_TYPE_X) {
+		 }
+		 */
 		fitstable_add_read_column_struct(tab, qcol->atom_type, qcol->atom_nb,
 										 off, qcol->atom_type, qcol->tlabel, TRUE);
 		off += fitscolumn_get_size(getcol(tab, ncols(tab)-1));
@@ -377,6 +389,8 @@ int fitstable_read_structs(fitstable_t* tab, void* struc,
     void* tempdata = NULL;
     int highwater = 0;
 
+    //logverb("fitstable_read_structs: stride %i, offset %i, N %i\n",strucstride, offset, N);
+
     for (i=0; i<ncols(tab); i++) {
         void* dest;
         int stride;
@@ -407,6 +421,7 @@ int fitstable_read_structs(fitstable_t* tab, void* struc,
 		if (in_memory(tab)) {
 			int j;
 			int off = offset_of_column(tab, i);
+			int sz;
 			if (!tab->rows) {
 				ERROR("No data has been written to this fitstable");
 				return -1;
@@ -415,10 +430,13 @@ int fitstable_read_structs(fitstable_t* tab, void* struc,
 				ERROR("Number of data items requested exceeds number of rows: offset %i, n %i, nrows %i", offset, N, bl_size(tab->rows));
 				return -1;
 			}
+
+			//logverb("column %i: dest offset %i, stride %i, row offset %i, input offset %i, size %i (%ix%i)\n", i, (int)(dest - struc), stride, offset, off, fitscolumn_get_size(col), col->fitssize, col->arraysize);
+			sz = fitscolumn_get_size(col);
 			for (j=0; j<N; j++)
 				memcpy(((char*)dest) + j * stride,
 					   ((char*)bl_access(tab->rows, offset+j)) + off,
-					   fitscolumn_get_size(col));
+					   sz);
 		} else {
 			// Read from FITS file...
 			qfits_query_column_seq_to_array(tab->table, col->col, offset, N, dest, stride);
@@ -1065,11 +1083,16 @@ int fitstable_read_extension(fitstable_t* tab, int ext) {
                 continue;
             }
         }
-        if (col->fitstype == TFITS_BIN_TYPE_X) {
-            col->arraysize = 8 * qcol->atom_nb;
-        } else {
-            col->arraysize = qcol->atom_nb;
-        }
+		/*  This was causing problems with copying startree tag-along data (Tycho2 test case: FLAGS column)
+
+		 if (col->fitstype == TFITS_BIN_TYPE_X) {
+		 // ??? really??
+		 col->arraysize = 8 * qcol->atom_nb;
+		 } else {
+		 col->arraysize = qcol->atom_nb;
+		 }
+		 */
+		col->arraysize = qcol->atom_nb;
     }
 
     if (tab->br) {

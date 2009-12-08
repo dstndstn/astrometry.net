@@ -393,7 +393,7 @@ void test_healpix_distance_to_radec(CuTest *ct) {
 	d = healpix_distance_to_radec(4, 1, 45+1, 0, xyz);
 	xyzarr2radecdeg(xyz, &ra, &dec);
     CuAssertDblEquals(ct, 45, ra, 0);
-    CuAssertDblEquals(ct, 0, dec, 0);
+    CuAssertDblEquals(ct, 0, dec, 1e-18);
 
 	d = healpix_distance_to_radec(4, 1, 45+1, 0+1, xyz);
 	xyzarr2radecdeg(xyz, &ra, &dec);
