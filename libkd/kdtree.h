@@ -323,6 +323,8 @@ void kdtree_memory_report(kdtree_t* kd);
 
 kdtree_t* kdtree_new(int N, int D, int Nleaf);
 
+void kdtree_print(kdtree_t* kd);
+
 /*
   Reinitialize the table of function pointers "kd->fun".
 */

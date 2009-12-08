@@ -323,10 +323,25 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	logverb("Row size: %i\n", R);
 	buf = malloc(R);
 	for (i=0; i<N; i++) {
+
+		// DEBUG
+		if (i == 0) {
+			logverb("Output row 0: input is from %i\n", outorder[i]);
+		}
+
 		if (fitstable_read_row_data(intable, outorder[i], buf)) {
 			ERROR("Failed to read data from input table");
 			return -1;
 		}
+
+		if (i == 0) {
+			int j;
+			printf("Row data\n");
+			for (j=0; j<R; j++)
+				printf("%02x ", ((unsigned char*)buf)[j]);
+			printf("\n");
+		}
+
 		if (fitstable_write_row_data(outtable, buf)) {
 			ERROR("Failed to write data to output table");
 			return -1;

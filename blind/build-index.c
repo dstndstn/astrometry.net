@@ -301,6 +301,11 @@ int main(int argc, char** argv) {
 			exit(-1);
 		}
 		startag = fitstable_open_in_memory();
+
+		printf("Uniformized table (reading):\n");
+		fitstable_print_columns(uniform);
+		printf("\n");
+
 	} else {
 		skdtfn = create_temp_file("skdt", tempdir);
 		sl_append_nocopy(tempfiles, skdtfn);

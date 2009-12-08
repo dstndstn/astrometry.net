@@ -31,6 +31,40 @@
 #include "errors.h"
 #include "log.h"
 
+void kdtree_print(kdtree_t* kd) {
+	printf("kdtree:\n");
+	printf("  type 0x%x\n", kd->treetype);
+	printf("  lr %p\n", kd->lr);
+	printf("  perm %p\n", kd->perm);
+	printf("  bb %p\n", kd->bb.any);
+	printf("  nbb %i\n", kd->n_bb);
+	printf("  split %p\n", kd->split.any);
+	printf("  splitdim %p\n", kd->splitdim);
+	printf("  dimbits %i\n", kd->dimbits);
+	printf("  dimmask 0x%x\n", kd->dimmask);
+	printf("  splitmask 0x%x\n", kd->splitmask);
+	printf("  data %p\n", kd->data.any);
+	printf("  converted %i\n", (int)kd->converted_data);
+	printf("  range");
+	if (kd->minval && kd->maxval) {
+		int i;
+		for (i=0; i<kd->ndim; i++)
+			printf(" [%g, %g]", kd->minval[i], kd->maxval[i]);
+	} else
+		printf(" (none)\n");
+	printf("\n");
+	printf("  scale %g\n", kd->scale);
+	printf("  invscale %g\n", kd->invscale);
+	printf("  Ndata %i\n", kd->ndata);
+	printf("  Ndim %i\n", kd->ndim);
+	printf("  Nnodes %i\n", kd->nnodes);
+	printf("  Nbottom %i\n", kd->nbottom);
+	printf("  Ninterior %i\n", kd->ninterior);
+	printf("  Nlevels %i\n", kd->nlevels);
+	printf("  has_linear_lr %i\n", (int)kd->has_linear_lr);
+	printf("  name %s\n", kd->name);
+}
+
 int kdtree_n(const kdtree_t* kd) {
     return kd->ndata;
 }

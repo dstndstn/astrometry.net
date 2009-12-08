@@ -188,6 +188,7 @@ fitstable_t* fitstable_open_in_memory();
 // for in-memory tables: done writing, start reading.
 int fitstable_switch_to_reading(fitstable_t* tab);
 
+//char* fitstable_get_column_name(const fitstable_t* src, int i);
 
 fitstable_t* fitstable_open(const char* fn);
 

@@ -26,6 +26,7 @@
 #include "fitsioutils.h"
 #include "fitsfile.h"
 #include "ioutils.h"
+#include "an-endian.h"
 
 #include "log.h"
 
@@ -80,14 +81,24 @@ static off_t get_row_offset(const fitstable_t* table, int row) {
 	return table->end_table_offset + table->table->tab_w * row;
 }
 
+int fitscolumn_get_size(fitscol_t* col) {
+	/*
+	 if (col->fitstype == TFITS_BIN_TYPE_X) {
+	 // UGLY HACK!
+	 return (7 + col->fitssize * col->arraysize) / 8;
+	 } else
+	 */
+	return col->fitssize * col->arraysize;
+}
+
 static int offset_of_column(const fitstable_t* table, int colnum) {
 	int i;
 	int offset = 0;
-	assert(colnum <= bl_size(table->cols));
-	for (i=0; i<colnum; i++) {
+	assert(colnum <= ncols(table));
+	for (i=0; i<ncols(table); i++) {
 		fitscol_t* col;
-		col = bl_access(table->cols, i);
-		offset += col->fitssize * col->arraysize;
+		col = getcol(table, i);
+		offset += fitscolumn_get_size(col);
 	}
 	return offset;
 }
@@ -162,16 +173,6 @@ tfits_type fitscolumn_any_type() {
     return (tfits_type)-1;
 }
 
-int fitscolumn_get_size(fitscol_t* col) {
-	/*
-	 if (col->fitstype == TFITS_BIN_TYPE_X) {
-	 // UGLY HACK!
-	 return (7 + col->fitssize * col->arraysize) / 8;
-	 } else
-	 */
-	return col->fitssize * col->arraysize;
-}
-
 int fitstable_ncols(fitstable_t* t) {
     return ncols(t);
 }
@@ -220,6 +221,19 @@ int fitstable_write_row_data(fitstable_t* table, void* data) {
 	assert(data);
 	R = fitstable_row_size(table);
 	if (in_memory(table)) {
+		// Endian-flip here??  Or elsewhere...
+		int i;
+		int off = 0;
+		char* cursor = data;
+		for (i=0; i<ncols(table); i++) {
+			int j;
+			fitscol_t* col = getcol(table, i);
+			for (j=0; j<col->arraysize; j++) {
+				endian_swap(cursor, col->fitssize);
+				cursor += col->fitssize;
+			}
+		}
+
 		ensure_row_list_exists(table);
 		bl_append(table->rows, data);
 		// ?
@@ -246,6 +260,11 @@ int fitstable_row_size(fitstable_t* t) {
      sz += fitscolumn_get_size(getcol(t, i));
      return sz;
      */
+}
+
+char* fitstable_get_column_name(const fitstable_t* src, int i) {
+	fitscol_t* col = getcol(src, i);
+	return col->colname;
 }
 
 void fitstable_copy_columns(const fitstable_t* src, fitstable_t* dest) {
@@ -315,7 +334,6 @@ void fitstable_add_fits_columns_as_struct(fitstable_t* tab) {
 	int off = 0;
 	for (i=0; i<tab->table->nc; i++) {
 		qfits_col* qcol = tab->table->col + i;
-		// atom_type, atom_size, atom_nb
 		/*
 		 if (qcol->atom_type == TFITS_BIN_TYPE_X) {
 		 }
@@ -378,8 +396,8 @@ void fitstable_print_columns(fitstable_t* tab) {
 	printf("Table columns:\n");
 	for (i=0; i<ncols(tab); i++) {
 		fitscol_t* col = getcol(tab, i);
-		printf("  %s: fits type %i, C type %i, arraysize %i, fitssize %i, C size %i, C offset %i, FITS column num: %i\n",
-			   col->colname, col->fitstype, col->ctype, col->arraysize, col->fitssize, col->csize, col->coffset, col->col);
+		printf("  %i: %s: fits type %i, C type %i, arraysize %i, fitssize %i, C size %i, C offset %i, FITS column num: %i\n",
+			   i, col->colname, col->fitstype, col->ctype, col->arraysize, col->fitssize, col->csize, col->coffset, col->col);
 	}
 }
 
@@ -405,14 +423,14 @@ int fitstable_read_structs(fitstable_t* tab, void* struc,
         finalstride = strucstride;
 
         if (col->fitstype != col->ctype) {
-            int NB = col->fitssize * col->arraysize * N;
+            int NB = fitscolumn_get_size(col) * N;
             if (NB > highwater) {
                 free(tempdata);
                 tempdata = malloc(NB);
                 highwater = NB;
             }
             dest = tempdata;
-            stride = col->fitssize * col->arraysize;
+            stride = fitscolumn_get_size(col);
         } else {
             dest = finaldest;
             stride = finalstride;
@@ -473,7 +491,6 @@ static int write_one(fitstable_t* table, const void* struc, va_list ap) {
 
 	if (in_memory(table)) {
 		ensure_row_list_exists(table);
-		// FIXME? -- could keep a buffer in fitstable_t... but that would be thread-unsafe
 		thisrow = calloc(1, bl_datasize(table->rows));
 	}
 
@@ -510,7 +527,7 @@ static int write_one(fitstable_t* table, const void* struc, va_list ap) {
         }
 		
 		if (in_memory(table)) {
-			int nb = col->fitssize * col->arraysize;
+			int nb = fitscolumn_get_size(col);
 			memcpy(thisrow + rowoff, columndata, nb);
 			rowoff += nb;
 		} else {
@@ -694,6 +711,7 @@ static void* read_array_into(const fitstable_t* tab,
 	if (in_memory(tab)) {
 		int i;
 		int off;
+		int sz;
 		if (!tab->rows) {
 			ERROR("No data has been written to this fitstable");
 			return NULL;
@@ -703,10 +721,11 @@ static void* read_array_into(const fitstable_t* tab,
 			return NULL;
 		}
 		off = fits_offset_of_column(tab->table, colnum);
+		sz = fitsstride;
 		for (i=0; i<Nread; i++)
 			memcpy(fitsdata + i * fitsstride,
 				   ((char*)bl_access(tab->rows, offset+i)) + off,
-				   fitssize * arraysize);
+				   sz);
 	} else {
 		qfits_query_column_seq_to_array(tab->table, colnum, offset, Nread,
 										(unsigned char*)fitsdata, fitsstride);

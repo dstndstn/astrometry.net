@@ -124,6 +124,17 @@ startree_t* startree_build(fitstable_t* intable,
 		goto bailout;
 	}
 	N = fitstable_nrows(intable);
+
+	printf("ra0,dec0 = %g,%g\n", ra[0], dec[0]);
+
+	/*{
+		int i;
+		printf("radec=array[");
+		for (i=0; i<N; i++)
+			printf("[%g,%g],", ra[i], dec[i]);
+		printf("]\n");
+	 }*/
+
 	xyz = malloc(N * 3 * sizeof(double));
 	if (!xyz) {
 		SYSERROR("Failed to malloc xyz array to build startree");
