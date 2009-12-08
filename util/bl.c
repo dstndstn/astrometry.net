@@ -46,6 +46,7 @@ static void bl_remove_from_node(bl* list, bl_node* node,
 // il_size
 // il_get
 
+#define DEFINE_SORT 1
 #define nl il
 #define number int
 #define NL_PRINT(x) printf("%i", x)
@@ -57,14 +58,6 @@ static void bl_remove_from_node(bl* list, bl_node* node,
 #define nl ll
 #define number int64_t
 #define NL_PRINT(x) printf("%lli", (long long int)x)
-#include "bl-nl.c"
-#undef nl
-#undef number
-#undef NL_PRINT
-
-#define nl pl
-#define number void*
-#define NL_PRINT(x) printf("%p", x)
 #include "bl-nl.c"
 #undef nl
 #undef number
@@ -85,6 +78,18 @@ static void bl_remove_from_node(bl* list, bl_node* node,
 #undef nl
 #undef number
 #undef NL_PRINT
+
+#undef DEFINE_SORT
+#define DEFINE_SORT 0
+#define nl pl
+#define number void*
+#define NL_PRINT(x) printf("%p", x)
+#include "bl-nl.c"
+#undef nl
+#undef number
+#undef NL_PRINT
+#undef DEFINE_SORT
+
 
 
 Pure int bl_datasize(const bl* list) {

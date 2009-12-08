@@ -221,6 +221,13 @@ void healpix_convert_xy_nside(int x, int y, int nside, int outnside,
 							  int* outx, int* outy);
 
 /**
+ Given a healpix index (in the XY scheme) of resolution "nside", and
+an output resolution "outnside", returns the healpix index at the
+output resolution.
+ */
+void healpix_convert_nside(int hp, int nside, int outnside, int* outhp);
+
+/**
    Converts (RA, DEC) coordinates (in radians) to healpix index.
 */
 Const int radectohealpix(double ra, double dec, int Nside);

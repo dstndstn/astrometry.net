@@ -270,6 +270,7 @@ ATTRIB_FORMAT(printf,3,4)
 sl_insertf(sl* list, int index, const char* format, ...);
 
 
+#define DEFINE_SORT 1
 #define nl il
 #define number int
 #include "bl-nl.h"
@@ -278,12 +279,6 @@ sl_insertf(sl* list, int index, const char* format, ...);
 
 #define nl ll
 #define number int64_t
-#include "bl-nl.h"
-#undef nl
-#undef number
-
-#define nl pl
-#define number void*
 #include "bl-nl.h"
 #undef nl
 #undef number
@@ -299,6 +294,16 @@ sl_insertf(sl* list, int index, const char* format, ...);
 #include "bl-nl.h"
 #undef nl
 #undef number
+
+#undef DEFINE_SORT
+#define DEFINE_SORT 0
+#define nl pl
+#define number void*
+#include "bl-nl.h"
+#undef nl
+#undef number
+
+#undef DEFINE_SORT
 
 //////// Special functions ////////
 void  pl_free_elements(pl* list);

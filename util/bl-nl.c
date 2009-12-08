@@ -123,6 +123,12 @@ nl* NLF(merge_ascending)(nl* list1, nl* list2) {
 	return res;
 }
 
+#if DEFINE_SORT
+void NLF(sort)(nl* list, int ascending) {
+	bl_sort(list, ascending ? NLF(compare_ascending) : NLF(compare_descending));
+}
+#endif
+
 void NLF(remove_all_reuse)(nl* list) {
 	bl_remove_all_but_first(list);
 }
