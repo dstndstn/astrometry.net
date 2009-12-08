@@ -54,6 +54,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 					   // uniformization nside.
 					   int finenside,
 					   double dedup_radius_arcsec,
-					   int nsweeps);
+					   int nsweeps,
+					   char** args, int argc);
 
 #endif

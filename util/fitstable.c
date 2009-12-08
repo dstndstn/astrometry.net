@@ -95,6 +95,14 @@ static bool is_writing(const fitstable_t* t) {
 	//return t->writing;
 }
 
+static void ensure_row_list_exists(fitstable_t* table) {
+	if (!table->rows) {
+		// how big are the rows?
+		int rowsize = offset_of_column(table, bl_size(table->cols));
+		table->rows = bl_new(1024, rowsize);
+	}
+}
+
 static bool in_memory(const fitstable_t* t) {
 	return t->inmemory;
 }
@@ -204,7 +212,10 @@ int fitstable_write_row_data(fitstable_t* table, void* data) {
 	assert(data);
 	R = fitstable_row_size(table);
 	if (in_memory(table)) {
+		ensure_row_list_exists(table);
 		bl_append(table->rows, data);
+		// ?
+		table->table->nr++;
 		return 0;
 	}
 	if (fwrite(data, 1, R, table->fid) != R) {
@@ -433,11 +444,7 @@ static int write_one(fitstable_t* table, const void* struc, va_list ap) {
 	int rowoff = 0;
 
 	if (in_memory(table)) {
-		if (!table->rows) {
-			// how big are the rows?
-			int rowsize = offset_of_column(table, bl_size(table->cols));
-			table->rows = bl_new(1024, rowsize);
-		}
+		ensure_row_list_exists(table);
 		// FIXME? -- could keep a buffer in fitstable_t... but that would be thread-unsafe
 		thisrow = calloc(1, bl_datasize(table->rows));
 	}
@@ -758,6 +765,8 @@ void fitstable_next_extension(fitstable_t* tab) {
 		fitsext_t ext;
 		if (!tab->table)
 			return;
+		// update NAXIS2
+		fitstable_fix_header(tab);
 		ext.table = tab->table;
 		ext.header = tab->header;
 		ext.rows = tab->rows;

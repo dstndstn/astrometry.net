@@ -154,7 +154,8 @@ int main(int argc, char *argv[]) {
 	if (uniformize_catalog(intable, outtable, racol, deccol,
 						   sortcol, sortasc,
 						   bighp, bignside, margin,
-						   Nside, dedup, sweeps)) {
+						   Nside, dedup, sweeps,
+						   argv, argc)) {
 		exit(-1);
 	}
 

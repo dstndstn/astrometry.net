@@ -64,9 +64,9 @@ static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 }
 
 static quadfile* new_quadfile(const char* fn, bool writing) {
-	quadfile* qf = calloc(1, sizeof(quadfile));
+	quadfile* qf;
 	fitsbin_chunk_t chunk;
-
+	qf = calloc(1, sizeof(quadfile));
 	if (!qf) {
 		SYSERROR("Couldn't malloc a quadfile struct");
 		return NULL;
@@ -75,7 +75,11 @@ static quadfile* new_quadfile(const char* fn, bool writing) {
     qf->hpnside = 1;
 
     if (writing)
-        qf->fb = fitsbin_open_for_writing(fn);
+        if (fn) {
+			qf->fb = fitsbin_open_for_writing(fn);
+		} else {
+			qf->fb = fitsbin_open_in_memory();
+		}
     else
         qf->fb = fitsbin_open(fn);
     if (!qf->fb) {
@@ -157,15 +161,13 @@ int quadfile_close(quadfile* qf) {
     return rtn;
 }
 
-quadfile* quadfile_open_for_writing(const char* fn) {
+static quadfile* open_for_writing(const char* fn) {
 	quadfile* qf;
 	qfits_header* hdr;
-
 	qf = new_quadfile(fn, TRUE);
 	if (!qf)
 		goto bailout;
     qf->dimquads = 4;
-
 	// add default values to header
 	hdr = fitsbin_get_primary_header(qf->fb);
     fits_add_endian(hdr);
@@ -186,6 +188,18 @@ quadfile* quadfile_open_for_writing(const char* fn) {
 	if (qf)
 		quadfile_close(qf);
 	return NULL;
+}
+
+quadfile* quadfile_open_for_writing(const char* fn) {
+	if (!fn) {
+		ERROR("Non-NULL filename required");
+		return NULL;
+	}
+	return open_for_writing(NULL);
+}
+
+quadfile* quadfile_open_in_memory() {
+	return open_for_writing(NULL);
 }
 
 static void add_to_header(qfits_header* hdr, quadfile* qf) {

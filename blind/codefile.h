@@ -69,6 +69,8 @@ codefile* codefile_open(const char* fn);
 
 codefile* codefile_open_for_writing(const char* fname);
 
+codefile* codefile_open_in_memory();
+
 int codefile_write_header(codefile* cf);
 
 int codefile_write_code(codefile* cf, double* code);

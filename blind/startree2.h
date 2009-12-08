@@ -19,18 +19,14 @@
 #ifndef STARTREE2_H
 #define STARTREE2_H
 
-/**
-
- Given a FITS BINTABLE, pulls out RA,Dec columns and builds a kd-tree
- out of them.
-
- Places the remaining columns in a "tag-along" table (?)
-
- */
 #include "starkd.h"
 #include "fitstable.h"
 #include "an-bool.h"
 
+/**
+ Given a FITS BINTABLE, pulls out RA,Dec columns and builds a kd-tree
+ out of them.
+ */
 startree_t* startree_build(fitstable_t* intable,
 						   const char* racol, const char* deccol,
 						   // KDT_DATA_*, KDT_TREE_*

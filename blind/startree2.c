@@ -45,7 +45,7 @@ int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
 	}
 	R = fitstable_row_size(intab);
 	NB = 1000;
-	logverb("Row size: %i\n", R);
+	logverb("Input row size: %i, output row size: %i\n", R, fitstable_row_size(outtab));
 	buf = malloc(NB * R);
 	N = fitstable_nrows(intab);
 	for (i=0; i<N; i+=NB) {
@@ -145,7 +145,14 @@ startree_t* startree_build(fitstable_t* intable,
 	}
 	starkd->tree->name = strdup(STARTREE_NAME);
 
-	inhdr = fitstable_get_header(intable);
+	//inhdr = fitstable_get_header(intable);
+	inhdr = fitstable_get_primary_header(intable);
+
+	logverb("Input table header:\n");
+	qfits_header_debug_dump(inhdr);
+	logverb("\n");
+
+
     hdr = startree_header(starkd);
 	fits_copy_header(inhdr, hdr, "HEALPIX");
 	fits_copy_header(inhdr, hdr, "HPNSIDE");
@@ -153,21 +160,19 @@ startree_t* startree_build(fitstable_t* intable,
 	fits_copy_header(inhdr, hdr, "JITTER");
 	fits_copy_header(inhdr, hdr, "CUTNSIDE");
 	fits_copy_header(inhdr, hdr, "CUTMARG");
-	fits_copy_header(inhdr, hdr, "CUTBAND");
+	//fits_copy_header(inhdr, hdr, "CUTBAND");
 	fits_copy_header(inhdr, hdr, "CUTDEDUP");
 	fits_copy_header(inhdr, hdr, "CUTNSWEP");
-	fits_copy_header(inhdr, hdr, "CUTMINMG");
-	fits_copy_header(inhdr, hdr, "CUTMAXMG");
+	//fits_copy_header(inhdr, hdr, "CUTMINMG");
+	//fits_copy_header(inhdr, hdr, "CUTMAXMG");
 
 	boilerplate_add_fits_headers(hdr);
-	qfits_header_add(hdr, "HISTORY", "This file was created by the program \"startree\".", NULL, NULL);
-	qfits_header_add(hdr, "HISTORY", "startree command line:", NULL, NULL);
+	qfits_header_add(hdr, "HISTORY", "This file was created by the command-line:", NULL, NULL);
 	fits_add_args(hdr, args, argc);
-	qfits_header_add(hdr, "HISTORY", "(end of startree command line)", NULL, NULL);
+	qfits_header_add(hdr, "HISTORY", "(end of command line)", NULL, NULL);
 	qfits_header_add(hdr, "HISTORY", "** History entries copied from the input file:", NULL, NULL);
 	fits_copy_all_headers(inhdr, hdr, "HISTORY");
 	qfits_header_add(hdr, "HISTORY", "** End of history entries.", NULL, NULL);
-
 	for (i=1;; i++) {
 		char key[16];
 		int n;

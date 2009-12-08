@@ -333,6 +333,10 @@ int hpquads(startree_t* starkd,
 	N = startree_N(me->starkd);
 	logmsg("Star tree contains %i objects.\n", N);
 
+	logmsg("Star kdtree header:\n");
+	qfits_header_debug_dump(startree_header(me->starkd));
+	logmsg("\n");
+
 	// get the "HEALPIX" header from the skdt...
 	skhp = qfits_header_getint(startree_header(me->starkd), "HEALPIX", -1);
 	if (skhp == -1) {

@@ -51,6 +51,8 @@ quadfile* quadfile_open(const char* fname);
 
 quadfile* quadfile_open_for_writing(const char* quadfname);
 
+quadfile* quadfile_open_in_memory();
+
 int quadfile_close(quadfile* qf);
 
 // Look at each quad, and ensure that the star ids it contains are all

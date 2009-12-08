@@ -135,7 +135,7 @@ static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	return 0;
 }
 
-static codefile* new_codefile(const char* fn, bool writing) {
+static codefile* new_codefile(const char* fn, bool writing, bool inmem) {
 	fitsbin_chunk_t chunk;
 	codefile* cf = calloc(1, sizeof(codefile));
 	if (!cf) {
@@ -145,10 +145,14 @@ static codefile* new_codefile(const char* fn, bool writing) {
 	cf->healpix = -1;
     cf->hpnside = 1;
 
-    if (writing)
-        cf->fb = fitsbin_open_for_writing(fn);
-    else
-        cf->fb = fitsbin_open(fn);
+	if (inmem) {
+		cf->fb = fitsbin_open_in_memory();
+	} else {
+		if (writing)
+			cf->fb = fitsbin_open_for_writing(fn);
+		else
+			cf->fb = fitsbin_open(fn);
+	}
     if (!cf->fb) {
         ERROR("Failed to create fitsbin");
         return NULL;
@@ -187,7 +191,7 @@ int codefile_close(codefile* cf) {
 codefile* codefile_open(const char* fn) {
     codefile* cf = NULL;
 
-    cf = new_codefile(fn, FALSE);
+    cf = new_codefile(fn, FALSE, FALSE);
     if (!cf)
         goto bailout;
     if (fitsbin_read(cf->fb)) {
@@ -203,11 +207,13 @@ codefile* codefile_open(const char* fn) {
     return NULL;
 }
 
-codefile* codefile_open_for_writing(const char* fn) {
+static codefile* open_for_writing(const char* fn) {
 	codefile* cf;
 	qfits_header* hdr;
-
-	cf = new_codefile(fn, TRUE);
+	if (fn)
+		cf = new_codefile(fn, TRUE, FALSE);
+	else
+		cf = new_codefile(fn, TRUE, TRUE);
 	if (!cf)
 		goto bailout;
     // default
@@ -229,11 +235,22 @@ codefile* codefile_open_for_writing(const char* fn) {
 						  "stored as %i native-endian doubles.  "
 						  "(the quad location in %i-D code space)", cf->dimcodes, cf->dimcodes);
 	return cf;
-
  bailout:
 	if (cf)
 		codefile_close(cf);
 	return NULL;
+}
+
+codefile* codefile_open_for_writing(const char* fn) {
+	if (!fn) {
+		ERROR("Non-NULL filename required");
+		return NULL;
+	}
+	return open_for_writing(fn);
+}
+
+codefile* codefile_open_in_memory() {
+	return open_for_writing(NULL);
 }
 
 int codefile_write_header(codefile* cf) {

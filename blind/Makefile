@@ -77,7 +77,8 @@ PIPELINE := usnobtofits build-an-catalog hpowned cut-an \
 	wcsinfo wcs-grab fits-guess-scale agreeable new-wcs get-wcs \
 	augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
 	certifiable get-healpix 2masstofits nomadtofits \
-	merge-index index-to-table setsolved
+	merge-index index-to-table setsolved \
+	startree2 uniformize-catalog build-index
 
 PROGS := backend image2xy control-program
 
@@ -344,6 +345,11 @@ ALL_OBJ += startree2-main.o startree2.o
 uniformize-catalog: uniformize-catalog-main.o uniformize-catalog.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += uniformize-catalog-main.o uniformize-catalog.o
+
+build-index: build-index.o uniformize-catalog.o startree2.o hpquads.o \
+		quad-builder.o quad-utils.o codefile.o \
+		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += build-index.o uniformize-catalog.o
 
 hpquads: hpquads-main.o hpquads.o quad-builder.o quad-utils.o codefile.o pnpoly.o histogram.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
