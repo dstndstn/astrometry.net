@@ -107,6 +107,8 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	il* myhps = NULL;
 	int i,j,k;
 	int nkeep = nsweeps;
+	int noob = 0;
+	int ndup = 0;
 
     if (Nside % bignside) {
         ERROR("Fine healpixelization Nside must be a multiple of the coarse healpixelization Nside");
@@ -116,6 +118,10 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		ERROR("Error: maximum healpix Nside = %i", HP_MAX_INT_NSIDE);
 		return -1;
 	}
+
+	NHP = 12 * Nside * Nside;
+	logverb("Healpix Nside: %i, # healpixes: %i\n", Nside, NHP);
+	logverb("Healpix side length: %g arcmin.\n", healpix_side_length_arcmin(Nside));
 
 	dubl = fitscolumn_double_type();
 	if (!racol)
@@ -139,17 +145,14 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	// starlists in order; OR read from the input table in sequence and
 	// sort in the starlists?
 	if (sortcol) {
-		double *sortval = fitstable_read_column(intable, sortcol, dubl);
+		double *sortval;
+		logverb("Sorting by %s...\n", sortcol);
+		sortval = fitstable_read_column(intable, sortcol, dubl);
 		inorder = permuted_sort(sortval, sizeof(double),
 								sort_ascending ? compare_doubles_asc : compare_doubles_desc,
 								NULL, N);
 		free(sortval);
 	}
-
-	NHP = 12 * Nside * Nside;
-
-	logverb("Healpix Nside: %i, # healpixes: %i\n", Nside, NHP);
-	logverb("Healpix side length: %g arcmin.\n", healpix_side_length_arcmin(Nside));
 
 	allsky = (bighp == -1);
 	if (allsky)
@@ -199,16 +202,16 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		il_free(seeds);
 	}
 
-	il_sort(myhps, TRUE);
+	if (myhps)
+		il_sort(myhps, TRUE);
 
 	dedupr2 = arcsec2distsq(dedup_radius);
 	starlists = intmap_new(sizeof(int32_t), nkeep, 0, dense);
 
+	logverb("Placing stars in grid cells...\n");
 	for (i=0; i<N; i++) {
 		int hp;
 		struct oh_token token;
-		int noob = 0;
-		int ndup = 0;
 		bl* lst;
 		int32_t j32;
 
@@ -246,6 +249,8 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		j32 = j;
 		bl_append(lst, &j32);
 	}
+	logverb("%i outside the healpix\n", noob);
+	logverb("%i duplicates\n", ndup);
 
 	il_free(myhps);
 	myhps = NULL;
@@ -277,7 +282,11 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	intmap_free(starlists);
 	starlists = NULL;
 
+	logmsg("Total: %i stars\n", outi);
+	N = outi;
+
 	// Write output.
+	/*
 	{
 		int R;
 		char* buf;
@@ -289,9 +298,9 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 			return -1;
 		}
 		R = fitstable_row_size(intable);
+		logmsg("Writing output...\n");
 		logverb("Row size: %i\n", R);
 		buf = malloc(R);
-		N = fitstable_nrows(intable);
 		for (i=0; i<N; i++) {
 			if (fitstable_read_struct(intable, outorder[i], buf)) {
 				ERROR("Failed to read data from input table");
@@ -306,7 +315,36 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 			ERROR("Failed to fix output table header");
 			return -1;
 		}
+	 }*/
+	{
+		int R;
+		char* buf;
+		fitstable_add_fits_columns_as_struct(intable);
+		fitstable_copy_columns(intable, outtable);
+		if (fitstable_write_header(outtable)) {
+			ERROR("Failed to write output table header");
+			return -1;
+		}
+		R = fitstable_row_size(intable);
+		logmsg("Writing output...\n");
+		logverb("Row size: %i\n", R);
+		buf = malloc(R);
+		for (i=0; i<N; i++) {
+			if (fitstable_read_row_data(intable, outorder[i], buf)) {
+				ERROR("Failed to read data from input table");
+				return -1;
+			}
+			if (fitstable_write_row_data(outtable, buf)) {
+				ERROR("Failed to write data to output table");
+				return -1;
+			}
+		}
+		if (fitstable_fix_header(outtable)) {
+			ERROR("Failed to fix output table header");
+			return -1;
+		}
 	}
+
 	free(outorder);
 	return 0;
 }

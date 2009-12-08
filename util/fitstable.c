@@ -71,11 +71,31 @@ static fitscol_t* getcol(const fitstable_t* t, int i) {
     return bl_access(t->cols, i);
 }
 
-bool is_writing(const fitstable_t* t) {
-    return t->fid ? TRUE : FALSE;
+static off_t get_row_offset(const fitstable_t* table, int row) {
+	assert(table->end_table_offset);
+	assert(table->table);
+	assert(table->table->tab_w);
+	return table->end_table_offset + table->table->tab_w * row;
 }
 
-bool in_memory(const fitstable_t* t) {
+static int offset_of_column(const fitstable_t* table, int colnum) {
+	int i;
+	int offset = 0;
+	assert(colnum <= bl_size(table->cols));
+	for (i=0; i<colnum; i++) {
+		fitscol_t* col;
+		col = bl_access(table->cols, i);
+		offset += col->fitssize * col->arraysize;
+	}
+	return offset;
+}
+
+static bool is_writing(const fitstable_t* t) {
+    return t->fid ? TRUE : FALSE;
+	//return t->writing;
+}
+
+static bool in_memory(const fitstable_t* t) {
 	return t->inmemory;
 }
 
@@ -140,16 +160,59 @@ int fitstable_ncols(fitstable_t* t) {
     return ncols(t);
 }
 
-static int offset_of_column(const fitstable_t* table, int colnum) {
-	int i;
-	int offset = 0;
-	assert(colnum <= bl_size(table->cols));
-	for (i=0; i<colnum; i++) {
-		fitscol_t* col;
-		col = bl_access(table->cols, i);
-		offset += col->fitssize * col->arraysize;
+int fitstable_read_row_data(fitstable_t* table, int row, void* dest) {
+	int R;
+	off_t off;
+	assert(table);
+	assert(row >= 0);
+	assert(row < fitstable_nrows(table));
+	assert(dest);
+	R = fitstable_row_size(table);
+	if (in_memory(table)) {
+		memcpy(dest, bl_access(table->rows, row), R);
+		return 0;
 	}
-	return offset;
+	if (!table->readfid) {
+		int start, end;
+		table->readfid = fopen(table->fn, "rb");
+		if (!table->readfid) {
+			SYSERROR("Failed to open FITS table %s for reading", table->fn);
+			return -1;
+		}
+		if (qfits_get_datinfo(table->fn, table->extension, &start, &end)) {
+			ERROR("Failed to find start of table: %s", table->fn);
+			return -1;
+		}
+		// end of table header is start of table data.
+		table->end_table_offset = start;
+	}
+	off = get_row_offset(table, row);
+	if (fseeko(table->readfid, off, SEEK_SET)) {
+		SYSERROR("Failed to fseeko() to read a row");
+		return -1;
+	}
+	if (fread(dest, 1, R, table->readfid) != R) {
+		SYSERROR("Failed to read a row from %s", table->fn);
+		return -1;
+	}
+	return 0;
+}
+
+int fitstable_write_row_data(fitstable_t* table, void* data) {
+	int R;
+	assert(table);
+	assert(data);
+	R = fitstable_row_size(table);
+	if (in_memory(table)) {
+		bl_append(table->rows, data);
+		return 0;
+	}
+	if (fwrite(data, 1, R, table->fid) != R) {
+		SYSERROR("Failed to write a row to %s", table->fn);
+		return -1;
+	}
+    table->table->nr++;
+	return 0;
 }
 
 int fitstable_row_size(fitstable_t* t) {
@@ -334,7 +397,7 @@ int fitstable_read_structs(fitstable_t* tab, void* struc,
 			for (j=0; j<N; j++)
 				memcpy(((char*)dest) + j * stride,
 					   ((char*)bl_access(tab->rows, offset+j)) + off,
-					   col->fitssize * col->arraysize);
+					   fitscolumn_get_size(col));
 		} else {
 			// Read from FITS file...
 			qfits_query_column_seq_to_array(tab->table, col->col, offset, N, dest, stride);
@@ -477,8 +540,7 @@ int fitstable_write_one_column(fitstable_t* table, int colnum,
 	if (!in_memory(table)) {
 		foffset = ftello(table->fid);
 		// jump to row start...
-		start = table->end_table_offset +
-			table->table->tab_w * rowoffset + off;
+		start = get_row_offset(table, rowoffset) + off;
 		if (fseeko(table->fid, start, SEEK_SET)) {
 			SYSERROR("Failed to fseeko() to the start of the file.");
 			return -1;
@@ -689,7 +751,7 @@ qfits_header* fitstable_get_header(fitstable_t* t) {
 }
 
 void fitstable_next_extension(fitstable_t* tab) {
-    if (tab->fid)
+	if (is_writing(tab))
         fits_pad_file(tab->fid);
 
 	if (in_memory(tab)) {
@@ -826,12 +888,15 @@ int fitstable_close(fitstable_t* tab) {
     int i;
     int rtn = 0;
     if (!tab) return 0;
-    if (tab->fid) {
+	if (is_writing(tab)) {
         if (fclose(tab->fid)) {
             SYSERROR("Failed to close output file %s", tab->fn);
             rtn = -1;
         }
     }
+	if (tab->readfid) {
+		fclose(tab->readfid);
+	}
     if (tab->primheader)
         qfits_header_destroy(tab->primheader);
     if (tab->header)
@@ -946,6 +1011,12 @@ int fitstable_read_extension(fitstable_t* tab, int ext) {
 
 	if (fitstable_open_extension(tab, ext))
 		return -1;
+
+	if (tab->readfid) {
+		// close FID so that table->end_table_offset gets refreshed.
+		fclose(tab->readfid);
+		tab->readfid = NULL;
+	}
 
     for (i=0; i<ncols(tab); i++) {
         fitscol_t* col = getcol(tab, i);

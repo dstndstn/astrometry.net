@@ -123,9 +123,16 @@ struct fitstable_t {
     // primary header
     qfits_header* primheader;
 
+	// opaque column descriptors
     bl* cols;
 
     int extension;
+
+	// when reading/writing from/to a file:
+	char* fn;
+
+	// Writing or reading?
+	//bool writing;
 
 	// when working in-memory:
 	bool inmemory;
@@ -135,17 +142,20 @@ struct fitstable_t {
 	bl* extensions;
 
     // When writing:
-	char* fn;
     FILE* fid;
     // the end of the primary header (including FITS padding)
     off_t end_header_offset;
-    // beginning of the current table
+    // beginning of the current table's header
     off_t table_offset;
-    // end of the current table (including FITS padding)
+    // end of the current table's header (including FITS padding)
+	// (also used when reading via 'readfid'):
     off_t end_table_offset;
 
     // Buffered reading.
     bread_t* br;
+
+	// When reading, via fitstable_read_row_data
+	FILE* readfid;
 
     // When reading: an optional postprocessing function to run after
     // fitstable_read_structs().
@@ -288,6 +298,10 @@ void* fitstable_read_column_offset(const fitstable_t* tab,
 
 // Note, you must call this with *pointers* to the data to write.
 int fitstable_write_row(fitstable_t* table, ...);
+
+// Reads the raw row data
+int fitstable_read_row_data(fitstable_t* table, int row, void* dest);
+int fitstable_write_row_data(fitstable_t* table, void* data);
 
 // Writes one row, with data drawn from the given structure.
 int fitstable_write_struct(fitstable_t* table, const void* struc);
