@@ -291,6 +291,11 @@ int main(int argc, char** argv) {
 	// startree
 
 	if (inmemory) {
+
+		printf("Uniformized table:\n");
+		fitstable_print_columns(uniform);
+		printf("\n");
+
 		if (fitstable_switch_to_reading(uniform)) {
 			ERROR("Failed to switch uniformized table to read-mode");
 			exit(-1);
@@ -534,6 +539,9 @@ int main(int argc, char** argv) {
 	}
 
 	 */
+
+	sl_free2(tempfiles);
+
 	printf("Done.\n");
 	return 0;
 }

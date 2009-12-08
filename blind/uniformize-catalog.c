@@ -309,6 +309,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		sprintf(key, "SWEEP%i", (k+1));
         fits_header_add_int(outhdr, key, npersweep[k], "# stars added");
 	}
+	free(npersweep);
 
 	// Write output.
 	fitstable_add_fits_columns_as_struct(intable);

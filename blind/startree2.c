@@ -24,12 +24,14 @@
 #include "an-bool.h"
 #include "fitsioutils.h"
 #include "boilerplate.h"
+#include "fitstable.h"
 
 int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
 								  const char* racol, const char* deccol) {
 	int i, R, NB, N;
 	char* buf;
 	
+	fitstable_clear_table(intab);
 	fitstable_add_fits_columns_as_struct(intab);
 	fitstable_copy_columns(intab, outtab);
 	if (!racol)
@@ -61,6 +63,7 @@ int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
 			return -1;
 		}
 	}
+	free(buf);
 	return 0;
 }
 
@@ -148,10 +151,11 @@ startree_t* startree_build(fitstable_t* intable,
 	//inhdr = fitstable_get_header(intable);
 	inhdr = fitstable_get_primary_header(intable);
 
-	logverb("Input table header:\n");
-	qfits_header_debug_dump(inhdr);
-	logverb("\n");
-
+	/*
+	 logverb("Input table header:\n");
+	 qfits_header_debug_dump(inhdr);
+	 logverb("\n");
+	 */
 
     hdr = startree_header(starkd);
 	fits_copy_header(inhdr, hdr, "HEALPIX");

@@ -361,6 +361,16 @@ int fitstable_remove_column(fitstable_t* tab, const char* name) {
     return -1;
 }
 
+void fitstable_print_columns(fitstable_t* tab) {
+	int i;
+	printf("Table columns:\n");
+	for (i=0; i<ncols(tab); i++) {
+		fitscol_t* col = getcol(tab, i);
+		printf("  %s: fits type %i, C type %i, arraysize %i, fitssize %i, C size %i, C offset %i, FITS column num: %i\n",
+			   col->colname, col->fitstype, col->ctype, col->arraysize, col->fitssize, col->csize, col->coffset, col->col);
+	}
+}
+
 int fitstable_read_structs(fitstable_t* tab, void* struc,
                            int strucstride, int offset, int N) {
     int i;

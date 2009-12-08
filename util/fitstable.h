@@ -363,4 +363,6 @@ void fitstable_print_missing(fitstable_t* tab, FILE* f);
 
 void fitstable_error_report_missing(fitstable_t* tab);
 
+void fitstable_print_columns(fitstable_t* tab);
+
 #endif
