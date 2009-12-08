@@ -30,7 +30,6 @@
 #include "log.h"
 
 struct oh_token {
-	//int basehp, x, y;
 	int hp;
 	int nside;
 	int finenside;
@@ -40,16 +39,6 @@ struct oh_token {
 static int outside_healpix(int hp, void* vtoken) {
 	struct oh_token* token = vtoken;
 	int bighp;
-	/*
-	 int bhp, bx, by;
-	 healpix_decompose_xy(hp, &bhp, &bx, &by, token->finenside);
-	 if (bhp != token->basehp)
-	 return 1;
-	 healpix_convert_xy_nside(bx, by, token->finenside, token->nside, &bx, &by);
-	 if (bx == token->x && by == token->y)
-	 return 0;
-	 return 1;
-	 */
 	healpix_convert_nside(hp, token->finenside, token->nside, &bighp);
 	return (bighp == token->hp ? 0 : 1);
 }
@@ -109,6 +98,9 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	int nkeep = nsweeps;
 	int noob = 0;
 	int ndup = 0;
+	struct oh_token token;
+	int R;
+	char* buf;
 
     if (Nside % bignside) {
         ERROR("Fine healpixelization Nside must be a multiple of the coarse healpixelization Nside");
@@ -158,11 +150,14 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	if (allsky)
         bignside = 0;
 
+	token.nside = bignside;
+	token.finenside = Nside;
+	token.hp = bighp;
+
 	if (!allsky && nmargin) {
 		int bigbighp, bighpx, bighpy;
 		int ninside;
 		il* seeds = il_new(256);
-		struct oh_token token;
 		logverb("Finding healpixes in range...\n");
         healpix_decompose_xy(bighp, &bigbighp, &bighpx, &bighpy, bignside);
 		ninside = (Nside/bignside)*(Nside/bignside);
@@ -190,14 +185,6 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		}
         logmsg("Number of boundary healpixes: %i (Nside/bignside = %i)\n", il_size(seeds), Nside/bignside);
 
-		token.nside = bignside;
-		token.finenside = Nside;
-		/*
-		 token.basehp = bigbighp;
-		 token.x = bighpx;
-		 token.y = bighpy;
-		 */
-		token.hp = bighp;
 		myhps = healpix_region_search(-1, seeds, Nside, NULL, NULL,
 									  outside_healpix, &token, nmargin);
 		il_free(seeds);
@@ -216,13 +203,8 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	logverb("Placing stars in grid cells...\n");
 	for (i=0; i<N; i++) {
 		int hp;
-		struct oh_token token;
 		bl* lst;
 		int32_t j32;
-
-		token.hp = bighp;
-		token.nside = bignside;
-		token.finenside = Nside;
 		if (inorder)
 			j = inorder[i];
 		else
@@ -296,65 +278,31 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	N = outi;
 
 	// Write output.
-	/*
-	{
-		int R;
-		char* buf;
-		fitstable_add_fits_columns_as_struct(intable);
-		fitstable_copy_columns(intable, outtable);
-		fitstable_read_extension(intable, 1);
-		if (fitstable_write_header(outtable)) {
-			ERROR("Failed to write output table header");
+	fitstable_add_fits_columns_as_struct(intable);
+	fitstable_copy_columns(intable, outtable);
+	if (fitstable_write_header(outtable)) {
+		ERROR("Failed to write output table header");
+		return -1;
+	}
+	R = fitstable_row_size(intable);
+	logmsg("Writing output...\n");
+	logverb("Row size: %i\n", R);
+	buf = malloc(R);
+	for (i=0; i<N; i++) {
+		if (fitstable_read_row_data(intable, outorder[i], buf)) {
+			ERROR("Failed to read data from input table");
 			return -1;
 		}
-		R = fitstable_row_size(intable);
-		logmsg("Writing output...\n");
-		logverb("Row size: %i\n", R);
-		buf = malloc(R);
-		for (i=0; i<N; i++) {
-			if (fitstable_read_struct(intable, outorder[i], buf)) {
-				ERROR("Failed to read data from input table");
-				return -1;
-			}
-			if (fitstable_write_struct(outtable, buf)) {
-				ERROR("Failed to write data to output table");
-				return -1;
-			}
-		}
-		if (fitstable_fix_header(outtable)) {
-			ERROR("Failed to fix output table header");
-			return -1;
-		}
-	 }*/
-	{
-		int R;
-		char* buf;
-		fitstable_add_fits_columns_as_struct(intable);
-		fitstable_copy_columns(intable, outtable);
-		if (fitstable_write_header(outtable)) {
-			ERROR("Failed to write output table header");
-			return -1;
-		}
-		R = fitstable_row_size(intable);
-		logmsg("Writing output...\n");
-		logverb("Row size: %i\n", R);
-		buf = malloc(R);
-		for (i=0; i<N; i++) {
-			if (fitstable_read_row_data(intable, outorder[i], buf)) {
-				ERROR("Failed to read data from input table");
-				return -1;
-			}
-			if (fitstable_write_row_data(outtable, buf)) {
-				ERROR("Failed to write data to output table");
-				return -1;
-			}
-		}
-		if (fitstable_fix_header(outtable)) {
-			ERROR("Failed to fix output table header");
+		if (fitstable_write_row_data(outtable, buf)) {
+			ERROR("Failed to write data to output table");
 			return -1;
 		}
 	}
-
+	free(buf);
+	if (fitstable_fix_header(outtable)) {
+		ERROR("Failed to fix output table header");
+		return -1;
+	}
 	free(outorder);
 	return 0;
 }
