@@ -123,6 +123,7 @@ int merge_index_files(const char* quadfn, const char* ckdtfn, const char* skdtfn
 	}
     logmsg("Ok.\n");
 
+	logmsg("Writing index to %s ...\n", indexfn);
 	rtn = merge_index(quad, code, star, indexfn);
 
     codetree_close(code);

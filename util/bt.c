@@ -29,6 +29,12 @@
 */
 #define AVL_MAX_HEIGHT 32
 
+// adapt compare_func to compare_func_2
+static int compare_helper(const void* v1, const void* v2, void* token) {
+	compare_func f = token;
+	return f(v1, v2);
+}
+
 // data follows the bt_datablock*.
 static Const void* NODE_DATA(bt_leaf* leaf) {
 	return leaf+1;
@@ -206,7 +212,7 @@ static Malloc bt_node* bt_new_leaf(bt* tree) {
 }
 
 static bool bt_leaf_insert(bt* tree, bt_leaf* leaf, void* data, bool unique,
-						   compare_func compare, void* overflow) {
+						   compare_func_2 compare, void* token, void* overflow) {
 	int lower, upper;
 	int nshift;
 	int index;
@@ -218,7 +224,7 @@ static bool bt_leaf_insert(bt* tree, bt_leaf* leaf, void* data, bool unique,
 		int mid;
 		int cmp;
 		mid = (upper + lower) / 2;
-		cmp = compare(data, get_element(tree, leaf, mid));
+		cmp = compare(data, get_element(tree, leaf, mid), token);
 		if (!cmp && unique) return FALSE;
 		if (cmp >= 0)
 			lower = mid;
@@ -230,7 +236,7 @@ static bool bt_leaf_insert(bt* tree, bt_leaf* leaf, void* data, bool unique,
 
 	// duplicate value?
 	if (unique && (index > 0))
-		if (compare(data, get_element(tree, leaf, index-1)) == 0)
+		if (compare(data, get_element(tree, leaf, index-1), token) == 0)
 			return FALSE;
 
 	// shift...
@@ -291,7 +297,7 @@ static bt_node* next_node(bt_node** ancestors, int nancestors,
 
 // Pure?
 static bool bt_leaf_contains(bt* tree, bt_leaf* leaf, void* data,
-							 compare_func compare) {
+							 compare_func_2 compare, void* token) {
 	int lower, upper;
 	lower = -1;
 	upper = leaf->N;
@@ -299,7 +305,7 @@ static bool bt_leaf_contains(bt* tree, bt_leaf* leaf, void* data,
 		int mid;
 		int cmp;
 		mid = (upper + lower) / 2;
-		cmp = compare(data, get_element(tree, leaf, mid));
+		cmp = compare(data, get_element(tree, leaf, mid), token);
 		if (cmp == 0) return TRUE;
 		if (cmp > 0)
 			lower = mid;
@@ -308,13 +314,17 @@ static bool bt_leaf_contains(bt* tree, bt_leaf* leaf, void* data,
 	}
 	// duplicate value?
 	if (lower >= 0)
-		if (compare(data, get_element(tree, leaf, lower)) == 0)
+		if (compare(data, get_element(tree, leaf, lower), token) == 0)
 			return TRUE;
 	return FALSE;
 }
 
 // Pure?
 bool bt_contains(bt* tree, void* data, compare_func compare) {
+	return bt_contains2(tree, data, compare_helper, compare);
+}
+
+bool bt_contains2(bt* tree, void* data, compare_func_2 compare, void* token) {
 	bt_node *n;
 	int cmp;
 	int dir;
@@ -324,12 +334,12 @@ bool bt_contains(bt* tree, void* data, compare_func compare) {
 
 	dir = 0;
 	for (n = tree->root; !isleaf(n); n = getchild(n, dir)) {
-		cmp = compare(data, first_element(n->branch.children[1]));
+		cmp = compare(data, first_element(n->branch.children[1]), token);
 		if (cmp == 0)
 			return TRUE;
 		dir = (cmp > 0);
 	}
-	return bt_leaf_contains(tree, &n->leaf, data, compare);
+	return bt_leaf_contains(tree, &n->leaf, data, compare, token);
 }
 
 static void update_firstleaf(bt_node** ancestors, int nancestors,
@@ -344,6 +354,10 @@ static void update_firstleaf(bt_node** ancestors, int nancestors,
 }
 
 bool bt_insert(bt* tree, void* data, bool unique, compare_func compare) {
+	return bt_insert2(tree, data, unique, compare_helper, compare);
+}
+
+bool bt_insert2(bt* tree, void* data, bool unique, compare_func_2 compare, void* token) {
 	bt_node *y, *z; /* Top node to update balance factor, and parent. */
 	bt_node *p, *q; /* Iterator, and parent. */
 	bt_node *n;     /* Newly inserted node. */
@@ -365,7 +379,7 @@ bool bt_insert(bt* tree, void* data, bool unique, compare_func compare) {
 		// inserting the first element...
 		n = bt_new_leaf(tree);
 		tree->root = n;
-		bt_leaf_insert(tree, &n->leaf, data, unique, compare, NULL);
+		bt_leaf_insert(tree, &n->leaf, data, unique, compare, token, NULL);
 		return TRUE;
 	}
 
@@ -375,7 +389,7 @@ bool bt_insert(bt* tree, void* data, bool unique, compare_func compare) {
 	for (q = z, p = y;
 		 !isleaf(p);
 		 q = p, p = p->branch.children[dir]) {
-		cmp = compare(data, first_element(p->branch.children[1]));
+		cmp = compare(data, first_element(p->branch.children[1]), token);
 		if (unique && (cmp == 0))
 			return FALSE;
 		if (p->branch.balance != 0) {
@@ -386,12 +400,12 @@ bool bt_insert(bt* tree, void* data, bool unique, compare_func compare) {
 		ancestors[nancestors++] = p;
 		da[k++] = dir = (cmp > 0);
 	}
-	cmp = compare(data, first_element(p));
+	cmp = compare(data, first_element(p), token);
 
 	// will this element fit in the current node?
 	willfit = (p->leaf.N < tree->blocksize);
 	if (willfit) {
-		rtn = bt_leaf_insert(tree, &p->leaf, data, unique, compare, overflow);
+		rtn = bt_leaf_insert(tree, &p->leaf, data, unique, compare, token, overflow);
 		// duplicate value?
 		if (!rtn)
 			return rtn;
@@ -416,7 +430,7 @@ bool bt_insert(bt* tree, void* data, bool unique, compare_func compare) {
 		  balanced parent?
 		*/
 
-		rtn = bt_leaf_insert(tree, &p->leaf, data, unique, compare, overflow);
+		rtn = bt_leaf_insert(tree, &p->leaf, data, unique, compare, token, overflow);
 		if (!rtn)
 			// duplicate value.
 			return rtn;
@@ -424,7 +438,7 @@ bool bt_insert(bt* tree, void* data, bool unique, compare_func compare) {
 		assert(!nextnode || isleaf(nextnode));
 		if (nextnode && (nextnode->leaf.N < tree->blocksize)) {
 			// there's room; insert the element!
-			rtn = bt_leaf_insert(tree, &nextnode->leaf, overflow, unique, compare, NULL);
+			rtn = bt_leaf_insert(tree, &nextnode->leaf, overflow, unique, compare, token, NULL);
 			for (i=0; i<nnextancestors; i++)
 				nextancestors[i]->branch.N++;
 			return rtn;
@@ -448,7 +462,7 @@ bool bt_insert(bt* tree, void* data, bool unique, compare_func compare) {
 	n = bt_new_leaf(tree);
 	if (!n)
 		return FALSE;
-	rtn = bt_leaf_insert(tree, &n->leaf, data, unique, compare, NULL);
+	rtn = bt_leaf_insert(tree, &n->leaf, data, unique, compare, token, NULL);
 	if (!rtn) {
 		free(n);
 		return FALSE;
