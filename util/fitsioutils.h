@@ -110,6 +110,8 @@ void fits_header_mod_double(qfits_header* hdr, const char* key, double val,
 
 int fits_update_value(qfits_header* hdr, const char* key, const char* newvalue);
 
+qfits_table* fits_copy_table(qfits_table* tbl);
+
 int fits_copy_header(const qfits_header* src, qfits_header* dest, char* key);
 
 int fits_copy_all_headers(const qfits_header* src, qfits_header* dest, char* targetkey);

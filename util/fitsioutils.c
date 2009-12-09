@@ -38,6 +38,15 @@
 #include "log.h"
 #include "errors.h"
 
+qfits_table* fits_copy_table(qfits_table* tbl) {
+	qfits_table* out;
+	out = calloc(1, sizeof(qfits_table));
+	memcpy(out, tbl, sizeof(qfits_table));
+	out->col = malloc(tbl->nc * sizeof(qfits_col));
+	memcpy(out->col, tbl->col, tbl->nc * sizeof(qfits_col));
+	return out;
+}
+
 int fits_pixdump(const qfitsdumper * qd) {
     FILE* f_out;
 	const void* vbuf;

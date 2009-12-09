@@ -25,8 +25,11 @@
 #include "kdtree.h"
 #include "qfits.h"
 #include "kdtree_fits_io.h"
+#include "fitstable.h"
 
 #define AN_FILETYPE_STARTREE "SKDT"
+
+#define AN_FILETYPE_TAGALONG "TAGALONG"
 
 #define STARTREE_NAME "stars"
 
@@ -38,6 +41,10 @@ struct startree_s {
 
     // reading or writing?
     int writing;
+
+	// reading: tagged-along data (a FITS BINTABLE with one row per star,
+	// in the same order); access this via startree_get_tagalong() ONLY!
+	fitstable_t* tagalong;
 
     // optional tables: positional error ellipses, proper motions
     float* sigma_radec;
@@ -60,6 +67,8 @@ void startree_search_for(const startree_t* s, const double* xyzcenter, double ra
 
 void startree_search(const startree_t* s, const double* xyzcenter, double radius2,
                      double** xyzresults, double** radecresults, int* nresults);
+
+fitstable_t* startree_get_tagalong(startree_t* s);
 
 /*
  Retrieve parameters of the cut-an process, if they are available.

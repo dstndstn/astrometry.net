@@ -174,9 +174,8 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	if (fitstable_fix_header(tag) ||
-		fitstable_close(tag)) {
-		ERROR("Failed to fix or close tag-along data");
+	if (fitstable_close(tag)) {
+		ERROR("Failed to close tag-along data");
 		exit(-1);
 	}
 	

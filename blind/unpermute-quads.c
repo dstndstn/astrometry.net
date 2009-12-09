@@ -32,13 +32,9 @@
 #include "errors.h"
 #include "boilerplate.h"
 
-int unpermute_quads(const char* quadinfn, const char* ckdtinfn,
-					const char* quadoutfn, const char* ckdtoutfn,
+int unpermute_quads(quadfile* quadin, codetree* treein,
+					quadfile* quadout, codetree** p_treeout,
 					char** args, int argc) {
-    quadfile* quadin;
-	quadfile* quadout;
-	codetree* treein;
-	codetree* treeout;
 	int i;
 	qfits_header* codehdr;
 	qfits_header* hdr;
@@ -47,22 +43,9 @@ int unpermute_quads(const char* quadinfn, const char* ckdtinfn,
 	int codehp;
 	qfits_header* qouthdr;
 	qfits_header* qinhdr;
+	codetree* treeout;
 
-	logmsg("Reading code tree from %s ...\n", ckdtinfn);
-	treein = codetree_open(ckdtinfn);
-	if (!treein) {
-		ERROR("Failed to read code kdtree from %s", ckdtinfn);
-		return -1;
-	}
 	codehdr = codetree_header(treein);
-
-	logmsg("Reading quads from %s ...\n", quadinfn);
-	quadin = quadfile_open(quadinfn);
-	if (!quadin) {
-		ERROR("Failed to read quads from %s", quadinfn);
-		return -1;
-	}
-
 	healpix = quadin->healpix;
 	hpnside = quadin->hpnside;
 	codehp = qfits_header_getint(codehdr, "HEALPIX", -1);
@@ -71,13 +54,6 @@ int unpermute_quads(const char* quadinfn, const char* ckdtinfn,
 	else if (codehp != healpix) {
 		ERROR("Quadfile says it's healpix %i, but code kdtree says %i",
 				healpix, codehp);
-		return -1;
-	}
-
-	logmsg("Writing quads to %s ...\n", quadoutfn);
-	quadout = quadfile_open_for_writing(quadoutfn);
-	if (!quadout) {
-		ERROR("Failed to write quads to %s", quadoutfn);
 		return -1;
 	}
 
@@ -125,9 +101,8 @@ int unpermute_quads(const char* quadinfn, const char* ckdtinfn,
 		}
 	}
 
-	if (quadfile_fix_header(quadout) ||
-		quadfile_close(quadout)) {
-		ERROR("Failed to close output quadfile");
+	if (quadfile_fix_header(quadout)) {
+		ERROR("Failed to fix quadfile header");
 		return -1;
 	}
 
@@ -153,6 +128,48 @@ int unpermute_quads(const char* quadinfn, const char* ckdtinfn,
 	fits_copy_header(codehdr, hdr, "CXDX");
 	fits_copy_header(codehdr, hdr, "CXDXLT1");
 	fits_copy_header(codehdr, hdr, "CIRCLE");
+
+	*p_treeout = treeout;
+	return 0;
+}
+
+int unpermute_quads_files(const char* quadinfn, const char* ckdtinfn,
+						  const char* quadoutfn, const char* ckdtoutfn,
+						  char** args, int argc) {
+    quadfile* quadin;
+	quadfile* quadout;
+	codetree* treein;
+	codetree* treeout;
+
+	logmsg("Reading code tree from %s ...\n", ckdtinfn);
+	treein = codetree_open(ckdtinfn);
+	if (!treein) {
+		ERROR("Failed to read code kdtree from %s", ckdtinfn);
+		return -1;
+	}
+
+	logmsg("Reading quads from %s ...\n", quadinfn);
+	quadin = quadfile_open(quadinfn);
+	if (!quadin) {
+		ERROR("Failed to read quads from %s", quadinfn);
+		return -1;
+	}
+
+	logmsg("Writing quads to %s ...\n", quadoutfn);
+	quadout = quadfile_open_for_writing(quadoutfn);
+	if (!quadout) {
+		ERROR("Failed to write quads to %s", quadoutfn);
+		return -1;
+	}
+
+	if (unpermute_quads(quadin, treein, quadout, &treeout, args, argc)) {
+		return -1;
+	}
+
+	if (quadfile_close(quadout)) {
+		ERROR("Failed to close output quadfile");
+		return -1;
+	}
 
 	quadfile_close(quadin);
 

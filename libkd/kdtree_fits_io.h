@@ -61,6 +61,7 @@
  kdtree_fits_close();
 
  */
+typedef fitsbin_t kdtree_fits_t;
 
 // convenience...
 kdtree_t* kdtree_fits_read(const char* fn, const char* treename,
@@ -68,8 +69,6 @@ kdtree_t* kdtree_fits_read(const char* fn, const char* treename,
 
 int kdtree_fits_write(const kdtree_t* kdtree, const char* fn,
                       const qfits_header* hdr);
-
-typedef fitsbin_t kdtree_fits_t;
 
 //sl* kdtree_fits_list_trees(kdtree_fits_t* io);
 

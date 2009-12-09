@@ -20,6 +20,9 @@
 #ifndef UNPERMUTE_QUADS_H
 #define UNPERMUTE_QUADS_H
 
+#include "quadfile.h"
+#include "codekd.h"
+
 /**
    \file Applies a code kdtree permutation array to the corresponding
    .quad file to produce new .quad and .ckdt files that are
@@ -30,8 +33,12 @@
 
    Original author: dstn
 */
-int unpermute_quads(const char* quadinfn, const char* ckdtinfn,
-					const char* quadoutfn, const char* ckdtoutfn,
+int unpermute_quads_files(const char* quadinfn, const char* ckdtinfn,
+						  const char* quadoutfn, const char* ckdtoutfn,
+						  char** args, int argc);
+
+int unpermute_quads(quadfile* quadin, codetree* ckdtin,
+					quadfile* quadout, codetree** ckdtout,
 					char** args, int argc);
 
 #endif

@@ -62,6 +62,9 @@ struct fitsext {
 };
 typedef struct fitsext fitsext_t;
 
+static bool need_endian_flip() {
+	return IS_BIG_ENDIAN == 0;
+}
 
 static void fitstable_add_columns(fitstable_t* tab, fitscol_t* cols, int Ncols);
 static void fitstable_add_column(fitstable_t* tab, fitscol_t* col);
@@ -209,36 +212,73 @@ int fitstable_read_row_data(fitstable_t* table, int row, void* dest) {
 	return 0;
 }
 
-int fitstable_write_row_data(fitstable_t* table, void* data) {
-	int R;
+void fitstable_endian_flip_row_data(fitstable_t* table, void* data) {
+	int i;
+	char* cursor;
+	if (!need_endian_flip())
+		return;
+	cursor = data;
+	for (i=0; i<ncols(table); i++) {
+		int j;
+		fitscol_t* col = getcol(table, i);
+		for (j=0; j<col->arraysize; j++) {
+			endian_swap(cursor, col->fitssize);
+			cursor += col->fitssize;
+		}
+	}
+}
+
+static int write_row_data(fitstable_t* table, void* data, int R) {
 	assert(table);
 	assert(data);
-	R = fitstable_row_size(table);
 	if (in_memory(table)) {
-		// Endian-flip here??  Or elsewhere...
-		int i;
-		char* cursor = data;
-		for (i=0; i<ncols(table); i++) {
-			int j;
-			fitscol_t* col = getcol(table, i);
-			for (j=0; j<col->arraysize; j++) {
-				endian_swap(cursor, col->fitssize);
-				cursor += col->fitssize;
-			}
-		}
-
 		ensure_row_list_exists(table);
 		bl_append(table->rows, data);
 		// ?
 		table->table->nr++;
 		return 0;
 	}
+	if (R == 0)
+		R = fitstable_row_size(table);
 	if (fwrite(data, 1, R, table->fid) != R) {
 		SYSERROR("Failed to write a row to %s", table->fn);
 		return -1;
 	}
+	assert(table->table);
     table->table->nr++;
 	return 0;
+}
+
+int fitstable_write_row_data(fitstable_t* table, void* data) {
+	return write_row_data(table, data, 0);
+}
+
+int fitstable_copy_rows_data(fitstable_t* intable, int* rows, int N, fitstable_t* outtable) {
+	int R;
+	char* buf = NULL;
+	int i;
+	// We need to endian-flip if we're going from FITS file <--> memory.
+	bool flip = need_endian_flip() && (in_memory(intable) != in_memory(outtable));
+	R = fitstable_row_size(intable);
+	buf = malloc(R);
+	for (i=0; i<N; i++) {
+		if (fitstable_read_row_data(intable, rows ? rows[i] : i, buf)) {
+			ERROR("Failed to read data from input table");
+			return -1;
+		}
+		if (flip)
+			fitstable_endian_flip_row_data(intable, buf);
+		if (write_row_data(outtable, buf, R)) {
+			ERROR("Failed to write data to output table");
+			return -1;
+		}
+	}
+	free(buf);
+	return 0;
+}
+
+int fitstable_copy_row_data(fitstable_t* table, int row, fitstable_t* outtable) {
+	return fitstable_copy_rows_data(table, &row, 1, outtable);
 }
 
 int fitstable_row_size(fitstable_t* t) {
@@ -888,16 +928,20 @@ fitstable_t* fitstable_open(const char* fn) {
     return NULL;
 }
 
-static fitstable_t* open_for_writing(const char* fn, const char* mode) {
+static fitstable_t* open_for_writing(const char* fn, const char* mode, FILE* fid) {
     fitstable_t* tab;
     tab = fitstable_new();
     if (!tab)
         goto bailout;
     tab->fn = strdup_safe(fn);
-    tab->fid = fopen(fn, mode);
-	if (!tab->fid) {
-		SYSERROR("Couldn't open output file %s for writing", fn);
-		goto bailout;
+	if (fid)
+		tab->fid = fid;
+	else {
+		tab->fid = fopen(fn, mode);
+		if (!tab->fid) {
+			SYSERROR("Couldn't open output file %s for writing", fn);
+			goto bailout;
+		}
 	}
     return tab;
  bailout:
@@ -908,7 +952,7 @@ static fitstable_t* open_for_writing(const char* fn, const char* mode) {
 }
 
 fitstable_t* fitstable_open_for_writing(const char* fn) {
-	fitstable_t* tab = open_for_writing(fn, "wb");
+	fitstable_t* tab = open_for_writing(fn, "wb", NULL);
 	if (!tab)
 		return tab;
 	tab->primheader = qfits_table_prim_header_default();
@@ -916,7 +960,7 @@ fitstable_t* fitstable_open_for_writing(const char* fn) {
 }
 
 fitstable_t* fitstable_open_for_appending(const char* fn) {
-	fitstable_t* tab = open_for_writing(fn, "r+b");
+	fitstable_t* tab = open_for_writing(fn, "r+b", NULL);
 	if (!tab)
 		return tab;
 	if (fseeko(tab->fid, 0, SEEK_END)) {
@@ -931,6 +975,49 @@ fitstable_t* fitstable_open_for_appending(const char* fn) {
 		return NULL;
     }
 	return tab;
+}
+
+fitstable_t* fitstable_open_for_appending_to(FILE* fid) {
+	fitstable_t* tab = open_for_writing(NULL, NULL, fid);
+	if (!tab)
+		return tab;
+	if (fseeko(tab->fid, 0, SEEK_END)) {
+		SYSERROR("Failed to seek to end of file");
+		fitstable_close(tab);
+		return NULL;
+	}
+	return tab;
+}
+
+int fitstable_append_to(fitstable_t* intable, FILE* fid) {
+	fitstable_t* outtable;
+	qfits_header* tmphdr;
+	outtable = fitstable_open_for_appending_to(fid);
+	fitstable_clear_table(intable);
+	fitstable_add_fits_columns_as_struct(intable);
+	fitstable_copy_columns(intable, outtable);
+	outtable->table = fits_copy_table(intable->table);
+	outtable->table->nr = 0;
+	// swap in the input header.
+	tmphdr = outtable->header;
+	outtable->header = intable->header;
+	if (fitstable_write_header(outtable)) {
+		ERROR("Failed to write output table header");
+		return -1;
+	}
+	if (fitstable_copy_rows_data(intable, NULL, fitstable_nrows(intable), outtable)) {
+		ERROR("Failed to copy rows from input table to output");
+		return -1;
+	}
+	if (fitstable_fix_header(outtable)) {
+		ERROR("Failed to fix output table header");
+		return -1;
+	}
+	outtable->header = tmphdr;
+	// clear this so that fitstable_close() doesn't fclose() it.
+	outtable->fid = NULL;
+	fitstable_close(outtable);
+	return 0;
 }
 
 int fitstable_close(fitstable_t* tab) {
@@ -1032,6 +1119,7 @@ int fitstable_open_extension(fitstable_t* tab, int ext) {
 		tab->table = theext->table;
 		tab->header = theext->header;
 		tab->rows = theext->rows;
+		tab->extension = ext;
 
 	} else {
 		if (tab->table) {
@@ -1050,6 +1138,7 @@ int fitstable_open_extension(fitstable_t* tab, int ext) {
 			ERROR("Couldn't get header for FITS extension %i in file %s", ext, tab->fn);
 			return -1;
 		}
+		tab->extension = ext;
 	}
     return 0;
 }

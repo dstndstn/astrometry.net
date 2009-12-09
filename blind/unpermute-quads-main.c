@@ -76,7 +76,8 @@ int main(int argc, char **args) {
 		exit(-1);
 	}
 
-	if (unpermute_quads(quadinfn, ckdtinfn, quadoutfn, ckdtoutfn, args, argc)) {
+	if (unpermute_quads_files(quadinfn, ckdtinfn, quadoutfn, ckdtoutfn,
+							  args, argc)) {
 		exit(-1);
 	}
 	return 0;

@@ -480,6 +480,10 @@ int fitsbin_read(fitsbin_t* fb) {
     return -1;
 }
 
+char* fitsbin_get_filename(fitsbin_t* fb) {
+	return fb->filename;
+}
+
 fitsbin_t* fitsbin_open(const char* fn) {
     fitsbin_t* fb;
 	if (!qfits_is_fits(fn)) {

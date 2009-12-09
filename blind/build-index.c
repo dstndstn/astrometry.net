@@ -130,6 +130,11 @@ int main(int argc, char** argv) {
 	// unpermute-stars
 	startree_t* starkd2 = NULL;
 	quadfile* quads2 = NULL;
+	fitstable_t* startag2 = NULL;
+
+	// unpermute-quads
+	quadfile* quads3 = NULL;
+	codetree* codekd2 = NULL;
 
 	int loglvl = LOG_MSG;
 	int id = 0;
@@ -140,7 +145,6 @@ int main(int argc, char** argv) {
 	sl* tempfiles;
 	char* tempdir = "/tmp";
 	char* unifn = NULL;
-	char* rdlsfn;
 	char* skdtfn;
 	char* quadfn;
 	char* codefn;
@@ -289,7 +293,12 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
-	if (!inmemory) {
+	if (inmemory) {
+		if (fitstable_switch_to_reading(uniform)) {
+			ERROR("Failed to switch uniformized table to read-mode");
+			exit(-1);
+		}
+	} else {
 		if (fitstable_close(uniform)) {
 			ERROR("Failed to close output table");
 			exit(-1);
@@ -300,10 +309,6 @@ int main(int argc, char** argv) {
 	// startree
 
 	if (inmemory) {
-		if (fitstable_switch_to_reading(uniform)) {
-			ERROR("Failed to switch uniformized table to read-mode");
-			exit(-1);
-		}
 		startag = fitstable_open_in_memory();
 
 	} else {
@@ -352,12 +357,14 @@ int main(int argc, char** argv) {
 			ERROR("Failed to write tag-along table");
 			exit(-1);
 		}
+		if (inmemory) {
+			if (fitstable_switch_to_reading(startag)) {
+				ERROR("Failed to switch star tag-along data to read-mode");
+				exit(-1);
+			}
+			starkd->tagalong = startag;
 
-		if (fitstable_fix_header(startag)) {
-			ERROR("Failed to fix tag-along data header");
-			exit(-1);
-		}
-		if (!inmemory) {
+		} else {
 			if (fitstable_close(startag)) {
 				ERROR("Failed to close star kdtree tag-along data");
 				exit(-1);
@@ -377,6 +384,15 @@ int main(int argc, char** argv) {
 			ERROR("hpquads failed");
 			exit(-1);
 		}
+		if (quadfile_switch_to_reading(quads)) {
+			ERROR("Failed to switch quadfile to read-mode");
+			exit(-1);
+		}
+		if (codefile_switch_to_reading(codes)) {
+			ERROR("Failed to switch codefile to read-mode");
+			exit(-1);
+		}
+
 
 	} else {
 		quadfn = create_temp_file("quad", tempdir);
@@ -396,10 +412,6 @@ int main(int argc, char** argv) {
 	// codetree
 
 	if (inmemory) {
-		if (codefile_switch_to_reading(codes)) {
-			ERROR("Failed to switch codefile to read-mode");
-			exit(-1);
-		}
 		logmsg("Building code kdtree from %i codes\n", codes->numcodes);
 		logmsg("dim: %i\n", codefile_dimcodes(codes));
 		codekd = codetree_build(codes, 0, 0, 0, 0, argv, argc);
@@ -424,19 +436,37 @@ int main(int argc, char** argv) {
 	}
 
 	// unpermute-stars
+
 	logmsg("Unpermute-stars...\n");
 	if (inmemory) {
 
-		if (quadfile_switch_to_reading(quads)) {
-			ERROR("Failed to switch quadfile to read-mode");
-			exit(-1);
-		}
+		/*
+		 double ra,dec;
+		 logmsg("Star 0 was %i\n", starkd->inverse_perm[0]);
+		 startree_get_radec(starkd, 0, &ra, &dec);
+		 logmsg("RA,Dec %g,%g\n", ra, dec);
+		 */
+
 		quads2 = quadfile_open_in_memory();
 		if (unpermute_stars(starkd, quads, &starkd2, quads2,
 							TRUE, FALSE, argv, argc)) {
 			ERROR("Failed to unpermute-stars");
 			exit(-1);
 		}
+		if (quadfile_switch_to_reading(quads2)) {
+			ERROR("Failed to switch quads2 to read-mode");
+			exit(-1);
+		}
+
+		startag2 = fitstable_open_in_memory();
+		startag2->table = fits_copy_table(startag->table);
+		startag2->table->nr = 0;
+		if (unpermute_stars_tagalong(starkd, startag2)) {
+			ERROR("Failed to unpermute-stars tag-along data");
+			exit(-1);
+		}
+		startag2->header = startag->header;
+		starkd2->tagalong = startag2;
 
 	} else {
 
@@ -453,34 +483,59 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	////////////// FIXME -- still need to unpermute the tag-along table!!
 
+	// unpermute-quads
 	logmsg("Unpermute-quads...\n");
 
-	/*
-	// unpermute-quads
-	ckdt2fn = create_temp_file("ckdt2", tempdir);
-	sl_append_nocopy(tempfiles, ckdt2fn);
-	quad3fn = create_temp_file("quad3", tempdir);
-	sl_append_nocopy(tempfiles, quad3fn);
-	logmsg("Unpermuting quads from %s and %s to %s and %s\n", quad2fn, ckdtfn, quad3fn, ckdt2fn);
-	if (unpermute_quads(quad2fn, ckdtfn,
-						quad3fn, ckdt2fn, argv, argc)) {
-		ERROR("Failed to unpermute-quads");
-		exit(-1);
+	if (inmemory) {
+
+		quads3 = quadfile_open_in_memory();
+
+		if (unpermute_quads(quads2, codekd, quads3, &codekd2, argv, argc)) {
+			ERROR("Failed to unpermute-quads");
+			exit(-1);
+		}
+
+
+	} else {
+
+		ckdt2fn = create_temp_file("ckdt2", tempdir);
+		sl_append_nocopy(tempfiles, ckdt2fn);
+		quad3fn = create_temp_file("quad3", tempdir);
+		sl_append_nocopy(tempfiles, quad3fn);
+		logmsg("Unpermuting quads from %s and %s to %s and %s\n", quad2fn, ckdtfn, quad3fn, ckdt2fn);
+		if (unpermute_quads_files(quad2fn, ckdtfn,
+								  quad3fn, ckdt2fn, argv, argc)) {
+			ERROR("Failed to unpermute-quads");
+			exit(-1);
+		}
 	}
 
 	// mergeindex
-	logmsg("Merging %s and %s and %s to %s\n", quad3fn, ckdt2fn, skdt2fn, indexfn);
-	if (merge_index(quad3fn, ckdt2fn, skdt2fn, indexfn)) {
-		ERROR("Failed to merge-index");
-		exit(-1);
+	if (inmemory) {
+		if (quadfile_switch_to_reading(quads3)) {
+			ERROR("Failed to switch quads3 to read-mode");
+			exit(-1);
+		}
+
+		logmsg("Writing to file %s\n", indexfn);
+		if (merge_index(quads3, codekd2, starkd2, indexfn)) {
+			ERROR("Failed to write index file");
+			exit(-1);
+		}
+
+	} else {
+		logmsg("Merging %s and %s and %s to %s\n", quad3fn, ckdt2fn, skdt2fn, indexfn);
+		if (merge_index_files(quad3fn, ckdt2fn, skdt2fn, indexfn)) {
+			ERROR("Failed to merge-index");
+			exit(-1);
+		}
 	}
 
-	 */
+	if (inmemory) {
+	}
 
 	sl_free2(tempfiles);
-
 	printf("Done.\n");
 	return 0;
 }

@@ -102,8 +102,6 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	int noob = 0;
 	int ndup = 0;
 	struct oh_token token;
-	int R;
-	char* buf = NULL;
 	int* npersweep = NULL;
 	qfits_header* outhdr = NULL;
 
@@ -317,21 +315,12 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		ERROR("Failed to write output table header");
 		return -1;
 	}
-	R = fitstable_row_size(intable);
 	logmsg("Writing output...\n");
-	logverb("Row size: %i\n", R);
-	buf = malloc(R);
-	for (i=0; i<N; i++) {
-		if (fitstable_read_row_data(intable, outorder[i], buf)) {
-			ERROR("Failed to read data from input table");
-			return -1;
-		}
-		if (fitstable_write_row_data(outtable, buf)) {
-			ERROR("Failed to write data to output table");
-			return -1;
-		}
+	logverb("Row size: %i\n", fitstable_row_size(intable));
+	if (fitstable_copy_rows_data(intable, outorder, N, outtable)) {
+		ERROR("Failed to copy rows from input table to output");
+		return -1;
 	}
-	free(buf);
 	if (fitstable_fix_header(outtable)) {
 		ERROR("Failed to fix output table header");
 		return -1;

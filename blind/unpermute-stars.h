@@ -22,6 +22,7 @@
 
 #include "starkd.h"
 #include "quadfile.h"
+#include "fitstable.h"
 
 /**
  \file Applies a star kdtree permutation array to all files that depend on
@@ -43,5 +44,8 @@ int unpermute_stars(startree_t* starkdin, quadfile* quadin,
 					startree_t** starkdout, quadfile* quadout,
 					bool sweep, bool check,
 					char** args, int argc);
+
+int unpermute_stars_tagalong(startree_t* starkdin,
+							 fitstable_t* tagalong_out);
 
 #endif

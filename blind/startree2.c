@@ -30,6 +30,7 @@ int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
 								  const char* racol, const char* deccol) {
 	int i, R, NB, N;
 	char* buf;
+	qfits_header* hdr;
 	
 	fitstable_clear_table(intab);
 	fitstable_add_fits_columns_as_struct(intab);
@@ -41,6 +42,8 @@ int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
 	fitstable_remove_column(outtab, racol);
 	fitstable_remove_column(outtab, deccol);
     fitstable_read_extension(intab, 1);
+	hdr = fitstable_get_header(outtab);
+	qfits_header_add(hdr, "AN_FILE", AN_FILETYPE_TAGALONG, "Extra data for stars", NULL);
 	if (fitstable_write_header(outtab)) {
 		ERROR("Failed to write tag-along data header");
 		return -1;
@@ -65,6 +68,10 @@ int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
 		}
 	}
 	free(buf);
+	if (fitstable_fix_header(outtab)) {
+		ERROR("Failed to fix tag-along data header");
+		return -1;
+	}
 	return 0;
 }
 

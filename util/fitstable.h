@@ -196,6 +196,10 @@ fitstable_t* fitstable_open_for_writing(const char* fn);
 
 fitstable_t* fitstable_open_for_appending(const char* fn);
 
+fitstable_t* fitstable_open_for_appending_to(FILE* fid);
+
+int fitstable_append_to(fitstable_t* t, FILE* fid);
+
 void fitstable_copy_columns(const fitstable_t* src, fitstable_t* dest);
 
 void fitstable_add_fits_columns_as_struct(fitstable_t* dest);
@@ -300,9 +304,23 @@ void* fitstable_read_column_offset(const fitstable_t* tab,
 // Note, you must call this with *pointers* to the data to write.
 int fitstable_write_row(fitstable_t* table, ...);
 
-// Reads the raw row data
+/**
+ Reads/writes raw row data, without endian-flipping.
+
+ This means that if you're reading from a FITS file into an in-memory
+ fitstable, or vice versa, you will need to use
+ fitstable_endian_flip_row_data().
+ */
 int fitstable_read_row_data(fitstable_t* table, int row, void* dest);
 int fitstable_write_row_data(fitstable_t* table, void* data);
+int fitstable_copy_row_data(fitstable_t* table, int row, fitstable_t* outtable);
+int fitstable_copy_rows_data(fitstable_t* table, int* rows, int Nrows, fitstable_t* outtable);
+
+/**
+ Endian-flips a row of data, IF NECESSARY, according to the current
+ list of columns.  (See fitstable_add_fits_columns_as_struct()).
+ */
+void fitstable_endian_flip_row_data(fitstable_t* table, void* data);
 
 // Writes one row, with data drawn from the given structure.
 int fitstable_write_struct(fitstable_t* table, const void* struc);

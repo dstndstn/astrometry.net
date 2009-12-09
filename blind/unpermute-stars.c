@@ -219,6 +219,39 @@ int unpermute_stars(startree_t* treein, quadfile* qfin,
 	return 0;
 }
 
+int unpermute_stars_tagalong(startree_t* treein,
+							 fitstable_t* tagout) {
+	fitstable_t* tagin;
+	qfits_header* tmphdr;
+	int N;
+	tagin = startree_get_tagalong(treein);
+	if (!tagin) {
+		ERROR("No input tag-along table");
+		return -1;
+	}
+	N = startree_N(treein);
+	assert(fitstable_nrows(tagin) == N);
+	fitstable_clear_table(tagin);
+	fitstable_add_fits_columns_as_struct(tagin);
+	fitstable_copy_columns(tagin, tagout);
+	tmphdr = tagout->header;
+	tagout->header = tagin->header;
+	if (fitstable_write_header(tagout)) {
+		ERROR("Failed to write tag-along table header");
+		return -1;
+	}
+	if (fitstable_copy_rows_data(tagin, treein->tree->perm, N, tagout)) {
+		ERROR("Failed to copy tag-along table rows from input to output");
+		return -1;
+	}
+	if (fitstable_fix_header(tagout)) {
+		ERROR("Failed to fix tag-along table header");
+		return -1;
+	}
+	tagout->header = tmphdr;
+	return 0;
+}
+
 int unpermute_stars_files(const char* skdtinfn, const char* quadinfn,
 						  const char* skdtoutfn, const char* quadoutfn,
 						  bool dosweeps, bool check,
@@ -227,6 +260,8 @@ int unpermute_stars_files(const char* skdtinfn, const char* quadinfn,
 	quadfile* qfout;
 	startree_t* treein;
 	startree_t* treeout;
+	fitstable_t* tagout = NULL;
+	fitstable_t* tagin;
 	int rtn;
 
 	logmsg("Reading star tree from %s ...\n", skdtinfn);
@@ -264,6 +299,24 @@ int unpermute_stars_files(const char* skdtinfn, const char* quadinfn,
 	if (startree_write_to_file(treeout, skdtoutfn)) {
 		ERROR("Failed to write star kdtree.\n");
 		return -1;
+	}
+
+	logmsg("Permuting tag-along table...\n");
+	tagin = startree_get_tagalong(treein);
+	if (tagin) {
+		tagout = fitstable_open_for_appending(skdtoutfn);
+
+		tagout->table = fits_copy_table(tagin->table);
+		tagout->table->nr = 0;
+
+		if (unpermute_stars_tagalong(treein, tagout)) {
+			ERROR("Failed to permute tag-along table");
+			return -1;
+		}
+		if (fitstable_close(tagout)) {
+			ERROR("Failed to close tag-along data");
+			return -1;
+		}
 	}
 
     free(treeout->sigma_radec);

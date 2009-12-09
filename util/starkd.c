@@ -273,6 +273,51 @@ int startree_close(startree_t* s) {
 	return 0;
 }
 
+fitstable_t* startree_get_tagalong(startree_t* s) {
+	char* fn;
+	qfits_header* hdr;
+	int next;
+	int i;
+	int ext = -1;
+	if (s->tagalong)
+		return s->tagalong;
+	if (!s->tree->io)
+		return NULL;
+	fn = fitsbin_get_filename(s->tree->io);
+	if (!fn) {
+		ERROR("No filename");
+		return NULL;
+	}
+	s->tagalong = fitstable_open(fn);
+	if (!s->tagalong) {
+		ERROR("Failed to open FITS table from %s", fn);
+		return NULL;
+	}
+	next = qfits_query_n_ext(fn);
+	for (i=1; i<=next; i++) {
+		char* type;
+		bool eq;
+		hdr = qfits_header_readext(fn, i);
+		if (!hdr) {
+			ERROR("Failed to read FITS header for ext %i in %s", i, fn);
+			return NULL;
+		}
+		type = fits_get_dupstring(hdr, "AN_FILE");
+		eq = streq(type, AN_FILETYPE_TAGALONG);
+		free(type);
+		if (!eq)
+			continue;
+		ext = i;
+		break;
+	}
+	if (ext == -1) {
+		ERROR("Failed to find a FITS header with the card AN_FILE = TAGALONG");
+		return NULL;
+	}
+	fitstable_open_extension(s->tagalong, ext);
+	return s->tagalong;
+}
+
 static int Ndata(const startree_t* s) {
 	return s->tree->ndata;
 }
