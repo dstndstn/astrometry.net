@@ -71,6 +71,9 @@ codefile* codefile_open_for_writing(const char* fname);
 
 codefile* codefile_open_in_memory();
 
+// when in-memory
+int codefile_switch_to_reading(codefile* cf);
+
 int codefile_write_header(codefile* cf);
 
 int codefile_write_code(codefile* cf, double* code);

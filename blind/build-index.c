@@ -33,6 +33,7 @@
 #include "quad-utils.h"
 #include "uniformize-catalog.h"
 #include "startree2.h"
+#include "codetree.h"
 #include "bl.h"
 #include "ioutils.h"
 #include "rdlist.h"
@@ -121,6 +122,8 @@ int main(int argc, char** argv) {
 
 	codefile* codes = NULL;
 	quadfile* quads = NULL;
+
+	codetree* codekd = NULL;
 
 	int loglvl = LOG_MSG;
 	int id = 0;
@@ -360,7 +363,6 @@ int main(int argc, char** argv) {
 	// hpquads
 
 	if (inmemory) {
-
 		codes = codefile_open_in_memory();
 		quads = quadfile_open_in_memory();
 		if (hpquads(starkd, codes, quads, Nside,
@@ -385,123 +387,37 @@ int main(int argc, char** argv) {
 		}
 	}
 
-
-	/*
-	// allquads
-	{
-		allquads_t* aq;
-		double diagpix, diag;
-		sip_t sip;
-		qfits_header* hdr;
-
-		// read WCS.
-		if (!sip_read_tan_or_sip_header_file_ext(wcsfn, wcsext, &sip, FALSE)) {
-			ERROR("Failed to read WCS file %s", wcsfn);
-			exit(-1);
-		}
-		// in pixels
-		diagpix = hypot(sip.wcstan.imagew, sip.wcstan.imageh);
-		// in arcsec
-		diag = diagpix * sip_pixel_scale(&sip);
-
-		logmsg("Image is %i x %i pixels\n", (int)sip.wcstan.imagew, (int)sip.wcstan.imageh);
-		logmsg("Setting quad scale range to [%g, %g] pixels, [%g, %g] arcsec\n",
-			   diagpix * lowf, diagpix * highf, diag * lowf, diag * highf);
-
-		aq = allquads_init();
-		aq->dimquads = dimquads;
-		aq->dimcodes = dimquad2dimcode(aq->dimquads);
-		aq->id = id;
-		aq->quadfn = quadfn;
-		aq->codefn = codefn;
-		aq->skdtfn = skdtfn;
-		aq->quad_d2_lower = arcsec2distsq(diag * lowf);
-		aq->quad_d2_upper = arcsec2distsq(diag * highf);
-		aq->use_d2_lower = TRUE;
-		aq->use_d2_upper = TRUE;
-
-		if (allquads_open_outputs(aq)) {
-			exit(-1);
-		}
-		hdr = codefile_get_header(aq->codes);
-		qfits_header_add(hdr, "CIRCLE", "T", "Codes live in the circle", NULL);
-		if (allquads_create_quads(aq) ||
-			allquads_close(aq)) {
-			exit(-1);
-		}
-		allquads_free(aq);
-	}
-
 	// codetree
-	ckdtfn = create_temp_file("ckdt", tempdir);
-	sl_append_nocopy(tempfiles, ckdtfn);
-	{
-		int Nleaf = 25;
-		codetree *codekd;
-		codefile* codes;
-		int exttype = KDT_EXT_DOUBLE;
-		int datatype = KDT_DATA_U16;
-		int treetype = KDT_TREE_U16;
-		int tt;
-		int buildopts = KD_BUILD_SPLIT;
-		int N, D;
-		qfits_header* chdr;
-		qfits_header* hdr;
 
-		codes = codefile_open(codefn);
-		if (!codes) {
-			ERROR("Failed to open code file %s", codefn);
+	if (inmemory) {
+		if (codefile_switch_to_reading(codes)) {
+			ERROR("Failed to switch codefile to read-mode");
 			exit(-1);
 		}
-		N = codes->numcodes;
-		logmsg("Read %i codes\n", N);
-		codekd = codetree_new();
+		logmsg("Building code kdtree from %i codes\n", codes->numcodes);
+		logmsg("dim: %i\n", codefile_dimcodes(codes));
+		codekd = codetree_build(codes, 0, 0, 0, 0, argv, argc);
 		if (!codekd) {
-			ERROR("Failed to allocate a codetree structure");
-			exit(-1);
-		}
-		chdr = codefile_get_header(codes);
-		hdr = codetree_header(codekd);
-		fits_header_add_int(hdr, "NLEAF", Nleaf, "Target number of points in leaves.");
-		fits_copy_header(chdr, hdr, "INDEXID");
-		fits_copy_header(chdr, hdr, "HEALPIX");
-		fits_copy_header(chdr, hdr, "HPNSIDE");
-		fits_copy_header(chdr, hdr, "CXDX");
-		fits_copy_header(chdr, hdr, "CXDXLT1");
-		fits_copy_header(chdr, hdr, "CIRCLE");
-
-		tt = kdtree_kdtypes_to_treetype(exttype, treetype, datatype);
-		D = codefile_dimcodes(codes);
-		codekd->tree = kdtree_new(N, D, Nleaf);
-		{
-			double low[D];
-			double high[D];
-			int d;
-			for (d=0; d<D; d++) {
-				low [d] = 0.5 - M_SQRT1_2;
-				high[d] = 0.5 + M_SQRT1_2;
-			}
-			kdtree_set_limits(codekd->tree, low, high);
-		}
-		logverb("Building code kdtree...\n");
-		codekd->tree = kdtree_build(codekd->tree, codes->codearray, N, D,
-									Nleaf, tt, buildopts);
-		if (!codekd->tree) {
 			ERROR("Failed to build code kdtree");
 			exit(-1);
 		}
-		codekd->tree->name = strdup(CODETREE_NAME);
-		logverb("Writing code kdtree to %s...\n", ckdtfn);
-		if (codetree_write_to_file(codekd, ckdtfn)) {
-			ERROR("Failed to write ckdt to %s", ckdtfn);
+		if (codefile_close(codes)) {
+			ERROR("Failed to close codefile");
 			exit(-1);
 		}
-		codefile_close(codes);
-		kdtree_free(codekd->tree);
-		codekd->tree = NULL;
-		codetree_close(codekd);
+
+	} else {
+
+		ckdtfn = create_temp_file("ckdt", tempdir);
+		sl_append_nocopy(tempfiles, ckdtfn);
+
+		if (codetree_files(codefn, ckdtfn, 0, 0, 0, 0, argv, argc)) {
+			ERROR("codetree failed");
+			exit(-1);
+		}
 	}
 
+	/*
 	// unpermute-stars
 	skdt2fn = create_temp_file("skdt2", tempdir);
 	sl_append_nocopy(tempfiles, skdt2fn);

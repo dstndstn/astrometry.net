@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -28,134 +29,83 @@
 #include <math.h>
 #include <string.h>
 
+#include "codetree.h"
 #include "codefile.h"
 #include "fitsioutils.h"
 #include "codekd.h"
 #include "boilerplate.h"
+#include "errors.h"
+#include "log.h"
 
-#define OPTIONS "hR:i:o:bsSt:d:"
+int codetree_files(const char* codefn, const char* ckdtfn,
+				   int Nleaf, int datatype, int treetype,
+				   int buildopts,
+				   char** args, int argc) {
+    codefile* codes;
+    codetree *codekd = NULL;
 
-static void printHelp(char* progname) {
-	boilerplate_help_header(stdout);
-	printf("\nUsage: %s\n"
-		   "    -i <input-filename>\n"
-		   "    -o <output-filename>\n"
-		   "   (   [-b]: build bounding boxes\n"
-		   "    OR [-s]: build splitting planes   )\n"
-		   "    [-t  <tree type>]:  {double,float,u32,u16}, default u16.\n"
-		   "    [-d  <data type>]:  {double,float,u32,u16}, default u16.\n"
-		   "    [-S]: include separate splitdim array\n"
-		   "    [-R <target-leaf-node-size>]   (default 25)\n"
-		   "\n", progname);
+	assert(codefn);
+	assert(ckdtfn);
+    logmsg("codetree: building KD tree for %s\n", codefn);
+    logmsg("       will write KD tree file %s\n", ckdtfn);
+    logmsg("Reading codes...");
+
+    codes = codefile_open(codefn);
+    if (!codes) {
+		ERROR("Failed to read code file %s", codefn);
+		return -1;
+    }
+    logmsg("got %u codes.\n", codes->numcodes);
+
+	codekd = codetree_build(codes, Nleaf, datatype, treetype,
+							buildopts, args, argc);
+	if (!codekd) {
+		return -1;
+	}
+
+    logmsg("  Writing code KD tree to %s...", ckdtfn);
+	if (codetree_write_to_file(codekd, ckdtfn)) {
+        ERROR("Failed to write code kdtree to %s", ckdtfn);
+		return -1;
+    }
+    logmsg("done.\n");
+    codefile_close(codes);
+    kdtree_free(codekd->tree);
+    codekd->tree = NULL;
+    codetree_close(codekd);
+	return 0;
 }
 
-extern char *optarg;
-extern int optind, opterr, optopt;
-
-int main(int argc, char *argv[]) {
-    int argidx, argchar;
-	char* progname = argv[0];
-
-	int Nleaf = 25;
-    codetree *codekd = NULL;
-    char* treefname = NULL;
-    char* codefname = NULL;
-    codefile* codes;
-	int rtn;
+codetree* codetree_build(codefile* codes,
+						 int Nleaf, int datatype, int treetype,
+						 int buildopts,
+						 char** args, int argc) {
+	codetree* codekd;
 	qfits_header* hdr;
 	int exttype = KDT_EXT_DOUBLE;
-	int datatype = KDT_DATA_NULL;
-	int treetype = KDT_TREE_NULL;
 	int tt;
-	int buildopts = 0;
 	int N, D;
     qfits_header* chdr;
 
-    if (argc <= 2) {
-        printHelp(progname);
-		exit(-1);
-    }
-
-    while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
-        switch (argchar) {
-        case 'R':
-            Nleaf = (int)strtoul(optarg, NULL, 0);
-            break;
-        case 'i':
-            codefname = optarg;
-            break;
-        case 'o':
-            treefname = optarg;
-            break;
-		case 't':
-			treetype = kdtree_kdtype_parse_tree_string(optarg);
-			break;
-		case 'd':
-			datatype = kdtree_kdtype_parse_data_string(optarg);
-			break;
-		case 'b':
-			buildopts |= KD_BUILD_BBOX;
-			break;
-		case 's':
-			buildopts |= KD_BUILD_SPLIT;
-			break;
-		case 'S':
-			buildopts |= KD_BUILD_SPLITDIM;
-			break;
-        case '?':
-            fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-        case 'h':
-			printHelp(progname);
-			exit(-1);
-        default:
-            return (OPT_ERR);
-        }
-
-    if (optind < argc) {
-        for (argidx = optind; argidx < argc; argidx++)
-            fprintf (stderr, "Non-option argument %s\n", argv[argidx]);
-		printHelp(progname);
-		exit(-1);
-    }
-    if (!codefname || !treefname) {
-		printHelp(progname);
-		exit(-1);
-    }
-	if (!(buildopts & (KD_BUILD_BBOX | KD_BUILD_SPLIT))) {
-		printf("You need bounding-boxes or splitting planes!\n");
-		printHelp(progname);
-		exit(-1);
+	codekd = codetree_new();
+	if (!codekd) {
+		ERROR("Failed to allocate a codetree structure");
+		return NULL;
 	}
 
-	// defaults
+	if (!Nleaf)
+		Nleaf = 25;
 	if (!datatype)
 		datatype = KDT_DATA_U16;
 	if (!treetype)
 		treetype = KDT_TREE_U16;
-
-    fprintf(stderr, "codetree: building KD tree for %s\n", codefname);
-    fprintf(stderr, "       will write KD tree file %s\n", treefname);
-
-    fprintf(stderr, "  Reading codes...");
-    fflush(stderr);
-
-    codes = codefile_open(codefname);
-    if (!codes) {
-        exit(-1);
-    }
-    fprintf(stderr, "got %u codes.\n", codes->numcodes);
-
-	codekd = codetree_new();
-	if (!codekd) {
-		fprintf(stderr, "Failed to allocate a codetree structure.\n");
-		exit(-1);
-	}
+	if (!buildopts)
+		buildopts = KD_BUILD_SPLIT;
 
 	tt = kdtree_kdtypes_to_treetype(exttype, treetype, datatype);
 	N = codes->numcodes;
 	D = codefile_dimcodes(codes);
 	codekd->tree = kdtree_new(N, D, Nleaf);
-
     chdr = codefile_get_header(codes);
 	{
 		double low[D];
@@ -174,20 +124,15 @@ int main(int argc, char *argv[]) {
 		}
 		kdtree_set_limits(codekd->tree, low, high);
 	}
-    fprintf(stderr, "Building tree...");
-    fflush(stderr);
+    logmsg("Building tree...\n");
     codekd->tree = kdtree_build(codekd->tree, codes->codearray, N, D,
                                 Nleaf, tt, buildopts);
     if (!codekd->tree) {
-		fprintf(stderr, "Failed to build code kdtree.\n");
-		exit(-1);
+		ERROR("Failed to build code kdtree");
+		return NULL;
 	}
-    fprintf(stderr, "done (%d codes)\n", codetree_N(codekd));
-
+    logmsg("Done\n");
     codekd->tree->name = strdup(CODETREE_NAME);
-
-    fprintf(stderr, "  Writing code KD tree to %s...", treefname);
-    fflush(stderr);
 
 	hdr = codetree_header(codekd);
 	fits_header_add_int(hdr, "NLEAF", Nleaf, "Target number of points in leaves.");
@@ -197,28 +142,14 @@ int main(int argc, char *argv[]) {
 	fits_copy_header(chdr, hdr, "CXDX");
 	fits_copy_header(chdr, hdr, "CXDXLT1");
 	fits_copy_header(chdr, hdr, "CIRCLE");
-
 	boilerplate_add_fits_headers(hdr);
-	qfits_header_add(hdr, "HISTORY", "This file was created by the program \"codetree\".", NULL, NULL);
-	qfits_header_add(hdr, "HISTORY", "codetree command line:", NULL, NULL);
-	fits_add_args(hdr, argv, argc);
-	qfits_header_add(hdr, "HISTORY", "(end of codetree command line)", NULL, NULL);
+	qfits_header_add(hdr, "HISTORY", "This file was created by the command-line:", NULL, NULL);
+	fits_add_args(hdr, args, argc);
+	qfits_header_add(hdr, "HISTORY", "(end of command line)", NULL, NULL);
 	qfits_header_add(hdr, "HISTORY", "** codetree: history from input file:", NULL, NULL);
 	fits_copy_all_headers(chdr, hdr, "HISTORY");
 	qfits_header_add(hdr, "HISTORY", "** codetree: end of history from input file.", NULL, NULL);
 
-	rtn = codetree_write_to_file(codekd, treefname);
-	if (rtn) {
-        fprintf(stderr, "Couldn't write code kdtree.\n");
-        exit(-1);
-    }
-
-    fprintf(stderr, "done.\n");
-    codefile_close(codes);
-
-    kdtree_free(codekd->tree);
-    codekd->tree = NULL;
-    codetree_close(codekd);
-	return 0;
+	return codekd;
 }
 

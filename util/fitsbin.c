@@ -291,7 +291,6 @@ int fitsbin_write_chunk_header_to(fitsbin_t* fb, fitsbin_chunk_t* chunk, FILE* f
 int fitsbin_fix_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
     // update NAXIS2 to reflect the number of rows written.
     fits_header_mod_int(chunk->header, "NAXIS2", chunk->nrows, NULL);
-	//if (in_memory(fb)) return 0;
 
 	// HACK -- leverage the fact that this is the last function called for each chunk...
 	if (in_memory(fb)) {
@@ -300,8 +299,6 @@ int fitsbin_fix_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 		// table, header, items
 		if (!fb->extensions)
 			fb->extensions = bl_new(4, sizeof(fitsext_t));
-
-		//ext.table = 
 		ext.header = qfits_header_copy(chunk->header);
 		ext.items = fb->items;
 		ext.tablename = strdup(chunk->tablename);

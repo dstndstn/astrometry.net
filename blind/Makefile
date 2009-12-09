@@ -347,7 +347,7 @@ uniformize-catalog: uniformize-catalog-main.o uniformize-catalog.o \
 ALL_OBJ += uniformize-catalog-main.o uniformize-catalog.o
 
 build-index: build-index.o uniformize-catalog.o startree2.o hpquads.o \
-		quad-builder.o quad-utils.o codefile.o \
+		quad-builder.o quad-utils.o codefile.o codetree.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += build-index.o uniformize-catalog.o
 
@@ -358,8 +358,9 @@ ALL_OBJ += hpquads-main.o quad-builder.o hpquads.o
 allquads: allquads-main.o allquads.o quad-builder.o quad-utils.o codefile.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-codetree: codetree.o codefile.o \
+codetree: codetree-main.o codetree.o codefile.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += codetree-main.o
 
 unpermute-stars: unpermute-stars-main.o unpermute-stars.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)

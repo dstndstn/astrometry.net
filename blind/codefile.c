@@ -253,6 +253,23 @@ codefile* codefile_open_in_memory() {
 	return open_for_writing(NULL);
 }
 
+int codefile_switch_to_reading(codefile* cf) {
+	if (codefile_fix_header(cf)) {
+        ERROR("Failed to fix codes header");
+		return -1;
+	}
+	if (fitsbin_switch_to_reading(cf->fb)) {
+        ERROR("Failed to switch to read mode");
+		return -1;
+	}
+    if (fitsbin_read(cf->fb)) {
+        ERROR("Failed to open codes file");
+		return -1;
+    }
+	cf->codearray = codes_chunk(cf)->data;
+	return 0;
+}
+
 int codefile_write_header(codefile* cf) {
 	fitsbin_t* fb = cf->fb;
     fitsbin_chunk_t* chunk = codes_chunk(cf);

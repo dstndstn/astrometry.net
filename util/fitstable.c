@@ -217,7 +217,6 @@ int fitstable_write_row_data(fitstable_t* table, void* data) {
 	if (in_memory(table)) {
 		// Endian-flip here??  Or elsewhere...
 		int i;
-		int off = 0;
 		char* cursor = data;
 		for (i=0; i<ncols(table); i++) {
 			int j;

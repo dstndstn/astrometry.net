@@ -124,17 +124,6 @@ startree_t* startree_build(fitstable_t* intable,
 		goto bailout;
 	}
 	N = fitstable_nrows(intable);
-
-	printf("ra0,dec0 = %g,%g\n", ra[0], dec[0]);
-
-	/*{
-		int i;
-		printf("radec=array[");
-		for (i=0; i<N; i++)
-			printf("[%g,%g],", ra[i], dec[i]);
-		printf("]\n");
-	 }*/
-
 	xyz = malloc(N * 3 * sizeof(double));
 	if (!xyz) {
 		SYSERROR("Failed to malloc xyz array to build startree");
@@ -168,15 +157,7 @@ startree_t* startree_build(fitstable_t* intable,
 	}
 	starkd->tree->name = strdup(STARTREE_NAME);
 
-	//inhdr = fitstable_get_header(intable);
 	inhdr = fitstable_get_primary_header(intable);
-
-	/*
-	 logverb("Input table header:\n");
-	 qfits_header_debug_dump(inhdr);
-	 logverb("\n");
-	 */
-
     hdr = startree_header(starkd);
 	fits_copy_header(inhdr, hdr, "HEALPIX");
 	fits_copy_header(inhdr, hdr, "HPNSIDE");
@@ -184,12 +165,11 @@ startree_t* startree_build(fitstable_t* intable,
 	fits_copy_header(inhdr, hdr, "JITTER");
 	fits_copy_header(inhdr, hdr, "CUTNSIDE");
 	fits_copy_header(inhdr, hdr, "CUTMARG");
-	//fits_copy_header(inhdr, hdr, "CUTBAND");
 	fits_copy_header(inhdr, hdr, "CUTDEDUP");
 	fits_copy_header(inhdr, hdr, "CUTNSWEP");
+	//fits_copy_header(inhdr, hdr, "CUTBAND");
 	//fits_copy_header(inhdr, hdr, "CUTMINMG");
 	//fits_copy_header(inhdr, hdr, "CUTMAXMG");
-
 	boilerplate_add_fits_headers(hdr);
 	qfits_header_add(hdr, "HISTORY", "This file was created by the command-line:", NULL, NULL);
 	fits_add_args(hdr, args, argc);
@@ -206,8 +186,6 @@ startree_t* startree_build(fitstable_t* intable,
 			break;
 		fits_copy_header(inhdr, hdr, key);
 	}
-
-
 
  bailout:
 	if (ra)
