@@ -269,13 +269,14 @@ int startree_close(startree_t* s) {
         else
             kdtree_fits_close(s->tree);
     }
+	if (s->tagalong)
+		fitstable_close(s->tagalong);
 	free(s);
 	return 0;
 }
 
 fitstable_t* startree_get_tagalong(startree_t* s) {
 	char* fn;
-	qfits_header* hdr;
 	int next;
 	int i;
 	int ext = -1;
@@ -297,6 +298,7 @@ fitstable_t* startree_get_tagalong(startree_t* s) {
 	for (i=1; i<=next; i++) {
 		char* type;
 		bool eq;
+		qfits_header* hdr;
 		hdr = qfits_header_readext(fn, i);
 		if (!hdr) {
 			ERROR("Failed to read FITS header for ext %i in %s", i, fn);
@@ -305,6 +307,7 @@ fitstable_t* startree_get_tagalong(startree_t* s) {
 		type = fits_get_dupstring(hdr, "AN_FILE");
 		eq = streq(type, AN_FILETYPE_TAGALONG);
 		free(type);
+		qfits_header_destroy(hdr);
 		if (!eq)
 			continue;
 		ext = i;
@@ -504,6 +507,7 @@ static int write_to_file(startree_t* s, const char* fn, bool flipped,
 				kdtree_fits_write_chunk(io, chunk);
 			}
 		}
+		fitsbin_chunk_clean(chunk);
 	}
 	bl_free(chunks);
 

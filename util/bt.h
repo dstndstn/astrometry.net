@@ -81,6 +81,8 @@ typedef struct bt bt;
 
 typedef int (*compare_func)(const void* v1, const void* v2);
 
+typedef int (*compare_func_2)(const void* v1, const void* v2, void* token);
+
 Malloc bt* bt_new(int datasize, int blocksize);
 
 void bt_free(bt* tree);
@@ -89,7 +91,11 @@ Pure Inline int bt_size(bt* tree);
 
 bool bt_insert(bt* tree, void* data, bool unique, compare_func compare);
 
+bool bt_insert2(bt* tree, void* data, bool unique, compare_func_2 compare, void* token);
+
 bool bt_contains(bt* tree, void* data, compare_func compare);
+
+bool bt_contains2(bt* tree, void* data, compare_func_2 compare, void* token);
 
 void* bt_access(bt* tree, int index);
 

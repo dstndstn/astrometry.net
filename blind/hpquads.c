@@ -78,14 +78,12 @@ struct hpquads {
 typedef struct hpquads hpquads_t;
 
 
-static int compare_quads(const void* v1, const void* v2) {
+static int compare_quads(const void* v1, const void* v2, void* token) {
 	const unsigned int* q1 = v1;
 	const unsigned int* q2 = v2;
+	int dimquads = *(int*)token;
 	int i;
-	// Hmm... I thought about having a static global "dimquads" here, but
-	// instead just ensured that are quad is always initialized to zero so that
-	// "star" values between dimquads and DQMAX are always equal.
-	for (i=0; i<DQMAX; i++) {
+	for (i=0; i<dimquads; i++) {
 		if (q1[i] > q2[i])
 			return 1;
 		if (q1[i] < q2[i])
@@ -159,7 +157,7 @@ static bool check_full_quad(quadbuilder_t* qb, unsigned int* quad, int nstars, v
 	bool dup;
 	if (!me->bigquadlist)
 		return TRUE;
-	dup = bt_contains(me->bigquadlist, quad, compare_quads);
+	dup = bt_contains2(me->bigquadlist, quad, compare_quads, &me->dimquads);
 	return !dup;
 }
 
@@ -478,10 +476,13 @@ int hpquads(startree_t* starkd,
 			me->bigquadlist = bt_new(quadsize, 256);
 		for (i=0; i<bl_size(me->quadlist); i++) {
 			void* q = bl_access(me->quadlist, i);
-			bt_insert(me->bigquadlist, q, FALSE, compare_quads);
+			bt_insert2(me->bigquadlist, q, FALSE, compare_quads, &me->dimquads);
 		}
 		bl_remove_all(me->quadlist);
 	}
+
+	il_free(hptotry);
+	hptotry = NULL;
 
 	if (Nloosen) {
 		int R;
@@ -500,7 +501,7 @@ int hpquads(startree_t* starkd,
 			logmsg("Made %i quads (out of %i healpixes) this pass.\n", nthispass, il_size(trylist));
 			for (i=0; i<bl_size(me->quadlist); i++) {
 				void* q = bl_access(me->quadlist, i);
-				bt_insert(me->bigquadlist, q, FALSE, compare_quads);
+				bt_insert2(me->bigquadlist, q, FALSE, compare_quads, &me->dimquads);
 			}
 			bl_remove_all(me->quadlist);
 		}
