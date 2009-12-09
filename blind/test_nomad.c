@@ -15,7 +15,8 @@ static void check_line1(CuTest* tc, const nomad_entry* e) {
     CuAssertIntEquals(tc,      15, rint((deg2arcsec(e->sigma_racosdec)) / 0.001));
     CuAssertIntEquals(tc,      28, rint((deg2arcsec(e->sigma_dec)) / 0.001));
     CuAssertIntEquals(tc,     190, rint(e->pm_racosdec / 0.0001));
-    CuAssertIntEquals(tc, 4294967109U, (uint32_t)rint(e->pm_dec / 0.0001));
+    CuAssertIntEquals(tc,    -187, (int32_t)rint(e->pm_dec / 0.0001));
+	CuAssertIntEquals(tc, 4294967109U, (uint32_t)((int32_t)rint(e->pm_dec / 0.0001)));
     CuAssertIntEquals(tc,      61, rint(e->sigma_pm_racosdec / 0.0001));
     CuAssertIntEquals(tc,      62, rint(e->sigma_pm_dec / 0.0001));
     CuAssertIntEquals(tc, 1998246, rint(e->epoch_ra / 0.001));
