@@ -264,8 +264,10 @@ int startree_close(startree_t* s) {
  	if (s->header)
 		qfits_header_destroy(s->header);
     if (s->tree) {
-        if (s->writing)
+        if (s->writing) {
             kdtree_free(s->tree);
+			free(s->sweep);
+		}
         else
             kdtree_fits_close(s->tree);
     }
@@ -343,6 +345,8 @@ int startree_check_inverse_perm(startree_t* s) {
 }
 
 void startree_compute_inverse_perm(startree_t* s) {
+	if (s->inverse_perm)
+		return;
 	// compute inverse permutation vector.
 	s->inverse_perm = malloc(Ndata(s) * sizeof(int));
 	if (!s->inverse_perm) {

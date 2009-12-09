@@ -499,6 +499,7 @@ int hpquads(startree_t* starkd,
 			me->retryhps = il_new(1024);
 			nthispass = build_quads(me, il_size(trylist), trylist, R);
 			logmsg("Made %i quads (out of %i healpixes) this pass.\n", nthispass, il_size(trylist));
+			il_free(trylist);
 			for (i=0; i<bl_size(me->quadlist); i++) {
 				void* q = bl_access(me->quadlist, i);
 				bt_insert2(me->bigquadlist, q, FALSE, compare_quads, &me->dimquads);

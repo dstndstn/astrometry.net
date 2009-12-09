@@ -440,17 +440,14 @@ int main(int argc, char** argv) {
 	logmsg("Unpermute-stars...\n");
 	if (inmemory) {
 
-		/*
-		 double ra,dec;
-		 logmsg("Star 0 was %i\n", starkd->inverse_perm[0]);
-		 startree_get_radec(starkd, 0, &ra, &dec);
-		 logmsg("RA,Dec %g,%g\n", ra, dec);
-		 */
-
 		quads2 = quadfile_open_in_memory();
 		if (unpermute_stars(starkd, quads, &starkd2, quads2,
 							TRUE, FALSE, argv, argc)) {
 			ERROR("Failed to unpermute-stars");
+			exit(-1);
+		}
+		if (quadfile_close(quads)) {
+			ERROR("Failed to close in-memory quads");
 			exit(-1);
 		}
 		if (quadfile_switch_to_reading(quads2)) {
@@ -461,12 +458,18 @@ int main(int argc, char** argv) {
 		startag2 = fitstable_open_in_memory();
 		startag2->table = fits_copy_table(startag->table);
 		startag2->table->nr = 0;
+		startag2->header = qfits_header_copy(startag->header);
 		if (unpermute_stars_tagalong(starkd, startag2)) {
 			ERROR("Failed to unpermute-stars tag-along data");
 			exit(-1);
 		}
-		startag2->header = startag->header;
 		starkd2->tagalong = startag2;
+
+		// unpermute-stars makes a shallow copy of the tree, so don't just startree_close(starkd)...
+		free(starkd->tree->perm);
+		free(starkd->tree);
+		starkd->tree = NULL;
+		startree_close(starkd);
 
 	} else {
 
@@ -495,7 +498,16 @@ int main(int argc, char** argv) {
 			ERROR("Failed to unpermute-quads");
 			exit(-1);
 		}
+		// unpermute-quads makes a shallow copy of the tree, so don't just codetree_close(codekd)...
+		free(codekd->tree->perm);
+		free(codekd->tree);
+		codekd->tree = NULL;
+		codetree_close(codekd);
 
+		if (quadfile_close(quads2)) {
+			ERROR("Failed to close quadfile quads2");
+			exit(-1);
+		}
 
 	} else {
 
@@ -524,15 +536,28 @@ int main(int argc, char** argv) {
 			exit(-1);
 		}
 
+		if (quadfile_close(quads3)) {
+			ERROR("Failed to close quadfile quads3");
+			exit(-1);
+		}
+		kdtree_free(codekd2->tree);
+		codekd2->tree = NULL;
+		if (codetree_close(codekd2)) {
+			ERROR("Failed to close codekd2");
+			exit(-1);
+		}
+		//free(starkd2->sweep);
+		if (startree_close(starkd2)) {
+			ERROR("Failed to close starkd2");
+			exit(-1);
+		}
+
 	} else {
 		logmsg("Merging %s and %s and %s to %s\n", quad3fn, ckdt2fn, skdt2fn, indexfn);
 		if (merge_index_files(quad3fn, ckdt2fn, skdt2fn, indexfn)) {
 			ERROR("Failed to merge-index");
 			exit(-1);
 		}
-	}
-
-	if (inmemory) {
 	}
 
 	sl_free2(tempfiles);

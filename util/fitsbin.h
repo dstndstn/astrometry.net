@@ -143,7 +143,6 @@ struct fitsbin_t {
 	bool inmemory;
 	bl* items;
 	bl* extensions;
-	//fitsbin_chunk_t* lastchunk;
 
     // The primary FITS header
     qfits_header* primheader;

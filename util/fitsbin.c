@@ -521,6 +521,15 @@ fitsbin_t* fitsbin_open_in_memory() {
 }
 
 int fitsbin_switch_to_reading(fitsbin_t* fb) {
+	int i;
+
+	// clear the current chunk data??
+    for (i=0; i<nchunks(fb); i++) {
+        fitsbin_chunk_t* chunk = get_chunk(fb, i);
+		if (chunk->header)
+			qfits_header_destroy(chunk->header);
+    }
+
 	return 0;
 }
 
