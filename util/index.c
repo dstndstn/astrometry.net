@@ -284,9 +284,40 @@ static void get_cut_params(index_t* index) {
 
 }
 
+static void set_meta(index_t* index) {
+	index->meta.index_scale_upper = quadfile_get_index_scale_upper_arcsec(index->quads);
+	index->meta.index_scale_lower = quadfile_get_index_scale_lower_arcsec(index->quads);
+	index->meta.indexid = index->quads->indexid;
+	index->meta.healpix = index->quads->healpix;
+	index->meta.hpnside = index->quads->hpnside;
+	index->meta.dimquads = index->quads->dimquads;
+	index->meta.nquads = index->quads->numquads;
+	index->meta.nstars = index->quads->numstars;
+
+	// This must get called after meta.indexid is set: otherwise we won't be
+	// able to fill in values that are missing in old index files.
+	get_cut_params(index);
+
+	// check for CIRCLE field in ckdt header...
+	index->meta.circle = qfits_header_getboolean(index->codekd->header, "CIRCLE", 0);
+
+	// New indexes are cooked such that cx < dx for all codes, but not
+	// all of the old ones are like this.
+    index->meta.cx_less_than_dx = qfits_header_getboolean(index->codekd->header, "CXDX", FALSE);
+}
+
+index_t* index_build_from(codetree* codekd, quadfile* quads, startree_t* starkd) {
+	index_t* index = calloc(1, sizeof(index_t));
+	index->codekd = codekd;
+	index->quads = quads;
+	index->starkd = starkd;
+
+	set_meta(index);
+	return index;
+}
+
 index_t* index_load(const char* indexname, int flags) {
     struct timeval tv1, tv2;
-
 	char *codetreefname=NULL, *quadfname=NULL, *startreefname=NULL;
     bool singlefile;
 	index_t* index = calloc(1, sizeof(index_t));
@@ -298,8 +329,6 @@ index_t* index_load(const char* indexname, int flags) {
     get_filenames(indexname, &quadfname, &codetreefname, &startreefname, &singlefile);
     gettimeofday(&tv2, NULL);
     debug("get_filenames took %g ms.\n", millis_between(&tv1, &tv2));
-
-	index->meta.indexname = strdup(quadfname);
 
 	// Read .skdt file...
 	logverb("Reading star KD tree from %s...\n", startreefname);
@@ -313,6 +342,8 @@ index_t* index_load(const char* indexname, int flags) {
 	}
 	free(startreefname);
     startreefname = NULL;
+
+	index->meta.indexname = strdup(quadfname);
 
 	if (flags & INDEX_ONLY_LOAD_SKDT)
 		return index;
@@ -329,18 +360,6 @@ index_t* index_load(const char* indexname, int flags) {
 	}
 	free(quadfname);
     quadfname = NULL;
-	index->meta.index_scale_upper = quadfile_get_index_scale_upper_arcsec(index->quads);
-	index->meta.index_scale_lower = quadfile_get_index_scale_lower_arcsec(index->quads);
-	index->meta.indexid = index->quads->indexid;
-	index->meta.healpix = index->quads->healpix;
-	index->meta.hpnside = index->quads->hpnside;
-	index->meta.dimquads = index->quads->dimquads;
-	index->meta.nquads = index->quads->numquads;
-	index->meta.nstars = index->quads->numstars;
-
-	// This must get called after meta.indexid is set: otherwise we won't be
-	// able to fill in values that are missing in old index files.
-	get_cut_params(index);
 
 	logverb("Index scale: [%g, %g] arcmin, [%g, %g] arcsec\n",
             index->meta.index_scale_lower / 60.0, index->meta.index_scale_upper / 60.0,
@@ -360,16 +379,12 @@ index_t* index_load(const char* indexname, int flags) {
 	free(codetreefname);
     codetreefname = NULL;
 
-	// check for CIRCLE field in ckdt header...
-	index->meta.circle = qfits_header_getboolean(index->codekd->header, "CIRCLE", 0);
+	set_meta(index);
+
 	if (!index->meta.circle) {
 		ERROR("Code kdtree does not contain the CIRCLE header.");
         goto bailout;
 	}
-
-	// New indexes are cooked such that cx < dx for all codes, but not
-	// all of the old ones are like this.
-    index->meta.cx_less_than_dx = qfits_header_getboolean(index->codekd->header, "CXDX", FALSE);
 
 	if (flags & INDEX_ONLY_LOAD_METADATA)
 		index_close(index);

@@ -346,11 +346,11 @@ uniformize-catalog: uniformize-catalog-main.o uniformize-catalog.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += uniformize-catalog-main.o uniformize-catalog.o
 
-build-index: build-index.o uniformize-catalog.o startree2.o hpquads.o \
+build-index: build-index-main.o build-index.o uniformize-catalog.o startree2.o hpquads.o \
 		quad-builder.o quad-utils.o codefile.o codetree.o unpermute-stars.o \
 		unpermute-quads.o merge-index.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-ALL_OBJ += build-index.o uniformize-catalog.o
+ALL_OBJ += build-index-main.o build-index.o uniformize-catalog.o
 
 hpquads: hpquads-main.o hpquads.o quad-builder.o quad-utils.o codefile.o pnpoly.o histogram.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)

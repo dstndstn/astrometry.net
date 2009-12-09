@@ -84,6 +84,8 @@ typedef struct index_s index_t;
 #define INDEX_ONLY_LOAD_METADATA 2
 #define INDEX_ONLY_LOAD_SKDT     4
 
+index_t* index_build_from(codetree* codekd, quadfile* quads, startree_t* starkd);
+
 bool index_is_file_index(const char* filename);
 
 char* index_get_quad_filename(const char* indexname);

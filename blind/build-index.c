@@ -27,6 +27,7 @@
 #include <sys/resource.h>
 #include <assert.h>
 
+#include "build-index.h"
 #include "boilerplate.h"
 #include "errors.h"
 #include "log.h"
@@ -48,63 +49,9 @@
 #include "merge-index.h"
 #include "fitsioutils.h"
 
-const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:M";
+int build_index(fitstable_t* catalog, index_params_t* p,
+				index_t** p_index, const char* indexfn) {
 
-static void print_help(char* progname) {
-	boilerplate_help_header(stdout);
-	printf("\nUsage: %s\n"
-	       "      -i <input-FITS-catalog>  input: source RA,DEC, etc\n"
-		   "      -o <output-index>        output filename for index\n"
-		   "      -N <nside>            healpix Nside for quad-building\n"
-		   "      -l <min-quad-size>    minimum quad size (arcminutes)\n"
-		   "      -u <max-quad-size>    maximum quad size (arcminutes)\n"
-		   "      [-S]: sort column (default: assume already sorted)\n"
-		   "      [-f]: sort in descending order (eg, for FLUX); default ascending (eg, for MAG)\n"
-		   "      [-U]: healpix Nside for uniformization (default: same as -n)\n"
-		   "      [-H <big healpix>]; default is all-sky\n"
-           "      [-s <big healpix Nside>]; default is 1\n"
-		   "      [-m <margin>]: add a margin of <margin> healpixels; default 0\n"
-		   "      [-n <sweeps>]    (ie, number of stars per fine healpix grid cell); default 10\n"
-		   "      [-r <dedup-radius>]: deduplication radius in arcseconds; default no deduplication\n"
-		   "\n"
-		   "      [-d <dimquads>] number of stars in a \"quad\" (default 4).\n"
-		   "      [-p <passes>]   number of rounds of quad-building (ie, # quads per healpix cell, default 1)\n"
-		   "      [-R <reuse-times>] number of times a star can be used.\n"
-		   "      [-L <max-reuses>] make extra passes through the healpixes, increasing the \"-r\" reuse\n"
-		   "                     limit each time, up to \"max-reuses\".\n"
-		   "      [-E]: scan through the catalog, checking which healpixes are occupied.\n"
-		   "\n"
-		   "      [-I <unique-id>] set the unique ID of this index\n"
-		   "\n"
-		   "      [-M]: in-memory (don't use temp files)\n"
-		   "      [-v]: add verbosity.\n"
-	       "\n", progname);
-}
-
-extern char *optarg;
-extern int optind, opterr, optopt;
-
-int main(int argc, char** argv) {
-	int argchar;
-
-	char* infn = NULL;
-	char* indexfn = NULL;
-
-	// uniformization:
-	char* sortcol = NULL;
-	bool sortasc = TRUE;
-	int bighp = -1;
-	int bignside = 1;
-	int sweeps = 10;
-	double dedup = 0.0;
-	int margin = 0;
-	int UNside = 0;
-
-	char* racol = "RA";
-	char* deccol = "DEC";
-
-	// uniformize
-	fitstable_t* catalog;
 	fitstable_t* uniform;
 
 	// star kdtree
@@ -112,15 +59,6 @@ int main(int argc, char** argv) {
 	fitstable_t* startag = NULL;
 
 	// hpquads
-	int Nside = 0;
-	double qlo = 0;
-	double qhi = 0;
-	int passes = 1;
-	int Nreuse = 3;
-	int Nloosen = 0;
-	bool scanoccupied = FALSE;
-	int dimquads = 4;
-
 	codefile* codes = NULL;
 	quadfile* quads = NULL;
 
@@ -136,15 +74,10 @@ int main(int argc, char** argv) {
 	quadfile* quads3 = NULL;
 	codetree* codekd2 = NULL;
 
-	int loglvl = LOG_MSG;
-	int id = 0;
-	int i;
-
-	bool inmemory = FALSE;
+	index_t* index = NULL;
 
 	sl* tempfiles;
-	char* tempdir = "/tmp";
-	char* unifn = NULL;
+	char* unifn;
 	char* skdtfn;
 	char* quadfn;
 	char* codefn;
@@ -154,172 +87,77 @@ int main(int argc, char** argv) {
 	char* quad3fn;
 	char* ckdt2fn;
 
-	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
-		switch (argchar) {
-		case 'E':
-			scanoccupied = TRUE;
-			break;
-		case 'L':
-			Nloosen = atoi(optarg);
-			break;
-		case 'R':
-			Nreuse = atoi(optarg);
-			break;
-		case 'p':
-			passes = atoi(optarg);
-			break;
-		case 'M':
-			inmemory = TRUE;
-			break;
-		case 'U':
-			UNside = atoi(optarg);
-			break;
-		case 'i':
-            infn = optarg;
-			break;
-		case 'o':
-			indexfn = optarg;
-			break;
-		case 'u':
-			qhi = atof(optarg);
-			break;
-		case 'l':
-			qlo = atof(optarg);
-			break;
-		case 'S':
-			sortcol = optarg;
-			break;
-		case 'f':
-			sortasc = FALSE;
-			break;
-		case 'H':
-			bighp = atoi(optarg);
-			break;
-		case 's':
-			bignside = atoi(optarg);
-			break;
-		case 'n':
-			sweeps = atoi(optarg);
-			break;
-		case 'N':
-			Nside = atoi(optarg);
-			break;
-		case 'r':
-			dedup = atof(optarg);
-			break;
-		case 'm':
-			margin = atoi(optarg);
-			break;
-		case 'd':
-			dimquads = atoi(optarg);
-			break;
-		case 'I':
-			id = atoi(optarg);
-			break;
-		case 'v':
-			loglvl++;
-			break;
-		case 'h':
-			print_help(argv[0]);
-			exit(0);
-		default:
-			return -1;
-		}
-	
-	log_init(loglvl);
+	if (!p->UNside)
+		p->UNside = p->Nside;
 
-	if (!infn || !indexfn) {
-		printf("Specify in & out filenames, bonehead!\n");
-		print_help(argv[0]);
-		exit( -1);
+	assert(p->Nside);
+
+	if (p->inmemory && !p_index) {
+		ERROR("If you set inmemory, you must set p_index");
+		return -1;
 	}
-
-    if (optind != argc) {
-        print_help(argv[0]);
-        printf("\nExtra command-line args were given: ");
-        for (i=optind; i<argc; i++) {
-            printf("%s ", argv[i]);
-        }
-        printf("\n");
-        exit(-1);
-    }
-
-	if (!id)
-		logmsg("Warning: you should set the unique-id for this index (with -I).\n");
-
-	if (dimquads > DQMAX) {
-		ERROR("Quad dimension %i exceeds compiled-in max %i.\n", dimquads, DQMAX);
-		exit(-1);
+	if (!p->inmemory && !indexfn) {
+		ERROR("If you set !inmemory, you must set indexfn");
+		return -1;
 	}
 
     tempfiles = sl_new(4);
 
-	logmsg("Reading %s...\n", infn);
-	catalog = fitstable_open(infn);
-    if (!catalog) {
-        ERROR("Couldn't read catalog %s", infn);
-        exit(-1);
-    }
-	logmsg("Got %i stars\n", fitstable_nrows(catalog));
-
-	if (inmemory)
+	if (p->inmemory)
 		uniform = fitstable_open_in_memory();
 	else {
-		unifn = create_temp_file("uniform", tempdir);
+		unifn = create_temp_file("uniform", p->tempdir);
 		sl_append_nocopy(tempfiles, unifn);
 		uniform = fitstable_open_for_writing(unifn);
 	}
 	if (!uniform) {
 		ERROR("Failed to open output table %s", unifn);
-		exit(-1);
+		return -1;
 	}
 	if (fitstable_write_primary_header(uniform)) {
 		ERROR("Failed to write primary header");
-		exit(-1);
+		return -1;
 	}
 
-	if (!UNside)
-		UNside = Nside;
-
-	if (uniformize_catalog(catalog, uniform, racol, deccol,
-						   sortcol, sortasc,
-						   bighp, bignside, margin,
-						   UNside, dedup, sweeps, argv, argc)) {
-		exit(-1);
+	if (uniformize_catalog(catalog, uniform, p->racol, p->deccol,
+						   p->sortcol, p->sortasc,
+						   p->bighp, p->bignside, p->margin,
+						   p->UNside, p->dedup, p->sweeps, p->args, p->argc)) {
+		return -1;
 	}
 
 	if (fitstable_fix_primary_header(uniform)) {
 		ERROR("Failed to fix output table");
-		exit(-1);
+		return -1;
 	}
 
-	if (inmemory) {
+	if (p->inmemory) {
 		if (fitstable_switch_to_reading(uniform)) {
 			ERROR("Failed to switch uniformized table to read-mode");
-			exit(-1);
+			return -1;
 		}
 	} else {
 		if (fitstable_close(uniform)) {
 			ERROR("Failed to close output table");
-			exit(-1);
+			return -1;
 		}
 	}
 	fitstable_close(catalog);
 
 	// startree
 
-	if (inmemory) {
+	if (p->inmemory) {
 		startag = fitstable_open_in_memory();
 
 	} else {
-		skdtfn = create_temp_file("skdt", tempdir);
+		skdtfn = create_temp_file("skdt", p->tempdir);
 		sl_append_nocopy(tempfiles, skdtfn);
 
 		logverb("Reading uniformized catalog %s...\n", unifn);
 		uniform = fitstable_open(unifn);
 		if (!uniform) {
 			ERROR("Failed to open uniformized catalog");
-			exit(-1);
+			return -1;
 		}
 	}
 
@@ -330,44 +168,44 @@ int main(int argc, char** argv) {
 		int buildopts = KD_BUILD_SPLIT;
 
 		logverb("Building star kdtree from %i stars\n", fitstable_nrows(uniform));
-		starkd = startree_build(uniform, racol, deccol, datatype, treetype,
-								buildopts, Nleaf, argv, argc);
+		starkd = startree_build(uniform, p->racol, p->deccol, datatype, treetype,
+								buildopts, Nleaf, p->args, p->argc);
 		if (!starkd) {
 			ERROR("Failed to create star kdtree");
-			exit(-1);
+			return -1;
 		}
 
-		if (!inmemory) {
+		if (!p->inmemory) {
 			logverb("Writing star kdtree to %s\n", skdtfn);
 			if (startree_write_to_file(starkd, skdtfn)) {
 				ERROR("Failed to write star kdtree");
-				exit(-1);
+				return -1;
 			}
 			startree_close(starkd);
 
 			startag = fitstable_open_for_appending(skdtfn);
 			if (!startag) {
 				ERROR("Failed to re-open star kdtree file %s for appending", skdtfn);
-				exit(-1);
+				return -1;
 			}
 		}
 
 		logverb("Adding star kdtree tag-along data...\n");
-		if (startree_write_tagalong_table(uniform, startag, racol, deccol)) {
+		if (startree_write_tagalong_table(uniform, startag, p->racol, p->deccol)) {
 			ERROR("Failed to write tag-along table");
-			exit(-1);
+			return -1;
 		}
-		if (inmemory) {
+		if (p->inmemory) {
 			if (fitstable_switch_to_reading(startag)) {
 				ERROR("Failed to switch star tag-along data to read-mode");
-				exit(-1);
+				return -1;
 			}
 			starkd->tagalong = startag;
 
 		} else {
 			if (fitstable_close(startag)) {
 				ERROR("Failed to close star kdtree tag-along data");
-				exit(-1);
+				return -1;
 			}
 		}
 	}
@@ -375,84 +213,84 @@ int main(int argc, char** argv) {
 
 	// hpquads
 
-	if (inmemory) {
+	if (p->inmemory) {
 		codes = codefile_open_in_memory();
 		quads = quadfile_open_in_memory();
-		if (hpquads(starkd, codes, quads, Nside,
-					qlo, qhi, dimquads, passes, Nreuse, Nloosen,
-					id, scanoccupied, argv, argc)) {
+		if (hpquads(starkd, codes, quads, p->Nside,
+					p->qlo, p->qhi, p->dimquads, p->passes, p->Nreuse, p->Nloosen,
+					p->indexid, p->scanoccupied, p->args, p->argc)) {
 			ERROR("hpquads failed");
-			exit(-1);
+			return -1;
 		}
 		if (quadfile_switch_to_reading(quads)) {
 			ERROR("Failed to switch quadfile to read-mode");
-			exit(-1);
+			return -1;
 		}
 		if (codefile_switch_to_reading(codes)) {
 			ERROR("Failed to switch codefile to read-mode");
-			exit(-1);
+			return -1;
 		}
 
 
 	} else {
-		quadfn = create_temp_file("quad", tempdir);
+		quadfn = create_temp_file("quad", p->tempdir);
 		sl_append_nocopy(tempfiles, quadfn);
-		codefn = create_temp_file("code", tempdir);
+		codefn = create_temp_file("code", p->tempdir);
 		sl_append_nocopy(tempfiles, codefn);
 
-		if (hpquads_files(skdtfn, codefn, quadfn, Nside,
-						  qlo, qhi, dimquads, passes, Nreuse, Nloosen,
-						  id, scanoccupied, argv, argc)) {
+		if (hpquads_files(skdtfn, codefn, quadfn, p->Nside,
+						  p->qlo, p->qhi, p->dimquads, p->passes, p->Nreuse, p->Nloosen,
+						  p->indexid, p->scanoccupied, p->args, p->argc)) {
 			ERROR("hpquads failed");
-			exit(-1);
+			return -1;
 		}
 
 	}
 
 	// codetree
 
-	if (inmemory) {
+	if (p->inmemory) {
 		logmsg("Building code kdtree from %i codes\n", codes->numcodes);
 		logmsg("dim: %i\n", codefile_dimcodes(codes));
-		codekd = codetree_build(codes, 0, 0, 0, 0, argv, argc);
+		codekd = codetree_build(codes, 0, 0, 0, 0, p->args, p->argc);
 		if (!codekd) {
 			ERROR("Failed to build code kdtree");
-			exit(-1);
+			return -1;
 		}
 		if (codefile_close(codes)) {
 			ERROR("Failed to close codefile");
-			exit(-1);
+			return -1;
 		}
 
 	} else {
 
-		ckdtfn = create_temp_file("ckdt", tempdir);
+		ckdtfn = create_temp_file("ckdt", p->tempdir);
 		sl_append_nocopy(tempfiles, ckdtfn);
 
-		if (codetree_files(codefn, ckdtfn, 0, 0, 0, 0, argv, argc)) {
+		if (codetree_files(codefn, ckdtfn, 0, 0, 0, 0, p->args, p->argc)) {
 			ERROR("codetree failed");
-			exit(-1);
+			return -1;
 		}
 	}
 
 	// unpermute-stars
 
 	logmsg("Unpermute-stars...\n");
-	if (inmemory) {
+	if (p->inmemory) {
 
 		quads2 = quadfile_open_in_memory();
 		if (unpermute_stars(starkd, quads, &starkd2, quads2,
-							TRUE, FALSE, argv, argc)) {
+							TRUE, FALSE, p->args, p->argc)) {
 			ERROR("Failed to unpermute-stars");
-			exit(-1);
+			return -1;
 		}
 		if (quadfile_close(quads)) {
 			ERROR("Failed to close in-memory quads");
-			exit(-1);
+			return -1;
 		}
 		if (quadfile_switch_to_reading(quads2)) {
 			ERROR("Failed to switch quads2 to read-mode");
-			exit(-1);
+			return -1;
 		}
 
 		startag2 = fitstable_open_in_memory();
@@ -461,7 +299,7 @@ int main(int argc, char** argv) {
 		startag2->header = qfits_header_copy(startag->header);
 		if (unpermute_stars_tagalong(starkd, startag2)) {
 			ERROR("Failed to unpermute-stars tag-along data");
-			exit(-1);
+			return -1;
 		}
 		starkd2->tagalong = startag2;
 
@@ -473,16 +311,16 @@ int main(int argc, char** argv) {
 
 	} else {
 
-		skdt2fn = create_temp_file("skdt2", tempdir);
+		skdt2fn = create_temp_file("skdt2", p->tempdir);
 		sl_append_nocopy(tempfiles, skdt2fn);
-		quad2fn = create_temp_file("quad2", tempdir);
+		quad2fn = create_temp_file("quad2", p->tempdir);
 		sl_append_nocopy(tempfiles, quad2fn);
 
 		logmsg("Unpermuting stars from %s and %s to %s and %s\n", skdtfn, quadfn, skdt2fn, quad2fn);
 		if (unpermute_stars_files(skdtfn, quadfn, skdt2fn, quad2fn,
-								  TRUE, FALSE, argv, argc)) {
+								  TRUE, FALSE, p->args, p->argc)) {
 			ERROR("Failed to unpermute-stars");
-			exit(-1);
+			return -1;
 		}
 	}
 
@@ -490,13 +328,13 @@ int main(int argc, char** argv) {
 	// unpermute-quads
 	logmsg("Unpermute-quads...\n");
 
-	if (inmemory) {
+	if (p->inmemory) {
 
 		quads3 = quadfile_open_in_memory();
 
-		if (unpermute_quads(quads2, codekd, quads3, &codekd2, argv, argc)) {
+		if (unpermute_quads(quads2, codekd, quads3, &codekd2, p->args, p->argc)) {
 			ERROR("Failed to unpermute-quads");
-			exit(-1);
+			return -1;
 		}
 		// unpermute-quads makes a shallow copy of the tree, so don't just codetree_close(codekd)...
 		free(codekd->tree->perm);
@@ -504,64 +342,136 @@ int main(int argc, char** argv) {
 		codekd->tree = NULL;
 		codetree_close(codekd);
 
+		if (quadfile_switch_to_reading(quads3)) {
+			ERROR("Failed to switch quads3 to read-mode");
+			return -1;
+		}
 		if (quadfile_close(quads2)) {
 			ERROR("Failed to close quadfile quads2");
-			exit(-1);
+			return -1;
 		}
+
 
 	} else {
 
-		ckdt2fn = create_temp_file("ckdt2", tempdir);
+		ckdt2fn = create_temp_file("ckdt2", p->tempdir);
 		sl_append_nocopy(tempfiles, ckdt2fn);
-		quad3fn = create_temp_file("quad3", tempdir);
+		quad3fn = create_temp_file("quad3", p->tempdir);
 		sl_append_nocopy(tempfiles, quad3fn);
 		logmsg("Unpermuting quads from %s and %s to %s and %s\n", quad2fn, ckdtfn, quad3fn, ckdt2fn);
 		if (unpermute_quads_files(quad2fn, ckdtfn,
-								  quad3fn, ckdt2fn, argv, argc)) {
+								  quad3fn, ckdt2fn, p->args, p->argc)) {
 			ERROR("Failed to unpermute-quads");
-			exit(-1);
+			return -1;
 		}
 	}
 
-	// mergeindex
-	if (inmemory) {
-		if (quadfile_switch_to_reading(quads3)) {
-			ERROR("Failed to switch quads3 to read-mode");
-			exit(-1);
+	// index
+	if (p->inmemory) {
+		index = index_build_from(codekd2, quads3, starkd2);
+		if (!index) {
+			ERROR("Failed to create index from constituent parts");
+			return -1;
 		}
-
-		logmsg("Writing to file %s\n", indexfn);
-		if (merge_index(quads3, codekd2, starkd2, indexfn)) {
-			ERROR("Failed to write index file");
-			exit(-1);
-		}
-
-		if (quadfile_close(quads3)) {
-			ERROR("Failed to close quadfile quads3");
-			exit(-1);
-		}
-		kdtree_free(codekd2->tree);
-		codekd2->tree = NULL;
-		if (codetree_close(codekd2)) {
-			ERROR("Failed to close codekd2");
-			exit(-1);
-		}
-		//free(starkd2->sweep);
-		if (startree_close(starkd2)) {
-			ERROR("Failed to close starkd2");
-			exit(-1);
-		}
+		/* When closing:
+		 kdtree_free(codekd2->tree);
+		 codekd2->tree = NULL;
+		 */
+		*p_index = index;
 
 	} else {
 		logmsg("Merging %s and %s and %s to %s\n", quad3fn, ckdt2fn, skdt2fn, indexfn);
 		if (merge_index_files(quad3fn, ckdt2fn, skdt2fn, indexfn)) {
 			ERROR("Failed to merge-index");
-			exit(-1);
+			return -1;
 		}
 	}
 
+	/*
+	// merge-index
+	if (p->inmemory) {
+		if (quadfile_switch_to_reading(quads3)) {
+			ERROR("Failed to switch quads3 to read-mode");
+			return -1;
+		}
+
+		logmsg("Writing to file %s\n", indexfn);
+		if (merge_index(quads3, codekd2, starkd2, indexfn)) {
+			ERROR("Failed to write index file");
+			return -1;
+		}
+
+		if (quadfile_close(quads3)) {
+			ERROR("Failed to close quadfile quads3");
+			return -1;
+		}
+		kdtree_free(codekd2->tree);
+		codekd2->tree = NULL;
+		if (codetree_close(codekd2)) {
+			ERROR("Failed to close codekd2");
+			return -1;
+		}
+		//free(starkd2->sweep);
+		if (startree_close(starkd2)) {
+			ERROR("Failed to close starkd2");
+			return -1;
+		}
+
+	 */
+
+	// FIXME -- delete temp files!
+
 	sl_free2(tempfiles);
-	printf("Done.\n");
 	return 0;
+}
+
+
+int build_index_files(const char* infn, const char* indexfn,
+					  index_params_t* p) {
+	fitstable_t* catalog;
+
+	logmsg("Reading %s...\n", infn);
+	catalog = fitstable_open(infn);
+    if (!catalog) {
+        ERROR("Couldn't read catalog %s", infn);
+		return -1;
+    }
+	logmsg("Got %i stars\n", fitstable_nrows(catalog));
+
+	if (p->inmemory) {
+		index_t* index;
+		if (build_index(catalog, p, &index, NULL)) {
+			return -1;
+		}
+		logmsg("Writing to file %s\n", indexfn);
+		if (merge_index(index->quads, index->codekd, index->starkd, indexfn)) {
+			ERROR("Failed to write index file");
+			return -1;
+		}
+		kdtree_free(index->codekd->tree);
+		index->codekd->tree = NULL;
+		index_close(index);
+
+	} else {
+		if (build_index(catalog, p, NULL, indexfn)) {
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+void build_index_defaults(index_params_t* p) {
+	memset(p, 0, sizeof(index_params_t));
+	p->sweeps = 10;
+	p->racol = "RA";
+	p->deccol = "DEC";
+	p->passes = 4;
+	p->Nreuse = 2;
+	p->dimquads = 4;
+	p->sortasc = TRUE;
+	//p->inmemory = TRUE;
+	p->delete_tempfiles = TRUE;
+	p->tempdir = "/tmp";
 }
 
