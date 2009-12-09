@@ -82,12 +82,6 @@ static off_t get_row_offset(const fitstable_t* table, int row) {
 }
 
 int fitscolumn_get_size(fitscol_t* col) {
-	/*
-	 if (col->fitstype == TFITS_BIN_TYPE_X) {
-	 // UGLY HACK!
-	 return (7 + col->fitssize * col->arraysize) / 8;
-	 } else
-	 */
 	return col->fitssize * col->arraysize;
 }
 

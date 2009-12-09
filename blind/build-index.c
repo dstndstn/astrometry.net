@@ -291,20 +291,11 @@ int main(int argc, char** argv) {
 	// startree
 
 	if (inmemory) {
-
-		printf("Uniformized table:\n");
-		fitstable_print_columns(uniform);
-		printf("\n");
-
 		if (fitstable_switch_to_reading(uniform)) {
 			ERROR("Failed to switch uniformized table to read-mode");
 			exit(-1);
 		}
 		startag = fitstable_open_in_memory();
-
-		printf("Uniformized table (reading):\n");
-		fitstable_print_columns(uniform);
-		printf("\n");
 
 	} else {
 		skdtfn = create_temp_file("skdt", tempdir);
