@@ -79,7 +79,8 @@ int scamp_catalog_write_field_header(scamp_cat_t* scamp, const qfits_header* hdr
         return -1;
     }
 
-    hdrstring = malloc(N * FITS_LINESZ);
+	// +1 because qfits_header_write_line adds a trailing '\0'.
+    hdrstring = malloc(N * FITS_LINESZ + 1);
     for (i=0; i<N; i++)
         if (qfits_header_write_line(hdr, i, hdrstring + i * FITS_LINESZ)) {
             ERROR("Failed to get scamp catalog field header line %i", i);

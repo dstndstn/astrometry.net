@@ -92,7 +92,7 @@ static int offset_of_column(const fitstable_t* table, int colnum) {
 	int i;
 	int offset = 0;
 	assert(colnum <= ncols(table));
-	for (i=0; i<ncols(table); i++) {
+	for (i=0; i<colnum; i++) {
 		fitscol_t* col;
 		col = getcol(table, i);
 		offset += fitscolumn_get_size(col);
