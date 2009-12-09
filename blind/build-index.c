@@ -145,7 +145,6 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 	fitstable_close(catalog);
 
 	// startree
-
 	if (p->inmemory) {
 		startag = fitstable_open_in_memory();
 
@@ -248,7 +247,6 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 	}
 
 	// codetree
-
 	if (p->inmemory) {
 		logmsg("Building code kdtree from %i codes\n", codes->numcodes);
 		logmsg("dim: %i\n", codefile_dimcodes(codes));
@@ -263,7 +261,6 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 		}
 
 	} else {
-
 		ckdtfn = create_temp_file("ckdt", p->tempdir);
 		sl_append_nocopy(tempfiles, ckdtfn);
 
@@ -274,10 +271,8 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 	}
 
 	// unpermute-stars
-
 	logmsg("Unpermute-stars...\n");
 	if (p->inmemory) {
-
 		quads2 = quadfile_open_in_memory();
 		if (unpermute_stars(starkd, quads, &starkd2, quads2,
 							TRUE, FALSE, p->args, p->argc)) {
@@ -292,7 +287,6 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 			ERROR("Failed to switch quads2 to read-mode");
 			return -1;
 		}
-
 		startag2 = fitstable_open_in_memory();
 		startag2->table = fits_copy_table(startag->table);
 		startag2->table->nr = 0;
@@ -310,7 +304,6 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 		startree_close(starkd);
 
 	} else {
-
 		skdt2fn = create_temp_file("skdt2", p->tempdir);
 		sl_append_nocopy(tempfiles, skdt2fn);
 		quad2fn = create_temp_file("quad2", p->tempdir);
@@ -327,11 +320,8 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 
 	// unpermute-quads
 	logmsg("Unpermute-quads...\n");
-
 	if (p->inmemory) {
-
 		quads3 = quadfile_open_in_memory();
-
 		if (unpermute_quads(quads2, codekd, quads3, &codekd2, p->args, p->argc)) {
 			ERROR("Failed to unpermute-quads");
 			return -1;
@@ -351,9 +341,7 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 			return -1;
 		}
 
-
 	} else {
-
 		ckdt2fn = create_temp_file("ckdt2", p->tempdir);
 		sl_append_nocopy(tempfiles, ckdt2fn);
 		quad3fn = create_temp_file("quad3", p->tempdir);
@@ -387,39 +375,15 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 		}
 	}
 
-	/*
-	// merge-index
-	if (p->inmemory) {
-		if (quadfile_switch_to_reading(quads3)) {
-			ERROR("Failed to switch quads3 to read-mode");
-			return -1;
+	if (p->delete_tempfiles) {
+		int i;
+		for (i=0; i<sl_size(tempfiles); i++) {
+			char* fn = sl_get(tempfiles, i);
+			logverb("Deleting temp file %s\n", fn);
+			if (unlink(fn))
+				SYSERROR("Failed to delete temp file \"%s\"", fn);
 		}
-
-		logmsg("Writing to file %s\n", indexfn);
-		if (merge_index(quads3, codekd2, starkd2, indexfn)) {
-			ERROR("Failed to write index file");
-			return -1;
-		}
-
-		if (quadfile_close(quads3)) {
-			ERROR("Failed to close quadfile quads3");
-			return -1;
-		}
-		kdtree_free(codekd2->tree);
-		codekd2->tree = NULL;
-		if (codetree_close(codekd2)) {
-			ERROR("Failed to close codekd2");
-			return -1;
-		}
-		//free(starkd2->sweep);
-		if (startree_close(starkd2)) {
-			ERROR("Failed to close starkd2");
-			return -1;
-		}
-
-	 */
-
-	// FIXME -- delete temp files!
+	}
 
 	sl_free2(tempfiles);
 	return 0;
