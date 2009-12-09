@@ -287,6 +287,23 @@ int fitstable_read_column_into(const fitstable_t* tab,
 							   const char* colname, tfits_type read_as_type,
 							   void* dest, int stride);
 
+int fitstable_read_column_inds_into(const fitstable_t* tab,
+									const char* colname, tfits_type read_as_type,
+									void* dest, int stride, int* inds, int N);
+
+void* fitstable_read_column_inds(const fitstable_t* tab,
+								 const char* colname, tfits_type read_as_type,
+								 int* inds, int N);
+
+int fitstable_read_column_array_inds_into(const fitstable_t* tab,
+										  const char* colname, tfits_type read_as_type,
+										  void* dest, int stride, int arraysize,
+										  int* inds, int N);
+
+void* fitstable_read_column_array_inds(const fitstable_t* tab,
+									   const char* colname, tfits_type read_as_type,
+									   int* inds, int N, int* arraysize);
+
 int fitstable_read_column_offset_into(const fitstable_t* tab,
 									  const char* colname, tfits_type read_as_type,
 									  void* dest, int stride, int start, int N);

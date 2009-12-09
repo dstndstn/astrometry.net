@@ -680,10 +680,16 @@ void fitstable_clear_table(fitstable_t* tab) {
     bl_remove_all(tab->cols);
 }
 
+/**
+ If "inds" is non-NULL, it's a list of indices to read.
+ */
 static void* read_array_into(const fitstable_t* tab,
 							 const char* colname, tfits_type ctype,
-							 bool array_ok, int offset, int Nread,
-							 void* dest, int deststride) {
+							 bool array_ok,
+							 int offset, int* inds, int Nread,
+							 void* dest, int deststride,
+							 int desired_arraysize,
+							 int* p_arraysize) {
     int colnum;
     qfits_col* col;
     int fitssize;
@@ -711,6 +717,12 @@ static void* read_array_into(const fitstable_t* tab,
     }
 
     arraysize = col->atom_nb;
+	if (p_arraysize)
+		*p_arraysize = arraysize;
+	if (desired_arraysize && arraysize != desired_arraysize) {
+		ERROR("Column \"%s\" has array size %i but you wanted %i", colname, arraysize, desired_arraysize);
+		return NULL;
+	}
     fitstype = col->atom_type;
     fitssize = fits_get_atom_size(fitstype);
     csize = fits_get_atom_size(ctype);
@@ -725,7 +737,7 @@ static void* read_array_into(const fitstable_t* tab,
 	else
 		cdata = calloc(csize, Nread * arraysize);
 
-	if (dest && deststride > -1)
+	if (dest && deststride > 0)
 		cstride = deststride;
 	else
 		cstride = csize * arraysize;
@@ -755,13 +767,31 @@ static void* read_array_into(const fitstable_t* tab,
 		}
 		off = fits_offset_of_column(tab->table, colnum);
 		sz = fitsstride;
-		for (i=0; i<Nread; i++)
-			memcpy(fitsdata + i * fitsstride,
-				   ((char*)bl_access(tab->rows, offset+i)) + off,
-				   sz);
+		if (inds) {
+			for (i=0; i<Nread; i++)
+				memcpy(fitsdata + i * fitsstride,
+					   ((char*)bl_access(tab->rows, inds[i])) + off,
+					   sz);
+		} else {
+			for (i=0; i<Nread; i++)
+				memcpy(fitsdata + i * fitsstride,
+					   ((char*)bl_access(tab->rows, offset+i)) + off,
+					   sz);
+		}
 	} else {
-		qfits_query_column_seq_to_array(tab->table, colnum, offset, Nread,
-										(unsigned char*)fitsdata, fitsstride);
+		int res;
+		if (inds) {
+			res = qfits_query_column_seq_to_array_inds(tab->table, colnum, inds, Nread,
+													   (unsigned char*)fitsdata, fitsstride);
+		} else {
+			res = qfits_query_column_seq_to_array(tab->table, colnum, offset, Nread,
+												  (unsigned char*)fitsdata, fitsstride);
+		}
+		if (res) {
+			ERROR("Failed to read column from FITS file");
+			// MEMLEAK!
+			return NULL;
+		}
 	}
 
 	if (fitstype != ctype) {
@@ -787,27 +817,47 @@ static void* read_array_into(const fitstable_t* tab,
 static void* read_array(const fitstable_t* tab,
                         const char* colname, tfits_type ctype,
                         bool array_ok, int offset, int Nread) {
-	return read_array_into(tab, colname, ctype, array_ok, offset, Nread, NULL, -1);
+	return read_array_into(tab, colname, ctype, array_ok, offset, NULL, Nread, NULL, 0, 0, NULL);
+}
+
+int fitstable_read_column_inds_into(const fitstable_t* tab,
+									const char* colname, tfits_type read_as_type,
+									void* dest, int stride, int* inds, int N) {
+	return (read_array_into(tab, colname, read_as_type, FALSE, 0, inds, N, dest, stride, 0, NULL)
+			== NULL ? -1 : 0);
+}
+
+void* fitstable_read_column_inds(const fitstable_t* tab,
+								 const char* colname, tfits_type read_as_type,
+								 int* inds, int N) {
+	return read_array_into(tab, colname, read_as_type, FALSE, 0, inds, N, NULL, 0, 0, NULL);
+}
+
+int fitstable_read_column_array_inds_into(const fitstable_t* tab,
+										  const char* colname, tfits_type read_as_type,
+										  void* dest, int stride, int arraysize,
+										  int* inds, int N) {
+	return (read_array_into(tab, colname, read_as_type, TRUE, 0, inds, N, dest, stride, arraysize, NULL)
+			== NULL ? -1 : 0);
+}
+
+void* fitstable_read_column_array_inds(const fitstable_t* tab,
+									   const char* colname, tfits_type read_as_type,
+									   int* inds, int N, int* arraysize) {
+	return read_array_into(tab, colname, read_as_type, TRUE, 0, inds, N, NULL, 0, 0, arraysize);
 }
 
 int fitstable_read_column_offset_into(const fitstable_t* tab,
 									  const char* colname, tfits_type read_as_type,
 									  void* dest, int stride, int start, int N) {
-	void* res;
-	res = read_array_into(tab, colname, read_as_type, FALSE, start, N, dest, stride);
-	if (!res)
-		return -1;
-	return 0;
+	return (read_array_into(tab, colname, read_as_type, FALSE, start, NULL, N, dest, stride, 0, NULL)
+			== NULL ? -1 : 0);
 }
 
 int fitstable_read_column_into(const fitstable_t* tab,
 							   const char* colname, tfits_type read_as_type,
 							   void* dest, int stride) {
-	void* res;
-	res = read_array_into(tab, colname, read_as_type, FALSE, 0, -1, dest, stride);
-	if (!res)
-		return -1;
-	return 0;
+	return fitstable_read_column_offset_into(tab, colname, read_as_type, dest, stride, 0, -1);
 }
 
 void* fitstable_read_column(const fitstable_t* tab,

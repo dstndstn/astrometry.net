@@ -40,6 +40,44 @@ static startree_t* startree_alloc() {
 	return s;
 }
 
+double* startree_get_data_column(startree_t* s, const char* colname, int* inds, int N) {
+	fitstable_t* table;
+	tfits_type dubl = fitscolumn_double_type();
+	double* arr;
+	table = startree_get_tagalong(s);
+	if (!table) {
+		ERROR("No tag-along data found");
+		return NULL;
+	}
+	arr = fitstable_read_column_inds(table, colname, dubl, inds, N);
+	if (!arr) {
+		ERROR("Failed to read tag-along data");
+		return NULL;
+	}
+	return arr;
+}
+
+double* startree_get_data_column_array(startree_t* s, const char* colname, int* indices, int N, int* arraysize) {
+	fitstable_t* table;
+	tfits_type dubl = fitscolumn_double_type();
+	double* arr;
+	table = startree_get_tagalong(s);
+	if (!table) {
+		ERROR("No tag-along data found");
+		return NULL;
+	}
+	arr = fitstable_read_column_array_inds(table, colname, dubl, indices, N, arraysize);
+	if (!arr) {
+		ERROR("Failed to read tag-along data");
+		return NULL;
+	}
+	return arr;
+}
+
+void startree_free_data_column(startree_t* s, double* d) {
+	free(d);
+}
+
 void startree_search_for(const startree_t* s, const double* xyzcenter, double radius2,
 						 double** xyzresults, double** radecresults,
 						 int** starinds, int* nresults) {

@@ -244,6 +244,13 @@ void * qfits_query_column_data(const qfits_table *, int, const int *,
 void * qfits_query_column_seq_data(const qfits_table *, int, int, int, 
         const void *);
 
+int qfits_query_column_seq_to_array_inds(const qfits_table	    *   th,
+										 int                 colnum,
+										 int* indices,
+										 int Ninds,
+										 unsigned char*      destination,
+										 int                 dest_stride);
+
 int qfits_query_column_seq_to_array(const qfits_table	    *   th,
 									int                 colnum,
 									int                 start_ind,

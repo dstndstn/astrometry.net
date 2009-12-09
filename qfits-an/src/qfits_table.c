@@ -900,6 +900,7 @@ static int qfits_query_column_seq_to_array_endian(
 												  const qfits_table	    *   th,
 												  int                 colnum,
 												  int                 start_ind,
+												  int* indices,
 												  int                 nb_rows,
 												  unsigned char*      destination,
 												  int                 dest_stride,
@@ -963,7 +964,13 @@ static int qfits_query_column_seq_to_array_endian(
     /* Get only the selected rows */
     for (i=0; i<nb_rows; i++) {
         /* Copy all atoms on this field into array */
-        memcpy(r, inbuf, field_size);
+		if (indices) {
+			memcpy(r, inbuf + (indices[i]*table_width), field_size);
+		} else {
+			memcpy(r, inbuf, field_size);
+			/* Jump to next line */
+			inbuf += table_width;
+		}
 
 #ifndef WORDS_BIGENDIAN
 		if (do_swap) {
@@ -977,8 +984,6 @@ static int qfits_query_column_seq_to_array_endian(
 #endif
 
         r += dest_stride;
-        /* Jump to next line */
-        inbuf += table_width;
 	}
     qfits_fdealloc(start, 0, size);
 
@@ -994,7 +999,16 @@ int qfits_query_column_seq_to_array(
 									unsigned char*      destination,
 									int                 dest_stride)
 {
-	return qfits_query_column_seq_to_array_endian(th, colnum, start_ind, nb_rows, destination, dest_stride, 1);
+	return qfits_query_column_seq_to_array_endian(th, colnum, start_ind, NULL, nb_rows, destination, dest_stride, 1);
+}
+
+int qfits_query_column_seq_to_array_inds(const qfits_table	    *   th,
+										 int                 colnum,
+										 int* indices,
+										 int Ninds,
+										 unsigned char*      destination,
+										 int                 dest_stride) {
+	return qfits_query_column_seq_to_array_endian(th, colnum, 0, indices, Ninds, destination, dest_stride, 1);
 }
 
 int qfits_query_column_seq_to_array_no_endian_swap(
@@ -1005,7 +1019,7 @@ int qfits_query_column_seq_to_array_no_endian_swap(
 												   unsigned char*      destination,
 												   int                 dest_stride)
 {
-	return qfits_query_column_seq_to_array_endian(th, colnum, start_ind, nb_rows, destination, dest_stride, 0);
+	return qfits_query_column_seq_to_array_endian(th, colnum, start_ind, NULL, nb_rows, destination, dest_stride, 0);
 }
 
 /*----------------------------------------------------------------------------*/
