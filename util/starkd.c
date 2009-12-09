@@ -125,72 +125,6 @@ bl* get_chunks(startree_t* s, il* wordsizes) {
     if (wordsizes)
         il_append(wordsizes, sizeof(uint8_t));
 
-    fitsbin_chunk_reset(&chunk);
-    chunk.tablename = "sigma_radec";
-    chunk.itemsize = 2 * sizeof(float);
-    chunk.nrows = kd->ndata;
-    chunk.data = s->sigma_radec;
-    chunk.userdata = &(s->sigma_radec);
-    chunk.required = FALSE;
-    bl_append(chunks, &chunk);
-    if (wordsizes)
-        il_append(wordsizes, sizeof(float));
-
-    fitsbin_chunk_reset(&chunk);
-    chunk.tablename = "proper_motion";
-    chunk.itemsize = 2 * sizeof(float);
-    chunk.nrows = kd->ndata;
-    chunk.data = s->proper_motion;
-    chunk.userdata = &(s->proper_motion);
-    chunk.required = FALSE;
-    bl_append(chunks, &chunk);
-    if (wordsizes)
-        il_append(wordsizes, sizeof(float));
-
-    fitsbin_chunk_reset(&chunk);
-    chunk.tablename = "sigma_pm";
-    chunk.itemsize = 2 * sizeof(float);
-    chunk.nrows = kd->ndata;
-    chunk.data = s->sigma_pm;
-    chunk.userdata = &(s->sigma_pm);
-    chunk.required = FALSE;
-    bl_append(chunks, &chunk);
-    if (wordsizes)
-        il_append(wordsizes, sizeof(float));
-
-    fitsbin_chunk_reset(&chunk);
-    chunk.tablename = "mag";
-    chunk.itemsize = sizeof(float);
-    chunk.nrows = kd->ndata;
-    chunk.data = s->mag;
-    chunk.userdata = &(s->mag);
-    chunk.required = FALSE;
-    bl_append(chunks, &chunk);
-    if (wordsizes)
-        il_append(wordsizes, sizeof(float));
-
-    fitsbin_chunk_reset(&chunk);
-    chunk.tablename = "mag_err";
-    chunk.itemsize = sizeof(float);
-    chunk.nrows = kd->ndata;
-    chunk.data = s->mag_err;
-    chunk.userdata = &(s->mag_err);
-    chunk.required = FALSE;
-    bl_append(chunks, &chunk);
-    if (wordsizes)
-        il_append(wordsizes, sizeof(float));
-
-    fitsbin_chunk_reset(&chunk);
-    chunk.tablename = "starid";
-    chunk.itemsize = sizeof(uint64_t);
-    chunk.nrows = kd->ndata;
-    chunk.data = s->starids;
-    chunk.userdata = &(s->starids);
-    chunk.required = FALSE;
-    bl_append(chunks, &chunk);
-    if (wordsizes)
-        il_append(wordsizes, sizeof(uint64_t));
-
     fitsbin_chunk_clean(&chunk);
     return chunks;
 }
@@ -251,12 +185,13 @@ startree_t* startree_open(const char* fn) {
 	return NULL;
 }
 
-uint64_t startree_get_starid(const startree_t* s, int ind) {
-    if (!s->starids)
-        return 0;
-    return s->starids[ind];
-}
-
+/*
+ uint64_t startree_get_starid(const startree_t* s, int ind) {
+ if (!s->starids)
+ return 0;
+ return s->starids[ind];
+ }
+ */
 int startree_close(startree_t* s) {
 	if (!s) return 0;
 	if (s->inverse_perm)

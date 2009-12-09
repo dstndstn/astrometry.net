@@ -187,34 +187,6 @@ int unpermute_stars(startree_t* treein, quadfile* qfin,
 		}
 	}
 
-    logmsg("Permuting tag-along arrays...\n");
-    if (treein->sigma_radec)
-        treeout->sigma_radec   = malloc(N * 2 * sizeof(float));
-    if (treein->proper_motion)
-        treeout->proper_motion = malloc(N * 2 * sizeof(float));
-    if (treein->sigma_pm)
-        treeout->sigma_pm      = malloc(N * 2 * sizeof(float));
-    if (treein->starids)
-        treeout->starids       = malloc(N * sizeof(uint64_t));
-
-    for (i=0; i<N; i++) {
-        int ind = treein->tree->perm[i];
-        if (treein->sigma_radec) {
-            treeout->sigma_radec[2*i] = treein->sigma_radec[2*ind];
-            treeout->sigma_radec[2*i+1] = treein->sigma_radec[2*ind+1];
-        }
-        if (treein->proper_motion) {
-            treeout->proper_motion[2*i] = treein->proper_motion[ind];
-            treeout->proper_motion[2*i+1] = treein->proper_motion[2*ind+1];
-        }
-        if (treein->sigma_pm) {
-            treeout->sigma_pm[2*i] = treein->sigma_pm[2*ind];
-            treeout->sigma_pm[2*i+1] = treein->sigma_pm[2*ind+1];
-        }
-        if (treein->starids)
-            treeout->starids[i] = treein->starids[ind];
-    }
-
 	*p_treeout = treeout;
 	return 0;
 }
@@ -240,7 +212,7 @@ int unpermute_stars_tagalong(startree_t* treein,
 		ERROR("Failed to write tag-along table header");
 		return -1;
 	}
-	if (fitstable_copy_rows_data(tagin, treein->tree->perm, N, tagout)) {
+	if (fitstable_copy_rows_data(tagin, (int*)treein->tree->perm, N, tagout)) {
 		ERROR("Failed to copy tag-along table rows from input to output");
 		return -1;
 	}
@@ -318,11 +290,6 @@ int unpermute_stars_files(const char* skdtinfn, const char* quadinfn,
 			return -1;
 		}
 	}
-
-    free(treeout->sigma_radec);
-    free(treeout->proper_motion);
-    free(treeout->sigma_pm);
-    free(treeout->starids);
 
 	quadfile_close(qfin);
 	startree_close(treein);

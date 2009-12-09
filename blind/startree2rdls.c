@@ -31,7 +31,7 @@
 #include "log.h"
 #include "errors.h"
 
-static const char* OPTIONS = "hr:m";
+static const char* OPTIONS = "hr:";
 
 extern char *optarg;
 extern int optind, opterr, optopt;
@@ -41,7 +41,6 @@ void print_help(char* progname)
 	boilerplate_help_header(stderr);
 	fprintf(stderr, "Usage: %s\n"
 			"   -r <rdls-output-file>\n"
-			"   [-m]: add mags\n"
 			"   [-v]: more verbose\n"
 			"   [-h]: help\n"
 			"   <skdt> [<skdt> ...]\n\n"
@@ -56,7 +55,6 @@ int main(int argc, char** args) {
     rdlist_t* rdls;
 	startree_t* skdt = NULL;
 	int i;
-	bool add_mags = FALSE;
 	int loglvl = LOG_MSG;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
@@ -66,9 +64,6 @@ int main(int argc, char** args) {
 			break;
 		case 'r':
 			outfn = optarg;
-			break;
-		case 'm':
-			add_mags = TRUE;
 			break;
 		case 'h':
 			print_help(args[0]);
@@ -93,7 +88,6 @@ int main(int argc, char** args) {
 
 	for (; optind<argc; optind++) {
 		int Nstars;
-		int magcol = -1;
         fn = args[optind];
         logmsg("Opening star kdtree %s...\n", fn);
         skdt = startree_open(fn);
@@ -102,15 +96,6 @@ int main(int argc, char** args) {
             exit(-1);
         }
         Nstars = startree_N(skdt);
-
-		if (add_mags) {
-			if (!skdt->mag) {
-				logmsg("Requested adding MAG column to output, but star kdtree %s does not include mags.\n", fn);
-				magcol = -1;
-			} else {
-				magcol = rdlist_add_tagalong_column(rdls, TFITS_BIN_TYPE_E, 1, TFITS_BIN_TYPE_E, "MAG", "mag");
-			}
-		}
 
         if (rdlist_write_header(rdls)) {
             ERROR("Failed to write new RDLS field header");
@@ -131,13 +116,6 @@ int main(int argc, char** args) {
                 ERROR("Failed to write a RA,Dec entry");
                 exit(-1);
             }
-		}
-		if (magcol != -1) {
-			if (rdlist_write_tagalong_column(rdls, magcol, 0, Nstars,
-											 skdt->mag, sizeof(float))) {
-				ERROR("Failed to write MAG column");
-				exit(-1);
-			}
 		}
 		printf("\n");
 

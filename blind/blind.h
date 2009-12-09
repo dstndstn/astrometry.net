@@ -93,8 +93,6 @@ struct blind_params {
 	// FITS keyword to copy from xylist to matchfile.
 	char *fieldid_key;
 
-	bool use_idfile;
-
 	// The fields to solve!
 	xylist_t* xyls;
 

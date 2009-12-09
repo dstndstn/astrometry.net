@@ -897,18 +897,11 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
         for (i=0; i<dimquads; i++) {
             mo.star[i] = star[i];
             mo.field[i] = fieldstars[i];
+			mo.ids[i] = 0;
 		}
 
 		memcpy(mo.quadpix, field, 2 * dimquads * sizeof(double));
 		memcpy(mo.quadxyz, starxyz, 3 * dimquads * sizeof(double));
-
-		if (index_has_ids(solver->index)) {
-            for (i=0; i<dimquads; i++)
-                mo.ids[i] = startree_get_starid(solver->index->starkd, star[i]);
-		} else {
-            for (i=0; i<dimquads; i++)
-                mo.ids[i] = 0;
-		}
 
 		set_center_and_radius(solver, &mo, &(mo.wcstan), NULL);
 

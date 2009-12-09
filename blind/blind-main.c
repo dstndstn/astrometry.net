@@ -117,8 +117,6 @@ static int read_parameters(blind_t* bp) {
             log_to(stderr);
         } else if (is_word(line, "verbose", &nextword)) {
             log_init(LOG_VERB);
-		} else if (is_word(line, "idfile", &nextword)) {
-			bp->use_idfile = TRUE;
 		} else if (is_word(line, "verify ", &nextword)) {
 			sl_append(bp->verify_wcsfiles, nextword);
 		} else if (is_word(line, "verify_wcs ", &nextword)) {

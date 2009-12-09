@@ -272,9 +272,6 @@ void blind_run(blind_t* bp) {
 
     remove_invalid_fields(bp->fieldlist, xylist_n_fields(bp->xyls));
 
-    if (bp->use_idfile)
-        bp->index_options |= INDEX_USE_IDS;
-
     Nindexes = n_indexes(bp);
 
 	// Verify any WCS estimates we have.

@@ -241,15 +241,6 @@ int main(int argc, char *argv[]) {
 		fits_copy_header(catheader, hdr, key);
 	}
 
-    // copy optional tables
-    starkd->sigma_radec = cat->sigma_radec;
-    starkd->proper_motion = cat->proper_motion;
-    starkd->sigma_pm = cat->sigma_pm;
-    starkd->starids = cat->starids;
-
-	starkd->mag = cat->mag;
-	starkd->mag_err = cat->mag_err;
-
 	if (startree_write_to_file(starkd, treefname)) {
 		fprintf(stderr, "Failed to write star kdtree.\n");
 		exit(-1);

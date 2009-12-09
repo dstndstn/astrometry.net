@@ -45,16 +45,6 @@ struct startree_s {
 	// reading: tagged-along data (a FITS BINTABLE with one row per star,
 	// in the same order); access this via startree_get_tagalong() ONLY!
 	fitstable_t* tagalong;
-
-    // optional tables: positional error ellipses, proper motions
-    float* sigma_radec;
-    float* proper_motion;
-    float* sigma_pm;
-    // optional tables: mag and mag error
-    float* mag;
-    float* mag_err;
-    // optional table: star IDs
-    uint64_t* starids;
 };
 typedef struct startree_s startree_t;
 
@@ -86,8 +76,7 @@ int startree_get_cut_margin(const startree_t* s);
 
 double startree_get_jitter(const startree_t* s);
 
-
-uint64_t startree_get_starid(const startree_t* s, int ind);
+//uint64_t startree_get_starid(const startree_t* s, int ind);
 
 // returns the sweep number of star 'ind', or -1 if the index is out of bounds
 // or the tree has no sweep numbers.

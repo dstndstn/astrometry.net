@@ -28,10 +28,6 @@ bool index_meta_overlaps_scale_range(index_meta_t* meta,
              (quadhi < meta->index_scale_lower));
 }
 
-bool index_has_ids(index_t* index) {
-    return index->use_ids;
-}
-
 int index_get_quad_dim(const index_t* index) {
     return quadfile_dimquads(index->quads);
 }
@@ -294,7 +290,6 @@ index_t* index_load(const char* indexname, int flags) {
 	char *codetreefname=NULL, *quadfname=NULL, *startreefname=NULL;
     bool singlefile;
 	index_t* index = calloc(1, sizeof(index_t));
-	//index->meta.indexname = strdup(indexname);
 
 	if (flags & INDEX_ONLY_LOAD_METADATA)
 		logverb("Loading metadata for %s...\n", indexname);
@@ -375,9 +370,6 @@ index_t* index_load(const char* indexname, int flags) {
 	// New indexes are cooked such that cx < dx for all codes, but not
 	// all of the old ones are like this.
     index->meta.cx_less_than_dx = qfits_header_getboolean(index->codekd->header, "CXDX", FALSE);
-
-	if (flags & INDEX_USE_IDS)
-        index->use_ids = TRUE;
 
 	if (flags & INDEX_ONLY_LOAD_METADATA)
 		index_close(index);

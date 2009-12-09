@@ -77,13 +77,10 @@ struct index_s {
 	quadfile* quads;
 	startree_t* starkd;
 
-    bool use_ids;
-
     index_meta_t meta;
 };
 typedef struct index_s index_t;
 
-#define INDEX_USE_IDS            1
 #define INDEX_ONLY_LOAD_METADATA 2
 #define INDEX_ONLY_LOAD_SKDT     4
 
@@ -94,8 +91,6 @@ char* index_get_quad_filename(const char* indexname);
 char* index_get_qidx_filename(const char* indexname);
 
 int index_get_meta(const char* filename, index_meta_t* meta);
-
-bool index_has_ids(index_t* index);
 
 int index_get_quad_dim(const index_t* index);
 
@@ -112,9 +107,7 @@ int index_nstars(const index_t* index);
  *               in files 'myindex.ckdt.fits' and 'myindex.skdt.fits', then
  *               the indexname is just 'myindex'
  *
- *   flags     - Either 0 or INDEX_USE_IDFILE. If INDEX_USE_IDFILE is
- *               specified, then the idfile will be loaded also.
- *               If INDEX_ONLY_LOAD_METADATA, then only metadata will be
+ *   flags     - If INDEX_ONLY_LOAD_METADATA, then only metadata will be
  *               loaded.
  *
  * Returns:
