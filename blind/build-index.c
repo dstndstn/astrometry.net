@@ -34,6 +34,8 @@
 #include "uniformize-catalog.h"
 #include "startree2.h"
 #include "codetree.h"
+#include "unpermute-quads.h"
+#include "unpermute-stars.h"
 #include "bl.h"
 #include "ioutils.h"
 #include "rdlist.h"
@@ -43,8 +45,6 @@
 #include "sip_qfits.h"
 #include "codefile.h"
 #include "codekd.h"
-#include "unpermute-quads.h"
-#include "unpermute-stars.h"
 #include "merge-index.h"
 #include "fitsioutils.h"
 
@@ -103,11 +103,15 @@ int main(int argc, char** argv) {
 	char* racol = "RA";
 	char* deccol = "DEC";
 
+	// uniformize
+	fitstable_t* catalog;
+	fitstable_t* uniform;
+
 	// star kdtree
 	startree_t* starkd = NULL;
 	fitstable_t* startag = NULL;
 
-	// indexing:
+	// hpquads
 	int Nside = 0;
 	double qlo = 0;
 	double qhi = 0;
@@ -117,13 +121,15 @@ int main(int argc, char** argv) {
 	bool scanoccupied = FALSE;
 	int dimquads = 4;
 
-	fitstable_t* catalog;
-	fitstable_t* uniform;
-
 	codefile* codes = NULL;
 	quadfile* quads = NULL;
 
+	// codetree
 	codetree* codekd = NULL;
+
+	// unpermute-stars
+	startree_t* starkd2 = NULL;
+	quadfile* quads2 = NULL;
 
 	int loglvl = LOG_MSG;
 	int id = 0;
@@ -371,7 +377,6 @@ int main(int argc, char** argv) {
 			ERROR("hpquads failed");
 			exit(-1);
 		}
-		startree_close(starkd);
 
 	} else {
 		quadfn = create_temp_file("quad", tempdir);
@@ -385,6 +390,7 @@ int main(int argc, char** argv) {
 			ERROR("hpquads failed");
 			exit(-1);
 		}
+
 	}
 
 	// codetree
@@ -417,20 +423,41 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	/*
 	// unpermute-stars
-	skdt2fn = create_temp_file("skdt2", tempdir);
-	sl_append_nocopy(tempfiles, skdt2fn);
-	quad2fn = create_temp_file("quad2", tempdir);
-	sl_append_nocopy(tempfiles, quad2fn);
-	logmsg("Unpermuting stars from %s and %s to %s and %s\n", skdtfn, quadfn, skdt2fn, quad2fn);
-	if (unpermute_stars(skdtfn, quadfn,
-						skdt2fn, quad2fn,
-						TRUE, FALSE, argv, argc)) {
-		ERROR("Failed to unpermute-stars");
-		exit(-1);
+	logmsg("Unpermute-stars...\n");
+	if (inmemory) {
+
+		if (quadfile_switch_to_reading(quads)) {
+			ERROR("Failed to switch quadfile to read-mode");
+			exit(-1);
+		}
+		quads2 = quadfile_open_in_memory();
+		if (unpermute_stars(starkd, quads, &starkd2, quads2,
+							TRUE, FALSE, argv, argc)) {
+			ERROR("Failed to unpermute-stars");
+			exit(-1);
+		}
+
+	} else {
+
+		skdt2fn = create_temp_file("skdt2", tempdir);
+		sl_append_nocopy(tempfiles, skdt2fn);
+		quad2fn = create_temp_file("quad2", tempdir);
+		sl_append_nocopy(tempfiles, quad2fn);
+
+		logmsg("Unpermuting stars from %s and %s to %s and %s\n", skdtfn, quadfn, skdt2fn, quad2fn);
+		if (unpermute_stars_files(skdtfn, quadfn, skdt2fn, quad2fn,
+								  TRUE, FALSE, argv, argc)) {
+			ERROR("Failed to unpermute-stars");
+			exit(-1);
+		}
 	}
 
+	////////////// FIXME -- still need to unpermute the tag-along table!!
+
+	logmsg("Unpermute-quads...\n");
+
+	/*
 	// unpermute-quads
 	ckdt2fn = create_temp_file("ckdt2", tempdir);
 	sl_append_nocopy(tempfiles, ckdt2fn);

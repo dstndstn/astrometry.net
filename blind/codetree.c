@@ -48,14 +48,14 @@ int codetree_files(const char* codefn, const char* ckdtfn,
 	assert(ckdtfn);
     logmsg("codetree: building KD tree for %s\n", codefn);
     logmsg("       will write KD tree file %s\n", ckdtfn);
-    logmsg("Reading codes...");
+    logmsg("Reading codes...\n");
 
     codes = codefile_open(codefn);
     if (!codes) {
 		ERROR("Failed to read code file %s", codefn);
 		return -1;
     }
-    logmsg("got %u codes.\n", codes->numcodes);
+    logmsg("Read %u codes.\n", codes->numcodes);
 
 	codekd = codetree_build(codes, Nleaf, datatype, treetype,
 							buildopts, args, argc);
@@ -63,12 +63,11 @@ int codetree_files(const char* codefn, const char* ckdtfn,
 		return -1;
 	}
 
-    logmsg("  Writing code KD tree to %s...", ckdtfn);
+    logmsg("Writing code KD tree to %s...\n", ckdtfn);
 	if (codetree_write_to_file(codekd, ckdtfn)) {
         ERROR("Failed to write code kdtree to %s", ckdtfn);
 		return -1;
     }
-    logmsg("done.\n");
     codefile_close(codes);
     kdtree_free(codekd->tree);
     codekd->tree = NULL;

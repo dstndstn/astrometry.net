@@ -195,11 +195,28 @@ quadfile* quadfile_open_for_writing(const char* fn) {
 		ERROR("Non-NULL filename required");
 		return NULL;
 	}
-	return open_for_writing(NULL);
+	return open_for_writing(fn);
 }
 
 quadfile* quadfile_open_in_memory() {
 	return open_for_writing(NULL);
+}
+
+int quadfile_switch_to_reading(quadfile* qf) {
+	if (quadfile_fix_header(qf)) {
+        ERROR("Failed to fix quads header");
+		return -1;
+	}
+	if (fitsbin_switch_to_reading(qf->fb)) {
+        ERROR("Failed to switch to read mode");
+		return -1;
+	}
+    if (fitsbin_read(qf->fb)) {
+        ERROR("Failed to open quads file");
+		return -1;
+    }
+	qf->quadarray = quads_chunk(qf)->data;
+	return 0;
 }
 
 static void add_to_header(qfits_header* hdr, quadfile* qf) {

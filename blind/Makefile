@@ -347,7 +347,7 @@ uniformize-catalog: uniformize-catalog-main.o uniformize-catalog.o \
 ALL_OBJ += uniformize-catalog-main.o uniformize-catalog.o
 
 build-index: build-index.o uniformize-catalog.o startree2.o hpquads.o \
-		quad-builder.o quad-utils.o codefile.o codetree.o \
+		quad-builder.o quad-utils.o codefile.o codetree.o unpermute-stars.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += build-index.o uniformize-catalog.o
 

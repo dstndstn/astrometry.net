@@ -51,14 +51,6 @@ int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
 	buf = malloc(NB * R);
 	N = fitstable_nrows(intab);
 	
-	printf("Input table:\n");
-	fitstable_print_columns(intab);
-	printf("\n");
-
-	printf("Output table:\n");
-	fitstable_print_columns(outtab);
-	printf("\n");
-
 	for (i=0; i<N; i+=NB) {
 		int nr = NB;
 		if (i+NB > N)
