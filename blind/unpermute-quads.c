@@ -40,21 +40,28 @@ int unpermute_quads(quadfile* quadin, codetree* treein,
 	qfits_header* hdr;
 	int healpix;
 	int hpnside;
-	int codehp;
+	int codehp = -1;
 	qfits_header* qouthdr;
 	qfits_header* qinhdr;
 	codetree* treeout;
+	bool allsky;
 
 	codehdr = codetree_header(treein);
 	healpix = quadin->healpix;
 	hpnside = quadin->hpnside;
-	codehp = qfits_header_getint(codehdr, "HEALPIX", -1);
-	if (codehp == -1)
-		ERROR("Warning, input code kdtree didn't have a HEALPIX header");
-	else if (codehp != healpix) {
-		ERROR("Quadfile says it's healpix %i, but code kdtree says %i",
-				healpix, codehp);
-		return -1;
+
+	allsky = qfits_header_getboolean(codehdr, "ALLSKY", 0);
+	if (allsky)
+		logverb("Index is all-sky\n");
+	else {
+		codehp = qfits_header_getint(codehdr, "HEALPIX", -1);
+		if (codehp == -1)
+			ERROR("Warning, input code kdtree didn't have a HEALPIX header");
+		else if (codehp != healpix) {
+			ERROR("Quadfile says it's healpix %i, but code kdtree says %i",
+				  healpix, codehp);
+			return -1;
+		}
 	}
 
 	quadout->healpix = healpix;
@@ -82,6 +89,7 @@ int unpermute_quads(quadfile* quadin, codetree* treein,
 	fits_copy_header(qinhdr, qouthdr, "CXDX");
 	fits_copy_header(qinhdr, qouthdr, "CXDXLT1");
 	fits_copy_header(qinhdr, qouthdr, "CIRCLE");
+	fits_copy_header(qinhdr, qouthdr, "ALLSKY");
 
 	if (quadfile_write_header(quadout)) {
 		ERROR("Failed to write quadfile header");
@@ -114,6 +122,7 @@ int unpermute_quads(quadfile* quadin, codetree* treein,
 	hdr = codetree_header(treeout);
 	fits_copy_header(qinhdr, hdr, "HEALPIX");
 	fits_copy_header(qinhdr, hdr, "HPNSIDE");
+	fits_copy_header(qinhdr, hdr, "ALLSKY");
 	boilerplate_add_fits_headers(hdr);
 	qfits_header_add(hdr, "HISTORY", "This file was created by the program \"unpermute-quads\".", NULL, NULL);
 	qfits_header_add(hdr, "HISTORY", "unpermute-quads command line:", NULL, NULL);

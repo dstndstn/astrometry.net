@@ -26,6 +26,9 @@ void* plot_xy_init(plot_args_t* args);
 // Called post cairo surface initialization.
 int plot_xy_init2(plot_args_t* args, void* baton);
 
+// Set the plot size based on IMAGEW,IMAGEH in the xylist header.
+int plot_xy_setsize(plot_args_t* args, plotxy_t* xyargs);
+
 int plot_xy_set_bg(plotxy_t* args, const char* color);
 void plot_xy_set_xcol(plotxy_t* args, const char* col);
 void plot_xy_set_ycol(plotxy_t* args, const char* col);

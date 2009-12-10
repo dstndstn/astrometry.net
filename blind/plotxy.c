@@ -41,6 +41,19 @@ void* plot_xy_init(plot_args_t* plotargs) {
 	return args;
 }
 
+int plot_xy_setsize(plot_args_t* pargs, plotxy_t* args) {
+	xylist_t* xyls;
+	xyls = xylist_open(args->fn);
+	if (!xyls) {
+		ERROR("Failed to open xylist from file \"%s\"", args->fn);
+		return -1;
+	}
+	pargs->W = xylist_get_imagew(xyls);
+	pargs->H = xylist_get_imageh(xyls);
+	xylist_close(xyls);
+	return 0;
+}
+
 int plot_xy_plot(const char* command, cairo_t* cairo,
 				 plot_args_t* plotargs, void* baton) {
 	plotxy_t* args = (plotxy_t*)baton;

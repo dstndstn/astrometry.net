@@ -434,6 +434,8 @@ void build_index_defaults(index_params_t* p) {
 	p->Nreuse = 2;
 	p->dimquads = 4;
 	p->sortasc = TRUE;
+	// default to all-sky
+	p->bighp = -1;
 	//p->inmemory = TRUE;
 	p->delete_tempfiles = TRUE;
 	p->tempdir = "/tmp";

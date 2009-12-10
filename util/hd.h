@@ -31,7 +31,7 @@
 
  Or the hard way (which involves downloading > 500 MB from Denmark):
 
- make hd.fits   (in the astrometry.net util/ directory; you will also need )
+ make hd.fits   (in the astrometry.net util/ directory)
 
  **/
 

@@ -36,8 +36,9 @@
 #include "cairoutils.h"
 #include "log.h"
 #include "errors.h"
+#include "fitsioutils.h"
 
-#define OPTIONS "hW:H:n:N:r:s:i:e:x:y:w:S:I:PC:X:Y:b:o:pJ"
+#define OPTIONS "hvW:H:n:N:r:s:i:e:x:y:w:S:I:PC:X:Y:b:o:pJ"
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
@@ -81,6 +82,7 @@ int main(int argc, char *args[]) {
 	plot_args_t pargs;
 	plotxy_t* xy;
 	plotimage_t* img;
+	int loglvl = LOG_MSG;
 
     // log errors to stderr, not stdout.
     errors_log_to(stderr);
@@ -102,6 +104,9 @@ int main(int argc, char *args[]) {
 
 	while ((argchar = getopt(argc, args, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'v':
+			loglvl++;
+			break;
         case 'C':
 			plotstuff_set_color(&pargs, optarg);
             break;
@@ -182,12 +187,20 @@ int main(int argc, char *args[]) {
 		printHelp(progname);
 		exit(-1);
 	}
+	log_init(loglvl);
+	log_to(stderr);
+	fits_use_error_system();
 	if (img->fn) {
 		if (plot_image_setsize(&pargs, img)) {
 			ERROR("Failed to set plot size from image");
 			exit(-1);
 		}
 		plotstuff_run_command(&pargs, "image");
+	} else {
+		if (plot_xy_setsize(&pargs, xy)) {
+			ERROR("Failed to set plot size from xylist");
+			exit(-1);
+		}
 	}
 
 	plotstuff_run_command(&pargs, "xy");

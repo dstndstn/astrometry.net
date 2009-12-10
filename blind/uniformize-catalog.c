@@ -105,6 +105,10 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	int* npersweep = NULL;
 	qfits_header* outhdr = NULL;
 
+	if (bignside == 0)
+		bignside = 1;
+	allsky = (bighp == -1);
+
     if (Nside % bignside) {
         ERROR("Fine healpixelization Nside must be a multiple of the coarse healpixelization Nside");
         return -1;
@@ -115,7 +119,11 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	}
 
 	NHP = 12 * Nside * Nside;
-	logverb("Healpix Nside: %i, # healpixes: %i\n", Nside, NHP);
+	logverb("Healpix Nside: %i, # healpixes on the whole sky: %i\n", Nside, NHP);
+	if (!allsky) {
+		logverb("Creating index for healpix %i, nside %i\n", bighp, bignside);
+		logverb("Number of healpixes: %i\n", ((Nside/bignside)*(Nside/bignside)));
+	}
 	logverb("Healpix side length: %g arcmin.\n", healpix_side_length_arcmin(Nside));
 
 	dubl = fitscolumn_double_type();
@@ -148,10 +156,6 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 								NULL, N);
 		free(sortval);
 	}
-
-	allsky = (bighp == -1);
-	if (allsky)
-        bignside = 0;
 
 	token.nside = bignside;
 	token.finenside = Nside;

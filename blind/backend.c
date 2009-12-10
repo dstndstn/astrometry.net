@@ -596,9 +596,9 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 
     sp->parity = PARITY_BOTH;
 	pstr = qfits_pretty_string(qfits_header_getstr(hdr, "ANPARITY"));
-	if (pstr && !strcmp(pstr, "NEG"))
+	if (pstr && streq(pstr, "NEG"))
 		sp->parity = PARITY_FLIP;
-	else if (pstr && !strcmp(pstr, "POS"))
+	else if (pstr && streq(pstr, "POS"))
 		sp->parity = PARITY_NORMAL;
 
     if (qfits_header_getboolean(hdr, "ANTWEAK", default_tweak)) {

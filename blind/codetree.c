@@ -137,6 +137,7 @@ codetree* codetree_build(codefile* codes,
 	fits_header_add_int(hdr, "NLEAF", Nleaf, "Target number of points in leaves.");
 	fits_copy_header(chdr, hdr, "INDEXID");
 	fits_copy_header(chdr, hdr, "HEALPIX");
+	fits_copy_header(chdr, hdr, "ALLSKY");
 	fits_copy_header(chdr, hdr, "HPNSIDE");
 	fits_copy_header(chdr, hdr, "CXDX");
 	fits_copy_header(chdr, hdr, "CXDXLT1");

@@ -39,20 +39,27 @@ int unpermute_stars(startree_t* treein, quadfile* qfin,
 	startree_t* treeout;
 	int i;
 	int N;
-	int healpix;
-    int hpnside;
-	int starhp;
+	int healpix = -1;
+    int hpnside = 0;
+	int starhp = -1;
 	int lastgrass;
 	qfits_header* qouthdr;
 	qfits_header* qinhdr;
+	bool allsky;
 
 	assert(p_treeout);
 	N = startree_N(treein);
-	starhp = qfits_header_getint(startree_header(treein), "HEALPIX", -1);
-	if (starhp == -1)
-		ERROR("Warning, input star kdtree didn't have a HEALPIX header.\n");
-    healpix = starhp;
-	hpnside = qfits_header_getint(startree_header(treein), "HPNSIDE", 1);
+	allsky = qfits_header_getboolean(startree_header(treein), "ALLSKY", 0);
+	if (allsky)
+		logverb("Star kd-tree is all-sky\n");
+	else {
+		starhp = qfits_header_getint(startree_header(treein), "HEALPIX", -1);
+		if (starhp == -1)
+			ERROR("Warning, input star kdtree didn't have a HEALPIX header.\n");
+		hpnside = qfits_header_getint(startree_header(treein), "HPNSIDE", 1);
+		healpix = starhp;
+		logverb("Star kd-tree covers healpix %i, nside %i\n", healpix, hpnside);
+	}
 
 	qfout->healpix = healpix;
     qfout->hpnside = hpnside;
@@ -64,6 +71,8 @@ int unpermute_stars(startree_t* treein, quadfile* qfin,
 
 	qouthdr = quadfile_get_header(qfout);
 	qinhdr  = quadfile_get_header(qfin);
+
+	fits_copy_header(qinhdr, qouthdr, "ALLSKY");
 
 	boilerplate_add_fits_headers(qouthdr);
 	qfits_header_add(qouthdr, "HISTORY", "This file was created by the program \"unpermute-stars\".", NULL, NULL);

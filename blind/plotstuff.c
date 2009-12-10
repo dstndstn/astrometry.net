@@ -178,6 +178,7 @@ int plotstuff_init(plot_args_t* pargs) {
 int plotstuff_init2(plot_args_t* pargs) {
 	int i, NR;
 
+	logverb("Creating drawing surface (%ix%i)\n", pargs->W, pargs->H);
 	// Allocate cairo surface
 	switch (pargs->outformat) {
 	case PLOTSTUFF_FORMAT_PDF:

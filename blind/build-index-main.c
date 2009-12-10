@@ -33,7 +33,7 @@
 #include "log.h"
 #include "starutil.h"
 
-const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:M";
+const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MT";
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -62,6 +62,7 @@ static void print_help(char* progname) {
 		   "      [-I <unique-id>] set the unique ID of this index\n"
 		   "\n"
 		   "      [-M]: in-memory (don't use temp files)\n"
+		   "      [-T]: don't delete temp files\n"
 		   "      [-v]: add verbosity.\n"
 	       "\n", progname);
 }
@@ -86,6 +87,9 @@ int main(int argc, char** argv) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'T':
+			p->delete_tempfiles = FALSE;
+			break;
 		case 'E':
 			p->scanoccupied = TRUE;
 			break;

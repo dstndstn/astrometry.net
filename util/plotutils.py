@@ -1,6 +1,6 @@
 #import matplotlib
 from matplotlib.patches import Circle, Ellipse
-from pylab import gca, gcf, gci, axis, histogram2d
+from pylab import gca, gcf, gci, axis, histogram2d, hist
 from numpy import array, append, flatnonzero
 
 from matplotlib.colors import LinearSegmentedColormap
