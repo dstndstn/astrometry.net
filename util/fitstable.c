@@ -314,6 +314,17 @@ void fitstable_copy_columns(const fitstable_t* src, fitstable_t* dest) {
 	}
 }
 
+sl* fitstable_get_fits_column_names(fitstable_t* t, sl* lst) {
+	int i;
+	if (!lst)
+		lst = sl_new(16);
+	for (i=0; i<ncols(t); i++) {
+		fitscol_t* col = getcol(t, i);
+		sl_append(lst, col->colname);
+	}
+	return lst;
+}
+
 void fitstable_add_write_column(fitstable_t* tab, tfits_type t,
                                 const char* name, const char* units) {
     fitstable_add_write_column_array_convert(tab, t, t, 1, name, units);
@@ -375,6 +386,25 @@ void fitstable_add_fits_columns_as_struct(fitstable_t* tab) {
 										 off, qcol->atom_type, qcol->tlabel, TRUE);
 		off += fitscolumn_get_size(getcol(tab, ncols(tab)-1));
 	}
+}
+
+int fitstable_find_fits_column(fitstable_t* tab, const char* colname,
+							   char** units, tfits_type* type, int* arraysize) {
+	int i;
+	for (i=0; i<tab->table->nc; i++) {
+		qfits_col* qcol = tab->table->col + i;
+		if (!strcaseeq(colname, qcol->tlabel))
+			continue;
+		// found it!
+		if (units)
+			*units = qcol->tunit;
+		if (type)
+			*type = qcol->atom_type;
+		if (arraysize)
+			*arraysize = qcol->atom_nb;
+		return 0;
+	}
+	return -1;
 }
 
 
@@ -686,7 +716,7 @@ void fitstable_clear_table(fitstable_t* tab) {
 static void* read_array_into(const fitstable_t* tab,
 							 const char* colname, tfits_type ctype,
 							 bool array_ok,
-							 int offset, int* inds, int Nread,
+							 int offset, const int* inds, int Nread,
 							 void* dest, int deststride,
 							 int desired_arraysize,
 							 int* p_arraysize) {
@@ -822,28 +852,28 @@ static void* read_array(const fitstable_t* tab,
 
 int fitstable_read_column_inds_into(const fitstable_t* tab,
 									const char* colname, tfits_type read_as_type,
-									void* dest, int stride, int* inds, int N) {
+									void* dest, int stride, const int* inds, int N) {
 	return (read_array_into(tab, colname, read_as_type, FALSE, 0, inds, N, dest, stride, 0, NULL)
 			== NULL ? -1 : 0);
 }
 
 void* fitstable_read_column_inds(const fitstable_t* tab,
 								 const char* colname, tfits_type read_as_type,
-								 int* inds, int N) {
+								 const int* inds, int N) {
 	return read_array_into(tab, colname, read_as_type, FALSE, 0, inds, N, NULL, 0, 0, NULL);
 }
 
 int fitstable_read_column_array_inds_into(const fitstable_t* tab,
 										  const char* colname, tfits_type read_as_type,
 										  void* dest, int stride, int arraysize,
-										  int* inds, int N) {
+										  const int* inds, int N) {
 	return (read_array_into(tab, colname, read_as_type, TRUE, 0, inds, N, dest, stride, arraysize, NULL)
 			== NULL ? -1 : 0);
 }
 
 void* fitstable_read_column_array_inds(const fitstable_t* tab,
 									   const char* colname, tfits_type read_as_type,
-									   int* inds, int N, int* arraysize) {
+									   const int* inds, int N, int* arraysize) {
 	return read_array_into(tab, colname, read_as_type, TRUE, 0, inds, N, NULL, 0, 0, arraysize);
 }
 

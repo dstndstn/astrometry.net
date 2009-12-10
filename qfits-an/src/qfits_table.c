@@ -1004,7 +1004,7 @@ int qfits_query_column_seq_to_array(
 
 int qfits_query_column_seq_to_array_inds(const qfits_table	    *   th,
 										 int                 colnum,
-										 int* indices,
+										 const int* indices,
 										 int Ninds,
 										 unsigned char*      destination,
 										 int                 dest_stride) {

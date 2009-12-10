@@ -60,6 +60,7 @@ void augment_xylist_init(augment_xylist_t* axy) {
     axy->depths = il_new(4);
     axy->fields = il_new(16);
     axy->verifywcs = sl_new(4);
+	axy->tagalong = sl_new(4);
     axy->try_verify = TRUE;
     axy->resort = TRUE;
     axy->ra_center = HUGE_VAL;
@@ -69,6 +70,7 @@ void augment_xylist_init(augment_xylist_t* axy) {
 
 void augment_xylist_free_contents(augment_xylist_t* axy) {
     sl_free2(axy->verifywcs);
+    sl_free2(axy->tagalong);
     il_free(axy->depths);
     il_free(axy->fields);
 }
@@ -177,6 +179,10 @@ static an_option_t options[] = {
      "output filename for match file"},
 	{'R', "rdls",		   required_argument, "filename",
      "output filename for RDLS file"},
+	{'}', "tag",           required_argument, "column",
+	 "grab tag-along column from index into RDLS file"},
+	{'<', "tag-all",       no_argument, NULL,
+	 "grab all tag-along columns from index into RDLS file"},
 	{'j', "scamp-ref",	   required_argument, "filename",
      "output filename for SCAMP reference catalog"},
     {'B', "corr",          required_argument, "filename",
@@ -241,6 +247,12 @@ int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
     switch (argchar) {
+	case '}':
+		sl_append(axy->tagalong, optarg);
+		break;
+	case '<':
+		axy->tagalong_all = TRUE;
+		break;
 	case '{':
 		axy->image_sigma = atof(optarg);
 		break;
@@ -896,6 +908,15 @@ int augment_xylist(augment_xylist_t* axy,
         qfits_header_add(hdr, "ANXCOL", axy->xcol, "Name of column containing X coords", NULL);
     if (axy->ycol)
         qfits_header_add(hdr, "ANYCOL", axy->ycol, "Name of column containing Y coords", NULL);
+
+	if (axy->tagalong_all)
+		qfits_header_add(hdr, "ANTAGALL", "T", "Tag-along all columns from index to RDLS", NULL);
+	else
+		for (i=0; i<sl_size(axy->tagalong); i++) {
+			char key[64];
+			sprintf(key, "ANTAG%i", i+1);
+			qfits_header_add(hdr, key, sl_get(axy->tagalong, i), "Tag-along column from index to RDLS", NULL);
+		}
 
 	if (axy->odds_to_solve)
 		fits_header_add_double(hdr, "ANODDSSL", axy->odds_to_solve, "Odds ratio to consider a field solved");

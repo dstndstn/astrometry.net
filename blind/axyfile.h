@@ -43,6 +43,9 @@
  ANCORR   -- correlation between sources and index
  ANCANCEL -- cancel file.
 
+ ANTAG#   (string) Tag-along columns to copy from index into index-rdls
+ ANTAGALL (bool)   Tag-along all columns
+
  ANXCOL   -- X column name
  ANYCOL   -- Y column name
 

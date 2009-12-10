@@ -37,6 +37,10 @@ struct augment_xylist_s {
 
     sl* verifywcs;
 
+	// FITS columns copied from index to RDLS output
+	sl* tagalong;
+	bool tagalong_all;
+
     // input files
     char* imagefn;
     char* xylsfn;

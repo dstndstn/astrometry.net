@@ -361,11 +361,6 @@ index_t* index_load(const char* indexname, int flags) {
 	free(quadfname);
     quadfname = NULL;
 
-	logverb("Index scale: [%g, %g] arcmin, [%g, %g] arcsec\n",
-            index->meta.index_scale_lower / 60.0, index->meta.index_scale_upper / 60.0,
-            index->meta.index_scale_lower, index->meta.index_scale_upper);
-    logverb("Index has %i quads and %i stars\n", index->meta.nquads, index->meta.nstars);
-
 	// Read .ckdt file...
 	logverb("Reading code KD tree from %s...\n", codetreefname);
     gettimeofday(&tv1, NULL);
@@ -380,6 +375,11 @@ index_t* index_load(const char* indexname, int flags) {
     codetreefname = NULL;
 
 	set_meta(index);
+
+	logverb("Index scale: [%g, %g] arcmin, [%g, %g] arcsec\n",
+            index->meta.index_scale_lower / 60.0, index->meta.index_scale_upper / 60.0,
+            index->meta.index_scale_lower, index->meta.index_scale_upper);
+    logverb("Index has %i quads and %i stars\n", index->meta.nquads, index->meta.nstars);
 
 	if (!index->meta.circle) {
 		ERROR("Code kdtree does not contain the CIRCLE header.");

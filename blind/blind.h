@@ -100,6 +100,10 @@ struct blind_params {
 	matchfile* mf;
 	rdlist_t* indexrdls;
 
+	// extra fields to add to index rdls file:
+	sl* rdls_tagalong;
+	bool rdls_tagalong_all;
+
     // List of MatchObjs with logodds >= logodds_tokeep
     bl* solutions;
 

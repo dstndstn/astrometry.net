@@ -183,6 +183,10 @@ tfits_type fitscolumn_bool_type();
 // When reading: allow this column to match to any FITS type.
 tfits_type fitscolumn_any_type();
 
+// see also, in fitsioutils:
+//    int fits_get_atom_size(tfits_type type);
+
+
 fitstable_t* fitstable_open_in_memory();
 
 // for in-memory tables: done writing, start reading.
@@ -203,6 +207,12 @@ int fitstable_append_to(fitstable_t* t, FILE* fid);
 void fitstable_copy_columns(const fitstable_t* src, fitstable_t* dest);
 
 void fitstable_add_fits_columns_as_struct(fitstable_t* dest);
+
+// reading:
+int fitstable_find_fits_column(fitstable_t* t, const char* colname,
+							   char** units, tfits_type* type, int* arraysize);
+
+sl* fitstable_get_fits_column_names(fitstable_t* t, sl* lst);
 
 // reading...
 int fitstable_open_extension(fitstable_t* tab, int ext);
@@ -289,20 +299,20 @@ int fitstable_read_column_into(const fitstable_t* tab,
 
 int fitstable_read_column_inds_into(const fitstable_t* tab,
 									const char* colname, tfits_type read_as_type,
-									void* dest, int stride, int* inds, int N);
+									void* dest, int stride, const int* inds, int N);
 
 void* fitstable_read_column_inds(const fitstable_t* tab,
 								 const char* colname, tfits_type read_as_type,
-								 int* inds, int N);
+								 const int* inds, int N);
 
 int fitstable_read_column_array_inds_into(const fitstable_t* tab,
 										  const char* colname, tfits_type read_as_type,
 										  void* dest, int stride, int arraysize,
-										  int* inds, int N);
+										  const int* inds, int N);
 
 void* fitstable_read_column_array_inds(const fitstable_t* tab,
 									   const char* colname, tfits_type read_as_type,
-									   int* inds, int N, int* arraysize);
+									   const int* inds, int N, int* arraysize);
 
 int fitstable_read_column_offset_into(const fitstable_t* tab,
 									  const char* colname, tfits_type read_as_type,

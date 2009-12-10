@@ -78,7 +78,7 @@ PIPELINE := usnobtofits build-an-catalog hpowned cut-an \
 	augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
 	certifiable get-healpix 2masstofits nomadtofits \
 	merge-index index-to-table setsolved \
-	startree2 uniformize-catalog build-index
+	startree2 uniformize-catalog build-index query-starkd
 
 PROGS := backend image2xy control-program
 
@@ -503,6 +503,9 @@ plotxy.o: plotxy.c
 plotxy: plotxy-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 ALL_OBJ += plotxy-main.o
+
+query-starkd: query-starkd.o $(ANLIBS)
+ALL_OBJ += query-starkd.o
 
 quadidx: quadidx.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 

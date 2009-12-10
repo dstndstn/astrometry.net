@@ -267,6 +267,10 @@ Const inline double deg2dist(double arcInDegrees) {
     return arcsec2dist(deg2arcsec(arcInDegrees));
 }
 
+Const inline double deg2distsq(double d) {
+	return rad2distsq(deg2rad(d));
+}
+
 Const inline double dist2deg(double dist) {
     return arcsec2deg(dist2arcsec(dist));
 }

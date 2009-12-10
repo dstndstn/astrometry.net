@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -102,6 +103,8 @@ struct match_struct {
     sip_t* sip;
     double* indexrdls;
     int nindexrdls;
+
+	bl* tagalong;
 
     // in arcsec.
     double index_jitter;

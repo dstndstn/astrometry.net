@@ -623,6 +623,24 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
                              (job->dec_center    != HUGE_VAL) &&
                              (job->search_radius != HUGE_VAL));
 
+	// tag-along columns
+	bp->rdls_tagalong_all = qfits_header_getboolean(hdr, "ANTAGALL", FALSE);
+	if (!bp->rdls_tagalong_all) {
+		n = 1;
+		while (1) {
+			char key[64];
+			char* val;
+			sprintf(key, "ANTAG%i", n);
+			val = fits_get_dupstring(hdr, key);
+			if (!val)
+				break;
+			if (!bp->rdls_tagalong)
+				bp->rdls_tagalong = sl_new(16);
+			sl_append_nocopy(bp->rdls_tagalong, val);
+			n++;
+		}
+	}
+
 	n = 1;
 	while (1) {
 		char key[64];

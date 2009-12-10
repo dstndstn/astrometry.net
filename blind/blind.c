@@ -70,6 +70,56 @@ static int compare_matchobjs(const void* v1, const void* v2);
 static void remove_duplicate_solutions(blind_t* bp);
 static void free_matchobj(MatchObj* mo);
 
+// A tag-along column for index rdls.
+struct tagalong {
+	tfits_type type;
+	int arraysize;
+	char* name;
+	char* units;
+	void* data;
+	// assigned by rdlist_add_tagalong_column
+	int colnum;
+};
+typedef struct tagalong tagalong_t;
+
+static bool grab_tagalong_data(startree_t* starkd, MatchObj* mo, blind_t* bp,
+							   const int* starinds, int N) {
+	fitstable_t* tagalong;
+	int i;
+	tagalong = startree_get_tagalong(starkd);
+	if (!tagalong) {
+		ERROR("Failed to find tag-along table in index");
+		return FALSE;
+	}
+	if (!mo->tagalong)
+		mo->tagalong = bl_new(16, sizeof(tagalong_t));
+
+	if (bp->rdls_tagalong_all) {
+		// retrieve all column names.
+		if (!bp->rdls_tagalong)
+			bp->rdls_tagalong = sl_new(16);
+		fitstable_get_fits_column_names(tagalong, bp->rdls_tagalong);
+	}
+	for (i=0; i<sl_size(bp->rdls_tagalong); i++) {
+		const char* col = sl_get(bp->rdls_tagalong, i);
+		tagalong_t tag;
+		if (fitstable_find_fits_column(tagalong, col, &(tag.units), &(tag.type), &(tag.arraysize))) {
+			ERROR("Failed to find column \"%s\" in index", col);
+			continue;
+		}
+		tag.data = fitstable_read_column_array_inds(tagalong, col, tag.type, starinds, N, NULL);
+		if (!tag.data) {
+			ERROR("Failed to read data for column \"%s\" in index", col);
+			continue;
+		}
+		tag.name = strdup(col);
+		tag.units = strdup(tag.units);
+		bl_append(mo->tagalong, &tag);
+	}
+	return TRUE;
+}
+
+
 /** Index handling for in_parallel and not.
 
  Currently it supposedly could handle both "indexnames" and "indexes",
@@ -599,6 +649,7 @@ void blind_cleanup(blind_t* bp) {
 	pl_free(bp->indexes);
 	sl_free2(bp->verify_wcsfiles);
 	bl_free(bp->verify_wcs_list);
+	sl_free2(bp->rdls_tagalong);
 
 	free(bp->cancelfname);
 	free(bp->fieldfname);
@@ -658,22 +709,36 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
     if (bp->do_tweak || bp->indexrdlsfname || bp->scamp_fname) {
         int nstars;
         double* radec = NULL;
+		int* starinds = NULL;
+		int** getinds = NULL;
+
+		// If we're adding tag-along columns to the RDLS, grab the row numbers.
+		if (bp->indexrdlsfname && (bp->rdls_tagalong || bp->rdls_tagalong_all)) {
+			getinds = &starinds;
+		}
 
 		// FIXME - hmm, for tweak you *might* want to keep index
 		// objects slightly outside the field.
 		verify_get_index_stars(mo->center, square(mo->radius),
 							   sp->index->starkd, NULL, &(mo->wcstan),
 							   mo->wcstan.imagew, mo->wcstan.imageh,
-							   &radec, NULL, NULL, &nstars);
+							   &radec, NULL, getinds, &nstars);
 
         if (bp->do_tweak)
             mo->sip = tweak(bp, &(mo->wcstan), radec, nstars);
 
-        // FIXME -- also gather mag, magerr, positional error ellipses...
         if (bp->indexrdlsfname || bp->scamp_fname) {
             // steal this array...
             mo->indexrdls = radec;
             mo->nindexrdls = nstars;
+
+			// FIXME -- add MAG, MAGERR, and positional errors for SCAMP catalog.
+
+			if (starinds) {
+				grab_tagalong_data(sp->index->starkd, mo, bp, starinds, nstars);
+				free(starinds);
+			}
+
         } else {
 			free(radec);
 		}
@@ -995,6 +1060,17 @@ static void free_matchobj(MatchObj* mo) {
         mo->indexrdls = NULL;
         mo->nindexrdls = 0;
     }
+	if (mo->tagalong) {
+		int i;
+		for (i=0; i<bl_size(mo->tagalong); i++) {
+			tagalong_t* tag = bl_access(mo->tagalong, i);
+			free(tag->name);
+			free(tag->units);
+			free(tag->data);
+		}
+		bl_free(mo->tagalong);
+		mo->tagalong = NULL;
+	}
 }
 
 static void remove_duplicate_solutions(blind_t* bp) {
@@ -1082,6 +1158,14 @@ static int write_solutions(blind_t* bp) {
                 qfits_header* hdr = rdlist_get_header(bp->indexrdls);
                 qfits_header_add(hdr, "FIELDID", mo->fieldname, "Name of this field", NULL);
             }
+			if (mo->tagalong) {
+				int j;
+				for (j=0; j<bl_size(mo->tagalong); j++) {
+					tagalong_t* tag = bl_access(mo->tagalong, i);
+					tag->colnum = rdlist_add_tagalong_column(bp->indexrdls, tag->type, tag->arraysize,
+															 tag->type, tag->name, tag->units);
+				}
+			}
             if (rdlist_write_header(bp->indexrdls)) {
                 logerr("Failed to write index RDLS field header.\n");
                 return -1;
@@ -1095,6 +1179,20 @@ static int write_solutions(blind_t* bp) {
                 logerr("Failed to write index RDLS entry.\n");
                 return -1;
             }
+
+			if (mo->tagalong) {
+				int j;
+				for (j=0; j<bl_size(mo->tagalong); j++) {
+					tagalong_t* tag = bl_access(mo->tagalong, i);
+					int sz = fits_get_atom_size(tag->type) * tag->arraysize;
+					if (rdlist_write_tagalong_column(bp->indexrdls, tag->colnum,
+													 0, mo->nindexrdls,
+													 tag->data, sz)) {
+						ERROR("Failed to write tag-along data column %s", tag->name);
+						return -1;
+					}
+				}
+			}
 
             rd_free_data(&rd);
 

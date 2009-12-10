@@ -63,6 +63,7 @@ char* an_canonicalize_file_name(const char* fn);
 
 // Are strings s1 and s2 equal?
 bool streq(const char* s1, const char* s2);
+bool strcaseeq(const char* s1, const char* s2);
 
 /*
  Copy data from "fin" to "fout", starting at offset "offset"

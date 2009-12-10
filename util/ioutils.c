@@ -207,6 +207,12 @@ bool streq(const char* s1, const char* s2) {
     return !strcmp(s1, s2);
 }
 
+bool strcaseeq(const char* s1, const char* s2) {
+    if (s1 == NULL || s2 == NULL)
+        return (s1 == s2);
+    return !strcasecmp(s1, s2);
+}
+
 int pipe_file_offset(FILE* fin, int offset, int length, FILE* fout) {
     char buf[1024];
     int i;

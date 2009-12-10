@@ -37,8 +37,10 @@
    xylist_write_header()
  
    // either:
-   xylist_write_one_row()
+   xylist_write_one_row() // repeatedly
+   // or:
    xylist_write_field()
+
    // optionally:
    xylist_write_tagalong_column()
 

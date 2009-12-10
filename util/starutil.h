@@ -177,6 +177,8 @@ Const inline double arcsec2dist(double arcInArcSec);
 // Degrees to distance on the unit sphere.
 Const inline double deg2dist(double arcInDegrees);
 
+Const inline double deg2distsq(double d);
+
 InlineDeclare Const double arcmin2dist(double arcmin);
 
 InlineDeclare Const double arcmin2distsq(double arcmin);
