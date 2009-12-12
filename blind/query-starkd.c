@@ -140,11 +140,12 @@ int main(int argc, char **argv) {
 	printf("\n");
 
 	for (i=0; i<N; i++) {
+		int j;
 		printf("%g, %g", radec[i*2+0], radec[i*2+1]);
 		if (getinds)
 			printf(", %i", inds[i]);
-		for (i=0; i<sl_size(tagdata); i++) {
-			double* data = pl_get(tagdata, i);
+		for (j=0; j<sl_size(tagdata); j++) {
+			double* data = pl_get(tagdata, j);
 			printf(", %g", data[i]);
 		}
 		printf("\n");
