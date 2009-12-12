@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -51,6 +52,26 @@ typedef struct startree_s startree_t;
 
 startree_t* startree_open(const char* fn);
 
+/**
+   Searches for stars within a radius of a point.
+
+ xyzcenter: double[3]: unit-sphere coordinates of point; see
+ starutil.h : radecdeg2xyzarr() to convert RA,Decs to this form.
+
+ radius2: radius-square on the unit sphere; see starutil.h :
+ deg2distsq() or arcsec2distsq().
+
+ xyzresults: if non-NULL, returns the xyz positions of the stars that
+ are found, in a newly-allocated array.
+
+ radecresults: if non-NULL, returns the RA,Dec positions (in degrees)
+ of the stars within range.
+
+ starinds: if non-NULL, returns the indices of stars within range.
+ This can be used to retrieve extra information about the stars, using
+ the 'startree_get_data_column()' function.
+ 
+ */
 void startree_search_for(const startree_t* s, const double* xyzcenter, double radius2,
 						 double** xyzresults, double** radecresults,
 						 int** starinds, int* nresults);

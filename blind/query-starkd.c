@@ -25,7 +25,7 @@
 #include "boilerplate.h"
 #include "starutil.h"
 
-static const char* OPTIONS = "hvr:d:R:t:";//T";
+static const char* OPTIONS = "hvr:d:R:t:I";//T";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
@@ -35,6 +35,7 @@ void printHelp(char* progname) {
 		   "    [-R <radius>] (deg)\n"
 		   "    [-t <tagalong-column>]\n"
 		   //"    [-T]: tag-along all\n"
+		   "    [-I]: print indices too\n"
 		   "    [-v]: +verbose\n"
 		   "\n", progname);
 }
@@ -54,7 +55,7 @@ int main(int argc, char **argv) {
 	int nmyargs;
 	double xyz[3];
 	double r2;
-
+	bool getinds = FALSE;
 	double* radec;
 	int* inds;
 	int N;
@@ -63,6 +64,9 @@ int main(int argc, char **argv) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'I':
+			getinds = TRUE;
+			break;
 		case 'r':
 			ra = atof(optarg);
 			break;
@@ -129,12 +133,16 @@ int main(int argc, char **argv) {
 
 	// Header
 	printf("# RA, Dec");
+	if (getinds)
+		printf(", index");
 	for (i=0; i<sl_size(tag); i++)
 		printf(", %s", sl_get(tag, i));
 	printf("\n");
 
 	for (i=0; i<N; i++) {
 		printf("%g, %g", radec[i*2+0], radec[i*2+1]);
+		if (getinds)
+			printf(", %i", inds[i]);
 		for (i=0; i<sl_size(tagdata); i++) {
 			double* data = pl_get(tagdata, i);
 			printf(", %g", data[i]);
