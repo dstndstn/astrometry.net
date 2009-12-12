@@ -611,16 +611,12 @@ static int write_one(fitstable_t* table, const void* struc, va_list ap) {
 
 int fitstable_write_struct(fitstable_t* table, const void* struc) {
 	va_list nil;
-	//if (!table->table)
-	//fitstable_create_table(table);
 	return write_one(table, struc, nil);
 }
 
 int fitstable_write_structs(fitstable_t* table, const void* struc, int stride, int N) {
 	int i;
 	char* s = (char*)struc;
-	//if (!table->table)
-	//fitstable_create_table(table);
 	for (i=0; i<N; i++) {
 		if (fitstable_write_struct(table, s)) {
 			return -1;

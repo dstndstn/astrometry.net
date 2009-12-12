@@ -58,7 +58,7 @@ int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
 		int nr = NB;
 		if (i+NB > N)
 			nr = N - i;
-		if (fitstable_read_structs(intab, buf, R, 0, nr)) {
+		if (fitstable_read_structs(intab, buf, R, i, nr)) {
 			ERROR("Failed to read tag-along data from catalog");
 			return -1;
 		}
