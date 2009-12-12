@@ -34,6 +34,7 @@
 #include <errors.h>
 #include <getopt.h>
 
+#include "boilerplate.h"
 #include "an-bool.h"
 #include "bl.h"
 #include "ioutils.h"
@@ -91,6 +92,7 @@ static an_option_t options[] = {
 };
 
 static void print_help(const char* progname, bl* opts) {
+	boilerplate_help_header(stdout);
 	printf("\nUsage:   %s [options]  [<image-file-1> <image-file-2> ...] [<xyls-file-1> <xyls-file-2> ...]\n"
            "\n"
            "You can specify http:// or ftp:// URLs instead of filenames.  The \"wget\" or \"curl\" program will be used to retrieve the URL.\n"
