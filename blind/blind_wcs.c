@@ -27,11 +27,11 @@
 #include "sip_qfits.h"
 #include "log.h"
 
-int blind_wcs_move_tangent_point(double* starxyz,
-								 double* fieldxy,
+int blind_wcs_move_tangent_point(const double* starxyz,
+								 const double* fieldxy,
 								 int N,
-								 double* crpix,
-								 tan_t* tanin,
+								 const double* crpix,
+								 const tan_t* tanin,
 								 tan_t* tanout) {
 	int i, j, k;
 	double field_cm[2] = {0, 0};
@@ -178,8 +178,8 @@ int blind_wcs_move_tangent_point(double* starxyz,
 
 
 
-int blind_wcs_compute(double* starxyz,
-                      double* fieldxy,
+int blind_wcs_compute(const double* starxyz,
+                      const double* fieldxy,
                       int N,
                       // output:
                       tan_t* tan,

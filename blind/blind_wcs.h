@@ -24,12 +24,19 @@
 #include "sip.h"
 #include "starkd.h"
 
-// TEST
-int blind_wcs_move_tangent_point(double* starxyz,
-								 double* fieldxy,
+/**
+ Move the tangent point to the given CRPIX, keeping the corresponding
+ stars in "starxyz" and "fieldxy" aligned.  It's assumed that "tanin"
+ contains a reasonably close WCS solution (eg, from
+ blind_wcs_compute).  The output is put in "tanout".  You might want
+ to iterate this process, though in my tests the adjustments in the
+ second iteration are very minor.
+ */
+int blind_wcs_move_tangent_point(const double* starxyz,
+								 const double* fieldxy,
 								 int N,
-								 double* crpix,
-								 tan_t* tanin,
+								 const double* crpix,
+								 const tan_t* tanin,
 								 tan_t* tanout);
 
 /*
@@ -43,15 +50,11 @@ int blind_wcs_move_tangent_point(double* starxyz,
  If "p_scale" is specified, the scale of the field will be placed in it.
  It is in units of degrees per pixel.
 */
-int blind_wcs_compute(double* starxyz,
-                      double* fieldxy,
+int blind_wcs_compute(const double* starxyz,
+                      const double* fieldxy,
                       int nobjs,
                       // output:
                       tan_t* wcstan,
                       double* p_scale);
-
-qfits_header* blind_wcs_get_header(tan_t* wcstan);
-
-qfits_header* blind_wcs_get_sip_header(sip_t* wcstan);
 
 #endif
