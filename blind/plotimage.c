@@ -77,19 +77,8 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 	xs = malloc(NX*NY * sizeof(double));
 	ys = malloc(NX*NY * sizeof(double));
 
-    printf("W=%i, gridsize=%g, W/gridsize=%g, NX=%i\n",
-           W, args->gridsize, W/args->gridsize, NX);
-    printf("H=%i, gridsize=%g, H/gridsize=%g, NY=%i\n",
-           H, args->gridsize, H/args->gridsize, NY);
-
 	NX = 1 + ceil(W / args->gridsize);
 	NY = 1 + ceil(H / args->gridsize);
-
-    i = NX-1;
-    j = NY-1;
-    printf("x range: 0 - %g -> %g\n", (i*args->gridsize), MIN(i * args->gridsize, W));
-    printf("y range: 0 - %g -> %g\n", (j*args->gridsize), MIN(j * args->gridsize, H));
-
 	cairo_pattern_set_filter(pat, CAIRO_FILTER_NEAREST);
 	for (j=0; j<NY; j++) {
 		double ra,dec;
@@ -99,7 +88,7 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			x = MIN(i * args->gridsize, W-1);
 			sip_pixelxy2radec(args->wcs, x, y, &ra, &dec);
 			ok = sip_radec2pixelxy(pargs->wcs, ra, dec, xs+j*NX+i, ys+j*NX+i);
-			printf("(%g,%g) -> (%g,%g)\n", x, y, xs[j*NX+i], ys[j*NX+i]);
+			//printf("(%g,%g) -> (%g,%g)\n", x, y, xs[j*NX+i], ys[j*NX+i]);
 		}
 	}
 	cairo_save(cairo);
@@ -139,36 +128,10 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 							  (xs[ba]-xs[aa])/(xhi-xlo),
 							  (ys[ba]-ys[aa])/(yhi-ylo),
 							  xs[0], ys[0]);
-
-            /*
-             printf("scale %g, %g; dxs %g, dx %g\n",
-             (xs[ab]-xs[aa])/(xhi-xlo),
-             (ys[ab]-ys[aa])/(yhi-ylo),
-             (xs[ab]-xs[aa]), (xhi-xlo));
-             */
 			cairo_matrix_invert(&mat);
 			cairo_pattern_set_matrix(pat, &mat);
 
 			cairo_fill(cairo);
-			//cairo_stroke(cairo);
-            /*
-             cairo_set_source(cairo, pat);
-             cairo_fill_preserve(cairo);
-             cairo_set_source_rgba(cairo, 1,0,0,0.5);
-             cairo_stroke(cairo);
-             */
-            /*
-            printf("(%g,%g)-(%g,%g)-(%g,%g)-(%g,%g)\n",
-                   xs[aa]+0.5*(xs[aa] >= midx ? 1 : -1),
-                   ys[aa]+0.5*(ys[aa] >= midy ? 1 : -1),
-                   xs[ab]+0.5*(xs[ab] >= midx ? 1 : -1),
-                   ys[ab]+0.5*(ys[ab] >= midy ? 1 : -1),
-                   xs[bb]+0.5*(xs[bb] >= midx ? 1 : -1),
-                   ys[bb]+0.5*(ys[bb] >= midy ? 1 : -1),
-                   xs[ba]+0.5*(xs[ba] >= midx ? 1 : -1),
-                   ys[ba]+0.5*(ys[ba] >= midy ? 1 : -1));
-             */
-
 		}
 	}
 	/* Grid:
