@@ -10,7 +10,7 @@ struct plotimage_args {
 	// FIXME -- alpha?
 
 	sip_t* wcs;
-	int gridsize;
+	double gridsize;
 
 	unsigned char* img;
 	int W;

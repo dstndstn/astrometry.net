@@ -72,25 +72,39 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 	pat = cairo_pattern_create_for_surface(thissurf);
 
 	assert(args->gridsize >= 1);
-	NX = ceil(W / (double)args->gridsize);
-	NY = ceil(H / (double)args->gridsize);
+	NX = 1 + ceil(W / args->gridsize);
+	NY = 1 + ceil(H / args->gridsize);
 	xs = malloc(NX*NY * sizeof(double));
 	ys = malloc(NX*NY * sizeof(double));
+
+    printf("W=%i, gridsize=%g, W/gridsize=%g, NX=%i\n",
+           W, args->gridsize, W/args->gridsize, NX);
+    printf("H=%i, gridsize=%g, H/gridsize=%g, NY=%i\n",
+           H, args->gridsize, H/args->gridsize, NY);
+
+	NX = 1 + ceil(W / args->gridsize);
+	NY = 1 + ceil(H / args->gridsize);
+
+    i = NX-1;
+    j = NY-1;
+    printf("x range: 0 - %g -> %g\n", (i*args->gridsize), MIN(i * args->gridsize, W));
+    printf("y range: 0 - %g -> %g\n", (j*args->gridsize), MIN(j * args->gridsize, H));
 
 	cairo_pattern_set_filter(pat, CAIRO_FILTER_NEAREST);
 	for (j=0; j<NY; j++) {
 		double ra,dec;
-		y = MIN(j * args->gridsize, H);
+		y = MIN(j * args->gridsize, H-1);
 		for (i=0; i<NX; i++) {
 			bool ok;
-			x = MIN(i * args->gridsize, W);
+			x = MIN(i * args->gridsize, W-1);
 			sip_pixelxy2radec(args->wcs, x, y, &ra, &dec);
 			ok = sip_radec2pixelxy(pargs->wcs, ra, dec, xs+j*NX+i, ys+j*NX+i);
-			//printf("(%g,%g) -> (%g,%g)\n", x, y, xs[j*NX+i], ys[j*NX+i]);
+			printf("(%g,%g) -> (%g,%g)\n", x, y, xs[j*NX+i], ys[j*NX+i]);
 		}
 	}
 	cairo_save(cairo);
 	cairo_set_source(cairo, pat);
+    //cairo_set_source_rgb(cairo, 1,0,0);
 	for (j=0; j<(NY-1); j++) {
 		for (i=0; i<(NX-1); i++) {
 			int aa = j*NX + i;
@@ -99,28 +113,62 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			int bb = aa + NX + 1;
             double midx = (xs[aa] + xs[ab] + xs[bb] + xs[ba])*0.25;
             double midy = (ys[aa] + ys[ab] + ys[bb] + ys[ba])*0.25;
+
+            double xlo,xhi,ylo,yhi;
+            ylo = MIN(j     * args->gridsize, H-1);
+            yhi = MIN((j+1) * args->gridsize, H-1);
+			xlo = MIN(i     * args->gridsize, W-1);
+			xhi = MIN((i+1) * args->gridsize, W-1);
+
             cairo_move_to(cairo,
-                          xs[aa]+0.5*(xs[aa] >= midx ? 1 : -1),
-                          ys[aa]+0.5*(ys[aa] >= midy ? 1 : -1));
+                          0.5 + xs[aa]+0.5*(xs[aa] >= midx ? 1 : -1),
+                          0.5 + ys[aa]+0.5*(ys[aa] >= midy ? 1 : -1));
             cairo_line_to(cairo,
-                          xs[ab]+0.5*(xs[ab] >= midx ? 1 : -1),
-                          ys[ab]+0.5*(ys[ab] >= midy ? 1 : -1));
+                          0.5 + xs[ab]+0.5*(xs[ab] >= midx ? 1 : -1),
+                          0.5 + ys[ab]+0.5*(ys[ab] >= midy ? 1 : -1));
             cairo_line_to(cairo,
-                          xs[bb]+0.5*(xs[bb] >= midx ? 1 : -1),
-                          ys[bb]+0.5*(ys[bb] >= midy ? 1 : -1));
+                          0.5 + xs[bb]+0.5*(xs[bb] >= midx ? 1 : -1),
+                          0.5 + ys[bb]+0.5*(ys[bb] >= midy ? 1 : -1));
             cairo_line_to(cairo,
-                          xs[ba]+0.5*(xs[ba] >= midx ? 1 : -1),
-                          ys[ba]+0.5*(ys[ba] >= midy ? 1 : -1));
+                          0.5 + xs[ba]+0.5*(xs[ba] >= midx ? 1 : -1),
+                          0.5 + ys[ba]+0.5*(ys[ba] >= midy ? 1 : -1));
 			cairo_close_path(cairo);
 			cairo_matrix_init(&mat,
-							  (xs[ab]-xs[aa])/args->gridsize,
-							  (ys[ab]-ys[aa])/args->gridsize,
-							  (xs[ba]-xs[aa])/args->gridsize,
-							  (ys[ba]-ys[aa])/args->gridsize,
+							  (xs[ab]-xs[aa])/(xhi-xlo),
+							  (ys[ab]-ys[aa])/(yhi-ylo),
+							  (xs[ba]-xs[aa])/(xhi-xlo),
+							  (ys[ba]-ys[aa])/(yhi-ylo),
 							  xs[0], ys[0]);
+
+            /*
+             printf("scale %g, %g; dxs %g, dx %g\n",
+             (xs[ab]-xs[aa])/(xhi-xlo),
+             (ys[ab]-ys[aa])/(yhi-ylo),
+             (xs[ab]-xs[aa]), (xhi-xlo));
+             */
 			cairo_matrix_invert(&mat);
 			cairo_pattern_set_matrix(pat, &mat);
+
 			cairo_fill(cairo);
+			//cairo_stroke(cairo);
+            /*
+             cairo_set_source(cairo, pat);
+             cairo_fill_preserve(cairo);
+             cairo_set_source_rgba(cairo, 1,0,0,0.5);
+             cairo_stroke(cairo);
+             */
+            /*
+            printf("(%g,%g)-(%g,%g)-(%g,%g)-(%g,%g)\n",
+                   xs[aa]+0.5*(xs[aa] >= midx ? 1 : -1),
+                   ys[aa]+0.5*(ys[aa] >= midy ? 1 : -1),
+                   xs[ab]+0.5*(xs[ab] >= midx ? 1 : -1),
+                   ys[ab]+0.5*(ys[ab] >= midy ? 1 : -1),
+                   xs[bb]+0.5*(xs[bb] >= midx ? 1 : -1),
+                   ys[bb]+0.5*(ys[bb] >= midy ? 1 : -1),
+                   xs[ba]+0.5*(xs[ba] >= midx ? 1 : -1),
+                   ys[ba]+0.5*(ys[ba] >= midy ? 1 : -1));
+             */
+
 		}
 	}
 	/* Grid:
@@ -252,7 +300,7 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 			}
 		}
 	} else if (streq(cmd, "image_grid")) {
-		args->gridsize = atoi(cmdargs);
+		args->gridsize = atof(cmdargs);
 	} else {
 		ERROR("Did not understand command \"%s\"", cmd);
 		return -1;
