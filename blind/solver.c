@@ -977,6 +977,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	if (sp->set_crpix) {
 		double crpix[2];
 		tan_t wcs2;
+		tan_t wcs3;
 		if (sp->set_crpix_center) {
 			crpix[0] = 1 + 0.5 * solver_field_width(sp);
 			crpix[1] = 1 + 0.5 * solver_field_height(sp);
@@ -984,9 +985,18 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 			crpix[0] = sp->crpix[0];
 			crpix[1] = sp->crpix[1];
 		}
+		printf("Original WCS:\n");
+		tan_print_to(&(mo->wcstan), stdout);
+		printf("\n");
 		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, crpix, &(mo->wcstan), &wcs2);
-		// ??
-		memcpy(&(mo->wcstan), &wcs2, sizeof(tan_t));
+		printf("Moved WCS:\n");
+		tan_print_to(&wcs2, stdout);
+		printf("\n");
+		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, crpix, &wcs2, &wcs3);
+		printf("Moved again WCS:\n");
+		tan_print_to(&wcs3, stdout);
+		printf("\n");
+		memcpy(&(mo->wcstan), &wcs3, sizeof(tan_t));
 	}
 
 	// If the user didn't supply a callback, or if the callback

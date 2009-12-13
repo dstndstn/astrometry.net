@@ -312,14 +312,26 @@ double sip_pixel_scale(const sip_t* sip) {
 	return tan_pixel_scale(&(sip->wcstan));
 }
 
+static void print_to(const tan_t* tan, FILE* f, char* type) {
+	fprintf(f,"%s Structure:\n", type);
+	fprintf(f,"  crval=(%g, %g)\n", tan->crval[0], tan->crval[1]);
+	fprintf(f,"  crpix=(%g, %g)\n", tan->crpix[0], tan->crpix[1]);
+	fprintf(f,"  CD = ( %12.5g   %12.5g )\n", tan->cd[0][0], tan->cd[0][1]);
+	fprintf(f,"       ( %12.5g   %12.5g )\n", tan->cd[1][0], tan->cd[1][1]);
+}
+
+void tan_print_to(const tan_t* tan, FILE* f) {
+	print_to(tan, f, "TAN");
+}
+
+void tan_print(const tan_t* tan) {
+	tan_print_to(tan, stderr);
+}
+
 void sip_print_to(const sip_t* sip, FILE* f) {
    double det,pixsc;
 
-	fprintf(f,"SIP Structure:\n");
-	fprintf(f,"  crval=(%g, %g)\n", sip->wcstan.crval[0], sip->wcstan.crval[1]);
-	fprintf(f,"  crpix=(%g, %g)\n", sip->wcstan.crpix[0], sip->wcstan.crpix[1]);
-	fprintf(f,"  CD = ( %12.5g   %12.5g )\n", sip->wcstan.cd[0][0], sip->wcstan.cd[0][1]);
-	fprintf(f,"       ( %12.5g   %12.5g )\n", sip->wcstan.cd[1][0], sip->wcstan.cd[1][1]);
+   print_to(&(sip->wcstan), f, "SIP");
 
 	if (sip->a_order > 0) {
 		int p, q;
