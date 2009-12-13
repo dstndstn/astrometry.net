@@ -105,13 +105,41 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			cairo_line_to(cairo, xs[ba], ys[ba]);
 			cairo_close_path(cairo);
 			// probably need the inverse of this...?
-			cairo_matrix_init(&mat,
-							  xs[ab]-xs[aa], ys[ab]-ys[aa],
-							  xs[ba]-xs[aa], ys[ba]-ys[aa],
-							  xs[aa], ys[aa]);
+			/*
+			 cairo_matrix_init(&mat,
+			 xs[ab]-xs[aa], ys[ab]-ys[aa],
+			 xs[ba]-xs[aa], ys[ba]-ys[aa],
+			 xs[aa], ys[aa]);
 			cairo_matrix_invert(&mat);
+			 */
+			//cairo_matrix_init_identity(&mat);
+
+			y = MIN(j * args->gridsize, H);
+			x = MIN(i * args->gridsize, W);
+
+			cairo_matrix_init(&mat,
+							  (xs[ab]-xs[aa])/args->gridsize,
+							  (ys[ab]-ys[aa])/args->gridsize,
+							  (xs[ba]-xs[aa])/args->gridsize,
+							  (ys[ba]-ys[aa])/args->gridsize,
+							  xs[0], ys[0]);
+			//0,0);
+							  //x/args->gridsize,
+							  //y/args->gridsize);
+							  //(xs[aa]-x)/args->gridsize,
+							  //(ys[aa]-y)/args->gridsize);
+							  //xs[aa]/args->gridsize, ys[aa]/args->gridsize);
+			printf("%g,%g\n", xs[aa], ys[aa]);
+			cairo_matrix_invert(&mat);
+			printf("matrix %g,%g,%g,%g\n",
+				   (xs[ab]-xs[aa])/args->gridsize,
+				   (ys[ab]-ys[aa])/args->gridsize,
+				   (xs[ba]-xs[aa])/args->gridsize,
+				   (ys[ba]-ys[aa])/args->gridsize);
+
 			cairo_pattern_set_matrix(pat, &mat);
-			cairo_paint(cairo);
+			cairo_fill(cairo);
+			//cairo_paint(cairo);
 		}
 	}
 
@@ -129,6 +157,26 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			cairo_close_path(cairo);
 			cairo_stroke(cairo);
 		}
+	}
+	{
+		int aa = 0;
+		int ab = 1;
+		int ba = NX;
+		int bb = NX + 1;
+		cairo_set_source_rgb(cairo, 0,1,0);
+		cairo_move_to(cairo, xs[aa], ys[aa]);
+		cairo_line_to(cairo, xs[ab], ys[ab]);
+		cairo_line_to(cairo, xs[bb], ys[bb]);
+		cairo_line_to(cairo, xs[ba], ys[ba]);
+		cairo_close_path(cairo);
+
+		cairo_move_to(cairo, 0, 0);
+		cairo_line_to(cairo, 0, args->gridsize);
+		cairo_line_to(cairo, args->gridsize, args->gridsize);
+		cairo_line_to(cairo, args->gridsize, 0);
+		cairo_close_path(cairo);
+
+		cairo_stroke(cairo);
 	}
 
 	free(xs);
