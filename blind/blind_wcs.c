@@ -27,6 +27,215 @@
 #include "sip_qfits.h"
 #include "log.h"
 
+int blind_wcs_move_tangent_point(double* starxyz,
+								 double* fieldxy,
+								 int N,
+								 double* crpix,
+								 tan_t* tanin,
+								 tan_t* tanout) {
+	/*
+	 // straightforwardly...
+	 int i;
+	 memcpy(tanout, tanin, sizeof(tan_t));
+	 tan_pixelxy2radec(tanin, crpix[0], crpix[1],
+	 tanout->crval+0, tanout->crval+1);
+	 tanout->crpix[0] = crpix[0];
+	 tanout->crpix[1] = crpix[1];
+	 printf("Image stars -- wcsin(field) -- wcsout(field):\n");
+	 for (i=0; i<N; i++) {
+	 double xyA[2];
+	 double xyB[2];
+	 tan_xyzarr2pixelxy(tanin, starxyz + i*3, xyA+0, xyA+1);
+	 tan_xyzarr2pixelxy(tanout, starxyz + i*3, xyB+0, xyB+1);
+	 printf("%g,%g   %g,%g   %g,%g\n", fieldxy[i*2+0], fieldxy[i*2+1],
+	 xyA[0], xyA[1], xyB[0], xyB[1]);
+	 }
+	 */
+
+	int i, j, k;
+	double field_cm[2] = {0, 0};
+	double cov[4] = {0, 0, 0, 0};
+	double R[4] = {0, 0, 0, 0};
+	double scale;
+	// projected star coordinates
+	double* p;
+	// relative field coordinates
+	double* f;
+	double pcm[2] = {0, 0};
+
+    gsl_matrix* A;
+    gsl_matrix* U;
+    gsl_matrix* V;
+    gsl_vector* S;
+    gsl_vector* work;
+    gsl_matrix_view vcov;
+    gsl_matrix_view vR;
+
+	double crxyz[3];
+
+	memcpy(tanout, tanin, sizeof(tan_t));
+
+	// Use original WCS to nail down reference point...
+	// you might actually want to let it slide around a bit!
+
+	tan_pixelxy2xyzarr(tanin, crpix[0], crpix[1], crxyz);
+
+	// -get field center-of-mass
+	for (i=0; i<N; i++) {
+		field_cm[0] += fieldxy[i*2 + 0];
+		field_cm[1] += fieldxy[i*2 + 1];
+	}
+	field_cm[0] /= (double)N;
+	field_cm[1] /= (double)N;
+
+	// -allocate and fill "p" and "f" arrays. ("projected" and "field")
+	p = malloc(N * 2 * sizeof(double));
+	f = malloc(N * 2 * sizeof(double));
+	j = 0;
+
+	for (i=0; i<N; i++) {
+		bool ok;
+		// -project the stars around crval
+		ok = star_coords(starxyz + i*3, crxyz, p + 2*i, p + 2*i + 1);
+		assert(ok);
+		// -grab the corresponding field coords
+		f[2*i+0] = fieldxy[2*i+0] - field_cm[0];
+		f[2*i+1] = fieldxy[2*i+1] - field_cm[1];
+	}
+
+	// -compute the center of mass of the projected stars and subtract it out.
+	for (i=0; i<N; i++) {
+		pcm[0] += p[2*i + 0];
+		pcm[1] += p[2*i + 1];
+	}
+	pcm[0] /= (double)N;
+	pcm[1] /= (double)N;
+	for (i=0; i<N; i++) {
+		p[2*i + 0] -= pcm[0];
+		p[2*i + 1] -= pcm[1];
+	}
+
+	// -compute the covariance between field positions and projected
+	//  positions of the corresponding stars.
+	for (i=0; i<N; i++)
+		for (j=0; j<2; j++)
+			for (k=0; k<2; k++)
+				cov[j*2 + k] += p[i*2 + k] * f[i*2 + j];
+
+	for (i=0; i<4; i++)
+        assert(isfinite(cov[i]));
+
+	// -run SVD
+    V = gsl_matrix_alloc(2, 2);
+    S = gsl_vector_alloc(2);
+    work = gsl_vector_alloc(2);
+    vcov = gsl_matrix_view_array(cov, 2, 2);
+    vR   = gsl_matrix_view_array(R, 2, 2);
+    A = &(vcov.matrix);
+    // The Jacobi version doesn't always compute an orthonormal U if S has zeros.
+    //gsl_linalg_SV_decomp_jacobi(A, V, S);
+    gsl_linalg_SV_decomp(A, V, S, work);
+    // the U result is written to A.
+    U = A;
+    gsl_vector_free(S);
+    gsl_vector_free(work);
+    // R = V U'
+    gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, V, U, 0.0, &(vR.matrix));
+    gsl_matrix_free(V);
+
+	for (i=0; i<4; i++)
+        assert(isfinite(R[i]));
+
+	// -compute scale: make the variances equal.
+	{
+		double pvar, fvar;
+		pvar = fvar = 0.0;
+		for (i=0; i<N; i++)
+			for (j=0; j<2; j++) {
+				pvar += square(p[i*2 + j]);
+				fvar += square(f[i*2 + j]);
+			}
+		scale = sqrt(pvar / fvar);
+	}
+
+	// -compute WCS parameters.
+
+	// this point is forced...
+	tanout->crpix[0] = crpix[0];
+	tanout->crpix[1] = crpix[1];
+
+	// this one we can wiggle around...
+	tan_pixelxy2radec(tanin, crpix[0], crpix[1],
+					  tanout->crval+0, tanout->crval+1);
+
+	////// FIXME -- we must have to compensate for pcm[] here.
+	/*
+	 tanout->crpix[0] = field_cm[0] + pcm[0];
+	 tanout->crpix[1] = field_cm[1] + pcm[1];
+	 */
+
+
+	scale = rad2deg(scale);
+	// The CD rows are reversed from R because star_coords and the Intermediate
+	// World Coordinate System consider x and y to be exchanged.
+	tanout->cd[0][0] = R[2] * scale; // CD1_1
+	tanout->cd[0][1] = R[3] * scale; // CD1_2
+	tanout->cd[1][0] = R[0] * scale; // CD2_1
+	tanout->cd[1][1] = R[1] * scale; // CD2_2
+
+    assert(isfinite(tanout->cd[0][0]));
+    assert(isfinite(tanout->cd[0][1]));
+    assert(isfinite(tanout->cd[1][0]));
+    assert(isfinite(tanout->cd[1][1]));
+
+	printf("field_cm %g, %g.\n", field_cm[0], field_cm[1]);
+	printf("pcm %g, %g\n", pcm[0], pcm[1]);
+	{
+		double ix,iy;
+		double dx,dy;
+		double dxyz[3];
+		double dra,ddec;
+		tan_pixelxy2iwc(tanout, field_cm[0], field_cm[1], &ix, &iy);
+		printf("iwc of field_cm: %g, %g (deg)\n", ix, iy);
+		printf("pcm: %g, %g (deg)\n", rad2deg(pcm[0]), rad2deg(pcm[1]));
+
+		// crossed over due to differences in star_coords and IWC.
+		dx = ix - rad2deg(pcm[1]);
+		dy = iy - rad2deg(pcm[0]);
+
+		printf("dx,dy iwc: %g, %g (deg)\n", dx, dy);
+
+		dx *= -1.0;
+		dy *= -1.0;
+
+		tan_iwc2xyzarr(tanout, dx, dy, dxyz);
+
+		printf("crval: %g, %g\n", tanout->crval[0], tanout->crval[1]);
+		xyzarr2radecdeg(dxyz, &dra, &ddec);
+		printf("dra,ddec: %g, %g (deg)\n", dra, ddec);
+
+		printf("old crpix: %g, %g\n", tanin->crpix[0], tanin->crpix[1]);
+		printf("old crval: %g, %g\n", tanin->crval[0], tanin->crval[1]);
+
+		/*
+		 for (i=0; i<3; i++)
+		 crxyz[i] += dxyz[i];
+		 normalize_3(crxyz);
+		 xyzarr2radecdeg(crxyz, &dra, &ddec);
+		 printf("changed CRVAL from %g, %g to %g, %g\n",
+		 */
+		
+		tanout->crval[0] = dra;
+		tanout->crval[1] = ddec;
+	}
+
+	free(p);
+	free(f);
+    return 0;
+}
+
+
+
 int blind_wcs_compute(double* starxyz,
                       double* fieldxy,
                       int N,
@@ -140,8 +349,13 @@ int blind_wcs_compute(double* starxyz,
 
 	// -compute WCS parameters.
 	xyzarr2radecdegarr(star_cm, tan->crval);
+	////// FIXME!!  This can't be right -- pcm is in RADIANS!
+	//tan->crpix[0] = field_cm[0] + pcm[0];
+	//tan->crpix[1] = field_cm[1] + pcm[1];
 	tan->crpix[0] = field_cm[0] + pcm[0];
 	tan->crpix[1] = field_cm[1] + pcm[1];
+
+
 	scale = rad2deg(scale);
 	// The CD rows are reversed from R because star_coords and the Intermediate
 	// World Coordinate System consider x and y to be exchanged.

@@ -601,6 +601,14 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 	else if (pstr && streq(pstr, "POS"))
 		sp->parity = PARITY_NORMAL;
 
+	sp->set_crpix_center = qfits_header_getboolean(hdr, "ANCRPIXC", FALSE);
+	sp->crpix[0] = qfits_header_getint(hdr, "ANCRPIX1", sp->crpix[0]);
+	sp->crpix[1] = qfits_header_getint(hdr, "ANCRPIX2", sp->crpix[1]);
+	sp->set_crpix = (sp->set_crpix_center || 
+					 // were the values set?
+					 qfits_header_getstr(hdr, "ANCRPIX1") ||
+					 qfits_header_getstr(hdr, "ANCRPIX2"));
+
     if (qfits_header_getboolean(hdr, "ANTWEAK", default_tweak)) {
         int order = qfits_header_getint(hdr, "ANTWEAKO", default_tweakorder);
         bp->do_tweak = TRUE;

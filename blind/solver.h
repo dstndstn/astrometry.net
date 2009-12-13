@@ -117,6 +117,11 @@ struct solver_t {
 	// Number of quad matches to try or zero for no limit.
 	int maxmatches;
 
+	//
+	bool set_crpix;
+	bool set_crpix_center;
+	double crpix[2];
+
 	// MatchObj template: if non-NULL, whenever a match is found, we first memcpy()
 	// this template, then set the fields that describe the match.
 	MatchObj* mo_template;
@@ -190,6 +195,9 @@ typedef struct solver_t solver_t;
 solver_t* solver_new();
 void solver_set_default_values(solver_t* solver);
 void solver_free(solver_t*);
+
+double solver_field_width(solver_t* t);
+double solver_field_height(solver_t* t);
 
 // call this to reset everything associated with solving a particular field.
 void solver_new_field(solver_t*);

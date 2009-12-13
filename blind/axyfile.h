@@ -64,6 +64,10 @@
  ANQSFMIN  (float)  minimum quad size fraction (of image size)
  ANQSFMAX  (float)  maximum quad size fraction (of image size)
 
+ ANCRPIXC  (bool)   set CRPIX to image center
+ ANCRPIX1  (float)  set CRPIX to...
+ ANCRPIX2  (float)  set CRPIX to...
+
  ANERA     (float)  estimated RA (deg)
  ANEDEC    (float)  estimated DEC (deg)
  ANERAD    (float)  estimated field radius (deg)

@@ -47,7 +47,6 @@
 #include "codekd.h"
 #include "boilerplate.h"
 #include "fitsioutils.h"
-#include "blind_wcs.h"
 #include "verify.h"
 #include "index.h"
 #include "log.h"

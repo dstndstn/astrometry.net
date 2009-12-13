@@ -102,6 +102,11 @@ struct augment_xylist_s {
     char* sortcol;
 	char* bgcol;
 
+	// WCS reference point
+	bool set_crpix;
+	bool set_crpix_center;
+	double crpix[2];
+
     bool sort_ascending;
     bool resort;
 

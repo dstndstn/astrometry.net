@@ -104,6 +104,13 @@ static void get_field_ll_corner(solver_t* s, double* lx, double* ly) {
     *ly = s->field_miny;
 }
 
+double solver_field_width(solver_t* s) {
+	return s->field_maxx - s->field_minx;
+}
+double solver_field_height(solver_t* s) {
+	return s->field_maxy - s->field_miny;
+}
+
 static void set_center_and_radius(solver_t* solver, MatchObj* mo,
                            tan_t* tan, sip_t* sip) {
     double cx, cy, lx, ly;
@@ -863,8 +870,11 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 			debug("%s%i", (i?" ":""), star[i]);
 		debug("]\n;");
 
-		// FIXME - could compute approximate scale here, before running
-		// blind_wcs_compute
+		// FIXME -- could compute position here and compare with
+		//  --ra,dec,radius !!
+
+		// FIXME -- could compute approximate scale here (based on AB
+		// distance), before computing full WCS solution
 
 		// compute TAN projection from the matching quad alone.
 		if (blind_wcs_compute(starxyz, field, dimquads, &wcs, &scale)) {
@@ -962,6 +972,22 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 
 	update_timeused(sp);
 	mo->timeused = sp->timeused;
+
+	// DEBUG
+	if (sp->set_crpix) {
+		double crpix[2];
+		tan_t wcs2;
+		if (sp->set_crpix_center) {
+			crpix[0] = 1 + 0.5 * solver_field_width(sp);
+			crpix[1] = 1 + 0.5 * solver_field_height(sp);
+		} else {
+			crpix[0] = sp->crpix[0];
+			crpix[1] = sp->crpix[1];
+		}
+		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, crpix, &(mo->wcstan), &wcs2);
+		// ??
+		memcpy(&(mo->wcstan), &wcs2, sizeof(tan_t));
+	}
 
 	// If the user didn't supply a callback, or if the callback
 	// returns TRUE, consider it solved.

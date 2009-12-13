@@ -203,6 +203,12 @@ static an_option_t options[] = {
      "ignore existing WCS headers in FITS input images"},
 	{'g', "guess-scale",   no_argument, NULL,
      "try to guess the image scale from the FITS headers"},
+	{'>', "crpix-center",  no_argument, NULL,
+	 "set the WCS reference point to the image center"},
+	{'/', "crpix-x",  required_argument, "pix",
+	 "set the WCS reference point to the given position"},
+	{'\\', "crpix-y",  required_argument, "pix",
+	 "set the WCS reference point to the given position"},
 	{'T', "no-tweak",	   no_argument,	NULL,
      "don't fine-tune WCS by computing a SIP polynomial"},
 	{'t', "tweak-order",    required_argument, "int",
@@ -247,6 +253,18 @@ int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
     switch (argchar) {
+	case '>':
+		axy->set_crpix_center = TRUE;
+		axy->set_crpix = TRUE;
+		break;
+	case '/':
+		axy->crpix[0] = atof(optarg);
+		axy->set_crpix = TRUE;
+		break;
+	case '\\':
+		axy->crpix[1] = atof(optarg);
+		axy->set_crpix = TRUE;
+		break;
 	case '}':
 		sl_append(axy->tagalong, optarg);
 		break;
@@ -966,6 +984,15 @@ int augment_xylist(augment_xylist_t* axy,
         fits_header_add_double(hdr, "ANQSFMIN", axy->quadsize_min, "minimum quad size: fraction");
     if (axy->quadsize_max > 0.0)
         fits_header_add_double(hdr, "ANQSFMAX", axy->quadsize_max, "maximum quad size: fraction");
+
+	if (axy->set_crpix) {
+		if (axy->set_crpix_center) {
+			qfits_header_add(hdr, "ANCRPIXC", "T", "Set CRPIX to the image center.", NULL);
+		} else {
+			fits_header_add_double(hdr, "ANCRPIX1", axy->crpix[0], "Set CRPIX1 to this val.");
+			fits_header_add_double(hdr, "ANCRPIX2", axy->crpix[1], "Set CRPIX2 to this val.");
+		}
+	}
 
 	qfits_header_add(hdr, "ANTWEAK", (axy->tweak ? "T" : "F"), (axy->tweak ? "Tweak: yes please!" : "Tweak: no, thanks."), NULL);
 	if (axy->tweak && axy->tweakorder)
