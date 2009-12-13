@@ -66,6 +66,9 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 
 	cairoutils_rgba_to_argb32(img, W, H);
 	thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
+    // DEBUG - alpha=0.5
+    //for (i=0; i<(W*H); i++)
+    //img[i*4+3] = 128;
 	pat = cairo_pattern_create_for_surface(thissurf);
 
 	assert(args->gridsize >= 1);
@@ -94,10 +97,20 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			int ab = aa + 1;
 			int ba = aa + NX;
 			int bb = aa + NX + 1;
-			cairo_move_to(cairo, xs[aa], ys[aa]);
-			cairo_line_to(cairo, xs[ab], ys[ab]);
-			cairo_line_to(cairo, xs[bb], ys[bb]);
-			cairo_line_to(cairo, xs[ba], ys[ba]);
+            double midx = (xs[aa] + xs[ab] + xs[bb] + xs[ba])*0.25;
+            double midy = (ys[aa] + ys[ab] + ys[bb] + ys[ba])*0.25;
+            cairo_move_to(cairo,
+                          xs[aa]+0.5*(xs[aa] >= midx ? 1 : -1),
+                          ys[aa]+0.5*(ys[aa] >= midy ? 1 : -1));
+            cairo_line_to(cairo,
+                          xs[ab]+0.5*(xs[ab] >= midx ? 1 : -1),
+                          ys[ab]+0.5*(ys[ab] >= midy ? 1 : -1));
+            cairo_line_to(cairo,
+                          xs[bb]+0.5*(xs[bb] >= midx ? 1 : -1),
+                          ys[bb]+0.5*(ys[bb] >= midy ? 1 : -1));
+            cairo_line_to(cairo,
+                          xs[ba]+0.5*(xs[ba] >= midx ? 1 : -1),
+                          ys[ba]+0.5*(ys[ba] >= midy ? 1 : -1));
 			cairo_close_path(cairo);
 			cairo_matrix_init(&mat,
 							  (xs[ab]-xs[aa])/args->gridsize,
@@ -137,13 +150,11 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 	 cairo_line_to(cairo, xs[bb], ys[bb]);
 	 cairo_line_to(cairo, xs[ba], ys[ba]);
 	 cairo_close_path(cairo);
-
 	 cairo_move_to(cairo, 0, 0);
 	 cairo_line_to(cairo, 0, args->gridsize);
 	 cairo_line_to(cairo, args->gridsize, args->gridsize);
 	 cairo_line_to(cairo, args->gridsize, 0);
 	 cairo_close_path(cairo);
-
 	 cairo_stroke(cairo);
 	 }
 	 */
