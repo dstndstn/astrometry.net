@@ -60,7 +60,6 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 	cairo_pattern_t* pat;
 	cairo_matrix_t mat;
 	int i,j;
-	//double *ras, *decs;
 	double *xs, *ys;
 	int NX, NY;
 	double x,y;
@@ -82,15 +81,11 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 		for (i=0; i<NX; i++) {
 			bool ok;
 			x = MIN(i * args->gridsize, W);
-			//sip_pixelxy2radec(args->wcs, x, y, ras+j*NX+i, decs+j*NX+i);
 			sip_pixelxy2radec(args->wcs, x, y, &ra, &dec);
 			ok = sip_radec2pixelxy(pargs->wcs, ra, dec, xs+j*NX+i, ys+j*NX+i);
 			//printf("(%g,%g) -> (%g,%g)\n", x, y, xs[j*NX+i], ys[j*NX+i]);
 		}
 	}
-	//cairo_matrix_init_scale(&mat, 0.5, 0.5);
-	//cairo_pattern_set_matrix(pat, &mat);
-
 	cairo_save(cairo);
 	cairo_set_source(cairo, pat);
 	for (j=0; j<(NY-1); j++) {
@@ -104,80 +99,54 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			cairo_line_to(cairo, xs[bb], ys[bb]);
 			cairo_line_to(cairo, xs[ba], ys[ba]);
 			cairo_close_path(cairo);
-			// probably need the inverse of this...?
-			/*
-			 cairo_matrix_init(&mat,
-			 xs[ab]-xs[aa], ys[ab]-ys[aa],
-			 xs[ba]-xs[aa], ys[ba]-ys[aa],
-			 xs[aa], ys[aa]);
-			cairo_matrix_invert(&mat);
-			 */
-			//cairo_matrix_init_identity(&mat);
-
-			y = MIN(j * args->gridsize, H);
-			x = MIN(i * args->gridsize, W);
-
 			cairo_matrix_init(&mat,
 							  (xs[ab]-xs[aa])/args->gridsize,
 							  (ys[ab]-ys[aa])/args->gridsize,
 							  (xs[ba]-xs[aa])/args->gridsize,
 							  (ys[ba]-ys[aa])/args->gridsize,
 							  xs[0], ys[0]);
-			//0,0);
-							  //x/args->gridsize,
-							  //y/args->gridsize);
-							  //(xs[aa]-x)/args->gridsize,
-							  //(ys[aa]-y)/args->gridsize);
-							  //xs[aa]/args->gridsize, ys[aa]/args->gridsize);
-			printf("%g,%g\n", xs[aa], ys[aa]);
 			cairo_matrix_invert(&mat);
-			printf("matrix %g,%g,%g,%g\n",
-				   (xs[ab]-xs[aa])/args->gridsize,
-				   (ys[ab]-ys[aa])/args->gridsize,
-				   (xs[ba]-xs[aa])/args->gridsize,
-				   (ys[ba]-ys[aa])/args->gridsize);
-
 			cairo_pattern_set_matrix(pat, &mat);
 			cairo_fill(cairo);
-			//cairo_paint(cairo);
 		}
 	}
+	/* Grid:
+	 cairo_set_source_rgb(cairo, 1,0,0);
+	 for (j=0; j<(NY-1); j++) {
+	 for (i=0; i<(NX-1); i++) {
+	 int aa = j*NX + i;
+	 int ab = aa + 1;
+	 int ba = aa + NX;
+	 int bb = aa + NX + 1;
+	 cairo_move_to(cairo, xs[aa], ys[aa]);
+	 cairo_line_to(cairo, xs[ab], ys[ab]);
+	 cairo_line_to(cairo, xs[bb], ys[bb]);
+	 cairo_line_to(cairo, xs[ba], ys[ba]);
+	 cairo_close_path(cairo);
+	 cairo_stroke(cairo);
+	 }
+	 }
+	 {
+	 int aa = 0;
+	 int ab = 1;
+	 int ba = NX;
+	 int bb = NX + 1;
+	 cairo_set_source_rgb(cairo, 0,1,0);
+	 cairo_move_to(cairo, xs[aa], ys[aa]);
+	 cairo_line_to(cairo, xs[ab], ys[ab]);
+	 cairo_line_to(cairo, xs[bb], ys[bb]);
+	 cairo_line_to(cairo, xs[ba], ys[ba]);
+	 cairo_close_path(cairo);
 
-	cairo_set_source_rgb(cairo, 1,0,0);
-	for (j=0; j<(NY-1); j++) {
-		for (i=0; i<(NX-1); i++) {
-			int aa = j*NX + i;
-			int ab = aa + 1;
-			int ba = aa + NX;
-			int bb = aa + NX + 1;
-			cairo_move_to(cairo, xs[aa], ys[aa]);
-			cairo_line_to(cairo, xs[ab], ys[ab]);
-			cairo_line_to(cairo, xs[bb], ys[bb]);
-			cairo_line_to(cairo, xs[ba], ys[ba]);
-			cairo_close_path(cairo);
-			cairo_stroke(cairo);
-		}
-	}
-	{
-		int aa = 0;
-		int ab = 1;
-		int ba = NX;
-		int bb = NX + 1;
-		cairo_set_source_rgb(cairo, 0,1,0);
-		cairo_move_to(cairo, xs[aa], ys[aa]);
-		cairo_line_to(cairo, xs[ab], ys[ab]);
-		cairo_line_to(cairo, xs[bb], ys[bb]);
-		cairo_line_to(cairo, xs[ba], ys[ba]);
-		cairo_close_path(cairo);
+	 cairo_move_to(cairo, 0, 0);
+	 cairo_line_to(cairo, 0, args->gridsize);
+	 cairo_line_to(cairo, args->gridsize, args->gridsize);
+	 cairo_line_to(cairo, args->gridsize, 0);
+	 cairo_close_path(cairo);
 
-		cairo_move_to(cairo, 0, 0);
-		cairo_line_to(cairo, 0, args->gridsize);
-		cairo_line_to(cairo, args->gridsize, args->gridsize);
-		cairo_line_to(cairo, args->gridsize, 0);
-		cairo_close_path(cairo);
-
-		cairo_stroke(cairo);
-	}
+	 cairo_stroke(cairo);
+	 }
+	 */
 
 	free(xs);
 	free(ys);
