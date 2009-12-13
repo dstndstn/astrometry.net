@@ -37,6 +37,7 @@
 
  image_file <fn>
  image_format <format>
+ image_wcs <fn>    -- project the image through its WCS, then back through the plot_wcs.
  image
 
  Xy:

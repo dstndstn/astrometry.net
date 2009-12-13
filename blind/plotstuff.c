@@ -142,7 +142,7 @@ static const plotter_t builtin = { "plot", plot_builtin_init, plot_builtin_init2
 int parse_image_format(const char* fmt) {
 	if (streq(fmt, "png")) {
 		return PLOTSTUFF_FORMAT_PNG;
-	} else if (streq(fmt, "jpg")) {
+	} else if (streq(fmt, "jpg") || streq(fmt, "jpeg")) {
 		return PLOTSTUFF_FORMAT_JPG;
 	} else if (streq(fmt, "ppm")) {
 		return PLOTSTUFF_FORMAT_PPM;

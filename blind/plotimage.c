@@ -16,10 +16,13 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 #include <string.h>
+#include <math.h>
+#include <sys/param.h>
 
 #include "plotimage.h"
 #include "cairoutils.h"
 #include "ioutils.h"
+#include "sip_qfits.h"
 #include "log.h"
 #include "errors.h"
 
@@ -33,18 +36,104 @@ const plotter_t plotter_image = {
 
 void* plot_image_init(plot_args_t* plotargs) {
 	plotimage_t* args = calloc(1, sizeof(plotimage_t));
+	args->gridsize = 50;
 	return args;
 }
 
 void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H) {
+	 cairo_surface_t* thissurf;
+	 cairo_pattern_t* pat;
+	 cairoutils_rgba_to_argb32(img, W, H);
+	 thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
+	 pat = cairo_pattern_create_for_surface(thissurf);
+	 cairo_save(cairo);
+	 cairo_set_source(cairo, pat);
+	 cairo_paint(cairo);
+	 cairo_pattern_destroy(pat);
+	 cairo_surface_destroy(thissurf);
+	 cairo_restore(cairo);
+}
+
+void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
+					plot_args_t* pargs, plotimage_t* args) {
 	cairo_surface_t* thissurf;
 	cairo_pattern_t* pat;
+	cairo_matrix_t mat;
+	int i,j;
+	//double *ras, *decs;
+	double *xs, *ys;
+	int NX, NY;
+	double x,y;
+
 	cairoutils_rgba_to_argb32(img, W, H);
 	thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
 	pat = cairo_pattern_create_for_surface(thissurf);
+
+	assert(args->gridsize >= 1);
+	NX = ceil(W / (double)args->gridsize);
+	NY = ceil(H / (double)args->gridsize);
+	xs = malloc(NX*NY * sizeof(double));
+	ys = malloc(NX*NY * sizeof(double));
+
+	cairo_pattern_set_filter(pat, CAIRO_FILTER_NEAREST);
+	for (j=0; j<NY; j++) {
+		double ra,dec;
+		y = MIN(j * args->gridsize, H);
+		for (i=0; i<NX; i++) {
+			bool ok;
+			x = MIN(i * args->gridsize, W);
+			//sip_pixelxy2radec(args->wcs, x, y, ras+j*NX+i, decs+j*NX+i);
+			sip_pixelxy2radec(args->wcs, x, y, &ra, &dec);
+			ok = sip_radec2pixelxy(pargs->wcs, ra, dec, xs+j*NX+i, ys+j*NX+i);
+			//printf("(%g,%g) -> (%g,%g)\n", x, y, xs[j*NX+i], ys[j*NX+i]);
+		}
+	}
+	//cairo_matrix_init_scale(&mat, 0.5, 0.5);
+	//cairo_pattern_set_matrix(pat, &mat);
+
 	cairo_save(cairo);
 	cairo_set_source(cairo, pat);
-	cairo_paint(cairo);
+	for (j=0; j<(NY-1); j++) {
+		for (i=0; i<(NX-1); i++) {
+			int aa = j*NX + i;
+			int ab = aa + 1;
+			int ba = aa + NX;
+			int bb = aa + NX + 1;
+			cairo_move_to(cairo, xs[aa], ys[aa]);
+			cairo_line_to(cairo, xs[ab], ys[ab]);
+			cairo_line_to(cairo, xs[bb], ys[bb]);
+			cairo_line_to(cairo, xs[ba], ys[ba]);
+			cairo_close_path(cairo);
+			// probably need the inverse of this...?
+			cairo_matrix_init(&mat,
+							  xs[ab]-xs[aa], ys[ab]-ys[aa],
+							  xs[ba]-xs[aa], ys[ba]-ys[aa],
+							  xs[aa], ys[aa]);
+			cairo_matrix_invert(&mat);
+			cairo_pattern_set_matrix(pat, &mat);
+			cairo_paint(cairo);
+		}
+	}
+
+	cairo_set_source_rgb(cairo, 1,0,0);
+	for (j=0; j<(NY-1); j++) {
+		for (i=0; i<(NX-1); i++) {
+			int aa = j*NX + i;
+			int ab = aa + 1;
+			int ba = aa + NX;
+			int bb = aa + NX + 1;
+			cairo_move_to(cairo, xs[aa], ys[aa]);
+			cairo_line_to(cairo, xs[ab], ys[ab]);
+			cairo_line_to(cairo, xs[bb], ys[bb]);
+			cairo_line_to(cairo, xs[ba], ys[ba]);
+			cairo_close_path(cairo);
+			cairo_stroke(cairo);
+		}
+	}
+
+	free(xs);
+	free(ys);
+
 	cairo_pattern_destroy(pat);
 	cairo_surface_destroy(thissurf);
 	cairo_restore(cairo);
@@ -79,7 +168,7 @@ int plot_image_set_filename(plotimage_t* args, const char* fn) {
 }
 
 int plot_image_plot(const char* command,
-					cairo_t* cairo, plot_args_t* plotargs, void* baton) {
+					cairo_t* cairo, plot_args_t* pargs, void* baton) {
 	plotimage_t* args = (plotimage_t*)baton;
 	// Plot it!
 	if (!args->img) {
@@ -87,7 +176,12 @@ int plot_image_plot(const char* command,
 			return -1;
 		}
 	}
-	plot_image_rgba_data(cairo, args->img, args->W, args->H);
+
+	if (pargs->wcs && args->wcs) {
+		plot_image_wcs(cairo, args->img, args->W, args->H, pargs, args);
+	} else {
+		plot_image_rgba_data(cairo, args->img, args->W, args->H);
+	}
 	// ?
 	free(args->img);
 	args->img = NULL;
@@ -117,6 +211,20 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 	} else if (streq(cmd, "image_setsize")) {
 		if (plot_image_setsize(pargs, args))
 			return -1;
+	} else if (streq(cmd, "image_wcs")) {
+		if (args->wcs)
+			free(args->wcs);
+		if (streq(cmdargs, "none")) {
+			args->wcs = NULL;
+		} else {
+			args->wcs = sip_read_tan_or_sip_header_file_ext(cmdargs, 0, NULL, FALSE);
+			if (!args->wcs) {
+				ERROR("Failed to read WCS file \"%s\"", cmdargs);
+				return -1;
+			}
+		}
+	} else if (streq(cmd, "image_grid")) {
+		args->gridsize = atoi(cmdargs);
 	} else {
 		ERROR("Did not understand command \"%s\"", cmd);
 		return -1;
