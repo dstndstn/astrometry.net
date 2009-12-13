@@ -973,7 +973,6 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	update_timeused(sp);
 	mo->timeused = sp->timeused;
 
-	// DEBUG
 	if (sp->set_crpix) {
 		double crpix[2];
 		tan_t wcs2;
@@ -985,18 +984,26 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 			crpix[0] = sp->crpix[0];
 			crpix[1] = sp->crpix[1];
 		}
-		printf("Original WCS:\n");
-		tan_print_to(&(mo->wcstan), stdout);
-		printf("\n");
 		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, crpix, &(mo->wcstan), &wcs2);
-		printf("Moved WCS:\n");
-		tan_print_to(&wcs2, stdout);
-		printf("\n");
 		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, crpix, &wcs2, &wcs3);
-		printf("Moved again WCS:\n");
-		tan_print_to(&wcs3, stdout);
-		printf("\n");
 		memcpy(&(mo->wcstan), &wcs3, sizeof(tan_t));
+		/*
+		 Good test case:
+		 http://antwrp.gsfc.nasa.gov/apod/image/0912/Geminid2007_pacholka850wp.jpg
+		 solve-field --backend-config backend.cfg Geminid2007_pacholka850wp.xy \
+		 --scale-low 10 --scale-units degwidth -v --no-tweak --continue --new-fits none \
+		 -o 4 --crpix-center --depth 40-45
+
+		 printf("Original WCS:\n");
+		 tan_print_to(&(mo->wcstan), stdout);
+		 printf("\n");
+		 printf("Moved WCS:\n");
+		 tan_print_to(&wcs2, stdout);
+		 printf("\n");
+		 printf("Moved again WCS:\n");
+		 tan_print_to(&wcs3, stdout);
+		 printf("\n");
+		 */
 	}
 
 	// If the user didn't supply a callback, or if the callback
