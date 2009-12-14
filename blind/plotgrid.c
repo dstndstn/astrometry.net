@@ -57,15 +57,19 @@ int plot_grid_plot(const char* command,
 		ERROR("Need grid_rastep, grid_decstep");
 		return -1;
 	}
+	logverb("Image bounds: RA %g, %g, Dec %g, %g\n",
+			ramin, ramax, decmin, decmax);
 	for (ra = args->rastep * floor(ramin / args->rastep);
 		 ra <= args->rastep * ceil(ramax / args->rastep);
 		 ra += args->rastep) {
-		plot_radec_line(pargs, ra, decmin, ra, decmax);
+		plot_line_constant_ra(pargs, ra, decmin, decmax);
+		cairo_stroke(pargs->cairo);
 	}
 	for (dec = args->decstep * floor(decmin / args->decstep);
 		 dec <= args->decstep * ceil(decmax / args->decstep);
 		 dec += args->decstep) {
-		plot_radec_line(pargs, ramin, dec, ramax, dec);
+		plot_line_constant_dec(pargs, dec, ramin, ramax);
+		cairo_stroke(pargs->cairo);
 	}
 	return 0;
 }

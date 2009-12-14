@@ -71,7 +71,7 @@
 #include "errors.h"
 
 
-static const char* OPTIONS = "hW:H:o:JP";
+static const char* OPTIONS = "hvW:H:o:JP";
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
@@ -80,8 +80,9 @@ static void printHelp(char* progname) {
            "  [-P]              Write PPM output instead of PNG.\n"
 		   "  [-J]              Write PDF output.\n"
 		   "  [-W <width>   ]   Width of output image (default: data-dependent).\n"
-		   "  [-H <height>  ]   Height of output image (default: data-dependent).\n",
-           progname);
+		   "  [-H <height>  ]   Height of output image (default: data-dependent).\n"
+		   "  [-v]: +verbose\n"
+		   "\n", progname);
 }
 
 extern char *optarg;
@@ -99,6 +100,9 @@ int main(int argc, char *args[]) {
 
 	while ((argchar = getopt(argc, args, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'v':
+			loglvl++;
+			break;
         case 'o':
             pargs.outfn = optarg;
             break;
@@ -113,9 +117,6 @@ int main(int argc, char *args[]) {
 			break;
 		case 'H':
 			pargs.H = atoi(optarg);
-			break;
-		case 'v':
-			loglvl++;
 			break;
 		case 'h':
 			printHelp(progname);

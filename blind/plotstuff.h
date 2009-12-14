@@ -30,6 +30,9 @@ struct plot_args {
 	float lw;
 	int marker;
 	float markersize;
+
+	// step size in pixels for drawing curved lines in RA,Dec
+	float linestep;
 };
 typedef struct plot_args plot_args_t;
 
@@ -84,7 +87,7 @@ double plotstuff_pixel_scale(plot_args_t* pargs);
 int plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 					   double* x, double* y);
 
-int plot_radec_line(plot_args_t* pargs, double ra1, double dec1,
-					double ra2, double dec2);
+int plot_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2);
+int plot_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra2);
 
 #endif

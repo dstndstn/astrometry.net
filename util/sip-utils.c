@@ -241,6 +241,25 @@ void sip_get_radec_bounds(const sip_t* wcs, int stepsize,
                 ramax += 360.0;
         }
     }
+
+	// Check for poles...
+	{
+		double x,y;
+		bool ok;
+		ok = sip_radec2pixelxy(wcs, 0, 90, &x, &y);
+		if (ok && x >= 1 && x <= W && y >= 1 && y <= H) {
+			ramin = 0;
+			ramax = 360;
+			decmax = 90;
+		}
+		ok = sip_radec2pixelxy(wcs, 0, -90, &x, &y);
+		if (ok && x >= 1 && x <= W && y >= 1 && y <= H) {
+			ramin = 0;
+			ramax = 360;
+			decmin = -90;
+		}
+	}
+
     if (pramin) *pramin = ramin;
     if (pramax) *pramax = ramax;
     if (pdecmin) *pdecmin = decmin;

@@ -37,10 +37,59 @@
 #include "sip_qfits.h"
 #include "sip.h"
 #include "cairoutils.h"
+#include "starutil.h"
 #include "ioutils.h"
 #include "log.h"
 #include "errors.h"
 
+int plot_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2) {
+	double decstep;
+	double dec;
+	double s;
+	assert(pargs->wcs);
+	decstep = arcsec2deg(sip_pixel_scale(pargs->wcs) * pargs->linestep);
+	s = 1.0;
+	if (dec1 > dec2)
+		s = -1;
+	for (dec=dec1; (s*dec)<=(s*dec2); dec+=(decstep*s)) {
+		double x, y;
+		bool ok;
+		ok = sip_radec2pixelxy(pargs->wcs, ra, dec, &x, &y);
+		if (!ok)
+			continue;
+		if (dec == dec1)
+			cairo_move_to(pargs->cairo, x, y);
+		else
+			cairo_line_to(pargs->cairo, x, y);
+	}
+	return 0;
+}
+
+int plot_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra2) {
+	double rastep;
+	double ra;
+	double f;
+	double s;
+	assert(pargs->wcs);
+	rastep = arcsec2deg(sip_pixel_scale(pargs->wcs) * pargs->linestep);
+	f = cos(deg2rad(dec));
+	rastep /= MAX(0.1, f);
+	s = 1.0;
+	if (ra1 > ra2)
+		s = -1.0;
+	for (ra=ra1; (s*ra)<=(s*ra2); ra+=(rastep*s)) {
+		double x, y;
+		bool ok;
+		ok = sip_radec2pixelxy(pargs->wcs, ra, dec, &x, &y);
+		if (!ok)
+			continue;
+		if (ra == ra1)
+			cairo_move_to(pargs->cairo, x, y);
+		else
+			cairo_line_to(pargs->cairo, x, y);
+	}
+	return 0;
+}
 
 int parse_color(const char* color, float* r, float* g, float* b, float* a) {
 	if (a) *a = 1.0;
@@ -81,6 +130,7 @@ static void* plot_builtin_init(plot_args_t* args) {
 	args->lw = 1.0;
 	args->marker = CAIROUTIL_MARKER_CIRCLE;
 	args->markersize = 5.0;
+	args->linestep = 10;
 	return NULL;
 }
 
@@ -159,7 +209,7 @@ int plotstuff_set_color(plot_args_t* pargs, const char* name) {
 }
 
 /* All render layers must go in here */
-static plotter_t plotters[4];
+static plotter_t plotters[5];
 
 int plotstuff_init(plot_args_t* pargs) {
 	int i, NR;
@@ -168,6 +218,7 @@ int plotstuff_init(plot_args_t* pargs) {
 	plotters[1] = plotter_xy;
 	plotters[2] = plotter_image;
 	plotters[3] = plotter_annotations;
+	plotters[4] = plotter_grid;
 
 	NR = sizeof(plotters) / sizeof(plotter_t);
 	// First init
