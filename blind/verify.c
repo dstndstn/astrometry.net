@@ -522,6 +522,7 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 		testxy = malloc(NT * 2 * sizeof(double));
 		permutation_apply(perm, NT, vf->xy, testxy, 2*sizeof(double));
 		permutation_apply(perm, NT, sigma2s, sigma2s, sizeof(double));
+		effA = fieldW * fieldH;
 		debug("Number of test stars: %i\n", NT);
 	}
 
@@ -530,8 +531,6 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 		return;
     }
 
-	//assert(testxy);
-	//assert(sigma2s);
 	worst = -HUGE_VAL;
 	K = verify_star_lists(refxy, NR, testxy, sigma2s, NT, effA, distractors,
 						  logbail, logstoplooking, &besti, NULL, &theta, &worst);
