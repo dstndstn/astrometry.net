@@ -49,6 +49,9 @@ def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 			if k != knew:
 				logging.debug('Replacing illegal keyword %s by %s' % (k, knew))
 				# add the new header card
+				# it seems pyfits is not clever enough to notice this...
+				if len(knew) > 8:
+					knew = 'HIERARCH ' + knew
 				hdr.update(knew, cards[k].value, cards[k].comment, after=k)
 				# remove the old one.
 				del hdr[k]
