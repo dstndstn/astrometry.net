@@ -607,7 +607,6 @@ int main(int argc, char** args) {
     bool skip_solved = FALSE;
     bool makeplots = TRUE;
     char* me;
-    char* tempdir = "/tmp";
     bool verbose = FALSE;
     int loglvl = LOG_MSG;
     char* outbase = NULL;
@@ -1020,12 +1019,12 @@ int main(int argc, char** args) {
 		if (sf->redgreenfn) {
 			// -- index xylist
 			if (!sf->indxylsfn) {
-				sf->indxylsfn = create_temp_file("indxyls", tempdir);
+				sf->indxylsfn = create_temp_file("indxyls", axy->tempdir);
 				sl_append_nocopy(tempfiles, sf->indxylsfn);
 			}
 			// -- match file.
 			if (!axy->matchfn) {
-				axy->matchfn = create_temp_file("match", tempdir);
+				axy->matchfn = create_temp_file("match", axy->tempdir);
 				sl_append_nocopy(tempfiles, axy->matchfn);
 			}
 		}
@@ -1034,12 +1033,12 @@ int main(int argc, char** args) {
 		if (sf->indxylsfn) {
 			// -- wcs
 			if (!axy->wcsfn) {
-				axy->wcsfn = create_temp_file("wcs", tempdir);
+				axy->wcsfn = create_temp_file("wcs", axy->tempdir);
 				sl_append_nocopy(tempfiles, axy->wcsfn);
 			}
 			// -- rdls
 			if (!axy->rdlsfn) {
-				axy->rdlsfn = create_temp_file("rdls", tempdir);
+				axy->rdlsfn = create_temp_file("rdls", axy->tempdir);
 				sl_append_nocopy(tempfiles, axy->rdlsfn);
 			}
 		}
@@ -1084,7 +1083,7 @@ int main(int argc, char** args) {
 			axy->imagefn = infile;
 
 		if (axy->imagefn) {
-            ppmfn = create_temp_file("ppm", tempdir);
+            ppmfn = create_temp_file("ppm", axy->tempdir);
             sl_append_nocopy(tempfiles, ppmfn);
             axy->pnmfn = ppmfn;
             axy->force_ppm = TRUE;
@@ -1121,7 +1120,7 @@ int main(int argc, char** args) {
 		if (!backend_batch) {
 			run_backend(backendargs);
 			after_solved(axy, sf, makeplots, me, verbose,
-						 tempdir, tempdirs, tempfiles);
+						 axy->tempdir, tempdirs, tempfiles);
 		} else {
 			bl_append(batchaxy, axy);
 			bl_append(batchsf,  sf );
@@ -1155,7 +1154,7 @@ int main(int argc, char** args) {
 			solve_field_args_t* sf = bl_access(batchsf, i);
 
 			after_solved(axy, sf, makeplots, me, verbose,
-						 tempdir, tempdirs, tempfiles);
+						 axy->tempdir, tempdirs, tempfiles);
 			errors_print_stack(stdout);
 			errors_clear_stack();
 			logmsg("\n");
