@@ -161,6 +161,8 @@ static an_option_t options[] = {
      "FITS extension to read image from."},
 	{'2', "no-fits2fits",   no_argument, NULL,
      "don't sanitize FITS files; assume they're already valid"},
+	{';', "invert",         no_argument, NULL,
+	 "invert the image (for black-on-white images)"},
     {'z', "downsample",     required_argument, "int",
      "downsample the image by factor <int> before running source extraction"},
 	{']', "no-background-subtraction", no_argument, NULL,
@@ -253,6 +255,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
     switch (argchar) {
+	case ';':
+		axy->invert_image = TRUE;
+		break;
 	case '>':
 		axy->set_crpix_center = TRUE;
 		axy->set_crpix = TRUE;
@@ -759,6 +764,7 @@ int augment_xylist(augment_xylist_t* axy,
 			// The other params get set to defaults for float or u8 images.
 			sxyparams.nobgsub = axy->no_bg_subtraction;
 			sxyparams.sigma = axy->image_sigma;
+			sxyparams.invert = axy->invert_image;
 
 			// MAGIC 3: downsample by a factor of 2, up to 3 times.
 			if (image2xy_files(fitsimgfn, xylsfn, TRUE, axy->downsample, 3, axy->extension,

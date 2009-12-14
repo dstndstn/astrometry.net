@@ -208,6 +208,16 @@ int simplexy_run(simplexy_t* s) {
     logverb("simplexy: maxper=%d, maxnpeaks=%d, maxsize=%d, halfbox=%d\n",
             s->maxper, s->maxnpeaks, s->maxsize, s->halfbox);
 
+	if (s->invert) {
+		if (s->image) {
+			for (i=0; i<nx*ny; i++)
+				s->image[i] = -s->image[i];
+		} else {
+			for (i=0; i<nx*ny; i++)
+				s->image_u8[i] = 255 - s->image_u8[i];
+		}
+	}
+
 	if (s->nobgsub) {
 		if (s->image)
 			bgsub = s->image;

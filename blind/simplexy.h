@@ -62,6 +62,9 @@ struct simplexy_t {
 	// don't do background subtraction.
 	bool nobgsub;
 
+	// invert the image before processing (for black-on-white images)
+	bool invert;
+
 	// If set to non-zero, the given sigma value will be used;
 	// otherwise a value will be estimated.
     float sigma;
