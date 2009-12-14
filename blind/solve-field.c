@@ -465,7 +465,7 @@ static void after_solved(augment_xylist_t* axy,
 	char* fieldunits;
 
 	// create new FITS file...
-	if (axy->fitsimgfn && sf->newfitsfn) {
+	if (axy->fitsimgfn && sf->newfitsfn && file_exists(axy->wcsfn)) {
 		logmsg("Creating new FITS file \"%s\"...\n", sf->newfitsfn);
 		if (new_wcs(axy->fitsimgfn, axy->wcsfn, sf->newfitsfn, TRUE)) {
 			ERROR("Failed to create FITS image with new WCS headers");
