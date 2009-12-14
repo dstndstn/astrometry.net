@@ -501,7 +501,7 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 		debug("After removing stars in the quad: %i reference stars.\n", NR);
 	}
 
-	if (!NR || !NT) {
+	if (!NR) {
 		set_null_mo(mo);
 		return;
     }
@@ -516,7 +516,19 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 			set_null_mo(mo);
 			return;
 		}
+	} else {
+		NT = verify_get_test_stars(vf, mo, pix2, do_gamma, fake_match,
+								   &sigma2s, &perm);
+		testxy = malloc(NT * 2 * sizeof(double));
+		permutation_apply(perm, NT, vf->xy, testxy, 2*sizeof(double));
+		permutation_apply(perm, NT, sigma2s, sigma2s, sizeof(double));
+		debug("Number of test stars: %i\n", NT);
 	}
+
+	if (!NR || !NT) {
+		set_null_mo(mo);
+		return;
+    }
 
 	//assert(testxy);
 	//assert(sigma2s);
