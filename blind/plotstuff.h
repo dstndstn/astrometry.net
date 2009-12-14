@@ -84,4 +84,7 @@ double plotstuff_pixel_scale(plot_args_t* pargs);
 int plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 					   double* x, double* y);
 
+int plot_radec_line(plot_args_t* pargs, double ra1, double dec1,
+					double ra2, double dec2);
+
 #endif

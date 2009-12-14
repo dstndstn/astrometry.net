@@ -32,6 +32,7 @@
 #include "plotxy.h"
 #include "plotimage.h"
 #include "plotannotations.h"
+#include "plotgrid.h"
 
 #include "sip_qfits.h"
 #include "sip.h"

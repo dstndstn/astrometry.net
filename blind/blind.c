@@ -372,7 +372,7 @@ void blind_run(blind_t* bp) {
                 }
                 solver_add_index(sp, index);
 				sp->index = index;
-				logmsg("Verifying WCS with index %i of %i\n",  I + 1, sl_size(bp->indexnames));
+				logmsg("Verifying WCS with index %i of %i (%s)\n",  I + 1, Nindexes, meta->indexname);
 				// Do it!
 				solve_fields(bp, wcs);
 				// Clean up this index...

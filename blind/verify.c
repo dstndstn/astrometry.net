@@ -441,15 +441,15 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	double* fieldcenter;
 	double fieldr2;
 	// number of reference stars
-	int NR, NT;
-	double* refxy;
-    int* starids;
-	double* testxy;
-    double* sigma2s;
+	int NR = 0, NT = 0;
+	double* refxy = NULL;
+    int* starids = NULL;
+	double* testxy = NULL;
+    double* sigma2s = NULL;
 	double effA, K, worst;
 	int besti;
-	int* theta;
-	int* perm;
+	int* theta = NULL;
+	int* perm = NULL;
 
 	assert(mo->wcs_valid || sip);
 
@@ -464,8 +464,8 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	debug("Found %i reference stars.\n", NR);
 
 	// remove reference stars that are part of the quad.
-	k = 0;
 	if (!fake_match) {
+		k = 0;
 		for (i=0; i<NR; i++) {
 			bool inquad = FALSE;
 			for (j=0; j<mo->dimquads; j++)
@@ -498,26 +498,28 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 		 assert(k == NR - dimquads);
 		 */
 		NR = k;
+		debug("After removing stars in the quad: %i reference stars.\n", NR);
 	}
-	debug("After removing stars in the quad: %i reference stars.\n", NR);
 
 	if (!NR || !NT) {
 		set_null_mo(mo);
 		return;
     }
 
-	verify_apply_ror(refxy, starids, &NR, index_cutnside, mo,
-					 vf, pix2, distractors, fieldW, fieldH,
-					 do_gamma, fake_match,
-					 &testxy, &sigma2s, &NT, &perm, &effA, NULL, NULL);
+	if (!fake_match) {
+		verify_apply_ror(refxy, starids, &NR, index_cutnside, mo,
+						 vf, pix2, distractors, fieldW, fieldH,
+						 do_gamma, fake_match,
+						 &testxy, &sigma2s, &NT, &perm, &effA, NULL, NULL);
+		if (!NR) {
+			logerr("After applying ROR, NR = 0!\n");
+			set_null_mo(mo);
+			return;
+		}
+	}
 
-	if (!NR) {
-		logerr("After applying ROR, NR = 0!\n");
-		set_null_mo(mo);
-		return;
-    }
-
-	theta = NULL;
+	//assert(testxy);
+	//assert(sigma2s);
 	worst = -HUGE_VAL;
 	K = verify_star_lists(refxy, NR, testxy, sigma2s, NT, effA, distractors,
 						  logbail, logstoplooking, &besti, NULL, &theta, &worst);

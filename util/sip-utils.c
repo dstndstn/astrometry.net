@@ -247,4 +247,3 @@ void sip_get_radec_bounds(const sip_t* wcs, int stepsize,
     if (pdecmax) *pdecmax = decmax;
 }
 
-

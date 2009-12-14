@@ -19,7 +19,7 @@
 #include <math.h>
 #include <sys/param.h>
 
-#include "plotimage.h"
+#include "plotxxx.h"
 #include "cairoutils.h"
 #include "ioutils.h"
 #include "log.h"
@@ -58,7 +58,6 @@ int plot_xxx_command(const char* cmd, const char* cmdargs,
 
 void plot_xxx_free(plot_args_t* plotargs, void* baton) {
 	plotxxx_t* args = (plotxxx_t*)baton;
-	free(args->fn);
 	free(args);
 }
 
