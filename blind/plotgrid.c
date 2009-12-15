@@ -53,7 +53,7 @@ int plot_grid_plot(const char* command,
 	// Find image bounds in RA,Dec...
 	sip_get_radec_bounds(pargs->wcs, 50, &ramin, &ramax, &decmin, &decmax);
 	if (args->rastep == 0 || args->decstep == 0) {
-		// FIXME -- default
+		// FIXME -- choose defaults
 		ERROR("Need grid_rastep, grid_decstep");
 		return -1;
 	}
@@ -71,6 +71,65 @@ int plot_grid_plot(const char* command,
 		plot_line_constant_dec(pargs, dec, ramin, ramax);
 		cairo_stroke(pargs->cairo);
 	}
+
+	logmsg("Dolabel: %i\n", (int)args->dolabel);
+	if (args->dolabel) {
+		double cra, cdec;
+		if (args->ralabelstep == 0 || args->declabelstep == 0) {
+			// FIXME -- choose defaults
+			ERROR("Need grid_ralabelstep, grid_declabelstep");
+			return -1;
+		}
+		sip_get_radec_center(pargs->wcs, &cra, &cdec);
+		assert(cra >= ramin && cra <= ramax);
+		assert(cdec >= decmin && cdec <= decmax);
+		for (ra = args->ralabelstep * floor(ramin / args->ralabelstep);
+			 ra <= args->ralabelstep * ceil(ramax / args->ralabelstep);
+			 ra += args->ralabelstep) {
+			// where does this line leave the image?
+			// cdec is inside
+			// decmin is probably outside; 1.5 * decmin - 0.5 * cdec is definitely outside?
+			//double out = MAX(-90, 1.5 * decmin - 0.5 * cdec);
+			double out = MIN(90, 1.5 * decmax - 0.5 * cdec);
+			double in = cdec;
+			char label[32];
+			double x,y;
+			bool ok;
+			int i, N;
+			assert(!sip_is_inside_image(pargs->wcs, ra, out));
+			//assert(!sip_is_inside_image(pargs->wcs, ra, in));
+			i=0;
+			N = 10;
+			while (!sip_is_inside_image(pargs->wcs, ra, in)) {
+				if (i == N)
+					break;
+				in = decmin + (double)i/(double)(N-1) * (decmax-decmin);
+			}
+			if (!sip_is_inside_image(pargs->wcs, ra, in))
+				continue;
+			while (fabs(out - in) > 1e-6) {
+				// hahaha
+				double half;
+				bool isin;
+				half = (out + in) / 2.0;
+				isin = sip_is_inside_image(pargs->wcs, ra, half);
+				if (isin)
+					in = half;
+				else
+					out = half;
+			}
+			printf("in=%g, out=%g\n", in, out);
+			snprintf(label, sizeof(label), "%.1f", ra);
+			logmsg("Label \"%s\" at (%g,%g)\n", label, ra, in);
+			ok = sip_radec2pixelxy(pargs->wcs, ra, in, &x, &y);
+			cairo_move_to(pargs->cairo, x, y);
+			cairo_show_text(pargs->cairo, label);
+			cairo_stroke(pargs->cairo);
+		}
+		
+	}
+
+
 	return 0;
 }
 

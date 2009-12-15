@@ -24,6 +24,13 @@
 #include "starutil.h"
 #include "mathutil.h"
 
+bool sip_is_inside_image(const sip_t* wcs, double ra, double dec) {
+	double x,y;
+	if (!sip_radec2pixelxy(wcs, ra, dec, &x, &y))
+		return FALSE;
+	return (x >= 1 && x <= wcs->wcstan.imagew && y >= 1 && y <= wcs->wcstan.imageh);
+}
+
 int* sip_filter_stars_in_field(const sip_t* sip, const tan_t* tan,
 							   const double* xyz, const double* radec,
 							   int N, double** p_xy, int* inds, int* p_Ngood) {
