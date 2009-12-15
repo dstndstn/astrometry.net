@@ -25,6 +25,48 @@
 
 #include "ioutils.h"
 
+void test_split_long_string(CuTest* tc) {
+	sl* lst;
+	lst = split_long_string("", 60, 80, NULL);
+	CuAssertPtrNotNull(tc, lst);
+	CuAssertIntEquals(tc, 0, sl_size(lst));
+	sl_free2(lst);
+
+	lst = split_long_string("really long line     that will get broken into"
+							" several pieces", 6, 10, NULL);
+	CuAssertPtrNotNull(tc, lst);
+	//printf("%s\n", sl_join(lst, "<<\n"));
+	CuAssertIntEquals(tc, 7, sl_size(lst));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 0), "really"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 1), "long line"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 2), "that will"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 3), "get broken"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 4), "into"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 5), "several"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 6), "pieces"));
+	sl_free2(lst);
+	
+	// Arguable whether this is correct handling of multiple spaces...
+	lst = split_long_string("extremely long line     with ridiculously long words necessitating hyphenationizing (?!)",
+							6, 10, NULL);
+	CuAssertPtrNotNull(tc, lst);
+	//printf("%s\n", sl_join(lst, "<<\n"));
+	CuAssertIntEquals(tc, 12, sl_size(lst));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 0), "extre-"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 1), "mely long"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 2), "line"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 3), "with"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 4), "ridiculou-"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 5), "sly long"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 6), "words"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 7), "necessita-"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 8), "ting"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 9), "hyphenati-"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 10), "onizing"));
+	CuAssertIntEquals(tc, 1, streq(sl_get(lst, 11), "(?!)"));
+	sl_free2(lst);
+}
+
 void test_streq_1(CuTest* tc) {
     CuAssertIntEquals(tc, 1, streq(NULL, NULL));
     CuAssertIntEquals(tc, 0, streq(NULL, ""));

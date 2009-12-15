@@ -75,8 +75,8 @@ static an_option_t options[] = {
     {'K', "continue",       no_argument, NULL,
      "don't overwrite output files if they already exist; continue a previous run"},
     {'J', "skip-solved",    no_argument, NULL,
-     "skip input files for which the 'solved' output file already exists;\n"
-     "                  NOTE: this assumes single-field input files"},
+     "skip input files for which the 'solved' output file already exists;"
+     " NOTE: this assumes single-field input files"},
     {'N', "new-fits",    required_argument, "filename",
      "output filename of the new FITS file containing the WCS header; \"none\" to not create this file"},
     {'Z', "kmz",            required_argument, "filename",
@@ -101,8 +101,8 @@ static void print_help(const char* progname, bl* opts) {
     opts_print_help(opts, stdout, augment_xylist_print_special_opts, NULL);
     printf("\n");
     printf("Note that most output files can be disabled by setting the filename to \"none\".\n"
-           " (If you have a sick sense of humour and you really want to name your output file \"none\",\n"
-           "  you can use \"./none\" instead.)\n");
+           " (If you have a sick sense of humour and you really want to name your output\n"
+		   "  file \"none\", you can use \"./none\" instead.)\n");
     printf("\n\n");
 }
 

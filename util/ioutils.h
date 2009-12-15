@@ -118,6 +118,14 @@ sl* dir_get_contents(const char* path, sl* result, bool filesonly, bool recursiv
 int file_get_last_modified_string(const char* fn, const char* timeformat,
                                   bool utc, char* output, size_t outsize);
 
+/**
+ Splits the given "str" into words, so that the first line is at most
+ "firstlinew" long.  Subsequent lines have length <= "linew".  If
+ "lst" is non-NULL, the words are added into it.  Otherwise a new sl
+ is allocated.
+ */
+sl* split_long_string(const char* str, int firstlinew, int linew, sl* lst);
+
 // Split a string on the first instance of "splitstr".
 // Places the addresses of (newly-allocated) copies of the first and seconds parts of the string.
 // Returns 1 if the string is found.

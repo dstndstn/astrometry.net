@@ -83,16 +83,16 @@ void augment_xylist_print_special_opts(an_option_t* opt, bl* opts, int index,
                 "   OR -x / --xylist <xylist-input-file>  ): input file\n");
     } else if (!strcmp(opt->name, "scale-units")) {
         fprintf(fid, "%s",
-                "  -u / --scale-units <units>: in what units are the lower and upper bound specified?\n"
+                "  -u / --scale-units <units>: in what units are the lower and upper bounds?\n"
                 "     choices:  \"degwidth\"    : width of the image, in degrees (default)\n"
                 "               \"arcminwidth\" : width of the image, in arcminutes\n"
                 "               \"arcsecperpix\": arcseconds per pixel\n"
                 );
     } else if (!strcmp(opt->name, "depth")) {
         fprintf(fid, "%s",
-                "  -d / --depth <number or range>: number of field objects to look at, or range of numbers;\n"
-                "                                  1 is the brightest star, so \"-d 10\" or \"-d 1-10\" mean look at\n"
-                "                                  the top ten brightest stars only.\n");
+                "  -d / --depth <number or range>: number of field objects to look at, or range\n"
+				"          of numbers; 1 is the brightest star, so \"-d 10\" or \"-d 1-10\" mean look\n"
+                "          at the top ten brightest stars only.\n");
     } else if (!strcmp(opt->name, "xylist-only")) {
         fprintf(fid, "%s",
                 "The following options are valid for xylist inputs only:\n");
@@ -140,11 +140,11 @@ static an_option_t options[] = {
 	{'^', "use-sextractor", no_argument, NULL,
 	 "use SExtractor rather than built-in image2xy to find sources"},
 	{'&', "sextractor-config", required_argument, "filename",
-	 "use the given SExtractor config file (default: etc/sextractor.conf).\n"
-	 "    Note that CATALOG_NAME and CATALOG_TYPE values will be over-ridden by command-line values"},
+	 "use the given SExtractor config file (default: etc/sextractor.conf).  "
+	 "Note that CATALOG_NAME and CATALOG_TYPE values will be over-ridden by command-line values"},
 	{'*', "sextractor-path", optional_argument, "filename",
-	 "use the given path to the SExtractor executable.  Default: just 'sex', assumed to be in your PATH.\n"
-	 "    Note that you can give command-line args here too, eg: '--sextractor-path sex -DETECT_TYPE CCD'"},
+	 "use the given path to the SExtractor executable.  Default: just 'sex', assumed to be in your PATH."
+	 "  Note that you can give command-line args here too, eg: '--sextractor-path sex -DETECT_TYPE CCD'"},
     {'3', "ra",             required_argument, "degrees or hh:mm:ss",
      "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
     {'4', "dec",            required_argument, "degrees or [+-]dd:mm:ss",
@@ -155,8 +155,8 @@ static an_option_t options[] = {
     {'l', "cpulimit",       required_argument, "seconds",
      "give up solving after the specified number of seconds of CPU time"},
     {'r', "resort",         no_argument, NULL,
-     "sort the star brightnesses by background-subtracted flux; the default is to sort using a\n"
-     "    compromise between background-subtracted and non-background-subtracted flux"},
+     "sort the star brightnesses by background-subtracted flux; the default is to sort using a"
+     "compromise between background-subtracted and non-background-subtracted flux"},
     {'6', "extension",      required_argument, "int",
      "FITS extension to read image from."},
 	{'2', "no-fits2fits",   no_argument, NULL,

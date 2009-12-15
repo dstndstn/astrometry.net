@@ -44,6 +44,48 @@
 
 uint32_t ENDIAN_DETECTOR = 0x01020304;
 
+sl* split_long_string(const char* str, int firstlinew, int linew, sl* lst) {
+	const char* s;
+	char* added;
+	int lw = firstlinew;
+	if (!lst)
+		lst = sl_new(16);
+	assert(linew > 1);
+	assert(str);
+	s = str;
+	while (1) {
+		int brk = -1;
+		int i, N;
+		N = strlen(s);
+		if (!N)
+			break;
+		if (N <= lw) {
+			sl_append(lst, s);
+			break;
+		}
+		// scan for last space (' ') before "lw".
+		for (i=0; i<MIN(lw+1, N); i++) {
+			if (s[i] == ' ')
+				brk = i;
+		}
+		if (brk <= 1) {
+			// no space -- hard-break at "lw"; add hyphen.
+			added = sl_appendf(lst, "%.*s-", lw-1, s);
+			s += strlen(added)-1;
+		} else {
+			// trim trailing spaces...
+			while (brk >= 1 && s[brk-1] == ' ')
+				brk--;
+			added = sl_appendf(lst, "%.*s", brk, s);
+			s += strlen(added);
+			// trim spaces.
+			while (s && s[0]==' ') s++;
+		}
+		lw = linew;
+	}
+	return lst;
+}
+
 int split_string_once(const char* str, const char* splitstr,
 					  char** first, char** second) {
 	char* start = strstr(str, splitstr);

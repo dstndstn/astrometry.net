@@ -19,8 +19,10 @@
 #include <stdio.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <string.h>
 
 #include "an-opts.h"
+#include "ioutils.h"
 #include "bl.h"
 #include "log.h"
 
@@ -30,13 +32,26 @@ void opts_print_help(bl* opts, FILE* fid,
     int i;
     for (i=0; i<bl_size(opts); i++) {
         an_option_t* opt = bl_access(opts, i);
+		int nw = 0;
+		sl* words;
+		int j;
         if (opt->help) {
-            fprintf(fid, "  -%c / --%s", opt->shortopt, opt->name);
+			if ((opt->shortopt >= 'a' && opt->shortopt <= 'z') ||
+				(opt->shortopt >= 'A' && opt->shortopt <= 'Z') ||
+				(opt->shortopt >= '0' && opt->shortopt <= '9'))
+				nw += fprintf(fid, "  -%c / --%s", opt->shortopt, opt->name);
+			else
+				nw += fprintf(fid, "  --%s", opt->name);
             if (opt->has_arg == optional_argument)
-                fprintf(fid, " [<%s>]", opt->argname);
+                nw += fprintf(fid, " [<%s>]", opt->argname);
             else if (opt->has_arg == required_argument)
-                fprintf(fid, " <%s>", opt->argname);
-            fprintf(fid, ": %s\n", opt->help);
+                nw += fprintf(fid, " <%s>", opt->argname);
+			nw += fprintf(fid, ": ");
+			if (!opt->help)
+				continue;
+			words = split_long_string(opt->help, 80-nw, 70, NULL);
+			for (j=0; j<sl_size(words); j++)
+				fprintf(fid, "%s%s\n", (j==0 ? "" : "          "), sl_get(words, j));
         } else if (special_case)
             special_case(opt, opts, i, fid, extra);
     }
