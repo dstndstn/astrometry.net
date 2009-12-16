@@ -26,6 +26,11 @@
 #include "boilerplate.h"
 #include "fitstable.h"
 
+bool startree_has_tagalong_data(const fitstable_t* intab) {
+	// don't include RA,Dec.
+	return fitstable_n_fits_columns(intab) > 2;
+}
+
 int startree_write_tagalong_table(fitstable_t* intab, fitstable_t* outtab,
 								  const char* racol, const char* deccol) {
 	int i, R, NB, N;

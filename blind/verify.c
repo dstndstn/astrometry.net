@@ -452,6 +452,9 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	int* perm = NULL;
 
 	assert(mo->wcs_valid || sip);
+	assert(isfinite(logaccept));
+	assert(isfinite(logbail));
+	assert(isfinite(logstoplooking));
 
 	// center and radius of the field in xyz space:
     fieldcenter = mo->center;
@@ -888,6 +891,7 @@ double verify_star_lists(const double* refxys, int NR,
 			all_logodds[i] = logodds;
 
         if (logodds < logodds_bail) {
+			debug("  logodds %g less than bailout %g\n", logodds, logodds_bail);
 			if (all_logodds)
 				for (j=i+1; j<NT; j++)
 					all_logodds[j] = logodds;

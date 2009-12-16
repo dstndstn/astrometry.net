@@ -297,7 +297,7 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
 	kdtree_t* kd = NULL;
     fitsbin_t* fb = kdtree_fits_get_fitsbin(io);
 	qfits_header* header;
-    int rtn;
+    int rtn = 0;
     char* fn = fb->filename;
 
     kd = CALLOC(1, sizeof(kdtree_t));

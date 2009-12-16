@@ -102,6 +102,10 @@ void fits_header_add_int(qfits_header* hdr, const char* key, int val,
 void fits_header_add_double(qfits_header* hdr, const char* key, double val,
                             const char* comment);
 
+// Add if it doesn't exist, mod if it does.
+void fits_header_set_double(qfits_header* hdr, const char* key, double val,
+                            const char* comment);
+
 void fits_header_mod_int(qfits_header* hdr, const char* key, int val,
                          const char* comment);
 

@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -21,6 +22,7 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#include <sys/param.h>
 
 #include "kdtree.h"
 #include "starutil.h"
@@ -65,6 +67,33 @@ void print_help(char* progname) {
 
 extern char *optarg;
 extern int optind, opterr, optopt;
+
+struct foundquad {
+	unsigned int stars[DQMAX];
+	double codedist;
+	double logodds;
+	double pscale;
+	int quadnum;
+	MatchObj mo;
+};
+typedef struct foundquad foundquad_t;
+
+static int sort_fq_by_stars(const void* v1, const void* v2) {
+	const foundquad_t* fq1 = v1;
+	const foundquad_t* fq2 = v2;
+	int mx1=0, mx2=0;
+	int i;
+	for (i=0; i<DQMAX; i++) {
+		mx1 = MAX(mx1, fq1->stars[i]);
+		mx2 = MAX(mx2, fq2->stars[i]);
+	}
+	if (mx1 < mx2)
+		return -1;
+	if (mx1 == mx2)
+		return 0;
+	return 1;
+}
+
 
 int main(int argc, char** args) {
 	int c;
@@ -188,6 +217,7 @@ int main(int argc, char** args) {
 		int j;
 		qidxfile* qidx;
 		il* uniqquadlist;
+		bl* foundquads = NULL;
 
         // index stars that are inside the image.
 		il* starlist;
@@ -500,6 +530,7 @@ int main(int argc, char** args) {
 		// Find quads that are fully contained in the image.
 		logverb("Looking at quads built from stars with correspondences...\n");
 		corrfullquads = il_new(16);
+
 		for (j=0; j<il_size(corruniqquads); j++) {
 			int quad = il_get(corruniqquads, j);
 			int ind = il_index_of(corrquads, quad);
@@ -524,6 +555,8 @@ int main(int argc, char** args) {
 		}
 		logmsg("Found %i quads built from stars with correspondencs, fully contained in the field.\n", il_size(corrfullquads));
 
+		foundquads = bl_new(16, sizeof(foundquad_t));
+
 		for (j=0; j<il_size(corrfullquads); j++) {
 			unsigned int stars[dimquads];
 			int k;
@@ -532,6 +565,8 @@ int main(int argc, char** args) {
             double fieldcode[dimcodes];
             tan_t wcs;
             MatchObj mo;
+			foundquad_t fq;
+			double codedist;
 
 			int quad = il_get(corrfullquads, j);
 
@@ -564,12 +599,18 @@ int main(int argc, char** args) {
 
             codefile_compute_field_code(mo.quadpix, fieldcode, dimquads);
 
-            logmsg("  code distance: %g\n",
-                    sqrt(distsq(realcode, fieldcode, dimcodes)));
+			codedist = sqrt(distsq(realcode, fieldcode, dimcodes));
+            logmsg("  code distance: %g\n", codedist);
 
             blind_wcs_compute(mo.quadxyz, mo.quadpix, dimquads, &wcs, NULL);
 			wcs.imagew = W;
 			wcs.imageh = H;
+
+			{
+				double pscale = tan_pixel_scale(&wcs);
+				logmsg("  quad scale: %g arcsec/pix -> field size %g x %g arcmin\n",
+					   pscale, arcsec2arcmin(pscale * W), arcsec2arcmin(pscale * H));
+			}
 
 			logverb("Distances between corresponding stars:\n");
             for (k=0; k<il_size(corrstars); k++) {
@@ -587,7 +628,6 @@ int main(int argc, char** args) {
 
 				logverb("  correspondence: field star %i: distance %g pix\n", field, d);
 			}
-
 
 			logmsg("  running verify() with the found WCS:\n");
 
@@ -612,17 +652,30 @@ int main(int argc, char** args) {
 
                 verify_hit(indx->starkd, indx->meta.cutnside, &mo, NULL, vf, verpix2,
                            DEFAULT_DISTRACTOR_RATIO, W, H,
-                           log(-1e100), HUGE_VAL, HUGE_VAL, TRUE, FALSE);
+                           log(1e-100), HUGE_VAL, HUGE_VAL, TRUE, FALSE);
 
                 verify_field_free(vf);
             }
 
 			log_set_level(loglvl);
 
-
             logmsg("Verify log-odds %g (odds %g)\n", mo.logodds, exp(mo.logodds));
 
+
+			memset(&fq, 0, sizeof(foundquad_t));
+			memcpy(fq.stars, stars, dimquads);
+			fq.codedist = codedist;
+			fq.logodds = mo.logodds;
+			fq.pscale = tan_pixel_scale(&wcs);
+			fq.quadnum = quad;
+			memcpy(&(fq.mo), &mo, sizeof(MatchObj));
+			bl_append(foundquads, &fq);
 		}
+
+		// Sort the found quads by star index...
+		bl_sort(foundquads, sort_fq_by_stars);
+
+
 
 		il_free(fullquadlist);
 		il_free(uniqquadlist);

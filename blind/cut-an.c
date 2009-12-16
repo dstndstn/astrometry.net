@@ -157,7 +157,7 @@ void starlists_free(starlists_t* sl) {
 }
 
 bl* starlists_get(starlists_t* sl, int64_t hp, bool create) {
-	int ind;
+	int ind = -1;
 	if (!sl->dlists) {
 		if (sl->ihps)
 			ind = il_sorted_index_of(sl->ihps, hp);

@@ -1073,7 +1073,7 @@ int augment_xylist(augment_xylist_t* axy,
 		int j;
 
         fn = sl_get(axy->verifywcs, i);
-        if (!sip_read_header_file(fn, &sip)) {
+        if (!sip_read_header_file_ext(fn, axy->extension, &sip)) {
             ERROR("Failed to parse WCS header from file \"%s\"", fn);
             continue;
         }

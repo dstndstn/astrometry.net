@@ -206,6 +206,8 @@ int fitstable_append_to(fitstable_t* t, FILE* fid);
 
 void fitstable_copy_columns(const fitstable_t* src, fitstable_t* dest);
 
+int fitstable_n_fits_columns(const fitstable_t* tab);
+
 void fitstable_add_fits_columns_as_struct(fitstable_t* dest);
 
 // reading:

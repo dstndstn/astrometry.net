@@ -34,7 +34,7 @@
 int merge_index(quadfile* quad, codetree* code, startree_t* star,
 				const char* indexfn) {
     FILE* fout;
-	fitstable_t* tag;
+	fitstable_t* tag = NULL;
 
     fout = fopen(indexfn, "wb");
     if (!fout) {
@@ -73,7 +73,8 @@ int merge_index(quadfile* quad, codetree* code, startree_t* star,
 		return -1;
 	}
 
-	tag = startree_get_tagalong(star);
+	if (startree_has_tagalong(star))
+		tag = startree_get_tagalong(star);
 	if (tag) {
 		if (fitstable_append_to(tag, fout)) {
 			ERROR("Failed to write star kdtree tag-along data to index file %s", indexfn);

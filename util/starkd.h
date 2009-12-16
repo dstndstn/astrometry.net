@@ -97,6 +97,8 @@ double* startree_get_data_column_array(startree_t* s, const char* colname, int* 
 void startree_free_data_column(startree_t* s, double* d);
 
 
+bool startree_has_tagalong(startree_t* s);
+
 fitstable_t* startree_get_tagalong(startree_t* s);
 
 /*
@@ -114,6 +116,8 @@ char* startree_get_cut_band(const startree_t* s);
 int startree_get_cut_margin(const startree_t* s);
 
 double startree_get_jitter(const startree_t* s);
+
+void startree_set_jitter(startree_t* s, double jitter_arcsec);
 
 //uint64_t startree_get_starid(const startree_t* s, int ind);
 

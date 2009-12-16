@@ -373,6 +373,10 @@ void fitstable_add_write_column_struct(fitstable_t* tab,
                                 fits_type, name, units, FALSE);
 }
 
+int fitstable_n_fits_columns(const fitstable_t* tab) {
+	return tab->table->nc;
+}
+
 void fitstable_add_fits_columns_as_struct(fitstable_t* tab) {
 	int i;
 	int off = 0;
@@ -640,8 +644,8 @@ int fitstable_write_row(fitstable_t* table, ...) {
 int fitstable_write_one_column(fitstable_t* table, int colnum,
                                int rowoffset, int nrows,
                                const void* src, int src_stride) {
-    off_t foffset;
-    off_t start;
+    off_t foffset = 0;
+    off_t start = 0;
     int i;
     char* buf = NULL;
     fitscol_t* col;

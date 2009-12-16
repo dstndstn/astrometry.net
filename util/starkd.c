@@ -250,23 +250,24 @@ int startree_close(startree_t* s) {
 	return 0;
 }
 
-fitstable_t* startree_get_tagalong(startree_t* s) {
+static fitstable_t* get_tagalong(startree_t* s, bool report_errs) {
 	char* fn;
 	int next;
 	int i;
 	int ext = -1;
-	if (s->tagalong)
-		return s->tagalong;
+	fitstable_t* tag;
 	if (!s->tree->io)
 		return NULL;
 	fn = fitsbin_get_filename(s->tree->io);
 	if (!fn) {
-		ERROR("No filename");
+		if (report_errs)
+			ERROR("No filename");
 		return NULL;
 	}
-	s->tagalong = fitstable_open(fn);
-	if (!s->tagalong) {
-		ERROR("Failed to open FITS table from %s", fn);
+	tag = fitstable_open(fn);
+	if (!tag) {
+		if (report_errs)
+			ERROR("Failed to open FITS table from %s", fn);
 		return NULL;
 	}
 	next = qfits_query_n_ext(fn);
@@ -276,7 +277,8 @@ fitstable_t* startree_get_tagalong(startree_t* s) {
 		qfits_header* hdr;
 		hdr = qfits_header_readext(fn, i);
 		if (!hdr) {
-			ERROR("Failed to read FITS header for ext %i in %s", i, fn);
+			if (report_errs)
+				ERROR("Failed to read FITS header for ext %i in %s", i, fn);
 			return NULL;
 		}
 		type = fits_get_dupstring(hdr, "AN_FILE");
@@ -289,10 +291,24 @@ fitstable_t* startree_get_tagalong(startree_t* s) {
 		break;
 	}
 	if (ext == -1) {
-		ERROR("Failed to find a FITS header with the card AN_FILE = TAGALONG");
+		if (report_errs)
+			ERROR("Failed to find a FITS header with the card AN_FILE = TAGALONG");
 		return NULL;
 	}
-	fitstable_open_extension(s->tagalong, ext);
+	fitstable_open_extension(tag, ext);
+	return tag;
+}
+
+bool startree_has_tagalong(startree_t* s) {
+	if (s->tagalong)
+		return TRUE;
+	return (get_tagalong(s, FALSE) != NULL);
+}
+
+fitstable_t* startree_get_tagalong(startree_t* s) {
+	if (s->tagalong)
+		return s->tagalong;
+	s->tagalong = get_tagalong(s, TRUE);
 	return s->tagalong;
 }
 
@@ -380,6 +396,9 @@ double startree_get_jitter(const startree_t* s) {
 	return qfits_header_getdouble(s->header, "JITTER", 0.0);
 }
 
+void startree_set_jitter(startree_t* s, double jitter_arcsec) {
+	fits_header_set_double(s->header, "JITTER", jitter_arcsec, "Positional error of stars [arcsec]");
+}
 
 /*
  int startree_get_sweep(const startree_t* s, int ind) {

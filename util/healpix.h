@@ -315,6 +315,13 @@ void healpix_to_radecdegarr(int hp, int Nside, double dx, double dy,
 Const double healpix_side_length_arcmin(int Nside);
 
 /**
+ Computes the approximate Nside you need to get healpixes with side
+ length about "arcmin" arcminutes.  (inverse of
+ healpix_side_length_arcmin)
+ */
+double healpix_nside_for_side_length_arcmin(double arcmin);
+
+/**
    Finds the healpixes neighbouring the given healpix, placing them in the
    array "neighbour".  Returns the number of neighbours.  You must ensure
    that "neighbour" has 8 elements.

@@ -145,10 +145,7 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 	fitstable_close(catalog);
 
 	// startree
-	if (p->inmemory) {
-		startag = fitstable_open_in_memory();
-
-	} else {
+	if (!p->inmemory) {
 		skdtfn = create_temp_file("skdt", p->tempdir);
 		sl_append_nocopy(tempfiles, skdtfn);
 
@@ -174,6 +171,10 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 			return -1;
 		}
 
+		if (p->jitter > 0.0) {
+			startree_set_jitter(starkd, p->jitter);
+		}
+
 		if (!p->inmemory) {
 			logverb("Writing star kdtree to %s\n", skdtfn);
 			if (startree_write_to_file(starkd, skdtfn)) {
@@ -181,30 +182,34 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 				return -1;
 			}
 			startree_close(starkd);
-
-			startag = fitstable_open_for_appending(skdtfn);
-			if (!startag) {
-				ERROR("Failed to re-open star kdtree file %s for appending", skdtfn);
-				return -1;
-			}
 		}
 
-		logverb("Adding star kdtree tag-along data...\n");
-		if (startree_write_tagalong_table(uniform, startag, p->racol, p->deccol)) {
-			ERROR("Failed to write tag-along table");
-			return -1;
-		}
-		if (p->inmemory) {
-			if (fitstable_switch_to_reading(startag)) {
-				ERROR("Failed to switch star tag-along data to read-mode");
+		if (startree_has_tagalong_data(uniform)) {
+			logverb("Adding star kdtree tag-along data...\n");
+			if (p->inmemory) {
+				startag = fitstable_open_in_memory();
+			} else {
+				startag = fitstable_open_for_appending(skdtfn);
+				if (!startag) {
+					ERROR("Failed to re-open star kdtree file %s for appending", skdtfn);
+					return -1;
+				}
+			}
+			if (startree_write_tagalong_table(uniform, startag, p->racol, p->deccol)) {
+				ERROR("Failed to write tag-along table");
 				return -1;
 			}
-			starkd->tagalong = startag;
-
-		} else {
-			if (fitstable_close(startag)) {
-				ERROR("Failed to close star kdtree tag-along data");
-				return -1;
+			if (p->inmemory) {
+				if (fitstable_switch_to_reading(startag)) {
+					ERROR("Failed to switch star tag-along data to read-mode");
+					return -1;
+				}
+				starkd->tagalong = startag;
+			} else {
+				if (fitstable_close(startag)) {
+					ERROR("Failed to close star kdtree tag-along data");
+					return -1;
+				}
 			}
 		}
 	}
@@ -287,15 +292,17 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 			ERROR("Failed to switch quads2 to read-mode");
 			return -1;
 		}
-		startag2 = fitstable_open_in_memory();
-		startag2->table = fits_copy_table(startag->table);
-		startag2->table->nr = 0;
-		startag2->header = qfits_header_copy(startag->header);
-		if (unpermute_stars_tagalong(starkd, startag2)) {
-			ERROR("Failed to unpermute-stars tag-along data");
-			return -1;
+		if (startag) {
+			startag2 = fitstable_open_in_memory();
+			startag2->table = fits_copy_table(startag->table);
+			startag2->table->nr = 0;
+			startag2->header = qfits_header_copy(startag->header);
+			if (unpermute_stars_tagalong(starkd, startag2)) {
+				ERROR("Failed to unpermute-stars tag-along data");
+				return -1;
+			}
+			starkd2->tagalong = startag2;
 		}
-		starkd2->tagalong = startag2;
 
 		// unpermute-stars makes a shallow copy of the tree, so don't just startree_close(starkd)...
 		free(starkd->tree->perm);

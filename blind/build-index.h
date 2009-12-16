@@ -27,6 +27,8 @@ struct index_params {
 	// catalog:
 	const char* racol;
 	const char* deccol;
+	// in arcsec
+	double jitter;
 	// uniformization:
 	const char* sortcol; bool sortasc;
 	int bighp; int bignside;

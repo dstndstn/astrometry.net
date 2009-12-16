@@ -282,21 +282,21 @@ int unpermute_stars_files(const char* skdtinfn, const char* quadinfn,
 		return -1;
 	}
 
-	logmsg("Permuting tag-along table...\n");
-	tagin = startree_get_tagalong(treein);
-	if (tagin) {
-		tagout = fitstable_open_for_appending(skdtoutfn);
-
-		tagout->table = fits_copy_table(tagin->table);
-		tagout->table->nr = 0;
-
-		if (unpermute_stars_tagalong(treein, tagout)) {
-			ERROR("Failed to permute tag-along table");
-			return -1;
-		}
-		if (fitstable_close(tagout)) {
-			ERROR("Failed to close tag-along data");
-			return -1;
+	if (startree_has_tagalong(treein)) {
+		logmsg("Permuting tag-along table...\n");
+		tagin = startree_get_tagalong(treein);
+		if (tagin) {
+			tagout = fitstable_open_for_appending(skdtoutfn);
+			tagout->table = fits_copy_table(tagin->table);
+			tagout->table->nr = 0;
+			if (unpermute_stars_tagalong(treein, tagout)) {
+				ERROR("Failed to permute tag-along table");
+				return -1;
+			}
+			if (fitstable_close(tagout)) {
+				ERROR("Failed to close tag-along data");
+				return -1;
+			}
 		}
 	}
 

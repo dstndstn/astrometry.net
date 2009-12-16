@@ -343,6 +343,10 @@ Const double healpix_side_length_arcmin(int Nside) {
 				(12.0 * Nside * Nside));
 }
 
+double healpix_nside_for_side_length_arcmin(double arcmin) {
+	return sqrt(4.0*M_PI / (mysquare(arcmin2rad(arcmin)) * 12.0));
+}
+
 static Inline void swap(int* i1, int* i2) {
 	int tmp;
 	tmp = *i1;

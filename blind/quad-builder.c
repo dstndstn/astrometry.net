@@ -30,7 +30,7 @@ typedef struct quad quad;
 static void check_scale(quadbuilder_t* qb, pquad_t* pq) {
 	double *sA, *sB;
 	double s2;
-	double Bx, By;
+	double Bx=0, By=0;
 	double invscale;
 	double ABx, ABy;
 	bool ok;

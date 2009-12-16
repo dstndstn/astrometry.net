@@ -31,23 +31,13 @@
 #include "errors.h"
 #include "log.h"
 #include "build-index.h"
-#include "quad-utils.h"
 #include "wcs-xy2rd.h"
-#include "bl.h"
-#include "ioutils.h"
 #include "rdlist.h"
-#include "kdtree.h"
-#include "allquads.h"
 #include "sip.h"
 #include "sip_qfits.h"
-#include "codefile.h"
-#include "codekd.h"
-#include "unpermute-quads.h"
-#include "unpermute-stars.h"
-#include "merge-index.h"
-#include "fitsioutils.h"
+#include "healpix.h"
 
-const char* OPTIONS = "hvx:w:l:u:o:d:I:n:";
+const char* OPTIONS = "hvx:w:l:u:o:d:I:N:p:R:L:Mn:U:S:f:r:J:";
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -58,8 +48,19 @@ static void print_help(char* progname) {
 		   "      [-l <min-quad-size>]: minimum fraction of the image size (diagonal) to make quads (default 0.05)\n"
 		   "      [-u <max-quad-size>]: maximum fraction of the image size (diagonal) to make quads (default 1.0)\n"
 		   "      [-d <dimquads>] number of stars in a \"quad\" (default 4).\n"
-		   "      [-n <n-stars>]: use only the first N stars in the xylist.\n"
+		   "      [-N <number of healpixels]: number of healpix grid cells to put in the image\n"
 		   "      [-I <unique-id>] set the unique ID of this index\n"
+		   "      [-S]: sort column (default: assume already sorted)\n"
+		   "      [-f]: sort in descending order (eg, for FLUX); default ascending (eg, for MAG)\n"
+		   "      [-U]: healpix Nside for uniformization (default: same as -n)\n"
+		   "      [-n <sweeps>]    (ie, number of stars per fine healpix grid cell); default 10\n"
+		   "      [-r <dedup-radius>]: deduplication radius in arcseconds; default no deduplication\n"
+		   "      [-p <passes>]   number of rounds of quad-building (ie, # quads per healpix cell, default 1)\n"
+		   "      [-R <reuse-times>] number of times a star can be used.\n"
+		   "      [-L <max-reuses>] make extra passes through the healpixes, increasing the \"-r\" reuse\n"
+		   "                     limit each time, up to \"max-reuses\".\n"
+		   "      [-M]: in-memory (don't use temp files)\n"
+		   "      [-J <jitter-in-pixels>]: set positional error of index stars, in pixels (default 1)\n"
 		   "\n"
 		   "      [-v]: add verbosity.\n"
 	       "\n", progname);
@@ -80,7 +81,8 @@ int main(int argc, char** argv) {
 
 	int loglvl = LOG_MSG;
 	int i;
-	int nstars = 0;
+	int nhp = 10;
+	int Nside;
 
 	sl* tempfiles;
 	char* tempdir = "/tmp";
@@ -88,17 +90,48 @@ int main(int argc, char** argv) {
 	char* rdlsfn;
 
 	sip_t sip;
-	double diagpix, diag;
+	double diagpix, diag, pscale;
 
 	index_params_t myip;
 	index_params_t* ip = &myip;
+	double jitterpix = 1.0;
 
 	build_index_defaults(ip);
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'J':
+			jitterpix = atof(optarg);
+			break;
+		case 'L':
+			ip->Nloosen = atoi(optarg);
+			break;
+		case 'R':
+			ip->Nreuse = atoi(optarg);
+			break;
+		case 'p':
+			ip->passes = atoi(optarg);
+			break;
+		case 'M':
+			ip->inmemory = TRUE;
+			break;
+		case 'U':
+			ip->UNside = atoi(optarg);
+			break;
+		case 'S':
+			ip->sortcol = optarg;
+			break;
+		case 'f':
+			ip->sortasc = FALSE;
+			break;
 		case 'n':
-			nstars = atoi(optarg);
+			ip->sweeps = atoi(optarg);
+			break;
+		case 'r':
+			ip->dedup = atof(optarg);
+			break;
+		case 'N':
+			nhp = atoi(optarg);
 			break;
 		case 'v':
 			loglvl++;
@@ -168,9 +201,11 @@ int main(int argc, char** argv) {
 	}
 	// in pixels
 	diagpix = hypot(sip.wcstan.imagew, sip.wcstan.imageh);
+	// arcsec / pix
+	pscale = sip_pixel_scale(&sip);
 	// in arcsec
-	diag = diagpix * sip_pixel_scale(&sip);
-
+	diag = diagpix * pscale;
+	// in arcmin
 	ip->qlo = arcsec2arcmin(lowf * diag);
 	ip->qhi = arcsec2arcmin(highf * diag);
 
@@ -179,6 +214,21 @@ int main(int argc, char** argv) {
 		   diagpix * lowf, diagpix * highf, diag * lowf, diag * highf,
 		   ip->qlo, ip->qhi);
 
+	ip->jitter = pscale * jitterpix;
+
+	// number of healpixes:
+	logmsg("Image area: %g arcsec^2\n", sip.wcstan.imagew * sip.wcstan.imageh * pscale*pscale);
+	logmsg(" %g arcsec\n", sqrt(sip.wcstan.imagew * sip.wcstan.imageh * pscale*pscale));
+	logmsg(" %g arcmin\n", arcsec2arcmin(sqrt(sip.wcstan.imagew * sip.wcstan.imageh * pscale*pscale)));
+
+	logmsg("Desired hp area: %g arcsec^2\n", sip.wcstan.imagew * sip.wcstan.imageh * pscale*pscale / (double)nhp);
+	logmsg(" %g arcsec\n", sqrt(sip.wcstan.imagew * sip.wcstan.imageh * pscale*pscale / (double)nhp));
+	logmsg(" %g arcmin\n", arcsec2arcmin(sqrt(sip.wcstan.imagew * sip.wcstan.imageh * pscale*pscale / (double)nhp)));
+	Nside = (int)ceil(healpix_nside_for_side_length_arcmin(arcsec2arcmin(sqrt(sip.wcstan.imagew * sip.wcstan.imageh * pscale*pscale / (double)nhp))));
+	logverb("Chose healpix Nside=%i, side length %g arcmin\n", Nside, healpix_side_length_arcmin(Nside));
+	ip->Nside = Nside;
+	ip->scanoccupied = TRUE;
+	
 	if (build_index_files(rdlsfn, indexfn, ip)) {
 		exit(-1);
 	}

@@ -31,6 +31,19 @@ static double square(double x) {
     return x*x;
 }
 
+void test_side_length(CuTest* ct) {
+	double hp;
+	double len = healpix_side_length_arcmin(1);
+	CuAssertDblEquals(ct, 3517.9, len, 0.1);
+	hp = healpix_nside_for_side_length_arcmin(len);
+	CuAssertDblEquals(ct, 1.0, hp, 0.001);
+
+	len = healpix_side_length_arcmin(2);
+	CuAssertDblEquals(ct, 1758.969, len, 0.001);
+	hp = healpix_nside_for_side_length_arcmin(len);
+	CuAssertDblEquals(ct, 2.0, hp, 0.001);
+}
+
 static void add_plot_xyz_point(double* xyz) {
 	double ra,dec;
 	xyzarr2radecdeg(xyz, &ra, &dec);
@@ -393,7 +406,7 @@ void test_healpix_distance_to_radec(CuTest *ct) {
 	d = healpix_distance_to_radec(4, 1, 45+1, 0, xyz);
 	xyzarr2radecdeg(xyz, &ra, &dec);
     CuAssertDblEquals(ct, 45, ra, 0);
-    CuAssertDblEquals(ct, 0, dec, 1e-18);
+    CuAssertDblEquals(ct, 0, dec, 1e-8);
 
 	d = healpix_distance_to_radec(4, 1, 45+1, 0+1, xyz);
 	xyzarr2radecdeg(xyz, &ra, &dec);

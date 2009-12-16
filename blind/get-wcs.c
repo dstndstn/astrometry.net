@@ -34,10 +34,11 @@
 #include "fitsioutils.h"
 #include "starutil.h"
 
-static char* OPTIONS = "ho:";
+static char* OPTIONS = "ho:e:";
 
 static void printHelp(char* progname) {
     printf("%s <input-file>\n"
+		   "   [-e <extension>]\n"
            "   [-o <output-file>]\n"
            "\n", progname);
 }
@@ -52,6 +53,7 @@ int main(int argc, char *argv[]) {
     char* outfn = NULL;
     qfits_header* hdr;
     tan_t wcs;
+	int ext = 0;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
@@ -59,6 +61,9 @@ int main(int argc, char *argv[]) {
         case 'h':
             printHelp(progname);
             return 0;
+		case 'e':
+			ext = atoi(optarg);
+			break;
         case 'o':
             outfn = optarg;
             break;
@@ -72,7 +77,7 @@ int main(int argc, char *argv[]) {
     }
     infn = argv[optind];
 
-    hdr = qfits_header_read(infn);
+    hdr = qfits_header_readext(infn, ext);
     if (!hdr) {
         fprintf(stderr, "Failed to read FITS header.\n");
         exit(-1);
