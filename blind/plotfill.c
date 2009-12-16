@@ -40,15 +40,12 @@ void* plot_fill_init(plot_args_t* plotargs) {
 
 int plot_fill_plot(const char* command,
 					cairo_t* cairo, plot_args_t* pargs, void* baton) {
-	//plotfill_t* args = (plotfill_t*)baton;
-	cairo_set_rgba(cairo, pargs->rgba);
 	cairo_paint(cairo);
 	return 0;
 }
 
 int plot_fill_command(const char* cmd, const char* cmdargs,
 					   plot_args_t* pargs, void* baton) {
-	//plotfill_t* args = (plotfill_t*)baton;
 	ERROR("Did not understand command \"%s\"", cmd);
 	return -1;
 }

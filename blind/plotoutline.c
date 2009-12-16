@@ -65,11 +65,9 @@ int plot_outline_plot(const char* command,
 	plotoutline_t* args = (plotoutline_t*)baton;
 	struct walk_token token;
 	assert(args->stepsize > 0);
-	//assert(args->wcsfn);
 	assert(args->wcs);
 	assert(pargs->wcs);
 
-	cairo_set_rgba(cairo, pargs->rgba);
 	token.first = TRUE;
 	token.cairo = cairo;
 	token.wcs = pargs->wcs;
@@ -80,7 +78,6 @@ int plot_outline_plot(const char* command,
 }
 
 int plot_outline_set_wcs_file(plotoutline_t* args, const char* cmdargs) {
-	//free(args->wcsfn);
 	free(args->wcs);
 	args->wcs = sip_read_tan_or_sip_header_file_ext(cmdargs, 0, NULL, FALSE);
 	if (!args->wcs) {
@@ -88,7 +85,6 @@ int plot_outline_set_wcs_file(plotoutline_t* args, const char* cmdargs) {
 		return -1;
 	}
 	logverb("Read WCS file %s\n", cmdargs);
-	//args->wcsfn = strdup_safe(cmdargs);
 	return 0;
 }
 
@@ -110,7 +106,6 @@ int plot_outline_command(const char* cmd, const char* cmdargs,
 
 void plot_outline_free(plot_args_t* plotargs, void* baton) {
 	plotoutline_t* args = (plotoutline_t*)baton;
-	//free(args->wcsfn);
 	free(args);
 }
 
