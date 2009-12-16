@@ -104,21 +104,6 @@ int* sip_filter_stars_in_field(const sip_t* sip, const tan_t* tan,
 	return inds;
 }
 
-static double fmod_pos(double a, double b) {
-    double fm = fmod(a, b);
-    if (fm < 0.0)
-        fm += b;
-    return fm;
-}
-
-static double shift(double ra) {
-    return fmod_pos(ra + 180.0, 360.0);
-}
-
-static double unshift(double ra) {
-    return fmod_pos(ra - 180.0, 360.0);
-}
-
 void sip_get_radec_center(const sip_t* wcs,
                           double* p_ra, double* p_dec) {
     double px = (wcs->wcstan.imagew + 1.0) / 2.0;
@@ -184,92 +169,83 @@ void sip_get_field_size(const sip_t* wcs,
     }
 }
 
-void sip_get_radec_bounds(const sip_t* wcs, int stepsize,
-                          double* pramin, double* pramax,
-                          double* pdecmin, double* pdecmax) {
-    double ramin, ramax, decmin, decmax;
+void sip_walk_image_boundary(const sip_t* wcs, double stepsize,
+							 void (*callback)(const sip_t* wcs, double x, double y, double ra, double dec, void* token),
+							 void* token) {
     int i, side;
     // Walk the perimeter of the image in steps of stepsize pixels
-    // to find the RA,Dec min/max.
-    int W = wcs->wcstan.imagew;
-    int H = wcs->wcstan.imageh;
+    double W = wcs->wcstan.imagew;
+    double H = wcs->wcstan.imageh;
     {
-        int offsetx[] = { stepsize, W, W, 0 };
-        int offsety[] = { 0, 0, H, H };
-        int stepx[] = { +stepsize, 0, -stepsize, 0 };
-        int stepy[] = { 0, +stepsize, 0, -stepsize };
-        int Nsteps[] = { (W/stepsize)-1, H/stepsize, W/stepsize, H/stepsize };
-        double lastra;
-        bool wrap = FALSE;
-
-        /*
-         We handle RA wrap-around in a hackish way here: if we detect wrap-around,
-         we just shift the RA values by 180 degrees so that MIN() and MAX() still
-         work, then shift the resulting min and max values back by 180 at the end.
-         */
-
-        sip_pixelxy2radec(wcs, 0, 0, &lastra, &decmin);
-        ramin = ramax = lastra;
-        decmax = decmin;
+		double Xmin = 0.5;
+		double Xmax = W + 0.5;
+		double Ymin = 0.5;
+		double Ymax = H + 0.5;
+        double offsetx[] = { Xmin, Xmax, Xmax, Xmin };
+        double offsety[] = { Ymin, Ymin, Ymax, Ymax };
+        double stepx[] = { +stepsize, 0, -stepsize, 0 };
+        double stepy[] = { 0, +stepsize, 0, -stepsize };
+        int Nsteps[] = { ceil(W/stepsize), ceil(H/stepsize), ceil(W/stepsize), ceil(H/stepsize) };
 
         for (side=0; side<4; side++) {
             for (i=0; i<Nsteps[side]; i++) {
                 double ra, dec;
-                int x, y;
-                x = offsetx[side] + i * stepx[side];
-                y = offsety[side] + i * stepy[side];
+                double x, y;
+                x = MIN(Xmax, MAX(Xmin, offsetx[side] + i * stepx[side]));
+                y = MIN(Ymax, MAX(Ymin, offsety[side] + i * stepy[side]));
                 sip_pixelxy2radec(wcs, x, y, &ra, &dec);
-
-                decmin = MIN(decmin, dec);
-                decmax = MAX(decmax, dec);
-
-                // Did we just walk over the RA wrap-around line?
-                if (!wrap &&
-                    (((lastra < 90) && (ra > 270)) ||
-                     ((lastra > 270) && (ra < 90)))) {
-                    wrap = TRUE;
-                    ramin = shift(ramin);
-                    ramax = shift(ramax);
-                }
-
-                if (wrap)
-                    ra = shift(ra);
-
-                ramin = MIN(ramin, ra);
-                ramax = MAX(ramax, ra);
-
-                lastra = ra;
+				callback(wcs, x, y, ra, dec, token);
             }
         }
-        if (wrap) {
-            ramin = unshift(ramin);
-            ramax = unshift(ramax);
-            if (ramin > ramax)
-                ramax += 360.0;
-        }
     }
+}
+
+struct radecbounds {
+	double rac, decc;
+    double ramin, ramax, decmin, decmax;
+};
+
+static void radec_bounds_callback(const sip_t* wcs, double x, double y, double ra, double dec, void* token) {
+	struct radecbounds* b = token;
+	b->decmin = MIN(b->decmin, dec);
+	b->decmax = MAX(b->decmax, dec);
+	if (ra - b->rac > 180)
+		// wrap-around: racenter < 180, ra has gone < 0 but been wrapped around to > 180
+		ra -= 360;
+	if (b->rac - ra > 180)
+		// wrap-around: racenter > 180, ra has gone > 360 but wrapped around to > 0.
+		ra += 360;
+
+	b->ramin = MIN(b->ramin, ra);
+	b->ramax = MAX(b->ramax, ra);
+}
+
+void sip_get_radec_bounds(const sip_t* wcs, int stepsize,
+                          double* pramin, double* pramax,
+                          double* pdecmin, double* pdecmax) {
+	struct radecbounds b;
+
+	sip_get_radec_center(wcs, &(b.rac), &(b.decc));
+	b.ramin  = b.ramax = b.rac;
+	b.decmin = b.decmax = b.decc;
+	sip_walk_image_boundary(wcs, stepsize, radec_bounds_callback, &b);
 
 	// Check for poles...
-	{
-		double x,y;
-		bool ok;
-		ok = sip_radec2pixelxy(wcs, 0, 90, &x, &y);
-		if (ok && x >= 1 && x <= W && y >= 1 && y <= H) {
-			ramin = 0;
-			ramax = 360;
-			decmax = 90;
-		}
-		ok = sip_radec2pixelxy(wcs, 0, -90, &x, &y);
-		if (ok && x >= 1 && x <= W && y >= 1 && y <= H) {
-			ramin = 0;
-			ramax = 360;
-			decmin = -90;
-		}
+	// north pole
+	if (sip_is_inside_image(wcs, 0, 90)) {
+		b.ramin = 0;
+		b.ramax = 360;
+		b.decmax = 90;
+	}
+	if (sip_is_inside_image(wcs, 0, -90)) {
+		b.ramin = 0;
+		b.ramax = 360;
+		b.decmin = -90;
 	}
 
-    if (pramin) *pramin = ramin;
-    if (pramax) *pramax = ramax;
-    if (pdecmin) *pdecmin = decmin;
-    if (pdecmax) *pdecmax = decmax;
+    if (pramin) *pramin = b.ramin;
+    if (pramax) *pramax = b.ramax;
+    if (pdecmin) *pdecmin = b.decmin;
+    if (pdecmax) *pdecmax = b.decmax;
 }
 

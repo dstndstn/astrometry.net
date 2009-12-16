@@ -492,7 +492,7 @@ add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)
 plotstuff.o: plotstuff.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
-PLOTSTUFF := plotstuff.o plotxy.o plotimage.o plotannotations.o plotgrid.o
+PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o plotannotations.o plotgrid.o plotoutline.o
 ALL_OBJ += $(PLOTSTUFF)
 
 plotstuff: plotstuff-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)

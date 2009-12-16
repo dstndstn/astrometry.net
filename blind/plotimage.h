@@ -18,8 +18,6 @@ struct plotimage_args {
 };
 typedef struct plotimage_args plotimage_t;
 
-//plotimage_t* plotstuff_get_image(plot_args_t* pargs);
-
 void* plot_image_init(plot_args_t* args);
 
 int plot_image_command(const char* command, const char* cmdargs,

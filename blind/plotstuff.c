@@ -29,10 +29,12 @@
 #endif
 
 #include "plotstuff.h"
+#include "plotfill.h"
 #include "plotxy.h"
 #include "plotimage.h"
 #include "plotannotations.h"
 #include "plotgrid.h"
+#include "plotoutline.h"
 
 #include "sip_qfits.h"
 #include "sip.h"
@@ -209,16 +211,18 @@ int plotstuff_set_color(plot_args_t* pargs, const char* name) {
 }
 
 /* All render layers must go in here */
-static plotter_t plotters[5];
+static plotter_t plotters[7];
 
 int plotstuff_init(plot_args_t* pargs) {
 	int i, NR;
 
 	plotters[0] = builtin;
-	plotters[1] = plotter_xy;
-	plotters[2] = plotter_image;
-	plotters[3] = plotter_annotations;
-	plotters[4] = plotter_grid;
+	plotters[1] = plotter_fill;
+	plotters[2] = plotter_xy;
+	plotters[3] = plotter_image;
+	plotters[4] = plotter_annotations;
+	plotters[5] = plotter_grid;
+	plotters[6] = plotter_outline;
 
 	NR = sizeof(plotters) / sizeof(plotter_t);
 	// First init

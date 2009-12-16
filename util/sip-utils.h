@@ -43,9 +43,25 @@ int* sip_filter_stars_in_field(const sip_t* sip, const tan_t* tan,
 							   int N,
 							   double** xy, int* inds, int* Ngood);
 
+/**
+ Returns the bounds of the image in RA,Dec space, approximately, by
+ walking the boundary of the image in steps of size "stepsize".
+
+ Return values satisfy:
+   -90 <= decmin <= decmax <= 90
+   ramin <= ramax
+      ramin may be < 0, or ramax > 360, if the image straddles RA=0.
+
+ THIS WILL PROBABLY FAIL FOR IMAGES WIDER THAN 180 DEGREES.
+
+ */
 void sip_get_radec_bounds(const sip_t* wcs, int stepsize,
                           double* pramin, double* pramax,
                           double* pdecmin, double* pdecmax);
+
+void sip_walk_image_boundary(const sip_t* wcs, double stepsize,
+							 void (*callback)(const sip_t* wcs, double x, double y, double ra, double dec, void* token),
+							 void* token);
 
 // sets RA,Dec in degrees.
 void sip_get_radec_center(const sip_t* wcs,
