@@ -36,6 +36,7 @@ struct index_params {
 	int UNside;
 	// hpquads:
 	int Nside;
+	// quad size range, in arcmin
 	double qlo; double qhi;
 	int passes;
 	int Nreuse; int Nloosen;

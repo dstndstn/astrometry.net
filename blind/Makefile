@@ -375,8 +375,10 @@ merge-index: merge-index-main.o merge-index.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += merge-index-main.o
 
-local-index: local-index.o merge-index.o unpermute-quads.o unpermute-stars.o \
-		allquads.o quad-builder.o quad-utils.o codefile.o wcs-xy2rd.o \
+#allquads.o 
+local-index: local-index.o build-index.o codetree.o startree2.o codetree.o \
+		hpquads.o uniformize-catalog.o merge-index.o unpermute-quads.o unpermute-stars.o \
+		quad-builder.o quad-utils.o codefile.o wcs-xy2rd.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += local-index.o
 

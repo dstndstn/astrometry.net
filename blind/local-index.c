@@ -30,6 +30,7 @@
 #include "boilerplate.h"
 #include "errors.h"
 #include "log.h"
+#include "build-index.h"
 #include "quad-utils.h"
 #include "wcs-xy2rd.h"
 #include "bl.h"
@@ -77,9 +78,7 @@ int main(int argc, char** argv) {
 	double lowf = 0.1;
 	double highf = 1.0;
 
-	int dimquads = 4;
 	int loglvl = LOG_MSG;
-	int id = 0;
 	int i;
 	int nstars = 0;
 
@@ -87,14 +86,14 @@ int main(int argc, char** argv) {
 	char* tempdir = "/tmp";
 	int wcsext = 0;
 	char* rdlsfn;
-	char* skdtfn;
-	char* quadfn;
-	char* codefn;
-	char* ckdtfn;
-	char* skdt2fn;
-	char* quad2fn;
-	char* quad3fn;
-	char* ckdt2fn;
+
+	sip_t sip;
+	double diagpix, diag;
+
+	index_params_t myip;
+	index_params_t* ip = &myip;
+
+	build_index_defaults(ip);
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
@@ -105,10 +104,10 @@ int main(int argc, char** argv) {
 			loglvl++;
 			break;
 		case 'd':
-			dimquads = atoi(optarg);
+			ip->dimquads = atoi(optarg);
 			break;
 		case 'I':
-			id = atoi(optarg);
+			ip->indexid = atoi(optarg);
 			break;
 		case 'h':
 			print_help(argv[0]);
@@ -150,14 +149,6 @@ int main(int argc, char** argv) {
         exit(-1);
     }
 
-	if (!id)
-		logmsg("Warning: you should set the unique-id for this index (with -I).\n");
-
-	if (dimquads > DQMAX) {
-		ERROR("Quad dimension %i exceeds compiled-in max %i.\n", dimquads, DQMAX);
-		exit(-1);
-	}
-
     tempfiles = sl_new(4);
 
 	// wcs-xy2rd
@@ -168,103 +159,35 @@ int main(int argc, char** argv) {
 		ERROR("Failed to convert xylist to rdlist");
 		exit(-1);
 	}
-        
-	// startree
-	skdtfn = create_temp_file("skdt", tempdir);
-	sl_append_nocopy(tempfiles, skdtfn);
-	{
-		int Nleaf = 25;
-		int exttype  = KDT_EXT_DOUBLE;
-		int datatype = KDT_DATA_U32;
-		int treetype = KDT_TREE_U32;
-		int tt;
-		int buildopts = KD_BUILD_SPLIT;
-		int N, D;
-		startree_t* starkd;
-		rdlist_t* rdls;
-		rd_t* rd;
-		double* xyz;
-		double low[3];
-		double high[3];
-		int d;
-		rdls = rdlist_open(rdlsfn);
-		if (!rdls) {
-			ERROR("Failed to open RDLS");
-			exit(-1);
-		}
-		rd = rdlist_read_field(rdls, NULL);
-		if (!rd) {
-			ERROR("Failed to read RA,Decs");
-			exit(-1);
-		}
-		N = rd_n(rd);
-		if (nstars && nstars < N) {
-			N = nstars;
-		}
-		D = 3;
 
-		xyz = malloc(N * D * sizeof(double));
-		radecdeg2xyzarrmany(rd->ra, rd->dec, xyz, N);
-
-		rd_free(rd);
-		rdlist_close(rdls);
-
-		starkd = startree_new();
-		if (!starkd) {
-			ERROR("Failed to allocate startree");
-			exit(-1);
-		}
-		tt = kdtree_kdtypes_to_treetype(exttype, treetype, datatype);
-		starkd->tree = kdtree_new(N, D, Nleaf);
-		for (d=0; d<3; d++) {
-			low[d] = -1.0;
-			high[d] = 1.0;
-		}
-		kdtree_set_limits(starkd->tree, low, high);
-		logverb("Building star kdtree...\n");
-		starkd->tree = kdtree_build(starkd->tree, xyz, N, D, Nleaf, tt, buildopts);
-		if (!starkd->tree) {
-			ERROR("Failed to build star kdtree");
-			exit(-1);
-		}
-		starkd->tree->name = strdup(STARTREE_NAME);
-		logverb("Writing skdt to %s...\n", skdtfn);
-
-		if (startree_write_to_file(starkd, skdtfn)) {
-			ERROR("Failed to write star kdtree to %s", skdtfn);
-			exit(-1);
-		}
-		startree_close(starkd);
+	// compute quad size range.
+	// read WCS.
+	if (!sip_read_tan_or_sip_header_file_ext(wcsfn, wcsext, &sip, FALSE)) {
+		ERROR("Failed to read WCS file %s", wcsfn);
+		exit(-1);
 	}
+	// in pixels
+	diagpix = hypot(sip.wcstan.imagew, sip.wcstan.imageh);
+	// in arcsec
+	diag = diagpix * sip_pixel_scale(&sip);
 
-	// FIXME -- write a temporary skdt containing only the stars we
-	// want to index, then a "full" skdt with the stars we want to have
-	// available for verifying?
+	ip->qlo = arcsec2arcmin(lowf * diag);
+	ip->qhi = arcsec2arcmin(highf * diag);
 
-	quadfn = create_temp_file("quad", tempdir);
-	sl_append_nocopy(tempfiles, quadfn);
-	codefn = create_temp_file("code", tempdir);
-	sl_append_nocopy(tempfiles, codefn);
+	logmsg("Image is %i x %i pixels\n", (int)sip.wcstan.imagew, (int)sip.wcstan.imageh);
+	logmsg("Setting quad scale range to [%g, %g] pixels, [%g, %g] arcsec ([%g, %g] arcmin)\n",
+		   diagpix * lowf, diagpix * highf, diag * lowf, diag * highf,
+		   ip->qlo, ip->qhi);
+
+	if (build_index_files(rdlsfn, indexfn, ip)) {
+		exit(-1);
+	}
+        
 	// allquads
+	/*
 	{
 		allquads_t* aq;
-		double diagpix, diag;
-		sip_t sip;
 		qfits_header* hdr;
-
-		// read WCS.
-		if (!sip_read_tan_or_sip_header_file_ext(wcsfn, wcsext, &sip, FALSE)) {
-			ERROR("Failed to read WCS file %s", wcsfn);
-			exit(-1);
-		}
-		// in pixels
-		diagpix = hypot(sip.wcstan.imagew, sip.wcstan.imageh);
-		// in arcsec
-		diag = diagpix * sip_pixel_scale(&sip);
-
-		logmsg("Image is %i x %i pixels\n", (int)sip.wcstan.imagew, (int)sip.wcstan.imageh);
-		logmsg("Setting quad scale range to [%g, %g] pixels, [%g, %g] arcsec\n",
-			   diagpix * lowf, diagpix * highf, diag * lowf, diag * highf);
 
 		aq = allquads_init();
 		aq->dimquads = dimquads;
@@ -289,108 +212,7 @@ int main(int argc, char** argv) {
 		}
 		allquads_free(aq);
 	}
-
-	// codetree
-	ckdtfn = create_temp_file("ckdt", tempdir);
-	sl_append_nocopy(tempfiles, ckdtfn);
-	{
-		int Nleaf = 25;
-		codetree *codekd;
-		codefile* codes;
-		int exttype = KDT_EXT_DOUBLE;
-		int datatype = KDT_DATA_U16;
-		int treetype = KDT_TREE_U16;
-		int tt;
-		int buildopts = KD_BUILD_SPLIT;
-		int N, D;
-		qfits_header* chdr;
-		qfits_header* hdr;
-
-		codes = codefile_open(codefn);
-		if (!codes) {
-			ERROR("Failed to open code file %s", codefn);
-			exit(-1);
-		}
-		N = codes->numcodes;
-		logmsg("Read %i codes\n", N);
-		codekd = codetree_new();
-		if (!codekd) {
-			ERROR("Failed to allocate a codetree structure");
-			exit(-1);
-		}
-		chdr = codefile_get_header(codes);
-		hdr = codetree_header(codekd);
-		fits_header_add_int(hdr, "NLEAF", Nleaf, "Target number of points in leaves.");
-		fits_copy_header(chdr, hdr, "INDEXID");
-		fits_copy_header(chdr, hdr, "HEALPIX");
-		fits_copy_header(chdr, hdr, "HPNSIDE");
-		fits_copy_header(chdr, hdr, "CXDX");
-		fits_copy_header(chdr, hdr, "CXDXLT1");
-		fits_copy_header(chdr, hdr, "CIRCLE");
-
-		tt = kdtree_kdtypes_to_treetype(exttype, treetype, datatype);
-		D = codefile_dimcodes(codes);
-		codekd->tree = kdtree_new(N, D, Nleaf);
-		{
-			double low[D];
-			double high[D];
-			int d;
-			for (d=0; d<D; d++) {
-				low [d] = 0.5 - M_SQRT1_2;
-				high[d] = 0.5 + M_SQRT1_2;
-			}
-			kdtree_set_limits(codekd->tree, low, high);
-		}
-		logverb("Building code kdtree...\n");
-		codekd->tree = kdtree_build(codekd->tree, codes->codearray, N, D,
-									Nleaf, tt, buildopts);
-		if (!codekd->tree) {
-			ERROR("Failed to build code kdtree");
-			exit(-1);
-		}
-		codekd->tree->name = strdup(CODETREE_NAME);
-		logverb("Writing code kdtree to %s...\n", ckdtfn);
-		if (codetree_write_to_file(codekd, ckdtfn)) {
-			ERROR("Failed to write ckdt to %s", ckdtfn);
-			exit(-1);
-		}
-		codefile_close(codes);
-		kdtree_free(codekd->tree);
-		codekd->tree = NULL;
-		codetree_close(codekd);
-	}
-
-	// unpermute-stars
-	skdt2fn = create_temp_file("skdt2", tempdir);
-	sl_append_nocopy(tempfiles, skdt2fn);
-	quad2fn = create_temp_file("quad2", tempdir);
-	sl_append_nocopy(tempfiles, quad2fn);
-	logmsg("Unpermuting stars from %s and %s to %s and %s\n", skdtfn, quadfn, skdt2fn, quad2fn);
-	if (unpermute_stars(skdtfn, quadfn,
-						skdt2fn, quad2fn,
-						TRUE, FALSE, argv, argc)) {
-		ERROR("Failed to unpermute-stars");
-		exit(-1);
-	}
-
-	// unpermute-quads
-	ckdt2fn = create_temp_file("ckdt2", tempdir);
-	sl_append_nocopy(tempfiles, ckdt2fn);
-	quad3fn = create_temp_file("quad3", tempdir);
-	sl_append_nocopy(tempfiles, quad3fn);
-	logmsg("Unpermuting quads from %s and %s to %s and %s\n", quad2fn, ckdtfn, quad3fn, ckdt2fn);
-	if (unpermute_quads(quad2fn, ckdtfn,
-						quad3fn, ckdt2fn, argv, argc)) {
-		ERROR("Failed to unpermute-quads");
-		exit(-1);
-	}
-
-	// mergeindex
-	logmsg("Merging %s and %s and %s to %s\n", quad3fn, ckdt2fn, skdt2fn, indexfn);
-	if (merge_index(quad3fn, ckdt2fn, skdt2fn, indexfn)) {
-		ERROR("Failed to merge-index");
-		exit(-1);
-	}
+	 */
 
 	printf("Done.\n");
 	return 0;
