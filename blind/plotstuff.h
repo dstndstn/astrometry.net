@@ -72,6 +72,8 @@ int plotstuff_set_color(plot_args_t* pargs, const char* name);
 
 int plotstuff_set_marker(plot_args_t* pargs, const char* name);
 
+int plotstuff_set_size(plot_args_t* pargs, int W, int H);
+
 int
 ATTRIB_FORMAT(printf,2,3)
 plotstuff_run_commandf(plot_args_t* pargs, const char* fmt, ...);

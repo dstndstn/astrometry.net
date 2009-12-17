@@ -37,10 +37,11 @@ const plotter_t plotter_image = {
 void* plot_image_init(plot_args_t* plotargs) {
 	plotimage_t* args = calloc(1, sizeof(plotimage_t));
 	args->gridsize = 50;
+	args->alpha = 1;
 	return args;
 }
 
-void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H) {
+void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H, double alpha) {
 	 cairo_surface_t* thissurf;
 	 cairo_pattern_t* pat;
 	 cairoutils_rgba_to_argb32(img, W, H);
@@ -48,7 +49,7 @@ void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H) {
 	 pat = cairo_pattern_create_for_surface(thissurf);
 	 cairo_save(cairo);
 	 cairo_set_source(cairo, pat);
-	 cairo_paint(cairo);
+	 cairo_paint_with_alpha(cairo, alpha);
 	 cairo_pattern_destroy(pat);
 	 cairo_surface_destroy(thissurf);
 	 cairo_restore(cairo);
@@ -66,9 +67,12 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 
 	cairoutils_rgba_to_argb32(img, W, H);
 	thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
-    // DEBUG - alpha=0.5
-    //for (i=0; i<(W*H); i++)
-    //img[i*4+3] = 128;
+
+	if (args->alpha != 1.0) {
+		unsigned char a = MIN(255, MAX(0, args->alpha * 255));
+		for (i=0; i<(W*H); i++)
+			img[i*4+3] = a;
+	}
 	pat = cairo_pattern_create_for_surface(thissurf);
 
 	assert(args->gridsize >= 1);
@@ -84,10 +88,13 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 		double ra,dec;
 		y = MIN(j * args->gridsize, H-1);
 		for (i=0; i<NX; i++) {
+			double ox,oy;
 			bool ok;
 			x = MIN(i * args->gridsize, W-1);
-			sip_pixelxy2radec(args->wcs, x, y, &ra, &dec);
-			ok = sip_radec2pixelxy(pargs->wcs, ra, dec, xs+j*NX+i, ys+j*NX+i);
+			sip_pixelxy2radec(args->wcs, x+1, y+1, &ra, &dec);
+			ok = sip_radec2pixelxy(pargs->wcs, ra, dec, &ox, &oy);
+			xs[j*NX+i] = ox-1;
+			ys[j*NX+i] = oy-1;
 			//printf("(%g,%g) -> (%g,%g)\n", x, y, xs[j*NX+i], ys[j*NX+i]);
 		}
 	}
@@ -219,7 +226,7 @@ int plot_image_plot(const char* command,
 	if (pargs->wcs && args->wcs) {
 		plot_image_wcs(cairo, args->img, args->W, args->H, pargs, args);
 	} else {
-		plot_image_rgba_data(cairo, args->img, args->W, args->H);
+		plot_image_rgba_data(cairo, args->img, args->W, args->H, args->alpha);
 	}
 	// ?
 	free(args->img);
@@ -233,8 +240,7 @@ int plot_image_setsize(plot_args_t* pargs, plotimage_t* args) {
 			return -1;
 		}
 	}
-	pargs->W = args->W;
-	pargs->H = args->H;
+	plotstuff_set_size(pargs, args->W, args->H);
 	return 0;
 }
 
@@ -243,6 +249,8 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 	plotimage_t* args = (plotimage_t*)baton;
 	if (streq(cmd, "image_file")) {
 		plot_image_set_filename(args, cmdargs);
+	} else if (streq(cmd, "image_alpha")) {
+		args->alpha = atof(cmdargs);
 	} else if (streq(cmd, "image_format")) {
 		args->format = parse_image_format(cmdargs);
 		if (args->format == -1)

@@ -25,6 +25,14 @@
 #include "starutil.h"
 #include "mathutil.h"
 
+double sip_imagew(sip_t* sip) {
+	assert(sip);
+	return sip->wcstan.imagew;
+}
+double sip_imageh(sip_t* sip) {
+	assert(sip);
+	return sip->wcstan.imageh;
+}
 sip_t* sip_create() {
 	sip_t* sip = calloc(1, sizeof(sip_t));
 

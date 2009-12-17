@@ -130,6 +130,9 @@ typedef struct sip_s {
 sip_t* sip_create(void);
 void   sip_free(sip_t* sip);
 
+double sip_imagew(sip_t* sip);
+double sip_imageh(sip_t* sip);
+
 // Pixels to RA,Dec in degrees.
 void   sip_pixelxy2radec(const sip_t* sip, double px, double py, double *a, double *d);
 

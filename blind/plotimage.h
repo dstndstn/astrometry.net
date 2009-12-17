@@ -6,8 +6,8 @@
 struct plotimage_args {
 	char* fn;
 	int format; // PLOTSTUFF_FORMAT_*
-	//char* format;
-	// FIXME -- alpha?
+
+	double alpha;
 
 	sip_t* wcs;
 	double gridsize;
@@ -32,7 +32,8 @@ int plot_image_set_filename(plotimage_t* args, const char* fn);
 
 int plot_image_setsize(plot_args_t* pargs, plotimage_t* args);
 
-void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H);
+void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H,
+						  double alpha);
 
 extern const plotter_t plotter_image;
 

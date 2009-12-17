@@ -32,12 +32,14 @@
  plot_marker <marker-shape>
  plot_markersize <radius>
  plot_wcs <filename>
+ plot_wcs_setsize
 
  Image:
 
  image_file <fn>
  image_format <format>
  image_wcs <fn>    -- project the image through its WCS, then back through the plot_wcs.
+ image_setsize    -- set plot size to image size.
  image
 
  Xy:
@@ -71,13 +73,14 @@
 #include "errors.h"
 
 
-static const char* OPTIONS = "hvW:H:o:JP";
+static const char* OPTIONS = "hvW:H:o:JjP";
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s [options] > output.png\n"
            "  [-o <output-file>] (default: stdout)\n"
            "  [-P]              Write PPM output instead of PNG.\n"
+		   "  [-j]              Write JPEG output.\n"
 		   "  [-J]              Write PDF output.\n"
 		   "  [-W <width>   ]   Width of output image (default: data-dependent).\n"
 		   "  [-H <height>  ]   Height of output image (default: data-dependent).\n"
@@ -109,6 +112,9 @@ int main(int argc, char *args[]) {
         case 'P':
             pargs.outformat = PLOTSTUFF_FORMAT_PPM;
             break;
+		case 'j':
+            pargs.outformat = PLOTSTUFF_FORMAT_JPG;
+			break;
 		case 'J':
             pargs.outformat = PLOTSTUFF_FORMAT_PDF;
 			break;
@@ -131,10 +137,12 @@ int main(int argc, char *args[]) {
 		printHelp(progname);
 		exit(-1);
 	}
-	if (!pargs.W || !pargs.H) {
-		ERROR("You must specify width and height of the output image.\n");
-		exit(-1);
-	}
+	/*
+	 if (!pargs.W || !pargs.H) {
+	 ERROR("You must specify width and height of the output image.\n");
+	 exit(-1);
+	 }
+	 */
 
 	log_init(loglvl);
 

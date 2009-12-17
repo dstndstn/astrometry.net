@@ -23,6 +23,7 @@
 #include "cairoutils.h"
 #include "log.h"
 #include "errors.h"
+#include "sip_qfits.h"
 
 const plotter_t plotter_xy = {
 	"xy", 
@@ -55,7 +56,7 @@ int plot_xy_setsize(plot_args_t* pargs, plotxy_t* args) {
 }
 
 int plot_xy_plot(const char* command, cairo_t* cairo,
-				 plot_args_t* plotargs, void* baton) {
+				 plot_args_t* pargs, void* baton) {
 	plotxy_t* args = (plotxy_t*)baton;
 	// Plot it!
 	xylist_t* xyls;
@@ -108,18 +109,33 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 		}
 	}
 
+	// Transform through WCSes.
+	if (args->wcs) {
+		double ra, dec, x, y;
+		assert(pargs->wcs);
+		for (i=0; i<Nxy; i++) {
+			bool ok;
+			sip_pixelxy2radec(args->wcs,
+							  starxy_getx(xy, i)+1, starxy_gety(xy, i)+1,
+							  &ra, &dec);
+			ok = sip_radec2pixelxy(pargs->wcs, ra, dec, &x, &y);
+			starxy_setx(xy, i, x-1);
+			starxy_sety(xy, i, y-1);
+		}
+	}
+
 	if (args->bgrgba[3] != 0.0) {
 		// Plot background.
 		cairo_save(cairo);
 		if (args->bglw)
 			cairo_set_line_width(cairo, args->bglw);
 		else
-			cairo_set_line_width(cairo, plotargs->lw + 2.0);
+			cairo_set_line_width(cairo, pargs->lw + 2.0);
 		cairo_set_rgba(cairo, args->bgrgba);
 		for (i=args->firstobj; i<Nxy; i++) {
 			double x = starxy_getx(xy, i) + 0.5;
 			double y = starxy_gety(xy, i) + 0.5;
-			cairoutils_draw_marker(cairo, plotargs->marker, x, y, plotargs->markersize);
+			cairoutils_draw_marker(cairo, pargs->marker, x, y, pargs->markersize);
 			cairo_stroke(cairo);
 		}
 		cairo_restore(cairo);
@@ -129,7 +145,7 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	for (i=args->firstobj; i<Nxy; i++) {
 		double x = starxy_getx(xy, i) + 0.5;
 		double y = starxy_gety(xy, i) + 0.5;
-		cairoutils_draw_marker(cairo, plotargs->marker, x, y, plotargs->markersize);
+		cairoutils_draw_marker(cairo, pargs->marker, x, y, pargs->markersize);
 		cairo_stroke(cairo);
 	}
 
@@ -157,6 +173,16 @@ void plot_xy_set_filename(plotxy_t* args, const char* fn) {
 	args->fn = strdup_safe(fn);
 }
 
+int plot_xy_set_wcs_filename(plotxy_t* args, const char* fn) {
+	free(args->wcs);
+	args->wcs = sip_read_tan_or_sip_header_file_ext(fn, 0, NULL, FALSE);
+	if (!args->wcs) {
+		ERROR("Failed to read WCS file \"%s\"", fn);
+		return -1;
+	}
+	return 0;
+}
+
 int plot_xy_command(const char* cmd, const char* cmdargs,
 					plot_args_t* plotargs, void* baton) {
 	plotxy_t* args = (plotxy_t*)baton;
@@ -182,6 +208,8 @@ int plot_xy_command(const char* cmd, const char* cmdargs,
 		plot_xy_set_bg(args, cmdargs);
 	} else if (streq(cmd, "xy_bglw")) {
 		args->bglw = atof(cmdargs);
+	} else if (streq(cmd, "xy_wcs")) {
+		return plot_xy_set_wcs_filename(args, cmdargs);
 	} else {
 		ERROR("Did not understand command \"%s\"", cmd);
 		return -1;
@@ -191,6 +219,7 @@ int plot_xy_command(const char* cmd, const char* cmdargs,
 
 void plot_xy_free(plot_args_t* plotargs, void* baton) {
 	plotxy_t* args = (plotxy_t*)baton;
+	free(args->wcs);
 	free(args->xcol);
 	free(args->ycol);
 	free(args->fn);

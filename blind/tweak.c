@@ -966,7 +966,7 @@ static void do_sip_tweak(tweak_t* t) {
 	totalweight = 0.0;
 	for (i=0; i<M; i++) {
         int refi;
-        double x, y;
+        double x=0, y=0;
         double xyzpt[3];
         double weight = 1.0;
         double u;

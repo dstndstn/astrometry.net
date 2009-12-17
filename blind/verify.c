@@ -253,7 +253,7 @@ double* verify_compute_sigma2s(const verify_field_t* vf, const MatchObj* mo,
 							   double verify_pix2, bool do_gamma) {
 	int NF;
 	double qc[2];
-	double Q2;
+	double Q2=0;
 	NF = starxy_n(vf->field);
 	if (do_gamma) {
 		verify_get_quad_center(vf, mo, qc, &Q2);

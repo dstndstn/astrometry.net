@@ -120,8 +120,8 @@ int image2xy_run(simplexy_t* s,
 	for (jj=0; jj<s->npeaks; jj++) {
 		assert(isfinite((s->x)[jj]));
 		assert(isfinite((s->y)[jj]));
-		// if S=1, this just shifts the origin to (1,1); the FITS
-		// standard says the center of the lower-left pixel is (1,1).
+		// shift the origin to the FITS standard: 
+		// center of the lower-left pixel is (1,1).
 		(s->x)[jj] = ((s->x)[jj] + 0.5) * (double)S + 0.5;
 		(s->y)[jj] = ((s->y)[jj] + 0.5) * (double)S + 0.5;
 	}

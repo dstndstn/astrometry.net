@@ -457,7 +457,7 @@ void solver_run(solver_t* solver) {
 		solver->minminAB2 = HUGE_VAL;
 		solver->maxmaxAB2 = -HUGE_VAL;
 		for (i = 0; i < num_indexes; i++) {
-			double minAB, maxAB;
+			double minAB=0, maxAB=0;
 			index_t* index = pl_get(solver->indexes, i);
 			// The limits on the size of quads that we try to match, in pixels.
 			// Derived from index_scale_* and funits_*.

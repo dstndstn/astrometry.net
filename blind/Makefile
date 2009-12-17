@@ -74,7 +74,7 @@ OTHER_OBJS := usnob.o usnob-fits.o catalog.o \
 PIPELINE := usnobtofits build-an-catalog hpowned cut-an \
 	startree hpquads codetree unpermute-quads unpermute-stars blind \
 	solvedserver printsolved xylist2fits mergesolved rdlsinfo xylsinfo \
-	wcsinfo wcs-grab fits-guess-scale agreeable new-wcs get-wcs \
+	wcsinfo subwcs wcs-grab fits-guess-scale agreeable new-wcs get-wcs \
 	augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
 	certifiable get-healpix 2masstofits nomadtofits \
 	merge-index index-to-table setsolved \
@@ -442,6 +442,10 @@ xylsinfo: xylsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 wcsinfo: wcsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) \
 		$(QFITS_LIB)
+
+subwcs: subwcs.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) \
+		$(QFITS_LIB)
+ALL_OBJS += subwcs.o
 
 wcs-grab: wcs-grab.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) \
 		$(QFITS_LIB)

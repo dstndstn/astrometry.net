@@ -153,6 +153,12 @@ int plotstuff_set_marker(plot_args_t* pargs, const char* name) {
 	return 0;
 }
 
+int plotstuff_set_size(plot_args_t* pargs, int W, int H) {
+	pargs->W = W;
+	pargs->H = H;
+	return 0;
+}
+
 static int plot_builtin_command(const char* cmd, const char* cmdargs,
 								plot_args_t* pargs, void* baton) {
 	if (streq(cmd, "plot_color")) {
@@ -177,6 +183,9 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 			ERROR("Failed to read WCS file \"%s\"", cmdargs);
 			return -1;
 		}
+	} else if (streq(cmd, "plot_wcs_setsize")) {
+		assert(pargs->wcs);
+		plotstuff_set_size(pargs, (int)ceil(sip_imagew(pargs->wcs)), (int)ceil(sip_imageh(pargs->wcs)));
 	} else {
 		ERROR("Did not understand command: \"%s\"", cmd);
 		return -1;
@@ -338,8 +347,10 @@ int plotstuff_run_command(plot_args_t* pargs, const char* cmd) {
 			char* cmdcmd;
 			char* cmdargs;
 			if (!split_string_once(cmd, " ", &cmdcmd, &cmdargs)) {
-				ERROR("Failed to split command \"%s\" into words\n", cmd);
-				return -1;
+				//ERROR("Failed to split command \"%s\" into words\n", cmd);
+				//return -1;
+				cmdcmd = strdup(cmd);
+				cmdargs = NULL;
 			}
 			logmsg("Command \"%s\", args \"%s\"\n", cmdcmd, cmdargs);
 			if (plotters[i].command(cmdcmd, cmdargs, pargs, plotters[i].baton)) {
@@ -403,6 +414,9 @@ int plotstuff_output(plot_args_t* pargs) {
 				res = cairoutils_write_ppm(pargs->outfn, img, pargs->W, pargs->H);
 			} else if (pargs->outformat == PLOTSTUFF_FORMAT_PNG) {
 				res = cairoutils_write_png(pargs->outfn, img, pargs->W, pargs->H);
+			} else {
+				res=-1; // for gcc
+				assert(0);
 			}
 			//free(img);
 			if (res)
