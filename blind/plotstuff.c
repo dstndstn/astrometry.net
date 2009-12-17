@@ -122,6 +122,7 @@ int cairo_set_color(cairo_t* cairo, const char* color) {
 static void plot_builtin_apply(cairo_t* cairo, plot_args_t* args) {
 	cairo_set_rgba(cairo, args->rgba);
 	cairo_set_line_width(cairo, args->lw);
+	cairo_set_operator(cairo, args->op);
 }
 
 static void* plot_builtin_init(plot_args_t* args) {
@@ -133,6 +134,7 @@ static void* plot_builtin_init(plot_args_t* args) {
 	args->marker = CAIROUTIL_MARKER_CIRCLE;
 	args->markersize = 5.0;
 	args->linestep = 10;
+	args->op = CAIRO_OPERATOR_OVER;
 	return NULL;
 }
 
@@ -169,6 +171,15 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 	} else if (streq(cmd, "plot_alpha")) {
 		// FIXME -- add checking.
 		pargs->rgba[3] = atof(cmdargs);
+	} else if (streq(cmd, "plot_op")) {
+		if (streq(cmdargs, "add")) {
+			pargs->op = CAIRO_OPERATOR_ADD;
+		} else if (streq(cmdargs, "reset")) {
+			pargs->op = CAIRO_OPERATOR_OVER;
+		} else {
+			ERROR("Didn't understand op: %s", cmdargs);
+			return -1;
+		}
 	} else if (streq(cmd, "plot_lw")) {
 		pargs->lw = atof(cmdargs);
 	} else if (streq(cmd, "plot_marker")) {

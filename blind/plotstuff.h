@@ -23,6 +23,8 @@ struct plot_args {
 
 	//bl* plotters;
 
+	cairo_operator_t op;
+
 	sip_t* wcs;
 
 	int W, H;
