@@ -258,55 +258,6 @@ void make_rand_star(double* star, double ramin, double ramax,
 	star[2] = radec2z(raval, decval);
 }
 
-Const inline double arcsec2dist(double arcInArcSec) {
-   return sqrt(arcsec2distsq(arcInArcSec));
-}
-
-// Degrees to distance on the unit sphere.
-Const inline double deg2dist(double arcInDegrees) {
-    return arcsec2dist(deg2arcsec(arcInDegrees));
-}
-
-Const inline double deg2distsq(double d) {
-	return rad2distsq(deg2rad(d));
-}
-
-Const inline double dist2deg(double dist) {
-    return arcsec2deg(dist2arcsec(dist));
-}
-
-Const inline double distsq2arcsec(double dist2) {
-	return rad2arcsec(distsq2rad(dist2));
-}
-
-Const inline double dist2arcsec(double dist) {
-	return distsq2arcsec(dist*dist);
-}
-
-// DEPRECATED
-Const inline double distsq2arc(double dist2) {
-	return distsq2rad(dist2);
-}
-
-Const inline double distsq2rad(double dist2) {
-	// cosine law: c^2 = a^2 + b^2 - 2 a b cos C
-	// c^2 is dist2.  We want C.
-	// a = b = 1
-	// c^2 = 1 + 1 - 2 cos C
-	// dist2 = 2( 1 - cos C )
-	// 1 - (dist2 / 2) = cos C
-	// C = acos(1 - dist2 / 2)
-	return acos(1.0 - dist2 / 2.0);
-}
-
-Const inline double distsq2deg(double dist2) {
-	return rad2deg(distsq2rad(dist2));
-}
-
-Const inline double dist2rad(double dist) {
-	return distsq2arc(dist*dist);
-}
-
 
 // RA in degrees to Mercator X coordinate [0, 1).
 inline double ra2mercx(double ra) {

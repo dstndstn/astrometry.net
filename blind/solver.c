@@ -885,8 +885,9 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 
 		// FIXME - should there be scale fudge here?
 		if (arcsecperpix > solver->funits_upper ||
-		        arcsecperpix < solver->funits_lower) {
-			debug("          bad scale.\n");
+			arcsecperpix < solver->funits_lower) {
+			debug("          bad scale (%g arcsec/pix, range %g %g)\n",
+				  arcsecperpix, solver->funits_lower, solver->funits_upper);
 			continue;
 		}
 		solver->numscaleok++;

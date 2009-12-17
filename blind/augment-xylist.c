@@ -952,12 +952,17 @@ int augment_xylist(augment_xylist_t* axy,
 	if ((axy->scalelo > 0.0) || (axy->scalehi > 0.0)) {
 		double appu, appl;
 		if (!axy->scaleunits || !strcasecmp(axy->scaleunits, "degwidth")) {
+			logverb("Scale range: %g to %g degrees wide\n", axy->scalelo, axy->scalehi);
 			appl = deg2arcsec(axy->scalelo) / (double)axy->W;
 			appu = deg2arcsec(axy->scalehi) / (double)axy->W;
+			logverb("Image width %i pixels; arcsec per pixel range %g %g\n", axy->W, appl, appu);
 		} else if (!strcasecmp(axy->scaleunits, "arcminwidth")) {
+			logverb("Scale range: %g to %g arcmin wide\n", axy->scalelo, axy->scalehi);
 			appl = arcmin2arcsec(axy->scalelo) / (double)axy->W;
 			appu = arcmin2arcsec(axy->scalehi) / (double)axy->W;
+			logverb("Image width %i pixels; arcsec per pixel range %g %g\n", axy->W, appl, appu);
 		} else if (!strcasecmp(axy->scaleunits, "arcsecperpix")) {
+			logverb("Scale range: %g to %g arcsec/pixel\n", axy->scalelo, axy->scalehi);
 			appl = axy->scalelo;
 			appu = axy->scalehi;
 		} else

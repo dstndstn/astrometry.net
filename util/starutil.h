@@ -76,12 +76,6 @@ InlineDeclare Const double arcsec2rad(double x);
 InlineDeclare Const double arcsec2deg(double x);
 InlineDeclare Const double arcsec2arcmin(double x);
 
-#ifdef INCLUDE_INLINE_SOURCE
-#define InlineDefine InlineDefineH
-#include "starutil.inc"
-#undef InlineDefine
-#endif
-
 // RA,Dec in radians:
 #define radec2x(r,d) (cos(d)*cos(r))
 #define radec2y(r,d) (cos(d)*sin(r))
@@ -110,8 +104,8 @@ inline void radec2xyzarrmany(double *ra, double *dec, double* xyz, int n);
 
 // RA,Dec in degrees:
 InlineDeclare void radecdeg2xyz(double ra, double dec, double* x, double* y, double* z);
-InlineDeclare void xyzarr2radecdeg(const double* xyz, double *ra, double *dec);
-InlineDeclare void xyzarr2radecdegarr(double* xyz, double *radec);
+InlineDeclare Flatten void xyzarr2radecdeg(const double* xyz, double *ra, double *dec);
+InlineDeclare Flatten void xyzarr2radecdegarr(double* xyz, double *radec);
 InlineDeclare void radecdeg2xyzarr(double ra, double dec, double* xyz);
 inline void radecdegarr2xyzarr(double* radec, double* xyz);
 inline void radecdeg2xyzarrmany(double *ra, double *dec, double* xyz, int n);
@@ -143,48 +137,48 @@ inline void project_equal_area(double x, double y, double z, double* projx, doub
 // surface of the unit sphere into the angle between the
 // rays from the center of the sphere to the points, in
 // radians.
-Const inline double distsq2arc(double dist2);
+InlineDeclare Flatten Const double distsq2arc(double dist2);
 
 // Distance^2 on the unit sphere to radians.
 // (alias of distsq2arc)
-Const inline double distsq2rad(double dist2);
+InlineDeclare Flatten Const double distsq2rad(double dist2);
 
-Const inline double distsq2deg(double dist2);
+InlineDeclare Flatten Const double distsq2deg(double dist2);
 
 // Distance on the unit sphere to radians.
-Const inline double dist2rad(double dist);
+InlineDeclare Flatten Const double dist2rad(double dist);
 
 // Distance^2 on the unit sphere to arcseconds.
-Const inline double distsq2arcsec(double dist2);
+InlineDeclare Flatten Const double distsq2arcsec(double dist2);
 
 // Distance on the unit sphere to arcseconds
-Const inline double dist2arcsec(double dist);
+InlineDeclare Flatten Const double dist2arcsec(double dist);
 
 // Radians to distance^2 on the unit sphere.
 // (alias of arc2distsq)
 InlineDeclare Const double rad2distsq(double arcInRadians);
 
 // Radians to distance on the unit sphere.
-InlineDeclare Const double rad2dist(double arcInRadians);
+InlineDeclare Flatten Const double rad2dist(double arcInRadians);
 
 // Converts an angle (in arcseconds) into the distance-squared
 // between two points on the unit sphere separated by that angle.
-InlineDeclare Const double arcsec2distsq(double arcInArcSec);
+InlineDeclare Flatten Const double arcsec2distsq(double arcInArcSec);
 
 // Arcseconds to distance on the unit sphere.
-Const inline double arcsec2dist(double arcInArcSec);
+InlineDeclare Flatten Const double arcsec2dist(double arcInArcSec);
 
 // Degrees to distance on the unit sphere.
-Const inline double deg2dist(double arcInDegrees);
+InlineDeclare Flatten Const double deg2dist(double arcInDegrees);
 
-Const inline double deg2distsq(double d);
+InlineDeclare Flatten Const double deg2distsq(double d);
 
-InlineDeclare Const double arcmin2dist(double arcmin);
+InlineDeclare Flatten Const double arcmin2dist(double arcmin);
 
-InlineDeclare Const double arcmin2distsq(double arcmin);
+InlineDeclare Flatten Const double arcmin2distsq(double arcmin);
 
 // Distance on the unit sphere to degrees.
-Const inline double dist2deg(double dist);
+InlineDeclare Flatten Const double dist2deg(double dist);
 
 #define HELP_ERR -101
 #define OPT_ERR -201
@@ -206,5 +200,11 @@ void make_rand_star(double* star, double ramin, double ramax,
 WarnUnusedResult InlineDeclare bool star_coords(const double *s, const double *r, double *x, double *y);
 
 inline void star_midpoint(double* mid, const double* A, const double* B);
+
+#ifdef INCLUDE_INLINE_SOURCE
+#define InlineDefine InlineDefineH
+#include "starutil.inc"
+#undef InlineDefine
+#endif
 
 #endif

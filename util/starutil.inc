@@ -75,19 +75,19 @@ InlineDefine Const double rad2distsq(double x) {
 	return 2.0 * (1.0 - cos(x));
 }
 
-InlineDefine Const double rad2dist(double x) {
+InlineDefine Flatten Const double rad2dist(double x) {
 	return sqrt(rad2distsq(x));
 }
 
-InlineDefine Const double arcsec2distsq(double x) {
+InlineDefine Flatten Const double arcsec2distsq(double x) {
 	return rad2distsq(arcsec2rad(x));
 }
 
-InlineDefine Const Flatten double arcmin2dist(double x) {
+InlineDefine Flatten Const double arcmin2dist(double x) {
 	return rad2dist(arcmin2rad(x));
 }
 
-InlineDefine Const Flatten double arcmin2distsq(double arcmin) {
+InlineDefine Flatten Const double arcmin2distsq(double arcmin) {
     return rad2distsq(arcmin2rad(arcmin));
 }
 
@@ -178,3 +178,53 @@ WarnUnusedResult InlineDefine bool star_coords(const double *s, const double *r,
 	}
 	return TRUE;
 }
+
+InlineDefine Flatten Const double distsq2rad(double dist2) {
+	// cosine law: c^2 = a^2 + b^2 - 2 a b cos C
+	// c^2 is dist2.  We want C.
+	// a = b = 1
+	// c^2 = 1 + 1 - 2 cos C
+	// dist2 = 2( 1 - cos C )
+	// 1 - (dist2 / 2) = cos C
+	// C = acos(1 - dist2 / 2)
+	return acos(1.0 - dist2 / 2.0);
+}
+
+InlineDefine Flatten Const double arcsec2dist(double arcInArcSec) {
+   return sqrt(arcsec2distsq(arcInArcSec));
+}
+
+// Degrees to distance on the unit sphere.
+InlineDefine Flatten Const double deg2dist(double arcInDegrees) {
+  return arcsec2dist(deg2arcsec(arcInDegrees));
+}
+
+InlineDefine Flatten Const double deg2distsq(double d) {
+	return rad2distsq(deg2rad(d));
+}
+
+InlineDefine Flatten Const double distsq2arcsec(double dist2) {
+	return rad2arcsec(distsq2rad(dist2));
+}
+
+InlineDefine Flatten Const double dist2arcsec(double dist) {
+	return distsq2arcsec(dist*dist);
+}
+
+InlineDefine Flatten Const double dist2deg(double dist) {
+    return arcsec2deg(dist2arcsec(dist));
+}
+
+// DEPRECATED
+InlineDefine Flatten Const double distsq2arc(double dist2) {
+	return distsq2rad(dist2);
+}
+
+InlineDefine Flatten Const double distsq2deg(double dist2) {
+	return rad2deg(distsq2rad(dist2));
+}
+
+InlineDefine Flatten Const double dist2rad(double dist) {
+	return distsq2arc(dist*dist);
+}
+

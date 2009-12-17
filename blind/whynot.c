@@ -69,7 +69,7 @@ extern char *optarg;
 extern int optind, opterr, optopt;
 
 struct foundquad {
-	unsigned int stars[DQMAX];
+	//unsigned int stars[DQMAX];
 	double codedist;
 	double logodds;
 	double pscale;
@@ -84,8 +84,8 @@ static int sort_fq_by_stars(const void* v1, const void* v2) {
 	int mx1=0, mx2=0;
 	int i;
 	for (i=0; i<DQMAX; i++) {
-		mx1 = MAX(mx1, fq1->stars[i]);
-		mx2 = MAX(mx2, fq2->stars[i]);
+		mx1 = MAX(mx1, fq1->mo.field[i]);
+		mx2 = MAX(mx2, fq2->mo.field[i]);
 	}
 	if (mx1 < mx2)
 		return -1;
@@ -663,7 +663,7 @@ int main(int argc, char** args) {
 
 
 			memset(&fq, 0, sizeof(foundquad_t));
-			memcpy(fq.stars, stars, dimquads);
+			//memcpy(fq.stars, stars, dimquads);
 			fq.codedist = codedist;
 			fq.logodds = mo.logodds;
 			fq.pscale = tan_pixel_scale(&wcs);
@@ -675,6 +675,18 @@ int main(int argc, char** args) {
 		// Sort the found quads by star index...
 		bl_sort(foundquads, sort_fq_by_stars);
 
+		logmsg("\n\n\n");
+		for (j=0; j<bl_size(foundquads); j++) {
+			int k;
+			foundquad_t* fq = bl_access(foundquads, j);
+			logmsg("quad #%i: stars", fq->quadnum);
+			for (k=0; k<fq->mo.dimquads; k++) {
+				logmsg(" %i", fq->mo.field[k]);
+			}
+			logmsg("\n");
+			logmsg("  codedist %g\n", fq->codedist);
+			logmsg("  logodds %g (odds %g)\n", fq->logodds, exp(fq->logodds));
+		}
 
 
 		il_free(fullquadlist);

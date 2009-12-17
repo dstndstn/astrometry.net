@@ -31,7 +31,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hi:Oo:8Hd:D:ve:B:S:M:s:p:P:bU:g:C:m:";
+static const char* OPTIONS = "hi:Oo:8Hd:D:ve:B:S:M:s:p:P:bU:g:C:m:a:";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -50,6 +50,7 @@ static void printHelp() {
 			"   [-s <median-filtering scale>]: set median-filter box size (default 100 pixels)\n"
 			"   [-g <sigma>]: set image noise level\n"
 			"   [-p <sigmas>]: set significance level of peaks (default 8 sigmas)\n"
+			"   [-a <saddle-sigmas>]: set \"saddle\" level joining peaks (default 5 sigmas)\n"
 			"   [-P <image plane>]: pull out a single plane of a multi-color image (default: first plane)\n"
 			"   [-b]: don't do background subtraction\n"
 			"   [-m]: set maximum extended object size for deblending (default 1000 pixels)\n"
@@ -90,6 +91,9 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'a':
+			params->saddle = atof(optarg);
+			break;
 		case 'm':
 			params->maxsize = atoi(optarg);
 			break;
