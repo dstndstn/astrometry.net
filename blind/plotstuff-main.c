@@ -44,11 +44,14 @@
 
  Xy:
 
+ Note, xylists are assumed to contain FITS-indexed pixels: the center of
+ the "lower-left" pixel is at coordinate (1,1).
+
  xy_file <xylist>
  xy_ext <fits-extension>
  xy_xcol <column-name>
  xy_ycol <column-name>
- xy_xoff <pixel-offset>
+ xy_xoff <pixel-offset>  -- default 1, for FITS pixels.
  xy_yoff <pixel-offset>
  xy_firstobj <obj-num>
  xy_nobjs <n>

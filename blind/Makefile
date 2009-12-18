@@ -97,6 +97,9 @@ BACKEND_OBJS := \
 		matchfile.o solvedclient.o solvedfile.o verify.o \
 		blind_wcs.o tweak.o
 
+PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o plotannotations.o plotgrid.o plotoutline.o
+ALL_OBJ += $(PLOTSTUFF)
+
 $(BACKEND_LIB): $(BACKEND_OBJS)
 	-rm -f $@
 	$(AR) rc $@ $(BACKEND_OBJS)
@@ -228,7 +231,7 @@ ALL_TEST_EXTRA_OBJS += $(SIMPLEXY_OBJ)
 test_resort-xylist: resort-xylist.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_TEST_EXTRA_OBJS += resort-xylist.o
 
-ALL_TEST_LIBS += $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_TEST_LIBS += $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) 
 
 include $(COMMON)/makefile.tests
 
@@ -497,9 +500,6 @@ add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)
 plotstuff.o: plotstuff.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
-PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o plotannotations.o plotgrid.o plotoutline.o
-ALL_OBJ += $(PLOTSTUFF)
-
 plotstuff: plotstuff-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 ALL_OBJ += plotstuff-main.o
@@ -510,6 +510,11 @@ plotxy.o: plotxy.c
 plotxy: plotxy-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 ALL_OBJ += plotxy-main.o
+
+test_plotstuff: test_plotstuff-main.o test_plotstuff.o $(COMMON)/cutest.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
+test_plotstuff-main.c: test_plotstuff.c
+	$(AN_SHELL) $(MAKE_TESTS) $^ > $@
 
 query-starkd: query-starkd.o $(ANLIBS)
 ALL_OBJ += query-starkd.o

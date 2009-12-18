@@ -39,6 +39,10 @@ void* plot_xy_init(plot_args_t* plotargs) {
 	plotxy_t* args = calloc(1, sizeof(plotxy_t));
 	args->ext = 1;
 	args->scale = 1.0;
+	args->xyvals = dl_new(32);
+	// FITS pixels.
+	args->xoff = 1.0;
+	args->yoff = 1.0;
 	return args;
 }
 
@@ -60,40 +64,54 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	plotxy_t* args = (plotxy_t*)baton;
 	// Plot it!
 	xylist_t* xyls;
-	starxy_t* xy;
+	starxy_t myxy;
+	starxy_t* xy = NULL;
+	starxy_t* freexy = NULL;
 	int Nxy;
 	int i;
 
-	if (!args->fn) {
-		ERROR("No xylist filename given");
+	if (args->fn && dl_size(args->xyvals)) {
+		ERROR("Can only plot one of xylist filename and xy_vals");
+		return -1;
+	}
+	if (!args->fn && !dl_size(args->xyvals)) {
+		ERROR("Neither xylist filename nor xy_vals given!");
 		return -1;
 	}
 
-	// Open xylist.
-	xyls = xylist_open(args->fn);
-	if (!xyls) {
-		ERROR("Failed to open xylist from file \"%s\"", args->fn);
-		return -1;
-	}
-	// we don't care about FLUX and BACKGROUND columns.
-	xylist_set_include_flux(xyls, FALSE);
-	xylist_set_include_background(xyls, FALSE);
-	if (args->xcol)
-		xylist_set_xname(xyls, args->xcol);
-	if (args->ycol)
-		xylist_set_yname(xyls, args->ycol);
+	if (args->fn) {
+		// Open xylist.
+		xyls = xylist_open(args->fn);
+		if (!xyls) {
+			ERROR("Failed to open xylist from file \"%s\"", args->fn);
+			return -1;
+		}
+		// we don't care about FLUX and BACKGROUND columns.
+		xylist_set_include_flux(xyls, FALSE);
+		xylist_set_include_background(xyls, FALSE);
+		if (args->xcol)
+			xylist_set_xname(xyls, args->xcol);
+		if (args->ycol)
+			xylist_set_yname(xyls, args->ycol);
 
-	// Find number of entries in xylist.
-	xy = xylist_read_field_num(xyls, args->ext, NULL);
-	xylist_close(xyls);
-	if (!xy) {
-		ERROR("Failed to read FITS extension %i from file %s.\n", args->ext, args->fn);
-		return -1;
+		// Find number of entries in xylist.
+		xy = xylist_read_field_num(xyls, args->ext, NULL);
+		freexy = xy;
+		xylist_close(xyls);
+		if (!xy) {
+			ERROR("Failed to read FITS extension %i from file %s.\n", args->ext, args->fn);
+			return -1;
+		}
+		Nxy = starxy_n(xy);
+		// If N is specified, apply it as a max.
+		if (args->nobjs)
+			Nxy = MIN(Nxy, args->nobjs);
+	} else {
+		assert(dl_size(args->xyvals));
+		starxy_from_dl(&myxy, args->xyvals, FALSE, FALSE);
+		xy = &myxy;
+		Nxy = starxy_n(xy);
 	}
-	Nxy = starxy_n(xy);
-	// If N is specified, apply it as a max.
-	if (args->nobjs)
-		Nxy = MIN(Nxy, args->nobjs);
 
 	// Shift and scale xylist entries.
 	if (args->xoff != 0.0 || args->yoff != 0.0) {
@@ -108,7 +126,7 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 			starxy_sety(xy, i, args->scale * starxy_gety(xy, i));
 		}
 	}
-
+	
 	// Transform through WCSes.
 	if (args->wcs) {
 		double ra, dec, x, y;
@@ -142,6 +160,7 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	}
 
 	// Plot markers.
+	cairo_set_rgba(cairo, pargs->rgba);
 	for (i=args->firstobj; i<Nxy; i++) {
 		double x = starxy_getx(xy, i) + 0.5;
 		double y = starxy_gety(xy, i) + 0.5;
@@ -149,7 +168,7 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 		cairo_stroke(cairo);
 	}
 
-	starxy_free(xy);
+	starxy_free(freexy);
 		
 	return 0;
 }
@@ -183,6 +202,17 @@ int plot_xy_set_wcs_filename(plotxy_t* args, const char* fn) {
 	return 0;
 }
 
+int plot_xy_set_offsets(plotxy_t* args, double xo, double yo) {
+	args->xoff = xo;
+	args->yoff = yo;
+	return 0;
+}
+
+void plot_xy_vals(plotxy_t* args, double x, double y) {
+	dl_append(args->xyvals, x);
+	dl_append(args->xyvals, y);
+}
+
 int plot_xy_command(const char* cmd, const char* cmdargs,
 					plot_args_t* plotargs, void* baton) {
 	plotxy_t* args = (plotxy_t*)baton;
@@ -210,6 +240,8 @@ int plot_xy_command(const char* cmd, const char* cmdargs,
 		args->bglw = atof(cmdargs);
 	} else if (streq(cmd, "xy_wcs")) {
 		return plot_xy_set_wcs_filename(args, cmdargs);
+	} else if (streq(cmd, "xy_vals")) {
+		plotstuff_append_doubles(cmdargs, args->xyvals);
 	} else {
 		ERROR("Did not understand command \"%s\"", cmd);
 		return -1;
@@ -219,6 +251,7 @@ int plot_xy_command(const char* cmd, const char* cmdargs,
 
 void plot_xy_free(plot_args_t* plotargs, void* baton) {
 	plotxy_t* args = (plotxy_t*)baton;
+	free(args->xyvals);
 	free(args->wcs);
 	free(args->xcol);
 	free(args->ycol);

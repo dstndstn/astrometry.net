@@ -13,8 +13,10 @@ struct plotxy_args {
 	int nobjs;
 	double scale;
 	double bglw;
-	//float bgr, bgg, bgb, bga;
 	float bgrgba[4];
+
+	// coordinates added with xy_val <x> <y>
+	dl* xyvals;
 
 	sip_t* wcs;
 };
@@ -34,6 +36,7 @@ void plot_xy_set_xcol(plotxy_t* args, const char* col);
 void plot_xy_set_ycol(plotxy_t* args, const char* col);
 void plot_xy_set_filename(plotxy_t* args, const char* fn);
 int plot_xy_set_wcs_filename(plotxy_t* args, const char* fn);
+int plot_xy_set_offsets(plotxy_t* args, double xo, double yo);
 
 int plot_xy_command(const char* command, const char* cmdargs,
 					plot_args_t* args, void* baton);
@@ -42,6 +45,8 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 				 plot_args_t* plotargs, void* baton);
 
 void plot_xy_free(plot_args_t* args, void* baton);
+
+void plot_xy_vals(plotxy_t* args, double x, double y);
 
 extern const plotter_t plotter_xy;
 

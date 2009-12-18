@@ -44,6 +44,15 @@
 #include "log.h"
 #include "errors.h"
 
+int plotstuff_append_doubles(const char* str, dl* lst) {
+	int i;
+	sl* strs = sl_split(NULL, str, " ");
+	for (i=0; i<sl_size(strs); i++)
+		dl_append(lst, atof(sl_get(strs, i)));
+	sl_free2(strs);
+	return 0;
+}
+
 int plot_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2) {
 	double decstep;
 	double dec;
@@ -147,6 +156,11 @@ static int plot_builtin_init2(plot_args_t* pargs, void* baton) {
 	return 0;
 }
 
+int plotstuff_set_markersize(plot_args_t* pargs, double ms) {
+	pargs->markersize = ms;
+	return 0;
+}
+
 int plotstuff_set_marker(plot_args_t* pargs, const char* name) {
 	int m = cairoutils_parse_marker(name);
 	if (m == -1) {
@@ -239,6 +253,9 @@ static plotter_t plotters[7];
 
 int plotstuff_init(plot_args_t* pargs) {
 	int i, NR;
+
+	// ?
+	memset(pargs, 0, sizeof(plot_args_t));
 
 	plotters[0] = builtin;
 	plotters[1] = plotter_fill;
@@ -418,12 +435,17 @@ int plotstuff_output(plot_args_t* pargs) {
 	case PLOTSTUFF_FORMAT_JPG:
 	case PLOTSTUFF_FORMAT_PPM:
 	case PLOTSTUFF_FORMAT_PNG:
+	case PLOTSTUFF_FORMAT_MEMIMG:
 		{
 			int res;
 			unsigned char* img = cairo_image_surface_get_data(pargs->target);
 			// Convert image for output...
 			cairoutils_argb32_to_rgba(img, pargs->W, pargs->H);
-			if (pargs->outformat == PLOTSTUFF_FORMAT_JPG) {
+			if (pargs->outformat == PLOTSTUFF_FORMAT_MEMIMG) {
+				pargs->outimage = img;
+				res = 0;
+				img = NULL;
+			} else if (pargs->outformat == PLOTSTUFF_FORMAT_JPG) {
 				res = cairoutils_write_jpeg(pargs->outfn, img, pargs->W, pargs->H);
 			} else if (pargs->outformat == PLOTSTUFF_FORMAT_PPM) {
 				res = cairoutils_write_ppm(pargs->outfn, img, pargs->W, pargs->H);
@@ -433,7 +455,6 @@ int plotstuff_output(plot_args_t* pargs) {
 				res=-1; // for gcc
 				assert(0);
 			}
-			//free(img);
 			if (res)
 				ERROR("Failed to write output image");
 			return res;

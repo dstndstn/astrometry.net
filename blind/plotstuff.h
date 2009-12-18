@@ -12,11 +12,15 @@
 #define PLOTSTUFF_FORMAT_PNG 2
 #define PLOTSTUFF_FORMAT_PPM 3
 #define PLOTSTUFF_FORMAT_PDF 4
+// Save the image as RGBA image "pargs->outimage"
+#define PLOTSTUFF_FORMAT_MEMIMG 5
 
 struct plot_args {
     char* outfn;
 	FILE* fout;
 	int outformat;
+
+	unsigned char* outimage;
 
 	cairo_t* cairo;
 	cairo_surface_t* target;
@@ -76,6 +80,8 @@ int plotstuff_set_color(plot_args_t* pargs, const char* name);
 
 int plotstuff_set_marker(plot_args_t* pargs, const char* name);
 
+int plotstuff_set_markersize(plot_args_t* pargs, double ms);
+
 int plotstuff_set_size(plot_args_t* pargs, int W, int H);
 
 int
@@ -95,5 +101,7 @@ int plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 
 int plot_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2);
 int plot_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra2);
+
+int plotstuff_append_doubles(const char* str, dl* lst);
 
 #endif
