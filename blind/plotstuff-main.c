@@ -58,10 +58,24 @@
 
  Annotations:
 
- annotations
  annotations_bgcolor
  annotations_fontsize
  annotations_font
+ annotations
+
+ Image outlines:
+
+ outline_wcs <fn>
+ outline_step <pix> -- step size for walking the image boundary, default 10
+ outline
+
+ RA,Dec grid:
+
+ grid_rastep <deg>
+ grid_decstep <deg>
+ grid_ralabelstep <deg>
+ grid_declabelstep <deg>
+ grid
 
  */
 

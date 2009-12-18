@@ -123,6 +123,7 @@ static void plot_builtin_apply(cairo_t* cairo, plot_args_t* args) {
 	cairo_set_rgba(cairo, args->rgba);
 	cairo_set_line_width(cairo, args->lw);
 	cairo_set_operator(cairo, args->op);
+	cairo_set_font_size(cairo, args->fontsize);
 }
 
 static void* plot_builtin_init(plot_args_t* args) {
@@ -135,6 +136,7 @@ static void* plot_builtin_init(plot_args_t* args) {
 	args->markersize = 5.0;
 	args->linestep = 10;
 	args->op = CAIRO_OPERATOR_OVER;
+	args->fontsize = 20;
 	return NULL;
 }
 
@@ -168,6 +170,8 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 			ERROR("Failed to parse plot_color: \"%s\"", cmdargs);
 			return -1;
 		}
+	} else if (streq(cmd, "plot_fontsize")) {
+		pargs->fontsize = atof(cmdargs);
 	} else if (streq(cmd, "plot_alpha")) {
 		// FIXME -- add checking.
 		pargs->rgba[3] = atof(cmdargs);

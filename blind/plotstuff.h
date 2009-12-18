@@ -33,6 +33,8 @@ struct plot_args {
 	int marker;
 	float markersize;
 
+	float fontsize;
+
 	// step size in pixels for drawing curved lines in RA,Dec
 	float linestep;
 };

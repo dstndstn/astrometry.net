@@ -40,11 +40,99 @@ void* plot_grid_init(plot_args_t* plotargs) {
 	return args;
 }
 
+static void pretty_label(double x, char* buf) {
+	int i;
+	sprintf(buf, "%.2f", x);
+	logverb("label: \"%s\"\n", buf);
+	// Look for decimal point.
+	if (!strchr(buf, '.')) {
+		logverb("no decimal point\n");
+		return;
+	}
+	// Trim trailing zeroes (after the decimal point)
+	i = strlen(buf)-1;
+	while (buf[i] == '0') {
+		buf[i] = '\0';
+		logverb("trimming trailing zero at %i: \"%s\"\n", i, buf);
+		i--;
+		assert(i > 0);
+	}
+	// Trim trailing decimal point, if it exists.
+	i = strlen(buf)-1;
+	if (buf[i] == '.') {
+		buf[i] = '\0';
+		logverb("trimming trailing decimal point at %i: \"%s\"\n", i, buf);
+	}
+}
+
+static void add_text(cairo_t* cairo, double x, double y,
+					 const char* txt, plot_args_t* pargs,
+					 float* bgrgba,
+					 float* width, float* height) {
+	float ex,ey;
+	float l,r,t,b;
+	cairo_text_extents_t ext;
+	double textmargin = 2.0;
+	cairo_text_extents(cairo, txt, &ext);
+	// x center
+	x -= (ext.width + ext.x_bearing)/2.0;
+	// y center
+	y -= ext.y_bearing/2.0;
+
+	l = x + ext.x_bearing;
+	r = l + ext.width;
+	t = y + ext.y_bearing;
+	b = t + ext.height;
+	l -= textmargin;
+	r += (textmargin + 1);
+	t -= textmargin;
+	b += (textmargin + 1);
+
+	// Move away from edges...
+	ex = ey = 0.0;
+	if (l < 0)
+		ex = -l;
+	if (t < 0)
+		ey = -t;
+	if (r > pargs->W)
+		ex = -(r - pargs->W);
+	if (b > pargs->H)
+		ey = -(b - pargs->H);
+	x += ex;
+	l += ex;
+	r += ex;
+	y += ey;
+	t += ey;
+	b += ey;
+
+	cairo_save(cairo);
+	// blank out underneath the text...
+	if (bgrgba) {
+		cairo_set_rgba(cairo, bgrgba);
+		cairo_move_to(cairo, l, t);
+		cairo_line_to(cairo, l, b);
+		cairo_line_to(cairo, r, b);
+		cairo_line_to(cairo, r, t);
+		cairo_close_path(cairo);
+		cairo_fill(cairo);
+	}
+	cairo_restore(cairo);
+
+	cairo_move_to(cairo, x, y);
+	cairo_show_text(cairo, txt);
+
+	if (width)
+		*width = (r - l);
+	if (height)
+		*height = (b - t);
+}
+
 int plot_grid_plot(const char* command,
 					cairo_t* cairo, plot_args_t* pargs, void* baton) {
 	plotgrid_t* args = (plotgrid_t*)baton;
 	double ramin,ramax,decmin,decmax;
 	double ra,dec;
+	float bgrgba[4] = { 0,0,0,1 };
 
 	if (!pargs->wcs) {
 		ERROR("No WCS was set -- can't plot grid lines");
@@ -72,7 +160,8 @@ int plot_grid_plot(const char* command,
 		cairo_stroke(pargs->cairo);
 	}
 
-	logmsg("Dolabel: %i\n", (int)args->dolabel);
+	//logmsg("Dolabel: %i\n", (int)args->dolabel);
+	args->dolabel = (args->ralabelstep > 0) && (args->declabelstep > 0);
 	if (args->dolabel) {
 		double cra, cdec;
 		if (args->ralabelstep == 0 || args->declabelstep == 0) {
@@ -80,6 +169,7 @@ int plot_grid_plot(const char* command,
 			ERROR("Need grid_ralabelstep, grid_declabelstep");
 			return -1;
 		}
+		logmsg("Adding grid labels...\n");
 		sip_get_radec_center(pargs->wcs, &cra, &cdec);
 		assert(cra >= ramin && cra <= ramax);
 		assert(cdec >= decmin && cdec <= decmax);
@@ -96,14 +186,16 @@ int plot_grid_plot(const char* command,
 			double x,y;
 			bool ok;
 			int i, N;
+			double lra;
+			logverb("Labelling RA=%g\n", ra);
 			assert(!sip_is_inside_image(pargs->wcs, ra, out));
-			//assert(!sip_is_inside_image(pargs->wcs, ra, in));
 			i=0;
 			N = 10;
 			while (!sip_is_inside_image(pargs->wcs, ra, in)) {
 				if (i == N)
 					break;
 				in = decmin + (double)i/(double)(N-1) * (decmax-decmin);
+				i++;
 			}
 			if (!sip_is_inside_image(pargs->wcs, ra, in))
 				continue;
@@ -118,14 +210,58 @@ int plot_grid_plot(const char* command,
 				else
 					out = half;
 			}
-			printf("in=%g, out=%g\n", in, out);
-			snprintf(label, sizeof(label), "%.1f", ra);
+			lra = ra;
+			if (lra < 0)
+				lra += 360;
+			if (lra >= 360)
+				lra -= 360;
+			//snprintf(label, sizeof(label), "%.1f", lra);
+			pretty_label(lra, label);
 			logmsg("Label \"%s\" at (%g,%g)\n", label, ra, in);
 			ok = sip_radec2pixelxy(pargs->wcs, ra, in, &x, &y);
-			cairo_move_to(pargs->cairo, x, y);
-			cairo_show_text(pargs->cairo, label);
-			cairo_stroke(pargs->cairo);
+
+			add_text(pargs->cairo, x, y, label, pargs, bgrgba, NULL, NULL);
 		}
+		for (dec = args->declabelstep * floor(decmin / args->declabelstep);
+			 dec <= args->declabelstep * ceil(decmax / args->declabelstep);
+			 dec += args->declabelstep) {
+			double out = MIN(90, 1.5 * ramax - 0.5 * cra);
+			double in = cra;
+			char label[32];
+			double x,y;
+			bool ok;
+			int i, N;
+			logverb("Labelling Dec=%g\n", dec);
+			assert(!sip_is_inside_image(pargs->wcs, out, dec));
+			i=0;
+			N = 10;
+			while (!sip_is_inside_image(pargs->wcs, in, dec)) {
+				if (i == N)
+					break;
+				in = ramin + (double)i/(double)(N-1) * (ramax-ramin);
+				i++;
+			}
+			if (!sip_is_inside_image(pargs->wcs, in, dec))
+				continue;
+			while (fabs(out - in) > 1e-6) {
+				// hahaha
+				double half;
+				bool isin;
+				half = (out + in) / 2.0;
+				isin = sip_is_inside_image(pargs->wcs, half, dec);
+				if (isin)
+					in = half;
+				else
+					out = half;
+			}
+			//snprintf(label, sizeof(label), "%.1f", dec);
+			pretty_label(dec, label);
+			logmsg("Label Dec=\"%s\" at (%g,%g)\n", label, in, dec);
+			ok = sip_radec2pixelxy(pargs->wcs, in, dec, &x, &y);
+
+			add_text(pargs->cairo, x, y, label, pargs, bgrgba, NULL, NULL);
+		}
+		
 		
 	}
 
