@@ -1,9 +1,17 @@
 import os
 import cPickle as pickle
 
-def file_size(fn):
-    st = os.stat(fn)
-    return st.st_size
+def _filesize(fn):
+	st = os.stat(fn)
+	return st.st_size
+
+def file_size(fn, error=None):
+	if error is None:
+		return _filesize(fn)
+	try:
+		return _filesize(fn)
+	except OSError:
+		return error
 
 def read_file(fn):
     return open(fn).read()
