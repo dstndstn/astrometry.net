@@ -87,11 +87,11 @@ int main(int argc, char *args[]) {
     // log errors to stderr, not stdout.
     errors_log_to(stderr);
 
-	memset(&pargs, 0, sizeof(pargs));
+
+	plotstuff_init(&pargs);
 	pargs.fout = stdout;
 	pargs.outformat = PLOTSTUFF_FORMAT_PNG;
 
-	plotstuff_init(&pargs);
 	xy = plotstuff_get_config(&pargs, "xy");
 	img = plotstuff_get_config(&pargs, "image");
 	assert(xy);

@@ -454,7 +454,8 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 	assert(mo->wcs_valid || sip);
 	assert(isfinite(logaccept));
 	assert(isfinite(logbail));
-	assert(isfinite(logstoplooking));
+	// default: HUGE_VAL
+	//assert(isfinite(logstoplooking));
 
 	// center and radius of the field in xyz space:
     fieldcenter = mo->center;
