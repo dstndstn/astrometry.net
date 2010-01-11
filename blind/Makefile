@@ -424,6 +424,12 @@ blind: blind-main.o blind.o solver.o matchfile.o \
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^
 	mv $@.tmp $@
 
+tweak: tweak-main.o blind_wcs.o verify.o matchfile.o \
+		$(COMMON)/cairoutils.o $(PLOTSTUFF) \
+		$(UTIL_OBJS) \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
+
 whynot: whynot.o matchfile.o codefile.o \
 		solvedclient.o solvedfile.o \
 		verify.o blind_wcs.o \

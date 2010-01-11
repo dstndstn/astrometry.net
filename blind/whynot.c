@@ -41,7 +41,6 @@
 #include "starkd.h"
 #include "codekd.h"
 #include "index.h"
-#include "qidxfile.h"
 #include "boilerplate.h"
 #include "sip.h"
 #include "sip_qfits.h"
@@ -51,7 +50,7 @@
 #include "codefile.h"
 #include "solver.h"
 
-const char* OPTIONS = "hx:w:i:vj:"; //q:";
+static const char* OPTIONS = "hx:w:i:vj:"; //q:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);

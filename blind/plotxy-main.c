@@ -87,7 +87,6 @@ int main(int argc, char *args[]) {
     // log errors to stderr, not stdout.
     errors_log_to(stderr);
 
-
 	plotstuff_init(&pargs);
 	pargs.fout = stdout;
 	pargs.outformat = PLOTSTUFF_FORMAT_PNG;
