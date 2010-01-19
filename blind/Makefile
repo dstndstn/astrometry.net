@@ -61,7 +61,7 @@ MISC_EXECS := project-usnob diffractionFlag_check \
 UTIL_OBJS := 
 
 OTHER_OBJS := usnob.o usnob-fits.o catalog.o \
-	codefile.o histogram.o verify.o \
+	codefile.o verify.o \
 	solver.o matchfile.o solvedclient.o solvedfile.o pnpoly.o \
 	blind_wcs.o tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
@@ -116,7 +116,7 @@ OLDEXECS := plotquads rawstartree checkquads
 
 CAIROEXECS := plotquad plotxy plot-constellations add-text plotstuff
 
-OLDEXECS_OBJS := catalog.o histogram.o verify.o matchfile.o \
+OLDEXECS_OBJS := catalog.o verify.o matchfile.o \
 	$(UTIL_OBJS)
 
 PIPELINE_MAIN_OBJ := $(addsuffix .o,$(PIPELINE))
@@ -272,7 +272,7 @@ rdlstohealpix: rdlstohealpix.o \
 xylist2fits: xylist2fits.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-certifiable: certifiable.o histogram.o matchfile.o solvedfile.o \
+certifiable: certifiable.o matchfile.o solvedfile.o \
 		$(UTILS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 fits-guess-scale: fits-guess-scale-main.o fits-guess-scale.o \
@@ -356,7 +356,7 @@ build-index: build-index-main.o build-index.o uniformize-catalog.o startree2.o h
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += build-index-main.o build-index.o uniformize-catalog.o quad-utils.o
 
-hpquads: hpquads-main.o hpquads.o quad-builder.o quad-utils.o codefile.o pnpoly.o histogram.o \
+hpquads: hpquads-main.o hpquads.o quad-builder.o quad-utils.o codefile.o pnpoly.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += hpquads-main.o quad-builder.o hpquads.o
 
@@ -418,13 +418,13 @@ ALL_OBJ += augment-xylist-main.o
 
 blind: blind-main.o blind.o solver.o matchfile.o \
 		solvedclient.o solvedfile.o verify.o \
-		blind_wcs.o histogram.o tweak.o \
+		blind_wcs.o tweak.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^
 	mv $@.tmp $@
 
-tweak: tweak-main.o blind_wcs.o verify.o matchfile.o histogram2d.o \
+tweak: tweak-main.o blind_wcs.o verify.o matchfile.o \
 		$(COMMON)/cairoutils.o $(PLOTSTUFF) \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
@@ -529,7 +529,7 @@ quadidx: quadidx.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 codeprojections: codeprojections.o $(UTIL_OBJS) $(ANLIBS)
 
-quadscales: quadscales.o histogram.o \
+quadscales: quadscales.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB)
 
