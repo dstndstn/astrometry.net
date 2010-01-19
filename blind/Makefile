@@ -424,7 +424,7 @@ blind: blind-main.o blind.o solver.o matchfile.o \
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^
 	mv $@.tmp $@
 
-tweak: tweak-main.o blind_wcs.o verify.o matchfile.o \
+tweak: tweak-main.o blind_wcs.o verify.o matchfile.o histogram2d.o \
 		$(COMMON)/cairoutils.o $(PLOTSTUFF) \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
