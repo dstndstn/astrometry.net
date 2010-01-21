@@ -38,13 +38,34 @@ void starxy_compute_range(starxy_t* xy) {
 }
 
 double starxy_getx(const starxy_t* f, int i) {
-    assert(i < f->N);
-    return f->x[i];
+  assert(f);
+  assert(i < f->N);
+  assert(i >= 0);
+  assert(f->x);
+  return f->x[i];
 }
 
 double starxy_gety(const starxy_t* f, int i) {
-    assert(i < f->N);
-    return f->y[i];
+  assert(f);
+  assert(i < f->N);
+  assert(i >= 0);
+  assert(f->y);
+  return f->y[i];
+}
+
+double starxy_get_flux(const starxy_t* f, int i) {
+  assert(f);
+  assert(i >= 0);
+  assert(i < f->N);
+  assert(f->flux);
+  return f->flux[i];
+}
+
+double starxy_get_x(const starxy_t* f, int i) {
+  return starxy_getx(f, i);
+}
+double starxy_get_y(const starxy_t* f, int i) {
+  return starxy_gety(f, i);
 }
 
 void starxy_get(const starxy_t* f, int i, double* xy) {
@@ -53,13 +74,34 @@ void starxy_get(const starxy_t* f, int i, double* xy) {
 }
 
 void starxy_setx(starxy_t* f, int i, double val) {
-    assert(i < f->N);
-    f->x[i] = val;
+  assert(f);
+  assert(i >= 0);
+  assert(i < f->N);
+  assert(f->x);
+  f->x[i] = val;
 }
 
 void starxy_sety(starxy_t* f, int i, double val) {
-    assert(i < f->N);
-    f->y[i] = val;
+  assert(f);
+  assert(i >= 0);
+  assert(i < f->N);
+  assert(f->y);
+  f->y[i] = val;
+}
+
+void starxy_set_flux(starxy_t* f, int i, double val) {
+  assert(f);
+  assert(i >= 0);
+  assert(i < f->N);
+  assert(f->flux);
+  f->flux[i] = val;
+}
+
+void starxy_set_x(starxy_t* f, int i, double x) {
+  starxy_setx(f, i, x);
+}
+void starxy_set_y(starxy_t* f, int i, double y) {
+  starxy_sety(f, i, y);
 }
 
 void starxy_set(starxy_t* f, int i, double x, double y) {

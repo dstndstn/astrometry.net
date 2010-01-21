@@ -40,10 +40,18 @@ void starxy_compute_range(starxy_t* xy);
 double starxy_getx(const starxy_t* f, int i);
 double starxy_gety(const starxy_t* f, int i);
 
+double starxy_get_x(const starxy_t* f, int i);
+double starxy_get_y(const starxy_t* f, int i);
+double starxy_get_flux(const starxy_t* f, int i);
+
 void starxy_get(const starxy_t* f, int i, double* xy);
 
 void starxy_setx(starxy_t* f, int i, double x);
 void starxy_sety(starxy_t* f, int i, double y);
+
+void starxy_set_x(starxy_t* f, int i, double x);
+void starxy_set_y(starxy_t* f, int i, double y);
+void starxy_set_flux(starxy_t* f, int i, double y);
 
 // Copies from the given arrays into the starxy_t.
 void starxy_set_x_array(starxy_t* s, const double* x);
