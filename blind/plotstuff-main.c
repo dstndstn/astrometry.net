@@ -114,7 +114,7 @@ int main(int argc, char *args[]) {
 	char* progname = args[0];
 	plot_args_t pargs;
 
-	memset(&pargs, 0, sizeof(pargs));
+	plotstuff_init(&pargs);
 	pargs.fout = stdout;
 	pargs.outformat = PLOTSTUFF_FORMAT_PNG;
 
@@ -154,20 +154,10 @@ int main(int argc, char *args[]) {
 		printHelp(progname);
 		exit(-1);
 	}
-	/*
-	 if (!pargs.W || !pargs.H) {
-	 ERROR("You must specify width and height of the output image.\n");
-	 exit(-1);
-	 }
-	 */
-
 	log_init(loglvl);
 
     // log errors to stderr, not stdout.
     errors_log_to(stderr);
-
-	if (plotstuff_init(&pargs))
-		exit(-1);
 
 	for (;;) {
 		if (plotstuff_read_and_run_command(&pargs, stdin))
