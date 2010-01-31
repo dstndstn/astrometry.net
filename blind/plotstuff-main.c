@@ -34,6 +34,10 @@
  plot_wcs <filename>
  plot_wcs_setsize
 
+ Fill with a color:
+
+ fill
+
  Image:
 
  image_file <fn>

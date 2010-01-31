@@ -101,7 +101,7 @@ xylist_t* xylist_open(const char* fn) {
         ERROR("Failed to allocate xylist");
 		return NULL;
     }
-    ls->table = fitstable_open(fn);
+    ls->table = fitstable_open_mixed(fn);
     if (!ls->table) {
 		ERROR("Failed to open FITS table %s", fn);
         free(ls);

@@ -1008,6 +1008,28 @@ fitstable_t* fitstable_open(const char* fn) {
     return NULL;
 }
 
+fitstable_t* fitstable_open_mixed(const char* fn) {
+    fitstable_t* tab;
+    tab = fitstable_new();
+    if (!tab) {
+		ERROR("Failed to allocate new FITS table structure");
+        goto bailout;
+	}
+    tab->extension = 1;
+    tab->fn = strdup_safe(fn);
+    tab->primheader = qfits_header_read(fn);
+    if (!tab->primheader) {
+        ERROR("Failed to read primary FITS header from %s", fn);
+        goto bailout;
+    }
+	return tab;
+ bailout:
+    if (tab) {
+        fitstable_close(tab);
+    }
+    return NULL;
+}
+
 static fitstable_t* open_for_writing(const char* fn, const char* mode, FILE* fid) {
     fitstable_t* tab;
     tab = fitstable_new();
