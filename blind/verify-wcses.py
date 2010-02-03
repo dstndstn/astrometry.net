@@ -77,9 +77,11 @@ if __name__ == '__main__':
 
 	for xyfn,wcsfn in zip(xylistfns, wcsfns):
 		xy = table_fields(xyfn)
-		I = argsort(-xy.mag_auto)
+		I = argsort(xy.mag_auto)
 		starx = xy.xwin_image[I]
 		stary = xy.ywin_image[I]
+
+		print zip(starx,stary)[:10]
 
 		starxy = starxy_from_arrays(starx, stary)
 		vf = verify_field_preprocess(starxy)
@@ -95,7 +97,8 @@ if __name__ == '__main__':
 		for starkd in starkds:
 			print 'verifying...'
 			logodds = verify_wcs(starkd, indexcutnside, sip, vf,
-								 1, 0.25, imagew, imageh, log(1e-100), log(1e9), log(1e300))
+								 1, 0.25, imagew, imageh,
+								 log(1e-100), log(1e9), log(1e300))
 			print 'logodds', logodds
 
 		sip_free(sip)
