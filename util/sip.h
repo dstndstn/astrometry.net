@@ -190,5 +190,7 @@ void   sip_print_to(const sip_t*, FILE* fid);
 void tan_print(const tan_t* tan);
 void tan_print_to(const tan_t* tan, FILE* f);
 
+// for python
+void sip_get_crval(const sip_t* sip, double* ra, double* dec);
 
 #endif

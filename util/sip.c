@@ -25,6 +25,11 @@
 #include "starutil.h"
 #include "mathutil.h"
 
+void sip_get_crval(const sip_t* sip, double* ra, double* dec) {
+	*ra = sip->wcstan.crval[0];
+	*dec = sip->wcstan.crval[1];
+}
+
 double sip_imagew(sip_t* sip) {
 	assert(sip);
 	return sip->wcstan.imagew;
