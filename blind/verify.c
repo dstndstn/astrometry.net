@@ -166,7 +166,7 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 
  Returns an array indicating which field stars should be kept.
  */
-bool* verify_deduplicate_field_stars(verify_field_t* vf, double* sigma2s, double nsigmas) {
+bool* verify_deduplicate_field_stars(const verify_field_t* vf, double* sigma2s, double nsigmas) {
     bool* keepers = NULL;
     int i, j, N;
     kdtree_qres_t* res;
@@ -358,7 +358,7 @@ void verify_uniformize_field(const double* xy,
 	free(lists);
 }
 
-int verify_get_test_stars(verify_field_t* vf, MatchObj* mo,
+int verify_get_test_stars(const verify_field_t* vf, MatchObj* mo,
 						  double pix2, bool do_gamma,
 						  bool fake_match,
 						  double** p_sigma2s, int** p_perm) {
@@ -425,6 +425,51 @@ double* verify_uniformize_bin_centers(double fieldW, double fieldH,
 	return bxy;
 }
 
+void verify_wcs(const startree_t* skdt,
+				int index_cutnside,
+                const sip_t* sip,
+                const verify_field_t* vf,
+                double verify_pix2,
+                double distractors,
+                double fieldW,
+                double fieldH,
+                double logbail,
+                double logaccept,
+                double logstoplooking,
+
+				double* logodds,
+				int* nfield, int* nindex,
+				int* nmatch, int* nconflict, int* ndistractor
+				// int** theta ?
+				) {
+	MatchObj mo;
+
+	memset(&mo, 0, sizeof(MatchObj));
+
+	radecdeg2xyzarr(sip->wcstan.crval[0], sip->wcstan.crval[1], mo.center);
+	mo.radius = arcsec2dist(hypot(fieldW, fieldH)/2.0 * sip_pixel_scale(sip));
+	memcpy(&(mo.wcstan), &(sip->wcstan), sizeof(tan_t));
+	mo.wcs_valid = TRUE;
+
+	verify_hit(skdt, index_cutnside, &mo, sip, vf, verify_pix2,
+			   distractors, fieldW, fieldH, logbail, logaccept,
+			   logstoplooking, FALSE, TRUE);
+
+	if (logodds)
+		*logodds = mo.logodds;
+	if (nfield)
+		*nfield = mo.nfield;
+	if (nindex)
+		*nindex = mo.nindex;
+	if (nmatch)
+		*nmatch = mo.nmatch;
+	if (nconflict)
+		*nconflict = mo.nconflict;
+	if (ndistractor)
+		*ndistractor = mo.ndistractor;
+}
+
+
 static void set_null_mo(MatchObj* mo) {
 	mo->nfield = 0;
 	mo->nmatch = 0;
@@ -432,7 +477,8 @@ static void set_null_mo(MatchObj* mo) {
 	mo->logodds = -HUGE_VAL;
 }
 
-void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, verify_field_t* vf,
+void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
+				const sip_t* sip, const verify_field_t* vf,
                 double pix2, double distractors,
                 double fieldW, double fieldH,
                 double logbail, double logaccept, double logstoplooking,
@@ -581,7 +627,7 @@ void verify_hit(startree_t* skdt, int index_cutnside, MatchObj* mo, sip_t* sip, 
 void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 					  int index_cutnside,
 					  MatchObj* mo,
-					  verify_field_t* vf,
+					  const verify_field_t* vf,
 					  double pix2,
 					  double distractors,
 					  double fieldW,

@@ -37,6 +37,24 @@ struct verify_field_t {
 };
 typedef struct verify_field_t verify_field_t;
 
+void verify_wcs(const startree_t* skdt,
+				int index_cutnside,
+                const sip_t* sip,
+                const verify_field_t* vf,
+                double verify_pix2,
+                double distractors,
+                double fieldW,
+                double fieldH,
+                double logratio_tobail,
+                double logratio_toaccept,
+                double logratio_tostoplooking,
+
+				double* logodds,
+				int* nfield, int* nindex,
+				int* nmatch, int* nconflict, int* ndistractor
+				// int** theta ?
+				);
+
 /*
   Uses the following entries in the "mo" struct:
   -wcs_valid
@@ -57,11 +75,12 @@ typedef struct verify_field_t verify_field_t;
   -corr_field
   -corr_index
  */
-void verify_hit(startree_t* skdt,
+void verify_hit(const startree_t* skdt,
 				int index_cutnside,
+				// input/output param.
                 MatchObj* mo,
-                sip_t* sip, // if non-NULL, verify this SIP WCS.
-                verify_field_t* vf,
+                const sip_t* sip, // if non-NULL, verify this SIP WCS.
+                const verify_field_t* vf,
                 double verify_pix2,
                 double distractors,
                 double fieldW,
@@ -80,7 +99,7 @@ void verify_hit(startree_t* skdt,
 void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 					  int index_cutnside,
 					  MatchObj* mo,
-					  verify_field_t* vf,
+					  const verify_field_t* vf,
 					  double pix2,
 					  double distractors,
 					  double fieldW,
@@ -121,7 +140,7 @@ double* verify_uniformize_bin_centers(double fieldW, double fieldH,
 void verify_get_quad_center(const verify_field_t* vf, const MatchObj* mo, double* centerpix,
 							double* quadr2);
 
-int verify_get_test_stars(verify_field_t* vf, MatchObj* mo,
+int verify_get_test_stars(const verify_field_t* vf, MatchObj* mo,
 						  double pix2, bool do_gamma,
 						  bool fake_match,
 						  double** p_sigma2s, int** p_perm);
@@ -132,7 +151,7 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 							double** p_indexradec,
 							double** p_indexpix, int** p_starids, int* p_nindex);
 
-bool* verify_deduplicate_field_stars(verify_field_t* vf, double* sigma2s, double nsigmas);
+bool* verify_deduplicate_field_stars(const verify_field_t* vf, double* sigma2s, double nsigmas);
 
 double* verify_compute_sigma2s_arr(const double* xy, int NF,
 								   const double* qc, double Q2,
