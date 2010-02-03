@@ -348,6 +348,12 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* healpixe
 										int Nside);
 
 /**
+ Same as above, but RA,Dec,radius in degrees.
+ */
+int healpix_get_neighbours_within_range_radec(double ra, double dec, double radius,
+											  int* healpixes, int Nside);
+
+/**
  Returns the minimum distance between the given healpix and the given
  RA,Dec, in degrees.
  */

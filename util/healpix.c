@@ -1177,6 +1177,15 @@ struct neighbour_dirn {
     double dx, dy;
 };
 
+int healpix_get_neighbours_within_range_radec(double ra, double dec, double radius,
+											  int* healpixes, int Nside) {
+	double xyz[3];
+	double r;
+	radecdeg2xyzarr(ra, dec, xyz);
+	r = deg2dist(radius);
+	return healpix_get_neighbours_within_range(xyz, r, healpixes, Nside);
+}
+
 int healpix_get_neighbours_within_range(double* xyz, double range, int* out_healpixes,
 										int Nside) {
 	int hp;
