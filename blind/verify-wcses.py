@@ -2,6 +2,7 @@ from astrometry.util.healpix import *
 from astrometry.util.pyfits_utils import *
 
 from numpy import *
+from pyfits import *
 
 import ctypes
 import ctypes.util
@@ -60,7 +61,7 @@ def verify_wcs(starkd, indexcutnside, sip, vf,
 
 def an_lib_setup():
 	# 2 = normal, 3 = verbose, 4 = debug
-	_lib.log_init(4)
+	_lib.log_init(3)
 
 if __name__ == '__main__':
 
@@ -74,6 +75,9 @@ if __name__ == '__main__':
 
 	xylistfns = ['testCat.fits']
 	wcsfns = ['PE00050.063.fits']
+	solvedlogodds = log(1e9)
+
+	lodds = []
 
 	for xyfn,wcsfn in zip(xylistfns, wcsfns):
 		xy = table_fields(xyfn)
@@ -81,7 +85,7 @@ if __name__ == '__main__':
 		starx = xy.xwin_image[I]
 		stary = xy.ywin_image[I]
 
-		print zip(starx,stary)[:10]
+		#print zip(starx,stary)[:10]
 
 		starxy = starxy_from_arrays(starx, stary)
 		vf = verify_field_preprocess(starxy)
@@ -100,11 +104,20 @@ if __name__ == '__main__':
 								 1, 0.25, imagew, imageh,
 								 log(1e-100), log(1e9), log(1e300))
 			print 'logodds', logodds
+			lodds.append(logodds)
 
 		sip_free(sip)
 		verify_field_free(vf)
 		starxy_free(starxy)
 
+	hdu = pyfits.new_table([
+		pyfits.Column(name='sourcefn', format='32A', array=xylistfns),
+		pyfits.Column(name='wcsfn', format='32A', array=wcsfns),
+		pyfits.Column(name='logodds', format='E', array=lodds),
+		pyfits.Column(name='solved', format='L', array=(lodds > solvedlogodds)),
+		])
+	hdu.writeto('logodds.fits', clobber=True)
+	
 	#healpix.healpix_neighbours_within_range
 
 	# -load set of star kdtree files
