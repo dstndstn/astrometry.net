@@ -1,4 +1,5 @@
 from numpy import *
+import datetime
 
 # scalars (racenter, deccenter) in deg
 # scalar radius in deg
