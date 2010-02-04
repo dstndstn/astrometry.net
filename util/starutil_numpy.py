@@ -259,8 +259,37 @@ def galactic_unit_vectors():
 	return (xhat, yhat, zhat)
 
 
+def mjdtodate(mjd):
+	jd = mjdtojd(mjd)
+	return jdtodate(jd)
 
+def jdtodate(jd):
+	unixtime = (jd - 2440587.5) * 86400. # in seconds
+	return datetime.datetime.utcfromtimestamp(unixtime)
 
+def mjdtojd(mjd):
+	return mjd + 2400000.5
+
+def timedeltatodays(dt):
+	return dt.days + (dt.seconds + dt.microseconds/1e6)/86400.
+
+def datetomjd(d):
+	d0 = datetime.datetime(1858, 11, 17, 0, 0, 0)
+	dt = d - d0
+	# dt is a timedelta object.
+	return timedeltatodays(dt)
+
+# UTC for 2000 January 1.5
+J2000 = datetime.datetime(2000,1,1,12,0,0,0,tzinfo=None)
+
+def ecliptic_basis(eclipticangle = 23.43928):
+	Equinox= array([1,0,0])
+	CelestialPole = array([0,0,1])
+	YPole = cross(CelestialPole, Equinox)
+	EclipticAngle= deg2rad(eclipticangle)
+	EclipticPole= (CelestialPole * cos(EclipticAngle) - YPole * sin(EclipticAngle))
+	Ydir = cross(EclipticPole, Equinox)
+	return (Equinox, Ydir, EclipticPole)
 
 
 
