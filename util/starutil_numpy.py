@@ -295,13 +295,24 @@ def ecliptic_basis(eclipticangle = 23.43928):
 	Ydir = cross(EclipticPole, Equinox)
 	return (Equinox, Ydir, EclipticPole)
 
+meters_per_au = 1.4959e11 # thanks, Google
+speed_of_light = 2.99792458e8 # m/s
+seconds_per_day = 86400.
+days_per_year = 365.25
 
+def days_to_years(d):
+	return d / days_per_year
 
+def au_to_meters(au):
+	return au * meters_per_au
 
+def seconds_to_days(s):
+	return s / seconds_per_day
 
-
-
-
+# Returns the light travel time for the given distance (in AU), in days.
+def au_light_travel_time_days(au):
+	return seconds_to_days(au_to_meters(au) / speed_of_light)
+	
 
 
 def hms2ra(h, m, s):

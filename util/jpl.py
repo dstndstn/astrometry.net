@@ -45,7 +45,7 @@ radecrex = re.compile(radecrexstr, re.MULTILINE | re.DOTALL)
 
 # Returns a list of lists of elements, plus a list of the JDs.
 #   ([jd1, jd2, ...], [   [a1, e1, i1, Omega1, pomega1, M1, GM1], ... ])
-# Where  i, Omega, pomega, M   are in degrees.
+# Where  i, Omega, pomega, M   are in radians
 def parse_orbital_elements(s):
 	m = sysgmrex.search(s)
 	if not m:
@@ -65,6 +65,8 @@ def parse_orbital_elements(s):
 	return allE
 
 # Returns (x, v, jd), each as numpy arrays.
+#     x in AU
+#     v in AU/yr
 def parse_phase_space(s):
 	all_x = []
 	all_v = []
@@ -79,6 +81,7 @@ def parse_phase_space(s):
 	return (array(all_x), array(all_v), array(all_jd))
 
 # Returns (ra,dec,jd), each as numpy arrays.
+#   RA,Dec in J2000 deg
 def parse_radec(s):
 	all_ra = []
 	all_dec = []
