@@ -280,6 +280,9 @@ def datetomjd(d):
 	# dt is a timedelta object.
 	return timedeltatodays(dt)
 
+def datetojd(d):
+	return mjdtojd(datetomjd(d))
+
 # UTC for 2000 January 1.5
 J2000 = datetime.datetime(2000,1,1,12,0,0,0,tzinfo=None)
 
