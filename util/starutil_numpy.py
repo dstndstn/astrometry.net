@@ -86,6 +86,27 @@ def xyztoradec(xyz):
 #####################
 
 # RA,Decs in degrees.
+def distsq_between_radecs(ra1, dec1, ra2, dec2):
+	'''
+	Computes the distance-square on the unit sphere between two (arrays of) RA,Decs.
+	'''
+	xyz1 = radectoxyz(ra1, dec1)
+	xyz2 = radectoxyz(ra2, dec2)
+	# (n,3) (m,3)
+	s0 = xyz1.shape[0]
+	s1 = xyz2.shape[0]
+	d2 = zeros((s0,s1))
+	for s in range(s0):
+		d2[s,:] = sum((xyz1[s,:] - xyz2)**2, axis=1)
+	if s0 == 1 and s1 == 1:
+		d2 = d2[0,0]
+	elif s0 == 1:
+		d2 = d2[0,:]
+	elif s1 == 1:
+		d2 = d2[:,0]
+	return d2
+
+# RA,Decs in degrees.
 def arcsec_between(ra1, dec1, ra2, dec2):
 	'''
 	Computes the angle between two (arrays of) RA,Decs.
@@ -105,26 +126,18 @@ def arcsec_between(ra1, dec1, ra2, dec2):
 	 [ 3600.     0.]]
 
 	'''
-	xyz1 = radectoxyz(ra1, dec1)
-	xyz2 = radectoxyz(ra2, dec2)
-	# (n,3) (m,3)
-
-	s0 = xyz1.shape[0]
-	s1 = xyz2.shape[0]
-	d2 = zeros((s0,s1))
-	for s in range(s0):
-		d2[s,:] = sum((xyz1[s,:] - xyz2)**2, axis=1)
-	if s0 == 1 and s1 == 1:
-		d2 = d2[0,0]
-	elif s0 == 1:
-		d2 = d2[0,:]
-	elif s1 == 1:
-		d2 = d2[:,0]
+	d2 = distsq_between_radecs(ra1, dec1, ra2, dec2)
 	return distsq2arcsec(d2)
 
 def degrees_between(ra1, dec1, ra2, dec2):
 	return arcsec2deg(arcsec_between(ra1, dec1, ra2, dec2))
 
+def deg2distsq(deg):
+	return rad2distsq(deg2rad(deg))
+
+def rad2distsq(r):
+	# inverse of distsq2arc; cosine law.
+	return 2.0 * (1.0 - cos(r));
 
 def distsq2rad(dist2):
     return arccos(1. - dist2 / 2.)

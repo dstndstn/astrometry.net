@@ -40,7 +40,7 @@ def metropolis(data, model, nlinks, beta=1., keepchain=True):
 			oldlnp = newlnp
 			#naccept += 1
 			if newlnp > bestlnp:
-				bestlnp = lnp
+				bestlnp = newlnp
 				bestparams = newparams
 		else:
 			# keep old parameters

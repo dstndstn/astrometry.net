@@ -21,7 +21,7 @@ elemrexstr = (r'^' + floatvar('jd')
 elemrex = re.compile(elemrexstr, re.MULTILINE | re.DOTALL)
 
 # For finding "System GM" -- only in orbital elements type
-sysgmrexstr = '^System GM *: ' + floatvar('gm') + ' AU^3/d^2$'
+sysgmrexstr = '^System GM *: ' + floatvar('gm') + r' '#AU\^3/d\^2$'
 sysgmrex = re.compile(sysgmrexstr)
 
 # For parsing X,V type output
