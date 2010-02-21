@@ -46,12 +46,15 @@ radecrex = re.compile(radecrexstr, re.MULTILINE | re.DOTALL)
 # Returns a list of lists of elements, plus a list of the JDs.
 #   ([jd1, jd2, ...], [   [a1, e1, i1, Omega1, pomega1, M1, GM1], ... ])
 # Where  i, Omega, pomega, M   are in radians
-def parse_orbital_elements(s):
-	m = sysgmrex.search(s)
-	if not m:
-		print 'Did not find "System GM" entry'
-		return None
-	gm = float(m.group('gm'))
+def parse_orbital_elements(s, needSystemGM=True):
+	if needSystemGM:
+		m = sysgmrex.search(s)
+		if not m:
+			print 'Did not find "System GM" entry'
+			return None
+		gm = float(m.group('gm'))
+	else:
+		gm = 1.
 	allE = []
 	alljd = []
 	for m in elemrex.finditer(s):
@@ -62,7 +65,7 @@ def parse_orbital_elements(s):
 		E.append(gm)
 		allE.append(E)
 		alljd.append(float(d['jd']))
-	return allE
+	return alljd,allE
 
 # Returns (x, v, jd), each as numpy arrays.
 #     x in AU

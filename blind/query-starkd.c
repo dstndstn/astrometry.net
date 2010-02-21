@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009,2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -24,12 +24,14 @@
 #include "errors.h"
 #include "boilerplate.h"
 #include "starutil.h"
+#include "rdlist.h"
 
-static const char* OPTIONS = "hvr:d:R:t:I";//T";
+static const char* OPTIONS = "hvr:d:R:t:Io:";//T";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s [options] <star-kdtree-file>\n"
+		   "    [-o <ra-dec-list>]: write FITS table (default: print ASCII to stdout)\n"
 		   "    [-r <ra>] (deg)\n"
 		   "    [-d <dec>] (deg)\n"
 		   "    [-R <radius>] (deg)\n"
@@ -61,9 +63,13 @@ int main(int argc, char **argv) {
 	int N;
 	pl* tagdata = pl_new(4);
 	int i;
+	char* rdfn = NULL;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'o':
+			rdfn = optarg;
+			break;
 		case 'I':
 			getinds = TRUE;
 			break;
@@ -131,24 +137,69 @@ int main(int argc, char **argv) {
 		pl_append(tagdata, data);
 	}
 
-	// Header
-	printf("# RA, Dec");
-	if (getinds)
-		printf(", index");
-	for (i=0; i<sl_size(tag); i++)
-		printf(", %s", sl_get(tag, i));
-	printf("\n");
-
-	for (i=0; i<N; i++) {
-		int j;
-		printf("%g, %g", radec[i*2+0], radec[i*2+1]);
-		if (getinds)
-			printf(", %i", inds[i]);
-		for (j=0; j<sl_size(tagdata); j++) {
-			double* data = pl_get(tagdata, j);
-			printf(", %g", data[i]);
+	if (rdfn) {
+		rdlist_t* rd = rdlist_open_for_writing(rdfn);
+		il* colnums = il_new(16);
+		if (!rd) {
+			ERROR("Failed to open output file %s", rdfn);
+			exit(-1);
 		}
+		if (rdlist_write_primary_header(rd)) {
+			ERROR("Failed to write header to output file %s", rdfn);
+			exit(-1);
+		}
+		for (i=0; i<sl_size(tag); i++) {
+			// HACK -- assume double!
+			int colnum = rdlist_add_tagalong_column(rd, fitscolumn_double_type(), 1,
+													fitscolumn_double_type(), sl_get(tag, i), NULL);
+			il_append(colnums, colnum);
+		}
+		if (rdlist_write_header(rd)) {
+			ERROR("Failed to write header to output file %s", rdfn);
+			exit(-1);
+		}
+
+		for (i=0; i<N; i++) {
+			if (rdlist_write_one_radec(rd, radec[i*2+0], radec[i*2+1])) {
+				ERROR("Failed to write RA,Dec to output file %s", rdfn);
+				exit(-1);
+			}
+		}
+		for (i=0; i<sl_size(tag); i++) {
+			// HACK -- assume double!
+			if (rdlist_write_tagalong_column(rd, il_get(colnums, i), 0, N, pl_get(tagdata, i), sizeof(double))) {
+				ERROR("Failed to write tag-along data column %s", sl_get(tag, i));
+				exit(-1);
+			}
+		}
+		if (rdlist_fix_header(rd) ||
+			rdlist_fix_primary_header(rd) ||
+			rdlist_close(rd)) {
+			ERROR("Failed to close output file %s", rdfn);
+			exit(-1);
+		}
+		il_free(colnums);
+
+	} else {
+		// Header
+		printf("# RA, Dec");
+		if (getinds)
+			printf(", index");
+		for (i=0; i<sl_size(tag); i++)
+			printf(", %s", sl_get(tag, i));
 		printf("\n");
+
+		for (i=0; i<N; i++) {
+			int j;
+			printf("%g, %g", radec[i*2+0], radec[i*2+1]);
+			if (getinds)
+				printf(", %i", inds[i]);
+			for (j=0; j<sl_size(tagdata); j++) {
+				double* data = pl_get(tagdata, j);
+				printf(", %g", data[i]);
+			}
+			printf("\n");
+		}
 	}
 
 	free(radec);

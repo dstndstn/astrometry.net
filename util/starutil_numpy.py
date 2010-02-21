@@ -284,6 +284,9 @@ def jdtodate(jd):
 def mjdtojd(mjd):
 	return mjd + 2400000.5
 
+def jdtomjd(jd):
+	return jd - 2400000.5
+
 def timedeltatodays(dt):
 	return dt.days + (dt.seconds + dt.microseconds/1e6)/86400.
 
