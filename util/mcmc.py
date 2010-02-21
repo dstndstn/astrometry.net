@@ -1,6 +1,6 @@
 from numpy import *
 
-def metropolis(data, model, nlinks, beta=1., keepchain=True):
+def metropolis(data, model, nlinks, beta=1., keepchain=True, startlink=0):
 	'''
 	p = model.get_params()
 	-- this must return an *independent copy* of the parameters.
@@ -21,7 +21,7 @@ def metropolis(data, model, nlinks, beta=1., keepchain=True):
 	bestlnp = oldlnp
 
 	chain = []
-	for link in range(nlinks):
+	for link in range(startlink, nlinks):
 
 		newparams = model.propose_params()
 		model.set_params(newparams)
