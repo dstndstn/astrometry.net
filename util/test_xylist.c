@@ -3,6 +3,7 @@
 #include "xylist.h"
 #include "fitsioutils.h"
 #include "qfits.h"
+#include "log.h"
 
 #include "cutest.h"
 
@@ -17,6 +18,8 @@ void test_tagalong(CuTest* ct) {
     char* fn = get_tmpfile(2);
     starxy_t fld;
     starxy_t infld;
+
+	log_init(LOG_VERB);
 
     out = xylist_open_for_writing(fn);
     CuAssertPtrNotNull(ct, out);
@@ -69,9 +72,7 @@ void test_tagalong(CuTest* ct) {
 
     in = xylist_open(fn);
     CuAssertPtrNotNull(ct, in);
-
     CuAssertIntEquals(ct, 1, xylist_n_fields(in));
-
     CuAssertIntEquals(ct, 0, strcmp(in->antype, AN_FILETYPE_XYLS));
     CuAssertPtrNotNull(ct, xylist_read_field(in, &infld));
     CuAssertIntEquals(ct, N, infld.N);
@@ -160,6 +161,9 @@ void test_read_write_xy(CuTest* ct) {
     starxy_t fld;
     starxy_t infld;
 
+	log_init(LOG_VERB);
+	logverb("using temp file %s\n", fn);
+
     out = xylist_open_for_writing(fn);
     CuAssertPtrNotNull(ct, out);
 
@@ -217,11 +221,9 @@ void test_read_write_xy(CuTest* ct) {
     CuAssertIntEquals(ct, 0, xylist_write_header(out));
     CuAssertIntEquals(ct, 0, xylist_write_field(out, &fld));
     CuAssertIntEquals(ct, 0, xylist_fix_header(out));
-
     CuAssertIntEquals(ct, 0, xylist_close(out));
 
     out = NULL;
-
 
     
     in = xylist_open(fn);
@@ -244,7 +246,6 @@ void test_read_write_xy(CuTest* ct) {
     hdr = xylist_get_header(in);
     CuAssertPtrNotNull(ct, hdr);
     CuAssertIntEquals(ct, 43, qfits_header_getint(hdr, "KEYB", -1));
-
     CuAssertPtrNotNull(ct, xylist_read_field(in, &infld));
 
     CuAssertIntEquals(ct, N, infld.N);

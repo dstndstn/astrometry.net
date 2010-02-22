@@ -148,6 +148,12 @@ struct fitsbin_t {
     qfits_header* primheader;
     off_t primheader_end;
 
+	// for use when reading (not in_memory()): cache the tables in this FITS file.
+	// ideally this would be pushed down to the qfits layer...
+	qfits_table** tables;
+	// number of extensions
+	int Next;
+
     // for use by callback_read_header().
     void* userdata;
 };

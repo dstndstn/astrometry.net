@@ -159,6 +159,15 @@ int fitsbin_close(fitsbin_t* fb) {
 		bl_free(fb->items);
 	}
 
+	if (fb->tables) {
+		for (i=0; i<fb->Next; i++) {
+			if (!fb->tables[i])
+				continue;
+			qfits_table_close(fb->tables[i]);
+		}
+		free(fb->tables);
+	}
+
 	free(fb);
     return rtn;
 }
@@ -345,8 +354,45 @@ int fitsbin_write_item(fitsbin_t* fb, fitsbin_chunk_t* chunk, void* data) {
     return fitsbin_write_items(fb, chunk, data, 1);
 }
 
+/**
+ Reads all tables in this file and caches them in fb->tables.
+ */
+static void cache_tables(fitsbin_t* fb) {
+	int i;
+	// NOTE, qfits has funny ideas about how extensions are numbered...
+	// (they're one-indexed); we could save a bit of storage by zero-indexing
+	// them, but that risks lots of off-by-ones...
+	fb->tables = calloc(fb->Next + 1, sizeof(qfits_table*));
+	for (i=1; i<=fb->Next; i++) {
+        fb->tables[i] = qfits_table_open(fb->filename, i);
+	}
+}
+
+// Like fitsioutils.c : fits_find_table_column(), but using our cache...
+static int find_table_column(fitsbin_t* fb, const char* colname, int* pstart, int* psize, int* pext) {
+    int i;
+	assert(fb->tables);
+	for (i=1; i<=fb->Next; i++) {
+        int c;
+        qfits_table* table = fb->tables[i];
+		if (!table)
+			continue;
+		c = fits_find_column(table, colname);
+		if (c == -1)
+			continue;
+		if (qfits_get_datinfo(fb->filename, i, pstart, psize) == -1) {
+			ERROR("error getting start/size for ext %i in file %s.\n", i, fb->filename);
+            return -1;
+        }
+		if (pext) *pext = i;
+		return 0;
+    }
+	debug("searched %i extensions in file %s but didn't find a table with a column \"%s\".\n",
+		  fb->Next, fb->filename, colname);
+    return -1;
+}
+
 static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
-    struct timeval tv1, tv2;
     int tabstart, tabsize, ext;
     size_t expected = 0;
 	int mode, flags;
@@ -377,17 +423,22 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 		chunk->header = qfits_header_copy(inmemext->header);
 
 	} else {
+		double t0;
 
-		gettimeofday(&tv1, NULL);
-		if (fits_find_table_column(fb->filename, chunk->tablename,
-								   &tabstart, &tabsize, &ext)) {
+		if (!fb->tables) {
+			t0 = timenow();
+			cache_tables(fb);
+			debug("fitsbin: cache_tables() took %g ms\n", 1000 * (timenow() - t0));
+		}
+
+		t0 = timenow();
+		if (find_table_column(fb, chunk->tablename, &tabstart, &tabsize, &ext)) {
 			if (chunk->required)
 				ERROR("Couldn't find table \"%s\" in file \"%s\"",
 					  chunk->tablename, fb->filename);
 			return -1;
 		}
-		gettimeofday(&tv2, NULL);
-		debug("fits_find_table_column(%s) took %g ms\n", chunk->tablename, millis_between(&tv1, &tv2));
+		debug("fits_find_table_column(%s) took %g ms\n", chunk->tablename, 1000 * (timenow() - t0));
 
 		chunk->header = qfits_header_readext(fb->filename, ext);
 		if (!chunk->header) {
@@ -503,6 +554,8 @@ fitsbin_t* fitsbin_open(const char* fn) {
         ERROR("Couldn't read FITS header from file \"%s\"", fn);
         goto bailout;
     }
+	fb->Next = qfits_query_n_ext(fn);
+
     return fb;
  bailout:
     fitsbin_close(fb);

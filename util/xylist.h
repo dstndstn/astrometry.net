@@ -51,6 +51,17 @@
 
  xylist_fix_primary_header()
  xylist_close()
+
+
+
+Reading:
+
+
+ xylist_t* xyls = xylist_open("my.xyls");
+ int nf = xylist_n_fields(xyls);
+ starxy_t* xy = xylist_read_field(xyls, NULL);
+
+
  */
 
 /*
