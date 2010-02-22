@@ -173,7 +173,11 @@ qfits_header* kdtree_fits_get_primary_header(kdtree_fits_t* io) {
 }
 
 int kdtree_fits_read_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
-    return fitsbin_read_chunk(io, chunk);
+	int rtn;
+	double t0 = timenow();
+    rtn = fitsbin_read_chunk(io, chunk);
+	debug("kdtree_fits_read_chunk(%s) took %g ms\n", chunk->tablename, 1000. * (timenow() - t0));
+	return rtn;
 }
 
 // declarations
@@ -354,10 +358,7 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
 }
 
 int kdtree_fits_write_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
-    //fitsbin_chunk_t* ch;
     fitsbin_t* fb = kdtree_fits_get_fitsbin(io);
-    //ch = fitsbin_add_chunk(fb, chunk);
-    //if (fitsbin_write_chunk(fb, ch)) {
     if (fitsbin_write_chunk(fb, chunk)) {
         ERROR("Failed to write kdtree extra chunk");
         return -1;
