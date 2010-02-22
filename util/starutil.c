@@ -190,6 +190,10 @@ double arcsec_between_radecdeg(double ra1, double dec1,
     return distsq2arcsec(distsq_between_radecdeg(ra1, dec1, ra2, dec2));
 }
 
+double deg_between_radecdeg(double ra1, double dec1, double ra2, double dec2) {
+	return arcsec2deg(arcsec_between_radecdeg(ra1, dec1, ra2, dec2));
+}
+
 // xyz stored as xyzxyzxyz.
 inline void radec2xyzarrmany(double *ra, double *dec, double* xyz, int n) {
 	int i;

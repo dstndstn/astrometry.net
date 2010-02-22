@@ -116,6 +116,9 @@ double distsq_between_radecdeg(double ra1, double dec1, double ra2, double dec2)
 // Returns the arcseconds between two (RA,Dec)s in degrees.
 double arcsec_between_radecdeg(double ra1, double dec1, double ra2, double dec2);
 
+// Returns the degrees between two (RA,Dec)s in degrees.
+double deg_between_radecdeg(double ra1, double dec1, double ra2, double dec2);
+
 // RA in degrees to Mercator X coordinate [0, 1).
 inline double ra2mercx(double ra);
 // Dec in degrees to Mercator Y coordinate [0, 1).

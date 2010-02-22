@@ -25,6 +25,9 @@
 
 #include "plotannotations.h"
 #include "ngc2000.h"
+#include "cairoutils.h"
+#include "sip-utils.h"
+#include "starutil.h"
 #include "ioutils.h"
 #include "log.h"
 #include "errors.h"
@@ -42,6 +45,8 @@ enum cmdtype {
 	TEXT,
 	LINE,
 	RECTANGLE,
+	ARROW,
+	MARKER,
 };
 typedef enum cmdtype cmdtype;
 
@@ -55,13 +60,21 @@ struct cairocmd {
 	double radius;
 	// TEXT
 	char* text;
-	// LINE / RECTANGLE
+	// LINE / RECTANGLE / ARROW
 	double x2, y2;
+	// MARKER
+	int marker;
+	double markersize;
 };
 typedef struct cairocmd cairocmd_t;
 
 
-
+struct target {
+	double ra;
+	double dec;
+	char* name;
+};
+typedef struct target target_t;
 
 struct annotation_args {
 	bool NGC;
@@ -73,6 +86,7 @@ struct annotation_args {
 	float fontsize;
 	char* fontname;
 	float bg_rgba[4];
+	bl* targets;
 };
 typedef struct annotation_args ann_t;
 
@@ -150,6 +164,90 @@ static void add_text(plot_args_t* pargs, ann_t* ann, cairo_t* cairo,
 	 */
 }
 
+static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
+	int i;
+	double cra, cdec;
+	sip_get_radec_center(pargs->wcs, &cra, &cdec);
+	
+	for (i=0; i<bl_size(ann->targets); i++) {
+		target_t* tar = bl_access(ann->targets, i);
+		cairocmd_t cmd;
+		double px,py;
+		double cx,cy;
+		double dx,dy, r;
+		double ex,ey;
+		double ly, ry, tx, bx;
+		double distdeg;
+		memset(&cmd, 0, sizeof(cmd));
+
+		cmd.layer = 3;
+		memcpy(cmd.rgba, pargs->rgba, sizeof(cmd.rgba));
+
+		if (!plotstuff_radec2xy(pargs, tar->ra, tar->dec, &px, &py))
+			continue;
+
+		if (px >= 0 && px < pargs->W && py >= 0 && py < pargs->H) {
+			// inside the image!
+			cmd.type = MARKER;
+			cmd.x = px;
+			cmd.y = py;
+			cmd.marker = pargs->marker;
+			cmd.markersize = pargs->markersize;
+			bl_append(ann->cairocmds, &cmd);
+			cmd.type = TEXT;
+			cmd.x = px;
+			cmd.y = py;
+			cmd.text = strdup(tar->name);
+			bl_append(ann->cairocmds, &cmd);
+			continue;
+		}
+
+		// outside the image: find intersection point.
+		cx = pargs->W / 2.0;
+		cy = pargs->H / 2.0;
+
+		dx = px - cx;
+		dy = py - cy;
+
+		ly = (-(pargs->W/2.0) / dx) * (dy) + cy;
+		ry = ( (pargs->W/2.0) / dx) * (dy) + cy;
+		bx = (-(pargs->H/2.0) / dy) * (dx) + cx;
+		tx = ( (pargs->H/2.0) / dy) * (dx) + cx;
+		if (ly >= 0 && ly < pargs->H) {
+			ex = 0.0;
+			ey = ly;
+		} else if (ry >= 0 && ry < pargs->H) {
+			ex = pargs->W - 1;
+			ey = ry;
+		} else if (bx >= 0 && bx < pargs->W) {
+			ex = bx;
+			ey = 0;
+		} else if (tx >= 0 && tx < pargs->W) {
+			ex = tx;
+			ey = pargs->H - 1;
+		} else {
+			logverb("None of the edges are in bounds: px,py=(%g,%g); ly=%g, ry=%g, bx=%g, tx=%g\n", px,py,ly,ry,bx,tx);
+			continue;
+		}
+		dx = ex - cx;
+		dy = ey - cy;
+		r = sqrt(dx*dx + dy*dy);
+		
+		cmd.type = ARROW;
+		cmd.x = (r-100.0) / r * dx + cx;
+		cmd.y = (r-100.0) / r * dy + cy;
+		cmd.x2 = ex;
+		cmd.y2 = ey;
+		bl_append(ann->cairocmds, &cmd);
+
+		distdeg = deg_between_radecdeg(cra, cdec, tar->ra, tar->dec);
+
+		cmd.type = TEXT;
+		//cmd.text = strdup(tar->name);
+		asprintf(&cmd.text, "%s: %.2f deg", tar->name, distdeg);
+		bl_append(ann->cairocmds, &cmd);
+	}
+}
 
 static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 	double imscale;
@@ -242,6 +340,7 @@ void* plot_annotations_init(plot_args_t* args) {
 	ann->fontname = strdup("DejaVu Sans Mono Book");
 	parse_color_rgba("black", ann->bg_rgba);
 	ann->fontsize = 14.0;
+	ann->targets = bl_new(4, sizeof(target_t));
 	return ann;
 }
 
@@ -257,6 +356,9 @@ int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 	cairo_set_font_size(cairo, ann->fontsize);
 
 	plot_ngc(cairo, pargs, ann);
+
+	if (bl_size(ann->targets))
+		plot_targets(cairo, pargs, ann);
 
 	morelayers = TRUE;
 	for (layer=0;; layer++) {
@@ -275,11 +377,32 @@ int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 				cairo_move_to(cairo, cmd->x + cmd->radius, cmd->y);
 				cairo_arc(cairo, cmd->x, cmd->y, cmd->radius, 0, 2*M_PI);
 				break;
+			case MARKER:
+				cairoutils_draw_marker(cairo, cmd->marker, cmd->x, cmd->y, cmd->markersize);
+				break;
 			case TEXT:
 				cairo_move_to(cairo, cmd->x, cmd->y);
 				cairo_show_text(cairo, cmd->text);
 				break;
 			case LINE:
+			case ARROW:
+				cairo_move_to(cairo, cmd->x, cmd->y);
+				cairo_line_to(cairo, cmd->x2, cmd->y2);
+				{
+					double dx = cmd->x - cmd->x2;
+					double dy = cmd->y - cmd->y2;
+					double angle = atan2(dy, dx);
+					double dang = 30. * M_PI/180.0;
+					double arrowlen = 20;
+					cairo_line_to(cairo,
+								  cmd->x2 + cos(angle+dang)*arrowlen,
+								  cmd->y2 + sin(angle+dang)*arrowlen);
+					cairo_move_to(cairo, cmd->x2, cmd->y2);
+					cairo_line_to(cairo,
+								  cmd->x2 + cos(angle-dang)*arrowlen,
+								  cmd->y2 + sin(angle-dang)*arrowlen);
+				}
+				break;
 			case RECTANGLE:
 				ERROR("Unimplemented!");
 				return -1;
@@ -306,6 +429,19 @@ int plot_annotations_command(const char* cmd, const char* cmdargs,
 		ann->fontname = strdup(cmdargs);
 	} else if (streq(cmd, "annotations_bgcolor")) {
 		parse_color_rgba(cmdargs, ann->bg_rgba);
+	} else if (streq(cmd, "annotations_target")) {
+		target_t tar;
+		sl* args = sl_split(NULL, cmdargs, " ");
+		memset(&tar, 0, sizeof(target_t));
+		if (sl_size(args) == 3) {
+			tar.ra = atof(sl_get(args, 0));
+			tar.dec = atof(sl_get(args, 1));
+			tar.name = strdup(sl_get(args, 2));
+			bl_append(ann->targets, &tar);
+		} else {
+			ERROR("Need RA,Dec,name");
+			return -1;
+		}
 	} else {
 		ERROR("Unknown command \"%s\"", cmd);
 		return -1;
