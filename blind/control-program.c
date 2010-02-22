@@ -336,23 +336,11 @@ int main(int argc, char** args) {
         for (i=0; i<N; i++) {
             index_t* index = pl_get(backend->indexes, i);
             index_meta_t* meta = &(index->meta);
-			int healpixes[9];
-			int nhp;
 
-			// Find nearby healpixes (at the healpix scale of this index)
-			nhp = healpix_get_neighbours_within_range(centerxyz, hprange,
-													  healpixes, meta->hpnside);
-            // (You could move this healpix computation outside this loop if you
-            // knew that all your indexes are built with the same healpix "Nside"
-            // setting)
-
-			il_append_array(hplist, healpixes, nhp);
-			// If the index is nearby, add it.
-			if (il_contains(hplist, meta->healpix)) {
-				logmsg("Adding index %s\n", meta->indexname);
-				solver_add_index(solver, index);
-			}
-			il_remove_all(hplist);
+			if (!index_meta_is_within_range(meta, racenter, deccenter, dist2deg(hprange)))
+				continue;
+			logmsg("Adding index %s\n", meta->indexname);
+			solver_add_index(solver, index);
         }
 
 		if (sip) {
