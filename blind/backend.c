@@ -452,34 +452,15 @@ int backend_run_job(backend_t* backend, job_t* job) {
             for (k=0; k<il_size(indexlist); k++) {
                 int ii = il_get(indexlist, k);
                 index_meta_t* meta = bl_access_const(backend->indexmetas, ii);
-                bool inrange = FALSE;
-                if ((job->use_radec_center) &&
-                    (meta->hpnside >= 1 && meta->healpix > -1)) {
-                    // FIXME -- stupidly, we recompute the healpix neighbours every time
-                    // because Nside could be different and I haven't cached the results.
-                    double xyz[3];
-                    double range;
-                    int nn;
-                    int hps[9];
-                    int m;
-                    radecdeg2xyzarr(job->ra_center, job->dec_center, xyz);
-                    range = deg2dist(job->search_radius);
-                    nn = healpix_get_neighbours_within_range(xyz, range, hps, meta->hpnside);
-                    for (m=0; m<nn; m++)
-                        if (hps[m] == meta->healpix) {
-                            inrange = TRUE;
-                            break;
-                        }
-                } else
-                    // all-sky index; or we're not using RA,Dec estimate.
-                    inrange = TRUE;
-
-                if (!inrange)
+                bool inrange = TRUE;
+				if (job->use_radec_center)
+					inrange = index_meta_is_within_range(meta, job->ra_center, job->dec_center, job->search_radius);
+                if (!inrange) {
                     logverb("Not using index %s because it's not within %g degrees of (RA,Dec) = (%g,%g)\n",
                             meta->indexname, job->search_radius, job->ra_center, job->dec_center);
-
-                if (inrange)
-                    add_index_to_blind(backend, bp, ii);
+					continue;
+				}
+				add_index_to_blind(backend, bp, ii);
             }
 
             il_free(indexlist);

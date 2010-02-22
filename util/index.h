@@ -32,6 +32,10 @@
 
 #define DEFAULT_INDEX_JITTER 1.0  // arcsec
 
+/**
+ Metadata about an index, including part of the sky it covers, size of
+ quads, etc.
+ */
 struct index_meta_s {
 	char* indexname;
 
@@ -65,27 +69,33 @@ struct index_meta_s {
 };
 typedef struct index_meta_s index_meta_t;
 
-// Returns TRUE if the given index contains quads of sizes that overlap the given
-// range of quad sizes, [quadlo, quadhi], in arcseconds.
+/**
+ Returns TRUE if the given index contains quads of sizes that overlap
+ the given range of quad sizes, [quadlo, quadhi], in arcseconds.
+ */
 bool index_meta_overlaps_scale_range(index_meta_t* meta, double quadlo, double quadhi);
+
+/**
+ Returns TRUE if the given index covers a part of the sky that is
+ within "radius_deg" degrees of the given "ra","dec" position (in
+ degrees).
+ */
+bool index_meta_is_within_range(index_meta_t* meta, double ra, double dec, double radius_deg);
 
 /**
  Reads index metadata from the given 'filename' into the given 'meta' struct.
 
  This is done by basically loading the index, grabbing the metadata,
  and closing the index; therefore it checks for structural consistency
- of the index file.  As a side-effect, this means it's slow.
+ of the index file as well as getting the metadata.
  */
 int index_get_meta(const char* filename, index_meta_t* meta);
 
-/**
- Reads index metadata from the given 'filename' into the given 'meta' struct.
+bool index_is_file_index(const char* filename);
 
- This function just quickly reads the metadata items out of the FITS
- header, so should be faster than index_get_meta().
-int index_get_meta_quickly(const char* filename, index_meta_t* meta);
- */
+char* index_get_quad_filename(const char* indexname);
 
+char* index_get_qidx_filename(const char* indexname);
 
 /**
  * A loaded index
@@ -102,19 +112,13 @@ typedef struct index_s index_t;
 #define INDEX_ONLY_LOAD_METADATA 2
 #define INDEX_ONLY_LOAD_SKDT     4
 
-index_t* index_build_from(codetree* codekd, quadfile* quads, startree_t* starkd);
-
-bool index_is_file_index(const char* filename);
-
-char* index_get_quad_filename(const char* indexname);
-
-char* index_get_qidx_filename(const char* indexname);
-
 int index_get_quad_dim(const index_t* index);
 
 int index_nquads(const index_t* index);
 
 int index_nstars(const index_t* index);
+
+index_t* index_build_from(codetree* codekd, quadfile* quads, startree_t* starkd);
 
 /**
  * Load an index from disk

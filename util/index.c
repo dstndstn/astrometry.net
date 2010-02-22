@@ -20,12 +20,21 @@
 #include "log.h"
 #include "errors.h"
 #include "ioutils.h"
+#include "healpix.h"
 #include "tic.h"
 
 bool index_meta_overlaps_scale_range(index_meta_t* meta,
                                      double quadlo, double quadhi) {
     return !((quadlo > meta->index_scale_upper) ||
              (quadhi < meta->index_scale_lower));
+}
+
+bool index_meta_is_within_range(index_meta_t* meta, double ra, double dec, double radius_deg) {
+	if (meta->healpix == -1) {
+		// allsky; tautology
+		return TRUE;
+	}
+	return (healpix_distance_to_radec(meta->healpix, meta->hpnside, ra, dec, NULL) <= radius_deg);
 }
 
 int index_get_quad_dim(const index_t* index) {
