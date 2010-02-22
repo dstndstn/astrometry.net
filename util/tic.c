@@ -28,7 +28,9 @@
 #include "errors.h"
 #include "log.h"
 
-static time_t starttime, endtime;
+static time_t starttime;
+static double starttime2;
+static double startutime, startstime;
 
 double timenow() {
     struct timeval tv;
@@ -47,10 +49,14 @@ double millis_between(struct timeval* tv1, struct timeval* tv2) {
 
 void tic() {
 	starttime = time(NULL);
+	starttime2 = timenow();
+	if (get_resource_stats(&startutime, &startstime, NULL)) {
+		ERROR("Failed to get_resource_stats()");
+		return;
+	}
 }
 
-int get_resource_stats(double* p_usertime, double* p_systime, long* p_maxrss)
-{
+int get_resource_stats(double* p_usertime, double* p_systime, long* p_maxrss) {
 	struct rusage usage;
 	if (getrusage(RUSAGE_SELF, &usage)) {
 		SYSERROR("Failed to get resource stats (getrusage)");
@@ -73,10 +79,14 @@ void toc() {
 	double utime, stime;
 	long rss;
 	int dtime;
-	endtime = time(NULL);
+	double dtime2;
+	time_t endtime = time(NULL);
 	dtime = (int)(endtime - starttime);
-	if (!get_resource_stats(&utime, &stime, &rss)) {
-		logmsg("Used %g s user, %g s system (%g s total), %i s wall time, max rss %li\n",
-			   utime, stime, utime + stime, dtime, rss);
+	dtime2 = timenow() - starttime2;
+	if (get_resource_stats(&utime, &stime, &rss)) {
+		ERROR("Failed to get_resource_stats()");
+		return;
 	}
+	logmsg("Used %g s user, %g s system (%g s total), %g s wall time since last check\n",
+		   utime-startutime, stime-startstime, (utime + stime)-(startutime+startstime), dtime2);
 }

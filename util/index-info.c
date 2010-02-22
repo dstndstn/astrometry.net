@@ -86,11 +86,13 @@ int main(int argc, char **argv) {
 		//index_t* index;
 		index_meta_t imeta;
 
+		tic();
 		if (index_get_meta(indexfn, &imeta)) {
 			ERROR("Failed to read metadata for index %s", indexfn);
 			continue;
 			//exit(-1);
 		}
+		toc();
 
 		logmsg("Index %s: id %i, healpix %i (nside %i), %i stars, %i quads, dimquads=%i, scales %g to %g arcmin.\n",
 			   imeta.indexname,

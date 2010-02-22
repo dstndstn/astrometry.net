@@ -70,7 +70,6 @@ PYTHON_LIBS := _sip.so _healpix.so
 
 PROGS := an-fitstopnm downsample-fits pad-file tycho2tofits fits-flip-endian \
 		index-info
-
 # tycho2tostellarium build-hd-tree
 
 all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS)
@@ -135,7 +134,7 @@ ngc2000entries.c: parse-ngc2000.awk $(DATA)/ngc2000.dat
 ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
 	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate.awk > $@
 
-index-info: index-info.o $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+index-info: index-info.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += index-info.o
 
 tycho2tofits: tycho2tofits.o \
