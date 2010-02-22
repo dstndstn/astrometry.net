@@ -68,6 +68,7 @@
  annotations_bgcolor
  annotations_fontsize
  annotations_font
+ annotations_target <ra> <dec> <label>
  annotations
 
  Image outlines:
