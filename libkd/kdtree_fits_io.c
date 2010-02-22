@@ -31,6 +31,8 @@
 #include "ioutils.h"
 #include "errors.h"
 #include "fitsbin.h"
+#include "tic.h"
+#include "log.h"
 
 // is the given table name one of the above strings?
 int kdtree_fits_column_is_kdtree(char* columnname) {
@@ -299,6 +301,7 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
 	qfits_header* header;
     int rtn = 0;
     char* fn = fb->filename;
+	double t0;
 
     kd = CALLOC(1, sizeof(kdtree_t));
     if (!kd) {
@@ -333,7 +336,9 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
     kd->nlevels = kdtree_nnodes_to_nlevels(nnodes);
 	kd->treetype = tt;
 
+	t0 = timenow();
 	KD_DISPATCH(kdtree_read_fits, tt, rtn = , (io, kd));
+	debug("kdtree_read_fits(%s) took %g ms\n", fn, 1000. * (timenow() - t0));
 
     if (rtn) {
         FREE(kd->name);

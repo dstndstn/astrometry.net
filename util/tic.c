@@ -74,7 +74,6 @@ int get_resource_stats(double* p_usertime, double* p_systime, long* p_maxrss) {
 	return 0;
 }
 
-
 void toc() {
 	double utime, stime;
 	long rss;

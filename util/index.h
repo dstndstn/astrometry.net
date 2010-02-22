@@ -70,6 +70,24 @@ typedef struct index_meta_s index_meta_t;
 bool index_meta_overlaps_scale_range(index_meta_t* meta, double quadlo, double quadhi);
 
 /**
+ Reads index metadata from the given 'filename' into the given 'meta' struct.
+
+ This is done by basically loading the index, grabbing the metadata,
+ and closing the index; therefore it checks for structural consistency
+ of the index file.  As a side-effect, this means it's slow.
+ */
+int index_get_meta(const char* filename, index_meta_t* meta);
+
+/**
+ Reads index metadata from the given 'filename' into the given 'meta' struct.
+
+ This function just quickly reads the metadata items out of the FITS
+ header, so should be faster than index_get_meta().
+int index_get_meta_quickly(const char* filename, index_meta_t* meta);
+ */
+
+
+/**
  * A loaded index
  */
 struct index_s {
@@ -91,8 +109,6 @@ bool index_is_file_index(const char* filename);
 char* index_get_quad_filename(const char* indexname);
 
 char* index_get_qidx_filename(const char* indexname);
-
-int index_get_meta(const char* filename, index_meta_t* meta);
 
 int index_get_quad_dim(const index_t* index);
 
