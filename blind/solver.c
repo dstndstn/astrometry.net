@@ -53,6 +53,9 @@ void test_try_all_codes(pquad* pq,
 
 static const int A = 0, B = 1, C = 2, D = 3;
 
+// Number of stars in the "backbone" of the quad: stars A and B.
+static const int NBACK = 2;
+
 static void find_field_boundaries(solver_t* solver);
 
 static inline double getx(const double* d, int ind) {
@@ -709,8 +712,8 @@ static void try_all_codes(const pquad* pq,
 	debug("]\n");
 
     for (i=0; i<dimcode/2; i++) {
-        code[2*i  ] = getx(pq->xy, fieldstars[C+i]);
-        code[2*i+1] = gety(pq->xy, fieldstars[C+i]);
+        code[2*i  ] = getx(pq->xy, fieldstars[NBACK+i]);
+        code[2*i+1] = gety(pq->xy, fieldstars[NBACK+i]);
     }
 
 	if (solver->parity == PARITY_NORMAL ||
@@ -798,9 +801,8 @@ static void try_permutations(const int* origstars, int dimquad,
 	int options = KD_OPTIONS_SMALL_RADIUS | KD_OPTIONS_COMPUTE_DISTS |
 		KD_OPTIONS_NO_RESIZE_RESULTS | KD_OPTIONS_USE_SPLIT;
 	double mycode[DCMAX];
-	// The MAGIC number 2 is the number of "backbone" stars in a quad.
-	int Nstars = dimquad - 2;
-	int lastslot = dimquad - 2 - 1;
+	int Nstars = dimquad - NBACK;
+	int lastslot = dimquad - NBACK - 1;
 	/*
 	 This is a recursive function that tries all combinations of the
 	 "internal" stars (ie, not stars A,B that form the "backbone" of
@@ -840,15 +842,14 @@ static void try_permutations(const int* origstars, int dimquad,
 
 		// Check cx <= dx, if we're a "dx".
 		if (slot > 0 && solver->index->cx_less_than_dx) {
-			if (code[2 * (slot - 1) +0] > origcode[2 * i +0] + solver->cxdx_margin) {
+			if (code[2*(slot - 1) +0] > origcode[2*i +0] + solver->cxdx_margin) {
 				solver->num_cxdx_skipped++;
 				continue;
 			}
 		}
 
 		// Slot in this star...
-		// Magic 2: number of "backbone" stars.
-		stars[slot + 2] = origstars[i + 2];
+		stars[slot + NBACK] = origstars[i + NBACK];
 		code[2*slot +0] = origcode[2*i +0];
 		code[2*slot +1] = origcode[2*i +1];
 
