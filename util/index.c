@@ -313,6 +313,10 @@ static void set_meta(index_t* index) {
 	index->meanx_less_than_half = qfits_header_getboolean(index->codekd->header, "CXDXLT1", FALSE);
 }
 
+int index_dimquads(index_t* indx) {
+	return indx->dimquads;
+}
+
 index_t* index_build_from(codetree* codekd, quadfile* quads, startree_t* starkd) {
 	index_t* index = calloc(1, sizeof(index_t));
 	index->codekd = codekd;

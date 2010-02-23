@@ -181,6 +181,11 @@ test-solver: test-solver.o solver_test.o blind_wcs.o verify.o \
 NODEP_OBJS += solver_test.o
 ALL_OBJ += test-solver.o
 
+CFLAGS_DEBUG = $(subst -DNDEBUG,,$(CFLAGS))
+
+test-solver.o: test-solver.c
+	$(CC) $(CFLAGS_DEBUG) -o $@ -c $<
+
 solver_test.o: solver.c
 	$(CC) $(CFLAGS) -DTESTING=1 -o $@ -c $<
 

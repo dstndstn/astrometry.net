@@ -605,7 +605,7 @@ void solver_run(solver_t* solver) {
                 index_t* index = pl_get(solver->indexes, i);
                 int dimquads;
                 set_index(solver, index);
-                dimquads = quadfile_dimquads(index->quads);
+                dimquads = index_dimquads(index);
                 for (field[A] = 0; field[A] < newpoint; field[A]++) {
                     // initialize the "pquad" struct for this AB combo.
                     pquad* pq = pquads + field[B] * numxy + field[A];
@@ -661,7 +661,7 @@ void solver_run(solver_t* solver) {
 					        (pq->scale > maxAB2s[i]))
 							continue;
                         set_index(solver, index);
-						dimquads = quadfile_dimquads(index->quads);
+						dimquads = index_dimquads(index);
 
                         tol2 = get_tolerance(solver);
 

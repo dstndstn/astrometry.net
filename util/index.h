@@ -81,6 +81,12 @@ struct index_s {
 typedef struct index_s index_t;
 
 /**
+ Simple accessor (indx->dimquads): returns the dimensionality of quads
+ in this index.
+ */
+int index_dimquads(index_t* indx);
+
+/**
  Returns TRUE if the given index contains quads of sizes that overlap
  the given range of quad sizes, [quadlo, quadhi], in arcseconds.
  */
