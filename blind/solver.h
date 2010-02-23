@@ -39,9 +39,6 @@ enum {
 	PARITY_BOTH
 };
 
-//#define PARITY_POS PARITY_NORMAL
-//#define PARITY_NEG PARITY_FLIP
-
 #define DEFAULT_CODE_TOL .01
 #define DEFAULT_PARITY PARITY_BOTH
 #define DEFAULT_TWEAK_ABORDER 3
@@ -117,7 +114,7 @@ struct solver_t {
 	// Number of quad matches to try or zero for no limit.
 	int maxmatches;
 
-	//
+	// Force CRPIX to be the given point "crpix", or the center of the image?
 	bool set_crpix;
 	bool set_crpix_center;
 	double crpix[2];
@@ -140,6 +137,7 @@ struct solver_t {
 	// ==============
 	// NOTE: these are only incremented, not initialized.  It's up to you to set
 	// them to zero before calling, if you're starting from scratch.
+	// See solver_reset_counters().
 	int numtries;
 	int nummatches;
 	int numscaleok;
@@ -193,16 +191,33 @@ struct solver_t {
 typedef struct solver_t solver_t;
 
 solver_t* solver_new();
+
 void solver_set_default_values(solver_t* solver);
+
 void solver_free(solver_t*);
+
+/**
+ Tells the solver which field of stars it's going to be solving.
+ */
+void solver_set_field(solver_t* s, starxy_t* field);
+
+/**
+ Tells the solver the pixel coordinate range of the image to be
+ solved.  If not set, this will be computed based on the bounds of the
+ stars within the field (an underestimate).
+ */
+void solver_set_field_bounds(solver_t* s, double xlo, double xhi, double ylo, double yhi);
+
+/**
+ Reset everything associated with solving a particular field.
+
+ (renamed from solver_new_field)
+ */
+void solver_cleanup_field(solver_t*);
 
 double solver_field_width(solver_t* t);
 double solver_field_height(solver_t* t);
 
-// call this to reset everything associated with solving a particular field.
-void solver_new_field(solver_t*);
-
-void solver_set_field(solver_t*, starxy_t* field);
 
 void solver_add_index(solver_t* solver, index_t* index);
 void solver_clear_indexes(solver_t* solver);
@@ -210,7 +225,6 @@ void solver_clear_indexes(solver_t* solver);
 void solver_verify_sip_wcs(solver_t* solver, sip_t* sip);
 void solver_run(solver_t* solver);
 
-void solver_reset_best_match(solver_t* sp);
 void solver_cleanup(solver_t* solver);
 
 // Call this before solver_inject_match(), solver_verify_sip_wcs() or solver_run().
@@ -227,5 +241,16 @@ void solver_compute_quad_range(const solver_t* solver, const index_t* index, dou
 // correspondences.  This function uses those indices to find the actual
 // pixel and RA,Dec positions of the corresponding stars.
 void solver_resolve_correspondences(const solver_t* solver, MatchObj* mo);
+
+/**
+ Resets the "numtries", "nummatches", etc counters, as well as
+ "quitnow".
+ */
+void solver_reset_counters(solver_t* t);
+
+/**
+ Clears the "best_match_solves", "have_best_match", etc fields.
+ */
+void solver_reset_best_match(solver_t* sp);
 
 #endif

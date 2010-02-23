@@ -1,6 +1,7 @@
 /*
  This file is part of the Astrometry.net suite.
  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+ Copyright 2008-2010 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -104,6 +105,18 @@ static void get_field_ll_corner(solver_t* s, double* lx, double* ly) {
     *ly = s->field_miny;
 }
 
+void solver_reset_counters(solver_t* s) {
+	s->quit_now = FALSE;
+	s->have_best_match = FALSE;
+	s->best_match_solves = FALSE;
+	s->numtries = 0;
+	s->nummatches = 0;
+	s->numscaleok = 0;
+	s->last_examined_object = 0;
+	s->num_cxdx_skipped = 0;
+	s->num_verified = 0;
+}
+
 double solver_field_width(solver_t* s) {
 	return s->field_maxx - s->field_minx;
 }
@@ -135,20 +148,21 @@ static void set_index(solver_t* s, index_t* index) {
 
 void solver_set_field(solver_t* s, starxy_t* field) {
     s->fieldxy = field;
-    // FIXME -- compute size of field, etc?
+	// Preprocessing happens in "solver_preprocess_field()".
 }
 
-void solver_new_field(solver_t* solver) {
+void solver_set_field_bounds(solver_t* s, double xlo, double xhi, double ylo, double yhi) {
+	s->field_minx = xlo;
+	s->field_maxx = xhi;
+	s->field_miny = ylo;
+	s->field_maxy = yhi;
+}
+
+void solver_cleanup_field(solver_t* solver) {
     solver_reset_best_match(solver);
     solver_free_field(solver);
     solver->fieldxy = NULL;
-    solver->numtries = 0;
-    solver->nummatches = 0;
-    solver->numscaleok = 0;
-    solver->num_cxdx_skipped = 0;
-    solver->num_verified = 0;
-    solver->last_examined_object = 0;
-    solver->quit_now = FALSE;
+	solver_reset_counters(solver);
 }
 
 void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) {
@@ -314,9 +328,12 @@ static void print_inbox(pquad* pq) {}
 
 
 static void find_field_boundaries(solver_t* solver) {
-	if ((solver->field_minx == solver->field_maxx) 
-			|| (solver->field_miny == solver->field_maxy)) {
+	if ((solver->field_minx == solver->field_maxx) ||
+		(solver->field_miny == solver->field_maxy)) {
 		int i;
+		// Hrm...
+		solver->field_minx = solver->field_miny =  HUGE_VAL;
+		solver->field_maxx = solver->field_maxy = -HUGE_VAL;
 		for (i = 0; i < starxy_n(solver->fieldxy); i++) {
 			solver->field_minx = MIN(solver->field_minx, field_getx(solver, i));
 			solver->field_maxx = MAX(solver->field_maxx, field_getx(solver, i));
@@ -325,7 +342,7 @@ static void find_field_boundaries(solver_t* solver) {
 		}
 	}
 	solver->field_diag = hypot(solver->field_maxy - solver->field_miny,
-	                       solver->field_maxx - solver->field_minx);
+							   solver->field_maxx - solver->field_minx);
 }
 
 void solver_preprocess_field(solver_t* solver) {
@@ -378,10 +395,11 @@ static double get_tolerance(solver_t* solver) {
 }
 
 /*
- A somewhat tricky recursive function: stars A and B have already been chosen,
- so the code coordinate system has been fixed, and we've already determined
- which other stars will create valid codes (ie, are in the "box").  Now we
- want to build features using all sets of valid stars (without permutations).
+ A somewhat tricky recursive function: stars A and B have already been
+ chosen, so the code coordinate system has been fixed, and we've
+ already determined which other stars will create valid codes (ie, are
+ in the "box").  Now we want to build features using all sets of valid
+ stars (without permutations).
 
  pq - data associated with the AB pair.
  field - the array of field star numbers

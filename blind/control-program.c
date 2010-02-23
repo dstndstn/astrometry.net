@@ -307,7 +307,7 @@ int main(int argc, char** args) {
 
         t0 = timenow();
 
-        solver_new_field(solver);
+        solver_cleanup_field(solver);
 
 		// Feed the image source coordinates to the solver...
 		field = starxy_new(nstars, TRUE, FALSE);
