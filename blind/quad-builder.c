@@ -69,7 +69,7 @@ static int
 check_inbox(pquad_t* pq, int* inds, int ninds, double* stars) {
 	int i, ind;
 	double* starpos;
-	double Dx, Dy;
+	double Dx=0, Dy=0;
 	double ADx, ADy;
 	double x, y;
 	int destind = 0;

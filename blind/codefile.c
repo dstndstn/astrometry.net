@@ -60,8 +60,8 @@ void codefile_compute_field_code(double* xy, double* code, int dimquads) {
 }
 
 void codefile_compute_star_code(double* starxyz, double* code, int dimquads) {
-	double Ax, Ay;
-	double Bx, By;
+	double Ax=0, Ay=0;
+	double Bx=0, By=0;
 	double ABx, ABy;
 	double scale, invscale;
 	double costheta, sintheta;
@@ -86,7 +86,7 @@ void codefile_compute_star_code(double* starxyz, double* code, int dimquads) {
 
 	for (i=2; i<dimquads; i++) {
         double* starpos;
-        double Dx, Dy;
+        double Dx=0, Dy=0;
         double ADx, ADy;
         double x, y;
 		starpos = starxyz + 3*i;

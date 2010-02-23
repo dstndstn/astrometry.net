@@ -619,9 +619,10 @@ int main(int argc, char** args) {
 				double xyz[2];
 				double sxy[2];
 				double d;
+				bool ok;
 
 				startree_get(indx->starkd, star, xyz);
-				tan_xyzarr2pixelxy(&wcs, xyz, sxy, sxy+1);
+				ok = tan_xyzarr2pixelxy(&wcs, xyz, sxy, sxy+1);
 				fxy = fieldxy + 2*field;
 				d = sqrt(distsq(fxy, sxy, 2));
 

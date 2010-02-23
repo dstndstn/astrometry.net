@@ -83,23 +83,20 @@ int main(int argc, char **argv) {
 
 	for (i=0; i<nmyargs; i++) {
 		char* indexfn = myargs[i];
-		//index_t* index;
-		index_meta_t imeta;
-
+		index_t index;
 		tic();
-		if (index_get_meta(indexfn, &imeta)) {
+		if (index_get_meta(indexfn, &index)) {
 			ERROR("Failed to read metadata for index %s", indexfn);
 			continue;
-			//exit(-1);
 		}
 		toc();
 
 		logmsg("Index %s: id %i, healpix %i (nside %i), %i stars, %i quads, dimquads=%i, scales %g to %g arcmin.\n",
-			   imeta.indexname,
-			   imeta.indexid, imeta.healpix, imeta.hpnside,
-			   imeta.nstars, imeta.nquads, imeta.dimquads,
-			   arcsec2arcmin(imeta.index_scale_lower),
-			   arcsec2arcmin(imeta.index_scale_upper));
+			   index.indexname,
+			   index.indexid, index.healpix, index.hpnside,
+			   index.nstars, index.nquads, index.dimquads,
+			   arcsec2arcmin(index.index_scale_lower),
+			   arcsec2arcmin(index.index_scale_upper));
 	}
 
 	return 0;

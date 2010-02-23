@@ -1332,7 +1332,7 @@ double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
 	double dxmid, dymid;
 	double dist2A, dist2B;
 	double midxyz[3];
-	double dist2mid;
+	double dist2mid = 0.0;
 
 	double EPS = 1e-16;
 
@@ -1369,15 +1369,9 @@ double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
 	assert(dxA == dxB || dyA == dyB);
 	assert(dist2A <= dist2B);
 
-	//printf("Start binary search\n");
 	while (1) {
 		dxmid = (dxA + dxB) / 2.0;
 		dymid = (dyA + dyB) / 2.0;
-		/*
-		 // converged to machine precision?
-		 if ((dxA != dxB && (dxmid == dxA || dxmid == dxB)) ||
-		 (dyA != dyB && (dymid == dyA || dymid == dyB)))
-		 */
 		// converged to EPS?
 		if ((dxA != dxB && (fabs(dxmid - dxA) < EPS || fabs(dxmid - dxB) < EPS)) ||
 			(dyA != dyB && (fabs(dymid - dyA) < EPS || fabs(dymid - dyB) < EPS)))
@@ -1385,7 +1379,6 @@ double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
 		healpix_to_xyzarr(hp, Nside, dxmid, dymid, midxyz);
 		dist2mid = distsq(xyz, midxyz, 3);
 		//printf("  dx,dy (%g,%g) %g  (%g,%g) %g  (%g,%g) %g\n", dxA, dyA, dist2A, dxmid, dymid, dist2mid, dxB, dyB, dist2B);
-		//assert(dist2mid <= (dist2A+1e-12) || dist2mid <= (dist2B+1e-12));
 		if ((dist2mid >= dist2A) && (dist2mid >= dist2B))
 			break;
 		if (dist2A < dist2B) {

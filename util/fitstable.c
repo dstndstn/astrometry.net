@@ -546,7 +546,7 @@ int fitstable_read_struct(fitstable_t* tab, int offset, void* struc) {
 }
 
 // One of "struc" or "ap" should be non-null.
-static int write_one(fitstable_t* table, const void* struc, va_list ap) {
+static int write_one(fitstable_t* table, const void* struc, va_list* ap) {
     int i;
     char* buf = NULL;
     int Nbuf = 0;
@@ -574,7 +574,7 @@ static int write_one(fitstable_t* table, const void* struc, va_list ap) {
 			if (struc)
 				columndata = NULL;
 			else
-				columndata = va_arg(ap, void *);
+				columndata = va_arg(*ap, void *);
 		}
 		// If "columndata" is NULL, fits_write_data_array
 		// skips the required number of bytes.
@@ -614,8 +614,7 @@ static int write_one(fitstable_t* table, const void* struc, va_list ap) {
 
 
 int fitstable_write_struct(fitstable_t* table, const void* struc) {
-	va_list nil;
-	return write_one(table, struc, nil);
+	return write_one(table, struc, NULL);
 }
 
 int fitstable_write_structs(fitstable_t* table, const void* struc, int stride, int N) {
@@ -636,7 +635,7 @@ int fitstable_write_row(fitstable_t* table, ...) {
 	if (!table->table)
 		fitstable_create_table(table);
 	va_start(ap, table);
-	ret = write_one(table, NULL, ap);
+	ret = write_one(table, NULL, &ap);
 	va_end(ap);
     return ret;
 }

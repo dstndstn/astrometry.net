@@ -258,23 +258,19 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 
 static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_match);
 
-static void check_scale(pquad* pq, solver_t* solver) {
+static void check_scale(pquad* pq, solver_t* s) {
 	double dx, dy;
-    
-    dx = (starxy_getx(solver->fieldxy, pq->fieldB) -
-          starxy_getx(solver->fieldxy, pq->fieldA));
-    dy = (starxy_gety(solver->fieldxy, pq->fieldB) -
-          starxy_gety(solver->fieldxy, pq->fieldA));
-
-	pq->scale = dx * dx + dy * dy;
-	if ((pq->scale < solver->minminAB2) ||
-			(pq->scale > solver->maxmaxAB2)) {
+	dx = field_getx(s, pq->fieldB) - field_getx(s, pq->fieldA);
+    dy = field_gety(s, pq->fieldB) - field_gety(s, pq->fieldA);
+	pq->scale = dx*dx + dy*dy;
+	if ((pq->scale < s->minminAB2) ||
+		(pq->scale > s->maxmaxAB2)) {
 		pq->scale_ok = FALSE;
 		return;
 	}
 	pq->costheta = (dy + dx) / pq->scale;
 	pq->sintheta = (dy - dx) / pq->scale;
-	pq->rel_field_noise2 = (solver->verify_pix * solver->verify_pix) / pq->scale;
+	pq->rel_field_noise2 = (s->verify_pix * s->verify_pix) / pq->scale;
 	pq->scale_ok = TRUE;
 }
 
@@ -328,10 +324,10 @@ static void print_inbox(pquad* pq) {}
 
 
 static void find_field_boundaries(solver_t* solver) {
+	// If the bounds haven't been set, use the bounding box.
 	if ((solver->field_minx == solver->field_maxx) ||
 		(solver->field_miny == solver->field_maxy)) {
 		int i;
-		// Hrm...
 		solver->field_minx = solver->field_miny =  HUGE_VAL;
 		solver->field_maxx = solver->field_maxy = -HUGE_VAL;
 		for (i = 0; i < starxy_n(solver->fieldxy); i++) {
@@ -608,10 +604,8 @@ void solver_run(solver_t* solver) {
             for (i = 0; i < num_indexes; i++) {
                 index_t* index = pl_get(solver->indexes, i);
                 int dimquads;
-
                 set_index(solver, index);
                 dimquads = quadfile_dimquads(index->quads);
-
                 for (field[A] = 0; field[A] < newpoint; field[A]++) {
                     // initialize the "pquad" struct for this AB combo.
                     pquad* pq = pquads + field[B] * numxy + field[A];
@@ -620,11 +614,9 @@ void solver_run(solver_t* solver) {
                     if ((pq->scale < minAB2s[i]) ||
                         (pq->scale > maxAB2s[i]))
                         continue;
-
                     // set code tolerance for this index and AB pair...
                     solver->rel_field_noise2 = pq->rel_field_noise2;
                     tol2 = get_tolerance(solver);
-
 					// Now look at all sets of (C, D, ...) stars (subject to field[C] < field[D] < ...)
                     // ("dimquads - 2" because we've set stars A and B at this point)
                     add_stars(pq, field, C, dimquads-2, 0, newpoint, dimquads, solver, tol2);
@@ -684,7 +676,6 @@ void solver_run(solver_t* solver) {
 					}
 				}
 			}
-
 			logverb("object %u of %u: %i quads tried, %i matched.\n",
 				   newpoint + 1, numxy, solver->numtries, solver->nummatches);
 
@@ -826,6 +817,8 @@ static void try_permutations(int* origstars, int dimquad, double* origcode,
 		code[2*(star-2)+0] = origcode[2*(i-2)+0];
 		code[2*(star-2)+1] = origcode[2*(i-2)+1];
 
+		// FIXME -- check CX + DX <= 1 (or, rather, the dimquads-agnostic version of that condition)
+
 		if (star == dimquad-1) {
 			double pixvals[dimquad*2];
 			int j;
@@ -886,7 +879,7 @@ static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
 		debug("        stars [");
 		for (i=0; i<dimquads; i++)
 			debug("%s%i", (i?" ":""), star[i]);
-		debug("]\n;");
+		debug("]\n");
 
 		// FIXME -- could compute position here and compare with
 		//  --ra,dec,radius !!

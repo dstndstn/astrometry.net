@@ -77,15 +77,15 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 	index_t* index = NULL;
 
 	sl* tempfiles;
-	char* unifn;
-	char* skdtfn;
-	char* quadfn;
-	char* codefn;
-	char* ckdtfn;
-	char* skdt2fn;
-	char* quad2fn;
-	char* quad3fn;
-	char* ckdt2fn;
+	char* unifn=NULL;
+	char* skdtfn=NULL;
+	char* quadfn=NULL;
+	char* codefn=NULL;
+	char* ckdtfn=NULL;
+	char* skdt2fn=NULL;
+	char* quad2fn=NULL;
+	char* quad3fn=NULL;
+	char* ckdt2fn=NULL;
 
 	if (!p->UNside)
 		p->UNside = p->Nside;

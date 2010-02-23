@@ -493,6 +493,7 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     // must be in this order because init_parameters handily zeros out sp
     solver_set_default_values(sp);
 
+	// Here we assume that the field's pixel coordinataes go from zero to IMAGEW,H.
     sp->field_maxx = qfits_header_getdouble(hdr, "IMAGEW", dnil);
     sp->field_maxy = qfits_header_getdouble(hdr, "IMAGEH", dnil);
 	if ((sp->field_maxx == dnil) || (sp->field_maxy == dnil) ||

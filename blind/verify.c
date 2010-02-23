@@ -642,7 +642,7 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 	int uni_nw, uni_nh;
 	int* perm;
 	double effA;
-	double qc[2], Q2;
+	double qc[2], Q2=0;
 	double* testxy;
 
 	NR = *p_NR;

@@ -95,8 +95,8 @@ int dcen3b(float f0, float f1, float f2, float *xcen
 
 int dcen3x3(float *image, float *xcen, float *ycen)
 {
-	float mx0, mx1, mx2;
-	float my0, my1, my2;
+	float mx0=0, mx1=0, mx2=0;
+	float my0=0, my1=0, my2=0;
 	float bx, by, mx , my;
 	int badcen = 0;
 
