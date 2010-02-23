@@ -309,6 +309,8 @@ static void set_meta(index_t* index) {
 	// New indexes are cooked such that cx < dx for all codes, but not
 	// all of the old ones are like this.
     index->cx_less_than_dx = qfits_header_getboolean(index->codekd->header, "CXDX", FALSE);
+
+	index->meanx_less_than_half = qfits_header_getboolean(index->codekd->header, "CXDXLT1", FALSE);
 }
 
 index_t* index_build_from(codetree* codekd, quadfile* quads, startree_t* starkd) {

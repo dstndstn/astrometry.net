@@ -67,6 +67,8 @@ struct index_s {
 	bool circle;
 	// Does the index have the CX <= DX property
 	bool cx_less_than_dx;
+	// Does the index have the CX + DX <= 1/2 property
+	bool meanx_less_than_half;
 
 	// Limits of the size of quads in the index, in arcseconds.
 	double index_scale_upper;

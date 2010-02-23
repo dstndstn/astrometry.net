@@ -233,23 +233,20 @@ void solver_compute_quad_range(const solver_t* sp, const index_t* index,
 	}
 }
 
-static void try_all_codes(pquad* pq,
-                          int* fieldstars, int dimquad,
+static void try_all_codes(const pquad* pq,
+                          const int* fieldstars, int dimquad,
                           solver_t* solver, double tol2);
 
-static void try_all_codes_2(int* fieldstars, int dimquad,
-                            double* code, solver_t* solver,
+static void try_all_codes_2(const int* fieldstars, int dimquad,
+                            const double* code, solver_t* solver,
                             bool current_parity, double tol2);
 
-static void try_permutations(int* origstars, int dimquad, double* origcode,
+static void try_permutations(const int* origstars, int dimquad,
+							 const double* origcode,
 							 solver_t* solver, bool current_parity,
 							 double tol2,
-							 int* stars,
-							 double* code,
-							 int firststar,
-							 int star,
-							 bool* placed,
-							 bool first,
+							 int* stars, double* code,
+							 int slot, bool* placed,
 							 kdtree_qres_t** presult);
 
 static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
@@ -695,8 +692,8 @@ void solver_run(solver_t* solver) {
 	}
 }
 
-static void try_all_codes(pquad* pq,
-                          int* fieldstars, int dimquad,
+static void try_all_codes(const pquad* pq,
+                          const int* fieldstars, int dimquad,
                           solver_t* solver, double tol2) {
     int dimcode = (dimquad - 2) * 2;
     double code[dimcode];
@@ -744,111 +741,150 @@ static void try_all_codes(pquad* pq,
 	}
 }
 
-static void try_all_codes_2(int* fieldstars, int dimquad,
-                            double* code, solver_t* solver,
+/**
+ This function tries the quad with the "backbone" stars A and B in
+ normal and flipped configurations.
+ */
+static void try_all_codes_2(const int* fieldstars, int dimquad,
+                            const double* code, solver_t* solver,
                             bool current_parity, double tol2) {
 	int i;
 	kdtree_qres_t* result = NULL;
-	int flipab;
     int dimcode = (dimquad - 2) * 2;
+	int stars[DQMAX];
+	double flipcode[DCMAX];
 
-	for (flipab=0; flipab<2; flipab++) {
-		double flipcode[dimcode];
-		double* origcode;
-		double searchcode[dimcode];
-		int stars[dimquad];
-		bool placed[dimquad];
+	// We actually only use elements up to dimquads-2.
+	bool placed[DQMAX];
 
-		for (i=0; i<dimquad; i++)
-			placed[i] = FALSE;
-		
-		if (!flipab) {
-			origcode = code;
-			stars[0] = fieldstars[0];
-			stars[1] = fieldstars[1];
-		} else {
-			for (i=0; i<dimcode; i++)
-				flipcode[i] = 1.0 - code[i];
-			origcode = flipcode;
+	// Un-flipped:
+	stars[0] = fieldstars[0];
+	stars[1] = fieldstars[1];
 
-			stars[0] = fieldstars[1];
-			stars[1] = fieldstars[0];
-		}
+	for (i=0; i<DQMAX; i++)
+		placed[i] = FALSE;
 
-		try_permutations(fieldstars, dimquad, origcode, solver, current_parity,
-						 tol2, stars, searchcode, 2, 2, placed, TRUE, &result);
-		if (unlikely(solver->quit_now))
-			break;
-	}
+	try_permutations(fieldstars, dimquad, code, solver, current_parity,
+					 tol2, stars, NULL, 0, placed, &result);
+	if (unlikely(solver->quit_now))
+		goto bailout;
 
+	// Flipped:
+	stars[0] = fieldstars[1];
+	stars[1] = fieldstars[0];
+
+	for (i=0; i<dimcode; i++)
+		flipcode[i] = 1.0 - code[i];
+
+	for (i=0; i<DQMAX; i++)
+		placed[i] = FALSE;
+
+	try_permutations(fieldstars, dimquad, flipcode, solver, current_parity,
+					 tol2, stars, NULL, 0, placed, &result);
+
+bailout:
 	kdtree_free_query(result);
 }
 
 
-static void try_permutations(int* origstars, int dimquad, double* origcode,
+static void try_permutations(const int* origstars, int dimquad,
+							 const double* origcode,
 							 solver_t* solver, bool current_parity,
 							 double tol2,
-							 int* stars,
-							 double* code,
-							 int firststar,
-							 int star,
-							 bool* placed,
-							 bool first,
+							 int* stars, double* code,
+							 int slot, bool* placed,
 							 kdtree_qres_t** presult) {
 	int i;
 	int options = KD_OPTIONS_SMALL_RADIUS | KD_OPTIONS_COMPUTE_DISTS |
-		KD_OPTIONS_NO_RESIZE_RESULTS;
-	// We have, say, three stars to be placed, C,D,E in position "star".
-	// Stars can't be reused so we check in the "placed" array to see if it has
-	// already been placed.
-	// If we're not placing the first star, we ensure that the cx<=dx criterion
-	// is satisfied (if the index has that property).
+		KD_OPTIONS_NO_RESIZE_RESULTS | KD_OPTIONS_USE_SPLIT;
+	double mycode[DCMAX];
+	// The MAGIC number 2 is the number of "backbone" stars in a quad.
+	int Nstars = dimquad - 2;
+	int lastslot = dimquad - 2 - 1;
+	/*
+	 This is a recursive function that tries all combinations of the
+	 "internal" stars (ie, not stars A,B that form the "backbone" of
+	 the quad).
 
-	// Look for "unplaced" stars.
-	for (i=firststar; i<dimquad; i++) {
+	 We fill the "stars" array with the star IDs (from "origstars") of
+	 the stars that form the quad, while simultaneously filling the
+	 "code" array with the corresponding code coordinates (from
+	 "origcode").
+
+	 For example, if "dimquad" is 5, and "origstars" contains
+	 A,B,C,D,E, we want to call "resolve_matches" with the following
+	 combinations in "stars":
+
+	 AB CDE
+	 AB CED
+	 AB DCE
+	 AB DEC
+	 AB ECD
+	 AB EDC
+
+	 This call will try to put each star in "slot" in turn, then for
+	 ecah one recurse to slot in the rest of the stars.
+
+	 Note that we are filling stars[2], stars[3], etc; the first two
+	 elements are already filled by stars A and B.
+	 */
+
+	if (code == NULL)
+		code = mycode;
+
+	// We try putting each star that hasn't already been placed in
+	// this "slot".
+	for (i=0; i<Nstars; i++) {
 		if (placed[i])
 			continue;
-		if (!first && solver->index->cx_less_than_dx &&
-			(code[2 * (star - 1 - 2)] > origcode[2 * (i - 2)] + solver->cxdx_margin))
-			continue;
-		//solver->num_cxdx_skipped++;
 
-		stars[star] = origstars[i];
-		code[2*(star-2)+0] = origcode[2*(i-2)+0];
-		code[2*(star-2)+1] = origcode[2*(i-2)+1];
+		// Check cx <= dx, if we're a "dx".
+		if (slot > 0 && solver->index->cx_less_than_dx) {
+			if (code[2 * (slot - 1) +0] > origcode[2 * i +0] + solver->cxdx_margin) {
+				solver->num_cxdx_skipped++;
+				continue;
+			}
+		}
+
+		// Slot in this star...
+		// Magic 2: number of "backbone" stars.
+		stars[slot + 2] = origstars[i + 2];
+		code[2*slot +0] = origcode[2*i +0];
+		code[2*slot +1] = origcode[2*i +1];
 
 		// FIXME -- check CX + DX <= 1 (or, rather, the dimquads-agnostic version of that condition)
+		// ie,  mean(x) <= 1/2; ie, (cx + dx + ...) / (dimquads-2) <= 1/2
 
-		if (star == dimquad-1) {
-			double pixvals[dimquad*2];
-			int j;
+		// Combined with the cx<=dx invariant, this means that the running mean
+		// must never exceed 1/2.
+		//if (solver->index->cx_less_than_dx &&
+		//solver->index->meanx_less_than_half &&
 
-			for (j=0; j<dimquad; j++) {
-                setx(pixvals, j, field_getx(solver, stars[j]));
-                sety(pixvals, j, field_gety(solver, stars[j]));
-            }
-
-            options |= KD_OPTIONS_USE_SPLIT;
-
-			*presult = kdtree_rangesearch_options_reuse(solver->index->codekd->tree,
-														*presult, code, tol2, options);
-
-			//debug("      trying ABCD = [%i %i %i %i]: %i results.\n", fstars[A], fstars[B], fstars[C], fstars[D], result->nres);
-
-			if ((*presult)->nres)
-				resolve_matches(*presult, code, pixvals, stars, dimquad, solver, current_parity);
-
-			if (unlikely(solver->quit_now))
-				return;
+		// If we have more slots to fill...
+		if (slot < lastslot) {
+			placed[i] = TRUE;
+			try_permutations(origstars, dimquad, origcode, solver,
+							 current_parity, tol2, stars, code, 
+							 slot+1, placed, presult);
+			placed[i] = FALSE;
 
 		} else {
-			placed[i] = TRUE;
+			// Search with the code we've built.
+			*presult = kdtree_rangesearch_options_reuse(solver->index->codekd->tree,
+														*presult, code, tol2, options);
+			//debug("      trying ABCD = [%i %i %i %i]: %i results.\n", fstars[A], fstars[B], fstars[C], fstars[D], result->nres);
 
-			try_permutations(origstars, dimquad, origcode, solver,
-							 current_parity, tol2, stars, code, firststar,
-							 star+1, placed, FALSE, presult);
-
-			placed[i] = FALSE;
+			if ((*presult)->nres) {
+				double pixvals[DQMAX*2];
+				int j;
+				for (j=0; j<dimquad; j++) {
+					setx(pixvals, j, field_getx(solver, stars[j]));
+					sety(pixvals, j, field_gety(solver, stars[j]));
+				}
+				resolve_matches(*presult, code, pixvals, stars, dimquad, solver, current_parity);
+			}
+			if (unlikely(solver->quit_now))
+				return;
 		}
 	}
 }
