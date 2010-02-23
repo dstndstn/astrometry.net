@@ -174,20 +174,25 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 		cp $$x $(INSTALL_DIR)/bin; \
 	done
 
-test-solver: test-solver.o solver_test.o blind_wcs.o verify.o \
-		matchfile.o \
+test-solver: test-solver.o solver_test.o blind_wcs.o verify.o matchfile.o \
+		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
+test-solver-2: test-solver-2.o solver_test_2.o blind_wcs.o verify.o matchfile.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 
-NODEP_OBJS += solver_test.o
-ALL_OBJ += test-solver.o
+NODEP_OBJS += solver_test.o solver_test_2.o
+ALL_OBJ += test-solver.o test-solver-2.o
 
 CFLAGS_DEBUG = $(subst -DNDEBUG,,$(CFLAGS))
 
 test-solver.o: test-solver.c
 	$(CC) $(CFLAGS_DEBUG) -o $@ -c $<
+test-solver-2.o: test-solver-2.c
+	$(CC) $(CFLAGS_DEBUG) -o $@ -c $<
 
 solver_test.o: solver.c
-	$(CC) $(CFLAGS) -DTESTING=1 -o $@ -c $<
+	$(CC) $(CFLAGS_DEBUG) -DTESTING=1 -DTESTING_TRYALLCODES=1 -o $@ -c $<
+solver_test_2.o: solver.c
+	$(CC) $(CFLAGS_DEBUG) -DTESTING=1 -DTESTING_TRYPERMUTATIONS=1 -o $@ -c $<
 
 #######################################
 

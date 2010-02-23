@@ -40,14 +40,24 @@
 #include "pquad.h"
 #include "kdtree.h"
 
-#if TESTING
+#if TESTING_TRYALLCODES
 #define DEBUGSOLVER 1
 #define TRY_ALL_CODES test_try_all_codes
 void test_try_all_codes(pquad* pq,
                         int* fieldstars, int dimquad,
                         solver_t* solver, double tol2);
+
 #else
 #define TRY_ALL_CODES try_all_codes
+#endif
+
+#if TESTING_TRYPERMUTATIONS
+#define DEBUGSOLVER 1
+#define TEST_TRY_PERMUTATIONS test_try_permutations
+void test_try_permutations(int* stars, double* code, int dimquad, solver_t* s);
+
+#else
+#define TEST_TRY_PERMUTATIONS(u,v,x,y)  // no-op.
 #endif
 
 
@@ -252,8 +262,8 @@ static void try_permutations(const int* origstars, int dimquad,
 							 int slot, bool* placed,
 							 kdtree_qres_t** presult);
 
-static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
-                            int* fstars, int dimquads,
+static void resolve_matches(kdtree_qres_t* krez, const double *field,
+                            const int* fstars, int dimquads,
                             solver_t* solver, bool current_parity);
 
 static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_match);
@@ -789,7 +799,9 @@ bailout:
 	kdtree_free_query(result);
 }
 
-
+/**
+ This functions tries different permutations of the non-backbone stars C [, D [,E ] ]
+ */
 static void try_permutations(const int* origstars, int dimquad,
 							 const double* origcode,
 							 solver_t* solver, bool current_parity,
@@ -870,6 +882,11 @@ static void try_permutations(const int* origstars, int dimquad,
 			placed[i] = FALSE;
 
 		} else {
+#if defined(TESTING_TRYPERMUTATIONS)
+				TEST_TRY_PERMUTATIONS(stars, code, dimquad, solver);
+				continue;
+#endif
+				
 			// Search with the code we've built.
 			*presult = kdtree_rangesearch_options_reuse(solver->index->codekd->tree,
 														*presult, code, tol2, options);
@@ -882,7 +899,7 @@ static void try_permutations(const int* origstars, int dimquad,
 					setx(pixvals, j, field_getx(solver, stars[j]));
 					sety(pixvals, j, field_gety(solver, stars[j]));
 				}
-				resolve_matches(*presult, code, pixvals, stars, dimquad, solver, current_parity);
+				resolve_matches(*presult, pixvals, stars, dimquad, solver, current_parity);
 			}
 			if (unlikely(solver->quit_now))
 				return;
@@ -891,8 +908,8 @@ static void try_permutations(const int* origstars, int dimquad,
 }
 
 // "field" contains the xy pixel coordinates of stars A,B,C,D.
-static void resolve_matches(kdtree_qres_t* krez, double *query, double *field,
-                            int* fieldstars, int dimquads,
+static void resolve_matches(kdtree_qres_t* krez, const double *field,
+                            const int* fieldstars, int dimquads,
                             solver_t* solver, bool current_parity) {
 	int jj, thisquadno;
 	MatchObj mo;
