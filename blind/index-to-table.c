@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-    index = index_load(indexfn, 0);
+    index = index_load(indexfn, 0, NULL);
     if (!index) {
         ERROR("Failed to open index");
         exit(-1);

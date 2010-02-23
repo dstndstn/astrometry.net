@@ -127,7 +127,7 @@ static bool grab_tagalong_data(startree_t* starkd, MatchObj* mo, blind_t* bp,
 static index_t* get_index(blind_t* bp, int i) {
     if (i < sl_size(bp->indexnames)) {
         char* fn = sl_get(bp->indexnames, i);
-        index_t* ind = index_load(fn, bp->index_options);
+        index_t* ind = index_load(fn, bp->index_options, NULL);
         if (!ind) {
             ERROR("Failed to load index %s", fn);
             exit( -1);
@@ -145,7 +145,7 @@ static char* get_index_name(blind_t* bp, int i) {
     }
     i -= sl_size(bp->indexnames);
     index = pl_get(bp->indexes, i);
-    return index->meta.indexname;
+    return index->indexname;
 }
 static void done_with_index(blind_t* bp, int i, index_t* ind) {
     if (i < sl_size(bp->indexnames)) {
@@ -365,14 +365,13 @@ void blind_run(blind_t* bp) {
 
 			for (I=0; I<Nindexes; I++) {
                 index_t* index = get_index(bp, I);
-                index_meta_t* meta = &(index->meta);
-                if (!index_meta_overlaps_scale_range(meta, quadlo, quadhi)) {
+                if (!index_overlaps_scale_range(index, quadlo, quadhi)) {
                     done_with_index(bp, I, index);
                     continue;
                 }
                 solver_add_index(sp, index);
 				sp->index = index;
-				logmsg("Verifying WCS with index %i of %i (%s)\n",  I + 1, Nindexes, meta->indexname);
+				logmsg("Verifying WCS with index %i of %i (%s)\n",  I + 1, Nindexes, index->indexname);
 				// Do it!
 				solve_fields(bp, wcs);
 				// Clean up this index...
@@ -437,7 +436,7 @@ void blind_run(blind_t* bp) {
 			// Load the index...
             index = get_index(bp, I);
             solver_add_index(sp, index);
-			logverb("Trying index %s...\n", index->meta.indexname);
+			logverb("Trying index %s...\n", index->indexname);
 
 			// Record current CPU usage.
 			bp->cpu_start = get_cpu_usage(bp);
@@ -670,7 +669,7 @@ static sip_t* tweak(const blind_t* bp, const tan_t* wcs, const double* starradec
     double jitter;
     sip_t* sip;
 	logmsg("Tweaking!\n");
-    jitter = hypot(tan_pixel_scale(wcs) * sp->verify_pix, sp->index->meta.index_jitter);
+    jitter = hypot(tan_pixel_scale(wcs) * sp->verify_pix, sp->index->index_jitter);
 	logverb("Setting tweak jitter: %g arcsec.\n", jitter);
     logverb("Using %i image stars and %i index stars.\n", starxy_n(sp->fieldxy), nstars);
 	logverb("Begin tweaking to order %i...\n", bp->tweak_aborder);
@@ -703,7 +702,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
     logverb("Pixel scale: %g arcsec/pix.\n", mo->scale);
     logverb("Parity: %s.\n", (mo->parity ? "neg" : "pos"));
 
-    mo->index_jitter = sp->index->meta.index_jitter;
+    mo->index_jitter = sp->index->index_jitter;
 
     if (bp->do_tweak || bp->indexrdlsfname || bp->scamp_fname) {
         int nstars;
@@ -759,7 +758,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
     bp->nsolves_sofar++;
     if (bp->nsolves_sofar >= bp->nsolves) {
         if (bp->solver.index) {
-			char* base = basename_safe(bp->solver.index->meta.indexname);
+			char* base = basename_safe(bp->solver.index->indexname);
             logmsg("Field %i: solved with index %s.\n", mo->fieldnum, base);
             free(base);
         } else {
@@ -799,14 +798,14 @@ static void add_blind_params(blind_t* bp, qfits_header* hdr) {
     int Nindexes;
 	fits_add_long_comment(hdr, "-- blind solver parameters: --");
 	if (sp->index) {
-		fits_add_long_comment(hdr, "Index name: %s", sp->index->meta.indexname);
-		fits_add_long_comment(hdr, "Index id: %i", sp->index->meta.indexid);
-		fits_add_long_comment(hdr, "Index healpix: %i", sp->index->meta.healpix);
-		fits_add_long_comment(hdr, "Index healpix nside: %i", sp->index->meta.hpnside);
-		fits_add_long_comment(hdr, "Index scale lower: %g arcsec", sp->index->meta.index_scale_lower);
-		fits_add_long_comment(hdr, "Index scale upper: %g arcsec", sp->index->meta.index_scale_upper);
-		fits_add_long_comment(hdr, "Index jitter: %g", sp->index->meta.index_jitter);
-		fits_add_long_comment(hdr, "Circle: %s", sp->index->meta.circle ? "yes" : "no");
+		fits_add_long_comment(hdr, "Index name: %s", sp->index->indexname);
+		fits_add_long_comment(hdr, "Index id: %i", sp->index->indexid);
+		fits_add_long_comment(hdr, "Index healpix: %i", sp->index->healpix);
+		fits_add_long_comment(hdr, "Index healpix nside: %i", sp->index->hpnside);
+		fits_add_long_comment(hdr, "Index scale lower: %g arcsec", sp->index->index_scale_lower);
+		fits_add_long_comment(hdr, "Index scale upper: %g arcsec", sp->index->index_scale_upper);
+		fits_add_long_comment(hdr, "Index jitter: %g", sp->index->index_jitter);
+		fits_add_long_comment(hdr, "Circle: %s", sp->index->circle ? "yes" : "no");
 		fits_add_long_comment(hdr, "Cxdx margin: %g", sp->cxdx_margin);
 	}
     Nindexes = n_indexes(bp);
@@ -959,10 +958,10 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		} else if (!verify_wcs) {
 			// Field unsolved.
             logerr("Field %i did not solve", fieldnum);
-            if (bp->solver.index && bp->solver.index->meta.indexname) {
+            if (bp->solver.index && bp->solver.index->indexname) {
                 char* copy;
                 char* base;
-                copy = strdup(bp->solver.index->meta.indexname);
+                copy = strdup(bp->solver.index->indexname);
                 base = strdup(basename(copy));
                 free(copy);
                 logerr(" (index %s", base);

@@ -144,96 +144,76 @@ int backend_autoindex_search_paths(backend_t* backend) {
 int backend_add_index(backend_t* backend, char* path) {
     int k;
     index_t* ind = NULL;
-    index_meta_t* meta;
-    index_meta_t mymeta;
     char* quadpath = index_get_quad_filename(path);
     char* base = basename_safe(quadpath);
+	double t0;
     free(quadpath);
 
     // check that an index with the same filename hasn't already been added.
-    for (k=0; k<bl_size(backend->indexmetas); k++) {
-        index_meta_t* m = bl_access(backend->indexmetas, k);
-        // m->indexname is a path to the quad filename; strip off directory component.
-        char* mbase = basename_safe(m->indexname);
+    for (k=0; k<pl_size(backend->indexes); k++) {
+		ind = pl_get(backend->indexes, k);
+        // ind->indexname is a path to the quad filename; strip off directory component.
+        char* mbase = basename_safe(ind->indexname);
         bool eq = streq(base, mbase);
         free(mbase);
         if (eq) {
-            logverb("Skipping index because we've already seen an index with the same name: %s\n", m->indexname);
+            logverb("Skipping index because we've already seen an index with the same name: %s\n", ind->indexname);
             free(base);
             return 0;
         }
     }
     free(base);
 
-    if (backend->inparallel) {
-        struct timeval tv1, tv2;
-        gettimeofday(&tv1, NULL);
-        ind = index_load(path, 0);
-        gettimeofday(&tv2, NULL);
-        debug("index_load(%s) took %g ms\n", path, millis_between(&tv1, &tv2));
-        if (!ind) {
-            ERROR("Failed to load index from path %s", path);
-            return -1;
-        }
-        meta = &(ind->meta);
-
-    } else {
-        if (index_get_meta(path, &mymeta)) {
-            ERROR("Failed to load index metadata from path %s", path);
-            return -1;
-        }
-        meta = &mymeta;
-
-    }
+	t0 = timenow();
+	ind = index_load(path, backend->inparallel ? 0 : INDEX_ONLY_LOAD_METADATA, NULL);
+	debug("index_load(\"%s\") took %g ms\n", path, 1000 * (timenow() - t0));
+	if (!ind) {
+		ERROR("Failed to load index from path %s", path);
+		return -1;
+	}
 
     // check that an index with the same id and healpix isn't already listed.
-    for (k=0; k<bl_size(backend->indexmetas); k++) {
-        index_meta_t* m = bl_access(backend->indexmetas, k);
-        if (m->indexid == meta->indexid &&
-            m->healpix == meta->healpix) {
+    for (k=0; k<pl_size(backend->indexes); k++) {
+		index_t* m = pl_get(backend->indexes, k);
+        if (m->indexid == ind->indexid &&
+            m->healpix == ind->healpix) {
             logverb("Skipping duplicate index %s\n", path);
-            if (ind)
-                index_close(ind);
+			index_free(ind);
             return 0;
         }
     }
 
-	bl_append(backend->indexmetas, meta);
+	pl_append(backend->indexes, ind);
 
     // <= smallest we've seen?
-	if (meta->index_scale_lower < backend->sizesmallest) {
-		backend->sizesmallest = meta->index_scale_lower;
+	if (ind->index_scale_lower < backend->sizesmallest) {
+		backend->sizesmallest = ind->index_scale_lower;
         bl_remove_all(backend->ismallest);
-		il_append(backend->ismallest, bl_size(backend->indexmetas) - 1);
-	} else if (meta->index_scale_lower == backend->sizesmallest) {
-		il_append(backend->ismallest, bl_size(backend->indexmetas) - 1);
+		il_append(backend->ismallest, pl_size(backend->indexes) - 1);
+	} else if (ind->index_scale_lower == backend->sizesmallest) {
+		il_append(backend->ismallest, pl_size(backend->indexes) - 1);
     }
 
     // >= largest we've seen?
-	if (meta->index_scale_upper > backend->sizebiggest) {
-		backend->sizebiggest = meta->index_scale_upper;
+	if (ind->index_scale_upper > backend->sizebiggest) {
+		backend->sizebiggest = ind->index_scale_upper;
         bl_remove_all(backend->ibiggest);
-		il_append(backend->ibiggest, bl_size(backend->indexmetas) - 1);
-	} else if (meta->index_scale_upper == backend->sizebiggest) {
-		il_append(backend->ibiggest, bl_size(backend->indexmetas) - 1);
+		il_append(backend->ibiggest, pl_size(backend->indexes) - 1);
+	} else if (ind->index_scale_upper == backend->sizebiggest) {
+		il_append(backend->ibiggest, pl_size(backend->indexes) - 1);
 	}
-
-    if (ind)
-        pl_append(backend->indexes, ind);
 
     return 0;
 }
 
 static void add_index_to_blind(backend_t* backend, blind_t* bp,
                                int i) {
+	index_t* index;
+	index = pl_get(backend->indexes, i);
     if (backend->inparallel) {
-        index_t* index;
-        assert(pl_size(backend->indexes) == bl_size(backend->indexmetas));
-        index = pl_get(backend->indexes, i);
         blind_add_loaded_index(bp, index);
     } else {
-        index_meta_t* meta = bl_access_const(backend->indexmetas, i);
-        blind_add_index(bp, meta->indexname);
+        blind_add_index(bp, index->indexname);
     }
 }
 
@@ -428,10 +408,9 @@ int backend_run_job(backend_t* backend, job_t* job) {
 
 			// Select the indices that should be checked.
             indexlist = il_new(16);
-			for (k = 0; k < bl_size(backend->indexmetas); k++) {
-				// bl_access_const for thread-safety.
-				index_meta_t* meta = bl_access_const(backend->indexmetas, k);
-                if (!index_meta_overlaps_scale_range(meta, fmin, fmax))
+			for (k = 0; k < pl_size(backend->indexes); k++) {
+				index_t* index = pl_get(backend->indexes, i);
+                if (!index_overlaps_scale_range(index, fmin, fmax))
                     continue;
                 il_append(indexlist, k);
 			}
@@ -451,13 +430,13 @@ int backend_run_job(backend_t* backend, job_t* job) {
 
             for (k=0; k<il_size(indexlist); k++) {
                 int ii = il_get(indexlist, k);
-                index_meta_t* meta = bl_access_const(backend->indexmetas, ii);
+				index_t* index = pl_get(backend->indexes, ii);
                 bool inrange = TRUE;
 				if (job->use_radec_center)
-					inrange = index_meta_is_within_range(meta, job->ra_center, job->dec_center, job->search_radius);
+					inrange = index_is_within_range(index, job->ra_center, job->dec_center, job->search_radius);
                 if (!inrange) {
                     logverb("Not using index %s because it's not within %g degrees of (RA,Dec) = (%g,%g)\n",
-                            meta->indexname, job->search_radius, job->ra_center, job->dec_center);
+                            index->indexname, job->search_radius, job->ra_center, job->dec_center);
 					continue;
 				}
 				add_index_to_blind(backend, bp, ii);
@@ -802,7 +781,6 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 backend_t* backend_new() {
 	backend_t* backend = calloc(1, sizeof(backend_t));
 	backend->index_paths = sl_new(10);
-	backend->indexmetas = bl_new(16, sizeof(index_meta_t));
     backend->indexes = pl_new(16);
 	backend->ismallest = il_new(4);
 	backend->ibiggest = il_new(4);
@@ -821,12 +799,10 @@ void backend_free(backend_t* backend) {
 	int i;
     if (!backend)
         return;
-	if (backend->indexmetas)
-		bl_free(backend->indexmetas);
     if (backend->indexes) {
         for (i=0; i<bl_size(backend->indexes); i++) {
             index_t* ind = pl_get(backend->indexes, i);
-            index_close(ind);
+            index_free(ind);
         }
         pl_free(backend->indexes);
     }

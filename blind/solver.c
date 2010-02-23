@@ -130,7 +130,7 @@ static void set_center_and_radius(solver_t* solver, MatchObj* mo,
 
 static void set_index(solver_t* s, index_t* index) {
     s->index = index;
-    s->rel_index_noise2 = square(index->meta.index_jitter / index->meta.index_scale_lower);
+    s->rel_index_noise2 = square(index->index_jitter / index->index_scale_lower);
 }
 
 void solver_set_field(solver_t* s, starxy_t* field) {
@@ -192,7 +192,7 @@ void solver_compute_quad_range(const solver_t* sp, const index_t* index,
 	double scalefudge = 0.0; // in pixels
 
 	if (sp->funits_upper != 0.0) {
-		*minAB = index->meta.index_scale_lower / sp->funits_upper;
+		*minAB = index->index_scale_lower / sp->funits_upper;
 
 		// compute fudge factor for quad scale: what are the extreme
 		// ranges of quad scales that should be accepted, given the
@@ -209,12 +209,12 @@ void solver_compute_quad_range(const solver_t* sp, const index_t* index,
 		//  can move before exceeding the code tolerance, in arcsec.
 		// -that divided by the smallest arcsec-per-pixel scale
 		//  gives the largest motion in pixels.
-		scalefudge = index->meta.index_scale_upper * M_SQRT1_2 *
+		scalefudge = index->index_scale_upper * M_SQRT1_2 *
             sp->codetol / sp->funits_upper;
 		*minAB -= scalefudge;
 	}
 	if (sp->funits_lower != 0.0) {
-		*maxAB = index->meta.index_scale_upper / sp->funits_lower;
+		*maxAB = index->index_scale_upper / sp->funits_lower;
 		*maxAB += scalefudge;
 	}
 }
@@ -467,7 +467,7 @@ void solver_run(solver_t* solver) {
 			solver->minminAB2 = MIN(solver->minminAB2, minAB2s[i]);
 			solver->maxmaxAB2 = MAX(solver->maxmaxAB2, maxAB2s[i]);
 
-			if (index->meta.cx_less_than_dx) {
+			if (index->cx_less_than_dx) {
 				solver->cxdx_margin = 1.5 * solver->codetol;
 				// FIXME die horribly if the indexes have differing cx_less_than_dx
 			}
@@ -799,7 +799,7 @@ static void try_permutations(int* origstars, int dimquad, double* origcode,
 	for (i=firststar; i<dimquad; i++) {
 		if (placed[i])
 			continue;
-		if (!first && solver->index->meta.cx_less_than_dx &&
+		if (!first && solver->index->cx_less_than_dx &&
 			(code[2 * (star - 1 - 2)] > origcode[2 * (i - 2)] + solver->cxdx_margin))
 			continue;
 		//solver->num_cxdx_skipped++;
@@ -937,18 +937,18 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	double match_distance_in_pixels2;
     bool solved;
 
-	mo->indexid = sp->index->meta.indexid;
-	mo->healpix = sp->index->meta.healpix;
-	mo->hpnside = sp->index->meta.hpnside;
+	mo->indexid = sp->index->indexid;
+	mo->healpix = sp->index->healpix;
+	mo->hpnside = sp->index->hpnside;
 	mo->wcstan.imagew = sp->field_maxx;
 	mo->wcstan.imageh = sp->field_maxy;
 
 	match_distance_in_pixels2 = square(sp->verify_pix) +
-		square(sp->index->meta.index_jitter / mo->scale);
+		square(sp->index->index_jitter / mo->scale);
 
 	mo->dimquads = quadfile_dimquads(sp->index->quads);
 
-	verify_hit(sp->index->starkd, sp->index->meta.cutnside,
+	verify_hit(sp->index->starkd, sp->index->cutnside,
 			   mo, sip, sp->vf, match_distance_in_pixels2,
 	           sp->distractor_ratio, sp->field_maxx, sp->field_maxy,
 	           sp->logratio_bail_threshold, sp->logratio_record_threshold,

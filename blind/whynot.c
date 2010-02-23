@@ -183,16 +183,16 @@ int main(int argc, char** args) {
 		char* qidxfn;
 		qidxfile* qidx;
 		logmsg("Loading index from %s...\n", name);
-		indx = index_load(name, 0);
+		indx = index_load(name, 0, NULL);
 		if (!indx) {
 			logmsg("Failed to read index \"%s\".\n", name);
 			exit(-1);
 		}
 		pl_append(indexes, indx);
 
-		logmsg("Index name: %s\n", indx->meta.indexname);
+		logmsg("Index name: %s\n", indx->indexname);
 
-        qidxfn = index_get_qidx_filename(indx->meta.indexname);
+        qidxfn = index_get_qidx_filename(indx->indexname);
 		qidx = qidxfile_open(qidxfn);
 		if (!qidx) {
 			logmsg("Failed to open qidxfile \"%s\".\n", qidxfn);
@@ -265,8 +265,8 @@ int main(int argc, char** args) {
 		indx = pl_get(indexes, i);
 		qidx = pl_get(qidxes, i);
 
-		logmsg("Index jitter: %g arcsec (%g pixels)\n", indx->meta.index_jitter, indx->meta.index_jitter / wcsscale);
-		pixr2 = square(indx->meta.index_jitter / wcsscale) + square(pixeljitter);
+		logmsg("Index jitter: %g arcsec (%g pixels)\n", indx->index_jitter, indx->index_jitter / wcsscale);
+		pixr2 = square(indx->index_jitter / wcsscale) + square(pixeljitter);
 		logmsg("Total jitter: %g pixels\n", sqrt(pixr2));
 
 		// Read field
@@ -649,7 +649,7 @@ int main(int argc, char** args) {
 
                 vf = verify_field_preprocess(xy);
 
-                verify_hit(indx->starkd, indx->meta.cutnside, &mo, NULL, vf, verpix2,
+                verify_hit(indx->starkd, indx->cutnside, &mo, NULL, vf, verpix2,
                            DEFAULT_DISTRACTOR_RATIO, W, H,
                            log(1e-100), HUGE_VAL, HUGE_VAL, TRUE, FALSE);
 

@@ -30,9 +30,9 @@ struct backend {
     // search paths (directories)
 	sl* index_paths;
 
-    // contains "index_meta_t" objects.
-	bl* indexmetas;
-    // if "inparallel" is set: contains "index_t" objects.
+    // contains "index_t" objects.
+	// if "inparallel" is not set, they will be "metadata-only" until
+	// they need to be loaded.
     pl* indexes;
 
 	il* ibiggest;

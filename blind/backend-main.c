@@ -206,7 +206,7 @@ int main(int argc, char** args) {
 		exit( -1);
 	}
 
-	if (!pl_size(backend->indexmetas)) {
+	if (!pl_size(backend->indexes)) {
 		logerr("You must list at least one index in the config file (%s)\n", configfn);
 		exit( -1);
 	}

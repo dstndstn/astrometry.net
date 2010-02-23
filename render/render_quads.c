@@ -82,20 +82,20 @@ int render_quads(cairo_t* cairo, render_args_t* args) {
         double quadr2;
 
 		fn = sl_get(fns, i);
-        index = index_load(fn, 0);
+        index = index_load(fn, 0, NULL);
 		if (!index) {
 			logmsg("failed to open index from file \"%s\"\n", fn);
 			continue;
 		}
 
-        qidxfn = index_get_qidx_filename(index->meta.indexname);
+        qidxfn = index_get_qidx_filename(index->indexname);
 		qidx = qidxfile_open(qidxfn);
 		if (!qidx) {
 			logmsg("Failed to open qidxfile \"%s\".\n", qidxfn);
             exit(-1);            
 		}
 
-        quadr2 = arcsec2distsq(index->meta.index_scale_upper);
+        quadr2 = arcsec2distsq(index->index_scale_upper);
 		startree_search_for(index->starkd, center, r2+quadr2, NULL, &radec, &starids, &nstars);
 		logmsg("found %i stars in the search radius\n", nstars);
 

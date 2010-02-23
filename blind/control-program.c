@@ -218,13 +218,13 @@ int main(int argc, char** args) {
 		exit( -1);
 	}
 
-	if (!pl_size(backend->indexmetas)) {
+	if (!pl_size(backend->indexes)) {
 		logerr("You must list at least one index in the config file (%s)\n", configfn);
 		exit( -1);
 	}
     free(configfn);
 
-    logmsg("Loaded %i indexes.\n", pl_size(backend->indexmetas));
+    logmsg("Loaded %i indexes.\n", pl_size(backend->indexes));
 
     // For a control program you almost certainly want to be using small enough
     // indexes that they fit in memory!
@@ -335,11 +335,9 @@ int main(int argc, char** args) {
         N = pl_size(backend->indexes);
         for (i=0; i<N; i++) {
             index_t* index = pl_get(backend->indexes, i);
-            index_meta_t* meta = &(index->meta);
-
-			if (!index_meta_is_within_range(meta, racenter, deccenter, dist2deg(hprange)))
+			if (!index_is_within_range(index, racenter, deccenter, dist2deg(hprange)))
 				continue;
-			logmsg("Adding index %s\n", meta->indexname);
+			logmsg("Adding index %s\n", index->indexname);
 			solver_add_index(solver, index);
         }
 
@@ -377,7 +375,7 @@ int main(int argc, char** args) {
 				double pscale;
 				tan_t* wcs;
 				logmsg("Solved using index %s with odds ratio %g\n",
-					   solver->best_index->meta.indexname,
+					   solver->best_index->indexname,
 					   solver->best_match.logodds);
 				// WCS is solver->best_match.wcstan
 				wcs = &(solver->best_match.wcstan);

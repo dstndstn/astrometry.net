@@ -33,10 +33,19 @@
 #define DEFAULT_INDEX_JITTER 1.0  // arcsec
 
 /**
- Metadata about an index, including part of the sky it covers, size of
- quads, etc.
+ Info about an index, including part of the sky it covers, size of
+ quads, etc.; plus the code kdtree, quad list, and star kdtree.
+
+ Some of the functions below only read the metadata, leaving the
+ "codekd", "quads", and "starkd" fields NULL.
  */
-struct index_meta_s {
+struct index_s {
+	// The actual components of an index.
+	codetree* codekd;
+	quadfile* quads;
+	startree_t* starkd;
+
+	// Below here: metadata about the index.
 	char* indexname;
 
 	// Unique id for this index.
@@ -67,47 +76,36 @@ struct index_meta_s {
     int nstars;
     int nquads;
 };
-typedef struct index_meta_s index_meta_t;
+typedef struct index_s index_t;
 
 /**
  Returns TRUE if the given index contains quads of sizes that overlap
  the given range of quad sizes, [quadlo, quadhi], in arcseconds.
  */
-bool index_meta_overlaps_scale_range(index_meta_t* meta, double quadlo, double quadhi);
+bool index_overlaps_scale_range(index_t* indx, double quadlo, double quadhi);
 
 /**
  Returns TRUE if the given index covers a part of the sky that is
  within "radius_deg" degrees of the given "ra","dec" position (in
  degrees).
  */
-bool index_meta_is_within_range(index_meta_t* meta, double ra, double dec, double radius_deg);
+bool index_is_within_range(index_t* indx, double ra, double dec, double radius_deg);
 
 /**
- Reads index metadata from the given 'filename' into the given 'meta' struct.
+ Reads index metadata from the given 'filename' into the given 'indx' struct.
 
  This is done by basically loading the index, grabbing the metadata,
  and closing the index; therefore it checks for structural consistency
- of the index file as well as getting the metadata.
+ of the index file as well as getting the metadata; this also means
+ it's slower than it could be...
  */
-int index_get_meta(const char* filename, index_meta_t* meta);
+int index_get_meta(const char* filename, index_t* indx);
 
 bool index_is_file_index(const char* filename);
 
 char* index_get_quad_filename(const char* indexname);
 
 char* index_get_qidx_filename(const char* indexname);
-
-/**
- * A loaded index
- */
-struct index_s {
-	codetree* codekd;
-	quadfile* quads;
-	startree_t* starkd;
-
-    index_meta_t meta;
-};
-typedef struct index_s index_t;
 
 #define INDEX_ONLY_LOAD_METADATA 2
 #define INDEX_ONLY_LOAD_SKDT     4
@@ -132,18 +130,26 @@ index_t* index_build_from(codetree* codekd, quadfile* quads, startree_t* starkd)
  *   flags     - If INDEX_ONLY_LOAD_METADATA, then only metadata will be
  *               loaded.
  *
+ *   dest      - If NULL, a new index_t will be allocated and returned; otherwise,
+ *               the results will be put in this index_t object.
+ *
  * Returns:
  *
  *   A pointer to an index_t structure or NULL on error.
  *
  */
-index_t* index_load(const char* indexname, int flags);
+index_t* index_load(const char* indexname, int flags, index_t* dest);
 
 /**
- * Close an index and free associated data structures
+ Close an index and free associated data structures, *without freeing
+ 'index' itself*.
  */
 void index_close(index_t* index);
 
+/**
+ Closes the given index and calls free(index).
+ */
+void index_free(index_t* index);
 
 int index_get_missing_cut_params(int indexid, int* hpnside, int* nsweep,
 								 double* dedup, int* margin, char** band);

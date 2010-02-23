@@ -105,7 +105,7 @@ int main(int argc, char** args) {
 		basename = args[optind];
 		printf("Reading files with basename %s\n", basename);
 
-		index = index_load(basename, 0);
+		index = index_load(basename, 0, NULL);
 		if (!index) {
 			fprintf(stderr, "Failed to read index with base name \"%s\"\n", basename);
 			exit(-1);

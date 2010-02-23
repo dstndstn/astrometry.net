@@ -23,13 +23,13 @@
 #include "healpix.h"
 #include "tic.h"
 
-bool index_meta_overlaps_scale_range(index_meta_t* meta,
+bool index_overlaps_scale_range(index_t* meta,
                                      double quadlo, double quadhi) {
     return !((quadlo > meta->index_scale_upper) ||
              (quadhi < meta->index_scale_lower));
 }
 
-bool index_meta_is_within_range(index_meta_t* meta, double ra, double dec, double radius_deg) {
+bool index_is_within_range(index_t* meta, double ra, double dec, double radius_deg) {
 	if (meta->healpix == -1) {
 		// allsky; tautology
 		return TRUE;
@@ -127,7 +127,7 @@ char* index_get_qidx_filename(const char* indexname) {
 bool index_is_file_index(const char* filename) {
     char* ckdtfn, *skdtfn, *quadfn;
     bool singlefile;
-    //index_meta_t meta;
+    //index_t meta;
     bool rtn = TRUE;
 
     get_filenames(filename, &quadfn, &ckdtfn, &skdtfn, &singlefile);
@@ -176,13 +176,10 @@ bool index_is_file_index(const char* filename) {
     return rtn;
 }
 
-int index_get_meta(const char* filename, index_meta_t* meta) {
-    index_t* ind = index_load(filename, 0);
+int index_get_meta(const char* filename, index_t* meta) {
+    index_t* ind = index_load(filename, INDEX_ONLY_LOAD_METADATA, meta);
     if (!ind)
         return -1;
-    memcpy(meta, &(ind->meta), sizeof(index_meta_t));
-    meta->indexname = strdup(meta->indexname);
-    index_close(ind);
     return 0;
 }
 
@@ -260,16 +257,15 @@ int index_get_missing_cut_params(int indexid, int* hpnside, int* nsweep,
 }
 
 static void get_cut_params(index_t* index) {
-	index_meta_t* meta = &(index->meta);
-	meta->index_jitter = startree_get_jitter(index->starkd);
-	if (meta->index_jitter == 0.0)
-		meta->index_jitter = DEFAULT_INDEX_JITTER;
+	index->index_jitter = startree_get_jitter(index->starkd);
+	if (index->index_jitter == 0.0)
+		index->index_jitter = DEFAULT_INDEX_JITTER;
 
-	meta->cutnside = startree_get_cut_nside(index->starkd);
-	meta->cutnsweep = startree_get_cut_nsweeps(index->starkd);
-	meta->cutdedup = startree_get_cut_dedup(index->starkd);
-	meta->cutband = strdup_safe(startree_get_cut_band(index->starkd));
-	meta->cutmargin = startree_get_cut_margin(index->starkd);
+	index->cutnside = startree_get_cut_nside(index->starkd);
+	index->cutnsweep = startree_get_cut_nsweeps(index->starkd);
+	index->cutdedup = startree_get_cut_dedup(index->starkd);
+	index->cutband = strdup_safe(startree_get_cut_band(index->starkd));
+	index->cutmargin = startree_get_cut_margin(index->starkd);
 
 	// HACK - fill in values that are missing in old index files.
 	{
@@ -277,42 +273,42 @@ static void get_cut_params(index_t* index) {
 		char** band = NULL;
 		double* dedup = NULL;
 
-		if (meta->cutnside == -1)
-			nside = &(meta->cutnside);
-		if (meta->cutnsweep == 0)
-			nsweep = &(meta->cutnsweep);
-		if (meta->cutmargin == -1)
-			margin = &(meta->cutmargin);
-		if (meta->cutdedup == 0)
-			dedup = &(meta->cutdedup);
-		if (!meta->cutband)
-			band = &(meta->cutband);
+		if (index->cutnside == -1)
+			nside = &(index->cutnside);
+		if (index->cutnsweep == 0)
+			nsweep = &(index->cutnsweep);
+		if (index->cutmargin == -1)
+			margin = &(index->cutmargin);
+		if (index->cutdedup == 0)
+			dedup = &(index->cutdedup);
+		if (!index->cutband)
+			band = &(index->cutband);
 
-		index_get_missing_cut_params(meta->indexid, nside, nsweep, dedup, margin, band);
+		index_get_missing_cut_params(index->indexid, nside, nsweep, dedup, margin, band);
 	}
 
 }
 
 static void set_meta(index_t* index) {
-	index->meta.index_scale_upper = quadfile_get_index_scale_upper_arcsec(index->quads);
-	index->meta.index_scale_lower = quadfile_get_index_scale_lower_arcsec(index->quads);
-	index->meta.indexid = index->quads->indexid;
-	index->meta.healpix = index->quads->healpix;
-	index->meta.hpnside = index->quads->hpnside;
-	index->meta.dimquads = index->quads->dimquads;
-	index->meta.nquads = index->quads->numquads;
-	index->meta.nstars = index->quads->numstars;
+	index->index_scale_upper = quadfile_get_index_scale_upper_arcsec(index->quads);
+	index->index_scale_lower = quadfile_get_index_scale_lower_arcsec(index->quads);
+	index->indexid = index->quads->indexid;
+	index->healpix = index->quads->healpix;
+	index->hpnside = index->quads->hpnside;
+	index->dimquads = index->quads->dimquads;
+	index->nquads = index->quads->numquads;
+	index->nstars = index->quads->numstars;
 
 	// This must get called after meta.indexid is set: otherwise we won't be
 	// able to fill in values that are missing in old index files.
 	get_cut_params(index);
 
 	// check for CIRCLE field in ckdt header...
-	index->meta.circle = qfits_header_getboolean(index->codekd->header, "CIRCLE", 0);
+	index->circle = qfits_header_getboolean(index->codekd->header, "CIRCLE", 0);
 
 	// New indexes are cooked such that cx < dx for all codes, but not
 	// all of the old ones are like this.
-    index->meta.cx_less_than_dx = qfits_header_getboolean(index->codekd->header, "CXDX", FALSE);
+    index->cx_less_than_dx = qfits_header_getboolean(index->codekd->header, "CXDX", FALSE);
 }
 
 index_t* index_build_from(codetree* codekd, quadfile* quads, startree_t* starkd) {
@@ -325,45 +321,44 @@ index_t* index_build_from(codetree* codekd, quadfile* quads, startree_t* starkd)
 	return index;
 }
 
-index_t* index_load(const char* indexname, int flags) {
+index_t* index_load(const char* indexname, int flags, index_t* dest) {
     struct timeval tv1, tv2;
 	char *codetreefname=NULL, *quadfname=NULL, *startreefname=NULL;
     bool singlefile;
-	index_t* index = calloc(1, sizeof(index_t));
+	index_t* allocd = NULL;
 
 	if (flags & INDEX_ONLY_LOAD_METADATA)
 		logverb("Loading metadata for %s...\n", indexname);
 
-    gettimeofday(&tv1, NULL);
+	if (!dest)
+		allocd = dest = calloc(1, sizeof(index_t));
+
     get_filenames(indexname, &quadfname, &codetreefname, &startreefname, &singlefile);
-    gettimeofday(&tv2, NULL);
-    debug("get_filenames took %g ms.\n", millis_between(&tv1, &tv2));
 
 	// Read .skdt file...
 	logverb("Reading star KD tree from %s...\n", startreefname);
     gettimeofday(&tv1, NULL);
-	index->starkd = startree_open(startreefname);
+	dest->starkd = startree_open(startreefname);
     gettimeofday(&tv2, NULL);
     debug("reading skdt took %g ms.\n", millis_between(&tv1, &tv2));
-	if (!index->starkd) {
+	if (!dest->starkd) {
 		ERROR("Failed to read star kdtree from file %s", startreefname);
         goto bailout;
 	}
 	free(startreefname);
     startreefname = NULL;
-
-	index->meta.indexname = strdup(quadfname);
+	dest->indexname = strdup(quadfname);
 
 	if (flags & INDEX_ONLY_LOAD_SKDT)
-		return index;
+		return dest;
 
 	// Read .quad file...
 	logverb("Reading quads file %s...\n", quadfname);
     gettimeofday(&tv1, NULL);
-	index->quads = quadfile_open(quadfname);
+	dest->quads = quadfile_open(quadfname);
     gettimeofday(&tv2, NULL);
     debug("reading quad took %g ms.\n", millis_between(&tv1, &tv2));
-	if (!index->quads) {
+	if (!dest->quads) {
         ERROR("Failed to read quads file from %s", quadfname);
         goto bailout;
 	}
@@ -373,45 +368,52 @@ index_t* index_load(const char* indexname, int flags) {
 	// Read .ckdt file...
 	logverb("Reading code KD tree from %s...\n", codetreefname);
     gettimeofday(&tv1, NULL);
-	index->codekd = codetree_open(codetreefname);
+	dest->codekd = codetree_open(codetreefname);
     gettimeofday(&tv2, NULL);
     debug("reading ckdt took %g ms.\n", millis_between(&tv1, &tv2));
-	if (!index->codekd) {
+	if (!dest->codekd) {
 		ERROR("Failed to read code kdtree from file %s", codetreefname);
         goto bailout;
     }
 	free(codetreefname);
     codetreefname = NULL;
 
-	set_meta(index);
+	set_meta(dest);
 
 	logverb("Index scale: [%g, %g] arcmin, [%g, %g] arcsec\n",
-            index->meta.index_scale_lower / 60.0, index->meta.index_scale_upper / 60.0,
-            index->meta.index_scale_lower, index->meta.index_scale_upper);
-    logverb("Index has %i quads and %i stars\n", index->meta.nquads, index->meta.nstars);
+            dest->index_scale_lower / 60.0, dest->index_scale_upper / 60.0,
+            dest->index_scale_lower, dest->index_scale_upper);
+    logverb("Index has %i quads and %i stars\n", dest->nquads, dest->nstars);
 
-	if (!index->meta.circle) {
+	if (!dest->circle) {
 		ERROR("Code kdtree does not contain the CIRCLE header.");
         goto bailout;
 	}
 
-	if (flags & INDEX_ONLY_LOAD_METADATA)
-		index_close(index);
+	if (flags & INDEX_ONLY_LOAD_METADATA) {
+		startree_close(dest->starkd);
+		codetree_close(dest->codekd);
+		quadfile_close(dest->quads);
+		dest->starkd = NULL;
+		dest->codekd = NULL;
+		dest->quads = NULL;
+	}
 
-	return index;
+	return dest;
 
  bailout:
     free(startreefname);
     free(quadfname);
     free(codetreefname);
-    index_close(index);
+    index_close(dest);
+	free(allocd);
     return NULL;
 }
 
 void index_close(index_t* index) {
 	if (!index) return;
-	free(index->meta.indexname);
-	free(index->meta.cutband);
+	free(index->indexname);
+	free(index->cutband);
 	if (index->starkd)
 		startree_close(index->starkd);
 	if (index->codekd)
@@ -421,5 +423,9 @@ void index_close(index_t* index) {
 	index->starkd = NULL;
 	index->codekd = NULL;
 	index->quads = NULL;
+}
+
+void index_free(index_t* index) {
+	index_close(index);
 	free(index);
 }
