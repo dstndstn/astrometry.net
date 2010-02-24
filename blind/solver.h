@@ -99,6 +99,11 @@ struct solver_t {
 	// One of PARITY_NORMAL, PARITY_FLIP, or PARITY_BOTH.  Are the X and Y axes of
 	// the image flipped?  Default PARITY_BOTH.
 	int parity;
+
+	// Only accept matches within a radius of a given RA,Dec position?
+	bool use_radec;
+	double centerxyz[3];
+	double r2;
 	
 	// During verification, if the log-odds ratio drops to this level, we bail out and
 	// assume it's not a match.  Default log(1e-100).
@@ -145,6 +150,9 @@ struct solver_t {
 	int last_examined_object;
 	// number of quads skipped because of cxdx constraints.
 	int num_cxdx_skipped;
+	int num_meanx_skipped;
+	// number of matches skipped due to RA,Dec bounds constraints.
+	int num_radec_skipped;
 	// The number of times we ran verification on a quad.
 	int num_verified;
 
@@ -200,6 +208,14 @@ void solver_free(solver_t*);
  Tells the solver which field of stars it's going to be solving.
  */
 void solver_set_field(solver_t* s, starxy_t* field);
+
+/**
+ Tells the solver to only accept matches within "radius_deg" (in
+ degrees) of the given "ra","dec" point (also in degrees).
+
+ This is, each star comprising the quad must be within than circle.
+ */
+void solver_set_radec(solver_t* s, double ra, double dec, double radius_deg);
 
 /**
  Tells the solver the pixel coordinate range of the image to be

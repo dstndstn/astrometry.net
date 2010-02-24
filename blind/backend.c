@@ -359,6 +359,12 @@ int backend_run_job(backend_t* backend, job_t* job) {
     if (backend->inparallel)
         bp->indexes_inparallel = TRUE;
 
+	if (job->use_radec_center) {
+		logmsg("Only searching for solutions within %g degrees of RA,Dec (%g,%g)\n",
+			   job->search_radius, job->ra_center, job->dec_center);
+		solver_set_radec(sp, job->ra_center, job->dec_center, job->search_radius);
+	}
+
     for (i=0; i<il_size(job->depths)/2; i++) {
 		int startobj = il_get(job->depths, i*2);
         int endobj = il_get(job->depths, i*2+1);
@@ -464,6 +470,10 @@ int backend_run_job(backend_t* backend, job_t* job) {
         if (solved)
             break;
 	}
+
+	logmsg("cx<=dx constraints: %i\n", sp->num_cxdx_skipped);
+	logmsg("meanx constraints: %i\n", sp->num_meanx_skipped);
+	logmsg("RA,Dec constraints: %i\n", sp->num_radec_skipped);
 
  finish:
     solver_cleanup(sp);

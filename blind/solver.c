@@ -127,6 +127,7 @@ void solver_reset_counters(solver_t* s) {
 	s->numscaleok = 0;
 	s->last_examined_object = 0;
 	s->num_cxdx_skipped = 0;
+	s->num_radec_skipped = 0;
 	s->num_verified = 0;
 }
 
@@ -135,6 +136,16 @@ double solver_field_width(solver_t* s) {
 }
 double solver_field_height(solver_t* s) {
 	return s->field_maxy - s->field_miny;
+}
+
+void solver_set_radec(solver_t* s, double ra, double dec, double radius_deg) {
+	s->use_radec = TRUE;
+	radecdeg2xyzarr(ra, dec, s->centerxyz);
+	s->r2 = deg2distsq(radius_deg);
+}
+
+void solver_clear_radec(solver_t* s) {
+	s->use_radec = FALSE;
 }
 
 static void set_center_and_radius(solver_t* solver, MatchObj* mo,
@@ -860,7 +871,7 @@ static void try_permutations(const int* origstars, int dimquad,
 		// Check cx <= dx, if we're a "dx".
 		if (slot > 0 && solver->index->cx_less_than_dx) {
 			if (code[2*(slot - 1) +0] > origcode[2*i +0] + solver->cxdx_margin) {
-				logverb("cx <= dx check failed: %g > %g + %g\n", code[2*(slot - 1) +0], origcode[2*i +0], solver->cxdx_margin);
+				debug("cx <= dx check failed: %g > %g + %g\n", code[2*(slot - 1) +0], origcode[2*i +0], solver->cxdx_margin);
 				solver->num_cxdx_skipped++;
 				continue;
 			}
@@ -884,9 +895,8 @@ static void try_permutations(const int* origstars, int dimquad,
 				meanx += code[2*j];
 			meanx /= (slot+1);
 			if (meanx > 0.5 + solver->cxdx_margin) {
-				logverb("meanx <= 0.5 check failed: %g > 0.5 + %g\n", meanx, solver->cxdx_margin);
-				// FIXME -- different counter for this!
-				solver->num_cxdx_skipped++;
+				debug("meanx <= 0.5 check failed: %g > 0.5 + %g\n", meanx, solver->cxdx_margin);
+				solver->num_meanx_skipped++;
 				continue;
 			}
 		}
@@ -941,12 +951,25 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
 		double arcsecperpix;
 		tan_t wcs;
         int i;
+		bool outofbounds = FALSE;
 
 		solver->nummatches++;
 		thisquadno = krez->inds[jj];
 		quadfile_get_stars(solver->index->quads, thisquadno, star);
-        for (i=0; i<dimquads; i++)
+        for (i=0; i<dimquads; i++) {
             startree_get(solver->index->starkd, star[i], starxyz + 3*i);
+			if (solver->use_radec)
+				if (distsq(starxyz + 3*i, solver->centerxyz, 3) > solver->r2) {
+					outofbounds = TRUE;
+					break;
+				}
+		}
+		if (outofbounds) {
+			debug("Quad match is out of bounds.\n");
+			solver->num_radec_skipped++;
+			continue;
+		}
+
 
 		debug("        stars [");
 		for (i=0; i<dimquads; i++)
