@@ -4,6 +4,9 @@
 AC_PREREQ(2.59)
 AC_INIT(qfits, 6.2.0, yjung@eso.org)
 
+# dstn - automake told me to add this.
+AC_PROG_LIBTOOL
+
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR([admin])

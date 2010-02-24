@@ -37,10 +37,7 @@ subdir = src
 DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4macros/acx_pthread.m4 \
-	$(top_srcdir)/m4macros/eso.m4 \
-	$(top_srcdir)/m4macros/qfits_memory.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -56,11 +53,11 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libqfits_la_DEPENDENCIES =
-am_libqfits_la_OBJECTS = qfits_byteswap.lo qfits_cache.lo \
+am_libqfits_la_OBJECTS = anqfits.lo qfits_byteswap.lo qfits_cache.lo \
 	qfits_card.lo qfits_error.lo qfits_filename.lo qfits_float.lo \
-	qfits_header.lo qfits_image.lo qfits_convert.lo qfits_memory.lo qfits_md5.lo \
-	qfits_rw.lo qfits_table.lo qfits_thread_pthreads.lo \
-	qfits_time.lo qfits_tools.lo md5.lo
+	qfits_header.lo qfits_image.lo qfits_convert.lo \
+	qfits_memory.lo qfits_md5.lo qfits_rw.lo qfits_table.lo \
+	qfits_thread_pthreads.lo qfits_time.lo qfits_tools.lo md5.lo
 libqfits_la_OBJECTS = $(am_libqfits_la_OBJECTS)
 libqfits_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -103,7 +100,6 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
-DOXYGEN = @DOXYGEN@
 DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
@@ -119,7 +115,6 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-LATEX = @LATEX@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -141,10 +136,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PTHREAD_CC = @PTHREAD_CC@
-PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
-PTHREAD_LIBS = @PTHREAD_LIBS@
-QFITS_CFLAGS = @QFITS_CFLAGS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -158,7 +149,6 @@ abs_top_srcdir = @abs_top_srcdir@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
-acx_pthread_config = @acx_pthread_config@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -209,6 +199,7 @@ INCLUDES = -I$(top_srcdir)/src
 AM_CFLAGS = $(QFITS_CFLAGS)
 lib_LTLIBRARIES = libqfits.la
 libqfits_la_SOURCES = \
+	anqfits.c \
 	qfits_byteswap.c \
     qfits_cache.c \
     qfits_card.c \
@@ -227,7 +218,9 @@ libqfits_la_SOURCES = \
     qfits_tools.c \
     md5.c 
 
-include_HEADERS = qfits_cache.h \
+include_HEADERS = \
+	anqfits.h \
+	qfits_cache.h \
     qfits_filename.h \
     qfits_header.h \
     qfits_image.h \
@@ -243,7 +236,8 @@ include_HEADERS = qfits_cache.h \
     qfits_tools.h \
     qfits_error.h
 
-noinst_HEADERS = qfits_byteswap.h \
+noinst_HEADERS = \
+	qfits_byteswap.h \
     qfits_card.h \
     qfits_float.h \
     qfits_thread.h \
@@ -321,16 +315,17 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/anqfits.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md5.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_byteswap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_cache.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_card.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_convert.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_error.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_filename.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_float.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_header.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_image.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_convert.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_md5.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_memory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qfits_rw.Plo@am__quote@
