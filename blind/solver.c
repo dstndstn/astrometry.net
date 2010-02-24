@@ -415,6 +415,7 @@ static double get_tolerance(solver_t* solver) {
  fieldtop - the maximum field star number to build quads out of.
  dimquad, solver, tol2 - passed to try_all_codes.
  */
+/*
 static void add_stars(pquad* pq, int* field, int fieldoffset,
                       int n_to_add, int adding, int fieldtop,
                       int dimquad,
@@ -447,6 +448,193 @@ static void add_stars(pquad* pq, int* field, int fieldoffset,
         }
     }
 }
+ */
+
+/**
+ FIXME -- currently we're failing to produce all C,D,E permutations when
+ we add a new star as star "C".
+
+ We need to force that one star to be used at least once in the
+ permutation; also it must appear in each position.
+
+ */
+
+
+/**
+ This functions tries different permutations of the non-backbone stars C [, D [,E ] ]
+ */
+static void try_perms(pquad* pq, int* field, int Nstars, int slot, int dimquad,
+                      solver_t* solver, double tol2,
+					  kdtree_qres_t** presult,
+					  int Xoff, int Yoff,
+					  double* code,
+					  bool current_parity,
+					  bool flip_chosen, bool flipAB) {
+	int options = KD_OPTIONS_SMALL_RADIUS | KD_OPTIONS_COMPUTE_DISTS |
+		KD_OPTIONS_NO_RESIZE_RESULTS | KD_OPTIONS_USE_SPLIT;
+	int i, k;
+	int lastslot = dimquad-1-NBACK;
+
+	// "slot" is 0 for star C, 1 for star D, ...
+
+	for (i=0; i<Nstars; i++) {
+		{
+			int j;
+			for (j=0; j<NBACK+slot; j++)
+				logverb("%i,", field[j]);
+			logverb("  %i? %s\n", i, pq->inbox[i] ? "yes" : "no");
+		}
+
+		// This prevents: placing stars A,B; placing any previously-placed stars
+		if (!pq->inbox[i])
+			continue;
+
+		//// FIXME -- loop over parity here?
+
+		for (k=0; flip_chosen ? k<1 : k<3; k++) {
+			double codex;
+
+			if (!flip_chosen) {
+				if (k == 0)
+					flipAB = FALSE;
+				else if (k == 1) {
+					flipAB = TRUE;
+					// swap field[0],field[1]
+					int tmp = field[1];
+					field[1] = field[0];
+					field[0] = tmp;
+				} else {
+					// swap field[0],field[1] back and exit
+					int tmp = field[1];
+					field[1] = field[0];
+					field[0] = tmp;
+					break;
+				}
+			}
+
+			{
+				int j;
+				for (j=0; j<NBACK+slot; j++)
+					logverb("%i,", field[j]);
+				logverb("%i", i);
+				logverb("  flip? %s\n", flipAB ? "yes":"no");
+			}
+
+			codex = code[2*slot +0] = pq->xy[2*i + Xoff];
+			if (flipAB)
+				codex = 1.0 - codex;
+
+			// Check cx <= dx, if we're a "dx".
+			if (slot > 0 && solver->index->cx_less_than_dx) {
+				double cx = code[2*(slot - 1) +Xoff];
+				if (flipAB)
+					cx = 1.0 - cx;
+				//double dx = pq->xy[2*i +Xoff];
+				double dx = codex;
+				if (cx > dx + solver->cxdx_margin) {
+					solver->num_cxdx_skipped++;
+					continue;
+				}
+			}
+
+			// Check meanx <= 1/2.
+			if (solver->index->meanx_less_than_half) {
+				int j;
+				double sumx = 0;
+				for (j=0; j<=slot; j++)
+					sumx += code[2*j];
+				sumx /= slot;
+				if (sumx > 0.5 + solver->cxdx_margin) {
+					// FIXME -- different counter for this!
+					solver->num_cxdx_skipped++;
+					continue;
+				}
+			}
+
+			// Slot in this star...
+			field[NBACK + slot] = i;
+			//code[2*slot +0] = pq->xy[2*i + Xoff];
+			code[2*slot +1] = pq->xy[2*i + Yoff];
+			if (flipAB)
+				code[2*slot +1] = 1.0 - code[2*slot + 1];
+
+			// If we have more slots to fill...
+			if (slot < lastslot) {
+				pq->inbox[i] = FALSE;
+				
+				try_perms(pq, field, Nstars, slot+1, dimquad, solver, tol2, presult,
+						  Xoff, Yoff, code, current_parity, TRUE, flipAB);
+				pq->inbox[i] = TRUE;
+			} else {
+#if defined(TESTING_TRYPERMUTATIONS)
+				TEST_TRY_PERMUTATIONS(field, code, dimquad, solver);
+#else
+				// Search with the code we've built.
+				*presult = kdtree_rangesearch_options_reuse(solver->index->codekd->tree,
+															*presult, code, tol2, options);
+				//debug("      trying ABCD = [%i %i %i %i]: %i results.\n", fstars[A], fstars[B], fstars[C], fstars[D], result->nres);
+
+				if ((*presult)->nres) {
+					double pixvals[DQMAX*2];
+					int j;
+					for (j=0; j<dimquad; j++) {
+						setx(pixvals, j, field_getx(solver, field[j]));
+						sety(pixvals, j, field_gety(solver, field[j]));
+					}
+					resolve_matches(*presult, pixvals, field, dimquad, solver, current_parity);
+				}
+				if (unlikely(solver->quit_now))
+					return;
+#endif
+			}
+
+			/*
+			 if (flip_chosen)
+			 break;
+			 if (flipAB) {
+			 break;
+			 }
+			 flipAB = TRUE;
+			 {
+			 // swap field[0],field[1]
+			 int tmp = field[1];
+			 field[1] = field[0];
+			 field[0] = tmp;
+			 }
+			 */
+		}
+	}
+}
+
+
+static void add_stars(pquad* pq, int* field, int fieldoffset,
+                      int n_to_add, int adding, int fieldtop,
+                      int dimquad,
+                      solver_t* solver, double tol2) {
+	kdtree_qres_t* result = NULL;
+	double code[DCMAX];
+	/////// FIXME -- if "fieldoffset" == D, need to set the first two code components!
+	if (solver->parity == PARITY_NORMAL ||
+		solver->parity == PARITY_BOTH) {
+		if (fieldoffset == D) {
+			code[0] = pq->xy[2*field[C] +0];
+			code[1] = pq->xy[2*field[C] +1];
+		}
+		try_perms(pq, field, fieldtop, fieldoffset - NBACK, dimquad,
+				  solver, tol2, &result, 0, 1, code, FALSE, FALSE, FALSE);
+	}
+	if (solver->parity == PARITY_FLIP ||
+		solver->parity == PARITY_BOTH) {
+		if (fieldoffset == D) {
+			code[0] = pq->xy[2*field[C] +1];
+			code[1] = pq->xy[2*field[C] +0];
+		}
+		try_perms(pq, field, fieldtop, fieldoffset - NBACK, dimquad,
+				  solver, tol2, &result, 1, 0, code, TRUE, FALSE, FALSE);
+	}
+}
+
+
 
 // The real deal
 void solver_run(solver_t* solver) {
@@ -704,6 +892,7 @@ void solver_run(solver_t* solver) {
 		free(pquads);
 	}
 }
+
 
 static void try_all_codes(const pquad* pq,
                           const int* fieldstars, int dimquad,
