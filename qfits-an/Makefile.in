@@ -37,7 +37,8 @@ DIST_COMMON = README $(am__configure_deps) $(include_HEADERS) \
 	$(srcdir)/config.h.in $(top_srcdir)/admin/html.am \
 	$(top_srcdir)/configure $(top_srcdir)/doc/Doxyfile.in AUTHORS \
 	admin/config.guess admin/config.sub admin/depcomp \
-	admin/install-sh admin/ltmain.sh admin/missing
+	admin/install-sh admin/ltmain.sh admin/missing config.guess \
+	config.sub install-sh
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
