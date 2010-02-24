@@ -398,7 +398,6 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	int mode, flags;
 	off_t mapstart;
 	int mapoffset;
-    qfits_table* table;
     int table_nrows;
     int table_rowsize;
 	fitsext_t* inmemext = NULL;
@@ -440,16 +439,15 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 		}
 		debug("fits_find_table_column(%s) took %g ms\n", chunk->tablename, 1000 * (timenow() - t0));
 
+		t0 = timenow();
 		chunk->header = qfits_header_readext(fb->filename, ext);
 		if (!chunk->header) {
 			ERROR("Couldn't read FITS header from file \"%s\" extension %i", fb->filename, ext);
 			return -1;
 		}
-
-		table = qfits_table_open(fb->filename, ext);
-		table_nrows = table->nr;
-		table_rowsize = table->tab_w;
-		qfits_table_close(table);
+		debug("reading chunk header (%s) took %g ms\n", chunk->tablename, 1000 * (timenow() - t0));
+		table_nrows = fb->tables[ext]->nr;
+		table_rowsize = fb->tables[ext]->tab_w;
 	}
 
     if (!chunk->itemsize)

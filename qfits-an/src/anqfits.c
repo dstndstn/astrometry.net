@@ -9,45 +9,58 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <assert.h>
+#include <errno.h>
 
-#define QFITS_MAX_EXTS            10192
+#include "anqfits.h"
+#include "qfits_std.h"
+#include "qfits_error.h"
+#include "qfits_tools.h"
+#include "qfits_table.h"
+#include "qfits_memory.h"
+#include "qfits_rw.h"
+#include "qfits_card.h"
 
+#define qdebug( code ) { code }
 
 int anqfits_n_ext(const anqfits_t* qf) {
-    return qf->exts;
+    return qf->Nexts;
 }
 
-int anqfits_header_start(const anqfits_t* qf, int ext) {
-    if (ext >= qf->exts)
+off_t anqfits_header_start(const anqfits_t* qf, int ext) {
+	assert(ext >= 0 && ext < qf->Nexts);
+    if (ext >= qf->Nexts)
         return -1;
-    return qf->hdr_start[ext] * FITS_BLOCK_SIZE;
+    return (off_t)qf->exts[ext].hdr_start * FITS_BLOCK_SIZE;
 }
 
-int anqfits_header_size(const anqfits_t* qf, int ext) {
-    if (ext >= qf->exts)
+off_t anqfits_header_size(const anqfits_t* qf, int ext) {
+	assert(ext >= 0 && ext < qf->Nexts);
+    if (ext >= qf->Nexts)
         return -1;
-    return qf->hdr_size[ext] * FITS_BLOCK_SIZE;
+    return (off_t)qf->exts[ext].hdr_size * FITS_BLOCK_SIZE;
 }
 
-int anqfits_data_start(const anqfits_t* qf, int ext) {
-    if (ext >= qf->exts)
+off_t anqfits_data_start(const anqfits_t* qf, int ext) {
+	assert(ext >= 0 && ext < qf->Nexts);
+    if (ext >= qf->Nexts)
         return -1;
-    return qf->data_start[ext] * FITS_BLOCK_SIZE;
+    return (off_t)qf->exts[ext].data_start * FITS_BLOCK_SIZE;
 }
 
-int anqfits_data_size(const anqfits_t* qf, int ext) {
-    if (ext >= qf->exts)
+off_t anqfits_data_size(const anqfits_t* qf, int ext) {
+	assert(ext >= 0 && ext < qf->Nexts);
+    if (ext >= qf->Nexts)
         return -1;
-    return qf->data_size[ext] * FITS_BLOCK_SIZE;
+    return (off_t)qf->exts[ext].data_size * FITS_BLOCK_SIZE;
 }
 
+/*
 char* qfits_query_ext_2(const qfits_t* qf, int ext, const char* keyword) {
     qfits_header* hdr;
     char* str;
-
     // HACK - return pointer to static memory!!
     static char val[81];
-
     hdr = qfits_get_header(qf, ext);
     if (!hdr)
         return NULL;
@@ -59,7 +72,6 @@ char* qfits_query_ext_2(const qfits_t* qf, int ext, const char* keyword) {
     qfits_header_destroy(hdr);
     return val;
 }
-
 int qfits_is_table_2(const qfits_t* qf, int ext) {
     qfits_header* hdr;
     int ttype;
@@ -68,7 +80,9 @@ int qfits_is_table_2(const qfits_t* qf, int ext) {
     qfits_header_destroy(hdr);
     return ttype;
 }
+ */
 
+#if 0
 qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
     qfits_table* table;
     qfits_col* curr_col;
@@ -116,7 +130,7 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
         
     /* Identify a table and get the table type : ASCII or BIN */
 	if ((table_type = qfits_is_table_header(hdr))==QFITS_INVALIDTABLE) {
-        qfits_error("[%s] extension %d is not a table", filename, ext) ;
+        qfits_error("[%s] extension %d is not a table", qf->filename, ext) ;
         qfits_header_destroy(hdr);
         return NULL;
     }
@@ -124,7 +138,7 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
     /* Get number of columns and allocate them: nc <-> TFIELDS */
     nb_col = qfits_header_getint(hdr, "TFIELDS", -1);
     if (nb_col == -1) {
-        qfits_error("cannot read TFIELDS in [%s]:[%d]", filename, ext);
+        qfits_error("cannot read TFIELDS in [%s]:[%d]", qf->filename, ext);
         qfits_header_destroy(hdr);
         return NULL;
     }
@@ -132,7 +146,7 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
     /* Get the width in bytes of the table */
     table_width = qfits_header_getint(hdr, "NAXIS1", -1);
     if (table_width == -1) {
-        qfits_error("cannot read NAXIS1 in [%s]:[%d]", filename, ext) ;
+        qfits_error("cannot read NAXIS1 in [%s]:[%d]", qf->filename, ext) ;
         qfits_header_destroy(hdr);
         return NULL;
     }
@@ -140,19 +154,19 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
 	/* Get the number of rows */
     nb_rows = qfits_header_getint(hdr, "NAXIS2", -1);
     if (nb_rows == -1) {
-        qfits_error("cannot read NAXIS2 in [%s]:[%d]", filename, ext) ;
+        qfits_error("cannot read NAXIS2 in [%s]:[%d]", qf->filename, ext) ;
         qfits_header_destroy(hdr);
         return NULL;
     }
 
     /* Create the table object */
-    table = qfits_table_new(filename, table_type, table_width, nb_col, nb_rows);
+    table = qfits_table_new(qf->filename, table_type, table_width, nb_col, nb_rows);
     
     /* Initialize offset_beg */
     offset_beg = anqfits_data_start(qf, ext);
     data_size = anqfits_data_size(qf, ext);
     if ((offset_beg == -1) || (data_size == -1)) {
-        qfits_error("cannot find data start in [%s]:[%d]", filename, ext);
+        qfits_error("cannot find data start in [%s]:[%d]", qf->filename, ext);
         qfits_header_destroy(hdr);
         qfits_table_close(table);
         return NULL;
@@ -188,7 +202,7 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
         /* atom_size, atom_nb, atom_dec_nb, atom_type    <-> TFORM */
         sprintf(keyword, "TFORM%d", i+1);
         if ((str_val=qfits_header_getstr(hdr, keyword)) == NULL) {
-            qfits_error("cannot read [%s] in [%s]:[%d]", keyword, filename, ext);
+            qfits_error("cannot read [%s] in [%s]:[%d]", keyword, qf->filename, ext);
             qfits_header_destroy(hdr);
             qfits_table_close(table);
             return NULL;
@@ -283,7 +297,7 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
                 sprintf(keyword, "TBCOL%d", i+1);
                 col_pos = qfits_header_getint(hdr, keyword, -1);
                 if (col_pos == -1) {
-                    qfits_error("cannot read [%s] in [%s]", keyword, filename);
+                    qfits_error("cannot read [%s] in [%s]", keyword, qf->filename);
                     qfits_table_close(table);
                     qfits_header_destroy(hdr);
                     return NULL;
@@ -292,7 +306,7 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
                 sprintf(keyword, "TBCOL%d", i+2) ;
                 next_col_pos = qfits_header_getint(hdr, keyword, -1);
                 if (next_col_pos == -1) {
-                    qfits_error("cannot read [%s] in [%s]", keyword, filename) ;
+                    qfits_error("cannot read [%s] in [%s]", keyword, qf->filename) ;
                     qfits_table_close(table) ;
                     qfits_header_destroy(hdr);
                     return NULL;
@@ -317,13 +331,40 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
     
     return table;
 }
+#endif
 
+qfits_header* anqfits_get_header(const anqfits_t* qf, int ext) {
+	assert(ext >= 0 && ext < qf->Nexts);
+	if (!qf->exts[ext].header)
+		qf->exts[ext].header = qfits_header_readext(qf->filename, ext);
+	if (!qf->exts[ext].header)
+		return NULL;
+	// .....!
+	return qfits_header_copy(qf->exts[ext].header);
+}
+
+qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
+	assert(ext >= 0 && ext < qf->Nexts);
+	if (!qf->exts[ext].table)
+		qf->exts[ext].table = qfits_table_open(qf->filename, ext);
+	if (!qf->exts[ext].table)
+		return NULL;
+	// .....!
+	return qfits_table_copy(qf->exts[ext].table);
+}
+
+
+#if 0
 qfits_header* anqfits_get_header(const anqfits_t* qf, int ext) {
     int start;
     size_t size;
     char* map;
     qfits_header* hdr;
     char line[81];
+	char* where;
+	char* key;
+	char* val;
+	char* com;
 
     if (!qf)
         return NULL;
@@ -375,6 +416,7 @@ qfits_header* anqfits_get_header(const anqfits_t* qf, int ext) {
     qfits_fdealloc(map, start, size);
     return hdr;
 }
+#endif
 
 static int starts_with(const char* str, const char* start) {
     int len = strlen(start);
@@ -397,8 +439,11 @@ anqfits_t* anqfits_open(const char* filename) {
     char* buf_c;
     int seeked;
 	int firsttime;
+	int i;
+	char* read_val;
 
-	int off_size = QFITS_MAX_EXTS;
+	// initial maximum number of extensions: we grow automatically
+	int off_size = 1024;
 
     qf = calloc(1, sizeof(anqfits_t));
     qf->filename = strdup(filename);
@@ -542,7 +587,7 @@ anqfits_t* anqfits_open(const char* filename) {
                 if (starts_with(buf, "XTENSION=")) {
                     /* Got an extension */
                     found_it = 1;
-                    qf->hdr_start[qf->Nexts] = n_blocks-1;
+                    qf->exts[qf->Nexts].hdr_start = n_blocks-1;
                 }
             }
             if (end_of_file)
@@ -601,7 +646,7 @@ anqfits_t* anqfits_open(const char* filename) {
 				qf->Nexts++;
 				if (qf->Nexts >= off_size) {
 					off_size *= 2;
-					qf->exts = realloc(qf->exts, off_size * sizeof(anfits_ext_t));
+					qf->exts = realloc(qf->exts, off_size * sizeof(anqfits_ext_t));
 					assert(qf->exts);
 					if (!qf->exts)
 						goto bailout;
@@ -615,7 +660,7 @@ anqfits_t* anqfits_open(const char* filename) {
     in = NULL;
 
     // realloc
-	qf->exts = realloc(qf->exts, qf->Nexts * sizeof(anfits_ext_t));
+	qf->exts = realloc(qf->exts, qf->Nexts * sizeof(anqfits_ext_t));
 	assert(qf->exts);
 	if (!qf->exts)
 		goto bailout;
@@ -627,7 +672,7 @@ anqfits_t* anqfits_open(const char* filename) {
 		else
 			qf->exts[i].data_size = qf->exts[i+1].hdr_start - qf->exts[i].data_start;
     }
-    qc->filesize = sta.st_size / FITS_BLOCK_SIZE;
+    qf->filesize = sta.st_size / FITS_BLOCK_SIZE;
 
     /* Add last modification date
      qc->mtime = sta.st_mtime ;

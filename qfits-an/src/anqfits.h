@@ -6,9 +6,13 @@
 #ifndef ANQFITS_H
 #define ANQFITS_H
 
+#include <stdint.h>
+
 #include "qfits_header.h"
 #include "qfits_table.h"
 #include "qfits_keywords.h"
+
+typedef uint8_t bool;
 
 // Everything we know about a FITS extension.
 struct anqfits_ext_t {
@@ -22,7 +26,7 @@ struct anqfits_ext_t {
 	int data_start;
 	// Data size
 	int data_size;
-	qfits_header* hdr;
+	qfits_header* header;
 	bool table_read;
 	qfits_table* table;
 };
@@ -37,7 +41,7 @@ struct anqfits_t {
 
     int Nexts;    // # of extensions in file
 
-	anqfits_ext* exts;
+	anqfits_ext_t* exts;
 
     off_t filesize ; // File size in FITS blocks (2880 bytes)
 };
@@ -49,17 +53,17 @@ void anqfits_close(anqfits_t* qf);
 
 int anqfits_n_ext(const anqfits_t* qf);
 
-// In FITS blocks.
-int anqfits_header_start(const anqfits_t* qf, int ext);
+// In BYTES
+off_t anqfits_header_start(const anqfits_t* qf, int ext);
 
-// In FITS blocks.
-int anqfits_header_size(const anqfits_t* qf, int ext);
+// In BYTES
+off_t anqfits_header_size(const anqfits_t* qf, int ext);
 
-// In FITS blocks.
-int anqfits_data_start(const anqfits_t* qf, int ext);
+// In BYTES
+off_t anqfits_data_start(const anqfits_t* qf, int ext);
 
-// In FITS blocks.
-int anqfits_data_size(const anqfits_t* qf, int ext);
+// In BYTES
+off_t anqfits_data_size(const anqfits_t* qf, int ext);
 
 qfits_header* anqfits_get_header(const anqfits_t* qf, int ext);
 

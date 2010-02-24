@@ -23,6 +23,8 @@
 #include "healpix.h"
 #include "tic.h"
 
+#include "anqfits.h"
+
 bool index_overlaps_scale_range(index_t* meta,
                                      double quadlo, double quadhi) {
     return !((quadlo > meta->index_scale_upper) ||
@@ -332,6 +334,8 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 	char *codetreefname=NULL, *quadfname=NULL, *startreefname=NULL;
     bool singlefile;
 	index_t* allocd = NULL;
+
+	anqfits_t* fits;
 
 	if (flags & INDEX_ONLY_LOAD_METADATA)
 		logverb("Loading metadata for %s...\n", indexname);

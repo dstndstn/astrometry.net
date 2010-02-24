@@ -58,12 +58,6 @@
 /* Size of the FITS magic number */
 #define FITS_MAGIC_SZ        6
 
-/*-----------------------------------------------------------------------------
-                        Private to this module  
- -----------------------------------------------------------------------------*/
-
-static int is_blank_line(const char *);
-
 /*----------------------------------------------------------------------------*/
 /**
  * @defgroup    qfits_rw    FITS header reading/writing
@@ -575,7 +569,7 @@ int qfits_get_datinfo_long(
 
 /**@}*/
 
-static int is_blank_line(const char * s)
+int is_blank_line(const char * s)
 {
     int     i;
 

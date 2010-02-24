@@ -38,6 +38,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "config.h"
 
@@ -73,8 +74,6 @@ static int qfits_table_append_ascii_xtension(FILE *, const qfits_table *,
         const void **);
 static int qfits_table_append_data(FILE *, const qfits_table *, const void **);
 static int qfits_table_get_field_size(int, const qfits_col *);
-static int qfits_table_interpret_type(const char *, int *, int*, tfits_type *, 
-        int);
 static char * qfits_strstrip(const char *);
 static double qfits_str2dec(const char *, int);
 
@@ -90,6 +89,16 @@ static double qfits_str2dec(const char *, int);
                               Function codes
  -----------------------------------------------------------------------------*/
 
+qfits_table* qfits_table_copy(const qfits_table* t) {
+	qfits_table* dest = calloc(1, sizeof(qfits_table));
+	assert(dest);
+	memcpy(dest, t, sizeof(qfits_table));
+	dest->col = calloc(dest->nc * sizeof(qfits_col), 1);
+	memcpy(dest->col, t->col, dest->nc * sizeof(qfits_col));
+	return dest;
+}
+
+
 /*----------------------------------------------------------------------------*/
 /**
   @brief    Identify a file as containing a FITS table in extension.
@@ -101,26 +110,37 @@ static double qfits_str2dec(const char *, int);
 /*----------------------------------------------------------------------------*/
 int qfits_is_table(const char * filename, int xtnum)
 {
-    int            ttype;
-    char valueA[FITS_LINESZ+1];
-    char value[FITS_LINESZ+1];
+    char    *    value ;
+    int            ttype ;
     
-    ttype = QFITS_INVALIDTABLE;
-    if (qfits_query_ext_r(filename, "XTENSION", xtnum, valueA)) {
-		qfits_error("failed to find keyword \"XTENSION\" in filename \"%s\" extension %i", filename, xtnum);
-		return ttype;
-	}
-
-    qfits_pretty_string_r(valueA, value);
+    ttype = QFITS_INVALIDTABLE ;
+    value = qfits_query_ext(filename, "XTENSION", xtnum);
+    if (value==NULL) return ttype ;
+    
+    value = qfits_pretty_string(value);
     if (!strcmp(value, "TABLE")) {
         ttype = QFITS_ASCIITABLE;
     } else if (!strcmp(value, "BINTABLE")) {
         ttype = QFITS_BINTABLE;
-    } else {
-		qfits_error("Filename \"%s\" extension %i is not a FITS table: XTENSION = \"%s\" / \"%s\"", filename, xtnum, valueA, value);
-	}
+    }
     return ttype;
 }    
+
+int qfits_is_table_header(const qfits_header* hdr) {
+    char* value;
+    int ttype;
+    ttype = QFITS_INVALIDTABLE;
+    value = qfits_header_getstr(hdr, "XTENSION");
+    if (!value)
+        return ttype;
+    value = qfits_pretty_string(value);
+    if (!strcmp(value, "TABLE")) {
+        ttype = QFITS_ASCIITABLE;
+    } else if (!strcmp(value, "BINTABLE")) {
+        ttype = QFITS_BINTABLE;
+    }
+    return ttype;
+}
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -900,7 +920,7 @@ static int qfits_query_column_seq_to_array_endian(
 												  const qfits_table	    *   th,
 												  int                 colnum,
 												  int                 start_ind,
-												  int* indices,
+												  const int* indices,
 												  int                 nb_rows,
 												  unsigned char*      destination,
 												  int                 dest_stride,
@@ -2300,7 +2320,7 @@ static double qfits_str2dec(
   This functions reads the input string and uses it to update nb and type
  */
 /*----------------------------------------------------------------------------*/
-static int qfits_table_interpret_type(
+int qfits_table_interpret_type(
         const char  *   str,
         int         *   nb,
         int         *   dec_nb,

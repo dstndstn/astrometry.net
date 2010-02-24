@@ -59,4 +59,6 @@ int qfits_get_datinfo_long(
         off_t       *   seg_start,
         size_t      *   seg_size);
 
+int is_blank_line(const char * s);
+
 #endif

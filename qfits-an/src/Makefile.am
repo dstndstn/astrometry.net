@@ -29,6 +29,7 @@ libqfits_la_SOURCES = \
 
 include_HEADERS = \
 	anqfits.h \
+	qfits_keywords.h \
 	qfits_cache.h \
     qfits_filename.h \
     qfits_header.h \

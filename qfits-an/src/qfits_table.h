@@ -229,6 +229,8 @@ typedef struct qfits_table
                                Function prototypes
  -----------------------------------------------------------------------------*/
 
+qfits_table* qfits_table_copy(const qfits_table* t);
+
 int qfits_is_table(const char * filename, int xtnum);
 qfits_header * qfits_table_prim_header_default(void);
 qfits_header * qfits_table_ext_header_default(const qfits_table *);
@@ -282,5 +284,16 @@ int qfits_table_append_xtension(FILE *, const qfits_table *, const void **);
 int qfits_table_append_xtension_hdr(FILE *, const qfits_table *, const void **,
         const qfits_header *);
 char * qfits_table_field_to_string(const qfits_table *, int, int, int);
+
+
+
+int qfits_table_interpret_type(
+        const char  *   str,
+        int         *   nb,
+        int         *   dec_nb,
+        tfits_type  *   type,
+        int             table_type);
+int qfits_is_table_header(const qfits_header* hdr);
+
 
 #endif
