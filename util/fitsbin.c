@@ -41,6 +41,12 @@ struct fitsext {
 };
 typedef struct fitsext fitsext_t;
 
+qfits_header* get_header(fitsbin_t* fb, int ext) {
+	if (fb->fits) {
+		return anqfits_get_header(fb->fits, ext);
+	}
+	return qfits_header_readext(fb->filename, ext);
+}
 
 FILE* fitsbin_get_fid(fitsbin_t* fb) {
     return fb->fid;
@@ -440,7 +446,7 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 		debug("fits_find_table_column(%s) took %g ms\n", chunk->tablename, 1000 * (timenow() - t0));
 
 		t0 = timenow();
-		chunk->header = qfits_header_readext(fb->filename, ext);
+		chunk->header = get_header(fb, ext);
 		if (!chunk->header) {
 			ERROR("Couldn't read FITS header from file \"%s\" extension %i", fb->filename, ext);
 			return -1;

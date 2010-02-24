@@ -63,7 +63,7 @@ static int callback_read_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	return 0;
 }
 
-static quadfile* new_quadfile(const char* fn, bool writing) {
+static quadfile* new_quadfile(const char* fn, anqfits_t* fits, bool writing) {
 	quadfile* qf;
 	fitsbin_chunk_t chunk;
 	qf = calloc(1, sizeof(quadfile));
@@ -80,8 +80,12 @@ static quadfile* new_quadfile(const char* fn, bool writing) {
 		} else {
 			qf->fb = fitsbin_open_in_memory();
 		}
-    else
-        qf->fb = fitsbin_open(fn);
+    else {
+		if (fits)
+			qf->fb = fitsbin_open_fits(fits);
+		else
+			qf->fb = fitsbin_open(fn);
+	}
     if (!qf->fb) {
         ERROR("Failed to create fitsbin");
         return NULL;
@@ -132,11 +136,11 @@ qfits_header* quadfile_get_header(const quadfile* qf) {
 	return fitsbin_get_primary_header(qf->fb);
 }
 
-quadfile* quadfile_open(const char* fn) {
+static quadfile* my_open(const char* fn, anqfits_t* fits) {
     quadfile* qf = NULL;
     fitsbin_chunk_t* chunk;
 
-    qf = new_quadfile(fn, FALSE);
+    qf = new_quadfile(fn, fits, FALSE);
     if (!qf)
         goto bailout;
     if (fitsbin_read(qf->fb)) {
@@ -153,6 +157,14 @@ quadfile* quadfile_open(const char* fn) {
     return NULL;
 }
 
+quadfile* quadfile_open_fits(anqfits_t* fits) {
+	return my_open(NULL, fits);
+}
+
+quadfile* quadfile_open(const char* fn) {
+	return my_open(fn, NULL);
+}
+
 int quadfile_close(quadfile* qf) {
     int rtn;
 	if (!qf) return 0;
@@ -164,7 +176,7 @@ int quadfile_close(quadfile* qf) {
 static quadfile* open_for_writing(const char* fn) {
 	quadfile* qf;
 	qfits_header* hdr;
-	qf = new_quadfile(fn, TRUE);
+	qf = new_quadfile(fn, NULL, TRUE);
 	if (!qf)
 		goto bailout;
     qf->dimquads = 4;

@@ -57,7 +57,7 @@ $(LIB): $(OBJS)
 	$(RANLIB) $@
 
 clean:
-	-rm $(LIB) $(OBJS)
+	-rm $(LIB) $(OBJS) ../lib/$(LIB) ../include/*
 
 #.SUFFIXES:
 

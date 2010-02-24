@@ -23,6 +23,9 @@
 
 #define qdebug( code ) { code }
 
+//#define debug printf
+#define debug(args...)
+
 int anqfits_n_ext(const anqfits_t* qf) {
     return qf->Nexts;
 }
@@ -488,18 +491,21 @@ anqfits_t* anqfits_open(const char* filename) {
 
     // Start looking for END card
     while (!found_it) {
+		debug("Firsttime = %i\n", firsttime);
 		if (!firsttime) {
 			// Read next FITS block
+			debug("Reading next FITS block\n");
 			if (fread(buf, 1, FITS_BLOCK_SIZE, in) != FITS_BLOCK_SIZE) {
 				qdebug(printf("anqfits: error reading file %s\n", filename););
 				goto bailout;
 			}
-			firsttime = 0;
 		}
+		firsttime = 0;
         n_blocks++;
         // Browse through current block
         buf_c = buf;
         for (i=0; i<FITS_NCARDS; i++) {
+			debug("Looking at line %i:\n  %.80s\n", i, buf_c);
             /* Look for BITPIX keyword */
             if (starts_with(buf_c, "BITPIX ")) {
                 read_val = qfits_getvalue(buf_c);
@@ -529,6 +535,7 @@ anqfits_t* anqfits_open(const char* filename) {
             /* Look for END keyword */
             } else if (starts_with(buf_c, "END ")) {
                 found_it = 1;
+				break;
             }
             buf_c += FITS_LINESZ;
         }
@@ -606,8 +613,8 @@ anqfits_t* anqfits_open(const char* filename) {
 						end_of_file = 1;
 						break;
 					}
-					firsttime = 0;
 				}
+				firsttime = 0;
                 n_blocks++;
 
                 /* Browse current block */

@@ -1,7 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -25,6 +25,7 @@
 
 #include "qfits.h"
 #include "fitsbin.h"
+#include "anqfits.h"
 
 struct quadfile {
 	unsigned int numquads;
@@ -48,6 +49,7 @@ struct quadfile {
 typedef struct quadfile quadfile;
 
 quadfile* quadfile_open(const char* fname);
+quadfile* quadfile_open_fits(anqfits_t* fits);
 
 quadfile* quadfile_open_for_writing(const char* quadfname);
 

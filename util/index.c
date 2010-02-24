@@ -379,7 +379,12 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 	// Read .quad file...
 	logverb("Reading quads file %s...\n", quadfname);
     gettimeofday(&tv1, NULL);
-	dest->quads = quadfile_open(quadfname);
+
+	if (fits)
+		dest->quads = quadfile_open_fits(fits);
+	else 
+		dest->quads = quadfile_open(quadfname);
+
     gettimeofday(&tv2, NULL);
     debug("reading quad took %g ms.\n", millis_between(&tv1, &tv2));
 	if (!dest->quads) {
