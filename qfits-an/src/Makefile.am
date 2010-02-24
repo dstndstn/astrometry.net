@@ -8,6 +8,7 @@ AM_CFLAGS = $(QFITS_CFLAGS)
 lib_LTLIBRARIES = libqfits.la
 
 libqfits_la_SOURCES = \
+	anqfits.c \
 	qfits_byteswap.c \
     qfits_cache.c \
     qfits_card.c \
@@ -26,7 +27,9 @@ libqfits_la_SOURCES = \
     qfits_tools.c \
     md5.c 
 
-include_HEADERS = qfits_cache.h \
+include_HEADERS = \
+	anqfits.h \
+	qfits_cache.h \
     qfits_filename.h \
     qfits_header.h \
     qfits_image.h \
@@ -42,7 +45,8 @@ include_HEADERS = qfits_cache.h \
     qfits_tools.h \
     qfits_error.h
 
-noinst_HEADERS = qfits_byteswap.h \
+noinst_HEADERS = \
+	qfits_byteswap.h \
     qfits_card.h \
     qfits_float.h \
     qfits_thread.h \
