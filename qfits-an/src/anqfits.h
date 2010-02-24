@@ -12,7 +12,7 @@
 #include "qfits_table.h"
 #include "qfits_keywords.h"
 
-typedef uint8_t bool;
+//typedef uint8_t bool;
 
 // Everything we know about a FITS extension.
 struct anqfits_ext_t {
@@ -27,7 +27,7 @@ struct anqfits_ext_t {
 	// Data size
 	int data_size;
 	qfits_header* header;
-	bool table_read;
+	//bool table_read;
 	qfits_table* table;
 };
 typedef struct anqfits_ext_t anqfits_ext_t;

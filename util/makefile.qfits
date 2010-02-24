@@ -16,37 +16,24 @@
 
 QFITS_DIR := $(BASEDIR)/qfits-an
 QFITS_SRCDIR := $(QFITS_DIR)/src
-QFITS_INSTALL := $(QFITS_DIR)/stage
-QFITS_INC := -I$(QFITS_INSTALL)/include
-QFITS_LIB := $(QFITS_INSTALL)/lib/libqfits.a
+QFITS_INC := -I$(QFITS_DIR)/src
+QFITS_LIB := $(QFITS_DIR)/src/libqfits.a
 
 QFITS_CFLAGS := $(CFLAGS_DEF)
 QFITS_LDFLAGS := $(LDFLAGS_DEF)
 
-# For _sip.so:
-QFITS_CFLAGS += -fPIC
-QFITS_LDFLAGS += -fPIC
+#export CFLAGS = $(CFLAGS_DEF)
+#export LDFLAGS = $(LDFLAGS_DEF)
 
-QFITS_CONFIGURE_FLAGS := --enable-memory-mode=0 --enable-shared=no \
-	--prefix="`pwd`/stage" \
-	CFLAGS="$(QFITS_CFLAGS)" \
-	LDFLAGS="$(QFITS_LDFLAGS)"
+$(QFITS_LIB):
+	$(MAKE) -C $(QFITS_DIR) CFLAGS="$(CFLAGS_DEF)" LDFLAGS="$(LDFLAGS_DEF)"
 
-$(QFITS_LIB): $(QFITS_DIR)/Makefile
-	cd $(QFITS_DIR) && $(MAKE) && $(MAKE) install
-
-$(QFITS_DIR)/Makefile:
-	cd $(QFITS_DIR) && ./configure $(QFITS_CONFIGURE_FLAGS)
+#	$(MAKE) -C $(QFITS_DIR) CFLAGS=$(CFLAGS_DEF) LDFLAGS=$(LDFLAGS_DEF)
+#	$(MAKE) -C $(QFITS_DIR)
 
 REMAKE_QFITS := remake-qfits
 .PHONY: $(REMAKE_QFITS)
-$(REMAKE_QFITS): $(QFITS_DIR)/Makefile
-	$(MAKE) -C $(QFITS_SRCDIR) && $(MAKE) -C $(QFITS_SRCDIR) install
+$(REMAKE_QFITS):
+	$(MAKE) -C $(QFITS_DIR) CFLAGS="$(CFLAGS_DEF)" LDFLAGS="$(LDFLAGS_DEF)"
 
-# YARR MAKE IS STUPID
-#	$(MAKE) -C $(QFITS_DIR) -q; \
-#	R=$$?; \
-#	echo Return value $$R; \
-#	if [ $$R -eq 1 ]; then \
-#		$(MAKE) -C $(QFITS_DIR) && $(MAKE) -C $(QFITS_DIR) install; \
-#	fi
+

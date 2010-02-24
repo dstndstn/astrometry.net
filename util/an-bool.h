@@ -19,6 +19,8 @@
 #ifndef AN_BOOL_H
 #define AN_BOOL_H
 
+#include <stdint.h>
+
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -28,7 +30,8 @@
 #ifndef __cplusplus
 #ifndef HAVE_BOOL
 #define HAVE_BOOL 1
-typedef unsigned char bool;
+//typedef unsigned char bool;
+typedef uint8_t bool;
 #endif
 #endif
 

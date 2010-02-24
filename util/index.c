@@ -335,7 +335,7 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
     bool singlefile;
 	index_t* allocd = NULL;
 
-	anqfits_t* fits;
+	anqfits_t* fits = NULL;
 
 	if (flags & INDEX_ONLY_LOAD_METADATA)
 		logverb("Loading metadata for %s...\n", indexname);
@@ -344,6 +344,14 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 		allocd = dest = calloc(1, sizeof(index_t));
 
     get_filenames(indexname, &quadfname, &codetreefname, &startreefname, &singlefile);
+
+	if (singlefile) {
+		fits = anqfits_open(startreefname);
+		if (!fits) {
+			ERROR("Failed to open FITS file %s", startreefname);
+			return NULL;
+		}
+	}
 
 	// Read .skdt file...
 	logverb("Reading star KD tree from %s...\n", startreefname);

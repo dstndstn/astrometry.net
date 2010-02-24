@@ -29,7 +29,7 @@ include $(COMMON)/makefile.qfits
 
 .PHONY: Makefile $(COMMON)/makefile.qfits
 
-all:
+all: $(QFITS_LIB)
 	$(MAKE) -C util
 	$(MAKE) -C libkd
 	$(MAKE) -C blind
@@ -170,9 +170,7 @@ test:
 clean:
 	$(MAKE) -C util clean
 	-$(MAKE) -C cfitsio distclean
-	-$(MAKE) -C qfits-an distclean
-	-rm qfits-an/Makefile
-	-rm -R qfits-an/stage
+	-$(MAKE) -C qfits clean
 	-rm __init__.pyc
 	$(MAKE) -C gsl-an clean
 	$(MAKE) -C libkd clean
@@ -183,9 +181,7 @@ clean:
 realclean:
 	$(MAKE) -C util realclean
 	-$(MAKE) -C cfitsio distclean
-	-$(MAKE) -C qfits-an distclean
-	-rm qfits-an/Makefile
-	-rm -R qfits-an/stage
+	-$(MAKE) -C qfits clean
 	-rm __init__.pyc
 	$(MAKE) -C gsl-an clean
 	$(MAKE) -C libkd realclean

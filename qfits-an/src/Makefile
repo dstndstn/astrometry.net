@@ -1,5 +1,9 @@
 
-all: libqfits.a
+all:
+
+LIB := libqfits.a
+
+all: $(LIB)
 
 RANLIB := ranlib
 
@@ -23,7 +27,41 @@ OBJS := \
 	qfits_time.o \
 	qfits_tools.o
 
-libqfits.a: $(OBJS)
+$(LIB): $(OBJS)
 	-rm -f $@
 	$(AR) rc $@ $(OBJS)
 	$(RANLIB) $@
+
+clean:
+	-rm $(LIB) $(OBJS)
+
+#.SUFFIXES:
+
+SUFFIXES:
+%: %.o
+%: %.c
+%: %.cc
+%: %.C
+%: %.cpp
+%: %.p
+%: %.f
+%: %.F
+%: %.m
+%: %.r
+%: %.s
+%: %.S
+%: %.mod
+%: %.sh
+%: RCS/%,v
+%: RCS/%
+%: s.%
+%: %,v
+%: SCCS/s.%
+
+%.c: %.y
+%.c: %.l
+%.c: %.w
+%.c: %.w %.ch
+
+%.tex: %.w %.ch
+%.tex: %.w
