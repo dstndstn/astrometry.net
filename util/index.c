@@ -397,7 +397,11 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 	// Read .ckdt file...
 	logverb("Reading code KD tree from %s...\n", codetreefname);
     gettimeofday(&tv1, NULL);
-	dest->codekd = codetree_open(codetreefname);
+
+	if (fits)
+		dest->codekd = codetree_open_fits(fits);
+	else
+		dest->codekd = codetree_open(codetreefname);
     gettimeofday(&tv2, NULL);
     debug("reading ckdt took %g ms.\n", millis_between(&tv1, &tv2));
 	if (!dest->codekd) {

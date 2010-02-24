@@ -58,7 +58,7 @@ int codetree_get_permuted(codetree* s, int index) {
 	else return index;
 }
 
-codetree* codetree_open(const char* fn) {
+static codetree* my_open(const char* fn, anqfits_t* fits) {
 	codetree* s;
     kdtree_fits_t* io;
     char* treename = CODETREE_NAME;
@@ -67,7 +67,11 @@ codetree* codetree_open(const char* fn) {
 	if (!s)
 		return s;
 
-    io = kdtree_fits_open(fn);
+	if (fits) {
+		io = kdtree_fits_open_fits(fits);
+		fn = fits->filename;
+	} else
+		io = kdtree_fits_open(fn);
 	if (!io) {
         ERROR("Failed to open FITS file \"%s\"", fn);
         goto bailout;
@@ -76,15 +80,22 @@ codetree* codetree_open(const char* fn) {
         treename = NULL;
     s->tree = kdtree_fits_read_tree(io, treename, &s->header);
 	if (!s->tree) {
-		fprintf(stderr, "Failed to read code kdtree from file %s\n", fn);
+		ERROR("Failed to read code kdtree from file %s\n", fn);
 		goto bailout;
 	}
 
 	return s;
-
  bailout:
 	free(s);
 	return NULL;
+}
+
+codetree* codetree_open_fits(anqfits_t* fits) {
+	return my_open(NULL, fits);
+}
+
+codetree* codetree_open(const char* fn) {
+	return my_open(fn, NULL);
 }
 
 int codetree_close(codetree* s) {

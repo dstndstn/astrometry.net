@@ -170,7 +170,7 @@ test:
 clean:
 	$(MAKE) -C util clean
 	-$(MAKE) -C cfitsio distclean
-	-$(MAKE) -C qfits clean
+	-$(MAKE) -C qfits-an clean
 	-rm __init__.pyc
 	$(MAKE) -C gsl-an clean
 	$(MAKE) -C libkd clean
@@ -181,7 +181,7 @@ clean:
 realclean:
 	$(MAKE) -C util realclean
 	-$(MAKE) -C cfitsio distclean
-	-$(MAKE) -C qfits clean
+	-$(MAKE) -C qfits-an clean
 	-rm __init__.pyc
 	$(MAKE) -C gsl-an clean
 	$(MAKE) -C libkd realclean

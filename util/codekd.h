@@ -21,6 +21,7 @@
 
 #include "kdtree.h"
 #include "qfits.h"
+#include "anqfits.h"
 
 #define AN_FILETYPE_CODETREE "CKDT"
 
@@ -35,6 +36,8 @@ typedef struct codetree codetree;
 
 
 codetree* codetree_open(const char* fn);
+
+codetree* codetree_open_fits(anqfits_t* fits);
 
 int codetree_get(codetree* s, unsigned int codeid, double* code);
 
