@@ -24,6 +24,7 @@
 #include "index.h"
 #include "pquad.h"
 #include "permutedsort.h"
+#include "quad-utils.h"
 #include "log.h"
 
 static int compare_n(const void* v1, const void* v2, int N) {
@@ -49,6 +50,7 @@ static int compare_quint(const void* v1, const void* v2) {
 
 
 bl* quadlist;
+int ninv;
 
 void test_try_permutations(int* stars, double* code, int dimquad, solver_t* s) {
 	int i;
@@ -67,6 +69,9 @@ void test_try_permutations(int* stars, double* code, int dimquad, solver_t* s) {
 	printf("}, ");
     fflush(NULL);
     bl_append(quadlist, stars);
+
+	if (quad_obeys_invariants(NULL, code, dimquad, 0))
+		ninv++;
 }
 
 static starxy_t* field1() {
@@ -104,7 +109,8 @@ static starxy_t* field1() {
 	return starxy;
 }
 
-void testit(int* wanted, int Nwanted, int dimquads, int (*compar)(const void *, const void *)) {
+void testit(int* wanted, int Nwanted, int dimquads, int (*compar)(const void *, const void *),
+			bool cxdx) {
 	int i;
     solver_t* solver;
     index_t index;
@@ -112,11 +118,14 @@ void testit(int* wanted, int Nwanted, int dimquads, int (*compar)(const void *, 
 
 	starxy = field1();
     quadlist = bl_new(16, dimquads*sizeof(int));
+	ninv = 0;
     solver = solver_new();
     memset(&index, 0, sizeof(index_t));
     index.index_scale_lower = 1;
     index.index_scale_upper = 10;
 	index.dimquads = dimquads;
+
+	index.cx_less_than_dx = index.meanx_less_than_half = cxdx;
 
     solver->funits_lower = 0.1;
     solver->funits_upper = 10;
@@ -125,6 +134,7 @@ void testit(int* wanted, int Nwanted, int dimquads, int (*compar)(const void *, 
     solver_set_field(solver, starxy);
     solver_preprocess_field(solver);
 
+	printf("Found:\n");
     solver_run(solver);
 	printf("\n");
 	fflush(NULL);
@@ -146,6 +156,8 @@ void testit(int* wanted, int Nwanted, int dimquads, int (*compar)(const void *, 
 		printf("}, ");
 	}
 	printf("\n");
+	printf("N found: %i; N wanted: %i\n", bl_size(quadlist), Nwanted);
+	printf("N obeying invariants: %i\n", ninv);
     assert(bl_size(quadlist) == Nwanted);
     for (i=0; i<bl_size(quadlist); i++) {
 		//int* i1 = bl_access(quadlist, i);
@@ -194,7 +206,7 @@ int main(int argc, char** args) {
 		//qsort(flatwanted+i*4, 2, sizeof(int), compare_ints_asc);
 		//qsort(sorted+2, dimquad-2, sizeof(int), compare_ints_asc);
 	}
-	testit(flatwanted, Nwanted, 4, compare_quad);
+	testit(flatwanted, Nwanted, 4, compare_quad, FALSE);
 	free(flatwanted);
 
 	itemsize = 5*sizeof(int);
@@ -202,7 +214,7 @@ int main(int argc, char** args) {
 	flatwanted = calloc(Nwanted, itemsize);
 	for (i=0; i<Nwanted; i++)
 		memcpy(flatwanted+i*5, wanted5[i], itemsize);
-	testit(flatwanted, Nwanted, 5, compare_quint);
+	testit(flatwanted, Nwanted, 5, compare_quint, FALSE);
 	free(flatwanted);
 
 	itemsize = 3*sizeof(int);
@@ -210,8 +222,46 @@ int main(int argc, char** args) {
 	flatwanted = calloc(Nwanted, itemsize);
 	for (i=0; i<Nwanted; i++)
 		memcpy(flatwanted+i*3, wanted3[i], itemsize);
-	testit(flatwanted, Nwanted, 3, compare_tri);
+	testit(flatwanted, Nwanted, 3, compare_tri, FALSE);
 	free(flatwanted);
+
+	int wanted3b[][3] = {
+		{0,1,3}, {1,0,3}, {2,0,3}, {0,2,3}, {1,2,3}, {2,1,3}, {4,2,3}, {4,2,3}, {0,1,4}, {1,0,4}, {0,1,4}, {1,0,4}, {2,0,4}, {0,2,4}, {3,0,4}, {0,3,4}, {1,2,4}, {2,1,4}, {1,3,4}, {3,1,4}, {0,5,4}, {5,0,4}, {5,1,4}, {1,5,4}, {5,2,0}, {2,5,0}, {2,5,1}, {5,2,1}, {5,2,3}, {5,2,3}, {5,2,4}, {5,2,4}, {3,5,4}, {5,3,4}, {3,5,4}, {5,3,4}, {1,0,5}, {0,1,5}, {0,6,4}, {6,0,4}, {0,6,5}, {6,0,5}, {6,1,4}, {1,6,4}, {6,1,5}, {1,6,5}, {6,2,0}, {2,6,0}, {2,6,1}, {6,2,1}, {2,6,3}, {2,6,3}, {2,6,4}, {6,2,4}, {2,6,4}, {6,2,4}, {6,2,5}, {6,2,5}, {6,3,0}, {3,6,0}, {3,6,1}, {6,3,1}, {3,6,4}, {3,6,4}, {3,6,5}, {3,6,5}, {4,6,5}, {4,6,5}
+	 };
+	int wanted5b[][5] = {
+		{5,2,0,3,1}, {5,2,1,3,0}, {5,2,0,4,1}, {5,2,1,4,0}, {5,2,0,4,3}, {5,2,4,3,0}, {5,2,4,3,1}, {5,2,1,4,3}, {0,1,3,4,5}, {1,0,5,4,3}, {0,1,5,4,3}, {1,0,3,4,5}, {2,6,1,3,0}, {2,6,0,3,1}, {2,6,1,4,0}, {6,2,0,4,1}, {2,6,0,4,1}, {6,2,1,4,0}, {6,2,0,5,1}, {6,2,1,5,0}, {6,2,0,4,3}, {2,6,0,3,4}, {6,2,0,5,3}, {2,6,0,3,5}, {6,2,0,5,4}, {2,6,0,4,5}, {2,6,1,3,4}, {6,2,1,4,3}, {2,6,1,3,5}, {6,2,1,5,3}, {2,6,1,4,5}, {6,2,1,5,4}, {2,6,3,4,5}, {6,2,5,4,3}, {2,6,3,4,5}, {6,2,5,4,3}, {3,6,1,4,0}, {3,6,0,4,1}, {3,6,1,5,0}, {3,6,0,5,1}, {3,6,4,5,0}, {3,6,0,4,5}, {3,6,1,4,5}, {3,6,4,5,1}, 
+	 };
+	int wanted4b[][4] = {
+		{0,1,3,4}, {1,0,3,4}, {2,0,3,4}, {0,2,4,3}, {1,2,4,3}, {2,1,3,4}, {5,2,0,1}, {5,2,1,0}, {5,2,0,3}, {2,5,0,3}, {5,2,3,0}, {5,2,0,4}, {5,2,4,0}, {2,5,1,3}, {5,2,3,1}, {5,2,1,3}, {5,2,4,1}, {5,2,1,4}, {5,2,4,3}, {5,2,4,3}, {0,1,3,5}, {1,0,5,3}, {0,1,5,3}, {1,0,3,5}, {1,0,5,4}, {0,1,5,4}, {0,6,4,5}, {6,0,5,4}, {6,1,5,4}, {1,6,4,5}, {2,6,1,0}, {6,2,0,1}, {2,6,0,1}, {6,2,1,0}, {6,2,0,3}, {2,6,0,3}, {6,2,0,4}, {2,6,0,4}, {6,2,0,5}, {2,6,0,5}, {2,6,1,3}, {6,2,1,3}, {2,6,1,4}, {6,2,1,4}, {2,6,1,5}, {6,2,1,5}, {2,6,3,4}, {2,6,3,4}, {2,6,3,5}, {6,2,5,3}, {2,6,3,5}, {6,2,5,3}, {6,2,5,4}, {6,2,5,4}, {3,6,1,0}, {3,6,0,1}, {3,6,4,0}, {3,6,0,4}, {3,6,5,0}, {6,3,0,5}, {3,6,0,5}, {3,6,1,4}, {3,6,4,1}, {3,6,1,5}, {3,6,5,1}, {6,3,1,5}, {3,6,4,5}, {3,6,4,5}
+	};
+
+	itemsize = 4*sizeof(int);
+	Nwanted = sizeof(wanted4b) / itemsize;
+	flatwanted = calloc(Nwanted, itemsize);
+	for (i=0; i<Nwanted; i++) {
+		memcpy(flatwanted+i*4, wanted4b[i], itemsize);
+	}
+	testit(flatwanted, Nwanted, 4, compare_quad, TRUE);
+	free(flatwanted);
+
+	itemsize = 3*sizeof(int);
+	Nwanted = sizeof(wanted3b) / itemsize;
+	flatwanted = calloc(Nwanted, itemsize);
+	for (i=0; i<Nwanted; i++) {
+		memcpy(flatwanted+i*3, wanted3b[i], itemsize);
+	}
+	testit(flatwanted, Nwanted, 3, compare_tri, TRUE);
+	free(flatwanted);
+
+	itemsize = 5*sizeof(int);
+	Nwanted = sizeof(wanted5b) / itemsize;
+	flatwanted = calloc(Nwanted, itemsize);
+	for (i=0; i<Nwanted; i++) {
+		memcpy(flatwanted+i*5, wanted5b[i], itemsize);
+	}
+	testit(flatwanted, Nwanted, 5, compare_quint, TRUE);
+	free(flatwanted);
+
 
     return 0;
 }

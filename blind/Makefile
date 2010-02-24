@@ -176,7 +176,7 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 
 test-solver: test-solver.o solver_test.o blind_wcs.o verify.o matchfile.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
-test-solver-2: test-solver-2.o solver_test_2.o blind_wcs.o verify.o matchfile.o \
+test-solver-2: test-solver-2.o solver_test_2.o blind_wcs.o verify.o matchfile.o quad-utils.o codefile.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 
 NODEP_OBJS += solver_test.o solver_test_2.o
