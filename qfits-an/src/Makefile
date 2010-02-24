@@ -5,7 +5,28 @@ LIB := libqfits.a
 
 all: $(LIB)
 
+# Programs
 RANLIB := ranlib
+CP := cp
+
+HEADERS := \
+	qfits.h \
+	qfits_cache.h \
+	qfits_filename.h \
+	qfits_header.h \
+	qfits_image.h \
+	qfits_md5.h \
+	qfits_rw.h \
+	qfits_std.h \
+	qfits_table.h \
+	qfits_time.h \
+	qfits_tools.h \
+	qfits_memory.h \
+	anqfits.h
+
+install: $(LIB)
+	$(CP) $(LIB) ../lib
+	$(CP) $(HEADERS) ../include
 
 OBJS := \
 	anqfits.o \
