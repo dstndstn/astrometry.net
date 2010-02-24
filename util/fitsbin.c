@@ -533,6 +533,29 @@ char* fitsbin_get_filename(fitsbin_t* fb) {
 	return fb->filename;
 }
 
+fitsbin_t* fitsbin_open_fits(anqfits_t* fits) {
+    fitsbin_t* fb;
+    fb = new_fitsbin(fits->filename);
+    if (!fb)
+        return fb;
+	fb->fid = fopen(fits->filename, "rb");
+	if (!fb->fid) {
+		SYSERROR("Failed to open file \"%s\"", fits->filename);
+        goto bailout;
+	}
+    fb->primheader = anqfits_get_header(fits, 0);
+    if (!fb->primheader) {
+        ERROR("Couldn't read primary FITS header from file \"%s\"", fits->filename);
+        goto bailout;
+    }
+	fb->Next = anqfits_n_ext(fits);
+	fb->fits = fits;
+    return fb;
+ bailout:
+    fitsbin_close(fb);
+    return NULL;
+}
+
 fitsbin_t* fitsbin_open(const char* fn) {
     fitsbin_t* fb;
 	if (!qfits_is_fits(fn)) {

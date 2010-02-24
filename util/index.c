@@ -356,7 +356,13 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 	// Read .skdt file...
 	logverb("Reading star KD tree from %s...\n", startreefname);
     gettimeofday(&tv1, NULL);
-	dest->starkd = startree_open(startreefname);
+
+	//dest->starkd = startree_open(startreefname);
+	if (fits)
+		dest->starkd = startree_open_fits(fits);
+	else
+		dest->starkd = startree_open(startreefname);
+
     gettimeofday(&tv2, NULL);
     debug("reading skdt took %g ms.\n", millis_between(&tv1, &tv2));
 	if (!dest->starkd) {

@@ -164,6 +164,10 @@ kdtree_fits_t* kdtree_fits_open(const char* fn) {
     return fitsbin_open(fn);
 }
 
+kdtree_fits_t* kdtree_fits_open_fits(anqfits_t* fits) {
+	return fitsbin_open_fits(fits);
+}
+
 kdtree_fits_t* kdtree_fits_open_for_writing(const char* fn) {
     return fitsbin_open_for_writing(fn);
 }

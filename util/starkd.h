@@ -28,6 +28,8 @@
 #include "kdtree_fits_io.h"
 #include "fitstable.h"
 
+#include "anqfits.h"
+
 #define AN_FILETYPE_STARTREE "SKDT"
 
 #define AN_FILETYPE_TAGALONG "TAGALONG"
@@ -51,6 +53,8 @@ typedef struct startree_s startree_t;
 
 
 startree_t* startree_open(const char* fn);
+
+startree_t* startree_open_fits(anqfits_t* fits);
 
 /**
    Searches for stars within a radius of a point.

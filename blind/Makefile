@@ -79,7 +79,7 @@ PIPELINE := usnobtofits build-an-catalog hpowned cut-an \
 	certifiable get-healpix 2masstofits nomadtofits \
 	merge-index index-to-table setsolved \
 	startree2 uniformize-catalog build-index query-starkd \
-	local-index
+	local-index index-info
 
 PROGS := backend image2xy control-program
 
@@ -461,6 +461,8 @@ xylsinfo: xylsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 wcsinfo: wcsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) \
 		$(QFITS_LIB)
+
+index-info: index-info.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 subwcs: subwcs.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) \
 		$(QFITS_LIB)

@@ -167,7 +167,7 @@ bl* get_chunks(startree_t* s, il* wordsizes) {
     return chunks;
 }
 
-startree_t* startree_open(const char* fn) {
+static startree_t* my_open(const char* fn, anqfits_t* fits) {
     struct timeval tv1, tv2;
 	startree_t* s;
     bl* chunks;
@@ -175,12 +175,18 @@ startree_t* startree_open(const char* fn) {
     kdtree_fits_t* io;
     char* treename = STARTREE_NAME;
 
+	assert(fn || fits);
+
 	s = startree_alloc();
 	if (!s)
-		return s;
+		return NULL;
 
     gettimeofday(&tv1, NULL);
-    io = kdtree_fits_open(fn);
+	if (fn)
+		io = kdtree_fits_open(fn);
+	else
+		io = kdtree_fits_open_fits(fits);
+
     gettimeofday(&tv2, NULL);
     debug("kdtree_fits_open() took %g ms\n", millis_between(&tv1, &tv2));
 	if (!io) {
@@ -221,6 +227,14 @@ startree_t* startree_open(const char* fn) {
     kdtree_fits_io_close(io);
     startree_close(s);
 	return NULL;
+}
+
+startree_t* startree_open_fits(anqfits_t* fits) {
+	return my_open(NULL, fits);
+}
+
+startree_t* startree_open(const char* fn) {
+	return my_open(fn, NULL);
 }
 
 /*

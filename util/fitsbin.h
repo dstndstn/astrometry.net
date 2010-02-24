@@ -22,9 +22,9 @@
 #include <stdio.h>
 
 #include "qfits.h"
+#include "anqfits.h"
 #include "bl.h"
 #include "an-bool.h"
-
 /**
  "fitsbin" is our abuse of FITS binary tables to hold raw binary data,
  *without endian flips*, by storing the data as characters/bytes.
@@ -134,6 +134,8 @@ typedef struct fitsbin_chunk_t fitsbin_chunk_t;
 struct fitsbin_t {
 	char* filename;
 
+	anqfits_t* fits;
+
     bl* chunks;
 
     // Writing:
@@ -172,6 +174,8 @@ char* fitsbin_get_filename(fitsbin_t* fb);
 
 
 fitsbin_t* fitsbin_open(const char* fn);
+
+fitsbin_t* fitsbin_open_fits(anqfits_t* fits);
 
 fitsbin_t* fitsbin_open_for_writing(const char* fn);
 

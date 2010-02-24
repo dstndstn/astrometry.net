@@ -23,6 +23,7 @@
 
 #include "kdtree.h"
 #include "fitsbin.h"
+#include "anqfits.h"
 
 /**
  Usage patterns:
@@ -63,6 +64,10 @@
  */
 typedef fitsbin_t kdtree_fits_t;
 
+kdtree_fits_t* kdtree_fits_open(const char* fn);
+
+kdtree_fits_t* kdtree_fits_open_fits(anqfits_t* fits);
+
 // convenience...
 kdtree_t* kdtree_fits_read(const char* fn, const char* treename,
                            qfits_header** p_hdr);
@@ -75,8 +80,6 @@ int kdtree_fits_write(const kdtree_t* kdtree, const char* fn,
 int kdtree_fits_contains_tree(const kdtree_fits_t* io, const char* treename);
 
 fitsbin_t* kdtree_fits_get_fitsbin(kdtree_fits_t* io);
-
-kdtree_fits_t* kdtree_fits_open(const char* fn);
 
 kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
                                 qfits_header** p_hdr);

@@ -13,6 +13,7 @@ HEADERS := \
 	qfits.h \
 	qfits_cache.h \
 	qfits_filename.h \
+	qfits_keywords.h \
 	qfits_header.h \
 	qfits_image.h \
 	qfits_md5.h \
@@ -22,6 +23,8 @@ HEADERS := \
 	qfits_time.h \
 	qfits_tools.h \
 	qfits_memory.h \
+	qfits_error.h \
+	qfits_convert.h \
 	anqfits.h
 
 install: $(LIB)
