@@ -269,6 +269,16 @@ def get_closest_pow2_nside(radius):
 def compose_xy(x, y, nside):
 	return x*nside + y
 
+# Returns (ralo,rahi, declo,dechi) in deg.
+def healpix_radec_bounds(hp, nside):
+	ralo = c_double()
+	rahi = c_double()
+	declo = c_double()
+	dechi = c_double()
+	_lib.healpix_radec_bounds(c_int(hp), c_int(nside),
+							  byref(ralo), byref(rahi), byref(declo), byref(dechi))
+	return (float(ralo.value), float(rahi.value), float(declo.value), float(dechi.value))
+
 def xyztohealpix(x, y, z, nside):
 	cx = ctypes.c_double(float(x))
 	cy = ctypes.c_double(float(y))
@@ -277,10 +287,28 @@ def xyztohealpix(x, y, z, nside):
 	chp = _lib.xyztohealpix(cx, cy, cz, cns)
 	return chp
 
+# Returns (bighp, hpx, hpy), bighp is int, hpx,hpy are floats.
+def xyztohealpixf(x, y, z, nside):
+	cx = ctypes.c_double(float(x))
+	cy = ctypes.c_double(float(y))
+	cz = ctypes.c_double(float(z))
+	cns = ctypes.c_int(int(nside))
+	cdx = ctypes.c_double(0)
+	cdy = ctypes.c_double(0)
+	chp = _lib.xyztohealpixf(cx, cy, cz, cns, byref(cdx), byref(cdy))
+	(bighp, hpx, hpy) = decompose_xy(chp, nside)
+	return (bighp, hpx + float(cdx.value), hpy + float(cdy.value))
+
 # ra, dec in degrees
 def radectohealpix(ra, dec, nside):
 	(x,y,z) = radectoxyz(ra, dec)
 	return xyztohealpix(x,y,z, nside)
+
+# RA,Dec in degrees
+# Returns (bighp, hpx, hpy), bighp is int, hpx,hpy are floats.
+def radectohealpixf(ra, dec, nside):
+	(x,y,z) = radectoxyz(ra, dec)
+	return xyztohealpixf(x,y,z, nside)
 
 # returns (ra,dec) in degrees.
 def healpix_to_radec(hp, nside, dx=0.5, dy=0.5):

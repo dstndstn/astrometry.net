@@ -1406,3 +1406,27 @@ double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
 	return distsq2deg(dist2mid);
 }
 
+void healpix_radec_bounds(int hp, int nside,
+						  double* p_ralo, double* p_rahi,
+						  double* p_declo, double* p_dechi) {
+	// corners!
+	double ralo,rahi,declo,dechi;
+	double ra,dec;
+	double dx, dy;
+	ralo = declo =  HUGE_VAL;
+	rahi = dechi = -HUGE_VAL;
+	for (dy=0; dy<2; dy+=1.0) {
+		for (dx=0; dx<2; dx+=1.0) {
+			healpix_to_radecdeg(hp, nside, dx, dy, &ra, &dec);
+			// FIXME -- wrap-around.
+			ralo = MIN(ra, ralo);
+			rahi = MAX(ra, rahi);
+			declo = MIN(dec, declo);
+			dechi = MAX(dec, dechi);
+		}
+	}
+	if (p_ralo) *p_ralo = ralo;
+	if (p_rahi) *p_rahi = rahi;
+	if (p_declo) *p_declo = declo;
+	if (p_dechi) *p_dechi = dechi;
+}

@@ -157,8 +157,6 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
     *p_nindex = NI;
 }
 
-//static void trim_index_stars()
-
 /**
  If field objects are within "sigma" of each other (where sigma depends on the
  distance from the matched quad), then they are not very useful for verification.
@@ -513,6 +511,9 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 						   fieldW, fieldH, NULL, &refxy, &starids, &NR);
 	debug("Found %i reference stars.\n", NR);
 
+	// "starids" are indices into the star kdtree and could be used to
+	// retrieve "tag-along" data with, eg, startree_get_data_column().
+
 	// remove reference stars that are part of the quad.
 	if (!fake_match) {
 		k = 0;
@@ -555,6 +556,10 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		set_null_mo(mo);
 		return;
     }
+
+	///// FIXME -- we could compute the RoR and search for ref stars
+	// based on the quad center and RoR rather than the image center
+	// and image radius!
 
 	if (!fake_match) {
 		verify_apply_ror(refxy, starids, &NR, index_cutnside, mo,
@@ -711,6 +716,7 @@ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
 				memcpy(refxy + 2*k, refxy + 2*i, 2*sizeof(double));
 				if (starids)
 					starids[k] = starids[i];
+				// FIXME -- record rejected ref stars...
 			}
 			k++;
 		}

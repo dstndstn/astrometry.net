@@ -360,4 +360,12 @@ int healpix_get_neighbours_within_range_radec(double ra, double dec, double radi
 double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
 								 double* closestxyz);
 
+/**
+ Computes the RA,Dec bounding-box of the given healpix.  Results are
+ in degrees.  RA may be wacky for healpixes spanning RA=0.
+ */
+void healpix_radec_bounds(int hp, int nside,
+						  double* ralo, double* rahi,
+						  double* declo, double* dechi);
+
 #endif

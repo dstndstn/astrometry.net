@@ -14,7 +14,7 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA		 02110-1301 USA
 
-from astrometry.util.healpix2 import *
+from astrometry.util.healpix import *
 from pylab import *
 
 if __name__ == '__main__':
@@ -30,7 +30,7 @@ if __name__ == '__main__':
 				'verticalalignment': 'center' }
 
 	for hp in range(12 * nside**2):
-		(racen,deccen) = healpix_to_radecdeg(hp, nside, 0.5, 0.5)
+		(racen,deccen) = healpix_to_radec(hp, nside, 0.5, 0.5)
 		text(racen, deccen, '%i' % hp, **textkws)
 
 		nsteps = 20
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 		x = stepvals + ones + rstepvals + zeros
 		y = zeros + stepvals + ones + rstepvals
 
-		edges = [healpix_to_radecdeg(hp, nside, xx, yy) for (xx,yy) in zip(x,y)]
+		edges = [healpix_to_radec(hp, nside, xx, yy) for (xx,yy) in zip(x,y)]
 		ras = [ra for (ra,dec) in edges]
 		decs = [dec for (ra,dec) in edges]
 
@@ -72,4 +72,67 @@ if __name__ == '__main__':
 	ylim(-90, 90)
 	title('Healpixes (nside=%i)' % nside)
 	savefig('healpix.png')
+	
+
+
+
+	nside = 1
+	for bighp in [1, 5, 9]:
+		clf()
+		xlabel('Healpix x')
+		ylabel('Healpix y')
+
+		(ralo,rahi,declo,dechi) = healpix_radec_bounds(bighp, 1)
+
+		ragrid = 5
+		decgrid = 5
+		rastep = 0.5
+		decstep = 0.5
+
+		ralo = floor(ralo/ragrid) *ragrid
+		rahi = (1+floor(rahi/ragrid)) *ragrid
+		declo = floor(declo/decgrid) *decgrid
+		dechi = (1+floor(dechi/decgrid)) *decgrid
+
+		for ra in arange(ralo,rahi,ragrid):
+			xy=[]
+			lastok = True
+			for dec in arange(declo, dechi, decstep):
+				(bhp, hpx, hpy) = radectohealpixf(ra, dec, nside)
+				#print 'ra,dec', ra,dec, 'bighp', bhp, 'x,y', hpx,hpy
+				if bhp != bighp:
+					if lastok and len(xy):
+						plot([x for x,y in xy], [y for x,y in xy], 'r-')
+						xy = []
+					lastok = False
+					continue
+				lastok = True
+				xy.append((hpx,hpy))
+			if len(xy):
+				plot([x for x,y in xy], [y for x,y in xy], 'r-')
+
+		for dec in arange(declo, dechi, decgrid):
+			xy=[]
+			lastok = True
+			for ra in arange(ralo,rahi,rastep):
+				(bhp, hpx, hpy) = radectohealpixf(ra, dec, nside)
+				if bhp != bighp:
+					if lastok and len(xy):
+						plot([x for x,y in xy], [y for x,y in xy], 'r-')
+						xy = []
+					lastok = False
+					continue
+				lastok = True
+				xy.append((hpx,hpy))
+			if len(xy):
+				plot([x for x,y in xy], [y for x,y in xy], 'r-')
+
+		axhline(y=0, lw=0.5, ls='-', color='0.8')
+		axhline(y=nside, lw=0.5, ls='-', color='0.8')
+		axvline(x=0, lw=0.5, ls='-', color='0.8')
+		axvline(x=nside, lw=0.5, ls='-', color='0.8')
+		axis('scaled')
+		axis([-0.1, nside+0.1, -0.1, nside+0.1])
+		title('RA,Dec lines in healpix space, for big healpix %i' % bighp)
+		savefig('hp-radec-%i.png' % bighp)
 	

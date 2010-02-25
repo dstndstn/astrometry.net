@@ -36,4 +36,3 @@ def healpix_to_radecdeg(hp, nside=1., dx=0.5, dy=0.5):
 
 
 
-
