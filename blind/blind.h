@@ -119,8 +119,8 @@ struct blind_params {
 	float cpu_total_start;
 	bool hit_total_cpulimit;
 
-	int total_timelimit;
-	time_t time_total_start;
+	double total_timelimit;
+	double time_total_start;
 	bool hit_total_timelimit;
 
 	bool single_field_solved;

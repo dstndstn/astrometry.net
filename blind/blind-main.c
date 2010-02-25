@@ -163,7 +163,7 @@ static int read_parameters(blind_t* bp) {
 		} else if (is_word(line, "timelimit ", &nextword)) {
 			bp->timelimit = atoi(nextword);
 		} else if (is_word(line, "total_timelimit ", &nextword)) {
-			bp->total_timelimit = atoi(nextword);
+			bp->total_timelimit = atof(nextword);
 		} else if (is_word(line, "total_cpulimit ", &nextword)) {
 			bp->total_cpulimit = atof(nextword);
 		} else if (is_word(line, "verify_pix ", &nextword)) {

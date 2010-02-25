@@ -20,7 +20,7 @@
  *   Solve fields blindly
  *
  * Inputs: .ckdt .quad .skdt
- * Output: .match .rdls .wcs
+ * Output: .match .rdls .wcs, ...
  */
 
 #include <sys/types.h>
@@ -260,7 +260,7 @@ void blind_add_field_range(blind_t* bp, int lo, int hi) {
 
 static void check_time_limits(blind_t* bp) {
 	if (bp->total_timelimit || bp->timelimit) {
-		time_t now = time(NULL);
+		double now = timenow();
 		if (bp->total_timelimit && (now - bp->time_total_start > bp->total_timelimit)) {
 			logmsg("Total wall-clock time limit reached!\n");
 			bp->hit_total_timelimit = TRUE;
@@ -296,7 +296,7 @@ void blind_run(blind_t* bp) {
     int Nindexes;
 
 	// Record current time for total wall-clock time limit.
-	bp->time_total_start = time(NULL);
+	bp->time_total_start = timenow();
 
 	// Record current CPU usage for total cpu-usage limit.
 	bp->cpu_total_start = get_cpu_usage(bp);
@@ -631,7 +631,7 @@ void blind_log_run_parameters(blind_t* bp) {
 	logverb("maxmatches %i\n", sp->maxmatches);
 	logverb("cpulimit %f\n", bp->cpulimit);
 	logverb("timelimit %i\n", bp->timelimit);
-	logverb("total_timelimit %i\n", bp->total_timelimit);
+	logverb("total_timelimit %g\n", bp->total_timelimit);
 	logverb("total_cpulimit %f\n", bp->total_cpulimit);
 	logverb("tweak %s\n", bp->do_tweak ? "on" : "off");
 	if (bp->do_tweak) {
@@ -832,7 +832,7 @@ static void add_blind_params(blind_t* bp, qfits_header* hdr) {
 	fits_add_long_comment(hdr, "Maxmatches: %i", sp->maxmatches);
 	fits_add_long_comment(hdr, "Cpu limit: %f s", bp->cpulimit);
 	fits_add_long_comment(hdr, "Time limit: %i s", bp->timelimit);
-	fits_add_long_comment(hdr, "Total time limit: %i s", bp->total_timelimit);
+	fits_add_long_comment(hdr, "Total time limit: %g s", bp->total_timelimit);
 	fits_add_long_comment(hdr, "Total CPU limit: %f s", bp->total_cpulimit);
 
 	fits_add_long_comment(hdr, "Tweak: %s", (bp->do_tweak ? "yes" : "no"));
