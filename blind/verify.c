@@ -559,7 +559,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 
 	///// FIXME -- we could compute the RoR and search for ref stars
 	// based on the quad center and RoR rather than the image center
-	// and image radius!
+	// and image radius.
 
 	if (!fake_match) {
 		verify_apply_ror(refxy, starids, &NR, index_cutnside, mo,
@@ -617,6 +617,11 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 				il_append(mo->corr_index, starids[theta[i]]);
 			}
 		}
+
+		// FIXME -- re-retrieve index stars and produce an "extended
+		// theta" array listing all the ref stars and how we think
+		// they correspond to image stars?
+
 		matchobj_compute_derived(mo);
 	}
 

@@ -442,6 +442,19 @@ int plot_annotations_command(const char* cmd, const char* cmdargs,
 			ERROR("Need RA,Dec,name");
 			return -1;
 		}
+	} else if (streq(cmd, "annotations_targetname")) {
+		target_t tar;
+		char* name = cmdargs;
+		ngc_entry* e = ngc_get_entry_named(name);
+		if (!e) {
+			ERROR("Failed to find target named \"%s\"", name);
+			return -1;
+		}
+		tar.name = ngc_get_name_list(e, "/");
+		logmsg("Found %s\n", tar.name);
+		tar.ra = e->ra;
+		tar.dec = e->dec;
+		bl_append(ann->targets, &tar);
 	} else {
 		ERROR("Unknown command \"%s\"", cmd);
 		return -1;

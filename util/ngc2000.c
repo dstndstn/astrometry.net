@@ -23,6 +23,7 @@
 #include "ngc2000.h"
 #include "ngcic-accurate.h"
 #include "bl.h"
+#include "ioutils.h"
 
 struct ngc_name {
 	bool is_ngc;
@@ -38,6 +39,10 @@ ngc_name ngc_names[] = {
 ngc_entry ngc_entries[] = {
 #include "ngc2000entries.c"
 };
+
+static int n_names() {
+	return sizeof(ngc_names) / sizeof(ngc_name);
+}
 
 ngc_entry* ngc_get_entry_accurate(int i) {
 	float ra, dec;
@@ -56,9 +61,42 @@ int ngc_num_entries() {
 ngc_entry* ngc_get_entry(int i) {
 	if (i < 0)
 		return NULL;
-	if (i >= (sizeof(ngc_entries) / sizeof(ngc_entry)))
+	if (i >= ngc_num_entries())
 		return NULL;
 	return ngc_entries + i;
+}
+
+ngc_entry* ngc_get_ngcic_num(bool is_ngc, int num) {
+	int i, N;
+	N = ngc_num_entries();
+	for (i=0; i<N; i++) {
+		ngc_entry* e = ngc_get_entry(i);
+		if (e->is_ngc == is_ngc && e->id == num)
+			return e;
+	}
+	return NULL;
+}
+
+ngc_entry* ngc_get_entry_named(const char* name) {
+	if (starts_with(name, "NGC ") || starts_with(name, "IC ")) {
+		int num;
+		const char* cptr;
+		bool isngc;
+		isngc = starts_with(name, "NGC ");
+		cptr = name + (isngc ? 4 : 3);
+		num = atoi(cptr);
+		if (!num)
+			return NULL;
+		return ngc_get_ngcic_num(isngc, num);
+	} else {
+		int i, N;
+		N = n_names();
+		for (i=0; i<N; i++) {
+			if (streq(name, ngc_names[i].name))
+				return ngc_get_ngcic_num(ngc_names[i].is_ngc, ngc_names[i].id);
+		}
+	}
+	return NULL;
 }
 
 char* ngc_get_name(ngc_entry* entry, int num) {

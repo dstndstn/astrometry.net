@@ -78,9 +78,14 @@ extern ngc_entry ngc_entries[];
 
 // convenience accessors:
 
+// Find an entry by NGC/IC number.
+ngc_entry* ngc_get_ngcic_num(bool is_ngc, int num);
+
 int ngc_num_entries();
 
 ngc_entry* ngc_get_entry(int i);
+
+ngc_entry* ngc_get_entry_named(const char* name);
 
 // Checks the "ngcic-accurate" catalog for more accurate RA,Dec
 // and substitutes it if found.
