@@ -153,6 +153,8 @@ struct solver_t {
 	int num_meanx_skipped;
 	// number of matches skipped due to RA,Dec bounds constraints.
 	int num_radec_skipped;
+	// 
+	int num_abscale_skipped;
 	// The number of times we ran verification on a quad.
 	int num_verified;
 
@@ -171,6 +173,9 @@ struct solver_t {
 
 	// The relative noise of the current quad, squared:
 	double rel_field_noise2;
+
+	double abscale_low;
+	double abscale_high;
 
 	// Field limits, in pixels.
 	double field_minx, field_maxx, field_miny, field_maxy;

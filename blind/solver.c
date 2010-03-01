@@ -128,6 +128,7 @@ void solver_reset_counters(solver_t* s) {
 	s->last_examined_object = 0;
 	s->num_cxdx_skipped = 0;
 	s->num_radec_skipped = 0;
+	s->num_abscale_skipped = 0;
 	s->num_verified = 0;
 }
 
@@ -227,28 +228,27 @@ void solver_reset_best_match(solver_t* sp) {
 
 void solver_compute_quad_range(const solver_t* sp, const index_t* index,
                                double* minAB, double* maxAB) {
-	double scalefudge = 0.0; // in pixels
+	double scalefudge; // in pixels
+
+	// compute fudge factor for quad scale: what are the extreme
+	// ranges of quad scales that should be accepted, given the
+	// code tolerance?
+	// -what is the maximum number of pixels a C or D star can move
+	//  to singlehandedly exceed the code tolerance?
+	// -largest quad
+	// -smallest arcsec-per-pixel scale
+
+	// -index_scale_upper * 1/sqrt(2) is the side length of
+	//  the unit-square of code space, in arcseconds.
+	// -that times the code tolerance is how far a C/D star
+	//  can move before exceeding the code tolerance, in arcsec.
+	// -that divided by the smallest arcsec-per-pixel scale
+	//  gives the largest motion in pixels.
+	scalefudge = index->index_scale_upper * M_SQRT1_2 *
+		sp->codetol / sp->funits_upper;
 
 	if (sp->funits_upper != 0.0) {
 		*minAB = index->index_scale_lower / sp->funits_upper;
-
-		// compute fudge factor for quad scale: what are the extreme
-		// ranges of quad scales that should be accepted, given the
-		// code tolerance?
-
-		// -what is the maximum number of pixels a C or D star can move
-		//  to singlehandedly exceed the code tolerance?
-		// -largest quad
-		// -smallest arcsec-per-pixel scale
-
-		// -index_scale_upper * 1/sqrt(2) is the side length of
-		//  the unit-square of code space, in arcseconds.
-		// -that times the code tolerance is how far a C/D star
-		//  can move before exceeding the code tolerance, in arcsec.
-		// -that divided by the smallest arcsec-per-pixel scale
-		//  gives the largest motion in pixels.
-		scalefudge = index->index_scale_upper * M_SQRT1_2 *
-            sp->codetol / sp->funits_upper;
 		*minAB -= scalefudge;
 	}
 	if (sp->funits_lower != 0.0) {
@@ -512,6 +512,20 @@ void solver_run(solver_t* solver) {
         if (solver->quadsize_max != 0.0)
             solver->maxmaxAB2 = MIN(solver->maxmaxAB2, square(solver->quadsize_max));
 		logverb("Quad scale range: [%g, %g] pixels\n", sqrt(solver->minminAB2), sqrt(solver->maxmaxAB2));
+
+		// quick-n-dirty scale estimate using stars A,B.
+		solver->abscale_high = square(arcsec2rad(solver->funits_upper) * (1.0 + solver->codetol));
+		solver->abscale_low  = square(arcsec2rad(solver->funits_lower) * (1.0 - solver->codetol));
+
+		/** Ugh, I want to avoid doing distsq2rad when checking scale,
+		 but that means correcting for the difference between the
+		 distance along the curve of the sphere vs the chord distance.
+		 This affects the lower bound for the largest quads in a messy way...
+		 This below isn't right.
+		 solver->abscale_high = square(arcsec2rad(solver->funits_upper) * (1.0 + solver->codetol));
+		 solver->abscale_low = arcsec2rad(solver->funits_lower) * (1.0 - solver->codetol) *
+		 MIN(M_PI, arcsec2rad(field_diag * solver->funits_upper)) ...
+		 */
 
 		pquads = calloc(numxy * numxy, sizeof(pquad));
 
@@ -882,13 +896,11 @@ static void try_permutations(const int* origstars, int dimquad,
 		code[2*slot +0] = origcode[2*i +0];
 		code[2*slot +1] = origcode[2*i +1];
 
-		// FIXME -- check CX + DX <= 1 (or, rather, the dimquads-agnostic version of that condition)
-		// ie,  mean(x) <= 1/2; ie, (cx + dx + ...) / (dimquads-2) <= 1/2
-		// Combined with the cx<=dx invariant, this means that the running mean
-		// must never exceed 1/2.
-
 		// Check meanx <= 1/2.
 		if (solver->index->cx_less_than_dx && solver->index->meanx_less_than_half) {
+			// Check the "cx + dx <= 1" condition (for quads); in general,
+			// combined with the "cx <= dx" condition, this means that the
+			// mean(x) <= 1/2.
 			int j;
 			double meanx = 0;
 			for (j=0; j<=slot; j++)
@@ -952,6 +964,7 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
 		tan_t wcs;
         int i;
 		bool outofbounds = FALSE;
+		double abscale;
 
 		solver->nummatches++;
 		thisquadno = krez->inds[jj];
@@ -976,15 +989,20 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
 			debug("%s%i", (i?" ":""), star[i]);
 		debug("]\n");
 
-		// FIXME -- could compute position here and compare with
-		//  --ra,dec,radius !!
-
-		// FIXME -- could compute approximate scale here (based on AB
-		// distance), before computing full WCS solution
+		// Quick-n-dirty scale estimate based on two stars.
+		//abscale = distsq(starxyz, starxyz+3, 3) / distsq(field, field+2, 2);
+		// in (rad per pix)**2
+		abscale = square(distsq2rad(distsq(starxyz, starxyz+3, 3))) / distsq(field, field+2, 2);
+		if (abscale > solver->abscale_high ||
+			abscale < solver->abscale_low) {
+			solver->num_abscale_skipped++;
+			continue;
+		}
 
 		// compute TAN projection from the matching quad alone.
 		if (blind_wcs_compute(starxyz, field, dimquads, &wcs, &scale)) {
             // bad quad.
+			logverb("bad quad at %s:%i\n", __FILE__, __LINE__);
             continue;
         }
 		arcsecperpix = scale * 3600.0;
