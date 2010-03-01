@@ -319,6 +319,15 @@ def healpix_to_radec(hp, nside, dx=0.5, dy=0.5):
 	cfunc(hp, nside, dx, dy, byref(ra), byref(dec))
 	return (float(ra.value), float(dec.value))
 
+def healpix_to_xyz(hp, nside, dx=0.5, dy=0.5):
+	cfunc = _lib.healpix_to_xyz
+	x = c_double(0.)
+	y = c_double(0.)
+	z = c_double(0.)
+	cfunc.argtypes = [c_int, c_int, c_double, c_double, c_void_p, c_void_p, c_void_p]
+	cfunc(hp, nside, dx, dy, byref(x), byref(y), byref(z))
+	return (float(x.value), float(y.value), float(z.value))
+
 def healpix_neighbours_within_range(ra, dec, radius, nside):
 	cfunc = _lib.healpix_get_neighbours_within_range_radec
 	cfunc.argtypes = [c_double, c_double, c_double, c_void_p, c_int]
