@@ -87,6 +87,9 @@ struct annotation_args {
 	char* fontname;
 	float bg_rgba[4];
 	bl* targets;
+
+    double label_offset_x;
+    double label_offset_y;
 };
 typedef struct annotation_args ann_t;
 
@@ -183,11 +186,16 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 		cmd.layer = 3;
 		memcpy(cmd.rgba, pargs->rgba, sizeof(cmd.rgba));
 
-		if (!plotstuff_radec2xy(pargs, tar->ra, tar->dec, &px, &py))
+		logverb("Target: \"%s\" at (%g,%g)\n", tar->name, tar->ra, tar->dec);
+
+		if (!plotstuff_radec2xy(pargs, tar->ra, tar->dec, &px, &py)) {
+			logmsg("Target %s is too far away!\n", tar->name);
 			continue;
+		}
 
 		if (px >= 0 && px < pargs->W && py >= 0 && py < pargs->H) {
 			// inside the image!
+			logverb("Target \"%s\" is inside the image, at pixel (%g,%g)\n", tar->name, px, py);
 			cmd.type = MARKER;
 			cmd.x = px;
 			cmd.y = py;
@@ -201,28 +209,30 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 			bl_append(ann->cairocmds, &cmd);
 			continue;
 		}
+					
+		logverb("Target \"%s\" is outside the image, at pixel (%g,%g)\n", tar->name, px, py);
 
 		// outside the image: find intersection point.
 		cx = pargs->W / 2.0;
 		cy = pargs->H / 2.0;
-
 		dx = px - cx;
 		dy = py - cy;
 
-		ly = (-(pargs->W/2.0) / dx) * (dy) + cy;
-		ry = ( (pargs->W/2.0) / dx) * (dy) + cy;
-		bx = (-(pargs->H/2.0) / dy) * (dx) + cx;
-		tx = ( (pargs->H/2.0) / dy) * (dx) + cx;
-		if (ly >= 0 && ly < pargs->H) {
+		ly = (-(pargs->W/2.0) / dx) * dy + cy;
+		ry = ( (pargs->W/2.0) / dx) * dy + cy;
+		bx = (-(pargs->H/2.0) / dy) * dx + cx;
+		tx = ( (pargs->H/2.0) / dy) * dx + cx;
+		logverb("ly %g, ry %g, bx %g, tx %g\n", ly, ry, bx, tx);
+		if (px < cx && ly >= 0 && ly < pargs->H) {
 			ex = 0.0;
 			ey = ly;
-		} else if (ry >= 0 && ry < pargs->H) {
+		} else if (px >= cx && ry >= 0 && ry < pargs->H) {
 			ex = pargs->W - 1;
 			ey = ry;
-		} else if (bx >= 0 && bx < pargs->W) {
+		} else if (py < cy && bx >= 0 && bx < pargs->W) {
 			ex = bx;
 			ey = 0;
-		} else if (tx >= 0 && tx < pargs->W) {
+		} else if (py >= cy && tx >= 0 && tx < pargs->W) {
 			ex = tx;
 			ey = pargs->H - 1;
 		} else {
@@ -238,6 +248,7 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 		cmd.y = (r-100.0) / r * dy + cy;
 		cmd.x2 = ex;
 		cmd.y2 = ey;
+		logverb("Arrow from (%g,%g) to (%g,%g)\n", cmd.x, cmd.y, cmd.x2, cmd.y2);
 		bl_append(ann->cairocmds, &cmd);
 
 		distdeg = deg_between_radecdeg(cra, cdec, tar->ra, tar->dec);
@@ -253,13 +264,6 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 	double imscale;
 	double imsize;
 	int i, N;
-	double dy = 0;
-	cairo_font_extents_t extents;
-
-    double label_offset = 15.0;
-
-	cairo_font_extents(cairo, &extents);
-	dy = extents.ascent * 0.5;
 
 	// arcsec/pixel
 	imscale = plotstuff_pixel_scale(pargs);
@@ -312,7 +316,8 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 
 		debug("size: %f arcsec, pix radius: %f pixels\n", ngc->size, pixrad);
 
-		add_text(pargs, ann, cairo, names, px + label_offset, py + dy);
+		//add_text(pargs, ann, cairo, names, px + ann->label_offset_x, py + dy + ann->label_offset_y);
+		add_text(pargs, ann, cairo, names, px, py);
 		free(names);
 
 		/*
@@ -341,6 +346,8 @@ void* plot_annotations_init(plot_args_t* args) {
 	parse_color_rgba("black", ann->bg_rgba);
 	ann->fontsize = 14.0;
 	ann->targets = bl_new(4, sizeof(target_t));
+	ann->label_offset_x = 15.0;
+	ann->label_offset_y = 0.0;
 	return ann;
 }
 
@@ -350,10 +357,15 @@ int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 	int i;
 	int layer;
 	bool morelayers;
+	cairo_font_extents_t extents;
+	double dy = 0;
 
 	// Set fonts, etc, before calling plotting routines
 	cairo_select_font_face(cairo, ann->fontname, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
 	cairo_set_font_size(cairo, ann->fontsize);
+
+	cairo_font_extents(cairo, &extents);
+	dy = extents.ascent * 0.5;
 
 	plot_ngc(cairo, pargs, ann);
 
@@ -381,7 +393,7 @@ int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 				cairoutils_draw_marker(cairo, cmd->marker, cmd->x, cmd->y, cmd->markersize);
 				break;
 			case TEXT:
-				cairo_move_to(cairo, cmd->x, cmd->y);
+				cairo_move_to(cairo, cmd->x + ann->label_offset_x, cmd->y + dy + ann->label_offset_y);
 				cairo_show_text(cairo, cmd->text);
 				break;
 			case LINE:
@@ -437,6 +449,7 @@ int plot_annotations_command(const char* cmd, const char* cmdargs,
 			tar.ra = atof(sl_get(args, 0));
 			tar.dec = atof(sl_get(args, 1));
 			tar.name = strdup(sl_get(args, 2));
+			logmsg("Added target \"%s\" at (%g,%g)\n", tar.name, tar.ra, tar.dec);
 			bl_append(ann->targets, &tar);
 		} else {
 			ERROR("Need RA,Dec,name");
@@ -444,16 +457,16 @@ int plot_annotations_command(const char* cmd, const char* cmdargs,
 		}
 	} else if (streq(cmd, "annotations_targetname")) {
 		target_t tar;
-		char* name = cmdargs;
+		const char* name = cmdargs;
 		ngc_entry* e = ngc_get_entry_named(name);
 		if (!e) {
 			ERROR("Failed to find target named \"%s\"", name);
 			return -1;
 		}
 		tar.name = ngc_get_name_list(e, "/");
-		logmsg("Found %s\n", tar.name);
 		tar.ra = e->ra;
 		tar.dec = e->dec;
+		logmsg("Found %s: RA,Dec (%g,%g)\n", tar.name, tar.ra, tar.dec);
 		bl_append(ann->targets, &tar);
 	} else {
 		ERROR("Unknown command \"%s\"", cmd);
