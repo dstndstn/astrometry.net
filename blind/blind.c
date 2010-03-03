@@ -688,7 +688,7 @@ static void print_match(blind_t* bp, MatchObj* mo) {
 static bool record_match_callback(MatchObj* mo, void* userdata) {
 	blind_t* bp = userdata;
 	solver_t* sp = &(bp->solver);
-    MatchObj* ourmo;
+    MatchObj* mymo;
     int ind;
 
 	check_time_limits(bp);
@@ -704,78 +704,61 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 
     mo->index_jitter = sp->index->index_jitter;
 
-	// FIXME -- do we really do all this if logodds < to_solve ?
+    ind = bl_insert_sorted(bp->solutions, mo, compare_matchobjs);
+    mymo = bl_access(bp->solutions, ind);
+
+	// steal these arrays from "mo" (prevent them from being free()'d
+	// by the caller)
+	mo->theta = NULL;
+	mo->matchodds = NULL;
+	mo->refxyz = NULL;
+	mo->refxy = NULL;
+	mo->refstarid = NULL;
+
+	// We have no guarantee that the index will still be open when it
+	// comes time to write our output files, so we've got to grab everything
+	// we need now while it's at hand.
+
+	// corr_fname ?
     if (bp->do_tweak || bp->indexrdlsfname || bp->scamp_fname) {
-        int nstars;
-        double* radec = NULL;
-		int* starinds = NULL;
-		int** getinds = NULL;
+		int i;
 
-		// If we're adding tag-along columns to the RDLS, grab the row numbers.
-		if (bp->indexrdlsfname && (bp->rdls_tagalong || bp->rdls_tagalong_all)) {
-			getinds = &starinds;
-		}
+		mymo->refradec = malloc(mymo->nindex * 2 * sizeof(double));
+		for (i=0; i<mymo->nindex; i++)
+			xyzarr2radecdegarr(mymo->refxyz+i*3, mymo->refradec+i*2);
 
-		// FIXME - hmm, for tweak you *might* want to keep index
-		// objects slightly outside the field.
-		verify_get_index_stars(mo->center, square(mo->radius),
-							   sp->index->starkd, NULL, &(mo->wcstan),
-							   mo->wcstan.imagew, mo->wcstan.imageh,
-							   &radec, NULL, getinds, &nstars);
-
+		// FIXME -- tweak should use the weights (verify_logodds_to_weight(mymo->matchodds))
         if (bp->do_tweak)
-            mo->sip = tweak(bp, &(mo->wcstan), radec, nstars);
+            mymo->sip = tweak(bp, &(mymo->wcstan), mymo->refradec, mymo->nindex);
 
-        if (bp->indexrdlsfname || bp->scamp_fname) {
-            // steal this array...
-            mo->indexrdls = radec;
-            mo->nindexrdls = nstars;
+		// FIXME -- add MAG, MAGERR, and positional errors for SCAMP catalog.
 
-			// FIXME -- add MAG, MAGERR, and positional errors for SCAMP catalog.
-
-			if (starinds) {
-				grab_tagalong_data(sp->index->starkd, mo, bp, starinds, nstars);
-				free(starinds);
-			}
-
-        } else {
-			free(radec);
-		}
+		if (bp->rdls_tagalong || bp->rdls_tagalong_all)
+			grab_tagalong_data(sp->index->starkd, mymo, bp, mymo->refstarid, mymo->nindex);
 	}
 
-    ind = bl_insert_sorted(bp->solutions, mo, compare_matchobjs);
-    ourmo = bl_access(bp->solutions, ind);
-
-	solver_resolve_correspondences(sp, ourmo);
-
-	/*
-	// drop references to these arrays: they'll be freed by "mo".
-    ourmo->corr_field = NULL;
-    ourmo->corr_index = NULL;
-	 */
-
-	if (mo->logodds < bp->logratio_tosolve)
+	if (mymo->logodds < bp->logratio_tosolve)
 		return FALSE;
 
 	// this match is considered a solution.
 
     bp->nsolves_sofar++;
-    if (bp->nsolves_sofar >= bp->nsolves) {
+    if (bp->nsolves_sofar < bp->nsolves) {
+        logmsg("Found a quad that solves the image; that makes %i of %i required.\n",
+               bp->nsolves_sofar, bp->nsolves);
+	} else {
         if (bp->solver.index) {
 			char* base = basename_safe(bp->solver.index->indexname);
-            logmsg("Field %i: solved with index %s.\n", mo->fieldnum, base);
+            logmsg("Field %i: solved with index %s.\n", mymo->fieldnum, base);
             free(base);
         } else {
-            logmsg("Field %i: solved with index %i", mo->fieldnum, mo->indexid);
-            if (mo->healpix >= 0)
-                logmsg(", healpix %i\n", mo->healpix);
+            logmsg("Field %i: solved with index %i", mymo->fieldnum, mymo->indexid);
+            if (mymo->healpix >= 0)
+                logmsg(", healpix %i\n", mymo->healpix);
             else
                 logmsg("\n");
         }
         return TRUE;
-    } else {
-        logmsg("Found a quad that solves the image; that makes %i of %i required.\n",
-               bp->nsolves_sofar, bp->nsolves);
     }
 	return FALSE;
 }
@@ -1058,12 +1041,15 @@ static void free_matchobj(MatchObj* mo) {
 	 if (mo->corr_field_xy) {
 	 dl_free(mo->corr_field_xy);
 	 }
+	 if (mo->indexrdls) {
+	 free(mo->indexrdls);
+	 mo->indexrdls = NULL;
+	 mo->nindexrdls = 0;
+	 }
 	 */
-    if (mo->indexrdls) {
-        free(mo->indexrdls);
-        mo->indexrdls = NULL;
-        mo->nindexrdls = 0;
-    }
+	free(mo->refradec);
+	mo->refradec = NULL;
+
 	if (mo->tagalong) {
 		int i;
 		for (i=0; i<bl_size(mo->tagalong); i++) {
@@ -1174,10 +1160,10 @@ static int write_solutions(blind_t* bp) {
                 logerr("Failed to write index RDLS field header.\n");
                 return -1;
             }
-            assert(mo->indexrdls);
+            assert(mo->refradec);
 
             // HACK - should instead make mo.indexrdls an rd_t.
-            rd_from_array(&rd, mo->indexrdls, mo->nindexrdls);
+            rd_from_array(&rd, mo->refradec, mo->nindex);
 
             if (rdlist_write_field(bp->indexrdls, &rd)) {
                 logerr("Failed to write index RDLS entry.\n");
@@ -1190,7 +1176,7 @@ static int write_solutions(blind_t* bp) {
 					tagalong_t* tag = bl_access(mo->tagalong, i);
 					int sz = fits_get_atom_size(tag->type) * tag->arraysize;
 					if (rdlist_write_tagalong_column(bp->indexrdls, tag->colnum,
-													 0, mo->nindexrdls,
+													 0, mo->nindex,
 													 tag->data, sz)) {
 						ERROR("Failed to write tag-along data column %s", tag->name);
 						return -1;
@@ -1309,10 +1295,10 @@ static int write_solutions(blind_t* bp) {
             return -1;
         }
         mo = bl_access(bp->solutions, 0);
-        for (i=0; i<mo->nindexrdls; i++) {
+        for (i=0; i<mo->nindex; i++) {
             scamp_ref_t ref;
-            ref.ra  = mo->indexrdls[2*i + 0];
-            ref.dec = mo->indexrdls[2*i + 1];
+            ref.ra  = mo->refradec[2*i + 0];
+            ref.dec = mo->refradec[2*i + 1];
             ref.err_a = ref.err_b = arcsec2deg(mo->index_jitter);
             // HACK
             ref.mag = 10.0;

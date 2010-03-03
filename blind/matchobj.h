@@ -100,9 +100,12 @@ struct match_struct {
 	float timeused;
 
     // stuff used by blind...
-    sip_t* sip;
-    double* indexrdls;
-    int nindexrdls;
+	sip_t* sip;
+	/*
+	 double* indexrdls;
+	 int nindexrdls;
+	 */
+	double* refradec;
 
 	bl* tagalong;
 
@@ -117,6 +120,7 @@ struct match_struct {
 	double* matchodds;
 	// add in all the stuff we discover about the reference stars during
 	// verify, or just enough that callers can retrieve it themselves?
+	// These arrays have length "nindex".
 	double* refxyz;
 	double* refxy;
 	int* refstarid;
