@@ -1033,21 +1033,22 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 			else
 				mo->nmatch++;
 		}
-		for (i=0; i<v->NT; i++) {
-			if (i == besti)
-				debug("* ");
-			debug("Theta[%i] = %i", i, theta[i]);
-			if (theta[i] < 0) {
-				debug("\n");
-				continue;
-			}
-			ri = theta[i];
-			ti = v->testperm[i];
-			debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
-				  v->refstarid[ri], v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
-		}
 
-		// Compute "extended theta" -- applying "testperm".
+		if (DEBUGVERIFY) {
+			for (i=0; i<v->NT; i++) {
+				if (i == besti)
+					debug("* ");
+				debug("Theta[%i] = %i", i, theta[i]);
+				if (theta[i] < 0) {
+					debug("\n");
+					continue;
+				}
+				ri = theta[i];
+				ti = v->testperm[i];
+				debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
+					  v->refstarid[ri], v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
+			}
+		}
 		etheta = malloc(v->NTall * sizeof(int));
 		for (i=0; i<v->NT; i++) {
 			ti = v->testperm[i];
@@ -1079,17 +1080,19 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 
 		mo->theta = etheta;
 
-		debug("\n");
-		for (i=0; i<v->NTall; i++) {
-			debug("ETheta[%i] = %i", i, etheta[i]);
-			if (etheta[i] < 0) {
-				debug("\n");
-				continue;
+		if (DEBUGVERIFY) {
+			debug("\n");
+			for (i=0; i<v->NTall; i++) {
+				debug("ETheta[%i] = %i", i, etheta[i]);
+				if (etheta[i] < 0) {
+					debug("\n");
+					continue;
+				}
+				ri = etheta[i];
+				ti = i;
+				debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
+					  v->refstarid[ri], v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
 			}
-			ri = etheta[i];
-			ti = i;
-			debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
-				  v->refstarid[ri], v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
 		}
 
 		matchobj_compute_derived(mo);
