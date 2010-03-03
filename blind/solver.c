@@ -375,6 +375,7 @@ void solver_free_field(solver_t* solver) {
 }
 
 void solver_resolve_correspondences(const solver_t* sp, MatchObj* mo) {
+	/*
 	int j;
     mo->corr_field_xy = dl_new(16);
     mo->corr_index_rd = dl_new(16);
@@ -396,6 +397,7 @@ void solver_resolve_correspondences(const solver_t* sp, MatchObj* mo) {
         dl_append(mo->corr_index_rd, iradec[0]);
         dl_append(mo->corr_index_rd, iradec[1]);
     }
+	 */
 }
 
 static double get_tolerance(solver_t* solver) {
@@ -1043,10 +1045,12 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
 		if (solver_handle_hit(solver, &mo, NULL, FALSE))
 			solver->quit_now = TRUE;
 
-        if (mo.corr_field)
-            il_free(mo.corr_field);
-        if (mo.corr_index)
-            il_free(mo.corr_index);
+		/*
+		 if (mo.corr_field)
+		 il_free(mo.corr_field);
+		 if (mo.corr_index)
+		 il_free(mo.corr_index);
+		 */
 
 		if (unlikely(solver->quit_now))
 			return;

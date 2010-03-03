@@ -72,6 +72,8 @@ void sip_get_radec_center_hms(const sip_t* wcs,
                               int* rah, int* ram, double* ras,
                               int* decd, int* decm, double* decs);
 
+bool sip_pixel_is_inside_image(const sip_t* wcs, double px, double py);
+
 bool sip_is_inside_image(const sip_t* wcs, double ra, double dec);
 
 // Writes RA, Dec H:M:S and D:M:S strings.

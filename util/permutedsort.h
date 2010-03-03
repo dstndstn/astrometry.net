@@ -40,7 +40,7 @@ int* permuted_sort(const void* realarray, int array_stride,
                    int (*compare)(const void*, const void*),
                    int* perm, int Nperm);
 
-void permutation_init(int* perm, int Nperm);
+int* permutation_init(int* perm, int Nperm);
 
 /**
  Applies a permutation array to a data vector.

@@ -39,6 +39,10 @@ svn_version.c: FORCE
 ## to call the function svn_version() to get a string that
 ## describes exactly what revision was built.
 ##
+
+I would do instead of 'svnversion':
+  svn info | tail -r | awk '/URL|Revision/{printf("%s ", $0)}'
+
  ***/
 
 static char date_rtnval[256];
@@ -93,6 +97,9 @@ const char* svn_url() {
 // of this file every time libanutils.a gets built.
 //
 
+//
+//
+//
 //
 //
 //

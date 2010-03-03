@@ -22,10 +22,13 @@
 #include "permutedsort.h"
 #include "gnu-specific.h" // for qsort_r
 
-void permutation_init(int* perm, int Nperm) {
+int* permutation_init(int* perm, int N) {
 	int i;
-	for (i=0; i<Nperm; i++)
+    if (!perm)
+        perm = malloc(sizeof(int) * N);
+	for (i=0; i<N; i++)
 		perm[i] = i;
+	return perm;
 }
 
 void permutation_apply(const int* perm, int Nperm, const void* inarray,
@@ -74,10 +77,7 @@ int* permuted_sort(const void* realarray, int array_stride,
                    int (*compare)(const void*, const void*),
                    int* perm, int N) {
     permsort_t ps;
-    if (!perm) {
-        perm = malloc(sizeof(int) * N);
-		permutation_init(perm, N);
-    }
+	perm = permutation_init(perm, N);
 
     ps.compare = compare;
     ps.data_array = realarray;

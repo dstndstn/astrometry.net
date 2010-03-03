@@ -109,10 +109,8 @@ struct match_struct {
     // in arcsec.
     double index_jitter;
 
-    il* corr_field;
-    il* corr_index;
-    dl* corr_field_xy;
-    dl* corr_index_rd;
+	// from verify.c: correspondences between index and image stars.
+	int* theta;
 };
 typedef struct match_struct MatchObj;
 

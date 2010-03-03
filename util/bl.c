@@ -1044,6 +1044,11 @@ int pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1, 
  }
  */
 
+/*
+ void sl_remove_duplicates(sl* lst) {
+ }
+ */
+
 sl* sl_new(int blocksize) {
 	pl* lst = pl_new(blocksize);
 	assert(lst);

@@ -96,18 +96,20 @@ void verify_hit(const startree_t* skdt,
 // Conflict
 #define THETA_CONFLICT -2
 
-void verify_apply_ror(double* refxy, int* starids, int* p_NR,
-					  int index_cutnside,
-					  MatchObj* mo,
-					  const verify_field_t* vf,
-					  double pix2,
-					  double distractors,
-					  double fieldW,
-					  double fieldH,
-					  bool do_gamma, bool fake_match,
-					  double** p_testxy, double** p_sigma2s,
-					  int* p_NT, int** p_perm, double* p_effA,
-					  int* p_uninw, int* p_uninh);
+/*
+ void verify_apply_ror(double* refxy, int* starids, int* p_NR,
+ int index_cutnside,
+ MatchObj* mo,
+ const verify_field_t* vf,
+ double pix2,
+ double distractors,
+ double fieldW,
+ double fieldH,
+ bool do_gamma, bool fake_match,
+ double** p_testxy, double** p_sigma2s,
+ int* p_NT, int** p_perm, double* p_effA,
+ int* p_uninw, int* p_uninh);
+ */
 
 /**
  Returns the best log-odds encountered.

@@ -19,11 +19,21 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #include "sip.h"
 #include "starutil.h"
 #include "mathutil.h"
+
+static bool has_distortions(const sip_t* sip) {
+	return (sip->a_order >= 0);
+}
+
+void sip_wrap_tan(const tan_t* tan, sip_t* sip) {
+	memset(&sip, 0, sizeof(sip_t));
+	memcpy(&sip->wcstan, tan, sizeof(tan_t));
+}
 
 void sip_get_crval(const sip_t* sip, double* ra, double* dec) {
 	*ra = sip->wcstan.crval[0];
@@ -65,30 +75,31 @@ static void sip_distortion(const sip_t* sip, double x, double y,
 
 // Pixels to RA,Dec in degrees.
 void sip_pixelxy2radec(const sip_t* sip, double px, double py,
-					   double *ra, double *dec)
-{
-	double U, V;
-    sip_distortion(sip, px, py, &U, &V);
-	// Run a normal TAN conversion on the distorted pixel coords.
-	tan_pixelxy2radec(&(sip->wcstan), U, V, ra, dec);
+					   double *ra, double *dec) {
+	if (has_distortions(sip)) {
+		double U, V;
+		sip_distortion(sip, px, py, &U, &V);
+		// Run a normal TAN conversion on the distorted pixel coords.
+		tan_pixelxy2radec(&(sip->wcstan), U, V, ra, dec);
+	} else
+		// Run a normal TAN conversion
+		tan_pixelxy2radec(&(sip->wcstan), px, py, ra, dec);
 }
 
 // Pixels to XYZ unit vector.
 void sip_pixelxy2xyzarr(const sip_t* sip, double px, double py, double *xyz) {
-    /*
-     double ra, dec;
-     sip_pixelxy2radec(sip, px, py, &ra, &dec);
-     radecdeg2xyzarr(ra, dec, xyz);
-     */
-	double U, V;
-    sip_distortion(sip, px, py, &U, &V);
-	// Run a normal TAN conversion on the distorted pixel coords.
-	tan_pixelxy2xyzarr(&(sip->wcstan), U, V, xyz);
+	if (has_distortions(sip)) {
+		double U, V;
+		sip_distortion(sip, px, py, &U, &V);
+		// Run a normal TAN conversion on the distorted pixel coords.
+		tan_pixelxy2xyzarr(&(sip->wcstan), U, V, xyz);
+	} else
+		// Run a normal TAN conversion
+		tan_pixelxy2xyzarr(&(sip->wcstan), px, py, xyz);
 }
 
 // Pixels to RA,Dec in degrees.
-void tan_pixelxy2radec(const tan_t* tan, double px, double py, double *ra, double *dec)
-{
+void tan_pixelxy2radec(const tan_t* tan, double px, double py, double *ra, double *dec) {
 	double xyz[3];
 	tan_pixelxy2xyzarr(tan, px, py, xyz);
 	xyzarr2radecdeg(xyz, ra,dec);
@@ -194,6 +205,9 @@ bool sip_radec2pixelxy(const sip_t* sip, double ra, double dec, double *px, doub
 	if (!tan_radec2pixelxy(&(sip->wcstan), ra, dec, px, py))
 		return FALSE;
 
+	if (!has_distortions(sip))
+		return TRUE;
+
 	// Subtract crpix, invert SIP distortion, add crpix.
 
 	// Sanity check:
@@ -219,6 +233,9 @@ bool sip_radec2pixelxy_check(const sip_t* sip, double ra, double dec, double *px
 	double U2, V2;
 	if (!tan_radec2pixelxy(&(sip->wcstan), ra, dec, px, py))
 		return FALSE;
+	if (!has_distortions(sip))
+		return TRUE;
+
 	// Subtract crpix, invert SIP distortion, add crpix.
 	// Sanity check:
 	if (sip->a_order != 0 && sip->ap_order == 0) {
