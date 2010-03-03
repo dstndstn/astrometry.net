@@ -705,7 +705,8 @@ int main(int argc, char** args) {
                 if (bs->common_name && strlen(bs->common_name))
                     sl_append(names, bs->common_name);
                 if (bs->name)
-                    sl_append(names, bs->name);
+					sl_append(names, bs->name);
+				
                 namearr = sl_join(names, "\", \"");
 
                 sl_appendf(json,
@@ -789,8 +790,7 @@ int main(int argc, char** args) {
                 continue;
 
             str = sl_new(4);
-            sl_appendf(str, "%s %i", (ngc->is_ngc ? "NGC" : "IC"), ngc->id);
-
+            //sl_appendf(str, "%s %i", (ngc->is_ngc ? "NGC" : "IC"), ngc->id);
             names = ngc_get_names(ngc, NULL);
             if (names) {
                 int n;

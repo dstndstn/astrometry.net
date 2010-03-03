@@ -228,6 +228,8 @@ void sl_remove_from(sl* list, int start);
 void   sl_merge_lists(sl* list1, sl* list2);
 void   sl_print(sl* list);
 
+//void sl_remove_duplicates(sl* lst);
+
 /*
  Splits the given string 'str' into substrings separated by 'sepstring'.
  (Some of the substrings may be empty, for example if the 'sepstring' appears
