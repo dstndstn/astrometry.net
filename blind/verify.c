@@ -39,7 +39,6 @@
 #define debug(args...)
 #endif
 
-
 // avoid functions with 50 arguments...
 struct verify_s {
 	const sip_t* wcs;
@@ -52,10 +51,21 @@ struct verify_s {
 	double* refxy;
 	// temp storage when filtering
 	int* badguys;
-	
+
+	// Image stars:
+	int NT;
+	int NTall;
+	int* testperm;
+	double* testxy;
+	double* testsigma; // actually sigma**2.
+	// temp storage
+	int* tbadguys;
 
 };
 typedef struct verify_s verify_t;
+
+
+static bool* verify_deduplicate_field_stars(verify_t* v, const verify_field_t* vf, double nsigmas);
 
 
 
@@ -104,6 +114,60 @@ void verify_field_free(verify_field_t* vf) {
     free(vf);
 }
 
+static double get_sigma2_at_radius(double verify_pix2, double r2, double quadr2) {
+	return verify_pix2 * (1.0 + r2/quadr2);
+}
+
+static double* compute_sigma2s(const verify_field_t* vf,
+							   const double* xy, int NF,
+							   const double* qc, double Q2,
+							   double verify_pix2, bool do_gamma) {
+	double* sigma2s;
+    int i;
+	double R2;
+
+    sigma2s = malloc(NF * sizeof(double));
+	if (!do_gamma) {
+		for (i=0; i<NF; i++)
+            sigma2s[i] = verify_pix2;
+	} else {
+		// Compute individual positional variances for every field
+		// star.
+		for (i=0; i<NF; i++) {
+			if (vf) {
+				double sxy[2];
+				starxy_get(vf->field, i, sxy);
+				// Distance from the quad center of this field star:
+				R2 = distsq(sxy, qc, 2);
+			} else
+				R2 = distsq(xy + 2*i, qc, 2);
+
+            // Variance of a field star at that distance from the quad center:
+            sigma2s[i] = get_sigma2_at_radius(verify_pix2, R2, Q2);
+        }
+	}
+	return sigma2s;
+}
+
+double* verify_compute_sigma2s(const verify_field_t* vf, const MatchObj* mo,
+							   double verify_pix2, bool do_gamma) {
+	int NF;
+	double qc[2];
+	double Q2=0;
+	NF = starxy_n(vf->field);
+	if (do_gamma) {
+		verify_get_quad_center(vf, mo, qc, &Q2);
+		debug("Quad radius = %g pixels\n", sqrt(Q2));
+	}
+	return compute_sigma2s(vf, NULL, NF, qc, Q2, verify_pix2, do_gamma);
+}
+
+double* verify_compute_sigma2s_arr(const double* xy, int NF,
+								   const double* qc, double Q2,
+								   double verify_pix2, bool do_gamma) {
+	return compute_sigma2s(NULL, xy, NF, qc, Q2, verify_pix2, do_gamma);
+}
+
 static double logd_at(double distractor, int mu, int NR, double logbg) {
 	return log(distractor + (1.0-distractor)*mu / (double)NR) + logbg;
 }
@@ -119,6 +183,53 @@ static int get_xy_bin(const double* xy,
 	return iy * nw + ix;
 }
 
+static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchObj* mo,
+								 double pix2, bool do_gamma, bool fake_match) {
+	bool* keepers = NULL;
+	int i;
+	int ibad, igood;
+
+	v->NTall = starxy_n(vf->field);
+	v->testxy = vf->xy;
+	v->NT = v->NTall;
+	v->testsigma = verify_compute_sigma2s(vf, mo, pix2, do_gamma);
+	v->testperm = permutation_init(NULL, v->NTall);
+	v->tbadguys = malloc(v->NTall * sizeof(int));
+
+	// Deduplicate test stars.  This could be done (approximately) in preprocessing.
+	// FIXME -- this should be at the reference deduplication radius, not relative to sigma!
+	// -- this requires the match scale
+	// -- can perhaps distretize dedup to nearest power-of-sqrt(2) pixel radius and cache it.
+	// -- we can compute sigma much later
+	keepers = verify_deduplicate_field_stars(v, vf, 1.0);
+
+	// Remove test quad stars.  Do this after deduplication so we
+	// don't end up with (duplicate) test stars near the quad stars.
+    if (!fake_match) {
+		for (i=0; i<mo->dimquads; i++) {
+            assert(mo->field[i] >= 0);
+            assert(mo->field[i] < v->NTall);
+            keepers[mo->field[i]] = FALSE;
+		}
+	}
+
+	ibad = igood = 0;
+	for (i=0; i<v->NT; i++) {
+		int ti = v->testperm[i];
+		if (keepers[ti]) {
+			v->testperm[igood] = ti;
+			igood++;
+		} else {
+			v->tbadguys[ibad] = ti;
+			ibad++;
+		}
+	}
+	v->NT = igood;
+	// remember the bad guys
+	memcpy(v->testperm + igood, v->tbadguys, ibad * sizeof(int));
+	free(keepers);
+}
+
 static void verify_apply_ror(verify_t* v,
 							 int index_cutnside,
 							 MatchObj* mo,
@@ -128,17 +239,12 @@ static void verify_apply_ror(verify_t* v,
 							 double fieldW,
 							 double fieldH,
 							 bool do_gamma, bool fake_match,
-							 double** p_testxy, double** p_sigma2s,
-							 int* p_NT, int** p_perm, double* p_effA,
+							 double* p_effA,
 							 int* p_uninw, int* p_uninh) {
-	int i, k;
-    int NT;
-    double* sigma2s;
+	int i;
 	int uni_nw, uni_nh;
-	int* perm;
 	double effA;
 	double qc[2], Q2=0;
-	double* testxy;
 	int igood, ibad;
 
 	// If we're verifying an existing WCS solution, then don't increase the variance
@@ -146,12 +252,15 @@ static void verify_apply_ror(verify_t* v,
     if (fake_match)
         do_gamma = FALSE;
 
-	NT = verify_get_test_stars(vf, mo, pix2, do_gamma, fake_match, &sigma2s, &perm);
-	debug("Number of test stars: %i\n", NT);
+	verify_get_test_stars(v, vf, mo, pix2, do_gamma, fake_match);
+	debug("Number of test stars: %i\n", v->NT);
 	debug("Number of reference stars: %i\n", v->NR);
 
 	if (!fake_match)
 		verify_get_quad_center(vf, mo, qc, &Q2);
+
+	// Uniformize test stars
+	// FIXME - can do this (possibly at several scales) in preprocessing.
 
 	// -get uniformization scale.
 	verify_get_uniformize_scale(index_cutnside, mo->scale, fieldW, fieldH, &uni_nw, &uni_nh);
@@ -165,7 +274,7 @@ static void verify_apply_ror(verify_t* v,
 		bool* goodbins = NULL;
 		int Ngoodbins;
 
-		verify_uniformize_field(vf->xy, perm, NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &binids);
+		verify_uniformize_field(vf->xy, v->testperm, v->NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &binids);
 		bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
 
 		debug("Quad radius = %g\n", sqrt(Q2));
@@ -180,15 +289,20 @@ static void verify_apply_ror(verify_t* v,
 				Ngoodbins++;
 		}
 		// Remove test stars in irrelevant bins...
-		k = 0;
-		for (i=0; i<NT; i++) {
-			if (!goodbins[binids[i]])
-				continue;
-			perm[k] = perm[i];
-			k++;
+		igood = ibad = 0;
+		for (i=0; i<v->NT; i++) {
+			int ti = v->testperm[i];
+			if (goodbins[binids[i]]) {
+				v->testperm[igood] = ti;
+				igood++;
+			} else {
+				v->tbadguys[ibad] = ti;
+				ibad++;
+			}
 		}
-		NT = k;
-		debug("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, NT);
+		v->NT = igood;
+		memcpy(v->testperm + igood, v->tbadguys, ibad * sizeof(int));
+		debug("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, v->NT);
 
 		// Effective area: A * proportion of good bins.
 		effA = fieldW * fieldH * Ngoodbins / (double)(uni_nw * uni_nh);
@@ -221,16 +335,6 @@ static void verify_apply_ror(verify_t* v,
 	} else {
 		effA = fieldW * fieldH;
 	}
-
-	testxy = malloc(NT * 2 * sizeof(double));
-
-	permutation_apply(perm, NT, vf->xy, testxy, 2*sizeof(double));
-	permutation_apply(perm, NT, sigma2s, sigma2s, sizeof(double));
-
-	*p_perm = perm;
-	*p_testxy = testxy;
-	*p_sigma2s = sigma2s;
-	*p_NT = NT;
 	*p_effA = effA;
 	if (p_uninw)
 		*p_uninw = uni_nw;
@@ -239,7 +343,6 @@ static void verify_apply_ror(verify_t* v,
 }
 
 static double real_verify_star_lists(verify_t* v,
-									 const double* testxys, const double* testsigma2s, int NT,
 									 double effective_area,
 									 double distractors,
 									 double logodds_bail,
@@ -267,8 +370,8 @@ static double real_verify_star_lists(verify_t* v,
 
 	int* rperm;
 
-	if (!v->NR || !NT) {
-		logerr("verify_star_lists: NR=%i, NT=%i\n", v->NR, NT);
+	if (!v->NR || !v->NT) {
+		logerr("verify_star_lists: NR=%i, NT=%i\n", v->NR, v->NT);
 		return -HUGE_VAL;
 	}
 
@@ -295,11 +398,11 @@ static double real_verify_star_lists(verify_t* v,
 		rprobs[i] = -HUGE_VAL;
 
 	if (p_all_logodds) {
-		all_logodds = calloc(NT, sizeof(double));
+		all_logodds = calloc(v->NT, sizeof(double));
 		*p_all_logodds = all_logodds;
 	}
 
-	theta = malloc(NT * sizeof(int));
+	theta = malloc(v->NT * sizeof(int));
 
 	logbg = log(1.0 / effective_area);
 
@@ -309,16 +412,18 @@ static double real_verify_star_lists(verify_t* v,
 	besti = -1;
 	logodds = 0.0;
 	mu = 0;
-	for (i=0; i<NT; i++) {
+	for (i=0; i<v->NT; i++) {
 		const double* testxy;
 		double sig2;
 		int refi;
 		int tmpi;
 		double d2;
 		double logfg;
+		int ti;
 
-		testxy = testxys + 2*i;
-		sig2 = testsigma2s[i];
+		ti = v->testperm[i];
+		testxy = v->testxy + 2*ti;
+		sig2 = v->testsigma[ti];
 
 		logd = logd_at(distractors, mu, v->NR, logbg);
 
@@ -431,7 +536,7 @@ static double real_verify_star_lists(verify_t* v,
         if (logodds < logodds_bail) {
 			debug("  logodds %g less than bailout %g\n", logodds, logodds_bail);
 			if (all_logodds)
-				for (j=i+1; j<NT; j++)
+				for (j=i+1; j<v->NT; j++)
 					all_logodds[j] = logodds;
             break;
 		}
@@ -551,75 +656,42 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 
  Returns an array indicating which field stars should be kept.
  */
-bool* verify_deduplicate_field_stars(const verify_field_t* vf, double* sigma2s, double nsigmas) {
+static bool* verify_deduplicate_field_stars(verify_t* v, const verify_field_t* vf, double nsigmas) {
     bool* keepers = NULL;
-    int i, j, N;
-    kdtree_qres_t* res;
+    int i, j, ti;
+    kdtree_qres_t* res = NULL;
 	double nsig2 = nsigmas*nsigmas;
+	int options = KD_OPTIONS_NO_RESIZE_RESULTS | KD_OPTIONS_SMALL_RADIUS;
 
-    N = starxy_n(vf->field);
-    keepers = malloc(N * sizeof(bool));
-    for (i=0; i<N; i++)
-		keepers[i] = TRUE;
-    for (i=0; i<N; i++) {
+	// default to FALSE
+    keepers = calloc(v->NTall, sizeof(bool));
+    for (i=0; i<v->NT; i++) {
+		ti = v->testperm[i];
+		keepers[ti] = TRUE;
+	}
+    for (i=0; i<v->NT; i++) {
         double sxy[2];
-		if (!keepers[i])
+		ti = v->testperm[i];
+		if (!keepers[ti])
 			continue;
-        starxy_get(vf->field, i, sxy);
-        res = kdtree_rangesearch_nosort(vf->ftree, sxy, nsig2 * sigma2s[i]);
+        starxy_get(vf->field, ti, sxy);
+        res = kdtree_rangesearch_options_reuse(vf->ftree, res, sxy, nsig2 * v->testsigma[ti], options);
         for (j=0; j<res->nres; j++) {
 			int ind = res->inds[j];
             if (ind > i) {
                 keepers[ind] = FALSE;
-                // DEBUG
-                /*
-                 double otherxy[2];
-                 starxy_get(vf->field, ind, otherxy);
-                 logverb("Field star %i at %g,%g: is close to field star %i at %g,%g.  dist is %g, sigma is %g\n",
-                 i, sxy[0], sxy[1], ind, otherxy[0], otherxy[1],
-                 sqrt(distsq(sxy, otherxy, 2)), sqrt(nsig2 * sigma2s[i]));
-                 */
+                if (DEBUGVERIFY) {
+					double otherxy[2];
+					starxy_get(vf->field, ind, otherxy);
+					logverb("Field star %i at %g,%g: is close to field star %i at %g,%g.  dist is %g, sigma is %g\n", 
+							i, sxy[0], sxy[1], ind, otherxy[0], otherxy[1],
+							sqrt(distsq(sxy, otherxy, 2)), sqrt(nsig2 * v->testsigma[ti]));
+				}
             }
         }
-        kdtree_free_query(res);
     }
-    return keepers;
-}
-
-
-static double get_sigma2_at_radius(double verify_pix2, double r2, double quadr2) {
-	return verify_pix2 * (1.0 + r2/quadr2);
-}
-
-static double* compute_sigma2s(const verify_field_t* vf,
-							   const double* xy, int NF,
-							   const double* qc, double Q2,
-							   double verify_pix2, bool do_gamma) {
-	double* sigma2s;
-    int i;
-	double R2;
-
-    sigma2s = malloc(NF * sizeof(double));
-	if (!do_gamma) {
-		for (i=0; i<NF; i++)
-            sigma2s[i] = verify_pix2;
-	} else {
-		// Compute individual positional variances for every field
-		// star.
-		for (i=0; i<NF; i++) {
-			if (vf) {
-				double sxy[2];
-				starxy_get(vf->field, i, sxy);
-				// Distance from the quad center of this field star:
-				R2 = distsq(sxy, qc, 2);
-			} else
-				R2 = distsq(xy + 2*i, qc, 2);
-
-            // Variance of a field star at that distance from the quad center:
-            sigma2s[i] = get_sigma2_at_radius(verify_pix2, R2, Q2);
-        }
-	}
-	return sigma2s;
+	kdtree_free_query(res);
+	return keepers;
 }
 
 void verify_get_quad_center(const verify_field_t* vf, const MatchObj* mo, double* centerpix,
@@ -632,25 +704,6 @@ void verify_get_quad_center(const verify_field_t* vf, const MatchObj* mo, double
 	centerpix[1] = 0.5 * (Axy[1] + Bxy[1]);
 	// Find the radius-squared of the quad = distsq(qc, A)
 	*quadr2 = distsq(Axy, centerpix, 2);
-}
-
-double* verify_compute_sigma2s(const verify_field_t* vf, const MatchObj* mo,
-							   double verify_pix2, bool do_gamma) {
-	int NF;
-	double qc[2];
-	double Q2=0;
-	NF = starxy_n(vf->field);
-	if (do_gamma) {
-		verify_get_quad_center(vf, mo, qc, &Q2);
-		debug("Quad radius = %g pixels\n", sqrt(Q2));
-	}
-	return compute_sigma2s(vf, NULL, NF, qc, Q2, verify_pix2, do_gamma);
-}
-
-double* verify_compute_sigma2s_arr(const double* xy, int NF,
-								   const double* qc, double Q2,
-								   double verify_pix2, bool do_gamma) {
-	return compute_sigma2s(NULL, xy, NF, qc, Q2, verify_pix2, do_gamma);
 }
 
 void verify_get_uniformize_scale(int cutnside, double scale, int W, int H, int* cutnw, int* cutnh) {
@@ -732,61 +785,6 @@ void verify_uniformize_field(const double* xy,
 	free(lists);
 }
 
-int verify_get_test_stars(const verify_field_t* vf, MatchObj* mo,
-						  double pix2, bool do_gamma,
-						  bool fake_match,
-						  double** p_sigma2s, int** p_perm) {
-	int* perm;
-    double* sigma2s;
-	bool* keepers = NULL;
-	int i, k, NT;
-
-	sigma2s = verify_compute_sigma2s(vf, mo, pix2, do_gamma);
-
-	// Deduplicate test stars.  This could be done (approximately) in preprocessing.
-	// FIXME -- this should be at the reference deduplication radius, not relative to sigma!
-	// -- this requires the match scale
-	// -- can perhaps distretize dedup to nearest power-of-sqrt(2) pixel radius and cache it.
-	// -- we can compute sigma much later
-	keepers = verify_deduplicate_field_stars(vf, sigma2s, 1.0);
-
-	// Remove test quad stars.  Do this after deduplication so we
-	// don't end up with test stars near the quad stars.
-    NT = starxy_n(vf->field);
-    if (!fake_match) {
-		for (i=0; i<mo->dimquads; i++) {
-            assert(mo->field[i] >= 0);
-            assert(mo->field[i] < NT);
-            keepers[mo->field[i]] = FALSE;
-		}
-	}
-
-	// Uniformize test stars
-	// FIXME - can do this (possibly at several scales) in preprocessing.
-
-	// -first apply the deduplication and removal of test stars by computing an
-	// initial permutation array.
-	perm = malloc(NT * sizeof(int));
-	k = 0;
-	for (i=0; i<NT; i++) {
-		if (!keepers[i])
-			continue;
-		perm[k] = i;
-		k++;
-	}
-	NT = k;
-	free(keepers);
-	if (p_sigma2s)
-		*p_sigma2s = sigma2s;
-	else
-		free(sigma2s);
-	if (p_perm)
-		*p_perm = perm;
-	else
-		free(perm);
-	return NT;
-}
-
 double* verify_uniformize_bin_centers(double fieldW, double fieldH,
 									  int nw, int nh) {
 	int i,j;
@@ -860,13 +858,9 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	int i,j;
 	double* fieldcenter;
 	double fieldr2;
-	int NT = 0;
-	double* testxy = NULL;
-    double* sigma2s = NULL;
 	double effA, K, worst;
 	int besti;
 	int* theta = NULL;
-	int* perm = NULL;
 	sip_t thewcs;
 	int ibad, igood;
 
@@ -1003,29 +997,25 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		verify_apply_ror(v, index_cutnside, mo,
 						 vf, pix2, distractors, fieldW, fieldH,
 						 do_gamma, fake_match,
-						 &testxy, &sigma2s, &NT, &perm, &effA, NULL, NULL);
+						 &effA, NULL, NULL);
 		if (!v->NR) {
 			logerr("After applying ROR, NR = 0!\n");
 			goto bailout;
 		}
 	} else {
-		NT = verify_get_test_stars(vf, mo, pix2, do_gamma, fake_match,
-								   &sigma2s, &perm);
-		testxy = malloc(NT * 2 * sizeof(double));
-		permutation_apply(perm, NT, vf->xy, testxy, 2*sizeof(double));
-		permutation_apply(perm, NT, sigma2s, sigma2s, sizeof(double));
+		verify_get_test_stars(v, vf, mo, pix2, do_gamma, fake_match);
 		effA = fieldW * fieldH;
-		debug("Number of test stars: %i\n", NT);
+		debug("Number of test stars: %i\n", v->NT);
 	}
-	if (!v->NR || !NT)
+	if (!v->NR || !v->NT)
 		goto bailout;
 
 	worst = -HUGE_VAL;
-	K = real_verify_star_lists(v, testxy, sigma2s, NT, effA, distractors,
+	K = real_verify_star_lists(v, effA, distractors,
 							   logbail, logstoplooking, &besti, NULL, &theta, &worst);
 	mo->logodds = K;
 	mo->worstlogodds = worst;
-	mo->nfield = NT;
+	mo->nfield = v->NT;
 	mo->nindex = v->NR;
 
 	if (K >= logaccept) {
@@ -1040,29 +1030,31 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 			else
 				mo->nmatch++;
 		}
-		// steal theta...
-		mo->theta = theta;
-		theta = NULL;
-
-		for (i=0; i<NT; i++) {
-			int ri;
+		for (i=0; i<v->NT; i++) {
+			int ri, ti;
+			if (i == besti)
+				debug("* ");
 			debug("Theta[%i] = %i", i, theta[i]);
 			if (theta[i] < 0) {
 				debug("\n");
 				continue;
 			}
 			ri = theta[i];
-			debug(", testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
-				  testxy[i*2+0], testxy[i*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
+			ti = v->testperm[i];
+			debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
+				  v->refstarid[ri], v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
 		}
+
+		// steal theta...
+		mo->theta = theta;
+		theta = NULL;
 
 		matchobj_compute_derived(mo);
 	}
 
-	free(perm);
 	free(theta);
-	free(testxy);
-    free(sigma2s);
+	free(v->testperm);
+    free(v->testsigma);
 	free(v->refperm);
 	free(v->refxy);
     free(v->refstarid);
@@ -1091,10 +1083,18 @@ double verify_star_lists(const double* refxys, int NR,
 	verify_t v;
 	memset(&v, 0, sizeof(verify_t));
 	v.NRall = v.NR = NR;
+	v.NTall = v.NT = NT;
 	// discard const here...
 	v.refxy = (double*)refxys;
+	v.testxy = (double*)testxys;
+	v.testsigma = (double*)testsigma2s;
+
 	v.refperm = permutation_init(NULL, NR);
-	X = real_verify_star_lists(&v, testxys, testsigma2s, NT, effective_area, distractors,
+	v.testperm = permutation_init(NULL, NT);
+
+	// badguys / tbadguys?
+
+	X = real_verify_star_lists(&v, effective_area, distractors,
 							   logodds_bail, logodds_stoplooking, p_besti, p_all_logodds, p_theta,
 							   p_worstlogodds);
 	free(v.refperm);
