@@ -1015,10 +1015,13 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 							   logbail, logstoplooking, &besti, NULL, &theta, &worst);
 	mo->logodds = K;
 	mo->worstlogodds = worst;
-	mo->nfield = v->NT;
-	mo->nindex = v->NR;
+	// ? NTall so that caller knows how big 'etheta' is.
+	mo->nfield = v->NTall;
+	mo->nindex = v->NRall;
 
 	if (K >= logaccept) {
+		int ri, ti;
+		int* etheta;
 		mo->nmatch = 0;
 		mo->nconflict = 0;
 		mo->ndistractor = 0;
@@ -1031,7 +1034,6 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 				mo->nmatch++;
 		}
 		for (i=0; i<v->NT; i++) {
-			int ri, ti;
 			if (i == besti)
 				debug("* ");
 			debug("Theta[%i] = %i", i, theta[i]);
@@ -1045,9 +1047,31 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 				  v->refstarid[ri], v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
 		}
 
-		// steal theta...
-		mo->theta = theta;
-		theta = NULL;
+		// Compute "extended theta" -- applying "testperm".
+		etheta = malloc(v->NTall * sizeof(int));
+		for (i=0; i<v->NT; i++) {
+			ti = v->testperm[i];
+			etheta[ti] = theta[i];
+		}
+		for (i=v->NT; i<v->NTall; i++) {
+			ti = v->testperm[i];
+			etheta[ti] = THETA_FILTERED;
+		}
+
+		mo->theta = etheta;
+
+		debug("\n");
+		for (i=0; i<v->NTall; i++) {
+			debug("ETheta[%i] = %i", i, etheta[i]);
+			if (etheta[i] < 0) {
+				debug("\n");
+				continue;
+			}
+			ri = etheta[i];
+			ti = i;
+			debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
+				  v->refstarid[ri], v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
+		}
 
 		matchobj_compute_derived(mo);
 	}

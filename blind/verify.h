@@ -95,6 +95,8 @@ void verify_hit(const startree_t* skdt,
 #define THETA_DISTRACTOR -1
 // Conflict
 #define THETA_CONFLICT -2
+// Filtered out
+#define THETA_FILTERED -3
 
 /*
  void verify_apply_ror(double* refxy, int* starids, int* p_NR,
