@@ -110,7 +110,12 @@ struct match_struct {
     double index_jitter;
 
 	// from verify.c: correspondences between index and image stars.
+	// length of this array is "nfield".
 	int* theta;
+	// log-odds that the matches in 'theta' are correct;
+	// this array is parallel to 'theta' so has length "nfield".
+	double* matchodds;
+
 };
 typedef struct match_struct MatchObj;
 

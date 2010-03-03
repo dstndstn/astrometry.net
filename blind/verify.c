@@ -348,7 +348,7 @@ static double real_verify_star_lists(verify_t* v,
 									 double logodds_bail,
 									 double logodds_stoplooking,
 									 int* p_besti,
-									 double** p_all_logodds, int** p_theta,
+									 double** p_logodds, int** p_theta,
 									 double* p_worstlogodds) {
 	int i, j;
 	double worstlogodds;
@@ -397,9 +397,9 @@ static double real_verify_star_lists(verify_t* v,
 	for (i=0; i<v->NR; i++)
 		rprobs[i] = -HUGE_VAL;
 
-	if (p_all_logodds) {
+	if (p_logodds) {
 		all_logodds = calloc(v->NT, sizeof(double));
-		*p_all_logodds = all_logodds;
+		*p_logodds = all_logodds;
 	}
 
 	theta = malloc(v->NT * sizeof(int));
@@ -531,13 +531,10 @@ static double real_verify_star_lists(verify_t* v,
         debug("  Logodds: change %.1f, now %.1f\n", (logfg - logbg), logodds);
 
 		if (all_logodds)
-			all_logodds[i] = logodds;
+			all_logodds[i] = logfg - logbg;
 
         if (logodds < logodds_bail) {
 			debug("  logodds %g less than bailout %g\n", logodds, logodds_bail);
-			if (all_logodds)
-				for (j=i+1; j<v->NT; j++)
-					all_logodds[j] = logodds;
             break;
 		}
 
@@ -861,6 +858,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	double effA, K, worst;
 	int besti;
 	int* theta = NULL;
+	double* allodds = NULL;
 	sip_t thewcs;
 	int ibad, igood;
 
@@ -1012,16 +1010,17 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 
 	worst = -HUGE_VAL;
 	K = real_verify_star_lists(v, effA, distractors,
-							   logbail, logstoplooking, &besti, NULL, &theta, &worst);
+							   logbail, logstoplooking, &besti, &allodds, &theta, &worst);
 	mo->logodds = K;
 	mo->worstlogodds = worst;
-	// ? NTall so that caller knows how big 'etheta' is.
+	// NTall so that caller knows how big 'etheta' is.
 	mo->nfield = v->NTall;
 	mo->nindex = v->NRall;
 
 	if (K >= logaccept) {
 		int ri, ti;
 		int* etheta;
+		double* eodds;
 		mo->nmatch = 0;
 		mo->nconflict = 0;
 		mo->ndistractor = 0;
@@ -1050,13 +1049,20 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 			}
 		}
 		etheta = malloc(v->NTall * sizeof(int));
+		eodds = malloc(v->NTall * sizeof(double));
 		for (i=0; i<v->NT; i++) {
 			ti = v->testperm[i];
 			etheta[ti] = theta[i];
+			// No match -> no weight.
+			if (theta[i] < 0)
+				eodds[ti] = -HUGE_VAL;
+			else
+				eodds[ti] = allodds[i];
 		}
 		for (i=v->NT; i<v->NTall; i++) {
 			ti = v->testperm[i];
 			etheta[ti] = THETA_FILTERED;
+			eodds[ti] = -HUGE_VAL;
 		}
 
 		// Reinsert the matched quad...
@@ -1070,6 +1076,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 					if (v->refstarid[ri] == mo->star[j]) {
 						ti = mo->field[j];
 						etheta[ti] = ri;
+						eodds[ti] = HUGE_VAL;
 						debug("Matched ref index %i (star %i) to test index %i; ref pos=(%.1f, %.1f), test pos=(%.1f, %.1f)\n",
 							  ri, v->refstarid[ri], ti, v->refxy[ri*2+0], v->refxy[ri*2+1], v->testxy[ti*2+0], v->testxy[ti*2+1]);
 						break;
@@ -1078,20 +1085,24 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 			}
 		}
 
+		// Make theta contain the refstarid rather than ri?
+
 		mo->theta = etheta;
+		mo->matchodds = eodds;
 
 		if (DEBUGVERIFY) {
 			debug("\n");
 			for (i=0; i<v->NTall; i++) {
 				debug("ETheta[%i] = %i", i, etheta[i]);
 				if (etheta[i] < 0) {
-					debug("\n");
+					debug(" (w=%g)\n", verify_logodds_to_weight(eodds[i]));
 					continue;
 				}
 				ri = etheta[i];
 				ti = i;
-				debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
-					  v->refstarid[ri], v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
+				debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f), p(fg)/p(bg) = %g, w=%g\n",
+					  v->refstarid[ri], v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1],
+					  exp(eodds[i]), verify_logodds_to_weight(eodds[i]));
 			}
 		}
 
@@ -1099,6 +1110,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	}
 
 	free(theta);
+	free(allodds);
 	free(v->testperm);
     free(v->testsigma);
 	free(v->refperm);
@@ -1113,6 +1125,14 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	free(v->badguys);
 	free(v->refperm);
 	free(v->badguys);
+}
+
+double verify_logodds_to_weight(double lodds) {
+	if (lodds > 40.)
+		return 1.0;
+	if (lodds < -700)
+		return 0.0;
+	return exp(lodds) / (1.0 + exp(lodds));
 }
 
 

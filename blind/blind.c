@@ -704,6 +704,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 
     mo->index_jitter = sp->index->index_jitter;
 
+	// FIXME -- do we really do all this if logodds < to_solve ?
     if (bp->do_tweak || bp->indexrdlsfname || bp->scamp_fname) {
         int nstars;
         double* radec = NULL;

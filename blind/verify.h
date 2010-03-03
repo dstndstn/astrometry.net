@@ -166,4 +166,7 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
  double verify_pix2, bool do_gamma);
  */
 
+// For use with matchobj.h : matchodds
+double verify_logodds_to_weight(double lodds);
+
 #endif
