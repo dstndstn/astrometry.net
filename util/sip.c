@@ -31,8 +31,8 @@ static bool has_distortions(const sip_t* sip) {
 }
 
 void sip_wrap_tan(const tan_t* tan, sip_t* sip) {
-	memset(&sip, 0, sizeof(sip_t));
-	memcpy(&sip->wcstan, tan, sizeof(tan_t));
+	memset(sip, 0, sizeof(sip_t));
+	memcpy(&(sip->wcstan), tan, sizeof(tan_t));
 }
 
 void sip_get_crval(const sip_t* sip, double* ra, double* dec) {

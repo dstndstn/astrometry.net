@@ -1044,6 +1044,18 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		mo->theta = theta;
 		theta = NULL;
 
+		for (i=0; i<NT; i++) {
+			int ri;
+			debug("Theta[%i] = %i", i, theta[i]);
+			if (theta[i] < 0) {
+				debug("\n");
+				continue;
+			}
+			ri = theta[i];
+			debug(", testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
+				  testxy[i*2+0], testxy[i*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
+		}
+
 		matchobj_compute_derived(mo);
 	}
 
