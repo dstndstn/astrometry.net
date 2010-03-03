@@ -861,9 +861,11 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	double* allodds = NULL;
 	sip_t thewcs;
 	int ibad, igood;
-
+	double* refxyz = NULL;
+	int* sweep = NULL;
 	verify_t the_v;
 	verify_t* v = &the_v;
+	int NRimage;
 
 	assert(mo->wcs_valid || sip);
 	assert(isfinite(logaccept));
@@ -890,66 +892,60 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	 verify_get_index_stars(fieldcenter, fieldr2, skdt, sip, &(mo->wcstan),
 	 fieldW, fieldH, NULL, &refxy, &starids, &NR);
 	 */
-	{
-		/*
-		 Gotta be a bit careful with reference stars:
+	/*
+	 Gotta be a bit careful with reference stars:
+	 
+	 We want to be able to return a list of all the reference
+	 stars in the image, but during the verification process we
+	 want to apply some filtering of reference stars.  We
+	 therefore keep an int array ("refperm") of indices into the
+	 arrays of reference star quantities.  There are "NR" good
+	 stars, but "NRall" in total.  Thus operations on all the
+	 stars must go to "NRall" in the original arrays, but
+	 operations on good stars must go to "NR", using "refperm" to
+	 redirect.
 
-		 We want to be able to return a list of all the reference
-		 stars in the image, but during the verification process we
-		 want to apply some filtering of reference stars.  We
-		 therefore keep an int array ("refperm") of indices into the
-		 arrays of reference star quantities.  There are "NR" good
-		 stars, but "NRall" in total.  Thus operations on all the
-		 stars must go to "NRall" in the original arrays, but
-		 operations on good stars must go to "NR", using "refperm" to
-		 redirect.
-
-		 This means that "refperm" should remain a permutation array
-		 (ie, no duplicates), and each value should be less than
-		 "NRall".
-		 */
-		double* refxyz;
-		int* sweep;
-		assert(skdt->sweep);
-		// Find all index stars within the bounding circle of the field.
-		startree_search_for(skdt, fieldcenter, fieldr2, &refxyz, NULL, &v->refstarid, &v->NRall);
-		if (!refxyz) {
-			// no stars in range.
-			goto bailout;
-		}
-		debug("%i reference stars in the bounding circle\n", v->NRall);
-		// Find index stars within the rectangular field.
-		v->refxy = malloc(v->NRall * 2 * sizeof(double));
-		v->refperm = malloc(v->NRall * sizeof(int));
-		igood = 0;
-		//ibad = NRall-1;
-		for (i=0; i<v->NRall; i++) {
-			if (!sip_xyzarr2pixelxy(v->wcs, refxyz+i*3, v->refxy+i*2, v->refxy+i*2 +1) ||
-				!sip_pixel_is_inside_image(v->wcs, v->refxy[i*2], v->refxy[i*2+1])) {
-				// Remember the bad guys!
-				//refperm[ibad] = i;
-				//ibad--;
-				continue;
-			}
-			v->refperm[igood] = i;
-			igood++;
-		}
-		v->NR = igood;
-		free(refxyz);
-
-		// Sort by sweep #.
-		// Each index star has a "sweep number" assigned during index building;
-		// it roughly represents a local brightness ordering.  Use this to sort the
-		// index stars.
-		sweep = malloc(v->NRall * sizeof(int));
-		for (i=0; i<v->NRall; i++)
-			sweep[i] = skdt->sweep[v->refstarid[i]];
-		// Note here that we're passing in an existing permutation array; it
-		// gets re-permuted during this call.
-		permuted_sort(sweep, sizeof(int), compare_ints_asc, v->refperm, v->NR);
-		free(sweep);
-		//debug("%i reference stars in the image\n", NR);
+	 This means that "refperm" should remain a permutation array
+	 (ie, no duplicates), and each value should be less than
+	 "NRall".
+	 */
+	assert(skdt->sweep);
+	// Find all index stars within the bounding circle of the field.
+	startree_search_for(skdt, fieldcenter, fieldr2, &refxyz, NULL, &v->refstarid, &v->NRall);
+	if (!refxyz) {
+		// no stars in range.
+		goto bailout;
 	}
+	debug("%i reference stars in the bounding circle\n", v->NRall);
+	// Find index stars within the rectangular field.
+	v->refxy = malloc(v->NRall * 2 * sizeof(double));
+	v->refperm = malloc(v->NRall * sizeof(int));
+	igood = 0;
+	for (i=0; i<v->NRall; i++) {
+		if (!sip_xyzarr2pixelxy(v->wcs, refxyz+i*3, v->refxy+i*2, v->refxy+i*2 +1) ||
+			!sip_pixel_is_inside_image(v->wcs, v->refxy[i*2], v->refxy[i*2+1])) {
+			continue;
+		}
+		v->refperm[igood] = i;
+		igood++;
+	}
+	v->NR = igood;
+	// We sort of want to forget about stars not within the image...
+	// but we don't want to change NRall...
+	NRimage = v->NR;
+
+	// Sort by sweep #.
+	// Each index star has a "sweep number" assigned during index building;
+	// it roughly represents a local brightness ordering.  Use this to sort the
+	// index stars.
+	sweep = malloc(v->NRall * sizeof(int));
+	for (i=0; i<v->NRall; i++)
+		sweep[i] = skdt->sweep[v->refstarid[i]];
+	// Note here that we're passing in an existing permutation array; it
+	// gets re-permuted during this call.
+	permuted_sort(sweep, sizeof(int), compare_ints_asc, v->refperm, v->NR);
+	free(sweep);
+	sweep = NULL;
 	debug("Found %i reference stars.\n", v->NR);
 
 	// "refstarids" are indices into the star kdtree and could be used to
@@ -1015,7 +1011,8 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	mo->worstlogodds = worst;
 	// NTall so that caller knows how big 'etheta' is.
 	mo->nfield = v->NTall;
-	mo->nindex = v->NRall;
+	// NRimage: only the stars inside the image bounds.
+	mo->nindex = NRimage;
 
 	if (K >= logaccept) {
 		int ri, ti;
@@ -1087,9 +1084,6 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 
 		// Make theta contain the refstarid rather than ri?
 
-		mo->theta = etheta;
-		mo->matchodds = eodds;
-
 		if (DEBUGVERIFY) {
 			debug("\n");
 			for (i=0; i<v->NTall; i++) {
@@ -1100,19 +1094,31 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 				}
 				ri = etheta[i];
 				ti = i;
-				debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f), p(fg)/p(bg) = %g, w=%g\n",
+				debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f), logodds=%g, w=%g\n",
 					  v->refstarid[ri], v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1],
-					  exp(eodds[i]), verify_logodds_to_weight(eodds[i]));
+					  eodds[i], verify_logodds_to_weight(eodds[i]));
 			}
 		}
+
+		mo->theta = etheta;
+		mo->matchodds = eodds;
+		mo->refxyz = refxyz;
+		refxyz = NULL;
+		mo->refxy = v->refxy;
+		v->refxy = NULL;
+		mo->refstarid = v->refstarid;
+		v->refstarid = NULL;
 
 		matchobj_compute_derived(mo);
 	}
 
+ cleanup:
+	free(refxyz);
 	free(theta);
 	free(allodds);
 	free(v->testperm);
     free(v->testsigma);
+    free(v->tbadguys);
 	free(v->refperm);
 	free(v->refxy);
     free(v->refstarid);
@@ -1121,10 +1127,8 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 
  bailout:
 	set_null_mo(mo);
-	free(v->refxy);
-	free(v->badguys);
-	free(v->refperm);
-	free(v->badguys);
+	// uh oh, spaghetti-oh!
+	goto cleanup;
 }
 
 double verify_logodds_to_weight(double lodds) {

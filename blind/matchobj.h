@@ -115,6 +115,11 @@ struct match_struct {
 	// log-odds that the matches in 'theta' are correct;
 	// this array is parallel to 'theta' so has length "nfield".
 	double* matchodds;
+	// add in all the stuff we discover about the reference stars during
+	// verify, or just enough that callers can retrieve it themselves?
+	double* refxyz;
+	double* refxy;
+	int* refstarid;
 
 };
 typedef struct match_struct MatchObj;
