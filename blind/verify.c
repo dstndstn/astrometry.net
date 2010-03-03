@@ -1058,6 +1058,25 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 			etheta[ti] = THETA_FILTERED;
 		}
 
+		// Reinsert the matched quad...
+		if (!fake_match) {
+			for (j=0; j<mo->dimquads; j++) {
+				// the ref star should have been eliminated, so it
+				// should be in the "bad" part of the array, but
+				// search the whole thing anyway.
+				for (i=0; i<v->NRall; i++) {
+					ri = i;
+					if (v->refstarid[ri] == mo->star[j]) {
+						ti = mo->field[j];
+						etheta[ti] = ri;
+						debug("Matched ref index %i (star %i) to test index %i; ref pos=(%.1f, %.1f), test pos=(%.1f, %.1f)\n",
+							  ri, v->refstarid[ri], ti, v->refxy[ri*2+0], v->refxy[ri*2+1], v->testxy[ti*2+0], v->testxy[ti*2+1]);
+						break;
+					}
+				}
+			}
+		}
+
 		mo->theta = etheta;
 
 		debug("\n");
