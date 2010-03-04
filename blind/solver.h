@@ -214,6 +214,8 @@ void solver_free(solver_t*);
  */
 void solver_set_field(solver_t* s, starxy_t* field);
 
+void solver_reset_field_size(solver_t* s);
+
 /**
  Tells the solver to only accept matches within "radius_deg" (in
  degrees) of the given "ra","dec" point (also in degrees).
@@ -221,6 +223,8 @@ void solver_set_field(solver_t* s, starxy_t* field);
  This is, each star comprising the quad must be within than circle.
  */
 void solver_set_radec(solver_t* s, double ra, double dec, double radius_deg);
+
+void solver_clear_radec(solver_t* s);
 
 /**
  Tells the solver the pixel coordinate range of the image to be

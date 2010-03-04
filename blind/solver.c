@@ -61,6 +61,23 @@ void test_try_permutations(int* stars, double* code, int dimquad, solver_t* s);
 #endif
 
 
+/*
+ static MatchObj* matchobj_copy_deep(const MatchObj* mo, MatchObj* dest) {
+ if (!dest)
+ dest = malloc(sizeof(MatchObj));
+ memcpy(dest, mo, sizeof(MatchObj));
+ // various modules add things to a mo...
+ blind_matchobj_deep_copy(mo, dest);
+ verify_matchobj_deep_copy(mo, dest);
+ return dest;
+ }
+ 
+ static void matchobj_free_data(MatchObj* mo) {
+ verify_free_matchobj(mo);
+ blind_free_matchobj(mo);
+ }
+ */
+
 static const int A = 0, B = 1, C = 2, D = 3;
 
 // Number of stars in the "backbone" of the quad: stars A and B.
@@ -343,6 +360,10 @@ static void print_inbox(pquad* pq) {
 static void print_inbox(pquad* pq) {}
 #endif
 
+
+void solver_reset_field_size(solver_t* s) {
+	s->field_minx = s->field_maxx = s->field_miny = s->field_maxy = 0;
+}
 
 static void find_field_boundaries(solver_t* solver) {
 	// If the bounds haven't been set, use the bounding box.
@@ -1052,16 +1073,18 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 
 	mo->nverified = sp->num_verified++;
 
-	if (mo->logodds >= sp->best_logodds)
+	if (mo->logodds >= sp->best_logodds) {
 		sp->best_logodds = mo->logodds;
-
-	if (!sp->have_best_match || (mo->logodds > sp->best_match.logodds)) {
 		logverb("Got a new best match: logodds %g.\n", mo->logodds);
-		// FIXME -- set logodds_toaccept to this so that the mo is valid here?
-		memcpy(&(sp->best_match), mo, sizeof(MatchObj));
-		sp->have_best_match = TRUE;
-		sp->best_index = sp->index;
 	}
+	/* I don't see why we should copy ones that are below the "record" threshold...
+	 if (!sp->have_best_match || (mo->logodds > sp->best_match.logodds)) {
+	 logverb("Got a new best match: logodds %g.\n", mo->logodds);
+	 //matchobj_copy_deep(mo, &sp->best_match);
+	 sp->have_best_match = TRUE;
+	 sp->best_index = sp->index;
+	 }
+	 */
 
 	if (mo->logodds < sp->logratio_record_threshold)
 		return FALSE;
@@ -1102,10 +1125,24 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		 */
 	}
 
+	mo->index = sp->index;
+    mo->index_jitter = sp->index->index_jitter;
+
 	// If the user didn't supply a callback, or if the callback
 	// returns TRUE, consider it solved.
 	solved = (!sp->record_match_callback ||
 			  sp->record_match_callback(mo, sp->userdata));
+
+	if (!sp->have_best_match || (mo->logodds > sp->best_match.logodds)) {
+		/*
+		 if (sp->have_best_match)
+		 matchobj_free_data(&sp->best_match);
+		 matchobj_copy_deep(mo, &sp->best_match);
+		 */
+		memcpy(&sp->best_match, mo, sizeof(MatchObj));
+		sp->have_best_match = TRUE;
+		sp->best_index = sp->index;
+	}
 
 	verify_free_matchobj(mo);
 

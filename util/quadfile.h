@@ -51,6 +51,8 @@ typedef struct quadfile quadfile;
 quadfile* quadfile_open(const char* fname);
 quadfile* quadfile_open_fits(anqfits_t* fits);
 
+char* quadfile_get_filename(const quadfile* qf);
+
 quadfile* quadfile_open_for_writing(const char* quadfname);
 
 quadfile* quadfile_open_in_memory();

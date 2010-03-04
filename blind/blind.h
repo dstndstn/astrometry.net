@@ -174,4 +174,8 @@ int blind_is_run_obsolete(blind_t* bp, solver_t* sp);
 
 void blind_log_run_parameters(blind_t* bp);
 
+void blind_free_matchobj(MatchObj* mo);
+
+void blind_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest);
+
 #endif

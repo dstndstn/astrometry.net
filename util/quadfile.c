@@ -157,6 +157,10 @@ static quadfile* my_open(const char* fn, anqfits_t* fits) {
     return NULL;
 }
 
+char* quadfile_get_filename(const quadfile* qf) {
+	return fitsbin_get_filename(qf->fb);
+}
+
 quadfile* quadfile_open_fits(anqfits_t* fits) {
 	return my_open(NULL, fits);
 }

@@ -25,6 +25,7 @@
 #include "starutil.h"
 #include "sip.h"
 #include "bl.h"
+#include "index.h"
 
 struct match_struct {
     unsigned int quadno;
@@ -112,17 +113,32 @@ struct match_struct {
     // in arcsec.
     double index_jitter;
 
+	index_t* index;
+
 	// from verify.c: correspondences between index and image stars.
 	// length of this array is "nfield".
+	// Element i corresponds to field star 'i'; theta[i] is the reference star 
+	// that matched, as an index in the "refxyz", "refxy", and "refstarid" arrays;
+	// OR one of the (negative) special values THETA_DISTRACTOR, THETA_CONFLICT, THETA_FILTERED.
 	int* theta;
+
 	// log-odds that the matches in 'theta' are correct;
 	// this array is parallel to 'theta' so has length "nfield".
+	// Star that were unmatched (THETA_DISTRACTOR, etc) have -inf;
+	// Stars that are part of the matched quad have +inf.
+	// Normal matches contain log-odds of the match: log(p(fg)/p(bg));
+	// see verify.h : verify_logodds_to_weight(x) to convert to a weight
+	// that is 0 for definitely not-a-match and 1 for definitely a match.
 	double* matchodds;
-	// add in all the stuff we discover about the reference stars during
-	// verify, or just enough that callers can retrieve it themselves?
-	// These arrays have length "nindex".
+
+	// the stuff we discover about the reference stars during verify().
+	// These arrays have length "nindex"; they include all reference
+	// stars that should appear in the image.
+	// refxyz[i*3] -- x,y,z unit sphere position of this star; xyz2radec
 	double* refxyz;
+	// refxy[i*2] -- pixel x,y position (according to the *un-tweaked* WCS)
 	double* refxy;
+	// refstarid[i] -- index in the star kdtree (ie, can be used with startree_get_data_column as 'indices')
 	int* refstarid;
 
 };
@@ -134,8 +150,8 @@ void matchobj_compute_overlap(MatchObj* mo);
 void matchobj_compute_derived(MatchObj* mo);
 
 /*
- int* matchobj_get_matched_image_stars(MatchObj* mo, int* Nstars);
- int* matchobj_get_matched_reference_stars(MatchObj* mo, int* Nstars);
+ MatchObj* matchobj_copy_deep(const MatchObj* mo, MatchObj* dest);
+ void matchobj_free_data(MatchObj* mo);
  */
 
 #endif

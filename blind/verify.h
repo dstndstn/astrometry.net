@@ -171,4 +171,6 @@ double verify_logodds_to_weight(double lodds);
 
 void verify_free_matchobj(MatchObj* mo);
 
+void verify_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest);
+
 #endif

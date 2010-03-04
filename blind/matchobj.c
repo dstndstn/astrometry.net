@@ -22,20 +22,6 @@
 #include "matchobj.h"
 #include "starutil.h"
 
-/*
- int* matchobj_get_matched_image_stars(MatchObj* mo, int* Nstars) {
- int i, N;
- int* rtn;
- N = 0;
- for (i=0; i<mo->nfield; i++)
- if (mo->theta[i] >= 0)
- N++;
- }
- 
- int* matchobj_get_matched_reference_stars(MatchObj* mo, int* Nstars) {
- }
- */
-
 void matchobj_compute_derived(MatchObj* mo) {
 	int mx;
 	int i;

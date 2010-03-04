@@ -1164,6 +1164,34 @@ void verify_free_matchobj(MatchObj* mo) {
 	free(mo->refxy);
 	free(mo->theta);
 	free(mo->matchodds);
+	mo->refxyz = NULL;
+	mo->refstarid = NULL;
+	mo->refxy = NULL;
+	mo->theta = NULL;
+	mo->matchodds = NULL;
+}
+
+void verify_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest) {
+	if (mo->refxyz) {
+		dest->refxyz = malloc(mo->nindex * 3 * sizeof(double));
+		memcpy(dest->refxyz, mo->refxyz, mo->nindex * 3 * sizeof(double));
+	}
+	if (mo->refxy) {
+		dest->refxy = malloc(mo->nindex * 2 * sizeof(double));
+		memcpy(dest->refxy, mo->refxy, mo->nindex * 2 * sizeof(double));
+	}
+	if (mo->refstarid) {
+		dest->refstarid = malloc(mo->nindex * sizeof(int));
+		memcpy(dest->refstarid, mo->refstarid, mo->nindex * sizeof(int));
+	}
+	if (mo->matchodds) {
+		dest->matchodds = malloc(mo->nfield * sizeof(double));
+		memcpy(dest->matchodds, mo->matchodds, mo->nfield * sizeof(double));
+	}
+	if (mo->theta) {
+		dest->theta = malloc(mo->nfield * sizeof(int));
+		memcpy(dest->theta, mo->theta, mo->nfield * sizeof(int));
+	}
 }
 
 double verify_logodds_to_weight(double lodds) {

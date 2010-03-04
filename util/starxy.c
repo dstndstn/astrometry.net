@@ -24,6 +24,19 @@
 #include "starxy.h"
 #include "permutedsort.h"
 
+starxy_t* starxy_subset(starxy_t* full, int N) {
+	starxy_t* sub = starxy_new(N, full->flux ? TRUE:FALSE, full->background?TRUE:FALSE);
+	if (!sub)
+		return sub;
+	starxy_set_x_array(sub, full->x);
+	starxy_set_y_array(sub, full->y);
+	if (full->flux)
+		starxy_set_flux_array(sub, full->flux);
+	if (full->background)
+		starxy_set_bg_array(sub, full->background);
+	return sub;
+}
+
 void starxy_compute_range(starxy_t* xy) {
     int i, N;
     xy->xlo = xy->ylo =  HUGE_VAL;

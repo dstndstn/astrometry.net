@@ -535,7 +535,7 @@ int fitsbin_read(fitsbin_t* fb) {
     return -1;
 }
 
-char* fitsbin_get_filename(fitsbin_t* fb) {
+char* fitsbin_get_filename(const fitsbin_t* fb) {
 	return fb->filename;
 }
 

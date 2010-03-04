@@ -120,7 +120,7 @@ char* index_get_quad_filename(const char* indexname);
 char* index_get_qidx_filename(const char* indexname);
 
 #define INDEX_ONLY_LOAD_METADATA 2
-#define INDEX_ONLY_LOAD_SKDT     4
+//#define INDEX_ONLY_LOAD_SKDT     4
 
 int index_get_quad_dim(const index_t* index);
 
@@ -151,6 +151,14 @@ index_t* index_build_from(codetree* codekd, quadfile* quads, startree_t* starkd)
  *
  */
 index_t* index_load(const char* indexname, int flags, index_t* dest);
+
+/**
+ Close the quad, skdt, and ckdt files; makes it as though you did
+ INDEX_ONLY_LOAD_METADATA.  You can re-open the files with index_reload().
+ */
+void index_unload(index_t* index);
+
+int index_reload(index_t* index);
 
 /**
  Close an index and free associated data structures, *without freeing

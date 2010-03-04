@@ -68,7 +68,6 @@ static int write_solutions(blind_t* bp);
 static void solved_field(blind_t* bp, int fieldnum);
 static int compare_matchobjs(const void* v1, const void* v2);
 static void remove_duplicate_solutions(blind_t* bp);
-static void free_matchobj(MatchObj* mo);
 
 // A tag-along column for index rdls / correspondence file.
 struct tagalong {
@@ -79,6 +78,7 @@ struct tagalong {
 	void* data;
 	// size in bytes of one item.
 	int itemsize;
+	int Ndata;
 	// assigned by rdlist_add_tagalong_column
 	int colnum;
 };
@@ -119,6 +119,7 @@ static bool grab_tagalong_data(startree_t* starkd, MatchObj* mo, blind_t* bp,
 		tag.name = strdup(col);
 		tag.units = strdup(tag.units);
 		tag.itemsize = fits_get_atom_size(tag.type) * tag.arraysize;
+		tag.Ndata = N;
 		bl_append(mo->tagalong, &tag);
 	}
 	return TRUE;
@@ -471,7 +472,7 @@ void blind_run(blind_t* bp) {
 	for (i=0; i<bl_size(bp->solutions); i++) {
 		MatchObj* mo = bl_access(bp->solutions, i);
 		verify_free_matchobj(mo);
-		free_matchobj(mo);
+		blind_free_matchobj(mo);
 	}
 	bl_remove_all(bp->solutions);
 }
@@ -709,8 +710,6 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
     logverb("Pixel scale: %g arcsec/pix.\n", mo->scale);
     logverb("Parity: %s.\n", (mo->parity ? "neg" : "pos"));
 
-    mo->index_jitter = sp->index->index_jitter;
-
 	// Copy "mo" to "mymo".
     ind = bl_insert_sorted(bp->solutions, mo, compare_matchobjs);
     mymo = bl_access(bp->solutions, ind);
@@ -742,8 +741,10 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 		memcpy(mymo->fieldxy, bp->solver.vf->xy, mymo->nfield * 2 * sizeof(double));
 
 		// FIXME -- tweak should use the weights (verify_logodds_to_weight(mymo->matchodds))
-        if (bp->do_tweak)
+        if (bp->do_tweak) {
             mymo->sip = tweak(bp, &(mymo->wcstan), mymo->refradec, mymo->nindex);
+			// FIXME -- recompute mymo->refxy ?
+		}
 
 		// FIXME -- add MAG, MAGERR, and positional errors for SCAMP catalog.
 
@@ -1036,8 +1037,41 @@ static void solved_field(blind_t* bp, int fieldnum) {
         bp->single_field_solved = TRUE;
 }
 
+void blind_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest) {
+	if (!mo || !dest)
+		return;
+	if (mo->sip) {
+		dest->sip = sip_create();
+		memcpy(dest->sip, mo->sip, sizeof(sip_t));
+	}
+	if (mo->refradec) {
+		dest->refradec = malloc(mo->nindex * 2 * sizeof(double));
+		memcpy(dest->refradec, mo->refradec, mo->nindex * 2 * sizeof(double));
+	}
+	if (mo->fieldxy) {
+		dest->fieldxy = malloc(mo->nfield * 2 * sizeof(double));
+		memcpy(dest->fieldxy, mo->fieldxy, mo->nfield * 2 * sizeof(double));
+	}
+	if (mo->tagalong) {
+		int i;
+		dest->tagalong = bl_new(16, sizeof(tagalong_t));
+		for (i=0; i<bl_size(mo->tagalong); i++) {
+			tagalong_t* tag = bl_access(mo->tagalong, i);
+			tagalong_t tagcopy;
+			memcpy(&tagcopy, tag, sizeof(tagalong_t));
+			tagcopy.name = strdup_safe(tag->name);
+			tagcopy.units = strdup_safe(tag->units);
+			if (tag->data) {
+				tagcopy.data = malloc(tag->Ndata * tag->itemsize);
+				memcpy(tagcopy.data, tag->data, tag->Ndata * tag->itemsize);
+			}
+			bl_append(dest->tagalong, &tagcopy);
+		}
+	}
+}
+
 // Free the things I added to the mo.
-static void free_matchobj(MatchObj* mo) {
+void blind_free_matchobj(MatchObj* mo) {
     if (!mo) return;
     if (mo->sip) {
         sip_free(mo->sip);
@@ -1073,7 +1107,8 @@ static void remove_duplicate_solutions(blind_t* bp) {
             if (mo->fieldnum != mo2->fieldnum)
                 break;
             assert(mo2->logodds <= mo->logodds);
-            free_matchobj(mo2);
+            blind_free_matchobj(mo2);
+			verify_free_matchobj(mo2);
             bl_remove_index(bp->solutions, j);
         }
     }

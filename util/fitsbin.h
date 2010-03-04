@@ -170,7 +170,7 @@ void fitsbin_chunk_clean(fitsbin_chunk_t* chunk);
 // clean + init
 void fitsbin_chunk_reset(fitsbin_chunk_t* chunk);
 
-char* fitsbin_get_filename(fitsbin_t* fb);
+char* fitsbin_get_filename(const fitsbin_t* fb);
 
 
 fitsbin_t* fitsbin_open(const char* fn);
