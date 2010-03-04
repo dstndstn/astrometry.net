@@ -16,13 +16,14 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-#ifndef _INDEX_H
-#define _INDEX_H
+#ifndef AN_INDEX_H
+#define AN_INDEX_H
 
 #include "quadfile.h"
 #include "starkd.h"
 #include "codekd.h"
 #include "an-bool.h"
+#include "anqfits.h"
 
 /*
  * These routines handle loading of index files, which can consist of
@@ -44,6 +45,9 @@ struct index_s {
 	codetree* codekd;
 	quadfile* quads;
 	startree_t* starkd;
+
+	// FITS file access
+	anqfits_t* fits;
 
 	// Below here: metadata about the index.
 	char* indexname;
@@ -162,4 +166,4 @@ void index_free(index_t* index);
 int index_get_missing_cut_params(int indexid, int* hpnside, int* nsweep,
 								 double* dedup, int* margin, char** band);
 
-#endif // _INDEX_H
+#endif

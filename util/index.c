@@ -453,9 +453,12 @@ void index_close(index_t* index) {
 		codetree_close(index->codekd);
 	if (index->quads)
 		quadfile_close(index->quads);
+	if (index->fits)
+		anqfits_close(index->fits);
 	index->starkd = NULL;
 	index->codekd = NULL;
 	index->quads = NULL;
+	index->fits = NULL;
 }
 
 void index_free(index_t* index) {

@@ -360,15 +360,17 @@ anqfits_t* anqfits_open(const char* filename) {
 }
 
 void anqfits_close(anqfits_t* qf) {
+	int i, N;
     if (!qf)
         return;
-    free(qf->filename);
-	/*
-	 free(qf->hdr_start);
-	 free(qf->hdr_size);
-	 free(qf->data_start);
-	 free(qf->data_size);
-	 */
+	for (i=0; i<qf->Nexts; i++) {
+		if (qf->exts[i].header)
+			qfits_header_destroy(qf->exts[i].header);
+		if (qf->exts[i].table)
+			qfits_table_close(qf->exts[i].table);
+	}
+	free(qf->exts);
+	free(qf->filename);
     free(qf);
 }
 
