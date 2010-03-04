@@ -333,7 +333,7 @@ void* fitstable_read_column_offset(const fitstable_t* tab,
                                    const char* colname, tfits_type ctype,
                                    int offset, int N);
 
-// Note, you must call this with *pointers* to the data to write.
+// NOTE NOTE NOTE, you must call this with *pointers* to the data to write.
 int fitstable_write_row(fitstable_t* table, ...);
 
 /**

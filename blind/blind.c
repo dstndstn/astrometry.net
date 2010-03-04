@@ -725,9 +725,12 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
     if (bp->do_tweak || bp->indexrdlsfname || bp->scamp_fname || bp->corr_fname) {
 		int i;
 
+		logdebug("Converting %i reference stars from xyz to radec\n", mymo->nindex);
 		mymo->refradec = malloc(mymo->nindex * 2 * sizeof(double));
-		for (i=0; i<mymo->nindex; i++)
+		for (i=0; i<mymo->nindex; i++) {
 			xyzarr2radecdegarr(mymo->refxyz+i*3, mymo->refradec+i*2);
+			logdebug("  %i: radec %.2f,%.2f\n", i, mymo->refradec[i*2], mymo->refradec[i*2+1]);
+		}
 
 		mymo->fieldxy = malloc(mymo->nfield * 2 * sizeof(double));
 		// whew!
@@ -1385,7 +1388,7 @@ static int write_corr_file(blind_t* bp) {
 			fy = mo->fieldxy[2*ti+1];
 			sip_pixelxy2radec(wcs, fx, fy, &fra, &fdec);
 			logdebug("Writing field xy %.1f,%.1f, radec %.2f,%.2f; index xy %.1f,%.1f, radec %.2f,%.2f\n", fx, fy, fra, fdec, rx, ry, rra, rdec);
-			if (fitstable_write_row(tab, fx, fy, fra, fdec, rx, ry, rra, rdec)) {
+			if (fitstable_write_row(tab, &fx, &fy, &fra, &fdec, &rx, &ry, &rra, &rdec)) {
 				ERROR("Failed to write coordinates to correspondences file \"%s\"", bp->corr_fname);
 				return -1;
 			}

@@ -933,13 +933,15 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	// We sort of want to forget about stars not within the image...
 	// but we don't want to change NRall...
 	NRimage = v->NR;
+	// NOTE that at this point, v->refperm elements past NRimage are invalid
+	// (ie, may contain repeats)
 
 	// Sort by sweep #.
 	// Each index star has a "sweep number" assigned during index building;
 	// it roughly represents a local brightness ordering.  Use this to sort the
 	// index stars.
-	sweep = malloc(v->NRall * sizeof(int));
-	for (i=0; i<v->NRall; i++)
+	sweep = malloc(NRimage * sizeof(int));
+	for (i=0; i<NRimage; i++)
 		sweep[i] = skdt->sweep[v->refstarid[i]];
 	// Note here that we're passing in an existing permutation array; it
 	// gets re-permuted during this call.
@@ -1091,7 +1093,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 				// the ref star should have been eliminated, so it
 				// should be in the "bad" part of the array, but
 				// search the whole thing anyway.
-				for (i=0; i<v->NRall; i++) {
+				for (i=0; i<NRimage; i++) {
 					ri = i;
 					if (v->refstarid[ri] == mo->star[j]) {
 						ti = mo->field[j];
