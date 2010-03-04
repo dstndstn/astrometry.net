@@ -940,8 +940,11 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	// Each index star has a "sweep number" assigned during index building;
 	// it roughly represents a local brightness ordering.  Use this to sort the
 	// index stars.
-	sweep = malloc(NRimage * sizeof(int));
-	for (i=0; i<NRimage; i++)
+	// (NOTE that here we do want "sweep" to be size "NRall"; only the
+	// bottom "NRimage" of the "refperm" array will be accessed, so none of
+	// the elements between NRimage and NRall will be touched.)
+	sweep = malloc(NRall * sizeof(int));
+	for (i=0; i<v->NRall; i++)
 		sweep[i] = skdt->sweep[v->refstarid[i]];
 	// Note here that we're passing in an existing permutation array; it
 	// gets re-permuted during this call.
