@@ -303,7 +303,6 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
         }
         if (backend_add_index(backend, path))
             logmsg("Failed to add index \"%s\".\n", path);
-		free(path);
     }
 
     if (auto_index) {

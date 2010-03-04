@@ -133,4 +133,9 @@ void matchobj_compute_overlap(MatchObj* mo);
 // compute all derived fields.
 void matchobj_compute_derived(MatchObj* mo);
 
+/*
+ int* matchobj_get_matched_image_stars(MatchObj* mo, int* Nstars);
+ int* matchobj_get_matched_reference_stars(MatchObj* mo, int* Nstars);
+ */
+
 #endif

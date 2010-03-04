@@ -179,19 +179,6 @@ int matchfile_fix_headers(matchfile* mf) {
     return fitstable_fix_header(mf);
 }
 
-void matchobj_compute_derived(MatchObj* mo) {
-	int mx;
-	int i;
-	mx = 0;
-	for (i=0; i<mo->dimquads; i++)
-		mx = MAX(mx, mo->field[i]);
-	mo->objs_tried = mx+1;
-	if (mo->wcs_valid)
-		mo->scale = tan_pixel_scale(&(mo->wcstan));
-    mo->radius = deg2dist(mo->radius_deg);
-	mo->nbest = mo->nmatch + mo->ndistractor + mo->nconflict;
-}
-
 pl* matchfile_get_matches_for_field(matchfile* mf, int field) {
 	pl* list = pl_new(256);
 	for (;;) {

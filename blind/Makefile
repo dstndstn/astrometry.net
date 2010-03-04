@@ -62,7 +62,7 @@ UTIL_OBJS :=
 
 OTHER_OBJS := usnob.o usnob-fits.o catalog.o \
 	codefile.o verify.o \
-	solver.o matchfile.o solvedclient.o solvedfile.o pnpoly.o \
+	solver.o matchfile.o matchobj.o solvedclient.o solvedfile.o pnpoly.o \
 	blind_wcs.o tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	nomad.o nomad-fits.o \
@@ -94,7 +94,7 @@ BACKEND_SO := libbackend.so
 
 BACKEND_OBJS := \
 		backend.o blindutils.o blind.o solver.o \
-		matchfile.o solvedclient.o solvedfile.o verify.o \
+		matchfile.o matchobj.o solvedclient.o solvedfile.o verify.o \
 		blind_wcs.o tweak.o
 
 PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o plotannotations.o plotgrid.o plotoutline.o
@@ -282,7 +282,7 @@ rdlstohealpix: rdlstohealpix.o \
 xylist2fits: xylist2fits.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-certifiable: certifiable.o matchfile.o solvedfile.o \
+certifiable: certifiable.o matchfile.o matchobj.o solvedfile.o \
 		$(UTILS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 fits-guess-scale: fits-guess-scale-main.o fits-guess-scale.o \
@@ -412,7 +412,7 @@ verify: verify-main.o verify.o verify2.o matchfile.o $(COMMON)/cairoutils.o \
 
 ALL_OBJ += verify-main.o
 
-solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o \
+solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o matchobj.o \
 		image2xy-files.o resort-xylist.o tabsort.o \
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
 		scamp.o \
@@ -426,7 +426,7 @@ augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scal
 
 ALL_OBJ += augment-xylist-main.o
 
-blind: blind-main.o blind.o solver.o matchfile.o \
+blind: blind-main.o blind.o solver.o matchfile.o matchobj.o \
 		solvedclient.o solvedfile.o verify.o \
 		blind_wcs.o tweak.o \
 		$(UTIL_OBJS) \
@@ -440,9 +440,8 @@ tweak: tweak-main.o blind_wcs.o verify.o matchfile.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 
-whynot: whynot.o matchfile.o codefile.o \
-		solvedclient.o solvedfile.o \
-		verify.o blind_wcs.o \
+whynot: whynot.o matchfile.o matchobj.o codefile.o solvedclient.o \
+		solvedfile.o verify.o blind_wcs.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
@@ -452,7 +451,7 @@ quadcenters: quadcenters.o \
 startree2rdls: startree2rdls.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
-agreeable: agreeable.o matchfile.o solvedfile.o solvedclient.o \
+agreeable: agreeable.o matchfile.o matchobj.o solvedfile.o solvedclient.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 rdlsinfo: rdlsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
