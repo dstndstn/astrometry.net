@@ -34,7 +34,7 @@
 #define DEBUGVERIFY 1
 
 #if DEBUGVERIFY
-#define debug(args...) fprintf(stderr, args)
+#define debug(args...) logdebug(stderr, args)
 #else
 #define debug(args...)
 #endif

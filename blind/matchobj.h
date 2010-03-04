@@ -100,12 +100,15 @@ struct match_struct {
 	float timeused;
 
     // stuff used by blind...
+	// tweaked-up WCS.
 	sip_t* sip;
 	/*
 	 double* indexrdls;
 	 int nindexrdls;
 	 */
 	double* refradec;
+	// for correspondence file we need a copy of the field!
+	double* fieldxy;
 
 	bl* tagalong;
 

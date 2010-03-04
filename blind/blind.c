@@ -69,13 +69,15 @@ static int compare_matchobjs(const void* v1, const void* v2);
 static void remove_duplicate_solutions(blind_t* bp);
 static void free_matchobj(MatchObj* mo);
 
-// A tag-along column for index rdls.
+// A tag-along column for index rdls / correspondence file.
 struct tagalong {
 	tfits_type type;
 	int arraysize;
 	char* name;
 	char* units;
 	void* data;
+	// size in bytes of one item.
+	int itemsize;
 	// assigned by rdlist_add_tagalong_column
 	int colnum;
 };
@@ -113,6 +115,7 @@ static bool grab_tagalong_data(startree_t* starkd, MatchObj* mo, blind_t* bp,
 		}
 		tag.name = strdup(col);
 		tag.units = strdup(tag.units);
+		tag.itemsize = fits_get_atom_size(tag.type) * tag.arraysize;
 		bl_append(mo->tagalong, &tag);
 	}
 	return TRUE;
@@ -719,13 +722,16 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 	// comes time to write our output files, so we've got to grab everything
 	// we need now while it's at hand.
 
-	// corr_fname ?
-    if (bp->do_tweak || bp->indexrdlsfname || bp->scamp_fname) {
+    if (bp->do_tweak || bp->indexrdlsfname || bp->scamp_fname || bp->corr_fname) {
 		int i;
 
 		mymo->refradec = malloc(mymo->nindex * 2 * sizeof(double));
 		for (i=0; i<mymo->nindex; i++)
 			xyzarr2radecdegarr(mymo->refxyz+i*3, mymo->refradec+i*2);
+
+		mymo->fieldxy = malloc(mymo->nfield * 2 * sizeof(double));
+		// whew!
+		memcpy(mymo->fieldxy, bp->solver.vf->xy, mymo->nfield * 2 * sizeof(double));
 
 		// FIXME -- tweak should use the weights (verify_logodds_to_weight(mymo->matchodds))
         if (bp->do_tweak)
@@ -1081,8 +1087,344 @@ static void remove_duplicate_solutions(blind_t* bp) {
     }
 }
 
+static int write_match_file(blind_t* bp) {
+	int i;
+	bp->mf = matchfile_open_for_writing(bp->matchfname);
+	if (!bp->mf) {
+		logerr("Failed to open file %s to write match file.\n", bp->matchfname);
+		return -1;
+	}
+	boilerplate_add_fits_headers(bp->mf->header);
+	qfits_header_add(bp->mf->header, "HISTORY", "This file was created by the program \"blind\".", NULL, NULL);
+	qfits_header_add(bp->mf->header, "DATE", qfits_get_datetime_iso8601(), "Date this file was created.", NULL);
+	add_blind_params(bp, bp->mf->header);
+	if (matchfile_write_headers(bp->mf)) {
+		logerr("Failed to write matchfile header.\n");
+		return -1;
+	}
+	for (i=0; i<bl_size(bp->solutions); i++) {
+		MatchObj* mo = bl_access(bp->solutions, i);
+		if (matchfile_write_match(bp->mf, mo)) {
+			logerr("Field %i: error writing a match.\n", mo->fieldnum);
+			return -1;
+		}
+	}
+	if (matchfile_fix_headers(bp->mf) ||
+		matchfile_close(bp->mf)) {
+		logerr("Error closing matchfile.\n");
+		return -1;
+	}
+	bp->mf = NULL;
+	return 0;
+}
+
+static int write_rdls_file(blind_t* bp) {
+	int i;
+	qfits_header* h;
+	bp->indexrdls = rdlist_open_for_writing(bp->indexrdlsfname);
+	if (!bp->indexrdls) {
+		logerr("Failed to open index RDLS file %s for writing.\n",
+			   bp->indexrdlsfname);
+		return -1;
+	}
+	h = rdlist_get_primary_header(bp->indexrdls);
+
+	boilerplate_add_fits_headers(h);
+	fits_add_long_history(h, "This \"indexrdls\" file was created by the program \"blind\"."
+						  "  It contains the RA/DEC of index objects that were found inside a solved field.");
+	qfits_header_add(h, "DATE", qfits_get_datetime_iso8601(), "Date this file was created.", NULL);
+	add_blind_params(bp, h);
+	if (rdlist_write_primary_header(bp->indexrdls)) {
+		logerr("Failed to write index RDLS header.\n");
+		return -1;
+	}
+
+	for (i=0; i<bl_size(bp->solutions); i++) {
+		MatchObj* mo = bl_access(bp->solutions, i);
+		rd_t rd;
+		if (strlen(mo->fieldname)) {
+			qfits_header* hdr = rdlist_get_header(bp->indexrdls);
+			qfits_header_add(hdr, "FIELDID", mo->fieldname, "Name of this field", NULL);
+		}
+		if (mo->tagalong) {
+			int j;
+			for (j=0; j<bl_size(mo->tagalong); j++) {
+				tagalong_t* tag = bl_access(mo->tagalong, i);
+				tag->colnum = rdlist_add_tagalong_column(bp->indexrdls, tag->type, tag->arraysize,
+														 tag->type, tag->name, tag->units);
+			}
+		}
+		if (rdlist_write_header(bp->indexrdls)) {
+			logerr("Failed to write index RDLS field header.\n");
+			return -1;
+		}
+		assert(mo->refradec);
+
+		rd_from_array(&rd, mo->refradec, mo->nindex);
+		if (rdlist_write_field(bp->indexrdls, &rd)) {
+			logerr("Failed to write index RDLS entry.\n");
+			return -1;
+		}
+		rd_free_data(&rd);
+
+		if (mo->tagalong) {
+			int j;
+			for (j=0; j<bl_size(mo->tagalong); j++) {
+				tagalong_t* tag = bl_access(mo->tagalong, j);
+				if (rdlist_write_tagalong_column(bp->indexrdls, tag->colnum,
+												 0, mo->nindex, tag->data, tag->itemsize)) {
+					ERROR("Failed to write tag-along data column %s", tag->name);
+					return -1;
+				}
+			}
+		}
+
+		if (rdlist_fix_header(bp->indexrdls)) {
+			logerr("Failed to fix index RDLS field header.\n");
+			return -1;
+		}
+		rdlist_next_field(bp->indexrdls);
+	}
+
+	if (rdlist_fix_primary_header(bp->indexrdls) ||
+		rdlist_close(bp->indexrdls)) {
+		logerr("Failed to close index RDLS file.\n");
+		return -1;
+	}
+	bp->indexrdls = NULL;
+	return 0;
+}
+
+static int write_wcs_file(blind_t* bp) {
+	int i;
+	for (i=0; i<bl_size(bp->solutions); i++) {
+		char wcs_fn[1024];
+		FILE* fout;
+		qfits_header* hdr;
+		char* tm;
+
+		MatchObj* mo = bl_access(bp->solutions, i);
+		snprintf(wcs_fn, sizeof(wcs_fn), bp->wcs_template, mo->fieldnum);
+		fout = fopen(wcs_fn, "wb");
+		if (!fout) {
+			logerr("Failed to open WCS output file %s: %s\n", wcs_fn, strerror(errno));
+			return -1;
+		}
+		assert(mo->wcs_valid);
+
+		if (mo->sip)
+			hdr = sip_create_header(mo->sip);
+		else
+			hdr = tan_create_header(&(mo->wcstan));
+
+		boilerplate_add_fits_headers(hdr);
+		qfits_header_add(hdr, "HISTORY", "This WCS header was created by the program \"blind\".", NULL, NULL);
+		tm = qfits_get_datetime_iso8601();
+		qfits_header_add(hdr, "DATE", tm, "Date this file was created.", NULL);
+		add_blind_params(bp, hdr);
+		fits_add_long_comment(hdr, "-- properties of the matching quad: --");
+		fits_add_long_comment(hdr, "index id: %i", mo->indexid);
+		fits_add_long_comment(hdr, "index healpix: %i", mo->healpix);
+		fits_add_long_comment(hdr, "index hpnside: %i", mo->hpnside);
+		fits_add_long_comment(hdr, "log odds: %g", mo->logodds);
+		fits_add_long_comment(hdr, "odds: %g", exp(mo->logodds));
+		fits_add_long_comment(hdr, "quadno: %i", mo->quadno);
+		fits_add_long_comment(hdr, "stars: %i,%i,%i,%i", mo->star[0], mo->star[1], mo->star[2], mo->star[3]);
+		fits_add_long_comment(hdr, "field: %i,%i,%i,%i", mo->field[0], mo->field[1], mo->field[2], mo->field[3]);
+		fits_add_long_comment(hdr, "code error: %g", sqrt(mo->code_err));
+		fits_add_long_comment(hdr, "nmatch: %i", mo->nmatch);
+		fits_add_long_comment(hdr, "nconflict: %i", mo->nconflict);
+		fits_add_long_comment(hdr, "nfield: %i", mo->nfield);
+		fits_add_long_comment(hdr, "nindex: %i", mo->nindex);
+		fits_add_long_comment(hdr, "scale: %g arcsec/pix", mo->scale);
+		fits_add_long_comment(hdr, "parity: %i", (int)mo->parity);
+		fits_add_long_comment(hdr, "quads tried: %i", mo->quads_tried);
+		fits_add_long_comment(hdr, "quads matched: %i", mo->quads_matched);
+		fits_add_long_comment(hdr, "quads verified: %i", mo->nverified);
+		fits_add_long_comment(hdr, "objs tried: %i", mo->objs_tried);
+		fits_add_long_comment(hdr, "cpu time: %g", mo->timeused);
+		fits_add_long_comment(hdr, "--");
+
+		if (strlen(mo->fieldname))
+			qfits_header_add(hdr, bp->fieldid_key, mo->fieldname, "Field name (copied from input field)", NULL);
+			
+		if (qfits_header_dump(hdr, fout)) {
+			logerr("Failed to write FITS WCS header.\n");
+			return -1;
+		}
+		fits_pad_file(fout);
+		qfits_header_destroy(hdr);
+		fclose(fout);
+	}
+	return 0;
+}
+
+static int write_scamp_file(blind_t* bp) {
+	int i;
+	scamp_cat_t* scamp;
+	qfits_header* hdr = NULL;
+	MatchObj* mo;
+	tan_t fakewcs;
+
+	// HACK -- just hdr = NULL?
+	hdr = qfits_header_default();
+	fits_header_add_int(hdr, "BITPIX", 0, NULL);
+	fits_header_add_int(hdr, "NAXIS", 2, NULL);
+	fits_header_add_int(hdr, "NAXIS1", 0, NULL);
+	fits_header_add_int(hdr, "NAXIS2", 0, NULL);
+	qfits_header_add(hdr, "EXTEND", "T", "", NULL);
+	memset(&fakewcs, 0, sizeof(tan_t));
+	tan_add_to_header(hdr, &fakewcs);
+
+	scamp = scamp_catalog_open_for_writing(bp->scamp_fname, TRUE);
+	if (!scamp) {
+		logerr("Failed to open SCAMP reference catalog for writing.\n");
+		return -1;
+	}
+	if (scamp_catalog_write_field_header(scamp, hdr)) {
+		logerr("Failed to write SCAMP headers.\n");
+		return -1;
+	}
+	mo = bl_access(bp->solutions, 0);
+	for (i=0; i<mo->nindex; i++) {
+		scamp_ref_t ref;
+		ref.ra  = mo->refradec[2*i + 0];
+		ref.dec = mo->refradec[2*i + 1];
+		ref.err_a = ref.err_b = arcsec2deg(mo->index_jitter);
+		// HACK
+		ref.mag = 10.0;
+		ref.err_mag = 0.1;
+
+		if (scamp_catalog_write_reference(scamp, &ref)) {
+			logerr("Failed to write SCAMP object.\n");
+			return -1;
+		}
+	}
+	if (scamp_catalog_close(scamp)) {
+		logerr("Failed to close SCAMP reference catalog.\n");
+		return -1;
+	}
+	return 0;
+}
+
+static int write_corr_file(blind_t* bp) {
+	int i;
+	fitstable_t* tab;
+	tab = fitstable_open_for_writing(bp->corr_fname);
+	if (!tab) {
+		ERROR("Failed to open correspondences file \"%s\" for writing", bp->corr_fname);
+		return -1;
+	}
+	// FIXME -- add header boilerplate.
+
+	if (fitstable_write_primary_header(tab)) {
+		ERROR("Failed to write primary header for corr file \"%s\"", bp->corr_fname);
+		return -1;
+	}
+
+	for (i=0; i<bl_size(bp->solutions); i++) {
+		MatchObj* mo;
+		sip_t thesip;
+		sip_t* wcs;
+		int j;
+		tfits_type dubl = fitscolumn_double_type();
+
+		mo = bl_access(bp->solutions, i);
+
+		if (mo->sip)
+			wcs = mo->sip;
+		else {
+			sip_wrap_tan(&mo->wcstan, &thesip);
+			wcs = &thesip;
+		}
+
+		fitstable_add_write_column(tab, dubl, "field_x",   "pixels");
+		fitstable_add_write_column(tab, dubl, "field_y",   "pixels");
+		fitstable_add_write_column(tab, dubl, "field_ra",  "degrees");
+		fitstable_add_write_column(tab, dubl, "field_dec", "degrees");
+		fitstable_add_write_column(tab, dubl, "index_x",   "pixels");
+		fitstable_add_write_column(tab, dubl, "index_y",   "pixels");
+		fitstable_add_write_column(tab, dubl, "index_ra",  "degrees");
+		fitstable_add_write_column(tab, dubl, "index_dec", "degrees");
+
+		if (mo->tagalong) {
+			for (j=0; j<bl_size(mo->tagalong); j++) {
+				tagalong_t* tag = bl_access(mo->tagalong, j);
+				fitstable_add_write_column_struct(tab, tag->type, tag->arraysize, 0, tag->type, tag->name, tag->units);
+				tag->colnum = fitstable_ncols(tab)-1;
+			}
+		}
+
+		if (fitstable_write_header(tab)) {
+			ERROR("Failed to write correspondence file header.");
+			return -1;
+		}
+
+		{
+			int rows = 0;
+			for (j=0; j<mo->nfield; j++) {
+				if (mo->theta[j] < 0)
+					continue;
+				rows++;
+			}
+			logverb("Writing %i rows (of %i field and %i index objects) to correspondence file.\n", rows, mo->nfield, mo->nindex);
+		}
+		for (j=0; j<mo->nfield; j++) {
+			double fx,fy,fra,fdec;
+			double rx,ry,rra,rdec;
+			int ti, ri;
+			ri = mo->theta[j];
+			if (ri < 0)
+				continue;
+			ti = j;
+			rra  = mo->refradec[2*ri+0];
+			rdec = mo->refradec[2*ri+1];
+			if (sip_radec2pixelxy(wcs, rra, rdec, &rx, &ry))
+				continue;
+			fx = mo->fieldxy[2*ti+0];
+			fy = mo->fieldxy[2*ti+1];
+			sip_pixelxy2radec(wcs, fx, fy, &fra, &fdec);
+			if (fitstable_write_row(tab, fx, fy, fra, fdec, rx, ry, rra, rdec)) {
+				ERROR("Failed to write coordinates to correspondences file \"%s\"", bp->corr_fname);
+				return -1;
+			}
+		}
+
+		if (mo->tagalong) {
+			for (j=0; j<bl_size(mo->tagalong); j++) {
+				tagalong_t* tag = bl_access(mo->tagalong, j);
+				int row = 0;
+				int k;
+				// Ugh, we write each datum individually...
+				for (k=0; k<mo->nfield; k++) {
+					int ri = mo->theta[k];
+					if (ri < 0)
+						continue;
+					fitstable_write_one_column(tab, tag->colnum, row, 1,
+											   (char*)tag->data + ri*tag->itemsize, 0);
+					row++;
+				}
+			}
+		}
+		
+		if (fitstable_fix_header(tab)) {
+			ERROR("Failed to fix correspondence file header.");
+			return -1;
+		}
+
+		fitstable_next_extension(tab);
+		fitstable_clear_table(tab);
+	}
+
+	if (fitstable_close(tab)) {
+		ERROR("Failed to close correspondence file");
+		return -1;
+	}
+
+	return 0;
+}
+
 static int write_solutions(blind_t* bp) {
-    int i;
 	bool got_solutions = (bl_size(bp->solutions) > 0);
 
 	// If we found no solution, don't write empty output files!
@@ -1090,361 +1432,29 @@ static int write_solutions(blind_t* bp) {
 		return 0;
 
 	if (bp->matchfname) {
-		bp->mf = matchfile_open_for_writing(bp->matchfname);
-		if (!bp->mf) {
-			logerr("Failed to open file %s to write match file.\n", bp->matchfname);
-            return -1;
-		}
-		boilerplate_add_fits_headers(bp->mf->header);
-		qfits_header_add(bp->mf->header, "HISTORY", "This file was created by the program \"blind\".", NULL, NULL);
-		qfits_header_add(bp->mf->header, "DATE", qfits_get_datetime_iso8601(), "Date this file was created.", NULL);
-		add_blind_params(bp, bp->mf->header);
-		if (matchfile_write_headers(bp->mf)) {
-			logerr("Failed to write matchfile header.\n");
-            return -1;
-		}
-
-        for (i=0; i<bl_size(bp->solutions); i++) {
-            MatchObj* mo = bl_access(bp->solutions, i);
-
-            if (matchfile_write_match(bp->mf, mo)) {
-                logerr("Field %i: error writing a match.\n", mo->fieldnum);
-                return -1;
-            }
-        }
-
-		if (matchfile_fix_headers(bp->mf) ||
-			matchfile_close(bp->mf)) {
-			logerr("Error closing matchfile.\n");
-            return -1;
-		}
-        bp->mf = NULL;
+		if (write_match_file(bp))
+			return -1;
 	}
-
 	if (bp->indexrdlsfname) {
-        qfits_header* h;
-		bp->indexrdls = rdlist_open_for_writing(bp->indexrdlsfname);
-		if (!bp->indexrdls) {
-			logerr("Failed to open index RDLS file %s for writing.\n",
-				   bp->indexrdlsfname);
-            return -1;
-		}
-        h = rdlist_get_primary_header(bp->indexrdls);
-
-        boilerplate_add_fits_headers(h);
-        fits_add_long_history(h, "This \"indexrdls\" file was created by the program \"blind\"."
-                              "  It contains the RA/DEC of index objects that were found inside a solved field.");
-        qfits_header_add(h, "DATE", qfits_get_datetime_iso8601(), "Date this file was created.", NULL);
-        add_blind_params(bp, h);
-        if (rdlist_write_primary_header(bp->indexrdls)) {
-            logerr("Failed to write index RDLS header.\n");
-            return -1;
-        }
-
-        for (i=0; i<bl_size(bp->solutions); i++) {
-            MatchObj* mo = bl_access(bp->solutions, i);
-            rd_t rd;
-            if (strlen(mo->fieldname)) {
-                qfits_header* hdr = rdlist_get_header(bp->indexrdls);
-                qfits_header_add(hdr, "FIELDID", mo->fieldname, "Name of this field", NULL);
-            }
-			if (mo->tagalong) {
-				int j;
-				for (j=0; j<bl_size(mo->tagalong); j++) {
-					tagalong_t* tag = bl_access(mo->tagalong, i);
-					tag->colnum = rdlist_add_tagalong_column(bp->indexrdls, tag->type, tag->arraysize,
-															 tag->type, tag->name, tag->units);
-				}
-			}
-            if (rdlist_write_header(bp->indexrdls)) {
-                logerr("Failed to write index RDLS field header.\n");
-                return -1;
-            }
-            assert(mo->refradec);
-
-            // HACK - should instead make mo.indexrdls an rd_t.
-            rd_from_array(&rd, mo->refradec, mo->nindex);
-
-            if (rdlist_write_field(bp->indexrdls, &rd)) {
-                logerr("Failed to write index RDLS entry.\n");
-                return -1;
-            }
-
-			if (mo->tagalong) {
-				int j;
-				for (j=0; j<bl_size(mo->tagalong); j++) {
-					tagalong_t* tag = bl_access(mo->tagalong, i);
-					int sz = fits_get_atom_size(tag->type) * tag->arraysize;
-					if (rdlist_write_tagalong_column(bp->indexrdls, tag->colnum,
-													 0, mo->nindex,
-													 tag->data, sz)) {
-						ERROR("Failed to write tag-along data column %s", tag->name);
-						return -1;
-					}
-				}
-			}
-
-            rd_free_data(&rd);
-
-            if (rdlist_fix_header(bp->indexrdls)) {
-                logerr("Failed to fix index RDLS field header.\n");
-                return -1;
-            }
-			rdlist_next_field(bp->indexrdls);
-        }
-
-		if (rdlist_fix_primary_header(bp->indexrdls) ||
-			rdlist_close(bp->indexrdls)) {
-			logerr("Failed to close index RDLS file.\n");
-            return -1;
-		}
-		bp->indexrdls = NULL;
+		if (write_rdls_file(bp))
+			return -1;
 	}
+
+	// We only want the best solution for each field in the following outputs:
+	remove_duplicate_solutions(bp);
 
     if (bp->wcs_template) {
-        // We want to write only the best WCS for each field.
-        remove_duplicate_solutions(bp);
-
-        for (i=0; i<bl_size(bp->solutions); i++) {
-            char wcs_fn[1024];
-            FILE* fout;
-            qfits_header* hdr;
-            char* tm;
-
-            MatchObj* mo = bl_access(bp->solutions, i);
-            snprintf(wcs_fn, sizeof(wcs_fn), bp->wcs_template, mo->fieldnum);
-            fout = fopen(wcs_fn, "wb");
-            if (!fout) {
-                logerr("Failed to open WCS output file %s: %s\n", wcs_fn, strerror(errno));
-                return -1;
-            }
-            assert(mo->wcs_valid);
-
-            if (mo->sip)
-                hdr = sip_create_header(mo->sip);
-            else
-                hdr = tan_create_header(&(mo->wcstan));
-
-            boilerplate_add_fits_headers(hdr);
-            qfits_header_add(hdr, "HISTORY", "This WCS header was created by the program \"blind\".", NULL, NULL);
-            tm = qfits_get_datetime_iso8601();
-            qfits_header_add(hdr, "DATE", tm, "Date this file was created.", NULL);
-            add_blind_params(bp, hdr);
-            fits_add_long_comment(hdr, "-- properties of the matching quad: --");
-            fits_add_long_comment(hdr, "index id: %i", mo->indexid);
-            fits_add_long_comment(hdr, "index healpix: %i", mo->healpix);
-            fits_add_long_comment(hdr, "index hpnside: %i", mo->hpnside);
-            fits_add_long_comment(hdr, "log odds: %g", mo->logodds);
-            fits_add_long_comment(hdr, "odds: %g", exp(mo->logodds));
-            fits_add_long_comment(hdr, "quadno: %i", mo->quadno);
-            fits_add_long_comment(hdr, "stars: %i,%i,%i,%i", mo->star[0], mo->star[1], mo->star[2], mo->star[3]);
-            fits_add_long_comment(hdr, "field: %i,%i,%i,%i", mo->field[0], mo->field[1], mo->field[2], mo->field[3]);
-            fits_add_long_comment(hdr, "code error: %g", sqrt(mo->code_err));
-            fits_add_long_comment(hdr, "nmatch: %i", mo->nmatch);
-            fits_add_long_comment(hdr, "nconflict: %i", mo->nconflict);
-            fits_add_long_comment(hdr, "nfield: %i", mo->nfield);
-            fits_add_long_comment(hdr, "nindex: %i", mo->nindex);
-            fits_add_long_comment(hdr, "scale: %g arcsec/pix", mo->scale);
-            fits_add_long_comment(hdr, "parity: %i", (int)mo->parity);
-            fits_add_long_comment(hdr, "quads tried: %i", mo->quads_tried);
-            fits_add_long_comment(hdr, "quads matched: %i", mo->quads_matched);
-            fits_add_long_comment(hdr, "quads verified: %i", mo->nverified);
-            fits_add_long_comment(hdr, "objs tried: %i", mo->objs_tried);
-            fits_add_long_comment(hdr, "cpu time: %g", mo->timeused);
-            fits_add_long_comment(hdr, "--");
-
-            if (strlen(mo->fieldname))
-                qfits_header_add(hdr, bp->fieldid_key, mo->fieldname, "Field name (copied from input field)", NULL);
-			
-			if (qfits_header_dump(hdr, fout)) {
-				logerr("Failed to write FITS WCS header.\n");
-				return -1;
-			}
-			fits_pad_file(fout);
-			qfits_header_destroy(hdr);
-			fclose(fout);
-        }
-    }
-
-    // Note that this follows the WCS output, so we've eliminated all but the best solution.
-
+		if (write_wcs_file(bp))
+			return -1;
+	}
     if (bp->scamp_fname) {
-        int i;
-        scamp_cat_t* scamp;
-        qfits_header* hdr = NULL;
-        MatchObj* mo;
-        tan_t fakewcs;
-
-        // HACK -- just hdr = NULL?
-        hdr = qfits_header_default();
-        fits_header_add_int(hdr, "BITPIX", 0, NULL);
-        fits_header_add_int(hdr, "NAXIS", 2, NULL);
-        fits_header_add_int(hdr, "NAXIS1", 0, NULL);
-        fits_header_add_int(hdr, "NAXIS2", 0, NULL);
-        qfits_header_add(hdr, "EXTEND", "T", "", NULL);
-        memset(&fakewcs, 0, sizeof(tan_t));
-        tan_add_to_header(hdr, &fakewcs);
-
-        scamp = scamp_catalog_open_for_writing(bp->scamp_fname, TRUE);
-        if (!scamp) {
-            logerr("Failed to open SCAMP reference catalog for writing.\n");
-            return -1;
-        }
-        if (scamp_catalog_write_field_header(scamp, hdr)) {
-            logerr("Failed to write SCAMP headers.\n");
-            return -1;
-        }
-        mo = bl_access(bp->solutions, 0);
-        for (i=0; i<mo->nindex; i++) {
-            scamp_ref_t ref;
-            ref.ra  = mo->refradec[2*i + 0];
-            ref.dec = mo->refradec[2*i + 1];
-            ref.err_a = ref.err_b = arcsec2deg(mo->index_jitter);
-            // HACK
-            ref.mag = 10.0;
-            ref.err_mag = 0.1;
-
-            if (scamp_catalog_write_reference(scamp, &ref)) {
-                logerr("Failed to write SCAMP object.\n");
-                return -1;
-            }
-        }
-        if (scamp_catalog_close(scamp)) {
-            logerr("Failed to close SCAMP reference catalog.\n");
-            return -1;
-        }
-    }
-
-
-	/*
-    if (bp->corr_fname) {
-        qfits_header* hdr;
-        FILE* fid = fopen(bp->corr_fname, "wb");
-        if (!fid) {
-            logerr("Failed to open file %s to write correspondences.\n", bp->corr_fname);
-            return -1;
-        }
-
-        hdr = qfits_table_prim_header_default();
-        // FIXME boilerplate
-        if (qfits_header_dump(hdr, fid)) {
-            logerr("Failed to write FITS header to correspondence file %s\n", bp->corr_fname);
-            return -1;
-        }
-        qfits_header_destroy(hdr);
-
-        for (i=0; i<bl_size(bp->solutions); i++) {
-            MatchObj* mo;
-            int j;
-            qfits_table* table;
-            int datasize;
-            int ncols, nrows, tablesize;
-            int NC;
-            int col;
-            int corrs;
-
-            mo = bl_access(bp->solutions, i);
-
-			 if (!(mo->corr_field_xy && mo->corr_index_rd)) {
-			 logerr("Match has no list of correspondences.\n");
-			 continue;
-			 }
-
-			 corrs = dl_size(mo->corr_field_xy) / 2;
-
-			 // field ra, dec, x, y
-			 // index ra, dec, x, y
-			 NC = 8;
-
-			 datasize = sizeof(double);
-			 ncols = NC;
-			 nrows = corrs;
-			 tablesize = datasize * nrows * ncols;
-			 table = qfits_table_new("", QFITS_BINTABLE, tablesize, ncols, nrows);
-			 table->tab_w = 0;
-
-			 col = 0;
-			 fits_add_column(table, col, TFITS_BIN_TYPE_D, 1, "degrees", "field_ra");
-			 col++;
-			 fits_add_column(table, col, TFITS_BIN_TYPE_D, 1, "degrees", "field_dec");
-			 col++;
-			 fits_add_column(table, col, TFITS_BIN_TYPE_D, 1, "pixels", "field_x");
-			 col++;
-			 fits_add_column(table, col, TFITS_BIN_TYPE_D, 1, "pixels", "field_y");
-			 col++;
-			 fits_add_column(table, col, TFITS_BIN_TYPE_D, 1, "degrees", "index_ra");
-			 col++;
-			 fits_add_column(table, col, TFITS_BIN_TYPE_D, 1, "degrees", "index_dec");
-			 col++;
-			 fits_add_column(table, col, TFITS_BIN_TYPE_D, 1, "pixels", "index_x");
-			 col++;
-			 fits_add_column(table, col, TFITS_BIN_TYPE_D, 1, "pixels", "index_y");
-			 col++;
-
-			 assert(col == NC);
-
-			 table->tab_w = qfits_compute_table_width(table);
-
-			 hdr = qfits_table_ext_header_default(table);
-			 if (qfits_header_dump(hdr, fid)) {
-			 logerr("Failed to write FITS table header to correspondence file %s\n", bp->corr_fname);
-			 return -1;
-			 }
-			 qfits_header_destroy(hdr);
-			 qfits_table_close(table);
-
-			 //printf("Have %i field xy and %i index radecs.\n", dl_size(mo->corr_field_xy)/2, dl_size(mo->corr_index_rd)/2);
-             
-			 for (j=0; j<corrs; j++) {
-			 double fxy[2];
-			 double fradec[2];
-			 double iradec[2];
-			 double ixy[2];
-			 bool ok;
-
-			 fxy[0] = dl_get(mo->corr_field_xy, j*2 + 0);
-			 fxy[1] = dl_get(mo->corr_field_xy, j*2 + 1);
-
-			 iradec[0] = dl_get(mo->corr_index_rd, j*2 + 0);
-			 iradec[1] = dl_get(mo->corr_index_rd, j*2 + 1);
-                
-			 if (mo->sip)
-			 sip_pixelxy2radec(mo->sip, fxy[0], fxy[1], fradec+0, fradec+1);
-			 else
-			 tan_pixelxy2radec(&(mo->wcstan), fxy[0], fxy[1], fradec+0, fradec+1);
-
-			 if (mo->sip)
-			 ok = sip_radec2pixelxy(mo->sip, iradec[0], iradec[1], ixy+0, ixy+1);
-			 else
-			 ok = tan_radec2pixelxy(&(mo->wcstan), iradec[0], iradec[1], ixy+0, ixy+1);
-			 assert(ok);
-
-			 if (fits_write_data_D(fid, fradec[0]) ||
-			 fits_write_data_D(fid, fradec[1]) ||
-			 fits_write_data_D(fid, fxy[0]) ||
-			 fits_write_data_D(fid, fxy[1]) ||
-			 fits_write_data_D(fid, iradec[0]) ||
-			 fits_write_data_D(fid, iradec[1]) ||
-			 fits_write_data_D(fid, ixy[0]) ||
-			 fits_write_data_D(fid, ixy[1])) {
-			 logerr("Failed to write row %i to correspondence table %s.\n", j, bp->corr_fname);
-			 return -1;
-			 }
-			 //printf("  pixels: (%g, %g) -- (%g, %g)\n", fxy[0], fxy[1], ixy[0], ixy[1]);
-			 //printf("  RA/Dec: (%g, %g) -- (%g, %g)\n", fradec[0], fradec[1], iradec[0], iradec[1]);
-			 }
-
-			 if (fits_pad_file(fid) ||
-			 fclose(fid)) {
-			 logerr("Failed to pad and close correspondence table %s: %s\n", bp->corr_fname, strerror(errno));
-			 return -1;
-			 }
-			 break;
-			 }
-
-	 }
-	 */
-
+		if (write_scamp_file(bp))
+			return -1;
+	}
+	if (bp->corr_fname) {
+		if (write_corr_file(bp))
+			return -1;
+	}
     return 0;
 }
 

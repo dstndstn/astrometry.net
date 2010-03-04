@@ -75,6 +75,7 @@ LOG_TEMPLATE(logmsg);
 LOG_TEMPLATE(logerr);
 LOG_TEMPLATE(logverb);
 LOG_TEMPLATE(debug);
+LOG_TEMPLATE(logdebug);
 
 // log at a particular level.
 void loglevel(enum log_level level, const char* format, ...);
