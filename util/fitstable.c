@@ -580,6 +580,7 @@ static int write_one(fitstable_t* table, const void* struc, va_list* ap) {
 		// skips the required number of bytes.
 		// This allows both structs and normal columns to coexist
 		// (in theory -- is this ever used?)
+		// (yes, by blind.c when writing rdls and correspondence files with tag-along data...)
 
         if (columndata && col->fitstype != col->ctype) {
             int sz = MAX(256, MAX(col->csize, col->fitssize) * col->arraysize);

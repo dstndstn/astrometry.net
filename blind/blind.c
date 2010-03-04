@@ -1379,11 +1379,12 @@ static int write_corr_file(blind_t* bp) {
 			ti = j;
 			rra  = mo->refradec[2*ri+0];
 			rdec = mo->refradec[2*ri+1];
-			if (sip_radec2pixelxy(wcs, rra, rdec, &rx, &ry))
+			if (!sip_radec2pixelxy(wcs, rra, rdec, &rx, &ry))
 				continue;
 			fx = mo->fieldxy[2*ti+0];
 			fy = mo->fieldxy[2*ti+1];
 			sip_pixelxy2radec(wcs, fx, fy, &fra, &fdec);
+			logdebug("Writing field xy %.1f,%.1f, radec %.2f,%.2f; index xy %.1f,%.1f, radec %.2f,%.2f\n", fx, fy, fra, fdec, rx, ry, rra, rdec);
 			if (fitstable_write_row(tab, fx, fy, fra, fdec, rx, ry, rra, rdec)) {
 				ERROR("Failed to write coordinates to correspondences file \"%s\"", bp->corr_fname);
 				return -1;

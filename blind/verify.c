@@ -1079,6 +1079,12 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 			eodds[ti] = -HUGE_VAL;
 		}
 
+		if (DEBUGVERIFY) {
+			for (i=0; i<v->NTall; i++)
+				if (etheta[i] >= 0)
+					assert(etheta[i] < NRimage);
+		}
+
 		// Reinsert the matched quad...
 		if (!fake_match) {
 			for (j=0; j<mo->dimquads; j++) {
@@ -1098,8 +1104,6 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 				}
 			}
 		}
-
-		// Make theta contain the refstarid rather than ri?
 
 		if (DEBUGVERIFY) {
 			debug("\n");
