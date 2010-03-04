@@ -92,6 +92,8 @@ BACKEND_LIB := libbackend.a
 
 BACKEND_SO := libbackend.so
 
+INSTALL_LIB := $(BACKEND_LIB) $(BACKEND_SO)
+
 BACKEND_OBJS := \
 		backend.o blindutils.o blind.o solver.o \
 		matchfile.o matchobj.o solvedclient.o solvedfile.o verify.o \
@@ -131,6 +133,20 @@ IMAGE2XY := image2xy
 INSTALL_EXECS := $(FITS_UTILS) $(PIPELINE) $(PROGS)
 INSTALL_CAIRO_EXECS := $(CAIROEXECS)
 
+INSTALL_H := 2mass-fits.h 2mass.h allquads.h augment-xylist.h axyfile.h \
+	backend.h blind.h blind_wcs.h blindutils.h build-index.h catalog.h \
+	codefile.h codetree.h ctmf.h dimage.h fits-guess-scale.h hpquads.h \
+	image2xy-files.h image2xy.h matchfile.h matchobj.h merge-index.h \
+	new-wcs.h nomad-fits.h nomad.h quad-builder.h quad-utils.h radix.h \
+	resort-xylist.h scamp.h simplexy-common.h simplexy.h solvedclient.h \
+	solvedfile.h solver.h tabsort.h tweak.h uniformize-catalog.h \
+	unpermute-quads.h unpermute-stars.h usnob-fits.h usnob.h verify.h \
+	wcs-rd2xy.h wcs-xy2rd.h
+
+PLOT_INSTALL_H := plotannotations.h plotfill.h plotgrid.h plotimage.h \
+	plotoutline.h plotstuff.h plotxy.h
+
+
 ALL_OBJ := $(UTIL_OBJS) $(KDTREE_OBJS) $(QFITS_OBJ) \
 	$(PIPELINE_MAIN_OBJ) $(PROSPECTUS_MAIN_OBJ) $(FITS_UTILS_MAIN_OBJ) \
 	$(OTHER_OBJS) $(2MASSOBJ) $(SIMPLEXY_OBJ)
@@ -165,6 +181,14 @@ install: $(INSTALL_EXECS)
 	done
 	mkdir -p $(INSTALL_DIR)/etc
 	sed "s+add_path /usr/local/astrometry/+add_path $(INSTALL_DIR)/+" < ../etc/backend.cfg-dist > $(INSTALL_DIR)/etc/backend.cfg
+	@for x in $(INSTALL_H); do \
+		echo cp $$x $(INSTALL_DIR)/include; \
+		cp $$x $(INSTALL_DIR)/include; \
+	done
+	@for x in $(INSTALL_LIB); do \
+		echo cp $$x $(INSTALL_DIR)/lib; \
+		cp $$x $(INSTALL_DIR)/lib; \
+	done
 
 install-extra: $(INSTALL_CAIRO_EXECS)
 	@echo Installing in directory $(INSTALL_DIR)
@@ -172,6 +196,10 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 	@for x in $(INSTALL_CAIRO_EXECS); do \
 		echo cp $$x $(INSTALL_DIR)/bin; \
 		cp $$x $(INSTALL_DIR)/bin; \
+	done
+	@for x in $(PLOT_INSTALL_H); do \
+		echo cp $$x $(INSTALL_DIR)/include; \
+		cp $$x $(INSTALL_DIR)/include; \
 	done
 
 test-solver: test-solver.o solver_test.o blind_wcs.o verify.o matchfile.o \
@@ -493,7 +521,7 @@ $(COMMON)/cairoutils.o:
 onepixel: onepixel.o $(COMMON)/cairoutils.o
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 
-plotquad: plotquad.o matchfile.o $(COMMON)/cairoutils.o \
+plotquad: plotquad.o matchfile.o matchobj.o $(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 

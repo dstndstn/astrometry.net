@@ -82,6 +82,24 @@ ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
 	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o
 
+# Actually there are ANFILES_H mixed in here too....
+ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h \
+	an-thread.h bl-nl.h bl-nl.inc bl.h brightstars.h bt.h cairoutils.h \
+	codekd.h constellations.h dualtree.h dualtree_nearestneighbour.h \
+	dualtree_rangesearch.h errors.h fitsbin.h fitsfile.h fitsioutils.h \
+	fitstable.h gnu-specific-config.h gnu-specific.h gslutils.h hd.h \
+	healpix-utils.h healpix.h index.h intmap.h ioutils.h keywords.h log.h \
+	mathutil.h ngc2000.h ngcic-accurate.h permutedsort.h qidxfile.h \
+	quadfile.h rdlist.h scamp-catalog.h sip-utils.h sip.h sip_qfits.h \
+	starkd.h starutil.h starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
+	xylist.h
+#cfitsutils.h
+#boilerplate.h
+#cutest.h
+#histogram.h
+#histogram2d.h
+#md5.h
+
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
 	tycho2-fits.o
@@ -180,6 +198,8 @@ PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py
 
 PY_INSTALL_DIR := $(INSTALL_DIR)/python/astrometry/util
 BIN_INSTALL_DIR := $(INSTALL_DIR)/bin
+INCLUDE_INSTALL_DIR := $(INSTALL_DIR)/include
+LIB_INSTALL_DIR := $(INSTALL_DIR)/lib
 LINK_DIR := ../python/astrometry/util
 
 install: $(PYTHON_LIBS)
@@ -199,6 +219,14 @@ install: $(PYTHON_LIBS)
 	@for x in $(PROGS); do \
 		echo cp $$x $(BIN_INSTALL_DIR)/$$x; \
 		cp $$x $(BIN_INSTALL_DIR)/$$x; \
+	done
+	@for x in $(ANUTILS_H); do \
+		echo cp $$x $(INCLUDE_INSTALL_DIR)/$$x; \
+		cp $$x $(INCLUDE_INSTALL_DIR)/$$x; \
+	done
+	@for x in $(ANFILES_LIB) $(ANUTILS_LIB); do \
+		echo cp $$x $(LIB_INSTALL_DIR)/$$x; \
+		cp $$x $(LIB_INSTALL_DIR)/$$x; \
 	done
 
 gnu-specific-config.h: gnu-specific-test.c

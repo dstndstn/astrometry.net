@@ -50,6 +50,8 @@ install: report.txt
 	mkdir -p $(INSTALL_DIR)/data
 	mkdir -p $(INSTALL_DIR)/bin
 	mkdir -p $(INSTALL_DIR)/doc
+	mkdir -p $(INSTALL_DIR)/include
+	mkdir -p $(INSTALL_DIR)/lib
 	mkdir -p $(INSTALL_DIR)/examples
 	mkdir -p $(INSTALL_DIR)/python/astrometry
 	mkdir -p $(INSTALL_DIR)/python/pyfits
