@@ -34,7 +34,7 @@
 #define DEBUGVERIFY 1
 
 #if DEBUGVERIFY
-#define debug(args...) logdebug(stderr, args)
+#define debug(args...) logdebug(args)
 #else
 #define debug(args...)
 #endif
@@ -1018,6 +1018,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		int ri, ti;
 		int* etheta;
 		double* eodds;
+		int* invrperm;
 		mo->nmatch = 0;
 		mo->nconflict = 0;
 		mo->ndistractor = 0;
@@ -1047,14 +1048,30 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		}
 		etheta = malloc(v->NTall * sizeof(int));
 		eodds = malloc(v->NTall * sizeof(double));
+
+		// Apply the "refperm" permutation, mostly to cut out the stars that
+		// aren't in the image (we want to have "nindex" = "NRimage" = "NRall").
+		// This requires computing the inverse perm so we can fix theta to match.
+
+		// borrow this storage...
+		invrperm = v->badguys;
+		for (i=0; i<NRimage; i++)
+			invrperm[v->refperm[i]] = i;
+
+		permutation_apply(v->refperm, NRimage, v->refstarid, v->refstarid, sizeof(int));
+		permutation_apply(v->refperm, NRimage, v->refxy, v->refxy, 2*sizeof(double));
+		permutation_apply(v->refperm, NRimage, refxyz, refxyz, 3*sizeof(double));
+
 		for (i=0; i<v->NT; i++) {
 			ti = v->testperm[i];
-			etheta[ti] = theta[i];
-			// No match -> no weight.
-			if (theta[i] < 0)
+			if (theta[i] < 0) {
+				etheta[ti] = theta[i];
+				// No match -> no weight.
 				eodds[ti] = -HUGE_VAL;
-			else
+			} else {
+				etheta[ti] = invrperm[theta[i]];
 				eodds[ti] = allodds[i];
+			}
 		}
 		for (i=v->NT; i<v->NTall; i++) {
 			ti = v->testperm[i];
