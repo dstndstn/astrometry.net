@@ -387,6 +387,15 @@ def ra2hmsstring(ra, separator=' '):
     (h,m,s) = ra2hms(ra)
     ss = int(floor(s))
     ds = int(round((s - ss) * 1000.0))
+    if ds >= 1000.:
+        ss += 1
+        ds -= 1000.
+	if ss >= 60:
+		ss -= 60
+		m += 1
+	if m >= 60:
+		m -= 60
+		h += 1
     return separator.join(['%0.2i' % h, '%0.2i' % m, '%0.2i.%0.3i' % (ss,ds)])
 
 # Dec in degrees

@@ -318,9 +318,9 @@ sl* fitstable_get_fits_column_names(fitstable_t* t, sl* lst) {
 	int i;
 	if (!lst)
 		lst = sl_new(16);
-	for (i=0; i<ncols(t); i++) {
-		fitscol_t* col = getcol(t, i);
-		sl_append(lst, col->colname);
+	for (i=0; i<t->table->nc; i++) {
+		qfits_col* qcol = t->table->col + i;
+		sl_append(lst, qcol->tlabel);
 	}
 	return lst;
 }

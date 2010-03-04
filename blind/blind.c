@@ -97,9 +97,11 @@ static bool grab_tagalong_data(startree_t* starkd, MatchObj* mo, blind_t* bp,
 
 	if (bp->rdls_tagalong_all) {
 		// retrieve all column names.
-		if (!bp->rdls_tagalong)
-			bp->rdls_tagalong = sl_new(16);
-		fitstable_get_fits_column_names(tagalong, bp->rdls_tagalong);
+		//if (!bp->rdls_tagalong)
+		//	bp->rdls_tagalong = sl_new(16);
+		bp->rdls_tagalong = fitstable_get_fits_column_names(tagalong, bp->rdls_tagalong);
+		// MEMLEAK
+		logverb("Found tag-along columns: %s\n", sl_join(bp->rdls_tagalong, ", "));
 	}
 	for (i=0; i<sl_size(bp->rdls_tagalong); i++) {
 		const char* col = sl_get(bp->rdls_tagalong, i);
@@ -1152,7 +1154,7 @@ static int write_rdls_file(blind_t* bp) {
 		if (mo->tagalong) {
 			int j;
 			for (j=0; j<bl_size(mo->tagalong); j++) {
-				tagalong_t* tag = bl_access(mo->tagalong, i);
+				tagalong_t* tag = bl_access(mo->tagalong, j);
 				tag->colnum = rdlist_add_tagalong_column(bp->indexrdls, tag->type, tag->arraysize,
 														 tag->type, tag->name, tag->units);
 			}

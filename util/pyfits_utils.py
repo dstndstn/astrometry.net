@@ -51,7 +51,7 @@ def table_fields(dataorfn, rows=None, hdunum=1):
 	return fields
 
 # ultra-brittle text table parsing.
-def text_table_fields(forfn, text=None):
+def text_table_fields(forfn, text=None, skiplines=0):
 	if text is None:
 		f = None
 		if isinstance(forfn, str):
@@ -64,7 +64,9 @@ def text_table_fields(forfn, text=None):
 		data = text
 	txtrows = data.split('\n')
 
-	# column names are in the first line.
+	txtrows = txtrows[skiplines:]
+
+	# column names are in the first (un-skipped) line.
 	header = txtrows.pop(0)
 	header = header.split()
 	assert(header[0] == '#')

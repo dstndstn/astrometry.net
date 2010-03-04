@@ -680,9 +680,9 @@ static bool* verify_deduplicate_field_stars(verify_t* v, const verify_field_t* v
                 if (DEBUGVERIFY) {
 					double otherxy[2];
 					starxy_get(vf->field, ind, otherxy);
-					logverb("Field star %i at %g,%g: is close to field star %i at %g,%g.  dist is %g, sigma is %g\n", 
-							i, sxy[0], sxy[1], ind, otherxy[0], otherxy[1],
-							sqrt(distsq(sxy, otherxy, 2)), sqrt(nsig2 * v->testsigma[ti]));
+					logdebug("Field star %i at %g,%g: is close to field star %i at %g,%g.  dist is %g, sigma is %g\n", 
+							 i, sxy[0], sxy[1], ind, otherxy[0], otherxy[1],
+							 sqrt(distsq(sxy, otherxy, 2)), sqrt(nsig2 * v->testsigma[ti]));
 				}
             }
         }

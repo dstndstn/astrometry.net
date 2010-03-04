@@ -33,7 +33,7 @@
 #include "log.h"
 #include "starutil.h"
 
-const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MT";
+const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:";
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -51,6 +51,7 @@ static void print_help(char* progname) {
 		   "      [-m <margin>]: add a margin of <margin> healpixels; default 0\n"
 		   "      [-n <sweeps>]    (ie, number of stars per fine healpix grid cell); default 10\n"
 		   "      [-r <dedup-radius>]: deduplication radius in arcseconds; default no deduplication\n"
+		   "      [-j <jitter-arcsec>]: positional error of stars in the reference catalog (in arcsec; default 1)\n"
 		   "\n"
 		   "      [-d <dimquads>] number of stars in a \"quad\" (default 4).\n"
 		   "      [-p <passes>]   number of rounds of quad-building (ie, # quads per healpix cell, default 1)\n"
@@ -87,6 +88,9 @@ int main(int argc, char** argv) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'j':
+			p->jitter = atof(optarg);
+			break;
 		case 'T':
 			p->delete_tempfiles = FALSE;
 			break;
