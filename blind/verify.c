@@ -943,7 +943,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	// (NOTE that here we do want "sweep" to be size "NRall"; only the
 	// bottom "NRimage" of the "refperm" array will be accessed, so none of
 	// the elements between NRimage and NRall will be touched.)
-	sweep = malloc(NRall * sizeof(int));
+	sweep = malloc(v->NRall * sizeof(int));
 	for (i=0; i<v->NRall; i++)
 		sweep[i] = skdt->sweep[v->refstarid[i]];
 	// Note here that we're passing in an existing permutation array; it
