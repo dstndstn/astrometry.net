@@ -100,6 +100,8 @@ void startree_search_for(const startree_t* s, const double* xyzcenter, double ra
         if (starinds)
 			*starinds = NULL;
         *nresults = 0;
+		if (res)
+			kdtree_free_query(res);
         return;
     }
 

@@ -1153,8 +1153,17 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 
  bailout:
 	set_null_mo(mo);
-	// uh oh, spaghetti-oh!
+	// uh oh, spaghetti-code-oh!
 	goto cleanup;
+}
+
+// Free the things we added to this mo.
+void verify_free_matchobj(MatchObj* mo) {
+	free(mo->refxyz);
+	free(mo->refstarid);
+	free(mo->refxy);
+	free(mo->theta);
+	free(mo->matchodds);
 }
 
 double verify_logodds_to_weight(double lodds) {

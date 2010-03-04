@@ -335,8 +335,6 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
     bool singlefile;
 	index_t* allocd = NULL;
 
-	anqfits_t* fits = NULL;
-
 	if (flags & INDEX_ONLY_LOAD_METADATA)
 		logverb("Loading metadata for %s...\n", indexname);
 
@@ -346,8 +344,8 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
     get_filenames(indexname, &quadfname, &codetreefname, &startreefname, &singlefile);
 
 	if (singlefile) {
-		fits = anqfits_open(startreefname);
-		if (!fits) {
+		dest->fits = anqfits_open(startreefname);
+		if (!dest->fits) {
 			ERROR("Failed to open FITS file %s", startreefname);
 			return NULL;
 		}
@@ -358,8 +356,8 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
     gettimeofday(&tv1, NULL);
 
 	//dest->starkd = startree_open(startreefname);
-	if (fits)
-		dest->starkd = startree_open_fits(fits);
+	if (dest->fits)
+		dest->starkd = startree_open_fits(dest->fits);
 	else
 		dest->starkd = startree_open(startreefname);
 
@@ -380,8 +378,8 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 	logverb("Reading quads file %s...\n", quadfname);
     gettimeofday(&tv1, NULL);
 
-	if (fits)
-		dest->quads = quadfile_open_fits(fits);
+	if (dest->fits)
+		dest->quads = quadfile_open_fits(dest->fits);
 	else 
 		dest->quads = quadfile_open(quadfname);
 
@@ -398,8 +396,8 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 	logverb("Reading code KD tree from %s...\n", codetreefname);
     gettimeofday(&tv1, NULL);
 
-	if (fits)
-		dest->codekd = codetree_open_fits(fits);
+	if (dest->fits)
+		dest->codekd = codetree_open_fits(dest->fits);
 	else
 		dest->codekd = codetree_open(codetreefname);
     gettimeofday(&tv2, NULL);

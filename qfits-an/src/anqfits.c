@@ -108,9 +108,6 @@ anqfits_t* anqfits_open(const char* filename) {
 	// initial maximum number of extensions: we grow automatically
 	int off_size = 1024;
 
-    qf = calloc(1, sizeof(anqfits_t));
-    qf->filename = strdup(filename);
-
     /* Stat file to get its size */
     if (stat(filename, &sta)!=0) {
         qdebug(printf("anqfits: cannot stat file %s: %s\n", filename, strerror(errno)););
@@ -203,6 +200,8 @@ anqfits_t* anqfits_open(const char* filename) {
 
     //qf->inode= sta.st_ino;
 
+    qf = calloc(1, sizeof(anqfits_t));
+    qf->filename = strdup(filename);
 	qf->exts = calloc(off_size, sizeof(anqfits_ext_t));
 	assert(qf->exts);
 	if (!qf->exts)
@@ -360,7 +359,7 @@ anqfits_t* anqfits_open(const char* filename) {
 }
 
 void anqfits_close(anqfits_t* qf) {
-	int i, N;
+	int i;
     if (!qf)
         return;
 	for (i=0; i<qf->Nexts; i++) {

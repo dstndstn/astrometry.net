@@ -169,4 +169,6 @@ void verify_get_index_stars(const double* fieldcenter, double fieldr2,
 // For use with matchobj.h : matchodds
 double verify_logodds_to_weight(double lodds);
 
+void verify_free_matchobj(MatchObj* mo);
+
 #endif

@@ -62,14 +62,14 @@
  * this module.
  */
 /** A regular expression matching a floating-point number */
-static char regex_float[] =
+static const char* regex_float =
     "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eEdD][+-]?[0-9]+)?$";
 
 /** A regular expression matching an integer */
-static char regex_int[] = "^[+-]?[0-9]+$";
+static const char* regex_int = "^[+-]?[0-9]+$";
 
 /** A regular expression matching a complex number (int or float) */
-static char regex_cmp[] =
+static const char* regex_cmp =
 "^[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eEdD][+-]?[0-9]+)?[ ]+[+-]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eEdD][+-]?[0-9]+)?$";
 
 /*----------------------------------------------------------------------------*/
@@ -408,7 +408,7 @@ int qfits_is_int(const char * s)
 
     if (s==NULL) return 0;
     if (s[0]==0) return 0;
-    if (regcomp(&re_int, &regex_int[0], REG_EXTENDED|REG_NOSUB)!=0) {
+    if (regcomp(&re_int, regex_int, REG_EXTENDED|REG_NOSUB)!=0) {
         qfits_error("internal error: compiling int rule");
         exit(-1);
     }
@@ -433,7 +433,7 @@ int qfits_is_float(const char * s)
 
     if (s==NULL) return 0;
     if (s[0]==0) return 0;
-    if (regcomp(&re_float, &regex_float[0], REG_EXTENDED|REG_NOSUB)!=0) {
+    if (regcomp(&re_float, regex_float, REG_EXTENDED|REG_NOSUB)!=0) {
         qfits_error("internal error: compiling float rule");
         exit(-1);
     }
@@ -458,7 +458,7 @@ int qfits_is_complex(const char * s)
 
     if (s==NULL) return 0;
     if (s[0]==0) return 0;
-    if (regcomp(&re_cmp, &regex_cmp[0], REG_EXTENDED|REG_NOSUB)!=0) {
+    if (regcomp(&re_cmp, regex_cmp, REG_EXTENDED|REG_NOSUB)!=0) {
         qfits_error("internal error: compiling complex rule");
         exit(-1);
     }

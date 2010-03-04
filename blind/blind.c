@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2008-2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -96,12 +97,12 @@ static bool grab_tagalong_data(startree_t* starkd, MatchObj* mo, blind_t* bp,
 		mo->tagalong = bl_new(16, sizeof(tagalong_t));
 
 	if (bp->rdls_tagalong_all) {
+		char* cols;
 		// retrieve all column names.
-		//if (!bp->rdls_tagalong)
-		//	bp->rdls_tagalong = sl_new(16);
 		bp->rdls_tagalong = fitstable_get_fits_column_names(tagalong, bp->rdls_tagalong);
-		// MEMLEAK
-		logverb("Found tag-along columns: %s\n", sl_join(bp->rdls_tagalong, ", "));
+		cols = sl_join(bp->rdls_tagalong, ", ");
+		logverb("Found tag-along columns: %s\n", cols);
+		free(cols);
 	}
 	for (i=0; i<sl_size(bp->rdls_tagalong); i++) {
 		const char* col = sl_get(bp->rdls_tagalong, i);
@@ -469,6 +470,7 @@ void blind_run(blind_t* bp) {
 
 	for (i=0; i<bl_size(bp->solutions); i++) {
 		MatchObj* mo = bl_access(bp->solutions, i);
+		verify_free_matchobj(mo);
 		free_matchobj(mo);
 	}
 	bl_remove_all(bp->solutions);
@@ -709,6 +711,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 
     mo->index_jitter = sp->index->index_jitter;
 
+	// Copy "mo" to "mymo".
     ind = bl_insert_sorted(bp->solutions, mo, compare_matchobjs);
     mymo = bl_access(bp->solutions, ind);
 
@@ -1033,33 +1036,17 @@ static void solved_field(blind_t* bp, int fieldnum) {
         bp->single_field_solved = TRUE;
 }
 
+// Free the things I added to the mo.
 static void free_matchobj(MatchObj* mo) {
     if (!mo) return;
     if (mo->sip) {
         sip_free(mo->sip);
         mo->sip = NULL;
     }
-	/*
-	 if (mo->corr_field) {
-	 il_free(mo->corr_field);
-	 }
-	 if (mo->corr_index) {
-	 il_free(mo->corr_index);
-	 }
-	 if (mo->corr_index_rd) {
-	 dl_free(mo->corr_index_rd);
-	 }
-	 if (mo->corr_field_xy) {
-	 dl_free(mo->corr_field_xy);
-	 }
-	 if (mo->indexrdls) {
-	 free(mo->indexrdls);
-	 mo->indexrdls = NULL;
-	 mo->nindexrdls = 0;
-	 }
-	 */
 	free(mo->refradec);
+	free(mo->fieldxy);
 	mo->refradec = NULL;
+	mo->fieldxy = NULL;
 
 	if (mo->tagalong) {
 		int i;

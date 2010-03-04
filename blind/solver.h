@@ -258,11 +258,6 @@ void solver_free_field(solver_t* sp);
 void solver_inject_match(solver_t* solver, MatchObj* mo, sip_t* sip);
 void solver_compute_quad_range(const solver_t* solver, const index_t* index, double*, double*);
 
-// During solving, the solver records the indices of image-to-index
-// correspondences.  This function uses those indices to find the actual
-// pixel and RA,Dec positions of the corresponding stars.
-void solver_resolve_correspondences(const solver_t* solver, MatchObj* mo);
-
 /**
  Resets the "numtries", "nummatches", etc counters, as well as
  "quitnow".
