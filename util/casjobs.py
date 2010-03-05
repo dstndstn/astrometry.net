@@ -33,6 +33,8 @@ sdss_cas = { 'base_url': 'http://casjobs.sdss.org/CasJobs/',
 			 'outputbaseurl': 'http://casjobs.sdss.org/CasJobsOutput2/FITS/',
 			 }
 
+# See also magic values in submit_query()...
+
 cas_params = sdss_cas
 
 def get_url(relurl):
@@ -110,7 +112,7 @@ def submit_query(sql, table='', taskname='', dbcontext=None):
 	doc = f.read()
 
 	redirurl = f.geturl()
-	# older CasJobs version redirect to the job details page: just pull the jobid
+	# older CasJobs version redirects to the job details page: just pull the jobid
 	# out of the redirected URL.
 	print 'Redirected to URL', redirurl
 	pat = re.escape(job_details_url().replace('%i','')) +  '([0-9]*)'
@@ -143,6 +145,22 @@ def submit_query(sql, table='', taskname='', dbcontext=None):
 		print doc
 		return None
 	jobid = int(jobid.data)
+	if jobid == -1:
+		# Error: find error message.
+		print 'Failed to submit query.  Looking for error message...'
+		founderr = False
+		msgs = xmldoc.getElementsByTagName('message')
+		for msg in msgs:
+			if msg.hasChildNodes():
+				c = msg.firstChild
+				if c.nodeType == xml.dom.Node.TEXT_NODE:
+					print 'Error message:', c.data
+					founderr = True
+		if not founderr:
+			print 'Error message not found.  Whole response document:'
+			print
+			print doc
+			print
 	return jobid
 
 def login(username, password):
@@ -285,6 +303,16 @@ def get_ready_outputs():
 		fns.append(m.group(2))
 	return (urls, fns)
 
+def setup_cookies():
+	cookie_handler = urllib2.HTTPCookieProcessor()
+	opener = urllib2.build_opener(cookie_handler)
+	# ...and install it globally so it can be used with urlopen.
+	urllib2.install_opener(opener)
+
+def find_new_outputs(durls, dfns, preurls):
+	newurls = [u for u in durls if not u in preurls]
+	newfns =  [f for (f,u) in zip(dfns,durls) if not u in preurls]
+	return (newurls, newfns)
 
 if __name__ == '__main__':
 	args = sys.argv[1:]
@@ -315,10 +343,7 @@ if __name__ == '__main__':
 	if len(args) > 2:
 		cmd = args[2]
 
-	cookie_handler = urllib2.HTTPCookieProcessor()
-	opener = urllib2.build_opener(cookie_handler)
-	# ...and install it globally so it can be used with urlopen.
-	urllib2.install_opener(opener)
+	setup_cookies()
 
 	login(username, password)
 
@@ -386,13 +411,10 @@ if __name__ == '__main__':
 		while True:
 			print 'Waiting for output to appear...'
 			(durls,dfns) = get_ready_outputs()
-			#for u in durls:
-			#	print '  ', u
-			durls = [u for u in durls if not u in preurls]
-			dfns =  [f for (f,u) in zip(dfns,durls) if not u in preurls]
+			(newurls, newfns) = find_new_outputs(durls, dfns, preurls)
 			print 'New outputs available:', dfns
 			for (fn,db) in zip(fns,dbs):
-				for (dfn,durl) in zip(dfns,durls):
+				for (dfn,durl) in zip(newfns,newurls):
 					# the filename will contain the db name.
 					if not db in dfn:
 						continue
