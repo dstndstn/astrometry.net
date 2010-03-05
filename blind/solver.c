@@ -1134,17 +1134,14 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 			  sp->record_match_callback(mo, sp->userdata));
 
 	if (!sp->have_best_match || (mo->logodds > sp->best_match.logodds)) {
-		/*
-		 if (sp->have_best_match)
-		 matchobj_free_data(&sp->best_match);
-		 matchobj_copy_deep(mo, &sp->best_match);
-		 */
+		if (sp->have_best_match)
+			verify_free_matchobj(sp->have_best_match);
 		memcpy(&sp->best_match, mo, sizeof(MatchObj));
 		sp->have_best_match = TRUE;
 		sp->best_index = sp->index;
+	} else {
+		verify_free_matchobj(mo);
 	}
-
-	verify_free_matchobj(mo);
 
 	if (solved) {
 		sp->best_match_solves = TRUE;

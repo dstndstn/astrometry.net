@@ -63,10 +63,12 @@ struct solver_t {
 	double funits_lower;
 	double funits_upper;
 
+	//double logratio_print_threshold;
+	double logratio_record_threshold;
+
 	// Callback; called for each match found whose log-odds ratio is above
 	// "logratio_record_threshold".  The second parameter is "userdata".
 	bool (*record_match_callback)(MatchObj*, void*);
-	double logratio_record_threshold;
 
 	// User data passed to the callbacks
 	void* userdata;
