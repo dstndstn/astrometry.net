@@ -27,9 +27,11 @@ HEADERS := \
 	qfits_convert.h \
 	anqfits.h
 
+INSTALL_DIR ?= ..
+
 install: $(LIB)
-	$(CP) $(LIB) ../lib
-	$(CP) $(HEADERS) ../include
+	$(CP) $(LIB) $(INSTALL_DIR)/lib
+	$(CP) $(HEADERS) $(INSTALL_DIR)/include
 
 OBJS := \
 	anqfits.o \

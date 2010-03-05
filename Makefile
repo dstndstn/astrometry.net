@@ -62,6 +62,7 @@ install: report.txt
 	cp demo/* $(INSTALL_DIR)/examples
 	$(MAKE) -C util  install
 	$(MAKE) -C libkd install
+	$(MAKE) -C qfits-an install
 	$(MAKE) -C blind install
 	@echo
 	@echo The following command may fail if you don\'t have the cairo, netpbm, and

@@ -36,6 +36,8 @@ INTERNALS := \
 KD := kdtree.o kdtree_dim.o kdtree_mem.o
 KD_FITS := kdtree_fits_io.o
 
+INSTALL_H := kdtree.h kdtree_fits_io.h
+
 # These are #included by other source files.
 INTERNAL_SOURCES := kdtree_internal.c kdtree_internal_fits.c
 
@@ -101,6 +103,14 @@ install: $(LIBKD_INSTALL)
 	@for x in $(LIBKD_INSTALL); do \
 		echo cp $$x $(INSTALL_DIR)/bin; \
 		cp $$x $(INSTALL_DIR)/bin; \
+	done
+	@for x in $(INSTALL_H); do \
+		echo cp $$x $(INSTALL_DIR)/include; \
+		cp $$x $(INSTALL_DIR)/include; \
+	done
+	@for x in $(LIBKD); do \
+		echo cp $$x $(INSTALL_DIR)/lib; \
+		cp $$x $(INSTALL_DIR)/lib; \
 	done
 
 ### TESTS are great

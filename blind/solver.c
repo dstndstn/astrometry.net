@@ -1135,7 +1135,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 
 	if (!sp->have_best_match || (mo->logodds > sp->best_match.logodds)) {
 		if (sp->have_best_match)
-			verify_free_matchobj(sp->have_best_match);
+			verify_free_matchobj(&sp->best_match);
 		memcpy(&sp->best_match, mo, sizeof(MatchObj));
 		sp->have_best_match = TRUE;
 		sp->best_index = sp->index;
