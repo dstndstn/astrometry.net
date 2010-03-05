@@ -84,14 +84,14 @@ ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h \
-	an-thread.h bl-nl.h bl-nl.inc bl.h brightstars.h bt.h cairoutils.h \
+	an-thread.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph brightstars.h bt.h cairoutils.h \
 	codekd.h constellations.h dualtree.h dualtree_nearestneighbour.h \
 	dualtree_rangesearch.h errors.h fitsbin.h fitsfile.h fitsioutils.h \
 	fitstable.h gnu-specific-config.h gnu-specific.h gslutils.h hd.h \
 	healpix-utils.h healpix.h index.h intmap.h ioutils.h keywords.h log.h \
 	mathutil.h ngc2000.h ngcic-accurate.h permutedsort.h qidxfile.h \
 	quadfile.h rdlist.h scamp-catalog.h sip-utils.h sip.h sip_qfits.h \
-	starkd.h starutil.h starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
+	starkd.h starutil.h starutil.inc starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
 	xylist.h
 #cfitsutils.h
 #boilerplate.h
