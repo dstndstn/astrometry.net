@@ -1177,6 +1177,10 @@ void solver_cleanup(solver_t* solver) {
 	solver_free_field(solver);
 	pl_free(solver->indexes);
     solver->indexes = NULL;
+	if (solver->have_best_match) {
+		verify_free_matchobj(&solver->best_match);
+		solver->have_best_match = FALSE;
+	}
 }
 
 void solver_free(solver_t* solver) {
