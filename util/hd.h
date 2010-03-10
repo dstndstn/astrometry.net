@@ -29,7 +29,7 @@
 
  wget http://trac.astrometry.net/export/13120/binary/henry-draper/hd.fits
 
- Or the hard way (which involves downloading > 500 MB from Denmark):
+ Or the hard way (which involves downloading > 500 MB of Tycho-2 catalog from Denmark!):
 
  make hd.fits   (in the astrometry.net util/ directory)
 

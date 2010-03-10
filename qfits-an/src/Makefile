@@ -32,6 +32,12 @@ INSTALL_DIR ?= ..
 install: $(LIB)
 	$(CP) $(LIB) $(INSTALL_DIR)/lib
 	$(CP) $(HEADERS) $(INSTALL_DIR)/include
+.PHONY: install
+
+stage: $(LIB) $(HEADERS)
+	$(CP) $(LIB) ../lib
+	$(CP) $(HEADERS) ../include
+.PHONY: stage
 
 OBJS := \
 	anqfits.o \
