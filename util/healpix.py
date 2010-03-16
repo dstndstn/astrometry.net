@@ -20,6 +20,11 @@ if _lib is None:
 	raise IOError('_healpix.so library not found')
 
 
+
+def healpix_nside_for_side_length_arcmin(arcmin):
+	_lib.healpix_nside_for_side_length_arcmin.restype = c_double
+	return _lib.healpix_nside_for_side_length_arcmin(c_double(arcmin))
+
 # returns (base hp, x, y)
 def decompose_xy(hp, nside):
 	finehp = hp % (nside**2)

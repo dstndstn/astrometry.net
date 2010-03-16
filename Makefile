@@ -29,7 +29,8 @@ include $(COMMON)/makefile.qfits
 
 .PHONY: Makefile $(COMMON)/makefile.qfits
 
-all: $(QFITS_LIB)
+all:
+	$(MAKE) -C qfits-an stage
 	$(MAKE) -C util
 	$(MAKE) -C libkd
 	$(MAKE) -C blind

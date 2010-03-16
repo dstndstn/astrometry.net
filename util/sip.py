@@ -181,6 +181,10 @@ class Sip(ctypes.Structure):
 		return '<Sip: ' + str(self.wcstan) + \
 			   ', a_order=%d, b_order=%d, ap_order=%d>' % (self.a_order, self.b_order, self.ap_order)
 
+	# in arcsec/pixel
+	def get_pixel_scale(self):
+		return self.wcstan.get_pixel_scale()
+
 	def get_a_term(self, i, j):
 		return Sip.get_term(self.a, i, j)
 	def get_b_term(self, i, j):
@@ -275,6 +279,20 @@ class Sip(ctypes.Structure):
 				ra, dec,
 				ctypes.pointer(fpx),
 				ctypes.pointer(fpy))
+		return fpx.value, fpy.value
+
+	def xyz2pixelxy(self, x,y,z):
+		'Return px,py of xyz'
+		cx = ctypes.c_double(x)
+		cy = ctypes.c_double(y)
+		cz = ctypes.c_double(z)
+		fpx = ctypes.c_double(0.)
+		fpy = ctypes.c_double(0.)
+		_sip.sip_xyz2pixelxy(
+			ctypes.pointer(self),
+			cx,cy,cz,
+			ctypes.pointer(fpx),
+			ctypes.pointer(fpy))
 		return fpx.value, fpy.value
 
 	def radec_bounds(self, stepsize=50):

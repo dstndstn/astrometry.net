@@ -30,6 +30,14 @@ static bool has_distortions(const sip_t* sip) {
 	return (sip->a_order >= 0);
 }
 
+bool sip_xyz2pixelxy(const sip_t* sip, double x, double y, double z, double *px, double *py) {
+	double xyz[3];
+	xyz[0] = x;
+	xyz[1] = y;
+	xyz[2] = z;
+	return sip_xyzarr2pixelxy(sip, xyz, px, py);
+}
+
 void sip_wrap_tan(const tan_t* tan, sip_t* sip) {
 	memset(sip, 0, sizeof(sip_t));
 	memcpy(&(sip->wcstan), tan, sizeof(tan_t));

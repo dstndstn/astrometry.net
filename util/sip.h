@@ -154,6 +154,9 @@ bool sip_radec2pixelxy_check(const sip_t* sip, double ra, double dec, double *px
 WarnUnusedResult
 bool sip_xyzarr2pixelxy(const sip_t* sip, const double* xyz, double *px, double *py);
 
+WarnUnusedResult
+bool sip_xyz2pixelxy(const sip_t* sip, double x, double y, double z, double *px, double *py);
+
 double tan_det_cd(const tan_t* tan);
 double sip_det_cd(const sip_t* sip);
 // returns pixel scale in arcseconds/pixel (NOT arcsec^2)

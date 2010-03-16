@@ -43,6 +43,7 @@ endif
 
 include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.jpeg
+include $(COMMON)/makefile.png
 include $(COMMON)/makefile.netpbm
 include $(COMMON)/makefile.gsl
 
@@ -299,6 +300,9 @@ suppl_1.dat:
 build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
 		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += build-hd-tree.o
+
+hpimage: hpimage.o cairoutils.o
+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $^ $(ANUTILS_LIB) $(QFITS_LIB) $(JPEG_LIB) $(PNG_LIB) $(NETPBM_LIB) $(CAIRO_LIB)
 
 ### TESTS
 
