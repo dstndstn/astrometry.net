@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 #include "dimage.h"
 #include "permutedsort.h"
@@ -67,40 +68,75 @@ int dpeaks(float *image,
 	} else {
 		for (j = 0;j < ny;j++)
 			for (i = 0;i < nx;i++)
-				smooth[i + j*nx] = image[i + j * nx];
+				smooth[i + j*nx] = image[i + j*nx];
 	}
 
-	/* 2. find peaks */
+	/* 2. find peaks (highest in the 3x3 neighbourhood) */
 	peaks = (int *) malloc(sizeof(int) * nx * ny);
 	*npeaks = 0;
-	for (j = 1;j < ny - 1;j++) {
+	for (j = 1; j < ny - 1; j++) {
 		jst = j - 1;
 		jnd = j + 1;
-		for (i = 1;i < nx - 1;i++) {
+		for (i = 1; i < nx - 1; i++) {
+			if (smooth[i + j*nx] < minpeak)
+				continue;
 			ist = i - 1;
 			ind = i + 1;
-			if (smooth[i + j*nx] > minpeak) {
-				highest = 1;
-				for (ip = ist;ip <= ind;ip++)
-					for (jp = jst;jp <= jnd;jp++)
-						if (smooth[ip + jp*nx] > smooth[i + j*nx])
-							highest = 0;
-				if (highest) {
-					peaks[*npeaks] = i + j * nx;
-					(*npeaks)++;
-				}
+			highest = 1;
+			for (ip = ist; ip <= ind; ip++)
+				for (jp = jst; jp <= jnd; jp++)
+					if (smooth[ip + jp*nx] > smooth[i + j*nx])
+						highest = 0;
+			if (highest) {
+				peaks[*npeaks] = i + j * nx;
+				(*npeaks)++;
 			}
 		}
 	}
 
+	// DEBUG
+	for (i=0; i<(*npeaks); i++) {
+		float pk = smooth[peaks[i]];
+		assert((peaks[i] % nx) >= 1);
+		assert((peaks[i] % nx) <= (nx-2));
+		assert((peaks[i] / nx) >= 1);
+		assert((peaks[i] / nx) <= (ny-2));
+		assert(pk >= minpeak);
+		assert(pk >= smooth[peaks[i]-1]);
+		assert(pk >= smooth[peaks[i]+1]);
+		assert(pk >= smooth[peaks[i]-nx]);
+		assert(pk >= smooth[peaks[i]+nx]);
+		assert(pk >= smooth[peaks[i]+nx+1]);
+		assert(pk >= smooth[peaks[i]+nx-1]);
+		assert(pk >= smooth[peaks[i]-nx+1]);
+		assert(pk >= smooth[peaks[i]-nx-1]);
+	}
+
 	/* 2. sort peaks */
-	indx = (int *) malloc(sizeof(int) * (*npeaks));
-	for (i=0; i<(*npeaks); i++)
-		indx[i] = peaks[i];
-
-	FREEVEC(peaks);
-
+	indx = realloc(peaks, sizeof(int) * (*npeaks));
+	peaks = NULL;
     permuted_sort(smooth, sizeof(float), compare_floats_desc, indx, *npeaks);
+
+	// DEBUG
+	for (i=0; i<(*npeaks); i++) {
+		float pk = smooth[peaks[i]];
+		assert((peaks[i] % nx) >= 1);
+		assert((peaks[i] % nx) <= (nx-2));
+		assert((peaks[i] / nx) >= 1);
+		assert((peaks[i] / nx) <= (ny-2));
+		assert(pk >= minpeak);
+		assert(pk >= smooth[peaks[i]-1]);
+		assert(pk >= smooth[peaks[i]+1]);
+		assert(pk >= smooth[peaks[i]-nx]);
+		assert(pk >= smooth[peaks[i]+nx]);
+		assert(pk >= smooth[peaks[i]+nx+1]);
+		assert(pk >= smooth[peaks[i]+nx-1]);
+		assert(pk >= smooth[peaks[i]-nx+1]);
+		assert(pk >= smooth[peaks[i]-nx-1]);
+	}
+	for (i=1; i<(*npeaks); i++) {
+		assert(smooth[peaks[i]] >= smooth[peaks[i-1]]);
+	}
 
 	if ((*npeaks) > maxnpeaks)
 		*npeaks = maxnpeaks;
@@ -111,8 +147,16 @@ int dpeaks(float *image,
 		fullxcen[i] = indx[i] % nx;
 		fullycen[i] = indx[i] / nx;
 	}
-
 	FREEVEC(indx);
+
+	// DEBUG
+	for (i = 0;i < (*npeaks);i++) {
+		assert(fullxcen[i] >= 1);
+		assert(fullxcen[i] <= nx-2);
+		assert(fullycen[i] >= 1);
+		assert(fullycen[i] <= ny-2);
+	}
+
 
 	/* 3. trim close peaks and joined peaks */
 	mask = (int *) malloc(sizeof(int) * nx * ny);
@@ -149,13 +193,16 @@ int dpeaks(float *image,
 		}
 	}
 
+	// Grab just the keepers.
 	tmpnpeaks = 0;
-	for (i = 0;i < (*npeaks);i++) {
-		if (keep[i] && tmpnpeaks < maxnpeaks) {
-			xcen[tmpnpeaks] = fullxcen[i];
-			ycen[tmpnpeaks] = fullycen[i];
-			tmpnpeaks++;
-		}
+	for (i=0; i < (*npeaks); i++) {
+		if (!keep[i])
+			continue;
+		xcen[tmpnpeaks] = fullxcen[i];
+		ycen[tmpnpeaks] = fullycen[i];
+		tmpnpeaks++;
+		if (tmpnpeaks >= maxnpeaks)
+			break;
 	}
 	(*npeaks) = tmpnpeaks;
 
