@@ -30,11 +30,13 @@ include $(COMMON)/makefile.qfits
 .PHONY: Makefile $(COMMON)/makefile.qfits
 
 all:
-	$(MAKE) -C qfits-an stage
+	$(MAKE) remake-qfits
 	$(MAKE) -C util
 	$(MAKE) -C libkd
 	$(MAKE) -C blind
 .PHONY: all
+
+	#$(MAKE) -C qfits-an stage 
 
 # Targets that require extra libraries
 extra:
