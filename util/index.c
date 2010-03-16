@@ -413,10 +413,10 @@ int index_reload(index_t* index) {
 		else {
 			logverb("Reading quads file %s...\n", quadfname);
 			index->quads = quadfile_open(quadfname);
-			if (!index->quads) {
-				ERROR("Failed to read quads file from %s", quadfname);
-				goto bailout;
-			}
+		}
+		if (!index->quads) {
+			ERROR("Failed to read quads from %s", quadfname);
+			goto bailout;
 		}
 	}
 	free(quadfname);
