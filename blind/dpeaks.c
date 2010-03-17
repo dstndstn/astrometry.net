@@ -135,7 +135,7 @@ int dpeaks(float *image,
 		assert(pk >= smooth[indx[i]-nx-1]);
 	}
 	for (i=1; i<(*npeaks); i++) {
-		assert(smooth[indx[i]] >= smooth[indx[i-1]]);
+		assert(smooth[indx[i-1]] >= smooth[indx[i]]);
 	}
 
 	if ((*npeaks) > maxnpeaks)
