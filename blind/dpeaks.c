@@ -119,23 +119,23 @@ int dpeaks(float *image,
 
 	// DEBUG
 	for (i=0; i<(*npeaks); i++) {
-		float pk = smooth[peaks[i]];
-		assert((peaks[i] % nx) >= 1);
-		assert((peaks[i] % nx) <= (nx-2));
-		assert((peaks[i] / nx) >= 1);
-		assert((peaks[i] / nx) <= (ny-2));
+		float pk = smooth[indx[i]];
+		assert((indx[i] % nx) >= 1);
+		assert((indx[i] % nx) <= (nx-2));
+		assert((indx[i] / nx) >= 1);
+		assert((indx[i] / nx) <= (ny-2));
 		assert(pk >= minpeak);
-		assert(pk >= smooth[peaks[i]-1]);
-		assert(pk >= smooth[peaks[i]+1]);
-		assert(pk >= smooth[peaks[i]-nx]);
-		assert(pk >= smooth[peaks[i]+nx]);
-		assert(pk >= smooth[peaks[i]+nx+1]);
-		assert(pk >= smooth[peaks[i]+nx-1]);
-		assert(pk >= smooth[peaks[i]-nx+1]);
-		assert(pk >= smooth[peaks[i]-nx-1]);
+		assert(pk >= smooth[indx[i]-1]);
+		assert(pk >= smooth[indx[i]+1]);
+		assert(pk >= smooth[indx[i]-nx]);
+		assert(pk >= smooth[indx[i]+nx]);
+		assert(pk >= smooth[indx[i]+nx+1]);
+		assert(pk >= smooth[indx[i]+nx-1]);
+		assert(pk >= smooth[indx[i]-nx+1]);
+		assert(pk >= smooth[indx[i]-nx-1]);
 	}
 	for (i=1; i<(*npeaks); i++) {
-		assert(smooth[peaks[i]] >= smooth[peaks[i-1]]);
+		assert(smooth[indx[i]] >= smooth[indx[i-1]]);
 	}
 
 	if ((*npeaks) > maxnpeaks)
