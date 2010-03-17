@@ -1059,7 +1059,8 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		// This requires computing the inverse perm so we can fix theta to match.
 
 		// borrow this storage...
-		invrperm = v->badguys;
+		//invrperm = v->badguys;
+		invrperm = malloc(v->NRall * sizeof(int));
 		for (i=0; i<NRimage; i++)
 			invrperm[v->refperm[i]] = i;
 
@@ -1078,6 +1079,9 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 				eodds[ti] = allodds[i];
 			}
 		}
+
+		free(invrperm);
+
 		for (i=v->NT; i<v->NTall; i++) {
 			ti = v->testperm[i];
 			etheta[ti] = THETA_FILTERED;
