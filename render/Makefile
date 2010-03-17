@@ -94,7 +94,7 @@ MISC_OBJS := merctree.o pnmutils.o
 
 tilerender: $(TILERENDER_OBJS) \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) \
-		$(COMMON)/cairoutils.o $(BLIND_DIR)/matchfile.o
+		$(COMMON)/cairoutils.o $(BLIND_DIR)/matchfile.o $(BLIND_DIR)/matchobj.o
 	$(MAKE) -C $(COMMON) cairoutils.o
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) $(NETPBM_LIB) $(JPEG_LIB) $(PNG_LIB) -lz
 
