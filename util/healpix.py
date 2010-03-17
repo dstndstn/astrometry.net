@@ -19,7 +19,25 @@ if _lib is None:
 if _lib is None:
 	raise IOError('_healpix.so library not found')
 
+def il_to_list(il):
+	_lib.il_size.argtypes = [c_void_p]
+	_lib.il_size.restype = c_int
+	_lib.il_get.argtypes = [c_void_p, c_int]
+	_lib.il_get.restype = c_int
+	N = _lib.il_size(il)
+	lst = []
+	for i in range(N):
+		x = _lib.il_get(il, c_int(i))
+		lst.append(int(x))
+	return lst
 
+def healpix_rangesearch(ra, dec, radius, nside):
+	_lib.healpix_rangesearch_radec.restype = c_void_p
+	hplist = _lib.healpix_rangesearch_radec(c_double(ra), c_double(dec), c_double(radius), c_int(nside), c_void_p(None))
+	lst = il_to_list(hplist)
+	_lib.il_free.argtypes = [c_void_p]
+	_lib.il_free(hplist)
+	return lst
 
 def healpix_nside_for_side_length_arcmin(arcmin):
 	_lib.healpix_nside_for_side_length_arcmin.restype = c_double

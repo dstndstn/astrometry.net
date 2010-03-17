@@ -78,7 +78,7 @@ il* healpix_region_search(int seed, il* seeds, int Nside,
 }
 
 
-il* healpix_approx_rangesearch(double* xyz, double radius, int Nside, il* hps) {
+static il* hp_rangesearch(const double* xyz, double radius, int Nside, il* hps, bool approx) {
 	int hp;
 	double hprad = arcmin2dist(healpix_side_length_arcmin(Nside)) * sqrt(2);
 	il* frontier = il_new(256);
@@ -95,6 +95,7 @@ il* healpix_approx_rangesearch(double* xyz, double radius, int Nside, il* hps) {
 		hp = il_pop(frontier);
 		nn = healpix_get_neighbours(hp, neighbours, Nside);
 		for (i=0; i<nn; i++) {
+			bool tst;
 			double nxyz[3];
 			if (il_contains(frontier, neighbours[i]))
 				continue;
@@ -102,8 +103,13 @@ il* healpix_approx_rangesearch(double* xyz, double radius, int Nside, il* hps) {
 				continue;
 			if (il_contains(hps, neighbours[i]))
 				continue;
-			healpix_to_xyzarr(neighbours[i], Nside, 0.5, 0.5, nxyz);
-			if (sqrt(distsq(xyz, nxyz, 3)) - hprad < radius) {
+			if (approx) {
+				healpix_to_xyzarr(neighbours[i], Nside, 0.5, 0.5, nxyz);
+				tst = (sqrt(distsq(xyz, nxyz, 3)) - hprad <= radius);
+			} else {
+				tst = (healpix_distance_to_xyz(neighbours[i], Nside, xyz, NULL) <= radius);
+			}
+			if (tst) {
 				// in range!
 				il_append(frontier, neighbours[i]);
 				il_append(hps, neighbours[i]);
@@ -116,4 +122,24 @@ il* healpix_approx_rangesearch(double* xyz, double radius, int Nside, il* hps) {
 	il_free(frontier);
 
 	return hps;
+}
+
+il* healpix_rangesearch_xyz_approx(const double* xyz, double radius, int Nside, il* hps) {
+	return hp_rangesearch(xyz, radius, Nside, hps, TRUE);
+}
+
+il* healpix_rangesearch_xyz(const double* xyz, double radius, int Nside, il* hps) {
+	return hp_rangesearch(xyz, radius, Nside, hps, FALSE);
+}
+
+il* healpix_rangesearch_radec_approx(double ra, double dec, double radius, int Nside, il* hps) {
+	double xyz[3];
+	radecdeg2xyzarr(ra, dec, xyz);
+	return hp_rangesearch(xyz, radius, Nside, hps, TRUE);
+}
+
+il* healpix_rangesearch_radec(double ra, double dec, double radius, int Nside, il* hps) {
+	double xyz[3];
+	radecdeg2xyzarr(ra, dec, xyz);
+	return hp_rangesearch(xyz, radius, Nside, hps, FALSE);
 }

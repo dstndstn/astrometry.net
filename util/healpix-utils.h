@@ -22,9 +22,12 @@
 #include "bl.h"
 
 /**
- Returns healpixes that may be within range of the given point.
+ Returns healpixes that are / may be within range of the given point, resp.
  */
-il* healpix_approx_rangesearch(double* xyz, double radius, int Nside, il* hps);
+il* healpix_rangesearch_xyz(const double* xyz, double radius, int Nside, il* hps);
+il* healpix_rangesearch_xyz_approx(const double* xyz, double radius, int Nside, il* hps);
+il* healpix_rangesearch_radec_approx(double ra, double dec, double radius, int Nside, il* hps);
+il* healpix_rangesearch_radec(double ra, double dec, double radius, int Nside, il* hps);
 
 /**
  Starting from a "seed" or list of "seeds" healpixes, grows a region

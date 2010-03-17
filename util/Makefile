@@ -175,7 +175,7 @@ _sip.so: sip-utils.o sip.o starutil.o mathutil.o sip_qfits.o \
 		errors.o log.o $(QFITS_LIB)
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
-_healpix.so: healpix.o permutedsort.o starutil.o mathutil.o errors.o bl.o log.o gnu-specific.o
+_healpix.so: healpix-utils.o healpix.o permutedsort.o starutil.o mathutil.o errors.o bl.o log.o gnu-specific.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
 pad-file: pad-file.o $(ANUTILS_LIB)

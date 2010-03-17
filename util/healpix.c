@@ -993,15 +993,15 @@ int radecdegtohealpixf(double ra, double dec, int Nside, double* dx, double* dy)
 	return radectohealpixf(deg2rad(ra), deg2rad(dec), Nside, dx, dy);
 }
 
-int xyzarrtohealpix(double* xyz, int Nside) {
+int xyzarrtohealpix(const double* xyz, int Nside) {
 	return xyztohealpix(xyz[0], xyz[1], xyz[2], Nside);
 }
 
-int64_t xyzarrtohealpixl(double* xyz, int Nside) {
+int64_t xyzarrtohealpixl(const double* xyz, int Nside) {
 	return xyztohealpixl(xyz[0], xyz[1], xyz[2], Nside);
 }
 
-int xyzarrtohealpixf(double* xyz,int Nside, double* p_dx, double* p_dy) {
+int xyzarrtohealpixf(const double* xyz,int Nside, double* p_dx, double* p_dy) {
     return xyztohealpixf(xyz[0], xyz[1], xyz[2], Nside, p_dx, p_dy);
 }
 
@@ -1319,10 +1319,9 @@ int healpix_get_neighbours_within_range(double* xyz, double range, int* out_heal
 	return nhp;
 }
 
-double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
-								 double* closestxyz) {
+double healpix_distance_to_xyz(int hp, int Nside, const double* xyz,
+							   double* closestxyz) {
 	int thehp;
-	double xyz[3];
 	// corners
 	double cdx[4], cdy[4];
 	double cdists[4];
@@ -1337,15 +1336,14 @@ double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
 	double EPS = 1e-16;
 
 	// If the point is actually inside the healpix, dist = 0.
-	thehp = radecdegtohealpix(ra, dec, Nside);
+	thehp = xyzarrtohealpix(xyz, Nside);
 	if (thehp == hp) {
 		if (closestxyz)
-			radecdeg2xyzarr(ra, dec, closestxyz);
+			memcpy(closestxyz, xyz, 3*sizeof(double));
 		return 0;
 	}
 
 	// Find two nearest corners.
-	radecdeg2xyzarr(ra, dec, xyz);
 	for (i=0; i<4; i++) {
 		double cxyz[3];
 		cdx[i] = i/2;
@@ -1404,6 +1402,13 @@ double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
 	if (closestxyz)
 		memcpy(closestxyz, midxyz, 3*sizeof(double));
 	return distsq2deg(dist2mid);
+}
+
+double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
+								 double* closestxyz) {
+	double xyz[3];
+	radecdeg2xyzarr(ra, dec, xyz);
+	return healpix_distance_to_xyz(hp, Nside, xyz, closestxyz);
 }
 
 void healpix_radec_bounds(int hp, int nside,

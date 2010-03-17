@@ -266,11 +266,11 @@ int64_t xyztohealpixlf(double x, double y, double z, int Nside,
    Converts (x,y,z) coordinates (stored in an array) on the unit sphere into
    a healpix index.
 */
-int xyzarrtohealpix(double* xyz, int Nside);
+int xyzarrtohealpix(const double* xyz, int Nside);
 
-int64_t xyzarrtohealpixl(double* xyz, int Nside);
+int64_t xyzarrtohealpixl(const double* xyz, int Nside);
 
-int xyzarrtohealpixf(double* xyz,int Nside, double* p_dx, double* p_dy);
+int xyzarrtohealpixf(const double* xyz,int Nside, double* p_dx, double* p_dy);
 
 /**
    Converts a healpix index, plus fractional offsets (dx,dy), into (x,y,z)
@@ -359,6 +359,13 @@ int healpix_get_neighbours_within_range_radec(double ra, double dec, double radi
  */
 double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
 								 double* closestxyz);
+
+/**
+ Returns the minimum distance (in degrees) between the given healpix
+ and the given xyz (point on unit sphere).
+ */
+double healpix_distance_to_xyz(int hp, int Nside, const double* xyz,
+							   double* closestxyz);
 
 /**
  Computes the RA,Dec bounding-box of the given healpix.  Results are
