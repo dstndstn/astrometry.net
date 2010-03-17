@@ -206,12 +206,43 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 		}
 	} else if (streq(cmd, "plot_markersize")) {
 		pargs->markersize = atof(cmdargs);
+	} else if (streq(cmd, "plot_size")) {
+		int W, H;
+		if (sscanf(cmdargs, "%i %i", &W, &H) != 2) {
+			ERROR("Failed to parse plot_size args \"%s\"", cmdargs);
+			return -1;
+		}
+		plotstuff_set_size(pargs, W, H);
 	} else if (streq(cmd, "plot_wcs")) {
 		pargs->wcs = sip_read_tan_or_sip_header_file_ext(cmdargs, 0, NULL, FALSE);
 		if (!pargs->wcs) {
 			ERROR("Failed to read WCS file \"%s\"", cmdargs);
 			return -1;
 		}
+	} else if (streq(cmd, "plot_wcs_box")) {
+		float ra, dec, width;
+		tan_t* twcs;
+		double scale;
+		if (sscanf(cmdargs, "%f %f %f", &ra, &dec, &width) != 3) {
+			ERROR("Failed to parse plot_wcs_box args \"%s\"", cmdargs);
+			return -1;
+		}
+		logverb("Setting WCS to a box centered at (%g,%g) with width %g deg.\n", ra, dec, width);
+		if (pargs->wcs)
+			sip_free(pargs->wcs);
+		pargs->wcs = sip_create();
+		twcs = &(pargs->wcs->wcstan);
+		twcs->crval[0] = ra;
+		twcs->crval[1] = dec;
+		twcs->crpix[0] = pargs->W / 2.0;
+		twcs->crpix[1] = pargs->H / 2.0;
+		scale = width / (double)pargs->W;
+		twcs->cd[0][0] = -scale;
+		twcs->cd[1][0] = 0;
+		twcs->cd[0][1] = 0;
+		twcs->cd[1][1] = -scale;
+		twcs->imagew = pargs->W;
+		twcs->imageh = pargs->H;
 	} else if (streq(cmd, "plot_wcs_setsize")) {
 		assert(pargs->wcs);
 		plotstuff_set_size(pargs, (int)ceil(sip_imagew(pargs->wcs)), (int)ceil(sip_imageh(pargs->wcs)));

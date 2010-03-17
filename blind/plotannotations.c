@@ -203,11 +203,8 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 			cmd.marker = pargs->marker;
 			cmd.markersize = pargs->markersize;
 			bl_append(ann->cairocmds, &cmd);
-			cmd.type = TEXT;
-			cmd.x = px;
-			cmd.y = py;
-			cmd.text = strdup(tar->name);
-			bl_append(ann->cairocmds, &cmd);
+
+			add_text(pargs, ann, cairo, tar->name, px, py);
 			continue;
 		}
 
@@ -378,6 +375,7 @@ void* plot_annotations_init(plot_args_t* args) {
 	ann->targets = bl_new(4, sizeof(target_t));
 	ann->label_offset_x = 15.0;
 	ann->label_offset_y = 0.0;
+	ann->NGC = TRUE;
 	return ann;
 }
 
@@ -397,7 +395,8 @@ int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 	cairo_font_extents(cairo, &extents);
 	dy = extents.ascent * 0.5;
 
-	plot_ngc(cairo, pargs, ann);
+	if (ann->NGC)
+		plot_ngc(cairo, pargs, ann);
 
 	if (bl_size(ann->targets))
 		plot_targets(cairo, pargs, ann);
@@ -420,6 +419,7 @@ int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 				cairo_arc(cairo, cmd->x, cmd->y, cmd->radius, 0, 2*M_PI);
 				break;
 			case MARKER:
+				cairo_move_to(cairo, cmd->x, cmd->y);
 				cairoutils_draw_marker(cairo, cmd->marker, cmd->x, cmd->y, cmd->markersize);
 				break;
 			case TEXT:
@@ -471,6 +471,8 @@ int plot_annotations_command(const char* cmd, const char* cmdargs,
 		ann->fontname = strdup(cmdargs);
 	} else if (streq(cmd, "annotations_bgcolor")) {
 		parse_color_rgba(cmdargs, ann->bg_rgba);
+	} else if (streq(cmd, "annotations_no_ngc")) {
+		ann->NGC = FALSE;
 	} else if (streq(cmd, "annotations_target")) {
 		target_t tar;
 		sl* args = sl_split(NULL, cmdargs, " ");
@@ -493,7 +495,7 @@ int plot_annotations_command(const char* cmd, const char* cmdargs,
 			ERROR("Failed to find target named \"%s\"", name);
 			return -1;
 		}
-		tar.name = ngc_get_name_list(e, "/");
+		tar.name = ngc_get_name_list(e, " / ");
 		tar.ra = e->ra;
 		tar.dec = e->dec;
 		logmsg("Found %s: RA,Dec (%g,%g)\n", tar.name, tar.ra, tar.dec);

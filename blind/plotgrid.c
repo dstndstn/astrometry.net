@@ -176,19 +176,41 @@ int plot_grid_plot(const char* command,
 		for (ra = args->ralabelstep * floor(ramin / args->ralabelstep);
 			 ra <= args->ralabelstep * ceil(ramax / args->ralabelstep);
 			 ra += args->ralabelstep) {
-			// where does this line leave the image?
-			// cdec is inside
-			// decmin is probably outside; 1.5 * decmin - 0.5 * cdec is definitely outside?
-			//double out = MAX(-90, 1.5 * decmin - 0.5 * cdec);
-			double out = MIN(90, 1.5 * decmax - 0.5 * cdec);
+			double out;
 			double in = cdec;
 			char label[32];
 			double x,y;
 			bool ok;
 			int i, N;
 			double lra;
+			bool gotit;
+			int dir;
 			logverb("Labelling RA=%g\n", ra);
-			assert(!sip_is_inside_image(pargs->wcs, ra, out));
+			// where does this line leave the image?
+			// cdec is inside; take steps away until we go outside.
+			gotit = FALSE;
+			// dir is first 1, then -1.
+			for (dir=1; dir>=-1; dir-=2) {
+				for (i=1;; i++) {
+					// take 10-deg steps
+					out = cdec + i*dir*10.0;
+					if (out >= 100.0 || out <= -100)
+						break;
+					out = MIN(90, MAX(-90, out));
+					logverb("dec in=%g, out=%g\n", in, out);
+					if (!sip_is_inside_image(pargs->wcs, ra, out)) {
+						gotit = TRUE;
+						break;
+					}
+				}
+				if (gotit)
+					break;
+			}
+			if (!gotit) {
+				ERROR("Couldn't find a Dec outside the image for RA=%g\n", ra);
+				continue;
+			}
+
 			i=0;
 			N = 10;
 			while (!sip_is_inside_image(pargs->wcs, ra, in)) {
@@ -225,14 +247,37 @@ int plot_grid_plot(const char* command,
 		for (dec = args->declabelstep * floor(decmin / args->declabelstep);
 			 dec <= args->declabelstep * ceil(decmax / args->declabelstep);
 			 dec += args->declabelstep) {
-			double out = MIN(90, 1.5 * ramax - 0.5 * cra);
+			double out;
 			double in = cra;
 			char label[32];
 			double x,y;
 			bool ok;
 			int i, N;
+			bool gotit;
+			int dir;
 			logverb("Labelling Dec=%g\n", dec);
-			assert(!sip_is_inside_image(pargs->wcs, out, dec));
+			gotit = FALSE;
+			// dir is first 1, then -1.
+			for (dir=1; dir>=-1; dir-=2) {
+				for (i=1;; i++) {
+					// take 10-deg steps
+					out = cra + i*dir*10.0;
+					if (out > 370.0 || out <= -10)
+						break;
+					out = MIN(360, MAX(0, out));
+					logverb("ra in=%g, out=%g\n", in, out);
+					if (!sip_is_inside_image(pargs->wcs, out, dec)) {
+						gotit = TRUE;
+						break;
+					}
+				}
+				if (gotit)
+					break;
+			}
+			if (!gotit) {
+				ERROR("Couldn't find an RA outside the image for Dec=%g\n", dec);
+				continue;
+			}
 			i=0;
 			N = 10;
 			while (!sip_is_inside_image(pargs->wcs, in, dec)) {
