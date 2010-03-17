@@ -31,6 +31,8 @@
 #include "ioutils.h"
 #include "log.h"
 #include "errors.h"
+#include "sip-utils.h"
+#include "mathutil.h"
 
 const plotter_t plotter_annotations = {
 	.name = "annotations",
@@ -181,6 +183,7 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 		double ex,ey;
 		double ly, ry, tx, bx;
 		double distdeg;
+		bool okquadrant;
 		memset(&cmd, 0, sizeof(cmd));
 
 		cmd.layer = 3;
@@ -188,12 +191,10 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 
 		logverb("Target: \"%s\" at (%g,%g)\n", tar->name, tar->ra, tar->dec);
 
-		if (!plotstuff_radec2xy(pargs, tar->ra, tar->dec, &px, &py)) {
-			logmsg("Target %s is too far away!\n", tar->name);
-			continue;
-		}
+		okquadrant = plotstuff_radec2xy(pargs, tar->ra, tar->dec, &px, &py);
 
-		if (px >= 0 && px < pargs->W && py >= 0 && py < pargs->H) {
+		if (okquadrant &&
+			px >= 0 && px < pargs->W && py >= 0 && py < pargs->H) {
 			// inside the image!
 			logverb("Target \"%s\" is inside the image, at pixel (%g,%g)\n", tar->name, px, py);
 			cmd.type = MARKER;
@@ -209,14 +210,38 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 			bl_append(ann->cairocmds, &cmd);
 			continue;
 		}
-					
-		logverb("Target \"%s\" is outside the image, at pixel (%g,%g)\n", tar->name, px, py);
 
 		// outside the image: find intersection point.
 		cx = pargs->W / 2.0;
 		cy = pargs->H / 2.0;
-		dx = px - cx;
-		dy = py - cy;
+		if (okquadrant) {
+			logverb("Target \"%s\" is outside the image, at pixel (%g,%g)\n", tar->name, px, py);
+			dx = px - cx;
+			dy = py - cy;
+		} else {
+			double cxyz[3];
+			double txyz[3];
+			double vec[3];
+			int j;
+			double ra,dec;
+			logverb("Target \"%s\" is way outside the image.\n", tar->name);
+			// fallback.
+			radecdeg2xyzarr(cra, cdec, cxyz);
+			radecdeg2xyzarr(tar->ra, tar->dec, txyz);
+			for (j=0; j<3; j++)
+				vec[j] = cxyz[j] + 0.1 * txyz[j];
+			normalize_3(vec);
+			xyzarr2radecdeg(vec, &ra, &dec);
+			okquadrant = plotstuff_radec2xy(pargs, ra, dec, &px, &py);
+			assert(okquadrant);
+			dx = px - cx;
+			dy = py - cy;
+			if ((dx*dx + dy*dy) < (cx*cx + cy*cy)) {
+				double scale = 3.0 * sqrt(cx*cx + cy*cy) / sqrt(dx*dx + dy*dy);
+				dx *= scale;
+				dy *= scale;
+			}
+		}
 
 		ly = (-(pargs->W/2.0) / dx) * dy + cy;
 		ry = ( (pargs->W/2.0) / dx) * dy + cy;
@@ -253,10 +278,15 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 
 		distdeg = deg_between_radecdeg(cra, cdec, tar->ra, tar->dec);
 
-		cmd.type = TEXT;
-		//cmd.text = strdup(tar->name);
-		asprintf(&cmd.text, "%s: %.2f deg", tar->name, distdeg);
-		bl_append(ann->cairocmds, &cmd);
+		/*
+		 cmd.type = TEXT;
+		 //cmd.text = strdup(tar->name);
+		 asprintf(&cmd.text, "%s: %.1f deg", tar->name, distdeg);
+		 bl_append(ann->cairocmds, &cmd);
+		 */
+		char* txt;
+		asprintf(&txt, "%s: %.1f deg", tar->name, distdeg);
+		add_text(pargs, ann, cairo, txt, cmd.x, cmd.y);
 	}
 }
 

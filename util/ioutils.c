@@ -320,9 +320,11 @@ sl* dir_get_contents(const char* path, sl* list, bool filesonly, bool recurse) {
         asprintf_safe(&fullpath, "%s/%s", path, name);
         if (stat(fullpath, &st)) {
             fprintf(stderr, "Failed to stat file %s: %s\n", fullpath, strerror(errno));
-            closedir(dir);
-            sl_free2(list);
-            return NULL;
+			// this can happen when files are deleted, eg
+			continue;
+            //closedir(dir);
+            //sl_free2(list);
+            //return NULL;
         }
 
         if (filesonly) {
