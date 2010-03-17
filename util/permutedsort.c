@@ -77,7 +77,8 @@ int* permuted_sort(const void* realarray, int array_stride,
                    int (*compare)(const void*, const void*),
                    int* perm, int N) {
     permsort_t ps;
-	perm = permutation_init(perm, N);
+	if (!perm)
+		perm = permutation_init(perm, N);
 
     ps.compare = compare;
     ps.data_array = realarray;
