@@ -24,9 +24,14 @@ if __name__ == '__main__':
 	
 	minmag = 18
 
+	catfn = 'catalog.fits'
+	indexfn = 'index.fits'
+	indexid = 999
+
 
 	usnobhps = healpix_rangesearch(ra, dec, radius, usnob_nside)
 	print 'USNO-B healpixes in range:', usnobhps
+	allU = []
 	for hp in usnobhps:
 		usnobfn = usnob_pat % hp
 		print 'USNOB filename:', usnobfn
@@ -47,6 +52,7 @@ if __name__ == '__main__':
 		print '%i USNOB stars with R mag > %g.' % (sum(I), minmag)
 		U = U[I]
 		U.rmag = avgmag[I]
+		allU.append(U)
 
 		clf()
 		plot(U.ra, U.dec, 'r.')
@@ -54,5 +60,27 @@ if __name__ == '__main__':
 		clf()
 		hist(U.rmag, 20)
 		savefig('rmag-%i.png' % hp)
-		
-	#usnobfn =
+
+	ra = hstack([U.ra for U in allU])
+	dec = hstack([U.dec for U in allU])
+	mag = hstack([U.rmag for U in allU])
+
+	C = pyfits.Column
+	pyfits.new_table([C(name='ra', format='D', array=ra, unit='deg'),
+					  C(name='dec', format='D', array=dec, unit='deg'),
+					  C(name='mag', format='E', array=mag, unit='mag'),
+					  ]).writeto(catfn, clobber=True)
+	print 'Wrote catalog to', catfn
+	
+	indnside = int(ceil(healpix_nside_for_side_length_arcmin(scale_low)))
+
+	cmd = (('build-index -i %s -o %s -N %i -l %g -u %g -S %s' +
+			' -r 1 -j 1 -p 16 -R 8 -L 20 -E -I %i -M') %
+		   (catfn, indexfn, indnside, scale_low, scale_high,
+			'mag', indexid))
+	print 'Running command:'
+	print
+	print '  ', cmd
+	print
+	os.system(cmd)
+
