@@ -34,10 +34,20 @@ install: $(LIB)
 	$(CP) $(HEADERS) $(INSTALL_DIR)/include
 .PHONY: install
 
-stage: $(LIB) $(HEADERS)
-	$(CP) $(LIB) ../lib
-	$(CP) $(HEADERS) ../include
+STAGED_LIB_DIR := $(CURDIR)/../lib
+STAGED_INCLUDE_DIR := $(CURDIR)/../include
+
+STAGED_LIB := $(STAGED_LIB_DIR)/$(LIB)
+STAGED_HEADERS := $(addprefix $(STAGED_INCLUDE_DIR)/, $(HEADERS))
+
+stage: $(STAGED_LIB) $(STAGED_HEADERS)
 .PHONY: stage
+
+$(STAGED_LIB): $(LIB)
+	$(CP) $< $@
+
+$(STAGED_HEADERS):: $(STAGED_INCLUDE_DIR)/%: %
+	$(CP) $< $@
 
 OBJS := \
 	anqfits.o \

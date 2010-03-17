@@ -36,8 +36,6 @@ all:
 	$(MAKE) -C blind
 .PHONY: all
 
-	#$(MAKE) -C qfits-an stage 
-
 # Targets that require extra libraries
 extra:
 	$(MAKE) -C util
