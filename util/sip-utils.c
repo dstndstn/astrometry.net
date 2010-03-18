@@ -115,6 +115,10 @@ void sip_get_radec_center(const sip_t* wcs,
 	sip_pixelxy2radec(wcs, px, py, p_ra, p_dec);
 }
 
+double sip_get_radius_deg(const sip_t* wcs) {
+	return arcsec2deg(sip_pixel_scale(wcs) * hypot(wcs->wcstan.imagew, wcs->wcstan.imageh)/2.0);
+}
+
 void sip_get_radec_center_hms(const sip_t* wcs,
                               int* rah, int* ram, double* ras,
                               int* decd, int* decm, double* decs) {

@@ -197,6 +197,7 @@ struct mymarker {
 typedef struct mymarker mymarker;
 
 static void drawcircle(cairo_t* cairo, double x, double y, double rad, const char* name) {
+	cairo_move_to(cairo, x+rad, y);
     cairo_arc(cairo, x, y, rad, 0.0, 2.0*M_PI);
 }
 

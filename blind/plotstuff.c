@@ -35,14 +35,26 @@
 #include "plotannotations.h"
 #include "plotgrid.h"
 #include "plotoutline.h"
+#include "plotindex.h"
 
 #include "sip_qfits.h"
+#include "sip-utils.h"
 #include "sip.h"
 #include "cairoutils.h"
 #include "starutil.h"
 #include "ioutils.h"
 #include "log.h"
 #include "errors.h"
+
+int plotstuff_get_radec_center_and_radius(plot_args_t* pargs,
+										  double* p_ra, double* p_dec, double* p_radius) {
+	if (!pargs->wcs)
+		return -1;
+	sip_get_radec_center(pargs->wcs, p_ra, p_dec);
+	if (p_radius)
+		*p_radius = sip_get_radius_deg(pargs->wcs);
+	return 0;
+}
 
 int plotstuff_append_doubles(const char* str, dl* lst) {
 	int i;
@@ -280,7 +292,7 @@ int plotstuff_set_color(plot_args_t* pargs, const char* name) {
 }
 
 /* All render layers must go in here */
-static plotter_t plotters[7];
+static plotter_t plotters[8];
 
 int plotstuff_init(plot_args_t* pargs) {
 	int i, NR;
@@ -295,6 +307,7 @@ int plotstuff_init(plot_args_t* pargs) {
 	plotters[4] = plotter_annotations;
 	plotters[5] = plotter_grid;
 	plotters[6] = plotter_outline;
+	plotters[7] = plotter_index;
 
 	NR = sizeof(plotters) / sizeof(plotter_t);
 	// First init
@@ -365,7 +378,7 @@ int plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 		ERROR("No WCS defined!");
 		return -1;
 	}
-	return sip_radec2pixelxy(pargs->wcs, ra, dec, x, y);
+	return (sip_radec2pixelxy(pargs->wcs, ra, dec, x, y) ? 0 : -1);
 }
 
 

@@ -91,6 +91,8 @@ plotstuff_run_commandf(plot_args_t* pargs, const char* fmt, ...);
 int plotstuff_output(plot_args_t* pargs);
 void plotstuff_free(plot_args_t* pargs);
 
+/// WCS-related stuff:
+
 // in arcsec/pixel
 double plotstuff_pixel_scale(plot_args_t* pargs);
 
@@ -99,8 +101,14 @@ double plotstuff_pixel_scale(plot_args_t* pargs);
 int plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 					   double* x, double* y);
 
+int plotstuff_get_radec_center_and_radius(plot_args_t* pargs, double* ra, double* dec, double* radius);
+
 int plot_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2);
 int plot_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra2);
+
+
+
+
 
 int plotstuff_append_doubles(const char* str, dl* lst);
 

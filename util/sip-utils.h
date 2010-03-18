@@ -67,6 +67,8 @@ void sip_walk_image_boundary(const sip_t* wcs, double stepsize,
 void sip_get_radec_center(const sip_t* wcs,
                           double* p_ra, double* p_dec);
 
+double sip_get_radius_deg(const sip_t* wcs);
+
 // RA hours:minutes:seconds, Dec degrees:minutes:seconds
 void sip_get_radec_center_hms(const sip_t* wcs,
                               int* rah, int* ram, double* ras,

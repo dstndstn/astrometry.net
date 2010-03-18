@@ -88,7 +88,7 @@ static int starts_with(const char* str, const char* start) {
 
 // from qfits_cache.c: qfits_cache_add()
 anqfits_t* anqfits_open(const char* filename) {
-    anqfits_t* qf;
+    anqfits_t* qf = NULL;
     FILE* in = NULL;
     struct stat sta;
     int n_blocks;

@@ -99,7 +99,8 @@ BACKEND_OBJS := \
 		matchfile.o matchobj.o solvedclient.o solvedfile.o verify.o \
 		blind_wcs.o tweak.o
 
-PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o plotannotations.o plotgrid.o plotoutline.o
+PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o \
+		plotannotations.o plotgrid.o plotoutline.o plotindex.o
 ALL_OBJ += $(PLOTSTUFF)
 
 $(BACKEND_LIB): $(BACKEND_OBJS)
@@ -545,7 +546,7 @@ add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)
 plotstuff.o: plotstuff.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
-plotstuff: plotstuff-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+plotstuff: plotstuff-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 ALL_OBJ += plotstuff-main.o
 

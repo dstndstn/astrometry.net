@@ -83,4 +83,5 @@ if __name__ == '__main__':
 	print '  ', cmd
 	print
 	os.system(cmd)
+	print 'Wrote index to', indexfn
 
