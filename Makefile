@@ -20,10 +20,10 @@
 INSTALL_DIR ?= /usr/local/astrometry
 export INSTALL_DIR
 
-# Turn on optimisation?  See util/makefile.common for details.
-OPTIMIZE := yes
-#OPTIMIZE := no
-export OPTIMIZE
+
+# Turn off optimisation?  If the following line is commented-out, the default
+# is to turn optimization on.  See util/makefile.common for details.
+#export OPTIMIZE = no
 
 all:
 
