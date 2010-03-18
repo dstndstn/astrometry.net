@@ -590,11 +590,10 @@ int main(int argc, char** args) {
                 mo.field[k] = find;
             }
 
-			logmsg("quad #%i (quad id %i): stars\n", j, quad);
+			logmsg("quad #%i (quad id %i): stars", j, quad);
             for (k=0; k<dimquads; k++)
                 logmsg(" %i", mo.field[k]);
             logmsg("\n");
-
 
             codefile_compute_field_code(mo.quadpix, fieldcode, dimquads);
 
@@ -652,7 +651,7 @@ int main(int argc, char** args) {
 
                 verify_hit(indx->starkd, indx->cutnside, &mo, NULL, vf, verpix2,
                            DEFAULT_DISTRACTOR_RATIO, W, H,
-                           log(1e-100), HUGE_VAL, HUGE_VAL, TRUE, FALSE);
+                           log(1e-100), log(1e9), HUGE_VAL, TRUE, FALSE);
 
                 verify_field_free(vf);
             }
@@ -676,9 +675,19 @@ int main(int argc, char** args) {
 		bl_sort(foundquads, sort_fq_by_stars);
 
 		logmsg("\n\n\n");
+		logmsg("Sorted by star number (ie, the order they'll be found):\n\n");
+		int ngood = 0;
+		double maxcodedist = 0.01;
+		double minlogodds = log(1e9);
+		logmsg("Assuming max code distance %g and min logodds %g\n", maxcodedist, minlogodds);
+
 		for (j=0; j<bl_size(foundquads); j++) {
 			int k;
 			foundquad_t* fq = bl_access(foundquads, j);
+			if (fq->codedist <= maxcodedist && fq->logodds >= minlogodds) {
+				ngood++;
+				logmsg("*** ");
+			}
 			logmsg("quad #%i: stars", fq->quadnum);
 			for (k=0; k<fq->mo.dimquads; k++) {
 				logmsg(" %i", fq->mo.field[k]);
@@ -687,7 +696,7 @@ int main(int argc, char** args) {
 			logmsg("  codedist %g\n", fq->codedist);
 			logmsg("  logodds %g (odds %g)\n", fq->logodds, exp(fq->logodds));
 		}
-
+		printf("\nTotal of %i quads that would solve the image.\n", ngood);
 
 		il_free(fullquadlist);
 		il_free(uniqquadlist);
