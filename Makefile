@@ -20,6 +20,11 @@
 INSTALL_DIR ?= /usr/local/astrometry
 export INSTALL_DIR
 
+# Turn on optimisation?  See util/makefile.common for details.
+OPTIMIZE := yes
+#OPTIMIZE := no
+export OPTIMIZE
+
 all:
 
 BASEDIR := .

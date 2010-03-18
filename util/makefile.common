@@ -124,16 +124,14 @@ X := $(shell rm $(TMPFILE))
 # FLAGS_DEF are gcc flags that are shared between compiling and
 # linking.  CFLAGS_DEF are compile flags, LDFLAGS_DEF are link flags.
 
-# Do YOU wanna go fast?
-RICKY_BOBBY := no
-#RICKY_BOBBY := yes
+# Turn optimization on by default; this statement only sets OPTIMIZE
+# if it hasn't been set already (eg, in ../Makefile)
+OPTIMIZE ?= yes
 
-
-ifeq ($(RICKY_BOBBY),yes)
+ifeq ($(OPTIMIZE),yes)
   # speedy!
   FLAGS_DEF += -O3
   FLAGS_DEF += -fomit-frame-pointer
-
   # turn off asserts:
   FLAGS_DEF += -DNDEBUG
 
