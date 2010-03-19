@@ -20,13 +20,23 @@
  hpimage tstimg; hpimage -r tstimg
  open tstimg.png tstimg-hp.png tstimg-unhp.png
 
+ cp tstimg-unhp.png tstimg-unhp-1.png
+ hpimage -r -s tstimg
+ cp tstimg-unhp.png tstimg-unhp-2.png
+
+ for x in tstimg.png tstimg-hp.png tstimg-unhp-{1,2}.png; do
+ pngtopnm $x | pnmscale 10 | pnmtopng > zoom-$x;
+ done
+
+
  */
 
-static const char* OPTIONS = "hr";
+static const char* OPTIONS = "hrs";
 
 void printHelp(char* progname) {
     fprintf(stderr, "%s [options] <base-filename>\n"
             "    [-r]: reverse direction\n"
+            "    [-s]: stretch coords when reverse-sampling\n"
             "\n", progname);
 }
 extern char *optarg;
@@ -47,7 +57,7 @@ int main(int argc, char** args) {
 	char* base = NULL;
 	char* fn;
 	unsigned char* img = NULL;
-	unsigned char* Himg = NULL;
+	unsigned char* outimg = NULL;
 	int W, H;
 	int wcsW, wcsH;
 	sip_t* wcs;
@@ -56,7 +66,7 @@ int main(int argc, char** args) {
 	int nside;
 	double pixscale;
 	double zoom = 1.0;
-	int HW,HH;
+	int outW,outH;
 	double hx, hy;
 	int i,j,k;
 	int bighp;
@@ -68,6 +78,7 @@ int main(int argc, char** args) {
 	double support;
 
 	bool reverse = FALSE;
+	bool stretch = FALSE;
 
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
@@ -77,6 +88,9 @@ int main(int argc, char** args) {
 			exit(0);
 		case 'r':
 			reverse = TRUE;
+			break;
+		case 's':
+			stretch = TRUE;
 			break;
 		}
 
@@ -154,29 +168,29 @@ int main(int argc, char** args) {
 	miny = 1.0/(double)nside * floor(miny * nside);
 	maxx = 1.0/(double)nside *  ceil(maxx * nside);
 	maxy = 1.0/(double)nside *  ceil(maxy * nside);
-	HW = (int)ceil(nside * (maxx - minx));
-	HH = (int)ceil(nside * (maxy - miny));
+	outW = (int)ceil(nside * (maxx - minx));
+	outH = (int)ceil(nside * (maxy - miny));
 
 	if (reverse) {
-		HW = wcsW;
-		HH = wcsH;
+		outW = wcsW;
+		outH = wcsH;
 	}
 
-	printf("Rendering output image: %i x %i\n", HW, HH);
+	printf("Rendering output image: %i x %i\n", outW, outH);
 
 	hpstep = 1.0 / (float)nside;
 
-	Himg = malloc(HW * HH * 4);
-	for (i=0; i<HW*HH; i++) {
-		Himg[4*i + 0] = 128;
-		Himg[4*i + 1] = 128;
-		Himg[4*i + 2] = 128;
-		Himg[4*i + 3] = 128;
+	outimg = malloc(outW * outH * 4);
+	for (i=0; i<outW*outH; i++) {
+		outimg[4*i + 0] = 128;
+		outimg[4*i + 1] = 128;
+		outimg[4*i + 2] = 128;
+		outimg[4*i + 3] = 128;
 	}
 
 	if (reverse) {
 		double maxD, minD;
-		double amaxD, aminD;
+		double amaxD;
 		// for sinc:
 		// FIXME -- inverse?
 		scale = 1.0 / zoom;
@@ -190,37 +204,23 @@ int main(int argc, char** args) {
 			// compute distance distortion matrix
 			int steps = 360;
 			double astep = 2.0 * M_PI / (double)steps;
-			double rara, decdec, radec;
-			double xra,yra,xdec,ydec;
 
 			// center of image in healpix coords
 			chx = (minx + W/2 * hpstep);
 			chy = (miny + H/2 * hpstep);
 			healpix_to_xyzarr(bighp, 1, chx, chy, cxyz);
 			// directions of increasing RA,Dec
-			//sip_get_radec_center(wcs, &cra, &cdec);
 			xyzarr2radecdeg(cxyz, &cra, &cdec);
 			radec_derivatives(cra, cdec, dravec, ddecvec);
 
-			printf("dra,ddec vec lengths: %g, %g\n",
-				   sqrt(square(dravec[0]) + square(dravec[1]) + square(dravec[2])),
-				   sqrt(square(ddecvec[0]) + square(ddecvec[1]) + square(ddecvec[2])));
-			printf("dot prods: %g, %g, %g\n",
-				   dravec[0]*ddecvec[0] + dravec[1]*ddecvec[1] + dravec[2]*ddecvec[2],
-				   dravec[0]*cxyz[0] + dravec[1]*cxyz[1] + dravec[2]*cxyz[2],
-				   cxyz[0]*ddecvec[0] + cxyz[1]*ddecvec[1] + cxyz[2]*ddecvec[2]);
-
-			rara = decdec = radec = 0.0;
-			xra = yra = xdec = ydec = 0.0;
-
 			maxD = -HUGE_VAL;
 			minD =  HUGE_VAL;
-			amaxD = aminD = -1;
+			amaxD = -1;
 
-			printf("dist=array([");
 			for (i=0; i<steps; i++) {
 				double angle = astep * i;
 				double dra, ddec;
+				double d;
 				hx = sin(angle) * hpstep + chx;
 				hy = cos(angle) * hpstep + chy;
 				healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
@@ -229,68 +229,36 @@ int main(int argc, char** args) {
 					dra += dravec[k] * (xyz[k] - cxyz[k]);
 					ddec += ddecvec[k] * (xyz[k] - cxyz[k]);
 				}
-				printf("[%g,%g,%g,%g],", hx-chx, hy-chy, dra, ddec);
-				rara += dra*dra;
-				decdec += ddec*ddec;
-				radec += dra*ddec;
-				xra += sin(angle) * dra;
-				yra += cos(angle) * dra;
-				xdec += sin(angle) * ddec;
-				ydec += cos(angle) * ddec;
-
-
 				// yarr.
-				double d = sqrt(dra*dra + ddec*ddec);
+				d = sqrt(dra*dra + ddec*ddec);
 				if (d > maxD) {
 					maxD = d;
 					amaxD = angle;
 				}
-				if (d < minD) {
-					minD = d;
-					aminD = angle;
-				}
+				minD = MIN(d, minD);
 			}
-			printf("])\n");
-			printf("rara %g, decdec %g, radec %g\n", rara, decdec, radec);
-			printf("x,y(ra) %g,%g, x,y(dec) %g,%g\n", xra, yra, xdec, ydec);
-
 			printf("min,max D: %g, %g\n", minD, maxD);
-			printf("min,max D angle: %g, %g\n", rad2deg(aminD), rad2deg(amaxD));
+			printf("max D angle: %g\n", rad2deg(amaxD));
 
-			printf("dst=array([");
-			for (i=0; i<steps; i++) {
-				double angle = astep * i;
-				double t0,t1;
-				double dst;
-				hx = sin(angle);
-				hy = cos(angle);
-				t0 = hx * xra  + hy * yra;
-				t1 = hx * xdec + hy * ydec;
-				dst = hx * t0 + hy * t1;
-				printf("%g,", dst);
-			}
-			printf("])\n");
-
-
-			printf("dst2=array([");
-			for (i=0; i<steps; i++) {
-				double angle = astep * i;
-				double t0,t1;
-				double dst;
-				hx = sin(angle);
-				hy = cos(angle);
-				t0 = maxD * (hx *  cos(amaxD) + hy * sin(amaxD));
-				t1 = minD * (hx * -sin(amaxD) + hy * cos(amaxD));
-				//t1 = minD * (hx *  cos(aminD) + hy * sin(aminD));
-				dst = sqrt(t0*t0 + t1*t1);
-				printf("%g,", dst);
-			}
-			printf("])\n");
-
+			/*
+			 printf("dst2=array([");
+			 for (i=0; i<steps; i++) {
+			 double angle = astep * i;
+			 double t0,t1;
+			 double dst;
+			 hx = sin(angle);
+			 hy = cos(angle);
+			 t0 = maxD * (hx *  cos(amaxD) + hy * sin(amaxD));
+			 t1 = minD * (hx * -sin(amaxD) + hy * cos(amaxD));
+			 dst = sqrt(t0*t0 + t1*t1);
+			 printf("%g,", dst);
+			 }
+			 printf("])\n");
+			 */
 		}
 
-		for (i=0; i<HH; i++) {
-			for (j=0; j<HW; j++) {
+		for (i=0; i<outH; i++) {
+			for (j=0; j<outW; j++) {
 				double px, py;
 				int ix, iy;
 
@@ -324,20 +292,18 @@ int main(int argc, char** args) {
 								continue;
 							}
 
-							d = hypot(px - ix, py - iy);
+							if (!stretch) {
+								d = hypot(px - ix, py - iy);
+							} else {
+								double t0,t1;
+								hx = ix-px;
+								hy = iy-py;
+								t0 = maxD * (hx *  cos(amaxD) + hy * sin(amaxD));
+								t1 = minD * (hx * -sin(amaxD) + hy * cos(amaxD));
+								d = sqrt(t0*t0 + t1*t1);
+								d *= nside;
+							}
 							L = lanczos(d * scale, order);
-
-							printf("d=%g\n", d);
-
-							double t0,t1;
-							hx = ix-px;
-							hy = iy-py;
-							t0 = maxD * (hx *  cos(amaxD) + hy * sin(amaxD));
-							t1 = minD * (hx * -sin(amaxD) + hy * cos(amaxD));
-							d = sqrt(t0*t0 + t1*t1);
-							d *= nside;
-							L = lanczos(d * scale, order);
-							printf("d2 = %g\n", d);
 
 							weight += L;
 							for (k=0; k<3; k++)
@@ -346,8 +312,8 @@ int main(int argc, char** args) {
 					}
 					if (weight > 0) {
 						for (k=0; k<3; k++)
-							Himg[4*(i*HW + j) + k] = MIN(255, MAX(0, sum[k] / weight));
-						Himg[4*(i*HW + j) + 3] = 255;
+							outimg[4*(i*outW + j) + k] = MIN(255, MAX(0, sum[k] / weight));
+						outimg[4*(i*outW + j) + 3] = 255;
 					}
 				} else {
 					ix = (int)px;
@@ -356,10 +322,10 @@ int main(int argc, char** args) {
 						continue;
 					if (iy < 0 || iy >= H)
 						continue;
-					memcpy(Himg + 4*(i*HW + j), img + 4*(iy*W + ix), 3);
+					memcpy(outimg + 4*(i*outW + j), img + 4*(iy*W + ix), 3);
 				}
 			}
-			printf("Row %i of %i\n", i+1, HH);
+			printf("Row %i of %i\n", i+1, outH);
 		}
 	} else {
 		// for sinc:
@@ -367,9 +333,9 @@ int main(int argc, char** args) {
 		scale = zoom;
 		support = (double)order / scale;
 
-		for (i=0; i<HH; i++) {
+		for (i=0; i<outH; i++) {
 			hy = miny + i*hpstep;
-			for (j=0; j<HW; j++) {
+			for (j=0; j<outW; j++) {
 				double px, py;
 				int ix, iy;
 				hx = minx + j*hpstep;
@@ -412,8 +378,8 @@ int main(int argc, char** args) {
 					}
 					if (weight > 0) {
 						for (k=0; k<3; k++)
-							Himg[4*(i*HW + j) + k] = MIN(255, MAX(0, sum[k] / weight));
-						Himg[4*(i*HW + j) + 3] = 255;
+							outimg[4*(i*outW + j) + k] = MIN(255, MAX(0, sum[k] / weight));
+						outimg[4*(i*outW + j) + 3] = 255;
 					}
 
 				} else {
@@ -423,30 +389,25 @@ int main(int argc, char** args) {
 						continue;
 					if (iy < 0 || iy >= H)
 						continue;
-					memcpy(Himg + 4*(i*HW + j), img + 4*(iy*W + ix), 3);
-					Himg[4*(i*HW + j) + 3] = 255;
+					memcpy(outimg + 4*(i*outW + j), img + 4*(iy*W + ix), 3);
+					outimg[4*(i*outW + j) + 3] = 255;
 				}
 			}
-			printf("Row %i of %i\n", i+1, HH);
+			printf("Row %i of %i\n", i+1, outH);
 		}
 	}
 
-	/*
-	 asprintf(&fn, "%s-hp.jpg", base);
-	 printf("Writing output: %s\n", fn);
-	 cairoutils_write_jpeg(fn, Himg, HW, HH);
-	 */
 	if (reverse) {
 		asprintf(&fn, "%s-unhp.png", base);
 	} else {
 		asprintf(&fn, "%s-hp.png", base);
 	}
 	printf("Writing output: %s\n", fn);
-	cairoutils_write_png(fn, Himg, HW, HH);
+	cairoutils_write_png(fn, outimg, outW, outH);
 
 	free(fn);
 	free(img);
-	free(Himg);
+	free(outimg);
 
 	return 0;
 }
