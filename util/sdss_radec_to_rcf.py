@@ -7,12 +7,14 @@ from os.path import basename,dirname
 # RA,Dec are either scalars or iterables.
 # If scalars, returns a list of (run, camcol, field, ra, dec) tuples, one for each matching field.
 # If iterable, returns a list containing one list per query (ra,dec) of the same tuple.
-def radec_to_sdss_rcf(ra, dec, spherematch=True):
+def radec_to_sdss_rcf(ra, dec, spherematch=True, radius=0):
 	fn = find_data_file('dr7fields.fits')
 	sdss = table_fields(fn)
 	sdssxyz = radectoxyz(sdss.ra, sdss.dec)
 	## HACK - magic 13x9 arcmin.
-	radius2 = arcmin2distsq(sqrt(13.**2 + 9.**2)/2.)
+	if radius == 0:
+		radius = sqrt(13.**2 + 9.**2)/2.
+	radius2 = arcmin2distsq(radius)
 	if not spherematch:
 		rcfs = []
 		for r,d in broadcast(ra,dec):
@@ -66,6 +68,26 @@ def radec_to_sdss_rcf(ra, dec, spherematch=True):
 
 if __name__ == '__main__':
 	#rcfs = radec_to_sdss_rcf([236.1, 236.4], [0,0])
-	rcfs = radec_to_sdss_rcf(10.632, 41.257)
+	#ra,dec = 10.632, 41.257
+	ra,dec = 146.8, 67.9
+	# arcmin
+	radius = 15.
+	rcfs = radec_to_sdss_rcf(ra,dec,radius=radius)
+	print 'ra,dec', ra,dec
 	print 'rcfs:', rcfs
+	print
+	for (r,c,f,ra,dec) in rcfs:
+		print '%i %i %i' % (r,c,f)
 
+	print
+	for (r,c,f,ra,dec) in rcfs:
+		print 'http://cas.sdss.org/dr7/en/get/frameByRCFZ.asp?R=%i&C=%i&F=%i&Z=0&submit1=Get+Image' % (r,c,f)
+
+	print
+	for (r,c,f,ra,dec) in rcfs:
+		print 'wget "http://cas.sdss.org/dr7/en/get/frameByRCFZ.asp?R=%i&C=%i&F=%i&Z=0&submit1=Get+Image" -O sdss-%04i-%i-%04i.jpg' % (r,c,f,r,c,f)
+
+	from sdss_das import *
+	for (r,c,f,ra,dec) in rcfs:
+		for b in 'ugriz':
+			sdss_das_get('fpC', None, r, c, f, b, suffix='.gz')
