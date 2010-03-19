@@ -36,6 +36,25 @@
 #include "starutil.inc"
 #undef InlineDefine
 
+void radec_derivatives(double ra, double dec, double* dra, double* ddec) {
+	double cosd = cos(deg2rad(dec));
+	double cosra = cos(deg2rad(ra));
+	double sinra = sin(deg2rad(ra));
+	if (dra) {
+		dra[0] = cosd * -sinra;
+		dra[1] = cosd *  cosra;
+		dra[2] = 0.0;
+		normalize_3(dra);
+	}
+	if (ddec) {
+		double sind = sin(deg2rad(dec));
+		ddec[0] = -sind * cosra;
+		ddec[1] = -sind * sinra;
+		ddec[2] =  cosd;
+		normalize_3(ddec);
+	}
+}
+
 void radecrange2xyzrange(double ralo, double declo, double rahi, double dechi,
 						 double* minxyz, double* maxxyz) {
 	double minmult, maxmult;

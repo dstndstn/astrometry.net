@@ -110,6 +110,11 @@ InlineDeclare void radecdeg2xyzarr(double ra, double dec, double* xyz);
 inline void radecdegarr2xyzarr(double* radec, double* xyz);
 inline void radecdeg2xyzarrmany(double *ra, double *dec, double* xyz, int n);
 
+// RA,Dec in degrees.
+// Puts the xyz unit vector pointing in positive-RA direction in "dra",
+// Puts the xyz unit vector pointing in the positive-Dec direction in "ddec".
+void radec_derivatives(double ra, double dec, double* dra, double* ddec);
+
 // Returns the distance-squared between two (RA,Dec)s in degrees.
 double distsq_between_radecdeg(double ra1, double dec1, double ra2, double dec2);
 
