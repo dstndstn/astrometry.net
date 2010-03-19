@@ -60,6 +60,7 @@ int main(int argc, char** args) {
 	unsigned char* outimg = NULL;
 	int W, H;
 	int wcsW, wcsH;
+	int hpW, hpH;
 	sip_t* wcs;
 	double minx, miny, maxx, maxy;
 	double hpstep;
@@ -79,6 +80,9 @@ int main(int argc, char** args) {
 
 	bool reverse = FALSE;
 	bool stretch = FALSE;
+
+	double maxD, minD;
+	double amaxD;
 
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
@@ -174,6 +178,11 @@ int main(int argc, char** args) {
 	if (reverse) {
 		outW = wcsW;
 		outH = wcsH;
+		hpW = W;
+		hpH = H;
+	} else {
+		hpW = outW;
+		hpH = outH;
 	}
 
 	printf("Rendering output image: %i x %i\n", outW, outH);
@@ -188,74 +197,59 @@ int main(int argc, char** args) {
 		outimg[4*i + 3] = 128;
 	}
 
+	// find how distances transform from 'image' to 'healpix image' space.
+	{
+		double chx, chy;
+		double cxyz[3];
+		double cra, cdec;
+		double dravec[3], ddecvec[3];
+		// compute distance distortion matrix
+		int steps = 360;
+		double astep = 2.0 * M_PI / (double)steps;
+
+		// center of image in healpix coords
+		chx = (minx + hpW/2 * hpstep);
+		chy = (miny + hpH/2 * hpstep);
+		healpix_to_xyzarr(bighp, 1, chx, chy, cxyz);
+		// directions of increasing RA,Dec
+		xyzarr2radecdeg(cxyz, &cra, &cdec);
+		radec_derivatives(cra, cdec, dravec, ddecvec);
+		maxD = -HUGE_VAL;
+		minD =  HUGE_VAL;
+		amaxD = -1;
+		for (i=0; i<steps; i++) {
+			double angle = astep * i;
+			double dra, ddec;
+			double d;
+			hx = sin(angle) * hpstep + chx;
+			hy = cos(angle) * hpstep + chy;
+			healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
+			dra = ddec = 0.0;
+			for (k=0; k<3; k++) {
+				dra += dravec[k] * (xyz[k] - cxyz[k]);
+				ddec += ddecvec[k] * (xyz[k] - cxyz[k]);
+			}
+			d = sqrt(dra*dra + ddec*ddec);
+			if (d > maxD) {
+				maxD = d;
+				amaxD = angle;
+			}
+			minD = MIN(d, minD);
+		}
+		printf("min,max D: %g, %g\n", minD, maxD);
+		printf("max D angle: %g\n", rad2deg(amaxD));
+	}
+
+
+
+
+
+
 	if (reverse) {
-		double maxD, minD;
-		double amaxD;
 		// for sinc:
 		// FIXME -- inverse?
 		scale = 1.0 / zoom;
 		support = (double)order / scale;
-
-		{
-			double chx, chy;
-			double cxyz[3];
-			double cra, cdec;
-			double dravec[3], ddecvec[3];
-			// compute distance distortion matrix
-			int steps = 360;
-			double astep = 2.0 * M_PI / (double)steps;
-
-			// center of image in healpix coords
-			chx = (minx + W/2 * hpstep);
-			chy = (miny + H/2 * hpstep);
-			healpix_to_xyzarr(bighp, 1, chx, chy, cxyz);
-			// directions of increasing RA,Dec
-			xyzarr2radecdeg(cxyz, &cra, &cdec);
-			radec_derivatives(cra, cdec, dravec, ddecvec);
-
-			maxD = -HUGE_VAL;
-			minD =  HUGE_VAL;
-			amaxD = -1;
-
-			for (i=0; i<steps; i++) {
-				double angle = astep * i;
-				double dra, ddec;
-				double d;
-				hx = sin(angle) * hpstep + chx;
-				hy = cos(angle) * hpstep + chy;
-				healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
-				dra = ddec = 0.0;
-				for (k=0; k<3; k++) {
-					dra += dravec[k] * (xyz[k] - cxyz[k]);
-					ddec += ddecvec[k] * (xyz[k] - cxyz[k]);
-				}
-				// yarr.
-				d = sqrt(dra*dra + ddec*ddec);
-				if (d > maxD) {
-					maxD = d;
-					amaxD = angle;
-				}
-				minD = MIN(d, minD);
-			}
-			printf("min,max D: %g, %g\n", minD, maxD);
-			printf("max D angle: %g\n", rad2deg(amaxD));
-
-			/*
-			 printf("dst2=array([");
-			 for (i=0; i<steps; i++) {
-			 double angle = astep * i;
-			 double t0,t1;
-			 double dst;
-			 hx = sin(angle);
-			 hy = cos(angle);
-			 t0 = maxD * (hx *  cos(amaxD) + hy * sin(amaxD));
-			 t1 = minD * (hx * -sin(amaxD) + hy * cos(amaxD));
-			 dst = sqrt(t0*t0 + t1*t1);
-			 printf("%g,", dst);
-			 }
-			 printf("])\n");
-			 */
-		}
 
 		for (i=0; i<outH; i++) {
 			for (j=0; j<outW; j++) {
@@ -369,8 +363,24 @@ int main(int argc, char** args) {
 					for (iy=y0; iy<=y1; iy++) {
 						for (ix=x0; ix<=x1; ix++) {
 							double d, L;
-							d = hypot(px - ix, py - iy);
+
+							if (!stretch) {
+								d = hypot(px - ix, py - iy);
+							} else {
+								double t0,t1;
+								double rot;
+								hx = ix-px;
+								hy = iy-py;
+								rot = -amaxD;
+								t0 = 1.0/maxD * (hx *  cos(rot) + hy * sin(rot));
+								t1 = 1.0/minD * (hx * -sin(rot) + hy * cos(rot));
+								d = sqrt(t0*t0 + t1*t1);
+								d /= (double)nside;
+								//printf("old d: %g, new %g\n", hypot(px - ix, py - iy), d);
+							}
 							L = lanczos(d * scale, order);
+							if (L == 0)
+								continue;
 							weight += L;
 							for (k=0; k<3; k++)
 								sum[k] += L * (double)img[4*(iy*W + ix) + k];

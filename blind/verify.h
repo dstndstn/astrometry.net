@@ -97,6 +97,8 @@ void verify_hit(const startree_t* skdt,
 #define THETA_CONFLICT -2
 // Filtered out
 #define THETA_FILTERED -3
+// Not examined because the bail-out threshold was reached.
+#define THETA_BAILEDOUT -4
 
 /*
  void verify_apply_ror(double* refxy, int* starids, int* p_NR,

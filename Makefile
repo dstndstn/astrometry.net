@@ -23,7 +23,7 @@ export INSTALL_DIR
 
 # Turn off optimisation?  If the following line is commented-out, the default
 # is to turn optimization on.  See util/makefile.common for details.
-#export OPTIMIZE = no
+export OPTIMIZE = no
 
 all:
 

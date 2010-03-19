@@ -349,7 +349,8 @@ static double real_verify_star_lists(verify_t* v,
 									 double logodds_stoplooking,
 									 int* p_besti,
 									 double** p_logodds, int** p_theta,
-									 double* p_worstlogodds) {
+									 double* p_worstlogodds,
+									 int* p_ibailed) {
 	int i, j;
 	double worstlogodds;
 	double bestworstlogodds;
@@ -401,6 +402,8 @@ static double real_verify_star_lists(verify_t* v,
 		all_logodds = calloc(v->NT, sizeof(double));
 		*p_logodds = all_logodds;
 	}
+	if (p_ibailed)
+		*p_ibailed = -1;
 
 	theta = malloc(v->NT * sizeof(int));
 
@@ -535,6 +538,8 @@ static double real_verify_star_lists(verify_t* v,
 
         if (logodds < logodds_bail) {
 			debug("  logodds %g less than bailout %g\n", logodds, logodds_bail);
+			if (p_ibailed)
+				*p_ibailed = i;
             break;
 		}
 
@@ -846,6 +851,20 @@ static void set_null_mo(MatchObj* mo) {
 	mo->logodds = -HUGE_VAL;
 }
 
+static void check_permutation(const int* perm, int N) {
+	int i;
+	int* counts = calloc(N, sizeof(int));
+	for (i=0; i<N; i++) {
+		assert(perm[i] >= 0);
+		assert(perm[i] < N);
+		counts[perm[i]]++;
+	}
+	for (i=0; i<N; i++) {
+		assert(counts[i] == 1);
+	}
+	free(counts);
+}
+
 void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 				const sip_t* sip, const verify_field_t* vf,
                 double pix2, double distractors,
@@ -866,6 +885,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	verify_t the_v;
 	verify_t* v = &the_v;
 	int NRimage;
+	int ibailed;
 
 	assert(mo->wcs_valid || sip);
 	assert(isfinite(logaccept));
@@ -1011,7 +1031,8 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 
 	worst = -HUGE_VAL;
 	K = real_verify_star_lists(v, effA, distractors,
-							   logbail, logstoplooking, &besti, &allodds, &theta, &worst);
+							   logbail, logstoplooking, &besti, &allodds, &theta, &worst,
+							   &ibailed);
 	mo->logodds = K;
 	mo->worstlogodds = worst;
 	// NTall so that caller knows how big 'etheta' is.
@@ -1035,6 +1056,17 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 			else
 				mo->nmatch++;
 		}
+		if (ibailed != -1)
+			for (i=ibailed+1; i<v->NT; i++)
+				theta[i] = THETA_BAILEDOUT;
+
+		// At this point, "theta[0]" is the *reference* star index
+		// that was matched by the test star "v->testperm[0]".
+		// Meanwhile, "v->refperm" lists all the valid reference stars.
+
+		// We want to produce "etheta", which has elements parallel to
+		// the test stars in their original (brightness) ordering; that is,
+		// we want to eliminate the need for "v->testperm".
 
 		if (DEBUGVERIFY) {
 			for (i=0; i<v->NT; i++) {
@@ -1058,23 +1090,46 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		// aren't in the image (we want to have "nindex" = "NRimage" = "NRall").
 		// This requires computing the inverse perm so we can fix theta to match.
 
-		// borrow this storage...
-		//invrperm = v->badguys;
+		// The reference stars include stars that are actually outside
+		// the field; we want to collapse the reference star list,
+		// which will renumber them.
+
 		invrperm = malloc(v->NRall * sizeof(int));
+		if (DEBUGVERIFY) {
+#define BAD_PERM -1000000
+			for (i=0; i<v->NRall; i++)
+				invrperm[i] = BAD_PERM;
+		}
 		for (i=0; i<NRimage; i++)
 			invrperm[v->refperm[i]] = i;
+
+		if (DEBUGVERIFY) {
+			// Both these permutations are complete.
+			check_permutation(v->refperm, v->NRall);
+			check_permutation(v->testperm, v->NTall);
+		}
 
 		permutation_apply(v->refperm, NRimage, v->refstarid, v->refstarid, sizeof(int));
 		permutation_apply(v->refperm, NRimage, v->refxy, v->refxy, 2*sizeof(double));
 		permutation_apply(v->refperm, NRimage, refxyz, refxyz, 3*sizeof(double));
 
+		// New v->refstarid[i] is old v->refstarid[ v->refperm[i] ]
+
+		if (DEBUGVERIFY) {
+			for (i=0; i<v->NTall; i++)
+				etheta[i] = BAD_PERM;
+		}
+
 		for (i=0; i<v->NT; i++) {
 			ti = v->testperm[i];
+			// assert that we haven't touched this element yet.
+			assert(etheta[ti] == BAD_PERM);
 			if (theta[i] < 0) {
 				etheta[ti] = theta[i];
 				// No match -> no weight.
 				eodds[ti] = -HUGE_VAL;
 			} else {
+				assert(invrperm[theta[i]] != BAD_PERM);
 				etheta[ti] = invrperm[theta[i]];
 				eodds[ti] = allodds[i];
 			}
@@ -1089,9 +1144,17 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		}
 
 		if (DEBUGVERIFY) {
+			// We should touch every element.
+			for (i=0; i<v->NTall; i++)
+				assert(etheta[i] != BAD_PERM);
 			for (i=0; i<v->NTall; i++)
 				if (etheta[i] >= 0)
 					assert(etheta[i] < NRimage);
+				else
+					assert(etheta[i] == THETA_FILTERED ||
+						   etheta[i] == THETA_DISTRACTOR ||
+						   etheta[i] == THETA_CONFLICT ||
+						   etheta[i] == THETA_BAILEDOUT);
 		}
 
 		// Reinsert the matched quad...
@@ -1104,6 +1167,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 					ri = i;
 					if (v->refstarid[ri] == mo->star[j]) {
 						ti = mo->field[j];
+						assert(etheta[ti] == THETA_FILTERED);
 						etheta[ti] = ri;
 						eodds[ti] = HUGE_VAL;
 						debug("Matched ref index %i (star %i) to test index %i; ref pos=(%.1f, %.1f), test pos=(%.1f, %.1f)\n",
@@ -1233,7 +1297,7 @@ double verify_star_lists(const double* refxys, int NR,
 
 	X = real_verify_star_lists(&v, effective_area, distractors,
 							   logodds_bail, logodds_stoplooking, p_besti, p_all_logodds, p_theta,
-							   p_worstlogodds);
+							   p_worstlogodds, NULL);
 	free(v.refperm);
 	return X;
 }
