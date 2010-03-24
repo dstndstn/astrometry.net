@@ -40,7 +40,7 @@ int blind_wcs_move_tangent_point(const double* starxyz,
 								 tan_t* tanout);
 
 /*
- Computes a rigid TAN WCS projection, based on the correspondence
+ Computes a rigid (conformal) TAN WCS projection, based on the correspondence
  between stars and field objects.
  .  starxyz is an array of star positions on the unit sphere.
  .  fieldxy is an array of pixel coordinates.

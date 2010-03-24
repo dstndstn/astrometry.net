@@ -228,6 +228,15 @@ int main(int argc, char** args) {
 
 			logmsg("Logodds: %g\n", logodds);
 
+			if (TRUE) {
+				for (i=0; i<Nfield; i++) {
+					if (theta[i] < 0)
+						continue;
+					printf("%g %g %g %g\n", fieldpix[2*i+0], fieldpix[2*i+1],
+						   rd_getra(rd, theta[i]), rd_getdec(rd, theta[i]));
+				}
+			}
+
 			if (plotfn) {
 				plot_args_t pargs;
 				plotimage_t* img;
