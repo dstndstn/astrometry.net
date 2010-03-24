@@ -381,6 +381,8 @@ static double real_verify_star_lists(verify_t* v,
 	refcopy = malloc(2 * v->NR * sizeof(double));
 	// we must pack/unpermute the refxys; remember this packing order in "rperm".
 	// we borrow storage for "rperm"...
+	if (!v->badguys)
+		v->badguys = malloc(v->NR * sizeof(int));
 	rperm = v->badguys;
 	for (i=0; i<v->NR; i++) {
 		int ri = v->refperm[i];
