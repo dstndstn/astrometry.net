@@ -961,7 +961,8 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	// it roughly represents a local brightness ordering.  Use this to sort the
 	// index stars.
 	// (NOTE that here we do want "sweep" to be size "NRall"; only the
-	// bottom "NRimage" of the "refperm" array will be accessed, so none of
+	// bottom "NRimage" of the "refperm" array will be accessed in the
+	// permuted_sort below, so none of
 	// the elements between NRimage and NRall will be touched.)
 	sweep = malloc(v->NRall * sizeof(int));
 	for (i=0; i<v->NRall; i++)
@@ -1104,8 +1105,8 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 			invrperm[v->refperm[i]] = i;
 
 		if (DEBUGVERIFY) {
-			// Both these permutations are complete.
-			check_permutation(v->refperm, v->NRall);
+			// Both these permutations should be complete.
+			check_permutation(v->refperm, NRimage);
 			check_permutation(v->testperm, v->NTall);
 		}
 

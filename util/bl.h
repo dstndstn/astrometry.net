@@ -222,6 +222,10 @@ void sl_remove(sl* list, int index);
 // Returns the index where the string was found, or -1 if it wasn't found.
 int sl_remove_string(sl* list, const char* string);
 
+// Removes "string" if it is found in the list, using strcasecmp().
+// Returns the index where the string was found, or -1 if it wasn't found.
+int sl_remove_string_bycaseval(sl* list, const char* string);
+
 // remove all elements starting from "start" to the end of the list.
 void sl_remove_from(sl* list, int start);
 

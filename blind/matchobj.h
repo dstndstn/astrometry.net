@@ -100,7 +100,7 @@ struct match_struct {
 	// how many seconds of CPU time have we spent on this field?
 	float timeused;
 
-    // stuff used by blind...
+	// stuff used by blind...
 	// tweaked-up WCS.
 	sip_t* sip;
 	// RA,Dec of reference stars
@@ -109,6 +109,7 @@ struct match_struct {
 	double* fieldxy;
 
 	bl* tagalong;
+	bl* field_tagalong;
 
     // in arcsec.
     double index_jitter;

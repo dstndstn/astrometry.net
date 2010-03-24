@@ -196,9 +196,11 @@ int main(int argc, char *args[]) {
 		}
 		plotstuff_run_command(&pargs, "image");
 	} else {
-		if (plot_xy_setsize(&pargs, xy)) {
-			ERROR("Failed to set plot size from xylist");
-			exit(-1);
+		if (pargs.W == 0 || pargs.H == 0) {
+			if (plot_xy_setsize(&pargs, xy)) {
+				ERROR("Failed to set plot size from xylist");
+				exit(-1);
+			}
 		}
 	}
 

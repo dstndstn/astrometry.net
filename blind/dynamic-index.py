@@ -28,7 +28,6 @@ if __name__ == '__main__':
 	indexfn = 'index.fits'
 	indexid = 999
 
-
 	usnobhps = healpix_rangesearch(ra, dec, radius, usnob_nside)
 	print 'USNO-B healpixes in range:', usnobhps
 	allU = []
@@ -64,11 +63,15 @@ if __name__ == '__main__':
 	ra = hstack([U.ra for U in allU])
 	dec = hstack([U.dec for U in allU])
 	mag = hstack([U.rmag for U in allU])
+	mag_r1 = hstack([U.magnitude_1 for U in allU])
+	mag_r2 = hstack([U.magnitude_3 for U in allU])
 
 	C = pyfits.Column
 	pyfits.new_table([C(name='ra', format='D', array=ra, unit='deg'),
 					  C(name='dec', format='D', array=dec, unit='deg'),
 					  C(name='mag', format='E', array=mag, unit='mag'),
+					  C(name='mag_r1', format='E', array=mag_r1, unit='mag'),
+					  C(name='mag_r2', format='E', array=mag_r2, unit='mag'),
 					  ]).writeto(catfn, clobber=True)
 	print 'Wrote catalog to', catfn
 	

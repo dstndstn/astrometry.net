@@ -69,7 +69,8 @@ def radec_to_sdss_rcf(ra, dec, spherematch=True, radius=0):
 if __name__ == '__main__':
 	#rcfs = radec_to_sdss_rcf([236.1, 236.4], [0,0])
 	#ra,dec = 10.632, 41.257
-	ra,dec = 146.8, 67.9
+	#ra,dec = 146.8, 67.9
+	ra,dec = 143, 21.5
 	# arcmin
 	radius = 15.
 	rcfs = radec_to_sdss_rcf(ra,dec,radius=radius)

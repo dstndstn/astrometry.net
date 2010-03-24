@@ -29,9 +29,24 @@
  done
 
 
+ cp tstimg.png tstimg-s.png
+ cp tstimg.wcs tstimg-s.wcs
+ hpimage -s tstimg-s; hpimage -r -s tstimg-s
+
+ for x in tstimg*.png; do
+ pngtopnm $x | pnmscale 10 | pnmtopng > zoom-$x;
+ done
+
+ cp tstimg.wcs tstdot.wcs
+ hpimage tstdot; hpimage -r tstdot
+ cp tstdot.png tstdot-s.png
+ cp tstdot.wcs tstdot-s.wcs
+ hpimage -s tstdot-s; hpimage -r -s tstdot-s
+
+
  */
 
-static const char* OPTIONS = "hrs";
+static const char* OPTIONS = "hrsv";
 
 void printHelp(char* progname) {
     fprintf(stderr, "%s [options] <base-filename>\n"
@@ -46,7 +61,7 @@ extern int optind, opterr, optopt;
 double lanczos(double x, int order) {
 	if (x == 0)
 		return 1.0;
-	if (x > order)
+	if (x > order || x < -order)
 		return 0.0;
 	return order * sin(M_PI * x) * sin(M_PI * x / (double)order) / square(M_PI * x);
 }
@@ -84,12 +99,17 @@ int main(int argc, char** args) {
 	double maxD, minD;
 	double amaxD;
 
+	int loglvl = LOG_MSG;
+
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
 		case '?':
         case 'h':
 			printHelp(args[0]);
 			exit(0);
+		case 'v':
+			loglvl++;
+			break;
 		case 'r':
 			reverse = TRUE;
 			break;
@@ -97,6 +117,8 @@ int main(int argc, char** args) {
 			stretch = TRUE;
 			break;
 		}
+
+	log_init(loglvl);
 
 	if (argc - optind != 1) {
 		ERROR("Need one arg: base filename.\n");
@@ -128,6 +150,7 @@ int main(int argc, char** args) {
 	free(fn);
 
 	asprintf(&fn, "%s.wcs", base);
+	printf("Reading WCS file %s\n", fn);
 	wcs = sip_read_tan_or_sip_header_file_ext(fn, 0, NULL, FALSE);
 	if (!wcs) {
 		ERROR("Failed to read WCS from file: %s\n", fn);
@@ -174,6 +197,7 @@ int main(int argc, char** args) {
 	maxy = 1.0/(double)nside *  ceil(maxy * nside);
 	outW = (int)ceil(nside * (maxx - minx));
 	outH = (int)ceil(nside * (maxy - miny));
+	logverb("Healpix x range [%.3f, %.3f], [%.3f, %.3f]\n", minx, maxx, miny, maxy);
 
 	if (reverse) {
 		outW = wcsW;
@@ -188,6 +212,7 @@ int main(int argc, char** args) {
 	printf("Rendering output image: %i x %i\n", outW, outH);
 
 	hpstep = 1.0 / (float)nside;
+	logverb("hpstep %g\n", hpstep);
 
 	outimg = malloc(outW * outH * 4);
 	for (i=0; i<outW*outH; i++) {
@@ -203,7 +228,7 @@ int main(int argc, char** args) {
 		double cxyz[3];
 		double cra, cdec;
 		double dravec[3], ddecvec[3];
-		// compute distance distortion matrix
+		// compute distance distortion matrix, poorly, by probing a circle.
 		int steps = 360;
 		double astep = 2.0 * M_PI / (double)steps;
 
@@ -251,6 +276,9 @@ int main(int argc, char** args) {
 		scale = 1.0 / zoom;
 		support = (double)order / scale;
 
+		if (stretch)
+			support *= (maxD/minD);
+
 		for (i=0; i<outH; i++) {
 			for (j=0; j<outW; j++) {
 				double px, py;
@@ -290,10 +318,14 @@ int main(int argc, char** args) {
 								d = hypot(px - ix, py - iy);
 							} else {
 								double t0,t1;
+								double rot;
 								hx = ix-px;
 								hy = iy-py;
-								t0 = maxD * (hx *  cos(amaxD) + hy * sin(amaxD));
-								t1 = minD * (hx * -sin(amaxD) + hy * cos(amaxD));
+								// ??
+								//rot = -amaxD;
+								rot = amaxD;
+								t0 = maxD * (hx *  cos(rot) + hy * sin(rot));
+								t1 = minD * (hx * -sin(rot) + hy * cos(rot));
 								d = sqrt(t0*t0 + t1*t1);
 								d *= nside;
 							}
@@ -306,7 +338,7 @@ int main(int argc, char** args) {
 					}
 					if (weight > 0) {
 						for (k=0; k<3; k++)
-							outimg[4*(i*outW + j) + k] = MIN(255, MAX(0, sum[k] / weight));
+							outimg[4*(i*outW + j) + k] = MIN(255, MAX(0, round(sum[k] / weight)));
 						outimg[4*(i*outW + j) + 3] = 255;
 					}
 				} else {
@@ -327,17 +359,23 @@ int main(int argc, char** args) {
 		scale = zoom;
 		support = (double)order / scale;
 
+		if (stretch)
+			support *= (maxD/minD);
+
 		for (i=0; i<outH; i++) {
 			hy = miny + i*hpstep;
 			for (j=0; j<outW; j++) {
 				double px, py;
 				int ix, iy;
 				hx = minx + j*hpstep;
+				debug("healpix (%.3f, %.3f)\n", hx, hy);
 				healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
+				debug("radec (%.3f, %.3f)\n", rad2deg(xy2ra(xyz[0], xyz[1])), rad2deg(z2dec(xyz[2])));
 				if (!sip_xyzarr2pixelxy(wcs, xyz, &px, &py)) {
 					ERROR("SIP projects to wrong side of sphere\n");
-					exit(-1);
+					continue;
 				}
+				debug("pixel (%.1f, %.1f)\n", px, py);
 				if (dosinc) {
 					double weight;
 					double sum[3];
@@ -369,14 +407,18 @@ int main(int argc, char** args) {
 							} else {
 								double t0,t1;
 								double rot;
-								hx = ix-px;
-								hy = iy-py;
-								rot = -amaxD;
-								t0 = 1.0/maxD * (hx *  cos(rot) + hy * sin(rot));
-								t1 = 1.0/minD * (hx * -sin(rot) + hy * cos(rot));
+								double dx, dy;
+								dx = ix-px;
+								dy = iy-py;
+								// ??
+								//rot = M_PI/2.0 + amaxD;
+								rot = amaxD;
+								t0 = 1.0/maxD * (dx *  cos(rot) + dy * sin(rot));
+								t1 = 1.0/minD * (dx * -sin(rot) + dy * cos(rot));
 								d = sqrt(t0*t0 + t1*t1);
 								d /= (double)nside;
-								//printf("old d: %g, new %g\n", hypot(px - ix, py - iy), d);
+								double d1 = hypot(px - ix, py - iy);
+								printf("old d: %g, new %g\n", d1, d);
 							}
 							L = lanczos(d * scale, order);
 							if (L == 0)
@@ -388,7 +430,7 @@ int main(int argc, char** args) {
 					}
 					if (weight > 0) {
 						for (k=0; k<3; k++)
-							outimg[4*(i*outW + j) + k] = MIN(255, MAX(0, sum[k] / weight));
+							outimg[4*(i*outW + j) + k] = MIN(255, MAX(0, round(sum[k] / weight)));
 						outimg[4*(i*outW + j) + 3] = 255;
 					}
 

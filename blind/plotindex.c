@@ -70,7 +70,7 @@ int plot_index_plot(const char* command,
 			startree_search_for(index->starkd, xyz, r2, NULL, &radecs, NULL, &N);
 			logmsg("Found %i stars in range of index %s\n", N, index->indexname);
 			for (j=0; j<N; j++) {
-				if (plotstuff_radec2xy(pargs, radecs[j*2], radecs[j*2+1], &px, &py)) {
+				if (!plotstuff_radec2xy(pargs, radecs[j*2], radecs[j*2+1], &px, &py)) {
 					ERROR("Failed to convert RA,Dec %g,%g to pixels\n", radecs[j*2], radecs[j*2+1]);
 					continue;
 				}
@@ -90,7 +90,7 @@ int plot_index_plot(const char* command,
 				quadfile_get_stars(index->quads, j, stars);
 				for (k=0; k<DQ; k++) {
 					startree_get_radec(index->starkd, stars[k], &ra, &dec);
-					if (plotstuff_radec2xy(pargs, ra, dec, &px, &py)) {
+					if (!plotstuff_radec2xy(pargs, ra, dec, &px, &py)) {
 						ERROR("Failed to convert RA,Dec %g,%g to pixels for quad %i\n", ra, dec, j);
 						continue;
 					}

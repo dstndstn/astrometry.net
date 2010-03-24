@@ -553,7 +553,7 @@ ALL_OBJ += plotstuff-main.o
 plotxy.o: plotxy.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) -c -o $@ $<
 
-plotxy: plotxy-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+plotxy: plotxy-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 ALL_OBJ += plotxy-main.o
 
@@ -570,6 +570,10 @@ quadidx: quadidx.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 codeprojections: codeprojections.o $(UTIL_OBJS) $(ANLIBS)
 
 quadscales: quadscales.o \
+		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
+		$(QFITS_LIB)
+
+index-stats: index-stats.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 		$(QFITS_LIB)
 

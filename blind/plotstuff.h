@@ -98,8 +98,9 @@ double plotstuff_pixel_scale(plot_args_t* pargs);
 
 // RA,Dec in degrees
 // x,y in pixels (cairo coordinates)
-int plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
-					   double* x, double* y);
+// Returns TRUE on success.
+bool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
+						double* x, double* y);
 
 int plotstuff_get_radec_center_and_radius(plot_args_t* pargs, double* ra, double* dec, double* radius);
 

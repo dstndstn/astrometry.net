@@ -1,4 +1,5 @@
 import pyfits
+import numpy
 from numpy import array, isscalar
 
 class tabledata(object):
@@ -27,6 +28,24 @@ class tabledata(object):
 			else:
 				rtn._length = len(val[I])
 		return rtn
+
+	def to_fits_columns(self):
+		cols = []
+
+		fmap = {numpy.float64:'D',
+				numpy.float32:'E',
+				numpy.int32:'J',
+				}
+				
+		for name,val in self.__dict__.items():
+			if name == '_length':
+				continue
+			# FIXME -- format should match that of the 'val'.
+			#print 'col', name, 'type', val.dtype, 'descr', val.dtype.descr
+			fitstype = fmap.get(val.dtype.type, 'D')
+			cols.append(pyfits.Column(name=name, array=val, format=fitstype))
+		return cols
+		
 
 def table_fields(dataorfn, rows=None, hdunum=1):
 	pf = None
@@ -92,10 +111,10 @@ def text_table_fields(forfn, text=None, skiplines=0):
 				float(x)
 			except:
 				isfloat = False
-				isint = False
+				#isint = False
 				break
 			try:
-				int(x)
+				int(x, 0)
 			except:
 				isint = False
 				break
@@ -103,7 +122,7 @@ def text_table_fields(forfn, text=None, skiplines=0):
 			isfloat = False
 
 		if isint:
-			vals = [int(x) for x in col]
+			vals = [int(x, 0) for x in col]
 		elif isfloat:
 			vals = [float(x) for x in col]
 		else:

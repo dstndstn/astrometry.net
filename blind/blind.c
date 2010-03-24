@@ -125,6 +125,41 @@ static bool grab_tagalong_data(startree_t* starkd, MatchObj* mo, blind_t* bp,
 	return TRUE;
 }
 
+static bool grab_field_tagalong_data(MatchObj* mo, xylist_t* xy, int N) {
+	fitstable_t* tagalong;
+	int i;
+	sl* lst;
+	if (!mo->field_tagalong)
+		mo->field_tagalong = bl_new(16, sizeof(tagalong_t));
+	tagalong = xy->table;
+	lst = xylist_get_tagalong_column_names(xy, NULL);
+	{
+		char* txt = sl_join(lst, " ");
+		logverb("Found tag-along columns from field: %s\n", txt);
+		free(txt);
+	}
+	for (i=0; i<sl_size(lst); i++) {
+		const char* col = sl_get(lst, i);
+		tagalong_t tag;
+		if (fitstable_find_fits_column(tagalong, col, &(tag.units), &(tag.type), &(tag.arraysize))) {
+			ERROR("Failed to find column \"%s\" in index", col);
+			continue;
+		}
+		tag.data = fitstable_read_column_array(tagalong, col, tag.type);
+		if (!tag.data) {
+			ERROR("Failed to read data for column \"%s\" in index", col);
+			continue;
+		}
+		tag.name = strdup(col);
+		tag.units = strdup(tag.units);
+		tag.itemsize = fits_get_atom_size(tag.type) * tag.arraysize;
+		tag.Ndata = N;
+		bl_append(mo->field_tagalong, &tag);
+	}
+	sl_free2(lst);
+	return TRUE;
+}
+
 
 /** Index handling for in_parallel and not.
 
@@ -497,6 +532,8 @@ void blind_init(blind_t* bp) {
     bp->quad_size_fraction_lo = DEFAULT_QSF_LO;
     bp->quad_size_fraction_hi = DEFAULT_QSF_HI;
     bp->nsolves = 1;
+
+	bp->xyls_tagalong_all = TRUE;
     // don't set sp-> here because solver_set_default_values()
     // will get called next and wipe it out...
 }
@@ -750,6 +787,12 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 
 		if (bp->rdls_tagalong || bp->rdls_tagalong_all)
 			grab_tagalong_data(sp->index->starkd, mymo, bp, mymo->refstarid, mymo->nindex);
+
+		// FIXME -- we don't support specifying individual fields (yet)
+		assert(bp->xyls_tagalong_all);
+		assert(!bp->xyls_tagalong);
+		if (bp->xyls_tagalong_all)
+			grab_field_tagalong_data(mymo, bp->xyls, mymo->nfield);
 	}
 
 	if (mymo->logodds < bp->logratio_tosolve)
@@ -1068,6 +1111,8 @@ void blind_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest) {
 			bl_append(dest->tagalong, &tagcopy);
 		}
 	}
+	// NOT SUPPORTED (yet)
+	assert(!mo->field_tagalong);
 }
 
 // Free the things I added to the mo.
@@ -1092,6 +1137,17 @@ void blind_free_matchobj(MatchObj* mo) {
 		}
 		bl_free(mo->tagalong);
 		mo->tagalong = NULL;
+	}
+	if (mo->field_tagalong) {
+		int i;
+		for (i=0; i<bl_size(mo->field_tagalong); i++) {
+			tagalong_t* tag = bl_access(mo->field_tagalong, i);
+			free(tag->name);
+			free(tag->units);
+			free(tag->data);
+		}
+		bl_free(mo->field_tagalong);
+		mo->field_tagalong = NULL;
 	}
 }
 
@@ -1382,6 +1438,16 @@ static int write_corr_file(blind_t* bp) {
 			}
 		}
 
+		// FIXME -- check for duplicate column names
+		if (mo->field_tagalong) {
+			int j;
+			for (j=0; j<bl_size(mo->field_tagalong); j++) {
+				tagalong_t* tag = bl_access(mo->field_tagalong, j);
+				fitstable_add_write_column_struct(tab, tag->type, tag->arraysize, 0, tag->type, tag->name, tag->units);
+				tag->colnum = fitstable_ncols(tab)-1;
+			}
+		}
+
 		if (fitstable_write_header(tab)) {
 			ERROR("Failed to write correspondence file header.");
 			return -1;
@@ -1432,6 +1498,28 @@ static int write_corr_file(blind_t* bp) {
 											   (char*)tag->data + ri*tag->itemsize, 0);
 					row++;
 				}
+			}
+		}
+		if (mo->field_tagalong) {
+			for (j=0; j<bl_size(mo->field_tagalong); j++) {
+				tagalong_t* tag = bl_access(mo->field_tagalong, j);
+				int row = 0;
+				int k;
+				// Ugh, we write each datum individually...
+				for (k=0; k<mo->nfield; k++) {
+					if (mo->theta[k] < 0)
+						continue;
+					fitstable_write_one_column(tab, tag->colnum, row, 1,
+											   (char*)tag->data + k*tag->itemsize, 0);
+					row++;
+				}
+				/*
+				 if (fitstable_write_one_column(tab, tag->colnum, 0, mo->nfield,
+				 tag->data, tag->itemsize)) {
+				 ERROR("Failed to write tag-along column \"%s\" to correspondences file", tag->name);
+				 return -1;
+				 }
+				 */
 			}
 		}
 		

@@ -301,29 +301,43 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 	logverb("Checking %i NGC/IC objects.\n", N);
 
 	for (i=0; i<N; i++) {
-		ngc_entry* ngc = ngc_get_entry_accurate(i);
+		ngc_entry* ngc;
 		char* names;
 		double pixrad;
 		cairocmd_t cmd;
 		double px, py;
-		memset(&cmd, 0, sizeof(cmd));
 
+		ngc = ngc_get_entry_accurate(i);
 		if (!ngc)
 			break;
-		if (ngc->size < imsize * ann->ngc_fraction)
+		if (ngc->size < imsize * ann->ngc_fraction) {
+			// FIXME -- just plot an X-mark with label.
+			debug("%s %i: size %g arcmin < limit of %g\n",
+				  (ngc->is_ngc ? "NGC":"IC"), ngc->id, ngc->size, imsize*ann->ngc_fraction);
 			continue;
+		}
 
-		if (!plotstuff_radec2xy(pargs, ngc->ra, ngc->dec, &px, &py))
+		if (!plotstuff_radec2xy(pargs, ngc->ra, ngc->dec, &px, &py)) {
+			debug("%s %i: RA,Dec (%.1f,%.1f) is >90 deg away.\n",
+				  (ngc->is_ngc ? "NGC":"IC"), ngc->id, ngc->ra, ngc->dec);
 			continue;
+		}
 
 		pixrad = 0.5 * ngc->size * 60.0 / imscale;
-		// FIXME --  should plot things whose circles will fall within frame.
-		if (px < -pixrad || py < -pixrad || px > pargs->W + pixrad || py > pargs->H + pixrad)
+		if (px < -pixrad || py < -pixrad || px > pargs->W + pixrad || py > pargs->H + pixrad) {
+			debug("%s %i: RA,Dec (%.1f,%.1f), pix (%.1f,%.1f) is out-of-bounds\n",
+				  (ngc->is_ngc ? "NGC":"IC"), ngc->id, ngc->ra, ngc->dec, px, py);
 			continue;
+		}
 
 		names = ngc_get_name_list(ngc, " / ");
 		//if (only_messier && !starts_with(sl_get(names, n), "M "))
 		printf("%s\n", names);
+
+		logverb("%s %i: RA,Dec (%.1f,%.1f), size %g arcmin, pix (%.1f,%.1f), radius %g\n",
+				(ngc->is_ngc ? "NGC":"IC"), ngc->id, ngc->ra, ngc->dec, ngc->size, px, py, pixrad);
+
+		memset(&cmd, 0, sizeof(cmd));
 
 		cmd.type = CIRCLE;
 		cmd.layer = 0;
@@ -343,7 +357,6 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 
 		debug("size: %f arcsec, pix radius: %f pixels\n", ngc->size, pixrad);
 
-		//add_text(pargs, ann, cairo, names, px + ann->label_offset_x, py + dy + ann->label_offset_y);
 		add_text(pargs, ann, cairo, names, px, py);
 		free(names);
 
@@ -473,6 +486,8 @@ int plot_annotations_command(const char* cmd, const char* cmdargs,
 		parse_color_rgba(cmdargs, ann->bg_rgba);
 	} else if (streq(cmd, "annotations_no_ngc")) {
 		ann->NGC = FALSE;
+	} else if (streq(cmd, "annotations_ngc_size")) {
+		ann->ngc_fraction = atof(cmdargs);
 	} else if (streq(cmd, "annotations_target")) {
 		target_t tar;
 		sl* args = sl_split(NULL, cmdargs, " ");

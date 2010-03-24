@@ -18,6 +18,13 @@
 
 #include <math.h>
 
+InlineDefine Const double mjdtojd(double mjd) {
+	return mjd + MJD_JD_OFFSET;
+}
+InlineDefine Const double jdtomjd(double jd) {
+	return jd - MJD_JD_OFFSET;
+}
+
 InlineDefine Const int dimquad2dimcode(int dimquad) {
     return 2 * (dimquad - 2);
 }

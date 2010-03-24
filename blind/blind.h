@@ -104,6 +104,10 @@ struct blind_params {
 	sl* rdls_tagalong;
 	bool rdls_tagalong_all;
 
+	// extra fields to add from the xyls file:
+	sl* xyls_tagalong;
+	bool xyls_tagalong_all;
+
     // List of MatchObjs with logodds >= logodds_tokeep
     bl* solutions;
 

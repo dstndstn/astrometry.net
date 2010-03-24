@@ -372,16 +372,14 @@ double plotstuff_pixel_scale(plot_args_t* pargs) {
 	return sip_pixel_scale(pargs->wcs);
 }
 
-int plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
-					   double* x, double* y) {
+bool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
+						double* x, double* y) {
 	if (!pargs->wcs) {
 		ERROR("No WCS defined!");
-		return -1;
+		return FALSE;
 	}
-	return (sip_radec2pixelxy(pargs->wcs, ra, dec, x, y) ? 0 : -1);
+	return sip_radec2pixelxy(pargs->wcs, ra, dec, x, y);
 }
-
-
 
 int
 ATTRIB_FORMAT(printf,2,3)

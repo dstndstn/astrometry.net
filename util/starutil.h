@@ -76,6 +76,11 @@ InlineDeclare Const double arcsec2rad(double x);
 InlineDeclare Const double arcsec2deg(double x);
 InlineDeclare Const double arcsec2arcmin(double x);
 
+#define MJD_JD_OFFSET 2400000.5
+
+InlineDeclare Const double mjdtojd(double mjd);
+InlineDeclare Const double jdtomjd(double jd);
+
 // RA,Dec in radians:
 #define radec2x(r,d) (cos(d)*cos(r))
 #define radec2y(r,d) (cos(d)*sin(r))

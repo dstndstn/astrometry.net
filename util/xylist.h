@@ -116,6 +116,13 @@ int xylist_add_tagalong_column(xylist_t* ls, tfits_type c_type,
 int xylist_write_tagalong_column(xylist_t* ls, int colnum,
                                  int offset, int N,
                                  void* data, int datastride);
+
+// when reading.
+// Returns the tagged-along column names.
+// If 'lst' is non-NULL, the names will be added to it; otherwise a new
+// sl* will be allocated and returned.
+sl* xylist_get_tagalong_column_names(xylist_t* ls, sl* lst);
+
 void* xylist_read_tagalong_column(xylist_t* ls, const char* colname,
                                   tfits_type c_type);
 

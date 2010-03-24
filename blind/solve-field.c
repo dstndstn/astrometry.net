@@ -258,7 +258,9 @@ static int plot_source_overlay(augment_xylist_t* axy, const char* me,
     if (axy->imagefn) {
         sl_append(cmdline, "-I");
         append_escape(cmdline, axy->pnmfn);
-    }
+    } else {
+		sl_appendf(cmdline, "-W %i -H %i", axy->W, axy->H);
+	}
     if (axy->xcol) {
         sl_append(cmdline, "-X");
         append_escape(cmdline, axy->xcol);

@@ -214,7 +214,7 @@ anqfits_t* anqfits_open(const char* filename) {
     
     if (xtend) {
         /* Look for extensions */
-        qdebug(printf("anqfits: searching for extensions in %s\n", filename););
+        //qdebug(printf("anqfits: searching for extensions in %s\n", filename););
 
         /*
          * Register all extension offsets

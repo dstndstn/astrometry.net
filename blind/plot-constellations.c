@@ -505,7 +505,7 @@ int main(int argc, char** args) {
 
         logverb("Checking %i constellations.\n", N);
         for (c=0; c<N; c++) {
-            const char* shortname;
+            const char* shortname = NULL;
             const char* longname;
             il* lines;
             il* uniqstars;
