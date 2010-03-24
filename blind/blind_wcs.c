@@ -291,12 +291,12 @@ int blind_wcs_compute(const double* starxyz,
 
 	// -compute WCS parameters.
 	xyzarr2radecdegarr(star_cm, tan->crval);
-	////// FIXME!!  This can't be right -- pcm is in RADIANS!
-	//tan->crpix[0] = field_cm[0] + pcm[0];
-	//tan->crpix[1] = field_cm[1] + pcm[1];
-	tan->crpix[0] = field_cm[0] + pcm[0];
-	tan->crpix[1] = field_cm[1] + pcm[1];
-
+	// FIXME -- we ignore pcm.  It should get added back in (after
+	// multiplication by CD in the appropriate units) to either crval or
+	// crpix.  It's a very small correction probably of the same size
+	// as the other approximations we're making.
+	tan->crpix[0] = field_cm[0];
+	tan->crpix[1] = field_cm[1];
 
 	scale = rad2deg(scale);
 	// The CD rows are reversed from R because star_coords and the Intermediate
@@ -311,54 +311,7 @@ int blind_wcs_compute(const double* starxyz,
     assert(isfinite(tan->cd[1][0]));
     assert(isfinite(tan->cd[1][1]));
 
-	/*
-	 * Did I add pcm in the right direction?
-	 * I've never seen it make more of a difference than machine epsilon.
-	  {
-		double rmsA = 0.0;
-		double rmsB = 0.0;
-		double rmsC = 0.0;
-		tan_t tan_tst;
-		memcpy(&tan_tst, tan, sizeof(tan_t));
-
-		tan_tst.crpix[0] = field_cm[0] + pcm[0];
-		tan_tst.crpix[1] = field_cm[1] + pcm[1];
-
-		for (i=0; i<N; i++) {
-			double x, y;
-			tan_xyzarr2pixelxy(&tan_tst, starxyz + i*3, &x, &y);
-			rmsA += square(x - fieldxy[i*2 + 0]) + square(y - fieldxy[i*2 + 1]);
-		}
-		rmsA = sqrt(rmsA / (double)N);
-
-		tan_tst.crpix[0] = field_cm[0];
-		tan_tst.crpix[1] = field_cm[1];
-
-		for (i=0; i<N; i++) {
-			double x, y;
-			tan_xyzarr2pixelxy(&tan_tst, starxyz + i*3, &x, &y);
-			rmsB += square(x - fieldxy[i*2 + 0]) + square(y - fieldxy[i*2 + 1]);
-		}
-		rmsB = sqrt(rmsB / (double)N);
-
-		tan_tst.crpix[0] = field_cm[0] - pcm[0];
-		tan_tst.crpix[1] = field_cm[1] - pcm[1];
-
-		for (i=0; i<N; i++) {
-			double x, y;
-			tan_xyzarr2pixelxy(&tan_tst, starxyz + i*3, &x, &y);
-			rmsC += square(x - fieldxy[i*2 + 0]) + square(y - fieldxy[i*2 + 1]);
-		}
-		rmsC = sqrt(rmsC / (double)N);
-
-		printf("rmsA = %.16g pix.\n", rmsA);
-		printf("rmsB = %.16g pix.\n", rmsB);
-		printf("rmsC = %.16g pix.\n", rmsC);
-	}
-	*/
-
 	if (p_scale) *p_scale = scale;
-
 	free(p);
 	free(f);
     return 0;
