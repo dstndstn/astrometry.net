@@ -60,7 +60,7 @@
 #include "plotimage.h"
 #include "cairoutils.h"
 
-static const char* OPTIONS = "hx:w:r:vj:";
+static const char* OPTIONS = "hx:w:r:vj:p:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -68,6 +68,7 @@ void print_help(char* progname) {
 		   "   -w <WCS input file>\n"
 		   "   -x <xyls input file>\n"
 		   "   -r <rdls input file>\n"
+		   "   [-p <plot output file>]\n"
            "   [-v]: verbose\n"
 		   "   [-j <pixel-jitter>]: set pixel jitter (default 1.0)\n"
 		   "\n", progname);
@@ -81,14 +82,13 @@ int main(int argc, char** args) {
 	char* xylsfn = NULL;
 	char* wcsfn = NULL;
 	char* rdlsfn = NULL;
+	char* plotfn = NULL;
 
 	xylist_t* xyls = NULL;
 	rdlist_t* rdls = NULL;
 	sip_t sip;
-	int i, j;
+	int i;
 	int W, H;
-	//double xyzcenter[3];
-	//double fieldrad2;
 	double pixeljitter = 1.0;
     int loglvl = LOG_MSG;
 	double wcsscale;
@@ -97,6 +97,9 @@ int main(int argc, char** args) {
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'p':
+			plotfn = optarg;
+			break;
 		case 'j':
 			pixeljitter = atof(optarg);
 			break;
@@ -156,12 +159,6 @@ int main(int argc, char** args) {
 		logmsg("Failed to read an rdlist from file %s.\n", rdlsfn);
 		exit(-1);
 	}
-
-	// Find field center and radius.
-	/*
-	 sip_pixelxy2xyzarr(&sip, W/2, H/2, xyzcenter);
-	 fieldrad2 = arcsec2distsq(sip_pixel_scale(&sip) * hypot(W/2, H/2));
-	 */
 
 	{
         // (x,y) positions of field stars.
@@ -231,18 +228,14 @@ int main(int argc, char** args) {
 
 			logmsg("Logodds: %g\n", logodds);
 
-			{
+			if (plotfn) {
 				plot_args_t pargs;
 				plotimage_t* img;
 				cairo_t* cairo;
-				char outfn[32];
 
-				j = 0;
-				
 				plotstuff_init(&pargs);
 				pargs.outformat = PLOTSTUFF_FORMAT_PNG;
-				sprintf(outfn, "tweak-%03i.png", j);
-				pargs.outfn = outfn;
+				pargs.outfn = plotfn;
 				img = plotstuff_get_config(&pargs, "image");
 				img->format = PLOTSTUFF_FORMAT_JPG;
 				plot_image_set_filename(img, "1.jpg");

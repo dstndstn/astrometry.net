@@ -867,6 +867,121 @@ static void check_permutation(const int* perm, int N) {
 	free(counts);
 }
 
+static void fixup_theta(int* theta, double* allodds, int ibailed, verify_t* v,
+						int besti, int NRimage, double* refxyz,
+						int** p_etheta, double** p_eodds) {
+	int* etheta;
+	double* eodds;
+	int* invrperm;
+	int i, ri, ti;
+
+	if (ibailed != -1)
+		for (i=ibailed+1; i<v->NT; i++)
+			theta[i] = THETA_BAILEDOUT;
+
+	// At this point, "theta[0]" is the *reference* star index
+	// that was matched by the test star "v->testperm[0]".
+	// Meanwhile, "v->refperm" lists all the valid reference stars.
+
+	// We want to produce "etheta", which has elements parallel to
+	// the test stars in their original (brightness) ordering; that is,
+	// we want to eliminate the need for "v->testperm".
+
+	if (DEBUGVERIFY) {
+		for (i=0; i<v->NT; i++) {
+			if (i == besti)
+				debug("* ");
+			debug("Theta[%i] = %i", i, theta[i]);
+			if (theta[i] < 0) {
+				debug("\n");
+				continue;
+			}
+			ri = theta[i];
+			ti = v->testperm[i];
+			debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
+				  (v->refstarid ? v->refstarid[ri] : -1000), v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
+		}
+	}
+	etheta = malloc(v->NTall * sizeof(int));
+	eodds = malloc(v->NTall * sizeof(double));
+
+	// Apply the "refperm" permutation, mostly to cut out the stars that
+	// aren't in the image (we want to have "nindex" = "NRimage" = "NRall").
+	// This requires computing the inverse perm so we can fix theta to match.
+
+	// The reference stars include stars that are actually outside
+	// the field; we want to collapse the reference star list,
+	// which will renumber them.
+
+	invrperm = malloc(v->NRall * sizeof(int));
+	if (DEBUGVERIFY) {
+#define BAD_PERM -1000000
+		for (i=0; i<v->NRall; i++)
+			invrperm[i] = BAD_PERM;
+	}
+	for (i=0; i<NRimage; i++)
+		invrperm[v->refperm[i]] = i;
+
+	if (DEBUGVERIFY) {
+		// Both these permutations should be complete.
+		check_permutation(v->refperm, NRimage);
+		check_permutation(v->testperm, v->NTall);
+	}
+
+	if (v->refstarid)
+		permutation_apply(v->refperm, NRimage, v->refstarid, v->refstarid, sizeof(int));
+	permutation_apply(v->refperm, NRimage, v->refxy, v->refxy, 2*sizeof(double));
+	if (refxyz)
+		permutation_apply(v->refperm, NRimage, refxyz, refxyz, 3*sizeof(double));
+
+	// New v->refstarid[i] is old v->refstarid[ v->refperm[i] ]
+
+	if (DEBUGVERIFY) {
+		for (i=0; i<v->NTall; i++)
+			etheta[i] = BAD_PERM;
+	}
+
+	for (i=0; i<v->NT; i++) {
+		ti = v->testperm[i];
+		// assert that we haven't touched this element yet.
+		assert(etheta[ti] == BAD_PERM);
+		if (theta[i] < 0) {
+			etheta[ti] = theta[i];
+			// No match -> no weight.
+			eodds[ti] = -HUGE_VAL;
+		} else {
+			assert(invrperm[theta[i]] != BAD_PERM);
+			etheta[ti] = invrperm[theta[i]];
+			eodds[ti] = allodds[i];
+		}
+	}
+
+	free(invrperm);
+
+	for (i=v->NT; i<v->NTall; i++) {
+		ti = v->testperm[i];
+		etheta[ti] = THETA_FILTERED;
+		eodds[ti] = -HUGE_VAL;
+	}
+
+	if (DEBUGVERIFY) {
+		// We should touch every element.
+		for (i=0; i<v->NTall; i++)
+			assert(etheta[i] != BAD_PERM);
+		for (i=0; i<v->NTall; i++)
+			if (etheta[i] >= 0)
+				assert(etheta[i] < NRimage);
+			else
+				assert(etheta[i] == THETA_FILTERED ||
+					   etheta[i] == THETA_DISTRACTOR ||
+					   etheta[i] == THETA_CONFLICT ||
+					   etheta[i] == THETA_BAILEDOUT);
+	}
+
+	*p_etheta = etheta;
+	*p_eodds = eodds;
+}
+
 void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 				const sip_t* sip, const verify_field_t* vf,
                 double pix2, double distractors,
@@ -1047,7 +1162,6 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		int ri, ti;
 		int* etheta;
 		double* eodds;
-		int* invrperm;
 		mo->nmatch = 0;
 		mo->nconflict = 0;
 		mo->ndistractor = 0;
@@ -1059,106 +1173,9 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 			else
 				mo->nmatch++;
 		}
-		if (ibailed != -1)
-			for (i=ibailed+1; i<v->NT; i++)
-				theta[i] = THETA_BAILEDOUT;
 
-		// At this point, "theta[0]" is the *reference* star index
-		// that was matched by the test star "v->testperm[0]".
-		// Meanwhile, "v->refperm" lists all the valid reference stars.
-
-		// We want to produce "etheta", which has elements parallel to
-		// the test stars in their original (brightness) ordering; that is,
-		// we want to eliminate the need for "v->testperm".
-
-		if (DEBUGVERIFY) {
-			for (i=0; i<v->NT; i++) {
-				if (i == besti)
-					debug("* ");
-				debug("Theta[%i] = %i", i, theta[i]);
-				if (theta[i] < 0) {
-					debug("\n");
-					continue;
-				}
-				ri = theta[i];
-				ti = v->testperm[i];
-				debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
-					  v->refstarid[ri], v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
-			}
-		}
-		etheta = malloc(v->NTall * sizeof(int));
-		eodds = malloc(v->NTall * sizeof(double));
-
-		// Apply the "refperm" permutation, mostly to cut out the stars that
-		// aren't in the image (we want to have "nindex" = "NRimage" = "NRall").
-		// This requires computing the inverse perm so we can fix theta to match.
-
-		// The reference stars include stars that are actually outside
-		// the field; we want to collapse the reference star list,
-		// which will renumber them.
-
-		invrperm = malloc(v->NRall * sizeof(int));
-		if (DEBUGVERIFY) {
-#define BAD_PERM -1000000
-			for (i=0; i<v->NRall; i++)
-				invrperm[i] = BAD_PERM;
-		}
-		for (i=0; i<NRimage; i++)
-			invrperm[v->refperm[i]] = i;
-
-		if (DEBUGVERIFY) {
-			// Both these permutations should be complete.
-			check_permutation(v->refperm, NRimage);
-			check_permutation(v->testperm, v->NTall);
-		}
-
-		permutation_apply(v->refperm, NRimage, v->refstarid, v->refstarid, sizeof(int));
-		permutation_apply(v->refperm, NRimage, v->refxy, v->refxy, 2*sizeof(double));
-		permutation_apply(v->refperm, NRimage, refxyz, refxyz, 3*sizeof(double));
-
-		// New v->refstarid[i] is old v->refstarid[ v->refperm[i] ]
-
-		if (DEBUGVERIFY) {
-			for (i=0; i<v->NTall; i++)
-				etheta[i] = BAD_PERM;
-		}
-
-		for (i=0; i<v->NT; i++) {
-			ti = v->testperm[i];
-			// assert that we haven't touched this element yet.
-			assert(etheta[ti] == BAD_PERM);
-			if (theta[i] < 0) {
-				etheta[ti] = theta[i];
-				// No match -> no weight.
-				eodds[ti] = -HUGE_VAL;
-			} else {
-				assert(invrperm[theta[i]] != BAD_PERM);
-				etheta[ti] = invrperm[theta[i]];
-				eodds[ti] = allodds[i];
-			}
-		}
-
-		free(invrperm);
-
-		for (i=v->NT; i<v->NTall; i++) {
-			ti = v->testperm[i];
-			etheta[ti] = THETA_FILTERED;
-			eodds[ti] = -HUGE_VAL;
-		}
-
-		if (DEBUGVERIFY) {
-			// We should touch every element.
-			for (i=0; i<v->NTall; i++)
-				assert(etheta[i] != BAD_PERM);
-			for (i=0; i<v->NTall; i++)
-				if (etheta[i] >= 0)
-					assert(etheta[i] < NRimage);
-				else
-					assert(etheta[i] == THETA_FILTERED ||
-						   etheta[i] == THETA_DISTRACTOR ||
-						   etheta[i] == THETA_CONFLICT ||
-						   etheta[i] == THETA_BAILEDOUT);
-		}
+		fixup_theta(theta, allodds, ibailed, v, besti, NRimage, refxyz, 
+					&etheta, &eodds);
 
 		// Reinsert the matched quad...
 		if (!fake_match) {
@@ -1285,6 +1302,12 @@ double verify_star_lists(const double* refxys, int NR,
 						 double* p_worstlogodds) {
 	double X;
 	verify_t v;
+	double* eodds;
+	int* etheta;
+	int ibailed;
+	int* theta;
+	double* allodds;
+
 	memset(&v, 0, sizeof(verify_t));
 	v.NRall = v.NR = NR;
 	v.NTall = v.NT = NT;
@@ -1296,11 +1319,24 @@ double verify_star_lists(const double* refxys, int NR,
 	v.refperm = permutation_init(NULL, NR);
 	v.testperm = permutation_init(NULL, NT);
 
-	// badguys / tbadguys?
-
 	X = real_verify_star_lists(&v, effective_area, distractors,
-							   logodds_bail, logodds_stoplooking, p_besti, p_all_logodds, p_theta,
-							   p_worstlogodds, NULL);
+							   logodds_bail, logodds_stoplooking, p_besti,
+							   &allodds, &theta,
+							   p_worstlogodds, &ibailed);
+	fixup_theta(theta, allodds, ibailed, &v, -1, NR, NULL,
+				&etheta, &eodds);
+	free(theta);
+	free(allodds);
+
+	if (p_all_logodds)
+		*p_all_logodds = eodds;
+	else
+		free(eodds);
+	if (p_theta)
+		*p_theta = etheta;
+	else
+		free(etheta);
+
 	free(v.refperm);
 	return X;
 }
