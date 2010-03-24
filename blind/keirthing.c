@@ -4,6 +4,8 @@
 #include "bl.h"
 #include "blind_wcs.h"
 #include "sip.h"
+#include "log.h"
+#include "errors.h"
 
 static const char* OPTIONS = "hW:H:X:Y:";
 
@@ -22,6 +24,8 @@ int main(int argc, char** args) {
 	tan_t tan, tan2, tan3;
 	int W=0, H=0;
 	double crpix[] = { HUGE_VAL, HUGE_VAL };
+
+	FILE* logstream = stderr;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
@@ -44,9 +48,11 @@ int main(int argc, char** args) {
 	if (optind != argc) {
 		exit(-1);
 	}
+	log_to(logstream);
+	errors_log_to(logstream);
 
 	if (W == 0 || H == 0) {
-		printf("Need -W, -H\n");
+		logerr("Need -W, -H\n");
 		exit(-1);
 	}
 	if (crpix[0] == HUGE_VAL)
@@ -68,7 +74,7 @@ int main(int argc, char** args) {
 			dl_append(radecs, dec);
 		}
 	}
-	printf("Read %i x,y,ra,dec tuples\n", dl_size(xys)/2);
+	logmsg("Read %i x,y,ra,dec tuples\n", dl_size(xys)/2);
 
 	N = dl_size(xys)/2;
 	xy = dl_to_array(xys);
@@ -80,25 +86,26 @@ int main(int argc, char** args) {
 
 	blind_wcs_compute(xyz, xy, N, &tan, NULL);
 
-	printf("Computed TAN WCS:\n");
-	tan_print(&tan);
+	logmsg("Computed TAN WCS:\n");
+	tan_print_to(&tan, logstream);
 
 	blind_wcs_move_tangent_point(xyz, xy, N, crpix, &tan, &tan2);
 	blind_wcs_move_tangent_point(xyz, xy, N, crpix, &tan2, &tan3);
-	printf("Moved tangent point to (%g,%g):\n", crpix[0], crpix[1]);
-	tan_print(&tan3);
+	logmsg("Moved tangent point to (%g,%g):\n", crpix[0], crpix[1]);
+	tan_print_to(&tan3, logstream);
 
 	for (i=0; i<dl_size(otherradecs)/2; i++) {
 		double ra, dec, x,y;
 		ra = dl_get(otherradecs, 2*i);
 		dec = dl_get(otherradecs, 2*i+1);
 		if (!tan_radec2pixelxy(&tan3, ra, dec, &x, &y)) {
-			printf("Not in tangent plane: %g,%g\n", ra, dec);
+			logerr("Not in tangent plane: %g,%g\n", ra, dec);
 			exit(-1);
 			//continue;
 		}
 		printf("%g %g\n", x, y);
 	}
+	dl_free(otherradecs);
 	free(xy);
 	free(xyz);
 	return 0;
