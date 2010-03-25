@@ -1411,6 +1411,7 @@ static int write_corr_file(blind_t* bp) {
 		sip_t* wcs;
 		int j;
 		tfits_type dubl = fitscolumn_double_type();
+		tfits_type itype = fitscolumn_int_type();
 
 		mo = bl_access(bp->solutions, i);
 
@@ -1429,6 +1430,8 @@ static int write_corr_file(blind_t* bp) {
 		fitstable_add_write_column(tab, dubl, "index_y",   "pixels");
 		fitstable_add_write_column(tab, dubl, "index_ra",  "degrees");
 		fitstable_add_write_column(tab, dubl, "index_dec", "degrees");
+		fitstable_add_write_column(tab, itype, "index_id", NULL);
+		fitstable_add_write_column(tab, itype, "field_id", NULL);
 
 		if (mo->tagalong) {
 			for (j=0; j<bl_size(mo->tagalong); j++) {
@@ -1478,7 +1481,7 @@ static int write_corr_file(blind_t* bp) {
 			fy = mo->fieldxy[2*ti+1];
 			sip_pixelxy2radec(wcs, fx, fy, &fra, &fdec);
 			logdebug("Writing field xy %.1f,%.1f, radec %.2f,%.2f; index xy %.1f,%.1f, radec %.2f,%.2f\n", fx, fy, fra, fdec, rx, ry, rra, rdec);
-			if (fitstable_write_row(tab, &fx, &fy, &fra, &fdec, &rx, &ry, &rra, &rdec)) {
+			if (fitstable_write_row(tab, &fx, &fy, &fra, &fdec, &rx, &ry, &rra, &rdec, &ri, &ti)) {
 				ERROR("Failed to write coordinates to correspondences file \"%s\"", bp->corr_fname);
 				return -1;
 			}
