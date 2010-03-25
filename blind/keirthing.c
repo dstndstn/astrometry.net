@@ -53,8 +53,8 @@ int main(int argc, char** args) {
 	if (optind != argc) {
 		exit(-1);
 	}
-	log_to(logstream);
 	log_init(loglvl);
+	log_to(logstream);
 	errors_log_to(logstream);
 
 	if (W == 0 || H == 0) {

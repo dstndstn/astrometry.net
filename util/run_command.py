@@ -33,7 +33,8 @@ def run_command(cmd, timeout=None, callback=None, stdindata=None):
         if stdin in ready_writers and stdindata:
             bytes_written = os.write(stdin, stdindata[:block])
             stdindata = stdindata[bytes_written:]
-            if bytes_written == 0:
+            if not stdindata:
+                fin.close()
                 ineof = True
         if stdout in ready_readers:
             outchunk = os.read(stdout, block)
@@ -47,7 +48,6 @@ def run_command(cmd, timeout=None, callback=None, stdindata=None):
             errbl.append(errchunk)
         if callback:
             callback()
-    fin.close()
     fout.close()
     ferr.close()
     w = child.wait()
