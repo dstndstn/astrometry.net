@@ -4,10 +4,12 @@
 #include "bl.h"
 #include "blind_wcs.h"
 #include "sip.h"
+#include "sip_qfits.h"
 #include "log.h"
 #include "errors.h"
+#include "tweak.h"
 
-static const char* OPTIONS = "hW:H:X:Y:";
+static const char* OPTIONS = "hW:H:X:Y:v";
 
 extern char *optarg;
 extern int optind, opterr, optopt;
@@ -24,11 +26,14 @@ int main(int argc, char** args) {
 	tan_t tan, tan2, tan3;
 	int W=0, H=0;
 	double crpix[] = { HUGE_VAL, HUGE_VAL };
-
+	int loglvl = LOG_MSG;
 	FILE* logstream = stderr;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'v':
+			loglvl++;
+			break;
 		case 'h':
 			exit(0);
 		case 'W':
@@ -49,6 +54,7 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 	log_to(logstream);
+	log_init(loglvl);
 	errors_log_to(logstream);
 
 	if (W == 0 || H == 0) {
@@ -85,15 +91,77 @@ int main(int argc, char** args) {
 	dl_free(radecs);
 
 	blind_wcs_compute(xyz, xy, N, &tan, NULL);
+	tan.imagew = W;
+	tan.imageh = H;
 
 	logmsg("Computed TAN WCS:\n");
 	tan_print_to(&tan, logstream);
 
+	for (i=0; i<dl_size(otherradecs)/2; i++) {
+		double ra, dec, x,y;
+		ra = dl_get(otherradecs, 2*i);
+		dec = dl_get(otherradecs, 2*i+1);
+		if (!tan_radec2pixelxy(&tan, ra, dec, &x, &y)) {
+			logerr("Not in tangent plane: %g,%g\n", ra, dec);
+			exit(-1);
+			//continue;
+		}
+		printf("%g %g\n", x, y);
+	}
+
+	{
+		tweak_t* t = tweak_new();
+		starxy_t* sxy = starxy_new(N, FALSE, FALSE);
+		il* imginds = il_new(256);
+		il* refinds = il_new(256);
+		//sip_t sip;
+
+		for (i=0; i<N; i++) {
+			starxy_set_x(sxy, i, xy[2*i+0]);
+			starxy_set_y(sxy, i, xy[2*i+1]);
+		}
+		tweak_init(t);
+		tweak_push_ref_xyz(t, xyz, N);
+		tweak_push_image_xy(t, sxy);
+		for (i=0; i<N; i++) {
+			il_append(imginds, i);
+			il_append(refinds, i);
+		}
+		// unweighted; no dist2s
+		tweak_push_correspondence_indices(t, imginds, refinds, NULL, NULL);
+
+		/*
+		 sip_wrap_tan(&tan, &sip);
+		 sip.a_order = sip.b_order = sip.ap_order = sip.bp_order = 1;
+		 t->sip = &sip;
+		 */
+		tweak_push_wcs_tan(t, &tan);
+		t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = 1;
+
+		for (i=0; i<10; i++) {
+			// go to TWEAK_HAS_LINEAR_CD -> do_sip_tweak
+			// t->image has the indices of corresponding image stars
+			// t->ref   has the indices of corresponding catalog stars
+			tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
+			logmsg("\n");
+			sip_print(t->sip);
+			t->state &= ~TWEAK_HAS_LINEAR_CD;
+		}
+		tan_write_to_file(&t->sip->wcstan, "kt1.wcs");
+	}
+
+
+	/*
 	blind_wcs_move_tangent_point(xyz, xy, N, crpix, &tan, &tan2);
 	blind_wcs_move_tangent_point(xyz, xy, N, crpix, &tan2, &tan3);
 	logmsg("Moved tangent point to (%g,%g):\n", crpix[0], crpix[1]);
 	tan_print_to(&tan3, logstream);
 
+	tan_write_to_file(&tan, "kt1.wcs");
+	 tan_write_to_file(&tan3, "kt2.wcs");
+	 */
+
+	/* FIX tan3
 	for (i=0; i<dl_size(otherradecs)/2; i++) {
 		double ra, dec, x,y;
 		ra = dl_get(otherradecs, 2*i);
@@ -105,6 +173,7 @@ int main(int argc, char** args) {
 		}
 		printf("%g %g\n", x, y);
 	}
+	 */
 	dl_free(otherradecs);
 	free(xy);
 	free(xyz);

@@ -875,6 +875,13 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, verify_t* v,
 	int* invrperm;
 	int i, ri, ti;
 
+	if (DEBUGVERIFY) {
+		// Both these permutations should be complete.
+		// NO, refperm has vals < NRall in elements < NRimage.
+		//check_permutation(v->refperm, NRimage);
+		check_permutation(v->testperm, v->NTall);
+	}
+
 	if (ibailed != -1)
 		for (i=ibailed+1; i<v->NT; i++)
 			theta[i] = THETA_BAILEDOUT;
@@ -921,12 +928,6 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, verify_t* v,
 	}
 	for (i=0; i<NRimage; i++)
 		invrperm[v->refperm[i]] = i;
-
-	if (DEBUGVERIFY) {
-		// Both these permutations should be complete.
-		check_permutation(v->refperm, NRimage);
-		check_permutation(v->testperm, v->NTall);
-	}
 
 	if (v->refstarid)
 		permutation_apply(v->refperm, NRimage, v->refstarid, v->refstarid, sizeof(int));
@@ -1174,7 +1175,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 				mo->nmatch++;
 		}
 
-		fixup_theta(theta, allodds, ibailed, v, besti, NRimage, refxyz, 
+		fixup_theta(theta, allodds, ibailed, v, besti, NRimage, refxyz,
 					&etheta, &eodds);
 
 		// Reinsert the matched quad...

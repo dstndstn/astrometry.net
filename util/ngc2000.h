@@ -68,7 +68,7 @@ struct ngc_entry {
 
 	//char source;
 	// bool sizelimit;
-	// float mag;
+	float mag;
 	// bool photo_mag;
 	// char[51] description;
 };

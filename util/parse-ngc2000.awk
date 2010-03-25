@@ -34,6 +34,13 @@ constellation = substr($0, 30, 3);
 
 #print ic " " id " " class " " ra " " dec;
 
+magpad = substr($0, 41, 4);
+split(magpad, parts, " ");
+mag = parts[1];
+if (mag == "") {
+	mag = -99.0;
+}
+
 print "{ .is_ngc = " (isngc ? "TRUE" : "FALSE") ",";
 print "  .id = " id ",";
 print "  .classification = \"" class "\",";
@@ -41,5 +48,6 @@ print "  .ra = " ra ",";
 print "  .dec = " dec ",";
 print "  .size = " size ",";
 print "  .constellation = \"" constellation "\",";
+print "  .mag = " mag ",";
 print "},";
 }
