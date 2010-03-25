@@ -441,6 +441,9 @@ verify: verify-main.o verify.o verify2.o matchfile.o matchobj.o $(PLOTSTUFF) $(C
 keirthing: keirthing.o blind_wcs.o tweak.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 
+dstnthing: dstnthing.o blind_wcs.o tweak.o matchfile.o matchobj.o verify.o \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
+
 ALL_OBJ += verify-main.o
 
 solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o matchobj.o \
