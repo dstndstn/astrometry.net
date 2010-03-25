@@ -4,7 +4,7 @@ import select
 from subprocess import PIPE
 
 # Returns (rtn, out, err)
-def run_command(cmd, timeout=None, callback=None):
+def run_command(cmd, timeout=None, callback=None, stdindata=None):
     """
     Run a command and return the text written to stdout and stderr, plus
     the return value.
@@ -14,34 +14,40 @@ def run_command(cmd, timeout=None, callback=None):
     child = subprocess.Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
     (fin, fout, ferr) = (child.stdin, child.stdout, child.stderr)
 
-    fin.close()
+    stdin = fin.fileno()
     stdout = fout.fileno()
     stderr = ferr.fileno()
     outbl = []
     errbl = []
-    outeof = erreof = False
+    ineof = outeof = erreof = False
     block = 1024
     while True:
-        s=[]
-        if not outeof:
-            s.append(stdout)
-        if not erreof:
-            s.append(stderr)
-        if not len(s):
+        readers = []
+        writers = []
+        if not ineof: writers.append(stdin)
+        if not outeof: readers.append(stdout)
+        if not erreof: readers.append(stderr)
+        if not len(readers):
             break
-        (ready, nil1, nil2) = select.select(s, [], [], timeout)
-        if stdout in ready:
+        (ready_readers, ready_writers, _) = select.select(readers, writers, [], timeout)
+        if stdin in ready_writers and stdindata:
+            bytes_written = os.write(stdin, stdindata[:block])
+            stdindata = stdindata[bytes_written:]
+            if bytes_written == 0:
+                ineof = True
+        if stdout in ready_readers:
             outchunk = os.read(stdout, block)
             if len(outchunk) == 0:
                 outeof = True
             outbl.append(outchunk)
-        if stderr in ready:
+        if stderr in ready_readers:
             errchunk = os.read(stderr, block)
             if len(errchunk) == 0:
                 erreof = True
             errbl.append(errchunk)
         if callback:
             callback()
+    fin.close()
     fout.close()
     ferr.close()
     w = child.wait()
@@ -51,4 +57,3 @@ def run_command(cmd, timeout=None, callback=None):
         return (-100, out, err)
     rtn = os.WEXITSTATUS(w)
     return (rtn, out, err)
-
