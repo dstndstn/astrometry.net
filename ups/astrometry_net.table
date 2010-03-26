@@ -1,3 +1,8 @@
+#
+# This UPS table can be used in a "live" tree.
+#
+# The astrometry_net.table-dist can be used for an "installed" version.
+#
 envPrepend(PYTHONPATH, ${PRODUCT_DIR}/util:${PRODUCT_DIR}/blind)
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/blind)
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/blind)

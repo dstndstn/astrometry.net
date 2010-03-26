@@ -1,0 +1,9 @@
+#
+# This is copied to INSTALL_DIR/ups/astrometry_net.table
+#
+envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
+envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
+envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
+
+envPrepend(CFLAGS, -I${PRODUCT_DIR}/include)
+envPrepend(LDFLAGS, -L${PRODUCT_DIR}/lib)
