@@ -234,6 +234,14 @@ void solver_add_index(solver_t* solver, index_t* index) {
     pl_append(solver->indexes, index);
 }
 
+int solver_n_indices_added(const solver_t* solver) {
+	return pl_size(solver->indexes);
+}
+
+index_t* solver_get_index(const solver_t* solver, int i) {
+	return pl_get(solver->indexes, i);
+}
+
 void solver_reset_best_match(solver_t* sp) {
     // we don't really care about very bad best matches...
 	sp->best_logodds = 0;
