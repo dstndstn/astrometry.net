@@ -249,7 +249,7 @@ double solver_field_height(solver_t* t);
 void solver_add_index(solver_t* solver, index_t* index);
 void solver_clear_indexes(solver_t* solver);
 
-int solver_n_indices_added(const solver_t* solver);
+int solver_n_indices(const solver_t* solver);
 index_t* solver_get_index(const solver_t* solver, int i);
 
 void solver_verify_sip_wcs(solver_t* solver, sip_t* sip);
