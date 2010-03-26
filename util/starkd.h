@@ -106,6 +106,29 @@ bool startree_has_tagalong(startree_t* s);
 fitstable_t* startree_get_tagalong(startree_t* s);
 
 /*
+ Returns a string-list of the names of the columns in the "tagalong" table of this star kdtree.
+ If you pass in a non-NULL "lst", the names will be added to that list; otherwise, a new sl*
+ will be allocated (free it with sl_free2()).
+
+ If you want to avoid "sl*", see:
+ -- startree_get_tagalong_N_columns(s)
+ -- startree_get_tagalong_column_name(s, i)
+ */
+sl* startree_get_tagalong_column_names(const startree_t* s, sl* lst);
+
+/**
+ Returns the number of columns in the tagalong table.
+ */
+int startree_get_tagalong_N_columns(const startree_t* s);
+
+/**
+ Returns the name of the 'i'th column in the tagalong table.
+ The lifetime of the returned string is the lifetime of this starkd.
+ */
+const char* startree_get_tagalong_column_name(const startree_t* s, int i);
+
+
+/*
  Retrieve parameters of the cut-an process, if they are available.
  Older index files may not have these header cards.
  */

@@ -40,6 +40,27 @@ static startree_t* startree_alloc() {
 	return s;
 }
 
+sl* startree_get_tagalong_column_names(const startree_t* s, sl* lst) {
+	if (!startree_has_tagalong(s))
+		return NULL;
+	return fitstable_get_fits_column_names(startree_get_tagalong(s), lst);
+}
+
+int startree_get_tagalong_N_columns(const startree_t* s) {
+	if (!startree_has_tagalong(s))
+		return 0;
+	return fitstable_get_N_fits_columns(startree_get_tagalong(s));
+}
+
+/**
+ Returns the name of the 'i'th column in the tagalong table.
+ */
+const char* startree_get_tagalong_column_name(const startree_t* s, int i) {
+	if (!startree_has_tagalong(s))
+		return NULL;
+	return fitstable_get_fits_column_name(startree_get_tagalong(s), i);
+}
+
 double* startree_get_data_column(startree_t* s, const char* colname, int* inds, int N) {
 	fitstable_t* table;
 	tfits_type dubl = fitscolumn_double_type();

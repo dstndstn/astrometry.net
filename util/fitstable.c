@@ -314,7 +314,7 @@ void fitstable_copy_columns(const fitstable_t* src, fitstable_t* dest) {
 	}
 }
 
-sl* fitstable_get_fits_column_names(fitstable_t* t, sl* lst) {
+sl* fitstable_get_fits_column_names(const fitstable_t* t, sl* lst) {
 	int i;
 	if (!lst)
 		lst = sl_new(16);
@@ -323,6 +323,16 @@ sl* fitstable_get_fits_column_names(fitstable_t* t, sl* lst) {
 		sl_append(lst, qcol->tlabel);
 	}
 	return lst;
+}
+
+int fitstable_get_N_fits_columns(const fitstable_t* t) {
+	return t->table->nc;
+}
+
+const char* fitstable_get_fits_column_name(const fitstable_t* t, int i) {
+	assert(i >= 0);
+	assert(i < t->table->nc);
+	return t->table->col[i].tlabel;
 }
 
 void fitstable_add_write_column(fitstable_t* tab, tfits_type t,

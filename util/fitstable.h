@@ -217,7 +217,19 @@ void fitstable_add_fits_columns_as_struct(fitstable_t* dest);
 int fitstable_find_fits_column(fitstable_t* t, const char* colname,
 							   char** units, tfits_type* type, int* arraysize);
 
-sl* fitstable_get_fits_column_names(fitstable_t* t, sl* lst);
+sl* fitstable_get_fits_column_names(const fitstable_t* t, sl* lst);
+
+/**
+ Returns the number of columns in the FITS table.
+ */
+int fitstable_get_N_fits_columns(const fitstable_t* t);
+
+/**
+ Returns the name of the 'i'th FITS column in this table.  The
+ lifetime of the returned string is the lifetime of the currently-open
+ extension; you might want to copy it for safety.
+ */
+const char* fitstable_get_fits_column_name(const fitstable_t* t, int i);
 
 // reading...
 int fitstable_open_extension(fitstable_t* tab, int ext);
