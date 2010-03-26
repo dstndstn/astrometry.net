@@ -61,6 +61,8 @@ install: report.txt
 	mkdir -p $(INSTALL_DIR)/examples
 	mkdir -p $(INSTALL_DIR)/python/astrometry
 	mkdir -p $(INSTALL_DIR)/python/pyfits
+	mkdir -p $(INSTALL_DIR)/ups
+	cp ups/astrometry_net.table $(INSTALL_DIR)/ups
 	cp __init__.py $(INSTALL_DIR)/python/astrometry
 	cp pyfits/*.py $(INSTALL_DIR)/python/pyfits
 	cp CREDITS GETTING-INDEXES LICENSE README $(INSTALL_DIR)/doc
