@@ -1,0 +1,6 @@
+envPrepend(PYTHONPATH, ${PRODUCT_DIR}/util:${PRODUCT_DIR}/blind)
+envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/blind)
+envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/blind)
+
+envPrepend(CFLAGS, -I${PRODUCT_DIR}/util -I${PRODUCT_DIR}/blind)
+envPrepend(LDFLAGS, -L${PRODUCT_DIR}/util -L${PRODUCT_DIR}/blind)
