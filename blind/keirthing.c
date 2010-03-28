@@ -9,7 +9,7 @@
 #include "errors.h"
 #include "tweak.h"
 
-static const char* OPTIONS = "hW:H:X:Y:v";
+static const char* OPTIONS = "hW:H:X:Y:vo:";
 
 extern char *optarg;
 extern int optind, opterr, optopt;
@@ -28,6 +28,7 @@ int main(int argc, char** args) {
 	double crpix[] = { HUGE_VAL, HUGE_VAL };
 	int loglvl = LOG_MSG;
 	FILE* logstream = stderr;
+	int order = 1;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
@@ -36,6 +37,9 @@ int main(int argc, char** args) {
 			break;
 		case 'h':
 			exit(0);
+		case 'o':
+			order = atoi(optarg);
+			break;
 		case 'W':
 			W = atoi(optarg);
 			break;
@@ -118,13 +122,8 @@ int main(int argc, char** args) {
 		// unweighted; no dist2s
 		tweak_push_correspondence_indices(t, imginds, refinds, NULL, NULL);
 
-		/*
-		 sip_wrap_tan(&tan, &sip);
-		 sip.a_order = sip.b_order = sip.ap_order = sip.bp_order = 1;
-		 t->sip = &sip;
-		 */
 		tweak_push_wcs_tan(t, &tan);
-		t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = 2;
+		t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = order;
 
 		for (i=0; i<10; i++) {
 			// go to TWEAK_HAS_LINEAR_CD -> do_sip_tweak
