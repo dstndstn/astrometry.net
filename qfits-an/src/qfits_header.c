@@ -1019,10 +1019,12 @@ static keytuple * keytuple_new(
     /* Hook a copy of the new key */
     qfits_expand_keyword_r(key, xkey);
     k->key = qfits_strdup(xkey);
-    /* Hook a copy of th        e value if defined */
+    /* Hook a copy of the value if defined */
     k->val = NULL;
     if (val!=NULL) {
-        if (strlen(val)>0) k->val = qfits_strdup(val);
+		// Why was this here?
+        //if (strlen(val)>0)
+		k->val = qfits_strdup(val);
     }
     /* Hook a copy of the comment if defined */
     k->com = NULL;
