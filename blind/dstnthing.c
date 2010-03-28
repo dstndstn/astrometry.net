@@ -15,6 +15,9 @@
 #include "rdlist.h"
 #include "mathutil.h"
 #include "verify.h"
+#include "plotstuff.h"
+#include "plotimage.h"
+#include "cairoutils.h"
 
 static const char* OPTIONS = "hx:m:r:vj:p:i:";
 
@@ -42,6 +45,14 @@ extern int optind, opterr, optopt;
  cp cmsky_cortner_full.wcs 1.wcs
  cp cmsky_cortner_full.jpg 1.jpg
  wget "http://live.astrometry.net/status.php?job=alpha-201003-01883980&get=match.fits" -O 1.match
+
+ X=http://live.astrometry.net/status.php?job=alpha-201003-36217312
+ wget "${X}&get=field.xy.fits" -O 2.xy
+ wget "${X}&get=index.rd.fits" -O 2.rd
+ wget "${X}&get=wcs.fits" -O 2.wcs
+ wget "${X}&get=match.fits" -O 2.match
+ wget "http://antwrp.gsfc.nasa.gov/apod/image/1003/mb_2010-03-10_SeaGullThor900.jpg" -O 2.jpg
+
  */
 
 int main(int argc, char** args) {
@@ -211,6 +222,7 @@ int main(int argc, char** args) {
 	double* fieldsigma2s = malloc(Nfield * sizeof(double));
 	int besti;
 	int* theta;
+	double* odds;
 	double logodds;
 	double Q2, R2;
 	double qc[2];
@@ -233,13 +245,15 @@ int main(int argc, char** args) {
 								fieldpix, fieldsigma2s, Nfield,
 								W*H, 0.25,
 								log(1e-100), log(1e100),
-								&besti, NULL, &theta, NULL);
+								&besti, &odds, &theta, NULL);
 	logmsg("Logodds: %g\n", logodds);
+	logmsg("besti: %i\n", besti);
 
 	if (plotfn) {
 		plot_args_t pargs;
 		plotimage_t* img;
 		cairo_t* cairo;
+		logmsg("Creating plot %s\n", plotfn);
 		plotstuff_init(&pargs);
 		pargs.outformat = PLOTSTUFF_FORMAT_PNG;
 		pargs.outfn = plotfn;
@@ -250,7 +264,7 @@ int main(int argc, char** args) {
 			plot_image_setsize(&pargs, img);
 			plotstuff_run_command(&pargs, "image");
 		} else {
-			plot_set_size(&pargs, W, H);
+			plotstuff_set_size(&pargs, W, H);
 		}
 		cairo = pargs.cairo;
 		// red circles around every field star.
@@ -270,7 +284,8 @@ int main(int argc, char** args) {
 		}
 		// thick white circles for corresponding field stars.
 		cairo_set_line_width(cairo, 2);
-		for (i=0; i<Nfield; i++) {
+		for (i=0; i<=besti; i++) {
+			//printf("field %i -> index %i\n", i, theta[i]);
 			if (theta[i] < 0)
 				continue;
 			cairo_set_color(cairo, "white");
@@ -288,6 +303,69 @@ int main(int argc, char** args) {
 		}
 		plotstuff_output(&pargs);
 	}
+
+	double* weights = malloc(Nfield * sizeof(double));
+	int Nmatch = 0;
+	double* matchxyz = malloc(Nfield * 3 * sizeof(double));
+	double* matchxy = malloc(Nfield * 2 * sizeof(double));
+	tan_t newtan;
+
+	Nmatch = 0;
+	logmsg("Weights:");
+	for (i=0; i<=besti; i++) {
+		double ra,dec;
+		if (theta[i] < 0)
+			continue;
+		rd_getradec(rd, theta[i], &ra, &dec);
+		radecdeg2xyzarr(ra, dec, matchxyz + Nmatch*3);
+		memcpy(matchxy + Nmatch*2, fieldpix + i*2, 2*sizeof(double));
+		weights[Nmatch] = verify_logodds_to_weight(odds[i]);
+		logmsg(" %.2f", weights[Nmatch]);
+		Nmatch++;
+	}
+	logmsg("\n");
+
+	blind_wcs_compute_weighted(matchxyz, matchxy, weights, Nmatch, &newtan, NULL);
+
+	logmsg("Original TAN WCS:\n");
+	tan_print_to(&sip.wcstan, stdout);
+	logmsg("Using %i (weighted) matches, new TAN WCS is:\n", Nmatch);
+	tan_print_to(&newtan, stdout);
+
+	sip_t* newsip;
+	tweak_t* t = tweak_new();
+	starxy_t* sxy = starxy_new(Nmatch, FALSE, FALSE);
+	il* imginds = il_new(256);
+	il* refinds = il_new(256);
+	dl* wts = dl_new(256);
+
+	for (i=0; i<Nmatch; i++) {
+		starxy_set_x(sxy, i, matchxy[2*i+0]);
+		starxy_set_y(sxy, i, matchxy[2*i+1]);
+	}
+	tweak_init(t);
+	tweak_push_ref_xyz(t, matchxyz, Nmatch);
+	tweak_push_image_xy(t, sxy);
+	for (i=0; i<Nmatch; i++) {
+		il_append(imginds, i);
+		il_append(refinds, i);
+		dl_append(wts, weights[i]);
+	}
+	tweak_push_correspondence_indices(t, imginds, refinds, NULL, wts);
+	tweak_push_wcs_tan(t, &newtan);
+	t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = 2;
+
+	for (i=0; i<10; i++) {
+		tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
+		logmsg("\n");
+		sip_print_to(t->sip, stdout);
+		t->state &= ~TWEAK_HAS_LINEAR_CD;
+	}
+	newsip = t->sip;
+
+
+
+
 
 
 	free(theta);

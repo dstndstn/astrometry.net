@@ -883,7 +883,7 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, verify_t* v,
 	}
 
 	if (ibailed != -1)
-		for (i=ibailed+1; i<v->NT; i++)
+		for (i=ibailed+1; i<v->NTall; i++)
 			theta[i] = THETA_BAILEDOUT;
 
 	// At this point, "theta[0]" is the *reference* star index

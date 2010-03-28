@@ -20,6 +20,12 @@
 
 #include "rdlist.h"
 
+void rd_getradec(const rd_t* f, int i, double* ra, double* dec) {
+    assert(i < f->N);
+	*ra  = f->ra [i];
+	*dec = f->dec[i];
+}
+
 double rd_getra (rd_t* f, int i) {
     assert(i < f->N);
     return f->ra[i];

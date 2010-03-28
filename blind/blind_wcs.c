@@ -178,12 +178,13 @@ int blind_wcs_move_tangent_point(const double* starxyz,
 
 
 
-int blind_wcs_compute(const double* starxyz,
-                      const double* fieldxy,
-                      int N,
-                      // output:
-                      tan_t* tan,
-                      double* p_scale) {
+int blind_wcs_compute_weighted(const double* starxyz,
+							   const double* fieldxy,
+							   const double* weights,
+							   int N,
+							   // output:
+							   tan_t* tan,
+							   double* p_scale) {
 	int i, j, k;
 	double star_cm[3] = {0, 0, 0};
 	double field_cm[2] = {0, 0};
@@ -195,6 +196,8 @@ int blind_wcs_compute(const double* starxyz,
 	// relative field coordinates
 	double* f;
 	double pcm[2] = {0, 0};
+	double w = 0;
+	double totalw;
 
     gsl_matrix* A;
     gsl_matrix* U;
@@ -206,15 +209,18 @@ int blind_wcs_compute(const double* starxyz,
 
 	// -get field & star centers-of-mass of the matching quad.
 	//  (this will become the tangent point)
+	totalw = 0.0;
 	for (i=0; i<N; i++) {
-		star_cm[0] += starxyz[i*3 + 0];
-		star_cm[1] += starxyz[i*3 + 1];
-		star_cm[2] += starxyz[i*3 + 2];
-		field_cm[0] += fieldxy[i*2 + 0];
-		field_cm[1] += fieldxy[i*2 + 1];
+		w = (weights ? weights[i] : 1.0);
+		star_cm[0] += w * starxyz[i*3 + 0];
+		star_cm[1] += w * starxyz[i*3 + 1];
+		star_cm[2] += w * starxyz[i*3 + 2];
+		field_cm[0] += w * fieldxy[i*2 + 0];
+		field_cm[1] += w * fieldxy[i*2 + 1];
+		totalw += w;
 	}
-	field_cm[0] /= (double)N;
-	field_cm[1] /= (double)N;
+	field_cm[0] /= totalw;
+	field_cm[1] /= totalw;
 	normalize_3(star_cm);
 
 	// -allocate and fill "p" and "f" arrays. ("projected" and "field")
@@ -235,12 +241,15 @@ int blind_wcs_compute(const double* starxyz,
 	// -compute the center of mass of the projected stars and subtract it out.
 	//  This will be close to zero, but we need it to be exactly zero
 	//  before we start rigid Procrustes
+	totalw = 0.0;
 	for (i=0; i<N; i++) {
-		pcm[0] += p[2*i + 0];
-		pcm[1] += p[2*i + 1];
+		w = (weights ? weights[i] : 1.0);
+		pcm[0] += w * p[2*i + 0];
+		pcm[1] += w * p[2*i + 1];
+		totalw += w;
 	}
-	pcm[0] /= (double)N;
-	pcm[1] /= (double)N;
+	pcm[0] /= totalw;
+	pcm[1] /= totalw;
 	for (i=0; i<N; i++) {
 		p[2*i + 0] -= pcm[0];
 		p[2*i + 1] -= pcm[1];
@@ -248,10 +257,13 @@ int blind_wcs_compute(const double* starxyz,
 
 	// -compute the covariance between field positions and projected
 	//  positions of the corresponding stars.
-	for (i=0; i<N; i++)
+	for (i=0; i<N; i++) {
+		w = (weights ? weights[i] : 1.0);
 		for (j=0; j<2; j++)
 			for (k=0; k<2; k++)
-				cov[j*2 + k] += p[i*2 + k] * f[i*2 + j];
+				// FIXME -- w? w*w?
+				cov[j*2 + k] += w * p[i*2 + k] * f[i*2 + j];
+	}
 
 	for (i=0; i<4; i++)
         assert(isfinite(cov[i]));
@@ -263,8 +275,6 @@ int blind_wcs_compute(const double* starxyz,
     vcov = gsl_matrix_view_array(cov, 2, 2);
     vR   = gsl_matrix_view_array(R, 2, 2);
     A = &(vcov.matrix);
-    // The Jacobi version doesn't always compute an orthonormal U if S has zeros.
-    //gsl_linalg_SV_decomp_jacobi(A, V, S);
     gsl_linalg_SV_decomp(A, V, S, work);
     // the U result is written to A.
     U = A;
@@ -281,11 +291,13 @@ int blind_wcs_compute(const double* starxyz,
 	{
 		double pvar, fvar;
 		pvar = fvar = 0.0;
-		for (i=0; i<N; i++)
+		for (i=0; i<N; i++) {
+			w = (weights ? weights[i] : 1.0);
 			for (j=0; j<2; j++) {
-				pvar += square(p[i*2 + j]);
-				fvar += square(f[i*2 + j]);
+				pvar += w * square(p[i*2 + j]);
+				fvar += w * square(f[i*2 + j]);
 			}
+		}
 		scale = sqrt(pvar / fvar);
 	}
 
@@ -315,5 +327,15 @@ int blind_wcs_compute(const double* starxyz,
 	free(p);
 	free(f);
     return 0;
+}
+
+int blind_wcs_compute(const double* starxyz,
+                      const double* fieldxy,
+                      int N,
+                      // output:
+                      tan_t* tan,
+                      double* p_scale) {
+	return blind_wcs_compute_weighted(starxyz, fieldxy, NULL, N,
+									  tan, p_scale);
 }
 

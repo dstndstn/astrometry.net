@@ -57,4 +57,12 @@ int blind_wcs_compute(const double* starxyz,
                       tan_t* wcstan,
                       double* p_scale);
 
+int blind_wcs_compute_weighted(const double* starxyz,
+							   const double* fieldxy,
+							   const double* weights,
+							   int N,
+							   // output:
+							   tan_t* tan,
+							   double* p_scale);
+
 #endif

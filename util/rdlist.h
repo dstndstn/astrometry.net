@@ -38,6 +38,7 @@ struct rd_t {
 };
 typedef struct rd_t rd_t;
 
+void rd_getradec(const rd_t* f, int i, double* ra, double* dec);
 double rd_getra (rd_t* f, int i);
 double rd_getdec(rd_t* f, int i);
 void rd_setra (rd_t* f, int i, double ra);
