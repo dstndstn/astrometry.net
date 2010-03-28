@@ -1430,8 +1430,8 @@ static int write_corr_file(blind_t* bp) {
 		fitstable_add_write_column(tab, dubl, "index_y",   "pixels");
 		fitstable_add_write_column(tab, dubl, "index_ra",  "degrees");
 		fitstable_add_write_column(tab, dubl, "index_dec", "degrees");
-		fitstable_add_write_column(tab, itype, "index_id", NULL);
-		fitstable_add_write_column(tab, itype, "field_id", NULL);
+		fitstable_add_write_column(tab, itype, "index_id", "none");
+		fitstable_add_write_column(tab, itype, "field_id", "none");
 
 		if (mo->tagalong) {
 			for (j=0; j<bl_size(mo->tagalong); j++) {
