@@ -97,24 +97,12 @@ int main(int argc, char** args) {
 	logmsg("Computed TAN WCS:\n");
 	tan_print_to(&tan, logstream);
 
-	for (i=0; i<dl_size(otherradecs)/2; i++) {
-		double ra, dec, x,y;
-		ra = dl_get(otherradecs, 2*i);
-		dec = dl_get(otherradecs, 2*i+1);
-		if (!tan_radec2pixelxy(&tan, ra, dec, &x, &y)) {
-			logerr("Not in tangent plane: %g,%g\n", ra, dec);
-			exit(-1);
-			//continue;
-		}
-		printf("%g %g\n", x, y);
-	}
-
+	sip_t* sip;
 	{
 		tweak_t* t = tweak_new();
 		starxy_t* sxy = starxy_new(N, FALSE, FALSE);
 		il* imginds = il_new(256);
 		il* refinds = il_new(256);
-		//sip_t sip;
 
 		for (i=0; i<N; i++) {
 			starxy_set_x(sxy, i, xy[2*i+0]);
@@ -148,32 +136,30 @@ int main(int argc, char** args) {
 			t->state &= ~TWEAK_HAS_LINEAR_CD;
 		}
 		tan_write_to_file(&t->sip->wcstan, "kt1.wcs");
+		sip = t->sip;
 	}
 
-
-	/*
-	blind_wcs_move_tangent_point(xyz, xy, N, crpix, &tan, &tan2);
-	blind_wcs_move_tangent_point(xyz, xy, N, crpix, &tan2, &tan3);
-	logmsg("Moved tangent point to (%g,%g):\n", crpix[0], crpix[1]);
-	tan_print_to(&tan3, logstream);
-
-	tan_write_to_file(&tan, "kt1.wcs");
-	 tan_write_to_file(&tan3, "kt2.wcs");
-	 */
-
-	/* FIX tan3
 	for (i=0; i<dl_size(otherradecs)/2; i++) {
 		double ra, dec, x,y;
 		ra = dl_get(otherradecs, 2*i);
 		dec = dl_get(otherradecs, 2*i+1);
-		if (!tan_radec2pixelxy(&tan3, ra, dec, &x, &y)) {
+		if (!sip_radec2pixelxy(sip, ra, dec, &x, &y)) {
 			logerr("Not in tangent plane: %g,%g\n", ra, dec);
 			exit(-1);
 			//continue;
 		}
 		printf("%g %g\n", x, y);
 	}
+
+	/*
+	 blind_wcs_move_tangent_point(xyz, xy, N, crpix, &tan, &tan2);
+	 blind_wcs_move_tangent_point(xyz, xy, N, crpix, &tan2, &tan3);
+	 logmsg("Moved tangent point to (%g,%g):\n", crpix[0], crpix[1]);
+	 tan_print_to(&tan3, logstream);
+	 tan_write_to_file(&tan, "kt1.wcs");
+	 tan_write_to_file(&tan3, "kt2.wcs");
 	 */
+
 	dl_free(otherradecs);
 	free(xy);
 	free(xyz);

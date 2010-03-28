@@ -234,7 +234,7 @@ void solver_add_index(solver_t* solver, index_t* index) {
     pl_append(solver->indexes, index);
 }
 
-int solver_n_indices_added(const solver_t* solver) {
+int solver_n_indices(const solver_t* solver) {
 	return pl_size(solver->indexes);
 }
 
