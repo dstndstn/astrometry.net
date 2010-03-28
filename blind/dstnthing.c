@@ -28,12 +28,72 @@ void print_help(char* progname) {
 		   "   -m <match input file>\n"
 		   "   -x <xyls input file>\n"
 		   "   -r <rdls input file>\n"
-		   "   [-p <plot output file>]\n"
+		   "   [-p <plot output base filename>]\n"
 		   "   [-i <plot background image>]\n"
            "   [-v]: verbose\n"
 		   "   [-j <pixel-jitter>]: set pixel jitter (default 1.0)\n"
 		   "\n", progname);
 }
+
+	   
+void makeplot(char* plotfn, char* bgimgfn, int W, int H,
+			  int Nfield, double* fieldpix, double* fieldsigma2s,
+			  int Nindex, double* indexpix, int besti, int* theta) {
+	int i;
+	plot_args_t pargs;
+	plotimage_t* img;
+	cairo_t* cairo;
+	logmsg("Creating plot %s\n", plotfn);
+	plotstuff_init(&pargs);
+	pargs.outformat = PLOTSTUFF_FORMAT_PNG;
+	pargs.outfn = plotfn;
+	if (bgimgfn) {
+		img = plotstuff_get_config(&pargs, "image");
+		img->format = PLOTSTUFF_FORMAT_JPG;
+		plot_image_set_filename(img, bgimgfn);
+		plot_image_setsize(&pargs, img);
+		plotstuff_run_command(&pargs, "image");
+	} else {
+		plotstuff_set_size(&pargs, W, H);
+	}
+	cairo = pargs.cairo;
+	// red circles around every field star.
+	cairo_set_color(cairo, "red");
+	for (i=0; i<Nfield; i++) {
+		cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_CIRCLE,
+							   fieldpix[2*i+0], fieldpix[2*i+1],
+							   2.0 * sqrt(fieldsigma2s[i]));
+		cairo_stroke(cairo);
+	}
+	// green crosshairs at every index star.
+	cairo_set_color(cairo, "green");
+	for (i=0; i<Nindex; i++) {
+		cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_XCROSSHAIR,
+							   indexpix[2*i+0], indexpix[2*i+1], 3);
+		cairo_stroke(cairo);
+	}
+	// thick white circles for corresponding field stars.
+	cairo_set_line_width(cairo, 2);
+	for (i=0; i<=besti; i++) {
+		//printf("field %i -> index %i\n", i, theta[i]);
+		if (theta[i] < 0)
+			continue;
+		cairo_set_color(cairo, "white");
+		cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_CIRCLE,
+							   fieldpix[2*i+0], fieldpix[2*i+1],
+							   2.0 * sqrt(fieldsigma2s[i]));
+		cairo_stroke(cairo);
+		// thick cyan crosshairs for corresponding index stars.
+		cairo_set_color(cairo, "cyan");
+		cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_XCROSSHAIR,
+							   indexpix[2*theta[i]+0],
+							   indexpix[2*theta[i]+1],
+							   3);
+		cairo_stroke(cairo);
+	}
+	plotstuff_output(&pargs);
+}
+
 
 extern char *optarg;
 extern int optind, opterr, optopt;
@@ -74,10 +134,36 @@ int main(int argc, char** args) {
 	MatchObj* mo;
 	sip_t sip;
 
+	double* fieldpix;
+	int Nfield;
+	starxy_t* xy;
+
+	rd_t* rd;
+	int Nindex;
+
+	int step;
+
+	double ra,dec;
+
+	double* indexpix;
+	double* fieldsigma2s;
+	int besti;
+	int* theta;
+	double* odds;
+	double logodds;
+	double Q2, R2;
+	double qc[2];
+	double gamma;
+
+	double* weights;
+	double* matchxyz;
+	double* matchxy;
+	int Nmatch;
+	tan_t newtan;
+
 	int loglvl = LOG_MSG;
 	//double crpix[] = { HUGE_VAL, HUGE_VAL };
 	//FILE* logstream = stderr;
-
 	//fits_use_error_system();
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
@@ -180,18 +266,7 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 
-	sip_wrap_tan(&mo->wcstan, &sip);
-
-
-
 	// (x,y) positions of field stars.
-	double* fieldpix;
-	int Nfield;
-	double* indexpix;
-	starxy_t* xy;
-	rd_t* rd;
-	int Nindex;
-
 	xy = xylist_read_field(xyls, NULL);
 	if (!xy) {
 		logmsg("Failed to read xyls entries.\n");
@@ -201,7 +276,7 @@ int main(int argc, char** args) {
 	fieldpix = starxy_to_xy_array(xy, NULL);
 	logmsg("Found %i field objects\n", Nfield);
 
-	// Project RDLS into pixel space.
+	// (ra,dec) of index stars.
 	rd = rdlist_read_field(rdls, NULL);
 	if (!rd) {
 		logmsg("Failed to read rdls entries.\n");
@@ -209,171 +284,158 @@ int main(int argc, char** args) {
 	}
 	Nindex = rd_n(rd);
 	logmsg("Found %i index objects\n", Nindex);
-	indexpix = malloc(2 * Nindex * sizeof(double));
-	for (i=0; i<Nindex; i++) {
-		bool ok;
-		double ra = rd_getra(rd, i);
-		double dec = rd_getdec(rd, i);
-		ok = sip_radec2pixelxy(&sip, ra, dec, indexpix + i*2, indexpix + i*2 + 1);
-		assert(ok);
-	}
-	logmsg("CRPIX is (%g,%g)\n", sip.wcstan.crpix[0], sip.wcstan.crpix[1]);
-
-	double* fieldsigma2s = malloc(Nfield * sizeof(double));
-	int besti;
-	int* theta;
-	double* odds;
-	double logodds;
-	double Q2, R2;
-	double qc[2];
-	double gamma;
 
 	// quad radius-squared = AB distance.
 	Q2 = distsq(mo->quadpix, mo->quadpix + 2, 2);
 	qc[0] = sip.wcstan.crpix[0];
 	qc[1] = sip.wcstan.crpix[1];
 
-	// HACK -- variance growth rate wrt radius.
+
+	sip_wrap_tan(&mo->wcstan, &sip);
+
+	indexpix = malloc(2 * Nindex * sizeof(double));
+	fieldsigma2s = malloc(Nfield * sizeof(double));
+	weights = malloc(Nfield * sizeof(double));
+	matchxyz = malloc(Nfield * 3 * sizeof(double));
+	matchxy = malloc(Nfield * 2 * sizeof(double));
+
+	// variance growth rate wrt radius.
 	gamma = 1.0;
+	int STEPS = 20;
 
-	for (i=0; i<Nfield; i++) {
-		R2 = distsq(qc, fieldpix + 2*i, 2);
-		fieldsigma2s[i] = square(pixeljitter) * (1.0 + gamma * R2/Q2);
-	}
+	for (step=0; step<STEPS; step++) {
+		// Anneal
+		gamma = pow(0.9, step);
+		if (step == STEPS-1)
+			gamma = 0.0;
 
-	logodds = verify_star_lists(indexpix, Nindex,
-								fieldpix, fieldsigma2s, Nfield,
-								W*H, 0.25,
-								log(1e-100), log(1e100),
-								&besti, &odds, &theta, NULL);
-	logmsg("Logodds: %g\n", logodds);
-	logmsg("besti: %i\n", besti);
+		printf("Set gamma = %g\n", gamma);
 
-	if (plotfn) {
-		plot_args_t pargs;
-		plotimage_t* img;
-		cairo_t* cairo;
-		logmsg("Creating plot %s\n", plotfn);
-		plotstuff_init(&pargs);
-		pargs.outformat = PLOTSTUFF_FORMAT_PNG;
-		pargs.outfn = plotfn;
-		if (bgimgfn) {
-			img = plotstuff_get_config(&pargs, "image");
-			img->format = PLOTSTUFF_FORMAT_JPG;
-			plot_image_set_filename(img, bgimgfn);
-			plot_image_setsize(&pargs, img);
-			plotstuff_run_command(&pargs, "image");
-		} else {
-			plotstuff_set_size(&pargs, W, H);
-		}
-		cairo = pargs.cairo;
-		// red circles around every field star.
-		cairo_set_color(cairo, "red");
-		for (i=0; i<Nfield; i++) {
-			cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_CIRCLE,
-								   fieldpix[2*i+0], fieldpix[2*i+1],
-								   2.0 * sqrt(fieldsigma2s[i]));
-			cairo_stroke(cairo);
-		}
-		// green crosshairs at every index star.
-		cairo_set_color(cairo, "green");
+		// Project RDLS into pixel space.
 		for (i=0; i<Nindex; i++) {
-			cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_XCROSSHAIR,
-								   indexpix[2*i+0], indexpix[2*i+1], 3);
-			cairo_stroke(cairo);
+			bool ok;
+			rd_getradec(rd, i, &ra, &dec);
+			ok = sip_radec2pixelxy(&sip, ra, dec, indexpix + i*2, indexpix + i*2 + 1);
+			assert(ok);
 		}
-		// thick white circles for corresponding field stars.
-		cairo_set_line_width(cairo, 2);
-		for (i=0; i<=besti; i++) {
-			//printf("field %i -> index %i\n", i, theta[i]);
+		logmsg("CRPIX is (%g,%g)\n", sip.wcstan.crpix[0], sip.wcstan.crpix[1]);
+
+		for (i=0; i<Nfield; i++) {
+			R2 = distsq(qc, fieldpix + 2*i, 2);
+			fieldsigma2s[i] = square(pixeljitter) * (1.0 + gamma * R2/Q2);
+		}
+
+		logodds = verify_star_lists(indexpix, Nindex,
+									fieldpix, fieldsigma2s, Nfield,
+									W*H, 0.25,
+									log(1e-100), HUGE_VAL, //log(1e100),
+									&besti, &odds, &theta, NULL);
+		logmsg("Logodds: %g\n", logodds);
+		logmsg("besti: %i\n", besti);
+
+		if (plotfn) {
+			char fn[256];
+			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'a');
+			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
+					 Nindex, indexpix, Nfield, theta);
+		}
+
+		Nmatch = 0;
+		logmsg("Weights:");
+		for (i=0; i<Nfield; i++) {
+			double ra,dec;
 			if (theta[i] < 0)
 				continue;
-			cairo_set_color(cairo, "white");
-			cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_CIRCLE,
-								   fieldpix[2*i+0], fieldpix[2*i+1],
-								   2.0 * sqrt(fieldsigma2s[i]));
-			cairo_stroke(cairo);
-			// thick cyan crosshairs for corresponding index stars.
-			cairo_set_color(cairo, "cyan");
-			cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_XCROSSHAIR,
-								   indexpix[2*theta[i]+0],
-								   indexpix[2*theta[i]+1],
-								   3);
-			cairo_stroke(cairo);
+			rd_getradec(rd, theta[i], &ra, &dec);
+			radecdeg2xyzarr(ra, dec, matchxyz + Nmatch*3);
+			memcpy(matchxy + Nmatch*2, fieldpix + i*2, 2*sizeof(double));
+			weights[Nmatch] = verify_logodds_to_weight(odds[i]);
+			logmsg(" %.2f", weights[Nmatch]);
+			Nmatch++;
 		}
-		plotstuff_output(&pargs);
-	}
-
-	double* weights = malloc(Nfield * sizeof(double));
-	int Nmatch = 0;
-	double* matchxyz = malloc(Nfield * 3 * sizeof(double));
-	double* matchxy = malloc(Nfield * 2 * sizeof(double));
-	tan_t newtan;
-
-	Nmatch = 0;
-	logmsg("Weights:");
-	for (i=0; i<=besti; i++) {
-		double ra,dec;
-		if (theta[i] < 0)
-			continue;
-		rd_getradec(rd, theta[i], &ra, &dec);
-		radecdeg2xyzarr(ra, dec, matchxyz + Nmatch*3);
-		memcpy(matchxy + Nmatch*2, fieldpix + i*2, 2*sizeof(double));
-		weights[Nmatch] = verify_logodds_to_weight(odds[i]);
-		logmsg(" %.2f", weights[Nmatch]);
-		Nmatch++;
-	}
-	logmsg("\n");
-
-	blind_wcs_compute_weighted(matchxyz, matchxy, weights, Nmatch, &newtan, NULL);
-
-	logmsg("Original TAN WCS:\n");
-	tan_print_to(&sip.wcstan, stdout);
-	logmsg("Using %i (weighted) matches, new TAN WCS is:\n", Nmatch);
-	tan_print_to(&newtan, stdout);
-
-	sip_t* newsip;
-	tweak_t* t = tweak_new();
-	starxy_t* sxy = starxy_new(Nmatch, FALSE, FALSE);
-	il* imginds = il_new(256);
-	il* refinds = il_new(256);
-	dl* wts = dl_new(256);
-
-	for (i=0; i<Nmatch; i++) {
-		starxy_set_x(sxy, i, matchxy[2*i+0]);
-		starxy_set_y(sxy, i, matchxy[2*i+1]);
-	}
-	tweak_init(t);
-	tweak_push_ref_xyz(t, matchxyz, Nmatch);
-	tweak_push_image_xy(t, sxy);
-	for (i=0; i<Nmatch; i++) {
-		il_append(imginds, i);
-		il_append(refinds, i);
-		dl_append(wts, weights[i]);
-	}
-	tweak_push_correspondence_indices(t, imginds, refinds, NULL, wts);
-	tweak_push_wcs_tan(t, &newtan);
-	t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = 2;
-
-	for (i=0; i<10; i++) {
-		tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
 		logmsg("\n");
+
+		blind_wcs_compute_weighted(matchxyz, matchxy, weights, Nmatch, &newtan, NULL);
+
+		logmsg("Original TAN WCS:\n");
+		tan_print_to(&sip.wcstan, stdout);
+		logmsg("Using %i (weighted) matches, new TAN WCS is:\n", Nmatch);
+		tan_print_to(&newtan, stdout);
+
+		if (plotfn) {
+			char fn[256];
+
+			for (i=0; i<Nindex; i++) {
+				bool ok;
+				rd_getradec(rd, i, &ra, &dec);
+				ok = tan_radec2pixelxy(&newtan, ra, dec, indexpix + i*2, indexpix + i*2 + 1);
+				assert(ok);
+			}
+
+			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'b');
+			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
+					 Nindex, indexpix, Nfield, theta);
+		}
+
+		sip_t* newsip;
+		tweak_t* t = tweak_new();
+		starxy_t* sxy = starxy_new(Nmatch, FALSE, FALSE);
+		il* imginds = il_new(256);
+		il* refinds = il_new(256);
+		dl* wts = dl_new(256);
+
+		for (i=0; i<Nmatch; i++) {
+			starxy_set_x(sxy, i, matchxy[2*i+0]);
+			starxy_set_y(sxy, i, matchxy[2*i+1]);
+		}
+		tweak_init(t);
+		tweak_push_ref_xyz(t, matchxyz, Nmatch);
+		tweak_push_image_xy(t, sxy);
+		for (i=0; i<Nmatch; i++) {
+			il_append(imginds, i);
+			il_append(refinds, i);
+			dl_append(wts, weights[i]);
+		}
+		tweak_push_correspondence_indices(t, imginds, refinds, NULL, wts);
+		tweak_push_wcs_tan(t, &newtan);
+		t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = 2;
+		t->weighted_fit = TRUE;
+		for (i=0; i<10; i++) {
+			tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
+			//logmsg("\n");
+			//sip_print_to(t->sip, stdout);
+			t->state &= ~TWEAK_HAS_LINEAR_CD;
+		}
+		logmsg("Got SIP:\n");
 		sip_print_to(t->sip, stdout);
-		t->state &= ~TWEAK_HAS_LINEAR_CD;
+		newsip = t->sip;
+
+		if (plotfn) {
+			char fn[256];
+
+			for (i=0; i<Nindex; i++) {
+				bool ok;
+				rd_getradec(rd, i, &ra, &dec);
+				ok = sip_radec2pixelxy(newsip, ra, dec, indexpix + i*2, indexpix + i*2 + 1);
+				assert(ok);
+			}
+
+			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'c');
+			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
+					 Nindex, indexpix, Nfield, theta);
+		}
+
+		memcpy(&sip, newsip, sizeof(sip_t));
+
+		starxy_free(sxy);
+		tweak_free(t);
+		free(theta);
+		free(odds);
 	}
-	newsip = t->sip;
 
-
-
-
-
-
-	free(theta);
 	free(fieldsigma2s);
-
 	free(fieldpix);
 	free(indexpix);
-
 
 
 	if (xylist_close(xyls)) {

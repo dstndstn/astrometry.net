@@ -350,7 +350,7 @@ static double real_verify_star_lists(verify_t* v,
 									 int* p_besti,
 									 double** p_logodds, int** p_theta,
 									 double* p_worstlogodds,
-									 int* p_ibailed) {
+									 int* p_ibailed, int* p_istopped) {
 	int i, j;
 	double worstlogodds;
 	double bestworstlogodds;
@@ -406,6 +406,8 @@ static double real_verify_star_lists(verify_t* v,
 	}
 	if (p_ibailed)
 		*p_ibailed = -1;
+	if (p_istopped)
+		*p_istopped = -1;
 
 	theta = malloc(v->NT * sizeof(int));
 
@@ -554,8 +556,11 @@ static double real_verify_star_lists(verify_t* v,
 			bestworstlogodds = worstlogodds;
 		}
 
-		if (logodds > logodds_stoplooking)
+		if (logodds > logodds_stoplooking) {
+			if (p_istopped)
+				*p_istopped = i;
 			break;
+		}
 	}
 
 	free(rmatches);
@@ -867,7 +872,7 @@ static void check_permutation(const int* perm, int N) {
 	free(counts);
 }
 
-static void fixup_theta(int* theta, double* allodds, int ibailed, verify_t* v,
+static void fixup_theta(int* theta, double* allodds, int ibailed, int istopped, verify_t* v,
 						int besti, int NRimage, double* refxyz,
 						int** p_etheta, double** p_eodds) {
 	int* etheta;
@@ -885,6 +890,10 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, verify_t* v,
 	if (ibailed != -1)
 		for (i=ibailed+1; i<v->NTall; i++)
 			theta[i] = THETA_BAILEDOUT;
+
+	if (istopped != -1)
+		for (i=istopped+1; i<v->NTall; i++)
+			theta[i] = THETA_STOPPEDLOOKING;
 
 	// At this point, "theta[0]" is the *reference* star index
 	// that was matched by the test star "v->testperm[0]".
@@ -976,7 +985,9 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, verify_t* v,
 				assert(etheta[i] == THETA_FILTERED ||
 					   etheta[i] == THETA_DISTRACTOR ||
 					   etheta[i] == THETA_CONFLICT ||
-					   etheta[i] == THETA_BAILEDOUT);
+					   etheta[i] == THETA_BAILEDOUT ||
+					   etheta[i] == THETA_STOPPEDLOOKING);
+					   
 	}
 
 	*p_etheta = etheta;
@@ -1003,7 +1014,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	verify_t the_v;
 	verify_t* v = &the_v;
 	int NRimage;
-	int ibailed;
+	int ibailed, istopped;
 
 	assert(mo->wcs_valid || sip);
 	assert(isfinite(logaccept));
@@ -1151,7 +1162,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	worst = -HUGE_VAL;
 	K = real_verify_star_lists(v, effA, distractors,
 							   logbail, logstoplooking, &besti, &allodds, &theta, &worst,
-							   &ibailed);
+							   &ibailed, &istopped);
 	mo->logodds = K;
 	mo->worstlogodds = worst;
 	// NTall so that caller knows how big 'etheta' is.
@@ -1175,7 +1186,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 				mo->nmatch++;
 		}
 
-		fixup_theta(theta, allodds, ibailed, v, besti, NRimage, refxyz,
+		fixup_theta(theta, allodds, ibailed, istopped, v, besti, NRimage, refxyz,
 					&etheta, &eodds);
 
 		// Reinsert the matched quad...
@@ -1305,7 +1316,8 @@ double verify_star_lists(const double* refxys, int NR,
 	verify_t v;
 	double* eodds;
 	int* etheta;
-	int ibailed;
+	int ibailed, istopped;
+	int besti;
 	int* theta;
 	double* allodds;
 
@@ -1321,10 +1333,10 @@ double verify_star_lists(const double* refxys, int NR,
 	v.testperm = permutation_init(NULL, NT);
 
 	X = real_verify_star_lists(&v, effective_area, distractors,
-							   logodds_bail, logodds_stoplooking, p_besti,
+							   logodds_bail, logodds_stoplooking, &besti,
 							   &allodds, &theta,
-							   p_worstlogodds, &ibailed);
-	fixup_theta(theta, allodds, ibailed, &v, -1, NR, NULL,
+							   p_worstlogodds, &ibailed, &istopped);
+	fixup_theta(theta, allodds, ibailed, istopped, &v, besti, NR, NULL,
 				&etheta, &eodds);
 	free(theta);
 	free(allodds);
@@ -1337,6 +1349,9 @@ double verify_star_lists(const double* refxys, int NR,
 		*p_theta = etheta;
 	else
 		free(etheta);
+
+	if (p_besti)
+		*p_besti = besti;
 
 	free(v.refperm);
 	return X;
