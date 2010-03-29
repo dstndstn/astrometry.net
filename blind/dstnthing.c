@@ -35,7 +35,70 @@ void print_help(char* progname) {
 		   "\n", progname);
 }
 
+/*
+ wget "http://antwrp.gsfc.nasa.gov/apod/image/0403/cmsky_cortner_full.jpg"
+ #solve-field --backend-config backend.cfg -v --keep-xylist %s.xy --continue --scale-low 10 --scale-units degwidth cmsky_cortner_full.xy --no-tweak
+ cp cmsky_cortner_full.xy 1.xy
+ cp cmsky_cortner_full.rdls 1.rd
+ cp cmsky_cortner_full.wcs 1.wcs
+ cp cmsky_cortner_full.jpg 1.jpg
+ wget "http://live.astrometry.net/status.php?job=alpha-201003-01883980&get=match.fits" -O 1.match
+
+ X=http://live.astrometry.net/status.php?job=alpha-201003-36217312
+ Y=2
+ wget "${X}&get=field.xy.fits" -O ${Y}.xy
+ wget "${X}&get=index.rd.fits" -O ${Y}.rd
+ wget "${X}&get=wcs.fits" -O ${Y}.wcs
+ wget "${X}&get=match.fits" -O ${Y}.match
+ wget "http://antwrp.gsfc.nasa.gov/apod/image/1003/mb_2010-03-10_SeaGullThor900.jpg" -O ${Y}.jpg
+
+ dstnthing -m 2.match -x 2.xy -r 2.rd -p 2 -i 2.jpg
+
+ X=http://live.astrometry.net/status.php?job=alpha-201002-83316463
+ Y=3
+ wget "${X}&get=fullsize.png" -O - | pngtopnm | pnmtojpeg > ${Y}.jpg
+
+ dstnthing -m 3.match -x 3.xy -r 3.rd -p 3 -i 3.jpg
+
+ X=http://oven.cosmo.fas.nyu.edu/test/status.php?job=test-201003-60743215
+ Y=4
+
+ X=http://live.astrometry.net/status.php?job=alpha-201003-74071720
+ Y=5
+
+ wget "${X}&get=field.xy.fits" -O ${Y}.xy
+ wget "${X}&get=index.rd.fits" -O ${Y}.rd
+ wget "${X}&get=wcs.fits" -O ${Y}.wcs
+ wget "${X}&get=match.fits" -O ${Y}.match
+ wget "${X}&get=fullsize.png" -O - | pngtopnm | pnmtojpeg > ${Y}.jpg
+ echo dstnthing -m ${Y}.match -x ${Y}.xy -r ${Y}.rd -p ${Y} -i ${Y}.jpg
+ echo mencoder -o fit${Y}.avi -ovc lavc -lavcopts vcodec=mpeg4:keyint=1:autoaspect mf://${Y}-*c.png -mf fps=4:type=png
+
+ X=http://live.astrometry.net/status.php?job=alpha-201003-75248251
+ Y=6
+
+mencoder mf://${Y}-*c.png -mf fps=4:type=png -o /dev/null -ovc x264 \
+-x264encopts pass=1:turbo:bitrate=900:bframes=1:\
+me=umh:partitions=all:trellis=1:qp_step=4:qcomp=0.7:direct_pred=auto:keyint=300 \
+-vf harddup \
+-oac faac -faacopts br=192:mpeg=4:object=2 -channels 2 -srate 48000 \
+-ofps 4
+
+
+mencoder mf://${Y}-*c.png -mf fps=4:type=png -o /dev/null -ovc x264 -x264encopts pass=1:turbo:bitrate=900:bframes=1:me=umh:partitions=all:trellis=1:qp_step=4:qcomp=0.7:direct_pred=auto:keyint=300 -vf harddup -oac faac -faacopts br=192:mpeg=4:object=2 -channels 2 -srate 48000 -ofps 4
+mencoder mf://${Y}-*c.png -mf fps=4:type=png -o v${Y}.avi -ovc x264 -x264encopts pass=2:turbo:bitrate=900:bframes=1:me=umh:partitions=all:trellis=1:qp_step=4:qcomp=0.7:direct_pred=auto:keyint=300 -vf harddup -oac faac -faacopts br=192:mpeg=4:object=2 -channels 2 -srate 48000 -ofps 4
+
+ffmpeg -f image2 -i ${Y}-%02dc.png -r 12 -s 800x712 fit${Y}.mp4
+
+
+### Works with quicktime and realplayer!
+mencoder "mf://${Y}-*c.png" -mf fps=10 -o fit${Y}.avi -ovc lavc -lavcopts vcodec=msmpeg4v2:vbitrate=800
+
 	   
+
+
+ */
+
 void makeplot(char* plotfn, char* bgimgfn, int W, int H,
 			  int Nfield, double* fieldpix, double* fieldsigma2s,
 			  int Nindex, double* indexpix, int besti, int* theta,
@@ -105,49 +168,6 @@ void makeplot(char* plotfn, char* bgimgfn, int W, int H,
 
 extern char *optarg;
 extern int optind, opterr, optopt;
-/*
- wget "http://antwrp.gsfc.nasa.gov/apod/image/0403/cmsky_cortner_full.jpg"
- #solve-field --backend-config backend.cfg -v --keep-xylist %s.xy --continue --scale-low 10 --scale-units degwidth cmsky_cortner_full.xy --no-tweak
- cp cmsky_cortner_full.xy 1.xy
- cp cmsky_cortner_full.rdls 1.rd
- cp cmsky_cortner_full.wcs 1.wcs
- cp cmsky_cortner_full.jpg 1.jpg
- wget "http://live.astrometry.net/status.php?job=alpha-201003-01883980&get=match.fits" -O 1.match
-
- X=http://live.astrometry.net/status.php?job=alpha-201003-36217312
- Y=2
- wget "${X}&get=field.xy.fits" -O ${Y}.xy
- wget "${X}&get=index.rd.fits" -O ${Y}.rd
- wget "${X}&get=wcs.fits" -O ${Y}.wcs
- wget "${X}&get=match.fits" -O ${Y}.match
- wget "http://antwrp.gsfc.nasa.gov/apod/image/1003/mb_2010-03-10_SeaGullThor900.jpg" -O ${Y}.jpg
-
- dstnthing -m 2.match -x 2.xy -r 2.rd -p 2 -i 2.jpg
-
- X=http://live.astrometry.net/status.php?job=alpha-201002-83316463
- Y=3
- wget "${X}&get=fullsize.png" -O - | pngtopnm | pnmtojpeg > ${Y}.jpg
-
- dstnthing -m 3.match -x 3.xy -r 3.rd -p 3 -i 3.jpg
-
- X=http://oven.cosmo.fas.nyu.edu/test/status.php?job=test-201003-60743215
- Y=4
-
- X=http://live.astrometry.net/status.php?job=alpha-201003-74071720
- Y=5
-
- wget "${X}&get=field.xy.fits" -O ${Y}.xy
- wget "${X}&get=index.rd.fits" -O ${Y}.rd
- wget "${X}&get=wcs.fits" -O ${Y}.wcs
- wget "${X}&get=match.fits" -O ${Y}.match
- wget "${X}&get=fullsize.png" -O - | pngtopnm | pnmtojpeg > ${Y}.jpg
- echo dstnthing -m ${Y}.match -x ${Y}.xy -r ${Y}.rd -p ${Y} -i ${Y}.jpg
- echo mencoder -o fit${Y}.avi -ovc lavc -lavcopts vcodec=mpeg4:keyint=1:autoaspect mf://${Y}-*c.png -mf fps=4:type=png
-
- X=http://live.astrometry.net/status.php?job=alpha-201003-75248251
- Y=6
-
- */
 
 int main(int argc, char** args) {
 	int c;

@@ -23,7 +23,7 @@ export INSTALL_DIR
 
 # Turn off optimisation?  If the following line is commented-out, the default
 # is to turn optimization on.  See util/makefile.common for details.
-export OPTIMIZE = no
+#export OPTIMIZE = no
 
 all:
 
@@ -144,7 +144,7 @@ upgrade-indexes:
 		fi; \
 	done
 
-RELEASE_VER := 0.25
+RELEASE_VER := 0.26
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
 RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data pyfits etc
