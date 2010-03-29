@@ -98,6 +98,8 @@ int main(int argc, char **argv) {
 			   index.nstars, index.nquads, index.dimquads,
 			   arcsec2arcmin(index.index_scale_lower),
 			   arcsec2arcmin(index.index_scale_upper));
+
+		index_close(&index);
 	}
 
 	return 0;
