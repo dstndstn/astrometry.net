@@ -85,6 +85,7 @@ int main(int argc, char **argv) {
 		char* indexfn = myargs[i];
 		index_t index;
 		tic();
+		logmsg("Reading meta-data for index %s\n", indexfn);
 		if (index_get_meta(indexfn, &index)) {
 			ERROR("Failed to read metadata for index %s", indexfn);
 			continue;

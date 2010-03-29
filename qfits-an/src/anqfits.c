@@ -108,6 +108,12 @@ anqfits_t* anqfits_open(const char* filename) {
 	// initial maximum number of extensions: we grow automatically
 	int off_size = 1024;
 
+	qfits_header* hdr = NULL;
+	const char* blankline = "                                                                                ";
+	char getval_buf[FITS_LINESZ+1];
+	char getkey_buf[FITS_LINESZ+1];
+	char getcom_buf[FITS_LINESZ+1];
+
     /* Stat file to get its size */
     if (stat(filename, &sta)!=0) {
         qdebug(printf("anqfits: cannot stat file %s: %s\n", filename, strerror(errno)););
@@ -141,13 +147,14 @@ anqfits_t* anqfits_open(const char* filename) {
 
     n_blocks = 0;
     found_it = 0;
-    xtend = 0;
-    naxis = 0;
-    data_bytes = 1;
 	firsttime = 1;
 
-    // Start looking for END card
+	assert(strlen(blankline) == 80);
+
+	// Parse this header
+    hdr = qfits_header_new();
     while (!found_it) {
+		char* line;
 		debug("Firsttime = %i\n", firsttime);
 		if (!firsttime) {
 			// Read next FITS block
@@ -160,43 +167,42 @@ anqfits_t* anqfits_open(const char* filename) {
 		firsttime = 0;
         n_blocks++;
         // Browse through current block
-        buf_c = buf;
+		line = buf;
         for (i=0; i<FITS_NCARDS; i++) {
-			debug("Looking at line %i:\n  %.80s\n", i, buf_c);
-            /* Look for BITPIX keyword */
-            if (starts_with(buf_c, "BITPIX ")) {
-                read_val = qfits_getvalue(buf_c);
-                data_bytes *= atoi(read_val) / 8;
-                if (data_bytes<0) data_bytes *= -1;
+			char *key, *val, *comment;
 
-            /* Look for NAXIS keyword */
-            } else if (starts_with(buf_c, "NAXIS")) {
-                if (buf_c[5] == ' ') {
-                    /* NAXIS keyword */
-                    read_val = qfits_getvalue(buf_c);
-                    naxis = atoi(read_val);
-                } else {
-                    /* NAXIS?? keyword (axis size) */
-                    read_val = qfits_getvalue(buf_c);
-                    data_bytes *= atoi(read_val);
-                }
+			debug("Looking at line %i:\n  %.80s\n", i, line);
+			if (starts_with(line, "END "))
+				found_it = 1;
 
-            /* Look for EXTEND keyword */
-            } else if (starts_with(buf_c, "EXTEND ")) {
-                /* The EXTEND keyword is present: might be some extensions */
-                read_val = qfits_getvalue(buf_c);
-                if (read_val[0]=='T' || read_val[0]=='1') {
-                    xtend=1;
-                }
-
-            /* Look for END keyword */
-            } else if (starts_with(buf_c, "END ")) {
-                found_it = 1;
+			// Skip blank lines.
+			if (!strcmp(line, blankline))
+				continue;
+            key = qfits_getkey_r(line, getkey_buf);
+			if (!key)
+				goto bailout;
+            val = qfits_getvalue_r(line, getval_buf);
+            comment = qfits_getcomment_r(line, getcom_buf);
+			debug("Got key/value/comment \"%s\" / \"%s\" / \"%s\"\n", key, val, comment);
+            qfits_header_append(hdr, key, val, comment, line);
+			line += 80;
+			if (!strcmp(key, "END")) {
+				found_it = 1;
 				break;
-            }
-            buf_c += FITS_LINESZ;
-        }
-    }
+			}
+		}
+	}
+	// otherwise we bail out trying to read blocks past the EOF...
+	assert(found_it);
+
+    xtend = qfits_header_getboolean(hdr, "EXTEND", 0);
+    naxis = qfits_header_getint(hdr, "NAXIS", 0);
+    data_bytes = abs(qfits_header_getint(hdr, "BITPIX", 0));
+	for (i=0; i<naxis; i++) {
+		char key[32];
+		sprintf(key, "NAXIS%i", i);
+		data_bytes *= qfits_header_getint(hdr, key, 0);
+	}
 
     //qf->inode= sta.st_ino;
 
@@ -210,6 +216,8 @@ anqfits_t* anqfits_open(const char* filename) {
     // Set first HDU offsets
     qf->exts[0].hdr_start = 0;
     qf->exts[0].data_start = n_blocks;
+	qf->exts[0].header = hdr;
+	hdr = NULL;
 	qf->Nexts = 1;
     
     if (xtend) {
@@ -255,6 +263,7 @@ anqfits_t* anqfits_open(const char* filename) {
                     found_it = 1;
                     qf->exts[qf->Nexts].hdr_start = n_blocks-1;
                 }
+				// FIXME -- should we really just skip the block if we don't find the "XTENSION=" header?
             }
             if (end_of_file)
                 break;
@@ -348,6 +357,8 @@ anqfits_t* anqfits_open(const char* filename) {
     return qf;
 
  bailout:
+	if (hdr)
+		qfits_header_destroy(hdr);
     if (in)
         fclose(in);
     if (qf) {
