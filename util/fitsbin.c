@@ -165,8 +165,9 @@ int fitsbin_close(fitsbin_t* fb) {
 		bl_free(fb->items);
 	}
 
+	// SEE ALSO funny extension indexing in cache_tables
 	if (fb->tables) {
-		for (i=0; i<fb->Next; i++) {
+		for (i=0; i<=fb->Next; i++) {
 			if (!fb->tables[i])
 				continue;
 			qfits_table_close(fb->tables[i]);
@@ -368,6 +369,7 @@ static void cache_tables(fitsbin_t* fb) {
 	// NOTE, qfits has funny ideas about how extensions are numbered...
 	// (they're one-indexed); we could save a bit of storage by zero-indexing
 	// them, but that risks lots of off-by-ones...
+	// SEE ALSO funny extension indexing in fitsbin_close
 	fb->tables = calloc(fb->Next + 1, sizeof(qfits_table*));
 	for (i=1; i<=fb->Next; i++) {
         fb->tables[i] = qfits_table_open(fb->filename, i);
