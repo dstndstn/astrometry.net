@@ -86,6 +86,39 @@ static int starts_with(const char* str, const char* start) {
     return strncmp(str, start, len) == 0;
 }
 
+static const char* blankline = "                                                                                ";
+
+static int parse_header_block(const char* buf, qfits_header* hdr, int* found_it) {
+	char getval_buf[FITS_LINESZ+1];
+	char getkey_buf[FITS_LINESZ+1];
+	char getcom_buf[FITS_LINESZ+1];
+	// Browse through current block
+	int i;
+	const char* line = buf;
+	for (i=0; i<FITS_NCARDS; i++) {
+		char *key, *val, *comment;
+		debug("Looking at line %i:\n  %.80s\n", i, line);
+		if (starts_with(line, "END "))
+			*found_it = 1;
+		// Skip blank lines.
+		if (!strcmp(line, blankline))
+			continue;
+		key = qfits_getkey_r(line, getkey_buf);
+		if (!key)
+			return -1;
+		val = qfits_getvalue_r(line, getval_buf);
+		comment = qfits_getcomment_r(line, getcom_buf);
+		debug("Got key/value/comment \"%s\" / \"%s\" / \"%s\"\n", key, val, comment);
+		qfits_header_append(hdr, key, val, comment, line);
+		line += 80;
+		if (!strcmp(key, "END")) {
+			*found_it = 1;
+			break;
+		}
+	}
+	return 0;
+}
+
 // from qfits_cache.c: qfits_cache_add()
 anqfits_t* anqfits_open(const char* filename) {
     anqfits_t* qf = NULL;
@@ -109,10 +142,6 @@ anqfits_t* anqfits_open(const char* filename) {
 	int off_size = 1024;
 
 	qfits_header* hdr = NULL;
-	const char* blankline = "                                                                                ";
-	char getval_buf[FITS_LINESZ+1];
-	char getkey_buf[FITS_LINESZ+1];
-	char getcom_buf[FITS_LINESZ+1];
 
     /* Stat file to get its size */
     if (stat(filename, &sta)!=0) {
@@ -166,31 +195,11 @@ anqfits_t* anqfits_open(const char* filename) {
 		}
 		firsttime = 0;
         n_blocks++;
-        // Browse through current block
-		line = buf;
-        for (i=0; i<FITS_NCARDS; i++) {
-			char *key, *val, *comment;
 
-			debug("Looking at line %i:\n  %.80s\n", i, line);
-			if (starts_with(line, "END "))
-				found_it = 1;
-
-			// Skip blank lines.
-			if (!strcmp(line, blankline))
-				continue;
-            key = qfits_getkey_r(line, getkey_buf);
-			if (!key)
-				goto bailout;
-            val = qfits_getvalue_r(line, getval_buf);
-            comment = qfits_getcomment_r(line, getcom_buf);
-			debug("Got key/value/comment \"%s\" / \"%s\" / \"%s\"\n", key, val, comment);
-            qfits_header_append(hdr, key, val, comment, line);
-			line += 80;
-			if (!strcmp(key, "END")) {
-				found_it = 1;
-				break;
-			}
+		if (parse_header_block(buf, hdr, &found_it)) {
+			goto bailout;
 		}
+
 	}
 	// otherwise we bail out trying to read blocks past the EOF...
 	assert(found_it);
@@ -227,6 +236,7 @@ anqfits_t* anqfits_open(const char* filename) {
         /*
          * Register all extension offsets
          */
+		hdr = qfits_header_new();
         end_of_file = 0;
         while (!end_of_file) {
             /*
@@ -234,10 +244,7 @@ anqfits_t* anqfits_open(const char* filename) {
              */
             if (naxis > 0) {
                 /* Skip as many blocks as there are declared pixels */
-                skip_blocks = data_bytes / FITS_BLOCK_SIZE;
-                if (data_bytes % FITS_BLOCK_SIZE) {
-                    skip_blocks++;
-                }
+                skip_blocks = qfits_blocks_needed(data_bytes);
                 seeked = fseek(in, skip_blocks*FITS_BLOCK_SIZE, SEEK_CUR);
                 if (seeked == -1) {
                     qdebug(printf("anqfits: error seeking file %s\n", filename););
@@ -285,39 +292,22 @@ anqfits_t* anqfits_open(const char* filename) {
 				firsttime = 0;
                 n_blocks++;
 
-                /* Browse current block */
-                buf_c = buf;
-                for (i=0; i<FITS_NCARDS; i++) {
-                    /* Look for BITPIX keyword */
-                    if (starts_with(buf_c, "BITPIX ")) {
-                        read_val = qfits_getvalue(buf_c);
-                        data_bytes *= atoi(read_val) / 8 ;
-                        if (data_bytes<0)
-                            data_bytes *= -1;
-
-                    /* Look for NAXIS keyword */
-                    } else if (starts_with(buf_c, "NAXIS")) {
-                        if (buf_c[5]==' ') {
-                            /* NAXIS keyword */
-                            read_val = qfits_getvalue(buf_c);
-                            naxis = atoi(read_val);
-                        } else {
-                            /* NAXIS?? keyword (axis size) */
-                            read_val = qfits_getvalue(buf_c);
-                            data_bytes *= atoi(read_val);
-                        }
-
-                    /* Look for END keyword */
-                    } else if (starts_with(buf_c, "END ")) {
-                        /* Got the END card */
-                        found_it = 1;
-						break;
-					}
-                    buf_c += FITS_LINESZ;
+				if (parse_header_block(buf, hdr, &found_it)) {
+					goto bailout;
 				}
 			}
 			if (found_it) {
+				naxis = qfits_header_getint(hdr, "NAXIS", 0);
+				data_bytes = abs(qfits_header_getint(hdr, "BITPIX", 0));
+				for (i=0; i<naxis; i++) {
+					char key[32];
+					sprintf(key, "NAXIS%i", i);
+					data_bytes *= qfits_header_getint(hdr, key, 0);
+				}
+
 				qf->exts[qf->Nexts].data_start = n_blocks;
+				qf->exts[qf->Nexts].header = hdr;
+				hdr = NULL;
 				qf->Nexts++;
 				if (qf->Nexts >= off_size) {
 					off_size *= 2;

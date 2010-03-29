@@ -56,6 +56,10 @@
                             Global variables
  -----------------------------------------------------------------------------*/
 
+int qfits_blocks_needed(int size) {
+	return (size + FITS_BLOCK_SIZE - 1) / FITS_BLOCK_SIZE;
+}
+
 /*
  * The following global variables are only used for regular expression
  * matching of integers and floats. These definitions are private to

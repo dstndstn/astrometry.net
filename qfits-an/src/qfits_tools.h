@@ -53,6 +53,10 @@
 /* String type for FITS value */
 #define QFITS_STRING        5
 
+#include "qfits_std.h"
+
+int qfits_blocks_needed(int size);
+
 /*-----------------------------------------------------------------------------
                               Function codes
  -----------------------------------------------------------------------------*/

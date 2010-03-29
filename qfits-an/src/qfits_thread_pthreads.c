@@ -21,6 +21,44 @@
 
 #include "qfits_thread.h"
 
+#define DEBUG_LOCKS 1
+
+#ifdef DEBUG_LOCKS
+//#define debug(args...) fprintf(stderr, args)
+
+#include <sys/time.h>
+#include <time.h>
+#include <stdio.h>
+
+static double timenow() {
+    struct timeval tv;
+    if (gettimeofday(&tv, NULL)) {
+        return -1.0;
+    }
+    return (double)(tv.tv_sec - 3600*24*365*30) + tv.tv_usec * 1e-6;
+}
+
+void qfits_lock_init(qfits_lock_t* lock) {
+	pthread_mutex_init(lock, NULL);
+}
+
+void qfits_lock_lock(qfits_lock_t* lock) {
+	double t0 = timenow();
+	pthread_mutex_lock(lock);
+	double t1 = timenow();
+	fprintf(stderr, "qfits_lock_lock(%p) took %g sec\n", lock, t1-t0);
+}
+
+void qfits_lock_unlock(qfits_lock_t* lock) {
+	double t0 = timenow();
+	pthread_mutex_unlock(lock);
+	double t1 = timenow();
+	fprintf(stderr, "qfits_lock_unlock(%p) took %g sec\n", lock, t1-t0);
+}
+
+#else
+//#define debug(args...)
+
 void qfits_lock_init(qfits_lock_t* lock) {
 	pthread_mutex_init(lock, NULL);
 }
@@ -32,4 +70,7 @@ void qfits_lock_lock(qfits_lock_t* lock) {
 void qfits_lock_unlock(qfits_lock_t* lock) {
 	pthread_mutex_unlock(lock);
 }
+
+#endif
+
 
