@@ -38,7 +38,8 @@ void print_help(char* progname) {
 	   
 void makeplot(char* plotfn, char* bgimgfn, int W, int H,
 			  int Nfield, double* fieldpix, double* fieldsigma2s,
-			  int Nindex, double* indexpix, int besti, int* theta) {
+			  int Nindex, double* indexpix, int besti, int* theta,
+			  double* crpix) {
 	int i;
 	plot_args_t pargs;
 	plotimage_t* img;
@@ -91,6 +92,13 @@ void makeplot(char* plotfn, char* bgimgfn, int W, int H,
 							   3);
 		cairo_stroke(cairo);
 	}
+
+	cairo_set_color(cairo, "yellow");
+	cairo_set_line_width(cairo, 4);
+	cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_CROSSHAIR,
+						   crpix[0], crpix[1], 10);
+	cairo_stroke(cairo);
+
 	plotstuff_output(&pargs);
 }
 
@@ -107,11 +115,37 @@ extern int optind, opterr, optopt;
  wget "http://live.astrometry.net/status.php?job=alpha-201003-01883980&get=match.fits" -O 1.match
 
  X=http://live.astrometry.net/status.php?job=alpha-201003-36217312
- wget "${X}&get=field.xy.fits" -O 2.xy
- wget "${X}&get=index.rd.fits" -O 2.rd
- wget "${X}&get=wcs.fits" -O 2.wcs
- wget "${X}&get=match.fits" -O 2.match
- wget "http://antwrp.gsfc.nasa.gov/apod/image/1003/mb_2010-03-10_SeaGullThor900.jpg" -O 2.jpg
+ Y=2
+ wget "${X}&get=field.xy.fits" -O ${Y}.xy
+ wget "${X}&get=index.rd.fits" -O ${Y}.rd
+ wget "${X}&get=wcs.fits" -O ${Y}.wcs
+ wget "${X}&get=match.fits" -O ${Y}.match
+ wget "http://antwrp.gsfc.nasa.gov/apod/image/1003/mb_2010-03-10_SeaGullThor900.jpg" -O ${Y}.jpg
+
+ dstnthing -m 2.match -x 2.xy -r 2.rd -p 2 -i 2.jpg
+
+ X=http://live.astrometry.net/status.php?job=alpha-201002-83316463
+ Y=3
+ wget "${X}&get=fullsize.png" -O - | pngtopnm | pnmtojpeg > ${Y}.jpg
+
+ dstnthing -m 3.match -x 3.xy -r 3.rd -p 3 -i 3.jpg
+
+ X=http://oven.cosmo.fas.nyu.edu/test/status.php?job=test-201003-60743215
+ Y=4
+
+ X=http://live.astrometry.net/status.php?job=alpha-201003-74071720
+ Y=5
+
+ wget "${X}&get=field.xy.fits" -O ${Y}.xy
+ wget "${X}&get=index.rd.fits" -O ${Y}.rd
+ wget "${X}&get=wcs.fits" -O ${Y}.wcs
+ wget "${X}&get=match.fits" -O ${Y}.match
+ wget "${X}&get=fullsize.png" -O - | pngtopnm | pnmtojpeg > ${Y}.jpg
+ echo dstnthing -m ${Y}.match -x ${Y}.xy -r ${Y}.rd -p ${Y} -i ${Y}.jpg
+ echo mencoder -o fit${Y}.avi -ovc lavc -lavcopts vcodec=mpeg4:keyint=1:autoaspect mf://${Y}-*c.png -mf fps=4:type=png
+
+ X=http://live.astrometry.net/status.php?job=alpha-201003-75248251
+ Y=6
 
  */
 
@@ -285,13 +319,12 @@ int main(int argc, char** args) {
 	Nindex = rd_n(rd);
 	logmsg("Found %i index objects\n", Nindex);
 
+	sip_wrap_tan(&mo->wcstan, &sip);
+
 	// quad radius-squared = AB distance.
 	Q2 = distsq(mo->quadpix, mo->quadpix + 2, 2);
 	qc[0] = sip.wcstan.crpix[0];
 	qc[1] = sip.wcstan.crpix[1];
-
-
-	sip_wrap_tan(&mo->wcstan, &sip);
 
 	indexpix = malloc(2 * Nindex * sizeof(double));
 	fieldsigma2s = malloc(Nfield * sizeof(double));
@@ -328,7 +361,7 @@ int main(int argc, char** args) {
 		logodds = verify_star_lists(indexpix, Nindex,
 									fieldpix, fieldsigma2s, Nfield,
 									W*H, 0.25,
-									log(1e-100), HUGE_VAL, //log(1e100),
+									log(1e-100), HUGE_VAL,
 									&besti, &odds, &theta, NULL);
 		logmsg("Logodds: %g\n", logodds);
 		logmsg("besti: %i\n", besti);
@@ -337,7 +370,7 @@ int main(int argc, char** args) {
 			char fn[256];
 			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'a');
 			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
-					 Nindex, indexpix, Nfield, theta);
+					 Nindex, indexpix, Nfield, theta, sip.wcstan.crpix);
 		}
 
 		Nmatch = 0;
@@ -374,7 +407,7 @@ int main(int argc, char** args) {
 
 			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'b');
 			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
-					 Nindex, indexpix, Nfield, theta);
+					 Nindex, indexpix, Nfield, theta, newtan.crpix);
 		}
 
 		sip_t* newsip;
@@ -422,7 +455,7 @@ int main(int argc, char** args) {
 
 			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'c');
 			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
-					 Nindex, indexpix, Nfield, theta);
+					 Nindex, indexpix, Nfield, theta, newsip->wcstan.crpix);
 		}
 
 		memcpy(&sip, newsip, sizeof(sip_t));

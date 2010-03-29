@@ -32,6 +32,7 @@ include $(COMMON)/makefile.netpbm
 include $(COMMON)/makefile.png
 include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.jpeg
+include $(COMMON)/makefile.zlib
 
 LDFLAGS := $(LDFLAGS_DEF)
 LDFLAGS += -lm
@@ -44,6 +45,7 @@ CFLAGS += $(LIBKD_INC)
 CFLAGS += $(ANUTILS_INC)
 CFLAGS += $(ANFILES_INC)
 CFLAGS += $(GSL_INC)
+CFLAGS += $(ZLIB_INC)
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
@@ -358,7 +360,7 @@ nomadtofits: nomadtofits.o nomad-fits.o nomad.o \
 read_nomad: read_nomad.o nomad.o
 
 2masstofits: $(2MASSOBJ) $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lz
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(ZLIB_LIB)
 
 diffractionFlag_check: diffractionFlag_check.o usnob-fits.o usnob.o \
 		$(UTIL_OBJS) $(ANUTILS_LIB) $(QFITS_LIB)
