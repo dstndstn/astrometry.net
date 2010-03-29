@@ -31,7 +31,7 @@
 #include "sip-utils.h"
 #include "healpix.h"
 
-#define DEBUGVERIFY 1
+#define DEBUGVERIFY 0
 
 #if DEBUGVERIFY
 #define debug(args...) logdebug(args)
