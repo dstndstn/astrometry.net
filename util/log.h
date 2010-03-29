@@ -82,6 +82,8 @@ void loglevel(enum log_level level, const char* format, ...);
 
 int log_get_level();
 
+FILE* log_get_fid();
+
 extern log_t _logger_global;
 
 #endif // _LOG_H

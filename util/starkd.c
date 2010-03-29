@@ -333,7 +333,6 @@ static fitstable_t* get_tagalong(startree_t* s, bool report_errs) {
 		return NULL;
 	}
 	fitstable_open_extension(tag, ext);
-	//fitstable_read_extension(tag, ext);
 	return tag;
 }
 

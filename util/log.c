@@ -88,6 +88,10 @@ int log_get_level() {
     return get_logger()->level;
 }
 
+FILE* log_get_fid() {
+	return get_logger()->f;
+}
+
 #define LOGGER_TEMPLATE(name, level)                  \
 	void                                                \
 	name##_(const log_t* logger, const char* format, ...) { \
