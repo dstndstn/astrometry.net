@@ -953,14 +953,16 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, int istopped, 
 
 	for (i=0; i<v->NT; i++) {
 		ti = v->testperm[i];
-		// assert that we haven't touched this element yet.
-		assert(etheta[ti] == BAD_PERM);
+		if (DEBUGVERIFY)
+			// assert that we haven't touched this element yet.
+			assert(etheta[ti] == BAD_PERM);
 		if (theta[i] < 0) {
 			etheta[ti] = theta[i];
 			// No match -> no weight.
 			eodds[ti] = -HUGE_VAL;
 		} else {
-			assert(invrperm[theta[i]] != BAD_PERM);
+			if (DEBUGVERIFY)
+				assert(invrperm[theta[i]] != BAD_PERM);
 			etheta[ti] = invrperm[theta[i]];
 			eodds[ti] = allodds[i];
 		}
