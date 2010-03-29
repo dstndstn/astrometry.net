@@ -222,7 +222,7 @@ void solver_reset_field_size(solver_t* s);
  Tells the solver to only accept matches within "radius_deg" (in
  degrees) of the given "ra","dec" point (also in degrees).
 
- This is, each star comprising the quad must be within than circle.
+ This is, each star comprising the quad must be within that circle.
  */
 void solver_set_radec(solver_t* s, double ra, double dec, double radius_deg);
 
@@ -277,5 +277,7 @@ void solver_reset_counters(solver_t* t);
  Clears the "best_match_solves", "have_best_match", etc fields.
  */
 void solver_reset_best_match(solver_t* sp);
+
+void solver_print_to(const solver_t* sp, FILE* stream);
 
 #endif

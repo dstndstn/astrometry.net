@@ -980,6 +980,8 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		} else {
 			logverb("Solving field %i.\n", fieldnum);
 			sp->distance_from_quad_bonus = TRUE;
+
+			solver_print_to(sp, stdout);
 			
 			// The real thing
 			solver_run(sp);

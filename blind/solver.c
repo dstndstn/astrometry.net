@@ -61,6 +61,51 @@ void test_try_permutations(int* stars, double* code, int dimquad, solver_t* s);
 #endif
 
 
+void solver_print_to(const solver_t* sp, FILE* stream) {
+  int i;
+  fprintf(stream, "Solver:\n");
+  fprintf(stream, "  Arcsec per pix range: %g, %g\n", sp->funits_lower, sp->funits_upper);
+  fprintf(stream, "  Log record threshold: %g\n", sp->logratio_record_threshold);
+  fprintf(stream, "  Dist from quad bonus: %s\n", sp->distance_from_quad_bonus ? "yes" : "no");
+  fprintf(stream, "  Verify_pix: %g\n", sp->verify_pix);
+  fprintf(stream, "  Distractor ratio: %g\n", sp->distractor_ratio);
+  fprintf(stream, "  Code tol: %g\n", sp->codetol);
+  fprintf(stream, "  Quad size range: %g, %g\n", sp->quadsize_min, sp->quadsize_max);
+  fprintf(stream, "  Objs: %i, %i\n", sp->startobj, sp->endobj);
+  fprintf(stream, "  Parity: %i, %s\n", sp->parity, sp->parity == PARITY_NORMAL ? "normal" : (sp->parity == PARITY_FLIP ? "flip" : "both"));
+  fprintf(stream, "  Use_radec? %s", sp->use_radec ? "yes" : "no\n");
+  if (sp->use_radec) {
+    double ra,dec,rad;
+    xyzarr2radecdeg(sp->centerxyz, &ra, &dec);
+    rad = distsq2deg(sp->r2);
+    fprintf(stream, ", (%g, %g), radius %g deg\n", ra, dec, rad);
+  }
+  fprintf(stream, "  Log bail threshold: %g\n", sp->logratio_bail_threshold);
+  fprintf(stream, "  Log stoplooking threshold: %g\n", sp->logratio_stoplooking);
+  fprintf(stream, "  Maxquads %i\n", sp->maxquads);
+  fprintf(stream, "  Maxmatches %i\n", sp->maxmatches);
+  fprintf(stream, "  Set CRPIX? %s", sp->set_crpix ? "yes" : "no\n");
+  if (sp->set_crpix) {
+    if (sp->set_crpix_center)
+      fprintf(stream, ", center\n");
+    else
+      fprintf(stream, ", %g, %g\n", sp->crpix[0], sp->crpix[1]);
+  }
+  fprintf(stream, "  Indexes: %i\n", pl_size(sp->indexes));
+  for (i=0; i<pl_size(sp->indexes); i++) {
+    index_t* ind = pl_get(sp->indexes, i);
+    fprintf(stream, "    %s\n", ind->indexname);
+  }
+  fprintf(stream, "  Field: %i stars\n", starxy_n(sp->fieldxy));
+  for (i=0; i<starxy_n(sp->fieldxy); i++) {
+    fprintf(stream, "    xy (%.1f, %.1f), flux %.1f\n",
+	    starxy_getx(sp->fieldxy, i), starxy_gety(sp->fieldxy, i),
+	    sp->fieldxy->flux ? starxy_get_flux(sp->fieldxy, i) : 0.0);
+  }
+
+
+}
+
 /*
  static MatchObj* matchobj_copy_deep(const MatchObj* mo, MatchObj* dest) {
  if (!dest)

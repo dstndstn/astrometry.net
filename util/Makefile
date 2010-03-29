@@ -103,7 +103,7 @@ ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h 
 
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
-	tycho2-fits.o
+	tycho2-fits.o tic.o
 ANUTILS_DEPS += $(QFITS_LIB)
 endif
 ifndef NO_KDTREE
@@ -203,7 +203,7 @@ INCLUDE_INSTALL_DIR := $(INSTALL_DIR)/include
 LIB_INSTALL_DIR := $(INSTALL_DIR)/lib
 LINK_DIR := ../python/astrometry/util
 
-install: $(PYTHON_LIBS)
+install: $(PYTHON_LIBS) $(PYtHON_EXECS) $(PROGS) $(ANUTILS_H) $(ANFILES_LIB) $(ANUTILS_LIB)
 	@echo Installing in base directory $(INSTALL_DIR)
 	mkdir -p $(PY_INSTALL_DIR)
 	@for x in $(PYTHON_INSTALL); do \
@@ -229,6 +229,7 @@ install: $(PYTHON_LIBS)
 		echo cp $$x $(LIB_INSTALL_DIR)/$$x; \
 		cp $$x $(LIB_INSTALL_DIR)/$$x; \
 	done
+.PHONY: install
 
 gnu-specific-config.h: gnu-specific-test.c
 	( \
