@@ -337,6 +337,8 @@ index_t* index_load(const char* indexname, int flags, index_t* dest) {
 
 	if (!dest)
 		allocd = dest = calloc(1, sizeof(index_t));
+	else
+		memset(dest, 0, sizeof(index_t));
 
 	dest->indexname = strdup(indexname);
 	if (index_reload(dest)) {
