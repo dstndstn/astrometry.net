@@ -665,6 +665,7 @@ qfits_table * qfits_table_open(
 	qfits_header* hdr;
     off_t               offset_beg;
     size_t              data_size;
+	qfits_table* t;
 	
 	/* See if 'filename' is a fits file  */
     if (qfits_is_fits(filename) != 1) {
@@ -684,7 +685,11 @@ qfits_table * qfits_table_open(
 		return NULL;
 	}
 
-	return qfits_table_open2(hdr, offset_beg, data_size, filename, xtnum);
+	t = qfits_table_open2(hdr, offset_beg, data_size, filename, xtnum);
+
+	qfits_header_destroy(hdr);
+
+	return t;
 }
 
 /*----------------------------------------------------------------------------*/

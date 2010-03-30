@@ -86,7 +86,7 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
 const qfits_table* anqfits_get_table_const(const anqfits_t* qf, int ext) {
 	assert(ext >= 0 && ext < qf->Nexts);
 	if (!qf->exts[ext].table) {
-		qfits_header* hdr = anqfits_get_header_const(qf, ext);
+		const qfits_header* hdr = anqfits_get_header_const(qf, ext);
 		off_t begin, size;
 		if (!hdr) {
 			qfits_error("Failed to get header for ext %i\n", ext);
