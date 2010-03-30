@@ -237,7 +237,12 @@ qfits_header * qfits_table_ext_header_default(const qfits_table *);
 qfits_table * qfits_table_new(const char *, int, int, int, int);
 int qfits_col_fill(qfits_col *, int, int, int, tfits_type, const char *, 
         const char *, const char *, const char *, int, float, int, float, int);
-qfits_table * qfits_table_open(const char *, int);
+
+qfits_table * qfits_table_open(const char* filename, int extension);
+
+qfits_table * qfits_table_open2(const qfits_header* hdr, off_t offset_beg, size_t data_size,
+								const char* filename, int xtnum);
+
 void qfits_table_close(qfits_table *);
 unsigned char * qfits_query_column(const qfits_table *, int, const int *);
 unsigned char * qfits_query_column_seq(const qfits_table *, int, int, int);
@@ -293,6 +298,7 @@ int qfits_table_interpret_type(
         int         *   dec_nb,
         tfits_type  *   type,
         int             table_type);
+// thread-safe.
 int qfits_is_table_header(const qfits_header* hdr);
 
 

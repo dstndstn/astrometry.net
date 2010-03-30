@@ -69,6 +69,8 @@ qfits_header* anqfits_get_header(const anqfits_t* qf, int ext);
 
 qfits_table* anqfits_get_table(const anqfits_t* qf, int ext);
 
+const qfits_table* anqfits_get_table_const(const anqfits_t* qf, int ext);
+
 /*
  Deprecated // ?
  int anqfits_is_table_2(const anqfits_t* qf, int ext);

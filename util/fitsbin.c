@@ -41,11 +41,48 @@ struct fitsext {
 };
 typedef struct fitsext fitsext_t;
 
-qfits_header* get_header(fitsbin_t* fb, int ext) {
-	if (fb->fits) {
+qfits_header* fitsbin_get_header(fitsbin_t* fb, int ext) {
+	if (fb->fits)
 		return anqfits_get_header(fb->fits, ext);
-	}
 	return qfits_header_readext(fb->filename, ext);
+}
+
+int fitsbin_get_datinfo(fitsbin_t* fb, int ext, off_t* pstart, off_t* psize) {
+	int istart, isize;
+	if (fb->fits) {
+		if (pstart)
+			*pstart = anqfits_data_start(fb->fits, ext);
+		if (psize)
+			*psize = anqfits_data_size(fb->fits, ext);
+		return 0;
+	}
+	if (qfits_get_datinfo(fb->filename, ext, &istart, &isize) == -1) {
+		ERROR("error getting start/size for ext %i in file %s.\n", ext, fb->filename);
+		return -1;
+	}
+	if (pstart)
+		*pstart = istart;
+	if (psize)
+		*psize = isize;
+	return 0;
+}
+
+const qfits_table* fitsbin_get_table_const(fitsbin_t* fb, int ext) {
+	if (fb->fits)
+		return anqfits_get_table_const(fb->fits, ext);
+	// cache 'em...
+	if (!fb->tables)
+		fb->tables = calloc(fb->Next, sizeof(qfits_table*));
+	if (fb->tables[ext])
+		return fb->tables[ext];
+	fb->tables[ext] = qfits_table_open(fb->filename, ext);
+	return fb->tables[ext];
+}
+
+int fitsbin_n_ext(const fitsbin_t* fb) {
+	if (fb->fits)
+		return anqfits_n_ext(fb->fits);
+	return qfits_query_n_ext(fb->filename);
 }
 
 FILE* fitsbin_get_fid(fitsbin_t* fb) {
@@ -165,9 +202,8 @@ int fitsbin_close(fitsbin_t* fb) {
 		bl_free(fb->items);
 	}
 
-	// SEE ALSO funny extension indexing in cache_tables
 	if (fb->tables) {
-		for (i=0; i<=fb->Next; i++) {
+		for (i=0; i<fb->Next; i++) {
 			if (!fb->tables[i])
 				continue;
 			qfits_table_close(fb->tables[i]);
@@ -361,34 +397,18 @@ int fitsbin_write_item(fitsbin_t* fb, fitsbin_chunk_t* chunk, void* data) {
     return fitsbin_write_items(fb, chunk, data, 1);
 }
 
-/**
- Reads all tables in this file and caches them in fb->tables.
- */
-static void cache_tables(fitsbin_t* fb) {
-	int i;
-	// NOTE, qfits has funny ideas about how extensions are numbered...
-	// (they're one-indexed); we could save a bit of storage by zero-indexing
-	// them, but that risks lots of off-by-ones...
-	// SEE ALSO funny extension indexing in fitsbin_close
-	fb->tables = calloc(fb->Next + 1, sizeof(qfits_table*));
-	for (i=1; i<=fb->Next; i++) {
-        fb->tables[i] = qfits_table_open(fb->filename, i);
-	}
-}
-
 // Like fitsioutils.c : fits_find_table_column(), but using our cache...
-static int find_table_column(fitsbin_t* fb, const char* colname, int* pstart, int* psize, int* pext) {
+static int find_table_column(fitsbin_t* fb, const char* colname, off_t* pstart, off_t* psize, int* pext) {
     int i;
-	assert(fb->tables);
-	for (i=1; i<=fb->Next; i++) {
+	for (i=1; i<fb->Next; i++) {
         int c;
-        qfits_table* table = fb->tables[i];
+        const qfits_table* table = fitsbin_get_table_const(fb, i);
 		if (!table)
 			continue;
 		c = fits_find_column(table, colname);
 		if (c == -1)
 			continue;
-		if (qfits_get_datinfo(fb->filename, i, pstart, psize) == -1) {
+		if (fitsbin_get_datinfo(fb, i, pstart, psize)) {
 			ERROR("error getting start/size for ext %i in file %s.\n", i, fb->filename);
             return -1;
         }
@@ -401,7 +421,8 @@ static int find_table_column(fitsbin_t* fb, const char* colname, int* pstart, in
 }
 
 static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
-    int tabstart, tabsize, ext;
+    off_t tabstart, tabsize;
+	int ext;
     size_t expected = 0;
 	int mode, flags;
 	off_t mapstart;
@@ -431,13 +452,6 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 
 	} else {
 		double t0;
-
-		if (!fb->tables) {
-			t0 = timenow();
-			cache_tables(fb);
-			debug("fitsbin: cache_tables() took %g ms\n", 1000 * (timenow() - t0));
-		}
-
 		t0 = timenow();
 		if (find_table_column(fb, chunk->tablename, &tabstart, &tabsize, &ext)) {
 			if (chunk->required)
@@ -448,14 +462,14 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 		debug("fits_find_table_column(%s) took %g ms\n", chunk->tablename, 1000 * (timenow() - t0));
 
 		t0 = timenow();
-		chunk->header = get_header(fb, ext);
+		chunk->header = fitsbin_get_header(fb, ext);
 		if (!chunk->header) {
 			ERROR("Couldn't read FITS header from file \"%s\" extension %i", fb->filename, ext);
 			return -1;
 		}
 		debug("reading chunk header (%s) took %g ms\n", chunk->tablename, 1000 * (timenow() - t0));
-		table_nrows = fb->tables[ext]->nr;
-		table_rowsize = fb->tables[ext]->tab_w;
+		table_nrows = fitsbin_get_table_const(fb, ext)->nr;
+		table_rowsize = fitsbin_get_table_const(fb, ext)->tab_w;
 	}
 
     if (!chunk->itemsize)
@@ -497,7 +511,7 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 			ERROR("Expected table size (%i => %i FITS blocks) is not equal to "
 				  "size of table \"%s\" (%i FITS blocks).",
 				  (int)expected, fits_blocks_needed(expected),
-				  chunk->tablename, tabsize / FITS_BLOCK_SIZE);
+				  chunk->tablename, (int)(tabsize / FITS_BLOCK_SIZE));
 			return -1;
 		}
 		get_mmap_size(tabstart, tabsize, &mapstart, &(chunk->mapsize), &mapoffset);
@@ -551,13 +565,14 @@ fitsbin_t* fitsbin_open_fits(anqfits_t* fits) {
 		SYSERROR("Failed to open file \"%s\"", fits->filename);
         goto bailout;
 	}
-    fb->primheader = anqfits_get_header(fits, 0);
+	fb->Next = anqfits_n_ext(fits);
+	debug("N ext: %i\n", fb->Next);
+	fb->fits = fits;
+    fb->primheader = fitsbin_get_header(fb, 0);
     if (!fb->primheader) {
         ERROR("Couldn't read primary FITS header from file \"%s\"", fits->filename);
         goto bailout;
     }
-	fb->Next = anqfits_n_ext(fits);
-	fb->fits = fits;
     return fb;
  bailout:
     fitsbin_close(fb);
@@ -583,7 +598,8 @@ fitsbin_t* fitsbin_open(const char* fn) {
         ERROR("Couldn't read FITS header from file \"%s\"", fn);
         goto bailout;
     }
-	fb->Next = qfits_query_n_ext(fn);
+	fb->Next = 1 + qfits_query_n_ext(fn);
+	debug("N ext: %i\n", fb->Next);
 
     return fb;
  bailout:

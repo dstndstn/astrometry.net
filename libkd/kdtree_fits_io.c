@@ -249,11 +249,11 @@ static qfits_header* find_tree(const char* treename, const fitsbin_t* fb,
       treename = NULL;
 
     // scan the extension headers, looking for one that contains a matching KDT_NAME entry.
-    nexten = qfits_query_n_ext(fn);
+    nexten = fitsbin_n_ext(fb);
     header = NULL;
     for (i=1; i<=nexten; i++) {
         char* name;
-        header = qfits_header_readext(fn, i);
+        header = fitsbin_get_header(fb, i);
         if (!header) {
             ERROR("Failed to read FITS header for extension %i in file %s", i, fn);
             goto next;

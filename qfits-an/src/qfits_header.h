@@ -82,7 +82,11 @@ int qfits_header_sort(qfits_header **);
 qfits_header * qfits_header_copy(const qfits_header *);
 void qfits_header_mod(qfits_header *, const char *, const char *, const char *);
 void qfits_header_destroy(qfits_header *);
-char * qfits_header_getstr(const qfits_header *, const char *);
+
+char* qfits_header_getstr(const qfits_header *, const char *);
+
+int qfits_header_getstr_pretty(const qfits_header* hdr, const char* key, char* pretty, const char* default_val);
+
 int qfits_header_getitem(const qfits_header *, int, char *, char *, char *, 
         char *); 
 

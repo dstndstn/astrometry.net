@@ -21,7 +21,7 @@
 
 #include "qfits_thread.h"
 
-#define DEBUG_LOCKS 1
+//#define DEBUG_LOCKS 1
 
 #ifdef DEBUG_LOCKS
 //#define debug(args...) fprintf(stderr, args)

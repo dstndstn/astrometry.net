@@ -257,8 +257,8 @@ ALL_TEST_EXTRA_OBJS += usnob-fits.o usnob.o
 test_nomad: nomad-fits.o nomad.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_TEST_EXTRA_OBJS += nomad-fits.o nomad.o
 
-test_matchfile: matchfile.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-ALL_TEST_EXTRA_OBJS += matchfile.o
+test_matchfile: matchfile.o matchobj.o $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_TEST_EXTRA_OBJS += matchfile.o matchobj.o
 
 test_blindutils: blindutils.o $(ANUTILS_LIB)
 ALL_TEST_EXTRA_OBJS += blindutils.o

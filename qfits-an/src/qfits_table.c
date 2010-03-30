@@ -39,6 +39,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <assert.h>
+#include <math.h>
 
 #include "config.h"
 
@@ -129,11 +130,14 @@ int qfits_is_table(const char * filename, int xtnum)
 int qfits_is_table_header(const qfits_header* hdr) {
     char* value;
     int ttype;
+	char buf[FITS_LINESZ + 1];
+
     ttype = QFITS_INVALIDTABLE;
     value = qfits_header_getstr(hdr, "XTENSION");
     if (!value)
         return ttype;
-    value = qfits_pretty_string(value);
+	qfits_pretty_string_r(value, buf);
+	value = buf;
     if (!strcmp(value, "TABLE")) {
         ttype = QFITS_ASCIITABLE;
     } else if (!strcmp(value, "BINTABLE")) {
@@ -426,21 +430,15 @@ int qfits_col_fill(
     return 0;
 }
 
-/*----------------------------------------------------------------------------*/
-/**
-  @brief    Read a FITS extension.
-  @param    filename    Name of the FITS file to examine.
-  @param    xtnum        Extension number to read (starting from 1).
-  @return    Pointer to newly allocated qfits_table structure.
-
-  Read a FITS table from a given file name and extension, and return a
-  newly allocated qfits_table structure. 
+/*
+ Creates a qfits_table* from the given qfits_header.
+ Also requires the offset to the beginning of the data unit, and its size.
+ (eg, via qfits_get_datinfo)
+ The "filename" and "xtnum" args are purely for printing error messages.
+ (the filename is copied to the qfits_table object, though)
  */
-/*----------------------------------------------------------------------------*/
-qfits_table * qfits_table_open(
-        const char  *   filename, 
-        int             xtnum)
-{
+qfits_table * qfits_table_open2(const qfits_header* hdr, off_t offset_beg, size_t data_size,
+								const char* filename, int xtnum) {
     qfits_table     *   tload;
     qfits_col       *   curr_col;
 	char str_val[FITS_LINESZ+1];
@@ -449,7 +447,7 @@ qfits_table * qfits_table_open(
     int                 table_type;
     int                 nb_col;
     int                 table_width;
-    int                 nb_raws;
+    int                 nb_rows;
     /* Column infos */
     char                label[FITSVALSZ];
     char                unit[FITSVALSZ];
@@ -459,8 +457,6 @@ qfits_table * qfits_table_open(
     int                 atom_dec_nb;
     int                 atom_size;
     tfits_type          atom_type;
-    off_t               offset_beg;
-    size_t              data_size;
     int                 theory_size;
     int                 zero_present;
     int                 scale_present;
@@ -475,193 +471,162 @@ qfits_table * qfits_table_open(
     int                    nb_bits;
         
     int                    i;
-    
-     /* See if 'filename' is a fits file  */
-    if (qfits_is_fits(filename) != 1) {
-        qfits_error("[%s] is not FITS", filename);
-        return NULL;
-    }
-        
+
     /* Identify a table and get the table type : ASCII or BIN */
-	if ((table_type = qfits_is_table(filename, xtnum))==QFITS_INVALIDTABLE) {
+	if ((table_type = qfits_is_table_header(hdr)) == QFITS_INVALIDTABLE) {
         qfits_error("[%s] extension %d is not a table", filename, xtnum);
         return NULL;
     }
     
     /* Get number of columns and allocate them: nc <-> TFIELDS */
-    if (qfits_query_ext_r(filename, "TFIELDS", xtnum, str_val)) {
+	nb_col = qfits_header_getint(hdr, "TFIELDS", -1);
+	if (nb_col == -1) {
         qfits_error("cannot read TFIELDS in [%s]:[%d]", filename, xtnum);
         return NULL;
     }
-    nb_col = atoi(str_val);
 
     /* Get the width in bytes of the table */
-    if (qfits_query_ext_r(filename, "NAXIS1", xtnum, str_val)) {
+	table_width = qfits_header_getint(hdr, "NAXIS1", -1);
+	if (table_width == -1) {
         qfits_error("cannot read NAXIS1 in [%s]:[%d]", filename, xtnum);
         return NULL;
     }
-    table_width = atoi(str_val);
     
 	/* Get the number of rows */
-    if (qfits_query_ext_r(filename, "NAXIS2", xtnum, str_val)) {
+    nb_rows = qfits_header_getint(hdr, "NAXIS2", -1);
+	if (nb_rows == -1) {
         qfits_error("cannot read NAXIS2 in [%s]:[%d]", filename, xtnum);
         return NULL;
     }
-    nb_raws = atoi(str_val);
 
     /* Create the table object */
-    tload = qfits_table_new(filename, table_type, table_width, nb_col, nb_raws);
-    
-    /* Initialize offset_beg */
-    if (qfits_get_datinfo_long(filename, xtnum, &offset_beg, &data_size)!=0) {
-        qfits_error("cannot find data start in [%s]:[%d]", filename, xtnum);
-        qfits_table_close(tload);
-        return NULL;
-    }
+    tload = qfits_table_new(filename, table_type, table_width, nb_col, nb_rows);
     
     /* Loop on all columns and get column descriptions  */
     curr_col = tload->col;
     for (i=0; i<tload->nc; i++) {
-		char str_val_2[FITS_LINESZ+1];
+		const char* nil = "";
 
         /* label <-> TTYPE     */
         sprintf(keyword, "TTYPE%d", i+1);
-        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
-            label[0] = '\0';
-        } else qfits_pretty_string_r(str_val, label);
+		qfits_header_getstr_pretty(hdr, keyword, label, nil);
         
         /* unit <-> TUNIT */
         sprintf(keyword, "TUNIT%d", i+1);
-        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
-            unit[0] = '\0';
-        } else qfits_pretty_string_r(str_val, unit);
+		qfits_header_getstr_pretty(hdr, keyword, unit, nil);
 
         /* disp <-> TDISP */
         sprintf(keyword, "TDISP%d", i+1);
-        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
-            disp[0] = '\0';
-        } else qfits_pretty_string_r(str_val, disp);
+		qfits_header_getstr_pretty(hdr, keyword, disp, nil);
 
         /* nullval <-> TNULL */
         sprintf(keyword, "TNULL%d", i+1);
-        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
-            nullval[0] = '\0';
-        } else qfits_pretty_string_r(str_val, nullval);
+		qfits_header_getstr_pretty(hdr, keyword, nullval, nil);
     
         /* atom_size, atom_nb, atom_dec_nb, atom_type    <-> TFORM */
         sprintf(keyword, "TFORM%d", i+1);
-        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
-            qfits_error("cannot read [%s] in [%s]:[%d]", keyword, filename, 
-						xtnum);
+		if (qfits_header_getstr_pretty(hdr, keyword, str_val, NULL)) {
+            qfits_error("cannot read [%s] in [%s]:[%d]", keyword, filename, xtnum);
             qfits_table_close(tload);
             return NULL;
         }
         /* Interpret the type in header */
-		qfits_pretty_string_r(str_val, str_val_2);
-        if (qfits_table_interpret_type(str_val_2,
-                        &(atom_nb), 
-                        &(atom_dec_nb),
-                        &(atom_type), 
-                        table_type) == -1) {
-            qfits_error("cannot interpret the type: %s", str_val_2);
+        if (qfits_table_interpret_type(str_val, &atom_nb, &atom_dec_nb, &atom_type, table_type) == -1) {
+            qfits_error("cannot interpret column type: %s", str_val);
             qfits_table_close(tload);
             return NULL;
         }
         
         /* Set atom_size */
         switch (atom_type) {
-            case TFITS_BIN_TYPE_A:
-            case TFITS_BIN_TYPE_L:
-            case TFITS_BIN_TYPE_B:
-                atom_size = 1;
-                break;
-            case TFITS_BIN_TYPE_I:
-                atom_size = 2;
-                break;
-            case TFITS_BIN_TYPE_J:
-            case TFITS_BIN_TYPE_E:
-            case TFITS_ASCII_TYPE_I:
-            case TFITS_ASCII_TYPE_E:
-            case TFITS_ASCII_TYPE_F:
-                atom_size = 4;
-                break;
-            case TFITS_BIN_TYPE_C:
-            case TFITS_BIN_TYPE_P:
-                atom_size = 4;
-                atom_nb *= 2;
-                break;
-            case TFITS_BIN_TYPE_K:
-            case TFITS_BIN_TYPE_D:
-            case TFITS_ASCII_TYPE_D:
-                atom_size = 8;
-                break;
-            case TFITS_BIN_TYPE_M:
-                atom_size = 8;
-                atom_nb *= 2;
-                break;
-            case TFITS_BIN_TYPE_X:
-                atom_size = 1;
-                nb_bits = atom_nb;
-                atom_nb = (int)((nb_bits - 1)/ 8) + 1;
-                break;
-            case TFITS_ASCII_TYPE_A:
-                atom_size = atom_nb;
-                break;
-            default:
-                qfits_error("unrecognized type");
-                qfits_table_close(tload);
-                return NULL;
-                break;
+		case TFITS_BIN_TYPE_A:
+		case TFITS_BIN_TYPE_L:
+		case TFITS_BIN_TYPE_B:
+			atom_size = 1;
+			break;
+		case TFITS_BIN_TYPE_I:
+			atom_size = 2;
+			break;
+		case TFITS_BIN_TYPE_J:
+		case TFITS_BIN_TYPE_E:
+		case TFITS_ASCII_TYPE_I:
+		case TFITS_ASCII_TYPE_E:
+		case TFITS_ASCII_TYPE_F:
+			atom_size = 4;
+			break;
+		case TFITS_BIN_TYPE_C:
+		case TFITS_BIN_TYPE_P:
+			atom_size = 4;
+			atom_nb *= 2;
+			break;
+		case TFITS_BIN_TYPE_K:
+		case TFITS_BIN_TYPE_D:
+		case TFITS_ASCII_TYPE_D:
+			atom_size = 8;
+			break;
+		case TFITS_BIN_TYPE_M:
+			atom_size = 8;
+			atom_nb *= 2;
+			break;
+		case TFITS_BIN_TYPE_X:
+			atom_size = 1;
+			nb_bits = atom_nb;
+			atom_nb = (int)((nb_bits - 1)/ 8) + 1;
+			break;
+		case TFITS_ASCII_TYPE_A:
+			atom_size = atom_nb;
+			break;
+		default:
+			qfits_error("unrecognized type");
+			qfits_table_close(tload);
+			return NULL;
+			break;
         }
-    
+
         /* zero <-> TZERO */
         sprintf(keyword, "TZERO%d", i+1);
-        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
-            zero = (float)atof(str_val);
-            zero_present = 1;    
-        } else {
-            zero = (float)0.0;
-            zero_present = 0;    
-        }
-        
+		zero_present = 1;
+		zero = qfits_header_getdouble(hdr, keyword, HUGE_VAL);
+		if (zero == HUGE_VAL) {
+			zero = 0.0;
+			zero_present = 0;
+		}
+
         /* scale <-> TSCAL */
         sprintf(keyword, "TSCAL%d", i+1);
-        if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
-            scale = (float)atof(str_val);
-            scale_present = 1;
-        } else {
-            scale = (float)1.0;
-            scale_present = 0;
-        }
+		scale_present = 1;
+		scale = qfits_header_getdouble(hdr, keyword, HUGE_VAL);
+		if (scale == HUGE_VAL) {
+			scale = 1.0;
+			scale_present = 0;
+		}
 
         /* Fill the current column object */
         qfits_col_fill(curr_col, atom_nb, atom_dec_nb, atom_size, atom_type, 
-                label, unit, nullval, disp, zero_present, zero, scale_present, 
-                scale, offset_beg);
+					   label, unit, nullval, disp, zero_present, zero, scale_present, 
+					   scale, offset_beg);
         
         /* Compute offset_beg but for the last column */
         if (i < tload->nc - 1) {
             if (table_type == QFITS_ASCIITABLE) {
-				char str_val_2[FITS_LINESZ+1];
                 /* column width <-> TBCOLi and TBCOLi+1 */
                 sprintf(keyword, "TBCOL%d", i+1);
-                if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
+				col_pos = qfits_header_getint(hdr, keyword, -1);
+				if (col_pos == -1) {
                     qfits_error("cannot read [%s] in [%s]", keyword, filename);
                     qfits_table_close(tload);
                     return NULL;
                 }
-				qfits_pretty_string_r(str_val, str_val_2);
-                col_pos = atoi(str_val_2);
                 
                 sprintf(keyword, "TBCOL%d", i+2);
-                if (qfits_query_ext_r(filename, keyword, xtnum, str_val)) {
+				next_col_pos = qfits_header_getint(hdr, keyword, -1);
+				if (next_col_pos == -1) {
                     qfits_error("cannot read [%s] in [%s]", keyword, filename);
                     qfits_table_close(tload);
                     return NULL;
                 }
-				qfits_pretty_string_r(str_val, str_val_2);
-                next_col_pos = atoi(str_val_2);
                 offset_beg += (int)(next_col_pos - col_pos);
+
             } else if (table_type == QFITS_BINTABLE) {
                 offset_beg += atom_nb * atom_size;
             }
@@ -680,6 +645,46 @@ qfits_table * qfits_table_open(
     
     /* Return  */
     return tload;
+}
+
+/*----------------------------------------------------------------------------*/
+/**
+  @brief    Read a FITS extension.
+  @param    filename    Name of the FITS file to examine.
+  @param    xtnum        Extension number to read (starting from 1).
+  @return    Pointer to newly allocated qfits_table structure.
+
+  Read a FITS table from a given file name and extension, and return a
+  newly allocated qfits_table structure. 
+ */
+/*----------------------------------------------------------------------------*/
+qfits_table * qfits_table_open(
+        const char  *   filename, 
+        int             xtnum)
+{
+	qfits_header* hdr;
+    off_t               offset_beg;
+    size_t              data_size;
+	
+	/* See if 'filename' is a fits file  */
+    if (qfits_is_fits(filename) != 1) {
+        qfits_error("[%s] is not FITS", filename);
+        return NULL;
+    }
+
+    /* Initialize offset_beg */
+    if (qfits_get_datinfo_long(filename, xtnum, &offset_beg, &data_size)!=0) {
+        qfits_error("cannot find data start in [%s]:[%d]", filename, xtnum);
+        return NULL;
+    }
+
+	hdr = qfits_header_readext(filename, xtnum);
+	if (!hdr) {
+		qfits_error("Failed to read extension %i of file %s\n", xtnum, filename);
+		return NULL;
+	}
+
+	return qfits_table_open2(hdr, offset_beg, data_size, filename, xtnum);
 }
 
 /*----------------------------------------------------------------------------*/

@@ -153,7 +153,7 @@ struct fitsbin_t {
 	// for use when reading (not in_memory()): cache the tables in this FITS file.
 	// ideally this would be pushed down to the qfits layer...
 	qfits_table** tables;
-	// number of extensions
+	// number of extensions, include the primary; extensions < Next are valid.
 	int Next;
 
     // for use by callback_read_header().
@@ -172,6 +172,12 @@ void fitsbin_chunk_reset(fitsbin_chunk_t* chunk);
 
 char* fitsbin_get_filename(const fitsbin_t* fb);
 
+// Reading: returns a new copy of the given FITS extension header.
+// (-> *qfits_get_header)
+qfits_header* fitsbin_get_header(fitsbin_t* fb, int ext);
+
+// Reading: how many extensions in this file?  (-> *qfits_query_n_ext)
+int fitsbin_n_ext(const fitsbin_t* fb);
 
 fitsbin_t* fitsbin_open(const char* fn);
 

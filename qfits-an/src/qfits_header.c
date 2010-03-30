@@ -627,6 +627,17 @@ char * qfits_header_getstr(const qfits_header * hdr, const char * key)
     return k->val;
 }
 
+int qfits_header_getstr_pretty(const qfits_header* hdr, const char* key, char* pretty, const char* defaultval) {
+	char* val = qfits_header_getstr(hdr, key);
+	if (!val) {
+		if (defaultval)
+			strcpy(pretty, defaultval);
+		return -1;
+	}
+	qfits_pretty_string_r(val, pretty);
+	return 0;
+}
+
 static keytuple* get_keytuple(qfits_header* hdr, int idx) {
     if (idx == 0) {
 	    hdr->current_idx = 0;

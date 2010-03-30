@@ -21,10 +21,13 @@
 #include "qfits_rw.h"
 #include "qfits_card.h"
 
-#define qdebug( code ) { code }
-
-//#define debug printf
-#define debug(args...)
+#if 0
+  #define qdebug( code ) { code }
+  #define debug printf
+#else
+  #define qdebug( code ) {}
+  #define debug(args...)
+#endif
 
 int anqfits_n_ext(const anqfits_t* qf) {
     return qf->Nexts;
@@ -70,13 +73,30 @@ qfits_header* anqfits_get_header(const anqfits_t* qf, int ext) {
 }
 
 qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
+	const qfits_table* t = anqfits_get_table_const(qf, ext);
+	if (!t)
+		return NULL;
+	return qfits_table_copy(t);
+}
+
+const qfits_table* anqfits_get_table_const(const anqfits_t* qf, int ext) {
 	assert(ext >= 0 && ext < qf->Nexts);
-	if (!qf->exts[ext].table)
-		qf->exts[ext].table = qfits_table_open(qf->filename, ext);
+	if (!qf->exts[ext].table) {
+		qfits_header* hdr = anqfits_get_header(qf, ext);
+		off_t begin, size;
+		if (!hdr) {
+			qfits_error("Failed to get header for ext %i\n", ext);
+			return NULL;
+		}
+		begin = anqfits_data_start(qf, ext);
+		size = anqfits_data_size(qf, ext);
+
+		qf->exts[ext].table = qfits_table_open2(hdr, begin, size, qf->filename, ext);
+	}
 	if (!qf->exts[ext].table)
 		return NULL;
 	// .....!
-	return qfits_table_copy(qf->exts[ext].table);
+	return qf->exts[ext].table;
 }
 
 
@@ -98,8 +118,8 @@ static int parse_header_block(const char* buf, qfits_header* hdr, int* found_it)
 	for (i=0; i<FITS_NCARDS; i++) {
 		char *key, *val, *comment;
 		debug("Looking at line %i:\n  %.80s\n", i, line);
-		if (starts_with(line, "END "))
-			*found_it = 1;
+		//if (starts_with(line, "END "))
+		//*found_it = 1;
 		// Skip blank lines.
 		if (!strcmp(line, blankline))
 			continue;
@@ -112,11 +132,28 @@ static int parse_header_block(const char* buf, qfits_header* hdr, int* found_it)
 		qfits_header_append(hdr, key, val, comment, line);
 		line += 80;
 		if (!strcmp(key, "END")) {
+			debug("Found END!\n");
 			*found_it = 1;
 			break;
 		}
 	}
 	return 0;
+}
+
+static int get_data_bytes(const qfits_header* hdr) {
+	int naxis;
+	int data_bytes;
+	int i;
+    data_bytes = abs(qfits_header_getint(hdr, "BITPIX", 0) / 8);
+    naxis = qfits_header_getint(hdr, "NAXIS", 0);
+	if (!naxis)
+		data_bytes = 0;
+	for (i=0; i<naxis; i++) {
+		char key[32];
+		sprintf(key, "NAXIS%i", i+1);
+		data_bytes *= qfits_header_getint(hdr, key, 0);
+	}
+	return data_bytes;
 }
 
 // from qfits_cache.c: qfits_cache_add()
@@ -127,16 +164,13 @@ anqfits_t* anqfits_open(const char* filename) {
     int n_blocks;
     int found_it;
     int xtend;
-    int naxis;
     int data_bytes;
     int end_of_file;
     int skip_blocks;
     char buf[FITS_BLOCK_SIZE];
-    char* buf_c;
     int seeked;
 	int firsttime;
 	int i;
-	char* read_val;
 
 	// initial maximum number of extensions: we grow automatically
 	int off_size = 1024;
@@ -183,7 +217,6 @@ anqfits_t* anqfits_open(const char* filename) {
 	// Parse this header
     hdr = qfits_header_new();
     while (!found_it) {
-		char* line;
 		debug("Firsttime = %i\n", firsttime);
 		if (!firsttime) {
 			// Read next FITS block
@@ -195,23 +228,14 @@ anqfits_t* anqfits_open(const char* filename) {
 		}
 		firsttime = 0;
         n_blocks++;
-
-		if (parse_header_block(buf, hdr, &found_it)) {
+		if (parse_header_block(buf, hdr, &found_it))
 			goto bailout;
-		}
-
 	}
 	// otherwise we bail out trying to read blocks past the EOF...
 	assert(found_it);
 
     xtend = qfits_header_getboolean(hdr, "EXTEND", 0);
-    naxis = qfits_header_getint(hdr, "NAXIS", 0);
-    data_bytes = abs(qfits_header_getint(hdr, "BITPIX", 0));
-	for (i=0; i<naxis; i++) {
-		char key[32];
-		sprintf(key, "NAXIS%i", i);
-		data_bytes *= qfits_header_getint(hdr, key, 0);
-	}
+	data_bytes = get_data_bytes(hdr);
 
     //qf->inode= sta.st_ino;
 
@@ -228,6 +252,8 @@ anqfits_t* anqfits_open(const char* filename) {
 	qf->exts[0].header = hdr;
 	hdr = NULL;
 	qf->Nexts = 1;
+
+	debug("Extensions? %s\n", xtend ? "yes":"no");
     
     if (xtend) {
         /* Look for extensions */
@@ -242,7 +268,7 @@ anqfits_t* anqfits_open(const char* filename) {
             /*
              * Skip the previous data section if pixels were declared
              */
-            if (naxis > 0) {
+            if (data_bytes > 0) {
                 /* Skip as many blocks as there are declared pixels */
                 skip_blocks = qfits_blocks_needed(data_bytes);
                 seeked = fseek(in, skip_blocks*FITS_BLOCK_SIZE, SEEK_CUR);
@@ -252,6 +278,7 @@ anqfits_t* anqfits_open(const char* filename) {
                 }
                 /* Increase counter of current seen blocks. */
                 n_blocks += skip_blocks;
+				data_bytes = 0;
             }
             
             /* Look for extension start */
@@ -278,9 +305,11 @@ anqfits_t* anqfits_open(const char* filename) {
             // Look for extension END
             n_blocks--;
             found_it = 0;
-            data_bytes = 1;
-            naxis = 0;
 			firsttime = 1;
+
+			if (!hdr)
+				hdr = qfits_header_new();
+
             while (!found_it && !end_of_file) {
 				if (!firsttime) {
 					if (fread(buf, 1, FITS_BLOCK_SIZE, in) != FITS_BLOCK_SIZE) {
@@ -293,17 +322,14 @@ anqfits_t* anqfits_open(const char* filename) {
                 n_blocks++;
 
 				if (parse_header_block(buf, hdr, &found_it)) {
+					debug("parse_header_block() failed: bailing\n");
 					goto bailout;
 				}
+				debug("parse_header_block() succeeded: found END? %s\n", found_it ? "yes":"no");
 			}
 			if (found_it) {
-				naxis = qfits_header_getint(hdr, "NAXIS", 0);
-				data_bytes = abs(qfits_header_getint(hdr, "BITPIX", 0));
-				for (i=0; i<naxis; i++) {
-					char key[32];
-					sprintf(key, "NAXIS%i", i);
-					data_bytes *= qfits_header_getint(hdr, key, 0);
-				}
+				data_bytes = get_data_bytes(hdr);
+				debug("This data block will have %i bytes\n", data_bytes);
 
 				qf->exts[qf->Nexts].data_start = n_blocks;
 				qf->exts[qf->Nexts].header = hdr;
@@ -319,6 +345,10 @@ anqfits_t* anqfits_open(const char* filename) {
             }
         }
     }
+	debug("Found %i extensions\n", qf->Nexts);
+
+	if (hdr)
+		qfits_header_destroy(hdr);
 
     /* Close file */
     fclose(in);
@@ -336,6 +366,7 @@ anqfits_t* anqfits_open(const char* filename) {
             qf->exts[i].data_size = (sta.st_size/FITS_BLOCK_SIZE) - qf->exts[i].data_start;
 		else
 			qf->exts[i].data_size = qf->exts[i+1].hdr_start - qf->exts[i].data_start;
+		debug("  Ext %i: header size %i, data size %i; hdr=%p\n", i, qf->exts[i].hdr_size, qf->exts[i].data_size, qf->exts[i].header);
     }
     qf->filesize = sta.st_size / FITS_BLOCK_SIZE;
 
