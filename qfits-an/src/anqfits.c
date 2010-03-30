@@ -93,9 +93,6 @@ const qfits_table* anqfits_get_table_const(const anqfits_t* qf, int ext) {
 
 		qf->exts[ext].table = qfits_table_open2(hdr, begin, size, qf->filename, ext);
 	}
-	if (!qf->exts[ext].table)
-		return NULL;
-	// .....!
 	return qf->exts[ext].table;
 }
 
@@ -112,14 +109,13 @@ static int parse_header_block(const char* buf, qfits_header* hdr, int* found_it)
 	char getval_buf[FITS_LINESZ+1];
 	char getkey_buf[FITS_LINESZ+1];
 	char getcom_buf[FITS_LINESZ+1];
+	char line_buf[FITS_LINESZ+1];
 	// Browse through current block
 	int i;
 	const char* line = buf;
 	for (i=0; i<FITS_NCARDS; i++) {
 		char *key, *val, *comment;
 		debug("Looking at line %i:\n  %.80s\n", i, line);
-		//if (starts_with(line, "END "))
-		//*found_it = 1;
 		// Skip blank lines.
 		if (!strcmp(line, blankline))
 			continue;
@@ -129,7 +125,9 @@ static int parse_header_block(const char* buf, qfits_header* hdr, int* found_it)
 		val = qfits_getvalue_r(line, getval_buf);
 		comment = qfits_getcomment_r(line, getcom_buf);
 		debug("Got key/value/comment \"%s\" / \"%s\" / \"%s\"\n", key, val, comment);
-		qfits_header_append(hdr, key, val, comment, line);
+		memcpy(line_buf, line, FITS_LINESZ);
+		line_buf[FITS_LINESZ] = '\0';
+		qfits_header_append(hdr, key, val, comment, line_buf);
 		line += 80;
 		if (!strcmp(key, "END")) {
 			debug("Found END!\n");
@@ -349,6 +347,7 @@ anqfits_t* anqfits_open(const char* filename) {
 
 	if (hdr)
 		qfits_header_destroy(hdr);
+	hdr = NULL;
 
     /* Close file */
     fclose(in);
