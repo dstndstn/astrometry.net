@@ -73,6 +73,8 @@ const qfits_table* fitsbin_get_table_const(fitsbin_t* fb, int ext) {
 	// cache 'em...
 	if (!fb->tables)
 		fb->tables = calloc(fb->Next, sizeof(qfits_table*));
+	assert(ext >= 0);
+	assert(ext < fb->Next);
 	if (fb->tables[ext])
 		return fb->tables[ext];
 	fb->tables[ext] = qfits_table_open(fb->filename, ext);

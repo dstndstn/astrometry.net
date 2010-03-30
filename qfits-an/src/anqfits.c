@@ -63,13 +63,17 @@ off_t anqfits_data_size(const anqfits_t* qf, int ext) {
 
 
 qfits_header* anqfits_get_header(const anqfits_t* qf, int ext) {
+	const qfits_header* hdr = anqfits_get_header_const(qf, ext);
+	if (!hdr)
+		return NULL;
+	return qfits_header_copy(hdr);
+}
+
+const qfits_header* anqfits_get_header_const(const anqfits_t* qf, int ext) {
 	assert(ext >= 0 && ext < qf->Nexts);
 	if (!qf->exts[ext].header)
 		qf->exts[ext].header = qfits_header_readext(qf->filename, ext);
-	if (!qf->exts[ext].header)
-		return NULL;
-	// .....!
-	return qfits_header_copy(qf->exts[ext].header);
+	return qf->exts[ext].header;
 }
 
 qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
@@ -82,7 +86,7 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
 const qfits_table* anqfits_get_table_const(const anqfits_t* qf, int ext) {
 	assert(ext >= 0 && ext < qf->Nexts);
 	if (!qf->exts[ext].table) {
-		qfits_header* hdr = anqfits_get_header(qf, ext);
+		qfits_header* hdr = anqfits_get_header_const(qf, ext);
 		off_t begin, size;
 		if (!hdr) {
 			qfits_error("Failed to get header for ext %i\n", ext);
