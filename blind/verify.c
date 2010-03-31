@@ -887,12 +887,14 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, int istopped, 
 		check_permutation(v->testperm, v->NTall);
 	}
 
+	// "theta" has length v->NT.
+
 	if (ibailed != -1)
-		for (i=ibailed+1; i<v->NTall; i++)
+		for (i=ibailed+1; i<v->NT; i++)
 			theta[i] = THETA_BAILEDOUT;
 
 	if (istopped != -1)
-		for (i=istopped+1; i<v->NTall; i++)
+		for (i=istopped+1; i<v->NT; i++)
 			theta[i] = THETA_STOPPEDLOOKING;
 
 	// At this point, "theta[0]" is the *reference* star index
