@@ -69,7 +69,7 @@ def parse_orbital_elements(s, needSystemGM=True):
 
 # Returns (x, v, jd), each as numpy arrays.
 #     x in AU
-#     v in AU/yr
+#     v in AU/day
 def parse_phase_space(s):
 	all_x = []
 	all_v = []
