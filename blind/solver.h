@@ -280,4 +280,6 @@ void solver_reset_best_match(solver_t* sp);
 
 void solver_print_to(const solver_t* sp, FILE* stream);
 
+void solver_log_params(const solver_t* sp);
+
 #endif

@@ -981,9 +981,8 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 			logverb("Solving field %i.\n", fieldnum);
 			sp->distance_from_quad_bonus = TRUE;
 
-			if (log_get_level() >= LOG_VERB)
-				solver_print_to(sp, log_get_fid());
-			
+			solver_log_params(sp);
+
 			// The real thing
 			solver_run(sp);
 

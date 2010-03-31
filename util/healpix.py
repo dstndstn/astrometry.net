@@ -70,6 +70,12 @@ def get_base_neighbour(hp, dx, dy):
         return -1
     return -1
 
+def healpix_nside_for_side_length_arcmin(arcmin):
+	f = _lib.healpix_nside_for_side_length_arcmin
+	f.argtypes = [c_double]
+	f.restype = c_double
+	return float(f(arcmin))
+
 def get_neighbours(hp, nside):
     cneigh = (c_int * 8)()
     nn = _lib.healpix_get_neighbours(c_int(hp), pointer(cneigh), c_int(nside))
