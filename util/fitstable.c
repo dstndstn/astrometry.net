@@ -84,6 +84,10 @@ static off_t get_row_offset(const fitstable_t* table, int row) {
 	return table->end_table_offset + table->table->tab_w * row;
 }
 
+int fitstable_n_extensions(const fitstable_t* t) {
+	return 1 + qfits_query_n_ext(t->fn);
+}
+
 int fitscolumn_get_size(fitscol_t* col) {
 	return col->fitssize * col->arraysize;
 }

@@ -232,6 +232,11 @@ qfits_header* fitsbin_get_primary_header(const fitsbin_t* fb) {
     return fb->primheader;
 }
 
+void fitsbin_set_primary_header(fitsbin_t* fb, const qfits_header* hdr) {
+	qfits_header_destroy(fb->primheader);
+	fb->primheader = qfits_header_copy(hdr);
+}
+
 int fitsbin_fix_primary_header(fitsbin_t* fb) {
 	if (in_memory(fb)) return 0;
     return fitsfile_fix_primary_header(fb->fid, fb->primheader,

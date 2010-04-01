@@ -205,6 +205,8 @@ fitstable_t* fitstable_open_for_appending(const char* fn);
 
 fitstable_t* fitstable_open_for_appending_to(FILE* fid);
 
+int fitstable_n_extensions(const fitstable_t* t);
+
 int fitstable_append_to(fitstable_t* t, FILE* fid);
 
 void fitstable_copy_columns(const fitstable_t* src, fitstable_t* dest);
