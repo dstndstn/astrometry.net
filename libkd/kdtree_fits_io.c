@@ -251,7 +251,7 @@ static qfits_header* find_tree(const char* treename, const fitsbin_t* fb,
     // scan the extension headers, looking for one that contains a matching KDT_NAME entry.
     nexten = fitsbin_n_ext(fb);
     header = NULL;
-    for (i=1; i<=nexten; i++) {
+    for (i=1; i<nexten; i++) {
         char* name;
         header = fitsbin_get_header(fb, i);
         if (!header) {
