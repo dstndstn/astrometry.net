@@ -27,8 +27,12 @@
 
 bool index_overlaps_scale_range(index_t* meta,
                                      double quadlo, double quadhi) {
-    return !((quadlo > meta->index_scale_upper) ||
-             (quadhi < meta->index_scale_lower));
+	bool rtn = 
+		!((quadlo > meta->index_scale_upper) ||
+		  (quadhi < meta->index_scale_lower));
+	debug("index_overlaps_scale_range: index %s has quads [%g, %g] arcsec; image has quads [%g, %g] arcsec.  In range? %s\n",
+			meta->indexname, meta->index_scale_lower, meta->index_scale_upper, quadlo, quadhi, rtn ? "yes" : "no");
+	return rtn;
 }
 
 bool index_is_within_range(index_t* meta, double ra, double dec, double radius_deg) {

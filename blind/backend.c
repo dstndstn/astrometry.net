@@ -416,7 +416,7 @@ int backend_run_job(backend_t* backend, job_t* job) {
 			// Select the indices that should be checked.
             indexlist = il_new(16);
 			for (k = 0; k < pl_size(backend->indexes); k++) {
-				index_t* index = pl_get(backend->indexes, i);
+				index_t* index = pl_get(backend->indexes, k);
                 if (!index_overlaps_scale_range(index, fmin, fmax))
                     continue;
                 il_append(indexlist, k);
