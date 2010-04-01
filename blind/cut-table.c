@@ -28,6 +28,7 @@
 #include "ioutils.h"
 #include "fitsioutils.h"
 #include "errors.h"
+#include "log.h"
 
 int cut_table(const char* infn, const char* outfn, int N) {
 	fitstable_t* in;
@@ -74,6 +75,7 @@ int cut_table(const char* infn, const char* outfn, int N) {
 	}
 	
 	Next = fitstable_n_extensions(in);
+	logverb("N extensions: %i\n", Next);
 	for (i=1; i<Next; i++) {
 		qfits_header* hdr = fitstable_get_header(in);
 		int width, rows;
@@ -99,7 +101,7 @@ int cut_table(const char* infn, const char* outfn, int N) {
 			}
 		}
 
-		if (i < N-1)
+		if (i < Next-1)
 			if (fitstable_open_next_extension(in)) {
 				ERROR("Failed to open extension %i", i+1);
 				return -1;
