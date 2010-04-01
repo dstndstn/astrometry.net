@@ -43,6 +43,7 @@
 #include "blindutils.h"
 #include "sip_qfits.h"
 #include "tabsort.h"
+#include "cut-table.h"
 #include "errors.h"
 #include "fits-guess-scale.h"
 #include "image2xy-files.h"
@@ -152,6 +153,8 @@ static an_option_t options[] = {
     {'5', "radius",         required_argument, "degrees",
      "only search in indexes within 'radius' of the field center given by ('ra', 'dec')"},
 	{'d', "depth",		   required_argument, NULL, NULL},
+	{'|', "objs",           required_argument, "int",
+	 "cut the source list to have this many items (after sorting, if applicable)."},
     {'l', "cpulimit",       required_argument, "seconds",
      "give up solving after the specified number of seconds of CPU time"},
     {'r', "resort",         no_argument, NULL,
@@ -393,6 +396,7 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         break;
     case 's':
         axy->sortcol = optarg;
+		axy->resort = FALSE;
         break;
     case 'a':
         axy->sort_ascending = TRUE;
@@ -421,6 +425,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
             return -1;
         }
         break;
+	case '|':
+		axy->cutobjs = atoi(optarg);
+		break;
     case 'o':
         axy->outfn = optarg;
         break;
@@ -787,7 +794,7 @@ int augment_xylist(augment_xylist_t* axy,
         if (!axy->no_fits2fits) {
             char* sanexylsfn;
 
-            if (axy->keepxylsfn && !dosort) {
+            if (axy->keepxylsfn && !dosort && !axy->cutobjs) {
                 sanexylsfn = axy->keepxylsfn;
             } else {
                 sanexylsfn = create_temp_file("sanexyls", axy->tempdir);
@@ -849,7 +856,7 @@ int augment_xylist(augment_xylist_t* axy,
 		if (!axy->bgcol)
 			axy->bgcol = "BACKGROUND";
 
-        if (axy->keepxylsfn) {
+        if (axy->keepxylsfn && !axy->cutobjs) {
             sortedxylsfn = axy->keepxylsfn;
         } else {
             sortedxylsfn = create_temp_file("sorted", axy->tempdir);
@@ -883,6 +890,24 @@ int augment_xylist(augment_xylist_t* axy,
 
 		xylsfn = sortedxylsfn;
     }
+
+	if (axy->cutobjs) {
+		char* cutxylsfn;
+		// cut the source lists to at most "cutobjs" objects.
+        if (axy->keepxylsfn && !axy->cutobjs) {
+            cutxylsfn = axy->keepxylsfn;
+        } else {
+            cutxylsfn = create_temp_file("cut", axy->tempdir);
+            sl_append_nocopy(tempfiles, cutxylsfn);
+        }
+
+		if (cut_table(xylsfn, cutxylsfn, axy->cutobjs)) {
+			ERROR("Failed to cut table %s to %i entries; output file %s", xylsfn, axy->cutobjs, cutxylsfn);
+			return -1;
+		}
+
+		xylsfn = cutxylsfn;
+	}
 
     if (axy->dont_augment)
         // done!

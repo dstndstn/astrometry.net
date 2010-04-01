@@ -450,14 +450,14 @@ dstnthing: dstnthing.o blind_wcs.o tweak.o matchfile.o matchobj.o verify.o $(PLO
 ALL_OBJ += verify-main.o
 
 solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o matchobj.o \
-		image2xy-files.o resort-xylist.o tabsort.o \
+		image2xy-files.o resort-xylist.o tabsort.o cut-table.o \
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
 		scamp.o \
 		$(SIMPLEXY_OBJ) $(CFITS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 ALL_OBJ += scamp.o
 
-augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o fits-guess-scale.o \
+augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o cut-table.o fits-guess-scale.o \
 		image2xy-files.o resort-xylist.o blindutils.o \
 		$(SIMPLEXY_OBJ) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_LIB)
 

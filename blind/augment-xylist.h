@@ -35,6 +35,8 @@ struct augment_xylist_s {
     // contains ranges of fields as pairs of ints.
     il* fields;
 
+	int cutobjs;
+
     sl* verifywcs;
 
 	// FITS columns copied from index to RDLS output
