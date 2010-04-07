@@ -455,7 +455,7 @@ solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o matchobj.o 
 		scamp.o \
 		$(SIMPLEXY_OBJ) $(CFITS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-ALL_OBJ += scamp.o
+ALL_OBJ += scamp.o cut-table.o
 
 augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o cut-table.o fits-guess-scale.o \
 		image2xy-files.o resort-xylist.o blindutils.o \

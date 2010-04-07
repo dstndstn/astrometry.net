@@ -44,14 +44,54 @@
  hpimage -s tstdot-s; hpimage -r -s tstdot-s
 
 
+CFHTLS field:
+ D1-25-r exposure, 715809p.fits
+ wget "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/getData?archive=CFHT&file_id=715809p&dua=true"
+
+ imcopy 715809p.fits.gz"[1][1:1024,1:1024]" 715809p-01-00.fits
+ get-wcs -o 715809p-01-00.wcs 715809p-01-00.fits
+
+ imcopy 715809p.fits.gz"[6][100:900,100:900]" 715809p-a.fits
+ get-wcs -o 715809p-a.wcs 715809p-a.fits
+ an-fitstopnm -i 715809p-a.fits -N 800 -X 5000 | pnmtopng > 715809p-a.png
+
+ hpimage 715809p-a
+ hpimage -r 715809p-a
+ cp 715809p-a-unhp.png 715809p-a-o2z1.png
+
+ for z in 1 2 3; do
+ for o in 2 3; do
+ hpimage -o $o -z $z 715809p-a;
+ hpimage -o $o -z $z -r 715809p-a;
+ cp 715809p-a-unhp.png 715809p-a-o${o}z${z}.png;
+ done
+ done
+
+import pyfits
+import matplotlib
+matplotlib.use('Agg')
+from pylab import *
+I1 = imread('715809p-a.png')
+for z in [1,2,3]:
+	for o in [2,3]:
+		clf()
+		I2 = imread('715809p-a-o%iz%i.png' % (o,z))[:,:,0]
+		imshow(I2 - I1, vmin=-0.1, vmax=0.1, origin='lower', interpolation='nearest')
+		gray()
+		colorbar()
+		title('Lanczos order %i; healpix oversampling factor %i' % (o,z))
+		savefig('diff-o%iz%i.png' % (o,z))
+
  */
 
-static const char* OPTIONS = "hrsv";
+static const char* OPTIONS = "hrsvz:o:";
 
 void printHelp(char* progname) {
     fprintf(stderr, "%s [options] <base-filename>\n"
             "    [-r]: reverse direction\n"
             "    [-s]: stretch coords when reverse-sampling\n"
+			"    [-z <zoom>]: oversample healpix grid by this factor x factor (default 1)\n"
+			"    [-o <order>]: Lanczos order (default 2)\n"
             "\n", progname);
 }
 extern char *optarg;
@@ -82,6 +122,7 @@ int main(int argc, char** args) {
 	int nside;
 	double pixscale;
 	double zoom = 1.0;
+	double realzoom;
 	int outW,outH;
 	double hx, hy;
 	int i,j,k;
@@ -115,6 +156,12 @@ int main(int argc, char** args) {
 			break;
 		case 's':
 			stretch = TRUE;
+			break;
+		case 'z':
+			zoom = atof(optarg);
+			break;
+		case 'o':
+			order = atoi(optarg);
 			break;
 		}
 
@@ -159,8 +206,11 @@ int main(int argc, char** args) {
 	free(fn);
 
 	pixscale = sip_pixel_scale(wcs);
+	printf("Target zoom: %g\n", zoom);
 	nside = (int)ceil(zoom * healpix_nside_for_side_length_arcmin(pixscale / 60.0));
 	printf("Using nside %i\n", nside);
+	realzoom = (pixscale/60.0) / healpix_side_length_arcmin(nside);
+	printf("Real zoom: %g\n", realzoom);
 
 	wcsW = wcs->wcstan.imagew;
 	wcsH = wcs->wcstan.imageh;
@@ -273,8 +323,9 @@ int main(int argc, char** args) {
 	if (reverse) {
 		// for sinc:
 		// FIXME -- inverse?
-		scale = 1.0 / zoom;
-		support = (double)order / scale;
+		//scale = 1.0 / realzoom;
+		scale = 1.0;
+		support = (double)order * scale;
 
 		if (stretch)
 			support *= (maxD/minD);
@@ -329,7 +380,7 @@ int main(int argc, char** args) {
 								d = sqrt(t0*t0 + t1*t1);
 								d *= nside;
 							}
-							L = lanczos(d * scale, order);
+							L = lanczos(d / scale, order);
 
 							weight += L;
 							for (k=0; k<3; k++)
@@ -356,8 +407,10 @@ int main(int argc, char** args) {
 	} else {
 		// for sinc:
 		// FIXME -- inverse?
-		scale = zoom;
-		support = (double)order / scale;
+		//scale = realzoom;
+		scale = 1.0;
+
+		support = (double)order * scale;
 
 		if (stretch)
 			support *= (maxD/minD);
@@ -420,7 +473,7 @@ int main(int argc, char** args) {
 								double d1 = hypot(px - ix, py - iy);
 								printf("old d: %g, new %g\n", d1, d);
 							}
-							L = lanczos(d * scale, order);
+							L = lanczos(d / scale, order);
 							if (L == 0)
 								continue;
 							weight += L;
