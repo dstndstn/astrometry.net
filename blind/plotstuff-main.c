@@ -33,6 +33,7 @@
  plot_markersize <radius>
  plot_wcs <filename>
  plot_wcs_setsize
+ plot_wcs_box <ra> <dec> <width>  -- center on RA,Dec with width in deg.
 
  Fill with a color:
 
