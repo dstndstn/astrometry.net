@@ -14,6 +14,7 @@
 #define PLOTSTUFF_FORMAT_PDF 4
 // Save the image as RGBA image "pargs->outimage"
 #define PLOTSTUFF_FORMAT_MEMIMG 5
+#define PLOTSTUFF_FORMAT_FITS 6
 
 struct plot_args {
     char* outfn;

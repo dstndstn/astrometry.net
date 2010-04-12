@@ -12,6 +12,14 @@ struct plotimage_args {
 	sip_t* wcs;
 	double gridsize;
 
+	// For FITS images: values that will be linearly transformed to 0,255.
+	double image_low;
+	double image_high;
+	// FITS extension
+	int fitsext;
+	// FITS image plane
+	int fitsplane;
+
 	unsigned char* img;
 	int W;
 	int H;

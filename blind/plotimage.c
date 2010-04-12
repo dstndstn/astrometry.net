@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -185,6 +185,56 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 	cairo_restore(cairo);
 }
 
+static unsigned char* read_fits_image(plotimage_t* args) {
+	float* fimg;
+	qfitsloader ld;
+	unsigned char* img;
+	int i,j;
+	float offset, scale;
+
+	ld.filename = args->fn;
+	ld.xtnum = args->fitsext;
+	ld.pnum = args->fitsplane;
+	ld.map = 1;
+	ld.ptype = PTYPE_FLOAT;
+		
+	if (qfitsloader_init(&ld)) {
+		ERROR("qfitsloader_init() failed");
+		return NULL;
+	}
+	if (qfits_loadpix(&ld)) {
+		ERROR("qfits_loadpix() failed");
+		return NULL;
+	}
+	args->W = ld.lx;
+	args->H = ld.ly;
+	fimg = ld.fbuf;
+
+	if (args->image_low == 0 && args->image_high == 0) {
+		offset = 0.0;
+		scale = 1.0;
+	} else {
+		offset = args->image_low;
+		scale = 255.0 / (args->image_high - args->image_low);
+	}
+
+	img = malloc(args->W * args->H * 4);
+	for (j=0; j<args->H; j++) {
+		for (i=0; i<args->W; i++) {
+			int k;
+			unsigned char v;
+			k = 4*(j*args->W + i);
+			v = MIN(255, MAX(0, (fimg[j*args->W + i] - offset) * scale));
+			img[k+0] = v;
+			img[k+1] = v;
+			img[k+2] = v;
+			img[k+3] = 255;
+		}
+	}
+	qfitsloader_free_buffers(&ld);
+	return img;
+}
+
 int plot_image_read(plotimage_t* args) {
 	// FIXME -- guess format from filename?
 	switch (args->format) {
@@ -196,6 +246,9 @@ int plot_image_read(plotimage_t* args) {
 		break;
 	case PLOTSTUFF_FORMAT_PPM:
 		args->img = cairoutils_read_ppm(args->fn, &(args->W), &(args->H));
+		break;
+	case PLOTSTUFF_FORMAT_FITS:
+		args->img = read_fits_image(args);
 		break;
 	case PLOTSTUFF_FORMAT_PDF:
 		ERROR("PDF format not supported");

@@ -19,6 +19,30 @@ if _lib is None:
 if _lib is None:
     raise IOError('_healpix.so library not found')
 
+# RA, Dec, radius in deg.
+# Returns a list of healpixes within range.
+def healpix_rangesearch(ra, dec, radius, nside):
+	func = _lib.healpix_rangesearch_radec
+	# il* healpix_rangesearch_radec(double ra, double dec, double radius, int Nside, il* hps);
+	func.restype = c_void_p
+	func.argtypes = [c_double, c_double, c_double, c_int, c_void_p]
+	nil = c_void_p(None)
+	clist = func(ra, dec, radius, nside, nil)
+	hps = []
+	ilsize = _lib.il_size
+	ilsize.restype = c_int
+	ilsize.argtypes = [c_void_p]
+	ilget = _lib.il_get
+	ilget.restype = c_int
+	ilget.argtypes = [c_void_p, c_int]
+	ilfree = _lib.il_free
+	ilfree.restype = None
+	ilfree.argtypes = [c_void_p]
+	N = ilsize(clist)
+	for i in range(N):
+		hps.append(ilget(clist, i))
+	ilfree(clist)
+	return hps
 
 # returns (base hp, x, y)
 def decompose_xy(hp, nside):

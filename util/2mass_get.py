@@ -24,7 +24,7 @@ def get_2mass_images(ra, dec, radius=1, basefn=None):
 		'INTERSECT': 'OVERLAPS', # Images overlapping region
 		'asky': 'asky', # All-sky release
 		'POS': '%g %g' % (ra,dec), # RA,Dec position
-		'SIZE': '%g' % (radius), # Search radius (deg)
+		'SIZE': '%g' % radius, # Search radius (deg)
 		# scan, coadd, hem, date
 		'band': 'A', # All bands (J,H,K_s)
 		}
@@ -97,15 +97,20 @@ def get_2mass_images(ra, dec, radius=1, basefn=None):
 
 		fn = basefn + '%s_%s_%s%s%03i%04i.fits' % (band, dataset, date, hem, scan, imgnum)
 
-		cmd = 'wget -c %s -O %s' % (url, fn)
+		# -t: num retries
+		cmd = "wget -t 1 -c '%s' -O %s" % (url, fn)
 		print 'Running command:', cmd
 
-		#(rtn, out, err) = run_command(cmd)
-		#if rtn:
-		#	print 'wget failed: return val', rtn
-		#	print 'Out:
-
-		os.system(cmd)
+		rtn = os.system(cmd)
+		# ctrl-C caught: quit, or continue?
+		if os.WIFSIGNALED(rtn):
+			print 'wget exited with signal', os.WTERMSIG(rtn)
+			break
+		if os.WIFEXITED(rtn) and os.WEXITSTATUS(rtn):
+			# returned non-zero.
+			print 'wget exited with value', os.WEXITSTATUS(rtn)
+			continue
+		
 		fns.append(fn)
 	return fns
 
@@ -113,7 +118,7 @@ def get_2mass_images(ra, dec, radius=1, basefn=None):
 if __name__ == '__main__':
 	parser = OptionParser(usage='%prog [options] <ra> <dec>')
 
-	parser.add_option('-r', dest='radius', help='Search radius, in deg (default 1 deg)')
+	parser.add_option('-r', dest='radius', type='float', help='Search radius, in deg (default 1 deg)')
 	parser.add_option('-b', dest='basefn', help='Base filename (default: 2mass-)')
 	parser.set_defaults(radius=1.0)
 
@@ -128,5 +133,9 @@ if __name__ == '__main__':
 	ra = float(args[0])
 	dec = float(args[1])
 
-	args = {}
-	get_2mass_images(ra, dec, **args)
+	# ugh!
+	opts = {}
+	for k in ['radius', 'basefn']:
+		opts[k] = getattr(opt, k)
+
+	get_2mass_images(ra, dec, **opts)

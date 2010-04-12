@@ -190,6 +190,10 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
+	// For HISTORY cards in output...
+	p->argc = argc;
+	p->args = argv;
+
 	if (build_index_files(infn, indexfn, p)) {
 		exit(-1);
 	}

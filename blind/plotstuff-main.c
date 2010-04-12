@@ -94,7 +94,7 @@
 #include "boilerplate.h"
 #include "log.h"
 #include "errors.h"
-
+#include "fitsioutils.h"
 
 static const char* OPTIONS = "hvW:H:o:JjP";
 
@@ -164,6 +164,8 @@ int main(int argc, char *args[]) {
 
     // log errors to stderr, not stdout.
     errors_log_to(stderr);
+
+	fits_use_error_system();
 
 	for (;;) {
 		if (plotstuff_read_and_run_command(&pargs, stdin))

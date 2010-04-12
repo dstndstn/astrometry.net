@@ -29,6 +29,9 @@
 int merge_index_files(const char* quadfn, const char* ckdtfn, const char* skdtfn,
 					  const char* indexfn);
 
+int merge_index_open_files(const char* quadfn, const char* ckdtfn, const char* skdtfn,
+						   quadfile** quad, codetree** code, startree_t** star);
+
 int merge_index(quadfile* quads, codetree* codekd, startree_t* starkd,
 				const char* indexfn);
 

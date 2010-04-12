@@ -49,6 +49,9 @@
 #include "merge-index.h"
 #include "fitsioutils.h"
 
+static void add_boilerplate(index_params_t* p, qfits_header* hdr) {
+}
+
 int build_index(fitstable_t* catalog, index_params_t* p,
 				index_t** p_index, const char* indexfn) {
 
@@ -363,11 +366,19 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 
 	// index
 	if (p->inmemory) {
+		qfits_header* hdr;
+
 		index = index_build_from(codekd2, quads3, starkd2);
 		if (!index) {
 			ERROR("Failed to create index from constituent parts");
 			return -1;
 		}
+		hdr = quadfile_get_header(index->quads);
+		if (hdr) {
+			add_boilerplate(p, hdr);
+			qfits_header_destroy(hdr);
+		}
+
 		/* When closing:
 		 kdtree_free(codekd2->tree);
 		 codekd2->tree = NULL;
@@ -375,11 +386,35 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 		*p_index = index;
 
 	} else {
+		quadfile* quad;
+		codetree* code;
+		startree_t* star;
+		qfits_header* hdr;
+
 		logmsg("Merging %s and %s and %s to %s\n", quad3fn, ckdt2fn, skdt2fn, indexfn);
-		if (merge_index_files(quad3fn, ckdt2fn, skdt2fn, indexfn)) {
-			ERROR("Failed to merge-index");
+		/*
+		 if (merge_index_files(quad3fn, ckdt2fn, skdt2fn, indexfn)) {
+		 ERROR("Failed to merge-index");
+		 return -1;
+		 }
+		 */
+		if (merge_index_open_files(quad3fn, ckdt2fn, skdt2fn,
+								   &quad, &code, &star)) {
+			ERROR("Failed to open index files for merging");
 			return -1;
 		}
+		hdr = quadfile_get_header(index->quads);
+		if (hdr) {
+			add_boilerplate(p, hdr);
+			qfits_header_destroy(hdr);
+		}
+		if (merge_index(quad, code, star, indexfn)) {
+			ERROR("Failed to write merged index");
+			return -1;
+		}
+		codetree_close(code);
+		startree_close(star);
+		quadfile_close(quad);
 	}
 
 	if (p->delete_tempfiles) {

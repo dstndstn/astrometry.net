@@ -93,43 +93,56 @@ int merge_index(quadfile* quad, codetree* code, startree_t* star,
 	return 0;
 }
 
-int merge_index_files(const char* quadfn, const char* ckdtfn, const char* skdtfn,
-					  const char* indexfn) {
-    quadfile* quad;
-	codetree* code;
-	startree_t* star;
-	int rtn;
-
+int merge_index_open_files(const char* quadfn, const char* ckdtfn, const char* skdtfn,
+						   quadfile** quad, codetree** code, startree_t** star) {
 	logmsg("Reading code tree from %s ...\n", ckdtfn);
-	code = codetree_open(ckdtfn);
-	if (!code) {
+	*code = codetree_open(ckdtfn);
+	if (!*code) {
 		ERROR("Failed to read code kdtree from %s", ckdtfn);
 		return -1;
 	}
     logmsg("Ok.\n");
 
 	logmsg("Reading star tree from %s ...\n", skdtfn);
-	star = startree_open(skdtfn);
-	if (!star) {
+	*star = startree_open(skdtfn);
+	if (!*star) {
 		ERROR("Failed to read star kdtree from %s", skdtfn);
 		return -1;
 	}
     logmsg("Ok.\n");
 
 	logmsg("Reading quads from %s ...\n", quadfn);
-	quad = quadfile_open(quadfn);
-	if (!quad) {
+	*quad = quadfile_open(quadfn);
+	if (!*quad) {
 		ERROR("Failed to read quads from %s", quadfn);
 		return -1;
 	}
     logmsg("Ok.\n");
+	return 0;
+}
+
+int merge_index_files(const char* quadfn, const char* ckdtfn, const char* skdtfn,
+					  const char* indexfn) {
+    quadfile* quad = NULL;
+	codetree* code = NULL;
+	startree_t* star = NULL;
+	int rtn;
+
+	if (merge_index_open_files(quadfn, ckdtfn, skdtfn, &quad, &code, &star)) {
+		rtn = -1;
+		goto cleanup;
+	}
 
 	logmsg("Writing index to %s ...\n", indexfn);
 	rtn = merge_index(quad, code, star, indexfn);
 
-    codetree_close(code);
-    startree_close(star);
-    quadfile_close(quad);
+ cleanup:
+	if (code)
+		codetree_close(code);
+	if (star)
+		startree_close(star);
+	if (quad)
+		quadfile_close(quad);
 
 	return rtn;
 }

@@ -282,6 +282,8 @@ int parse_image_format(const char* fmt) {
 		return PLOTSTUFF_FORMAT_PPM;
 	} else if (streq(fmt, "pdf")) {
 		return PLOTSTUFF_FORMAT_PDF;
+	} else if (streq(fmt, "fits")) {
+		return PLOTSTUFF_FORMAT_FITS;
 	}
 	ERROR("Unknown image format \"%s\"", fmt);
 	return -1;
