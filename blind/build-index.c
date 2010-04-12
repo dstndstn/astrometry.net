@@ -401,7 +401,7 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 			ERROR("Failed to open index files for merging");
 			return -1;
 		}
-		hdr = quadfile_get_header(index->quads);
+		hdr = quadfile_get_header(quad);
 		if (hdr)
 			add_boilerplate(p, hdr);
 		if (merge_index(quad, code, star, indexfn)) {
