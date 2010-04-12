@@ -374,10 +374,8 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 			return -1;
 		}
 		hdr = quadfile_get_header(index->quads);
-		if (hdr) {
+		if (hdr)
 			add_boilerplate(p, hdr);
-			qfits_header_destroy(hdr);
-		}
 
 		/* When closing:
 		 kdtree_free(codekd2->tree);
@@ -404,10 +402,8 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 			return -1;
 		}
 		hdr = quadfile_get_header(index->quads);
-		if (hdr) {
+		if (hdr)
 			add_boilerplate(p, hdr);
-			qfits_header_destroy(hdr);
-		}
 		if (merge_index(quad, code, star, indexfn)) {
 			ERROR("Failed to write merged index");
 			return -1;
