@@ -325,6 +325,10 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 		}
 	} else if (streq(cmd, "image_grid")) {
 		args->gridsize = atof(cmdargs);
+	} else if (streq(cmd, "image_low")) {
+		args->image_low = atof(cmdargs);
+	} else if (streq(cmd, "image_high")) {
+		args->image_high = atof(cmdargs);
 	} else {
 		ERROR("Did not understand command \"%s\"", cmd);
 		return -1;
