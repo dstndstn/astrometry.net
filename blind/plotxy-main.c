@@ -37,6 +37,7 @@
 #include "log.h"
 #include "errors.h"
 #include "fitsioutils.h"
+#include "ioutils.h"
 
 #define OPTIONS "hvW:H:n:N:r:s:i:e:x:y:w:S:I:PC:X:Y:b:o:pJ"
 

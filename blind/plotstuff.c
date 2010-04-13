@@ -17,6 +17,9 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
+// Avoid *nasty* problem when 'bool' gets redefined to be 4 bytes!
+#include "an-bool.h"
+
 #include <math.h>
 #include <string.h>
 #include <stdint.h>
@@ -360,9 +363,10 @@ int plotstuff_init2(plot_args_t* pargs) {
 void* plotstuff_get_config(plot_args_t* pargs, const char* name) {
 	int i, NR;
 	NR = sizeof(plotters) / sizeof(plotter_t);
-	for (i=0; i<NR; i++)
+	for (i=0; i<NR; i++) {
 		if (streq(plotters[i].name, name))
 			return plotters[i].baton;
+	}
 	return NULL;
 }
 

@@ -246,7 +246,7 @@ char* an_canonicalize_file_name(const char* fn) {
 bool streq(const char* s1, const char* s2) {
     if (s1 == NULL || s2 == NULL)
         return (s1 == s2);
-    return !strcmp(s1, s2);
+    return (strcmp(s1, s2) == 0) ? TRUE : FALSE;
 }
 
 bool strcaseeq(const char* s1, const char* s2) {
