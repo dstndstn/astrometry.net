@@ -17,7 +17,7 @@ from astrometry.util.run_command import run_command
 
 # args: radius in deg
 # returns list of local filenames to which images were written
-def get_2mass_images(ra, dec, radius=1, basefn=None):
+def get_2mass_images(ra, dec, radius=1, basefn=None, band='A'):
 
 	formvals = {
 		'type': 'at', # Atlas images (not quicklook)
@@ -26,7 +26,7 @@ def get_2mass_images(ra, dec, radius=1, basefn=None):
 		'POS': '%g %g' % (ra,dec), # RA,Dec position
 		'SIZE': '%g' % radius, # Search radius (deg)
 		# scan, coadd, hem, date
-		'band': 'A', # All bands (J,H,K_s)
+		'band': band, # 'A'=All bands; alternatives: J,H,K
 		}
 
 	if basefn is None:
@@ -120,7 +120,8 @@ if __name__ == '__main__':
 
 	parser.add_option('-r', dest='radius', type='float', help='Search radius, in deg (default 1 deg)')
 	parser.add_option('-b', dest='basefn', help='Base filename (default: 2mass-)')
-	parser.set_defaults(radius=1.0)
+	parser.add_option('-B', dest='band', help='Band (J, H, K); default: all three')
+	parser.set_defaults(radius=1.0, band='A')
 
 	(opt, args) = parser.parse_args()
 	if len(args) != 2:
@@ -135,7 +136,7 @@ if __name__ == '__main__':
 
 	# ugh!
 	opts = {}
-	for k in ['radius', 'basefn']:
+	for k in ['radius', 'basefn', 'band']:
 		opts[k] = getattr(opt, k)
 
 	get_2mass_images(ra, dec, **opts)
