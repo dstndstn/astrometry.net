@@ -123,6 +123,17 @@ static void wcs_hdr_common(qfits_header* hdr, const tan_t* tan) {
         fits_header_add_double(hdr, "IMAGEH", tan->imageh, "Image height, in pixels.");
 }
 
+int sip_get_image_size(const qfits_header* hdr, int* pW, int* pH) {
+	int W, H;
+    W = qfits_header_getint(hdr, "IMAGEW", 0);
+    H = qfits_header_getint(hdr, "IMAGEH", 0);
+    if (!W)
+        W = qfits_header_getint(hdr, "NAXIS1", 0);
+    if (!H)
+        H = qfits_header_getint(hdr, "NAXIS2", 0);
+	return 0;
+}
+
 static void add_polynomial(qfits_header* hdr, const char* format,
 						   int order, const double* data, int datastride,
 						   bool drop_linear) {
@@ -340,6 +351,7 @@ tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
 	char* ct1;
 	char* ct2;
 	int swap;
+	int W, H;
 
 	memset(&tan, 0, sizeof(tan_t));
 
@@ -355,13 +367,9 @@ tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
 	if (swap == -1)
 		return NULL;
 
-    tan.imagew = qfits_header_getint(hdr, "IMAGEW", 0);
-    tan.imageh = qfits_header_getint(hdr, "IMAGEH", 0);
-
-    if (!tan.imagew)
-        tan.imagew = qfits_header_getint(hdr, "NAXIS1", 0);
-    if (!tan.imageh)
-        tan.imageh = qfits_header_getint(hdr, "NAXIS2", 0);
+	sip_get_image_size(hdr, &W, &H);
+	tan.imagew = W;
+	tan.imageh = H;
 
 	{
 		const char* keys[] = { "CRVAL1", "CRVAL2", "CRPIX1", "CRPIX2",

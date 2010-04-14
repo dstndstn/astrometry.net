@@ -22,12 +22,14 @@
 /** Interface to Mark Calabretta's wcslib, if available. */
 
 #define ANWCS_TYPE_WCSLIB 1
-
+#define ANWCS_TYPE_SIP 2
 
 struct anwcs_t {
 	/**
 	 If type == ANWCS_TYPE_WCSLIB:
-	   data is a wcslib  "struct wcsprm*".
+	   data is a private struct containing a wcslib  "struct wcsprm*".
+	 If type == ANWCS_TYPE_SIP:
+	   data is a "sip_t*"
 	 */
 	int type;
 	void* data;
@@ -35,7 +37,11 @@ struct anwcs_t {
 typedef struct anwcs_t anwcs_t;
 
 
+anwcs_t* anwcs_open(const char* filename, int ext);
+
 anwcs_t* anwcs_open_wcslib(const char* filename, int ext);
+
+anwcs_t* anwcs_open_sip(const char* filename, int ext);
 
 int anwcs_radec2pixelxy(const anwcs_t* wcs, double ra, double dec, double* px, double* py);
 

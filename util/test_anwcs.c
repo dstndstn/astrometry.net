@@ -39,6 +39,7 @@ void test_wcslib_equals_tan(CuTest* tc) {
 	char* tmpfile = create_temp_file("test-anwcs-wcs", "/tmp");
 	double x, y, x2, y2, ra, dec, ra2, dec2;
 	int ok, ok2;
+	int i;
 
 	// from http://live.astrometry.net/status.php?job=alpha-201004-29242410
 	// test-anwcs-1.wcs
@@ -50,79 +51,86 @@ void test_wcslib_equals_tan(CuTest* tc) {
 		CuFail(tc, "failed to write WCS to temp file");
 	}
 
-	anwcs = anwcs_open_wcslib(tmpfile, 0);
-	CuAssertPtrNotNull(tc, anwcs);
-
 	tan = tan_read_header_file(tmpfile, NULL);
 	CuAssertPtrNotNull(tc, tan);
+
+	for (i=0; i<2; i++) {
+		if (i == 0) {
+			anwcs = anwcs_open_wcslib(tmpfile, 0);
+		} else if (i == 1) {
+			anwcs = anwcs_open_sip(tmpfile, 0);
+		}
+		CuAssertPtrNotNull(tc, anwcs);
+
+		printf("ANWCS:\n");
+		anwcs_print(anwcs, stdout);
 	
-	printf("ANWCS:\n");
-	anwcs_print(anwcs, stdout);
-	
-	printf("TAN:\n");
-	tan_print_to(tan, stdout);
+		printf("TAN:\n");
+		tan_print_to(tan, stdout);
 
-	/* this wcs has:
-	 crval=(83.7132, -5.10104)
-	 crpix=(221.593, 169.656)
-	 CD = (   1.5526e-06     0.00081692 )
-	 (  -0.00081692     1.5526e-06 )
-	 */
+		/* this wcs has:
+		 crval=(83.7132, -5.10104)
+		 crpix=(221.593, 169.656)
+		 CD = (   1.5526e-06     0.00081692 )
+		 (  -0.00081692     1.5526e-06 )
+		 */
 
-	// check crval <-> crpix.
-	x = tan->crpix[0];
-	y = tan->crpix[1];
-	ra = 1; ra2 = 2; dec = 3; dec2 = 4;
+		// check crval <-> crpix.
+		x = tan->crpix[0];
+		y = tan->crpix[1];
+		ra = 1; ra2 = 2; dec = 3; dec2 = 4;
 
-	tan_pixelxy2radec(tan, x, y, &ra, &dec);
-	CuAssertDblEquals(tc, tan->crval[0], ra, 1e-6);
-	CuAssertDblEquals(tc, tan->crval[1], dec, 1e-6);
+		tan_pixelxy2radec(tan, x, y, &ra, &dec);
+		CuAssertDblEquals(tc, tan->crval[0], ra, 1e-6);
+		CuAssertDblEquals(tc, tan->crval[1], dec, 1e-6);
 
-	ok = anwcs_pixelxy2radec(anwcs, x, y, &ra2, &dec2);
-	CuAssertIntEquals(tc, 0, ok);
-	CuAssertDblEquals(tc, tan->crval[0], ra2, 1e-6);
-	CuAssertDblEquals(tc, tan->crval[1], dec2, 1e-6);
+		ok = anwcs_pixelxy2radec(anwcs, x, y, &ra2, &dec2);
+		CuAssertIntEquals(tc, 0, ok);
+		CuAssertDblEquals(tc, tan->crval[0], ra2, 1e-6);
+		CuAssertDblEquals(tc, tan->crval[1], dec2, 1e-6);
 
-	ra = tan->crval[0];
-	dec = tan->crval[1];
-	x = 1; x2 = 2; y = 3; y2 = 4;
+		ra = tan->crval[0];
+		dec = tan->crval[1];
+		x = 1; x2 = 2; y = 3; y2 = 4;
 
-	ok = tan_radec2pixelxy(tan, ra, dec, &x, &y);
-	CuAssertIntEquals(tc, TRUE, ok);
-	CuAssertDblEquals(tc, tan->crpix[0], x, 1e-6);
-	CuAssertDblEquals(tc, tan->crpix[1], y, 1e-6);
+		ok = tan_radec2pixelxy(tan, ra, dec, &x, &y);
+		CuAssertIntEquals(tc, TRUE, ok);
+		CuAssertDblEquals(tc, tan->crpix[0], x, 1e-6);
+		CuAssertDblEquals(tc, tan->crpix[1], y, 1e-6);
 
-	ok2 = anwcs_radec2pixelxy(anwcs, ra, dec, &x2, &y2);
-	CuAssertIntEquals(tc, 0, ok2);
-	CuAssertDblEquals(tc, tan->crpix[0], x2, 1e-6);
-	CuAssertDblEquals(tc, tan->crpix[1], y2, 1e-6);
+		ok2 = anwcs_radec2pixelxy(anwcs, ra, dec, &x2, &y2);
+		CuAssertIntEquals(tc, 0, ok2);
+		CuAssertDblEquals(tc, tan->crpix[0], x2, 1e-6);
+		CuAssertDblEquals(tc, tan->crpix[1], y2, 1e-6);
 
-	// check pixel (0,0).
-	x = y = 0.0;
-	ra = 1; ra2 = 2; dec = 3; dec2 = 4;
+		// check pixel (0,0).
+		x = y = 0.0;
+		ra = 1; ra2 = 2; dec = 3; dec2 = 4;
 
-	tan_pixelxy2radec(tan, x, y, &ra, &dec);
-	ok = anwcs_pixelxy2radec(anwcs, x, y, &ra2, &dec2);
-	CuAssertIntEquals(tc, 0, ok);
+		tan_pixelxy2radec(tan, x, y, &ra, &dec);
+		ok = anwcs_pixelxy2radec(anwcs, x, y, &ra2, &dec2);
+		CuAssertIntEquals(tc, 0, ok);
 
-	CuAssertDblEquals(tc, ra, ra2, 1e-6);
-	CuAssertDblEquals(tc, dec, dec2, 1e-6);
+		CuAssertDblEquals(tc, ra, ra2, 1e-6);
+		CuAssertDblEquals(tc, dec, dec2, 1e-6);
 
-	// check RA,Dec (85, -4)
-	ra = 85;
-	dec = -4;
-	x = 1; x2 = 2; y = 3; y2 = 4;
+		// check RA,Dec (85, -4)
+		ra = 85;
+		dec = -4;
+		x = 1; x2 = 2; y = 3; y2 = 4;
 
-	ok = tan_radec2pixelxy(tan, ra, dec, &x, &y);
-	CuAssertIntEquals(tc, TRUE, ok);
-	ok2 = anwcs_radec2pixelxy(anwcs, ra, dec, &x2, &y2);
-	CuAssertIntEquals(tc, 0, ok2);
-	printf("x,y (%g,%g) vs (%g,%g)\n", x, y, x2, y2);
-	CuAssertDblEquals(tc, x, x2, 1e-6);
-	CuAssertDblEquals(tc, y, y2, 1e-6);
+		ok = tan_radec2pixelxy(tan, ra, dec, &x, &y);
+		CuAssertIntEquals(tc, TRUE, ok);
+		ok2 = anwcs_radec2pixelxy(anwcs, ra, dec, &x2, &y2);
+		CuAssertIntEquals(tc, 0, ok2);
+		printf("x,y (%g,%g) vs (%g,%g)\n", x, y, x2, y2);
+		CuAssertDblEquals(tc, x, x2, 1e-6);
+		CuAssertDblEquals(tc, y, y2, 1e-6);
+
+		anwcs_free(anwcs);
+	}
 
 	free(tan);
-	anwcs_free(anwcs);
 }
 
 

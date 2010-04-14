@@ -22,6 +22,8 @@
 #include "qfits.h"
 #include "sip.h"
 
+int sip_get_image_size(const qfits_header* hdr, int* pW, int* pH);
+
 sip_t* sip_read_tan_or_sip_header_file_ext(const char* fn, int ext, sip_t* dest, bool forcetan);
 
 qfits_header* sip_create_header(const sip_t* sip);

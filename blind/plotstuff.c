@@ -1,7 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -17,7 +17,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-// Avoid *nasty* problem when 'bool' gets redefined to be 4 bytes!
+// Avoid *nasty* problem when 'bool' gets redefined (by ppm.h) to be 4 bytes!
 #include "an-bool.h"
 
 #include <math.h>
@@ -48,6 +48,7 @@
 #include "ioutils.h"
 #include "log.h"
 #include "errors.h"
+#include "anwcs.h"
 
 int plotstuff_get_radec_center_and_radius(plot_args_t* pargs,
 										  double* p_ra, double* p_dec, double* p_radius) {

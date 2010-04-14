@@ -7,6 +7,7 @@
 #include "keywords.h"
 #include "sip.h"
 #include "bl.h"
+#include "anwcs.h"
 
 #define PLOTSTUFF_FORMAT_JPG 1
 #define PLOTSTUFF_FORMAT_PNG 2
@@ -30,7 +31,8 @@ struct plot_args {
 
 	cairo_operator_t op;
 
-	sip_t* wcs;
+	//sip_t* wcs;
+	anwcs_t* wcs;
 
 	int W, H;
 	float rgba[4];
