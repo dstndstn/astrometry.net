@@ -69,6 +69,11 @@ qfits_header* anqfits_get_header(const anqfits_t* qf, int ext);
 
 const qfits_header* anqfits_get_header_const(const anqfits_t* qf, int ext);
 
+// Returns a newly-allocated array containing the raw header bytes for the
+// given extension.  (Plus a zero-terminator.)  Places the number of
+// bytes returned in *Nbytes (not including the zero-terminator).
+char* anqfits_header_get_data(const anqfits_t* qf, int ext, int* Nbytes);
+
 qfits_table* anqfits_get_table(const anqfits_t* qf, int ext);
 
 const qfits_table* anqfits_get_table_const(const anqfits_t* qf, int ext);

@@ -1,5 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+# Copyright 2010 Dustin Lang.
 #
 # The Astrometry.net suite is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License
@@ -60,11 +61,12 @@ FLAGS_DEF += $(shell $(CCTEST))
 
 ## Below, we try to guess good compiler flags for this CPU / architecture.
 ## If we make an incorrect choice -- ie, the code fails in some way on the
-## machine on which it was compiled, please let us know at code@astrometry.net
+## machine on which it was compiled, please let us know by emailing
+##    code2 at astrometry.net
 ## If you want to override this setting, you can set the
 ##      ARCH_FLAGS
 ## environment variable in your shell.
-## With gcc 4.2 and later, gcc should be able to make the optimal choice on it own.
+## With gcc 4.2 and later, gcc should be able to make the optimal choice on its own.
 ## See the README section "I wanna go fast!" for more details.
 ifneq ($(origin ARCH_FLAGS),undefined)
   FLAGS_DEF += $(ARCH_FLAGS)
@@ -147,7 +149,7 @@ endif
 FLAGS_DEF += -fPIC
 
 # profily!
-FLAGS_DEF += -pg
+#FLAGS_DEF += -pg
 
 ## FIXME DEBUG
 #FLAGS_DEF += -fstrict-aliasing -std=c99

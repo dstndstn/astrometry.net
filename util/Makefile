@@ -1,6 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
-# Copyright 2008, 2009 Dustin Lang.
+# Copyright 2008, 2009, 2010 Dustin Lang.
 #
 # The Astrometry.net suite is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License
@@ -27,7 +27,7 @@ all:
 
 # You can build stripped-down versions of the AN libraries that do not
 # depend on libkd or libqfits by defining the following in your Makefile
-# before calling make in the an-common directory:
+# before calling "make" in the "util" directory:
 #   NO_KDTREE := 1
 #   export NO_KDTREE
 #   NO_QFITS := 1
@@ -46,12 +46,18 @@ include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.png
 include $(COMMON)/makefile.netpbm
 include $(COMMON)/makefile.gsl
+include $(COMMON)/makefile.wcslib
 
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(CAIRO_INC)
 CFLAGS += $(NETPBM_INC)
 CFLAGS += $(JPEG_INC)
 CFLAGS += $(GSL_INC)
+CFLAGS += $(WCSLIB_INC)
+
+ifdef WCSLIB_EXISTS
+CFLAGS += -DWCSLIB_EXISTS
+endif
 
 LDFLAGS += $(LDFLAGS_DEF)
 LDFLAGS += -lm
@@ -81,7 +87,8 @@ ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	permutedsort.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
 	gnu-specific.o an-endian.o errors.o an-opts.o svn.o tic.o log.o \
 	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
-	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o
+	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
+	anwcs.o
 
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h \
@@ -310,14 +317,17 @@ hpimage: hpimage.o cairoutils.o
 ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log test_ioutils \
 	test_dualtree_nn test_scamp_catalog test_starutil test_svd test_hd \
-	test_tycho2
+	test_tycho2 test_anwcs
 # test_hd depends on hd.fits...
 ALL_TEST_EXTRA_OBJS = 
-ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
+ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB) $(WCSLIB_LIB)
 
 include $(COMMON)/makefile.tests
 
 DEP_OBJ += $(ALL_TEST_FILES_O)
+
+test_anwcs: $(ANUTILS_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $^ $(WCSLIB_LIB)
 
 test_tycho2: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 

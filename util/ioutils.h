@@ -72,7 +72,7 @@ bool strcaseeq(const char* s1, const char* s2);
  */
 int pipe_file_offset(FILE* fin, int offset, int length, FILE* fout);
 
-int write_file(const char* fn, char* data, int len);
+int write_file(const char* fn, const char* data, int len);
 
 /*
  It's not really _safe_ as such, it just prints an error message if it fails...

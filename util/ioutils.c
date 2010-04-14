@@ -111,7 +111,7 @@ int split_string_once(const char* str, const char* splitstr,
 	return 1;
 }
 
-int write_file(const char* fn, char* data, int len) {
+int write_file(const char* fn, const char* data, int len) {
 	FILE* fid = fopen(fn, "wb");
 	if (!fid) {
 		SYSERROR("Failed to open file \"%s\"", fn);

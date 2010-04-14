@@ -1,0 +1,27 @@
+# This file is part of the Astrometry.net suite.
+# Copyright 2007, 2010 Dustin Lang.
+#
+# The Astrometry.net suite is free software; you can redistribute
+# it and/or modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation, version 2.
+#
+# The Astrometry.net suite is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with the Astrometry.net suite ; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+# WCSLIB is (supposed to be) optional.
+
+WCSLIB_INC := $(shell pkg-config --cflags wcslib 2>/dev/null)
+WCSLIB_LIB := $(shell pkg-config --libs wcslib 2>/dev/null)
+#WCSLIB_LIB := $(shell pkg-config --static wcslib 2>/dev/null)
+
+X := $(shell pkg-config --exists wcslib && echo yes || echo no)
+ifeq ($(X), yes)
+  WCSLIB_EXISTS := 1
+endif
+

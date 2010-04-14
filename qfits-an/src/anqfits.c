@@ -61,7 +61,6 @@ off_t anqfits_data_size(const anqfits_t* qf, int ext) {
     return (off_t)qf->exts[ext].data_size * FITS_BLOCK_SIZE;
 }
 
-
 qfits_header* anqfits_get_header(const anqfits_t* qf, int ext) {
 	const qfits_header* hdr = anqfits_get_header_const(qf, ext);
 	if (!hdr)
@@ -74,6 +73,32 @@ const qfits_header* anqfits_get_header_const(const anqfits_t* qf, int ext) {
 	if (!qf->exts[ext].header)
 		qf->exts[ext].header = qfits_header_readext(qf->filename, ext);
 	return qf->exts[ext].header;
+}
+
+// Returns a newly-allocated array containing the raw header bytes for the
+// given extension.
+char* anqfits_header_get_data(const anqfits_t* qf, int ext, int* Nbytes) {
+	FILE* fid;
+	int N, nr;
+	char* data;
+	N = anqfits_header_size(qf, ext);
+	if (N == -1)
+		return NULL;
+	fid = fopen(qf->filename, "rb");
+	if (!fid) {
+		return NULL;
+	}
+	data = malloc(N + 1);
+	nr = fread(data, 1, N, fid);
+	fclose(fid);
+	if (nr != N) {
+		free(data);
+		return NULL;
+	}
+	data[N] = '\0';
+	if (Nbytes)
+		*Nbytes = N;
+	return data;
 }
 
 qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
