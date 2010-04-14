@@ -66,7 +66,8 @@ def get_2mass_images(ra, dec, radius=1, basefn=None, band='A'):
 	if len(imgs) == 0:
 		print 'no <TR> tags found'
 		return None
-	fns = []
+
+	urlfns = []
 	for imgtag in imgs:
 		print
 		if not imgtag.hasChildNodes():
@@ -97,6 +98,13 @@ def get_2mass_images(ra, dec, radius=1, basefn=None, band='A'):
 
 		fn = basefn + '%s_%s_%s%s%03i%04i.fits.gz' % (band, dataset, date, hem, scan, imgnum)
 
+		urlfns.append((url,fn))
+
+	fns = []
+	for i,(url,fn) in enumerate(urlfns):
+		print
+		print 'Retrieving file %i of %i' % (i+1, len(urlfns))
+		print
 		# -t: num retries
 		cmd = "wget -t 1 -c '%s' -O %s" % (url, fn)
 		print 'Running command:', cmd
@@ -117,6 +125,8 @@ def get_2mass_images(ra, dec, radius=1, basefn=None, band='A'):
 
 if __name__ == '__main__':
 	parser = OptionParser(usage='%prog [options] <ra> <dec>')
+
+	# See http://irsa.ipac.caltech.edu/applications/2MASS/IM/inventory.html#pos
 
 	parser.add_option('-r', dest='radius', type='float', help='Search radius, in deg (default 1 deg)')
 	parser.add_option('-b', dest='basefn', help='Base filename (default: 2mass-)')
