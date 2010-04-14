@@ -2,6 +2,7 @@
 #define PLOTIMAGE_H
 
 #include "plotstuff.h"
+#include "anwcs.h"
 
 struct plotimage_args {
 	char* fn;
@@ -9,7 +10,8 @@ struct plotimage_args {
 
 	double alpha;
 
-	sip_t* wcs;
+	anwcs_t* wcs;
+	//sip_t* wcs;
 	double gridsize;
 
 	// For FITS images: values that will be linearly transformed to 0,255.

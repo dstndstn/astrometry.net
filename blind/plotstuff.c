@@ -54,10 +54,7 @@ int plotstuff_get_radec_center_and_radius(plot_args_t* pargs,
 										  double* p_ra, double* p_dec, double* p_radius) {
 	if (!pargs->wcs)
 		return -1;
-	sip_get_radec_center(pargs->wcs, p_ra, p_dec);
-	if (p_radius)
-		*p_radius = sip_get_radius_deg(pargs->wcs);
-	return 0;
+	return anwcs_get_radec_center_and_radius(pargs->wcs, p_ra, p_dec, p_radius);
 }
 
 int plotstuff_append_doubles(const char* str, dl* lst) {
@@ -74,15 +71,13 @@ int plot_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec
 	double dec;
 	double s;
 	assert(pargs->wcs);
-	decstep = arcsec2deg(sip_pixel_scale(pargs->wcs) * pargs->linestep);
+	decstep = arcsec2deg(anwcs_pixel_scale(pargs->wcs) * pargs->linestep);
 	s = 1.0;
 	if (dec1 > dec2)
 		s = -1;
 	for (dec=dec1; (s*dec)<=(s*dec2); dec+=(decstep*s)) {
 		double x, y;
-		bool ok;
-		ok = sip_radec2pixelxy(pargs->wcs, ra, dec, &x, &y);
-		if (!ok)
+		if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
 			continue;
 		if (dec == dec1)
 			cairo_move_to(pargs->cairo, x, y);
@@ -98,7 +93,7 @@ int plot_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra
 	double f;
 	double s;
 	assert(pargs->wcs);
-	rastep = arcsec2deg(sip_pixel_scale(pargs->wcs) * pargs->linestep);
+	rastep = arcsec2deg(anwcs_pixel_scale(pargs->wcs) * pargs->linestep);
 	f = cos(deg2rad(dec));
 	rastep /= MAX(0.1, f);
 	s = 1.0;
@@ -106,9 +101,7 @@ int plot_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra
 		s = -1.0;
 	for (ra=ra1; (s*ra)<=(s*ra2); ra+=(rastep*s)) {
 		double x, y;
-		bool ok;
-		ok = sip_radec2pixelxy(pargs->wcs, ra, dec, &x, &y);
-		if (!ok)
+		if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
 			continue;
 		if (ra == ra1)
 			cairo_move_to(pargs->cairo, x, y);
@@ -230,14 +223,14 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 		}
 		plotstuff_set_size(pargs, W, H);
 	} else if (streq(cmd, "plot_wcs")) {
-		pargs->wcs = sip_read_tan_or_sip_header_file_ext(cmdargs, 0, NULL, FALSE);
+		pargs->wcs = anwcs_open(cmdargs, 0);
 		if (!pargs->wcs) {
 			ERROR("Failed to read WCS file \"%s\"", cmdargs);
 			return -1;
 		}
 	} else if (streq(cmd, "plot_wcs_box")) {
 		float ra, dec, width;
-		tan_t* twcs;
+		tan_t tanwcs;
 		double scale;
 		if (sscanf(cmdargs, "%f %f %f", &ra, &dec, &width) != 3) {
 			ERROR("Failed to parse plot_wcs_box args \"%s\"", cmdargs);
@@ -245,23 +238,24 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 		}
 		logverb("Setting WCS to a box centered at (%g,%g) with width %g deg.\n", ra, dec, width);
 		if (pargs->wcs)
-			sip_free(pargs->wcs);
-		pargs->wcs = sip_create();
-		twcs = &(pargs->wcs->wcstan);
-		twcs->crval[0] = ra;
-		twcs->crval[1] = dec;
-		twcs->crpix[0] = pargs->W / 2.0;
-		twcs->crpix[1] = pargs->H / 2.0;
+			anwcs_free(pargs->wcs);
+
+		tanwcs.crval[0] = ra;
+		tanwcs.crval[1] = dec;
+		tanwcs.crpix[0] = pargs->W / 2.0;
+		tanwcs.crpix[1] = pargs->H / 2.0;
 		scale = width / (double)pargs->W;
-		twcs->cd[0][0] = -scale;
-		twcs->cd[1][0] = 0;
-		twcs->cd[0][1] = 0;
-		twcs->cd[1][1] = -scale;
-		twcs->imagew = pargs->W;
-		twcs->imageh = pargs->H;
+		tanwcs.cd[0][0] = -scale;
+		tanwcs.cd[1][0] = 0;
+		tanwcs.cd[0][1] = 0;
+		tanwcs.cd[1][1] = -scale;
+		tanwcs.imagew = pargs->W;
+		tanwcs.imageh = pargs->H;
+		pargs->wcs = anwcs_new_tan(&tanwcs);
+
 	} else if (streq(cmd, "plot_wcs_setsize")) {
 		assert(pargs->wcs);
-		plotstuff_set_size(pargs, (int)ceil(sip_imagew(pargs->wcs)), (int)ceil(sip_imageh(pargs->wcs)));
+		plotstuff_set_size(pargs, (int)ceil(anwcs_imagew(pargs->wcs)), (int)ceil(anwcs_imageh(pargs->wcs)));
 	} else {
 		ERROR("Did not understand command: \"%s\"", cmd);
 		return -1;
@@ -376,7 +370,7 @@ double plotstuff_pixel_scale(plot_args_t* pargs) {
 		ERROR("plotstuff_pixel_scale: No WCS defined!");
 		return 0.0;
 	}
-	return sip_pixel_scale(pargs->wcs);
+	return anwcs_pixel_scale(pargs->wcs);
 }
 
 bool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
@@ -385,7 +379,7 @@ bool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 		ERROR("No WCS defined!");
 		return FALSE;
 	}
-	return sip_radec2pixelxy(pargs->wcs, ra, dec, x, y);
+	return (anwcs_radec2pixelxy(pargs->wcs, ra, dec, x, y) ? FALSE : TRUE);
 }
 
 int

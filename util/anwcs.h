@@ -19,6 +19,8 @@
 #ifndef ANWCSLIB_H
 #define ANWCSLIB_H
 
+#include "sip.h"
+
 /** Interface to Mark Calabretta's wcslib, if available. */
 
 #define ANWCS_TYPE_WCSLIB 1
@@ -43,11 +45,26 @@ anwcs_t* anwcs_open_wcslib(const char* filename, int ext);
 
 anwcs_t* anwcs_open_sip(const char* filename, int ext);
 
+anwcs_t* anwcs_new_sip(const sip_t* sip);
+
+anwcs_t* anwcs_new_tan(const tan_t* tan);
+
 int anwcs_radec2pixelxy(const anwcs_t* wcs, double ra, double dec, double* px, double* py);
 
 int anwcs_pixelxy2radec(const anwcs_t* wcs, double px, double py, double* ra, double* dec);
 
 void anwcs_print(const anwcs_t* wcs, FILE* fid);
+
+// Center and radius of the field.
+// RA,Dec,radius in degrees.
+int anwcs_get_radec_center_and_radius(anwcs_t* anwcs,
+									  double* p_ra, double* p_dec, double* p_radius);
+
+double anwcs_imagew(const anwcs_t* anwcs);
+double anwcs_imageh(const anwcs_t* anwcs);
+
+// Approximate pixel scale, in arcsec/pixel, at the reference point.
+double anwcs_pixel_scale(const anwcs_t* anwcs);
 
 void anwcs_free(anwcs_t* wcs);
 

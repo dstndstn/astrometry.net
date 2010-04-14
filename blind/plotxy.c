@@ -132,11 +132,11 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 		double ra, dec, x, y;
 		assert(pargs->wcs);
 		for (i=0; i<Nxy; i++) {
-			bool ok;
 			sip_pixelxy2radec(args->wcs,
 							  starxy_getx(xy, i)+1, starxy_gety(xy, i)+1,
 							  &ra, &dec);
-			ok = sip_radec2pixelxy(pargs->wcs, ra, dec, &x, &y);
+			if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
+				continue;
 			starxy_setx(xy, i, x-1);
 			starxy_sety(xy, i, y-1);
 		}

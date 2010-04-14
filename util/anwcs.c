@@ -30,14 +30,134 @@
 #include "log.h"
 #include "sip.h"
 #include "sip_qfits.h"
+#include "sip-utils.h"
+#include "starutil.h"
 
 struct anwcslib_t {
 	struct wcsprm* wcs;
 	// Image width and height, in pixels.
-	int width;
-	int height;
+	int imagew;
+	int imageh;
 };
 typedef struct anwcslib_t anwcslib_t;
+
+// Approximate pixel scale, in arcsec/pixel, at the reference point.
+double anwcs_pixel_scale(const anwcs_t* anwcs) {
+	assert(anwcs);
+	switch (anwcs->type) {
+
+	case ANWCS_TYPE_WCSLIB:
+		{
+			anwcslib_t* anwcslib = anwcs->data;
+			struct wcsprm* wcs = anwcslib->wcs;
+			double* cd = wcs->m_cd;
+			// HACK -- assume "cd" elements are set...
+			return deg2arcsec(sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2])));
+		}
+
+	case ANWCS_TYPE_SIP:
+		return sip_pixel_scale(anwcs->data);
+
+	default:
+		ERROR("Unknown anwcs type %i", anwcs->type);
+		return -1;
+	}
+}
+
+double anwcs_imagew(const anwcs_t* anwcs) {
+	assert(anwcs);
+	switch (anwcs->type) {
+
+	case ANWCS_TYPE_WCSLIB:
+		{
+			anwcslib_t* anwcslib = anwcs->data;
+			return anwcslib->imagew;
+		}
+
+	case ANWCS_TYPE_SIP:
+		return sip_imagew(anwcs->data);
+
+	default:
+		ERROR("Unknown anwcs type %i", anwcs->type);
+		return -1;
+	}
+}
+
+double anwcs_imageh(const anwcs_t* anwcs) {
+	assert(anwcs);
+	switch (anwcs->type) {
+
+	case ANWCS_TYPE_WCSLIB:
+		{
+			anwcslib_t* anwcslib = anwcs->data;
+			return anwcslib->imageh;
+		}
+		
+	case ANWCS_TYPE_SIP:
+		return sip_imageh(anwcs->data);
+
+	default:
+		ERROR("Unknown anwcs type %i", anwcs->type);
+		return -1;
+	}
+}
+
+int anwcs_get_radec_center_and_radius(anwcs_t* anwcs,
+									  double* p_ra, double* p_dec, double* p_radius) {
+	assert(anwcs);
+	switch (anwcs->type) {
+	case ANWCS_TYPE_WCSLIB:
+		{
+			anwcslib_t* anwcslib = anwcs->data;
+			double x,y;
+			double ra1, dec1, ra2, dec2;
+			// FIXME -- is this right?
+			x = anwcslib->imagew + 0.5;
+			y = anwcslib->imageh + 0.5;
+			if (anwcs_pixelxy2radec(anwcs, x, y, &ra1, &dec1))
+				return -1;
+			// FIXME -- this is certainly not right in general....
+			if (p_ra) *p_ra = ra1;
+			if (p_dec) *p_dec = dec1;
+			if (p_radius) {
+				if (anwcs_pixelxy2radec(anwcs, 1.0, 1.0, &ra2, &dec2))
+					return -1;
+				*p_radius = deg_between_radecdeg(ra1, dec1, ra2, dec2);
+			}
+		}
+		break;
+
+	case ANWCS_TYPE_SIP:
+		{
+			sip_t* sip;
+			sip = anwcs->data;
+			sip_get_radec_center(sip, p_ra, p_dec);
+			if (p_radius)
+				*p_radius = sip_get_radius_deg(sip);
+		}
+		break;
+
+	default:
+		ERROR("Unknown anwcs type %i", anwcs->type);
+		return -1;
+	}
+	return 0;
+}
+
+anwcs_t* anwcs_new_sip(const sip_t* sip) {
+	anwcs_t* anwcs;
+	anwcs = calloc(1, sizeof(anwcs_t));
+	anwcs->type = ANWCS_TYPE_SIP;
+	anwcs->data = sip_create();
+	memcpy(anwcs->data, sip, sizeof(sip_t));
+	return anwcs;
+}
+
+anwcs_t* anwcs_new_tan(const tan_t* tan) {
+	sip_t sip;
+	sip_wrap_tan(tan, &sip);
+	return anwcs_new_sip(&sip);
+}
 
 anwcs_t* anwcs_open(const char* filename, int ext) {
 	char* errmsg;
@@ -148,8 +268,8 @@ anwcs_t* anwcs_open_wcslib(const char* filename, int ext) {
 	anwcs->data = calloc(1, sizeof(anwcslib_t));
 	anwcslib = anwcs->data;
 	anwcslib->wcs = wcs2;
-	anwcslib->width = W;
-	anwcslib->height = H;
+	anwcslib->imagew = W;
+	anwcslib->imageh = H;
 
 	return anwcs;
 #endif
@@ -269,7 +389,7 @@ void anwcs_print(const anwcs_t* anwcs, FILE* fid) {
 			anwcslib_t* anwcslib = anwcs->data;
 			fprintf(fid, "AN WCS type: wcslib\n");
 			wcsprt(anwcslib->wcs);
-			fprintf(fid, "Image size: %i x %i\n", anwcslib->width, anwcslib->height);
+			fprintf(fid, "Image size: %i x %i\n", anwcslib->imagew, anwcslib->imageh);
 			break;
 		}
 

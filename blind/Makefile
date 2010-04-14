@@ -33,6 +33,7 @@ include $(COMMON)/makefile.png
 include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.zlib
+include $(COMMON)/makefile.wcslib
 
 LDFLAGS := $(LDFLAGS_DEF)
 LDFLAGS += -lm
@@ -555,7 +556,7 @@ plotstuff.o: plotstuff.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
 plotstuff: plotstuff-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB)
 ALL_OBJ += plotstuff-main.o
 
 plotxy.o: plotxy.c

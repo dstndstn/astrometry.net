@@ -25,6 +25,7 @@
 #include "sip_qfits.h"
 #include "log.h"
 #include "errors.h"
+#include "anwcs.h"
 
 const plotter_t plotter_image = {
 	.name = "image",
@@ -91,8 +92,8 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			double ox,oy;
 			bool ok;
 			x = MIN(i * args->gridsize, W-1);
-			sip_pixelxy2radec(args->wcs, x+1, y+1, &ra, &dec);
-			ok = sip_radec2pixelxy(pargs->wcs, ra, dec, &ox, &oy);
+			anwcs_pixelxy2radec(args->wcs, x+1, y+1, &ra, &dec);
+			ok = plotstuff_radec2xy(pargs, ra, dec, &ox, &oy);
 			xs[j*NX+i] = ox-1;
 			ys[j*NX+i] = oy-1;
 			//printf("(%g,%g) -> (%g,%g)\n", x, y, xs[j*NX+i], ys[j*NX+i]);
@@ -313,11 +314,11 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 			return -1;
 	} else if (streq(cmd, "image_wcs")) {
 		if (args->wcs)
-			free(args->wcs);
+			anwcs_free(args->wcs);
 		if (streq(cmdargs, "none")) {
 			args->wcs = NULL;
 		} else {
-			args->wcs = sip_read_tan_or_sip_header_file_ext(cmdargs, 0, NULL, FALSE);
+			args->wcs = anwcs_open(cmdargs, 0);
 			if (!args->wcs) {
 				ERROR("Failed to read WCS file \"%s\"", cmdargs);
 				return -1;
@@ -338,6 +339,8 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 
 void plot_image_free(plot_args_t* plotargs, void* baton) {
 	plotimage_t* args = (plotimage_t*)baton;
+	if (args->wcs)
+		anwcs_free(args->wcs);
 	free(args->fn);
 	free(args);
 }

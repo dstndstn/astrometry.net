@@ -95,7 +95,7 @@ def get_2mass_images(ra, dec, radius=1, basefn=None, band='A'):
 		scan = int(tds[24].firstChild.data)
 		imgnum = int(tds[25].firstChild.data)
 
-		fn = basefn + '%s_%s_%s%s%03i%04i.fits' % (band, dataset, date, hem, scan, imgnum)
+		fn = basefn + '%s_%s_%s%s%03i%04i.fits.gz' % (band, dataset, date, hem, scan, imgnum)
 
 		# -t: num retries
 		cmd = "wget -t 1 -c '%s' -O %s" % (url, fn)
