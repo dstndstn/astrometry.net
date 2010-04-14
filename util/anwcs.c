@@ -41,7 +41,6 @@ anwcs_t* anwcs_open_wcslib(const char* filename, int ext) {
 	int nwcs = 0;
 	int code;
 	int nrej = 0;
-	int i;
 	struct wcsprm* wcs = NULL;
 	struct wcsprm* wcs2 = NULL;
 	anwcs_t* anwcs = NULL;
@@ -68,20 +67,15 @@ anwcs_t* anwcs_open_wcslib(const char* filename, int ext) {
 		return NULL;
 	}
 
-	wcs2 = calloc(1, sizeof(struct wcsprm));
-	wcscopy(1, wcs, wcs2);
+	if (nwcs > 1) {
+		// copy the first entry, free the rest.
+		wcs2 = calloc(1, sizeof(struct wcsprm));
+		wcscopy(1, wcs, wcs2);
+		wcsvfree(&nwcs, &wcs);
+	} else {
+		wcs2 = wcs;
+	}
 	wcsset(wcs2);
-
-	wcsvfree(&nwcs, &wcs);
-
-	/*
-	 // free all but first WCS entry.
-	 for (i=1; i<nwcs; i++) {
-	 wcsfree(wcs + i);
-	 }
-	 // resize array down to one entry.
-	 wcs = realloc(wcs, sizeof(struct wcsprm));
-	 */
 
 	anwcs = calloc(1, sizeof(anwcs_t));
 	anwcs->type = ANWCS_TYPE_WCSLIB;
