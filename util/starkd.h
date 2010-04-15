@@ -62,7 +62,7 @@ startree_t* startree_open_fits(anqfits_t* fits);
  xyzcenter: double[3]: unit-sphere coordinates of point; see
  starutil.h : radecdeg2xyzarr() to convert RA,Decs to this form.
 
- radius2: radius-square on the unit sphere; see starutil.h :
+ radius2: radius-squared on the unit sphere; see starutil.h :
  deg2distsq() or arcsec2distsq().
 
  xyzresults: if non-NULL, returns the xyz positions of the stars that

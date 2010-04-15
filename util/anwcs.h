@@ -20,6 +20,7 @@
 #define ANWCSLIB_H
 
 #include "sip.h"
+#include "an-bool.h"
 
 /** Interface to Mark Calabretta's wcslib, if available. */
 
@@ -52,6 +53,12 @@ anwcs_t* anwcs_new_tan(const tan_t* tan);
 int anwcs_radec2pixelxy(const anwcs_t* wcs, double ra, double dec, double* px, double* py);
 
 int anwcs_pixelxy2radec(const anwcs_t* wcs, double px, double py, double* ra, double* dec);
+
+bool anwcs_radec_is_inside_image(const anwcs_t* wcs, double ra, double dec);
+
+void anwcs_get_radec_bounds(const anwcs_t* wcs, int stepsize,
+							double* pramin, double* pramax,
+							double* pdecmin, double* pdecmax);
 
 void anwcs_print(const anwcs_t* wcs, FILE* fid);
 

@@ -17,6 +17,7 @@
 */
 
 #include <stdio.h>
+#include <sys/param.h>
 
 #ifdef WCSLIB_EXISTS
 #include <wcshdr.h>
@@ -41,6 +42,226 @@ struct anwcslib_t {
 };
 typedef struct anwcslib_t anwcslib_t;
 
+
+#define ANWCS_DISPATCH(anwcs, action, defaction, func, ...)	\
+	do {													\
+		assert(anwcs);										\
+		switch (anwcs->type) {								\
+		case ANWCS_TYPE_WCSLIB:								\
+			#ifndef WCSLIB_EXISTS							\
+				ERROR("Wcslib support was not compiled in");	\
+			defaction;											\
+			#else												\
+				{														\
+					anwcslib_t* anwcslib = anwcs->data;					\
+					action wcslib_##func(anwcslib, ##__VA_ARGS__);		\
+					break;												\
+				}														\
+			#endif														\
+		case ANWCS_TYPE_SIP:											\
+			{															\
+				sip_t* sip = anwcs->data;								\
+				action ansip_##func(sip, ##__VA_ARGS__);				\
+				break;													\
+			}															\
+		default:														\
+			ERROR("Unknown anwcs type %i", anwcs->type);				\
+			defaction;													\
+		}																\
+	} while (0)
+
+
+
+/////////////////// wcslib implementations //////////////////////////
+
+static double wcslib_imagew(const anwcslib_t* anwcs) {
+	return anwcs->imagew;
+}
+static double wcslib_imageh(const anwcslib_t* anwcs) {
+	return anwcs->imageh;
+}
+
+static int wcslib_pixelxy2radec(const anwcslib_t* anwcslib, double px, double py, double* ra, double* dec) {
+	double pix[2];
+	double world[2];
+	double phi;
+	double theta;
+	double imgcrd[2];
+	int status = 0;
+	int code;
+	struct wcsprm* wcs = anwcslib->wcs;
+	pix[0] = px;
+	pix[1] = py;
+	code = wcsp2s(wcs, 1, 0, pix, imgcrd, &phi, &theta, world, &status);
+	/*
+	 int wcsp2s(struct wcsprm *wcs, int ncoord, int nelem, const double pixcrd[],
+	 double imgcrd[], double phi[], double theta[], double world[],
+	 int stat[]);
+	 */
+	if (code) {
+		ERROR("Wcslib's wcsp2s() failed: code=%i, status=%i", code, status);
+		return -1;
+	}
+	if (ra)  *ra  = world[wcs->lng];
+	if (dec) *dec = world[wcs->lat];
+	return 0;
+}
+
+static int wcslib_radec2pixelxy(const anwcslib_t* anwcslib, double ra, double dec, double* px, double* py) {
+	double pix[2];
+	double world[2];
+	double phi;
+	double theta;
+	double imgcrd[2];
+	int status = 0;
+	int code;
+	struct wcsprm* wcs = anwcslib->wcs;
+	world[wcs->lng] = ra;
+	world[wcs->lat] = dec;
+	code = wcss2p(wcs, 1, 0, world, &phi, &theta, imgcrd, pix, &status);
+	/*
+	 int wcss2p(struct wcsprm *wcs, int ncoord, int nelem, const double world[],
+	 double phi[], double theta[], double imgcrd[], double pixcrd[],
+	 int stat[]);
+	 */
+	if (code) {
+		ERROR("Wcslib's wcss2p() failed: code=%i, status=%i", code, status);
+		return -1;
+	}
+	if (px) *px = pix[0];
+	if (py) *py = pix[1];
+	return 0;
+}
+
+static bool wcslib_radec_is_inside_image(anwcslib_t* wcslib, double ra, double dec) {
+	double px, py;
+	if (wcslib_radec2pixelxy(wcslib, ra, dec, &px, &py))
+		return FALSE;
+	return (px >= 1 && px <= wcslib->imagew &&
+			py >= 1 && py <= wcslib->imageh);
+}
+
+static void wcslib_radec_bounds(const anwcslib_t* wcs, int stepsize,
+								double* pramin, double* pramax,
+								double* pdecmin, double* pdecmax) {
+	// FIXME -- this does no pole-checking.
+	// It should be possible to just walk the boundary (as in sip-utils)
+	// but this is more robust...
+	int i, j, W, H;
+	double ralo, rahi, declo, dechi;
+	W = wcslib_imagew(wcs);
+	H = wcslib_imageh(wcs);
+	for (i=1; i<H+stepsize; i+=stepsize) {
+		// up to and including H
+		i = MIN(H, i);
+		for (j=1; j<=W+stepsize; j+=stepsize) {
+			j = MIN(W, j);
+			double ra,dec;
+			if (wcslib_pixelxy2radec(wcs, i, j, &ra, &dec)) {
+				ERROR("Error converting pixel coord (%i,%i) in radec_bounds", i, j);
+				continue;
+			}
+			// first time through loop?
+			if (i == 1 && j == 1) {
+				ralo = rahi = ra;
+				declo = dechi = dec;
+			} else {
+				ralo = MIN(ralo, ra);
+				rahi = MAX(rahi, ra);
+				declo = MIN(declo, dec);
+				dechi = MAX(dechi, dec);
+			}
+		}
+	}
+	if (pramin) *pramin = ralo;
+	if (pramax) *pramax = rahi;
+	if (pdecmin) *pdecmin = declo;
+	if (pdecmax) *pdecmax = dechi;
+}
+
+static void wcslib_print(const anwcslib_t* anwcslib, FILE* fid) {
+	fprintf(fid, "AN WCS type: wcslib\n");
+	wcsprt(anwcslib->wcs);
+	fprintf(fid, "Image size: %i x %i\n", anwcslib->imagew, anwcslib->imageh);
+}
+
+static void wcslib_free(anwcslib_t* anwcslib) {
+	wcsfree(anwcslib->wcs);
+	free(anwcslib->wcs);
+	free(anwcslib);
+}
+
+/////////////////// sip implementations //////////////////////////
+
+/*
+ static void ansip_radec_bounds(const sip_t* sip, int stepsize,
+ double* pramin, double* pramax,
+ double* pdecmin, double* pdecmax) {
+ sip_get_radec_bounds(sip, stepsize, pramin, pramax, pdecmin, pdecmax);
+ }
+ */
+#define ansip_radec_bounds sip_get_radec_bounds
+
+#define ansip_radec_is_inside_image sip_is_inside_image
+
+#define ansip_imagew sip_imagew
+#define ansip_imageh sip_imageh
+
+//#define ansip_pixelxy2radec sip_pixelxy2radec
+static int ansip_pixelxy2radec(const sip_t* sip, double px, double py, double* ra, double* dec) {
+	sip_pixelxy2radec(sip, px, py, ra, dec);
+	return 0;
+}
+
+#define ansip_print sip_print_to
+
+#define ansip_free sip_free
+
+/////////////////// dispatched anwcs_t entry points //////////////////////////
+
+void anwcs_get_radec_bounds(const anwcs_t* wcs, int stepsize,
+							double* pramin, double* pramax,
+							double* pdecmin, double* pdecmax) {
+	ANWCS_DISPATCH(wcs, , , radec_bounds, stepsize, pramin, pramax, pdecmin, pdecmax);
+}
+
+void anwcs_print(const anwcs_t* anwcs, FILE* fid) {
+	assert(anwcs);
+	assert(fid);
+	ANWCS_DISPATCH(anwcs, , , print, fid);
+}
+
+void anwcs_free(anwcs_t* anwcs) {
+	if (!anwcs)
+		return;
+	ANWCS_DISPATCH(anwcs, , , free);
+	free(anwcs);
+}
+
+bool anwcs_radec_is_inside_image(const anwcs_t* wcs, double ra, double dec) {
+	ANWCS_DISPATCH(wcs, return, return FALSE, radec_is_inside_image, ra, dec);
+}
+
+double anwcs_imagew(const anwcs_t* anwcs) {
+	ANWCS_DISPATCH(anwcs, return, return -1.0, imagew);
+}
+double anwcs_imageh(const anwcs_t* anwcs) {
+	ANWCS_DISPATCH(anwcs, return, return -1.0, imageh);
+}
+
+int anwcs_pixelxy2radec(const anwcs_t* anwcs, double px, double py, double* ra, double* dec) {
+	ANWCS_DISPATCH(anwcs, return, return -1, pixelxy2radec, px, py, ra, dec);
+}
+
+
+
+
+
+
+
+
+///////////////////////// un-dispatched functions ///////////////////
+
 // Approximate pixel scale, in arcsec/pixel, at the reference point.
 double anwcs_pixel_scale(const anwcs_t* anwcs) {
 	assert(anwcs);
@@ -57,44 +278,6 @@ double anwcs_pixel_scale(const anwcs_t* anwcs) {
 
 	case ANWCS_TYPE_SIP:
 		return sip_pixel_scale(anwcs->data);
-
-	default:
-		ERROR("Unknown anwcs type %i", anwcs->type);
-		return -1;
-	}
-}
-
-double anwcs_imagew(const anwcs_t* anwcs) {
-	assert(anwcs);
-	switch (anwcs->type) {
-
-	case ANWCS_TYPE_WCSLIB:
-		{
-			anwcslib_t* anwcslib = anwcs->data;
-			return anwcslib->imagew;
-		}
-
-	case ANWCS_TYPE_SIP:
-		return sip_imagew(anwcs->data);
-
-	default:
-		ERROR("Unknown anwcs type %i", anwcs->type);
-		return -1;
-	}
-}
-
-double anwcs_imageh(const anwcs_t* anwcs) {
-	assert(anwcs);
-	switch (anwcs->type) {
-
-	case ANWCS_TYPE_WCSLIB:
-		{
-			anwcslib_t* anwcslib = anwcs->data;
-			return anwcslib->imageh;
-		}
-		
-	case ANWCS_TYPE_SIP:
-		return sip_imageh(anwcs->data);
 
 	default:
 		ERROR("Unknown anwcs type %i", anwcs->type);
@@ -283,29 +466,8 @@ int anwcs_radec2pixelxy(const anwcs_t* anwcs, double ra, double dec, double* px,
 	return -1;
 #else
 		{
-			double pix[2];
-			double world[2];
-			double phi;
-			double theta;
-			double imgcrd[2];
-			int status = 0;
-			int code;
 			anwcslib_t* anwcslib = anwcs->data;
-			struct wcsprm* wcs = anwcslib->wcs;
-			world[wcs->lng] = ra;
-			world[wcs->lat] = dec;
-			code = wcss2p(wcs, 1, 0, world, &phi, &theta, imgcrd, pix, &status);
-			/*
-			 int wcss2p(struct wcsprm *wcs, int ncoord, int nelem, const double world[],
-			 double phi[], double theta[], double imgcrd[], double pixcrd[],
-			 int stat[]);
-			 */
-			if (code) {
-				ERROR("Wcslib's wcss2p() failed: code=%i, status=%i", code, status);
-				return -1;
-			}
-			if (px) *px = pix[0];
-			if (py) *py = pix[1];
+			return wcslib_radec2pixelxy(anwcslib, ra, dec, px, py);
 		}
 #endif
 		break;
@@ -328,102 +490,5 @@ int anwcs_radec2pixelxy(const anwcs_t* anwcs, double ra, double dec, double* px,
 	return 0;
 }
 
-int anwcs_pixelxy2radec(const anwcs_t* anwcs, double px, double py, double* ra, double* dec) {
-	assert(anwcs);
-	switch (anwcs->type) {
-
-	case ANWCS_TYPE_WCSLIB:
-#ifndef WCSLIB_EXISTS
-	ERROR("Wcslib support was not compiled in");
-	return -1;
-#else
-		{
-			double pix[2];
-			double world[2];
-			double phi;
-			double theta;
-			double imgcrd[2];
-			int status = 0;
-			int code;
-			anwcslib_t* anwcslib = anwcs->data;
-			struct wcsprm* wcs = anwcslib->wcs;
-			pix[0] = px;
-			pix[1] = py;
-			code = wcsp2s(wcs, 1, 0, pix, imgcrd, &phi, &theta, world, &status);
-			/*
-			 int wcsp2s(struct wcsprm *wcs, int ncoord, int nelem, const double pixcrd[],
-			 double imgcrd[], double phi[], double theta[], double world[],
-			 int stat[]);
-			 */
-			if (code) {
-				ERROR("Wcslib's wcsp2s() failed: code=%i, status=%i", code, status);
-				return -1;
-			}
-			if (ra)  *ra  = world[wcs->lng];
-			if (dec) *dec = world[wcs->lat];
-		}
-#endif
-		break;
-
-	case ANWCS_TYPE_SIP:
-		sip_pixelxy2radec(anwcs->data, px, py, ra, dec);
-		break;
-
-	default:
-		ERROR("Unknown anwcs type %i", anwcs->type);
-		return -1;
-	}
-	return 0;
-}
-
-void anwcs_print(const anwcs_t* anwcs, FILE* fid) {
-	assert(anwcs);
-	assert(fid);
-	switch (anwcs->type) {
-	case ANWCS_TYPE_WCSLIB:
-#ifndef WCSLIB_EXISTS
-		fprintf(fid, "AN WCS type: wcslib, but wcslib support is not compiled in!\n");
-		return;
-#endif
-		{
-			anwcslib_t* anwcslib = anwcs->data;
-			fprintf(fid, "AN WCS type: wcslib\n");
-			wcsprt(anwcslib->wcs);
-			fprintf(fid, "Image size: %i x %i\n", anwcslib->imagew, anwcslib->imageh);
-			break;
-		}
-
-	case ANWCS_TYPE_SIP:
-		fprintf(fid, "AN WCS type: sip\n");
-		sip_print_to(anwcs->data, fid);
-		break;
-
-	default:
-		fprintf(fid, "AN WCS type: unknown (%i)\n", anwcs->type);
-	}
-}
-
-void anwcs_free(anwcs_t* anwcs) {
-	if (!anwcs)
-		return;
-	switch (anwcs->type) {
-	case ANWCS_TYPE_WCSLIB:
-#ifdef WCSLIB_EXISTS
-		{
-			anwcslib_t* anwcslib = anwcs->data;
-			wcsfree(anwcslib->wcs);
-			free(anwcslib->wcs);
-			free(anwcslib);
-		}
-#endif
-		break;
-
-	case ANWCS_TYPE_SIP:
-		sip_free(anwcs->data);
-		break;
-
-	}
-	free(anwcs);
-}
 
 

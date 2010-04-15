@@ -131,6 +131,8 @@ int sip_get_image_size(const qfits_header* hdr, int* pW, int* pH) {
         W = qfits_header_getint(hdr, "NAXIS1", 0);
     if (!H)
         H = qfits_header_getint(hdr, "NAXIS2", 0);
+	if (pW) *pW = W;
+	if (pH) *pH = H;
 	return 0;
 }
 

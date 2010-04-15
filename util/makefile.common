@@ -149,7 +149,7 @@ endif
 FLAGS_DEF += -fPIC
 
 # profily!
-#FLAGS_DEF += -pg
+FLAGS_DEF += -pg
 
 ## FIXME DEBUG
 #FLAGS_DEF += -fstrict-aliasing -std=c99
