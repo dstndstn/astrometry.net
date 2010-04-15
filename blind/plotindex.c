@@ -57,6 +57,8 @@ int plot_index_plot(const char* command,
 	}
 	radecdeg2xyzarr(ra, dec, xyz);
 	r2 = deg2distsq(radius);
+	logmsg("Field RA,Dec,radius = (%g,%g), %g deg\n", ra, dec, radius);
+	logmsg("distsq: %g\n", r2);
 
 	for (i=0; i<pl_size(args->indexes); i++) {
 		index_t* index = pl_get(args->indexes, i);

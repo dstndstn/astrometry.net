@@ -118,7 +118,11 @@ void makeplot(char* plotfn, char* bgimgfn, int W, int H,
 		plot_image_setsize(&pargs, img);
 		plotstuff_run_command(&pargs, "image");
 	} else {
+		float rgba[4] = {0, 0, 0.1, 1.0};
 		plotstuff_set_size(&pargs, W, H);
+		//plotstuff_init2(&pargs);
+		plotstuff_set_rgba(&pargs, rgba);
+		plotstuff_run_command(&pargs, "fill");
 	}
 	cairo = pargs.cairo;
 	// red circles around every field star.
@@ -390,7 +394,7 @@ int main(int argc, char** args) {
 			char fn[256];
 			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'a');
 			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
-					 Nindex, indexpix, Nfield, theta, sip.wcstan.crpix);
+					 Nindex, indexpix, Nfield-1, theta, sip.wcstan.crpix);
 		}
 
 		Nmatch = 0;
@@ -427,7 +431,7 @@ int main(int argc, char** args) {
 
 			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'b');
 			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
-					 Nindex, indexpix, Nfield, theta, newtan.crpix);
+					 Nindex, indexpix, Nfield-1, theta, newtan.crpix);
 		}
 
 		sip_t* newsip;
@@ -475,7 +479,7 @@ int main(int argc, char** args) {
 
 			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'c');
 			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
-					 Nindex, indexpix, Nfield, theta, newsip->wcstan.crpix);
+					 Nindex, indexpix, Nfield-1, theta, newsip->wcstan.crpix);
 		}
 
 		memcpy(&sip, newsip, sizeof(sip_t));

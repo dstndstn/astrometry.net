@@ -137,7 +137,7 @@ int cairo_set_color(cairo_t* cairo, const char* color) {
 	return res;
 }
 
-static void plot_builtin_apply(cairo_t* cairo, plot_args_t* args) {
+void plotstuff_builtin_apply(cairo_t* cairo, plot_args_t* args) {
 	cairo_set_rgba(cairo, args->rgba);
 	cairo_set_line_width(cairo, args->lw);
 	cairo_set_operator(cairo, args->op);
@@ -159,7 +159,7 @@ static void* plot_builtin_init(plot_args_t* args) {
 }
 
 static int plot_builtin_init2(plot_args_t* pargs, void* baton) {
-	plot_builtin_apply(pargs->cairo, pargs);
+	plotstuff_builtin_apply(pargs->cairo, pargs);
 	// Inits that aren't in "plot_builtin"
 	cairo_set_antialias(pargs->cairo, CAIRO_ANTIALIAS_GRAY);
 	return 0;
@@ -261,7 +261,7 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 		return -1;
 	}
 	if (pargs->cairo)
-		plot_builtin_apply(pargs->cairo, pargs);
+		plotstuff_builtin_apply(pargs->cairo, pargs);
 	return 0;
 }
 
@@ -289,6 +289,14 @@ int parse_image_format(const char* fmt) {
 
 int plotstuff_set_color(plot_args_t* pargs, const char* name) {
 	return parse_color_rgba(name, pargs->rgba);
+}
+
+int plotstuff_set_rgba(plot_args_t* pargs, const float* rgba) {
+	pargs->rgba[0] = rgba[0];
+	pargs->rgba[1] = rgba[1];
+	pargs->rgba[2] = rgba[2];
+	pargs->rgba[3] = rgba[3];
+	return 0;
 }
 
 /* All render layers must go in here */
@@ -380,6 +388,24 @@ bool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 		return FALSE;
 	}
 	return (anwcs_radec2pixelxy(pargs->wcs, ra, dec, x, y) ? FALSE : TRUE);
+}
+
+bool plotstuff_radec_is_inside_image(plot_args_t* pargs, double ra, double dec) {
+	if (!pargs->wcs) {
+		ERROR("No WCS defined!");
+		return FALSE;
+	}
+	return anwcs_radec_is_inside_image(pargs->wcs, ra, dec);
+}
+
+void plotstuff_get_radec_bounds(const plot_args_t* pargs, int stepsize,
+								double* pramin, double* pramax,
+								double* pdecmin, double* pdecmax) {
+	if (!pargs->wcs) {
+		ERROR("No WCS defined!");
+		return;
+	}
+	return anwcs_get_radec_bounds(pargs->wcs, stepsize, pramin, pramax, pdecmin, pdecmax);
 }
 
 int

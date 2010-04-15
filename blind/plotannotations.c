@@ -25,6 +25,7 @@
 
 #include "plotannotations.h"
 #include "ngc2000.h"
+#include "brightstars.h"
 #include "cairoutils.h"
 #include "sip-utils.h"
 #include "starutil.h"
@@ -85,8 +86,8 @@ struct annotation_args {
 	bool HD;
 	float ngc_fraction;
 	bl* cairocmds;
-	float fontsize;
-	char* fontname;
+	//float fontsize;
+	//char* fontname;
 	float bg_rgba[4];
 	bl* targets;
 
@@ -172,7 +173,7 @@ static void add_text(plot_args_t* pargs, ann_t* ann, cairo_t* cairo,
 static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 	int i;
 	double cra, cdec;
-	sip_get_radec_center(pargs->wcs, &cra, &cdec);
+	plotstuff_get_radec_center_and_radius(pargs, &cra, &cdec, NULL);
 	
 	for (i=0; i<bl_size(ann->targets); i++) {
 		target_t* tar = bl_access(ann->targets, i);
@@ -287,6 +288,44 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 	}
 }
 
+static void plot_brightstars(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
+	int i, N;
+	cairocmd_t cmd;
+
+	memset(&cmd, 0, sizeof(cmd));
+
+	N = bright_stars_n();
+	for (i=0; i<N; i++) {
+		double px, py;
+		double pixrad = pargs->markersize;
+		const brightstar_t* bs = bright_stars_get(i);
+		//if (!plotstuff_radec_is_inside_image(pargs, bs->ra, bs->dec))
+		if (!plotstuff_radec2xy(pargs, bs->ra, bs->dec, &px, &py))
+			continue;
+		logverb("Bright star %s/%s at RA,Dec (%g,%g) -> xy (%g, %g)\n", bs->name, bs->common_name, bs->ra, bs->dec, px, py);
+		if (px < 1 || py < 1 || px > pargs->W || py > pargs->H)
+			continue;
+
+		cmd.type = CIRCLE;
+		cmd.layer = 0;
+		cmd.x = px;
+		cmd.y = py;
+		cmd.radius = pixrad + 1;
+		memcpy(cmd.rgba, ann->bg_rgba, sizeof(cmd.rgba));
+		bl_append(ann->cairocmds, &cmd);
+
+		cmd.radius = pixrad - 1.0;
+		bl_append(ann->cairocmds, &cmd);
+
+		cmd.layer = 1;
+		cmd.radius = pixrad;
+		memcpy(cmd.rgba, pargs->rgba, sizeof(cmd.rgba));
+		bl_append(ann->cairocmds, &cmd);
+
+		add_text(pargs, ann, cairo, bs->common_name, px, py);
+	}
+}
+
 static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 	double imscale;
 	double imsize;
@@ -382,13 +421,14 @@ void* plot_annotations_init(plot_args_t* args) {
 	ann_t* ann = calloc(1, sizeof(ann_t));
 	ann->cairocmds = bl_new(256, sizeof(cairocmd_t));
 	ann->ngc_fraction = 0.02;
-	ann->fontname = strdup("DejaVu Sans Mono Book");
 	parse_color_rgba("black", ann->bg_rgba);
-	ann->fontsize = 14.0;
+	//ann->fontname = strdup("DejaVu Sans Mono Book");
+	//ann->fontsize = 14.0;
 	ann->targets = bl_new(4, sizeof(target_t));
 	ann->label_offset_x = 15.0;
 	ann->label_offset_y = 0.0;
 	ann->NGC = TRUE;
+	ann->bright = TRUE;
 	return ann;
 }
 
@@ -402,14 +442,20 @@ int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 	double dy = 0;
 
 	// Set fonts, etc, before calling plotting routines
-	cairo_select_font_face(cairo, ann->fontname, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-	cairo_set_font_size(cairo, ann->fontsize);
+	plotstuff_builtin_apply(cairo, pargs);
+	/*
+	 cairo_select_font_face(cairo, ann->fontname, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+	 cairo_set_font_size(cairo, ann->fontsize);
+	 */
 
 	cairo_font_extents(cairo, &extents);
 	dy = extents.ascent * 0.5;
 
 	if (ann->NGC)
 		plot_ngc(cairo, pargs, ann);
+
+	if (ann->bright)
+		plot_brightstars(cairo, pargs, ann);
 
 	if (bl_size(ann->targets))
 		plot_targets(cairo, pargs, ann);
@@ -477,15 +523,19 @@ int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 int plot_annotations_command(const char* cmd, const char* cmdargs,
 							 plot_args_t* pargs, void* baton) {
 	ann_t* ann = (ann_t*)baton;
-	if (streq(cmd, "annotations_fontsize")) {
-		ann->fontsize = atoi(cmdargs);
-	} else if (streq(cmd, "annotations_font")) {
-		free(ann->fontname);
-		ann->fontname = strdup(cmdargs);
-	} else if (streq(cmd, "annotations_bgcolor")) {
+	/*
+	 if (streq(cmd, "annotations_fontsize")) {
+	 ann->fontsize = atoi(cmdargs);
+	 } else if (streq(cmd, "annotations_font")) {
+	 free(ann->fontname);
+	 ann->fontname = strdup(cmdargs);
+	 } else */
+	if (streq(cmd, "annotations_bgcolor")) {
 		parse_color_rgba(cmdargs, ann->bg_rgba);
 	} else if (streq(cmd, "annotations_no_ngc")) {
 		ann->NGC = FALSE;
+	} else if (streq(cmd, "annotations_no_bright")) {
+		ann->bright = FALSE;
 	} else if (streq(cmd, "annotations_ngc_size")) {
 		ann->ngc_fraction = atof(cmdargs);
 	} else if (streq(cmd, "annotations_target")) {
@@ -525,7 +575,7 @@ int plot_annotations_command(const char* cmd, const char* cmdargs,
 void plot_annotations_free(plot_args_t* args, void* baton) {
 	ann_t* ann = (ann_t*)baton;
 	bl_free(ann->cairocmds);
-	free(ann->fontname);
+	//free(ann->fontname);
 	free(ann);
 }
 

@@ -81,11 +81,15 @@ void* plotstuff_get_config(plot_args_t* pargs, const char* name);
 
 int plotstuff_set_color(plot_args_t* pargs, const char* name);
 
+int plotstuff_set_rgba(plot_args_t* pargs, const float* rgba);
+
 int plotstuff_set_marker(plot_args_t* pargs, const char* name);
 
 int plotstuff_set_markersize(plot_args_t* pargs, double ms);
 
 int plotstuff_set_size(plot_args_t* pargs, int W, int H);
+
+void plotstuff_builtin_apply(cairo_t* cairo, plot_args_t* args);
 
 int
 ATTRIB_FORMAT(printf,2,3)
@@ -106,6 +110,12 @@ bool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 						double* x, double* y);
 
 int plotstuff_get_radec_center_and_radius(plot_args_t* pargs, double* ra, double* dec, double* radius);
+
+void plotstuff_get_radec_bounds(const plot_args_t* pargs, int stepsize,
+								double* pramin, double* pramax,
+								double* pdecmin, double* pdecmax);
+
+bool plotstuff_radec_is_inside_image(plot_args_t* pargs, double ra, double dec);
 
 int plot_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2);
 int plot_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra2);

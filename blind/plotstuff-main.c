@@ -70,6 +70,10 @@
  annotations_fontsize
  annotations_font
  annotations_target <ra> <dec> <label>
+ annotations_targetname <label>  -- eg "M 8", "NGC 427"
+ annotations_no_ngc     -- don't plot NGC/IC galaxies
+ annotations_no_bright  -- don't plot named stars
+ annotations_ngc_size <fraction> -- default 0.02, min size to annotate.
  annotations
 
  Image outlines:

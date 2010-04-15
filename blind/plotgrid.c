@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -139,7 +139,7 @@ int plot_grid_plot(const char* command,
 		return -1;
 	}
 	// Find image bounds in RA,Dec...
-	sip_get_radec_bounds(pargs->wcs, 50, &ramin, &ramax, &decmin, &decmax);
+	plotstuff_get_radec_bounds(pargs, 50, &ramin, &ramax, &decmin, &decmax);
 	if (args->rastep == 0 || args->decstep == 0) {
 		// FIXME -- choose defaults
 		ERROR("Need grid_rastep, grid_decstep");
@@ -170,7 +170,7 @@ int plot_grid_plot(const char* command,
 			return -1;
 		}
 		logmsg("Adding grid labels...\n");
-		sip_get_radec_center(pargs->wcs, &cra, &cdec);
+		plotstuff_get_radec_center_and_radius(pargs, &cra, &cdec, NULL);
 		assert(cra >= ramin && cra <= ramax);
 		assert(cdec >= decmin && cdec <= decmax);
 		for (ra = args->ralabelstep * floor(ramin / args->ralabelstep);
@@ -198,7 +198,7 @@ int plot_grid_plot(const char* command,
 						break;
 					out = MIN(90, MAX(-90, out));
 					logverb("dec in=%g, out=%g\n", in, out);
-					if (!sip_is_inside_image(pargs->wcs, ra, out)) {
+					if (!plotstuff_radec_is_inside_image(pargs, ra, out)) {
 						gotit = TRUE;
 						break;
 					}
@@ -213,20 +213,20 @@ int plot_grid_plot(const char* command,
 
 			i=0;
 			N = 10;
-			while (!sip_is_inside_image(pargs->wcs, ra, in)) {
+			while (!plotstuff_radec_is_inside_image(pargs, ra, in)) {
 				if (i == N)
 					break;
 				in = decmin + (double)i/(double)(N-1) * (decmax-decmin);
 				i++;
 			}
-			if (!sip_is_inside_image(pargs->wcs, ra, in))
+			if (!plotstuff_radec_is_inside_image(pargs, ra, in))
 				continue;
 			while (fabs(out - in) > 1e-6) {
 				// hahaha
 				double half;
 				bool isin;
 				half = (out + in) / 2.0;
-				isin = sip_is_inside_image(pargs->wcs, ra, half);
+				isin = plotstuff_radec_is_inside_image(pargs, ra, half);
 				if (isin)
 					in = half;
 				else
@@ -240,7 +240,7 @@ int plot_grid_plot(const char* command,
 			//snprintf(label, sizeof(label), "%.1f", lra);
 			pretty_label(lra, label);
 			logmsg("Label \"%s\" at (%g,%g)\n", label, ra, in);
-			ok = sip_radec2pixelxy(pargs->wcs, ra, in, &x, &y);
+			ok = plotstuff_radec2xy(pargs, ra, in, &x, &y);
 
 			add_text(pargs->cairo, x, y, label, pargs, bgrgba, NULL, NULL);
 		}
@@ -266,7 +266,7 @@ int plot_grid_plot(const char* command,
 						break;
 					out = MIN(360, MAX(0, out));
 					logverb("ra in=%g, out=%g\n", in, out);
-					if (!sip_is_inside_image(pargs->wcs, out, dec)) {
+					if (!plotstuff_radec_is_inside_image(pargs, out, dec)) {
 						gotit = TRUE;
 						break;
 					}
@@ -280,20 +280,20 @@ int plot_grid_plot(const char* command,
 			}
 			i=0;
 			N = 10;
-			while (!sip_is_inside_image(pargs->wcs, in, dec)) {
+			while (!plotstuff_radec_is_inside_image(pargs, in, dec)) {
 				if (i == N)
 					break;
 				in = ramin + (double)i/(double)(N-1) * (ramax-ramin);
 				i++;
 			}
-			if (!sip_is_inside_image(pargs->wcs, in, dec))
+			if (!plotstuff_radec_is_inside_image(pargs, in, dec))
 				continue;
 			while (fabs(out - in) > 1e-6) {
 				// hahaha
 				double half;
 				bool isin;
 				half = (out + in) / 2.0;
-				isin = sip_is_inside_image(pargs->wcs, half, dec);
+				isin = plotstuff_radec_is_inside_image(pargs, half, dec);
 				if (isin)
 					in = half;
 				else
@@ -302,7 +302,7 @@ int plot_grid_plot(const char* command,
 			//snprintf(label, sizeof(label), "%.1f", dec);
 			pretty_label(dec, label);
 			logmsg("Label Dec=\"%s\" at (%g,%g)\n", label, in, dec);
-			ok = sip_radec2pixelxy(pargs->wcs, in, dec, &x, &y);
+			ok = plotstuff_radec2xy(pargs, in, dec, &x, &y);
 
 			add_text(pargs->cairo, x, y, label, pargs, bgrgba, NULL, NULL);
 		}
