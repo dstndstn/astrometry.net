@@ -42,22 +42,24 @@ struct anwcslib_t {
 };
 typedef struct anwcslib_t anwcslib_t;
 
+/*
+ This is ugly... this macro gets defined differently depending on
+ whether wcslib is available or not... I couldn't figure out how to put
+ the #ifdef inside the macro definition to make it cleaner.
+ */
+
+#ifdef WCSLIB_EXISTS
 
 #define ANWCS_DISPATCH(anwcs, action, defaction, func, ...)	\
 	do {													\
 		assert(anwcs);										\
 		switch (anwcs->type) {								\
-		case ANWCS_TYPE_WCSLIB:								\
-			#ifndef WCSLIB_EXISTS							\
-				ERROR("Wcslib support was not compiled in");	\
-			defaction;											\
-			#else												\
-				{														\
-					anwcslib_t* anwcslib = anwcs->data;					\
-					action wcslib_##func(anwcslib, ##__VA_ARGS__);		\
-					break;												\
-				}														\
-			#endif														\
+		case ANWCS_TYPE_WCSLIB:											\
+			{															\
+				anwcslib_t* anwcslib = anwcs->data;						\
+				action wcslib_##func(anwcslib, ##__VA_ARGS__);			\
+				break;													\
+			}															\
 		case ANWCS_TYPE_SIP:											\
 			{															\
 				sip_t* sip = anwcs->data;								\
@@ -69,6 +71,31 @@ typedef struct anwcslib_t anwcslib_t;
 			defaction;													\
 		}																\
 	} while (0)
+
+#else
+
+// No WCSLIB.
+#define ANWCS_DISPATCH(anwcs, action, defaction, func, ...)	\
+	do {													\
+		assert(anwcs);										\
+		switch (anwcs->type) {								\
+		case ANWCS_TYPE_WCSLIB:									\
+			ERROR("Wcslib support was not compiled in");				\
+			defaction;													\
+			break;														\
+		case ANWCS_TYPE_SIP:											\
+			{															\
+				sip_t* sip = anwcs->data;								\
+				action ansip_##func(sip, ##__VA_ARGS__);				\
+				break;													\
+			}															\
+		default:														\
+			ERROR("Unknown anwcs type %i", anwcs->type);				\
+			defaction;													\
+		}																\
+	} while (0)
+
+#endif
 
 
 
