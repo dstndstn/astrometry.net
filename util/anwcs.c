@@ -101,6 +101,8 @@ typedef struct anwcslib_t anwcslib_t;
 
 /////////////////// wcslib implementations //////////////////////////
 
+#ifdef WCSLIB_EXISTS
+
 static double wcslib_imagew(const anwcslib_t* anwcs) {
 	return anwcs->imagew;
 }
@@ -218,6 +220,15 @@ static void wcslib_free(anwcslib_t* anwcslib) {
 	free(anwcslib);
 }
 
+static double wcslib_pixel_scale(const anwcslib_t* anwcslib) {
+	struct wcsprm* wcs = anwcslib->wcs;
+	double* cd = wcs->m_cd;
+	// HACK -- assume "cd" elements are set...
+	return deg2arcsec(sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2])));
+}
+
+#endif
+
 /////////////////// sip implementations //////////////////////////
 
 /*
@@ -243,6 +254,8 @@ static int ansip_pixelxy2radec(const sip_t* sip, double px, double py, double* r
 #define ansip_print sip_print_to
 
 #define ansip_free sip_free
+
+#define ansip_pixel_scale sip_pixel_scale
 
 /////////////////// dispatched anwcs_t entry points //////////////////////////
 
@@ -280,6 +293,11 @@ int anwcs_pixelxy2radec(const anwcs_t* anwcs, double px, double py, double* ra, 
 	ANWCS_DISPATCH(anwcs, return, return -1, pixelxy2radec, px, py, ra, dec);
 }
 
+// Approximate pixel scale, in arcsec/pixel, at the reference point.
+double anwcs_pixel_scale(const anwcs_t* anwcs) {
+	ANWCS_DISPATCH(anwcs, return, return -1, pixel_scale);
+}
+
 
 
 
@@ -288,29 +306,6 @@ int anwcs_pixelxy2radec(const anwcs_t* anwcs, double px, double py, double* ra, 
 
 
 ///////////////////////// un-dispatched functions ///////////////////
-
-// Approximate pixel scale, in arcsec/pixel, at the reference point.
-double anwcs_pixel_scale(const anwcs_t* anwcs) {
-	assert(anwcs);
-	switch (anwcs->type) {
-
-	case ANWCS_TYPE_WCSLIB:
-		{
-			anwcslib_t* anwcslib = anwcs->data;
-			struct wcsprm* wcs = anwcslib->wcs;
-			double* cd = wcs->m_cd;
-			// HACK -- assume "cd" elements are set...
-			return deg2arcsec(sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2])));
-		}
-
-	case ANWCS_TYPE_SIP:
-		return sip_pixel_scale(anwcs->data);
-
-	default:
-		ERROR("Unknown anwcs type %i", anwcs->type);
-		return -1;
-	}
-}
 
 int anwcs_get_radec_center_and_radius(anwcs_t* anwcs,
 									  double* p_ra, double* p_dec, double* p_radius) {

@@ -173,7 +173,7 @@ int fits_write_i16_image(const int16_t* img, int nx, int ny, const char* fn) {
 }
 
 static void errfunc(char* errstr) {
-    report_error("qfits", -1, "%s", errstr);
+    report_error("qfits", -1, __func__, "%s", errstr);
 }
 
 int fits_write_header_and_image(const qfits_header* hdr, const qfitsdumper* qd, int W) {
