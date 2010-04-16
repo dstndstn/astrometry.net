@@ -1434,7 +1434,8 @@ static int write_corr_file(blind_t* bp) {
 		fitstable_add_write_column(tab, dubl, "index_dec", "degrees");
 		fitstable_add_write_column(tab, itype, "index_id", "none");
 		fitstable_add_write_column(tab, itype, "field_id", "none");
-
+		fitstable_add_write_column(tab, dubl, "match_weight", "none");
+		
 		if (mo->tagalong) {
 			for (j=0; j<bl_size(mo->tagalong); j++) {
 				tagalong_t* tag = bl_access(mo->tagalong, j);
@@ -1470,6 +1471,7 @@ static int write_corr_file(blind_t* bp) {
 		for (j=0; j<mo->nfield; j++) {
 			double fx,fy,fra,fdec;
 			double rx,ry,rra,rdec;
+			double weight;
 			int ti, ri;
 			ri = mo->theta[j];
 			if (ri < 0)
@@ -1483,7 +1485,8 @@ static int write_corr_file(blind_t* bp) {
 			fy = mo->fieldxy[2*ti+1];
 			sip_pixelxy2radec(wcs, fx, fy, &fra, &fdec);
 			logdebug("Writing field xy %.1f,%.1f, radec %.2f,%.2f; index xy %.1f,%.1f, radec %.2f,%.2f\n", fx, fy, fra, fdec, rx, ry, rra, rdec);
-			if (fitstable_write_row(tab, &fx, &fy, &fra, &fdec, &rx, &ry, &rra, &rdec, &ri, &ti)) {
+			weight = verify_logodds_to_weight(mo->matchodds[j]);
+			if (fitstable_write_row(tab, &fx, &fy, &fra, &fdec, &rx, &ry, &rra, &rdec, &ri, &ti, &weight)) {
 				ERROR("Failed to write coordinates to correspondences file \"%s\"", bp->corr_fname);
 				return -1;
 			}
@@ -1518,13 +1521,6 @@ static int write_corr_file(blind_t* bp) {
 											   (char*)tag->data + k*tag->itemsize, 0);
 					row++;
 				}
-				/*
-				 if (fitstable_write_one_column(tab, tag->colnum, 0, mo->nfield,
-				 tag->data, tag->itemsize)) {
-				 ERROR("Failed to write tag-along column \"%s\" to correspondences file", tag->name);
-				 return -1;
-				 }
-				 */
 			}
 		}
 		
