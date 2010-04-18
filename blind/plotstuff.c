@@ -476,7 +476,7 @@ int plotstuff_read_and_run_command(plot_args_t* pargs, FILE* f) {
 	char* cmd;
 	int rtn;
 	cmd = read_string_terminated(stdin, "\n\r\0", 3, FALSE);
-	logmsg("command: \"%s\"\n", cmd);
+	logverb("command: \"%s\"\n", cmd);
 	if (!cmd || feof(f)) {
 		free(cmd);
 		return -1;

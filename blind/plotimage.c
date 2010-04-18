@@ -217,6 +217,7 @@ static unsigned char* read_fits_image(plotimage_t* args) {
 	} else {
 		offset = args->image_low;
 		scale = 255.0 / (args->image_high - args->image_low);
+		logmsg("Image range %g, %g --> offset %g, scale %g\n", args->image_low, args->image_high, offset, scale);
 	}
 
 	img = malloc(args->W * args->H * 4);
@@ -312,6 +313,19 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 	} else if (streq(cmd, "image_setsize")) {
 		if (plot_image_setsize(pargs, args))
 			return -1;
+	} else if (streq(cmd, "image_wcslib")) {
+		// force reading WCS using WCSLIB.
+		if (args->wcs)
+			anwcs_free(args->wcs);
+		args->wcs = anwcs_open_wcslib(cmdargs, 0);
+		if (!args->wcs) {
+			ERROR("Failed to read WCS file \"%s\"", cmdargs);
+			return -1;
+		}
+		if (log_get_level() >= LOG_VERB) {
+			logverb("Set image WCS to:");
+			anwcs_print(args->wcs, stdout);
+		}
 	} else if (streq(cmd, "image_wcs")) {
 		if (args->wcs)
 			anwcs_free(args->wcs);
@@ -323,13 +337,19 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 				ERROR("Failed to read WCS file \"%s\"", cmdargs);
 				return -1;
 			}
+			if (log_get_level() >= LOG_VERB) {
+				logverb("Set image WCS to:");
+				anwcs_print(args->wcs, stdout);
+			}
 		}
 	} else if (streq(cmd, "image_grid")) {
 		args->gridsize = atof(cmdargs);
 	} else if (streq(cmd, "image_low")) {
 		args->image_low = atof(cmdargs);
+		logmsg("set image_low %g\n", args->image_low);
 	} else if (streq(cmd, "image_high")) {
 		args->image_high = atof(cmdargs);
+		logmsg("set image_high %g\n", args->image_high);
 	} else {
 		ERROR("Did not understand command \"%s\"", cmd);
 		return -1;

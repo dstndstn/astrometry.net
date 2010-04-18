@@ -44,13 +44,16 @@ void* plot_outline_init(plot_args_t* plotargs) {
 struct walk_token {
 	cairo_t* cairo;
 	bool first;
-	sip_t* wcs;
+	//sip_t* wcs;
+	//anwcs_t* plotwcs;
+	plot_args_t* pargs;
 };
 
 static void walk_callback(const sip_t* wcs, double x, double y, double ra, double dec, void* token) {
 	struct walk_token* walk = token;
 	bool ok;
-	ok = sip_radec2pixelxy(walk->wcs, ra, dec, &x, &y);
+	//ok = sip_radec2pixelxy(walk->wcs, ra, dec, &x, &y);
+	ok = plotstuff_radec2xy(walk->pargs, ra, dec, &x, &y);
 	if (!ok)
 		return;
 	if (walk->first) {
@@ -70,7 +73,8 @@ int plot_outline_plot(const char* command,
 
 	token.first = TRUE;
 	token.cairo = cairo;
-	token.wcs = pargs->wcs;
+	//token.plotwcs = pargs->wcs;
+	token.pargs = pargs;
 	sip_walk_image_boundary(args->wcs, args->stepsize, walk_callback, &token);
 	cairo_stroke(cairo);
 
