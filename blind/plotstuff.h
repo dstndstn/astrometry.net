@@ -1,3 +1,21 @@
+/*
+ This file is part of the Astrometry.net suite.
+ Copyright 2009, 2010 Dustin Lang.
+
+ The Astrometry.net suite is free software; you can redistribute
+ it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, version 2.
+
+ The Astrometry.net suite is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with the Astrometry.net suite ; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ */
+
 #ifndef PLOTSTUFF_H
 #define PLOTSTUFF_H
 
@@ -27,11 +45,8 @@ struct plot_args {
 	cairo_t* cairo;
 	cairo_surface_t* target;
 
-	//bl* plotters;
-
 	cairo_operator_t op;
 
-	//sip_t* wcs;
 	anwcs_t* wcs;
 
 	int W, H;
@@ -40,7 +55,19 @@ struct plot_args {
 	int marker;
 	float markersize;
 
+	float bg_rgba[4];
+	float bg_lw;
+
 	float fontsize;
+
+    double label_offset_x;
+    double label_offset_y;
+
+	int text_bg_layer;
+	int text_fg_layer;
+	int marker_fg_layer;
+
+	bl* cairocmds;
 
 	// step size in pixels for drawing curved lines in RA,Dec
 	float linestep;
@@ -98,6 +125,14 @@ plotstuff_run_commandf(plot_args_t* pargs, const char* fmt, ...);
 int plotstuff_output(plot_args_t* pargs);
 void plotstuff_free(plot_args_t* pargs);
 
+
+void plotstuff_stack_marker(plot_args_t* pargs, double x, double y);
+void plotstuff_stack_arrow(plot_args_t* pargs, double x, double y,
+						   double x2, double y2);
+void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
+						  const char* txt, double px, double py);
+int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo);
+
 /// WCS-related stuff:
 
 // in arcsec/pixel
@@ -119,10 +154,6 @@ bool plotstuff_radec_is_inside_image(plot_args_t* pargs, double ra, double dec);
 
 int plot_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2);
 int plot_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra2);
-
-
-
-
 
 int plotstuff_append_doubles(const char* str, dl* lst);
 

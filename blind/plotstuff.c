@@ -50,6 +50,33 @@
 #include "errors.h"
 #include "anwcs.h"
 
+enum cmdtype {
+	CIRCLE,
+	TEXT,
+	LINE,
+	RECTANGLE,
+	ARROW,
+	MARKER,
+};
+typedef enum cmdtype cmdtype;
+
+struct cairocmd {
+	cmdtype type;
+	int layer;
+	double x, y;
+	float rgba[4];
+	// CIRCLE
+	double radius;
+	// TEXT
+	char* text;
+	// LINE / RECTANGLE / ARROW
+	double x2, y2;
+	// MARKER
+	int marker;
+	double markersize;
+};
+typedef struct cairocmd cairocmd_t;
+
 int plotstuff_get_radec_center_and_radius(plot_args_t* pargs,
 										  double* p_ra, double* p_dec, double* p_radius) {
 	if (!pargs->wcs)
@@ -145,16 +172,21 @@ void plotstuff_builtin_apply(cairo_t* cairo, plot_args_t* args) {
 }
 
 static void* plot_builtin_init(plot_args_t* args) {
-	args->rgba[0] = 0;
-	args->rgba[1] = 0;
-	args->rgba[2] = 0;
-	args->rgba[3] = 1;
+	parse_color_rgba("gray", args->rgba);
+	parse_color_rgba("black", args->bg_rgba);
+	args->text_bg_layer = 2;
+	args->text_fg_layer = 3;
+	args->marker_fg_layer = 3;
+	args->bg_lw = 3.0;
 	args->lw = 1.0;
 	args->marker = CAIROUTIL_MARKER_CIRCLE;
 	args->markersize = 5.0;
 	args->linestep = 10;
 	args->op = CAIRO_OPERATOR_OVER;
 	args->fontsize = 20;
+	args->cairocmds = bl_new(256, sizeof(cairocmd_t));
+	args->label_offset_x = 15.0;
+	args->label_offset_y = 0.0;
 	return NULL;
 }
 
@@ -193,6 +225,11 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 			ERROR("Failed to parse plot_color: \"%s\"", cmdargs);
 			return -1;
 		}
+	} else if (streq(cmd, "plot_bgcolor")) {
+		if (parse_color_rgba(cmdargs, pargs->bg_rgba)) {
+			ERROR("Failed to parse plot_bgcolor: \"%s\"", cmdargs);
+			return -1;
+		}
 	} else if (streq(cmd, "plot_fontsize")) {
 		pargs->fontsize = atof(cmdargs);
 	} else if (streq(cmd, "plot_alpha")) {
@@ -209,6 +246,8 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 		}
 	} else if (streq(cmd, "plot_lw")) {
 		pargs->lw = atof(cmdargs);
+	} else if (streq(cmd, "plot_bglw")) {
+		pargs->bg_lw = atof(cmdargs);
 	} else if (streq(cmd, "plot_marker")) {
 		if (plotstuff_set_marker(pargs, cmdargs)) {
 			return -1;
@@ -265,8 +304,165 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 	return 0;
 }
 
+static void add_cmd(plot_args_t* pargs, cairocmd_t* cmd) {
+	bl_append(pargs->cairocmds, cmd);
+}
+
+void plotstuff_stack_marker(plot_args_t* pargs, double x, double y) {
+	cairocmd_t cmd;
+	// BG marker?
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.layer = pargs->marker_fg_layer;
+	cmd.type = MARKER;
+	cmd.x = x;
+	cmd.y = y;
+	cmd.marker = pargs->marker;
+	cmd.markersize = pargs->markersize;
+	add_cmd(pargs, &cmd);
+}
+
+void plotstuff_stack_arrow(plot_args_t* pargs, double x, double y,
+						   double x2, double y2) {
+	cairocmd_t cmd;
+	// BG?
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.layer = pargs->marker_fg_layer;
+	cmd.type = ARROW;
+	cmd.x = x;
+	cmd.y = y;
+	cmd.x2 = x2;
+	cmd.y2 = y2;
+	add_cmd(pargs, &cmd);
+}
+
+void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
+						  const char* txt, double px, double py) {
+    cairo_text_extents_t textents;
+    double l,r,t,b;
+    double margin = 2.0;
+    int dx, dy;
+	cairocmd_t cmd;
+	memset(&cmd, 0, sizeof(cmd));
+
+	px += pargs->label_offset_x;
+	py += pargs->label_offset_y;
+
+    cairo_text_extents(cairo, txt, &textents);
+    l = px + textents.x_bearing;
+    r = l + textents.width + textents.x_bearing;
+    t = py + textents.y_bearing;
+    b = t + textents.height;
+    l -= margin;
+    t -= margin;
+    r += margin + 1;
+    b += margin + 1;
+
+    // move text away from the edges of the image.
+    if (l < 0) {
+        px += -l;
+        l = 0;
+    }
+    if (t < 0) {
+        py += -t;
+        t = 0;
+    }
+    if (r > pargs->W) {
+        px -= (r - pargs->W);
+        r = pargs->W;
+    }
+    if (b > pargs->H) {
+        py -= (b - pargs->H);
+        b = pargs->H;
+    }
+
+	cmd.type = TEXT;
+	cmd.layer = pargs->text_bg_layer;
+	memcpy(cmd.rgba, pargs->bg_rgba, sizeof(cmd.rgba));
+    for (dy=-1; dy<=1; dy++) {
+        for (dx=-1; dx<=1; dx++) {
+			cmd.text = strdup(txt);
+			cmd.x = px + dx;
+			cmd.y = py + dy;
+			add_cmd(pargs, &cmd);
+		}
+	}
+
+	cmd.layer = pargs->text_fg_layer;
+	memcpy(cmd.rgba, pargs->rgba, sizeof(cmd.rgba));
+	cmd.text = strdup(txt);
+    cmd.x = px;
+	cmd.y = py;
+	add_cmd(pargs, &cmd);
+}
+
+int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
+	int i;
+	int layer;
+	bool morelayers;
+
+	morelayers = TRUE;
+	for (layer=0;; layer++) {
+		if (!morelayers)
+			break;
+		morelayers = FALSE;
+		for (i=0; i<bl_size(pargs->cairocmds); i++) {
+			cairocmd_t* cmd = bl_access(pargs->cairocmds, i);
+			if (cmd->layer > layer)
+				morelayers = TRUE;
+			if (cmd->layer != layer)
+				continue;
+			cairo_set_rgba(cairo, cmd->rgba);
+			switch (cmd->type) {
+			case CIRCLE:
+				cairo_move_to(cairo, cmd->x + cmd->radius, cmd->y);
+				cairo_arc(cairo, cmd->x, cmd->y, cmd->radius, 0, 2*M_PI);
+				break;
+			case MARKER:
+				cairo_move_to(cairo, cmd->x, cmd->y);
+				cairoutils_draw_marker(cairo, cmd->marker, cmd->x, cmd->y, cmd->markersize);
+				break;
+			case TEXT:
+				cairo_move_to(cairo, cmd->x, cmd->y);
+				cairo_show_text(cairo, cmd->text);
+				break;
+			case LINE:
+			case ARROW:
+				cairo_move_to(cairo, cmd->x, cmd->y);
+				cairo_line_to(cairo, cmd->x2, cmd->y2);
+				{
+					double dx = cmd->x - cmd->x2;
+					double dy = cmd->y - cmd->y2;
+					double angle = atan2(dy, dx);
+					double dang = 30. * M_PI/180.0;
+					double arrowlen = 20;
+					cairo_line_to(cairo,
+								  cmd->x2 + cos(angle+dang)*arrowlen,
+								  cmd->y2 + sin(angle+dang)*arrowlen);
+					cairo_move_to(cairo, cmd->x2, cmd->y2);
+					cairo_line_to(cairo,
+								  cmd->x2 + cos(angle-dang)*arrowlen,
+								  cmd->y2 + sin(angle-dang)*arrowlen);
+				}
+				break;
+			case RECTANGLE:
+				ERROR("Unimplemented!");
+				return -1;
+			}
+			cairo_stroke(cairo);
+		}
+	}
+	for (i=0; i<bl_size(pargs->cairocmds); i++) {
+		cairocmd_t* cmd = bl_access(pargs->cairocmds, i);
+		free(cmd->text);
+	}
+	bl_remove_all(pargs->cairocmds);
+
+	return 0;
+}
+
 static void plot_builtin_free(plot_args_t* pargs, void* baton) {
 	free(pargs->wcs);
+	bl_free(pargs->cairocmds);
 }
 
 static const plotter_t builtin = { "plot", plot_builtin_init, plot_builtin_init2, plot_builtin_command, NULL, plot_builtin_free, NULL };

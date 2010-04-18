@@ -59,6 +59,7 @@ static mycolor mycolors[] = {
     { "brightred",    1.0, 0.0, 0.2 },
     { "skyblue",      0.0, 0.5, 1.0 },
     { "orange",       1.0, 0.5, 0.0 },
+    { "gray",         0.5, 0.5, 0.5 },
 };
 static const int nmycolors = sizeof(mycolors)/sizeof(mycolor);
 

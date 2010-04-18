@@ -142,34 +142,15 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 		}
 	}
 
-	if (args->bgrgba[3] != 0.0) {
-		// Plot background.
-		cairo_save(cairo);
-		if (args->bglw)
-			cairo_set_line_width(cairo, args->bglw);
-		else
-			cairo_set_line_width(cairo, pargs->lw + 2.0);
-		cairo_set_rgba(cairo, args->bgrgba);
-		for (i=args->firstobj; i<Nxy; i++) {
-			double x = starxy_getx(xy, i) + 0.5;
-			double y = starxy_gety(xy, i) + 0.5;
-			cairoutils_draw_marker(cairo, pargs->marker, x, y, pargs->markersize);
-			cairo_stroke(cairo);
-		}
-		cairo_restore(cairo);
-	}
-
 	// Plot markers.
-	cairo_set_rgba(cairo, pargs->rgba);
 	for (i=args->firstobj; i<Nxy; i++) {
 		double x = starxy_getx(xy, i) + 0.5;
 		double y = starxy_gety(xy, i) + 0.5;
-		cairoutils_draw_marker(cairo, pargs->marker, x, y, pargs->markersize);
-		cairo_stroke(cairo);
+		plotstuff_stack_marker(pargs, x, y);
 	}
+	plotstuff_plot_stack(pargs, cairo);
 
 	starxy_free(freexy);
-		
 	return 0;
 }
 
