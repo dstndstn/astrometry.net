@@ -1,7 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -137,6 +137,8 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 							  &ra, &dec);
 			if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
 				continue;
+			logverb("  xy (%g,%g) -> RA,Dec (%g,%g) -> plot xy (%g,%g)\n",
+					starxy_getx(xy,i), starxy_gety(xy,i), ra, dec, x, y);
 			starxy_setx(xy, i, x-1);
 			starxy_sety(xy, i, y-1);
 		}

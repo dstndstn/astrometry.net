@@ -29,6 +29,8 @@
 
  plot_color (<r> <g> <b> <a> or color name)
  plot_lw <linewidth>
+ plot_bgcolor (<r> <g> <b> <a> or color name)
+ plot_bglw <linewidth>
  plot_marker <marker-shape>
  plot_markersize <radius>
  plot_wcs <filename>
@@ -53,6 +55,7 @@
  the "lower-left" pixel is at coordinate (1,1).
 
  xy_file <xylist>
+ xy_wcs <wcs-file>
  xy_ext <fits-extension>
  xy_xcol <column-name>
  xy_ycol <column-name>

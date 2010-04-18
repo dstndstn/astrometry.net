@@ -308,16 +308,21 @@ static void add_cmd(plot_args_t* pargs, cairocmd_t* cmd) {
 	bl_append(pargs->cairocmds, cmd);
 }
 
+static void set_cmd_args(plot_args_t* pargs, cairocmd_t* cmd) {
+	memset(cmd, 0, sizeof(cairocmd_t));
+	cmd->marker = pargs->marker;
+	cmd->markersize = pargs->markersize;
+	memcpy(cmd->rgba, pargs->rgba, sizeof(cmd->rgba));
+}
+
 void plotstuff_stack_marker(plot_args_t* pargs, double x, double y) {
 	cairocmd_t cmd;
+	set_cmd_args(pargs, &cmd);
 	// BG marker?
-	memset(&cmd, 0, sizeof(cmd));
 	cmd.layer = pargs->marker_fg_layer;
 	cmd.type = MARKER;
 	cmd.x = x;
 	cmd.y = y;
-	cmd.marker = pargs->marker;
-	cmd.markersize = pargs->markersize;
 	add_cmd(pargs, &cmd);
 }
 
@@ -325,7 +330,7 @@ void plotstuff_stack_arrow(plot_args_t* pargs, double x, double y,
 						   double x2, double y2) {
 	cairocmd_t cmd;
 	// BG?
-	memset(&cmd, 0, sizeof(cmd));
+	set_cmd_args(pargs, &cmd);
 	cmd.layer = pargs->marker_fg_layer;
 	cmd.type = ARROW;
 	cmd.x = x;
@@ -342,7 +347,8 @@ void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
     double margin = 2.0;
     int dx, dy;
 	cairocmd_t cmd;
-	memset(&cmd, 0, sizeof(cmd));
+
+	set_cmd_args(pargs, &cmd);
 
 	px += pargs->label_offset_x;
 	py += pargs->label_offset_y;
@@ -400,6 +406,7 @@ int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
 	int layer;
 	bool morelayers;
 
+	logmsg("Plotting %i stacked plot commands.\n", bl_size(pargs->cairocmds));
 	morelayers = TRUE;
 	for (layer=0;; layer++) {
 		if (!morelayers)

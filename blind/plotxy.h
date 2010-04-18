@@ -12,8 +12,6 @@ struct plotxy_args {
 	int firstobj;
 	int nobjs;
 	double scale;
-	double bglw;
-	float bgrgba[4];
 
 	// coordinates added with xy_val <x> <y>
 	dl* xyvals;
