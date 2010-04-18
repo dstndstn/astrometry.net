@@ -98,7 +98,7 @@ int main(int argc, char *args[]) {
 	assert(img);
 
 	plotstuff_set_color(&pargs, "white");
-	plot_xy_set_bg(xy, "black");
+	plotstuff_set_bgcolor(&pargs, "black");
 	
 	img->format = PLOTSTUFF_FORMAT_PPM;
 
@@ -111,7 +111,7 @@ int main(int argc, char *args[]) {
 			plotstuff_set_color(&pargs, optarg);
             break;
         case 'b':
-			plot_xy_set_bg(xy, optarg);
+			plotstuff_set_bgcolor(&pargs, "optarg");
             break;
         case 'o':
             pargs.outfn = optarg;

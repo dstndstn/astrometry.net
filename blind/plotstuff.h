@@ -107,6 +107,7 @@ int plotstuff_run_command(plot_args_t* pargs, const char* cmd);
 void* plotstuff_get_config(plot_args_t* pargs, const char* name);
 
 int plotstuff_set_color(plot_args_t* pargs, const char* name);
+int plotstuff_set_bgcolor(plot_args_t* pargs, const char* name);
 
 int plotstuff_set_rgba(plot_args_t* pargs, const float* rgba);
 

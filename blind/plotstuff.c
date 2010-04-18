@@ -487,6 +487,10 @@ int plotstuff_set_color(plot_args_t* pargs, const char* name) {
 	return parse_color_rgba(name, pargs->rgba);
 }
 
+int plotstuff_set_bgcolor(plot_args_t* pargs, const char* name) {
+	return parse_color_rgba(name, pargs->bg_rgba);
+}
+
 int plotstuff_set_rgba(plot_args_t* pargs, const float* rgba) {
 	pargs->rgba[0] = rgba[0];
 	pargs->rgba[1] = rgba[1];

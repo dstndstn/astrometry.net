@@ -154,10 +154,6 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	return 0;
 }
 
-int plot_xy_set_bg(plotxy_t* args, const char* color) {
-	return parse_color_rgba(color, args->bgrgba);
-}
-
 void plot_xy_set_xcol(plotxy_t* args, const char* col) {
 	free(args->xcol);
 	args->xcol = strdup_safe(col);
@@ -215,10 +211,6 @@ int plot_xy_command(const char* cmd, const char* cmdargs,
 		args->nobjs = atoi(cmdargs);
 	} else if (streq(cmd, "xy_scale")) {
 		args->scale = atof(cmdargs);
-	} else if (streq(cmd, "xy_bgcolor")) {
-		plot_xy_set_bg(args, cmdargs);
-	} else if (streq(cmd, "xy_bglw")) {
-		args->bglw = atof(cmdargs);
 	} else if (streq(cmd, "xy_wcs")) {
 		return plot_xy_set_wcs_filename(args, cmdargs);
 	} else if (streq(cmd, "xy_vals")) {
