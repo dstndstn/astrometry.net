@@ -67,8 +67,18 @@
  xy_firstobj <obj-num>
  xy_nobjs <n>
  xy_scale <factor>
- xy_bgcolor <r> <g> <b> <a>
+ xy_vals <x> <y>  -- coordinates to plot
  xy
+
+ RA,Dec lists:
+
+ radec_file <filename (FITS binary table)>
+ radec_ext <FITS extension, default 1>
+ radec_racol <FITS column name, default "RA">
+ radec_deccol <FITS column name, default "DEC">
+ radec_firstobj <int, default 0>
+ radec_nobjs <int, default no limit>
+ radec_vals <ra> <dec>   -- coordinates to plot
 
  Annotations:
 
@@ -95,6 +105,13 @@
  grid_ralabelstep <deg>
  grid_declabelstep <deg>
  grid
+
+ Astrometry.net index files:
+
+ index_file <filename>
+ index_draw_stars <0/1>   -- draw stars?
+ index_draw_quads <0/1>   -- draw quads?
+ index
 
  */
 

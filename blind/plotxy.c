@@ -118,10 +118,10 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 		double ra, dec, x, y;
 		assert(pargs->wcs);
 		for (i=0; i<Nxy; i++) {
-			sip_pixelxy2radec(args->wcs,
-							  starxy_getx(xy, i), starxy_gety(xy, i),
-							  &ra, &dec);
-			if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
+			anwcs_pixelxy2radec(args->wcs,
+								starxy_getx(xy, i), starxy_gety(xy, i),
+								&ra, &dec);
+			if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y))
 				continue;
 			logverb("  xy (%g,%g) -> RA,Dec (%g,%g) -> plot xy (%g,%g)\n",
 					starxy_getx(xy,i), starxy_gety(xy,i), ra, dec, x, y);
@@ -175,8 +175,8 @@ void plot_xy_set_filename(plotxy_t* args, const char* fn) {
 }
 
 int plot_xy_set_wcs_filename(plotxy_t* args, const char* fn) {
-	free(args->wcs);
-	args->wcs = sip_read_tan_or_sip_header_file_ext(fn, 0, NULL, FALSE);
+	anwcs_free(args->wcs);
+	args->wcs = anwcs_open(fn, 0);
 	if (!args->wcs) {
 		ERROR("Failed to read WCS file \"%s\"", fn);
 		return -1;
@@ -230,7 +230,7 @@ int plot_xy_command(const char* cmd, const char* cmdargs,
 void plot_xy_free(plot_args_t* plotargs, void* baton) {
 	plotxy_t* args = (plotxy_t*)baton;
 	free(args->xyvals);
-	free(args->wcs);
+	anwcs_free(args->wcs);
 	free(args->xcol);
 	free(args->ycol);
 	free(args->fn);

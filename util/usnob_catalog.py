@@ -24,7 +24,7 @@ def get_usnob_sources(ra, dec, radius=1, basefn=None):
 		usnobfn = usnob_pat % hp
 		print 'USNOB filename:', usnobfn
 		U = table_fields(usnobfn)
-		I = logical_and(I, degrees_between(ra, dec, U.ra, U.dec) < radius)
+		I = (degrees_between(ra, dec, U.ra, U.dec) < radius)
 		print '%i USNOB stars within range.' % sum(I)
 		U = U[I]
 		if allU is None:
@@ -58,6 +58,34 @@ if __name__ == '__main__':
 		opts[k] = getattr(opt, k)
 
 	X = get_usnob_sources(ra, dec, **opts)
-	print 'Got %i USNO-B sources.  Writing to', outfn
+	print 'Got %i USNO-B sources.' % len(X)
+
+	print 'Applying cuts...'
+	# USNO-B sources (not Tycho-2)
+	I = (X.num_detections >= 2)
+	# no diffraction spikes
+	I = logical_and(I, logical_not(X.flags[:,0]))
+	X = X[I]
+	print '%i pass cuts' % len(X)
+
+	#from pylab import *
+	#clf()
+	#plot(X.ra, X.dec, 'r.')
+	#savefig('radec.png')
+
+	# Compute average R and B mags.
+	epoch1 = (X.field_1 > 0)
+	epoch2 = (X.field_3 > 0)
+	nmag = where(epoch1, 1, 0) + where(epoch2, 1, 0)
+	avgmag = where(epoch1, X.magnitude_1, 0) + where(epoch2, X.magnitude_3, 0)
+	X.r_mag = avgmag
+	# B
+	epoch1 = (X.field_0 > 0)
+	epoch2 = (X.field_2 > 0)
+	nmag = where(epoch1, 1, 0) + where(epoch2, 1, 0)
+	avgmag = where(epoch1, X.magnitude_0, 0) + where(epoch2, X.magnitude_2, 0)
+	X.b_mag = avgmag
+
+	print 'Writing to', outfn
 	X.write_to(outfn)
 	

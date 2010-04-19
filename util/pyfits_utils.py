@@ -7,7 +7,7 @@ class tabledata(object):
 		self._length = 0
 	def __setattr__(self, name, val):
 		object.__setattr__(self, name, val)
-	def set(self, name,val):
+	def set(self, name, val):
 		self.__setattr__(name, val)
 	def getcolumn(self, name):
 		return self.__dict__[name.lower()]
@@ -33,7 +33,9 @@ class tabledata(object):
 		for name,val in self.__dict__.items():
 			if name == '_length':
 				continue
-			self.set(name, numpy.append(val[I], X.getcolumn(name)))
+			newX = numpy.append(val[I], X.getcolumn(name))
+			self.set(name, newX)
+			self._length = len(newX)
 
 	def write_to(self, fn):
 		pyfits.new_table(self.to_fits_columns()).writeto(fn, clobber=True)
@@ -46,15 +48,37 @@ class tabledata(object):
 		fmap = {numpy.float64:'D',
 				numpy.float32:'E',
 				numpy.int32:'J',
+				numpy.uint8:'B', #
+				numpy.int16:'I',
+				numpy.bool:'X',
+				numpy.bool_:'X',
 				}
 				
 		for name,val in self.__dict__.items():
 			if name == '_length':
 				continue
 			# FIXME -- format should match that of the 'val'.
+			#print
 			#print 'col', name, 'type', val.dtype, 'descr', val.dtype.descr
+			#print repr(val.dtype)
+			#print val.dtype.type
+			#print repr(val.dtype.type)
 			fitstype = fmap.get(val.dtype.type, 'D')
-			cols.append(pyfits.Column(name=name, array=val, format=fitstype))
+
+			if fitstype == 'X':
+				# pack bits...
+				pass
+
+			if len(val.shape) > 1:
+				fitstype = '%i%s' % (val.shape[1], fitstype)
+			else:
+				fitstype = '1'+fitstype
+
+			col = pyfits.Column(name=name, array=val, format=fitstype)
+			cols.append(col)
+			#print 'fits type', fitstype, 'column', col
+			#print repr(col)
+			#print 'col', name, ': data length:', val.shape
 		return cols
 		
 

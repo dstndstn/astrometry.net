@@ -1,0 +1,168 @@
+/*
+  This file is part of the Astrometry.net suite.
+  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2009, 2010 Dustin Lang.
+
+  The Astrometry.net suite is free software; you can redistribute
+  it and/or modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation, version 2.
+
+  The Astrometry.net suite is distributed in the hope that it will be
+  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with the Astrometry.net suite ; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+*/
+#include <sys/param.h>
+
+#include "plotradec.h"
+#include "rdlist.h"
+#include "cairoutils.h"
+#include "log.h"
+#include "errors.h"
+#include "sip_qfits.h"
+
+const plotter_t plotter_radec = {
+	"radec", 
+	plot_radec_init,
+	NULL,
+	plot_radec_command,
+	plot_radec_plot,
+	plot_radec_free,
+	NULL
+};
+
+void* plot_radec_init(plot_args_t* plotargs) {
+	plotradec_t* args = calloc(1, sizeof(plotradec_t));
+	args->ext = 1;
+	args->radecvals = dl_new(32);
+	return args;
+}
+
+int plot_radec_plot(const char* command, cairo_t* cairo,
+				 plot_args_t* pargs, void* baton) {
+	plotradec_t* args = (plotradec_t*)baton;
+	// Plot it!
+	rdlist_t* rdls;
+	rd_t myrd;
+	rd_t* rd = NULL;
+	rd_t* freerd = NULL;
+	int Nrd;
+	int i;
+
+	if (!pargs->wcs) {
+		ERROR("plotting radec but not plot_wcs has been set.");
+		return -1;
+	}
+
+	if (args->fn && dl_size(args->radecvals)) {
+		ERROR("Can only plot one of rdlist filename and radec_vals");
+		return -1;
+	}
+	if (!args->fn && !dl_size(args->radecvals)) {
+		ERROR("Neither rdlist filename nor radec_vals given!");
+		return -1;
+	}
+
+	if (args->fn) {
+		// Open rdlist.
+		rdls = rdlist_open(args->fn);
+		if (!rdls) {
+			ERROR("Failed to open rdlist from file \"%s\"", args->fn);
+			return -1;
+		}
+		if (args->racol)
+			rdlist_set_raname(rdls, args->racol);
+		if (args->deccol)
+			rdlist_set_decname(rdls, args->deccol);
+
+		// Find number of entries in rdlist.
+		rd = rdlist_read_field_num(rdls, args->ext, NULL);
+		freerd = rd;
+		rdlist_close(rdls);
+		if (!rd) {
+			ERROR("Failed to read FITS extension %i from file %s.\n", args->ext, args->fn);
+			return -1;
+		}
+		Nrd = rd_n(rd);
+		// If N is specified, apply it as a max.
+		if (args->nobjs)
+			Nrd = MIN(Nrd, args->nobjs);
+	} else {
+		assert(dl_size(args->radecvals));
+		rd_from_dl(&myrd, args->radecvals);
+		rd = &myrd;
+		Nrd = rd_n(rd);
+	}
+
+	// Plot markers.
+	for (i=args->firstobj; i<Nrd; i++) {
+		double x,y;
+		double ra = rd_getra(rd, i);
+		double dec = rd_getdec(rd, i);
+		if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y))
+			continue;
+		plotstuff_stack_marker(pargs, x, y);
+	}
+	plotstuff_plot_stack(pargs, cairo);
+
+	rd_free(freerd);
+	return 0;
+}
+
+void plot_radec_set_racol(plotradec_t* args, const char* col) {
+	free(args->racol);
+	args->racol = strdup_safe(col);
+}
+
+void plot_radec_set_deccol(plotradec_t* args, const char* col) {
+	free(args->deccol);
+	args->deccol = strdup_safe(col);
+}
+
+void plot_radec_set_filename(plotradec_t* args, const char* fn) {
+	free(args->fn);
+	args->fn = strdup_safe(fn);
+}
+
+void plot_radec_vals(plotradec_t* args, double ra, double dec) {
+	dl_append(args->radecvals, ra);
+	dl_append(args->radecvals, dec);
+}
+
+int plot_radec_command(const char* cmd, const char* cmdargs,
+					plot_args_t* plotargs, void* baton) {
+	plotradec_t* args = (plotradec_t*)baton;
+	if (streq(cmd, "radec_file")) {
+		plot_radec_set_filename(args, cmdargs);
+	} else if (streq(cmd, "radec_ext")) {
+		args->ext = atoi(cmdargs);
+	} else if (streq(cmd, "radec_racol")) {
+		plot_radec_set_racol(args, cmdargs);
+	} else if (streq(cmd, "radec_deccol")) {
+		plot_radec_set_deccol(args, cmdargs);
+	} else if (streq(cmd, "radec_firstobj")) {
+		args->firstobj = atoi(cmdargs);
+	} else if (streq(cmd, "radec_nobjs")) {
+		args->nobjs = atoi(cmdargs);
+	} else if (streq(cmd, "radec_vals")) {
+		plotstuff_append_doubles(cmdargs, args->radecvals);
+	} else {
+		ERROR("Did not understand command \"%s\"", cmd);
+		return -1;
+	}
+	return 0;
+}
+
+void plot_radec_free(plot_args_t* plotargs, void* baton) {
+	plotradec_t* args = (plotradec_t*)baton;
+	free(args->radecvals);
+	free(args->racol);
+	free(args->deccol);
+	free(args->fn);
+	free(args);
+}
+
