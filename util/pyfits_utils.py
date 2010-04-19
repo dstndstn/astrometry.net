@@ -29,6 +29,12 @@ class tabledata(object):
 				rtn._length = len(val[I])
 		return rtn
 
+	def append(self, X):
+		for name,val in self.__dict__.items():
+			if name == '_length':
+				continue
+			self.set(name, numpy.append(val[I], X.getcolumn(name)))
+
 	def write_to(self, fn):
 		pyfits.new_table(self.to_fits_columns()).writeto(fn, clobber=True)
 	def writeto(self, fn):

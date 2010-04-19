@@ -11,12 +11,13 @@ struct plotimage_args {
 	double alpha;
 
 	anwcs_t* wcs;
-	//sip_t* wcs;
 	double gridsize;
 
 	// For FITS images: values that will be linearly transformed to 0,255.
 	double image_low;
 	double image_high;
+	// image value that will be made transparent.
+	double image_null;
 	// FITS extension
 	int fitsext;
 	// FITS image plane

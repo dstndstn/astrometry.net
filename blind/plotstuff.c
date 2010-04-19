@@ -321,8 +321,9 @@ void plotstuff_stack_marker(plot_args_t* pargs, double x, double y) {
 	// BG marker?
 	cmd.layer = pargs->marker_fg_layer;
 	cmd.type = MARKER;
-	cmd.x = x;
-	cmd.y = y;
+	// FIXME -- handle cairo half-pixel issues here?
+	cmd.x = x + 0.5;
+	cmd.y = y + 0.5;
 	add_cmd(pargs, &cmd);
 }
 
@@ -406,7 +407,7 @@ int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
 	int layer;
 	bool morelayers;
 
-	logmsg("Plotting %i stacked plot commands.\n", bl_size(pargs->cairocmds));
+	logverb("Plotting %i stacked plot commands.\n", bl_size(pargs->cairocmds));
 	morelayers = TRUE;
 	for (layer=0;; layer++) {
 		if (!morelayers)

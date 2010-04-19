@@ -39,6 +39,7 @@ void* plot_image_init(plot_args_t* plotargs) {
 	plotimage_t* args = calloc(1, sizeof(plotimage_t));
 	args->gridsize = 50;
 	args->alpha = 1;
+	args->image_null = 1.0 / 0.0;
 	return args;
 }
 
@@ -69,12 +70,16 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 	cairoutils_rgba_to_argb32(img, W, H);
 	thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
 
+	cairoutils_surface_status_errors(thissurf);
+	cairoutils_cairo_status_errors(cairo);
+
 	if (args->alpha != 1.0) {
 		unsigned char a = MIN(255, MAX(0, args->alpha * 255));
 		for (i=0; i<(W*H); i++)
 			img[i*4+3] = a;
 	}
 	pat = cairo_pattern_create_for_surface(thissurf);
+	cairoutils_cairo_status_errors(cairo);
 
 	assert(args->gridsize >= 1);
 	NX = 1 + ceil(W / args->gridsize);
@@ -96,7 +101,7 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			ok = plotstuff_radec2xy(pargs, ra, dec, &ox, &oy);
 			xs[j*NX+i] = ox-1;
 			ys[j*NX+i] = oy-1;
-			//printf("(%g,%g) -> (%g,%g)\n", x, y, xs[j*NX+i], ys[j*NX+i]);
+			debug("image (%g,%g) -> plot (%g,%g)\n", x, y, xs[j*NX+i], ys[j*NX+i]);
 		}
 	}
 	cairo_save(cairo);
@@ -225,12 +230,21 @@ static unsigned char* read_fits_image(plotimage_t* args) {
 		for (i=0; i<args->W; i++) {
 			int k;
 			unsigned char v;
+			double pval = fimg[j*args->W + i];
 			k = 4*(j*args->W + i);
-			v = MIN(255, MAX(0, (fimg[j*args->W + i] - offset) * scale));
-			img[k+0] = v;
-			img[k+1] = v;
-			img[k+2] = v;
-			img[k+3] = 255;
+			if ((isnan(args->image_null) && isnan(pval)) ||
+				(args->image_null == pval)) {
+				img[k+0] = 0;
+				img[k+1] = 0;
+				img[k+2] = 0;
+				img[k+3] = 0;
+			} else {
+				v = MIN(255, MAX(0, (pval - offset) * scale));
+				img[k+0] = v;
+				img[k+1] = v;
+				img[k+2] = v;
+				img[k+3] = 255;
+			}
 		}
 	}
 	qfitsloader_free_buffers(&ld);
@@ -347,6 +361,8 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 	} else if (streq(cmd, "image_low")) {
 		args->image_low = atof(cmdargs);
 		logmsg("set image_low %g\n", args->image_low);
+	} else if (streq(cmd, "image_null")) {
+		args->image_null = atof(cmdargs);
 	} else if (streq(cmd, "image_high")) {
 		args->image_high = atof(cmdargs);
 		logmsg("set image_high %g\n", args->image_high);

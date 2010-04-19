@@ -113,41 +113,44 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 		Nxy = starxy_n(xy);
 	}
 
-	// Shift and scale xylist entries.
-	if (args->xoff != 0.0 || args->yoff != 0.0) {
-		for (i=0; i<Nxy; i++) {
-			starxy_setx(xy, i, starxy_getx(xy, i) - args->xoff);
-			starxy_sety(xy, i, starxy_gety(xy, i) - args->yoff);
-		}
-	}
-	if (args->scale != 1.0) {
-		for (i=0; i<Nxy; i++) {
-			starxy_setx(xy, i, args->scale * starxy_getx(xy, i));
-			starxy_sety(xy, i, args->scale * starxy_gety(xy, i));
-		}
-	}
-	
 	// Transform through WCSes.
 	if (args->wcs) {
 		double ra, dec, x, y;
 		assert(pargs->wcs);
 		for (i=0; i<Nxy; i++) {
 			sip_pixelxy2radec(args->wcs,
-							  starxy_getx(xy, i)+1, starxy_gety(xy, i)+1,
+							  starxy_getx(xy, i), starxy_gety(xy, i),
 							  &ra, &dec);
 			if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
 				continue;
 			logverb("  xy (%g,%g) -> RA,Dec (%g,%g) -> plot xy (%g,%g)\n",
 					starxy_getx(xy,i), starxy_gety(xy,i), ra, dec, x, y);
-			starxy_setx(xy, i, x-1);
-			starxy_sety(xy, i, y-1);
+
+			// add shift and scale...
+			// FIXME -- not clear that we want to do this here...
+			starxy_setx(xy, i, args->scale * (x - args->xoff));
+			starxy_sety(xy, i, args->scale * (y - args->yoff));
+		}
+	} else {
+		// Shift and scale xylist entries.
+		if (args->xoff != 0.0 || args->yoff != 0.0) {
+			for (i=0; i<Nxy; i++) {
+				starxy_setx(xy, i, starxy_getx(xy, i) - args->xoff);
+				starxy_sety(xy, i, starxy_gety(xy, i) - args->yoff);
+			}
+		}
+		if (args->scale != 1.0) {
+			for (i=0; i<Nxy; i++) {
+				starxy_setx(xy, i, args->scale * starxy_getx(xy, i));
+				starxy_sety(xy, i, args->scale * starxy_gety(xy, i));
+			}
 		}
 	}
 
 	// Plot markers.
 	for (i=args->firstobj; i<Nxy; i++) {
-		double x = starxy_getx(xy, i) + 0.5;
-		double y = starxy_gety(xy, i) + 0.5;
+		double x = starxy_getx(xy, i);
+		double y = starxy_gety(xy, i);
 		plotstuff_stack_marker(pargs, x, y);
 	}
 	plotstuff_plot_stack(pargs, cairo);

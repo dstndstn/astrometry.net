@@ -47,6 +47,9 @@
  image_format <format>
  image_wcs <fn>    -- project the image through its WCS, then back through the plot_wcs.
  image_setsize    -- set plot size to image size.
+ image_low -- FITS pixel value that will be black.
+ image_high -- FITS pixel value that will be black.
+ image_null -- FITS pixel value that will be transparent.
  image
 
  Xy:
