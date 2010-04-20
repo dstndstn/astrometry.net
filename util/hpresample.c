@@ -20,18 +20,9 @@
  hpresample tstimg; hpresample -r tstimg
  open tstimg.png tstimg-hp.png tstimg-unhp.png
 
- cp tstimg-unhp.png tstimg-unhp-1.png
- hpresample -r -s tstimg
- cp tstimg-unhp.png tstimg-unhp-2.png
-
  for x in tstimg.png tstimg-hp.png tstimg-unhp-{1,2}.png; do
  pngtopnm $x | pnmscale 10 | pnmtopng > zoom-$x;
  done
-
-
- cp tstimg.png tstimg-s.png
- cp tstimg.wcs tstimg-s.wcs
- hpresample -s tstimg-s; hpresample -r -s tstimg-s
 
  for x in tstimg*.png; do
  pngtopnm $x | pnmscale 10 | pnmtopng > zoom-$x;
@@ -39,10 +30,6 @@
 
  cp tstimg.wcs tstdot.wcs
  hpresample tstdot; hpresample -r tstdot
- cp tstdot.png tstdot-s.png
- cp tstdot.wcs tstdot-s.wcs
- hpresample -s tstdot-s; hpresample -r -s tstdot-s
-
 
 CFHTLS field:
  D1-25-r exposure, 715809p.fits
