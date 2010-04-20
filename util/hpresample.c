@@ -84,12 +84,11 @@ for z in [1,2,3]:
 
  */
 
-static const char* OPTIONS = "hrsvz:o:";
+static const char* OPTIONS = "hrvz:o:";
 
 void printHelp(char* progname) {
     fprintf(stderr, "%s [options] <base-filename>\n"
             "    [-r]: reverse direction\n"
-            "    [-s]: stretch coords when reverse-sampling\n"
 			"    [-z <zoom>]: oversample healpix grid by this factor x factor (default 1)\n"
 			"    [-o <order>]: Lanczos order (default 2)\n"
             "\n", progname);
@@ -135,7 +134,6 @@ int main(int argc, char** args) {
 	double support;
 
 	bool reverse = FALSE;
-	bool stretch = FALSE;
 
 	double maxD, minD;
 	double amaxD;
@@ -153,9 +151,6 @@ int main(int argc, char** args) {
 			break;
 		case 'r':
 			reverse = TRUE;
-			break;
-		case 's':
-			stretch = TRUE;
 			break;
 		case 'z':
 			zoom = atof(optarg);
@@ -317,18 +312,10 @@ int main(int argc, char** args) {
 
 
 
-
-
-
 	if (reverse) {
 		// for sinc:
-		// FIXME -- inverse?
-		//scale = 1.0 / realzoom;
 		scale = 1.0;
 		support = (double)order * scale;
-
-		if (stretch)
-			support *= (maxD/minD);
 
 		for (i=0; i<outH; i++) {
 			for (j=0; j<outW; j++) {
@@ -364,22 +351,7 @@ int main(int argc, char** args) {
 								// out-of-bounds pixel
 								continue;
 							}
-
-							if (!stretch) {
-								d = hypot(px - ix, py - iy);
-							} else {
-								double t0,t1;
-								double rot;
-								hx = ix-px;
-								hy = iy-py;
-								// ??
-								//rot = -amaxD;
-								rot = amaxD;
-								t0 = maxD * (hx *  cos(rot) + hy * sin(rot));
-								t1 = minD * (hx * -sin(rot) + hy * cos(rot));
-								d = sqrt(t0*t0 + t1*t1);
-								d *= nside;
-							}
+							d = hypot(px - ix, py - iy);
 							L = lanczos(d / scale, order);
 
 							weight += L;
@@ -405,15 +377,8 @@ int main(int argc, char** args) {
 			printf("Row %i of %i\n", i+1, outH);
 		}
 	} else {
-		// for sinc:
-		// FIXME -- inverse?
-		//scale = realzoom;
 		scale = 1.0;
-
 		support = (double)order * scale;
-
-		if (stretch)
-			support *= (maxD/minD);
 
 		for (i=0; i<outH; i++) {
 			hy = miny + i*hpstep;
@@ -433,13 +398,6 @@ int main(int argc, char** args) {
 					double weight;
 					double sum[3];
 					int x0,x1,y0,y1;
-					// FIXME -- sloppy edge-handling.
-					/*
-					 if (px < 0 || px >= W)
-					 continue;
-					 if (py < 0 || py >= H)
-					 continue;
-					 */
 					if (px < -support || px >= W+support)
 						continue;
 					if (py < -support || py >= H+support)
@@ -454,25 +412,7 @@ int main(int argc, char** args) {
 					for (iy=y0; iy<=y1; iy++) {
 						for (ix=x0; ix<=x1; ix++) {
 							double d, L;
-
-							if (!stretch) {
-								d = hypot(px - ix, py - iy);
-							} else {
-								double t0,t1;
-								double rot;
-								double dx, dy;
-								dx = ix-px;
-								dy = iy-py;
-								// ??
-								//rot = M_PI/2.0 + amaxD;
-								rot = amaxD;
-								t0 = 1.0/maxD * (dx *  cos(rot) + dy * sin(rot));
-								t1 = 1.0/minD * (dx * -sin(rot) + dy * cos(rot));
-								d = sqrt(t0*t0 + t1*t1);
-								d /= (double)nside;
-								double d1 = hypot(px - ix, py - iy);
-								printf("old d: %g, new %g\n", d1, d);
-							}
+							d = hypot(px - ix, py - iy);
 							L = lanczos(d / scale, order);
 							if (L == 0)
 								continue;
@@ -516,5 +456,4 @@ int main(int argc, char** args) {
 
 	return 0;
 }
-
 
