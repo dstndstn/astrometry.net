@@ -93,11 +93,20 @@ void printHelp(char* progname) {
 extern char *optarg;
 extern int optind, opterr, optopt;
 
-static void resample_image(const float* img, int W, int H, 
-						   float* outimg, int outW, int outH,
+static double lanczos(double x, int order) {
+	if (x == 0)
+		return 1.0;
+	if (x > order || x < -order)
+		return 0.0;
+	return order * sin(M_PI * x) * sin(M_PI * x / (double)order) / square(M_PI * x);
+}
+
+static void resample_image(const double* img, int W, int H, 
+						   double* outimg, int outW, int outH,
 						   double minx, double miny, double hpstep,
 						   int bighp, const anwcs_t* wcs,
-						   double support, int order, bool set_or_add) {
+						   double support, int order, double scale,
+						   bool set_or_add, double* rowsum) {
 	 int i, j;
 	 bool dosinc = TRUE;
 
@@ -121,8 +130,8 @@ static void resample_image(const float* img, int W, int H,
 			 py -= 1;
 			 debug("pixel (%.1f, %.1f)\n", px, py);
 			 if (dosinc) {
-				 float weight;
-				 float sum;
+				 double weight;
+				 double sum;
 				 int x0,x1,y0,y1;
 				 if (px < -support || px >= W+support)
 					 continue;
@@ -145,6 +154,9 @@ static void resample_image(const float* img, int W, int H,
 						 sum += L * img[iy*W + ix];
 					 }
 				 }
+				 if (rowsum)
+					 rowsum[i*outW + j] = weight;
+
 				 if (weight != 0) {
 					 if (set_or_add)
 						 outimg[i*outW + j] = sum / weight;
@@ -164,9 +176,68 @@ static void resample_image(const float* img, int W, int H,
 					 outimg[i*outW + j] += img[iy*W + ix];
 			 }
 		 }
-		 printf("Row %i of %i\n", i+1, outH);
+		 logverb("Row %i of %i\n", i+1, outH);
 	 }
 }
+
+
+
+
+static void resample_add_transpose(double* img, int W, int H, 
+								   const double* outimg, int outW, int outH,
+								   double minx, double miny, double hpstep,
+								   int bighp, const anwcs_t* wcs,
+								   double support, int order, double scale,
+								   const double* rowsum) {
+	int i, j;
+
+	assert(rowsum);
+	
+	for (i=0; i<outH; i++) {
+		double hx, hy;
+		hy = miny + i*hpstep;
+		for (j=0; j<outW; j++) {
+			double px, py;
+			double xyz[3];
+			int ix, iy;
+			int x0,x1,y0,y1;
+			hx = minx + j*hpstep;
+			debug("healpix (%.3f, %.3f)\n", hx, hy);
+			healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
+			debug("radec (%.3f, %.3f)\n", rad2deg(xy2ra(xyz[0], xyz[1])), rad2deg(z2dec(xyz[2])));
+			if (anwcs_xyz2pixelxy(wcs, xyz, &px, &py)) {
+				ERROR("WCS projects to wrong side of sphere\n");
+				continue;
+			}
+			// MAGIC -1: FITS pixel coords...
+			px -= 1;
+			py -= 1;
+			debug("pixel (%.1f, %.1f)\n", px, py);
+			if (px < -support || px >= W+support)
+				continue;
+			if (py < -support || py >= H+support)
+				continue;
+			x0 = MAX(0, (int)floor(px - support));
+			y0 = MAX(0, (int)floor(py - support));
+			x1 = MIN(W-1, (int) ceil(px + support));
+			y1 = MIN(H-1, (int) ceil(py + support));
+			for (iy=y0; iy<=y1; iy++) {
+				for (ix=x0; ix<=x1; ix++) {
+					double d, L;
+					d = hypot(px - ix, py - iy);
+					L = lanczos(d / scale, order);
+					if (L == 0)
+						continue;
+					img[iy*W + ix] += L * outimg[i*outW + j] / rowsum[i*outW + j];
+				}
+			}
+		}
+		logverb("Row %i of %i\n", i+1, outH);
+	}
+}
+
+
+
 
 struct mvp {
 	int W;
@@ -180,22 +251,71 @@ struct mvp {
 	anwcs_t* wcs;
 	double support;
 	int order;
+	double scale;
+	double* rowsum;
 };
 typedef struct mvp mvp_t;
 
 
 static void mat_vec_prod(long mode, dvec* x, dvec* y, void* token) {
-	mvp_t* mvp;
+	mvp_t* mvp = token;
 	logmsg("mat_vec_prod: mode=%i\n", (int)mode);
 	if (mode == 0) {
+		double* rowsum;
 		// y = y + A * x
-		/*
-		 resample_image(img, W, H, outimg, outW, outH,
-		 minx, miny, hpstep, bighp, wcs,
-		 support, order, FALSE);
-		 */
+
+		// ie, HPimg += W * Img
+		// ie, HPimg += resample(Img)
+
+		// x is the image.  The image is the output.
+
+		assert(x->length == mvp->outW * mvp->outH);
+		assert(y->length == mvp->W * mvp->H);
+
+		if (!mvp->rowsum) {
+			int i;
+			rowsum = malloc(mvp->W * mvp->H * sizeof(double));
+			for (i=0; i<(mvp->W*mvp->H); i++)
+				rowsum[i] = 0.0;
+		} else
+			rowsum = NULL;
+
+		logmsg("before update: norm2(x) = %g\n", dvec_norm2(x));
+		logmsg("before update: norm2(y) = %g\n", dvec_norm2(y));
+
+		resample_image(x->elements, mvp->outW, mvp->outH,
+					   y->elements, mvp->W, mvp->H,
+					   mvp->minx, mvp->miny, mvp->hpstep, mvp->bighp,
+					   mvp->wcs, mvp->support, mvp->order, mvp->scale,
+					   FALSE, rowsum);
+
+		logmsg("after update: norm2(x) = %g\n", dvec_norm2(x));
+		logmsg("after update: norm2(y) = %g\n", dvec_norm2(y));
+
+		if (!mvp->rowsum)
+			mvp->rowsum = rowsum;
+
 	} else if (mode == 1) {
 		// x = x + A^T * y
+
+		// ie, Img += W^T * HPimg
+
+		assert(x->length == mvp->outW * mvp->outH);
+		assert(y->length == mvp->W * mvp->H);
+		assert(mvp->rowsum);
+
+		logmsg("before update: norm2(x) = %g\n", dvec_norm2(x));
+		logmsg("before update: norm2(y) = %g\n", dvec_norm2(y));
+
+		resample_add_transpose(x->elements, mvp->outW, mvp->outH,
+							   y->elements, mvp->W, mvp->H,
+							   mvp->minx, mvp->miny, mvp->hpstep, mvp->bighp,
+							   mvp->wcs, mvp->support, mvp->order, mvp->scale,
+							   mvp->rowsum);
+
+		logmsg("after update: norm2(x) = %g\n", dvec_norm2(x));
+		logmsg("after update: norm2(y) = %g\n", dvec_norm2(y));
+
 	} else {
 		ERROR("Unknown mode %i", (int)mode);
 		exit(-1);
@@ -204,14 +324,6 @@ static void mat_vec_prod(long mode, dvec* x, dvec* y, void* token) {
 
 
 
-static double lanczos(double x, int order) {
-	if (x == 0)
-		return 1.0;
-	if (x > order || x < -order)
-		return 0.0;
-	return order * sin(M_PI * x) * sin(M_PI * x / (double)order) / square(M_PI * x);
-}
-
 int main(int argc, char** args) {
     int argchar;
 
@@ -219,8 +331,8 @@ int main(int argc, char** args) {
 	char* outfn = NULL;
 	char* wcsfn = NULL;
 
-	float* img = NULL;
-	float* outimg = NULL;
+	double* img = NULL;
+	double* outimg = NULL;
 
 	int W, H;
 	int wcsW, wcsH;
@@ -299,7 +411,7 @@ int main(int argc, char** args) {
 	// color plane
 	ld.pnum = 0;
 	ld.map = 1;
-	ld.ptype = PTYPE_FLOAT;
+	ld.ptype = PTYPE_DOUBLE;
 	if (qfitsloader_init(&ld)) {
 		ERROR("qfitsloader_init() failed");
 		exit(-1);
@@ -310,7 +422,7 @@ int main(int argc, char** args) {
 	}
 	W = ld.lx;
 	H = ld.ly;
-	img = ld.fbuf;
+	img = ld.dbuf;
 
 	printf("Read image %s: %i x %i.\n", infn, W, H);
 
@@ -382,10 +494,10 @@ int main(int argc, char** args) {
 
 	printf("Rendering output image: %i x %i\n", outW, outH);
 
-	hpstep = 1.0 / (float)nside;
+	hpstep = 1.0 / (double)nside;
 	logverb("hpstep %g\n", hpstep);
 
-	outimg = malloc(outW * outH * sizeof(float));
+	outimg = malloc(outW * outH * sizeof(double));
 	for (i=0; i<outW*outH; i++)
 		outimg[i] = 1.0 / 0.0;
 
@@ -453,8 +565,8 @@ int main(int argc, char** args) {
 				py = (hy - miny) / hpstep;
 
 				if (dosinc) {
-					float weight;
-					float sum;
+					double weight;
+					double sum;
 					int x0,x1,y0,y1;
 					if (px < -support || px >= W+support)
 						continue;
@@ -469,7 +581,7 @@ int main(int argc, char** args) {
 					for (iy=y0; iy<=y1; iy++) {
 						for (ix=x0; ix<=x1; ix++) {
 							double d, L;
-							float pix = img[iy*W + ix];
+							double pix = img[iy*W + ix];
 							if (isnan(pix))
 								// out-of-bounds pixel
 								continue;
@@ -492,7 +604,7 @@ int main(int argc, char** args) {
 					outimg[i*outW + j] = img[iy*W + ix];
 				}
 			}
-			printf("Row %i of %i\n", i+1, outH);
+			logverb("Row %i of %i\n", i+1, outH);
 		}
 
 
@@ -505,12 +617,13 @@ int main(int argc, char** args) {
 			lsqr_work *lwork;
 			lsqr_func *lfunc;
 			int R, C;
-			void* token = NULL;
-			//dvec v;
+			mvp_t mvp;
+
+			memset(&mvp, 0, sizeof(mvp_t));
 
 			// rows, cols.
-			R = outW * outH;
-			C = W * H;
+			R = W * H;
+			C = outW * outH;
 
 			alloc_lsqr_mem(&lin, &lout, &lwork, &lfunc, R, C);
 			lfunc->mat_vec_prod = mat_vec_prod;
@@ -532,8 +645,17 @@ int main(int argc, char** args) {
 			 v.elements = img;
 			 dvec_copy(&v, lin->rhs_vec);
 			 */
+			assert(lin->rhs_vec->length == W*H);
 			for (i=0; i<(W*H); i++)
-				lin->rhs_vec->elements[i] = img[i];
+				lin->rhs_vec->elements[i] = (isfinite(img[i]) ? img[i] : 0);
+			//(isnan(img[i]) ? 0 : img[i]);
+			//lin->rhs_vec->elements[i] = img[i];
+
+			for (i=0; i<(W*H); i++) {
+				assert(isfinite(lin->rhs_vec->elements[i]));
+			}
+
+			logmsg("lin->rhs_vec norm2 is %g\n", dvec_norm2(lin->rhs_vec));
 
 			// output image is initial guess
 			/*
@@ -541,10 +663,27 @@ int main(int argc, char** args) {
 			 v.elements = outimg;
 			 dvec_copy(&v, lin->sol_vec);
 			 */
+			assert(lin->sol_vec->length == outW*outH);
 			for (i=0; i<(outW*outH); i++)
-				lin->sol_vec->elements[i] = outimg[i];
+				lin->sol_vec->elements[i] = (isnan(outimg[i]) ? 0 : outimg[i]);
+				//lin->sol_vec->elements[i] = outimg[i];
 
-			lsqr(lin, lout, lwork, lfunc, token);
+			logmsg("lin->sol_vec norm2 is %g\n", dvec_norm2(lin->sol_vec));
+
+			mvp.W = W;
+			mvp.H = H;
+			mvp.outW = outW;
+			mvp.outH = outH;
+			mvp.minx = minx;
+			mvp.miny = miny;
+			mvp.hpstep = hpstep;
+			mvp.bighp = bighp;
+			mvp.wcs = wcs;
+			mvp.support = support;
+			mvp.order = order;
+			mvp.scale = scale;
+
+			lsqr(lin, lout, lwork, lfunc, &mvp);
 
 			logmsg("Termination reason: %i\n", (int)lout->term_flag);
 			logmsg("Iterations: %i\n", (int)lout->num_iters);
@@ -559,11 +698,13 @@ int main(int argc, char** args) {
 			 dvec_copy(lout->sol_vec, &v);
 			 */
 			for (i=0; i<(outW*outH); i++)
-				outimg[i] = lin->sol_vec->elements[i];
+				outimg[i] = lout->sol_vec->elements[i];
 
 			// lout->std_err_vec
 
 			free_lsqr_mem(lin, lout, lwork, lfunc);
+
+			free(mvp.rowsum);
 		}
 
 
@@ -573,13 +714,19 @@ int main(int argc, char** args) {
 
 		resample_image(img, W, H, outimg, outW, outH,
 					   minx, miny, hpstep, bighp, wcs,
-					   support, order, TRUE);
+					   support, order, scale, TRUE, NULL);
 	}
 
 	printf("Writing output: %s\n", outfn);
-	if (fits_write_float_image(outimg, outW, outH, outfn)) {
-		ERROR("Failed to write output image %s", outfn);
-		exit(-1);
+	// HACK -- reduce output image to float, in-place.
+	{
+		float* fimg = (float*)outimg;
+		for (i=0; i<outW*outH; i++)
+			fimg[i] = outimg[i];
+		if (fits_write_float_image(fimg, outW, outH, outfn)) {
+			ERROR("Failed to write output image %s", outfn);
+			exit(-1);
+		}
 	}
 
 	free(img);
