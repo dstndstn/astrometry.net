@@ -73,11 +73,13 @@ for z in [1,2,3]:
 
  */
 
-static const char* OPTIONS = "hrvz:o:";
+static const char* OPTIONS = "hrvz:o:e:w:";
 
 void printHelp(char* progname) {
     fprintf(stderr, "%s [options] <input-FITS-filename> <output-FITS-filename>\n"
+			"    [-e <ext>]: input FITS extension to read (default: primary extension, 0)\n"
             "    [-r]: reverse direction\n"
+			"    [-w <wcs-file>] (default: input file)\n"
 			"    [-z <zoom>]: oversample healpix grid by this factor x factor (default 1)\n"
 			"    [-o <order>]: Lanczos order (default 2)\n"
             "\n", progname);
@@ -98,6 +100,7 @@ int main(int argc, char** args) {
 
 	char* infn = NULL;
 	char* outfn = NULL;
+	char* wcsfn = NULL;
 
 	float* img = NULL;
 	float* outimg = NULL;
@@ -131,6 +134,8 @@ int main(int argc, char** args) {
 	int loglvl = LOG_MSG;
 	qfitsloader ld;
 
+	int fitsext = 0;
+
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
 		case '?':
@@ -146,12 +151,19 @@ int main(int argc, char** args) {
 		case 'z':
 			zoom = atof(optarg);
 			break;
+		case 'e':
+			fitsext = atoi(optarg);
+			break;
+		case 'w':
+			wcsfn = optarg;
+			break;
 		case 'o':
 			order = atoi(optarg);
 			break;
 		}
 
 	log_init(loglvl);
+	fits_use_error_system();
 
 	if (argc - optind != 2) {
 		ERROR("Need args: input and output FITS image filenames.\n");
@@ -161,10 +173,12 @@ int main(int argc, char** args) {
 		
 	infn = args[optind];
 	outfn = args[optind+1];
+	if (!wcsfn)
+		wcsfn = infn;
 
 	ld.filename = infn;
 	// extension
-	ld.xtnum = 1;
+	ld.xtnum = fitsext;
 	// color plane
 	ld.pnum = 0;
 	ld.map = 1;
@@ -183,15 +197,20 @@ int main(int argc, char** args) {
 
 	printf("Read image %s: %i x %i.\n", infn, W, H);
 
-	printf("Reading WCS file %s\n", infn);
-	wcs = anwcs_open(infn, 0);
+	wcs = anwcs_open(wcsfn, fitsext);
+	printf("Reading WCS file %s\n", wcsfn);
 	if (!wcs) {
-		ERROR("Failed to read WCS from file: %s\n", infn);
+		ERROR("Failed to read WCS from file: %s\n", wcsfn);
 		exit(-1);
 	}
 
 	pixscale = anwcs_pixel_scale(wcs);
+	if (pixscale == 0) {
+		ERROR("Pixel scale from the WCS file is zero.  Usually this means the image has no valid WCS header.\n");
+		exit(-1);
+	}
 	printf("Target zoom: %g\n", zoom);
+	printf("Pixel scale: %g arcsec/pix\n", pixscale);
 	nside = (int)ceil(zoom * healpix_nside_for_side_length_arcmin(pixscale / 60.0));
 	printf("Using nside %i\n", nside);
 	realzoom = (pixscale/60.0) / healpix_side_length_arcmin(nside);
@@ -343,9 +362,9 @@ int main(int argc, char** args) {
 							sum += L * pix;
 						}
 					}
-					if (weight > 0)
+					if (weight != 0)
 						outimg[i*outW + j] = sum / weight;
-					
+
 				} else {
 					ix = (int)px;
 					iy = (int)py;
@@ -375,7 +394,7 @@ int main(int argc, char** args) {
 					ERROR("WCS projects to wrong side of sphere\n");
 					continue;
 				}
-				// MAGIC -1: FITS pixels...
+				// MAGIC -1: FITS pixel coords...
 				px -= 1;
 				py -= 1;
 				debug("pixel (%.1f, %.1f)\n", px, py);
@@ -401,10 +420,10 @@ int main(int argc, char** args) {
 							if (L == 0)
 								continue;
 							weight += L;
-							sum += img[iy*W + ix];
+							sum += L * img[iy*W + ix];
 						}
 					}
-					if (weight > 0)
+					if (weight != 0)
 						outimg[i*outW + j] = sum / weight;
 
 				} else {
