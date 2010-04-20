@@ -17,11 +17,11 @@
  python util/tstimg.py 
  an-fitstopnm -i tstimg.fits -N 0 -X 255 | pnmtopng > tstimg.png
 
- hpimage tstimg; hpimage -r tstimg
+ hpresample tstimg; hpresample -r tstimg
  open tstimg.png tstimg-hp.png tstimg-unhp.png
 
  cp tstimg-unhp.png tstimg-unhp-1.png
- hpimage -r -s tstimg
+ hpresample -r -s tstimg
  cp tstimg-unhp.png tstimg-unhp-2.png
 
  for x in tstimg.png tstimg-hp.png tstimg-unhp-{1,2}.png; do
@@ -31,17 +31,17 @@
 
  cp tstimg.png tstimg-s.png
  cp tstimg.wcs tstimg-s.wcs
- hpimage -s tstimg-s; hpimage -r -s tstimg-s
+ hpresample -s tstimg-s; hpresample -r -s tstimg-s
 
  for x in tstimg*.png; do
  pngtopnm $x | pnmscale 10 | pnmtopng > zoom-$x;
  done
 
  cp tstimg.wcs tstdot.wcs
- hpimage tstdot; hpimage -r tstdot
+ hpresample tstdot; hpresample -r tstdot
  cp tstdot.png tstdot-s.png
  cp tstdot.wcs tstdot-s.wcs
- hpimage -s tstdot-s; hpimage -r -s tstdot-s
+ hpresample -s tstdot-s; hpresample -r -s tstdot-s
 
 
 CFHTLS field:
@@ -55,14 +55,14 @@ CFHTLS field:
  get-wcs -o 715809p-a.wcs 715809p-a.fits
  an-fitstopnm -i 715809p-a.fits -N 800 -X 5000 | pnmtopng > 715809p-a.png
 
- hpimage 715809p-a
- hpimage -r 715809p-a
+ hpresample 715809p-a
+ hpresample -r 715809p-a
  cp 715809p-a-unhp.png 715809p-a-o2z1.png
 
  for z in 1 2 3; do
  for o in 2 3; do
- hpimage -o $o -z $z 715809p-a;
- hpimage -o $o -z $z -r 715809p-a;
+ hpresample -o $o -z $z 715809p-a;
+ hpresample -o $o -z $z -r 715809p-a;
  cp 715809p-a-unhp.png 715809p-a-o${o}z${z}.png;
  done
  done

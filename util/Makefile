@@ -309,7 +309,7 @@ build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
 		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += build-hd-tree.o
 
-hpimage: hpimage.o cairoutils.o
+hpresample: hpresample.o cairoutils.o
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $^ $(ANUTILS_LIB) $(QFITS_LIB) $(JPEG_LIB) $(PNG_LIB) $(NETPBM_LIB) $(CAIRO_LIB)
 
 ### TESTS
