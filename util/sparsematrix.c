@@ -103,3 +103,18 @@ void sparsematrix_transpose_mult_vec(const sparsematrix_t* sp, const double* vec
 	}
 }
 
+int sparsematrix_count_elements_in_row(sparsematrix_t* sp, int row) {
+	return bl_size(sp->rows + row);
+}
+
+void sparsematrix_subset_rows(sparsematrix_t* sp, int* rows, int NR) {
+	bl* newrows;
+	int i;
+	assert(NR <= sp->R);
+	newrows = malloc(NR * sizeof(bl));
+	for (i=0; i<NR; i++)
+		newrows[i] = sp->rows[rows[i]];
+	free(sp->rows);
+	sp->rows = newrows;
+	sp->R = NR;
+}

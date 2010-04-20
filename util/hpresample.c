@@ -646,7 +646,9 @@ int main(int argc, char** args) {
 			lsqr_work *lwork;
 			lsqr_func *lfunc;
 			int R, C;
-
+			int* rowmap;
+			int Rused;
+			int Rall;
 			sparsematrix_t* sp;
 
 			// rows, cols.
@@ -700,6 +702,26 @@ int main(int argc, char** args) {
 			}
 			sparsematrix_normalize_rows(sp);
 
+			// find elements (pixels) in the healpix image that are used;
+			// ie, rows in the W matrix that contain elements.
+			rowmap = malloc(R * sizeof(int));
+			Rused = 0;
+			for (i=0; i<R; i++) {
+				if (sparsematrix_count_elements_in_row(sp, i)) {
+					//rowmap[i] = Rused;
+					rowmap[Rused] = i;
+					Rused++;
+				}
+			}
+			Rall = R;
+			R = Rused;
+			sparsematrix_subset_rows(sp, rowmap, R);
+
+			for (i=0; i<R; i++) {
+				assert(sparsematrix_count_elements_in_row(sp, i) > 0);
+				logverb("Row %i (%i): %i elements set.\n", i, rowmap[i], sparsematrix_count_elements_in_row(sp, i));
+			}
+
 			alloc_lsqr_mem(&lin, &lout, &lwork, &lfunc, R, C);
 			lfunc->mat_vec_prod = mat_vec_prod_2;
 			lin->lsqr_fp_out = stdout;
@@ -715,35 +737,79 @@ int main(int argc, char** args) {
 			lin->max_iter = R + C + 50;
 
 			// input image is RHS.
-			assert(lin->rhs_vec->length == W*H);
-			for (i=0; i<(W*H); i++)
-				lin->rhs_vec->elements[i] = (isfinite(img[i]) ? img[i] : 0);
-			for (i=0; i<(W*H); i++) {
+			/*
+			 assert(lin->rhs_vec->length == W*H);
+			 for (i=0; i<(W*H); i++)
+			 lin->rhs_vec->elements[i] = (isfinite(img[i]) ? img[i] : 0);
+			 for (i=0; i<(W*H); i++) {
+			 assert(isfinite(lin->rhs_vec->elements[i]));
+			 }
+			 */
+			assert(lin->rhs_vec->length == R);
+			for (i=0; i<R; i++)
+				lin->rhs_vec->elements[i] = (isfinite(img[rowmap[i]]) ? img[rowmap[i]] : 0);
+			for (i=0; i<R; i++)
 				assert(isfinite(lin->rhs_vec->elements[i]));
-			}
+
 			logmsg("lin->rhs_vec norm2 is %g\n", dvec_norm2(lin->rhs_vec));
 
 			// output image is initial guess
 			assert(lin->sol_vec->length == outW*outH);
 			for (i=0; i<(outW*outH); i++)
 				lin->sol_vec->elements[i] = (isnan(outimg[i]) ? 0 : outimg[i]);
+				//lin->sol_vec->elements[i] = 0;
 			logmsg("lin->sol_vec norm2 is %g\n", dvec_norm2(lin->sol_vec));
 
-			lsqr(lin, lout, lwork, lfunc, sp);
 
-			logmsg("Termination reason: %i\n", (int)lout->term_flag);
-			logmsg("Iterations: %i\n", (int)lout->num_iters);
-			logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
-			logmsg("Normal of residuals: %g\n", lout->resid_norm);
-			logmsg("Norm of W*resids: %g\n", lout->mat_resid_norm);
+			// HACK -- reduce output image to float, in-place.
+			{
+				char checkfn[256];
+				sprintf(checkfn, "step-0.fits");
+				float* fimg = (float*)outimg;
+				for (i=0; i<outW*outH; i++)
+					fimg[i] = outimg[i];
+				if (fits_write_float_image(fimg, outW, outH, checkfn)) {
+					ERROR("Failed to write output image %s", checkfn);
+					exit(-1);
+				}
+			}
 
-			// Grab output solution...
-			for (i=0; i<(outW*outH); i++)
-				outimg[i] = lout->sol_vec->elements[i];
-			// lout->std_err_vec
+			int k;
+			for (k=0; k<20; k++) {
+				lin->max_iter = 1;
+				for (i=0; i<R; i++)
+					lin->rhs_vec->elements[i] = (isfinite(img[rowmap[i]]) ? img[rowmap[i]] : 0);
+
+				lsqr(lin, lout, lwork, lfunc, sp);
+				logmsg("Termination reason: %i\n", (int)lout->term_flag);
+				logmsg("Iterations: %i\n", (int)lout->num_iters);
+				logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
+				logmsg("Normal of residuals: %g\n", lout->resid_norm);
+				logmsg("Norm of W*resids: %g\n", lout->mat_resid_norm);
+
+				// Grab output solution...
+				for (i=0; i<(outW*outH); i++)
+					outimg[i] = lout->sol_vec->elements[i];
+				// lout->std_err_vec
+
+
+				// HACK -- reduce output image to float, in-place.
+				{
+					char checkfn[256];
+					sprintf(checkfn, "step-%i.fits", k+1);
+					float* fimg = (float*)outimg;
+					for (i=0; i<outW*outH; i++)
+						fimg[i] = outimg[i];
+					if (fits_write_float_image(fimg, outW, outH, checkfn)) {
+						ERROR("Failed to write output image %s", checkfn);
+						exit(-1);
+					}
+				}
+
+			}
 
 			free_lsqr_mem(lin, lout, lwork, lfunc);
-
+			free(rowmap); rowmap = NULL;
 			sparsematrix_free(sp);
 		}
 

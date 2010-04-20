@@ -26,7 +26,8 @@ void sparsematrix_transpose_mult_vec(const sparsematrix_t* sp, const double* vec
 
 void sparsematrix_set(sparsematrix_t* sp, int r, int c, double val);
 
+int sparsematrix_count_elements_in_row(sparsematrix_t* sp, int row);
 
-
+void sparsematrix_subset_rows(sparsematrix_t* sp, int* rows, int NR);
 
 #endif
