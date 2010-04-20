@@ -307,6 +307,23 @@ double anwcs_pixel_scale(const anwcs_t* anwcs) {
 
 ///////////////////////// un-dispatched functions ///////////////////
 
+// FIXME -- this is probably the bass-ackwards way -- xyz is more natural; this probably requires converting back and forth between ra,dec and xyz.
+int anwcs_pixelxy2xyz(const anwcs_t* wcs, double px, double py, double* xyz) {
+	int rtn;
+	double ra,dec;
+	rtn = anwcs_pixelxy2radec(wcs, px, py, &ra, &dec);
+	radecdeg2xyzarr(ra, dec, xyz);
+	return rtn;
+}
+
+int anwcs_xyz2pixelxy(const anwcs_t* wcs, const double* xyz, double *px, double *py) {
+	int rtn;
+	double ra,dec;
+	xyzarr2radecdeg(xyz, &ra, &dec);
+	rtn = anwcs_radec2pixelxy(wcs, ra, dec, px, py);
+	return rtn;
+}
+
 int anwcs_get_radec_center_and_radius(anwcs_t* anwcs,
 									  double* p_ra, double* p_dec, double* p_radius) {
 	assert(anwcs);

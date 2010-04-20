@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "cairoutils.h"
+#include "anwcs.h"
+#include "fitsioutils.h"
 #include "sip.h"
 #include "sip_qfits.h"
 #include "sip-utils.h"
@@ -11,6 +12,7 @@
 #include "errors.h"
 #include "log.h"
 #include "mathutil.h"
+#include "qfits_image.h"
 
 /**
 
@@ -74,7 +76,7 @@ for z in [1,2,3]:
 static const char* OPTIONS = "hrvz:o:";
 
 void printHelp(char* progname) {
-    fprintf(stderr, "%s [options] <base-filename>\n"
+    fprintf(stderr, "%s [options] <input-FITS-filename> <output-FITS-filename>\n"
             "    [-r]: reverse direction\n"
 			"    [-z <zoom>]: oversample healpix grid by this factor x factor (default 1)\n"
 			"    [-o <order>]: Lanczos order (default 2)\n"
@@ -82,7 +84,6 @@ void printHelp(char* progname) {
 }
 extern char *optarg;
 extern int optind, opterr, optopt;
-
 
 double lanczos(double x, int order) {
 	if (x == 0)
@@ -95,14 +96,16 @@ double lanczos(double x, int order) {
 int main(int argc, char** args) {
     int argchar;
 
-	char* base = NULL;
-	char* fn;
-	unsigned char* img = NULL;
-	unsigned char* outimg = NULL;
+	char* infn = NULL;
+	char* outfn = NULL;
+
+	float* img = NULL;
+	float* outimg = NULL;
+
 	int W, H;
 	int wcsW, wcsH;
 	int hpW, hpH;
-	sip_t* wcs;
+	anwcs_t* wcs;
 	double minx, miny, maxx, maxy;
 	double hpstep;
 	int nside;
@@ -126,6 +129,7 @@ int main(int argc, char** args) {
 	double amaxD;
 
 	int loglvl = LOG_MSG;
+	qfitsloader ld;
 
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
@@ -149,53 +153,52 @@ int main(int argc, char** args) {
 
 	log_init(loglvl);
 
-	if (argc - optind != 1) {
-		ERROR("Need one arg: base filename.\n");
+	if (argc - optind != 2) {
+		ERROR("Need args: input and output FITS image filenames.\n");
+		printHelp(args[0]);
 		exit(-1);
 	}
 		
-	base = args[optind];
+	infn = args[optind];
+	outfn = args[optind+1];
 
-	/*
-	 asprintf(&fn, "%s.jpg", base);
-	 img = cairoutils_read_jpeg(fn, &W, &H);
-	 if (!img) {
-	 ERROR("Failed to read image file as jpeg: %s\n", img);
-	 exit(-1);
-	 }
-	 */
-	if (reverse) {
-		asprintf(&fn, "%s-hp.png", base);
-	} else {
-		asprintf(&fn, "%s.png", base);
-	}
-	img = cairoutils_read_png(fn, &W, &H);
-	if (!img) {
-		ERROR("Failed to read image file as png: %s\n", img);
+	ld.filename = infn;
+	// extension
+	ld.xtnum = 1;
+	// color plane
+	ld.pnum = 0;
+	ld.map = 1;
+	ld.ptype = PTYPE_FLOAT;
+	if (qfitsloader_init(&ld)) {
+		ERROR("qfitsloader_init() failed");
 		exit(-1);
 	}
+	if (qfits_loadpix(&ld)) {
+		ERROR("qfits_loadpix() failed");
+		exit(-1);
+	}
+	W = ld.lx;
+	H = ld.ly;
+	img = ld.fbuf;
 
-	printf("Read image %s: %i x %i.\n", fn, W, H);
-	free(fn);
+	printf("Read image %s: %i x %i.\n", infn, W, H);
 
-	asprintf(&fn, "%s.wcs", base);
-	printf("Reading WCS file %s\n", fn);
-	wcs = sip_read_tan_or_sip_header_file_ext(fn, 0, NULL, FALSE);
+	printf("Reading WCS file %s\n", infn);
+	wcs = anwcs_open(infn, 0);
 	if (!wcs) {
-		ERROR("Failed to read WCS from file: %s\n", fn);
+		ERROR("Failed to read WCS from file: %s\n", infn);
 		exit(-1);
 	}
-	free(fn);
 
-	pixscale = sip_pixel_scale(wcs);
+	pixscale = anwcs_pixel_scale(wcs);
 	printf("Target zoom: %g\n", zoom);
 	nside = (int)ceil(zoom * healpix_nside_for_side_length_arcmin(pixscale / 60.0));
 	printf("Using nside %i\n", nside);
 	realzoom = (pixscale/60.0) / healpix_side_length_arcmin(nside);
 	printf("Real zoom: %g\n", realzoom);
 
-	wcsW = wcs->wcstan.imagew;
-	wcsH = wcs->wcstan.imageh;
+	wcsW = anwcs_imagew(wcs);
+	wcsH = anwcs_imageh(wcs);
 
 	// when going forward, wcsW == W
 
@@ -215,7 +218,7 @@ int main(int argc, char** args) {
 			py = wcsH;
 			break;
 		}
-		sip_pixelxy2xyzarr(wcs, px, py, xyz);
+		anwcs_pixelxy2xyz(wcs, px, py, xyz);
 		bighp = xyzarrtohealpixf(xyz, 1, &hx, &hy);
 		minx = MIN(minx, hx);
 		miny = MIN(miny, hy);
@@ -246,15 +249,13 @@ int main(int argc, char** args) {
 	hpstep = 1.0 / (float)nside;
 	logverb("hpstep %g\n", hpstep);
 
-	outimg = malloc(outW * outH * 4);
-	for (i=0; i<outW*outH; i++) {
-		outimg[4*i + 0] = 128;
-		outimg[4*i + 1] = 128;
-		outimg[4*i + 2] = 128;
-		outimg[4*i + 3] = 128;
-	}
+	outimg = malloc(outW * outH * sizeof(float));
+	for (i=0; i<outW*outH; i++)
+		outimg[i] = 1.0 / 0.0;
 
-	// find how distances transform from 'image' to 'healpix image' space.
+
+
+	// ASIDE - find how distances transform from 'image' to 'healpix image' space.
 	{
 		double chx, chy;
 		double cxyz[3];
@@ -308,18 +309,17 @@ int main(int argc, char** args) {
 			for (j=0; j<outW; j++) {
 				double px, py;
 				int ix, iy;
-
-				sip_pixelxy2xyzarr(wcs, j, i, xyz);
+				// MAGIC +1: FITS pixel coords.
+				anwcs_pixelxy2xyz(wcs, j+1, i+1, xyz);
 				xyzarrtohealpixf(xyz, 1, &hx, &hy);
 				// convert healpix coord to pixel coords in the healpix img.
 				px = (hx - minx) / hpstep;
 				py = (hy - miny) / hpstep;
 
 				if (dosinc) {
-					double weight;
-					double sum[3];
+					float weight;
+					float sum;
 					int x0,x1,y0,y1;
-					// FIXME -- sloppy edge-handling.
 					if (px < -support || px >= W+support)
 						continue;
 					if (py < -support || py >= H+support)
@@ -329,28 +329,23 @@ int main(int argc, char** args) {
 					x1 = MIN(W-1, (int) ceil(px + support));
 					y1 = MIN(H-1, (int) ceil(py + support));
 					weight = 0.0;
-					for (k=0; k<3; k++)
-						sum[k] = 0.0;
+					sum = 0.0;
 					for (iy=y0; iy<=y1; iy++) {
 						for (ix=x0; ix<=x1; ix++) {
 							double d, L;
-							if (img[4*(iy*W + ix) + 3] == 128) {
+							float pix = img[iy*W + ix];
+							if (isnan(pix))
 								// out-of-bounds pixel
 								continue;
-							}
 							d = hypot(px - ix, py - iy);
 							L = lanczos(d / scale, order);
-
 							weight += L;
-							for (k=0; k<3; k++)
-								sum[k] += L * (double)img[4*(iy*W + ix) + k];
+							sum += L * pix;
 						}
 					}
-					if (weight > 0) {
-						for (k=0; k<3; k++)
-							outimg[4*(i*outW + j) + k] = MIN(255, MAX(0, round(sum[k] / weight)));
-						outimg[4*(i*outW + j) + 3] = 255;
-					}
+					if (weight > 0)
+						outimg[i*outW + j] = sum / weight;
+					
 				} else {
 					ix = (int)px;
 					iy = (int)py;
@@ -358,7 +353,7 @@ int main(int argc, char** args) {
 						continue;
 					if (iy < 0 || iy >= H)
 						continue;
-					memcpy(outimg + 4*(i*outW + j), img + 4*(iy*W + ix), 3);
+					outimg[i*outW + j] = img[iy*W + ix];
 				}
 			}
 			printf("Row %i of %i\n", i+1, outH);
@@ -376,14 +371,17 @@ int main(int argc, char** args) {
 				debug("healpix (%.3f, %.3f)\n", hx, hy);
 				healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
 				debug("radec (%.3f, %.3f)\n", rad2deg(xy2ra(xyz[0], xyz[1])), rad2deg(z2dec(xyz[2])));
-				if (!sip_xyzarr2pixelxy(wcs, xyz, &px, &py)) {
-					ERROR("SIP projects to wrong side of sphere\n");
+				if (anwcs_xyz2pixelxy(wcs, xyz, &px, &py)) {
+					ERROR("WCS projects to wrong side of sphere\n");
 					continue;
 				}
+				// MAGIC -1: FITS pixels...
+				px -= 1;
+				py -= 1;
 				debug("pixel (%.1f, %.1f)\n", px, py);
 				if (dosinc) {
-					double weight;
-					double sum[3];
+					float weight;
+					float sum;
 					int x0,x1,y0,y1;
 					if (px < -support || px >= W+support)
 						continue;
@@ -394,8 +392,7 @@ int main(int argc, char** args) {
 					x1 = MIN(W-1, (int) ceil(px + support));
 					y1 = MIN(H-1, (int) ceil(py + support));
 					weight = 0.0;
-					for (k=0; k<3; k++)
-						sum[k] = 0.0;
+					sum = 0.0;
 					for (iy=y0; iy<=y1; iy++) {
 						for (ix=x0; ix<=x1; ix++) {
 							double d, L;
@@ -404,15 +401,11 @@ int main(int argc, char** args) {
 							if (L == 0)
 								continue;
 							weight += L;
-							for (k=0; k<3; k++)
-								sum[k] += L * (double)img[4*(iy*W + ix) + k];
+							sum += img[iy*W + ix];
 						}
 					}
-					if (weight > 0) {
-						for (k=0; k<3; k++)
-							outimg[4*(i*outW + j) + k] = MIN(255, MAX(0, round(sum[k] / weight)));
-						outimg[4*(i*outW + j) + 3] = 255;
-					}
+					if (weight > 0)
+						outimg[i*outW + j] = sum / weight;
 
 				} else {
 					ix = (int)px;
@@ -421,26 +414,21 @@ int main(int argc, char** args) {
 						continue;
 					if (iy < 0 || iy >= H)
 						continue;
-					memcpy(outimg + 4*(i*outW + j), img + 4*(iy*W + ix), 3);
-					outimg[4*(i*outW + j) + 3] = 255;
+					outimg[i*outW + j] = img[iy*W + ix];
 				}
 			}
 			printf("Row %i of %i\n", i+1, outH);
 		}
 	}
 
-	if (reverse) {
-		asprintf(&fn, "%s-unhp.png", base);
-	} else {
-		asprintf(&fn, "%s-hp.png", base);
+	printf("Writing output: %s\n", outfn);
+	if (fits_write_float_image(outimg, outW, outH, outfn)) {
+		ERROR("Failed to write output image %s", outfn);
+		exit(-1);
 	}
-	printf("Writing output: %s\n", fn);
-	cairoutils_write_png(fn, outimg, outW, outH);
 
-	free(fn);
 	free(img);
 	free(outimg);
-
 	return 0;
 }
 

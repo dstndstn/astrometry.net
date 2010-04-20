@@ -54,6 +54,10 @@ int anwcs_radec2pixelxy(const anwcs_t* wcs, double ra, double dec, double* px, d
 
 int anwcs_pixelxy2radec(const anwcs_t* wcs, double px, double py, double* ra, double* dec);
 
+int anwcs_pixelxy2xyz(const anwcs_t* wcs, double px, double py, double* xyz);
+
+int anwcs_xyz2pixelxy(const anwcs_t* wcs, const double* xyz, double *px, double *py);
+
 bool anwcs_radec_is_inside_image(const anwcs_t* wcs, double ra, double dec);
 
 void anwcs_get_radec_bounds(const anwcs_t* wcs, int stepsize,
