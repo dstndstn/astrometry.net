@@ -14,6 +14,8 @@
 #include "mathutil.h"
 #include "qfits_image.h"
 
+#include "lsqr.h"
+
 /**
 
  python util/tstimg.py 
@@ -39,6 +41,10 @@ CFHTLS field:
 
  imcopy 715809p.fits.gz"[1][1:1024,1:1024]" 715809p-01-00.fits
  get-wcs -o 715809p-01-00.wcs 715809p-01-00.fits
+
+
+ imcopy 715809p.fits.gz"[1][1:512,1:512]" small.fits
+
 
  imcopy 715809p.fits.gz"[6][100:900,100:900]" 715809p-a.fits
  get-wcs -o 715809p-a.wcs 715809p-a.fits
@@ -87,7 +93,118 @@ void printHelp(char* progname) {
 extern char *optarg;
 extern int optind, opterr, optopt;
 
-double lanczos(double x, int order) {
+static void resample_image(const float* img, int W, int H, 
+						   float* outimg, int outW, int outH,
+						   double minx, double miny, double hpstep,
+						   int bighp, const anwcs_t* wcs,
+						   double support, int order, bool set_or_add) {
+	 int i, j;
+	 bool dosinc = TRUE;
+
+	 for (i=0; i<outH; i++) {
+		 double hx, hy;
+		 hy = miny + i*hpstep;
+		 for (j=0; j<outW; j++) {
+			 double px, py;
+			 double xyz[3];
+			 int ix, iy;
+			 hx = minx + j*hpstep;
+			 debug("healpix (%.3f, %.3f)\n", hx, hy);
+			 healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
+			 debug("radec (%.3f, %.3f)\n", rad2deg(xy2ra(xyz[0], xyz[1])), rad2deg(z2dec(xyz[2])));
+			 if (anwcs_xyz2pixelxy(wcs, xyz, &px, &py)) {
+				 ERROR("WCS projects to wrong side of sphere\n");
+				 continue;
+			 }
+			 // MAGIC -1: FITS pixel coords...
+			 px -= 1;
+			 py -= 1;
+			 debug("pixel (%.1f, %.1f)\n", px, py);
+			 if (dosinc) {
+				 float weight;
+				 float sum;
+				 int x0,x1,y0,y1;
+				 if (px < -support || px >= W+support)
+					 continue;
+				 if (py < -support || py >= H+support)
+					 continue;
+				 x0 = MAX(0, (int)floor(px - support));
+				 y0 = MAX(0, (int)floor(py - support));
+				 x1 = MIN(W-1, (int) ceil(px + support));
+				 y1 = MIN(H-1, (int) ceil(py + support));
+				 weight = 0.0;
+				 sum = 0.0;
+				 for (iy=y0; iy<=y1; iy++) {
+					 for (ix=x0; ix<=x1; ix++) {
+						 double d, L;
+						 d = hypot(px - ix, py - iy);
+						 L = lanczos(d / scale, order);
+						 if (L == 0)
+							 continue;
+						 weight += L;
+						 sum += L * img[iy*W + ix];
+					 }
+				 }
+				 if (weight != 0) {
+					 if (set_or_add)
+						 outimg[i*outW + j] = sum / weight;
+					 else
+						 outimg[i*outW + j] += sum / weight;
+				 }
+			 } else {
+				 ix = (int)px;
+				 iy = (int)py;
+				 if (ix < 0 || ix >= W)
+					 continue;
+				 if (iy < 0 || iy >= H)
+					 continue;
+				 if (set_or_add)
+					 outimg[i*outW + j] = img[iy*W + ix];
+				 else
+					 outimg[i*outW + j] += img[iy*W + ix];
+			 }
+		 }
+		 printf("Row %i of %i\n", i+1, outH);
+	 }
+}
+
+struct mvp {
+	int W;
+	int H;
+	int outW;
+	int outH;
+	double minx;
+	double miny;
+	double hpstep;
+	int bighp;
+	anwcs_t* wcs;
+	double support;
+	int order;
+};
+typedef struct mvp mvp_t;
+
+
+static void mat_vec_prod(long mode, dvec* x, dvec* y, void* token) {
+	mvp_t* mvp;
+	logmsg("mat_vec_prod: mode=%i\n", (int)mode);
+	if (mode == 0) {
+		// y = y + A * x
+		/*
+		 resample_image(img, W, H, outimg, outW, outH,
+		 minx, miny, hpstep, bighp, wcs,
+		 support, order, FALSE);
+		 */
+	} else if (mode == 1) {
+		// x = x + A^T * y
+	} else {
+		ERROR("Unknown mode %i", (int)mode);
+		exit(-1);
+	}
+}
+
+
+
+static double lanczos(double x, int order) {
 	if (x == 0)
 		return 1.0;
 	if (x > order || x < -order)
@@ -377,67 +494,86 @@ int main(int argc, char** args) {
 			}
 			printf("Row %i of %i\n", i+1, outH);
 		}
+
+
+
+
+		// RHL's inverse-resampling method.
+		{
+			lsqr_input *lin;
+			lsqr_output *lout;
+			lsqr_work *lwork;
+			lsqr_func *lfunc;
+			int R, C;
+			void* token = NULL;
+			//dvec v;
+
+			// rows, cols.
+			R = outW * outH;
+			C = W * H;
+
+			alloc_lsqr_mem(&lin, &lout, &lwork, &lfunc, R, C);
+			lfunc->mat_vec_prod = mat_vec_prod;
+			lin->lsqr_fp_out = stdout;
+			lin->num_rows = R;
+			lin->num_cols = C;
+			//lin->rel_mat_err = 1e-10;
+			//lin->rel_rhs_err = 1e-10;
+			//lin->cond_lim = 10.0; // * cnum;
+			lin->damp_val = 1.0;
+			lin->rel_mat_err = 0;
+			lin->rel_rhs_err = 0;
+			lin->cond_lim = 0;
+			lin->max_iter = R + C + 50;
+
+			// input image is RHS.
+			/*
+			 v.length = W * H;
+			 v.elements = img;
+			 dvec_copy(&v, lin->rhs_vec);
+			 */
+			for (i=0; i<(W*H); i++)
+				lin->rhs_vec->elements[i] = img[i];
+
+			// output image is initial guess
+			/*
+			 v.length = outW * outH;
+			 v.elements = outimg;
+			 dvec_copy(&v, lin->sol_vec);
+			 */
+			for (i=0; i<(outW*outH); i++)
+				lin->sol_vec->elements[i] = outimg[i];
+
+			lsqr(lin, lout, lwork, lfunc, token);
+
+			logmsg("Termination reason: %i\n", (int)lout->term_flag);
+			logmsg("Iterations: %i\n", (int)lout->num_iters);
+			logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
+			logmsg("Normal of residuals: %g\n", lout->resid_norm);
+			logmsg("Norm of W*resids: %g\n", lout->mat_resid_norm);
+
+			// Grab output solution...
+			/*
+			 v.length = outW * outH;
+			 v.elements = outimg;
+			 dvec_copy(lout->sol_vec, &v);
+			 */
+			for (i=0; i<(outW*outH); i++)
+				outimg[i] = lin->sol_vec->elements[i];
+
+			// lout->std_err_vec
+
+			free_lsqr_mem(lin, lout, lwork, lfunc);
+		}
+
+
 	} else {
 		scale = 1.0;
 		support = (double)order * scale;
 
-		for (i=0; i<outH; i++) {
-			hy = miny + i*hpstep;
-			for (j=0; j<outW; j++) {
-				double px, py;
-				int ix, iy;
-				hx = minx + j*hpstep;
-				debug("healpix (%.3f, %.3f)\n", hx, hy);
-				healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
-				debug("radec (%.3f, %.3f)\n", rad2deg(xy2ra(xyz[0], xyz[1])), rad2deg(z2dec(xyz[2])));
-				if (anwcs_xyz2pixelxy(wcs, xyz, &px, &py)) {
-					ERROR("WCS projects to wrong side of sphere\n");
-					continue;
-				}
-				// MAGIC -1: FITS pixel coords...
-				px -= 1;
-				py -= 1;
-				debug("pixel (%.1f, %.1f)\n", px, py);
-				if (dosinc) {
-					float weight;
-					float sum;
-					int x0,x1,y0,y1;
-					if (px < -support || px >= W+support)
-						continue;
-					if (py < -support || py >= H+support)
-						continue;
-					x0 = MAX(0, (int)floor(px - support));
-					y0 = MAX(0, (int)floor(py - support));
-					x1 = MIN(W-1, (int) ceil(px + support));
-					y1 = MIN(H-1, (int) ceil(py + support));
-					weight = 0.0;
-					sum = 0.0;
-					for (iy=y0; iy<=y1; iy++) {
-						for (ix=x0; ix<=x1; ix++) {
-							double d, L;
-							d = hypot(px - ix, py - iy);
-							L = lanczos(d / scale, order);
-							if (L == 0)
-								continue;
-							weight += L;
-							sum += L * img[iy*W + ix];
-						}
-					}
-					if (weight != 0)
-						outimg[i*outW + j] = sum / weight;
-
-				} else {
-					ix = (int)px;
-					iy = (int)py;
-					if (ix < 0 || ix >= W)
-						continue;
-					if (iy < 0 || iy >= H)
-						continue;
-					outimg[i*outW + j] = img[iy*W + ix];
-				}
-			}
-			printf("Row %i of %i\n", i+1, outH);
-		}
+		resample_image(img, W, H, outimg, outW, outH,
+					   minx, miny, hpstep, bighp, wcs,
+					   support, order, TRUE);
 	}
 
 	printf("Writing output: %s\n", outfn);
