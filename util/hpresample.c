@@ -15,7 +15,7 @@
 #include "qfits_image.h"
 
 #include "lsqr.h"
-
+#include "sparsematrix.h"
 /**
 
  python util/tstimg.py 
@@ -323,6 +323,33 @@ static void mat_vec_prod(long mode, dvec* x, dvec* y, void* token) {
 }
 
 
+static void mat_vec_prod_2(long mode, dvec* x, dvec* y, void* token) {
+	sparsematrix_t* sp = token;
+	logmsg("mat_vec_prod_2: mode=%i\n", (int)mode);
+
+	logmsg("before update: norm2(x) = %g\n", dvec_norm2(x));
+	logmsg("before update: norm2(y) = %g\n", dvec_norm2(y));
+
+	if (mode == 0) {
+		// y = y + A * x
+		assert(sp->R == y->length);
+		assert(sp->C == x->length);
+		sparsematrix_mult_vec(sp, x->elements, y->elements, TRUE);
+	} else if (mode == 1) {
+		// x = x + A^T * y
+		assert(sp->R == y->length);
+		assert(sp->C == x->length);
+		sparsematrix_transpose_mult_vec(sp, y->elements, x->elements, TRUE);
+	} else {
+		ERROR("Unknown mode %i", (int)mode);
+		exit(-1);
+	}
+
+	logmsg("after update: norm2(x) = %g\n", dvec_norm2(x));
+	logmsg("after update: norm2(y) = %g\n", dvec_norm2(y));
+}
+
+
 
 int main(int argc, char** args) {
     int argchar;
@@ -337,6 +364,7 @@ int main(int argc, char** args) {
 	int W, H;
 	int wcsW, wcsH;
 	int hpW, hpH;
+	int imW, imH;
 	anwcs_t* wcs;
 	double minx, miny, maxx, maxy;
 	double hpstep;
@@ -482,6 +510,9 @@ int main(int argc, char** args) {
 	outH = (int)ceil(nside * (maxy - miny));
 	logverb("Healpix x range [%.3f, %.3f], [%.3f, %.3f]\n", minx, maxx, miny, maxy);
 
+	imW = wcsW;
+	imH = wcsH;
+
 	if (reverse) {
 		outW = wcsW;
 		outH = wcsH;
@@ -608,10 +639,117 @@ int main(int argc, char** args) {
 		}
 
 
+		// RHL's inverse-resampling method, try #2
+		{
+			lsqr_input *lin;
+			lsqr_output *lout;
+			lsqr_work *lwork;
+			lsqr_func *lfunc;
+			int R, C;
+
+			sparsematrix_t* sp;
+
+			// rows, cols.
+			R = W * H;
+			C = outW * outH;
+
+			sp = sparsematrix_new(R, C);
+
+			{
+				int i, j;
+				for (i=0; i<hpH; i++) {
+					double hx, hy;
+					hy = miny + i*hpstep;
+					for (j=0; j<hpW; j++) {
+						double px, py;
+						double xyz[3];
+						int ix, iy;
+						int x0,x1,y0,y1;
+						hx = minx + j*hpstep;
+						debug("healpix (%.3f, %.3f)\n", hx, hy);
+						healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
+						debug("radec (%.3f, %.3f)\n", rad2deg(xy2ra(xyz[0], xyz[1])), rad2deg(z2dec(xyz[2])));
+						if (anwcs_xyz2pixelxy(wcs, xyz, &px, &py)) {
+							ERROR("WCS projects to wrong side of sphere\n");
+							continue;
+						}
+						// MAGIC -1: FITS pixel coords...
+						px -= 1;
+						py -= 1;
+						debug("pixel (%.1f, %.1f)\n", px, py);
+						if (px < -support || px >= imW+support)
+							continue;
+						if (py < -support || py >= imH+support)
+							continue;
+						x0 = MAX(0, (int)floor(px - support));
+						y0 = MAX(0, (int)floor(py - support));
+						x1 = MIN(imW-1, (int) ceil(px + support));
+						y1 = MIN(imH-1, (int) ceil(py + support));
+						for (iy=y0; iy<=y1; iy++) {
+							for (ix=x0; ix<=x1; ix++) {
+								double d, L;
+								d = hypot(px - ix, py - iy);
+								L = lanczos(d / scale, order);
+								if (L == 0)
+									continue;
+								sparsematrix_set(sp, i*hpW + j, iy*imW + ix, L);
+							}
+						}
+					}
+				}
+			}
+			sparsematrix_normalize_rows(sp);
+
+			alloc_lsqr_mem(&lin, &lout, &lwork, &lfunc, R, C);
+			lfunc->mat_vec_prod = mat_vec_prod_2;
+			lin->lsqr_fp_out = stdout;
+			lin->num_rows = R;
+			lin->num_cols = C;
+			//lin->rel_mat_err = 1e-10;
+			//lin->rel_rhs_err = 1e-10;
+			//lin->cond_lim = 10.0; // * cnum;
+			lin->damp_val = 1.0;
+			lin->rel_mat_err = 0;
+			lin->rel_rhs_err = 0;
+			lin->cond_lim = 0;
+			lin->max_iter = R + C + 50;
+
+			// input image is RHS.
+			assert(lin->rhs_vec->length == W*H);
+			for (i=0; i<(W*H); i++)
+				lin->rhs_vec->elements[i] = (isfinite(img[i]) ? img[i] : 0);
+			for (i=0; i<(W*H); i++) {
+				assert(isfinite(lin->rhs_vec->elements[i]));
+			}
+			logmsg("lin->rhs_vec norm2 is %g\n", dvec_norm2(lin->rhs_vec));
+
+			// output image is initial guess
+			assert(lin->sol_vec->length == outW*outH);
+			for (i=0; i<(outW*outH); i++)
+				lin->sol_vec->elements[i] = (isnan(outimg[i]) ? 0 : outimg[i]);
+			logmsg("lin->sol_vec norm2 is %g\n", dvec_norm2(lin->sol_vec));
+
+			lsqr(lin, lout, lwork, lfunc, sp);
+
+			logmsg("Termination reason: %i\n", (int)lout->term_flag);
+			logmsg("Iterations: %i\n", (int)lout->num_iters);
+			logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
+			logmsg("Normal of residuals: %g\n", lout->resid_norm);
+			logmsg("Norm of W*resids: %g\n", lout->mat_resid_norm);
+
+			// Grab output solution...
+			for (i=0; i<(outW*outH); i++)
+				outimg[i] = lout->sol_vec->elements[i];
+			// lout->std_err_vec
+
+			free_lsqr_mem(lin, lout, lwork, lfunc);
+
+			sparsematrix_free(sp);
+		}
 
 
 		// RHL's inverse-resampling method.
-		{
+		if (0) {
 			lsqr_input *lin;
 			lsqr_output *lout;
 			lsqr_work *lwork;
