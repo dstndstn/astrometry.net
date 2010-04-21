@@ -325,10 +325,10 @@ static void mat_vec_prod(long mode, dvec* x, dvec* y, void* token) {
 
 static void mat_vec_prod_2(long mode, dvec* x, dvec* y, void* token) {
 	sparsematrix_t* sp = token;
-	logmsg("mat_vec_prod_2: mode=%i\n", (int)mode);
-
-	logmsg("before update: norm2(x) = %g\n", dvec_norm2(x));
-	logmsg("before update: norm2(y) = %g\n", dvec_norm2(y));
+	
+	logverb("mat_vec_prod_2: mode=%i\n", (int)mode);
+	logverb("before update: norm2(x) = %g\n", dvec_norm2(x));
+	logverb("before update: norm2(y) = %g\n", dvec_norm2(y));
 
 	if (mode == 0) {
 		// y = y + A * x
@@ -345,9 +345,109 @@ static void mat_vec_prod_2(long mode, dvec* x, dvec* y, void* token) {
 		exit(-1);
 	}
 
-	logmsg("after update: norm2(x) = %g\n", dvec_norm2(x));
-	logmsg("after update: norm2(y) = %g\n", dvec_norm2(y));
+	logverb("after update: norm2(x) = %g\n", dvec_norm2(x));
+	logverb("after update: norm2(y) = %g\n", dvec_norm2(y));
 }
+
+
+
+static void testit() {
+	// 1-D tests.
+	int Nin=20;
+	double input[Nin];
+	double mn = Nin/2.0;
+	double sig = 2;
+	int i, j;
+
+	int Nout = 20;
+	double outx[Nout];
+	double output[Nout];
+
+	double recon[Nin];
+
+	int order = 2;
+
+	for (i=0; i<Nin; i++)
+		input[i] = exp(-(i-mn)*(i-mn) / (2.0*sig*sig));
+
+	for (i=0; i<Nout; i++)
+		outx[i] = 0.99 * i + 0.4;
+
+	int R,C;
+	sparsematrix_t* sp;
+	R = Nout;
+	C = Nin;
+	sp = sparsematrix_new(R, C);
+
+	for (i=0; i<Nout; i++) {
+		double sum, weight;
+		sum = weight = 0.0;
+		for (j=0; j<Nin; j++) {
+			double dx = outx[i] - j;
+			double L = lanczos(dx, order);
+			if (L == 0)
+				continue;
+			sum += L * input[j];
+			weight += L;
+
+			sparsematrix_set(sp, i, j, L);
+		}
+		output[i] = sum / weight;
+	}
+	sparsematrix_normalize_rows(sp);
+
+	lsqr_input *lin;
+	lsqr_output *lout;
+	lsqr_work *lwork;
+	lsqr_func *lfunc;
+
+	alloc_lsqr_mem(&lin, &lout, &lwork, &lfunc, R, C);
+	lfunc->mat_vec_prod = mat_vec_prod_2;
+	lin->lsqr_fp_out = stdout;
+	lin->num_rows = R;
+	lin->num_cols = C;
+	//lin->damp_val = 1.0;
+	lin->damp_val = 0.0;
+	lin->rel_mat_err = 0;
+	lin->rel_rhs_err = 0;
+	lin->cond_lim = 0;
+	lin->max_iter = R + C + 50;
+
+	// target = input
+	assert(lin->rhs_vec->length == R);
+	for (i=0; i<R; i++)
+		lin->rhs_vec->elements[i] = output[i];
+	logmsg("lin->rhs_vec norm2 is %g\n", dvec_norm2(lin->rhs_vec));
+
+	// initial guess = 0
+	for (i=0; i<C; i++)
+		lin->sol_vec->elements[i] = 0.0;
+	logmsg("lin->sol_vec norm2 is %g\n", dvec_norm2(lin->sol_vec));
+
+	//lin->max_iter = 5;
+
+	lsqr(lin, lout, lwork, lfunc, sp);
+
+	logmsg("Termination reason: %i\n", (int)lout->term_flag);
+	logmsg("Iterations: %i\n", (int)lout->num_iters);
+	logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
+	logmsg("Normal of residuals: %g\n", lout->resid_norm);
+	logmsg("Norm of W*resids: %g\n", lout->mat_resid_norm);
+
+	// Grab output solution...
+	for (i=0; i<C; i++)
+		recon[i] = lout->sol_vec->elements[i];
+
+
+	printf("In      ----->    Out    ------>    Reconstruct in\n");
+	for (i=0; i<C; i++) {
+		printf("%12.5f %12.5f %12.5f\n", input[i], output[i], recon[i]);
+	}
+
+	free_lsqr_mem(lin, lout, lwork, lfunc);
+	sparsematrix_free(sp);
+}
+
 
 
 
@@ -421,6 +521,12 @@ int main(int argc, char** args) {
 
 	log_init(loglvl);
 	fits_use_error_system();
+
+
+	/*
+	 testit();
+	 exit(0);
+	 */
 
 	if (argc - optind != 2) {
 		ERROR("Need args: input and output FITS image filenames.\n");
@@ -752,11 +858,13 @@ int main(int argc, char** args) {
 			//lin->rel_mat_err = 1e-10;
 			//lin->rel_rhs_err = 1e-10;
 			//lin->cond_lim = 10.0; // * cnum;
-			lin->damp_val = 1.0;
+			//lin->damp_val = 1.0;
+			lin->damp_val = 0.0;
 			lin->rel_mat_err = 0;
 			lin->rel_rhs_err = 0;
 			lin->cond_lim = 0;
-			lin->max_iter = R + C + 50;
+			//lin->max_iter = R + C + 50;
+			lin->max_iter = 200;
 
 			// input image is RHS.
 			/*
@@ -811,7 +919,7 @@ int main(int argc, char** args) {
 
 			int k;
 			for (k=0; k<20; k++) {
-				lin->max_iter = 5;
+				//lin->max_iter = 5;
 				for (i=0; i<R; i++)
 					lin->rhs_vec->elements[i] = (isfinite(img[rowmap[i]]) ? img[rowmap[i]] : 0);
 
@@ -828,8 +936,8 @@ int main(int argc, char** args) {
 				// lout->std_err_vec
 
 				// copy this output back to the input for next iteration...
-				for (i=0; i<(outW*outH); i++)
-					lin->sol_vec->elements[i] = lout->sol_vec->elements[i];
+				//for (i=0; i<(outW*outH); i++)
+				//lin->sol_vec->elements[i] = lout->sol_vec->elements[i];
 				
 
 				// HACK -- reduce output image to float, in-place.
@@ -844,7 +952,7 @@ int main(int argc, char** args) {
 						exit(-1);
 					}
 				}
-
+				break;
 			}
 
 			free_lsqr_mem(lin, lout, lwork, lfunc);
@@ -877,7 +985,8 @@ int main(int argc, char** args) {
 			//lin->rel_mat_err = 1e-10;
 			//lin->rel_rhs_err = 1e-10;
 			//lin->cond_lim = 10.0; // * cnum;
-			lin->damp_val = 1.0;
+			//lin->damp_val = 1.0;
+			lin->damp_val = 0.0;
 			lin->rel_mat_err = 0;
 			lin->rel_rhs_err = 0;
 			lin->cond_lim = 0;
