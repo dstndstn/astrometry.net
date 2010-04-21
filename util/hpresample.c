@@ -13,6 +13,7 @@
 #include "log.h"
 #include "mathutil.h"
 #include "qfits_image.h"
+#include "keywords.h"
 
 #include "lsqr.h"
 #include "sparsematrix.h"
@@ -180,149 +181,6 @@ static void resample_image(const double* img, int W, int H,
 	 }
 }
 
-
-
-
-static void resample_add_transpose(double* img, int W, int H, 
-								   const double* outimg, int outW, int outH,
-								   double minx, double miny, double hpstep,
-								   int bighp, const anwcs_t* wcs,
-								   double support, int order, double scale,
-								   const double* rowsum) {
-	int i, j;
-
-	assert(rowsum);
-	
-	for (i=0; i<outH; i++) {
-		double hx, hy;
-		hy = miny + i*hpstep;
-		for (j=0; j<outW; j++) {
-			double px, py;
-			double xyz[3];
-			int ix, iy;
-			int x0,x1,y0,y1;
-			hx = minx + j*hpstep;
-			debug("healpix (%.3f, %.3f)\n", hx, hy);
-			healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
-			debug("radec (%.3f, %.3f)\n", rad2deg(xy2ra(xyz[0], xyz[1])), rad2deg(z2dec(xyz[2])));
-			if (anwcs_xyz2pixelxy(wcs, xyz, &px, &py)) {
-				ERROR("WCS projects to wrong side of sphere\n");
-				continue;
-			}
-			// MAGIC -1: FITS pixel coords...
-			px -= 1;
-			py -= 1;
-			debug("pixel (%.1f, %.1f)\n", px, py);
-			if (px < -support || px >= W+support)
-				continue;
-			if (py < -support || py >= H+support)
-				continue;
-			x0 = MAX(0, (int)floor(px - support));
-			y0 = MAX(0, (int)floor(py - support));
-			x1 = MIN(W-1, (int) ceil(px + support));
-			y1 = MIN(H-1, (int) ceil(py + support));
-			for (iy=y0; iy<=y1; iy++) {
-				for (ix=x0; ix<=x1; ix++) {
-					double d, L;
-					d = hypot(px - ix, py - iy);
-					L = lanczos(d / scale, order);
-					if (L == 0)
-						continue;
-					img[iy*W + ix] += L * outimg[i*outW + j] / rowsum[i*outW + j];
-				}
-			}
-		}
-		logverb("Row %i of %i\n", i+1, outH);
-	}
-}
-
-
-
-
-struct mvp {
-	int W;
-	int H;
-	int outW;
-	int outH;
-	double minx;
-	double miny;
-	double hpstep;
-	int bighp;
-	anwcs_t* wcs;
-	double support;
-	int order;
-	double scale;
-	double* rowsum;
-};
-typedef struct mvp mvp_t;
-
-
-static void mat_vec_prod(long mode, dvec* x, dvec* y, void* token) {
-	mvp_t* mvp = token;
-	logverb("mat_vec_prod: mode=%i\n", (int)mode);
-	if (mode == 0) {
-		double* rowsum;
-		// y = y + A * x
-
-		// ie, HPimg += W * Img
-		// ie, HPimg += resample(Img)
-
-		// x is the image.  The image is the output.
-
-		assert(x->length == mvp->outW * mvp->outH);
-		assert(y->length == mvp->W * mvp->H);
-
-		if (!mvp->rowsum) {
-			int i;
-			rowsum = malloc(mvp->W * mvp->H * sizeof(double));
-			for (i=0; i<(mvp->W*mvp->H); i++)
-				rowsum[i] = 0.0;
-		} else
-			rowsum = NULL;
-
-		logverb("before update: norm2(x) = %g\n", dvec_norm2(x));
-		logverb("before update: norm2(y) = %g\n", dvec_norm2(y));
-
-		resample_image(x->elements, mvp->outW, mvp->outH,
-					   y->elements, mvp->W, mvp->H,
-					   mvp->minx, mvp->miny, mvp->hpstep, mvp->bighp,
-					   mvp->wcs, mvp->support, mvp->order, mvp->scale,
-					   FALSE, rowsum);
-
-		logverb("after update: norm2(x) = %g\n", dvec_norm2(x));
-		logverb("after update: norm2(y) = %g\n", dvec_norm2(y));
-
-		if (!mvp->rowsum)
-			mvp->rowsum = rowsum;
-
-	} else if (mode == 1) {
-		// x = x + A^T * y
-
-		// ie, Img += W^T * HPimg
-
-		assert(x->length == mvp->outW * mvp->outH);
-		assert(y->length == mvp->W * mvp->H);
-		assert(mvp->rowsum);
-
-		logverb("before update: norm2(x) = %g\n", dvec_norm2(x));
-		logverb("before update: norm2(y) = %g\n", dvec_norm2(y));
-
-		resample_add_transpose(x->elements, mvp->outW, mvp->outH,
-							   y->elements, mvp->W, mvp->H,
-							   mvp->minx, mvp->miny, mvp->hpstep, mvp->bighp,
-							   mvp->wcs, mvp->support, mvp->order, mvp->scale,
-							   mvp->rowsum);
-
-		logverb("after update: norm2(x) = %g\n", dvec_norm2(x));
-		logverb("after update: norm2(y) = %g\n", dvec_norm2(y));
-
-	} else {
-		ERROR("Unknown mode %i", (int)mode);
-		exit(-1);
-	}
-}
-
-
 static void mat_vec_prod_2(long mode, dvec* x, dvec* y, void* token) {
 	sparsematrix_t* sp = token;
 	
@@ -350,8 +208,7 @@ static void mat_vec_prod_2(long mode, dvec* x, dvec* y, void* token) {
 }
 
 
-
-static void testit() {
+Unused static void testit() {
 	// 1-D tests.
 	int Nin=20;
 	double input[Nin];
@@ -522,11 +379,7 @@ int main(int argc, char** args) {
 	log_init(loglvl);
 	fits_use_error_system();
 
-
-	/*
-	 testit();
-	 exit(0);
-	 */
+	//testit();
 
 	if (argc - optind != 2) {
 		ERROR("Need args: input and output FITS image filenames.\n");
@@ -745,8 +598,8 @@ int main(int argc, char** args) {
 		}
 
 
-		// RHL's inverse-resampling method, try #2
-		if (0) {
+		// RHL's inverse-resampling method, try #2, using a sparse matrix representation
+		{
 			lsqr_input *lin;
 			lsqr_output *lout;
 			lsqr_work *lwork;
@@ -756,39 +609,36 @@ int main(int argc, char** args) {
 			int Rused;
 			int Rall;
 			sparsematrix_t* sp;
+			int i, j;
 
 			// rows, cols.
 			R = W * H;
 			C = outW * outH;
-
 			sp = sparsematrix_new(R, C);
 
-			{
-				int i, j;
-
-				int nelems = 0;
-
-				for (i=0; i<hpH; i++) {
-					double hx, hy;
-					hy = miny + i*hpstep;
-					for (j=0; j<hpW; j++) {
-						double px, py;
-						double xyz[3];
-						int ix, iy;
-						int x0,x1,y0,y1;
-						hx = minx + j*hpstep;
-						debug("healpix (%.3f, %.3f)\n", hx, hy);
-						healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
-						debug("radec (%.3f, %.3f)\n", rad2deg(xy2ra(xyz[0], xyz[1])), rad2deg(z2dec(xyz[2])));
-						if (anwcs_xyz2pixelxy(wcs, xyz, &px, &py)) {
-							ERROR("WCS projects to wrong side of sphere\n");
-							continue;
-						}
-						// MAGIC -1: FITS pixel coords...
-						px -= 1;
-						py -= 1;
-						debug("pixel (%.1f, %.1f)\n", px, py);
-						if (px < -support || px >= imW+support)
+			// Compute the matrix W that applies the Lanczos convolution
+			// kernel to the image to produce the healpix image.
+			for (i=0; i<hpH; i++) {
+				double hx, hy;
+				hy = miny + i*hpstep;
+				for (j=0; j<hpW; j++) {
+					double px, py;
+					double xyz[3];
+					int ix, iy;
+					int x0,x1,y0,y1;
+					hx = minx + j*hpstep;
+					debug("healpix (%.3f, %.3f)\n", hx, hy);
+					healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
+					debug("radec (%.3f, %.3f)\n", rad2deg(xy2ra(xyz[0], xyz[1])), rad2deg(z2dec(xyz[2])));
+					if (anwcs_xyz2pixelxy(wcs, xyz, &px, &py)) {
+						ERROR("WCS projects to wrong side of sphere\n");
+						continue;
+					}
+					// MAGIC -1: FITS pixel coords...
+					px -= 1;
+					py -= 1;
+					debug("pixel (%.1f, %.1f)\n", px, py);
+					if (px < -support || px >= imW+support)
 							continue;
 						if (py < -support || py >= imH+support)
 							continue;
@@ -805,15 +655,11 @@ int main(int argc, char** args) {
 								if (L == 0)
 									continue;
 								sparsematrix_set(sp, i*hpW + j, iy*imW + ix, L);
-
-								nelems++;
 							}
 						}
-					}
 				}
-				printf("Number of non-zero matrix elements: %i\n", nelems);
-				printf("sp count: %i\n", sparsematrix_count_elements(sp));
 			}
+			printf("Number of non-zero matrix elements: %i\n", sparsematrix_count_elements(sp));
 
 			// find elements (pixels) in the healpix image that are used;
 			// ie, rows in the W matrix that contain elements.
@@ -821,6 +667,8 @@ int main(int argc, char** args) {
 			Rused = 0;
 			for (i=0; i<R; i++) {
 				//if (sparsematrix_count_elements_in_row(sp, i)) {
+				// Pixels near the boundary can have negative or small weight sums.
+				// Just eliminate them.
 				double sum = sparsematrix_sum_row(sp, i);
 				if (sum > 0.5) {
 					sparsematrix_scale_row(sp, i, 1.0/sum);
@@ -836,24 +684,14 @@ int main(int argc, char** args) {
 				assert(sparsematrix_count_elements_in_row(sp, i) > 0);
 				//logverb("Row %i (%i): %i elements set.\n", i, rowmap[i], sparsematrix_count_elements_in_row(sp, i));
 			}
-			printf("sp count: %i\n", sparsematrix_count_elements(sp));
-			printf("sp max: %g\n", sparsematrix_max(sp));
-			int mxr, mxc;
-			sparsematrix_argmax(sp, &mxr, &mxc);
-			printf("sp argmax: %i,%i\n", mxr, mxc);
-			printf("N entries in row: %i\n", sparsematrix_count_elements_in_row(sp, mxr));
-			printf("rowmap: %i\n", rowmap[mxr]);
-			sparsematrix_print_row(sp, mxr, stdout);
+
+			printf("Trimmed to %i rows and %i elements\n", R, sparsematrix_count_elements(sp));
 
 			alloc_lsqr_mem(&lin, &lout, &lwork, &lfunc, R, C);
 			lfunc->mat_vec_prod = mat_vec_prod_2;
 			lin->lsqr_fp_out = stdout;
 			lin->num_rows = R;
 			lin->num_cols = C;
-			//lin->rel_mat_err = 1e-10;
-			//lin->rel_rhs_err = 1e-10;
-			//lin->cond_lim = 10.0; // * cnum;
-			//lin->damp_val = 1.0;
 			lin->damp_val = 0.0;
 			lin->rel_mat_err = 0;
 			lin->rel_rhs_err = 0;
@@ -866,16 +704,14 @@ int main(int argc, char** args) {
 				lin->rhs_vec->elements[i] = (isfinite(img[rowmap[i]]) ? img[rowmap[i]] : 0);
 			for (i=0; i<R; i++)
 				assert(isfinite(lin->rhs_vec->elements[i]));
-
 			logmsg("lin->rhs_vec norm2 is %g\n", dvec_norm2(lin->rhs_vec));
 
 			// output image is initial guess
 			assert(lin->sol_vec->length == outW*outH);
+			assert(lin->sol_vec->length == C);
 			for (i=0; i<(outW*outH); i++)
-				lin->sol_vec->elements[i] = (isnan(outimg[i]) ? 0 : outimg[i]);
-				//lin->sol_vec->elements[i] = 0;
+				lin->sol_vec->elements[i] = (isfinite(outimg[i]) ? outimg[i] : 0);
 			logmsg("lin->sol_vec norm2 is %g\n", dvec_norm2(lin->sol_vec));
-
 
 			{
 				char checkfn[256];
@@ -921,7 +757,6 @@ int main(int argc, char** args) {
 					outimg[i] = lout->sol_vec->elements[i];
 				// lout->std_err_vec
 
-				// HACK -- reduce output image to float, in-place.
 				{
 					char checkfn[256];
 					sprintf(checkfn, "step-%i.fits", k+1);
@@ -936,128 +771,14 @@ int main(int argc, char** args) {
 				break;
 			}
 
-			free_lsqr_mem(lin, lout, lwork, lfunc);
-			free(rowmap); rowmap = NULL;
-			sparsematrix_free(sp);
-		}
-
-
-		// RHL's inverse-resampling method.
-		else {
-
-			lsqr_input *lin;
-			lsqr_output *lout;
-			lsqr_work *lwork;
-			lsqr_func *lfunc;
-			int R, C;
-			mvp_t mvp;
-
-			memset(&mvp, 0, sizeof(mvp_t));
-
-			// rows, cols.
-			R = W * H;
-			C = outW * outH;
-
-			alloc_lsqr_mem(&lin, &lout, &lwork, &lfunc, R, C);
-			lfunc->mat_vec_prod = mat_vec_prod;
-			lin->lsqr_fp_out = stdout;
-			lin->num_rows = R;
-			lin->num_cols = C;
-			//lin->rel_mat_err = 1e-10;
-			//lin->rel_rhs_err = 1e-10;
-			//lin->cond_lim = 10.0; // * cnum;
-			//lin->damp_val = 1.0;
-			lin->damp_val = 0.0;
-			lin->rel_mat_err = 0;
-			lin->rel_rhs_err = 0;
-			lin->cond_lim = 0;
-			lin->max_iter = R + C + 50;
-
-			// input image is RHS.
-			assert(lin->rhs_vec->length == W*H);
-			for (i=0; i<(W*H); i++)
-				lin->rhs_vec->elements[i] = (isfinite(img[i]) ? img[i] : 0);
-
-			for (i=0; i<(W*H); i++) {
-				assert(isfinite(lin->rhs_vec->elements[i]));
-			}
-
-			logmsg("lin->rhs_vec norm2 is %g\n", dvec_norm2(lin->rhs_vec));
-
-			// output image is initial guess
-			assert(lin->sol_vec->length == outW*outH);
-			for (i=0; i<(outW*outH); i++)
-				lin->sol_vec->elements[i] = (isnan(outimg[i]) ? 0 : outimg[i]);
-
-			logmsg("lin->sol_vec norm2 is %g\n", dvec_norm2(lin->sol_vec));
-
-			mvp.W = W;
-			mvp.H = H;
-			mvp.outW = outW;
-			mvp.outH = outH;
-			mvp.minx = minx;
-			mvp.miny = miny;
-			mvp.hpstep = hpstep;
-			mvp.bighp = bighp;
-			mvp.wcs = wcs;
-			mvp.support = support;
-			mvp.order = order;
-			mvp.scale = scale;
-
-			{
-				char checkfn[256];
-				sprintf(checkfn, "step-0.fits");
-				float* fimg = (float*)outimg;
-				for (i=0; i<outW*outH; i++)
-					fimg[i] = outimg[i];
-				if (fits_write_float_image(fimg, outW, outH, checkfn)) {
-					ERROR("Failed to write output image %s", checkfn);
-					exit(-1);
-				}
-			}
-
-			int k;
-			for (k=0; k<20; k++) {
-				lin->max_iter = 100;
-				for (i=0; i<R; i++)
-					lin->rhs_vec->elements[i] = (isfinite(img[i]) ? img[i] : 0);
-
-				lsqr(lin, lout, lwork, lfunc, &mvp);
-
-				logmsg("Termination reason: %i\n", (int)lout->term_flag);
-				logmsg("Iterations: %i\n", (int)lout->num_iters);
-				logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
-				logmsg("Normal of residuals: %g\n", lout->resid_norm);
-				logmsg("Norm of W*resids: %g\n", lout->mat_resid_norm);
-
-				// Grab output solution...
-				for (i=0; i<(outW*outH); i++)
-					outimg[i] = lout->sol_vec->elements[i];
-
-				// lout->std_err_vec
-
-				// HACK -- reduce output image to float, in-place.
-				{
-					char checkfn[256];
-					sprintf(checkfn, "step-%i.fits", k+1);
-					float* fimg = (float*)outimg;
-					for (i=0; i<outW*outH; i++)
-						fimg[i] = outimg[i];
-					if (fits_write_float_image(fimg, outW, outH, checkfn)) {
-						ERROR("Failed to write output image %s", checkfn);
-						exit(-1);
-					}
-				}
-			}
-
+			// (re-)grab output solution.
 			for (i=0; i<(outW*outH); i++)
 				outimg[i] = lout->sol_vec->elements[i];
 
 			free_lsqr_mem(lin, lout, lwork, lfunc);
-
-			free(mvp.rowsum);
+			free(rowmap); rowmap = NULL;
+			sparsematrix_free(sp);
 		}
-
 
 	} else {
 		scale = 1.0;
