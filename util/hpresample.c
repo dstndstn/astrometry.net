@@ -659,6 +659,9 @@ int main(int argc, char** args) {
 
 			{
 				int i, j;
+
+				int nelems = 0;
+
 				for (i=0; i<hpH; i++) {
 					double hx, hy;
 					hy = miny + i*hpstep;
@@ -687,6 +690,7 @@ int main(int argc, char** args) {
 						y0 = MAX(0, (int)floor(py - support));
 						x1 = MIN(imW-1, (int) ceil(px + support));
 						y1 = MIN(imH-1, (int) ceil(py + support));
+
 						for (iy=y0; iy<=y1; iy++) {
 							for (ix=x0; ix<=x1; ix++) {
 								double d, L;
@@ -695,10 +699,14 @@ int main(int argc, char** args) {
 								if (L == 0)
 									continue;
 								sparsematrix_set(sp, i*hpW + j, iy*imW + ix, L);
+
+								nelems++;
 							}
 						}
 					}
 				}
+				printf("Number of non-zero matrix elements: %i\n", nelems);
+				printf("sp count: %i\n", sparsematrix_count_elements(sp));
 			}
 			sparsematrix_normalize_rows(sp);
 
@@ -708,7 +716,6 @@ int main(int argc, char** args) {
 			Rused = 0;
 			for (i=0; i<R; i++) {
 				if (sparsematrix_count_elements_in_row(sp, i)) {
-					//rowmap[i] = Rused;
 					rowmap[Rused] = i;
 					Rused++;
 				}
@@ -719,8 +726,10 @@ int main(int argc, char** args) {
 
 			for (i=0; i<R; i++) {
 				assert(sparsematrix_count_elements_in_row(sp, i) > 0);
-				logverb("Row %i (%i): %i elements set.\n", i, rowmap[i], sparsematrix_count_elements_in_row(sp, i));
+				//logverb("Row %i (%i): %i elements set.\n", i, rowmap[i], sparsematrix_count_elements_in_row(sp, i));
 			}
+			printf("sp count: %i\n", sparsematrix_count_elements(sp));
+			printf("sp max: %g\n", sparsematrix_max(sp));
 
 			alloc_lsqr_mem(&lin, &lout, &lwork, &lfunc, R, C);
 			lfunc->mat_vec_prod = mat_vec_prod_2;
@@ -772,6 +781,20 @@ int main(int argc, char** args) {
 					ERROR("Failed to write output image %s", checkfn);
 					exit(-1);
 				}
+			}
+
+			{
+				// check W * I: should be ~= H.
+				float* fimg = calloc(W * H, sizeof(float));
+				sparsematrix_mult_vec(sp, lin->sol_vec->elements, outimg, FALSE);
+				for (i=0; i<R; i++)
+					fimg[rowmap[i]] = outimg[i];
+				char* checkfn = "WI.fits";
+				if (fits_write_float_image(fimg, hpW, hpH, checkfn)) {
+					ERROR("Failed to write output image %s", checkfn);
+					exit(-1);
+				}
+				free(fimg);
 			}
 
 			int k;

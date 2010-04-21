@@ -1,3 +1,23 @@
+/*
+  This file is part of the Astrometry.net suite.
+  Copyright 2010 Dustin Lang.
+
+  The Astrometry.net suite is free software; you can redistribute
+  it and/or modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation, version 2.
+
+  The Astrometry.net suite is distributed in the hope that it will be
+  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with the Astrometry.net suite ; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+*/
+
+#include <sys/param.h>
+#include <math.h>
 
 #include "sparsematrix.h"
 
@@ -16,6 +36,19 @@ int compare_entries(const void* v1, const void* v2) {
 		return 0;
 	return 1;
 }
+
+#define FOR_EACH(sp, X)								\
+	do {												\
+		int r;										\
+		for (r=0; r<sp->R; r++) {					\
+			bl* row = sp->rows + r;					\
+			int ci;									\
+			for (ci=0; ci<bl_size(row); ci++) {		\
+				entry_t* e = bl_access(row, ci);	\
+				X;									\
+			}										\
+		}											\
+	} while (0)
 
 sparsematrix_t* sparsematrix_new(int R, int C) {
 	int i;
@@ -103,11 +136,19 @@ void sparsematrix_transpose_mult_vec(const sparsematrix_t* sp, const double* vec
 	}
 }
 
-int sparsematrix_count_elements_in_row(sparsematrix_t* sp, int row) {
+int sparsematrix_count_elements_in_row(const sparsematrix_t* sp, int row) {
 	return bl_size(sp->rows + row);
 }
 
-void sparsematrix_subset_rows(sparsematrix_t* sp, int* rows, int NR) {
+int sparsematrix_count_elements(const sparsematrix_t* sp) {
+	int i, N;
+	N = 0;
+	for (i=0; i<sp->R; i++)
+		N += bl_size(sp->rows + i);
+	return N;
+}
+
+void sparsematrix_subset_rows(sparsematrix_t* sp, const int* rows, int NR) {
 	bl* newrows;
 	int i;
 	assert(NR <= sp->R);
@@ -118,3 +159,21 @@ void sparsematrix_subset_rows(sparsematrix_t* sp, int* rows, int NR) {
 	sp->rows = newrows;
 	sp->R = NR;
 }
+
+double sparsematrix_max(const sparsematrix_t* sp) {
+	double mx = -HUGE_VAL;
+	FOR_EACH(sp, mx = MAX(mx, e->val));
+
+	/*
+	 int i, j;
+	 for (i=0; i<sp->R; i++) {
+	 bl* row = sp->rows + i;
+	 for (j=0; j<bl_size(row); j++) {
+	 entry_t* e = bl_access(row, j);
+	 mx = MAX(mx, e->val);
+	 }
+	 }
+	 */
+	return mx;
+}
+
