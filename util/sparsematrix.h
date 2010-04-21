@@ -20,6 +20,8 @@
 #ifndef SPARSE_MATRIX_H
 #define SPARSE_MATRIX_H
 
+#include <stdio.h>
+
 #include "bl.h"
 #include "an-bool.h"
 
@@ -50,6 +52,14 @@ int sparsematrix_count_elements(const sparsematrix_t* sp);
 
 double sparsematrix_max(const sparsematrix_t* sp);
 
+double sparsematrix_argmax(const sparsematrix_t* sp, int* pr, int* pc);
+
 void sparsematrix_subset_rows(sparsematrix_t* sp, const int* rows, int NR);
+
+void sparsematrix_print_row(const sparsematrix_t* sp, int row, FILE* fid);
+
+double sparsematrix_sum_row(const sparsematrix_t* sp, int r);
+
+void sparsematrix_scale_row(const sparsematrix_t* sp, int r, double scale);
 
 #endif

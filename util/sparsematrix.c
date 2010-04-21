@@ -50,6 +50,32 @@ int compare_entries(const void* v1, const void* v2) {
 		}											\
 	} while (0)
 
+#define FOR_EACH_IN_ROW(sp, r, X)						\
+	do {												\
+		bl* row = sp->rows + r;							\
+		int ci;											\
+		for (ci=0; ci<bl_size(row); ci++) {				\
+			entry_t* e = bl_access(row, ci);			\
+			X;											\
+		}												\
+	} while (0)
+
+/*
+#define FOR_EACH_DECL()							\
+	int r;										\
+	int ci;										\
+	int c;										\
+	bl* row;									\
+	entry_t* e;
+#define FOR_EACH(sp, r, ci, c, row, e)									\
+	for (row=sp->rows, ci=0, r=0, e=bl_access(row,ci); r<sp->R;			\
+		 r = (ci == bl_size(row) ? r+1 : r),							\
+			 ci = (ci == bl_size(row) ? 0 : ci+1	),					\
+			 row = sp->rows + r,										\
+			 e = (r == sp->R ? NULL : bl_access(row, ci)))
+//ci = (ci == bl_size(row) ? e=bl_access((ci == bl_size(row) ? sp->rows + (++r) : rows), (ci == bl_size(row) ? 0 : ci)), ci++)
+ */
+
 sparsematrix_t* sparsematrix_new(int R, int C) {
 	int i;
 	sparsematrix_t* sp = calloc(1, sizeof(sparsematrix_t));
@@ -87,10 +113,13 @@ void sparsematrix_normalize_rows(sparsematrix_t* sp) {
 		entry_t* e;
 		sum = 0;
 		N = bl_size(row);
+		if (N == 0)
+			continue;
 		for (j=0; j<N; j++) {
 			e = bl_access(row, j);
 			sum += e->val;
 		}
+		printf("row sum of %i: %g\n", i, sum);
 		for (j=0; j<N; j++) {
 			e = bl_access(row, j);
 			e->val /= sum;
@@ -163,17 +192,39 @@ void sparsematrix_subset_rows(sparsematrix_t* sp, const int* rows, int NR) {
 double sparsematrix_max(const sparsematrix_t* sp) {
 	double mx = -HUGE_VAL;
 	FOR_EACH(sp, mx = MAX(mx, e->val));
-
 	/*
-	 int i, j;
-	 for (i=0; i<sp->R; i++) {
-	 bl* row = sp->rows + i;
-	 for (j=0; j<bl_size(row); j++) {
-	 entry_t* e = bl_access(row, j);
+	 FOR_EACH_DECL();
+	 FOR_EACH(sp, r, ci, c, row, e) {
 	 mx = MAX(mx, e->val);
-	 }
 	 }
 	 */
 	return mx;
 }
 
+double sparsematrix_argmax(const sparsematrix_t* sp, int* pr, int* pc) {
+	double mx = -HUGE_VAL;
+	FOR_EACH(sp, if (e->val > mx) { mx = e->val; *pr = r; *pc = e->c; });
+	return mx;
+}
+
+double sparsematrix_sum_row(const sparsematrix_t* sp, int r) {
+	double sum = 0.0;
+	FOR_EACH_IN_ROW(sp, r, sum += e->val);
+	return sum;
+}
+
+void sparsematrix_scale_row(const sparsematrix_t* sp, int r, double scale) {
+	FOR_EACH_IN_ROW(sp, r, e->val *= scale);
+}
+
+void sparsematrix_print_row(const sparsematrix_t* sp, int r, FILE* fid) {
+	const bl* row = sp->rows + r;
+	int i;
+	for (i=0; i<bl_size(row); i++) {
+		entry_t* e = bl_access_const(row, i);
+		if (i)
+			fprintf(fid, ", ");
+		fprintf(fid, "[%i]=%g", e->c, e->val);
+	}
+	fprintf(fid, "\n");
+}

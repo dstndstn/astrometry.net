@@ -640,7 +640,7 @@ int main(int argc, char** args) {
 
 
 		// RHL's inverse-resampling method, try #2
-		{
+		if (1) {
 			lsqr_input *lin;
 			lsqr_output *lout;
 			lsqr_work *lwork;
@@ -708,14 +708,21 @@ int main(int argc, char** args) {
 				printf("Number of non-zero matrix elements: %i\n", nelems);
 				printf("sp count: %i\n", sparsematrix_count_elements(sp));
 			}
-			sparsematrix_normalize_rows(sp);
+
+			/*
+			 sparsematrix_print_row(sp, 141705, stdout);
+			 sparsematrix_normalize_rows(sp);
+			 */
 
 			// find elements (pixels) in the healpix image that are used;
 			// ie, rows in the W matrix that contain elements.
 			rowmap = malloc(R * sizeof(int));
 			Rused = 0;
 			for (i=0; i<R; i++) {
-				if (sparsematrix_count_elements_in_row(sp, i)) {
+				//if (sparsematrix_count_elements_in_row(sp, i)) {
+				double sum = sparsematrix_sum_row(sp, i);
+				if (sum > 0.5) {
+					sparsematrix_scale_row(sp, i, 1.0/sum);
 					rowmap[Rused] = i;
 					Rused++;
 				}
@@ -730,6 +737,12 @@ int main(int argc, char** args) {
 			}
 			printf("sp count: %i\n", sparsematrix_count_elements(sp));
 			printf("sp max: %g\n", sparsematrix_max(sp));
+			int mxr, mxc;
+			sparsematrix_argmax(sp, &mxr, &mxc);
+			printf("sp argmax: %i,%i\n", mxr, mxc);
+			printf("N entries in row: %i\n", sparsematrix_count_elements_in_row(sp, mxr));
+			printf("rowmap: %i\n", rowmap[mxr]);
+			sparsematrix_print_row(sp, mxr, stdout);
 
 			alloc_lsqr_mem(&lin, &lout, &lwork, &lfunc, R, C);
 			lfunc->mat_vec_prod = mat_vec_prod_2;
@@ -770,7 +783,6 @@ int main(int argc, char** args) {
 			logmsg("lin->sol_vec norm2 is %g\n", dvec_norm2(lin->sol_vec));
 
 
-			// HACK -- reduce output image to float, in-place.
 			{
 				char checkfn[256];
 				sprintf(checkfn, "step-0.fits");
@@ -799,7 +811,7 @@ int main(int argc, char** args) {
 
 			int k;
 			for (k=0; k<20; k++) {
-				lin->max_iter = 1;
+				lin->max_iter = 5;
 				for (i=0; i<R; i++)
 					lin->rhs_vec->elements[i] = (isfinite(img[rowmap[i]]) ? img[rowmap[i]] : 0);
 
@@ -815,6 +827,10 @@ int main(int argc, char** args) {
 					outimg[i] = lout->sol_vec->elements[i];
 				// lout->std_err_vec
 
+				// copy this output back to the input for next iteration...
+				for (i=0; i<(outW*outH); i++)
+					lin->sol_vec->elements[i] = lout->sol_vec->elements[i];
+				
 
 				// HACK -- reduce output image to float, in-place.
 				{
@@ -838,7 +854,8 @@ int main(int argc, char** args) {
 
 
 		// RHL's inverse-resampling method.
-		if (0) {
+		else {
+
 			lsqr_input *lin;
 			lsqr_output *lout;
 			lsqr_work *lwork;
@@ -910,24 +927,56 @@ int main(int argc, char** args) {
 			mvp.order = order;
 			mvp.scale = scale;
 
-			lsqr(lin, lout, lwork, lfunc, &mvp);
+			{
+				char checkfn[256];
+				sprintf(checkfn, "step-0.fits");
+				float* fimg = (float*)outimg;
+				for (i=0; i<outW*outH; i++)
+					fimg[i] = outimg[i];
+				if (fits_write_float_image(fimg, outW, outH, checkfn)) {
+					ERROR("Failed to write output image %s", checkfn);
+					exit(-1);
+				}
+			}
 
-			logmsg("Termination reason: %i\n", (int)lout->term_flag);
-			logmsg("Iterations: %i\n", (int)lout->num_iters);
-			logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
-			logmsg("Normal of residuals: %g\n", lout->resid_norm);
-			logmsg("Norm of W*resids: %g\n", lout->mat_resid_norm);
+			int k;
+			for (k=0; k<20; k++) {
+				lin->max_iter = 1;
+				for (i=0; i<R; i++)
+					lin->rhs_vec->elements[i] = (isfinite(img[i]) ? img[i] : 0);
 
-			// Grab output solution...
-			/*
-			 v.length = outW * outH;
-			 v.elements = outimg;
-			 dvec_copy(lout->sol_vec, &v);
-			 */
-			for (i=0; i<(outW*outH); i++)
-				outimg[i] = lout->sol_vec->elements[i];
+				lsqr(lin, lout, lwork, lfunc, &mvp);
 
-			// lout->std_err_vec
+				logmsg("Termination reason: %i\n", (int)lout->term_flag);
+				logmsg("Iterations: %i\n", (int)lout->num_iters);
+				logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
+				logmsg("Normal of residuals: %g\n", lout->resid_norm);
+				logmsg("Norm of W*resids: %g\n", lout->mat_resid_norm);
+
+				// Grab output solution...
+				/*
+				 v.length = outW * outH;
+				 v.elements = outimg;
+				 dvec_copy(lout->sol_vec, &v);
+				 */
+				for (i=0; i<(outW*outH); i++)
+					outimg[i] = lout->sol_vec->elements[i];
+
+				// lout->std_err_vec
+
+				// HACK -- reduce output image to float, in-place.
+				{
+					char checkfn[256];
+					sprintf(checkfn, "step-%i.fits", k+1);
+					float* fimg = (float*)outimg;
+					for (i=0; i<outW*outH; i++)
+						fimg[i] = outimg[i];
+					if (fits_write_float_image(fimg, outW, outH, checkfn)) {
+						ERROR("Failed to write output image %s", checkfn);
+						exit(-1);
+					}
+				}
+			}
 
 			free_lsqr_mem(lin, lout, lwork, lfunc);
 
