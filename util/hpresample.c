@@ -259,7 +259,7 @@ typedef struct mvp mvp_t;
 
 static void mat_vec_prod(long mode, dvec* x, dvec* y, void* token) {
 	mvp_t* mvp = token;
-	logmsg("mat_vec_prod: mode=%i\n", (int)mode);
+	logverb("mat_vec_prod: mode=%i\n", (int)mode);
 	if (mode == 0) {
 		double* rowsum;
 		// y = y + A * x
@@ -280,8 +280,8 @@ static void mat_vec_prod(long mode, dvec* x, dvec* y, void* token) {
 		} else
 			rowsum = NULL;
 
-		logmsg("before update: norm2(x) = %g\n", dvec_norm2(x));
-		logmsg("before update: norm2(y) = %g\n", dvec_norm2(y));
+		logverb("before update: norm2(x) = %g\n", dvec_norm2(x));
+		logverb("before update: norm2(y) = %g\n", dvec_norm2(y));
 
 		resample_image(x->elements, mvp->outW, mvp->outH,
 					   y->elements, mvp->W, mvp->H,
@@ -289,8 +289,8 @@ static void mat_vec_prod(long mode, dvec* x, dvec* y, void* token) {
 					   mvp->wcs, mvp->support, mvp->order, mvp->scale,
 					   FALSE, rowsum);
 
-		logmsg("after update: norm2(x) = %g\n", dvec_norm2(x));
-		logmsg("after update: norm2(y) = %g\n", dvec_norm2(y));
+		logverb("after update: norm2(x) = %g\n", dvec_norm2(x));
+		logverb("after update: norm2(y) = %g\n", dvec_norm2(y));
 
 		if (!mvp->rowsum)
 			mvp->rowsum = rowsum;
@@ -304,8 +304,8 @@ static void mat_vec_prod(long mode, dvec* x, dvec* y, void* token) {
 		assert(y->length == mvp->W * mvp->H);
 		assert(mvp->rowsum);
 
-		logmsg("before update: norm2(x) = %g\n", dvec_norm2(x));
-		logmsg("before update: norm2(y) = %g\n", dvec_norm2(y));
+		logverb("before update: norm2(x) = %g\n", dvec_norm2(x));
+		logverb("before update: norm2(y) = %g\n", dvec_norm2(y));
 
 		resample_add_transpose(x->elements, mvp->outW, mvp->outH,
 							   y->elements, mvp->W, mvp->H,
@@ -313,8 +313,8 @@ static void mat_vec_prod(long mode, dvec* x, dvec* y, void* token) {
 							   mvp->wcs, mvp->support, mvp->order, mvp->scale,
 							   mvp->rowsum);
 
-		logmsg("after update: norm2(x) = %g\n", dvec_norm2(x));
-		logmsg("after update: norm2(y) = %g\n", dvec_norm2(y));
+		logverb("after update: norm2(x) = %g\n", dvec_norm2(x));
+		logverb("after update: norm2(y) = %g\n", dvec_norm2(y));
 
 	} else {
 		ERROR("Unknown mode %i", (int)mode);
@@ -746,7 +746,7 @@ int main(int argc, char** args) {
 
 
 		// RHL's inverse-resampling method, try #2
-		if (1) {
+		if (0) {
 			lsqr_input *lin;
 			lsqr_output *lout;
 			lsqr_work *lwork;
@@ -815,11 +815,6 @@ int main(int argc, char** args) {
 				printf("sp count: %i\n", sparsematrix_count_elements(sp));
 			}
 
-			/*
-			 sparsematrix_print_row(sp, 141705, stdout);
-			 sparsematrix_normalize_rows(sp);
-			 */
-
 			// find elements (pixels) in the healpix image that are used;
 			// ie, rows in the W matrix that contain elements.
 			rowmap = malloc(R * sizeof(int));
@@ -863,18 +858,9 @@ int main(int argc, char** args) {
 			lin->rel_mat_err = 0;
 			lin->rel_rhs_err = 0;
 			lin->cond_lim = 0;
-			//lin->max_iter = R + C + 50;
 			lin->max_iter = 200;
 
 			// input image is RHS.
-			/*
-			 assert(lin->rhs_vec->length == W*H);
-			 for (i=0; i<(W*H); i++)
-			 lin->rhs_vec->elements[i] = (isfinite(img[i]) ? img[i] : 0);
-			 for (i=0; i<(W*H); i++) {
-			 assert(isfinite(lin->rhs_vec->elements[i]));
-			 }
-			 */
 			assert(lin->rhs_vec->length == R);
 			for (i=0; i<R; i++)
 				lin->rhs_vec->elements[i] = (isfinite(img[rowmap[i]]) ? img[rowmap[i]] : 0);
@@ -935,11 +921,6 @@ int main(int argc, char** args) {
 					outimg[i] = lout->sol_vec->elements[i];
 				// lout->std_err_vec
 
-				// copy this output back to the input for next iteration...
-				//for (i=0; i<(outW*outH); i++)
-				//lin->sol_vec->elements[i] = lout->sol_vec->elements[i];
-				
-
 				// HACK -- reduce output image to float, in-place.
 				{
 					char checkfn[256];
@@ -993,16 +974,9 @@ int main(int argc, char** args) {
 			lin->max_iter = R + C + 50;
 
 			// input image is RHS.
-			/*
-			 v.length = W * H;
-			 v.elements = img;
-			 dvec_copy(&v, lin->rhs_vec);
-			 */
 			assert(lin->rhs_vec->length == W*H);
 			for (i=0; i<(W*H); i++)
 				lin->rhs_vec->elements[i] = (isfinite(img[i]) ? img[i] : 0);
-			//(isnan(img[i]) ? 0 : img[i]);
-			//lin->rhs_vec->elements[i] = img[i];
 
 			for (i=0; i<(W*H); i++) {
 				assert(isfinite(lin->rhs_vec->elements[i]));
@@ -1011,15 +985,9 @@ int main(int argc, char** args) {
 			logmsg("lin->rhs_vec norm2 is %g\n", dvec_norm2(lin->rhs_vec));
 
 			// output image is initial guess
-			/*
-			 v.length = outW * outH;
-			 v.elements = outimg;
-			 dvec_copy(&v, lin->sol_vec);
-			 */
 			assert(lin->sol_vec->length == outW*outH);
 			for (i=0; i<(outW*outH); i++)
 				lin->sol_vec->elements[i] = (isnan(outimg[i]) ? 0 : outimg[i]);
-				//lin->sol_vec->elements[i] = outimg[i];
 
 			logmsg("lin->sol_vec norm2 is %g\n", dvec_norm2(lin->sol_vec));
 
@@ -1050,7 +1018,7 @@ int main(int argc, char** args) {
 
 			int k;
 			for (k=0; k<20; k++) {
-				lin->max_iter = 1;
+				lin->max_iter = 100;
 				for (i=0; i<R; i++)
 					lin->rhs_vec->elements[i] = (isfinite(img[i]) ? img[i] : 0);
 
@@ -1063,11 +1031,6 @@ int main(int argc, char** args) {
 				logmsg("Norm of W*resids: %g\n", lout->mat_resid_norm);
 
 				// Grab output solution...
-				/*
-				 v.length = outW * outH;
-				 v.elements = outimg;
-				 dvec_copy(lout->sol_vec, &v);
-				 */
 				for (i=0; i<(outW*outH); i++)
 					outimg[i] = lout->sol_vec->elements[i];
 
@@ -1086,6 +1049,9 @@ int main(int argc, char** args) {
 					}
 				}
 			}
+
+			for (i=0; i<(outW*outH); i++)
+				outimg[i] = lout->sol_vec->elements[i];
 
 			free_lsqr_mem(lin, lout, lwork, lfunc);
 
