@@ -331,7 +331,7 @@ int main(int argc, char** args) {
 	double realzoom;
 	int outW,outH;
 	double hx, hy;
-	int i,j,k;
+	int i,j;
 	int bighp;
 	double xyz[3];
 
@@ -339,11 +339,7 @@ int main(int argc, char** args) {
 	double scale;
 	int order = 2;
 	double support;
-
 	bool reverse = FALSE;
-
-	double maxD, minD;
-	double amaxD;
 
 	int loglvl = LOG_MSG;
 	qfitsloader ld;
@@ -490,53 +486,6 @@ int main(int argc, char** args) {
 	outimg = malloc(outW * outH * sizeof(double));
 	for (i=0; i<outW*outH; i++)
 		outimg[i] = 1.0 / 0.0;
-
-
-
-	// ASIDE - find how distances transform from 'image' to 'healpix image' space.
-	{
-		double chx, chy;
-		double cxyz[3];
-		double cra, cdec;
-		double dravec[3], ddecvec[3];
-		// compute distance distortion matrix, poorly, by probing a circle.
-		int steps = 360;
-		double astep = 2.0 * M_PI / (double)steps;
-
-		// center of image in healpix coords
-		chx = (minx + hpW/2 * hpstep);
-		chy = (miny + hpH/2 * hpstep);
-		healpix_to_xyzarr(bighp, 1, chx, chy, cxyz);
-		// directions of increasing RA,Dec
-		xyzarr2radecdeg(cxyz, &cra, &cdec);
-		radec_derivatives(cra, cdec, dravec, ddecvec);
-		maxD = -HUGE_VAL;
-		minD =  HUGE_VAL;
-		amaxD = -1;
-		for (i=0; i<steps; i++) {
-			double angle = astep * i;
-			double dra, ddec;
-			double d;
-			hx = sin(angle) * hpstep + chx;
-			hy = cos(angle) * hpstep + chy;
-			healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
-			dra = ddec = 0.0;
-			for (k=0; k<3; k++) {
-				dra += dravec[k] * (xyz[k] - cxyz[k]);
-				ddec += ddecvec[k] * (xyz[k] - cxyz[k]);
-			}
-			d = sqrt(dra*dra + ddec*ddec);
-			if (d > maxD) {
-				maxD = d;
-				amaxD = angle;
-			}
-			minD = MIN(d, minD);
-		}
-		printf("min,max D: %g, %g\n", minD, maxD);
-		printf("max D angle: %g\n", rad2deg(amaxD));
-	}
-
-
 
 	if (reverse) {
 		// for sinc:
