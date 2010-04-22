@@ -103,7 +103,8 @@ BACKEND_OBJS := \
 		blind_wcs.o tweak.o
 
 PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o \
-		plotannotations.o plotgrid.o plotoutline.o plotindex.o plotradec.o
+		plotannotations.o plotgrid.o plotoutline.o plotindex.o plotradec.o \
+		plothealpix.o
 ALL_OBJ += $(PLOTSTUFF)
 
 $(BACKEND_LIB): $(BACKEND_OBJS)

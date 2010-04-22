@@ -40,6 +40,7 @@
 #include "plotoutline.h"
 #include "plotindex.h"
 #include "plotradec.h"
+#include "plothealpix.h"
 
 #include "sip_qfits.h"
 #include "sip-utils.h"
@@ -509,7 +510,7 @@ int plotstuff_set_rgba(plot_args_t* pargs, const float* rgba) {
 }
 
 /* All render layers must go in here */
-static plotter_t plotters[9];
+static plotter_t plotters[10];
 
 int plotstuff_init(plot_args_t* pargs) {
 	int i, NR;
@@ -526,6 +527,7 @@ int plotstuff_init(plot_args_t* pargs) {
 	plotters[6] = plotter_outline;
 	plotters[7] = plotter_index;
 	plotters[8] = plotter_radec;
+	plotters[9] = plotter_healpix;
 
 	NR = sizeof(plotters) / sizeof(plotter_t);
 	// First init
