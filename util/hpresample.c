@@ -42,6 +42,22 @@ Test with CFHTLS field (D1-25-r exposure, 715809p.fits)
  hpresample big.fits bighp.fits
  hpresample -r -w big.fits bighp.fits bigunhp.fits
 
+ imarith unhp.fits small.fits sub diff.fits
+ cat <<< EOF
+plot_wcs small.fits
+image_file diff.fits
+image_format fits
+image_low -10
+image_high 10
+image_setsize
+image
+plot_color blue
+healpix_nside 11439
+healpix
+EOF | plotstuff -o hp.png
+
+
+
  */
 
 static const char* OPTIONS = "hrvz:o:e:w:W";
