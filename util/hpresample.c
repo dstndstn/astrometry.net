@@ -31,8 +31,8 @@ Test with CFHTLS field (D1-25-r exposure, 715809p.fits)
 
  imcopy 715809p.fits.gz"[1][1:512,1:512]" small.fits
 
- hpresample small.fits hp.fits
- hpresample -r -w small.fits hp.fits unhp.fits
+ hpresample -z 1.4 small.fits hp.fits
+ hpresample -z 1.4 -r -w small.fits hp.fits unhp.fits
 
  python hpresample-plots.py steps
 
@@ -605,15 +605,17 @@ int main(int argc, char** args) {
 
 			{
 				// check W * I: should be ~= H.
+				double* dimg = calloc(W * H, sizeof(double));
 				float* fimg = calloc(W * H, sizeof(float));
-				sparsematrix_mult_vec(sp, lin->sol_vec->elements, outimg, FALSE);
+				sparsematrix_mult_vec(sp, lin->sol_vec->elements, dimg, FALSE);
 				for (i=0; i<R; i++)
-					fimg[rowmap[i]] = outimg[i];
+					fimg[rowmap[i]] = dimg[i];
 				char* checkfn = "WI.fits";
 				if (fits_write_float_image(fimg, hpW, hpH, checkfn)) {
 					ERROR("Failed to write output image %s", checkfn);
 					exit(-1);
 				}
+				free(dimg);
 				free(fimg);
 			}
 

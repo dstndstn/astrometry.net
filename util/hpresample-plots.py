@@ -7,7 +7,9 @@ from pylab import *
 import pyfits
 import sys
 
+
 dosteps = 'steps' in sys.argv[1:]
+N = 74
 
 I0 = pyfits.open('small.fits')[0].data
 I1 = pyfits.open('unhp.fits')[0].data
@@ -63,7 +65,17 @@ savefig('hists.png')
 clf()
 subplot(111)
 title('Resampled image: pixel error distribution')
-hist((I1-I0).ravel(), bins=linspace(-25, 25, 51))
+D = (I1-I0).ravel()
+D.sort()
+q1 = D[int(0.25 * len(D))]
+q3 = D[int(0.75 * len(D))]
+print '25th percentile of error:', q1
+print '75th percentile of error:', q3
+print 'min, max', D.min(), D.max()
+
+hist(D, bins=linspace(D.min(), D.max(), 50), log=True)
+#hist(D, bins=linspace(q1, q3, 50))
+#hist((I1-I0).ravel(), bins=linspace(-25, 25, 51))
 xlabel('Resampled pixel - Original pixel')
 savefig('histdiffs.png')
 
@@ -79,9 +91,7 @@ ylabel('Resampled pixel value')
 axis([900,1100,900,1100])
 savefig('sorted.png')
 
-sys.exit(0)
-
-ii = [0, 99] + range(1, 99)
+ii = [0, N-1] + range(1, N-1)
 RMS = zeros_like(ii).astype(float)
 MED = zeros_like(RMS)
 
