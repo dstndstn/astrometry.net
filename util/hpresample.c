@@ -21,65 +21,19 @@
 Unused static void testit();
 
 /**
+Test with CFHTLS field (D1-25-r exposure, 715809p.fits)
 
- python util/tstimg.py 
- an-fitstopnm -i tstimg.fits -N 0 -X 255 | pnmtopng > tstimg.png
-
- hpresample tstimg; hpresample -r tstimg
- open tstimg.png tstimg-hp.png tstimg-unhp.png
-
- for x in tstimg.png tstimg-hp.png tstimg-unhp-{1,2}.png; do
- pngtopnm $x | pnmscale 10 | pnmtopng > zoom-$x;
- done
-
- for x in tstimg*.png; do
- pngtopnm $x | pnmscale 10 | pnmtopng > zoom-$x;
- done
-
- cp tstimg.wcs tstdot.wcs
- hpresample tstdot; hpresample -r tstdot
-
-CFHTLS field:
- D1-25-r exposure, 715809p.fits
  wget "http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/getData?archive=CFHT&file_id=715809p&dua=true"
 
- imcopy 715809p.fits.gz"[1][1:1024,1:1024]" 715809p-01-00.fits
- get-wcs -o 715809p-01-00.wcs 715809p-01-00.fits
-
+ #imcopy 715809p.fits.gz"[1][1:1024,1:1024]" 715809p-01-00.fits
+ #get-wcs -o 715809p-01-00.wcs 715809p-01-00.fits
 
  imcopy 715809p.fits.gz"[1][1:512,1:512]" small.fits
 
+ hpresample small.fits hp.fits
+ hpresample -r -w small.fits hp.fits unhp.fits
 
- imcopy 715809p.fits.gz"[6][100:900,100:900]" 715809p-a.fits
- get-wcs -o 715809p-a.wcs 715809p-a.fits
- an-fitstopnm -i 715809p-a.fits -N 800 -X 5000 | pnmtopng > 715809p-a.png
-
- hpresample 715809p-a
- hpresample -r 715809p-a
- cp 715809p-a-unhp.png 715809p-a-o2z1.png
-
- for z in 1 2 3; do
- for o in 2 3; do
- hpresample -o $o -z $z 715809p-a;
- hpresample -o $o -z $z -r 715809p-a;
- cp 715809p-a-unhp.png 715809p-a-o${o}z${z}.png;
- done
- done
-
-import pyfits
-import matplotlib
-matplotlib.use('Agg')
-from pylab import *
-I1 = imread('715809p-a.png')
-for z in [1,2,3]:
-	for o in [2,3]:
-		clf()
-		I2 = imread('715809p-a-o%iz%i.png' % (o,z))[:,:,0]
-		imshow(I2 - I1, vmin=-0.1, vmax=0.1, origin='lower', interpolation='nearest')
-		gray()
-		colorbar()
-		title('Lanczos order %i; healpix oversampling factor %i' % (o,z))
-		savefig('diff-o%iz%i.png' % (o,z))
+ python hpresample-plots.py
 
  */
 
@@ -211,9 +165,26 @@ static void mat_vec_prod_2(long mode, dvec* x, dvec* y, void* token) {
 }
 
 
+struct write_image_token {
+	char* fnpat;
+	float* img;
+	int W, H;
+};
 
-
-
+static int write_images(lsqr_input* lin, lsqr_output* lout, void* token) {
+	struct write_image_token* wit = token;
+	char filename[256];
+	int i;
+	sprintf(filename, wit->fnpat, lout->num_iters);
+	for (i=0; i<wit->W*wit->H; i++)
+		wit->img[i] = lout->sol_vec->elements[i];
+	logmsg("Writing %s...\n", filename);
+	if (fits_write_float_image(wit->img, wit->W, wit->H, filename)) {
+		ERROR("Failed to write output image %s", filename);
+		exit(-1);
+	}
+	return 0;
+}
 
 int main(int argc, char** args) {
     int argchar;
@@ -431,6 +402,10 @@ int main(int argc, char** args) {
 							if (isnan(pix))
 								// out-of-bounds pixel
 								continue;
+							if (!isfinite(pix)) {
+								logverb("Pixel value: %g\n", pix);
+								continue;
+							}
 							d = hypot(px - ix, py - iy);
 							L = lanczos(d / scale, order);
 							weight += L;
@@ -548,7 +523,8 @@ int main(int argc, char** args) {
 			lin->lsqr_fp_out = stdout;
 			lin->num_rows = R;
 			lin->num_cols = C;
-			lin->damp_val = 0.0;
+			//lin->damp_val = 1e-3;
+			lin->damp_val = 0;
 			lin->rel_mat_err = 0;
 			lin->rel_rhs_err = 0;
 			lin->cond_lim = 0;
@@ -571,7 +547,7 @@ int main(int argc, char** args) {
 
 			{
 				char checkfn[256];
-				sprintf(checkfn, "step-0.fits");
+				sprintf(checkfn, "step-00.fits");
 				float* fimg = (float*)outimg;
 				for (i=0; i<outW*outH; i++)
 					fimg[i] = outimg[i];
@@ -595,25 +571,35 @@ int main(int argc, char** args) {
 				free(fimg);
 			}
 
+			struct write_image_token wit;
+
 			int k;
-			for (k=0; k<20; k++) {
-				//lin->max_iter = 5;
+			for (k=0; k<100; k++) {
+				lin->max_iter = 100;
 				for (i=0; i<R; i++)
 					lin->rhs_vec->elements[i] = (isfinite(img[rowmap[i]]) ? img[rowmap[i]] : 0);
 
-				lsqr(lin, lout, lwork, lfunc, sp);
+				wit.fnpat = "step-%02i.fits";
+				wit.img = (float*)outimg;
+				wit.W = outW;
+				wit.H = outH;
+				
+				lsqr(lin, lout, lwork, lfunc, sp, write_images, &wit);
 				logmsg("Termination reason: %i\n", (int)lout->term_flag);
 				logmsg("Iterations: %i\n", (int)lout->num_iters);
 				logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
 				logmsg("Normal of residuals: %g\n", lout->resid_norm);
 				logmsg("Norm of W*resids: %g\n", lout->mat_resid_norm);
 
+				logmsg("lin->sol_vec = %p.  lout->sol_vec = %p\n", lin->sol_vec, lout->sol_vec);
+				logmsg("lin->sol_vec->elems = %p.  lout->sol_vec->elems = %p\n", lin->sol_vec->elements, lout->sol_vec->elements);
+
 				// Grab output solution...
 				for (i=0; i<(outW*outH); i++)
 					outimg[i] = lout->sol_vec->elements[i];
 				// lout->std_err_vec
 
-				{
+				/*{
 					char checkfn[256];
 					sprintf(checkfn, "step-%i.fits", k+1);
 					float* fimg = (float*)outimg;
@@ -623,7 +609,7 @@ int main(int argc, char** args) {
 						ERROR("Failed to write output image %s", checkfn);
 						exit(-1);
 					}
-				}
+				 }*/
 				break;
 			}
 
@@ -731,7 +717,7 @@ Unused static void testit() {
 	for (i=0; i<C; i++)
 		lin->sol_vec->elements[i] = 0.0;
 	logmsg("lin->sol_vec norm2 is %g\n", dvec_norm2(lin->sol_vec));
-	lsqr(lin, lout, lwork, lfunc, sp);
+	lsqr(lin, lout, lwork, lfunc, sp, NULL, NULL);
 	logmsg("Termination reason: %i\n", (int)lout->term_flag);
 	logmsg("Iterations: %i\n", (int)lout->num_iters);
 	logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
