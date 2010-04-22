@@ -20,7 +20,18 @@ colorbar()
 title('Healpix image')
 savefig('H.png')
 
-for i in range(100):
+clf()
+imshow(I1, vmin=1000, vmax=1200)
+colorbar()
+title('Resampled image')
+savefig('I1.png')
+clf()
+imshow(I1-I0, vmin=-10, vmax=10)
+colorbar()
+gray()
+savefig('diff.png')
+
+for i in [0, 99] + range(1, 99):
 	clf()
 	fn = 'step-%02i.fits' % i
 	print 'Reading', fn
@@ -38,13 +49,3 @@ for i in range(100):
 	title('Resampled image error, step %i.  RMS=%.2f, Median=%.2f' % (i, rms, med))
 	savefig('Ierrstep-%02i.png' % i)
 
-clf()
-imshow(I1, vmin=1000, vmax=1200)
-colorbar()
-title('Resampled image')
-savefig('I1.png')
-clf()
-imshow(I1-I0, vmin=-10, vmax=10)
-colorbar()
-gray()
-savefig('diff.png')

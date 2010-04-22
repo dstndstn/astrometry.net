@@ -14,9 +14,10 @@
 #include "mathutil.h"
 #include "qfits_image.h"
 #include "keywords.h"
+#include "tic.h"
+#include "sparsematrix.h"
 
 #include "lsqr.h"
-#include "sparsematrix.h"
 
 Unused static void testit();
 
@@ -35,9 +36,15 @@ Test with CFHTLS field (D1-25-r exposure, 715809p.fits)
 
  python hpresample-plots.py
 
+
+
+ imcopy ~/DATA/715809p.fits"[1]" big.fits
+ hpresample big.fits bighp.fits
+ hpresample -r -w big.fits bighp.fits bigunhp.fits
+
  */
 
-static const char* OPTIONS = "hrvz:o:e:w:";
+static const char* OPTIONS = "hrvz:o:e:w:W";
 
 void printHelp(char* progname) {
     fprintf(stderr, "%s [options] <input-FITS-filename> <output-FITS-filename>\n"
@@ -46,6 +53,7 @@ void printHelp(char* progname) {
 			"    [-w <wcs-file>] (default: input file)\n"
 			"    [-z <zoom>]: oversample healpix grid by this factor x factor (default 1)\n"
 			"    [-o <order>]: Lanczos order (default 2)\n"
+			"    [-W]: write out an image at each step.\n"
             "\n", progname);
 }
 extern char *optarg;
@@ -110,6 +118,9 @@ static void resample_image(const double* img, int W, int H,
 							 continue;
 						 weight += L;
 						 sum += L * img[iy*W + ix];
+						 if (!isfinite(img[iy*W + ix])) {
+							 logmsg("Image pixel (%i,%i) = %g\n", ix, iy, img[iy*W + ix]);
+						 }
 					 }
 				 }
 				 if (rowsum)
@@ -140,11 +151,13 @@ static void resample_image(const double* img, int W, int H,
 
 static void mat_vec_prod_2(long mode, dvec* x, dvec* y, void* token) {
 	sparsematrix_t* sp = token;
+	double t0, dt;
 	
 	logverb("mat_vec_prod_2: mode=%i\n", (int)mode);
 	logverb("before update: norm2(x) = %g\n", dvec_norm2(x));
 	logverb("before update: norm2(y) = %g\n", dvec_norm2(y));
 
+	t0 = timenow();
 	if (mode == 0) {
 		// y = y + A * x
 		assert(sp->R == y->length);
@@ -159,6 +172,8 @@ static void mat_vec_prod_2(long mode, dvec* x, dvec* y, void* token) {
 		ERROR("Unknown mode %i", (int)mode);
 		exit(-1);
 	}
+	dt = timenow() - t0;
+	logmsg("matrix mult took %g s\n", dt);
 
 	logverb("after update: norm2(x) = %g\n", dvec_norm2(x));
 	logverb("after update: norm2(y) = %g\n", dvec_norm2(y));
@@ -223,6 +238,9 @@ int main(int argc, char** args) {
 	qfitsloader ld;
 
 	int fitsext = 0;
+	double t0, dt;
+
+	bool writeimages = FALSE;
 
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
@@ -232,6 +250,9 @@ int main(int argc, char** args) {
 			exit(0);
 		case 'v':
 			loglvl++;
+			break;
+		case 'W':
+			writeimages = TRUE;
 			break;
 		case 'r':
 			reverse = TRUE;
@@ -366,10 +387,12 @@ int main(int argc, char** args) {
 		outimg[i] = 1.0 / 0.0;
 
 	if (reverse) {
+
 		// for sinc:
 		scale = 1.0;
 		support = (double)order * scale;
 
+		t0 = timenow();
 		for (i=0; i<outH; i++) {
 			for (j=0; j<outW; j++) {
 				double px, py;
@@ -427,7 +450,8 @@ int main(int argc, char** args) {
 			}
 			logverb("Row %i of %i\n", i+1, outH);
 		}
-
+		dt = timenow() - t0;
+		logmsg("Initial resampling took %g s\n", dt);
 
 		// RHL's inverse-resampling method, try #2, using a sparse matrix representation
 		{
@@ -441,6 +465,8 @@ int main(int argc, char** args) {
 			int Rall;
 			sparsematrix_t* sp;
 			int i, j;
+
+			t0 = timenow();
 
 			// rows, cols.
 			R = W * H;
@@ -490,6 +516,7 @@ int main(int argc, char** args) {
 						}
 				}
 			}
+
 			printf("Number of non-zero matrix elements: %i\n", sparsematrix_count_elements(sp));
 
 			// find elements (pixels) in the healpix image that are used;
@@ -518,13 +545,16 @@ int main(int argc, char** args) {
 
 			printf("Trimmed to %i rows and %i elements\n", R, sparsematrix_count_elements(sp));
 
+			dt = timenow() - t0;
+			logmsg("Computing matrix %g s\n", dt);
+
 			alloc_lsqr_mem(&lin, &lout, &lwork, &lfunc, R, C);
 			lfunc->mat_vec_prod = mat_vec_prod_2;
 			lin->lsqr_fp_out = stdout;
 			lin->num_rows = R;
 			lin->num_cols = C;
-			//lin->damp_val = 1e-3;
-			lin->damp_val = 0;
+			lin->damp_val = 1e-3;
+			//lin->damp_val = 0;
 			lin->rel_mat_err = 0;
 			lin->rel_rhs_err = 0;
 			lin->cond_lim = 0;
@@ -550,7 +580,7 @@ int main(int argc, char** args) {
 				sprintf(checkfn, "step-00.fits");
 				float* fimg = (float*)outimg;
 				for (i=0; i<outW*outH; i++)
-					fimg[i] = outimg[i];
+					fimg[i] = isfinite(outimg[i]) ? outimg[i] : 0;
 				if (fits_write_float_image(fimg, outW, outH, checkfn)) {
 					ERROR("Failed to write output image %s", checkfn);
 					exit(-1);
@@ -583,8 +613,15 @@ int main(int argc, char** args) {
 				wit.img = (float*)outimg;
 				wit.W = outW;
 				wit.H = outH;
-				
-				lsqr(lin, lout, lwork, lfunc, sp, write_images, &wit);
+
+				t0 = timenow();
+				if (writeimages)
+					lsqr(lin, lout, lwork, lfunc, sp, write_images, &wit);
+				else
+					lsqr(lin, lout, lwork, lfunc, sp, NULL, NULL);
+				dt = timenow() - t0;
+				logmsg("lsqr() took %g s\n", dt);
+
 				logmsg("Termination reason: %i\n", (int)lout->term_flag);
 				logmsg("Iterations: %i\n", (int)lout->num_iters);
 				logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
@@ -626,9 +663,12 @@ int main(int argc, char** args) {
 		scale = 1.0;
 		support = (double)order * scale;
 
+		t0 = timenow();
 		resample_image(img, W, H, outimg, outW, outH,
 					   minx, miny, hpstep, bighp, wcs,
 					   support, order, scale, TRUE, NULL);
+		dt = timenow() - t0;
+		logmsg("Resampling took %g s\n", dt);
 	}
 
 	printf("Writing output: %s\n", outfn);
