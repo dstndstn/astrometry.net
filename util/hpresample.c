@@ -34,7 +34,7 @@ Test with CFHTLS field (D1-25-r exposure, 715809p.fits)
  hpresample small.fits hp.fits
  hpresample -r -w small.fits hp.fits unhp.fits
 
- python hpresample-plots.py
+ python hpresample-plots.py steps
 
 
 
