@@ -431,7 +431,9 @@ void free_lsqr_fnc( lsqr_func  *fnc_struct )
 */
 void lsqr( lsqr_input *input, lsqr_output *output, lsqr_work *work,
            lsqr_func *func,
-           void *prod )
+           void *prod,
+		   int (*per_iteration_callback)(lsqr_input*, lsqr_output*, void* token),
+		   void* token)
 {
   double  dvec_norm2( dvec * );
 
@@ -803,6 +805,10 @@ void lsqr( lsqr_input *input, lsqr_output *output, lsqr_work *work,
       if( (term_iter < term_iter_max) &&
           (output->num_iters < input->max_iter) )
         output->term_flag = 0;
+
+	  if (per_iteration_callback)
+		  per_iteration_callback(input, output, token);
+
     } /* end while loop */
 /*
 *  Finish computing the standard error estimates vector se.

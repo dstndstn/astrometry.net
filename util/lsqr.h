@@ -392,7 +392,9 @@ void free_lsqr_wrk( lsqr_work * );
 lsqr_func *alloc_lsqr_fnc( );
 void free_lsqr_fnc( lsqr_func * );
 
-void lsqr( lsqr_input *, lsqr_output *, lsqr_work *, lsqr_func *, void * );
+void lsqr( lsqr_input *, lsqr_output *, lsqr_work *, lsqr_func *, void *,
+		   int (*per_iteration_callback)(lsqr_input*, lsqr_output*, void* token),
+		   void* token);
 
 double dvec_norm2( dvec * );
 void dvec_scale( double, dvec * );
