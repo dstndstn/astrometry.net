@@ -60,7 +60,7 @@ EOF | plotstuff -o hp.png
 
  */
 
-static const char* OPTIONS = "hrvz:o:e:w:W";
+static const char* OPTIONS = "hrvz:o:e:w:WqI:";
 
 void printHelp(char* progname) {
     fprintf(stderr, "%s [options] <input-FITS-filename> <output-FITS-filename>\n"
@@ -70,6 +70,8 @@ void printHelp(char* progname) {
 			"    [-z <zoom>]: oversample healpix grid by this factor x factor (default 1)\n"
 			"    [-o <order>]: Lanczos order (default 2)\n"
 			"    [-W]: write out an image at each step.\n"
+			"    [-q]: less verbose\n"
+			"    [-I <original image>]: for printing errors stats.\n"
             "\n", progname);
 }
 extern char *optarg;
@@ -217,6 +219,32 @@ static int write_images(lsqr_input* lin, lsqr_output* lout, void* token) {
 	return 0;
 }
 
+struct resample_error_token {
+	double* origimg;
+	int W, H;
+	int stepi;
+	double* rms;
+};
+static int resample_error(lsqr_input* lin, lsqr_output* lout, void* token) {
+	struct resample_error_token* re = token;
+	double rms = 0.0;
+	int i;
+	int N = 0;
+	for (i=0; i<re->W*re->H; i++) {
+		if (!isfinite(re->origimg[i])) {
+			printf("Pixel (%i,%i) in origimg is %g\n", i%re->W, i/re->W, re->origimg[i]);
+			continue;
+		}
+		rms += square(lout->sol_vec->elements[i] - re->origimg[i]);
+		N++;
+	}
+	rms = sqrt(rms / (double)N);
+	re->rms[re->stepi] = rms;
+	re->stepi++;
+	logmsg("Step %i: reconstruction RMS %g\n", re->stepi, re->rms[re->stepi-1]);
+	return 0;
+}
+
 int main(int argc, char** args) {
     int argchar;
 
@@ -224,8 +252,11 @@ int main(int argc, char** args) {
 	char* outfn = NULL;
 	char* wcsfn = NULL;
 
+	char* origfn = NULL;
+
 	double* img = NULL;
 	double* outimg = NULL;
+	double* origimg = NULL;
 
 	int W, H;
 	int wcsW, wcsH;
@@ -252,6 +283,7 @@ int main(int argc, char** args) {
 
 	int loglvl = LOG_MSG;
 	qfitsloader ld;
+	qfitsloader ld2;
 
 	int fitsext = 0;
 	double t0, dt;
@@ -266,6 +298,12 @@ int main(int argc, char** args) {
 			exit(0);
 		case 'v':
 			loglvl++;
+			break;
+		case 'q':
+			loglvl--;
+			break;
+		case 'I':
+			origfn = optarg;
 			break;
 		case 'W':
 			writeimages = TRUE;
@@ -321,11 +359,32 @@ int main(int argc, char** args) {
 	W = ld.lx;
 	H = ld.ly;
 	img = ld.dbuf;
+	logmsg("Read image %s: %i x %i.\n", infn, W, H);
 
-	printf("Read image %s: %i x %i.\n", infn, W, H);
+	if (origfn) {
+		int oW, oH;
+		ld2.filename = origfn;
+		ld2.xtnum = 0;
+		ld2.pnum = 0;
+		ld2.map = 1;
+		ld2.ptype = PTYPE_DOUBLE;
+		if (qfitsloader_init(&ld2)) {
+			ERROR("qfitsloader_init() failed");
+			exit(-1);
+		}
+		if (qfits_loadpix(&ld2)) {
+			ERROR("qfits_loadpix() failed");
+			exit(-1);
+		}
+		oW = ld2.lx;
+		oH = ld2.ly;
+		origimg = ld2.dbuf;
+		logmsg("Read original image %s: %i x %i.\n", origfn, oW, oH);
+	}
+
 
 	wcs = anwcs_open(wcsfn, fitsext);
-	printf("Reading WCS file %s\n", wcsfn);
+	logmsg("Reading WCS file %s\n", wcsfn);
 	if (!wcs) {
 		ERROR("Failed to read WCS from file: %s\n", wcsfn);
 		exit(-1);
@@ -336,15 +395,54 @@ int main(int argc, char** args) {
 		ERROR("Pixel scale from the WCS file is zero.  Usually this means the image has no valid WCS header.\n");
 		exit(-1);
 	}
-	printf("Target zoom: %g\n", zoom);
-	printf("Pixel scale: %g arcsec/pix\n", pixscale);
+	logmsg("Target zoom: %g\n", zoom);
+	logmsg("Pixel scale: %g arcsec/pix\n", pixscale);
 	nside = (int)ceil(zoom * healpix_nside_for_side_length_arcmin(pixscale / 60.0));
-	printf("Using nside %i\n", nside);
+	logmsg("Using nside %i\n", nside);
 	realzoom = (pixscale/60.0) / healpix_side_length_arcmin(nside);
-	printf("Real zoom: %g\n", realzoom);
+	logmsg("Real zoom: %g\n", realzoom);
 
 	wcsW = anwcs_imagew(wcs);
 	wcsH = anwcs_imageh(wcs);
+
+	// check the axis ratio of the healpix...
+	{
+		double xyz[12];
+		double px = wcsW / 2.0;
+		double py = wcsH / 2.0;
+		double hx, hy;
+		double ra,dec;
+		int bighp;
+		double dh;
+		double d0, d1, d2, d3;
+		anwcs_pixelxy2radec(wcs, px, py, &ra, &dec);
+		logmsg("This image's center is RA,Dcc (%g, %g)\n", ra, dec);
+		anwcs_pixelxy2xyz(wcs, px, py, xyz);
+		bighp = xyzarrtohealpixf(xyz, 1, &hx, &hy);
+		logmsg("Big healpix %i, healpix coords (%g, %g)\n", bighp, hx, hy);
+		dh = (1.0 / (double)nside);
+
+		healpix_to_xyzarr(bighp, 1, hx, hy, xyz);
+		healpix_to_xyzarr(bighp, 1, hx+dh, hy, xyz+3);
+		healpix_to_xyzarr(bighp, 1, hx+dh, hy+dh, xyz+6);
+		healpix_to_xyzarr(bighp, 1, hx, hy+dh, xyz+9);
+
+		d0 = sqrt(distsq(xyz, xyz+6, 3));
+		d1 = sqrt(distsq(xyz+3, xyz+9, 3));
+
+		logmsg("Healpix diagonal ratio: %g\n", MAX(d0,d1) / MIN(d0, d1));
+		logmsg("  %g arcsec  vs  %g arcsec  across the two diagonals\n",
+			   dist2arcsec(d0), dist2arcsec(d1));
+
+		d2 = sqrt(distsq(xyz, xyz+3, 3));
+		d3 = sqrt(distsq(xyz, xyz+9, 3));
+
+		logmsg("Healpix axis ratio: %g\n", MAX(d2,d3) / MIN(d2, d3));
+		logmsg("  %g arcsec  vs  %g arcsec  in the x,y directions\n",
+			   dist2arcsec(d2), dist2arcsec(d3));
+
+	}
+
 
 	// when going forward, wcsW == W
 
@@ -393,7 +491,7 @@ int main(int argc, char** args) {
 		hpH = outH;
 	}
 
-	printf("Rendering output image: %i x %i\n", outW, outH);
+	logmsg("Rendering output image: %i x %i\n", outW, outH);
 
 	hpstep = 1.0 / (double)nside;
 	logverb("hpstep %g\n", hpstep);
@@ -512,28 +610,28 @@ int main(int argc, char** args) {
 					py -= 1;
 					debug("pixel (%.1f, %.1f)\n", px, py);
 					if (px < -support || px >= imW+support)
-							continue;
-						if (py < -support || py >= imH+support)
-							continue;
-						x0 = MAX(0, (int)floor(px - support));
-						y0 = MAX(0, (int)floor(py - support));
-						x1 = MIN(imW-1, (int) ceil(px + support));
-						y1 = MIN(imH-1, (int) ceil(py + support));
-
-						for (iy=y0; iy<=y1; iy++) {
-							for (ix=x0; ix<=x1; ix++) {
-								double d, L;
-								d = hypot(px - ix, py - iy);
-								L = lanczos(d / scale, order);
-								if (L == 0)
-									continue;
-								sparsematrix_set(sp, i*hpW + j, iy*imW + ix, L);
-							}
+						continue;
+					if (py < -support || py >= imH+support)
+						continue;
+					x0 = MAX(0, (int)floor(px - support));
+					y0 = MAX(0, (int)floor(py - support));
+					x1 = MIN(imW-1, (int) ceil(px + support));
+					y1 = MIN(imH-1, (int) ceil(py + support));
+					
+					for (iy=y0; iy<=y1; iy++) {
+						for (ix=x0; ix<=x1; ix++) {
+							double d, L;
+							d = hypot(px - ix, py - iy);
+							L = lanczos(d / scale, order);
+							if (L == 0)
+								continue;
+							sparsematrix_set(sp, i*hpW + j, iy*imW + ix, L);
 						}
+					}
 				}
 			}
 
-			printf("Number of non-zero matrix elements: %i\n", sparsematrix_count_elements(sp));
+			logmsg("Number of non-zero matrix elements: %i\n", sparsematrix_count_elements(sp));
 
 			// find elements (pixels) in the healpix image that are used;
 			// ie, rows in the W matrix that contain elements.
@@ -559,7 +657,7 @@ int main(int argc, char** args) {
 				//logverb("Row %i (%i): %i elements set.\n", i, rowmap[i], sparsematrix_count_elements_in_row(sp, i));
 			}
 
-			printf("Trimmed to %i rows and %i elements\n", R, sparsematrix_count_elements(sp));
+			logmsg("Trimmed to %i rows and %i elements\n", R, sparsematrix_count_elements(sp));
 
 			dt = timenow() - t0;
 			logmsg("Computing matrix %g s\n", dt);
@@ -574,7 +672,7 @@ int main(int argc, char** args) {
 			lin->rel_mat_err = 0;
 			lin->rel_rhs_err = 0;
 			lin->cond_lim = 0;
-			lin->max_iter = 200;
+			lin->max_iter = 100;
 
 			// input image is RHS.
 			assert(lin->rhs_vec->length == R);
@@ -591,26 +689,26 @@ int main(int argc, char** args) {
 				lin->sol_vec->elements[i] = (isfinite(outimg[i]) ? outimg[i] : 0);
 			logmsg("lin->sol_vec norm2 is %g\n", dvec_norm2(lin->sol_vec));
 
-			{
+			if (writeimages) {
 				char checkfn[256];
 				sprintf(checkfn, "step-00.fits");
-				float* fimg = (float*)outimg;
+				float* fimg = calloc(W * H, sizeof(float));
 				for (i=0; i<outW*outH; i++)
 					fimg[i] = isfinite(outimg[i]) ? outimg[i] : 0;
 				if (fits_write_float_image(fimg, outW, outH, checkfn)) {
 					ERROR("Failed to write output image %s", checkfn);
 					exit(-1);
 				}
+				free(fimg);
 			}
-
-			{
+			if (writeimages) {
 				// check W * I: should be ~= H.
 				double* dimg = calloc(W * H, sizeof(double));
 				float* fimg = calloc(W * H, sizeof(float));
+				char* checkfn = "WI.fits";
 				sparsematrix_mult_vec(sp, lin->sol_vec->elements, dimg, FALSE);
 				for (i=0; i<R; i++)
 					fimg[rowmap[i]] = dimg[i];
-				char* checkfn = "WI.fits";
 				if (fits_write_float_image(fimg, hpW, hpH, checkfn)) {
 					ERROR("Failed to write output image %s", checkfn);
 					exit(-1);
@@ -620,55 +718,42 @@ int main(int argc, char** args) {
 			}
 
 			struct write_image_token wit;
+			wit.fnpat = "step-%02i.fits";
+			wit.img = (float*)outimg;
+			wit.W = outW;
+			wit.H = outH;
 
-			int k;
-			for (k=0; k<100; k++) {
-				lin->max_iter = 100;
-				for (i=0; i<R; i++)
-					lin->rhs_vec->elements[i] = (isfinite(img[rowmap[i]]) ? img[rowmap[i]] : 0);
+			struct resample_error_token re;
+			re.origimg = origimg;
+			re.W = outW;
+			re.H = outH;
+			re.stepi = 0;
+			re.rms = calloc(lin->max_iter, sizeof(double));
 
-				wit.fnpat = "step-%02i.fits";
-				wit.img = (float*)outimg;
-				wit.W = outW;
-				wit.H = outH;
+			t0 = timenow();
+			if (writeimages)
+				lsqr(lin, lout, lwork, lfunc, sp, write_images, &wit);
+			else if (origimg)
+				lsqr(lin, lout, lwork, lfunc, sp, resample_error, &re);
+			else
+				lsqr(lin, lout, lwork, lfunc, sp, NULL, NULL);
+			dt = timenow() - t0;
+			logmsg("lsqr() took %g s\n", dt);
 
-				t0 = timenow();
-				if (writeimages)
-					lsqr(lin, lout, lwork, lfunc, sp, write_images, &wit);
-				else
-					lsqr(lin, lout, lwork, lfunc, sp, NULL, NULL);
-				dt = timenow() - t0;
-				logmsg("lsqr() took %g s\n", dt);
+			logmsg("Termination reason: %i\n", (int)lout->term_flag);
+			logmsg("Iterations: %i\n", (int)lout->num_iters);
+			logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
+			logmsg("Normal of residuals: %g\n", lout->resid_norm);
+			logmsg("Norm of W*resids: %g\n", lout->mat_resid_norm);
 
-				logmsg("Termination reason: %i\n", (int)lout->term_flag);
-				logmsg("Iterations: %i\n", (int)lout->num_iters);
-				logmsg("Condition number estimate: %g\n", lout->mat_cond_num);
-				logmsg("Normal of residuals: %g\n", lout->resid_norm);
-				logmsg("Norm of W*resids: %g\n", lout->mat_resid_norm);
-
-				logmsg("lin->sol_vec = %p.  lout->sol_vec = %p\n", lin->sol_vec, lout->sol_vec);
-				logmsg("lin->sol_vec->elems = %p.  lout->sol_vec->elems = %p\n", lin->sol_vec->elements, lout->sol_vec->elements);
-
-				// Grab output solution...
-				for (i=0; i<(outW*outH); i++)
-					outimg[i] = lout->sol_vec->elements[i];
-				// lout->std_err_vec
-
-				/*{
-					char checkfn[256];
-					sprintf(checkfn, "step-%i.fits", k+1);
-					float* fimg = (float*)outimg;
-					for (i=0; i<outW*outH; i++)
-						fimg[i] = outimg[i];
-					if (fits_write_float_image(fimg, outW, outH, checkfn)) {
-						ERROR("Failed to write output image %s", checkfn);
-						exit(-1);
-					}
-				 }*/
-				break;
+			if (origimg) {
+				printf("%g, ", zoom);
+				for (i=0; i<re.stepi; i++)
+					printf("%g, ", re.rms[i]);
+				printf("\n");
 			}
 
-			// (re-)grab output solution.
+			// Grab output solution...
 			for (i=0; i<(outW*outH); i++)
 				outimg[i] = lout->sol_vec->elements[i];
 
@@ -689,7 +774,7 @@ int main(int argc, char** args) {
 		logmsg("Resampling took %g s\n", dt);
 	}
 
-	printf("Writing output: %s\n", outfn);
+	logmsg("Writing output: %s\n", outfn);
 	// HACK -- reduce output image to float, in-place.
 	{
 		float* fimg = (float*)outimg;
