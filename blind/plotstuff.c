@@ -31,6 +31,7 @@
 #include <ppm.h>
 #endif
 
+
 #include "plotstuff.h"
 #include "plotfill.h"
 #include "plotxy.h"
@@ -51,6 +52,7 @@
 #include "log.h"
 #include "errors.h"
 #include "anwcs.h"
+
 
 enum cmdtype {
 	CIRCLE,
