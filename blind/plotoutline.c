@@ -35,6 +35,10 @@ const plotter_t plotter_outline = {
 	.free = plot_outline_free
 };
 
+plotoutline_t* plot_outline_get(plot_args_t* pargs) {
+	return plotstuff_get_config(pargs, "outline");
+}
+
 void* plot_outline_init(plot_args_t* plotargs) {
 	plotoutline_t* args = calloc(1, sizeof(plotoutline_t));
 	args->stepsize = 10;
@@ -44,15 +48,12 @@ void* plot_outline_init(plot_args_t* plotargs) {
 struct walk_token {
 	cairo_t* cairo;
 	bool first;
-	//sip_t* wcs;
-	//anwcs_t* plotwcs;
 	plot_args_t* pargs;
 };
 
 static void walk_callback(const sip_t* wcs, double x, double y, double ra, double dec, void* token) {
 	struct walk_token* walk = token;
 	bool ok;
-	//ok = sip_radec2pixelxy(walk->wcs, ra, dec, &x, &y);
 	ok = plotstuff_radec2xy(walk->pargs, ra, dec, &x, &y);
 	if (!ok)
 		return;
@@ -71,24 +72,39 @@ int plot_outline_plot(const char* command,
 	assert(args->wcs);
 	assert(pargs->wcs);
 
+	plotstuff_builtin_apply(cairo, pargs);
+
 	token.first = TRUE;
 	token.cairo = cairo;
-	//token.plotwcs = pargs->wcs;
 	token.pargs = pargs;
 	sip_walk_image_boundary(args->wcs, args->stepsize, walk_callback, &token);
-	cairo_stroke(cairo);
+	if (args->fill)
+		cairo_fill(cairo);
+	else
+		cairo_stroke(cairo);
 
 	return 0;
 }
 
-int plot_outline_set_wcs_file(plotoutline_t* args, const char* cmdargs) {
-	free(args->wcs);
-	args->wcs = sip_read_tan_or_sip_header_file_ext(cmdargs, 0, NULL, FALSE);
-	if (!args->wcs) {
-		ERROR("Failed to read WCS file \"%s\"", cmdargs);
+int plot_outline_set_wcs_file(plotoutline_t* args, const char* filename, int ext) {
+	sip_t* wcs = sip_read_tan_or_sip_header_file_ext(filename, ext, NULL, FALSE);
+	if (!wcs) {
+		ERROR("Failed to read WCS file \"%s\"", filename);
 		return -1;
 	}
-	logverb("Read WCS file %s\n", cmdargs);
+	logverb("Read WCS file %s\n", filename);
+	return plot_outline_set_wcs(args, wcs);
+}
+
+int plot_outline_set_wcs(plotoutline_t* args, sip_t* wcs) {
+	if (args->wcs)
+		sip_free(args->wcs);
+	args->wcs = wcs;
+	return 0;
+}
+
+int plot_outline_set_fill(plotoutline_t* args, bool fill) {
+	args->fill = fill;
 	return 0;
 }
 
@@ -96,9 +112,14 @@ int plot_outline_command(const char* cmd, const char* cmdargs,
 					   plot_args_t* pargs, void* baton) {
 	plotoutline_t* args = (plotoutline_t*)baton;
 	if (streq(cmd, "outline_wcs")) {
-		if (plot_outline_set_wcs_file(args, cmdargs)) {
+		if (plot_outline_set_wcs_file(args, cmdargs, 0)) {
 			return -1;
 		}
+	} else if (streq(cmd, "outline_fill")) {
+		if (streq(cmdargs, "0"))
+			args->fill = FALSE;
+		else
+			args->fill = TRUE;
 	} else if (streq(cmd, "outline_step")) {
 		args->stepsize = atof(cmdargs);
 	} else {

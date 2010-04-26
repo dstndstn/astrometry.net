@@ -81,6 +81,12 @@ struct cairocmd {
 };
 typedef struct cairocmd cairocmd_t;
 
+plot_args_t* plotstuff_new() {
+	plot_args_t* pargs = calloc(1, sizeof(plot_args_t));
+	plotstuff_init(pargs);
+	return pargs;
+}
+
 int plotstuff_get_radec_center_and_radius(plot_args_t* pargs,
 										  double* p_ra, double* p_dec, double* p_radius) {
 	if (!pargs->wcs)
@@ -222,6 +228,44 @@ int plotstuff_set_size(plot_args_t* pargs, int W, int H) {
 	return 0;
 }
 
+int plotstuff_set_wcs_file(plot_args_t* pargs, const char* filename, int ext) {
+	anwcs_t* wcs = anwcs_open(filename, ext);
+	if (!wcs) {
+		ERROR("Failed to read WCS file \"%s\", extension %i", filename, ext);
+		return -1;
+	}
+	return plotstuff_set_wcs(pargs, wcs);
+}
+
+int plotstuff_set_wcs(plot_args_t* pargs, anwcs_t* wcs) {
+	if (pargs->wcs) {
+		anwcs_free(pargs->wcs);
+	}
+	pargs->wcs = wcs;
+	return 0;
+}
+
+int plotstuff_set_wcs_box(plot_args_t* pargs, float ra, float dec, float width) {
+	tan_t tanwcs;
+	anwcs_t* wcs;
+	double scale;
+	logverb("Setting WCS to a box centered at (%g,%g) with width %g deg.\n", ra, dec, width);
+
+	tanwcs.crval[0] = ra;
+	tanwcs.crval[1] = dec;
+	tanwcs.crpix[0] = pargs->W / 2.0;
+	tanwcs.crpix[1] = pargs->H / 2.0;
+	scale = width / (double)pargs->W;
+	tanwcs.cd[0][0] = -scale;
+	tanwcs.cd[1][0] = 0;
+	tanwcs.cd[0][1] = 0;
+	tanwcs.cd[1][1] = -scale;
+	tanwcs.imagew = pargs->W;
+	tanwcs.imageh = pargs->H;
+	wcs = anwcs_new_tan(&tanwcs);
+	return plotstuff_set_wcs(pargs, wcs);
+}
+
 static int plot_builtin_command(const char* cmd, const char* cmdargs,
 								plot_args_t* pargs, void* baton) {
 	if (streq(cmd, "plot_color")) {
@@ -237,8 +281,10 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 	} else if (streq(cmd, "plot_fontsize")) {
 		pargs->fontsize = atof(cmdargs);
 	} else if (streq(cmd, "plot_alpha")) {
-		// FIXME -- add checking.
-		pargs->rgba[3] = atof(cmdargs);
+		if (plotstuff_set_alpha(pargs, atof(cmdargs))) {
+			ERROR("Failed to set alpha");
+			return -1;
+		}
 	} else if (streq(cmd, "plot_op")) {
 		if (streq(cmdargs, "add")) {
 			pargs->op = CAIRO_OPERATOR_ADD;
@@ -266,36 +312,18 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 		}
 		plotstuff_set_size(pargs, W, H);
 	} else if (streq(cmd, "plot_wcs")) {
-		pargs->wcs = anwcs_open(cmdargs, 0);
-		if (!pargs->wcs) {
-			ERROR("Failed to read WCS file \"%s\"", cmdargs);
+		if (plotstuff_set_wcs_file(pargs, cmdargs, 0)) {
 			return -1;
 		}
 	} else if (streq(cmd, "plot_wcs_box")) {
 		float ra, dec, width;
-		tan_t tanwcs;
-		double scale;
 		if (sscanf(cmdargs, "%f %f %f", &ra, &dec, &width) != 3) {
 			ERROR("Failed to parse plot_wcs_box args \"%s\"", cmdargs);
 			return -1;
 		}
-		logverb("Setting WCS to a box centered at (%g,%g) with width %g deg.\n", ra, dec, width);
-		if (pargs->wcs)
-			anwcs_free(pargs->wcs);
-
-		tanwcs.crval[0] = ra;
-		tanwcs.crval[1] = dec;
-		tanwcs.crpix[0] = pargs->W / 2.0;
-		tanwcs.crpix[1] = pargs->H / 2.0;
-		scale = width / (double)pargs->W;
-		tanwcs.cd[0][0] = -scale;
-		tanwcs.cd[1][0] = 0;
-		tanwcs.cd[0][1] = 0;
-		tanwcs.cd[1][1] = -scale;
-		tanwcs.imagew = pargs->W;
-		tanwcs.imageh = pargs->H;
-		pargs->wcs = anwcs_new_tan(&tanwcs);
-
+		if (plotstuff_set_wcs_box(pargs, ra, dec, width)) {
+			return -1;
+		}
 	} else if (streq(cmd, "plot_wcs_setsize")) {
 		assert(pargs->wcs);
 		plotstuff_set_size(pargs, (int)ceil(anwcs_imagew(pargs->wcs)), (int)ceil(anwcs_imageh(pargs->wcs)));
@@ -499,8 +527,21 @@ int plotstuff_set_color(plot_args_t* pargs, const char* name) {
 	return parse_color_rgba(name, pargs->rgba);
 }
 
+int plotstuff_set_alpha(plot_args_t* pargs, float alpha) {
+	pargs->rgba[3] = alpha;
+	return 0;
+}
+
 int plotstuff_set_bgcolor(plot_args_t* pargs, const char* name) {
 	return parse_color_rgba(name, pargs->bg_rgba);
+}
+
+int plotstuff_set_bgrgba2(plot_args_t* pargs, float r, float g, float b, float a) {
+	pargs->bg_rgba[0] = r;
+	pargs->bg_rgba[1] = g;
+	pargs->bg_rgba[2] = b;
+	pargs->bg_rgba[3] = a;
+	return 0;
 }
 
 int plotstuff_set_rgba(plot_args_t* pargs, const float* rgba) {
@@ -508,6 +549,14 @@ int plotstuff_set_rgba(plot_args_t* pargs, const float* rgba) {
 	pargs->rgba[1] = rgba[1];
 	pargs->rgba[2] = rgba[2];
 	pargs->rgba[3] = rgba[3];
+	return 0;
+}
+
+int plotstuff_set_rgba2(plot_args_t* pargs, float r, float g, float b, float a) {
+	pargs->rgba[0] = r;
+	pargs->rgba[1] = g;
+	pargs->rgba[2] = b;
+	pargs->rgba[3] = a;
 	return 0;
 }
 

@@ -34,6 +34,10 @@ const plotter_t plotter_grid = {
 	.free = plot_grid_free
 };
 
+plotgrid_t* plot_grid_get(plot_args_t* pargs) {
+	return plotstuff_get_config(pargs, "grid");
+}
+
 void* plot_grid_init(plot_args_t* plotargs) {
 	plotgrid_t* args = calloc(1, sizeof(plotgrid_t));
 	args->dolabel = TRUE;
@@ -132,7 +136,6 @@ int plot_grid_plot(const char* command,
 	plotgrid_t* args = (plotgrid_t*)baton;
 	double ramin,ramax,decmin,decmax;
 	double ra,dec;
-	float bgrgba[4] = { 0,0,0,1 };
 
 	if (!pargs->wcs) {
 		ERROR("No WCS was set -- can't plot grid lines");
@@ -140,24 +143,35 @@ int plot_grid_plot(const char* command,
 	}
 	// Find image bounds in RA,Dec...
 	plotstuff_get_radec_bounds(pargs, 50, &ramin, &ramax, &decmin, &decmax);
-	if (args->rastep == 0 || args->decstep == 0) {
-		// FIXME -- choose defaults
-		ERROR("Need grid_rastep, grid_decstep");
-		return -1;
-	}
+	/*
+	 if (args->rastep == 0 || args->decstep == 0) {
+	 // FIXME -- choose defaults
+	 ERROR("Need grid_rastep, grid_decstep");
+	 return -1;
+	 }
+	 */
+
+	plotstuff_builtin_apply(cairo, pargs);
+	pargs->label_offset_x = 0;
+	pargs->label_offset_y = -10;
+	
 	logverb("Image bounds: RA %g, %g, Dec %g, %g\n",
 			ramin, ramax, decmin, decmax);
-	for (ra = args->rastep * floor(ramin / args->rastep);
-		 ra <= args->rastep * ceil(ramax / args->rastep);
-		 ra += args->rastep) {
-		plot_line_constant_ra(pargs, ra, decmin, decmax);
-		cairo_stroke(pargs->cairo);
+	if (args->rastep > 0) {
+		for (ra = args->rastep * floor(ramin / args->rastep);
+			 ra <= args->rastep * ceil(ramax / args->rastep);
+			 ra += args->rastep) {
+			plot_line_constant_ra(pargs, ra, decmin, decmax);
+			cairo_stroke(pargs->cairo);
+		}
 	}
-	for (dec = args->decstep * floor(decmin / args->decstep);
-		 dec <= args->decstep * ceil(decmax / args->decstep);
-		 dec += args->decstep) {
-		plot_line_constant_dec(pargs, dec, ramin, ramax);
-		cairo_stroke(pargs->cairo);
+	if (args->decstep > 0) {
+		for (dec = args->decstep * floor(decmin / args->decstep);
+			 dec <= args->decstep * ceil(decmax / args->decstep);
+			 dec += args->decstep) {
+			plot_line_constant_dec(pargs, dec, ramin, ramax);
+			cairo_stroke(pargs->cairo);
+		}
 	}
 
 	//logmsg("Dolabel: %i\n", (int)args->dolabel);
@@ -242,7 +256,8 @@ int plot_grid_plot(const char* command,
 			logmsg("Label \"%s\" at (%g,%g)\n", label, ra, in);
 			ok = plotstuff_radec2xy(pargs, ra, in, &x, &y);
 
-			add_text(pargs->cairo, x, y, label, pargs, bgrgba, NULL, NULL);
+			//add_text(pargs->cairo, x, y, label, pargs, pargs->bg_rgba, NULL, NULL);
+			plotstuff_stack_text(pargs, cairo, label, x, y);
 		}
 		for (dec = args->declabelstep * floor(decmin / args->declabelstep);
 			 dec <= args->declabelstep * ceil(decmax / args->declabelstep);
@@ -304,15 +319,22 @@ int plot_grid_plot(const char* command,
 			logmsg("Label Dec=\"%s\" at (%g,%g)\n", label, in, dec);
 			ok = plotstuff_radec2xy(pargs, in, dec, &x, &y);
 
-			add_text(pargs->cairo, x, y, label, pargs, bgrgba, NULL, NULL);
+			//add_text(pargs->cairo, x, y, label, pargs, pargs->bg_rgba, NULL, NULL);
+			plotstuff_stack_text(pargs, cairo, label, x, y);
 		}
-		
+
+		plotstuff_plot_stack(pargs, cairo);
 		
 	}
 
 
 	return 0;
 }
+
+/*
+int plot_grid_set_radec_step(plotgrid_t* args, double rastep, double decstep) {
+}
+ */
 
 int plot_grid_command(const char* cmd, const char* cmdargs,
 					   plot_args_t* pargs, void* baton) {

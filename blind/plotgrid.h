@@ -31,6 +31,8 @@ struct plotgrid_args {
 };
 typedef struct plotgrid_args plotgrid_t;
 
+plotgrid_t* plot_grid_get(plot_args_t* pargs);
+
 void* plot_grid_init(plot_args_t* args);
 
 int plot_grid_command(const char* command, const char* cmdargs,

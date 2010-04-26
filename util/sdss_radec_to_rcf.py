@@ -3,6 +3,9 @@ from astrometry.util.pyfits_utils import *
 from astrometry.util.starutil_numpy import *
 from astrometry.util.find_data_file import *
 from os.path import basename,dirname
+from numpy import argsort
+
+from optparse import OptionParser
 
 # RA,Dec are either scalars or iterables.
 # If scalars, returns a list of (run, camcol, field, ra, dec) tuples, one for each matching field.
@@ -38,7 +41,10 @@ def radec_to_sdss_rcf(ra, dec, spherematch=True, radius=0):
 		#print 'sdss type:', sdssxyz.dtype
 		(inds,dists) = spherematch.match(xyz, sdssxyz, sqrt(radius2))
 		#print 'found %i matches' % len(inds)
-		#print 'inds:', inds.shape
+		print 'inds:', inds.shape
+		I = argsort(dists[:,0])
+		print 'dists:', dists.shape
+		inds = inds[I,:]
 		rcfs = [[] for i in range(len(rds))]
 		#print 'len rds:', len(rds)
 		#print 'len sdssxyz:', len(sdssxyz)
@@ -67,10 +73,25 @@ def radec_to_sdss_rcf(ra, dec, spherematch=True, radius=0):
 #  rm g.fits a.fits
 
 if __name__ == '__main__':
+	parser = OptionParser(usage='%prog [options] <ra> <dec>')
+
+	(opt, args) = parser.parse_args()
+	if len(args) != 2:
+		parser.print_help()
+		print
+		print 'Got extra arguments:', args
+		sys.exit(-1)
+
+	# parse RA,Dec.
+	ra = float(args[0])
+	dec = float(args[1])
+	
 	#rcfs = radec_to_sdss_rcf([236.1, 236.4], [0,0])
 	#ra,dec = 10.632, 41.257
 	#ra,dec = 146.8, 67.9
-	ra,dec = 143, 21.5
+	#ra,dec = 143, 21.5
+	#ra,dec = 18.8, -0.86
+
 	# arcmin
 	radius = 15.
 	rcfs = radec_to_sdss_rcf(ra,dec,radius=radius)

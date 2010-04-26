@@ -21,11 +21,13 @@
 #include "plotstuff.h"
 
 struct plotoutline_args {
-	//char* wcsfn;
 	sip_t* wcs;
 	double stepsize;
+	bool fill;
 };
 typedef struct plotoutline_args plotoutline_t;
+
+plotoutline_t* plot_outline_get(plot_args_t* pargs);
 
 void* plot_outline_init(plot_args_t* args);
 
@@ -36,6 +38,12 @@ int plot_outline_plot(const char* command, cairo_t* cr,
 					plot_args_t* args, void* baton);
 
 void plot_outline_free(plot_args_t* args, void* baton);
+
+int plot_outline_set_wcs_file(plotoutline_t* args, const char* filename, int ext);
+
+int plot_outline_set_wcs(plotoutline_t* args, sip_t* wcs);
+
+int plot_outline_set_fill(plotoutline_t* args, bool fill);
 
 extern const plotter_t plotter_outline;
 

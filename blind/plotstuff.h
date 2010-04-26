@@ -100,6 +100,8 @@ int parse_color_rgba(const char* color, float* rgba);
 int cairo_set_color(cairo_t* cairo, const char* color);
 void cairo_set_rgba(cairo_t* cairo, const float* rgba);
 
+
+plot_args_t* plotstuff_new(void);
 int plotstuff_init(plot_args_t* plotargs);
 int plotstuff_read_and_run_command(plot_args_t* pargs, FILE* f);
 int plotstuff_run_command(plot_args_t* pargs, const char* cmd);
@@ -109,13 +111,23 @@ void* plotstuff_get_config(plot_args_t* pargs, const char* name);
 int plotstuff_set_color(plot_args_t* pargs, const char* name);
 int plotstuff_set_bgcolor(plot_args_t* pargs, const char* name);
 
+int plotstuff_set_alpha(plot_args_t* pargs, float alpha);
+
 int plotstuff_set_rgba(plot_args_t* pargs, const float* rgba);
+
+int plotstuff_set_rgba2(plot_args_t* pargs, float r, float g, float b, float a);
+int plotstuff_set_bgrgba2(plot_args_t* pargs, float r, float g, float b, float a);
 
 int plotstuff_set_marker(plot_args_t* pargs, const char* name);
 
 int plotstuff_set_markersize(plot_args_t* pargs, double ms);
 
 int plotstuff_set_size(plot_args_t* pargs, int W, int H);
+
+int plotstuff_set_wcs_box(plot_args_t* pargs, float ra, float dec, float width);
+
+int plotstuff_set_wcs(plot_args_t* pargs, anwcs_t* wcs);
+
 
 void plotstuff_builtin_apply(cairo_t* cairo, plot_args_t* args);
 
