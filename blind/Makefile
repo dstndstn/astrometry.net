@@ -564,9 +564,9 @@ ALL_OBJ += plotstuff-main.o
 plotstuff_wrap.c: plotstuff.i
 	swig -python $<
 
-_plotstuff.so: plotstuff_wrap.c setup.py $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+_plotstuff_c.so: plotstuff_wrap.c setup.py $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	python setup.py build --force --build-base build --build-platlib build/lib
-	cp build/lib/_plotstuff.so $@
+	cp build/lib/_plotstuff_c.so $@
 
 plotxy.o: plotxy.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) -c -o $@ $<

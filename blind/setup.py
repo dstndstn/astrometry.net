@@ -33,7 +33,7 @@ def get_lib_dirs(pkg):
 	libs = [l[2:] for l in libs]
 	return libs
 
-c_module = Extension('_plotstuff',
+c_module = Extension('_plotstuff_c',
                      sources = ['plotstuff_wrap.c'],
                      include_dirs = [
 						 '../qfits-an/include',
