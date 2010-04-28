@@ -29,33 +29,33 @@ applying conditions on the distribution of these files.
 
 2. Conditions
 
-Astrometry.net are making available a set of data files ("indexes") under
-the following conditions:
+Astrometry.net are making available a set of data files ("index
+files") under the following conditions:
 
- * NOT-FOR-COMMERCIAL-USE: Because the indexes represent a re-release of
-   data originating in the USNO-B Catalog, the indexes may not
-   be used for any commercial purpose whatsoever without prior written
-   consent from our team.  Our consent will only be granted to
-   commercial users for use in public, not-for-profit projects they
-   are engaged in or supporting.
+ * NOT-FOR-COMMERCIAL-USE: Because the index files represent a
+   re-release of data originating in the USNO-B Catalog, the index
+   files may not be used for any commercial purpose whatsoever without
+   prior written consent from our team.  Our consent will only be
+   granted to commercial users for use in public, not-for-profit
+   projects they are engaged in or supporting.
 
- * CREDIT: If the indexes are used in a system which provides a public
-   web service, then any web page that makes use of the results must
-   clearly display the following text:
-   "This service uses tools provided by Astrometry.net.
-    For more details visit http://astrometry.net/ ."
+ * CREDIT: If the index files are used in a system that provides a
+   public web service, then any web page that makes use of the results
+   must clearly display the following text: "This service uses tools
+   provided by Astrometry.net.  For more details visit
+   http://astrometry.net/ ."
 
- * PUBLIC SERVICES MUST BE OPEN: If the indexes are used in a system
-   which provides a public web service, then any astronomical images
-   solved using the indexes (alone or in conjunction with other data)
-   must be made available to any other interested party including the
-   Astrometry.net team.  The image files may be made accessible by
-   providing a list of URLs, by granting network access to a source
-   control repository or database, or by giving access to or sending
-   physical media.
+ * PUBLIC SERVICES MUST BE OPEN: If the index files are used in a
+   system that provides a public web service, then any astronomical
+   images solved using the index files (alone or in conjunction with
+   other data) must be made available to any other interested party
+   including the Astrometry.net team.  The image files may be made
+   accessible by providing a list of URLs, by granting network access
+   to a source control repository or database, or by giving access to
+   or sending physical media.
 
- * ACADEMIC CITATION: If the indexes are used in any scholarly work,
-   research grant proposals or other scientific or academic
+ * ACADEMIC CITATION: If the index files are used in any scholarly
+   work, research grant proposals or other scientific or academic
    publications, the Astrometry.net project must be properly cited and
    acknowledged.  The paper to cite is the Lang et al paper on our
    bibliography page http://astrometry.net/biblio.html .  The
@@ -63,16 +63,17 @@ the following conditions:
    by Astrometry.net."
 
  * NO REDISTRIBUTION: Redistribution, copying, posting, mirroring, or
-   hosting copies of the indexes or information sufficient to obtain
-   the indexes is not permitted.  In other words, the only legitimate
-   way for someone to have the indexes is for them to have obtained
-   them from us directly.
+   hosting copies of the index files or information sufficient to
+   obtain the index files is not permitted.  In other words, the only
+   legitimate way for someone to have the index files is for them to
+   have obtained them from us directly.
 
-3. Obtaining the indexes
+3. Obtaining the index files
 
 Send an email to the user "code2" at the domain "astrometry.net"
-stating clearly your intended use of the indexes, and stating
+stating clearly your intended use of the index files, and stating
 explicitly that you have read and agreed to the conditions in this
 text file.  We will return to you information required to obtain the
-indexes.  That information may not be redistributed, as noted in the
-conditions above.
+index files.  That information may not be redistributed, as noted in
+the conditions above.  If you don't get a reply to your email within
+24 hours, please send us a reminder.
