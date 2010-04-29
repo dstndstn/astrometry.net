@@ -88,7 +88,7 @@ ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	gnu-specific.o an-endian.o errors.o an-opts.o svn.o tic.o log.o \
 	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
 	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
-	anwcs.o
+	anwcs.o sparsematrix.o lsqr.o
 
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h \
@@ -308,9 +308,6 @@ suppl_1.dat:
 build-hd-tree: build-hd-tree.o tycho2-fits.o tycho2.o \
 		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += build-hd-tree.o
-
-hpresample: hpresample.o cairoutils.o anwcs.o lsqr.o sparsematrix.o
-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $^ $(ANUTILS_LIB) $(QFITS_LIB) $(JPEG_LIB) $(PNG_LIB) $(NETPBM_LIB) $(CAIRO_LIB) $(WCSLIB_LIB)
 
 ### TESTS
 
