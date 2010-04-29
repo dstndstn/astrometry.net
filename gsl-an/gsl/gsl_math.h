@@ -1,10 +1,10 @@
 /* gsl_math.h
  * 
- * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2004 Gerard Jungman, Brian Gough
+ * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2004, 2007 Gerard Jungman, Brian Gough
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
+ * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful, but
@@ -21,10 +21,12 @@
 #define __GSL_MATH_H__
 #include <math.h>
 #include <gsl/gsl_sys.h>
+#include <gsl/gsl_inline.h>
 #include <gsl/gsl_machine.h>
 #include <gsl/gsl_precision.h>
 #include <gsl/gsl_nan.h>
 #include <gsl/gsl_pow_int.h>
+#include <gsl/gsl_minmax.h>
 
 #ifndef M_E
 #define M_E        2.71828182845904523536028747135      /* e */
@@ -115,70 +117,6 @@ __BEGIN_DECLS
 
 /* Return nonzero if x is a real number, i.e. non NaN or infinite. */
 #define GSL_IS_REAL(x) (gsl_finite(x))
-
-/* Define MAX and MIN macros/functions if they don't exist. */
-
-/* plain old macros for general use */
-#define GSL_MAX(a,b) ((a) > (b) ? (a) : (b))
-#define GSL_MIN(a,b) ((a) < (b) ? (a) : (b))
-
-/* function versions of the above, in case they are needed */
-double gsl_max (double a, double b);
-double gsl_min (double a, double b);
-
-/* inline-friendly strongly typed versions */
-#ifdef HAVE_INLINE
-
-extern inline int GSL_MAX_INT (int a, int b);
-extern inline int GSL_MIN_INT (int a, int b);
-extern inline double GSL_MAX_DBL (double a, double b);
-extern inline double GSL_MIN_DBL (double a, double b);
-extern inline long double GSL_MAX_LDBL (long double a, long double b);
-extern inline long double GSL_MIN_LDBL (long double a, long double b);
-
-extern inline int
-GSL_MAX_INT (int a, int b)
-{
-  return GSL_MAX (a, b);
-}
-
-extern inline int
-GSL_MIN_INT (int a, int b)
-{
-  return GSL_MIN (a, b);
-}
-
-extern inline double
-GSL_MAX_DBL (double a, double b)
-{
-  return GSL_MAX (a, b);
-}
-
-extern inline double
-GSL_MIN_DBL (double a, double b)
-{
-  return GSL_MIN (a, b);
-}
-
-extern inline long double
-GSL_MAX_LDBL (long double a, long double b)
-{
-  return GSL_MAX (a, b);
-}
-
-extern inline long double
-GSL_MIN_LDBL (long double a, long double b)
-{
-  return GSL_MIN (a, b);
-}
-#else
-#define GSL_MAX_INT(a,b)   GSL_MAX(a,b)
-#define GSL_MIN_INT(a,b)   GSL_MIN(a,b)
-#define GSL_MAX_DBL(a,b)   GSL_MAX(a,b)
-#define GSL_MIN_DBL(a,b)   GSL_MIN(a,b)
-#define GSL_MAX_LDBL(a,b)  GSL_MAX(a,b)
-#define GSL_MIN_LDBL(a,b)  GSL_MIN(a,b)
-#endif /* HAVE_INLINE */
 
 /* Definition of an arbitrary function with parameters */
 

@@ -1,6 +1,6 @@
 /* matrix/init_source.c
  * 
- * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2007 Gerard Jungman, Brian Gough
+ * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2007, 2009 Gerard Jungman, Brian Gough
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -182,6 +182,8 @@ FUNCTION (gsl_matrix, alloc_from_matrix) (TYPE(gsl_matrix) * mm,
 void
 FUNCTION (gsl_matrix, free) (TYPE (gsl_matrix) * m)
 {
+  RETURN_IF_NULL (m);
+
   if (m->owner)
     {
       FUNCTION(gsl_block, free) (m->block);

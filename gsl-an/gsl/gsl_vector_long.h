@@ -1,10 +1,10 @@
 /* vector/gsl_vector_long.h
  * 
- * Copyright (C) 1996, 1997, 1998, 1999, 2000 Gerard Jungman, Brian Gough
+ * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2007 Gerard Jungman, Brian Gough
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
+ * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful, but
@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_inline.h>
 #include <gsl/gsl_check_range.h>
 #include <gsl/gsl_block_long.h>
 
@@ -122,12 +123,6 @@ gsl_vector_long_const_subvector_with_stride (const gsl_vector_long *v,
 
 /* Operations */
 
-long gsl_vector_long_get (const gsl_vector_long * v, const size_t i);
-void gsl_vector_long_set (gsl_vector_long * v, const size_t i, long x);
-
-long *gsl_vector_long_ptr (gsl_vector_long * v, const size_t i);
-const long *gsl_vector_long_const_ptr (const gsl_vector_long * v, const size_t i);
-
 void gsl_vector_long_set_zero (gsl_vector_long * v);
 void gsl_vector_long_set_all (gsl_vector_long * v, long x);
 int gsl_vector_long_set_basis (gsl_vector_long * v, size_t i);
@@ -163,15 +158,21 @@ int gsl_vector_long_add_constant (gsl_vector_long * a, const double x);
 int gsl_vector_long_isnull (const gsl_vector_long * v);
 int gsl_vector_long_ispos (const gsl_vector_long * v);
 int gsl_vector_long_isneg (const gsl_vector_long * v);
+int gsl_vector_long_isnonneg (const gsl_vector_long * v);
+
+INLINE_DECL long gsl_vector_long_get (const gsl_vector_long * v, const size_t i);
+INLINE_DECL void gsl_vector_long_set (gsl_vector_long * v, const size_t i, long x);
+INLINE_DECL long * gsl_vector_long_ptr (gsl_vector_long * v, const size_t i);
+INLINE_DECL const long * gsl_vector_long_const_ptr (const gsl_vector_long * v, const size_t i);
 
 #ifdef HAVE_INLINE
 
-extern inline
+INLINE_FUN
 long
 gsl_vector_long_get (const gsl_vector_long * v, const size_t i)
 {
 #if GSL_RANGE_CHECK
-  if (i >= v->size)
+  if (GSL_RANGE_COND(i >= v->size))
     {
       GSL_ERROR_VAL ("index out of range", GSL_EINVAL, 0);
     }
@@ -179,12 +180,12 @@ gsl_vector_long_get (const gsl_vector_long * v, const size_t i)
   return v->data[i * v->stride];
 }
 
-extern inline
+INLINE_FUN
 void
 gsl_vector_long_set (gsl_vector_long * v, const size_t i, long x)
 {
 #if GSL_RANGE_CHECK
-  if (i >= v->size)
+  if (GSL_RANGE_COND(i >= v->size))
     {
       GSL_ERROR_VOID ("index out of range", GSL_EINVAL);
     }
@@ -192,12 +193,12 @@ gsl_vector_long_set (gsl_vector_long * v, const size_t i, long x)
   v->data[i * v->stride] = x;
 }
 
-extern inline
+INLINE_FUN
 long *
 gsl_vector_long_ptr (gsl_vector_long * v, const size_t i)
 {
 #if GSL_RANGE_CHECK
-  if (i >= v->size)
+  if (GSL_RANGE_COND(i >= v->size))
     {
       GSL_ERROR_NULL ("index out of range", GSL_EINVAL);
     }
@@ -205,20 +206,18 @@ gsl_vector_long_ptr (gsl_vector_long * v, const size_t i)
   return (long *) (v->data + i * v->stride);
 }
 
-extern inline
+INLINE_FUN
 const long *
 gsl_vector_long_const_ptr (const gsl_vector_long * v, const size_t i)
 {
 #if GSL_RANGE_CHECK
-  if (i >= v->size)
+  if (GSL_RANGE_COND(i >= v->size))
     {
       GSL_ERROR_NULL ("index out of range", GSL_EINVAL);
     }
 #endif
   return (const long *) (v->data + i * v->stride);
 }
-
-
 #endif /* HAVE_INLINE */
 
 __END_DECLS

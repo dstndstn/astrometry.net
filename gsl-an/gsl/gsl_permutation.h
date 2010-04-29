@@ -1,10 +1,10 @@
 /* permutation/gsl_permutation.h
  * 
- * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2004 Brian Gough
+ * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2004, 2007 Brian Gough
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
+ * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful, but
@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_inline.h>
 #include <gsl/gsl_check_range.h>
 
 #undef __BEGIN_DECLS
@@ -59,10 +60,9 @@ int gsl_permutation_fprintf (FILE * stream, const gsl_permutation * p, const cha
 size_t gsl_permutation_size (const gsl_permutation * p);
 size_t * gsl_permutation_data (const gsl_permutation * p);
 
-size_t gsl_permutation_get (const gsl_permutation * p, const size_t i);
 int gsl_permutation_swap (gsl_permutation * p, const size_t i, const size_t j);
 
-int gsl_permutation_valid (gsl_permutation * p);
+int gsl_permutation_valid (const gsl_permutation * p);
 void gsl_permutation_reverse (gsl_permutation * p);
 int gsl_permutation_inverse (gsl_permutation * inv, const gsl_permutation * p);
 int gsl_permutation_next (gsl_permutation * p);
@@ -76,14 +76,16 @@ size_t gsl_permutation_inversions (const gsl_permutation * p);
 size_t gsl_permutation_linear_cycles (const gsl_permutation * p);
 size_t gsl_permutation_canonical_cycles (const gsl_permutation * q);
 
+INLINE_DECL size_t gsl_permutation_get (const gsl_permutation * p, const size_t i);
+
 #ifdef HAVE_INLINE
 
-extern inline
+INLINE_FUN
 size_t
 gsl_permutation_get (const gsl_permutation * p, const size_t i)
 {
 #if GSL_RANGE_CHECK
-  if (i >= p->size)
+  if (GSL_RANGE_COND(i >= p->size))
     {
       GSL_ERROR_VAL ("index out of range", GSL_EINVAL, 0);
     }

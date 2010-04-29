@@ -1,6 +1,6 @@
 /* linalg/svdstep.c 
  *
- * Copyright (C) 2007 Brian Gough
+ * Copyright (C) 2007, 2010 Brian Gough
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ chop_small_elements (gsl_vector * d, gsl_vector * f)
         {
           gsl_vector_set (f, i, 0.0);
         }
+
       d_i = d_ip1;
     }
 
@@ -49,13 +50,19 @@ trailing_eigenvalue (const gsl_vector * d, const gsl_vector * f)
   double fa = (n > 2) ? gsl_vector_get (f, n - 3) : 0.0;
   double fb = gsl_vector_get (f, n - 2);
 
+  double mu;
+
+#if GOLUB_VAN_LOAN_8_3_2
+
+  /* Golub and van Loan, Algorithm 8.3.2 
+     The full SVD algorithm is described in section 8.6.2 */
+
   double ta = da * da + fa * fa;
   double tb = db * db + fb * fb;
   double tab = da * fb;
 
   double dt = (ta - tb) / 2.0;
 
-  double mu;
 
   if (dt >= 0)
     {
@@ -65,6 +72,44 @@ trailing_eigenvalue (const gsl_vector * d, const gsl_vector * f)
     {
       mu = tb + (tab * tab) / ((-dt) + hypot (dt, tab));
     }
+
+#else
+  {
+    /* We can compute mu more accurately than using the formula above
+       since we know the roots cannot be negative.  This also avoids
+       the possibility of NaNs in the formula above.
+
+       The matrix is [ da^2 + fa^2,  da fb      ;
+                       da fb      , db^2 + fb^2 ]
+       and mu is the eigenvalue closest to the bottom right element.
+    */
+    
+    double ta = da * da + fa * fa;
+    double tb = db * db + fb * fb;
+    double tab = da * fb;
+    
+    double dt = (ta - tb) / 2.0;
+    
+    double S = ta + tb;
+    double da2 = da * da, db2 = db * db;
+    double fa2 = fa * fa, fb2 = fb * fb;
+    double P = (da2 * db2) + (fa2 * db2) + (fa2 * fb2);
+    double D = hypot(dt, tab);
+    double r1 = S/2 + D;
+    
+    if (dt >= 0)
+      {
+        /* tb < ta, choose smaller root */
+        mu = (r1 > 0) ?  P / r1 : 0.0;
+      }
+    else 
+      {
+        /* tb > ta, choose larger root */
+        mu = r1;
+      }
+  }
+    
+#endif
 
   return mu;
 }
@@ -147,7 +192,7 @@ svd2 (gsl_vector * d, gsl_vector * f, gsl_matrix * U, gsl_matrix * V)
       gsl_vector_set (d, 0, c * f0 - s * d1);
       gsl_vector_set (f, 0, s * f0 + c * d1);
       gsl_vector_set (d, 1, 0.0);
-      
+
       /* Compute U <= U G */
 
       for (i = 0; i < M; i++)
@@ -323,7 +368,7 @@ chase_out_trailing_zero (gsl_vector * d, gsl_vector * f, gsl_matrix * V)
   x = gsl_vector_get (d, n - 2);
   y = gsl_vector_get (f, n - 2);
 
-  for (k = n - 1; k > 0 && k--;)
+  for (k = n - 1; k-- > 0;)
     {
       create_givens (x, y, &c, &s);
 

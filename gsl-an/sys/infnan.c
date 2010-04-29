@@ -1,6 +1,6 @@
 /* sys/infnan.c
  * 
- * Copyright (C) 2001, 2004, 2007 Brian Gough
+ * Copyright (C) 2001, 2004, 2007, 2010 Brian Gough
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,10 +24,7 @@
 #include <ieeefp.h>
 #endif
 
-double gsl_nan (void);
-double gsl_posinf (void);
-double gsl_neginf (void);
-double gsl_fdiv (const double x, const double y);
+#include <gsl/gsl_sys.h>
 
 double gsl_nan (void)
 {
@@ -97,6 +94,8 @@ gsl_finite (const double x)
   int status = (y == y);
   return status;
 }
+# else
+# error "cannot define gsl_finite without HAVE_DECL_FINITE or HAVE_IEEE_COMPARISONS"
 # endif
 
 # if HAVE_DECL_ISNAN
@@ -112,13 +111,26 @@ gsl_isnan (const double x)
   int status = (x != x);
   return status;
 }
+# else
+# error "cannot define gsl_isnan without HAVE_DECL_ISNAN or HAVE_IEEE_COMPARISONS"
 # endif
 
 # if HAVE_DECL_ISINF
 int
 gsl_isinf (const double x)
 {
-    return isinf(x);
+  /* isinf(3): In glibc 2.01 and earlier, isinf() returns a
+     non-zero value (actually: 1) if x is an infinity (positive or
+     negative).  (This is all that C99 requires.) */
+
+  if (isinf(x)) 
+    {
+      return (x > 0) ? 1 : -1;
+    } 
+  else 
+    {
+      return 0;
+    }
 }
 # else
 

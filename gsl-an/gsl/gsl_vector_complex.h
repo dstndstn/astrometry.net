@@ -7,7 +7,7 @@
 #if GSL_RANGE_CHECK
 #define GSL_VECTOR_COMPLEX(zv, i) (((i) >= (zv)->size ? (gsl_error ("index out of range", __FILE__, __LINE__, GSL_EINVAL), 0):0 , *GSL_COMPLEX_AT((zv),(i))))
 #else
-#define GSL_VECTOR_COMPLEX(zv, i) (GSL_COMPLEX_AT((zv),(i)))
+#define GSL_VECTOR_COMPLEX(zv, i) (*GSL_COMPLEX_AT((zv),(i)))
 #endif
 
 #define GSL_COMPLEX_AT(zv,i) ((gsl_complex*)&((zv)->data[2*(i)*(zv)->stride]))

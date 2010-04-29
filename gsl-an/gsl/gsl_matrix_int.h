@@ -1,10 +1,10 @@
 /* matrix/gsl_matrix_int.h
  * 
- * Copyright (C) 1996, 1997, 1998, 1999, 2000 Gerard Jungman, Brian Gough
+ * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2007 Gerard Jungman, Brian Gough
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
+ * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful, but
@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_inline.h>
 #include <gsl/gsl_check_range.h>
 #include <gsl/gsl_vector_int.h>
 
@@ -116,6 +117,14 @@ gsl_matrix_int_subdiagonal (gsl_matrix_int * m, const size_t k);
 _gsl_vector_int_view 
 gsl_matrix_int_superdiagonal (gsl_matrix_int * m, const size_t k);
 
+_gsl_vector_int_view
+gsl_matrix_int_subrow (gsl_matrix_int * m, const size_t i,
+                         const size_t offset, const size_t n);
+
+_gsl_vector_int_view
+gsl_matrix_int_subcolumn (gsl_matrix_int * m, const size_t j,
+                            const size_t offset, const size_t n);
+
 _gsl_matrix_int_view
 gsl_matrix_int_view_array (int * base,
                              const size_t n1, 
@@ -164,6 +173,14 @@ _gsl_vector_int_const_view
 gsl_matrix_int_const_superdiagonal (const gsl_matrix_int * m, 
                                       const size_t k);
 
+_gsl_vector_int_const_view
+gsl_matrix_int_const_subrow (const gsl_matrix_int * m, const size_t i,
+                               const size_t offset, const size_t n);
+
+_gsl_vector_int_const_view
+gsl_matrix_int_const_subcolumn (const gsl_matrix_int * m, const size_t j,
+                                  const size_t offset, const size_t n);
+
 _gsl_matrix_int_const_view
 gsl_matrix_int_const_view_array (const int * base,
                                    const size_t n1, 
@@ -187,12 +204,6 @@ gsl_matrix_int_const_view_vector_with_tda (const gsl_vector_int * v,
                                              const size_t tda);
 
 /* Operations */
-
-int   gsl_matrix_int_get(const gsl_matrix_int * m, const size_t i, const size_t j);
-void    gsl_matrix_int_set(gsl_matrix_int * m, const size_t i, const size_t j, const int x);
-
-int * gsl_matrix_int_ptr(gsl_matrix_int * m, const size_t i, const size_t j);
-const int * gsl_matrix_int_const_ptr(const gsl_matrix_int * m, const size_t i, const size_t j);
 
 void gsl_matrix_int_set_zero (gsl_matrix_int * m);
 void gsl_matrix_int_set_identity (gsl_matrix_int * m);
@@ -223,6 +234,7 @@ void gsl_matrix_int_minmax_index (const gsl_matrix_int * m, size_t * imin, size_
 int gsl_matrix_int_isnull (const gsl_matrix_int * m);
 int gsl_matrix_int_ispos (const gsl_matrix_int * m);
 int gsl_matrix_int_isneg (const gsl_matrix_int * m);
+int gsl_matrix_int_isnonneg (const gsl_matrix_int * m);
 
 int gsl_matrix_int_add (gsl_matrix_int * a, const gsl_matrix_int * b);
 int gsl_matrix_int_sub (gsl_matrix_int * a, const gsl_matrix_int * b);
@@ -239,73 +251,91 @@ int gsl_matrix_int_get_row(gsl_vector_int * v, const gsl_matrix_int * m, const s
 int gsl_matrix_int_get_col(gsl_vector_int * v, const gsl_matrix_int * m, const size_t j);
 int gsl_matrix_int_set_row(gsl_matrix_int * m, const size_t i, const gsl_vector_int * v);
 int gsl_matrix_int_set_col(gsl_matrix_int * m, const size_t j, const gsl_vector_int * v);
+/***********************************************************************/
 
 /* inline functions if you are using GCC */
 
+INLINE_DECL int   gsl_matrix_int_get(const gsl_matrix_int * m, const size_t i, const size_t j);
+INLINE_DECL void    gsl_matrix_int_set(gsl_matrix_int * m, const size_t i, const size_t j, const int x);
+INLINE_DECL int * gsl_matrix_int_ptr(gsl_matrix_int * m, const size_t i, const size_t j);
+INLINE_DECL const int * gsl_matrix_int_const_ptr(const gsl_matrix_int * m, const size_t i, const size_t j);
+
 #ifdef HAVE_INLINE
-extern inline 
+INLINE_FUN 
 int
 gsl_matrix_int_get(const gsl_matrix_int * m, const size_t i, const size_t j)
 {
 #if GSL_RANGE_CHECK
-  if (i >= m->size1)
+  if (GSL_RANGE_COND(1)) 
     {
-      GSL_ERROR_VAL("first index out of range", GSL_EINVAL, 0) ;
-    }
-  else if (j >= m->size2)
-    {
-      GSL_ERROR_VAL("second index out of range", GSL_EINVAL, 0) ;
+      if (i >= m->size1)
+        {
+          GSL_ERROR_VAL("first index out of range", GSL_EINVAL, 0) ;
+        }
+      else if (j >= m->size2)
+        {
+          GSL_ERROR_VAL("second index out of range", GSL_EINVAL, 0) ;
+        }
     }
 #endif
   return m->data[i * m->tda + j] ;
 } 
 
-extern inline 
+INLINE_FUN 
 void
 gsl_matrix_int_set(gsl_matrix_int * m, const size_t i, const size_t j, const int x)
 {
 #if GSL_RANGE_CHECK
-  if (i >= m->size1)
+  if (GSL_RANGE_COND(1)) 
     {
-      GSL_ERROR_VOID("first index out of range", GSL_EINVAL) ;
-    }
-  else if (j >= m->size2)
-    {
-      GSL_ERROR_VOID("second index out of range", GSL_EINVAL) ;
+      if (i >= m->size1)
+        {
+          GSL_ERROR_VOID("first index out of range", GSL_EINVAL) ;
+        }
+      else if (j >= m->size2)
+        {
+          GSL_ERROR_VOID("second index out of range", GSL_EINVAL) ;
+        }
     }
 #endif
   m->data[i * m->tda + j] = x ;
 }
 
-extern inline 
+INLINE_FUN 
 int *
 gsl_matrix_int_ptr(gsl_matrix_int * m, const size_t i, const size_t j)
 {
 #if GSL_RANGE_CHECK
-  if (i >= m->size1)
+  if (GSL_RANGE_COND(1)) 
     {
-      GSL_ERROR_NULL("first index out of range", GSL_EINVAL) ;
-    }
-  else if (j >= m->size2)
-    {
-      GSL_ERROR_NULL("second index out of range", GSL_EINVAL) ;
+      if (i >= m->size1)
+        {
+          GSL_ERROR_NULL("first index out of range", GSL_EINVAL) ;
+        }
+      else if (j >= m->size2)
+        {
+          GSL_ERROR_NULL("second index out of range", GSL_EINVAL) ;
+        }
     }
 #endif
   return (int *) (m->data + (i * m->tda + j)) ;
 } 
 
-extern inline 
+INLINE_FUN 
 const int *
 gsl_matrix_int_const_ptr(const gsl_matrix_int * m, const size_t i, const size_t j)
 {
 #if GSL_RANGE_CHECK
-  if (i >= m->size1)
+  if (GSL_RANGE_COND(1)) 
     {
-      GSL_ERROR_NULL("first index out of range", GSL_EINVAL) ;
-    }
-  else if (j >= m->size2)
-    {
-      GSL_ERROR_NULL("second index out of range", GSL_EINVAL) ;
+      if (i >= m->size1)
+        {
+          GSL_ERROR_NULL("first index out of range", GSL_EINVAL) ;
+        }
+      else if (j >= m->size2)
+        {
+          GSL_ERROR_NULL("second index out of range", GSL_EINVAL) ;
+        }
     }
 #endif
   return (const int *) (m->data + (i * m->tda + j)) ;

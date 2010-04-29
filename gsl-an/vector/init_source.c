@@ -162,6 +162,8 @@ FUNCTION (gsl_vector, alloc_from_vector) (TYPE(gsl_vector) * w,
 void
 FUNCTION (gsl_vector, free) (TYPE (gsl_vector) * v)
 {
+  RETURN_IF_NULL (v);
+
   if (v->owner)
     {
       FUNCTION(gsl_block, free) (v->block) ;

@@ -1,6 +1,6 @@
 /* linalg/svd.c
  * 
- * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2004, 2007 Gerard Jungman, Brian Gough
+ * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2004, 2007, 2010 Gerard Jungman, Brian Gough
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -127,9 +127,9 @@ gsl_linalg_SV_decomp (gsl_matrix * A, gsl_matrix * V, gsl_vector * S,
         
         /* Find the largest unreduced block (a,b) starting from b
            and working backwards */
-        
+
         a = b - 1;
-        
+
         while (a > 0)
           {
             double fam1 = gsl_vector_get (&f.vector, a - 1);
@@ -160,14 +160,64 @@ gsl_linalg_SV_decomp (gsl_matrix * A, gsl_matrix * V, gsl_vector * S,
           gsl_matrix_view V_block =
             gsl_matrix_submatrix (V, 0, a, V->size1, n_block);
           
-          qrstep (&S_block.vector, &f_block.vector, &U_block.matrix, &V_block.matrix);
+          int rescale = 0;
+          double scale = 1; 
+          double norm = 0;
+
+          /* Find the maximum absolute values of the diagonal and subdiagonal */
+
+          for (i = 0; i < n_block; i++) 
+            {
+              double s_i = gsl_vector_get (&S_block.vector, i);
+              double a = fabs(s_i);
+              if (a > norm) norm = a;
+            }
+
+          for (i = 0; i < n_block - 1; i++) 
+            {
+              double f_i = gsl_vector_get (&f_block.vector, i);
+              double a = fabs(f_i);
+              if (a > norm) norm = a;
+            }
+
+          /* Temporarily scale the submatrix if necessary */
+
+          if (norm > GSL_SQRT_DBL_MAX)
+            {
+              scale = (norm / GSL_SQRT_DBL_MAX);
+              rescale = 1;
+            }
+          else if (norm < GSL_SQRT_DBL_MIN && norm > 0)
+            {
+              scale = (norm / GSL_SQRT_DBL_MIN);
+              rescale = 1;
+            }
+
+          if (rescale) 
+            {
+              gsl_blas_dscal(1.0 / scale, &S_block.vector);
+              gsl_blas_dscal(1.0 / scale, &f_block.vector);
+            }
+
+          /* Perform the implicit QR step */
           
+          qrstep (&S_block.vector, &f_block.vector, &U_block.matrix, &V_block.matrix);
           /* remove any small off-diagonal elements */
           
           chop_small_elements (&S_block.vector, &f_block.vector);
+          
+          /* Undo the scaling if needed */
+
+          if (rescale)
+            {
+              gsl_blas_dscal(scale, &S_block.vector);
+              gsl_blas_dscal(scale, &f_block.vector);
+            }
         }
+        
       }
   }
+
   /* Make singular values positive by reflections if necessary */
   
   for (j = 0; j < K; j++)
@@ -323,7 +373,7 @@ gsl_linalg_SV_decomp_mod (gsl_matrix * A,
 
   /* Convert A into an orthogonal matrix L */
 
-  for (j = N; j > 0 && j--;)
+  for (j = N; j-- > 0;)
     {
       /* Householder column transformation to accumulate L */
       double tj = gsl_vector_get (S, j);
@@ -533,8 +583,8 @@ gsl_linalg_SV_decomp_jacobi (gsl_matrix * A, gsl_matrix * Q, gsl_vector * S)
                   abserr_a = gsl_vector_get(S,j);
                   abserr_b = gsl_vector_get(S,k);
 
-                  sorted = (gsl_coerce_double(a) >= gsl_coerce_double(b));
-                  orthog = (fabs (p) <= tolerance * gsl_coerce_double(a * b));
+                  sorted = (GSL_COERCE_DBL(a) >= GSL_COERCE_DBL(b));
+                  orthog = (fabs (p) <= tolerance * GSL_COERCE_DBL(a * b));
                   noisya = (a < abserr_a);
                   noisyb = (b < abserr_b);
 

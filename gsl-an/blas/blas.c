@@ -1,6 +1,6 @@
 /* blas/blas.c
  * 
- * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001 Gerard Jungman & Brian 
+ * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2009 Gerard Jungman & Brian 
  * Gough
  * 
  * This program is free software; you can redistribute it and/or modify
@@ -533,7 +533,7 @@ gsl_blas_srotm (gsl_vector_float * X, gsl_vector_float * Y, const float P[])
 int
 gsl_blas_drotm (gsl_vector * X, gsl_vector * Y, const double P[])
 {
-  if (X->size != Y->size)
+  if (X->size == Y->size)
     {
       cblas_drotm (INT (X->size), X->data, INT (X->stride), Y->data,
                    INT (Y->stride), P);

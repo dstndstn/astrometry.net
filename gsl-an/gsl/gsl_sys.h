@@ -1,10 +1,10 @@
 /* sys/gsl_sys.h
  * 
- * Copyright (C) 1996, 1997, 1998, 1999, 2000 Gerard Jungman, Brian Gough
+ * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2007 Gerard Jungman, Brian Gough
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
+ * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful, but
@@ -35,6 +35,7 @@ __BEGIN_DECLS
 double gsl_log1p (const double x);
 double gsl_expm1 (const double x);
 double gsl_hypot (const double x, const double y);
+double gsl_hypot3 (const double x, const double y, const double z);
 double gsl_acosh (const double x);
 double gsl_asinh (const double x);
 double gsl_atanh (const double x);

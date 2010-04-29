@@ -19,8 +19,7 @@
 
 #include <config.h>
 #include <math.h>
-
-double gsl_fdiv (const double x, const double y);
+#include <gsl/gsl_sys.h>
 
 double 
 gsl_fdiv (const double x, const double y)

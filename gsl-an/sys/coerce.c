@@ -19,8 +19,7 @@
 
 #include <config.h>
 #include <math.h>
-
-double gsl_coerce_double (const double x);
+#include <gsl/gsl_sys.h>
 
 double 
 gsl_coerce_double (const double x)
@@ -29,8 +28,6 @@ gsl_coerce_double (const double x)
   y = x;
   return y;
 }
-
-float gsl_coerce_float (const float x);
 
 float 
 gsl_coerce_float (const float x)
@@ -41,8 +38,6 @@ gsl_coerce_float (const float x)
 }
 
 /* The following function is not needed, but is included for completeness */
-
-long double gsl_coerce_long_double (const long double x);
 
 long double 
 gsl_coerce_long_double (const long double x)

@@ -1,12 +1,21 @@
-This is a subset of the gsl-1.9 package, containing the files required to provide Cholesky and QR 
-decompositions.
+This is a subset of the gsl-1.9 package, containing the files required
+to provide Cholesky, QR, and LU decompositions.
 
 => Updated to gsl-1.11.
+=> Updated to gsl-1.14.
 
-We have not modified any of the source files, though we have provided our own Makefile (ignoring
-all the automake/autowhatever jazz) that builds just what we need.
+To grab files from a new version (assuming nothing has changed
+structurally):
 
-Our contributions are Copyright 2007, 2008 Dustin Lang and are placed under the GPL.
+	cd gsl-an
+	./grab-gsl-sources.sh
+
+We have not modified any of the source files, though we have provided
+our own Makefile (ignoring all the automake/autowhatever jazz) that
+builds just what we need.
+
+Our contributions are Copyright 2007, 2008, 2010 Dustin Lang and are
+placed under the GPL.
 
 Yes, that's the royal we.  And we are pleased.
 

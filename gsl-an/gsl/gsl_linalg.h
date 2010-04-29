@@ -1,10 +1,10 @@
 /* linalg/gsl_linalg.h
  * 
- * Copyright (C) 1996, 1997, 1998, 1999, 2000 Gerard Jungman, Brian Gough
+ * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2006, 2007 Gerard Jungman, Brian Gough, Patrick Alken
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
+ * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful, but
@@ -109,20 +109,34 @@ int gsl_linalg_complex_householder_hm (gsl_complex tau,
                                        const gsl_vector_complex * v, 
                                        gsl_matrix_complex * A);
 
+int gsl_linalg_complex_householder_mh (gsl_complex tau,
+                                       const gsl_vector_complex * v,
+                                       gsl_matrix_complex * A);
+
 int gsl_linalg_complex_householder_hv (gsl_complex tau, 
                                        const gsl_vector_complex * v, 
                                        gsl_vector_complex * w);
 
 /* Hessenberg reduction */
 
-int gsl_linalg_hessenberg(gsl_matrix *A, gsl_vector *tau);
+int gsl_linalg_hessenberg_decomp(gsl_matrix *A, gsl_vector *tau);
 int gsl_linalg_hessenberg_unpack(gsl_matrix * H, gsl_vector * tau,
                                  gsl_matrix * U);
 int gsl_linalg_hessenberg_unpack_accum(gsl_matrix * H, gsl_vector * tau,
                                        gsl_matrix * U);
-void gsl_linalg_hessenberg_set_zero(gsl_matrix * H);
+int gsl_linalg_hessenberg_set_zero(gsl_matrix * H);
 int gsl_linalg_hessenberg_submatrix(gsl_matrix *M, gsl_matrix *A,
                                     size_t top, gsl_vector *tau);
+
+/* To support gsl-1.9 interface: DEPRECATED */
+int gsl_linalg_hessenberg(gsl_matrix *A, gsl_vector *tau);
+
+
+/* Hessenberg-Triangular reduction */
+
+int gsl_linalg_hesstri_decomp(gsl_matrix * A, gsl_matrix * B,
+                              gsl_matrix * U, gsl_matrix * V,
+                              gsl_vector * work);
 
 /* Singular Value Decomposition
 
@@ -262,6 +276,10 @@ int gsl_linalg_QR_QTvec (const gsl_matrix * QR,
 int gsl_linalg_QR_Qvec (const gsl_matrix * QR,
                         const gsl_vector * tau,
                         gsl_vector * v);
+
+int gsl_linalg_QR_QTmat (const gsl_matrix * QR,
+                         const gsl_vector * tau,
+                         gsl_matrix * A);
 
 int gsl_linalg_QR_unpack (const gsl_matrix * QR,
                           const gsl_vector * tau,
@@ -411,6 +429,7 @@ int gsl_linalg_cholesky_solve (const gsl_matrix * cholesky,
 int gsl_linalg_cholesky_svx (const gsl_matrix * cholesky,
                              gsl_vector * x);
 
+int gsl_linalg_cholesky_invert(gsl_matrix * cholesky);
 
 /* Cholesky decomposition with unit-diagonal triangular parts.
  *   A = L D L^T, where diag(L) = (1,1,...,1).
@@ -420,6 +439,16 @@ int gsl_linalg_cholesky_svx (const gsl_matrix * cholesky,
  */
 int gsl_linalg_cholesky_decomp_unit(gsl_matrix * A, gsl_vector * D);
 
+/* Complex Cholesky Decomposition */
+
+int gsl_linalg_complex_cholesky_decomp (gsl_matrix_complex * A);
+
+int gsl_linalg_complex_cholesky_solve (const gsl_matrix_complex * cholesky,
+                                       const gsl_vector_complex * b,
+                                       gsl_vector_complex * x);
+
+int gsl_linalg_complex_cholesky_svx (const gsl_matrix_complex * cholesky,
+                                     gsl_vector_complex * x);
 
 /* Symmetric to symmetric tridiagonal decomposition */
 
@@ -443,7 +472,7 @@ int gsl_linalg_hermtd_decomp (gsl_matrix_complex * A,
 
 int gsl_linalg_hermtd_unpack (const gsl_matrix_complex * A, 
                               const gsl_vector_complex * tau,
-                              gsl_matrix_complex * Q, 
+                              gsl_matrix_complex * U, 
                               gsl_vector * diag, 
                               gsl_vector * sudiag);
 

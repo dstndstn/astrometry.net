@@ -224,6 +224,98 @@ gsl_linalg_cholesky_svx (const gsl_matrix * LLT,
     }
 }
 
+/*
+gsl_linalg_cholesky_invert()
+  Compute the inverse of a symmetric positive definite matrix in
+Cholesky form.
+
+Inputs: LLT - matrix in cholesky form on input
+              A^{-1} = L^{-t} L^{-1} on output
+
+Return: success or error
+*/
+
+int
+gsl_linalg_cholesky_invert(gsl_matrix * LLT)
+{
+  if (LLT->size1 != LLT->size2)
+    {
+      GSL_ERROR ("cholesky matrix must be square", GSL_ENOTSQR);
+    }
+  else
+    {
+      size_t N = LLT->size1;
+      size_t i, j;
+      double sum;
+      gsl_vector_view v1, v2;
+
+      /* invert the lower triangle of LLT */
+      for (i = 0; i < N; ++i)
+        {
+          double ajj;
+
+          j = N - i - 1;
+
+          gsl_matrix_set(LLT, j, j, 1.0 / gsl_matrix_get(LLT, j, j));
+          ajj = -gsl_matrix_get(LLT, j, j);
+
+          if (j < N - 1)
+            {
+              gsl_matrix_view m;
+              
+              m = gsl_matrix_submatrix(LLT, j + 1, j + 1,
+                                       N - j - 1, N - j - 1);
+              v1 = gsl_matrix_subcolumn(LLT, j, j + 1, N - j - 1);
+
+              gsl_blas_dtrmv(CblasLower, CblasNoTrans, CblasNonUnit,
+                             &m.matrix, &v1.vector);
+
+              gsl_blas_dscal(ajj, &v1.vector);
+            }
+        } /* for (i = 0; i < N; ++i) */
+
+      /*
+       * The lower triangle of LLT now contains L^{-1}. Now compute
+       * A^{-1} = L^{-t} L^{-1}
+       *
+       * The (ij) element of A^{-1} is column i of L^{-1} dotted into
+       * column j of L^{-1}
+       */
+
+      for (i = 0; i < N; ++i)
+        {
+          for (j = i + 1; j < N; ++j)
+            {
+              v1 = gsl_matrix_subcolumn(LLT, i, j, N - j);
+              v2 = gsl_matrix_subcolumn(LLT, j, j, N - j);
+
+              /* compute Ainv_{ij} = sum_k Linv_{ki} Linv_{kj} */
+              gsl_blas_ddot(&v1.vector, &v2.vector, &sum);
+
+              /* store in upper triangle */
+              gsl_matrix_set(LLT, i, j, sum);
+            }
+
+          /* now compute the diagonal element */
+          v1 = gsl_matrix_subcolumn(LLT, i, i, N - i);
+          gsl_blas_ddot(&v1.vector, &v1.vector, &sum);
+          gsl_matrix_set(LLT, i, i, sum);
+        }
+
+      /* copy the transposed upper triangle to the lower triangle */
+
+      for (j = 1; j < N; j++)
+        {
+          for (i = 0; i < j; i++)
+            {
+              double A_ij = gsl_matrix_get (LLT, i, j);
+              gsl_matrix_set (LLT, j, i, A_ij);
+            }
+        } 
+
+      return GSL_SUCCESS;
+    }
+} /* gsl_linalg_cholesky_invert() */
 
 int
 gsl_linalg_cholesky_decomp_unit(gsl_matrix * A, gsl_vector * D)

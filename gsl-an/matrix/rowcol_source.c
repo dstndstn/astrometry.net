@@ -146,7 +146,7 @@ FUNCTION (gsl_matrix, subrow) (QUALIFIED_TYPE(gsl_matrix) * m, const size_t i, c
       GSL_ERROR_VAL ("vector length n must be positive integer",
                      GSL_EINVAL, view);
     }
-  else if (offset + n > m->size1)
+  else if (offset + n > m->size2)
     {
       GSL_ERROR_VAL ("dimension n overflows matrix", GSL_EINVAL, view);
     }
@@ -179,7 +179,7 @@ FUNCTION (gsl_matrix, subcolumn) (QUALIFIED_TYPE(gsl_matrix) * m, const size_t j
       GSL_ERROR_VAL ("vector length n must be positive integer",
                      GSL_EINVAL, view);
     }
-  else if (offset + n > m->size2)
+  else if (offset + n > m->size1)
     {
       GSL_ERROR_VAL ("dimension n overflows matrix", GSL_EINVAL, view);
     }

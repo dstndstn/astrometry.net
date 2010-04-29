@@ -1,10 +1,10 @@
 /* matrix/gsl_matrix_ulong.h
  * 
- * Copyright (C) 1996, 1997, 1998, 1999, 2000 Gerard Jungman, Brian Gough
+ * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2007 Gerard Jungman, Brian Gough
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
+ * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful, but
@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <gsl/gsl_types.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_inline.h>
 #include <gsl/gsl_check_range.h>
 #include <gsl/gsl_vector_ulong.h>
 
@@ -116,6 +117,14 @@ gsl_matrix_ulong_subdiagonal (gsl_matrix_ulong * m, const size_t k);
 _gsl_vector_ulong_view 
 gsl_matrix_ulong_superdiagonal (gsl_matrix_ulong * m, const size_t k);
 
+_gsl_vector_ulong_view
+gsl_matrix_ulong_subrow (gsl_matrix_ulong * m, const size_t i,
+                         const size_t offset, const size_t n);
+
+_gsl_vector_ulong_view
+gsl_matrix_ulong_subcolumn (gsl_matrix_ulong * m, const size_t j,
+                            const size_t offset, const size_t n);
+
 _gsl_matrix_ulong_view
 gsl_matrix_ulong_view_array (unsigned long * base,
                              const size_t n1, 
@@ -164,6 +173,14 @@ _gsl_vector_ulong_const_view
 gsl_matrix_ulong_const_superdiagonal (const gsl_matrix_ulong * m, 
                                       const size_t k);
 
+_gsl_vector_ulong_const_view
+gsl_matrix_ulong_const_subrow (const gsl_matrix_ulong * m, const size_t i,
+                               const size_t offset, const size_t n);
+
+_gsl_vector_ulong_const_view
+gsl_matrix_ulong_const_subcolumn (const gsl_matrix_ulong * m, const size_t j,
+                                  const size_t offset, const size_t n);
+
 _gsl_matrix_ulong_const_view
 gsl_matrix_ulong_const_view_array (const unsigned long * base,
                                    const size_t n1, 
@@ -187,12 +204,6 @@ gsl_matrix_ulong_const_view_vector_with_tda (const gsl_vector_ulong * v,
                                              const size_t tda);
 
 /* Operations */
-
-unsigned long   gsl_matrix_ulong_get(const gsl_matrix_ulong * m, const size_t i, const size_t j);
-void    gsl_matrix_ulong_set(gsl_matrix_ulong * m, const size_t i, const size_t j, const unsigned long x);
-
-unsigned long * gsl_matrix_ulong_ptr(gsl_matrix_ulong * m, const size_t i, const size_t j);
-const unsigned long * gsl_matrix_ulong_const_ptr(const gsl_matrix_ulong * m, const size_t i, const size_t j);
 
 void gsl_matrix_ulong_set_zero (gsl_matrix_ulong * m);
 void gsl_matrix_ulong_set_identity (gsl_matrix_ulong * m);
@@ -223,6 +234,7 @@ void gsl_matrix_ulong_minmax_index (const gsl_matrix_ulong * m, size_t * imin, s
 int gsl_matrix_ulong_isnull (const gsl_matrix_ulong * m);
 int gsl_matrix_ulong_ispos (const gsl_matrix_ulong * m);
 int gsl_matrix_ulong_isneg (const gsl_matrix_ulong * m);
+int gsl_matrix_ulong_isnonneg (const gsl_matrix_ulong * m);
 
 int gsl_matrix_ulong_add (gsl_matrix_ulong * a, const gsl_matrix_ulong * b);
 int gsl_matrix_ulong_sub (gsl_matrix_ulong * a, const gsl_matrix_ulong * b);
@@ -239,73 +251,91 @@ int gsl_matrix_ulong_get_row(gsl_vector_ulong * v, const gsl_matrix_ulong * m, c
 int gsl_matrix_ulong_get_col(gsl_vector_ulong * v, const gsl_matrix_ulong * m, const size_t j);
 int gsl_matrix_ulong_set_row(gsl_matrix_ulong * m, const size_t i, const gsl_vector_ulong * v);
 int gsl_matrix_ulong_set_col(gsl_matrix_ulong * m, const size_t j, const gsl_vector_ulong * v);
+/***********************************************************************/
 
 /* inline functions if you are using GCC */
 
+INLINE_DECL unsigned long   gsl_matrix_ulong_get(const gsl_matrix_ulong * m, const size_t i, const size_t j);
+INLINE_DECL void    gsl_matrix_ulong_set(gsl_matrix_ulong * m, const size_t i, const size_t j, const unsigned long x);
+INLINE_DECL unsigned long * gsl_matrix_ulong_ptr(gsl_matrix_ulong * m, const size_t i, const size_t j);
+INLINE_DECL const unsigned long * gsl_matrix_ulong_const_ptr(const gsl_matrix_ulong * m, const size_t i, const size_t j);
+
 #ifdef HAVE_INLINE
-extern inline 
+INLINE_FUN 
 unsigned long
 gsl_matrix_ulong_get(const gsl_matrix_ulong * m, const size_t i, const size_t j)
 {
 #if GSL_RANGE_CHECK
-  if (i >= m->size1)
+  if (GSL_RANGE_COND(1)) 
     {
-      GSL_ERROR_VAL("first index out of range", GSL_EINVAL, 0) ;
-    }
-  else if (j >= m->size2)
-    {
-      GSL_ERROR_VAL("second index out of range", GSL_EINVAL, 0) ;
+      if (i >= m->size1)
+        {
+          GSL_ERROR_VAL("first index out of range", GSL_EINVAL, 0) ;
+        }
+      else if (j >= m->size2)
+        {
+          GSL_ERROR_VAL("second index out of range", GSL_EINVAL, 0) ;
+        }
     }
 #endif
   return m->data[i * m->tda + j] ;
 } 
 
-extern inline 
+INLINE_FUN 
 void
 gsl_matrix_ulong_set(gsl_matrix_ulong * m, const size_t i, const size_t j, const unsigned long x)
 {
 #if GSL_RANGE_CHECK
-  if (i >= m->size1)
+  if (GSL_RANGE_COND(1)) 
     {
-      GSL_ERROR_VOID("first index out of range", GSL_EINVAL) ;
-    }
-  else if (j >= m->size2)
-    {
-      GSL_ERROR_VOID("second index out of range", GSL_EINVAL) ;
+      if (i >= m->size1)
+        {
+          GSL_ERROR_VOID("first index out of range", GSL_EINVAL) ;
+        }
+      else if (j >= m->size2)
+        {
+          GSL_ERROR_VOID("second index out of range", GSL_EINVAL) ;
+        }
     }
 #endif
   m->data[i * m->tda + j] = x ;
 }
 
-extern inline 
+INLINE_FUN 
 unsigned long *
 gsl_matrix_ulong_ptr(gsl_matrix_ulong * m, const size_t i, const size_t j)
 {
 #if GSL_RANGE_CHECK
-  if (i >= m->size1)
+  if (GSL_RANGE_COND(1)) 
     {
-      GSL_ERROR_NULL("first index out of range", GSL_EINVAL) ;
-    }
-  else if (j >= m->size2)
-    {
-      GSL_ERROR_NULL("second index out of range", GSL_EINVAL) ;
+      if (i >= m->size1)
+        {
+          GSL_ERROR_NULL("first index out of range", GSL_EINVAL) ;
+        }
+      else if (j >= m->size2)
+        {
+          GSL_ERROR_NULL("second index out of range", GSL_EINVAL) ;
+        }
     }
 #endif
   return (unsigned long *) (m->data + (i * m->tda + j)) ;
 } 
 
-extern inline 
+INLINE_FUN 
 const unsigned long *
 gsl_matrix_ulong_const_ptr(const gsl_matrix_ulong * m, const size_t i, const size_t j)
 {
 #if GSL_RANGE_CHECK
-  if (i >= m->size1)
+  if (GSL_RANGE_COND(1)) 
     {
-      GSL_ERROR_NULL("first index out of range", GSL_EINVAL) ;
-    }
-  else if (j >= m->size2)
-    {
-      GSL_ERROR_NULL("second index out of range", GSL_EINVAL) ;
+      if (i >= m->size1)
+        {
+          GSL_ERROR_NULL("first index out of range", GSL_EINVAL) ;
+        }
+      else if (j >= m->size2)
+        {
+          GSL_ERROR_NULL("second index out of range", GSL_EINVAL) ;
+        }
     }
 #endif
   return (const unsigned long *) (m->data + (i * m->tda + j)) ;

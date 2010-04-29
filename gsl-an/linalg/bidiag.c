@@ -208,7 +208,7 @@ gsl_linalg_bidiag_unpack (const gsl_matrix * A,
 
       gsl_matrix_set_identity (V);
 
-      for (i = N - 1; i > 0 && i--;)
+      for (i = N - 1; i-- > 0;)
         {
           /* Householder row transformation to accumulate V */
           gsl_vector_const_view r = gsl_matrix_const_row (A, i);
@@ -227,7 +227,7 @@ gsl_linalg_bidiag_unpack (const gsl_matrix * A,
 
       gsl_matrix_set_identity (U);
 
-      for (j = N; j > 0 && j--;)
+      for (j = N; j-- > 0;)
         {
           /* Householder column transformation to accumulate U */
           gsl_vector_const_view c = gsl_matrix_const_column (A, j);
@@ -279,7 +279,7 @@ gsl_linalg_bidiag_unpack2 (gsl_matrix * A,
 
       gsl_matrix_set_identity (V);
 
-      for (i = N - 1; i > 0 && i--;)
+      for (i = N - 1; i-- > 0;)
         {
           /* Householder row transformation to accumulate V */
           gsl_vector_const_view r = gsl_matrix_const_row (A, i);
@@ -305,7 +305,7 @@ gsl_linalg_bidiag_unpack2 (gsl_matrix * A,
       /* Allow U to be unpacked into the same memory as A, copy
          diagonal into tau_U */
 
-      for (j = N; j > 0 && j--;)
+      for (j = N; j-- > 0;)
         {
           /* Householder column transformation to accumulate U */
           double tj = gsl_vector_get (tau_U, j);

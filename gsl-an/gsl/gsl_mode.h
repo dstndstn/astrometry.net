@@ -4,7 +4,7 @@
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
+ * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
  * 
  * This program is distributed in the hope that it will be useful, but
@@ -21,6 +21,7 @@
 
 #ifndef __GSL_MODE_H__
 #define __GSL_MODE_H__
+#include <gsl/gsl_inline.h>
 
 #undef __BEGIN_DECLS
 #undef __END_DECLS
@@ -67,9 +68,9 @@ typedef unsigned int gsl_mode_t;
 #define GSL_PREC_APPROX  2
 
 #ifdef HAVE_INLINE
-extern inline unsigned int GSL_MODE_PREC(gsl_mode_t mt);
+INLINE_FUN unsigned int GSL_MODE_PREC(gsl_mode_t mt);
 
-extern inline unsigned int
+INLINE_FUN unsigned int
 GSL_MODE_PREC(gsl_mode_t mt)
 { return  (mt & (unsigned int)7); }
 #else  /* HAVE_INLINE */
