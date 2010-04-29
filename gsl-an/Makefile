@@ -163,10 +163,12 @@ SVD_OBJS := linalg/svd.o linalg/bidiag.o sys/coerce.o vector/swap.o matrix/swap.
 svd-demo: svd-demo.o $(GSL_LIB)
 	gcc -o $@ $^ -lm
 
+LU_OBJS := linalg/lu.o
+
 EXTRA_OBJS := matrix/view.o
 
 # "sort" removes duplicates.
-GSL_OBJS := $(sort $(QR_OBJS) $(CHOL_OBJS) $(SVD_OBJS) $(EXTRA_OBJS))
+GSL_OBJS := $(sort $(QR_OBJS) $(CHOL_OBJS) $(SVD_OBJS) $(LU_OBJS) $(EXTRA_OBJS))
 
 $(GSL_LIB): config.h $(GSL_OBJS)
 	$(AR) rc $@ $(GSL_OBJS)
