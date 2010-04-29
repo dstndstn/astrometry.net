@@ -163,7 +163,7 @@ SVD_OBJS := linalg/svd.o linalg/bidiag.o sys/coerce.o vector/swap.o matrix/swap.
 svd-demo: svd-demo.o $(GSL_LIB)
 	gcc -o $@ $^ -lm
 
-LU_OBJS := linalg/lu.o
+LU_OBJS := linalg/lu.o permutation/init.o permutation/permutation.o permutation/permute.o
 
 EXTRA_OBJS := matrix/view.o
 
