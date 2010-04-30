@@ -29,6 +29,7 @@
 #include "errors.h"
 #include "fitsioutils.h"
 #include "ioutils.h"
+#include "bl.h"
 
 static const char* OPTIONS = "hvqo:";
 
@@ -48,10 +49,8 @@ extern int optind, opterr, optopt;
 
 int main(int argc, char** args) {
     int argchar;
-
 	char* infn = NULL;
 	char* outfn = NULL;
-
 	struct pam img;
 	tuple * tuplerow;
 	unsigned int row;
@@ -65,6 +64,8 @@ int main(int argc, char** args) {
 	qfits_header* hdr;
 	unsigned int plane;
 	off_t datastart;
+	bool onepass = FALSE;
+	bl* pixcache = NULL;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
         switch (argchar) {
@@ -142,6 +143,15 @@ int main(int argc, char** args) {
 	}
 
 	datastart = ftello(fid);
+	// Figure out if we can seek backward in this input file...
+	if ((fid == stdin) ||
+		(fseeko(fid, 0, SEEK_SET) ||
+		 fseeko(fid, datastart, SEEK_SET)))
+		// Nope!
+		onepass = TRUE;
+	logmsg("Reading in one pass\n");
+	if (onepass)
+		pixcache = bl_new(16384, bits/8);
 
 	for (plane=0; plane<img.depth; plane++) {
 		if (plane > 0) {
@@ -165,9 +175,47 @@ int main(int argc, char** args) {
 					exit(-1);
 				}
 			}
+			if (onepass && img.depth > 1) {
+				for (column = 0; column<img.width; column++) {
+					for (plane=1; plane<img.depth; plane++) {
+						if (outformat == BPP_8_UNSIGNED) {
+							uint8_t pix = tuplerow[column][plane];
+							bl_append(pixcache, &pix);
+						} else {
+							int16_t pix = tuplerow[column][plane] - bzero;
+							bl_append(pixcache, &pix);
+						}
+					}
+				}
+			}
 		}
 	}
 	pnm_freepamrow(tuplerow);
+
+	if (pixcache) {
+		int i, j;
+		int step = (img.depth - 1);
+		logverb("Writing %i queued pixels\n", bl_size(pixcache));
+		for (plane=1; plane<img.depth; plane++) {
+			j = (plane - 1);
+			for (i=0; i<(img.width * img.height); i++) {
+				int rtn;
+				if (outformat == BPP_8_UNSIGNED) {
+					uint8_t* pix = bl_access(pixcache, j);
+					rtn = fits_write_data_B(fout, *pix);
+				} else {
+					int16_t* pix = bl_access(pixcache, j);
+					rtn = fits_write_data_I(fout, *pix);
+				}
+				if (rtn) {
+					ERROR("Failed to write FITS pixel");
+					exit(-1);
+				}
+				j += step;
+			}
+		}
+		bl_free(pixcache);
+	}
 
 	if (fid != stdin)
 		fclose(fid);
