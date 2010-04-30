@@ -63,6 +63,8 @@ int main(int argc, char** args) {
 	int bzero = 0;
 	int outformat;
 	qfits_header* hdr;
+	unsigned int plane;
+	off_t datastart;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
         switch (argchar) {
@@ -84,7 +86,6 @@ int main(int argc, char** args) {
 	log_init(loglvl);
 	log_to(stderr);
 	fits_use_error_system();
-
 
 	if (optind == argc) {
 		// ok, stdin to stdout.
@@ -140,12 +141,19 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 
-	for (row = 0; row<img.height; row++) {
-		unsigned int column;
-		pnm_readpamrow(&img, tuplerow);
-		for (column = 0; column<img.width; column++) {
-			unsigned int plane;
-			for (plane=0; plane<img.depth; plane++) {
+	datastart = ftello(fid);
+
+	for (plane=0; plane<img.depth; plane++) {
+		if (plane > 0) {
+			if (fseeko(fid, datastart, SEEK_SET)) {
+				SYSERROR("Failed to seek back to start of image data");
+				exit(-1);
+			}
+		}
+		for (row = 0; row<img.height; row++) {
+			unsigned int column;
+			pnm_readpamrow(&img, tuplerow);
+			for (column = 0; column<img.width; column++) {
 				int rtn;
 				//grand_total += tuplerow[column][plane];
 				if (outformat == BPP_8_UNSIGNED)
