@@ -20,11 +20,37 @@
 #include <sys/param.h>
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_vector_double.h>
+#include <gsl/gsl_permutation.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
 #include <stdarg.h>
 
 #include "gslutils.h"
+#include "errors.h"
+
+int gslutils_invert_3x3(const double* A, double* B) {
+	gsl_matrix* LU;
+	gsl_permutation *p;
+	gsl_matrix_view mB;
+	int rtn = 0;
+	int signum;
+
+	p = gsl_permutation_alloc(3);
+	gsl_matrix_const_view mA = gsl_matrix_const_view_array(A, 3, 3);
+	mB = gsl_matrix_view_array(B, 3, 3);
+	LU = gsl_matrix_alloc(3, 3);
+
+	gsl_matrix_memcpy(LU, &mA.matrix);
+	if (gsl_linalg_LU_decomp(LU, p, &signum) ||
+		gsl_linalg_LU_invert(LU, p, &mB.matrix)) {
+		ERROR("gsl_linalg_LU_decomp() or _invert() failed.");
+		rtn = -1;
+	}
+
+	gsl_permutation_free(p);
+	gsl_matrix_free(LU);
+	return rtn;
+}
 
 void gslutils_matrix_multiply(gsl_matrix* C,
                               const gsl_matrix* A, const gsl_matrix* B) {

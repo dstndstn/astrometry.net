@@ -428,7 +428,7 @@ static int find_table_column(fitsbin_t* fb, const char* colname, off_t* pstart, 
 }
 
 static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
-    off_t tabstart, tabsize;
+    off_t tabstart=0, tabsize=0;
 	int ext;
     size_t expected = 0;
 	int mode, flags;

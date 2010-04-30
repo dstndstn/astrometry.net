@@ -224,15 +224,22 @@ int fits_write_header_and_image(const qfits_header* hdr, const qfitsdumper* qd, 
 
 qfits_header* fits_get_header_for_image2(int W, int H, int bitpix,
 										 qfits_header* addtoheader) {
+	return fits_get_header_for_image3(W, H, bitpix, 1, addtoheader);
+}
+
+qfits_header* fits_get_header_for_image3(int W, int H, int bitpix, int planes,
+										 qfits_header* addtoheader) {
     qfits_header* hdr;
     if (addtoheader)
         hdr = addtoheader;
     else
         hdr = qfits_header_default();
     fits_header_add_int(hdr, "BITPIX", bitpix, "bits per pixel");
-    fits_header_add_int(hdr, "NAXIS", 2, "number of axes");
+    fits_header_add_int(hdr, "NAXIS", (planes == 1) ? 2 : 3, "number of axes");
     fits_header_add_int(hdr, "NAXIS1", W, "image width");
     fits_header_add_int(hdr, "NAXIS2", H, "image height");
+	if (planes > 1)
+		fits_header_add_int(hdr, "NAXIS3", planes, "image planes");
     return hdr;
 }
 
@@ -258,7 +265,7 @@ int fits_convert_data(void* vdest, int deststride, tfits_type desttype,
 
     // this loop is over rows of data
     for (i=0; i<N; i++) {
-        // store local pointers to we can stride over the array, without
+        // store local pointers so we can stride over the array, without
         // affecting the row stride.
         char* adest = dest;
         const char* asrc = src;
@@ -990,7 +997,7 @@ int fits_write_data_E(FILE* fid, float value) {
 	return 0;
 }
 
-int fits_write_data_B(FILE* fid, unsigned char value) {
+int fits_write_data_B(FILE* fid, uint8_t value) {
 	if (fwrite(&value, 1, 1, fid) != 1) {
 		fprintf(stderr, "Failed to write a bit array to FITS file: %s\n", strerror(errno));
 		return -1;

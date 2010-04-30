@@ -59,4 +59,6 @@ int gslutils_solve_leastsquares_v(gsl_matrix* A, int NB, ...);
 // C = A B
 void gslutils_matrix_multiply(gsl_matrix* C, const gsl_matrix* A, const gsl_matrix* B);
 
+int gslutils_invert_3x3(const double* A, double* B);
+
 #endif
