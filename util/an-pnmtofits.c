@@ -141,6 +141,7 @@ int main(int argc, char** args) {
 		ERROR("Failed to write FITS header to file %s", outfn);
 		exit(-1);
 	}
+	qfits_header_destroy(hdr);
 
 	datastart = ftello(fid);
 	// Figure out if we can seek backward in this input file...
