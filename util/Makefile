@@ -214,7 +214,7 @@ INCLUDE_INSTALL_DIR := $(INSTALL_DIR)/include
 LIB_INSTALL_DIR := $(INSTALL_DIR)/lib
 LINK_DIR := ../python/astrometry/util
 
-install: $(PYTHON_LIBS) $(PYtHON_EXECS) $(PROGS) $(ANUTILS_H) $(ANFILES_LIB) $(ANUTILS_LIB)
+install: $(PYTHON_LIBS) $(PYTHON_EXECS) $(PROGS) $(ANUTILS_H) $(ANFILES_LIB) $(ANUTILS_LIB)
 	@echo Installing in base directory $(INSTALL_DIR)
 	mkdir -p $(PY_INSTALL_DIR)
 	@for x in $(PYTHON_INSTALL); do \
