@@ -47,7 +47,7 @@ int render_healpixes(cairo_t* cairo, render_args_t* args) {
 		r = MAX(r, sqrt(distsq(xyz, thisxyz, 3)));
 	}
 
-	hps = healpix_approx_rangesearch(xyz, r, nside, NULL);
+	hps = healpix_rangesearch_xyz_approx(xyz, r, nside, NULL);
 	logmsg("Found %i healpixes within range.\n", il_size(hps));
 
 	for (i=0; i<il_size(hps); i++) {

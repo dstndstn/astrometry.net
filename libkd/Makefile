@@ -68,7 +68,8 @@ DEP_OBJ := $(KD) $(KD_FITS) $(INTERNALS) $(INTERNALS_NOIO)
 %_noio.o: %.c
 	$(CC) -o $@ -c $< $(CFLAGS) -DKDTREE_NO_FITS
 
-all: $(REMAKE_ANUTILS) $(LIBKD) checktree fix-bb spherematch_c.so
+all: $(REMAKE_ANUTILS) $(LIBKD) checktree fix-bb
+#spherematch_c.so
 
 $(LIBKD): $(KD) $(KD_FITS) $(INTERNALS)
 	-rm -f $@

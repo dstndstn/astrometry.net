@@ -678,7 +678,9 @@ int augment_xylist(augment_xylist_t* axy,
 
                 sl_append(cmd, "ppmtopgm");
                 append_escape(cmd, pnmfn);
-                sl_append(cmd, "| pnmtofits >");
+				sl_append(cmd, "|");
+                append_executable(cmd, "an-pnmtofits", me);
+				sl_append(cmd, ">");
                 append_escape(cmd, fitsimgfn);
 
                 run(cmd, verbose);
@@ -686,7 +688,7 @@ int augment_xylist(augment_xylist_t* axy,
 			} else {
                 logverb("Converting PGM image to FITS...\n");
 
-                sl_append(cmd, "pnmtofits");
+                append_executable(cmd, "an-pnmtofits", me);
                 append_escape(cmd, pnmfn);
                 sl_append(cmd, ">");
                 append_escape(cmd, fitsimgfn);

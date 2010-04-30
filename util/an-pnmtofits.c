@@ -150,9 +150,10 @@ int main(int argc, char** args) {
 		 fseeko(fid, datastart, SEEK_SET)))
 		// Nope!
 		onepass = TRUE;
-	logmsg("Reading in one pass\n");
-	if (onepass)
+	if (onepass && img.depth > 1) {
+		logmsg("Reading in one pass\n");
 		pixcache = bl_new(16384, bits/8);
+	}
 
 	for (plane=0; plane<img.depth; plane++) {
 		if (plane > 0) {
