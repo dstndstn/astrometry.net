@@ -35,6 +35,10 @@ const plotter_t plotter_index = {
 	.free = plot_index_free
 };
 
+plotindex_t* plot_index_get(plot_args_t* pargs) {
+	return plotstuff_get_config(pargs, "index");
+}
+
 void* plot_index_init(plot_args_t* plotargs) {
 	plotindex_t* args = calloc(1, sizeof(plotindex_t));
 	args->indexes = pl_new(16);
@@ -50,6 +54,8 @@ int plot_index_plot(const char* command,
 	double ra, dec, radius;
 	double xyz[3];
 	double r2;
+
+	plotstuff_builtin_apply(cairo, pargs);
 
 	if (plotstuff_get_radec_center_and_radius(pargs, &ra, &dec, &radius)) {
 		ERROR("Failed to get RA,Dec center and radius");
@@ -110,17 +116,22 @@ int plot_index_plot(const char* command,
 	return 0;
 }
 
+int plot_index_add_file(plotindex_t* args, const char* fn) {
+	index_t* index = index_load(fn, 0, NULL);
+	if (!index) {
+		ERROR("Failed to open index \"%s\"", fn);
+		return -1;
+	}
+	pl_append(args->indexes, index);
+	return 0;
+}
+
 int plot_index_command(const char* cmd, const char* cmdargs,
 					   plot_args_t* pargs, void* baton) {
 	plotindex_t* args = (plotindex_t*)baton;
 	if (streq(cmd, "index_file")) {
 		const char* fn = cmdargs;
-		index_t* index = index_load(fn, 0, NULL);
-		if (!index) {
-			ERROR("Failed to open index \"%s\"", fn);
-			return -1;
-		}
-		pl_append(args->indexes, index);
+		return plot_index_add_file(args, fn);
 	} else if (streq(cmd, "index_draw_stars")) {
 		args->stars = atoi(cmdargs);
 	} else if (streq(cmd, "index_draw_quads")) {

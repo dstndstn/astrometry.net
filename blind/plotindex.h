@@ -28,6 +28,10 @@ struct plotindex_args {
 };
 typedef struct plotindex_args plotindex_t;
 
+plotindex_t* plot_index_get(plot_args_t* pargs);
+
+int plot_index_add_file(plotindex_t* args, const char* fn);
+
 void* plot_index_init(plot_args_t* args);
 
 int plot_index_command(const char* command, const char* cmdargs,

@@ -86,6 +86,8 @@ void startree_search(const startree_t* s, const double* xyzcenter, double radius
 /**
  Reads a column of data from the "tag-along" table.
 
+ Get the "inds" and "N" from "startree_search" or "startree_search_for".
+
  The data should be freed using "startree_free_data_column"
  */
 double* startree_get_data_column(startree_t* s, const char* colname, int* indices, int N);
