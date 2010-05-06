@@ -82,6 +82,7 @@ int plot_index_plot(const char* command,
 					ERROR("Failed to convert RA,Dec %g,%g to pixels\n", radecs[j*2], radecs[j*2+1]);
 					continue;
 				}
+				logverb("  RA,Dec (%g,%g) -> x,y (%g,%g)\n", radecs[2*j], radecs[2*j+1], px, py);
 				cairoutils_draw_marker(cairo, pargs->marker, px, py, pargs->markersize);
 				cairo_stroke(cairo);
 			}
