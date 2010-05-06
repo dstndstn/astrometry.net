@@ -356,6 +356,8 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 				anwcs_print(args->wcs, stdout);
 			}
 		}
+	} else if (streq(cmd, "image_ext")) {
+		args->fitsext = atoi(cmdargs);
 	} else if (streq(cmd, "image_grid")) {
 		args->gridsize = atof(cmdargs);
 	} else if (streq(cmd, "image_low")) {

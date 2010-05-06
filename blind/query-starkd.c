@@ -128,6 +128,9 @@ int main(int argc, char **argv) {
 
 	logmsg("Got %i results.\n", N);
 
+	if (!N)
+		goto done;
+
 	for (i=0; i<sl_size(tag); i++) {
 		void* data = startree_get_data_column(starkd, sl_get(tag, i), inds, N);
 		if (!data) {
@@ -202,6 +205,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
+ done:
 	free(radec);
 	free(inds);
 	// etc

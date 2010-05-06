@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import os
 import fnmatch
 from astrometry.blind.plotstuff_c import *

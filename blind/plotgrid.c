@@ -69,68 +69,6 @@ static void pretty_label(double x, char* buf) {
 	}
 }
 
-static void add_text(cairo_t* cairo, double x, double y,
-					 const char* txt, plot_args_t* pargs,
-					 float* bgrgba,
-					 float* width, float* height) {
-	float ex,ey;
-	float l,r,t,b;
-	cairo_text_extents_t ext;
-	double textmargin = 2.0;
-	cairo_text_extents(cairo, txt, &ext);
-	// x center
-	x -= (ext.width + ext.x_bearing)/2.0;
-	// y center
-	y -= ext.y_bearing/2.0;
-
-	l = x + ext.x_bearing;
-	r = l + ext.width;
-	t = y + ext.y_bearing;
-	b = t + ext.height;
-	l -= textmargin;
-	r += (textmargin + 1);
-	t -= textmargin;
-	b += (textmargin + 1);
-
-	// Move away from edges...
-	ex = ey = 0.0;
-	if (l < 0)
-		ex = -l;
-	if (t < 0)
-		ey = -t;
-	if (r > pargs->W)
-		ex = -(r - pargs->W);
-	if (b > pargs->H)
-		ey = -(b - pargs->H);
-	x += ex;
-	l += ex;
-	r += ex;
-	y += ey;
-	t += ey;
-	b += ey;
-
-	cairo_save(cairo);
-	// blank out underneath the text...
-	if (bgrgba) {
-		cairo_set_rgba(cairo, bgrgba);
-		cairo_move_to(cairo, l, t);
-		cairo_line_to(cairo, l, b);
-		cairo_line_to(cairo, r, b);
-		cairo_line_to(cairo, r, t);
-		cairo_close_path(cairo);
-		cairo_fill(cairo);
-	}
-	cairo_restore(cairo);
-
-	cairo_move_to(cairo, x, y);
-	cairo_show_text(cairo, txt);
-
-	if (width)
-		*width = (r - l);
-	if (height)
-		*height = (b - t);
-}
-
 int plot_grid_plot(const char* command,
 					cairo_t* cairo, plot_args_t* pargs, void* baton) {
 	plotgrid_t* args = (plotgrid_t*)baton;
@@ -153,7 +91,7 @@ int plot_grid_plot(const char* command,
 
 	plotstuff_builtin_apply(cairo, pargs);
 	pargs->label_offset_x = 0;
-	pargs->label_offset_y = -10;
+	pargs->label_offset_y = 10;
 	
 	logverb("Image bounds: RA %g, %g, Dec %g, %g\n",
 			ramin, ramax, decmin, decmax);
