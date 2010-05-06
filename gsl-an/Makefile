@@ -18,9 +18,11 @@ BASEDIR := ..
 COMMON := $(BASEDIR)/util
 
 GSL_LIB := libgsl-an.a
-all: config.h lib #$(GSL_LIB)
+all: config.h lib
 .PHONY: all
 
+# Add a level of indirection so that when building GSL_LIB, the "make" variable
+# MAKECMDGOALS = $(GSL_LIB); we use that to import the dependency files.
 lib:
 	$(MAKE) $(GSL_LIB)
 .PHONY: lib
@@ -173,6 +175,8 @@ EXTRA_OBJS := matrix/view.o
 
 # "sort" removes duplicates.
 GSL_OBJS := $(sort $(QR_OBJS) $(CHOL_OBJS) $(SVD_OBJS) $(LU_OBJS) $(EXTRA_OBJS))
+
+$(GSL_OBJS): config.h
 
 $(GSL_LIB): config.h $(GSL_OBJS)
 	$(AR) rc $@ $(GSL_OBJS)
