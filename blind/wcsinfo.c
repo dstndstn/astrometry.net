@@ -30,12 +30,14 @@
 #include "mathutil.h"
 #include "boilerplate.h"
 
-const char* OPTIONS = "he:";
+const char* OPTIONS = "he:W:H:";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stderr);
 	fprintf(stderr, "\nUsage: %s [options] <wcs-file>\n"
-			"\n  [-e <extension>]  Read from given HDU (default 0 = primary)\n"
+			"  [-e <extension>]  Read from given HDU (default 0 = primary)\n"
+			"  [-W <image width>] Set/override IMAGEW\n"
+			"  [-H <image height>] Set/override IMAGEH\n"
 			"\n", progname);
 }
 
@@ -49,7 +51,7 @@ int main(int argc, char** args) {
 	int ninputfiles = 0;
 	int ext = 0;
 	sip_t wcs;
-	double imw, imh;
+	double imw=0, imh=0;
 	double rac, decc;
 	double det, T, A, parity, orient, orientc;
     int rah, ram, decd, decm;
@@ -68,6 +70,12 @@ int main(int argc, char** args) {
 		switch (argchar) {
 		case 'e':
 			ext = atoi(optarg);
+			break;
+		case 'W':
+			imw = atof(optarg);
+			break;
+		case 'H':
+			imh = atof(optarg);
 			break;
 		case 'h':
 		default:
@@ -89,8 +97,10 @@ int main(int argc, char** args) {
 		return -1;
 	}
 
-    imw = wcs.wcstan.imagew;
-    imh = wcs.wcstan.imageh;
+	if (imw == 0)
+		imw = wcs.wcstan.imagew;
+	if (imh == 0)
+		imh = wcs.wcstan.imageh;
 	if ((imw == 0.0) || (imh == 0.0)) {
 		fprintf(stderr, "failed to find IMAGE{W,H} in WCS file.\n");
 		return -1;
