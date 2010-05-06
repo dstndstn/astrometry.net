@@ -18,8 +18,12 @@ BASEDIR := ..
 COMMON := $(BASEDIR)/util
 
 GSL_LIB := libgsl-an.a
-all: $(GSL_LIB)
+all: config.h lib #$(GSL_LIB)
 .PHONY: all
+
+lib:
+	$(MAKE) $(GSL_LIB)
+.PHONY: lib
 
 include $(COMMON)/makefile.common
 
@@ -179,7 +183,11 @@ config.h: configure config.h.in
 	touch $@
 
 DEP_OBJ := $(GSL_OBJS)
+# Don't try to include "*.dep" before config.h is built.
+ifeq ($(MAKECMDGOALS),$(GSL_LIB))
 include $(COMMON)/makefile.deps
+endif
+
 
 clean:
 	-rm -f $(GSL_OBJS) $(GSL_LIB) \
