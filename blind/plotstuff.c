@@ -89,9 +89,17 @@ plot_args_t* plotstuff_new() {
 
 int plotstuff_get_radec_center_and_radius(plot_args_t* pargs,
 										  double* p_ra, double* p_dec, double* p_radius) {
+	int rtn;
 	if (!pargs->wcs)
 		return -1;
-	return anwcs_get_radec_center_and_radius(pargs->wcs, p_ra, p_dec, p_radius);
+	rtn = anwcs_get_radec_center_and_radius(pargs->wcs, p_ra, p_dec, p_radius);
+	if (rtn)
+		return rtn;
+	if (p_radius && *p_radius == 0.0) {
+		// HACK -- get approximate scale, using plot size.
+		*p_radius = arcsec2deg(anwcs_pixel_scale(pargs->wcs) * hypot(pargs->W, pargs->H)/2.0);
+	}
+	return rtn;
 }
 
 int plotstuff_append_doubles(const char* str, dl* lst) {
