@@ -2,7 +2,7 @@
 
 GSL=/tmp/gsl-1.14
 
-for x in COPYING README; do
+for x in COPYING README *.h config.h.in; do
 	echo $x
 	cp ${GSL}/$x .
 done
@@ -19,7 +19,3 @@ for x in gsl/*.h; do
 	cp ${GSL}/$x gsl/
 done
 
-for x in *.h; do
-	echo $x
-	cp ${GSL}/$x .
-done

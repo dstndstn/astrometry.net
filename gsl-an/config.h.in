@@ -3,6 +3,9 @@
 /* Disable deprecated functions and enums while building */
 #define GSL_DISABLE_DEPRECATED 1
 
+/* Define if you have inline with C99 behavior */
+#undef HAVE_C99_INLINE
+
 /* Define to 1 if you have the declaration of `acosh', and to 0 if you don't.
    */
 #undef HAVE_DECL_ACOSH
@@ -159,6 +162,9 @@
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
@@ -289,3 +295,6 @@
 #if defined(GSL_RANGE_CHECK_OFF) || !defined(GSL_RANGE_CHECK)
 #define GSL_RANGE_CHECK 0  /* turn off range checking by default internally */
 #endif
+
+#define RETURN_IF_NULL(x) if (!x) { return ; }
+
