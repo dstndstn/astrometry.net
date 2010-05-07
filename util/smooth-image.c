@@ -135,6 +135,8 @@ int main(int argc, char *argv[]) {
 	W = load.lx;
 	H = load.ly;
 
+	//hdr = qfits_header_read(
+
 	hdr = qfits_header_default();
     fits_header_add_int(hdr, "BITPIX", out_bitpix, "bits per pixel");
 	if (load.np > 1)

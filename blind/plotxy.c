@@ -55,6 +55,11 @@ int plot_xy_setsize(plot_args_t* pargs, plotxy_t* args) {
 	}
 	pargs->W = xylist_get_imagew(xyls);
 	pargs->H = xylist_get_imageh(xyls);
+	if (pargs->W == 0 && pargs->H == 0) {
+		qfits_header* hdr = xylist_get_primary_header(xyls);
+		pargs->W = qfits_header_getint(hdr, "IMAGEW", 0);
+		pargs->H = qfits_header_getint(hdr, "IMAGEH", 0);
+	}
 	xylist_close(xyls);
 	return 0;
 }
