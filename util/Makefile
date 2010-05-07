@@ -75,7 +75,7 @@ ANUTILS_LIB := libanutils.a
 
 PYTHON_LIBS := _sip.so _healpix.so
 
-PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian
+PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian smooth-image
 # tycho2tostellarium build-hd-tree
 
 all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS)
@@ -197,6 +197,9 @@ ALL_OBJ += an-pnmotfits.o
 
 downsample-fits: downsample-fits.o $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += downsample-fits.o
+
+smooth-image: smooth-image.o $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += smooth-image.o
 
 fits-flip-endian: fits-flip-endian.o $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += fits-flip-endian.o

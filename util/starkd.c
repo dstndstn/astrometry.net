@@ -65,6 +65,10 @@ double* startree_get_data_column(startree_t* s, const char* colname, int* inds, 
 	fitstable_t* table;
 	tfits_type dubl = fitscolumn_double_type();
 	double* arr;
+	if (N == 0) {
+		logmsg("Warning: zero stars in your request for data column \"%s\"\n", colname);
+		return NULL;
+	}
 	table = startree_get_tagalong(s);
 	if (!table) {
 		ERROR("No tag-along data found");
