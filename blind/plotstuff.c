@@ -695,27 +695,40 @@ plotstuff_run_commandf(plot_args_t* pargs, const char* format, ...) {
 	return rtn;
 }
 
+int plotstuff_plot_layer(plot_args_t* pargs, const char* layer) {
+  int i, NR;
+  NR = sizeof(plotters) / sizeof(plotter_t);
+  for (i=0; i<NR; i++) {
+    if (streq(layer, plotters[i].name)) {
+      if (!pargs->cairo) {
+	if (plotstuff_init2(pargs)) {
+	  return -1;
+	}
+      }
+      if (plotters[i].doplot) {
+	if (plotters[i].doplot(layer, pargs->cairo, pargs, plotters[i].baton)) {
+	  ERROR("Plotter \"%s\" failed on command \"%s\"", plotters[i].name, layer);
+	  return -1;
+	} else
+	  return 0;
+      }
+    }
+  }
+  return -1;
+}
+
 int plotstuff_run_command(plot_args_t* pargs, const char* cmd) {
 	int i, NR;
 	bool matched = FALSE;
 	if (!cmd || (strlen(cmd) == 0) || (cmd[0] == '#')) {
 		return 0;
 	}
+	if (!plotstuff_plot_layer(pargs, cmd)) {
+	  return 0;
+	}
 	NR = sizeof(plotters) / sizeof(plotter_t);
 	for (i=0; i<NR; i++) {
-		if (streq(cmd, plotters[i].name)) {
-			if (!pargs->cairo) {
-				if (plotstuff_init2(pargs)) {
-					return -1;
-				}
-			}
-			if (plotters[i].doplot) {
-				if (plotters[i].doplot(cmd, pargs->cairo, pargs, plotters[i].baton)) {
-					ERROR("Plotter \"%s\" failed on command \"%s\"", plotters[i].name, cmd);
-					return -1;
-				}
-			}
-		} else if (starts_with(cmd, plotters[i].name)) {
+	  if (starts_with(cmd, plotters[i].name)) {
 			char* cmdcmd;
 			char* cmdargs;
 			if (!split_string_once(cmd, " ", &cmdcmd, &cmdargs)) {

@@ -106,6 +106,8 @@ int plotstuff_init(plot_args_t* plotargs);
 int plotstuff_read_and_run_command(plot_args_t* pargs, FILE* f);
 int plotstuff_run_command(plot_args_t* pargs, const char* cmd);
 
+int plotstuff_plot_layer(plot_args_t* pargs, const char* layer);
+
 void* plotstuff_get_config(plot_args_t* pargs, const char* name);
 
 int plotstuff_set_color(plot_args_t* pargs, const char* name);

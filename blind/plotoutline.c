@@ -86,6 +86,16 @@ int plot_outline_plot(const char* command,
 	return 0;
 }
 
+int plot_outline_set_wcs_size(plotoutline_t* args, int W, int H) {
+  if (!args->wcs) {
+    ERROR("No WCS is currently set.");
+    return -1;
+  }
+  args->wcs->wcstan.imagew = W;
+  args->wcs->wcstan.imageh = H;
+  return 0;
+}
+
 int plot_outline_set_wcs_file(plotoutline_t* args, const char* filename, int ext) {
 	sip_t* wcs = sip_read_tan_or_sip_header_file_ext(filename, ext, NULL, FALSE);
 	if (!wcs) {
