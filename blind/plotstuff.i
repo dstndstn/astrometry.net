@@ -7,6 +7,7 @@
 #include "plotoutline.h"
 #include "plotgrid.h"
 #include "plotindex.h"
+#include "log.h"
 #define true 1
 #define false 0
 %}
@@ -14,6 +15,5 @@
 %include "plotoutline.h"
 %include "plotgrid.h"
 %include "plotindex.h"
-
 extern void log_init(int level);
 

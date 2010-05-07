@@ -21,6 +21,19 @@ def get_libs(pkg):
 	print 'returning libs:', libs
 	return libs
 
+def get_include_dirs(pkg):
+	(rtn,out,err) = run_command('pkg-config --cflags-only-I ' + pkg)
+	if rtn:
+		raise 'Failed to find include paths for package'+pkg
+	if err and len(err):
+		print 'pkg-config complained:', err
+	dirs = out.split()
+	dirs = [l for l in dirs if len(l)]
+	# Strip off the leading "-I"
+	dirs = [l[2:] for l in dirs]
+	print 'returning include dirs:', dirs
+	return dirs
+
 def get_lib_dirs(pkg):
 	(rtn,out,err) = run_command('pkg-config --libs-only-L ' + pkg)
 	if rtn:
@@ -38,7 +51,7 @@ c_module = Extension('_plotstuff_c',
                      include_dirs = [
 						 '../qfits-an/include',
 						 '../libkd',
-						 '../util', '.'],
+						 '../util', '.'] + get_include_dirs('cairo'),
 					 extra_objects = [
 						 'plotstuff.o', 'plotfill.o', 'plotxy.o',
 						 'plotimage.o', 'plotannotations.o',
