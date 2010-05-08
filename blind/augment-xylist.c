@@ -1,6 +1,7 @@
 /*
  This file is part of the Astrometry.net suite.
  Copyright 2007-2009 Dustin Lang, Keir Mierle and Sam Roweis.
+ Copyright 2010 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -67,6 +68,7 @@ void augment_xylist_init(augment_xylist_t* axy) {
     axy->ra_center = HUGE_VAL;
     axy->dec_center = HUGE_VAL;
     axy->parity = PARITY_BOTH;
+	axy->uniformize = 10;
 }
 
 void augment_xylist_free_contents(augment_xylist_t* axy) {
@@ -149,7 +151,7 @@ static an_option_t options[] = {
     {'3', "ra",             required_argument, "degrees or hh:mm:ss",
      "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
     {'4', "dec",            required_argument, "degrees or [+-]dd:mm:ss",
-     "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
+	 "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
     {'5', "radius",         required_argument, "degrees",
      "only search in indexes within 'radius' of the field center given by ('ra', 'dec')"},
 	{'d', "depth",		   required_argument, NULL, NULL},
@@ -174,6 +176,8 @@ static an_option_t options[] = {
 	 "set the noise level in the image"},
 	{'9', "no-remove-lines", no_argument, NULL,
 	 "don't remove horizontal and vertical overdensities of sources."},
+	{':', "uniformize", required_argument, NULL,
+	 "select sources uniformly using roughly this many boxes (0=disable; default 10)"},
 	{'0', "no-fix-sdss",    no_argument, NULL,
 	 "don't try to fix SDSS idR files."},
 	{'C', "cancel",		   required_argument, "filename",
@@ -293,6 +297,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
 		break;
 	case '9':
 		axy->no_removelines = TRUE;
+		break;
+	case ':':
+		axy->uniformize = atoi(optarg);
 		break;
 	case '0':
 		axy->no_fix_sdss = TRUE;
@@ -542,6 +549,11 @@ int augment_xylist(augment_xylist_t* axy,
     FILE* fout = NULL;
     char *fitsimgfn = NULL;
 	dl* scales;
+	char* sanexylsfn = NULL;
+	char* nolinesfn = NULL;
+	char* sortedxylsfn = NULL;
+	char* unixylsfn = NULL;
+	char* cutxylsfn = NULL;
 
     cmd = sl_new(16);
     tempfiles = sl_new(4);
@@ -789,30 +801,8 @@ int augment_xylist(augment_xylist_t* axy,
 		// if --xylist is given:
 		//	 -fits2fits.py sanitize
         xylsfn = axy->xylsfn;
-
         if (axy->sortcol)
             dosort = TRUE;
-
-        if (!axy->no_fits2fits) {
-            char* sanexylsfn;
-
-            if (axy->keepxylsfn && !dosort && !axy->cutobjs) {
-                sanexylsfn = axy->keepxylsfn;
-            } else {
-                sanexylsfn = create_temp_file("sanexyls", axy->tempdir);
-                sl_append_nocopy(tempfiles, sanexylsfn);
-            }
-
-            append_executable(cmd, "fits2fits.py", me);
-            if (verbose)
-                sl_append(cmd, "--verbose");
-            append_escape(cmd, xylsfn);
-            append_escape(cmd, sanexylsfn);
-
-            run(cmd, verbose);
-            xylsfn = sanexylsfn;
-        }
-
 	}
 
     if (axy->guess_scale && (fitsimgfn || !axy->imagefn)) {
@@ -829,15 +819,79 @@ int augment_xylist(augment_xylist_t* axy,
         dl_free(estscales);
     }
 
+	// fits2fits
+	// remove lines
+	// sort
+	// uniformize
+	// cut
+	if (axy->keepxylsfn) {
+		// Figure out which is the last stage to run, and set its output
+		// file to "keepxylsfn".
+		if (axy->cutobjs) {
+			cutxylsfn = axy->keepxylsfn;
+		} else if (axy->uniformize) {
+			unixylsfn = axy->keepxylsfn;
+		} else if (dosort) {
+			sortedxylsfn = axy->keepxylsfn;
+		} else if (!axy->no_removelines) {
+			nolinesfn = axy->keepxylsfn;
+		} else if (!axy->imagefn && !axy->no_fits2fits) {
+			sanexylsfn = axy->keepxylsfn;
+		} else {
+			// copy xylsfn to axy->keepxylsfn.
+			FILE* fin = fopen(xylsfn, "rb");
+			FILE* fout = fopen(axy->keepxylsfn, "wb");
+			struct stat st;
+			off_t len;
+			if (!fin) {
+				SYSERROR("Failed to open xyls file \"%s\" for copying", xylsfn);
+				return -1;
+			}
+			if (stat(xylsfn, &st)) {
+				SYSERROR("Failed to stat file \"%s\"", xylsfn);
+				return -1;
+			}
+			len = st.st_size;
+			if (!fout) {
+				SYSERROR("Failed to open output xyls file \"%s\" for copying", axy->keepxylsfn);
+				return -1;
+			}
+			if (pipe_file_offset(fin, 0, len, fout)) {
+				ERROR("Failed to copy xyls file \"%s\" to \"%s\"", xylsfn, axy->keepxylsfn);
+				return -1;
+			}
+			if (fclose(fin)) {
+				SYSERROR("Failed to close input file \"%s\"", xylsfn);
+				return -1;
+			}
+			if (fclose(fout)) {
+				SYSERROR("Failed to close output file \"%s\"", axy->keepxylsfn);
+				return -1;
+			}
+		}
+	}
+
+	if (!axy->imagefn && !axy->no_fits2fits) {
+		if (!sanexylsfn) {
+			sanexylsfn = create_temp_file("sanexyls", axy->tempdir);
+			sl_append_nocopy(tempfiles, sanexylsfn);
+		}
+		append_executable(cmd, "fits2fits.py", me);
+		if (verbose)
+			sl_append(cmd, "--verbose");
+		append_escape(cmd, xylsfn);
+		append_escape(cmd, sanexylsfn);
+		run(cmd, verbose);
+		xylsfn = sanexylsfn;
+	}
+
 	if (!axy->no_removelines) {
-		// input is "xylsfn"
-		// output is a temp file
-		char* nolinesfn;
-		nolinesfn = create_temp_file("removelines", axy->tempdir);
-		sl_append_nocopy(tempfiles, nolinesfn);
+		if (!nolinesfn) {
+			nolinesfn = create_temp_file("removelines", axy->tempdir);
+			sl_append_nocopy(tempfiles, nolinesfn);
+		}
 		logverb("Removing lines of (spurious) sources from xylist \"%s\", writing to \"%s\"\n",
 				xylsfn, nolinesfn);
-
 		append_executable(cmd, "removelines.py", me);
 		if (axy->xcol)
 			sl_appendf(cmd, "-X %s", axy->xcol);
@@ -850,7 +904,6 @@ int augment_xylist(augment_xylist_t* axy,
 	}
 
     if (dosort) {
-        char* sortedxylsfn;
         bool do_tabsort = FALSE;
 
         if (!axy->sortcol)
@@ -858,9 +911,7 @@ int augment_xylist(augment_xylist_t* axy,
 		if (!axy->bgcol)
 			axy->bgcol = "BACKGROUND";
 
-        if (axy->keepxylsfn && !axy->cutobjs) {
-            sortedxylsfn = axy->keepxylsfn;
-        } else {
+		if (!sortedxylsfn) {
             sortedxylsfn = create_temp_file("sorted", axy->tempdir);
             sl_append_nocopy(tempfiles, sortedxylsfn);
         }
@@ -889,16 +940,29 @@ int augment_xylist(augment_xylist_t* axy,
                     xylsfn, sortedxylsfn, axy->sortcol);
             tabsort(xylsfn, sortedxylsfn, axy->sortcol, !axy->sort_ascending);
         }
-
 		xylsfn = sortedxylsfn;
     }
 
+	if (axy->uniformize) {
+		if (!unixylsfn) {
+            unixylsfn = create_temp_file("uniform", axy->tempdir);
+            sl_append_nocopy(tempfiles, unixylsfn);
+		}
+		append_executable(cmd, "uniformize.py", me);
+		sl_appendf(cmd, "-n %i", axy->uniformize);
+		if (axy->xcol)
+			sl_appendf(cmd, "-X %s", axy->xcol);
+		if (axy->ycol)
+			sl_appendf(cmd, "-Y %s", axy->ycol);
+		append_escape(cmd, xylsfn);
+		append_escape(cmd, unixylsfn);
+		run(cmd, verbose);
+		xylsfn = unixylsfn;
+	}
+
 	if (axy->cutobjs) {
-		char* cutxylsfn;
 		// cut the source lists to at most "cutobjs" objects.
-        if (axy->keepxylsfn && !axy->cutobjs) {
-            cutxylsfn = axy->keepxylsfn;
-        } else {
+		if (!cutxylsfn) {
             cutxylsfn = create_temp_file("cut", axy->tempdir);
             sl_append_nocopy(tempfiles, cutxylsfn);
         }
@@ -907,7 +971,6 @@ int augment_xylist(augment_xylist_t* axy,
 			ERROR("Failed to cut table %s to %i entries; output file %s", xylsfn, axy->cutobjs, cutxylsfn);
 			return -1;
 		}
-
 		xylsfn = cutxylsfn;
 	}
 

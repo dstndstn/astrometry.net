@@ -52,10 +52,15 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', **kwargs):
 	maxlen = max([len(b) for b in bins])
 	J = []
 	for i in range(maxlen):
+		thisrow = []
 		for b in bins:
 			if i >= len(b):
 				continue
-			J.append(b[i])
+			thisrow.append(b[i])
+			# J.append(b[i])
+		thisrow.sort()
+		J += thisrow
+
 	J = array(J)
 	#print 'len(J):', len(J)
 	p[1].header.add_history('This xylist was filtered by the "uniformize.py" program')
