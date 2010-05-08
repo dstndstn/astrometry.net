@@ -19,7 +19,16 @@
 %include "plotgrid.h"
 %include "plotindex.h"
 %include "sip.h"
-extern void log_init(int level);
+
+enum log_level {
+	LOG_NONE,
+	LOG_ERROR,
+	LOG_MSG,
+	LOG_VERB,
+	LOG_ALL
+};
+
+void log_init(int log_level);
 
 %extend sip_t {
 	double crval1() {
