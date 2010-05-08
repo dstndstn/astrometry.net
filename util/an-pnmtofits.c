@@ -117,7 +117,14 @@ int main(int argc, char** args) {
 		outfn = "stdout";
 
 	pm_init(args[0], 0);
-	pnm_readpaminit(fid, &img, PAM_STRUCT_SIZE(tuple_type));
+	pnm_readpaminit(fid, &img, 
+					// PAM_STRUCT_SIZE isn't defined until Netpbm 10.23 (July 2004)
+#if defined(PAM_STRUCT_SIZE)
+					PAM_STRUCT_SIZE(tuple_type)
+#else
+					sizeof(struct pam)
+#endif
+);
 	logmsg("Read file %s: %i x %i pixels x %i color(s); maxval %i\n",
 		   infn ? infn : "stdin", img.width, img.height, img.depth, (int)img.maxval);
 
