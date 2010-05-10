@@ -1049,7 +1049,7 @@ static bool is_field_solved(blind_t* bp, int fieldnum) {
   bool solved = FALSE;
     if (bp->solved_in) {
       solved = solvedfile_get(bp->solved_in, fieldnum);
-      logverb("Checking %s field %i to see if the field is solved: %s.\n",
+      logverb("Checking %s file %i to see if the field is solved: %s.\n",
 	      bp->solved_in, fieldnum, (solved ? "yes" : "no"));
     }
     if (solved) {

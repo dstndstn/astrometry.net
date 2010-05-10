@@ -810,6 +810,9 @@ int plotstuff_output(plot_args_t* pargs) {
 			}
 			if (res)
 				ERROR("Failed to write output image");
+			if (img)
+				// Convert image back...
+				cairoutils_rgba_to_argb32(img, pargs->W, pargs->H);
 			return res;
 		}
 		break;
