@@ -25,6 +25,8 @@ class Plotstuff(object):
 			plotstuff_set_size(self.pargs, val[0], val[1])
 		elif name == 'color':
 			self.set_color(val)
+		elif name == 'marker' and type(val) is str:
+			plotstuff_set_marker(self.pargs, val)
 		else:
 			self.pargs.__setattr__(name, val)
 

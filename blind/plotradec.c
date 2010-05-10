@@ -39,10 +39,23 @@ plotradec_t* plot_radec_get(plot_args_t* pargs) {
 	return plotstuff_get_config(pargs, "radec");
 }
 
-void* plot_radec_init(plot_args_t* plotargs) {
-	plotradec_t* args = calloc(1, sizeof(plotradec_t));
+void plot_radec_reset(plotradec_t* args) {
+	if (args->radecvals)
+		dl_free(args->radecvals);
+	if (args->racol)
+		free(args->racol);
+	if (args->deccol)
+		free(args->deccol);
+	if (args->fn)
+		free(args->fn);
+	memset(args, 0, sizeof(plotradec_t));
 	args->ext = 1;
 	args->radecvals = dl_new(32);
+}
+
+void* plot_radec_init(plot_args_t* plotargs) {
+	plotradec_t* args = calloc(1, sizeof(plotradec_t));
+	plot_radec_reset(args);
 	return args;
 }
 

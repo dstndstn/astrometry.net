@@ -36,6 +36,8 @@ typedef struct plotradec_args plotradec_t;
 
 plotradec_t* plot_radec_get(plot_args_t* pargs);
 
+void plot_radec_reset(plotradec_t* args);
+
 // Called prior to cairo surface initialization.
 void* plot_radec_init(plot_args_t* args);
 
