@@ -65,6 +65,8 @@ c_module = Extension('_plotstuff_c',
 						 ],
 					 libraries=reduce(lambda x,y: x+y, [get_libs(x) for x in ['cairo', 'wcslib']]) + ['jpeg', 'netpbm'],
 					 library_dirs=reduce(lambda x,y: x+y, [get_lib_dirs(x) for x in ['cairo', 'wcslib']]),
+		     extra_compile_args=['-O0','-g'],
+		     extra_link_args=['-O0', '-g'],
 					 )
 
 setup(name = 'Plotting stuff in python',

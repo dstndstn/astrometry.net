@@ -14,5 +14,5 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-ZLIB_INC := $(shell pkg-config --cflags zlib)
-ZLIB_LIB := $(shell pkg-config --libs zlib || echo "-lz")
+ZLIB_INC ?= $(shell pkg-config --cflags zlib)
+ZLIB_LIB ?= $(shell pkg-config --libs zlib || echo "-lz")

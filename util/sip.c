@@ -405,3 +405,15 @@ void sip_print_to(const sip_t* sip, FILE* f) {
 void sip_print(const sip_t* sip) {
 	sip_print_to(sip, stderr);
 }
+
+double sip_get_orientation(const sip_t* sip) {
+  double T, A, orient;
+  double det, parity;
+  det = sip_det_cd(sip);
+  parity = (det >= 0 ? 1.0 : -1.0);
+  T = parity * sip->wcstan.cd[0][0] + sip->wcstan.cd[1][1];
+  A = parity * sip->wcstan.cd[1][0] - sip->wcstan.cd[0][1];
+  orient = -rad2deg(atan2(A, T));
+  return orient;
+}
+

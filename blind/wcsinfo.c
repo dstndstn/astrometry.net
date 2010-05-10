@@ -53,7 +53,7 @@ int main(int argc, char** args) {
 	sip_t wcs;
 	double imw=0, imh=0;
 	double rac, decc;
-	double det, T, A, parity, orient, orientc;
+	double det, parity, orient, orientc;
     int rah, ram, decd, decm;
     double ras, decs;
     char* units;
@@ -130,10 +130,8 @@ int main(int argc, char** args) {
 	printf("parity %i\n", (int)parity);
 	printf("pixscale %.12g\n", pixscale);
 
-	T = parity * wcs.wcstan.cd[0][0] + wcs.wcstan.cd[1][1];
-	A = parity * wcs.wcstan.cd[1][0] - wcs.wcstan.cd[0][1];
-	orient = -rad2deg(atan2(A, T));
-	printf("orientation %.8g\n", orient);
+	orient = sip_get_orientation(&wcs);
+printf("orientation %.8g\n", orient);
 
     sip_get_radec_center(&wcs, &rac, &decc);
 	printf("ra_center %.12g\n", rac);
