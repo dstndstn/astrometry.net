@@ -1,3 +1,21 @@
+/*
+ This file is part of the Astrometry.net suite.
+ Copyright 2009, 2010 Dustin Lang.
+
+ The Astrometry.net suite is free software; you can redistribute
+ it and/or modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation, version 2.
+
+ The Astrometry.net suite is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with the Astrometry.net suite ; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ */
+
 #ifndef PLOTXY_H
 #define PLOTXY_H
 
@@ -20,11 +38,10 @@ struct plotxy_args {
 };
 typedef struct plotxy_args plotxy_t;
 
+plotxy_t* plot_xy_get(plot_args_t* pargs);
+
 // Called prior to cairo surface initialization.
 void* plot_xy_init(plot_args_t* args);
-
-// Called post cairo surface initialization.
-int plot_xy_init2(plot_args_t* args, void* baton);
 
 // Set the plot size based on IMAGEW,IMAGEH in the xylist header.
 int plot_xy_setsize(plot_args_t* args, plotxy_t* xyargs);

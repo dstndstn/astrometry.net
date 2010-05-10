@@ -33,6 +33,10 @@ const plotter_t plotter_xxx = {
 	.free = plot_xxx_free
 };
 
+plotxxx_t* plot_xxx_get(plot_args_t* pargs) {
+	return plotstuff_get_config(pargs, "xxx");
+}
+
 void* plot_xxx_init(plot_args_t* plotargs) {
 	plotxxx_t* args = calloc(1, sizeof(plotxxx_t));
 	return args;

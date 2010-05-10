@@ -42,6 +42,7 @@
 #include "plotindex.h"
 #include "plotradec.h"
 #include "plothealpix.h"
+#include "plotmatch.h"
 
 #include "sip_qfits.h"
 #include "sip-utils.h"
@@ -569,7 +570,7 @@ int plotstuff_set_rgba2(plot_args_t* pargs, float r, float g, float b, float a) 
 }
 
 /* All render layers must go in here */
-static plotter_t plotters[10];
+static plotter_t plotters[11];
 
 int plotstuff_init(plot_args_t* pargs) {
 	int i, NR;
@@ -587,6 +588,7 @@ int plotstuff_init(plot_args_t* pargs) {
 	plotters[7] = plotter_index;
 	plotters[8] = plotter_radec;
 	plotters[9] = plotter_healpix;
+	plotters[10] = plotter_match;
 
 	NR = sizeof(plotters) / sizeof(plotter_t);
 	// First init

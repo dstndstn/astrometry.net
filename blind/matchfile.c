@@ -136,7 +136,7 @@ int matchfile_close(matchfile* nomad) {
     return fitstable_close(nomad);
 }
 
-matchfile* matchfile_open(char* fn) {
+matchfile* matchfile_open(const char* fn) {
 	matchfile* mf = NULL;
     mf = fitstable_open(fn);
     if (!mf)

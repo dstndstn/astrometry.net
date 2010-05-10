@@ -35,6 +35,10 @@ const plotter_t plotter_radec = {
 	NULL
 };
 
+plotradec_t* plot_radec_get(plot_args_t* pargs) {
+	return plotstuff_get_config(pargs, "radec");
+}
+
 void* plot_radec_init(plot_args_t* plotargs) {
 	plotradec_t* args = calloc(1, sizeof(plotradec_t));
 	args->ext = 1;

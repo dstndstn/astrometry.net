@@ -35,6 +35,10 @@ const plotter_t plotter_xy = {
 	NULL
 };
 
+plotxy_t* plot_xy_get(plot_args_t* pargs) {
+	return plotstuff_get_config(pargs, "xy");
+}
+
 void* plot_xy_init(plot_args_t* plotargs) {
 	plotxy_t* args = calloc(1, sizeof(plotxy_t));
 	args->ext = 1;

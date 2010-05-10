@@ -9,6 +9,9 @@
 #include "plotoutline.h"
 #include "plotgrid.h"
 #include "plotindex.h"
+#include "plotxy.h"
+#include "plotradec.h"
+#include "plotmatch.h"
 #include "sip.h"
 #include "log.h"
 #define true 1
@@ -18,6 +21,9 @@
 %include "plotoutline.h"
 %include "plotgrid.h"
 %include "plotindex.h"
+%include "plotxy.h"
+%include "plotradec.h"
+%include "plotmatch.h"
 %include "sip.h"
 
 enum log_level {

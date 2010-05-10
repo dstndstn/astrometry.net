@@ -104,8 +104,7 @@ BACKEND_OBJS := \
 
 PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o \
 		plotannotations.o plotgrid.o plotoutline.o plotindex.o plotradec.o \
-		plothealpix.o
-ALL_OBJ += $(PLOTSTUFF)
+		plothealpix.o plotmatch.o matchfile.o matchobj.o
 
 $(BACKEND_LIB): $(BACKEND_OBJS)
 	-rm -f $@
@@ -156,6 +155,8 @@ ALL_OBJ := $(UTIL_OBJS) $(KDTREE_OBJS) $(QFITS_OBJ) \
 	$(PIPELINE_MAIN_OBJ) $(PROSPECTUS_MAIN_OBJ) $(FITS_UTILS_MAIN_OBJ) \
 	$(OTHER_OBJS) $(2MASSOBJ) $(SIMPLEXY_OBJ)
 ALL_EXECS :=
+
+ALL_OBJ += $(PLOTSTUFF)
 
 all: $(QFITS_LIB) $(CFITS_LIB) $(LIBKD_LIB) \
 	$(REMAKE_LIBKD) $(REMAKE_ANUTILS) $(REMAKE_ANFILES) \
@@ -653,7 +654,7 @@ clean:
 		$(PIPELINE) $(PROSPECTUS) $(DEPS) deps $(FITS_UTILS) $(ALL_OBJ) $(IMAGE2XY) \
 		$(NODEP_OBJS) plot-constellations fitsverify plotquad plotxy \
 		$(ALL_EXECS) $(GENERATED_FILES) $(ALL_TESTS_CLEAN) \
-		$(BACKEND_LIB) $(BACKEND_SO)
+		$(BACKEND_LIB) $(BACKEND_SO) _plotstuff_c.so
 
 
 

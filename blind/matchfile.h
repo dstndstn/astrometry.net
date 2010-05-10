@@ -41,7 +41,7 @@ int matchfile_fix_headers(matchfile* m);
 
 int matchfile_write_match(matchfile* m, MatchObj* mo);
 
-matchfile* matchfile_open(char* fn);
+matchfile* matchfile_open(const char* fn);
 
 int matchfile_read_matches(matchfile* m, MatchObj* mo, int offset, int n);
 
