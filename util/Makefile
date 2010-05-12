@@ -50,13 +50,13 @@ include $(COMMON)/makefile.wcslib
 include $(COMMON)/makefile.netpbm
 include $(COMMON)/makefile.os-features
 
+NETPBM_INC_ORIG := $(NETPBM_INC)
+NETPBM_LIB_ORIG := $(NETPBM_LIB)
+
 ifeq ($(HAVE_NETPBM),yes)
-else
-ifeq ($(MAKECMDGOALS),makefile.os-features)
 else
 NETPBM_INC :=
 NETPBM_LIB :=
-endif
 endif
 
 CFLAGS += $(CFLAGS_DEF)
@@ -280,7 +280,7 @@ os-features-config.h: os-features-test.c
 	|| echo "#define NEED_SWAP_QSORT_R 0") \
 	; \
 	 (($(CC) -o os-features-test-netpbm \
-		$(CFLAGS) -DTEST_NETPBM $(LDFLAGS) $(NETPBM_INC) $(NETPBM_LIB) $^ > /dev/null && \
+		$(CFLAGS) -DTEST_NETPBM $(LDFLAGS) $(NETPBM_INC_ORIG) $(NETPBM_LIB_ORIG) $^ > /dev/null && \
 	  ./os-features-test-netpbm) \
 	|| echo "#define HAVE_NETPBM 0") \
 	; \
@@ -289,7 +289,7 @@ os-features-config.h: os-features-test.c
 makefile.os-features: os-features-test.c
 	( \
 	 (($(CC) -o os-features-test-netpbm-make \
-		$(CFLAGS) -DTEST_NETPBM_MAKE $(LDFLAGS) $(NETPBM_INC) $(NETPBM_LIB) $^ > /dev/null && \
+		$(CFLAGS) -DTEST_NETPBM_MAKE $(LDFLAGS) $(NETPBM_INC_ORIG) $(NETPBM_LIB_ORIG) $^ > /dev/null && \
 	  ./os-features-test-netpbm-make) \
 	|| echo "# Don't HAVE_NETPBM.") \
 	; \
