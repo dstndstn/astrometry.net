@@ -20,13 +20,9 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "an-bool.h"
-
 #include <cairo.h>
-#ifndef ASTROMETRY_NO_PPM
-#include <ppm.h>
-#endif
 
+#include "an-bool.h"
 #include "cairoutils.h"
 #include "boilerplate.h"
 #include "bl.h"
@@ -216,18 +212,20 @@ int main(int argc, char *args[]) {
 	nquads = dl_size(coords) / (2*dimquads);
 
     if (infn) {
-#ifdef ASTROMETRY_NO_PPM
+#if HAVE_NETPBM
+#else
 	pnginput = TRUE;
 #endif
       if (pnginput) {
 	img = cairoutils_read_png(infn, &W, &H);
       }
-#ifndef ASTROMETRY_NO_PPM
+#if HAVE_NETPBM
+#else
       else {
-	ppm_init(&argc, args);
+		  cairoutils_fake_ppm_init();
 	img = cairoutils_read_ppm(infn, &W, &H);
       }
-#endif // ASTROMETRY_NO_PPM
+#endif
         if (!img) {
             fprintf(stderr, "Failed to read input image %s.\n", infn);
             exit(-1);
