@@ -74,3 +74,14 @@ int main() {
     return 0;
 }
 #endif
+
+#ifdef TEST_NETPBM
+#include "pam.h"
+int main(int argc, char** args) {
+	struct pam img;
+	pm_init(args[0], 0);
+    printf("#define HAVE_NETPBM 1\n");
+    return 0;
+}
+#endif
+

@@ -267,6 +267,11 @@ os-features-config.h: os-features-test.c
 	  ./os-features-test-swap-qsort) \
 	|| echo "#define NEED_SWAP_QSORT_R 0") \
 	; \
+	 (($(CC) -o os-features-test-netpbm \
+		$(CFLAGS) -DTEST_NETPBM $(LDFLAGS) $(NETPBM_INC) $(NETPBM_LIB) $^ > /dev/null && \
+	  ./os-features-test-netpbm) \
+	|| echo "#define HAVE_NETPBM 0") \
+	; \
 	echo) | grep -v "Segmentation" > $@
 
 ALL_OBJ += os-features.o
