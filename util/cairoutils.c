@@ -25,10 +25,14 @@
 
 #include <cairo.h>
 #include <png.h>
-#ifndef ASTROMETRY_NO_PPM
+#include <jpeglib.h>
+
+#include "an-bool.h"
+#include "os-features.h"
+
+#if HAVE_NETPBM
 #include <ppm.h>
 #endif
-#include <jpeglib.h>
 
 #include "ioutils.h"
 #include "cairoutils.h"
@@ -545,12 +549,14 @@ static int writeout(const char* outfn, unsigned char* img, int W, int H, int for
 	return 0;
 }
 
-#ifndef ASTROMETRY_NO_PPM
+#if HAVE_NETPBM
 void cairoutils_fake_ppm_init() {
     char* fake_args[] = {"cairoutils"};
     int fake_argc = 1;
     ppm_init(&fake_argc, fake_args);
 }
+#else
+void cairoutils_fake_ppm_init() {}
 #endif
 
 int cairoutils_write_ppm(const char* outfn, unsigned char* img, int W, int H) {
@@ -621,7 +627,7 @@ void cairoutils_rgba_to_argb32(unsigned char* img, int W, int H) {
     }
 }
 
-#ifndef ASTROMETRY_NO_PPM
+#if HAVE_NETPBM
 unsigned char* cairoutils_read_ppm_stream(FILE* fin, int* pW, int* pH) {
     int x,y;
     int W, H, format;
@@ -664,6 +670,12 @@ unsigned char* cairoutils_read_ppm_stream(FILE* fin, int* pW, int* pH) {
     ppm_freerow(pixelrow);
     return img;
 }
+#else
+unsigned char* cairoutils_read_ppm_stream(FILE* fin, int* pW, int* pH) {
+	ERROR("Netpbm is not available; can't read PPM images");
+	return NULL;
+}
+#endif
 
 unsigned char* cairoutils_read_ppm(const char* infn, int* pW, int* pH) {
     FILE* fin;
@@ -688,4 +700,4 @@ unsigned char* cairoutils_read_ppm(const char* infn, int* pW, int* pH) {
     }
     return img;
 }
-#endif // ASTROMETRY_NO_PPM
+
