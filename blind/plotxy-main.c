@@ -24,9 +24,6 @@
 
 #include <cairo.h>
 #include <cairo-pdf.h>
-#ifndef ASTROMETRY_NO_PPM
-#include <ppm.h>
-#endif
 
 #include "plotstuff.h"
 #include "plotxy.h"
