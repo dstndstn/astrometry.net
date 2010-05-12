@@ -52,8 +52,11 @@ include $(COMMON)/makefile.os-features
 
 ifeq ($(HAVE_NETPBM),yes)
 else
+ifeq ($(MAKECMDGOALS),makefile.os-features)
+else
 NETPBM_INC :=
 NETPBM_LIB :=
+endif
 endif
 
 CFLAGS += $(CFLAGS_DEF)
@@ -414,6 +417,6 @@ clean:
 		$(DEPS) deps cairoutils.o $(PYTHON_LIBS) \
 		grab-stellarium-constellations \
 		$(PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN) \
-		cairoutils.dep
+		cairoutils.dep makefile.os-features
 
 include $(COMMON)/makefile.deps
