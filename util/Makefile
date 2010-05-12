@@ -204,7 +204,6 @@ ALL_OBJ += an-fitstopnm.o
 
 an-pnmtofits: an-pnmtofits.o $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(NETPBM_LIB)
-
 ALL_OBJ += an-pnmtofits.o
 
 downsample-fits: downsample-fits.o $(ANUTILS_LIB) $(QFITS_LIB)
@@ -306,11 +305,13 @@ ALL_TARGETS := os-features-test.o \
 
 
 
-
 DEP_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 ifndef NO_QFITS
 DEP_PREREQS := $(QFITS_LIB)
 endif
+
+PROG_MAIN_OBJS := $(addsuffix .o,$(PROGS))
+DEP_OBJ += $(PROG_MAIN_OBJS)
 
 stellarium-constellations.c:
 	-$(MAKE) grab-stellarium-constellations
