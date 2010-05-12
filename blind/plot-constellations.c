@@ -25,11 +25,9 @@
 #include <ctype.h>
 #include <assert.h>
 
-#include "an-bool.h"
-
 #include <cairo.h>
-#include <ppm.h>
 
+#include "an-bool.h"
 #include "sip_qfits.h"
 #include "qfits.h"
 #include "starutil.h"
@@ -374,7 +372,7 @@ int main(int argc, char** args) {
 
 
     if (infn) {
-        ppm_init(&argc, args);
+		cairoutils_fake_ppm_init();
         img = cairoutils_read_ppm(infn, &W, &H);
         if (!img) {
             ERROR("Failed to read input image %s", infn);
