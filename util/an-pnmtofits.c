@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include "an-bool.h"
+#include "os-features-config.h" // for HAVE_NETPBM.
 
 #if HAVE_NETPBM
 #include "pam.h"
@@ -47,8 +48,6 @@ static void printHelp(char* progname) {
 
 #if HAVE_NETPBM
 #else
-
-//#include <regex.h>
 
 static int skip_whitespace(FILE* fid, int nmax) {
 	int c;
