@@ -20,8 +20,9 @@
 
 #include "an-bool.h"
 
-//#include <netpbm/pam.h>
+#if HAVE_NETPBM
 #include "pam.h"
+#endif
 
 #include "qfits_image.h"
 
@@ -42,6 +43,103 @@ static void printHelp(char* progname) {
 		   "\n", progname);
 }
 
+#if HAVE_NETPBM
+#else
+
+//#include <regex.h>
+
+static int skip_whitespace(FILE* fid, int nmax) {
+	int c;
+	int i;
+	for (i=0; (nmax == 0) || i<nmax; i++) {
+		c = getc(fid);
+		if (c == EOF) {
+			if (feof(fid)) {
+				SYSERROR("Failed reading whitespace in PNM header: end-of-file");
+			} else if (ferror(fid )) {
+				SYSERROR("Failed reading whitespace in PNM header");
+			} else {
+				SYSERROR("Failed reading whitespace in PNM header");
+			}
+			return -1;
+		}
+		if (c == ' ' || c == '\n' || c == '\r' || c == '\t')
+			continue;
+		// finished... push back.
+		ungetc(c, fid);
+		return 0;
+	}
+	return -1;
+}
+
+static int parse_pnm_header(FILE* fid, int* W, int* H, int* depth, int* maxval) {
+	// P6 == ppm
+	unsigned char p = '\0';
+	unsigned char n = '\0';
+	if (read_u8(fid, &p) ||
+		read_u8(fid, &n))
+		return -1;
+	if (p != 'P') {
+		ERROR("File doesn't start with 'P': not pnm.");
+		return -1;
+	}
+	if (n == '6') {
+		// PPM
+		*depth = 3;
+	} else if (n == '5') {
+		// PGM
+		*depth = 1;
+	} else {
+		ERROR("File starts with code \"%c%c\": not understood as pnm.", p,n);
+		return -1;
+	}
+	if (skip_whitespace(fid, 0))
+		return -1;
+	if (fscanf(fid, "%d", W) != 1) {
+		ERROR("Failed to parse width from PNM header");
+		return -1;
+	}
+	if (skip_whitespace(fid, 0))
+		return -1;
+	if (fscanf(fid, "%d", H) != 1) {
+		ERROR("Failed to parse height from PNM header");
+		return -1;
+	}
+	if (skip_whitespace(fid, 0))
+		return -1;
+	if (fscanf(fid, "%d", maxval) != 1) {
+		ERROR("Failed to parse maxval from PNM header");
+		return -1;
+	}
+	if (skip_whitespace(fid, 1))
+		return -1;
+	return 0;
+}
+
+static int maxval_to_bytes(int maxval) {
+	if (maxval <= 255)
+		return 1;
+	return 2;
+}
+
+static int read_pnm_row(FILE* fid, int W, int depth, int maxval, void* buffer) {
+	int bps = maxval_to_bytes(maxval);
+	if (fread(buffer, bps, W*depth, fid) != W*depth) {
+		SYSERROR("Failed to read PNM row");
+		return -1;
+	}
+	if (bps == 2) {
+		// big-endian
+		uint16_t* u = buffer;
+		int i;
+		for (i=0; i<W*depth; i++)
+			u[i] = ntohs(u[i]);
+	}
+	return 0;
+}
+
+#endif
+
 	
 
 extern char *optarg;
@@ -51,8 +149,6 @@ int main(int argc, char** args) {
     int argchar;
 	char* infn = NULL;
 	char* outfn = NULL;
-	struct pam img;
-	tuple * tuplerow;
 	unsigned int row;
 	int bits;
 	FILE* fid = stdin;
@@ -66,6 +162,14 @@ int main(int argc, char** args) {
 	off_t datastart;
 	bool onepass = FALSE;
 	bl* pixcache = NULL;
+
+#if HAVE_NETPBM
+	struct pam img;
+	tuple * tuplerow;
+#else
+	void* rowbuf;
+#endif
+	int W, H, depth, maxval;
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
         switch (argchar) {
@@ -116,6 +220,7 @@ int main(int argc, char** args) {
 	} else
 		outfn = "stdout";
 
+#if HAVE_NETPBM
 	pm_init(args[0], 0);
 	pnm_readpaminit(fid, &img, 
 					// PAM_STRUCT_SIZE isn't defined until Netpbm 10.23 (July 2004)
@@ -125,25 +230,41 @@ int main(int argc, char** args) {
 					sizeof(struct pam)
 #endif
 );
-	logmsg("Read file %s: %i x %i pixels x %i color(s); maxval %i\n",
-		   infn ? infn : "stdin", img.width, img.height, img.depth, (int)img.maxval);
+	W = img.width;
+	H = img.height;
+	depth = img.depth;
+	maxval = img.maxval;
 
 	tuplerow = pnm_allocpamrow(&img);
-
 	bits = pm_maxvaltobits(img.maxval); 
 	bits = (bits <= 8) ? 8 : 16;
+
+#else // No NETPBM
+
+	if (parse_pnm_header(fid, &W, &H, &depth, &maxval)) {
+		ERROR("Failed to parse PNM header from file: %s\n", infn ? infn : "<stdin>");
+		exit(-1);
+	}
+	bits = 8 * maxval_to_bytes(maxval);
+
+	rowbuf = malloc(W * depth * (bits/8));
+
+#endif
+
+	logmsg("Read file %s: %i x %i pixels x %i color(s); maxval %i\n",
+		   infn ? infn : "stdin", W, H, depth, maxval);
 	if (bits == 8)
 		outformat = BPP_8_UNSIGNED;
 	else {
 		outformat = BPP_16_SIGNED;
-		if (img.maxval >= INT16_MAX)
+		if (maxval >= INT16_MAX)
 			bzero = 0x8000;
 	}
 	logmsg("Using %i-bit output\n", bits);
 
-	hdr = fits_get_header_for_image3(img.width, img.height, outformat, img.depth, NULL);
+	hdr = fits_get_header_for_image3(W, H, outformat, depth, NULL);
 	if (bzero)
-		fits_header_add_int(hdr, "BZERO", bzero, "Amount that has been subtracted from pixel values");
+		fits_header_add_int(hdr, "BZERO", bzero, "Number that has been subtracted from pixel values");
 	if (qfits_header_dump(hdr, fout)) {
 		ERROR("Failed to write FITS header to file %s", outfn);
 		exit(-1);
@@ -157,41 +278,63 @@ int main(int argc, char** args) {
 		 fseeko(fid, datastart, SEEK_SET)))
 		// Nope!
 		onepass = TRUE;
-	if (onepass && img.depth > 1) {
+	if (onepass && depth > 1) {
 		logmsg("Reading in one pass\n");
 		pixcache = bl_new(16384, bits/8);
 	}
 
-	for (plane=0; plane<img.depth; plane++) {
+	for (plane=0; plane<depth; plane++) {
 		if (plane > 0) {
 			if (fseeko(fid, datastart, SEEK_SET)) {
 				SYSERROR("Failed to seek back to start of image data");
 				exit(-1);
 			}
 		}
-		for (row = 0; row<img.height; row++) {
+		for (row = 0; row<H; row++) {
 			unsigned int column;
+
+#if HAVE_NETPBM
 			pnm_readpamrow(&img, tuplerow);
-			for (column = 0; column<img.width; column++) {
+#else
+			read_pnm_row(fid, W, depth, maxval, rowbuf);
+#endif
+
+			for (column = 0; column<W; column++) {
 				int rtn;
-				//grand_total += tuplerow[column][plane];
+				int pixval;
+
+#if HAVE_NETPBM
+				pixval = tuplerow[column][plane];
+#else
+				pixval = (bits == 8 ?
+						  ((uint8_t *)rowbuf)[column*depth + plane] :
+						  ((uint16_t*)rowbuf)[column*depth + plane]);
+#endif
 				if (outformat == BPP_8_UNSIGNED)
-					rtn = fits_write_data_B(fout, tuplerow[column][plane]-bzero);
+					rtn = fits_write_data_B(fout, pixval);
 				else
-					rtn = fits_write_data_I(fout, tuplerow[column][plane]-bzero);
+					rtn = fits_write_data_I(fout, pixval-bzero);
 				if (rtn) {
 					ERROR("Failed to write FITS pixel");
 					exit(-1);
 				}
 			}
-			if (onepass && img.depth > 1) {
-				for (column = 0; column<img.width; column++) {
-					for (plane=1; plane<img.depth; plane++) {
+			if (onepass && depth > 1) {
+				for (column = 0; column<W; column++) {
+					for (plane=1; plane<depth; plane++) {
+						int pixval;
+#if HAVE_NETPBM
+						pixval = tuplerow[column][plane];
+#else
+						pixval = (bits == 8 ?
+								  ((uint8_t *)rowbuf)[column*depth + plane] :
+								  ((uint16_t*)rowbuf)[column*depth + plane]);
+#endif
 						if (outformat == BPP_8_UNSIGNED) {
-							uint8_t pix = tuplerow[column][plane];
+							uint8_t pix = pixval;
 							bl_append(pixcache, &pix);
 						} else {
-							int16_t pix = tuplerow[column][plane] - bzero;
+							int16_t pix = pixval - bzero;
 							bl_append(pixcache, &pix);
 						}
 					}
@@ -199,15 +342,20 @@ int main(int argc, char** args) {
 			}
 		}
 	}
+	
+#if HAVE_NETPBM
 	pnm_freepamrow(tuplerow);
+#else
+	free(rowbuf);
+#endif
 
 	if (pixcache) {
 		int i, j;
-		int step = (img.depth - 1);
+		int step = (depth - 1);
 		logverb("Writing %i queued pixels\n", bl_size(pixcache));
-		for (plane=1; plane<img.depth; plane++) {
+		for (plane=1; plane<depth; plane++) {
 			j = (plane - 1);
-			for (i=0; i<(img.width * img.height); i++) {
+			for (i=0; i<(W * H); i++) {
 				int rtn;
 				if (outformat == BPP_8_UNSIGNED) {
 					uint8_t* pix = bl_access(pixcache, j);

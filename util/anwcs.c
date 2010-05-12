@@ -178,6 +178,8 @@ static void wcslib_radec_bounds(const anwcslib_t* wcs, int stepsize,
 	// but this is more robust...
 	int i, j, W, H;
 	double ralo, rahi, declo, dechi;
+	// for gcc:
+	ralo = rahi = declo = dechi = 0;
 	W = wcslib_imagew(wcs);
 	H = wcslib_imageh(wcs);
 	for (i=1; i<H+stepsize; i+=stepsize) {

@@ -43,7 +43,7 @@ void printHelp(char* progname) {
 			"    [-X <x-hi>] (default image W)\n"
 			"    [-y <y-lo>] (default 1)\n"
 			"    [-Y <y-hi>] (default image H)\n"
-			"    [-s <scale>] (default 1)\n"
+			"    [-s <scale>] make output image this factor bigger (default 1)\n"
 			"\n", progname);
 }
 
@@ -126,16 +126,8 @@ int main(int argc, char** args) {
 	logmsg("Cropping image to x=%g,%g, y=%g,%g and scaling by %g\n",
 		   xlo, xhi, ylo, yhi, scale);
 
-	memcpy(&wcsout, &wcsin, sizeof(tan_t));
+	tan_transform(&wcsin, &wcsout, xlo, xhi, ylo, yhi, scale);
 
-	wcsout.imagew = (xhi - xlo + 1) / scale;
-	wcsout.imageh = (yhi - ylo + 1) / scale;
-	wcsout.crpix[0] = (wcsout.crpix[0] - (xlo - 1)) / scale;
-	wcsout.crpix[1] = (wcsout.crpix[1] - (ylo - 1)) / scale;
-	wcsout.cd[0][0] *= scale;
-	wcsout.cd[0][1] *= scale;
-	wcsout.cd[1][0] *= scale;
-	wcsout.cd[1][1] *= scale;
 
 	if (tan_write_to_file(&wcsout, myargs[1])) {
 		ERROR("Error writing output");

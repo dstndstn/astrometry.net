@@ -40,6 +40,7 @@ void* plot_fill_init(plot_args_t* plotargs) {
 
 int plot_fill_plot(const char* command,
 					cairo_t* cairo, plot_args_t* pargs, void* baton) {
+	plotstuff_builtin_apply(cairo, pargs);
 	cairo_paint(cairo);
 	return 0;
 }

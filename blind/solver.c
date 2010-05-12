@@ -1138,14 +1138,6 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		sp->best_logodds = mo->logodds;
 		logverb("Got a new best match: logodds %g.\n", mo->logodds);
 	}
-	/* I don't see why we should copy ones that are below the "record" threshold...
-	 if (!sp->have_best_match || (mo->logodds > sp->best_match.logodds)) {
-	 logverb("Got a new best match: logodds %g.\n", mo->logodds);
-	 //matchobj_copy_deep(mo, &sp->best_match);
-	 sp->have_best_match = TRUE;
-	 sp->best_index = sp->index;
-	 }
-	 */
 
 	if (mo->logodds < sp->logratio_record_threshold)
 		return FALSE;
@@ -1194,6 +1186,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	solved = (!sp->record_match_callback ||
 			  sp->record_match_callback(mo, sp->userdata));
 
+	// New best match?
 	if (!sp->have_best_match || (mo->logodds > sp->best_match.logodds)) {
 		if (sp->have_best_match)
 			verify_free_matchobj(&sp->best_match);

@@ -193,7 +193,7 @@ ALL_OBJ += an-fitstopnm.o
 
 an-pnmtofits: an-pnmtofits.o $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(NETPBM_LIB)
-ALL_OBJ += an-pnmotfits.o
+ALL_OBJ += an-pnmtofits.o
 
 downsample-fits: downsample-fits.o $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += downsample-fits.o
@@ -280,7 +280,6 @@ DEP_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 ifndef NO_QFITS
 DEP_PREREQS := $(QFITS_LIB)
 endif
-include $(COMMON)/makefile.deps
 
 stellarium-constellations.c:
 	-$(MAKE) grab-stellarium-constellations
@@ -387,3 +386,5 @@ clean:
 		$(DEPS) deps cairoutils.o $(PYTHON_LIBS) \
 		grab-stellarium-constellations \
 		$(PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN)
+
+include $(COMMON)/makefile.deps

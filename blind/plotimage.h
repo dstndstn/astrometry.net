@@ -29,6 +29,10 @@ struct plotimage_args {
 };
 typedef struct plotimage_args plotimage_t;
 
+plotimage_t* plot_image_get(plot_args_t* pargs);
+
+int plot_image_set_wcs(plotimage_t* args, const char* filename, int ext);
+
 void* plot_image_init(plot_args_t* args);
 
 int plot_image_command(const char* command, const char* cmdargs,

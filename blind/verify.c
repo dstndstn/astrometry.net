@@ -932,8 +932,8 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, int istopped, 
 	// which will renumber them.
 
 	invrperm = malloc(v->NRall * sizeof(int));
-	if (DEBUGVERIFY) {
 #define BAD_PERM -1000000
+	if (DEBUGVERIFY) {
 		for (i=0; i<v->NRall; i++)
 			invrperm[i] = BAD_PERM;
 	}

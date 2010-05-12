@@ -86,4 +86,9 @@ void sip_get_field_size(const sip_t* wcs,
                         double* pw, double* ph,
                         char** units);
 
+void tan_transform(const tan_t* tanin, tan_t* tanout,
+				   double xlo, double xhi, double ylo, double yhi,
+				   double scale);
+
+
 #endif

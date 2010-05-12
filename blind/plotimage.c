@@ -35,6 +35,10 @@ const plotter_t plotter_image = {
 	.free = plot_image_free
 };
 
+plotimage_t* plot_image_get(plot_args_t* pargs) {
+	return plotstuff_get_config(pargs, "image");
+}
+
 void* plot_image_init(plot_args_t* plotargs) {
 	plotimage_t* args = calloc(1, sizeof(plotimage_t));
 	args->gridsize = 50;
@@ -87,9 +91,11 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 	xs = malloc(NX*NY * sizeof(double));
 	ys = malloc(NX*NY * sizeof(double));
 
-	NX = 1 + ceil(W / args->gridsize);
-	NY = 1 + ceil(H / args->gridsize);
-	cairo_pattern_set_filter(pat, CAIRO_FILTER_NEAREST);
+	// FIXME -- NEAREST is good when we're zooming in on individual pixels;
+	// some smoothing is necessary if we're zoomed out.  Should probably
+	// resample image in this case, since I doubt cairo is very smart in this case.
+	cairo_pattern_set_filter(pat, CAIRO_FILTER_GOOD);
+							 //CAIRO_FILTER_NEAREST);
 	for (j=0; j<NY; j++) {
 		double ra,dec;
 		y = MIN(j * args->gridsize, H-1);
@@ -313,6 +319,25 @@ int plot_image_setsize(plot_args_t* pargs, plotimage_t* args) {
 	return 0;
 }
 
+int plot_image_set_wcs(plotimage_t* args, const char* filename, int ext) {
+	if (args->wcs)
+		anwcs_free(args->wcs);
+	if (streq(filename, "none")) {
+		args->wcs = NULL;
+	} else {
+		args->wcs = anwcs_open(filename, ext);
+		if (!args->wcs) {
+			ERROR("Failed to read WCS file \"%s\"", filename);
+			return -1;
+		}
+		if (log_get_level() >= LOG_VERB) {
+			logverb("Set image WCS to:");
+			anwcs_print(args->wcs, stdout);
+		}
+	}
+	return 0;
+}
+
 int plot_image_command(const char* cmd, const char* cmdargs,
 					   plot_args_t* pargs, void* baton) {
 	plotimage_t* args = (plotimage_t*)baton;
@@ -341,21 +366,7 @@ int plot_image_command(const char* cmd, const char* cmdargs,
 			anwcs_print(args->wcs, stdout);
 		}
 	} else if (streq(cmd, "image_wcs")) {
-		if (args->wcs)
-			anwcs_free(args->wcs);
-		if (streq(cmdargs, "none")) {
-			args->wcs = NULL;
-		} else {
-			args->wcs = anwcs_open(cmdargs, 0);
-			if (!args->wcs) {
-				ERROR("Failed to read WCS file \"%s\"", cmdargs);
-				return -1;
-			}
-			if (log_get_level() >= LOG_VERB) {
-				logverb("Set image WCS to:");
-				anwcs_print(args->wcs, stdout);
-			}
-		}
+		return plot_image_set_wcs(args, cmdargs, args->fitsext);
 	} else if (streq(cmd, "image_ext")) {
 		args->fitsext = atoi(cmdargs);
 	} else if (streq(cmd, "image_grid")) {

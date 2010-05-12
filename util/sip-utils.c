@@ -19,6 +19,7 @@
 #include <sys/param.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 #include "sip-utils.h"
 #include "starutil.h"
@@ -255,5 +256,19 @@ void sip_get_radec_bounds(const sip_t* wcs, int stepsize,
     if (pramax) *pramax = b.ramax;
     if (pdecmin) *pdecmin = b.decmin;
     if (pdecmax) *pdecmax = b.decmax;
+}
+
+void tan_transform(const tan_t* tanin, tan_t* tanout,
+				   double xlo, double xhi, double ylo, double yhi,
+				   double scale) {
+	memcpy(tanout, tanin, sizeof(tan_t));
+	tanout->imagew = (xhi - xlo + 1) * scale;
+	tanout->imageh = (yhi - ylo + 1) * scale;
+	tanout->crpix[0] = (tanout->crpix[0] - (xlo - 1)) * scale;
+	tanout->crpix[1] = (tanout->crpix[1] - (ylo - 1)) * scale;
+	tanout->cd[0][0] /= scale;
+	tanout->cd[0][1] /= scale;
+	tanout->cd[1][0] /= scale;
+	tanout->cd[1][1] /= scale;
 }
 

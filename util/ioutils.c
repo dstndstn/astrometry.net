@@ -826,11 +826,11 @@ int is_word(const char* cmdline, const char* keyword, char** cptr) {
 
 void read_complain(FILE* fin, const char* attempted) {
 	if (feof(fin)) {
-		fprintf(stderr, "Couldn't read %s: end-of-file.\n", attempted);
+		SYSERROR("Couldn't read %s: end-of-file", attempted);
 	} else if (ferror(fin)) {
-		fprintf(stderr, "Couldn't read %s: error: %s\n", attempted, strerror(errno));
+		SYSERROR("Couldn't read %s", attempted);
 	} else {
-		fprintf(stderr, "Couldn't read %s: %s\n", attempted, strerror(errno));
+		SYSERROR("Couldn't read %s", attempted);
 	}
 }
 

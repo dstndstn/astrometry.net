@@ -6,6 +6,7 @@
 #define WarnUnusedResult
 %{
 #include "plotstuff.h"
+#include "plotimage.h"
 #include "plotoutline.h"
 #include "plotgrid.h"
 #include "plotindex.h"
@@ -13,11 +14,15 @@
 #include "plotradec.h"
 #include "plotmatch.h"
 #include "sip.h"
+#include "sip-utils.h"
+#include "sip_qfits.h"
 #include "log.h"
+#include "fitsioutils.h"
 #define true 1
 #define false 0
 %}
 %include "plotstuff.h"
+%include "plotimage.h"
 %include "plotoutline.h"
 %include "plotgrid.h"
 %include "plotindex.h"
@@ -25,6 +30,8 @@
 %include "plotradec.h"
 %include "plotmatch.h"
 %include "sip.h"
+%include "sip_qfits.h"
+%include "sip-utils.h"
 
 enum log_level {
 	LOG_NONE,
@@ -35,6 +42,7 @@ enum log_level {
 };
 
 void log_init(int log_level);
+void fits_use_error_system(void);
 
 %extend sip_t {
 	double crval1() {

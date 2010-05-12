@@ -567,7 +567,8 @@ PLOTSTUFF_HDRS = $(subst .o,.h,$(PLOTSTUFF))
 plotstuff_wrap.c: plotstuff.i $(PLOTSTUFF_SRCS) $(PLOTSTUFF_HDRS) $(ANUTILS_DIR)/sip.h
 	swig -python $(ANUTILS_INC) $<
 
-_plotstuff_c.so: plotstuff_wrap.c setup.py $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+_plotstuff_c.so: plotstuff_wrap.c setup.py $(PLOTSTUFF) $(COMMON)/cairoutils.o \
+		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	python setup.py build --force --build-base build --build-platlib build/lib
 	cp build/lib/_plotstuff_c.so $@
 

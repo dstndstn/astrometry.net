@@ -246,6 +246,11 @@ int plotstuff_set_wcs_file(plot_args_t* pargs, const char* filename, int ext) {
 	return plotstuff_set_wcs(pargs, wcs);
 }
 
+int plotstuff_set_wcs_tan(plot_args_t* pargs, tan_t* wcs) {
+	anwcs_t* anwcs = anwcs_new_tan(wcs);
+	return plotstuff_set_wcs(pargs, anwcs);
+}
+
 int plotstuff_set_wcs(plot_args_t* pargs, anwcs_t* wcs) {
 	if (pargs->wcs) {
 		anwcs_free(pargs->wcs);
