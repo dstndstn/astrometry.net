@@ -69,7 +69,7 @@ static int skip_whitespace(FILE* fid, int nmax) {
 		ungetc(c, fid);
 		return 0;
 	}
-	return -1;
+	return 0;
 }
 
 static int parse_pnm_header(FILE* fid, int* W, int* H, int* depth, int* maxval) {
@@ -77,8 +77,10 @@ static int parse_pnm_header(FILE* fid, int* W, int* H, int* depth, int* maxval) 
 	unsigned char p = '\0';
 	unsigned char n = '\0';
 	if (read_u8(fid, &p) ||
-		read_u8(fid, &n))
+		read_u8(fid, &n)) {
+		ERROR("Failed to read P* from PNM header");
 		return -1;
+	}
 	if (p != 'P') {
 		ERROR("File doesn't start with 'P': not pnm.");
 		return -1;
