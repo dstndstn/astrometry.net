@@ -22,6 +22,8 @@
 
 #if HAVE_NETPBM
 #include "pam.h"
+#else
+#include <arpa/inet.h>
 #endif
 
 #include "qfits_image.h"
