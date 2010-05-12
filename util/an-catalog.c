@@ -26,7 +26,7 @@
 #include "an-catalog.h"
 #include "fitsioutils.h"
 #include "starutil.h"
-#include "gnu-specific.h"
+#include "os-features.h"
 #include "errors.h"
 
 // This is a naughty preprocessor function because it uses variables

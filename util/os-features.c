@@ -20,8 +20,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "gnu-specific.h"
-#include "gnu-specific-config.h"
+#include "os-features.h"
+#include "os-features-config.h"
 
 #if defined(_POSIX_SYNCHRONIZED_IO) && (_POSIX_SYNCHRONIZED_IO > 0)
 #define NEED_FDATASYNC 0

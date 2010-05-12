@@ -45,7 +45,7 @@
 #include "math.h"
 #include "fitsioutils.h"
 #include "blindutils.h"
-#include "gnu-specific.h"
+//#include "os-features.h"
 #include "blind.h"
 #include "log.h"
 #include "qfits.h"

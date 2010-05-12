@@ -38,7 +38,7 @@
 #include <sys/param.h>
 
 #include "ioutils.h"
-#include "gnu-specific.h"
+#include "os-features.h"
 #include "errors.h"
 #include "log.h"
 

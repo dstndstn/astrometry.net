@@ -85,7 +85,7 @@ ANUTILS_DEPS :=
 
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	permutedsort.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
-	gnu-specific.o an-endian.o errors.o an-opts.o svn.o tic.o log.o \
+	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o \
 	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
 	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
 	anwcs.o sparsematrix.o lsqr.o
@@ -95,7 +95,7 @@ ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h 
 	an-thread.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph brightstars.h bt.h cairoutils.h \
 	codekd.h constellations.h dualtree.h dualtree_nearestneighbour.h \
 	dualtree_rangesearch.h errors.h fitsbin.h fitsfile.h fitsioutils.h \
-	fitstable.h gnu-specific-config.h gnu-specific.h gslutils.h hd.h \
+	fitstable.h os-features-config.h os-features.h gslutils.h hd.h \
 	healpix-utils.h healpix.h index.h intmap.h ioutils.h keywords.h log.h \
 	mathutil.h ngc2000.h ngcic-accurate.h permutedsort.h qidxfile.h \
 	quadfile.h rdlist.h scamp-catalog.h sip-utils.h sip.h sip_qfits.h \
@@ -178,11 +178,11 @@ $(ANFILES_LIB): $(ANFILES_OBJ) $(ANFILES_DEPS)
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
 _sip.so: sip-utils.o sip.o starutil.o mathutil.o sip_qfits.o \
-		fitsioutils.o ioutils.o bl.o gnu-specific.o an-endian.o \
+		fitsioutils.o ioutils.o bl.o os-features.o an-endian.o \
 		errors.o log.o $(QFITS_LIB)
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
-_healpix.so: healpix-utils.o healpix.o permutedsort.o starutil.o mathutil.o errors.o bl.o log.o gnu-specific.o
+_healpix.so: healpix-utils.o healpix.o permutedsort.o starutil.o mathutil.o errors.o bl.o log.o os-features.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
 pad-file: pad-file.o $(ANUTILS_LIB)
@@ -245,36 +245,36 @@ install: $(PYTHON_LIBS) $(PYTHON_EXECS) $(PROGS) $(ANUTILS_H) $(ANFILES_LIB) $(A
 	done
 .PHONY: install
 
-gnu-specific-config.h: gnu-specific-test.c
+os-features-config.h: os-features-test.c
 	( \
-	(($(CC) -o gnu-specific-test-canonicalize \
+	(($(CC) -o os-features-test-canonicalize \
 		$(CFLAGS) -DTEST_CANONICALIZE_FILE_NAME $(LDFLAGS) $^  > /dev/null && \
-	  ./gnu-specific-test-canonicalize) \
+	  ./os-features-test-canonicalize) \
 	|| echo "#define NEED_CANONICALIZE_FILE_NAME 1") \
 	; \
-	 (($(CC) -o gnu-specific-test-declare-qsort \
+	 (($(CC) -o os-features-test-declare-qsort \
 		$(CFLAGS) -DTEST_DECLARE_QSORT_R $(LDFLAGS) $^ > /dev/null && \
-	  ./gnu-specific-test-declare-qsort) \
+	  ./os-features-test-declare-qsort) \
 	|| echo "#define NEED_DECLARE_QSORT_R 0") \
 	; \
-	 (($(CC) -o gnu-specific-test-qsort \
+	 (($(CC) -o os-features-test-qsort \
 		$(CFLAGS) -DTEST_QSORT_R $(LDFLAGS) $^ > /dev/null && \
-	  ./gnu-specific-test-qsort) \
+	  ./os-features-test-qsort) \
 	|| echo "#define NEED_QSORT_R 1") \
 	; \
-	 (($(CC) -o gnu-specific-test-swap-qsort \
+	 (($(CC) -o os-features-test-swap-qsort \
 		$(CFLAGS) -DTEST_SWAP_QSORT_R $(LDFLAGS) $^ > /dev/null && \
-	  ./gnu-specific-test-swap-qsort) \
+	  ./os-features-test-swap-qsort) \
 	|| echo "#define NEED_SWAP_QSORT_R 0") \
 	; \
 	echo) | grep -v "Segmentation" > $@
 
-ALL_OBJ += gnu-specific.o
-ALL_TARGETS := gnu-specific-test.o \
-	gnu-specific-test-canonicalize \
-	gnu-specific-test-declare-qsort \
-	gnu-specific-test-qsort \
-	gnu-specific-config.h
+ALL_OBJ += os-features.o
+ALL_TARGETS := os-features-test.o \
+	os-features-test-canonicalize \
+	os-features-test-declare-qsort \
+	os-features-test-qsort \
+	os-features-config.h
 
 DEP_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 ifndef NO_QFITS

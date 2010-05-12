@@ -15,12 +15,12 @@
   along with the Astrometry.net suite ; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
-#ifndef GNU_SPECIFIC_H
-#define GNU_SPECIFIC_H
+#ifndef OS_FEATURES_H
+#define OS_FEATURES_H
 
-#include "gnu-specific-config.h"
+#include "os-features-config.h"
 
-// Declarations of GNU-specific functions that we use.
+// Features we use that aren't standard across all supported platforms
 
 char* canonicalize_file_name(const char* fn);
 
@@ -57,7 +57,7 @@ int fdatasync(int fd);
 */
 
 #if NEED_DECLARE_QSORT_R
-//// NOTE: this declaration must match gnu-specific-test.c .
+//// NOTE: this declaration must match os-features-test.c .
 void qsort_r(void *base, size_t nmemb, size_t sz,
              void *userdata,
              int (*compar)(void *, const void *, const void *));

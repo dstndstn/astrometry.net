@@ -26,7 +26,7 @@
 
 #include "keywords.h"
 // for qsort_r
-#include "gnu-specific.h"
+#include "os-features.h"
 
 #include "bl.ph"
 

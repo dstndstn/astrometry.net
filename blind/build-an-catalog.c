@@ -33,7 +33,7 @@
 #include "boilerplate.h"
 #include "fitsioutils.h"
 #include "2mass-fits.h"
-#include "gnu-specific.h"
+#include "os-features.h"
 #include "errors.h"
 
 #define OPTIONS "ho:N:H:"
