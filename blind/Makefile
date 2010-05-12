@@ -28,12 +28,23 @@ include $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.cfitsio
 include $(COMMON)/makefile.libkd
 include $(COMMON)/makefile.gsl
-include $(COMMON)/makefile.netpbm
 include $(COMMON)/makefile.png
 include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.zlib
 include $(COMMON)/makefile.wcslib
+
+include $(COMMON)/makefile.netpbm
+include $(COMMON)/makefile.os-features
+
+$(COMMON)/makefile.os-features:
+	$(MAKE) -C $(COMMON) makefile.os-features
+
+ifeq ($(HAVE_NETPBM),yes)
+else
+NETPBM_INC :=
+NETPBM_LIB :=
+endif
 
 LDFLAGS := $(LDFLAGS_DEF)
 LDFLAGS += -lm

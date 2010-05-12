@@ -50,16 +50,18 @@ include $(COMMON)/makefile.wcslib
 include $(COMMON)/makefile.netpbm
 include $(COMMON)/makefile.os-features
 
+ifeq ($(HAVE_NETPBM),yes)
+else
+NETPBM_INC :=
+NETPBM_LIB :=
+endif
+
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(CAIRO_INC)
 CFLAGS += $(JPEG_INC)
 CFLAGS += $(GSL_INC)
 CFLAGS += $(WCSLIB_INC)
-
-# Include netpbm headers?
-ifeq ($(HAVE_NETPBM),yes)
 CFLAGS += $(NETPBM_INC)
-endif
 
 ifdef WCSLIB_EXISTS
 CFLAGS += -DWCSLIB_EXISTS
@@ -197,14 +199,8 @@ ALL_OBJ += pad-file.o
 an-fitstopnm: an-fitstopnm.o $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += an-fitstopnm.o
 
-# Include NETPBM_LIB, or don't.
-ifeq ($(HAVE_NETPBM),yes)
 an-pnmtofits: an-pnmtofits.o $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(NETPBM_LIB)
-else
-an-pnmtofits: an-pnmtofits.o $(ANUTILS_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^
-endif
 
 ALL_OBJ += an-pnmtofits.o
 
