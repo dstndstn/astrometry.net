@@ -44,16 +44,22 @@ endif
 include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.jpeg
 include $(COMMON)/makefile.png
-include $(COMMON)/makefile.netpbm
 include $(COMMON)/makefile.gsl
 include $(COMMON)/makefile.wcslib
 
+include $(COMMON)/makefile.netpbm
+include $(COMMON)/makefile.os-features
+
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(CAIRO_INC)
-CFLAGS += $(NETPBM_INC)
 CFLAGS += $(JPEG_INC)
 CFLAGS += $(GSL_INC)
 CFLAGS += $(WCSLIB_INC)
+
+# Include netpbm headers?
+ifeq ($(HAVE_NETPBM),yes)
+CFLAGS += $(NETPBM_INC)
+endif
 
 ifdef WCSLIB_EXISTS
 CFLAGS += -DWCSLIB_EXISTS
@@ -191,8 +197,15 @@ ALL_OBJ += pad-file.o
 an-fitstopnm: an-fitstopnm.o $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += an-fitstopnm.o
 
+# Include NETPBM_LIB, or don't.
+ifeq ($(HAVE_NETPBM),yes)
 an-pnmtofits: an-pnmtofits.o $(ANUTILS_LIB) $(QFITS_LIB)
-	($(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(NETPBM_LIB)) || ($(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(NETPBM_LIB)
+else
+an-pnmtofits: an-pnmtofits.o $(ANUTILS_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^
+endif
+
 ALL_OBJ += an-pnmtofits.o
 
 downsample-fits: downsample-fits.o $(ANUTILS_LIB) $(QFITS_LIB)
@@ -274,12 +287,26 @@ os-features-config.h: os-features-test.c
 	; \
 	echo) | grep -v "Segmentation" > $@
 
+makefile.os-features: os-features-test.c
+	( \
+	 (($(CC) -o os-features-test-netpbm-make \
+		$(CFLAGS) -DTEST_NETPBM_MAKE $(LDFLAGS) $(NETPBM_INC) $(NETPBM_LIB) $^ > /dev/null && \
+	  ./os-features-test-netpbm-make) \
+	|| echo "# Don't HAVE_NETPBM.") \
+	; \
+	echo) | grep -v "Segmentation" > $@
+
 ALL_OBJ += os-features.o
 ALL_TARGETS := os-features-test.o \
 	os-features-test-canonicalize \
 	os-features-test-declare-qsort \
 	os-features-test-qsort \
+	os-features-test-netpbm \
+	os-features-test-netpbm-make \
 	os-features-config.h
+
+
+
 
 DEP_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 ifndef NO_QFITS

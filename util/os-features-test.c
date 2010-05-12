@@ -85,3 +85,13 @@ int main(int argc, char** args) {
 }
 #endif
 
+#ifdef TEST_NETPBM_MAKE
+#include "pam.h"
+int main(int argc, char** args) {
+	struct pam img;
+	pm_init(args[0], 0);
+    printf("HAVE_NETPBM := yes\n");
+    return 0;
+}
+#endif
+
