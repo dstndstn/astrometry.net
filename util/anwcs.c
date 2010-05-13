@@ -231,6 +231,48 @@ static double wcslib_pixel_scale(const anwcslib_t* anwcslib) {
 
 #endif
 
+static int wcslib_write_to(const anwcslib_t* anwcslib, FILE* fid) {
+	int res;
+	int Ncards;
+	char* hdrstr;
+	res = wcshdo(-1, anwcslib->wcs, &Ncards, &hdrstr);
+	if (res) {
+		ERROR("wcshdo() failed: %s", wcshdr_errmsg[res]);
+		return -1;
+	}
+
+	// FIXME -- incomplete!  Add other required headers and write to file.
+	int i;
+	printf("wcslib header:\n");
+	for (i=0; i<Ncards; i++)
+		printf("%.80s\n", hdrstr + i*80);
+	printf("\n\n");
+
+	ERROR("wcslib_write_to() is unfinished.\n");
+	return -1;
+}
+
+static int wcslib_write(const anwcslib_t* anwcslib, const char* filename) {
+	int rtn;
+	FILE* fid = fopen(filename, "wb");
+	if (!fid) {
+		SYSERROR("Failed to open file \"%s\" for FITS WCS output", filename);
+		return -1;
+	}
+	rtn = wcslib_write_to(anwcslib, fid);
+	if (fclose(fid)) {
+		if (!rtn) {
+			SYSERROR("Failed to close output file \"%s\"", filename);
+			return -1;
+		}
+	}
+	if (rtn) {
+		ERROR("wcslib_write_to file \"%s\" failed", filename);
+		return -1;
+	}
+	return 0;
+}
+
 /////////////////// sip implementations //////////////////////////
 
 /*
@@ -258,6 +300,10 @@ static int ansip_pixelxy2radec(const sip_t* sip, double px, double py, double* r
 #define ansip_free sip_free
 
 #define ansip_pixel_scale sip_pixel_scale
+
+#define ansip_write sip_write_to_file
+
+#define ansip_write_to sip_write_to
 
 /////////////////// dispatched anwcs_t entry points //////////////////////////
 
@@ -300,6 +346,13 @@ double anwcs_pixel_scale(const anwcs_t* anwcs) {
 	ANWCS_DISPATCH(anwcs, return, return -1, pixel_scale);
 }
 
+int anwcs_write(const anwcs_t* wcs, const char* filename) {
+	ANWCS_DISPATCH(wcs, return, return -1, write, filename);
+}
+
+int anwcs_write_to(const anwcs_t* wcs, FILE* fid) {
+	ANWCS_DISPATCH(wcs, return, return -1, write_to, fid);
+}
 
 
 

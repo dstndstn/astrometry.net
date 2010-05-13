@@ -18,6 +18,7 @@
 #include "sip_qfits.h"
 #include "log.h"
 #include "fitsioutils.h"
+#include "anwcs.h"
 #define true 1
 #define false 0
 %}
@@ -32,6 +33,7 @@
 %include "sip.h"
 %include "sip_qfits.h"
 %include "sip-utils.h"
+%include "anwcs.h"
 
 enum log_level {
 	LOG_NONE,

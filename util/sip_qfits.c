@@ -45,15 +45,9 @@ sip_t* sip_read_tan_or_sip_header_file_ext(const char* wcsfn, int ext, sip_t* de
 	}
 }
 
-int sip_write_to_file(const sip_t* sip, const char* fn) {
-	FILE* fid;
+int sip_write_to(const sip_t* sip, FILE* fid) {
 	qfits_header* hdr;
 	int res;
-	fid = fopen(fn, "wb");
-	if (!fid) {
-		SYSERROR("Failed to open file \"%s\" to write WCS header", fn);
-		return -1;
-	}
 	hdr = sip_create_header(sip);
 	if (!hdr) {
 		ERROR("Failed to create FITS header from WCS");
@@ -61,6 +55,18 @@ int sip_write_to_file(const sip_t* sip, const char* fn) {
 	}
 	res = qfits_header_dump(hdr, fid);
 	qfits_header_destroy(hdr);
+	return res;
+}
+
+int sip_write_to_file(const sip_t* sip, const char* fn) {
+	FILE* fid;
+	int res;
+	fid = fopen(fn, "wb");
+	if (!fid) {
+		SYSERROR("Failed to open file \"%s\" to write WCS header", fn);
+		return -1;
+	}
+	res = sip_write_to(sip, fid);
 	if (res) {
 		ERROR("Failed to write FITS header to file \"%s\"", fn);
 		return -1;
@@ -72,15 +78,9 @@ int sip_write_to_file(const sip_t* sip, const char* fn) {
 	return 0;
 }
 
-int tan_write_to_file(const tan_t* tan, const char* fn) {
-	FILE* fid;
+int tan_write_to(const tan_t* tan, FILE* fid) {
 	qfits_header* hdr;
 	int res;
-	fid = fopen(fn, "wb");
-	if (!fid) {
-		SYSERROR("Failed to open file \"%s\" to write WCS header", fn);
-		return -1;
-	}
 	hdr = tan_create_header(tan);
 	if (!hdr) {
 		ERROR("Failed to create FITS header from WCS");
@@ -88,6 +88,18 @@ int tan_write_to_file(const tan_t* tan, const char* fn) {
 	}
 	res = qfits_header_dump(hdr, fid);
 	qfits_header_destroy(hdr);
+	return res;
+}
+
+int tan_write_to_file(const tan_t* tan, const char* fn) {
+	FILE* fid;
+	int res;
+	fid = fopen(fn, "wb");
+	if (!fid) {
+		SYSERROR("Failed to open file \"%s\" to write WCS header", fn);
+		return -1;
+	}
+	res = tan_write_to(tan, fid);
 	if (res) {
 		ERROR("Failed to write FITS header to file \"%s\"", fn);
 		return -1;
