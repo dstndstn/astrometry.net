@@ -230,10 +230,10 @@ int blind_wcs_compute_weighted(const double* starxyz,
 
 	for (i=0; i<N; i++) {
 		bool ok;
-		// -project the stars around the quad center of mass
+		// -project the stars around their center of mass
 		ok = star_coords(starxyz + i*3, star_cm, p + 2*i, p + 2*i + 1);
 		assert(ok);
-		// -grab the corresponding field coords
+		// -find field coords relative to their center of mass
 		f[2*i+0] = fieldxy[2*i+0] - field_cm[0];
 		f[2*i+1] = fieldxy[2*i+1] - field_cm[1];
 	}
@@ -254,6 +254,7 @@ int blind_wcs_compute_weighted(const double* starxyz,
 		p[2*i + 0] -= pcm[0];
 		p[2*i + 1] -= pcm[1];
 	}
+	logverb("Projected star center of mass: (%g, %g) ~radians\n", pcm[0], pcm[1]);
 
 	// -compute the covariance between field positions and projected
 	//  positions of the corresponding stars.

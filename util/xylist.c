@@ -36,13 +36,27 @@ static bool is_reading(xylist_t* ls) {
 }
 
 int xylist_get_imagew(xylist_t* ls) {
+	int W;
 	qfits_header* hdr = xylist_get_header(ls);
-	return qfits_header_getint(hdr, "IMAGEW", 0);
+	W = qfits_header_getint(hdr, "IMAGEW", 0);
+	if (!W) {
+		// some axy's have IMAGEW/H only in the primary hdr...
+		hdr = xylist_get_primary_header(ls);
+		W = qfits_header_getint(hdr, "IMAGEW", 0);
+	}
+	return W;
 }
 
 int xylist_get_imageh(xylist_t* ls) {
 	qfits_header* hdr = xylist_get_header(ls);
-	return qfits_header_getint(hdr, "IMAGEH", 0);
+	int H;
+	H = qfits_header_getint(hdr, "IMAGEH", 0);
+	if (!H) {
+		// some axy's have IMAGEW/H only in the primary hdr...
+		hdr = xylist_get_primary_header(ls);
+		H = qfits_header_getint(hdr, "IMAGEH", 0);
+	}
+	return H;
 }
 
 bool xylist_is_file_xylist(const char* fn, const char* xcolumn, const char* ycolumn,

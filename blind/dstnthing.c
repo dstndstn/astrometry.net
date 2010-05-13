@@ -5,6 +5,7 @@
 #include "blind_wcs.h"
 #include "sip.h"
 #include "sip_qfits.h"
+#include "sip-utils.h"
 #include "log.h"
 #include "errors.h"
 #include "tweak.h"
@@ -19,19 +20,21 @@
 #include "plotimage.h"
 #include "cairoutils.h"
 
-static const char* OPTIONS = "hx:m:r:vj:p:i:";
+static const char* OPTIONS = "hx:m:r:vj:p:i:J:o:w:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
-		   //"   -w <WCS input file>\n"
 		   "   -m <match input file>\n"
 		   "   -x <xyls input file>\n"
 		   "   -r <rdls input file>\n"
+		   "   [-w <wcs-output>]: write resulting SIP WCS to this file\n"
+		   "   [-o <order>]: SIP distortion order, default 2\n"
 		   "   [-p <plot output base filename>]\n"
 		   "   [-i <plot background image>]\n"
            "   [-v]: verbose\n"
-		   "   [-j <pixel-jitter>]: set pixel jitter (default 1.0)\n"
+		   "   [-j <pixel-jitter>]: set image pixel jitter (default 1.0)\n"
+		   "   [-J <pixel-jitter>]: set index jitter (in arcsec, default 1.0)\n"
 		   "\n", progname);
 }
 
@@ -183,6 +186,7 @@ int main(int argc, char** args) {
 	char* plotfn = NULL;
 	char* bgimgfn = NULL;
 
+	double indexjitter = 1.0; // arcsec
 	double pixeljitter = 1.0;
 	int i;
 	int W, H;
@@ -203,6 +207,7 @@ int main(int argc, char** args) {
 
 	double ra,dec;
 
+	double* indexrd;
 	double* indexpix;
 	double* fieldsigma2s;
 	int besti;
@@ -213,11 +218,14 @@ int main(int argc, char** args) {
 	double qc[2];
 	double gamma;
 
+	char* sipout = NULL;
+
 	double* weights;
 	double* matchxyz;
 	double* matchxy;
 	int Nmatch;
 	tan_t newtan;
+	int order = 2;
 
 	int loglvl = LOG_MSG;
 	//double crpix[] = { HUGE_VAL, HUGE_VAL };
@@ -226,6 +234,9 @@ int main(int argc, char** args) {
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'o':
+			order = atoi(optarg);
+			break;
 		case 'p':
 			plotfn = optarg;
 			break;
@@ -234,6 +245,9 @@ int main(int argc, char** args) {
 			break;
 		case 'j':
 			pixeljitter = atof(optarg);
+			break;
+		case 'J':
+			indexjitter = atof(optarg);
 			break;
         case 'h':
 			print_help(args[0]);
@@ -244,13 +258,11 @@ int main(int argc, char** args) {
 		case 'x':
 			xylsfn = optarg;
 			break;
-			/*
-			 case 'w':
-			 wcsfn = optarg;
-			 break;
-			 */
 		case 'm':
 			matchfn = optarg;
+			break;
+		case 'w':
+			sipout = optarg;
 			break;
         case 'v':
             loglvl++;
@@ -278,24 +290,14 @@ int main(int argc, char** args) {
 	log_init(loglvl);
 	//errors_log_to(logstream);
 
-	/*
-	 if (W == 0 || H == 0) {
-	 logerr("Need -W, -H\n");
-	 exit(-1);
-	 }
-	 if (crpix[0] == HUGE_VAL)
-	 crpix[0] = W/2.0;
-	 if (crpix[1] == HUGE_VAL)
-	 crpix[1] = H/2.0;
-	 */
-
-
 	// read XYLS.
 	xyls = xylist_open(xylsfn);
 	if (!xyls) {
 		logmsg("Failed to read an xylist from file %s.\n", xylsfn);
 		exit(-1);
 	}
+	xylist_set_include_flux(xyls, FALSE);
+	xylist_set_include_background(xyls, FALSE);
 
 	// read RDLS.
 	rdls = rdlist_open(rdlsfn);
@@ -311,6 +313,7 @@ int main(int argc, char** args) {
 		logmsg("XYLS file %s didn't contain IMAGEW and IMAGEH headers.\n", xylsfn);
 		exit(-1);
 	}
+	logverb("Got image size %i x %i\n", W, H);
 
 	// read match file.
 	mf = matchfile_open(matchfn);
@@ -350,6 +353,7 @@ int main(int argc, char** args) {
 	qc[0] = sip.wcstan.crpix[0];
 	qc[1] = sip.wcstan.crpix[1];
 
+	indexrd = malloc(2 * Nindex * sizeof(double));
 	indexpix = malloc(2 * Nindex * sizeof(double));
 	fieldsigma2s = malloc(Nfield * sizeof(double));
 	weights = malloc(Nfield * sizeof(double));
@@ -361,28 +365,54 @@ int main(int argc, char** args) {
 	int STEPS = 20;
 
 	for (step=0; step<STEPS; step++) {
+		int Nin;
+		double iscale;
+		double ijitter;
 		// Anneal
 		gamma = pow(0.9, step);
 		if (step == STEPS-1)
 			gamma = 0.0;
 
-		printf("Set gamma = %g\n", gamma);
+		logmsg("Set gamma = %g\n", gamma);
 
-		// Project RDLS into pixel space.
+		if (!sip.wcstan.imagew)
+			sip.wcstan.imagew = W;
+		if (!sip.wcstan.imageh)
+			sip.wcstan.imageh = H;
+		logverb("SIP image size %g x %g\n", sip.wcstan.imagew, sip.wcstan.imageh);
+
+		// Project RDLS into pixel space; keep the ones inside image bounds.
+		Nin = 0;
 		for (i=0; i<Nindex; i++) {
 			bool ok;
+			double x,y;
 			rd_getradec(rd, i, &ra, &dec);
-			ok = sip_radec2pixelxy(&sip, ra, dec, indexpix + i*2, indexpix + i*2 + 1);
-			assert(ok);
+			ok = sip_radec2pixelxy(&sip, ra, dec, &x, &y);
+			if (!ok)
+				continue;
+			//assert(ok);
+			if (!sip_pixel_is_inside_image(&sip, x, y))
+				continue;
+			indexpix[Nin*2+0] = x;
+			indexpix[Nin*2+1] = y;
+			indexrd[Nin*2+0] = ra;
+			indexrd[Nin*2+1] = dec;
+			Nin++;
 		}
+		logmsg("%i reference sources within the image.\n", Nin);
+
 		logmsg("CRPIX is (%g,%g)\n", sip.wcstan.crpix[0], sip.wcstan.crpix[1]);
+
+		iscale = sip_pixel_scale(&sip);
+		ijitter = indexjitter / iscale;
+		logverb("With pixel scale of %g arcsec/pixel, index adds jitter of %g pix.\n", iscale, ijitter);
 
 		for (i=0; i<Nfield; i++) {
 			R2 = distsq(qc, fieldpix + 2*i, 2);
-			fieldsigma2s[i] = square(pixeljitter) * (1.0 + gamma * R2/Q2);
+			fieldsigma2s[i] = (square(pixeljitter) + square(ijitter)) * (1.0 + gamma * R2/Q2);
 		}
 
-		logodds = verify_star_lists(indexpix, Nindex,
+		logodds = verify_star_lists(indexpix, Nin,
 									fieldpix, fieldsigma2s, Nfield,
 									W*H, 0.25,
 									log(1e-100), HUGE_VAL,
@@ -394,7 +424,7 @@ int main(int argc, char** args) {
 			char fn[256];
 			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'a');
 			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
-					 Nindex, indexpix, Nfield-1, theta, sip.wcstan.crpix);
+					 Nin, indexpix, Nfield-1, theta, sip.wcstan.crpix);
 		}
 
 		Nmatch = 0;
@@ -403,7 +433,9 @@ int main(int argc, char** args) {
 			double ra,dec;
 			if (theta[i] < 0)
 				continue;
-			rd_getradec(rd, theta[i], &ra, &dec);
+			//rd_getradec(rd, theta[i], &ra, &dec);
+			ra  = indexrd[theta[i]*2+0];
+			dec = indexrd[theta[i]*2+1];
 			radecdeg2xyzarr(ra, dec, matchxyz + Nmatch*3);
 			memcpy(matchxy + Nmatch*2, fieldpix + i*2, 2*sizeof(double));
 			weights[Nmatch] = verify_logodds_to_weight(odds[i]);
@@ -455,7 +487,7 @@ int main(int argc, char** args) {
 		}
 		tweak_push_correspondence_indices(t, imginds, refinds, NULL, wts);
 		tweak_push_wcs_tan(t, &newtan);
-		t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = 2;
+		t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = order;
 		t->weighted_fit = TRUE;
 		for (i=0; i<10; i++) {
 			tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
@@ -493,13 +525,20 @@ int main(int argc, char** args) {
 	free(fieldsigma2s);
 	free(fieldpix);
 	free(indexpix);
-
+	free(indexrd);
 
 	if (xylist_close(xyls)) {
 		logmsg("Failed to close XYLS file.\n");
 	}
-	return 0;
 
+	if (sipout) {
+		if (sip_write_to_file(&sip, sipout)) {
+			ERROR("Failed to write SIP result to file \"%s\"", sipout);
+			return -1;
+		}
+	}
+
+	return 0;
 }
 
 
