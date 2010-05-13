@@ -29,6 +29,7 @@
 #include "os-features.h"
 
 #include "bl.ph"
+#include "log.h"
 
 static bl_node* bl_new_node(bl* list);
 static void bl_free_node(bl_node* node);
@@ -1070,19 +1071,20 @@ void sl_free2(sl* list) {
 sl* sl_split(sl* lst, const char* str, const char* sepstring) {
     int seplen;
     const char* s;
-    char* nexts;
+    char* next_sep;
     if (!lst)
         lst = sl_new(4);
     seplen = strlen(sepstring);
     s = str;
     while (s && *s) {
-        nexts = strstr(s, sepstring);
-        if (!nexts) {
+        next_sep = strstr(s, sepstring);
+        if (!next_sep) {
             sl_append(lst, s);
             break;
         }
-        sl_appendf(lst, "%.*s", (int)(nexts - s), s);
-        s = nexts + seplen;
+        //logverb("Appending: '%.*s'\n", (int)(next_sep - s), s);
+        sl_appendf(lst, "%.*s", (int)(next_sep - s), s);
+        s = next_sep + seplen;
     }
     return lst;
 }

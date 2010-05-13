@@ -357,6 +357,12 @@ static void set_cmd_args(plot_args_t* pargs, cairocmd_t* cmd) {
 	memcpy(cmd->rgba, pargs->rgba, sizeof(cmd->rgba));
 }
 
+bool plotstuff_marker_in_bounds(plot_args_t* pargs, double x, double y) {
+	double margin = pargs->markersize;
+	return (x >= -margin && x <= (pargs->W + margin) &&
+			y >= -margin && y <= (pargs->H + margin));
+}
+
 void plotstuff_stack_marker(plot_args_t* pargs, double x, double y) {
 	cairocmd_t cmd;
 	set_cmd_args(pargs, &cmd);

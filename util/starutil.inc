@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -17,6 +18,21 @@
 */
 
 #include <math.h>
+
+InlineDefine void star_midpoint(double* mid, const double* A, const double* B) {
+	double len;
+	double invlen;
+	// we don't divide by 2 because we immediately renormalize it...
+	mid[0] = A[0] + B[0];
+	mid[1] = A[1] + B[1];
+	mid[2] = A[2] + B[2];
+	//len = sqrt(square(mid[0]) + square(mid[1]) + square(mid[2]));
+	len = sqrt(mid[0] * mid[0] + mid[1] * mid[1] + mid[2] * mid[2]);
+	invlen = 1.0 / len;
+	mid[0] *= invlen;
+	mid[1] *= invlen;
+	mid[2] *= invlen;
+}
 
 InlineDefine Const double mjdtojd(double mjd) {
 	return mjd + MJD_JD_OFFSET;
@@ -150,6 +166,25 @@ InlineDefine void radecdeg2xyz(double ra, double dec,
 
 InlineDefine void radecdeg2xyzarr(double ra, double dec, double* xyz) {
 	radec2xyzarr(deg2rad(ra),deg2rad(dec), xyz);
+}
+
+InlineDefine void radecdegarr2xyzarr(double* radec, double* xyz) {
+    radecdeg2xyzarr(radec[0], radec[1], xyz);
+}
+
+// xyz stored as xyzxyzxyz.
+InlineDefine void radec2xyzarrmany(double *ra, double *dec, double* xyz, int n) {
+	int i;
+	for (i=0; i<n; i++) {
+		radec2xyzarr(ra[i], dec[i], xyz+3*i);
+	}
+}
+
+InlineDefine void radecdeg2xyzarrmany(double *ra, double *dec, double* xyz, int n) {
+	int i;
+	for (i=0; i<n; i++) {
+		radec2xyzarr(deg2rad(ra[i]), deg2rad(dec[i]), xyz+3*i);
+	}
 }
 
 WarnUnusedResult InlineDefine bool star_coords(const double *s, const double *r, double *x, double *y) {

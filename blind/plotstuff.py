@@ -14,6 +14,12 @@ class Plotstuff(object):
 		plotstuff_free(self.pargs)
 
 	def __getattr__(self, name):
+		if name == 'xy':
+			return plot_xy_get(self.pargs)
+		elif name == 'index':
+			return plot_index_get(self.pargs)
+		elif name == 'radec':
+			return plot_radec_get(self.pargs)
 		return self.pargs.__getattr__(name)
 
 	def __setattr__(self, name, val):
@@ -25,6 +31,8 @@ class Plotstuff(object):
 			plotstuff_set_size(self.pargs, val[0], val[1])
 		elif name == 'color':
 			self.set_color(val)
+		elif name == 'alpha':
+			self.set_alpha(val)
 		elif name == 'marker' and type(val) is str:
 			plotstuff_set_marker(self.pargs, val)
 		else:
@@ -38,7 +46,9 @@ class Plotstuff(object):
 
 	def set_color(self, color):
 		x = plotstuff_set_color(self.pargs, color)
-		print 'set_color returned:', x
+
+	def set_alpha(self, a):
+		x = plotstuff_set_alpha(self.pargs, a)
 
 	def plot_grid(self, rastep, decstep, ralabelstep=None, declabelstep=None):
 		grid = plot_grid_get(self.pargs)

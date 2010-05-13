@@ -103,17 +103,17 @@ void radecrange2xyzrange(double ralow, double declow, double rahigh, double dech
 InlineDeclare void radec2xyz(double ra, double dec, double* x, double* y, double* z);
 InlineDeclare Flatten void xyz2radec(double x, double y, double z, double *ra, double *dec);
 InlineDeclare Flatten void xyzarr2radec(const double* xyz, double *ra, double *dec);
-inline void xyzarr2radecarr(const double* xyz, double *radec);
+InlineDeclare void xyzarr2radecarr(const double* xyz, double *radec);
 InlineDeclare void radec2xyzarr(double ra, double dec, double* xyz);
-inline void radec2xyzarrmany(double *ra, double *dec, double* xyz, int n);
+InlineDeclare void radec2xyzarrmany(double *ra, double *dec, double* xyz, int n);
 
 // RA,Dec in degrees:
 InlineDeclare void radecdeg2xyz(double ra, double dec, double* x, double* y, double* z);
 InlineDeclare Flatten void xyzarr2radecdeg(const double* xyz, double *ra, double *dec);
 InlineDeclare Flatten void xyzarr2radecdegarr(double* xyz, double *radec);
 InlineDeclare void radecdeg2xyzarr(double ra, double dec, double* xyz);
-inline void radecdegarr2xyzarr(double* radec, double* xyz);
-inline void radecdeg2xyzarrmany(double *ra, double *dec, double* xyz, int n);
+InlineDeclare void radecdegarr2xyzarr(double* radec, double* xyz);
+InlineDeclare void radecdeg2xyzarrmany(double *ra, double *dec, double* xyz, int n);
 
 // RA,Dec in degrees.
 // Puts the xyz unit vector pointing in positive-RA direction in "dra",
@@ -130,9 +130,9 @@ double arcsec_between_radecdeg(double ra1, double dec1, double ra2, double dec2)
 double deg_between_radecdeg(double ra1, double dec1, double ra2, double dec2);
 
 // RA in degrees to Mercator X coordinate [0, 1).
-inline double ra2mercx(double ra);
+double ra2mercx(double ra);
 // Dec in degrees to Mercator Y coordinate [0, 1).
-inline double dec2mercy(double dec);
+double dec2mercy(double dec);
 
 // RA in degrees to H:M:S
 void ra2hms(double ra, int* h, int* m, double* s);
@@ -142,9 +142,9 @@ void dec2dms(double dec, int* d, int* m, double* s);
 double hms2ra(int h, int m, double s);
 double dms2dec(int sgn, int d, int m, double s);
 
-inline void project_hammer_aitoff_x(double x, double y, double z, double* projx, double* projy);
+void project_hammer_aitoff_x(double x, double y, double z, double* projx, double* projy);
 
-inline void project_equal_area(double x, double y, double z, double* projx, double* projy);
+void project_equal_area(double x, double y, double z, double* projx, double* projy);
 
 // Converts a distance-squared between two points on the
 // surface of the unit sphere into the angle between the
@@ -212,7 +212,7 @@ void make_rand_star(double* star, double ramin, double ramax,
 */
 WarnUnusedResult InlineDeclare bool star_coords(const double *s, const double *r, double *x, double *y);
 
-inline void star_midpoint(double* mid, const double* A, const double* B);
+InlineDeclare void star_midpoint(double* mid, const double* A, const double* B);
 
 #ifdef INCLUDE_INLINE_SOURCE
 #define InlineDefine InlineDefineH

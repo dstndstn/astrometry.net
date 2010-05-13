@@ -56,15 +56,6 @@ struct bt_branch {
 };
 typedef struct bt_branch bt_branch;
 
-/*
-  struct bt_node {
-  union {
-  bt_leaf leaf;
-  bt_branch branch;
-  };
-  };
-  typedef struct bt_node bt_node;
-*/
 union bt_node {
 	bt_leaf leaf;
 	bt_branch branch;
@@ -87,7 +78,8 @@ Malloc bt* bt_new(int datasize, int blocksize);
 
 void bt_free(bt* tree);
 
-Pure Inline int bt_size(bt* tree);
+Pure //Inline
+int bt_size(bt* tree);
 
 bool bt_insert(bt* tree, void* data, bool unique, compare_func compare);
 

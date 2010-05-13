@@ -24,6 +24,7 @@
 #include "log.h"
 #include "errors.h"
 #include "sip_qfits.h"
+#include "tic.h"
 
 const plotter_t plotter_xy = {
 	"xy", 
@@ -78,6 +79,7 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	starxy_t* freexy = NULL;
 	int Nxy;
 	int i;
+	double t0;
 
 	if (args->fn && dl_size(args->xyvals)) {
 		ERROR("Can only plot one of xylist filename and xy_vals");
@@ -89,6 +91,7 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	}
 
 	if (args->fn) {
+		t0 = timenow();
 		// Open xylist.
 		xyls = xylist_open(args->fn);
 		if (!xyls) {
@@ -115,6 +118,7 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 		// If N is specified, apply it as a max.
 		if (args->nobjs)
 			Nxy = MIN(Nxy, args->nobjs);
+		logmsg("%g s to read xylist\n", timenow()-t0);
 	} else {
 		assert(dl_size(args->xyvals));
 		starxy_from_dl(&myxy, args->xyvals, FALSE, FALSE);
@@ -126,6 +130,14 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	if (args->wcs) {
 		double ra, dec, x, y;
 		assert(pargs->wcs);
+		/*
+		 // check for any overlap.
+		 double pralo,prahi,pdeclo,pdechi;
+		 double ralo,rahi,declo,dechi;
+		 anwcs_get_radec_bounds(pargs->wcs, 100, &pralo, &prahi, &pdeclo, &pdechi);
+		 anwcs_get_radec_bounds(args->wcs, 100, &ralo, &rahi, &declo, &dechi);
+		 if (
+		 */
 		for (i=0; i<Nxy; i++) {
 			anwcs_pixelxy2radec(args->wcs,
 								starxy_getx(xy, i), starxy_gety(xy, i),
@@ -157,12 +169,15 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	}
 
 	// Plot markers.
+	t0 = timenow();
 	for (i=args->firstobj; i<Nxy; i++) {
 		double x = starxy_getx(xy, i);
 		double y = starxy_gety(xy, i);
-		plotstuff_stack_marker(pargs, x, y);
+		if (plotstuff_marker_in_bounds(pargs, x, y))
+			plotstuff_stack_marker(pargs, x, y);
 	}
 	plotstuff_plot_stack(pargs, cairo);
+	logmsg("%g s to plot xylist\n", timenow()-t0);
 
 	starxy_free(freexy);
 	return 0;

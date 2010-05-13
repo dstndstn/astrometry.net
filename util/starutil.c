@@ -191,10 +191,6 @@ inline void xyzarr2radecarr(const double* xyz, double *radec) {
 	xyz2radec(xyz[0], xyz[1], xyz[2], radec+0, radec+1);
 }
 
-inline void radecdegarr2xyzarr(double* radec, double* xyz) {
-    radecdeg2xyzarr(radec[0], radec[1], xyz);
-}
-
 double distsq_between_radecdeg(double ra1, double dec1,
                                double ra2, double dec2) {
     double xyz1[3];
@@ -213,22 +209,7 @@ double deg_between_radecdeg(double ra1, double dec1, double ra2, double dec2) {
 	return arcsec2deg(arcsec_between_radecdeg(ra1, dec1, ra2, dec2));
 }
 
-// xyz stored as xyzxyzxyz.
-inline void radec2xyzarrmany(double *ra, double *dec, double* xyz, int n) {
-	int i;
-	for (i=0; i<n; i++) {
-		radec2xyzarr(ra[i], dec[i], xyz+3*i);
-	}
-}
-
-inline void radecdeg2xyzarrmany(double *ra, double *dec, double* xyz, int n) {
-	int i;
-	for (i=0; i<n; i++) {
-		radec2xyzarr(deg2rad(ra[i]), deg2rad(dec[i]), xyz+3*i);
-	}
-}
-
-inline void project_equal_area(double x, double y, double z, double* projx, double* projy) {
+void project_equal_area(double x, double y, double z, double* projx, double* projy) {
 	double Xp = x*sqrt(1./(1. + z));
 	double Yp = y*sqrt(1./(1. + z));
 	Xp = 0.5 * (1.0 + Xp);
@@ -239,7 +220,7 @@ inline void project_equal_area(double x, double y, double z, double* projx, doub
 	*projy = Yp;
 }
 
-inline void project_hammer_aitoff_x(double x, double y, double z, double* projx, double* projy) {
+void project_hammer_aitoff_x(double x, double y, double z, double* projx, double* projy) {
 	double theta = atan(x/z);
 	double r = sqrt(x*x+z*z);
 	double zp, xp;
@@ -347,17 +328,3 @@ inline void dec2dms(double dec, int* d, int* m, double* s) {
     *s = rem;
 }
 
-inline void star_midpoint(double* mid, const double* A, const double* B) {
-	double len;
-	double invlen;
-	// we don't divide by 2 because we immediately renormalize it...
-	mid[0] = A[0] + B[0];
-	mid[1] = A[1] + B[1];
-	mid[2] = A[2] + B[2];
-	//len = sqrt(square(mid[0]) + square(mid[1]) + square(mid[2]));
-	len = sqrt(mid[0] * mid[0] + mid[1] * mid[1] + mid[2] * mid[2]);
-	invlen = 1.0 / len;
-	mid[0] *= invlen;
-	mid[1] *= invlen;
-	mid[2] *= invlen;
-}

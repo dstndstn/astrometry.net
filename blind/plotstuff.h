@@ -134,6 +134,9 @@ int plotstuff_set_wcs_tan(plot_args_t* pargs, tan_t* wcs);
 
 void plotstuff_builtin_apply(cairo_t* cairo, plot_args_t* args);
 
+// Would a marker plotted with the current markersize at x,y appear in the image?
+bool plotstuff_marker_in_bounds(plot_args_t* pargs, double x, double y);
+
 int
 ATTRIB_FORMAT(printf,2,3)
 plotstuff_run_commandf(plot_args_t* pargs, const char* fmt, ...);
