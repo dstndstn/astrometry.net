@@ -61,3 +61,6 @@ def tree_open(fn):
 def tree_close(kd):
     return spherematch_c.kdtree_close(kd)
     
+def trees_match(kd1, kd2, radius):
+    (inds,dists) = spherematch_c.match(kd1, kd2, radius)
+    return (inds,dists)

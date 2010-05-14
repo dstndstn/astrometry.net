@@ -202,7 +202,7 @@ sip_t* wcs_shift(sip_t* wcs, double xs, double ys) {
 	wcs->wcstan.crpix[0] += xs;
 	wcs->wcstan.crpix[1] += ys;
 
-	logmsg("wcs_shift: xs,ys=(%g,%g)\n", xs, ys);
+	//logmsg("wcs_shift: xs,ys=(%g,%g)\n", xs, ys);
 
 	// now reproject the old crpix[xy] into shifted wcs
 	sip_pixelxy2radec(wcs, crpix0, crpix1, &nxref, &nyref);

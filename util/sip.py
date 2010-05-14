@@ -254,6 +254,14 @@ class Sip(ctypes.Structure):
 		rtn = _sip.sip_write_to_file(ctypes.pointer(self), cfn)
 		return rtn
 
+	def xyarray2radec(self, X, Y):
+		ras,decs = [],[]
+		for x,y in zip(X, Y):
+			(ra,dec) = self.pixelxy2radec(x,y)
+			ras.append(ra)
+			decs.append(dec)
+		#ras,decs = array(ras),array(decs)
+		return ras,decs
 
 	def pixelxy2radec(self, px,py):
 		'Return ra,dec of px,py'

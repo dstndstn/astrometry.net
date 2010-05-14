@@ -6,6 +6,7 @@
 #include "sip.h"
 #include "sip_qfits.h"
 #include "sip-utils.h"
+#include "scamp.h"
 #include "log.h"
 #include "errors.h"
 #include "tweak.h"
@@ -19,8 +20,9 @@
 #include "plotstuff.h"
 #include "plotimage.h"
 #include "cairoutils.h"
+#include "fitsioutils.h"
 
-static const char* OPTIONS = "hx:m:r:vj:p:i:J:o:w:";
+static const char* OPTIONS = "hx:m:r:vj:p:i:J:o:W:w:s:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -28,13 +30,15 @@ void print_help(char* progname) {
 		   "   -m <match input file>\n"
 		   "   -x <xyls input file>\n"
 		   "   -r <rdls input file>\n"
+		   "   [-W <initial WCS>] (default is to get result from match file)\n"
 		   "   [-w <wcs-output>]: write resulting SIP WCS to this file\n"
+		   "   [-s <scamp-output>]: write resulting SIP WCS to this file\n"
 		   "   [-o <order>]: SIP distortion order, default 2\n"
 		   "   [-p <plot output base filename>]\n"
 		   "   [-i <plot background image>]\n"
            "   [-v]: verbose\n"
 		   "   [-j <pixel-jitter>]: set image pixel jitter (default 1.0)\n"
-		   "   [-J <pixel-jitter>]: set index jitter (in arcsec, default 1.0)\n"
+		   "   [-J <index-jitter>]: set index jitter (in arcsec, default 1.0)\n"
 		   "\n", progname);
 }
 
@@ -186,6 +190,8 @@ int main(int argc, char** args) {
 	char* plotfn = NULL;
 	char* bgimgfn = NULL;
 
+	char* wcsfn = NULL;
+
 	double indexjitter = 1.0; // arcsec
 	double pixeljitter = 1.0;
 	int i;
@@ -219,6 +225,7 @@ int main(int argc, char** args) {
 	double gamma;
 
 	char* sipout = NULL;
+	char* scampout = NULL;
 
 	double* weights;
 	double* matchxyz;
@@ -264,9 +271,15 @@ int main(int argc, char** args) {
 		case 'w':
 			sipout = optarg;
 			break;
+		case 's':
+			scampout = optarg;
+			break;
         case 'v':
             loglvl++;
             break;
+		case 'W':
+			wcsfn = optarg;
+			break;
 			/*
 			 case 'X':
 			 crpix[0] = atof(optarg);
@@ -286,9 +299,7 @@ int main(int argc, char** args) {
 		exit(-1);
 	}
 
-	//log_to(logstream);
 	log_init(loglvl);
-	//errors_log_to(logstream);
 
 	// read XYLS.
 	xyls = xylist_open(xylsfn);
@@ -346,7 +357,14 @@ int main(int argc, char** args) {
 	Nindex = rd_n(rd);
 	logmsg("Found %i index objects\n", Nindex);
 
-	sip_wrap_tan(&mo->wcstan, &sip);
+	if (wcsfn) {
+		if (!sip_read_tan_or_sip_header_file_ext(wcsfn, 0, &sip, FALSE)) {
+			ERROR("Failed to read initial SIP/TAN WCS from \"%s\"", wcsfn);
+			return -1;
+		}
+	} else {
+		sip_wrap_tan(&mo->wcstan, &sip);
+	}
 
 	// quad radius-squared = AB distance.
 	Q2 = distsq(mo->quadpix, mo->quadpix + 2, 2);
@@ -410,6 +428,7 @@ int main(int argc, char** args) {
 		for (i=0; i<Nfield; i++) {
 			R2 = distsq(qc, fieldpix + 2*i, 2);
 			fieldsigma2s[i] = (square(pixeljitter) + square(ijitter)) * (1.0 + gamma * R2/Q2);
+			//fieldsigma2s[i] = (square(pixeljitter) + square(gamma * ijitter)) * (1.0 + gamma * R2/Q2);
 		}
 
 		logodds = verify_star_lists(indexpix, Nin,
@@ -433,7 +452,6 @@ int main(int argc, char** args) {
 			double ra,dec;
 			if (theta[i] < 0)
 				continue;
-			//rd_getradec(rd, theta[i], &ra, &dec);
 			ra  = indexrd[theta[i]*2+0];
 			dec = indexrd[theta[i]*2+1];
 			radecdeg2xyzarr(ra, dec, matchxyz + Nmatch*3);
@@ -527,15 +545,29 @@ int main(int argc, char** args) {
 	free(indexpix);
 	free(indexrd);
 
-	if (xylist_close(xyls)) {
-		logmsg("Failed to close XYLS file.\n");
-	}
-
 	if (sipout) {
 		if (sip_write_to_file(&sip, sipout)) {
 			ERROR("Failed to write SIP result to file \"%s\"", sipout);
 			return -1;
 		}
+	}
+
+	if (scampout) {
+		qfits_header* hdr = NULL;
+		hdr = xylist_get_primary_header(xyls);
+		//qfits_header_read(axy->xylsfn);
+		// Set NAXIS=2, NAXIS1=IMAGEW, NAXIS2=IMAGEH
+		fits_header_mod_int(hdr, "NAXIS", 2, NULL);
+		fits_header_add_int(hdr, "NAXIS1", W, NULL);
+		fits_header_add_int(hdr, "NAXIS2", H, NULL);
+		if (scamp_write_field(hdr, &sip, xy, scampout)) {
+			ERROR("Failed to write SIP result to Scamp file \"%s\"", scampout);
+			return -1;
+		}
+	}
+
+	if (xylist_close(xyls)) {
+		logmsg("Failed to close XYLS file.\n");
 	}
 
 	return 0;
