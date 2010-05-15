@@ -15,7 +15,7 @@ if __name__ == '__main__':
 	textfn = args[0]
 	fitsfn = args[1]
 	
-	t = text_table_fields(textfn, split=separator)
+	t = text_table_fields(textfn, split=opt.separator)
 	ft = pyfits.new_table(t.to_fits_columns())
 	ft.writeto(fitsfn, clobber=True)
 

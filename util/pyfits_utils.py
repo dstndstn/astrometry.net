@@ -105,7 +105,7 @@ def table_fields(dataorfn, rows=None, hdunum=1):
 	return fields
 
 # ultra-brittle text table parsing.
-def text_table_fields(forfn, text=None, skiplines=0, split=None):
+def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True):
 	if text is None:
 		f = None
 		if isinstance(forfn, str):
@@ -121,28 +121,36 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None):
 	txtrows = txtrows[skiplines:]
 
 	# column names are in the first (un-skipped) line.
-	header = txtrows.pop(0)
+	txt = txtrows.pop(0)
+	header = txt
 	header = header.split()
 	if header[0] == '#':
 		header = header[1:]
-	assert(len(header) >= 1)
-	colnames = header[1:]
+	if len(header) == 0:
+		raise Exception('Expected to find column names in the first row of text; got \"%s\".' % txt)
+	#assert(len(header) >= 1)
+	if trycsv and (split is None) and (len(header) == 1) and (',' in header[0]):
+		# try CSV
+		header = header[0].split(',')
+	colnames = header
 
 	fields = tabledata()
 	txtrows = [r for r in txtrows if not r.startswith('#')]
 	coldata = [[] for x in colnames]
-	for r in txtrows:
+	for i,r in enumerate(txtrows):
 		if split is None:
 			cols = r.split()
 		else:
 			cols = r.split(split)
 		if len(cols) == 0:
 			continue
-		if split is None and len(cols) != len(colnames) and ',' in r:
+		if trycsv and (split is None) and (len(cols) != len(colnames)) and (',' in r):
 			# try to parse as CSV.
 			cols = r.split(',')
 			
-		assert(len(cols) == len(colnames))
+		if len(cols) != len(colnames):
+			raise Exception('Expected to find %i columns of data to match headers (%s) in row %i' % (len(colnames), ', '.join(colnames), i))
+		#assert(len(cols) == len(colnames))
 		for i,c in enumerate(cols):
 			coldata[i].append(c)
 
