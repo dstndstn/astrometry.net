@@ -34,6 +34,13 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', **kwargs):
 	y = xy.field(ycol)
 
 	# use IMAGEW,H, or compute bounds?
+	#  #$)(*&%^ NaNs in LSST source positions.  Seriously, WTF!
+	I = logical_and(isfinite(x), isfinite(y))
+	if not all(I):
+		print '%i source positions are not finite.' % sum(logical_not(I))
+		x = x[I]
+		y = y[I]
+	
 	W = max(x) - min(x)
 	H = max(y) - min(y)
 	NX = int(max(1, round(W / sqrt(W*H / float(n)))))
@@ -43,7 +50,14 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', **kwargs):
 
 	ix = (clip(floor((x - min(x)) / float(W) * NX), 0, NX-1)).astype(int)
 	iy = (clip(floor((y - min(y)) / float(H) * NY), 0, NY-1)).astype(int)
+	#print ix, iy
+	assert(all(ix >= 0))
+	assert(all(ix < NX))
+	assert(all(iy >= 0))
+	assert(all(iy < NY))
 	I = iy * NX + ix
+	assert(all(I >= 0))
+	assert(all(I < NX*NY))
 	#print 'len(I):', len(I)
 	#print I.shape
 	bins = [[] for i in range(NX*NY)]
