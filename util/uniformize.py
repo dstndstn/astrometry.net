@@ -39,6 +39,7 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', **kwargs):
 	NX = int(max(1, round(W / sqrt(W*H / float(n)))))
 	NY = int(max(1, round(n / float(NX))))
 	print 'Uniformizing into %i x %i bins' % (NX, NY)
+	print 'Image bounds: x [%g,%g], y [%g,%g]' % (min(x),max(x),min(y),max(y))
 
 	ix = (clip(floor((x - min(x)) / float(W) * NX), 0, NX-1)).astype(int)
 	iy = (clip(floor((y - min(y)) / float(H) * NY), 0, NY-1)).astype(int)
