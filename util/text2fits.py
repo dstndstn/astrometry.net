@@ -10,7 +10,7 @@ if __name__ == '__main__':
 	p.set_defaults(separator=None)
 	(opt,args) = p.parse_args()
 	if len(args) != 2:
-		p.print _help()
+		p.print_help()
 		sys.exit(-1)
 	textfn = args[0]
 	fitsfn = args[1]
