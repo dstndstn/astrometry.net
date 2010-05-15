@@ -123,8 +123,9 @@ def text_table_fields(forfn, text=None, skiplines=0):
 	# column names are in the first (un-skipped) line.
 	header = txtrows.pop(0)
 	header = header.split()
-	assert(header[0] == '#')
-	assert(len(header) > 1)
+	if header[0] == '#':
+		header = header[1:]
+	assert(len(header) >= 1)
 	colnames = header[1:]
 
 	fields = tabledata()
