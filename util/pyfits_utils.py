@@ -105,7 +105,7 @@ def table_fields(dataorfn, rows=None, hdunum=1):
 	return fields
 
 # ultra-brittle text table parsing.
-def text_table_fields(forfn, text=None, skiplines=0):
+def text_table_fields(forfn, text=None, skiplines=0, split=None):
 	if text is None:
 		f = None
 		if isinstance(forfn, str):
@@ -132,9 +132,16 @@ def text_table_fields(forfn, text=None, skiplines=0):
 	txtrows = [r for r in txtrows if not r.startswith('#')]
 	coldata = [[] for x in colnames]
 	for r in txtrows:
-		cols = r.split()
+		if split is None:
+			cols = r.split()
+		else:
+			cols = r.split(split)
 		if len(cols) == 0:
 			continue
+		if split is None and len(cols) != len(colnames) and ',' in r:
+			# try to parse as CSV.
+			cols = r.split(',')
+			
 		assert(len(cols) == len(colnames))
 		for i,c in enumerate(cols):
 			coldata[i].append(c)
