@@ -2070,6 +2070,7 @@ kdtree_t* MANGLE(kdtree_convert_data)
 				WARNING("Clamping value %.12g -> %.12g to %u.\n", (double)*edata, (double)dd, (unsigned int)DTYPE_MIN);
 				dd = DTYPE_MIN;
 			}
+			// Right place for this?  Not really....
 			if (!ETYPE_INTEGER) {
 				// NaN and Inf detection...
 				if (!isfinite(dd) || isnan(dd)) {
@@ -2190,6 +2191,22 @@ kdtree_t* MANGLE(kdtree_build)
             MANGLE(kdtree_convert_data)(kd, indata, N, D, Nleaf);
         } else {
             kd->data.any = indata;
+			
+			// ???
+			if (!ETYPE_INTEGER) {
+				int i,d;
+				etype* edata = indata;
+				for (i=0; i<N; i++) {
+					for (d=0; d<D; d++) {
+						etype dd = edata[i*D + d];
+						// NaN and Inf detection...
+						if (!isfinite(dd) || isnan(dd)) {
+							WARNING("Replacing inf/nan value (element %i,%i) = %g with %g\n", i, d, (double)dd, (double)DTYPE_MAX);
+							edata[i*D + d] = DTYPE_MAX;
+						}
+					}
+				}
+			}
         }
     }
     if (needs_data_conversion()) {
@@ -2213,7 +2230,7 @@ kdtree_t* MANGLE(kdtree_build)
 	 * sorts to keep track of the original index. */
 	kd->perm = MALLOC(sizeof(u32) * N);
 	assert(kd->perm);
-	for (i = 0;i < N;i++)
+	for (i = 0; i < N; i++)
 		kd->perm[i] = i;
 
 	kd->lr = MALLOC(kd->nbottom * sizeof(int32_t));
