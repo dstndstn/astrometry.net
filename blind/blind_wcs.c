@@ -254,7 +254,7 @@ int blind_wcs_compute_weighted(const double* starxyz,
 		p[2*i + 0] -= pcm[0];
 		p[2*i + 1] -= pcm[1];
 	}
-	logverb("Projected star center of mass: (%g, %g) ~radians\n", pcm[0], pcm[1]);
+	//logverb("Projected star center of mass: (%g, %g) ~radians\n", pcm[0], pcm[1]);
 
 	// -compute the covariance between field positions and projected
 	//  positions of the corresponding stars.

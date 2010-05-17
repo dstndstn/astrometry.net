@@ -176,7 +176,7 @@ static an_option_t options[] = {
 	 "set the noise level in the image"},
 	{'9', "no-remove-lines", no_argument, NULL,
 	 "don't remove horizontal and vertical overdensities of sources."},
-	{':', "uniformize", required_argument, NULL,
+	{':', "uniformize", required_argument, "int",
 	 "select sources uniformly using roughly this many boxes (0=disable; default 10)"},
 	{'0', "no-fix-sdss",    no_argument, NULL,
 	 "don't try to fix SDSS idR files."},

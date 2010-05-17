@@ -229,8 +229,6 @@ static double wcslib_pixel_scale(const anwcslib_t* anwcslib) {
 	return deg2arcsec(sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2])));
 }
 
-#endif
-
 static int wcslib_write_to(const anwcslib_t* anwcslib, FILE* fid) {
 	int res;
 	int Ncards;
@@ -272,6 +270,9 @@ static int wcslib_write(const anwcslib_t* anwcslib, const char* filename) {
 	}
 	return 0;
 }
+
+#endif  // end of WCSLIB implementations
+
 
 /////////////////// sip implementations //////////////////////////
 

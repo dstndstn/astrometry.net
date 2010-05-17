@@ -543,6 +543,10 @@ void solver_run(solver_t* solver) {
 		numxy = solver->endobj;
 	if (solver->startobj >= numxy)
 		return;
+	if (numxy >= 1000) {
+		logverb("Limiting search to first 1000 objects\n");
+		numxy = 1000;
+	}
 
 	num_indexes = pl_size(solver->indexes);
 	{

@@ -78,6 +78,9 @@ struct cairocmd {
 };
 typedef struct cairocmd cairocmd_t;
 
+static void get_text_position(plot_args_t* pargs, cairo_t* cairo,
+							  const char* txt, double* px, double* py);
+
 plot_args_t* plotstuff_new() {
 	plot_args_t* pargs = calloc(1, sizeof(plot_args_t));
 	plotstuff_init(pargs);
@@ -150,6 +153,20 @@ int plot_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra
 		else
 			cairo_line_to(pargs->cairo, x, y);
 	}
+	return 0;
+}
+
+int plot_text_radec(plot_args_t* pargs, double ra, double dec, const char* label) {
+	double x,y;
+	if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y)) {
+		ERROR("Failed to convert RA,Dec (%g,%g) to pixel position in plot_text_radec\n", ra, dec);
+		return -1;
+	}
+	assert(pargs->cairo);
+	//plotstuff_stack_text(pargs, pargs->cairo, label, x, y);
+	get_text_position(pargs, pargs->cairo, label, &x, &y);
+	cairo_move_to(pargs->cairo, x, y);
+	cairo_show_text(pargs->cairo, label);
 	return 0;
 }
 
@@ -337,12 +354,28 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 	} else if (streq(cmd, "plot_wcs_setsize")) {
 		assert(pargs->wcs);
 		plotstuff_set_size(pargs, (int)ceil(anwcs_imagew(pargs->wcs)), (int)ceil(anwcs_imageh(pargs->wcs)));
+	} else if (streq(cmd, "plot_label_radec")) {
+		assert(pargs->wcs);
+		double ra, dec;
+		int nc;
+		const char* label;
+		if (sscanf(cmdargs, "%lf %lf %n", &ra, &dec, &nc) != 3) {
+			ERROR("Failed to parse plot_label_radec args \"%s\"", cmdargs);
+			return -1;
+		}
+		label = cmdargs + nc;
+		return plot_text_radec(pargs, ra, dec, label);
 	} else {
 		ERROR("Did not understand command: \"%s\"", cmd);
 		return -1;
 	}
 	if (pargs->cairo)
 		plotstuff_builtin_apply(pargs->cairo, pargs);
+	return 0;
+}
+
+int plot_builtin_plot(const char* command, cairo_t* cairo, plot_args_t* pargs, void* baton) {
+	//plotstuff_plot_stack(pargs, cairo);
 	return 0;
 }
 
@@ -389,23 +422,22 @@ void plotstuff_stack_arrow(plot_args_t* pargs, double x, double y,
 	add_cmd(pargs, &cmd);
 }
 
-void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
-						  const char* txt, double px, double py) {
+static void get_text_position(plot_args_t* pargs, cairo_t* cairo,
+							  const char* txt, double* px, double* py) {
     cairo_text_extents_t textents;
     double l,r,t,b;
     double margin = 2.0;
-    int dx, dy;
-	cairocmd_t cmd;
+	double x, y;
+	x = *px;
+	y = *py;
 
-	set_cmd_args(pargs, &cmd);
-
-	px += pargs->label_offset_x;
-	py += pargs->label_offset_y;
+	x += pargs->label_offset_x;
+	y += pargs->label_offset_y;
 
     cairo_text_extents(cairo, txt, &textents);
-    l = px + textents.x_bearing;
+    l = x + textents.x_bearing;
     r = l + textents.width + textents.x_bearing;
-    t = py + textents.y_bearing;
+    t = y + textents.y_bearing;
     b = t + textents.height;
     l -= margin;
     t -= margin;
@@ -414,21 +446,33 @@ void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
 
     // move text away from the edges of the image.
     if (l < 0) {
-        px += -l;
+        x += -l;
         l = 0;
     }
     if (t < 0) {
-        py += -t;
+        y += -t;
         t = 0;
     }
     if (r > pargs->W) {
-        px -= (r - pargs->W);
+        x -= (r - pargs->W);
         r = pargs->W;
     }
     if (b > pargs->H) {
-        py -= (b - pargs->H);
+        y -= (b - pargs->H);
         b = pargs->H;
     }
+	*px = x;
+	*py = y;
+}
+
+void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
+						  const char* txt, double px, double py) {
+    int dx, dy;
+	cairocmd_t cmd;
+
+	set_cmd_args(pargs, &cmd);
+
+	get_text_position(pargs, cairo, txt, &px, &py);
 
 	cmd.type = TEXT;
 	cmd.layer = pargs->text_bg_layer;
@@ -521,7 +565,7 @@ static void plot_builtin_free(plot_args_t* pargs, void* baton) {
 	bl_free(pargs->cairocmds);
 }
 
-static const plotter_t builtin = { "plot", plot_builtin_init, plot_builtin_init2, plot_builtin_command, NULL, plot_builtin_free, NULL };
+static const plotter_t builtin = { "plot", plot_builtin_init, plot_builtin_init2, plot_builtin_command, plot_builtin_plot, plot_builtin_free, NULL };
 
 int parse_image_format(const char* fmt) {
 	if (streq(fmt, "png")) {

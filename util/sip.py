@@ -303,6 +303,14 @@ class Sip(ctypes.Structure):
 			ctypes.pointer(fpy))
 		return fpx.value, fpy.value
 
+	def get_radec_center(self):
+		ra  = ctypes.c_double(0)
+		dec = ctypes.c_double(0)
+		_sip.sip_get_radec_center(ctypes.pointer(self),
+								  ctypes.pointer(ra),
+								  ctypes.pointer(dec))
+		return (ra.value, dec.value)
+
 	def radec_bounds(self, stepsize=50):
 		ramin = ctypes.c_double(0)
 		ramax = ctypes.c_double(0)
