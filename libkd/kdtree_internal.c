@@ -2070,6 +2070,13 @@ kdtree_t* MANGLE(kdtree_convert_data)
 				WARNING("Clamping value %.12g -> %.12g to %u.\n", (double)*edata, (double)dd, (unsigned int)DTYPE_MIN);
 				dd = DTYPE_MIN;
 			}
+			if (!ETYPE_INTEGER) {
+				// NaN and Inf detection...
+				if (!isfinite(dd) || isnan(dd)) {
+					WARNING("Replacing inf/nan value (element %i,%i) = %g with %g\n", i, d, (double)dd, (double)DTYPE_MAX);
+					dd = DTYPE_MAX;
+				}
+			}
 			*ddata = (dtype)dd;
 
 			ddata++;
