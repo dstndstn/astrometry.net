@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include <time.h>
 
 #include "an-bool.h"
 #include "bl.h"
@@ -96,6 +97,9 @@ char* create_temp_dir(const char* name, const char* dir);
 char* shell_escape(const char* str);
 
 int mkdir_p(const char* path);
+
+// Returns 0 on error.
+time_t file_get_last_modified_time(const char* fn);
 
 bool file_exists(const char* fn);
 

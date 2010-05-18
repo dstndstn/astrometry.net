@@ -709,16 +709,25 @@ void get_mmap_size(int start, int size, off_t* mapstart, size_t* mapsize, int* p
 	*pgap = gap;
 }
 
-int file_get_last_modified_string(const char* fn, const char* timeformat,
-                                  bool utc, char* output, size_t outsize) {
+time_t file_get_last_modified_time(const char* fn) {
     struct stat st;
     time_t t;
-    struct tm tym;
     if (stat(fn, &st)) {
         SYSERROR("Failed to stat() file \"%s\"", fn);
-        return -1;
+        return 0;
     }
-    t = st.st_mtime;
+    return st.st_mtime;
+}
+
+int file_get_last_modified_string(const char* fn, const char* timeformat,
+                                  bool utc, char* output, size_t outsize) {
+    struct tm tym;
+	time_t t;
+
+	t = file_get_last_modified_time(fn);
+	if (t == 0) {
+		return -1;
+	}
     if (utc) {
         if (!gmtime_r(&t, &tym)) {
             SYSERROR("gmtime_r() failed");

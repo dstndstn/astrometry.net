@@ -466,6 +466,29 @@ static void after_solved(augment_xylist_t* axy,
 	char rastr[32], decstr[32];
 	char* fieldunits;
 
+	// print info about the field.
+	logmsg("Field: %s\n", axy->imagefn ? axy->imagefn : axy->xylsfn);
+	if (file_exists(axy->wcsfn)) {
+		if (axy->wcs_last_mod) {
+			time_t t = file_get_last_modified_time(axy->wcsfn);
+			if (t == axy->wcs_last_mod) {
+				logmsg("Warning: there was already a WCS file, and its timestamp has not changed.\n");
+			}
+		}
+		if (!sip_read_header_file(axy->wcsfn, &wcs)) {
+			ERROR("Failed to read WCS header from file %s", axy->wcsfn);
+			exit(-1);
+		}
+		sip_get_radec_center(&wcs, &ra, &dec);
+		sip_get_radec_center_hms_string(&wcs, rastr, decstr);
+		sip_get_field_size(&wcs, &fieldw, &fieldh, &fieldunits);
+		logmsg("Field center: (RA,Dec) = (%.4g, %.4g) deg.\n", ra, dec);
+		logmsg("Field center: (RA H:M:S, Dec D:M:S) = (%s, %s).\n", rastr, decstr);
+		logmsg("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
+	} else {
+		logmsg("Did not solve (or no WCS file was written).\n");
+	}
+
 	// create new FITS file...
 	if (axy->fitsimgfn && sf->newfitsfn && file_exists(axy->wcsfn)) {
 		logmsg("Creating new FITS file \"%s\"...\n", sf->newfitsfn);
@@ -485,20 +508,6 @@ static void after_solved(augment_xylist_t* axy,
 			ERROR("Failed to project index stars into field coordinates using wcs-rd2xy");
 			exit(-1);
 		}
-	}
-
-	// print info about the field.
-	if (file_exists(axy->wcsfn)) {
-		if (!sip_read_header_file(axy->wcsfn, &wcs)) {
-			ERROR("Failed to read WCS header from file %s", axy->wcsfn);
-			exit(-1);
-		}
-		sip_get_radec_center(&wcs, &ra, &dec);
-		sip_get_radec_center_hms_string(&wcs, rastr, decstr);
-		sip_get_field_size(&wcs, &fieldw, &fieldh, &fieldunits);
-		logmsg("Field center: (RA,Dec) = (%.4g, %.4g) deg.\n", ra, dec);
-		logmsg("Field center: (RA H:M:S, Dec D:M:S) = (%s, %s).\n", rastr, decstr);
-		logmsg("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
 	}
 
 	if (makeplots && file_exists(sf->indxylsfn) && file_readable(axy->matchfn) && file_readable(axy->wcsfn)) {
@@ -1118,6 +1127,11 @@ int main(int argc, char** args) {
         }
 
 		append_escape(backendargs, axy->outfn);
+
+		if (file_readable(axy->wcsfn))
+			axy->wcs_last_mod = file_get_last_modified_time(axy->wcsfn);
+		else
+			axy->wcs_last_mod = 0;
 
 		if (!backend_batch) {
 			run_backend(backendargs);

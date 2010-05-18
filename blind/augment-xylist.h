@@ -19,6 +19,8 @@
 #ifndef AUGMENT_XYLIST_H
 #define AUGMENT_XYLIST_H
 
+#include <time.h>
+
 #include "starxy.h"
 #include "an-bool.h"
 #include "bl.h"
@@ -60,6 +62,8 @@ struct augment_xylist_s {
     char* corrfn;
     char* keepxylsfn;
     char* pnmfn;
+
+	time_t wcs_last_mod;
 
     bool keep_fitsimg;
     char* fitsimgfn;
