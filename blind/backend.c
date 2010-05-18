@@ -1,6 +1,7 @@
 /*
  This file is part of the Astrometry.net suite.
  Copyright 2007, 2008 Dustin Lang, Keir Mierle and Sam Roweis.
+ Copyright 2010 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -157,9 +158,9 @@ int backend_add_index(backend_t* backend, char* path) {
         bool eq = streq(base, mbase);
         free(mbase);
         if (eq) {
-            logverb("Skipping index because we've already seen an index with the same name: %s\n", ind->indexname);
-            free(base);
-            return 0;
+            logmsg("Warning: we've already seen an index with the same name: \"%s\".  Adding it anyway...\n", ind->indexname);
+            //free(base);
+            //return 0;
         }
     }
     free(base);
@@ -177,9 +178,10 @@ int backend_add_index(backend_t* backend, char* path) {
 		index_t* m = pl_get(backend->indexes, k);
         if (m->indexid == ind->indexid &&
             m->healpix == ind->healpix) {
-            logverb("Skipping duplicate index %s\n", path);
-			index_free(ind);
-            return 0;
+            logmsg("Warning: encountered two index files with the same INDEXID = %i and HEALPIX = %i: \"%s\" and \"%s\".  Keeping both.\n",
+				   m->indexid, m->healpix, m->indexname, path);
+			//index_free(ind);
+            //return 0;
         }
     }
 
