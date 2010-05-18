@@ -364,7 +364,7 @@ int main(int argc, char** args) {
 					indexrd, Nindex, indexjitter,
 					qc, Q2,
 					0.25, -100,
-					order, &sip, NULL);
+					order, &sip, NULL, NULL, NULL);
 	if (!sipout) {
 		ERROR("tweak2() failed.\n");
 		return -1;

@@ -1358,6 +1358,8 @@ double verify_star_lists(const double* refxys, int NR,
 		*p_besti = besti;
 
 	free(v.refperm);
+	free(v.testperm);
+	free(v.badguys);
 	return X;
 }
 

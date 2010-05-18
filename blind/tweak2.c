@@ -48,8 +48,8 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			  double logodds_bail,
 			  int sip_order,
 			  const sip_t* startwcs,
-			  sip_t* destwcs
-			  ) {
+			  sip_t* destwcs,
+			  int** newtheta, double** newodds) {
 	int order;
 	sip_t* sipout;
 	int* indexin;
@@ -58,6 +58,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 	double* weights;
 	double* matchxyz;
 	double* matchxy;
+	int i, Nin;
 
 	if (destwcs)
 		sipout = destwcs;
@@ -90,7 +91,6 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 		logverb("Starting tweak2 order=%i\n", order);
 
 		for (step=0; step<STEPS; step++) {
-			int i, Nin;
 			double iscale;
 			double ijitter;
 			double ra, dec;
@@ -108,6 +108,10 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			
 			logverb("Using input WCS:\n");
 			sip_print_to(sipout, stdout);
+
+			// FIXME --- this should be done in dstnthing, since it
+			// isn't necessary when called during normal solving (and
+			// it requires keeping the 'indexin' permutation).
 
 			// Project RDLS into pixel space; keep the ones inside image bounds.
 			Nin = 0;
@@ -245,6 +249,25 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			}
 		}
 	}
+
+	if (newtheta || newodds) {
+		int besti;
+		double logodds;
+		logodds = verify_star_lists(indexpix, Nin,
+									fieldxy, fieldsigma2s, Nfield,
+									W*H, distractors,
+									logodds_bail, HUGE_VAL,
+									&besti, newodds, newtheta, NULL);
+		logverb("Final logodds: %g\n", logodds);
+		// undo the "indexpix" inside-image-bounds cut.
+		for (i=0; i<=besti; i++) {
+			if ((*newtheta)[i] < 0)
+				continue;
+			(*newtheta)[i] = indexin[(*newtheta)[i]];
+		}
+
+	}
+
 
 	free(indexin);
 	free(indexpix);

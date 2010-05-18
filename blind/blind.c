@@ -781,6 +781,9 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
         if (bp->do_tweak2) {
 			sip_t sipin;
 			double Q2;
+			int* newtheta;
+			double* newodds;
+
 			sip_wrap_tan(&mymo->wcstan, &sipin);
 			sipin.wcstan.imagew = solver_field_width(sp);
 			sipin.wcstan.imageh = solver_field_height(sp);
@@ -792,7 +795,14 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 							   mymo->wcstan.crpix, Q2,
 							   sp->distractor_ratio,
 							   sp->logratio_bail_threshold,
-							   bp->tweak_aborder, &sipin, NULL);
+							   bp->tweak_aborder, &sipin, NULL,
+							   &newtheta, &newodds);
+			// ??
+			free(mymo->theta);
+			free(mymo->matchodds);
+			mymo->theta = newtheta;
+			mymo->matchodds = newodds;
+			// FIXME -- recompute mymo->refxy ?
 		}
 
 		// FIXME -- tweak should use the weights (verify_logodds_to_weight(mymo->matchodds))

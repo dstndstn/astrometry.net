@@ -159,6 +159,7 @@ int main(int argc, char** args) {
 		print_help(args[0], opts);
 		exit(0);
 	}
+	bl_free(opts);
 
     log_init(loglvl);
     if (tostderr)
@@ -218,17 +219,14 @@ int main(int argc, char** args) {
 
 	if (sl_size(inds)) {
 		// Expand globs.
-		//sl* inds2 = sl_new(4);
 		for (i=0; i<sl_size(inds); i++) {
 			char* s = sl_get(inds, i);
 			glob_t myglob;
 			int flags = GLOB_TILDE | GLOB_BRACE;
-			// flags |= GLOB_BRACE; // {x,y,...} expansion
 			if (glob(s, flags, NULL, &myglob)) {
 				SYSERROR("Failed to expand wildcards in index-file path \"%s\"", s);
 				exit(-1);
 			}
-			//sl_append_array(inds2, (const char**)myglob.gl_pathv, myglob.gl_pathc);
 			for (c=0; c<myglob.gl_pathc; c++) {
 				if (backend_add_index(backend, myglob.gl_pathv[c])) {
 					ERROR("Failed to add index \"%s\"", myglob.gl_pathv[c]);
