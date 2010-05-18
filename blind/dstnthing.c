@@ -9,7 +9,6 @@
 #include "scamp.h"
 #include "log.h"
 #include "errors.h"
-#include "tweak.h"
 #include "matchfile.h"
 #include "matchobj.h"
 #include "boilerplate.h"
@@ -21,6 +20,7 @@
 #include "plotimage.h"
 #include "cairoutils.h"
 #include "fitsioutils.h"
+#include "tweak2.h"
 
 static const char* OPTIONS = "hx:m:r:vj:p:i:J:o:W:w:s:";
 
@@ -201,6 +201,7 @@ int main(int argc, char** args) {
 	matchfile* mf;
 	MatchObj* mo;
 	sip_t sip;
+	sip_t* sipout;
 
 	double* fieldpix;
 	int Nfield;
@@ -208,30 +209,13 @@ int main(int argc, char** args) {
 
 	rd_t* rd;
 	int Nindex;
-
-	int step;
-
-	double ra,dec;
-
 	double* indexrd;
-	double* indexpix;
-	double* fieldsigma2s;
-	int besti;
-	int* theta;
-	double* odds;
-	double logodds;
-	double Q2, R2;
+	double Q2;
 	double qc[2];
-	double gamma;
 
-	char* sipout = NULL;
+	char* sipoutfn = NULL;
 	char* scampout = NULL;
 
-	double* weights;
-	double* matchxyz;
-	double* matchxy;
-	int Nmatch;
-	tan_t newtan;
 	int order = 2;
 
 	int loglvl = LOG_MSG;
@@ -269,7 +253,7 @@ int main(int argc, char** args) {
 			matchfn = optarg;
 			break;
 		case 'w':
-			sipout = optarg;
+			sipoutfn = optarg;
 			break;
 		case 's':
 			scampout = optarg;
@@ -366,188 +350,31 @@ int main(int argc, char** args) {
 		sip_wrap_tan(&mo->wcstan, &sip);
 	}
 
-	// quad radius-squared = AB distance.
+	// quad radius-squared = AB distance. (/4)
 	Q2 = distsq(mo->quadpix, mo->quadpix + 2, 2);
 	qc[0] = sip.wcstan.crpix[0];
 	qc[1] = sip.wcstan.crpix[1];
 
 	indexrd = malloc(2 * Nindex * sizeof(double));
-	indexpix = malloc(2 * Nindex * sizeof(double));
-	fieldsigma2s = malloc(Nfield * sizeof(double));
-	weights = malloc(Nfield * sizeof(double));
-	matchxyz = malloc(Nfield * 3 * sizeof(double));
-	matchxy = malloc(Nfield * 2 * sizeof(double));
+	for (i=0; i<Nindex; i++)
+		rd_getradec(rd, i, indexrd+2*i, indexrd+2*i+1);
 
-	// variance growth rate wrt radius.
-	gamma = 1.0;
-	int STEPS = 20;
-
-	for (step=0; step<STEPS; step++) {
-		int Nin;
-		double iscale;
-		double ijitter;
-		// Anneal
-		gamma = pow(0.9, step);
-		if (step == STEPS-1)
-			gamma = 0.0;
-
-		logmsg("Set gamma = %g\n", gamma);
-
-		if (!sip.wcstan.imagew)
-			sip.wcstan.imagew = W;
-		if (!sip.wcstan.imageh)
-			sip.wcstan.imageh = H;
-		logverb("SIP image size %g x %g\n", sip.wcstan.imagew, sip.wcstan.imageh);
-
-		// Project RDLS into pixel space; keep the ones inside image bounds.
-		Nin = 0;
-		for (i=0; i<Nindex; i++) {
-			bool ok;
-			double x,y;
-			rd_getradec(rd, i, &ra, &dec);
-			ok = sip_radec2pixelxy(&sip, ra, dec, &x, &y);
-			if (!ok)
-				continue;
-			//assert(ok);
-			if (!sip_pixel_is_inside_image(&sip, x, y))
-				continue;
-			indexpix[Nin*2+0] = x;
-			indexpix[Nin*2+1] = y;
-			indexrd[Nin*2+0] = ra;
-			indexrd[Nin*2+1] = dec;
-			Nin++;
-		}
-		logmsg("%i reference sources within the image.\n", Nin);
-
-		logmsg("CRPIX is (%g,%g)\n", sip.wcstan.crpix[0], sip.wcstan.crpix[1]);
-
-		iscale = sip_pixel_scale(&sip);
-		ijitter = indexjitter / iscale;
-		logverb("With pixel scale of %g arcsec/pixel, index adds jitter of %g pix.\n", iscale, ijitter);
-
-		for (i=0; i<Nfield; i++) {
-			R2 = distsq(qc, fieldpix + 2*i, 2);
-			fieldsigma2s[i] = (square(pixeljitter) + square(ijitter)) * (1.0 + gamma * R2/Q2);
-			//fieldsigma2s[i] = (square(pixeljitter) + square(gamma * ijitter)) * (1.0 + gamma * R2/Q2);
-		}
-
-		logodds = verify_star_lists(indexpix, Nin,
-									fieldpix, fieldsigma2s, Nfield,
-									W*H, 0.25,
-									log(1e-100), HUGE_VAL,
-									&besti, &odds, &theta, NULL);
-		logmsg("Logodds: %g\n", logodds);
-		logmsg("besti: %i\n", besti);
-
-		if (plotfn) {
-			char fn[256];
-			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'a');
-			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
-					 Nin, indexpix, Nfield-1, theta, sip.wcstan.crpix);
-		}
-
-		Nmatch = 0;
-		logmsg("Weights:");
-		for (i=0; i<Nfield; i++) {
-			double ra,dec;
-			if (theta[i] < 0)
-				continue;
-			ra  = indexrd[theta[i]*2+0];
-			dec = indexrd[theta[i]*2+1];
-			radecdeg2xyzarr(ra, dec, matchxyz + Nmatch*3);
-			memcpy(matchxy + Nmatch*2, fieldpix + i*2, 2*sizeof(double));
-			weights[Nmatch] = verify_logodds_to_weight(odds[i]);
-			logmsg(" %.2f", weights[Nmatch]);
-			Nmatch++;
-		}
-		logmsg("\n");
-
-		blind_wcs_compute_weighted(matchxyz, matchxy, weights, Nmatch, &newtan, NULL);
-
-		logmsg("Original TAN WCS:\n");
-		tan_print_to(&sip.wcstan, stdout);
-		logmsg("Using %i (weighted) matches, new TAN WCS is:\n", Nmatch);
-		tan_print_to(&newtan, stdout);
-
-		if (plotfn) {
-			char fn[256];
-
-			for (i=0; i<Nindex; i++) {
-				bool ok;
-				rd_getradec(rd, i, &ra, &dec);
-				ok = tan_radec2pixelxy(&newtan, ra, dec, indexpix + i*2, indexpix + i*2 + 1);
-				assert(ok);
-			}
-
-			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'b');
-			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
-					 Nindex, indexpix, Nfield-1, theta, newtan.crpix);
-		}
-
-		sip_t* newsip;
-		tweak_t* t = tweak_new();
-		starxy_t* sxy = starxy_new(Nmatch, FALSE, FALSE);
-		il* imginds = il_new(256);
-		il* refinds = il_new(256);
-		dl* wts = dl_new(256);
-
-		for (i=0; i<Nmatch; i++) {
-			starxy_set_x(sxy, i, matchxy[2*i+0]);
-			starxy_set_y(sxy, i, matchxy[2*i+1]);
-		}
-		tweak_init(t);
-		tweak_push_ref_xyz(t, matchxyz, Nmatch);
-		tweak_push_image_xy(t, sxy);
-		for (i=0; i<Nmatch; i++) {
-			il_append(imginds, i);
-			il_append(refinds, i);
-			dl_append(wts, weights[i]);
-		}
-		tweak_push_correspondence_indices(t, imginds, refinds, NULL, wts);
-		tweak_push_wcs_tan(t, &newtan);
-		t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = order;
-		t->weighted_fit = TRUE;
-		for (i=0; i<10; i++) {
-			tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
-			//logmsg("\n");
-			//sip_print_to(t->sip, stdout);
-			t->state &= ~TWEAK_HAS_LINEAR_CD;
-		}
-		logmsg("Got SIP:\n");
-		sip_print_to(t->sip, stdout);
-		newsip = t->sip;
-
-		if (plotfn) {
-			char fn[256];
-
-			for (i=0; i<Nindex; i++) {
-				bool ok;
-				rd_getradec(rd, i, &ra, &dec);
-				ok = sip_radec2pixelxy(newsip, ra, dec, indexpix + i*2, indexpix + i*2 + 1);
-				assert(ok);
-			}
-
-			sprintf(fn, "%s-%02i%c.png", plotfn, step, 'c');
-			makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
-					 Nindex, indexpix, Nfield-1, theta, newsip->wcstan.crpix);
-		}
-
-		memcpy(&sip, newsip, sizeof(sip_t));
-
-		starxy_free(sxy);
-		tweak_free(t);
-		free(theta);
-		free(odds);
+	sipout = tweak2(fieldpix, Nfield, pixeljitter,
+					W, H,
+					indexrd, Nindex, indexjitter,
+					qc, Q2,
+					0.25, -100,
+					order, &sip, NULL);
+	if (!sipout) {
+		ERROR("tweak2() failed.\n");
+		return -1;
 	}
 
-	free(fieldsigma2s);
-	free(fieldpix);
-	free(indexpix);
 	free(indexrd);
 
-	if (sipout) {
-		if (sip_write_to_file(&sip, sipout)) {
-			ERROR("Failed to write SIP result to file \"%s\"", sipout);
+	if (sipoutfn) {
+		if (sip_write_to_file(sipout, sipoutfn)) {
+			ERROR("Failed to write SIP result to file \"%s\"", sipoutfn);
 			return -1;
 		}
 	}
@@ -560,15 +387,16 @@ int main(int argc, char** args) {
 		fits_header_mod_int(hdr, "NAXIS", 2, NULL);
 		fits_header_add_int(hdr, "NAXIS1", W, NULL);
 		fits_header_add_int(hdr, "NAXIS2", H, NULL);
-		if (scamp_write_field(hdr, &sip, xy, scampout)) {
+		if (scamp_write_field(hdr, sipout, xy, scampout)) {
 			ERROR("Failed to write SIP result to Scamp file \"%s\"", scampout);
 			return -1;
 		}
 	}
 
-	if (xylist_close(xyls)) {
-		logmsg("Failed to close XYLS file.\n");
-	}
+	sip_free(sipout);
+	xylist_close(xyls);
+	matchfile_close(mf);
+	rdlist_close(rdls);
 
 	return 0;
 }

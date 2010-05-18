@@ -134,6 +134,8 @@ struct blind_params {
 	bool cancelled;
 
 	bool do_tweak;
+	bool do_tweak2;
+
 	int tweak_aborder;
 	int tweak_abporder;
 	bool tweak_skipshift;

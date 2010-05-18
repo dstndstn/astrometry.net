@@ -38,6 +38,7 @@
 
 #include "blind.h"
 #include "tweak.h"
+#include "tweak2.h"
 #include "sip_qfits.h"
 #include "starutil.h"
 #include "mathutil.h"
@@ -763,7 +764,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 	// comes time to write our output files, so we've got to grab everything
 	// we need now while it's at hand.
 
-    if (bp->do_tweak || bp->indexrdlsfname || bp->scamp_fname || bp->corr_fname) {
+    if (bp->do_tweak || bp->do_tweak2 || bp->indexrdlsfname || bp->scamp_fname || bp->corr_fname) {
 		int i;
 
 		logdebug("Converting %i reference stars from xyz to radec\n", mymo->nindex);
@@ -776,6 +777,23 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 		mymo->fieldxy = malloc(mymo->nfield * 2 * sizeof(double));
 		// whew!
 		memcpy(mymo->fieldxy, bp->solver.vf->xy, mymo->nfield * 2 * sizeof(double));
+
+        if (bp->do_tweak2) {
+			sip_t sipin;
+			double Q2;
+			sip_wrap_tan(&mymo->wcstan, &sipin);
+			sipin.wcstan.imagew = solver_field_width(sp);
+			sipin.wcstan.imageh = solver_field_height(sp);
+			// Q2 = (A-B distance / 2) ** 2
+			Q2 = 0.25 * distsq(mymo->quadpix, mymo->quadpix + 2, 2);
+			mymo->sip = tweak2(mymo->fieldxy, mymo->nfield, sp->verify_pix,
+							   solver_field_width(sp), solver_field_height(sp),
+							   mymo->refradec, mymo->nindex, sp->index->index_jitter,
+							   mymo->wcstan.crpix, Q2,
+							   sp->distractor_ratio,
+							   sp->logratio_bail_threshold,
+							   bp->tweak_aborder, &sipin, NULL);
+		}
 
 		// FIXME -- tweak should use the weights (verify_logodds_to_weight(mymo->matchodds))
         if (bp->do_tweak) {

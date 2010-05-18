@@ -586,7 +586,8 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 
     if (qfits_header_getboolean(hdr, "ANTWEAK", default_tweak)) {
         int order = qfits_header_getint(hdr, "ANTWEAKO", default_tweakorder);
-        bp->do_tweak = TRUE;
+        //bp->do_tweak = TRUE;
+        bp->do_tweak2 = TRUE;
         bp->tweak_aborder = order;
         bp->tweak_abporder = order;
         bp->tweak_skipshift = TRUE;

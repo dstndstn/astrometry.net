@@ -81,7 +81,7 @@ OTHER_OBJS := usnob.o usnob-fits.o catalog.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	nomad.o nomad-fits.o \
 	noisesim.o noise.o blindutils.o \
-	backend-main.o backend.o plotquad.o plotxy.o add-text.o
+	backend-main.o backend.o plotquad.o plotxy.o add-text.o tweak2.o
 
 2MASSOBJ := 2masstofits.o 2mass-fits.o 2mass.o
 
@@ -110,8 +110,8 @@ INSTALL_LIB := $(BACKEND_LIB) $(BACKEND_SO)
 
 BACKEND_OBJS := \
 		backend.o blindutils.o blind.o solver.o \
-		matchfile.o matchobj.o solvedclient.o solvedfile.o verify.o \
-		blind_wcs.o tweak.o
+		matchfile.o matchobj.o solvedclient.o solvedfile.o tweak2.o \
+		verify.o blind_wcs.o tweak.o 
 
 PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o \
 		plotannotations.o plotgrid.o plotoutline.o plotindex.o plotradec.o \
@@ -457,7 +457,7 @@ verify: verify-main.o verify.o verify2.o matchfile.o matchobj.o $(PLOTSTUFF) $(C
 keirthing: keirthing.o blind_wcs.o tweak.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 
-dstnthing: dstnthing.o blind_wcs.o tweak.o matchfile.o matchobj.o verify.o scamp.o $(PLOTSTUFF) \
+dstnthing: dstnthing.o tweak2.o blind_wcs.o tweak.o matchfile.o matchobj.o verify.o scamp.o $(PLOTSTUFF) \
 		$(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB)
 ALL_OBJ += dstnthing.o
@@ -479,7 +479,7 @@ augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o cut-table.o fit
 ALL_OBJ += augment-xylist-main.o
 
 blind: blind-main.o blind.o solver.o matchfile.o matchobj.o \
-		solvedclient.o solvedfile.o verify.o \
+		solvedclient.o solvedfile.o tweak2.o verify.o \
 		blind_wcs.o tweak.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)

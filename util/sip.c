@@ -356,6 +356,7 @@ static void print_to(const tan_t* tan, FILE* f, char* type) {
 	fprintf(f,"  crpix=(%g, %g)\n", tan->crpix[0], tan->crpix[1]);
 	fprintf(f,"  CD = ( %12.5g   %12.5g )\n", tan->cd[0][0], tan->cd[0][1]);
 	fprintf(f,"       ( %12.5g   %12.5g )\n", tan->cd[1][0], tan->cd[1][1]);
+	fprintf(f,"  image size = (%g x %g)\n", tan->imagew, tan->imageh);
 }
 
 void tan_print_to(const tan_t* tan, FILE* f) {
@@ -397,7 +398,7 @@ void sip_print_to(const sip_t* sip, FILE* f) {
 
 	det = sip_det_cd(sip);
 	pixsc = 3600*sqrt(fabs(det));
-	fprintf(f,"  det(CD)=%g\n", det);
+	//fprintf(f,"  det(CD)=%g\n", det);
 	fprintf(f,"  sqrt(det(CD))=%g [arcsec]\n", pixsc);
 	//fprintf(f,"\n");
 }
