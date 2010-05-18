@@ -711,7 +711,6 @@ void get_mmap_size(int start, int size, off_t* mapstart, size_t* mapsize, int* p
 
 time_t file_get_last_modified_time(const char* fn) {
     struct stat st;
-    time_t t;
     if (stat(fn, &st)) {
         SYSERROR("Failed to stat() file \"%s\"", fn);
         return 0;

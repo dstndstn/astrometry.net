@@ -75,6 +75,8 @@ void backend_free(backend_t* backend);
 
 job_t* backend_read_job_file(backend_t* backend, const char* jobfn);
 int job_set_base_dir(job_t* job, const char* dir);
+int job_set_input_base_dir(job_t* job, const char* dir);
+int job_set_output_base_dir(job_t* job, const char* dir);
 void job_set_cancel_file(job_t* job, const char* fn);
 void job_set_solved_file(job_t* job, const char* fn);
 void job_free(job_t* job);

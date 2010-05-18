@@ -191,6 +191,9 @@ int    sl_size(sl* list);
 char*  sl_append(sl* list, const char* string);
 // appends the string; doesn't copy it.
 void   sl_append_nocopy(sl* list, const char* string);
+
+void sl_append_array(sl* list, const char** strings, int n);
+
 // copies the string and pushes the copy.  Returns the copy.
 char*  sl_push(sl* list, const char* data);
 // returns the last string: it's your responsibility to free it.

@@ -900,20 +900,30 @@ void job_set_solved_file(job_t* job, const char* fn) {
 
 // Modify all filenames to be relative to "dir".
 int job_set_base_dir(job_t* job, const char* dir) {
+	return job_set_output_base_dir(job, dir) ||
+		job_set_input_base_dir(job, dir);
+}
+
+int job_set_input_base_dir(job_t* job, const char* dir) {
     char* path;
     blind_t* bp = &(job->bp);
-
-    logverb("Changing base dir to %s\n", dir);
-
-    if (bp->cancelfname) {
-        path = resolve_path(bp->cancelfname, dir);
-        logverb("Cancel file was %s, changing to %s.\n", bp->cancelfname, path);
-        blind_set_cancel_file(bp, path);
-    }
+    logverb("Changing input file base dir to %s\n", dir);
     if (bp->fieldfname) {
         path = resolve_path(bp->fieldfname, dir);
         logverb("Changing %s to %s\n", bp->fieldfname, path);
         blind_set_field_file(bp, path);
+    }
+	return 0;
+}
+
+int job_set_output_base_dir(job_t* job, const char* dir) {
+    char* path;
+    blind_t* bp = &(job->bp);
+    logverb("Changing output file base dir to %s\n", dir);
+    if (bp->cancelfname) {
+        path = resolve_path(bp->cancelfname, dir);
+        logverb("Cancel file was %s, changing to %s.\n", bp->cancelfname, path);
+        blind_set_cancel_file(bp, path);
     }
     if (bp->solved_in) {
         path = resolve_path(bp->solved_in, dir);

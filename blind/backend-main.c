@@ -36,6 +36,7 @@
 #include <getopt.h>
 #include <dirent.h>
 #include <assert.h>
+#include <glob.h>
 
 #include "tic.h"
 #include "ioutils.h"
@@ -45,38 +46,35 @@
 #include "math.h"
 #include "fitsioutils.h"
 #include "blindutils.h"
-//#include "os-features.h"
 #include "blind.h"
 #include "log.h"
 #include "qfits.h"
 #include "errors.h"
 #include "backend.h"
+#include "an-opts.h"
 
-static struct option long_options[] =
-    {
-	    {"help",    no_argument,       0, 'h'},
-        {"verbose", no_argument,       0, 'v'},
-	    {"config",  required_argument, 0, 'c'},
-	    {"base-dir",  required_argument, 0, 'd'},
-	    {"cancel",  required_argument, 0, 'C'},
-	    {"solved",  required_argument, 0, 's'},
-        {"to-stderr", no_argument,     0, 'E'},
-        {"inputs-from", required_argument, 0, 'f'},
-	    {0, 0, 0, 0}
-    };
+static an_option_t myopts[] = {
+	{'h', "help", no_argument, NULL, "print this help"},
+	{'v', "verbose", no_argument, NULL, "+verbose"},
+	{'c', "config",  required_argument, "file",
+	 "Use this config file (default: \"backend.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable)"},
+	{'d', "base-dir",  required_argument, "dir", 
+	 "set base directory of all output filenames."},
+	{'C', "cancel",  required_argument, "file", 
+	 "quit solving if this file appears" },
+	{'s', "solved",  required_argument, "file",
+	 "write to this file when a field is solved"},
+	{'E', "to-stderr", no_argument, NULL,
+	 "send log message to stderr"},
+	{'f', "inputs-from", required_argument, "file",
+	 "read input filenames from the given file, \"-\" for stdin"},
+	{'i', "index", required_argument, "file(s)",
+	 "use the given index files (in addition to any specified in the config file); put in quotes to use wildcards, eg: \" -i 'index-*.fits' \""},
+};
 
-static const char* OPTIONS = "hc:i:vC:Ef:d:s:";
-
-static void print_help(const char* progname) {
-	printf("Usage:   %s [options] <augmented xylist>\n"
-	       "   [-c or --config <backend config file>]  (default: \"backend.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable)\n"
-	       "   [-d or --base-dir <directory>]: set base directory of all output filenames.\n"
-           "   [-C or --cancel <cancel-filename>]: quit solving if the file <cancel-filename> appears.\n"
-	   "   [-s or --solved <solved-filename>]\n"
-           "   [-v or --verbose]: verbose\n"
-           "   [-E or --to-stderr]: send log messages to stderr\n"
-           "   [-f or --inputs-from <filename>]: read input filenames from the given file, \"-\" for standard input (stdin)\n"
-	       "\n", progname);
+static void print_help(const char* progname, bl* opts) {
+	printf("Usage:   %s [options] <augmented xylist (axy) file(s)>\n", progname);
+	opts_print_help(opts, stdout, NULL, NULL);
 }
 
 int main(int argc, char** args) {
@@ -101,12 +99,18 @@ int main(int argc, char** args) {
     FILE* fin = NULL;
     bool fromstdin = FALSE;
 
+	bl* opts = opts_from_array(myopts, sizeof(myopts)/sizeof(an_option_t), NULL);
+	sl* inds = sl_new(4);
+
 	while (1) {
-		int option_index = 0;
-		c = getopt_long(argc, args, OPTIONS, long_options, &option_index);
+		c = opts_getopt(opts, argc, args);
 		if (c == -1)
 			break;
 		switch (c) {
+		case 'i':
+			//printf("Index %s\n", optarg);
+			sl_append(inds, optarg);
+			break;
 		case 'd':
 		  basedir = optarg;
 		  break;
@@ -146,7 +150,7 @@ int main(int argc, char** args) {
 		help = TRUE;
 	}
 	if (help) {
-		print_help(args[0]);
+		print_help(args[0], opts);
 		exit(0);
 	}
 
@@ -206,14 +210,37 @@ int main(int argc, char** args) {
 		exit( -1);
 	}
 
+	if (sl_size(inds)) {
+		// Expand globs.
+		//sl* inds2 = sl_new(4);
+		for (i=0; i<sl_size(inds); i++) {
+			char* s = sl_get(inds, i);
+			glob_t myglob;
+			int flags = GLOB_TILDE;
+			// flags |= GLOB_BRACE; // {x,y,...} expansion
+			if (glob(s, flags, NULL, &myglob)) {
+				SYSERROR("Failed to expand wildcards in index-file path \"%s\"", s);
+				exit(-1);
+			}
+			//sl_append_array(inds2, (const char**)myglob.gl_pathv, myglob.gl_pathc);
+			for (c=0; c<myglob.gl_pathc; c++) {
+				if (backend_add_index(backend, myglob.gl_pathv[c])) {
+					ERROR("Failed to add index \"%s\"", myglob.gl_pathv[c]);
+					exit(-1);
+				}
+			}
+			globfree(&myglob);
+		}
+	}
+
 	if (!pl_size(backend->indexes)) {
 		logerr("You must list at least one index in the config file (%s)\n", configfn);
-		exit( -1);
+		exit(-1);
 	}
 
 	if (backend->minwidth <= 0.0 || backend->maxwidth <= 0.0) {
 		logerr("\"minwidth\" and \"maxwidth\" in the config file %s must be positive!\n", configfn);
-		exit( -1);
+		exit(-1);
 	}
 
     free(configfn);
@@ -255,7 +282,7 @@ int main(int argc, char** args) {
 
 	if (basedir) {
 	  logverb("Setting job's output base directory to %s\n", basedir);
-	  job_set_base_dir(job, basedir);
+	  job_set_output_base_dir(job, basedir);
 	}
 
 		if (backend_run_job(backend, job))
@@ -268,6 +295,7 @@ int main(int argc, char** args) {
 
 	backend_free(backend);
     sl_free2(strings);
+	sl_free2(inds);
 
     if (fin && !fromstdin)
         fclose(fin);

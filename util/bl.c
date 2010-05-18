@@ -1148,6 +1148,12 @@ char* sl_append(sl* list, const char* data) {
 	return copy;
 }
 
+void sl_append_array(sl* list, const char**strings, int n) {
+	int i;
+	for (i=0; i<n; i++)
+		sl_append(list, strings[i]);
+}
+
 void sl_append_nocopy(sl* list, const char* data) {
 	pl_append(list, data);
 }
