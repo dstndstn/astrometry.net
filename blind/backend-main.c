@@ -57,7 +57,7 @@ static an_option_t myopts[] = {
 	{'h', "help", no_argument, NULL, "print this help"},
 	{'v', "verbose", no_argument, NULL, "+verbose"},
 	{'c', "config",  required_argument, "file",
-	 "Use this config file (default: \"backend.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable)"},
+	 "Use this config file (default: \"backend.cfg\" in the directory ../etc/ relative to the directory containing the \"backend\" executable); 'none' for no config file"},
 	{'d', "base-dir",  required_argument, "dir", 
 	 "set base directory of all output filenames."},
 	{'C', "cancel",  required_argument, "file", 
@@ -70,6 +70,8 @@ static an_option_t myopts[] = {
 	 "read input filenames from the given file, \"-\" for stdin"},
 	{'i', "index", required_argument, "file(s)",
 	 "use the given index files (in addition to any specified in the config file); put in quotes to use wildcards, eg: \" -i 'index-*.fits' \""},
+	{'p', "in-parallel", no_argument, NULL,
+	 "run the index files in parallel"},
 };
 
 static void print_help(const char* progname, bl* opts) {
@@ -102,13 +104,17 @@ int main(int argc, char** args) {
 	bl* opts = opts_from_array(myopts, sizeof(myopts)/sizeof(an_option_t), NULL);
 	sl* inds = sl_new(4);
 
+	backend = backend_new();
+
 	while (1) {
 		c = opts_getopt(opts, argc, args);
 		if (c == -1)
 			break;
 		switch (c) {
+		case 'p':
+			backend->inparallel = TRUE;
+			break;
 		case 'i':
-			//printf("Index %s\n", optarg);
 			sl_append(inds, optarg);
 			break;
 		case 'd':
@@ -170,8 +176,6 @@ int main(int argc, char** args) {
             fin = stdin;
     }
 
-	backend = backend_new();
-
     // directory containing the 'backend' executable:
     me = find_executable(args[0], NULL);
     if (!me)
@@ -205,9 +209,11 @@ int main(int argc, char** args) {
         sl_free2(trycf);
     }
 
-	if (backend_parse_config_file(backend, configfn)) {
-        logerr("Failed to parse (or encountered an error while interpreting) config file \"%s\"\n", configfn);
-		exit( -1);
+	if (!streq(configfn, "none")) {
+		if (backend_parse_config_file(backend, configfn)) {
+			logerr("Failed to parse (or encountered an error while interpreting) config file \"%s\"\n", configfn);
+			exit( -1);
+		}
 	}
 
 	if (sl_size(inds)) {
@@ -216,7 +222,7 @@ int main(int argc, char** args) {
 		for (i=0; i<sl_size(inds); i++) {
 			char* s = sl_get(inds, i);
 			glob_t myglob;
-			int flags = GLOB_TILDE;
+			int flags = GLOB_TILDE | GLOB_BRACE;
 			// flags |= GLOB_BRACE; // {x,y,...} expansion
 			if (glob(s, flags, NULL, &myglob)) {
 				SYSERROR("Failed to expand wildcards in index-file path \"%s\"", s);
