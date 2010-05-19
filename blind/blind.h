@@ -104,6 +104,9 @@ struct blind_params {
 	sl* rdls_tagalong;
 	bool rdls_tagalong_all;
 
+	// field to sort RDLS file by; prefix by "-" for descending order.
+	char* sort_rdls;
+
 	// extra fields to add from the xyls file:
 	sl* xyls_tagalong;
 	bool xyls_tagalong_all;

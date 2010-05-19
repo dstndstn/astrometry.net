@@ -625,6 +625,9 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 		}
 	}
 
+	// sort RDLS column
+	bp->sort_rdls = fits_get_dupstring(hdr, "ANRDSORT");
+
 	n = 1;
 	while (1) {
 		char key[64];

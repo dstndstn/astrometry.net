@@ -750,12 +750,12 @@ static void* read_array_into(const fitstable_t* tab,
 
     colnum = fits_find_column(tab->table, colname);
     if (colnum == -1) {
-        ERROR("Column \"%s\" not found in FITS table %s.\n", colname, tab->fn);
+        ERROR("Column \"%s\" not found in FITS table %s", colname, tab->fn);
         return NULL;
     }
     col = tab->table->col + colnum;
     if (!array_ok && (col->atom_nb != 1)) {
-        ERROR("Column \"%s\" in FITS table %s is an array of size %i, not a scalar.\n",
+        ERROR("Column \"%s\" in FITS table %s is an array of size %i, not a scalar",
               colname, tab->fn, col->atom_nb);
         return NULL;
     }

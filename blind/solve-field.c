@@ -1,6 +1,7 @@
 /*
  This file is part of the Astrometry.net suite.
  Copyright 2007-2009 Dustin Lang, Keir Mierle and Sam Roweis.
+ Copyright 2010 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -678,6 +679,23 @@ int main(int argc, char** args) {
         }
     }
 
+	// which options are left?
+	/*{
+		char options[256];
+		memset(options, 0, 256);
+		printf("options:\n");
+		for (i=0; i<bl_size(opts); i++) {
+			an_option_t* opt = bl_access(opts, i);
+			printf("  %c (%i) %s\n", opt->shortopt, (int)opt->shortopt, opt->name);
+			options[(int)((opt->shortopt + 256) % 256)] = 1;
+		}
+		printf("Remaining short opts:\n");
+		for (i=0; i<256; i++) {
+			if (!options[i])
+				printf("  %c (%i, 0x%x)\n", (char)i, i, i);
+		}
+	 }*/
+
     augment_xylist_init(allaxy);
 
     // default output filename patterns.
@@ -693,6 +711,7 @@ int main(int argc, char** args) {
 	while (1) {
         int res;
 		c = opts_getopt(opts, argc, args);
+		printf("option %c (%i)\n", c, (int)c);
         if (c == -1)
             break;
         switch (c) {

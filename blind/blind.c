@@ -56,6 +56,7 @@
 #include "qfits_table.h"
 #include "errors.h"
 #include "scamp-catalog.h"
+#include "permutedsort.h"
 
 static bool record_match_callback(MatchObj* mo, void* userdata);
 static time_t timer_callback(void* user_data);
@@ -708,6 +709,7 @@ void blind_cleanup(blind_t* bp) {
 	free(bp->wcs_template);
 	free(bp->xcolname);
 	free(bp->ycolname);
+	free(bp->sort_rdls);
 }
 
 static sip_t* tweak(const blind_t* bp, const tan_t* wcs, const double* starradec, int nstars) {
@@ -729,6 +731,53 @@ static sip_t* tweak(const blind_t* bp, const tan_t* wcs, const double* starradec
 static void print_match(blind_t* bp, MatchObj* mo) {
 	logverb("  logodds ratio %g (%g), %i match, %i conflict, %i distractors, %i index.\n",
 			mo->logodds, exp(mo->logodds), mo->nmatch, mo->nconflict, mo->ndistractor, mo->nindex);
+}
+
+static int sort_rdls(MatchObj* mymo, blind_t* bp) {
+	const solver_t* sp = &(bp->solver);
+	bool asc = TRUE;
+	char* colname = bp->sort_rdls;
+	double* sortdata;
+	fitstable_t* tagalong;
+	int* perm;
+	int i;
+	logverb("Sorting RDLS by column \"%s\"\n", bp->sort_rdls);
+	if (colname[0] == '-') {
+		colname++;
+		asc = FALSE;
+	}
+	tagalong = startree_get_tagalong(sp->index->starkd);
+	if (!tagalong) {
+		ERROR("Failed to find tag-along table in index");
+		return -1;
+	}
+	sortdata = fitstable_read_column_inds(tagalong, colname, fitscolumn_double_type(),
+										  mymo->refstarid, mymo->nindex);
+	if (!sortdata) {
+		ERROR("Failed to read data for column \"%s\" in index", colname);
+		return -1;
+	}
+	perm = permutation_init(NULL, mymo->nindex);
+	permuted_sort(sortdata, sizeof(double), asc ? compare_doubles_asc : compare_doubles_desc,
+				  perm, mymo->nindex);
+	free(sortdata);
+
+	if (mymo->refradec)
+		permutation_apply(perm, mymo->nindex, mymo->refradec,  mymo->refradec, 2*sizeof(double));
+	if (mymo->refxy)
+		permutation_apply(perm, mymo->nindex, mymo->refxy,     mymo->refxy,    2*sizeof(double));
+	if (mymo->refstarid)
+		permutation_apply(perm, mymo->nindex, mymo->refstarid, mymo->refstarid,  sizeof(int));
+	// not populated yet
+	assert(!mymo->refxyz);
+	if (mymo->theta)
+		for (i=0; i<mymo->nfield; i++) {
+			if (mymo->theta[i] < 0)
+				continue;
+			mymo->theta[i] = perm[mymo->theta[i]];
+		}
+	free(perm);
+	return 0;
 }
 
 static bool record_match_callback(MatchObj* mo, void* userdata) {
@@ -766,6 +815,14 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 
     if (bp->do_tweak || bp->do_tweak2 || bp->indexrdlsfname || bp->scamp_fname || bp->corr_fname) {
 		int i;
+
+		// This must happen first, because it reorders the "ref" arrays,
+		// and we want that to be done before more data are integrated.
+		if (bp->sort_rdls) {
+			if (sort_rdls(mymo, bp)) {
+				ERROR("Failed to sort RDLS file by column \"%s\"", bp->sort_rdls);
+			}
+		}
 
 		logdebug("Converting %i reference stars from xyz to radec\n", mymo->nindex);
 		mymo->refradec = malloc(mymo->nindex * 2 * sizeof(double));

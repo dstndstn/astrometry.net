@@ -45,6 +45,9 @@ struct augment_xylist_s {
 	sl* tagalong;
 	bool tagalong_all;
 
+	// column to sort RDLS output by; prefix with "-" for descending order.
+	char* sort_rdls;
+
     // input files
     char* imagefn;
     char* xylsfn;

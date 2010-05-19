@@ -190,7 +190,10 @@ static an_option_t options[] = {
      "output filename for match file"},
 	{'R', "rdls",		   required_argument, "filename",
      "output filename for RDLS file"},
-	{'}', "tag",           required_argument, "column",
+	{'\x80', "sort-rdls",    required_argument, "column",
+	 "sort the RDLS file by this column; default is ascending; use "
+	 "\"-column\" to sort \"column\" in descending order instead."},
+	{'}',"tag",           required_argument, "column",
 	 "grab tag-along column from index into RDLS file"},
 	{'<', "tag-all",       no_argument, NULL,
 	 "grab all tag-along columns from index into RDLS file"},
@@ -261,7 +264,11 @@ static int parse_fields_string(il* fields, const char* str);
 int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
+	printf("parsing option %c (%i)\n", argchar, (int)argchar);
     switch (argchar) {
+	case '\x80':
+		axy->sort_rdls = optarg;
+		break;
 	case ';':
 		axy->invert_image = TRUE;
 		break;
@@ -1031,6 +1038,9 @@ int augment_xylist(augment_xylist_t* axy,
 			sprintf(key, "ANTAG%i", i+1);
 			qfits_header_add(hdr, key, sl_get(axy->tagalong, i), "Tag-along column from index to RDLS", NULL);
 		}
+
+	if (axy->sort_rdls)
+		qfits_header_add(hdr, "ANRDSORT", axy->sort_rdls, "Sort RDLS file by this column", NULL);
 
 	if (axy->odds_to_solve)
 		fits_header_add_double(hdr, "ANODDSSL", axy->odds_to_solve, "Odds ratio to consider a field solved");
