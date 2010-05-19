@@ -94,6 +94,8 @@ typedef struct plotter plotter_t;
 
 // return PLOTSTUFF_FORMAT_*, or -1 on error
 int parse_image_format(const char* fmt);
+int guess_image_format_from_filename(const char* fn);
+const char* image_format_name_from_code(int code);
 
 int parse_color(const char* color, float* r, float* g, float* b, float* a);
 int parse_color_rgba(const char* color, float* rgba);

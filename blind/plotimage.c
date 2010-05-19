@@ -259,6 +259,10 @@ static unsigned char* read_fits_image(plotimage_t* args) {
 
 int plot_image_read(plotimage_t* args) {
 	// FIXME -- guess format from filename?
+	if (args->format == 0) {
+		args->format = guess_image_format_from_filename(args->fn);
+		logverb("Guessing format of image from filename: \"%s\" -> %s", args->fn, image_format_name_from_code(args->format));
+	}
 	switch (args->format) {
 	case PLOTSTUFF_FORMAT_JPG:
 		args->img = cairoutils_read_jpeg(args->fn, &(args->W), &(args->H));

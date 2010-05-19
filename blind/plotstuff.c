@@ -568,19 +568,47 @@ static void plot_builtin_free(plot_args_t* pargs, void* baton) {
 static const plotter_t builtin = { "plot", plot_builtin_init, plot_builtin_init2, plot_builtin_command, plot_builtin_plot, plot_builtin_free, NULL };
 
 int parse_image_format(const char* fmt) {
-	if (streq(fmt, "png")) {
+	if (strcaseeq(fmt, "png")) {
 		return PLOTSTUFF_FORMAT_PNG;
-	} else if (streq(fmt, "jpg") || streq(fmt, "jpeg")) {
+	} else if (strcaseeq(fmt, "jpg") || strcaseeq(fmt, "jpeg")) {
 		return PLOTSTUFF_FORMAT_JPG;
-	} else if (streq(fmt, "ppm")) {
+	} else if (strcaseeq(fmt, "ppm")) {
 		return PLOTSTUFF_FORMAT_PPM;
-	} else if (streq(fmt, "pdf")) {
+	} else if (strcaseeq(fmt, "pdf")) {
 		return PLOTSTUFF_FORMAT_PDF;
-	} else if (streq(fmt, "fits")) {
+	} else if (strcaseeq(fmt, "fits")) {
 		return PLOTSTUFF_FORMAT_FITS;
 	}
 	ERROR("Unknown image format \"%s\"", fmt);
 	return -1;
+}
+
+int guess_image_format_from_filename(const char* fn) {
+	// look for "."
+	int len = strlen(fn);
+	if (len >= 4 && fn[len-4] == '.') {
+		return parse_image_format(fn + len - 3);
+	}
+	if (len >= 5 && fn[len - 5] == '.') {
+		return parse_image_format(fn + len - 4);
+	}
+	return 0;
+}
+
+const char* image_format_name_from_code(int code) {
+	if (code == PLOTSTUFF_FORMAT_JPG)
+		return "jpeg";
+	if (code == PLOTSTUFF_FORMAT_PNG)
+		return "png";
+	if (code == PLOTSTUFF_FORMAT_PPM)
+		return "ppm";
+	if (code == PLOTSTUFF_FORMAT_PDF)
+		return "pdf";
+	if (code == PLOTSTUFF_FORMAT_FITS)
+		return "fits";
+	if (code == PLOTSTUFF_FORMAT_MEMIMG)
+		return "memory";
+	return "unknown";
 }
 
 int plotstuff_set_color(plot_args_t* pargs, const char* name) {

@@ -22,6 +22,8 @@ class Plotstuff(object):
 			return plot_radec_get(self.pargs)
 		elif name == 'match':
 			return plot_match_get(self.pargs)
+		elif name == 'image':
+			return plot_image_get(self.pargs)
 		return self.pargs.__getattr__(name)
 
 	def __setattr__(self, name, val):
