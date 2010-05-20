@@ -380,6 +380,11 @@ int main(int argc, char** args) {
 	if (fid != stdin)
 		fclose(fid);
 
+	if (fits_pad_file(fout)) {
+		ERROR("Failed to pad output file \"%s\"", outfn);
+		return -1;
+	}
+
 	if (fout != stdout)
 		if (fclose(fout)) {
 			SYSERROR("Failed to close output file %s", outfn);

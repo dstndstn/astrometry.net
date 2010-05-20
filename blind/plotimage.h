@@ -13,6 +13,10 @@ struct plotimage_args {
 	anwcs_t* wcs;
 	double gridsize;
 
+	// Only used when WCS is *not* set: scales the image by the given factors.
+	//double scalex;
+	//double scaley;
+
 	// For FITS images: values that will be linearly transformed to 0,255.
 	double image_low;
 	double image_high;
@@ -47,8 +51,7 @@ int plot_image_set_filename(plotimage_t* args, const char* fn);
 
 int plot_image_setsize(plot_args_t* pargs, plotimage_t* args);
 
-void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H,
-						  double alpha);
+//void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H, double alpha);
 
 extern const plotter_t plotter_image;
 

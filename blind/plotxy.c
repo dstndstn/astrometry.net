@@ -81,6 +81,8 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 	int i;
 	double t0;
 
+	plotstuff_builtin_apply(cairo, pargs);
+
 	if (args->fn && dl_size(args->xyvals)) {
 		ERROR("Can only plot one of xylist filename and xy_vals");
 		return -1;

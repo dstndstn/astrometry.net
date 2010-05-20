@@ -44,21 +44,25 @@ void* plot_image_init(plot_args_t* plotargs) {
 	args->gridsize = 50;
 	args->alpha = 1;
 	args->image_null = 1.0 / 0.0;
+	//args->scalex = args->scaley = 1.0;
 	return args;
 }
 
-void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H, double alpha) {
-	 cairo_surface_t* thissurf;
-	 cairo_pattern_t* pat;
-	 cairoutils_rgba_to_argb32(img, W, H);
-	 thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
-	 pat = cairo_pattern_create_for_surface(thissurf);
-	 cairo_save(cairo);
-	 cairo_set_source(cairo, pat);
-	 cairo_paint_with_alpha(cairo, alpha);
-	 cairo_pattern_destroy(pat);
-	 cairo_surface_destroy(thissurf);
-	 cairo_restore(cairo);
+//void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H, double alpha) 
+
+void plot_image_rgba_data(cairo_t* cairo, plotimage_t* args) {
+	cairo_surface_t* thissurf;
+	cairo_pattern_t* pat;
+	cairoutils_rgba_to_argb32(args->img, args->W, args->H);
+	thissurf = cairo_image_surface_create_for_data(args->img, CAIRO_FORMAT_ARGB32, args->W, args->H, args->W*4);
+	pat = cairo_pattern_create_for_surface(thissurf);
+	cairo_save(cairo);
+	cairo_set_source(cairo, pat);
+	//cairo_scale(cairo, args->scalex, args->scaley);
+	cairo_paint_with_alpha(cairo, args->alpha);
+	cairo_pattern_destroy(pat);
+	cairo_surface_destroy(thissurf);
+	cairo_restore(cairo);
 }
 
 void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
@@ -305,7 +309,7 @@ int plot_image_plot(const char* command,
 	if (pargs->wcs && args->wcs) {
 		plot_image_wcs(cairo, args->img, args->W, args->H, pargs, args);
 	} else {
-		plot_image_rgba_data(cairo, args->img, args->W, args->H, args->alpha);
+		plot_image_rgba_data(cairo, args);
 	}
 	// ?
 	free(args->img);
@@ -320,6 +324,7 @@ int plot_image_setsize(plot_args_t* pargs, plotimage_t* args) {
 		}
 	}
 	plotstuff_set_size(pargs, args->W, args->H);
+	//plotstuff_set_size(pargs, args->W * args->scalex, args->H * args->scaley);
 	return 0;
 }
 
