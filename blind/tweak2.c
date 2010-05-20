@@ -98,7 +98,6 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			int besti, Nmatch;
 			int* theta;
 			double* odds;
-			tan_t newtan;
 
 			// Anneal
 			gamma = pow(0.9, step);
@@ -218,7 +217,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 					dl_append(wts, weights[i]);
 				}
 				tweak_push_correspondence_indices(t, imginds, refinds, NULL, wts);
-				tweak_push_wcs_tan(t, &newtan);
+				tweak_push_wcs_tan(t, &sipout->wcstan);
 				t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = order;
 				t->weighted_fit = TRUE;
 				for (i=0; i<10; i++) {
