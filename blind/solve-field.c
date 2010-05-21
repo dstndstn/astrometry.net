@@ -711,7 +711,7 @@ int main(int argc, char** args) {
 	while (1) {
         int res;
 		c = opts_getopt(opts, argc, args);
-		printf("option %c (%i)\n", c, (int)c);
+		//printf("option %c (%i)\n", c, (int)c);
         if (c == -1)
             break;
         switch (c) {

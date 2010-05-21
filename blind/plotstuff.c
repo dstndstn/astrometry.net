@@ -217,8 +217,8 @@ static void* plot_builtin_init(plot_args_t* args) {
 	args->op = CAIRO_OPERATOR_OVER;
 	args->fontsize = 20;
 	args->cairocmds = bl_new(256, sizeof(cairocmd_t));
-	args->label_offset_x = 15.0;
-	args->label_offset_y = 0.0;
+	args->label_offset_x = 10.0;
+	args->label_offset_y =  5.0;
 	return NULL;
 }
 

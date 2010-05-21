@@ -123,9 +123,9 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True):
 	# column names are in the first (un-skipped) line.
 	txt = txtrows.pop(0)
 	header = txt
-	header = header.split()
 	if header[0] == '#':
 		header = header[1:]
+	header = header.split()
 	if len(header) == 0:
 		raise Exception('Expected to find column names in the first row of text; got \"%s\".' % txt)
 	#assert(len(header) >= 1)

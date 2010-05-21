@@ -729,8 +729,12 @@ static sip_t* tweak(const blind_t* bp, const tan_t* wcs, const double* starradec
 }
 
 static void print_match(blind_t* bp, MatchObj* mo) {
+	double ra,dec;
 	logverb("  logodds ratio %g (%g), %i match, %i conflict, %i distractors, %i index.\n",
 			mo->logodds, exp(mo->logodds), mo->nmatch, mo->nconflict, mo->ndistractor, mo->nindex);
+	xyzarr2radecdeg(mo->center, &ra, &dec);
+	logverb("  RA,Dec = (%g,%g), pixel scale %g arcsec/pix.\n",
+			ra, dec, mo->scale);
 }
 
 static int sort_rdls(MatchObj* mymo, blind_t* bp) {

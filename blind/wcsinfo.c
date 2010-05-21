@@ -105,6 +105,11 @@ int main(int argc, char** args) {
 		fprintf(stderr, "failed to find IMAGE{W,H} in WCS file.\n");
 		return -1;
 	}
+	// If W,H were set on the cmdline...
+	if (wcs.wcstan.imagew == 0)
+		wcs.wcstan.imagew = imw;
+	if (wcs.wcstan.imageh == 0)
+		wcs.wcstan.imageh = imh;
 
 	printf("crpix0 %.12g\n", wcs.wcstan.crpix[0]);
 	printf("crpix1 %.12g\n", wcs.wcstan.crpix[1]);
@@ -131,7 +136,7 @@ int main(int argc, char** args) {
 	printf("pixscale %.12g\n", pixscale);
 
 	orient = sip_get_orientation(&wcs);
-printf("orientation %.8g\n", orient);
+	printf("orientation %.8g\n", orient);
 
     sip_get_radec_center(&wcs, &rac, &decc);
 	printf("ra_center %.12g\n", rac);

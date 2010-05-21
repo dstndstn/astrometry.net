@@ -55,3 +55,14 @@ void fits_use_error_system(void);
 	}
 }
 
+%extend plotimage_args {
+  int set_wcs_file(const char* fn, int ext) {
+    return plot_image_set_wcs(self, fn, ext);
+  }
+}
+
+%extend plotindex_args {
+ int add_file(const char* fn) {
+  return plot_index_add_file(self, fn);
+}
+}

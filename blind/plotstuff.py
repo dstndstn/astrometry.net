@@ -5,12 +5,12 @@ from plotstuff_c import *
 class Plotstuff(object):
 	def __init__(self):
 		p = plotstuff_new()
-		print 'plotstuff.__init__, pargs=', p
+		#print 'plotstuff.__init__, pargs=', p
 		self.pargs = p
 		#self.pargs = plotstuff_new()
 
 	def __del__(self):
-		print 'plotstuff.__del__, pargs=', self.pargs
+		#print 'plotstuff.__del__, pargs=', self.pargs
 		plotstuff_free(self.pargs)
 
 	def __getattr__(self, name):
@@ -24,14 +24,16 @@ class Plotstuff(object):
 			return plot_match_get(self.pargs)
 		elif name == 'image':
 			return plot_image_get(self.pargs)
+		elif name == 'outline':
+			return plot_outline_get(self.pargs)
 		return self.pargs.__getattr__(name)
 
 	def __setattr__(self, name, val):
 		if name == 'pargs':
-			print 'plotstuff.py: setting pargs to', val
+			#print 'plotstuff.py: setting pargs to', val
 			self.__dict__[name] = val
 		elif name == 'size':
-			print 'plotstuff.py: setting plot size of', self.pargs, 'to %i,%i' % (val[0], val[1])
+			#print 'plotstuff.py: setting plot size of', self.pargs, 'to %i,%i' % (val[0], val[1])
 			plotstuff_set_size(self.pargs, val[0], val[1])
 		elif name == 'color':
 			self.set_color(val)

@@ -1,5 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+# Copyright 2010 Dustin Lang.
 #
 # The Astrometry.net suite is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License
@@ -144,7 +145,7 @@ upgrade-indexes:
 		fi; \
 	done
 
-RELEASE_VER := 0.27
+RELEASE_VER := 0.28
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
 RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data pyfits etc ups

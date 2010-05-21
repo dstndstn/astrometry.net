@@ -51,10 +51,13 @@ struct walk_token {
 	plot_args_t* pargs;
 };
 
-static void walk_callback(const sip_t* wcs, double x, double y, double ra, double dec, void* token) {
+static void walk_callback(const sip_t* wcs, double ix, double iy, double ra, double dec, void* token) {
 	struct walk_token* walk = token;
 	bool ok;
+	double x, y;
 	ok = plotstuff_radec2xy(walk->pargs, ra, dec, &x, &y);
+	logverb("plotoutline: wcs x,y (%.0f,%.0f) -> RA,Dec (%.1g,%.1g) -> image x,y (%.1f, %.1f)\n",
+			ix, iy, ra, dec, x, y);
 	if (!ok)
 		return;
 	if (walk->first) {

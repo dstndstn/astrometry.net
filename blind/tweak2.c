@@ -58,7 +58,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 	double* weights;
 	double* matchxyz;
 	double* matchxy;
-	int i, Nin;
+	int i, Nin=0;
 
 	if (destwcs)
 		sipout = destwcs;
@@ -129,8 +129,8 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				indexin[Nin] = i;
 				Nin++;
 			}
-			logmsg("%i reference sources within the image.\n", Nin);
-			//logmsg("CRPIX is (%g,%g)\n", sip.wcstan.crpix[0], sip.wcstan.crpix[1]);
+			logverb("%i reference sources within the image.\n", Nin);
+			//logverb("CRPIX is (%g,%g)\n", sip.wcstan.crpix[0], sip.wcstan.crpix[1]);
 			iscale = sip_pixel_scale(sipout);
 			ijitter = indexjitter / iscale;
 			logverb("With pixel scale of %g arcsec/pixel, index adds jitter of %g pix.\n", iscale, ijitter);
@@ -145,8 +145,8 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 										W*H, distractors,
 										logodds_bail, HUGE_VAL,
 										&besti, &odds, &theta, NULL);
-			logmsg("Logodds: %g\n", logodds);
-			logmsg("besti: %i\n", besti);
+			logverb("Logodds: %g\n", logodds);
+			logverb("besti: %i\n", besti);
 
 			/*		if (plotfn) {
 			 char fn[256];
@@ -156,7 +156,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			 }*/
 
 			Nmatch = 0;
-			logmsg("Weights:");
+			logverb("Weights:");
 			for (i=0; i<Nfield; i++) {
 				double ra,dec;
 				if (theta[i] < 0)
@@ -166,10 +166,10 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				radecdeg2xyzarr(ra, dec, matchxyz + Nmatch*3);
 				memcpy(matchxy + Nmatch*2, fieldxy + i*2, 2*sizeof(double));
 				weights[Nmatch] = verify_logodds_to_weight(odds[i]);
-				logmsg(" %.2f", weights[Nmatch]);
+				logverb(" %.2f", weights[Nmatch]);
 				Nmatch++;
 			}
-			logmsg("\n");
+			logverb("\n");
 
 			free(theta);
 			free(odds);
@@ -181,7 +181,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				newtan.imageh = H;
 				sip_wrap_tan(&newtan, sipout);
 
-				//logmsg("Original TAN WCS:\n");
+				//logverb("Original TAN WCS:\n");
 				//tan_print_to(&sip.wcstan, stdout);
 				logverb("Using %i (weighted) matches, new TAN WCS is:\n", Nmatch);
 				tan_print_to(&newtan, stdout);
@@ -222,12 +222,13 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				t->weighted_fit = TRUE;
 				for (i=0; i<10; i++) {
 					tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
-					//logmsg("\n");
+					//logverb("\n");
 					//sip_print_to(t->sip, stdout);
 					t->state &= ~TWEAK_HAS_LINEAR_CD;
 				}
-				logmsg("Got SIP:\n");
-				sip_print_to(t->sip, stdout);
+				logverb("Got SIP:\n");
+				if (log_get_level() >= LOG_VERB)
+					sip_print_to(t->sip, stdout);
 				memcpy(sipout, t->sip, sizeof(sip_t));
 				sipout->wcstan.imagew = W;
 				sipout->wcstan.imageh = H;

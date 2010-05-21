@@ -1,7 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License

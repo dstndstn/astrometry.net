@@ -162,15 +162,20 @@ static void plot_brightstars(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 	N = bright_stars_n();
 	for (i=0; i<N; i++) {
 		double px, py;
+		char* label;
 		const brightstar_t* bs = bright_stars_get(i);
 		if (!plotstuff_radec2xy(pargs, bs->ra, bs->dec, &px, &py))
 			continue;
 		logverb("Bright star %s/%s at RA,Dec (%g,%g) -> xy (%g, %g)\n", bs->name, bs->common_name, bs->ra, bs->dec, px, py);
 		if (px < 1 || py < 1 || px > pargs->W || py > pargs->H)
 			continue;
+		// skip unnamed
+		if (!strlen(bs->name) && !strlen(bs->common_name))
+			continue;
 
+		label = (strlen(bs->common_name) ? bs->common_name : bs->name);
 		plotstuff_stack_marker(pargs, px, py);
-		plotstuff_stack_text(pargs, cairo, bs->common_name, px, py);
+		plotstuff_stack_text(pargs, cairo, label, px, py);
 	}
 }
 

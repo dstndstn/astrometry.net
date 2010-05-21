@@ -264,7 +264,7 @@ static int parse_fields_string(il* fields, const char* str);
 int augment_xylist_parse_option(char argchar, char* optarg,
                                 augment_xylist_t* axy) {
     double d;
-	printf("parsing option %c (%i)\n", argchar, (int)argchar);
+	//printf("parsing option %c (%i)\n", argchar, (int)argchar);
     switch (argchar) {
 	case '\x80':
 		axy->sort_rdls = optarg;
@@ -537,6 +537,11 @@ static sl* backtick(sl* cmd, bool verbose) {
 
 static void run(sl* cmd, bool verbose) {
     sl* lines = backtick(cmd, verbose);
+	if (verbose) {
+		int i;
+		for (i=0; i<sl_size(lines); i++)
+			logverb("  %s\n", sl_get(lines, i));
+	}
     sl_free2(lines);
 }
 
