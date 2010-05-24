@@ -148,6 +148,12 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			logverb("Logodds: %g\n", logodds);
 			logverb("besti: %i\n", besti);
 
+			logverb("  Hit/miss: ");
+			if (log_get_level() >= LOG_VERB)
+				verify_log_hit_miss(theta, NULL, besti+1, Nfield, LOG_VERB);
+			logverb("\n");
+
+
 			/*		if (plotfn) {
 			 char fn[256];
 			 sprintf(fn, "%s-%02i%c.png", plotfn, step, 'a');

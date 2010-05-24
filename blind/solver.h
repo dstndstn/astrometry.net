@@ -66,6 +66,8 @@ struct solver_t {
 	//double logratio_print_threshold;
 	double logratio_record_threshold;
 
+	double logratio_totune;
+
 	// Callback; called for each match found whose log-odds ratio is above
 	// "logratio_record_threshold".  The second parameter is "userdata".
 	bool (*record_match_callback)(MatchObj*, void*);
@@ -76,6 +78,8 @@ struct solver_t {
 	// Assume that stars far from the matched quad will have larger positional
 	// variance?
 	bool distance_from_quad_bonus;
+
+	bool verify_uniformize;
 
 	// OPTIONAL FIELDS WITH SENSIBLE DEFAULTS
 	// ======================================

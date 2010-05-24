@@ -126,6 +126,7 @@ struct augment_xylist_s {
     double codetol;
     double pixelerr;
 
+	double odds_to_tune_up;
 	double odds_to_solve;
 	double odds_to_bail;
 	double odds_to_stoplooking;
@@ -133,6 +134,8 @@ struct augment_xylist_s {
     int downsample;
 
     bool dont_augment;
+
+	bool verify_uniformize;
 
     // try to verify FITS input images?
     bool try_verify;

@@ -34,6 +34,9 @@ struct verify_field_t {
 	// this copy is permuted by the kdtree
     double* fieldcopy;
     kdtree_t* ftree;
+
+	// should this field be spatially uniformized at the index's scale?
+	bool do_uniformize;
 };
 typedef struct verify_field_t verify_field_t;
 
@@ -54,6 +57,8 @@ void verify_wcs(const startree_t* skdt,
 				int* nmatch, int* nconflict, int* ndistractor
 				// int** theta ?
 				);
+
+void verify_log_hit_miss(int* theta, int* testperm, int nbest, int nfield, int loglevel);
 
 /*
   Uses the following entries in the "mo" struct:

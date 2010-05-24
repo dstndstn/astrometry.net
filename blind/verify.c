@@ -1,7 +1,7 @@
 /*
  This file is part of the Astrometry.net suite.
  Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
- Copyright 2009 Dustin Lang, David W. Hogg.
+ Copyright 2009, 2010 Dustin Lang, David W. Hogg.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -31,7 +31,7 @@
 #include "sip-utils.h"
 #include "healpix.h"
 
-#define DEBUGVERIFY 0
+#define DEBUGVERIFY 1
 
 #if DEBUGVERIFY
 #define debug(args...) logdebug(args)
@@ -65,6 +65,31 @@ struct verify_s {
 typedef struct verify_s verify_t;
 
 
+void verify_log_hit_miss(int* theta, int* testperm, int nbest, int nfield, int loglev) {
+	int i;
+	for (i=0; i<MIN(nfield, 100); i++) {
+		int ti = (testperm ? theta[testperm[i]] : theta[i]);
+		if (ti == THETA_DISTRACTOR) {
+			loglevel(loglev, "-");
+		} else if (ti == THETA_CONFLICT) {
+			loglevel(loglev, "c");
+		} else if (ti == THETA_FILTERED) {
+			loglevel(loglev, "f");
+		} else if (ti == THETA_BAILEDOUT) {
+			loglevel(loglev, " bail");
+			break;
+		} else if (ti == THETA_STOPPEDLOOKING) {
+			loglevel(loglev, " stopped");
+			break;
+		} else {
+			loglevel(loglev, "+");
+		}
+		if (i+1 == nbest) {
+			loglevel(loglev, "(best)");
+		}
+	}
+}
+
 static bool* verify_deduplicate_field_stars(verify_t* v, const verify_field_t* vf, double nsigmas);
 
 
@@ -97,6 +122,9 @@ verify_field_t* verify_field_preprocess(const starxy_t* fieldxy) {
     // Build a tree out of the field objects (in pixel space)
     vf->ftree = kdtree_build(NULL, vf->fieldcopy, starxy_n(vf->field),
                              2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
+
+	vf->do_uniformize = TRUE;
+
     return vf;
 }
 
@@ -199,7 +227,7 @@ static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchOb
 	// Deduplicate test stars.  This could be done (approximately) in preprocessing.
 	// FIXME -- this should be at the reference deduplication radius, not relative to sigma!
 	// -- this requires the match scale
-	// -- can perhaps distretize dedup to nearest power-of-sqrt(2) pixel radius and cache it.
+	// -- can perhaps discretize dedup to nearest power-of-sqrt(2) pixel radius and cache it.
 	// -- we can compute sigma much later
 	keepers = verify_deduplicate_field_stars(v, vf, 1.0);
 
@@ -243,7 +271,7 @@ static void verify_apply_ror(verify_t* v,
 							 int* p_uninw, int* p_uninh) {
 	int i;
 	int uni_nw, uni_nh;
-	double effA;
+	double effA = 0;
 	double qc[2], Q2=0;
 	int igood, ibad;
 
@@ -261,80 +289,82 @@ static void verify_apply_ror(verify_t* v,
 
 	// Uniformize test stars
 	// FIXME - can do this (possibly at several scales) in preprocessing.
+	if (vf->do_uniformize) {
+		// -get uniformization scale.
+		verify_get_uniformize_scale(index_cutnside, mo->scale, fieldW, fieldH, &uni_nw, &uni_nh);
+		debug("uniformizing into %i x %i blocks.\n", uni_nw, uni_nh);
 
-	// -get uniformization scale.
-	verify_get_uniformize_scale(index_cutnside, mo->scale, fieldW, fieldH, &uni_nw, &uni_nh);
-	debug("uniformizing into %i x %i blocks.\n", uni_nw, uni_nh);
+		// uniformize!
+		if (uni_nw > 1 || uni_nh > 1) {
+			double* bincenters;
+			int* binids;
+			double ror2;
+			bool* goodbins = NULL;
+			int Ngoodbins;
 
-	// uniformize!
-	if (uni_nw > 1 || uni_nh > 1) {
-		double* bincenters;
-		int* binids;
-		double ror2;
-		bool* goodbins = NULL;
-		int Ngoodbins;
+			verify_uniformize_field(vf->xy, v->testperm, v->NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &binids);
+			bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
 
-		verify_uniformize_field(vf->xy, v->testperm, v->NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &binids);
-		bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
-
-		debug("Quad radius = %g\n", sqrt(Q2));
-		ror2 = Q2 * MAX(1, (fieldW*fieldH*(1 - distractors) / (4. * M_PI * v->NR * pix2) - 1));
-		debug("(strong) Radius of relevance is %.1f\n", sqrt(ror2));
-		goodbins = malloc(uni_nw * uni_nh * sizeof(bool));
-		Ngoodbins = 0;
-		for (i=0; i<(uni_nw * uni_nh); i++) {
-			double binr2 = distsq(bincenters + 2*i, qc, 2);
-			goodbins[i] = (binr2 < ror2);
-			if (goodbins[i])
-				Ngoodbins++;
-		}
-		// Remove test stars in irrelevant bins...
-		igood = ibad = 0;
-		for (i=0; i<v->NT; i++) {
-			int ti = v->testperm[i];
-			if (goodbins[binids[i]]) {
-				v->testperm[igood] = ti;
-				igood++;
-			} else {
-				v->tbadguys[ibad] = ti;
-				ibad++;
+			debug("Quad radius = %g\n", sqrt(Q2));
+			ror2 = Q2 * MAX(1, (fieldW*fieldH*(1 - distractors) / (4. * M_PI * v->NR * pix2) - 1));
+			debug("(strong) Radius of relevance is %.1f\n", sqrt(ror2));
+			goodbins = malloc(uni_nw * uni_nh * sizeof(bool));
+			Ngoodbins = 0;
+			for (i=0; i<(uni_nw * uni_nh); i++) {
+				double binr2 = distsq(bincenters + 2*i, qc, 2);
+				goodbins[i] = (binr2 < ror2);
+				if (goodbins[i])
+					Ngoodbins++;
 			}
-		}
-		v->NT = igood;
-		memcpy(v->testperm + igood, v->tbadguys, ibad * sizeof(int));
-		debug("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, v->NT);
-
-		// Effective area: A * proportion of good bins.
-		effA = fieldW * fieldH * Ngoodbins / (double)(uni_nw * uni_nh);
-
-		// Remove reference stars in bad bins.
-		igood = ibad = 0;
-		for (i=0; i<v->NR; i++) {
-			int ri = v->refperm[i];
-			int binid = get_xy_bin(v->refxy + 2*ri, fieldW, fieldH, uni_nw, uni_nh);
-			if (goodbins[binid]) {
-				v->refperm[igood] = ri;
-				igood++;
-			} else {
-				v->badguys[ibad] = ri;
-				ibad++;
+			// Remove test stars in irrelevant bins...
+			igood = ibad = 0;
+			for (i=0; i<v->NT; i++) {
+				int ti = v->testperm[i];
+				if (goodbins[binids[i]]) {
+					v->testperm[igood] = ti;
+					igood++;
+				} else {
+					v->tbadguys[ibad] = ti;
+					ibad++;
+				}
 			}
+			v->NT = igood;
+			memcpy(v->testperm + igood, v->tbadguys, ibad * sizeof(int));
+			debug("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, v->NT);
+
+			// Effective area: A * proportion of good bins.
+			effA = fieldW * fieldH * Ngoodbins / (double)(uni_nw * uni_nh);
+
+			// Remove reference stars in bad bins.
+			igood = ibad = 0;
+			for (i=0; i<v->NR; i++) {
+				int ri = v->refperm[i];
+				int binid = get_xy_bin(v->refxy + 2*ri, fieldW, fieldH, uni_nw, uni_nh);
+				if (goodbins[binid]) {
+					v->refperm[igood] = ri;
+					igood++;
+				} else {
+					v->badguys[ibad] = ri;
+					ibad++;
+				}
+			}
+			// remember the bad guys
+			memcpy(v->refperm + igood, v->badguys, ibad * sizeof(int));
+			v->NR = igood;
+			debug("After removing irrelevant ref stars: %i ref stars.\n", v->NR);
+
+			// New ROR is...
+			debug("ROR changed from %g to %g\n", sqrt(ror2),
+				  sqrt(Q2 * (1 + effA*(1 - distractors) / (4. * M_PI * v->NR * pix2))));
+
+			free(goodbins);
+			free(bincenters);
+			free(binids);
 		}
-		// remember the bad guys
-		memcpy(v->refperm + igood, v->badguys, ibad * sizeof(int));
-		v->NR = igood;
-		debug("After removing irrelevant ref stars: %i ref stars.\n", v->NR);
-
-		// New ROR is...
-		debug("ROR changed from %g to %g\n", sqrt(ror2),
-			  sqrt(Q2 * (1 + effA*(1 - distractors) / (4. * M_PI * v->NR * pix2))));
-
-		free(goodbins);
-		free(bincenters);
-		free(binids);
-	} else {
-		effA = fieldW * fieldH;
 	}
+	if (effA == 0.0)
+		effA = fieldW * fieldH;
+
 	*p_effA = effA;
 	if (p_uninw)
 		*p_uninw = uni_nw;
@@ -881,10 +911,14 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, int istopped, 
 	int i, ri, ti;
 
 	if (DEBUGVERIFY) {
-		// Both these permutations should be complete.
-		// NO, refperm has vals < NRall in elements < NRimage.
-		//check_permutation(v->refperm, NRimage);
+		// The "testperm" permutation should be "complete".
 		check_permutation(v->testperm, v->NTall);
+		// "refperm" has vals < NRall in elements < NRimage.
+		//check_permutation(v->refperm, NRimage);
+		for (i=0; i<NRimage; i++) {
+			assert(refperm[i] >= 0);
+			assert(refperm[i] < v->NRall);
+		}
 	}
 
 	// "theta" has length v->NT.
@@ -1238,6 +1272,8 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		v->refxy = NULL;
 		mo->refstarid = v->refstarid;
 		v->refstarid = NULL;
+		mo->testperm = v->testperm;
+		v->testperm = NULL;
 
 		matchobj_compute_derived(mo);
 	}
@@ -1268,6 +1304,8 @@ void verify_free_matchobj(MatchObj* mo) {
 	free(mo->refxy);
 	free(mo->theta);
 	free(mo->matchodds);
+	free(mo->testperm);
+	mo->testperm = NULL;
 	mo->refxyz = NULL;
 	mo->refstarid = NULL;
 	mo->refxy = NULL;

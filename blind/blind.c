@@ -730,11 +730,27 @@ static sip_t* tweak(const blind_t* bp, const tan_t* wcs, const double* starradec
 
 static void print_match(blind_t* bp, MatchObj* mo) {
 	double ra,dec;
-	logverb("  logodds ratio %g (%g), %i match, %i conflict, %i distractors, %i index.\n",
+	logverb("  log-odds ratio %g (%g), %i match, %i conflict, %i distractors, %i index.\n",
 			mo->logodds, exp(mo->logodds), mo->nmatch, mo->nconflict, mo->ndistractor, mo->nindex);
 	xyzarr2radecdeg(mo->center, &ra, &dec);
 	logverb("  RA,Dec = (%g,%g), pixel scale %g arcsec/pix.\n",
 			ra, dec, mo->scale);
+	if (log_get_level() >= LOG_VERB) {
+		int i;
+		logverb("  Hit/miss: ");
+		verify_log_hit_miss(mo->theta, NULL, mo->nbest, mo->nfield, LOG_VERB);
+		logverb("\n");
+		logverb("  Test star order: ");
+		for (i=0; i<MIN(100, mo->nfield); i++) {
+			logverb("%i ", mo->testperm[i]);
+		}
+		logverb("\n");
+
+		logverb("  Hit/miss in order: ");
+		verify_log_hit_miss(mo->theta, mo->testperm, mo->nbest, mo->nfield, LOG_VERB);
+		logverb("\n");
+
+	}
 }
 
 static int sort_rdls(MatchObj* mymo, blind_t* bp) {
@@ -845,6 +861,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 			int* newtheta;
 			double* newodds;
 
+			logverb("Starting tweak2 on a match with log-odds %g\n", mymo->logodds);
 			sip_wrap_tan(&mymo->wcstan, &sipin);
 			sipin.wcstan.imagew = solver_field_width(sp);
 			sipin.wcstan.imageh = solver_field_height(sp);

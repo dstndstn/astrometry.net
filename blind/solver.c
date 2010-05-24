@@ -448,6 +448,8 @@ void solver_preprocess_field(solver_t* solver) {
 	find_field_boundaries(solver);
 	// precompute a kdtree over the field
 	solver->vf = verify_field_preprocess(solver->fieldxy);
+
+	solver->vf->do_uniformize = solver->verify_uniformize;
 }
 
 void solver_free_field(solver_t* solver) {
@@ -1118,6 +1120,9 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	double match_distance_in_pixels2;
     bool solved;
 
+	//int* testperm = NULL;
+	//int** p_testperm = NULL;
+
 	mo->indexid = sp->index->indexid;
 	mo->healpix = sp->index->healpix;
 	mo->hpnside = sp->index->hpnside;
@@ -1128,6 +1133,9 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		square(sp->index->index_jitter / mo->scale);
 
 	mo->dimquads = quadfile_dimquads(sp->index->quads);
+
+	// DEBUG
+	//p_testperm = &testperm;
 
 	verify_hit(sp->index->starkd, sp->index->cutnside,
 			   mo, sip, sp->vf, match_distance_in_pixels2,
@@ -1142,6 +1150,12 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		sp->best_logodds = mo->logodds;
 		logverb("Got a new best match: logodds %g.\n", mo->logodds);
 	}
+
+	/*  GAH, have to put this in blind.c ?
+	 Want to do tweak2(), pretty much
+	 if (mo->logodds >= sp->logratio_totune && mo->logodds < sp->logratio_to_solve) {
+	 }
+	 */
 
 	if (mo->logodds < sp->logratio_record_threshold)
 		return FALSE;
@@ -1224,6 +1238,7 @@ void solver_set_default_values(solver_t* solver) {
 	solver->codetol = DEFAULT_CODE_TOL;
     solver->distractor_ratio = DEFAULT_DISTRACTOR_RATIO;
     solver->verify_pix = DEFAULT_VERIFY_PIX;
+	solver->verify_uniformize = TRUE;
 }
 
 void solver_clear_indexes(solver_t* solver) {

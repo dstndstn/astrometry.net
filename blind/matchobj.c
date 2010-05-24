@@ -21,6 +21,8 @@
 #include "sip.h"
 #include "matchobj.h"
 #include "starutil.h"
+#include "log.h"
+#include "verify.h"
 
 void matchobj_compute_derived(MatchObj* mo) {
 	int mx;
@@ -35,3 +37,7 @@ void matchobj_compute_derived(MatchObj* mo) {
 	mo->nbest = mo->nmatch + mo->ndistractor + mo->nconflict;
 }
 
+/*void matchobj_log_verify_hit_miss(MatchObj* mo, int loglevel) {
+ verify_log_hit_miss(mo->theta, mo->nbest, mo->nfield, loglevel);
+ }
+ */

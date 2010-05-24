@@ -69,6 +69,7 @@ void augment_xylist_init(augment_xylist_t* axy) {
     axy->dec_center = HUGE_VAL;
     axy->parity = PARITY_BOTH;
 	axy->uniformize = 10;
+	axy->verify_uniformize = TRUE;
 }
 
 void augment_xylist_free_contents(augment_xylist_t* axy) {
@@ -127,17 +128,21 @@ static an_option_t options[] = {
     {'8', "parity",         required_argument, "pos/neg",
      "only check for matches with positive/negative parity (default: try both)"},
     {'c', "code-tolerance", required_argument, "distance",
-     "matching distance for quads, default 0.01"},
+     "matching distance for quads (default: 0.01)"},
     {'E', "pixel-error",    required_argument, "pixels",
-     "for verification, size of pixel positional error, default 1"},
+     "for verification, size of pixel positional error (default: 1)"},
     {'q', "quad-size-min",  required_argument, "fraction",
-     "minimum size of quads to try, as a fraction of the smaller image dimension, default 0.1"},
+     "minimum size of quads to try, as a fraction of the smaller image dimension, default: 0.1"},
     {'Q', "quad-size-max",  required_argument, "fraction",
      "maximum size of quads to try, as a fraction of the image hypotenuse, default 1.0"},
+	/*
+	 {'\x82', "odds-to-tune-up",  required_argument, "odds",
+	 "odds ratio at which to try tuning up a match that isn't good enough to solve (default: 1e6)"},
+	 */
 	{'[', "odds-to-solve",  required_argument, "odds",
-	 "odds ratio at which to consider a field solved (default 1e9)"},
+	 "odds ratio at which to consider a field solved (default: 1e9)"},
 	{'#', "odds-to-reject",   required_argument, "odds",
-	 "odds ratio at which to reject a hypothesis (default 1e-100)"},
+	 "odds ratio at which to reject a hypothesis (default: 1e-100)"},
 	{'%', "odds-to-stop-looking", required_argument, "odds",
 	 "odds ratio at which to stop adding stars when evaluating a hypothesis (default: HUGE_VAL)"},
 	{'^', "use-sextractor", no_argument, NULL,
@@ -178,6 +183,8 @@ static an_option_t options[] = {
 	 "don't remove horizontal and vertical overdensities of sources."},
 	{':', "uniformize", required_argument, "int",
 	 "select sources uniformly using roughly this many boxes (0=disable; default 10)"},
+	{'\x81', "no-verify-uniformize", no_argument, NULL,
+	 "don't uniformize the field stars during verification"},
 	{'0', "no-fix-sdss",    no_argument, NULL,
 	 "don't try to fix SDSS idR files."},
 	{'C', "cancel",		   required_argument, "filename",
@@ -269,6 +276,14 @@ int augment_xylist_parse_option(char argchar, char* optarg,
 	case '\x80':
 		axy->sort_rdls = optarg;
 		break;
+	case '\x81':
+		axy->verify_uniformize = FALSE;
+		break;
+		/*
+		 case '\x82':
+		 axy->odds_to_tune_up = atof(optarg);
+		 break;
+		 */
 	case ';':
 		axy->invert_image = TRUE;
 		break;
@@ -1047,6 +1062,10 @@ int augment_xylist(augment_xylist_t* axy,
 	if (axy->sort_rdls)
 		qfits_header_add(hdr, "ANRDSORT", axy->sort_rdls, "Sort RDLS file by this column", NULL);
 
+	qfits_header_add(hdr, "ANVERUNI", axy->verify_uniformize ? "T":"F", "Uniformize field during verification", NULL);
+
+	if (axy->odds_to_tune_up)
+		fits_header_add_double(hdr, "ANODDSTU", axy->odds_to_tune_up, "Odds ratio to tune up a match");
 	if (axy->odds_to_solve)
 		fits_header_add_double(hdr, "ANODDSSL", axy->odds_to_solve, "Odds ratio to consider a field solved");
 	if (axy->odds_to_bail)

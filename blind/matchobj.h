@@ -132,6 +132,9 @@ struct match_struct {
 	// that is 0 for definitely not-a-match and 1 for definitely a match.
 	double* matchodds;
 
+	// the order in which test stars were tried during verification
+	int* testperm;
+
 	// the stuff we discover about the reference stars during verify().
 	// These arrays have length "nindex"; they include all reference
 	// stars that should appear in the image.
@@ -149,6 +152,8 @@ void matchobj_compute_overlap(MatchObj* mo);
 
 // compute all derived fields.
 void matchobj_compute_derived(MatchObj* mo);
+
+//void matchobj_log_verify_hit_miss(MatchObj* mo, int loglevel);
 
 /*
  MatchObj* matchobj_copy_deep(const MatchObj* mo, MatchObj* dest);

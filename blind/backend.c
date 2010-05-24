@@ -499,6 +499,7 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     double default_odds_toprint = 1e6;
     double default_odds_tokeep = 1e9;
     double default_odds_tosolve = 1e9;
+    double default_odds_totune = 1e6;
     //double default_image_fraction = 1.0;
     char* fn;
     double val;
@@ -515,6 +516,8 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 		logerr("Must specify positive \"IMAGEW\" and \"IMAGEH\".\n");
 		goto bailout;
 	}
+
+	sp->verify_uniformize = qfits_header_getboolean(hdr, "ANVERUNI", sp->verify_uniformize);
 
     val = qfits_header_getdouble(hdr, "ANPOSERR", 0.0);
     if (val > 0.0)
@@ -560,6 +563,7 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 	// gotta print it to keep it (so what if that doesn't make sense)!
 	bp->logratio_toprint = MIN(bp->logratio_toprint, bp->logratio_tokeep);
 
+    sp->logratio_totune = log(qfits_header_getdouble(hdr, "ANODDSTU", default_odds_totune));
     sp->logratio_bail_threshold = log(qfits_header_getdouble(hdr, "ANODDSBL", DEFAULT_BAIL_THRESHOLD));
 	val = qfits_header_getdouble(hdr, "ANODDSST", 0.0);
 	if (val > 0.0)

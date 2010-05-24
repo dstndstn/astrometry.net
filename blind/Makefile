@@ -503,8 +503,8 @@ quadcenters: quadcenters.o \
 startree2rdls: startree2rdls.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
-agreeable: agreeable.o matchfile.o matchobj.o solvedfile.o solvedclient.o \
-		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+agreeable: agreeable.o matchfile.o matchobj.o solvedfile.o solvedclient.o verify.o \
+		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
 
 rdlsinfo: rdlsinfo.o $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
