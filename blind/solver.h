@@ -80,6 +80,7 @@ struct solver_t {
 	bool distance_from_quad_bonus;
 
 	bool verify_uniformize;
+	bool verify_dedup;
 
 	// OPTIONAL FIELDS WITH SENSIBLE DEFAULTS
 	// ======================================

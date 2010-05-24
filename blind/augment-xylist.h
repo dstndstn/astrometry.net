@@ -136,6 +136,7 @@ struct augment_xylist_s {
     bool dont_augment;
 
 	bool verify_uniformize;
+	bool verify_dedup;
 
     // try to verify FITS input images?
     bool try_verify;

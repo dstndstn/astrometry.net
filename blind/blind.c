@@ -828,6 +828,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 	mo->refxyz = NULL;
 	mo->refxy = NULL;
 	mo->refstarid = NULL;
+	mo->testperm = NULL;
 
 	// We have no guarantee that the index will still be open when it
 	// comes time to write our output files, so we've got to grab everything

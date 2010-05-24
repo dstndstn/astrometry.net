@@ -450,6 +450,7 @@ void solver_preprocess_field(solver_t* solver) {
 	solver->vf = verify_field_preprocess(solver->fieldxy);
 
 	solver->vf->do_uniformize = solver->verify_uniformize;
+	solver->vf->do_dedup = solver->verify_dedup;
 }
 
 void solver_free_field(solver_t* solver) {
@@ -1239,6 +1240,7 @@ void solver_set_default_values(solver_t* solver) {
     solver->distractor_ratio = DEFAULT_DISTRACTOR_RATIO;
     solver->verify_pix = DEFAULT_VERIFY_PIX;
 	solver->verify_uniformize = TRUE;
+	solver->verify_dedup = TRUE;
 }
 
 void solver_clear_indexes(solver_t* solver) {

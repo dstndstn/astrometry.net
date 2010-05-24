@@ -185,6 +185,8 @@ static an_option_t options[] = {
 	 "select sources uniformly using roughly this many boxes (0=disable; default 10)"},
 	{'\x81', "no-verify-uniformize", no_argument, NULL,
 	 "don't uniformize the field stars during verification"},
+	{'\x83', "no-verify-dedup", no_argument, NULL,
+	 "don't deduplicate the field stars during verification"},
 	{'0', "no-fix-sdss",    no_argument, NULL,
 	 "don't try to fix SDSS idR files."},
 	{'C', "cancel",		   required_argument, "filename",
@@ -284,6 +286,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
 		 axy->odds_to_tune_up = atof(optarg);
 		 break;
 		 */
+	case '\x83':
+		axy->verify_dedup = FALSE;
+		break;
 	case ';':
 		axy->invert_image = TRUE;
 		break;
@@ -1063,6 +1068,7 @@ int augment_xylist(augment_xylist_t* axy,
 		qfits_header_add(hdr, "ANRDSORT", axy->sort_rdls, "Sort RDLS file by this column", NULL);
 
 	qfits_header_add(hdr, "ANVERUNI", axy->verify_uniformize ? "T":"F", "Uniformize field during verification", NULL);
+	qfits_header_add(hdr, "ANVERDUP", axy->verify_dedup ? "T":"F", "Deduplicate field during verification", NULL);
 
 	if (axy->odds_to_tune_up)
 		fits_header_add_double(hdr, "ANODDSTU", axy->odds_to_tune_up, "Odds ratio to tune up a match");

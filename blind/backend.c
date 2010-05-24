@@ -518,6 +518,7 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 	}
 
 	sp->verify_uniformize = qfits_header_getboolean(hdr, "ANVERUNI", sp->verify_uniformize);
+	sp->verify_dedup = qfits_header_getboolean(hdr, "ANVERDUP", sp->verify_dedup);
 
     val = qfits_header_getdouble(hdr, "ANPOSERR", 0.0);
     if (val > 0.0)

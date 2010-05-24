@@ -124,6 +124,8 @@ verify_field_t* verify_field_preprocess(const starxy_t* fieldxy) {
                              2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
 
 	vf->do_uniformize = TRUE;
+	vf->do_dedup = TRUE;
+	vf->do_ror = TRUE;
 
     return vf;
 }
@@ -239,34 +241,64 @@ static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchOb
 		debug("\n");
 	}
 
-	// Deduplicate test stars.  This could be done (approximately) in preprocessing.
-	// FIXME -- this should be at the reference deduplication radius, not relative to sigma!
-	// -- this requires the match scale
-	// -- can perhaps discretize dedup to nearest power-of-sqrt(2) pixel radius and cache it.
-	// -- we can compute sigma much later
-	keepers = verify_deduplicate_field_stars(v, vf, 1.0);
+	if (vf->do_dedup) {
+		// Deduplicate test stars.  This could be done (approximately) in preprocessing.
+		// FIXME -- this should be at the reference deduplication radius, not relative to sigma!
+		// -- this requires the match scale
+		// -- can perhaps discretize dedup to nearest power-of-sqrt(2) pixel radius and cache it.
+		// -- we can compute sigma much later
+		keepers = verify_deduplicate_field_stars(v, vf, 1.0);
 
-	// Remove test quad stars.  Do this after deduplication so we
-	// don't end up with (duplicate) test stars near the quad stars.
-    if (!fake_match) {
-		for (i=0; i<mo->dimquads; i++) {
-            assert(mo->field[i] >= 0);
-            assert(mo->field[i] < v->NTall);
-            keepers[mo->field[i]] = FALSE;
+		// Remove test quad stars.  Do this after deduplication so we
+		// don't end up with (duplicate) test stars near the quad stars.
+		if (!fake_match) {
+			for (i=0; i<mo->dimquads; i++) {
+				assert(mo->field[i] >= 0);
+				assert(mo->field[i] < v->NTall);
+				keepers[mo->field[i]] = FALSE;
+			}
+		}
+
+		ibad = igood = 0;
+		for (i=0; i<v->NT; i++) {
+			int ti = v->testperm[i];
+			if (keepers[ti]) {
+				v->testperm[igood] = ti;
+				igood++;
+			} else {
+				v->tbadguys[ibad] = ti;
+				ibad++;
+			}
+		}
+	} else {
+		// Remove the quad.
+		if (!fake_match) {
+			int j;
+			for (i=0; i<mo->dimquads; i++) {
+				assert(mo->field[i] >= 0);
+				assert(mo->field[i] < v->NTall);
+			}
+			ibad = igood = 0;
+			for (i=0; i<v->NT; i++) {
+				int ti = v->testperm[i];
+				bool isquad = FALSE;
+				for (j=0; j<mo->dimquads; j++) {
+					if (ti == mo->field[j]) {
+						isquad = TRUE;
+						break;
+					}
+				}
+				if (!isquad) {
+					v->testperm[igood] = ti;
+					igood++;
+				} else {
+					v->tbadguys[ibad] = ti;
+					ibad++;
+				}
+			}
 		}
 	}
 
-	ibad = igood = 0;
-	for (i=0; i<v->NT; i++) {
-		int ti = v->testperm[i];
-		if (keepers[ti]) {
-			v->testperm[igood] = ti;
-			igood++;
-		} else {
-			v->tbadguys[ibad] = ti;
-			ibad++;
-		}
-	}
 	v->NT = igood;
 	// remember the bad guys
 	memcpy(v->testperm + igood, v->tbadguys, ibad * sizeof(int));
@@ -292,10 +324,12 @@ static void verify_apply_ror(verify_t* v,
 							 double* p_effA,
 							 int* p_uninw, int* p_uninh) {
 	int i;
-	int uni_nw, uni_nh;
-	double effA = 0;
+	int uni_nw = 0, uni_nh = 0;
+	double effA = fieldW * fieldH;
 	double qc[2], Q2=0;
 	int igood, ibad;
+	int* binids = NULL;
+	double* bincenters = NULL;
 
 	// If we're verifying an existing WCS solution, then don't increase the variance
 	// away from the center of the matched quad.
@@ -318,12 +352,6 @@ static void verify_apply_ror(verify_t* v,
 
 		// uniformize!
 		if (uni_nw > 1 || uni_nh > 1) {
-			double* bincenters;
-			int* binids;
-			double ror2;
-			bool* goodbins = NULL;
-			int Ngoodbins;
-
 			verify_uniformize_field(vf->xy, v->testperm, v->NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &binids);
 			bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
 
@@ -332,10 +360,19 @@ static void verify_apply_ror(verify_t* v,
 				print_test_perm(v);
 				debug("\n");
 			}
+		}
+	}
+	if (vf->do_ror && !fake_match) {
+		bool* goodbins = NULL;
+		int Ngoodbins;
+		double ror2;
 
-			debug("Quad radius = %g\n", sqrt(Q2));
-			ror2 = Q2 * MAX(1, (fieldW*fieldH*(1 - distractors) / (4. * M_PI * v->NR * pix2) - 1));
-			debug("(strong) Radius of relevance is %.1f\n", sqrt(ror2));
+		debug("Quad radius = %g\n", sqrt(Q2));
+		ror2 = Q2 * MAX(1, (fieldW*fieldH*(1 - distractors) / (4. * M_PI * v->NR * pix2) - 1));
+		debug("(strong) Radius of relevance is %.1f\n", sqrt(ror2));
+
+		if (binids) {
+			assert(uni_nw);
 			goodbins = malloc(uni_nw * uni_nh * sizeof(bool));
 			Ngoodbins = 0;
 			for (i=0; i<(uni_nw * uni_nh); i++) {
@@ -356,21 +393,50 @@ static void verify_apply_ror(verify_t* v,
 					ibad++;
 				}
 			}
-			v->NT = igood;
-			memcpy(v->testperm + igood, v->tbadguys, ibad * sizeof(int));
-			debug("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, v->NT);
-
-			if (DEBUGVERIFY) {
-				debug("after applying RoR:\n");
-				print_test_perm(v);
-				debug("\n");
-			}
-
-			// Effective area: A * proportion of good bins.
-			effA = fieldW * fieldH * Ngoodbins / (double)(uni_nw * uni_nh);
-
-			// Remove reference stars in bad bins.
+		} else {
+			// Remove test stars outside the RoR.
 			igood = ibad = 0;
+			for (i=0; i<v->NT; i++) {
+				int ti = v->testperm[i];
+				double r2 = distsq(qc, vf->xy + 2*ti, 2);
+				if (r2 < ror2) {
+					v->testperm[igood] = ti;
+					igood++;
+				} else {
+					v->tbadguys[ibad] = ti;
+					ibad++;
+				}
+			}
+			// Count good bins to find effective area... (ugh)
+			assert(!bincenters);
+			if (!uni_nw)
+				verify_get_uniformize_scale(index_cutnside, mo->scale, fieldW, fieldH, &uni_nw, &uni_nh);
+			bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
+			Ngoodbins = 0;
+			for (i=0; i<(uni_nw * uni_nh); i++) {
+				double binr2 = distsq(bincenters + 2*i, qc, 2);
+				if (binr2 < ror2)
+					Ngoodbins++;
+			}
+		}
+
+		v->NT = igood;
+		memcpy(v->testperm + igood, v->tbadguys, ibad * sizeof(int));
+		debug("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, v->NT);
+
+		if (DEBUGVERIFY) {
+			debug("after applying RoR:\n");
+			print_test_perm(v);
+			debug("\n");
+		}
+
+		// Effective area: A * proportion of good bins.
+		effA *= Ngoodbins / (double)(uni_nw * uni_nh);
+
+		// Remove reference stars in bad bins.
+		igood = ibad = 0;
+		if (goodbins) {
+			assert(uni_nw);
 			for (i=0; i<v->NR; i++) {
 				int ri = v->refperm[i];
 				int binid = get_xy_bin(v->refxy + 2*ri, fieldW, fieldH, uni_nw, uni_nh);
@@ -382,22 +448,30 @@ static void verify_apply_ror(verify_t* v,
 					ibad++;
 				}
 			}
-			// remember the bad guys
-			memcpy(v->refperm + igood, v->badguys, ibad * sizeof(int));
-			v->NR = igood;
-			debug("After removing irrelevant ref stars: %i ref stars.\n", v->NR);
-
-			// New ROR is...
-			debug("ROR changed from %g to %g\n", sqrt(ror2),
-				  sqrt(Q2 * (1 + effA*(1 - distractors) / (4. * M_PI * v->NR * pix2))));
-
-			free(goodbins);
-			free(bincenters);
-			free(binids);
+		} else {
+			for (i=0; i<v->NR; i++) {
+				int ri = v->refperm[i];
+				if (distsq(qc, v->refxy + 2*ri, 2) < ror2) {
+					v->refperm[igood] = ri;
+					igood++;
+				} else {
+					v->badguys[ibad] = ri;
+					ibad++;
+				}
+			}
 		}
+		// remember the bad guys
+		memcpy(v->refperm + igood, v->badguys, ibad * sizeof(int));
+		v->NR = igood;
+		debug("After removing irrelevant ref stars: %i ref stars.\n", v->NR);
+
+		// New ROR is...
+		debug("ROR changed from %g to %g\n", sqrt(ror2),
+			  sqrt(Q2 * (1 + effA*(1 - distractors) / (4. * M_PI * v->NR * pix2))));
+		free(goodbins);
 	}
-	if (effA == 0.0)
-		effA = fieldW * fieldH;
+	free(bincenters);
+	free(binids);
 
 	*p_effA = effA;
 	if (p_uninw)
@@ -815,13 +889,16 @@ void verify_uniformize_field(const double* xy,
 		lists[i] = il_new(16);
 
 	// put the stars in the appropriate bins.
+	debug("Test star bins:\n");
 	for (i=0; i<N; i++) {
 		int ind;
 		int bin;
 		ind = perm[i];
 		bin = get_xy_bin(xy + 2*ind, fieldW, fieldH, nw, nh);
+		debug("%i ", bin);
 		il_append(lists[bin], ind);
 	}
+	debug("\n");
 
 	if (p_bincounts) {
 		// note the bin occupancies.
@@ -950,8 +1027,8 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, int istopped, 
 		// "refperm" has vals < NRall in elements < NRimage.
 		//check_permutation(v->refperm, NRimage);
 		for (i=0; i<NRimage; i++) {
-			assert(refperm[i] >= 0);
-			assert(refperm[i] < v->NRall);
+			assert(v->refperm[i] >= 0);
+			assert(v->refperm[i] < v->NRall);
 		}
 	}
 

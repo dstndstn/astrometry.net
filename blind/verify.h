@@ -37,6 +37,10 @@ struct verify_field_t {
 
 	// should this field be spatially uniformized at the index's scale?
 	bool do_uniformize;
+	// should this field be de-duplicated (have nearby sources removed)?
+	bool do_dedup;
+	// apply radius-of-relevance filtering
+	bool do_ror;
 };
 typedef struct verify_field_t verify_field_t;
 
