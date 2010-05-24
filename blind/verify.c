@@ -211,6 +211,15 @@ static int get_xy_bin(const double* xy,
 	return iy * nw + ix;
 }
 
+static void print_test_perm(verify_t* v) {
+	int i;
+	for (i=0; i<v->NTall; i++) {
+		if (i == v->NT)
+			debug("(NT)");
+		debug("%i ", v->testperm[i]);
+	}
+}
+
 static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchObj* mo,
 								 double pix2, bool do_gamma, bool fake_match) {
 	bool* keepers = NULL;
@@ -223,6 +232,12 @@ static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchOb
 	v->testsigma = verify_compute_sigma2s(vf, mo, pix2, do_gamma);
 	v->testperm = permutation_init(NULL, v->NTall);
 	v->tbadguys = malloc(v->NTall * sizeof(int));
+
+	if (DEBUGVERIFY) {
+		debug("start:\n");
+		print_test_perm(v);
+		debug("\n");
+	}
 
 	// Deduplicate test stars.  This could be done (approximately) in preprocessing.
 	// FIXME -- this should be at the reference deduplication radius, not relative to sigma!
@@ -256,6 +271,13 @@ static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchOb
 	// remember the bad guys
 	memcpy(v->testperm + igood, v->tbadguys, ibad * sizeof(int));
 	free(keepers);
+
+	if (DEBUGVERIFY) {
+		debug("after dedup and removing quad:\n");
+		print_test_perm(v);
+		debug("\n");
+	}
+
 }
 
 static void verify_apply_ror(verify_t* v,
@@ -305,6 +327,12 @@ static void verify_apply_ror(verify_t* v,
 			verify_uniformize_field(vf->xy, v->testperm, v->NT, fieldW, fieldH, uni_nw, uni_nh, NULL, &binids);
 			bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
 
+			if (DEBUGVERIFY) {
+				debug("after uniformizing:\n");
+				print_test_perm(v);
+				debug("\n");
+			}
+
 			debug("Quad radius = %g\n", sqrt(Q2));
 			ror2 = Q2 * MAX(1, (fieldW*fieldH*(1 - distractors) / (4. * M_PI * v->NR * pix2) - 1));
 			debug("(strong) Radius of relevance is %.1f\n", sqrt(ror2));
@@ -331,6 +359,12 @@ static void verify_apply_ror(verify_t* v,
 			v->NT = igood;
 			memcpy(v->testperm + igood, v->tbadguys, ibad * sizeof(int));
 			debug("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, v->NT);
+
+			if (DEBUGVERIFY) {
+				debug("after applying RoR:\n");
+				print_test_perm(v);
+				debug("\n");
+			}
 
 			// Effective area: A * proportion of good bins.
 			effA = fieldW * fieldH * Ngoodbins / (double)(uni_nw * uni_nh);
