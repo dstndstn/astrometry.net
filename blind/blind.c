@@ -736,17 +736,19 @@ static void print_match(blind_t* bp, MatchObj* mo) {
 	logverb("  RA,Dec = (%g,%g), pixel scale %g arcsec/pix.\n",
 			ra, dec, mo->scale);
 	if (log_get_level() >= LOG_VERB) {
-		int i;
+		/*
+		 int i;
+		 logverb("  Hit/miss: ");
+		 verify_log_hit_miss(mo->theta, NULL, mo->nbest, mo->nfield, LOG_VERB);
+		 logverb("\n");
+		 logverb("  Test star order: ");
+		 for (i=0; i<MIN(100, mo->nfield); i++) {
+		 logverb("%i ", mo->testperm[i]);
+		 }
+		 logverb("\n");
+		 //logverb("  Hit/miss in order: ");
+		 */
 		logverb("  Hit/miss: ");
-		verify_log_hit_miss(mo->theta, NULL, mo->nbest, mo->nfield, LOG_VERB);
-		logverb("\n");
-		logverb("  Test star order: ");
-		for (i=0; i<MIN(100, mo->nfield); i++) {
-			logverb("%i ", mo->testperm[i]);
-		}
-		logverb("\n");
-
-		logverb("  Hit/miss in order: ");
 		verify_log_hit_miss(mo->theta, mo->testperm, mo->nbest, mo->nfield, LOG_VERB);
 		logverb("\n");
 
@@ -782,14 +784,15 @@ static int sort_rdls(MatchObj* mymo, blind_t* bp) {
 				  perm, mymo->nindex);
 	free(sortdata);
 
+	if (mymo->refxyz)
+		permutation_apply(perm, mymo->nindex, mymo->refxyz, mymo->refxyz, 3*sizeof(double));
+	// probably not set yet, but what the heck...
 	if (mymo->refradec)
 		permutation_apply(perm, mymo->nindex, mymo->refradec,  mymo->refradec, 2*sizeof(double));
 	if (mymo->refxy)
 		permutation_apply(perm, mymo->nindex, mymo->refxy,     mymo->refxy,    2*sizeof(double));
 	if (mymo->refstarid)
 		permutation_apply(perm, mymo->nindex, mymo->refstarid, mymo->refstarid,  sizeof(int));
-	// not populated yet
-	assert(!mymo->refxyz);
 	if (mymo->theta)
 		for (i=0; i<mymo->nfield; i++) {
 			if (mymo->theta[i] < 0)
