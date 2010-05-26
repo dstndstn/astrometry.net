@@ -96,7 +96,7 @@ ANUTILS_DEPS :=
 
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	permutedsort.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
-	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o \
+	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
 	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
 	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
 	anwcs.o sparsematrix.o lsqr.o

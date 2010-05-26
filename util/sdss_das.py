@@ -18,7 +18,12 @@ def get_urls(urls, outfn):
 			print 'Return val:', rtn
 	return False
 
-def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, suffix=''):
+def sdss_das_get_suffix(filetype):
+	return ({'fpC': '.gz'}).get(filetype, '')
+
+def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, suffix=None):
+	if suffix is None:
+		suffix = sdss_das_get_suffix(filetype)
 	if reruns is None:
 		reruns = [40,41,42,44]
 	urls = []

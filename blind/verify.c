@@ -30,6 +30,7 @@
 #include "log.h"
 #include "sip-utils.h"
 #include "healpix.h"
+#include "datalog.h"
 
 #define DEBUGVERIFY 1
 
@@ -38,6 +39,15 @@
 #else
 #define debug(args...)
 #endif
+
+#define DATALOG_MASK_VERIFY 0x1
+
+// level
+#define DLOG_ODDS 10
+
+#define DLOG_ODDS_MIN log(1e6)
+
+#define dlog(lev, fmt, ...) data_log(DATALOG_MASK_VERIFY, lev, fmt, ##__VA_ARGS__)
 
 // avoid functions with 50 arguments...
 struct verify_s {
@@ -226,7 +236,7 @@ static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchOb
 								 double pix2, bool do_gamma, bool fake_match) {
 	bool* keepers = NULL;
 	int i;
-	int ibad, igood;
+	int ibad=0, igood=0;
 
 	v->NTall = starxy_n(vf->field);
 	v->testxy = vf->xy;
@@ -506,7 +516,6 @@ static double real_verify_star_lists(verify_t* v,
 	double* all_logodds = NULL;
 	int* theta = NULL;
 	int mu;
-
 	int* rperm;
 
 	if (!v->NR || !v->NT) {
@@ -538,10 +547,11 @@ static double real_verify_star_lists(verify_t* v,
 	for (i=0; i<v->NR; i++)
 		rprobs[i] = -HUGE_VAL;
 
-	if (p_logodds) {
+	if (p_logodds || data_log_passes(DATALOG_MASK_VERIFY, DLOG_ODDS))
 		all_logodds = calloc(v->NT, sizeof(double));
+	if (p_logodds)
 		*p_logodds = all_logodds;
-	}
+	
 	if (p_ibailed)
 		*p_ibailed = -1;
 	if (p_istopped)
@@ -701,6 +711,17 @@ static double real_verify_star_lists(verify_t* v,
 		}
 	}
 
+	if (bestlogodds > DLOG_ODDS_MIN) {
+		// when the loop stopped...
+		int iend = i;
+		data_log_start_item(DATALOG_MASK_VERIFY, DLOG_ODDS, "logodds");
+		dlog(DLOG_ODDS, "[");
+		for (i=0; i<iend; i++)
+			dlog(DLOG_ODDS, "%s%g", (i ? ", ":""), all_logodds[i]);
+		dlog(DLOG_ODDS, "]");
+		data_log_end_item(DATALOG_MASK_VERIFY, DLOG_ODDS);
+	}
+
 	free(rmatches);
 
 	if (p_theta)
@@ -713,6 +734,9 @@ static double real_verify_star_lists(verify_t* v,
 
 	if (p_worstlogodds)
 		*p_worstlogodds = bestworstlogodds;
+
+	if (all_logodds && !*p_logodds)
+		free(all_logodds);
 
 	free(rprobs);
 

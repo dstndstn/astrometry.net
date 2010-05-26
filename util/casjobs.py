@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import sys
 
 import httplib
@@ -329,6 +330,8 @@ if __name__ == '__main__':
 		print '     -> request that a database be output as a FITS table'
 		print '   outputdownload <database> <filename> [...]'
 		print '     -> request output, wait for it to finish, and download to <filename>'
+		print '   outputdownloaddelete <database> <filename> [...]'
+		print '     -> request output, wait for it to finish, download to <filename>, and drop table.'
 		sys.exit(-1)
 
 	if sys.argv[0].startswith('galex'):
