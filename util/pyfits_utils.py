@@ -104,6 +104,8 @@ def table_fields(dataorfn, rows=None, hdunum=1):
 		pf.close()
 	return fields
 
+fits_table = table_fields
+
 # ultra-brittle text table parsing.
 def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True):
 	if text is None:
