@@ -48,7 +48,7 @@
    to handle them.
  */
 
-static const char* OPTIONS = "hDl:c:n:w:p:v";
+static const char* OPTIONS = "hDl:c:n:w:p:vP:N:";
 
 static char* command = "echo %s";
 static char* newfilepattern = NULL;
@@ -59,12 +59,14 @@ static char* qtempfile = "queue.tmp";
 static void printHelp(char* progname) {
 	fprintf(stderr, "Usage:\n\n"
 			"%s [options], where options include:\n"
+            "      [-N <name>]: a no-op flag for identifying processes in 'ps'\n"
 			"      [-p <pattern>]: only run the command on files that match the given\n"
 			"                      POSIX extended regex.  Default: accept everything.\n"
 			"      [-D]: become a daemon; implies logging to the default\n"
 			"           file (\"watcher.log\" in the current directory)\n"
 			"           if logging is not specified with -l.\n"
 			"      [-l <logfile>]: log to the specified file.\n"
+            "      [-P <pidfile>]: write the daemon's PID to this file.\n"
 			"      [-c <command>]: run the given command; it should be a printf\n"
 			"           pattern; it will be passed the path of the file.\n"
 			"           default: \"%s\"\n"
@@ -616,6 +618,7 @@ int main(int argc, char** args) {
 	char buf[1024];
 	char* cwd;
 	int i;
+    char* pidfile = NULL;
 
 	flog = stderr;
 
@@ -630,6 +633,9 @@ int main(int argc, char** args) {
 
     while ((argchar = getopt (argc, args, OPTIONS)) != -1)
         switch (argchar) {
+        case 'P':
+            pidfile = optarg;
+            break;
 		case 'p':
 			newfilepattern = optarg;
 			break;
@@ -712,6 +718,14 @@ int main(int argc, char** args) {
 	}
 	qpath = strdup(buf);
 
+    if (pidfile) {
+        if (snprintf(buf, sizeof(buf), "%s/%s", cwd, pidfile) >= sizeof(buf)) {
+            fprintf(stderr, "Path of PID file is too long.\n");
+            exit(-1);
+        }
+        pidfile = strdup(buf);
+    }
+
 	if (be_daemon) {
 		fprintf(stderr, "Becoming daemon...\n");
 		if (daemon(0, 0) == -1) {
@@ -727,6 +741,17 @@ int main(int argc, char** args) {
 			exit(-1);
 		}
 	}
+    if (pidfile) {
+        pid_t pid = getpid();
+        FILE* fid = fopen(pidfile, "w");
+        if (!fid) {
+            loggit("Failed to write PID (%i) to file %s: %s\n", (int)pid, pidfile, strerror(errno));
+            exit(-1);
+        }
+        fprintf(fid, "%i\n", (int)pid);
+        fclose(fid);
+        loggit("Wrote PID (%i) to file %s\n", (int)pid, pidfile);
+    }
 
 	if (pthread_create(&childthread, NULL, child_start_routine, thepipe)) {
 		loggit("Failed to create child process: %s\n", strerror(errno));
