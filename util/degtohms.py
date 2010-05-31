@@ -1,6 +1,8 @@
+#! /usr/bin/env python
+
 import sys
 
-from astrometry.util.starutil import *
+from astrometry.util.starutil_numpy import *
 
 if __name__ == '__main__':
 	args = sys.argv[1:]

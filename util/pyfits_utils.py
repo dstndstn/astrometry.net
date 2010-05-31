@@ -1,8 +1,23 @@
 import pyfits
 import numpy
-from numpy import array, isscalar
+from numpy import array, isscalar, ndarray
 
 class tabledata(object):
+
+	class td_iter(object):
+		def __init__(self, td):
+			self.td = td
+			self.i = 0
+		def __iter__(self):
+			return self
+		def next(self):
+			if self.i >= len(self.td):
+				raise StopIteration
+			X = self.td[self.i]
+			self.i += 1
+			return X
+
+
 	def __init__(self):
 		self._length = 0
 	def __setattr__(self, name, val):
@@ -22,12 +37,42 @@ class tabledata(object):
 		for name,val in self.__dict__.items():
 			if name == '_length':
 				continue
-			rtn.set(name, val[I])
+			try:
+				rtn.set(name, val[I])
+			except Exception as e:
+				# HACK -- emulate numpy's boolean and int array slicing...
+				ok = False
+				if type(I) == numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'bool':
+					rtn.set(name, [val[i] for i,b in enumerate(I) if b])
+					ok = True
+				if type(I) == numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'int':
+					rtn.set(name, [val[i] for i in I])
+					ok = True
+				if not ok:
+					print 'Error in slicing an astrometry.net.pyfits_utils.table_data object:'
+					print '  -->', e
+					print 'While setting member:', name
+					print ' by taking elements:', I
+					print ' from', val
+					print ' type:', type(val)
+					if hasattr(val, 'shape'):
+						print ' shape:', val.shape
+					if hasattr(I, 'shape'):
+						print ' index shape:', I.shape
+					print 'index type:', type(I)
+					if hasattr(I, 'dtype'):
+						print '  index dtype:', I.dtype
+					print 'my length:', self._length
+					raise Exception('error in fits_table indexing')
+
+
 			if isscalar(I):
 				rtn._length = 1
 			else:
-				rtn._length = len(val[I])
+				rtn._length = len(getattr(rtn, name))
 		return rtn
+	def __iter__(self):
+		return td_iter(self)
 
 	def append(self, X):
 		for name,val in self.__dict__.items():

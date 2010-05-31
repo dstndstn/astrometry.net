@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 from astrometry.util.run_command import run_command
 from astrometry.util.sdss_filenames import *
 

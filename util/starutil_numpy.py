@@ -89,21 +89,21 @@ def xyztoradec(xyz):
 
 # RA,Decs in degrees.  Both pairs can be arrays.
 def distsq_between_radecs(ra1, dec1, ra2, dec2):
-	xyz1 = radectoxyz(ra1, dec1)
-	xyz2 = radectoxyz(ra2, dec2)
-	# (n,3) (m,3)
-	s0 = xyz1.shape[0]
-	s1 = xyz2.shape[0]
-	d2 = zeros((s0,s1))
-	for s in range(s0):
-		d2[s,:] = sum((xyz1[s,:] - xyz2)**2, axis=1)
-	if s0 == 1 and s1 == 1:
-		d2 = d2[0,0]
-	elif s0 == 1:
-		d2 = d2[0,:]
-	elif s1 == 1:
-		d2 = d2[:,0]
-	return d2
+    xyz1 = radectoxyz(ra1, dec1)
+    xyz2 = radectoxyz(ra2, dec2)
+    # (n,3) (m,3)
+    s0 = xyz1.shape[0]
+    s1 = xyz2.shape[0]
+    d2 = zeros((s0,s1))
+    for s in range(s0):
+        d2[s,:] = sum((xyz1[s,:] - xyz2)**2, axis=1)
+    if s0 == 1 and s1 == 1:
+        d2 = d2[0,0]
+    elif s0 == 1:
+        d2 = d2[0,:]
+    elif s1 == 1:
+        d2 = d2[:,0]
+    return d2
 
 # RA,Decs in degrees.
 def distsq_between_radecs(ra1, dec1, ra2, dec2):
@@ -397,7 +397,8 @@ def dec2dms(dec):
     if s >= 60.:
         m += 1.
         s -= 60.
-    return (sgn*d, m, s)
+    # don't just return sgn*d because values between 0 and 1 deg will get you!
+    return (sgn, d, m, s)
 
 # RA in degrees
 def ra2hmsstring(ra, separator=' '):
@@ -407,20 +408,24 @@ def ra2hmsstring(ra, separator=' '):
     if ds >= 1000.:
         ss += 1
         ds -= 1000.
-	if ss >= 60:
-		ss -= 60
-		m += 1
-	if m >= 60:
-		m -= 60
-		h += 1
+    if ss >= 60:
+        ss -= 60
+        m += 1
+    if m >= 60:
+        m -= 60
+        h += 1
     return separator.join(['%0.2i' % h, '%0.2i' % m, '%0.2i.%0.3i' % (ss,ds)])
 
 # Dec in degrees
 def dec2dmsstring(dec, separator=' '):
-    (d,m,s) = dec2dms(dec)
+    (sgn, d,m,s) = dec2dms(dec)
     ss = int(floor(s))
     ds = int(round((s - ss) * 1000.0))
-    return ' '.join(['%+0.2i' % d, '%0.2i' % m, '%0.2i.%0.3i' % (ss,ds)])
+    if sgn > 0:
+        signc = '+'
+    else:
+        signc = '-'
+    return separator.join(['%c%0.2i' % (signc, d), '%0.2i' % m, '%0.2i.%0.3i' % (ss,ds)])
 
 def xyzarrtoradec(xyz):
     return (degrees(xy2ra(xyz[0], xyz[1])), degrees(z2dec(xyz[2])))

@@ -1,7 +1,11 @@
+#! /usr/bin/env python
+
 import pyfits
 from astrometry.util.pyfits_utils import *
 from astrometry.util.starutil_numpy import *
 from astrometry.util.find_data_file import *
+from astrometry.util.sip import *
+from astrometry.util.sdss_filenames import *
 from os.path import basename,dirname
 from numpy import argsort
 
@@ -77,13 +81,29 @@ def radec_to_sdss_rcf(ra, dec, spherematch=True, radius=0, tablefn=None, contain
 #  mv e.fits dr7fields.fits
 #  rm g.fits a.fits
 
+'''
+cd ~/sdss-tests
+casjobs.py $SDSS_CAS_USER $SDSS_CAS_PASS querywait @dr7_ngood.sql
+casjobs.py $SDSS_CAS_USER $SDSS_CAS_PASS querywait @dr7_ngood2.sql
+casjobs.py $SDSS_CAS_USER $SDSS_CAS_PASS outputdownloaddelete mydb.goodfields2 /tmp/dr7.fits
+fitscopy /tmp/dr7.fits"[col RA=(ramin+ramax)/2;DEC=(decmin+decmax)/2;run;field;camcol;ngood;ramin;ramax;decmin;decmax]" dr7fields.fits
+
+casjobs.py $SDSS_CAS_USER $SDSS_CAS_PASS querywait @s82_ngood.sql
+# Stripe82 has no RunQA table.
+casjobs.py $SDSS_CAS_USER $SDSS_CAS_PASS querywait @s82_ngood2.sql
+casjobs.py $SDSS_CAS_USER $SDSS_CAS_PASS outputdownloaddelete mydb.s82goodfields2 s82.fits
+fitscopy s82.fits"[col RA=(ramin+ramax)/2;DEC=(decmin+decmax)/2;run;field;camcol;ngood;ramin;ramax;decmin;decmax]" s82fields.fits
+
+'''
+
 if __name__ == '__main__':
 	import sys
 	
 	parser = OptionParser(usage='%prog [options] <ra> <dec>')
 	parser.add_option('-f', dest='fields', help='FITS table of fields to use; default is astrometry/data/dr7fields.fits')
 	parser.add_option('-c', dest='contains', action='store_true', help='Print only fields that *contain* the given point; requires RAMIN,RAMAX,DECMIN,DECMAX fields.')
-	parser.set_defaults(fields=None, contains=False)
+	parser.add_option('-b', '--bands', dest='bands', help='Retrieve fpCs of the given bands; default "ugriz"')
+	parser.set_defaults(fields=None, contains=False, bands='ugriz')
 
 	(opt, args) = parser.parse_args()
 	if len(args) != 2:
@@ -116,14 +136,30 @@ if __name__ == '__main__':
 		print '%i %i %i (dist: %g arcmin)' % (r,c,f, deg2arcmin(degrees_between(ra,dec,ra1,dec1)))
 
 	print
-	for (r,c,f,ra,dec) in rcfs:
+	for (r,c,f,ra1,dec1) in rcfs:
 		print 'http://cas.sdss.org/dr7/en/get/frameByRCFZ.asp?R=%i&C=%i&F=%i&Z=0&submit1=Get+Image' % (r,c,f)
 
 	print
-	for (r,c,f,ra,dec) in rcfs:
+	for (r,c,f,ra1,dec1) in rcfs:
 		print 'wget "http://cas.sdss.org/dr7/en/get/frameByRCFZ.asp?R=%i&C=%i&F=%i&Z=0&submit1=Get+Image" -O sdss-%04i-%i-%04i.jpg' % (r,c,f,r,c,f)
 
 	from sdss_das import *
-	for (r,c,f,ra,dec) in rcfs:
-		for b in 'ugriz':
+	for (r,c,f,ra1,dec1) in rcfs:
+		for b in opt.bands:
 			sdss_das_get('fpC', None, r, c, f, b)
+			fpc = sdss_filename('fpC', r, c, f, b)
+			os.system('gunzip -cd %s.gz > %s' % (fpc,fpc))
+			wcs = Tan(filename=fpc)
+			x,y = wcs.radec2pixelxy(ra, dec)
+			x,y = int(x),int(y)
+			os.system('imcopy %s"[%i:%i,%i:%i]" !/tmp/cut-%s' % (fpc, x-100, x+100, y-100, y+100, fpc))
+			os.system('an-fitstopnm -i /tmp/cut-%s -N 1150 -X 1400 | pnmtopng > cut-%s.png' % (fpc, fpc))
+			print 'R,C,F', r,c,f
+			print 'x,y', x,y
+			
+	#from sdss_das import *
+	#for (r,c,f,ra,dec) in rcfs:
+	#	for b in 'ugriz':
+	#		sdss_das_get('fpC', None, r, c, f, b)
+
+
