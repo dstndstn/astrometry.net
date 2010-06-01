@@ -48,6 +48,9 @@ class tabledata(object):
 				if type(I) == numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'int':
 					rtn.set(name, [val[i] for i in I])
 					ok = True
+				if len(I) == 0:
+					rtn.set(name, [])
+					ok = True
 				if not ok:
 					print 'Error in slicing an astrometry.net.pyfits_utils.table_data object:'
 					print '  -->', e
