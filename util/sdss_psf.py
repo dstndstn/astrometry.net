@@ -1,6 +1,21 @@
 from astrometry.util.pyfits_utils import *
 from numpy import *
 
+# Returns (a, sigma1, b, sigma2)
+def sdss_dg_psf(psfield, band):
+	T = fits_table(psfield[6].data)
+	# the psf table has one row.
+	assert(len(T)) == 1
+	T = T[0]
+	# http://www.sdss.org/dr7/dm/flatFiles/psField.html
+	# good = PSP_FIELD_OK
+	assert(T.status[band] == 0)
+	a  = 1.0
+	s1 = T.psf_sigma1_2g[band]
+	b  = T.psf_b_2g[band]
+	s2 = T.psf_sigma2_2g[band]
+	return (float(a), float(s1), float(b), float(s2))
+
 # Reconstruct the SDSS model PSF from KL basis functions.
 #   hdu: the psField hdu for the band you are looking at.
 #      eg, for r-band:
