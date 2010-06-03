@@ -85,12 +85,12 @@ class tabledata(object):
 			self.set(name, newX)
 			self._length = len(newX)
 
-	def write_to(self, fn):
-		pyfits.new_table(self.to_fits_columns()).writeto(fn, clobber=True)
+	def write_to(self, fn, columns=None):
+		pyfits.new_table(self.to_fits_columns(columns)).writeto(fn, clobber=True)
 	def writeto(self, fn):
 		return self.write_to(fn)
 
-	def to_fits_columns(self):
+	def to_fits_columns(self, columns=None):
 		cols = []
 
 		fmap = {numpy.float64:'D',
@@ -101,10 +101,14 @@ class tabledata(object):
 				numpy.bool:'X',
 				numpy.bool_:'X',
 				}
+
+		if columns is None:
+			columns = self.__dict__.keys()
 				
-		for name,val in self.__dict__.items():
+		for name in columns:
 			if name == '_length':
 				continue
+			val = self.__dict__.get(name)
 			# FIXME -- format should match that of the 'val'.
 			#print
 			#print 'col', name, 'type', val.dtype, 'descr', val.dtype.descr
