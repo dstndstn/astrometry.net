@@ -879,7 +879,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 							   sp->distractor_ratio,
 							   sp->logratio_bail_threshold,
 							   bp->tweak_aborder, &sipin, NULL,
-							   &newtheta, &newodds, NULL);
+							   &newtheta, &newodds, sp->set_crpix ? sp->crpix : NULL);
 			// ??
 			free(mymo->theta);
 			free(mymo->matchodds);
