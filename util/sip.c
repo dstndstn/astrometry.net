@@ -94,6 +94,19 @@ void sip_pixelxy2radec(const sip_t* sip, double px, double py,
 		tan_pixelxy2radec(&(sip->wcstan), px, py, ra, dec);
 }
 
+// Pixels to Intermediate World Coordinates in degrees.
+void sip_pixelxy2iwc(const sip_t* sip, double px, double py,
+					 double *iwcx, double* iwcy) {
+	if (has_distortions(sip)) {
+		double U, V;
+		sip_distortion(sip, px, py, &U, &V);
+		// Run a normal TAN conversion on the distorted pixel coords.
+		tan_pixelxy2iwc(&(sip->wcstan), U, V, iwcx, iwcy);
+	} else
+		// Run a normal TAN conversion
+		tan_pixelxy2iwc(&(sip->wcstan), px, py, iwcx, iwcy);
+}
+
 // Pixels to XYZ unit vector.
 void sip_pixelxy2xyzarr(const sip_t* sip, double px, double py, double *xyz) {
 	if (has_distortions(sip)) {

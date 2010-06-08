@@ -157,6 +157,11 @@ bool sip_xyzarr2pixelxy(const sip_t* sip, const double* xyz, double *px, double 
 WarnUnusedResult
 bool sip_xyz2pixelxy(const sip_t* sip, double x, double y, double z, double *px, double *py);
 
+// Pixels to Intermediate World Coordinates in degrees.
+void sip_pixelxy2iwc(const sip_t* sip, double px, double py,
+					 double *iwcx, double* iwcy);
+
+
 double tan_det_cd(const tan_t* tan);
 double sip_det_cd(const sip_t* sip);
 // returns pixel scale in arcseconds/pixel (NOT arcsec^2)

@@ -840,9 +840,10 @@ static void do_sip_tweak(tweak_t* t) {
 	int M, N;
 	int i, j, p, q, order;
 	double totalweight;
-
+	int rtn;
 	gsl_matrix *mA;
 	gsl_vector *b1, *b2, *x1, *x2;
+	gsl_vector *r1=NULL, *r2=NULL;
 
 	// a_order and b_order should be the same!
 	assert(t->sip->a_order == t->sip->b_order);
@@ -1041,8 +1042,11 @@ static void do_sip_tweak(tweak_t* t) {
 	if (t->weighted_fit)
 		logverb("Total weight: %g\n", totalweight);
 
+
 	// Solve the equation.
-    if (gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL)) {
+    rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, &r1, b2, &x2, &r2);
+	//rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
+	if (rtn) {
         ERROR("Failed to solve tweak inversion matrix equation!");
         return;
     }
@@ -1103,6 +1107,33 @@ static void do_sip_tweak(tweak_t* t) {
 
 	invert_sip_polynomial(t);
 
+	// DEBUG
+	printf("\nBEFORE WCS_SHIFT:\n");
+	{
+		radecdeg2xyzarr(t->sip->wcstan.crval[0], t->sip->wcstan.crval[1], xyzcrval);
+		for (i=0; i<M; i++) {
+			int refi;
+			double x=0, y=0;
+			double xyzpt[3];
+			double bx, by;
+			double axx, axy;
+			bool ok;
+			refi = il_get(t->ref, i);
+			radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], xyzpt);
+			ok = star_coords(xyzpt, xyzcrval, &y, &x); // tangent-plane projection
+			assert(ok);
+			bx = rad2deg(x);
+			by = rad2deg(y);
+			x = t->x[il_get(t->image, i)];
+			y = t->y[il_get(t->image, i)];
+			sip_pixelxy2iwc(t->sip, x, y, &axx, &axy);
+			printf("Resid %i: GSL says (%g, %g), dstn says (%g, %g)\n",
+				   i, gsl_vector_get(r1, i), gsl_vector_get(r2, i),
+				   bx - axx, by - axy);
+		}
+	}
+
+
 	/*
 	 if (t->push_crval) {
 	 logverb("push_crval. sx,sy = %g,%g\n", sx, sy);
@@ -1110,7 +1141,7 @@ static void do_sip_tweak(tweak_t* t) {
 	 } else {
 	 */
 	{
-		logverb("Appling shift of sx,sy = %g,%g to CRVAL and CD.\n", sx, sy);
+		logverb("Applying shift of sx,sy = %g,%g deg to CRVAL and CD.\n", sx, sy);
 
 		sU =
 			cdinv[0][0] * sx +
@@ -1138,6 +1169,53 @@ static void do_sip_tweak(tweak_t* t) {
             correspondences_rms_arcsec(t, 0));
 	logverb("Weighted RMS error of correspondences: %g arcsec\n",
             correspondences_rms_arcsec(t, 1));
+
+	// DEBUG
+	{
+		// compute the residuals via WCS functions on the new SIP
+
+		// resids are:    b[M-by-1] - A[M-by-N] x[N-by-1]
+
+		// B contains Intermediate World Coordinates (in degrees)
+		// of ref stars.
+
+		// A x  ~=  sip_pixelxy2iwc( image stars )
+
+		printf("\nAFTER WCS_SHIFT:\n");
+		radecdeg2xyzarr(t->sip->wcstan.crval[0], t->sip->wcstan.crval[1], xyzcrval);
+		for (i=0; i<M; i++) {
+			int refi;
+			double x=0, y=0;
+			double xyzpt[3];
+			double bx, by;
+			double axx, axy;
+			bool ok;
+
+			refi = il_get(t->ref, i);
+			radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], xyzpt);
+			ok = star_coords(xyzpt, xyzcrval, &y, &x); // tangent-plane projection
+			assert(ok);
+			bx = rad2deg(x);
+			by = rad2deg(y);
+
+			x = t->x[il_get(t->image, i)];
+			y = t->y[il_get(t->image, i)];
+			sip_pixelxy2iwc(t->sip, x, y, &axx, &axy);
+
+			printf("Resid %i: GSL says (%g, %g), dstn says (%g, %g)\n",
+				   i, gsl_vector_get(r1, i), gsl_vector_get(r2, i),
+				   bx - axx, by - axy);
+		}
+
+
+
+
+	}
+
+	if (r1)
+		gsl_vector_free(r1);
+	if (r2)
+		gsl_vector_free(r2);
 
 	gsl_matrix_free(mA);
 	gsl_vector_free(b1);
