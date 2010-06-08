@@ -32,7 +32,8 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			  int sip_order,
 			  const sip_t* startwcs,
 			  sip_t* destwcs,
-			  int** newtheta, double** newodds);
+			  int** newtheta, double** newodds,
+			  double* crpix);
 
 
 #endif

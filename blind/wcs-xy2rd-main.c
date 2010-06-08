@@ -30,7 +30,7 @@
 #include "errors.h"
 #include "wcs-xy2rd.h"
 
-const char* OPTIONS = "hi:o:w:f:R:D:te:x:y:";
+const char* OPTIONS = "hi:o:w:f:R:D:te:x:y:X:Y:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);

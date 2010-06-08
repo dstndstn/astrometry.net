@@ -271,6 +271,13 @@ static int wcslib_write(const anwcslib_t* anwcslib, const char* filename) {
 	return 0;
 }
 
+static void wcslib_set_size(anwcslib_t* anwcslib, int W, int H) {
+	anwcslib->imagew = W;
+	anwcslib->imageh = H;
+}
+
+
+
 #endif  // end of WCSLIB implementations
 
 
@@ -306,7 +313,16 @@ static int ansip_pixelxy2radec(const sip_t* sip, double px, double py, double* r
 
 #define ansip_write_to sip_write_to
 
+static void ansip_set_size(sip_t* sip, int W, int H) {
+	sip->wcstan.imagew = W;
+	sip->wcstan.imageh = H;
+}
+
 /////////////////// dispatched anwcs_t entry points //////////////////////////
+
+void anwcs_set_size(anwcs_t* wcs, int W, int H) {
+	ANWCS_DISPATCH(wcs, , , set_size, W, H);
+}
 
 void anwcs_get_radec_bounds(const anwcs_t* wcs, int stepsize,
 							double* pramin, double* pramax,
@@ -362,6 +378,39 @@ int anwcs_write_to(const anwcs_t* wcs, FILE* fid) {
 
 
 ///////////////////////// un-dispatched functions ///////////////////
+
+void anwcs_walk_image_boundary(const anwcs_t* wcs, double stepsize,
+							   void (*callback)(const anwcs_t* wcs, double x, double y, double ra, double dec, void* token),
+							   void* token) {
+    int i, side;
+    // Walk the perimeter of the image in steps of stepsize pixels
+    double W = anwcs_imagew(wcs);
+    double H = anwcs_imageh(wcs);
+	logverb("Walking WCS image boundary: image size is %g x %g\n", W, H);
+    {
+		double Xmin = 0.5;
+		double Xmax = W + 0.5;
+		double Ymin = 0.5;
+		double Ymax = H + 0.5;
+        double offsetx[] = { Xmin, Xmax, Xmax, Xmin };
+        double offsety[] = { Ymin, Ymin, Ymax, Ymax };
+        double stepx[] = { +stepsize, 0, -stepsize, 0 };
+        double stepy[] = { 0, +stepsize, 0, -stepsize };
+        int Nsteps[] = { ceil(W/stepsize), ceil(H/stepsize), ceil(W/stepsize), ceil(H/stepsize) };
+
+        for (side=0; side<4; side++) {
+            for (i=0; i<Nsteps[side]; i++) {
+                double ra, dec;
+                double x, y;
+                x = MIN(Xmax, MAX(Xmin, offsetx[side] + i * stepx[side]));
+                y = MIN(Ymax, MAX(Ymin, offsety[side] + i * stepy[side]));
+                anwcs_pixelxy2radec(wcs, x, y, &ra, &dec);
+				callback(wcs, x, y, ra, dec, token);
+            }
+        }
+    }
+}
+
 
 // FIXME -- this is probably the bass-ackwards way -- xyz is more natural; this probably requires converting back and forth between ra,dec and xyz.
 int anwcs_pixelxy2xyz(const anwcs_t* wcs, double px, double py, double* xyz) {
@@ -448,8 +497,8 @@ anwcs_t* anwcs_open(const char* filename, int ext) {
 		errors_pop_state();
 		return anwcs;
 	} else {
-		errmsg = errors_stop_logging_to_string(": ");
-		logverb("Failed to open file %s, ext %i as SIP: %s", filename, ext, errmsg);
+		errmsg = errors_stop_logging_to_string("\n  ");
+		logverb("Failed to open file %s, ext %i as SIP:\n%s\n", filename, ext, errmsg);
 		free(errmsg);
 	}
 
@@ -515,8 +564,11 @@ anwcs_t* anwcs_open_wcslib(const char* filename, int ext) {
 	}
 	nkeys = Nhdr / FITS_LINESZ;
 
-	if (!sip_get_image_size(hdr, &W, &H)) {
+	if (sip_get_image_size(hdr, &W, &H)) {
 		logverb("Failed to find image size in file %s, ext %i\n", filename, ext);
+		//logverb("Header:\n");
+		//qfits_header_debug_dump(hdr);
+		logverb("\n");
 		W = H = 0;
 	}
 

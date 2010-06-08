@@ -75,7 +75,7 @@ class tabledata(object):
 				rtn._length = len(getattr(rtn, name))
 		return rtn
 	def __iter__(self):
-		return td_iter(self)
+		return tabledata.td_iter(self)
 
 	def append(self, X):
 		for name,val in self.__dict__.items():

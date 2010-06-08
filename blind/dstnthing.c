@@ -22,7 +22,7 @@
 #include "fitsioutils.h"
 #include "tweak2.h"
 
-static const char* OPTIONS = "hx:m:r:vj:p:i:J:o:W:w:s:";
+static const char* OPTIONS = "hx:m:r:vj:p:i:J:o:W:w:s:X:Y:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -39,6 +39,8 @@ void print_help(char* progname) {
            "   [-v]: verbose\n"
 		   "   [-j <pixel-jitter>]: set image pixel jitter (default 1.0)\n"
 		   "   [-J <index-jitter>]: set index jitter (in arcsec, default 1.0)\n"
+		   "   [-X <CRPIX0>]: fix crpix\n"
+		   "   [-Y <CRPIX1>]: fix crpix\n"
 		   "\n", progname);
 }
 
@@ -219,12 +221,15 @@ int main(int argc, char** args) {
 	int order = 2;
 
 	int loglvl = LOG_MSG;
-	//double crpix[] = { HUGE_VAL, HUGE_VAL };
+	double crpix[] = { HUGE_VAL, HUGE_VAL };
+	bool do_crpix = FALSE;
+
 	//FILE* logstream = stderr;
 	//fits_use_error_system();
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+			
 		case 'o':
 			order = atoi(optarg);
 			break;
@@ -264,14 +269,12 @@ int main(int argc, char** args) {
 		case 'W':
 			wcsfn = optarg;
 			break;
-			/*
-			 case 'X':
-			 crpix[0] = atof(optarg);
-			 break;
-			 case 'Y':
-			 crpix[1] = atof(optarg);
-			 break;
-			 */
+		case 'X':
+			crpix[0] = atof(optarg);
+			break;
+		case 'Y':
+			crpix[1] = atof(optarg);
+			break;
 		}
 	}
 	if (optind != argc) {
@@ -282,6 +285,8 @@ int main(int argc, char** args) {
 		print_help(args[0]);
 		exit(-1);
 	}
+
+	do_crpix = (crpix[0] != HUGE_VAL) && (crpix[1] != HUGE_VAL);
 
 	log_init(loglvl);
 
@@ -364,7 +369,8 @@ int main(int argc, char** args) {
 					indexrd, Nindex, indexjitter,
 					qc, Q2,
 					0.25, -100,
-					order, &sip, NULL, NULL, NULL);
+					order, &sip, NULL, NULL, NULL,
+					do_crpix ? crpix : NULL);
 	if (!sipout) {
 		ERROR("tweak2() failed.\n");
 		return -1;

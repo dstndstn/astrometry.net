@@ -1,6 +1,7 @@
 /*
  This file is part of the Astrometry.net suite.
  Copyright 2006, 2007 Keir Mierle, David W. Hogg, Sam Roweis and Dustin Lang.
+ Copyright 2010 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -935,31 +936,42 @@ static void do_sip_tweak(tweak_t* t) {
      *
      * And we want an overdetermined system, so M >= N.
      * 
-     *           [ 1  u1   v1  u1^2  u1v1  v1^2  ... ]
-     *    mA  =  [ 1  u2   v2  u2^2  u2v2  v2^2  ... ]
-     *           [           ......                  ]
+     *           [ 1  u_1   v_1  u_1^2  u_1 v_1  v_1^2  ... ]
+     *    mA  =  [ 1  u_2   v_2  u_2^2  u_2 v_2  v_2^2  ... ]
+     *           [           ......                         ]
+	 *
+	 * Where (u_i, v_i) are *undistorted* pixel positions minus CRPIX.
+	 *
+     *  The answers we want are:
      *
-     *         [ x1 ]
-     *    b1 = [ x2 ]
-     *         [ ...]
+     *         [ sx                  ]
+     *    x1 = [ cd11                ]
+     *         [ cd12                ]
+	 *         [      (A)        (B) ]
+     *         [ cd11*(A) + cd12*(B) ]
+	 *         [      (A)        (B) ]
      *
-     *         [ y1 ]
-     *    b2 = [ y2 ]
-     *         [ ...]
+     *         [ sy                  ]
+     *    x2 = [ cd21                ]
+     *         [ cd22                ]
+	 *         [      (A)        (B) ]
+     *         [ cd21*(A) + cd22*(B) ]
+	 *         [      (A)        (B) ]
+	 *
+	 * And the target vectors are the intermediate world coords of the
+	 * reference stars, in degrees.
      *
-     *  And the answers are:
+     *         [ ix_1 ]
+     *    b1 = [ ix_2 ]
+     *         [ ...  ]
      *
-     *         [ sx              ]
-     *    x1 = [ cd11            ]
-     *         [ cd12            ]
-     *         [ cd11*A + cd12*B ]
+     *         [ iy_1 ]
+     *    b2 = [ iy_2 ]
+     *         [ ...  ]
      *
-     *         [ sy              ]
-     *    x2 = [ cd21            ]
-     *         [ cd22            ]
-     *         [ cd21*A + cd22*B ]
      *
-     *  (where A and B are actually tall vectors)
+     *  (where A and B are tall vectors of SIP coefficients of order 2
+     *  and above)
      *
      */
 
@@ -1053,13 +1065,6 @@ static void do_sip_tweak(tweak_t* t) {
 	sx = gsl_vector_get(x1, 0);
 	sy = gsl_vector_get(x2, 0);
 
-	sU =
-		cdinv[0][0] * sx +
-		cdinv[0][1] * sy;
-	sV =
-		cdinv[1][0] * sx +
-		cdinv[1][1] * sy;
-
 	// Extract the SIP coefficients.
 	//  (this includes the 0 and 1 order terms, which we later overwrite)
 	j = 0;
@@ -1098,19 +1103,31 @@ static void do_sip_tweak(tweak_t* t) {
 
 	invert_sip_polynomial(t);
 
-	//	sU = get(X, 2, 0);
-	//	sV = get(X, 2, 1);
-	sip_calc_inv_distortion(t->sip, sU, sV, &su, &sv);
-	//	su *= -1;
-	//	sv *= -1;
+	/*
+	 if (t->push_crval) {
+	 logverb("push_crval. sx,sy = %g,%g\n", sx, sy);
+	 assert(0);
+	 } else {
+	 */
+	{
+		logverb("Appling shift of sx,sy = %g,%g to CRVAL and CD.\n", sx, sy);
 
-	debug("sx = %g, sy = %g\n", sx, sy);
-	debug("sU = %g, sV = %g\n", sU, sV);
-	debug("su = %g, sv = %g\n", su, sv);
+		sU =
+			cdinv[0][0] * sx +
+			cdinv[0][1] * sy;
+		sV =
+			cdinv[1][0] * sx +
+			cdinv[1][1] * sy;
+		sip_calc_inv_distortion(t->sip, sU, sV, &su, &sv);
 
-	swcs = wcs_shift(t->sip, -su, -sv);
-	memcpy(t->sip, swcs, sizeof(sip_t));
-	sip_free(swcs);
+		debug("sx = %g, sy = %g\n", sx, sy);
+		debug("sU = %g, sV = %g\n", sU, sV);
+		debug("su = %g, sv = %g\n", su, sv);
+
+		swcs = wcs_shift(t->sip, -su, -sv);
+		memcpy(t->sip, swcs, sizeof(sip_t));
+		sip_free(swcs);
+	}
 
 	// recalc using new SIP
     tweak_clear_on_sip_change(t);

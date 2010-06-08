@@ -51,7 +51,7 @@ struct walk_token {
 	plot_args_t* pargs;
 };
 
-static void walk_callback(const sip_t* wcs, double ix, double iy, double ra, double dec, void* token) {
+static void walk_callback(const anwcs_t* wcs, double ix, double iy, double ra, double dec, void* token) {
 	struct walk_token* walk = token;
 	bool ok;
 	double x, y;
@@ -80,7 +80,8 @@ int plot_outline_plot(const char* command,
 	token.first = TRUE;
 	token.cairo = cairo;
 	token.pargs = pargs;
-	sip_walk_image_boundary(args->wcs, args->stepsize, walk_callback, &token);
+	anwcs_walk_image_boundary(args->wcs, args->stepsize, walk_callback, &token);
+	cairo_close_path(cairo);
 	if (args->fill)
 		cairo_fill(cairo);
 	else
@@ -94,25 +95,28 @@ int plot_outline_set_wcs_size(plotoutline_t* args, int W, int H) {
     ERROR("No WCS is currently set.");
     return -1;
   }
-  args->wcs->wcstan.imagew = W;
-  args->wcs->wcstan.imageh = H;
+  anwcs_set_size(args->wcs, W, H);
   return 0;
 }
 
 int plot_outline_set_wcs_file(plotoutline_t* args, const char* filename, int ext) {
-	sip_t* wcs = sip_read_tan_or_sip_header_file_ext(filename, ext, NULL, FALSE);
+	anwcs_t* wcs = anwcs_open(filename, ext);
 	if (!wcs) {
 		ERROR("Failed to read WCS file \"%s\"", filename);
 		return -1;
 	}
 	logverb("Read WCS file %s\n", filename);
-	return plot_outline_set_wcs(args, wcs);
+	if (args->wcs)
+		anwcs_free(args->wcs);
+	args->wcs = wcs;
+	//anwcs_print(args->wcs, stdout);
+	return 0;
 }
 
 int plot_outline_set_wcs(plotoutline_t* args, sip_t* wcs) {
 	if (args->wcs)
-		sip_free(args->wcs);
-	args->wcs = wcs;
+		anwcs_free(args->wcs);
+	args->wcs = anwcs_new_sip(wcs);
 	return 0;
 }
 

@@ -50,7 +50,7 @@
 #include "codefile.h"
 #include "solver.h"
 
-static const char* OPTIONS = "hx:w:i:vj:"; //q:";
+static const char* OPTIONS = "hx:w:i:vj:X:Y:"; //q:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -59,6 +59,8 @@ void print_help(char* progname) {
 		   "   -x <xyls input file>\n"
 		   "   -i <index-name>\n"
 		   //"   [-q <qidx-name>]\n"
+		   "   [-X <x-column>]: X column name\n"
+		   "   [-Y <y-column>]: Y column name\n"
            "   [-v]: verbose\n"
 		   "   [-j <pixel-jitter>]: set pixel jitter (default 1.0)\n"
 		   "\n", progname);
@@ -113,6 +115,9 @@ int main(int argc, char** args) {
     int loglvl = LOG_MSG;
 	double wcsscale;
 
+	char* xcol = NULL;
+	char* ycol = NULL;
+	
 	double nsigma = 3.0;
 
 	fits_use_error_system();
@@ -121,6 +126,12 @@ int main(int argc, char** args) {
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'X':
+			xcol = optarg;
+			break;
+		case 'Y':
+			ycol = optarg;
+			break;
 		case 'j':
 			pixeljitter = atof(optarg);
 			break;
@@ -173,6 +184,14 @@ int main(int argc, char** args) {
 		logmsg("Failed to read an xylist from file %s.\n", xylsfn);
 		exit(-1);
 	}
+	if (xcol)
+		xylist_set_xname(xyls, xcol);
+	if (ycol)
+		xylist_set_yname(xyls, ycol);
+	xylist_set_include_flux(xyls, FALSE);
+	xylist_set_include_background(xyls, FALSE);
+
+
 
 	// read indices.
 	indexes = pl_new(8);
@@ -344,7 +363,7 @@ int main(int argc, char** args) {
 			 */
 
 			nn = kdtree_nearest_neighbour(ftree, xy, &nnd2);
-			logverb("  Index star at (%.1f, %.1f): nearest field star is %g away.\n",
+			logverb("  Index star at (%.1f, %.1f): nearest field star is %g pixels away.\n",
 					xy[0], xy[1], sqrt(nnd2));
 
 			res = kdtree_rangesearch_options(ftree, xy, pixr2 * nsigma*nsigma, KD_OPTIONS_SMALL_RADIUS);

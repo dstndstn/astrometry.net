@@ -76,8 +76,14 @@ void anwcs_print(const anwcs_t* wcs, FILE* fid);
 int anwcs_get_radec_center_and_radius(anwcs_t* anwcs,
 									  double* p_ra, double* p_dec, double* p_radius);
 
+void anwcs_walk_image_boundary(const anwcs_t* wcs, double stepsize,
+							   void (*callback)(const anwcs_t* wcs, double x, double y, double ra, double dec, void* token),
+							   void* token);
+
 double anwcs_imagew(const anwcs_t* anwcs);
 double anwcs_imageh(const anwcs_t* anwcs);
+
+void anwcs_set_size(anwcs_t* anwcs, int W, int H);
 
 // Approximate pixel scale, in arcsec/pixel, at the reference point.
 double anwcs_pixel_scale(const anwcs_t* anwcs);

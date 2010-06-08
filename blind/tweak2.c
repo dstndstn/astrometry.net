@@ -49,7 +49,8 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			  int sip_order,
 			  const sip_t* startwcs,
 			  sip_t* destwcs,
-			  int** newtheta, double** newodds) {
+			  int** newtheta, double** newodds,
+			  double* crpix) {
 	int order;
 	sip_t* sipout;
 	int* indexin;
@@ -191,6 +192,22 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				//tan_print_to(&sip.wcstan, stdout);
 				logverb("Using %i (weighted) matches, new TAN WCS is:\n", Nmatch);
 				tan_print_to(&newtan, stdout);
+
+				if (crpix) {
+					tan_t temptan;
+					logverb("Moving tangent point to given CRPIX (%g,%g)\n", crpix[0], crpix[1]);
+
+					blind_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
+														  crpix, &newtan, &temptan);
+					blind_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
+														  crpix, &temptan, &newtan);
+					newtan.imagew = W;
+					newtan.imageh = H;
+					sip_wrap_tan(&newtan, sipout);
+					logverb("After moving CRPIX, TAN WCS is:\n");
+					tan_print_to(&newtan, stdout);
+				}
+
 				/*if (plotfn) {
 				 char fn[256];
 				 for (i=0; i<Nindex; i++) {
@@ -226,12 +243,14 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				tweak_push_wcs_tan(t, &sipout->wcstan);
 				t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = order;
 				t->weighted_fit = TRUE;
-				for (i=0; i<10; i++) {
-					tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
-					//logverb("\n");
-					//sip_print_to(t->sip, stdout);
-					t->state &= ~TWEAK_HAS_LINEAR_CD;
-				}
+				// We don't really want to iterate, since tweak will do its own
+				// correspondences in a bad way.
+				//for (i=0; i<10; i++) {
+				tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
+				//logverb("\n");
+				//sip_print_to(t->sip, stdout);
+				//t->state &= ~TWEAK_HAS_LINEAR_CD;
+				//}
 				logverb("Got SIP:\n");
 				if (log_get_level() >= LOG_VERB)
 					sip_print_to(t->sip, stdout);

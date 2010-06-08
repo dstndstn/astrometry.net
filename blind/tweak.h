@@ -95,6 +95,12 @@ typedef struct tweak_s {
 
 	// Weighted or unweighted fit?
     bool weighted_fit;
+
+	// push SIP shift term onto CRPIX, or CRVAL?
+	// traditional behavior is CRPIX; ie push_crval = FALSE.
+	//bool push_crval;
+
+
 } tweak_t;
 
 tweak_t* tweak_new();

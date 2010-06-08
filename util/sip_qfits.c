@@ -23,6 +23,7 @@
 #include "an-bool.h"
 #include "fitsioutils.h"
 #include "errors.h"
+#include "log.h"
 
 sip_t* sip_read_tan_or_sip_header_file_ext(const char* wcsfn, int ext, sip_t* dest, bool forcetan) {
 	sip_t* rtn;
@@ -138,11 +139,17 @@ static void wcs_hdr_common(qfits_header* hdr, const tan_t* tan) {
 int sip_get_image_size(const qfits_header* hdr, int* pW, int* pH) {
 	int W, H;
     W = qfits_header_getint(hdr, "IMAGEW", 0);
+	debug("sip_get_image_size: IMAGEW = %i\n", W);
     H = qfits_header_getint(hdr, "IMAGEH", 0);
-    if (!W)
+	debug("sip_get_image_size: IMAGEH = %i\n", H);
+    if (!W) {
         W = qfits_header_getint(hdr, "NAXIS1", 0);
-    if (!H)
+		debug("sip_get_image_size: NAXIS1 = %i\n", W);
+	}
+    if (!H) {
         H = qfits_header_getint(hdr, "NAXIS2", 0);
+		debug("sip_get_image_size: NAXIS2 = %i\n", H);
+	}
 	if (pW) *pW = W;
 	if (pH) *pH = H;
 	return 0;

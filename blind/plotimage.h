@@ -27,6 +27,8 @@ struct plotimage_args {
 	// FITS image plane
 	int fitsplane;
 
+	bool auto_scale;
+
 	unsigned char* img;
 	int W;
 	int H;

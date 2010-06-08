@@ -228,6 +228,7 @@ bool sip_radec2pixelxy(const sip_t* sip, double ra, double dec, double *px, doub
 	V = *py - sip->wcstan.crpix[1];
 
 	sip_calc_inv_distortion(sip, U, V, &u, &v);
+	//printf("dx,dy %g,%g --> %g,%g\n", U, V, u, v);
 
 	*px = u + sip->wcstan.crpix[0];
 	*py = v + sip->wcstan.crpix[1];

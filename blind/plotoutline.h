@@ -19,9 +19,10 @@
 #define PLOTOUTLINE_H
 
 #include "plotstuff.h"
+#include "anwcs.h"
 
 struct plotoutline_args {
-	sip_t* wcs;
+	anwcs_t* wcs;
 	double stepsize;
 	bool fill;
 };

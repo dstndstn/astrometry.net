@@ -871,6 +871,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 			sipin.wcstan.imageh = solver_field_height(sp);
 			// Q2 = (A-B distance / 2) ** 2
 			Q2 = 0.25 * distsq(mymo->quadpix, mymo->quadpix + 2, 2);
+			// FIXME -- crpix
 			mymo->sip = tweak2(mymo->fieldxy, mymo->nfield, sp->verify_pix,
 							   solver_field_width(sp), solver_field_height(sp),
 							   mymo->refradec, mymo->nindex, sp->index->index_jitter,
@@ -878,7 +879,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 							   sp->distractor_ratio,
 							   sp->logratio_bail_threshold,
 							   bp->tweak_aborder, &sipin, NULL,
-							   &newtheta, &newodds);
+							   &newtheta, &newodds, NULL);
 			// ??
 			free(mymo->theta);
 			free(mymo->matchodds);

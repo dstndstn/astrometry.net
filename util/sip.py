@@ -171,7 +171,17 @@ class Sip(ctypes.Structure):
 				('bp', c_double*(SIP_MAXORDER**2)),]
 
 	def __init__(self, filename=None, ext=0):
-		if not filename is None:
+		if filename is None:
+			self.a_order = 0
+			self.b_order = 0
+			self.ap_order = 0
+			self.bp_order = 0
+			for i in range(SIP_MAXORDER**2):
+				self.a[i] = 0
+				self.b[i] = 0
+				self.ap[i] = 0
+				self.bp[i] = 0
+		else:
 			cfn = c_char_p(filename)
 			rtn = _sip.sip_read_header_file_ext(cfn, ext, ctypes.pointer(self))
 			if not rtn:

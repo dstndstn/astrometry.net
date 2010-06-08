@@ -57,7 +57,7 @@
 #include "plotimage.h"
 #include "cairoutils.h"
 
-static const char* OPTIONS = "hx:w:r:vj:";
+static const char* OPTIONS = "hx:w:r:vj:I:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -65,6 +65,7 @@ void print_help(char* progname) {
 		   "   -w <WCS input file>\n"
 		   "   -x <xyls input file>\n"
 		   "   -r <rdls input file>\n"
+		   "   [-I <background-image>]: background for plots.\n"
            "   [-v]: verbose\n"
 		   "   [-j <pixel-jitter>]: set pixel jitter (default 1.0)\n"
 		   "\n", progname);
@@ -84,18 +85,23 @@ int main(int argc, char** args) {
 	sip_t sip;
 	int i, j;
 	int W, H;
-	double xyzcenter[3];
-	double fieldrad2;
+	//double xyzcenter[3];
+	//double fieldrad2;
 	double pixeljitter = 1.0;
     int loglvl = LOG_MSG;
 	double wcsscale;
 
-	double nsigma = 3.0;
+	char* bgfn = NULL;
+
+	//double nsigma = 3.0;
 
 	fits_use_error_system();
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'I':
+			bgfn = optarg;
+			break;
 		case 'j':
 			pixeljitter = atof(optarg);
 			break;
@@ -199,85 +205,88 @@ int main(int argc, char** args) {
 
 		logmsg("CRPIX is (%g,%g)\n", sip.wcstan.crpix[0], sip.wcstan.crpix[1]);
 
-		// ??
-		// Look for index-field pairs that are (a) close together; and (b) close to CRPIX.
+		/*
 
-		// Split the image into 3x3, 5x5 or so, and in each, look for a
-		// (small) rotation and log(scale), then (bigger) shift, using histogram
-		// cross-correlation.
+		 // ??
+		 // Look for index-field pairs that are (a) close together; and (b) close to CRPIX.
 
-		// Are the rotations and scales really going to be big enough that this
-		// is required, or can we get away with doing shift first, then fine-tuning
-		// rotation and scale?
+		 // Split the image into 3x3, 5x5 or so, and in each, look for a
+		 // (small) rotation and log(scale), then (bigger) shift, using histogram
+		 // cross-correlation.
 
-		{
-			// NxN blocks
-			int NB = 3;
-			int b;
-			// HACK - use histogram2d machinery to split image into blocks.
-			histogram2d* blockhist = histogram2d_new_nbins(0, W, NB, 0, H, NB);
-			int* fieldi = malloc(Nfield * sizeof(int));
-			int* indexi = malloc(Nindex * sizeof(int));
-			// rotation bins
-			int NR = 100;
-			// scale bins (ie, log(radius) bins)
-			double minrad = 1.0;
-			double maxrad = 200.0;
-			int NS = 100;
-			histogram2d* rsfield = histogram2d_new_nbins(-M_PI, M_PI, NR,
-														 log(minrad), log(maxrad), NS);
-			histogram2d* rsindex = histogram2d_new_nbins(-M_PI, M_PI, NR,
-														 log(minrad), log(maxrad), NS);
-			histogram2d_set_y_edges(rsfield, HIST2D_DISCARD);
-			histogram2d_set_y_edges(rsindex, HIST2D_DISCARD);
+		 // Are the rotations and scales really going to be big enough that this
+		 // is required, or can we get away with doing shift first, then fine-tuning
+		 // rotation and scale?
 
-			for (b=0; b<(NB*NB); b++) {
-				int bin;
-				int NF, NI;
-				double dx, dy;
-				NF = NI = 0;
-				for (i=0; i<Nfield; i++) {
-					bin = histogram2d_add(blockhist, fieldpix[2*i], fieldpix[2*i+1]);
-					if (bin != b)
-						continue;
-					fieldi[NF] = i;
-					NF++;
-				}
+		 {
+		 // NxN blocks
+		 int NB = 3;
+		 int b;
+		 // HACK - use histogram2d machinery to split image into blocks.
+		 histogram2d* blockhist = histogram2d_new_nbins(0, W, NB, 0, H, NB);
+		 int* fieldi = malloc(Nfield * sizeof(int));
+		 int* indexi = malloc(Nindex * sizeof(int));
+		 // rotation bins
+		 int NR = 100;
+		 // scale bins (ie, log(radius) bins)
+		 double minrad = 1.0;
+		 double maxrad = 200.0;
+		 int NS = 100;
+		 histogram2d* rsfield = histogram2d_new_nbins(-M_PI, M_PI, NR,
+		 log(minrad), log(maxrad), NS);
+		 histogram2d* rsindex = histogram2d_new_nbins(-M_PI, M_PI, NR,
+		 log(minrad), log(maxrad), NS);
+		 histogram2d_set_y_edges(rsfield, HIST2D_DISCARD);
+		 histogram2d_set_y_edges(rsindex, HIST2D_DISCARD);
 
-				for (i=0; i<Nindex; i++) {
-					bin = histogram2d_add(blockhist, indexpix[2*i], indexpix[2*i+1]);
-					if (bin != b)
-						continue;
-					indexi[NI] = i;
-					NI++;
-				}
-				logmsg("bin %i has %i field and %i index stars.\n", b, NF, NI);
+		 for (b=0; b<(NB*NB); b++) {
+		 int bin;
+		 int NF, NI;
+		 double dx, dy;
+		 NF = NI = 0;
+		 for (i=0; i<Nfield; i++) {
+		 bin = histogram2d_add(blockhist, fieldpix[2*i], fieldpix[2*i+1]);
+		 if (bin != b)
+		 continue;
+		 fieldi[NF] = i;
+		 NF++;
+		 }
 
-				logmsg("histogramming field rotation/scale\n");
-				for (i=0; i<NF; i++) {
-					for (j=0; j<i; j++) {
-						dx = fieldpix[2*fieldi[i]] - fieldpix[2*fieldi[j]];
-						dy = fieldpix[2*fieldi[i]+1] - fieldpix[2*fieldi[j]+1];
-						histogram2d_add(rsfield, atan2(dy, dx), log(sqrt(dx*dx + dy*dy)));
-					}
-				}
-				logmsg("histogramming index rotation/scale\n");
-				for (i=0; i<NI; i++) {
-					for (j=0; j<i; j++) {
-						dx = indexpix[2*indexi[i]] - fieldpix[2*indexi[j]];
-						dy = indexpix[2*indexi[i]+1] - fieldpix[2*indexi[j]+1];
-						histogram2d_add(rsindex, atan2(dy, dx), log(sqrt(dx*dx + dy*dy)));
-					}
-				}
+		 for (i=0; i<Nindex; i++) {
+		 bin = histogram2d_add(blockhist, indexpix[2*i], indexpix[2*i+1]);
+		 if (bin != b)
+		 continue;
+		 indexi[NI] = i;
+		 NI++;
+		 }
+		 logmsg("bin %i has %i field and %i index stars.\n", b, NF, NI);
+
+		 logmsg("histogramming field rotation/scale\n");
+		 for (i=0; i<NF; i++) {
+		 for (j=0; j<i; j++) {
+		 dx = fieldpix[2*fieldi[i]] - fieldpix[2*fieldi[j]];
+		 dy = fieldpix[2*fieldi[i]+1] - fieldpix[2*fieldi[j]+1];
+		 histogram2d_add(rsfield, atan2(dy, dx), log(sqrt(dx*dx + dy*dy)));
+		 }
+		 }
+		 logmsg("histogramming index rotation/scale\n");
+		 for (i=0; i<NI; i++) {
+		 for (j=0; j<i; j++) {
+		 dx = indexpix[2*indexi[i]] - fieldpix[2*indexi[j]];
+		 dy = indexpix[2*indexi[i]+1] - fieldpix[2*indexi[j]+1];
+		 histogram2d_add(rsindex, atan2(dy, dx), log(sqrt(dx*dx + dy*dy)));
+		 }
+		 }
 
 
-			}
-			histogram2d_free(rsfield);
-			histogram2d_free(rsindex);
-			free(fieldi);
-			free(indexi);
-			histogram2d_free(blockhist);
-		}
+		 }
+		 histogram2d_free(rsfield);
+		 histogram2d_free(rsindex);
+		 free(fieldi);
+		 free(indexi);
+		 histogram2d_free(blockhist);
+		 }
+		 */
 
 		{
 			double* fieldsigma2s = malloc(Nfield * sizeof(double));
@@ -310,7 +319,7 @@ int main(int argc, char** args) {
 
 			logmsg("Logodds: %g\n", logodds);
 
-			{
+			if (bgfn) {
 				plot_args_t pargs;
 				plotimage_t* img;
 				cairo_t* cairo;
@@ -323,8 +332,8 @@ int main(int argc, char** args) {
 				sprintf(outfn, "tweak-%03i.png", j);
 				pargs.outfn = outfn;
 				img = plotstuff_get_config(&pargs, "image");
-				img->format = PLOTSTUFF_FORMAT_JPG;
-				plot_image_set_filename(img, "1.jpg");
+				//img->format = PLOTSTUFF_FORMAT_JPG; // guess
+				plot_image_set_filename(img, bgfn);
 				plot_image_setsize(&pargs, img);
 				plotstuff_run_command(&pargs, "image");
 				cairo = pargs.cairo;

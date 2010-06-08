@@ -26,6 +26,7 @@
 #include "log.h"
 #include "errors.h"
 #include "anwcs.h"
+#include "permutedsort.h"
 
 const plotter_t plotter_image = {
 	.name = "image",
@@ -227,8 +228,39 @@ static unsigned char* read_fits_image(plotimage_t* args) {
 	fimg = ld.fbuf;
 
 	if (args->image_low == 0 && args->image_high == 0) {
-		offset = 0.0;
-		scale = 1.0;
+		if (args->auto_scale) {
+			// min/max, or percentiles?
+			/*
+			 double mn = HUGE_VAL;
+			 double mx = -HUGE_VAL;
+			 for (i=0; i<(args->W*args->H); i++) {
+			 mn = MIN(mn, fimg[i]);
+			 mx = MAX(mx, fimg[i]);
+			 }
+			 */
+			int N = args->W * args->H;
+			int* perm = permutation_init(NULL, N);
+			int i;
+			int Nreal = 0;
+			for (i=0; i<N; i++) {
+				if (isfinite(fimg[i])) {
+					perm[Nreal] = perm[i];
+					Nreal++;
+				}
+			}
+			permuted_sort(fimg, sizeof(float), compare_floats_asc, perm, Nreal);
+			double mn = fimg[perm[(int)(Nreal * 0.1)]];
+			double mx = fimg[perm[(int)(Nreal * 0.98)]];
+			logmsg("Image auto-scaling: range %g, %g; percentiles %g, %g\n", fimg[perm[0]], fimg[perm[N-1]], mn, mx);
+			free(perm);
+
+			offset = mn;
+			scale = (255.0 / (mx - mn));
+			logmsg("Image range %g, %g --> offset %g, scale %g\n", mn, mx, offset, scale);
+		} else {
+			offset = 0.0;
+			scale = 1.0;
+		}
 	} else {
 		offset = args->image_low;
 		scale = 255.0 / (args->image_high - args->image_low);

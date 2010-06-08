@@ -39,6 +39,14 @@ int blind_wcs_move_tangent_point(const double* starxyz,
 								 const tan_t* tanin,
 								 tan_t* tanout);
 
+int blind_wcs_move_tangent_point_weighted(const double* starxyz,
+										  const double* fieldxy,
+										  const double* weights,
+										  int N,
+										  const double* crpix,
+										  const tan_t* tanin,
+										  tan_t* tanout);
+
 /*
  Computes a rigid (conformal) TAN WCS projection, based on the correspondence
  between stars and field objects.
