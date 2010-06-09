@@ -1118,7 +1118,10 @@ static void do_sip_tweak(tweak_t* t) {
 			double bx, by;
 			double axx, axy;
 			bool ok;
+			double weight = 1.0;
 			refi = il_get(t->ref, i);
+			if (t->weighted_fit)
+				weight = dl_get(t->weight, i);
 			radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], xyzpt);
 			ok = star_coords(xyzpt, xyzcrval, &y, &x); // tangent-plane projection
 			assert(ok);
@@ -1127,9 +1130,9 @@ static void do_sip_tweak(tweak_t* t) {
 			x = t->x[il_get(t->image, i)];
 			y = t->y[il_get(t->image, i)];
 			sip_pixelxy2iwc(t->sip, x, y, &axx, &axy);
-			printf("Resid %i: GSL says (%g, %g), dstn says (%g, %g)\n",
+			printf("Resid %i: GSL says (%g, %g), dstn says (%g, %g), weighted (%g, %g)\n",
 				   i, gsl_vector_get(r1, i), gsl_vector_get(r2, i),
-				   bx - axx, by - axy);
+				   bx - axx, by - axy, weight*(bx-axx), weight*(by-axy));
 		}
 	}
 
@@ -1190,8 +1193,11 @@ static void do_sip_tweak(tweak_t* t) {
 			double bx, by;
 			double axx, axy;
 			bool ok;
+			double weight = 1.0;
 
 			refi = il_get(t->ref, i);
+			if (t->weighted_fit)
+				weight = dl_get(t->weight, i);
 			radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], xyzpt);
 			ok = star_coords(xyzpt, xyzcrval, &y, &x); // tangent-plane projection
 			assert(ok);
@@ -1202,9 +1208,9 @@ static void do_sip_tweak(tweak_t* t) {
 			y = t->y[il_get(t->image, i)];
 			sip_pixelxy2iwc(t->sip, x, y, &axx, &axy);
 
-			printf("Resid %i: GSL says (%g, %g), dstn says (%g, %g)\n",
+			printf("Resid %i: GSL says (%g, %g), dstn says (%g, %g), weighted (%g, %g)\n",
 				   i, gsl_vector_get(r1, i), gsl_vector_get(r2, i),
-				   bx - axx, by - axy);
+				   bx - axx, by - axy, weight*(bx-axx), weight*(by-axy));
 		}
 
 

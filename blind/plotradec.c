@@ -122,7 +122,7 @@ int plot_radec_plot(const char* command, cairo_t* cairo,
 		double dec = rd_getdec(rd, i);
 		if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y))
 			continue;
-		plotstuff_stack_marker(pargs, x, y);
+		plotstuff_stack_marker(pargs, x-1, y-1);
 	}
 	plotstuff_plot_stack(pargs, cairo);
 
