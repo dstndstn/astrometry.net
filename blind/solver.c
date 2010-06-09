@@ -1165,18 +1165,21 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	mo->timeused = sp->timeused;
 
 	if (sp->set_crpix) {
-		double crpix[2];
+		//double crpix[2];
 		tan_t wcs2;
 		tan_t wcs3;
 		if (sp->set_crpix_center) {
-			crpix[0] = 1 + 0.5 * solver_field_width(sp);
-			crpix[1] = 1 + 0.5 * solver_field_height(sp);
-		} else {
-			crpix[0] = sp->crpix[0];
-			crpix[1] = sp->crpix[1];
+			sp->crpix[0] = 1 + 0.5 * solver_field_width(sp);
+			sp->crpix[1] = 1 + 0.5 * solver_field_height(sp);
 		}
-		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, crpix, &(mo->wcstan), &wcs2);
-		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, crpix, &wcs2, &wcs3);
+		/*
+		 else {
+		 crpix[0] = sp->crpix[0];
+		 crpix[1] = sp->crpix[1];
+		 }
+		 */
+		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, sp->crpix, &(mo->wcstan), &wcs2);
+		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, sp->crpix, &wcs2, &wcs3);
 		memcpy(&(mo->wcstan), &wcs3, sizeof(tan_t));
 		/*
 		 Good test case:
