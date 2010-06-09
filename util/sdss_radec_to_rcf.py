@@ -21,6 +21,9 @@ def radec_to_sdss_rcf(ra, dec, spherematch=True, radius=0, tablefn=None, contain
 	if tablefn is None:
 		tablefn = find_data_file('dr7fields.fits')
 	sdss = table_fields(tablefn)
+	if sdss is None:
+		print 'Failed to read table of SDSS fields from file', tablefn
+		raise Exception('Failed to read table of SDSS fields from file: "' + str(tablefn) + '"')
 	sdssxyz = radectoxyz(sdss.ra, sdss.dec)
 	## HACK - magic 13x9 arcmin.
 	if radius == 0:

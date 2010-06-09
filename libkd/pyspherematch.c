@@ -154,7 +154,7 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     double rad;
     struct dualtree_results dtresults;
     PyArrayObject* inds;
-    int dims[2];
+    npy_intp dims[2];
     PyArrayObject* dists;
 
     if (!PyArg_ParseTuple(args, "lld", &p1, &p2, &rad)) {
