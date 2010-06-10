@@ -109,7 +109,7 @@ BACKEND_SO := libbackend.so
 INSTALL_LIB := $(BACKEND_LIB) $(BACKEND_SO)
 
 BACKEND_OBJS := \
-		backend.o blindutils.o blind.o solver.o \
+		backend.o blindutils.o blind.o solver.o quad-utils.o \
 		matchfile.o matchobj.o solvedclient.o solvedfile.o tweak2.o \
 		verify.o blind_wcs.o tweak.o 
 
@@ -418,7 +418,7 @@ ALL_OBJ += hpquads-main.o quad-builder.o hpquads.o
 allquads: allquads-main.o allquads.o quad-builder.o quad-utils.o codefile.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-codetree: codetree-main.o codetree.o codefile.o \
+codetree: codetree-main.o codetree.o codefile.o quad-utils.o \
 		$(UTIL_OBJS) $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += codetree-main.o
 
@@ -478,7 +478,7 @@ augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o cut-table.o fit
 
 ALL_OBJ += augment-xylist-main.o
 
-blind: blind-main.o blind.o solver.o matchfile.o matchobj.o \
+blind: blind-main.o blind.o solver.o quad-utils.o matchfile.o matchobj.o \
 		solvedclient.o solvedfile.o tweak2.o verify.o \
 		blind_wcs.o tweak.o \
 		$(UTIL_OBJS) \
@@ -493,7 +493,7 @@ tweak: tweak-main.o blind_wcs.o verify.o matchfile.o \
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB)
 
 whynot: whynot.o matchfile.o matchobj.o codefile.o solvedclient.o \
-		solvedfile.o verify.o blind_wcs.o \
+		solvedfile.o verify.o blind_wcs.o quad-utils.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 

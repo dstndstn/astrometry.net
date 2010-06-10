@@ -39,6 +39,7 @@
 #include "log.h"
 #include "pquad.h"
 #include "kdtree.h"
+#include "quad-utils.h"
 
 #if TESTING_TRYALLCODES
 #define DEBUGSOLVER 1
@@ -833,12 +834,8 @@ static void try_all_codes(const pquad* pq,
 	}
 	if (solver->parity == PARITY_FLIP ||
 	        solver->parity == PARITY_BOTH) {
-        int i;
-        // swap CX <-> CY, DX <-> DY.
-        for (i=0; i<dimcode/2; i++) {
-            flipcode[2*i+0] = code[2*i+1];
-            flipcode[2*i+1] = code[2*i+0];
-        }
+
+		quad_flip_parity(code, flipcode, dimcode);
 
 		debug("    trying reverse parity: code=[");
 		for (i=0; i<dimcode; i++)

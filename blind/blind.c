@@ -98,12 +98,17 @@ static bool grab_tagalong_data(startree_t* starkd, MatchObj* mo, blind_t* bp,
 	if (!mo->tagalong)
 		mo->tagalong = bl_new(16, sizeof(tagalong_t));
 
-	if (bp->rdls_tagalong_all) {
+	if (bp->rdls_tagalong_all) { // && ! bp->done_rdls_tagalong_all
 		char* cols;
 		// retrieve all column names.
 		bp->rdls_tagalong = fitstable_get_fits_column_names(tagalong, bp->rdls_tagalong);
 		cols = sl_join(bp->rdls_tagalong, ", ");
 		logverb("Found tag-along columns: %s\n", cols);
+		free(cols);
+		//
+		sl_remove_duplicates(bp->rdls_tagalong);
+		cols = sl_join(bp->rdls_tagalong, ", ");
+		logverb("After removing duplicates: %s\n", cols);
 		free(cols);
 	}
 	for (i=0; i<sl_size(bp->rdls_tagalong); i++) {
@@ -871,7 +876,6 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 			sipin.wcstan.imageh = solver_field_height(sp);
 			// Q2 = (A-B distance / 2) ** 2
 			Q2 = 0.25 * distsq(mymo->quadpix, mymo->quadpix + 2, 2);
-			// FIXME -- crpix
 			mymo->sip = tweak2(mymo->fieldxy, mymo->nfield, sp->verify_pix,
 							   solver_field_width(sp), solver_field_height(sp),
 							   mymo->refradec, mymo->nindex, sp->index->index_jitter,
@@ -880,7 +884,6 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 							   sp->logratio_bail_threshold,
 							   bp->tweak_aborder, &sipin, NULL,
 							   &newtheta, &newodds, sp->set_crpix ? sp->crpix : NULL);
-			// ??
 			free(mymo->theta);
 			free(mymo->matchodds);
 			mymo->theta = newtheta;

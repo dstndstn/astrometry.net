@@ -22,6 +22,10 @@
 #include "codefile.h"
 #include "quadfile.h"
 
+void quad_compute_star_code(const double* starxyz, double* code, int dimquads);
+
+void quad_flip_parity(const double* code, double* flipcode, int dimcode);
+
 int quad_compute_code(const unsigned int* quad, int dimquads, startree_t* starkd, 
 					  double* code);
 
@@ -30,16 +34,5 @@ void quad_enforce_invariants(unsigned int* quad, double* code,
 
 bool quad_obeys_invariants(unsigned int* quad, double* code,
 						   int dimquads, int dimcodes);
-
-/**
- Warning: this may permute "quad"!
- */
-void quad_write(codefile* codes, quadfile* quads,
-				unsigned int* quad, startree_t* starkd,
-				int dimquads, int dimcodes);
-
-void quad_write_const(codefile* codes, quadfile* quads,
-					  const unsigned int* quad, startree_t* starkd,
-					  int dimquads, int dimcodes);
 
 #endif

@@ -104,6 +104,9 @@ struct blind_params {
 	sl* rdls_tagalong;
 	bool rdls_tagalong_all;
 
+	// internal use only: have I grabbed "all" rdls fields already?
+	//bool done_rdls_tagalong_all;
+
 	// field to sort RDLS file by; prefix by "-" for descending order.
 	char* sort_rdls;
 

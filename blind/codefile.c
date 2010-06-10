@@ -25,8 +25,29 @@
 #include "ioutils.h"
 #include "fitsioutils.h"
 #include "errors.h"
+#include "quad-utils.h"
 
-void codefile_compute_field_code(double* xy, double* code, int dimquads) {
+void quad_write(codefile* codes, quadfile* quads,
+				unsigned int* quad, startree_t* starkd,
+				int dimquads, int dimcodes) {
+	double code[DCMAX];
+	quad_compute_code(quad, dimquads, starkd, code);
+	quad_enforce_invariants(quad, code, dimquads, dimcodes);
+	codefile_write_code(codes, code);
+	quadfile_write_quad(quads, quad);
+}
+
+void quad_write_const(codefile* codes, quadfile* quads,
+					  const unsigned int* quad, startree_t* starkd,
+					  int dimquads, int dimcodes) {
+	int k;
+	unsigned int quadcopy[DQMAX];
+	for (k=0; k<dimquads; k++)
+		quadcopy[k] = quad[k];
+	quad_write(codes, quads, quadcopy, starkd, dimquads, dimcodes);
+}
+
+void codefile_compute_field_code(const double* xy, double* code, int dimquads) {
 	double Ax, Ay;
 	double Bx, By;
 	double ABx, ABy;
@@ -45,6 +66,7 @@ void codefile_compute_field_code(double* xy, double* code, int dimquads) {
 	costheta = (ABy + ABx) * invscale;
 	sintheta = (ABy - ABx) * invscale;
 
+	// starting with star C...
 	for (i=2; i<dimquads; i++) {
         double Cx, Cy;
         double x, y;
@@ -59,46 +81,8 @@ void codefile_compute_field_code(double* xy, double* code, int dimquads) {
     }
 }
 
-void codefile_compute_star_code(double* starxyz, double* code, int dimquads) {
-	double Ax=0, Ay=0;
-	double Bx=0, By=0;
-	double ABx, ABy;
-	double scale, invscale;
-	double costheta, sintheta;
-	double midAB[3];
-	bool ok;
-	int i;
-	double *sA, *sB;
-
-	sA = starxyz;
-	sB = starxyz + 3;
-	star_midpoint(midAB, sA, sB);
-	ok = star_coords(sA, midAB, &Ax, &Ay);
-	assert(ok);
-	ok = star_coords(sB, midAB, &Bx, &By);
-	assert(ok);
-	ABx = Bx - Ax;
-	ABy = By - Ay;
-	scale = (ABx * ABx) + (ABy * ABy);
-	invscale = 1.0 / scale;
-	costheta = (ABy + ABx) * invscale;
-	sintheta = (ABy - ABx) * invscale;
-
-	for (i=2; i<dimquads; i++) {
-        double* starpos;
-        double Dx=0, Dy=0;
-        double ADx, ADy;
-        double x, y;
-		starpos = starxyz + 3*i;
-		ok = star_coords(starpos, midAB, &Dx, &Dy);
-		assert(ok);
-		ADx = Dx - Ax;
-		ADy = Dy - Ay;
-		x =  ADx * costheta + ADy * sintheta;
-		y = -ADx * sintheta + ADy * costheta;
-		code[2*(i-2)+0] = x;
-		code[2*(i-2)+1] = y;
-	}
+void codefile_compute_star_code(const double* starxyz, double* code, int dimquads) {
+	quad_compute_star_code(starxyz, code, dimquads);
 }
 
 

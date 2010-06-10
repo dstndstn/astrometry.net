@@ -229,13 +229,20 @@ int sl_remove_string(sl* list, const char* string);
 // Returns the index where the string was found, or -1 if it wasn't found.
 int sl_remove_string_bycaseval(sl* list, const char* string);
 
+// Removes "string" if it is found in the list, using strcmp().
+// Returns the index where the string was found, or -1 if it wasn't found.
+int sl_remove_string_byval(sl* list, const char* string);
+
 // remove all elements starting from "start" to the end of the list.
 void sl_remove_from(sl* list, int start);
 
 void   sl_merge_lists(sl* list1, sl* list2);
 void   sl_print(sl* list);
 
-//void sl_remove_duplicates(sl* lst);
+/*
+ Removes duplicate entries, using strcmp().
+ */
+void sl_remove_duplicates(sl* lst);
 
 /*
  Splits the given string 'str' into substrings separated by 'sepstring'.

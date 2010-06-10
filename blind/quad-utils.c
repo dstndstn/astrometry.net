@@ -21,6 +21,61 @@
 #include "codefile.h"
 #include "starkd.h"
 #include "errors.h"
+#include "log.h"
+
+void quad_compute_star_code(const double* starxyz, double* code, int dimquads) {
+	double Ax=0, Ay=0;
+	double Bx=0, By=0;
+	double ABx, ABy;
+	double scale, invscale;
+	double costheta, sintheta;
+	double midAB[3];
+	bool ok;
+	int i;
+	const double *sA, *sB;
+
+	sA = starxyz;
+	sB = starxyz + 3;
+	star_midpoint(midAB, sA, sB);
+	ok = star_coords(sA, midAB, &Ax, &Ay);
+	assert(ok);
+	ok = star_coords(sB, midAB, &Bx, &By);
+	assert(ok);
+	ABx = Bx - Ax;
+	ABy = By - Ay;
+	scale = (ABx * ABx) + (ABy * ABy);
+	invscale = 1.0 / scale;
+	costheta = (ABy + ABx) * invscale;
+	sintheta = (ABy - ABx) * invscale;
+
+	for (i=2; i<dimquads; i++) {
+        const double* starpos;
+        double Dx=0, Dy=0;
+        double ADx, ADy;
+        double x, y;
+		starpos = starxyz + 3*i;
+		ok = star_coords(starpos, midAB, &Dx, &Dy);
+		assert(ok);
+		ADx = Dx - Ax;
+		ADy = Dy - Ay;
+		x =  ADx * costheta + ADy * sintheta;
+		y = -ADx * sintheta + ADy * costheta;
+		code[2*(i-2)+0] = x;
+		code[2*(i-2)+1] = y;
+	}
+}
+
+void quad_flip_parity(const double* code, double* flipcode, int dimcode) {
+	int i;
+	// swap CX <-> CY, DX <-> DY.
+	for (i=0; i<dimcode/2; i++) {
+		// use tmp in code "code" == "flipcode"
+		double tmp;
+		tmp = code[2*i+1];
+		flipcode[2*i+1] = code[2*i+0];
+		flipcode[2*i+0] = tmp;
+	}
+}
 
 int quad_compute_code(const unsigned int* quad, int dimquads, startree_t* starkd, 
 					  double* code) {
@@ -32,7 +87,7 @@ int quad_compute_code(const unsigned int* quad, int dimquads, startree_t* starkd
 			return -1;
 		}
 	}
-    codefile_compute_star_code(starxyz, code, dimquads);
+    quad_compute_star_code(starxyz, code, dimquads);
 	return 0;
 }
 
@@ -62,10 +117,11 @@ void quad_enforce_invariants(unsigned int* quad, double* code,
 
 	// here we add the invariant that (cx + dx + ...) / (dimquads-2) <= 1/2
 	sum = 0.0;
-	for (i=0; i<(dimquads-2); i++)
+	for (i=0; i<dimcodes/2; i++)
 		sum += code[2*i];
-	sum /= (dimquads-2);
+	sum /= (dimcodes/2);
 	if (sum > 0.5) {
+		logverb("Flipping code to ensure mean(x)<=0.5\n");
 		// swap the labels of A,B.
 		int tmp = quad[0];
 		quad[0] = quad[1];
@@ -109,25 +165,5 @@ void quad_enforce_invariants(unsigned int* quad, double* code,
 		code[2*i+1] = code[2*j+1];
 		code[2*j+1] = dtmp;
 	}
-}
-
-void quad_write(codefile* codes, quadfile* quads,
-				unsigned int* quad, startree_t* starkd,
-				int dimquads, int dimcodes) {
-	double code[DCMAX];
-	quad_compute_code(quad, dimquads, starkd, code);
-	quad_enforce_invariants(quad, code, dimquads, dimcodes);
-	codefile_write_code(codes, code);
-	quadfile_write_quad(quads, quad);
-}
-
-void quad_write_const(codefile* codes, quadfile* quads,
-					  const unsigned int* quad, startree_t* starkd,
-					  int dimquads, int dimcodes) {
-	int k;
-	unsigned int quadcopy[DQMAX];
-	for (k=0; k<dimquads; k++)
-		quadcopy[k] = quad[k];
-	quad_write(codes, quads, quadcopy, starkd, dimquads, dimcodes);
 }
 

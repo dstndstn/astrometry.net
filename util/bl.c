@@ -1045,10 +1045,19 @@ int pl_insert_sorted(pl* list, const void* data, int (*compare)(const void* v1, 
  }
  */
 
-/*
- void sl_remove_duplicates(sl* lst) {
- }
- */
+void sl_remove_duplicates(sl* lst) {
+	int i, j;
+	for (i=0; i<sl_size(lst); i++) {
+		const char* s1 = sl_get(lst, i);
+		for (j=i+1; j<sl_size(lst); j++) {
+			const char* s2 = sl_get(lst, j);
+			if (strcmp(s1, s2) == 0) {
+				sl_remove(lst, j);
+				j--;
+			}
+		}
+	}
+}
 
 sl* sl_new(int blocksize) {
 	pl* lst = pl_new(blocksize);
@@ -1218,6 +1227,19 @@ int sl_remove_string_bycaseval(sl* list, const char* string) {
 	for (i=0; i<N; i++) {
         char* str = sl_get(list, i);
 		if (strcasecmp(str, string) == 0) {
+			sl_remove(list, i);
+			return i;
+		}
+	}
+	return -1;
+}
+
+int sl_remove_string_byval(sl* list, const char* string) {
+	int N = sl_size(list);
+	int i;
+	for (i=0; i<N; i++) {
+        char* str = sl_get(list, i);
+		if (strcmp(str, string) == 0) {
 			sl_remove(list, i);
 			return i;
 		}

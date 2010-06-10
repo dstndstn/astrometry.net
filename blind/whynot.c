@@ -32,6 +32,7 @@
 #include "catalog.h"
 #include "tic.h"
 #include "quadfile.h"
+#include "quad-utils.h"
 #include "xylist.h"
 #include "rdlist.h"
 #include "qidxfile.h"
@@ -414,7 +415,7 @@ int main(int argc, char** args) {
 		uniqquadlist = il_new(16);
 		quadlist = il_new(16);
 
-		// For each index star, find the quads of which it is a part.
+		// For each index star, find the quads of which it is part.
 		for (j=0; j<il_size(starlist); j++) {
 			int k;
 			int starnum = il_get(starlist, j);
@@ -609,15 +610,26 @@ int main(int argc, char** args) {
                 mo.field[k] = find;
             }
 
-			logmsg("quad #%i (quad id %i): stars", j, quad);
+			logmsg("\nquad #%i (quad id %i): stars", j, quad);
             for (k=0; k<dimquads; k++)
                 logmsg(" %i", mo.field[k]);
             logmsg("\n");
 
             codefile_compute_field_code(mo.quadpix, fieldcode, dimquads);
 
+			//logmsg(" code (index): %.3f,%.3f,%.3f,%.3f\n", realcode[0], realcode[1], realcode[2], realcode[3]);
+			//logmsg(" code (field): %.3f,%.3f,%.3f,%.3f\n", fieldcode[0], fieldcode[1], fieldcode[2], fieldcode[3]);
+
+			quad_enforce_invariants(mo.star, realcode, dimquads, dimcodes);
+			quad_enforce_invariants(mo.field, fieldcode, dimquads, dimcodes);
 			codedist = sqrt(distsq(realcode, fieldcode, dimcodes));
-            logmsg("  code distance: %g\n", codedist);
+            logmsg("  code distance (normal parity): %g\n", codedist);
+
+			quad_flip_parity(fieldcode, fieldcode, dimcodes);
+			quad_enforce_invariants(mo.star, realcode, dimquads, dimcodes);
+			quad_enforce_invariants(mo.field, fieldcode, dimquads, dimcodes);
+			codedist = sqrt(distsq(realcode, fieldcode, dimcodes));
+            logmsg("  code distance (flip parity): %g\n", codedist);
 
             blind_wcs_compute(mo.quadxyz, mo.quadpix, dimquads, &wcs, NULL);
 			wcs.imagew = W;

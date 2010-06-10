@@ -25,12 +25,13 @@
 #include "starutil.h"
 #include "qfits.h"
 #include "fitsbin.h"
-
+#include "quadfile.h"
+#include "starkd.h"
 
 // util:
-void codefile_compute_star_code(double* starxyz, double* code, int dimquads);
+void codefile_compute_star_code(const double* starxyz, double* code, int dimquads);
 
-void codefile_compute_field_code(double* xy, double* code, int dimquads);
+void codefile_compute_field_code(const double* xy, double* code, int dimquads);
 
 
 
@@ -81,5 +82,16 @@ int codefile_write_code(codefile* cf, double* code);
 int codefile_fix_header(codefile* cf);
 
 qfits_header* codefile_get_header(const codefile* cf);
+
+
+
+void quad_write(codefile* codes, quadfile* quads,
+				unsigned int* quad, startree_t* starkd,
+				int dimquads, int dimcodes);
+
+void quad_write_const(codefile* codes, quadfile* quads,
+					  const unsigned int* quad, startree_t* starkd,
+					  int dimquads, int dimcodes);
+
 
 #endif
