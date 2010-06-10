@@ -25,6 +25,7 @@
 #include "kdtree_fits_io.h"
 #include "starutil.h"
 #include "fitsbin.h"
+#include "fitstable.h"
 #include "errors.h"
 #include "tic.h"
 #include "log.h"
@@ -174,13 +175,14 @@ qfits_header* startree_header(const startree_t* s) {
 	return s->header;
 }
 
-bl* get_chunks(startree_t* s, il* wordsizes) {
+static bl* get_chunks(startree_t* s, il* wordsizes) {
     bl* chunks = bl_new(4, sizeof(fitsbin_chunk_t));
     fitsbin_chunk_t chunk;
     kdtree_t* kd = s->tree;
 
     fitsbin_chunk_init(&chunk);
     chunk.tablename = "sweep";
+	chunk.forced_type = fitscolumn_u8_type();
     chunk.itemsize = sizeof(uint8_t);
     chunk.nrows = kd->ndata;
     chunk.data = s->sweep;

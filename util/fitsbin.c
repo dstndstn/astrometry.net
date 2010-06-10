@@ -263,7 +263,8 @@ qfits_header* fitsbin_get_chunk_header(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 	tablesize = chunk->itemsize * chunk->nrows * ncols;
 	table = qfits_table_new(fn, QFITS_BINTABLE, tablesize, ncols, chunk->nrows);
 	assert(table);
-    qfits_col_fill(table->col, chunk->itemsize, 0, 1, TFITS_BIN_TYPE_A,
+    qfits_col_fill(table->col, chunk->itemsize, 0, 1,
+				   chunk->forced_type ? chunk->forced_type : TFITS_BIN_TYPE_A,
 				   chunk->tablename, "", "", "", 0, 0, 0, 0, 0);
     hdr = qfits_table_ext_header_default(table);
     qfits_table_close(table);

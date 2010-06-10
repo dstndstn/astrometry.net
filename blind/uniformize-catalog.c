@@ -219,7 +219,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 			j = i;
 		
 		hp = radecdegtohealpix(ra[j], dec[j], Nside);
-		printf("HP %i\n", hp);
+		//printf("HP %i\n", hp);
 		// in bounds?
 		oob = FALSE;
 		if (myhps) {
@@ -294,6 +294,20 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		}
 		logmsg("Sweep %i: %i stars\n", k+1, outi - starti);
 		npersweep[k] = outi - starti;
+
+		if (sortcol) {
+			// Re-sort within this sweep.
+			permuted_sort(sortval, sizeof(double),
+						  sort_ascending ? compare_doubles_asc : compare_doubles_desc,
+						  outorder + starti, npersweep[k]);
+			/*
+			 for (i=0; i<npersweep[k]; i++) {
+			 printf("  within sweep %i: star %i, j=%i, %s=%g\n",
+			 k, i, outorder[starti + i], sortcol, sortval[outorder[starti + i]]);
+			 }
+			 */
+		}
+
 	}
 	intmap_free(starlists);
 	starlists = NULL;

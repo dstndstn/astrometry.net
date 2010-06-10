@@ -192,7 +192,7 @@ int unpermute_stars(startree_t* treein, quadfile* qfin,
 			// Stars are sorted first by sweep and then by brightness within
 			// the sweep.  Instead of just storing the sweep number, we can
 			// store a quantization of the total-ordered rank.
-			treeout->sweep[i] = (uint8_t)(256 * ind / N);
+			treeout->sweep[i] = (uint8_t)floor((float)256.0 * (float)ind / (float)N);
 		}
 	}
 

@@ -61,7 +61,7 @@ int blind_wcs_solve(const double* starxyz,
 
 	double star_cm[3] = {0, 0, 0};
 
-	assert((tanin != NULL && crpix != NULL) || (tanin == NULL) && (crpix == NULL));
+	assert(((tanin != NULL) && (crpix != NULL)) || ((tanin == NULL) && (crpix == NULL)));
 
 	if (tanin) {
 		// default vals...

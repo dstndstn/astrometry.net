@@ -122,6 +122,9 @@ struct fitsbin_chunk_t {
     off_t header_start;
     off_t header_end;
 
+	// on output, force a type other than A?
+	tfits_type forced_type;
+
 	// Internal use:
 	// The mmap'ed address
 	char* map;
