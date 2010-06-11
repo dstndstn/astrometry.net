@@ -27,7 +27,7 @@ class tabledata(object):
 	def getcolumn(self, name):
 		return self.__dict__[name.lower()]
 	def columns(self):
-		return self.__dict__.keys()
+		return [k for k in self.__dict__.keys() if not k == '_length']
 	def __len__(self):
 		return self._length
 	def delete_column(self, c):
@@ -81,14 +81,14 @@ class tabledata(object):
 		for name,val in self.__dict__.items():
 			if name == '_length':
 				continue
-			newX = numpy.append(val[I], X.getcolumn(name))
+			newX = numpy.append(val, X.getcolumn(name), axis=0)
 			self.set(name, newX)
 			self._length = len(newX)
 
 	def write_to(self, fn, columns=None):
 		pyfits.new_table(self.to_fits_columns(columns)).writeto(fn, clobber=True)
-	def writeto(self, fn):
-		return self.write_to(fn)
+	def writeto(self, fn, columns=None):
+		return self.write_to(fn, columns=columns)
 
 	def to_fits_columns(self, columns=None):
 		cols = []
@@ -96,10 +96,14 @@ class tabledata(object):
 		fmap = {numpy.float64:'D',
 				numpy.float32:'E',
 				numpy.int32:'J',
+				numpy.int64:'K',
 				numpy.uint8:'B', #
 				numpy.int16:'I',
-				numpy.bool:'X',
-				numpy.bool_:'X',
+				#numpy.bool:'X',
+				#numpy.bool_:'X',
+				numpy.bool:'L',
+				numpy.bool_:'L',
+				numpy.string_:'A',
 				}
 
 		if columns is None:
@@ -115,6 +119,7 @@ class tabledata(object):
 			#print repr(val.dtype)
 			#print val.dtype.type
 			#print repr(val.dtype.type)
+			#print val.shape
 			fitstype = fmap.get(val.dtype.type, 'D')
 
 			if fitstype == 'X':
@@ -125,7 +130,7 @@ class tabledata(object):
 				fitstype = '%i%s' % (val.shape[1], fitstype)
 			else:
 				fitstype = '1'+fitstype
-
+			#print 'fits type', fitstype
 			col = pyfits.Column(name=name, array=val, format=fitstype)
 			cols.append(col)
 			#print 'fits type', fitstype, 'column', col

@@ -20,14 +20,15 @@ bluegrayred = LinearSegmentedColormap('bluegrayred',
 									   'blue':  ((0., -1, 1),
 												 (1., 0, -1))})
 
-def hist_ints(x, *args, **kwargs):
+def hist_ints(x, step=1, **kwargs):
 	'''
 	Creates a histogram of integers.  The number of bins is set to the
 	range of the data (+1).  That is, each integer gets its own bin.
 	'''
-	kwargs['bins'] = x.max() - x.min() + 1
-	kwargs['range'] = (x.min() - 0.5, x.max() + 0.5)
-	return hist(x, *args, **kwargs)
+	kwargs['bins'] = x.max()/step - x.min()/step + 1
+	kwargs['range'] = ( (x.min()/int(step))*step - 0.5,
+						((x.max()/int(step))*step + 0.5) )
+	return hist(x, **kwargs)
 
 def hist2d_with_outliers(x, y, xbins, ybins, nout):
 	'''
