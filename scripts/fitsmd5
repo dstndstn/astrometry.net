@@ -35,9 +35,12 @@ fi
 
 trap sigint_func SIGINT
 
+MD5SUM="md5sum"
+# MD5SUM="md5sum -b"
+
 for x in $*; do
-	fitsgetext -i $x -b | \
-		awk "{if (NR > 1) {if (\$16 > 0) { system(\"dd if=$x bs=2880 skip=\" \$13 \" count=\" \$16 \" 2> /dev/null | md5sum -b | awk '{print \$1, \\\"$x\\\", \\\"[\"\$2\"]\\\"}'\");}}}"
+	fitsgetext -b -i $x 2>&1 | \
+		awk "{if (NR > 1) {if (\$16 > 0) { system(\"dd if=$x bs=2880 skip=\" \$13 \" count=\" \$16 \" 2> /dev/null | ${MD5SUM} | awk '{print \$1, \\\"$x\\\", \\\"[\"\$2\"]\\\"}'\");}}}"
 	if [ $? -ne 0 ]; then
 		break;
 	fi
