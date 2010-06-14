@@ -70,4 +70,10 @@ int build_index_files(const char* catalogfn, const char* indexfn,
 int build_index(fitstable_t* catalog, index_params_t* p,
 				index_t** p_index, const char* indexfn);
 
+int build_index_shared_skdt(startree_t* starkd, index_params_t* p,
+							index_t** p_index, const char* indexfn);
+
+int build_index_shared_skdt_files(const char* starkdfn, const char* indexfn,
+								  index_params_t* p);
+
 #endif

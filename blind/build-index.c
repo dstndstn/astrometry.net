@@ -254,6 +254,18 @@ static int step_merge_index(index_params_t* p,
 	return 0;
 }
 
+static void step_delete_tempfiles(index_params_t* p, sl* tempfiles) {
+	if (p->delete_tempfiles) {
+		int i;
+		for (i=0; i<sl_size(tempfiles); i++) {
+			char* fn = sl_get(tempfiles, i);
+			logverb("Deleting temp file %s\n", fn);
+			if (unlink(fn))
+				SYSERROR("Failed to delete temp file \"%s\"", fn);
+		}
+	}
+}
+
 int build_index_shared_skdt(startree_t* starkd, index_params_t* p,
 							index_t** p_index, const char* indexfn) {
 	// assume we've got a final (ie, post-unpermute-stars) skdt
@@ -278,9 +290,9 @@ int build_index_shared_skdt(startree_t* starkd, index_params_t* p,
 	codetree* codekd = NULL;
 	char* ckdtfn=NULL;
 
-	//startree_t* starkd2 = NULL;
+	startree_t* starkd2 = NULL;
 	quadfile* quads2 = NULL;
-	//char* skdt2fn=NULL;
+	char* skdt2fn=NULL;
 	char* quad2fn=NULL;
 
 	quadfile* quads3 = NULL;
@@ -352,13 +364,22 @@ int build_index_shared_skdt(startree_t* starkd, index_params_t* p,
 	// no unpermute-stars...
 	quads2 = quads;
 	quad2fn = quadfn;
-	//starkd2 = ...
+	starkd2 = starkd;
+	skdt2fn = skdtfn;
 
 	// unpermute-quads...
 	if (step_unpermute_quads(p, quads2, codekd, &quads3, &codekd2,
 							 quad2fn, ckdtfn, &quad3fn, &ckdt2fn, tempfiles))
 		return -1;
+
 	// merge-index...
+	if (step_merge_index(p, codekd2, quads3, starkd2, p_index,
+						 ckdt2fn, quad3fn, skdt2fn, indexfn))
+		return -1;
+
+	step_delete_tempfiles(p, tempfiles);
+
+	sl_free2(tempfiles);
 
 	rtn = 0;
 
@@ -605,16 +626,9 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 						 ckdt2fn, quad3fn, skdt2fn, indexfn))
 		return -1;
 
+	// FIXME -- close codekd2, quads3, starkd2?
 
-	if (p->delete_tempfiles) {
-		int i;
-		for (i=0; i<sl_size(tempfiles); i++) {
-			char* fn = sl_get(tempfiles, i);
-			logverb("Deleting temp file %s\n", fn);
-			if (unlink(fn))
-				SYSERROR("Failed to delete temp file \"%s\"", fn);
-		}
-	}
+	step_delete_tempfiles(p, tempfiles);
 
 	sl_free2(tempfiles);
 	return 0;
@@ -655,6 +669,42 @@ int build_index_files(const char* infn, const char* indexfn,
 
 	return 0;
 }
+
+int build_index_shared_skdt_files(const char* starkdfn, const char* indexfn,
+								  index_params_t* p) {
+	startree_t* skdt = NULL;
+
+	logmsg("Reading %s...\n", starkdfn);
+	skdt = startree_open(starkdfn);
+    if (!skdt) {
+        ERROR("Couldn't read star kdtree from \"%s\"", starkdfn);
+		return -1;
+    }
+	logmsg("Got %i stars\n", startree_N(skdt));
+
+	if (p->inmemory) {
+		index_t* index;
+		if (build_index_shared_skdt(skdt, p, &index, NULL)) {
+			return -1;
+		}
+		logmsg("Writing to file %s\n", indexfn);
+		if (merge_index(index->quads, index->codekd, index->starkd, indexfn)) {
+			ERROR("Failed to write index file \"%s\"", indexfn);
+			return -1;
+		}
+		// FIXME?  Why close codekd independently?
+		kdtree_free(index->codekd->tree);
+		index->codekd->tree = NULL;
+		index_close(index);
+
+	} else {
+		if (build_index_shared_skdt(skdt, p, NULL, indexfn)) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
 
 void build_index_defaults(index_params_t* p) {
 	memset(p, 0, sizeof(index_params_t));

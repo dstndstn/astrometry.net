@@ -33,12 +33,14 @@
 #include "log.h"
 #include "starutil.h"
 
-const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:";
+const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:";
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
-	       "      -i <input-FITS-catalog>  input: source RA,DEC, etc\n"
+	       "   (    -i <input-FITS-catalog>  input: source RA,DEC, etc\n"
+		   "    OR, -1 <input-index>         to share another index's stars\n"
+		   "   )\n"
 		   "      -o <output-index>        output filename for index\n"
 		   "      -N <nside>            healpix Nside for quad-building\n"
 		   "      -l <min-quad-size>    minimum quad size (arcminutes)\n"
@@ -76,6 +78,7 @@ int main(int argc, char** argv) {
 
 	char* infn = NULL;
 	char* indexfn = NULL;
+	char* inindexfn = NULL;
 
 	index_params_t myp;
 	index_params_t* p;
@@ -88,6 +91,9 @@ int main(int argc, char** argv) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case '1':
+			inindexfn = optarg;
+			break;
 		case 'j':
 			p->jitter = atof(optarg);
 			break;
@@ -166,8 +172,13 @@ int main(int argc, char** argv) {
 	
 	log_init(loglvl);
 
-	if (!infn || !indexfn) {
+	if (!(infn || inindexfn) || !indexfn) {
 		printf("Specify in & out filenames, bonehead!\n");
+		print_help(argv[0]);
+		exit( -1);
+	}
+	if (infn && inindexfn) {
+		printf("Only specify one of -i <input catalog> and -1 <share star kdtree>!\n");
 		print_help(argv[0]);
 		exit( -1);
 	}
@@ -194,8 +205,14 @@ int main(int argc, char** argv) {
 	p->argc = argc;
 	p->args = argv;
 
-	if (build_index_files(infn, indexfn, p)) {
-		exit(-1);
+	if (infn) {
+		if (build_index_files(infn, indexfn, p)) {
+			exit(-1);
+		}
+	} else {
+		if (build_index_shared_skdt_files(inindexfn, indexfn, p)) {
+			exit(-1);
+		}
 	}
 	return 0;
 }
