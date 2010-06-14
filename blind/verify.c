@@ -306,6 +306,8 @@ static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchOb
 					ibad++;
 				}
 			}
+		} else {
+			igood = v->NT;
 		}
 	}
 
@@ -1209,6 +1211,13 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
     fieldr2 = square(mo->radius);
     debug("Field center %g,%g,%g, radius2 %g\n", fieldcenter[0], fieldcenter[1], fieldcenter[2], fieldr2);
 
+	if (log_get_level() >= LOG_ALL) {
+		double ra,dec, r;
+		xyzarr2radecdeg(fieldcenter, &ra, &dec);
+		r = distsq2deg(fieldr2);
+		debug("Field center RA,Dec %g,%g, radius %g deg\n", ra, dec, r);
+	}
+
     // find index stars and project them into pixel coordinates.
 	/*
 	 verify_get_index_stars(fieldcenter, fieldr2, skdt, sip, &(mo->wcstan),
@@ -1234,11 +1243,11 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	assert(skdt->sweep);
 	// Find all index stars within the bounding circle of the field.
 	startree_search_for(skdt, fieldcenter, fieldr2, &refxyz, NULL, &v->refstarid, &v->NRall);
+	debug("%i reference stars in the bounding circle\n", v->NRall);
 	if (!refxyz) {
 		// no stars in range.
 		goto bailout;
 	}
-	debug("%i reference stars in the bounding circle\n", v->NRall);
 	// Find index stars within the rectangular field.
 	v->refxy = malloc(v->NRall * 2 * sizeof(double));
 	v->refperm = malloc(v->NRall * sizeof(int));

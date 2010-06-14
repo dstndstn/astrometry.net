@@ -88,6 +88,8 @@ void startree_search(const startree_t* s, const double* xyzcenter, double radius
 
  Get the "inds" and "N" from "startree_search" or "startree_search_for".
 
+ To get all entries, set "inds" = NULL and N = startree_N().
+
  The data should be freed using "startree_free_data_column"
  */
 double* startree_get_data_column(startree_t* s, const char* colname, int* indices, int N);

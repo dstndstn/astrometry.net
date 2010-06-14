@@ -36,6 +36,11 @@ int hpquads(startree_t* starkd,
 			int Nloosen,
 			int id,
 			bool scanoccupied,
+
+			void* sort_data,
+			int (*sort_func)(const void*, const void*),
+			int sort_size,
+
 			char** args, int argc);
 
 int hpquads_files(const char* skdtfn,
@@ -50,6 +55,11 @@ int hpquads_files(const char* skdtfn,
 				  int Nloosen,
 				  int id,
 				  bool scanoccupied,
+
+				  void* sort_data,
+				  int (*sort_func)(const void*, const void*),
+				  int sort_size,
+
 				  char** args, int argc);
 
 #endif

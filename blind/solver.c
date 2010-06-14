@@ -261,26 +261,29 @@ void solver_cleanup_field(solver_t* solver) {
 	solver_reset_counters(solver);
 }
 
-void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) {
+void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) { //, MatchObj* pmo) {
     int i, nindexes;
     MatchObj mo;
+	MatchObj* pmo;
+	//if (!pmo)
+	pmo = &mo;
 
 	if (!solver->vf)
 		solver_preprocess_field(solver);
 
     // fabricate a match and inject it into the solver.
-    set_matchobj_template(solver, &mo);
+    set_matchobj_template(solver, pmo);
     memcpy(&(mo.wcstan), &(sip->wcstan), sizeof(tan_t));
     mo.wcs_valid = TRUE;
     mo.scale = sip_pixel_scale(sip);
-    set_center_and_radius(solver, &mo, NULL, sip);
+    set_center_and_radius(solver, pmo, NULL, sip);
     solver->distance_from_quad_bonus = FALSE;
 
     nindexes = pl_size(solver->indexes);
     for (i=0; i<nindexes; i++) {
         index_t* index = pl_get(solver->indexes, i);
         set_index(solver, index);
-        solver_inject_match(solver, &mo, sip);
+        solver_inject_match(solver, pmo, sip);
     }
 }
 

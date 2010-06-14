@@ -174,7 +174,9 @@ int main(int argc, char** argv) {
 	if (hpquads_files(skdtfn, codefn, quadfn, Nside,
 					  scale_min_arcmin, scale_max_arcmin,
 					  dimquads, passes, Nreuse, Nloosen,
-					  id, scanoccupied, argv, argc)) {
+					  id, scanoccupied, 
+					  NULL, NULL, 0,
+					  argv, argc)) {
 		ERROR("hpquads failed");
 		exit(-1);
 	}

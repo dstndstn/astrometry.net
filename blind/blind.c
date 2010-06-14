@@ -876,6 +876,10 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 			sipin.wcstan.imageh = solver_field_height(sp);
 			// Q2 = (A-B distance / 2) ** 2
 			Q2 = 0.25 * distsq(mymo->quadpix, mymo->quadpix + 2, 2);
+			if (Q2 == 0.0) {
+				// can happen if we're verifying an existing WCS
+				Q2 = 1e6;
+			}
 			mymo->sip = tweak2(mymo->fieldxy, mymo->nfield, sp->verify_pix,
 							   solver_field_width(sp), solver_field_height(sp),
 							   mymo->refradec, mymo->nindex, sp->index->index_jitter,
@@ -1088,8 +1092,10 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		solver_preprocess_field(sp);
 
 		if (verify_wcs) {
+			//MatchObj mo;
 			logmsg("Verifying WCS of field %i.\n", fieldnum);
-            solver_verify_sip_wcs(sp, verify_wcs);
+            solver_verify_sip_wcs(sp, verify_wcs); //, &mo);
+			logmsg(" --> log-odds %g\n", sp->best_logodds);
 
 		} else {
 			logverb("Solving field %i.\n", fieldnum);

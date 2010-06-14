@@ -29,6 +29,7 @@ struct index_params {
 	const char* deccol;
 	// in arcsec
 	double jitter;
+
 	// uniformization:
 	const char* sortcol; bool sortasc;
 	int bighp; int bignside;
@@ -36,8 +37,14 @@ struct index_params {
 	double dedup;
 	int margin;
 	int UNside;
+
 	// hpquads:
 	int Nside;
+
+	void* hpquads_sort_data;
+	int (*hpquads_sort_func)(const void*, const void*);
+	int hpquads_sort_size;
+
 	// quad size range, in arcmin
 	double qlo; double qhi;
 	int passes;

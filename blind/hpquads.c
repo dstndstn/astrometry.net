@@ -67,6 +67,10 @@ struct hpquads {
 	double* stars;
 	int Nstars;
 
+	void* sort_data;
+	int (*sort_func)(const void*, const void*);
+	int sort_size;
+
 	// for create_quad():
 	bool quad_created;
 	bool count_uses;
@@ -132,8 +136,14 @@ static bool find_stars(hpquads_t* me, double radius2, int R) {
 	// sort the stars in increasing order of index - assume
 	// that this corresponds to decreasing order of brightness.
 
-	// find permutation that sorts by index...
-	perm = permuted_sort(me->res->inds, sizeof(int), compare_ints_asc, NULL, N);
+	// UNLESS another sorting is provided!
+
+	if (me->sort_data && me->sort_func && me->sort_size) {
+		perm = permuted_sort(me->sort_data, me->sort_size, me->sort_func, NULL, N);
+	} else {
+		// find permutation that sorts by index...
+		perm = permuted_sort(me->res->inds, sizeof(int), compare_ints_asc, NULL, N);
+	}
 	// apply the permutation...
 	permutation_apply(perm, N, me->res->inds, me->res->inds, sizeof(int));
 	permutation_apply(perm, N, me->res->results.d, me->res->results.d, 3 * sizeof(double));
@@ -284,6 +294,11 @@ int hpquads(startree_t* starkd,
 			int Nloosen,
 			int id,
 			bool scanoccupied,
+
+			void* sort_data,
+			int (*sort_func)(const void*, const void*),
+			int sort_size,
+			
 			char** args, int argc) {
 	hpquads_t myhpquads;
 	hpquads_t* me = &myhpquads;
@@ -563,6 +578,11 @@ int hpquads_files(const char* skdtfn,
 				  int Nloosen,
 				  int id,
 				  bool scanoccupied,
+
+				  void* sort_data,
+				  int (*sort_func)(const void*, const void*),
+				  int sort_size,
+
 				  char** args, int argc) {
 	quadfile* quads;
 	codefile* codes;
@@ -591,7 +611,9 @@ int hpquads_files(const char* skdtfn,
 	rtn = hpquads(starkd, codes, quads, Nside,
 				  scale_min_arcmin, scale_max_arcmin,
 				  dimquads, passes, Nreuses, Nloosen, id,
-				  scanoccupied, args, argc);
+				  scanoccupied, 
+				  sort_data, sort_func, sort_size,
+				  args, argc);
 	if (rtn)
 		return rtn;
 

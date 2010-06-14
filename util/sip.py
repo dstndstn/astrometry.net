@@ -63,6 +63,21 @@ class Tan(ctypes.Structure):
 			if not rtn:
 				raise Exception, 'Failed to parse TAN header from file "%s"' % filename
 
+	@staticmethod
+	def from_match(m, width=0, height=0):
+		wcs = Tan()
+		wcs.crval[0] = m.crval[0]
+		wcs.crval[1] = m.crval[1]
+		wcs.crpix[0] = m.crpix[0]
+		wcs.crpix[1] = m.crpix[1]
+		wcs.cd[0] = m.cd[0]
+		wcs.cd[1] = m.cd[1]
+		wcs.cd[2] = m.cd[2]
+		wcs.cd[3] = m.cd[3]
+		wcs.imagew = width
+		wcs.imageh = height
+		return wcs
+
 	def __str__(self):
 		return ('<Tan: CRVAL (%f, %f)' % (self.crval[0], self.crval[1]) +
 				' CRPIX (%f, %f)' % (self.crpix[0], self.crpix[1]) +

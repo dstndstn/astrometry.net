@@ -48,8 +48,183 @@
 #include "codekd.h"
 #include "merge-index.h"
 #include "fitsioutils.h"
+#include "permutedsort.h"
 
 static void add_boilerplate(index_params_t* p, qfits_header* hdr) {
+}
+
+static int step_hpquads(index_params_t* p,
+						codefile** p_codes, quadfile** p_quads,
+						char** p_codefn, char** p_quadfn, 
+						startree_t* starkd, char* skdtfn,
+						sl* tempfiles) {
+	codefile* codes = NULL;
+	quadfile* quads = NULL;
+	char* quadfn = NULL;
+	char* codefn = NULL;
+
+	if (p->inmemory) {
+		codes = codefile_open_in_memory();
+		quads = quadfile_open_in_memory();
+		if (hpquads(starkd, codes, quads, p->Nside,
+					p->qlo, p->qhi, p->dimquads, p->passes, p->Nreuse, p->Nloosen,
+					p->indexid, p->scanoccupied,
+					p->hpquads_sort_data, p->hpquads_sort_func, p->hpquads_sort_size,
+					p->args, p->argc)) {
+			ERROR("hpquads failed");
+			return -1;
+		}
+		if (quadfile_switch_to_reading(quads)) {
+			ERROR("Failed to switch quadfile to read-mode");
+			return -1;
+		}
+		if (codefile_switch_to_reading(codes)) {
+			ERROR("Failed to switch codefile to read-mode");
+			return -1;
+		}
+
+	} else {
+		quadfn = create_temp_file("quad", p->tempdir);
+		sl_append_nocopy(tempfiles, quadfn);
+		codefn = create_temp_file("code", p->tempdir);
+		sl_append_nocopy(tempfiles, codefn);
+
+		if (hpquads_files(skdtfn, codefn, quadfn, p->Nside,
+						  p->qlo, p->qhi, p->dimquads, p->passes, p->Nreuse, p->Nloosen,
+						  p->indexid, p->scanoccupied, 
+						  p->hpquads_sort_data, p->hpquads_sort_func, p->hpquads_sort_size,
+						  p->args, p->argc)) {
+			ERROR("hpquads failed");
+			return -1;
+		}
+		
+	}
+
+	if (p_codes) *p_codes = codes;
+	if (p_quads) *p_quads = quads;
+	if (p_codefn) *p_codefn = codefn;
+	if (p_quadfn) *p_quadfn = quadfn;
+		
+	return 0;
+}
+
+static int step_codetree(index_params_t* p,
+						 codefile* codes, codetree** p_codekd,
+						 const char* codefn, char** p_ckdtfn,
+						 sl* tempfiles) {
+	codetree* codekd = NULL;
+	char* ckdtfn=NULL;
+
+	if (p->inmemory) {
+		logmsg("Building code kdtree from %i codes\n", codes->numcodes);
+		logmsg("dim: %i\n", codefile_dimcodes(codes));
+		codekd = codetree_build(codes, 0, 0, 0, 0, p->args, p->argc);
+		if (!codekd) {
+			ERROR("Failed to build code kdtree");
+			return -1;
+		}
+		if (codefile_close(codes)) {
+			ERROR("Failed to close codefile");
+			return -1;
+		}
+
+	} else {
+		ckdtfn = create_temp_file("ckdt", p->tempdir);
+		sl_append_nocopy(tempfiles, ckdtfn);
+
+		if (codetree_files(codefn, ckdtfn, 0, 0, 0, 0, p->args, p->argc)) {
+			ERROR("codetree failed");
+			return -1;
+		}
+	}
+	
+	if (p_codekd) *p_codekd = codekd;
+	if (p_ckdtfn) *p_ckdtfn = ckdtfn;
+	return 0;
+}
+
+int build_index_shared_skdt(startree_t* starkd, index_params_t* p,
+							index_t** p_index, const char* indexfn) {
+	// assume we've got a final (ie, post-unpermute-stars) skdt
+	// we use that skdt's stars to uniformize, along with a column pulled
+	// from its tag-along data.  This yields a permutation array, which
+	// we feed to hpquads to alter its idea of how to sort stars that could
+	// be used to build quads.
+	// Then we do unpermute-quads, skip unpermute-stars, and feed
+	// the original skdt in to merge-index.
+	// TODO - tweak the index-reading code to allow multiple indices
+	// sharing an skdt in one FITS file.
+	// --quads_X table
+	// --header card in the .quads HDU saying what the name of its skdt is.
+	double* sortdata = NULL;
+	//int* uniperm = NULL;
+	int rtn = -1;
+	codefile* codes = NULL;
+	quadfile* quads = NULL;
+	char* skdtfn=NULL;
+	char* quadfn=NULL;
+	char* codefn=NULL;
+	codetree* codekd = NULL;
+	char* ckdtfn=NULL;
+	sl* tempfiles;
+
+	assert(starkd->tree);
+	assert(starkd->tree->perm == NULL);
+	assert(p->sortcol);
+
+    tempfiles = sl_new(4);
+
+	// OR, should we just strictly sort on the tag-along sortcol in hpquads?
+	// Yes, probably.  Uniformization isn't going to change the ordering much
+	// in deciding which stars to use in a quad -- they're all nearby.
+
+	logverb("Grabbing tag-along column \"%s\" for uniformizing...\n", p->sortcol);
+	sortdata = startree_get_data_column(starkd, p->sortcol, NULL, startree_N(starkd));
+	if (!sortdata) {
+		ERROR("Failed to find sort column data for uniformizing catalog");
+		goto cleanup;
+	}
+
+	/*
+	 logverb("Uniformizing...\n");
+	 uniperm = uniformize_catalog_get_permutation(skdt, sortdata,
+	 p->bighp, p->bignside, p->margin,
+	 p->UNside, p->dedup, p->sweeps,
+	 p->args, p->argc);
+	 if (!uniperm) {
+	 ERROR("Failed to find uniformization permutation array");
+	 goto cleanup;
+	 }
+	p->hpquads_sort = uniperm;
+	p->hpquads_sortfunc = compare_ints_asc;
+	 */
+
+	p->hpquads_sort_data = sortdata;
+	p->hpquads_sort_func = (p->sortasc ? compare_doubles_asc : compare_doubles_desc);
+	p->hpquads_sort_size = sizeof(double);
+
+	// hpquads
+	if (step_hpquads(p, &codes, &quads, &codefn, &quadfn,
+					 starkd, skdtfn,
+					 tempfiles))
+		return -1;
+
+	// codetree
+	if (step_codetree(p, codes, &codekd,
+					  codefn, &ckdtfn, tempfiles))
+		return -1;
+
+	// no unpermute-stars...
+
+	// unpermute-quads...
+	// merge-index...
+
+	rtn = 0;
+
+ cleanup:
+	//free(uniperm);
+	free(sortdata);
+	return rtn;
 }
 
 int build_index(fitstable_t* catalog, index_params_t* p,
@@ -219,64 +394,15 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 	fitstable_close(uniform);
 
 	// hpquads
-
-	if (p->inmemory) {
-		codes = codefile_open_in_memory();
-		quads = quadfile_open_in_memory();
-		if (hpquads(starkd, codes, quads, p->Nside,
-					p->qlo, p->qhi, p->dimquads, p->passes, p->Nreuse, p->Nloosen,
-					p->indexid, p->scanoccupied, p->args, p->argc)) {
-			ERROR("hpquads failed");
-			return -1;
-		}
-		if (quadfile_switch_to_reading(quads)) {
-			ERROR("Failed to switch quadfile to read-mode");
-			return -1;
-		}
-		if (codefile_switch_to_reading(codes)) {
-			ERROR("Failed to switch codefile to read-mode");
-			return -1;
-		}
-
-
-	} else {
-		quadfn = create_temp_file("quad", p->tempdir);
-		sl_append_nocopy(tempfiles, quadfn);
-		codefn = create_temp_file("code", p->tempdir);
-		sl_append_nocopy(tempfiles, codefn);
-
-		if (hpquads_files(skdtfn, codefn, quadfn, p->Nside,
-						  p->qlo, p->qhi, p->dimquads, p->passes, p->Nreuse, p->Nloosen,
-						  p->indexid, p->scanoccupied, p->args, p->argc)) {
-			ERROR("hpquads failed");
-			return -1;
-		}
-
-	}
+	if (step_hpquads(p, &codes, &quads, &codefn, &quadfn, 
+					 starkd, skdtfn,
+					 tempfiles))
+		return -1;
 
 	// codetree
-	if (p->inmemory) {
-		logmsg("Building code kdtree from %i codes\n", codes->numcodes);
-		logmsg("dim: %i\n", codefile_dimcodes(codes));
-		codekd = codetree_build(codes, 0, 0, 0, 0, p->args, p->argc);
-		if (!codekd) {
-			ERROR("Failed to build code kdtree");
-			return -1;
-		}
-		if (codefile_close(codes)) {
-			ERROR("Failed to close codefile");
-			return -1;
-		}
-
-	} else {
-		ckdtfn = create_temp_file("ckdt", p->tempdir);
-		sl_append_nocopy(tempfiles, ckdtfn);
-
-		if (codetree_files(codefn, ckdtfn, 0, 0, 0, 0, p->args, p->argc)) {
-			ERROR("codetree failed");
-			return -1;
-		}
-	}
+	if (step_codetree(p, codes, &codekd,
+					  codefn, &ckdtfn, tempfiles))
+		return -1;
 
 	// unpermute-stars
 	logmsg("Unpermute-stars...\n");
