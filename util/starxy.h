@@ -72,9 +72,11 @@ double* starxy_copy_x(const starxy_t* xy);
 double* starxy_copy_y(const starxy_t* xy);
 double* starxy_copy_xy(const starxy_t* xy);
 
-// Returns a flat array of [x0, y0, x1, y1, ...]
+// Returns a flat array of [x0, y0, x1, y1, ...].
+// If "arr" is NULL, allocates and returns a new array.
 double* starxy_to_xy_array(starxy_t* xy, double* arr);
 
+// Like starxy_to_xy_array, but also includes "flux" and "background" if they're set.
 double* starxy_to_flat_array(starxy_t* xy, double* arr);
 
 void starxy_alloc_data(starxy_t* f, int N, bool flux, bool back);

@@ -103,7 +103,7 @@ struct match_struct {
 	// stuff used by blind...
 	// tweaked-up WCS.
 	sip_t* sip;
-	// RA,Dec of reference stars
+	// RA,Dec of reference stars; length is "nindex".
 	double* refradec;
 	// for correspondence file we need a copy of the field! (star x,y positions)
 	double* fieldxy;

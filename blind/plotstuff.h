@@ -51,14 +51,14 @@ struct plot_args {
 
 	int W, H;
 	float rgba[4];
-	float lw;
-	int marker;
-	float markersize;
+	float lw; // default: 1
+	int marker; // default: circle
+	float markersize; // default: 5
 
 	float bg_rgba[4];
-	float bg_lw;
+	float bg_lw; // default: 3
 
-	float fontsize;
+	float fontsize; // default: 20
 
     double label_offset_x;
     double label_offset_y;
