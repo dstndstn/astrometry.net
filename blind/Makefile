@@ -156,7 +156,7 @@ INSTALL_H := 2mass-fits.h 2mass.h allquads.h augment-xylist.h axyfile.h \
 	resort-xylist.h scamp.h simplexy-common.h simplexy.h solvedclient.h \
 	solvedfile.h solver.h tabsort.h tweak.h uniformize-catalog.h \
 	unpermute-quads.h unpermute-stars.h usnob-fits.h usnob.h verify.h \
-	wcs-rd2xy.h wcs-xy2rd.h
+	wcs-rd2xy.h wcs-xy2rd.h tweak2.h
 
 PLOT_INSTALL_H := plotannotations.h plotfill.h plotgrid.h plotimage.h \
 	plotoutline.h plotstuff.h plotxy.h
