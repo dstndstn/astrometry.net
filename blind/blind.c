@@ -878,8 +878,11 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 			Q2 = 0.25 * distsq(mymo->quadpix, mymo->quadpix + 2, 2);
 			if (Q2 == 0.0) {
 				// can happen if we're verifying an existing WCS
+				// note, this is radius-squared, so 1e6 is not crazy.
 				Q2 = 1e6;
 			}
+			// FIXME -- is crpix the quad center here, even if sp->set_crpix is set?
+
 			mymo->sip = tweak2(mymo->fieldxy, mymo->nfield, sp->verify_pix,
 							   solver_field_width(sp), solver_field_height(sp),
 							   mymo->refradec, mymo->nindex, sp->index->index_jitter,

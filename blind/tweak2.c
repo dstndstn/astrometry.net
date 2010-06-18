@@ -289,7 +289,8 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 									&besti, newodds, newtheta, NULL);
 		logverb("Final logodds: %g\n", logodds);
 		// undo the "indexpix" inside-image-bounds cut.
-		for (i=0; i<=besti; i++) {
+		//for (i=0; i<=besti; i++) {
+		for (i=0; i<Nfield; i++) {
 			if ((*newtheta)[i] < 0)
 				continue;
 			(*newtheta)[i] = indexin[(*newtheta)[i]];
