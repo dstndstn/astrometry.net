@@ -44,6 +44,8 @@ struct verify_field_t {
 };
 typedef struct verify_field_t verify_field_t;
 
+void verify_count_hits(int* theta, int besti, int* p_nmatch, int* p_nconflict, int* p_ndistractor);
+
 void verify_wcs(const startree_t* skdt,
 				int index_cutnside,
                 const sip_t* sip,

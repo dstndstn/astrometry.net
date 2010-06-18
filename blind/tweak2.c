@@ -99,6 +99,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			int besti, Nmatch;
 			int* theta;
 			double* odds;
+			int nmatch, nconf, ndist;
 
 			// Anneal
 			gamma = pow(0.9, step);
@@ -148,7 +149,8 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 										&besti, &odds, &theta, NULL);
 			logverb("Logodds: %g\n", logodds);
 			logverb("besti: %i\n", besti);
-
+			verify_count_hits(theta, besti, &nmatch, &nconf, &ndist);
+			logverb("%i matches, %i distractors, %i conflicts; %i field sources, %i index sources\n", nmatch, ndist, nconf, Nfield, Nin);
 			logverb("  Hit/miss: ");
 			if (log_get_level() >= LOG_VERB)
 				verify_log_hit_miss(theta, NULL, besti+1, Nfield, LOG_VERB);

@@ -39,7 +39,8 @@ class tabledata(object):
 				continue
 			try:
 				rtn.set(name, val[I])
-			except Exception as e:
+			#except Exception as e:
+			except Exception:
 				# HACK -- emulate numpy's boolean and int array slicing...
 				ok = False
 				if type(I) == numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'bool':
@@ -53,7 +54,7 @@ class tabledata(object):
 					ok = True
 				if not ok:
 					print 'Error in slicing an astrometry.net.pyfits_utils.table_data object:'
-					print '  -->', e
+					#print '  -->', e
 					print 'While setting member:', name
 					print ' by taking elements:', I
 					print ' from', val

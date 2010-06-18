@@ -1169,6 +1169,26 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, int istopped, 
 	*p_eodds = eodds;
 }
 
+void verify_count_hits(int* theta, int besti, int* p_nmatch, int* p_nconflict, int* p_ndistractor) {
+  int i;
+  int d, c, m;
+  d = 0;
+  c = 0;
+  m = 0;
+  for (i=0; i<=besti; i++) {
+    if (theta[i] == THETA_DISTRACTOR)
+      d++;
+    else if (theta[i] == THETA_CONFLICT)
+      c++;
+    else
+      m++;
+  }
+  if (p_nconflict) *p_nconflict = c;
+  if (p_ndistractor) *p_ndistractor = d;
+  if (p_nmatch) *p_nmatch = m;
+}
+
+
 void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 				const sip_t* sip, const verify_field_t* vf,
                 double pix2, double distractors,
@@ -1356,17 +1376,11 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		int ri, ti;
 		int* etheta;
 		double* eodds;
-		mo->nmatch = 0;
-		mo->nconflict = 0;
-		mo->ndistractor = 0;
-		for (i=0; i<=besti; i++) {
-			if (theta[i] == THETA_DISTRACTOR)
-				mo->ndistractor++;
-			else if (theta[i] == THETA_CONFLICT)
-				mo->nconflict++;
-			else
-				mo->nmatch++;
-		}
+		int nm, nc, nd;
+		verify_count_hits(theta, besti, &nm, &nc, &nd);
+		mo->nmatch = nm;
+		mo->nconflict = nc;
+		mo->ndistractor = nd;
 
 		fixup_theta(theta, allodds, ibailed, istopped, v, besti, NRimage, refxyz,
 					&etheta, &eodds);

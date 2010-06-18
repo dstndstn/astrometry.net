@@ -9,7 +9,7 @@ from astrometry.util.run_command import run_command
 def get_libs(pkg):
 	(rtn,out,err) = run_command('pkg-config --libs-only-l ' + pkg)
 	if rtn:
-		raise 'Failed to find libraries for package'+pkg
+		raise Exception('Failed to find libraries for package ' + pkg)
 	if err and len(err):
 		print 'pkg-config complained:', err
 	#print 'pkg-config said:', out
@@ -24,7 +24,7 @@ def get_libs(pkg):
 def get_include_dirs(pkg):
 	(rtn,out,err) = run_command('pkg-config --cflags-only-I ' + pkg)
 	if rtn:
-		raise 'Failed to find include paths for package'+pkg
+		raise Exception('Failed to find include paths for package ' + pkg)
 	if err and len(err):
 		print 'pkg-config complained:', err
 	dirs = out.split()
@@ -37,7 +37,7 @@ def get_include_dirs(pkg):
 def get_lib_dirs(pkg):
 	(rtn,out,err) = run_command('pkg-config --libs-only-L ' + pkg)
 	if rtn:
-		raise 'Failed to find libraries for package'+pkg
+		raise Exception('Failed to find libraries for package ' + pkg)
 	if err and len(err):
 		print 'pkg-config said:', err
 	libs = out.split()
