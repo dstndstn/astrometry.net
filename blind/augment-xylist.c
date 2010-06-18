@@ -766,7 +766,7 @@ int augment_xylist(augment_xylist_t* axy,
 
 				paramfn = create_temp_file("param", axy->tempdir);
 				sl_append_nocopy(tempfiles, paramfn);
-				paramstr = "X_IMAGE\nY_IMAGE\nMAG_AUTO\n";
+				paramstr = "X_IMAGE\nY_IMAGE\nMAG_AUTO\nFLUX_AUTO";
 				if (write_file(paramfn, paramstr, strlen(paramstr))) {
 					ERROR("Failed to write SExtractor parameters to temp file \"%s\"", paramfn);
 					exit(-1);
