@@ -24,6 +24,62 @@
 #include "cutest.h"
 
 #include "ioutils.h"
+#include "log.h"
+#include "tic.h"
+
+void test_run_command(CuTest* tc) {
+	int rtn;
+	sl* outlines = NULL;
+	sl* errlines = NULL;
+	char* cmd;
+	FILE* fid;
+	char* tmpfn;
+	int N;
+	int i;
+	int trial;
+
+	log_init(3);
+
+	tmpfn = create_temp_file("test_run_command", "/tmp");
+	CuAssertPtrNotNull(tc, tmpfn);
+
+	for (trial=0; trial<4; trial++) {
+		double t0;
+		printf("test_ioutils:test_run_command() trial %i\n", trial);
+		fid = fopen(tmpfn, "wb");
+		CuAssertPtrNotNull(tc, fid);
+		N = 102400;
+		for (i=0; i<N; i++) {
+			int nw;
+			char c;
+			if (trial == 0) {
+				c = random() % 256;
+			} else if (trial == 1) {
+				c = '\n';
+			} else if ((trial == 2) || (trial == 3)) {
+				c = 'A';
+			}
+			nw = fwrite(&c, 1, 1, fid);
+			CuAssertIntEquals(tc, 1, nw);
+		}
+		rtn = fclose(fid);
+		CuAssertIntEquals(tc, 0, rtn);
+
+		if (trial == 3) {
+			asprintf(&cmd, "sleep 1; dd if=%s bs=1k; sleep 1", tmpfn);
+		} else {
+			asprintf(&cmd, "sleep 1; dd if=%s bs=1k 1>&2; sleep 1", tmpfn);
+		}
+		t0 = timenow();
+		rtn = run_command_get_outputs(cmd, &outlines, &errlines);
+		printf("That took %g sec\n", timenow() - t0);
+		CuAssertIntEquals(tc, 0, rtn);
+
+		free(cmd);
+		sl_free2(outlines);
+		sl_free2(errlines);
+	}
+}
 
 void test_split_long_string(CuTest* tc) {
 	sl* lst;

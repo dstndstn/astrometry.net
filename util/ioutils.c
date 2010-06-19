@@ -475,8 +475,8 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 	} else {
 		FILE *fout = NULL, *ferr = NULL;
 		int status;
-		sl* outlist = NULL;
-		sl* errlist = NULL;
+		//sl* outlist = NULL;
+		//sl* errlist = NULL;
 		bool outdone=TRUE, errdone=TRUE;
 
 		// Parent process.
@@ -489,7 +489,7 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 			}
 
 			outdone = FALSE;
-			outlist = sl_new(256);
+			*outlines = sl_new(256);
 			fout = fdopen(outpipe[0], "r");
 			if (!fout) {
 				SYSERROR("Failed to open stdout pipe");
@@ -505,53 +505,73 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 			}
 
 			errdone = FALSE;
-			errlist = sl_new(256);
+			*errlines = sl_new(256);
 			ferr = fdopen(errpipe[0], "r");
 			if (!ferr) {
 				SYSERROR("Failed to open stderr pipe");
 				return -1;
 			}
 		}
-		// Wait for command to finish.
+
+		// Read from child process's streams...
 
 		while (!outdone || !errdone) {
+			bool wait = TRUE;
 			char buf[1024];
 			if (!outdone) {
-				logverb("reading a line from stdout...\n");
+				//logverb("reading a line from stdout...\n");
+				errno = 0;
 				if (fgets(buf, sizeof(buf), fout)) {
 					int slen = strlen(buf);
+					wait = FALSE;
 					// clip newline
 					if (slen > 0 && buf[slen-1] == '\n')
 						buf[slen-1] = '\0';
+					//logverb("Read %i bytes\n", slen);
+					sl_append(*outlines, buf);
 				} else {
 					if (feof(fout)) {
-						logverb("stdout EOF\n");
+						//logverb("stdout EOF\n");
 						outdone = TRUE;
-					}
-					if (ferror(fout)) {
-						SYSERROR("stdout error");
-						return -1;
+					} else if (ferror(fout)) {
+						if (errno != EAGAIN) {
+							SYSERROR("Error reading stdout from child process");
+							return -1;
+						}
 					}
 				}
 			}
 			if (!errdone) {
-				logverb("reading a line from stderr...\n");
+				//logverb("reading a line from stderr...\n");
+				errno = 0;
 				if (fgets(buf, sizeof(buf), ferr)) {
 					int slen = strlen(buf);
+					wait = FALSE;
 					// clip newline
 					if (slen > 0 && buf[slen-1] == '\n')
 						buf[slen-1] = '\0';
+					//logverb("Read %i bytes\n", slen);
+					sl_append(*errlines, buf);
 				} else {
 					if (feof(ferr)) {
-						logverb("stderr EOF\n");
+						//logverb("stderr EOF\n");
 						errdone = TRUE;
-					}
-					if (ferror(ferr)) {
-						SYSERROR("stderr error");
-						return -1;
+					} else if (ferror(ferr)) {
+						if (errno != EAGAIN) {
+							SYSERROR("Error reading stderr from child process");
+							return -1;
+						}
 					}
 				}
 			}
+			if (wait)
+				//sleep(1);
+				{
+					struct timespec ts;
+					ts.tv_nsec = 100000000L;
+					ts.tv_sec = 0;
+					nanosleep(&ts, NULL);
+				}
 		}
 
 		/*
@@ -619,14 +639,16 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 			}
 		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
 
-		if (outlines) {
-			*outlines = fid_get_lines(fout, FALSE);
-			fclose(fout);
-		}
-		if (errlines) {
-			*errlines = fid_get_lines(ferr, FALSE);
-			fclose(ferr);
-		}
+		/*
+		 if (outlines) {
+		 *outlines = fid_get_lines(fout, FALSE);
+		 fclose(fout);
+		 }
+		 if (errlines) {
+		 *errlines = fid_get_lines(ferr, FALSE);
+		 fclose(ferr);
+		 }
+		 */
 	}
 	return 0;
 }
