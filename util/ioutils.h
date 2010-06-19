@@ -113,6 +113,8 @@ void* file_get_contents(const char* fn, size_t* len, bool addzero);
 
 char* file_get_contents_offset(const char* fn, int offset, int length);
 
+sl* fid_add_lines(FILE* fid, bool include_newlines, sl* list);
+
 sl* file_get_lines(const char* fn, bool include_newlines);
 
 sl* fid_get_lines(FILE* fid, bool include_newlines);

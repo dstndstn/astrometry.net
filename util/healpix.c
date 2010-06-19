@@ -1364,6 +1364,12 @@ double healpix_distance_to_xyz(int hp, int Nside, const double* xyz,
 	dist2B = cdists[corder[1]];
 	// the closest two points should share an edge... unless we're in some
 	// weird configuration like the opposite side of the sphere.
+	if (!((dxA == dxB) || (dyA == dyB))) {
+		// weird configuration -- return the closest corner.
+		if (closestxyz)
+			healpix_to_xyzarr(hp, Nside, cdx[corder[0]], cdy[corder[0]], closestxyz);
+		return distsq2deg(cdists[corder[0]]);
+	}
 	assert(dxA == dxB || dyA == dyB);
 	assert(dist2A <= dist2B);
 

@@ -25,6 +25,8 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/select.h>
+#include <fcntl.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdlib.h>
@@ -473,32 +475,135 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 	} else {
 		FILE *fout = NULL, *ferr = NULL;
 		int status;
+		sl* outlist = NULL;
+		sl* errlist = NULL;
+		bool outdone=TRUE, errdone=TRUE;
+
 		// Parent process.
 		if (outlines) {
 			close(outpipe[1]);
+			
+			if (fcntl(outpipe[0], F_SETFL, O_NONBLOCK)) {
+				SYSERROR("Failed to set O_NONBLOCK flag on stdout pipe from child process");
+				return -1;
+			}
+
+			outdone = FALSE;
+			outlist = sl_new(256);
 			fout = fdopen(outpipe[0], "r");
 			if (!fout) {
-                SYSERROR("Failed to open stdout pipe");
+				SYSERROR("Failed to open stdout pipe");
 				return -1;
 			}
 		}
 		if (errlines) {
 			close(errpipe[1]);
+
+			if (fcntl(errpipe[0], F_SETFL, O_NONBLOCK)) {
+				SYSERROR("Failed to set O_NONBLOCK flag on stderr pipe from child process");
+				return -1;
+			}
+
+			errdone = FALSE;
+			errlist = sl_new(256);
 			ferr = fdopen(errpipe[0], "r");
 			if (!ferr) {
-                SYSERROR("Failed to open stderr pipe");
+				SYSERROR("Failed to open stderr pipe");
 				return -1;
 			}
 		}
 		// Wait for command to finish.
+
+		while (!outdone || !errdone) {
+			char buf[1024];
+			if (!outdone) {
+				logverb("reading a line from stdout...\n");
+				if (fgets(buf, sizeof(buf), fout)) {
+					int slen = strlen(buf);
+					// clip newline
+					if (slen > 0 && buf[slen-1] == '\n')
+						buf[slen-1] = '\0';
+				} else {
+					if (feof(fout)) {
+						logverb("stdout EOF\n");
+						outdone = TRUE;
+					}
+					if (ferror(fout)) {
+						SYSERROR("stdout error");
+						return -1;
+					}
+				}
+			}
+			if (!errdone) {
+				logverb("reading a line from stderr...\n");
+				if (fgets(buf, sizeof(buf), ferr)) {
+					int slen = strlen(buf);
+					// clip newline
+					if (slen > 0 && buf[slen-1] == '\n')
+						buf[slen-1] = '\0';
+				} else {
+					if (feof(ferr)) {
+						logverb("stderr EOF\n");
+						errdone = TRUE;
+					}
+					if (ferror(ferr)) {
+						SYSERROR("stderr error");
+						return -1;
+					}
+				}
+			}
+		}
+
+		/*
+		do {
+			int maxfd;
+			int rtn;
+			fd_set readers;
+			fd_set errors;
+			//struct timeval tv;
+
+			maxfd = 0;
+			FD_ZERO(&readers);
+			FD_ZERO(&errors);
+			if (!outdone) {
+				FD_SET(outpipe[0], &readers);
+				FD_SET(outpipe[0], &errors);
+				maxfd = MAX(maxfd, outpipe[0]);
+			}
+			if (!errdone) {
+				FD_SET(errpipe[0], &readers);
+				FD_SET(errpipe[0], &errors);
+				maxfd = MAX(maxfd, errpipe[0]);
+			}
+
+			rtn = select(maxfd+1, &readers, NULL, &errors, NULL);
+			if (rtn == -1) {
+                SYSERROR("Failed to select() to wait for output from command");
+				return -1;
+			}
+			if (rtn > 0) {
+				if (FD_ISSET(outpipe[0], &readers)) {
+				}
+
+			}
+		} while (!outdone || !errdone);
+		 */
+
 		// FIXME - do we need to read from the pipes to prevent the command
 		// from blocking?
 		//printf("Waiting for command to finish (PID %i).\n", (int)pid);
 		do {
-			if (waitpid(pid, &status, 0) == -1) {
+			int opts = 0; //WNOHANG;
+			pid_t wpid = waitpid(pid, &status, opts);
+			if (wpid == -1) {
                 SYSERROR("Failed to waitpid() for command to finish");
 				return -1;
 			}
+			/*
+			 if (pid == 0) {
+			 // process has not finished.
+			 }
+			 */
 			if (WIFSIGNALED(status)) {
                 ERROR("Command was killed by signal %i", WTERMSIG(status));
 				return -1;
@@ -617,9 +722,9 @@ sl* file_get_lines(const char* fn, bool include_newlines) {
 	return list;
 }
 
-sl* fid_get_lines(FILE* fid, bool include_newlines) {
-	sl* list;
-	list = sl_new(256);
+sl* fid_add_lines(FILE* fid, bool include_newlines, sl* list) {
+	if (!list)
+		list = sl_new(256);
 	while (1) {
 		char* line = read_string_terminated(fid, "\n\r\0", 3, include_newlines);
 		if (!line) {
@@ -637,6 +742,10 @@ sl* fid_get_lines(FILE* fid, bool include_newlines) {
 			break;
 	}
 	return list;
+}
+
+sl* fid_get_lines(FILE* fid, bool include_newlines) {
+	return fid_add_lines(fid, include_newlines, NULL);
 }
 
 char* file_get_contents_offset(const char* fn, int offset, int size) {
