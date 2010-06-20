@@ -574,51 +574,16 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 				}
 		}
 
-		/*
-		do {
-			int maxfd;
-			int rtn;
-			fd_set readers;
-			fd_set errors;
-			//struct timeval tv;
-
-			maxfd = 0;
-			FD_ZERO(&readers);
-			FD_ZERO(&errors);
-			if (!outdone) {
-				FD_SET(outpipe[0], &readers);
-				FD_SET(outpipe[0], &errors);
-				maxfd = MAX(maxfd, outpipe[0]);
-			}
-			if (!errdone) {
-				FD_SET(errpipe[0], &readers);
-				FD_SET(errpipe[0], &errors);
-				maxfd = MAX(maxfd, errpipe[0]);
-			}
-
-			rtn = select(maxfd+1, &readers, NULL, &errors, NULL);
-			if (rtn == -1) {
-                SYSERROR("Failed to select() to wait for output from command");
-				return -1;
-			}
-			if (rtn > 0) {
-				if (FD_ISSET(outpipe[0], &readers)) {
-				}
-
-			}
-		} while (!outdone || !errdone);
-		 */
-
-		// FIXME - do we need to read from the pipes to prevent the command
-		// from blocking?
 		//printf("Waiting for command to finish (PID %i).\n", (int)pid);
 		do {
+		  //logverb("Waiting for command to finish...\n");
 			int opts = 0; //WNOHANG;
 			pid_t wpid = waitpid(pid, &status, opts);
 			if (wpid == -1) {
                 SYSERROR("Failed to waitpid() for command to finish");
 				return -1;
 			}
+			//logverb("waitpid() returned\n");
 			/*
 			 if (pid == 0) {
 			 // process has not finished.
@@ -639,16 +604,6 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 			}
 		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
 
-		/*
-		 if (outlines) {
-		 *outlines = fid_get_lines(fout, FALSE);
-		 fclose(fout);
-		 }
-		 if (errlines) {
-		 *errlines = fid_get_lines(ferr, FALSE);
-		 fclose(ferr);
-		 }
-		 */
 	}
 	return 0;
 }
