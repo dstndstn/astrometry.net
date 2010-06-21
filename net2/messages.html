@@ -1,0 +1,8 @@
+{% if messages %}
+{% for message in messages %}
+{% autoescape off %}
+{{ message }}
+{% endautoescape %}
+<br>
+{% endfor %}
+{% endif %}

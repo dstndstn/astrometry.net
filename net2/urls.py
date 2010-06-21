@@ -5,6 +5,9 @@ from django.conf.urls.defaults import *
 # admin.autodiscover()
 
 urlpatterns = patterns('',
+					   (r'^login', 'astrometry.net2.views.login'),
+
+
     # Example:
     # (r'^net2/', include('net2.foo.urls')),
 

@@ -1,0 +1,24 @@
+<div id="menu">
+
+{% if user.is_authenticated %}
+
+<b>{{ user.username }}</b>
+
+{% else %}
+
+not logged in
+
+
+{% endif %}
+ | |
+
+Stuff you can do.
+
+<a href="{% url astrometry.net2.logout %}">Sign out</a>
+{% else %}
+
+<a href="{% url astrometry.net2.login %}">Sign in</a>
+
+{% endif %}
+
+</div>

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block pagetitle %}
+Astrometry.net Login
+{% endblock %}
+
+{% block title %}
+Login
+{% endblock %}
+
+{% block content %}
+<form id="login" action="" method="post">
+<div id="loginbox">
+
+<table class="boxedtable" border="0">
+
+{% if form.non_field_errors %}
+<tr><td colspan="2">
+<div class="myerrors">
+{{ form.non_field_errors|join:", " }}
+</div>
+</td></tr>
+{% endif %}
+
+{% if form.openid.errors %}
+<tr><td colspan="2">
+<div class="myerrors">
+{{ form.openid.errors|join:", " }}
+</div>
+</td></tr>
+{% endif %}
+
+<tr>
+<td class="r">Open Id:</td>
+<td> {{ form.openid }} </td>
+</tr>
+
+<tr>
+<td colspan="2" class="c">
+<input type="hidden" name="next" value="{{ next }}" />
+<input type="submit" name="login" value="Login" class="bigbutton" />
+</td>
+
+</tr>
+</table>
+</div> <!-- end loginbox -->
+</form>
+
+{% endblock content %}
+
