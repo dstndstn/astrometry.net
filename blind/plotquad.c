@@ -28,8 +28,10 @@
 #include "bl.h"
 #include "permutedsort.h"
 #include "matchfile.h"
+#include "log.h"
+#include "os-features.h" // for HAVE_NETPBM.
 
-#define OPTIONS "hW:H:w:I:C:PRo:d:cm:s:b:"
+#define OPTIONS "hW:H:w:I:C:PRo:d:cm:s:b:v"
 
 static void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
@@ -85,10 +87,15 @@ int main(int argc, char *args[]) {
     bool background = FALSE;
     float br=0.0, bg=0.0, bb=0.0;
 
+	int loglvl = LOG_MSG;
+
 	coords = dl_new(16);
 
 	while ((argchar = getopt(argc, args, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'v':
+			loglvl++;
+			break;
         case 's':
             scale = atof(optarg);
             break;
@@ -146,6 +153,9 @@ int main(int argc, char *args[]) {
 			printHelp(progname);
 			exit(-1);
 		}
+
+	log_init(loglvl);
+	log_to(stderr);
 
     if (dimquads == 0) {
         printf("Error: dimquads (-d) must be positive.\n");
@@ -214,17 +224,20 @@ int main(int argc, char *args[]) {
     if (infn) {
 #if HAVE_NETPBM
 #else
-	pnginput = TRUE;
+		logverb("No netpbm available: forcing PNG input.\n");
+		pnginput = TRUE;
 #endif
-      if (pnginput) {
-	img = cairoutils_read_png(infn, &W, &H);
-      }
+		if (pnginput) {
+			logverb("Reading PNG file %s\n", infn);
+			img = cairoutils_read_png(infn, &W, &H);
+		}
 #if HAVE_NETPBM
+		else {
+			logverb("Reading PPM from %s\n", infn);
+			cairoutils_fake_ppm_init();
+			img = cairoutils_read_ppm(infn, &W, &H);
+		}
 #else
-      else {
-		  cairoutils_fake_ppm_init();
-	img = cairoutils_read_ppm(infn, &W, &H);
-      }
 #endif
         if (!img) {
             fprintf(stderr, "Failed to read input image %s.\n", infn);

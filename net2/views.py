@@ -18,9 +18,10 @@ def login(req):
 	else:
 		form = LoginForm()
 
-	return render_to_response('login.html', {'form': form,
-											 'next': '/home'})
-			
+	c = {'form': form,
+		 'next': '/home'}
+	c.update(csrf(req))
+	return render_to_response('login.html', c)
 
 def logout(req):
 	return HttpResponse('not implemented')

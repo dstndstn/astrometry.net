@@ -10,6 +10,7 @@ Login
 
 {% block content %}
 <form id="login" action="" method="post">
+{% csrf_token %}
 <div id="loginbox">
 
 <table class="boxedtable" border="0">

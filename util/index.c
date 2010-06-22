@@ -384,7 +384,8 @@ int index_reload(index_t* index) {
 	get_filenames(index->indexname, &quadfname, &codetreefname, &startreefname, &singlefile);
 	if (!index->fits) {
 		if (singlefile) {
-			index->fits = anqfits_open(startreefname);
+			if (!index->fits)
+				index->fits = anqfits_open(startreefname);
 			if (!index->fits) {
 				ERROR("Failed to open FITS file %s", startreefname);
 				return -1;

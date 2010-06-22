@@ -14,11 +14,10 @@ not logged in
 
 Stuff you can do.
 
+{% if user.is_authenticated %}
 <a href="{% url astrometry.net2.logout %}">Sign out</a>
 {% else %}
-
 <a href="{% url astrometry.net2.login %}">Sign in</a>
-
 {% endif %}
 
 </div>
