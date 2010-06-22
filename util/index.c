@@ -24,6 +24,7 @@
 #include "tic.h"
 
 #include "anqfits.h"
+#include "starutil.h"
 
 bool index_overlaps_scale_range(index_t* meta,
                                      double quadlo, double quadhi) {
@@ -45,6 +46,10 @@ bool index_is_within_range(index_t* meta, double ra, double dec, double radius_d
 
 int index_get_quad_dim(const index_t* index) {
     return quadfile_dimquads(index->quads);
+}
+
+int index_get_code_dim(const index_t* index) {
+	return dimquad2dimcode(index_get_quad_dim(index));
 }
 
 int index_nquads(const index_t* index) {

@@ -196,6 +196,14 @@ _sip.so: sip-utils.o sip.o starutil.o mathutil.o sip_qfits.o \
 _healpix.so: healpix-utils.o healpix.o permutedsort.o starutil.o mathutil.o errors.o bl.o log.o os-features.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
+index_wrap.c: index.i index.h
+	swig -python -I. $<
+
+_index_c.so: index_wrap.c setup-index.py \
+		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+	python setup-index.py build --force --build-base build --build-platlib build/lib
+	cp build/lib/_index_c.so $@
+
 pad-file: pad-file.o $(ANUTILS_LIB)
 ALL_OBJ += pad-file.o
 

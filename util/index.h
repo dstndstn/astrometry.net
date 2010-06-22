@@ -124,6 +124,8 @@ char* index_get_qidx_filename(const char* indexname);
 
 int index_get_quad_dim(const index_t* index);
 
+int index_get_code_dim(const index_t* index);
+
 int index_nquads(const index_t* index);
 
 int index_nstars(const index_t* index);
