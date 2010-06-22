@@ -22,6 +22,10 @@ double code_get(double* code, int i) {
 long codekd_addr(index_t* ind) {
 	 return (long)ind->codekd;
 }
+long starkd_addr(index_t* ind) {
+	 return (long)ind->starkd;
+}
+
 
 /*
 void codetree_get_N(codetree* s, unsigned int codeid_start, int N, double* code) {
@@ -44,6 +48,7 @@ void code_free(double* code);
 double code_get(double* code, int i);
 
 long codekd_addr(index_t* ind);
+long starkd_addr(index_t* ind);
 
 /*
 void codetree_get_N(codetree* s, unsigned int codeid_start, int N, double* code);

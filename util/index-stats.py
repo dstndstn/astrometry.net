@@ -32,25 +32,8 @@ if __name__ == '__main__':
 
 		# codes
 		print 'Getting codes...'
-		codes2 = index_get_codes(I)
-		#print 'codekd is', I.codekd
-		#print 'addr', addr
-		#codes2 = codekd_get_codes_numpy(addr)
-		print 'shape', codes2.shape
-
-		codes = zeros((NQ, DQ))
-		code = code_alloc(DC)
-		for i in range(codetree_N(I.codekd)):
-			if codetree_get(I.codekd, i, code):
-				raise 'Failed to get code %i' % i
-			#print 'code:', code
-			for j in range(DQ):
-				codes[i,j] = code_get(code, j) #code[j]
-		code_free(code);
-		#codetree_get_N(I.codekd, 0, NQ, codes.data)
-		print 'Codes:', codes.shape
-
-		print 'Equal:', (codes - codes2).min(), (codes - codes2).max()
+		codes = index_get_codes(I)
+		print 'shape', codes.shape
 
 		# code slices
 		cx = codes[:,0]
@@ -102,16 +85,7 @@ if __name__ == '__main__':
 
 		# stars
 		print 'Getting stars...'
-		stars = zeros((NS, 3))
-		# HACK -- abuse code_{alloc,get,free}
-		star = code_alloc(3)
-		for i in range(startree_N(I.starkd)):
-			if startree_get(I.starkd, i, star):
-				raise 'Failed to get star %i' % i
-			for j in range(3):
-				stars[i,j] = code_get(star, j)
-		code_free(star)
-		print 'Stars:', stars.shape
+		stars = index_get_stars(I)
 
 		R = 15.
 		print 'Finding pairs within', R, 'arcsec'
