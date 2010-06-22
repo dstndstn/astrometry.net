@@ -32,6 +32,12 @@ if __name__ == '__main__':
 
 		# codes
 		print 'Getting codes...'
+		codes2 = index_get_codes(I)
+		#print 'codekd is', I.codekd
+		#print 'addr', addr
+		#codes2 = codekd_get_codes_numpy(addr)
+		print 'shape', codes2.shape
+
 		codes = zeros((NQ, DQ))
 		code = code_alloc(DC)
 		for i in range(codetree_N(I.codekd)):
@@ -43,6 +49,8 @@ if __name__ == '__main__':
 		code_free(code);
 		#codetree_get_N(I.codekd, 0, NQ, codes.data)
 		print 'Codes:', codes.shape
+
+		print 'Equal:', (codes - codes2).min(), (codes - codes2).max()
 
 		# code slices
 		cx = codes[:,0]
