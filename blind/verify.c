@@ -142,7 +142,7 @@ verify_field_t* verify_field_preprocess(const starxy_t* fieldxy) {
 
 /*
  This gets called after all verification calls for a field are finished;
- we cleanup the data structures we created in the verify_field_preprocess()
+ we clean up the data structures we created in the verify_field_preprocess()
  function.
  */
 void verify_field_free(verify_field_t* vf) {
