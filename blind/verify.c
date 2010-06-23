@@ -32,12 +32,12 @@
 #include "healpix.h"
 #include "datalog.h"
 
-#define DEBUGVERIFY 1
+#define DEBUGVERIFY 0
 
 #if DEBUGVERIFY
-#define debug(args...) logdebug(args)
+#define debug2(args...) logdebug(args)
 #else
-#define debug(args...)
+#define debug2(args...)
 #endif
 
 #define DATALOG_MASK_VERIFY 0x1
@@ -197,7 +197,7 @@ double* verify_compute_sigma2s(const verify_field_t* vf, const MatchObj* mo,
 	NF = starxy_n(vf->field);
 	if (do_gamma) {
 		verify_get_quad_center(vf, mo, qc, &Q2);
-		debug("Quad radius = %g pixels\n", sqrt(Q2));
+		debug2("Quad radius = %g pixels\n", sqrt(Q2));
 	}
 	return compute_sigma2s(vf, NULL, NF, qc, Q2, verify_pix2, do_gamma);
 }
@@ -227,8 +227,8 @@ static void print_test_perm(verify_t* v) {
 	int i;
 	for (i=0; i<v->NTall; i++) {
 		if (i == v->NT)
-			debug("(NT)");
-		debug("%i ", v->testperm[i]);
+			debug2("(NT)");
+		debug2("%i ", v->testperm[i]);
 	}
 }
 
@@ -246,9 +246,9 @@ static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchOb
 	v->tbadguys = malloc(v->NTall * sizeof(int));
 
 	if (DEBUGVERIFY) {
-		debug("start:\n");
+		debug2("start:\n");
 		print_test_perm(v);
-		debug("\n");
+		debug2("\n");
 	}
 
 	if (vf->do_dedup) {
@@ -317,9 +317,9 @@ static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchOb
 	free(keepers);
 
 	if (DEBUGVERIFY) {
-		debug("after dedup and removing quad:\n");
+		debug2("after dedup and removing quad:\n");
 		print_test_perm(v);
-		debug("\n");
+		debug2("\n");
 	}
 
 }
@@ -349,8 +349,8 @@ static void verify_apply_ror(verify_t* v,
         do_gamma = FALSE;
 
 	verify_get_test_stars(v, vf, mo, pix2, do_gamma, fake_match);
-	debug("Number of test stars: %i\n", v->NT);
-	debug("Number of reference stars: %i\n", v->NR);
+	debug2("Number of test stars: %i\n", v->NT);
+	debug2("Number of reference stars: %i\n", v->NR);
 
 	if (!fake_match)
 		verify_get_quad_center(vf, mo, qc, &Q2);
@@ -360,7 +360,7 @@ static void verify_apply_ror(verify_t* v,
 	if (vf->do_uniformize) {
 		// -get uniformization scale.
 		verify_get_uniformize_scale(index_cutnside, mo->scale, fieldW, fieldH, &uni_nw, &uni_nh);
-		debug("uniformizing into %i x %i blocks.\n", uni_nw, uni_nh);
+		debug2("uniformizing into %i x %i blocks.\n", uni_nw, uni_nh);
 
 		// uniformize!
 		if (uni_nw > 1 || uni_nh > 1) {
@@ -368,9 +368,9 @@ static void verify_apply_ror(verify_t* v,
 			bincenters = verify_uniformize_bin_centers(fieldW, fieldH, uni_nw, uni_nh);
 
 			if (DEBUGVERIFY) {
-				debug("after uniformizing:\n");
+				debug2("after uniformizing:\n");
 				print_test_perm(v);
-				debug("\n");
+				debug2("\n");
 			}
 		}
 	}
@@ -379,9 +379,9 @@ static void verify_apply_ror(verify_t* v,
 		int Ngoodbins;
 		double ror2;
 
-		debug("Quad radius = %g\n", sqrt(Q2));
+		debug2("Quad radius = %g\n", sqrt(Q2));
 		ror2 = Q2 * MAX(1, (fieldW*fieldH*(1 - distractors) / (4. * M_PI * v->NR * pix2) - 1));
-		debug("(strong) Radius of relevance is %.1f\n", sqrt(ror2));
+		debug2("(strong) Radius of relevance is %.1f\n", sqrt(ror2));
 
 		if (binids) {
 			assert(uni_nw);
@@ -434,12 +434,12 @@ static void verify_apply_ror(verify_t* v,
 
 		v->NT = igood;
 		memcpy(v->testperm + igood, v->tbadguys, ibad * sizeof(int));
-		debug("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, v->NT);
+		debug2("After removing %i/%i irrelevant bins: %i test stars.\n", (uni_nw*uni_nh)-Ngoodbins, uni_nw*uni_nh, v->NT);
 
 		if (DEBUGVERIFY) {
-			debug("after applying RoR:\n");
+			debug2("after applying RoR:\n");
 			print_test_perm(v);
-			debug("\n");
+			debug2("\n");
 		}
 
 		// Effective area: A * proportion of good bins.
@@ -475,10 +475,10 @@ static void verify_apply_ror(verify_t* v,
 		// remember the bad guys
 		memcpy(v->refperm + igood, v->badguys, ibad * sizeof(int));
 		v->NR = igood;
-		debug("After removing irrelevant ref stars: %i ref stars.\n", v->NR);
+		debug2("After removing irrelevant ref stars: %i ref stars.\n", v->NR);
 
 		// New ROR is...
-		debug("ROR changed from %g to %g\n", sqrt(ror2),
+		debug2("ROR changed from %g to %g\n", sqrt(ror2),
 			  sqrt(Q2 * (1 + effA*(1 - distractors) / (4. * M_PI * v->NR * pix2))));
 		free(goodbins);
 	}
@@ -584,14 +584,14 @@ static double real_verify_star_lists(verify_t* v,
 
 		logd = logd_at(distractors, mu, v->NR, logbg);
 
-		debug("\n");
-		debug("test star %i: (%.1f,%.1f), sigma: %.1f\n", i, testxy[0], testxy[1], sqrt(sig2));
+		debug2("\n");
+		debug2("test star %i: (%.1f,%.1f), sigma: %.1f\n", i, testxy[0], testxy[1], sqrt(sig2));
 
 		// find nearest ref star (within 5 sigma)
         tmpi = kdtree_nearest_neighbour_within(rtree, testxy, sig2 * 25.0, &d2);
 		if (tmpi == -1) {
 			// no nearest neighbour within range.
-			debug("  No nearest neighbour.\n");
+			debug2("  No nearest neighbour.\n");
 			refi = -1;
 			logfg = -HUGE_VAL;
 		} else {
@@ -603,25 +603,25 @@ static double real_verify_star_lists(verify_t* v,
 			// FIXME - do something with uninformative hits?
 			// these should be eliminated by RoR filtering...
 			if (loggmax < logbg)
-				debug("  This star is uninformative: peak %.1f, bg %.1f.\n", loggmax, logbg);
+				debug2("  This star is uninformative: peak %.1f, bg %.1f.\n", loggmax, logbg);
 
 			// value of the Gaussian
 			logfg = loggmax - d2 / (2.0 * sig2);
 			
-			debug("  NN: ref star %i, dist %.2f, sigmas: %.3f, logfg: %.1f (%.1f above distractor, %.1f above bg)\n",
+			debug2("  NN: ref star %i, dist %.2f, sigmas: %.3f, logfg: %.1f (%.1f above distractor, %.1f above bg)\n",
 					refi, sqrt(d2), sqrt(d2 / sig2), logfg, logfg - logd, logfg - logbg);
 		}
 
 		if (logfg < logd) {
 			logfg = logd;
-			debug("  Distractor.\n");
+			debug2("  Distractor.\n");
 			theta[i] = THETA_DISTRACTOR;
 
 		} else {
 			// duplicate match?
 			if (rmatches[refi] != -1) {
 				double oldfg = rprobs[refi];
-				//debug("Conflict: odds was %g, now %g.\n", oldfg, logfg);
+				//debug2("Conflict: odds was %g, now %g.\n", oldfg, logfg);
 				// Conflict.  Compute probabilities of old vs new theta.
 				// keep the old one: the new star is a distractor
 				double keepfg = logd;
@@ -638,24 +638,24 @@ static double real_verify_star_lists(verify_t* v,
 				// FIXME - could estimate/bound the distractor change and avoid computing it...
 
 				// ... and the intervening distractors become worse.
-				debug("  oldj is %i, muj is %i.\n", oldj, muj);
-				debug("  changing old point to distractor: %.1f change in logodds\n",
+				debug2("  oldj is %i, muj is %i.\n", oldj, muj);
+				debug2("  changing old point to distractor: %.1f change in logodds\n",
 						(logd_at(distractors, muj, v->NR, logbg) - oldfg));
 				for (; j<i; j++)
 					if (theta[j] < 0) {
 						switchfg += (logd_at(distractors, muj, v->NR, logbg) -
 									 logd_at(distractors, muj+1, v->NR, logbg));
-						debug("  adjusting distractor %i: %g change in logodds\n",
+						debug2("  adjusting distractor %i: %g change in logodds\n",
 							  j, (logd_at(distractors, muj, v->NR, logbg) -
 								  logd_at(distractors, muj+1, v->NR, logbg)));
 					} else
 						muj++;
-				debug("  Conflict: keeping   old match, logfg would be %.1f\n", keepfg);
-				debug("  Conflict: accepting new match, logfg would be %.1f\n", switchfg);
+				debug2("  Conflict: keeping   old match, logfg would be %.1f\n", keepfg);
+				debug2("  Conflict: accepting new match, logfg would be %.1f\n", switchfg);
 				
 				if (switchfg > keepfg) {
 					// upgrade: old match becomes a distractor.
-					debug("  Conflict: upgrading.\n");
+					debug2("  Conflict: upgrading.\n");
 					theta[oldj] = THETA_CONFLICT;
 					// Note that here we want the entries in "theta" to be
 					// indices into "v->refxy" et al, so apply the "rperm" permutation.
@@ -669,7 +669,7 @@ static double real_verify_star_lists(verify_t* v,
 
 				} else {
 					// old match was better: this match becomes a distractor.
-					debug("  Conflict: not upgrading.\n"); //  logprob was %.1f, now %.1f.\n", oldfg, logfg);
+					debug2("  Conflict: not upgrading.\n"); //  logprob was %.1f, now %.1f.\n", oldfg, logfg);
 					logfg = keepfg;
 					theta[i] = THETA_CONFLICT;
 				}
@@ -685,13 +685,13 @@ static double real_verify_star_lists(verify_t* v,
 		}
 
         logodds += (logfg - logbg);
-        debug("  Logodds: change %.1f, now %.1f\n", (logfg - logbg), logodds);
+        debug2("  Logodds: change %.1f, now %.1f\n", (logfg - logbg), logodds);
 
 		if (all_logodds)
 			all_logodds[i] = logfg - logbg;
 
         if (logodds < logodds_bail) {
-			debug("  logodds %g less than bailout %g\n", logodds, logodds_bail);
+			debug2("  logodds %g less than bailout %g\n", logodds, logodds_bail);
 			if (p_ibailed)
 				*p_ibailed = i;
             break;
@@ -883,10 +883,10 @@ void verify_get_uniformize_scale(int cutnside, double scale, int W, int H, int* 
 	double cutarcsec, cutpix;
 	cutarcsec = healpix_side_length_arcmin(cutnside) * 60.0;
 	cutpix = cutarcsec / scale;
-	debug("cut nside: %i\n", cutnside);
-	debug("cut scale: %g arcsec\n", cutarcsec);
-	debug("match scale: %g arcsec/pix\n", scale);
-	debug("cut scale: %g pixels\n", cutpix);
+	debug2("cut nside: %i\n", cutnside);
+	debug2("cut scale: %g arcsec\n", cutarcsec);
+	debug2("match scale: %g arcsec/pix\n", scale);
+	debug2("cut scale: %g pixels\n", cutpix);
 	if (cutnw)
 		*cutnw = MAX(1, (int)round(W / cutpix));
 	if (cutnh)
@@ -915,16 +915,16 @@ void verify_uniformize_field(const double* xy,
 		lists[i] = il_new(16);
 
 	// put the stars in the appropriate bins.
-	debug("Test star bins:\n");
+	debug2("Test star bins:\n");
 	for (i=0; i<N; i++) {
 		int ind;
 		int bin;
 		ind = perm[i];
 		bin = get_xy_bin(xy + 2*ind, fieldW, fieldH, nw, nh);
-		debug("%i ", bin);
+		debug2("%i ", bin);
 		il_append(lists[bin], ind);
 	}
-	debug("\n");
+	debug2("\n");
 
 	if (p_bincounts) {
 		// note the bin occupancies.
@@ -1079,15 +1079,15 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, int istopped, 
 	if (DEBUGVERIFY) {
 		for (i=0; i<v->NT; i++) {
 			if (i == besti)
-				debug("* ");
-			debug("Theta[%i] = %i", i, theta[i]);
+				debug2("* ");
+			debug2("Theta[%i] = %i", i, theta[i]);
 			if (theta[i] < 0) {
-				debug("\n");
+				debug2("\n");
 				continue;
 			}
 			ri = theta[i];
 			ti = v->testperm[i];
-			debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
+			debug2(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f)\n",
 				  (v->refstarid ? v->refstarid[ri] : -1000), v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1]);
 		}
 	}
@@ -1263,7 +1263,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	assert(skdt->sweep);
 	// Find all index stars within the bounding circle of the field.
 	startree_search_for(skdt, fieldcenter, fieldr2, &refxyz, NULL, &v->refstarid, &v->NRall);
-	debug("%i reference stars in the bounding circle\n", v->NRall);
+	debug2("%i reference stars in the bounding circle\n", v->NRall);
 	if (!refxyz) {
 		// no stars in range.
 		goto bailout;
@@ -1303,7 +1303,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	permuted_sort(sweep, sizeof(int), compare_ints_asc, v->refperm, v->NR);
 	free(sweep);
 	sweep = NULL;
-	debug("Found %i reference stars.\n", v->NR);
+	debug2("Found %i reference stars.\n", v->NR);
 
 	// "refstarids" are indices into the star kdtree and could be used to
 	// retrieve "tag-along" data with, eg, startree_get_data_column().
@@ -1320,7 +1320,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 			for (j=0; j<mo->dimquads; j++) {
 				if (v->refstarid[ri] == mo->star[j]) {
 					inquad = TRUE;
-					//debug("Skipping ref star index %i, starid %i: quad star %i\n", ri, v->refstarid[ri], j);
+					//debug2("Skipping ref star index %i, starid %i: quad star %i\n", ri, v->refstarid[ri], j);
 					v->badguys[ibad] = ri;
 					ibad++;
 					break;
@@ -1334,7 +1334,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		// remember the bad guys
 		memcpy(v->refperm + igood, v->badguys, ibad * sizeof(int));
 		v->NR = igood;
-		debug("After removing stars in the quad: %i reference stars.\n", v->NR);
+		debug2("After removing stars in the quad: %i reference stars.\n", v->NR);
 	}
 	
 	if (!v->NR)
@@ -1356,7 +1356,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	} else {
 		verify_get_test_stars(v, vf, mo, pix2, do_gamma, fake_match);
 		effA = fieldW * fieldH;
-		debug("Number of test stars: %i\n", v->NT);
+		debug2("Number of test stars: %i\n", v->NT);
 	}
 	if (!v->NR || !v->NT)
 		goto bailout;
@@ -1371,6 +1371,13 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	mo->nfield = v->NTall;
 	// NRimage: only the stars inside the image bounds.
 	mo->nindex = NRimage;
+
+	if (log_get_level() >= LOG_ALL) {
+		int nm, nc, nd;
+		verify_count_hits(theta, besti, &nm, &nc, &nd);
+		debug("verify: logodds %g, %i matches, %i conflicts, %i distractors after %i field objects.\n",
+			  K, nm, nc, nd, besti);
+	}
 
 	if (K >= logaccept) {
 		int ri, ti;
@@ -1398,7 +1405,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 						assert(etheta[ti] == THETA_FILTERED);
 						etheta[ti] = ri;
 						eodds[ti] = HUGE_VAL;
-						debug("Matched ref index %i (star %i) to test index %i; ref pos=(%.1f, %.1f), test pos=(%.1f, %.1f)\n",
+						debug2("Matched ref index %i (star %i) to test index %i; ref pos=(%.1f, %.1f), test pos=(%.1f, %.1f)\n",
 							  ri, v->refstarid[ri], ti, v->refxy[ri*2+0], v->refxy[ri*2+1], v->testxy[ti*2+0], v->testxy[ti*2+1]);
 						break;
 					}
@@ -1407,16 +1414,16 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		}
 
 		if (DEBUGVERIFY) {
-			debug("\n");
+			debug2("\n");
 			for (i=0; i<v->NTall; i++) {
-				debug("ETheta[%i] = %i", i, etheta[i]);
+				debug2("ETheta[%i] = %i", i, etheta[i]);
 				if (etheta[i] < 0) {
-					debug(" (w=%g)\n", verify_logodds_to_weight(eodds[i]));
+					debug2(" (w=%g)\n", verify_logodds_to_weight(eodds[i]));
 					continue;
 				}
 				ri = etheta[i];
 				ti = i;
-				debug(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f), logodds=%g, w=%g\n",
+				debug2(" (starid %i), testxy=(%.1f, %.1f), refxy=(%.1f, %.1f), logodds=%g, w=%g\n",
 					  v->refstarid[ri], v->testxy[ti*2+0], v->testxy[ti*2+1], v->refxy[ri*2+0], v->refxy[ri*2+1],
 					  eodds[i], verify_logodds_to_weight(eodds[i]));
 			}

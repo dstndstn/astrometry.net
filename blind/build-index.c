@@ -325,10 +325,10 @@ int build_index_shared_skdt(startree_t* starkd, index_params_t* p,
 	// Yes, probably.  Uniformization isn't going to change the ordering much
 	// in deciding which stars to use in a quad -- they're all nearby.
 
-	logverb("Grabbing tag-along column \"%s\" for uniformizing...\n", p->sortcol);
+	logverb("Grabbing tag-along column \"%s\" for sorting...\n", p->sortcol);
 	sortdata = startree_get_data_column(starkd, p->sortcol, NULL, startree_N(starkd));
 	if (!sortdata) {
-		ERROR("Failed to find sort column data for uniformizing catalog");
+		ERROR("Failed to find sort column data for sorting catalog");
 		goto cleanup;
 	}
 
@@ -342,8 +342,8 @@ int build_index_shared_skdt(startree_t* starkd, index_params_t* p,
 	 ERROR("Failed to find uniformization permutation array");
 	 goto cleanup;
 	 }
-	p->hpquads_sort = uniperm;
-	p->hpquads_sortfunc = compare_ints_asc;
+	 p->hpquads_sort = uniperm;
+	 p->hpquads_sortfunc = compare_ints_asc;
 	 */
 
 	p->hpquads_sort_data = sortdata;
@@ -352,8 +352,7 @@ int build_index_shared_skdt(startree_t* starkd, index_params_t* p,
 
 	// hpquads
 	if (step_hpquads(p, &codes, &quads, &codefn, &quadfn,
-					 starkd, skdtfn,
-					 tempfiles))
+					 starkd, skdtfn, tempfiles))
 		return -1;
 
 	// codetree

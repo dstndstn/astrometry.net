@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import matplotlib
 matplotlib.use('Agg')
 
@@ -5,6 +6,7 @@ from astrometry.util.index import *
 from astrometry.util.plotutils import *
 from astrometry.libkd.spherematch import match
 from astrometry.util.starutil_numpy import *
+from astrometry.util.pyfits_utils import *
 
 from optparse import *
 
@@ -16,6 +18,47 @@ if __name__ == '__main__':
 	parser.add_option('-p', '--prefix', dest='prefix', help='Prefix for output plot names')
 	parser.set_defaults(prefix='')
 	opt,args = parser.parse_args()
+
+	if False: # DEBUG!
+		cat = fits_table('cat2.fits')
+		xyz = radectoxyz(cat.ra, cat.dec)
+		R = 15.
+		inds,dists = match(xyz, xyz, deg2rad(R/3600.))
+		notself = (inds[:,0] != inds[:,1])
+		clf()
+		hist(rad2deg(dists[notself]) * 3600., 200)
+		title('ImSim reference catalog')
+		xlabel('Distance between pairs of sources (arcsec)')
+		ylabel('Counts')
+		xlim(0, R)
+		savefig('cat-stars-1.png')
+
+		cat = fits_table('stars3.fits')
+		xyz = radectoxyz(cat.ra, cat.dec)
+		R = 15.
+		inds,dists = match(xyz, xyz, deg2rad(R/3600.))
+		notself = (inds[:,0] != inds[:,1])
+		clf()
+		hist(rad2deg(dists[notself]) * 3600., 200)
+		title('ImSim reference catalog -- stars only')
+		xlabel('Distance between pairs of sources (arcsec)')
+		ylabel('Counts')
+		xlim(0, R)
+		savefig('cat-stars-2.png')
+
+		cat = fits_table('gals2.fits')
+		xyz = radectoxyz(cat.ra, cat.dec)
+		R = 15.
+		inds,dists = match(xyz, xyz, deg2rad(R/3600.))
+		notself = (inds[:,0] != inds[:,1])
+		clf()
+		hist(rad2deg(dists[notself]) * 3600., 200)
+		title('ImSim reference catalog -- galaxies only')
+		xlabel('Distance between pairs of sources (arcsec)')
+		ylabel('Counts')
+		xlim(0, R)
+		savefig('cat-stars-3.png')
+
 
 	for indfn in args:
 		print 'Reading index', indfn
@@ -97,9 +140,21 @@ if __name__ == '__main__':
 		hist(rad2deg(dists[notself]) * 3600., 200)
 		xlabel('Star pair distances (arcsec)')
 		ylabel('Counts')
+		xlim(0, R)
 		savefig(opt.prefix + 'stars-1.png')
 
+		ra,dec = xyztoradec(stars)
+		ra += (ra > 180)*-360
 
+		clf()
+		(H,xe,ye) = histogram2d(ra, dec, bins=(100,100))
+		H=H.T
+		imshow(H, extent=(min(xe), max(xe), min(ye), max(ye)), aspect='auto',
+			   interpolation='nearest', origin='lower', cmap=antigray)
+		axis('equal')
+		xlabel('RA (deg)')
+		ylabel('Dec (deg)')
+		savefig(opt.prefix + 'stars-2.png')
 
 		index_free(I)
 		

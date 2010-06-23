@@ -51,7 +51,9 @@
 #include "codefile.h"
 #include "solver.h"
 
-static const char* OPTIONS = "hx:w:i:vj:X:Y:"; //q:";
+//#include "plotstuff.h"
+
+static const char* OPTIONS = "hx:w:i:vj:X:Y:Q:"; //q:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -64,6 +66,7 @@ void print_help(char* progname) {
 		   "   [-Y <y-column>]: Y column name\n"
            "   [-v]: verbose\n"
 		   "   [-j <pixel-jitter>]: set pixel jitter (default 1.0)\n"
+		   //"   [-Q <quad-plot-basename>]: plot all the quads in the image, one per file.  Put a %%i in this filename!\n"
 		   "\n", progname);
 }
 
@@ -121,12 +124,17 @@ int main(int argc, char** args) {
 	
 	double nsigma = 3.0;
 
+	//char* quadplotfn = NULL;
+
 	fits_use_error_system();
 
 	indexnames = sl_new(8);
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+			//case 'Q':
+			//quadplotfn = optarg;
+			//break;
 		case 'X':
 			xcol = optarg;
 			break;
@@ -473,7 +481,7 @@ int main(int argc, char** args) {
             for (k=0; k<dimquads; k++)
                 il_insert_unique_ascending(starsinquadslist, stars[k]);
 		}
-		logmsg("Found %i stars involved in quads (with at least one star contained in the image).\n", il_size(starsinquadslist));
+		logmsg("Found %i index stars involved in quads (with at least one star contained in the image).\n", il_size(starsinquadslist));
 
 		// Find the stars that are in quads that are completely contained.
 		starsinquadsfull = il_new(16);
@@ -485,7 +493,7 @@ int main(int argc, char** args) {
             for (k=0; k<dimquads; k++)
                 il_insert_unique_ascending(starsinquadsfull, stars[k]);
 		}
-		logmsg("Found %i stars involved in quads (fully contained in the image).\n", il_size(starsinquadsfull));
+		logmsg("Found %i index stars involved in quads (with all stars contained in the image).\n", il_size(starsinquadsfull));
 
 		// For each index object involved in quads, search for a correspondence.
 		corrstars = il_new(16);

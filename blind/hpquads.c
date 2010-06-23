@@ -343,6 +343,10 @@ int hpquads(startree_t* starkd,
 	logmsg("Nside=%i.  Nside^2=%i.  Number of healpixes=%i.  Healpix side length ~ %g arcmin.\n",
 		   me->Nside, me->Nside*me->Nside, NHP, healpix_side_length_arcmin(me->Nside));
 
+	me->sort_data = sort_data;
+	me->sort_func = sort_func;
+	me->sort_size = sort_size;
+
 	tic();
 	me->starkd = starkd;
 	N = startree_N(me->starkd);

@@ -756,6 +756,7 @@ void solver_run(solver_t* solver) {
 					debug("  C is in the box for A=%i, B=%i\n", field[A], field[B]);
                     debug("    box now:");
 					print_inbox(pq);
+					debug("\n");
 
                     solver->rel_field_noise2 = pq->rel_field_noise2;
 
@@ -1144,7 +1145,6 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	           sp->logratio_bail_threshold, sp->logratio_record_threshold,
 			   sp->logratio_stoplooking,
 			   sp->distance_from_quad_bonus, fake_match);
-
 	mo->nverified = sp->num_verified++;
 
 	if (mo->logodds >= sp->best_logodds) {
