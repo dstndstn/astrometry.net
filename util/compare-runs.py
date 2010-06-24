@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import matplotlib
 matplotlib.use('Agg')
 
@@ -8,6 +10,7 @@ from pylab import *
 from optparse import *
 import os
 from glob import glob
+from numpy import *
 
 def get_field(fieldname, m1, m2, nil, preproc=None):
 	t1 = []
@@ -15,7 +18,9 @@ def get_field(fieldname, m1, m2, nil, preproc=None):
 	for k,v in m1.items():
 		tt1 = v.getcolumn(fieldname)
 		if preproc is not None:
+			#print 'tt1=', tt1
 			tt1 = preproc(tt1)
+			#print 'after: tt1=', tt1
 		if not k in m2:
 			tt2 = nil
 		else:
@@ -102,8 +107,23 @@ if __name__ == '__main__':
 			# N objs
 			tinf = 1000.
 			clf()
-			t1,t2 = get_field('fieldobjs', m1, m2, tinf, preproc=max)
-			print t1, t2
+			def ppmax(x):
+				return amax(x, axis=1)
+			t1,t2 = get_field('fieldobjs', m1, m2, tinf, preproc=ppmax)
+			t1 = array(list(flatten(t1)))
+			t2 = array(list(flatten(t2)))
+			#print 'nobjs: t1=', t1
+			#print 't2=', t2
+			dN = 50
+			I = logical_or((t1 - t2) > dN , (t1 - t2) < -dN)
+			for i in flatnonzero(I):
+				k1,v1 = (m1.items())[i]
+				k2,v2 = (m2.items())[i]
+				print 'Nmatch changed:'
+				print '  %s: %i' % (k1, t1[i])
+				print '  %s: %i' % (k2, t2[i])
+				
+
 			plot(t1, t2, 'r.')
 			xlabel(d1 + ': N objects examined')
 			ylabel(d2 + ': N objects examined')

@@ -143,6 +143,28 @@ if __name__ == '__main__':
 		title('duplicated for A-B swap')
 		savefig(opt.prefix + 'codes-4.png')
 
+		clf()
+		arrs = [cx,cy,dx,dy]
+		anames = ['cx', 'cy', 'dx', 'dy']
+		sp = 1
+		for i,a1 in enumerate(arrs):
+			for j,a2 in enumerate(arrs):
+				subplot(4,4, sp)
+				sp += 1
+				if j > i:
+					continue
+				if i == j:
+					hist(a1, 100, range=[-0.3, 1.3])
+					xlabel(anames[i])
+				else:
+					(H,xe,ye) = histogram2d(a1, a2, bins=(100,100), range=[[-0.3,1.3],[-0.3,1.3]])
+					H=H.T
+					imshow(H, extent=(min(xe), max(xe), min(ye), max(ye)), aspect='auto',
+						   interpolation='nearest', origin='lower', cmap=antigray)
+					xlabel(anames[i])
+					ylabel(anames[j])
+		savefig(opt.prefix + 'codes-5.png')
+
 		# stars
 		print 'Getting stars...'
 		stars = index_get_stars(I)
