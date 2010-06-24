@@ -77,14 +77,14 @@ if __name__ == '__main__':
 	epoch1 = (X.field_1 > 0)
 	epoch2 = (X.field_3 > 0)
 	nmag = where(epoch1, 1, 0) + where(epoch2, 1, 0)
-	avgmag = where(epoch1, X.magnitude_1, 0) + where(epoch2, X.magnitude_3, 0)
-	X.r_mag = avgmag
+	summag = where(epoch1, X.magnitude_1, 0) + where(epoch2, X.magnitude_3, 0)
+	X.r_mag = summag / nmag
 	# B
 	epoch1 = (X.field_0 > 0)
 	epoch2 = (X.field_2 > 0)
 	nmag = where(epoch1, 1, 0) + where(epoch2, 1, 0)
-	avgmag = where(epoch1, X.magnitude_0, 0) + where(epoch2, X.magnitude_2, 0)
-	X.b_mag = avgmag
+	summag = where(epoch1, X.magnitude_0, 0) + where(epoch2, X.magnitude_2, 0)
+	X.b_mag = summag / nmag
 
 	print 'Writing to', outfn
 	X.write_to(outfn)
