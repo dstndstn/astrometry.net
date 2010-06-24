@@ -27,6 +27,7 @@
 #include "starutil.h"
 #include "index.h"
 #include "qidxfile.h"
+#include "permutedsort.h"
 
 const plotter_t plotter_index = {
 	.name = "index",
@@ -55,19 +56,39 @@ static void plotquad(cairo_t* cairo, plot_args_t* pargs, plotindex_t* args, inde
 	unsigned int stars[DQMAX];
 	double ra, dec;
 	double px, py;
+	double xy[DQMAX*2];
+	double cx, cy;
+	double theta[DQMAX];
+	int* perm;
+
 	quadfile_get_stars(index->quads, quadnum, stars);
+	cx = cy = 0.0;
 	for (k=0; k<DQ; k++) {
 		startree_get_radec(index->starkd, stars[k], &ra, &dec);
 		if (!plotstuff_radec2xy(pargs, ra, dec, &px, &py)) {
 			ERROR("Failed to convert RA,Dec %g,%g to pixels for quad %i\n", ra, dec, quadnum);
 			continue;
 		}
+		cx += px;
+		cy += py;
+		xy[2*k + 0] = px;
+		xy[2*k + 1] = py;
+	}
+	cx /= DQ;
+	cy /= DQ;
+	for (k=0; k<DQ; k++)
+		theta[k] = atan2(xy[2*k+1] - cy, xy[2*k+0] - cx);
+	perm = permuted_sort(theta, sizeof(double), compare_doubles_asc, NULL, DQ);
+	for (k=0; k<DQ; k++) {
+		px = xy[2 * perm[k] + 0];
+		py = xy[2 * perm[k] + 1];
 		if (k == 0) {
 			cairo_move_to(cairo, px, py);
 		} else {
 			cairo_line_to(cairo, px, py);
 		}
 	}
+	free(perm);
 	cairo_close_path(cairo);
 	if (args->fill)
 		cairo_fill(cairo);
