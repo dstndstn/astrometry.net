@@ -149,10 +149,12 @@ static an_option_t options[] = {
 	 "use SExtractor rather than built-in image2xy to find sources"},
 	{'&', "sextractor-config", required_argument, "filename",
 	 "use the given SExtractor config file (default: etc/sextractor.conf).  "
-	 "Note that CATALOG_NAME and CATALOG_TYPE values will be over-ridden by command-line values"},
-	{'*', "sextractor-path", optional_argument, "filename",
+	 "Note that CATALOG_NAME and CATALOG_TYPE values will be over-ridden by command-line values.  "
+	 "This option implies --use-sextractor."},
+	{'*', "sextractor-path", required_argument, "filename",
 	 "use the given path to the SExtractor executable.  Default: just 'sex', assumed to be in your PATH."
-	 "  Note that you can give command-line args here too, eg: --sextractor-path 'sex -DETECT_TYPE CCD'"},
+	 "  Note that you can give command-line args here too (but put them in quotes), eg: --sextractor-path 'sex -DETECT_TYPE CCD'.  "
+	 "This option implies --use-sextractor."},
     {'3', "ra",             required_argument, "degrees or hh:mm:ss",
      "only search in indexes within 'radius' of the field center given by 'ra' and 'dec'"},
     {'4', "dec",            required_argument, "degrees or [+-]dd:mm:ss",
@@ -318,9 +320,11 @@ int augment_xylist_parse_option(char argchar, char* optarg,
 		break;
 	case '&':
 		axy->sextractor_config = optarg;
+		axy->use_sextractor = TRUE;
 		break;
 	case '*':
 		axy->sextractor_path = optarg;
+		axy->use_sextractor = TRUE;
 		break;
 	case '9':
 		axy->no_removelines = TRUE;
