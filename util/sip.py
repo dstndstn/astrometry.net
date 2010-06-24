@@ -206,6 +206,14 @@ class Sip(ctypes.Structure):
 		return '<Sip: ' + str(self.wcstan) + \
 			   ', a_order=%d, b_order=%d, ap_order=%d>' % (self.a_order, self.b_order, self.ap_order)
 
+	def get_distortion(self, px, py):
+		cpx = c_double(px)
+		cpy = c_double(py)
+		coutx = c_double(0)
+		couty = c_double(0)
+		_sip.sip_pixel_distortion(ctypes.pointer(self), cpx, cpy, ctypes.pointer(coutx), ctypes.pointer(couty))
+		return coutx.value, couty.value
+		
 	# in arcsec/pixel
 	def get_pixel_scale(self):
 		return self.wcstan.get_pixel_scale()

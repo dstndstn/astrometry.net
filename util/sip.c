@@ -311,8 +311,7 @@ bool tan_radec2pixelxy(const tan_t* tan, double a, double d, double *px, double 
 	return tan_xyzarr2pixelxy(tan, xyzpt, px, py);
 }
 
-void sip_calc_distortion(const sip_t* sip, double u, double v, double* U, double *V)
-{
+void sip_calc_distortion(const sip_t* sip, double u, double v, double* U, double *V) {
 	// Do SIP distortion (in relative pixel coordinates)
 	// See the sip_t struct definition in header file for details
 	int p, q;
@@ -328,6 +327,10 @@ void sip_calc_distortion(const sip_t* sip, double u, double v, double* U, double
 				guv += sip->b[p][q]*pow(u,p)*pow(v,q);
 	*U = u + fuv;
 	*V = v + guv;
+}
+
+void sip_pixel_distortion(const sip_t* sip, double x, double y, double* X, double *Y) {
+	sip_distortion(sip, x, y, X, Y);
 }
 
 void sip_calc_inv_distortion(const sip_t* sip, double U, double V, double* u, double *v)

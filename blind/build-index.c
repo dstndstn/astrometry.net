@@ -710,8 +710,9 @@ void build_index_defaults(index_params_t* p) {
 	p->sweeps = 10;
 	p->racol = "RA";
 	p->deccol = "DEC";
-	p->passes = 4;
-	p->Nreuse = 2;
+	p->passes = 16;
+	p->Nreuse = 8;
+	p->Nloosen = 20;
 	p->dimquads = 4;
 	p->sortasc = TRUE;
 	// default to all-sky

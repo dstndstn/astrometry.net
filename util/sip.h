@@ -167,9 +167,14 @@ double sip_det_cd(const sip_t* sip);
 // returns pixel scale in arcseconds/pixel (NOT arcsec^2)
 double tan_pixel_scale(const tan_t* tn);
 double sip_pixel_scale(const sip_t* sip);
+
+// these take *relative* pixel coords (WRT crpix)
 void   sip_calc_inv_distortion(const sip_t* sip, double U, double V, double* u, double *v);
 void   sip_calc_distortion(const sip_t* sip, double u, double v, double* U, double *V);
       
+// applies forward SIP distortion to pixel coords.
+void sip_pixel_distortion(const sip_t* sip, double x, double y, double* X, double *Y);
+
 // Pixels to XYZ unit vector.
 void   tan_pixelxy2xyzarr(const tan_t* tan, double px, double py, double *xyz);
 
