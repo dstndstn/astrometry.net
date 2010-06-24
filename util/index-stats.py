@@ -143,27 +143,33 @@ if __name__ == '__main__':
 		title('duplicated for A-B swap')
 		savefig(opt.prefix + 'codes-4.png')
 
-		clf()
-		arrs = [cx,cy,dx,dy]
-		anames = ['cx', 'cy', 'dx', 'dy']
-		sp = 1
-		for i,a1 in enumerate(arrs):
-			for j,a2 in enumerate(arrs):
-				subplot(4,4, sp)
-				sp += 1
-				if j > i:
-					continue
-				if i == j:
-					hist(a1, 100, range=[-0.3, 1.3])
-					xlabel(anames[i])
-				else:
-					(H,xe,ye) = histogram2d(a1, a2, bins=(100,100), range=[[-0.3,1.3],[-0.3,1.3]])
-					H=H.T
-					imshow(H, extent=(min(xe), max(xe), min(ye), max(ye)), aspect='auto',
-						   interpolation='nearest', origin='lower', cmap=antigray)
-					xlabel(anames[i])
-					ylabel(anames[j])
-		savefig(opt.prefix + 'codes-5.png')
+		for pnum,arrs in [(5, [cx,cy,dx,dy]),
+						  (6, [append(cx, 1-cx), append(cy, 1-cy), append(dx, 1-dx), append(dy, 1-dy)])]:
+			clf()
+			anames = ['cx', 'cy', 'dx', 'dy']
+			sp = 0
+			for i,a1 in enumerate(arrs):
+				for j,a2 in enumerate(arrs):
+					sp += 1
+					if j > i:
+						continue
+					subplot(4,4, sp)
+					if i == j:
+						hist(a1, 100, range=[-0.3, 1.3])
+					else:
+						(H,xe,ye) = histogram2d(a2, a1, bins=(100,100), range=[[-0.3,1.3],[-0.3,1.3]])
+						H=H.T
+						imshow(H, extent=(min(xe), max(xe), min(ye), max(ye)), aspect='auto',
+							   interpolation='nearest', origin='lower', cmap=antigray)
+						axis([-0.3,1.3,-0.3,1.3])
+						axis('scaled')
+					xticks([],[])
+					yticks([],[])
+					if i == 3:
+						xlabel(anames[j])
+					if j == 0:
+						ylabel(anames[i])
+			savefig(opt.prefix + 'codes-%i.png' % pnum)
 
 		# stars
 		print 'Getting stars...'

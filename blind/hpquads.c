@@ -139,7 +139,25 @@ static bool find_stars(hpquads_t* me, double radius2, int R) {
 	// UNLESS another sorting is provided!
 
 	if (me->sort_data && me->sort_func && me->sort_size) {
-		perm = permuted_sort(me->sort_data, me->sort_size, me->sort_func, NULL, N);
+		/*
+		 Two levels of indirection here!
+
+		 me->res->inds are indices into the "sort_data" array (since kdtree is assumed to be un-permuted)
+
+		 We want to produce "perm", which permutes me->res->inds to make sort_data sorted;
+		 need to do this because we also want to permute results.d.
+
+		 Alternatively, we could re-fetch the results.d ...
+		 */
+		int k;
+		char* tempdata = malloc(me->sort_size * N);
+		for (k=0; k<N; k++)
+			memcpy(tempdata + k*me->sort_size,
+				   ((char*)me->sort_data) + me->sort_size * me->res->inds[k],
+				   me->sort_size);
+		perm = permuted_sort(tempdata, me->sort_size, me->sort_func, NULL, N);
+		free(tempdata);
+
 	} else {
 		// find permutation that sorts by index...
 		perm = permuted_sort(me->res->inds, sizeof(int), compare_ints_asc, NULL, N);
@@ -147,6 +165,7 @@ static bool find_stars(hpquads_t* me, double radius2, int R) {
 	// apply the permutation...
 	permutation_apply(perm, N, me->res->inds, me->res->inds, sizeof(int));
 	permutation_apply(perm, N, me->res->results.d, me->res->results.d, 3 * sizeof(double));
+
 	free(perm);
 
 	me->inds = (int*)me->res->inds;
