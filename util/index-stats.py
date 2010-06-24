@@ -19,7 +19,7 @@ if __name__ == '__main__':
 	parser.set_defaults(prefix='')
 	opt,args = parser.parse_args()
 
-	if False: # DEBUG!
+	if 'plots' in args: # DEBUG!
 		cat = fits_table('cat2.fits')
 		xyz = radectoxyz(cat.ra, cat.dec)
 		R = 15.
@@ -46,6 +46,23 @@ if __name__ == '__main__':
 		xlim(0, R)
 		savefig('cat-stars-2.png')
 
+		I1 = inds[notself,0]
+		I2 = inds[notself,1]
+		clf()
+		RA = cat.ra + (cat.ra > 180)*-360
+		dra = RA[I1]-RA[I2]
+		ddec = cat.dec[I1]-cat.dec[I2]
+		#plot(dra, ddec, 'r.')
+		(H,xe,ye) = histogram2d(dra, ddec, bins=(200,200))
+		H=H.T
+		imshow(H, extent=(min(xe), max(xe), min(ye), max(ye)), aspect='auto',
+			   interpolation='nearest', origin='lower', cmap=antigray)
+
+		xlabel('dRA (deg)')
+		ylabel('dDec (deg)')
+		axis('equal')
+		savefig('cat-stars-4.png')
+
 		cat = fits_table('gals2.fits')
 		xyz = radectoxyz(cat.ra, cat.dec)
 		R = 15.
@@ -58,7 +75,7 @@ if __name__ == '__main__':
 		ylabel('Counts')
 		xlim(0, R)
 		savefig('cat-stars-3.png')
-
+		sys.exit(0)
 
 	for indfn in args:
 		print 'Reading index', indfn
