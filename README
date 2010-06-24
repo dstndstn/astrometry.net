@@ -301,7 +301,7 @@ TRICKS AND TIPS
 
 *** To lower the CPU time limit before giving up:
 
-    $  solve-field --cpu-limit 30 ...
+    $  solve-field --cpulimit 30 ...
 
 will make it give up after 30 seconds.
 

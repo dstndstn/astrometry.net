@@ -26,6 +26,7 @@
 #include "errors.h"
 #include "starutil.h"
 #include "index.h"
+#include "qidxfile.h"
 
 const plotter_t plotter_index = {
 	.name = "index",
@@ -42,9 +43,36 @@ plotindex_t* plot_index_get(plot_args_t* pargs) {
 void* plot_index_init(plot_args_t* plotargs) {
 	plotindex_t* args = calloc(1, sizeof(plotindex_t));
 	args->indexes = pl_new(16);
+	args->qidxes = pl_new(16);
 	args->stars = TRUE;
 	args->quads = TRUE;
+	args->fill = FALSE;
 	return args;
+}
+
+static void plotquad(cairo_t* cairo, plot_args_t* pargs, plotindex_t* args, index_t* index, int quadnum, int DQ) {
+	int k;
+	unsigned int stars[DQMAX];
+	double ra, dec;
+	double px, py;
+	quadfile_get_stars(index->quads, quadnum, stars);
+	for (k=0; k<DQ; k++) {
+		startree_get_radec(index->starkd, stars[k], &ra, &dec);
+		if (!plotstuff_radec2xy(pargs, ra, dec, &px, &py)) {
+			ERROR("Failed to convert RA,Dec %g,%g to pixels for quad %i\n", ra, dec, quadnum);
+			continue;
+		}
+		if (k == 0) {
+			cairo_move_to(cairo, px, py);
+		} else {
+			cairo_line_to(cairo, px, py);
+		}
+	}
+	cairo_close_path(cairo);
+	if (args->fill)
+		cairo_fill(cairo);
+	else
+		cairo_stroke(cairo);
 }
 
 int plot_index_plot(const char* command,
@@ -69,7 +97,7 @@ int plot_index_plot(const char* command,
 	for (i=0; i<pl_size(args->indexes); i++) {
 		index_t* index = pl_get(args->indexes, i);
 		int j, N;
-		int k, DQ;
+		int DQ;
 		double* radecs;
 		double px,py;
 
@@ -89,31 +117,56 @@ int plot_index_plot(const char* command,
 			free(radecs);
 		}
 		if (args->quads) {
-			// plot quads
-			N = index_nquads(index);
 			DQ = index_get_quad_dim(index);
-			// HACK -- could use quadidx if the index is much bigger than the plot area...
-			for (j=0; j<N; j++) {
-				unsigned int stars[DQMAX];
-				double ra, dec;
-				quadfile_get_stars(index->quads, j, stars);
-				for (k=0; k<DQ; k++) {
-					startree_get_radec(index->starkd, stars[k], &ra, &dec);
-					if (!plotstuff_radec2xy(pargs, ra, dec, &px, &py)) {
-						ERROR("Failed to convert RA,Dec %g,%g to pixels for quad %i\n", ra, dec, j);
-						continue;
+			qidxfile* qidx = pl_get(args->qidxes, i);
+			if (qidx) {
+				int* stars;
+				int Nstars;
+				il* quadlist = il_new(256);
+
+				// find stars in range.
+				startree_search_for(index->starkd, xyz, r2, NULL, NULL, &stars, &Nstars);
+				logmsg("Found %i stars in range of index %s\n", N, index->indexname);
+				logmsg("Using qidx file.\n");
+				// find quads that each star is a member of.
+				for (j=0; j<Nstars; j++) {
+					uint32_t* quads;
+					int Nquads;
+					int k;
+					if (qidxfile_get_quads(qidx, stars[j], &quads, &Nquads)) {
+						ERROR("Failed to get quads for star %i\n", stars[j]);
+						return -1;
 					}
-					if (k == 0) {
-						cairo_move_to(cairo, px, py);
-					} else {
-						cairo_line_to(cairo, px, py);
-					}
+					for (k=0; k<Nquads; k++)
+						il_insert_unique_ascending(quadlist, quads[k]);
 				}
-				cairo_close_path(cairo);
-				cairo_stroke(cairo);
+				for (j=0; j<il_size(quadlist); j++) {
+					plotquad(cairo, pargs, args, index, il_get(quadlist, j), DQ);
+				}
+
+			} else {
+				// plot quads
+				N = index_nquads(index);
+				// HACK -- could use quadidx if the index is much bigger than the plot area...
+				for (j=0; j<N; j++) {
+					plotquad(cairo, pargs, args, index, j, DQ);
+				}
 			}
 		}
 	}
+	return 0;
+}
+
+int plot_index_add_qidx_file(plotindex_t* args, const char* fn) {
+	qidxfile* qidx = qidxfile_open(fn);
+	if (!qidx) {
+		ERROR("Failed to open quad index file \"%s\"", fn);
+		return -1;
+	}
+	while ((pl_size(args->qidxes)+1) < pl_size(args->indexes))
+		pl_append(args->qidxes, NULL);
+
+	pl_append(args->qidxes, qidx);
 	return 0;
 }
 
@@ -133,10 +186,15 @@ int plot_index_command(const char* cmd, const char* cmdargs,
 	if (streq(cmd, "index_file")) {
 		const char* fn = cmdargs;
 		return plot_index_add_file(args, fn);
+	} else if (streq(cmd, "index_qidxfile")) {
+		const char* fn = cmdargs;
+		return plot_index_add_qidx_file(args, fn);
 	} else if (streq(cmd, "index_draw_stars")) {
 		args->stars = atoi(cmdargs);
 	} else if (streq(cmd, "index_draw_quads")) {
 		args->quads = atoi(cmdargs);
+	} else if (streq(cmd, "index_fill")) {
+		args->fill = atoi(cmdargs);
 	} else {
 		ERROR("Did not understand command \"%s\"", cmd);
 		return -1;
@@ -152,6 +210,11 @@ void plot_index_free(plot_args_t* plotargs, void* baton) {
 		index_free(index);
 	}
 	pl_free(args->indexes);
+	for (i=0; i<pl_size(args->qidxes); i++) {
+		qidxfile* qidx = pl_get(args->qidxes, i);
+		qidxfile_close(qidx);
+	}
+	pl_free(args->qidxes);
 	free(args);
 }
 
