@@ -10,8 +10,7 @@ def sourceset_from_table(t):
 	for f in ["XAstrom", "XAstromErr", "YAstrom", "YAstromErr",
 			  "PsfFlux", "ApFlux", "Ixx", "IxxErr", "Iyy",
 			  "IyyErr", "Ixy", "IxyErr"]:
-		f = f.lower()
-		vals = t.getcolumn(f)
+		vals = t.getcolumn(f.lower())
 		for s,v in zip(ss,vals):
 			func = getattr(s, "set" + f)
 			func(v)
