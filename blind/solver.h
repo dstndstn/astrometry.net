@@ -258,7 +258,10 @@ int solver_n_indices(const solver_t* solver);
 index_t* solver_get_index(const solver_t* solver, int i);
 
 void solver_verify_sip_wcs(solver_t* solver, sip_t* sip); //, MatchObj* mo);
+
 void solver_run(solver_t* solver);
+
+void solver_tweak2(solver_t* solver, MatchObj* mo, int order);
 
 void solver_cleanup(solver_t* solver);
 

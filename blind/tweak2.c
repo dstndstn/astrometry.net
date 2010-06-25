@@ -50,7 +50,9 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			  const sip_t* startwcs,
 			  sip_t* destwcs,
 			  int** newtheta, double** newodds,
-			  double* crpix) {
+			  double* crpix,
+			  double* p_logodds,
+			  int* p_besti) {
 	int order;
 	sip_t* sipout;
 	int* indexin;
@@ -60,6 +62,8 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 	double* matchxyz;
 	double* matchxy;
 	int i, Nin=0;
+	double logodds = 0;
+	int besti = -1;
 
 	if (destwcs)
 		sipout = destwcs;
@@ -95,8 +99,8 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			double iscale;
 			double ijitter;
 			double ra, dec;
-			double R2, logodds;
-			int besti, Nmatch;
+			double R2;
+			int Nmatch;
 			int* theta;
 			double* odds;
 			int nmatch, nconf, ndist;
@@ -280,8 +284,6 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 	}
 
 	if (newtheta || newodds) {
-		int besti;
-		double logodds;
 		logodds = verify_star_lists(indexpix, Nin,
 									fieldxy, fieldsigma2s, Nfield,
 									W*H, distractors,
@@ -298,6 +300,10 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 
 	}
 
+	if (p_logodds)
+		*p_logodds = logodds;
+	if (p_besti)
+		*p_besti = besti;
 
 	free(indexin);
 	free(indexpix);

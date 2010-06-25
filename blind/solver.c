@@ -41,6 +41,8 @@
 #include "kdtree.h"
 #include "quad-utils.h"
 
+#include "tweak2.h"
+
 #if TESTING_TRYALLCODES
 #define DEBUGSOLVER 1
 #define TRY_ALL_CODES test_try_all_codes
@@ -60,6 +62,81 @@ void test_try_permutations(int* stars, double* code, int dimquad, solver_t* s);
 #else
 #define TEST_TRY_PERMUTATIONS(u,v,x,y)  // no-op.
 #endif
+
+void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
+	double* xy = NULL;
+	int Nxy;
+	double indexjitter;
+	// quad center
+	double qc[2];
+	// quad radius-squared
+	double Q2;
+	// initial WCS
+	sip_t startsip;
+	int* theta;
+	double* odds;
+	double* refradec;
+	int i;
+	double newodds;
+	int nm, nc, nd;
+	int besti;
+
+	//indexjitter = mo->index->index_jitter; // ref cat positional error, in arcsec.
+	indexjitter = mo->index_jitter; // ref cat positional error, in arcsec.
+
+	xy = starxy_to_xy_array(sp->fieldxy, NULL);
+	Nxy = starxy_n(sp->fieldxy);
+	qc[0] = (mo->quadpix[0] + mo->quadpix[2]) / 2.0;
+	qc[1] = (mo->quadpix[1] + mo->quadpix[3]) / 2.0;
+	Q2 = 0.25 * distsq(mo->quadpix, mo->quadpix + 2, 2);
+	if (Q2 == 0.0) {
+		// can happen if we're verifying an existing WCS
+		// note, this is radius-squared, so 1e6 is not crazy.
+		Q2 = 1e6;
+	}
+	sip_wrap_tan(&(mo->wcstan), &startsip);
+
+	// mo->refradec may be NULL at this point, so get it from refxyz instead...
+	refradec = malloc(3 * mo->nindex * sizeof(double));
+	for (i=0; i<mo->nindex; i++)
+		xyzarr2radecdegarr(mo->refxyz + i*3, refradec + i*2);
+
+	if (mo->sip)
+		sip_free(mo->sip);
+
+	mo->sip = tweak2(xy, Nxy,
+					 sp->verify_pix, // pixel positional noise sigma
+					 solver_field_width(sp),
+					 solver_field_height(sp),
+					 refradec, mo->nindex,
+					 indexjitter, qc, Q2,
+					 sp->distractor_ratio,
+					 sp->logratio_bail_threshold,
+					 order, &startsip, NULL, &theta, &odds,
+					 sp->set_crpix ? sp->crpix : NULL,
+					 &newodds, &besti);
+	assert(mo->sip);
+	free(refradec);
+
+	// Yoink the TAN solution (?)
+	memcpy(&(mo->wcstan), &(mo->sip->wcstan), sizeof(tan_t));
+	// Plug in the new "theta" and "odds".
+	free(mo->theta);
+	free(mo->matchodds);
+	// FIXME -- update refxy?
+	// FIXME -- 
+	mo->theta = theta;
+	mo->matchodds = odds;
+	mo->logodds = newodds;
+
+	verify_count_hits(theta, besti, &nm, &nc, &nd);
+	mo->nmatch = nm;
+	mo->nconflict = nc;
+	mo->ndistractor = nd;
+	matchobj_compute_derived(mo);
+
+	free(xy);
+}
 
 void solver_log_params(const solver_t* sp) {
   int i;

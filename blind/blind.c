@@ -865,37 +865,38 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 		memcpy(mymo->fieldxy, bp->solver.vf->xy, mymo->nfield * 2 * sizeof(double));
 
         if (bp->do_tweak2) {
-			sip_t sipin;
-			double Q2;
-			int* newtheta;
-			double* newodds;
-
-			logverb("Starting tweak2 on a match with log-odds %g\n", mymo->logodds);
-			sip_wrap_tan(&mymo->wcstan, &sipin);
-			sipin.wcstan.imagew = solver_field_width(sp);
-			sipin.wcstan.imageh = solver_field_height(sp);
-			// Q2 = (A-B distance / 2) ** 2
-			Q2 = 0.25 * distsq(mymo->quadpix, mymo->quadpix + 2, 2);
-			if (Q2 == 0.0) {
-				// can happen if we're verifying an existing WCS
-				// note, this is radius-squared, so 1e6 is not crazy.
-				Q2 = 1e6;
-			}
-			// FIXME -- is crpix the quad center here, even if sp->set_crpix is set?
-
-			mymo->sip = tweak2(mymo->fieldxy, mymo->nfield, sp->verify_pix,
-							   solver_field_width(sp), solver_field_height(sp),
-							   mymo->refradec, mymo->nindex, sp->index->index_jitter,
-							   mymo->wcstan.crpix, Q2,
-							   sp->distractor_ratio,
-							   sp->logratio_bail_threshold,
-							   bp->tweak_aborder, &sipin, NULL,
-							   &newtheta, &newodds, sp->set_crpix ? sp->crpix : NULL);
-			free(mymo->theta);
-			free(mymo->matchodds);
-			mymo->theta = newtheta;
-			mymo->matchodds = newodds;
-			// FIXME -- recompute mymo->refxy ?
+			/*
+			 sip_t sipin;
+			 double Q2;
+			 int* newtheta;
+			 double* newodds;
+			 logverb("Starting tweak2 on a match with log-odds %g\n", mymo->logodds);
+			 sip_wrap_tan(&mymo->wcstan, &sipin);
+			 sipin.wcstan.imagew = solver_field_width(sp);
+			 sipin.wcstan.imageh = solver_field_height(sp);
+			 // Q2 = (A-B distance / 2) ** 2
+			 Q2 = 0.25 * distsq(mymo->quadpix, mymo->quadpix + 2, 2);
+			 if (Q2 == 0.0) {
+			 // can happen if we're verifying an existing WCS
+			 // note, this is radius-squared, so 1e6 is not crazy.
+			 Q2 = 1e6;
+			 }
+			 // FIXME -- is crpix the quad center here, even if sp->set_crpix is set?
+			 mymo->sip = tweak2(mymo->fieldxy, mymo->nfield, sp->verify_pix,
+			 solver_field_width(sp), solver_field_height(sp),
+			 mymo->refradec, mymo->nindex, sp->index->index_jitter,
+			 mymo->wcstan.crpix, Q2,
+			 sp->distractor_ratio,
+			 sp->logratio_bail_threshold,
+			 bp->tweak_aborder, &sipin, NULL,
+			 &newtheta, &newodds, sp->set_crpix ? sp->crpix : NULL);
+			 free(mymo->theta);
+			 free(mymo->matchodds);
+			 mymo->theta = newtheta;
+			 mymo->matchodds = newodds;
+			 // FIXME -- recompute mymo->refxy ?
+			 */
+			solver_tweak2(sp, mymo, bp->tweak_aborder);
 		}
 
 		// FIXME -- tweak should use the weights (verify_logodds_to_weight(mymo->matchodds))
