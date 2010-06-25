@@ -123,8 +123,14 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
 	// Plug in the new "theta" and "odds".
 	free(mo->theta);
 	free(mo->matchodds);
-	// FIXME -- update refxy?
-	// FIXME -- 
+
+	// FIXME -- update refxy?  Nobody uses it, right?
+	free(mo->refxy);
+	mo->refxy = NULL;
+	// FIXME -- and testperm?
+	free(mo->testperm);
+	mo->testperm = NULL;
+
 	mo->theta = theta;
 	mo->matchodds = odds;
 	mo->logodds = newodds;
