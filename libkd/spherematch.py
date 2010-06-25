@@ -9,6 +9,8 @@ match(x1, x2, radius):
 
 '''
 def match(x1, x2, radius):
+	x1 = x1.astype(float64)
+	x2 = x2.astype(float64)
 	(N1,D1) = x1.shape
 	(N2,D2) = x2.shape
 	if D1 != D2:
