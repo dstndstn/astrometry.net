@@ -180,7 +180,7 @@ int kdtree_fits_read_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
 	int rtn;
 	double t0 = timenow();
     rtn = fitsbin_read_chunk(io, chunk);
-	debug("kdtree_fits_read_chunk(%s) took %g ms\n", chunk->tablename, 1000. * (timenow() - t0));
+    //debug("kdtree_fits_read_chunk(%s) took %g ms\n", chunk->tablename, 1000. * (timenow() - t0));
 	return rtn;
 }
 
@@ -346,7 +346,7 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
 
 	t0 = timenow();
 	KD_DISPATCH(kdtree_read_fits, tt, rtn = , (io, kd));
-	debug("kdtree_read_fits(%s) took %g ms\n", fn, 1000. * (timenow() - t0));
+	//debug("kdtree_read_fits(%s) took %g ms\n", fn, 1000. * (timenow() - t0));
 
     if (rtn) {
         FREE(kd->name);

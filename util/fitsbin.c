@@ -467,7 +467,7 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 					  chunk->tablename, fb->filename);
 			return -1;
 		}
-		debug("fits_find_table_column(%s) took %g ms\n", chunk->tablename, 1000 * (timenow() - t0));
+		//debug("fits_find_table_column(%s) took %g ms\n", chunk->tablename, 1000 * (timenow() - t0));
 
 		t0 = timenow();
 		chunk->header = fitsbin_get_header(fb, ext);
@@ -475,7 +475,7 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 			ERROR("Couldn't read FITS header from file \"%s\" extension %i", fb->filename, ext);
 			return -1;
 		}
-		debug("reading chunk header (%s) took %g ms\n", chunk->tablename, 1000 * (timenow() - t0));
+		//debug("reading chunk header (%s) took %g ms\n", chunk->tablename, 1000 * (timenow() - t0));
 		table_nrows = fitsbin_get_table_const(fb, ext)->nr;
 		table_rowsize = fitsbin_get_table_const(fb, ext)->tab_w;
 	}
