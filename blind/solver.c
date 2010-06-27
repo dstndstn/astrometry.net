@@ -148,6 +148,7 @@ void solver_log_params(const solver_t* sp) {
   int i;
   logverb("Solver:\n");
   logverb("  Arcsec per pix range: %g, %g\n", sp->funits_lower, sp->funits_upper);
+  logverb("  Image size: %g x %g\n", solver_field_width(sp), solver_field_height(sp));
   logverb("  Log record threshold: %g\n", sp->logratio_record_threshold);
   logverb("  Dist from quad bonus: %s\n", sp->distance_from_quad_bonus ? "yes" : "no");
   logverb("  Verify_pix: %g\n", sp->verify_pix);

@@ -227,7 +227,7 @@ ALL_OBJ += fits-flip-endian.o
 PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
 	shell.py __init__.py file.py run_command.py w3c_validator.py \
 	filetype.py pyfits_utils.py fix_sdss_idr.py removelines.py \
-	ngc2000.py uniformize.py $(PYTHON_LIBS)
+	ngc2000.py uniformize.py lsstutils.py $(PYTHON_LIBS)
 
 PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py uniformize.py
 
