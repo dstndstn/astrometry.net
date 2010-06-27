@@ -3,6 +3,11 @@ import os
 
 basedir = os.path.dirname(__file__)
 
+openid_dir = os.path.join(basedir, 'openid')
+# What the user is shown as the entity requesting a login.
+openid_realm = 'http://astrometry.net'
+
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 

@@ -5,7 +5,8 @@ from django.conf.urls.defaults import *
 # admin.autodiscover()
 
 urlpatterns = patterns('',
-					   (r'^login', 'astrometry.net2.views.login'),
+					   (r'^login$', 'astrometry.net2.views.login'),
+					   (r'^login-openid', 'astrometry.net2.views.login_openid_done'),
 					   (r'^logout', 'astrometry.net2.views.logout'),
 
 
