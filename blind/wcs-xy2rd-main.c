@@ -151,7 +151,7 @@ int main(int argc, char** args) {
 
 		// convert immediately.
 		anwcs_pixelxy2radec(wcs, x, y, &ra, &dec);
-		printf("Pixel (%f, %f) -> RA,Dec (%f, %f)\n", x, y, ra, dec);
+		printf("Pixel (%.10f, %.10f) -> RA,Dec (%.10f, %.10f)\n", x, y, ra, dec);
 		anwcs_free(wcs);
 		exit(0);
 	}

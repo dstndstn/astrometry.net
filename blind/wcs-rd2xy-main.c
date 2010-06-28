@@ -151,7 +151,7 @@ int main(int argc, char** args) {
 			ERROR("The given RA,Dec is on the opposite side of the sky.");
 			exit(-1);
 		}
-		printf("RA,Dec (%f, %f) -> pixel (%f, %f)\n", ra, dec, x, y);
+		printf("RA,Dec (%.10f, %.10f) -> pixel (%.10f, %.10f)\n", ra, dec, x, y);
 		anwcs_free(wcs);
 		exit(0);
 	}
