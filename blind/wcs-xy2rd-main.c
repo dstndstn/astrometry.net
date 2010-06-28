@@ -28,8 +28,9 @@
 #include "anwcs.h"
 #include "errors.h"
 #include "wcs-xy2rd.h"
+#include "log.h"
 
-const char* OPTIONS = "hi:o:w:f:R:D:te:x:y:X:Y:L";
+const char* OPTIONS = "hi:o:w:f:R:D:te:x:y:X:Y:Lv";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -42,6 +43,7 @@ void print_help(char* progname) {
 		   "  [-X <x-column-name> -Y <y-column-name>]\n"
 		   "  [-t]: just use TAN projection, even if SIP extension exists.\n"
 		   "  [-L]: force WCSlib\n"
+		   "  [-v]: +verbose\n"
 		   "\n"
 		   "You can also specify a single point to convert (result is printed to stdout):\n"
 		   "  [-x <pixel>]\n"
@@ -64,12 +66,16 @@ int main(int argc, char** args) {
 	il* fields;
 	int ext = 0;
 	double x, y;
+	int loglvl = LOG_MSG;
 
 	x = y = HUGE_VAL;
 	fields = il_new(16);
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'v':
+			loglvl++;
+			break;
 		case 'L':
 			forcewcslib = TRUE;
 			break;
@@ -109,6 +115,8 @@ int main(int argc, char** args) {
 		}
 	}
 
+	log_init(loglvl);
+
 	if (optind != argc) {
 		print_help(args[0]);
 		exit(-1);
@@ -135,6 +143,12 @@ int main(int argc, char** args) {
 			ERROR("Failed to read WCS file \"%s\", extension %i", wcsfn, ext);
 			exit(-1);
 		}
+
+		logverb("Read WCS:\n");
+		if (log_get_level() >= LOG_VERB) {
+			anwcs_print(wcs, log_get_fid());
+		}
+
 		// convert immediately.
 		anwcs_pixelxy2radec(wcs, x, y, &ra, &dec);
 		printf("Pixel (%f, %f) -> RA,Dec (%f, %f)\n", x, y, ra, dec);

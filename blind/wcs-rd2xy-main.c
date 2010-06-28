@@ -26,14 +26,11 @@
 #include "bl.h"
 #include "boilerplate.h"
 #include "wcs-rd2xy.h"
-/*
- #include "sip_qfits.h"
- #include "sip.h"
- */
 #include "anwcs.h"
 #include "errors.h"
+#include "log.h"
 
-const char* OPTIONS = "hi:o:w:f:R:D:te:r:d:L";
+const char* OPTIONS = "hi:o:w:f:R:D:te:r:d:Lv";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -46,6 +43,7 @@ void print_help(char* progname) {
 		   "  [-R <RA-column-name> -D <Dec-column-name>]\n"
 		   "  [-t]: just use TAN projection, even if SIP extension exists\n"
 		   "  [-L]: force using WCSlib rather than Astrometry.net routines\n"
+		   "  [-v]: +verbose\n"
 		   "You can also just specify a single point to convert (printed to stdout)\n"
 		   "   [-r <ra>], RA in deg.\n"
 		   "   [-d <ra>], Dec in deg.\n"
@@ -67,11 +65,15 @@ int main(int argc, char** args) {
 	int ext = 0;
 	double ra=HUGE_VAL, dec=HUGE_VAL;
 	bool wcslib = FALSE;
+	int loglvl = LOG_MSG;
 
 	fields = il_new(16);
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'v':
+			loglvl++;
+			break;
 		case 'L':
 			wcslib = TRUE;
 			break;
@@ -111,6 +113,8 @@ int main(int argc, char** args) {
 		}
 	}
 
+	log_init(loglvl);
+
 	if (optind != argc) {
 		print_help(args[0]);
 		exit(-1);
@@ -137,6 +141,11 @@ int main(int argc, char** args) {
 			ERROR("Failed to read WCS file");
 			exit(-1);
 		}
+		logverb("Read WCS:\n");
+		if (log_get_level() >= LOG_VERB) {
+			anwcs_print(wcs, log_get_fid());
+		}
+
 		// convert immediately.
 		if (!anwcs_radec2pixelxy(wcs, ra, dec, &x, &y)) {
 			ERROR("The given RA,Dec is on the opposite side of the sky.");
