@@ -1,5 +1,9 @@
 from lsst.afw.detection import SourceSet, Source
 
+sourceset_fields = ['FlagForDetection', "XAstrom", "XAstromErr", "YAstrom", "YAstromErr",
+					"PsfFlux", "ApFlux", "Ixx", "IxxErr", "Iyy",
+					"IyyErr", "Ixy", "IxyErr"]
+
 # eg, from astrometry.util.pyfits_utils : fits_table() or text_table()
 def sourceset_from_table(t):
 	N = len(t)
@@ -7,9 +11,7 @@ def sourceset_from_table(t):
 	for i in range(N):
 		s = Source()
 		ss.push_back(s)
-	for f in ["XAstrom", "XAstromErr", "YAstrom", "YAstromErr",
-			  "PsfFlux", "ApFlux", "Ixx", "IxxErr", "Iyy",
-			  "IyyErr", "Ixy", "IxyErr"]:
+	for f in sourceset_fields:
 		vals = t.getcolumn(f.lower())
 		for s,v in zip(ss,vals):
 			func = getattr(s, "set" + f)
@@ -19,9 +21,7 @@ def sourceset_from_table(t):
 
 def sourceset_to_dict(ss):
 	d = dict()
-	for f in ["XAstrom", "XAstromErr", "YAstrom", "YAstromErr",
-			  "PsfFlux", "ApFlux", "Ixx", "IxxErr", "Iyy",
-			  "IyyErr", "Ixy", "IxyErr"]:
+	for f in sourceset_fields:
 		vals = []
 		for s in ss:
 			func = getattr(s, "get" + f)
@@ -30,16 +30,14 @@ def sourceset_to_dict(ss):
 	return d
 
 def sourceset_from_dict(d):
-	x = d['XAstrom']
+	x = d[sourceset_fields[0]]
 	N = len(x)
 	ss = SourceSet()
 	for i in range(N):
 		s = Source()
 		ss.push_back(s)
 
-	for f in ["XAstrom", "XAstromErr", "YAstrom", "YAstromErr",
-			  "PsfFlux", "ApFlux", "Ixx", "IxxErr", "Iyy",
-			  "IyyErr", "Ixy", "IxyErr"]:
+	for f in sourceset_fields:
 		vals = d[f]
 		for s,v in zip(ss,vals):
 			func = getattr(s, "set" + f)
