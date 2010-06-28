@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sip_qfits.h"
+#include "anwcs.h"
 #include "an-bool.h"
 #include "qfits.h"
 #include "starutil.h"
@@ -34,19 +34,28 @@
 
 int wcs_xy2rd(const char* wcsfn, int ext,
 			  const char* xylsfn, const char* rdlsfn,
-              const char* xcol, const char* ycol, bool forcetan,
+              const char* xcol, const char* ycol,
+			  bool forcetan,
+			  bool forcewcslib,
               il* fields) {
 	rdlist_t* rdls = NULL;
 	xylist_t* xyls = NULL;
-	sip_t sip;
+	anwcs_t* wcs = NULL;
 	int i;
     int rtn = -1;
     bool alloced_fields = FALSE;
 
 	// read WCS.
-	if (!sip_read_tan_or_sip_header_file_ext(wcsfn, ext, &sip, forcetan)) {
-		ERROR("Failed to read WCS file %s", wcsfn);
-		goto bailout;
+	if (forcewcslib) {
+		wcs = anwcs_open_wcslib(wcsfn, ext);
+	} else if (forcetan) {
+		wcs = anwcs_open_tan(wcsfn, ext);
+	} else {
+		wcs = anwcs_open(wcsfn, ext);
+	}
+	if (!wcs) {
+		ERROR("Failed to read WCS file \"%s\", extension %i", wcsfn, ext);
+		return -1;
 	}
 
 	// read XYLS.
@@ -107,7 +116,7 @@ int wcs_xy2rd(const char* wcsfn, int ext,
             double x, y, ra, dec;
             x = starxy_getx(&xy, j);
             y = starxy_gety(&xy, j);
-			sip_pixelxy2radec(&sip, x, y, &ra, &dec);
+			anwcs_pixelxy2radec(wcs, x, y, &ra, &dec);
             rd_setra (&rd, j, ra);
             rd_setdec(&rd, j, dec);
 		}
@@ -148,5 +157,7 @@ int wcs_xy2rd(const char* wcsfn, int ext,
         rdlist_close(rdls);
     if (xyls)
         xylist_close(xyls);
+	if (wcs)
+		anwcs_free(wcs);
     return rtn;
 }

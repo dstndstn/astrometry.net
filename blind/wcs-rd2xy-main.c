@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -25,11 +26,14 @@
 #include "bl.h"
 #include "boilerplate.h"
 #include "wcs-rd2xy.h"
-#include "sip_qfits.h"
-#include "sip.h"
+/*
+ #include "sip_qfits.h"
+ #include "sip.h"
+ */
+#include "anwcs.h"
 #include "errors.h"
 
-const char* OPTIONS = "hi:o:w:f:R:D:te:r:d:";
+const char* OPTIONS = "hi:o:w:f:R:D:te:r:d:L";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -40,7 +44,8 @@ void print_help(char* progname) {
 		   "   -o <xyls output file>\n"
 		   "  [-f <rdls field index>] (default: all)\n"
 		   "  [-R <RA-column-name> -D <Dec-column-name>]\n"
-		   "  [-t]: just use TAN projection, even if SIP extension exists.\n"
+		   "  [-t]: just use TAN projection, even if SIP extension exists\n"
+		   "  [-L]: force using WCSlib rather than Astrometry.net routines\n"
 		   "You can also just specify a single point to convert (printed to stdout)\n"
 		   "   [-r <ra>], RA in deg.\n"
 		   "   [-d <ra>], Dec in deg.\n"
@@ -61,11 +66,15 @@ int main(int argc, char** args) {
 	il* fields;
 	int ext = 0;
 	double ra=HUGE_VAL, dec=HUGE_VAL;
+	bool wcslib = FALSE;
 
 	fields = il_new(16);
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'L':
+			wcslib = TRUE;
+			break;
 		case 'r':
 			ra = atof(optarg);
 			break;
@@ -114,24 +123,33 @@ int main(int argc, char** args) {
 
 	if (!rdlsfn) {
 		double x,y;
-		sip_t sip;
+		anwcs_t* wcs = NULL;
+
 		// read WCS.
-		if (!sip_read_tan_or_sip_header_file_ext(wcsfn, ext, &sip, forcetan)) {
+		if (wcslib) {
+			wcs = anwcs_open_wcslib(wcsfn, ext);
+		} else if (forcetan) {
+			wcs = anwcs_open_tan(wcsfn, ext);
+		} else {
+			wcs = anwcs_open(wcsfn, ext);
+		}
+		if (!wcs) {
 			ERROR("Failed to read WCS file");
 			exit(-1);
 		}
 		// convert immediately.
-		if (!sip_radec2pixelxy(&sip, ra, dec, &x, &y)) {
+		if (!anwcs_radec2pixelxy(wcs, ra, dec, &x, &y)) {
 			ERROR("The given RA,Dec is on the opposite side of the sky.");
 			exit(-1);
 		}
 		printf("RA,Dec (%f, %f) -> pixel (%f, %f)\n", ra, dec, x, y);
+		anwcs_free(wcs);
 		exit(0);
 	}
 
 
     if (wcs_rd2xy(wcsfn, ext, rdlsfn, xylsfn,
-                  rcol, dcol, forcetan, fields)) {
+                  rcol, dcol, forcetan, wcslib, fields)) {
         ERROR("wcs-rd2xy failed");
         exit(-1);
     }

@@ -25,12 +25,11 @@
 #include "bl.h"
 #include "boilerplate.h"
 #include "wcs-rd2xy.h"
-#include "sip_qfits.h"
-#include "sip.h"
+#include "anwcs.h"
 #include "errors.h"
 #include "wcs-xy2rd.h"
 
-const char* OPTIONS = "hi:o:w:f:R:D:te:x:y:X:Y:";
+const char* OPTIONS = "hi:o:w:f:R:D:te:x:y:X:Y:L:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -42,6 +41,7 @@ void print_help(char* progname) {
 		   "  [-f <xyls field index>] (default: all)\n"
 		   "  [-X <x-column-name> -Y <y-column-name>]\n"
 		   "  [-t]: just use TAN projection, even if SIP extension exists.\n"
+		   "  [-L]: force WCSlib\n"
 		   "\n"
 		   "You can also specify a single point to convert (result is printed to stdout):\n"
 		   "  [-x <pixel>]\n"
@@ -60,6 +60,7 @@ int main(int argc, char** args) {
 	char* xcol = NULL;
 	char* ycol = NULL;
 	bool forcetan = FALSE;
+	bool forcewcslib = FALSE;
 	il* fields;
 	int ext = 0;
 	double x, y;
@@ -69,6 +70,9 @@ int main(int argc, char** args) {
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'L':
+			forcewcslib = TRUE;
+			break;
 		case 'x':
 			x = atof(optarg);
 			break;
@@ -117,20 +121,29 @@ int main(int argc, char** args) {
 
 	if (!xylsfn) {
 		double ra,dec;
-		sip_t sip;
+		anwcs_t* wcs = NULL;
+
 		// read WCS.
-		if (!sip_read_tan_or_sip_header_file_ext(wcsfn, ext, &sip, forcetan)) {
-			ERROR("Failed to read WCS file");
+		if (forcewcslib) {
+			wcs = anwcs_open_wcslib(wcsfn, ext);
+		} else if (forcetan) {
+			wcs = anwcs_open_tan(wcsfn, ext);
+		} else {
+			wcs = anwcs_open(wcsfn, ext);
+		}
+		if (!wcs) {
+			ERROR("Failed to read WCS file \"%s\", extension %i", wcsfn, ext);
 			exit(-1);
 		}
 		// convert immediately.
-		sip_pixelxy2radec(&sip, x, y, &ra, &dec);
+		anwcs_pixelxy2radec(wcs, x, y, &ra, &dec);
 		printf("Pixel (%f, %f) -> RA,Dec (%f, %f)\n", x, y, ra, dec);
+		anwcs_free(wcs);
 		exit(0);
 	}
 
     if (wcs_xy2rd(wcsfn, ext, xylsfn, rdlsfn, 
-                  xcol, ycol, forcetan, fields)) {
+                  xcol, ycol, forcetan, forcewcslib, fields)) {
         ERROR("wcs-xy2rd failed");
         exit(-1);
     }

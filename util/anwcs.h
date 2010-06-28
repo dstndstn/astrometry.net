@@ -47,6 +47,8 @@ anwcs_t* anwcs_open_wcslib(const char* filename, int ext);
 
 anwcs_t* anwcs_open_sip(const char* filename, int ext);
 
+anwcs_t* anwcs_open_tan(const char* filename, int ext);
+
 anwcs_t* anwcs_new_sip(const sip_t* sip);
 
 anwcs_t* anwcs_new_tan(const tan_t* tan);

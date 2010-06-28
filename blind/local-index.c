@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
 	rdlsfn = create_temp_file("rdls", tempdir);
 	sl_append_nocopy(tempfiles, rdlsfn);
 	logmsg("Writing RA,Decs to %s\n", rdlsfn);
-	if (wcs_xy2rd(wcsfn, wcsext, xylsfn, rdlsfn, NULL, NULL, FALSE, NULL)) {
+	if (wcs_xy2rd(wcsfn, wcsext, xylsfn, rdlsfn, NULL, NULL, FALSE, FALSE, NULL)) {
 		ERROR("Failed to convert xylist to rdlist");
 		exit(-1);
 	}

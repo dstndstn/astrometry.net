@@ -1,7 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -20,7 +20,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sip_qfits.h"
+//#include "sip_qfits.h"
+#include "anwcs.h"
 #include "an-bool.h"
 #include "qfits.h"
 #include "starutil.h"
@@ -31,18 +32,26 @@
 
 int wcs_rd2xy(const char* wcsfn, int wcsext,
 			  const char* rdlsfn, const char* xylsfn,
-              const char* racol, const char* deccol, bool forcetan,
+              const char* racol, const char* deccol,
+			  bool forcetan, bool forcewcslib,
               il* fields) {
 	xylist_t* xyls = NULL;
 	rdlist_t* rdls = NULL;
-	sip_t sip;
+	anwcs_t* wcs = NULL;
 	int i;
     bool alloced_fields = FALSE;
     int rtn = -1;
 
 	// read WCS.
-	if (!sip_read_tan_or_sip_header_file_ext(wcsfn, wcsext, &sip, forcetan)) {
-		ERROR("Failed to read WCS");
+	if (forcewcslib) {
+		wcs = anwcs_open_wcslib(wcsfn, wcsext);
+	} else if (forcetan) {
+		wcs = anwcs_open_tan(wcsfn, wcsext);
+	} else {
+		wcs = anwcs_open(wcsfn, wcsext);
+	}
+	if (!wcs) {
+		ERROR("Failed to read WCS file \"%s\", extension %i", wcsfn, wcsext);
 		return -1;
 	}
 
@@ -101,7 +110,7 @@ int wcs_rd2xy(const char* wcsfn, int wcsext,
 			double x, y, ra, dec;
             ra  = rd_getra (&rd, j);
             dec = rd_getdec(&rd, j);
-			if (!sip_radec2pixelxy(&sip, ra, dec, &x, &y)) {
+			if (!anwcs_radec2pixelxy(wcs, ra, dec, &x, &y)) {
 				ERROR("Point RA,Dec = (%g,%g) projects to the opposite side of the sphere", ra, dec);
 				continue;
 			}
@@ -143,6 +152,8 @@ int wcs_rd2xy(const char* wcsfn, int wcsext,
         rdlist_close(rdls);
     if (xyls)
         xylist_close(xyls);
+	if (wcs)
+		anwcs_free(wcs);
     return rtn;
 }
 

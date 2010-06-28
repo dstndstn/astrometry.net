@@ -505,7 +505,7 @@ static void after_solved(augment_xylist_t* axy,
 		assert(axy->rdlsfn);
 		// index rdls to xyls.
 		if (wcs_rd2xy(axy->wcsfn, 0, axy->rdlsfn, sf->indxylsfn,
-					  NULL, NULL, FALSE, NULL)) {
+					  NULL, NULL, FALSE, FALSE, NULL)) {
 			ERROR("Failed to project index stars into field coordinates using wcs-rd2xy");
 			exit(-1);
 		}

@@ -58,6 +58,9 @@ CFLAGS += $(ANUTILS_INC)
 CFLAGS += $(ANFILES_INC)
 CFLAGS += $(GSL_INC)
 CFLAGS += $(ZLIB_INC)
+CFLAGS += $(WCSLIB_INC)
+
+ALL_WCSLIB_TARGETS :=
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
@@ -340,10 +343,12 @@ get-wcs: get-wcs.o \
 
 wcs-xy2rd: wcs-xy2rd-main.o wcs-xy2rd.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $(CCFLAGS) $^ $(LDFLAGS) $(WCSLIB_LIB)
 ALL_OBJ += wcs-xy2rd-main.o
 
 wcs-rd2xy: wcs-rd2xy-main.o wcs-rd2xy.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $(CCFLAGS) $^ $(LDFLAGS) $(WCSLIB_LIB)
 ALL_OBJ += wcs-rd2xy-main.o
 
 wcs-pv2sip: wcs-pv2sip.o tweak.o \
@@ -434,11 +439,11 @@ merge-index: merge-index-main.o merge-index.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += merge-index-main.o
 
-#allquads.o 
 local-index: local-index.o build-index.o codetree.o startree2.o codetree.o \
 		hpquads.o uniformize-catalog.o merge-index.o unpermute-quads.o unpermute-stars.o \
 		quad-builder.o quad-utils.o codefile.o wcs-xy2rd.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $(CCFLAGS) $^ $(LDFLAGS) $(WCSLIB_LIB)
 ALL_OBJ += local-index.o
 
 index-to-table: index-to-table.o \
@@ -469,6 +474,7 @@ solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o matchobj.o 
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
 		scamp.o \
 		$(SIMPLEXY_OBJ) $(CFITS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $(CCFLAGS) $^ $(LDFLAGS) $(WCSLIB_LIB)
 
 ALL_OBJ += scamp.o cut-table.o
 

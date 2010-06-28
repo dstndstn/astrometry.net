@@ -516,10 +516,10 @@ anwcs_t* anwcs_open(const char* filename, int ext) {
 	return NULL;
 }
 
-anwcs_t* anwcs_open_sip(const char* filename, int ext) {
+static anwcs_t* open_tansip(const char* filename, int ext, bool forcetan) {
 	anwcs_t* anwcs = NULL;
 	sip_t* sip = NULL;
-	sip = sip_read_tan_or_sip_header_file_ext(filename, ext, NULL, FALSE);
+	sip = sip_read_tan_or_sip_header_file_ext(filename, ext, NULL, forcetan);
 	if (!sip) {
 		ERROR("Failed to parse SIP header");
 		return NULL;
@@ -528,6 +528,14 @@ anwcs_t* anwcs_open_sip(const char* filename, int ext) {
 	anwcs->type = ANWCS_TYPE_SIP;
 	anwcs->data = sip;
 	return anwcs;
+}
+
+anwcs_t* anwcs_open_tan(const char* filename, int ext) {
+	return open_tansip(filename, ext, TRUE);
+}
+
+anwcs_t* anwcs_open_sip(const char* filename, int ext) {
+	return open_tansip(filename, ext, FALSE);
 }
 
 anwcs_t* anwcs_open_wcslib(const char* filename, int ext) {
