@@ -147,7 +147,7 @@ int main(int argc, char** args) {
 		}
 
 		// convert immediately.
-		if (!anwcs_radec2pixelxy(wcs, ra, dec, &x, &y)) {
+		if (anwcs_radec2pixelxy(wcs, ra, dec, &x, &y)) {
 			ERROR("The given RA,Dec is on the opposite side of the sky.");
 			exit(-1);
 		}
