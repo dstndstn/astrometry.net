@@ -1,4 +1,4 @@
-from views import login,logout
+#from views import login,logout
 
 
 

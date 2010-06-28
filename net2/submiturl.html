@@ -1,0 +1,28 @@
+{% extends "submit.html" %}
+
+{% block moreinlinecss %}
+#id_url { font-size:100%; }
+{% endblock %}
+
+{% block newjobcontent %}
+<form enctype="multipart/form-data" method="post" action="{{ actionurl }}">
+{% csrf_token %}
+
+{% if urlerr %}
+<div class="err"> {{ urlerr }} </div>
+{% endif %}
+
+<p style="text-align:center; vertical-align:middle;">
+{{ form.url }}
+<input name="submit" value="Submit" type="submit" class="bigbutton" />
+</p>
+
+<div id="switch_views">
+<a href="{% url astrometry.net2.views.submit_file %}">switch to file upload version</a>
+&nbsp;&nbsp;
+<a href="{% url astrometry.net2.views.submit_full %}">switch to full version</a>
+</div>
+
+</form>
+{% endblock newjobcontent %}
+

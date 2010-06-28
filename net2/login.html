@@ -4,8 +4,33 @@
 Astrometry.net Login
 {% endblock %}
 
+{% block javascript %}
+<script type="text/javascript">
+// <![CDATA[
+// the above is required to make this valid XHTML.
+function removeAllChildren(node) {
+	while (node.childNodes.length) {
+		node.removeChild(node.childNodes[0]);
+	}
+}
+
+function providerChanged() {
+  var prov = document.getElementById('id_provider').value;
+  var label = document.getElementById('openid_label');
+  switch (prov) {
+    case 'google':
+      removeAllChildren(label);
+      label.appendChild(document.createTextNode('<img src="https://www.google.com/accounts/google_transparent.gif"> Account:'));
+      break;
+  }
+}
+// ]]>
+</script>
+{% endblock javascript %}
+
+
 {% block title %}
-Login
+Sign In with your OpenId
 {% endblock %}
 
 {% block content %}
@@ -23,6 +48,19 @@ Login
 </td></tr>
 {% endif %}
 
+{% if form.provider.errors %}
+<tr><td colspan="2">
+<div class="myerrors">
+{{ form.provider.errors|join:", " }}
+</div>
+</td></tr>
+{% endif %}
+
+<tr>
+<td class="r">Open Id Provider:</td>
+<td> {{ form.provider }} </td>
+</tr>
+
 {% if form.openid.errors %}
 <tr><td colspan="2">
 <div class="myerrors">
@@ -32,7 +70,9 @@ Login
 {% endif %}
 
 <tr>
-<td class="r">Open Id:</td>
+<td class="r"><div id="openid_label"><!--img src="http://www.google.ca/images/logo_sm.gif" /-->
+<img src="/mymedia/google_logo.gif" alt="Google" />
+<!--https://www.google.com/accounts/google_transparent.gif" alt="Google" /--> Account:</div></td>
 <td> {{ form.openid }} </td>
 </tr>
 

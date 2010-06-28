@@ -5,7 +5,17 @@ basedir = os.path.dirname(__file__)
 
 openid_dir = os.path.join(basedir, 'openid')
 # What the user is shown as the entity requesting a login.
-openid_realm = 'http://astrometry.net'
+#openid_realm = 'http://astrometry.net'
+# For Google to reply, this MUST match the requesting URL,
+# including the port number.
+# Use req.get_host() to ensure this...
+#openid_realm = 'http://oven.cosmo.fas.nyu.edu:8000'
+
+LOGIN_URL='/login'
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    )
 
 
 DEBUG = True
@@ -53,7 +63,8 @@ USE_L10N = True
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = ''
+MEDIA_ROOT = os.path.join(basedir, 'media')
+#print 'Media root:', MEDIA_ROOT
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
@@ -67,6 +78,11 @@ ADMIN_MEDIA_PREFIX = '/media/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '&0g7s%=$fu%5ujzq9lka7h^f*=4t2i$uzj4*t)*056t+sqk5+3'
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.contrib.auth.context_processors.auth',
+    )
+
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (

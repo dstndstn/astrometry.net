@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block pagetitle %}
+Astrometry.net Job
+{% endblock %}
+
+{% block inlinecss %}
+#logo { width:300px; margin-left:auto; margin-right:auto; text-align:center; padding:5px;}
+#banner { text-align:center; padding:5px;}
+.err { font-size:110%; color:red; text-align:center;}
+#switch_views { font-size:75%; text-align:center; color:#999; font-family:sans-serif; }
+#switch_views a { color:#999; font-family:sans-serif; }
+{% block moreinlinecss %}
+{% endblock moreinlinecss %}
+
+{% endblock inlinecss %}
+
+{% block logo %}
+{% endblock logo %}
+
+{% block content %}
+{% block banner %}
+<div id="banner">
+<img src="http://oven.cosmo.fas.nyu.edu/test/you_are_here1.png" alt="Paste Url. Wait. You are Here." />
+</div>
+{% endblock banner %}
+
+{% block newjobcontent %}
+{% endblock newjobcontent %}
+
+{% endblock content %}
+
