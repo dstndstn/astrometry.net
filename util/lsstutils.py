@@ -14,7 +14,10 @@ def sourceset_from_table(t):
 	for f in sourceset_fields:
 		vals = t.getcolumn(f.lower())
 		for s,v in zip(ss,vals):
-			func = getattr(s, "set" + f)
+			fname = "set" + f
+			func = getattr(s, fname)
+			if func is None:
+				raise Exception('Function not found in Source object: ' + fname + ', object %s' % str(s))
 			func(v)
 	return ss
 	
