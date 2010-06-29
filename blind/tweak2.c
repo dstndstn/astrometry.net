@@ -33,9 +33,6 @@
 #include "rdlist.h"
 #include "mathutil.h"
 #include "verify.h"
-#include "plotstuff.h"
-#include "plotimage.h"
-#include "cairoutils.h"
 #include "fitsioutils.h"
 
 sip_t* tweak2(const double* fieldxy, int Nfield,
@@ -88,12 +85,16 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 	if (!sipout->wcstan.imageh)
 		sipout->wcstan.imageh = H;
 
+	logverb("Tweak2: starting from WCS:\n");
+	if (log_get_level() >= LOG_VERB)
+		sip_print_to(sipout, stdout);
+
 	for (order=1; order <= sip_order; order++) {
 		int step;
 		int STEPS = 20;
 		// variance growth rate wrt radius.
 		double gamma = 1.0;
-		logverb("Starting tweak2 order=%i\n", order);
+		//logverb("Starting tweak2 order=%i\n", order);
 
 		for (step=0; step<STEPS; step++) {
 			double iscale;
@@ -109,10 +110,11 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			gamma = pow(0.9, step);
 			if (step == STEPS-1)
 				gamma = 0.0;
-			logverb("Annealing step %i, gamma = %g\n", step, gamma);
+			logverb("Annealing: order %i, step %i, gamma = %g\n", order, step, gamma);
 			
-			logverb("Using input WCS:\n");
-			sip_print_to(sipout, stdout);
+			debug("Using input WCS:\n");
+			if (log_get_level() > LOG_VERB)
+				sip_print_to(sipout, stdout);
 
 			// FIXME --- this should be done in dstnthing, since it
 			// isn't necessary when called during normal solving (and
@@ -152,7 +154,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 										logodds_bail, HUGE_VAL,
 										&besti, &odds, &theta, NULL);
 			logverb("Logodds: %g\n", logodds);
-			logverb("besti: %i\n", besti);
+			//logverb("besti: %i\n", besti);
 			verify_count_hits(theta, besti, &nmatch, &nconf, &ndist);
 			logverb("%i matches, %i distractors, %i conflicts (at best log-odds); %i field sources, %i index sources\n", nmatch, ndist, nconf, Nfield, Nin);
 			verify_count_hits(theta, Nfield-1, &nmatch, &nconf, &ndist);
@@ -162,16 +164,8 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				verify_log_hit_miss(theta, NULL, besti+1, Nfield, LOG_VERB);
 			logverb("\n");
 
-
-			/*		if (plotfn) {
-			 char fn[256];
-			 sprintf(fn, "%s-%02i%c.png", plotfn, step, 'a');
-			 makeplot(fn, bgimgfn, W, H, Nfield, fieldxy, fieldsigma2s,
-			 Nin, indexpix, Nfield-1, theta, sip.wcstan.crpix);
-			 }*/
-
 			Nmatch = 0;
-			logverb("Weights:");
+			debug("Weights:");
 			for (i=0; i<Nfield; i++) {
 				double ra,dec;
 				if (theta[i] < 0)
@@ -181,10 +175,10 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				radecdeg2xyzarr(ra, dec, matchxyz + Nmatch*3);
 				memcpy(matchxy + Nmatch*2, fieldxy + i*2, 2*sizeof(double));
 				weights[Nmatch] = verify_logodds_to_weight(odds[i]);
-				logverb(" %.2f", weights[Nmatch]);
+				debug(" %.2f", weights[Nmatch]);
 				Nmatch++;
 			}
-			logverb("\n");
+			debug("\n");
 
 			free(theta);
 			free(odds);
@@ -195,11 +189,9 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				newtan.imagew = W;
 				newtan.imageh = H;
 				sip_wrap_tan(&newtan, sipout);
-
-				//logverb("Original TAN WCS:\n");
-				//tan_print_to(&sip.wcstan, stdout);
-				logverb("Using %i (weighted) matches, new TAN WCS is:\n", Nmatch);
-				tan_print_to(&newtan, stdout);
+				debug("Using %i (weighted) matches, new TAN WCS is:\n", Nmatch);
+				if (log_get_level() > LOG_VERB)
+					tan_print_to(&newtan, stdout);
 
 				if (crpix) {
 					tan_t temptan;
@@ -212,22 +204,11 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 					newtan.imagew = W;
 					newtan.imageh = H;
 					sip_wrap_tan(&newtan, sipout);
-					logverb("After moving CRPIX, TAN WCS is:\n");
-					tan_print_to(&newtan, stdout);
+					debug("After moving CRPIX, TAN WCS is:\n");
+					if (log_get_level() > LOG_VERB)
+						tan_print_to(&newtan, stdout);
 				}
 
-				/*if (plotfn) {
-				 char fn[256];
-				 for (i=0; i<Nindex; i++) {
-				 bool ok;
-				 rd_getradec(rd, i, &ra, &dec);
-				 ok = tan_radec2pixelxy(&newtan, ra, dec, indexpix + i*2, indexpix + i*2 + 1);
-				 assert(ok);
-				 }
-				 sprintf(fn, "%s-%02i%c.png", plotfn, step, 'b');
-				 makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
-				 Nindex, indexpix, Nfield-1, theta, newtan.crpix);
-				 }*/
 			} else {
 				tweak_t* t = tweak_new();
 				starxy_t* sxy = starxy_new(Nmatch, FALSE, FALSE);
@@ -251,32 +232,14 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				tweak_push_wcs_tan(t, &sipout->wcstan);
 				t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = order;
 				t->weighted_fit = TRUE;
-				// We don't really want to iterate, since tweak will do its own
-				// correspondences in a bad way.
-				//for (i=0; i<10; i++) {
 				tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
-				//logverb("\n");
-				//sip_print_to(t->sip, stdout);
-				//t->state &= ~TWEAK_HAS_LINEAR_CD;
-				//}
-				logverb("Got SIP:\n");
-				if (log_get_level() >= LOG_VERB)
+
+				debug("Got SIP:\n");
+				if (log_get_level() > LOG_VERB)
 					sip_print_to(t->sip, stdout);
 				memcpy(sipout, t->sip, sizeof(sip_t));
 				sipout->wcstan.imagew = W;
 				sipout->wcstan.imageh = H;
-				/*if (plotfn) {
-				 char fn[256];
-				 for (i=0; i<Nindex; i++) {
-				 bool ok;
-				 rd_getradec(rd, i, &ra, &dec);
-				 ok = sip_radec2pixelxy(newsip, ra, dec, indexpix + i*2, indexpix + i*2 + 1);
-				 assert(ok);
-				 }
-				 sprintf(fn, "%s-%02i%c.png", plotfn, step, 'c');
-				 makeplot(fn, bgimgfn, W, H, Nfield, fieldpix, fieldsigma2s,
-				 Nindex, indexpix, Nfield-1, theta, newsip->wcstan.crpix);
-				 }*/
 				starxy_free(sxy);
 				tweak_free(t);
 			}
@@ -299,6 +262,10 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 		}
 
 	}
+
+	logverb("Tweak2: final WCS:\n");
+	if (log_get_level() >= LOG_VERB)
+		sip_print_to(sipout, stdout);
 
 	if (p_logodds)
 		*p_logodds = logodds;

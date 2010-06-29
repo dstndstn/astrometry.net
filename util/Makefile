@@ -225,9 +225,14 @@ fits-flip-endian: fits-flip-endian.o $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += fits-flip-endian.o
 
 PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
+	starutil_numpy.py \
 	shell.py __init__.py file.py run_command.py w3c_validator.py \
 	filetype.py pyfits_utils.py fix_sdss_idr.py removelines.py \
-	ngc2000.py uniformize.py lsstutils.py $(PYTHON_LIBS)
+	ngc2000.py uniformize.py lsstutils.py casjobs.py \
+	sdss_das.py sdss_filenames.py sdss_get_catalog.py sdss_noise.py \
+	sdss_psf.py sdss_psfield.py sdss_radec_to_rcf.py sdss_tsfield.py sqlcl.py \
+	usnob_catalog.py usnob_get_image.py \
+	$(PYTHON_LIBS)
 
 PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py uniformize.py
 

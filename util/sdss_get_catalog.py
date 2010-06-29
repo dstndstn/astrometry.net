@@ -3,6 +3,7 @@ import os
 import sys
 import time
 from optparse import *
+from math import *
 
 from astrometry.util import casjobs
 from astrometry.util.starutil_numpy import *
@@ -25,10 +26,17 @@ def sdss_cas_get(username, password, ra, dec, radius, fn, band=None, maxmag=None
 	else:
 		magcut = ''
 
-	sql = ' '.join(['select ra,dec,raErr,decErr,u,g,r,i,z,err_u,err_g,err_r,err_i,err_z',
+	# It's MUCH faster to pre-compute the bounding RA,Dec box in addition to the fDistanceArcMinEq call.
+	ramin = max(0, ra - radius / cos(deg2rad(dec)))
+	ramax = min(360, ra + radius / cos(deg2rad(dec)))
+	decmin = dec - radius
+	decmax = dec + radius
+
+	sql = ' '.join(['select ra,dec,raErr,decErr,flags,u,g,r,i,z,err_u,err_g,err_r,err_i,err_z',
 					('into mydb.%s' % mydbname),
 					'from PhotoPrimary',
-					('where dbo.fDistanceArcMinEq(%g, %g, ra, dec) <= %g' % (ra, dec, deg2arcmin(radius))),
+					('where ra >= %g and ra <= %g and dec >= %g and dec <= %g' % (ramin, ramax, decmin, decmax)),
+					('and dbo.fDistanceArcMinEq(%g, %g, ra, dec) <= %g' % (ra, dec, deg2arcmin(radius))),
 					magcut
 					])
 	print 'Submitting SQL:'
