@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -311,6 +312,14 @@ void solver_set_quad_size_range(solver_t* solver, double qmin, double qmax);
  */
 void solver_set_quad_size_fraction(solver_t* solver, double qmin, double qmax);
 
+/**
+ Returns the range of quad sizes that could be matched, given the
+ current settings of pixel scale and image quad size.
+
+ Returns minimum pixel scale * minimum quad size and
+ maximum pixel scale * maximum quad size.
+ */
+void solver_get_quad_size_range_arcsec(const solver_t* solver, double* qmin, double* qmax);
 
 void solver_free(solver_t*);
 

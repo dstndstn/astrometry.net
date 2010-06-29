@@ -80,6 +80,18 @@ bool solver_did_solve(const solver_t* solver) {
 	return solver->best_match_solves;
 }
 
+void solver_get_quad_size_range_arcsec(const solver_t* solver, double* qmin, double* qmax) {
+	if (qmin) {
+		*qmin = solver->quadsize_min * solver_get_pixscale_low(solver);
+	}
+	if (qmax) {
+		double q = solver->quadsize_max;
+		if (q == 0)
+			q = solver->field_diag;
+		*qmax = q * solver_get_pixscale_high(solver);
+	}
+}
+
 double solver_get_field_jitter(const solver_t* solver) {
 	return solver->verify_pix;
 }
