@@ -315,6 +315,54 @@ def find_new_outputs(durls, dfns, preurls):
 	newfns =  [f for (f,u) in zip(dfns,durls) if not u in preurls]
 	return (newurls, newfns)
 
+
+# Requests output of the given list of databases, waits for them to appear,
+# downloads them, and writes them to the given list of local filenames.
+#
+# 'dbs' and 'fns' must be either strings, or lists of string of the same length.
+#
+# If 'dodelete' is True, the databases will be deleted after download.
+#
+def output_and_download(dbs, fns, dodelete=False, sleeptime=10):
+	if type(dbs) is str:
+		dbs = [dbs]
+		assert(type(fns) is str)
+		fns = [fns]
+
+	print 'Getting list of available downloads...'
+	(preurls,nil) = get_ready_outputs()
+	for db in dbs:
+		print 'Requesting output of', db
+		request_output(db)
+	while True:
+		print 'Waiting for output to appear...'
+		(durls,dfns) = get_ready_outputs()
+		(newurls, newfns) = find_new_outputs(durls, dfns, preurls)
+		print 'New outputs available:', dfns
+		for (fn,db) in zip(fns,dbs):
+			for (dfn,durl) in zip(newfns,newurls):
+				# the filename will contain the db name.
+				if not db in dfn:
+					continue
+				print 'Output', dfn, 'looks like it belongs to database', db
+				print 'Downloading to local file', fn
+				cmd = 'wget -O "%s" "%s"' % (fn, durl)
+				print '  (running: "%s")' % cmd
+				w = os.system(cmd)
+				if not os.WIFEXITED(w) or os.WEXITSTATUS(w):
+					print 'download failed.'
+					return -1
+				dbs.remove(db)
+				fns.remove(fn)
+				if dodelete:
+					print 'Deleting database', db
+					drop_table(db)
+		if not len(dbs):
+			break
+		print 'Waiting...'
+		time.sleep(sleeptime)
+	return 0
+
 if __name__ == '__main__':
 	args = sys.argv[1:]
 
@@ -404,40 +452,8 @@ if __name__ == '__main__':
 			sys.exit(-1)
 		dbs = dbfns[0::2]
 		fns = dbfns[1::2]
-		print 'Getting list of available downloads...'
-		(preurls,nil) = get_ready_outputs()
-		#for u in preurls:
-		#	print '  ', u
-		for db in dbs:
-			print 'Requesting output of', db
-			request_output(db)
-		while True:
-			print 'Waiting for output to appear...'
-			(durls,dfns) = get_ready_outputs()
-			(newurls, newfns) = find_new_outputs(durls, dfns, preurls)
-			print 'New outputs available:', dfns
-			for (fn,db) in zip(fns,dbs):
-				for (dfn,durl) in zip(newfns,newurls):
-					# the filename will contain the db name.
-					if not db in dfn:
-						continue
-					print 'Output', dfn, 'looks like it belongs to database', db
-					print 'Downloading to local file', fn
-					cmd = 'wget -O "%s" "%s"' % (fn, durl)
-					print '  (running: "%s")' % cmd
-					w = os.system(cmd)
-					if not os.WIFEXITED(w) or os.WEXITSTATUS(w):
-						print 'download failed.'
-						sys.exit(-1)
-					dbs.remove(db)
-					fns.remove(fn)
-					if dodelete:
-						print 'Deleting database', db
-						drop_table(db)
-			if not len(dbs):
-				break
-			print 'Waiting...'
-			time.sleep(10)
+
+		output_and_download(dbs, fns, dodelete)
 		sys.exit(0)
 
 	statefile = 'submit.pickle'
