@@ -153,6 +153,9 @@ void matchobj_compute_overlap(MatchObj* mo);
 // compute all derived fields.
 void matchobj_compute_derived(MatchObj* mo);
 
+// Returns the name of the index that produced this match.
+const char* matchobj_get_index_name(MatchObj* mo);
+
 //void matchobj_log_verify_hit_miss(MatchObj* mo, int loglevel);
 
 /*

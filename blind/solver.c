@@ -40,7 +40,7 @@
 #include "pquad.h"
 #include "kdtree.h"
 #include "quad-utils.h"
-
+#include "errors.h"
 #include "tweak2.h"
 
 #if TESTING_TRYALLCODES
@@ -62,6 +62,63 @@ void test_try_permutations(int* stars, double* code, int dimquad, solver_t* s);
 #else
 #define TEST_TRY_PERMUTATIONS(u,v,x,y)  // no-op.
 #endif
+
+void solver_set_record_logodds(solver_t* solver, double logodds) {
+	solver->logratio_record_threshold = logodds;
+}
+
+int solver_set_parity(solver_t* solver, int parity) {
+	if (!((parity == PARITY_NORMAL) || (parity == PARITY_FLIP) || (parity == PARITY_BOTH))) {
+		ERROR("Invalid parity value: %i", parity);
+		return -1;
+	}
+	solver->parity = parity;
+	return 0;
+}
+
+bool solver_did_solve(const solver_t* solver) {
+	return solver->best_match_solves;
+}
+
+double solver_get_field_jitter(const solver_t* solver) {
+	return solver->verify_pix;
+}
+
+void solver_get_field_center(const solver_t* solver, double* px, double* py) {
+	if (px)
+		*px = (solver->field_maxx + solver->field_minx)/2.0;
+	if (py)
+		*py = (solver->field_maxy + solver->field_miny)/2.0;
+}
+
+double solver_get_max_radius_arcsec(const solver_t* solver) {
+	return solver->funits_upper * solver->field_diag / 2.0;
+}
+
+MatchObj* solver_get_best_match(solver_t* solver) {
+	return &(solver->best_match);
+}
+
+const char* solver_get_best_match_index_name(const solver_t* solver) {
+	return solver->best_index->indexname;
+}
+
+double solver_get_pixscale_low(const solver_t* solver) {
+	return solver->funits_lower;
+}
+double solver_get_pixscale_high(const solver_t* solver) {
+	return solver->funits_upper;
+}
+
+void solver_set_quad_size_range(solver_t* solver, double qmin, double qmax) {
+	solver->quadsize_min = qmin;
+	solver->quadsize_max = qmax;
+}
+
+void solver_set_quad_size_fraction(solver_t* solver, double qmin, double qmax) {
+	solver_set_quad_size_range(solver, qmin * MIN(solver_field_width(solver), solver_field_height(solver)),
+							   qmax * solver->field_diag);
+}
 
 void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
 	double* xy = NULL;
@@ -287,10 +344,10 @@ void solver_reset_counters(solver_t* s) {
 	s->num_verified = 0;
 }
 
-double solver_field_width(solver_t* s) {
+double solver_field_width(const solver_t* s) {
 	return s->field_maxx - s->field_minx;
 }
-double solver_field_height(solver_t* s) {
+double solver_field_height(const solver_t* s) {
 	return s->field_maxy - s->field_miny;
 }
 
@@ -326,6 +383,10 @@ static void set_index(solver_t* s, index_t* index) {
     s->rel_index_noise2 = square(index->index_jitter / index->index_scale_lower);
 }
 
+static void set_diag(solver_t* s) {
+	s->field_diag = hypot(solver_field_width(s), solver_field_height(s));
+}
+
 void solver_set_field(solver_t* s, starxy_t* field) {
     s->fieldxy = field;
 	// Preprocessing happens in "solver_preprocess_field()".
@@ -336,6 +397,7 @@ void solver_set_field_bounds(solver_t* s, double xlo, double xhi, double ylo, do
 	s->field_maxx = xhi;
 	s->field_miny = ylo;
 	s->field_maxy = yhi;
+	set_diag(s);
 }
 
 void solver_cleanup_field(solver_t* solver) {
@@ -349,7 +411,8 @@ void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) { //, MatchObj* pmo) {
     int i, nindexes;
     MatchObj mo;
 	MatchObj* pmo;
-	//if (!pmo)
+	bool olddqb;
+
 	pmo = &mo;
 
 	if (!solver->vf)
@@ -361,14 +424,18 @@ void solver_verify_sip_wcs(solver_t* solver, sip_t* sip) { //, MatchObj* pmo) {
     mo.wcs_valid = TRUE;
     mo.scale = sip_pixel_scale(sip);
     set_center_and_radius(solver, pmo, NULL, sip);
-    solver->distance_from_quad_bonus = FALSE;
-
+	olddqb = solver->distance_from_quad_bonus;
+	solver->distance_from_quad_bonus = FALSE;
+		
     nindexes = pl_size(solver->indexes);
     for (i=0; i<nindexes; i++) {
         index_t* index = pl_get(solver->indexes, i);
         set_index(solver, index);
         solver_inject_match(solver, pmo, sip);
     }
+
+	// revert
+	solver->distance_from_quad_bonus = olddqb;
 }
 
 void solver_add_index(solver_t* solver, index_t* index) {
@@ -512,6 +579,7 @@ static void print_inbox(pquad* pq) {}
 
 void solver_reset_field_size(solver_t* s) {
 	s->field_minx = s->field_maxx = s->field_miny = s->field_maxy = 0;
+	s->field_diag = 0.0;
 }
 
 static void find_field_boundaries(solver_t* solver) {
@@ -528,8 +596,7 @@ static void find_field_boundaries(solver_t* solver) {
 			solver->field_maxy = MAX(solver->field_maxy, field_gety(solver, i));
 		}
 	}
-	solver->field_diag = hypot(solver->field_maxy - solver->field_miny,
-							   solver->field_maxx - solver->field_minx);
+	set_diag(solver);
 }
 
 void solver_preprocess_field(solver_t* solver) {
@@ -545,6 +612,10 @@ void solver_free_field(solver_t* solver) {
 	if (solver->vf)
 		verify_field_free(solver->vf);
 	solver->vf = NULL;
+}
+
+starxy_t* solver_get_field(solver_t* solver) {
+	return solver->fieldxy;
 }
 
 static double get_tolerance(solver_t* solver) {
@@ -1328,6 +1399,7 @@ void solver_set_default_values(solver_t* solver) {
     solver->verify_pix = DEFAULT_VERIFY_PIX;
 	solver->verify_uniformize = TRUE;
 	solver->verify_dedup = TRUE;
+	solver->distance_from_quad_bonus = TRUE;
 }
 
 void solver_clear_indexes(solver_t* solver) {

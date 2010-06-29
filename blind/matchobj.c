@@ -41,3 +41,9 @@ void matchobj_compute_derived(MatchObj* mo) {
  verify_log_hit_miss(mo->theta, mo->nbest, mo->nfield, loglevel);
  }
  */
+
+const char* matchobj_get_index_name(MatchObj* mo) {
+	if (!mo->index)
+		return NULL;
+	return mo->index->indexname;
+}

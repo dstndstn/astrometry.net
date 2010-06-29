@@ -63,7 +63,6 @@ struct solver_t {
 	double funits_lower;
 	double funits_upper;
 
-	//double logratio_print_threshold;
 	double logratio_record_threshold;
 
 	double logratio_totune;
@@ -214,12 +213,113 @@ solver_t* solver_new();
 
 void solver_set_default_values(solver_t* solver);
 
+/**
+ Returns the assumed field positional uncertainty ("jitter")
+ in pixels.
+ */
+double solver_get_field_jitter(const solver_t* solver);
+
+/**
+ Sets the log-odds ratio for "recording" a proposed solution.  NOTE,
+ 'recording' means calling your callback, where you can decide what to
+ do with it; thus it's probably your "solve" threshold.
+
+ Default: 0, which means your callback gets called for every match.
+
+ Suggested value: log(1e9) or log(1e12).
+ */
+void solver_set_record_logodds(solver_t* solver, double logodds);
+
+/**
+ Sets the "parity" or "flip" of the image.
+
+ PARITY_NORMAL: det(CD) < 0
+ PARITY_FLIP:   det(CD) > 0
+ PARITY_BOTH (default): try both.
+
+ Return 0 on success, -1 on invalid parity value.
+ */
+int solver_set_parity(solver_t* solver, int parity);
+
+/**
+ Returns the pixel position of the center of the field, defined
+ to be the mean of the min and max position.
+ (field_maxx + field_maxy)/2
+ */
+void solver_get_field_center(const solver_t* solver, double* px, double* py);
+
+/**
+ Returns the maximum field size expected, in arcsec.
+
+ This is simply the maximum pixel scale * maximum radius (on the
+ diagonal)
+ */
+double solver_get_max_radius_arcsec(const solver_t* solver);
+
+/**
+ Returns the best match found after a solver_run() call.
+
+ This is just &(solver->best_match)
+ */
+MatchObj* solver_get_best_match(solver_t* solver);
+
+/**
+ Did the best match solve?
+
+ Returns solver->best_match_solved.
+ */
+bool solver_did_solve(const solver_t* solver);
+
+/**
+ Returns solver->best_index->indexname.
+
+ (Should be equal to solver->best_match->index->indexname.
+ */
+const char* solver_get_best_match_index_name(const solver_t* solver);
+
+/**
+ Returns the lower/upper bounds of pixel scale that will be searched,
+ in arcsec/pixel.
+ */
+double solver_get_pixscale_low(const solver_t* solver);
+double solver_get_pixscale_high(const solver_t* solver);
+
+/**
+ Sets the range of quad sizes to try in the image.  This will be
+ further tightened, if possible, given the range of quad sizes in the
+ index and the pixel scale estimates.
+
+ This avoids looking at tiny quads in the image, because if matches
+ are generated they are difficult to verify (a tiny bit of noise in
+ the quad position translates to a lot of positional noise in stars
+ far away).
+
+ Min and max are in pixels.
+
+ Sets quadsize_min, quadsize_max fields.
+
+ Recommended: ~ 10% of smaller image dimension; 100% of image diagonal.
+ */
+void solver_set_quad_size_range(solver_t* solver, double qmin, double qmax);
+
+/**
+ Same as solver_set_quad_size_range(), but specified in terms of
+ fraction of the smaller image dimension (for lower) and the diagonal
+ (for upper).
+
+ Recommended: min=0.1, max=1
+ */
+void solver_set_quad_size_fraction(solver_t* solver, double qmin, double qmax);
+
+
 void solver_free(solver_t*);
 
 /**
  Tells the solver which field of stars it's going to be solving.
  */
 void solver_set_field(solver_t* s, starxy_t* field);
+
+starxy_t* solver_get_field(solver_t* solver);
 
 void solver_reset_field_size(solver_t* s);
 
@@ -247,8 +347,11 @@ void solver_set_field_bounds(solver_t* s, double xlo, double xhi, double ylo, do
  */
 void solver_cleanup_field(solver_t*);
 
-double solver_field_width(solver_t* t);
-double solver_field_height(solver_t* t);
+/**
+ get field w,h
+ */
+double solver_field_width(const solver_t* t);
+double solver_field_height(const solver_t* t);
 
 
 void solver_add_index(solver_t* solver, index_t* index);
