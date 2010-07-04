@@ -443,13 +443,11 @@ void startree_set_jitter(startree_t* s, double jitter_arcsec) {
 	fits_header_set_double(s->header, "JITTER", jitter_arcsec, "Positional error of stars [arcsec]");
 }
 
-/*
- int startree_get_sweep(const startree_t* s, int ind) {
- if (ind < 0 || ind >= Ndata(s) || !s->sweep)
- return -1;
- return s->sweep[ind];
- }
- */
+int startree_get_sweep(const startree_t* s, int ind) {
+	if (ind < 0 || ind >= Ndata(s) || !s->sweep)
+		return -1;
+	return s->sweep[ind];
+}
 
 int startree_get(startree_t* s, int starid, double* posn) {
 	if (s->tree->perm && !s->inverse_perm) {

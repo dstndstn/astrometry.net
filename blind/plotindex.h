@@ -30,6 +30,10 @@ struct plotindex_args {
 };
 typedef struct plotindex_args plotindex_t;
 
+// immediate: do cairo_move_to and cairo_line_to; no cairo_stroke/fill.
+void plot_quad_xy(cairo_t* cairo, double* quadxy, int dimquads);
+
+
 plotindex_t* plot_index_get(plot_args_t* pargs);
 
 int plot_index_add_file(plotindex_t* args, const char* fn);

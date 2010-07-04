@@ -51,37 +51,32 @@ void* plot_index_init(plot_args_t* plotargs) {
 	return args;
 }
 
-static void plotquad(cairo_t* cairo, plot_args_t* pargs, plotindex_t* args, index_t* index, int quadnum, int DQ) {
+static void pad_qidxes(plotindex_t* args) {
+	while ((pl_size(args->qidxes)) < pl_size(args->indexes))
+		pl_append(args->qidxes, NULL);
+}
+
+void plot_quad_xy(cairo_t* cairo, double* quadxy, int dimquads) {
 	int k;
-	unsigned int stars[DQMAX];
-	double ra, dec;
-	double px, py;
-	double xy[DQMAX*2];
 	double cx, cy;
 	double theta[DQMAX];
 	int* perm;
 
-	quadfile_get_stars(index->quads, quadnum, stars);
 	cx = cy = 0.0;
-	for (k=0; k<DQ; k++) {
-		startree_get_radec(index->starkd, stars[k], &ra, &dec);
-		if (!plotstuff_radec2xy(pargs, ra, dec, &px, &py)) {
-			ERROR("Failed to convert RA,Dec %g,%g to pixels for quad %i\n", ra, dec, quadnum);
-			continue;
-		}
-		cx += px;
-		cy += py;
-		xy[2*k + 0] = px;
-		xy[2*k + 1] = py;
+	for (k=0; k<dimquads; k++) {
+		cx += quadxy[2*k+0];
+		cy += quadxy[2*k+1];
 	}
-	cx /= DQ;
-	cy /= DQ;
-	for (k=0; k<DQ; k++)
-		theta[k] = atan2(xy[2*k+1] - cy, xy[2*k+0] - cx);
-	perm = permuted_sort(theta, sizeof(double), compare_doubles_asc, NULL, DQ);
-	for (k=0; k<DQ; k++) {
-		px = xy[2 * perm[k] + 0];
-		py = xy[2 * perm[k] + 1];
+	cx /= dimquads;
+	cy /= dimquads;
+
+	for (k=0; k<dimquads; k++)
+		theta[k] = atan2(quadxy[2*k+1] - cy, quadxy[2*k+0] - cx);
+	perm = permuted_sort(theta, sizeof(double), compare_doubles_asc, NULL, dimquads);
+	for (k=0; k<dimquads; k++) {
+		double px,py;
+		px = quadxy[2 * perm[k] + 0];
+		py = quadxy[2 * perm[k] + 1];
 		if (k == 0) {
 			cairo_move_to(cairo, px, py);
 		} else {
@@ -90,6 +85,26 @@ static void plotquad(cairo_t* cairo, plot_args_t* pargs, plotindex_t* args, inde
 	}
 	free(perm);
 	cairo_close_path(cairo);
+}
+
+static void plotquad(cairo_t* cairo, plot_args_t* pargs, plotindex_t* args, index_t* index, int quadnum, int DQ) {
+	int k;
+	unsigned int stars[DQMAX];
+	double ra, dec;
+	double px, py;
+	double xy[DQMAX*2];
+
+	quadfile_get_stars(index->quads, quadnum, stars);
+	for (k=0; k<DQ; k++) {
+		startree_get_radec(index->starkd, stars[k], &ra, &dec);
+		if (!plotstuff_radec2xy(pargs, ra, dec, &px, &py)) {
+			ERROR("Failed to convert RA,Dec %g,%g to pixels for quad %i\n", ra, dec, quadnum);
+			continue;
+		}
+		xy[2*k + 0] = px;
+		xy[2*k + 1] = py;
+	}
+	plot_quad_xy(cairo, xy, DQ);
 	if (args->fill)
 		cairo_fill(cairo);
 	else
@@ -103,6 +118,8 @@ int plot_index_plot(const char* command,
 	double ra, dec, radius;
 	double xyz[3];
 	double r2;
+
+	pad_qidxes(args);
 
 	plotstuff_builtin_apply(cairo, pargs);
 
@@ -119,19 +136,22 @@ int plot_index_plot(const char* command,
 		index_t* index = pl_get(args->indexes, i);
 		int j, N;
 		int DQ;
-		double* radecs;
 		double px,py;
 
 		if (args->stars) {
 			// plot stars
+			double* radecs = NULL;
 			startree_search_for(index->starkd, xyz, r2, NULL, &radecs, NULL, &N);
-			logmsg("Found %i stars in range of index %s\n", N, index->indexname);
+			if (N) {
+				assert(radecs);
+			}
+			logmsg("Found %i stars in range in index %s\n", N, index->indexname);
 			for (j=0; j<N; j++) {
+				logverb("  RA,Dec (%g,%g) -> x,y (%g,%g)\n", radecs[2*j], radecs[2*j+1], px, py);
 				if (!plotstuff_radec2xy(pargs, radecs[j*2], radecs[j*2+1], &px, &py)) {
 					ERROR("Failed to convert RA,Dec %g,%g to pixels\n", radecs[j*2], radecs[j*2+1]);
 					continue;
 				}
-				logverb("  RA,Dec (%g,%g) -> x,y (%g,%g)\n", radecs[2*j], radecs[2*j+1], px, py);
 				cairoutils_draw_marker(cairo, pargs->marker, px, py, pargs->markersize);
 				cairo_stroke(cairo);
 			}
@@ -168,7 +188,6 @@ int plot_index_plot(const char* command,
 			} else {
 				// plot quads
 				N = index_nquads(index);
-				// HACK -- could use quadidx if the index is much bigger than the plot area...
 				for (j=0; j<N; j++) {
 					plotquad(cairo, pargs, args, index, j, DQ);
 				}
@@ -179,15 +198,15 @@ int plot_index_plot(const char* command,
 }
 
 int plot_index_add_qidx_file(plotindex_t* args, const char* fn) {
+	int i;
 	qidxfile* qidx = qidxfile_open(fn);
 	if (!qidx) {
 		ERROR("Failed to open quad index file \"%s\"", fn);
 		return -1;
 	}
-	while ((pl_size(args->qidxes)+1) < pl_size(args->indexes))
-		pl_append(args->qidxes, NULL);
-
-	pl_append(args->qidxes, qidx);
+	pad_qidxes(args);
+	i = pl_size(args->indexes) - 1;
+	pl_set(args->qidxes, i, qidx);
 	return 0;
 }
 

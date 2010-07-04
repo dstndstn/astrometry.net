@@ -154,7 +154,7 @@ void startree_set_jitter(startree_t* s, double jitter_arcsec);
 
 // returns the sweep number of star 'ind', or -1 if the index is out of bounds
 // or the tree has no sweep numbers.
-//int startree_get_sweep(const startree_t* s, int ind);
+int startree_get_sweep(const startree_t* s, int ind);
 
 int startree_N(const startree_t* s);
 

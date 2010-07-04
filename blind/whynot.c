@@ -50,10 +50,13 @@
 #include "blind_wcs.h"
 #include "codefile.h"
 #include "solver.h"
+#include "permutedsort.h"
 
-//#include "plotstuff.h"
+#include "plotstuff.h"
+#include "plotxy.h"
+#include "plotindex.h"
 
-static const char* OPTIONS = "hx:w:i:vj:X:Y:Q:"; //q:";
+static const char* OPTIONS = "hx:w:i:vj:X:Y:Q:s:O:";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -61,12 +64,13 @@ void print_help(char* progname) {
 		   "   -w <WCS input file>\n"
 		   "   -x <xyls input file>\n"
 		   "   -i <index-name>\n"
-		   //"   [-q <qidx-name>]\n"
 		   "   [-X <x-column>]: X column name\n"
 		   "   [-Y <y-column>]: Y column name\n"
            "   [-v]: verbose\n"
 		   "   [-j <pixel-jitter>]: set pixel jitter (default 1.0)\n"
-		   //"   [-Q <quad-plot-basename>]: plot all the quads in the image, one per file.  Put a %%i in this filename!\n"
+		   "   [-Q <quad-plot-basename>]: plot all the quads in the image, one per file.  Put a %%i in this filename!\n"
+		   "   [-O <obj-plot-basename>]: make a plot for each image object; Put a %%i in this filename\n"
+		   "   [-s <plot-scale>]: scale everything by this factor (eg, 0.25)\n"
 		   "\n", progname);
 }
 
@@ -124,7 +128,9 @@ int main(int argc, char** args) {
 	
 	double nsigma = 3.0;
 
-	//char* quadplotfn = NULL;
+	char* quadplotfn = NULL;
+	char* objplotfn = NULL;
+	double quadplotscale = 1.0;
 
 	fits_use_error_system();
 
@@ -132,9 +138,15 @@ int main(int argc, char** args) {
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
-			//case 'Q':
-			//quadplotfn = optarg;
-			//break;
+		case 's':
+			quadplotscale = atof(optarg);
+			break;
+		case 'Q':
+			quadplotfn = optarg;
+			break;
+		case 'O':
+			objplotfn = optarg;
+			break;
 		case 'X':
 			xcol = optarg;
 			break;
@@ -237,7 +249,6 @@ int main(int argc, char** args) {
 
 	// Find all stars in the field.
 	for (i=0; i<pl_size(indexes); i++) {
-		kdtree_qres_t* res;
 		index_t* indx;
 		int nquads;
 		uint32_t* quads;
@@ -290,6 +301,11 @@ int main(int argc, char** args) {
 		double pixr2;
 		il* indstarswithcorrs;
 
+		double* xyzs = NULL;
+		int* starinds = NULL;
+		int Nindex;
+		int Ngood;
+
 		indx = pl_get(indexes, i);
 		qidx = pl_get(qidxes, i);
 
@@ -308,31 +324,37 @@ int main(int argc, char** args) {
 		logmsg("Found %i field objects\n", Nfield);
 
 		// Find index stars.
-		res = kdtree_rangesearch_options(indx->starkd->tree, xyzcenter, fieldrad2*1.05,
-										 KD_OPTIONS_SMALL_RADIUS | KD_OPTIONS_RETURN_POINTS);
-		if (!res || !res->nres) {
+		startree_search_for(indx->starkd, xyzcenter, fieldrad2*1.05,
+							&xyzs, NULL, &starinds, &Nindex);
+		if (!Nindex) {
 			logmsg("No index stars found.\n");
 			exit(-1);
 		}
-		logmsg("Found %i index stars in range.\n", res->nres);
+		logmsg("Found %i index stars in range.\n", Nindex);
 
 		starlist = il_new(16);
 		corrstarlist = il_new(16);
 		starxylist = dl_new(16);
 
 		// Find which ones in range are inside the image rectangle.
-		for (j=0; j<res->nres; j++) {
-			int starnum = res->inds[j];
+		Ngood = 0;
+		for (j=0; j<Nindex; j++) {
+			int starnum = starinds[j];
 			double x, y;
-			if (!sip_xyzarr2pixelxy(&sip, res->results.d + j*3, &x, &y))
+			if (!sip_xyzarr2pixelxy(&sip, xyzs + j*3, &x, &y))
 				continue;
 			if ((x < 0) || (y < 0) || (x >= W) || (y >= H))
 				continue;
 			il_append(starlist, starnum);
 			dl_append(starxylist, x);
 			dl_append(starxylist, y);
+			// compact this array...
+			starinds[Ngood] = starnum;
+			Ngood++;
 		}
 		logmsg("Found %i index stars inside the field.\n", il_size(starlist));
+
+
 
 		// Now find correspondences between index objects and field objects.
 		// Build a tree out of the field objects (in pixel space)
@@ -470,6 +492,139 @@ int main(int argc, char** args) {
 			il_append(fullquadlist, quad);
 		}
 		logmsg("Found %i quads fully contained in the field.\n", il_size(fullquadlist));
+
+
+		{
+			double* sortdata = startree_get_data_column(indx->starkd, "r", starinds, Ngood);
+			int k;
+			int* sweeps = malloc(Ngood * sizeof(int));
+			int* perm = NULL;
+			int* maxsweep = malloc(il_size(uniqquadlist) * sizeof(int));
+			unsigned int stars[DQMAX];
+
+			// DEBUG -- how does "sweep" correspond to column "r" ?
+			// (answer: small sweep --> small r, pretty much.)
+			for (k=0; k<Ngood; k++) {
+				sweeps[k] = startree_get_sweep(indx->starkd, starinds[k]);
+			}
+			perm = permuted_sort(sweeps, sizeof(int), compare_ints_asc, NULL, Ngood);
+			for (k=0; k<Ngood; k++) {
+				logverb("  sweep %i, r mag %g\n", sweeps[perm[k]], sortdata[perm[k]]);
+			}
+			free(perm);
+
+
+			for (j=0; j<il_size(uniqquadlist); j++) {
+				int quad = il_get(uniqquadlist, j);
+				int ms = 0;
+				quadfile_get_stars(indx->quads, quad, stars);
+				for (k=0; k<dimquads; k++) {
+					int sweep = startree_get_sweep(indx->starkd, stars[k]);
+					ms = MAX(ms, sweep);
+				}
+				maxsweep[j] = ms;
+			}
+			perm = permuted_sort(maxsweep, sizeof(int), compare_ints_asc, NULL, il_size(uniqquadlist));
+
+			logverb("\nQuads completely within the image:\n");
+			for (j=0; j<il_size(uniqquadlist); j++) {
+				int quad = il_get(uniqquadlist, perm[j]);
+				if (!il_contains(fullquadlist, quad))
+					continue;
+				quadfile_get_stars(indx->quads, quad, stars);
+				logverb("(full) quad %i: made from stars with sweeps:", quad);
+				for (k=0; k<dimquads; k++) {
+					int sweep = startree_get_sweep(indx->starkd, stars[k]);
+					logverb(" %i", sweep);
+				}
+				logverb("\n");
+			}
+
+			logverb("\nNearby quads, not completely within the image:\n");
+			for (j=0; j<il_size(uniqquadlist); j++) {
+				int quad = il_get(uniqquadlist, perm[j]);
+				if (il_contains(fullquadlist, quad))
+					continue;
+				quadfile_get_stars(indx->quads, quad, stars);
+				logverb("(near) quad %i: made from stars with sweeps:", quad);
+				for (k=0; k<dimquads; k++) {
+					int sweep = startree_get_sweep(indx->starkd, stars[k]);
+					logverb(" %i", sweep);
+				}
+				logverb("\n");
+			}
+
+			free(perm);
+			free(maxsweep);
+
+			free(sweeps);
+			free(sortdata);
+		}
+
+
+
+		if (quadplotfn) {
+			for (j=0; j<il_size(fullquadlist); j++) {
+				char* fn;
+				int SW, SH;
+				int k;
+				plot_args_t* pargs;
+				plotxy_t* pxy;
+				plotindex_t* pind;
+				int quad;
+				unsigned int stars[dimquads];
+				double quadxy[DQMAX * 2];
+
+				asprintf(&fn, quadplotfn, j);
+				SW = (int)(quadplotscale * W);
+				SH = (int)(quadplotscale * H);
+
+				pargs = plotstuff_new();
+				pargs->outformat = PLOTSTUFF_FORMAT_PNG;
+				pargs->outfn = fn;
+				plotstuff_set_size(pargs, SW, SH);
+
+				plotstuff_set_color(pargs, "black");
+				plotstuff_plot_layer(pargs, "fill");
+				pargs->lw = 2.0;
+
+				pxy = plot_xy_get(pargs);
+				pxy->scale = quadplotscale;
+
+				plotstuff_set_color(pargs, "red");
+				plotstuff_set_markersize(pargs, 6);
+				for (k=0; k<Nfield; k++)
+					plot_xy_vals(pxy, fieldxy[2*k+0], fieldxy[2*k+1]);
+				plotstuff_plot_layer(pargs, "xy");
+
+				plotstuff_set_color(pargs, "green");
+				//plotstuff_set_marker(pargs, "crosshair");
+				plotstuff_set_markersize(pargs, 4);
+				for (k=0; k<dl_size(starxylist)/2; k++)
+					plot_xy_vals(pxy, dl_get(starxylist, 2*k+0), dl_get(starxylist, 2*k+1));
+				plotstuff_plot_layer(pargs, "xy");
+
+				pind = plot_index_get(pargs);
+
+				quad = il_get(fullquadlist, j);
+				quadfile_get_stars(indx->quads, quad, stars);
+				for (k=0; k<dimquads; k++) {
+					int m = il_index_of(starlist, stars[k]);
+					quadxy[k*2+0] = dl_get(starxylist, 2*m+0) * quadplotscale;
+					quadxy[k*2+1] = dl_get(starxylist, 2*m+1) * quadplotscale;
+				}
+
+				plot_quad_xy(pargs->cairo, quadxy, dimquads);
+				cairo_stroke(pargs->cairo);
+
+				plotstuff_output(pargs);
+
+				plotstuff_free(pargs);
+				logmsg("Wrote %s\n", fn);
+				free(fn);
+			}
+		}
+
 
 		// Find the stars that are in quads.
 		starsinquadslist = il_new(16);
