@@ -1130,9 +1130,9 @@ static void do_sip_tweak(tweak_t* t) {
 			x = t->x[il_get(t->image, i)];
 			y = t->y[il_get(t->image, i)];
 			sip_pixelxy2iwc(t->sip, x, y, &axx, &axy);
-			printf("Resid %i: GSL says (%g, %g), dstn says (%g, %g), weighted (%g, %g)\n",
-				   i, gsl_vector_get(r1, i), gsl_vector_get(r2, i),
-				   bx - axx, by - axy, weight*(bx-axx), weight*(by-axy));
+			debug("Resid %i: GSL says (%g, %g), dstn says (%g, %g), weighted (%g, %g)\n",
+				  i, gsl_vector_get(r1, i), gsl_vector_get(r2, i),
+				  bx - axx, by - axy, weight*(bx-axx), weight*(by-axy));
 		}
 	}
 
