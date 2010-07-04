@@ -52,6 +52,7 @@ struct mycolor {
 typedef struct mycolor mycolor;
 
 static mycolor mycolors[] = {
+    { "darkred",      0.5, 0.0, 0.0 },
     { "red",          1.0, 0.0, 0.0 },
     { "darkgreen",    0.0, 0.5, 0.0 },
     { "green",        0.0, 1.0, 0.0 },

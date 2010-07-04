@@ -261,7 +261,7 @@ void sip_get_radec_bounds(const sip_t* wcs, int stepsize,
 void tan_transform(const tan_t* tanin, tan_t* tanout,
 				   double xlo, double xhi, double ylo, double yhi,
 				   double scale) {
-	memcpy(tanout, tanin, sizeof(tan_t));
+	memmove(tanout, tanin, sizeof(tan_t));
 	tanout->imagew = (xhi - xlo + 1) * scale;
 	tanout->imageh = (yhi - ylo + 1) * scale;
 	tanout->crpix[0] = (tanout->crpix[0] - (xlo - 1)) * scale;

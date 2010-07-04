@@ -44,6 +44,7 @@
 #include "index.h"
 #include "boilerplate.h"
 #include "sip.h"
+#include "sip-utils.h"
 #include "sip_qfits.h"
 #include "log.h"
 #include "fitsioutils.h"
@@ -891,6 +892,195 @@ int main(int argc, char** args) {
 			logmsg("  logodds %g (odds %g)\n", fq->logodds, exp(fq->logodds));
 		}
 		printf("\nTotal of %i quads that would solve the image.\n", ngood);
+
+		if (objplotfn) {
+			il* closeistars = il_new(256);
+			kdtree_t* itree;
+			int SW, SH;
+			plot_args_t* pargs;
+			sip_t scalesip;
+			{
+				double* ixycopy = malloc(Ngood * 2 * sizeof(double));
+				dl_copy(starxylist, 0, Ngood * 2, ixycopy);
+				itree = kdtree_build(NULL, ixycopy, Ngood, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
+			}
+			if (!itree) {
+				logmsg("Failed to build index kdtree.\n");
+				exit(-1);
+			}
+
+			SW = (int)(quadplotscale * W);
+			SH = (int)(quadplotscale * H);
+
+			pargs = plotstuff_new();
+			pargs->outformat = PLOTSTUFF_FORMAT_PNG;
+			plotstuff_set_size(pargs, SW, SH);
+
+			sip_copy(&scalesip, &sip);
+			tan_transform(&scalesip.wcstan, &scalesip.wcstan,
+						  1, scalesip.wcstan.imagew,
+						  1, scalesip.wcstan.imageh,
+						  quadplotscale);
+			plotstuff_set_wcs_sip(pargs, &scalesip);
+
+			for (j=0; j<Nfield; j++) {
+				char* fn;
+				int k,m;
+				plotxy_t* pxy;
+				plotindex_t* pind;
+				int quad;
+				unsigned int stars[dimquads];
+				double quadxy[DQMAX * 2];
+				double* fxy;
+				int nn;
+				double nnd2;
+				kdtree_qres_t* res;
+				double x,y;
+				int closestart;
+
+				fxy = fieldxy + 2*j;
+
+				logverb("Field object %i: (%g, %g)\n", j, fxy[0], fxy[1]);
+
+				nn = kdtree_nearest_neighbour(itree, fxy, &nnd2);
+				logverb("  Nearest index star is %g pixels away.\n",
+						sqrt(nnd2));
+
+				res = kdtree_rangesearch_options(itree, fxy, pixr2 * nsigma*nsigma, KD_OPTIONS_SMALL_RADIUS);
+				if (!res || !res->nres) {
+					logverb("  No index stars within %g pixels\n", sqrt(pixr2)*nsigma);
+					continue;
+				}
+
+				logverb("  %i index stars within %g pixels\n", res->nres, sqrt(pixr2)*nsigma);
+
+				// NOTE, "closeistars" contains indices in "starlist" / "starxy" directly.
+
+				closestart = il_size(closeistars);
+
+				for (k=0; k<res->nres; k++) {
+					il_append(closeistars, res->inds[k]);
+				}
+
+				asprintf(&fn, objplotfn, j);
+				pargs->outfn = fn;
+
+				plotstuff_set_color(pargs, "black");
+				plotstuff_plot_layer(pargs, "fill");
+				pargs->lw = 2.0;
+
+				pxy = plot_xy_get(pargs);
+				pxy->scale = quadplotscale;
+
+				plotstuff_set_color(pargs, "green");
+				//plotstuff_set_marker(pargs, "crosshair");
+
+				plotstuff_set_markersize(pargs, 5);
+				for (k=0; k<il_size(closeistars); k++) {
+					int ind = il_get(closeistars, k);
+					double x,y;
+					assert(ind >= 0);
+					x = dl_get(starxylist, 2*ind+0);
+					y = dl_get(starxylist, 2*ind+1);
+					plot_xy_vals(pxy, x, y);
+				}
+				plotstuff_plot_layer(pargs, "xy");
+				plot_xy_clear_list(pxy);
+
+				plotstuff_set_color(pargs, "darkgreen");
+				plotstuff_set_markersize(pargs, 2);
+				for (k=0; k<il_size(starlist); k++) {
+					//int star = il_get(starlist, k);
+					//if (il_contains(closeistars, star))
+					if (il_contains(closeistars, k))
+						continue;
+					x = dl_get(starxylist, 2*k+0);
+					y = dl_get(starxylist, 2*k+1);
+					plot_xy_vals(pxy, x, y);
+				}
+				plotstuff_plot_layer(pargs, "xy");
+				plot_xy_clear_list(pxy);
+
+				pind = plot_index_get(pargs);
+
+				// All quads incident on index stars near field stars we've looked at (cumulative)
+				for (k=0; k<il_size(uniqquadlist); k++) {
+					int nclose = 0;
+					bool thistime = FALSE;
+					quad = il_get(uniqquadlist, k);
+					quadfile_get_stars(indx->quads, quad, stars);
+					for (m=0; m<dimquads; m++) {
+						int cind;
+						int ind = il_index_of(starlist, stars[m]);
+						if (ind == -1)
+							continue;
+						cind = il_index_of(closeistars, ind);
+						if (cind < 0)
+							continue;
+						nclose++;
+						if (cind >= closestart)
+							thistime = TRUE;
+						//logverb("quad %i: star %i, starlist ind %i, close ind %i (start %i)\n", quad, stars[m], ind, cind, closestart);
+					}
+					if (!nclose)
+						continue;
+
+					/*
+					 for (m=0; m<dimquads; m++) {
+					 int ind = il_index_of(starlist, stars[m]);
+					 assert(ind >= 0);
+					 quadxy[m*2+0] = dl_get(starxylist, 2*ind+0) * quadplotscale;
+					 quadxy[m*2+1] = dl_get(starxylist, 2*ind+1) * quadplotscale;
+					 }
+					 plot_quad_xy(pargs->cairo, quadxy, dimquads);
+					 */
+
+					if (thistime)
+						logverb("Quad %i: made from %i stars we've seen so far.\n", quad, nclose);
+
+					if (thistime) {
+						//plotstuff_set_color(pargs, "green");
+						cairo_set_color(pargs->cairo, "green");
+					} else {
+						//plotstuff_set_color(pargs, "darkgreen");
+						cairo_set_color(pargs->cairo, "darkgreen");
+					}
+
+					plot_index_plotquad(pargs->cairo, pargs, pind, indx, quad, dimquads);
+				}
+
+
+				plotstuff_set_color(pargs, "red");
+				plotstuff_set_markersize(pargs, 6);
+				for (k=0; k<=j; k++)
+					plot_xy_vals(pxy, fieldxy[2*k+0], fieldxy[2*k+1]);
+				plotstuff_plot_layer(pargs, "xy");
+				plot_xy_clear_list(pxy);
+
+				plotstuff_set_markersize(pargs, 10);
+				plot_xy_vals(pxy, fxy[0], fxy[1]);
+				plotstuff_plot_layer(pargs, "xy");
+				plot_xy_clear_list(pxy);
+
+				plotstuff_set_color(pargs, "darkred");
+				plotstuff_set_markersize(pargs, 3);
+				for (k=j+1; k<Nfield; k++)
+					plot_xy_vals(pxy, fieldxy[2*k+0], fieldxy[2*k+1]);
+				plotstuff_plot_layer(pargs, "xy");
+				plot_xy_clear_list(pxy);
+
+				plotstuff_output(pargs);
+
+				logmsg("Wrote %s\n", fn);
+				free(fn);
+
+				kdtree_free_query(res);
+			}
+
+			plotstuff_free(pargs);
+			free(itree->data.any);
+			kdtree_free(itree);
+		}
 
 		il_free(fullquadlist);
 		il_free(uniqquadlist);

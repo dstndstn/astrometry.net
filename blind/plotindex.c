@@ -111,6 +111,10 @@ static void plotquad(cairo_t* cairo, plot_args_t* pargs, plotindex_t* args, inde
 		cairo_stroke(cairo);
 }
 
+void plot_index_plotquad(cairo_t* cairo, plot_args_t* pargs, plotindex_t* args, index_t* index, int quadnum, int DQ) {
+	plotquad(cairo, pargs, args, index, quadnum, DQ);
+}
+
 int plot_index_plot(const char* command,
 					cairo_t* cairo, plot_args_t* pargs, void* baton) {
 	plotindex_t* args = (plotindex_t*)baton;

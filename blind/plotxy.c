@@ -120,7 +120,7 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 		// If N is specified, apply it as a max.
 		if (args->nobjs)
 			Nxy = MIN(Nxy, args->nobjs);
-		logmsg("%g s to read xylist\n", timenow()-t0);
+		//logmsg("%g s to read xylist\n", timenow()-t0);
 	} else {
 		assert(dl_size(args->xyvals));
 		starxy_from_dl(&myxy, args->xyvals, FALSE, FALSE);
@@ -184,7 +184,7 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 			plotstuff_stack_marker(pargs, x, y);
 	}
 	plotstuff_plot_stack(pargs, cairo);
-	logmsg("%g s to plot xylist\n", timenow()-t0);
+	//logmsg("%g s to plot xylist\n", timenow()-t0);
 
 	starxy_free(freexy);
 	return 0;
@@ -224,6 +224,10 @@ int plot_xy_set_offsets(plotxy_t* args, double xo, double yo) {
 void plot_xy_vals(plotxy_t* args, double x, double y) {
 	dl_append(args->xyvals, x);
 	dl_append(args->xyvals, y);
+}
+
+void plot_xy_clear_list(plotxy_t* args) {
+	dl_remove_all(args->xyvals);
 }
 
 int plot_xy_command(const char* cmd, const char* cmdargs,

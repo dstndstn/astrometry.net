@@ -46,6 +46,9 @@ void* plot_xy_init(plot_args_t* args);
 // Set the plot size based on IMAGEW,IMAGEH in the xylist header.
 int plot_xy_setsize(plot_args_t* args, plotxy_t* xyargs);
 
+// Clears the list of points.
+void plot_xy_clear_list(plotxy_t* args);
+
 void plot_xy_set_xcol(plotxy_t* args, const char* col);
 void plot_xy_set_ycol(plotxy_t* args, const char* col);
 void plot_xy_set_filename(plotxy_t* args, const char* fn);

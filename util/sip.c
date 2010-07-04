@@ -71,6 +71,10 @@ void sip_free(sip_t* sip) {
 	free(sip);
 }
 
+void sip_copy(sip_t* dest, const sip_t* src) {
+	memcpy(dest, src, sizeof(sip_t));
+}
+
 static void sip_distortion(const sip_t* sip, double x, double y,
                            double* X, double* Y) {
 	// Get pixel coordinates relative to reference pixel

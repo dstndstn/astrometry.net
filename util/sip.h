@@ -130,6 +130,8 @@ typedef struct sip_s {
 sip_t* sip_create(void);
 void   sip_free(sip_t* sip);
 
+void sip_copy(sip_t* dest, const sip_t* src);
+
 // Set the given SIP wcs to the given TAN wcs.
 void sip_wrap_tan(const tan_t* tan, sip_t* sip);
 
