@@ -114,6 +114,15 @@ struct correspondence {
 };
 typedef struct correspondence corr_t;
 
+struct indexstar {
+	int star;
+	double starx, stary;
+	pl* corrs;
+	il* allquads;
+};
+typedef struct indexstar indexstar_t;
+
+
 int main(int argc, char** args) {
 	int c;
 	char* xylsfn = NULL;
@@ -299,6 +308,8 @@ int main(int argc, char** args) {
 		//intmap_t* corr_f2i;
 
 		bl* corrs;
+
+		indexstar* istars;
 	
 		dl* starxylist;
 		il* corrquads;
@@ -379,6 +390,7 @@ int main(int argc, char** args) {
 		assert(Ngood == il_size(starlist));
 		assert(Ngood * 2 == dl_size(starxylist));
 
+		istars = malloc(Ngood * sizeof(indexstar_t));
 
 		// Now find correspondences between index objects and field objects.
 		// Build a tree out of the field objects (in pixel space)
@@ -430,7 +442,14 @@ int main(int argc, char** args) {
 			if (!res || !res->nres)
 				continue;
 
+			istars[j].star = il_get(starlist, j);
+			istars[j].starx = dl_get(starxylist, 2*j+0);
+			istars[j].stary = dl_get(starxylist, 2*j+1);
+			istars[j].corrs = pl_new(16);
+			istars[j].allquads = il_new(16);
+
 			for (k=0; k<res->nres; k++) {
+				corr_t* cc;
 				memset(&c, 0, sizeof(c));
 				c.star = il_get(starlist, j);
 				c.field = res->inds[k];
@@ -439,7 +458,9 @@ int main(int argc, char** args) {
 				c.fieldx = fieldxy[2*res->inds[k]+0];
 				c.fieldy = fieldxy[2*res->inds[k]+1];
 				c.dist = sqrt(res->sdists[k]);
-				bl_append(corrs, &c);
+				// add to master list, recording ptr.
+				cc = bl_append(corrs, &c);
+				pl_append(istars[j].corrs, cc);
 			}
 
 			/*
@@ -447,7 +468,6 @@ int main(int argc, char** args) {
 			 intmap_append(corr_i2f, il_get(starlist, j), res->inds + k);
 			 }
 			 */
-
 
 			ncorr += res->nres;
 			nindexcorr++;
@@ -546,6 +566,8 @@ int main(int argc, char** args) {
 			for (k=0; k<nquads; k++) {
 				il_insert_ascending(quadlist, quads[k]);
 				il_insert_unique_ascending(uniqquadlist, quads[k]);
+
+				il_append(istars[j].allquads, quads[k]);
 			}
 		}
 		logmsg("Found %i quads partially contained in the field.\n", il_size(uniqquadlist));

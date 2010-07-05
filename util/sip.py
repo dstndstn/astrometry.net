@@ -78,6 +78,11 @@ class Tan(ctypes.Structure):
 		wcs.imageh = height
 		return wcs
 
+	def get_width(self):
+		return self.imagew
+	def get_height(self):
+		return self.imageh
+
 	def __str__(self):
 		return ('<Tan: CRVAL (%f, %f)' % (self.crval[0], self.crval[1]) +
 				' CRPIX (%f, %f)' % (self.crpix[0], self.crpix[1]) +
@@ -99,6 +104,14 @@ class Tan(ctypes.Structure):
 				('WCSAXES', 2), ('EQUINOX', 2000),
 				('CTYPE1', 'RA---TAN'), ('CTYPE2', 'DEC--TAN')]:
 			hdr.update(key, val)
+
+	def get_radec_center(self):
+		ra  = ctypes.c_double(0)
+		dec = ctypes.c_double(0)
+		_sip.tan_get_radec_center(ctypes.pointer(self),
+								  ctypes.pointer(ra),
+								  ctypes.pointer(dec))
+		return (ra.value, dec.value)
 
 	# returns (ra,dec) in degrees.
 	def pixelxy2radec(self, px,py):
@@ -205,6 +218,11 @@ class Sip(ctypes.Structure):
 	def __str__(self):
 		return '<Sip: ' + str(self.wcstan) + \
 			   ', a_order=%d, b_order=%d, ap_order=%d>' % (self.a_order, self.b_order, self.ap_order)
+
+	def get_width(self):
+		return self.wcstan.imagew
+	def get_height(self):
+		return self.wcstan.imageh
 
 	def get_distortion(self, px, py):
 		cpx = c_double(px)

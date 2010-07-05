@@ -5,6 +5,8 @@
 #include "index.h"
 #include "codekd.h"
 #include "starkd.h"
+#include "qidxfile.h"
+#include "log.h"
 
 #define true 1
 #define false 0
@@ -26,6 +28,13 @@ long starkd_addr(index_t* ind) {
 	 return (long)ind->starkd;
 }
 
+long quadfile_addr(index_t* ind) {
+	 return (long)ind->quads;
+}
+
+long qidxfile_addr(qidxfile* qf) {
+	 return (long)qf;
+}
 
 /*
 void codetree_get_N(codetree* s, unsigned int codeid_start, int N, double* code) {
@@ -42,6 +51,7 @@ void codetree_get_N(codetree* s, unsigned int codeid_start, int N, double* code)
 %include "index.h"
 %include "codekd.h"
 %include "starkd.h"
+%include "qidxfile.h"
 
 double* code_alloc(int DC);
 void code_free(double* code);
@@ -49,6 +59,10 @@ double code_get(double* code, int i);
 
 long codekd_addr(index_t* ind);
 long starkd_addr(index_t* ind);
+long quadfile_addr(index_t* ind);
+long qidxfile_addr(qidxfile* qf);
+
+void log_init(int level);
 
 /*
 void codetree_get_N(codetree* s, unsigned int codeid_start, int N, double* code);

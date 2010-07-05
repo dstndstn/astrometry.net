@@ -22,6 +22,9 @@ class tabledata(object):
 		self._length = 0
 	def __setattr__(self, name, val):
 		object.__setattr__(self, name, val)
+		#print 'set', name, 'to', val
+		if self._length == 0 and name is not '_length' and hasattr(val, '__len__') and len(val) != 0:
+			self._length = len(val)
 	def set(self, name, val):
 		self.__setattr__(name, val)
 	def getcolumn(self, name):
