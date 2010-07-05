@@ -61,6 +61,9 @@ Malloc number* NLF(to_array)(nl* list);
 // is not found.
 int  NLF(index_of)(nl* list, const number data);
 InlineDeclare number  NLF(get)(nl* list, int n);
+
+InlineDeclare number*  NLF(access)(nl* list, int n);
+
 /**
  Copy from the list, starting at index "start" for length "length",
  into the provided array.

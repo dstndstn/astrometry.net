@@ -97,6 +97,11 @@ bl* intmap_find(intmap_t* im, key_t key, bool create) {
 	}
 }
 
+void intmap_append(intmap_t* it, int key, void* pval) {
+	bl* lst = intmap_find(it, key, TRUE);
+	bl_append(lst, pval);
+}
+
 bool intmap_get_entry(intmap_t* im, int index,
 					  key_t* p_key, bl** p_list) {
 	assert(im);

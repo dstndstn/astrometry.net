@@ -52,6 +52,7 @@
 #include "codefile.h"
 #include "solver.h"
 #include "permutedsort.h"
+#include "intmap.h"
 
 #include "plotstuff.h"
 #include "plotxy.h"
@@ -104,6 +105,14 @@ static int sort_fq_by_stars(const void* v1, const void* v2) {
 	return 1;
 }
 
+struct correspondence {
+	int star;
+	int field;
+	double starx, stary;
+	double fieldx, fieldy;
+	double dist;
+};
+typedef struct correspondence corr_t;
 
 int main(int argc, char** args) {
 	int c;
@@ -253,7 +262,7 @@ int main(int argc, char** args) {
 		index_t* indx;
 		int nquads;
 		uint32_t* quads;
-		int j;
+		int j, k;
 		qidxfile* qidx;
 		il* uniqquadlist;
 		bl* foundquads = NULL;
@@ -285,7 +294,12 @@ int main(int argc, char** args) {
 		il* corrfullquads;
 
 
+		// Map from index stars to list of field stars corresponding.
+		//intmap_t* corr_i2f;
+		//intmap_t* corr_f2i;
 
+		bl* corrs;
+	
 		dl* starxylist;
 		il* corrquads;
 		il* corruniqquads;
@@ -296,6 +310,7 @@ int main(int argc, char** args) {
 
 		int Nfield;
 		kdtree_t* ftree;
+		kdtree_t* itree;
 		int Nleaf = 5;
         int dimquads, dimcodes;
 		int ncorr, nindexcorr;
@@ -303,12 +318,18 @@ int main(int argc, char** args) {
 		il* indstarswithcorrs;
 
 		double* xyzs = NULL;
+
+		// Indices (in the star-kdtree) of stars that are within the image rectangle;
+		// Ngood of them.
 		int* starinds = NULL;
+
 		int Nindex;
 		int Ngood;
 
 		indx = pl_get(indexes, i);
 		qidx = pl_get(qidxes, i);
+
+		corrs = bl_new(256, sizeof(corr_t));
 
 		logmsg("Index jitter: %g arcsec (%g pixels)\n", indx->index_jitter, indx->index_jitter / wcsscale);
 		pixr2 = square(indx->index_jitter / wcsscale) + square(pixeljitter);
@@ -355,6 +376,8 @@ int main(int argc, char** args) {
 		}
 		logmsg("Found %i index stars inside the field.\n", il_size(starlist));
 
+		assert(Ngood == il_size(starlist));
+		assert(Ngood * 2 == dl_size(starxylist));
 
 
 		// Now find correspondences between index objects and field objects.
@@ -370,7 +393,11 @@ int main(int argc, char** args) {
 			exit(-1);
 		}
 
-		// Search for correspondences with any stars.
+		// Search for correspondences
+		/*
+		 corr_i2f = intmap_new(sizeof(int), 4, 256, 0);
+		 corr_f2i = intmap_new(sizeof(int), 4, 256, 0);
+		 */
 		ncorr = 0;
 		nindexcorr = 0;
 		indstarswithcorrs = il_new(16);
@@ -379,28 +406,49 @@ int main(int argc, char** args) {
 			kdtree_qres_t* res;
 			int nn;
 			double nnd2;
+			corr_t c;
 			xy[0] = dl_get(starxylist, j*2+0);
 			xy[1] = dl_get(starxylist, j*2+1);
 
 			// kdtree check.
 			/*
 			 int k;
-			for (k=0; k<Nfield; k++) {
-				double d2 = distsq(fieldxy + 2*k, xy, 2);
-				if (d2 < pixr2) {
-					logverb("  index star at (%.1f, %.1f) and field star at (%.1f, %.1f)\n", xy[0], xy[1],
-							fieldxy[2*k+0], fieldxy[2*k+1]);
-				}
-			}
+			 for (k=0; k<Nfield; k++) {
+			 double d2 = distsq(fieldxy + 2*k, xy, 2);
+			 if (d2 < pixr2) {
+			 logverb("  index star at (%.1f, %.1f) and field star at (%.1f, %.1f)\n", xy[0], xy[1],
+			 fieldxy[2*k+0], fieldxy[2*k+1]);
+			 }
+			 }
 			 */
 
 			nn = kdtree_nearest_neighbour(ftree, xy, &nnd2);
 			logverb("  Index star at (%.1f, %.1f): nearest field star is %g pixels away.\n",
 					xy[0], xy[1], sqrt(nnd2));
 
-			res = kdtree_rangesearch_options(ftree, xy, pixr2 * nsigma*nsigma, KD_OPTIONS_SMALL_RADIUS);
+			res = kdtree_rangesearch_options(ftree, xy, pixr2 * nsigma*nsigma, KD_OPTIONS_SMALL_RADIUS | KD_OPTIONS_COMPUTE_DISTS | KD_OPTIONS_SORT_DISTS);
 			if (!res || !res->nres)
 				continue;
+
+			for (k=0; k<res->nres; k++) {
+				memset(&c, 0, sizeof(c));
+				c.star = il_get(starlist, j);
+				c.field = res->inds[k];
+				c.starx = dl_get(starxylist, 2*j+0);
+				c.stary = dl_get(starxylist, 2*j+1);
+				c.fieldx = fieldxy[2*res->inds[k]+0];
+				c.fieldy = fieldxy[2*res->inds[k]+1];
+				c.dist = sqrt(res->sdists[k]);
+				bl_append(corrs, &c);
+			}
+
+			/*
+			 for (k=0; k<res->nres; k++) {
+			 intmap_append(corr_i2f, il_get(starlist, j), res->inds + k);
+			 }
+			 */
+
+
 			ncorr += res->nres;
 			nindexcorr++;
 			kdtree_free_query(res);
@@ -410,6 +458,46 @@ int main(int argc, char** args) {
 		}
 		logmsg("Found %i index stars with corresponding field stars.\n", nindexcorr);
 		logmsg("Found %i total index star correspondences\n", ncorr);
+
+		{
+			double* ixycopy = malloc(Ngood * 2 * sizeof(double));
+			dl_copy(starxylist, 0, Ngood * 2, ixycopy);
+			itree = kdtree_build(NULL, ixycopy, Ngood, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
+		}
+		if (!itree) {
+			logmsg("Failed to build index kdtree.\n");
+			exit(-1);
+		}
+		for (j=0; j<Nfield; j++) {
+			double* fxy;
+			int nn;
+			kdtree_qres_t* res;
+			double nnd2;
+
+			fxy = fieldxy + 2*j;
+
+			logverb("Field object %i: (%g, %g)\n", j, fxy[0], fxy[1]);
+
+			nn = kdtree_nearest_neighbour(itree, fxy, &nnd2);
+			logverb("  Nearest index star is %g pixels away.\n",
+					sqrt(nnd2));
+
+			res = kdtree_rangesearch_options(itree, fxy, pixr2 * nsigma*nsigma, KD_OPTIONS_SMALL_RADIUS);
+			if (!res || !res->nres) {
+				logverb("  No index stars within %g pixels\n", sqrt(pixr2)*nsigma);
+				continue;
+			}
+			logverb("  %i index stars within %g pixels\n", res->nres, sqrt(pixr2)*nsigma);
+
+			/*
+			 for (k=0; k<res->nres; k++) {
+			 intmap_append(corr_f2i, j, il_access(starlist, res->inds[k]));
+			 }
+			 */
+			//intmap_append(corr_f2i, res->inds[k], il_access(starlist, j));
+			kdtree_free_query(res);
+		}
+
 
 		if (log_get_level() >= LOG_VERB) {
 			// See what quads could be built from the index stars with correspondences.
@@ -512,6 +600,23 @@ int main(int argc, char** args) {
 			for (k=0; k<Ngood; k++) {
 				logverb("  sweep %i, r mag %g\n", sweeps[perm[k]], sortdata[perm[k]]);
 			}
+
+			/*
+			 for (k=0; k<Ngood; k++) {
+			 int star = starinds[perm[k]];
+			 double sd = sortdata[perm[k]];
+			 il* lst;
+			 lst = (il*)intmap_find(corr_i2f, star, FALSE);
+			 logmsg("Index star %i (%i), sweep %i, mag %g.  %i correspondences\n", k, star, sweeps[perm[k]], sd, (lst ? il_size(lst) : 0));
+			 if (lst) {
+			 for (j=0; j<il_size(lst); j++) {
+			 logmsg("  field star %i\n", il_get(lst, j));
+			 }
+			 }
+			 }
+			 */
+
+
 			free(perm);
 
 
@@ -893,21 +998,13 @@ int main(int argc, char** args) {
 		}
 		printf("\nTotal of %i quads that would solve the image.\n", ngood);
 
+
+
 		if (objplotfn) {
 			il* closeistars = il_new(256);
-			kdtree_t* itree;
 			int SW, SH;
 			plot_args_t* pargs;
 			sip_t scalesip;
-			{
-				double* ixycopy = malloc(Ngood * 2 * sizeof(double));
-				dl_copy(starxylist, 0, Ngood * 2, ixycopy);
-				itree = kdtree_build(NULL, ixycopy, Ngood, 2, Nleaf, KDTT_DOUBLE, KD_BUILD_SPLIT);
-			}
-			if (!itree) {
-				logmsg("Failed to build index kdtree.\n");
-				exit(-1);
-			}
 
 			SW = (int)(quadplotscale * W);
 			SH = (int)(quadplotscale * H);
@@ -930,7 +1027,7 @@ int main(int argc, char** args) {
 				plotindex_t* pind;
 				int quad;
 				unsigned int stars[dimquads];
-				double quadxy[DQMAX * 2];
+				//double quadxy[DQMAX * 2];
 				double* fxy;
 				int nn;
 				double nnd2;

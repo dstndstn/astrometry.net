@@ -29,3 +29,8 @@ int NLF(size)(const nl* list) {
     return bl_size(list);
 }
 
+InlineDefine
+number* NLF(access)(nl* list, int j) {
+    return bl_access(list, j);
+}
+

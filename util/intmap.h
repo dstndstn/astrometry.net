@@ -66,6 +66,8 @@ void intmap_free(intmap_t* it);
  */
 bl* intmap_find(intmap_t* it, int key, bool create);
 
+void intmap_append(intmap_t* it, int key, void* pval);
+
 /**
  Iterates through the map elements.
 
