@@ -104,6 +104,16 @@ void startree_free_data_column(startree_t* s, double* d) {
 	free(d);
 }
 
+void startree_search_for_radec(const startree_t* s, double ra, double dec, double radius,
+							   double** xyzresults, double** radecresults,
+							   int** starinds, int* nresults) {
+	double xyz[3];
+	double r2;
+	radecdeg2xyzarr(ra, dec, xyz);
+	r2 = deg2distsq(radius);
+	startree_search_for(s, xyz, r2, xyzresults, radecresults, starinds, nresults);
+}
+
 void startree_search_for(const startree_t* s, const double* xyzcenter, double radius2,
 						 double** xyzresults, double** radecresults,
 						 int** starinds, int* nresults) {
@@ -299,6 +309,7 @@ static fitstable_t* get_tagalong(startree_t* s, bool report_errs) {
 	int i;
 	int ext = -1;
 	fitstable_t* tag;
+
 	if (!s->tree->io)
 		return NULL;
 	fn = fitsbin_get_filename(s->tree->io);
@@ -342,17 +353,15 @@ static fitstable_t* get_tagalong(startree_t* s, bool report_errs) {
 	return tag;
 }
 
-bool startree_has_tagalong(startree_t* s) {
-	if (s->tagalong)
-		return TRUE;
-	return (get_tagalong(s, FALSE) != NULL);
-}
-
 fitstable_t* startree_get_tagalong(startree_t* s) {
 	if (s->tagalong)
 		return s->tagalong;
 	s->tagalong = get_tagalong(s, TRUE);
 	return s->tagalong;
+}
+
+bool startree_has_tagalong(startree_t* s) {
+	return (startree_get_tagalong(s) != NULL);
 }
 
 static int Ndata(const startree_t* s) {

@@ -80,6 +80,13 @@ void startree_search_for(const startree_t* s, const double* xyzcenter, double ra
 						 double** xyzresults, double** radecresults,
 						 int** starinds, int* nresults);
 
+/**
+ RA, Dec, and radius in degrees.  Otherwise same as startree_search_for().
+ */
+void startree_search_for_radec(const startree_t* s, double ra, double dec, double radius,
+							   double** xyzresults, double** radecresults,
+							   int** starinds, int* nresults);
+
 void startree_search(const startree_t* s, const double* xyzcenter, double radius2,
                      double** xyzresults, double** radecresults, int* nresults);
 

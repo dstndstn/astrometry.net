@@ -227,6 +227,10 @@ ALL_OBJ += smooth-image.o
 fits-flip-endian: fits-flip-endian.o $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += fits-flip-endian.o
 
+search-index: search-index.o \
+		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += search-index.o
+
 PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
 	starutil_numpy.py \
 	shell.py __init__.py file.py run_command.py w3c_validator.py \
