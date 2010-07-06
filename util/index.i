@@ -11,6 +11,21 @@
 #define true 1
 #define false 0
 
+/**
+
+For returning single codes and quads as python lists, do something like this:
+
+%typemap(out) float [ANY] {
+  int i;
+  $result = PyList_New($1_dim0);
+  for (i = 0; i < $1_dim0; i++) {
+    PyObject *o = PyFloat_FromDouble((double) $1[i]);
+    PyList_SetItem($result,i,o);
+  }
+}
+
+**/
+
 double* code_alloc(int DC) {
 	 return malloc(DC * sizeof(double));
 }
