@@ -101,7 +101,7 @@ PIPELINE := usnobtofits build-an-catalog hpowned cut-an \
 PROGS := backend image2xy control-program
 
 PROSPECTUS := quadidx codeprojections quadscales quadsperstar \
-	whynot quadcenters startree2rdls
+	quadcenters startree2rdls
 
 ANLIBS := $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -134,7 +134,8 @@ $(BACKEND_SO): $(BACKEND_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) \
 # old and miscellaneous executables that aren't part of the pipeline.
 OLDEXECS := plotquads rawstartree checkquads
 
-CAIROEXECS := plotquad plotxy plot-constellations add-text plotstuff
+CAIROEXECS := plotquad plotxy plot-constellations add-text plotstuff \
+	whynot
 
 OLDEXECS_OBJS := catalog.o verify.o matchfile.o \
 	$(UTIL_OBJS)
