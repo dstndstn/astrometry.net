@@ -19,11 +19,14 @@ BASEDIR := ..
 COMMON := .
 DATA := $(BASEDIR)/data
 
+all:
+.PHONY: all
+
 $(DATA)/%.txt: ;
 $(DATA)/%.dat: ;
 
-all:
-.PHONY: all
+# Delete the default suffix rules
+.SUFFIXES:
 
 # You can build stripped-down versions of the AN libraries that do not
 # depend on libkd or libqfits by defining the following in your Makefile
