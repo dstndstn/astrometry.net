@@ -234,3 +234,6 @@ report:
 report.txt: Makefile
 	$(MAKE) report > $@
 
+
+.SUFFIXES:            # Delete the default suffixes
+#.SUFFIXES: .c .o .h   # Define our suffix list

@@ -41,13 +41,13 @@ static startree_t* startree_alloc() {
 	return s;
 }
 
-sl* startree_get_tagalong_column_names(const startree_t* s, sl* lst) {
+sl* startree_get_tagalong_column_names(startree_t* s, sl* lst) {
 	if (!startree_has_tagalong(s))
 		return NULL;
 	return fitstable_get_fits_column_names(startree_get_tagalong(s), lst);
 }
 
-int startree_get_tagalong_N_columns(const startree_t* s) {
+int startree_get_tagalong_N_columns(startree_t* s) {
 	if (!startree_has_tagalong(s))
 		return 0;
 	return fitstable_get_N_fits_columns(startree_get_tagalong(s));
@@ -56,7 +56,7 @@ int startree_get_tagalong_N_columns(const startree_t* s) {
 /**
  Returns the name of the 'i'th column in the tagalong table.
  */
-const char* startree_get_tagalong_column_name(const startree_t* s, int i) {
+const char* startree_get_tagalong_column_name(startree_t* s, int i) {
 	if (!startree_has_tagalong(s))
 		return NULL;
 	return fitstable_get_fits_column_name(startree_get_tagalong(s), i);
