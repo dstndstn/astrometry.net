@@ -98,17 +98,19 @@ DEP_OBJ += fix-bb.o checktree.o
 
 LIBKD_INSTALL := fix-bb checktree
 
-install: $(LIBKD_INSTALL)
+install: $(LIBKD_INSTALL) $(LIBKD)
 	@echo Installing in directory $(INSTALL_DIR)
 	mkdir -p $(INSTALL_DIR)/bin
 	@for x in $(LIBKD_INSTALL); do \
 		echo cp $$x $(INSTALL_DIR)/bin; \
 		cp $$x $(INSTALL_DIR)/bin; \
 	done
+	mkdir -p $(INSTALL_DIR)/include
 	@for x in $(INSTALL_H); do \
 		echo cp $$x $(INSTALL_DIR)/include; \
 		cp $$x $(INSTALL_DIR)/include; \
 	done
+	mkdir -p $(INSTALL_DIR)/lib
 	@for x in $(LIBKD); do \
 		echo cp $$x $(INSTALL_DIR)/lib; \
 		cp $$x $(INSTALL_DIR)/lib; \

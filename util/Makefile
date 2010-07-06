@@ -28,6 +28,16 @@ $(DATA)/%.dat: ;
 # Delete the default suffix rules
 .SUFFIXES:
 
+# Cancel stupid implicit rules.
+%: %,v
+%: RCS/%,v
+%: RCS/%
+%: s.%
+%: SCCS/s.%
+
+%.o: %.c
+	$(CC) -o $@ $(CFLAGS) -c $<
+
 # You can build stripped-down versions of the AN libraries that do not
 # depend on libkd or libqfits by defining the following in your Makefile
 # before calling "make" in the "util" directory:

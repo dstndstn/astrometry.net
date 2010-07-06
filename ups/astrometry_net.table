@@ -1,16 +1,9 @@
 #
-# This ups file can be used for an svn "live" installation
+# This is copied to INSTALL_DIR/ups/astrometry_net.table
 #
-envPrepend(PYTHONPATH, ${PRODUCT_DIR})
-envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/util)
-envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/blind)
-envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/util)
-envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/blind)
+envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
+envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
+envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 
-# qfits?  gsl?
-envPrepend(CFLAGS, -I${PRODUCT_DIR}/util)
-envPrepend(CFLAGS, -I${PRODUCT_DIR}/libkd)
-envPrepend(CFLAGS, -I${PRODUCT_DIR}/blind)
-envPrepend(LDFLAGS, -L${PRODUCT_DIR}/util)
-envPrepend(LDFLAGS, -L${PRODUCT_DIR}/libkd)
-envPrepend(LDFLAGS, -L${PRODUCT_DIR}/blind)
+envPrepend(CFLAGS, -I${PRODUCT_DIR}/include)
+envPrepend(LDFLAGS, -L${PRODUCT_DIR}/lib)
