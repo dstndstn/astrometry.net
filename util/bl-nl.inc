@@ -31,6 +31,6 @@ int NLF(size)(const nl* list) {
 
 InlineDefine
 number* NLF(access)(nl* list, int j) {
-    return bl_access(list, j);
+    return (number*)bl_access(list, j);
 }
 

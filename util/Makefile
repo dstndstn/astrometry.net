@@ -25,16 +25,6 @@ all:
 $(DATA)/%.txt: ;
 $(DATA)/%.dat: ;
 
-# Delete the default suffix rules
-.SUFFIXES:
-
-# Cancel stupid implicit rules.
-%: %,v
-%: RCS/%,v
-%: RCS/%
-%: s.%
-%: SCCS/s.%
-
 %.o: %.c
 	$(CC) -o $@ $(CFLAGS) -c $<
 

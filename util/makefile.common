@@ -25,11 +25,20 @@ endif
 # no default rules
 .SUFFIXES :=
 
+# These are files
 %.c: ;
 %.h: ;
 %.awk: ;
+%.inc: ;
 makefile.%: ;
 Makefile: ;
+
+# Cancel stupid implicit rules.
+%: %,v
+%: RCS/%,v
+%: RCS/%
+%: s.%
+%: SCCS/s.%
 
 # sh shell
 AN_SHELL = /bin/sh

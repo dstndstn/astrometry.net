@@ -35,7 +35,10 @@ include $(COMMON)/makefile.zlib
 include $(COMMON)/makefile.wcslib
 
 include $(COMMON)/makefile.netpbm
-include $(COMMON)/makefile.os-features
+
+ifneq ($(MAKECMDGOALS),clean)
+  include $(COMMON)/makefile.os-features
+endif
 
 $(COMMON)/makefile.os-features:
 	$(MAKE) -C $(COMMON) makefile.os-features
@@ -193,7 +196,7 @@ fitsutils: $(FITS_UTILS)
 simplexy: image2xy
 .PHONY: simplexy
 
-install: $(INSTALL_EXECS)
+install: $(INSTALL_EXECS) $(INSTALL_LIB)
 	@echo Installing in directory $(INSTALL_DIR)
 	mkdir -p $(INSTALL_DIR)/bin
 	@for x in $(INSTALL_EXECS); do \
@@ -202,10 +205,12 @@ install: $(INSTALL_EXECS)
 	done
 	mkdir -p $(INSTALL_DIR)/etc
 	sed "s+add_path /usr/local/astrometry/+add_path $(INSTALL_DIR)/+" < ../etc/backend.cfg-dist > $(INSTALL_DIR)/etc/backend.cfg
+	mkdir -p $(INSTALL_DIR)/include
 	@for x in $(INSTALL_H); do \
 		echo cp $$x $(INSTALL_DIR)/include; \
 		cp $$x $(INSTALL_DIR)/include; \
 	done
+	mkdir -p $(INSTALL_DIR)/lib
 	@for x in $(INSTALL_LIB); do \
 		echo cp $$x $(INSTALL_DIR)/lib; \
 		cp $$x $(INSTALL_DIR)/lib; \
@@ -218,6 +223,7 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 		echo cp $$x $(INSTALL_DIR)/bin; \
 		cp $$x $(INSTALL_DIR)/bin; \
 	done
+	mkdir -p $(INSTALL_DIR)/include
 	@for x in $(PLOT_INSTALL_H); do \
 		echo cp $$x $(INSTALL_DIR)/include; \
 		cp $$x $(INSTALL_DIR)/include; \
