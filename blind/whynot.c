@@ -309,7 +309,7 @@ int main(int argc, char** args) {
 
 		bl* corrs;
 
-		indexstar* istars;
+		indexstar_t* istars;
 	
 		dl* starxylist;
 		il* corrquads;
