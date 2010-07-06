@@ -105,6 +105,7 @@
  grid_decstep <deg>
  grid_ralabelstep <deg>
  grid_declabelstep <deg>
+ grid_step <deg>     -- sets all the above at once.
  grid
 
  Astrometry.net index files:
@@ -113,6 +114,12 @@
  index_draw_stars <0/1>   -- draw stars?
  index_draw_quads <0/1>   -- draw quads?
  index
+
+ Healpix boundaries:
+
+ healpix_nside <int>
+ healpix
+
 
  */
 

@@ -285,6 +285,9 @@ int plot_grid_command(const char* cmd, const char* cmdargs,
 		args->ralabelstep = atof(cmdargs);
 	} else if (streq(cmd, "grid_declabelstep")) {
 		args->declabelstep = atof(cmdargs);
+	} else if (streq(cmd, "grid_step")) {
+		args->declabelstep = args->ralabelstep =
+			args->rastep = args->decstep = atof(cmdargs);
 	} else {
 		ERROR("Did not understand command \"%s\"", cmd);
 		return -1;

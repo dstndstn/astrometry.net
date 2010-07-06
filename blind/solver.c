@@ -259,13 +259,13 @@ void solver_log_params(const solver_t* sp) {
 
 
 void solver_print_to(const solver_t* sp, FILE* stream) {
-  int oldlevel = log_get_level();
-  FILE* oldfid = log_get_fid();
-  log_set_level(LOG_ALL);
-  log_to(stream);
-  solver_log_params(sp);
-  log_set_level(oldlevel);
-  log_to(oldfid);
+	//int oldlevel = log_get_level();
+	FILE* oldfid = log_get_fid();
+	//log_set_level(LOG_ALL);
+	log_to(stream);
+	solver_log_params(sp);
+	//log_set_level(oldlevel);
+	log_to(oldfid);
 }
 
 /*
