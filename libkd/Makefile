@@ -98,6 +98,7 @@ DEP_OBJ += fix-bb.o checktree.o
 
 LIBKD_INSTALL := fix-bb checktree
 
+.PHONY: install
 install: $(LIBKD_INSTALL) $(LIBKD)
 	@echo Installing in directory $(INSTALL_DIR)
 	mkdir -p $(INSTALL_DIR)/bin
@@ -115,6 +116,17 @@ install: $(LIBKD_INSTALL) $(LIBKD)
 		echo cp $$x $(INSTALL_DIR)/lib; \
 		cp $$x $(INSTALL_DIR)/lib; \
 	done
+	# Try building and installing python spherematch module
+	-$(MAKE) install-spherematch
+
+.PHONY: install-spherematch
+install-spherematch: spherematch_c.so
+	mkdir -p $(INSTALL_DIR)/python/astrometry/libkd
+	@for x in spherematch_c.so spherematch.py __init__.py; do \
+		echo cp $$x $(INSTALL_DIR)/python/astrometry/libkd; \
+		cp $$x $(INSTALL_DIR)/python/astrometry/libkd; \
+	done
+
 
 ### TESTS are great
 

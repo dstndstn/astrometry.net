@@ -1,4 +1,5 @@
 from lsst.afw.detection import SourceSet, Source
+from astrometry.util.pyfits_utils import *
 
 sourceset_fields = ['FlagForDetection', "XAstrom", "XAstromErr", "YAstrom", "YAstromErr",
 					"PsfFlux", "ApFlux", "Ixx", "IxxErr", "Iyy",
@@ -31,6 +32,13 @@ def sourceset_to_dict(ss):
 			vals.append(func())
 		d[f] = vals
 	return d
+
+def sourceset_to_table(ss):
+	sd = sourceset_to_dict(ss)
+	td = tabledata()
+	for k,v in sd.items():
+		td.set(k, array(v))
+	return td
 
 def sourceset_from_dict(d):
 	x = d[sourceset_fields[0]]

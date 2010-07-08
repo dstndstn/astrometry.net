@@ -52,8 +52,6 @@ int* sip_filter_stars_in_field(const sip_t* sip, const tan_t* tan,
    ramin <= ramax
       ramin may be < 0, or ramax > 360, if the image straddles RA=0.
 
- THIS WILL PROBABLY FAIL FOR IMAGES WIDER THAN 180 DEGREES.
-
  */
 void sip_get_radec_bounds(const sip_t* wcs, int stepsize,
                           double* pramin, double* pramax,
