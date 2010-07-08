@@ -17,6 +17,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -112,6 +113,7 @@ int wcs_rd2xy(const char* wcsfn, int wcsext,
             dec = rd_getdec(&rd, j);
 			if (anwcs_radec2pixelxy(wcs, ra, dec, &x, &y)) {
 				ERROR("Point RA,Dec = (%g,%g) projects to the opposite side of the sphere", ra, dec);
+				starxy_set(&xy, j, NAN, NAN);
 				continue;
 			}
             starxy_set(&xy, j, x, y);
