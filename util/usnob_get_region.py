@@ -3,6 +3,8 @@ from urllib2 import urlopen
 from urllib import urlencode
 from urlparse import urlparse, urljoin
 
+import os.path
+
 from numpy import *
 
 from astrometry.util.file import *
@@ -27,9 +29,11 @@ if __name__ == '__main__':
 					  dest='survey', help='Grab only one USNOB survey: poss-i, poss-ii, ... (see http://www.nofs.navy.mil/data/fchpix/cfch.html')
 	parser.add_option('-P', '--plate',
 					  dest='plate', help='Grab only one USNOB plate: "se0161", for example')
+	parser.add_option('-c', '--continue',
+					  dest='cont', action='store_true', help='Continue a previously interrupted transfer')
 
 	parser.set_defaults(prefix='usnob', survey=None, plate=None,
-						ralo=None, rahi=None, declo=None, dechi=None)
+						ralo=None, rahi=None, declo=None, dechi=None, cont=False)
 	(opt, args) = parser.parse_args()
 
 	if opt.ralo is None or opt.rahi is None or opt.declo is None or opt.dechi is None:
@@ -68,12 +72,23 @@ if __name__ == '__main__':
 			print 'keep fits urls:', keepfits
 		base = opt.prefix + '-%.3f-%.3f-' % (ra,dec)
 		for url in keepjpeg:
-			fn = base + url.split('/')[-1]
+			# like "fchlwFxSl_so0194.000.jpg"
+			urlfn = url.split('/')[-1]
+			urlfn = urlfn.split('_')[-1]
+			fn = base + urlfn
+			if opt.cont and os.path.exists(fn):
+				print 'File', fn, 'exists.'
+				continue
 			print 'retrieving', url, 'to', fn
 			res = urlopen(url)
 			write_file(res.read(), fn)
 		for url in keepfits:
-			fn = base + url.split('/')[-1] + '.fits'
+			urlfn = url.split('/')[-1]
+			urlfn = urlfn.split('_')[-1]
+			fn = base + urlfn + '.fits'
+			if opt.cont and os.path.exists(fn):
+				print 'File', fn, 'exists.'
+				continue
 			print 'retrieving', url, 'to', fn
 			res = urlopen(url)
 			write_file(res.read(), fn)

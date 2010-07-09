@@ -72,12 +72,12 @@ static void add_columns(fitstable_t* tab, bool write) {
     ADDARR(d,  d,   "QUADXYZ",         nil, quadxyz, 3*DQMAX);
     ADDARR(d,  d,   "CENTERXYZ",       nil, center, 3);
     ADDCOL(d,  d,   "RADIUS",          "DEG", radius_deg);
-    ADDCOL(i16,i16, "NMATCH",          nil, nmatch);
-    ADDCOL(i16,i16, "NDISTRACT",       nil, ndistractor);
-    ADDCOL(i16,i16, "NCONFLICT",       nil, nconflict);
-    ADDCOL(i16,i16, "NFIELD",          nil, nfield);
-    ADDCOL(i16,i16, "NINDEX",          nil, nindex);
-    ADDCOL(i16,i16, "NAGREE",          nil, nagree);
+    ADDCOL(i,  i32,   "NMATCH",          nil, nmatch);
+    ADDCOL(i  ,i32,   "NDISTRACT",       nil, ndistractor);
+    ADDCOL(i  ,i32,   "NCONFLICT",       nil, nconflict);
+    ADDCOL(i  ,i32,   "NFIELD",          nil, nfield);
+    ADDCOL(i  ,i32,   "NINDEX",          nil, nindex);
+    ADDCOL(i  ,i32,   "NAGREE",          nil, nagree);
     //ADDCOL(i16,i16, "BESTI",           nil, besti);
     ADDARR(d,  d,   "CRVAL",           nil, wcstan.crval, 2);
     ADDARR(d,  d,   "CRPIX",           nil, wcstan.crpix, 2);

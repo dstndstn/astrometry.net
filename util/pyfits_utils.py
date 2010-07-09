@@ -168,7 +168,7 @@ def table_fields(dataorfn, rows=None, hdunum=1):
 fits_table = table_fields
 
 # ultra-brittle text table parsing.
-def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True):
+def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, maxcols=None):
 	if text is None:
 		f = None
 		if isinstance(forfn, str):
@@ -201,6 +201,8 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True):
 	txtrows = [r for r in txtrows if not r.startswith('#')]
 	coldata = [[] for x in colnames]
 	for i,r in enumerate(txtrows):
+		if maxcols is not None:
+			r = r[:maxcols]
 		if split is None:
 			cols = r.split()
 		else:
@@ -212,7 +214,7 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True):
 			cols = r.split(',')
 			
 		if len(cols) != len(colnames):
-			raise Exception('Expected to find %i columns of data to match headers (%s) in row %i' % (len(colnames), ', '.join(colnames), i))
+			raise Exception('Expected to find %i columns of data to match headers (%s) in row %i; got %i\n  "%s"' % (len(colnames), ', '.join(colnames), i, len(cols), r))
 		#assert(len(cols) == len(colnames))
 		for i,c in enumerate(cols):
 			coldata[i].append(c)
@@ -226,11 +228,13 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True):
 			except:
 				isfloat = False
 				#isint = False
-				break
+				#break
 			try:
 				int(x, 0)
 			except:
 				isint = False
+				#break
+			if not isint and not isfloat:
 				break
 		if isint:
 			isfloat = False
