@@ -1,11 +1,12 @@
+#! /usr/bin/env python
 from urllib2 import urlopen
 from urllib import urlencode
 from urlparse import urlparse, urljoin
 
 from numpy import *
 
-from get_usnob import *
 from astrometry.util.file import *
+from astrometry.util.usnob_get_image import *
 
 from optparse import OptionParser
 
@@ -35,97 +36,45 @@ if __name__ == '__main__':
 		parser.print_help()
 		parser.error('RA,Dec lo,hi are required.')
 
+	radecs = []
+
 	decstep = 14./60.
 	Dec = arange(opt.declo, opt.dechi+decstep, decstep)
 	for dec in Dec:
 		rastep = 14./60./cos(deg2rad(dec))
 		RA  = arange(opt.ralo , opt.rahi +rastep , rastep)
 		for ra in RA:
-			(jpeg,fits) = get_usnob_images(ra, dec, fits=True, survey=opt.survey, justurls=True)
-			print 'got jpeg urls:', jpeg
-			print 'got fits urls:', fits
-			if opt.plate is None:
-				keepjpeg = jpeg
-				keepfits = fits
-			else:
-				keepjpeg = [u for u in jpeg if opt.plate in u]
-				keepfits = [u for u in fits if opt.plate in u]
-				print 'keep jpeg urls:', keepjpeg
-				print 'keep fits urls:', keepfits
-			base = opt.prefix + '-%.3f-%.3f-' % (ra,dec)
-			for url in keepjpeg:
-				fn = base + url.split('/')[-1]
-				print 'retrieving', url, 'to', fn
-				res = urlopen(url)
-				write_file(res.read(), fn)
-			for url in keepfits:
-				fn = base + url.split('/')[-1] + '.fits'
-				print 'retrieving', url, 'to', fn
-				res = urlopen(url)
-				write_file(res.read(), fn)
+			radecs.append((ra,dec))
+	radecs = array(radecs)
 
-		
+	# Retrieve them in order of distance from the center of the region...
+	#dists = [distsq_between_radecs(r,d, (opt.ralo+opt.rahi)/2., (opt.declo+opt.dechi)/2.)
+	#		 for (r,d) in radecs]
+	dists = distsq_between_radecs(radecs[:,0], radecs[:,1],
+								  (opt.ralo+opt.rahi)/2., (opt.declo+opt.dechi)/2.)
+	order = argsort(dists)
 
-
-
-
-def old():
-	#prefix = 'mosaic'
-	#(ralo,  rahi ) = (161.6, 165.2)
-	#(declo, dechi) = ( 43.0,  45.5)
-
-	#prefix = 'mosaic-c-'
-	#(ralo,  rahi ) = (162.75, 165.25)
-	#(declo, dechi) = ( 44.3,   44.29)
-
-	#prefix = 'mosaic-d'
-	#(ralo,  rahi ) = (162.75, 162.74)
-	#(declo, dechi) = ( 43.,    44.3 )
-
-	#survey = 'poss-i'
-	#plate = 'se0215'
-
-	#prefix = 'mosaic-e'
-	#(ralo,  rahi ) = (95.0, 100.2)
-	#(declo, dechi) = (49.5,  52.6)
-
-	prefix = 'mosaic-f'
-	(ralo,  rahi ) = (95.0, 100.2)
-	(declo, dechi) = (51.0, 50.99)
-
-	survey = 'poss-i'
-	plate = 'se0161'
-
-	rastep = 20./60.  # (14 / cos(deg2rad(45)))
-	decstep = 14./60.
-
-	RA  = arange(ralo , rahi +rastep , rastep)
-	Dec = arange(declo, dechi+decstep, decstep)
-
-	print 'RA:', RA
-	print 'Dec:', Dec
-
-	for dec in Dec:
-		for ra in RA:
-			(jpeg,fits) = get_usnob_images(ra, dec, fits=True, survey=survey, justurls=True)
-			print 'got jpeg urls:', jpeg
-			print 'got fits urls:', fits
-			keepjpeg = [u for u in jpeg if plate in u]
-			keepfits = [u for u in fits if plate in u]
+	for (ra,dec) in radecs[order]:
+		(jpeg,fits) = get_usnob_images(ra, dec, fits=True, survey=opt.survey, justurls=True)
+		print 'got jpeg urls:', jpeg
+		print 'got fits urls:', fits
+		if opt.plate is None:
+			keepjpeg = jpeg
+			keepfits = fits
+		else:
+			keepjpeg = [u for u in jpeg if opt.plate in u]
+			keepfits = [u for u in fits if opt.plate in u]
 			print 'keep jpeg urls:', keepjpeg
 			print 'keep fits urls:', keepfits
-
-			base = prefix + '-%.3f-%.3f-' % (ra,dec)
-
-			for url in keepjpeg:
-				fn = base + url.split('/')[-1]
-				print 'retrieving', url, 'to', fn
-				res = urlopen(url)
-				write_file(res.read(), fn)
+		base = opt.prefix + '-%.3f-%.3f-' % (ra,dec)
+		for url in keepjpeg:
+			fn = base + url.split('/')[-1]
+			print 'retrieving', url, 'to', fn
+			res = urlopen(url)
+			write_file(res.read(), fn)
+		for url in keepfits:
+			fn = base + url.split('/')[-1] + '.fits'
+			print 'retrieving', url, 'to', fn
+			res = urlopen(url)
+			write_file(res.read(), fn)
 		
-			for url in keepfits:
-				fn = base + url.split('/')[-1] + '.fits'
-				print 'retrieving', url, 'to', fn
-				res = urlopen(url)
-				write_file(res.read(), fn)
-
