@@ -238,7 +238,8 @@ PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
 	ngc2000.py uniformize.py lsstutils.py casjobs.py \
 	sdss_das.py sdss_filenames.py sdss_get_catalog.py sdss_noise.py \
 	sdss_psf.py sdss_psfield.py sdss_radec_to_rcf.py sdss_tsfield.py sqlcl.py \
-	usnob_catalog.py usnob_get_image.py \
+	usnob_catalog.py usnob_get_image.py usnob_get_region.py \
+	find_data_file.py \
 	$(PYTHON_LIBS)
 
 PYTHON_EXECS := fits2fits.py image2pnm.py removelines.py uniformize.py

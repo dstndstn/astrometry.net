@@ -69,6 +69,8 @@ static an_option_t options[] = {
      "read filenames to solve on stdin, one per line"},
 	{'p', "no-plots",       no_argument, NULL,
      "don't create any plots of the results"},
+	{'\x84', "plot-scale",  required_argument, "scale",
+	 "scale the plots by this factor (eg, 0.25)"},
     {'G', "use-wget",       no_argument, NULL,
      "use wget instead of curl"},
   	{'O', "overwrite",      no_argument, NULL,
@@ -247,21 +249,31 @@ static int write_kmz(const augment_xylist_t* axy, const char* kmzfn,
 }
 
 static int plot_source_overlay(augment_xylist_t* axy, const char* me,
-                               const char* objsfn) {
+                               const char* objsfn, double plotscale) {
     // plotxy -i harvard.axy -I /tmp/pnm -C red -P -w 2 -N 50 | plotxy -w 2 -r 3 -I - -i harvard.axy -C red -n 50 > harvard-objs.png
     sl* cmdline = sl_new(16);
     char* cmd;
     bool ctrlc;
+	char* imgfn;
+
+	imgfn = axy->pnmfn;
+	if (axy->imagefn && plotscale != 1.0) {
+		append_executable(cmdline, "pnmscale", me);
+		sl_appendf(cmdline, "%f", plotscale);
+        append_escape(cmdline, axy->pnmfn);
+		sl_append(cmdline, "|");
+		imgfn = "-";
+	}
 
     append_executable(cmdline, "plotxy", me);
+    if (imgfn) {
+        sl_append(cmdline, "-I");
+        append_escape(cmdline, imgfn);
+    } else {
+		sl_appendf(cmdline, "-W %i -H %i", (int)(plotscale * axy->W), (int)(plotscale * axy->H));
+	}
     sl_append(cmdline, "-i");
     append_escape(cmdline, axy->outfn);
-    if (axy->imagefn) {
-        sl_append(cmdline, "-I");
-        append_escape(cmdline, axy->pnmfn);
-    } else {
-		sl_appendf(cmdline, "-W %i -H %i", axy->W, axy->H);
-	}
     if (axy->xcol) {
         sl_append(cmdline, "-X");
         append_escape(cmdline, axy->xcol);
@@ -270,9 +282,12 @@ static int plot_source_overlay(augment_xylist_t* axy, const char* me,
         sl_append(cmdline, "-Y");
         append_escape(cmdline, axy->ycol);
     }
-    sl_append(cmdline, "-P");
+	if (plotscale != 1.0) {
+		sl_append(cmdline, "-S");
+		sl_appendf(cmdline, "%f", plotscale);
+	}
     sl_append(cmdline, "-C red -w 2 -N 50 -x 1 -y 1");
-            
+    sl_append(cmdline, "-P");
     sl_append(cmdline, "|");
 
     append_executable(cmdline, "plotxy", me);
@@ -287,6 +302,10 @@ static int plot_source_overlay(augment_xylist_t* axy, const char* me,
         append_escape(cmdline, axy->ycol);
     }
     sl_append(cmdline, "-I - -w 2 -r 3 -C red -n 50 -N 200 -x 1 -y 1");
+	if (plotscale != 1.0) {
+		sl_append(cmdline, "-S");
+		sl_appendf(cmdline, "%f", plotscale);
+	}
 
     sl_append(cmdline, ">");
     append_escape(cmdline, objsfn);
@@ -308,13 +327,15 @@ static int plot_source_overlay(augment_xylist_t* axy, const char* me,
 }
 
 static int plot_index_overlay(augment_xylist_t* axy, const char* me,
-                              const char* indxylsfn, const char* redgreenfn) {
+                              const char* indxylsfn, const char* redgreenfn,
+	double plotscale) {
     sl* cmdline = sl_new(16);
     char* cmd;
     matchfile* mf;
     MatchObj* mo;
     int i;
     bool ctrlc;
+	char* imgfn;
 
 	assert(axy->matchfn);
     mf = matchfile_open(axy->matchfn);
@@ -330,13 +351,25 @@ static int plot_index_overlay(augment_xylist_t* axy, const char* me,
     }
 
     // sources + index overlay
+	imgfn = axy->pnmfn;
+
+	if (axy->imagefn && plotscale != 1.0) {
+		append_executable(cmdline, "pnmscale", me);
+		sl_appendf(cmdline, "%f", plotscale);
+        append_escape(cmdline, axy->pnmfn);
+		sl_append(cmdline, "|");
+		imgfn = "-";
+	}
+
     append_executable(cmdline, "plotxy", me);
+    if (imgfn) {
+        sl_append(cmdline, "-I");
+        append_escape(cmdline, imgfn);
+    } else {
+		sl_appendf(cmdline, "-W %i -H %i", (int)(plotscale * axy->W), (int)(plotscale * axy->H));
+	}
     sl_append(cmdline, "-i");
     append_escape(cmdline, axy->outfn);
-    if (axy->imagefn) {
-        sl_append(cmdline, "-I");
-        append_escape(cmdline, axy->pnmfn);
-    }
     if (axy->xcol) {
         sl_append(cmdline, "-X");
         append_escape(cmdline, axy->xcol);
@@ -345,13 +378,21 @@ static int plot_index_overlay(augment_xylist_t* axy, const char* me,
         sl_append(cmdline, "-Y");
         append_escape(cmdline, axy->ycol);
     }
-    sl_append(cmdline, "-P");
+	if (plotscale != 1.0) {
+		sl_append(cmdline, "-S");
+		sl_appendf(cmdline, "%f", plotscale);
+	}
     sl_append(cmdline, "-C red -w 2 -r 6 -N 200 -x 1 -y 1");
+    sl_append(cmdline, "-P");
     sl_append(cmdline, "|");
     append_executable(cmdline, "plotxy", me);
     sl_append(cmdline, "-i");
     append_escape(cmdline, indxylsfn);
     sl_append(cmdline, "-I - -w 2 -r 4 -C green -x 1 -y 1");
+	if (plotscale != 1.0) {
+		sl_append(cmdline, "-S");
+		sl_appendf(cmdline, "%f", plotscale);
+	}
 
     // if we solved by verifying an existing WCS, there is no quad.
     if (mo->dimquads) {
@@ -361,6 +402,10 @@ static int plot_index_overlay(augment_xylist_t* axy, const char* me,
         sl_append(cmdline, "-C green");
         sl_append(cmdline, "-w 2");
         sl_appendf(cmdline, "-d %i", mo->dimquads);
+		if (plotscale != 1.0) {
+			sl_append(cmdline, "-s");
+			sl_appendf(cmdline, "%f", plotscale);
+		}
         for (i=0; i<(2 * mo->dimquads); i++)
             sl_appendf(cmdline, " %g", mo->quadpix[i]);
     }
@@ -382,10 +427,20 @@ static int plot_index_overlay(augment_xylist_t* axy, const char* me,
 }
 
 static int plot_annotations(augment_xylist_t* axy, const char* me, bool verbose,
-                            const char* annfn) {
+                            const char* annfn, double plotscale) {
     sl* cmdline = sl_new(16);
     char* cmd;
     sl* lines;
+	char* imgfn;
+
+	imgfn = axy->pnmfn;
+	if (axy->imagefn && plotscale != 1.0) {
+		append_executable(cmdline, "pnmscale", me);
+		sl_appendf(cmdline, "%f", plotscale);
+        append_escape(cmdline, axy->pnmfn);
+		sl_append(cmdline, "|");
+		imgfn = "-";
+	}
 
     append_executable(cmdline, "plot-constellations", me);
     if (verbose)
@@ -393,9 +448,13 @@ static int plot_annotations(augment_xylist_t* axy, const char* me, bool verbose,
     sl_append(cmdline, "-w");
 	assert(axy->wcsfn);
     append_escape(cmdline, axy->wcsfn);
-    sl_append(cmdline, "-i");
-	assert(axy->pnmfn);
-    append_escape(cmdline, axy->pnmfn);
+
+	sl_append(cmdline, "-i");
+	append_escape(cmdline, imgfn);
+	if (plotscale != 1.0) {
+		sl_append(cmdline, "-s");
+		sl_appendf(cmdline, "%f", plotscale);
+	}
     sl_append(cmdline, "-N");
     sl_append(cmdline, "-C");
     sl_append(cmdline, "-o");
@@ -461,7 +520,8 @@ static void after_solved(augment_xylist_t* axy,
 						 bool verbose,
 						 const char* tempdir,
 						 sl* tempdirs,
-						 sl* tempfiles) {
+						 sl* tempfiles,
+	double plotscale) {
 	sip_t wcs;
 	double ra, dec, fieldw, fieldh;
 	char rastr[32], decstr[32];
@@ -513,14 +573,14 @@ static void after_solved(augment_xylist_t* axy,
 
 	if (makeplots && file_exists(sf->indxylsfn) && file_readable(axy->matchfn) && file_readable(axy->wcsfn)) {
 		logmsg("Creating index object overlay plot...\n");
-		if (plot_index_overlay(axy, me, sf->indxylsfn, sf->redgreenfn)) {
+		if (plot_index_overlay(axy, me, sf->indxylsfn, sf->redgreenfn, plotscale)) {
 			ERROR("Plot index overlay failed.");
 		}
 	}
 
 	if (makeplots && axy->imagefn && file_exists(axy->wcsfn) && axy->pnmfn) {
 		logmsg("Creating annotation plot...\n");
-		if (plot_annotations(axy, me, verbose, sf->ngcfn)) {
+		if (plot_annotations(axy, me, verbose, sf->ngcfn, plotscale)) {
 			ERROR("Plot annotations failed.");
 		}
 	}
@@ -618,6 +678,7 @@ int main(int argc, char** args) {
 	bool cont = FALSE;
     bool skip_solved = FALSE;
     bool makeplots = TRUE;
+	double plotscale = 1.0;
     char* me;
     bool verbose = FALSE;
     int loglvl = LOG_MSG;
@@ -715,6 +776,9 @@ int main(int argc, char** args) {
         if (c == -1)
             break;
         switch (c) {
+		case '\x84':
+			plotscale = atof(optarg);
+			break;
 		case '(':
 			backend_batch = TRUE;
 			break;
@@ -1141,7 +1205,7 @@ int main(int argc, char** args) {
         }
         if (makeplots) {
             // source extraction overlay
-            if (plot_source_overlay(axy, me, objsfn))
+            if (plot_source_overlay(axy, me, objsfn, plotscale))
                 makeplots = FALSE;
         }
 
@@ -1155,7 +1219,7 @@ int main(int argc, char** args) {
 		if (!backend_batch) {
 			run_backend(backendargs);
 			after_solved(axy, sf, makeplots, me, verbose,
-						 axy->tempdir, tempdirs, tempfiles);
+						 axy->tempdir, tempdirs, tempfiles, plotscale);
 		} else {
 			bl_append(batchaxy, axy);
 			bl_append(batchsf,  sf );
@@ -1189,7 +1253,7 @@ int main(int argc, char** args) {
 			solve_field_args_t* sf = bl_access(batchsf, i);
 
 			after_solved(axy, sf, makeplots, me, verbose,
-						 axy->tempdir, tempdirs, tempfiles);
+						 axy->tempdir, tempdirs, tempfiles, plotscale);
 			errors_print_stack(stdout);
 			errors_clear_stack();
 			logmsg("\n");
