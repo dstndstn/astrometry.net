@@ -173,6 +173,11 @@ ngc2000entries.c: parse-ngc2000.awk $(DATA)/ngc2000.dat
 ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
 	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate.awk > $@
 
+resample: resample.o \
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB)
+ALL_OBJ += resampe.o
+
 tycho2tofits: tycho2tofits.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += tycho2tofits.o
