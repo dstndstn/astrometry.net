@@ -1,9 +1,14 @@
 #! /usr/bin/env python
+import matplotlib
+matplotlib.use('Agg')
 import os
 import sys
 import logging
 
 from pylab import *
+from optparse import OptionParser
+
+from removelines import hist_remove_lines
 
 if __name__ == '__main__':
 	try:
@@ -31,8 +36,10 @@ import pyfits
 from numpy import *
 from numpy.random import rand
 
+'''
 # Returns a numpy array of booleans: True for points that should be kept (are not part of lines)
-def hist_remove_lines(x, binwidth, binoffset, nsig):
+if False:
+	# def hist_remove_lines(x, binwidth, binoffset, nsig, plots=False):
 	bins = -binoffset + arange(0, max(x)+binwidth, binwidth)
 	(counts, thebins) = histogram(x, bins)
 
@@ -45,9 +52,10 @@ def hist_remove_lines(x, binwidth, binoffset, nsig):
 	mean = sum(k) / ((max(x) - min(x)) / binwidth) * sqrt(2.)
 	thresh = mean + nsig * sqrt(mean)
 
-	hist(x, bins)
-	axhline(mean)
-	axhline(thresh, color='r')
+	if plots:
+		hist(x, bins)
+		axhline(mean)
+		axhline(thresh, color='r')
 
 	print 'mean', mean, 'thresh:', thresh, 'max:', max(k)
 	
@@ -68,20 +76,26 @@ def hist_remove_lines(x, binwidth, binoffset, nsig):
 
 	badpoints = sum(array([(x >= L)*(x < R) for (L,R) in zip(badleft, badright)]), 0)
 	return (badpoints == 0)
+'''
+#'''
 
-def removelines(infile, outfile, **kwargs):
+def removelines(infile, outfile, xcol='X', ycol='Y', plots=False, cut=None, **kwargs):
 	p = pyfits.open(infile)
 	xy = p[1].data
 	hdr = p[1].header
-	x = xy.field('X')
-	y = xy.field('Y')
+	x = xy.field(xcol)
+	y = xy.field(ycol)
 
 	NX = max(x) - min(x)
 	NY = max(y) - min(y)
 	nangle = int(ceil(sqrt(NX*NY)/4.))
 
-	clf()
-	plot(x, y, 'r.')
+	if cut is None:
+		cut = 20
+
+	if plots:
+		clf()
+		plot(x, y, 'r.')
 
 	I = array([True]*len(x))
 	for i,angle in enumerate(0.75 + linspace(0, pi/2., nangle, endpoint=False)):
@@ -92,28 +106,34 @@ def removelines(infile, outfile, **kwargs):
 		xx -= min(xx)
 		yy -= min(yy)
 
-		print
-		clf()
-		subplot(2,2,1)
-		plot(xx, yy, 'r.')
+		if plots:
+			print
+			clf()
+			subplot(2,2,1)
+			plot(xx, yy, 'r.')
+			subplot(2,2,3)
 
-<<<<<<< .mine
-		subplot(2,2,3)
-		ix = hist_remove_lines(xx, 0.5, 0.5, 5)
-		subplot(2,2,4)
-		iy = hist_remove_lines(yy, 0.5, 0.5, 5)
+
+		#ix = hist_remove_lines(xx, 0.5, 0.5, 5, plots=plots)
+		ix = hist_remove_lines(xx, 1, 0.5, logcut=-cut)
+
+		if plots:
+			subplot(2,2,4)
+
+		#iy = hist_remove_lines(yy, 0.5, 0.5, 5, plots=plots)
+		iy = hist_remove_lines(yy, 1, 0.5, logcut=-cut)
 
 		I *= ix * iy
 
 		removed = (ix * iy == False)
-		if sum(removed):
-			plot([min(x[removed]), max(x[removed])],
-				 [min(y[removed]), max(y[removed])], 'k-', alpha=0.5)
-
-		subplot(2,2,1)
-		plot(xx[removed], yy[removed], 'b-', alpha=0.5)
-		plot(xx[removed], yy[removed], 'b.')
-		savefig('rot-%04i.png' % i)
+		if plots:
+			if sum(removed):
+				plot([min(x[removed]), max(x[removed])],
+					 [min(y[removed]), max(y[removed])], 'k-', alpha=0.5)
+			subplot(2,2,1)
+			plot(xx[removed], yy[removed], 'b-', alpha=0.5)
+			plot(xx[removed], yy[removed], 'b.')
+			savefig('rot-%04i.png' % i)
 
 		print 'angle', angle, 'removed', (len(x) - sum(ix*iy))
 
@@ -121,29 +141,36 @@ def removelines(infile, outfile, **kwargs):
 	yc = y[I]
 	print 'removelines.py: Removed %i sources' % (len(x) - len(xc))
 
-	plot(xc, yc, 'o', mec='r', mfc='none')
-	#axes('equal')
-	savefig('after.png')
+	if plots:
+		plot(xc, yc, 'o', mec='r', mfc='none')
+		# axes('equal')
+		savefig('after.png')
 
-	p[1].header.add_history('This xylist was filtered by the "removelines.py" program')
-	p[1].header.add_history('to remove horizontal and vertical lines of sources')
-	p[1].header.update('REMLINEN', len(x) - len(xc), 'Number of sources removed by "removelines.py"')
+	p[1].header.add_history('This xylist was filtered by the "removelines_rotate.py" program')
+	p[1].header.add_history('to remove lines of sources')
+	p[1].header.update('REMLINEN', len(x) - len(xc), 'Number of sources removed by "removelines"')
 
 	p[1].data = p[1].data[I]
 	p.writeto(outfile, clobber=True)
 
 	return 0
 
-=======
-
->>>>>>> .r11460
 if __name__ == '__main__':
-	args = sys.argv[1:]
-	if (len(args) == 2):
-		infile = args[0]
-		outfile = args[1]
-		rtncode = removelines(infile, outfile)
-		sys.exit(rtncode)
-	else:
-		print 'Usage: %s <input-file> <output-file>' % sys.argv[0]
+	parser = OptionParser(usage='%prog <input-file> <output-file>')
+	parser.add_option('-X', '--x-column', dest='xcol', help='X column name')
+	parser.add_option('-Y', '--y-column', dest='ycol', help='Y column name')
+	parser.set_defaults(xcol='X', ycol='Y')
+	opt,args = parser.parse_args()
+	if len(args) != 2:
+		parser.print_help()
+		sys.exit(0)
+
+	kwargs = {}
+	for k in 'xcol','ycol':
+		kwargs[k] = getattr(opt, k)
+
+	infile = args[0]
+	outfile = args[1]
+	rtncode = removelines(infile, outfile, **kwargs)
+	sys.exit(rtncode)
 
