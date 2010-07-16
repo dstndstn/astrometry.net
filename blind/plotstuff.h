@@ -130,6 +130,8 @@ int plotstuff_set_size(plot_args_t* pargs, int W, int H);
 
 int plotstuff_set_wcs_box(plot_args_t* pargs, float ra, float dec, float width);
 
+int plotstuff_set_wcs_file(plot_args_t* pargs, const char* fn, int ext);
+
 int plotstuff_set_wcs(plot_args_t* pargs, anwcs_t* wcs);
 
 int plotstuff_set_wcs_tan(plot_args_t* pargs, tan_t* wcs);

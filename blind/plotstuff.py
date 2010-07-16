@@ -26,6 +26,8 @@ class Plotstuff(object):
 			return plot_image_get(self.pargs)
 		elif name == 'outline':
 			return plot_outline_get(self.pargs)
+		elif name == 'grid':
+			return plot_grid_get(self.pargs)
 		return self.pargs.__getattr__(name)
 
 	def __setattr__(self, name, val):

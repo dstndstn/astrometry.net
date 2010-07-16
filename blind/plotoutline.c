@@ -77,6 +77,9 @@ int plot_outline_plot(const char* command,
 
 	plotstuff_builtin_apply(cairo, pargs);
 
+	logmsg("Plotting outline of WCS: image size is %g x %g\n",
+		   anwcs_imagew(args->wcs), anwcs_imageh(args->wcs));
+
 	token.first = TRUE;
 	token.cairo = cairo;
 	token.pargs = pargs;

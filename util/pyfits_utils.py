@@ -2,6 +2,25 @@ import pyfits
 import numpy
 from numpy import array, isscalar, ndarray
 
+def add_nonstructural_headers(fromhdr, tohdr):
+	for card in fromhdr.ascardlist():
+		if ((card.key in ['SIMPLE','XTENSION', 'BITPIX', 'END', 'PCOUNT', 'GCOUNT',
+						  'TFIELDS',]) or
+			card.key.startswith('NAXIS') or
+			card.key.startswith('TTYPE') or
+			card.key.startswith('TFORM') or
+			card.key.startswith('TUNIT') or
+			card.key.startswith('TDISP')):
+			#print 'skipping card', card.key
+			continue
+		if tohdr.has_key(card.key):
+			#print 'skipping existing card', card.key
+			continue
+		#print 'adding card', card.key
+		tohdr.update(card.key, card.value, card.comment)
+
+
+
 class tabledata(object):
 
 	class td_iter(object):
@@ -18,19 +37,20 @@ class tabledata(object):
 			return X
 
 
-	def __init__(self):
+	def __init__(self, header=None):
 		self._length = 0
+		self._header = header
 	def __setattr__(self, name, val):
 		object.__setattr__(self, name, val)
 		#print 'set', name, 'to', val
-		if self._length == 0 and name is not '_length' and hasattr(val, '__len__') and len(val) != 0:
+		if (self._length == 0) and (not (name.startswith('_'))) and hasattr(val, '__len__') and len(val) != 0:
 			self._length = len(val)
 	def set(self, name, val):
 		self.__setattr__(name, val)
 	def getcolumn(self, name):
 		return self.__dict__[name.lower()]
 	def columns(self):
-		return [k for k in self.__dict__.keys() if not k == '_length']
+		return [k for k in self.__dict__.keys() if not k.startswith('_')]
 	def __len__(self):
 		return self._length
 	def delete_column(self, c):
@@ -38,7 +58,7 @@ class tabledata(object):
 	def __getitem__(self, I):
 		rtn = tabledata()
 		for name,val in self.__dict__.items():
-			if name == '_length':
+			if name.startswith('_'):
 				continue
 			try:
 				rtn.set(name, val[I])
@@ -77,22 +97,28 @@ class tabledata(object):
 				rtn._length = 1
 			else:
 				rtn._length = len(getattr(rtn, name))
+		rtn._header = self._header
 		return rtn
 	def __iter__(self):
 		return tabledata.td_iter(self)
 
 	def append(self, X):
 		for name,val in self.__dict__.items():
-			if name == '_length':
+			if name.startswith('_'):
 				continue
 			newX = numpy.append(val, X.getcolumn(name), axis=0)
 			self.set(name, newX)
 			self._length = len(newX)
 
-	def write_to(self, fn, columns=None):
-		pyfits.new_table(self.to_fits_columns(columns)).writeto(fn, clobber=True)
-	def writeto(self, fn, columns=None):
-		return self.write_to(fn, columns=columns)
+	def write_to(self, fn, columns=None, header='default'):
+		T = pyfits.new_table(self.to_fits_columns(columns))
+		if header == 'default':
+			header = self._header
+		if header is not None:
+			add_nonstructural_headers(header, T.header)
+		T.writeto(fn, clobber=True)
+
+	writeto = write_to
 
 	def to_fits_columns(self, columns=None):
 		cols = []
@@ -114,7 +140,7 @@ class tabledata(object):
 			columns = self.__dict__.keys()
 				
 		for name in columns:
-			if name == '_length':
+			if name.startswith('_'):
 				continue
 			val = self.__dict__.get(name)
 			# FIXME -- format should match that of the 'val'.
@@ -143,17 +169,20 @@ class tabledata(object):
 		return cols
 		
 
-def table_fields(dataorfn, rows=None, hdunum=1):
+def table_fields(dataorfn, rows=None, hdunum=1, header='default'):
 	pf = None
+	hdr = None
 	if isinstance(dataorfn, str):
 		pf = pyfits.open(dataorfn)
 		data = pf[hdunum].data
+		if header == 'default':
+			hdr = pf[hdunum].header
 	else:
 		data = dataorfn
 
 	if data is None:
 		return None
-	fields = tabledata()
+	fields = tabledata(header=hdr)
 	colnames = data.dtype.names
 	for c in colnames:
 		col = data.field(c)
