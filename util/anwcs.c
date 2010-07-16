@@ -276,6 +276,10 @@ static void wcslib_set_size(anwcslib_t* anwcslib, int W, int H) {
 	anwcslib->imageh = H;
 }
 
+static int wcslib_scale_wcs(anwcslib_t* wcslib, double scale) {
+	ERROR("Not implemented!");
+	return -1;
+}
 
 
 #endif  // end of WCSLIB implementations
@@ -316,6 +320,13 @@ static int ansip_pixelxy2radec(const sip_t* sip, double px, double py, double* r
 static void ansip_set_size(sip_t* sip, int W, int H) {
 	sip->wcstan.imagew = W;
 	sip->wcstan.imageh = H;
+}
+
+static int ansip_scale_wcs(sip_t* sip, double scale) {
+	// FIXME!!!
+	logmsg("Warning: ansip_scale_wcs only scales the TAN, not the SIP coefficients!\n");
+	tan_scale(&sip->wcstan, &sip->wcstan, scale);
+	return 0;
 }
 
 /////////////////// dispatched anwcs_t entry points //////////////////////////
@@ -371,6 +382,9 @@ int anwcs_write_to(const anwcs_t* wcs, FILE* fid) {
 	ANWCS_DISPATCH(wcs, return, return -1, write_to, fid);
 }
 
+int anwcs_scale_wcs(anwcs_t* anwcs, double scale) {
+	ANWCS_DISPATCH(anwcs, return, return -1, scale_wcs, scale);
+}
 
 
 

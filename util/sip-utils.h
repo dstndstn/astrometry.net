@@ -91,4 +91,6 @@ void tan_transform(const tan_t* tanin, tan_t* tanout,
 				   double xlo, double xhi, double ylo, double yhi,
 				   double scale);
 
+void tan_scale(const tan_t* tanin, tan_t* tanout, double scale);
+
 #endif

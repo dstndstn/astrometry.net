@@ -49,6 +49,9 @@ class Plotstuff(object):
 	def plot(self, layer):
 		plotstuff_plot_layer(self.pargs, layer)
 
+	def scale_wcs(self, scale):
+		plotstuff_scale_wcs(self.pargs, scale)
+
 	def set_wcs_box(self, ra, dec, width):
 		plotstuff_set_wcs_box(self.pargs, ra, dec, width)
 

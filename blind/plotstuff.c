@@ -250,6 +250,14 @@ int plotstuff_set_size(plot_args_t* pargs, int W, int H) {
 	return 0;
 }
 
+int plotstuff_scale_wcs(plot_args_t* pargs, double scale) {
+	if (!pargs->wcs) {
+		ERROR("No WCS has been set");
+		return -1;
+	}
+	return anwcs_scale_wcs(pargs->wcs, scale);
+}
+
 int plotstuff_set_wcs_file(plot_args_t* pargs, const char* filename, int ext) {
 	anwcs_t* wcs = anwcs_open(filename, ext);
 	if (!wcs) {

@@ -279,3 +279,16 @@ void tan_transform(const tan_t* tanin, tan_t* tanout,
 	tanout->cd[1][1] /= scale;
 }
 
+void tan_scale(const tan_t* tanin, tan_t* tanout,
+			   double scale) {
+	memmove(tanout, tanin, sizeof(tan_t));
+	tanout->imagew *= scale;
+	tanout->imageh *= scale;
+	// +1 issues?
+	tanout->crpix[0] = 1 + scale * (tanin->crpix[0] - 1);
+	tanout->crpix[1] = 1 + scale * (tanin->crpix[1] - 1);
+	tanout->cd[0][0] /= scale;
+	tanout->cd[0][1] /= scale;
+	tanout->cd[1][0] /= scale;
+	tanout->cd[1][1] /= scale;
+}
