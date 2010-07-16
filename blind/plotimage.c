@@ -36,6 +36,13 @@ const plotter_t plotter_image = {
 	.free = plot_image_free
 };
 
+static void set_format(plotimage_t* args) {
+	if (args->format == 0) {
+		args->format = guess_image_format_from_filename(args->fn);
+		logverb("Guessing format of image from filename: \"%s\" -> %s\n", args->fn, image_format_name_from_code(args->format));
+	}
+}
+
 plotimage_t* plot_image_get(plot_args_t* pargs) {
 	return plotstuff_get_config(pargs, "image");
 }
@@ -294,11 +301,7 @@ static unsigned char* read_fits_image(plotimage_t* args) {
 }
 
 int plot_image_read(plotimage_t* args) {
-	// FIXME -- guess format from filename?
-	if (args->format == 0) {
-		args->format = guess_image_format_from_filename(args->fn);
-		logverb("Guessing format of image from filename: \"%s\" -> %s\n", args->fn, image_format_name_from_code(args->format));
-	}
+	set_format(args);
 	switch (args->format) {
 	case PLOTSTUFF_FORMAT_JPG:
 		args->img = cairoutils_read_jpeg(args->fn, &(args->W), &(args->H));
@@ -346,6 +349,41 @@ int plot_image_plot(const char* command,
 	// ?
 	free(args->img);
 	args->img = NULL;
+	return 0;
+}
+
+static int read_fits_size(plotimage_t* args, int* W, int* H) {
+	qfitsloader ld;
+	ld.filename = args->fn;
+	ld.xtnum = args->fitsext;
+	ld.pnum = args->fitsplane;
+	ld.map = 1;
+	ld.ptype = PTYPE_FLOAT;
+	if (qfitsloader_init(&ld)) {
+		ERROR("qfitsloader_init() failed");
+		return -1;
+	}
+	if (W)
+		*W = ld.lx;
+	if (H)
+		*H = ld.ly;
+	qfitsloader_free_buffers(&ld);
+	return 0;
+}
+
+int plot_image_getsize(plotimage_t* args, int* W, int* H) {
+	set_format(args);
+	if (args->format == PLOTSTUFF_FORMAT_FITS)
+		return read_fits_size(args, W, H);
+	if (!args->img) {
+		if (plot_image_read(args)) {
+			return -1;
+		}
+	}
+	if (W)
+		*W = args->W;
+	if (H)
+		*H = args->H;
 	return 0;
 }
 

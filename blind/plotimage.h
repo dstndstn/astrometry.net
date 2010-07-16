@@ -49,6 +49,8 @@ int plot_image_plot(const char* command, cairo_t* cr,
 
 void plot_image_free(plot_args_t* args, void* baton);
 
+int plot_image_getsize(plotimage_t* args, int* W, int* H);
+
 int plot_image_set_filename(plotimage_t* args, const char* fn);
 
 int plot_image_setsize(plot_args_t* pargs, plotimage_t* args);
