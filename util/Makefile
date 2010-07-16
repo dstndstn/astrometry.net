@@ -89,7 +89,7 @@ ANUTILS_LIB := libanutils.a
 
 PYTHON_LIBS := _sip.so _healpix.so
 
-PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian smooth-image
+PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian smooth-image search-index
 # tycho2tostellarium build-hd-tree
 
 all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS)
@@ -382,14 +382,15 @@ ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_tycho2 test_anwcs
 # test_hd depends on hd.fits...
 ALL_TEST_EXTRA_OBJS = 
-ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB) $(WCSLIB_LIB)
+ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
+ALL_TEST_EXTRA_LDFLAGS = $(WCSLIB_LIB)
 
 include $(COMMON)/makefile.tests
 
 DEP_OBJ += $(ALL_TEST_FILES_O)
 
 test_anwcs: $(ANUTILS_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(WCSLIB_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB)
 
 test_tycho2: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 

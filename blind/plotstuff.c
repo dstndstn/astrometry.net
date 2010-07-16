@@ -887,7 +887,7 @@ int plotstuff_output(plot_args_t* pargs) {
 			int res;
 			unsigned char* img = cairo_image_surface_get_data(pargs->target);
 			// Convert image for output...
-			cairoutils_argb32_to_rgba(img, pargs->W, pargs->H);
+ 			cairoutils_argb32_to_rgba(img, pargs->W, pargs->H);
 			if (pargs->outformat == PLOTSTUFF_FORMAT_MEMIMG) {
 				pargs->outimage = img;
 				res = 0;

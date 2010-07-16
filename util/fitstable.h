@@ -248,6 +248,8 @@ int fitstable_nrows(fitstable_t* t);
 // Returns the size of the row in FITS format.
 int fitstable_row_size(fitstable_t* t);
 
+int fitstable_get_struct_size(const fitstable_t* table);
+
 // when writing...
 void fitstable_next_extension(fitstable_t* tab);
 
@@ -263,6 +265,8 @@ int  fitstable_read_extension(fitstable_t* tab, int ext);
 int fitstable_get_array_size(fitstable_t* tab, const char* name);
 
 int fitstable_get_type(fitstable_t* tab, const char* name);
+
+//void fitstable_add_column_from(fitstable_t* dest, const fitstable_t* src, 
 
 void fitstable_add_read_column_struct(fitstable_t* tab,
                                       tfits_type c_type,

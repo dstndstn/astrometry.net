@@ -66,8 +66,8 @@ static bool need_endian_flip() {
 	return IS_BIG_ENDIAN == 0;
 }
 
-static void fitstable_add_columns(fitstable_t* tab, fitscol_t* cols, int Ncols);
-static void fitstable_add_column(fitstable_t* tab, fitscol_t* col);
+//static void fitstable_add_columns(fitstable_t* tab, fitscol_t* cols, int Ncols);
+static fitscol_t* fitstable_add_column(fitstable_t* tab, fitscol_t* col);
 static void fitstable_create_table(fitstable_t* tab);
 
 static int ncols(const fitstable_t* t) {
@@ -102,6 +102,11 @@ static int offset_of_column(const fitstable_t* table, int colnum) {
 		offset += fitscolumn_get_size(col);
 	}
 	return offset;
+}
+
+int fitstable_get_struct_size(const fitstable_t* table) {
+	int rowsize = offset_of_column(table, bl_size(table->cols));
+	return rowsize;
 }
 
 static bool is_writing(const fitstable_t* t) {
@@ -308,13 +313,10 @@ void fitstable_copy_columns(const fitstable_t* src, fitstable_t* dest) {
 	int i;
 	for (i=0; i<ncols(src); i++) {
 		fitscol_t* col = getcol(src, i);
-		char* name = col->colname;
-		char* units = col->units;
-		col->colname = strdup_safe(col->colname);
-		col->units   = strdup_safe(col->units);
-		fitstable_add_column(dest, col);
-		col->colname = name;
-		col->units = units;
+		fitscol_t* newcol = fitstable_add_column(dest, col);
+		// fix string fields...
+		newcol->colname = strdup_safe(newcol->colname);
+		newcol->units   = strdup_safe(newcol->units);
 	}
 }
 
@@ -1185,18 +1187,21 @@ int fitstable_close(fitstable_t* tab) {
     return rtn;
 }
 
-static void fitstable_add_columns(fitstable_t* tab, fitscol_t* cols, int Ncols) {
-    int i;
-    for (i=0; i<Ncols; i++) {
-        fitscol_t* col = bl_append(tab->cols, cols + i);
-        col->csize = fits_get_atom_size(col->ctype);
-        col->fitssize = fits_get_atom_size(col->fitstype);
-    }
+static fitscol_t* fitstable_add_column(fitstable_t* tab, fitscol_t* col) {
+	col = bl_append(tab->cols, col);
+	col->csize = fits_get_atom_size(col->ctype);
+	col->fitssize = fits_get_atom_size(col->fitstype);
+	return col;
 }
 
-static void fitstable_add_column(fitstable_t* tab, fitscol_t* col) {
-    fitstable_add_columns(tab, col, 1);
-}
+/*
+ static void fitstable_add_columns(fitstable_t* tab, fitscol_t* cols, int Ncols) {
+ int i;
+ for (i=0; i<Ncols; i++) {
+ fitstable_add_column(tab, cols + i);
+ }
+ }
+ */
 
 int fitstable_get_array_size(fitstable_t* tab, const char* name) {
     qfits_col* qcol;

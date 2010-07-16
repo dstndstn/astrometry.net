@@ -26,8 +26,9 @@
 #include "ioutils.h"
 #include "boilerplate.h"
 #include "tic.h"
+#include "fitstable.h"
 
-static const char* OPTIONS = "hvr:d:R:";
+static const char* OPTIONS = "hvr:d:R:o:";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
@@ -35,6 +36,7 @@ void printHelp(char* progname) {
 		   "    -r <ra>     (deg)\n"
 		   "    -d <dec>    (deg)\n"
 		   "    -R <radius> (deg)\n"
+		   "    [-o <filename>]: save results in FITS table; tag-along columns must be the same in all indices\n"
 		   "    [-v]: +verbose\n"
 		   "\n", progname);
 }
@@ -49,9 +51,14 @@ int main(int argc, char **argv) {
 	char** myargs;
 	int nmyargs;
 	int i;
+	char* outfn = NULL;
+	fitstable_t* table = NULL;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'o':
+			outfn = optarg;
+			break;
 		case 'r':
 			ra = atof(optarg);
 			break;
@@ -67,9 +74,8 @@ int main(int argc, char **argv) {
         case '?':
             fprintf(stderr, "Unknown option `-%c'.\n", optopt);
 		case 'h':
-			printHelp(argv[0]);
-			break;
 		default:
+			printHelp(argv[0]);
 			return -1;
 		}
 	log_init(loglvl);
@@ -85,6 +91,18 @@ int main(int argc, char **argv) {
 		exit(-1);
 	}
 
+	if (outfn) {
+		table = fitstable_open_for_writing(outfn);
+		if (!table) {
+			ERROR("Failed to open output table");
+			exit(-1);
+		}
+		if (fitstable_write_primary_header(table)) {
+			ERROR("Failed to write primary header of output table");
+			exit(-1);
+		}
+	}
+
 	for (i=0; i<nmyargs; i++) {
 		char* indexfn = myargs[i];
 		index_t index;
@@ -93,6 +111,7 @@ int main(int argc, char **argv) {
 		double* radecs;
 		int N;
 		int j;
+		fitstable_t* tagtable = NULL;
 
 		/*
 		 tic();
@@ -129,6 +148,55 @@ int main(int argc, char **argv) {
 								  NULL, &radecs, &inds, &N);
 		logmsg("Found %i stars\n", N);
 
+		if ((i == 0) && table) {
+			int tagsize;
+			int rowsize;
+			char* rowbuf = NULL;
+			//int NR = 1000;
+
+			tagtable = startree_get_tagalong(index.starkd);
+			if (tagtable) {
+				fitstable_add_fits_columns_as_struct(tagtable);
+				logmsg("Input tag-along table:\n");
+				fitstable_print_columns(tagtable);
+				fitstable_copy_columns(tagtable, table);
+			}
+			/*
+			 fitstable_add_write_column(table, fitscolumn_double_type(), "RA", "degrees");
+			 fitstable_add_write_column(table, fitscolumn_double_type(), "DEC", "degrees");
+			 */
+			tagsize = fitstable_get_struct_size(table);
+			printf("tagsize=%i\n", tagsize);
+			fitstable_add_write_column_struct(table, fitscolumn_double_type(), 1, tagsize, fitscolumn_double_type(), "RA", "degrees");
+			fitstable_add_write_column_struct(table, fitscolumn_double_type(), 1, tagsize + sizeof(double), fitscolumn_double_type(), "DEC", "degrees");
+			rowsize = fitstable_get_struct_size(table);
+			assert(rowsize == tagsize + 2*sizeof(double));
+			printf("rowsize=%i\n", rowsize);
+			rowbuf = malloc(rowsize);
+
+			logmsg("Output table (3):\n");
+			fitstable_print_columns(table);
+
+			if (fitstable_write_header(table)) {
+				ERROR("Failed to write header of output table");
+				exit(-1);
+			}
+
+			for (j=0; j<N; j++) {
+				if (fitstable_read_struct(tagtable, inds[j], rowbuf)) {
+					ERROR("Failed to read row %i of tag-along table", inds[j]);
+					exit(-1);
+				}
+				// Add RA,Dec to end of struct...
+				memcpy(rowbuf + tagsize, radecs+2*j+0, sizeof(double));
+				memcpy(rowbuf + tagsize + sizeof(double), radecs+2*j+1, sizeof(double));
+				if (fitstable_write_struct(table, rowbuf)) {
+					ERROR("Failed to write row %i of output", j);
+					exit(-1);
+				}
+			}
+		}
+
 		for (j=0; j<sl_size(cols); j++) {
 			char* col;
 			double* dat;
@@ -144,6 +212,14 @@ int main(int argc, char **argv) {
 		free(inds);
 
 		index_close(&index);
+	}
+
+	if (table) {
+		if (fitstable_fix_header(table) ||
+			fitstable_close(table)) {
+			ERROR("Failed to fix header or close output table");
+			exit(-1);
+		}
 	}
 
 	return 0;

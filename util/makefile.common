@@ -144,7 +144,7 @@ OPTIMIZE ?= yes
 ifeq ($(OPTIMIZE),yes)
   # speedy!
   FLAGS_DEF += -O3
-  FLAGS_DEF += -fomit-frame-pointer
+  #FLAGS_DEF += -fomit-frame-pointer
   # turn off asserts:
   FLAGS_DEF += -DNDEBUG
 
@@ -158,7 +158,7 @@ endif
 FLAGS_DEF += -fPIC
 
 # profily!
-#FLAGS_DEF += -pg
+FLAGS_DEF += -pg
 
 ## FIXME DEBUG
 #FLAGS_DEF += -fstrict-aliasing -std=c99
