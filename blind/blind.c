@@ -1668,6 +1668,9 @@ static int write_corr_file(blind_t* bp) {
 static int write_solutions(blind_t* bp) {
 	bool got_solutions = (bl_size(bp->solutions) > 0);
 
+	// The solutions can fall out of order because tweak2() updates their logodds.
+	bl_sort(bp->solutions, compare_matchobjs);
+
 	// If we found no solution, don't write empty output files!
 	if (!got_solutions)
 		return 0;

@@ -439,14 +439,15 @@ int main(int argc, char** args) {
 					xy[0], xy[1], sqrt(nnd2));
 
 			res = kdtree_rangesearch_options(ftree, xy, pixr2 * nsigma*nsigma, KD_OPTIONS_SMALL_RADIUS | KD_OPTIONS_COMPUTE_DISTS | KD_OPTIONS_SORT_DISTS);
-			if (!res || !res->nres)
-				continue;
 
 			istars[j].star = il_get(starlist, j);
 			istars[j].starx = dl_get(starxylist, 2*j+0);
 			istars[j].stary = dl_get(starxylist, 2*j+1);
 			istars[j].corrs = pl_new(16);
 			istars[j].allquads = il_new(16);
+
+			if (!res || !res->nres)
+				continue;
 
 			for (k=0; k<res->nres; k++) {
 				corr_t* cc;
@@ -619,8 +620,10 @@ int main(int argc, char** args) {
 				sweeps[k] = startree_get_sweep(indx->starkd, starinds[k]);
 			}
 			perm = permuted_sort(sweeps, sizeof(int), compare_ints_asc, NULL, Ngood);
-			for (k=0; k<Ngood; k++) {
-				logverb("  sweep %i, r mag %g\n", sweeps[perm[k]], sortdata[perm[k]]);
+			if (sortdata) {
+				for (k=0; k<Ngood; k++) {
+					logverb("  sweep %i, r mag %g\n", sweeps[perm[k]], sortdata[perm[k]]);
+				}
 			}
 
 			/*
