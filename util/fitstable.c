@@ -398,12 +398,17 @@ void fitstable_add_fits_columns_as_struct(fitstable_t* tab) {
 	int off = 0;
 	for (i=0; i<tab->table->nc; i++) {
 		qfits_col* qcol = tab->table->col + i;
+		fitscol_t* col;
 		/*
 		 if (qcol->atom_type == TFITS_BIN_TYPE_X) {
 		 }
 		 */
 		fitstable_add_read_column_struct(tab, qcol->atom_type, qcol->atom_nb,
 										 off, qcol->atom_type, qcol->tlabel, TRUE);
+		// set the FITS column number.
+		col = getcol(tab, ncols(tab)-1);
+		col->col = i;
+
 		off += fitscolumn_get_size(getcol(tab, ncols(tab)-1));
 	}
 }

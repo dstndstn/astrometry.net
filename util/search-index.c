@@ -160,6 +160,10 @@ int main(int argc, char **argv) {
 				logmsg("Input tag-along table:\n");
 				fitstable_print_columns(tagtable);
 				fitstable_copy_columns(tagtable, table);
+
+				//fitstable_read_extension(tagtable, tagtable->extension);
+				//logmsg("Input tag-along table:\n");
+				//fitstable_print_columns(tagtable);
 			}
 			/*
 			 fitstable_add_write_column(table, fitscolumn_double_type(), "RA", "degrees");
