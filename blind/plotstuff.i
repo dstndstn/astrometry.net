@@ -60,16 +60,16 @@ void fits_use_error_system(void);
     return plot_image_set_wcs(self, fn, ext);
   }
 
-  int get_image_width(plotimage_t* args) {
+  int get_image_width() {
 	  int W;
-	  if (plot_image_getsize(args, &W, NULL)) {
+	  if (plot_image_getsize(self, &W, NULL)) {
 		  return -1;
 	  }
 	  return W;
   }
-  int get_image_height(plotimage_t* args) {
+  int get_image_height() {
 	  int H;
-	  if (plot_image_getsize(args, NULL, &H)) {
+	  if (plot_image_getsize(self, NULL, &H)) {
 		  return -1;
 	  }
 	  return H;
