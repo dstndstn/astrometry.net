@@ -135,10 +135,8 @@ static an_option_t options[] = {
      "minimum size of quads to try, as a fraction of the smaller image dimension, default: 0.1"},
     {'Q', "quad-size-max",  required_argument, "fraction",
      "maximum size of quads to try, as a fraction of the image hypotenuse, default 1.0"},
-	/*
-	 {'\x82', "odds-to-tune-up",  required_argument, "odds",
+	{'\x82', "odds-to-tune-up",  required_argument, "odds",
 	 "odds ratio at which to try tuning up a match that isn't good enough to solve (default: 1e6)"},
-	 */
 	{'[', "odds-to-solve",  required_argument, "odds",
 	 "odds ratio at which to consider a field solved (default: 1e9)"},
 	{'#', "odds-to-reject",   required_argument, "odds",
@@ -283,11 +281,9 @@ int augment_xylist_parse_option(char argchar, char* optarg,
 	case '\x81':
 		axy->verify_uniformize = FALSE;
 		break;
-		/*
-		 case '\x82':
-		 axy->odds_to_tune_up = atof(optarg);
-		 break;
-		 */
+	case '\x82':
+		axy->odds_to_tune_up = atof(optarg);
+		break;
 	case '\x83':
 		axy->verify_dedup = FALSE;
 		break;

@@ -150,9 +150,7 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
 	int nm, nc, nd;
 	int besti;
 
-	//indexjitter = mo->index->index_jitter; // ref cat positional error, in arcsec.
 	indexjitter = mo->index_jitter; // ref cat positional error, in arcsec.
-
 	xy = starxy_to_xy_array(sp->fieldxy, NULL);
 	Nxy = starxy_n(sp->fieldxy);
 	qc[0] = (mo->quadpix[0] + mo->quadpix[2]) / 2.0;
@@ -162,6 +160,8 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
 		// can happen if we're verifying an existing WCS
 		// note, this is radius-squared, so 1e6 is not crazy.
 		Q2 = 1e6;
+		// set qc to the image center here?  or crpix?
+		logverb("solver_tweak2(): setting Q2=%g; qc=(%g,%g)\n", Q2, qc[0], qc[1]);
 	}
 	sip_wrap_tan(&(mo->wcstan), &startsip);
 
@@ -1288,9 +1288,7 @@ void solver_inject_match(solver_t* solver, MatchObj* mo, sip_t* sip) {
 static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_match) {
 	double match_distance_in_pixels2;
     bool solved;
-
-	//int* testperm = NULL;
-	//int** p_testperm = NULL;
+	double logaccept;
 
 	mo->indexid = sp->index->indexid;
 	mo->healpix = sp->index->healpix;
@@ -1303,13 +1301,12 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 
 	mo->dimquads = quadfile_dimquads(sp->index->quads);
 
-	// DEBUG
-	//p_testperm = &testperm;
+	logaccept = MIN(sp->logratio_record_threshold, sp->logratio_totune);
 
 	verify_hit(sp->index->starkd, sp->index->cutnside,
 			   mo, sip, sp->vf, match_distance_in_pixels2,
 	           sp->distractor_ratio, sp->field_maxx, sp->field_maxy,
-	           sp->logratio_bail_threshold, sp->logratio_record_threshold,
+	           sp->logratio_bail_threshold, logaccept,
 			   sp->logratio_stoplooking,
 			   sp->distance_from_quad_bonus, fake_match);
 	mo->nverified = sp->num_verified++;
@@ -1319,11 +1316,11 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		logverb("Got a new best match: logodds %g.\n", mo->logodds);
 	}
 
-	/*  GAH, have to put this in blind.c ?
-	 Want to do tweak2(), pretty much
-	 if (mo->logodds >= sp->logratio_totune && mo->logodds < sp->logratio_to_solve) {
-	 }
-	 */
+	if (mo->logodds >= sp->logratio_totune && mo->logodds < sp->logratio_record_threshold) {
+		logverb("Trying to tune up this solution (logodds = %g; %g)...\n", mo->logodds, exp(mo->logodds));
+		solver_tweak2(sp, mo, 1);
+		logverb("After tuning, logodds = %g (%g)\n", mo->logodds, exp(mo->logodds));
+	}
 
 	if (mo->logodds < sp->logratio_record_threshold)
 		return FALSE;
@@ -1405,6 +1402,7 @@ void solver_set_default_values(solver_t* solver) {
 	solver->funits_upper = HUGE_VAL;
 	solver->logratio_bail_threshold = log(1e-100);
 	solver->logratio_stoplooking = HUGE_VAL;
+	solver->logratio_totune = HUGE_VAL;
 	solver->parity = DEFAULT_PARITY;
 	solver->codetol = DEFAULT_CODE_TOL;
     solver->distractor_ratio = DEFAULT_DISTRACTOR_RATIO;
