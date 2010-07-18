@@ -218,11 +218,6 @@ void solver_log_params(const solver_t* sp) {
   logverb("Solver:\n");
   logverb("  Arcsec per pix range: %g, %g\n", sp->funits_lower, sp->funits_upper);
   logverb("  Image size: %g x %g\n", solver_field_width(sp), solver_field_height(sp));
-  logverb("  Log record threshold: %g\n", sp->logratio_record_threshold);
-  logverb("  Dist from quad bonus: %s\n", sp->distance_from_quad_bonus ? "yes" : "no");
-  logverb("  Verify_pix: %g\n", sp->verify_pix);
-  logverb("  Distractor ratio: %g\n", sp->distractor_ratio);
-  logverb("  Code tol: %g\n", sp->codetol);
   logverb("  Quad size range: %g, %g\n", sp->quadsize_min, sp->quadsize_max);
   logverb("  Objs: %i, %i\n", sp->startobj, sp->endobj);
   logverb("  Parity: %i, %s\n", sp->parity, sp->parity == PARITY_NORMAL ? "normal" : (sp->parity == PARITY_FLIP ? "flip" : "both"));
@@ -233,6 +228,12 @@ void solver_log_params(const solver_t* sp) {
     rad = distsq2deg(sp->r2);
     logverb(", (%g, %g), radius %g deg\n", ra, dec, rad);
   }
+  logverb("  Verify_pix: %g\n", sp->verify_pix);
+  logverb("  Code tol: %g\n", sp->codetol);
+  logverb("  Dist from quad bonus: %s\n", sp->distance_from_quad_bonus ? "yes" : "no");
+  logverb("  Distractor ratio: %g\n", sp->distractor_ratio);
+  logverb("  Log tune-up threshold: %g\n", sp->logratio_totune);
+  logverb("  Log record threshold: %g\n", sp->logratio_record_threshold);
   logverb("  Log bail threshold: %g\n", sp->logratio_bail_threshold);
   logverb("  Log stoplooking threshold: %g\n", sp->logratio_stoplooking);
   logverb("  Maxquads %i\n", sp->maxquads);
@@ -1302,6 +1303,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	mo->dimquads = quadfile_dimquads(sp->index->quads);
 
 	logaccept = MIN(sp->logratio_record_threshold, sp->logratio_totune);
+	//logverb("record: %g, tune %g; accept %g\n", sp->logratio_record_threshold, sp->logratio_totune, logaccept);
 
 	verify_hit(sp->index->starkd, sp->index->cutnside,
 			   mo, sip, sp->vf, match_distance_in_pixels2,
@@ -1316,6 +1318,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		logverb("Got a new best match: logodds %g.\n", mo->logodds);
 	}
 
+	// FIXME -- here, or in blind?
 	if (mo->logodds >= sp->logratio_totune && mo->logodds < sp->logratio_record_threshold) {
 		logverb("Trying to tune up this solution (logodds = %g; %g)...\n", mo->logodds, exp(mo->logodds));
 		solver_tweak2(sp, mo, 1);

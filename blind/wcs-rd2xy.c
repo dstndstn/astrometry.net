@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//#include "sip_qfits.h"
 #include "anwcs.h"
 #include "an-bool.h"
 #include "qfits.h"

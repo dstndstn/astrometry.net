@@ -819,6 +819,13 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 	if (mo->logodds >= bp->logratio_toprint)
         print_match(bp, mo);
 
+	// FIXME -- here, or in solver?
+	if (mo->logodds >= sp->logratio_totune && mo->logodds < bp->logratio_tokeep) {
+		logverb("Trying to tune up this solution (logodds = %g; %g)...\n", mo->logodds, exp(mo->logodds));
+		solver_tweak2(sp, mo, 1);
+		logverb("After tuning, logodds = %g (%g)\n", mo->logodds, exp(mo->logodds));
+	}
+
 	if (mo->logodds < bp->logratio_tokeep)
 		return FALSE;
 
