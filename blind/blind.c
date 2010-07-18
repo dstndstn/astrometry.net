@@ -1255,6 +1255,9 @@ void blind_free_matchobj(MatchObj* mo) {
 
 static void remove_duplicate_solutions(blind_t* bp) {
     int i, j;
+	// The solutions can fall out of order because tweak2() updates their logodds.
+	bl_sort(bp->solutions, compare_matchobjs);
+
     for (i=0; i<bl_size(bp->solutions); i++) {
         MatchObj* mo = bl_access(bp->solutions, i);
         j = i+1;
@@ -1650,17 +1653,6 @@ static int write_solutions(blind_t* bp) {
 
 	// The solutions can fall out of order because tweak2() updates their logodds.
 	bl_sort(bp->solutions, compare_matchobjs);
-
-	// DEBUG
-	{
-		int i;
-		logverb("Solutions:\n");
-		for (i=0; i<bl_size(bp->solutions); i++) {
-			MatchObj* mo = bl_access(bp->solutions, i);
-			printf("  logodds %g\n", mo->logodds);
-		}
-	}
-
 
 	if (bp->matchfname) {
 		if (write_match_file(bp))
