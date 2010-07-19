@@ -1222,14 +1222,13 @@ static void do_sip_tweak(tweak_t* t) {
 	 } else {
 	 */
 	{
-		logverb("Applying shift of sx,sy = %g,%g deg to CRVAL and CD.\n", sx, sy);
-
 		sU =
 			cdinv[0][0] * sx +
 			cdinv[0][1] * sy;
 		sV =
 			cdinv[1][0] * sx +
 			cdinv[1][1] * sy;
+		logverb("Applying shift of sx,sy = %g,%g deg (%g,%g pix) to CRVAL and CD.\n", sx, sy, sU, sV);
 		sip_calc_inv_distortion(t->sip, sU, sV, &su, &sv);
 
 		debug("sx = %g, sy = %g\n", sx, sy);

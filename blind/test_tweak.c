@@ -102,6 +102,42 @@ void test_tweak_1(CuTest* tc) {
 	printf("Output SIP:\n");
 	sip_print(outsip);
 
+	CuAssertDblEquals(tc, outsip->wcstan.crval[0], tan->crval[0], 1e-6);
+	CuAssertDblEquals(tc, outsip->wcstan.crval[1], tan->crval[1], 1e-6);
+	// should be exactly equal.
+	CuAssertDblEquals(tc, outsip->wcstan.crpix[0], tan->crpix[0], 1e-10);
+	CuAssertDblEquals(tc, outsip->wcstan.crpix[1], tan->crpix[1], 1e-10);
+
+	CuAssertDblEquals(tc, outsip->wcstan.cd[0][0], tan->cd[0][0], 1e-10);
+	CuAssertDblEquals(tc, outsip->wcstan.cd[0][1], tan->cd[0][1], 1e-10);
+	CuAssertDblEquals(tc, outsip->wcstan.cd[1][0], tan->cd[1][0], 1e-10);
+	CuAssertDblEquals(tc, outsip->wcstan.cd[1][1], tan->cd[1][1], 1e-10);
+
+	CuAssertDblEquals(tc, outsip->wcstan.imagew, tan->imagew, 1e-10);
+	CuAssertDblEquals(tc, outsip->wcstan.imageh, tan->imageh, 1e-10);
+
+	double *d1, *d2;
+	d1 = (double*)outsip->a;
+	d2 = (double*)&(sip.a);
+	for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+		CuAssertDblEquals(tc, d1[i], d2[i], 1e-10);
+	d1 = (double*)outsip->b;
+	d2 = (double*)&(sip.b);
+	for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+		CuAssertDblEquals(tc, d1[i], d2[i], 1e-10);
+	d1 = (double*)outsip->ap;
+	d2 = (double*)&(sip.ap);
+	for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+		CuAssertDblEquals(tc, d1[i], d2[i], 1e-10);
+	d1 = (double*)outsip->bp;
+	d2 = (double*)&(sip.bp);
+	for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+		CuAssertDblEquals(tc, d1[i], d2[i], 1e-10);
+	
+	CuAssertIntEquals(tc, outsip->a_order, sip.a_order);
+	CuAssertIntEquals(tc, outsip->b_order, sip.b_order);
+	CuAssertIntEquals(tc, outsip->ap_order, sip.ap_order);
+	CuAssertIntEquals(tc, outsip->bp_order, sip.bp_order);
 }
 
 void test_tchebytweak(CuTest* tc) {
