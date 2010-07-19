@@ -136,4 +136,7 @@ sip_t* tweak_just_do_it(const tan_t* wcs, const starxy_t* imagexy,
                         bool weighted, bool skip_shift);
 
 
+// TEST
+void tchebyshev_tweak(tweak_t* t, int W, int H);
+
 #endif

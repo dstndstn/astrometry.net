@@ -62,6 +62,9 @@ void starxy_set_y_array(starxy_t* s, const double* y);
 void starxy_set_flux_array(starxy_t* s, const double* f);
 void starxy_set_bg_array(starxy_t* s, const double* f);
 
+// interleaved x,y
+void starxy_set_xy_array(starxy_t* s, const double* xy);
+
 void starxy_sort_by_flux(starxy_t* f);
 
 void starxy_set(starxy_t* f, int i, double x, double y);

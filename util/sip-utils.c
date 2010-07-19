@@ -21,9 +21,205 @@
 #include <assert.h>
 #include <string.h>
 
+#include <gsl/gsl_matrix_double.h>
+#include <gsl/gsl_vector_double.h>
+
 #include "sip-utils.h"
+#include "gslutils.h"
 #include "starutil.h"
 #include "mathutil.h"
+#include "errors.h"
+#include "log.h"
+
+int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
+									double xlo, double xhi,
+									double ylo, double yhi) {
+	int inv_sip_order, ngrid;
+	int M, N;
+	int i, j, p, q, gu, gv;
+	double maxu, maxv, minu, minv;
+	double u, v, U, V;
+	gsl_matrix *mA;
+	gsl_vector *b1, *b2, *x1, *x2;
+	tan_t* tan;
+
+	assert(sip->a_order == sip->b_order);
+	assert(sip->ap_order == sip->bp_order);
+	tan = &(sip->wcstan);
+
+	/*
+     basic idea: lay down a grid in image, for each gridpoint, push
+     through the polynomial to get yourself into warped image
+     coordinate (but not yet lifted onto the sky).  Then, using the
+     set of warped gridpoints as inputs, fit back to their original
+     grid locations as targets.
+     */
+	inv_sip_order = sip->ap_order;
+
+	// Number of grid points to use:
+	if (NX == 0)
+		NX = 10 * (inv_sip_order + 1);
+	if (NY == 0)
+		NY = 10 * (inv_sip_order + 1);
+	if (xhi == 0)
+		xhi = tan->imagew;
+	if (yhi == 0)
+		yhi = tan->imageh;
+
+	//logverb("tweak inversion using %u gridpoints\n", ngrid);
+
+	// Number of coefficients to solve for:
+	// We only compute the upper triangle polynomial terms, and we
+	// exclude the 0,0 element.
+	N = (inv_sip_order + 1) * (inv_sip_order + 2) / 2 - 1;
+
+	// Number of samples to fit.
+	M = NX * NY;
+
+	mA = gsl_matrix_alloc(M, N);
+	b1 = gsl_vector_alloc(M);
+	b2 = gsl_vector_alloc(M);
+	assert(mA);
+	assert(b1);
+	assert(b2);
+
+    /*
+     *  Rearranging formula (4), (5), and (6) from the SIP paper gives the
+     *  following equations:
+     * 
+     *    +----------------------- Linear pixel coordinates in PIXELS
+     *    |                        before SIP correction
+     *    |                   +--- Intermediate world coordinates in DEGREES
+     *    |                   |
+     *    v                   v
+     *                   -1
+     *    U = [CD11 CD12]   * x
+     *    V   [CD21 CD22]     y
+     * 
+     *    +---------------- PIXEL distortion delta from telescope to
+     *    |                 linear coordinates
+     *    |    +----------- Linear PIXEL coordinates before SIP correction
+     *    |    |       +--- Polynomial U,V terms in powers of PIXELS
+     *    v    v       v
+     * 
+     *    -f(u1,v1) =  p11 p12 p13 p14 p15 ... * ap1
+     *    -f(u2,v2) =  p21 p22 p23 p24 p25 ...   ap2
+     *    ...
+     * 
+     *    -g(u1,v1) =  p11 p12 p13 p14 p15 ... * bp1
+     *    -g(u2,v2) =  p21 p22 p23 p24 p25 ...   bp2
+     *    ...
+     * 
+     *  which recovers the A and B's.
+     */
+
+	minu = xlo - tan->crpix[0];
+	maxu = xhi - tan->crpix[0];
+	minv = ylo - tan->crpix[1];
+	maxv = yhi - tan->crpix[1];
+	
+	// Sample grid locations.
+	i = 0;
+	for (gu=0; gu<NX; gu++) {
+		for (gv=0; gv<NY; gv++) {
+			double fuv, guv;
+			// Calculate grid position in original image pixels
+			u = (gu * (maxu - minu) / (NX-1)) + minu;
+			v = (gv * (maxv - minv) / (NY-1)) + minv;
+			// compute U=u+f(u,v) and V=v+g(u,v)
+			sip_calc_distortion(sip, u, v, &U, &V);
+			fuv = U - u;
+			guv = V - v;
+			// Polynomial terms...
+			j = 0;
+			for (p = 0; p <= inv_sip_order; p++)
+				for (q = 0; q <= inv_sip_order; q++)
+					if ((p + q > 0) &&
+						(p + q <= inv_sip_order)) {
+						assert(j < N);
+						gsl_matrix_set(mA, i, j, pow(U, (double)p) * pow(V, (double)q));
+						j++;
+					}
+			assert(j == N);
+			gsl_vector_set(b1, i, -fuv);
+			gsl_vector_set(b2, i, -guv);
+			i++;
+		}
+	}
+
+	// Solve the linear equation.
+    if (gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL)) {
+        ERROR("Failed to solve tweak inversion matrix equation!");
+        return -1;
+    }
+
+	// Extract the coefficients
+	j = 0;
+	for (p = 0; p <= inv_sip_order; p++)
+		for (q = 0; q <= inv_sip_order; q++)
+			if ((p + q > 0) &&
+				(p + q <= inv_sip_order)) {
+				assert(j < N);
+				sip->ap[p][q] = gsl_vector_get(x1, j);
+				sip->bp[p][q] = gsl_vector_get(x2, j);
+				j++;
+			}
+	assert(j == N);
+
+	// Check that we found values that actually invert the polynomial.
+	// The error should be particularly small at the grid points.
+	if (log_get_level() > LOG_VERB) {
+		// rms error accumulators:
+		double sumdu = 0;
+		double sumdv = 0;
+		int Z;
+		for (gu = 0; gu < NX; gu++) {
+			for (gv = 0; gv < NY; gv++) {
+				double newu, newv;
+				// Calculate grid position in original image pixels
+				u = (gu * (maxu - minu) / (NX-1)) + minu;
+				v = (gv * (maxv - minv) / (NY-1)) + minv;
+				sip_calc_distortion(sip, u, v, &U, &V);
+				sip_calc_inv_distortion(sip, U, V, &newu, &newv);
+				sumdu += square(u - newu);
+				sumdv += square(v - newv);
+			}
+		}
+		sumdu /= (ngrid*ngrid);
+		sumdv /= (ngrid*ngrid);
+		debug("RMS error of inverting a distortion (at the grid points):\n");
+		debug("  du: %g\n", sqrt(sumdu));
+		debug("  dv: %g\n", sqrt(sumdu));
+		debug("  dist: %g\n", sqrt(sumdu + sumdv));
+
+		sumdu = 0;
+		sumdv = 0;
+		Z = 1000;
+		for (i=0; i<Z; i++) {
+			double newu, newv;
+			u = uniform_sample(minu, maxu);
+			v = uniform_sample(minv, maxv);
+			sip_calc_distortion(sip, u, v, &U, &V);
+			sip_calc_inv_distortion(sip, U, V, &newu, &newv);
+			sumdu += square(u - newu);
+			sumdv += square(v - newv);
+		}
+		sumdu /= Z;
+		sumdv /= Z;
+		debug("RMS error of inverting a distortion (at random points):\n");
+		debug("  du: %g\n", sqrt(sumdu));
+		debug("  dv: %g\n", sqrt(sumdu));
+		debug("  dist: %g\n", sqrt(sumdu + sumdv));
+	}
+
+	gsl_matrix_free(mA);
+	gsl_vector_free(b1);
+	gsl_vector_free(b2);
+	gsl_vector_free(x1);
+	gsl_vector_free(x2);
+
+	return 0;
+}
 
 bool sip_pixel_is_inside_image(const sip_t* wcs, double x, double y) {
 	return (x >= 1 && x <= wcs->wcstan.imagew && y >= 1 && y <= wcs->wcstan.imageh);

@@ -24,6 +24,15 @@
 #include "starxy.h"
 #include "permutedsort.h"
 
+void starxy_set_xy_array(starxy_t* s, const double* xy) {
+	int i,N;
+    N = starxy_n(s);
+    for (i=0; i<N; i++) {
+		s->x[i] = xy[2*i+0];
+		s->y[i] = xy[2*i+1];
+    }
+}
+
 starxy_t* starxy_subset(starxy_t* full, int N) {
 	starxy_t* sub = starxy_new(N, full->flux ? TRUE:FALSE, full->background?TRUE:FALSE);
 	if (!sub)

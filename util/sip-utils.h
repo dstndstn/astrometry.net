@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2007 Dustin Lang.
+  Copyright 2007, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -20,6 +20,23 @@
 #define SIP_UTILS_H
 
 #include "sip.h"
+
+/**
+ sip->a_order, sip->b_order, sip->a, and sip->b must be set.
+
+ sip->ap_order and sip->bp_order must be set.
+
+ Computes sip->ap and sip->bp by inverting the forward polynomial evaluated
+ on a regular grid of points, NX x NY, between xlo,xhi and ylo,yhi.
+
+ If NX,NY are 0, a reasonable default will be chosen.
+
+ If xlo=xhi=0 or ylo=yhi=0, the bounds of the image (from
+ sip->wcstan.imagew/h) will be used.
+ */
+int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
+									double xlo, double xhi,
+									double ylo, double yhi);
 
 /*
  Finds stars that are inside the bounds of a given field (wcs).
