@@ -42,7 +42,7 @@ static double gaussian_sample(double mean, double stddev) {
 }
 
 static void set_grid(int GX, int GY, tan_t* tan, sip_t* sip,
-					 double* origxy, double* radec, double* xy,
+					 double* tanxy, double* radec, double* xy,
 					 double* gridx, double* gridy) {
 	int i, j;
 
@@ -60,14 +60,13 @@ static void set_grid(int GX, int GY, tan_t* tan, sip_t* sip,
 	for (i=0; i<GY; i++)
 		for (j=0; j<GX; j++) {
 			double ra, dec, x, y;
-			origxy[2*(i*GX+j) + 0] = gridx[j];
-			origxy[2*(i*GX+j) + 1] = gridy[i];
-			tan_pixelxy2radec(tan, gridx[j], gridy[i], &ra, &dec);
-			radec[2*(i*GX+j) + 0] = ra;
-			radec[2*(i*GX+j) + 1] = dec;
-			sip_radec2pixelxy(sip, ra, dec, &x, &y);
-			xy[2*(i*GX+j) + 0] = x;
-			xy[2*(i*GX+j) + 1] = y;
+			// Lay down the grid in (measured, distorted) CCD space
+			x = xy[2*(i*GX+j) + 0] = gridx[j];
+			y = xy[2*(i*GX+j) + 1] = gridy[i];
+			sip_pixelxy2radec(sip, x, y, &ra, &dec);
+			tan_radec2pixelxy(tan, ra, dec, &x, &y);
+			tanxy[2*(i*GX+j) + 0] = x;
+			tanxy[2*(i*GX+j) + 1] = y;
 		}
 
 }
@@ -179,19 +178,19 @@ void test_tweak_1(CuTest* tc) {
 	CuAssertDblEquals(tc, tan->crval[1], outsip->wcstan.crval[1], 1e-6);
 
 	CuAssertDblEquals(tc, tan->cd[0][0], outsip->wcstan.cd[0][0], 1e-10);
-	CuAssertDblEquals(tc, tan->cd[0][1], outsip->wcstan.cd[0][1], 1e-10);
-	CuAssertDblEquals(tc, tan->cd[1][0], outsip->wcstan.cd[1][0], 1e-10);
+	CuAssertDblEquals(tc, tan->cd[0][1], outsip->wcstan.cd[0][1], 1e-14);
+	CuAssertDblEquals(tc, tan->cd[1][0], outsip->wcstan.cd[1][0], 1e-14);
 	CuAssertDblEquals(tc, tan->cd[1][1], outsip->wcstan.cd[1][1], 1e-10);
 
 	double *d1, *d2;
 	d1 = (double*)outsip->a;
 	d2 = (double*)&(sip->a);
 	for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
-		CuAssertDblEquals(tc, d2[i], d1[i], 1e-10);
+		CuAssertDblEquals(tc, d2[i], d1[i], 1e-13);
 	d1 = (double*)outsip->b;
 	d2 = (double*)&(sip->b);
 	for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
-		CuAssertDblEquals(tc, d2[i], d1[i], 1e-10);
+		CuAssertDblEquals(tc, d2[i], d1[i], 1e-18);
 	d1 = (double*)outsip->ap;
 	d2 = (double*)&(sip->ap);
 	for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)

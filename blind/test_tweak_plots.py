@@ -6,14 +6,19 @@ from numpy import *
 # test_tweak 2>tt.py
 import tt
 
+def savefig(fn):
+	from pylab import savefig as sf
+	print 'Saving', fn
+	sf(fn)
+
 if __name__ == '__main__':
 	#print 'me:', __file__
 	#tt = os.path.join(os.path.dirname(__file__), 'test_tweak')
 
 	for run in [2,3]:
 
+		tanxy = getattr(tt, 'origxy_%i' % run)
 		xy = getattr(tt, 'xy_%i' % run)
-		origxy = getattr(tt, 'origxy_%i' % run)
 		noisyxy = getattr(tt, 'noisyxy_%i' % run)
 		gridx = getattr(tt, 'gridx_%i' % run)
 		gridy = getattr(tt, 'gridy_%i' % run)
@@ -23,8 +28,8 @@ if __name__ == '__main__':
 		sip_b = getattr(tt, 'sip_b_%i' % run)
 		x0,y0 = tt.x0, tt.y0
 		
-		truedxy = xy - origxy
-		obsdxy  = noisyxy - origxy
+		truedxy = xy - tanxy
+		obsdxy  = noisyxy - tanxy
 
 		xlo,xhi = -500, 2500
 		ylo,yhi = -500, 2500
@@ -47,6 +52,7 @@ if __name__ == '__main__':
 		for xo,yo,c in truesip_b:
 			truesipy_y += c * (X2 - x0)**xo * (Y2 - y0)**yo
 			truesipy_x += c * (X1 - x0)**xo * (Y1 - y0)**yo
+
 		x = xy[:,0]
 		y = xy[:,1]
 		truedx = truedxy[:,0]
@@ -106,3 +112,40 @@ if __name__ == '__main__':
 
 			savefig('tt%i-%i.png' % (run, order))
 	
+			clf()
+			subplot(111)
+
+			plot(tanxy[:,0], tanxy[:,1], 'b.')
+			plot(noisyxy[:,0], noisyxy[:,1], 'r.')
+			plot(xy[:,0], xy[:,1], 'bo', mec='b', mfc='None')
+
+			if False:
+				X3,Y3 = meshgrid(linspace(xlo, xhi, 11),
+								 linspace(ylo, yhi, 11))
+				truesipx = X3
+				truesipy = Y3
+				for xo,yo,c in truesip_a:
+					truesipx += c * (X3 - x0)**xo * (Y3 - y0)**yo
+				for xo,yo,c in truesip_b:
+					truesipy += c * (X3 - x0)**xo * (Y3 - y0)**yo
+				sipx = X3
+				sipy = Y3
+				for xo,yo,c in sip_a[order]:
+					sipx += c * (X3 - x0)**xo * (Y3 - y0)**yo
+				for xo,yo,c in sip_b[order]:
+					sipy += c * (X3 - x0)**xo * (Y3 - y0)**yo
+				plot(truesipx, truesipy, 'bs', mec='b', mfc='None')
+				plot(sipx, sipy, 'ms', mec='m', mfc='None')
+
+			plot(X1, Y1, 'g-', alpha=0.25)
+			plot(X2, Y2, 'g-', alpha=0.25)
+
+			plot(truesipx_x + X1, truesipy_x + Y1, 'b-', alpha=0.25)
+			plot(truesipx_y + X2, truesipy_y + Y2, 'b-', alpha=0.25)
+
+			plot(sipx_x + X1, sipy_x + Y1, 'r-', alpha=0.25)
+			plot(sipx_y + X2, sipy_y + Y2, 'r-', alpha=0.25)
+
+			xlim(xlo,xhi)
+			ylim(ylo,yhi)
+			savefig('ttxy%i-%i.png' % (run,order))
