@@ -62,12 +62,11 @@ const char* startree_get_tagalong_column_name(startree_t* s, int i) {
 	return fitstable_get_fits_column_name(startree_get_tagalong(s), i);
 }
 
-double* startree_get_data_column(startree_t* s, const char* colname, int* inds, int N) {
+static void* get_data_column(startree_t* s, const char* colname, const int* inds, int N, tfits_type tt) {
 	fitstable_t* table;
-	tfits_type dubl = fitscolumn_double_type();
-	double* arr;
+	void* arr;
 	if (N == 0) {
-		logmsg("Warning: zero stars in your request for data column \"%s\"\n", colname);
+		logmsg("Warning: zero stars (elements) in your request for data column \"%s\"\n", colname);
 		return NULL;
 	}
 	table = startree_get_tagalong(s);
@@ -75,15 +74,24 @@ double* startree_get_data_column(startree_t* s, const char* colname, int* inds, 
 		ERROR("No tag-along data found");
 		return NULL;
 	}
-	arr = fitstable_read_column_inds(table, colname, dubl, inds, N);
+	arr = fitstable_read_column_inds(table, colname, tt, inds, N);
 	if (!arr) {
-		ERROR("Failed to read tag-along data");
+		ERROR("Failed to read tag-along data column \"%s\"", colname);
 		return NULL;
 	}
 	return arr;
 }
 
-double* startree_get_data_column_array(startree_t* s, const char* colname, int* indices, int N, int* arraysize) {
+
+double* startree_get_data_column(startree_t* s, const char* colname, const int* inds, int N) {
+	return get_data_column(s, colname, inds, N, fitscolumn_double_type());
+}
+
+int64_t* startree_get_data_column_int64(startree_t* s, const char* colname, const int* inds, int N) {
+	return get_data_column(s, colname, inds, N, fitscolumn_i64_type());
+}
+
+double* startree_get_data_column_array(startree_t* s, const char* colname, const int* indices, int N, int* arraysize) {
 	fitstable_t* table;
 	tfits_type dubl = fitscolumn_double_type();
 	double* arr;

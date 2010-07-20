@@ -97,19 +97,32 @@ void startree_search(const startree_t* s, const double* xyzcenter, double radius
 
  To get all entries, set "inds" = NULL and N = startree_N().
 
- The data should be freed using "startree_free_data_column"
+ The return value is a newly-allocated array of size N.  It should be
+ freed using "startree_free_data_column"
  */
-double* startree_get_data_column(startree_t* s, const char* colname, int* indices, int N);
+Malloc
+double* startree_get_data_column(startree_t* s, const char* colname, const int* indices, int N);
+
+/**
+ Same as startree_get_data_column but for int64_t.  Don't you love C templating?
+ */
+Malloc
+int64_t* startree_get_data_column_int64(startree_t* s, const char* colname, const int* indices, int N);
 
 /**
  Reads a column of data from the "tag-along" table.
 
  The column may be an array (that is, each row contains multiple
  entries); the array size is placed in "arraysize".
+
+ The array entries 
  */
-double* startree_get_data_column_array(startree_t* s, const char* colname, int* indices, int N, int* arraysize);
+Malloc
+double* startree_get_data_column_array(startree_t* s, const char* colname, const int* indices, int N, int* arraysize);
 
 void startree_free_data_column(startree_t* s, double* d);
+
+
 
 
 bool startree_has_tagalong(startree_t* s);

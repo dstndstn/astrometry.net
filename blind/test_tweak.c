@@ -260,7 +260,6 @@ void test_tweak_2(CuTest* tc) {
 	for (i=0; i<(GX*GY); i++)
 		fprintf(stderr, "[%g,%g],", origxy[2*i+0], origxy[2*i+1]);
 	fprintf(stderr, "])\n");
-
 	fprintf(stderr, "xy_2 = array([");
 	for (i=0; i<(GX*GY); i++)
 		fprintf(stderr, "[%g,%g],", xy[2*i+0], xy[2*i+1]);
