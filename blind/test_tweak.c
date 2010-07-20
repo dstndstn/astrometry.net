@@ -46,10 +46,16 @@ static void set_grid(int GX, int GY, tan_t* tan, sip_t* sip,
 					 double* gridx, double* gridy) {
 	int i, j;
 
-	for (i=0; i<GX; i++)
-		gridx[i] = 0.5 + i * tan->imagew / (GX-1);
-	for (i=0; i<GY; i++)
-		gridy[i] = 0.5 + i * tan->imageh / (GY-1);
+	if (GX == 1)
+		gridx[i] = 0.5 + 0.5 * tan->imagew;
+	else
+		for (i=0; i<GX; i++)
+			gridx[i] = 0.5 + i * tan->imagew / (GX-1);
+	if (GY == 1)
+		gridy[i] = 0.5 + 0.5 * tan->imageh;
+	else
+		for (i=0; i<GY; i++)
+			gridy[i] = 0.5 + i * tan->imageh / (GY-1);
 
 	for (i=0; i<GY; i++)
 		for (j=0; j<GX; j++) {
@@ -142,6 +148,8 @@ void test_tweak_1(CuTest* tc) {
 	int i;
 	sip_t* outsip;
 
+	printf("\ntest_tweak_1\n\n");
+
 	log_init(LOG_VERB);
 
 	memset(sip, 0, sizeof(sip_t));
@@ -199,9 +207,7 @@ void test_tweak_1(CuTest* tc) {
 }
 
 
-void test_tweak_2(CuTest* tc) {
-	int GX = 11;
-	int GY = 11;
+static void tst_tweak_n(CuTest* tc, int run, int GX, int GY) {
 	double origxy[GX*GY*2];
 	double xy[GX*GY*2];
 	double noisyxy[GX*GY*2];
@@ -213,6 +219,8 @@ void test_tweak_2(CuTest* tc) {
 	tan_t* tan = &(sip->wcstan);
 	int i,j;
 	sip_t* outsip;
+
+	printf("\ntest_tweak_%i\n\n", run);
 
 	log_init(LOG_VERB);
 
@@ -244,54 +252,222 @@ void test_tweak_2(CuTest* tc) {
 		noisyxy[i] = xy[i] + gaussian_sample(0.0, 1.0);
 	}
 
-	outsip = run_test(tc, sip, GX*GY, noisyxy, radec);
-
 	fprintf(stderr, "from numpy import array\n");
 	fprintf(stderr, "x0,y0 = %g,%g\n", tan->crpix[0], tan->crpix[1]);
-	fprintf(stderr, "gridx=array([");
+	fprintf(stderr, "gridx_%i=array([", run);
 	for (i=0; i<GX; i++)
 		fprintf(stderr, "%g, ", gridx[i]);
 	fprintf(stderr, "])\n");
-	fprintf(stderr, "gridy=array([");
+	fprintf(stderr, "gridy_%i=array([", run);
 	for (i=0; i<GY; i++)
 		fprintf(stderr, "%g, ", gridy[i]);
 	fprintf(stderr, "])\n");
-	fprintf(stderr, "origxy_2 = array([");
+	fprintf(stderr, "origxy_%i = array([", run);
 	for (i=0; i<(GX*GY); i++)
 		fprintf(stderr, "[%g,%g],", origxy[2*i+0], origxy[2*i+1]);
 	fprintf(stderr, "])\n");
-	fprintf(stderr, "xy_2 = array([");
+	fprintf(stderr, "xy_%i = array([", run);
 	for (i=0; i<(GX*GY); i++)
 		fprintf(stderr, "[%g,%g],", xy[2*i+0], xy[2*i+1]);
 	fprintf(stderr, "])\n");
 
-	fprintf(stderr, "noisyxy_2 = array([");
+	fprintf(stderr, "noisyxy_%i = array([", run);
 	for (i=0; i<(GX*GY); i++)
 		fprintf(stderr, "[%g,%g],", noisyxy[2*i+0], noisyxy[2*i+1]);
 	fprintf(stderr, "])\n");
 
-	fprintf(stderr, "truesip_a_2 = array([");
+	fprintf(stderr, "truesip_a_%i = array([", run);
 	for (i=0; i<=sip->a_order; i++)
 		for (j=0; j<=sip->a_order; j++)
 			if (sip->a[i][j] != 0)
 				fprintf(stderr, "[%i,%i,%g],", i, j, sip->a[i][j]);
 	fprintf(stderr, "])\n");
 
-	fprintf(stderr, "truesip_b_2 = array([");
+	fprintf(stderr, "truesip_b_%i = array([", run);
 	for (i=0; i<=sip->a_order; i++)
 		for (j=0; j<=sip->a_order; j++)
 			if (sip->b[i][j] != 0)
 				fprintf(stderr, "[%i,%i,%g],", i, j, sip->b[i][j]);
 	fprintf(stderr, "])\n");
 
-	fprintf(stderr, "sip_a_2 = array([");
+	fprintf(stderr, "sip_a_%i = {}\n", run);
+	fprintf(stderr, "sip_b_%i = {}\n", run);
+
+	int o;
+	for (o=2; o<6; o++) {
+		sip->a_order = o;
+		outsip = run_test(tc, sip, GX*GY, noisyxy, radec);
+
+		fprintf(stderr, "sip_a_%i[%i] = array([", run, o);
+		for (i=0; i<=outsip->a_order; i++)
+			for (j=0; j<=outsip->a_order; j++)
+				if (outsip->a[i][j] != 0)
+					fprintf(stderr, "[%i,%i,%g],", i, j, outsip->a[i][j]);
+		fprintf(stderr, "])\n");
+
+		fprintf(stderr, "sip_b_%i[%i] = array([", run, o);
+		for (i=0; i<=outsip->a_order; i++)
+			for (j=0; j<=outsip->a_order; j++)
+				if (outsip->b[i][j] != 0)
+					fprintf(stderr, "[%i,%i,%g],", i, j, outsip->b[i][j]);
+		fprintf(stderr, "])\n");
+	}
+
+	sip->a_order = 2;
+	outsip = run_test(tc, sip, GX*GY, noisyxy, radec);
+
+	CuAssertDblEquals(tc, tan->crval[0], outsip->wcstan.crval[0], 1e-3);
+	CuAssertDblEquals(tc, tan->crval[1], outsip->wcstan.crval[1], 1e-3);
+
+	CuAssertDblEquals(tc, tan->cd[0][0], outsip->wcstan.cd[0][0], 1e-6);
+	CuAssertDblEquals(tc, tan->cd[0][1], outsip->wcstan.cd[0][1], 1e-6);
+	CuAssertDblEquals(tc, tan->cd[1][0], outsip->wcstan.cd[1][0], 1e-6);
+	CuAssertDblEquals(tc, tan->cd[1][1], outsip->wcstan.cd[1][1], 1e-6);
+
+	if (run == 2) {
+		double *d1, *d2;
+		d1 = (double*)outsip->a;
+		d2 = (double*)&(sip->a);
+		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+			// rather large error, no?
+			CuAssertDblEquals(tc, d2[i], d1[i], 6e-7);
+		d1 = (double*)outsip->b;
+		d2 = (double*)&(sip->b);
+		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+			CuAssertDblEquals(tc, d2[i], d1[i], 2e-7);
+		d1 = (double*)outsip->ap;
+		d2 = (double*)&(sip->ap);
+		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+			CuAssertDblEquals(tc, d2[i], d1[i], 1e-6);
+		d1 = (double*)outsip->bp;
+		d2 = (double*)&(sip->bp);
+		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+			CuAssertDblEquals(tc, d2[i], d1[i], 1e-6);
+		CuAssertIntEquals(tc, sip->a_order, outsip->a_order);
+		CuAssertIntEquals(tc, sip->b_order, outsip->b_order);
+		CuAssertIntEquals(tc, sip->ap_order, outsip->ap_order);
+		CuAssertIntEquals(tc, sip->bp_order, outsip->bp_order);
+	} else if (run == 3) {
+		double *d1, *d2;
+		d1 = (double*)outsip->a;
+		d2 = (double*)&(sip->a);
+		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+			// rather large error, no?
+			CuAssertDblEquals(tc, d2[i], d1[i], 6e-7);
+		d1 = (double*)outsip->b;
+		d2 = (double*)&(sip->b);
+		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+			CuAssertDblEquals(tc, d2[i], d1[i], 1e-6);
+		d1 = (double*)outsip->ap;
+		d2 = (double*)&(sip->ap);
+		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+			CuAssertDblEquals(tc, d2[i], d1[i], 1e-6);
+		d1 = (double*)outsip->bp;
+		d2 = (double*)&(sip->bp);
+		for (i=0; i<(SIP_MAXORDER * SIP_MAXORDER); i++)
+			CuAssertDblEquals(tc, d2[i], d1[i], 1e-6);
+		CuAssertIntEquals(tc, sip->a_order, outsip->a_order);
+		CuAssertIntEquals(tc, sip->b_order, outsip->b_order);
+		CuAssertIntEquals(tc, sip->ap_order, outsip->ap_order);
+		CuAssertIntEquals(tc, sip->bp_order, outsip->bp_order);
+	}
+}
+
+
+/*
+void tst_tweak_3(CuTest* tc) {
+	int GX = 11;
+	int GY = 1;
+	double origxy[GX*GY*2];
+	double xy[GX*GY*2];
+	double noisyxy[GX*GY*2];
+	double radec[GX*GY*2];
+	double gridx[GX];
+	double gridy[GY];
+	sip_t thesip;
+	sip_t* sip = &thesip;
+	tan_t* tan = &(sip->wcstan);
+	int i,j;
+	sip_t* outsip;
+
+	printf("\ntest_tweak_3\n\n");
+
+	log_init(LOG_VERB);
+
+	memset(sip, 0, sizeof(sip_t));
+
+	tan->imagew = 2000;
+	tan->imageh = 2000;
+	tan->crval[0] = 150;
+	tan->crval[1] = -30;
+	tan->crpix[0] = 1000.5;
+	tan->crpix[1] = 1000.5;
+	tan->cd[0][0] = 1./1000.;
+	tan->cd[0][1] = 0;
+	tan->cd[1][1] = 1./1000.;
+	tan->cd[1][0] = 0;
+
+	sip->a_order = sip->b_order = 2;
+	sip->a[2][0] = 10.*1e-6;
+	sip->ap_order = sip->bp_order = 4;
+
+	sip_compute_inverse_polynomials(sip, 0, 0, 0, 0, 0, 0);
+
+	set_grid(GX, GY, tan, sip, origxy, radec, xy, gridx, gridy);
+
+	// add noise to observed y positions only.
+	srand(42);
+	for (i=0; i<(GX*GY); i++) {
+		noisyxy[2*i+0] = xy[2*i+0];
+		noisyxy[2*i+1] = xy[2*i+1] + gaussian_sample(0.0, 1.0);
+	}
+
+	outsip = run_test(tc, sip, GX*GY, noisyxy, radec);
+
+	fprintf(stderr, "gridx_3=array([");
+	for (i=0; i<GX; i++)
+		fprintf(stderr, "%g, ", gridx[i]);
+	fprintf(stderr, "])\n");
+	fprintf(stderr, "gridy_3=array([");
+	for (i=0; i<GY; i++)
+		fprintf(stderr, "%g, ", gridy[i]);
+	fprintf(stderr, "])\n");
+	fprintf(stderr, "origxy_3 = array([");
+	for (i=0; i<(GX*GY); i++)
+		fprintf(stderr, "[%g,%g],", origxy[2*i+0], origxy[2*i+1]);
+	fprintf(stderr, "])\n");
+	fprintf(stderr, "xy_3 = array([");
+	for (i=0; i<(GX*GY); i++)
+		fprintf(stderr, "[%g,%g],", xy[2*i+0], xy[2*i+1]);
+	fprintf(stderr, "])\n");
+
+	fprintf(stderr, "noisyxy_3 = array([");
+	for (i=0; i<(GX*GY); i++)
+		fprintf(stderr, "[%g,%g],", noisyxy[2*i+0], noisyxy[2*i+1]);
+	fprintf(stderr, "])\n");
+
+	fprintf(stderr, "truesip_a_3 = array([");
+	for (i=0; i<=sip->a_order; i++)
+		for (j=0; j<=sip->a_order; j++)
+			if (sip->a[i][j] != 0)
+				fprintf(stderr, "[%i,%i,%g],", i, j, sip->a[i][j]);
+	fprintf(stderr, "])\n");
+
+	fprintf(stderr, "truesip_b_3 = array([");
+	for (i=0; i<=sip->a_order; i++)
+		for (j=0; j<=sip->a_order; j++)
+			if (sip->b[i][j] != 0)
+				fprintf(stderr, "[%i,%i,%g],", i, j, sip->b[i][j]);
+	fprintf(stderr, "])\n");
+
+	fprintf(stderr, "sip_a_3 = array([");
 	for (i=0; i<=outsip->a_order; i++)
 		for (j=0; j<=outsip->a_order; j++)
 			if (outsip->a[i][j] != 0)
 				fprintf(stderr, "[%i,%i,%g],", i, j, outsip->a[i][j]);
 	fprintf(stderr, "])\n");
 
-	fprintf(stderr, "sip_b_2 = array([");
+	fprintf(stderr, "sip_b_3 = array([");
 	for (i=0; i<=outsip->a_order; i++)
 		for (j=0; j<=outsip->a_order; j++)
 			if (outsip->b[i][j] != 0)
@@ -330,6 +506,14 @@ void test_tweak_2(CuTest* tc) {
 	CuAssertIntEquals(tc, sip->bp_order, outsip->bp_order);
 
 }
+ */
+
+
+void test_tweak_2(CuTest* tc) {
+	tst_tweak_n(tc, 2, 11, 11);
+	tst_tweak_n(tc, 3, 5, 5);
+}
+
 
 
 

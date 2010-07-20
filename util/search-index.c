@@ -113,24 +113,14 @@ int main(int argc, char **argv) {
 		int j;
 		fitstable_t* tagtable = NULL;
 
-		/*
-		 tic();
-		 logmsg("Reading meta-data for index %s\n", indexfn);
-		 if (index_get_meta(indexfn, &index)) {
-		 ERROR("Failed to read metadata for index %s", indexfn);
-		 continue;
-		 }
-		 toc();
-		 */
-
+		logmsg("Reading index \"%s\"...\n", indexfn);
 		if (!index_load(indexfn, 0, &index)) {
 			ERROR("Failed to read index \"%s\"", indexfn);
 			continue;
 		}
 
 		logmsg("Index %s: id %i, healpix %i (nside %i), %i stars, %i quads, dimquads=%i, scales %g to %g arcmin.\n",
-			   index.indexname,
-			   index.indexid, index.healpix, index.hpnside,
+			   index.indexname, index.indexid, index.healpix, index.hpnside,
 			   index.nstars, index.nquads, index.dimquads,
 			   arcsec2arcmin(index.index_scale_lower),
 			   arcsec2arcmin(index.index_scale_upper));
@@ -148,38 +138,37 @@ int main(int argc, char **argv) {
 								  NULL, &radecs, &inds, &N);
 		logmsg("Found %i stars\n", N);
 
-		if ((i == 0) && table) {
+		if (table) {
 			int tagsize;
 			int rowsize;
 			char* rowbuf = NULL;
-			//int NR = 1000;
+
+			if (i > 0) {
+				fitstable_next_extension(table);
+				fitstable_clear_table(table);
+			}
 
 			tagtable = startree_get_tagalong(index.starkd);
 			if (tagtable) {
 				fitstable_add_fits_columns_as_struct(tagtable);
-				logmsg("Input tag-along table:\n");
-				fitstable_print_columns(tagtable);
+				logverb("Input tag-along table:\n");
+				if (log_get_level() >= LOG_VERB)
+					fitstable_print_columns(tagtable);
 				fitstable_copy_columns(tagtable, table);
-
-				//fitstable_read_extension(tagtable, tagtable->extension);
-				//logmsg("Input tag-along table:\n");
-				//fitstable_print_columns(tagtable);
 			}
-			/*
-			 fitstable_add_write_column(table, fitscolumn_double_type(), "RA", "degrees");
-			 fitstable_add_write_column(table, fitscolumn_double_type(), "DEC", "degrees");
-			 */
 			tagsize = fitstable_get_struct_size(table);
-			printf("tagsize=%i\n", tagsize);
+			debug("tagsize=%i\n", tagsize);
+			// Add RA,Dec at the end of the row...
 			fitstable_add_write_column_struct(table, fitscolumn_double_type(), 1, tagsize, fitscolumn_double_type(), "RA", "degrees");
 			fitstable_add_write_column_struct(table, fitscolumn_double_type(), 1, tagsize + sizeof(double), fitscolumn_double_type(), "DEC", "degrees");
 			rowsize = fitstable_get_struct_size(table);
 			assert(rowsize == tagsize + 2*sizeof(double));
-			printf("rowsize=%i\n", rowsize);
+			debug("rowsize=%i\n", rowsize);
 			rowbuf = malloc(rowsize);
 
-			logmsg("Output table (3):\n");
-			fitstable_print_columns(table);
+			logverb("Output table:\n");
+			if (log_get_level() >= LOG_VERB)
+				fitstable_print_columns(table);
 
 			if (fitstable_write_header(table)) {
 				ERROR("Failed to write header of output table");
@@ -187,9 +176,11 @@ int main(int argc, char **argv) {
 			}
 
 			for (j=0; j<N; j++) {
-				if (fitstable_read_struct(tagtable, inds[j], rowbuf)) {
-					ERROR("Failed to read row %i of tag-along table", inds[j]);
-					exit(-1);
+				if (tagtable) {
+					if (fitstable_read_struct(tagtable, inds[j], rowbuf)) {
+						ERROR("Failed to read row %i of tag-along table", inds[j]);
+						exit(-1);
+					}
 				}
 				// Add RA,Dec to end of struct...
 				memcpy(rowbuf + tagsize, radecs+2*j+0, sizeof(double));
@@ -199,16 +190,13 @@ int main(int argc, char **argv) {
 					exit(-1);
 				}
 			}
-		}
+			free(rowbuf);
 
-		for (j=0; j<sl_size(cols); j++) {
-			char* col;
-			double* dat;
-			col = sl_get(cols, j);
-			logmsg("Grabbing tag-along column \"%s\"...\n", col);
-			dat = startree_get_data_column(index.starkd, col, inds, N);
-			// ...
-			free(dat);
+			if (fitstable_fix_header(table)) {
+				ERROR("Failed to fix header of output table");
+				exit(-1);
+			}
+
 		}
 
 		sl_free2(cols);
@@ -219,9 +207,8 @@ int main(int argc, char **argv) {
 	}
 
 	if (table) {
-		if (fitstable_fix_header(table) ||
-			fitstable_close(table)) {
-			ERROR("Failed to fix header or close output table");
+		if (fitstable_close(table)) {
+			ERROR("Failed to close output table");
 			exit(-1);
 		}
 	}

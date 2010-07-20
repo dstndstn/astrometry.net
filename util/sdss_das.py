@@ -51,7 +51,7 @@ if __name__ == '__main__':
 	import sys
 
 	parser = OptionParser(usage=('%prog <options> <file types>\n\n' +
-								 'file types include: fpC, fpM, fpObjc, psField'))
+								 'file types include: fpC, fpM, fpObjc, psField, tsObj'))
 
 	parser.add_option('-r', '--run', dest='run', type='int')
 	parser.add_option('-f', '--field', dest='field', type='int')
