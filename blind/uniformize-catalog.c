@@ -356,6 +356,11 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	}
 	free(npersweep);
 
+	if (fitstable_write_primary_header(outtable)) {
+		ERROR("Failed to write primary header");
+		return -1;
+	}
+
 	// Write output.
 	fitstable_add_fits_columns_as_struct(intable);
 	fitstable_copy_columns(intable, outtable);

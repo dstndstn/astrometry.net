@@ -453,10 +453,6 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 		ERROR("Failed to open output table %s", unifn);
 		return -1;
 	}
-	if (fitstable_write_primary_header(uniform)) {
-		ERROR("Failed to write primary header");
-		return -1;
-	}
 
 	if (uniformize_catalog(catalog, uniform, p->racol, p->deccol,
 						   p->sortcol, p->sortasc,

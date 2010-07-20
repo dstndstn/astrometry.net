@@ -146,11 +146,12 @@ int main(int argc, char *argv[]) {
 		ERROR("Failed to open output table %s", outfn);
 		exit(-1);
 	}
-	if (fitstable_write_primary_header(outtable)) {
-		ERROR("Failed to write primary header");
-		exit(-1);
-	}
-
+	/*
+	 if (fitstable_write_primary_header(outtable)) {
+	 ERROR("Failed to write primary header");
+	 exit(-1);
+	 }
+	 */
 	if (uniformize_catalog(intable, outtable, racol, deccol,
 						   sortcol, sortasc,
 						   bighp, bignside, margin,

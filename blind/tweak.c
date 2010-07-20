@@ -1186,6 +1186,7 @@ static void do_sip_tweak(tweak_t* t) {
 	invert_sip_polynomial(t);
 
 	// DEBUG
+	/*
 	printf("\nBEFORE WCS_SHIFT:\n");
 	{
 		radecdeg2xyzarr(t->sip->wcstan.crval[0], t->sip->wcstan.crval[1], xyzcrval);
@@ -1213,7 +1214,7 @@ static void do_sip_tweak(tweak_t* t) {
 				  bx - axx, by - axy, weight*(bx-axx), weight*(by-axy));
 		}
 	}
-
+	 */
 
 	/*
 	 if (t->push_crval) {
@@ -1251,6 +1252,7 @@ static void do_sip_tweak(tweak_t* t) {
             correspondences_rms_arcsec(t, 1));
 
 	// DEBUG
+	/*
 	{
 		// compute the residuals via WCS functions on the new SIP
 
@@ -1289,11 +1291,8 @@ static void do_sip_tweak(tweak_t* t) {
 				   i, gsl_vector_get(r1, i), gsl_vector_get(r2, i),
 				   bx - axx, by - axy, weight*(bx-axx), weight*(by-axy));
 		}
-
-
-
-
 	}
+	 */
 
 	if (r1)
 		gsl_vector_free(r1);
