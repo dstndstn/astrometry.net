@@ -641,12 +641,17 @@ static void after_solved(augment_xylist_t* axy,
 			imageheader = qfits_header_read(axy->fitsimgfn);
 		}
 		if (axy->xylsfn) {
+			char val[32];
 			//hdrfile = axy->xylsfn;
 			imageheader = qfits_header_read(axy->xylsfn);
 			// Set NAXIS=2, NAXIS1=IMAGEW, NAXIS2=IMAGEH
 			fits_header_mod_int(imageheader, "NAXIS", 2, NULL);
-			fits_header_add_int(imageheader, "NAXIS1", axy->W, NULL);
-			fits_header_add_int(imageheader, "NAXIS2", axy->H, NULL);
+			sprintf(val, "%i", axy->W);
+			qfits_header_add_after(imageheader, "NAXIS",  "NAXIS1", val, "image width", NULL);
+			sprintf(val, "%i", axy->H);
+			qfits_header_add_after(imageheader, "NAXIS1", "NAXIS2", val, "image height", NULL);
+			//fits_header_add_int(imageheader, "NAXIS1", axy->W, NULL);
+			//fits_header_add_int(imageheader, "NAXIS2", axy->H, NULL);
 			logverb("Using NAXIS 1,2 = %i,%i\n", axy->W, axy->H);
 		}
 
