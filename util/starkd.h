@@ -27,8 +27,13 @@
 #include "qfits.h"
 #include "kdtree_fits_io.h"
 #include "fitstable.h"
-
+#include "keywords.h"
 #include "anqfits.h"
+
+#ifdef SWIG
+// this keyword (from keywords.h) confuses swig
+#define Malloc
+#endif
 
 #define AN_FILETYPE_STARTREE "SKDT"
 
