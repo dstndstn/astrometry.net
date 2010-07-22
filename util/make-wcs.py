@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 from astrometry.util.sip import *
 
 from optparse import OptionParser
