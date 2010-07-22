@@ -102,7 +102,7 @@ ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
 	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
 	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
-	anwcs.o sparsematrix.o lsqr.o
+	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o
 
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h \
@@ -114,7 +114,7 @@ ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h 
 	mathutil.h ngc2000.h ngcic-accurate.h permutedsort.h qidxfile.h \
 	quadfile.h rdlist.h scamp-catalog.h sip-utils.h sip.h sip_qfits.h \
 	starkd.h starutil.h starutil.inc starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
-	xylist.h
+	xylist.h coadd.h convolve-image.h
 #cfitsutils.h
 #boilerplate.h
 #cutest.h
@@ -213,7 +213,7 @@ _index_util.so _index_c.so: index_wrap.c index_pyutils.c setup-index.py \
 	cp build/lib/_index_c.so _index_c.so
 	cp build/lib/_index_util.so _index_util.so
 
-coadd: coadd-main.o coadd.o $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
+coadd: coadd-main.o $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB)
 ALL_OBJ += coadd.o coadd-main.o
 

@@ -103,6 +103,9 @@ int main(int argc, char** args) {
 
 	if (fitstable_read_extension(table, 1)) {
 		ERROR("Failed to open table from extension 1 of \"%s\"", infn);
+		fitstable_error_report_missing(table);
+		logmsg("Table has columns:\n");
+		fitstable_print_columns(table);
 		exit(-1);
 	}
 

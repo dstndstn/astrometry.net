@@ -37,7 +37,7 @@
 #include "sip_qfits.h"
 #include "healpix.h"
 
-const char* OPTIONS = "hvx:w:l:u:o:d:I:N:p:R:L:Mn:U:S:f:r:J:";
+const char* OPTIONS = "hvx:w:l:u:o:d:I:N:p:R:L:Mn:U:S:f:r:J:X:Y:";
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -45,19 +45,21 @@ static void print_help(char* progname) {
 	       "      -x <input-xylist>    input: source positions; assumed sorted by brightness\n"
 		   "      -w <input-wcs>       input: WCS file for sources\n"
 		   "      -o <output-index>    output filename for index\n"
+		   "      [-X <x-column-name>]\n"
+		   "      [-Y <y-column-name>]\n"
 		   "      [-l <min-quad-size>]: minimum fraction of the image size (diagonal) to make quads (default 0.05)\n"
 		   "      [-u <max-quad-size>]: maximum fraction of the image size (diagonal) to make quads (default 1.0)\n"
 		   "      [-d <dimquads>] number of stars in a \"quad\" (default 4).\n"
-		   "      [-N <number of healpixels]: number of healpix grid cells to put in the image\n"
+		   "      [-N <number of healpixels]: number of healpix grid cells to put in the image (default 10)\n"
 		   "      [-I <unique-id>] set the unique ID of this index\n"
 		   "      [-S]: sort column (default: assume already sorted)\n"
 		   "      [-f]: sort in descending order (eg, for FLUX); default ascending (eg, for MAG)\n"
-		   "      [-U]: healpix Nside for uniformization (default: same as -n)\n"
+		   "      [-U]: healpix Nside for uniformization (default: same as -N)\n"
 		   "      [-n <sweeps>]    (ie, number of stars per fine healpix grid cell); default 10\n"
 		   "      [-r <dedup-radius>]: deduplication radius in arcseconds; default no deduplication\n"
-		   "      [-p <passes>]   number of rounds of quad-building (ie, # quads per healpix cell, default 1)\n"
-		   "      [-R <reuse-times>] number of times a star can be used.\n"
-		   "      [-L <max-reuses>] make extra passes through the healpixes, increasing the \"-r\" reuse\n"
+		   "      [-p <passes>]   number of rounds of quad-building (ie, # quads per healpix cell, default 16)\n"
+		   "      [-R <reuse-times>] number of times a star can be used (default 8).\n"
+		   "      [-L <max-reuses>] make extra passes through the healpixes, increasing the \"-r\" reuse (default 20)\n"
 		   "                     limit each time, up to \"max-reuses\".\n"
 		   "      [-M]: in-memory (don't use temp files)\n"
 		   "      [-J <jitter-in-pixels>]: set positional error of index stars, in pixels (default 1)\n"
@@ -95,11 +97,19 @@ int main(int argc, char** argv) {
 	index_params_t myip;
 	index_params_t* ip = &myip;
 	double jitterpix = 1.0;
+	char* xcol = NULL;
+	char* ycol = NULL;
 
 	build_index_defaults(ip);
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'X':
+			xcol = optarg;
+			break;
+		case 'Y':
+			ycol = optarg;
+			break;
 		case 'J':
 			jitterpix = atof(optarg);
 			break;
@@ -188,7 +198,7 @@ int main(int argc, char** argv) {
 	rdlsfn = create_temp_file("rdls", tempdir);
 	sl_append_nocopy(tempfiles, rdlsfn);
 	logmsg("Writing RA,Decs to %s\n", rdlsfn);
-	if (wcs_xy2rd(wcsfn, wcsext, xylsfn, rdlsfn, NULL, NULL, FALSE, FALSE, NULL)) {
+	if (wcs_xy2rd(wcsfn, wcsext, xylsfn, rdlsfn, xcol, ycol, FALSE, FALSE, NULL)) {
 		ERROR("Failed to convert xylist to rdlist");
 		exit(-1);
 	}

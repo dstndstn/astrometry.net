@@ -14,7 +14,7 @@
 #include "keywords.h"
 #include "tic.h"
 
-static const char* OPTIONS = "hvw:o:e:O:";
+static const char* OPTIONS = "hvw:o:e:O:Ns:";
 
 void printHelp(char* progname) {
     fprintf(stderr, "%s [options] <input-FITS-image> <image-ext> <input-weight> <weight-ext> <input-WCS> <wcs-ext> [<image> <ext> <weight> <ext> <wcs> <ext>...]\n"
@@ -22,6 +22,8 @@ void printHelp(char* progname) {
 			"    [-e <output-wcs-ext>]: FITS extension to read WCS from (default: primary extension, 0)\n"
 			"     -o <output-image-file>\n"
 			"    [-O <order>]: Lanczos order (default 3)\n"
+			"    [-N]: use nearest-neighbour resampling (default: Lanczos)\n"
+			"    [-s <sigma>]: smooth before resampling\n"
 			"    [-v]: more verbose\n"
             "\n", progname);
 }
@@ -98,6 +100,25 @@ double lanczos_resample(double px, double py,
 	return sum;
 }
 
+double nearest_resample(double px, double py,
+						const number* img, const number* weightimg,
+						int W, int H,
+						double* out_wt,
+						void* token) {
+	int ix = round(px);
+	int iy = round(py);
+	double wt;
+
+	if (weightimg)
+		wt = weightimg[iy * W + ix];
+	else
+		wt = 1.0;
+
+	if (out_wt)
+		*out_wt = wt;
+
+	return img[iy*W + ix] * wt;
+}
 
 
 int main(int argc, char** args) {
@@ -124,12 +145,21 @@ int main(int argc, char** args) {
 	coadd_t* coadd;
 	lanczos_args_t largs;
 
+	double sigma = 0.0;
+	bool nearest = FALSE;
+
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
 		case '?':
         case 'h':
 			printHelp(progname);
 			exit(0);
+		case 'N':
+			nearest = TRUE;
+			break;
+		case 's':
+			sigma = atof(optarg);
+			break;
 		case 'v':
 			loglvl++;
 			break;
@@ -179,9 +209,14 @@ int main(int argc, char** args) {
 
 	coadd->wcs = outwcs;
 
-	coadd->resample_func = lanczos_resample;
-	largs.order = order;
-	coadd->resample_token = &largs;
+	if (nearest) {
+		coadd->resample_func = nearest_resample;
+		coadd->resample_token = NULL;
+	} else {
+		coadd->resample_func = lanczos_resample;
+		largs.order = order;
+		coadd->resample_token = &largs;
+	}
 
 	for (i=0; i<sl_size(inimgfns); i++) {
 		qfitsloader ld;
@@ -210,11 +245,13 @@ int main(int argc, char** args) {
 			ERROR("qfits_loadpix() failed");
 			exit(-1);
 		}
-
-		//W = ld.lx;
-		//H = ld.ly;
 		img = ld.fbuf;
 		logmsg("Read image: %i x %i.\n", ld.lx, ld.ly);
+
+		if (sigma > 0.0) {
+			logmsg("Smoothing by Gaussian with sigma=%g\n", sigma);
+
+		}
 
 		fn = sl_get(inwcsfns, i);
 		ext = il_get(inwcsexts, i);

@@ -25,6 +25,7 @@
 #include <math.h>
 
 #include "an-bool.h"
+#include "convolve-image.h"
 #include "qfits.h"
 #include "log.h"
 #include "errors.h"
@@ -69,7 +70,6 @@ int main(int argc, char *argv[]) {
 	float* kernel = NULL;
 	int NK;
 	int K0;
-	int i;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
@@ -158,18 +158,13 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	K0 = ceil(sigma * nsigma);
-	NK = 2*K0 + 1;
-	kernel = malloc(NK * sizeof(float));
-	for (i=0; i<NK; i++)
-		kernel[i] = 1.0 / sqrt(2.0 * M_PI) / sigma * exp(-0.5 * square(i - K0) / square(sigma));
+	kernel = convolve_get_gaussian_kernel_f(sigma, nsigma, &K0, &NK);
 
 	outimg = malloc(W * H * sizeof(float));
 	tempimg = malloc(W * H * sizeof(float));
 
 	logmsg("Image is %i x %i x %i\n", W, H, load.np);
 	for (plane=0; plane<load.np; plane++) {
-		int i,j,k;
 		load.pnum = plane;
 		if (qfits_loadpix(&load)) {
 			ERROR("Failed to load pixels");
@@ -177,23 +172,7 @@ int main(int argc, char *argv[]) {
 		}
 		img = load.fbuf;
 
-		for (i=0; i<H; i++) {
-			for (j=0; j<W; j++) {
-				float sum = 0;
-				for (k=0; k<NK; k++)
-					sum += kernel[k] * img[i*W + MIN(W-1, MAX(0, j - k + K0))];
-				// store into temp image in transposed order
-				tempimg[j*H + i] = sum;
-			}
-		}
-		for (j=0; j<W; j++) {
-			for (i=0; i<H; i++) {
-				float sum = 0;
-				for (k=0; k<NK; k++)
-					sum += kernel[k] * tempimg[j*H + MIN(H-1, MAX(0, i - k + K0))];
-				outimg[i*W + j] = sum;
-			}
-		}
+		convolve_1d_f(img, W, H, kernel, K0, NK, outimg, tempimg);
 
 		qfitsloader_free_buffers(&load);
 		dump.fbuf = outimg;
@@ -205,6 +184,9 @@ int main(int argc, char *argv[]) {
 		npixout += dump.npix;
 	}
 	free(outimg);
+	free(tempimg);
+	free(kernel);
+
 
 	if (tostdout) {
 		// pad.
