@@ -213,6 +213,10 @@ _index_util.so _index_c.so: index_wrap.c index_pyutils.c setup-index.py \
 	cp build/lib/_index_c.so _index_c.so
 	cp build/lib/_index_util.so _index_util.so
 
+coadd: coadd-main.o coadd.o $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB)
+ALL_OBJ += coadd.o coadd-main.o
+
 pad-file: pad-file.o $(ANUTILS_LIB)
 ALL_OBJ += pad-file.o
 

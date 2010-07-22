@@ -40,6 +40,7 @@ static double lanczos(double x, int order) {
 
 static void resample_image(const double* img, int W, int H, anwcs_t* inwcs,
 						   double* outimg, int outW, int outH, anwcs_t* outwcs,
+						   double* weightimg, double imgweight,
 						   bool set_or_add, int order) {
 	//
 	double support;
@@ -69,10 +70,17 @@ static void resample_image(const double* img, int W, int H, anwcs_t* inwcs,
 			px -= 1;
 			py -= 1;
 
-			if (px < -support || px >= W+support)
+			/* ??
+			 if (px < -support || px >= W+support)
+			 continue;
+			 if (py < -support || py >= H+support)
+			 continue;
+			 */
+			if (px < 0 || px >= W)
 				continue;
-			if (py < -support || py >= H+support)
+			if (py < 0 || py >= H)
 				continue;
+
 			x0 = MAX(0, (int)floor(px - support));
 			y0 = MAX(0, (int)floor(py - support));
 			x1 = MIN(W-1, (int) ceil(px + support));
@@ -108,6 +116,9 @@ static void resample_image(const double* img, int W, int H, anwcs_t* inwcs,
 					outimg[i*outW + j] = sum / weight;
 				else
 					outimg[i*outW + j] += sum / weight;
+
+				if (weightimg)
+					weightimg[i*outW + j] += imgweight;
 			}
 		}
 		logverb("Row %i of %i\n", i+1, outH);
@@ -233,6 +244,7 @@ int main(int argc, char** args) {
 
 	resample_image(img, W, H, inwcs,
 				   outimg, outW, outH, outwcs,
+				   NULL, 0,
 				   TRUE, order);
 
 
