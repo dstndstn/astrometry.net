@@ -2,13 +2,77 @@ import spherematch_c
 from math import *
 from numpy import *
 
-'''
-match(x1, x2, radius):
-
-
-
-'''
 def match(x1, x2, radius):
+	'''
+	(indices,dists) = match(x1, x2, radius):
+
+	Returns the indices (Nx2 int array) and distances (Nx1 float
+	array) between points in "x1" and "x2" that are within "radius"
+	Euclidean distance of each other.
+
+	"x1" is N1xD and "x2" is N2xD.  "x1" and "x2" can be the same
+	array.
+
+	The "indices" return value has a row for each match; the matched
+	points are:
+	x1[indices[:,0],:]
+	and
+	x2[indices[:,1],:]
+
+	This function doesn\'t know about spherical coordinates -- it just
+	searches for matches in n-dimensional space.  For RA,Dec arrays,
+	convert them to positions on the unit sphere, eg via the function
+	radectoxyz() in astrometry.util.starutil_numpy:
+
+	>>> from astrometry.util.starutil_numpy import *   
+	>>> from astrometry.libkd import spherematch
+
+	# RA,Dec in degrees
+	>>> ra1  = array([  0,  1, 2, 3, 4, 359,360])
+	>>> dec1 = array([-90,-89,-1, 0, 1,  89, 90])
+
+	# xyz: N x 3 array: unit vectors
+	>>> xyz1 = radectoxyz(ra1, dec1)
+
+	>>> ra2  = array([ 45,   1,  4, 4, 4,  0,  1])
+	>>> dec2 = array([-89, -88, -1, 0, 2, 89, 89])
+	>>> xyz2 = radectoxyz(ra2, dec2)
+
+	# The \'radius\' is now distance between points on the unit sphere --
+	# for small angles, this is ~ angular distance in radians.  You can use
+	# the function:
+	>>> radius_in_deg = 2.
+	>>> r = sqrt(deg2distsq(radius_in_deg))
+ 
+	>>> (inds,dists) = spherematch.match(xyz1, xyz2, r)
+
+	# Now "inds" is an Mx2 array of the matching indices,
+	# and "dists" the distances between them:
+	#  eg,  sqrt(sum((xyz1[inds[:,0],:] - xyz2[inds[:,1],:])**2, axis=1)) = dists
+
+	>>> print inds
+	[[0 0]
+	 [1 0]
+	 [1 1]
+	 [2 2]
+	 [3 2]
+	 [3 3]
+	 [4 3]
+	 [4 4]
+	 [5 5]
+	 [6 5]
+	 [5 6]
+	 [6 6]]
+ 
+	>>> print sqrt(sum((xyz1[inds[:,0],:] - xyz2[inds[:,1],:])**2, axis=1))
+	[ 0.01745307  0.01307557  0.01745307  0.0348995   0.02468143  0.01745307
+	  0.01745307  0.01745307  0.0003046   0.01745307  0.00060917  0.01745307]
+
+	>>> print dists[:,0]
+	[ 0.01745307  0.01307557  0.01745307  0.0348995   0.02468143  0.01745307
+	  0.01745307  0.01745307  0.0003046   0.01745307  0.00060917  0.01745307]
+
+	'''
 	x1 = x1.astype(float64)
 	x2 = x2.astype(float64)
 	(N1,D1) = x1.shape
@@ -83,3 +147,8 @@ def tree_close(kd):
 def trees_match(kd1, kd2, radius):
 	(inds,dists) = spherematch_c.match(kd1, kd2, radius)
 	return (inds,dists)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
