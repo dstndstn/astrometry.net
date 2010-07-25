@@ -10,9 +10,34 @@ def index_get_stars(I):
 	return starkd_get_stars_numpy(addr)
 
 # RA, Dec, radius in deg.
-# Returns (xyz, radec, inds)
-def index_search_stars(I, ra, dec, radius):
+# Returns (xyz, radec, inds[, tagalong])
+# "tagalong", if requested, is a dict of column name -> numpy array.
+def index_search_stars(I, ra, dec, radius, tagalong=False):
 	addr = starkd_addr(I)
-	return starkd_search_stars_numpy(addr, ra, dec, radius)
+	return starkd_search_stars_numpy(addr, ra, dec, radius, tagalong)
+
+# Returns a list of  (name, fits_type, array_size)
+def index_get_tagalong_columns(index):
+	skdt = index.starkd
+	N = startree_get_tagalong_N_columns(skdt)
+	cols = []
+	for i in range(N):
+		col = startree_get_tagalong_column_name(skdt, i)
+		print 'column:', col
+		ft = startree_get_tagalong_column_fits_type(skdt, i)
+		print 'fits type', ft
+		arr = startree_get_tagalong_column_array_size(skdt, i)
+		print 'array size', arr
+		cols.append((col, ft, arr))
+	return cols
+
+#def index_get_tagalong(index, inds):
+#	#skdt = index.starkd
+#	#addr = starkd_addr(I)
+#	#tagalong = {}
+#	#for (col,ft,arr) in index_get_tagalong_columns(index):
+#	#	startree_get_
+#	#return tagalong
+#	return starkd_get_tagalong_python(starkd_addr(index), inds)
 
 

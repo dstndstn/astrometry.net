@@ -12,7 +12,6 @@
 #define false 0
 
 /**
-
 For returning single codes and quads as python lists, do something like this:
 
 %typemap(out) float [ANY] {
@@ -23,7 +22,6 @@ For returning single codes and quads as python lists, do something like this:
     PyList_SetItem($result,i,o);
   }
 }
-
 **/
 
 double* code_alloc(int DC) {

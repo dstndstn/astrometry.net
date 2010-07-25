@@ -138,6 +138,11 @@ tfits_type fitscolumn_int_type() {
     return -1;
 }
 
+/*
+ char fitscolumn_tfits_to_char(tfits_type t) {
+ }
+ */
+
 tfits_type fitscolumn_double_type() {
     return TFITS_BIN_TYPE_D;
 }
@@ -339,6 +344,18 @@ const char* fitstable_get_fits_column_name(const fitstable_t* t, int i) {
 	assert(i >= 0);
 	assert(i < t->table->nc);
 	return t->table->col[i].tlabel;
+}
+
+tfits_type fitstable_get_fits_column_type(const fitstable_t* t, int i) {
+	assert(i >= 0);
+	assert(i < t->table->nc);
+	return t->table->col[i].atom_type;
+}
+
+int fitstable_get_fits_column_array_size(const fitstable_t* t, int i) {
+	assert(i >= 0);
+	assert(i < t->table->nc);
+	return t->table->col[i].atom_nb;
 }
 
 void fitstable_add_write_column(fitstable_t* tab, tfits_type t,

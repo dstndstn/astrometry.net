@@ -62,6 +62,19 @@ const char* startree_get_tagalong_column_name(startree_t* s, int i) {
 	return fitstable_get_fits_column_name(startree_get_tagalong(s), i);
 }
 
+tfits_type startree_get_tagalong_column_fits_type(startree_t* s, int i) {
+	if (!startree_has_tagalong(s))
+		return TFITS_BIN_TYPE_UNKNOWN;
+	return fitstable_get_fits_column_type(startree_get_tagalong(s), i);
+}
+
+int startree_get_tagalong_column_array_size(startree_t* s, int i) {
+	if (!startree_has_tagalong(s))
+		return -1;
+	return fitstable_get_fits_column_array_size(startree_get_tagalong(s), i);
+}
+
+
 static void* get_data_column(startree_t* s, const char* colname, const int* inds, int N, tfits_type tt) {
 	fitstable_t* table;
 	void* arr;

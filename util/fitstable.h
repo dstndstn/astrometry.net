@@ -233,6 +233,10 @@ int fitstable_get_N_fits_columns(const fitstable_t* t);
  */
 const char* fitstable_get_fits_column_name(const fitstable_t* t, int i);
 
+tfits_type fitstable_get_fits_column_type(const fitstable_t* t, int i);
+
+int fitstable_get_fits_column_array_size(const fitstable_t* t, int i);
+
 // reading...
 int fitstable_open_extension(fitstable_t* tab, int ext);
 

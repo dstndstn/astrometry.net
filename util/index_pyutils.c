@@ -63,7 +63,8 @@ static PyObject* qidxfile_get_quad_list(PyObject* self, PyObject* args) {
     return Py_BuildValue("O", pyquads);
 }
 
-// starkd_search_stars_numpy(addr, ra, dec, radius)
+
+// starkd_search_stars_numpy(addr, ra, dec, radius, tagalong)
 static PyObject* starkd_search_stars_numpy(PyObject* self, PyObject* args) {
 	startree_t* s;
 	double ra, dec, radius;
@@ -77,8 +78,11 @@ static PyObject* starkd_search_stars_numpy(PyObject* self, PyObject* args) {
 	double* xyzres;
 	double* radecres;
 	int* inds;
+	unsigned char tag;
+	int i, C;
+	PyObject* pydict;
 
-    if (!PyArg_ParseTuple(args, "lddd", &s, &ra, &dec, &radius)) {
+    if (!PyArg_ParseTuple(args, "ldddb", &s, &ra, &dec, &radius, &tag)) {
         PyErr_SetString(PyExc_ValueError, "need four args: starkd, ra, dec, radius");
         return NULL;
 	}
@@ -100,7 +104,74 @@ static PyObject* starkd_search_stars_numpy(PyObject* self, PyObject* args) {
 	dims[1] = 1;
 	pyinds = (PyArrayObject*)PyArray_SimpleNewFromData(1, dims, PyArray_INT, inds);
 
-    return Py_BuildValue("(OOO)", pyxyz, pyradec, pyinds);
+	if (!tag)
+		return Py_BuildValue("(OOO)", pyxyz, pyradec, pyinds);
+
+	if (!startree_has_tagalong(s) || N == 0) {
+		return Py_BuildValue("(OOOO)", pyxyz, pyradec, pyinds, PyDict_New());
+	}
+	C = startree_get_tagalong_N_columns(s);
+	pydict = PyDict_New();
+	for (i=0; i<C; i++) {
+		PyObject* pyval;
+		void* vdata;
+		const char* name;
+		tfits_type ft, readtype;
+		int nd;
+		int arr;
+		int pytype = 0;
+		name = startree_get_tagalong_column_name(s, i);
+		ft = startree_get_tagalong_column_fits_type(s, i);
+		readtype = ft;
+		switch (ft) {
+			// FIXME -- special-case this?
+		case TFITS_BIN_TYPE_A:
+		case TFITS_BIN_TYPE_B:
+		case TFITS_BIN_TYPE_X:
+			// these are actually the characters 'T' and 'F'.
+		case TFITS_BIN_TYPE_L:
+			pytype = NPY_BYTE;
+			break;
+		case TFITS_BIN_TYPE_D:
+			pytype = NPY_FLOAT64;
+			break;
+		case TFITS_BIN_TYPE_E:
+			pytype = NPY_FLOAT32;
+			break;
+		case TFITS_BIN_TYPE_I:
+			pytype = NPY_INT16;
+			break;
+		case TFITS_BIN_TYPE_J:
+			pytype = NPY_INT32;
+			break;
+		case TFITS_BIN_TYPE_K:
+			pytype = NPY_INT64;
+			break;
+		default:
+			PyErr_Format(PyExc_ValueError, "failed to map FITS type %i to numpy type, for column \"%s\"", ft, name);
+			return NULL;
+		}
+
+		//int arr = startree_get_tagalong_column_array_size(s, i);
+		vdata = fitstable_read_column_array_inds(startree_get_tagalong(s), name, readtype, inds, N, &arr);
+		if (!vdata) {
+			PyErr_Format(PyExc_ValueError, "fail to read tag-along column \"%s\"", name);
+			return NULL;
+		}
+		dims[0] = N;
+		dims[1] = arr;
+		if (arr > 1)
+			nd = 2;
+		else
+			nd = 1;
+		pyval = PyArray_SimpleNewFromData(nd, dims, pytype, vdata);
+		if (PyDict_SetItemString(pydict, name, pyval)) {
+			PyErr_Format(PyExc_ValueError, "fail to set tag-along column value, for \"%s\"", name);
+			return NULL;
+		}
+	}
+
+	return Py_BuildValue("(OOOO)", pyxyz, pyradec, pyinds, pydict);
 }
 
 

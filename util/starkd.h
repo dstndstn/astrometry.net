@@ -156,6 +156,17 @@ int startree_get_tagalong_N_columns(startree_t* s);
  */
 const char* startree_get_tagalong_column_name(startree_t* s, int i);
 
+/**
+ Returns the FITS type of the 'i'th column in the tagalong table.
+ */
+tfits_type startree_get_tagalong_column_fits_type(startree_t* s, int i);
+
+/**
+ Returns the array size of the 'i'th column in the tagalong table.
+ For scalar columns, this is 1.
+ */
+int startree_get_tagalong_column_array_size(startree_t* s, int i);
+
 
 /*
  Retrieve parameters of the cut-an process, if they are available.
