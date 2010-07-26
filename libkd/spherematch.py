@@ -6,12 +6,20 @@ def match(x1, x2, radius):
 	'''
 	(indices,dists) = match(x1, x2, radius):
 
+    Given an N1 x D1 array x1,
+    and   an N2 x D2 array x2,
+    and   radius:
+
 	Returns the indices (Nx2 int array) and distances (Nx1 float
 	array) between points in "x1" and "x2" that are within "radius"
 	Euclidean distance of each other.
 
 	"x1" is N1xD and "x2" is N2xD.  "x1" and "x2" can be the same
-	array.
+	array.  Dimensions D above 5-10 will probably not run faster than
+	naive.
+
+    Despite the name of this package, the arrays x1 and x2 need not be
+    celestial positions; in particular, there is no RA wrapping at 0!
 
 	The "indices" return value has a row for each match; the matched
 	points are:
