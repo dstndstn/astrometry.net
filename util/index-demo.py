@@ -13,10 +13,20 @@ if __name__ == '__main__':
 
 	index = index_load(fn, 0, None)
 
+	#use_numpy = True
+	use_numpy = False
+
 	#(xyz,radec,inds,tag) = index_search_stars(index, -143, -2, 1, True)
-	(xyz,radec,inds,tag) = index_search_stars(index, -117, 0, 1, True)
-	print 'Got xyz', xyz.shape
-	print 'Got inds', inds.shape
+	#(xyz,radec,inds,tag) = index_search_stars(index, -117, 0, 1, True, use_numpy)
+	(xyz,radec,inds,tag) = index_search_stars(index, -117, 0, 0.1, True, use_numpy)
+
+	if use_numpy:
+		print 'Got xyz', xyz.shape
+		print 'Got inds', inds.shape
+
 	print inds
-	print tag
-	#print 'tag-along cols:', index_get_tagalong_columns(index)
+	print radec
+	for k,v in tag.items():
+		print '  ', k, '=', v
+	#print tag
+

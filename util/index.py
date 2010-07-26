@@ -12,9 +12,12 @@ def index_get_stars(I):
 # RA, Dec, radius in deg.
 # Returns (xyz, radec, inds[, tagalong])
 # "tagalong", if requested, is a dict of column name -> numpy array.
-def index_search_stars(I, ra, dec, radius, tagalong=False):
+def index_search_stars(I, ra, dec, radius, tagalong=False, numpy=True):
 	addr = starkd_addr(I)
-	return starkd_search_stars_numpy(addr, ra, dec, radius, tagalong)
+	if numpy:
+		return starkd_search_stars_numpy(addr, ra, dec, radius, tagalong)
+	else:
+		return starkd_search_stars(addr, ra, dec, radius, tagalong)
 
 # Returns a list of  (name, fits_type, array_size)
 def index_get_tagalong_columns(index):
