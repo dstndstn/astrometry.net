@@ -1,8 +1,8 @@
 from distutils.core import setup, Extension
 import os.path
 from astrometry.util.run_command import run_command
-#import numpy
 
+#import numpy
 #numpy_inc = (os.path.dirname(numpy.__file__) +
 #             '/core/include/numpy')
 
@@ -46,6 +46,16 @@ def get_lib_dirs(pkg):
 	libs = [l[2:] for l in libs]
 	return libs
 
+netpbm_inc = os.environ.get('NETPBM_INC', '')
+netpbm_lib = os.environ.get('NETPBM_LIB', '')
+
+compile_args = ['-O0', '-g']
+if len(netpbm_inc):
+	compile_args.append(netpbm_inc)
+link_args = ['-O0', '-g']
+if len(netpbm_lib):
+	link_args.append(netpbm_lib)
+
 c_module = Extension('_plotstuff_c',
                      sources = ['plotstuff_wrap.c'],
                      include_dirs = [
@@ -64,10 +74,10 @@ c_module = Extension('_plotstuff_c',
 						 '../util/libanutils.a',
 						 '../qfits-an/lib/libqfits.a',
 						 ],
-					 libraries=reduce(lambda x,y: x+y, [get_libs(x) for x in ['cairo', 'wcslib']]) + ['jpeg', 'netpbm'],
+					 libraries=reduce(lambda x,y: x+y, [get_libs(x) for x in ['cairo', 'wcslib']]) + ['jpeg'], #'netpbm'],
 					 library_dirs=reduce(lambda x,y: x+y, [get_lib_dirs(x) for x in ['cairo', 'wcslib']]),
-		     extra_compile_args=['-O0','-g'],
-		     extra_link_args=['-O0', '-g'],
+		     extra_compile_args=compile_args,
+		     extra_link_args=link_args,
 					 )
 
 setup(name = 'Plotting stuff in python',
