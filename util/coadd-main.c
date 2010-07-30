@@ -15,7 +15,7 @@
 #include "tic.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hvw:o:e:O:Ns:";
+static const char* OPTIONS = "hvw:o:e:O:Ns:p:";
 
 void printHelp(char* progname) {
     fprintf(stderr, "%s [options] <input-FITS-image> <image-ext> <input-weight (filename or constant)> <weight-ext> <input-WCS> <wcs-ext> [<image> <ext> <weight> <ext> <wcs> <ext>...]\n"
@@ -23,6 +23,7 @@ void printHelp(char* progname) {
 			"    [-e <output-wcs-ext>]: FITS extension to read WCS from (default: primary extension, 0)\n"
 			"     -o <output-image-file>\n"
 			"    [-O <order>]: Lanczos order (default 3)\n"
+			"    [-p <plane>]: image plane to read (default 0)\n"
 			"    [-N]: use nearest-neighbour resampling (default: Lanczos)\n"
 			"    [-s <sigma>]: smooth before resampling\n"
 			"    [-v]: more verbose\n"
@@ -110,6 +111,12 @@ double nearest_resample(double px, double py,
 	int iy = round(py);
 	double wt;
 
+	if (ix < 0 || ix >= W || iy < 0 || iy >= H) {
+		if (out_wt)
+			*out_wt = 0;
+		return 0.0;
+	}
+
 	if (weightimg)
 		wt = weightimg[iy * W + ix];
 	else
@@ -149,12 +156,17 @@ int main(int argc, char** args) {
 	double sigma = 0.0;
 	bool nearest = FALSE;
 
+	int plane = 0;
+
     while ((argchar = getopt(argc, args, OPTIONS)) != -1)
         switch (argchar) {
 		case '?':
         case 'h':
 			printHelp(progname);
 			exit(0);
+		case 'p':
+			plane = atoi(optarg);
+			break;
 		case 'N':
 			nearest = TRUE;
 			break;
@@ -236,7 +248,7 @@ int main(int argc, char** args) {
 		// extension
 		ld.xtnum = ext;
 		// color plane
-		ld.pnum = 0;
+		ld.pnum = plane;
 		ld.map = 1;
 		ld.ptype = PTYPE_FLOAT;
 		if (qfitsloader_init(&ld)) {
