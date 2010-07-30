@@ -129,7 +129,7 @@ struct solver_t {
 	// Force CRPIX to be the given point "crpix", or the center of the image?
 	bool set_crpix;
 	bool set_crpix_center;
-	double crpix[2];
+	double crpix x[2];
 
 	// MatchObj template: if non-NULL, whenever a match is found, we first memcpy()
 	// this template, then set the fields that describe the match.

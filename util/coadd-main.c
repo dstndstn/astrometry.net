@@ -13,9 +13,10 @@
 #include "qfits_image.h"
 #include "keywords.h"
 #include "tic.h"
+#include "convolve-image.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hvw:o:e:O:Ns:p:";
+static const char* OPTIONS = "hvw:o:e:O:Ns:p:D";
 
 void printHelp(char* progname) {
     fprintf(stderr, "%s [options] <input-FITS-image> <image-ext> <input-weight (filename or constant)> <weight-ext> <input-WCS> <wcs-ext> [<image> <ext> <weight> <ext> <wcs> <ext>...]\n"
@@ -26,6 +27,7 @@ void printHelp(char* progname) {
 			"    [-p <plane>]: image plane to read (default 0)\n"
 			"    [-N]: use nearest-neighbour resampling (default: Lanczos)\n"
 			"    [-s <sigma>]: smooth before resampling\n"
+			"    [-D]: divide each image by its weight image before starting\n"
 			"    [-v]: more verbose\n"
             "\n", progname);
 }
@@ -113,7 +115,7 @@ double nearest_resample(double px, double py,
 
 	if (ix < 0 || ix >= W || iy < 0 || iy >= H) {
 		if (out_wt)
-			*out_wt = 0;
+			*out_wt = 0.0;
 		return 0.0;
 	}
 
@@ -155,6 +157,7 @@ int main(int argc, char** args) {
 
 	double sigma = 0.0;
 	bool nearest = FALSE;
+	bool divweight = FALSE;
 
 	int plane = 0;
 
@@ -164,6 +167,9 @@ int main(int argc, char** args) {
         case 'h':
 			printHelp(progname);
 			exit(0);
+		case 'D':
+			divweight = TRUE;
+			break;
 		case 'p':
 			plane = atoi(optarg);
 			break;
@@ -263,8 +269,12 @@ int main(int argc, char** args) {
 		logmsg("Read image: %i x %i.\n", ld.lx, ld.ly);
 
 		if (sigma > 0.0) {
+			int k0, nk;
+			float* kernel;
 			logmsg("Smoothing by Gaussian with sigma=%g\n", sigma);
-
+			kernel = convolve_get_gaussian_kernel_f(sigma, 4, &k0, &nk);
+			convolve_1d_f(img, ld.lx, ld.ly, kernel, k0, nk, img, NULL);
+			free(kernel);
 		}
 
 		fn = sl_get(inwcsfns, i);
@@ -287,7 +297,10 @@ int main(int argc, char** args) {
 
 		fn = sl_get(inwtfns, i);
 		ext = il_get(inwtexts, i);
-		if (file_exists(fn)) {
+		if (streq(fn, "none")) {
+			logmsg("Not using weight image.\n");
+			wt = NULL;
+		} else if (file_exists(fn)) {
 			logmsg("Reading input weight image \"%s\" ext %i\n", fn, ext);
 			wld.filename = fn;
 			// extension
@@ -320,10 +333,19 @@ int main(int argc, char** args) {
 			logmsg("Parsed weight value \"%g\"\n", overallwt);
 		}
 
+		if (divweight && wt) {
+			int j;
+			logmsg("Dividing image by weight image...\n");
+			for (j=0; j<(ld.lx*ld.ly); j++)
+				img[j] /= wt[j];
+		}
+
 		coadd_add_image(coadd, img, wt, overallwt, inwcs);
 
+		anwcs_free(inwcs);
 		qfitsloader_free_buffers(&ld);
-		qfitsloader_free_buffers(&wld);
+		if (wt)
+			qfitsloader_free_buffers(&wld);
 	}
 
 	//
@@ -331,12 +353,52 @@ int main(int argc, char** args) {
 
 	coadd_divide_by_weight(coadd, 0.0);
 
-	if (fits_write_float_image(coadd->img, coadd->W, coadd->H, outfn)) {
-		ERROR("Failed to write output image %s", outfn);
-		exit(-1);
+	/*
+	 if (fits_write_float_image_hdr(coadd->img, coadd->W, coadd->H, outfn)) {
+	 ERROR("Failed to write output image %s", outfn);
+	 exit(-1);
+	 }
+	 */
+	/*
+	 if (fits_write_float_image(coadd->img, coadd->W, coadd->H, outfn)) {
+	 ERROR("Failed to write output image %s", outfn);
+	 exit(-1);
+	 }
+	 */
+	{
+		qfitsdumper qoutimg;
+		qfits_header* hdr;
+		hdr = qfits_header_readext(outwcsfn, outwcsext);
+		if (!hdr) {
+			ERROR("Failed to read WCS file \"%s\" ext %i\n", outwcsfn, outwcsext);
+			exit(-1);
+		}
+		fits_header_mod_int(hdr, "NAXIS", 2, NULL);
+		fits_header_set_int(hdr, "NAXIS1", coadd->W, "image width");
+		fits_header_set_int(hdr, "NAXIS2", coadd->H, "image height");
+		fits_header_modf(hdr, "BITPIX", "-32", "32-bit floats");
+		memset(&qoutimg, 0, sizeof(qoutimg));
+		qoutimg.filename = outfn;
+		qoutimg.npix = coadd->W * coadd->H;
+		qoutimg.fbuf = coadd->img;
+		qoutimg.ptype = PTYPE_FLOAT;
+		qoutimg.out_ptype = BPP_IEEE_FLOAT;
+		if (fits_write_header_and_image(NULL, &qoutimg, coadd->W)) {
+			ERROR("Failed to write FITS image to file \"%s\"", outfn);
+			exit(-1);
+		}
+		qfits_header_destroy(hdr);
 	}
 
 	coadd_free(coadd);
+	sl_free2(inimgfns);
+	sl_free2(inwcsfns);
+	sl_free2(inwtfns);
+	il_free(inimgexts);
+	il_free(inwcsexts);
+	il_free(inwtexts);
+	anwcs_free(outwcs);
+
 
 	return 0;
 }

@@ -49,7 +49,6 @@ int coadd_add_image(coadd_t* ca, const number* img,
 
 			val = ca->resample_func(px, py, img, weightimg, W, H, &wt,
 									ca->resample_token);
-
 			ca->img[i*ca->W + j] += val * weight;
 			ca->weight[i*ca->W + j] += wt * weight;
 		}
