@@ -13,11 +13,12 @@
 #include "qfits_image.h"
 #include "keywords.h"
 #include "tic.h"
+#include "ioutils.h"
 
 static const char* OPTIONS = "hvw:o:e:O:Ns:";
 
 void printHelp(char* progname) {
-    fprintf(stderr, "%s [options] <input-FITS-image> <image-ext> <input-weight> <weight-ext> <input-WCS> <wcs-ext> [<image> <ext> <weight> <ext> <wcs> <ext>...]\n"
+    fprintf(stderr, "%s [options] <input-FITS-image> <image-ext> <input-weight (filename or constant)> <weight-ext> <input-WCS> <wcs-ext> [<image> <ext> <weight> <ext> <wcs> <ext>...]\n"
 			"     -w <output-wcs-file>  (default: input file)\n"
 			"    [-e <output-wcs-ext>]: FITS extension to read WCS from (default: primary extension, 0)\n"
 			"     -o <output-image-file>\n"
@@ -222,10 +223,11 @@ int main(int argc, char** args) {
 		qfitsloader ld;
 		qfitsloader wld;
 		float* img;
-		float* wt;
+		float* wt = NULL;
 		anwcs_t* inwcs;
 		char* fn;
 		int ext;
+		float overallwt = 1.0;
 
 		fn = sl_get(inimgfns, i);
 		ext = il_get(inimgexts, i);
@@ -266,39 +268,47 @@ int main(int argc, char** args) {
 			ERROR("Pixel scale from the WCS file is zero.  Usually this means the image has no valid WCS header.\n");
 			exit(-1);
 		}
-
-		fn = sl_get(inwtfns, i);
-		ext = il_get(inwtexts, i);
-		logmsg("Reading input weight image \"%s\" ext %i\n", fn, ext);
-		wld.filename = fn;
-		// extension
-		wld.xtnum = ext;
-		// color plane
-		wld.pnum = 0;
-		wld.map = 1;
-		wld.ptype = PTYPE_FLOAT;
-		if (qfitsloader_init(&wld)) {
-			ERROR("qfitsloader_init() failed");
-			exit(-1);
-		}
-		if (qfits_loadpix(&wld)) {
-			ERROR("qfits_loadpix() failed");
-			exit(-1);
-		}
-		wt = wld.fbuf;
-		logmsg("Read image: %i x %i.\n", wld.lx, wld.ly);
-
-		if (wld.lx != ld.lx || wld.ly != ld.ly) {
-			ERROR("Size mismatch between image and weight!");
-			exit(-1);
-		}
-
 		if (anwcs_imagew(inwcs) != ld.lx || anwcs_imageh(inwcs) != ld.ly) {
 			ERROR("Size mismatch between image and WCS!");
 			exit(-1);
 		}
 
-		coadd_add_image(coadd, img, wt, 1.0, inwcs);
+		fn = sl_get(inwtfns, i);
+		ext = il_get(inwtexts, i);
+		if (file_exists(fn)) {
+			logmsg("Reading input weight image \"%s\" ext %i\n", fn, ext);
+			wld.filename = fn;
+			// extension
+			wld.xtnum = ext;
+			// color plane
+			wld.pnum = 0;
+			wld.map = 1;
+			wld.ptype = PTYPE_FLOAT;
+			if (qfitsloader_init(&wld)) {
+				ERROR("qfitsloader_init() failed");
+				exit(-1);
+			}
+			if (qfits_loadpix(&wld)) {
+				ERROR("qfits_loadpix() failed");
+				exit(-1);
+			}
+			wt = wld.fbuf;
+			logmsg("Read image: %i x %i.\n", wld.lx, wld.ly);
+			if (wld.lx != ld.lx || wld.ly != ld.ly) {
+				ERROR("Size mismatch between image and weight!");
+				exit(-1);
+			}
+		} else {
+			char* endp;
+			overallwt = strtod(fn, &endp);
+			if (endp == fn) {
+				ERROR("Weight: \"%s\" is neither a file nor a double.\n", fn);
+				exit(-1);
+			}
+			logmsg("Parsed weight value \"%g\"\n", overallwt);
+		}
+
+		coadd_add_image(coadd, img, wt, overallwt, inwcs);
 
 		qfitsloader_free_buffers(&ld);
 		qfitsloader_free_buffers(&wld);

@@ -158,7 +158,6 @@ int write_u32(FILE* fout, unsigned int val);
 int write_uints(FILE* fout, unsigned int* val, int n);
 int write_double(FILE* fout, double val);
 int write_float(FILE* fout, float val);
-int write_double(FILE* fout, double val);
 int write_fixed_length_string(FILE* fout, char* s, int length);
 int write_string(FILE* fout, char* s);
 

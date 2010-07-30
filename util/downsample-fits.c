@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
     fits_header_add_int(hdr, "NAXIS1", outw, "image width");
     fits_header_add_int(hdr, "NAXIS2", outh, "image height");
 	if (load.np > 1)
-		fits_header_add_int(hdr, "NAXI3", load.np, "number of planes");
+		fits_header_add_int(hdr, "NAXIS3", load.np, "number of planes");
 	if (qfits_header_dump(hdr, fout)) {
 		ERROR("Failed to write FITS header to \"%s\"", outfn);
 		exit(-1);
