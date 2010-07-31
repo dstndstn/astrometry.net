@@ -297,8 +297,11 @@ anqfits_t* anqfits_open(const char* filename) {
              */
             if (data_bytes > 0) {
                 /* Skip as many blocks as there are declared pixels */
+				long off;
                 skip_blocks = qfits_blocks_needed(data_bytes);
-                seeked = fseek(in, skip_blocks*FITS_BLOCK_SIZE, SEEK_CUR);
+				off = skip_blocks;
+				off *= FITS_BLOCK_SIZE;
+                seeked = fseek(in, off, SEEK_CUR);
                 if (seeked == -1) {
                     qdebug(printf("anqfits: error seeking file %s\n", filename););
                     goto bailout;
