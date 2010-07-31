@@ -457,7 +457,7 @@ qfits_table * qfits_table_open2(const qfits_header* hdr, off_t offset_beg, size_
     int                 atom_dec_nb;
     int                 atom_size;
     tfits_type          atom_type;
-    int                 theory_size;
+    size_t              theory_size;
     int                 zero_present;
     int                 scale_present;
     float               zero;
@@ -636,7 +636,7 @@ qfits_table * qfits_table_open2(const qfits_header* hdr, off_t offset_beg, size_
 
     /* Check that the theoretical data size is not far from the measured */
     /* one by more than 2880 */
-    theory_size = qfits_compute_table_width(tload)*tload->nr;
+    theory_size = (size_t)qfits_compute_table_width(tload) * (size_t)tload->nr;
     if (data_size < theory_size) {
         qfits_error("Inconsistent data sizes: found %i, expected %i.", data_size, theory_size);
         qfits_table_close(tload);

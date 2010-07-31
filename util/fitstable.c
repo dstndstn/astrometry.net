@@ -27,6 +27,7 @@
 #include "fitsfile.h"
 #include "ioutils.h"
 #include "an-endian.h"
+#include "anqfits.h"
 
 #include "log.h"
 
@@ -81,7 +82,7 @@ static off_t get_row_offset(const fitstable_t* table, int row) {
 	assert(table->end_table_offset);
 	assert(table->table);
 	assert(table->table->tab_w);
-	return table->end_table_offset + table->table->tab_w * row;
+	return (off_t)table->end_table_offset + (off_t)table->table->tab_w * (off_t)row;
 }
 
 int fitstable_n_extensions(const fitstable_t* t) {
@@ -201,18 +202,25 @@ int fitstable_read_row_data(fitstable_t* table, int row, void* dest) {
 		return 0;
 	}
 	if (!table->readfid) {
-		int start, end;
 		table->readfid = fopen(table->fn, "rb");
 		if (!table->readfid) {
 			SYSERROR("Failed to open FITS table %s for reading", table->fn);
 			return -1;
 		}
-		if (qfits_get_datinfo(table->fn, table->extension, &start, &end)) {
-			ERROR("Failed to find start of table: %s", table->fn);
-			return -1;
+
+		if (table->anq) {
+			off_t start;
+			start = anqfits_data_start(table->anq, table->extension);
+			table->end_table_offset = start;
+		} else {
+			int start, end;
+			if (qfits_get_datinfo(table->fn, table->extension, &start, &end)) {
+				ERROR("Failed to find start of table: %s", table->fn);
+				return -1;
+			}
+			// end of table header is start of table data.
+			table->end_table_offset = start;
 		}
-		// end of table header is start of table data.
-		table->end_table_offset = start;
 	}
 	off = get_row_offset(table, row);
 	if (fseeko(table->readfid, off, SEEK_SET)) {
@@ -1029,7 +1037,9 @@ fitstable_t* fitstable_open(const char* fn) {
 	}
     tab->extension = 1;
     tab->fn = strdup_safe(fn);
-    tab->primheader = qfits_header_read(fn);
+
+	tab->anq = anqfits_open(fn);
+	tab->primheader = anqfits_get_header(tab->anq, 0);
     if (!tab->primheader) {
         ERROR("Failed to read primary FITS header from %s", fn);
         goto bailout;
@@ -1170,6 +1180,9 @@ int fitstable_close(fitstable_t* tab) {
             rtn = -1;
         }
     }
+	if (tab->anq) {
+		anqfits_close(tab->anq);
+	}
 	if (tab->readfid) {
 		fclose(tab->readfid);
 	}
@@ -1268,7 +1281,12 @@ int fitstable_open_extension(fitstable_t* tab, int ext) {
 		if (tab->table) {
 			qfits_table_close(tab->table);
 		}
-		tab->table = qfits_table_open(tab->fn, ext);
+
+		if (tab->anq)
+			tab->table = anqfits_get_table(tab->anq, ext);
+		else
+			tab->table = qfits_table_open(tab->fn, ext);
+
 		if (!tab->table) {
 			ERROR("FITS extension %i in file %s is not a table (or there was an error opening the file)", ext, tab->fn);
 			return -1;
@@ -1276,7 +1294,12 @@ int fitstable_open_extension(fitstable_t* tab, int ext) {
 		if (tab->header) {
 			qfits_header_destroy(tab->header);
 		}
-		tab->header = qfits_header_readext(tab->fn, ext);
+
+		if (tab->anq)
+			tab->header = anqfits_get_header(tab->anq, ext);
+		else
+			tab->header = qfits_header_readext(tab->fn, ext);
+
 		if (!tab->header) {
 			ERROR("Couldn't get header for FITS extension %i in file %s", ext, tab->fn);
 			return -1;

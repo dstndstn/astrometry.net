@@ -26,6 +26,7 @@
 #include "an-bool.h"
 #include "bl.h"
 #include "ioutils.h"
+#include "anqfits.h"
 
 /**
  For quick-n-easy(-ish) access to a column of data in a FITS BINTABLE.
@@ -116,6 +117,8 @@
  */
 
 struct fitstable_t {
+	anqfits_t* anq;
+
     qfits_table* table;
     // header for this extension's table
     qfits_header* header;
