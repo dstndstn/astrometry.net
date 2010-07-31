@@ -194,7 +194,7 @@ int fits_offset_of_column(qfits_table* table, int colnum);
  */
 int fits_convert_data(void* dest, int deststride, tfits_type desttype,
                       const void* src, int srcstride, tfits_type srctype,
-                      int arraysize, int N);
+                      int arraysize, size_t N);
 
 // write single column fields:
 int fits_write_data_A(FILE* fid, char value);

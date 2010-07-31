@@ -878,9 +878,9 @@ static void* read_array_into(const fitstable_t* tab,
 							  arraysize, Nread);
 		} else {
 			// work backward from the end of the array
-            fits_convert_data(cdata + ((Nread*arraysize)-1) * csize,
+            fits_convert_data(cdata + (((off_t)Nread*(off_t)arraysize)-1) * (off_t)csize,
 							  -csize, ctype,
-							  fitsdata + ((Nread*arraysize)-1) * fitssize,
+							  fitsdata + (((off_t)Nread*(off_t)arraysize)-1) * (off_t)fitssize,
 							  -fitssize, fitstype,
 							  1, Nread * arraysize);
 		}

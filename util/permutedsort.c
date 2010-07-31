@@ -64,8 +64,8 @@ typedef struct permuted_sort_t permsort_t;
 // This is the comparison function we use.
 static int QSORT_COMPARISON_FUNCTION(compare_permuted, void* user, const void* v1, const void* v2) {
     permsort_t* ps = user;
-	int i1 = *(int*)v1;
-	int i2 = *(int*)v2;
+	off_t i1 = *(int*)v1;
+	off_t i2 = *(int*)v2;
 	const void *val1, *val2;
     const char* darray = ps->data_array;
 	val1 = darray + i1 * ps->data_array_stride;

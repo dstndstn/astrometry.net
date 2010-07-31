@@ -256,8 +256,9 @@ void fits_use_error_system() {
 
 int fits_convert_data(void* vdest, int deststride, tfits_type desttype,
                       const void* vsrc, int srcstride, tfits_type srctype,
-                      int arraysize, int N) {
-    int i, j;
+                      int arraysize, size_t N) {
+	size_t i;
+    int j;
     char* dest = vdest;
     const char* src = vsrc;
     int destatomsize = fits_get_atom_size(desttype);
