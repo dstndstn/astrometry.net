@@ -54,7 +54,7 @@ near the middle.
 0. There is a bug in the v 0.25 code that makes the "hpquads" program
 crash when building index files containing many small quads.  If you
 want to build an index with quads smaller than 2 arcmin, please
-contact the email address "code" at astrometry.net.
+contact the email address "code2" at astrometry.net.
 
 1. Create a FITS binary table (BINTABLE) containing RA, DEC, and MAG
 columns (RA, DEC in degrees).  Add the header card "AN_FILE = RDLS" to
@@ -107,7 +107,7 @@ in the index files we distribute and use in the web service.
 The result is "your-index.fits".  You can delete all the temp files.
 
 These instructions are for v0.25 of the code -- for newer versions please contact
-the email address 'code' at astrometry.net.
+the email address 'code2' at astrometry.net.
 
 5. Tell "solve-field" and "backend" to use the new index.
 
