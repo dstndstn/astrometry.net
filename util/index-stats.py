@@ -16,7 +16,8 @@ from numpy import *
 if __name__ == '__main__':
 	parser = OptionParser()
 	parser.add_option('-p', '--prefix', dest='prefix', help='Prefix for output plot names')
-	parser.set_defaults(prefix='')
+	parser.add_option('-r', '--range', dest='range', type='float', help='Set search radius range (in arcsec) of stars-1 plot, default 15')
+	parser.set_defaults(prefix='', range=15.)
 	opt,args = parser.parse_args()
 
 	if 'plots' in args: # DEBUG!
@@ -175,7 +176,7 @@ if __name__ == '__main__':
 		print 'Getting stars...'
 		stars = index_get_stars(I)
 
-		R = 15.
+		R = opt.range
 		print 'Finding pairs within', R, 'arcsec'
 		inds,dists = match(stars, stars, deg2rad(R/3600.))
 		print 'inds', inds.shape, 'dists', dists.shape
