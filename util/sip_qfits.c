@@ -315,8 +315,8 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 
 	sip.a_order  = qfits_header_getint(hdr, "A_ORDER", -1);
 	sip.b_order  = qfits_header_getint(hdr, "B_ORDER", -1);
-	sip.ap_order = qfits_header_getint(hdr, "AP_ORDER", -1);
-	sip.bp_order = qfits_header_getint(hdr, "BP_ORDER", -1);
+	sip.ap_order = qfits_header_getint(hdr, "AP_ORDER", 0);
+	sip.bp_order = qfits_header_getint(hdr, "BP_ORDER", 0);
 
 	if ((sip.a_order == -1) || 
 		(sip.b_order == -1)) {
@@ -324,8 +324,8 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 			  sip.a_order, sip.b_order);
 		return NULL;
 	}
-	if ((sip.ap_order == -1) || 
-		(sip.bp_order == -1)) {
+	if ((sip.ap_order == 0) || 
+		(sip.bp_order == 0)) {
 		logverb("Warning: SIP: failed to read polynomial orders (A_ORDER=%i, B_ORDER=%i, AP_ORDER=%i, BP_ORDER=%i, -1 means absent)",
 				sip.a_order, sip.b_order, sip.ap_order, sip.bp_order);
 	}
