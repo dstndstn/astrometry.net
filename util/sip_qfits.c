@@ -319,12 +319,15 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 	sip.bp_order = qfits_header_getint(hdr, "BP_ORDER", -1);
 
 	if ((sip.a_order == -1) || 
-		(sip.b_order == -1) || 
-		(sip.ap_order == -1) || 
-		(sip.bp_order == -1)) {
-		ERROR("SIP: failed to read polynomial orders (A_ORDER=%i, B_ORDER=%i, AP_ORDER=%i, BP_ORDER=%i, -1 means absent)",
-			  sip.a_order, sip.b_order, sip.ap_order, sip.bp_order);
+		(sip.b_order == -1)) {
+		ERROR("SIP: failed to read polynomial orders (A_ORDER=%i, B_ORDER=%i, -1 means absent)",
+			  sip.a_order, sip.b_order);
 		return NULL;
+	}
+	if ((sip.ap_order == -1) || 
+		(sip.bp_order == -1)) {
+		logverb("Warning: SIP: failed to read polynomial orders (A_ORDER=%i, B_ORDER=%i, AP_ORDER=%i, BP_ORDER=%i, -1 means absent)",
+				sip.a_order, sip.b_order, sip.ap_order, sip.bp_order);
 	}
 
 	if ((sip.a_order > SIP_MAXORDER) || 
@@ -338,8 +341,8 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 
 	if (!read_polynomial(hdr, "A_%i_%i",  sip.a_order,  (double*)sip.a,  SIP_MAXORDER, TRUE) ||
 		!read_polynomial(hdr, "B_%i_%i",  sip.b_order,  (double*)sip.b,  SIP_MAXORDER, TRUE) ||
-		!read_polynomial(hdr, "AP_%i_%i", sip.ap_order, (double*)sip.ap, SIP_MAXORDER, FALSE) ||
-		!read_polynomial(hdr, "BP_%i_%i", sip.bp_order, (double*)sip.bp, SIP_MAXORDER, FALSE)) {
+		(sip.ap_order > 0 && !read_polynomial(hdr, "AP_%i_%i", sip.ap_order, (double*)sip.ap, SIP_MAXORDER, FALSE)) ||
+		(sip.bp_order > 0 && !read_polynomial(hdr, "BP_%i_%i", sip.bp_order, (double*)sip.bp, SIP_MAXORDER, FALSE))) {
 		ERROR("SIP: failed to read polynomial terms");
 		return NULL;
 	}
