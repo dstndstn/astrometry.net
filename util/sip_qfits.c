@@ -25,6 +25,22 @@
 #include "errors.h"
 #include "log.h"
 
+sip_t* sip_from_string(const char* str, int slen, sip_t* dest) {
+	qfits_header* hdr;
+	sip_t* rtn;
+	if (slen == 0) {
+		slen = strlen(str);
+	}
+	hdr = qfits_header_read_hdr_string((const unsigned char*)str, slen);
+	if (!hdr) {
+		ERROR("Failed to parse a FITS header from the given string");
+		return NULL;
+	}
+	rtn = sip_read_header(hdr, dest);
+	qfits_header_destroy(hdr);
+	return rtn;
+}
+
 sip_t* sip_read_tan_or_sip_header_file_ext(const char* wcsfn, int ext, sip_t* dest, bool forcetan) {
 	sip_t* rtn;
 	if (forcetan) {

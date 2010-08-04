@@ -33,7 +33,7 @@
 
 int sip_ensure_inverse_polynomials(sip_t* sip) {
 	if ((sip->a_order == 0 && sip->b_order == 0) ||
-		(sip->ap_order >= 0  && sip->bp_order >= 0)) {
+		(sip->ap_order > 0  && sip->bp_order > 0)) {
 		return 0;
 	}
 	sip->ap_order = sip->bp_order = MAX(sip->a_order, sip->b_order) + 1;

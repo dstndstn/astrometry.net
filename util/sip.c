@@ -393,6 +393,9 @@ void sip_print_to(const sip_t* sip, FILE* f) {
 
    print_to(&(sip->wcstan), f, "SIP");
 
+   fprintf(f, "  SIP order: A=%i, B=%i, AP=%i, BP=%i\n",
+		   sip->a_order, sip->b_order, sip->ap_order, sip->bp_order);
+
 	if (sip->a_order > 0) {
 		int p, q;
 		for (p=0; p<=sip->a_order; p++) {
@@ -416,6 +419,28 @@ void sip_print_to(const sip_t* sip, FILE* f) {
 			fprintf(f,"\n");
 		}
 	}
+
+	if (sip->ap_order > 0) {
+		int p, q;
+		for (p=0; p<=sip->ap_order; p++) {
+			fprintf(f, (p ? "      " : "  AP = "));
+			for (q=0; q<=sip->ap_order; q++)
+				if (p+q <= sip->ap_order)
+					fprintf(f,"%12.5g", sip->ap[p][q]);
+			fprintf(f,"\n");
+		}
+	}
+	if (sip->bp_order > 0) {
+		int p, q;
+		for (p=0; p<=sip->bp_order; p++) {
+			fprintf(f, (p ? "      " : "  BP = "));
+			for (q=0; q<=sip->bp_order; q++)
+				if (p+q <= sip->bp_order)
+					fprintf(f,"%12.5g", sip->bp[p][q]);
+			fprintf(f,"\n");
+		}
+	}
+
 
 	det = sip_det_cd(sip);
 	pixsc = 3600*sqrt(fabs(det));

@@ -47,6 +47,9 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest);
 tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest);
 
 
+sip_t* sip_from_string(const char* str, int len, sip_t* dest);
+
+
 int tan_write_to(const tan_t* tan, FILE* fid);
 
 int sip_write_to(const sip_t* sip, FILE* fid);
