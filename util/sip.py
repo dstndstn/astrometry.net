@@ -214,9 +214,7 @@ class Sip(ctypes.Structure):
 			rtn = _sip.sip_read_header_file_ext(cfn, ext, ctypes.pointer(self))
 			if not rtn:
 				raise Exception, 'Failed to parse SIP header from file "%s"' % filename
-			if self.a_order and not self.ap_order:
-				self.ap_order = self.bp_order = max(self.a_order, self.b_order)+1
-				_sip.sip_compute_inverse_polynomials(ctypes.pointer(self), 0, 0, 0, 0, 0, 0)
+			_sip.sip_ensure_inverse_polynomials()
 
 	def __str__(self):
 		return '<Sip: ' + str(self.wcstan) + \

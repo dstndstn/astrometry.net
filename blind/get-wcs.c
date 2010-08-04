@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -33,13 +34,17 @@
 #include "sip_qfits.h"
 #include "fitsioutils.h"
 #include "starutil.h"
+#include "errors.h"
+#include "log.h"
+#include "ioutils.h"
 
-static char* OPTIONS = "ho:e:";
+static char* OPTIONS = "ho:e:t";
 
 static void printHelp(char* progname) {
     printf("%s <input-file>\n"
 		   "   [-e <extension>]\n"
            "   [-o <output-file>]\n"
+		   "   [-t]: force TAN (not SIP)\n"
            "\n", progname);
 }
 
@@ -51,9 +56,10 @@ int main(int argc, char *argv[]) {
     int argchar;
     char* infn = NULL;
     char* outfn = NULL;
-    qfits_header* hdr;
-    tan_t wcs;
+    sip_t* wcs;
 	int ext = 0;
+	bool forcetan = FALSE;
+	tan_t* tan;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
@@ -67,6 +73,9 @@ int main(int argc, char *argv[]) {
         case 'o':
             outfn = optarg;
             break;
+		case 't':
+			forcetan = TRUE;
+			break;
         default:
             return -1;
         }
@@ -77,56 +86,62 @@ int main(int argc, char *argv[]) {
     }
     infn = argv[optind];
 
-    hdr = qfits_header_readext(infn, ext);
-    if (!hdr) {
-        fprintf(stderr, "Failed to read FITS header.\n");
-        exit(-1);
-    }
+	log_init(LOG_MSG);
+	fits_use_error_system();
+	errors_log_to(stderr);
 
-    memset(&wcs, 0, sizeof(tan_t));
+	wcs = sip_read_tan_or_sip_header_file_ext(infn, ext, NULL, forcetan);
+	if (!wcs) {
+		ERROR("Failed to parse WCS header");
+		exit(-1);
+	}
 
-    // This sucks :)
+	tan = &(wcs->wcstan);
 
-    if (!tan_read_header(hdr, &wcs)) {
-        // Couldn't get a wcs from this file.
-        return 0;
-    }
-    qfits_header_destroy(hdr);
+    printf("crval1 %g\n", tan->crval[0]);
+    printf("crval2 %g\n", tan->crval[1]);
+    printf("crpix1 %g\n", tan->crpix[0]);
+    printf("crpix2 %g\n", tan->crpix[1]);
+    printf("cd11 %g\n", tan->cd[0][0]);
+    printf("cd12 %g\n", tan->cd[0][1]);
+    printf("cd21 %g\n", tan->cd[1][0]);
+    printf("cd22 %g\n", tan->cd[1][1]);
 
-    printf("crval1 %g\n", wcs.crval[0]);
-    printf("crval2 %g\n", wcs.crval[1]);
-    printf("crpix1 %g\n", wcs.crpix[0]);
-    printf("crpix2 %g\n", wcs.crpix[1]);
-    printf("cd11 %g\n", wcs.cd[0][0]);
-    printf("cd12 %g\n", wcs.cd[0][1]);
-    printf("cd21 %g\n", wcs.cd[1][0]);
-    printf("cd22 %g\n", wcs.cd[1][1]);
+	if (wcs->a_order) {
+		printf("a_order %i\n", wcs->a_order);
+		printf("b_order %i\n", wcs->b_order);
+		// FIXME -- print the coefficients!
+	}
 
     if (outfn) {
         FILE* fout;
         bool tostdout;
-        tostdout =  !strcmp(outfn, "-");
+        tostdout = streq(outfn, "-");
         if (tostdout)
             fout = stdout;
         else {
             fout = fopen(outfn, "wb");
             if (!fout) {
-                fprintf(stderr, "Failed to open output file %s: %s\n", outfn, strerror(errno));
+                SYSERROR("Failed to open output file %s", outfn);
                 exit(-1);
             }
         }
-        hdr = tan_create_header(&wcs);
-        if (!hdr) {
-            fprintf(stderr, "Failed to create WCS header.\n");
-            exit(-1);
-        }
-        if (qfits_header_dump(hdr, fout)) {
-            fprintf(stderr, "Failed to write WCS header.\n");
-            exit(-1);
-        }
+
+		if (wcs->a_order) {
+			if (sip_write_to(wcs, fout)) {
+				ERROR("Failed to write SIP header to file \"%s\"", outfn);
+				exit(-1);
+			}
+		} else {
+			if (tan_write_to(&(wcs->wcstan), fout)) {
+				ERROR("Failed to write TAN header to file \"%s\"", outfn);
+				exit(-1);
+			}
+		}
+
         if (!tostdout) {
             if (fclose(fout)) {
-                fprintf(stderr, "Failed to close output file %s: %s\n", outfn, strerror(errno));
+                SYSERROR("Failed to close output file \"%s\"", outfn);
                 exit(-1);
             }
         }

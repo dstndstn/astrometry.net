@@ -31,10 +31,19 @@
 #include "errors.h"
 #include "log.h"
 
+int sip_ensure_inverse_polynomials(sip_t* sip) {
+	if ((sip->a_order == 0 && sip->b_order == 0) ||
+		(sip->ap_order >= 0  && sip->bp_order >= 0)) {
+		return 0;
+	}
+	sip->ap_order = sip->bp_order = MAX(sip->a_order, sip->b_order) + 1;
+	return sip_compute_inverse_polynomials(sip, 0, 0, 0, 0, 0, 0);
+}
+
 int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 									double xlo, double xhi,
 									double ylo, double yhi) {
-	int inv_sip_order, ngrid;
+	int inv_sip_order;
 	int M, N;
 	int i, j, p, q, gu, gv;
 	double maxu, maxv, minu, minv;
@@ -65,8 +74,6 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 		xhi = tan->imagew;
 	if (yhi == 0)
 		yhi = tan->imageh;
-
-	//logverb("tweak inversion using %u gridpoints\n", ngrid);
 
 	// Number of coefficients to solve for:
 	// We only compute the upper triangle polynomial terms, and we
@@ -185,8 +192,8 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 				sumdv += square(v - newv);
 			}
 		}
-		sumdu /= (ngrid*ngrid);
-		sumdv /= (ngrid*ngrid);
+		sumdu /= (NX*NY);
+		sumdv /= (NX*NY);
 		debug("RMS error of inverting a distortion (at the grid points):\n");
 		debug("  du: %g\n", sqrt(sumdu));
 		debug("  dv: %g\n", sqrt(sumdu));

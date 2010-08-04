@@ -21,6 +21,8 @@
 
 #include "sip.h"
 
+int sip_ensure_inverse_polynomials(sip_t* sip);
+
 /**
  sip->a_order, sip->b_order, sip->a, and sip->b must be set.
 
