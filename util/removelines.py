@@ -57,6 +57,11 @@ def removelines(infile, outfile, xcol='X', ycol='Y', cut=None, **kwargs):
 	p = pyfits.open(infile)
 	xy = p[1].data
 	hdr = p[1].header
+	if xy is None:
+		print 'removelines.py: Input file contains no sources.'
+		p.writeto(outfile, clobber=True)
+		return 0
+
 	x = xy.field(xcol)
 	y = xy.field(ycol)
 

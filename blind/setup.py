@@ -47,7 +47,7 @@ def get_lib_dirs(pkg):
 	return libs
 
 netpbm_inc = os.environ.get('NETPBM_INC', '')
-netpbm_lib = os.environ.get('NETPBM_LIB', '')
+netpbm_lib = os.environ.get('NETPBM_LIB', '-lnetpbm')
 
 compile_args = ['-O0', '-g']
 if len(netpbm_inc):

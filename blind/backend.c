@@ -783,6 +783,12 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
             }
         }
 
+		if (wcs.a_order > 0 && wcs.ap_order == 0) {
+			logverb("Computing inverse SIP polynomial terms...\n");
+			wcs.ap_order = wcs.bp_order = MAX(wcs.a_order, wcs.b_order) + 1;
+			sip_compute_inverse_polynomials(&wcs, 0, 0, 0, 0, 0, 0);
+		}
+
         blind_add_verify_wcs(bp, &wcs);
 		n++;
 	}

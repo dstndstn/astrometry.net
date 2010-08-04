@@ -538,6 +538,13 @@ static anwcs_t* open_tansip(const char* filename, int ext, bool forcetan) {
 		ERROR("Failed to parse SIP header");
 		return NULL;
 	}
+	if (sip->a_order >= 2 && sip->b_order >= 2 &&
+		(sip->ap_order == 0 || sip->bp_order == 0)) {
+		logverb("Computing inverse SIP polynomial terms...\n");
+		sip->ap_order = sip->bp_order = MAX(sip->a_order, sip->b_order) + 1;
+		sip_compute_inverse_polynomials(sip, 0, 0, 0, 0, 0, 0);
+	}
+
 	anwcs = calloc(1, sizeof(anwcs_t));
 	anwcs->type = ANWCS_TYPE_SIP;
 	anwcs->data = sip;

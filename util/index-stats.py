@@ -175,7 +175,7 @@ if __name__ == '__main__':
 		# stars
 		print 'Getting stars...'
 		stars = index_get_stars(I)
-
+		print stars.shape
 		R = opt.range
 		print 'Finding pairs within', R, 'arcsec'
 		inds,dists = match(stars, stars, deg2rad(R/3600.))
