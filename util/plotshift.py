@@ -8,12 +8,24 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None):
 	radius = dcell * sqrt(2.)
 	print 'ixy', ixy.shape
 	print 'rxy', rxy.shape
+	assert(rxy.shape[1] == 2)
+	assert(ixy.shape[1] == 2)
+
+	rx = rxy[:,0]
+	ry = rxy[:,1]
+	ix = ixy[:,0]
+	iy = ixy[:,1]
 
 	if W is None:
-		W = max(ixy[:,0])
+		W = max(ix)
 	if H is None:
-		H = max(ixy[:,1])
+		H = max(iy)
 
+	keep = (rx > -dcell) * (rx < W+dcell) * (ry > -dcell) * (ry < H+dcell)
+	rx = rx[keep]
+	ry = ry[keep]
+	print 'Cut to %i ref sources in range' % len(rx)
+	
 	cellsize = sqrt(W * H / ncells)
 	nw = int(round(W / cellsize))
 	nh = int(round(H / cellsize))
@@ -36,28 +48,29 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None):
 			R = (bin == thisbin)
 			print 'cell %i, %i' % (j, i)
 			print '%i ref sources' % sum(R)
-			if sum(R) == 0:
-				continue
-			(inds,dists) = spherematch.match(rxy[R,:], ixy, radius)
-			print 'Found %i matches within %g pixels' % (len(dists), radius)
-			ri = inds[:,0]
-			# un-cut ref inds...
-			ri = (flatnonzero(R))[ri]
-			ii = inds[:,1]
-			matchx  = rx[ri]
-			matchy  = ry[ri]
-			matchdx = ix[ii] - matchx
-			matchdy = iy[ii] - matchy
-			ok = (matchdx >= -dcell) * (matchdx <= dcell) * (matchdy >= -dcell) * (matchdy <= dcell)
-			matchdx = matchdx[ok]
-			matchdy = matchdy[ok]
-			print 'Cut to %i within %g x %g square' % (sum(ok), dcell*2, dcell*2)
+
+			if sum(R) > 0:
+				(inds,dists) = spherematch.match(rxy[R,:], ixy, radius)
+				print 'Found %i matches within %g pixels' % (len(dists), radius)
+				ri = inds[:,0]
+				# un-cut ref inds...
+				ri = (flatnonzero(R))[ri]
+				ii = inds[:,1]
+				matchx  = rx[ri]
+				matchy  = ry[ri]
+				matchdx = ix[ii] - matchx
+				matchdy = iy[ii] - matchy
+				ok = (matchdx >= -dcell) * (matchdx <= dcell) * (matchdy >= -dcell) * (matchdy <= dcell)
+				matchdx = matchdx[ok]
+				matchdy = matchdy[ok]
+				print 'Cut to %i within %g x %g square' % (sum(ok), dcell*2, dcell*2)
 			
 			# Subplot places plots left-to-right, TOP-to-BOTTOM.
 			subplot(nh, nw, 1 + ((nh - i - 1)*nw + j))
-			plot(matchdx, matchdy, 'ro', mec='r', mfc='r', ms=5, alpha=0.2)
-			plot(matchdx, matchdy, 'ro', mec='r', mfc='none', ms=5, alpha=0.2)
-			#plot([0], [0], 'bo', mec='b', mfc='none')
+			if sum(R) > 0:
+				plot(matchdx, matchdy, 'ro', mec='r', mfc='r', ms=5, alpha=0.2)
+				plot(matchdx, matchdy, 'ro', mec='r', mfc='none', ms=5, alpha=0.2)
+
 			axhline(0, color='k', alpha=0.5)
 			axvline(0, color='k', alpha=0.5)
 			if i == 0 and j == 0:
