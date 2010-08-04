@@ -29,6 +29,7 @@
 #include "starutil.h"
 #include "mathutil.h"
 #include "boilerplate.h"
+#include "errors.h"
 
 const char* OPTIONS = "he:W:H:";
 
@@ -93,7 +94,7 @@ int main(int argc, char** args) {
 	}
 
 	if (!sip_read_header_file_ext(inputfiles[0], ext, &wcs)) {
-		fprintf(stderr, "failed to read WCS header from file %s, extension %i.\n", inputfiles[0], ext);
+		ERROR("failed to read WCS header from file %s, extension %i", inputfiles[0], ext);
 		return -1;
 	}
 
@@ -102,7 +103,7 @@ int main(int argc, char** args) {
 	if (imh == 0)
 		imh = wcs.wcstan.imageh;
 	if ((imw == 0.0) || (imh == 0.0)) {
-		fprintf(stderr, "failed to find IMAGE{W,H} in WCS file.\n");
+		ERROR("failed to find IMAGE{W,H} in WCS file");
 		return -1;
 	}
 	// If W,H were set on the cmdline...

@@ -18,6 +18,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "permutedsort.h"
 #include "os-features.h" // for qsort_r

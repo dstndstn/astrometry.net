@@ -49,6 +49,8 @@ class tabledata(object):
 		self.__setattr__(name, val)
 	def getcolumn(self, name):
 		return self.__dict__[name.lower()]
+	def get_columns(self):
+		return self._columns
 	def columns(self):
 		return [k for k in self.__dict__.keys() if not k.startswith('_')]
 	def __len__(self):
@@ -111,6 +113,8 @@ class tabledata(object):
 			self._length = len(newX)
 
 	def write_to(self, fn, columns=None, header='default'):
+		if columns is None and hasattr(self, '_columns'):
+			columns = self._columns
 		T = pyfits.new_table(self.to_fits_columns(columns))
 		if header == 'default':
 			header = self._header
@@ -277,5 +281,7 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
 
 		fields.set(colnames[i].lower(), array(vals))
 		fields._length = len(vals)
+
+	fields._columns = [c.lower() for c in colnames]
 
 	return fields
