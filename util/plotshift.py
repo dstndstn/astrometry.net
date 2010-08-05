@@ -11,8 +11,6 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None):
 	assert(rxy.shape[1] == 2)
 	assert(ixy.shape[1] == 2)
 
-	rx = rxy[:,0]
-	ry = rxy[:,1]
 	ix = ixy[:,0]
 	iy = ixy[:,1]
 
@@ -21,10 +19,9 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None):
 	if H is None:
 		H = max(iy)
 
-	keep = (rx > -dcell) * (rx < W+dcell) * (ry > -dcell) * (ry < H+dcell)
-	rx = rx[keep]
-	ry = ry[keep]
-	print 'Cut to %i ref sources in range' % len(rx)
+	keep = (rxy[:,0] > -dcell) * (rxy[:,0] < W+dcell) * (rxy[:,1] > -dcell) * (rxy[:,1] < H+dcell)
+	rxy = rxy[keep]
+	print 'Cut to %i ref sources in range' % len(rxy)
 	
 	cellsize = sqrt(W * H / ncells)
 	nw = int(round(W / cellsize))
@@ -33,9 +30,11 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None):
 	print 'N cells', nw, 'x', nh
 	edgesx = linspace(0, W, nw+1)
 	edgesy = linspace(0, H, nh+1)
-
-	binx = digitize(rx, edgesx)
-	biny = digitize(ry, edgesy)
+	print 'Edges:'
+	print '  x:', edgesx
+	print '  y:', edgesy
+	binx = digitize(rxy[:,0], edgesx)
+	biny = digitize(rxy[:,1], edgesy)
 	binx = clip(binx - 1, 0, nw-1)
 	biny = clip(biny - 1, 0, nh-1)
 	bin = biny * nw + binx
@@ -56,8 +55,8 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None):
 				# un-cut ref inds...
 				ri = (flatnonzero(R))[ri]
 				ii = inds[:,1]
-				matchx  = rx[ri]
-				matchy  = ry[ri]
+				matchx  = rxy[ri,0]
+				matchy  = rxy[ri,1]
 				matchdx = ix[ii] - matchx
 				matchdy = iy[ii] - matchy
 				ok = (matchdx >= -dcell) * (matchdx <= dcell) * (matchdy >= -dcell) * (matchdy <= dcell)
