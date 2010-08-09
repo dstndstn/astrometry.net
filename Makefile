@@ -160,6 +160,25 @@ release:
 	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
 	bzip2 --best $(RELEASE_DIR).tar
 
+# spherematch-only release
+SP_RELEASE_DIR := pyspherematch-$(RELEASE_VER)
+SP_RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
+SP_RELEASE_SUBDIRS := gsl-an qfits-an util libkd
+SP_ONLY := pyspherematch-only
+
+release-pyspherematch:
+	-rm -R $(SP_RELEASE_DIR) $(SP_RELEASE_DIR).tar $(SP_RELEASE_DIR).tar.gz $(SP_RELEASE_DIR).tar.bz2
+	svn export -N $(SP_RELEASE_SVN) $(SP_RELEASE_DIR)
+	for x in $(SP_RELEASE_SUBDIRS); do \
+		svn export $(SP_RELEASE_SVN)/$$x $(SP_RELEASE_DIR)/$$x; \
+	done
+# make a new Makefile that install pyspherematch only
+	cp -r $(SP_ONLY)/* $(SP_RELEASE_DIR)
+	tar cf $(SP_RELEASE_DIR).tar $(SP_RELEASE_DIR)
+	gzip --best -c $(SP_RELEASE_DIR).tar > $(SP_RELEASE_DIR).tar.gz
+	bzip2 --best $(SP_RELEASE_DIR).tar
+
+
 tag-release:
 	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
 
