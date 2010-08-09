@@ -237,6 +237,7 @@ report:
 	-$(MAKE) --version
 	-$(CC) -dM -E - < /dev/null
 	-cat /proc/cpuinfo
+	-sysctl -a kern.ostype kern.osrelease kern.version kern.osversion hw.machine hw.model hw.ncpu hw.byteorder hw.physmem hw.cpufrequency hw.memsize hw.optional.x86_64 hw.cpu64bit_capable machdep.cpu.brand_string
 	-free
 	@echo "SHAREDLIBFLAGS_DEF: $(SHAREDLIBFLAGS_DEF)"
 	@echo "FLAGS_DEF: $(FLAGS_DEF)"

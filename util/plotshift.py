@@ -1,3 +1,11 @@
+#! /usr/bin/env python
+
+import sys
+from optparse import OptionParser
+
+import matplotlib
+matplotlib.use('Agg')
+
 from pylab import *
 from numpy import *
 
@@ -59,16 +67,23 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None):
 				matchy  = rxy[ri,1]
 				matchdx = ix[ii] - matchx
 				matchdy = iy[ii] - matchy
+				#print 'All matches:'
+				#for dx,dy in zip(matchdx,matchdy):
+				#	print '  %.1f, %.1f' % (dx,dy)
 				ok = (matchdx >= -dcell) * (matchdx <= dcell) * (matchdy >= -dcell) * (matchdy <= dcell)
 				matchdx = matchdx[ok]
 				matchdy = matchdy[ok]
 				print 'Cut to %i within %g x %g square' % (sum(ok), dcell*2, dcell*2)
+				#print 'Cut matches:'
+				#for dx,dy in zip(matchdx,matchdy):
+				#	print '  %.1f, %.1f' % (dx,dy)
 			
 			# Subplot places plots left-to-right, TOP-to-BOTTOM.
 			subplot(nh, nw, 1 + ((nh - i - 1)*nw + j))
 			if sum(R) > 0:
-				plot(matchdx, matchdy, 'ro', mec='r', mfc='r', ms=5, alpha=0.2)
-				plot(matchdx, matchdy, 'ro', mec='r', mfc='none', ms=5, alpha=0.2)
+				#plot(matchdx, matchdy, 'ro', mec='r', mfc='r', ms=5, alpha=0.2)
+				#plot(matchdx, matchdy, 'ro', mec='r', mfc='none', ms=5, alpha=0.2)
+				plot(matchdx, matchdy, 'r.', alpha=0.3)
 
 			axhline(0, color='k', alpha=0.5)
 			axvline(0, color='k', alpha=0.5)
@@ -83,3 +98,47 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None):
 	if outfn is not None:
 		print 'Saving', outfn
 		savefig(outfn)
+
+
+if __name__ == '__main__':
+	from astrometry.util.pyfits_utils import fits_table
+	
+	parser = OptionParser('usage: %prog [options] <image xy> <reference xy> <plot name>')
+	parser.add_option('-X', dest='xcol', help='Name of X column in image table')
+	parser.add_option('-Y', dest='ycol', help='Name of Y column in image table')
+	parser.add_option('-N', dest='nimage', type='int', help='Cut to the first N image sources')
+	parser.add_option('-x', dest='rxcol', help='Name of X column in reference table')
+	parser.add_option('-y', dest='rycol', help='Name of Y column in reference table')
+	parser.add_option('-n', dest='nref', type='int', help='Cut to the first N reference sources')
+	parser.add_option('-c', dest='cells', type='int', help='Approx. number of pieces to cut image into (default:18)')
+	parser.add_option('-s', dest='cellsize', type='int', help='Search radius, in pixels (default 50)')
+	parser.set_defaults(xcol='X', ycol='Y', nimage=0, cells=0, cellsize=0, rxcol='X', rycol='Y', nref=0)
+	opt,args = parser.parse_args()
+
+	if len(args) != 3:
+		parser.print_help()
+		sys.exit(-1)
+
+	imxy = fits_table(args[0])
+	refxy = fits_table(args[1])
+	outfn = args[2]
+
+	kwargs = {}
+	if opt.cells:
+		kwargs['ncells'] = opt.cells
+	if opt.cellsize:
+		kwargs['dcell'] = opt.cellsize
+
+	ix = imxy.getcolumn(opt.xcol)
+	iy = imxy.getcolumn(opt.ycol)
+	ixy = vstack((ix,iy)).T
+	if opt.nimage:
+		ixy = ixy[:opt.nimage,:]
+
+	rx = refxy.getcolumn(opt.rxcol)
+	ry = refxy.getcolumn(opt.rycol)
+	rxy = vstack((rx,ry)).T
+	if opt.nref:
+		rxy = rxy[:opt.nref,:]
+
+	plotshift(ixy, rxy, outfn=outfn, **kwargs)
