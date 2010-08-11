@@ -13,12 +13,18 @@ def add_nonstructural_headers(fromhdr, tohdr):
 			card.key.startswith('TDISP')):
 			#print 'skipping card', card.key
 			continue
-		if tohdr.has_key(card.key):
-			#print 'skipping existing card', card.key
-			continue
+		#if tohdr.has_key(card.key):
+		#	#print 'skipping existing card', card.key
+		#	continue
 		#print 'adding card', card.key
-		tohdr.update(card.key, card.value, card.comment)
-
+		#tohdr.update(card.key, card.value, card.comment, before='END')
+		#tohdr.ascardlist().append(
+		cl = tohdr.ascardlist()
+		if 'END' in cl.keys():
+			i = cl.index_of('END')
+		else:
+			i = len(cl)
+		cl.insert(i, pyfits.Card(card.key, card.value, card.comment))
 
 
 class tabledata(object):
@@ -49,8 +55,14 @@ class tabledata(object):
 		self.__setattr__(name, val)
 	def getcolumn(self, name):
 		return self.__dict__[name.lower()]
+
+	# Returns the list of column names, as they were ordered in the input FITS or text table.
 	def get_columns(self):
 		return self._columns
+	# Returns the original FITS header.
+	def get_header(self):
+		return self._header
+
 	def columns(self):
 		return [k for k in self.__dict__.keys() if not k.startswith('_')]
 	def __len__(self):
@@ -114,7 +126,7 @@ class tabledata(object):
 			self.set(name, newX)
 			self._length = len(newX)
 
-	def write_to(self, fn, columns=None, header='default'):
+	def write_to(self, fn, columns=None, header='default', primheader=None):
 		if columns is None and hasattr(self, '_columns'):
 			columns = self._columns
 		T = pyfits.new_table(self.to_fits_columns(columns))
@@ -122,7 +134,12 @@ class tabledata(object):
 			header = self._header
 		if header is not None:
 			add_nonstructural_headers(header, T.header)
-		T.writeto(fn, clobber=True)
+		if primheader is not None:
+			P = pyfits.PrimaryHDU()
+			add_nonstructural_headers(primheader, P.header)
+			pyfits.HDUList([P, T]).writeto(fn, clobber=True)
+		else:
+			T.writeto(fn, clobber=True)
 
 	writeto = write_to
 
