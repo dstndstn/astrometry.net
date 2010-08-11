@@ -100,6 +100,8 @@ class tabledata(object):
 			else:
 				rtn._length = len(getattr(rtn, name))
 		rtn._header = self._header
+		if hasattr(self, '_columns'):
+			rtn._columns = self._columns
 		return rtn
 	def __iter__(self):
 		return tabledata.td_iter(self)
@@ -194,6 +196,7 @@ def table_fields(dataorfn, rows=None, hdunum=1, header='default'):
 			col = col[rows]
 		fields.set(c.lower(), col)
 	fields._length = len(data)
+	fields._columns = [c.lower() for c in colnames]
 	if pf:
 		pf.close()
 	return fields

@@ -11,7 +11,9 @@ from numpy import *
 
 from astrometry.libkd import spherematch
 
-def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None):
+def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None, hist=False,
+			  nhistbins=21):
+			  #histbinsize=None):
 	# correspondences we could have hit...
 	radius = dcell * sqrt(2.)
 	print 'ixy', ixy.shape
@@ -55,6 +57,7 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None):
 			R = (bin == thisbin)
 			print 'cell %i, %i' % (j, i)
 			print '%i ref sources' % sum(R)
+			matchdx = []
 
 			if sum(R) > 0:
 				(inds,dists) = spherematch.match(rxy[R,:], ixy, radius)
@@ -80,13 +83,26 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None):
 			
 			# Subplot places plots left-to-right, TOP-to-BOTTOM.
 			subplot(nh, nw, 1 + ((nh - i - 1)*nw + j))
-			if sum(R) > 0:
+
+			if len(matchdx) > 0:
 				#plot(matchdx, matchdy, 'ro', mec='r', mfc='r', ms=5, alpha=0.2)
 				#plot(matchdx, matchdy, 'ro', mec='r', mfc='none', ms=5, alpha=0.2)
-				plot(matchdx, matchdy, 'r.', alpha=0.3)
+				if hist:
+					#if histbinsize is None:
+					#	histbinsize = dcell / 10.
+					edges = linspace(-dcell, dcell, nhistbins)
+					(H,xe,ye) = histogram2d(matchdx, matchdy, bins=(edges,edges))
+					imshow(H.T, extent=(min(xe), max(xe), min(ye), max(ye)),
+						   aspect='auto', origin='lower', interpolation='nearest')
+					text(dcell, dcell, '%i' % H.max(), color='y',
+						 horizontalalignment='right', verticalalignment='top')
+						 
+				else:
+					plot(matchdx, matchdy, 'r.', alpha=0.3)
 
-			axhline(0, color='k', alpha=0.5)
-			axvline(0, color='k', alpha=0.5)
+			if not hist:
+				axhline(0, color='k', alpha=0.5)
+				axvline(0, color='k', alpha=0.5)
 			if i == 0 and j == 0:
 				xticks([-dcell,0,dcell])
 				yticks([-dcell,0,dcell])

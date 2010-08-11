@@ -75,12 +75,14 @@ void anwcs_print(const anwcs_t* wcs, FILE* fid);
 
 // Center and radius of the field.
 // RA,Dec,radius in degrees.
-int anwcs_get_radec_center_and_radius(anwcs_t* anwcs,
+int anwcs_get_radec_center_and_radius(const anwcs_t* anwcs,
 									  double* p_ra, double* p_dec, double* p_radius);
 
 void anwcs_walk_image_boundary(const anwcs_t* wcs, double stepsize,
 							   void (*callback)(const anwcs_t* wcs, double x, double y, double ra, double dec, void* token),
 							   void* token);
+
+bool anwcs_overlaps(const anwcs_t* wcs1, const anwcs_t* wcs2, int stepsize);
 
 double anwcs_imagew(const anwcs_t* anwcs);
 double anwcs_imageh(const anwcs_t* anwcs);

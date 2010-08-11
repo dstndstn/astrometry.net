@@ -170,44 +170,55 @@ static bool wcslib_radec_is_inside_image(anwcslib_t* wcslib, double ra, double d
 			py >= 1 && py <= wcslib->imageh);
 }
 
-static void wcslib_radec_bounds(const anwcslib_t* wcs, int stepsize,
+//// This was copied wholesale from sip-utils.c /////
+
+struct radecbounds {
+	double rac, decc;
+    double ramin, ramax, decmin, decmax;
+};
+
+static void radec_bounds_callback(const anwcs_t* wcs, double x, double y, double ra, double dec, void* token) {
+	struct radecbounds* b = token;
+	b->decmin = MIN(b->decmin, dec);
+	b->decmax = MAX(b->decmax, dec);
+	if (ra - b->rac > 180)
+		// wrap-around: racenter < 180, ra has gone < 0 but been wrapped around to > 180
+		ra -= 360;
+	if (b->rac - ra > 180)
+		// wrap-around: racenter > 180, ra has gone > 360 but wrapped around to > 0.
+		ra += 360;
+
+	b->ramin = MIN(b->ramin, ra);
+	b->ramax = MAX(b->ramax, ra);
+}
+
+static void wcslib_radec_bounds(const anwcs_t* genwcs, const anwcslib_t* wcs, int stepsize,
 								double* pramin, double* pramax,
 								double* pdecmin, double* pdecmax) {
-	// FIXME -- this does no pole-checking.
-	// It should be possible to just walk the boundary (as in sip-utils)
-	// but this is more robust...
-	int i, j, W, H;
-	double ralo, rahi, declo, dechi;
-	// for gcc:
-	ralo = rahi = declo = dechi = 0;
-	W = wcslib_imagew(wcs);
-	H = wcslib_imageh(wcs);
-	for (i=1; i<H+stepsize; i+=stepsize) {
-		// up to and including H
-		i = MIN(H, i);
-		for (j=1; j<=W+stepsize; j+=stepsize) {
-			j = MIN(W, j);
-			double ra,dec;
-			if (wcslib_pixelxy2radec(wcs, i, j, &ra, &dec)) {
-				ERROR("Error converting pixel coord (%i,%i) in radec_bounds", i, j);
-				continue;
-			}
-			// first time through loop?
-			if (i == 1 && j == 1) {
-				ralo = rahi = ra;
-				declo = dechi = dec;
-			} else {
-				ralo = MIN(ralo, ra);
-				rahi = MAX(rahi, ra);
-				declo = MIN(declo, dec);
-				dechi = MAX(dechi, dec);
-			}
-		}
+	struct radecbounds b;
+
+	anwcs_get_radec_center_and_radius(genwcs, &(b.rac), &(b.decc), NULL);
+	b.ramin  = b.ramax = b.rac;
+	b.decmin = b.decmax = b.decc;
+	anwcs_walk_image_boundary(genwcs, stepsize, radec_bounds_callback, &b);
+
+	// Check for poles...
+	// north pole
+	if (anwcs_radec_is_inside_image(genwcs, 0, 90)) {
+		b.ramin = 0;
+		b.ramax = 360;
+		b.decmax = 90;
 	}
-	if (pramin) *pramin = ralo;
-	if (pramax) *pramax = rahi;
-	if (pdecmin) *pdecmin = declo;
-	if (pdecmax) *pdecmax = dechi;
+	if (anwcs_radec_is_inside_image(genwcs, 0, -90)) {
+		b.ramin = 0;
+		b.ramax = 360;
+		b.decmin = -90;
+	}
+
+    if (pramin) *pramin = b.ramin;
+    if (pramax) *pramax = b.ramax;
+    if (pdecmin) *pdecmin = b.decmin;
+    if (pdecmax) *pdecmax = b.decmax;
 }
 
 static void wcslib_print(const anwcslib_t* anwcslib, FILE* fid) {
@@ -287,14 +298,7 @@ static int wcslib_scale_wcs(anwcslib_t* wcslib, double scale) {
 
 /////////////////// sip implementations //////////////////////////
 
-/*
- static void ansip_radec_bounds(const sip_t* sip, int stepsize,
- double* pramin, double* pramax,
- double* pdecmin, double* pdecmax) {
- sip_get_radec_bounds(sip, stepsize, pramin, pramax, pdecmin, pdecmax);
- }
- */
-#define ansip_radec_bounds sip_get_radec_bounds
+//#define ansip_radec_bounds sip_get_radec_bounds
 
 #define ansip_radec_is_inside_image sip_is_inside_image
 
@@ -338,7 +342,29 @@ void anwcs_set_size(anwcs_t* wcs, int W, int H) {
 void anwcs_get_radec_bounds(const anwcs_t* wcs, int stepsize,
 							double* pramin, double* pramax,
 							double* pdecmin, double* pdecmax) {
-	ANWCS_DISPATCH(wcs, , , radec_bounds, stepsize, pramin, pramax, pdecmin, pdecmax);
+	assert(wcs);
+	switch (wcs->type) {
+	case ANWCS_TYPE_WCSLIB:
+#ifdef WCSLIB_EXISTS
+		{
+			anwcslib_t* anwcslib = wcs->data;
+			wcslib_radec_bounds(wcs, anwcslib, stepsize, pramin, pramax, pdecmin, pdecmax);
+		}
+#else
+		ERROR("Wcslib support was not compiled in");
+#endif
+		break;
+	case ANWCS_TYPE_SIP:
+		{
+			sip_t* sip = wcs->data;
+			sip_get_radec_bounds(sip, stepsize, pramin, pramax, pdecmin, pdecmax);
+			break;
+		}
+	default:
+		ERROR("Unknown anwcs type %i", wcs->type);
+		break;
+	}
+	//ANWCS_DISPATCH(wcs, , , radec_bounds, stepsize, pramin, pramax, pdecmin, pdecmax);
 }
 
 void anwcs_print(const anwcs_t* anwcs, FILE* fid) {
@@ -393,6 +419,66 @@ int anwcs_scale_wcs(anwcs_t* anwcs, double scale) {
 
 ///////////////////////// un-dispatched functions ///////////////////
 
+struct overlap_token {
+	const anwcs_t* wcs;
+	bool inside;
+};
+static void overlap_callback(const anwcs_t* wcs, double x, double y, double ra, double dec, void* token) {
+	struct overlap_token* t = token;
+	if (t->inside)
+		return;
+	if (anwcs_radec_is_inside_image(t->wcs, ra, dec))
+		t->inside = TRUE;
+}
+
+bool anwcs_overlaps(const anwcs_t* wcs1, const anwcs_t* wcs2, int stepsize) {
+	// check for definitely do or don't overlap via bounds:
+	double ralo1, rahi1, ralo2, rahi2;
+	double declo1, dechi1, declo2, dechi2;
+	struct overlap_token token;
+
+	anwcs_get_radec_bounds(wcs1, 1000, &ralo1, &rahi1, &declo1, &dechi1);
+	anwcs_get_radec_bounds(wcs2, 1000, &ralo2, &rahi2, &declo2, &dechi2);
+
+	if ((declo1 > dechi2) || (declo2 > dechi1))
+		return FALSE;
+
+	// anwcs_get_radec_bounds() has the behavior that ralo <= rahi,
+	// but ralo may be < 0 or rahi > 360.
+	assert(ralo1 < rahi1);
+	assert(ralo2 < rahi2);
+	// undo wrap over 360
+	if (rahi1 >= 360.0) {
+		ralo1 -= 360.0;
+		rahi1 -= 360.0;
+	}
+	if (rahi2 >= 360.0) {
+		ralo2 -= 360.0;
+		rahi2 -= 360.0;
+	}
+	assert(rahi1 >= 0);
+	assert(rahi2 >= 0);
+
+	if ((ralo1 > rahi2) || (ralo2 > rahi1))
+		return FALSE;
+
+	// check for #1 completely inside #2.
+	if (ralo1 >= ralo2 && rahi1 <= rahi2 && declo1 >= declo2 && dechi1 <= dechi2)
+		return TRUE;
+
+	// check for #2 completely inside #1.
+	if (ralo2 >= ralo1 && rahi2 <= rahi1 && declo2 >= declo1 && dechi2 <= dechi1)
+		return TRUE;
+
+	// walk the edge of #1, checking whether any point is in #2.
+	token.wcs = wcs2;
+	token.inside = FALSE;
+	if (stepsize == 0)
+		stepsize = 100;
+	anwcs_walk_image_boundary(wcs1, stepsize, overlap_callback, &token);
+	return token.inside;
+}
+
 void anwcs_walk_image_boundary(const anwcs_t* wcs, double stepsize,
 							   void (*callback)(const anwcs_t* wcs, double x, double y, double ra, double dec, void* token),
 							   void* token) {
@@ -443,7 +529,7 @@ int anwcs_xyz2pixelxy(const anwcs_t* wcs, const double* xyz, double *px, double 
 	return rtn;
 }
 
-int anwcs_get_radec_center_and_radius(anwcs_t* anwcs,
+int anwcs_get_radec_center_and_radius(const anwcs_t* anwcs,
 									  double* p_ra, double* p_dec, double* p_radius) {
 	assert(anwcs);
 	switch (anwcs->type) {

@@ -133,12 +133,15 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			int bb = aa + NX + 1;
             double midx = (xs[aa] + xs[ab] + xs[bb] + xs[ba])*0.25;
             double midy = (ys[aa] + ys[ab] + ys[bb] + ys[ba])*0.25;
+			cairo_status_t st;
 
             double xlo,xhi,ylo,yhi;
             ylo = MIN(j     * args->gridsize, H-1);
             yhi = MIN((j+1) * args->gridsize, H-1);
 			xlo = MIN(i     * args->gridsize, W-1);
 			xhi = MIN((i+1) * args->gridsize, W-1);
+			if (xlo == xhi || ylo == yhi)
+				continue;
 
             cairo_move_to(cairo,
                           0.5 + xs[aa]+0.5*(xs[aa] >= midx ? 1 : -1),
@@ -159,7 +162,18 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 							  (xs[ba]-xs[aa])/(xhi-xlo),
 							  (ys[ba]-ys[aa])/(yhi-ylo),
 							  xs[0], ys[0]);
-			cairo_matrix_invert(&mat);
+			st = cairo_matrix_invert(&mat);
+			if (st != CAIRO_STATUS_SUCCESS) {
+				ERROR("Cairo: %s", cairo_status_to_string(st));
+				ERROR("Matrix: AB %g, %g, BA %g, %g, AA %g, %g\n"
+					  "  xlo,xhi %g, %g  ylo,yhi %g, %g",
+					  xs[ab], ys[ab], xs[ba], ys[ba], xs[aa], ys[aa],
+					  xlo, xhi, ylo, yhi);
+				// Matrix: AB 270.892, 121.737, BA 274.958, 129.407, AA 274.958, 129.407
+				//  xlo,xhi 0, 50  ylo,yhi 2050, 2050					  
+				continue;
+			}
+
 			cairo_pattern_set_matrix(pat, &mat);
 
 			cairo_fill(cairo);
