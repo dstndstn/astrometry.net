@@ -51,6 +51,8 @@ class tabledata(object):
 		#print 'set', name, 'to', val
 		if (self._length == 0) and (not (name.startswith('_'))) and hasattr(val, '__len__') and len(val) != 0:
 			self._length = len(val)
+		if hasattr(self, '_columns') and not name in self._columns:
+			self._columns.append(name)
 	def set(self, name, val):
 		self.__setattr__(name, val)
 	def getcolumn(self, name):
