@@ -6,6 +6,7 @@ import commands
 import sys
 from math import log
 
+ok=1
 lmax = log(sys.maxsize, 2)
 if lmax < 31:
     pbit = 32
@@ -30,8 +31,6 @@ if uname =='Darwin':
         ldflags = commands.getoutput('echo $LDFLAGS')
         print 'echo $CFLAGS: ',cflags
         print 'echo $LDFLAGS: ',ldflags
-
-        ok=1
                 
         if cflags.find('i386') < 0:
             flag ='export CFLAGS="$CFLAGS -arch i386"'
