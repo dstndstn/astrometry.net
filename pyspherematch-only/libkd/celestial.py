@@ -21,4 +21,4 @@ def match(ra1, dec1, ra2, dec2,radius_in_deg):
     
     dist_in_deg = distsq2arcsec(np.power(dists,2))/3600.
     
-    return  inds[:,0], inds[:,1], dist_in_deg
+    return  inds[:,0], inds[:,1], dist_in_deg[:,0]
