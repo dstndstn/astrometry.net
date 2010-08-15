@@ -146,6 +146,7 @@ upgrade-indexes:
 	done
 
 RELEASE_VER := 0.33
+SP_RELEASE_VER := 0.1
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
 RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data pyfits etc ups
@@ -161,9 +162,9 @@ release:
 	bzip2 --best $(RELEASE_DIR).tar
 
 # spherematch-only release
-SP_RELEASE_DIR := pyspherematch-$(RELEASE_VER)
-SP_RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
-SP_RELEASE_SUBDIRS := gsl-an qfits-an util libkd
+SP_RELEASE_DIR := pyspherematch-$(SP_RELEASE_VER)
+SP_RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER)/astrometry
+SP_RELEASE_SUBDIRS := gsl-an qfits-an util libkd data
 SP_ONLY := pyspherematch-only
 
 release-pyspherematch:
@@ -172,8 +173,7 @@ release-pyspherematch:
 	for x in $(SP_RELEASE_SUBDIRS); do \
 		svn export $(SP_RELEASE_SVN)/$$x $(SP_RELEASE_DIR)/$$x; \
 	done
-# make a new Makefile that install pyspherematch only
-	cp -r $(SP_ONLY)/* $(SP_RELEASE_DIR)
+	cp -r $(SP_ONLY)/* $(SP_RELEASE_DIR) # replace/add files to release
 	tar cf $(SP_RELEASE_DIR).tar $(SP_RELEASE_DIR)
 	gzip --best -c $(SP_RELEASE_DIR).tar > $(SP_RELEASE_DIR).tar.gz
 	bzip2 --best $(SP_RELEASE_DIR).tar
@@ -186,6 +186,18 @@ retag-release:
 	-svn rm svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER) \
 		-m "Remove old release tag in preparation for re-tagging"
 	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)
+
+
+tag-release-pyspherematch:
+	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER)
+	@echo
+	@echo version in $(SP_ONLY)/libkd/setup.py :
+	@echo grep version $(SP_ONLY)/libkd/setup.py 
+
+retag-release-pyspherematch:
+	-svn rm svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER) \
+		-m "Remove old release tag in preparation for re-tagging"
+	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER)
 
 SNAPSHOT_SVN := svn+ssh://astrometry.net/svn/trunk/src/astrometry
 SNAPSHOT_SUBDIRS := $(RELEASE_SUBDIRS)
