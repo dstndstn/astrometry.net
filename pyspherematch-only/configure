@@ -1,0 +1,5 @@
+#! /bin/bash
+
+python conf.py
+
+#echo "Ok"
