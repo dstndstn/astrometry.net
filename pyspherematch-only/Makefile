@@ -43,7 +43,7 @@ all:
 .PHONY: all
 
 install: 
-	@echo cd libkd/ ; python setup.py install
+	@echo "cd libkd/ ; python setup.py install"
 	@cd $(BASEDIR)/libkd ; python setup.py install
 
 report:

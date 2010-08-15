@@ -189,7 +189,7 @@ retag-release:
 
 
 tag-release-pyspherematch:
-	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER)
+	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER) -m "$(SP_RELEASE_VER) "
 	@echo
 	@echo version in $(SP_ONLY)/libkd/setup.py :
 	@echo grep version $(SP_ONLY)/libkd/setup.py 
