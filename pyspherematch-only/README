@@ -1,7 +1,7 @@
 pyspherematch-only release of Astrometry.net 
 ===========================
 
-Copyright 2006-2010 Michael Blanton, David W. Hogg, Dustin Lang, Keir
+Copyright 2006-2009 Michael Blanton, David W. Hogg, Dustin Lang, Keir
 Mierle and Sam Roweis.
 
 Packaged by Sjoert van Velzen
@@ -19,11 +19,11 @@ To compile everything and run with full functionality, you will need:
 
 
 Grab the code:
-  $ wget http://astrometry.net/downloads/pyspherematch-0.1.tar.bz2
-  $ tar xjf pyspherematch-0.1.tar.bz2
-  $ cd  pyspherematch-0.1
+  $ wget http://astrometry.net/downloads/pyspherematch-0.2.tar.bz2
+  $ tar xjf pyspherematch-0.2.tar.bz2
+  $ cd  pyspherematch-0.2
 
-Check if extra compling/linking flares are needed (Mac OS X only)
+Check if extra compling/linking flags are needed (Mac OS X only)
   $ ./configure
 
 Build the solving system:
@@ -33,8 +33,7 @@ Install python package (this run setup libkd/setup.py):
   $ make install
 
 
-By default it will be installed in your python ``site-packges" dir.
-You can override editing libkd/setup.py
+By default it will be installed in your python ``site-packages" dir (e.g., /usr/local/lib/pythonX.Y/site-packages). You can override editing libkd/setup.py
 
 
 LICENSE

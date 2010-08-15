@@ -178,7 +178,8 @@ release-pyspherematch:
 	# replace, add and remove files from spherematch-only release
 	cp -r $(SP_ONLY)/* $(SP_RELEASE_DIR)
 	for x in $(SP_RELEASE_REMOVE); do \
-		rm -v $(SP_RELEASE_DIR)/$$x 
+		rm -v $(SP_RELEASE_DIR)/$$x; \
+	done
 
 	tar cf $(SP_RELEASE_DIR).tar $(SP_RELEASE_DIR)
 	gzip --best -c $(SP_RELEASE_DIR).tar > $(SP_RELEASE_DIR).tar.gz
@@ -198,9 +199,9 @@ tag-release-pyspherematch:
 	svn copy svn+ssh://astrometry.net/svn/trunk/src svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER) -m "tag pyspherematch verion $(SP_RELEASE_VER) "
 	@echo
 	@echo version in $(SP_ONLY)/libkd/setup.py :
-	@echo grep version $(SP_ONLY)/libkd/setup.py 
+	@grep version $(SP_ONLY)/libkd/setup.py 
 	@echo version in $(SP_ONLY)/README
-	@echo grep wget $(SP_ONLY)/libkd/README
+	@grep wget $(SP_ONLY)/README
 
 
 retag-release-pyspherematch:
