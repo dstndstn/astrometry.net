@@ -29,7 +29,6 @@ export INSTALL_DIR
 #export OPTIMIZE = no
 
 all:
-
 BASEDIR := .
 COMMON := $(BASEDIR)/util
 include $(COMMON)/makefile.common
@@ -43,14 +42,9 @@ all:
 	$(MAKE) -C libkd
 .PHONY: all
 
-install: report.txt
-	mkdir -p $(INSTALL_DIR)/include
-	mkdir -p $(INSTALL_DIR)/lib
-	mkdir -p $(INSTALL_DIR)/python/astrometry
-
-	$(MAKE) -C util  install
-	$(MAKE) -C libkd install
-	$(MAKE) -C qfits-an install
+install: 
+	@echo cd libkd/ ; python setup.py install
+	@cd $(BASEDIR)/libkd ; python setup.py install
 
 report:
 	-uname -m
@@ -82,3 +76,11 @@ report.txt: Makefile
 
 .SUFFIXES:            # Delete the default suffixes
 #.SUFFIXES: .c .o .h   # Define our suffix list
+
+clean:
+	$(MAKE) -C util clean
+	-$(MAKE) -C cfitsio distclean
+	-$(MAKE) -C qfits-an clean
+	-rm __init__.pyc
+	$(MAKE) -C gsl-an clean
+	$(MAKE) -C libkd clean
