@@ -26,7 +26,7 @@ if uname =='Darwin':
     if (float(vers) > 105) & (pbit ==32):
         print '\nNote that, your OS is Snow Leopard (or newer), but python is 32 bit'
         
-# check compiler and linking flares to avoid architure problems
+# check compiler and linking flags to avoid architecture problems
         cflags = commands.getoutput('echo $CFLAGS')
         ldflags = commands.getoutput('echo $LDFLAGS')
         print 'echo $CFLAGS: ',cflags
