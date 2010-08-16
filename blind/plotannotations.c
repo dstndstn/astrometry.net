@@ -234,6 +234,8 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 		plotstuff_stack_marker(pargs, px, py);
 		plotstuff_stack_text(pargs, cairo, names, px, py);
 		free(names);
+		// revert old marker size...
+		pargs->markersize = r;
 
 		/*
 		 if (json) {
