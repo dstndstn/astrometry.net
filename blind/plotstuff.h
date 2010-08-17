@@ -128,6 +128,9 @@ int plotstuff_set_markersize(plot_args_t* pargs, double ms);
 
 int plotstuff_set_size(plot_args_t* pargs, int W, int H);
 
+// Sets the plot size from the WCS size.
+int plotstuff_set_size_wcs(plot_args_t* pargs);
+
 int plotstuff_scale_wcs(plot_args_t* pargs, double scale);
 
 int plotstuff_set_wcs_box(plot_args_t* pargs, float ra, float dec, float width);

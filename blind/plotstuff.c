@@ -366,7 +366,7 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 		}
 	} else if (streq(cmd, "plot_wcs_setsize")) {
 		assert(pargs->wcs);
-		plotstuff_set_size(pargs, (int)ceil(anwcs_imagew(pargs->wcs)), (int)ceil(anwcs_imageh(pargs->wcs)));
+		plotstuff_set_size_wcs(pargs);
 	} else if (streq(cmd, "plot_label_radec")) {
 		assert(pargs->wcs);
 		double ra, dec;
@@ -385,6 +385,11 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 	if (pargs->cairo)
 		plotstuff_builtin_apply(pargs->cairo, pargs);
 	return 0;
+}
+
+int plotstuff_set_size_wcs(plot_args_t* pargs) {
+  assert(pargs->wcs);
+  return plotstuff_set_size(pargs, (int)ceil(anwcs_imagew(pargs->wcs)), (int)ceil(anwcs_imageh(pargs->wcs)));
 }
 
 int plot_builtin_plot(const char* command, cairo_t* cairo, plot_args_t* pargs, void* baton) {
@@ -448,10 +453,24 @@ static void get_text_position(plot_args_t* pargs, cairo_t* cairo,
 	y += pargs->label_offset_y;
 
     cairo_text_extents(cairo, txt, &textents);
-    l = x + textents.x_bearing;
+    // If horizontalalignment == left
+    //l = x + textents.x_bearing;
+    //r = l + textents.width + textents.x_bearing;
+    // if horizontalalignment == center
+    l = x + textents.x_bearing - 0.5*textents.width;
     r = l + textents.width + textents.x_bearing;
-    t = y + textents.y_bearing;
+
+    // If verticalalignment == bottom
+    //t = y + textents.y_bearing;
+    //b = t + textents.height;
+
+    // If verticalalignment == center
+    t = y + textents.y_bearing + 0.5*textents.height;
     b = t + textents.height;
+
+    x = l;
+    y = b;
+
     l -= margin;
     t -= margin;
     r += margin + 1;
@@ -474,8 +493,9 @@ static void get_text_position(plot_args_t* pargs, cairo_t* cairo,
         y -= (b - pargs->H);
         b = pargs->H;
     }
-	*px = x;
-	*py = y;
+
+    *px = x;
+    *py = y;
 }
 
 void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,

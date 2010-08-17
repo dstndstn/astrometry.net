@@ -706,7 +706,11 @@ anwcs_t* anwcs_open_wcslib(const char* filename, int ext) {
 	} else {
 		wcs2 = wcs;
 	}
-	wcsset(wcs2);
+	code = wcsset(wcs2);
+	if (code) {
+	  ERROR("wcslib's wcsset() failed with code %i: %s", code, wcs_errmsg[code]);
+	  return NULL;
+	}
 
 	anwcs = calloc(1, sizeof(anwcs_t));
 	anwcs->type = ANWCS_TYPE_WCSLIB;
