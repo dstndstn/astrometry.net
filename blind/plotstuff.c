@@ -58,6 +58,7 @@ enum cmdtype {
 	RECTANGLE,
 	ARROW,
 	MARKER,
+	POLYGON,
 };
 typedef enum cmdtype cmdtype;
 
@@ -75,6 +76,9 @@ struct cairocmd {
 	// MARKER
 	int marker;
 	double markersize;
+	// POLYGON
+	dl* xy;
+	bool fill;
 };
 typedef struct cairocmd cairocmd_t;
 
@@ -111,7 +115,7 @@ int plotstuff_append_doubles(const char* str, dl* lst) {
 	return 0;
 }
 
-int plot_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2) {
+int plotstuff_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2) {
 	double decstep;
 	double dec;
 	double s;
@@ -132,7 +136,7 @@ int plot_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec
 	return 0;
 }
 
-int plot_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra2) {
+int plotstuff_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra2) {
 	double rastep;
 	double ra;
 	double f;
@@ -156,7 +160,7 @@ int plot_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra
 	return 0;
 }
 
-int plot_text_radec(plot_args_t* pargs, double ra, double dec, const char* label) {
+int plotstuff_text_radec(plot_args_t* pargs, double ra, double dec, const char* label) {
 	double x,y;
 	if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y)) {
 		ERROR("Failed to convert RA,Dec (%g,%g) to pixel position in plot_text_radec\n", ra, dec);
@@ -167,6 +171,38 @@ int plot_text_radec(plot_args_t* pargs, double ra, double dec, const char* label
 	get_text_position(pargs, pargs->cairo, label, &x, &y);
 	cairo_move_to(pargs->cairo, x, y);
 	cairo_show_text(pargs->cairo, label);
+	return 0;
+}
+
+static int moveto_lineto_radec(plot_args_t* pargs, double ra, double dec, bool move) {
+	double x,y;
+	if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y)) {
+		ERROR("Failed to convert RA,Dec (%g,%g) to pixel position in plot_text_radec\n", ra, dec);
+		return -1;
+	}
+	assert(pargs->cairo);
+	(move ? cairo_move_to : cairo_line_to)(pargs->cairo, x, y);
+	return 0;
+}
+
+int plotstuff_move_to_radec(plot_args_t* pargs, double ra, double dec) {
+	assert(pargs->cairo);
+	plotstuff_builtin_apply(pargs->cairo, pargs);
+	return moveto_lineto_radec(pargs, ra, dec, TRUE);
+}
+
+int plotstuff_line_to_radec(plot_args_t* pargs, double ra, double dec) {
+	return moveto_lineto_radec(pargs, ra, dec, FALSE);
+}
+
+int plotstuff_fill(plot_args_t* pargs) {
+	assert(pargs->cairo);
+	cairo_fill(pargs->cairo);
+	return 0;
+}
+int plotstuff_stroke(plot_args_t* pargs) {
+	assert(pargs->cairo);
+	cairo_stroke(pargs->cairo);
 	return 0;
 }
 
@@ -377,7 +413,7 @@ static int plot_builtin_command(const char* cmd, const char* cmdargs,
 			return -1;
 		}
 		label = cmdargs + nc;
-		return plot_text_radec(pargs, ra, dec, label);
+		return plotstuff_text_radec(pargs, ra, dec, label);
 	} else {
 		ERROR("Did not understand command: \"%s\"", cmd);
 		return -1;
@@ -397,12 +433,28 @@ int plot_builtin_plot(const char* command, cairo_t* cairo, plot_args_t* pargs, v
 	return 0;
 }
 
+static void cairocmd_init(cairocmd_t* cmd) {
+	if (!cmd)
+		return;
+	memset(cmd, 0, sizeof(cairocmd_t));
+	//cmd->xy = dl_new(32);
+}
+
+static void cairocmd_clear(cairocmd_t* cmd) {
+	if (!cmd)
+		return;
+	free(cmd->text);
+	cmd->text = NULL;
+	if (cmd->xy)
+		dl_free(cmd->xy);
+	cmd->xy = NULL;
+}
+
 static void add_cmd(plot_args_t* pargs, cairocmd_t* cmd) {
 	bl_append(pargs->cairocmds, cmd);
 }
 
 static void set_cmd_args(plot_args_t* pargs, cairocmd_t* cmd) {
-	memset(cmd, 0, sizeof(cairocmd_t));
 	cmd->marker = pargs->marker;
 	cmd->markersize = pargs->markersize;
 	memcpy(cmd->rgba, pargs->rgba, sizeof(cmd->rgba));
@@ -416,6 +468,7 @@ bool plotstuff_marker_in_bounds(plot_args_t* pargs, double x, double y) {
 
 void plotstuff_stack_marker(plot_args_t* pargs, double x, double y) {
 	cairocmd_t cmd;
+	cairocmd_init(&cmd);
 	set_cmd_args(pargs, &cmd);
 	// BG marker?
 	cmd.layer = pargs->marker_fg_layer;
@@ -429,6 +482,7 @@ void plotstuff_stack_marker(plot_args_t* pargs, double x, double y) {
 void plotstuff_stack_arrow(plot_args_t* pargs, double x, double y,
 						   double x2, double y2) {
 	cairocmd_t cmd;
+	cairocmd_init(&cmd);
 	// BG?
 	set_cmd_args(pargs, &cmd);
 	cmd.layer = pargs->marker_fg_layer;
@@ -502,14 +556,14 @@ void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
 						  const char* txt, double px, double py) {
     int dx, dy;
 	cairocmd_t cmd;
-
+	cairocmd_init(&cmd);
 	set_cmd_args(pargs, &cmd);
-
-	get_text_position(pargs, cairo, txt, &px, &py);
-
 	cmd.type = TEXT;
 	cmd.layer = pargs->text_bg_layer;
 	memcpy(cmd.rgba, pargs->bg_rgba, sizeof(cmd.rgba));
+
+	get_text_position(pargs, cairo, txt, &px, &py);
+
     for (dy=-1; dy<=1; dy++) {
         for (dx=-1; dx<=1; dx++) {
 			cmd.text = strdup(txt);
@@ -527,8 +581,11 @@ void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
 	add_cmd(pargs, &cmd);
 }
 
+//void plotstuff_stack_polygon(plot_args_t* pargs, cairo_t* cairo,
+							 
+
 int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
-	int i;
+	int i, j;
 	int layer;
 	bool morelayers;
 
@@ -580,13 +637,21 @@ int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
 			case RECTANGLE:
 				ERROR("Unimplemented!");
 				return -1;
+			case POLYGON:
+				if (!cmd->xy)
+					break;
+				for (j=0; j<dl_size(cmd->xy)/2; j++)
+					(j == 0 ? cairo_move_to : cairo_line_to)(cairo, dl_get(cmd->xy, 2*j+0), dl_get(cmd->xy, 2*j+1));
+				if (cmd->fill)
+					cairo_fill(cairo);
+				break;
 			}
 			cairo_stroke(cairo);
 		}
 	}
 	for (i=0; i<bl_size(pargs->cairocmds); i++) {
 		cairocmd_t* cmd = bl_access(pargs->cairocmds, i);
-		free(cmd->text);
+		cairocmd_clear(cmd);
 	}
 	bl_remove_all(pargs->cairocmds);
 
@@ -594,7 +659,7 @@ int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
 }
 
 static void plot_builtin_free(plot_args_t* pargs, void* baton) {
-	free(pargs->wcs);
+	anwcs_free(pargs->wcs);
 	bl_free(pargs->cairocmds);
 }
 

@@ -593,6 +593,9 @@ ALL_OBJ += plotstuff-main.o
 PLOTSTUFF_SRCS = $(subst .o,.c,$(PLOTSTUFF))
 PLOTSTUFF_HDRS = $(subst .o,.h,$(PLOTSTUFF))
 
+pyplotstuff: _plotstuff_c.so
+.PHONY: pyplotstuff
+
 plotstuff_wrap.c: plotstuff.i $(PLOTSTUFF_SRCS) $(PLOTSTUFF_HDRS) $(ANUTILS_DIR)/sip.h $(ANUTILS_DIR)/anwcs.h
 	swig -python $(ANUTILS_INC) $<
 

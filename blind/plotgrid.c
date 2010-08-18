@@ -99,7 +99,7 @@ int plot_grid_plot(const char* command,
 		for (ra = args->rastep * floor(ramin / args->rastep);
 			 ra <= args->rastep * ceil(ramax / args->rastep);
 			 ra += args->rastep) {
-			plot_line_constant_ra(pargs, ra, decmin, decmax);
+			plotstuff_line_constant_ra(pargs, ra, decmin, decmax);
 			cairo_stroke(pargs->cairo);
 		}
 	}
@@ -107,7 +107,7 @@ int plot_grid_plot(const char* command,
 		for (dec = args->decstep * floor(decmin / args->decstep);
 			 dec <= args->decstep * ceil(decmax / args->decstep);
 			 dec += args->decstep) {
-			plot_line_constant_dec(pargs, dec, ramin, ramax);
+			plotstuff_line_constant_dec(pargs, dec, ramin, ramax);
 			cairo_stroke(pargs->cairo);
 		}
 	}
