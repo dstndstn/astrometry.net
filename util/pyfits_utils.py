@@ -46,6 +46,7 @@ class tabledata(object):
 	def __init__(self, header=None):
 		self._length = 0
 		self._header = header
+		self._columns = []
 	def __setattr__(self, name, val):
 		object.__setattr__(self, name, val)
 		#print 'set', name, 'to', val
