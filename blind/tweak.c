@@ -669,6 +669,7 @@ static double tchebyshev(double x, int o) {
 	case 9: return 256.*pow(x, 9) - 576.*pow(x, 7) + 432.*pow(x,5) - 120.*pow(x,3) + 9.*x;
 	}
 	assert(0);
+	return 0.0;
 }
 
 //static void tchebyshev_tweak(tweak_t* t, int W, int H) {

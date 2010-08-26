@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -33,19 +33,25 @@
 #include "log.h"
 #include "starutil.h"
 
-const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:";
+const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:P:";
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
-	       "   (    -i <input-FITS-catalog>  input: source RA,DEC, etc\n"
-		   "    OR, -1 <input-index>         to share another index's stars\n"
-		   "   )\n"
+	       "      (\n"
+		   "         -i <input-FITS-catalog>  input: source RA,DEC, etc\n"
+		   "    OR,\n"
+		   "         -1 <input-index>         to share another index's stars\n"
+		   "      )\n"
 		   "      -o <output-index>        output filename for index\n"
-		   "      -N <nside>            healpix Nside for quad-building\n"
-		   "      -l <min-quad-size>    minimum quad size (arcminutes)\n"
-		   "      -u <max-quad-size>    maximum quad size (arcminutes)\n"
-		   "      [-S]: sort column (default: assume already sorted)\n"
+		   "      (\n"
+		   "         -P <scale-number>: use 'preset' values for '-N', '-l', and '-u'\n"
+		   "  OR,\n"
+		   "         -N <nside>            healpix Nside for quad-building\n"
+		   "         -l <min-quad-size>    minimum quad size (arcminutes)\n"
+		   "         -u <max-quad-size>    maximum quad size (arcminutes)\n"
+		   "      )\n"
+		   "      [-S]: sort column (default: assume the input file is already sorted)\n"
 		   "      [-f]: sort in descending order (eg, for FLUX); default ascending (eg, for MAG)\n"
 		   "      [-U]: healpix Nside for uniformization (default: same as -n)\n"
 		   "      [-H <big healpix>]; default is all-sky\n"
@@ -85,12 +91,16 @@ int main(int argc, char** argv) {
 
 	int loglvl = LOG_MSG;
 	int i;
+	int preset = -100;
 
 	p = &myp;
 	build_index_defaults(p);
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'P':
+			preset = atoi(optarg);
+			break;
 		case '1':
 			inindexfn = optarg;
 			break;
@@ -173,7 +183,7 @@ int main(int argc, char** argv) {
 	log_init(loglvl);
 
 	if (!(infn || inindexfn) || !indexfn) {
-		printf("Specify in & out filenames, bonehead!\n");
+		printf("You must specify input & output filenames.\n");
 		print_help(argv[0]);
 		exit( -1);
 	}
@@ -199,6 +209,25 @@ int main(int argc, char** argv) {
 	if (p->dimquads > DQMAX) {
 		ERROR("Quad dimension %i exceeds compiled-in max %i.\n", p->dimquads, DQMAX);
 		exit(-1);
+	}
+
+	if (preset > -100) {
+		if (preset >= 0) {
+			double scales[] = { 2., 2.8, 4., 5.6, 8., 11., 16., 22., 30., 42., 60., 85.,
+								120., 170., 240., 340., 480., 680., 1000., 1400., 2000. };
+			double hpbase = 1760;
+			int Ns = sizeof(scales)/sizeof(double) - 1;
+
+			if (preset >= Ns) {
+				ERROR("Error: only presets 0 through %i are defined.\n", Ns);
+				exit(-1);
+			}
+			p->qlo = scales[preset];
+			p->qhi = scales[preset+1];
+			p->Nside = (int)(p->bignside * ceil(hpbase * pow((1./sqrt(2)), preset) / (double)p->bignside));
+
+			logverb("Preset %i: quad scales %g to %g, Nside %i\n", preset, p->qlo, p->qhi, p->Nside);
+		}
 	}
 
 	// For HISTORY cards in output...
