@@ -216,16 +216,21 @@ int main(int argc, char** argv) {
 			double scales[] = { 2., 2.8, 4., 5.6, 8., 11., 16., 22., 30., 42., 60., 85.,
 								120., 170., 240., 340., 480., 680., 1000., 1400., 2000. };
 			double hpbase = 1760;
-			int Ns = sizeof(scales)/sizeof(double) - 1;
+			double nside;
+			int P = sizeof(scales)/sizeof(double) - 1;
 
-			if (preset >= Ns) {
-				ERROR("Error: only presets 0 through %i are defined.\n", Ns);
+			if (preset >= P) {
+				ERROR("Error: only presets 0 through %i are defined.\n", P);
 				exit(-1);
 			}
 			p->qlo = scales[preset];
 			p->qhi = scales[preset+1];
-			p->Nside = (int)(p->bignside * ceil(hpbase * pow((1./sqrt(2)), preset) / (double)p->bignside));
-
+			nside = hpbase * pow((1./sqrt(2)), preset);
+			logverb("nside: %g\n", nside);
+			if (p->bignside)
+				p->Nside = (int)(p->bignside * ceil(nside / (double)p->bignside));
+			else
+				p->Nside = (int)ceil(nside);
 			logverb("Preset %i: quad scales %g to %g, Nside %i\n", preset, p->qlo, p->qhi, p->Nside);
 		}
 	}
