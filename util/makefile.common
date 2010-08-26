@@ -47,6 +47,8 @@ RANLIB := ranlib
 
 AWK := LC_ALL=C LC_NUMERIC=EN_US awk
 
+SED := sed
+
 FLAGS_DEF := -g -Wall
 
 TMPFILE := cc-out.tmp

@@ -35,7 +35,7 @@ include $(COMMON)/makefile.qfits
 
 .PHONY: Makefile $(COMMON)/makefile.qfits
 
-all:
+all: README
 	$(MAKE) remake-qfits
 	$(MAKE) -C util
 	$(MAKE) -C libkd
@@ -150,6 +150,9 @@ SP_RELEASE_VER := 0.2
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
 RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data pyfits etc ups
+
+README: README.in
+	$(SED) 's/$$VERSION/$(RELEASE_VER)/g' $< > $@
 
 release:
 	-rm -R $(RELEASE_DIR) $(RELEASE_DIR).tar $(RELEASE_DIR).tar.gz $(RELEASE_DIR).tar.bz2
