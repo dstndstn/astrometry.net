@@ -1,7 +1,7 @@
 #! /usr/bin/env python
-from astrometry.util.sip import *
-
+import sys
 from optparse import OptionParser
+from astrometry.util.sip import *
 
 if __name__ == '__main__':
 	parser = OptionParser('usage: %prog [options] <outfn>')
@@ -14,6 +14,10 @@ if __name__ == '__main__':
 	# crpix at image middle
 	parser.set_defaults(ra=None, dec=None, size=None, w=None, h=None)
 	opt,args = parser.parse_args()
+
+	if len(args) == 0:
+		parser.print_help()
+		sys.exit(0)
 
 	wcs = Tan()
 	wcs.crval[0] = opt.ra

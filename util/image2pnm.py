@@ -44,6 +44,7 @@ an_fitstopnm_ext_cmd = 'an-fitstopnm -e %i -i %%s > %%s'
 imgcmds = {fitstype : (fitsext, 'an-fitstopnm -i %s > %s'),
 		   'JPEG image data'  : ('jpg',	 'jpegtopnm %s > %s'),
 		   'PNG image data'	  : ('png',	 'pngtopnm %s > %s'),
+		   'PNG image'	  : ('png',	 'pngtopnm %s > %s'),
 		   'GIF image data'	  : ('gif',	 'giftopnm %s > %s'),
 		   'Netpbm PPM'		  : ('ppm',	 'ppmtoppm < %s > %s'),
 		   'Netpbm PPM "rawbits" image data' : ('ppm',	'cp %s %s'),

@@ -18,8 +18,8 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None, hist=Fa
 	radius = dcell * sqrt(2.)
 	print 'ixy', ixy.shape
 	print 'rxy', rxy.shape
-	assert(rxy.shape[1] == 2)
-	assert(ixy.shape[1] == 2)
+	assert((len(rxy) == 0) or (rxy.shape[1] == 2))
+	assert((len(ixy) == 0) or (ixy.shape[1] == 2))
 
 	ix = ixy[:,0]
 	iy = ixy[:,1]
@@ -29,8 +29,9 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None, hist=Fa
 	if H is None:
 		H = max(iy)
 
-	keep = (rxy[:,0] > -dcell) * (rxy[:,0] < W+dcell) * (rxy[:,1] > -dcell) * (rxy[:,1] < H+dcell)
-	rxy = rxy[keep]
+	if len(rxy):
+		keep = (rxy[:,0] > -dcell) * (rxy[:,0] < W+dcell) * (rxy[:,1] > -dcell) * (rxy[:,1] < H+dcell)
+		rxy = rxy[keep]
 	print 'Cut to %i ref sources in range' % len(rxy)
 	
 	cellsize = sqrt(W * H / ncells)
@@ -43,8 +44,12 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None, hist=Fa
 	print 'Edges:'
 	print '  x:', edgesx
 	print '  y:', edgesy
-	binx = digitize(rxy[:,0], edgesx)
-	biny = digitize(rxy[:,1], edgesy)
+	if len(rxy) == 0:
+		binx = array([])
+		biny = array([])
+	else:
+		binx = digitize(rxy[:,0], edgesx)
+		biny = digitize(rxy[:,1], edgesy)
 	binx = clip(binx - 1, 0, nw-1)
 	biny = clip(biny - 1, 0, nh-1)
 	bin = biny * nw + binx

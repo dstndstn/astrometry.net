@@ -59,14 +59,44 @@ void* plot_radec_init(plot_args_t* plotargs) {
 	return args;
 }
 
+static rd_t* get_rd(plotradec_t* args, rd_t* myrd) {
+	rdlist_t* rdls = NULL;
+	rd_t* rd = NULL;
+	if (args->fn) {
+		// Open rdlist.
+		rdls = rdlist_open(args->fn);
+		if (!rdls) {
+			ERROR("Failed to open rdlist from file \"%s\"", args->fn);
+			return -1;
+		}
+		if (args->racol)
+			rdlist_set_raname(rdls, args->racol);
+		if (args->deccol)
+			rdlist_set_decname(rdls, args->deccol);
+
+		// Find number of entries in rdlist.
+		rd = rdlist_read_field_num(rdls, args->ext, NULL);
+		//freerd = rd;
+		rdlist_close(rdls);
+		if (!rd) {
+			ERROR("Failed to read FITS extension %i from file %s.\n", args->ext, args->fn);
+			return NULL;
+		}
+	} else {
+		assert(dl_size(args->radecvals));
+		rd_from_dl(myrd, args->radecvals);
+		rd = myrd;
+	}
+	return rd;
+}
+
 int plot_radec_plot(const char* command, cairo_t* cairo,
 				 plot_args_t* pargs, void* baton) {
 	plotradec_t* args = (plotradec_t*)baton;
 	// Plot it!
-	rdlist_t* rdls;
 	rd_t myrd;
 	rd_t* rd = NULL;
-	rd_t* freerd = NULL;
+	//rd_t* freerd = NULL;
 	int Nrd;
 	int i;
 
@@ -84,36 +114,12 @@ int plot_radec_plot(const char* command, cairo_t* cairo,
 		return -1;
 	}
 
-	if (args->fn) {
-		// Open rdlist.
-		rdls = rdlist_open(args->fn);
-		if (!rdls) {
-			ERROR("Failed to open rdlist from file \"%s\"", args->fn);
-			return -1;
-		}
-		if (args->racol)
-			rdlist_set_raname(rdls, args->racol);
-		if (args->deccol)
-			rdlist_set_decname(rdls, args->deccol);
-
-		// Find number of entries in rdlist.
-		rd = rdlist_read_field_num(rdls, args->ext, NULL);
-		freerd = rd;
-		rdlist_close(rdls);
-		if (!rd) {
-			ERROR("Failed to read FITS extension %i from file %s.\n", args->ext, args->fn);
-			return -1;
-		}
-		Nrd = rd_n(rd);
-		// If N is specified, apply it as a max.
-		if (args->nobjs)
-			Nrd = MIN(Nrd, args->nobjs);
-	} else {
-		assert(dl_size(args->radecvals));
-		rd_from_dl(&myrd, args->radecvals);
-		rd = &myrd;
-		Nrd = rd_n(rd);
-	}
+	rd = get_rd(args, &myrd);
+	if (!rd) return -1;
+	Nrd = rd_n(rd);
+	// If N is specified, apply it as a max.
+	if (args->nobjs)
+		Nrd = MIN(Nrd, args->nobjs);
 
 	// Plot markers.
 	for (i=args->firstobj; i<Nrd; i++) {
@@ -122,12 +128,43 @@ int plot_radec_plot(const char* command, cairo_t* cairo,
 		double dec = rd_getdec(rd, i);
 		if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y))
 			continue;
+		if (!plotstuff_marker_in_bounds(pargs, x, y))
+			continue;
 		plotstuff_stack_marker(pargs, x-1, y-1);
 	}
 	plotstuff_plot_stack(pargs, cairo);
 
-	rd_free(freerd);
+	if (rd != &myrd)
+		rd_free(rd);
+	//rd_free(freerd);
 	return 0;
+}
+
+int plot_radec_count_inbounds(plot_args_t* pargs, plotradec_t* args) {
+	rd_t myrd;
+	rd_t* rd = NULL;
+	int i, Nrd, nib;
+
+	rd = get_rd(args, &myrd);
+	if (!rd) return -1;
+	Nrd = rd_n(rd);
+	// If N is specified, apply it as a max.
+	if (args->nobjs)
+		Nrd = MIN(Nrd, args->nobjs);
+	nib = 0;
+	for (i=args->firstobj; i<Nrd; i++) {
+		double x,y;
+		double ra = rd_getra(rd, i);
+		double dec = rd_getdec(rd, i);
+		if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y))
+			continue;
+		if (!plotstuff_marker_in_bounds(pargs, x, y))
+			continue;
+		nib++;
+	}
+	if (rd != &myrd)
+		rd_free(rd);
+	return nib;
 }
 
 void plot_radec_set_racol(plotradec_t* args, const char* col) {

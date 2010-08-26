@@ -48,6 +48,8 @@ void plot_radec_set_filename(plotradec_t* args, const char* fn);
 int plot_radec_command(const char* command, const char* cmdargs,
 					plot_args_t* args, void* baton);
 
+int plot_radec_count_inbounds(plot_args_t* pargs, plotradec_t* args);
+
 int plot_radec_plot(const char* command, cairo_t* cairo,
 				 plot_args_t* plotargs, void* baton);
 
