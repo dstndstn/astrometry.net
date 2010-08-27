@@ -14,3 +14,6 @@ envPrepend(CFLAGS, -I${PRODUCT_DIR}/blind)
 envPrepend(LDFLAGS, -L${PRODUCT_DIR}/util)
 envPrepend(LDFLAGS, -L${PRODUCT_DIR}/libkd)
 envPrepend(LDFLAGS, -L${PRODUCT_DIR}/blind)
+
+envAppend(PATH, ${PRODUCT_DIR}/util)
+envAppend(PATH, ${PRODUCT_DIR}/blind)

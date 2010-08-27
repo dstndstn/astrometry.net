@@ -7,3 +7,5 @@ envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 
 envPrepend(CFLAGS, -I${PRODUCT_DIR}/include)
 envPrepend(LDFLAGS, -L${PRODUCT_DIR}/lib)
+
+envAppend(PATH, ${PRODUCT_DIR}/bin)
