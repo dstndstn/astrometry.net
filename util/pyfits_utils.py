@@ -169,6 +169,8 @@ class tabledata(object):
 		for name in columns:
 			if name.startswith('_'):
 				continue
+			if not name in self.__dict__:
+				continue
 			val = self.__dict__.get(name)
 			# FIXME -- format should match that of the 'val'.
 			#print
