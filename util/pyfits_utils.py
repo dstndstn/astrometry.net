@@ -72,6 +72,7 @@ class tabledata(object):
 		return self._length
 	def delete_column(self, c):
 		del self.__dict__[c]
+		self._columns.remove(c)
 	def __getitem__(self, I):
 		rtn = tabledata()
 		for name,val in self.__dict__.items():
