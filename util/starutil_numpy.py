@@ -177,6 +177,8 @@ def distsq2rad(dist2):
     return arccos(1. - dist2 / 2.)
 def distsq2arcsec(dist2):
     return rad2arcsec(distsq2rad(dist2))
+def distsq2deg(dist2):
+    return rad2deg(distsq2rad(dist2))
 
 def rad2deg(r):
     return 180.0*r/pi
@@ -484,6 +486,8 @@ def arcmin2dist(arcmin):
 def dist2arcsec(dist):
     return distsq2arcsec(dist**2)
 
+def dist2deg(dist):
+    return distsq2deg(dist**2)
 
 
 

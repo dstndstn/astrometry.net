@@ -1,6 +1,38 @@
 import spherematch_c
 from math import *
 from numpy import *
+from astrometry.util.starutil_numpy import radectoxyz, deg2distsq, distsq2arcsec
+
+# Copied from "celestial.py" by Sjoert van Velzen.
+def match_radec(ra1, dec1, ra2, dec2, radius_in_deg):
+    '''
+	Cross-match lists of RA,Dec points.
+
+    Behaves like spherematch.pro of IDL 
+
+    (m1,m2,d12) = match_radec(ra1,dec1, ra2,dec2, radius_in_deg)
+
+	ra1,dec1 (and 2): RA,Dec in degrees of points to match.
+  	   Should be scalars or numpy arrays.
+	radius_in_deg: search radius in degrees.
+
+	m1: indices into the "ra1,dec1" arrays of matching points.
+	   Numpy array of ints.
+    m2: same, but for "ra2,dec2".
+	d12: distance, in degrees, between the matching points.
+    '''
+
+    # Convert to coordinates on the unit sphere
+    xyz1 = radectoxyz(ra1, dec1)
+    xyz2 = radectoxyz(ra2, dec2)
+    r = sqrt(deg2distsq(radius_in_deg))
+
+    (inds,dists) = match(xyz1, xyz2, r)
+    
+    dist_in_deg = dist2deg(dists)
+    
+    return  inds[:,0], inds[:,1], dist_in_deg[:,0]
+
 
 def match(x1, x2, radius):
 	'''
