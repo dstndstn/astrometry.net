@@ -50,7 +50,7 @@ class tabledata(object):
 	def __setattr__(self, name, val):
 		object.__setattr__(self, name, val)
 		#print 'set', name, 'to', val
-		if (self._length == 0) and (not (name.startswith('_'))) and hasattr(val, '__len__') and len(val) != 0:
+		if (self._length == 0) and (not (name.startswith('_'))) and hasattr(val, '__len__') and len(val) != 0 and type(val) != str:
 			self._length = len(val)
 		if hasattr(self, '_columns') and not name in self._columns:
 			self._columns.append(name)
@@ -172,21 +172,23 @@ class tabledata(object):
 			if not name in self.__dict__:
 				continue
 			val = self.__dict__.get(name)
-			# FIXME -- format should match that of the 'val'.
-			#print
 			#print 'col', name, 'type', val.dtype, 'descr', val.dtype.descr
 			#print repr(val.dtype)
 			#print val.dtype.type
 			#print repr(val.dtype.type)
 			#print val.shape
+			#print val.size
+			#print val.itemsize
 			fitstype = fmap.get(val.dtype.type, 'D')
 
 			if fitstype == 'X':
 				# pack bits...
 				pass
-
 			if len(val.shape) > 1:
 				fitstype = '%i%s' % (val.shape[1], fitstype)
+			elif fitstype == 'A' and val.itemsize > 1:
+				# strings
+				fitstype = '%i%s' % (val.itemsize, fitstype)
 			else:
 				fitstype = '1'+fitstype
 			#print 'fits type', fitstype

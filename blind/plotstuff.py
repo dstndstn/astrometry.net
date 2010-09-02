@@ -43,6 +43,8 @@ class Plotstuff(object):
 			self.set_alpha(val)
 		elif name == 'marker' and type(val) is str:
 			plotstuff_set_marker(self.pargs, val)
+		elif name == 'wcs_file':
+			plotstuff_set_wcs_file(self.pargs, val, 0)
 		else:
 			self.pargs.__setattr__(name, val)
 

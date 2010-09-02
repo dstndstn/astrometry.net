@@ -1,20 +1,22 @@
 import spherematch_c
 from math import *
 from numpy import *
-from astrometry.util.starutil_numpy import radectoxyz, deg2distsq, distsq2arcsec
+from astrometry.util.starutil_numpy import radectoxyz, deg2dist, dist2deg
 
 # Copied from "celestial.py" by Sjoert van Velzen.
 def match_radec(ra1, dec1, ra2, dec2, radius_in_deg):
     '''
-	Cross-match lists of RA,Dec points.
+    (m1,m2,d12) = match_radec(ra1,dec1, ra2,dec2, radius_in_deg)
+
+	Cross-matches numpy arrays of RA,Dec points.
 
     Behaves like spherematch.pro of IDL 
 
-    (m1,m2,d12) = match_radec(ra1,dec1, ra2,dec2, radius_in_deg)
-
 	ra1,dec1 (and 2): RA,Dec in degrees of points to match.
-  	   Should be scalars or numpy arrays.
+	   Must be scalars or numpy arrays.
 	radius_in_deg: search radius in degrees.
+
+	Returns:
 
 	m1: indices into the "ra1,dec1" arrays of matching points.
 	   Numpy array of ints.
@@ -25,7 +27,7 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg):
     # Convert to coordinates on the unit sphere
     xyz1 = radectoxyz(ra1, dec1)
     xyz2 = radectoxyz(ra2, dec2)
-    r = sqrt(deg2distsq(radius_in_deg))
+    r = deg2dist(radius_in_deg)
 
     (inds,dists) = match(xyz1, xyz2, r)
     
@@ -51,7 +53,9 @@ def match(x1, x2, radius):
 	naive.
 
     Despite the name of this package, the arrays x1 and x2 need not be
-    celestial positions; in particular, there is no RA wrapping at 0!
+    celestial positions; in particular, there is no RA wrapping at 0,
+    and no special handling at the poles.  If you want to match
+    celestial coordinates like RA,Dec, see the match_radec function.
 
 	The "indices" return value has a row for each match; the matched
 	points are:
@@ -60,9 +64,7 @@ def match(x1, x2, radius):
 	x2[indices[:,1],:]
 
 	This function doesn\'t know about spherical coordinates -- it just
-	searches for matches in n-dimensional space.  For RA,Dec arrays,
-	convert them to positions on the unit sphere, eg via the function
-	radectoxyz() in astrometry.util.starutil_numpy:
+	searches for matches in n-dimensional space.
 
 	>>> from astrometry.util.starutil_numpy import *   
 	>>> from astrometry.libkd import spherematch
@@ -142,10 +144,15 @@ def match(x1, x2, radius):
 	return (inds,dists)
 
 def match_naive(x1, x2, radius):
+	''' Does the same thing as match(), but the straight-forward slow
+	way.  (Not necessarily the way you\'d do it in python either).
+	Not very fair as a speec comparison, but useful to convince
+	yourself that match() does the right thing.
+	'''
 	(N1,D1) = x1.shape
 	(N2,D2) = x2.shape
 	if D1 != D2:
-		raise ValueError, 'Arrays must have the same dimensionality'
+		raise ValueError,'Arrays must have the same dimensionality'
 	inds = []
 	dists = []
 	for i1 in range(N1):
@@ -169,12 +176,6 @@ def nearest(x1, x2, maxradius):
 	spherematch_c.kdtree_free(kd1)
 	spherematch_c.kdtree_free(kd2)
 	return (inds,dist2s)
-
-def rad2deg(x):
-	return x * 180./pi
-
-def deg2rad(x):
-	return x * pi / 180
 
 def tree_build(ra=None, dec=None, xyz=None):
 	if ra is not None:
