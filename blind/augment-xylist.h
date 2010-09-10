@@ -1,6 +1,6 @@
 /*
  This file is part of the Astrometry.net suite.
- Copyright 2008-2009 Dustin Lang.
+ Copyright 2008, 2009, 2010 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -25,6 +25,10 @@
 #include "an-bool.h"
 #include "bl.h"
 #include "an-opts.h"
+
+#define SCALE_UNITS_DEG_WIDTH 0
+#define SCALE_UNITS_ARCMIN_WIDTH 1
+#define SCALE_UNITS_ARCSEC_PER_PIX 2
 
 struct augment_xylist_s {
     char* tempdir;
@@ -90,7 +94,8 @@ struct augment_xylist_s {
 
     double scalelo;
     double scalehi;
-    char* scaleunits;
+
+	int scaleunit;
 
     int parity;
 
@@ -152,6 +157,7 @@ struct augment_xylist_s {
 };
 typedef struct augment_xylist_s augment_xylist_t;
 
+int parse_scale_units(const char* str);
 
 int augment_xylist(augment_xylist_t* args,
                    const char* executable_path);

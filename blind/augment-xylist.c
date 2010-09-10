@@ -88,9 +88,9 @@ void augment_xylist_print_special_opts(an_option_t* opt, bl* opts, int index,
     } else if (!strcmp(opt->name, "scale-units")) {
         fprintf(fid, "%s",
                 "  -u / --scale-units <units>: in what units are the lower and upper bounds?\n"
-                "     choices:  \"degwidth\"    : width of the image, in degrees (default)\n"
-                "               \"arcminwidth\" : width of the image, in arcminutes\n"
-                "               \"arcsecperpix\": arcseconds per pixel\n"
+                "     choices:  \"degwidth\", \"degw\", \"dw\"   : width of the image, in degrees (default)\n"
+                "               \"arcminwidth\", \"amw\", \"aw\" : width of the image, in arcminutes\n"
+                "               \"arcsecperpix\", \"app\": arcseconds per pixel\n"
                 );
     } else if (!strcmp(opt->name, "depth")) {
         fprintf(fid, "%s",
@@ -478,7 +478,11 @@ int augment_xylist_parse_option(char argchar, char* optarg,
         axy->scalehi = atof(optarg);
         break;
     case 'u':
-        axy->scaleunits = optarg;
+        axy->scaleunit = parse_scale_units(optarg);
+		if (axy->scaleunit == -1) {
+			ERROR("Unknown image scale units \"%s\".  See \"solve-field -h\" for allowed values.\n", optarg);
+			return -1;
+		}
         break;
     case 'w':
         axy->W = atoi(optarg);
@@ -522,7 +526,24 @@ int augment_xylist_parse_option(char argchar, char* optarg,
     default:
         return 1;
     }
+
     return 0;
+}
+
+int parse_scale_units(const char* units) {
+	if (strcaseeq(units, "degwidth") ||
+		strcaseeq(units, "degw") ||
+		strcaseeq(units, "dw")) {
+		return SCALE_UNITS_DEG_WIDTH;
+	} else if (strcaseeq(units, "arcminwidth") ||
+			   strcaseeq(units, "amw") ||
+			   strcaseeq(units, "aw")) {
+		return SCALE_UNITS_ARCMIN_WIDTH;
+	} else if (strcaseeq(units, "arcsecperpix") ||
+			   strcaseeq(units, "app")) {
+		return SCALE_UNITS_ARCSEC_PER_PIX;
+	}
+	return -1;
 }
 
 // run(): ppmtopgm, pnmtofits, fits2fits.py
@@ -1081,25 +1102,28 @@ int augment_xylist(augment_xylist_t* axy,
 
 	if ((axy->scalelo > 0.0) || (axy->scalehi > 0.0)) {
 		double appu, appl;
-		if (!axy->scaleunits || !strcasecmp(axy->scaleunits, "degwidth")) {
+		switch (axy->scaleunit) {
+		case SCALE_UNITS_DEG_WIDTH:
 			logverb("Scale range: %g to %g degrees wide\n", axy->scalelo, axy->scalehi);
 			appl = deg2arcsec(axy->scalelo) / (double)axy->W;
 			appu = deg2arcsec(axy->scalehi) / (double)axy->W;
 			logverb("Image width %i pixels; arcsec per pixel range %g %g\n", axy->W, appl, appu);
-		} else if (!strcasecmp(axy->scaleunits, "arcminwidth")) {
+			break;
+		case SCALE_UNITS_ARCMIN_WIDTH:
 			logverb("Scale range: %g to %g arcmin wide\n", axy->scalelo, axy->scalehi);
 			appl = arcmin2arcsec(axy->scalelo) / (double)axy->W;
 			appu = arcmin2arcsec(axy->scalehi) / (double)axy->W;
 			logverb("Image width %i pixels; arcsec per pixel range %g %g\n", axy->W, appl, appu);
-		} else if (!strcasecmp(axy->scaleunits, "arcsecperpix")) {
+			break;
+		case SCALE_UNITS_ARCSEC_PER_PIX:
 			logverb("Scale range: %g to %g arcsec/pixel\n", axy->scalelo, axy->scalehi);
 			appl = axy->scalelo;
 			appu = axy->scalehi;
-		} else
-			exit(-1);
-
-		dl_append(scales, appl);
-		dl_append(scales, appu);
+			break;
+		default:
+			ERROR("Unknown scale unit code %i\n", axy->scaleunit);
+			return -1;
+		}
 	}
 
     /* Hmm, do we want this??

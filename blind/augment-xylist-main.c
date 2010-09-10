@@ -116,14 +116,6 @@ int main(int argc, char** args) {
 		help_flag = 1;
 		rtn = -1;
 	}
-	if (!((!axy->scaleunits) ||
-		  (!strcasecmp(axy->scaleunits, "degwidth")) ||
-		  (!strcasecmp(axy->scaleunits, "arcminwidth")) ||
-		  (!strcasecmp(axy->scaleunits, "arcsecperpix")))) {
-		printf("Unknown scale units \"%s\".\n", axy->scaleunits);
-		help_flag = 1;
-		rtn = -1;
-	}
 	if (help_flag) {
 		print_help(args[0], opts);
 		exit(rtn);
