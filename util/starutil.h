@@ -137,10 +137,13 @@ double dec2mercy(double dec);
 // RA in degrees to H:M:S
 void ra2hms(double ra, int* h, int* m, double* s);
 // Dec in degrees to D:M:S
-void dec2dms(double dec, int* d, int* m, double* s);
+void dec2dms(double dec, int* sign, int* d, int* m, double* s);
 
 double hms2ra(int h, int m, double s);
 double dms2dec(int sgn, int d, int m, double s);
+
+void ra2hmsstring(double ra, char* str);
+void dec2dmsstring(double dec, char* str);
 
 void project_hammer_aitoff_x(double x, double y, double z, double* projx, double* projy);
 

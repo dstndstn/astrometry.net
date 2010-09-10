@@ -92,7 +92,7 @@ double sip_get_radius_deg(const sip_t* wcs);
 // RA hours:minutes:seconds, Dec degrees:minutes:seconds
 void sip_get_radec_center_hms(const sip_t* wcs,
                               int* rah, int* ram, double* ras,
-                              int* decd, int* decm, double* decs);
+                              int* decsign, int* decd, int* decm, double* decs);
 
 bool sip_pixel_is_inside_image(const sip_t* wcs, double px, double py);
 

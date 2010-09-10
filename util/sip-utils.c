@@ -332,20 +332,19 @@ double sip_get_radius_deg(const sip_t* wcs) {
 
 void sip_get_radec_center_hms(const sip_t* wcs,
                               int* rah, int* ram, double* ras,
-                              int* decd, int* decm, double* decs) {
+                              int* decsign, int* decd, int* decm, double* decs) {
     double ra, dec;
     sip_get_radec_center(wcs, &ra, &dec);
     ra2hms(ra, rah, ram, ras);
-    dec2dms(dec, decd, decm, decs);
+    dec2dms(dec, decsign, decd, decm, decs);
 }
 
 void sip_get_radec_center_hms_string(const sip_t* wcs,
                                      char* rastr, char* decstr) {
-    int rah, ram, decd, decm;
-    double ras, decs;
-    sip_get_radec_center_hms(wcs, &rah, &ram, &ras, &decd, &decm, &decs);
-    sprintf(rastr, "%02i:%02i:%02.3g", rah, ram, ras);
-    sprintf(decstr, "%+02i:%02i:%02.3g", decd, decm, decs);
+	double ra, dec;
+	sip_get_radec_center(wcs, &ra, &dec);
+	ra2hmsstring(ra, rastr);
+	dec2dmsstring(dec, decstr);
 }
 
 void sip_get_field_size(const sip_t* wcs,

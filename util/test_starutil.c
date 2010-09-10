@@ -22,6 +22,90 @@
 #include "starutil.h"
 #include "cutest.h"
 
+void test_ra2hmsstring(CuTest* tc) {
+	char rastr[32], decstr[32];
+	double hr;
+	double as;
+
+	ra2hmsstring(0, rastr);
+	CuAssertStrEquals(tc, "00:00:00.000", rastr);
+	printf("ra %s\n", rastr);
+
+	hr = 15.0;
+
+	ra2hmsstring(-hr, rastr);
+	CuAssertStrEquals(tc, "23:00:00.000", rastr);
+	printf("ra %s\n", rastr);
+
+	ra2hmsstring(hr, rastr);
+	CuAssertStrEquals(tc, "01:00:00.000", rastr);
+	printf("ra %s\n", rastr);
+
+	as = 15.0/3600.0;
+
+	ra2hmsstring(60.0*as, rastr);
+	CuAssertStrEquals(tc, "00:01:00.000", rastr);
+	printf("ra %s\n", rastr);
+
+	ra2hmsstring(as, rastr);
+	CuAssertStrEquals(tc, "00:00:01.000", rastr);
+	printf("ra %s\n", rastr);
+
+	ra2hmsstring(0.001*as, rastr);
+	CuAssertStrEquals(tc, "00:00:00.001", rastr);
+	printf("ra %s\n", rastr);
+
+	ra2hmsstring(0.000999*as, rastr);
+	CuAssertStrEquals(tc, "00:00:00.001", rastr);
+	printf("ra %s\n", rastr);
+
+	ra2hmsstring(360.0 - 0.001*as, rastr);
+	CuAssertStrEquals(tc, "23:59:59.999", rastr);
+	printf("ra %s\n", rastr);
+
+	as = 1.0/3600.0;
+
+	dec2dmsstring(0, decstr);
+	CuAssertStrEquals(tc, "+00:00:00.000", decstr);
+	printf("dec %s\n", decstr);
+
+	dec2dmsstring(-0, decstr);
+	CuAssertStrEquals(tc, "+00:00:00.000", decstr);
+	printf("dec %s\n", decstr);
+
+	dec2dmsstring(-1, decstr);
+	CuAssertStrEquals(tc, "-01:00:00.000", decstr);
+	printf("dec %s\n", decstr);
+
+	dec2dmsstring(-1*as, decstr);
+	CuAssertStrEquals(tc, "-00:00:01.000", decstr);
+	printf("dec %s\n", decstr);
+
+	dec2dmsstring(-0.001*as, decstr);
+	CuAssertStrEquals(tc, "-00:00:00.001", decstr);
+	printf("dec %s\n", decstr);
+
+	dec2dmsstring(-0.000999*as, decstr);
+	CuAssertStrEquals(tc, "-00:00:00.001", decstr);
+	printf("dec %s\n", decstr);
+
+	dec2dmsstring(as, decstr);
+	CuAssertStrEquals(tc, "+00:00:01.000", decstr);
+	printf("dec %s\n", decstr);
+
+	dec2dmsstring(0.5, decstr);
+	CuAssertStrEquals(tc, "+00:30:00.000", decstr);
+	printf("dec %s\n", decstr);
+
+	dec2dmsstring(-0.5, decstr);
+	CuAssertStrEquals(tc, "-00:30:00.000", decstr);
+	printf("dec %s\n", decstr);
+
+
+
+}
+
+
 void test_hammer_aitoff(CuTest* tc) {
 	double xyz[3];
 	double px, py;

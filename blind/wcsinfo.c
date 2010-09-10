@@ -55,7 +55,7 @@ int main(int argc, char** args) {
 	double imw=0, imh=0;
 	double rac, decc;
 	double det, parity, orient, orientc;
-    int rah, ram, decd, decm;
+    int rah, ram, decsign, decd, decm;
     double ras, decs;
     char* units;
     double pixscale;
@@ -147,10 +147,11 @@ int main(int argc, char** args) {
 	orientc = orient + rad2deg(atan(tan(deg2rad(rac - wcs.wcstan.crval[0])) * sin(deg2rad(wcs.wcstan.crval[1]))));
 	printf("orientation_center %.8g\n", orientc);
 
-    sip_get_radec_center_hms(&wcs, &rah, &ram, &ras, &decd, &decm, &decs);
+    sip_get_radec_center_hms(&wcs, &rah, &ram, &ras, &decsign, &decd, &decm, &decs);
     printf("ra_center_h %i\n", rah);
     printf("ra_center_m %i\n", ram);
     printf("ra_center_s %.12g\n", ras);
+	printf("dec_center_sign %i\n", decsign);
     printf("dec_center_d %i\n", decd);
     printf("dec_center_m %i\n", decm);
     printf("dec_center_s %.12g\n", decs);

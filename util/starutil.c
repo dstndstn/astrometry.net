@@ -308,14 +308,13 @@ inline void ra2hms(double ra, int* h, int* m, double* s) {
 }
 
 // Dec in degrees to D:M:S
-inline void dec2dms(double dec, int* d, int* m, double* s) {
+void dec2dms(double dec, int* sign, int* d, int* m, double* s) {
     double rem;
     double flr;
-    int sign;
-    sign = (dec >= 0.0) ? 1 : -1;
-    dec *= sign;
+    *sign = (dec >= 0.0) ? 1 : -1;
+    dec *= (*sign);
     flr = floor(dec);
-    *d = sign * flr;
+    *d = flr;
     // remaining degrees:
     rem = dec - flr;
     // -> minutes
@@ -326,5 +325,52 @@ inline void dec2dms(double dec, int* d, int* m, double* s) {
     // -> seconds
     rem *= 60.0;
     *s = rem;
+}
+
+void ra2hmsstring(double ra, char* str) {
+	int h, m;
+	double s;
+	int ss;
+	int ds;
+	ra2hms(ra, &h, &m, &s);
+
+	// round to display to 3 decimal places
+	ss = (int)floor(s);
+	ds = (int)round((s - ss) * 1000.0);
+	if (ds >= 1000) {
+		ss++;
+		ds -= 1000;
+	}
+	if (ss >= 60) {
+		ss -= 60;
+		m += 1;
+	}
+	if (m >= 60) {
+		m -= 60;
+		h += 1;
+	}
+	sprintf(str, "%02i:%02i:%02i.%03i", h, m, ss, ds);
+}
+
+void dec2dmsstring(double dec, char* str) {
+	int sign, d, m;
+	double s;
+	int ss, ds;
+	dec2dms(dec, &sign, &d, &m, &s);
+	ss = (int)floor(s);
+	ds = (int)round((s - ss) * 1000.0);
+	if (ds >= 1000) {
+		ss++;
+		ds -= 1000;
+	}
+	if (ss >= 60) {
+		ss -= 60;
+		m += 1;
+	}
+	if (m >= 60) {
+		m -= 60;
+		d += 1;
+	}
+	sprintf(str, "%c%02i:%02i:%02i.%03i", (sign==1 ? '+':'-'), d, m, ss, ds);
 }
 
