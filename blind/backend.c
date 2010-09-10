@@ -475,10 +475,10 @@ int backend_run_job(backend_t* backend, job_t* job) {
             break;
 	}
 
-	logmsg("cx<=dx constraints: %i\n", sp->num_cxdx_skipped);
-	logmsg("meanx constraints: %i\n", sp->num_meanx_skipped);
-	logmsg("RA,Dec constraints: %i\n", sp->num_radec_skipped);
-	logmsg("AB scale constraints: %i\n", sp->num_abscale_skipped);
+	logverb("cx<=dx constraints: %i\n", sp->num_cxdx_skipped);
+	logverb("meanx constraints: %i\n", sp->num_meanx_skipped);
+	logverb("RA,Dec constraints: %i\n", sp->num_radec_skipped);
+	logverb("AB scale constraints: %i\n", sp->num_abscale_skipped);
 
  finish:
     solver_cleanup(sp);
