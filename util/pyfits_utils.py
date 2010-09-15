@@ -165,7 +165,7 @@ class tabledata(object):
 			if type(val) is numpy.ndarray:
 			#try:
 				rtn.set(name, val[I])
-			elif type(val) is list and type(I) is int:
+			elif type(val) is list and type(I) in [int, numpy.int64]:
 				rtn.set(name, val[I])
 				
 			#except Exception as e:
@@ -174,10 +174,10 @@ class tabledata(object):
 				# HACK -- emulate numpy's boolean and int array slicing
 				# (when "val" is a normal python list)
 				ok = False
-				if type(I) is numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'bool':
+				if type(I) is numpy.ndarray and hasattr(I, 'dtype') and I.dtype.type in [bool, numpy.bool]:
 					rtn.set(name, [val[i] for i,b in enumerate(I) if b])
 					ok = True
-				if type(I) is numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'int':
+				if type(I) is numpy.ndarray and hasattr(I, 'dtype') and I.dtype.type in [int, numpy.int64, numpy.int]:
 					rtn.set(name, [val[i] for i in I])
 					ok = True
 				if hasattr(I, '__len__') and len(I) == 0:
@@ -186,10 +186,10 @@ class tabledata(object):
 				if not ok:
 					print 'Error in slicing an astrometry.util.pyfits_utils.table_data object:'
 					#print '  -->', e
-					print 'While setting member:', name
+					print 'While getting member:', name
 					print ' by taking elements:', I
-					print ' from', val
-					print ' type:', type(val)
+					#print ' from', val
+					print ' from a:', type(val)
 					if hasattr(val, 'shape'):
 						print ' shape:', val.shape
 					if hasattr(I, 'shape'):
@@ -197,6 +197,9 @@ class tabledata(object):
 					print 'index type:', type(I)
 					if hasattr(I, 'dtype'):
 						print '  index dtype:', I.dtype
+						print '  index dtype has type:', type(I.dtype)
+						print '  index dtype.type:', I.dtype.type
+						print 'options are', [int, numpy.int64, numpy.int]
 					print 'my length:', self._length
 					raise Exception('error in fits_table indexing')
 
