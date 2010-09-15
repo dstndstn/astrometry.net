@@ -1,7 +1,22 @@
 import os.path
 
+def sdss_band_name(b):
+	if b in ['u','g','r','i','z']:
+		return b
+	if b in [0,1,2,3,4]:
+		return 'ugriz'[b]
+	raise Exception('Invalid SDSS band: "' + str(b) + '"')
+
+def sdss_band_index(b):
+	if b in ['u','g','r','i','z']:
+		return 'ugriz'.index(b)
+	if b in [0,1,2,3,4]:
+		return b
+	raise Exception('Invalid SDSS band: "' + str(b) + '"')
 
 def sdss_filename(filetype, run, camcol, field, band=None, rerun=None):
+	if band is not None:
+		band = sdss_band_name(band)
 	x = dict(run=run, band=band, camcol=camcol, field=field, rerun=rerun)
 	ftmap = {
 		'fpC': 'fpC-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit',
@@ -32,7 +47,7 @@ def sdss_find_file(filetype, run, camcol, field, band=None, reruns=None, datadir
 	if filetype == 'psField':
 		basedir = datadir
 		for rerun in reruns:
-			pth = os.path.join(basedir, sdss_path(filetype, run, camcol, field, rerun=rerun))
+			pth = os.path.join(basedir, sdss_path(filetype, run, camcol, field, band=band, rerun=rerun))
 			print 'trying path', pth
 			if os.path.exists(pth):
 				return pth

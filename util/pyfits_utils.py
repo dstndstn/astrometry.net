@@ -47,6 +47,25 @@ class tabledata(object):
 		self._length = 0
 		self._header = header
 		self._columns = []
+	def __str__(self):
+		return 'tabledata object with %i rows and %i columns' % (len(self), len([k for k in self.__dict__.keys() if not k.startswith('_')]))
+	def about(self):
+		keys = [k for k in self.__dict__.keys() if not k.startswith('_')]
+		print 'tabledata object with %i rows and %i columns:' % (len(self),  len(keys))
+		keys.sort()
+		for k in keys:
+			print '  ', k,
+			v = self.get(k)
+			print '(%s)' % (str(type(v))),
+			if numpy.isscalar(v):
+				print v
+			elif hasattr(v, 'shape'):
+				print 'shape', v.shape
+			elif hasattr(v, '__len__'):
+				print 'length', len(v)
+			else:
+				print v
+			
 	def __setattr__(self, name, val):
 		object.__setattr__(self, name, val)
 		#print 'set', name, 'to', val
@@ -57,8 +76,11 @@ class tabledata(object):
 	def set(self, name, val):
 		self.__setattr__(name, val)
 	def getcolumn(self, name):
-		return self.__dict__[name.lower()]
-
+		return self.__dict__[name]
+		#except:
+		#	return self.__dict__[name.lower()]
+	def get(self, name):
+		return self.getcolumn(name)
 	# Returns the list of column names, as they were ordered in the input FITS or text table.
 	def get_columns(self):
 		return self._columns
@@ -73,28 +95,96 @@ class tabledata(object):
 	def delete_column(self, c):
 		del self.__dict__[c]
 		self._columns.remove(c)
-	def __getitem__(self, I):
-		rtn = tabledata()
+	def __setitem__(self, I, O):
+		if type(I) is slice:
+			print 'I:', I
+			# HACK... "[:]" -> slice(None, None, None)
+			if I.start is None and I.stop is None and I.step is None:
+				I = numpy.arange(len(self))
+			else:
+				I = numpy.arange(I.start, I.stop, I.step)
 		for name,val in self.__dict__.items():
 			if name.startswith('_'):
 				continue
+			# ?
+			if numpy.isscalar(val):
+				self.set(name, O.get(name))
+				continue
 			try:
-				rtn.set(name, val[I])
-			#except Exception as e:
+				val[I] = O.get(name)
 			except Exception:
 				# HACK -- emulate numpy's boolean and int array slicing...
 				ok = False
-				if type(I) == numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'bool':
+				#if type(I) == numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'bool':
+				#	for i,b in enumerate(I):
+				#		if b:
+				#			val[i] = O.get(val)
+				#	ok = True
+				#if type(I) == numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'int':
+				#	rtn.set(name, [val[i] for i in I])
+				#	ok = True
+				#if len(I) == 0:
+				#	rtn.set(name, [])
+				#	ok = True
+				if not ok:
+					print 'Error in slicing an astrometry.util.pyfits_utils.table_data object:'
+					#print '  -->', e
+
+					import pdb; pdb.set_trace()
+
+					print 'While setting member:', name
+					print ' setting elements:', I
+					print ' from obj', O
+					print ' target type:', type(O.get(name))
+					print ' dest type:', type(val)
+					print 'index type:', type(I)
+					#if hasattr(val, 'shape'):
+					#	print ' shape:', val.shape
+					#if hasattr(I, 'shape'):
+					#	print ' index shape:', I.shape
+					if hasattr(I, 'dtype'):
+						print '  index dtype:', I.dtype
+					print 'my length:', self._length
+					raise Exception('error in fits_table indexing')
+
+	def __getitem__(self, I):
+		rtn = tabledata()
+		if type(I) is slice:
+			print 'I:', I
+			# HACK... "[:]" -> slice(None, None, None)
+			if I.start is None and I.stop is None and I.step is None:
+				I = numpy.arange(len(self))
+			else:
+				I = numpy.arange(I.start, I.stop, I.step)
+		for name,val in self.__dict__.items():
+			if name.startswith('_'):
+				continue
+			if numpy.isscalar(val):
+				rtn.set(name, val)
+				continue
+			if type(val) is numpy.ndarray:
+			#try:
+				rtn.set(name, val[I])
+			elif type(val) is list and type(I) is int:
+				rtn.set(name, val[I])
+				
+			#except Exception as e:
+			#except Exception:
+			else:
+				# HACK -- emulate numpy's boolean and int array slicing
+				# (when "val" is a normal python list)
+				ok = False
+				if type(I) is numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'bool':
 					rtn.set(name, [val[i] for i,b in enumerate(I) if b])
 					ok = True
-				if type(I) == numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'int':
+				if type(I) is numpy.ndarray and hasattr(I, 'dtype') and I.dtype == 'int':
 					rtn.set(name, [val[i] for i in I])
 					ok = True
-				if len(I) == 0:
+				if hasattr(I, '__len__') and len(I) == 0:
 					rtn.set(name, [])
 					ok = True
 				if not ok:
-					print 'Error in slicing an astrometry.net.pyfits_utils.table_data object:'
+					print 'Error in slicing an astrometry.util.pyfits_utils.table_data object:'
 					#print '  -->', e
 					print 'While setting member:', name
 					print ' by taking elements:', I
