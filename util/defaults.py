@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 #matplotlib.use('cairo')
 
 # Check out: http://matplotlib.sourceforge.net/users/customizing.html

@@ -1,10 +1,16 @@
-from numpy import sin
+from numpy import sin, atleast_1d, zeros, logical_and
 from math import pi
 
 def lanczos_filter(order, x):
-	filt = order * sin(pi * x) * sin(pi * x / order) / ((pi * x)**2)
-	filt[x == 0] = 1
-	filt[x > order] = 0
+	x = atleast_1d(x)
+	nz = logical_and(x != 0., logical_and(x < order, x > -order))
+	filt = zeros(len(x), float)
+	#filt[nz] = order * sin(pi * x[nz]) * sin(pi * x[nz] / order) / ((pi * x[nz])**2)
+	pinz = pi * x[nz]
+	filt[nz] = order * sin(pinz) * sin(pinz / order) / (pinz**2)
+	filt[x == 0] = 1.
+	#filt[x >  order] = 0.
+	#filt[x < -order] = 0.
 	return filt
 
 # Given a range of integer coordinates that you want to, eg, cut out
