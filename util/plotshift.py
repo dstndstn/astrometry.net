@@ -16,8 +16,8 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None, hist=Fa
 			  #histbinsize=None):
 	# correspondences we could have hit...
 	radius = dcell * sqrt(2.)
-	print 'ixy', ixy.shape
-	print 'rxy', rxy.shape
+	#print 'ixy', ixy.shape
+	#print 'rxy', rxy.shape
 	assert((len(rxy) == 0) or (rxy.shape[1] == 2))
 	assert((len(ixy) == 0) or (ixy.shape[1] == 2))
 
@@ -32,18 +32,18 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None, hist=Fa
 	if len(rxy):
 		keep = (rxy[:,0] > -dcell) * (rxy[:,0] < W+dcell) * (rxy[:,1] > -dcell) * (rxy[:,1] < H+dcell)
 		rxy = rxy[keep]
-	print 'Cut to %i ref sources in range' % len(rxy)
+    #print 'Cut to %i ref sources in range' % len(rxy)
 	
 	cellsize = sqrt(W * H / ncells)
 	nw = int(round(W / cellsize))
 	nh = int(round(H / cellsize))
-	print 'Grid cell size', cellsize
-	print 'N cells', nw, 'x', nh
+	#print 'Grid cell size', cellsize
+	#print 'N cells', nw, 'x', nh
 	edgesx = linspace(0, W, nw+1)
 	edgesy = linspace(0, H, nh+1)
-	print 'Edges:'
-	print '  x:', edgesx
-	print '  y:', edgesy
+	#print 'Edges:'
+	#print '	 x:', edgesx
+	#print '	 y:', edgesy
 	if len(rxy) == 0:
 		binx = array([])
 		biny = array([])
@@ -60,31 +60,31 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None, hist=Fa
 		for j in range(nw):
 			thisbin = i * nw + j
 			R = (bin == thisbin)
-			print 'cell %i, %i' % (j, i)
-			print '%i ref sources' % sum(R)
+			#print 'cell %i, %i' % (j, i)
+			#print '%i ref sources' % sum(R)
 			matchdx = []
 
 			if sum(R) > 0:
 				(inds,dists) = spherematch.match(rxy[R,:], ixy, radius)
-				print 'Found %i matches within %g pixels' % (len(dists), radius)
+				#print 'Found %i matches within %g pixels' % (len(dists), radius)
 				ri = inds[:,0]
 				# un-cut ref inds...
 				ri = (flatnonzero(R))[ri]
 				ii = inds[:,1]
-				matchx  = rxy[ri,0]
-				matchy  = rxy[ri,1]
+				matchx	= rxy[ri,0]
+				matchy	= rxy[ri,1]
 				matchdx = ix[ii] - matchx
 				matchdy = iy[ii] - matchy
 				#print 'All matches:'
 				#for dx,dy in zip(matchdx,matchdy):
-				#	print '  %.1f, %.1f' % (dx,dy)
+				#	print '	 %.1f, %.1f' % (dx,dy)
 				ok = (matchdx >= -dcell) * (matchdx <= dcell) * (matchdy >= -dcell) * (matchdy <= dcell)
 				matchdx = matchdx[ok]
 				matchdy = matchdy[ok]
-				print 'Cut to %i within %g x %g square' % (sum(ok), dcell*2, dcell*2)
+				#print 'Cut to %i within %g x %g square' % (sum(ok), dcell*2, dcell*2)
 				#print 'Cut matches:'
 				#for dx,dy in zip(matchdx,matchdy):
-				#	print '  %.1f, %.1f' % (dx,dy)
+				#	print '	 %.1f, %.1f' % (dx,dy)
 			
 			# Subplot places plots left-to-right, TOP-to-BOTTOM.
 			subplot(nh, nw, 1 + ((nh - i - 1)*nw + j))
@@ -95,7 +95,7 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None, hist=Fa
 				if hist:
 					#if histbinsize is None:
 					#	histbinsize = dcell / 10.
-					edges = linspace(-dcell, dcell, nhistbins)
+					edges = linspace(-dcell, dcell, nhistbins+1)
 					(H,xe,ye) = histogram2d(matchdx, matchdy, bins=(edges,edges))
 					imshow(H.T, extent=(min(xe), max(xe), min(ye), max(ye)),
 						   aspect='auto', origin='lower', interpolation='nearest')
@@ -105,7 +105,10 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None, hist=Fa
 				else:
 					plot(matchdx, matchdy, 'r.', alpha=0.3)
 
-			if not hist:
+			if hist:
+				axhline(0, color='b', alpha=0.8)
+				axvline(0, color='b', alpha=0.8)
+			else:
 				axhline(0, color='k', alpha=0.5)
 				axvline(0, color='k', alpha=0.5)
 			if i == 0 and j == 0:
@@ -117,7 +120,7 @@ def plotshift(ixy, rxy, dcell=50, ncells=18, outfn=None, W=None, H=None, hist=Fa
 			axis('scaled')
 			axis([-dcell, dcell, -dcell, dcell])
 	if outfn is not None:
-		print 'Saving', outfn
+		#print 'Saving', outfn
 		savefig(outfn)
 
 
