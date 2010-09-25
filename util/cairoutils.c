@@ -375,7 +375,7 @@ unsigned char* cairoutils_read_png_stream(FILE* fid, int* pW, int *pH) {
     if (color_type == PNG_COLOR_TYPE_PALETTE)
         png_set_palette_to_rgb(ping);
     if (color_type == PNG_COLOR_TYPE_GRAY && bitdepth < 8)
-        png_set_gray_1_2_4_to_8(ping);
+        png_set_expand(ping);
     if (png_get_valid(ping, info, PNG_INFO_tRNS))
         png_set_tRNS_to_alpha(ping);
     if (bitdepth == 16)
