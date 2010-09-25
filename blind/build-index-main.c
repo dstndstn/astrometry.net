@@ -212,19 +212,24 @@ int main(int argc, char** argv) {
 	}
 
 	if (preset > -100) {
-		if (preset >= 0) {
-			double scales[] = { 2., 2.8, 4., 5.6, 8., 11., 16., 22., 30., 42., 60., 85.,
-								120., 170., 240., 340., 480., 680., 1000., 1400., 2000. };
+		int minpreset = -4;
+		if (preset >= minpreset) {
+			double scales[] = { 
+				0.5, 0.7, 1., 1.4,
+				2., 2.8, 4., 5.6, 8., 11., 16., 22., 30., 42., 60., 85.,
+				120., 170., 240., 340., 480., 680., 1000., 1400., 2000. };
 			double hpbase = 1760;
 			double nside;
 			int P = sizeof(scales)/sizeof(double) - 1;
+			int maxpreset = P + minpreset;
+			int prei = preset - minpreset;
 
-			if (preset >= P) {
-				ERROR("Error: only presets 0 through %i are defined.\n", P);
+			if (preset >= maxpreset) {
+				ERROR("Error: only presets %i through %i are defined.\n", minpreset, maxpreset-1);
 				exit(-1);
 			}
-			p->qlo = scales[preset];
-			p->qhi = scales[preset+1];
+			p->qlo = scales[prei];
+			p->qhi = scales[prei+1];
 			nside = hpbase * pow((1./sqrt(2)), preset);
 			logverb("nside: %g\n", nside);
 			if (p->bignside)
