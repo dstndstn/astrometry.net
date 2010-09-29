@@ -19,6 +19,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <math.h>
+#include <assert.h>
 
 #include "permutedsort.h"
 #include "os-features.h" // for qsort_r
@@ -90,15 +93,43 @@ int* permuted_sort(const void* realarray, int array_stride,
     return perm;
 }
 
+#define COMPARE(d1, d2, op1, op2)						\
+	if (d1 op1 d2) return -1;							\
+	if (d1 op2 d2) return 1;							\
+	/* explicitly test for equality, to catch NaNs*/	\
+	if (d1 == d2) return 0;								\
+	printf("d1=%g, d2=%g\n", d1, d2);					\
+	if (isnan(d1) && isnan(d2)) return 0;				\
+	if (isnan(d1)) return 1;							\
+	if (isnan(d2)) return -1;							\
+	assert(0); return 0;
+
 int compare_doubles_asc(const void* v1, const void* v2) {
 	const double d1 = *(double*)v1;
 	const double d2 = *(double*)v2;
-	if (d1 < d2)
-		return -1;
-	if (d1 > d2)
-		return 1;
-	return 0;
+	COMPARE(d1, d2, <, >);
 }
+
+int compare_doubles_desc(const void* v1, const void* v2) {
+    // (note that v1,v2 are flipped)
+	const double d1 = *(double*)v1;
+	const double d2 = *(double*)v2;
+	COMPARE(d1, d2, >, <);
+}
+
+int compare_floats_asc(const void* v1, const void* v2) {
+	float f1 = *(float*)v1;
+	float f2 = *(float*)v2;
+	COMPARE(f1, f2, <, >);
+}
+
+int compare_floats_desc(const void* v1, const void* v2) {
+	float f1 = *(float*)v1;
+	float f2 = *(float*)v2;
+	COMPARE(f1, f2, >, <);
+}
+
+#undef COMPARE
 
 int compare_ints_asc(const void* v1, const void* v2) {
 	const int d1 = *(int*)v1;
@@ -110,26 +141,8 @@ int compare_ints_asc(const void* v1, const void* v2) {
 	return 0;
 }
 
-int compare_floats_asc(const void* v1, const void* v2) {
-	float f1 = *(float*)v1;
-	float f2 = *(float*)v2;
-	if (f1 < f2)
-		return -1;
-	if (f1 > f2)
-		return 1;
-	return 0;
-}
-
-int compare_doubles_desc(const void* v1, const void* v2) {
-    // (note that v1,v2 are flipped)
-    return compare_doubles_asc(v2, v1);
-}
-
 int compare_ints_desc(const void* v1, const void* v2) {
     return compare_ints_asc(v2, v1);
 }
 
-int compare_floats_desc(const void* v1, const void* v2) {
-    return compare_floats_asc(v2, v1);
-}
 

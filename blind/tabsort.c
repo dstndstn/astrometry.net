@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -119,7 +120,7 @@ int tabsort(const char* infn, const char* outfn, const char* colname,
 			continue;
 		}
 
-        // Grab the data.
+        // Grab the sort column.
 		atomsize = fits_get_atom_size(col->atom_type);
 		qfits_query_column_seq_to_array(table, c, 0, table->nr, data, atomsize);
         // Sort it.
