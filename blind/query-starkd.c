@@ -26,7 +26,7 @@
 #include "starutil.h"
 #include "rdlist.h"
 
-static const char* OPTIONS = "hvr:d:R:t:Io:";//T";
+static const char* OPTIONS = "hvr:d:R:t:Io:T";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
@@ -36,7 +36,7 @@ void printHelp(char* progname) {
 		   "    [-d <dec>] (deg)\n"
 		   "    [-R <radius>] (deg)\n"
 		   "    [-t <tagalong-column>]\n"
-		   //"    [-T]: tag-along all\n"
+		   "    [-T]: tag-along all\n"
 		   "    [-I]: print indices too\n"
 		   "    [-v]: +verbose\n"
 		   "\n", progname);
@@ -130,6 +130,13 @@ int main(int argc, char **argv) {
 
 	if (!N)
 		goto done;
+
+	if (tagall) {
+		int j, M;
+		M = startree_get_tagalong_N_columns(starkd); 
+		for (j=0; j<M; j++)
+			sl_append(tag, startree_get_tagalong_column_name(starkd, j));
+	}
 
 	for (i=0; i<sl_size(tag); i++) {
 		void* data = startree_get_data_column(starkd, sl_get(tag, i), inds, N);

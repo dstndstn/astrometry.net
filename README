@@ -1,14 +1,19 @@
 Astrometry.net code release
 ===========================
+Copyright 2006-2010 Michael Blanton, David W. Hogg, Dustin Lang, Keir
+Mierle and Sam Roweis.  Released under the GPLv2 license.
 
-Copyright 2006-2009 Michael Blanton, David W. Hogg, Dustin Lang, Keir
-Mierle and Sam Roweis.
+This code is accompanied by the paper:
 
-This code is meant as an accompanyment for an upcoming paper and its
-main purpose is to allow reproduction of the results in that paper.
+Lang, D., Hogg, D. W.; Mierle, K., Blanton, M., & Roweis, S., 2010,
+Astrometry.net: Blind astrometric calibration of arbitrary
+astronomical images, Astronomical Journal 137, 1782–1800.
+http://arxiv.org/abs/0910.2233
 
-This is research code only and is not intended for scientific use in
-reducing data or other analyses.
+The original purpose of this code release was to back up the claims in
+the paper in the interest of scientific repeatability.  Over the
+years, it has become more robust and usable for a wider audience, but
+it's still neither totally easy nor bug-free.
 
 This release includes a snapshot of all of the components of our
 current research code, including routines to:
