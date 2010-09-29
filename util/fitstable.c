@@ -185,6 +185,13 @@ tfits_type fitscolumn_any_type() {
     return (tfits_type)-1;
 }
 
+/*
+ const char* fitscolumn_format_string(tfits_type t) {
+ switch (t) {
+ case TFITS_BIN_TYPE_D:
+ return "
+ */
+
 int fitstable_ncols(fitstable_t* t) {
     return ncols(t);
 }

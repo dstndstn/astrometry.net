@@ -180,6 +180,8 @@ tfits_type fitscolumn_i32_type();
 tfits_type fitscolumn_i64_type();
 tfits_type fitscolumn_bitfield_type();
 
+//const char* fitscolumn_format_string(tfits_type t);
+
 // an-bool type.
 tfits_type fitscolumn_bool_type();
 

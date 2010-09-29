@@ -20,6 +20,7 @@
 #include <stdio.h>
 
 #include "starkd.h"
+#include "fitsioutils.h"
 #include "log.h"
 #include "errors.h"
 #include "boilerplate.h"
@@ -55,15 +56,15 @@ int main(int argc, char **argv) {
 	int loglvl = LOG_MSG;
 	char** myargs;
 	int nmyargs;
-	double xyz[3];
-	double r2;
 	bool getinds = FALSE;
 	double* radec;
 	int* inds;
 	int N;
-	pl* tagdata = pl_new(4);
 	int i;
 	char* rdfn = NULL;
+	pl* tagdata = pl_new(16);
+	il* tagsizes = il_new(16);
+	fitstable_t* tagalong = NULL;
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
@@ -117,14 +118,11 @@ int main(int argc, char **argv) {
 		exit(-1);
 	}
 
-	radecdeg2xyzarr(ra, dec, xyz);
-	r2 = deg2distsq(radius);
-
 	logmsg("Searching kdtree %s at RA,Dec = (%g,%g), radius %g deg.\n",
 		   starfn, ra, dec, radius);
 
-	startree_search_for(starkd, xyz, r2,
-						NULL, &radec, &inds, &N);
+	startree_search_for_radec(starkd, ra, dec, radius,
+							  NULL, &radec, &inds, &N);
 
 	logmsg("Got %i results.\n", N);
 
@@ -138,18 +136,18 @@ int main(int argc, char **argv) {
 			sl_append(tag, startree_get_tagalong_column_name(starkd, j));
 	}
 
-	for (i=0; i<sl_size(tag); i++) {
-		void* data = startree_get_data_column(starkd, sl_get(tag, i), inds, N);
-		if (!data) {
-			ERROR("Failed to read tag-along column %s\n", sl_get(tag, i));
-			break;
+	if (sl_size(tag)) {
+		tagalong = startree_get_tagalong(starkd);
+		if (!tagalong) {
+			ERROR("Failed to find tag-along table in index");
+			exit(-1);
 		}
-		pl_append(tagdata, data);
 	}
 
 	if (rdfn) {
 		rdlist_t* rd = rdlist_open_for_writing(rdfn);
 		il* colnums = il_new(16);
+
 		if (!rd) {
 			ERROR("Failed to open output file %s", rdfn);
 			exit(-1);
@@ -158,11 +156,31 @@ int main(int argc, char **argv) {
 			ERROR("Failed to write header to output file %s", rdfn);
 			exit(-1);
 		}
+
 		for (i=0; i<sl_size(tag); i++) {
-			// HACK -- assume double!
-			int colnum = rdlist_add_tagalong_column(rd, fitscolumn_double_type(), 1,
-													fitscolumn_double_type(), sl_get(tag, i), NULL);
+			const char* col = sl_get(tag, i);
+			char* units;
+			tfits_type type;
+			int arraysize;
+			void* data;
+			int colnum;
+			int itemsize;
+
+			if (fitstable_find_fits_column(tagalong, col, &units, &type, &arraysize)) {
+				ERROR("Failed to find column \"%s\" in index", col);
+				exit(-1);
+			}
+			itemsize = fits_get_atom_size(type) * arraysize;
+			data = fitstable_read_column_array_inds(tagalong, col, type, inds, N, NULL);
+			if (!data) {
+				ERROR("Failed to read data for column \"%s\" in index", col);
+				exit(-1);
+			}
+			colnum = rdlist_add_tagalong_column(rd, type, arraysize, type, col, NULL);
+
 			il_append(colnums, colnum);
+			il_append(tagsizes, itemsize);
+			pl_append(tagdata, data);
 		}
 		if (rdlist_write_header(rd)) {
 			ERROR("Failed to write header to output file %s", rdfn);
@@ -176,8 +194,11 @@ int main(int argc, char **argv) {
 			}
 		}
 		for (i=0; i<sl_size(tag); i++) {
-			// HACK -- assume double!
-			if (rdlist_write_tagalong_column(rd, il_get(colnums, i), 0, N, pl_get(tagdata, i), sizeof(double))) {
+			int col = il_get(colnums, i);
+			void* data = pl_get(tagdata, i);
+			int itemsize = il_get(tagsizes, i);
+
+			if (rdlist_write_tagalong_column(rd, col, 0, N, data, itemsize)) {
 				ERROR("Failed to write tag-along data column %s", sl_get(tag, i));
 				exit(-1);
 			}
@@ -199,15 +220,42 @@ int main(int argc, char **argv) {
 			printf(", %s", sl_get(tag, i));
 		printf("\n");
 
+		for (i=0; i<sl_size(tag); i++) {
+			const char* col = sl_get(tag, i);
+			char* units;
+			tfits_type type;
+			int arraysize;
+			void* data;
+			int itemsize;
+
+			if (fitstable_find_fits_column(tagalong, col, &units, &type, &arraysize)) {
+				ERROR("Failed to find column \"%s\" in index", col);
+				exit(-1);
+			}
+			itemsize = fits_get_atom_size(type) * arraysize;
+			data = fitstable_read_column_array_inds(tagalong, col, type, inds, N, NULL);
+			if (!data) {
+				ERROR("Failed to read data for column \"%s\" in index", col);
+				exit(-1);
+			}
+			il_append(tagsizes, itemsize);
+			pl_append(tagdata, data);
+		}
+
 		for (i=0; i<N; i++) {
 			int j;
 			printf("%g, %g", radec[i*2+0], radec[i*2+1]);
 			if (getinds)
 				printf(", %i", inds[i]);
-			for (j=0; j<sl_size(tagdata); j++) {
-				double* data = pl_get(tagdata, j);
-				printf(", %g", data[i]);
-			}
+
+			//// FIXME -- print tag-along data of generic type.
+			/*
+			 for (j=0; j<pl_size(tagdata); j++) {
+			 double* data = pl_get(tagdata, j);
+			 printf(", %g", data[i]);
+			 }
+			 */
+
 			printf("\n");
 		}
 	}
@@ -215,7 +263,10 @@ int main(int argc, char **argv) {
  done:
 	free(radec);
 	free(inds);
-	// etc
+	for (i=0; i<pl_size(tagdata); i++)
+		free(pl_get(tagdata, i));
+	pl_free(tagdata);
+	il_free(tagsizes);
 
 	return 0;
 }
