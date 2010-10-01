@@ -1,7 +1,8 @@
 Astrometry.net code release
 ===========================
+
 Copyright 2006-2010 Michael Blanton, David W. Hogg, Dustin Lang, Keir
-Mierle and Sam Roweis.  Released under the GPLv2 license.
+Mierle and Sam Roweis.
 
 This code is accompanied by the paper:
 
@@ -37,7 +38,18 @@ same files we're using for our web service.
 INSTALLING
 ----------
 
-To compile everything and run with full functionality, you will need:
+The short version:
+
+   make
+   make extra
+   make install  # to put it in /usr/local/astrometry
+   # or:
+   make install INSTALL_DIR=/some/other/place
+
+
+The long version:
+
+For full functionality, you will need:
   * GNU build tools (gcc, make, etc.)
   * cairo
   * netpbm
@@ -75,9 +87,9 @@ able to compile and use the core parts of the solver, but you will
 miss out on some eye-candy.
 
 Grab the code:
-  $ wget http://astrometry.net/downloads/astrometry.net-0.34.tar.bz2
-  $ tar xjf astrometry.net-0.34.tar.bz2
-  $ cd astrometry.net-0.34
+  $ wget http://astrometry.net/downloads/astrometry.net-0.35.tar.bz2
+  $ tar xjf astrometry.net-0.35.tar.bz2
+  $ cd astrometry.net-0.35
 
 Build the solving system:
   $ make
@@ -160,7 +172,7 @@ index-200.tar.bz2             2.0  -  2.8              10,058
 --------------------------------------------------------------
 
 Download the indexes you need and put them in the top-level
-(astrometry-0.34) source directory.
+(astrometry-0.35) source directory.
 
 Install them:
    $ make install-indexes
@@ -175,9 +187,8 @@ Next, you can (optionally) configure the solver by editing the file
 UPGRADING INDEX FILES
 ---------------------
 
-The format of the index files has changed from the 0.1 and 0.11
-releases.  There is a program for updating them, and there is also a
-makefile target.
+The format of the index files changed after the 0.11 release.  There
+is a program for updating them, and there is also a makefile target.
 
   $ make upgrade-indexes
 
@@ -247,7 +258,8 @@ If you have any of indexes 200 to 203:
    $ solve-field demo/sdss.jpg
 
 
-Copyrights and credits for the demo images are listed in the file demo/CREDITS .
+Copyrights and credits for the demo images are listed in the file
+demo/CREDITS .
 
 Note that you can also give solve-field a URL rather than a file as input:
    $ solve-field --out apod1b http://antwrp.gsfc.nasa.gov/apod/image/0302/ngc2264_croman_c3.jpg 
@@ -611,21 +623,26 @@ subtraction).
 
 Index-building programs
 -----------------------
-  * usnobtofits, tycho2tofits, nomadtofits, 2masstofits: convert
+
+  * build-index: given a FITS binary table with RA,Dec, build an
+    index.  This is the "easy", recent way.  The old way uses the rest
+    of these programs:
+
+    * usnobtofits, tycho2tofits, nomadtofits, 2masstofits: convert
 catalogs into FITS binary tables.
 
-  * build-an-catalog: convert input catalogs into a standard FITS
+    * build-an-catalog: convert input catalogs into a standard FITS
 binary table format.
 
-  * cut-an: grab a bright, uniform subset of stars from a catalog.
+    * cut-an: grab a bright, uniform subset of stars from a catalog.
 
-  * startree: build a star kdtree from a catalog.
+    * startree: build a star kdtree from a catalog.
 
-  * hpquads: find a bright, uniform set of N-star features.
+    * hpquads: find a bright, uniform set of N-star features.
 
-  * codetree: build a kdtree from N-star shape descriptors.
+    * codetree: build a kdtree from N-star shape descriptors.
 
-  * unpermute-quads, unpermute-stars: reorder index files for
+    * unpermute-quads, unpermute-stars: reorder index files for
 efficiency.
 
 
@@ -782,14 +799,14 @@ track of which source files depend on which other source files.  These
 dependencies get stored in a file named "deps"; when it doesn't exist,
 "make" tries to rebuild it, but not before printing this message.
 
-3.    gnu-specific-test.c: In function 'main':
-      gnu-specific-test.c:23: warning: implicit declaration of function 'canonicalize_file_name'
-      gnu-specific-test.c:23: warning: initialization makes pointer from integer without a cast
+3.    os-features-test.c: In function 'main':
+      os-features-test.c:23: warning: implicit declaration of function 'canonicalize_file_name'
+      os-features-test.c:23: warning: initialization makes pointer from integer without a cast
       /usr/bin/ld: Undefined symbols:
       _canonicalize_file_name
       collect2: ld returned 1 exit status
 
-Not a problem.  We provide replacements for a couple of GNU-specific
+Not a problem.  We provide replacements for a couple of OS-specific
 functions, but we need to decide whether to use them or not.  We do
 that by trying to build a test program and checking whether it works.
 This failure tells us your OS doesn't provide the
