@@ -43,6 +43,10 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', **kwargs):
 	
 	W = max(x) - min(x)
 	H = max(y) - min(y)
+	if W == 0 or H == 0:
+		print 'Area of the rectangle enclosing all image sources: %i x %i' % (W,H)
+		p.writeto(outfile, clobber=True)
+		return
 	NX = int(max(1, round(W / sqrt(W*H / float(n)))))
 	NY = int(max(1, round(n / float(NX))))
 	print 'Uniformizing into %i x %i bins' % (NX, NY)
