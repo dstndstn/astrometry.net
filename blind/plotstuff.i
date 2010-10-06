@@ -13,6 +13,7 @@
 #include "plotxy.h"
 #include "plotradec.h"
 #include "plotmatch.h"
+#include "plotannotations.h"
 #include "sip.h"
 #include "sip-utils.h"
 #include "sip_qfits.h"
@@ -30,6 +31,7 @@
 %include "plotxy.h"
 %include "plotradec.h"
 %include "plotmatch.h"
+%include "plotannotations.h"
 %include "sip.h"
 %include "sip_qfits.h"
 %include "sip-utils.h"
@@ -42,6 +44,25 @@ enum log_level {
 	LOG_VERB,
 	LOG_ALL
 };
+
+// HACK!
+enum cairo_op {
+    CAIRO_OPERATOR_CLEAR,
+    CAIRO_OPERATOR_SOURCE,
+    CAIRO_OPERATOR_OVER,
+    CAIRO_OPERATOR_IN,
+    CAIRO_OPERATOR_OUT,
+    CAIRO_OPERATOR_ATOP,
+    CAIRO_OPERATOR_DEST,
+    CAIRO_OPERATOR_DEST_OVER,
+    CAIRO_OPERATOR_DEST_IN,
+    CAIRO_OPERATOR_DEST_OUT,
+    CAIRO_OPERATOR_DEST_ATOP,
+    CAIRO_OPERATOR_XOR,
+    CAIRO_OPERATOR_ADD,
+    CAIRO_OPERATOR_SATURATE
+};
+typedef enum cairo_op cairo_operator_t;
 
 void log_init(int log_level);
 void fits_use_error_system(void);
@@ -58,6 +79,9 @@ void fits_use_error_system(void);
 %extend plotimage_args {
   int set_wcs_file(const char* fn, int ext) {
     return plot_image_set_wcs(self, fn, ext);
+  }
+  int set_file(const char* fn) {
+    return plot_image_set_filename(self, fn);
   }
 
   int get_image_width() {

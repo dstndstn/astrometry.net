@@ -89,11 +89,14 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 	cairoutils_surface_status_errors(thissurf);
 	cairoutils_cairo_status_errors(cairo);
 
+	// Are we double-applying alpha?
 	if (args->alpha != 1.0) {
 		unsigned char a = MIN(255, MAX(0, args->alpha * 255));
 		for (i=0; i<(W*H); i++)
 			img[i*4+3] = a;
+		cairoutils_premultiply_alpha_rgba(img, W, H);
 	}
+
 	pat = cairo_pattern_create_for_surface(thissurf);
 	cairoutils_cairo_status_errors(cairo);
 
@@ -175,7 +178,6 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			}
 
 			cairo_pattern_set_matrix(pat, &mat);
-
 			cairo_fill(cairo);
 		}
 	}
@@ -354,6 +356,8 @@ int plot_image_plot(const char* command,
 			return -1;
 		}
 	}
+
+	plotstuff_builtin_apply(cairo, pargs);
 
 	if (pargs->wcs && args->wcs) {
 		plot_image_wcs(cairo, args->img, args->W, args->H, pargs, args);

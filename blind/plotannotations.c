@@ -24,6 +24,7 @@
 #include <cairo.h>
 
 #include "plotannotations.h"
+#include "hd.h"
 #include "ngc2000.h"
 #include "brightstars.h"
 #include "cairoutils.h"
@@ -50,17 +51,11 @@ struct target {
 };
 typedef struct target target_t;
 
-struct annotation_args {
-	bool NGC;
-	bool constellations;
-	bool bright;
-	bool HD;
-	float ngc_fraction;
-	bl* targets;
-};
-typedef struct annotation_args ann_t;
+plotann_t* plot_annotations_get(plot_args_t* pargs) {
+	return plotstuff_get_config(pargs, "annotations");
+}
 
-static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
+static void plot_targets(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 	int i;
 	double cra, cdec;
 	plotstuff_get_radec_center_and_radius(pargs, &cra, &cdec, NULL);
@@ -156,7 +151,7 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 	}
 }
 
-static void plot_brightstars(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
+static void plot_brightstars(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 	int i, N;
 
 	N = bright_stars_n();
@@ -179,7 +174,53 @@ static void plot_brightstars(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 	}
 }
 
-static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
+int plot_annotations_set_hd_catalog(plotann_t* ann, const char* hdfn) {
+	if (ann->hd_catalog)
+		free(ann->hd_catalog);
+	ann->hd_catalog = strdup(hdfn);
+	return 0;
+}
+
+static void plot_hd(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
+	int i, N;
+	hd_catalog_t* hdcat = NULL;
+	double ra,dec,rad;
+	bl* hdlist = NULL;
+
+	if (!ann->hd_catalog)
+		return;
+	hdcat = henry_draper_open(ann->hd_catalog);
+	if (!hdcat) {
+		ERROR("Failed to open Henry Draper catalog file \"%s\"", ann->hd_catalog);
+		return;
+	}
+	if (plotstuff_get_radec_center_and_radius(pargs, &ra, &dec, &rad)) {
+		ERROR("Failed to get RA,Dec,radius from plotstuff");
+		return;
+	}
+	hdlist = henry_draper_get(hdcat, ra, dec, deg2arcsec(rad));
+	logverb("Got %i Henry Draper stars\n", bl_size(hdlist));
+	
+	N = bl_size(hdlist);
+	for (i=0; i<N; i++) {
+		hd_entry_t* entry = bl_access(hdlist, i);
+		double px, py;
+		char label[16];
+		if (!plotstuff_radec2xy(pargs, entry->ra, entry->dec, &px, &py))
+			continue;
+		if (px < 1 || py < 1 || px > pargs->W || py > pargs->H)
+			continue;
+		logverb("HD %i at RA,Dec (%g,%g) -> xy (%g, %g)\n", entry->hd, entry->ra, entry->dec, px, py);
+
+		sprintf(label, "HD %i", entry->hd);
+		plotstuff_stack_marker(pargs, px, py);
+		plotstuff_stack_text(pargs, cairo, label, px, py);
+	}
+	bl_free(hdlist);
+	henry_draper_close(hdcat);
+}
+
+static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 	double imscale;
 	double imsize;
 	int i, N;
@@ -254,7 +295,7 @@ static void plot_ngc(cairo_t* cairo, plot_args_t* pargs, ann_t* ann) {
 }
 
 void* plot_annotations_init(plot_args_t* args) {
-	ann_t* ann = calloc(1, sizeof(ann_t));
+	plotann_t* ann = calloc(1, sizeof(plotann_t));
 	ann->ngc_fraction = 0.02;
 	ann->targets = bl_new(4, sizeof(target_t));
 	ann->NGC = TRUE;
@@ -264,7 +305,7 @@ void* plot_annotations_init(plot_args_t* args) {
 
 int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 							 plot_args_t* pargs, void* baton) {
-	ann_t* ann = (ann_t*)baton;
+	plotann_t* ann = (plotann_t*)baton;
 
 	// Set fonts, etc, before calling plotting routines
 	plotstuff_builtin_apply(cairo, pargs);
@@ -275,6 +316,9 @@ int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 	if (ann->bright)
 		plot_brightstars(cairo, pargs, ann);
 
+	if (ann->HD)
+		plot_hd(cairo, pargs, ann);
+
 	if (bl_size(ann->targets))
 		plot_targets(cairo, pargs, ann);
 
@@ -283,7 +327,7 @@ int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 
 int plot_annotations_command(const char* cmd, const char* cmdargs,
 							 plot_args_t* pargs, void* baton) {
-	ann_t* ann = (ann_t*)baton;
+	plotann_t* ann = (plotann_t*)baton;
 	if (streq(cmd, "annotations_no_ngc")) {
 		ann->NGC = FALSE;
 	} else if (streq(cmd, "annotations_no_bright")) {
@@ -325,7 +369,8 @@ int plot_annotations_command(const char* cmd, const char* cmdargs,
 }
 
 void plot_annotations_free(plot_args_t* args, void* baton) {
-	ann_t* ann = (ann_t*)baton;
+	plotann_t* ann = (plotann_t*)baton;
+	free(ann->hd_catalog);
 	free(ann);
 }
 

@@ -133,6 +133,9 @@ int plotstuff_set_size_wcs(plot_args_t* pargs);
 
 int plotstuff_scale_wcs(plot_args_t* pargs, double scale);
 
+// in deg.
+int plotstuff_rotate_wcs(plot_args_t* pargs, double angle);
+
 int plotstuff_set_wcs_box(plot_args_t* pargs, float ra, float dec, float width);
 
 int plotstuff_set_wcs_file(plot_args_t* pargs, const char* fn, int ext);
@@ -174,6 +177,7 @@ double plotstuff_pixel_scale(plot_args_t* pargs);
 bool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
 						double* x, double* y);
 
+// RA,Dec,radius in deg.
 int plotstuff_get_radec_center_and_radius(plot_args_t* pargs, double* ra, double* dec, double* radius);
 
 void plotstuff_get_radec_bounds(const plot_args_t* pargs, int stepsize,

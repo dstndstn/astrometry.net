@@ -91,6 +91,14 @@ plot_args_t* plotstuff_new() {
 	return pargs;
 }
 
+int plotstuff_rotate_wcs(plot_args_t* pargs, double angle) {
+	if (!pargs->wcs) {
+		ERROR("No WCS has been set");
+		return -1;
+	}
+	return anwcs_rotate_wcs(pargs->wcs, angle);
+}
+
 int plotstuff_get_radec_center_and_radius(plot_args_t* pargs,
 										  double* p_ra, double* p_dec, double* p_radius) {
 	int rtn;

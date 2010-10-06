@@ -112,4 +112,6 @@ void tan_transform(const tan_t* tanin, tan_t* tanout,
 
 void tan_scale(const tan_t* tanin, tan_t* tanout, double scale);
 
+void tan_rotate(const tan_t* tanin, tan_t* tanout, double rotate);
+
 #endif

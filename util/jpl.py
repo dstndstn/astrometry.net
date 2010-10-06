@@ -38,9 +38,24 @@ xvrex = re.compile(xvrexstr, re.MULTILINE | re.DOTALL)
 
 # For parsing "observer" type output (RA,Dec)
 # With QUANTITIES=1; angle format=DEG
-radecrexstr = ('^ ' + '(?P<datetime>[\d]{4}-[\w]{3}-[\d]{2} [\d]{2}:[\d]{2}) .*?'
+radecrexstr = (
+	'^ ' + '(?P<datetime>[\d]{4}-[\w]{3}-[\d]{2} [\d]{2}:[\d]{2}) .*?'
 			   + floatvar('ra') + ' *?' + floatvar('dec'))
 radecrex = re.compile(radecrexstr, re.MULTILINE | re.DOTALL)
+
+'''
+For output like:
+
+#Date       UT      R.A. (J2000) Decl.    Delta     r     El.    Ph.   m1     Sky Motion
+#            h m s                                                            "/min    P.A.
+# geocentric
+2007 04 01 000000   23.1983  -02.463     2.953   2.070   22.9  10.8  17.1    1.45    057.9
+'''
+#radecrexstr2 = (
+#	'^' + '(?P<datetime>[\d]{4} [\d]{2} [\d]{2} [\d]{2}:[\d]{2}) .*?'
+#			   + floatvar('ra') + ' *?' + floatvar('dec'))
+#radecrex = re.compile(radecrexstr, re.MULTILINE | re.DOTALL)
+
 
 
 # Returns a list of lists of elements, plus a list of the JDs.

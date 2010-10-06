@@ -67,7 +67,7 @@ static rd_t* get_rd(plotradec_t* args, rd_t* myrd) {
 		rdls = rdlist_open(args->fn);
 		if (!rdls) {
 			ERROR("Failed to open rdlist from file \"%s\"", args->fn);
-			return -1;
+			return NULL;
 		}
 		if (args->racol)
 			rdlist_set_raname(rdls, args->racol);

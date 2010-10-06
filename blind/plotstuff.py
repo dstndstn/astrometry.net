@@ -28,6 +28,8 @@ class Plotstuff(object):
 			return plot_outline_get(self.pargs)
 		elif name == 'grid':
 			return plot_grid_get(self.pargs)
+		elif name in ['ann', 'annotations']:
+			return plot_annotations_get(self.pargs)
 		return self.pargs.__getattr__(name)
 
 	def __setattr__(self, name, val):
@@ -45,6 +47,9 @@ class Plotstuff(object):
 			plotstuff_set_marker(self.pargs, val)
 		elif name == 'wcs_file':
 			plotstuff_set_wcs_file(self.pargs, val, 0)
+		#elif name == 'operator':
+		#	print 'val:', val
+		#	self.pargs.op = val
 		else:
 			self.pargs.__setattr__(name, val)
 
@@ -53,6 +58,9 @@ class Plotstuff(object):
 
 	def scale_wcs(self, scale):
 		plotstuff_scale_wcs(self.pargs, scale)
+
+	def rotate_wcs(self, angle):
+		plotstuff_rotate_wcs(self.pargs, angle)
 
 	def set_wcs_box(self, ra, dec, width):
 		plotstuff_set_wcs_box(self.pargs, ra, dec, width)

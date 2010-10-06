@@ -31,6 +31,22 @@
 #include "errors.h"
 #include "log.h"
 
+void tan_rotate(const tan_t* tanin, tan_t* tanout, double angle) {
+	double s,c;
+	double newcd[4];
+	memmove(tanout, tanin, sizeof(tan_t));
+	s = sin(deg2rad(angle));
+	c = cos(deg2rad(angle));
+	newcd[0] = c*tanin->cd[0][0] + s*tanin->cd[1][0];
+	newcd[1] = c*tanin->cd[0][1] + s*tanin->cd[1][1];
+	newcd[2] = -s*tanin->cd[0][0] + c*tanin->cd[1][0];
+	newcd[3] = -s*tanin->cd[0][1] + c*tanin->cd[1][1];
+	tanout->cd[0][0] = newcd[0];
+	tanout->cd[0][1] = newcd[1];
+	tanout->cd[1][0] = newcd[2];
+	tanout->cd[1][1] = newcd[3];
+}
+
 int sip_ensure_inverse_polynomials(sip_t* sip) {
 	if ((sip->a_order == 0 && sip->b_order == 0) ||
 		(sip->ap_order > 0  && sip->bp_order > 0)) {

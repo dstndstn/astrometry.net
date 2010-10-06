@@ -91,6 +91,9 @@ void anwcs_set_size(anwcs_t* anwcs, int W, int H);
 
 int anwcs_scale_wcs(anwcs_t* anwcs, double scale);
 
+// angle in deg
+int anwcs_rotate_wcs(anwcs_t* anwcs, double angle);
+
 // Approximate pixel scale, in arcsec/pixel, at the reference point.
 double anwcs_pixel_scale(const anwcs_t* anwcs);
 
