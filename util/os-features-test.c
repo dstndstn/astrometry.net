@@ -22,7 +22,7 @@
 int main() {
     char* path = canonicalize_file_name("/");
     free(path);
-    printf("#define NEED_CANONICALIZE_FILE_NAME 0\n");
+    //printf("#define NEED_CANONICALIZE_FILE_NAME 0\n");
     return 0;
 }
 #endif
@@ -34,7 +34,7 @@ static int cmp(void* u, const void* a, const void* b) {
 int main() {
     int array;
     qsort_r(&array, 1, sizeof(int), NULL, cmp);
-    printf("#define NEED_QSORT_R 0\n");
+    //printf("#define NEED_QSORT_R 0\n");
     return 0;
 }
 #endif
@@ -42,13 +42,12 @@ int main() {
 #ifdef TEST_DECLARE_QSORT_R
 // Test whether just declaring qsort_r as we do causes a compile failure.
 
-//// NOTE: this declaration must match gnu-specific-test.c .
 void qsort_r(void *base, size_t nmemb, size_t sz,
              void *userdata,
              int (*compar)(void *, const void *, const void *));
 
 int main() {
-    printf("#define NEED_DECLARE_QSORT_R 1\n");
+    //printf("#define NEED_DECLARE_QSORT_R 1\n");
     return 0;
 }
 #endif
@@ -70,7 +69,7 @@ int main() {
     int mythunk = 42;
     // glibc 2.8 swaps the last two args compared to BSD.
     qsort_r(array, N, sizeof(int), sortfunc, &mythunk);
-    printf("#define NEED_SWAP_QSORT_R 1\n");
+    //printf("#define NEED_SWAP_QSORT_R 1\n");
     return 0;
 }
 #endif
