@@ -115,12 +115,6 @@ ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h 
 	quadfile.h rdlist.h scamp-catalog.h sip-utils.h sip.h sip_qfits.h \
 	starkd.h starutil.h starutil.inc starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
 	xylist.h coadd.h convolve-image.h
-#cfitsutils.h
-#boilerplate.h
-#cutest.h
-#histogram.h
-#histogram2d.h
-#md5.h
 
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
@@ -288,6 +282,8 @@ install: $(PYTHON_LIBS) $(PYTHON_EXECS) $(PROGS) $(ANUTILS_H) $(ANFILES_LIB) $(A
 .PHONY: install
 
 os-features-config.h: os-features-test.c
+	echo "---- Error messages in the next few commands are not necessarily bugs ----"
+	echo "     (we're checking how things works on your computer)"
 	( \
 	(($(CC) -o os-features-test-canonicalize \
 		$(CFLAGS) -DTEST_CANONICALIZE_FILE_NAME $(LDFLAGS) $^  > /dev/null && \
@@ -314,7 +310,8 @@ os-features-config.h: os-features-test.c
 	  ./os-features-test-netpbm) \
 	|| echo "#define HAVE_NETPBM 0") \
 	; \
-	echo) | grep -v "Segmentation" > $@
+	echo) | grep -v "Segmentation" | grep -v "Bus error" > $@
+	echo "--------------- End of expected error messages -----------------"
 
 makefile.os-features: os-features-test.c
 	( \
@@ -323,7 +320,7 @@ makefile.os-features: os-features-test.c
 	  ./os-features-test-netpbm-make) \
 	|| echo "# Don't HAVE_NETPBM.") \
 	; \
-	echo) | grep -v "Segmentation" > $@
+	echo) | grep -v "Segmentation" | grep -v "Bus error" > $@
 
 ALL_OBJ += os-features.o
 ALL_TARGETS := os-features-test.o \
