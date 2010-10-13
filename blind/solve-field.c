@@ -934,7 +934,7 @@ int main(int argc, char** args) {
 		char* cpy;
 		char* base;
         char* basedir;
-        char* basefile;
+        char* basefile = NULL;
 		char *objsfn=NULL;
 		char *ppmfn=NULL;
         char* downloadfn = NULL;

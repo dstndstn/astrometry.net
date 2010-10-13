@@ -475,8 +475,6 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 	} else {
 		FILE *fout = NULL, *ferr = NULL;
 		int status;
-		//sl* outlist = NULL;
-		//sl* errlist = NULL;
 		bool outdone=TRUE, errdone=TRUE;
 
 		// Parent process.
@@ -564,14 +562,12 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 					}
 				}
 			}
-			if (wait)
-				//sleep(1);
-				{
+			if (wait) {
 					struct timespec ts;
 					ts.tv_nsec = 100000000L;
 					ts.tv_sec = 0;
 					nanosleep(&ts, NULL);
-				}
+			}
 		}
 
 		//printf("Waiting for command to finish (PID %i).\n", (int)pid);
@@ -604,6 +600,11 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 			}
 		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
 
+		if (fout)
+			fclose(fout);
+		if (ferr)
+			fclose(ferr);
+		
 	}
 	return 0;
 }

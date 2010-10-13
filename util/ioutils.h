@@ -44,6 +44,8 @@ char* basename_safe(const char* path);
 // Returns (system + user) CPU time, in seconds.
 float get_cpu_usage();
 
+//int log_resource_usage(int loglevel);
+
 /*
  Searches for the given "filename" in the given set of directories.
  Returns a newly allocated string "dir/filename", or NULL if none of

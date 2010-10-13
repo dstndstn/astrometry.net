@@ -28,6 +28,8 @@
 
 int* permutation_init(int* perm, int N) {
 	int i;
+	if (!N)
+		return perm;
     if (!perm)
         perm = malloc(sizeof(int) * N);
 	for (i=0; i<N; i++)

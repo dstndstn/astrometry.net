@@ -53,6 +53,9 @@ class Plotstuff(object):
 		else:
 			self.pargs.__setattr__(name, val)
 
+	def apply_settings(self):
+		plotstuff_builtin_apply(self.pargs.cairo, self.pargs)
+
 	def plot(self, layer):
 		plotstuff_plot_layer(self.pargs, layer)
 
