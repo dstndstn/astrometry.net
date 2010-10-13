@@ -1124,6 +1124,8 @@ int augment_xylist(augment_xylist_t* axy,
 			ERROR("Unknown scale unit code %i\n", axy->scaleunit);
 			return -1;
 		}
+		dl_append(scales, appl);
+		dl_append(scales, appu);
 	}
 
     /* Hmm, do we want this??
