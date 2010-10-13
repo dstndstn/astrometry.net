@@ -931,7 +931,6 @@ int main(int argc, char** args) {
 		bool isxyls;
 		char* reason;
 		int len;
-		char* cpy;
 		char* base;
         char* basedir;
         char* basefile = NULL;
@@ -999,7 +998,7 @@ int main(int argc, char** args) {
             if (isurl)
                 basedir = strdup(".");
             else
-				basedir = basename_safe(infile);
+				basedir = dirname_safe(infile);
         }
         //logverb("Base directory: %s\n", basedir);
 

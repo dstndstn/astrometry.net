@@ -167,6 +167,14 @@ int pad_file(char* filename, size_t len, char pad) {
 }
 
 Malloc
+char* dirname_safe(const char* path) {
+	char* copy = strdup(path);
+	char* res = strdup(dirname(copy));
+	free(copy);
+	return res;
+}
+
+Malloc
 char* basename_safe(const char* path) {
 	char* copy = strdup(path);
 	char* res = strdup(basename(copy));

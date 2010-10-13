@@ -41,6 +41,9 @@ int pad_file(char* filename, size_t len, char pad);
 Malloc
 char* basename_safe(const char* path);
 
+Malloc
+char* dirname_safe(const char* path);
+
 // Returns (system + user) CPU time, in seconds.
 float get_cpu_usage();
 
