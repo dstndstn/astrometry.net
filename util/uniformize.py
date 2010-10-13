@@ -29,6 +29,10 @@ from numpy.random import rand
 def uniformize(infile, outfile, n, xcol='X', ycol='Y', **kwargs):
 	p = pyfits.open(infile)
 	xy = p[1].data
+	if xy is None:
+		print 'No sources'
+		p.writeto(outfile, clobber=True)
+		return
 	hdr = p[1].header
 	x = xy.field(xcol)
 	y = xy.field(ycol)
