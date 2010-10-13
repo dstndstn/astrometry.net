@@ -79,7 +79,7 @@ int main() {
 int main(int argc, char** args) {
 	struct pam img;
 	pm_init(args[0], 0);
-    printf("#define HAVE_NETPBM 1\n");
+    //printf("#define HAVE_NETPBM 1\n");
     return 0;
 }
 #endif
@@ -89,7 +89,7 @@ int main(int argc, char** args) {
 int main(int argc, char** args) {
 	struct pam img;
 	pm_init(args[0], 0);
-    printf("HAVE_NETPBM := yes\n");
+    //printf("HAVE_NETPBM := yes\n");
     return 0;
 }
 #endif

@@ -985,11 +985,8 @@ int main(int argc, char** args) {
 		// Choose the base path/filename for output files.
         if (outbase)
             asprintf_safe(&basefile, outbase, inputnum, infile);
-        else {
-            cpy = strdup(infile);
-            basefile = strdup(basename(cpy));
-            free(cpy);
-        }
+        else
+			basefile = basename_safe(infile);
         //logverb("Base filename: %s\n", basefile);
 
         isurl = (!file_exists(infile) &&
@@ -1001,11 +998,8 @@ int main(int argc, char** args) {
 		else {
             if (isurl)
                 basedir = strdup(".");
-            else {
-                cpy = strdup(infile);
-                basedir = strdup(dirname(cpy));
-                free(cpy);
-            }
+            else
+				basedir = basename_safe(infile);
         }
         //logverb("Base directory: %s\n", basedir);
 
@@ -1074,7 +1068,7 @@ int main(int argc, char** args) {
         }
 
         if (axy->solvedinfn)
-            asprintf(&axy->solvedinfn, axy->solvedinfn, base);
+            asprintf_safe(&axy->solvedinfn, axy->solvedinfn, base);
 
         // Do %s replacement on --verify-wcs entries...
         if (sl_size(axy->verifywcs)) {
