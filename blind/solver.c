@@ -1331,7 +1331,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	update_timeused(sp);
 	mo->timeused = sp->timeused;
 
-	if (sp->set_crpix) {
+	if (!sip && sp->set_crpix) {
 		//double crpix[2];
 		tan_t wcs2;
 		tan_t wcs3;
