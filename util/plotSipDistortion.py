@@ -11,10 +11,10 @@ def plotDistortion(sip, W, H, ncells, exaggerate=1.):
 	a grid and distorting it.  Allows exaggeration of the distortion for ease
 	of visualization.
 
-	sip -- an astrometry.util.Sip/Tan object
+	sip -- an astrometry.util.Sip object
+	   (duck-type: has "(dx,dy) = sip.get_distortion(x,y)")
 	W, H -- the image size
 	ncells -- the approximate number of grid cells to split the image into.
-	prefix -- output plot filename prefix.
 	exaggerate -- the factor by which to exaggerate the distortion.
 	
 	'''

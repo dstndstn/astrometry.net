@@ -182,6 +182,14 @@ int plotstuff_text_radec(plot_args_t* pargs, double ra, double dec, const char* 
 	return 0;
 }
 
+int plotstuff_text_xy(plot_args_t* pargs, double x, double y, const char* label) {
+	assert(pargs->cairo);
+	get_text_position(pargs, pargs->cairo, label, &x, &y);
+	cairo_move_to(pargs->cairo, x, y);
+	cairo_show_text(pargs->cairo, label);
+	return 0;
+}
+
 static int moveto_lineto_radec(plot_args_t* pargs, double ra, double dec, bool move) {
 	double x,y;
 	if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y)) {

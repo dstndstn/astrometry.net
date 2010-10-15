@@ -35,6 +35,219 @@
 #include "verify.h"
 #include "fitsioutils.h"
 
+
+// Tweak debug plots?
+#define TWEAK_DEBUG_PLOTS 1
+#if TWEAK_DEBUG_PLOTS
+#include "plotstuff.h"
+#include "plotimage.h"
+#include "cairoutils.h"
+
+static void makeplot(const char* plotfn, char* bgimgfn, int W, int H,
+					 int Nfield, double* fieldpix, double* fieldsigma2s,
+					 int Nindex, double* indexpix, int besti, int* theta,
+					 double* crpix, int* testperm) {
+	int i;
+	plot_args_t pargs;
+	plotimage_t* img;
+	cairo_t* cairo;
+	int ti;
+	logmsg("Creating plot %s\n", plotfn);
+	plotstuff_init(&pargs);
+	pargs.outformat = PLOTSTUFF_FORMAT_PNG;
+	pargs.outfn = plotfn;
+	pargs.fontsize = 12;
+	if (bgimgfn) {
+		img = plotstuff_get_config(&pargs, "image");
+		img->format = PLOTSTUFF_FORMAT_JPG;
+		plot_image_set_filename(img, bgimgfn);
+		plot_image_setsize(&pargs, img);
+		plotstuff_run_command(&pargs, "image");
+	} else {
+		float rgba[4] = {0, 0, 0.1, 1.0};
+		plotstuff_set_size(&pargs, W, H);
+		//plotstuff_init2(&pargs);
+		plotstuff_set_rgba(&pargs, rgba);
+		plotstuff_run_command(&pargs, "fill");
+	}
+	cairo = pargs.cairo;
+	// red circles around every field star.
+	cairo_set_color(cairo, "gray");
+	for (i=0; i<Nfield; i++) {
+		cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_CIRCLE,
+							   fieldpix[2*i+0], fieldpix[2*i+1],
+							   2.0 * sqrt(fieldsigma2s[i]));
+		cairo_stroke(cairo);
+	}
+	// green crosshairs at every index star.
+	cairo_set_color(cairo, "green");
+	for (i=0; i<Nindex; i++) {
+		cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_XCROSSHAIR,
+							   indexpix[2*i+0], indexpix[2*i+1], 3);
+		cairo_stroke(cairo);
+	}
+	// thick white circles for corresponding field stars.
+	cairo_set_line_width(cairo, 2);
+	for (ti=0; ti<=besti; ti++) {
+		if (testperm)
+			i = testperm[ti];
+		else
+			i = ti;
+		//printf("field %i -> index %i\n", i, theta[i]);
+		if (theta[i] < 0)
+			continue;
+		cairo_set_color(cairo, "white");
+		cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_CIRCLE,
+							   fieldpix[2*i+0], fieldpix[2*i+1],
+							   2.0 * sqrt(fieldsigma2s[i]));
+		cairo_stroke(cairo);
+		// thick cyan crosshairs for corresponding index stars.
+		cairo_set_color(cairo, "cyan");
+		cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_XCROSSHAIR,
+							   indexpix[2*theta[i]+0],
+							   indexpix[2*theta[i]+1],
+							   3);
+		cairo_stroke(cairo);
+	}
+
+	cairo_set_line_width(cairo, 2);
+
+	//for (i=0; i<=besti; i++) {
+	for (ti=0; ti<=Nfield; ti++) {
+		bool mark = TRUE;
+		if (testperm)
+			i = testperm[ti];
+		else
+			i = ti;
+		switch (theta[i]) {
+		case THETA_DISTRACTOR:
+			cairo_set_color(cairo, "red");
+			break;
+		case THETA_CONFLICT:
+			cairo_set_color(cairo, "yellow");
+			break;
+		case THETA_FILTERED:
+			cairo_set_color(cairo, "orange");
+			break;
+		default:
+			//coninue;
+			if (theta[i] < 0) {
+				cairo_set_color(cairo, "gray");
+			} else {
+				cairo_set_color(cairo, "white");
+			}
+			mark = FALSE;
+		}
+
+		if (mark) {
+			cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_CIRCLE,
+								   fieldpix[2*i+0], fieldpix[2*i+1],
+								   2.0 * sqrt(fieldsigma2s[i]));
+			cairo_stroke(cairo);
+		}
+
+		if (ti <= besti) {
+			char label[32];
+			sprintf(label, "%i", i);
+			plotstuff_text_xy(&pargs, fieldpix[2*i+0], fieldpix[2*i+1], label);
+		}
+		if (i == besti) {
+			cairo_set_line_width(cairo, 1);
+		}
+	}
+
+
+	if (crpix) {
+		cairo_set_color(cairo, "yellow");
+		cairo_set_line_width(cairo, 4);
+		cairoutils_draw_marker(cairo, CAIROUTIL_MARKER_CROSSHAIR,
+							   crpix[0], crpix[1], 10);
+		cairo_stroke(cairo);
+	}
+
+	plotstuff_output(&pargs);
+}
+
+static char* tdebugfn(const char* name) {
+	static char fn[256];
+	static int plotnum = 0;
+	sprintf(fn, "tweak-%03i-%s.png", plotnum, name);
+	plotnum++;
+	return fn;
+}
+
+#define TWEAK_DEBUG_PLOT(name, W, H, Nfield, fieldxy, fieldsig2,		\
+						 Nindex, indexxy, besti, theta, crpix, testperm) \
+	makeplot(tdebugfn(name), NULL, W, H, Nfield, fieldxy, fieldsig2,	\
+			 Nindex, indexxy, besti, theta, crpix, testperm);
+
+
+#else
+
+#define TWEAK_DEBUG_PLOT(name, W, H, Nfield, fieldxy, fieldsig2,		\
+						 Nindex, indexxy, besti, theta, crpix, testperm) \
+	do{}while(0)
+
+#endif
+
+
+
+
+
+/**
+ Computed SIP parameters given a set of corresponding points.
+
+ If 'weights' is NULL, uniform weighting will be used.
+
+ You MUST set:
+   sip->a_order = sip->b_order = X;
+   sip->ap_order = sip->bp_order = Y;
+   sip->wcstan.imagew = W;
+   sip->wcstan.imageh = H;
+   sip->wcstan.crval = {RA,Dec};
+   sip->wcstan.crpix = {x0,y0};
+
+ */
+void tweak2_from_correspondences(const double* fieldxy,
+								 const double* refxyz,
+								 const double* weights,
+								 int N,
+								 sip_t* sip) {
+	tweak_t* t = tweak_new();
+	starxy_t* sxy = starxy_new(N, FALSE, FALSE);
+	il* imginds = il_new(256);
+	il* refinds = il_new(256);
+	dl* wts = dl_new(256);
+	int i;
+
+	for (i=0; i<N; i++) {
+		starxy_set_x(sxy, i, fieldxy[2*i+0]);
+		starxy_set_y(sxy, i, fieldxy[2*i+1]);
+	}
+	tweak_init(t);
+	tweak_push_ref_xyz(t, refxyz, N);
+	tweak_push_image_xy(t, sxy);
+	for (i=0; i<N; i++) {
+		il_append(imginds, i);
+		il_append(refinds, i);
+		if (weights)
+			dl_append(wts, weights[i]);
+	}
+	tweak_push_correspondence_indices(t, imginds, refinds, NULL, wts);
+	tweak_push_wcs_tan(t, &sip->wcstan);
+	t->weighted_fit = (weights ? TRUE : FALSE);
+	// fake this -- tweak doesn't really need it.
+	t->state |= TWEAK_HAS_REF_XY;
+	t->sip->a_order = t->sip->b_order = sip->a_order;
+	t->sip->ap_order = t->sip->bp_order = sip->ap_order;
+	tweak_skip_shift(t);
+	tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
+
+	memcpy(sip, t->sip, sizeof(sip_t));
+	starxy_free(sxy);
+	tweak_free(t);
+}
+
 sip_t* tweak2(const double* fieldxy, int Nfield,
 			  double fieldjitter,
 			  int W, int H,
@@ -44,12 +257,14 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			  double distractors,
 			  double logodds_bail,
 			  int sip_order,
+			  int sip_invorder,
 			  const sip_t* startwcs,
 			  sip_t* destwcs,
 			  int** newtheta, double** newodds,
 			  double* crpix,
 			  double* p_logodds,
-			  int* p_besti) {
+			  int* p_besti,
+			  int* testperm) {
 	int order;
 	sip_t* sipout;
 	int* indexin;
@@ -80,6 +295,8 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 	assert(startwcs);
 	memcpy(sipout, startwcs, sizeof(sip_t));
 
+	logverb("tweak2: starting orders %i, %i\n", sipout->a_order, sipout->ap_order);
+
 	if (!sipout->wcstan.imagew)
 		sipout->wcstan.imagew = W;
 	if (!sipout->wcstan.imageh)
@@ -88,6 +305,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 	logverb("Tweak2: starting from WCS:\n");
 	if (log_get_level() >= LOG_VERB)
 		sip_print_to(sipout, stdout);
+
 
 	for (order=1; order <= sip_order; order++) {
 		int step;
@@ -116,11 +334,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			if (log_get_level() > LOG_VERB)
 				sip_print_to(sipout, stdout);
 
-			// FIXME --- this should be done in dstnthing, since it
-			// isn't necessary when called during normal solving (and
-			// it requires keeping the 'indexin' permutation).
-
-			// Project RDLS into pixel space; keep the ones inside image bounds.
+			// Project reference sources into pixel space; keep the ones inside image bounds.
 			Nin = 0;
 			for (i=0; i<Nindex; i++) {
 				bool ok;
@@ -148,6 +362,17 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				fieldsigma2s[i] = (square(fieldjitter) + square(ijitter)) * (1.0 + gamma * R2/quadR2);
 			}
 
+
+			if (order == 1 && step == 0 && TWEAK_DEBUG_PLOTS) {
+				// RoR?
+				TWEAK_DEBUG_PLOT("init", W, H, Nfield, fieldxy, fieldsigma2s,
+								 Nindex, indexpix, *p_besti, *newtheta,
+								 sipout->wcstan.crpix, testperm);
+	}
+
+
+
+
 			logodds = verify_star_lists(indexpix, Nin,
 										fieldxy, fieldsigma2s, Nfield,
 										W*H, distractors,
@@ -161,8 +386,18 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			logverb("%i matches, %i distractors, %i conflicts (all sources)\n", nmatch, ndist, nconf);
 			logverb("  Hit/miss: ");
 			if (log_get_level() >= LOG_VERB)
-				verify_log_hit_miss(theta, NULL, besti+1, Nfield, LOG_VERB);
+				matchobj_log_hit_miss(theta, NULL, besti+1, Nfield, LOG_VERB);
 			logverb("\n");
+
+			if (TWEAK_DEBUG_PLOTS) {
+				char name[32];
+				sprintf(name, "o%is%02i", order, step);
+				// RoR
+				TWEAK_DEBUG_PLOT(name, W, H, Nfield, fieldxy, fieldsigma2s,
+								 Nindex, indexpix, besti, theta,
+								 sipout->wcstan.crpix, testperm
+					);
+			}
 
 			Nmatch = 0;
 			debug("Weights:");
@@ -210,38 +445,18 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				}
 
 			} else {
-				tweak_t* t = tweak_new();
-				starxy_t* sxy = starxy_new(Nmatch, FALSE, FALSE);
-				il* imginds = il_new(256);
-				il* refinds = il_new(256);
-				dl* wts = dl_new(256);
+				//
+				sipout->a_order = sipout->b_order = order;
+				sipout->ap_order = sipout->bp_order = sip_invorder;
+				logverb("tweak2: setting orders %i, %i\n", sipout->a_order, sipout->ap_order);
 
-				for (i=0; i<Nmatch; i++) {
-					starxy_set_x(sxy, i, matchxy[2*i+0]);
-					starxy_set_y(sxy, i, matchxy[2*i+1]);
-				}
-				tweak_init(t);
-				tweak_push_ref_xyz(t, matchxyz, Nmatch);
-				tweak_push_image_xy(t, sxy);
-				for (i=0; i<Nmatch; i++) {
-					il_append(imginds, i);
-					il_append(refinds, i);
-					dl_append(wts, weights[i]);
-				}
-				tweak_push_correspondence_indices(t, imginds, refinds, NULL, wts);
-				tweak_push_wcs_tan(t, &sipout->wcstan);
-				t->sip->a_order = t->sip->b_order = t->sip->ap_order = t->sip->bp_order = order;
-				t->weighted_fit = TRUE;
-				tweak_go_to(t, TWEAK_HAS_LINEAR_CD);
-
+				tweak2_from_correspondences(matchxy, matchxyz, weights, Nmatch,
+											sipout);
 				debug("Got SIP:\n");
 				if (log_get_level() > LOG_VERB)
-					sip_print_to(t->sip, stdout);
-				memcpy(sipout, t->sip, sizeof(sip_t));
+					sip_print_to(sipout, stdout);
 				sipout->wcstan.imagew = W;
 				sipout->wcstan.imageh = H;
-				starxy_free(sxy);
-				tweak_free(t);
 			}
 		}
 	}
@@ -254,7 +469,6 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 									&besti, newodds, newtheta, NULL);
 		logverb("Final logodds: %g\n", logodds);
 		// undo the "indexpix" inside-image-bounds cut.
-		//for (i=0; i<=besti; i++) {
 		for (i=0; i<Nfield; i++) {
 			if ((*newtheta)[i] < 0)
 				continue;

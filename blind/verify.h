@@ -64,8 +64,6 @@ void verify_wcs(const startree_t* skdt,
 				// int** theta ?
 				);
 
-void verify_log_hit_miss(int* theta, int* testperm, int nbest, int nfield, int loglevel);
-
 /*
   Uses the following entries in the "mo" struct:
   -wcs_valid
@@ -187,5 +185,8 @@ double verify_logodds_to_weight(double lodds);
 void verify_free_matchobj(MatchObj* mo);
 
 void verify_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest);
+
+double verify_get_ror2(double Q2, double area,
+					   double distractors, int NR, double pix2);
 
 #endif

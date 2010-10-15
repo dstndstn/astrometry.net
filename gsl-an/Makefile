@@ -171,7 +171,7 @@ svd-demo: svd-demo.o $(GSL_LIB)
 
 LU_OBJS := linalg/lu.o permutation/init.o permutation/permutation.o permutation/permute.o
 
-EXTRA_OBJS := matrix/view.o
+EXTRA_OBJS := matrix/view.o err/strerror.o
 
 # "sort" removes duplicates.
 GSL_OBJS := $(sort $(QR_OBJS) $(CHOL_OBJS) $(SVD_OBJS) $(LU_OBJS) $(EXTRA_OBJS))

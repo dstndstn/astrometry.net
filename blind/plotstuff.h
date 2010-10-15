@@ -189,6 +189,7 @@ bool plotstuff_radec_is_inside_image(plot_args_t* pargs, double ra, double dec);
 int plotstuff_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2);
 int plotstuff_line_constant_dec(plot_args_t* pargs, double dec, double ra1, double ra2);
 
+int plotstuff_text_xy(plot_args_t* pargs, double ra, double dec, const char* label);
 int plotstuff_text_radec(plot_args_t* pargs, double ra, double dec, const char* label);
 int plotstuff_move_to_radec(plot_args_t* pargs, double ra, double dec);
 int plotstuff_line_to_radec(plot_args_t* pargs, double ra, double dec);

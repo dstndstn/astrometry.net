@@ -7,7 +7,7 @@ for x in COPYING README *.h config.h.in; do
 	cp ${GSL}/$x .
 done
 
-for y in cblas blas block linalg matrix sys vector; do
+for y in cblas blas block linalg matrix sys vector err; do
 	for x in $y/*.c; do
 		echo $x
 		cp ${GSL}/$x $y

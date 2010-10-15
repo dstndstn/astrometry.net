@@ -130,6 +130,10 @@ void tan_pixelxy2radec(const tan_t* tan, double px, double py, double *ra, doubl
 	xyzarr2radecdeg(xyz, ra,dec);
 }
 
+void   tan_pixelxy2radecarr(const tan_t* wcs_tan, double px, double py, double *radec) {
+	tan_pixelxy2radec(wcs_tan, px, py, radec+0, radec+1);
+}
+
 void tan_iwc2pixelxy(const tan_t* tan, double x, double y,
 					 double *px, double* py) {
 	double U,V;
@@ -335,6 +339,15 @@ void sip_calc_distortion(const sip_t* sip, double u, double v, double* U, double
 
 void sip_pixel_distortion(const sip_t* sip, double x, double y, double* X, double *Y) {
 	sip_distortion(sip, x, y, X, Y);
+}
+
+void sip_pixel_undistortion(const sip_t* sip, double x, double y, double* X, double *Y) {
+	// Get pixel coordinates relative to reference pixel
+	double u = x - sip->wcstan.crpix[0];
+	double v = y - sip->wcstan.crpix[1];
+	sip_calc_inv_distortion(sip, u, v, X, Y);
+	*X += sip->wcstan.crpix[0];
+	*Y += sip->wcstan.crpix[1];
 }
 
 void sip_calc_inv_distortion(const sip_t* sip, double U, double V, double* u, double *v)

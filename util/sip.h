@@ -174,8 +174,17 @@ double sip_pixel_scale(const sip_t* sip);
 void   sip_calc_inv_distortion(const sip_t* sip, double U, double V, double* u, double *v);
 void   sip_calc_distortion(const sip_t* sip, double u, double v, double* U, double *V);
       
-// applies forward SIP distortion to pixel coords.
+// Applies forward SIP distortion to pixel coords.
+// This applies the A,B matrix terms;
+// This is the distortion applied in the pixel-to-RA,Dec direction.
+//   (pix -> "un"distorted -> TAN -> RA,Dec)
 void sip_pixel_distortion(const sip_t* sip, double x, double y, double* X, double *Y);
+
+// Reverses sip_pixel_distortion;
+// Applies "reverse" SIP distortion: the AP, BP matrices;
+// This is the distortion applied in the RA,Dec-to-pixel direction:
+//   (RA,Dec -> TAN -> undistorted -> pix)
+void sip_pixel_undistortion(const sip_t* sip, double x, double y, double* X, double *Y);
 
 // Pixels to XYZ unit vector.
 void   tan_pixelxy2xyzarr(const tan_t* tan, double px, double py, double *xyz);
@@ -183,12 +192,16 @@ void   tan_pixelxy2xyzarr(const tan_t* tan, double px, double py, double *xyz);
 // Pixels to RA,Dec in degrees.
 void   tan_pixelxy2radec(const tan_t* wcs_tan, double px, double py, double *ra, double *dec);
 
+// Pixels to RA,Dec in degrees.
+void   tan_pixelxy2radecarr(const tan_t* wcs_tan, double px, double py, double *radec);
+
 // RA,Dec in degrees to Pixels.
 // Returns FALSE if the point is on the opposite side of the sphere.
 WarnUnusedResult
 bool   tan_radec2pixelxy(const tan_t* wcs_tan, double ra, double dec, double *px, double *py);
 
 // xyz unit vector to Pixels.
+// Returns TRUE if all is good.
 WarnUnusedResult
 bool   tan_xyzarr2pixelxy(const tan_t* wcs_tan, const double* xyz, double *px, double *py);
 

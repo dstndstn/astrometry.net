@@ -156,6 +156,10 @@ void matchobj_compute_derived(MatchObj* mo);
 // Returns the name of the index that produced this match.
 const char* matchobj_get_index_name(MatchObj* mo);
 
+void matchobj_log_hit_miss(int* theta, int* testperm, int nbest, int nfield, int loglevel);
+
+void matchobj_print(MatchObj* mo, int loglvl);
+
 //void matchobj_log_verify_hit_miss(MatchObj* mo, int loglevel);
 
 /*

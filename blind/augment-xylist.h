@@ -45,6 +45,8 @@ struct augment_xylist_s {
 
     sl* verifywcs;
 
+	sip_t* predistort;
+
 	// FITS columns copied from index to RDLS output
 	sl* tagalong;
 	bool tagalong_all;

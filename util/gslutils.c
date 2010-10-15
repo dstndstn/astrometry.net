@@ -23,10 +23,25 @@
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
+#include <gsl/gsl_errno.h>
 #include <stdarg.h>
 
 #include "gslutils.h"
 #include "errors.h"
+
+static void errhandler(const char * reason,
+					   const char * file,
+					   int line,
+					   int gsl_errno) {
+	ERROR("GSL error: \"%s\" in %s:%i (gsl errno %i = %s)",
+		  reason, file, line,
+		  gsl_errno,
+		  gsl_strerror(gsl_errno));
+}
+
+void gslutils_use_error_system() {
+	gsl_set_error_handler(errhandler);
+}
 
 int gslutils_invert_3x3(const double* A, double* B) {
 	gsl_matrix* LU;

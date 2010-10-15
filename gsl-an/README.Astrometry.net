@@ -7,8 +7,16 @@ to provide Cholesky, QR, and LU decompositions.
 To grab files from a new version (assuming nothing has changed
 structurally):
 
+    - unpack gsl-VVV into /tmp
+    - ./configure
+ 	- make   #--> to generate header files
+    - edit grab-gsl-sources.sh to point to that directory
+
 	cd gsl-an
 	./grab-gsl-sources.sh
+
+--Note that grab-gsl-source.sh only updates *existing* files, it doesn't
+  grab new ones.
 
 We have not modified any of the source files, though we have provided
 our own Makefile (ignoring all the automake/autowhatever jazz) that

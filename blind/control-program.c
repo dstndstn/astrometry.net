@@ -270,7 +270,7 @@ int main(int argc, char** args) {
 
 		// This determines how good a match has to be.
 		// (you can set it huge; most matches are overwhelmingly good)
-		solver->logratio_record_threshold = log(1e12);
+		solver_set_keep_logodds(solver, log(1e12));
 
 		// What is the radius of the bounding circle of a field?
 		// (in units of distance on the unit sphere)

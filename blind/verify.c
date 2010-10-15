@@ -74,35 +74,7 @@ struct verify_s {
 };
 typedef struct verify_s verify_t;
 
-
-void verify_log_hit_miss(int* theta, int* testperm, int nbest, int nfield, int loglev) {
-	int i;
-	for (i=0; i<MIN(nfield, 100); i++) {
-		int ti = (testperm ? theta[testperm[i]] : theta[i]);
-		if (ti == THETA_DISTRACTOR) {
-			loglevel(loglev, "-");
-		} else if (ti == THETA_CONFLICT) {
-			loglevel(loglev, "c");
-		} else if (ti == THETA_FILTERED) {
-			loglevel(loglev, "f");
-		} else if (ti == THETA_BAILEDOUT) {
-			loglevel(loglev, " bail");
-			break;
-		} else if (ti == THETA_STOPPEDLOOKING) {
-			loglevel(loglev, " stopped");
-			break;
-		} else {
-			loglevel(loglev, "+");
-		}
-		if (i+1 == nbest) {
-			loglevel(loglev, "(best)");
-		}
-	}
-}
-
 static bool* verify_deduplicate_field_stars(verify_t* v, const verify_field_t* vf, double nsigmas);
-
-
 
 /*
  This gets called once for each field before verification begins.  We
@@ -324,6 +296,11 @@ static void verify_get_test_stars(verify_t* v, const verify_field_t* vf, MatchOb
 
 }
 
+double verify_get_ror2(double Q2, double area,
+					   double distractors, int NR, double pix2) {
+	return Q2 * MAX(1, (area*(1 - distractors) / (4. * M_PI * NR * pix2) - 1));
+}
+
 static void verify_apply_ror(verify_t* v,
 							 int index_cutnside,
 							 MatchObj* mo,
@@ -380,7 +357,7 @@ static void verify_apply_ror(verify_t* v,
 		double ror2;
 
 		debug2("Quad radius = %g\n", sqrt(Q2));
-		ror2 = Q2 * MAX(1, (fieldW*fieldH*(1 - distractors) / (4. * M_PI * v->NR * pix2) - 1));
+		ror2 = verify_get_ror2(Q2, fieldW*fieldH, distractors, v->NR, pix2);
 		debug2("(strong) Radius of relevance is %.1f\n", sqrt(ror2));
 
 		if (binids) {
@@ -479,7 +456,8 @@ static void verify_apply_ror(verify_t* v,
 
 		// New ROR is...
 		debug2("ROR changed from %g to %g\n", sqrt(ror2),
-			  sqrt(Q2 * (1 + effA*(1 - distractors) / (4. * M_PI * v->NR * pix2))));
+			   sqrt(verify_get_ror2(Q2, effA, distractors, v->NR, pix2)));
+
 		free(goodbins);
 	}
 	free(bincenters);
@@ -521,7 +499,7 @@ static double real_verify_star_lists(verify_t* v,
 	int* rperm;
 
 	if (!v->NR || !v->NT) {
-		logerr("verify_star_lists: NR=%i, NT=%i\n", v->NR, v->NT);
+		logerr("real_verify_star_lists: NR=%i, NT=%i\n", v->NR, v->NT);
 		return -HUGE_VAL;
 	}
 

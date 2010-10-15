@@ -60,11 +60,15 @@ struct solver_t {
 	// The field to solve
     starxy_t* fieldxy;
 
+	// Distortion pattern to apply before solving.
+	sip_t* predistort;
+
 	// Limits on the image pixel scale in [arcsec per pixel].
 	double funits_lower;
 	double funits_upper;
 
-	double logratio_record_threshold;
+	double logratio_toprint;
+	double logratio_tokeep;
 
 	double logratio_totune;
 
@@ -81,6 +85,12 @@ struct solver_t {
 
 	bool verify_uniformize;
 	bool verify_dedup;
+
+	bool do_tweak;
+
+	int tweak_aborder;
+	int tweak_abporder;
+
 
 	// OPTIONAL FIELDS WITH SENSIBLE DEFAULTS
 	// ======================================
@@ -229,7 +239,7 @@ double solver_get_field_jitter(const solver_t* solver);
 
  Suggested value: log(1e9) or log(1e12).
  */
-void solver_set_record_logodds(solver_t* solver, double logodds);
+void solver_set_keep_logodds(solver_t* solver, double logodds);
 
 /**
  Sets the "parity" or "flip" of the image.

@@ -63,8 +63,13 @@ void test_try_permutations(int* stars, double* code, int dimquad, solver_t* s);
 #define TEST_TRY_PERMUTATIONS(u,v,x,y)  // no-op.
 #endif
 
-void solver_set_record_logodds(solver_t* solver, double logodds) {
-	solver->logratio_record_threshold = logodds;
+
+
+
+
+
+void solver_set_keep_logodds(solver_t* solver, double logodds) {
+	solver->logratio_tokeep = logodds;
 }
 
 int solver_set_parity(solver_t* solver, int parity) {
@@ -150,6 +155,8 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
 	int nm, nc, nd;
 	int besti;
 
+
+
 	indexjitter = mo->index_jitter; // ref cat positional error, in arcsec.
 	xy = starxy_to_xy_array(sp->fieldxy, NULL);
 	Nxy = starxy_n(sp->fieldxy);
@@ -173,6 +180,14 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
 	if (mo->sip)
 		sip_free(mo->sip);
 
+	startsip.ap_order = startsip.bp_order = sp->tweak_abporder;
+	startsip.a_order = startsip.b_order = sp->tweak_aborder;
+	logverb("solver_tweak2: setting orders %i, %i\n", sp->tweak_aborder, sp->tweak_abporder);
+
+	// for TWEAK_DEBUG_PLOTs
+	theta = mo->theta;
+	besti = mo->nbest-1;//mo->nmatch + mo->nconflict + mo->ndistractor;
+
 	mo->sip = tweak2(xy, Nxy,
 					 sp->verify_pix, // pixel positional noise sigma
 					 solver_field_width(sp),
@@ -181,9 +196,10 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
 					 indexjitter, qc, Q2,
 					 sp->distractor_ratio,
 					 sp->logratio_bail_threshold,
-					 order, &startsip, NULL, &theta, &odds,
+					 order, sp->tweak_abporder,
+					 &startsip, NULL, &theta, &odds,
 					 sp->set_crpix ? sp->crpix : NULL,
-					 &newodds, &besti);
+					 &newodds, &besti, mo->testperm);
 	assert(mo->sip);
 	free(refradec);
 
@@ -233,7 +249,6 @@ void solver_log_params(const solver_t* sp) {
   logverb("  Dist from quad bonus: %s\n", sp->distance_from_quad_bonus ? "yes" : "no");
   logverb("  Distractor ratio: %g\n", sp->distractor_ratio);
   logverb("  Log tune-up threshold: %g\n", sp->logratio_totune);
-  logverb("  Log record threshold: %g\n", sp->logratio_record_threshold);
   logverb("  Log bail threshold: %g\n", sp->logratio_bail_threshold);
   logverb("  Log stoplooking threshold: %g\n", sp->logratio_stoplooking);
   logverb("  Maxquads %i\n", sp->maxquads);
@@ -244,6 +259,11 @@ void solver_log_params(const solver_t* sp) {
       logverb(", center\n");
     else
       logverb(", %g, %g\n", sp->crpix[0], sp->crpix[1]);
+  }
+  logverb("  Tweak? %s\n", sp->do_tweak ? "yes" : "no");
+  if (sp->do_tweak) {
+	  logverb("    Forward order %i\n", sp->tweak_aborder);
+	  logverb("    Reverse order %i\n", sp->tweak_abporder);
   }
   logverb("  Indexes: %i\n", pl_size(sp->indexes));
   for (i=0; i<pl_size(sp->indexes); i++) {
@@ -1296,14 +1316,12 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	mo->hpnside = sp->index->hpnside;
 	mo->wcstan.imagew = sp->field_maxx;
 	mo->wcstan.imageh = sp->field_maxy;
+	mo->dimquads = quadfile_dimquads(sp->index->quads);
 
 	match_distance_in_pixels2 = square(sp->verify_pix) +
 		square(sp->index->index_jitter / mo->scale);
 
-	mo->dimquads = quadfile_dimquads(sp->index->quads);
-
-	logaccept = MIN(sp->logratio_record_threshold, sp->logratio_totune);
-	//logverb("record: %g, tune %g; accept %g\n", sp->logratio_record_threshold, sp->logratio_totune, logaccept);
+	logaccept = MIN(sp->logratio_tokeep, sp->logratio_totune);
 
 	verify_hit(sp->index->starkd, sp->index->cutnside,
 			   mo, sip, sp->vf, match_distance_in_pixels2,
@@ -1318,33 +1336,131 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		logverb("Got a new best match: logodds %g.\n", mo->logodds);
 	}
 
-	// FIXME -- here, or in blind?
-	if (mo->logodds >= sp->logratio_totune && mo->logodds < sp->logratio_record_threshold) {
+	if (mo->logodds >= sp->logratio_totune && mo->logodds < sp->logratio_tokeep) {
 		logverb("Trying to tune up this solution (logodds = %g; %g)...\n", mo->logodds, exp(mo->logodds));
 		solver_tweak2(sp, mo, 1);
 		logverb("After tuning, logodds = %g (%g)\n", mo->logodds, exp(mo->logodds));
 	}
 
-	if (mo->logodds < sp->logratio_record_threshold)
+	if (mo->logodds < sp->logratio_toprint)
 		return FALSE;
 
 	update_timeused(sp);
 	mo->timeused = sp->timeused;
 
-	if (!sip && sp->set_crpix) {
-		//double crpix[2];
+	matchobj_print(mo, log_get_level());
+
+	if (mo->logodds < sp->logratio_tokeep)
+		return FALSE;
+
+    logverb("Pixel scale: %g arcsec/pix.\n", mo->scale);
+    logverb("Parity: %s.\n", (mo->parity ? "neg" : "pos"));
+
+	mo->index = sp->index;
+    mo->index_jitter = sp->index->index_jitter;
+
+	if (sp->set_crpix && sp->set_crpix_center) {
+		sp->crpix[0] = 1 + 0.5 * solver_field_width(sp);
+		sp->crpix[1] = 1 + 0.5 * solver_field_height(sp);
+	}
+
+	if (sp->predistort) {
+		int i;
+		double* matchxy;
+		double* matchxyz;
+		double* weights;
+		int N;
+		int Ngood;
+		double dx,dy;
+
+		// Apply the distortion.
+		logverb("Applying the distortion pattern and recomputing WCS...\n");
+
+		// this includes conflicts and distractors; we won't fill these arrays.
+		N = mo->nbest;
+		matchxy = malloc(N * 2 * sizeof(double));
+		matchxyz = malloc(N * 3 * sizeof(double));
+		weights = malloc(N * sizeof(double));
+
+		Ngood = 0;
+		for (i=0; i<N; i++) {
+			double x,y;
+			if (mo->theta[i] < 0)
+				continue;
+			x = starxy_get_x(sp->fieldxy, i);
+			y = starxy_get_y(sp->fieldxy, i);
+			sip_pixel_undistortion(sp->predistort, x, y, &dx, &dy);
+			matchxy[2*Ngood + 0] = dx;
+			matchxy[2*Ngood + 1] = dy;
+			memcpy(matchxyz + 3*Ngood, mo->refxyz + 3*mo->theta[i], 3*sizeof(double));
+			weights[Ngood] = verify_logodds_to_weight(mo->matchodds[i]);
+
+			double xx,yy;
+			bool ok;
+			ok = tan_xyzarr2pixelxy(&mo->wcstan, matchxyz+3*Ngood, &xx, &yy);
+			assert(ok);
+			logverb("match: ref(%.1f, %.1f) -- img(%.1f, %.1f) --> dist(%.1f, %.1f)\n",
+					xx, yy, x, y, dx, dy);
+
+			Ngood++;
+		}
+
+		if (sp->do_tweak) {
+			// Compute the SIP solution using the correspondences
+			// found during verify(), but with the re-distorted positions.
+			sip_t sip;
+			memset(&sip, 0, sizeof(sip_t));
+			sip.a_order = sip.b_order = sp->tweak_aborder;
+			sip.ap_order = sip.bp_order = sp->tweak_abporder;
+			sip.wcstan.imagew = solver_field_width(sp);
+			sip.wcstan.imageh = solver_field_height(sp);
+			if (sp->set_crpix) {
+				sip.wcstan.crpix[0] = sp->crpix[0];
+				sip.wcstan.crpix[1] = sp->crpix[1];
+				// find matching crval...
+				sip_pixel_distortion(sp->predistort, sp->crpix[0], sp->crpix[1], &dx, &dy);
+				tan_pixelxy2radecarr(&mo->wcstan, dx, dy, sip.wcstan.crval);
+
+			} else {
+				// keep TAN WCS's crval but distort the crpix.
+				sip.wcstan.crval[0] = mo->wcstan.crval[0];
+				sip.wcstan.crval[1] = mo->wcstan.crval[1];
+				sip_pixel_undistortion(sp->predistort, mo->wcstan.crpix[0], mo->wcstan.crpix[1],
+									   sip.wcstan.crpix + 0, sip.wcstan.crpix + 1);
+			}
+
+			tweak2_from_correspondences(matchxy, matchxyz, weights, Ngood, &sip);
+
+			for (i=0; i<Ngood; i++) {
+				double xx,yy;
+				bool ok;
+				ok = sip_xyzarr2pixelxy(&sip, matchxyz+3*i, &xx, &yy);
+				assert(ok);
+				logverb("match: ref(%.1f, %.1f) -- dist(%.1f, %.1f)\n",
+						xx, yy, matchxy[2*i+0], matchxy[2*i+1]);
+			}
+
+		} else {
+			// Compute new TAN WCS...?
+			blind_wcs_compute_weighted(matchxyz, matchxy, weights, Ngood,
+									   &mo->wcstan, NULL);
+			if (sp->set_crpix) {
+				tan_t wcs2;
+				blind_wcs_move_tangent_point(matchxyz, matchxy, Ngood, sp->crpix, &mo->wcstan, &wcs2);
+				blind_wcs_move_tangent_point(matchxyz, matchxy, Ngood, sp->crpix, &wcs2, &mo->wcstan);
+			}
+		}
+
+		free(matchxy);
+		free(matchxyz);
+		free(weights);
+
+	} else if (sp->do_tweak) {
+		solver_tweak2(sp, mo, sp->tweak_aborder);
+
+	} else if (!sip && sp->set_crpix) {
 		tan_t wcs2;
 		tan_t wcs3;
-		if (sp->set_crpix_center) {
-			sp->crpix[0] = 1 + 0.5 * solver_field_width(sp);
-			sp->crpix[1] = 1 + 0.5 * solver_field_height(sp);
-		}
-		/*
-		 else {
-		 crpix[0] = sp->crpix[0];
-		 crpix[1] = sp->crpix[1];
-		 }
-		 */
 		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, sp->crpix, &(mo->wcstan), &wcs2);
 		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, sp->crpix, &wcs2, &wcs3);
 		memcpy(&(mo->wcstan), &wcs3, sizeof(tan_t));
@@ -1366,9 +1482,6 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		 printf("\n");
 		 */
 	}
-
-	mo->index = sp->index;
-    mo->index_jitter = sp->index->index_jitter;
 
 	// If the user didn't supply a callback, or if the callback
 	// returns TRUE, consider it solved.
@@ -1413,6 +1526,8 @@ void solver_set_default_values(solver_t* solver) {
 	solver->verify_uniformize = TRUE;
 	solver->verify_dedup = TRUE;
 	solver->distance_from_quad_bonus = TRUE;
+	solver->tweak_aborder = DEFAULT_TWEAK_ABORDER;
+	solver->tweak_abporder = DEFAULT_TWEAK_ABPORDER;
 }
 
 void solver_clear_indexes(solver_t* solver) {
@@ -1428,6 +1543,9 @@ void solver_cleanup(solver_t* solver) {
 		verify_free_matchobj(&solver->best_match);
 		solver->have_best_match = FALSE;
 	}
+	if (solver->predistort)
+		sip_free(solver->predistort);
+	solver->predistort = NULL;
 }
 
 void solver_free(solver_t* solver) {

@@ -22,6 +22,8 @@
 #include <gsl/gsl_matrix_double.h>
 #include <gsl/gsl_vector_double.h>
 
+void gslutils_use_error_system();
+
 /**
  Solves a least-squares matrix equation
  A X_i = B_i

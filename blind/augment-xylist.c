@@ -77,6 +77,8 @@ void augment_xylist_free_contents(augment_xylist_t* axy) {
     sl_free2(axy->tagalong);
     il_free(axy->depths);
     il_free(axy->fields);
+	if (axy->predistort)
+		sip_free(axy->predistort);
 }
 
 void augment_xylist_print_special_opts(an_option_t* opt, bl* opts, int index,
@@ -236,6 +238,8 @@ static an_option_t options[] = {
      "don't fine-tune WCS by computing a SIP polynomial"},
 	{'t', "tweak-order",    required_argument, "int",
      "polynomial order of SIP WCS corrections"},
+	{'\x86', "predistort",  required_argument, "filename",
+	 "apply the distortion in this SIP WCS header before and after solving"},
 	{'m', "temp-dir",       required_argument, "dir",
      "where to put temp files, default /tmp"},
     // placeholder for printing "The following are for xylist inputs only"
@@ -286,6 +290,13 @@ int augment_xylist_parse_option(char argchar, char* optarg,
 		break;
 	case '\x83':
 		axy->verify_dedup = FALSE;
+		break;
+	case '\x86':
+		axy->predistort = sip_read_header_file(optarg, NULL);
+		if (!axy->predistort) {
+			ERROR("Failed to read SIP header file \"%s\" for pre-distortion values", optarg);
+			return -1;
+		}
 		break;
 	case ';':
 		axy->invert_image = TRUE;
@@ -584,6 +595,42 @@ static void run(sl* cmd, bool verbose) {
 			logverb("  %s\n", sl_get(lines, i));
 	}
     sl_free2(lines);
+}
+
+static void add_sip_coeffs(qfits_header* hdr, const char* prefix, const sip_t* sip) {
+	char key[64];
+	int m, n, order;
+
+	if (sip->a_order) {
+		sprintf(key, "%sSAO", prefix);
+		order = sip->a_order;
+		fits_header_add_int(hdr, key, order, "SIP forward polynomial order");
+		for (m=0; m<=order; m++) {
+			for (n=0; (m+n)<=order; n++) {
+				if (m+n < 1)
+					continue;
+				sprintf(key, "%sA%i%i", prefix, m, n);
+				fits_header_add_double(hdr, key, sip->a[m][n], "");
+				sprintf(key, "%sB%i%i", prefix, m, n);
+				fits_header_add_double(hdr, key, sip->b[m][n], "");
+			}
+		}
+	}
+	if (sip->ap_order) {
+		order = sip->ap_order;
+		sprintf(key, "%sSAPO", prefix);
+		fits_header_add_int(hdr, key, order, "SIP reverse polynomial order");
+		for (m=0; m<=order; m++) {
+			for (n=0; (m+n)<=order; n++) {
+				if (m+n < 1)
+					continue;
+				sprintf(key, "%sAP%i%i", prefix, m, n);
+				fits_header_add_double(hdr, key, sip->ap[m][n], "");
+				sprintf(key, "%sBP%i%i", prefix, m, n);
+				fits_header_add_double(hdr, key, sip->bp[m][n], "");
+			}
+		}
+	}
 }
 
 int augment_xylist(augment_xylist_t* axy,
@@ -1249,44 +1296,21 @@ int augment_xylist(augment_xylist_t* axy,
             char key[64];
             char* keys[] = { "ANW%iPIX1", "ANW%iPIX2", "ANW%iVAL1", "ANW%iVAL2",
                              "ANW%iCD11", "ANW%iCD12", "ANW%iCD21", "ANW%iCD22" };
-            int m, n, order;
             for (j = 0; j < 8; j++) {
                 sprintf(key, keys[j], I);
                 fits_header_add_double(hdr, key, vals[j], "");
             }
 
-            if (sip.a_order) {
-                sprintf(key, "ANW%iSAO", I);
-                order = sip.a_order;
-                fits_header_add_int(hdr, key, order, "SIP forward polynomial order");
-                for (m=0; m<=order; m++) {
-                    for (n=0; (m+n)<=order; n++) {
-                        if (m+n < 1)
-                            continue;
-                        sprintf(key, "ANW%iA%i%i", I, m, n);
-                        fits_header_add_double(hdr, key, sip.a[m][n], "");
-                        sprintf(key, "ANW%iB%i%i", I, m, n);
-                        fits_header_add_double(hdr, key, sip.b[m][n], "");
-                    }
-                }
-            }
-            if (sip.ap_order) {
-                order = sip.ap_order;
-                sprintf(key, "ANW%iSAPO", I);
-                fits_header_add_int(hdr, key, order, "SIP reverse polynomial order");
-                for (m=0; m<=order; m++) {
-                    for (n=0; (m+n)<=order; n++) {
-                        if (m+n < 1)
-                            continue;
-                        sprintf(key, "ANW%iAP%i%i", I, m, n);
-                        fits_header_add_double(hdr, key, sip.ap[m][n], "");
-                        sprintf(key, "ANW%iBP%i%i", I, m, n);
-                        fits_header_add_double(hdr, key, sip.bp[m][n], "");
-                    }
-                }
-            }
+			sprintf(key, "ANW%i", I);
+			add_sip_coeffs(hdr, key, &sip);
         }
     }
+
+	if (axy->predistort) {
+		fits_header_add_double(hdr, "ANDPIX0", axy->predistort->wcstan.crpix[0], "Pre-distortion ref pix x");
+		fits_header_add_double(hdr, "ANDPIX1", axy->predistort->wcstan.crpix[1], "Pre-distortion ref pix y");
+		add_sip_coeffs(hdr, "AND", axy->predistort);
+	}
 
 	fout = fopen(axy->outfn, "wb");
 	if (!fout) {

@@ -534,8 +534,6 @@ void blind_init(blind_t* bp) {
     blind_set_ycol(bp, NULL);
 	bp->firstfield = -1;
 	bp->lastfield = -1;
-	bp->tweak_aborder = DEFAULT_TWEAK_ABORDER;
-	bp->tweak_abporder = DEFAULT_TWEAK_ABPORDER;
     bp->quad_size_fraction_lo = DEFAULT_QSF_LO;
     bp->quad_size_fraction_hi = DEFAULT_QSF_HI;
     bp->nsolves = 1;
@@ -685,11 +683,6 @@ void blind_log_run_parameters(blind_t* bp) {
 	logverb("timelimit %i\n", bp->timelimit);
 	logverb("total_timelimit %g\n", bp->total_timelimit);
 	logverb("total_cpulimit %f\n", bp->total_cpulimit);
-	logverb("tweak %s\n", bp->do_tweak ? "on" : "off");
-	if (bp->do_tweak) {
-		logverb("tweak_aborder %i\n", bp->tweak_aborder);
-		logverb("tweak_abporder %i\n", bp->tweak_abporder);
-	}
 }
 
 void blind_cleanup(blind_t* bp) {
@@ -715,49 +708,6 @@ void blind_cleanup(blind_t* bp) {
 	free(bp->xcolname);
 	free(bp->ycolname);
 	free(bp->sort_rdls);
-}
-
-static sip_t* tweak(const blind_t* bp, const tan_t* wcs, const double* starradec, int nstars) {
-	const solver_t* sp = &(bp->solver);
-    double jitter;
-    sip_t* sip;
-	logmsg("Tweaking!\n");
-    jitter = hypot(tan_pixel_scale(wcs) * sp->verify_pix, sp->index->index_jitter);
-	logverb("Setting tweak jitter: %g arcsec.\n", jitter);
-    logverb("Using %i image stars and %i index stars.\n", starxy_n(sp->fieldxy), nstars);
-	logverb("Begin tweaking to order %i...\n", bp->tweak_aborder);
-    sip = tweak_just_do_it(wcs, sp->fieldxy, NULL, NULL, NULL, starradec, nstars,
-                           jitter, bp->tweak_aborder, bp->tweak_abporder, 5,
-                           TRUE, bp->tweak_skipshift);
-	logverb("Done tweaking!\n");
-    return sip;
-}
-
-static void print_match(blind_t* bp, MatchObj* mo) {
-	double ra,dec;
-	logverb("  log-odds ratio %g (%g), %i match, %i conflict, %i distractors, %i index.\n",
-			mo->logodds, exp(mo->logodds), mo->nmatch, mo->nconflict, mo->ndistractor, mo->nindex);
-	xyzarr2radecdeg(mo->center, &ra, &dec);
-	logverb("  RA,Dec = (%g,%g), pixel scale %g arcsec/pix.\n",
-			ra, dec, mo->scale);
-	if (log_get_level() >= LOG_VERB) {
-		/*
-		 int i;
-		 logverb("  Hit/miss: ");
-		 verify_log_hit_miss(mo->theta, NULL, mo->nbest, mo->nfield, LOG_VERB);
-		 logverb("\n");
-		 logverb("  Test star order: ");
-		 for (i=0; i<MIN(100, mo->nfield); i++) {
-		 logverb("%i ", mo->testperm[i]);
-		 }
-		 logverb("\n");
-		 //logverb("  Hit/miss in order: ");
-		 */
-		logverb("  Hit/miss: ");
-		verify_log_hit_miss(mo->theta, mo->testperm, mo->nbest, mo->nfield, LOG_VERB);
-		logverb("\n");
-
-	}
 }
 
 static int sort_rdls(MatchObj* mymo, blind_t* bp) {
@@ -816,22 +766,6 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 
 	check_time_limits(bp);
 
-	if (mo->logodds >= bp->logratio_toprint)
-        print_match(bp, mo);
-
-	// FIXME -- here, or in solver?
-	if (mo->logodds >= sp->logratio_totune && mo->logodds < bp->logratio_tokeep) {
-		logverb("Trying to tune up this solution (logodds = %g; %g)...\n", mo->logodds, exp(mo->logodds));
-		solver_tweak2(sp, mo, 1);
-		logverb("After tuning, logodds = %g (%g)\n", mo->logodds, exp(mo->logodds));
-	}
-
-	if (mo->logodds < bp->logratio_tokeep)
-		return FALSE;
-
-    logverb("Pixel scale: %g arcsec/pix.\n", mo->scale);
-    logverb("Parity: %s.\n", (mo->parity ? "neg" : "pos"));
-
 	// Copy "mo" to "mymo".
     ind = bl_insert_sorted(bp->solutions, mo, compare_matchobjs);
     mymo = bl_access(bp->solutions, ind);
@@ -849,7 +783,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 	// comes time to write our output files, so we've got to grab everything
 	// we need now while it's at hand.
 
-    if (bp->do_tweak || bp->do_tweak2 || bp->indexrdlsfname || bp->scamp_fname || bp->corr_fname) {
+    if (bp->indexrdlsfname || bp->scamp_fname || bp->corr_fname) {
 		int i;
 
 		// This must happen first, because it reorders the "ref" arrays,
@@ -871,15 +805,7 @@ static bool record_match_callback(MatchObj* mo, void* userdata) {
 		// whew!
 		memcpy(mymo->fieldxy, bp->solver.vf->xy, mymo->nfield * 2 * sizeof(double));
 
-        if (bp->do_tweak2) {
-			solver_tweak2(sp, mymo, bp->tweak_aborder);
-		}
-
-		// FIXME -- tweak should use the weights (verify_logodds_to_weight(mymo->matchodds))
-        if (bp->do_tweak) {
-            mymo->sip = tweak(bp, &(mymo->wcstan), mymo->refradec, mymo->nindex);
-			// FIXME -- recompute mymo->refxy ?
-		}
+		// Tweak was here...
 
 		// FIXME -- add MAG, MAGERR, and positional errors for SCAMP catalog.
 
@@ -978,11 +904,12 @@ static void add_blind_params(blind_t* bp, qfits_header* hdr) {
 	fits_add_long_comment(hdr, "Total time limit: %g s", bp->total_timelimit);
 	fits_add_long_comment(hdr, "Total CPU limit: %f s", bp->total_cpulimit);
 
-	fits_add_long_comment(hdr, "Tweak: %s", (bp->do_tweak ? "yes" : "no"));
-	if (bp->do_tweak) {
-		fits_add_long_comment(hdr, "Tweak AB order: %i", bp->tweak_aborder);
-		fits_add_long_comment(hdr, "Tweak ABP order: %i", bp->tweak_abporder);
+	fits_add_long_comment(hdr, "Tweak: %s", (sp->do_tweak ? "yes" : "no"));
+	if (sp->do_tweak) {
+		fits_add_long_comment(hdr, "Tweak AB order: %i", sp->tweak_aborder);
+		fits_add_long_comment(hdr, "Tweak ABP order: %i", sp->tweak_abporder);
 	}
+
 	fits_add_long_comment(hdr, "--");
 }
 
@@ -1058,16 +985,13 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		sp->num_verified = 0;
 		sp->quit_now = FALSE;
 		sp->mo_template = &template ;
-
+		sp->record_match_callback = record_match_callback;
+        sp->timer_callback = timer_callback;
+		sp->userdata = bp;
 		solver_reset_best_match(sp);
 
 		bp->fieldnum = fieldnum;
         bp->nsolves_sofar = 0;
-
-		sp->logratio_record_threshold = MIN(bp->logratio_tokeep, bp->logratio_toprint);
-		sp->record_match_callback = record_match_callback;
-        sp->timer_callback = timer_callback;
-		sp->userdata = bp;
 
 		solver_preprocess_field(sp);
 
@@ -1080,7 +1004,6 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 		} else {
 			logverb("Solving field %i.\n", fieldnum);
 			sp->distance_from_quad_bonus = TRUE;
-
 			solver_log_params(sp);
 
 			// The real thing
@@ -1120,7 +1043,7 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
             logerr(".\n");
 			if (sp->have_best_match) {
 				logverb("Best match encountered: ");
-				print_match(bp, &(sp->best_match));
+				matchobj_print(&(sp->best_match), log_get_level());
 			} else {
 				logverb("Best odds encountered: %g\n", exp(sp->best_logodds));
 			}

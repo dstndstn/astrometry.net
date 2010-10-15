@@ -173,9 +173,9 @@ static int read_parameters(blind_t* bp) {
 		} else if (is_word(line, "ratio_tosolve ", &nextword)) {
 			bp->logratio_tosolve = log(atof(nextword));
 		} else if (is_word(line, "ratio_tokeep ", &nextword)) {
-			bp->logratio_tokeep = log(atof(nextword));
+			sp->logratio_tokeep = log(atof(nextword));
 		} else if (is_word(line, "ratio_toprint ", &nextword)) {
-			bp->logratio_toprint = log(atof(nextword));
+			sp->logratio_toprint = log(atof(nextword));
 		} else if (is_word(line, "ratio_tobail ", &nextword)) {
 			sp->logratio_bail_threshold = log(atof(nextword));
 		} else if (is_word(line, "match ", &nextword)) {
@@ -199,13 +199,13 @@ static int read_parameters(blind_t* bp) {
 			free(bp->solvedserver);
 			bp->solvedserver = strdup(nextword);
 		} else if (is_word(line, "tweak_skipshift", &nextword)) {
-			bp->tweak_skipshift = TRUE;
+			// deprecated
 		} else if (is_word(line, "tweak_aborder ", &nextword)) {
-			bp->tweak_aborder = atoi(nextword);
+			sp->tweak_aborder = atoi(nextword);
 		} else if (is_word(line, "tweak_abporder ", &nextword)) {
-			bp->tweak_abporder = atoi(nextword);
+			sp->tweak_abporder = atoi(nextword);
 		} else if (is_word(line, "tweak", &nextword)) {
-			bp->do_tweak = TRUE;
+			sp->do_tweak = TRUE;
 		} else if (is_word(line, "wcs ", &nextword)) {
             blind_set_wcs_file(bp, nextword);
 		} else if (is_word(line, "fieldid_key ", &nextword)) {

@@ -34,8 +34,6 @@ struct blind_params {
 
 	bool indexes_inparallel;
 
-	double logratio_toprint;
-	double logratio_tokeep;
 	double logratio_tosolve;
 
     // How many solving quads are required before we stop?
@@ -138,13 +136,6 @@ struct blind_params {
 	// filename for cancelling
 	char* cancelfname;
 	bool cancelled;
-
-	bool do_tweak;
-	bool do_tweak2;
-
-	int tweak_aborder;
-	int tweak_abporder;
-	bool tweak_skipshift;
 
 	bool best_hit_only;
 };

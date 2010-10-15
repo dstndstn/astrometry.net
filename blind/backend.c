@@ -486,7 +486,48 @@ int backend_run_job(backend_t* backend, job_t* job) {
 	return 0;
 }
 
-static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
+static void parse_sip_coeffs(const qfits_header* hdr, const char* prefix, sip_t* wcs) {
+	char key[64];
+	int order, i, j;
+	sprintf(key, "%sSAO", prefix);
+	order = qfits_header_getint(hdr, key, -1);
+	if (order >= 2) {
+		if (order > 9)
+			order = 9;
+		wcs->a_order = order;
+		wcs->b_order = order;
+		for (i=0; i<=order; i++) {
+			for (j=0; (i+j)<=order; j++) {
+				if (i+j < 1)
+					continue;
+				sprintf(key, "%sA%i%i", prefix, i, j);
+				wcs->a[i][j] = qfits_header_getdouble(hdr, key, 0.0);
+				sprintf(key, "%sB%i%i", prefix, i, j);
+				wcs->b[i][j] = qfits_header_getdouble(hdr, key, 0.0);
+			}
+		}
+	}
+	sprintf(key, "%sSAPO", prefix);
+	order = qfits_header_getint(hdr, key, -1);
+	if (order >= 2) {
+		if (order > 9)
+			order = 9;
+		wcs->ap_order = order;
+		wcs->bp_order = order;
+		for (i=0; i<=order; i++) {
+			for (j=0; (i+j)<=order; j++) {
+				if (i+j < 1)
+					continue;
+				sprintf(key, "%sAP%i%i", prefix, i, j);
+				wcs->ap[i][j] = qfits_header_getdouble(hdr, key, 0.0);
+				sprintf(key, "%sBP%i%i", prefix, i, j);
+				wcs->bp[i][j] = qfits_header_getdouble(hdr, key, 0.0);
+			}
+		}
+	}
+}
+
+static bool parse_job_from_qfits_header(const qfits_header* hdr, job_t* job) {
     blind_t* bp = &(job->bp);
     solver_t* sp = &(bp->solver);
 
@@ -555,22 +596,23 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 
     bp->timelimit = qfits_header_getint(hdr, "ANTLIM", 0);
     bp->cpulimit = qfits_header_getdouble(hdr, "ANCLIM", 0.0);
-    bp->logratio_toprint = log(qfits_header_getdouble(hdr, "ANODDSPR", default_odds_toprint));
-    bp->logratio_tokeep = log(qfits_header_getdouble(hdr, "ANODDSKP", default_odds_tokeep));
     bp->logratio_tosolve = log(qfits_header_getdouble(hdr, "ANODDSSL", default_odds_tosolve));
 	logverb("Set odds ratio to solve to %g (log = %g)\n", exp(bp->logratio_tosolve), bp->logratio_tosolve);
 
-	// gotta keep it to solve it!
-	bp->logratio_tokeep = MIN(bp->logratio_tokeep, bp->logratio_tosolve);
-	// gotta print it to keep it (so what if that doesn't make sense)!
-	bp->logratio_toprint = MIN(bp->logratio_toprint, bp->logratio_tokeep);
 
+    sp->logratio_toprint = log(qfits_header_getdouble(hdr, "ANODDSPR", default_odds_toprint));
+    sp->logratio_tokeep = log(qfits_header_getdouble(hdr, "ANODDSKP", default_odds_tokeep));
     sp->logratio_totune = log(qfits_header_getdouble(hdr, "ANODDSTU", default_odds_totune));
     sp->logratio_bail_threshold = log(qfits_header_getdouble(hdr, "ANODDSBL", DEFAULT_BAIL_THRESHOLD));
 	val = qfits_header_getdouble(hdr, "ANODDSST", 0.0);
 	if (val > 0.0)
 		sp->logratio_stoplooking = log(val);
     bp->best_hit_only = TRUE;
+
+	// gotta keep it to solve it!
+	sp->logratio_tokeep = MIN(sp->logratio_tokeep, bp->logratio_tosolve);
+	// gotta print it to keep it (so what if that doesn't make sense)!
+	sp->logratio_toprint = MIN(sp->logratio_toprint, sp->logratio_tokeep);
 
 	// job->image_fraction = qfits_header_getdouble(hdr, "ANIMFRAC", job->image_fraction);
     job->include_default_scales = qfits_header_getboolean(hdr, "ANAPPDEF", 0);
@@ -593,10 +635,9 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
     if (qfits_header_getboolean(hdr, "ANTWEAK", default_tweak)) {
         int order = qfits_header_getint(hdr, "ANTWEAKO", default_tweakorder);
         //bp->do_tweak = TRUE;
-        bp->do_tweak2 = TRUE;
-        bp->tweak_aborder = order;
-        bp->tweak_abporder = order;
-        bp->tweak_skipshift = TRUE;
+        sp->do_tweak = TRUE;
+        sp->tweak_aborder = order;
+        sp->tweak_abporder = order;
     }
 
     val = qfits_header_getdouble(hdr, "ANQSFMIN", 0.0);
@@ -731,9 +772,8 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 				   &(wcs.wcstan.crpix[0]), &(wcs.wcstan.crpix[1]),
 				   &(wcs.wcstan.cd[0][0]), &(wcs.wcstan.cd[0][1]),
 				   &(wcs.wcstan.cd[1][0]), &(wcs.wcstan.cd[1][1]) };
-		int i, j;
+		int j;
 		int bail = 0;
-        int order;
         memset(&wcs, 0, sizeof(wcs));
 		for (j = 0; j < 8; j++) {
 			sprintf(key, keys[j], n);
@@ -747,48 +787,35 @@ static bool parse_job_from_qfits_header(qfits_header* hdr, job_t* job) {
 			break;
 
         // SIP terms
-        sprintf(key, "ANW%iSAO", n);
-        order = qfits_header_getint(hdr, key, -1);
-        if (order >= 2) {
-            if (order > 9)
-                order = 9;
-            wcs.a_order = order;
-            wcs.b_order = order;
-            for (i=0; i<=order; i++) {
-                for (j=0; (i+j)<=order; j++) {
-                    if (i+j < 1)
-                        continue;
-                    sprintf(key, "ANW%iA%i%i", n, i, j);
-                    wcs.a[i][j] = qfits_header_getdouble(hdr, key, 0.0);
-                    sprintf(key, "ANW%iB%i%i", n, i, j);
-                    wcs.b[i][j] = qfits_header_getdouble(hdr, key, 0.0);
-                }
-            }
-        }
-        sprintf(key, "ANW%iSAPO", n);
-        order = qfits_header_getint(hdr, key, -1);
-        if (order >= 2) {
-            if (order > 9)
-                order = 9;
-            wcs.ap_order = order;
-            wcs.bp_order = order;
-            for (i=0; i<=order; i++) {
-                for (j=0; (i+j)<=order; j++) {
-                    if (i+j < 1)
-                        continue;
-                    sprintf(key, "ANW%iAP%i%i", n, i, j);
-                    wcs.ap[i][j] = qfits_header_getdouble(hdr, key, 0.0);
-                    sprintf(key, "ANW%iBP%i%i", n, i, j);
-                    wcs.bp[i][j] = qfits_header_getdouble(hdr, key, 0.0);
-                }
-            }
-        }
+		sprintf(key, "ANW%i", n);
+		parse_sip_coeffs(hdr, key, &wcs);
 
 		sip_ensure_inverse_polynomials(&wcs);
 
         blind_add_verify_wcs(bp, &wcs);
 		n++;
 	}
+
+	// Distortion to apply before matching...
+	do {
+		sip_t dsip;
+		double p0, p1;
+		memset(&dsip, 0, sizeof(sip_t));
+		p0 = qfits_header_getdouble(hdr, "ANDPIX0", dnil);
+		if (p0 == dnil)
+			break;
+		p1 = qfits_header_getdouble(hdr, "ANDPIX1", dnil);
+		if (p1 == dnil)
+			break;
+		dsip.wcstan.crpix[0] = p0;
+		dsip.wcstan.crpix[1] = p1;
+		parse_sip_coeffs(hdr, "AND", &dsip);
+		if ((dsip.a_order > 1 && dsip.b_order > 1) ||
+			(dsip.ap_order > 1 && dsip.bp_order > 1)) {
+			sp->predistort = malloc(sizeof(sip_t));
+			memcpy(sp->predistort, &dsip, sizeof(sip_t));
+		}
+	} while (0);
 
 	run = qfits_header_getboolean(hdr, "ANRUN", FALSE);
 

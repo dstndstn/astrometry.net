@@ -351,9 +351,9 @@ void tweak_clear_on_sip_change(tweak_t* t) {
 // ref_xy are the catalog star positions in image coordinates
 void tweak_clear_ref_xy(tweak_t* t) {
 	if (t->state & TWEAK_HAS_REF_XY) {
-		assert(t->x_ref);
+		//assert(t->x_ref);
 		free(t->x_ref);
-		assert(t->y_ref);
+		//assert(t->y_ref);
 		t->x_ref = NULL;
 		free(t->y_ref);
 		t->y_ref = NULL;
@@ -636,10 +636,7 @@ static double figure_of_merit2(tweak_t* t) {
     return sqerr * square(sip_pixel_scale(t->sip));
 }
 
-// I apologize for the rampant copying and pasting of the polynomial calcs...
 static void invert_sip_polynomial(tweak_t* t) {
-	assert(t->sip->a_order == t->sip->b_order);
-	assert(t->sip->ap_order == t->sip->bp_order);
 	sip_compute_inverse_polynomials(t->sip, 0, 0, 0, 0, 0, 0);
 }
 
@@ -776,8 +773,8 @@ void tchebyshev_tweak(tweak_t* t, int W, int H) {
 
 
 	// Solve the equation.
-    rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, &r1, b2, &x2, &r2);
-	//rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
+    //rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, &r1, b2, &x2, &r2);
+	rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
 	if (rtn) {
         ERROR("Failed to solve tweak inversion matrix equation!");
         return;
@@ -1123,8 +1120,8 @@ static void do_sip_tweak(tweak_t* t) {
 
 
 	// Solve the equation.
-    rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, &r1, b2, &x2, &r2);
-	//rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
+    //rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, &r1, b2, &x2, &r2);
+	rtn = gslutils_solve_leastsquares_v(mA, 2, b1, &x1, NULL, b2, &x2, NULL);
 	if (rtn) {
         ERROR("Failed to solve tweak inversion matrix equation!");
         return;

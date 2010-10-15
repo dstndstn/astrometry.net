@@ -52,6 +52,7 @@
 #include "errors.h"
 #include "backend.h"
 #include "an-opts.h"
+#include "gslutils.h"
 
 #include "datalog.h"
 
@@ -179,6 +180,8 @@ int main(int argc, char** args) {
 		exit(0);
 	}
 	bl_free(opts);
+
+	gslutils_use_error_system();
 
     log_init(loglvl);
     if (tostderr)
