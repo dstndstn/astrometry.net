@@ -91,7 +91,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			  double* crpix,
 			  double* p_logodds,
 			  int* p_besti,
-			  int* testperm);
+			  int* testperm, int startorder);
 
 
 #endif

@@ -154,8 +154,7 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
 	double newodds;
 	int nm, nc, nd;
 	int besti;
-
-
+	int startorder;
 
 	indexjitter = mo->index_jitter; // ref cat positional error, in arcsec.
 	xy = starxy_to_xy_array(sp->fieldxy, NULL);
@@ -170,15 +169,22 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
 		// set qc to the image center here?  or crpix?
 		logverb("solver_tweak2(): setting Q2=%g; qc=(%g,%g)\n", Q2, qc[0], qc[1]);
 	}
-	sip_wrap_tan(&(mo->wcstan), &startsip);
 
 	// mo->refradec may be NULL at this point, so get it from refxyz instead...
 	refradec = malloc(3 * mo->nindex * sizeof(double));
 	for (i=0; i<mo->nindex; i++)
 		xyzarr2radecdegarr(mo->refxyz + i*3, refradec + i*2);
 
-	if (mo->sip)
+
+	// Verifying an existing WCS?
+	if (mo->sip) {
+		memcpy(&startsip, mo->sip, sizeof(sip_t));
+		startorder = MIN(mo->sip->a_order, sp->tweak_aborder);
 		sip_free(mo->sip);
+	} else {
+		startorder = 1;
+		sip_wrap_tan(&(mo->wcstan), &startsip);
+	}
 
 	startsip.ap_order = startsip.bp_order = sp->tweak_abporder;
 	startsip.a_order = startsip.b_order = sp->tweak_aborder;
@@ -199,7 +205,7 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
 					 order, sp->tweak_abporder,
 					 &startsip, NULL, &theta, &odds,
 					 sp->set_crpix ? sp->crpix : NULL,
-					 &newodds, &besti, mo->testperm);
+					 &newodds, &besti, mo->testperm, startorder);
 	assert(mo->sip);
 	free(refradec);
 
@@ -1456,6 +1462,9 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		free(weights);
 
 	} else if (sp->do_tweak) {
+		if (sip) {
+			mo->sip = sip;
+		}
 		solver_tweak2(sp, mo, sp->tweak_aborder);
 
 	} else if (!sip && sp->set_crpix) {
