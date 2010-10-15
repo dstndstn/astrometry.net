@@ -1192,8 +1192,6 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	assert(mo->wcs_valid || sip);
 	assert(isfinite(logaccept));
 	assert(isfinite(logbail));
-	// default: HUGE_VAL
-	//assert(isfinite(logstoplooking));
 
 	memset(v, 0, sizeof(verify_t));
 
@@ -1234,9 +1232,11 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	 operations on good stars must go to "NR", using "refperm" to
 	 redirect.
 
-	 This means that "refperm" should remain a permutation array
-	 (ie, no duplicates), and each value should be less than
-	 "NRall".
+	 This means that "refperm" should remain a permutation array (ie,
+	 no duplicates), and each value should be less than "NRall"; when
+	 filtering out an index, it should get moved to the part of the
+	 array between "NR" and "NRall".  We use the "badguys" array to
+	 hold these indices temporarily.
 	 */
 	assert(skdt->sweep);
 	// Find all index stars within the bounding circle of the field.
@@ -1488,7 +1488,7 @@ double verify_logodds_to_weight(double lodds) {
 }
 
 
-double verify_star_lists(const double* refxys, int NR,
+double verify_star_lists(double* refxys, int NR,
 						 const double* testxys, const double* testsigma2s, int NT,
 						 double effective_area,
 						 double distractors,
@@ -1496,7 +1496,8 @@ double verify_star_lists(const double* refxys, int NR,
 						 double logodds_stoplooking,
 						 int* p_besti,
 						 double** p_all_logodds, int** p_theta,
-						 double* p_worstlogodds) {
+						 double* p_worstlogodds,
+						 int** p_testperm) {
 	double X;
 	verify_t v;
 	double* eodds;
@@ -1538,9 +1539,169 @@ double verify_star_lists(const double* refxys, int NR,
 	if (p_besti)
 		*p_besti = besti;
 
+	if (p_testperm)
+		*p_testperm = v.testperm;
+	else
+		free(v.testperm);
+
 	free(v.refperm);
-	free(v.testperm);
 	free(v.badguys);
+	return X;
+}
+
+
+
+
+
+
+
+
+
+double verify_star_lists_ror(double* refxys, int NR,
+							 const double* testxys, const double* testsigma2s, int NT,
+							 double pix2, double gamma,
+							 const double* qc, double Q2,
+							 double W, double H,
+							 double distractors,
+							 double logodds_bail,
+							 double logodds_stoplooking,
+							 int* p_besti,
+							 double** p_all_logodds, int** p_theta,
+							 double* p_worstlogodds,
+							 int** p_testperm, int** p_refperm) {
+	double X;
+	verify_t v;
+	double* eodds;
+	int* etheta;
+	int ibailed, istopped;
+	int besti;
+	int* theta;
+	double* allodds;
+	// RoR
+	double ror2;
+	int igood, ibad;
+	int NB = 100;
+	int NBx, NBy;
+	double bx0, by0;
+	double stepx, stepy;
+	int i, j;
+	int Ngood;
+	double effective_area;
+
+	memset(&v, 0, sizeof(verify_t));
+	v.NRall = v.NR = NR;
+	v.NTall = v.NT = NT;
+	v.refxy = refxys;
+	// instead of verify_get_test_stars()...
+	// (so we don't do:
+	// --dedup
+	// --remove quad stars
+	// --uniformize
+	// )
+
+	// discard const here...
+	v.testxy = (double*)testxys;
+	v.testsigma = (double*)testsigma2s;
+	v.refperm = permutation_init(NULL, NR);
+	v.testperm = permutation_init(NULL, NT);
+	v.tbadguys = malloc(v.NTall * sizeof(int));
+	v.badguys = malloc(v.NRall * sizeof(int));
+
+	ror2 = verify_get_ror2(Q2, W*H, distractors, NR, pix2);
+	logverb("RoR: %g\n", sqrt(ror2));
+
+	// Remove test stars outside the RoR.
+	igood = ibad = 0;
+	for (i=0; i<v.NT; i++) {
+		int ti = v.testperm[i];
+		double r2 = distsq(qc, v.testxy + 2*ti, 2);
+		if (r2 < ror2) {
+			v.testperm[igood] = ti;
+			igood++;
+		} else {
+			v.tbadguys[ibad] = ti;
+			ibad++;
+		}
+	}
+	v.NT = igood;
+	// remember the bad guys
+	memcpy(v.testperm + igood, v.tbadguys, ibad * sizeof(int));
+	logverb("Test stars in RoR: %i of %i\n", v.NT, v.NTall);
+
+	// Count good bins to find effective area...
+	NBx = ceil((double)W / sqrt(W*H) * sqrt(NB));
+	NBy = ceil((double)H / sqrt(W*H) * sqrt(NB));
+	NB = NBx * NBy;
+	stepx = (double)W / (double)NBx;
+	stepy = (double)H / (double)NBy;
+	bx0 = stepx/2.0;
+	by0 = stepy/2.0;
+	Ngood = 0;
+	for (i=0; i<NBy; i++) {
+		double bxy[2];
+		bxy[1] = by0 + i*stepy;
+		for (j=0; j<NBx; j++) {
+			double r2;
+			bxy[0] = bx0 + j*stepx;
+			r2 = distsq(bxy, qc, 2);
+			if (r2 < ror2)
+				Ngood++;
+		}
+	}
+	effective_area = W*H * (double)Ngood / (double)NB;
+	logverb("Good bins: %i / %i; effA %g of %g\n", Ngood, NB, W*H, effective_area);
+
+	// Remove ref stars outside RoR.
+	igood = ibad = 0;
+	for (i=0; i<v.NR; i++) {
+		int ri = v.refperm[i];
+		if (distsq(qc, v.refxy + 2*ri, 2) < ror2) {
+			v.refperm[igood] = ri;
+			igood++;
+		} else {
+			v.badguys[ibad] = ri;
+			ibad++;
+		}
+	}
+	// remember the bad guys
+	memcpy(v.refperm + igood, v.badguys, ibad * sizeof(int));
+	v.NR = igood;
+	logverb("Ref stars in RoR: %i of %i\n", v.NR, v.NRall);
+
+	X = real_verify_star_lists(&v, effective_area, distractors,
+							   logodds_bail, logodds_stoplooking, &besti,
+							   &allodds, &theta,
+							   p_worstlogodds, &ibailed, &istopped);
+	fixup_theta(theta, allodds, ibailed, istopped, &v, besti, NR, NULL,
+				&etheta, &eodds);
+	free(theta);
+	free(allodds);
+
+	if (p_all_logodds)
+		*p_all_logodds = eodds;
+	else
+		free(eodds);
+	if (p_theta)
+		*p_theta = etheta;
+	else
+		free(etheta);
+
+	if (p_besti)
+		*p_besti = besti;
+
+	if (p_testperm)
+		*p_testperm = v.testperm;
+	else
+		free(v.testperm);
+
+	if (p_refperm)
+		*p_refperm = v.refperm;
+	else
+		free(v.refperm);
+
+	free(v.badguys);
+	free(v.tbadguys);
+	
 	return X;
 }
 

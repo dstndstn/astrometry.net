@@ -16,6 +16,7 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  */
 #include <stdio.h>
+#include <sys/param.h>
 
 #include "bl.h"
 #include "blind_wcs.h"
@@ -113,7 +114,7 @@ static void makeplot(const char* plotfn, char* bgimgfn, int W, int H,
 	cairo_set_line_width(cairo, 2);
 
 	//for (i=0; i<=besti; i++) {
-	for (ti=0; ti<=Nfield; ti++) {
+	for (ti=0; ti<Nfield; ti++) {
 		bool mark = TRUE;
 		if (testperm)
 			i = testperm[ti];
@@ -130,7 +131,6 @@ static void makeplot(const char* plotfn, char* bgimgfn, int W, int H,
 			cairo_set_color(cairo, "orange");
 			break;
 		default:
-			//coninue;
 			if (theta[i] < 0) {
 				cairo_set_color(cairo, "gray");
 			} else {
@@ -146,7 +146,7 @@ static void makeplot(const char* plotfn, char* bgimgfn, int W, int H,
 			cairo_stroke(cairo);
 		}
 
-		if (ti <= besti) {
+		if (ti <= MAX(besti, 10)) {
 			char label[32];
 			sprintf(label, "%i", i);
 			plotstuff_text_xy(&pargs, fieldpix[2*i+0], fieldpix[2*i+1], label);
@@ -166,6 +166,7 @@ static void makeplot(const char* plotfn, char* bgimgfn, int W, int H,
 	}
 
 	plotstuff_output(&pargs);
+	logmsg("Wrote plot %s\n", plotfn);
 }
 
 static char* tdebugfn(const char* name) {
@@ -323,6 +324,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			int* theta;
 			double* odds;
 			int nmatch, nconf, ndist;
+			double pix2;
 
 			// Anneal
 			gamma = pow(0.9, step);
@@ -357,46 +359,76 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			ijitter = indexjitter / iscale;
 			logverb("With pixel scale of %g arcsec/pixel, index adds jitter of %g pix.\n", iscale, ijitter);
 
+			/* CHECK
+			 for (i=0; i<Nin; i++) {
+			 double x,y;
+			 int ii = indexin[i];
+			 sip_radec2pixelxy(sipout, indexradec[2*ii+0], indexradec[2*ii+1], &x, &y);
+			 logverb("indexin[%i]=%i; (%.1f,%.1f) -- (%.1f,%.1f)\n",
+			 i, ii, indexpix[i*2+0], indexpix[i*2+1], x, y);
+			 }
+			 */
+
 			for (i=0; i<Nfield; i++) {
 				R2 = distsq(quadcenter, fieldxy + 2*i, 2);
 				fieldsigma2s[i] = (square(fieldjitter) + square(ijitter)) * (1.0 + gamma * R2/quadR2);
 			}
 
-
 			if (order == 1 && step == 0 && TWEAK_DEBUG_PLOTS) {
 				// RoR?
 				TWEAK_DEBUG_PLOT("init", W, H, Nfield, fieldxy, fieldsigma2s,
-								 Nindex, indexpix, *p_besti, *newtheta,
+								 Nin, indexpix, *p_besti, *newtheta,
 								 sipout->wcstan.crpix, testperm);
-	}
+			}
 
+			/*
+			 logodds = verify_star_lists(indexpix, Nin,
+			 fieldxy, fieldsigma2s, Nfield,
+			 W*H, distractors,
+			 logodds_bail, HUGE_VAL,
+			 &besti, &odds, &theta, NULL,
+			 &testperm);
+			 */
 
+			int* refperm = NULL;
 
+			pix2 = square(fieldjitter);
+			logodds = verify_star_lists_ror(indexpix, Nin,
+											fieldxy, fieldsigma2s, Nfield,
+											pix2, gamma, quadcenter, quadR2,
+											W, H, distractors,
+											logodds_bail, HUGE_VAL,
+											&besti, &odds, &theta, NULL,
+											&testperm, &refperm);
 
-			logodds = verify_star_lists(indexpix, Nin,
-										fieldxy, fieldsigma2s, Nfield,
-										W*H, distractors,
-										logodds_bail, HUGE_VAL,
-										&besti, &odds, &theta, NULL);
 			logverb("Logodds: %g\n", logodds);
-			//logverb("besti: %i\n", besti);
 			verify_count_hits(theta, besti, &nmatch, &nconf, &ndist);
 			logverb("%i matches, %i distractors, %i conflicts (at best log-odds); %i field sources, %i index sources\n", nmatch, ndist, nconf, Nfield, Nin);
 			verify_count_hits(theta, Nfield-1, &nmatch, &nconf, &ndist);
 			logverb("%i matches, %i distractors, %i conflicts (all sources)\n", nmatch, ndist, nconf);
-			logverb("  Hit/miss: ");
-			if (log_get_level() >= LOG_VERB)
-				matchobj_log_hit_miss(theta, NULL, besti+1, Nfield, LOG_VERB);
-			logverb("\n");
+			if (log_get_level() >= LOG_VERB) {
+				logverb("Hit/miss: ");
+				matchobj_log_hit_miss(theta, testperm, besti+1, Nfield, LOG_VERB);
+				logverb("\n");
+			}
+
+			/*
+			 logverb("\nAfter verify():\n");
+			 for (i=0; i<Nin; i++) {
+			 double x,y;
+			 int ii = indexin[refperm[i]];
+			 sip_radec2pixelxy(sipout, indexradec[2*ii+0], indexradec[2*ii+1], &x, &y);
+			 logverb("indexin[%i]=%i; (%.1f,%.1f) -- (%.1f,%.1f)\n",
+			 i, ii, indexpix[i*2+0], indexpix[i*2+1], x, y);
+			 }
+			 */
 
 			if (TWEAK_DEBUG_PLOTS) {
 				char name[32];
 				sprintf(name, "o%is%02i", order, step);
-				// RoR
 				TWEAK_DEBUG_PLOT(name, W, H, Nfield, fieldxy, fieldsigma2s,
-								 Nindex, indexpix, besti, theta,
-								 sipout->wcstan.crpix, testperm
-					);
+								 Nin, indexpix, besti, theta,
+								 sipout->wcstan.crpix, testperm);
 			}
 
 			Nmatch = 0;
@@ -405,13 +437,28 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				double ra,dec;
 				if (theta[i] < 0)
 					continue;
-				ra  = indexradec[indexin[theta[i]]*2+0];
-				dec = indexradec[indexin[theta[i]]*2+1];
+				assert(theta[i] < Nin);
+				int ii = indexin[refperm[theta[i]]];
+				assert(ii < Nindex);
+				assert(ii >= 0);
+
+				ra  = indexradec[ii*2+0];
+				dec = indexradec[ii*2+1];
 				radecdeg2xyzarr(ra, dec, matchxyz + Nmatch*3);
 				memcpy(matchxy + Nmatch*2, fieldxy + i*2, 2*sizeof(double));
 				weights[Nmatch] = verify_logodds_to_weight(odds[i]);
 				debug(" %.2f", weights[Nmatch]);
 				Nmatch++;
+
+				logverb("match img (%.1f,%.1f) -- ref (%.1f, %.1f), odds %g, wt %.3f\n",
+						fieldxy[i*2+0], fieldxy[i*2+1],
+						indexpix[theta[i]*2+0], indexpix[theta[i]*2+1],
+						odds[i],
+						weights[Nmatch-1]);
+				double xx,yy;
+				sip_radec2pixelxy(sipout, ra, dec, &xx, &yy);
+				logverb("check: (%.1f, %.1f)\n", xx, yy);
+						
 			}
 			debug("\n");
 
@@ -466,7 +513,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 									fieldxy, fieldsigma2s, Nfield,
 									W*H, distractors,
 									logodds_bail, HUGE_VAL,
-									&besti, newodds, newtheta, NULL);
+									&besti, newodds, newtheta, NULL, &testperm);
 		logverb("Final logodds: %g\n", logodds);
 		// undo the "indexpix" inside-image-bounds cut.
 		for (i=0; i<Nfield; i++) {

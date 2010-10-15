@@ -129,7 +129,7 @@ void verify_hit(const startree_t* skdt,
 /**
  Returns the best log-odds encountered.
  */
-double verify_star_lists(const double* refxys, int NR,
+double verify_star_lists(double* refxys, int NR,
 						 const double* testxys, const double* testsigma2s, int NT,
 						 double effective_area,
 						 double distractors,
@@ -137,7 +137,8 @@ double verify_star_lists(const double* refxys, int NR,
 						 double logodds_accept,
 						 int* p_besti,
 						 double** p_all_logodds, int** p_theta,
-						 double* p_worstlogodds);
+						 double* p_worstlogodds,
+	int** p_testperm);
 
 verify_field_t* verify_field_preprocess(const starxy_t* fieldxy);
 
@@ -188,5 +189,20 @@ void verify_matchobj_deep_copy(const MatchObj* mo, MatchObj* dest);
 
 double verify_get_ror2(double Q2, double area,
 					   double distractors, int NR, double pix2);
+
+
+
+double verify_star_lists_ror(double* refxys, int NR,
+							 const double* testxys, const double* testsigma2s, int NT,
+							 double pix2, double gamma,
+							 const double* qc, double Q2,
+							 double W, double H,
+							 double distractors,
+							 double logodds_bail,
+							 double logodds_stoplooking,
+							 int* p_besti,
+							 double** p_all_logodds, int** p_theta,
+							 double* p_worstlogodds,
+							 int** p_testperm, int** p_refperm);
 
 #endif
