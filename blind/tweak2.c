@@ -38,7 +38,7 @@
 
 
 // Tweak debug plots?
-#define TWEAK_DEBUG_PLOTS 1
+#define TWEAK_DEBUG_PLOTS 0
 #if TWEAK_DEBUG_PLOTS
 #include "plotstuff.h"
 #include "plotimage.h"
@@ -325,7 +325,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 
 	for (order=startorder; order <= sip_order; order++) {
 		int step;
-		int STEPS = 20;
+		int STEPS = 100;
 		// variance growth rate wrt radius.
 		double gamma = 1.0;
 		//logverb("Starting tweak2 order=%i\n", order);
