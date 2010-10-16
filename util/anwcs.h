@@ -21,6 +21,7 @@
 
 #include "sip.h"
 #include "an-bool.h"
+#include "qfits_header.h"
 
 /** Interface to Mark Calabretta's wcslib, if available, and
  Astrometry.net's TAN/SIP implementation. */
@@ -56,6 +57,8 @@ anwcs_t* anwcs_new_tan(const tan_t* tan);
 int anwcs_write(const anwcs_t* wcs, const char* filename);
 
 int anwcs_write_to(const anwcs_t* wcs, FILE* fid);
+
+int anwcs_add_to_header(const anwcs_t* wcs, qfits_header* hdr);
 
 int anwcs_radec2pixelxy(const anwcs_t* wcs, double ra, double dec, double* px, double* py);
 

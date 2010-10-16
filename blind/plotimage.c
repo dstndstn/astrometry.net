@@ -122,7 +122,7 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			ok = plotstuff_radec2xy(pargs, ra, dec, &ox, &oy);
 			xs[j*NX+i] = ox-1;
 			ys[j*NX+i] = oy-1;
-			debug("image (%g,%g) -> plot (%g,%g)\n", x, y, xs[j*NX+i], ys[j*NX+i]);
+			debug("image (%.1f,%.1f) -> radec (%.4f,%.4f), plot (%.1f,%.1f)\n", x, y, ra, dec, xs[j*NX+i], ys[j*NX+i]);
 		}
 	}
 	cairo_save(cairo);

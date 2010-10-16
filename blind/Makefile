@@ -647,7 +647,9 @@ fitsgetext: fitsgetext.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
 fits-dedup: fits-dedup.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
-wcs-resample: wcs-resample.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+wcs-resample: wcs-resample-main.o wcs-resample.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(WCSLIB_LIB)
+
 
 subtable: subtable.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 

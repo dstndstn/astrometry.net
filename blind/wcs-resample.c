@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009, Dustin Lang.
+  Copyright 2009, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -23,6 +23,7 @@
 #include <sys/param.h>
 #include <assert.h>
 
+#include "wcs-resample.h"
 #include "sip_qfits.h"
 #include "an-bool.h"
 #include "qfits.h"
@@ -32,29 +33,15 @@
 #include "log.h"
 #include "errors.h"
 #include "fitsioutils.h"
+#include "anwcs.h"
 
-const char* OPTIONS = "hw:";
+int resample_wcs_files(const char* infitsfn, int infitsext,
+					   const char* inwcsfn, int inwcsext,
+					   const char* outwcsfn, int outwcsext,
+					   const char* outfitsfn) {
 
-void print_help(char* progname) {
-	boilerplate_help_header(stdout);
-	printf("\nUsage: %s [options] <input-FITS-image> <target-WCS-file> <output-FITS-image>\n"
-		   "   [-w <input WCS file>] (default is to read WCS from input FITS image)\n"
-		   //"  [-t]: just use TAN projection, even if SIP extension exists.\n"
-		   "\n", progname);
-}
-
-extern char *optarg;
-extern int optind, opterr, optopt;
-
-int main(int argc, char** args) {
-	int c;
-	char* inwcsfn = NULL;
-	char* outwcsfn = NULL;
-    char* infitsfn = NULL;
-    char* outfitsfn = NULL;
-
-    sip_t inwcs;
-    sip_t outwcs;
+    anwcs_t* inwcs;
+    anwcs_t* outwcs;
     qfitsloader qinimg;
     qfitsdumper qoutimg;
     float* inimg;
@@ -64,55 +51,24 @@ int main(int argc, char** args) {
     int outW, outH;
     int inW, inH;
 
-	int i,j;
-
-    double inxmin, inxmax, inymin, inymax;
-
     double outpixmin, outpixmax;
 
-    //float fa;
-    //int a;
-
-    while ((c = getopt(argc, args, OPTIONS)) != -1) {
-        switch (c) {
-        case 'h':
-			print_help(args[0]);
-			exit(0);
-        case 'w':
-            inwcsfn = optarg;
-            break;
-		}
-	}
-
-    log_init(LOG_MSG);
-    fits_use_error_system();
-
-	if (optind != argc - 3) {
-		print_help(args[0]);
-		exit(-1);
-	}
-
-    infitsfn  = args[optind+0];
-    outwcsfn  = args[optind+1];
-    outfitsfn = args[optind+2];
-
-    if (!inwcsfn)
-        inwcsfn = infitsfn;
-
 	// read input WCS.
-    if (!sip_read_header_file(inwcsfn, &inwcs)) {
-        ERROR("Failed to parse TAN/SIP header from %s", inwcsfn);
-        exit(-1);
+	inwcs = anwcs_open(inwcsfn, inwcsext);
+    if (!inwcs) {
+        ERROR("Failed to parse WCS header from %s extension %i", inwcsfn, inwcsext);
+		return -1;
     }
 
 	// read output WCS.
-    if (!sip_read_header_file(outwcsfn, &outwcs)) {
-        ERROR("Failed to parse TAN/SIP header from %s", outwcsfn);
-        exit(-1);
+	outwcs = anwcs_open(outwcsfn, outwcsext);
+    if (!outwcs) {
+        ERROR("Failed to parse WCS header from %s extension %i", outwcsfn, outwcsext);
+		return -1;
     }
 
-    outW = outwcs.wcstan.imagew;
-    outH = outwcs.wcstan.imageh;
+    outW = anwcs_imagew(outwcs);
+    outH = anwcs_imageh(outwcs);
 
     // read input image.
     memset(&qinimg, 0, sizeof(qinimg));
@@ -127,7 +83,7 @@ int main(int argc, char** args) {
     if (qfitsloader_init(&qinimg) ||
         qfits_loadpix(&qinimg)) {
         ERROR("Failed to read pixels from input FITS image \"%s\"", infitsfn);
-        exit(-1);
+		return -1;
     }
 
     // lx, ly, fbuf
@@ -141,10 +97,67 @@ int main(int argc, char** args) {
 
     outimg = calloc(outW * outH, sizeof(float));
 
-    // FIXME - the window size should depend on the relative sizes
-    // of the input and output images.
-    //fa = 3.0;
-    //a = ceil(fa);
+	if (resample_wcs(inwcs, inimg, inW, inH,
+					 outwcs, outimg, outW, outH)) {
+		ERROR("Failed to resample");
+		return -1;
+	}
+
+    {
+        double pmin, pmax;
+		int i;
+		/*
+		 pmin =  HUGE_VAL;
+		 pmax = -HUGE_VAL;
+		 for (i=0; i<(inW*inH); i++) {
+		 pmin = MIN(pmin, inimg[i]);
+		 pmax = MAX(pmax, inimg[i]);
+		 }
+		 logmsg("Input image bounds: %g to %g\n", pmin, pmax);
+		 */
+        pmin =  HUGE_VAL;
+        pmax = -HUGE_VAL;
+        for (i=0; i<(outW*outH); i++) {
+            pmin = MIN(pmin, outimg[i]);
+            pmax = MAX(pmax, outimg[i]);
+        }
+        logmsg("Output image bounds: %g to %g\n", pmin, pmax);
+        outpixmin = pmin;
+        outpixmax = pmax;
+	 }
+
+    qfitsloader_free_buffers(&qinimg);
+
+    // prepare output image.
+    memset(&qoutimg, 0, sizeof(qoutimg));
+    qoutimg.filename = outfitsfn;
+    qoutimg.npix = outW * outH;
+    qoutimg.ptype = PTYPE_FLOAT;
+    qoutimg.fbuf = outimg;
+    qoutimg.out_ptype = BPP_IEEE_FLOAT;
+
+    hdr = fits_get_header_for_image(&qoutimg, outW, NULL);
+	anwcs_add_to_header(outwcs, hdr);
+    fits_header_add_double(hdr, "DATAMIN", outpixmin, "min pixel value");
+    fits_header_add_double(hdr, "DATAMAX", outpixmax, "max pixel value");
+
+	if (fits_write_header_and_image(hdr, &qoutimg, 0)) {
+        ERROR("Failed to write image to file \"%s\"", outfitsfn);
+		return -1;
+	}
+    free(outimg);
+	qfits_header_destroy(hdr);
+
+	anwcs_free(inwcs);
+	anwcs_free(outwcs);
+
+	return 0;
+}
+
+int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
+				 const anwcs_t* outwcs, float* outimg, int outW, int outH) {
+	int i,j;
+    double inxmin, inxmax, inymin, inymax;
 
     inxmax = -HUGE_VAL;
     inymax = -HUGE_VAL;
@@ -158,8 +171,8 @@ int main(int argc, char** args) {
             int x,y;
             //int xlo,xhi,ylo,yhi;
             // +1 for FITS pixel coordinates.
-            sip_pixelxy2xyzarr(&outwcs, i+1, j+1, xyz);
-            if (!sip_xyzarr2pixelxy(&inwcs, xyz, &inx, &iny))
+            if (anwcs_pixelxy2xyz(outwcs, i+1, j+1, xyz) ||
+				anwcs_xyz2pixelxy(inwcs, xyz, &inx, &iny))
                 continue;
 
             // FIXME - Nearest-neighbour resampling!!
@@ -195,50 +208,6 @@ int main(int argc, char** args) {
     logmsg("  x: %g to %g\n", inxmin, inxmax);
     logmsg("  y: %g to %g\n", inymin, inymax);
 
-    {
-        double pmin, pmax;
-        pmin =  HUGE_VAL;
-        pmax = -HUGE_VAL;
-        for (i=0; i<(inW*inH); i++) {
-            pmin = MIN(pmin, inimg[i]);
-            pmax = MAX(pmax, inimg[i]);
-        }
-        logmsg("Input image bounds: %g to %g\n", pmin, pmax);
-        pmin =  HUGE_VAL;
-        pmax = -HUGE_VAL;
-        for (i=0; i<(outW*outH); i++) {
-            pmin = MIN(pmin, outimg[i]);
-            pmax = MAX(pmax, outimg[i]);
-        }
-        logmsg("Output image bounds: %g to %g\n", pmin, pmax);
-        outpixmin = pmin;
-        outpixmax = pmax;
-    }
-
-    qfitsloader_free_buffers(&qinimg);
-
-    // prepare output image.
-    memset(&qoutimg, 0, sizeof(qoutimg));
-    qoutimg.filename = outfitsfn;
-    qoutimg.npix = outW * outH;
-    qoutimg.ptype = PTYPE_FLOAT;
-    qoutimg.fbuf = outimg;
-    qoutimg.out_ptype = BPP_IEEE_FLOAT;
-
-    hdr = fits_get_header_for_image(&qoutimg, outW, NULL);
-    if (outwcs.a_order)
-        sip_add_to_header(hdr, &outwcs);
-    else
-        tan_add_to_header(hdr, &(outwcs.wcstan));
-
-    fits_header_add_double(hdr, "DATAMIN", outpixmin, "min pixel value");
-    fits_header_add_double(hdr, "DATAMAX", outpixmax, "max pixel value");
-
-	if (fits_write_header_and_image(hdr, &qoutimg, 0)) {
-        ERROR("Failed to write image to file \"%s\"", outfitsfn);
-        exit(-1);
-	}
-    free(outimg);
-
 	return 0;
 }
+

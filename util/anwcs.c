@@ -297,6 +297,11 @@ static int wcslib_rotate_wcs(anwcslib_t* wcslib, double scale) {
 	return -1;
 }
 
+static int wcslib_add_to_header(const anwcslib_t* wcslib, qfits_header* hdr) {
+	ERROR("Not implemented!");
+	return -1;
+}
+
 
 #endif  // end of WCSLIB implementations
 
@@ -341,6 +346,11 @@ static int ansip_scale_wcs(sip_t* sip, double scale) {
 static int ansip_rotate_wcs(sip_t* sip, double angle) {
 	logmsg("Warning: ansip_rotate_wcs only scales the TAN, not the SIP coefficients!\n");
 	tan_rotate(&sip->wcstan, &sip->wcstan, angle);
+	return 0;
+}
+
+static int ansip_add_to_header(const sip_t* sip, qfits_header* hdr) {
+	sip_add_to_header(hdr, sip);
 	return 0;
 }
 
@@ -425,6 +435,10 @@ int anwcs_scale_wcs(anwcs_t* anwcs, double scale) {
 
 int anwcs_rotate_wcs(anwcs_t* anwcs, double rot) {
 	ANWCS_DISPATCH(anwcs, return, return -1, rotate_wcs, rot);
+}
+
+int anwcs_add_to_header(const anwcs_t* wcs, qfits_header* hdr) {
+	ANWCS_DISPATCH(wcs, return, return -1, add_to_header, hdr);
 }
 
 
