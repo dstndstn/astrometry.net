@@ -137,7 +137,7 @@ void solver_set_quad_size_fraction(solver_t* solver, double qmin, double qmax) {
 							   qmax * solver->field_diag);
 }
 
-void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
+void solver_tweak2(solver_t* sp, MatchObj* mo, int order, sip_t* verifysip) {
 	double* xy = NULL;
 	int Nxy;
 	double indexjitter;
@@ -177,10 +177,9 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order) {
 
 
 	// Verifying an existing WCS?
-	if (mo->sip) {
-		memcpy(&startsip, mo->sip, sizeof(sip_t));
-		startorder = MIN(mo->sip->a_order, sp->tweak_aborder);
-		sip_free(mo->sip);
+	if (verifysip) {
+		memcpy(&startsip, verifysip, sizeof(sip_t));
+		startorder = MIN(verifysip->a_order, sp->tweak_aborder);
 	} else {
 		startorder = 1;
 		sip_wrap_tan(&(mo->wcstan), &startsip);
@@ -1344,7 +1343,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 
 	if (mo->logodds >= sp->logratio_totune && mo->logodds < sp->logratio_tokeep) {
 		logverb("Trying to tune up this solution (logodds = %g; %g)...\n", mo->logodds, exp(mo->logodds));
-		solver_tweak2(sp, mo, 1);
+		solver_tweak2(sp, mo, 1, NULL);
 		logverb("After tuning, logodds = %g (%g)\n", mo->logodds, exp(mo->logodds));
 	}
 
@@ -1462,10 +1461,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		free(weights);
 
 	} else if (sp->do_tweak) {
-		if (sip) {
-			mo->sip = sip;
-		}
-		solver_tweak2(sp, mo, sp->tweak_aborder);
+		solver_tweak2(sp, mo, sp->tweak_aborder, sip);
 
 	} else if (!sip && sp->set_crpix) {
 		tan_t wcs2;
