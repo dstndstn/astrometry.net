@@ -260,7 +260,7 @@ static unsigned char* read_fits_image(const plot_args_t* pargs, plotimage_t* arg
 
 	if (args->resample) {
 		// resample onto the output grid...
-		rimg = malloc(pargs->W * pargs->H * sizeof(float));
+		rimg = calloc(pargs->W * pargs->H, sizeof(float));
 		if (resample_wcs(args->wcs, fimg, args->W, args->H,
 						 pargs->wcs, rimg, pargs->W, pargs->H)) {
 			ERROR("Failed to resample image");
