@@ -27,6 +27,7 @@
 #include "errors.h"
 #include "anwcs.h"
 #include "permutedsort.h"
+#include "wcs-resample.h"
 
 const plotter_t plotter_image = {
 	.name = "image",
@@ -82,6 +83,12 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 	double *xs, *ys;
 	int NX, NY;
 	double x,y;
+
+	if (args->resample) {
+		assert(args->img);
+		plot_image_rgba_data(cairo, args);
+		return;
+	}
 
 	cairoutils_rgba_to_argb32(img, W, H);
 	thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
@@ -225,12 +232,13 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 	cairo_restore(cairo);
 }
 
-static unsigned char* read_fits_image(plotimage_t* args) {
+static unsigned char* read_fits_image(const plot_args_t* pargs, plotimage_t* args) {
 	float* fimg;
 	qfitsloader ld;
 	unsigned char* img;
 	int i,j;
 	float offset, scale;
+	float* rimg = NULL;
 
 	ld.filename = args->fn;
 	ld.xtnum = args->fitsext;
@@ -249,6 +257,21 @@ static unsigned char* read_fits_image(plotimage_t* args) {
 	args->W = ld.lx;
 	args->H = ld.ly;
 	fimg = ld.fbuf;
+
+	if (args->resample) {
+		// resample onto the output grid...
+		rimg = malloc(pargs->W * pargs->H * sizeof(float));
+		if (resample_wcs(args->wcs, fimg, args->W, args->H,
+						 pargs->wcs, rimg, pargs->W, pargs->H)) {
+			ERROR("Failed to resample image");
+			return NULL;
+		}
+
+		// ?
+		args->W = pargs->W;
+		args->H = pargs->H;
+		fimg = rimg;
+	}
 
 	if (args->image_low == 0 && args->image_high == 0) {
 		if (args->auto_scale) {
@@ -313,10 +336,13 @@ static unsigned char* read_fits_image(plotimage_t* args) {
 		}
 	}
 	qfitsloader_free_buffers(&ld);
+
+	free(rimg);
+
 	return img;
 }
 
-int plot_image_read(plotimage_t* args) {
+static int plot_image_read(const plot_args_t* pargs, plotimage_t* args) {
 	set_format(args);
 	switch (args->format) {
 	case PLOTSTUFF_FORMAT_JPG:
@@ -329,7 +355,8 @@ int plot_image_read(plotimage_t* args) {
 		args->img = cairoutils_read_ppm(args->fn, &(args->W), &(args->H));
 		break;
 	case PLOTSTUFF_FORMAT_FITS:
-		args->img = read_fits_image(args);
+		assert(pargs);
+		args->img = read_fits_image(pargs, args);
 		break;
 	case PLOTSTUFF_FORMAT_PDF:
 		ERROR("PDF format not supported");
@@ -352,7 +379,7 @@ int plot_image_plot(const char* command,
 	plotimage_t* args = (plotimage_t*)baton;
 	// Plot it!
 	if (!args->img) {
-		if (plot_image_read(args)) {
+		if (plot_image_read(pargs, args)) {
 			return -1;
 		}
 	}
@@ -394,7 +421,8 @@ int plot_image_getsize(plotimage_t* args, int* W, int* H) {
 	if (args->format == PLOTSTUFF_FORMAT_FITS)
 		return read_fits_size(args, W, H);
 	if (!args->img) {
-		if (plot_image_read(args)) {
+		// HACK -- only FITS format needs pargs.
+		if (plot_image_read(NULL, args)) {
 			return -1;
 		}
 	}
@@ -407,7 +435,7 @@ int plot_image_getsize(plotimage_t* args, int* W, int* H) {
 
 int plot_image_setsize(plot_args_t* pargs, plotimage_t* args) {
 	if (!args->img) {
-		if (plot_image_read(args)) {
+		if (plot_image_read(pargs, args)) {
 			return -1;
 		}
 	}

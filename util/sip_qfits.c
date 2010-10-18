@@ -336,13 +336,13 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 
 	if ((sip.a_order == -1) || 
 		(sip.b_order == -1)) {
-		ERROR("SIP: failed to read polynomial orders (A_ORDER=%i, B_ORDER=%i, -1 means absent)",
+		ERROR("SIP: failed to read polynomial orders (A_ORDER=%i, B_ORDER=%i, -1 means absent)\n",
 			  sip.a_order, sip.b_order);
 		return NULL;
 	}
 	if ((sip.ap_order == 0) || 
 		(sip.bp_order == 0)) {
-		logverb("Warning: SIP: failed to read polynomial orders (A_ORDER=%i, B_ORDER=%i (-1 means absent), AP_ORDER=%i, BP_ORDER=%i, (0 means absent)",
+		logverb("Warning: SIP: failed to read polynomial orders (A_ORDER=%i, B_ORDER=%i (-1 means absent), AP_ORDER=%i, BP_ORDER=%i, (0 means absent)\n",
 				sip.a_order, sip.b_order, sip.ap_order, sip.bp_order);
 	}
 

@@ -121,7 +121,7 @@ BACKEND_OBJS := \
 
 PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o \
 		plotannotations.o plotgrid.o plotoutline.o plotindex.o plotradec.o \
-		plothealpix.o plotmatch.o matchfile.o matchobj.o
+		plothealpix.o plotmatch.o matchfile.o matchobj.o wcs-resample.o
 
 $(BACKEND_LIB): $(BACKEND_OBJS)
 	-rm -f $@

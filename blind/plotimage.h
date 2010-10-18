@@ -8,6 +8,10 @@ struct plotimage_args {
 	char* fn;
 	int format; // PLOTSTUFF_FORMAT_*
 
+	// Use slow but correct resampling?
+	// default is to use faster but approximate Cairo rendering.
+	bool resample;
+
 	double alpha;
 
 	anwcs_t* wcs;
