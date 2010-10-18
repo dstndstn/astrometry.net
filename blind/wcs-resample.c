@@ -72,7 +72,7 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
 
     // read input image.
     memset(&qinimg, 0, sizeof(qinimg));
-    qinimg.filename = infitsfn;
+    qinimg.filename = (char*)infitsfn;
     // primary extension
     qinimg.xtnum = 0;
     // first pixel plane
@@ -159,50 +159,111 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 	int i,j;
     double inxmin, inxmax, inymin, inymax;
 
+	int B = 50;
+
+	int BW, BH;
+	bool* bib = NULL;
+	bool* bib2 = NULL;
+	int bi,bj;
+
+	// Check whether output pixels overlap with input pixels,
+	// on a grid of output pixel positions.
+	BW = (int)ceil(outW / (float)B);
+	BH = (int)ceil(outH / (float)B);
+	bib = calloc(BW*BH, sizeof(bool));
+	for (i=0; i<BH; i++) {
+		for (j=0; j<BW; j++) {
+			int x,y;
+			double ra,dec;
+			y = MIN(outH-1, B*i);
+			x = MIN(outW-1, B*j);
+            if (anwcs_pixelxy2radec(outwcs, x+1, y+1, &ra, &dec))
+				continue;
+			bib[i*BW+j] = anwcs_radec_is_inside_image(inwcs, ra, dec);
+		}
+	}
+	if (log_get_level() >= LOG_VERB) {
+		logverb("Input image overlaps output image:\n");
+		for (i=0; i<BH; i++) {
+			for (j=0; j<BW; j++)
+				logverb((bib[i*BW+j]) ? "*" : ".");
+			logverb("\n");
+		}
+	}
+	// Grow the in-bounds area:
+	bib2 = calloc(BW*BH, sizeof(bool));
+	for (i=0; i<BH; i++)
+		for (j=0; j<BW; j++) {
+			int di,dj;
+			if (!bib[i*BW+j])
+				continue;
+			for (di=-1; di<=1; di++)
+				for (dj=-1; dj<=1; dj++)
+					bib2[(MIN(MAX(i+di, 0), BH-1))*BW + (MIN(MAX(j+dj, 0), BW-1))] = TRUE;
+		}
+	// swap!
+	free(bib);
+	bib = bib2;
+	bib2 = NULL;
+
+	if (log_get_level() >= LOG_VERB) {
+		logverb("After growing:\n");
+		for (i=0; i<BH; i++) {
+			for (j=0; j<BW; j++)
+				logverb((bib[i*BW+j]) ? "*" : ".");
+			logverb("\n");
+		}
+	}
+
     inxmax = -HUGE_VAL;
     inymax = -HUGE_VAL;
     inxmin =  HUGE_VAL;
     inymin =  HUGE_VAL;
 
-    for (j=0; j<outH; j++) {
-        for (i=0; i<outW; i++) {
-            double xyz[3];
-            double inx, iny;
-            int x,y;
-            //int xlo,xhi,ylo,yhi;
-            // +1 for FITS pixel coordinates.
-            if (anwcs_pixelxy2xyz(outwcs, i+1, j+1, xyz) ||
-				anwcs_xyz2pixelxy(inwcs, xyz, &inx, &iny))
-                continue;
+	// We've expanded the in-bounds boxes by 1 in each direction,
+	// so this (using the lower-left corner) should be ok.
+	for (bj=0; bj<(BH-1); bj++) {
+		for (bi=0; bi<(BW-1); bi++) {
+			int jlo,jhi,ilo,ihi;
+			if (!bib[bj*BW + bi])
+				continue;
+			jlo = bj * B;
+			jhi = MIN(outH, (bj+1)*B);
+			ilo = bi * B;
+			ihi = MIN(outW, (bi+1)*B);
 
-            // FIXME - Nearest-neighbour resampling!!
-            // -1 for FITS pixel coordinates.
-            x = round(inx - 1.0);
-            y = round(iny - 1.0);
+			for (j=jlo; j<jhi; j++) {
+				for (i=ilo; i<ihi; i++) {
 
-            // keep track of the bounds of the requested pixels in the
-            // input image.
-            inxmax = MAX(inxmax, x);
-            inymax = MAX(inymax, y);
-            inxmin = MIN(inxmin, x);
-            inymin = MIN(inymin, y);
+					double xyz[3];
+					double inx, iny;
+					int x,y;
+					// +1 for FITS pixel coordinates.
+					if (anwcs_pixelxy2xyz(outwcs, i+1, j+1, xyz) ||
+						anwcs_xyz2pixelxy(inwcs, xyz, &inx, &iny))
+						continue;
 
-            if (x < 0 || x >= inW || y < 0 || y >= inH)
-                continue;
-            outimg[j * outW + i] = inimg[y * inW + x];
+					// FIXME - Nearest-neighbour resampling!!
+					// -1 for FITS pixel coordinates.
+					x = round(inx - 1.0);
+					y = round(iny - 1.0);
+					
+					// keep track of the bounds of the requested pixels in the
+					// input image.
+					inxmax = MAX(inxmax, x);
+					inymax = MAX(inymax, y);
+					inxmin = MIN(inxmin, x);
+					inymin = MIN(inymin, y);
 
-            /*
-             ylo = MAX(0, iny-a);
-             yhi = MIN(inH-1, iny+a);
-             xlo = MAX(0, inx-a);
-             xhi = MIN(inW-1, inx+a);
-             for (y=ylo; y<=yhi; y++) {
-             for (x=xlo; x<=xhi; x++) {
-             }
-             }
-             */
-        }
-    }
+					if (x < 0 || x >= inW || y < 0 || y >= inH)
+						continue;
+					outimg[j * outW + i] = inimg[y * inW + x];
+				}
+			}
+		}
+	}
+
+	free(bib);
 
     logmsg("Bounds of the pixels requested from the input image:\n");
     logmsg("  x: %g to %g\n", inxmin, inxmax);
