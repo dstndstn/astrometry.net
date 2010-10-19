@@ -34,6 +34,7 @@ include $(COMMON)/makefile.cairo
 include $(COMMON)/makefile.netpbm
 include $(COMMON)/makefile.png
 include $(COMMON)/makefile.jpeg
+include $(COMMON)/makefile.gsl
 
 LDFLAGS := $(LDFLAGS_DEF)
 LDFLAGS += -lm
@@ -69,7 +70,7 @@ $(COMMON)/cairoutils.o:
 	$(MAKE) -C $(COMMON) cairoutils.o
 
 load-db: load-db.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) $(NETPBM_LIB) $(JPEG_LIB) $(PNG_LIB)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) $(NETPBM_LIB) $(JPEG_LIB) $(PNG_LIB) $(GSL_LIB)
 
 image-pyramid: image-pyramid.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) $(NETPBM_LIB) $(JPEG_LIB) $(PNG_LIB)
@@ -96,7 +97,7 @@ tilerender: $(TILERENDER_OBJS) \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) \
 		$(COMMON)/cairoutils.o $(BLIND_DIR)/matchfile.o $(BLIND_DIR)/matchobj.o
 	$(MAKE) -C $(COMMON) cairoutils.o
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) $(NETPBM_LIB) $(JPEG_LIB) $(PNG_LIB) -lz
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS) $(NETPBM_LIB) $(JPEG_LIB) $(PNG_LIB) $(GSL_LIB) -lz
 
 render-mercator: render-mercator.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)

@@ -191,11 +191,11 @@ $(ANFILES_LIB): $(ANFILES_OBJ) $(ANFILES_DEPS)
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
 _sip.so: sip-utils.o gslutils.o sip.o starutil.o mathutil.o sip_qfits.o \
-		fitsioutils.o ioutils.o bl.o os-features.o an-endian.o \
-		errors.o log.o $(QFITS_LIB) $(GSL_LIB)
+		fitsioutils.o errors.o ioutils.o bl.o os-features.o an-endian.o \
+		log.o $(QFITS_LIB) $(GSL_LIB)
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
-_healpix.so: healpix-utils.o healpix.o permutedsort.o starutil.o mathutil.o errors.o bl.o log.o os-features.o
+_healpix.so: healpix-utils.o healpix.o permutedsort.o starutil.o mathutil.o errors.o ioutils.o bl.o log.o os-features.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
 index_wrap.c: index.i index.h
