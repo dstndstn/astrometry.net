@@ -2,6 +2,7 @@
 #define _LOG_H
 
 #include <stdio.h>
+#include <stdarg.h>
 
 enum log_level {
 	LOG_NONE,
@@ -11,11 +12,24 @@ enum log_level {
 	LOG_ALL
 };
 
+typedef void (*logfunc_t)(void* baton, enum log_level, const char* file, int line, const char* format, va_list va);
+//typedef void (*logfunc2_t)(void* baton, enum log_level, const char* file, int line, const char* string);
+
 struct log_t {
 	enum log_level level;
     FILE* f;
+	// User-specified logging functions
+	logfunc_t logfunc;
+	void* baton;
 };
 typedef struct log_t log_t;
+
+/**
+ Send log messages to the user-specified logging function (as well as
+ to the FILE*, if it is set; use log_to(NULL) to only send messages to
+ the user-specified function.
+ */
+void log_use_function(logfunc_t func, void* baton);
 
 /**
  Make all logging commands thread-specific rather than global.
@@ -60,25 +74,30 @@ log_t* log_create(const enum log_level level);
  */
 void log_free(log_t* logger);
 
-/**
- * Log a message
- */
-
-#define LOG_TEMPLATE(name) \
-	void name(const char* format, ...)                      \
-		__attribute__ ((format (printf, 1, 2)));             \
-	void name##_(const log_t* log, const char* format, ...) \
-		__attribute__ ((format (printf, 2, 3)));             \
-
-// Note that these must match corresponding templates in log.c
+#define LOG_TEMPLATE(name)												\
+	void log_##name(const char* file, int line, const char* format, ...) \
+		 __attribute__ ((format (printf, 3, 4)));
 LOG_TEMPLATE(logmsg);
 LOG_TEMPLATE(logerr);
 LOG_TEMPLATE(logverb);
-LOG_TEMPLATE(debug);
 LOG_TEMPLATE(logdebug);
 
+void log_loglevel(enum log_level level, const char* file, int line, const char* format, ...)
+	__attribute__ ((format (printf, 4, 5)));
+
+
+/**
+ * Log a message:
+ */
+
+#define logerr(  x, ...) log_logerr(  __FILE__, __LINE__, x, ##__VA_ARGS__)
+#define logmsg(  x, ...) log_logmsg(  __FILE__, __LINE__, x, ##__VA_ARGS__)
+#define logverb( x, ...) log_logverb( __FILE__, __LINE__, x, ##__VA_ARGS__)
+#define debug(   x, ...) log_logdebug(__FILE__, __LINE__, x, ##__VA_ARGS__)
+#define logdebug(x, ...) log_logdebug(__FILE__, __LINE__, x, ##__VA_ARGS__)
+
 // log at a particular level.
-void loglevel(enum log_level level, const char* format, ...);
+#define loglevel(loglvl, format, ...) log_loglevel(loglvl, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
 int log_get_level();
 

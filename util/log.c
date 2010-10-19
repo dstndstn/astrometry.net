@@ -29,11 +29,11 @@ static log_t* get_logger() {
     return &g_logger;
 }
 
-
-
 void log_init_structure(log_t* logger, enum log_level level) {
 	logger->level = level;
     logger->f = stdout;
+	logger->logfunc = NULL;
+	logger->baton = NULL;
 }
 
 void log_init(enum log_level level) {
@@ -54,6 +54,12 @@ void log_to_fd(int fd) {
     log_to(fid);
 }
 
+void log_use_function(logfunc_t func, void* baton) {
+	log_t* l = get_logger();
+	l->logfunc = func;
+	l->baton = baton;
+}
+
 log_t* log_create(enum log_level level) {
 	log_t* logger = calloc(1, sizeof(log_t));
 	return logger;
@@ -67,20 +73,28 @@ void log_free(log_t* log) {
 AN_THREAD_DECLARE_STATIC_MUTEX(loglock);
 
 static void loglvl(const log_t* logger, enum log_level level,
+				   const char* file, int line,
                    const char* format, va_list va) {
 	if (level > logger->level)
 		return;
 	AN_THREAD_LOCK(loglock);
-	vfprintf(logger->f, format, va);
-	fflush(logger->f);
+	if (logger->f) {
+		//fprintf(logger->f, "%s:%i ", file, line);
+		vfprintf(logger->f, format, va);
+		fflush(logger->f);
+	}
+	if (logger->logfunc) {
+		logger->logfunc(logger->baton, level, file, line, format, va);
+	}
 	AN_THREAD_UNLOCK(loglock);
 }
 
-void loglevel(enum log_level level,
-              const char* format, ...) {
+void log_loglevel(enum log_level level,
+				  const char* file, int line,
+				  const char* format, ...) {
     va_list va;
     va_start(va, format);
-    loglvl(get_logger(), level, format, va);
+    loglvl(get_logger(), level, file, line, format, va);
     va_end(va);
 }
 
@@ -92,24 +106,26 @@ FILE* log_get_fid() {
 	return get_logger()->f;
 }
 
-#define LOGGER_TEMPLATE(name, level)                  \
-	void                                                \
-	name##_(const log_t* logger, const char* format, ...) { \
-		va_list va;                                       \
-		va_start(va, format);                             \
-		loglvl(logger, level, format, va);                \
-		va_end(va);                                       \
-	}                                                   \
-	void                                                \
-	name(const char* format, ...) {                     \
-		va_list va;                                       \
-		va_start(va, format);                             \
-		loglvl(get_logger(), level, format, va);       \
-		va_end(va);                                       \
-	}                                                   \
+#define LOGGER_TEMPLATE(name, level)									\
+	void																\
+	name##_(const log_t* logger, const char* file, int line, const char* format, ...) {	\
+		va_list va;														\
+		va_start(va, format);											\
+		loglvl(logger, level, file, line, format, va);					\
+		va_end(va);														\
+	}																	\
+	void																\
+	name(const char* file, int line, const char* format, ...) {			\
+		va_list va;														\
+		va_start(va, format);											\
+		loglvl(get_logger(), level, file, line, format, va);			\
+		va_end(va);														\
+	}																	\
+	
+LOGGER_TEMPLATE(log_logerr,  LOG_ERROR);
+LOGGER_TEMPLATE(log_logmsg,  LOG_MSG);
+LOGGER_TEMPLATE(log_logverb, LOG_VERB);
+LOGGER_TEMPLATE(log_logdebug,LOG_ALL);
 
-LOGGER_TEMPLATE(logerr,  LOG_ERROR);
-LOGGER_TEMPLATE(logmsg,  LOG_MSG);
-LOGGER_TEMPLATE(logverb, LOG_VERB);
-LOGGER_TEMPLATE(debug,   LOG_ALL);
-LOGGER_TEMPLATE(logdebug,LOG_ALL);
+
+

@@ -36,6 +36,16 @@ void* thread2(void* v) {
     return NULL;
 }
 
+typedef struct {
+	int magic;
+} teststruc_t;
+
+static void logfunc(void* baton, enum log_level loglvl, const char* file, int line, const char* format, va_list va) {
+	teststruc_t* t = baton;
+	printf("Magic: %i.  %s:%i: level %i ", t->magic, file, line, loglvl);
+	vprintf(format, va);
+}
+
 void test_log_ts(CuTest* tc) {
     pthread_t t1, t2;
     FILE *f1, *f2;
@@ -83,4 +93,24 @@ void test_log_ts(CuTest* tc) {
     free(fn2);
 }
 
+
+
+void test_log_func(CuTest* tc) {
+	log_init(LOG_VERB);
+
+	teststruc_t ts;
+	ts.magic = 42;
+	log_use_function(logfunc, &ts);
+	log_to(NULL);
+
+	logmsg("Testing 1 2 3\n");
+	logdebug("Testing 1 2 3\n");
+
+	log_use_function(NULL, NULL);
+	log_to(stdout);
+
+	logmsg("Testing 1 2 3 4\n");
+	logdebug("Testing 1 2 3 4\n");
+
+}
 
