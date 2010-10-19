@@ -28,14 +28,28 @@
 #include "bl.h"
 #include "keywords.h"
 
+// forward declaration
+struct errors;
+typedef struct errors err_t;
+
+typedef void (errfunc_t)(void* baton, err_t* errstate, const char* file, int line, const char* func, const char* format, va_list va);
+
+struct errentry {
+	char* file;
+	int line;
+	char* func;
+	char* str;
+};
+typedef struct errentry errentry_t;
+
 struct errors {
     FILE* print;
     bool save;
-    sl* modstack;
-    sl* errstack;
-};
-typedef struct errors err_t;
+	bl* errstack;
 
+	errfunc_t* errfunc;
+	void* baton;
+};
 
 /***    Global functions    ***/
 
@@ -58,16 +72,21 @@ void report_errno();
 
 #define SYSERROR(fmt, ...) do { report_errno(); report_error(__FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__); } while(0)
 
-// free globals.
-void errors_free();
-
 void errors_log_to(FILE* f);
+
+/* Sends all errors to the given function for processing;
+ turns off printing and saving (ie, err_t.print and err_t.save)
+ */
+void errors_use_function(errfunc_t* func, void* baton);
 
 void errors_print_stack(FILE* f);
 
 void errors_clear_stack();
 
 int errors_print_on_exit(FILE* fid);
+
+// free globals.
+void errors_free();
 
 /*
  A convenience routine for times when you want to suppress printing error
@@ -83,22 +102,31 @@ void errors_start_logging_to_string();
  */
 char* errors_stop_logging_to_string(const char* separator);
 
+/*
+ Convenience function to report an error from the regex module.
+ */
 void errors_regex_error(int errcode, const regex_t* re);
 
 /***    End globals   ***/
-
-
-
-
 
 
 err_t* error_new();
 
 void error_free(err_t* e);
 
-int error_nerrs(err_t* e);
+void error_stack_add_entryv(err_t* e, const char* file, int line, const char* func, const char* format, va_list va);
 
-char* error_get_errstr(err_t* e, int i);
+void error_stack_add_entry(err_t* e, const char* file, int line, const char* func, const char* str);
+
+errentry_t* error_stack_get_entry(const err_t* e, int i);
+
+int error_stack_N_entries(const err_t* e);
+
+int error_nerrs(const err_t* e);
+
+char* error_get_errstr(const err_t* e, int i);
+
+void error_stack_clear(err_t* e);
 
 void
 ATTRIB_FORMAT(printf,5,6)
@@ -113,7 +141,6 @@ void error_print_stack(err_t* e, FILE* f);
 // returns the error messages (not module:lines) in a newly-allocated string
 char* error_get_errs(err_t* e, const char* separator);
 
-void error_clear_stack(err_t* e);
 
 #endif
 

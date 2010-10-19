@@ -29,11 +29,15 @@ static pl* estack = NULL;
 static bool atexit_registered = FALSE;
 
 static err_t* error_copy(err_t* e) {
+	int i, N;
     err_t* copy = error_new();
     copy->print = e->print;
     copy->save = e->save;
-    sl_append_contents(copy->errstack, e->errstack);
-    sl_append_contents(copy->modstack, e->modstack);
+	N = error_stack_N_entries(e);
+	for (i=0; i<N; i++) {
+		errentry_t* ee = error_stack_get_entry(e, i);
+		error_stack_add_entry(copy, ee->file, ee->line, ee->func, ee->str);
+	}
     return copy;
 }
 
@@ -77,13 +81,17 @@ void errors_log_to(FILE* f) {
     e->print = f;
 }
 
-void errors_clear_stack() {
-    error_clear_stack(errors_get_state());
+void errors_use_function(errfunc_t* func, void* baton) {
+    err_t* e;
+    e = errors_get_state();
+    e->errfunc = func;
+	e->baton = baton;
+	e->print = NULL;
+	e->save = FALSE;
 }
 
-void error_clear_stack(err_t* e) {
-    sl_remove_all(e->modstack);
-    sl_remove_all(e->errstack);
+void errors_clear_stack() {
+    error_stack_clear(errors_get_state());
 }
 
 err_t* errors_get_state() {
@@ -149,24 +157,24 @@ void report_errno() {
 
 err_t* error_new() {
     err_t* e = calloc(1, sizeof(err_t));
-    e->modstack = sl_new(4);
-    e->errstack = sl_new(4);
+    e->errstack = bl_new(4, sizeof(errentry_t));
     return e;
 }
 
 void error_free(err_t* e) {
     if (!e) return;
-    sl_free2(e->modstack);
-    sl_free2(e->errstack);
+	error_stack_clear(e);
+	bl_free(e->errstack);
     free(e);
 }
 
-int error_nerrs(err_t* e) {
-    return sl_size(e->errstack);
+int error_nerrs(const err_t* e) {
+    return error_stack_N_entries(e);
 }
 
-char* error_get_errstr(err_t* e, int i) {
-    return sl_get(e->errstack, i);
+char* error_get_errstr(const err_t* e, int i) {
+	errentry_t* ee = error_stack_get_entry(e, i);
+	return ee->str;
 }
 
 void error_report(err_t* e, const char* module, int line, const char* func, 
@@ -188,28 +196,41 @@ void error_reportv(err_t* e, const char* module, int line,
         fprintf(e->print, "\n");
     }
     if (e->save) {
-        sl_appendvf(e->errstack, fmt, va);
-        if (line >= 0) {
-            sl_appendf(e->modstack, "%s:%i:%s", module, line, func);
-        } else {
-            sl_appendf(e->modstack, "%s", module);
-        }
+		error_stack_add_entryv(e, module, line, func, fmt, va);
     }
+	if (e->errfunc) {
+		e->errfunc(e->baton, e, module, line, func, fmt, va);
+	}
 }
 
 void error_print_stack(err_t* e, FILE* f) {
     int i;
-    for (i=sl_size(e->modstack)-1; i>=0; i--) {
-        char* mod = sl_get(e->modstack, i);
-        char* err = sl_get(e->errstack, i);
-        if (i < sl_size(e->modstack)-1)
-            fprintf(f, "  ");
-        fprintf(f, "%s: %s\n", mod, err);
+	bool first=TRUE;
+    for (i=error_stack_N_entries(e)-1; i>=0; i--) {
+		errentry_t* ee = error_stack_get_entry(e, i);
+		if (!first)
+			fprintf(f, " ");
+        if (ee->line >= 0) {
+			fprintf(f, "%s:%i:%s %s\n", ee->file, ee->line, ee->func, ee->str);
+        } else {
+			fprintf(f, "%s:%s %s\n", ee->file, ee->func, ee->str);
+        }
+		first = FALSE;
     }
 }
 
 char* error_get_errs(err_t* e, const char* separator) {
-    return sl_join_reverse(e->errstack, separator);
+	sl* errs = sl_new(4);
+	int i,N;
+	char* rtn;
+	N = error_stack_N_entries(e);
+	for (i=0; i<N; i++) {
+		errentry_t* ee = error_stack_get_entry(e, i);
+		sl_append(errs, ee->str);
+	}
+	rtn = sl_join_reverse(errs, separator);
+	sl_free2(errs);
+	return rtn;
 }
 
 void errors_regex_error(int errcode, const regex_t* re) {
@@ -217,3 +238,40 @@ void errors_regex_error(int errcode, const regex_t* re) {
     regerror(errcode, re, str, sizeof(str));
     error_report(errors_get_state(), "regex", -1, NULL, "%s", str);
 }
+
+void error_stack_add_entryv(err_t* e, const char* file, int line, const char* func, const char* format, va_list va) {
+	char* str;
+	vasprintf(&str, format, va);
+	error_stack_add_entry(e, file, line, func, str);
+	free(str);
+}
+
+ void error_stack_add_entry(err_t* e, const char* file, int line, const char* func, const char* str) {
+	errentry_t ee;
+	ee.file = strdup_safe(file);
+	ee.line = line;
+	ee.func = strdup_safe(func);
+	ee.str = strdup_safe(str);
+	bl_append(e->errstack, &ee);
+}
+
+errentry_t* error_stack_get_entry(const err_t* e, int i) {
+	return bl_access(e->errstack, i);
+}
+
+int error_stack_N_entries(const err_t* e) {
+	return bl_size(e->errstack);
+}
+
+void error_stack_clear(err_t* e) {
+	int i;
+	int N = bl_size(e->errstack);
+	for (i=0; i<N; i++) {
+		errentry_t* ee = bl_access(e->errstack, i);
+		free(ee->file);
+		free(ee->func);
+		free(ee->str);
+	}
+	bl_remove_all(e->errstack);
+}
+
