@@ -73,7 +73,7 @@ void log_free(log_t* log) {
 AN_THREAD_DECLARE_STATIC_MUTEX(loglock);
 
 static void loglvl(const log_t* logger, enum log_level level,
-				   const char* file, int line,
+				   const char* file, int line, const char* func,
                    const char* format, va_list va) {
 	if (level > logger->level)
 		return;
@@ -84,17 +84,17 @@ static void loglvl(const log_t* logger, enum log_level level,
 		fflush(logger->f);
 	}
 	if (logger->logfunc) {
-		logger->logfunc(logger->baton, level, file, line, format, va);
+		logger->logfunc(logger->baton, level, file, line, func, format, va);
 	}
 	AN_THREAD_UNLOCK(loglock);
 }
 
 void log_loglevel(enum log_level level,
-				  const char* file, int line,
+				  const char* file, int line, const char* func,
 				  const char* format, ...) {
     va_list va;
     va_start(va, format);
-    loglvl(get_logger(), level, file, line, format, va);
+    loglvl(get_logger(), level, file, line, func, format, va);
     va_end(va);
 }
 
@@ -108,17 +108,17 @@ FILE* log_get_fid() {
 
 #define LOGGER_TEMPLATE(name, level)									\
 	void																\
-	name##_(const log_t* logger, const char* file, int line, const char* format, ...) {	\
+	name##_(const log_t* logger, const char* file, int line, const char* func, const char* format, ...) { \
 		va_list va;														\
 		va_start(va, format);											\
-		loglvl(logger, level, file, line, format, va);					\
+		loglvl(logger, level, file, line, func, format, va);				\
 		va_end(va);														\
 	}																	\
 	void																\
-	name(const char* file, int line, const char* format, ...) {			\
+	name(const char* file, int line, const char* func, const char* format, ...) { \
 		va_list va;														\
 		va_start(va, format);											\
-		loglvl(get_logger(), level, file, line, format, va);			\
+		loglvl(get_logger(), level, file, line, func, format, va);		\
 		va_end(va);														\
 	}																	\
 	

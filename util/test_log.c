@@ -40,9 +40,9 @@ typedef struct {
 	int magic;
 } teststruc_t;
 
-static void logfunc(void* baton, enum log_level loglvl, const char* file, int line, const char* format, va_list va) {
+static void logfunc(void* baton, enum log_level loglvl, const char* file, int line, const char* func, const char* format, va_list va) {
 	teststruc_t* t = baton;
-	printf("Magic: %i.  %s:%i: level %i ", t->magic, file, line, loglvl);
+	printf("Magic: %i.  %s:%i(%s): level %i ", t->magic, file, line, func, loglvl);
 	vprintf(format, va);
 }
 
