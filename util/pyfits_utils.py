@@ -150,12 +150,18 @@ class tabledata(object):
 	def __getitem__(self, I):
 		rtn = tabledata()
 		if type(I) is slice:
-			print 'I:', I
-			# HACK... "[:]" -> slice(None, None, None)
-			if I.start is None and I.stop is None and I.step is None:
-				I = numpy.arange(len(self))
-			else:
-				I = numpy.arange(I.start, I.stop, I.step)
+			#print 'I:', I
+			# Replace 'None' elements of the slice:
+			i0 = I.start
+			if i0 is None:
+				i0 = 0
+			i1 = I.stop
+			if i1 is None:
+				i1 = len(self)
+			step = I.step
+			if step is None:
+				step = 1
+			I = numpy.arange(i0, i1, step)
 		for name,val in self.__dict__.items():
 			if name.startswith('_'):
 				continue
