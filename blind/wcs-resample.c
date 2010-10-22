@@ -159,7 +159,7 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 	int i,j;
     double inxmin, inxmax, inymin, inymax;
 
-	int B = 50;
+	int B = 20;
 
 	int BW, BH;
 	bool* bib = NULL;
@@ -222,14 +222,14 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 
 	// We've expanded the in-bounds boxes by 1 in each direction,
 	// so this (using the lower-left corner) should be ok.
-	for (bj=0; bj<(BH-1); bj++) {
-		for (bi=0; bi<(BW-1); bi++) {
+	for (bj=0; bj<BH; bj++) {
+		for (bi=0; bi<BW; bi++) {
 			int jlo,jhi,ilo,ihi;
 			if (!bib[bj*BW + bi])
 				continue;
-			jlo = bj * B;
+			jlo = MIN(outH,  bj   *B);
 			jhi = MIN(outH, (bj+1)*B);
-			ilo = bi * B;
+			ilo = MIN(outW,  bi   *B);
 			ihi = MIN(outW, (bi+1)*B);
 
 			for (j=jlo; j<jhi; j++) {
