@@ -1,6 +1,9 @@
 from numpy import *
 import datetime
 
+def ra_normalize(ra):
+	return mod(ra, 360.)
+
 # Galactic (l,b) to Ecliptic (ra,dec).
 # Lifted from LSST's afw.coord.Coord class by Steve Bickerton.
 def lbtoradec(l, b):
@@ -402,6 +405,7 @@ def dmsstring2dec(s):
 
 # RA in degrees
 def ra2hms(ra):
+	ra = ra_normalize(ra)
 	h = ra * 24. / 360.
 	hh = int(floor(h))
 	m = (h - hh) * 60.
@@ -411,7 +415,7 @@ def ra2hms(ra):
 
 # Dec in degrees
 def dec2dms(dec):
-	sgn = (dec > 0) and 1. or -1.
+	sgn = (dec >= 0) and 1. or -1.
 	d = dec * sgn
 	dd = int(floor(d))
 	m = (d - dd) * 60.

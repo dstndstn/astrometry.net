@@ -184,8 +184,16 @@ class tabledata(object):
 																		 or (I.dtype == bool)):
 					rtn.set(name, [val[i] for i,b in enumerate(I) if b])
 					ok = True
-				if type(I) is numpy.ndarray and hasattr(I, 'dtype') and I.dtype.type in [int, numpy.int64, numpy.int]:
+				inttypes = [int, numpy.int64, numpy.int32, numpy.int]
+				#if type(I) is numpy.ndarray and hasattr(I, 'dtype') and I.dtype.type in inttypes:
+				if type(I) is numpy.ndarray and all(I.astype(int) == I):
 					rtn.set(name, [val[i] for i in I])
+					ok = True
+				#if type(I) in inttypes:
+				#	rtn.set(name, val[i])
+				#	ok = True
+				if isscalar(I) and hasattr(I, 'dtype') and I.dtype in inttypes:
+					rtn.set(name, val[int(I)])
 					ok = True
 				if hasattr(I, '__len__') and len(I) == 0:
 					rtn.set(name, [])
@@ -206,7 +214,16 @@ class tabledata(object):
 						print '  index dtype:', I.dtype
 						print '  index dtype has type:', type(I.dtype)
 						print '  index dtype.type:', I.dtype.type
-						print 'options are', [int, numpy.int64, numpy.int]
+						print 'options are', inttypes
+						print 'I is numpy.ndarray?', (type(I) is numpy.ndarray)
+						print 'has dtype?', (hasattr(I, 'dtype'))
+						print 'I.dtype.type in inttypes:', (I.dtype.type in inttypes)
+						print 'equal:', [(t, (I.dtype.type == t)) for t in inttypes]
+						print 'I.astype(int)', I.astype(int)
+
+						import pdb
+						pdb.set_trace()
+
 					print 'my length:', self._length
 					raise Exception('error in fits_table indexing (table_data.__getitem__)')
 
