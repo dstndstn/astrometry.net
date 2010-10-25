@@ -8,9 +8,9 @@ def add_nonstructural_headers(fromhdr, tohdr):
 						  'TFIELDS',]) or
 			card.key.startswith('NAXIS') or
 			card.key.startswith('TTYPE') or
-			card.key.startswith('TFORM') or
-			card.key.startswith('TUNIT') or
-			card.key.startswith('TDISP')):
+			card.key.startswith('TFORM')):
+			#card.key.startswith('TUNIT') or
+			#card.key.startswith('TDISP')):
 			#print 'skipping card', card.key
 			continue
 		#if tohdr.has_key(card.key):
