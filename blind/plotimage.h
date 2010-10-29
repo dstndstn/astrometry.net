@@ -59,6 +59,15 @@ int plot_image_set_filename(plotimage_t* args, const char* fn);
 
 int plot_image_setsize(plot_args_t* pargs, plotimage_t* args);
 
+// 'percentile' must be in [0,1]
+// results are placed in 'rgbout'
+// don't rename 'rgbout' -- that name is used in plotstuff.i by SWIG
+int plot_image_get_percentile(plot_args_t* pargs, plotimage_t* args,
+							  double percentile,
+							  unsigned char* rgbout);
+
+void plot_image_add_to_pixels(plotimage_t* args, int rgb[3]);
+
 //void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H, double alpha);
 
 extern const plotter_t plotter_image;

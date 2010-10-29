@@ -23,8 +23,63 @@
 #define true 1
 #define false 0
 %}
+
+%include "typemaps.i"
+
 %include "plotstuff.h"
+
+/*
+	%apply unsigned char* rgboutdouble *OUTPUT { double *result };
+	%inlne %{
+	extern void add(double a, double b, double *result);
+	%}
+*/
+
+
+/* Set the input argument to point to a temporary variable */
+%typemap(in, numinputs=0) unsigned char* rgbout (unsigned char temp[3]) {
+   $1 = temp;
+}
+
+%typemap(argout) unsigned char* rgbout {
+  // Append output value $1 to $result
+  if (result) {
+    Py_DECREF($result);
+    $result = Py_None;
+  } else {
+    int i;
+    Py_DECREF($result);
+    $result = PyList_New(3);
+    for (i=0; i<3; i++) {
+      PyObject *o = PyInt_FromLong((long)$1[i]);
+      PyList_SetItem($result,i,o);
+    }
+  }
+}
+
+%typemap(in) int rgb[3] (int temp[3]) {
+  int i;
+  // Convert sequence of ints to int[3]
+  if (!PySequence_Check($input) ||	 
+  	 (PySequence_Length($input) != 3)) {
+    PyErr_SetString(PyExc_ValueError,"Expected a sequence of length 3");
+    return NULL;
+  }
+  for (i=0; i<3; i++) {
+    PyObject *o = PySequence_GetItem($input, i);
+    if (PyNumber_Check(o)) {
+      temp[i] = (int)PyInt_AsLong(o);
+    } else {
+      PyErr_SetString(PyExc_ValueError,"Sequence elements must be numbers");
+      return NULL;
+    }
+  }
+  $1 = temp;
+}
+
 %include "plotimage.h"
+
+
 %include "plotoutline.h"
 %include "plotgrid.h"
 %include "plotindex.h"

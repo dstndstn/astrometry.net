@@ -29,6 +29,8 @@
 #include "permutedsort.h"
 #include "wcs-resample.h"
 
+static int plot_image_read(const plot_args_t* pargs, plotimage_t* args);
+
 const plotter_t plotter_image = {
 	.name = "image",
 	.init = plot_image_init,
@@ -39,6 +41,7 @@ const plotter_t plotter_image = {
 
 static void set_format(plotimage_t* args) {
 	if (args->format == 0) {
+		assert(args->fn);
 		args->format = guess_image_format_from_filename(args->fn);
 		logverb("Guessing format of image from filename: \"%s\" -> %s\n", args->fn, image_format_name_from_code(args->format));
 	}
@@ -55,6 +58,43 @@ void* plot_image_init(plot_args_t* plotargs) {
 	args->image_null = 1.0 / 0.0;
 	//args->scalex = args->scaley = 1.0;
 	return args;
+}
+
+void plot_image_add_to_pixels(plotimage_t* args, int rgb[3]) {
+	int i, j, N;
+	assert(args->img);
+	N = args->W * args->H;
+	for (i=0; i<N; i++)
+		for (j=0; j<3; j++)
+			args->img[i*4+j] = (unsigned char)MIN(255, MAX(0, ((int)args->img[i*4+j]) + rgb[j]));
+}
+
+int plot_image_get_percentile(plot_args_t* pargs, plotimage_t* args,
+							   double percentile,
+							   unsigned char* rgb) {
+	int j;
+	int N;
+	int I;
+	if (percentile < 0.0 || percentile > 1.0) {
+		ERROR("percentile must be between 0 and 1 (ok, so it's badly named, sue me)");
+		return -1;
+	}
+
+	if (!args->img) {
+		if (plot_image_read(pargs, args)) {
+			return -1;
+		}
+	}
+
+	N = args->W * args->H;
+	I = MAX(0, MIN(N-1, floor(N * percentile)));
+	for (j=0; j<3; j++) {
+		int* P;
+		P = permuted_sort(args->img + j, 4, compare_uchars_asc, NULL, N);
+		rgb[j] = args->img[4 * P[I] + j];
+		free(P);
+	}
+	return 0;
 }
 
 //void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H, double alpha) 

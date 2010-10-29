@@ -105,6 +105,7 @@ int main(int argc, char **argv) {
 	myargs = argv + optind;
 
 	if (nmyargs != 1) {
+		ERROR("Got %i arguments; expected 1.\n", nmyargs);
 		printHelp(argv[0]);
 		exit(-1);
 	}
@@ -243,7 +244,7 @@ int main(int argc, char **argv) {
 		}
 
 		for (i=0; i<N; i++) {
-			int j;
+			//int j;
 			printf("%g, %g", radec[i*2+0], radec[i*2+1]);
 			if (getinds)
 				printf(", %i", inds[i]);

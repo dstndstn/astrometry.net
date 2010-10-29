@@ -100,11 +100,12 @@ int* permuted_sort(const void* realarray, int array_stride,
 	if (d1 op2 d2) return 1;							\
 	/* explicitly test for equality, to catch NaNs*/	\
 	if (d1 == d2) return 0;								\
-	printf("d1=%g, d2=%g\n", d1, d2);					\
 	if (isnan(d1) && isnan(d2)) return 0;				\
 	if (isnan(d1)) return 1;							\
 	if (isnan(d2)) return -1;							\
 	assert(0); return 0;
+
+	//printf("d1=%g, d2=%g\n", d1, d2);				   
 
 int compare_doubles_asc(const void* v1, const void* v2) {
 	const double d1 = *(double*)v1;
@@ -147,4 +148,17 @@ int compare_ints_desc(const void* v1, const void* v2) {
     return compare_ints_asc(v2, v1);
 }
 
+int compare_uchars_asc(const void* v1, const void* v2) {
+	const unsigned char d1 = *(unsigned char*)v1;
+	const unsigned char d2 = *(unsigned char*)v2;
+	if (d1 < d2)
+		return -1;
+	if (d1 > d2)
+		return 1;
+	return 0;
+}
+
+int compare_uchars_desc(const void* v1, const void* v2) {
+    return compare_ints_desc(v2, v1);
+}
 
