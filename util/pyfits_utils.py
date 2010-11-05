@@ -51,10 +51,10 @@ class tabledata(object):
 		return 'tabledata object with %i rows and %i columns' % (len(self), len([k for k in self.__dict__.keys() if not k.startswith('_')]))
 	def about(self):
 		keys = [k for k in self.__dict__.keys() if not k.startswith('_')]
-		print 'tabledata object with %i rows and %i columns:' % (len(self),  len(keys))
+		print 'tabledata object with %i rows and %i columns:' % (len(self),	 len(keys))
 		keys.sort()
 		for k in keys:
-			print '  ', k,
+			print '	 ', k,
 			v = self.get(k)
 			print '(%s)' % (str(type(v))),
 			if numpy.isscalar(v):
@@ -143,7 +143,7 @@ class tabledata(object):
 					#if hasattr(I, 'shape'):
 					#	print ' index shape:', I.shape
 					if hasattr(I, 'dtype'):
-						print '  index dtype:', I.dtype
+						print '	 index dtype:', I.dtype
 					print 'my length:', self._length
 					raise Exception('error in fits_table indexing')
 
@@ -172,6 +172,7 @@ class tabledata(object):
 			#try:
 				rtn.set(name, val[I])
 			elif type(val) is list and type(I) in [int, numpy.int64]:
+				#print 'slice A', type(val), list, type(I)
 				rtn.set(name, val[I])
 				
 			#except Exception as e:
@@ -182,22 +183,29 @@ class tabledata(object):
 				ok = False
 				if type(I) is numpy.ndarray and hasattr(I, 'dtype') and ((I.dtype.type in [bool, numpy.bool])
 																		 or (I.dtype == bool)):
+					#print 'slice C', name
 					rtn.set(name, [val[i] for i,b in enumerate(I) if b])
 					ok = True
 				inttypes = [int, numpy.int64, numpy.int32, numpy.int]
 				#if type(I) is numpy.ndarray and hasattr(I, 'dtype') and I.dtype.type in inttypes:
-				if type(I) is numpy.ndarray and all(I.astype(int) == I):
+				if ok:
+					pass
+				elif type(I) is numpy.ndarray and all(I.astype(int) == I):
+					print 'slice D', name
 					rtn.set(name, [val[i] for i in I])
 					ok = True
 				#if type(I) in inttypes:
 				#	rtn.set(name, val[i])
 				#	ok = True
-				if isscalar(I) and hasattr(I, 'dtype') and I.dtype in inttypes:
+				elif isscalar(I) and hasattr(I, 'dtype') and I.dtype in inttypes:
+					print 'slice E', name
 					rtn.set(name, val[int(I)])
 					ok = True
-				if hasattr(I, '__len__') and len(I) == 0:
+				elif hasattr(I, '__len__') and len(I) == 0:
+					print 'slice F', name
 					rtn.set(name, [])
 					ok = True
+
 				if not ok:
 					print 'Error in slicing an astrometry.util.pyfits_utils.table_data object (__getitem__):'
 					#print '  -->', e
@@ -211,9 +219,9 @@ class tabledata(object):
 						print ' index shape:', I.shape
 					print 'index type:', type(I)
 					if hasattr(I, 'dtype'):
-						print '  index dtype:', I.dtype
-						print '  index dtype has type:', type(I.dtype)
-						print '  index dtype.type:', I.dtype.type
+						print '	 index dtype:', I.dtype
+						print '	 index dtype has type:', type(I.dtype)
+						print '	 index dtype.type:', I.dtype.type
 						print 'options are', inttypes
 						print 'I is numpy.ndarray?', (type(I) is numpy.ndarray)
 						print 'has dtype?', (hasattr(I, 'dtype'))
@@ -296,6 +304,8 @@ class tabledata(object):
 			#print val.shape
 			#print val.size
 			#print val.itemsize
+			if type(val) is list:
+				val = array(val)
 			fitstype = fmap.get(val.dtype.type, 'D')
 
 			if fitstype == 'X':
@@ -392,7 +402,7 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
 			cols = r.split(',')
 			
 		if len(cols) != len(colnames):
-			raise Exception('Expected to find %i columns of data to match headers (%s) in row %i; got %i\n  "%s"' % (len(colnames), ', '.join(colnames), i, len(cols), r))
+			raise Exception('Expected to find %i columns of data to match headers (%s) in row %i; got %i\n	"%s"' % (len(colnames), ', '.join(colnames), i, len(cols), r))
 		#assert(len(cols) == len(colnames))
 		for i,c in enumerate(cols):
 			coldata[i].append(c)
