@@ -2,9 +2,8 @@ from distutils.core import setup, Extension
 import os.path
 from astrometry.util.run_command import run_command
 
-#import numpy
-#numpy_inc = (os.path.dirname(numpy.__file__) +
-#             '/core/include/numpy')
+import numpy
+numpy_inc = numpy.get_include()
 
 def get_libs(pkg):
 	(rtn,out,err) = run_command('pkg-config --libs-only-l ' + pkg)
@@ -61,7 +60,8 @@ c_module = Extension('_plotstuff_c',
                      include_dirs = [
 						 '../qfits-an/include',
 						 '../libkd',
-						 '../util', '.'] + get_include_dirs('cairo'),
+						 '../util', '.'] + get_include_dirs('cairo') +
+					 [numpy_inc],
 					 extra_objects = [
 						 'plotstuff.o', 'plotfill.o', 'plotxy.o',
 						 'plotimage.o', 'plotannotations.o',

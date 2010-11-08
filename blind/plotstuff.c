@@ -819,6 +819,7 @@ int plotstuff_init2(plot_args_t* pargs) {
 	case PLOTSTUFF_FORMAT_JPG:
 	case PLOTSTUFF_FORMAT_PPM:
 	case PLOTSTUFF_FORMAT_PNG:
+	case PLOTSTUFF_FORMAT_MEMIMG:
 		pargs->target = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, pargs->W, pargs->H);
 		break;
 	default:

@@ -5,6 +5,8 @@
 #undef WarnUnusedResult
 #define WarnUnusedResult
 %{
+#include "numpy/arrayobject.h"
+
 #include "plotstuff.h"
 #include "plotimage.h"
 #include "plotoutline.h"
@@ -131,7 +133,48 @@ void fits_use_error_system(void);
 	}
 }
 
+%extend plot_args {
+  //PyObject* PyArray_SimpleNewFromData(int nd, npy_intp* dims, int typenum, void* data)¶
+	PyObject* get_image_as_numpy() {
+		npy_intp dim[3];
+		PyObject* po;
+		printf("get_image_as_numpy\n");
+		printf("  image size %i x %i\n", self->W, self->H);
+		printf("  image data: %p\n", self->outimage);
+		dim[0] = self->W;
+		dim[1] = self->H;
+		dim[2] = 4;
+		/*{
+			int i;
+			int acc = 0;
+			unsigned char* ptr = self->outimage;
+			for (i=0; i<(dim[0] * dim[1] * dim[2]); i++) {
+				acc += (ptr[i] ? 1 : 0);
+			}
+			printf("acc %i\n", acc);
+		 }*/
+		//return PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, self->outimage);
+		po = PyArray_SimpleNew(3, dim, NPY_UBYTE);
+		printf("po: %p\n", po);
+		printf("dim: %i\n", (int)PyArray_DIM(po, 0));
+		printf("dim: %i\n", (int)PyArray_DIM(po, 1));
+		printf("dim: %i\n", (int)PyArray_DIM(po, 2));
+		printf("itemsize: %i\n", PyArray_ITEMSIZE(po));
+
+
+		po = PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, self->outimage);
+		printf("po: %p\n", po);
+		printf("dim: %i\n", (int)PyArray_DIM(po, 0));
+		printf("dim: %i\n", (int)PyArray_DIM(po, 1));
+		printf("dim: %i\n", (int)PyArray_DIM(po, 2));
+		printf("itemsize: %i\n", PyArray_ITEMSIZE(po));
+		return po;
+	}
+}
+
+
 %extend plotimage_args {
+
   int set_wcs_file(const char* fn, int ext) {
     return plot_image_set_wcs(self, fn, ext);
   }

@@ -53,6 +53,9 @@ class Plotstuff(object):
 		else:
 			self.pargs.__setattr__(name, val)
 
+	def get_image_as_numpy(self):
+		return self.pargs.get_image_as_numpy()
+
 	def apply_settings(self):
 		plotstuff_builtin_apply(self.pargs.cairo, self.pargs)
 
