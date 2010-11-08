@@ -127,19 +127,29 @@ int plotstuff_line_constant_ra(plot_args_t* pargs, double ra, double dec1, doubl
 	double decstep;
 	double dec;
 	double s;
+	double pixscale;
+	bool lastok = FALSE;
 	assert(pargs->wcs);
-	decstep = arcsec2deg(anwcs_pixel_scale(pargs->wcs) * pargs->linestep);
+	pixscale = anwcs_pixel_scale(pargs->wcs);
+	assert(pixscale > 0.0);
+	decstep = arcsec2deg(pixscale * pargs->linestep);
+	logverb("plotstuff_line_constant_ra: RA=%g, Dec=[%g,%g], pixscale %g, decstep %g\n",
+			ra, dec1, dec2, anwcs_pixel_scale(pargs->wcs), decstep);
 	s = 1.0;
 	if (dec1 > dec2)
 		s = -1;
 	for (dec=dec1; (s*dec)<=(s*dec2); dec+=(decstep*s)) {
 		double x, y;
-		if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
+		//logverb("  line_constant_ra: RA,Dec %g,%g\n", ra, dec);
+		if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y)) {
+			lastok = FALSE;
 			continue;
-		if (dec == dec1)
-			cairo_move_to(pargs->cairo, x, y);
-		else
+		}
+		lastok = TRUE;
+		if (lastok)
 			cairo_line_to(pargs->cairo, x, y);
+		else
+			cairo_move_to(pargs->cairo, x, y);
 	}
 	return 0;
 }

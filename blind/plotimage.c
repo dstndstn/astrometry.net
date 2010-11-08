@@ -126,7 +126,48 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 
 	if (args->resample) {
 		assert(args->img);
-		plot_image_rgba_data(cairo, args);
+
+		// FITS images get resampled right after reading.  Others...
+		if (args->format != PLOTSTUFF_FORMAT_FITS) {
+			// resample onto the output grid...
+			unsigned char* img2 = NULL;
+			unsigned char* tmpimg = NULL;
+			float* rimg = NULL;
+			float* fimg = NULL;
+			int Nin = args->W * args->H;
+			int Nout = pargs->W * pargs->H;
+
+			img2 = calloc(Nout * 4, 1);
+			fimg = malloc(Nin * sizeof(float));
+			rimg = calloc(Nout, sizeof(float));
+			// One plane at a time...
+			for (j=0; j<3; j++) {
+				// convert the image to float...
+				for (i=0; i<Nin; i++)
+					fimg[i] = args->img[4*i + j];
+				// resample onto output grid...
+				if (resample_wcs(args->wcs, fimg, args->W, args->H,
+								 pargs->wcs, rimg, pargs->W, pargs->H)) {
+					ERROR("Failed to resample image");
+					return;
+				}
+				// convert resampled image back to uchar.
+				for (i=0; i<Nout; i++)
+					img2[4*i + j] = rimg[i];
+			}
+			free(rimg);
+			free(fimg);
+
+			args->W = pargs->W;
+			args->H = pargs->H;
+			tmpimg = args->img;
+			args->img = img2;
+			plot_image_rgba_data(cairo, args);
+			args->img = tmpimg;
+			free(img2);
+		} else {
+			plot_image_rgba_data(cairo, args);
+		}
 		return;
 	}
 

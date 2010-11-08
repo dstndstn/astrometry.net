@@ -22,6 +22,7 @@
 #include "sip.h"
 #include "an-bool.h"
 #include "qfits_header.h"
+#include "bl.h"
 
 /** Interface to Mark Calabretta's wcslib, if available, and
  Astrometry.net's TAN/SIP implementation. */
@@ -84,6 +85,22 @@ int anwcs_get_radec_center_and_radius(const anwcs_t* anwcs,
 void anwcs_walk_image_boundary(const anwcs_t* wcs, double stepsize,
 							   void (*callback)(const anwcs_t* wcs, double x, double y, double ra, double dec, void* token),
 							   void* token);
+
+bool anwcs_is_discontinuous(const anwcs_t* wcs, double ra1, double dec1,
+							double ra2, double dec2);
+
+/*
+ // Assuming there is a discontinuity between (ra1,dec1) and (ra2,dec2),
+ // return 
+ int anwcs_get_discontinuity(const anwcs_t* wcs, double ra1, double dec1,
+ double ra2, double dec2,
+ double* dra, double* ddec);
+ */
+dl* anwcs_walk_discontinuity(const anwcs_t* wcs,
+							 double ra1, double dec1, double ra2, double dec2,
+							 double ra3, double dec3, double ra4, double dec4,
+							 double stepsize,
+							 dl* radecs);
 
 bool anwcs_overlaps(const anwcs_t* wcs1, const anwcs_t* wcs2, int stepsize);
 

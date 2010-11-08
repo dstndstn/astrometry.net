@@ -78,6 +78,10 @@ class Plotstuff(object):
 		grid = plot_grid_get(self.pargs)
 		grid.rastep = rastep
 		grid.decstep = decstep
+		if ralabelstep is None:
+			ralabelstep = 0
+		if declabelstep is None:
+			declabelstep = 0
 		grid.ralabelstep = ralabelstep
 		grid.declabelstep = declabelstep
 		self.plot('grid')

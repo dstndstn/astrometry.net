@@ -33,6 +33,8 @@
 #include "sip_qfits.h"
 #include "sip-utils.h"
 #include "starutil.h"
+#include "mathutil.h"
+#include "ioutils.h"
 
 struct anwcslib_t {
 	struct wcsprm* wcs;
@@ -128,7 +130,7 @@ static int wcslib_pixelxy2radec(const anwcslib_t* anwcslib, double px, double py
 	 int stat[]);
 	 */
 	if (code) {
-		ERROR("Wcslib's wcsp2s() failed: code=%i, status=%i", code, status);
+		ERROR("Wcslib's wcsp2s() failed: code=%i, status=%i (%s); (x,y)=(%g,%g)", code, status, wcs_errmsg[status], px, py);
 		return -1;
 	}
 	if (ra)  *ra  = world[wcs->lng];
@@ -236,8 +238,11 @@ static void wcslib_free(anwcslib_t* anwcslib) {
 static double wcslib_pixel_scale(const anwcslib_t* anwcslib) {
 	struct wcsprm* wcs = anwcslib->wcs;
 	double* cd = wcs->m_cd;
+	double ps;
 	// HACK -- assume "cd" elements are set...
-	return deg2arcsec(sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2])));
+	ps = deg2arcsec(sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2])));
+	assert(ps > 0.0);
+	return ps;
 }
 
 static int wcslib_write_to(const anwcslib_t* anwcslib, FILE* fid) {
@@ -783,6 +788,229 @@ int anwcs_radec2pixelxy(const anwcs_t* anwcs, double ra, double dec, double* px,
 		return -1;
 	}
 	return 0;
+}
+
+
+bool anwcs_is_discontinuous(const anwcs_t* wcs, double ra1, double dec1,
+							double ra2, double dec2) {
+	//double x1,y1,x2,y2;
+
+#ifdef WCSLIB_EXISTS
+	if (wcs->type == ANWCS_TYPE_WCSLIB) {
+		//anwcslib_t* wcslib = wcs->data;
+		struct wcsprm* wcslib = ((anwcslib_t*)wcs->data)->wcs;
+		/*
+		 printf("ctype[0]: %s\n", wcslib->ctype[0]);
+		 printf("ctype[1]: %s\n", wcslib->ctype[1]);
+		 */
+		if (ends_with(wcslib->ctype[0], "AIT")) {
+			// Hammer-Aitoff -- wraps at 180 deg from CRVAL0
+			double ra0 = fmod(wcslib->crval[0] + 180.0, 360.0);
+			/*
+			 double dra1, dra2;
+			 printf("ra ref: %g\n", ra0);
+			 dra1 = ra1 - ra0;
+			 dra2 = ra2 - ra0;
+			 printf("dRA: %g %g\n", dra1, dra2);
+			 */
+			if ((ra1 - ra0) * (ra2 - ra0) < 0) {
+				return TRUE;
+			}
+		}
+	}
+#endif
+
+	/*
+	 if (anwcs_radec2pixelxy(wcs, ra1, dec1, &x1, &y1) ||
+	 anwcs_radec2pixelxy(wcs, ra2, dec2, &x2, &y2)) {
+	 return TRUE;
+	 }
+	 */
+	
+	return FALSE;
+}
+
+/*
+static int anwcs_get_discontinuity(const anwcs_t* wcs,
+								   double ra1, double dec1,
+								   double ra2, double dec2,
+								   double* dra, double* ddec) {
+#ifdef WCSLIB_EXISTS
+	if (wcs->type == ANWCS_TYPE_WCSLIB) {
+		struct wcsprm* wcslib = ((anwcslib_t*)wcs->data)->wcs;
+		if (ends_with(wcslib->ctype[0], "AIT")) {
+			// Hammer-Aitoff -- wraps at 180 deg from CRVAL0
+			double ra0 = fmod(wcslib->crval[0] + 180.0, 360.0);
+			
+			if ((ra1 - ra0) * (ra2 - ra0) < 0) {
+				return TRUE;
+			}
+		}
+	}
+#endif
+}
+ */
+
+// Walk from (ra1,dec1) toward (ra2,dec2) until you hit a boundary;
+// then along the boundary until the boundary between (ra3,dec3) and
+// (ra4,dec4), then to (ra3,dec3).
+// 'stepsize' is in degrees.
+dl* anwcs_walk_discontinuity(const anwcs_t* wcs,
+							 double ra1, double dec1, double ra2, double dec2,
+							 double ra3, double dec3, double ra4, double dec4,
+							 double stepsize,
+							 dl* radecs) {
+	double xyz1[3], xyz2[3], xyz3[3], xyz4[4];
+	double xyz[3];
+	double dxyz[3];
+	int i, j;
+	double xyzstep;
+	double ra,dec, lastra, lastdec;
+	double raA,decA, raB,decB;
+	double xyzA[3], xyzB[3];
+	double dab;
+	int NMAX;
+
+	radecdeg2xyzarr(ra1, dec1, xyz1);
+	radecdeg2xyzarr(ra2, dec2, xyz2);
+	radecdeg2xyzarr(ra3, dec3, xyz3);
+	radecdeg2xyzarr(ra4, dec4, xyz4);
+
+	if (!radecs)
+		radecs = dl_new(256);
+
+	// first, from ra1,dec1 toward ra2,dec2.
+	for (i=0; i<3; i++)
+		dxyz[i] = xyz2[i] - xyz1[i];
+	normalize_3(dxyz);
+	xyzstep = deg2dist(stepsize);
+	NMAX = ceil(2. / xyzstep);
+	logverb("stepsize %g; nmax %i\n", xyzstep, NMAX);
+	for (i=0; i<3; i++)
+		dxyz[i] *= xyzstep;
+	for (i=0; i<3; i++)
+		xyz[i] = xyz1[i];
+
+	dl_append(radecs, ra1);
+	dl_append(radecs, dec1);
+	lastra = ra1;
+	lastdec = dec1;
+
+	logverb("Walking from 1 to 2: RA,Decs %g,%g to %g,%g\n", ra1, dec1, ra2, dec2);
+	for (j=0; j<NMAX; j++) {
+		for (i=0; i<3; i++)
+			xyz[i] += dxyz[i];
+		normalize_3(xyz);
+		xyzarr2radecdeg(xyz, &ra, &dec);
+		logverb("  ra,dec %g,%g\n", ra, dec);
+		if (anwcs_is_discontinuous(wcs, lastra, lastdec, ra, dec))
+			break;
+		dl_append(radecs, ra);
+		dl_append(radecs, dec);
+		lastra = ra;
+		lastdec = dec;
+	}
+	if (j == NMAX)
+		logverb("EXCEEDED number of steps\n");
+		
+	logverb("Hit boundary: %g,%g -- %g,%g\n", lastra, lastdec, ra, dec);
+	raA = lastra;
+	decA = lastdec;
+
+	// Find the boundary between ra3,dec3 and ra4,dec4.
+	for (i=0; i<3; i++)
+		dxyz[i] = xyz4[i] - xyz3[i];
+	normalize_3(dxyz);
+	for (i=0; i<3; i++)
+		dxyz[i] *= xyzstep;
+	lastra = ra3;
+	lastdec = dec3;
+	for (i=0; i<3; i++)
+		xyz[i] = xyz3[i];
+
+	for (j=0; j<NMAX; j++) {
+		for (i=0; i<3; i++)
+			xyz[i] += dxyz[i];
+		normalize_3(xyz);
+		xyzarr2radecdeg(xyz, &ra, &dec);
+		if (anwcs_is_discontinuous(wcs, lastra, lastdec, ra, dec))
+			break;
+		lastra = ra;
+		lastdec = dec;
+	}
+	if (j == NMAX)
+		logverb("EXCEEDED number of steps\n");
+	logverb("Hit boundary at %g,%g\n", lastra, lastdec);
+	raB = lastra;
+	decB = lastdec;
+
+	// Walk from A to B
+	radecdeg2xyzarr(raA, decA, xyzA);
+	radecdeg2xyzarr(raB, decB, xyzB);
+	dab = distsq(xyzA, xyzB, 3);
+	if (dab > 0) {
+		for (i=0; i<3; i++)
+			dxyz[i] = xyzB[i] - xyzA[i];
+		normalize_3(dxyz);
+		for (i=0; i<3; i++)
+			dxyz[i] *= xyzstep;
+		for (i=0; i<3; i++)
+			xyz[i] = xyzA[i];
+		for (j=0; j<NMAX; j++) {
+			double d;
+			for (i=0; i<3; i++)
+				xyz[i] += dxyz[i];
+			normalize_3(xyz);
+			// did we walk past?
+			d = distsq(xyzA, xyz, 3);
+			if (d > dab)
+				break;
+			xyzarr2radecdeg(xyz, &ra, &dec);
+			dl_append(radecs, ra);
+			dl_append(radecs, dec);
+		}
+		if (j == NMAX)
+			logverb("EXCEEDED number of steps\n");
+		logverb("Walked along boundary A-B (to %g,%g)\n", ra, dec);
+		dl_append(radecs, raB);
+		dl_append(radecs, decB);
+	}
+
+	// Now from B to ra3,dec3.
+	dab = distsq(xyzB, xyz3, 3);
+	logverb("Walking B->3 (dist %g)\n", sqrt(dab));
+	if (dab > 0) {
+		for (i=0; i<3; i++)
+			dxyz[i] = xyz3[i] - xyzB[i];
+		normalize_3(dxyz);
+		for (i=0; i<3; i++)
+			dxyz[i] *= xyzstep;
+		for (i=0; i<3; i++)
+			xyz[i] = xyzB[i];
+		for (j=0; j<NMAX; j++) {
+			double d;
+			for (i=0; i<3; i++)
+				xyz[i] += dxyz[i];
+			normalize_3(xyz);
+			// did we walk past?
+			d = distsq(xyzB, xyz, 3);
+			// DEBUG
+			xyzarr2radecdeg(xyz, &ra, &dec);
+			logverb("  -> ra,dec %g,%g, dist %g, target %g\n", ra, dec, sqrt(d), sqrt(dab));
+			if (d > dab)
+				break;
+			//xyzarr2radecdeg(xyz, &ra, &dec);
+			dl_append(radecs, ra);
+			dl_append(radecs, dec);
+		}
+		if (j == NMAX)
+			logverb("EXCEEDED number of steps\n");
+		logverb("Walk to %g,%g\n", ra, dec);
+	}
+	dl_append(radecs, ra3);
+	dl_append(radecs, dec3);
+
+	return radecs;
 }
 
 
