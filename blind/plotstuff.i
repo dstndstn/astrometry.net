@@ -94,6 +94,10 @@
 %include "sip-utils.h"
 %include "anwcs.h"
 
+%init %{
+   import_array();
+%}
+
 enum log_level {
 	LOG_NONE,
 	LOG_ERROR,
