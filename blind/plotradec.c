@@ -25,6 +25,7 @@
 #include "errors.h"
 #include "sip_qfits.h"
 
+/*
 const plotter_t plotter_radec = {
 	"radec", 
 	plot_radec_init,
@@ -34,6 +35,8 @@ const plotter_t plotter_radec = {
 	plot_radec_free,
 	NULL
 };
+ */
+DEFINE_PLOTTER(radec);
 
 plotradec_t* plot_radec_get(plot_args_t* pargs) {
 	return plotstuff_get_config(pargs, "radec");

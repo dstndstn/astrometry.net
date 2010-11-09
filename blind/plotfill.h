@@ -34,6 +34,8 @@ int plot_fill_plot(const char* command, cairo_t* cr,
 
 void plot_fill_free(plot_args_t* args, void* baton);
 
-extern const plotter_t plotter_fill;
+//extern const plotter_t plotter_fill;
+//plotter_t* plot_fill_new();
+DECLARE_PLOTTER(fill);
 
 #endif

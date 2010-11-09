@@ -35,7 +35,14 @@
 #define PLOTSTUFF_FORMAT_MEMIMG 5
 #define PLOTSTUFF_FORMAT_FITS 6
 
+struct plotter;
+typedef struct plotter plotter_t;
+
 struct plot_args {
+	// the workers
+	plotter_t* plotters;
+	int NP;
+
     char* outfn;
 	FILE* fout;
 	int outformat;
@@ -90,7 +97,29 @@ struct plotter {
 	plot_func_free_t free;
 	void* baton;
 };
-typedef struct plotter plotter_t;
+
+//#define DECLARE_PLOTTER(name) plotter_t* plot_ ## name ## _new()
+#define DECLARE_PLOTTER(name) void plot_ ## name ## _describe(plotter_t* p)
+#define DEFINE_PLOTTER_BODY(pname) \
+		p->name = #pname;												\
+		p->init = plot_ ## pname ## _init;								\
+		p->command = plot_ ## pname ## _command;							\
+		p->doplot = plot_ ## pname ## _plot;								\
+		p->free = plot_ ## pname ## _free;								
+		
+#define DEFINE_PLOTTER(name) DECLARE_PLOTTER(name) {		  \
+		DEFINE_PLOTTER_BODY(name)							  \
+}
+
+/*
+#define DEFINE_PLOTTER(name) void plot_ ## name ## _describe(plotter_t* p) { \
+		p->name = #name;												\
+		p->init = plot_ ## name ## _init;								\
+		p->command = plot_ ## name ## _command;							\
+		p->doplot = plot_ ## name ## _plot;								\
+		p->free = plot_ ## name ## _free;								\
+	}
+ */
 
 // return PLOTSTUFF_FORMAT_*, or -1 on error
 int parse_image_format(const char* fmt);

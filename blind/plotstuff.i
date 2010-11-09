@@ -138,15 +138,16 @@ void fits_use_error_system(void);
 }
 
 %extend plot_args {
-  //PyObject* PyArray_SimpleNewFromData(int nd, npy_intp* dims, int typenum, void* data)¶
 	PyObject* get_image_as_numpy() {
 		npy_intp dim[3];
-		PyObject* po;
+		//PyObject* po;
+		/*
 		printf("get_image_as_numpy\n");
 		printf("  image size %i x %i\n", self->W, self->H);
 		printf("  image data: %p\n", self->outimage);
-		dim[0] = self->W;
-		dim[1] = self->H;
+		 */
+		dim[0] = self->H;
+		dim[1] = self->W;
 		dim[2] = 4;
 		/*{
 			int i;
@@ -157,22 +158,16 @@ void fits_use_error_system(void);
 			}
 			printf("acc %i\n", acc);
 		 }*/
-		//return PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, self->outimage);
-		po = PyArray_SimpleNew(3, dim, NPY_UBYTE);
-		printf("po: %p\n", po);
-		printf("dim: %i\n", (int)PyArray_DIM(po, 0));
-		printf("dim: %i\n", (int)PyArray_DIM(po, 1));
-		printf("dim: %i\n", (int)PyArray_DIM(po, 2));
-		printf("itemsize: %i\n", PyArray_ITEMSIZE(po));
-
-
-		po = PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, self->outimage);
-		printf("po: %p\n", po);
-		printf("dim: %i\n", (int)PyArray_DIM(po, 0));
-		printf("dim: %i\n", (int)PyArray_DIM(po, 1));
-		printf("dim: %i\n", (int)PyArray_DIM(po, 2));
-		printf("itemsize: %i\n", PyArray_ITEMSIZE(po));
-		return po;
+		return PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, self->outimage);
+		/*
+		 po = PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, self->outimage);
+		 printf("po: %p\n", po);
+		 printf("dim: %i\n", (int)PyArray_DIM(po, 0));
+		 printf("dim: %i\n", (int)PyArray_DIM(po, 1));
+		 printf("dim: %i\n", (int)PyArray_DIM(po, 2));
+		 printf("itemsize: %i\n", PyArray_ITEMSIZE(po));
+		 return po;
+		 */
 	}
 }
 

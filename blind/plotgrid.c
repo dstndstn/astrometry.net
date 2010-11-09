@@ -26,6 +26,7 @@
 #include "log.h"
 #include "errors.h"
 
+/*
 const plotter_t plotter_grid = {
 	.name = "grid",
 	.init = plot_grid_init,
@@ -33,6 +34,9 @@ const plotter_t plotter_grid = {
 	.doplot = plot_grid_plot,
 	.free = plot_grid_free
 };
+ */
+DEFINE_PLOTTER(grid);
+
 
 plotgrid_t* plot_grid_get(plot_args_t* pargs) {
 	return plotstuff_get_config(pargs, "grid");

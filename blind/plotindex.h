@@ -53,6 +53,7 @@ int plot_index_plot(const char* command, cairo_t* cr,
 
 void plot_index_free(plot_args_t* args, void* baton);
 
-extern const plotter_t plotter_index;
+//extern const plotter_t plotter_index;
+DECLARE_PLOTTER(index);
 
 #endif

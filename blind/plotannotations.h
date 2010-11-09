@@ -3,8 +3,6 @@
 
 #include "plotstuff.h"
 
-extern const plotter_t plotter_annotations;
-
 struct annotation_args {
 	bool NGC;
 	bool constellations;
@@ -29,5 +27,11 @@ int plot_annotations_plot(const char* command,
 void plot_annotations_free(plot_args_t* args, void* baton);
 
 int plot_annotations_set_hd_catalog(plotann_t* ann, const char* hdfn);
+
+
+//extern const plotter_t plotter_annotations;
+//plotter_t* plot_annotations_new();
+DECLARE_PLOTTER(annotations);
+
 
 #endif

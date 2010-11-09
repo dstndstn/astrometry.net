@@ -31,6 +31,7 @@
 
 static int plot_image_read(const plot_args_t* pargs, plotimage_t* args);
 
+/*
 const plotter_t plotter_image = {
 	.name = "image",
 	.init = plot_image_init,
@@ -38,6 +39,19 @@ const plotter_t plotter_image = {
 	.doplot = plot_image_plot,
 	.free = plot_image_free
 };
+ */
+/*
+plotter_t* plot_image_new() {
+	plotter_t* p = calloc(1, sizeof(plotter_t));
+	p->name = "image";
+	p->init = plot_image_init;
+	p->command = plot_image_command;
+	p->doplot = plot_image_plot;
+	p->free = plot_image_free;
+	return p;
+}
+ */
+DEFINE_PLOTTER(image);
 
 static void set_format(plotimage_t* args) {
 	if (args->format == 0) {

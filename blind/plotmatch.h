@@ -43,6 +43,7 @@ int plot_match_plot(const char* command, cairo_t* cr,
 
 void plot_match_free(plot_args_t* args, void* baton);
 
-extern const plotter_t plotter_match;
+//extern const plotter_t plotter_match;
+DECLARE_PLOTTER(match);
 
 #endif

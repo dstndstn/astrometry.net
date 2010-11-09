@@ -48,6 +48,7 @@ int plot_outline_set_wcs(plotoutline_t* args, sip_t* wcs);
 
 int plot_outline_set_fill(plotoutline_t* args, bool fill);
 
-extern const plotter_t plotter_outline;
+//extern const plotter_t plotter_outline;
+DECLARE_PLOTTER(outline);
 
 #endif

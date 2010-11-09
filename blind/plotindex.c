@@ -29,6 +29,7 @@
 #include "qidxfile.h"
 #include "permutedsort.h"
 
+/*
 const plotter_t plotter_index = {
 	.name = "index",
 	.init = plot_index_init,
@@ -36,6 +37,9 @@ const plotter_t plotter_index = {
 	.doplot = plot_index_plot,
 	.free = plot_index_free
 };
+ */
+DEFINE_PLOTTER(index);
+
 
 plotindex_t* plot_index_get(plot_args_t* pargs) {
 	return plotstuff_get_config(pargs, "index");

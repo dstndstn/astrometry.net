@@ -43,6 +43,7 @@ int plot_grid_plot(const char* command, cairo_t* cr,
 
 void plot_grid_free(plot_args_t* args, void* baton);
 
-extern const plotter_t plotter_grid;
+//extern const plotter_t plotter_grid;
+DECLARE_PLOTTER(grid);
 
 #endif

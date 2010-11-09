@@ -689,7 +689,24 @@ static void plot_builtin_free(plot_args_t* pargs, void* baton) {
 	bl_free(pargs->cairocmds);
 }
 
-static const plotter_t builtin = { "plot", plot_builtin_init, plot_builtin_init2, plot_builtin_command, plot_builtin_plot, plot_builtin_free, NULL };
+//static const plotter_t builtin = { "plot", plot_builtin_init, plot_builtin_init2, plot_builtin_command, plot_builtin_plot, plot_builtin_free, NULL };
+/*
+static plotter_t* builtin_new() {
+	plotter_t* p = calloc(1, sizeof(plotter_t));
+	p->name = "plot";
+	p->init = plot_builtin_init;
+	p->init2 = plot_builtin_init2;
+	p->command = plot_builtin_command;
+	p->doplot = plot_builtin_plot;
+	p->free = plot_builtin_free;
+	return p;
+}
+ */
+
+DECLARE_PLOTTER(builtin) {
+	DEFINE_PLOTTER_BODY(builtin)
+		p->init2 = plot_builtin_init2;
+}
 
 int parse_image_format(const char* fmt) {
 	if (strcaseeq(fmt, "png")) {
@@ -772,15 +789,12 @@ int plotstuff_set_rgba2(plot_args_t* pargs, float r, float g, float b, float a) 
 	return 0;
 }
 
-/* All render layers must go in here */
-static plotter_t plotters[11];
-
 int plotstuff_init(plot_args_t* pargs) {
-	int i, NR;
+	int i;
 
-	// ?
 	memset(pargs, 0, sizeof(plot_args_t));
 
+	/*
 	plotters[0] = builtin;
 	plotters[1] = plotter_fill;
 	plotters[2] = plotter_xy;
@@ -792,16 +806,45 @@ int plotstuff_init(plot_args_t* pargs) {
 	plotters[8] = plotter_radec;
 	plotters[9] = plotter_healpix;
 	plotters[10] = plotter_match;
+	 */
 
-	NR = sizeof(plotters) / sizeof(plotter_t);
+	pargs->NP = 11;
+	pargs->plotters = calloc(pargs->NP, sizeof(plotter_t));
+	/*
+	pargs->plotters[0] = builtin_new();
+	pargs->plotters[1] = plot_fill_new();
+	pargs->plotters[2] = plot_xy_new();
+	pargs->plotters[3] = plot_image_new();
+	pargs->plotters[4] = plot_annotations_new();
+	pargs->plotters[5] = plot_grid_new();
+	pargs->plotters[6] = plot_outline_new();
+	pargs->plotters[7] = plot_index_new();
+	pargs->plotters[8] = plot_radec_new();
+	pargs->plotters[9] = plot_healpix_new();
+	pargs->plotters[10] = plot_match_new();
+	 */
+	//builtin_describe(pargs->plotters + 0);
+
+	plot_builtin_describe    (pargs->plotters + 0);
+	plot_fill_describe       (pargs->plotters + 1);
+	plot_xy_describe         (pargs->plotters + 2);
+	plot_image_describe      (pargs->plotters + 3);
+	plot_annotations_describe(pargs->plotters + 4);
+	plot_grid_describe       (pargs->plotters + 5);
+	plot_outline_describe    (pargs->plotters + 6);
+	plot_index_describe      (pargs->plotters + 7);
+	plot_radec_describe      (pargs->plotters + 8);
+	plot_healpix_describe    (pargs->plotters + 9);
+	plot_match_describe      (pargs->plotters + 10);
+
 	// First init
-	for (i=0; i<NR; i++)
-		plotters[i].baton = plotters[i].init(pargs);
+	for (i=0; i<pargs->NP; i++)
+		pargs->plotters[i].baton = pargs->plotters[i].init(pargs);
 	return 0;
 }
 
 int plotstuff_init2(plot_args_t* pargs) {
-	int i, NR;
+	int i;
 
 	logverb("Creating drawing surface (%ix%i)\n", pargs->W, pargs->H);
 	// Allocate cairo surface
@@ -829,10 +872,9 @@ int plotstuff_init2(plot_args_t* pargs) {
 	}
 	pargs->cairo = cairo_create(pargs->target);
 
-	NR = sizeof(plotters) / sizeof(plotter_t);
-	for (i=0; i<NR; i++) {
-		if (plotters[i].init2 &&
-			plotters[i].init2(pargs, plotters[i].baton)) {
+	for (i=0; i<pargs->NP; i++) {
+		if (pargs->plotters[i].init2 &&
+			pargs->plotters[i].init2(pargs, pargs->plotters[i].baton)) {
 			ERROR("Plot initializer failed");
 			exit(-1);
 		}
@@ -841,11 +883,10 @@ int plotstuff_init2(plot_args_t* pargs) {
 }
 
 void* plotstuff_get_config(plot_args_t* pargs, const char* name) {
-	int i, NR;
-	NR = sizeof(plotters) / sizeof(plotter_t);
-	for (i=0; i<NR; i++) {
-		if (streq(plotters[i].name, name))
-			return plotters[i].baton;
+	int i;
+	for (i=0; i<pargs->NP; i++) {
+		if (streq(pargs->plotters[i].name, name))
+			return pargs->plotters[i].baton;
 	}
 	return NULL;
 }
@@ -902,18 +943,17 @@ plotstuff_run_commandf(plot_args_t* pargs, const char* format, ...) {
 }
 
 int plotstuff_plot_layer(plot_args_t* pargs, const char* layer) {
-  int i, NR;
-  NR = sizeof(plotters) / sizeof(plotter_t);
-  for (i=0; i<NR; i++) {
-    if (streq(layer, plotters[i].name)) {
+  int i;
+  for (i=0; i<pargs->NP; i++) {
+    if (streq(layer, pargs->plotters[i].name)) {
       if (!pargs->cairo) {
 	if (plotstuff_init2(pargs)) {
 	  return -1;
 	}
       }
-      if (plotters[i].doplot) {
-	if (plotters[i].doplot(layer, pargs->cairo, pargs, plotters[i].baton)) {
-	  ERROR("Plotter \"%s\" failed on command \"%s\"", plotters[i].name, layer);
+      if (pargs->plotters[i].doplot) {
+	if (pargs->plotters[i].doplot(layer, pargs->cairo, pargs, pargs->plotters[i].baton)) {
+	  ERROR("Plotter \"%s\" failed on command \"%s\"", pargs->plotters[i].name, layer);
 	  return -1;
 	} else
 	  return 0;
@@ -924,7 +964,7 @@ int plotstuff_plot_layer(plot_args_t* pargs, const char* layer) {
 }
 
 int plotstuff_run_command(plot_args_t* pargs, const char* cmd) {
-	int i, NR;
+	int i;
 	bool matched = FALSE;
 	if (!cmd || (strlen(cmd) == 0) || (cmd[0] == '#')) {
 		return 0;
@@ -932,9 +972,8 @@ int plotstuff_run_command(plot_args_t* pargs, const char* cmd) {
 	if (!plotstuff_plot_layer(pargs, cmd)) {
 	  return 0;
 	}
-	NR = sizeof(plotters) / sizeof(plotter_t);
-	for (i=0; i<NR; i++) {
-	  if (starts_with(cmd, plotters[i].name)) {
+	for (i=0; i<pargs->NP; i++) {
+	  if (starts_with(cmd, pargs->plotters[i].name)) {
 			char* cmdcmd;
 			char* cmdargs;
 			if (!split_string_once(cmd, " ", &cmdcmd, &cmdargs)) {
@@ -944,8 +983,8 @@ int plotstuff_run_command(plot_args_t* pargs, const char* cmd) {
 				cmdargs = NULL;
 			}
 			logmsg("Command \"%s\", args \"%s\"\n", cmdcmd, cmdargs);
-			if (plotters[i].command(cmdcmd, cmdargs, pargs, plotters[i].baton)) {
-				ERROR("Plotter \"%s\" failed on command \"%s\"", plotters[i].name, cmd);
+			if (pargs->plotters[i].command(cmdcmd, cmdargs, pargs, pargs->plotters[i].baton)) {
+				ERROR("Plotter \"%s\" failed on command \"%s\"", pargs->plotters[i].name, cmd);
 				return -1;
 			}
 			free(cmdcmd);
@@ -1030,10 +1069,9 @@ int plotstuff_output(plot_args_t* pargs) {
 }
 
 void plotstuff_free(plot_args_t* pargs) {
-	int i, NR;
-	NR = sizeof(plotters) / sizeof(plotter_t);
-	for (i=0; i<NR; i++) {
-		plotters[i].free(pargs, plotters[i].baton);
+	int i;
+	for (i=0; i<pargs->NP; i++) {
+		pargs->plotters[i].free(pargs, pargs->plotters[i].baton);
 	}
 	cairo_destroy(pargs->cairo);
 	cairo_surface_destroy(pargs->target);

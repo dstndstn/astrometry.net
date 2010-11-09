@@ -36,6 +36,7 @@ int plot_healpix_plot(const char* command, cairo_t* cr,
 
 void plot_healpix_free(plot_args_t* args, void* baton);
 
-extern const plotter_t plotter_healpix;
+//extern const plotter_t plotter_healpix;
+DECLARE_PLOTTER(healpix);
 
 #endif

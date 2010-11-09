@@ -57,6 +57,7 @@ void plot_radec_free(plot_args_t* args, void* baton);
 
 void plot_radec_vals(plotradec_t* args, double ra, double dec);
 
-extern const plotter_t plotter_radec;
+//extern const plotter_t plotter_radec;
+DECLARE_PLOTTER(radec);
 
 #endif

@@ -28,6 +28,7 @@
 #include "healpix-utils.h"
 #include "healpix.h"
 
+/*
 const plotter_t plotter_healpix = {
 	.name = "healpix",
 	.init = plot_healpix_init,
@@ -35,6 +36,8 @@ const plotter_t plotter_healpix = {
 	.doplot = plot_healpix_plot,
 	.free = plot_healpix_free
 };
+ */
+DEFINE_PLOTTER(healpix);
 
 void* plot_healpix_init(plot_args_t* plotargs) {
 	plothealpix_t* args = calloc(1, sizeof(plothealpix_t));

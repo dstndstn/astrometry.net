@@ -26,6 +26,7 @@
 #include "sip_qfits.h"
 #include "tic.h"
 
+/*
 const plotter_t plotter_xy = {
 	"xy", 
 	plot_xy_init,
@@ -35,6 +36,21 @@ const plotter_t plotter_xy = {
 	plot_xy_free,
 	NULL
 };
+ */
+
+DEFINE_PLOTTER(xy);
+
+/*
+plotter_t* plot_xy_new() {
+	plotter_t* p = calloc(1, sizeof(plotter_t));
+	p->name = "xy";
+	p->init = plot_xy_init;
+	p->command = plot_xy_command;
+	p->doplot = plot_xy_plot;
+	p->free = plot_xy_free;
+	return p;
+}
+ */
 
 plotxy_t* plot_xy_get(plot_args_t* pargs) {
 	return plotstuff_get_config(pargs, "xy");

@@ -70,6 +70,8 @@ void plot_image_add_to_pixels(plotimage_t* args, int rgb[3]);
 
 //void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H, double alpha);
 
-extern const plotter_t plotter_image;
+//extern const plotter_t plotter_image;
+//plotter_t* plot_image_new();
+DECLARE_PLOTTER(image);
 
 #endif

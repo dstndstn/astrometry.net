@@ -65,6 +65,8 @@ void plot_xy_free(plot_args_t* args, void* baton);
 
 void plot_xy_vals(plotxy_t* args, double x, double y);
 
-extern const plotter_t plotter_xy;
+//extern const plotter_t plotter_xy;
+//plotter_t* plot_xy_new();
+DECLARE_PLOTTER(xy);
 
 #endif
