@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -127,6 +127,31 @@ int plot_outline_plot(const char* command,
 	logmsg("Outline: walked in %i steps\n", dl_size(token2.radecs));
 	rd = token2.radecs;
 
+	// avoid special case when there is a break between
+	// the beginning and end of the list.
+	dl_append(rd, dl_get(rd, 0));
+	dl_append(rd, dl_get(rd, 1));
+
+	// DEBUG
+	/*
+	for (i=0; i<dl_size(rd)/2; i++) {
+		double ra,dec,x,y, lx,ly;
+		ra  = dl_get(rd, 2*i+0);
+		dec = dl_get(rd, 2*i+1);
+		if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y)) {
+			logverb("oops!\n");
+			continue;
+		}
+		if (i == 0) {
+			lx = ly = 0;
+		}
+
+		logverb("%4i %8.1f %8.1f --> %6.1f, %6.1f  (d %g)\n", i, ra, dec, x, y, hypot(x-lx,y-ly));
+		lx = x;
+		ly = y;
+	}
+	 */
+
 	end = dl_size(rd)/2;
 	brk = trace_line(pargs->wcs, cairo, rd, 0, 1, end, TRUE);
 	logverb("tracing line 1: brk=%i\n", brk);
@@ -136,12 +161,17 @@ int plot_outline_plot(const char* command,
 		int brk3;
 		// back out the path.
 		cairo_new_path(cairo);
-		// trace segment 1 backwards.
+		// trace segment 1 backwards to 0
 		brk2 = trace_line(pargs->wcs, cairo, rd, brk-1, -1, -1, TRUE);
 		logverb("traced line 1 backwards: brk2=%i\n", brk2);
 		assert(brk2 == 0);
+
+		// catch edge case: there is a break between the beginning and end of the list.
+		//if (anwcs_is_discontinuous(wcs, dl_get(lastra, lastdec, ra, dec)) {
+		
+
 		// trace segment 2: from end of list backward, until we
-		// hit brk2.
+		// hit brk2 (worst case, we [should] hit brk)
 		brk2 = trace_line(pargs->wcs, cairo, rd, end-1, -1, -1, FALSE);
 		logverb("traced segment 2: brk2=%i\n", brk2);
 		// trace segment 3: from brk2 to brk.
@@ -172,26 +202,28 @@ int plot_outline_plot(const char* command,
 			cairo_stroke(cairo);
 
 		// trace segments 4+5: from brk to brk2.
-		brk3 = trace_line(pargs->wcs, cairo, rd, brk, 1, brk2, TRUE);
-		logverb("traced segment 4/5: brk3=%i\n", brk3);
-		assert(brk3 == 0);
-		// trace segment 6: from brk2 to brk.
-		rd2 = anwcs_walk_discontinuity(pargs->wcs,
-									   dl_get(rd, 2*(brk2  )+0), dl_get(rd, 2*(brk2  )+1),
-									   dl_get(rd, 2*(brk2+1)+0), dl_get(rd, 2*(brk2+1)+1),
-									   dl_get(rd, 2*(brk   )+0), dl_get(rd, 2*(brk   )+1),
-									   dl_get(rd, 2*(brk -1)+0), dl_get(rd, 2*(brk -1)+1),
-									   degstep, NULL);
-		for (i=0; i<dl_size(rd2)/2; i++) {
-			double x,y,ra,dec;
-			ra  = dl_get(rd2, 2*i+0);
-			dec = dl_get(rd2, 2*i+1);
-			if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
-				// oops.
-				continue;
-			cairo_line_to(cairo, x, y);
+		if (brk2 > brk) {
+			brk3 = trace_line(pargs->wcs, cairo, rd, brk, 1, brk2, TRUE);
+			logverb("traced segment 4/5: brk3=%i\n", brk3);
+			assert(brk3 == 0);
+			// trace segment 6: from brk2 to brk.
+			rd2 = anwcs_walk_discontinuity(pargs->wcs,
+										   dl_get(rd, 2*(brk2  )+0), dl_get(rd, 2*(brk2  )+1),
+										   dl_get(rd, 2*(brk2+1)+0), dl_get(rd, 2*(brk2+1)+1),
+										   dl_get(rd, 2*(brk   )+0), dl_get(rd, 2*(brk   )+1),
+										   dl_get(rd, 2*(brk -1)+0), dl_get(rd, 2*(brk -1)+1),
+										   degstep, NULL);
+			for (i=0; i<dl_size(rd2)/2; i++) {
+				double x,y,ra,dec;
+				ra  = dl_get(rd2, 2*i+0);
+				dec = dl_get(rd2, 2*i+1);
+				if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
+					// oops.
+					continue;
+				cairo_line_to(cairo, x, y);
+			}
+			dl_free(rd2);
 		}
-		dl_free(rd2);
 	}
 	cairo_close_path(cairo);
 	dl_free(token2.radecs);
