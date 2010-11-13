@@ -376,7 +376,7 @@ int ffpkls( fitsfile *fptr,     /* I - FITS file pointer        */
   This routine is a modified version of ffpkys which supports the
   HEASARC long string convention and can write arbitrarily long string
   keyword values.  The value is continued over multiple keywords that
-  have the name COMTINUE without an equal sign in column 9 of the card.
+  have the name CONTINUE without an equal sign in column 9 of the card.
   This routine also supports simple string keywords which are less than
   69 characters in length.
 */

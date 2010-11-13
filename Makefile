@@ -145,7 +145,7 @@ upgrade-indexes:
 		fi; \
 	done
 
-RELEASE_VER := 0.36
+RELEASE_VER := 0.37
 SP_RELEASE_VER := 0.2
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
