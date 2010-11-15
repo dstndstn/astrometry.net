@@ -188,7 +188,7 @@ fitsbin_t* fitsbin_open_fits(anqfits_t* fits);
 
 fitsbin_t* fitsbin_open_for_writing(const char* fn);
 
-fitsbin_t* fitsbin_open_in_memory();
+fitsbin_t* fitsbin_open_in_memory(void);
 
 int fitsbin_switch_to_reading(fitsbin_t* fb);
 

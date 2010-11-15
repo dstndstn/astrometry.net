@@ -156,11 +156,16 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     PyArrayObject* inds;
     npy_intp dims[2];
     PyArrayObject* dists;
+	bool notself;
 
-    if (!PyArg_ParseTuple(args, "lld", &p1, &p2, &rad)) {
+	// So that ParseTuple("b") with a C "bool" works
+	assert(sizeof(bool) == sizeof(unsigned char));
+
+    if (!PyArg_ParseTuple(args, "lldb", &p1, &p2, &rad, &notself)) {
         PyErr_SetString(PyExc_ValueError, "need three args: two kdtree identifiers (ints), and search radius");
         return NULL;
     }
+	//printf("Notself = %i\n", (int)notself);
     // Nasty!
     kd1 = (kdtree_t*)p1;
     kd2 = (kdtree_t*)p2;
@@ -168,7 +173,7 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
     dtresults.inds1 = il_new(256);
     dtresults.inds2 = il_new(256);
     dtresults.dists = dl_new(256);
-    dualtree_rangesearch(kd1, kd2, 0.0, rad, NULL,
+    dualtree_rangesearch(kd1, kd2, 0.0, rad, notself, NULL,
                          callback_dualtree, &dtresults,
                          NULL, NULL);
 
@@ -208,8 +213,12 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     int *pinds;
     double *pdist2s;
     double rad;
+	bool notself;
 
-    if (!PyArg_ParseTuple(args, "lld", &p1, &p2, &rad)) {
+	// So that ParseTuple("b") with a C "bool" works
+	assert(sizeof(bool) == sizeof(unsigned char));
+
+    if (!PyArg_ParseTuple(args, "lldb", &p1, &p2, &rad, &notself)) {
         PyErr_SetString(PyExc_ValueError, "need three args: two kdtree identifiers (ints), and search radius");
         return NULL;
     }
@@ -230,7 +239,7 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     pinds  = PyArray_DATA(inds);
     pdist2s = PyArray_DATA(dist2s);
 
-    dualtree_nearestneighbour(kd1, kd2, rad*rad, &pdist2s, &pinds);
+    dualtree_nearestneighbour(kd1, kd2, rad*rad, &pdist2s, &pinds, notself);
 
     return Py_BuildValue("(OO)", inds, dist2s);
 }

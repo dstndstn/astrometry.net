@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2008 Dustin Lang.
+  Copyright 2008, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -22,7 +22,8 @@
 #include "kdtree.h"
 
 void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2,
-                               double** nearest_d2, int** nearest_ind);
+                               double** nearest_d2, int** nearest_ind,
+							   bool notself);
 
 #endif
 

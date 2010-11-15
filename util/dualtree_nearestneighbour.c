@@ -29,6 +29,8 @@ struct rs_params {
 	kdtree_t* xtree;
 	kdtree_t* ytree;
 
+	bool notself;
+
     double* node_nearest_d2;
 
     double* nearest_d2;
@@ -42,7 +44,7 @@ static void rs_handle_result(void* extra, kdtree_t* searchtree, int searchnode,
 							 kdtree_t* querytree, int querynode);
 
 void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2,
-                               double** nearest_d2, int** nearest_ind) {
+                               double** nearest_d2, int** nearest_ind, bool notself) {
     int i, NY, NNY;
 
     // dual-tree search callback functions
@@ -60,12 +62,13 @@ void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2
 	memset(&params, 0, sizeof(params));
 	params.xtree = xtree;
 	params.ytree = ytree;
+	params.notself = notself;
 
-    // FIXME -- should we always overwrite nearest_d2, nearest_ind ???
     if (*nearest_d2)
         params.nearest_d2 = *nearest_d2;
     else
         params.nearest_d2 = malloc(NY * sizeof(double));
+
     if (maxdist2 == 0.0)
         maxdist2 = HUGE_VAL;
     for (i=0; i<NY; i++)
@@ -114,6 +117,11 @@ static bool rs_within_range(void* vparams,
     return TRUE;
 }
 
+/**
+ This callback gets called when we've reached a node in the Y tree and
+ a node in the X tree (one or both may be leaves), and it's time to
+ look at individual data points.
+ */
 static void rs_handle_result(void* vparams,
 							 kdtree_t* xtree, int xnode,
 							 kdtree_t* ytree, int ynode) {
@@ -135,7 +143,10 @@ static void rs_handle_result(void* vparams,
             continue;
 		for (x=xl; x<=xr; x++) {
 			double d2;
-			void* px = kdtree_get_data(xtree, x);
+			void* px;
+			if (p->notself && (y == x))
+				continue;
+			px = kdtree_get_data(xtree, x);
 			d2 = distsq(px, py, D);
             if (d2 > p->nearest_d2[y])
                 continue;

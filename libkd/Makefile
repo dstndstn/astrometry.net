@@ -81,6 +81,9 @@ $(LIBKD_NOIO): $(KD) $(INTERNALS_NOIO)
 	$(AR) rc $@ $^
 	$(RANLIB) $@
 
+pyspherematch: spherematch_c.so
+	@echo pyspherematch
+
 PYSPHEREMATCH_OBJ := pyspherematch.o
 
 #spherematch_c.so: pyspherematch.c setup.py $(LIBKD_NOIO) $(ANUTILS_LIB)

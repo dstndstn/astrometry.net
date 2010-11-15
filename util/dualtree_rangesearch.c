@@ -28,6 +28,8 @@ struct rs_params {
 	kdtree_t* xtree;
 	kdtree_t* ytree;
 
+	bool notself;
+
     // radius-squared of the search range.
     double mindistsq;
     double maxdistsq;
@@ -63,6 +65,7 @@ static double mydistsq(void* v1, void* v2, int D) {
 
 void dualtree_rangesearch(kdtree_t* xtree, kdtree_t* ytree,
 						  double mindist, double maxdist,
+						  bool notself,
 						  dist2_function distsquared,
 						  result_callback callback,
 						  void* param,
@@ -101,14 +104,15 @@ void dualtree_rangesearch(kdtree_t* xtree, kdtree_t* ytree,
 		params.usemax = TRUE;
 		params.maxdistsq = d*d;
     }
+	params.notself = notself;
 
-    if (distsquared)
-        params.distsquared = distsquared;
-    else
-        params.distsquared = mydistsq;
+	if (distsquared)
+		params.distsquared = distsquared;
+	else
+		params.distsquared = mydistsq;
 
-    params.user_callback = callback;
-    params.user_callback_param = param;
+	params.user_callback = callback;
+	params.user_callback_param = param;
 	params.xtree = xtree;
 	params.ytree = ytree;
 	if (progress) {
@@ -119,12 +123,12 @@ void dualtree_rangesearch(kdtree_t* xtree, kdtree_t* ytree,
 		params.ydone = 0;
 	}
 
-    dualtree_search(xtree, ytree, &callbacks);
+	dualtree_search(xtree, ytree, &callbacks);
 }
 
 static void rs_start_results(void* vparams,
 							 kdtree_t* ytree, int ynode) {
-    rs_params* p = (rs_params*)vparams;
+	rs_params* p = (rs_params*)vparams;
 	p->ydone += 1 + kdtree_right(ytree, ynode) - kdtree_left(ytree, ynode);
 	if (p->user_progress)
 		p->user_progress(p->user_progress_param, p->ydone);
@@ -182,6 +186,8 @@ static void rs_handle_result(void* vparams,
 		for (x=xl; x<=xr; x++) {
 			double d2;
 			double px[D];
+			if (p->notself && x == y)
+				continue;
 			kdtree_copy_data_double(xtree, x, 1, px);
 			d2 = p->distsquared(px, py, D);
 			//printf("eliminated point.\n");

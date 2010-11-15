@@ -34,6 +34,7 @@ typedef double (*dist2_function)(void* px, void* py, int D);
 
 void dualtree_rangesearch(kdtree_t* xtree, kdtree_t* ytree,
 						  double mindist, double maxdist,
+						  bool notself,
 						  dist2_function distsquared,
 						  result_callback callback,
 						  void* param,
