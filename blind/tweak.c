@@ -559,7 +559,7 @@ static void find_correspondences(tweak_t* t, double jitter) {
 
 	// Find closest neighbours
 	dualtree_rangesearch(t->kd_image, t->kd_ref,
-	                     RANGESEARCH_NO_LIMIT, dist, NULL,
+	                     RANGESEARCH_NO_LIMIT, dist, FALSE, NULL,
 	                     dtrs_match_callback, t,
 	                     NULL, NULL);
 
