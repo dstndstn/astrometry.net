@@ -97,18 +97,26 @@ static void plotquad(cairo_t* cairo, plot_args_t* pargs, plotindex_t* args, inde
 	double ra, dec;
 	double px, py;
 	double xy[DQMAX*2];
+	int N;
 
 	quadfile_get_stars(index->quads, quadnum, stars);
+	N = 0;
 	for (k=0; k<DQ; k++) {
-		startree_get_radec(index->starkd, stars[k], &ra, &dec);
+		if (startree_get_radec(index->starkd, stars[k], &ra, &dec)) {
+			ERROR("Failed to get RA,Dec for star %i\n", stars[k]);
+			continue;
+		}
 		if (!plotstuff_radec2xy(pargs, ra, dec, &px, &py)) {
 			ERROR("Failed to convert RA,Dec %g,%g to pixels for quad %i\n", ra, dec, quadnum);
 			continue;
 		}
 		xy[2*k + 0] = px;
 		xy[2*k + 1] = py;
+		N++;
 	}
-	plot_quad_xy(cairo, xy, DQ);
+	if (N < 3)
+		return;
+	plot_quad_xy(cairo, xy, N);
 	if (args->fill)
 		cairo_fill(cairo);
 	else

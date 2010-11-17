@@ -18,7 +18,7 @@ def lanczos_filter(order, x):
 # returns the range of coordinates that are in-bounds, and the
 # corresponding region within the desired cutout.
 def get_overlapping_region(xlo, xhi, xmin, xmax):
-	if xlo > xmax or xhi < xmin:
+	if xlo > xmax or xhi < xmin or xlo > xhi or xmin > xmax:
 		return ([], [])
 
 	assert(xlo <= xhi)

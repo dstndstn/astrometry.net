@@ -318,6 +318,10 @@ int build_index_shared_skdt(startree_t* starkd, index_params_t* p,
 	assert(starkd->tree);
 	assert(starkd->tree->perm == NULL);
 	assert(p->sortcol);
+	if (!p->sortcol) {
+		ERROR("You must set the sort column\n");
+		return -1;
+	}
 
     tempfiles = sl_new(4);
 
