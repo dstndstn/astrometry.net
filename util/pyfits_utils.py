@@ -191,7 +191,7 @@ class tabledata(object):
 				if ok:
 					pass
 				elif type(I) is numpy.ndarray and all(I.astype(int) == I):
-					print 'slice D', name
+					#print 'slice D', name
 					rtn.set(name, [val[i] for i in I])
 					ok = True
 				#if type(I) in inttypes:

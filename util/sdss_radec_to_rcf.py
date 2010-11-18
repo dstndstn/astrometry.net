@@ -116,9 +116,15 @@ if __name__ == '__main__':
 		sys.exit(-1)
 
 	# parse RA,Dec.
-	ra = float(args[0])
-	dec = float(args[1])
-
+	try:
+		ra = float(args[0])
+	except ValueError:
+		ra = hmsstring2ra(args[0])
+	try:
+		dec = float(args[1])
+	except ValueError:
+		dec = dmsstring2dec(args[1])
+	
 	tablefn = None
 	if opt.fields is not None:
 		if os.path.exists(opt.fields):
@@ -155,7 +161,7 @@ if __name__ == '__main__':
 			wcs = Tan(filename=fpc)
 			x,y = wcs.radec2pixelxy(ra, dec)
 			x,y = int(x),int(y)
-			os.system('imcopy %s"[%i:%i,%i:%i]" !/tmp/cut-%s' % (fpc, x-100, x+100, y-100, y+100, fpc))
+			os.system('imcopy %s"[%i:%i,%i:%i]" !/tmp/cut-%s' % (fpc, max(0, x-100), x+100, max(0, y-100), y+100, fpc))
 			os.system('an-fitstopnm -i /tmp/cut-%s -N 1150 -X 1400 | pnmtopng > cut-%s.png' % (fpc, fpc))
 			print 'R,C,F', r,c,f
 			print 'x,y', x,y
