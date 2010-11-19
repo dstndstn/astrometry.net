@@ -1102,10 +1102,6 @@ void sl_free_nonrecursive(sl* list) {
 	bl_free(list);
 }
 
-int   sl_size(sl* list) {
-	return bl_size(list);
-}
-
 void sl_append_contents(sl* dest, sl* src) {
 	int i;
 	if (!src)
@@ -1179,6 +1175,10 @@ char* sl_pop(sl* list) {
 
 char* sl_get(sl* list, int n) {
 	return pl_get(list, n);
+}
+
+char* sl_get_const(const sl* list, int n) {
+	return pl_get_const(list, n);
 }
 
 char* sl_set(sl* list, int index, const char* value) {

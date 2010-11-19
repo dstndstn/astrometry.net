@@ -130,7 +130,7 @@ ANFILES_DEPS :=
 
 ANFILES_OBJ := 
 ifndef NO_QFITS
-ANFILES_OBJ += index.o codekd.o starkd.o rdlist.o xylist.o \
+ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
 	starxy.o an-catalog.o qidxfile.o quadfile.o scamp-catalog.o \
 	hd.o
 ANFILES_DEPS += $(QFITS_LIB)
@@ -387,7 +387,7 @@ ALL_OBJ += build-hd-tree.o
 ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log test_ioutils \
 	test_dualtree_nn test_scamp_catalog test_starutil test_svd test_hd \
-	test_tycho2 test_anwcs test_sip-utils test_errors
+	test_tycho2 test_anwcs test_sip-utils test_errors test_multiindex
 # test_hd depends on hd.fits...
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
@@ -396,6 +396,8 @@ ALL_TEST_EXTRA_LDFLAGS = $(WCSLIB_LIB)
 include $(COMMON)/makefile.tests
 
 DEP_OBJ += $(ALL_TEST_FILES_O)
+
+test_multiindex: $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 test_errors: $(ANUTILS_LIB)
 

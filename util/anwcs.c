@@ -865,7 +865,7 @@ dl* anwcs_walk_discontinuity(const anwcs_t* wcs,
 	double dxyz[3];
 	int i, j;
 	double xyzstep;
-	double ra,dec, lastra, lastdec;
+	double ra=0,dec=0, lastra, lastdec;
 	double raA,decA, raB,decB;
 	double xyzA[3], xyzB[3];
 	double dab;

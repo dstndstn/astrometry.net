@@ -25,6 +25,12 @@ number NLF(get)(nl* list, int n) {
 }
 
 InlineDefine
+number NLF(get_const)(const nl* list, int n) {
+	number* ptr = (number*)bl_access_const(list, n);
+	return *ptr;
+}
+
+InlineDefine
 int NLF(size)(const nl* list) {
     return bl_size(list);
 }

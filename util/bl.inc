@@ -69,3 +69,8 @@ int bl_size(const bl* list) {
 	return list->N;
 }
 
+
+InlineDefine
+int sl_size(const sl* list) {
+	return bl_size(list);
+}

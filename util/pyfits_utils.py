@@ -198,7 +198,7 @@ class tabledata(object):
 				#	rtn.set(name, val[i])
 				#	ok = True
 				elif isscalar(I) and hasattr(I, 'dtype') and I.dtype in inttypes:
-					print 'slice E', name
+					#print 'slice E', name
 					rtn.set(name, val[int(I)])
 					ok = True
 				elif hasattr(I, '__len__') and len(I) == 0:

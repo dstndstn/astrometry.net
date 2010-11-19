@@ -159,10 +159,10 @@ sl*    sl_new(int blocksize);
 
 /*
  The functions:
-   sl_init()
-   sl_free()
-   sl_add()
-   sl_find()
+   sl_init()  --->  sl_init2()
+   sl_free()  --->  sl_free2()
+   sl_add()   --->  sl_add2()
+   sl_find()  --->  sl_find2()
  are defined by BSD, where they live in libc.
 
  We therefore avoid these names, which breaks the principle of least surprise, but
@@ -187,7 +187,9 @@ int sl_contains(sl* lst, const char* str);
 
 // just free the list structure, not the strings in it.
 void   sl_free_nonrecursive(sl* list);
-int    sl_size(sl* list);
+
+Pure InlineDeclare int  sl_size(const sl* list);
+
 // copies the string and enqueues it; returns the newly-allocate string.
 char*  sl_append(sl* list, const char* string);
 // appends the string; doesn't copy it.
@@ -200,6 +202,7 @@ char*  sl_push(sl* list, const char* data);
 // returns the last string: it's your responsibility to free it.
 char*  sl_pop(sl* list);
 char*  sl_get(sl* list, int n);
+char*  sl_get_const(const sl* list, int n);
 // sets the string at the given index to the given value.
 // if there is already a string at that index, frees it.
 char*  sl_set(sl* list, int n, const char* val);
