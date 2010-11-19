@@ -249,12 +249,14 @@ solver_test.o: solver.c
 solver_test_2.o: solver.c
 	$(CC) $(CFLAGS_DEBUG) -DTESTING=1 -DTESTING_TRYPERMUTATIONS=1 -o $@ -c $<
 
+
 #######################################
 
 # Add the basename of your test sources here...
 ALL_TEST_FILES = test_dfind test_ctmf test_dsmooth test_2mass \
 	test_usnob test_nomad test_matchfile test_blindutils \
-	test_dcen3x3 test_resort-xylist test_simplexy test_tweak
+	test_dcen3x3 test_resort-xylist test_simplexy test_tweak \
+	test_multiindex2
 
 ALL_TEST_EXTRA_OBJS :=
 ALL_TEST_LIBS :=
@@ -271,6 +273,12 @@ test_ctmf: $(TEST_CTMF_OBJS)
 TEST_DSMOOTH_OBJS := dsmooth.o
 ALL_TEST_EXTRA_OBJS += $(TEST_DSMOOTH_OBJS)
 test_dsmooth: $(TEST_DSMOOTH_OBJS)
+
+test_multiindex2: test_multiindex2.o solver.o blind_wcs.o verify.o \
+	tweak2.o tweak.o matchfile.o matchobj.o quad-utils.o \
+	$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
+
+#../util/cutest.o \
 
 test_2mass: 2mass.o 2mass-fits.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 ALL_TEST_EXTRA_OBJS += 2mass-fits.o 2mass.o
