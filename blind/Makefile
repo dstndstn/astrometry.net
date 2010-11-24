@@ -526,6 +526,7 @@ whynot: whynot.o matchfile.o matchobj.o codefile.o solvedclient.o \
 		$(COMMON)/cairoutils.o $(PLOTSTUFF) \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB) 
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB)
+ALL_OBJ += whynot.o
 
 quadcenters: quadcenters.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB)
