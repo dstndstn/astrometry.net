@@ -241,6 +241,9 @@ double solver_get_field_jitter(const solver_t* solver);
  */
 void solver_set_keep_logodds(solver_t* solver, double logodds);
 
+// back-compate
+#define solver_set_record_logodds solver_set_keep_logodds
+
 /**
  Sets the "parity" or "flip" of the image.
 

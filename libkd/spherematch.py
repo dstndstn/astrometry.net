@@ -1,4 +1,4 @@
-import spherematch_c
+from astrometry.libkd import spherematch_c
 from math import *
 from numpy import *
 from astrometry.util.starutil_numpy import radectoxyz, deg2dist, dist2deg
