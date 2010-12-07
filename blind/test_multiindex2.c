@@ -26,6 +26,10 @@
   wcs-rd2xy -w t1.wcs -i t10.rd -o t1.xy
   solve-field --just-augment --scale-low 1 t1.xy --continue --width 1000 --height 1000
   backend -c none -i 't1?.index' -v t1.axy 
+
+ (in util/ directory:)
+ ../blind/test_multiindex2
+
  */
 
 void test_solve_multiindex(CuTest* ct) {
