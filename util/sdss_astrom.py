@@ -1,15 +1,24 @@
 from astrometry.util.pyfits_utils import *
 from numpy import *
 import pyfits
+from glob import glob
 
-def sdss_tsfield_get_node_incl(tsfield):
+def tsfield_get_node_incl(tsfield):
 	hdr = tsfield[0].header
 	node = deg2rad(hdr.get('NODE'))
 	incl = deg2rad(hdr.get('INCL'))
 	return (node, incl)
 
-def sdss_munu_to_radec(mu, nu, tsfield):
-	node, incl = sdss_tsfield_get_node_incl(tsfield)
+def radec_to_pixel(ra, dec, color, band, tsfield):
+	mu, nu = radec_to_munu(ra, dec, tsfield)
+	return munu_to_pixel(mu, nu, color, band, tsfield)
+
+def pixel_to_radec(x, y, color, band, tsfield):
+	mu, nu = pixel_to_munu(x, y, color, band, tsfield)
+	return munu_to_radec(mu, nu, tsfield)
+
+def munu_to_radec(mu, nu, tsfield):
+	node, incl = tsfield_get_node_incl(tsfield)
 	mu, nu = deg2rad(mu), deg2rad(nu)
 	ra = node + arctan2(sin(mu - node) * cos(nu) * cos(incl) - sin(nu) * sin(incl), cos(mu - node) * cos(nu))
 	dec = arcsin(sin(mu - node) * cos(nu) * sin(incl) + sin(nu) * cos(incl))
@@ -17,9 +26,8 @@ def sdss_munu_to_radec(mu, nu, tsfield):
 	ra += (360. * (ra < 0))
 	return (ra, dec)
 
-
-def sdss_radec_to_munu(ra, dec, tsfield):
-	node, incl = sdss_tsfield_get_node_incl(tsfield)
+def radec_to_munu(ra, dec, tsfield):
+	node, incl = tsfield_get_node_incl(tsfield)
 	ra, dec = deg2rad(ra), deg2rad(dec)
 	mu = node + arctan2(sin(ra - node) * cos(dec) * cos(incl) + sin(dec) * sin(incl), cos(ra - node) * cos(dec))
 	nu = arcsin(-sin(ra - node) * cos(dec) * sin(incl) + sin(dec) * cos(incl))
@@ -27,20 +35,14 @@ def sdss_radec_to_munu(ra, dec, tsfield):
 	mu += (360. * (mu < 0))
 	return (mu, nu)
 
-def sdss_pixel_to_radec(x, y, color, band, tsfield):
-	mu, nu = sdss_pixel_to_munu(x, y, color, band, tsfield)
-	return sdss_munu_to_radec(mu, nu, tsfield)
-
-def sdss_prime_to_pixel(xprime, yprime,  color, band, tsfield):
+def prime_to_pixel(xprime, yprime,  color, band, tsfield):
 	T = fits_table(tsfield[1].data)
 	T = T[0]
-
 	color0 = T.ricut[band]
 	g0, g1, g2, g3 = T.drow0[band], T.drow1[band], T.drow2[band], T.drow3[band]
 	h0, h1, h2, h3 = T.dcol0[band], T.dcol1[band], T.dcol2[band], T.dcol3[band]
 	px, py = T.csrow[band], T.cscol[band]
 	qx, qy = T.ccrow[band], T.cccol[band]
-
 	color  = atleast_1d(color)
 	color0 = atleast_1d(color0)
 	xprime -= where(color < color0, px * color, qx)
@@ -49,22 +51,18 @@ def sdss_prime_to_pixel(xprime, yprime,  color, band, tsfield):
 	# Now invert:
 	#   xprime = x + g0 + g1 * y + g2 * y**2 + g3 * y**3
 	#   yprime = y + h0 + h1 * y + h2 * y**2 + h3 * y**3
-
 	y = yprime
-	while True:
+	dy = 1.
+	while sum(abs(dy)) > 0.:
 		yp = y + h0 + h1 * y + h2 * y**2 + h3 * y**3
 		dypdy = 1 + h1 + h2 * 2*y + h3 * 3*y**2
 		dy = (yprime - yp) / dypdy
+		print dy
 		y -= dy
-		#if (dy 
-
 	x = xprime - (g0 + g1 * y + g2 * y**2 + g3 * y**3)
+	return (x, y)
 
-
-
-	pass
-
-def sdss_pixel_to_prime(x, y, color, band, tsfield):
+def pixel_to_prime(x, y, color, band, tsfield):
 	T = fits_table(tsfield[1].data)
 	T = T[0]
 
@@ -77,58 +75,57 @@ def sdss_pixel_to_prime(x, y, color, band, tsfield):
 	#    dCol0, dCol1, dCol2, and dCol3, respectively;
 	# px and py are called csRow and csCol, respectively;
 	# and qx and qy are called ccRow and ccCol, respectively.
-
 	color0 = T.ricut[band]
 	g0, g1, g2, g3 = T.drow0[band], T.drow1[band], T.drow2[band], T.drow3[band]
 	h0, h1, h2, h3 = T.dcol0[band], T.dcol1[band], T.dcol2[band], T.dcol3[band]
 	px, py = T.csrow[band], T.cscol[band]
 	qx, qy = T.ccrow[band], T.cccol[band]
-
-	print 'px,py', px,py
-	print 'qx,qy', qx,qy
-	print 'color0', color0
-
 	xprime = x + g0 + g1 * y + g2 * y**2 + g3 * y**3
 	yprime = y + h0 + h1 * y + h2 * y**2 + h3 * y**3
 
-	'''
-	if color < color0:
-		xprime += px * color
-		yprime += py * color
-	else:
-		xprime += qx
-		yprime += qy
-	'''
+	#if color < color0:
+	#	xprime += px * color
+	#	yprime += py * color
+	#else:
+	#	xprime += qx
+	#	yprime += qy
 	color  = atleast_1d(color)
 	color0 = atleast_1d(color0)
 	xprime += where(color < color0, px * color, qx)
 	yprime += where(color < color0, py * color, qy)
 	return (xprime, yprime)
 
-
-def sdss_pixel_to_munu(x, y, color, band, tsfield):
+def pixel_to_munu(x, y, color, band, tsfield):
 	T = fits_table(tsfield[1].data)
 	T = T[0]
-
-	(xprime, yprime) = sdss_pixel_to_prime(x, y, color, band, tsfield)
-
+	(xprime, yprime) = pixel_to_prime(x, y, color, band, tsfield)
 	a, b, c = T.a[band], T.b[band], T.c[band]
 	d, e, f = T.d[band], T.e[band], T.f[band]
-
 	mu = a + b * xprime + c * yprime
 	nu = d + e * xprime + f * yprime
-
 	return (mu, nu)
-	
 
+def munu_to_pixel(mu, nu, color, band, tsfield):
+	T = fits_table(tsfield[1].data)
+	T = T[0]
+	a, b, c = T.a[band], T.b[band], T.c[band]
+	d, e, f = T.d[band], T.e[band], T.f[band]
+	determinant = b * f - c * e
+	B = f / determinant
+	C = -c / determinant
+	E = -e / determinant
+	F = b / determinant
+	xprime = B * (mu - a) + C * (nu - d)
+	yprime = E * (mu - a) + F * (nu - d)
+	return prime_to_pixel(xprime, yprime, color, band, tsfield)
 
 if __name__ == '__main__':
-	tsfield = pyfits.open('tsField-002830-6-41-0398.fit')
+	tsfield = pyfits.open(glob('tsField-002830-6-*-0398.fit')[0])
 
 	x,y = 0,0
 	band = array([2,3])
 	color = 0.
-	rd = sdss_pixel_to_radec(x, y, color, band, tsfield)
+	rd = pixel_to_radec(x, y, color, band, tsfield)
 	print rd
 
 	N = 10
@@ -136,11 +133,15 @@ if __name__ == '__main__':
 	y = numpy.random.uniform(1489, size=(N,))
 	color = numpy.random.uniform(-1, 4, size=(N,))
 	band = 2
-	rd = sdss_pixel_to_radec(x, y, color, band, tsfield)
+	rd = pixel_to_radec(x, y, color, band, tsfield)
 	print rd
 
 	m,n = numpy.random.uniform(360, size=N), numpy.random.uniform(-90, 90, size=N)
-	r,d = sdss_munu_to_radec(m, n, tsfield)
-	#print r,d
-	mu,nu = sdss_radec_to_munu(r, d, tsfield)
+	r,d = munu_to_radec(m, n, tsfield)
+	mu,nu = radec_to_munu(r, d, tsfield)
 	print mu-m, nu-n
+
+	x,y = numpy.random.uniform(2048, size=N), numpy.random.uniform(1489, 90, size=N)
+	mu,nu = pixel_to_munu(x, y, color, band, tsfield)
+	xx,yy = munu_to_pixel(mu, nu, color, band, tsfield)
+	print xx-x, yy-y

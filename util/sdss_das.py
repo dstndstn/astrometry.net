@@ -3,11 +3,19 @@
 from astrometry.util.run_command import run_command
 from astrometry.util.sdss_filenames import *
 
-def get_urls(urls, outfn):
+def get_urls(urls, outfn, curl=False):
 	for url in urls:
-		cmd = 'wget --continue -nv '
-		if outfn:
-			cmd += '-O %s ' % outfn
+		if curl:
+			cmd = 'curl '
+			if outfn:
+				cmd += '-o %s ' % outfn
+			else:
+				cmd += '-O '
+		else:
+			cmd = 'wget --continue -nv '
+			if outfn:
+				cmd += '-O %s ' % outfn
+
 		cmd += '\"%s\"' % url
 		print 'Running:', cmd
 		(rtn, out, err) = run_command(cmd)
@@ -23,7 +31,7 @@ def get_urls(urls, outfn):
 def sdss_das_get_suffix(filetype):
 	return ({'fpC': '.gz'}).get(filetype, '')
 
-def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, suffix=None, gunzip=True):
+def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, suffix=None, gunzip=True, curl=False):
 	if suffix is None:
 		suffix = sdss_das_get_suffix(filetype)
 	if reruns is None:
@@ -39,7 +47,7 @@ def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, su
 		outfn = outfn % { 'run':run, 'camcol':camcol, 'field':field, 'band':band }
 	else:
 		outfn = sdss_filename(filetype, run, camcol, field, band) + suffix
-	if not get_urls(urls, outfn):
+	if not get_urls(urls, outfn, curl):
 		return False
 
 	if suffix == '.gz' and gunzip:
@@ -70,14 +78,17 @@ if __name__ == '__main__':
 	import sys
 
 	parser = OptionParser(usage=('%prog <options> <file types>\n\n' +
-								 'file types include: fpC, fpM, fpObjc, psField, tsObj'))
+								 'file types include: fpC, fpM, fpObjc, psField, tsObj, tsField'))
 
 	parser.add_option('-r', '--run', dest='run', type='int')
 	parser.add_option('-f', '--field', dest='field', type='int')
 	parser.add_option('-c', '--camcol', dest='camcol', type='int')
+	parser.add_option('-R', '--rerun', dest='rerun', type='int')
 	parser.add_option('-b', '--band', dest='band')
+	parser.add_option('-C', '--curl', dest='curl', action='store_true', default=False)
 
-	parser.set_defaults(run=None, field=None, camcol=None, band=None)
+
+	parser.set_defaults(run=None, field=None, camcol=None, band=None, rerun=None)
 
 	(opt, args) = parser.parse_args()
 	if not len(args):
@@ -100,8 +111,10 @@ if __name__ == '__main__':
 	argdict = {}
 	if band is not None:
 		argdict['band'] = band
+	if opt.rerun is not None:
+		argdict['reruns'] = [opt.rerun]
 
 	for filetype in args:
 		print 'Retrieving', filetype, '...'
-		sdss_das_get(filetype, None, run, camcol, field, **argdict)
+		sdss_das_get(filetype, None, run, camcol, field, curl=opt.curl, **argdict)
 
