@@ -45,20 +45,25 @@ def prime_to_pixel(xprime, yprime,  color, band, tsfield):
 	qx, qy = T.ccrow[band], T.cccol[band]
 	color  = atleast_1d(color)
 	color0 = atleast_1d(color0)
+	# HACK HACK HACK FIXME
+	qx = qx * ones_like(xprime)
+	qy = qy * ones_like(yprime)
+	print 'color', color.shape, 'px', px.shape, 'qx', qx.shape
 	xprime -= where(color < color0, px * color, qx)
 	yprime -= where(color < color0, py * color, qy)
 
 	# Now invert:
 	#   xprime = x + g0 + g1 * y + g2 * y**2 + g3 * y**3
 	#   yprime = y + h0 + h1 * y + h2 * y**2 + h3 * y**3
-	y = yprime
+	y = yprime - h0 # - h1*yprime - h2*yprime**2 - h3*yprime**3
 	dy = 1.
-	while sum(abs(dy)) > 0.:
-		yp = y + h0 + h1 * y + h2 * y**2 + h3 * y**3
-		dypdy = 1 + h1 + h2 * 2*y + h3 * 3*y**2
+	# FIXME
+	while max(atleast_1d(abs(dy))) > 1e-9: # pixels
+		yp    = y + h0 + h1 * y + h2 * y**2 + h3 * y**3
+		dypdy = 1 +      h1     + h2 * 2*y +  h3 * 3*y**2
 		dy = (yprime - yp) / dypdy
-		print dy
-		y -= dy
+		print 'Max Newton dy', max(abs(dy))
+		y += dy
 	x = xprime - (g0 + g1 * y + g2 * y**2 + g3 * y**3)
 	return (x, y)
 
@@ -91,6 +96,9 @@ def pixel_to_prime(x, y, color, band, tsfield):
 	#	yprime += qy
 	color  = atleast_1d(color)
 	color0 = atleast_1d(color0)
+	qx = qx * ones_like(x)
+	qy = qy * ones_like(y)
+	print 'color', color.shape, 'px', px.shape, 'qx', qx.shape
 	xprime += where(color < color0, px * color, qx)
 	yprime += where(color < color0, py * color, qy)
 	return (xprime, yprime)
@@ -144,4 +152,25 @@ if __name__ == '__main__':
 	x,y = numpy.random.uniform(2048, size=N), numpy.random.uniform(1489, 90, size=N)
 	mu,nu = pixel_to_munu(x, y, color, band, tsfield)
 	xx,yy = munu_to_pixel(mu, nu, color, band, tsfield)
-	print xx-x, yy-y
+	print 'diff:', xx-x, yy-y
+
+
+	x,y = numpy.random.uniform(2048, size=N), numpy.random.uniform(1489, 90, size=N)
+	ra,dec = pixel_to_radec(x, y, color, band, tsfield)
+	xx,yy = radec_to_pixel(ra, dec, color, band, tsfield)
+	rr,dd = pixel_to_radec(xx, yy, color, band, tsfield)
+	print 'diff in pix:', xx-x, yy-y
+	print 'diff in ra,dec:', rr-ra, dd-dec
+
+
+	O = fits_table('tsObj-002830-6-0-0398.fit')
+	ra,dec = O.ra, O.dec
+	print 'ra,dec', ra.shape
+	for band in range(5):
+		X,Y = O.colc[:,band], O.rowc[:,band]
+		color = zeros_like(X)
+		xx,yy = radec_to_pixel(ra, dec, color, band, tsfield)
+		print 'xx', xx.shape
+		rr,dd = pixel_to_radec(X, Y, color, band, tsfield)
+		print 'dxy', xx-X, yy-Y
+		print 'dradec', ra-rr, dec-dd
