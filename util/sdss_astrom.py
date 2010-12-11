@@ -49,6 +49,11 @@ def prime_to_pixel(xprime, yprime,  color, band, tsfield):
 	h0, h1, h2, h3 = T.dcol0[band], T.dcol1[band], T.dcol2[band], T.dcol3[band]
 	px, py = T.csrow[band], T.cscol[band]
 	qx, qy = T.ccrow[band], T.cccol[band]
+
+	# #$(%*&^(%$%*& bad documentation.
+	(px,py) = (py,px)
+	(qx,qy) = (qy,qx)
+
 	color  = atleast_1d(color)
 	color0 = atleast_1d(color0)
 	# HACK HACK HACK FIXME
@@ -91,6 +96,10 @@ def pixel_to_prime(x, y, color, band, tsfield):
 	h0, h1, h2, h3 = T.dcol0[band], T.dcol1[band], T.dcol2[band], T.dcol3[band]
 	px, py = T.csrow[band], T.cscol[band]
 	qx, qy = T.ccrow[band], T.cccol[band]
+	# #$(%*&^(%$%*& bad documentation.
+	(px,py) = (py,px)
+	(qx,qy) = (qy,qx)
+
 	yprime = y + g0 + g1 * x + g2 * x**2 + g3 * x**3
 	xprime = x + h0 + h1 * x + h2 * x**2 + h3 * x**3
 
@@ -183,17 +192,30 @@ if __name__ == '__main__':
 	X = X[:N]
 	Y = Y[:N]
 	print 'x', X.shape
-	color = zeros_like(X)
+	rmag = O.psfcounts[:,2]
+	imag = O.psfcounts[:,3]
+	color = (rmag - imag)[:N]
+	#color = zeros_like(X)
 	xx,yy = radec_to_pixel(ra, dec, color, band, tsfield)
 	print 'xx', xx.shape
 	rr,dd = pixel_to_radec(X, Y, color, band, tsfield)
 	print 'dxy', xx-X, yy-Y
 	print 'dradec', ra-rr, dec-dd
 
-	for Xi,Yi,xi,yi,ri,di in zip(X,Y,xx,yy,ra,dec):
-		wxi,wyi = wcs.radec2pixelxy(ri,di)
-		print ('  X,Y (%8.2f,%8.2f) xx,yy (%8.2f, %8.2f), dx,dy (%8.2f, %8.2f), wcs xy (%8.2f, %8.2f) wcs dxy (%8.2f, %8.2f)' %
-			   (Xi, Yi, xi, yi, (Xi-xi), (Yi-yi), wxi, wyi, Xi-wxi, Yi-wyi))
+
+	# with color:
+	# 14 mpix X, 14 mpix Y
+
+	# color=0:
+	#  2 mpix X, 14 mpix Y
+
+	print 'MAD:', median(abs(xx-X)), median(abs(yy-Y))
+
+	if False:
+		for Xi,Yi,xi,yi,ri,di in zip(X,Y,xx,yy,ra,dec):
+			wxi,wyi = wcs.radec2pixelxy(ri,di)
+			print ('  X,Y (%8.2f,%8.2f) xx,yy (%8.2f, %8.2f), dx,dy (%8.2f, %8.2f), wcs xy (%8.2f, %8.2f) wcs dxy (%8.2f, %8.2f)' %
+				   (Xi, Yi, xi, yi, (Xi-xi), (Yi-yi), wxi, wyi, Xi-wxi, Yi-wyi))
 
 	from pylab import *
 
