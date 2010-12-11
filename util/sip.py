@@ -114,7 +114,7 @@ class Tan(ctypes.Structure):
 		return (ra.value, dec.value)
 
 	# returns (ra,dec) in degrees.
-	def pixelxy2radec(self, px,py):
+	def pixelxxy2radec(self, px,py):
 		'Return ra,dec of px,py'
 		ra = ctypes.c_double(3.14159)
 		dec = ctypes.c_double(2.71828)

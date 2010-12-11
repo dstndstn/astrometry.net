@@ -1,3 +1,9 @@
+# Copyright 2010 Dustin Lang and David W. Hogg, all rights reserved.
+
+# style notes:
+# ------------
+# - column is x, row is y; this is at odds with some online documentation
+
 from astrometry.util.pyfits_utils import *
 from numpy import *
 import pyfits
@@ -53,18 +59,18 @@ def prime_to_pixel(xprime, yprime,  color, band, tsfield):
 	yprime -= where(color < color0, py * color, qy)
 
 	# Now invert:
-	#   xprime = x + g0 + g1 * y + g2 * y**2 + g3 * y**3
-	#   yprime = y + h0 + h1 * y + h2 * y**2 + h3 * y**3
-	y = yprime - h0 # - h1*yprime - h2*yprime**2 - h3*yprime**3
-	dy = 1.
-	# FIXME
-	while max(atleast_1d(abs(dy))) > 1e-9: # pixels
-		yp    = y + h0 + h1 * y + h2 * y**2 + h3 * y**3
-		dypdy = 1 +      h1     + h2 * 2*y +  h3 * 3*y**2
-		dy = (yprime - yp) / dypdy
-		print 'Max Newton dy', max(abs(dy))
-		y += dy
-	x = xprime - (g0 + g1 * y + g2 * y**2 + g3 * y**3)
+	#   yprime = y + g0 + g1 * x + g2 * x**2 + g3 * x**3
+	#   xprime = x + h0 + h1 * x + h2 * x**2 + h3 * x**3
+	x = xprime - h0
+	# dumb-ass Newton's method
+	dx = 1.
+	while max(abs(atleast_1d(dx))) > 1e-10:
+		xp    = x + h0 + h1 * x + h2 * x**2 + h3 * x**3
+		dxpdx = 1 +      h1     + h2 * 2*x +  h3 * 3*x**2
+		dx = (xprime - xp) / dxpdx
+		print 'Max Newton dx', max(abs(dx))
+		x += dx
+	y = yprime - (g0 + g1 * x + g2 * x**2 + g3 * x**3)
 	return (x, y)
 
 def pixel_to_prime(x, y, color, band, tsfield):
@@ -85,8 +91,8 @@ def pixel_to_prime(x, y, color, band, tsfield):
 	h0, h1, h2, h3 = T.dcol0[band], T.dcol1[band], T.dcol2[band], T.dcol3[band]
 	px, py = T.csrow[band], T.cscol[band]
 	qx, qy = T.ccrow[band], T.cccol[band]
-	xprime = x + g0 + g1 * y + g2 * y**2 + g3 * y**3
-	yprime = y + h0 + h1 * y + h2 * y**2 + h3 * y**3
+	yprime = y + g0 + g1 * x + g2 * x**2 + g3 * x**3
+	xprime = x + h0 + h1 * x + h2 * x**2 + h3 * x**3
 
 	#if color < color0:
 	#	xprime += px * color
@@ -109,8 +115,8 @@ def pixel_to_munu(x, y, color, band, tsfield):
 	(xprime, yprime) = pixel_to_prime(x, y, color, band, tsfield)
 	a, b, c = T.a[band], T.b[band], T.c[band]
 	d, e, f = T.d[band], T.e[band], T.f[band]
-	mu = a + b * xprime + c * yprime
-	nu = d + e * xprime + f * yprime
+	mu = a + b * yprime + c * xprime
+	nu = d + e * yprime + f * xprime
 	return (mu, nu)
 
 def munu_to_pixel(mu, nu, color, band, tsfield):
@@ -123,8 +129,8 @@ def munu_to_pixel(mu, nu, color, band, tsfield):
 	C = -c / determinant
 	E = -e / determinant
 	F = b / determinant
-	xprime = B * (mu - a) + C * (nu - d)
-	yprime = E * (mu - a) + F * (nu - d)
+	yprime = B * (mu - a) + C * (nu - d)
+	xprime = E * (mu - a) + F * (nu - d)
 	return prime_to_pixel(xprime, yprime, color, band, tsfield)
 
 if __name__ == '__main__':
@@ -163,14 +169,51 @@ if __name__ == '__main__':
 	print 'diff in ra,dec:', rr-ra, dd-dec
 
 
+	from astrometry.util.sip import *
+	wcs = Sip('fpC-002830-r6-0398.fit')
+
+	N = 800
 	O = fits_table('tsObj-002830-6-0-0398.fit')
 	ra,dec = O.ra, O.dec
-	print 'ra,dec', ra.shape
-	for band in range(5):
-		X,Y = O.colc[:,band], O.rowc[:,band]
-		color = zeros_like(X)
-		xx,yy = radec_to_pixel(ra, dec, color, band, tsfield)
-		print 'xx', xx.shape
-		rr,dd = pixel_to_radec(X, Y, color, band, tsfield)
-		print 'dxy', xx-X, yy-Y
-		print 'dradec', ra-rr, dec-dd
+	print 'ra,dec', ra.shape, dec.shape
+	band = 2
+	ra = ra[:N]
+	dec = dec[:N]
+	X,Y = O.colc[:,band], O.rowc[:,band]
+	X = X[:N]
+	Y = Y[:N]
+	print 'x', X.shape
+	color = zeros_like(X)
+	xx,yy = radec_to_pixel(ra, dec, color, band, tsfield)
+	print 'xx', xx.shape
+	rr,dd = pixel_to_radec(X, Y, color, band, tsfield)
+	print 'dxy', xx-X, yy-Y
+	print 'dradec', ra-rr, dec-dd
+
+	for Xi,Yi,xi,yi,ri,di in zip(X,Y,xx,yy,ra,dec):
+		wxi,wyi = wcs.radec2pixelxy(ri,di)
+		print ('  X,Y (%8.2f,%8.2f) xx,yy (%8.2f, %8.2f), dx,dy (%8.2f, %8.2f), wcs xy (%8.2f, %8.2f) wcs dxy (%8.2f, %8.2f)' %
+			   (Xi, Yi, xi, yi, (Xi-xi), (Yi-yi), wxi, wyi, Xi-wxi, Yi-wyi))
+
+	from pylab import *
+
+	clf()
+	plot(X, Y, 'k.')
+	plot(xx, yy, 'rx')
+	plot(vstack((X,xx)), array((Y,yy)), '-', color='0.5')
+	savefig('dxy.png')
+	
+	#rd = array([wcs.pixelxy2radec(x,y) for x,y in zip(X,Y)])
+	#r1 = rd[:,0]
+	#d1 = rd[:,1]
+	#print 'delta radec', r1
+
+	if False:
+		for band in range(5):
+			X,Y = O.colc[:,band], O.rowc[:,band]
+			color = zeros_like(X)
+			xx,yy = radec_to_pixel(ra, dec, color, band, tsfield)
+			print 'xx', xx.shape
+			rr,dd = pixel_to_radec(X, Y, color, band, tsfield)
+			print 'dxy', xx-X, yy-Y
+			print 'dradec', ra-rr, dec-dd
