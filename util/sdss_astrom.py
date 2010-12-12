@@ -1,5 +1,7 @@
 # Copyright 2010 Dustin Lang and David W. Hogg, all rights reserved.
 
+# Note: not thoroughly tested.
+
 # style notes:
 # ------------
 # - column is x, row is y; this is at odds with some online documentation
