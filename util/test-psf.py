@@ -1,8 +1,5 @@
 from astrometry.util.pyfits_utils import *
 from astrometry.util.sdss_psf import *
-
-from scipy.ndimage.filters import gaussian_filter
-
 from pylab import *
 
 if __name__ == '__main__':
@@ -42,21 +39,14 @@ if __name__ == '__main__':
 				yticks([],[])
 		subplots_adjust(wspace=0.05, hspace=0.05)
 		savefig('psf-%i-kl.png' % band)
-
-		(a, s1, b, s2) = sdss_dg_psf(psfield, band)
-		a /= (s1**2 + b*s2**2)
-
-		print 'a,s1,b,s2', a,s1,b,s2
+		
+		dgp = sdss_dg_psf_params(psfield, band)
+		#print 'a,s1,b,s2', a,s1,b,s2
 		clf()
 		ploti = 1
 		for iy,y in enumerate(Y):
 			for ix,x in enumerate(X):
-				img = zeros(psfshape)
-				h,w = psfshape
-				img[h/2, w/2] = 1.
-
-				psf = a * (s1**2 * gaussian_filter(img, s1) +
-						   b * s2**2 * gaussian_filter(img, s2))
+				psf = sdss_dg_psf(dgp, psfshape)
 				subplot(len(Y), len(X), ploti)
 				ploti += 1
 				print 'psf range:', psf.min(), psf.max(), psf.sum()
