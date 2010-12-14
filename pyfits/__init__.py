@@ -1,54 +1,33 @@
-#This is the configuration file for the pyfits namespace.  This is needed
-#because we have the option of using either a numarray or numpy version
-#of pyfits.
+#This is the configuration file for the pyfits namespace.
 
-#This option is controlled by the NUMERIX environment variable.  Set NUMERIX 
-#to 'numarray' for the numarray version of pyfits.  Set NUMERIX to 'numpy'
-#for the numpy version of pyfits.
-
-#If only one array package is installed, that package's version of pyfits
-#will be imported.  If both packages are installed the NUMERIX value is
-#used to decide between the packages.  If no NUMERIX value is set then 
-#the numpy version of pyfits will be imported.
-
-#Anything else is an exception.
+from __future__ import division # confidence high
 
 import os
 
-__version__ = '2.1.1'
-
-# Check the environment variables for NUMERIX
+# Define the version of the pyfits package.
 try:
-    numerix = os.environ["NUMERIX"]
-except:
-    numerix = 'numpy'
+    import svn_version
+    __svn_version__ = svn_version.__svn_version__
+except ImportError:
+    __svn_version__ = 'Unable to determine SVN revision'
 
+__version__ = '2.3.1'
 
-if (numerix == 'numarray'):
-    try :
-        from NA_pyfits import *
-        import NA_pyfits as core
-        __doc__ = NA_pyfits.__doc__
-    except ImportError, e:
-        raise ImportError, `e` + ".  Cannot import numarray version of PyFITS!"
-else:
-    try:
-        try:
-            from NP_pyfits import *
-            import NP_pyfits as core
-            __doc__ = NP_pyfits.__doc__
-        except ImportError:
-            try:
-                from NA_pyfits import *
-                import NA_pyfits as core
-                doc__ = NA_pyfits.__doc__
-            except ImportError, e:
-                raise ImportError, `e` + ".  Cannot import either numpy or numarray."
-    except Exception, e:
-        raise ImportError, `e` + ".  No usable array package has been found.  Cannot import either numpy or numarray."
-    
+# Import the pyfits core module.
+from core import *
+__doc__ = core.__doc__
+
+# Define modules available using from pyfits import *.
 _locals = locals().keys()
 for n in _locals[::-1]:
     if n[0] == '_' or n in ('re', 'os', 'tempfile', 'exceptions', 'operator', 'num', 'ndarray', 'chararray', 'rec', 'objects', 'Memmap', 'maketrans', 'open'):
         _locals.remove(n)
 __all__ = _locals
+
+try:
+    import pytools.tester
+    def test(*args,**kwds):
+        pytools.tester.test(modname=__name__, *args, **kwds)
+except ImportError:
+    pass
+

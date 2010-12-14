@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-# $Id: NP_pyfits.py 442 2009-04-22 12:43:13Z jtaylor2 $
+# $Id: core.py 597 2010-05-07 19:15:56Z stsci_jtaylor2 $
 
 """
-A module for reading and writing FITS files and manipulating their contents.
+A module for reading and writing FITS files and manipulating their
+contents.
 
 A module for reading and writing Flexible Image Transport System
 (FITS) files.  This file format was endorsed by the International
@@ -12,28 +13,19 @@ for storing high energy astrophysics data.  For details of the FITS
 standard, see the NASA/Science Office of Standards and Technology
 publication, NOST 100-2.0.
 
-License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
-
-For detailed examples of usage, see the I{PyFITS User's Manual} available from
-U{http://www.stsci.edu/resources/software_hardware/pyfits/Users_Manual1.pdf}
-
-Epydoc markup used for all docstrings in this module.
-
-@group Header-related Classes: Card, CardList, _Card_with_continue,
-    Header, _Hierarch
-@group HDU Classes: _AllHDU, BinTableHDU, _CorruptedHDU, _ExtensionHDU,
-    GroupsHDU, ImageHDU, _ImageBaseHDU, PrimaryHDU, TableHDU, 
-    _TableBaseHDU, _TempHDU, _ValidHDU
-@group Table-related Classes: ColDefs, Column, FITS_rec, _FormatP,
-    _FormatX, _VLF
+For detailed examples of usage, see the `PyFITS User's Manual
+<http://stsdas.stsci.edu/download/wikidocs/The_PyFITS_Handbook.pdf>`_.
 
 """
+
+from __future__ import division # confidence high
+
 """
         Do you mean: "Profits"?
 
                 - Google Search, when asked for "PyFITS"
 """
-  
+
 import re, os, tempfile, exceptions
 import operator
 import __builtin__
@@ -53,6 +45,8 @@ import threading
 import sys
 import warnings
 import weakref
+import datetime
+import textwrap
 try:
     import pyfitsComp
     compressionSupported = 1
@@ -61,7 +55,7 @@ except:
 
 # Module variables
 _blockLen = 2880         # the FITS block size
-_python_mode = {'readonly':'rb', 'copyonwrite':'rb', 'update':'rb+', 'append':'ab+'}  # open modes
+_python_mode = {'readonly':'rb', 'copyonwrite':'rb', 'update':'rb+', 'append':'ab+', 'ostream':'w'}  # open modes
 _memmap_mode = {'readonly':'r', 'copyonwrite':'c', 'update':'r+'}
 
 TRUE  = True    # deprecated
@@ -72,7 +66,7 @@ DELAYED = "delayed"     # used for lazy instantiation of data
 ASCIITNULL = 0          # value for ASCII table cell with value = TNULL
                         # this can be reset by user.
 _isInt = "isinstance(val, (int, long, np.integer))"
-    
+
 # The following variable and function are used to support case sensitive
 # values for the value of a EXTNAME card in an extension header.  By default,
 # pyfits converts the value of EXTNAME cards to upper case when reading from
@@ -83,7 +77,7 @@ _isInt = "isinstance(val, (int, long, np.integer))"
 _extensionNameCaseSensitive = False
 
 def setExtensionNameCaseSensitive(value=True):
-    global _extensionNameCaseSensitive 
+    global _extensionNameCaseSensitive
     _extensionNameCaseSensitive = value
 
 # Warnings routines
@@ -105,15 +99,17 @@ warnings.filterwarnings('always',category=UserWarning,append=True)
 # Functions
 
 def _padLength(stringLen):
-    """Bytes needed to pad the input stringLen to the next FITS block."""
+    """
+    Bytes needed to pad the input stringLen to the next FITS block.
+    """
     return (_blockLen - stringLen%_blockLen) % _blockLen
 
 def _tmpName(input):
-    """Create a temporary file name which should not already exist.
-       Use the directory of the input file and the base name of the mktemp()
-       output.
     """
-
+    Create a temporary file name which should not already exist.  Use
+    the directory of the input file and the base name of the mktemp()
+    output.
+    """
     dirName = os.path.dirname(input)
     if dirName != '':
         dirName += '/'
@@ -121,7 +117,7 @@ def _tmpName(input):
     if not os.path.exists(_name):
         return _name
     else:
-        raise _name, "exists"
+        raise RuntimeError("%s exists" % _name)
 
 def _fromfile(infile, dtype, count, sep):
     if isinstance(infile, file):
@@ -134,18 +130,46 @@ def _fromfile(infile, dtype, count, sep):
 def _tofile(arr, outfile):
     if isinstance(outfile, file):
         arr.tofile(outfile)
-    else: # treat as file-like object with "read" method
+    else: # treat as file-like object with "write" method
         str=arr.tostring()
         outfile.write(str)
 
+def _chunk_array(arr, CHUNK_SIZE=2 ** 25):
+    """
+    Yields subviews of the given array.  The number of rows is
+    selected so it is as close to CHUNK_SIZE (bytes) as possible.
+    """
+    if len(arr) == 0:
+        return
+    if isinstance(arr, FITS_rec):
+        arr = np.asarray(arr)
+    row_size = arr[0].size
+    rows_per_chunk = max(min(CHUNK_SIZE // row_size, len(arr)), 1)
+    for i in range(0, len(arr), rows_per_chunk):
+        yield arr[i:i+rows_per_chunk,...]
+
+def _unsigned_zero(dtype):
+    """
+    Given a numpy dtype, finds it's "zero" point, which is exactly in
+    the middle of its range.
+    """
+    assert dtype.kind == 'u'
+    return 1 << (dtype.itemsize * 8 - 1)
+
+def _is_pseudo_unsigned(dtype):
+    return dtype.kind == 'u' and dtype.itemsize >= 2
+
 class VerifyError(exceptions.Exception):
-    """Verify exception class."""
+    """
+    Verify exception class.
+    """
     pass
 
 class _ErrList(list):
-    """Verification errors list class.  It has a nested list structure
-       constructed by error messages generated by verifications at different
-       class levels.
+    """
+    Verification errors list class.  It has a nested list structure
+    constructed by error messages generated by verifications at
+    different class levels.
     """
 
     def __init__(self, val, unit="Element"):
@@ -153,10 +177,11 @@ class _ErrList(list):
         self.unit = unit
 
     def __str__(self, tab=0):
-        """Print out nested structure with corresponding indentations.
+        """
+        Print out nested structure with corresponding indentations.
 
-           A tricky use of __str__, since normally __str__ has only one
-           argument.
+        A tricky use of `__str__`, since normally `__str__` has only
+        one argument.
         """
         result = ""
         element = 0
@@ -182,11 +207,14 @@ class _ErrList(list):
         return result
 
 class _Verify(object):
-    """Shared methods for verification."""
+    """
+    Shared methods for verification.
+    """
 
     def run_option(self, option="warn", err_text="", fix_text="Fixed.", fix = "pass", fixable=1):
-        """Execute the verification with selected option."""
-
+        """
+        Execute the verification with selected option.
+        """
         _text = err_text
         if not fixable:
             option = 'unfixable'
@@ -204,8 +232,17 @@ class _Verify(object):
             _text += '  ' + fix_text
         return _text
 
-    def verify (self, option='warn'):
-        """Wrapper for _verify."""
+    def verify(self, option='warn'):
+        """
+        Verify all values in the instance.
+
+        Parameters
+        ----------
+        option : str
+            Output verification option.  Must be one of ``"fix"``,
+            ``"silentfix"``, ``"ignore"``, ``"warn"``, or
+            ``"exception"``.  See :ref:`verify` for more info.
+        """
 
         _option = option.lower()
         if _option not in ['fix', 'silentfix', 'ignore', 'warn', 'exception']:
@@ -224,7 +261,9 @@ class _Verify(object):
             raise VerifyError, '\n'+x
 
 def _pad(input):
-    """Pad balnk space to the input string to be multiple of 80."""
+    """
+    Pad blank space to the input string to be multiple of 80.
+    """
     _len = len(input)
     if _len == Card.length:
         return input
@@ -241,21 +280,34 @@ def _pad(input):
         return input + ' ' * (Card.length-strlen)
 
 def _floatFormat(value):
-    """Format the floating number to make sure it gets the decimal point."""
+    """
+    Format the floating number to make sure it gets the decimal point.
+    """
     valueStr = "%.16G" % value
     if "." not in valueStr and "E" not in valueStr:
         valueStr += ".0"
     return valueStr
 
 class Undefined:
-    """Undefined value."""
+    """
+    Undefined value.
+    """
     pass
 
 class Delayed:
-    """Delayed file-reading data."""
+    """
+    Delayed file-reading data.
+    """
     def __init__(self, hdu=None, field=None):
         self.hdu = weakref.ref(hdu)
         self.field = field
+
+    def __getitem__(self, key):
+        # This forces the data for the HDU to be read, which will replace
+        # the corresponding Delayed objects in the Tables Columns to be
+        # transformed into ndarrays.  It will also return the value of the
+        # requested data element.
+        return self.hdu().data[key][self.field]
 
 # translation table for floating value string
 _fix_table = maketrans('de', 'DE')
@@ -342,13 +394,21 @@ class Card(_Verify):
     _commentaryKeys = ['', 'COMMENT', 'HISTORY']
 
     def __init__(self, key='', value='', comment=''):
-        """Construct a card from key, value, and (optionally) comment.
-           Any specifed arguments, except defaults, must be compliant to
-           FITS standard.
+        """
+        Construct a card from `key`, `value`, and (optionally)
+        `comment`.  Any specifed arguments, except defaults, must be
+        compliant to FITS standard.
 
-           key: keyword name, default=''.
-           value: keyword value, default=''.
-           comment: comment, default=''.
+        Parameters
+        ----------
+        key : str, optional
+            keyword name
+
+        value : str, optional
+            keyword value
+
+        comment : str, optional
+            comment
         """
 
         if key != '' or value != '' or comment != '':
@@ -368,7 +428,9 @@ class Card(_Verify):
         return self._cardimage
 
     def __getattr__(self, name):
-        """ instanciate specified attribute object."""
+        """
+        Instantiate specified attribute object.
+        """
 
         if name == '_cardimage':
             self.ascardimage()
@@ -382,7 +444,9 @@ class Card(_Verify):
         return getattr(self, name)
 
     def _setkey(self, val):
-        """Set the key attribute, surrogate for the __setattr__ key case."""
+        """
+        Set the key attribute, surrogate for the `__setattr__` key case.
+        """
 
         if isinstance(val, str):
             val = val.strip()
@@ -402,7 +466,9 @@ class Card(_Verify):
         self.__dict__['key'] = val
 
     def _setvalue(self, val):
-        """Set the value attribute."""
+        """
+        Set the value attribute.
+        """
 
         if isinstance(val, (str, int, long, float, complex, bool, Undefined,
                             np.floating, np.integer, np.complexfloating)):
@@ -414,7 +480,9 @@ class Card(_Verify):
         self.__dict__['value'] = val
 
     def _setcomment(self, val):
-        """Set the comment attribute."""
+        """
+        Set the comment attribute.
+        """
 
         if isinstance(val,str):
             self._checkText(val)
@@ -441,10 +509,16 @@ class Card(_Verify):
         self._ascardimage()
 
     def ascardimage(self, option='silentfix'):
-        """Generate a (new) card image from the attributes: key, value,
-           and comment, or from raw string.
+        """
+        Generate a (new) card image from the attributes: `key`, `value`,
+        and `comment`, or from raw string.
 
-           option: verification option, default=silentfix.
+        Parameters
+        ----------
+        option : str
+            Output verification option.  Must be one of ``"fix"``,
+            ``"silentfix"``, ``"ignore"``, ``"warn"``, or
+            ``"exception"``.  See :ref:`verify` for more info.
         """
 
         # Only if the card image already exist (to avoid infinite loop),
@@ -455,8 +529,9 @@ class Card(_Verify):
         return self.__dict__['_cardimage']
 
     def _ascardimage(self):
-        """Generate a (new) card image from the attributes: key, value,
-           and comment.  Core code for ascardimage.
+        """
+        Generate a (new) card image from the attributes: `key`, `value`,
+        and `comment`.  Core code for `ascardimage`.
         """
 
         # keyword string
@@ -555,16 +630,18 @@ class Card(_Verify):
         self.__dict__['_cardimage'] = output
 
     def _checkText(self, val):
-        """Verify val to be printable ASCII text."""
-
+        """
+        Verify `val` to be printable ASCII text.
+        """
         if Card._comment_FSC_RE.match(val) is None:
             self.__dict__['_err_text'] = 'Unprintable string %s' % repr(val)
             self.__dict__['_fixable'] = 0
             raise ValueError, self._err_text
 
     def _checkKey(self, val):
-        """Verify the keyword to be FITS standard."""
-
+        """
+        Verify the keyword `val` to be FITS standard.
+        """
         # use repr (not str) in case of control character
         if Card._keywd_FSC_RE.match(val) is None:
             self.__dict__['_err_text'] = 'Illegal keyword name %s' % repr(val)
@@ -572,7 +649,9 @@ class Card(_Verify):
             raise ValueError, self._err_text
 
     def _extractKey(self):
-        """Returns the keyword name parsed from the card image."""
+        """
+        Returns the keyword name parsed from the card image.
+        """
         head = self._getKeyString()
         if isinstance(self, _Hierarch):
             self.__dict__['key'] = head.strip()
@@ -580,8 +659,9 @@ class Card(_Verify):
             self.__dict__['key'] = head.strip().upper()
 
     def _extractValueComment(self, name):
-        """Extract the keyword value or comment from the card image."""
-
+        """
+        Extract the keyword value or comment from the card image.
+        """
         # for commentary cards, no need to parse further
         if self.key in Card._commentaryKeys:
             self.__dict__['value'] = self._cardimage[8:].rstrip()
@@ -639,8 +719,9 @@ class Card(_Verify):
                     self.__dict__['comment'] = _comm.rstrip()
 
     def _fixValue(self, input):
-        """Fix the card image for fixable non-standard compliance."""
-
+        """
+        Fix the card image for fixable non-standard compliance.
+        """
         _valStr = None
 
         # for the unparsable case
@@ -675,11 +756,11 @@ class Card(_Verify):
         self._ascardimage()
 
     def _locateEq(self):
-        """Locate the equal sign in the card image before column 10 and
-           return its location.  It returns None if equal sign is not present,
-           or it is a commentary card.
         """
-
+        Locate the equal sign in the card image before column 10 and
+        return its location.  It returns `None` if equal sign is not
+        present, or it is a commentary card.
+        """
         # no equal sign for commentary cards (i.e. part of the string value)
         _key = self._cardimage[:8].strip().upper()
         if _key in Card._commentaryKeys:
@@ -696,11 +777,11 @@ class Card(_Verify):
         return eqLoc
 
     def _getKeyString(self):
-        """Locate the equal sign in the card image and return the string
-           before the equal sign.  If there is no equal sign, return the
-           string before column 9.
         """
-
+        Locate the equal sign in the card image and return the string
+        before the equal sign.  If there is no equal sign, return the
+        string before column 9.
+        """
         eqLoc = self._locateEq()
         if eqLoc is None:
             eqLoc = 8
@@ -711,19 +792,20 @@ class Card(_Verify):
         return self._cardimage[_start:eqLoc]
 
     def _getValueCommentString(self):
-        """Locate the equal sign in the card image and return the string
-           after the equal sign.  If there is no equal sign, return the
-           string after column 8.
         """
-
+        Locate the equal sign in the card image and return the string
+        after the equal sign.  If there is no equal sign, return the
+        string after column 8.
+        """
         eqLoc = self._locateEq()
         if eqLoc is None:
             eqLoc = 7
         return self._cardimage[eqLoc+1:]
 
     def _check(self, option='ignore'):
-        """Verify the card image with the specified option. """
-
+        """
+        Verify the card image with the specified option.
+        """
         self.__dict__['_err_text'] = ''
         self.__dict__['_fix_text'] = ''
         self.__dict__['_fixable'] = 1
@@ -776,12 +858,12 @@ class Card(_Verify):
                     self._checkText(_str)
 
     def fromstring(self, input):
-        """Construct a Card object from a (raw) string. It will pad the
-           string if it is not the length of a card image (80 columns).
-           If the card image is longer than 80, assume it contains CONTINUE
-           card(s).
         """
-
+        Construct a `Card` object from a (raw) string. It will pad the
+        string if it is not the length of a card image (80 columns).
+        If the card image is longer than 80 columns, assume it
+        contains ``CONTINUE`` card(s).
+        """
         self.__dict__['_cardimage'] = _pad(input)
 
         if self._cardimage[:8].upper() == 'HIERARCH':
@@ -797,15 +879,17 @@ class Card(_Verify):
         return self
 
     def _ncards(self):
-        return len(self._cardimage) / Card.length
+        return len(self._cardimage) // Card.length
 
     def _verify(self, option='warn'):
-        """Card class verification method."""
+        """
+        Card class verification method.
+        """
         _err = _ErrList([])
         try:
             self._check(option)
         except ValueError:
-            # Trapping the ValueError raised by _check method.  Want execution to continue while printing 
+            # Trapping the ValueError raised by _check method.  Want execution to continue while printing
             # exception message.
             pass
         _err.append(self.run_option(option, err_text=self._err_text, fix_text=self._fix_text, fixable=self._fixable))
@@ -814,19 +898,21 @@ class Card(_Verify):
 
 class RecordValuedKeywordCard(Card):
     """
-    Class to manage record-valued keyword cards as described in the FITS WCS
-    Paper IV proposal for representing a more general distortion model.
+    Class to manage record-valued keyword cards as described in the
+    FITS WCS Paper IV proposal for representing a more general
+    distortion model.
 
-    Record-valued Keyword cards are string-valued cards where the string is
-    interpreted as a definition giving a record field name, and its floating
-    point value.  In a FITS header they have the following syntax:
+    Record-valued keyword cards are string-valued cards where the
+    string is interpreted as a definition giving a record field name,
+    and its floating point value.  In a FITS header they have the
+    following syntax::
 
-        keyword= 'field-specifier: float'
+        keyword = 'field-specifier: float'
 
-    where keyword is a standard eight-character FITS keyword name, float is the
-    standard FITS ASCII representation of a floating point number, and these
-    are separated by a colon followed by a single blank.  The grammar for
-    field-specifier is:
+    where `keyword` is a standard eight-character FITS keyword name,
+    `float` is the standard FITS ASCII representation of a floating
+    point number, and these are separated by a colon followed by a
+    single blank.  The grammar for field-specifier is::
 
         field-specifier:
             field
@@ -836,17 +922,18 @@ class RecordValuedKeywordCard(Card):
             identifier
             identifier.index
 
-    where identifier is a sequence of letters (upper or lower case), 
-    underscores, and digits of which the first character must not be a digit,
-    and index is a sequence of digits.  No blank characters may occur in the
-    field-specifier.  The index is provided primarily for defining array
-    elements though it need not be used for that purpose.
+    where `identifier` is a sequence of letters (upper or lower case),
+    underscores, and digits of which the first character must not be a
+    digit, and `index` is a sequence of digits.  No blank characters
+    may occur in the field-specifier.  The `index` is provided
+    primarily for defining array elements though it need not be used
+    for that purpose.
 
-    Multiple record-valued keywords of the same name but differing values may
-    be present in a FITS header.  The field-specifier may be viewed as part
-    of the keyword name.
+    Multiple record-valued keywords of the same name but differing
+    values may be present in a FITS header.  The field-specifier may
+    be viewed as part of the keyword name.
 
-    Some examples follow:
+    Some examples follow::
 
         DP1     = 'NAXIS: 2'
         DP1     = 'AXIS.1: 1'
@@ -882,12 +969,12 @@ class RecordValuedKeywordCard(Card):
     field_specifier_NFSC_image_RE = re.compile(field_specifier_NFSC_val)
     #
     # regular expression to extract the field specifier and value from
-    # a card value; the value may not be FITS Standard Complient 
+    # a card value; the value may not be FITS Standard Complient
     # (ex. 'AXIS.1: 2.0e5')
     #
     field_specifier_NFSC_val_RE = re.compile(field_specifier_NFSC_val+'$')
     #
-    # regular expression to extract the key and the field specifier from a 
+    # regular expression to extract the key and the field specifier from a
     # string that is being used to index into a card list that contains
     # record value keyword cards (ex. 'DP1.AXIS.1')
     #
@@ -895,7 +982,7 @@ class RecordValuedKeywordCard(Card):
                                  r'(?P<field_spec>' + field_specifier_s + r')$')
     #
     # regular expression to extract the field specifier and value and comment
-    # from the string value of a record value keyword card 
+    # from the string value of a record value keyword card
     # (ex "'AXIS.1: 1' / a comment")
     #
     keyword_val_comm_RE = re.compile(keyword_val_comm)
@@ -912,18 +999,26 @@ class RecordValuedKeywordCard(Card):
 
     def coerce(cls,card):
         """
-        Class method to coerce an input Card object to a 
-        RecordValuedKeywordCard object if the value of the card meets the
-        requirements of this type of card.
+        Coerces an input `Card` object to a `RecordValuedKeywordCard`
+        object if the value of the card meets the requirements of this
+        type of card.
 
-        :Parameters:
-            card: A Card object to coerec
+        Parameters
+        ----------
+        card : `Card` object
+            A `Card` object to coerce
 
-        :Returns:
-            Input card coercable: a new RecordValuedKeywordCard constructed
-                                  from the key, value, and comment of the 
-                                  input card
-            Input card not coercable: the input card 
+        Returns
+        -------
+        card
+            - If the input card is coercible:
+
+                a new `RecordValuedKeywordCard` constructed from the
+                `key`, `value`, and `comment` of the input card.
+
+            - If the input card is not coercible:
+
+                the input card
         """
         mo = cls.field_specifier_NFSC_val_RE.match(card.value)
         if mo:
@@ -935,19 +1030,24 @@ class RecordValuedKeywordCard(Card):
 
     def upperKey(cls, key):
         """
-        Class method to convert a keyword value that may contain a 
-        field-specifier to upper case.  The effect is to raise the 
-        key to upper case and leave the field specifier in its original
+        `classmethod` to convert a keyword value that may contain a
+        field-specifier to uppercase.  The effect is to raise the
+        key to uppercase and leave the field specifier in its original
         case.
 
-        :Parameters:
-            key: A keyword value that could be an integer, a key, or
-                 a key.field-specifier value
+        Parameters
+        ----------
+        key : int or str
+            A keyword value that could be an integer, a key, or a
+            `key.field-specifier` value
 
-        :Returns:
-            Integer input: the original integer key
+        Returns
+        -------
+        Integer input
+            the original integer key
 
-            String input: the converted string
+        String input
+            the converted string
         """
         if isinstance(key, (int, long,np.integer)):
             return key
@@ -959,33 +1059,39 @@ class RecordValuedKeywordCard(Card):
                    mo.group('field_spec')
         else:
             return key.strip().upper()
-        
+
     upperKey = classmethod(upperKey)
 
     def validKeyValue(cls, key, value=0):
         """
-        Class method that will determine if the input key and value can
-        be used to form a valid RecordValuedKeywordCard object.  The
-        key parameter may contain the key only or both the key and 
-        field-specifier.  The value may be the value only or the 
-        field-specifier and the value together.  The value parameter
-        is optional, in which case the key parameter must contain both
-        the key and the field specifier.  Some examples follow:
+        Determine if the input key and value can be used to form a
+        valid `RecordValuedKeywordCard` object.  The `key` parameter
+        may contain the key only or both the key and field-specifier.
+        The `value` may be the value only or the field-specifier and
+        the value together.  The `value` parameter is optional, in
+        which case the `key` parameter must contain both the key and
+        the field specifier.
 
-        validKeyValue('DP1','AXIS.1: 2')
-        validKeyValue('DP1.AXIS.1', 2)
-        validKeyValue('DP1.AXIS.1')
+        Parameters
+        ----------
+        key : str
+            The key to parse
 
-        :Parameters:
-            key: string - The key to parse
-     
-            value: string or something that may be converted to a float -
-                   The value to parse
+        value : str or float-like, optional
+            The value to parse
 
-        :Returns:
-            valid input - A list containing the key, field-specifier, value
+        Returns
+        -------
+        valid input : A list containing the key, field-specifier, value
 
-            invalid input - An empty list
+        invalid input : An empty list
+
+        Examples
+        --------
+
+        >>> validKeyValue('DP1','AXIS.1: 2')
+        >>> validKeyValue('DP1.AXIS.1', 2)
+        >>> validKeyValue('DP1.AXIS.1')
         """
 
         rtnKey = rtnFieldSpec = rtnValue = ''
@@ -1012,7 +1118,7 @@ class RecordValuedKeywordCard(Card):
                         rtnKey = myKey
 
         if rtnFieldSpec:
-            return [rtnKey, rtnFieldSpec, rtnValue] 
+            return [rtnKey, rtnFieldSpec, rtnValue]
         else:
             return []
 
@@ -1020,21 +1126,27 @@ class RecordValuedKeywordCard(Card):
 
     def createCard(cls, key='', value='', comment=''):
         """
-        Class method that will create a card given the input key, value,
-        and comment.  If the input key and value qualify for a
-        RecordValuedKeywordCard then that is the object created.  Otherwise,
-        a standard Card object is created.
+        Create a card given the input `key`, `value`, and `comment`.
+        If the input key and value qualify for a
+        `RecordValuedKeywordCard` then that is the object created.
+        Otherwise, a standard `Card` object is created.
 
-        :Parameters:
-            key: string - The key
+        Parameters
+        ----------
+        key : str, optional
+            The key
 
-            value: string - The value
+        value : str, optional
+            The value
 
-            comment: string - The comment
+        comment : str, optional
+            The comment
 
-        :Returns:
-            either a RecordValuedKeywordCard or a Card object                           """
-
+        Returns
+        -------
+        card
+            Either a `RecordValuedKeywordCard` or a `Card` object.
+        """
         if cls.validKeyValue(key, value):
             objClass = cls
         else:
@@ -1046,18 +1158,21 @@ class RecordValuedKeywordCard(Card):
 
     def createCardFromString(cls, input):
         """
-        Class method that will create a card given the input string.
-        If the input string can be parsed into a key and value that qualify
-        for a RecordValuedKeywordCard then that is the object created.
-        Otherwise, a standard Card object is created.
+        Create a card given the `input` string.  If the `input` string
+        can be parsed into a key and value that qualify for a
+        `RecordValuedKeywordCard` then that is the object created.
+        Otherwise, a standard `Card` object is created.
 
-        :Parameters:
-            input: string - The string representing the card
+        Parameters
+        ----------
+        input : str
+            The string representing the card
 
-        :Returns:
-            either a RecordValuedKeywordCard or a Card object
+        Returns
+        -------
+        card
+            either a `RecordValuedKeywordCard` or a `Card` object
         """
-
         idx1 = string.find(input, "'")+1
         idx2 = string.rfind(input, "'")
 
@@ -1073,19 +1188,18 @@ class RecordValuedKeywordCard(Card):
 
     def __init__(self, key='', value='', comment=''):
         """
-        Class initializer
+        Parameters
+        ----------
+        key : str, optional
+            The key, either the simple key or one that contains
+            a field-specifier
 
-        :Parameters:
-            key: string - The key, either the simple key or one that contains
-                          a field-specifier
+        value : str, optional
+            The value, either a simple value or one that contains a
+            field-specifier
 
-            value: string - The value, either a simple value or one that
-                            contains a field-specifier
-
-            comment: string - The comment
-
-        :Returns:
-            None
+        comment : str, optional
+            The comment
         """
 
         mo = self.keyword_name_RE.match(key)
@@ -1104,7 +1218,7 @@ class RecordValuedKeywordCard(Card):
                     else:
                         raise ValueError, \
                               "value %s must be in the form " % value + \
-                              "field_specifier: value (ex. 'NAXIS: 2')" 
+                              "field_specifier: value (ex. 'NAXIS: 2')"
             else:
                 raise ValueError, 'value %s is not a string' % value
 
@@ -1132,10 +1246,9 @@ class RecordValuedKeywordCard(Card):
 
     def _ascardimage(self):
         """
-        Generate a (new) card image from the attributes: key, value,
-        field_specifier, and comment.  Core code for ascardimage.
+        Generate a (new) card image from the attributes: `key`, `value`,
+        `field_specifier`, and `comment`.  Core code for `ascardimage`.
         """
-
         Card._ascardimage(self)
         eqloc = self._cardimage.index("=")
         slashloc = self._cardimage.find("/")
@@ -1148,7 +1261,7 @@ class RecordValuedKeywordCard(Card):
         valStr = "'" + self.field_specifier + ": " + valStr + "'"
         valStr = '%-20s' % valStr
 
-        output = self._cardimage[:eqloc+2] + valStr 
+        output = self._cardimage[:eqloc+2] + valStr
 
         if slashloc > 0:
             output = output + self._cardimage[slashloc-1:]
@@ -1160,8 +1273,9 @@ class RecordValuedKeywordCard(Card):
 
 
     def _extractValueComment(self, name):
-        """Extract the keyword value or comment from the card image."""
-
+        """
+        Extract the keyword value or comment from the card image.
+        """
         valu = self._check(option='parse')
 
         if name == 'value':
@@ -1172,7 +1286,7 @@ class RecordValuedKeywordCard(Card):
             self.__dict__['field_specifier'] = valu.group('keyword')
             self.__dict__['value'] = \
                            eval(valu.group('val').translate(_fix_table2, ' '))
- 
+
             if '_valuestring' not in self.__dict__:
                 self.__dict__['_valuestring'] = valu.group('val')
             if '_valueModified' not in self.__dict__:
@@ -1181,29 +1295,24 @@ class RecordValuedKeywordCard(Card):
         elif name == 'comment':
             Card._extractValueComment(self, name)
 
-        
+
     def strvalue(self):
         """
-        Method to extract the field specifier and value from the 
-        card image.  This is what is reported to the user when requesting
-        the value of the Card using either an integer index or the card
-        key without any field specifier.
-
-        :Parameters: 
-            None
-
-        :Returns: 
-            None
+        Method to extract the field specifier and value from the card
+        image.  This is what is reported to the user when requesting
+        the value of the `Card` using either an integer index or the
+        card key without any field specifier.
         """
 
         mo = self.field_specifier_NFSC_image_RE.search(self._cardimage)
         return self._cardimage[mo.start():mo.end()]
 
     def _fixValue(self, input):
-        """Fix the card image for fixable non-standard compliance."""
-
+        """
+        Fix the card image for fixable non-standard compliance.
+        """
         _valStr = None
- 
+
         if input is None:
             tmp = self._getValueCommentString()
 
@@ -1214,7 +1323,7 @@ class RecordValuedKeywordCard(Card):
 
             self.__dict__['_err_text'] = 'Illegal value %s' % tmp[:slashLoc]
             self.__dict__['_fixable'] = 0
-            raise ValueError, self._err_text 
+            raise ValueError, self._err_text
         else:
             self.__dict__['_valuestring'] = \
                                  input.group('val').translate(_fix_table, ' ')
@@ -1222,8 +1331,9 @@ class RecordValuedKeywordCard(Card):
 
 
     def _check(self, option='ignore'):
-        """Verify the card image with the specified option. """
-
+        """
+        Verify the card image with the specified `option`.
+        """
         self.__dict__['_err_text'] = ''
         self.__dict__['_fix_text'] = ''
         self.__dict__['_fixable'] = 1
@@ -1249,7 +1359,7 @@ class RecordValuedKeywordCard(Card):
                            'Fixed card to be FITS standard. : %s' % self.key
 
             # verify the key
-           
+
             self._checkKey(self.key)
 
             # verify the value
@@ -1280,17 +1390,21 @@ class RecordValuedKeywordCard(Card):
 
 def createCard(key='', value='', comment=''):
     return RecordValuedKeywordCard.createCard(key, value, comment)
+createCard.__doc__ = RecordValuedKeywordCard.createCard.__doc__
 
 def createCardFromString(input):
     return RecordValuedKeywordCard.createCardFromString(input)
+createCardFromString.__doc__ = \
+    RecordValuedKeywordCard.createCardFromString.__doc__
 
 def upperKey(key):
     return RecordValuedKeywordCard.upperKey(key)
-
+upperKey.__doc__ = RecordValuedKeywordCard.upperKey.__doc__
 
 class _Hierarch(Card):
-    """Cards begins with HIERARCH which allows keyword name longer than 8
-       characters.
+    """
+    Cards begins with ``HIERARCH`` which allows keyword name longer
+    than 8 characters.
     """
     def _verify(self, option='warn'):
         """No verification (for now)."""
@@ -1298,23 +1412,26 @@ class _Hierarch(Card):
 
 
 class _Card_with_continue(Card):
-    """Cards having more than one 80-char "physical" cards, the cards after
-       the first one must start with CONTINUE and the whole card must have
-       string value.
+    """
+    Cards having more than one 80-char "physical" cards, the cards after
+    the first one must start with ``CONTINUE`` and the whole card must have
+    string value.
     """
 
     def __str__(self):
-        """Format a list of cards into a printable string."""
-
+        """
+        Format a list of cards into a printable string.
+        """
         kard = self._cardimage
         output = ''
-        for i in range(len(kard)/80):
+        for i in range(len(kard)//80):
             output += kard[i*80:(i+1)*80] + '\n'
         return output[:-1]
 
     def _extractValueComment(self, name):
-        """Exatrct the keyword value or comment from the card image."""
-
+        """
+        Extract the keyword value or comment from the card image.
+        """
         longstring = ''
 
         ncards = self._ncards()
@@ -1344,13 +1461,13 @@ class _Card_with_continue(Card):
             self.__dict__[name] = longstring.rstrip()
 
     def _breakup_strings(self):
-        """Break up long string value/comment into CONTINUE cards.
-           This is a primitive implementation, it will put the value
-           string in one block and the comment string in another.
-           Also, it does not break at the blank space between words.
-           So it may not look pretty.
         """
-
+        Break up long string value/comment into ``CONTINUE`` cards.
+        This is a primitive implementation: it will put the value
+        string in one block and the comment string in another.  Also,
+        it does not break at the blank space between words.  So it may
+        not look pretty.
+        """
         val_len = 67
         comm_len = 64
         output = ''
@@ -1374,7 +1491,6 @@ class _Card_with_continue(Card):
             comm = self.comment
         commfmt = "%-s"
         if not comm == '':
-            nlines = len(comm) / comm_len + 1
             comm_list = self._words_group(comm, comm_len)
             for i in comm_list:
                 commstr = "CONTINUE  '&' / " + commfmt % i
@@ -1383,15 +1499,15 @@ class _Card_with_continue(Card):
         return output
 
     def _words_group(self, input, strlen):
-        """Split a long string into parts where each part is no longer than
-           strlen and no word is cut into two pieces.  But if there is one
-           single word which is longer than strlen, then it will be split in
-           the middle of the word.
         """
-
+        Split a long string into parts where each part is no longer
+        than `strlen` and no word is cut into two pieces.  But if
+        there is one single word which is longer than `strlen`, then
+        it will be split in the middle of the word.
+        """
         list = []
         _nblanks = input.count(' ')
-        nmax = max(_nblanks, len(input)/strlen+1)
+        nmax = max(_nblanks, len(input)//strlen+1)
         arr = chararray.array(input+' ', itemsize=1)
 
         # locations of the blanks
@@ -1421,10 +1537,11 @@ class _Card_with_continue(Card):
         return list
 
 class _Header_iter:
-    """Iterator class for a FITS header object.
+    """
+    Iterator class for a FITS header object.
 
-       Returns the key values of the cards in the header.  Duplicate
-       key values are not returned.
+    Returns the key values of the cards in the header.  Duplicate key
+    values are not returned.
     """
 
     def __init__(self, header):
@@ -1446,31 +1563,47 @@ class _Header_iter:
 
 
 class Header:
-    """FITS header class.  The behavior of this class is to present the
-       header like a dictionary as opposed to a list of cards.  The attribute
-       ascard supplies the header like a list of cards.  The header
-       class uses the card's keyword as the dictionary key and the cards
-       value is the dictionary value.   The has_key, get, and keys methods
-       are implemented to provide the corresponding dictionary functionality.
-       The header may be indexed by keyword value and like a dictionary,
-       the associated value will be returned.  When the header contains
-       cards with duplicate keywords, only the value of the first card with
-       the given keyword will be returned.  The header may also be indexed
-       by card list index number.  In that case the value of the card at the
-       given index in the card list will be returned.  A delete method has
-       been implemented to allow deletion from the header.  When del is called
-       all cards with the given keyword are deleted from the header.  The
-       Header class has an associated iterator class _Header_iter which will
-       allow iteration over the unique keywords in the header dictionary.
     """
+    FITS header class.
 
+    The purpose of this class is to present the header like a
+    dictionary as opposed to a list of cards.
+
+    The attribute `ascard` supplies the header like a list of cards.
+
+    The header class uses the card's keyword as the dictionary key and
+    the cards value is the dictionary value.
+
+    The `has_key`, `get`, and `keys` methods are implemented to
+    provide the corresponding dictionary functionality.  The header
+    may be indexed by keyword value and like a dictionary, the
+    associated value will be returned.  When the header contains cards
+    with duplicate keywords, only the value of the first card with the
+    given keyword will be returned.
+
+    The header may also be indexed by card list index number.  In that
+    case, the value of the card at the given index in the card list
+    will be returned.
+
+    A delete method has been implemented to allow deletion from the
+    header.  When `del` is called, all cards with the given keyword
+    are deleted from the header.
+
+    The `Header` class has an associated iterator class `_Header_iter`
+    which will allow iteration over the unique keywords in the header
+    dictionary.
+    """
     def __init__(self, cards=[], txtfile=None):
-        """Construct a Header from a CardList and/or text file.
+        """
+        Construct a `Header` from a `CardList` and/or text file.
 
-           cards: A list of Cards, default=[].
+        Parameters
+        ----------
+        cards : A list of `Card` objects, optional
+            The cards to initialize the header with.
 
-           txtfile: Input ASCII header parameters file supplied as a file name,
-                    file object, or file like object. 
+        txtfile : file path, file object or file-like object, optional
+            Input ASCII header parameters file.
         """
 
         # populate the cardlist
@@ -1506,7 +1639,7 @@ class Header:
                 elif xtension in ('BINTABLE', 'A3DTABLE'):
                     try:
                         if self.ascard['ZIMAGE'].value == True:
-                            global compressionSupported 
+                            global compressionSupported
 
                             if compressionSupported == 1:
                                 self._hdutype = CompImageHDU
@@ -1537,13 +1670,14 @@ class Header:
         return _Header_iter(self)
 
     def __getitem__ (self, key):
-        """Get a header keyword value."""
-     
+        """
+        Get a header keyword value.
+        """
         card = self.ascard[key]
 
         if isinstance(card, RecordValuedKeywordCard) and \
            (not isinstance(key, types.StringType) or string.find(key,'.') < 0):
-            returnVal = card.strvalue() 
+            returnVal = card.strvalue()
         elif isinstance(card, CardList):
             returnVal = card
         else:
@@ -1552,13 +1686,16 @@ class Header:
         return returnVal
 
     def __setitem__ (self, key, value):
-        """Set a header keyword value."""
+        """
+        Set a header keyword value.
+        """
         self.ascard[key].value = value
         self._mod = 1
 
     def __delitem__(self, key):
-        """Delete card(s) with the name 'key'."""
-
+        """
+        Delete card(s) with the name `key`.
+        """
         # delete ALL cards with the same keyword name
         if isinstance(key, str):
             while 1:
@@ -1577,42 +1714,60 @@ class Header:
         return self.ascard.__str__()
 
     def ascardlist(self):
-        """Returns a CardList."""
+        """
+        Returns a `CardList` object.
+        """
         return self.ascard
 
     def items(self):
-        """Return a list of all keyword-value pairs from the CardList."""
-
+        """
+        Return a list of all keyword-value pairs from the `CardList`.
+        """
         pairs = []
         for card in self.ascard:
             pairs.append((card.key, card.value))
         return pairs
 
     def has_key(self, key):
-        """Check for existence of a keyword. Returns 1 if found, otherwise, 0.
-
-           key: keyword name. If given an index, always returns 0.
         """
+        Check for existence of a keyword.
 
+        Parameters
+        ----------
+        key : str or int
+           Keyword name.  If given an index, always returns 0.
+
+        Returns
+        -------
+        has_key : bool
+            Returns `True` if found, otherwise, `False`.
+        """
         try:
             key = upperKey(key)
 
             if key[:8] == 'HIERARCH':
                 key = key[8:].strip()
             _index = self.ascard[key]
-            return 1
+            return True
         except:
-            return 0
+            return False
 
     def rename_key(self, oldkey, newkey, force=0):
-        """Rename a card's keyword in the header.
-
-           oldkey: old keyword, can be a name or index.
-           newkey: new keyword, must be a string.
-           force: if new key name already exist, force to have duplicate name.
         """
+        Rename a card's keyword in the header.
 
-        
+        Parameters
+        ----------
+        oldkey : str or int
+            old keyword
+
+        newkey : str
+            new keyword
+
+        force : bool
+            When `True`, if new key name already exists, force to have
+            duplicate name.
+        """
         oldkey = upperKey(oldkey)
         newkey = upperKey(newkey)
 
@@ -1634,9 +1789,9 @@ class Header:
 #        self.ascard._keylist[_index] = newkey
 
     def keys(self):
-        """ Return a list of keys with duplicates removed
         """
-
+        Return a list of keys with duplicates removed.
+        """
         rtnVal = []
 
         for key in self.ascard.keys():
@@ -1646,11 +1801,17 @@ class Header:
         return rtnVal
 
     def get(self, key, default=None):
-        """Get a keyword value from the CardList.
-           If no keyword is found, return the default value.
+        """
+        Get a keyword value from the `CardList`.  If no keyword is
+        found, return the default value.
 
-           key: keyword name or index
-           default: if no keyword is found, the value to be returned.
+        Parameters
+        ----------
+        key : str or int
+            keyword name or index
+
+        default : object, optional
+            if no keyword is found, the value to be returned.
         """
 
         try:
@@ -1660,29 +1821,42 @@ class Header:
 
     def update(self, key, value, comment=None, before=None, after=None,
                savecomment=False):
-        """Update one header card."""
-
         """
-        If the keyword already exists, it's value/comment will be updated.
-        If it does not exist, a new card will be created and it will be
-        placed before or after the specified location.  If no "before"
-        or "after" is specified, it will be appended at the end.
+        Update one header card.
 
-        key:      keyword name
-        value:    keyword value (to be used for updating)
-        comment:  keyword comment (to be used for updating), default=None.
-        before:   name of the keyword, or index of the Card before which
-                  the new card will be placed.  The argument `before' takes
-                  precedence over `after' if both specified. default=None.
-        after:    name of the keyword, or index of the Card  after which
-                  the new card will be placed. default=None.
-        savecomment: when true, preserve the current comment for an existing
-                     keyword.  The argument 'savecomment' takes precedence over
-                     'comment' if both specified.  If 'comment' is not
-                     specified then the current comment will automatically be
-                     preserved.  default=False
+        If the keyword already exists, it's value and/or comment will
+        be updated.  If it does not exist, a new card will be created
+        and it will be placed before or after the specified location.
+        If no `before` or `after` is specified, it will be appended at
+        the end.
+
+        Parameters
+        ----------
+        key : str
+            keyword
+
+        value : str
+            value to be used for updating
+
+        comment : str, optional
+            to be used for updating, default=None.
+
+        before : str or int, optional
+            name of the keyword, or index of the `Card` before which
+            the new card will be placed.  The argument `before` takes
+            precedence over `after` if both specified.
+
+        after : str or int, optional
+            name of the keyword, or index of the `Card` after which
+            the new card will be placed.
+
+        savecomment : bool, optional
+            When `True`, preserve the current comment for an existing
+            keyword.  The argument `savecomment` takes precedence over
+            `comment` if both specified.  If `comment` is not
+            specified then the current comment will automatically be
+            preserved.
         """
-        
         keylist = RecordValuedKeywordCard.validKeyValue(key,value)
 
         if keylist:
@@ -1718,11 +1892,19 @@ class Header:
             self._tableHeader.update(key,value,comment,before,after)
 
     def add_history(self, value, before=None, after=None):
-        """Add a HISTORY card.
+        """
+        Add a ``HISTORY`` card.
 
-           value: History text to be added.
-           before: [same as in update()]
-           after: [same as in update()]
+        Parameters
+        ----------
+        value : str
+            history text to be added.
+
+        before : str or int, optional
+            same as in `Header.update`
+
+        after : str or int, optional
+            same as in `Header.update`
         """
         self._add_commentary('history', value, before=before, after=after)
 
@@ -1733,11 +1915,19 @@ class Header:
             self._tableHeader.add_history(value,before,after)
 
     def add_comment(self, value, before=None, after=None):
-        """Add a COMMENT card.
+        """
+        Add a ``COMMENT`` card.
 
-           value: Comment text to be added.
-           before: [same as in update()]
-           after: [same as in update()]
+        Parameters
+        ----------
+        value : str
+            text to be added.
+
+        before : str or int, optional
+            same as in `Header.update`
+
+        after : str or int, optional
+            same as in `Header.update`
         """
         self._add_commentary('comment', value, before=before, after=after)
 
@@ -1748,11 +1938,19 @@ class Header:
             self._tableHeader.add_comment(value,before,after)
 
     def add_blank(self, value='', before=None, after=None):
-        """Add a blank card.
+        """
+        Add a blank card.
 
-           value: Text to be added.
-           before: [same as in update()]
-           after: [same as in update()]
+        Parameters
+        ----------
+        value : str, optional
+            text to be added.
+
+        before : str or int, optional
+            same as in `Header.update`
+
+        after : str or int, optional
+            same as in `Header.update`
         """
         self._add_commentary(' ', value, before=before, after=after)
 
@@ -1763,7 +1961,9 @@ class Header:
             self._tableHeader.add_blank(value,before,after)
 
     def get_history(self):
-        """Get all histories as a list of string texts."""
+        """
+        Get all history cards as a list of string texts.
+        """
         output = []
         for _card in self.ascardlist():
             if _card.key == 'HISTORY':
@@ -1771,7 +1971,9 @@ class Header:
         return output
 
     def get_comment(self):
-        """Get all comments as a list of string texts."""
+        """
+        Get all comment cards as a list of string texts.
+        """
         output = []
         for _card in self.ascardlist():
             if _card.key == 'COMMENT':
@@ -1781,11 +1983,12 @@ class Header:
 
 
     def _add_commentary(self, key, value, before=None, after=None):
-        """Add a commentary card.
+        """
+        Add a commentary card.
 
-           If before and after are None, add to the last occurrence of
-           cards of the same name (except blank card).  If there is no card
-           (or blank card), append at the end.
+        If `before` and `after` are `None`, add to the last occurrence
+        of cards of the same name (except blank card).  If there is no
+        card (or blank card), append at the end.
         """
 
         new_card = Card(key, value)
@@ -1805,7 +2008,9 @@ class Header:
         self._mod = 1
 
     def copy(self):
-        """Make a copy of the Header."""
+        """
+        Make a copy of the `Header`.
+        """
         tmp = Header(self.ascard.copy())
 
         # also copy the class
@@ -1813,10 +2018,11 @@ class Header:
         return tmp
 
     def _strip(self):
-        """Strip cards specific to a certain kind of header.
+        """
+        Strip cards specific to a certain kind of header.
 
-           Strip cards like SIMPLE, BITPIX, etc. so the rest of the header
-           can be used to reconstruct another kind of header.
+        Strip cards like ``SIMPLE``, ``BITPIX``, etc. so the rest of
+        the header can be used to reconstruct another kind of header.
         """
         try:
 
@@ -1875,19 +2081,20 @@ class Header:
         """
         Output the header parameters to a file in ASCII format.
 
-        :Parameters:
-            outFile:  Output header parameters file supplied as a file name,
-                      file object, or file like object. 
-            clobber:  Overwrite the output file if it exists, default = False.
+        Parameters
+        ----------
+        outFile : file path, file object or file-like object
+            Output header parameters file.
 
-        :Returns:
-            None
+        clobber : bool
+            When `True`, overwrite the output file if it exists.
         """
 
         closeFile = False
 
         # check if the output file already exists
-        if (isinstance(outFile,types.StringType)):
+        if (isinstance(outFile,types.StringType) or
+            isinstance(outFile,types.UnicodeType)):
             if (os.path.exists(outFile) and os.path.getsize(outFile) != 0):
                 if clobber:
                     warnings.warn( "Overwrite existing file '%s'." % outFile)
@@ -1916,27 +2123,28 @@ class Header:
         """
         Input the header parameters from an ASCII file.
 
-        The input header cards will be used to update the current header.
-        Therefore, when an input card key matches a card key that already
-        exists in the header, that card will be updated in place.  Any 
-        input cards that do not already exist in the header will be added.
-        Cards will not be deleted from the header.
+        The input header cards will be used to update the current
+        header.  Therefore, when an input card key matches a card key
+        that already exists in the header, that card will be updated
+        in place.  Any input cards that do not already exist in the
+        header will be added.  Cards will not be deleted from the
+        header.
 
-        :Parameters:
-            inFile:  Input header parameters file supplied as a file name,
-                     file object, or file like object. 
+        Parameters
+        ----------
+        inFile : file path, file object or file-like object
+            Input header parameters file.
 
-            replace: When True indicates that the entire header should be
-                     replaced with the contents of the ASCII file instead
-                     of just updating the current header.  Default = False.
-
-        :Returns:
-            None
+        replace : bool, optional
+            When `True`, indicates that the entire header should be
+            replaced with the contents of the ASCII file instead of
+            just updating the current header.
         """
 
         closeFile = False
 
-        if isinstance(inFile, types.StringType):
+        if isinstance(inFile, types.StringType) or \
+           isinstance(inFile, types.UnicodeType):
             inFile = __builtin__.open(inFile,'r')
             closeFile = True
 
@@ -2034,12 +2242,18 @@ class Header:
 
 
 class CardList(list):
-    """FITS header card list class."""
+    """
+    FITS header card list class.
+    """
 
     def __init__(self, cards=[], keylist=None):
-        """Construct the CardList object from a list of Cards.
+        """
+        Construct the `CardList` object from a list of `Card` objects.
 
-           cards: A list of Cards, default=[].
+        Parameters
+        ----------
+        cards
+            A list of `Card` objects.
         """
 
         list.__init__(self, cards)
@@ -2058,8 +2272,8 @@ class CardList(list):
 
     def _hasFilterChar(self, key):
         """
-        Return True if the input key contains one of the special filtering
-        characters (*, ?, or ...).
+        Return `True` if the input key contains one of the special filtering
+        characters (``*``, ``?``, or ...).
         """
         if isinstance(key, types.StringType) and (key.endswith('...') or \
            key.find('*') > 0 or key.find('?') > 0):
@@ -2069,15 +2283,20 @@ class CardList(list):
 
     def filterList(self, key):
         """
-        Construct a CardList that contains references to all of the cards in
-        this CardList that match the input key value including any special
-        filter keys (*, ?, and ...).
+        Construct a `CardList` that contains references to all of the cards in
+        this `CardList` that match the input key value including any special
+        filter keys (``*``, ``?``, and ``...``).
 
-        :Parameters:
-            key - key value to filter the list with
+        Parameters
+        ----------
+        key : str
+            key value to filter the list with
 
-        :Returns:
-            A CardList object containing references to all the requested cards.
+        Returns
+        -------
+        cardlist :
+            A `CardList` object containing references to all the
+            requested cards.
         """
         outCl = CardList()
 
@@ -2095,11 +2314,13 @@ class CardList(list):
 
             if match_RE.match(matchStr):
                 outCl.append(card)
-                
+
         return outCl
 
     def __getitem__(self, key):
-        """Get a Card by indexing or by the keyword name."""
+        """
+        Get a `Card` by indexing or by the keyword name.
+        """
         if self._hasFilterChar(key):
             return self.filterList(key)
         else:
@@ -2112,7 +2333,9 @@ class CardList(list):
         return result
 
     def __setitem__(self, key, value):
-        """Set a Card by indexing or by the keyword name."""
+        """
+        Set a `Card` by indexing or by the keyword name.
+        """
         if isinstance (value, Card):
             _key = self.index_of(key)
 
@@ -2126,13 +2349,15 @@ class CardList(list):
             raise SyntaxError, "%s is not a Card" % str(value)
 
     def __delitem__(self, key):
-        """Delete a Card from the CardList."""
+        """
+        Delete a `Card` from the `CardList`.
+        """
         if self._hasFilterChar(key):
             cardlist = self.filterList(key)
 
             if len(cardlist) == 0:
                 raise KeyError, "Keyword '%s' not found/" % key
-    
+
             for card in cardlist:
                 if isinstance(card, RecordValuedKeywordCard):
                     mykey = card.key + '.' + card.field_specifier
@@ -2148,26 +2373,38 @@ class CardList(list):
             self._mod = 1
 
     def count_blanks(self):
-        """Find out how many blank cards are *directly* before the END card."""
+        """
+        Returns how many blank cards are *directly* before the ``END``
+        card.
+        """
         for i in range(1, len(self)):
             if str(self[-i]) != ' '*Card.length:
                 self._blanks = i - 1
                 break
 
-    def append(self, card, useblanks=1, bottom=0):
-        """Append a Card to the CardList.
+    def append(self, card, useblanks=True, bottom=False):
+        """
+        Append a `Card` to the `CardList`.
 
-           card: The Card to be appended.
-           useblanks: Use any *extra* blank cards? default=1.
-                      If useblanks != 0, and if there are blank cards directly
-                      before END, it will use this space first, instead of
-                      appending after these blank cards, so the total space
-                      will not increase (default).  When useblanks == 0, the
-                      card will be appended at the end, even if there are
-                      blank cards in front of END.
-           bottom: If =0 (default) the card will be appended after the last
-                      non-commentary card.  If =1, the card will be appended
-                      after the last non-blank card.
+        Parameters
+        ----------
+        card : `Card` object
+            The `Card` to be appended.
+
+        useblanks : bool, optional
+            Use any *extra* blank cards?
+
+            If `useblanks` is `True`, and if there are blank cards
+            directly before ``END``, it will use this space first,
+            instead of appending after these blank cards, so the total
+            space will not increase.  When `useblanks` is `False`, the
+            card will be appended at the end, even if there are blank
+            cards in front of ``END``.
+
+        bottom : bool, optional
+           If `False` the card will be appended after the last
+           non-commentary card.  If `True` the card will be appended
+           after the last non-blank card.
         """
 
         if isinstance (card, Card):
@@ -2188,10 +2425,11 @@ class CardList(list):
             raise SyntaxError, "%s is not a Card" % str(card)
 
     def _pos_insert(self, card, before, after, useblanks=1):
-        """Insert a Card to the location specified by before or after.
+        """
+        Insert a `Card` to the location specified by before or after.
 
-           The argument `before' takes precedence over `after' if both
-           specified.  They can be either a keyword name or index.
+        The argument `before` takes precedence over `after` if both
+        specified.  They can be either a keyword name or index.
         """
 
         if before != None:
@@ -2201,19 +2439,26 @@ class CardList(list):
             loc = self.index_of(after)
             self.insert(loc+1, card, useblanks=useblanks)
 
-    def insert(self, pos, card, useblanks=1):
-        """Insert a Card to the CardList.
+    def insert(self, pos, card, useblanks=True):
+        """
+        Insert a `Card` to the `CardList`.
 
-           pos: The position (index, keyword name will not be allowed) to
-                insert. The new card will be inserted before it.
-           card: The Card to be inserted.
-           useblanks: Use any *extra* blank cards? default=1.
-                      If useblanks != 0, and if there are blank cards directly
-                      before END, it will use this space first, instead of
-                      appending after these blank cards, so the total space
-                      will not increase (default).  When useblanks == 0, the
-                      card will be appended at the end, even if there are
-                      blank cards in front of END.
+        Parameters
+        ----------
+        pos : int
+            The position (index, keyword name will not be allowed) to
+            insert. The new card will be inserted before it.
+
+        card : `Card` object
+            The card to be inserted.
+
+        useblanks : bool, optional
+            If `useblanks` is `True`, and if there are blank cards
+            directly before ``END``, it will use this space first,
+            instead of appending after these blank cards, so the total
+            space will not increase.  When `useblanks` is `False`, the
+            card will be appended at the end, even if there are blank
+            cards in front of ``END``.
         """
 
         if isinstance (card, Card):
@@ -2235,10 +2480,11 @@ class CardList(list):
 
     def keys(self):
         """
-        Return a list of all keywords from the CardList.
-        Keywords include field_specifier for RecordValuedKeywordCards
-        """
+        Return a list of all keywords from the `CardList`.
 
+        Keywords include ``field_specifier`` for
+        `RecordValuedKeywordCard` objects.
+        """
         rtnVal = []
 
         for card in self:
@@ -2252,27 +2498,39 @@ class CardList(list):
         return rtnVal
 
     def _keys(self):
-        """Return a list of all keywords from the CardList."""
-
+        """
+        Return a list of all keywords from the `CardList`.
+        """
         return map(lambda x: getattr(x,'key'), self)
 
     def values(self):
-        """ 
-        Return a list of the values of all cards in the CardList
-        For RecordValuedKeywordCards the value returned is the floating
-        point value, exclusive of the field_specifier.
         """
+        Return a list of the values of all cards in the `CardList`.
 
+        For `RecordValuedKeywordCard` objects, the value returned is
+        the floating point value, exclusive of the
+        ``field_specifier``.
+        """
         return map(lambda x: getattr(x,'value'), self)
 
-    def index_of(self, key, backward=0):
-        """Get the index of a keyword in the CardList.
-
-           key: the keyword name (a string) or the index (an integer).
-           backward: search the index from the END, i.e. backward? default=0.
-                     If backward = 1, search from the end.
+    def index_of(self, key, backward=False):
         """
+        Get the index of a keyword in the `CardList`.
 
+        Parameters
+        ----------
+        key : str or int
+            The keyword name (a string) or the index (an integer).
+
+        backward : bool, optional
+            When `True`, search the index from the ``END``, i.e.,
+            backward.
+
+        Returns
+        -------
+        index : int
+            The index of the `Card` with the given keyword.
+        """
         if isinstance(key, (int, long,np.integer)):
             return key
         elif isinstance(key, str):
@@ -2292,7 +2550,7 @@ class CardList(list):
                 while requestedKey:
                     try:
                         i = _keylist[_indx:].index(requestedKey[0].upper())
-                        _indx = i + _indx 
+                        _indx = i + _indx
 
                         if isinstance(self[_indx], RecordValuedKeywordCard) \
                         and requestedKey[1] == self[_indx].field_specifier:
@@ -2311,26 +2569,30 @@ class CardList(list):
             raise KeyError, 'Illegal key data type %s' % type(key)
 
     def copy(self):
-        """Make a (deep)copy of the CardList."""
-
+        """
+        Make a (deep)copy of the `CardList`.
+        """
         return CardList([createCardFromString(repr(c)) for c in self])
 
     def __repr__(self):
-        """Format a list of cards into a string."""
-
+        """
+        Format a list of cards into a string.
+        """
         return ''.join(map(repr,self))
 
     def __str__(self):
-        """Format a list of cards into a printable string."""
-
+        """
+        Format a list of cards into a printable string.
+        """
         return '\n'.join(map(str,self))
 
 
 # ----------------------------- HDU classes ------------------------------------
 
 class _AllHDU(object):
-    """Base class for all HDU (header data unit) classes."""
-
+    """
+    Base class for all HDU (header data unit) classes.
+    """
     def __init__(self, data=None, header=None):
         self._header = header
 
@@ -2349,34 +2611,39 @@ class _AllHDU(object):
             raise AttributeError(attr)
 
     def __setattr__(self, attr, value):
-        """Set an HDU attribute."""
-
+        """
+        Set an HDU attribute.
+        """
         if attr == 'header':
             self._header = value
         else:
             object.__setattr__(self,attr,value)
 
 class _CorruptedHDU(_AllHDU):
-    """A Corrupted HDU class."""
-
-    """ This class is used when one or more mandatory Cards are
-    corrupted (unparsable), such as the 'BITPIX', 'NAXIS', or 'END' cards.
-    A corrupted HDU usually means that the data size cannot be
-    calculated or the 'END' card is not found.  In the case of a
-    missing 'END' card, the Header may also contain the binary data(*).
-
-    (*) In future it may be possible to decipher where the last block
-    of the Header ends, but this task may be difficult when the
-    extension is a TableHDU containing ASCII data.
     """
+    A Corrupted HDU class.
 
+    This class is used when one or more mandatory `Card`s are
+    corrupted (unparsable), such as the ``BITPIX``, ``NAXIS``, or
+    ``END`` cards.  A corrupted HDU usually means that the data size
+    cannot be calculated or the ``END`` card is not found.  In the case
+    of a missing ``END`` card, the `Header` may also contain the binary
+    data
+
+    .. note::
+       In future, it may be possible to decipher where the last block
+       of the `Header` ends, but this task may be difficult when the
+       extension is a `TableHDU` containing ASCII data.
+    """
     def __init__(self, data=None, header=None):
         super(_CorruptedHDU, self).__init__(data, header)
         self._file, self._offset, self._datLoc = None, None, None
         self.name = None
-        
+
     def size(self):
-        """Returns the size (in bytes) of the HDU's data part."""
+        """
+        Returns the size (in bytes) of the HDU's data part.
+        """
         self._file.seek(0, 2)
         return self._file.tell() - self._datLoc
 
@@ -2391,23 +2658,25 @@ class _NonstandardHDU(_AllHDU, _Verify):
     """
     A Non-standard HDU class.
 
-    This class is used for a Primary HDU when the SIMPLE Card has a value
-    of False.  A non-standard HDU comes from a file that resembles
-    a FITS file but departs from the standards in some significant way.  One
-    example would be files where the numbers are in the DEC VAX internal
-    storage format rather than the standard FITS most significant byte first.
-    The header for this HDU should be valid.  The data for this HDU is read
-    from the file as a byte stream that begins at the first byte after the
-    header END card and continues until the end of the file.
+    This class is used for a Primary HDU when the ``SIMPLE`` Card has
+    a value of `False`.  A non-standard HDU comes from a file that
+    resembles a FITS file but departs from the standards in some
+    significant way.  One example would be files where the numbers are
+    in the DEC VAX internal storage format rather than the standard
+    FITS most significant byte first.  The header for this HDU should
+    be valid.  The data for this HDU is read from the file as a byte
+    stream that begins at the first byte after the header ``END`` card
+    and continues until the end of the file.
     """
-
     def __init__(self, data=None, header=None):
         super(_NonstandardHDU, self).__init__(data, header)
         self._file, self._offset, self._datLoc = None, None, None
         self.name = None
 
     def size(self):
-        """Returns the size (in bytes) of the HDU's data part."""
+        """
+        Returns the size (in bytes) of the HDU's data part.
+        """
         self._file.seek(0, 2)
         return self._file.tell() - self._datLoc
 
@@ -2416,7 +2685,9 @@ class _NonstandardHDU(_AllHDU, _Verify):
                                      len(self._header.ascard))
 
     def __getattr__(self, attr):
-        """Get the data attribute."""
+        """
+        Get the data attribute.
+        """
         if attr == 'data':
             self.__dict__[attr] = None
             self._file.seek(self._datLoc)
@@ -2439,19 +2710,35 @@ class _NonstandardHDU(_AllHDU, _Verify):
         return _err
 
     def writeto(self, name, output_verify='exception', clobber=False,
-                classExtensions={}):
-        """Write the HDU to a new file.  This is a convenience method
-           to provide a user easier output interface if only one HDU
-           needs to be written to a file.
+                classExtensions={}, checksum=False):
+        """
+        Write the HDU to a new file.  This is a convenience method to
+        provide a user easier output interface if only one HDU needs
+        to be written to a file.
 
-           name:  output FITS file name to be written to, file object, or
-                  file like object (if opened must be opened for append (ab+)).
-           output_verify:  output verification option, default='exception'.
-           clobber:  Overwrite the output file if exists, default = False.
-           classExtensions: A dictionary that maps pyfits classes to extensions
-                            of those classes.  When present in the dictionary,
-                            the extension class will be constructed in place of
-                            the pyfits class.
+        Parameters
+        ----------
+        name : file path, file object or file-like object
+            Output FITS file.  If opened, must be opened for append
+            ("ab+")).
+
+        output_verify : str
+            Output verification option.  Must be one of ``"fix"``,
+            ``"silentfix"``, ``"ignore"``, ``"warn"``, or
+            ``"exception"``.  See :ref:`verify` for more info.
+
+        clobber : bool
+            Overwrite the output file if exists.
+
+        classExtensions : dict
+            A dictionary that maps pyfits classes to extensions of
+            those classes.  When present in the dictionary, the
+            extension class will be constructed in place of the pyfits
+            class.
+
+        checksum : bool
+            When `True` adds both ``DATASUM`` and ``CHECKSUM`` cards
+            to the header of the HDU when written to the file.
         """
 
         if classExtensions.has_key(HDUList):
@@ -2460,15 +2747,19 @@ class _NonstandardHDU(_AllHDU, _Verify):
             hdulist = HDUList([self])
 
         hdulist.writeto(name, output_verify, clobber=clobber,
-                        classExtensions=classExtensions)
+                        checksum=checksum, classExtensions=classExtensions)
 
 
 class _ValidHDU(_AllHDU, _Verify):
-    """Base class for all HDUs which are not corrupted."""
+    """
+    Base class for all HDUs which are not corrupted.
+    """
 
     # 0.6.5.5
     def size(self):
-        """Size (in bytes) of the data portion of the HDU."""
+        """
+        Size (in bytes) of the data portion of the HDU.
+        """
         size = 0
         naxis = self._header.get('NAXIS', 0)
         if naxis > 0:
@@ -2478,11 +2769,13 @@ class _ValidHDU(_AllHDU, _Verify):
             bitpix = self._header['BITPIX']
             gcount = self._header.get('GCOUNT', 1)
             pcount = self._header.get('PCOUNT', 0)
-            size = abs(bitpix) * gcount * (pcount + size) / 8
+            size = abs(bitpix) * gcount * (pcount + size) // 8
         return size
 
     def copy(self):
-        """Make a copy of the HDU, both header and data are copied."""
+        """
+        Make a copy of the HDU, both header and data are copied.
+        """
         if self.data is not None:
             _data = self.data.copy()
         else:
@@ -2490,33 +2783,49 @@ class _ValidHDU(_AllHDU, _Verify):
         return self.__class__(data=_data, header=self._header.copy())
 
     def writeto(self, name, output_verify='exception', clobber=False,
-                classExtensions={}):
-        """Write the HDU to a new file.  This is a convenience method
-           to provide a user easier output interface if only one HDU
-           needs to be written to a file.
+                classExtensions={}, checksum=False):
+        """
+        Write the HDU to a new file.  This is a convenience method to
+        provide a user easier output interface if only one HDU needs
+        to be written to a file.
 
-           name:  output FITS file name to be written to, file object, or
-                  file like object (if opened must be opened for append (ab+)).
-           output_verify:  output verification option, default='exception'.
-           clobber:  Overwrite the output file if exists, default = False.
-           classExtensions: A dictionary that maps pyfits classes to extensions 
-                            of those classes.  When present in the dictionary, 
-                            the extension class will be constructed in place of 
-                            the pyfits class. 
+        Parameters
+        ----------
+        name : file path, file object or file-like object
+            Output FITS file.  If opened, must be opened for append
+            ("ab+")).
+
+        output_verify : str
+            Output verification option.  Must be one of ``"fix"``,
+            ``"silentfix"``, ``"ignore"``, ``"warn"``, or
+            ``"exception"``.  See :ref:`verify` for more info.
+
+        clobber : bool
+            Overwrite the output file if exists, default = False.
+
+        classExtensions : dict
+           A dictionary that maps pyfits classes to extensions of
+           those classes.  When present in the dictionary, the
+           extension class will be constructed in place of the pyfits
+           class.
+
+        checksum : bool
+            When `True`, adds both ``DATASUM`` and ``CHECKSUM`` cards
+            to the header of the HDU when written to the file.
         """
 
         if isinstance(self, _ExtensionHDU):
             if classExtensions.has_key(HDUList):
-                hdulist = classExtensions[HDUList]([PrimaryHDU(),self]) 
+                hdulist = classExtensions[HDUList]([PrimaryHDU(),self])
             else:
                 hdulist = HDUList([PrimaryHDU(), self])
         elif isinstance(self, PrimaryHDU):
             if classExtensions.has_key(HDUList):
-                hdulist = classExtensions[HDUList]([self]) 
+                hdulist = classExtensions[HDUList]([self])
             else:
                 hdulist = HDUList([self])
         hdulist.writeto(name, output_verify, clobber=clobber,
-                        classExtensions=classExtensions)
+                        checksum=checksum, classExtensions=classExtensions)
 
     def _verify(self, option='warn'):
         _err = _ErrList([], unit='Card')
@@ -2540,6 +2849,21 @@ class _ValidHDU(_AllHDU, _Verify):
         if naxis < 1000:
             for j in range(3, naxis+3):
                 self.req_cards('NAXIS'+`j-2`, '== '+`j`, _isInt+" and val>= 0", 1, option, _err)
+            # Remove NAXISj cards where j is not in range 1, naxis inclusive.
+            for _card in self._header.ascard:
+                if _card.key.startswith("NAXIS") and len(_card.key) > 5:
+                    try:
+                        number = int(_card.key[5:])
+                        if number <= 0 or number > naxis:
+                            raise ValueError
+                    except ValueError:
+                        _err.append(self.run_option(
+                                option=option,
+                                err_text=("NAXISj keyword out of range ('%s' when NAXIS == %d)" %
+                                          (_card.key, naxis)),
+                                fix="del self._header['%s']" % _card.key,
+                                fix_text="Deleted."))
+
         # verify each card
         for _card in self._header.ascard:
             _err.append(_card._verify(option))
@@ -2547,13 +2871,15 @@ class _ValidHDU(_AllHDU, _Verify):
         return _err
 
     def req_cards(self, keywd, pos, test, fix_value, option, errlist):
-        """Check the existence, location, and value of a required Card."""
-
-        """If pos = None, it can be anywhere.  If the card does not exist,
-           the new card will have the fix_value as its value when created.
-           Also check the card's value by using the "test" argument.
         """
+        Check the existence, location, and value of a required `Card`.
 
+        TODO: Write about parameters
+
+        If `pos` = `None`, it can be anywhere.  If the card does not exist,
+        the new card will have the `fix_value` as its value when created.
+        Also check the card's value by using the `test` argument.
+        """
         _err = errlist
         fix = ''
         cards = self._header.ascard
@@ -2606,16 +2932,295 @@ class _ValidHDU(_AllHDU, _Verify):
 
         return _err
 
+    def _compute_checksum(self, bytes, sum32=0):
+        """
+        Compute the ones-complement checksum of a sequence of bytes.
+
+        Parameters
+        ----------
+        bytes
+            a memory region to checksum
+
+        sum32
+            incremental checksum value from another region
+
+        Returns
+        -------
+        ones complement checksum
+        """
+        # Use uint32 literals as a hedge against type promotion to int64.
+        u8 = np.array(8, dtype='uint32')
+        u16 = np.array(16, dtype='uint32')
+        uFFFF = np.array(0xFFFF, dtype='uint32')
+
+        b0 = bytes[0::4].astype('uint32') << u8
+        b1 = bytes[1::4].astype('uint32')
+        b2 = bytes[2::4].astype('uint32') << u8
+        b3 = bytes[3::4].astype('uint32')
+
+        hi = np.array(sum32, dtype='uint32') >> u16
+        lo = np.array(sum32, dtype='uint32') & uFFFF
+
+        hi += np.add.reduce((b0 + b1)).astype('uint32')
+        lo += np.add.reduce((b2 + b3)).astype('uint32')
+
+        hicarry = hi >> u16
+        locarry = lo >> u16
+
+        while int(hicarry) or int(locarry):
+            hi = (hi & uFFFF) + locarry
+            lo = (lo & uFFFF) + hicarry
+            hicarry = hi >> u16
+            locarry = lo >> u16
+
+        return (hi << u16) + lo
+
+
+    # _MASK and _EXCLUDE used for encoding the checksum value into a character
+    # string.
+    _MASK = [ 0xFF000000,
+              0x00FF0000,
+              0x0000FF00,
+              0x000000FF ]
+
+    _EXCLUDE = [ 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40,
+                 0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60 ]
+
+    def _encode_byte(self, byte):
+        """
+        Encode a single byte.
+        """
+        quotient = byte // 4 + ord('0')
+        remainder = byte % 4
+
+        ch = np.array(
+            [(quotient + remainder), quotient, quotient, quotient],
+            dtype='int32')
+
+        check = True
+        while check:
+            check = False
+            for x in self._EXCLUDE:
+                for j in [0, 2]:
+                    if ch[j] == x or ch[j+1] == x:
+                        ch[j]   += 1
+                        ch[j+1] -= 1
+                        check = True
+        return ch
+
+    def _char_encode(self, value):
+        """
+        Encodes the checksum `value` using the algorithm described
+        in SPR section A.7.2 and returns it as a 16 character string.
+
+        Parameters
+        ----------
+        value
+            a checksum
+
+        Returns
+        -------
+        ascii encoded checksum
+        """
+        value = np.array(value, dtype='uint32')
+
+        asc = np.zeros((16,), dtype='byte')
+        ascii = np.zeros((16,), dtype='byte')
+
+        for i in range(4):
+            byte = (value & self._MASK[i]) >> ((3 - i) * 8)
+            ch = self._encode_byte(byte)
+            for j in range(4):
+                asc[4*j+i] = ch[j]
+
+        for i in range(16):
+            ascii[i] = asc[(i+15) % 16]
+
+        return ascii.tostring()
+
+    def _datetime_str(self):
+        """
+        Time of now formatted like: 2007-05-30T19:05:11
+        """
+        now = str(datetime.datetime.now()).split()
+        return now[0] + "T" + now[1].split(".")[0]
+
+    def _calculate_datasum(self):
+        """
+        Calculate the value for the ``DATASUM`` card in the HDU.
+        """
+        if (not self.__dict__.has_key('data')):
+            # This is the case where the data has not been read from the file
+            # yet.  We find the data in the file, read it, and calculate the
+            # datasum.
+            if self.size() > 0:
+                self._file.seek(self._datLoc)
+                raw_data = _fromfile(self._file, dtype='ubyte',
+                                     count=self._datSpan, sep="")
+                return self._compute_checksum(raw_data,0)
+            else:
+                return 0
+        elif (self.data != None):
+            return self._compute_checksum(
+                                 np.fromstring(self.data, dtype='ubyte'),0)
+        else:
+            return 0
+
+    def _calculate_checksum(self, datasum):
+        """
+        Calculate the value of the ``CHECKSUM`` card in the HDU.
+        """
+        oldChecksum = self.header['CHECKSUM']
+        self.header.update('CHECKSUM', '0'*16);
+
+        # Convert the header to a string.
+        s = repr(self._header.ascard) + _pad('END')
+        s = s + _padLength(len(s))*' '
+
+        # Calculate the checksum of the Header and data.
+        cs = self._compute_checksum(np.fromstring(s, dtype='ubyte'),datasum)
+
+        # Encode the checksum into a string.
+        s = self._char_encode(~cs)
+
+        # Return the header card value.
+        self.header.update("CHECKSUM", oldChecksum);
+
+        return s
+
+    def add_datasum(self, when=None):
+        """
+        Add the ``DATASUM`` card to this HDU with the value set to the
+        checksum calculated for the data.
+
+        Parameters
+        ----------
+        when : str, optional
+            Comment string for the card that by default represents the
+            time when the checksum was calculated
+
+        Returns
+        -------
+        checksum : int
+            The calculated datasum
+
+        Notes
+        -----
+        For testing purposes, provide a `when` argument to enable the
+        comment value in the card to remain consistent.  This will
+        enable the generation of a ``CHECKSUM`` card with a consistent
+        value.
+        """
+        cs = self._calculate_datasum()
+
+        if when is None:
+           when = "data unit checksum updated " + self._datetime_str()
+
+        self.header.update("DATASUM", str(cs), when);
+        return cs
+
+    def add_checksum(self, when=None, override_datasum=False):
+        """
+        Add the ``CHECKSUM`` and ``DATASUM`` cards to this HDU with
+        the values set to the checksum calculated for the HDU and the
+        data respectively.  The addition of the ``DATASUM`` card may
+        be overridden.
+
+        Parameters
+        ----------
+        when : str, optional
+           comment string for the cards; by default the comments
+           will represent the time when the checksum was calculated
+
+        override_datasum : bool, optional
+           add the ``CHECKSUM`` card only
+
+        Notes
+        -----
+        For testing purposes, first call `add_datasum` with a `when`
+        argument, then call `add_checksum` with a `when` argument and
+        `override_datasum` set to `True`.  This will provide
+        consistent comments for both cards and enable the generation
+        of a ``CHECKSUM`` card with a consistent value.
+        """
+
+        if not override_datasum:
+           # Calculate and add the data checksum to the header.
+           data_cs = self.add_datasum(when)
+        else:
+           # Just calculate the data checksum
+           data_cs = self._calculate_datasum()
+
+        if when is None:
+            when = "HDU checksum updated " + self._datetime_str()
+
+        # Add the CHECKSUM card to the header with a value of all zeros.
+        if self.header.has_key("DATASUM"):
+            self.header.update("CHECKSUM", "0"*16, when, before='DATASUM');
+        else:
+            self.header.update("CHECKSUM", "0"*16, when);
+
+        s = self._calculate_checksum(data_cs)
+
+        # Update the header card.
+        self.header.update("CHECKSUM", s, when);
+
+    def verify_datasum(self):
+        """
+        Verify that the value in the ``DATASUM`` keyword matches the value
+        calculated for the ``DATASUM`` of the current HDU data.
+
+        Returns
+        -------
+        valid : int
+           - 0 - failure
+           - 1 - success
+           - 2 - no ``DATASUM`` keyword present
+        """
+        if self.header.has_key('DATASUM'):
+            if self._calculate_datasum() == int(self.header['DATASUM']):
+                return 1
+            else:
+                return 0
+        else:
+            return 2
+
+    def verify_checksum(self):
+        """
+        Verify that the value in the ``CHECKSUM`` keyword matches the
+        value calculated for the current HDU CHECKSUM.
+
+        Returns
+        -------
+        valid : int
+           - 0 - failure
+           - 1 - success
+           - 2 - no ``CHECKSUM`` keyword present
+        """
+        if self._header.has_key('CHECKSUM'):
+            if self._header.has_key('DATASUM'):
+                datasum = self._calculate_datasum()
+            else:
+                datasum = 0
+            if self._calculate_checksum(datasum) == self.header['CHECKSUM']:
+                return 1
+            else:
+                return 0
+        else:
+            return 2
+
 
 class _TempHDU(_ValidHDU):
-    """Temporary HDU, used when the file is first opened. This is to
-       speed up the open.  Any header will not be initialized till the
-       HDU is accessed.
+    """
+    Temporary HDU, used when the file is first opened. This is to
+    speed up the open.  Any header will not be initialized till the
+    HDU is accessed.
     """
 
     def _getname(self):
-        """Get the extname and extver from the header."""
-
+        """
+        Get the ``EXTNAME`` and ``EXTVER`` from the header.
+        """
         re_extname = re.compile(r"EXTNAME\s*=\s*'([ -&(-~]*)'")
         re_extver = re.compile(r"EXTVER\s*=\s*(\d+)")
 
@@ -2634,8 +3239,9 @@ class _TempHDU(_ValidHDU):
         return name, extver
 
     def _getsize(self, block):
-        """Get the size from the first block of the HDU."""
-
+        """
+        Get the size from the first block of the HDU.
+        """
         re_simple = re.compile(r'SIMPLE  =\s*')
         re_bitpix = re.compile(r'BITPIX  =\s*(-?\d+)')
         re_naxis = re.compile(r'NAXIS   =\s*(\d+)')
@@ -2685,7 +3291,7 @@ class _TempHDU(_ValidHDU):
                 pos = mo.end(0)
                 dims[int(mo.group(1))-1] = int(mo.group(2))
             datasize = reduce(operator.mul, dims[groups:])
-        size = abs(bitpix) * gcount * (pcount + datasize) / 8
+        size = abs(bitpix) * gcount * (pcount + datasize) // 8
 
         if simple and not groups:
             name = 'PRIMARY'
@@ -2695,10 +3301,10 @@ class _TempHDU(_ValidHDU):
         return size, name
 
     def setupHDU(self, classExtensions={}):
-        """Read one FITS HDU, data portions are not actually read here, but
-           the beginning locations are computed.
         """
-
+        Read one FITS HDU, data portions are not actually read here,
+        but the beginning locations are computed.
+        """
         _cardList = []
         _keyList = []
 
@@ -2773,12 +3379,20 @@ class _TempHDU(_ValidHDU):
 
         return hdu
 
+    def isPrimary(self):
+        blocks = self._raw
+
+        if (blocks[:8] == 'SIMPLE  '):
+           return True
+        else:
+           return False
 
 class _ExtensionHDU(_ValidHDU):
-    """An extension HDU class.
+    """
+    An extension HDU class.
 
-       This class is the base class for the TableHDU, ImageHDU, and
-       BinTableHDU classes.
+    This class is the base class for the `TableHDU`, `ImageHDU`, and
+    `BinTableHDU` classes.
     """
 
     def __init__(self, data=None, header=None):
@@ -2787,7 +3401,9 @@ class _ExtensionHDU(_ValidHDU):
         self._xtn = ' '
 
     def __setattr__(self, attr, value):
-        """Set an HDU attribute."""
+        """
+        Set an HDU attribute.
+        """
 
         if attr == 'name' and value:
             if not isinstance(value, str):
@@ -2814,13 +3430,13 @@ class _NonstandardExtHDU(_ExtensionHDU):
     """
     A Non-standard Extension HDU class.
 
-    This class is used for an Extension HDU when the XTENSION Card has a 
-    non-standard value.  In this case, pyfits can figure out how big the data
-    is but not what it is.  The data for this HDU is read from the file as a
-    byte stream that begins at the first byte after the header END card and
-    continues until the beginning of the next header or the end of the file.
+    This class is used for an Extension HDU when the ``XTENSION``
+    `Card` has a non-standard value.  In this case, pyfits can figure
+    out how big the data is but not what it is.  The data for this HDU
+    is read from the file as a byte stream that begins at the first
+    byte after the header ``END`` card and continues until the
+    beginning of the next header or the end of the file.
     """
-
     def __init__(self, data=None, header=None):
         super(_NonstandardExtHDU, self).__init__(data, header)
         self._file, self._offset, self._datLoc = None, None, None
@@ -2831,7 +3447,9 @@ class _NonstandardExtHDU(_ExtensionHDU):
                                      len(self._header.ascard))
 
     def __getattr__(self, attr):
-        """Get the data attribute."""
+        """
+        Get the data attribute.
+        """
         if attr == 'data':
             self.__dict__[attr] = None
             self._file.seek(self._datLoc)
@@ -2845,19 +3463,35 @@ class _NonstandardExtHDU(_ExtensionHDU):
             raise AttributeError(attr)
 
     def writeto(self, name, output_verify='exception', clobber=False,
-                classExtensions={}):
-        """Write the HDU to a new file.  This is a convenience method
-           to provide a user easier output interface if only one HDU
-           needs to be written to a file.
+                classExtensions={}, checksum=False):
+        """
+        Write the HDU to a new file.  This is a convenience method to
+        provide a user easier output interface if only one HDU needs
+        to be written to a file.
 
-           name:  output FITS file name to be written to, file object, or
-                  file like object (if opened must be opened for append (ab+)).
-           output_verify:  output verification option, default='exception'.
-           clobber:  Overwrite the output file if exists, default = False.
-           classExtensions: A dictionary that maps pyfits classes to extensions
-                            of those classes.  When present in the dictionary,
-                            the extension class will be constructed in place of
-                            the pyfits class.
+        Parameters
+        ----------
+        name : file path, file object or file-like object
+            Output FITS file.  If opened, must be opened for append
+            (ab+)).
+
+        output_verify : str
+            Output verification option.  Must be one of ``"fix"``,
+            ``"silentfix"``, ``"ignore"``, ``"warn"``, or
+            ``"exception"``.  See :ref:`verify` for more info.
+
+        clobber : bool
+            Overwrite the output file if exists.
+
+        classExtensions : dict
+            A dictionary that maps pyfits classes to extensions of
+            those classes.  When present in the dictionary, the
+            extension class will be constructed in place of the pyfits
+            class.
+
+        checksum : bool
+            When `True`, adds both ``DATASUM`` and ``CHECKSUM`` cards
+            to the header of the HDU when written to the file.
         """
 
         if classExtensions.has_key(HDUList):
@@ -2866,7 +3500,7 @@ class _NonstandardExtHDU(_ExtensionHDU):
             hdulist = HDUList([PrimaryHDU(),self])
 
         hdulist.writeto(name, output_verify, clobber=clobber,
-                        classExtensions=classExtensions)
+                        checksum=checksum, classExtensions=classExtensions)
 
 
 # 0.8.8
@@ -2887,13 +3521,15 @@ def _iswholeline(indx, naxis):
             if indx.step == 1:
                 return _LineSlice(indx.stop-indx.start, indx.start)
             else:
-                return _SteppedSlice((indx.stop-indx.start)/indx.step, indx.start)
+                return _SteppedSlice((indx.stop-indx.start)//indx.step, indx.start)
     else:
         raise IndexError, 'Illegal index %s' % indx
 
 
 def _normalize_slice(input, naxis):
-    """Set the slice's start/stop in the regular range."""
+    """
+    Set the slice's start/stop in the regular range.
+    """
 
     def _normalize(indx, npts):
         if indx < -npts:
@@ -2962,8 +3598,11 @@ class _SteppedSlice(_KeyType):
 
 
 class Section:
-    """Image section."""
+    """
+    Image section.
 
+    TODO: elaborate
+    """
     def __init__(self, hdu):
         self.hdu = hdu
 
@@ -3011,9 +3650,9 @@ class Section:
         # Now, get the data (does not include bscale/bzero for now XXX)
         _bitpix = self.hdu.header['BITPIX']
         code = _ImageBaseHDU.NumCode[_bitpix]
-        self.hdu._file.seek(self.hdu._datLoc+offset*abs(_bitpix)/8)
+        self.hdu._file.seek(self.hdu._datLoc+offset*abs(_bitpix)//8)
         nelements = 1
-        for dim in dims: 
+        for dim in dims:
             nelements = nelements*dim
         raw_data = _fromfile(self.hdu._file, dtype=code, count=nelements, sep="")
         raw_data.shape = dims
@@ -3023,21 +3662,31 @@ class Section:
 
 
 class _ImageBaseHDU(_ValidHDU):
-    """FITS image HDU base class."""
+    """FITS image HDU base class.
 
-    """Attributes:
-         header:  image header
-         data:  image data
-         _file:  file associated with array          (None)
-         _datLoc:  starting byte location of data block in file (None)
+    Attributes
+    ----------
+    header
+        image header
+
+    data
+        image data
+
+    _file
+        file associated with array
+
+    _datLoc
+        starting byte location of data block in file
     """
-    
+
     # mappings between FITS and numpy typecodes
 #    NumCode = {8:'int8', 16:'int16', 32:'int32', 64:'int64', -32:'float32', -64:'float64'}
 #    ImgCode = {'<i2':8, '<i4':16, '<i8':32, '<i16':64, '<f8':-32, '<f16':-64}
     NumCode = {8:'uint8', 16:'int16', 32:'int32', 64:'int64', -32:'float32', -64:'float64'}
-    ImgCode = {'uint8':8, 'int16':16, 'uint16':16, 'int32':32, 'int64':64, 'float32':-32, 'float64':-64}
-    
+    ImgCode = {'uint8':8, 'int16':16, 'uint16':16, 'int32':32,
+               'uint32':32, 'int64':64, 'uint64':64,
+               'float32':-32, 'float64':-64}
+
     def __init__(self, data=None, header=None):
         self._file, self._datLoc = None, None
 
@@ -3098,13 +3747,15 @@ class _ImageBaseHDU(_ValidHDU):
         del self._header['BZERO']
 
     def update_header(self):
-        """Update the header keywords to agree with the data."""
-
+        """
+        Update the header keywords to agree with the data.
+        """
         old_naxis = self._header.get('NAXIS', 0)
 
         if isinstance(self.data, GroupData):
-            self._header['BITPIX'] = _ImageBaseHDU.ImgCode[self.data.dtype.name]
-            axes = list(self.data.data.getshape())[1:]
+            self._header['BITPIX'] = _ImageBaseHDU.ImgCode[
+                      self.data.dtype.fields[self.data.dtype.names[0]][0].name]
+            axes = list(self.data.data.shape)[1:]
             axes.reverse()
             axes = [0] + axes
 
@@ -3157,7 +3808,9 @@ class _ImageBaseHDU(_ValidHDU):
                     self._header.update('PZERO'+`i+1`, self.data._coldefs.bzeros[i])
 
     def __getattr__(self, attr):
-        """Get the data attribute."""
+        """
+        Get the data attribute.
+        """
         if attr == 'section':
             return Section(self)
         elif attr == 'data':
@@ -3166,7 +3819,7 @@ class _ImageBaseHDU(_ValidHDU):
                 _bitpix = self._header['BITPIX']
                 self._file.seek(self._datLoc)
                 if isinstance(self, GroupsHDU):
-                    dims = self.size()*8/abs(_bitpix)
+                    dims = self.size()*8//abs(_bitpix)
                 else:
                     dims = self._dimShape()
 
@@ -3181,36 +3834,70 @@ class _ImageBaseHDU(_ValidHDU):
 
                     nelements = 1
                     for x in range(len(dims)):
-                        nelements = nelements * dims[x]                    
+                        nelements = nelements * dims[x]
 
-                    raw_data = _fromfile(self._file, dtype=code, 
+                    raw_data = _fromfile(self._file, dtype=code,
                                          count=nelements,sep="")
 
                     raw_data.shape=dims
-                    
+
 #                print "raw_data.shape: ",raw_data.shape
 #                raw_data._byteorder = 'big'
                 raw_data.dtype = raw_data.dtype.newbyteorder('>')
 
                 if (self._bzero != 0 or self._bscale != 1):
-                    if self._ffile.uint16 and _bitpix == 16 \
-                    and self._bzero == 32768 and self._bscale == 1:
-                        self.data = np.array(raw_data, dtype=np.uint16)
-                    elif _bitpix > 16:  # scale integers to Float64
-                        self.data = np.array(raw_data, dtype=np.float64)
-                    elif _bitpix > 0:  # scale integers to Float32
-                        self.data = np.array(raw_data, dtype=np.float32)
-                    else:  # floating point cases
-                        if self._ffile.memmap:
-                            self.data = raw_data.copy()
-                        # if not memmap, use the space already in memory
-                        else:
-                            self.data = raw_data
+                    data = None
+                    # Handle "pseudo-unsigned" integers, if the user
+                    # requested it.  In this case, we don't need to
+                    # handle BLANK to convert it to NAN, since we
+                    # can't do NaNs with integers, anyway, i.e. the
+                    # user is responsible for managing blanks.
+                    if self._ffile.uint and self._bscale == 1:
+                        for bits, dtype in ((16, np.uint16),
+                                            (32, np.uint32),
+                                            (64, np.uint64)):
+                            if _bitpix == bits and self._bzero == 1 << (bits - 1):
+                                # Convert the input raw data into an unsigned
+                                # integer array and then scale the data
+                                # adjusting for the value of BZERO.  Note
+                                # that we subtract the value of BZERO instead
+                                # of adding because of the way numpy converts
+                                # the raw signed array into an unsigned array.
+                                data = np.array(raw_data, dtype=dtype)
+                                data -= (1 << (bits - 1))
+                                break
 
-                    if self._bscale != 1:
-                        np.multiply(self.data, self._bscale, self.data)
-                    if self._bzero != 0:
-                        self.data += self._bzero
+                    if data is None:
+                        # In these cases, we end up with
+                        # floating-point arrays and have to apply
+                        # bscale and bzero. We may have to handle
+                        # BLANK and convert to NaN in the resulting
+                        # floating-point arrays.
+                        if self._header.has_key('BLANK'):
+                            nullDvals = np.array(self._header['BLANK'],
+                                                 dtype='int64')
+                            blanks = (raw_data == nullDvals)
+
+                        if _bitpix > 16:  # scale integers to Float64
+                            data = np.array(raw_data, dtype=np.float64)
+                        elif _bitpix > 0:  # scale integers to Float32
+                            data = np.array(raw_data, dtype=np.float32)
+                        else:  # floating point cases
+                            if self._ffile.memmap:
+                                data = raw_data.copy()
+                            # if not memmap, use the space already in memory
+                            else:
+                                data = raw_data
+
+                        if self._bscale != 1:
+                            np.multiply(data, self._bscale, data)
+                        if self._bzero != 0:
+                            data += self._bzero
+
+                        if self._header.has_key('BLANK'):
+                            data = np.where(blanks, np.nan, data)
+
+                    self.data = data
 
                     # delete the keywords BSCALE and BZERO after scaling
                     del self._header['BSCALE']
@@ -3218,6 +3905,7 @@ class _ImageBaseHDU(_ValidHDU):
                     self._header['BITPIX'] = _ImageBaseHDU.ImgCode[self.data.dtype.name]
                 else:
                     self.data = raw_data
+
         else:
             return _AllHDU.__getattr__(self, attr)
 
@@ -3227,7 +3915,9 @@ class _ImageBaseHDU(_ValidHDU):
             raise AttributeError(attr)
 
     def _dimShape(self):
-        """Returns a tuple of image dimensions, reverse the order of NAXIS."""
+        """
+        Returns a tuple of image dimensions, reverse the order of ``NAXIS``.
+        """
         naxis = self._header['NAXIS']
         axes = naxis*[0]
         for j in range(naxis):
@@ -3237,7 +3927,9 @@ class _ImageBaseHDU(_ValidHDU):
         return tuple(axes)
 
     def _summary(self):
-        """Summarize the HDU: name, dimensions, and formats."""
+        """
+        Summarize the HDU: name, dimensions, and formats.
+        """
         class_name  = str(self.__class__)
         type  = class_name[class_name.rfind('.')+1:-2]
 
@@ -3254,7 +3946,8 @@ class _ImageBaseHDU(_ValidHDU):
                 # reverse of the numarray shape
                 if isinstance(self, GroupsHDU):
                     _shape = list(self.data.data.shape)[1:]
-                    _format = self.data._parent.field(0).dtype.name
+                    _format = \
+                       self.data.dtype.fields[self.data.dtype.names[0]][0].name
                 else:
                     _shape = list(self.data.shape)
                     _format = self.data.dtype.name
@@ -3279,24 +3972,31 @@ class _ImageBaseHDU(_ValidHDU):
             (self.name, type, len(self._header.ascard), _shape, _format, _gcount)
 
     def scale(self, type=None, option="old", bscale=1, bzero=0):
-        """Scale image data by using BSCALE/BZERO.
+        """
+        Scale image data by using ``BSCALE``/``BZERO``.
 
-        Call to this method will scale self.data and update the keywords
-        of BSCALE and BZERO in self._header.  This method should only be
-        used right before writing to the output file, as the data will be
-        scaled and is therefore not very usable after the call.
+        Call to this method will scale `data` and update the keywords
+        of ``BSCALE`` and ``BZERO`` in `_header`.  This method should
+        only be used right before writing to the output file, as the
+        data will be scaled and is therefore not very usable after the
+        call.
 
-        type (string): destination data type, use numpy attribute format,
-              (e.g. 'uint8', 'int16', 'float32' etc.).  If is None, use the
-              current data type.
+        Parameters
+        ----------
+        type : str, optional
+            destination data type, use a string representing a numpy
+            dtype name, (e.g. ``'uint8'``, ``'int16'``, ``'float32'``
+            etc.).  If is `None`, use the current data type.
 
-        option: how to scale the data: if "old", use the original BSCALE
-              and BZERO values when the data was read/created. If
-              "minmax", use the minimum and maximum of the data to scale.
-              The option will be overwritten by any user specified
-              bscale/bzero values.
+        option : str
+            How to scale the data: if ``"old"``, use the original
+            ``BSCALE`` and ``BZERO`` values when the data was
+            read/created. If ``"minmax"``, use the minimum and maximum
+            of the data to scale.  The option will be overwritten by
+            any user specified `bscale`/`bzero` values.
 
-        bscale/bzero:  user specified BSCALE and BZERO values.
+        bscale, bzero : int, optional
+            User-specified ``BSCALE`` and ``BZERO`` values.
         """
 
         if self.data is None:
@@ -3358,15 +4058,61 @@ class _ImageBaseHDU(_ValidHDU):
         #
         self._header['BITPIX'] = _ImageBaseHDU.ImgCode[self.data.dtype.name]
 
+    def _calculate_datasum(self):
+        """
+        Calculate the value for the ``DATASUM`` card in the HDU.
+        """
+        if self.__dict__.has_key('data') and self.data != None:
+            # We have the data to be used.
+            d = self.data
+
+            # First handle the special case where the data is unsigned integer
+            # 16, 32 or 64
+            if _is_pseudo_unsigned(self.data.dtype):
+                d = np.array(self.data - _unsigned_zero(self.data.dtype),
+                             dtype='i%d' % self.data.dtype.itemsize)
+
+            # Check the byte order of the data.  If it is little endian we
+            # must swap it before calculating the datasum.
+            if d.dtype.str[0] != '>':
+                byteswapped = True
+                d = d.byteswap(True)
+                d.dtype = d.dtype.newbyteorder('>')
+            else:
+                byteswapped = False
+
+            cs = self._compute_checksum(np.fromstring(d, dtype='ubyte'),0)
+
+            # If the data was byteswapped in this method then return it to
+            # its original little-endian order.
+            if byteswapped and not _is_pseudo_unsigned(self.data.dtype):
+                d.byteswap(True)
+                d.dtype = d.dtype.newbyteorder('<')
+
+            return cs
+        else:
+            # This is the case where the data has not been read from the file
+            # yet.  We can handle that in a generic manner so we do it in the
+            # base class.  The other possibility is that there is no data at
+            # all.  This can also be handled in a gereric manner.
+            return super(_ImageBaseHDU,self)._calculate_datasum()
+
 class PrimaryHDU(_ImageBaseHDU):
-    """FITS primary HDU class."""
-
+    """
+    FITS primary HDU class.
+    """
     def __init__(self, data=None, header=None):
-        """Construct a primary HDU.
+        """
+        Construct a primary HDU.
 
-           data: the data in the HDU, default=None.
-           header: the header to be used (as a template), default=None.
-                   If header=None, a minimal Header will be provided.
+        Parameters
+        ----------
+        data : array or DELAYED, optional
+            The data in the HDU.
+
+        header : Header instance, optional
+            The header to be used (as a template).  If `header` is
+            `None`, a minimal header will be provided.
         """
 
         _ImageBaseHDU.__init__(self, data=data, header=header)
@@ -3381,16 +4127,26 @@ class PrimaryHDU(_ImageBaseHDU):
 
 
 class ImageHDU(_ExtensionHDU, _ImageBaseHDU):
-    """FITS image extension HDU class."""
+    """
+    FITS image extension HDU class.
+    """
 
     def __init__(self, data=None, header=None, name=None):
-        """Construct an image HDU.
+        """
+        Construct an image HDU.
 
-           data: the data in the HDU, default=None.
-           header: the header to be used (as a template), default=None.
-                   If header=None, a minimal Header will be provided.
-           name: The name of the HDU, will be the value of the keywod EXTNAME,
-                 default=None.
+        Parameters
+        ----------
+        data : array
+            The data in the HDU.
+
+        header : Header instance
+            The header to be used (as a template).  If `header` is
+            `None`, a minimal header will be provided.
+
+        name : str, optional
+            The name of the HDU, will be the value of the keyword
+            ``EXTNAME``.
         """
 
         # no need to run _ExtensionHDU.__init__ since it is not doing anything.
@@ -3411,7 +4167,9 @@ class ImageHDU(_ExtensionHDU, _ImageBaseHDU):
         self.name = name
 
     def _verify(self, option='warn'):
-        """ImageHDU verify method."""
+        """
+        ImageHDU verify method.
+        """
         _err = _ValidHDU._verify(self, option=option)
         naxis = self.header.get('NAXIS', 0)
         self.req_cards('PCOUNT', '== '+`naxis+3`, _isInt+" and val == 0",
@@ -3422,11 +4180,16 @@ class ImageHDU(_ExtensionHDU, _ImageBaseHDU):
 
 
 class GroupsHDU(PrimaryHDU):
-    """FITS Random Groups HDU class."""
+    """
+    FITS Random Groups HDU class.
+    """
 
     _dict = {8:'B', 16:'I', 32:'J', 64:'K', -32:'E', -64:'D'}
 
     def __init__(self, data=None, header=None, name=None):
+        """
+        TODO: Write me
+        """
         PrimaryHDU.__init__(self, data=data, header=header)
         self._header._hdutype = GroupsHDU
         self.name = name
@@ -3437,8 +4200,9 @@ class GroupsHDU(PrimaryHDU):
 
 
     def __getattr__(self, attr):
-        """Get the 'data' or 'columns' attribute.  The data of random group
-           FITS file will be like a binary table's data.
+        """
+        Get the `data` or `columns` attribute.  The data of random
+        group FITS file will be like a binary table's data.
         """
 
         if attr == 'data': # same code as in _TableBaseHDU
@@ -3487,7 +4251,9 @@ class GroupsHDU(PrimaryHDU):
 
     # 0.6.5.5
     def size(self):
-        """Returns the size (in bytes) of the HDU's data part."""
+        """
+        Returns the size (in bytes) of the HDU's data part.
+        """
         size = 0
         naxis = self._header.get('NAXIS', 0)
 
@@ -3499,7 +4265,7 @@ class GroupsHDU(PrimaryHDU):
             bitpix = self._header['BITPIX']
             gcount = self._header.get('GCOUNT', 1)
             pcount = self._header.get('PCOUNT', 0)
-            size = abs(bitpix) * gcount * (pcount + size) / 8
+            size = abs(bitpix) * gcount * (pcount + size) // 8
         return size
 
     def _verify(self, option='warn'):
@@ -3521,6 +4287,41 @@ class GroupsHDU(PrimaryHDU):
         self.req_cards('PCOUNT', _pos, _isInt, 0, option, _err)
         self.req_cards('GROUPS', _pos, 'val == True', True, option, _err)
         return _err
+
+    def _calculate_datasum(self):
+        """
+        Calculate the value for the ``DATASUM`` card in the HDU.
+        """
+        if self.__dict__.has_key('data') and self.data != None:
+            # We have the data to be used.
+            # Check the byte order of the data.  If it is little endian we
+            # must swap it before calculating the datasum.
+            byteorder = \
+                     self.data.dtype.fields[self.data.dtype.names[0]][0].str[0]
+
+            if byteorder != '>':
+                byteswapped = True
+                d = self.data.byteswap(True)
+                d.dtype = d.dtype.newbyteorder('>')
+            else:
+                byteswapped = False
+                d = self.data
+
+            cs = self._compute_checksum(np.fromstring(d, dtype='ubyte'),0)
+
+            # If the data was byteswapped in this method then return it to
+            # its original little-endian order.
+            if byteswapped:
+                d.byteswap(True)
+                d.dtype = d.dtype.newbyteorder('<')
+
+            return cs
+        else:
+            # This is the case where the data has not been read from the file
+            # yet.  We can handle that in a generic manner so we do it in the
+            # base class.  The other possibility is that there is no data at
+            # all.  This can also be handled in a gereric manner.
+            return super(GroupsHDU,self)._calculate_datasum()
 
 
 # --------------------------Table related code----------------------------------
@@ -3544,11 +4345,15 @@ for key in _fits2rec.keys():
 
 
 class _FormatX(str):
-    """For X format in binary tables."""
+    """
+    For X format in binary tables.
+    """
     pass
 
 class _FormatP(str):
-    """For P format in variable length table."""
+    """
+    For P format in variable length table.
+    """
     pass
 
 # TFORM regular expression
@@ -3558,12 +4363,14 @@ _tformat_re = re.compile(r'(?P<repeat>^[0-9]*)(?P<dtype>[A-Za-z])(?P<option>[!-~
 _tdef_re = re.compile(r'(?P<label>^T[A-Z]*)(?P<num>[1-9][0-9 ]*$)')
 
 def _parse_tformat(tform):
-    """Parse the TFORM value into repeat, data type, and option."""
+    """
+    Parse the ``TFORM`` value into `repeat`, `dtype`, and `option`.
+    """
     try:
         (repeat, dtype, option) = _tformat_re.match(tform.strip()).groups()
     except:
         warnings.warn('Format "%s" is not recognized.' % tform)
-    
+
 
     if repeat == '': repeat = 1
     else: repeat = eval(repeat)
@@ -3571,12 +4378,28 @@ def _parse_tformat(tform):
     return (repeat, dtype, option)
 
 def _convert_format(input_format, reverse=0):
-    """Convert FITS format spec to record format spec.  Do the opposite
-       if reverse = 1.
     """
+    Convert FITS format spec to record format spec.  Do the opposite
+    if reverse = 1.
+    """
+    if reverse and isinstance(input_format, np.dtype):
+        shape = input_format.shape
+        kind = input_format.base.kind
+        option = str(input_format.base.itemsize)
+        if kind == 'S':
+            kind = 'a'
+        dtype = kind
 
-    fmt = input_format
-    (repeat, dtype, option) = _parse_tformat(fmt)
+        ndims = len(shape)
+        repeat = 1
+        if ndims > 0:
+            nel = np.array(shape, dtype='i8').prod()
+            if nel > 1:
+                repeat = nel
+    else:
+        fmt = input_format
+        (repeat, dtype, option) = _parse_tformat(fmt)
+
     if reverse == 0:
         if dtype in _fits2rec.keys():                            # FITS format
             if dtype == 'A':
@@ -3593,7 +4416,7 @@ def _convert_format(input_format, reverse=0):
                 output_format = _repeat+_fits2rec[dtype]
 
         elif dtype == 'X':
-            nbytes = ((repeat-1) / 8) + 1
+            nbytes = ((repeat-1) // 8) + 1
             # use an array, even if it is only ONE u1 (i.e. use tuple always)
             output_format = _FormatX(`(nbytes,)`+'u1')
             output_format._nx = repeat
@@ -3607,7 +4430,14 @@ def _convert_format(input_format, reverse=0):
             raise ValueError, "Illegal format %s" % fmt
     else:
         if dtype == 'a':
-            output_format = option+_rec2fits[dtype]
+            # This is a kludge that will place string arrays into a
+            # single field, so at least we won't lose data.  Need to
+            # use a TDIM keyword to fix this, declaring as (slength,
+            # dim1, dim2, ...)  as mwrfits does
+
+            ntot = int(repeat)*int(option)
+
+            output_format = str(ntot)+_rec2fits[dtype]
         elif isinstance(dtype, _FormatX):
             warnings.warn('X format')
         elif dtype+option in _rec2fits.keys():                    # record format
@@ -3621,7 +4451,9 @@ def _convert_format(input_format, reverse=0):
     return output_format
 
 def _convert_ASCII_format(input_format):
-    """Convert ASCII table format spec to record format spec. """
+    """
+    Convert ASCII table format spec to record format spec.
+    """
 
     ascii2rec = {'A':'a', 'I':'i4', 'F':'f4', 'E':'f4', 'D':'f8'}
     _re = re.compile(r'(?P<dtype>[AIFED])(?P<width>[0-9]*)')
@@ -3641,25 +4473,27 @@ def _convert_ASCII_format(input_format):
 
 def _get_index(nameList, key):
     """
-    Get the index of the key in the name list.
-    The key can be an integer or string.  If integer, it is the index
+    Get the index of the `key` in the `nameList`.
+
+    The `key` can be an integer or string.  If integer, it is the index
     in the list.  If string,
-    (a) Field (column) names are case sensitive: you can have two
-        different columns called 'abc' and 'ABC' respectively.
 
-    (b) When you *refer* to a field (presumably with the field method),
-        it will try to match the exact name first, so in the example in
-        (a), field('abc') will get the first field, and field('ABC') will
-        get the second field.
+        a. Field (column) names are case sensitive: you can have two
+           different columns called 'abc' and 'ABC' respectively.
 
-        If there is no exact name matched, it will try to match the name
-        with case insensitivity.  So, in the last example, field('Abc')
-        will cause an exception since there is no unique mapping.  If
-        there is a field named "XYZ" and no other field name is a case
-        variant of "XYZ", then field('xyz'), field('Xyz'), etc. will get
-        this field.
+        b. When you *refer* to a field (presumably with the field
+           method), it will try to match the exact name first, so in
+           the example in (a), field('abc') will get the first field,
+           and field('ABC') will get the second field.
+
+        If there is no exact name matched, it will try to match the
+        name with case insensitivity.  So, in the last example,
+        field('Abc') will cause an exception since there is no unique
+        mapping.  If there is a field named "XYZ" and no other field
+        name is a case variant of "XYZ", then field('xyz'),
+        field('Xyz'), etc. will get this field.
     """
-    
+
     if isinstance(key, (int, long,np.integer)):
         indx = int(key)
     elif isinstance(key, str):
@@ -3684,15 +4518,23 @@ def _get_index(nameList, key):
     return indx
 
 def _unwrapx(input, output, nx):
-    """Unwrap the X format column into a Boolean array.
+    """
+    Unwrap the X format column into a Boolean array.
 
-       input:  input Uint8 array of shape (s, nbytes)
-       output: output Boolean array of shape (s, nx)
-       nx:     number of bits
+    Parameters
+    ----------
+    input
+        input ``Uint8`` array of shape (`s`, `nbytes`)
+
+    output
+        output Boolean array of shape (`s`, `nx`)
+
+    nx
+        number of bits
     """
 
     pow2 = [128, 64, 32, 16, 8, 4, 2, 1]
-    nbytes = ((nx-1) / 8) + 1
+    nbytes = ((nx-1) // 8) + 1
     for i in range(nbytes):
         _min = i*8
         _max = min((i+1)*8, nx)
@@ -3700,15 +4542,23 @@ def _unwrapx(input, output, nx):
             np.bitwise_and(input[...,i], pow2[j-i*8], output[...,j])
 
 def _wrapx(input, output, nx):
-    """Wrap the X format column Boolean array into an UInt8 array.
+    """
+    Wrap the X format column Boolean array into an ``UInt8`` array.
 
-       input:  input Boolean array of shape (s, nx)
-       output: output Uint8 array of shape (s, nbytes)
-       nx:     number of bits
+    Parameters
+    ----------
+    input
+        input Boolean array of shape (`s`, `nx`)
+
+    output
+        output ``Uint8`` array of shape (`s`, `nbytes`)
+
+    nx
+        number of bits
     """
 
     output[...] = 0 # reset the output
-    nbytes = ((nx-1) / 8) + 1
+    nbytes = ((nx-1) // 8) + 1
     unused = nbytes*8 - nx
     for i in range(nbytes):
         _min = i*8
@@ -3722,18 +4572,25 @@ def _wrapx(input, output, nx):
     np.left_shift(output[...,i], unused, output[...,i])
 
 def _makep(input, desp_output, dtype):
-    """Construct the P format column array, both the data descriptors and
-       the data.  It returns the output "data" array of data type dtype.
-
-       The descriptor location will have a zero offset for all columns
-       after this call.  The final offset will be calculated when the file
-       is written.
-
-       input:  input object array
-       desp_output: output "descriptor" array of data type 2Int32
-       dtype:  data type of the variable array
     """
+    Construct the P format column array, both the data descriptors and
+    the data.  It returns the output "data" array of data type `dtype`.
 
+    The descriptor location will have a zero offset for all columns
+    after this call.  The final offset will be calculated when the file
+    is written.
+
+    Parameters
+    ----------
+    input
+        input object array
+
+    desp_output
+        output "descriptor" array of data type ``Int32``
+
+    dtype
+        data type of the variable array
+    """
     _offset = 0
     data_output = _VLF([None]*len(input))
     data_output._dtype = dtype
@@ -3742,7 +4599,7 @@ def _makep(input, desp_output, dtype):
         _nbytes = 1
     else:
         _nbytes = np.array([],dtype=np.typeDict[dtype]).itemsize
-        
+
     for i in range(len(input)):
         if dtype == 'a':
             data_output[i] = chararray.array(input[i], itemsize=1)
@@ -3756,26 +4613,33 @@ def _makep(input, desp_output, dtype):
     return data_output
 
 class _VLF(np.ndarray):
-    """variable length field object."""
+    """
+    Variable length field object.
+    """
 
     def __new__(subtype, input):
         """
-            input: a sequence of variable-sized elements.
+        Parameters
+        ----------
+        input
+            a sequence of variable-sized elements.
         """
-        self = np.ndarray.__new__(subtype, shape=(len(input)), dtype=np.object)
+        a = np.array(input,dtype=np.object)
+        self = np.ndarray.__new__(subtype, shape=(len(input)), buffer=a,
+                                  dtype=np.object)
         self._max = 0
         return self
 
     def __array_finalize__(self,obj):
         if obj is None:
-            return 
+            return
         self._max = obj._max
-        
-    def __setitem__(self, key, value):
-        """To make sure the new item has consistent data type to avoid
-           misalignment.
-        """
 
+    def __setitem__(self, key, value):
+        """
+        To make sure the new item has consistent data type to avoid
+        misalignment.
+        """
         if isinstance(value, np.ndarray) and value.dtype == self.dtype:
             pass
         elif isinstance(value, chararray.chararray) and value.itemsize == 1:
@@ -3789,28 +4653,48 @@ class _VLF(np.ndarray):
 
 
 class Column:
-    """Column class which contains the definition of one column, e.g.
-       ttype, tform, etc. and the array.  Does not support theap yet.
     """
-
+    Class which contains the definition of one column, e.g.  `ttype`,
+    `tform`, etc. and the array containing values for the column.
+    Does not support `theap` yet.
+    """
     def __init__(self, name=None, format=None, unit=None, null=None, \
                        bscale=None, bzero=None, disp=None, start=None, \
                        dim=None, array=None):
-        """Construct a Column by specifying attributes.  All attributes
-           except format can be optional.
-
-           name:   column name, corresponding to TTYPE keyword
-           format: column format, corresponding to TFORM keyword
-           unit:   column unit, corresponding to TUNIT keyword
-           null:   null value, corresponding to TNULL keyword
-           bscale: bscale value, corresponding to TSCAL keyword
-           bzero:  bzero value, corresponding to TZERO keyword
-           disp:   display format, corresponding to TDISP keyword
-           start:  column starting position (ASCII table only),
-                   corresponding to TBCOL keyword
-           dim:    column dimension corresponding to TDIM keyword
         """
+        Construct a `Column` by specifying attributes.  All attributes
+        except `format` can be optional.
 
+        Parameters
+        ----------
+        name : str, optional
+            column name, corresponding to ``TTYPE`` keyword
+
+        format : str, optional
+            column format, corresponding to ``TFORM`` keyword
+
+        unit : str, optional
+            column unit, corresponding to ``TUNIT`` keyword
+
+        null : str, optional
+            null value, corresponding to ``TNULL`` keyword
+
+        bscale : int-like, optional
+            bscale value, corresponding to ``TSCAL`` keyword
+
+        bzero : int-like, optional
+            bzero value, corresponding to ``TZERO`` keyword
+
+        disp : str, optional
+            display format, corresponding to ``TDISP`` keyword
+
+        start : int, optional
+            column starting position (ASCII table only), corresponding
+            to ``TBCOL`` keyword
+
+        dim : str, optional
+            column dimension corresponding to ``TDIM`` keyword
+        """
         # any of the input argument (except array) can be a Card or just
         # a number/string
         for cname in _commonNames:
@@ -3854,8 +4738,7 @@ class Column:
                     except:
                         if isinstance(recfmt, _FormatP):
                             try:
-                                _func = lambda x: np.array(x, type=recfmt._dtype)
-                                array = _VLF(map(_func, array))
+                                array=_VLF(array)
                             except:
                                 try:
                                     # this handles ['abc'] and [['a','b','c']]
@@ -3875,7 +4758,7 @@ class Column:
         if isinstance(array, np.ndarray):
 
             # boolean needs to be scaled too
-            if recfmt == _booltype:
+            if recfmt[-2:] == _booltype:
                 _out = np.zeros(array.shape, dtype=recfmt)
                 array = np.where(array==0, ord('F'), ord('T'))
 
@@ -3886,7 +4769,7 @@ class Column:
                     array += -bzero
                 if bscale not in ['', None, 1]:
                     array /= bscale
-        
+
         array = self.__checkValidDataType(array,self.format)
         self.array = array
 
@@ -3897,7 +4780,7 @@ class Column:
         elif (array is None):
             return array
         else:
-            if (format.find('A') != -1):
+            if (format.find('A') != -1 and format.find('P') == -1):
                 if str(array.dtype).find('S') != -1:
                     # For ASCII arrays, reconstruct the array and ensure
                     # that all elements have enough characters to comply
@@ -3905,15 +4788,13 @@ class Column:
                     # left justified in the field with trailing blanks
                     # added to complete the format requirements.
                     fsize=eval(_convert_format(format)[1:])
+                    l = []
 
-                    if fsize > array.itemsize:
-                        l = []
-                        for i in range(len(array)):
-                            l.append(array[i][:min(fsize,array.itemsize)]+
-                                     ' '*(fsize-array.itemsize))
-                        return chararray.array(l)
-                    else:
-                        return array
+                    for i in range(len(array)):
+                        al = len(array[i])
+                        l.append(array[i][:min(fsize,array.itemsize)]+
+                                 ' '*(fsize-al))
+                    return chararray.array(l)
                 else:
                     numpyFormat = _convert_format(format)
                     return array.astype(numpyFormat)
@@ -3925,7 +4806,7 @@ class Column:
                 return array.astype(np.uint8)
             else:
                 return array
-    
+
     def __repr__(self):
         text = ''
         for cname in _commonNames:
@@ -3935,22 +4816,34 @@ class Column:
         return text[:-1]
 
     def copy(self):
+        """
+        Return a copy of this `Column`.
+        """
         tmp = Column(format='I') # just use a throw-away format
         tmp.__dict__=self.__dict__.copy()
         return tmp
 
 
 class ColDefs(object):
-    """Column definitions class.  It has attributes corresponding to the
-       Column attributes (e.g. ColDefs has the attribute .names while Column
-       has .name), Each attribute in ColDefs is a list of corresponding
-       attribute values from all Columns.
     """
+    Column definitions class.
 
+    It has attributes corresponding to the `Column` attributes
+    (e.g. `ColDefs` has the attribute `~ColDefs.names` while `Column`
+    has `~Column.name`). Each attribute in `ColDefs` is a list of
+    corresponding attribute values from all `Column` objects.
+    """
     def __init__(self, input, tbtype='BinTableHDU'):
-        """input:  a list of Columns, an (table) HDU
-           tbtype: which table HDU, 'BinTableHDU' (default) or
-                   'TableHDU' (text table).
+        """
+        Parameters
+        ----------
+
+        input : sequence of `Column` objects
+            an (table) HDU
+
+        tbtype : str, optional
+            which table HDU, ``"BinTableHDU"`` (default) or
+            ``"TableHDU"`` (text table).
         """
         ascii_fmt = {'A':'A1', 'I':'I10', 'E':'E14.6', 'F':'F16.7', 'D':'D24.16'}
         self._tbtype = tbtype
@@ -3959,10 +4852,12 @@ class ColDefs(object):
             self.data = [col.copy() for col in input.data]
 
         # if the input is a list of Columns
-        elif isinstance(input, (list, tuple)):            
+        elif isinstance(input, (list, tuple)):
             for col in input:
                 if not isinstance(col, Column):
-                    raise "Element %d in the ColDefs input is not a Column." % input.index(col)
+                    raise TypeError(
+                           "Element %d in the ColDefs input is not a Column."
+                           % input.index(col))
             self.data = [col.copy() for col in input]
 
             # if the format of an ASCII column has no width, add one
@@ -4000,14 +4895,16 @@ class ColDefs(object):
             # now build the columns
             tmp = [Column(**attrs) for attrs in dict]
             self.data = tmp
+            self._listener = input
         else:
             raise TypeError, "input to ColDefs must be a table HDU or a list of Columns"
 
     def __getattr__(self, name):
-        """Populate the attributes."""
-
+        """
+        Populate the attributes.
+        """
         cname = name[:-1]
-        if cname in _commonNames:
+        if cname in _commonNames and name[-1] == 's':
             attr = [''] * len(self)
             for i in range(len(self)):
                 val = getattr(self[i], cname)
@@ -4027,7 +4924,6 @@ class ColDefs(object):
                 dummy.append(self._width-self.starts[-1]+1)
                 attr = map(lambda y: 'a'+`y`, dummy)
         elif name == 'spans':
-
             # make sure to consider the case that the starting column of
             # a field may not be the column right after the last field
             if self._tbtype == 'TableHDU':
@@ -4041,6 +4937,8 @@ class ColDefs(object):
                     attr[i] = _width
                     last_end = _end
                 self._width = _end
+            else:
+                raise KeyError, 'Attribute %s not defined.' % name
         else:
             raise KeyError, 'Attribute %s not defined.' % name
 
@@ -4102,20 +5000,50 @@ class ColDefs(object):
         tmp = [self[i] for i in indx]
         return ColDefs(tmp)
 
-    def _setup(self):
-        """ Initialize all attributes to be a list of null strings."""
-        for cname in _commonNames:
-            setattr(self, cname+'s', ['']*self._nfields)
-        setattr(self, '_arrays', [None]*self._nfields)
+    def _update_listener(self):
+        if hasattr(self, '_listener'):
+            delattr(self._listener, 'data')
 
     def add_col(self, column):
-        """Append one Column to the column definition."""
+        """
+        Append one `Column` to the column definition.
 
-        return self+column
+        .. warning::
 
+        *New in pyfits 2.3*: This function appends the new column to
+        the `ColDefs` object in place.  Prior to pyfits 2.3, this
+        function returned a new `ColDefs` with the new column at the
+        end.
+        """
+        assert isinstance(column, Column)
+
+        for cname in _commonNames:
+            attr = getattr(self, cname+'s')
+            attr.append(getattr(column, cname))
+
+        self._arrays.append(column.array)
+        # Obliterate caches of certain things
+        if hasattr(self, '_recformats'):
+            delattr(self, '_recformats')
+        if hasattr(self, 'spans'):
+            delattr(self, 'spans')
+
+        self.data.append(column)
+        # Force regeneration of self._Formats member
+        ignored = self._recformats
+
+        # If this ColDefs is being tracked by a Table, inform the
+        # table that its data is now invalid.
+        self._update_listener()
+        return self
 
     def del_col(self, col_name):
-        """Delete (the definition of) one Column."""
+        """
+        Delete (the definition of) one `Column`.
+
+        col_name : str or int
+            The column's name or index
+        """
         indx = _get_index(self.names, col_name)
 
         for cname in _commonNames:
@@ -4123,31 +5051,93 @@ class ColDefs(object):
             del attr[indx]
 
         del self._arrays[indx]
-        self._nfields -= 1
+        # Obliterate caches of certain things
+        if hasattr(self, '_recformats'):
+            delattr(self, '_recformats')
+        if hasattr(self, 'spans'):
+            delattr(self, 'spans')
+
+        del self.data[indx]
+        # Force regeneration of self._Formats member
+        ignored = self._recformats
+
+        # If this ColDefs is being tracked by a Table, inform the
+        # table that its data is now invalid.
+        self._update_listener()
+        return self
 
     def change_attrib(self, col_name, attrib, new_value):
-        """Change an attribute (in the commonName list) of a Column."""
+        """
+        Change an attribute (in the commonName list) of a `Column`.
+
+        col_name : str or int
+            The column name or index to change
+
+        attrib : str
+            The attribute name
+
+        value : object
+            The new value for the attribute
+        """
         indx = _get_index(self.names, col_name)
         getattr(self, attrib+'s')[indx] = new_value
 
+        # If this ColDefs is being tracked by a Table, inform the
+        # table that its data is now invalid.
+        self._update_listener()
+
     def change_name(self, col_name, new_name):
-        """Change a Column's name."""
+        """
+        Change a `Column`'s name.
+
+        col_name : str
+            The current name of the column
+
+        new_name : str
+            The new name of the column
+        """
         if new_name != col_name and new_name in self.names:
             raise ValueError, 'New name %s already exists.' % new_name
         else:
             self.change_attrib(col_name, 'name', new_name)
 
+        # If this ColDefs is being tracked by a Table, inform the
+        # table that its data is now invalid.
+        self._update_listener()
+
     def change_unit(self, col_name, new_unit):
-        """Change a Column's unit."""
+        """
+        Change a `Column`'s unit.
+
+        col_name : str or int
+            The column name or index
+
+        new_unit : str
+            The new unit for the column
+        """
         self.change_attrib(col_name, 'unit', new_unit)
 
-    def info(self, attrib='all'):
-        """Get attribute(s) information of the column definition."""
+        # If this ColDefs is being tracked by a Table, inform the
+        # table that its data is now invalid.
+        self._update_listener()
 
-        """The attrib can be one or more of the attributes listed in
-           _commonNames.  The default is "all" which will print out
-           all attributes.  It forgives plurals and blanks.  If there are
-           two or more attribute names, they must be separated by comma(s).
+    def info(self, attrib='all'):
+        """
+        Get attribute(s) information of the column definition.
+
+        Parameters
+        ----------
+        attrib : str
+           Can be one or more of the attributes listed in
+           `_commonNames`.  The default is ``"all"`` which will print
+           out all attributes.  It forgives plurals and blanks.  If
+           there are two or more attribute names, they must be
+           separated by comma(s).
+
+        Notes
+        -----
+        This function doesn't return anything, it just prints to
+        stdout.
         """
 
         if attrib.strip().lower() in ['all', '']:
@@ -4171,8 +5161,9 @@ class ColDefs(object):
         #self.change_attrib(col_name, 'format', new_format)
 
 def _get_tbdata(hdu):
-    """ Get the table data from input (an HDU object)."""
-
+    """
+    Get the table data from input (an HDU object).
+    """
     tmp = hdu.columns
     # get the right shape for the data part of the random group,
     # since binary table does not support ND yet
@@ -4193,9 +5184,9 @@ def _get_tbdata(hdu):
             data_type = 'S'+str(tmp.spans[j])
 
             if j == len(tmp)-1:
-                if hdu.header['NAXIS1'] > itemsize:
+                if hdu._header['NAXIS1'] > itemsize:
                     data_type = 'S'+str(tmp.spans[j]+ \
-                                hdu.header['NAXIS1']-itemsize)
+                                hdu._header['NAXIS1']-itemsize)
             dtype[tmp.names[j]] = (data_type,tmp.starts[j]-1)
 
     if hdu._ffile.memmap:
@@ -4211,10 +5202,10 @@ def _get_tbdata(hdu):
                              dtype=hdu._ffile.code, names=tmp.names)
     else:
         if isinstance(hdu, TableHDU):
-            _data = rec.array(hdu._file, dtype=dtype, names=tmp.names, 
+            _data = rec.array(hdu._file, dtype=dtype, names=tmp.names,
                               shape=tmp._shape)
         else:
-            _data = rec.array(hdu._file, formats=",".join(tmp._recformats), 
+            _data = rec.array(hdu._file, formats=",".join(tmp._recformats),
                               names=tmp.names, shape=tmp._shape)
 
     if isinstance(hdu._ffile, _File):
@@ -4224,7 +5215,7 @@ def _get_tbdata(hdu):
     # pass datLoc, for P format
     _data._heapoffset = hdu._theap + hdu._datLoc
     _data._file = hdu._file
-    _tbsize = hdu.header['NAXIS1']*hdu.header['NAXIS2']
+    _tbsize = hdu._header['NAXIS1']*hdu._header['NAXIS2']
     _data._gap = hdu._theap - _tbsize
     # comment out to avoid circular reference of _pcount
 
@@ -4232,36 +5223,61 @@ def _get_tbdata(hdu):
     for attr in ['formats', 'names']:
         setattr(_data, attr, getattr(tmp, attr))
     for i in range(len(tmp)):
-        tmp._arrays[i] = _data.field(i)
+       # get the data for each column object from the rec.recarray
+        tmp.data[i].array = _data.field(i)
 
-    return FITS_rec(_data)
+    # delete the _arrays attribute so that it is recreated to point to the
+    # new data placed in the column object above
+    if tmp.__dict__.has_key('_arrays'):
+        del tmp.__dict__['_arrays']
 
-def new_table (input, header=None, nrows=0, fill=0, tbtype='BinTableHDU'):
-    """Create a new table from the input column definitions."""
+    # TODO: Probably a benign change, but I'd still like to get to
+    # the bottom of the root cause...
+    #return FITS_rec(_data)
+    return _data.view(FITS_rec)
 
+def new_table(input, header=None, nrows=0, fill=False, tbtype='BinTableHDU'):
     """
-    input:  a list of Columns or a ColDefs object.
-    header: header to be used to populate the non-required keywords
-    nrows:  number of rows in the new table
-    fill:   if = 1, will fill all cells with zeros or blanks
-            if = 0, copy the data from input, undefined cells will still
-                  be filled with zeros/blanks.
-    tbtype: table type to be created (BinTableHDU or TableHDU)
-    """
+    Create a new table from the input column definitions.
 
+    Parameters
+    ----------
+    input : sequence of Column or ColDefs objects
+        The data to create a table from.
+
+    header : Header instance
+        Header to be used to populate the non-required keywords.
+
+    nrows : int
+        Number of rows in the new table.
+
+    fill : bool
+        If `True`, will fill all cells with zeros or blanks.  If
+        `False`, copy the data from input, undefined cells will still
+        be filled with zeros/blanks.
+
+    tbtype : str
+        Table type to be created ("BinTableHDU" or "TableHDU").
+    """
     # construct a table HDU
     hdu = eval(tbtype)(header=header)
 
     if isinstance(input, ColDefs):
         if input._tbtype == tbtype:
-            tmp = hdu.columns = input
+            # Create a new ColDefs object from the input object and assign
+            # it to the ColDefs attribute of the new hdu.
+            tmp = hdu.columns = ColDefs(input, tbtype)
         else:
             raise ValueError, 'column definitions have a different table type'
     elif isinstance(input, FITS_rec): # input is a FITS_rec
-        tmp = hdu.columns = input._coldefs
+        # Create a new ColDefs object from the input FITS_rec's ColDefs
+        # object and assign it to the ColDefs attribute of the new hdu.
+        tmp = hdu.columns = ColDefs(input._coldefs, tbtype)
     elif isinstance(input, np.ndarray):
         tmp = hdu.columns = eval(tbtype)(input).data._coldefs
     else:                 # input is a list of Columns
+        # Create a new ColDefs object from the input list of Columns and
+        # assign it to the ColDefs attribute of the new hdu.
         tmp = hdu.columns = ColDefs(input, tbtype)
 
     # read the delayed data
@@ -4290,17 +5306,27 @@ def new_table (input, header=None, nrows=0, fill=0, tbtype='BinTableHDU'):
         for j in range(len(tmp)):
            data_type = 'S'+str(tmp.spans[j])
            dtype[tmp.names[j]] = (data_type,tmp.starts[j]-1)
-       
-        hdu.data = FITS_rec(rec.array(' '*_itemsize*nrows, dtype=dtype, shape=nrows))
+
+        hdu.data = FITS_rec(rec.array(' '*_itemsize*nrows, dtype=dtype,
+                                      shape=nrows))
         hdu.data.setflags(write=True)
     else:
-        hdu.data = FITS_rec(rec.array(None, formats=",".join(tmp._recformats), names=tmp.names, shape=nrows))
+        hdu.data = FITS_rec(rec.array(None, formats=",".join(tmp._recformats),
+                                      names=tmp.names, shape=nrows))
 
     hdu.data._coldefs = hdu.columns
     hdu.data.formats = hdu.columns.formats
 
-    # populate data to the new table
+    # Populate data to the new table from the ndarrays in the input ColDefs
+    # object.
     for i in range(len(tmp)):
+        # For each column in the ColDef object, determine the number
+        # of rows in that column.  This will be either the number of
+        # rows in the ndarray associated with the column, or the
+        # number of rows given in the call to this function, which
+        # ever is smaller.  If the input FILL argument is true, the
+        # number of rows is set to zero so that no data is copied from
+        # the original input data.
         if tmp._arrays[i] is None:
             size = 0
         else:
@@ -4310,16 +5336,30 @@ def new_table (input, header=None, nrows=0, fill=0, tbtype='BinTableHDU'):
         if fill:
             n = 0
 
+        # Get any scale factors from the FITS_rec
         (_scale, _zero, bscale, bzero) = hdu.data._get_scale_factors(i)[3:]
 
         if n > 0:
+            # Only copy data if there is input data to copy
+            # Copy all of the data from the input ColDefs object for this
+            # column to the new FITS_rec data array for this column.
             if isinstance(tmp._recformats[i], _FormatX):
+                # Data is a bit array
                 if tmp._arrays[i][:n].shape[-1] == tmp._recformats[i]._nx:
-                    _wrapx(tmp._arrays[i][:n], rec.recarray.field(hdu.data,i)[:n], tmp._recformats[i]._nx)
+                    _wrapx(tmp._arrays[i][:n],
+                           rec.recarray.field(hdu.data,i)[:n],
+                           tmp._recformats[i]._nx)
                 else: # from a table parent data, just pass it
                     rec.recarray.field(hdu.data,i)[:n] = tmp._arrays[i][:n]
             elif isinstance(tmp._recformats[i], _FormatP):
-                hdu.data._convert[i] = _makep(tmp._arrays[i][:n], rec.recarray.field(hdu.data,i)[:n], tmp._recformats[i]._dtype)
+                hdu.data._convert[i] = _makep(tmp._arrays[i][:n],
+                                            rec.recarray.field(hdu.data,i)[:n],
+                                            tmp._recformats[i]._dtype)
+            elif tmp._recformats[i][-2:] == _booltype and \
+                 tmp._arrays[i].dtype == bool:
+                # column is boolean 
+                rec.recarray.field(hdu.data,i)[:n] = \
+                           np.where(tmp._arrays[i]==False, ord('F'), ord('T'))
             else:
                 if tbtype == 'TableHDU':
 
@@ -4327,7 +5367,8 @@ def new_table (input, header=None, nrows=0, fill=0, tbtype='BinTableHDU'):
                     if isinstance(tmp._arrays[i], chararray.chararray):
                         rec.recarray.field(hdu.data,i)[:n] = tmp._arrays[i][:n]
                     else:
-                        hdu.data._convert[i] = np.zeros(nrows, dtype=tmp._arrays[i].dtype)
+                        hdu.data._convert[i] = np.zeros(nrows,
+                                                    dtype=tmp._arrays[i].dtype)
                         if _scale or _zero:
                             _arr = tmp._arrays[i].copy()
                         else:
@@ -4341,78 +5382,157 @@ def new_table (input, header=None, nrows=0, fill=0, tbtype='BinTableHDU'):
                     rec.recarray.field(hdu.data,i)[:n] = tmp._arrays[i][:n]
 
         if n < nrows:
+            # If there are additional rows in the new table that were not
+            # copied from the input ColDefs object, initialize the new data
             if tbtype == 'BinTableHDU':
-                # resize the data in the hdu ColDefs attribute
-                hdu.columns._arrays[i] = rec.recarray.field(hdu.data,i)
-
-                # initialize the new data to zero
                 if isinstance(rec.recarray.field(hdu.data,i), np.ndarray):
-
-                    # make the scaled data = 0, not the stored data
+                    # make the scaled data = 0
                     rec.recarray.field(hdu.data,i)[n:] = -bzero/bscale
                 else:
                     rec.recarray.field(hdu.data,i)[n:] = ''
             else:
-                # resize the data in the hdu ColDefs attribute
-                hdu.columns._arrays[i] = rec.recarray.field(hdu.data,i)
-                rec.recarray.field(hdu.data,i)[n:] = ' '*hdu.data._coldefs.spans[i]
+                rec.recarray.field(hdu.data,i)[n:] = \
+                                                 ' '*hdu.data._coldefs.spans[i]
 
+    # Update the HDU header to match the data
     hdu.update()
+
+    # Make the ndarrays in the Column objects of the ColDefs object of the HDU
+    # reference the same ndarray as the HDU's FITS_rec object.
+    for i in range(len(tmp)):
+        hdu.columns.data[i].array = hdu.data.field(i)
+
+    # Delete the _arrays attribute so that it is recreated to point to the
+    # new data placed in the column objects above
+    if hdu.columns.__dict__.has_key('_arrays'):
+        del hdu.columns.__dict__['_arrays']
+
     return hdu
 
 class FITS_record(object):
-    """FITS record class.  FITS record class is used to access records of
-       the FITS_rec object.  This will allow us to deal with scaled columns.
-       The FITS_record class expects a FITS_rec object as input
-    """    
-    def __init__(self, input, row=0):
+    """
+    FITS record class.
+
+    `FITS_record` is used to access records of the `FITS_rec` object.
+    This will allow us to deal with scaled columns.  The `FITS_record`
+    class expects a `FITS_rec` object as input.
+    """
+    def __init__(self, input, row=0, startColumn=0, endColumn=0):
+        """
+        Parameters
+        ----------
+        input : array
+           The array to wrap.
+
+        row : int, optional
+           The starting logical row of the array.
+
+        startColumn : int, optional
+           The starting column in the row associated with this object.
+           Used for subsetting the columns of the FITS_rec object.
+
+        endColumn : int, optional
+           The ending column in the row associated with this object.
+           Used for subsetting the columns of the FITS_rec object.
+        """
         self.array = input
         self.row = row
+        len = self.array._nfields
+
+        if startColumn > len:
+            self.start = len + 1
+        else:
+            self.start = startColumn
+
+        if endColumn <= 0 or endColumn > len:
+            self.end = len
+        else:
+            self.end = endColumn
 
     def field(self, fieldName):
-        """Get the field data of the record."""
+        """
+        Get the field data of the record.
+        """
+        return self.__getitem__(fieldName)
 
-        return self.array.field(fieldName)[self.row]
 
     def setfield(self, fieldName, value):
-        """Set the field data of the record."""
-
-        self.array.field(fieldName)[self.row] = value
+        """
+        Set the field data of the record.
+        """
+        self.__setitem__(fieldName, value)
 
     def __str__(self):
-        """Print one row."""
+        """
+        Print one row.
+        """
+        if isinstance(self.row, (str, unicode)):
+            return repr(np.asarray(self.array)[self.row])
+        else:
+            outlist = []
+            for i in range(self.array._nfields):
+                if i >= self.start and i < self.end:
+                    outlist.append(`self.array.field(i)[self.row]`)
+            return "(" + ", ".join(outlist) + ")"
 
-        outlist = []
-        for i in range(self.array._nfields):
-            outlist.append(`self.array.field(i)[self.row]`)
-        return "(" + ", ".join(outlist) + ")"
-                
 
     def __repr__(self):
         return self.__str__()
 
     def __getitem__(self,key):
+        if isinstance(key, (str, unicode)):
+            indx = _get_index(self.array._coldefs.names, key)
 
-        return self.array.field(key)[self.row]
-        
+            if indx < self.start or indx > self.end - 1:
+                raise KeyError("Key '%s' does not exist."%key)
+        else:
+            indx = key + self.start
+
+            if indx > self.end - 1:
+                raise IndexError("index out of bounds")
+
+        return self.array.field(indx)[self.row]
+
     def __setitem__(self,fieldName,value):
-        
-        self.array.field(fieldName)[self.row] = value
+        if isinstance(fieldName, (str, unicode)):
+            indx = _get_index(self.array._coldefs.names, fieldName)
+
+            if indx < self.start or indx > self.end - 1:
+                raise KeyError("Key '%s' does not exist."%fieldName)
+        else:
+            indx = fieldName + self.start
+
+            if indx > self.end - 1:
+                raise IndexError("index out of bounds")
+
+        self.array.field(indx)[self.row] = value
+
+    def __len__(self):
+        return min(self.end - self.start, self.array._nfields)
+
+    def __getslice__(self, i, j):
+        return FITS_record(self.array,self.row,i,j)
 
 class FITS_rec(rec.recarray):
-    """FITS record array class.  FITS record array is the data part of a
-       table HDU's data part.  This is a layer over the recarray, so we
-       can deal with scaled columns.
+    """
+    FITS record array class.
+
+    `FITS_rec` is the data part of a table HDU's data part.  This is a
+    layer over the `recarray`, so we can deal with scaled columns.
+
+    It inherits all of the standard methods from `numpy.ndarray`.
     """
 
     def __new__(subtype, input):
-        """Construct a FITS record array from a recarray."""
+        """
+        Construct a FITS record array from a recarray.
+        """
         # input should be a record array
         if input.dtype.subdtype is None:
-            self = rec.recarray.__new__(subtype, input.shape, input.dtype, 
+            self = rec.recarray.__new__(subtype, input.shape, input.dtype,
                                         buf=input.data,heapoffset=input._heapoffset,file=input._file)
         else:
-            self = rec.recarray.__new__(subtype, input.shape, input.dtype, 
+            self = rec.recarray.__new__(subtype, input.shape, input.dtype,
                                         buf=input.data, strides=input.strides,heapoffset=input._heapoffset,file=input._file)
 
         self._nfields = len(self.dtype.names)
@@ -4426,17 +5546,60 @@ class FITS_rec(rec.recarray):
 
     def __array_finalize__(self,obj):
         if obj is None:
-            return 
-        self._convert = obj._convert
-        self._coldefs = obj._coldefs
-        self._nfields = obj._nfields
-        self.names = obj.names
-        self._names = obj._names
-        self._gap = obj._gap
-        self.formats = obj.formats
-        
+            return
+
+        # This will allow regular ndarrays with fields, rather than
+        # just other FITS_rec objects
+        self._nfields = len(obj.dtype.names)
+        self._convert = [None]*len(obj.dtype.names)
+
+        self._heapoffset = getattr(obj,'_heapoffset',0)
+        self._file = getattr(obj,'_file', None)
+
+        self._coldefs = None
+        self._gap = 0
+        self.names = obj.dtype.names
+        self._names = obj.dtype.names # This attribute added for backward compatibility with numarray version of FITS_rec
+        self.formats = None
+
+        attrs=['_convert', '_coldefs', 'names', '_names', '_gap', 'formats']
+        for attr in attrs:
+            if hasattr(obj, attr):
+                value = getattr(obj, attr, None)
+                if value is None:
+                    warnings.warn('Setting attribute %s as None' % attr)
+                setattr(self, attr, value)
+
+        if self._coldefs == None:
+            # The data does not have a _coldefs attribute so
+            # create one from the underlying recarray.
+            columns = []
+            formats = []
+
+            for i in range(len(obj.dtype.names)):
+                cname = obj.dtype.names[i]
+
+                format = _convert_format(obj.dtype[i], reverse=True)
+
+                formats.append(format)
+
+                c = Column(name=cname,format=format)
+                columns.append(c)
+
+            tbtype = 'BinTableHDU'
+            try:
+                if self._xtn == 'TABLE':
+                    tbtype = 'TableHDU'
+            except AttributeError:
+                pass
+
+            self.formats = formats
+            self._coldefs = ColDefs(columns, tbtype=tbtype)
+
     def _clone(self, shape):
-        """Overload this to make mask array indexing work properly."""
+        """
+        Overload this to make mask array indexing work properly.
+        """
         hdu = new_table(self._coldefs, nrows=shape[0])
         return hdu.data
 
@@ -4476,20 +5639,43 @@ class FITS_rec(rec.recarray):
         # if not a slice, do this because Record has no __getstate__.
         # also more efficient.
         else:
+            if isinstance(key, int) and key >= len(self):
+                raise IndexError("index out of bounds")
+
             newrecord = FITS_record(self,key)
             return newrecord
-    
+
     def __setitem__(self,row,value):
-        for i in range(self._nfields):
-            self.field(self.names[i])[row] = value.field(self.names[i])
+        if isinstance(value, FITS_record):
+            for i in range(self._nfields):
+                self.field(self.names[i])[row] = value.field(self.names[i])
+        elif isinstance(value, (tuple, list)):
+            if self._nfields == len(value):
+                for i in range (self._nfields):
+                    self.field(i)[row] = value[i]
+            else:
+               raise ValueError, \
+                     "input tuple or list required to have %s elements" \
+                     % self._nfields
+        else:
+            raise TypeError, \
+                  "assignment requires a FITS_record, tuple, or list as input"
+
+    def __setslice__(self,start,end,value):
+        _end = min(len(self),end)
+        _end = max(0,_end)
+        _start = max(0,start)
+        _end = min(_end, _start+len(value))
+
+        for i in range(_start,_end):
+            self.__setitem__(i,value[i-_start])
 
     def _get_scale_factors(self, indx):
         """
         Get the scaling flags and factors for one field.
 
-        indx is the index of the field.
+        `indx` is the index of the field.
         """
-
         if self._coldefs._tbtype == 'BinTableHDU':
             _str = 'a' in self._coldefs.formats[indx]
             _bool = self._coldefs._recformats[indx][-2:] == _booltype
@@ -4510,7 +5696,9 @@ class FITS_rec(rec.recarray):
         return (_str, _bool, _number, _scale, _zero, bscale, bzero)
 
     def field(self, key):
-        """A view of a Column's data as an array."""
+        """
+        A view of a `Column`'s data as an array.
+        """
         indx = _get_index(self._coldefs.names, key)
 
         if (self._convert[indx] is None):
@@ -4591,8 +5779,9 @@ class FITS_rec(rec.recarray):
         return self._convert[indx]
 
     def _scale_back(self):
-        """Update the parent array, using the (latest) scaled array."""
-
+        """
+        Update the parent array, using the (latest) scaled array.
+        """
         _dict = {'A':'s', 'I':'d', 'F':'f', 'E':'E', 'D':'E'}
         # calculate the starting point and width of each field for ASCII table
         if self._coldefs._tbtype == 'TableHDU':
@@ -4674,39 +5863,52 @@ class FITS_rec(rec.recarray):
 
                 # ASCII table does not have Boolean type
                 elif _bool:
-                    rec.recarray.field(self,indx)[:] = np.choose(self._convert[indx], 
+                    rec.recarray.field(self,indx)[:] = np.choose(self._convert[indx],
                                                     (np.array([ord('F')],dtype=np.int8)[0],
                                                     np.array([ord('T')],dtype=np.int8)[0]))
 
 
 class GroupData(FITS_rec):
-    """Random groups data object.
-    
-    Allows structured access to FITS Group data in a manner analogous to tables
+    """
+    Random groups data object.
+
+    Allows structured access to FITS Group data in a manner analogous
+    to tables.
     """
 
     def __new__(subtype, input=None, bitpix=None, pardata=None, parnames=[],
                  bscale=None, bzero=None, parbscales=None, parbzeros=None):
-        """input: input data, either the group data itself (a numarray) or
-                  a record array (FITS_rec) which will contain both group
-                  parameter info and the data.  The rest of the arguments are
-                  used only for the first case.
-           bitpix: data type as expressed in FITS BITPIX value
-                  (8, 16, 32, 64, -32, or -64)
-
-           pardata: parameter data, as a list of (numeric) arrays.
-
-           parnames: list of parameter names.
-
-           bscale: BSCALE of the data
-
-           bzero: BZERO of the data
-
-           parbscales: list of bscales for the parameters
-
-           parbzeros: list of bzeros for the parameters
         """
+        Parameters
+        ----------
+        input : array or FITS_rec instance
+            input data, either the group data itself (a
+            `numpy.ndarray`) or a record array (`FITS_rec`) which will
+            contain both group parameter info and the data.  The rest
+            of the arguments are used only for the first case.
 
+        bitpix : int
+            data type as expressed in FITS ``BITPIX`` value (8, 16, 32,
+            64, -32, or -64)
+
+        pardata : sequence of arrays
+            parameter data, as a list of (numeric) arrays.
+
+        parnames : sequence of str
+            list of parameter names.
+
+        bscale : int
+            ``BSCALE`` of the data
+
+        bzero : int
+            ``BZERO`` of the data
+
+        parbscales : sequence of int
+            list of bscales for the parameters
+
+        parbzeros : sequence of int
+            list of bzeros for the parameters
+        """
         if not isinstance(input, FITS_rec):
             _formats = ''
             _cols = []
@@ -4729,50 +5931,47 @@ class GroupData(FITS_rec):
             _formats += data_fmt
             gcount = input.shape[0]
             for i in range(npars):
-                _cols.append(Column(name='c'+`i+1`, format = fits_fmt, bscale = parbscales[i], bzero = parbzeros[i]))
-            _cols.append(Column(name='data', format = fits_fmt, bscale = bscale, bzero = bzero))
-            subtype._coldefs = ColDefs(_cols)
-            subtype.parnames = [i.lower() for i in parnames]
-            
-            # need to inherit from FITS rec.  What is being done here?
- #           tmp = FITS_rec(rec.array(None, formats=_formats, shape=gcount, names= self._coldefs.names))
- #           self.__setstate__(tmp.__getstate__())
-            
-            self = FITS_rec(rec.array(None, formats=_formats, names=self._coldefs.names, shape=gcount))
-            
+                _cols.append(Column(name='c'+`i+1`,
+                                    format = fits_fmt,
+                                    bscale = parbscales[i],
+                                    bzero = parbzeros[i]))
+            _cols.append(Column(name='data',
+                                format = fits_fmt,
+                                bscale = bscale,
+                                bzero = bzero))
+            _coldefs = ColDefs(_cols)
+
+            self = FITS_rec.__new__(subtype,
+                                    rec.array(None,
+                                              formats=_formats,
+                                              names=_coldefs.names,
+                                              shape=gcount))
+            self._coldefs = _coldefs
+            self.parnames = [i.lower() for i in parnames]
+
             for i in range(npars):
                 (_scale, _zero)  = self._get_scale_factors(i)[3:5]
                 if _scale or _zero:
                     self._convert[i] = pardata[i]
                 else:
-#                    self._parent.field(i)[:] = pardata[i]
                     rec.recarray.field(self,i)[:] = pardata[i]
             (_scale, _zero)  = self._get_scale_factors(npars)[3:5]
             if _scale or _zero:
                 self._convert[npars] = input
             else:
-#                self._parent.field(npars)[:] = input
                 rec.recarray.field(self,npars)[:] = input
         else:
-#            self.__setstate__(input.__getstate__())
              self = FITS_rec.__new__(subtype,input)
         return self
 
-    def __str__(self):
-
-        # Byteswap temporarily the byte order for presentation (if needed)
-        outlist = []
-        for i in self:
-            outlist.append(FITS_record.__str__(i))
-
-        # When finished, restore the byte order (if needed)
-        return "RecArray[ \n" + ",\n".join(outlist) + "\n]"
-
+    def __getattribute__(self, attr):
+        if attr == 'data':
+            return self.field('data')
+        else:
+            return super(GroupData, self).__getattribute__(attr)
 
     def __getattr__(self, attr):
-        if attr == 'data':
-            self.__dict__[attr] = self.field('data')
-        elif attr == '_unique':
+        if attr == '_unique':
             _unique = {}
             for i in range(len(self.parnames)):
                 _name = self.parnames[i]
@@ -4787,8 +5986,9 @@ class GroupData(FITS_rec):
             raise AttributeError(attr)
 
     def par(self, parName):
-        """Get the group parameter values."""
-
+        """
+        Get the group parameter values.
+        """
         if isinstance(parName, (int, long, np.integer)):
             result = self.field(parName)
         else:
@@ -4804,55 +6004,124 @@ class GroupData(FITS_rec):
 
         return result
 
-    def setpar(self, parName, value):
-        """Set the group parameter values."""
+    def _getitem(self, key):
+        row = (offset - self._byteoffset) // self._strides[0]
+        return _Group(self, row)
 
-        if isinstance(parName, (int, long, np.integer)):
-            self.field(parName)[:] = value
+    def __getitem__(self, key):
+        return _Group(self,key,self.parnames)
+
+class _Group(FITS_record):
+    """
+    One group of the random group data.
+    """
+    def __init__(self, input, row, parnames):
+        super(_Group, self).__init__(input, row)
+        self.parnames = parnames
+
+    def __getattr__(self, attr):
+        if attr == '_unique':
+            _unique = {}
+            for i in range(len(self.parnames)):
+                _name = self.parnames[i]
+                if _name in _unique:
+                    _unique[_name].append(i)
+                else:
+                    _unique[_name] = [i]
+            self.__dict__[attr] = _unique
+        try:
+             return self.__dict__[attr]
+        except KeyError:
+            raise AttributeError(attr)
+
+    def __str__(self):
+        """
+        Print one row.
+        """
+        if isinstance(self.row, slice):
+            if self.row.step:
+                step = self.row.step
+            else:
+                step = 1
+
+            if self.row.stop > len(self.array):
+                stop = len(self.array)
+            else:
+                stop = self.row.stop
+
+            outlist = []
+
+            for i in range(self.row.start, stop, step):
+                rowlist = []
+
+                for j in range(self.array._nfields):
+                    rowlist.append(`self.array.field(j)[i]`)
+
+                outlist.append(" (" + ", ".join(rowlist) + ")")
+
+            return "[" + ",\n".join(outlist) + "]"
         else:
-            indx = self._unique[parName]
+            return super(_Group, self).__str__()
+
+    def par(self, parName):
+        """
+        Get the group parameter value.
+        """
+        if isinstance(parName, (int, long, np.integer)):
+            result = self.array[self.row][parName]
+        else:
+            indx = self._unique[parName.lower()]
             if len(indx) == 1:
-                self.field(indx[0])[:] = value
+                result = self.array[self.row][indx[0]]
+
+            # if more than one group parameter have the same name
+            else:
+                result = self.array[self.row][indx[0]].astype('f8')
+                for i in indx[1:]:
+                    result += self.array[self.row][i]
+
+        return result
+
+
+    def setpar(self, parName, value):
+        """
+        Set the group parameter value.
+        """
+        if isinstance(parName, (int, long, np.integer)):
+            self.array[self.row][parName] = value
+        else:
+            indx = self._unique[parName.lower()]
+            if len(indx) == 1:
+                self.array[self.row][indx[0]] = value
 
             # if more than one group parameter have the same name, the
             # value must be a list (or tuple) containing arrays
             else:
                 if isinstance(value, (list, tuple)) and len(indx) == len(value):
                     for i in range(len(indx)):
-                        self.field(indx[i])[:] = value[i]
+                        self.array[self.row][indx[i]] = value[i]
                 else:
-                    raise ValueError, "parameter value must be a sequence with %d arrays/numbers." % len(indx)
+                    raise ValueError, "parameter value must be a sequence " + \
+                                      "with %d arrays/numbers." % len(indx)
 
-    def _getitem(self, offset):
-        row = (offset - self._byteoffset) / self._strides[0]
-        return _Group(self, row)
-
-
-class _Group(rec.record):
-    """One group of the random group data."""
-
-    def __init__(self, input, row=0):
-        rec.Record.__init__(self, input, row)
-
-    def par(self, fieldName):
-        """Get the group parameter value."""
-
-        return self.array.par(fieldName)[self.row]
-
-    def setpar(self, fieldName, value):
-        """Set the group parameter value."""
-
-        self.array[self.row:self.row+1].setpar(fieldName, value)
 
 
 class _TableBaseHDU(_ExtensionHDU):
-    """FITS table extension base HDU class."""
-
+    """
+    FITS table extension base HDU class.
+    """
     def __init__(self, data=None, header=None, name=None):
         """
-            header: header to be used
-            data: data to be used
-            name: name to be populated in EXTNAME keyword
+        Parameters
+        ----------
+        header : Header instance
+            header to be used
+
+        data : array
+            data to be used
+
+        name : str
+            name to be populated in ``EXTNAME`` keyword
         """
 
         if header is not None:
@@ -4894,21 +6163,20 @@ class _TableBaseHDU(_ExtensionHDU):
 
         if (data is not DELAYED):
             if isinstance(data,np.ndarray) and not data.dtype.fields == None:
-                if isinstance(data,FITS_rec):
+                if isinstance(data, FITS_rec):
                     self.data = data
-                elif isinstance(data,rec.recarray):
+                elif isinstance(data, rec.recarray):
                     self.data = FITS_rec(data)
                 else:
-                    d = data.view(rec.recarray)
-                    self.data = FITS_rec(d)
-            
+                    self.data = data.view(FITS_rec)
+
                 self._header['NAXIS1'] = self.data.itemsize
                 self._header['NAXIS2'] = self.data.shape[0]
                 self._header['TFIELDS'] = self.data._nfields
 
                 if self.data._coldefs == None:
                     #
-                    # The data does not have a _coldefs attribute so 
+                    # The data does not have a _coldefs attribute so
                     # create one from the underlying recarray.
                     #
                     columns = []
@@ -4939,6 +6207,20 @@ class _TableBaseHDU(_ExtensionHDU):
 
                 self.columns = self.data._coldefs
                 self.update()
+
+                try:
+                   # Make the ndarrays in the Column objects of the ColDefs
+                   # object of the HDU reference the same ndarray as the HDU's
+                   # FITS_rec object.
+                    for i in range(len(self.columns)):
+                        self.columns.data[i].array = self.data.field(i)
+
+                    # Delete the _arrays attribute so that it is recreated to
+                    # point to the new data placed in the column objects above
+                    if self.columns.__dict__.has_key('_arrays'):
+                        del self.columns.__dict__['_arrays']
+                except (TypeError, AttributeError), e:
+                    pass
             elif data is None:
                 pass
             else:
@@ -4950,7 +6232,9 @@ class _TableBaseHDU(_ExtensionHDU):
         self.name = name
 
     def __getattr__(self, attr):
-        """Get the 'data' or 'columns' attribute."""
+        """
+        Get the `data` or `columns` attribute.
+        """
         if attr == 'data':
             size = self.size()
             if size:
@@ -4982,7 +6266,9 @@ class _TableBaseHDU(_ExtensionHDU):
 
 
     def _summary(self):
-        """Summarize the HDU: name, dimensions, and formats."""
+        """
+        Summarize the HDU: name, dimensions, and formats.
+        """
         class_name  = str(self.__class__)
         type  = class_name[class_name.rfind('.')+1:-2]
 
@@ -5012,11 +6298,15 @@ class _TableBaseHDU(_ExtensionHDU):
             (self.name, type, len(self._header.ascard), _dims, _format)
 
     def get_coldefs(self):
-        """Returns the table's column definitions."""
+        """
+        Returns the table's column definitions.
+        """
         return self.columns
 
     def update(self):
-        """ Update header keywords to reflect recent changes of columns."""
+        """
+        Update header keywords to reflect recent changes of columns.
+        """
         _update = self._header.update
         _append = self._header.ascard.append
         _cols = self.columns
@@ -5051,21 +6341,29 @@ class _TableBaseHDU(_ExtensionHDU):
                         elif isinstance(val, _FormatP):
                             VLdata = self.data.field(i)
                             VLdata._max = max(map(len, VLdata))
-                            val = 'P' + _convert_format(val._dtype, reverse=1) + '(%d)' %  VLdata._max
+                            if val._dtype == 'a':
+                                fmt = 'A'
+                            else:
+                                fmt = _convert_format(val._dtype, reverse=1)
+                            val = 'P' + fmt + '(%d)' %  VLdata._max
                         else:
                             val = _convert_format(val, reverse=1)
                     #_update(keyword, val)
                     _append(Card(keyword, val))
 
     def copy(self):
-        """Make a copy of the table HDU, both header and data are copied."""
+        """
+        Make a copy of the table HDU, both header and data are copied.
+        """
         # touch the data, so it's defined (in the case of reading from a
         # FITS file)
         self.data
         return new_table(self.columns, header=self._header, tbtype=self.columns._tbtype)
 
     def _verify(self, option='warn'):
-        """_TableBaseHDU verify method."""
+        """
+        _TableBaseHDU verify method.
+        """
         _err = _ExtensionHDU._verify(self, option=option)
         self.req_cards('NAXIS', None, 'val == 2', 2, option, _err)
         self.req_cards('BITPIX', None, 'val == 8', 8, option, _err)
@@ -5077,16 +6375,25 @@ class _TableBaseHDU(_ExtensionHDU):
 
 
 class TableHDU(_TableBaseHDU):
-    """FITS ASCII table extension HDU class."""
+    """
+    FITS ASCII table extension HDU class.
+    """
     __format_RE = re.compile(
         r'(?P<code>[ADEFI])(?P<width>\d+)(?:\.(?P<prec>\d+))?')
 
     def __init__(self, data=None, header=None, name=None):
-        """data:   data of the table
-           header: header to be used for the HDU
-           name:   the EXTNAME value
         """
+        Parameters
+        ----------
+        data : array
+            data of the table
 
+        header : Header instance
+            header to be used for the HDU
+
+        name : str
+            the ``EXTNAME`` value
+        """
         self._xtn = 'TABLE'
         _TableBaseHDU.__init__(self, data=data, header=header, name=name)
         if self._header[0].rstrip() != self._xtn:
@@ -5111,9 +6418,33 @@ class TableHDU(_TableBaseHDU):
         return strfmt
     '''
 
+    def _calculate_datasum(self):
+        """
+        Calculate the value for the ``DATASUM`` card in the HDU.
+        """
+        if self.__dict__.has_key('data') and self.data != None:
+            # We have the data to be used.
+            # We need to pad the data to a block length before calculating
+            # the datasum.
+
+            if self.size() > 0:
+                d = np.append(np.fromstring(self.data, dtype='ubyte'),
+                              np.fromstring(_padLength(self.size())*' ',
+                                            dtype='ubyte'))
+
+            cs = self._compute_checksum(np.fromstring(d, dtype='ubyte'),0)
+            return cs
+        else:
+            # This is the case where the data has not been read from the file
+            # yet.  We can handle that in a generic manner so we do it in the
+            # base class.  The other possibility is that there is no data at
+            # all.  This can also be handled in a gereric manner.
+            return super(TableHDU,self)._calculate_datasum()
 
     def _verify(self, option='warn'):
-        """TableHDU verify method."""
+        """
+        `TableHDU` verify method.
+        """
         _err = _TableBaseHDU._verify(self, option=option)
         self.req_cards('PCOUNT', None, 'val == 0', 0, option, _err)
         tfields = self._header['TFIELDS']
@@ -5123,13 +6454,21 @@ class TableHDU(_TableBaseHDU):
 
 
 class BinTableHDU(_TableBaseHDU):
-    """Binary table HDU class."""
-
-
+    """
+    Binary table HDU class.
+    """
     def __init__(self, data=None, header=None, name=None):
-        """data:   data of the table
-           header: header to be used for the HDU
-           name:   the EXTNAME value
+        """
+        Parameters
+        ----------
+        data : array
+            data of the table
+
+        header : Header instance
+            header to be used for the HDU
+
+        name : str
+            the ``EXTNAME`` value
         """
 
         self._xtn = 'BINTABLE'
@@ -5141,46 +6480,98 @@ class BinTableHDU(_TableBaseHDU):
 
         self._header._hdutype = BinTableHDU
 
+    def _calculate_datasum_from_data(self, data):
+        """
+        Calculate the value for the ``DATASUM`` card given the input data
+        """
+        # Check the byte order of the data.  If it is little endian we
+        # must swap it before calculating the datasum.
+        for i in range(data._nfields):
+            coldata = data.field(i)
+
+            if not isinstance(coldata, chararray.chararray):
+                if isinstance(coldata, _VLF):
+                    k = 0
+                    for j in coldata:
+                        if not isinstance(j, chararray.chararray):
+                            if j.itemsize > 1:
+                                if j.dtype.str[0] != '>':
+                                    j[:] = j.byteswap()
+                                    j.dtype = j.dtype.newbyteorder('>')
+                        if rec.recarray.field(data,i)[k:k+1].dtype.str[0]!='>':
+                            rec.recarray.field(data,i)[k:k+1].byteswap(True)
+                        k = k + 1
+                else:
+                    if coldata.itemsize > 1:
+                        if data.field(i).dtype.str[0] != '>':
+                            data.field(i)[:] = data.field(i).byteswap()
+        data.dtype = data.dtype.newbyteorder('>')
+
+        dout=np.fromstring(data, dtype='ubyte')
+
+        for i in range(data._nfields):
+            if isinstance(data._coldefs._recformats[i], _FormatP):
+                for j in range(len(data.field(i))):
+                    coldata = data.field(i)[j]
+                    if len(coldata) > 0:
+                        dout = np.append(dout,
+                                    np.fromstring(coldata,dtype='ubyte'))
+
+        cs = self._compute_checksum(dout,0)
+        return cs
+
+    def _calculate_datasum(self):
+        """
+        Calculate the value for the ``DATASUM`` card in the HDU.
+        """
+        if self.__dict__.has_key('data') and self.data != None:
+            # We have the data to be used.
+            return self._calculate_datasum_from_data(self.data)
+        else:
+            # This is the case where the data has not been read from the file
+            # yet.  We can handle that in a generic manner so we do it in the
+            # base class.  The other possibility is that there is no data at
+            # all.  This can also be handled in a gereric manner.
+            return super(BinTableHDU,self)._calculate_datasum()
+
     def tdump(self, datafile=None, cdfile=None, hfile=None, clobber=False):
         """
         Dump the table HDU to a file in ASCII format.  The table may be dumped
-        in three separate files, one containing column definitions, one 
+        in three separate files, one containing column definitions, one
         containing header parameters, and one for table data.
 
-        :Parameters:
-            datafile: Output data file supplied as a file name, file object, or
-                      file like object.  The default is the root name of the
-                      fits file associated with this HDU appended with the
-                      extension .txt.
+        Parameters
+        ----------
+        datafile : file path, file object or file-like object, optional
+            Output data file.  The default is the root name of the
+            fits file associated with this HDU appended with the
+            extension ``.txt``.
 
-            cdfile:   Output column definitions file supplied as a file name,
-                      file object, or file like object.  The default is None,
-                      no column definitions output is produced.
+        cdfile : file path, file object or file-like object, optional
+            Output column definitions file.  The default is `None`, no
+            column definitions output is produced.
 
-            hfile:    Output header parameters file supplied as a file name,
-                      file object, or file like object.  The default is None,
-                      no header parameters output is produced.
+        hfile : file path, file object or file-like object, optional
+            Output header parameters file.  The default is `None`,
+            no header parameters output is produced.
 
-            clobber:  Overwrite the output files if they exist, default = False.
+        clobber : bool
+            Overwrite the output files if they exist.
 
-        :Returns:
-            None
-
-        :Notes:
-            The primary use for the tdump method is to allow editing in a
-            standard text editor of the table data and parameters.  The tcreate
-            method can be used to reassemble the table from the three ASCII
-            files.
-
-            Output File Formats:
+        Notes
+        -----
+        The primary use for the `tdump` method is to allow editing in a
+        standard text editor of the table data and parameters.  The
+        `tcreate` method can be used to reassemble the table from the
+        three ASCII files.
         """
-
         # check if the output files already exist
         exceptMessage = 'File '
         files = [datafile, cdfile, hfile]
 
         for f in files:
-            if (isinstance(f,types.StringType)):
+            if (isinstance(f,types.StringType) or
+                isinstance(f,types.UnicodeType)):
                 if (os.path.exists(f) and os.path.getsize(f) != 0):
                     if clobber:
                         warnings.warn(" Overwrite existing file '%s'." % f)
@@ -5200,13 +6591,14 @@ class BinTableHDU(_TableBaseHDU):
 
         closeDfile = False
 
-        if isinstance(datafile, types.StringType):
+        if isinstance(datafile, types.StringType) or \
+           isinstance(datafile, types.UnicodeType):
             datafile = __builtin__.open(datafile,'w')
             closeDfile = True
 
         dlines = []   # lines to go out to the data file
-        
-        # Process each row of the table and output the result to the dlines 
+
+        # Process each row of the table and output the result to the dlines
         # list.
 
         for i in range(len(self.data)):
@@ -5225,7 +6617,7 @@ class BinTableHDU(_TableBaseHDU):
                     # the length of the array for this row and set the format
                     # for the VLA data
                     line = line + "VLA_Length= %-21d " % \
-                                  len(self.data.field(name)[i]) 
+                                  len(self.data.field(name)[i])
                     (repeat,dtype,option) = _parse_tformat(
                          self.columns.formats[self.columns.names.index(name)])
                     VLA_format =  _fits2rec[option[0]][0]
@@ -5254,7 +6646,7 @@ class BinTableHDU(_TableBaseHDU):
                                 # no whitespace
                                 width = val.itemsize+1
                                 str = val
-                  
+
                             line = line + '%-*s'%(width,str)
                         elif arrayFormat in np.typecodes['AllInteger']:
                             # output integer
@@ -5278,7 +6670,7 @@ class BinTableHDU(_TableBaseHDU):
                             # no whitespace
                             width = self.data.dtype.fields[name][0].itemsize+1
                             str = self.data.field(name)[i]
-                  
+
                         line = line + '%-*s'%(width,str)
                     elif arrayFormat in np.typecodes['AllInteger']:
                         # output integer
@@ -5303,7 +6695,8 @@ class BinTableHDU(_TableBaseHDU):
         if cdfile:
             closeCdfile = False
 
-            if isinstance(cdfile, types.StringType):
+            if isinstance(cdfile, types.StringType) or \
+               isinstance(cdfile, types.UnicodeType):
                 cdfile = __builtin__.open(cdfile,'w')
                 closeCdfile = True
 
@@ -5345,11 +6738,11 @@ class BinTableHDU(_TableBaseHDU):
 
                 #Append the line for this column to the list of output lines
                 cdlines.append(
-                   "%-16s %-16s %-16s %-16s %-16s %-16s %-16s %-16s\n" % 
+                   "%-16s %-16s %-16s %-16s %-16s %-16s %-16s %-16s\n" %
                    (self.columns.names[j],self.columns.formats[j],
-                    disp, unit, dim, null, bscale, bzero)) 
+                    disp, unit, dim, null, bscale, bzero))
 
-            # Write the column definition lines out to the ASCII column 
+            # Write the column definition lines out to the ASCII column
             # definitions file
             cdfile.writelines(cdlines)
 
@@ -5361,62 +6754,53 @@ class BinTableHDU(_TableBaseHDU):
         if hfile:
             self.header.toTxtFile(hfile)
 
-    tdumpFileFormat = \
-    """
-                datafile:  Each line of the data file represents one row of
-                           table data.  The data is output one column at a time
-                           in column order.  If a column contains an array,
-                           each element of the column array in the current row
-                           is output before moving on to the next column.  Each
-                           row ends with a new line.
+    tdumpFileFormat = """
 
-                           Integer data is output right justified in a 21
-                           character field followed by a blank.  Floating point
-                           data is output right justified using g format in a
-                           21 character field with 15 digits of precision 
-                           followed by a blank.  String data that does not
-                           contain whitespace is output left justified in a
-                           field whose width matches the width specified in the
-                           TFORM header parameter for the column followed by a
-                           blank.  When the string data contains whitespace
-                           characters, the string is enclosed in quotation
-                           marks ("").  For the last data element in a row the
-                           trailing blank in the field is replaced by a new
-                           line.
+- **datafile:** Each line of the data file represents one row of table
+  data.  The data is output one column at a time in column order.  If
+  a column contains an array, each element of the column array in the
+  current row is output before moving on to the next column.  Each row
+  ends with a new line.
 
-                           For column data containing variable length arrays
-                           (P format), the array data is preceded by the string
-                           'VLA_Length= ' and the integer length of the array
-                           for that row, left justified in a 21 character field
-                           followed by a blank.
+  Integer data is output right-justified in a 21-character field
+  followed by a blank.  Floating point data is output right justified
+  using 'g' format in a 21-character field with 15 digits of
+  precision, followed by a blank.  String data that does not contain
+  whitespace is output left-justified in a field whose width matches
+  the width specified in the ``TFORM`` header parameter for the
+  column, followed by a blank.  When the string data contains
+  whitespace characters, the string is enclosed in quotation marks
+  (``""``).  For the last data element in a row, the trailing blank in
+  the field is replaced by a new line character.
 
-                           For column data representing a bit field (X format),
-                           each bit value in the field is output right
-                           justified in a 21 character field as 1 (for true)
-                           or 0 (for false).
-                      
-                cdfile:    Each line of the column definitions file provides
-                           the definitions for one column in the table.  The
-                           line is broken up into 8, sixteen character fields.
-                           The first field provides the column name (TTYPEn).
-                           The second field provides the column format (TFORMn).
-                           The third field provides the display format (TDISPn).
-                           The fourth field provides the physical units
-                           (TUNITn).  The fifth field provides the dimensions
-                           for a multidimensional array (TDIMn).  The sixth
-                           field provides the value that signifies an undefined
-                           value (TNULLn).  The seventh field provides the 
-                           scale factor (TSCALn).  The eighth field provides 
-                           the offset value (TZEROn).   A field value of ""
-                           is used to represent the case where no value is
-                           provided.
-                     
-                hfile:     Each line of the header parameters file provides
-                           the definition of a single HDU header card as 
-                           represented by the card image.  
-    """
+  For column data containing variable length arrays ('P' format), the
+  array data is preceded by the string ``'VLA_Length= '`` and the
+  integer length of the array for that row, left-justified in a
+  21-character field, followed by a blank.
 
-    tdump.__doc__ += tdumpFileFormat
+  For column data representing a bit field ('X' format), each bit
+  value in the field is output right-justified in a 21-character field
+  as 1 (for true) or 0 (for false).
+
+- **cdfile:** Each line of the column definitions file provides the
+  definitions for one column in the table.  The line is broken up into
+  8, sixteen-character fields.  The first field provides the column
+  name (``TTYPEn``).  The second field provides the column format
+  (``TFORMn``).  The third field provides the display format
+  (``TDISPn``).  The fourth field provides the physical units
+  (``TUNITn``).  The fifth field provides the dimensions for a
+  multidimensional array (``TDIMn``).  The sixth field provides the
+  value that signifies an undefined value (``TNULLn``).  The seventh
+  field provides the scale factor (``TSCALn``).  The eighth field
+  provides the offset value (``TZEROn``).  A field value of ``""`` is
+  used to represent the case where no value is provided.
+
+- **hfile:** Each line of the header parameters file provides the
+  definition of a single HDU header card as represented by the card
+  image.
+"""
+
+    tdump.__doc__ += tdumpFileFormat.replace("\n", "\n        ")
 
     def tcreate(self, datafile, cdfile=None, hfile=None, replace=False):
         """
@@ -5427,47 +6811,44 @@ class BinTableHDU(_TableBaseHDU):
         the column definitions and/or header parameters are taken from the
         current values in this HDU.
 
-        :Parameters:
-            datafile: Input data file containing the table data in ASCII format
-                      supplied as a file name, file object, or file like object.
+        Parameters
+        ----------
+        datafile : file path, file object or file-like object
+            Input data file containing the table data in ASCII format.
 
-            cdfile:   Input column definition file containing the names,
-                      formats, display formats, physical units, multidimensional
-                      array dimensions, undefined values, scale factors, and 
-                      offsets associated with the columns in the table.  It is
-                      supplied as a file name, file object, or file like object.
-                      Default = None.  If None, the Column definitions are
-                      taken from the current values in this object.
+        cdfile : file path, file object, file-like object, optional
+            Input column definition file containing the names,
+            formats, display formats, physical units, multidimensional
+            array dimensions, undefined values, scale factors, and
+            offsets associated with the columns in the table.  If
+            `None`, the column definitions are taken from the current
+            values in this object.
 
-            hfile:    Input parameter definition file containing the header
-                      paramater definitions to be associated with the table.
-                      It is supplied as a file name, file object, or file like
-                      object.  Default = None.  If None, the header parameter
-                      definitions are taken from the current values in this
-                      objects header.
+        hfile : file path, file object, file-like object, optional
+            Input parameter definition file containing the header
+            parameter definitions to be associated with the table.  If
+            `None`, the header parameter definitions are taken from
+            the current values in this objects header.
 
-            replace: When True indicates that the entire header should be
-                     replaced with the contents of the ASCII file instead
-                     of just updating the current header.  Default = False.
+        replace : bool
+            When `True`, indicates that the entire header should be
+            replaced with the contents of the ASCII file instead of
+            just updating the current header.
 
-        :Returns:
-            None
-
-        :Notes:
-            The primary use for the tcreate method is to allow the input of 
-            ASCII data that was edited in a standard text editor of the table
-            data and parameters.  The tdump method can be used to create the
-            initial ASCII files.
-
-            Input File Formats:
+        Notes
+        -----
+        The primary use for the `tcreate` method is to allow the input
+        of ASCII data that was edited in a standard text editor of the
+        table data and parameters.  The `tdump` method can be used to
+        create the initial ASCII files.
         """
-
         # Process the column definitions file
 
         if cdfile:
             closeCdfile = False
 
-            if isinstance(cdfile, types.StringType):
+            if isinstance(cdfile, types.StringType) or \
+               isinstance(cdfile, types.UnicodeType):
                 cdfile = __builtin__.open(cdfile,'r')
                 closeCdfile = True
 
@@ -5522,7 +6903,8 @@ class BinTableHDU(_TableBaseHDU):
 
         closeDfile = False
 
-        if isinstance(datafile, types.StringType):
+        if isinstance(datafile, types.StringType) or \
+           isinstance(datafile, types.UnicodeType):
             datafile = __builtin__.open(datafile,'r')
             closeDfile = True
 
@@ -5552,7 +6934,7 @@ class BinTableHDU(_TableBaseHDU):
                                      _parse_tformat(self.columns.formats[i])
                 arrayShape = (len(dlines),X_format_size[i])
 
-            arrays.append(np.empty(arrayShape,recFmt))            
+            arrays.append(np.empty(arrayShape,recFmt))
 
         lineNo = 0
 
@@ -5599,7 +6981,7 @@ class BinTableHDU(_TableBaseHDU):
                     idx += X_format_size[i]
                 elif isinstance(arrays[i][lineNo], np.ndarray):
                     arrays[i][lineNo] = words[idx:idx+arrays[i][lineNo].size]
-                    idx += arrays[i][lineNo].size 
+                    idx += arrays[i][lineNo].size
                 else:
                     if recFmts[i] == 'a':
                         # make sure character arrays are blank filled
@@ -5611,7 +6993,7 @@ class BinTableHDU(_TableBaseHDU):
                     idx += 1
 
             lineNo += 1
-       
+
         columns = []
 
         for i in range(len(self.columns.names)):
@@ -5628,7 +7010,7 @@ class BinTableHDU(_TableBaseHDU):
         tmp = new_table(columns, self.header)
         self.__dict__ = tmp.__dict__
 
-    tcreate.__doc__ += tdumpFileFormat
+    tcreate.__doc__ += tdumpFileFormat.replace("\n", "\n        ")
 
 if compressionSupported:
     # If compression object library imports properly then define the
@@ -5644,174 +7026,191 @@ if compressionSupported:
     def_bytePix = 4
 
     class CompImageHDU(BinTableHDU):
-        """Compressed Image HDU class."""
-   
+        """
+        Compressed Image HDU class.
+        """
         def __init__(self, data=None, header=None, name=None,
                      compressionType=def_compressionType,
                      tileSize=None,
                      hcompScale=def_hcompScale,
                      hcompSmooth=def_hcompSmooth,
                      quantizeLevel=def_quantizeLevel):
-            """data:            data of the image
-               header:          header to be associated with the image; when
-                                 reading the HDU from a file (data=DELAYED),
-                                 the header read from the file
-               name:            the EXTNAME value; if this value is None, then
-                                 the name from the input image header will be
-                                 used; if there is no name in the input image
-                                 header then the default name 'COMPRESSED_IMAGE'
-                                 is used
-               compressionType: compression algorithm 'RICE_1', 'PLIO_1', 
-                                 'GZIP_1', 'HCOMPRESS_1'
-               tileSize:        compression tile sizes default treats each row
-                                 of image as a tile
-               hcompScale:      HCOMPRESS scale parameter
-               hcompSmooth:     HCOMPRESS smooth parameter
-               quantizeLevel:   floating point quantization level; see note
-                                 below 
-
-               :Notes:
-                   The pyfits module supports 2 methods of image compression.
-
-                   1) The entire FITS file may be externally compressed with
-                      the gzip or pkzip utility programs, producing a *.gz or
-                      *.zip file, respectively.  When reading compressed files
-                      of this type, pyfits first uncompresses the entire file
-                      into a temporary file before performing the requested
-                      read operations.  The pyfits module does not support
-                      writing to these types of compressed files.  This type
-                      of compression is supported in the _File class, not in
-                      the CompImageHDU class.  The file compression type is
-                      recognized by the .gz or .zip file name extension.
-
-                   2) The CompImageHDU class supports the FITS tiled image
-                      compression convention in which the image is subdivided 
-                      into a grid of rectangular tiles, and each tile of 
-                      pixels is individually compressed.  The details of this
-                      FITS compression convention are described at the FITS
-                      Support Office web site at
-                      http://fits.gsfc.nasa.gov/registry/tilecompression.html.
-                      Basically, the compressed image tiles are stored in rows
-                      of a variable length arrray column in a FITS binary 
-                      table.  The pyfits module recognizes that this binary 
-                      table extension contains an image and treats it as if it
-                      were an image extension.  Under this tile-compression
-                      format, FITS header keywords remain uncompressed.  At 
-                      this time, pyfits does not support the ability to extract
-                      and uncompress sections of the image without having to
-                      uncompress the entire image.
-
-                      The pyfits module supports 3 general purpose compression
-                      algorithms plus one other special-purpose compression
-                      technique that is designed for data masks with positive
-                      integer pixel values.  The 3 general purpose algorithms
-                      are GZIP, Rice, and HCOMPRESS, and the special-purpose
-                      technique is the IRAF pixel list compression technique
-                      (PLIO).   The compressionType parameter defines the 
-                      compression algorithm to be used. 
-
-                      The FITS image can be subdivided into any desired
-                      rectangular grid of compression tiles.  With the GZIP,
-                      Rice, and PLIO algorithms, the default is to take each
-                      row of the image as a tile.  The HCOMPRESS algorithm
-                      is inherently 2-dimensional in nature, so the default
-                      in this case is to take 16 rows of the image per tile.
-                      In most cases it makes little difference what tiling
-                      pattern is used, so the default tiles are usually
-                      adequate.  In the case of very small images, it could 
-                      be more efficient to compress the whole image as a 
-                      single tile.  Note that the image dimensions are not
-                      required to be an integer multiple of the tile dimensions;
-                      if not, then the tiles at the edges of the image will
-                      be smaller than the other tiles.  The tileSize parameter
-                      may be provided as a list of tile sizes, one for each
-                      dimension in the image.  For example a tileSize value of
-                      [100,100] would divide a 300 X 300 image into 9 100 X 100
-                      tiles.
-
-                      The 4 supported image compression algorithms are all 
-                      'loss-less' when applied to integer FITS images; the
-                      pixel values are preserved exactly with no loss of
-                      information during the compression and uncompression
-                      process.  In addition, the HCOMPRESS algorithm supports
-                      a 'lossy' compression mode that will produce larger
-                      amount of image compression.  This is achieved by
-                      specifying a non-zero value for the hcompScale parameter.
-                      Since the amount of compression that is achieved depends
-                      directly on the RMS noise in the image, it is usually
-                      more convenient to specify the hcompScale factor
-                      relative to the RMS noise.  Setting hcompScale = 2.5
-                      means use a scale factor that is 2.5 times the calculated
-                      RMS noise in the image tile.  In some cases it may be
-                      desireable to specify the exact scaling to be used,
-                      instead of specifying it relative to the calculated noise
-                      value.  This may be done by specifying the negative of
-                      the desired scale value (typically in the range -2 to
-                      -100).
-
-                      Very high compression factors (of 100 or more) can be
-                      achieved by using large hcompScale values, however, this
-                      can produce undesireable 'blocky' artifacts in the 
-                      compressed image.  A variation of the HCOMPRESS algorithm
-                      (called HSCOMPRESS) can be used in this case to apply
-                      a small amount of smoothing of the image when it is
-                      uncompressed to help cover up these artifacts.  This 
-                      smoothing is purely cosmetic and does not cause any
-                      significant change to the image pixel values.  Setting
-                      the hcompSmooth parameter to 1 will engage the smoothing
-                      algorithm.
-
-                      Floating point FITS images (which have BITPIX = -32 or
-                      -64) usually contain too much 'noise' in the least
-                      significant bits of the mantissa of the pixel values to
-                      be effectively compressed with any lossless algorithm.
-                      Consequently, floating point images are first quantized
-                      into scaled integer pixel values (and thus throwing away
-                      much of the noise) before being compressed with the
-                      specified algorithm (either GZIP, RICE, or HCOMPRESS).
-                      This technique produces much higher compression factors
-                      than simply using the GZIP utility to externally compress
-                      the whole FITS file, but it also means that the original
-                      floating point value pixel values are not exactly
-                      perserved.  When done properly, this integer scaling
-                      technique will only discards the insignificant noise
-                      while still preserving all the real imformation in the
-                      image.  The amount of precision that is retained in the
-                      pixel values is controlled by the quantizeLevel parameter.
-                      Larger values will result in compressed images whose
-                      pixels more closely match the floating point pixel
-                      values, but at the same time the amount of compression
-                      that is achieved will be reduced.  Users should
-                      experiment with different values for this parameter to
-                      determine the optimal value that preserves all the useful
-                      information in the image, without needlessly preserving
-                      all the 'noise' which will hurt the compression
-                      efficiency.
-
-                      The default value for the quantizeLevel scale factor is 
-                      16, which means that scaled integer pixel values will be
-                      quantized such that the difference between adjacent
-                      integer values will be 1/16th of the noise level in the
-                      image background.  An optimized algorithm is used to
-                      accurately estimate the noise in the image.  As an
-                      example, if the RMS noise in the background pixels of an
-                      image = 32.0, then the spacing between adjacent scaled
-                      integer pixel values will equal 2.0 by default.  Note
-                      that the RMS noise is independently calculated for each
-                      tile of the image, so the resulting integer scaling
-                      factor may fluctuate slightly for each tile.  In some
-                      cases it may be desireable to specify the exact
-                      quantization level to be used, instead of specifying it
-                      relative to the calculated noise value.  This may be done
-                      by specifying the negative of desired quantization level
-                      for the value of quantizeLevel.  In the previous example,
-                      one could specify quantizeLevel=-2.0 so that the
-                      quantized integer levels differ by 2.0.  Larger negative
-                      values for quantizeLevel means that the levels are more
-                      coursely spaced, and will produce higher compression
-                      factors.
             """
-   
+            Parameters
+            ----------
+            data : array, optional
+                data of the image
+
+            header : Header instance, optional
+                header to be associated with the image; when reading
+                the HDU from a file ( `data` = "DELAYED" ), the header
+                read from the file
+
+            name : str, optional
+                the ``EXTNAME`` value; if this value is `None`, then
+                the name from the input image header will be used; if
+                there is no name in the input image header then the
+                default name ``COMPRESSED_IMAGE`` is used.
+
+            compressionType : str, optional
+                compression algorithm 'RICE_1', 'PLIO_1', 'GZIP_1',
+                'HCOMPRESS_1'
+
+            tileSize : int, optional
+                compression tile sizes.  Default treats each row of
+                image as a tile.
+
+            hcompScale : float, optional
+                HCOMPRESS scale parameter
+
+            hcompSmooth : float, optional
+                HCOMPRESS smooth parameter
+
+            quantizeLevel : float, optional
+                floating point quantization level; see note below
+
+            Notes
+            -----
+            The pyfits module supports 2 methods of image compression.
+
+                1) The entire FITS file may be externally compressed
+                   with the gzip or pkzip utility programs, producing
+                   a ``*.gz`` or ``*.zip`` file, respectively.  When
+                   reading compressed files of this type, pyfits first
+                   uncompresses the entire file into a temporary file
+                   before performing the requested read operations.
+                   The pyfits module does not support writing to these
+                   types of compressed files.  This type of
+                   compression is supported in the `_File` class, not
+                   in the `CompImageHDU` class.  The file compression
+                   type is recognized by the ``.gz`` or ``.zip`` file
+                   name extension.
+
+                2) The `CompImageHDU` class supports the FITS tiled
+                   image compression convention in which the image is
+                   subdivided into a grid of rectangular tiles, and
+                   each tile of pixels is individually compressed.
+                   The details of this FITS compression convention are
+                   described at the `FITS Support Office web site
+                   <http://fits.gsfc.nasa.gov/registry/tilecompression.html>`_.
+                   Basically, the compressed image tiles are stored in
+                   rows of a variable length arrray column in a FITS
+                   binary table.  The pyfits module recognizes that
+                   this binary table extension contains an image and
+                   treats it as if it were an image extension.  Under
+                   this tile-compression format, FITS header keywords
+                   remain uncompressed.  At this time, pyfits does not
+                   support the ability to extract and uncompress
+                   sections of the image without having to uncompress
+                   the entire image.
+
+            The `pyfits` module supports 3 general-purpose compression
+            algorithms plus one other special-purpose compression
+            technique that is designed for data masks with positive
+            integer pixel values.  The 3 general purpose algorithms
+            are GZIP, Rice, and HCOMPRESS, and the special-purpose
+            technique is the IRAF pixel list compression technique
+            (PLIO).  The `compressionType` parameter defines the
+            compression algorithm to be used.
+
+            The FITS image can be subdivided into any desired
+            rectangular grid of compression tiles.  With the GZIP,
+            Rice, and PLIO algorithms, the default is to take each row
+            of the image as a tile.  The HCOMPRESS algorithm is
+            inherently 2-dimensional in nature, so the default in this
+            case is to take 16 rows of the image per tile.  In most
+            cases, it makes little difference what tiling pattern is
+            used, so the default tiles are usually adequate.  In the
+            case of very small images, it could be more efficient to
+            compress the whole image as a single tile.  Note that the
+            image dimensions are not required to be an integer
+            multiple of the tile dimensions; if not, then the tiles at
+            the edges of the image will be smaller than the other
+            tiles.  The `tileSize` parameter may be provided as a list
+            of tile sizes, one for each dimension in the image.  For
+            example a `tileSize` value of ``[100,100]`` would divide a
+            300 X 300 image into 9 100 X 100 tiles.
+
+            The 4 supported image compression algorithms are all
+            'loss-less' when applied to integer FITS images; the pixel
+            values are preserved exactly with no loss of information
+            during the compression and uncompression process.  In
+            addition, the HCOMPRESS algorithm supports a 'lossy'
+            compression mode that will produce larger amount of image
+            compression.  This is achieved by specifying a non-zero
+            value for the `hcompScale` parameter.  Since the amount of
+            compression that is achieved depends directly on the RMS
+            noise in the image, it is usually more convenient to
+            specify the `hcompScale` factor relative to the RMS noise.
+            Setting `hcompScale` = 2.5 means use a scale factor that
+            is 2.5 times the calculated RMS noise in the image tile.
+            In some cases it may be desirable to specify the exact
+            scaling to be used, instead of specifying it relative to
+            the calculated noise value.  This may be done by
+            specifying the negative of the desired scale value
+            (typically in the range -2 to -100).
+
+            Very high compression factors (of 100 or more) can be
+            achieved by using large `hcompScale` values, however, this
+            can produce undesireable 'blocky' artifacts in the
+            compressed image.  A variation of the HCOMPRESS algorithm
+            (called HSCOMPRESS) can be used in this case to apply a
+            small amount of smoothing of the image when it is
+            uncompressed to help cover up these artifacts.  This
+            smoothing is purely cosmetic and does not cause any
+            significant change to the image pixel values.  Setting the
+            `hcompSmooth` parameter to 1 will engage the smoothing
+            algorithm.
+
+            Floating point FITS images (which have ``BITPIX`` = -32 or
+            -64) usually contain too much 'noise' in the least
+            significant bits of the mantissa of the pixel values to be
+            effectively compressed with any lossless algorithm.
+            Consequently, floating point images are first quantized
+            into scaled integer pixel values (and thus throwing away
+            much of the noise) before being compressed with the
+            specified algorithm (either GZIP, RICE, or HCOMPRESS).
+            This technique produces much higher compression factors
+            than simply using the GZIP utility to externally compress
+            the whole FITS file, but it also means that the original
+            floating point value pixel values are not exactly
+            perserved.  When done properly, this integer scaling
+            technique will only discard the insignificant noise while
+            still preserving all the real imformation in the image.
+            The amount of precision that is retained in the pixel
+            values is controlled by the `quantizeLevel` parameter.
+            Larger values will result in compressed images whose
+            pixels more closely match the floating point pixel values,
+            but at the same time the amount of compression that is
+            achieved will be reduced.  Users should experiment with
+            different values for this parameter to determine the
+            optimal value that preserves all the useful information in
+            the image, without needlessly preserving all the 'noise'
+            which will hurt the compression efficiency.
+
+            The default value for the `quantizeLevel` scale factor is
+            16, which means that scaled integer pixel values will be
+            quantized such that the difference between adjacent
+            integer values will be 1/16th of the noise level in the
+            image background.  An optimized algorithm is used to
+            accurately estimate the noise in the image.  As an
+            example, if the RMS noise in the background pixels of an
+            image = 32.0, then the spacing between adjacent scaled
+            integer pixel values will equal 2.0 by default.  Note that
+            the RMS noise is independently calculated for each tile of
+            the image, so the resulting integer scaling factor may
+            fluctuate slightly for each tile.  In some cases, it may
+            be desireable to specify the exact quantization level to
+            be used, instead of specifying it relative to the
+            calculated noise value.  This may be done by specifying
+            the negative of desired quantization level for the value
+            of `quantizeLevel`.  In the previous example, one could
+            specify `quantizeLevel`=-2.0 so that the quantized integer
+            levels differ by 2.0.  Larger negative values for
+            `quantizeLevel` means that the levels are more
+            coarsely-spaced, and will produce higher compression
+            factors.
+            """
             self._file, self._datLoc = None, None
 
             if data is DELAYED:
@@ -5824,12 +7223,12 @@ if compressionSupported:
 
                 # Store the input image data
                 self.data = data
-                 
+
                 # Update the table header (_header) to the compressed
                 # image format and to match the input data (if any);
                 # Create the image header (_imageHeader) from the input
                 # image header (if any) and ensure it matches the input
-                # data; Create the initially empty table data array to 
+                # data; Create the initially empty table data array to
                 # hold the compressed data.
                 self.updateHeaderData(header, name, compressionType,
                                       tileSize, hcompScale, hcompSmooth,
@@ -5838,13 +7237,14 @@ if compressionSupported:
             # store any scale factors from the table header
             self._bzero = self._header.get('BZERO', 0)
             self._bscale = self._header.get('BSCALE', 1)
+            self._bitpix = self._header['ZBITPIX']
 
             # Maintain a reference to the table header in the image header.
             # This reference will be used to update the table header whenever
             # a card in the image header is updated.
             self.header._tableHeader = self._header
-   
-        def updateHeaderData(self, imageHeader, 
+
+        def updateHeaderData(self, imageHeader,
                              name=None,
                              compressionType=None,
                              tileSize=None,
@@ -5852,39 +7252,54 @@ if compressionSupported:
                              hcompSmooth=None,
                              quantizeLevel=None):
             """
-            Update the table header (_header) to the compressed image format
-            and to match the input data (if any).  Create the image header 
-            (_imageHeader) from the input image header (if any) and ensure
-            it matches the input data. Create the initially empty table data
-            array to hold the compressed data.
+            Update the table header (`_header`) to the compressed
+            image format and to match the input data (if any).  Create
+            the image header (`_imageHeader`) from the input image
+            header (if any) and ensure it matches the input
+            data. Create the initially-empty table data array to hold
+            the compressed data.
 
-            This method is mainly called internally, but a user may wish to 
-            call this method after assigning new data to the CompImageHDU
+            This method is mainly called internally, but a user may wish to
+            call this method after assigning new data to the `CompImageHDU`
             object that is of a different type.
 
-            imageHeader:     header to be associated with the image
-            name:            the EXTNAME value; if this value is None, then
-                              the name from the input image header will be
-                              used; if there is no name in the input image
-                              header then the default name 'COMPRESSED_IMAGE'
-                              is used
-            compressionType: compression algorithm 'RICE_1', 'PLIO_1', 
-                              'GZIP_1', 'HCOMPRESS_1'; if this value is None,
-                              use value already in the header; if no value
-                              already in the header, use 'RICE_1'
-            tileSize:        compression tile sizes as a list; if this value is
-                              None, use value already in the header; if no
-                              value already in the header, treat each row of
-                              image as a tile
-            hcompScale:      HCOMPRESS scale parameter; if this value is None,
-                              use the value already in the header; if no value
-                              already in the header, use 1
-            hcompSmooth:     HCOMPRESS smooth parameter; if this value is None,
-                              use the value already in the header; if no value
-                              already in the header, use 0
-            quantizeLevel:   floating point quantization level; if this value
-                              is None, use the value already in the header; if
-                              no value already in header, use 16
+            Parameters
+            ----------
+            imageHeader : Header instance
+                header to be associated with the image
+
+            name : str, optional
+                the ``EXTNAME`` value; if this value is `None`, then
+                the name from the input image header will be used; if
+                there is no name in the input image header then the
+                default name 'COMPRESSED_IMAGE' is used
+
+            compressionType : str, optional
+                compression algorithm 'RICE_1', 'PLIO_1', 'GZIP_1',
+                'HCOMPRESS_1'; if this value is `None`, use value
+                already in the header; if no value already in the
+                header, use 'RICE_1'
+
+            tileSize : sequence of int, optional
+                compression tile sizes as a list; if this value is
+                `None`, use value already in the header; if no value
+                already in the header, treat each row of image as a
+                tile
+
+            hcompScale : float, optional
+                HCOMPRESS scale parameter; if this value is `None`,
+                use the value already in the header; if no value
+                already in the header, use 1
+
+            hcompSmooth : float, optional
+                HCOMPRESS smooth parameter; if this value is `None`,
+                use the value already in the header; if no value
+                already in the header, use 0
+
+            quantizeLevel : float, optional
+                floating point quantization level; if this value
+                is `None`, use the value already in the header; if
+                no value already in header, use 16
             """
 
             # Construct an ImageBaseHDU object using the input header
@@ -5902,7 +7317,7 @@ if compressionSupported:
                 name = 'COMPRESSED_IMAGE'
 
             if name:
-                self._header.update('EXTNAME', name, 
+                self._header.update('EXTNAME', name,
                                     'name of this binary table extension',
                                     after='TFIELDS')
                 self.name = name
@@ -5925,7 +7340,7 @@ if compressionSupported:
                 compressionType = self._header.get('ZCMPTYPE', 'RICE_1')
 
             # If the input image header had BSCALE/BZERO cards, then insert
-            # them in the table header. 
+            # them in the table header.
 
             if imageHeader:
                 bzero = imageHeader.get('BZERO', 0.0)
@@ -5939,9 +7354,15 @@ if compressionSupported:
                 if bzero != 0.0:
                     self._header.update('BZERO',bzero,after=afterCard)
 
+                bitpix_comment = imageHeader.ascardlist()['BITPIX'].comment
+                naxis_comment =  imageHeader.ascardlist()['NAXIS'].comment
+            else:
+                bitpix_comment = 'data type of original image'
+                naxis_comment = 'dimension of original image'
+
             # Set the label for the first column in the table
 
-            self._header.update('TTYPE1', 'COMPRESSED_DATA', 
+            self._header.update('TTYPE1', 'COMPRESSED_DATA',
                                 'label for field 1', after='TFIELDS')
 
             # Set the data format for the first column.  It is dependent
@@ -5952,7 +7373,7 @@ if compressionSupported:
             else:
                 tform1 = '1PB'
 
-            self._header.update('TFORM1', tform1, 
+            self._header.update('TFORM1', tform1,
                                 'data format of field: variable length array',
                                 after='TTYPE1')
 
@@ -5963,14 +7384,14 @@ if compressionSupported:
             # Create the additional columns required for floating point
             # data and calculate the width of the output table.
 
-            if self._imageHeader['BITPIX'] < 0:  
-                # floating point image has 'COMPRESSED_DATA', 
+            if self._imageHeader['BITPIX'] < 0:
+                # floating point image has 'COMPRESSED_DATA',
                 # 'UNCOMPRESSED_DATA', 'ZSCALE', and 'ZZERO' columns.
                 ncols = 4
 
                 # Set up the second column for the table that will hold
                 # any uncompressable data.
-                self._header.update('TTYPE2', 'UNCOMPRESSED_DATA', 
+                self._header.update('TTYPE2', 'UNCOMPRESSED_DATA',
                                     'label for field 2', after='TFORM1')
 
                 if self._imageHeader['BITPIX'] == -32:
@@ -5985,7 +7406,7 @@ if compressionSupported:
 
                 # Set up the third column for the table that will hold
                 # the scale values for quantized data.
-                self._header.update('TTYPE3', 'ZSCALE', 
+                self._header.update('TTYPE3', 'ZSCALE',
                                     'label for field 3', after='TFORM2')
                 self._header.update('TFORM3', '1D',
                                  'data format of field: 8-byte DOUBLE',
@@ -5993,9 +7414,9 @@ if compressionSupported:
                 col3 = Column(name=self._header['TTYPE3'],
                               format=self._header['TFORM3'])
 
-                # Set up the fourth column for the table that will hold 
+                # Set up the fourth column for the table that will hold
                 # the zero values for the quantized data.
-                self._header.update('TTYPE4', 'ZZERO', 
+                self._header.update('TTYPE4', 'ZZERO',
                                     'label for field 4', after='TFORM3')
                 self._header.update('TFORM4', '1D',
                                  'data format of field: 8-byte DOUBLE',
@@ -6015,7 +7436,7 @@ if compressionSupported:
                 # may be left over from the previous data
                 keyList = ['TTYPE2', 'TFORM2', 'TTYPE3', 'TFORM3', 'TTYPE4',
                            'TFORM4']
-       
+
                 for k in keyList:
                     del self._header[k]
 
@@ -6027,23 +7448,23 @@ if compressionSupported:
             # image HDU, the data type of the image data and the number of
             # dimensions in the image data array.
             self._header.update('NAXIS1', ncols*8, 'width of table in bytes')
-            self._header.update('TFIELDS', ncols, 
+            self._header.update('TFIELDS', ncols,
                                 'number of fields in each row')
-            self._header.update('ZIMAGE', True, 
+            self._header.update('ZIMAGE', True,
                                 'extension contains compressed image',
                                 after = after)
             self._header.update('ZBITPIX', self._imageHeader['BITPIX'],
-                                'data type of original image',
+                                bitpix_comment,
                                 after = 'ZIMAGE')
             self._header.update('ZNAXIS', self._imageHeader['NAXIS'],
-                                'dimension of original image',
+                                naxis_comment,
                                 after = 'ZBITPIX')
 
             # Strip the table header of all the ZNAZISn and ZTILEn keywords
             # that may be left over from the previous data
 
             i = 1
-            
+
             while 1:
                 try:
                     del self._header.ascardlist()['ZNAXIS'+`i`]
@@ -6062,7 +7483,7 @@ if compressionSupported:
                               'for the data.  Default tile size will be used.')
                 tileSize = []
 
-            # Set default tile dimensions for HCOMPRESS_1 
+            # Set default tile dimensions for HCOMPRESS_1
 
             if compressionType == 'HCOMPRESS_1':
                 if self._imageHeader['NAXIS'] < 2:
@@ -6090,12 +7511,12 @@ if compressionSupported:
                     # the row by row tiling that is used for other compression
                     # algorithms is not appropriate.  If the image has less
                     # than 30 rows, then the entire image will be compressed
-                    # as a single tile.  Otherwise the tiles will consist of 
-                    # 16 rows of the image.  This keeps the tiles to a 
+                    # as a single tile.  Otherwise the tiles will consist of
+                    # 16 rows of the image.  This keeps the tiles to a
                     # reasonable size, and it also includes enough rows to
                     # allow good compression efficiency.  It the last tile of
                     # the image happens to contain less than 4 rows, then find
-                    # another tile size with between 14 and 30 rows 
+                    # another tile size with between 14 and 30 rows
                     # (preferably even), so that the last tile has at least
                     # 4 rows.
 
@@ -6143,7 +7564,7 @@ if compressionSupported:
                 if remain > 0 and remain < 4:
                     tileSize[0] += 1 # try increasing tile size by 1
 
-                    remain = self._imageHeader['NAXIS1'] % tileSize[0] 
+                    remain = self._imageHeader['NAXIS1'] % tileSize[0]
 
                     if remain > 0 and remain < 4:
                         raise ValueError, 'Last tile along 1st dimension ' + \
@@ -6154,7 +7575,7 @@ if compressionSupported:
                 if remain > 0 and remain < 4:
                     tileSize[1] += 1 # try increasing tile size by 1
 
-                    remain = self._imageHeader['NAXIS2'] % tileSize[1] 
+                    remain = self._imageHeader['NAXIS2'] % tileSize[1]
 
                     if remain > 0 and remain < 4:
                         raise ValueError, 'Last tile along 2nd dimension ' + \
@@ -6185,11 +7606,17 @@ if compressionSupported:
                     ts = self._header['ZTILE'+`i+1`]
 
                 naxisn = self._imageHeader['NAXIS'+`i+1`]
-                nrows = nrows * ((naxisn - 1) / ts + 1)
+                nrows = nrows * ((naxisn - 1) // ts + 1)
 
-                self._header.update('ZNAXIS'+`i+1`, naxisn,
-                                    'length of original image axis',
-                                    after=after)
+                if imageHeader and imageHeader.has_key('NAXIS'+`i+1`):
+                    self._header.update('ZNAXIS'+`i+1`, naxisn,
+                              imageHeader.ascardlist()['NAXIS'+`i+1`].comment,
+                              after=after)
+                else:
+                    self._header.update('ZNAXIS'+`i+1`, naxisn,
+                              'length of original image axis',
+                              after=after)
+
                 self._header.update('ZTILE'+`i+1`, ts,
                                     'size of tiles to be compressed',
                                     after=after1)
@@ -6202,16 +7629,16 @@ if compressionSupported:
 
             # Create the record array to be used for the table data.
             self.columns = cols
-            self.compData = FITS_rec(rec.array(None, 
+            self.compData = FITS_rec(rec.array(None,
                                              formats=",".join(cols._recformats),
                                              names=cols.names, shape=nrows))
             self.compData._coldefs = self.columns
             self.compData.formats = self.columns.formats
 
             # Set up and initialize the variable length columns.  There will
-            # either be one (COMPRESSED_DATA) or two (COMPRESSED_DATA, 
+            # either be one (COMPRESSED_DATA) or two (COMPRESSED_DATA,
             # UNCOMPRESSED_DATA) depending on whether we have floating point
-            # data or not.  Note: the ZSCALE and ZZERO columns are fixed  
+            # data or not.  Note: the ZSCALE and ZZERO columns are fixed
             # length columns.
             for i in range(min(2,len(cols))):
                 self.columns._arrays[i] = rec.recarray.field(self.compData,i)
@@ -6248,18 +7675,18 @@ if compressionSupported:
 
             if hcompSmooth == None:
                 hcompSmooth = def_hcompScale
-                    
+
             # Next, strip the table header of all the ZNAMEn and ZVALn keywords
             # that may be left over from the previous data
 
             i = 1
-            
+
             while self._header.has_key('ZNAME'+`i`):
                 del self._header.ascardlist()['ZNAME'+`i`]
                 del self._header.ascardlist()['ZVAL'+`i`]
                 i += 1
 
-            # Finally, put the appropriate keywords back based on the 
+            # Finally, put the appropriate keywords back based on the
             # compression type.
 
             afterCard = 'ZCMPTYPE'
@@ -6313,8 +7740,118 @@ if compressionSupported:
                                     'floating point quantization level',
                                     after='ZNAME'+`i`)
 
+            if imageHeader:
+                # Move SIMPLE card from the image header to the
+                # table header as ZSIMPLE card.
+
+                if imageHeader.has_key('SIMPLE'):
+                    self._header.update('ZSIMPLE',
+                            imageHeader['SIMPLE'],
+                            imageHeader.ascardlist()['SIMPLE'].comment)
+
+                # Move EXTEND card from the image header to the
+                # table header as ZEXTEND card.
+
+                if imageHeader.has_key('EXTEND'):
+                    self._header.update('ZEXTEND',
+                            imageHeader['EXTEND'],
+                            imageHeader.ascardlist()['EXTEND'].comment)
+
+                # Move BLOCKED card from the image header to the
+                # table header as ZBLOCKED card.
+
+                if imageHeader.has_key('BLOCKED'):
+                    self._header.update('ZBLOCKED',
+                            imageHeader['BLOCKED'],
+                            imageHeader.ascardlist()['BLOCKED'].comment)
+
+                # Move XTENSION card from the image header to the
+                # table header as ZTENSION card.
+
+                # Since we only handle compressed IMAGEs, ZTENSION should
+                # always be IMAGE, even if the caller has passed in a header
+                # for some other type of extension.
+                if imageHeader.has_key('XTENSION'):
+                    self._header.update('ZTENSION',
+                            'IMAGE',
+                            imageHeader.ascardlist()['XTENSION'].comment)
+
+                # Move PCOUNT and GCOUNT cards from image header to the table
+                # header as ZPCOUNT and ZGCOUNT cards.
+
+                if imageHeader.has_key('PCOUNT'):
+                    self._header.update('ZPCOUNT',
+                            imageHeader['PCOUNT'],
+                            imageHeader.ascardlist()['PCOUNT'].comment)
+
+                if imageHeader.has_key('GCOUNT'):
+                    self._header.update('ZGCOUNT',
+                            imageHeader['GCOUNT'],
+                            imageHeader.ascardlist()['GCOUNT'].comment)
+
+                # Move CHECKSUM and DATASUM cards from the image header to the
+                # table header as XHECKSUM and XDATASUM cards.
+
+                if imageHeader.has_key('CHECKSUM'):
+                    self._header.update('ZHECKSUM',
+                            imageHeader['CHECKSUM'],
+                            imageHeader.ascardlist()['CHECKSUM'].comment)
+
+                if imageHeader.has_key('DATASUM'):
+                    self._header.update('ZDATASUM',
+                            imageHeader['DATASUM'],
+                            imageHeader.ascardlist()['DATASUM'].comment)
+            else:
+                # Move XTENSION card from the image header to the
+                # table header as ZTENSION card.
+
+                # Since we only handle compressed IMAGEs, ZTENSION should
+                # always be IMAGE, even if the caller has passed in a header
+                # for some other type of extension.
+                if self._imageHeader.has_key('XTENSION'):
+                    self._header.update('ZTENSION',
+                            'IMAGE',
+                            self._imageHeader.ascardlist()['XTENSION'].comment)
+
+                # Move PCOUNT and GCOUNT cards from image header to the table
+                # header as ZPCOUNT and ZGCOUNT cards.
+
+                if self._imageHeader.has_key('PCOUNT'):
+                    self._header.update('ZPCOUNT',
+                            self._imageHeader['PCOUNT'],
+                            self._imageHeader.ascardlist()['PCOUNT'].comment)
+
+                if self._imageHeader.has_key('GCOUNT'):
+                    self._header.update('ZGCOUNT',
+                            self._imageHeader['GCOUNT'],
+                            self._imageHeader.ascardlist()['GCOUNT'].comment)
+
+
+            # When we have an image checksum we need to ensure that the same
+            # number of blank cards exist in the table header as there were in
+            # the image header.  This allows those blank cards to be carried
+            # over to the image header when the hdu is uncompressed.
+
+            if self._header.has_key('ZHECKSUM'):
+                imageHeader.ascardlist().count_blanks()
+                self._imageHeader.ascardlist().count_blanks()
+                self._header.ascardlist().count_blanks()
+                requiredBlankCount = imageHeader.ascardlist()._blanks
+                imageBlankCount = self._imageHeader.ascardlist()._blanks
+                tableBlankCount = self._header.ascardlist()._blanks
+
+                for i in range(requiredBlankCount - imageBlankCount):
+                    self._imageHeader.add_blank()
+                    tableBlankCount = tableBlankCount + 1
+
+                for i in range(requiredBlankCount - tableBlankCount):
+                    self._header.add_blank()
+
+
         def __getattr__(self, attr):
-            """ Get an HDU attribute. """
+            """
+            Get an HDU attribute.
+            """
             if attr == 'data':
                 # The data attribute is the image data (not the table data).
 
@@ -6329,7 +7866,7 @@ if compressionSupported:
                 tileSizeList = []
                 zvalList = []
                 uncompressedDataList = []
-   
+
                 # Set up an array holding the integer value that represents
                 # undefined pixels.  This could come from the ZBLANK column
                 # from the table, or from the ZBLANK header card (if no
@@ -6349,16 +7886,16 @@ if compressionSupported:
                         nullDvals = np.array(0,dtype='int32')
                 else:
                     cn_zblank = 1  # null value supplied as a column
-   
+
                     #if sys.byteorder == 'little':
                     #    nullDvals = self.compData.field('ZBLANK').byteswap()
                     #else:
                     #    nullDvals = self.compData.field('ZBLANK')
                     nullDvals = self.compData.field('ZBLANK')
-   
+
                 # Set up an array holding the linear scale factor values
-                # This could come from the ZSCALE column from the table, or 
-                # from the ZSCALE header card (if no ZSCALE column (all 
+                # This could come from the ZSCALE column from the table, or
+                # from the ZSCALE header card (if no ZSCALE column (all
                 # linear scale factor values are the same for each tile)).
 
                 if self._header.has_key('BSCALE'):
@@ -6377,16 +7914,16 @@ if compressionSupported:
                         zScaleVals = np.array(1.0,dtype='float64')
                 else:
                     cn_zscale = 1 # scale value supplied as a column
-   
+
                     #if sys.byteorder == 'little':
                     #    zScaleVals = self.compData.field('ZSCALE').byteswap()
                     #else:
                     #    zScaleVals = self.compData.field('ZSCALE')
                     zScaleVals = self.compData.field('ZSCALE')
-   
+
                 # Set up an array holding the zero point offset values
-                # This could come from the ZZERO column from the table, or 
-                # from the ZZERO header card (if no ZZERO column (all 
+                # This could come from the ZZERO column from the table, or
+                # from the ZZERO header card (if no ZZERO column (all
                 # zero point offset values are the same for each tile)).
 
                 if self._header.has_key('BZERO'):
@@ -6405,41 +7942,41 @@ if compressionSupported:
                         zZeroVals = np.array(1.0,dtype='float64')
                 else:
                     cn_zzero = 1 # zero value supplied as a column
-   
+
                     #if sys.byteorder == 'little':
                     #    zZeroVals = self.compData.field('ZZERO').byteswap()
                     #else:
                     #    zZeroVals = self.compData.field('ZZERO')
                     zZeroVals = self.compData.field('ZZERO')
-   
+
                 # Is uncompressed data supplied in a column?
                 if not 'UNCOMPRESSED_DATA' in self.compData.names:
                     cn_uncompressed = 0 # no uncompressed data supplied
                 else:
                     cn_uncompressed = 1 # uncompressed data supplied as column
-   
-                # Take the compressed data out of the array and put it into 
-                # a list as character bytes to pass to the decompression 
+
+                # Take the compressed data out of the array and put it into
+                # a list as character bytes to pass to the decompression
                 # routine.
                 for i in range(0,len(self.compData)):
                     dataList.append(
                          self.compData[i].field('COMPRESSED_DATA').tostring())
-   
+
                     # If we have a column with uncompressed data then create
-                    # a list of lists of the data in the coulum.  Each 
+                    # a list of lists of the data in the coulum.  Each
                     # underlying list contains the uncompressed data for a
                     # pixel in the tile.  There are one of these lists for
                     # each tile in the image.
                     if 'UNCOMPRESSED_DATA' in self.compData.names:
                         tileUncDataList = []
-   
+
                         for j in range(0,
                              len(self.compData.field('UNCOMPRESSED_DATA')[i])):
                             tileUncDataList.append(
                              self.compData.field('UNCOMPRESSED_DATA')[i][j])
-   
+
                         uncompressedDataList.append(tileUncDataList)
-   
+
                 # Calculate the total number of elements (pixels) in the
                 # resulting image data array.  Create a list of the number
                 # of pixels along each axis in the image and a list of the
@@ -6450,7 +7987,7 @@ if compressionSupported:
                     naxesList.append(self._header['ZNAXIS'+`i+1`])
                     tileSizeList.append(self._header['ZTILE'+`i+1`])
                     nelem = nelem * self._header['ZNAXIS'+`i+1`]
-   
+
                 # Create a list for the compression parameters.  The contents
                 # of the list is dependent on the compression type.
 
@@ -6458,7 +7995,7 @@ if compressionSupported:
                     i = 1
                     blockSize = def_blockSize
                     bytePix = def_bytePix
-  
+
                     while self._header.has_key('ZNAME'+`i`):
                         if self._header['ZNAME'+`i`] == 'BLOCKSIZE':
                             blockSize = self._header['ZVAL'+`i`]
@@ -6470,8 +8007,8 @@ if compressionSupported:
                     zvalList.append(bytePix)
                 elif self._header['ZCMPTYPE'] == 'HCOMPRESS_1':
                     i = 1
-                    hcompSmooth = def_hcompSmooth 
-  
+                    hcompSmooth = def_hcompSmooth
+
                     while self._header.has_key('ZNAME'+`i`):
                         if self._header['ZNAME'+`i`] == 'SMOOTH':
                             hcompSmooth = self._header['ZVAL'+`i`]
@@ -6486,7 +8023,7 @@ if compressionSupported:
 
                 if self._header['ZBITPIX'] < 0:
                     i = 1
-  
+
                     while self._header.has_key('ZNAME'+`i`):
                         if self._header['ZNAME'+`i`] == 'NOISEBIT':
                             quantizeLevel = self._header['ZVAL'+`i`]
@@ -6496,7 +8033,7 @@ if compressionSupported:
 
                 if self._header['ZCMPTYPE'] == 'HCOMPRESS_1':
                     i = 1
-  
+
                     while self._header.has_key('ZNAME'+`i`):
                         if self._header['ZNAME'+`i`] == 'SCALE':
                             hcompScale = self._header['ZVAL'+`i`]
@@ -6509,9 +8046,9 @@ if compressionSupported:
                 naxesList.reverse()
 
                 # Call the C decompression routine to decompress the data.
-                # Note that any errors in this routine will raise an 
+                # Note that any errors in this routine will raise an
                 # exception.
-                status = pyfitsComp.decompressData(dataList, 
+                status = pyfitsComp.decompressData(dataList,
                                                  self._header['ZNAXIS'],
                                                  naxesList, tileSizeList,
                                                  zScaleVals, cn_zscale,
@@ -6533,16 +8070,22 @@ if compressionSupported:
                     else:
                         data = np.array(data,dtype=np.float64)
 
+                    if cn_zblank:
+                        blanks = (data == nullDvals)
+
                     if self._bscale != 1:
                         np.multiply(data, self._bscale, data)
                     if self._bzero != 0:
                         data += self._bzero
 
+                    if cn_zblank:
+                        data = np.where(blanks, np.nan, data)
+
                 self.__dict__[attr] = data
-   
+
             elif attr == 'compData':
                 # In order to create the compressed data we will reference the
-                # image data.  Referencing the image data will cause the 
+                # image data.  Referencing the image data will cause the
                 # compressed data to be read from the file.
                 data = self.data
             elif attr == 'header':
@@ -6555,84 +8098,125 @@ if compressionSupported:
                     # Start with a copy of the table header.
                     self._imageHeader = self._header.copy()
                     cardList = self._imageHeader.ascardlist()
-   
+
                     try:
                         # Set the extension type to IMAGE
                         cardList['XTENSION'].value = 'IMAGE'
                         cardList['XTENSION'].comment = 'extension type'
                     except KeyError:
                         pass
-   
+
                     # Delete cards that are related to the table.  And move
                     # the values of those cards that relate to the image from
-                    # their corresponding table cards.  These include 
+                    # their corresponding table cards.  These include
                     # ZBITPIX -> BITPIX, ZNAXIS -> NAXIS, and ZNAXISn -> NAXISn.
                     try:
                         del cardList['ZIMAGE']
                     except KeyError:
                         pass
-   
+
                     try:
                         del cardList['ZCMPTYPE']
                     except KeyError:
                         pass
-   
+
                     try:
                         del cardList['ZBITPIX']
                         _bitpix = self._header['ZBITPIX']
                         cardList['BITPIX'].value = self._header['ZBITPIX']
-    
+
                         if (self._bzero != 0 or self._bscale != 1):
                             if _bitpix > 16:  # scale integers to Float64
                                 cardList['BITPIX'].value = -64
                             elif _bitpix > 0:  # scale integers to Float32
                                 cardList['BITPIX'].value = -32
-   
-                        cardList['BITPIX'].comment = 'array data type'
+
+                        cardList['BITPIX'].comment = \
+                                   self._header.ascardlist()['ZBITPIX'].comment
                     except KeyError:
                         pass
-   
+
                     try:
                         del cardList['ZNAXIS']
                         cardList['NAXIS'].value = self._header['ZNAXIS']
-                        cardList['NAXIS'].comment = 'number of array dimensions'
-   
+                        cardList['NAXIS'].comment = \
+                                 self._header.ascardlist()['ZNAXIS'].comment
+
                         for i in range(cardList['NAXIS'].value):
                             del cardList['ZNAXIS'+`i+1`]
                             self._imageHeader.update('NAXIS'+`i+1`,
-                                                   self._header['ZNAXIS'+`i+1`],
-                                                   'length of data axis', 
-                                                   after='NAXIS'+`i`)
+                              self._header['ZNAXIS'+`i+1`],
+                              self._header.ascardlist()['ZNAXIS'+`i+1`].comment,
+                              after='NAXIS'+`i`)
+                            lastNaxisCard = 'NAXIS'+`i+1`
+
+                        if lastNaxisCard == 'NAXIS1':
+                            # There is only one axis in the image data so we
+                            # need to delete the extra NAXIS2 card.
+                            del cardList['NAXIS2']
                     except KeyError:
                         pass
-   
+
                     try:
                         for i in range(self._header['ZNAXIS']):
                             del cardList['ZTILE'+`i+1`]
-     
+
                     except KeyError:
                         pass
-   
+
                     try:
-                        cardList['PCOUNT'].value = 0
-                        cardList['PCOUNT'].comment = 'number of parameters'
+                        del cardList['ZPCOUNT']
+                        self._imageHeader.update('PCOUNT',
+                                 self._header['ZPCOUNT'],
+                                 self._header.ascardlist()['ZPCOUNT'].comment)
+                    except KeyError:
+                        try:
+                            del cardList['PCOUNT']
+                        except KeyError:
+                            pass
+
+                    try:
+                        del cardList['ZGCOUNT']
+                        self._imageHeader.update('GCOUNT',
+                                 self._header['ZGCOUNT'],
+                                 self._header.ascardlist()['ZGCOUNT'].comment)
+                    except KeyError:
+                        try:
+                            del cardList['GCOUNT']
+                        except KeyError:
+                            pass
+
+                    try:
+                        del cardList['ZEXTEND']
+                        self._imageHeader.update('EXTEND',
+                                 self._header['ZEXTEND'],
+                                 self._header.ascardlist()['ZEXTEND'].comment,
+                                 after = lastNaxisCard)
                     except KeyError:
                         pass
-   
+
+                    try:
+                        del cardList['ZBLOCKED']
+                        self._imageHeader.update('BLOCKED',
+                                 self._header['ZBLOCKED'],
+                                 self._header.ascardlist()['ZBLOCKED'].comment)
+                    except KeyError:
+                        pass
+
                     try:
                         del cardList['TFIELDS']
-    
+
                         for i in range(self._header['TFIELDS']):
                             del cardList['TFORM'+`i+1`]
-   
+
                             if self._imageHeader.has_key('TTYPE'+`i+1`):
                                 del cardList['TTYPE'+`i+1`]
-   
+
                     except KeyError:
                         pass
-   
+
                     i = 1
-   
+
                     while 1:
                         try:
                             del cardList['ZNAME'+`i`]
@@ -6640,19 +8224,76 @@ if compressionSupported:
                             i += 1
                         except KeyError:
                             break
-   
+
                     # delete the keywords BSCALE and BZERO
-   
+
                     try:
                         del cardList['BSCALE']
                     except KeyError:
                         pass
-   
+
                     try:
                         del cardList['BZERO']
                     except KeyError:
                         pass
-   
+
+                    # Move the ZHECKSUM and ZDATASUM cards to the image header
+                    # as CHECKSUM and DATASUM
+                    try:
+                        del cardList['ZHECKSUM']
+                        self._imageHeader.update('CHECKSUM',
+                                self._header['ZHECKSUM'],
+                                self._header.ascardlist()['ZHECKSUM'].comment)
+                    except KeyError:
+                        pass
+
+                    try:
+                        del cardList['ZDATASUM']
+                        self._imageHeader.update('DATASUM',
+                                self._header['ZDATASUM'],
+                                self._header.ascardlist()['ZDATASUM'].comment)
+                    except KeyError:
+                        pass
+
+                    try:
+                        del cardList['ZSIMPLE']
+                        self._imageHeader.update('SIMPLE',
+                                self._header['ZSIMPLE'],
+                                self._header.ascardlist()['ZSIMPLE'].comment,
+                                before=1)
+                        del cardList['XTENSION']
+                    except KeyError:
+                        pass
+
+                    try:
+                        del cardList['ZTENSION']
+                        if self._header['ZTENSION'] != 'IMAGE':
+                            warnings.warn("ZTENSION keyword in compressed extension != 'IMAGE'")
+                        self._imageHeader.update('XTENSION',
+                                'IMAGE',
+                                self._header.ascardlist()['ZTENSION'].comment)
+                    except KeyError:
+                        pass
+
+                    # Remove the EXTNAME card if the value in the table header
+                    # is the default value of COMPRESSED_IMAGE.
+
+                    if self._header.has_key('EXTNAME') and \
+                       self._header['EXTNAME'] == 'COMPRESSED_IMAGE':
+                           del cardList['EXTNAME']
+
+                    # Look to see if there are any blank cards in the table
+                    # header.  If there are, there should be the same number
+                    # of blank cards in the image header.  Add blank cards to
+                    # the image header to make it so.
+                    self._header.ascardlist().count_blanks()
+                    tableHeaderBlankCount = self._header.ascardlist()._blanks
+                    self._imageHeader.ascardlist().count_blanks()
+                    imageHeaderBlankCount=self._imageHeader.ascardlist()._blanks
+
+                    for i in range(tableHeaderBlankCount-imageHeaderBlankCount):
+                        self._imageHeader.add_blank()
+
                 try:
                     return self._imageHeader
                 except KeyError:
@@ -6660,34 +8301,37 @@ if compressionSupported:
             else:
                 # Call the base class __getattr__ method.
                 return BinTableHDU.__getattr__(self,attr)
-   
+
             try:
                 return self.__dict__[attr]
             except KeyError:
                 raise AttributeError(attr)
-   
-        def __setattr__(self, attr, value):
-            """Set an HDU attribute."""
 
+        def __setattr__(self, attr, value):
+            """
+            Set an HDU attribute.
+            """
             if attr == 'data':
-                if (value != None) and (not isinstance(value,np.ndarray) or 
+                if (value != None) and (not isinstance(value,np.ndarray) or
                                         value.dtype.fields != None):
                     raise TypeError, "CompImageHDU data has incorrect type"
 
             _ExtensionHDU.__setattr__(self,attr,value)
 
         def _summary(self):
-            """Summarize the HDU: name, dimensions, and formats."""
+            """
+            Summarize the HDU: name, dimensions, and formats.
+            """
             class_name  = str(self.__class__)
             type  = class_name[class_name.rfind('.')+1:-2]
-   
+
             # if data is touched, use data info.
 
             if 'data' in dir(self):
                 if self.data is None:
                     _shape, _format = (), ''
                 else:
-   
+
                     # the shape will be in the order of NAXIS's which is the
                     # reverse of the numarray shape
                     _shape = list(self.data.shape)
@@ -6695,7 +8339,7 @@ if compressionSupported:
                     _shape.reverse()
                     _shape = tuple(_shape)
                     _format = _format[_format.rfind('.')+1:]
-   
+
             # if data is not touched yet, use header info.
             else:
                 _shape = ()
@@ -6704,16 +8348,18 @@ if compressionSupported:
                     _shape += (self.header['NAXIS'+`j+1`],)
 
                 _format = _ImageBaseHDU.NumCode[self.header['BITPIX']]
-   
+
             return "%-10s  %-12s  %4d  %-12s  %s" % \
                (self.name, type, len(self.header.ascard), _shape, _format)
-   
+
         def updateCompressedData(self):
-            """ Compress the image data so that it may be written to a file. """
+            """
+            Compress the image data so that it may be written to a file.
+            """
             naxesList = []
             tileSizeList = []
             zvalList = []
-   
+
             # Check to see that the imageHeader matches the image data
             if self.header.get('NAXIS',0) != len(self.data.shape) or \
                self.header.get('BITPIX',0) != \
@@ -6726,7 +8372,7 @@ if compressionSupported:
             for i in range(0,self._header['ZNAXIS']):
                 naxesList.append(self._header['ZNAXIS'+`i+1`])
                 tileSizeList.append(self._header['ZTILE'+`i+1`])
-   
+
             # Indicate if the linear scale factor is from a column, a single
             # scale value, or not given.
             if 'ZSCALE' in self.compData.names:
@@ -6735,7 +8381,7 @@ if compressionSupported:
                 cn_zscale = -1 # scale value is a constant
             else:
                 cn_zscale = 0 # no scale value given so don't scale
-   
+
             # Indicate if the zero point offset value is from a column, a
             # single value, or not given.
             if 'ZZERO' in self.compData.names:
@@ -6744,21 +8390,21 @@ if compressionSupported:
                 cn_zzero = -1 # zero value is a constant
             else:
                 cn_zzero = 0 # no zero value given so don't scale
-   
-            # Indicate if there is a UNCOMPRESSED_DATA column in the 
+
+            # Indicate if there is a UNCOMPRESSED_DATA column in the
             # compressed data table.
             if 'UNCOMPRESSED_DATA' in self.compData.names:
                 cn_uncompressed = 1 # there is a uncompressed data column
             else:
                 cn_uncompressed = 0 # there is no uncompressed data column
-   
+
             # Create a list for the compression parameters.  The contents
             # of the list is dependent on the compression type.
             if self._header['ZCMPTYPE'] == 'RICE_1':
                 i = 1
                 blockSize = def_blockSize
                 bytePix = def_bytePix
-  
+
                 while self._header.has_key('ZNAME'+`i`):
                     if self._header['ZNAME'+`i`] == 'BLOCKSIZE':
                         blockSize = self._header['ZVAL'+`i`]
@@ -6770,8 +8416,8 @@ if compressionSupported:
                 zvalList.append(bytePix)
             elif self._header['ZCMPTYPE'] == 'HCOMPRESS_1':
                 i = 1
-                hcompSmooth = def_hcompSmooth 
-  
+                hcompSmooth = def_hcompSmooth
+
                 while self._header.has_key('ZNAME'+`i`):
                     if self._header['ZNAME'+`i`] == 'SMOOTH':
                         hcompSmooth = self._header['ZVAL'+`i`]
@@ -6786,7 +8432,7 @@ if compressionSupported:
 
             if self._header['ZBITPIX'] < 0:
                 i = 1
- 
+
                 while self._header.has_key('ZNAME'+`i`):
                     if self._header['ZNAME'+`i`] == 'NOISEBIT':
                         quantizeLevel = self._header['ZVAL'+`i`]
@@ -6796,7 +8442,7 @@ if compressionSupported:
 
             if self._header['ZCMPTYPE'] == 'HCOMPRESS_1':
                 i = 1
-  
+
                 while self._header.has_key('ZNAME'+`i`):
                     if self._header['ZNAME'+`i`] == 'SCALE':
                         hcompScale = self._header['ZVAL'+`i`]
@@ -6810,7 +8456,7 @@ if compressionSupported:
             else:
                 cn_zblank = 0 # no null value so don't use
                 zblank = 0
-   
+
             if self._header.has_key('BSCALE') and self.data.dtype.str[1] == 'f':
                 # If this is scaled data (ie it has a BSCALE value and it is
                 # floating point data) then pass in the BSCALE value so the C
@@ -6818,12 +8464,12 @@ if compressionSupported:
                 cn_bscale = self._header['BSCALE']
             else:
                 cn_bscale = 1.0
-   
+
             if self._header.has_key('BZERO') and self.data.dtype.str[1] == 'f':
                 cn_bzero = self._header['BZERO']
             else:
                 cn_bzero = 0.0
-   
+
             # put data in machine native byteorder on little endian machines
 
             byteswapped = False
@@ -6832,14 +8478,14 @@ if compressionSupported:
                 byteswapped = True
                 self.data = self.data.byteswap(True)
                 self.data.dtype = self.data.dtype.newbyteorder('<')
-         
+
             try:
                 # Compress the data.
                 status, compDataList, scaleList, zeroList, uncompDataList =  \
-                   pyfitsComp.compressData(self.data,  
+                   pyfitsComp.compressData(self.data,
                                            self._header['ZNAXIS'],
                                            naxesList, tileSizeList,
-                                           cn_zblank, zblank, 
+                                           cn_zblank, zblank,
                                            cn_bscale, cn_bzero, cn_zscale,
                                            cn_zzero, cn_uncompressed,
                                            quantizeLevel,
@@ -6854,54 +8500,55 @@ if compressionSupported:
                 if byteswapped:
                     self.data = self.data.byteswap(True)
                     self.data.dtype = self.data.dtype.newbyteorder('>')
-   
+
             if status != 0:
                 raise RuntimeError, 'Unable to write compressed image'
-   
-            # Convert the compressed data from a list of byte strings to 
+
+            # Convert the compressed data from a list of byte strings to
             # an array and set it in the COMPRESSED_DATA field of the table.
             colDType = 'uint8'
-   
+
             if self._header['ZCMPTYPE'] == 'PLIO_1':
                 colDType = 'i2'
-   
+
             for i in range(0,len(compDataList)):
                 self.compData[i].setfield('COMPRESSED_DATA',np.fromstring(
                                                             compDataList[i],
                                                             dtype=colDType))
-   
-            # Convert the linear scale factor values from a list to an 
+
+            # Convert the linear scale factor values from a list to an
             # array and set it in the ZSCALE field of the table.
             if cn_zscale > 0:
                 for i in range (0,len(scaleList)):
                     self.compData[i].setfield('ZSCALE',scaleList[i])
-   
+
             # Convert the zero point offset values from a list to an
             # array and set it in the ZZERO field of the table.
             if cn_zzero > 0:
                 for i in range (0,len(zeroList)):
                     self.compData[i].setfield('ZZERO',zeroList[i])
-   
+
             # Convert the uncompressed data values from a list to an
             # array and set it in the UNCOMPRESSED_DATA field of the table.
             if cn_uncompressed > 0:
                 for i in range(0,len(uncompDataList)):
                     self.compData[i].setfield('UNCOMPRESSED_DATA',
                                               uncompDataList[i])
-   
+
             # Update the table header cards to match the compressed data.
             self.updateHeader()
-   
+
         def updateHeader(self):
-            """Update the table header cards to match the compressed data."""
-   
+            """
+            Update the table header cards to match the compressed data.
+            """
             # Get the _heapsize attribute to match the data.
             self.compData._scale_back()
-   
+
             # Check that TFIELDS and NAXIS2 match the data.
             self._header['TFIELDS'] = self.compData._nfields
             self._header['NAXIS2'] = self.compData.shape[0]
-   
+
             # Calculate PCOUNT, for variable length tables.
             _tbsize = self._header['NAXIS1']*self._header['NAXIS2']
             _heapstart = self._header.get('THEAP', _tbsize)
@@ -6910,7 +8557,7 @@ if compressionSupported:
 
             if _pcount > 0:
                 self._header['PCOUNT'] = _pcount
-   
+
             # Update TFORM for variable length columns.
             for i in range(self.compData._nfields):
                 if isinstance(self.compData._coldefs.formats[i], _FormatP):
@@ -6944,35 +8591,42 @@ if compressionSupported:
                                         after='ZNAME2')
 
         def scale(self, type=None, option="old", bscale=1, bzero=0):
-            """Scale image data by using BSCALE/BZERO.
+            """
+            Scale image data by using ``BSCALE`` and ``BZERO``.
 
-            Call to this method will scale self.data and update the keywords
-            of BSCALE and BZERO in self._header and self._imageHeader.  This
-            method should only be used right before writing to the output file,
-            as the data will be scaled and is therefore not very usable after
-            the call.
+            Calling this method will scale `self.data` and update the
+            keywords of ``BSCALE`` and ``BZERO`` in `self._header` and
+            `self._imageHeader`.  This method should only be used
+            right before writing to the output file, as the data will
+            be scaled and is therefore not very usable after the call.
 
-            type (string): destination data type, use numpy attribute format,
-                           (e.g. 'uint8', 'int16', 'float32' etc.).  If is 
-                           None, use the current data type.
+            Parameters
+            ----------
 
-            option: how to scale the data: if "old", use the original BSCALE
-                    and BZERO values when the data was read/created. If
-                    "minmax", use the minimum and maximum of the data to scale.
-                    The option will be overwritten by any user specified
-                    bscale/bzero values.
+            type : str, optional
+                destination data type, use a string representing a numpy
+                dtype name, (e.g. ``'uint8'``, ``'int16'``, ``'float32'``
+                etc.).  If is `None`, use the current data type.
 
-            bscale/bzero:  user specified BSCALE and BZERO values.
+            option : str, optional
+                how to scale the data: if ``"old"``, use the original
+                ``BSCALE`` and ``BZERO`` values when the data was
+                read/created. If ``"minmax"``, use the minimum and maximum
+                of the data to scale.  The option will be overwritten
+                by any user-specified bscale/bzero values.
+
+            bscale, bzero : int, optional
+                user specified ``BSCALE`` and ``BZERO`` values.
             """
 
             if self.data is None:
                 return
-  
+
             # Determine the destination (numpy) data type
             if type is None:
-                type = self.NumCode[self._bitpix]
+                type = _ImageBaseHDU.NumCode[self._bitpix]
             _type = getattr(np, type)
-  
+
             # Determine how to scale the data
             # bscale and bzero takes priority
             if (bscale != 1 or bzero !=0):
@@ -7008,7 +8662,7 @@ if compressionSupported:
             if _zero != 0:
                 self.data += -_zero # 0.9.6.3 to avoid out of range error for
                                     # BZERO = +32768
-  
+
             if _scale != 1:
                 self.data /= _scale
 
@@ -7031,13 +8685,28 @@ if compressionSupported:
                 self.header.update('BZERO', _zero)
             else:
                 del self.header['BZERO']
-  
+
             if _scale != 1:
                 self.header.update('BSCALE', _scale)
             else:
                 del self.header['BSCALE']
 
- 
+        def _calculate_datasum(self):
+            """
+            Calculate the value for the ``DATASUM`` card in the HDU.
+            """
+            if self.__dict__.has_key('data') and self.data != None:
+                # We have the data to be used.
+                return self._calculate_datasum_from_data(self.compData)
+            else:
+                # This is the case where the data has not been read from the
+                # file yet.  We can handle that in a generic manner so we do
+                # it in the base class.  The other possibility is that there
+                # is no data at all.  This can also be handled in a gereric
+                # manner.
+                return super(CompImageHDU,self)._calculate_datasum()
+
+
 else:
     # Compression object library failed to import so define it as an
     # empty BinTableHDU class.  This way the code will run when the object
@@ -7045,57 +8714,55 @@ else:
 
     class CompImageHDU(BinTableHDU):
         pass
-   
-   
+
+
 class StreamingHDU:
     """
     A class that provides the capability to stream data to a FITS file
-    instead of requiring data to all be written at once.  
+    instead of requiring data to all be written at once.
 
-    The following psudo code illustrates its use:
+    The following pseudocode illustrates its use::
 
-    header = pyfits.Header()
+        header = pyfits.Header()
 
-    for all the cards you need in the header:
-        header.update(key,value,comment)
+        for all the cards you need in the header:
+            header.update(key,value,comment)
 
-    shdu = pyfits.StreamingHDU('filename.fits',header)
+        shdu = pyfits.StreamingHDU('filename.fits',header)
 
-    for each piece of data:
-        shdu.write(data)
+        for each piece of data:
+            shdu.write(data)
 
-    shdu.close()
+        shdu.close()
     """
-
-    def __init__(self, name, header): 
+    def __init__(self, name, header):
         """
-        Construct a StreamingHDU object given a file name and a header.
+        Construct a `StreamingHDU` object given a file name and a header.
 
-        :Parameters:
-          name : string, file object, or file like object
-              The file to which the header and data will be streamed
-              (if opened file object must be opened for append (ab+)).
+        Parameters
+        ----------
+        name : file path, file object, or file like object
+            The file to which the header and data will be streamed.
+            If opened, the file object must be opened for append
+            (ab+).
 
-          header : Header
-              The header object associated with the data to be written 
-              to the file.
-
-        :Returns:
-          None
+        header : `Header` instance
+            The header object associated with the data to be written
+            to the file.
 
         Notes
         -----
-
         The file will be opened and the header appended to the end of
-        the file.  If the file does not already exist, it will be created 
-        and if the header represents a Primary header, it will be written 
-        to the beginning of the file.  If the file does not exist and the 
-        provided header is not a Primary header, a default Primary HDU will 
-        be inserted at the beginning of the file and the provided header 
-        will be added as the first extension.  If the file does already 
-        exist, but the provided header represents a Primary header, the 
-        header will be modified to an image extension header and appended 
-        to the end of the file.
+        the file.  If the file does not already exist, it will be
+        created, and if the header represents a Primary header, it
+        will be written to the beginning of the file.  If the file
+        does not exist and the provided header is not a Primary
+        header, a default Primary HDU will be inserted at the
+        beginning of the file and the provided header will be added as
+        the first extension.  If the file does already exist, but the
+        provided header represents a Primary header, the header will
+        be modified to an image extension header and appended to the
+        end of the file.
         """
 
         if isinstance(name, gzip.GzipFile):
@@ -7107,14 +8774,15 @@ class StreamingHDU:
 
         if isinstance(name, file):
            filename = name.name
-        elif isinstance(name, types.StringType):
+        elif isinstance(name, types.StringType) or \
+             isinstance(name, types.UnicodeType):
             filename = name
         else:
             filename = ''
 #
 #       Check if the file already exists.  If it does not, check to see
-#       if we were provided with a Primary Header.  If not we will need 
-#       to prepend a default PrimaryHDU to the file before writing the 
+#       if we were provided with a Primary Header.  If not we will need
+#       to prepend a default PrimaryHDU to the file before writing the
 #       given header.
 #
         newFile = False
@@ -7133,7 +8801,7 @@ class StreamingHDU:
             if self._header.has_key('SIMPLE'):
 #
 #               This will not be the first extension in the file so we
-#               must change the Primary header provided into an image 
+#               must change the Primary header provided into an image
 #               extension header.
 #
                 self._header.update('XTENSION','IMAGE','Image extension',
@@ -7169,29 +8837,30 @@ class StreamingHDU:
         """
         Write the given data to the stream.
 
-        :Parameters:
-          data : ndarray
-              Data to stream to the file.
+        Parameters
+        ----------
+        data : ndarray
+            Data to stream to the file.
 
-        :Returns:
-
-          writeComplete : integer 
-              Flag that when true indicates that all of the required data
-              has been written to the stream. 
+        Returns
+        -------
+        writeComplete : int
+            Flag that when `True` indicates that all of the required
+            data has been written to the stream.
 
         Notes
         -----
-
-        Only the amount of data specified in the header provided to the 
-        class constructor may be written to the stream.  If the provided
-        data would cause the stream to overflow, an IOError exception is 
-        raised and the data is not written.  Once sufficient data has been
-        written to the stream to satisfy the amount specified in the header,
-        the stream is padded to fill a complete FITS block and no more data
-        will be accepted.  An attempt to write more data after the stream
-        has been filled will raise an IOError exception.  If the dtype of 
-        the input data does not match what is expected by the header, a
-        TypeError exception is raised.
+        Only the amount of data specified in the header provided to
+        the class constructor may be written to the stream.  If the
+        provided data would cause the stream to overflow, an `IOError`
+        exception is raised and the data is not written.  Once
+        sufficient data has been written to the stream to satisfy the
+        amount specified in the header, the stream is padded to fill a
+        complete FITS block and no more data will be accepted.  An
+        attempt to write more data after the stream has been filled
+        will raise an `IOError` exception.  If the dtype of the input
+        data does not match what is expected by the header, a
+        `TypeError` exception is raised.
         """
 
         curDataSize = self._ffo.getfile().tell() - self._datLoc
@@ -7228,14 +8897,6 @@ class StreamingHDU:
     def size(self):
         """
         Return the size (in bytes) of the data portion of the HDU.
-
-        :Parameters:
-          None
-
-        :Returns:
-          size : integer
-              The number of bytes of data required to fill the stream
-              per the header provided in the constructor.
         """
 
         size = 0
@@ -7257,26 +8918,28 @@ class StreamingHDU:
             bitpix = self._header['BITPIX']
             gcount = self._header.get('GCOUNT', 1)
             pcount = self._header.get('PCOUNT', 0)
-            size = abs(bitpix) * gcount * (pcount + size) / 8
+            size = abs(bitpix) * gcount * (pcount + size) // 8
         return size
 
     def close(self):
         """
-        Close the 'physical' FITS file.
-
-        :Parameters:
-          None
-
-        :Returns:
-          None
+        Close the physical FITS file.
         """
 
         self._ffo.close()
 
+    # Support the 'with' statement
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
 class ErrorURLopener(urllib.FancyURLopener):
-    """A class to use with urlretrieve to allow IOError exceptions to be
-       raised when a file specified by a URL cannot be accessed"""
+    """
+    A class to use with `urlretrieve` to allow `IOError` exceptions to
+    be raised when a file specified by a URL cannot be accessed.
+    """
     def http_error_default(self, url, fp, errcode, errmsg, headers):
         raise IOError, (errcode, errmsg, url)
 
@@ -7286,24 +8949,29 @@ urllib._urlopener.tempcache = {} # Initialize tempcache with an empty
                                  # dictionary to enable file cacheing
 
 class _File:
-    """A file I/O class"""
-
-    def __init__(self, name, mode='copyonwrite', memmap=0, uint16=0):
+    """
+    A file I/O class.
+    """
+    def __init__(self, name, mode='copyonwrite', memmap=0, **parms):
         if mode not in _python_mode.keys():
-            raise "Mode '%s' not recognized" % mode
+            raise ValueError, "Mode '%s' not recognized" % mode
 
-        
+
         if isinstance(name, file):
             self.name = name.name
-        elif isinstance(name, types.StringType):
+        elif isinstance(name, types.StringType) or \
+             isinstance(name, types.UnicodeType):
             if mode != 'append' and not os.path.exists(name) and \
             not os.path.splitdrive(name)[0]:
                 #
                 # Not writing file and file does not exist on local machine and
-                # name does not begin with a drive letter (Windows), try to 
+                # name does not begin with a drive letter (Windows), try to
                 # get it over the web.
                 #
-                self.name, fileheader = urllib.urlretrieve(name)
+                try:
+                    self.name, fileheader = urllib.urlretrieve(name)
+                except IOError, e:
+                    raise e
             else:
                 self.name = name
         else:
@@ -7318,13 +8986,20 @@ class _File:
 
         self.mode = mode
         self.memmap = memmap
-        self.uint16 = uint16
         self.code = None
         self.dims = None
         self.offset = 0
-        
+
+        if parms.has_key('ignore_missing_end'):
+            self.ignore_missing_end = parms['ignore_missing_end']
+        else:
+            self.ignore_missing_end = 0
+
+        self.uint = parms.get('uint16', False) or parms.get('uint', False)
+
         if memmap and mode not in ['readonly', 'copyonwrite', 'update']:
-            raise "Memory mapping is not implemented for mode `%s`." % mode
+            raise NotImplementedError(
+                   "Memory mapping is not implemented for mode `%s`." % mode)
         else:
             if isinstance(name, file) or isinstance(name, gzip.GzipFile):
                 if hasattr(name, 'closed'):
@@ -7340,20 +9015,22 @@ class _File:
 
                 if not closed:
                     if _python_mode[mode] != foMode:
-                        raise "Input mode '%s' (%s) " \
+                        raise ValueError, "Input mode '%s' (%s) " \
                               % (mode, _python_mode[mode]) + \
                               "does not match mode of the input file (%s)." \
                               % name.mode
-                    self.__file = name 
+                    self.__file = name
                 elif isinstance(name, file):
                     self.__file=__builtin__.open(self.name, _python_mode[mode])
                 else:
                     self.__file=gzip.open(self.name, _python_mode[mode])
-            elif isinstance(name, types.StringType):
+            elif isinstance(name, types.StringType) or \
+                 isinstance(name, types.UnicodeType):
                 if os.path.splitext(self.name)[1] == '.gz':
                     # Handle gzip files
                     if mode in ['update', 'append']:
-                        raise "Writing to gzipped fits files is not supported"
+                        raise NotImplementedError(
+                              "Writing to gzipped fits files is not supported")
                     zfile = gzip.GzipFile(self.name)
                     self.tfile = tempfile.NamedTemporaryFile('rb+',-1,'.fits')
                     self.name = self.tfile.name
@@ -7363,11 +9040,13 @@ class _File:
                 elif os.path.splitext(self.name)[1] == '.zip':
                     # Handle zip files
                     if mode in ['update', 'append']:
-                        raise "Writing to zipped fits files is not supported"
+                        raise NotImplementedError(
+                              "Writing to zipped fits files is not supported")
                     zfile = zipfile.ZipFile(self.name)
                     namelist = zfile.namelist()
                     if len(namelist) != 1:
-                        raise "Zip files with multiple members are not supported."
+                        raise NotImplementedError(
+                          "Zip files with multiple members are not supported.")
                     self.tfile = tempfile.NamedTemporaryFile('rb+',-1,'.fits')
                     self.name = self.tfile.name
                     self.__file = self.tfile.file
@@ -7376,23 +9055,38 @@ class _File:
                 else:
                     self.__file=__builtin__.open(self.name, _python_mode[mode])
             else:
-                self.__file = name 
+                # We are dealing with a file like object.
+                # Assume it is open.
+                self.__file = name
+
+                # If there is not seek or tell methods then set the mode to
+                # output streaming.
+                if not hasattr(self.__file, 'seek') or \
+                   not hasattr(self.__file, 'tell'):
+                    self.mode = mode = 'ostream';
 
             # For 'ab+' mode, the pointer is at the end after the open in
             # Linux, but is at the beginning in Solaris.
 
-            if isinstance(self.__file,gzip.GzipFile):
+            if mode == 'ostream':
+                # For output stream start with a truncated file.
+                self._size = 0
+            elif isinstance(self.__file,gzip.GzipFile):
                 self.__file.fileobj.seek(0,2)
                 self._size = self.__file.fileobj.tell()
                 self.__file.fileobj.seek(0)
                 self.__file.seek(0)
-            else:
+            elif hasattr(self.__file, 'seek'):
                 self.__file.seek(0, 2)
                 self._size = self.__file.tell()
                 self.__file.seek(0)
+            else:
+                self._size = 0
 
     def __getattr__(self, attr):
-        """Get the _mm attribute."""
+        """
+        Get the `_mm` attribute.
+        """
         if attr == '_mm':
             return Memmap(self.name,offset=self.offset,mode=_memmap_mode[self.mode],dtype=self.code,shape=self.dims)
         try:
@@ -7423,7 +9117,11 @@ class _File:
                 break
 
     def _readHDU(self):
-        """Read the skeleton structure of the HDU."""
+        """
+        Read the skeleton structure of the HDU.
+        """
+        if not hasattr(self.__file, 'tell') or not hasattr(self.__file, 'read'):
+            raise EOFError
 
         end_RE = re.compile('END'+' '*77)
         _hdrLoc = self.__file.tell()
@@ -7449,6 +9147,9 @@ class _File:
             else:
                 break
         hdu._raw += block
+
+        if not end_RE.search(block) and not self.ignore_missing_end:
+            raise IOError, "Header missing END card."
 
         _size, hdu.name = hdu._getsize(hdu._raw)
 
@@ -7477,63 +9178,100 @@ class _File:
 
         return hdu
 
-    def writeHDU(self, hdu):
-        """Write *one* FITS HDU.  Must seek to the correct location before
-           calling this method.
+    def writeHDU(self, hdu, checksum=False):
+        """
+        Write *one* FITS HDU.  Must seek to the correct location
+        before calling this method.
         """
 
         if isinstance(hdu, _ImageBaseHDU):
             hdu.update_header()
         elif isinstance(hdu, CompImageHDU):
-            hdu.updateCompressedData() 
-        return (self.writeHDUheader(hdu),) + self.writeHDUdata(hdu)
+            hdu.updateCompressedData()
+        return (self.writeHDUheader(hdu,checksum),) + self.writeHDUdata(hdu)
 
-    def writeHDUheader(self, hdu):
-        """Write FITS HDU header part."""
-
-        # If the data is unsigned int 16 add BSCALE/BZERO cards to header
+    def writeHDUheader(self, hdu, checksum=False):
+        """
+        Write FITS HDU header part.
+        """
+        # If the data is unsigned int 16, 32, or 64 add BSCALE/BZERO
+        # cards to header
 
         if 'data' in dir(hdu) and hdu.data is not None \
         and not isinstance(hdu, _NonstandardHDU) \
         and not isinstance(hdu, _NonstandardExtHDU) \
-        and hdu.data.dtype == np.uint16:
-            hdu._header.update('BSCALE',1,
-                              after='NAXIS'+`hdu.header.get('NAXIS')`)
-            hdu._header.update('BZERO',32768,after='BSCALE')
+        and _is_pseudo_unsigned(hdu.data.dtype):
+            hdu._header.update(
+                'BSCALE', 1,
+                after='NAXIS'+`hdu.header.get('NAXIS')`)
+            hdu._header.update(
+                'BZERO', _unsigned_zero(hdu.data.dtype),
+                after='BSCALE')
+
+        # Handle checksum
+        if hdu._header.has_key('CHECKSUM'):
+            del hdu.header['CHECKSUM']
+
+        if hdu._header.has_key('DATASUM'):
+            del hdu.header['DATASUM']
+
+        if checksum == 'datasum':
+            hdu.add_datasum()
+        elif checksum == 'test':
+            hdu.add_datasum(hdu._datasum_comment)
+            hdu.add_checksum(hdu._checksum_comment,True)
+        elif checksum:
+            hdu.add_checksum()
 
         blocks = repr(hdu._header.ascard) + _pad('END')
         blocks = blocks + _padLength(len(blocks))*' '
 
         if len(blocks)%_blockLen != 0:
             raise IOError
-        self.__file.flush()
 
-        if self.__file.mode == 'ab+':
-            self.__file.seek(0,2)
+        if hasattr(self.__file, 'flush'):
+            self.__file.flush()
 
-        loc = self.__file.tell()
+        try:
+           if self.__file.mode == 'ab+':
+               self.__file.seek(0,2)
+        except AttributeError:
+           pass
+
+        try:
+            loc = self.__file.tell()
+        except (AttributeError, IOError):
+            loc = 0
+
         self.__file.write(blocks)
 
         # flush, to make sure the content is written
-        self.__file.flush()
+        if hasattr(self.__file, 'flush'):
+            self.__file.flush()
 
-        # If data is unsigned integer 16 remove the BSCALE/BZERO cards
-
+        # If data is unsigned integer 16, 32 or 64, remove the
+        # BSCALE/BZERO cards
         if 'data' in dir(hdu) and hdu.data is not None \
         and not isinstance(hdu, _NonstandardHDU) \
         and not isinstance(hdu, _NonstandardExtHDU) \
-        and hdu.data.dtype == np.uint16:
+        and _is_pseudo_unsigned(hdu.data.dtype):
             del hdu._header['BSCALE']
             del hdu._header['BZERO']
 
         return loc
 
     def writeHDUdata(self, hdu):
-        """Write FITS HDU data part."""
-        byteswapped = False
+        """
+        Write FITS HDU data part.
+        """
+        if hasattr(self.__file, 'flush'):
+            self.__file.flush()
 
-        self.__file.flush()
-        loc = self.__file.tell()
+        try:
+            loc = self.__file.tell()
+        except (AttributeError, IOError):
+            loc = 0
+
         _size = 0
         if isinstance(hdu, _NonstandardHDU) and hdu.data is not None:
             self.__file.write(hdu.data)
@@ -7556,25 +9294,47 @@ class _File:
             # return both the location and the size of the data area
             return loc, _size+_padLength(_size)
         elif hdu.data is not None:
-
-            # deal with unsigned integer 16 data
-            if hdu.data.dtype == np.uint16:
-                output = np.array(hdu.data-32768,dtype='i2')
-
-                if output.dtype.str[0] != '>':
-                    output = output.byteswap(True)
-                    output.dtype = output.dtype.newbyteorder('>')
+            # Based on the system type, determine the byteorders that
+            # would need to be swapped to get to big-endian output
+            if sys.byteorder == 'little':
+                swap_types = ('<', '=')
+            else:
+                swap_types = ('<',)
 
             # if image, need to deal with byte order
-            elif isinstance(hdu, _ImageBaseHDU):
-
-#               if the data is littleendian
-                if hdu.data.dtype.str[0] != '>':
-                    byteswapped = True
-                    output = hdu.data.byteswap(True)
-                    output.dtype = output.dtype.newbyteorder('>')
+            if isinstance(hdu, _ImageBaseHDU):
+                # deal with unsigned integer 16, 32 and 64 data
+                if _is_pseudo_unsigned(hdu.data.dtype):
+                    # Convert the unsigned array to signed
+                    output = np.array(
+                        hdu.data - _unsigned_zero(hdu.data.dtype),
+                        dtype='>i%d' % hdu.data.dtype.itemsize)
+                    should_swap = False
                 else:
                     output = hdu.data
+
+                    if isinstance(hdu.data, GroupData):
+                        byteorder = \
+                            output.dtype.fields[hdu.data.dtype.names[0]][0].str[0]
+                    else:
+                        byteorder = output.dtype.str[0]
+                    should_swap = (byteorder in swap_types)
+
+                if should_swap:
+                    # If we need to do byteswapping, do it in chunks
+                    # so the original array is not touched
+                    # output_dtype = output.dtype.newbyteorder('>')
+                    # for chunk in _chunk_array(output):
+                    #     chunk = np.array(chunk, dtype=output_dtype, copy=True)
+                    #     _tofile(output, self.__file)
+
+                    output.byteswap(True)
+                    try:
+                        _tofile(output, self.__file)
+                    finally:
+                        output.byteswap(True)
+                else:
+                    _tofile(output, self.__file)
 
             # Binary table byteswap
             elif isinstance(hdu, BinTableHDU):
@@ -7583,64 +9343,58 @@ class _File:
                 else:
                     output = hdu.data
 
-                for i in range(output._nfields):
-                    coldata = output.field(i)
-                    
-                    if not isinstance(coldata, chararray.chararray):
+                swapped = []
+                try:
+                    for i in range(output._nfields):
+                        coldata = output.field(i)
+                        if not isinstance(coldata, chararray.chararray):
                             # only swap unswapped
                             # deal with var length table
-                        if isinstance(coldata, _VLF):
-                            k = 0
-                            for j in coldata:
-                                if not isinstance(j, chararray.chararray):
-                                    #if hdu.data.field(i).itemsize > 1:
-                                        #if hdu.data.field(i).dtype.str[0] != '>':
-                                            #hdu.data.field(i)[:] = hdu.data.field(i).byteswap()
-                                    if j.itemsize > 1:
-                                        if j.dtype.str[0] != '>':
-                                            j[:] = j.byteswap()
-                                            j.dtype = j.dtype.newbyteorder('>')
+                            if isinstance(coldata, _VLF):
+                                k = 0
+                                for j in coldata:
+                                    if (not isinstance(j, chararray.chararray) and
+                                        j.itemsize > 1 and
+                                        j.dtype.str[0] in swap_types):
+                                        j.byteswap(True)
+                                        swapped.append(j)
+                                    if (rec.recarray.field(output,i)[k:k+1].dtype.str[0] in
+                                        swap_types):
+                                        rec.recarray.field(output,i)[k:k+1].byteswap(True)
+                                        swapped.append(rec.recarray.field(output,i)[k:k+1])
+                                    k = k + 1
+                            else:
+                                if (coldata.itemsize > 1 and
+                                    coldata.dtype.str[0] in swap_types):
+                                    rec.recarray.field(output, i).byteswap(True)
+                                    swapped.append(rec.recarray.field(output, i))
 
-                                if rec.recarray.field(output,i)[k:k+1].dtype.str[0] != '>':
-                                    rec.recarray.field(output,i)[k:k+1].byteswap(True)
-                                k = k + 1
-                        else:
-                            if coldata.itemsize > 1:
-                                if output.field(i).dtype.str[0] != '>':
-                                    output.field(i)[:] = output.field(i).byteswap() 
+                    _tofile(output, self.__file)
 
-                # In case the FITS_rec was created in a LittleEndian machine
-                output.dtype = output.dtype.newbyteorder('>')
+                    # write out the heap of variable length array columns
+                    # this has to be done after the "regular" data is written
+                    # (above)
+                    nbytes = output._gap
+                    self.__file.write(output._gap*'\0')
+
+                    for i in range(output._nfields):
+                        if isinstance(output._coldefs._recformats[i], _FormatP):
+                            for j in range(len(output.field(i))):
+                                coldata = output.field(i)[j]
+                                if len(coldata) > 0:
+                                    nbytes= nbytes + coldata.nbytes
+                                    coldata.tofile(self.__file)
+
+                    output._heapsize = nbytes - output._gap
+                    _size = _size + nbytes
+                finally:
+                    for obj in swapped:
+                        obj.byteswap(True)
             else:
                 output = hdu.data
+                _tofile(output, self.__file)
 
-            _tofile(output, self.__file)
-            _size = output.size * output.itemsize
-
-
-            # if the image data was byteswapped in this method return it to
-            # it's original little-endian order
-            if (byteswapped == True):
-                output.byteswap(True)
-                output.dtype = output.dtype.newbyteorder('<')
-
-
-            # write out the heap of variable length array columns
-            # this has to be done after the "regular" data is written (above)
-            _where = self.__file.tell()
-            if isinstance(hdu, BinTableHDU):
-                self.__file.write(output._gap*'\0')
-
-                for i in range(output._nfields):
-                    if isinstance(output._coldefs._recformats[i], _FormatP):
-                        for j in range(len(output.field(i))):
-                            coldata = output.field(i)[j]
-                            if len(coldata) > 0:
-                                coldata.tofile(self.__file)
-
-                _shift = self.__file.tell() - _where
-                output._heapsize = _shift - output._gap
-                _size = _size + _shift
+            _size = _size + output.size * output.itemsize
 
             # pad the FITS data block
             if _size > 0:
@@ -7650,32 +9404,48 @@ class _File:
                     self.__file.write(_padLength(_size)*'\0')
 
         # flush, to make sure the content is written
-        self.__file.flush()
+        if hasattr(self.__file, 'flush'):
+            self.__file.flush()
 
         # return both the location and the size of the data area
         return loc, _size+_padLength(_size)
 
     def close(self):
-        """Close the 'physical' FITS file."""
-
-        self.__file.close()
+        """
+        Close the 'physical' FITS file.
+        """
+        if hasattr(self.__file, 'close'):
+            self.__file.close()
 
         if hasattr(self, 'tfile'):
             del self.tfile
 
+    # Support the 'with' statement
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
 
 class HDUList(list, _Verify):
-    """HDU list class.  This is the top-level FITS object.  When a FITS
-       file is opened, a HDUList object is returned.
+    """
+    HDU list class.  This is the top-level FITS object.  When a FITS
+    file is opened, a `HDUList` object is returned.
     """
 
     def __init__(self, hdus=[], file=None):
-        """Construct a HDUList object.
+        """
+        Construct a `HDUList` object.
 
-           hdus: Input, can be a list of HDU's or a single HDU. Default = None,
-                 i.e. an empty HDUList.
-           file: The opened physical file associated with the HDUList.
-                 Default = None.
+        Parameters
+        ----------
+        hdus : sequence of HDU objects or single HDU, optional
+            The HDU object(s) to comprise the `HDUList`.  Should be
+            instances of `_AllHDU`.
+
+        file : file object, optional
+            The opened physical file associated with the `HDUList`.
         """
         self.__file = file
         if hdus is None:
@@ -7685,22 +9455,26 @@ class HDUList(list, _Verify):
         if isinstance(hdus, _ValidHDU):
             hdus = [hdus]
         elif not isinstance(hdus, (HDUList, list)):
-            raise "Invalid input for HDUList."
+            raise TypeError, "Invalid input for HDUList."
 
         for hdu in hdus:
             if not isinstance(hdu, _AllHDU):
-                raise "Element %d in the HDUList input is not an HDU." % hdus.index(hdu)
+                raise TypeError(
+                      "Element %d in the HDUList input is not an HDU."
+                      % hdus.index(hdu))
         list.__init__(self, hdus)
 
     def __iter__(self):
         return [self[i] for i in range(len(self))].__iter__()
 
     def __getitem__(self, key, classExtensions={}):
-        """Get an HDU from the HDUList, indexed by number or name."""
+        """
+        Get an HDU from the `HDUList`, indexed by number or name.
+        """
         key = self.index_of(key)
         _item = super(HDUList, self).__getitem__(key)
         if isinstance(_item, _TempHDU):
-            super(HDUList, self).__setitem__(key, 
+            super(HDUList, self).__setitem__(key,
                                              _item.setupHDU(classExtensions))
 
         return super(HDUList, self).__getitem__(key)
@@ -7711,7 +9485,9 @@ class HDUList(list, _Verify):
         return result
 
     def __setitem__(self, key, hdu):
-        """Set an HDU to the HDUList, indexed by number or name."""
+        """
+        Set an HDU to the `HDUList`, indexed by number or name.
+        """
         _key = self.index_of(key)
         if isinstance(hdu, (slice, list)):
             if isinstance(_key, (int,np.integer)):
@@ -7731,28 +9507,31 @@ class HDUList(list, _Verify):
         self._truncate = 0
 
     def __delitem__(self, key):
-        """Delete an HDU from the HDUList, indexed by number or name."""
+        """
+        Delete an HDU from the `HDUList`, indexed by number or name.
+        """
         key = self.index_of(key)
 
         endIndex = len(self)-1
         super(HDUList, self).__delitem__(key)
-       
+
         if ( key == endIndex or key == -1 and not self._resize):
             self._truncate = 1
         else:
-            self._truncate = 0   
+            self._truncate = 0
             self._resize = 1
 
     def __delslice__(self, i, j):
-        """Delete a slice of HDUs from the HDUList, indexed by number only."""
-
+        """
+        Delete a slice of HDUs from the `HDUList`, indexed by number only.
+        """
         endIndex = len(self)
         super(HDUList, self).__delslice__(i, j)
 
         if ( j == endIndex or j == sys.maxint and not self._resize):
             self._truncate = 1
         else:
-            self._truncate = 0   
+            self._truncate = 0
             self._resize = 1
 
 
@@ -7782,23 +9561,167 @@ class HDUList(list, _Verify):
                     _err.append(_result)
         return _err
 
-    def append(self, hdu):
-        """Append a new HDU to the HDUList."""
+    def insert(self, index, hdu, classExtensions={}):
+        """
+        Insert an HDU into the `HDUList` at the given `index`.
+
+        Parameters
+        ----------
+        index : int
+            Index before which to insert the new HDU.
+
+        hdu : _AllHDU instance
+            The HDU object to insert
+
+        classExtensions : dict
+            A dictionary that maps pyfits classes to extensions of those
+            classes.  When present in the dictionary, the extension class
+            will be constructed in place of the pyfits class.
+        """
         if isinstance(hdu, _AllHDU):
+            num_hdus = len(self)
+
+            if index == 0 or num_hdus == 0:
+                if num_hdus != 0:
+                    # We are inserting a new Primary HDU so we need to 
+                    # make the current Primary HDU into an extension HDU.
+                    if isinstance(self[0], GroupsHDU):
+                       raise ValueError, \
+                             "The current Primary HDU is a GroupsHDU.  " + \
+                             "It can't be made into an extension HDU," + \
+                             " so you can't insert another HDU in front of it."
+
+                    if classExtensions.has_key(ImageHDU):
+                        hdu1 = classExtensions[ImageHDU](self[0].data,
+                                                         self[0].header)
+                    else:
+                        hdu1= ImageHDU(self[0].data, self[0].header)
+
+                    # Insert it into position 1, then delete HDU at position 0.
+                    super(HDUList, self).insert(1,hdu1)
+                    super(HDUList, self).__delitem__(0)
+
+                if not isinstance(hdu, PrimaryHDU):
+                    # You passed in an Extension HDU but we need a Primary HDU.
+                    # If you provided an ImageHDU then we can convert it to
+                    # a primary HDU and use that.
+                    if isinstance(hdu, ImageHDU):
+                        if classExtensions.has_key(PrimaryHDU):
+                            hdu = classExtensions[PrimaryHDU](hdu.data,
+                                                              hdu.header)
+                        else:
+                            hdu = PrimaryHDU(hdu.data, hdu.header)
+                    else:
+                        # You didn't provide an ImageHDU so we create a
+                        # simple Primary HDU and append that first before
+                        # we append the new Extension HDU.
+                        if classExtensions.has_key(PrimaryHDU):
+                            phdu = classExtensions[PrimaryHDU]()
+                        else:
+                            phdu = PrimaryHDU()
+
+                        super(HDUList, self).insert(0,phdu)
+                        index = 1
+            else:
+                if isinstance(hdu, GroupsHDU):
+                   raise ValueError, \
+                         "A GroupsHDU must be inserted as a Primary HDU"
+
+                if isinstance(hdu, PrimaryHDU):
+                    # You passed a Primary HDU but we need an Extension HDU
+                    # so create an Extension HDU from the input Primary HDU.
+                    if classExtensions.has_key(ImageHDU):
+                        hdu = classExtensions[ImageHDU](hdu.data,hdu.header)
+                    else:
+                        hdu = ImageHDU(hdu.data, hdu.header)
+
+            super(HDUList, self).insert(index,hdu)
+            self._resize = 1
+            self._truncate = 0
+        else:
+            raise ValueError, "%s is not an HDU." % hdu
+
+        # make sure the EXTEND keyword is in primary HDU if there is extension
+        if len(self) > 1:
+            self.update_extend()
+
+    def append(self, hdu, classExtensions={}):
+        """
+        Append a new HDU to the `HDUList`.
+
+        Parameters
+        ----------
+        hdu : instance of _AllHDU
+            HDU to add to the `HDUList`.
+
+        classExtensions : dict
+            A dictionary that maps pyfits classes to extensions of those
+            classes.  When present in the dictionary, the extension class
+            will be constructed in place of the pyfits class.
+        """
+        if isinstance(hdu, _AllHDU):
+            if not isinstance(hdu, _TempHDU):
+                if len(self) > 0:
+                    if isinstance(hdu, GroupsHDU):
+                       raise ValueError, \
+                             "Can't append a GroupsHDU to a non-empty HDUList"
+
+                    if isinstance(hdu, PrimaryHDU):
+                        # You passed a Primary HDU but we need an Extension HDU
+                        # so create an Extension HDU from the input Primary HDU.
+                        if classExtensions.has_key(ImageHDU):
+                            hdu = classExtensions[ImageHDU](hdu.data,hdu.header)
+                        else:
+                            hdu = ImageHDU(hdu.data, hdu.header)
+                else:
+                    if not isinstance(hdu, PrimaryHDU):
+                        # You passed in an Extension HDU but we need a Primary
+                        # HDU.
+                        # If you provided an ImageHDU then we can convert it to
+                        # a primary HDU and use that.
+                        if isinstance(hdu, ImageHDU):
+                            if classExtensions.has_key(PrimaryHDU):
+                                hdu = classExtensions[PrimaryHDU](hdu.data,
+                                                                  hdu.header)
+                            else:
+                                hdu = PrimaryHDU(hdu.data, hdu.header)
+                        else:
+                            # You didn't provide an ImageHDU so we create a
+                            # simple Primary HDU and append that first before
+                            # we append the new Extension HDU.
+                            if classExtensions.has_key(PrimaryHDU):
+                                phdu = classExtensions[PrimaryHDU]()
+                            else:
+                                phdu = PrimaryHDU()
+
+                            super(HDUList, self).append(phdu)
+
             super(HDUList, self).append(hdu)
             hdu._new = 1
             self._resize = 1
             self._truncate = 0
         else:
-            raise "HDUList can only append an HDU"
+            raise ValueError, "HDUList can only append an HDU"
 
         # make sure the EXTEND keyword is in primary HDU if there is extension
         if len(self) > 1:
             self.update_extend()
 
     def index_of(self, key):
-        """Get the index of an HDU from the HDUList.  The key can be an
-           integer, a string, or a tuple of (string, integer).
+        """
+        Get the index of an HDU from the `HDUList`.
+
+        Parameters
+        ----------
+        key : int, str or tuple of (string, int)
+           The key identifying the HDU.  If `key` is a tuple, it is of
+           the form (`key`, `ver`) where `ver` is an ``EXTVER`` value
+           that must match the HDU being searched for.
+
+        Returns
+        -------
+        index : int
+           The index of the HDU in the `HDUList`.
         """
 
         if isinstance(key, (int, np.integer,slice)):
@@ -7842,14 +9765,17 @@ class HDUList(list, _Verify):
             return found
 
     def readall(self):
-        """Read data of all HDU's into memory."""
+        """
+        Read data of all HDUs into memory.
+        """
         for i in range(len(self)):
             if self[i].data is not None:
                 continue
 
     def update_tbhdu(self):
-        """Update all table HDU's for scaled fields."""
-
+        """
+        Update all table HDU's for scaled fields.
+        """
         for hdu in self:
             if 'data' in dir(hdu) and not isinstance(hdu, CompImageHDU):
                 if isinstance(hdu, (GroupsHDU, _TableBaseHDU)) and hdu.data is not None:
@@ -7875,16 +9801,26 @@ class HDUList(list, _Verify):
                             hdu.header['TFORM'+`i+1`] = key[:key.find('(')+1] + `hdu.data.field(i)._max` + ')'
 
 
-    def flush(self, output_verify='exception', verbose=0, classExtensions={}):
-        """Force a write of the HDUList back to the file (for append and
-           update modes only).
+    def flush(self, output_verify='exception', verbose=False, classExtensions={}):
+        """
+        Force a write of the `HDUList` back to the file (for append and
+        update modes only).
 
-           output_verify:  output verification option, default = 'exception'.
-           verbose: print out verbose messages? default = 0.
-           classExtensions: A dictionary that maps pyfits classes to extensions 
-                            of those classes.  When present in the dictionary, 
-                            the extension class will be constructed in place of 
-                            the pyfits class. 
+        Parameters
+        ----------
+        output_verify : str
+            Output verification option.  Must be one of ``"fix"``,
+            ``"silentfix"``, ``"ignore"``, ``"warn"``, or
+            ``"exception"``.  See :ref:`verify` for more info.
+
+        verbose : bool
+            When `True`, print verbose messages
+
+        classExtensions : dict
+            A dictionary that maps pyfits classes to extensions of
+            those classes.  When present in the dictionary, the
+            extension class will be constructed in place of the pyfits
+            class.
         """
 
         # Get the name of the current thread and determine if this is a single treaded application
@@ -7897,26 +9833,32 @@ class HDUList(list, _Verify):
             def New_SIGINT(*args):
                 warnings.warn("KeyboardInterrupt ignored until flush is complete!")
                 keyboardInterruptSent = True
-        
+
             # Install new handler
             old_handler = signal.signal(signal.SIGINT,New_SIGINT)
 
-        if self.__file.mode not in ('append', 'update'):
+        if self.__file.mode not in ('append', 'update', 'ostream'):
             warnings.warn("flush for '%s' mode is not supported." % self.__file.mode)
             return
 
         self.update_tbhdu()
         self.verify(option=output_verify)
 
-        if self.__file.mode == 'append':
+        if self.__file.mode in ('append', 'ostream'):
             for hdu in self:
                 if (verbose):
                     try: _extver = `hdu.header['extver']`
                     except: _extver = ''
 
                 # only append HDU's which are "new"
-                if hdu._new:
-                    self.__file.writeHDU(hdu)
+                if not hasattr(hdu, '_new') or hdu._new:
+                    # only output the checksum if flagged to do so
+                    if hasattr(hdu, '_output_checksum'):
+                        checksum = hdu._output_checksum
+                    else:
+                        checksum = False
+
+                    self.__file.writeHDU(hdu, checksum=checksum)
                     if (verbose):
                         print "append HDU", hdu.name, _extver
                     hdu._new = 0
@@ -7955,11 +9897,11 @@ class HDUList(list, _Verify):
 
                 if self._truncate:
                    try:
-                       self.__file.getfile().truncate(hdu._datLoc+hdu._datSpan) 
+                       self.__file.getfile().truncate(hdu._datLoc+hdu._datSpan)
                    except IOError:
                        self._resize = 1
                    self._truncate = 0
- 
+
             # if the HDUList is resized, need to write out the entire contents
             # of the hdulist to the file.
             if self._resize or isinstance(self.__file.getfile(), gzip.GzipFile):
@@ -7980,12 +9922,19 @@ class HDUList(list, _Verify):
                     else:
                         newFile = _name
 
-                    _hduList = open(newFile, mode="append", 
+                    _hduList = open(newFile, mode="append",
                                     classExtensions=classExtensions)
                     if (verbose): print "open a temp file", _name
 
                     for hdu in self:
-                        (hdu._hdrLoc, hdu._datLoc, hdu._datSpan) = _hduList.__file.writeHDU(hdu)
+                        # only output the checksum if flagged to do so
+                        if hasattr(hdu, '_output_checksum'):
+                            checksum = hdu._output_checksum
+                        else:
+                            checksum = False
+
+                        (hdu._hdrLoc, hdu._datLoc, hdu._datSpan) = \
+                               _hduList.__file.writeHDU(hdu, checksum=checksum)
                     _hduList.__file.close()
                     self.__file.close()
                     os.remove(self.__file.name)
@@ -8000,7 +9949,7 @@ class HDUList(list, _Verify):
                         oldFile = oldName
 
                     if classExtensions.has_key(_File):
-                        ffo = classExtensions[_File](oldFile, mode="update", 
+                        ffo = classExtensions[_File](oldFile, mode="update",
                                                        memmap=oldMemmap)
                     else:
                         ffo = _File(oldFile, mode="update", memmap=oldMemmap)
@@ -8012,18 +9961,29 @@ class HDUList(list, _Verify):
                     # The underlying file is not a file object, it is a file
                     # like object.  We can't write out to a file, we must
                     # update the file like object in place.  To do this,
-                    # we write out to a temporary file, then delete the 
-                    # contents in our file like object, then write the 
+                    # we write out to a temporary file, then delete the
+                    # contents in our file like object, then write the
                     # contents of the temporary file to the now empty file
                     # like object.
                     #
                     self.writeto(_name)
                     _hduList = open(_name)
                     ffo = self.__file
-                    ffo.getfile().truncate(0)
+
+                    try:
+                        ffo.getfile().truncate(0)
+                    except AttributeError:
+                        pass
 
                     for hdu in _hduList:
-                        (hdu._hdrLoc, hdu._datLoc, hdu._datSpan) = ffo.writeHDU(hdu)
+                        # only output the checksum if flagged to do so
+                        if hasattr(hdu, '_output_checksum'):
+                            checksum = hdu._output_checksum
+                        else:
+                            checksum = False
+
+                        (hdu._hdrLoc, hdu._datLoc, hdu._datSpan) = \
+                                            ffo.writeHDU(hdu, checksum=checksum)
 
                     # Close the temporary file and delete it.
 
@@ -8046,8 +10006,14 @@ class HDUList(list, _Verify):
                         try: _extver = `hdu.header['extver']`
                         except: _extver = ''
                     if hdu.header._mod or hdu.header.ascard._mod:
+                        # only output the checksum if flagged to do so
+                        if hasattr(hdu, '_output_checksum'):
+                            checksum = hdu._output_checksum
+                        else:
+                            checksum = False
+
                         hdu._file.seek(hdu._hdrLoc)
-                        self.__file.writeHDUheader(hdu)
+                        self.__file.writeHDUheader(hdu,checksum=checksum)
                         if (verbose):
                             print "update header in place: Name =", hdu.name, _extver
                     if 'data' in dir(hdu):
@@ -8064,17 +10030,20 @@ class HDUList(list, _Verify):
                 for hdu in self:
                     hdu.header._mod = 0
                     hdu.header.ascard._mod = 0
-        if singleThread:        
+        if singleThread:
             if keyboardInterruptSent:
                 raise KeyboardInterrupt
-            
-            signal.signal(signal.SIGINT,old_handler)
+
+            if old_handler != None:
+                signal.signal(signal.SIGINT,old_handler)
+            else:
+                signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     def update_extend(self):
-        """Make sure if the primary header needs the keyword EXTEND or if
-           it has the proper value.
         """
-
+        Make sure that if the primary header needs the keyword
+        ``EXTEND`` that it has it and it is correct.
+        """
         hdr = self[0].header
         if hdr.has_key('extend'):
             if (hdr['extend'] == False):
@@ -8087,18 +10056,33 @@ class HDUList(list, _Verify):
                 hdr.update('extend', True, after='naxis'+`n`)
 
     def writeto(self, name, output_verify='exception', clobber=False,
-                classExtensions={}):
-        """Write the HDUList to a new file.
+                classExtensions={}, checksum=False):
+        """
+        Write the `HDUList` to a new file.
 
-           name:  output FITS file name to be written to, file object, or
-                  file like object 
-                  (if opened must be opened for append (ab+)).
-           output_verify:  output verification option, default = 'exception'.
-           clobber:  Overwrite the output file if exists, default = False.
-           classExtensions: A dictionary that maps pyfits classes to extensions 
-                            of those classes.  When present in the dictionary, 
-                            the extension class will be constructed in place of 
-                            the pyfits class. 
+        Parameters
+        ----------
+        name : file path, file object or file-like object
+            File to write to.  If a file object, must be opened for
+            append (ab+).
+
+        output_verify : str
+            Output verification option.  Must be one of ``"fix"``,
+            ``"silentfix"``, ``"ignore"``, ``"warn"``, or
+            ``"exception"``.  See :ref:`verify` for more info.
+
+        clobber : bool
+            When `True`, overwrite the output file if exists.
+
+        classExtensions : dict
+            A dictionary that maps pyfits classes to extensions of
+            those classes.  When present in the dictionary, the
+            extension class will be constructed in place of the pyfits
+            class.
+
+        checksum : bool
+            When `True` adds both ``DATASUM`` and ``CHECKSUM`` cards
+            to the headers of all HDU's written to the file.
         """
 
         if (len(self) == 0):
@@ -8114,19 +10098,32 @@ class HDUList(list, _Verify):
 
         # check if the file object is closed
         closed = True
+        fileMode = 'ab+'
 
         if isinstance(name, file):
             closed = name.closed
             filename = name.name
+
+            if not closed:
+                fileMode = name.mode
+
         elif isinstance(name, gzip.GzipFile):
             if name.fileobj != None:
                 closed = name.fileobj.closed
             filename = name.filename
-        elif isinstance(name, types.StringType):
+
+            if not closed:
+                fileMode = name.fileobj.mode
+
+        elif isinstance(name, types.StringType) or \
+             isinstance(name, types.UnicodeType):
             filename = name
         else:
             if hasattr(name, 'closed'):
                 closed = name.closed
+
+            if hasattr(name, 'mode'):
+                fileMode = name.mode
 
             if hasattr(name, 'name'):
                 filename = name.name
@@ -8138,7 +10135,8 @@ class HDUList(list, _Verify):
                 filename = str(type(name))
 
         # check if the output file already exists
-        if (isinstance(name,types.StringType) or isinstance(name,file) or
+        if (isinstance(name,types.StringType) or
+            isinstance(name,types.UnicodeType) or isinstance(name,file) or
             isinstance(name,gzip.GzipFile)):
             if (os.path.exists(filename) and os.path.getsize(filename) != 0):
                 if clobber:
@@ -8161,29 +10159,41 @@ class HDUList(list, _Verify):
         if len(self) > 1:
             self.update_extend()
 
-        hduList = open(name, mode="append", classExtensions=classExtensions)
+        for key in _python_mode.keys():
+            if _python_mode[key] == fileMode:
+                mode = key
+                break
+
+        hduList = open(name, mode=mode, classExtensions=classExtensions)
+
         for hdu in self:
-            hduList.__file.writeHDU(hdu)
+            hduList.__file.writeHDU(hdu, checksum)
         hduList.close(output_verify=output_verify,closed=closed)
 
 
-    def close(self, output_verify='exception', verbose=0, closed=1):
-        """Close the associated FITS file and memmap object, if any.
+    def close(self, output_verify='exception', verbose=False, closed=True):
+        """
+        Close the associated FITS file and memmap object, if any.
 
-           output_verify:  output verification option, default = 'exception'.
-           verbose: print out verbose messages? default = 0.
-           closed:  flag to indicate if the underlying file object should
-                    be closed, default = 1 (close it) 
+        Parameters
+        ----------
+        output_verify : str
+            Output verification option.  Must be one of ``"fix"``,
+            ``"silentfix"``, ``"ignore"``, ``"warn"``, or
+            ``"exception"``.  See :ref:`verify` for more info.
 
-           This simply calls the close method of the _File class.  It has this
-           two-tier calls because _File has ts own private attribute __file.
+        verbose : bool
+            When `True`, print out verbose messages.
+
+        closed : bool
+            When `True`, close the underlying file object.
         """
 
         if self.__file != None:
             if self.__file.mode in ['append', 'update']:
                 self.flush(output_verify=output_verify, verbose=verbose)
 
-            if closed:
+            if closed and hasattr(self.__file, 'close'):
                 self.__file.close()
 
         # close the memmap object, it is designed to use an independent
@@ -8195,7 +10205,12 @@ class HDUList(list, _Verify):
 #            pass
 
     def info(self):
-        """Summarize the info of the HDU's in this HDUList."""
+        """
+        Summarize the info of the HDUs in this `HDUList`.
+
+        Note that this function prints its results to the console---it
+        does not return a value.
+        """
         if self.__file is None:
             _name = '(No file associated with this HDUList)'
         else:
@@ -8208,53 +10223,160 @@ class HDUList(list, _Verify):
         results = results[:-1]
         print results
 
+    def filename(self):
+        """
+        Return the file name associated with the HDUList object if one exists.
+        Otherwise returns None.
 
-def open(name, mode="copyonwrite", memmap=0, classExtensions={}, uint16=0):
-    """Factory function to open a FITS file and return an HDUList object.
+        Returns
+        -------
+        filename : a string containing the file name associated with the
+                   HDUList object if an association exists.  Otherwise returns
+                   None.
+        """
+        if self.__file is not None:
+           if hasattr(self.__file, 'name'):
+              return self.__file.name
+        return None
 
-       name: Name of the FITS file, file object, or file like object to be
-             opened 
-             (if opened, mode must match the mode the file was opened with,
-              copyonwrite (rb), readonly (rb), update (rb+), or append (ab+)).
-       mode: Open mode, 'readonly' (default), 'update', or 'append'.
-       memmap: Is memmory mapping to be used? default=0.
-       classExtensions: A dictionary that maps pyfits classes to extensions of
-                        those classes.  When present in the dictionary, the
-                        extension class will be constructed in place of the
-                        pyfits class. 
-       uint16: Interpret int16 data with BZERO = 32768 and BSCALE = 1 as
-               uint16 data? default=0 (False).
+    # Support the 'with' statement
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
+
+def open(name, mode="copyonwrite", memmap=False, classExtensions={}, **parms):
     """
+    Factory function to open a FITS file and return an `HDUList` object.
 
+    Parameters
+    ----------
+    name : file path, file object or file-like object
+        File to be
+        opened.
+
+    mode : str
+        Open mode, 'copyonwrite' (default), 'readonly', 'update', 
+        'append', or 'ostream'.
+
+        If `name` is a file object that is already opened, `mode` must
+        match the mode the file was opened with, copyonwrite (rb),
+        readonly (rb), update (rb+), append (ab+), ostream (w)).
+
+    memmap : bool
+        Is memory mapping to be used?
+
+    classExtensions : dict
+        A dictionary that maps pyfits classes to extensions of those
+        classes.  When present in the dictionary, the extension class
+        will be constructed in place of the pyfits class.
+
+    parms : dict
+        optional keyword arguments, possible values are:
+
+        - **uint** : bool
+
+            Interpret signed integer data where ``BZERO`` is the
+            central value and ``BSCALE == 1`` as unsigned integer
+            data.  For example, `int16` data with ``BZERO = 32768``
+            and ``BSCALE = 1`` would be treated as `uint16` data.
+
+            Note, for backward compatibility, the kwarg **uint16** may
+            be used instead.  The kwarg was renamed when support was
+            added for integers of any size.
+
+        - **ignore_missing_end** : bool
+
+            Do not issue an exception when opening a file that is
+            missing an ``END`` card in the last header.
+
+        - **checksum** : bool
+
+            If `True`, verifies that both ``DATASUM`` and
+            ``CHECKSUM`` card values (when present in the HDU header)
+            match the header and data of all HDU's in the file.
+
+    Returns
+    -------
+        hdulist : an HDUList object
+            `HDUList` containing all of the header data units in the
+            file.
+    """
     # instantiate a FITS file object (ffo)
 
     if classExtensions.has_key(_File):
-        ffo = classExtensions[_File](name, mode=mode, memmap=memmap, 
-                                     uint16=uint16)
+        ffo = classExtensions[_File](name, mode=mode, memmap=memmap, **parms)
     else:
-        ffo = _File(name, mode=mode, memmap=memmap, uint16=uint16)
+        ffo = _File(name, mode=mode, memmap=memmap, **parms)
 
     if classExtensions.has_key(HDUList):
         hduList = classExtensions[HDUList](file=ffo)
     else:
         hduList = HDUList(file=ffo)
 
-    # read all HDU's
-    while 1:
-        try:
-            hduList.append(ffo._readHDU())
-        except EOFError:
-            break
-        # check in the case there is extra space after the last HDU or corrupted HDU
-        except ValueError:
-            warnings.warn('Warning:  Required keywords missing when trying to read HDU #%d.\n    There may be extra bytes after the last HDU or the file is corrupted.' % (len(hduList)+1))
-            break
-        except IOError, e:
-            if isinstance(ffo.getfile(), gzip.GzipFile) and \
-               string.find(str(e),'on write-only GzipFile object'):
+    if mode != 'ostream':
+        # read all HDU's
+        while 1:
+            try:
+                hduList.append(ffo._readHDU(), classExtensions=classExtensions)
+            except EOFError:
                 break
+            # check in the case there is extra space after the last HDU or
+            # corrupted HDU
+            except ValueError, e:
+                warnings.warn('Warning:  Required keywords missing when trying to read HDU #%d.\n          %s\n          There may be extra bytes after the last HDU or the file is corrupted.' % (len(hduList),e))
+                break
+            except IOError, e:
+                if isinstance(ffo.getfile(), gzip.GzipFile) and \
+                   string.find(str(e),'on write-only GzipFile object'):
+                    break
+                else:
+                    raise e
+
+        # If we're trying to read only and no header units were found,
+        # raise and exception
+        if mode == 'readonly' and len(hduList) == 0:
+            raise IOError("Empty FITS file")
+
+        # For each HDU, verify the checksum/datasum value if the cards exist in
+        # the header and we are opening with checksum=True.  Always remove the
+        # checksum/datasum cards from the header.
+        for i in range(len(hduList)):
+            hdu = hduList.__getitem__(i, classExtensions)
+
+            if hdu._header.has_key('CHECKSUM'):
+                 hdu._checksum = hdu._header['CHECKSUM']
+                 hdu._checksum_comment = \
+                                hdu._header.ascardlist()['CHECKSUM'].comment
+
+                 if 'checksum' in parms and parms['checksum'] and \
+                 not hdu.verify_checksum():
+                     warnings.warn('Warning:  Checksum verification failed for '
+                                   'HDU #%d.\n' % i)
+
+                 del hdu.header['CHECKSUM']
             else:
-                raise e
+                 hdu._checksum = None
+                 hdu._checksum_comment = None
+
+            if hdu._header.has_key('DATASUM'):
+                 hdu._datasum = hdu.header['DATASUM']
+                 hdu._datasum_comment = \
+                                   hdu.header.ascardlist()['DATASUM'].comment
+
+                 if 'checksum' in parms and parms['checksum'] and \
+                 not hdu.verify_datasum():
+                     warnings.warn('Warning:  Datasum verification failed for '
+                                   'HDU #%d.\n' % (len(hduList)))
+
+                 del hdu.header['DATASUM']
+            else:
+                 hdu._checksum = None
+                 hdu._checksum_comment = None
+                 hdu._datasum = None
+                 hdu._datasum_comment = None
 
     # initialize/reset attributes to be used in "update/append" mode
     # CardList needs its own _mod attribute since it has methods to change
@@ -8273,14 +10395,24 @@ class _Zero(int):
         self = 0
 
 def _getext(filename, mode, *ext1, **ext2):
-    """Open the input file, return the HDUList and the extension."""
+    """
+    Open the input file, return the `HDUList` and the extension.
+    """
+    hdulist = open(filename, mode=mode, **ext2)
 
+    # delete these from the variable keyword argument list so the extension
+    # will properly validate
     if ext2.has_key('classExtensions'):
-        hdulist = open(filename, mode=mode, 
-                       classExtensions=ext2['classExtensions'])
         del ext2['classExtensions']
-    else:
-        hdulist = open(filename, mode=mode)
+
+    if ext2.has_key('ignore_missing_end'):
+        del ext2['ignore_missing_end']
+
+    if ext2.has_key('uint16'):
+        del ext2['uint16']
+
+    if ext2.has_key('uint'):
+        del ext2['uint']
 
     n_ext1 = len(ext1)
     n_ext2 = len(ext2)
@@ -8326,24 +10458,28 @@ def _getext(filename, mode, *ext1, **ext2):
     return hdulist, ext
 
 def getheader(filename, *ext, **extkeys):
-    """Get the header from an extension of a FITS file.
-
-       @type filename: string, file object, or file like object 
-       @param filename: name of the FITS file, or file object, or file like
-                        object
-                        (if opened, mode must be one of the following rb,
-                         rb+, or ab+).
-       @keyword classExtensions: (optional) A dictionary that maps pyfits 
-               classes to extensions of those classes.  When present in the 
-               dictionary, the extension class will be constructed in place 
-               of the pyfits class. 
-       @param ext: The rest of the arguments are for extension specification.
-          See L{getdata} for explanations/examples.
-       
-       @rtype: L{Header} object
-       @return: header
     """
+    Get the header from an extension of a FITS file.
 
+    Parameters
+    ----------
+    filename : file path, file object, or file like object
+        File to get header from.  If an opened file object, its mode
+        must be one of the following rb, rb+, or ab+).
+
+    classExtensions : optional
+        A dictionary that maps pyfits classes to extensions of those
+        classes.  When present in the dictionary, the extension class
+        will be constructed in place of the pyfits class.
+
+    ext
+        The rest of the arguments are for extension specification.
+        `getdata` for explanations/examples.
+
+    Returns
+    -------
+    header : `Header` object
+    """
     # allow file object to already be opened in any of the valid modes
     # and leave the file in the same state (opened or closed) as when
     # the function was called
@@ -8378,61 +10514,108 @@ def getheader(filename, *ext, **extkeys):
     hdulist.close(closed=closed)
     return hdr
 
-def getdata(filename, *ext, **extkeys):
-    """Get the data from an extension of a FITS file (and optionally the header).
 
-       @type filename: string, file object, or file like object 
-       @param filename: name of the FITS file, or file object, or file like
-                        object
-                        (if opened, mode must be one of the following rb,
-                         rb+, or ab+).
-
-       @keyword classExtensions: (optional) A dictionary that maps pyfits 
-               classes to extensions of those classes.  When present in the 
-               dictionary, the extension class will be constructed in place 
-               of the pyfits class. 
-     
-       @param ext: The rest of the arguments are for extension specification.  They are
-       flexible and are best illustrated by examples:
-
-       No extra arguments implies the primary header
-       
-       >>> getdata('in.fits')
-       
-       By extension number:
-       
-       >>> getdata('in.fits', 0)    # the primary header      
-       >>> getdata('in.fits', 2)    # the second extension
-       >>> getdata('in.fits', ext=2) # the second extension
-       
-       By name, i.e., EXTNAME value (if unique):
-       
-       >>> getdata('in.fits', 'sci')
-       >>> getdata('in.fits', extname='sci') # equivalent
-       
-       Note EXTNAMEs are not case sensitive
-
-       By combination of EXTNAME and EXTVER, as separate arguments or as a tuple: 
-       
-       >>> getdata('in.fits', 'sci', 2) # EXTNAME='SCI' & EXTVER=2
-       >>> getdata('in.fits', extname='sci', extver=2) # equivalent
-       >>> getdata('in.fits', ('sci', 2)) # equivalent
-
-       Ambiguous or conflicting specifications will raise an exception, e.g.,
-       
-       >>> getdata('in.fits', ext=('sci',1), extname='err', extver=2) 
-
-       @return: an array, record array (i.e. table), or groups data object 
-       depending on the type of the extension being referenced
-       If the optional keyword 'header' is set to True, this function will
-       return a (data, header) tuple.
+def _fnames_changecase(data, func):
     """
+    Convert case of field names.
+    """
+    if data.dtype.names is None:
+        # this data does not have fields
+        return
 
+    if data.dtype.descr[0][0] == '':
+        # this data does not have fields
+        return
+
+    data.dtype.names = [func(n) for n in data.dtype.names]
+
+
+def getdata(filename, *ext, **extkeys):
+    """
+    Get the data from an extension of a FITS file (and optionally the
+    header).
+
+    Parameters
+    ----------
+    filename : file path, file object, or file like object
+        File to get data from.  If opened, mode must be one of the
+        following rb, rb+, or ab+.
+
+    classExtensions : dict, optional
+        A dictionary that maps pyfits classes to extensions of those
+        classes.  When present in the dictionary, the extension class
+        will be constructed in place of the pyfits class.
+
+    ext
+        The rest of the arguments are for extension specification.
+        They are flexible and are best illustrated by examples.
+
+        No extra arguments implies the primary header::
+
+            >>> getdata('in.fits')
+
+        By extension number::
+
+            >>> getdata('in.fits', 0)    # the primary header
+            >>> getdata('in.fits', 2)    # the second extension
+            >>> getdata('in.fits', ext=2) # the second extension
+
+        By name, i.e., ``EXTNAME`` value (if unique)::
+
+            >>> getdata('in.fits', 'sci')
+            >>> getdata('in.fits', extname='sci') # equivalent
+
+        Note ``EXTNAME`` values are not case sensitive
+
+        By combination of ``EXTNAME`` and EXTVER`` as separate
+        arguments or as a tuple::
+
+            >>> getdata('in.fits', 'sci', 2) # EXTNAME='SCI' & EXTVER=2
+            >>> getdata('in.fits', extname='sci', extver=2) # equivalent
+            >>> getdata('in.fits', ('sci', 2)) # equivalent
+
+        Ambiguous or conflicting specifications will raise an exception::
+
+            >>> getdata('in.fits', ext=('sci',1), extname='err', extver=2)
+
+    lower, upper : bool, optional
+        If `lower` or `upper` are `True`, the field names in the
+        returned data object will be converted to lower or upper case,
+        respectively.
+
+    view : ndarray view class, optional
+        When given, the data will be turned wrapped in the given view
+        class, by calling::
+
+           data.view(view)
+
+    Returns
+    -------
+    array : array, record array or groups data object
+        Type depends on the type of the extension being referenced.
+
+        If the optional keyword `header` is set to `True`, this
+        function will return a (`data`, `header`) tuple.
+    """
     if 'header' in extkeys:
         _gethdr = extkeys['header']
         del extkeys['header']
     else:
         _gethdr = False
+
+    # Code further down rejects unkown keys
+    lower=False
+    if 'lower' in extkeys:
+        lower=extkeys['lower']
+        del extkeys['lower']
+    upper=False
+    if 'upper' in extkeys:
+        upper=extkeys['upper']
+        del extkeys['upper']
+    view=None
+    if 'view' in extkeys:
+        view=extkeys['view']
+        del extkeys['view']
 
     # allow file object to already be opened in any of the valid modes
     # and leave the file in the same state (opened or closed) as when
@@ -8475,28 +10658,48 @@ def getdata(filename, *ext, **extkeys):
     if _gethdr:
         _hdr = hdu.header
     hdulist.close(closed=closed)
+
+    # Change case of names if requested
+    if lower:
+        _fnames_changecase(_data, str.lower)
+    elif upper:
+        _fnames_changecase(_data, str.upper)
+
+    # allow different views into the underlying ndarray.  Keep the original
+    # view just in case there is a problem
+    if view is not None:
+        _data = _data.view(view)
+
     if _gethdr:
         return _data, _hdr
     else:
         return _data
 
 def getval(filename, key, *ext, **extkeys):
-    """Get a keyword's value from a header in a FITS file.
+    """
+    Get a keyword's value from a header in a FITS file.
 
-    @type filename: string, file object, or file like object 
-    @param filename: name of the FITS file, or file object
-                    (if opened, mode must be one of the following rb,
-                     rb+, or ab+).
-    @type key: string
-    @param key: keyword name
-    @keyword classExtensions: (optional) A dictionary that maps pyfits 
-            classes to extensions of those classes.  When present in the 
-            dictionary, the extension class will be constructed in place 
-            of the pyfits class. 
-    @param ext: The rest of the arguments are for extension specification.
-       See L{getdata} for explanations/examples.
-    @return: keyword value
-    @rtype: string, integer, or float
+    Parameters
+    ----------
+    filename : file path, file object, or file like object
+        Name of the FITS file, or file object (if opened, mode must be
+        one of the following rb, rb+, or ab+).
+
+    key : str
+        keyword name
+
+    classExtensions : (optional)
+        A dictionary that maps pyfits classes to extensions of those
+        classes.  When present in the dictionary, the extension class
+        will be constructed in place of the pyfits class.
+
+    ext
+        The rest of the arguments are for extension specification.
+        See `getdata` for explanations/examples.
+
+    Returns
+    -------
+    keyword value : string, integer, or float
     """
 
     _hdr = getheader(filename, *ext, **extkeys)
@@ -8504,48 +10707,58 @@ def getval(filename, key, *ext, **extkeys):
 
 def setval(filename, key, value="", comment=None, before=None, after=None,
            savecomment=False, *ext, **extkeys):
-    """Set a keyword's value from a header in a FITS file.
+    """
+    Set a keyword's value from a header in a FITS file.
 
-       If the keyword already exists, it's value/comment will be updated.
-       If it does not exist, a new card will be created and it will be
-       placed before or after the specified location.  If no "before"
-       or "after" is specified, it will be appended at the end.
+    If the keyword already exists, it's value/comment will be updated.
+    If it does not exist, a new card will be created and it will be
+    placed before or after the specified location.  If no `before` or
+    `after` is specified, it will be appended at the end.
 
-       When updating more than one keyword in a file, this convenience
-       function is a much less efficient approach compared with opening
-       the file for update, modifying the header, and closing the file.
+    When updating more than one keyword in a file, this convenience
+    function is a much less efficient approach compared with opening
+    the file for update, modifying the header, and closing the file.
 
-    @type filename: string, file object, or file like object 
-    @param filename: name of the FITS file, or file object
-                     If opened, mode must be update (rb+).  An opened
-                     file object or GzipFile object will be closed upon
-                     return.
-    @type key: string
-    @param key: keyword name
-    @type value: string, integer, float
-    @param value: Keyword value, default = ""
-    @type comment: string
-    @param comment: Keyword comment, default = None
-    @type before: string, integer
-    @param before: name of the keyword, or index of the Card before which
-                   the new card will be placed.  The argument `before' takes
-                   precedence over `after' if both specified. default=None.
-    @type after: string, integer
-    @param after: name of the keyword, or index of the Card  after which
-                  the new card will be placed. default=None.
-    @type savecomment: logical
-    @param savecomment: when true preserve the current comment for an existing
-                        keyword.  The argument 'savecomment' takes precedence
-                        over 'comment' if both specified.  If 'comment' is not
-                        specified then the current comment will automatically
-                        be preserved.  default=False
-    @keyword classExtensions: (optional) A dictionary that maps pyfits 
-            classes to extensions of those classes.  When present in the 
-            dictionary, the extension class will be constructed in place 
-            of the pyfits class. 
-    @param ext: The rest of the arguments are for extension specification.
-       See L{getdata} for explanations/examples.
-    @return: None
+    Parameters
+    ----------
+    filename : file path, file object, or file like object
+        Name of the FITS file, or file object If opened, mode must be
+        update (rb+).  An opened file object or `GzipFile` object will
+        be closed upon return.
+
+    key : str
+        keyword name
+
+    value : str, int, float
+        Keyword value, default = ""
+
+    comment : str
+        Keyword comment, default = None
+
+    before : str, int
+        name of the keyword, or index of the `Card` before which
+        the new card will be placed.  The argument `before` takes
+        precedence over `after` if both specified. default=`None`.
+
+    after : str, int
+        name of the keyword, or index of the `Card` after which the
+        new card will be placed. default=`None`.
+
+    savecomment : bool
+        when `True`, preserve the current comment for an existing
+        keyword.  The argument `savecomment` takes precedence over
+        `comment` if both specified.  If `comment` is not specified
+        then the current comment will automatically be preserved.
+        default=`False`
+
+    classExtensions : dict, optional
+        A dictionary that maps pyfits classes to extensions of those
+        classes.  When present in the dictionary, the extension class
+        will be constructed in place of the pyfits class.
+
+    ext
+        The rest of the arguments are for extension specification.
+        See `getdata` for explanations/examples.
     """
 
     hdulist, ext = _getext(filename, mode='update', *ext, **extkeys)
@@ -8560,22 +10773,28 @@ def setval(filename, key, value="", comment=None, before=None, after=None,
     hdulist.close()
 
 def delval(filename, key, *ext, **extkeys):
-    """Delete all instances of keyword from a header in a FITS file.
+    """
+    Delete all instances of keyword from a header in a FITS file.
 
-    @type filename: string, file object, or file like object 
-    @param filename: name of the FITS file, or file object
-                     If opened, mode must be update (rb+).  An opened
-                     file object or GzipFile object will be closed upon
-                     return.
-    @type key: string, integer
-    @param key: keyword name or index
-    @keyword classExtensions: (optional) A dictionary that maps pyfits 
-            classes to extensions of those classes.  When present in the 
-            dictionary, the extension class will be constructed in place 
-            of the pyfits class. 
-    @param ext: The rest of the arguments are for extension specification.
-       See L{getdata} for explanations/examples.
-    @return: None
+    Parameters
+    ----------
+
+    filename : file path, file object, or file like object
+        Name of the FITS file, or file object If opened, mode must be
+        update (rb+).  An opened file object or `GzipFile` object will
+        be closed upon return.
+
+    key : str, int
+        Keyword name or index
+
+    classExtensions : optional
+        A dictionary that maps pyfits classes to extensions of those
+        classes.  When present in the dictionary, the extension class
+        will be constructed in place of the pyfits class.
+
+    ext
+        The rest of the arguments are for extension specification.
+        See `getdata` for explanations/examples.
     """
 
     hdulist, ext = _getext(filename, mode='update', *ext, **extkeys)
@@ -8589,10 +10808,16 @@ def delval(filename, key, *ext, **extkeys):
 
     hdulist.close()
 
+
 def _makehdu(data, header, classExtensions={}):
     if header is None:
-        if isinstance(data, FITS_rec):
-            hdu = BinTableHDU(data)
+        if ((isinstance(data, np.ndarray) and data.dtype.fields is not None)
+            or isinstance(data, np.recarray)
+            or isinstance(data, rec.recarray)):
+            if classExtensions.has_key(BinTableHDU):
+                hdu = classExtensions[BinTableHDU](data)
+            else:
+                hdu = BinTableHDU(data)
         elif isinstance(data, np.ndarray):
             if classExtensions.has_key(ImageHDU):
                 hdu = classExtensions[ImageHDU](data)
@@ -8607,67 +10832,7 @@ def _makehdu(data, header, classExtensions={}):
         hdu=header._hdutype(data=data, header=header)
     return hdu
 
-def writeto(filename, data, header=None, **keys):
-    """Create a new FITS file using the supplied data/header.
-
-       @type filename: string, file object, or file like object 
-       @param filename: name of the new FITS file to write to, or file object
-                        (if opened must be opened for append (ab+)).
-       @type data: array, record array, or groups data object
-       @param data: data to write to the new file
-       @type header: L{Header} object or None
-       @param header: the header associated with 'data', if None, a
-               header of the appropriate type is created for the supplied
-               data. This argument is optional.
-       @keyword classExtensions: (optional) A dictionary that maps pyfits 
-               classes to extensions of those classes.  When present in the 
-               dictionary, the extension class will be constructed in place 
-               of the pyfits class. 
-       @keyword clobber: (optional) if True and if filename already exists, it
-               will overwrite the file.  Default is False.
-    """
-
-    if header is None:
-        if 'header' in keys:
-            header = keys['header']
-
-    classExtensions = keys.get('classExtensions', {})
-    hdu=_makehdu(data, header, classExtensions)
-    if not isinstance(hdu, PrimaryHDU):
-        if classExtensions.has_key(PrimaryHDU):
-            hdu = classExtensions[PrimaryHDU](data, header=header)
-        else:
-            hdu = PrimaryHDU(data, header=header)
-    clobber = keys.get('clobber', False)
-    output_verify = keys.get('output_verify', 'exception')
-    hdu.writeto(filename, clobber=clobber, output_verify=output_verify,
-                classExtensions=classExtensions)
-
-def append(filename, data, header=None, classExtensions={}):
-    """Append the header/data to FITS file if filename exists, create if not.
-    
-    If only data is supplied, a minimal header is created
-
-       @type filename: string, file object, or file like object 
-       @param filename: name of the FITS file to write to, or file object, or
-                        file like object
-                        If opened must be opened for update (rb+) unless it is
-                        a new file, then it must be opened for append (ab+).
-                        A file or GzipFile object opened for update will be 
-                        closed after return.
-       @type data: array, table, or group data object
-       @param data: the new data used for appending
-       @type header: L{Header} object or None
-       @param header: the header associated with 'data', if None,
-               an appropriate header will be created for the data object
-               supplied.
-       @type classExtensions: dictionary
-       @param classExtensions: A dictionary that maps pyfits classes to 
-                               extensions of those classes.  When present in 
-                               the dictionary, the extension class will be 
-                               constructed in place of the pyfits class. 
-    """
-
+def _stat_filename_or_fileobj(filename):
     closed = True
     name = ''
 
@@ -8689,14 +10854,106 @@ def append(filename, data, header=None, classExtensions={}):
         elif hasattr(filename, 'filename'):
             name = filename.filename
 
-    if (name and ((not os.path.exists(name)) or (os.path.getsize(name)==0)) or
-        not name and filename.tell()==0):
+    try:
+        loc = filename.tell()
+    except AttributeError:
+        loc = 0
+
+    noexist_or_empty = \
+        (name and ((not os.path.exists(name)) or (os.path.getsize(name)==0))) \
+         or (not name and loc==0)
+
+    return name, closed, noexist_or_empty
+
+def writeto(filename, data, header=None, **keys):
+    """
+    Create a new FITS file using the supplied data/header.
+
+    Parameters
+    ----------
+    filename : file path, file object, or file like object
+        File to write to.  If opened, must be opened for append (ab+).
+
+    data : array, record array, or groups data object
+        data to write to the new file
+
+    header : Header object, optional
+        the header associated with `data`. If `None`, a header
+        of the appropriate type is created for the supplied data. This
+        argument is optional.
+
+    classExtensions : dict, optional
+        A dictionary that maps pyfits classes to extensions of those
+        classes.  When present in the dictionary, the extension class
+        will be constructed in place of the pyfits class.
+
+    clobber : bool, optional
+        If `True`, and if filename already exists, it will overwrite
+        the file.  Default is `False`.
+
+    checksum : bool, optional
+        If `True`, adds both ``DATASUM`` and ``CHECKSUM`` cards to the
+        headers of all HDU's written to the file.
+    """
+    if header is None:
+        if 'header' in keys:
+            header = keys['header']
+
+    clobber = keys.get('clobber', False)
+    output_verify = keys.get('output_verify', 'exception')
+
+    classExtensions = keys.get('classExtensions', {})
+    hdu = _makehdu(data, header, classExtensions)
+    if not isinstance(hdu, PrimaryHDU) and not isinstance(hdu, _TableBaseHDU):
+        if classExtensions.has_key(PrimaryHDU):
+            hdu = classExtensions[PrimaryHDU](data, header=header)
+        else:
+            hdu = PrimaryHDU(data, header=header)
+    checksum = keys.get('checksum', False)
+    hdu.writeto(filename, clobber=clobber, output_verify=output_verify,
+                checksum=checksum, classExtensions=classExtensions)
+
+def append(filename, data, header=None, classExtensions={}, checksum=False,
+           **keys):
+    """
+    Append the header/data to FITS file if filename exists, create if not.
+
+    If only `data` is supplied, a minimal header is created.
+
+    Parameters
+    ----------
+    filename : file path, file object, or file like object
+        File to write to.  If opened, must be opened for update (rb+)
+        unless it is a new file, then it must be opened for append
+        (ab+).  A file or `GzipFile` object opened for update will be
+        closed after return.
+
+    data : array, table, or group data object
+        the new data used for appending
+
+    header : Header object, optional
+        The header associated with `data`.  If `None`, an appropriate
+        header will be created for the data object supplied.
+
+    classExtensions : dictionary, optional
+        A dictionary that maps pyfits classes to extensions of those
+        classes.  When present in the dictionary, the extension class
+        will be constructed in place of the pyfits class.
+
+    checksum : bool, optional
+        When `True` adds both ``DATASUM`` and ``CHECKSUM`` cards to
+        the header of the HDU when written to the file.
+    """
+    name, closed, noexist_or_empty = _stat_filename_or_fileobj(filename)
+
+    if noexist_or_empty:
         #
         # The input file or file like object either doesn't exits or is
-        # empty.  Use the writeto convenience function to write the 
+        # empty.  Use the writeto convenience function to write the
         # output to the empty object.
         #
-        writeto(filename, data, header, classExtentsions=classExtensions)
+        writeto(filename, data, header, classExtensions=classExtensions,
+                checksum=checksum, **keys)
     else:
         hdu=_makehdu(data, header, classExtensions)
         if isinstance(hdu, PrimaryHDU):
@@ -8706,40 +10963,45 @@ def append(filename, data, header=None, classExtensions={}):
                 hdu = ImageHDU(data, header)
 
         f = open(filename, mode='update', classExtensions=classExtensions)
-        f.append(hdu)
+        f.append(hdu, classExtensions=classExtensions)
 
+        # Set a flag in the HDU so that only this HDU gets a checksum
+        # when writing the file.
+        hdu._output_checksum = checksum
         f.close(closed=closed)
 
 def update(filename, data, *ext, **extkeys):
-    """Update the specified extension with the input data/header.
+    """
+    Update the specified extension with the input data/header.
 
-       @type filename: string, file object, or file like object 
-       @param filename: name of the FITS file, or file object, or file like
-                        object
-                        If opened, mode must be update (rb+).  An opened
-                        file object or GzipFile object will be closed upon
-                        return.
-       @type filename: string
-       @param filename: name of the file to be updated
-       data: the new data used for updating
-       @keyword classExtensions: (optional) A dictionary that maps pyfits 
-               classes to extensions of those classes.  When present in the 
-               dictionary, the extension class will be constructed in place 
-               of the pyfits class. 
+    Parameters
+    ----------
+    filename : file path, file object, or file like object
+        File to update.  If opened, mode must be update (rb+).  An
+        opened file object or `GzipFile` object will be closed upon
+        return.
 
-       The rest of the arguments are flexible:
-       the 3rd argument can be the header associated with the data.
-       If the 3rd argument is not a header, it (and other positional
-       arguments) are assumed to be the extension specification(s).
-       Header and extension specs can also be keyword arguments.
-       For example:
+    data : array, table, or group data object
+        the new data used for updating
 
-       >>> update(file, dat, hdr, 'sci')  # update the 'sci' extension
-       >>> update(file, dat, 3)  # update the 3rd extension
-       >>> update(file, dat, hdr, 3)  # update the 3rd extension
-       >>> update(file, dat, 'sci', 2)  # update the 2nd SCI extension
-       >>> update(file, dat, 3, header=hdr)  # update the 3rd extension
-       >>> update(file, dat, header=hdr, ext=5)  # update the 5th extension
+    classExtensions : dict, optional
+        A dictionary that maps pyfits classes to extensions of those
+        classes.  When present in the dictionary, the extension class
+        will be constructed in place of the pyfits class.
+
+    ext
+        The rest of the arguments are flexible: the 3rd argument can
+        be the header associated with the data.  If the 3rd argument
+        is not a `Header`, it (and other positional arguments) are
+        assumed to be the extension specification(s).  Header and
+        extension specs can also be keyword arguments.  For example::
+
+            >>> update(file, dat, hdr, 'sci')  # update the 'sci' extension
+            >>> update(file, dat, 3)  # update the 3rd extension
+            >>> update(file, dat, hdr, 3)  # update the 3rd extension
+            >>> update(file, dat, 'sci', 2)  # update the 2nd SCI extension
+            >>> update(file, dat, 3, header=hdr)  # update the 3rd extension
+            >>> update(file, dat, header=hdr, ext=5)  # update the 5th extension
     """
 
     # parse the arguments
@@ -8770,22 +11032,42 @@ def update(filename, data, *ext, **extkeys):
     hdulist.close(closed=closed)
 
 
-def info(filename, classExtensions={}):
-    """Print the summary information on a FITS file.
-    
+def info(filename, classExtensions={}, **parms):
+    """
+    Print the summary information on a FITS file.
+
     This includes the name, type, length of header, data shape and type
     for each extension.
 
-    @type filename: string, file object, or file like object 
-    @param filename: name of the FITS file to write to, or file object, or 
-                     file like object
-                     (if opened, mode must be one of the following rb,
-                      rb+, or ab+).
-    @type classExtensions: dictionary
-    @param classExtensions: A dictionary that maps pyfits classes to 
-                            extensions of those classes.  When present in 
-                            the dictionary, the extension class will be 
-                            constructed in place of the pyfits class. 
+    Parameters
+    ----------
+    filename : file path, file object, or file like object
+        FITS file to obtain info from.  If opened, mode must be one of
+        the following: rb, rb+, or ab+.
+
+    classExtensions : dict, optional
+        A dictionary that maps pyfits classes to extensions of those
+        classes.  When present in the dictionary, the extension class
+        will be constructed in place of the pyfits class.
+
+    parms : optional keyword arguments
+
+        - **uint** : bool
+
+            Interpret signed integer data where ``BZERO`` is the
+            central value and ``BSCALE == 1`` as unsigned integer
+            data.  For example, `int16` data with ``BZERO = 32768``
+            and ``BSCALE = 1`` would be treated as `uint16` data.
+
+            Note, for backward compatibility, the kwarg **uint16** may
+            be used instead.  The kwarg was renamed when support was
+            added for integers of any size.
+
+        - **ignore_missing_end** : bool
+
+            Do not issue an exception when opening a file that is
+            missing an ``END`` card in the last header.  Default is
+            `True`.
     """
 
     # allow file object to already be opened in any of the valid modes
@@ -8795,7 +11077,8 @@ def info(filename, classExtensions={}):
     mode = 'copyonwrite'
     closed = True
 
-    if not isinstance(filename, types.StringType):
+    if not isinstance(filename, types.StringType) and \
+       not isinstance(filename, types.UnicodeType):
         if hasattr(filename, 'closed'):
             closed = filename.closed
         elif hasattr(filename, 'fileobj') and filename.fileobj != None:
@@ -8813,57 +11096,59 @@ def info(filename, classExtensions={}):
                 mode = key
                 break
 
-    f = open(filename,mode=mode,classExtensions=classExtensions)
+    # Set the default value for the ignore_missing_end parameter
+    if not parms.has_key('ignore_missing_end'):
+        parms['ignore_missing_end'] = True
+
+    f = open(filename,mode=mode,classExtensions=classExtensions, **parms)
     f.info()
 
     if closed:
         f.close()
 
-def tdump(fitsFile, datafile=None, cdfile=None, hfile=None, ext=1, 
+def tdump(fitsFile, datafile=None, cdfile=None, hfile=None, ext=1,
           clobber=False, classExtensions={}):
     """
-        Dump a table HDU to a file in ASCII format.  The table may be dumped
-        in three separate files, one containing column definitions, one 
-        containing header parameters, and one for table data.
+    Dump a table HDU to a file in ASCII format.  The table may be
+    dumped in three separate files, one containing column definitions,
+    one containing header parameters, and one for table data.
 
-        :Parameters:
-            fitsFile: Input fits file supplied as a file name, file object, or
-                      file like object.  
+    Parameters
+    ----------
+    fitsFile : file path, file object or file-like object
+        Input fits file.
 
-            datafile: Output data file supplied as a file name, file object, or
-                      file like object.  The default is the root name of the
-                      input fits file appended with an underscore, followed by
-                      the extension number (ext), followed by the extension
-                      .txt.
+    datafile : file path, file object or file-like object, optional
+        Output data file.  The default is the root name of the input
+        fits file appended with an underscore, followed by the
+        extension number (ext), followed by the extension ``.txt``.
 
-            cdfile:   Output column definitions file supplied as a file name,
-                      file object, or file like object.  The default is None,
-                      no column definitions output is produced.
+    cdfile : file path, file object or file-like object, optional
+        Output column definitions file.  The default is `None`,
+        no column definitions output is produced.
 
-            hfile:    Output header parameters file supplied as a file name,
-                      file object, or file like object.  The default is None,
-                      no header parameters output is produced.
+    hfile : file path, file object or file-like object, optional
+        Output header parameters file.  The default is `None`,
+        no header parameters output is produced.
 
-            ext:      The number of the extension containing the table HDU
-                      to be dumped.
+    ext : int
+        The number of the extension containing the table HDU to be
+        dumped.
 
-            clobber:  Overwrite the output files if they exist, default = False.
+    clobber : bool
+        Overwrite the output files if they exist.
 
-            classExtensions: A dictionary that maps pyfits classes to extensions
-                             of those classes.  When present in the dictionary,
-                             the extension class will be constructed in place of
-                             the pyfits class.
+    classExtensions : dict
+        A dictionary that maps pyfits classes to extensions of those
+        classes.  When present in the dictionary, the extension class
+        will be constructed in place of the pyfits class.
 
-        :Returns:
-            None
-
-        :Notes:
-            The primary use for the tdump function is to allow editing in a
-            standard text editor of the table data and parameters.  The tcreate
-            function can be used to reassemble the table from the three ASCII
-            files.
-
-            Output File Formats:
+    Notes
+    -----
+    The primary use for the `tdump` function is to allow editing in a
+    standard text editor of the table data and parameters.  The
+    `tcreate` function can be used to reassemble the table from the
+    three ASCII files.
     """
 
     # allow file object to already be opened in any of the valid modes
@@ -8873,7 +11158,8 @@ def tdump(fitsFile, datafile=None, cdfile=None, hfile=None, ext=1,
     mode = 'copyonwrite'
     closed = True
 
-    if not isinstance(fitsFile, types.StringType):
+    if not isinstance(fitsFile, types.StringType) and \
+       not isinstance(fitsFile, types.UnicodeType):
         if hasattr(fitsFile, 'closed'):
             closed = fitsFile.closed
         elif hasattr(fitsFile, 'fileobj') and fitsFile.fileobj != None:
@@ -8900,47 +11186,43 @@ def tdump(fitsFile, datafile=None, cdfile=None, hfile=None, ext=1,
         datafile = root + '_' + `ext` + '.txt'
 
     # Dump the data from the HDU to the files
-    f[ext].tdump(datafile, cdfile, hfile, clobber) 
+    f[ext].tdump(datafile, cdfile, hfile, clobber)
 
     if closed:
         f.close()
 
-tdump.__doc__ += BinTableHDU.tdumpFileFormat
+tdump.__doc__ += BinTableHDU.tdumpFileFormat.replace("\n", "\n    ")
 
-def tcreate(datafile, cdfile, hfile=None): 
+def tcreate(datafile, cdfile, hfile=None):
     """
-        Create a table from the input ASCII files.  The input is from up to
-        three separate files, one containing column definitions, one containing
-        header parameters, and one containing column data.  The header
-        parameters file is not required.  When the header parameters file is 
-        absent a minimal header is constructed.
+    Create a table from the input ASCII files.  The input is from up
+    to three separate files, one containing column definitions, one
+    containing header parameters, and one containing column data.  The
+    header parameters file is not required.  When the header
+    parameters file is absent a minimal header is constructed.
 
-        :Parameters:
-            datafile: Input data file containing the table data in ASCII format
-                      supplied as a file name, file object, or file like object.
+    Parameters
+    ----------
+    datafile : file path, file object or file-like object
+        Input data file containing the table data in ASCII format.
 
-            cdfile:   Input column definition file containing the names,
-                      formats, display formats, physical units, multidimensional
-                      array dimensions, undefined values, scale factors, and
-                      offsets associated with the columns in the table.  It is
-                      supplied as a file name, file object, or file like object.
+    cdfile : file path, file object or file-like object
+        Input column definition file containing the names, formats,
+        display formats, physical units, multidimensional array
+        dimensions, undefined values, scale factors, and offsets
+        associated with the columns in the table.
 
-            hfile:    Input parameter definition file containing the header
-                      paramater definitions to be associated with the table.
-                      It is supplied as a file name, file object, or file like
-                      object.  Default = None.  If None, a minimal header is
-                      constructed.
+    hfile : file path, file object or file-like object, optional
+        Input parameter definition file containing the header
+        parameter definitions to be associated with the table.
+        If `None`, a minimal header is constructed.
 
-        :Returns:
-            None
-
-        :Notes:
-            The primary use for the tcreate function is to allow the input of
-            ASCII data that was edited in a standard text editor of the table
-            data and parameters.  The tdump function can be used to create the
-            initial ASCII files.
-
-            Input File Formats:
+    Notes
+    -----
+    The primary use for the `tcreate` function is to allow the input of
+    ASCII data that was edited in a standard text editor of the table
+    data and parameters.  The tdump function can be used to create the
+    initial ASCII files.
     """
 
     # Construct an empty HDU
@@ -8950,7 +11232,7 @@ def tcreate(datafile, cdfile, hfile=None):
     hdu.tcreate(datafile, cdfile, hfile, replace=True)
     return hdu
 
-tcreate.__doc__ += BinTableHDU.tdumpFileFormat
+tcreate.__doc__ += BinTableHDU.tdumpFileFormat.replace("\n", "\n    ")
 
 UNDEFINED = Undefined()
 

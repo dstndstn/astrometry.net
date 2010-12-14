@@ -1,4 +1,5 @@
 # All of the functions allow formats to be a dtype
+from __future__ import division # confidence high
 __all__ = ['record', 'recarray', 'format_parser']
 
 import numpy.core.numeric as sb
@@ -9,6 +10,7 @@ import os
 import sys
 import warnings
 import numpy as np
+import StringIO
 
 ndarray = sb.ndarray
 
@@ -108,7 +110,7 @@ class format_parser:
                         else:
                            self._names[i] = self._names[i] + str(count)
                         count += 1
-                       
+
         if (titles):
             self._titles = [n.strip() for n in titles[:self._nfields]]
         else:
@@ -206,7 +208,7 @@ class recarray(ndarray):
 
     def __array_finalize__(self,obj):
         if obj is None:
-            return 
+            return
         self._heapoffset = getattr(obj,'_heapoffset',0)
         self._file = getattr(obj,'_file', None)
 
@@ -386,7 +388,7 @@ def fromrecords(recList, dtype=None, shape=None, formats=None, names=None,
     >>> r.col1
     array([456,   2])
     >>> r.col2
-    chararray(['dbe', 'de'], 
+    chararray(['dbe', 'de'],
           dtype='|S3')
     >>> import cPickle
     >>> print cPickle.loads(cPickle.dumps(r))
@@ -444,7 +446,7 @@ def fromstring(datastring, dtype=None, shape=None, offset=0, formats=None,
 
     itemsize = descr.itemsize
     if (shape is None or shape == 0 or shape == -1):
-        shape = (len(datastring)-offset) / itemsize
+        shape = (len(datastring)-offset) // itemsize
 
     _array = recarray(shape, descr, buf=datastring, offset=offset)
     return _array
@@ -453,7 +455,15 @@ def get_remaining_size(fd):
     try:
         fn = fd.fileno()
     except AttributeError:
-        return os.path.getsize(fd.name) - fd.tell()
+        try:
+           return os.path.getsize(fd.name) - fd.tell()
+        except AttributeError:
+           cp = fd.tell()
+           fd.seek(0,2)
+           size = fd.tell() - cp
+           fd.seek(cp)
+           return size
+
     st = os.fstat(fn)
     size = st.st_size - fd.tell()
     return size
@@ -505,7 +515,7 @@ def fromfile(fd, dtype=None, shape=None, offset=0, formats=None,
     shapesize = shapeprod*itemsize
     if shapesize < 0:
         shape = list(shape)
-        shape[ shape.index(-1) ] = size / -shapesize
+        shape[ shape.index(-1) ] = size // -shapesize
         shape = tuple(shape)
         shapeprod = sb.array(shape).prod()
 
@@ -516,8 +526,17 @@ def fromfile(fd, dtype=None, shape=None, offset=0, formats=None,
                 "Not enough bytes left in file for specified shape and type")
 
     # create the array
-    arr = np.fromfile(fd,dtype=descr,count=shape[0]) 
-    _array = recarray(shape, descr, arr.data)
+    if isinstance (fd, file):
+       arr = np.fromfile(fd,dtype=descr,count=shape[0])
+    else:
+       read_size = np.dtype(descr).itemsize * shape[0]
+       st=fd.read(read_size)
+       arr = np.fromstring(st, dtype=descr, count=shape[0])
+
+    # TODO: There was a problem with large arrays, don't fully understand
+    # but this is more efficient anyway
+    #_array = recarray(shape, descr, arr.data)
+    _array = arr.view(recarray)
 
     if name:
         fd.close()
@@ -570,7 +589,7 @@ def array(obj, dtype=None, shape=None, offset=0, strides=None, formats=None,
             new = new.copy()
         return new
 
-    elif isinstance(obj, file):
+    elif isinstance(obj, file) or isinstance(obj, StringIO.StringIO):
         return fromfile(obj, dtype=dtype, shape=shape, offset=offset)
 
     elif isinstance(obj, ndarray):
