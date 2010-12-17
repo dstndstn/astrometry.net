@@ -20,53 +20,293 @@ from numpy import *
 from astrometry.util.sqlcl import query as casquery
 from astrometry.util.file import *
 
-galex_cas = { 'base_url': 'http://galex.stsci.edu/casjobs/',
-			  'submiturl': 'SubmitJob.aspx',
-			  'actionurl': 'mydbcontent.aspx?tableName=%s&kind=tables',
-			  'defaultdb': 'GALEXGR4Plus5',
-			  'outputbaseurl': 'http://mastweb.stsci.edu/CasOutPut/FITS/',
-			  }
-sdss_cas = { 'base_url': 'http://casjobs.sdss.org/CasJobs/',
-			 'submiturl': 'submitjobhelper.aspx',
-			 'actionurl': 'mydbcontent.aspx?ObjName=%s&ObjType=TABLE&context=MyDB&type=normal',
-			 'defaultdb': 'DR7',
-			 'request_output_extra': { 'targetDDL':'TargDR7Long' },
-			 'outputbaseurl': 'http://casjobs.sdss.org/CasJobsOutput2/FITS/',
-			 }
+class Cas(object):
+	def __init__(self, **kwargs):
+		self.params = kwargs
 
-# See also magic values in submit_query()...
+	def get_url(self, relurl):
+		return self.params['base_url'] + relurl
 
-cas_params = sdss_cas
+	def login_url(self):
+		return self.get_url('login.aspx')
 
-def get_url(relurl):
-	return cas_params['base_url'] + relurl
+	def submit_url(self):
+		return self.get_url(self.params['submiturl'])
 
-def login_url():
-	return get_url('login.aspx')
+	def mydb_url(self):
+		return self.get_url('MyDB.aspx')
 
-def submit_url():
-	return get_url(cas_params['submiturl'])
+	def mydb_index_url(self):
+		return self.get_url('mydbindex.aspx')
 
-def mydb_url():
-	return get_url('MyDB.aspx')
+	def mydb_action_url(self):
+		return self.get_url(self.params['actionurl'])
 
-def mydb_index_url():
-	return get_url('mydbindex.aspx')
+	def drop_url(self):
+		return self.get_url('DropTable.aspx?tableName=%s')
 
-def mydb_action_url():
-	return get_url(cas_params['actionurl'])
+	def output_url(self):
+		return self.get_url('Output.aspx')
 
-def drop_url():
-	return get_url('DropTable.aspx?tableName=%s')
+	def job_details_url(self):
+		return self.get_url('jobdetails.aspx?id=%i')
 
-def output_url():
-	return get_url('Output.aspx')
+	def cancel_url(self):
+		return self.get_url('cancelJob.aspx')
 
-def job_details_url():
-	return get_url('jobdetails.aspx?id=%i')
+	def submit_query(self, sql, table='', taskname='', dbcontext=None):
+		if dbcontext is None:
+			dbcontext = self.params['defaultdb']
 
-def cancel_url():
-	return get_url('cancelJob.aspx')
+		# MAGIC
+		data = urllib.urlencode({
+			'targest': dbcontext,
+			'sql': sql,
+			'queue': 500,
+			'syntax': 'false',
+			'table': table,
+			'taskname': taskname,
+			})
+		f = urllib2.urlopen(self.submit_url(), data)
+		doc = f.read()
+		redirurl = f.geturl()
+		# older CasJobs version redirects to the job details page:
+		# just pull the jobid out of the redirected URL.
+		print 'Redirected to URL', redirurl
+		pat = re.escape(self.job_details_url().replace('%i','')) +  '([0-9]*)'
+		#print 'pattern:', pat
+		m = re.match(pat, redirurl)
+		if m is not None:
+			jobid = int(m.group(1))
+			print 'jobid:', jobid
+			return jobid
+		#write_file(doc, 'sub.out')
+		xmldoc = minidom.parseString(doc)
+		jobids = xmldoc.getElementsByTagName('jobid')
+		if len(jobids) == 0:
+			print 'No <jobid> tag found:'
+			print doc
+			return None
+		if len(jobids) > 1:
+			print 'Multiple <jobid> tags found:'
+			print doc
+			return None
+		jobid = jobids[0]
+		if not jobid.hasChildNodes():
+			print '<jobid> tag has no child node:'
+			print doc
+			return None
+		jobid = jobid.firstChild
+		if jobid.nodeType != xml.dom.Node.TEXT_NODE:
+			print 'job id is not a text node:'
+			print doc
+			return None
+		jobid = int(jobid.data)
+		if jobid == -1:
+			# Error: find error message.
+			print 'Failed to submit query.  Looking for error message...'
+			founderr = False
+			msgs = xmldoc.getElementsByTagName('message')
+			for msg in msgs:
+				if msg.hasChildNodes():
+					c = msg.firstChild
+					if c.nodeType == xml.dom.Node.TEXT_NODE:
+						print 'Error message:', c.data
+						founderr = True
+			if not founderr:
+				print 'Error message not found.  Whole response document:'
+				print
+				print doc
+				print
+		return jobid
+	
+	def login(self, username, password):
+		print 'Logging in.'
+		data = urllib.urlencode({'userid': username, 'password': password})
+		f = urllib2.urlopen(self.login_url(), data)
+		d = f.read()
+		# headers = f.info()
+		# print 'headers:', headers
+		# print 'Got response:'
+		# print d
+		return None
+
+	def cancel_job(self, jobid):
+		data = urllib.urlencode({'id': jobid, 'CancelJob': 'Cancel Job'})
+		f = urllib2.urlopen(self.cancel_url(), data)
+		f.read()
+
+	# Returns 'Finished', 'Ready', 'Started', 'Failed', 'Cancelled'
+	def get_job_status(self, jobid):
+		# print 'Getting job status for', jobid
+		url = self.job_details_url() % jobid
+		doc = urllib2.urlopen(url).read()
+		for line in doc.split('\n'):
+			for stat in ['Finished', 'Ready', 'Started', 'Failed', 'Cancelled']:
+				if ('<td > <p class = "%s">%s</p></td>' %(stat,stat) in line or
+					'<td > <p class="%s">%s</p></td>' %(stat,stat) in line or
+					'<td class="center"> <p class = "%s">%s</p></td>' %(stat,stat) in line or
+					'<td class="center"> <p class = "%s">Running</p></td>' %(stat) in line): # Galex "Started"/Running
+					return stat
+		return None
+
+	def drop_table(self, dbname):
+		url = self.drop_url() % dbname
+		try:
+			f = urllib2.urlopen(url)
+		except Exception,e:
+			print 'Failed to drop table', dbname
+			print e
+			return False
+		doc = f.read()
+		(vs,ev) = get_viewstate_and_eventvalidation(doc)
+		data = urllib.urlencode({'yesButton':'Yes',
+								 '__EVENTVALIDATION':ev,
+								 '__VIEWSTATE':vs})
+		print 'Dropping table', dbname
+		try:
+			f = urllib2.urlopen(url, data)
+		except Exception,e:
+			print 'Failed to drop table', dbname
+			print e
+			return False
+		d = f.read()
+		# print 'Got response:'
+		# print d
+		# write_file(d, 'res.html')
+		return True
+
+	def request_output(self, mydbname):
+		url = self.mydb_action_url() % mydbname
+		try:
+			# Need to prime the VIEWSTATE by "clicking" through...
+			f = urllib2.urlopen(self.mydb_url())
+			f.read()
+			f = urllib2.urlopen(self.mydb_index_url())
+			f.read()
+			# request = urllib2.Request(url)
+			# request.add_header('User-Agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.11) Gecko/2009060214 Firefox/3.0.11')
+			# f = urllib2.urlopen(request)
+			# Referer: http://galex.stsci.edu/casjobs/mydbindex.aspx
+			f = urllib2.urlopen(url)
+		except urllib2.HTTPError,e:
+			print 'HTTPError:', e
+			print '  code', e.code
+			print '  msg', e.msg
+			print '  hdrs', e.hdrs
+			print '  data:', e.fp.read()
+			raise e
+		doc = f.read().strip()
+		# write_file(doc, 'r1.html')
+		(vs,ev) = get_viewstate_and_eventvalidation(doc)
+		data = {'extractDDL':'FITS', 'Button1':'Go',
+				'__VIEWSTATE':vs}
+		if ev is not None:
+			data['__EVENTVALIDATION'] = ev
+		extra = self.params.get('request_output_extra')
+		if extra is not None:
+			data.update(extra)
+			print 'requesting FITS output of MyDB table', mydbname
+		print 'url', url
+		print 'data', urllib.urlencode(data)
+		try:
+			f = urllib2.urlopen(url, urllib.urlencode(data))
+		except urllib2.HTTPError,e:
+			print 'HTTPError:', e
+			print '  code', e.code
+			# print '  reason', e.reason
+			raise e
+		d = f.read()
+		# print 'Got response:'
+		# print d
+		# write_file(d, 'res.html')
+		return
+
+	def get_ready_outputs(self):
+		url = self.output_url()
+		print 'Hitting output URL', url
+		f = urllib2.urlopen(url)
+		doc = f.read()
+		write_file(doc, 'ready.html')
+		print 'Wrote ready downloads to ready.html'
+		urls = []
+		fns = []
+		rex = re.compile('<a href="(' + re.escape(self.params['outputbaseurl']) + '(.*))">Download</a>')
+		for line in doc.split('\n'):
+			m = rex.search(line)
+			if not m:
+				continue
+			urls.append(m.group(1))
+			fns.append(m.group(2))
+		return (urls, fns)
+
+	# Requests output of the given list of databases, waits for them to appear,
+	# downloads them, and writes them to the given list of local filenames.
+	#
+	# 'dbs' and 'fns' must be either strings,
+	#   or lists of string of the same length.
+	#
+	# If 'dodelete' is True, the databases will be deleted after download.
+	#
+	def output_and_download(self, dbs, fns, dodelete=False, sleeptime=10):
+		if type(dbs) is str:
+			dbs = [dbs]
+			assert(type(fns) is str)
+			fns = [fns]
+
+		print 'Getting list of available downloads...'
+		(preurls,nil) = self.get_ready_outputs()
+		for db in dbs:
+			print 'Requesting output of', db
+			self.request_output(db)
+		while True:
+			print 'Waiting for output to appear...'
+			(durls,dfns) = self.get_ready_outputs()
+			(newurls, newfns) = find_new_outputs(durls, dfns, preurls)
+			print 'New outputs available:', dfns
+			for (fn,db) in zip(fns,dbs):
+				for (dfn,durl) in zip(newfns,newurls):
+					# the filename will contain the db name.
+					if not db in dfn:
+						continue
+					print 'Output', dfn, 'looks like it belongs to database', db
+					print 'Downloading to local file', fn
+					cmd = 'wget -O "%s" "%s"' % (fn, durl)
+					print '  (running: "%s")' % cmd
+					w = os.system(cmd)
+					if not os.WIFEXITED(w) or os.WEXITSTATUS(w):
+						print 'download failed.'
+						return -1
+					dbs.remove(db)
+					fns.remove(fn)
+					if dodelete:
+						print 'Deleting database', db
+						self.drop_table(db)
+			if not len(dbs):
+			   	break
+			print 'Waiting...'
+			time.sleep(sleeptime)
+		return 0
+
+
+def get_viewstate_and_eventvalidation(doc):
+	rex = re.compile('<input type="hidden" name="__VIEWSTATE" (?:id="__VIEWSTATE" )?value="(.*)" />')
+	vs = None
+	for line in doc.split('\n'):
+		m = rex.search(line)
+		if not m:
+			continue
+		vs = m.group(1)
+		break
+	rex = re.compile('<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="(.*)" />')
+	ev = None
+	for line in doc.split('\n'):
+		m = rex.search(line)
+		if not m:
+			continue
+		ev = m.group(1)
+		break
+	return (vs,ev)
 
 def query(sql):
 	f = casquery(sql)
@@ -75,7 +315,6 @@ def query(sql):
 		raise RuntimeError('SQL error: ' + f.read())
 	cols = header.split(',')
 	results = []
-
 	for line in f:
 		words = line.strip().split(',')
 		row = []
@@ -93,216 +332,8 @@ def query(sql):
 			except ValueError:
 				pass
 			row.append(w)
-		results.append(row)
+			results.append(row)
 	return (cols, results)
-
-
-
-def submit_query(sql, table='', taskname='', dbcontext=None):
-	if dbcontext is None:
-		dbcontext = cas_params['defaultdb']
-	data = urllib.urlencode({
-		'targest': dbcontext,
-		'sql': sql,
-		'queue': 500,
-		'syntax': 'false',
-		'table': table,
-		'taskname': taskname,
-		})
-	f = urllib2.urlopen(submit_url(), data)
-	doc = f.read()
-
-	redirurl = f.geturl()
-	# older CasJobs version redirects to the job details page: just pull the jobid
-	# out of the redirected URL.
-	print 'Redirected to URL', redirurl
-	pat = re.escape(job_details_url().replace('%i','')) +  '([0-9]*)'
-	#print 'pattern:', pat
-	m = re.match(pat, redirurl)
-	if m is not None:
-		jobid = int(m.group(1))
-		print 'jobid:', jobid
-		return jobid
-	#write_file(doc, 'sub.out')
-	
-	xmldoc = minidom.parseString(doc)
-	jobids = xmldoc.getElementsByTagName('jobid')
-	if len(jobids) == 0:
-		print 'No <jobid> tag found:'
-		print doc
-		return None
-	if len(jobids) > 1:
-		print 'Multiple <jobid> tags found:'
-		print doc
-		return None
-	jobid = jobids[0]
-	if not jobid.hasChildNodes():
-		print '<jobid> tag has no child node:'
-		print doc
-		return None
-	jobid = jobid.firstChild
-	if jobid.nodeType != xml.dom.Node.TEXT_NODE:
-		print 'job id is not a text node:'
-		print doc
-		return None
-	jobid = int(jobid.data)
-	if jobid == -1:
-		# Error: find error message.
-		print 'Failed to submit query.  Looking for error message...'
-		founderr = False
-		msgs = xmldoc.getElementsByTagName('message')
-		for msg in msgs:
-			if msg.hasChildNodes():
-				c = msg.firstChild
-				if c.nodeType == xml.dom.Node.TEXT_NODE:
-					print 'Error message:', c.data
-					founderr = True
-		if not founderr:
-			print 'Error message not found.  Whole response document:'
-			print
-			print doc
-			print
-	return jobid
-
-def login(username, password):
-	print 'Logging in.'
-	data = urllib.urlencode({'userid': username, 'password': password})
-	f = urllib2.urlopen(login_url(), data)
-	d = f.read()
-	#headers = f.info()
-	#print 'headers:', headers
-	#print 'Got response:'
-	#print d
-	return None
-
-def cancel_job(jobid):
-	data = urllib.urlencode({'id': jobid, 'CancelJob': 'Cancel Job'})
-	f = urllib2.urlopen(cancel_url(), data)
-	f.read()
-
-# Returns 'Finished', 'Ready', 'Started', 'Failed', 'Cancelled'
-def get_job_status(jobid):
-	#print 'Getting job status for', jobid
-	url = job_details_url() % jobid
-	doc = urllib2.urlopen(url).read()
-	for line in doc.split('\n'):
-		for stat in ['Finished', 'Ready', 'Started', 'Failed', 'Cancelled']:
-			if ('<td > <p class = "%s">%s</p></td>' %(stat,stat) in line or
-				'<td > <p class="%s">%s</p></td>' %(stat,stat) in line or
-				'<td class="center"> <p class = "%s">%s</p></td>' %(stat,stat) in line or
-				'<td class="center"> <p class = "%s">Running</p></td>' %(stat) in line): # Galex "Started"/Running
-				return stat
-	return None
-
-def get_viewstate_and_eventvalidation(doc):
-	rex = re.compile('<input type="hidden" name="__VIEWSTATE" (?:id="__VIEWSTATE" )?value="(.*)" />')
-	vs = None
-	for line in doc.split('\n'):
-		m = rex.search(line)
-		if not m:
-			continue
-		vs = m.group(1)
-		break
-
-	rex = re.compile('<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="(.*)" />')
-	ev = None
-	for line in doc.split('\n'):
-		m = rex.search(line)
-		if not m:
-			continue
-		ev = m.group(1)
-		break
-
-	return (vs,ev)
-
-def drop_table(dbname):
-	url = drop_url() % dbname
-	try:
-		f = urllib2.urlopen(url)
-	except Exception,e:
-		print 'Failed to drop table', dbname
-		print e
-		return False
-	doc = f.read()
-	(vs,ev) = get_viewstate_and_eventvalidation(doc)
-	data = urllib.urlencode({'yesButton':'Yes',
-							 '__EVENTVALIDATION':ev,
-							 '__VIEWSTATE':vs})
-	print 'Dropping table', dbname
-	try:
-		f = urllib2.urlopen(url, data)
-	except Exception,e:
-		print 'Failed to drop table', dbname
-		print e
-		return False
-	d = f.read()
-	#print 'Got response:'
-	#print d
-	#write_file(d, 'res.html')
-	return True
-
-
-	
-def request_output(mydbname):
-	url = mydb_action_url() % mydbname
-	#print 'url', url
-	try:
-		## Need to prime the VIEWSTATE by "clicking" through...
-		f = urllib2.urlopen(mydb_url())
-		f.read()
-		f = urllib2.urlopen(mydb_index_url())
-		f.read()
-		#request = urllib2.Request(url)
-		#request.add_header('User-Agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.11) Gecko/2009060214 Firefox/3.0.11')
-		#f = urllib2.urlopen(request)
-		#Referer: http://galex.stsci.edu/casjobs/mydbindex.aspx
-		f = urllib2.urlopen(url)
-	except urllib2.HTTPError,e:
-		print 'HTTPError:', e
-		print '  code', e.code
-		print '  msg', e.msg
-		print '  hdrs', e.hdrs
-		print '  data:', e.fp.read()
-		raise e
-	doc = f.read().strip()
-	#write_file(doc, 'r1.html')
-	(vs,ev) = get_viewstate_and_eventvalidation(doc)
-	data = {'extractDDL':'FITS', 'Button1':'Go',
-			'__VIEWSTATE':vs}
-	if ev is not None:
-		data['__EVENTVALIDATION'] = ev
-	extra = cas_params.get('request_output_extra')
-	if extra is not None:
-		data.update(extra)
-		print 'requesting FITS output of MyDB table', mydbname
-	#print 'url', url
-	#print 'data', urllib.urlencode(data)
-	try:
-		f = urllib2.urlopen(url, urllib.urlencode(data))
-	except urllib2.HTTPError,e:
-		print 'HTTPError:', e
-		print '  code', e.code
-		#print '  reason', e.reason
-		raise e
-	d = f.read()
-	#print 'Got response:'
-	#print d
-	#write_file(d, 'res.html')
-	return
-
-def get_ready_outputs():
-	f = urllib2.urlopen(output_url())
-	doc = f.read()
-	urls = []
-	fns = []
-	rex = re.compile('<a href="(' + re.escape(cas_params['outputbaseurl']) + '(.*))">Download</a>')
-	for line in doc.split('\n'):
-		m = rex.search(line)
-		if not m:
-			continue
-		urls.append(m.group(1))
-		fns.append(m.group(2))
-	return (urls, fns)
 
 def setup_cookies():
 	cookie_handler = urllib2.HTTPCookieProcessor()
@@ -315,56 +346,49 @@ def find_new_outputs(durls, dfns, preurls):
 	newfns =  [f for (f,u) in zip(dfns,durls) if not u in preurls]
 	return (newurls, newfns)
 
+def get_known_servers():
+	return 	{
+		'galex': Cas(
+			base_url='http://galex.stsci.edu/casjobs/',
+			submiturl='SubmitJob.aspx',
+			actionurl='mydbcontent.aspx?tableName=%s&kind=tables',
+			defaultdb='GALEXGR4Plus5',
+			outputbaseurl='http://mastweb.stsci.edu/CasOutPut/FITS/'
+			),
+		# SDSS
+		'dr7': Cas(
+			base_url='http://casjobs.sdss.org/CasJobs/',
+			submiturl='submitjobhelper.aspx',
+			actionurl='mydbcontent.aspx?ObjName=%s&ObjType=TABLE&context=MyDB&type=normal',
+			defaultdb='DR7',
+			request_output_extra={ 'targetDDL':'TargDR7Long' },
+			outputbaseurl='http://casjobs.sdss.org/CasJobsOutput2/FITS/'
+			),
+		# SDSS
+		'dr8': Cas(
+			# These will change...
+			base_url='http://skyservice.pha.jhu.edu/casjobs/',
+			submiturl='submitjobhelper.aspx',
+			actionurl='mydbcontent.aspx?ObjName=%s&ObjType=TABLE&context=MyDB&type=normal',
+			defaultdb='DR7',
+			request_output_extra={ 'targetDDL':'Thumper_DR7' },
+			outputbaseurl='http://skyservice.pha.jhu.edu/CasJobsOutput/FITS/'
+			),
+		}
 
-# Requests output of the given list of databases, waits for them to appear,
-# downloads them, and writes them to the given list of local filenames.
-#
-# 'dbs' and 'fns' must be either strings, or lists of string of the same length.
-#
-# If 'dodelete' is True, the databases will be deleted after download.
-#
-def output_and_download(dbs, fns, dodelete=False, sleeptime=10):
-	if type(dbs) is str:
-		dbs = [dbs]
-		assert(type(fns) is str)
-		fns = [fns]
-
-	print 'Getting list of available downloads...'
-	(preurls,nil) = get_ready_outputs()
-	for db in dbs:
-		print 'Requesting output of', db
-		request_output(db)
-	while True:
-		print 'Waiting for output to appear...'
-		(durls,dfns) = get_ready_outputs()
-		(newurls, newfns) = find_new_outputs(durls, dfns, preurls)
-		print 'New outputs available:', dfns
-		for (fn,db) in zip(fns,dbs):
-			for (dfn,durl) in zip(newfns,newurls):
-				# the filename will contain the db name.
-				if not db in dfn:
-					continue
-				print 'Output', dfn, 'looks like it belongs to database', db
-				print 'Downloading to local file', fn
-				cmd = 'wget -O "%s" "%s"' % (fn, durl)
-				print '  (running: "%s")' % cmd
-				w = os.system(cmd)
-				if not os.WIFEXITED(w) or os.WEXITSTATUS(w):
-					print 'download failed.'
-					return -1
-				dbs.remove(db)
-				fns.remove(fn)
-				if dodelete:
-					print 'Deleting database', db
-					drop_table(db)
-		if not len(dbs):
-			break
-		print 'Waiting...'
-		time.sleep(sleeptime)
-	return 0
 
 if __name__ == '__main__':
-	args = sys.argv[1:]
+	from optparse import OptionParser
+
+	surveys = get_known_servers()
+
+	parser = OptionParser(usage=('%prog <options> <args>'))
+	parser.add_option('-s', '--survey', dest='survey', default='dr7',
+					  help=('Set the CasJobs instance to use: one of: ' +
+							', '.join(surveys.keys())))
+
+	opt,args = parser.parse_args()
+	cas = surveys[opt.survey]
 
 	if len(args) < 2:
 		print '%s <username> <password> [command <args>]' % sys.argv[0]
@@ -382,10 +406,6 @@ if __name__ == '__main__':
 		print '     -> request output, wait for it to finish, download to <filename>, and drop table.'
 		sys.exit(-1)
 
-	if sys.argv[0].startswith('galex'):
-		print 'Using GALEX CasJobs'
-		cas_params = galex_cas
-
 	instance = 4
 
 	username = args[0]
@@ -396,7 +416,7 @@ if __name__ == '__main__':
 
 	setup_cookies()
 
-	login(username, password)
+	cas.login(username, password)
 
 	if cmd == 'delete':
 		if len(args) < 4:
@@ -404,7 +424,7 @@ if __name__ == '__main__':
 			sys.exit(-1)
 		db = args[3]
 		print 'Dropping', db
-		drop_table(db)
+		cas.drop_table(db)
 		sys.exit(0)
 
 	if cmd in ['query', 'querywait']:
@@ -416,7 +436,7 @@ if __name__ == '__main__':
 		for q in qs:
 			if q.startswith('@'):
 				q = read_file(q[1:])
-			jobid = submit_query(q)
+			jobid = cas.submit_query(q)
 			print 'Submitted job id', jobid
 			jids.append(jobid)
 		if cmd == 'querywait':
@@ -424,7 +444,7 @@ if __name__ == '__main__':
 			while True:
 				print 'Waiting for job ids:', jids
 				for jid in jids:
-					jobstatus = get_job_status(jid)
+					jobstatus = cas.get_job_status(jid)
 					print 'Job id', jid, 'is', jobstatus
 					if jobstatus in ['Finished', 'Failed', 'Cancelled']:
 						jids.remove(jid)
@@ -441,7 +461,7 @@ if __name__ == '__main__':
 			sys.exit(-1)
 		for db in dbs:
 			print 'Requesting output of db', db
-			request_output(db)
+			cas.request_output(db)
 		sys.exit(0)
 
 	if cmd in ['outputdownload', 'outputdownloaddelete']:
@@ -453,7 +473,7 @@ if __name__ == '__main__':
 		dbs = dbfns[0::2]
 		fns = dbfns[1::2]
 
-		output_and_download(dbs, fns, dodelete)
+		cas.output_and_download(dbs, fns, dodelete)
 		sys.exit(0)
 
 	statefile = 'submit.pickle'
@@ -497,11 +517,11 @@ if __name__ == '__main__':
 		for i,stat in enumerate(statuses):
 			if stat != 'waiting-query':
 				continue
-			jobstatus = get_job_status(jobids[i])
+			jobstatus = cas.get_job_status(jobids[i])
 			if not jobstatus in ['Ready', 'Started']:
 				continue
 			print 'Cancelling job', jobids[i]
-			cancel_job(jobids[i])
+			cas.cancel_job(jobids[i])
 		sys.exit(0)
 	elif cmd == 'resetall':
 		# reset all 'fail's to 'ready's
@@ -537,7 +557,7 @@ if __name__ == '__main__':
 	# Download ones that haven't already been downloaded.
 	# Delete the db when done.
 	print 'Listing available downloads...'
-	(urls,fns) = get_ready_outputs()
+	(urls,fns) = cas.get_ready_outputs()
 	for (url,fn) in zip(urls,fns):
 		if os.path.exists(fn):
 			#print 'Skipping ', fn
@@ -551,7 +571,7 @@ if __name__ == '__main__':
 			os.system(cmd)
 			#
 			print 'Deleting db', db
-			drop_table(db)
+			cas.drop_table(db)
 			statuses[i] = 'done'
 			state['status'] = statuses
 			pickle.dump(state, open(statefile, 'w'))
@@ -561,7 +581,7 @@ if __name__ == '__main__':
 	for i,stat in enumerate(statuses):
 		if stat != 'waiting-query':
 			continue
-		jobstatus = get_job_status(jobids[i])
+		jobstatus = cas.get_job_status(jobids[i])
 		if jobstatus in [ 'Failed', 'Cancelled']:
 			print 'Error: job id', jobids[i], 'has status:', jobstatus
 			statuses[i] = 'failed'
@@ -572,7 +592,7 @@ if __name__ == '__main__':
 		if jobstatus != 'Finished':
 			continue
 		print 'Requesting output of run', runs[i]
-		request_output(dbnames[i])
+		cas.request_output(dbnames[i])
 		statuses[i] = 'waiting-output'
 		state['status'] = statuses
 		pickle.dump(state, open(statefile, 'w'))
@@ -597,7 +617,7 @@ if __name__ == '__main__':
 			   + ' from PhotoObjAll where run=%i ' % runs[i]
 			   + 'and mode in (1,2) and type in (3,6)')
 		taskname = dbnames[i]
-		jobid = submit_query(sql, table, taskname)
+		jobid = cas.submit_query(sql, table, taskname)
 		nrunning += 1
 
 		statuses[i] = 'waiting-query'

@@ -11,10 +11,14 @@ from astrometry.util.starutil_numpy import *
 # override numpy.random
 import random
 
-def sdss_cas_get(username, password, ra, dec, radius, fn, band=None, maxmag=None, delete=True, mydbname=None):
+def sdss_cas_get(username, password, ra, dec, radius, fn, band=None, maxmag=None, delete=True, mydbname=None, dr=None):
 
 	casjobs.setup_cookies()
-	casjobs.login(username, password)
+
+	if dr is None:
+		dr = 'dr7'
+	cas = casjobs.get_known_servers()[dr]
+	cas.login(username, password)
 
 	if mydbname is None:
 		az = [chr(i) for i in range(ord('A'), ord('Z')+1)]
@@ -26,27 +30,31 @@ def sdss_cas_get(username, password, ra, dec, radius, fn, band=None, maxmag=None
 	else:
 		magcut = ''
 
-	# It's MUCH faster to pre-compute the bounding RA,Dec box in addition to the fDistanceArcMinEq call.
+	# It's MUCH faster to pre-compute the bounding RA,Dec box in addition
+	# to the fDistanceArcMinEq call.
 	ramin = max(0, ra - radius / cos(deg2rad(dec)))
 	ramax = min(360, ra + radius / cos(deg2rad(dec)))
 	decmin = dec - radius
 	decmax = dec + radius
 
-	sql = ' '.join(['select ra,dec,raErr,decErr,flags,u,g,r,i,z,err_u,err_g,err_r,err_i,err_z',
+	sql = ' '.join(['select ra,dec,raErr,decErr,flags,u,g,r,i,z,'
+					'err_u,err_g,err_r,err_i,err_z',
 					('into mydb.%s' % mydbname),
 					'from PhotoPrimary',
-					('where ra >= %g and ra <= %g and dec >= %g and dec <= %g' % (ramin, ramax, decmin, decmax)),
-					('and dbo.fDistanceArcMinEq(%g, %g, ra, dec) <= %g' % (ra, dec, deg2arcmin(radius))),
+					('where ra >= %g and ra <= %g and dec >= %g and dec <= %g' %
+					 (ramin, ramax, decmin, decmax)),
+					('and dbo.fDistanceArcMinEq(%g, %g, ra, dec) <= %g' %
+					 (ra, dec, deg2arcmin(radius))),
 					magcut
 					])
 	print 'Submitting SQL:'
 	print sql
 	
-	jobid = casjobs.submit_query(sql)
+	jobid = cas.submit_query(sql)
 	print 'jobid', jobid
 
 	while True:
-		jobstatus = casjobs.get_job_status(jobid)
+		jobstatus = cas.get_job_status(jobid)
 		print 'Job id', jobid, 'is', jobstatus
 		if jobstatus in ['Finished', 'Failed', 'Cancelled']:
 			break
@@ -54,7 +62,7 @@ def sdss_cas_get(username, password, ra, dec, radius, fn, band=None, maxmag=None
 		time.sleep(10)
 
 	print 'Requesting output...'
-	casjobs.output_and_download(mydbname, fn, dodelete=delete)
+	cas.output_and_download(mydbname, fn, dodelete=delete)
 
 					  
 if __name__ == '__main__':
@@ -65,7 +73,8 @@ if __name__ == '__main__':
 	parser.add_option('-m', dest='maxmag', type='float', help='Maximum magnitude cut')
 	parser.add_option('-u', dest='username', help='SDSS CasJobs username (default: from $SDSS_CAS_USER)')
 	parser.add_option('-p', dest='password', help='SDSS CasJobs password (default: from $SDSS_CAS_PASS)')
-	parser.set_defaults(radius=1.0, band='r', maxmag=20., username=None, password=None)
+	parser.add_option('-R', dest='dr', type='string', help='CAS server to use ("dr7" or "dr8")')
+	parser.set_defaults(radius=1.0, band='r', maxmag=20., username=None, password=None, dr=None)
 
 	(opt, args) = parser.parse_args()
 	if len(args) != 3:
@@ -88,5 +97,5 @@ if __name__ == '__main__':
 	outfn = args[2]
 
 	sdss_cas_get(opt.username, opt.password, ra, dec, opt.radius, outfn,
-				 opt.band, opt.maxmag)
+				 opt.band, opt.maxmag, dr=opt.dr)
 

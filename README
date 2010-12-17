@@ -72,14 +72,20 @@ For full functionality, you will need:
 					   zlib-devel
 
 -> On Mac OS X, possibly the easiest way is to install Fink
-   (www.finkproject.org), and then use apt-get install as per the
-   Debian instructions above (leaving out "zlib1g-dev" because it's
-   already included with OSX).  Note that to use Fink you will need to
+   (www.finkproject.org), and then use apt-get install:
+
+    $ sudo apt-get install libjpeg cairo netpbm10 libpng3
+
+   (leave "zlib1g-dev" because it is already included with OSX).
+   Note that to use Fink you will need to
    add something like this in your ~/.profile or ~/.bashrc file:
 
 . /sw/bin/init.sh
 export CFLAGS="-I/usr/local/include -I/sw/include"
 export LDFLAGS="-L/usr/local/lib -L/sw/lib"
+
+   You should also grab the "numpy" package from http://scipy.org/Download .
+
 
 
 If you don't have and can't get these libraries, you should still be
