@@ -32,6 +32,7 @@ BASEDIR := .
 COMMON := $(BASEDIR)/util
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.qfits
+include $(COMMON)/makefile.cfitsio
 
 .PHONY: Makefile $(COMMON)/makefile.qfits
 

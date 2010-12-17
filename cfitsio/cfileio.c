@@ -5965,6 +5965,7 @@ int ffclos(fitsfile *fptr,      /* I - FITS file pointer */
 
 				ffpmsg("failed to close the following file: (ffclos)");
 				ffpmsg((fptr->Fptr)->filename);
+				ffpmsg(strerror(errno));
             }
         }
 
