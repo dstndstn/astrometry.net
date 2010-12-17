@@ -5704,13 +5704,9 @@ class FITS_rec(rec.recarray):
         if (self._convert[indx] is None):
             # for X format
             if isinstance(self._coldefs._recformats[indx], _FormatX):
-                print 'grabbing X format...'
                 _nx = self._coldefs._recformats[indx]._nx
                 dummy = np.zeros(self.shape+(_nx,), dtype=np.bool_)
-                f = rec.recarray.field(self,indx)
-                print 'f:', f
                 _unwrapx(rec.recarray.field(self,indx), dummy, _nx)
-                print 'dummy:', dummy
                 self._convert[indx] = dummy
                 return self._convert[indx]
 
