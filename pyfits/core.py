@@ -5205,6 +5205,8 @@ def _get_tbdata(hdu):
             _data = rec.array(hdu._file, dtype=dtype, names=tmp.names,
                               shape=tmp._shape)
         else:
+            # print '_recformats:', tmp._recformats
+            # print 'names:', tmp.names
             _data = rec.array(hdu._file, formats=",".join(tmp._recformats),
                               names=tmp.names, shape=tmp._shape)
 

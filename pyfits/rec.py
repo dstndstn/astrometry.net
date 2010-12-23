@@ -83,6 +83,7 @@ class format_parser:
             else:
                 raise NameError, "illegal input names %s" % `names`
 
+            # print 'names:', names
             self._names = [n.strip() for n in names[:self._nfields]]
         else:
             self._names = []
