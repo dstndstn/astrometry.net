@@ -147,6 +147,30 @@ class tabledata(object):
 					print 'my length:', self._length
 					raise Exception('error in fits_table indexing')
 
+	def copy(self):
+		rtn = tabledata()
+		for name,val in self.__dict__.items():
+			if name.startswith('_'):
+				continue
+			if numpy.isscalar(val):
+				print 'copying scalar', name
+				rtn.set(name, val)
+				continue
+			if type(val) is numpy.ndarray:
+				print 'copying numpy array', name
+				rtn.set(name, val.copy())
+				continue
+			if type(val) is list:
+				print 'copying list', name
+				rtn.set(name, val[:])
+				continue
+			print 'in pyfits_utils: copy(): can\'t copy', name, '=', valxo
+		rtn._header = self._header
+		if hasattr(self, '_columns'):
+			rtn._columns = self._columns
+		return rtn
+
+
 	def __getitem__(self, I):
 		rtn = tabledata()
 		if type(I) is slice:
@@ -168,7 +192,7 @@ class tabledata(object):
 			if numpy.isscalar(val):
 				rtn.set(name, val)
 				continue
-			if type(val) is numpy.ndarray:
+			if type(val) in [numpy.ndarray, numpy.core.defchararray.chararray]:
 			#try:
 				rtn.set(name, val[I])
 			elif type(val) is list and type(I) in [int, numpy.int64]:
@@ -251,9 +275,17 @@ class tabledata(object):
 		for name,val in self.__dict__.items():
 			if name.startswith('_'):
 				continue
-			newX = numpy.append(val, X.getcolumn(name), axis=0)
-			self.set(name, newX)
-			self._length = len(newX)
+			try:
+				val2 = X.getcolumn(name)
+				if type(val) is list:
+					newX = val + val2
+				else:
+					newX = numpy.append(val, val2, axis=0)
+				self.set(name, newX)
+				self._length = len(newX)
+			except Exception as e:
+				print 'exception appending element "%s"' % name
+				raise e
 
 	def write_to(self, fn, columns=None, header='default', primheader=None):
 		if columns is None and hasattr(self, '_columns'):

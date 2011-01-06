@@ -28,7 +28,7 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False):
 
 	# Convert to coordinates on the unit sphere
 	xyz1 = radectoxyz(ra1, dec1)
-	if ra1 == ra2 and dec1 == dec2:
+	if all(ra1 == ra2) and all(dec1 == dec2):
 		xyz2 = xyz1
 	else:
 		xyz2 = radectoxyz(ra2, dec2)

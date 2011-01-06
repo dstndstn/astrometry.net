@@ -10,6 +10,8 @@ def sdss_dg_psf_params(psfield, band):
 	T = T[0]
 	# http://www.sdss.org/dr7/dm/flatFiles/psField.html
 	# good = PSP_FIELD_OK
+	if T.status[band] != 0:
+		print 'T.status[band=%s] =' % band, T.status[band]
 	assert(T.status[band] == 0)
 	a  = 1.0
 	s1 = T.psf_sigma1_2g[band]

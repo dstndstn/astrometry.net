@@ -60,7 +60,7 @@ class Plotstuff(object):
 		plotstuff_builtin_apply(self.pargs.cairo, self.pargs)
 
 	def plot(self, layer):
-		plotstuff_plot_layer(self.pargs, layer)
+		return plotstuff_plot_layer(self.pargs, layer)
 
 	def scale_wcs(self, scale):
 		plotstuff_scale_wcs(self.pargs, scale)
