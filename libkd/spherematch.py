@@ -1,7 +1,27 @@
 from astrometry.libkd import spherematch_c
 from math import *
 from numpy import *
-from astrometry.util.starutil_numpy import radectoxyz, deg2dist, dist2deg
+
+# for LSST (use things defined in astrometry.net 0.30)
+try:
+    from astrometry.util.starutil_numpy import radectoxyz, deg2dist, dist2deg
+except:
+    from astrometry.util.starutil_numpy import radectoxyz, rad2distsq
+
+    def rad2dist(r):
+        return sqrt(rad2distsq(r))
+
+    def distsq2rad(dist2):
+        return arccos(1. - dist2 / 2.)
+    def distsq2deg(dist2):
+        return rad2deg(distsq2rad(dist2))
+
+    # deg2dist, dist2deg
+    def deg2dist(deg):
+        return rad2dist(deg2rad(deg))
+    def dist2deg(dist):
+        return distsq2deg(dist**2)
+
 
 # Copied from "celestial.py" by Sjoert van Velzen.
 def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False):

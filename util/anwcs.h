@@ -119,5 +119,7 @@ double anwcs_pixel_scale(const anwcs_t* anwcs);
 
 void anwcs_free(anwcs_t* wcs);
 
+// useful for python: get the sip_t*, if this anwcs wraps a SIP structure; NULL else
+sip_t* anwcs_get_sip(const anwcs_t* wcs);
 
 #endif

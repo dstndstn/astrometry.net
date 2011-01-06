@@ -40,6 +40,7 @@ class Plotstuff(object):
 			#print 'plotstuff.py: setting plot size of', self.pargs, 'to %i,%i' % (val[0], val[1])
 			plotstuff_set_size(self.pargs, val[0], val[1])
 		elif name == 'color':
+			print 'plotstuff.py: setting color to "%s"' % val
 			self.set_color(val)
 		elif name == 'alpha':
 			self.set_alpha(val)
@@ -72,7 +73,9 @@ class Plotstuff(object):
 		plotstuff_set_wcs_box(self.pargs, ra, dec, width)
 
 	def set_color(self, color):
+		print 'calling plotstuff_set_color(., \"%s\")' % color
 		x = plotstuff_set_color(self.pargs, color)
+		return x
 
 	def set_alpha(self, a):
 		x = plotstuff_set_alpha(self.pargs, a)

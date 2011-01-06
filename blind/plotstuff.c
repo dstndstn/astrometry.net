@@ -753,6 +753,7 @@ const char* image_format_name_from_code(int code) {
 }
 
 int plotstuff_set_color(plot_args_t* pargs, const char* name) {
+    logverb("setting color to \"%s\"\n", name);
 	return parse_color_rgba(name, pargs->rgba);
 }
 

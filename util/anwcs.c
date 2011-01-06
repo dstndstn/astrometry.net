@@ -1013,5 +1013,11 @@ dl* anwcs_walk_discontinuity(const anwcs_t* wcs,
 	return radecs;
 }
 
+sip_t* anwcs_get_sip(const anwcs_t* wcs) {
+    if (wcs->type == ANWCS_TYPE_SIP)
+        return wcs->data;
+    return NULL;
+}
+
 
 
