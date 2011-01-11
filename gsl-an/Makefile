@@ -164,7 +164,7 @@ chol-demo: chol-demo.o $(GSL_LIB)
 	gcc -o $@ $^ -lm
 
 SVD_OBJS := linalg/svd.o linalg/bidiag.o sys/coerce.o vector/swap.o matrix/swap.o \
-		vector/oper.o
+		vector/oper.o sys/ldfrexp.o
 
 svd-demo: svd-demo.o $(GSL_LIB)
 	gcc -o $@ $^ -lm
