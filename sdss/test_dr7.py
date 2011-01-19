@@ -4,6 +4,7 @@ import numpy as np
 
 import astrometry.sdss
 from astrometry.sdss import DR7
+from astrometry.util.pyfits_utils import fits_table
 
 if __name__ == '__main__':
 	sdss = DR7()
@@ -24,7 +25,12 @@ if __name__ == '__main__':
 	x,y = 0,0
 	color = 0.
 
-	rdr = asr.pixel_to_radec(x, y, color)
-	rdi = asi.pixel_to_radec(x, y, color)
-	print 'rdr', rdr
-	print 'rdi', rdi
+	rr,dr = asr.pixel_to_radec(x, y, color)
+	ri,di = asi.pixel_to_radec(x, y, color)
+	print 'r', rr,dr
+	print 'i', ri,di
+
+	rx,ry = asr.radec_to_pixel(rr, dr)
+	ix,iy = asi.radec_to_pixel(ri, di)
+	print 'r', rx, ry
+	print 'i', ix, iy

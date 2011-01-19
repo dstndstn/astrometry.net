@@ -57,19 +57,19 @@ class AsTrans(SdssFile):
 	def __init__(self, *args, **kwargs):
 		'''
 		node, incl: in radians
+
+		astrans: must be an object with fields:
+		 {a,b,c,d,e,f}[band]
+		 {ricut}[band]
+		 {drow0, drow1, drow2, drow3, dcol0, dcol1, dcol2, dcol3}[band]
+		 {csrow, cscol, ccrow, cccol}[band]
+
 		'''
-		# node=None, incl=None, astrans=None, 
 		super(AsTrans, self).__init__(*args, **kwargs)
 		self.filetype = 'asTrans'
 		self.node = kwargs.get('node', None)
 		self.incl = kwargs.get('incl', None)
 		astrans = kwargs.get('astrans', None)
-		# "astrans" must be an object with fields:
-		#  {a,b,c,d,e,f}[band]
-		#  {ricut}[band]
-		#  {drow0, drow1, drow2, drow3, dcol0, dcol1, dcol2, dcol3}[band]
-		#  {csrow, cscol, ccrow, cccol}[band]
-		#self.astrans = astrans
 		self.trans = {}
 		if astrans is not None and hasattr(self, 'bandi'):
 			for f in ['a','b','c','d','e','f', 'ricut',
@@ -101,7 +101,7 @@ class AsTrans(SdssFile):
 		mu, nu = self.pixel_to_munu(x, y, color)
 		return self.munu_to_radec(mu, nu)
 
-	def radec_to_pixel(self, ra, dec, color):
+	def radec_to_pixel(self, ra, dec, color=0):
 		mu, nu = self.radec_to_munu(ra, dec)
 		return self.munu_to_pixel(mu, nu, color)
 	
@@ -203,7 +203,7 @@ class AsTrans(SdssFile):
 		mu = node + np.arctan2(np.sin(ra - node) * np.cos(dec) * np.cos(incl) +
 							   np.sin(dec) * np.sin(incl),
 							   np.cos(ra - node) * np.cos(dec))
-		nu = np.arcsin(-sin(ra - node) * np.cos(dec) * np.sin(incl) +
+		nu = np.arcsin(-np.sin(ra - node) * np.cos(dec) * np.sin(incl) +
 					   np.sin(dec) * np.cos(incl))
 		mu, nu = np.rad2deg(mu), np.rad2deg(nu)
 		mu += (360. * (mu < 0))
