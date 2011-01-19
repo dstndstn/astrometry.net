@@ -1,3 +1,4 @@
+import os
 import pyfits
 
 from common import *
@@ -17,6 +18,7 @@ class DR7(object):
 			'tsField': 'tsField-%(run)06i-%(camcol)i-%(rerun)i-%(field)04i.fit',
 			}
 		self.softbias = 1000
+		self.basedir = None
 
 	def getFilename(self, filetype, *args, **kwargs):
 		for k,v in zip(['run', 'camcol', 'field', 'band'], args):
@@ -26,12 +28,35 @@ class DR7(object):
 		pat = self.filenames[filetype]
 		return pat % kwargs
 
+	def setBasedir(self, dirnm):
+		self.basedir = dirnm
+
 	def _open(self, fn):
-		return pyfits.open(fn)
+		if self.basedir is not None:
+			path = os.path.join(self.basedir, fn)
+		else:
+			path = fn
+		return pyfits.open(path)
+
+	def readTsField(self, run, camcol, field, rerun):
+		'''
+		http://www.sdss.org/dr7/dm/flatFiles/tsField.html
+
+		band: string ('u', 'g', 'r', 'i', 'z')
+		'''
+		f = TsField(run, camcol, field, rerun=rerun)
+		fn = self.getFilename('tsField', run, camcol, field, rerun=rerun)
+		print 'reading file', fn
+		p = self._open(fn)
+		print 'got', len(p), 'HDUs'
+		f.setHdus(p)
+		return f
 
 	def readFpC(self, run, camcol, field, band):
 		'''
 		http://data.sdss3.org/datamodel/files/PHOTO_REDUX/RERUN/RUN/objcs/CAMCOL/fpC.html
+
+		band: string ('u', 'g', 'r', 'i', 'z')
 		'''
 		f = FpC(run, camcol, field, band)
 		# ...

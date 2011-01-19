@@ -26,6 +26,9 @@ def sdss_filename(filetype, run, camcol, field, band=None, rerun=0):
 		'psField': 'psField-%(run)06i-%(camcol)i-%(field)04i.fit',
 		'tsObj': 'tsObj-%(run)06i-%(camcol)i-%(rerun)i-%(field)04i.fit',
 		'tsField': 'tsField-%(run)06i-%(camcol)i-%(rerun)i-%(field)04i.fit',
+
+		#'http://das.sdss.org/imaging/125/40/astrom/asTrans-000125.fit'
+		# http://das.sdss.org/imaging/125/40/calibChunks/3/tsField-000125-3-40-0196.fit
 		}
 	format = ftmap.get(filetype, None)
 	if format is None:
