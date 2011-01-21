@@ -220,6 +220,9 @@ int fitstable_n_fits_columns(const fitstable_t* tab);
 
 void fitstable_add_fits_columns_as_struct(fitstable_t* dest);
 
+void fitstable_add_fits_columns_as_struct2(const fitstable_t* intab,
+										   fitstable_t* outtab);
+
 // reading:
 int fitstable_find_fits_column(fitstable_t* t, const char* colname,
 							   char** units, tfits_type* type, int* arraysize);
@@ -250,12 +253,12 @@ int fitstable_open_next_extension(fitstable_t* tab);
 
 int  fitstable_close(fitstable_t*);
 
-int fitstable_ncols(fitstable_t* t);
+int fitstable_ncols(const fitstable_t* t);
 
-int fitstable_nrows(fitstable_t* t);
+int fitstable_nrows(const fitstable_t* t);
 
 // Returns the size of the row in FITS format.
-int fitstable_row_size(fitstable_t* t);
+int fitstable_row_size(const fitstable_t* t);
 
 int fitstable_get_struct_size(const fitstable_t* table);
 
@@ -369,6 +372,8 @@ int fitstable_write_row(fitstable_t* table, ...);
  This means that if you're reading from a FITS file into an in-memory
  fitstable, or vice versa, you will need to use
  fitstable_endian_flip_row_data().
+
+ (these inputs are not "const" because they update the file offsets)
  */
 int fitstable_read_row_data(fitstable_t* table, int row, void* dest);
 int fitstable_write_row_data(fitstable_t* table, void* data);

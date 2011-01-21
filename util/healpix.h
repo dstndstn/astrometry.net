@@ -358,7 +358,14 @@ int healpix_get_neighbours_within_range_radec(double ra, double dec, double radi
  and the given RA,Dec (in degrees).
  */
 double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
-								 double* closestxyz);
+								 double* closestradec);
+
+/**
+ Returns true if the closest distance between the given healpix and
+ the given RA,Dec (in degrees) is less than then given radius (in degrees).
+ */
+int healpix_within_range_of_radec(int hp, int Nside, double ra, double dec,
+								   double radius);
 
 /**
  Returns the minimum distance (in degrees) between the given healpix

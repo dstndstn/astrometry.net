@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009, 2010 Dustin Lang.
+  Copyright 2009, 2010, 2011 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -394,7 +394,16 @@ int build_index_shared_skdt(startree_t* starkd, index_params_t* p,
 
 int build_index(fitstable_t* catalog, index_params_t* p,
 				index_t** p_index, const char* indexfn) {
+	int rtn;
+	pl* lst = pl_new(1);
+	pl_append(lst, catalog);
+	rtn = build_index2(lst, p, p_index, indexfn);
+	pl_free(lst);
+	return rtn;
+}
 
+int build_index2(const pl* catalogs, index_params_t* p,
+				index_t** p_index, const char* indexfn) {
 	fitstable_t* uniform;
 
 	// star kdtree

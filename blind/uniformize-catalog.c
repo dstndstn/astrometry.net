@@ -170,12 +170,12 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		ninside = (Nside/bignside)*(Nside/bignside);
 		// Prime the queue with the fine healpixes that are on the
 		// boundary of the big healpix.
-		// -1 prevents us from double-adding the corners.
 		for (i=0; i<((Nside / bignside) - 1); i++) {
 			// add (i,0), (i,max), (0,i), and (0,max) healpixes
             int xx = i + bighpx * (Nside / bignside);
             int yy = i + bighpy * (Nside / bignside);
             int y0 =     bighpy * (Nside / bignside);
+			// -1 prevents us from double-adding the corners.
             int y1 =(1 + bighpy)* (Nside / bignside) - 1;
             int x0 =     bighpx * (Nside / bignside);
             int x1 =(1 + bighpx)* (Nside / bignside) - 1;
@@ -362,8 +362,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	}
 
 	// Write output.
-	fitstable_add_fits_columns_as_struct(intable);
-	fitstable_copy_columns(intable, outtable);
+	fitstable_add_fits_columns_as_struct2(intable, outtable);
 	if (fitstable_write_header(outtable)) {
 		ERROR("Failed to write output table header");
 		return -1;

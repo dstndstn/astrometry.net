@@ -89,7 +89,7 @@ ANUTILS_LIB := libanutils.a
 
 PYTHON_LIBS := _sip.so _healpix.so
 
-PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian smooth-image search-index
+PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian smooth-image search-index hpsplit
 # tycho2tostellarium build-hd-tree
 
 all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS)
@@ -233,6 +233,10 @@ ALL_OBJ += fits-flip-endian.o
 search-index: search-index.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += search-index.o
+
+hpsplit: hpsplit.o \
+		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += hpsplit.o
 
 PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
 	starutil_numpy.py \

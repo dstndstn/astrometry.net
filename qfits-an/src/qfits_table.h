@@ -290,7 +290,7 @@ int qfits_table_append_xtension_hdr(FILE *, const qfits_table *, const void **,
         const qfits_header *);
 char * qfits_table_field_to_string(const qfits_table *, int, int, int);
 
-
+const qfits_col* qfits_table_get_col(const qfits_table* t, int i);
 
 int qfits_table_interpret_type(
         const char  *   str,

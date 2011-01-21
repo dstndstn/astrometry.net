@@ -90,6 +90,10 @@ static double qfits_str2dec(const char *, int);
                               Function codes
  -----------------------------------------------------------------------------*/
 
+const qfits_col* qfits_table_get_col(const qfits_table* t, int i) {
+	return t->col + i;
+}
+
 qfits_table* qfits_table_copy(const qfits_table* t) {
 	qfits_table* dest = calloc(1, sizeof(qfits_table));
 	assert(dest);

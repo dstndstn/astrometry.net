@@ -1411,11 +1411,23 @@ double healpix_distance_to_xyz(int hp, int Nside, const double* xyz,
 }
 
 double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
-								 double* closestxyz) {
+								 double* closestradec) {
 	double xyz[3];
+	double closestxyz[3];
+	double dist;
 	radecdeg2xyzarr(ra, dec, xyz);
-	return healpix_distance_to_xyz(hp, Nside, xyz, closestxyz);
+	dist = healpix_distance_to_xyz(hp, Nside, xyz, closestxyz);
+	if (closestradec)
+		xyzarr2radecdegarr(closestxyz, closestradec);
+	return dist;
 }
+
+int healpix_within_range_of_radec(int hp, int Nside, double ra, double dec,
+								  double radius) {
+	// This is the dumb trivial implementation...
+	return (healpix_distance_to_radec(hp, Nside, ra, dec, NULL) <= radius);
+}
+
 
 void healpix_radec_bounds(int hp, int nside,
 						  double* p_ralo, double* p_rahi,

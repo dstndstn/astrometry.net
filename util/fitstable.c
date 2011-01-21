@@ -192,7 +192,7 @@ tfits_type fitscolumn_any_type() {
  return "
  */
 
-int fitstable_ncols(fitstable_t* t) {
+int fitstable_ncols(const fitstable_t* t) {
     return ncols(t);
 }
 
@@ -310,7 +310,7 @@ int fitstable_copy_row_data(fitstable_t* table, int row, fitstable_t* outtable) 
 	return fitstable_copy_rows_data(table, &row, 1, outtable);
 }
 
-int fitstable_row_size(fitstable_t* t) {
+int fitstable_row_size(const fitstable_t* t) {
     // FIXME - should this return the size of the *existing* FITS table
     // (when reading), or just the columns we care about (those in "cols")?
     return t->table->tab_w;
@@ -423,6 +423,27 @@ void fitstable_add_write_column_struct(fitstable_t* tab,
 
 int fitstable_n_fits_columns(const fitstable_t* tab) {
 	return tab->table->nc;
+}
+
+void fitstable_add_fits_columns_as_struct2(const fitstable_t* intab,
+										   fitstable_t* outtab) {
+	int i, NC;
+	int off = 0;
+	NC = fitstable_get_N_fits_columns(intab);
+	for (i=0; i<NC; i++) {
+		const qfits_col* qcol = qfits_table_get_col(intab->table, i);
+		fitscol_t* col;
+		/*
+		 if (qcol->atom_type == TFITS_BIN_TYPE_X) {
+		 }
+		 */
+		fitstable_add_read_column_struct(outtab, qcol->atom_type, qcol->atom_nb,
+										 off, qcol->atom_type, qcol->tlabel, TRUE);
+		// set the FITS column number.
+		col = getcol(outtab, ncols(outtab)-1);
+		col->col = i;
+		off += fitscolumn_get_size(col); //getcol(tab, ncols(tab)-1));
+	}
 }
 
 void fitstable_add_fits_columns_as_struct(fitstable_t* tab) {
@@ -1456,7 +1477,7 @@ void fitstable_close_table(fitstable_t* tab) {
     }
 }
 
-int fitstable_nrows(fitstable_t* t) {
+int fitstable_nrows(const fitstable_t* t) {
     if (!t->table) return 0;
     return t->table->nr;
 }
