@@ -16,6 +16,10 @@ def band_index(b):
 		return b
 	raise Exception('Invalid SDSS band: "' + str(b) + '"')
 
+#def munu_to_radec(node, incl, mu, nu):
+#	# 
+	
+
 class SdssFile(object):
 	def __init__(self, run=None, camcol=None, field=None, band=None, rerun=None,
 				 **kwargs):
@@ -97,7 +101,7 @@ class AsTrans(SdssFile):
 	def _get_ricut(self):
 		return self.trans['ricut']
 
-	def pixel_to_radec(self, x, y, color):
+	def pixel_to_radec(self, x, y, color=0):
 		mu, nu = self.pixel_to_munu(x, y, color)
 		return self.munu_to_radec(mu, nu)
 
@@ -105,7 +109,7 @@ class AsTrans(SdssFile):
 		mu, nu = self.radec_to_munu(ra, dec)
 		return self.munu_to_pixel(mu, nu, color)
 	
-	def munu_to_pixel(self, mu, nu, color):
+	def munu_to_pixel(self, mu, nu, color=0):
 		a, b, c, d, e, f = self._get_abcdef()
 		determinant = b * f - c * e
 		B = f  / determinant
@@ -116,14 +120,14 @@ class AsTrans(SdssFile):
 		xprime = E * (mu - a) + F * (nu - d)
 		return self.prime_to_pixel(xprime, yprime, color)
 
-	def pixel_to_munu(self, x, y, color):
+	def pixel_to_munu(self, x, y, color=0):
 		(xprime, yprime) = self.pixel_to_prime(x, y, color)
 		a, b, c, d, e, f = self._get_abcdef()
 		mu = a + b * yprime + c * xprime
 		nu = d + e * yprime + f * xprime
 		return (mu, nu)
 
-	def pixel_to_prime(self, x, y, color):
+	def pixel_to_prime(self, x, y, color=0):
 		# Secret decoder ring:
 		#  http://www.sdss.org/dr7/products/general/astrometry.html
 		# (color)0 is called riCut;
@@ -161,7 +165,7 @@ class AsTrans(SdssFile):
 		yprime += np.where(color < color0, py * color, qy)
 		return (xprime, yprime)
 
-	def prime_to_pixel(self, xprime, yprime,  color):
+	def prime_to_pixel(self, xprime, yprime,  color=0):
 		color0 = self._get_ricut()
 		g0, g1, g2, g3 = self._get_drow()
 		h0, h1, h2, h3 = self._get_dcol()

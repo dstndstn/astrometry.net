@@ -44,7 +44,7 @@ def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, su
 			return False
 		urls.append('http://das.sdss.org/imaging/' + path + suffix)
 	if outfn:
-		outfn = outfn % { 'run':run, 'camcol':camcol, 'field':field, 'band':band }
+		outfn = outfn % { 'run':run, 'camcol':camcol, 'field':field, 'band':band } + suffix
 	else:
 		outfn = sdss_filename(filetype, run, camcol, field, band) + suffix
 	if not get_urls(urls, outfn, curl):
