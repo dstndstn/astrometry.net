@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009, 2010, 2011 Dustin Lang.
+  Copyright 2009 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -67,15 +67,7 @@ void build_index_defaults(index_params_t* params);
 int build_index_files(const char* catalogfn, const char* indexfn,
 					  index_params_t* params);
 
-/** Multiple input catalog files. */
-int build_index_files2(const sl* catalogfns, const char* indexfn,
-					   index_params_t* params);
-
 int build_index(fitstable_t* catalog, index_params_t* p,
-				index_t** p_index, const char* indexfn);
-
-/** Multiple input catalogs (of type fitstable_t* -- not const!) */
-int build_index2(const pl* catalogs, index_params_t* p,
 				index_t** p_index, const char* indexfn);
 
 int build_index_shared_skdt(startree_t* starkd, index_params_t* p,

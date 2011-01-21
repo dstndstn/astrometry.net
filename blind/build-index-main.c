@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009, 2010, 2011 Dustin Lang.
+  Copyright 2009, 2010 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -40,8 +40,6 @@ static void print_help(char* progname) {
 	printf("\nUsage: %s\n"
 	       "      (\n"
 		   "         -i <input-FITS-catalog>  input: source RA,DEC, etc\n"
-		   "    OR,\n"
-		   "         <input-FITS-catalog> ...\n"
 		   "    OR,\n"
 		   "         -1 <input-index>         to share another index's stars\n"
 		   "      )\n"
@@ -94,7 +92,7 @@ extern int optind, opterr, optopt;
 int main(int argc, char** argv) {
 	int argchar;
 
-	sl* infns = sl_new(4);
+	char* infn = NULL;
 	char* indexfn = NULL;
 	char* inindexfn = NULL;
 
@@ -141,7 +139,7 @@ int main(int argc, char** argv) {
 			p->UNside = atoi(optarg);
 			break;
 		case 'i':
-            sl_append(infns, optarg);
+            infn = optarg;
 			break;
 		case 'o':
 			indexfn = optarg;
@@ -194,19 +192,26 @@ int main(int argc, char** argv) {
 	
 	log_init(loglvl);
 
-	for (i=optind; i<argc; i++) {
-		sl_append(infns, argv[i]);
-	}
-	if (!(sl_size(infns) || inindexfn) || !indexfn) {
+	if (!(infn || inindexfn) || !indexfn) {
 		printf("You must specify input & output filenames.\n");
 		print_help(argv[0]);
 		exit( -1);
 	}
-	if (sl_size(infns) && inindexfn) {
+	if (infn && inindexfn) {
 		printf("Only specify one of -i <input catalog> and -1 <share star kdtree>!\n");
 		print_help(argv[0]);
 		exit( -1);
 	}
+
+    if (optind != argc) {
+        print_help(argv[0]);
+        printf("\nExtra command-line args were given: ");
+        for (i=optind; i<argc; i++) {
+            printf("%s ", argv[i]);
+        }
+        printf("\n");
+        exit(-1);
+    }
 
 	if (!p->indexid)
 		logmsg("Warning: you should set the unique-id for this index (with -I).\n");
@@ -249,8 +254,8 @@ int main(int argc, char** argv) {
 	p->argc = argc;
 	p->args = argv;
 
-	if (sl_size(infns)) {
-		if (build_index_files2(infns, indexfn, p)) {
+	if (infn) {
+		if (build_index_files(infn, indexfn, p)) {
 			exit(-1);
 		}
 	} else {
@@ -258,7 +263,6 @@ int main(int argc, char** argv) {
 			exit(-1);
 		}
 	}
-	sl_free2(infns);
 	return 0;
 }
 
