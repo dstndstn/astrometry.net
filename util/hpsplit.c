@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
 	NHP = 12 * nside * nside;
 	logmsg("%i output healpixes\n", NHP);
 	outtables = calloc(NHP, sizeof(fitstable_t*));
-	assert(outtable);
+	assert(outtables);
 
 	for (i=0; i<sl_size(infns); i++) {
 		char* infn = sl_get(infns, i);
