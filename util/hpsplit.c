@@ -243,6 +243,7 @@ int main(int argc, char *argv[]) {
 			double ra, dec;
 			int j;
 			double* rd;
+			void* rowdata;
 			rd = fitstable_next_struct(intable);
 			ra = rd[0];
 			dec = rd[1];
@@ -259,9 +260,11 @@ int main(int argc, char *argv[]) {
 				logverb(" ]\n");
 			}
 
+			rowdata = buffered_read(rowbuf);
+			assert(rowdata);
+
 			j=0;
 			while (1) {
-				void* rowdata;
 				if (hps) {
 					if (j >= il_size(hps))
 						break;
@@ -292,7 +295,6 @@ int main(int argc, char *argv[]) {
 					outtables[hp] = out;
 				}
 
-				rowdata = buffered_read(rowbuf);
 				if (fitstable_write_row_data(outtables[hp], rowdata)) {
 					ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
 				}
@@ -305,8 +307,12 @@ int main(int argc, char *argv[]) {
 
 		}
 		buffered_read_free(rowbuf);
+		// wack... buffered_read_free() just frees the buffer
+		// who wrote this crazy code?  Oh, me of 5 years ago.  Jerk.
+		free(rowbuf);
 
 		fitstable_close(intable);
+		il_free(hps);
 	}
 
 	for (i=0; i<NHP; i++) {
