@@ -96,6 +96,7 @@ int main(int argc, char *argv[]) {
 	int nside = 1;
 	double margin = 0.0;
 	int NHP;
+	double md;
 	
 	fitstable_t* intable;
 	fitstable_t** outtables;
@@ -152,6 +153,8 @@ int main(int argc, char *argv[]) {
 	outtables = calloc(NHP, sizeof(fitstable_t*));
 	assert(outtables);
 
+	md = deg2dist(margin);
+
 	cap_t* mincaps = malloc(NHP * sizeof(cap_t));
 	cap_t* maxcaps = malloc(NHP * sizeof(cap_t));
 	for (i=0; i<NHP; i++) {
@@ -177,7 +180,7 @@ int main(int argc, char *argv[]) {
 		r2 = MAX(r2, distsq(xyz, cxyz, 3));
 		healpix_to_xyzarr(i, nside, 1.0, 1.0, xyz);
 		r2 = MAX(r2, distsq(xyz, cxyz, 3));
-		maxcaps[i].r2 = r2;
+		maxcaps[i].r2 = square(MAX(0, sqrt(r2) - md));
 		r2a = r2;
 
 		r2 = 1.0;
@@ -196,6 +199,7 @@ int main(int argc, char *argv[]) {
 			r2 = MIN(r2, distsq(xyz, cxyz, 3));
 			r2b = MAX(r2b, distsq(xyz, cxyz, 3));
 		}
+		mincaps[i].r2 = square(MAX(0, sqrt(r2) - md));
 		logverb("\nhealpix %i: min rad    %g\n", i, sqrt(r2));
 		logverb("healpix %i: max rad    %g\n", i, sqrt(r2a));
 		logverb("healpix %i: max rad(b) %g\n", i, sqrt(r2b));
@@ -244,16 +248,47 @@ int main(int argc, char *argv[]) {
 			int j;
 			double* rd;
 			void* rowdata;
+
 			rd = fitstable_next_struct(intable);
 			ra = rd[0];
 			dec = rd[1];
-			
+
 			logverb("row %i: ra,dec %g,%g\n", r, ra, dec);
 			if (margin == 0) {
 				hp = radecdegtohealpix(ra, dec, nside);
 				logverb("  --> healpix %i\n", hp);
 			} else {
-				hps = healpix_rangesearch_radec(ra, dec, margin, nside, hps);
+
+				double xyz[3];
+				bool gotit = FALSE;
+				double d2;
+				if (!hps)
+					hps = il_new(4);
+				radecdeg2xyzarr(ra, dec, xyz);
+				for (j=0; j<NHP; j++) {
+					d2 = distsq(xyz, mincaps[j].xyz, 3);
+					if (d2 <= mincaps[j].r2) {
+						logverb("  -> in mincap %i  (dist %g vs %g)\n", j, sqrt(d2), sqrt(mincaps[j].r2));
+						il_append(hps, j);
+						gotit = TRUE;
+						break;
+					}
+				}
+				if (!gotit) {
+					for (j=0; j<NHP; j++) {
+						d2 = distsq(xyz, maxcaps[j].xyz, 3);
+						if (d2 <= maxcaps[j].r2) {
+							logverb("  -> in maxcap %i  (dist %g vs %g)\n", j, sqrt(d2), sqrt(maxcaps[j].r2));
+							if (healpix_within_range_of_xyz(j, nside, xyz, margin)) {
+								logverb("  -> and within range.\n");
+								il_append(hps, j);
+							}
+						}
+					}
+				}
+
+				//hps = healpix_rangesearch_radec(ra, dec, margin, nside, hps);
+
 				logverb("  --> healpixes: [");
 				for (j=0; j<il_size(hps); j++)
 					logverb(" %i", il_get(hps, j));
