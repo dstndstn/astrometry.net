@@ -361,18 +361,21 @@ double healpix_distance_to_radec(int hp, int Nside, double ra, double dec,
 								 double* closestradec);
 
 /**
- Returns true if the closest distance between the given healpix and
- the given RA,Dec (in degrees) is less than then given radius (in degrees).
- */
-int healpix_within_range_of_radec(int hp, int Nside, double ra, double dec,
-								   double radius);
-
-/**
  Returns the minimum distance (in degrees) between the given healpix
  and the given xyz (point on unit sphere).
  */
 double healpix_distance_to_xyz(int hp, int Nside, const double* xyz,
 							   double* closestxyz);
+
+/**
+ Returns true if the closest distance between the given healpix and
+ the given RA,Dec (in degrees) is less than then given radius (in degrees).
+ */
+int healpix_within_range_of_radec(int hp, int Nside, double ra, double dec,
+								   double radius);
+int healpix_within_range_of_xyz(int hp, int Nside, const double* xyz,
+								double radius);
+
 
 /**
  Computes the RA,Dec bounding-box of the given healpix.  Results are

@@ -1427,6 +1427,10 @@ int healpix_within_range_of_radec(int hp, int Nside, double ra, double dec,
 	// This is the dumb trivial implementation...
 	return (healpix_distance_to_radec(hp, Nside, ra, dec, NULL) <= radius);
 }
+int healpix_within_range_of_xyz(int hp, int Nside, const double* xyz,
+								double radius) {
+	return (healpix_distance_to_xyz(hp, Nside, xyz, NULL) <= radius);
+}
 
 
 void healpix_radec_bounds(int hp, int nside,

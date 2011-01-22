@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <sys/param.h>
 
 #include "healpix.h"
 #include "healpix-utils.h"
@@ -32,6 +33,7 @@
 #include "bl.h"
 #include "fitstable.h"
 #include "ioutils.h"
+#include "mathutil.h"
 
 /**
  Accepts a list of input FITS tables, all with exactly the same
@@ -69,6 +71,12 @@ extern int optind, opterr, optopt;
  };
  typedef rd_s radec;
  */
+
+struct cap_s {
+	double xyz[3];
+	double r2;
+};
+typedef struct cap_s cap_t;
 
 int main(int argc, char *argv[]) {
     int argchar;
@@ -137,13 +145,65 @@ int main(int argc, char *argv[]) {
 	outtables = calloc(NHP, sizeof(fitstable_t*));
 	assert(outtables);
 
+	cap_t* mincaps = malloc(NHP * sizeof(cap_t));
+	cap_t* maxcaps = malloc(NHP * sizeof(cap_t));
+	for (i=0; i<NHP; i++) {
+		// center
+		double r2;
+		double xyz[3];
+		double* cxyz;
+		double step = 1e-3;
+		double v;
+		double r2b, r2a;
+
+		cxyz = mincaps[i].xyz;
+		healpix_to_xyzarr(i, nside, 0.5, 0.5, mincaps[i].xyz);
+		memcpy(maxcaps[i].xyz, cxyz, 3 * sizeof(double));
+		// radius-squared:
+		// max is the easy one: max of the four corners (I assume)
+		r2 = 0.0;
+		healpix_to_xyzarr(i, nside, 0.0, 0.0, xyz);
+		r2 = MAX(r2, distsq(xyz, cxyz, 3));
+		healpix_to_xyzarr(i, nside, 1.0, 0.0, xyz);
+		r2 = MAX(r2, distsq(xyz, cxyz, 3));
+		healpix_to_xyzarr(i, nside, 0.0, 1.0, xyz);
+		r2 = MAX(r2, distsq(xyz, cxyz, 3));
+		healpix_to_xyzarr(i, nside, 1.0, 1.0, xyz);
+		r2 = MAX(r2, distsq(xyz, cxyz, 3));
+		maxcaps[i].r2 = r2;
+		r2a = r2;
+
+		r2 = 1.0;
+		r2b = 0.0;
+		for (v=0; v<=1.0; v+=step) {
+			healpix_to_xyzarr(i, nside, 0.0, v, xyz);
+			r2 = MIN(r2, distsq(xyz, cxyz, 3));
+			r2b = MAX(r2b, distsq(xyz, cxyz, 3));
+			healpix_to_xyzarr(i, nside, 1.0, v, xyz);
+			r2 = MIN(r2, distsq(xyz, cxyz, 3));
+			r2b = MAX(r2b, distsq(xyz, cxyz, 3));
+			healpix_to_xyzarr(i, nside, v, 0.0, xyz);
+			r2 = MIN(r2, distsq(xyz, cxyz, 3));
+			r2b = MAX(r2b, distsq(xyz, cxyz, 3));
+			healpix_to_xyzarr(i, nside, v, 1.0, xyz);
+			r2 = MIN(r2, distsq(xyz, cxyz, 3));
+			r2b = MAX(r2b, distsq(xyz, cxyz, 3));
+		}
+		logverb("\nhealpix %i: min rad    %g\n", i, sqrt(r2));
+		logverb("healpix %i: max rad    %g\n", i, sqrt(r2a));
+		logverb("healpix %i: max rad(b) %g\n", i, sqrt(r2b));
+		assert(r2a >= r2b);
+	}
+
+
+
+
+
 	for (i=0; i<sl_size(infns); i++) {
 		char* infn = sl_get(infns, i);
 		int r, NR;
 		double radec[2];
 		tfits_type any, dubl;
-		//char* rowbuf;
-		//int rowsize;
 		il* hps = NULL;
 
 		logmsg("Reading input \"%s\"...\n", infn);
@@ -156,10 +216,6 @@ int main(int argc, char *argv[]) {
 		NR = fitstable_nrows(intable);
 		logmsg("Got %i rows\n", NR);
 
-		//rowsize = fitstable_row_size();
-		//logmsg("FITS rows size: %i bytes\n", rowsize);
-		//rowbuf = malloc(rowsize);
-		
 		any = fitscolumn_any_type();
 		dubl = fitscolumn_double_type();
 

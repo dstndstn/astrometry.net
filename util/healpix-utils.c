@@ -107,7 +107,7 @@ static il* hp_rangesearch(const double* xyz, double radius, int Nside, il* hps, 
 				healpix_to_xyzarr(neighbours[i], Nside, 0.5, 0.5, nxyz);
 				tst = (sqrt(distsq(xyz, nxyz, 3)) - hprad <= radius);
 			} else {
-				tst = (healpix_distance_to_xyz(neighbours[i], Nside, xyz, NULL) <= radius);
+				tst = healpix_within_range_of_xyz(neighbours[i], Nside, xyz, radius);
 			}
 			if (tst) {
 				// in range!

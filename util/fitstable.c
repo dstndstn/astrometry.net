@@ -197,6 +197,11 @@ int fitstable_ncols(const fitstable_t* t) {
 }
 
 int fitstable_read_row_data(fitstable_t* table, int row, void* dest) {
+	return fitstable_read_nrows_data(table, row, 1, dest);
+}
+
+int fitstable_read_nrows_data(fitstable_t* table, int row0, int nrows,
+							  void* dest) {
 	int R;
 	off_t off;
 	assert(table);
@@ -205,7 +210,10 @@ int fitstable_read_row_data(fitstable_t* table, int row, void* dest) {
 	assert(dest);
 	R = fitstable_row_size(table);
 	if (in_memory(table)) {
-		memcpy(dest, bl_access(table->rows, row), R);
+		int i;
+		char* cdest = dest;
+		for (i=0; i<nrows; i++)
+			memcpy(cdest, bl_access(table->rows, row0 + i), R);
 		return 0;
 	}
 	if (!table->readfid) {
@@ -234,8 +242,8 @@ int fitstable_read_row_data(fitstable_t* table, int row, void* dest) {
 		SYSERROR("Failed to fseeko() to read a row");
 		return -1;
 	}
-	if (fread(dest, 1, R, table->readfid) != R) {
-		SYSERROR("Failed to read a row from %s", table->fn);
+	if (fread(dest, 1, R*nrows, table->readfid) != (R*nrows)) {
+		SYSERROR("Failed to read %i rows starting from %i, from %s", nrows, row0, table->fn);
 		return -1;
 	}
 	return 0;

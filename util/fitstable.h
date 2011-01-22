@@ -375,6 +375,7 @@ int fitstable_write_row(fitstable_t* table, ...);
 
  (these inputs are not "const" because they update the file offsets)
  */
+int fitstable_read_nrows_data(fitstable_t* table, int row0, int nrows, void* dest);
 int fitstable_read_row_data(fitstable_t* table, int row, void* dest);
 int fitstable_write_row_data(fitstable_t* table, void* data);
 int fitstable_copy_row_data(fitstable_t* table, int row, fitstable_t* outtable);
