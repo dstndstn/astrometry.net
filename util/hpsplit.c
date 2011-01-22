@@ -78,6 +78,13 @@ struct cap_s {
 };
 typedef struct cap_s cap_t;
 
+static int refill_rowbuffer(void* baton, void* buffer,
+							unsigned int offset, unsigned int nelems) {
+	fitstable_t* table = baton;
+	return fitstable_read_nrows_data(table, offset, nelems, buffer);
+}
+
+
 int main(int argc, char *argv[]) {
     int argchar;
 	char* progname = argv[0];
@@ -197,14 +204,13 @@ int main(int argc, char *argv[]) {
 
 
 
-
-
 	for (i=0; i<sl_size(infns); i++) {
 		char* infn = sl_get(infns, i);
 		int r, NR;
-		double radec[2];
 		tfits_type any, dubl;
 		il* hps = NULL;
+		bread_t* rowbuf;
+		int R;
 
 		logmsg("Reading input \"%s\"...\n", infn);
 
@@ -222,6 +228,11 @@ int main(int argc, char *argv[]) {
 		fitstable_add_read_column_struct(intable, dubl, 1, 0, any, racol, TRUE);
 		fitstable_add_read_column_struct(intable, dubl, 1, sizeof(double), any, deccol, TRUE);
 
+		fitstable_use_buffered_reading(intable, 2*sizeof(double), 1000);
+
+		R = fitstable_row_size(intable);
+		rowbuf = buffered_read_new(R, 1000, NR, refill_rowbuffer, intable);
+
 		if (fitstable_read_extension(intable, 1)) {
 			ERROR("Failed to find RA and DEC columns (called \"%s\" and \"%s\" in the FITS file)", racol, deccol);
 			exit(-1);
@@ -231,12 +242,11 @@ int main(int argc, char *argv[]) {
 			int hp = -1;
 			double ra, dec;
 			int j;
-			if (fitstable_read_struct(intable, r, radec)) {
-				ERROR("Failed to read row %i from file \"%s\"", r, infn);
-				exit(-1);
-			}
-			ra = radec[0];
-			dec = radec[1];
+			double* rd;
+			rd = fitstable_next_struct(intable);
+			ra = rd[0];
+			dec = rd[1];
+			
 			logverb("row %i: ra,dec %g,%g\n", r, ra, dec);
 			if (margin == 0) {
 				hp = radecdegtohealpix(ra, dec, nside);
@@ -251,6 +261,7 @@ int main(int argc, char *argv[]) {
 
 			j=0;
 			while (1) {
+				void* rowdata;
 				if (hps) {
 					if (j >= il_size(hps))
 						break;
@@ -281,18 +292,20 @@ int main(int argc, char *argv[]) {
 					outtables[hp] = out;
 				}
 
-				if (fitstable_copy_row_data(intable, r, outtables[hp])) {
+				rowdata = buffered_read(rowbuf);
+				if (fitstable_write_row_data(outtables[hp], rowdata)) {
 					ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
-					exit(-1);
 				}
+
 				if (!hps)
 					break;
 			}
 			if (hps)
 				il_remove_all(hps);
-			//if (fitstable_read_row_data(intable, r, 
-			//fitstable_copy_row_data()
+
 		}
+		buffered_read_free(rowbuf);
+
 		fitstable_close(intable);
 	}
 
@@ -309,6 +322,10 @@ int main(int argc, char *argv[]) {
 
 	free(outtables);
 	sl_free2(infns);
+
+	free(mincaps);
+	free(maxcaps);
+
     return 0;
 }
 

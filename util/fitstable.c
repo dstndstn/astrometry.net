@@ -205,8 +205,8 @@ int fitstable_read_nrows_data(fitstable_t* table, int row0, int nrows,
 	int R;
 	off_t off;
 	assert(table);
-	assert(row >= 0);
-	assert(row < fitstable_nrows(table));
+	assert(row0 >= 0);
+	assert((row0 + nrows) <= fitstable_nrows(table));
 	assert(dest);
 	R = fitstable_row_size(table);
 	if (in_memory(table)) {
@@ -237,7 +237,7 @@ int fitstable_read_nrows_data(fitstable_t* table, int row0, int nrows,
 			table->end_table_offset = start;
 		}
 	}
-	off = get_row_offset(table, row);
+	off = get_row_offset(table, row0);
 	if (fseeko(table->readfid, off, SEEK_SET)) {
 		SYSERROR("Failed to fseeko() to read a row");
 		return -1;
