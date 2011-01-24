@@ -3,7 +3,7 @@ from matplotlib.patches import Circle, Ellipse
 from pylab import gca, gcf, gci, axis, histogram2d, hist
 from numpy import array, append, flatnonzero
 import numpy as np
-
+import pylab as plt
 from matplotlib.colors import LinearSegmentedColormap
 
 def setRadecAxes(ramin, ramax, decmin, decmax):

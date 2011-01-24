@@ -189,7 +189,7 @@ def match(x1, x2, radius, notself=False):
 def match_naive(x1, x2, radius, notself=False):
 	''' Does the same thing as match(), but the straight-forward slow
 	way.  (Not necessarily the way you\'d do it in python either).
-	Not very fair as a speec comparison, but useful to convince
+	Not very fair as a speed comparison, but useful to convince
 	yourself that match() does the right thing.
 	'''
 	(fx1, fx2) = _cleaninputs(x1, x2)
