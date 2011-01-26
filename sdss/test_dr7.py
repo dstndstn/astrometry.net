@@ -28,18 +28,43 @@ if __name__ == '__main__':
 	asr = tsfield.getAsTrans(rband)
 	asi = tsfield.getAsTrans(iband)
 
-	x,y = 0,0
-	color = 0.
+	'''
+$ listhead fpC-002830-r6-0398.fit
 
-	rr,dr = asr.pixel_to_radec(x, y, color)
-	ri,di = asi.pixel_to_radec(x, y, color)
-	print 'r', rr,dr
-	print 'i', ri,di
+CRPIX1  = 1.02450000000000E+03 / Column Pixel Coordinate of Ref. Pixel
+CRPIX2  = 7.44500000000000E+02 / Row Pixel Coordinate of Ref. Pixel
+CRVAL1  = 1.79464261370000E+02 / RA at Reference Pixel
+CRVAL2  = 5.33206072700000E+01 / DEC at Reference Pixel
+CD1_1   = -8.4291038759718E-06 / RA  degrees per column pixel
+CD1_2   = 1.09673333339369E-04 / RA  degrees per row pixel
+CD2_1   = 1.09675673828125E-04 / DEC degrees per column pixel
+CD2_2   = 8.42453629032368E-06 / DEC degrees per row pixel
+'''
 
-	rx,ry = asr.radec_to_pixel(rr, dr)
-	ix,iy = asi.radec_to_pixel(ri, di)
-	print 'r', rx, ry
-	print 'i', ix, iy
+	print 'CD at 0,0:', asr.cd_at_pixel(1024.5, 744.5)
+
+	for x,y,color in [ (0, 0, 0),
+
+					   (np.array([1,2,3]),
+						np.array([0,100,200]),
+						0),
+
+					   (np.array([1,2,3]),
+						np.array([0,100,200]),
+						np.array([0,1,2])),
+					   ]:
+		print
+		print 'Pixel x,y', x,y
+		print 'color', color
+		rr,dr = asr.pixel_to_radec(x, y, color)
+		ri,di = asi.pixel_to_radec(x, y, color)
+		print 'r-band RA,Dec:', rr,dr
+		print 'i-band RA,Dec:', ri,di
+		rx,ry = asr.radec_to_pixel(rr, dr)
+		ix,iy = asi.radec_to_pixel(ri, di)
+		print 'r-band x,y:', rx, ry
+		print 'i-band x,y:', ix, iy
+
 
 	tsobj = fits_table(os.path.join(testdata, 'cut-tsObj-002830-6-0-0398.fit'))
 	ra,dec = tsobj.ra, tsobj.dec
@@ -94,3 +119,4 @@ if __name__ == '__main__':
 			 range=rng)
 	plt.xlabel('log_10 ( x,y error )')
 	plt.savefig('dr.png')
+

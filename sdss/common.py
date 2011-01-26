@@ -101,6 +101,27 @@ class AsTrans(SdssFile):
 	def _get_ricut(self):
 		return self.trans['ricut']
 
+	def cd_at_pixel(self, x, y, color=0):
+		'''
+		(x,y) to numpy array (2,2) -- the CD matrix at pixel x,y:
+
+		[ [ dRA/dx * cos(Dec), dRA/dy * cos(Dec) ],
+		  [ dDec/dx          , dDec/dy           ] ]
+
+		in FITS these are called:
+		[ [ CD11             , CD12              ],
+		  [ CD21             , CD22              ] ]
+
+		  Note: these statements have not been verified by the FDA.
+		'''
+		ra0,dec0 = self.pixel_to_radec(x, y, color)
+		step = 10. # pixels
+		rax,decx = self.pixel_to_radec(x+step, y, color)
+		ray,decy = self.pixel_to_radec(x, y+step, color)
+		cosd = np.cos(np.deg2rad(dec0))
+		return np.array([ [ (rax-ra0)/step * cosd, (ray-ra0)/step * cosd ],
+						  [ (decx-dec0)/step     , (decy-dec0)/step      ] ])
+
 	def pixel_to_radec(self, x, y, color=0):
 		mu, nu = self.pixel_to_munu(x, y, color)
 		return self.munu_to_radec(mu, nu)
@@ -156,13 +177,12 @@ class AsTrans(SdssFile):
 		# else:
 		#	xprime += qx
 		#	yprime += qy
-		color  = np.atleast_1d(color)
-		color0 = np.atleast_1d(color0)
 		qx = qx * np.ones_like(x)
 		qy = qy * np.ones_like(y)
 		#print 'color', color.shape, 'px', px.shape, 'qx', qx.shape
 		xprime += np.where(color < color0, px * color, qx)
 		yprime += np.where(color < color0, py * color, qy)
+
 		return (xprime, yprime)
 
 	def prime_to_pixel(self, xprime, yprime,  color=0):
@@ -175,9 +195,6 @@ class AsTrans(SdssFile):
 		(px,py) = (py,px)
 		(qx,qy) = (qy,qx)
 
-		color  = np.atleast_1d(color)
-		color0 = np.atleast_1d(color0)
-		# FIXME -- get the broadcasting right...
 		qx = qx * np.ones_like(xprime)
 		qy = qy * np.ones_like(yprime)
 		#print 'color', color.shape, 'px', px.shape, 'qx', qx.shape
