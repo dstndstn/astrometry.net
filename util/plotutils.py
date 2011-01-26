@@ -9,33 +9,10 @@ from matplotlib.colors import LinearSegmentedColormap
 def setRadecAxes(ramin, ramax, decmin, decmax):
 	rl,rh = ramin,ramax
 	dl,dh = decmin,decmax
-	# find aspect ratio of axes...
-	bb = plt.gca().get_position()
-	(x0,y0) = bb.p0
-	(x1,y1) = bb.p1
-	fw,fh = plt.gcf().get_figwidth(), plt.gcf().get_figheight()
-	aw,ah = fw*(x1-x0), fh*(y1-y0)
-	print 'plot axis ratio:', aw/ah
 	rascale = np.cos(np.deg2rad((dl+dh)/2.))
-	dr = (rh-rl)*rascale
-	dd = dh - dl
-	print 'dr=', dr, 'dd=', dd, '(ratio', (dr/dd),'), axis ratio:', (aw/ah)
-	if dr/dd > aw/ah:
-		# RA bounds tight
-		dd = dr * ah / aw
-		dmid = (dl + dh) / 2.
-		dl,dh = dmid - dd/2., dmid + dd/2.
-	else:
-		# Dec bounds tight
-		print 'Dec bounds are tight'
-		dr = dd * aw / ah
-		print 'setting dr to', dr
-		rmid = (rl + rh) / 2.
-		rl,rh = rmid - dr/rascale/2., rmid + dr/rascale/2.
-		print 'set delta-r to', (rh-rl), ' *rascale =', (rh-rl)*rascale
 	ax = [rh,rl, dl,dh]
 	plt.axis(ax)
-	#plt.gca().set_aspect(aw/ah)
+	plt.gca().set_aspect(1./rascale, adjustable='box', anchor='C')
 	plt.xlabel('RA (deg)')
 	plt.ylabel('Dec (deg)')
 	return ax

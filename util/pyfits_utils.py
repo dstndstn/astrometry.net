@@ -153,15 +153,15 @@ class tabledata(object):
 			if name.startswith('_'):
 				continue
 			if numpy.isscalar(val):
-				print 'copying scalar', name
+				#print 'copying scalar', name
 				rtn.set(name, val)
 				continue
 			if type(val) is numpy.ndarray:
-				print 'copying numpy array', name
+				#print 'copying numpy array', name
 				rtn.set(name, val.copy())
 				continue
 			if type(val) is list:
-				print 'copying list', name
+				#print 'copying list', name
 				rtn.set(name, val[:])
 				continue
 			print 'in pyfits_utils: copy(): can\'t copy', name, '=', valxo
