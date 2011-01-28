@@ -2,8 +2,10 @@
 from matplotlib.patches import Circle, Ellipse
 from pylab import gca, gcf, gci, axis, histogram2d, hist
 from numpy import array, append, flatnonzero
+
 import numpy as np
 import pylab as plt
+
 from matplotlib.colors import LinearSegmentedColormap
 
 def setRadecAxes(ramin, ramax, decmin, decmax):
@@ -32,6 +34,27 @@ bluegrayred = LinearSegmentedColormap('bluegrayred',
 												 (1., 0, -1)),
 									   'blue':  ((0., -1, 1),
 												 (1., 0, -1))})
+
+# x, y0, y1
+_redgreen_data =  {'red':   ((0.,  -100,  1),
+							 #(0.5,  0,  0),
+							 #(0.5,  0.1, 0),
+							 (0.49, 0.1, 0),
+							 (0.491, 0, 0),
+							 (0.51,  0, 0),
+							 (0.511,  0, 0.1),
+							 (1.,   0, -100)),
+				   'green': ((0.,  -100,  0),
+							 #(0.5,  0,  0),
+							 #(0.5,  0,  0.1),
+							 (0.49, 0.1, 0),
+							 (0.491, 0, 0),
+							 (0.51,  0, 0),
+							 (0.511,  0, 0.1),
+							 (1.,   1, -100)),
+				   'blue':  ((0.,  -100,  0),
+							 (1.,   0, -100))}
+redgreen = LinearSegmentedColormap('redgreen',   _redgreen_data)
 
 def hist_ints(x, step=1, **kwargs):
 	'''
