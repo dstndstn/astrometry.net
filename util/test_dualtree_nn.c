@@ -31,7 +31,7 @@
 
 void test_nn_1(CuTest* tc) {
     int NX = 5000;
-    int NY = 5000;
+    int NY = 6000;
     int D = 3;
     int Nleaf = 5;
 
@@ -45,6 +45,8 @@ void test_nn_1(CuTest* tc) {
 
     double* nearest_d2 = NULL;
     int* nearest_ind = NULL;
+
+	double maxr2 = 0.01;
 
     double* true_nearest_d2;
     int* true_nearest_ind;
@@ -66,7 +68,7 @@ void test_nn_1(CuTest* tc) {
     t0 = timenow();
     for (j=0; j<NY; j++) {
         int ind = -1;
-        double bestd2 = HUGE_VAL;
+        double bestd2 = maxr2;
         for (i=0; i<NX; i++) {
             double d2 = distsq(xdata + i*D, ydata + j*D, D);
             if (d2 < bestd2) {
@@ -83,12 +85,12 @@ void test_nn_1(CuTest* tc) {
     ykd = kdtree_build(NULL, ydata, NY, D, Nleaf, KDTT_DOUBLE, KD_BUILD_BBOX);
 
     t0 = timenow();
-    dualtree_nearestneighbour(xkd, ykd, 1000.0, &nearest_d2, &nearest_ind);
+    dualtree_nearestneighbour(xkd, ykd, maxr2, &nearest_d2, &nearest_ind, 0);
     printf("Dualtree took %g ms\n", 1000.0*(timenow() - t0));
 
     for (j=0; j<NY; j++) {
-        int jj = kdtree_permute(ykd, j);
-        CuAssertIntEquals(tc, true_nearest_ind[jj], kdtree_permute(xkd, nearest_ind[j]));
+        int jj = kdtree_permute(ykd, j); 
+       CuAssertIntEquals(tc, true_nearest_ind[jj], kdtree_permute(xkd, nearest_ind[j]));
         CuAssertDblEquals(tc, true_nearest_d2[jj],  nearest_d2[j], 1e-6);
     }
 

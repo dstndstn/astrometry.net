@@ -204,16 +204,17 @@ static PyObject* spherematch_match(PyObject* self, PyObject* args) {
 
 
 static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
-    int NY;
+    int i, NY;
     long p1, p2;
     kdtree_t *kd1, *kd2;
-    npy_intp dims[2];
+    npy_intp dims[1];
     PyArrayObject* inds;
     PyArrayObject* dist2s;
     int *pinds;
     double *pdist2s;
     double rad;
 	bool notself;
+	int* tempinds;
 
 	// So that ParseTuple("b") with a C "bool" works
 	assert(sizeof(bool) == sizeof(unsigned char));
@@ -229,17 +230,32 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
     NY = kdtree_n(kd2);
 
     dims[0] = NY;
-    dims[1] = 1;
-    inds   = (PyArrayObject*)PyArray_SimpleNew(2, dims, PyArray_INT);
-    dist2s = (PyArrayObject*)PyArray_SimpleNew(2, dims, PyArray_DOUBLE);
-
+    inds   = (PyArrayObject*)PyArray_SimpleNew(1, dims, PyArray_INT);
+    dist2s = (PyArrayObject*)PyArray_SimpleNew(1, dims, PyArray_DOUBLE);
     assert(PyArray_ITEMSIZE(inds) == sizeof(int));
     assert(PyArray_ITEMSIZE(dist2s) == sizeof(double));
 
-    pinds   = PyArray_DATA(inds);
+	// YUCK!
+	tempinds = (int*)malloc(NY * sizeof(int));
+
+    pinds   = tempinds; //PyArray_DATA(inds);
     pdist2s = PyArray_DATA(dist2s);
 
     dualtree_nearestneighbour(kd1, kd2, rad*rad, &pdist2s, &pinds, notself);
+
+	// now we have to apply kd1's permutation array!
+	for (i=0; i<NY; i++)
+		if (pinds[i] != -1)
+			pinds[i] = kdtree_permute(kd1, pinds[i]);
+
+	// and kd2's permutation array!
+	pinds = PyArray_DATA(inds);
+	for (i=0; i<NY; i++) {
+		pinds[i] = -1;
+		if (tempinds[i] != -1)
+			pinds[kdtree_permute(kd2, i)] = tempinds[i];
+	}
+	free(tempinds);
 
     return Py_BuildValue("(OO)", inds, dist2s);
 }

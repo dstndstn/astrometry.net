@@ -210,6 +210,12 @@ def match_naive(x1, x2, radius, notself=False):
 	return (inds,dists)
 
 def nearest(x1, x2, maxradius, notself=False):
+	'''
+	For each point in x2, returns the index of the nearest point in x1,
+	if there is a point within 'maxradius'.
+
+	(Note, this may be backward from what you want/expect!)
+	'''
 	(kd1,kd2) = _buildtrees(x1, x2)
 	(inds,dist2s) = spherematch_c.nearest(kd1, kd2, maxradius, notself)
 	_freetrees(kd1, kd2)

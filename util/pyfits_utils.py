@@ -208,8 +208,13 @@ class tabledata(object):
 				if type(I) is numpy.ndarray and hasattr(I, 'dtype') and ((I.dtype.type in [bool, numpy.bool])
 																		 or (I.dtype == bool)):
 					#print 'slice C', name
-					rtn.set(name, [val[i] for i,b in enumerate(I) if b])
-					ok = True
+					try:
+						rtn.set(name, [val[i] for i,b in enumerate(I) if b])
+						ok = True
+					except:
+						print 'Failed to slice field', name, ' -- adding it whole'
+						setattr(rtn, name, val)
+						continue
 				inttypes = [int, numpy.int64, numpy.int32, numpy.int]
 				#if type(I) is numpy.ndarray and hasattr(I, 'dtype') and I.dtype.type in inttypes:
 				if ok:
@@ -275,6 +280,8 @@ class tabledata(object):
 		for name,val in self.__dict__.items():
 			if name.startswith('_'):
 				continue
+			if numpy.isscalar(val):
+				continue
 			try:
 				val2 = X.getcolumn(name)
 				if type(val) is list:
@@ -338,7 +345,11 @@ class tabledata(object):
 			#print val.itemsize
 			if type(val) is list:
 				val = array(val)
-			fitstype = fmap.get(val.dtype.type, 'D')
+			try:
+				fitstype = fmap.get(val.dtype.type, 'D')
+			except:
+				print 'Table column "%s" has no "dtype"; skipping' % name
+				continue
 
 			if fitstype == 'X':
 				# pack bits...

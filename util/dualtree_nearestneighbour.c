@@ -51,6 +51,12 @@ void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2
     dualtree_callbacks callbacks;
     rs_params params;
 
+	// These two inputs must be non-NULL (they are essential return values);
+	// but they may point to pointers that are NULL (indicating that the caller wants us to
+	// allocate and return new arrays).
+	assert(nearest_d2);
+	assert(nearest_ind);
+
     memset(&callbacks, 0, sizeof(dualtree_callbacks));
     callbacks.decision = rs_within_range;
     callbacks.decision_extra = &params;
@@ -64,6 +70,7 @@ void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2
 	params.ytree = ytree;
 	params.notself = notself;
 
+	// were we given a d2 array?
     if (*nearest_d2)
         params.nearest_d2 = *nearest_d2;
     else
@@ -74,6 +81,7 @@ void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2
     for (i=0; i<NY; i++)
         params.nearest_d2[i] = maxdist2;
 
+	// were we given an ind array?
     if (*nearest_ind)
         params.nearest_ind = *nearest_ind;
     else
@@ -88,8 +96,9 @@ void dualtree_nearestneighbour(kdtree_t* xtree, kdtree_t* ytree, double maxdist2
     
     dualtree_search(xtree, ytree, &callbacks);
 
-    *nearest_d2 = params.nearest_d2;
-    *nearest_ind = params.nearest_ind;
+	// Return array addresses
+	*nearest_d2 = params.nearest_d2;
+	*nearest_ind = params.nearest_ind;
     free(params.node_nearest_d2);
 }
 
