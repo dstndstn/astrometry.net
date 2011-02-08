@@ -38,7 +38,8 @@ void log_init(int level);
 %include "healpix.h"
 //%include "anwcs.h"
 
-%apply double *OUTPUT { double *px, double *py, double *pz };
+%apply double *OUTPUT { double *p_x, double *p_y, double *p_z };
+%apply double *OUTPUT { double *p_ra, double *p_dec };
 //%apply double *OUTPUT { double *xyz };
 
 %include "sip.h"
@@ -53,13 +54,28 @@ void log_init(int level);
 	}
 	~tan_t() { free($self); }
 	double pixel_scale() { return tan_pixel_scale($self); }
-	void pixelxy2xyz(double x, double y, double *px, double *py, double *pz) {
+	void pixelxy2xyz(double x, double y, double *p_x, double *p_y, double *p_z) {
 		double xyz[3];
 		tan_pixelxy2xyzarr($self, x, y, xyz);
 		*px = xyz[0];
 		*py = xyz[1];
 		*pz = xyz[2];
 	}
+	void pixelxy2radec(double x, double y, double *p_ra, double *p_dec) {
+		tan_pixelxy2radec($self, x, y, p_ra, p_dec);
+	}
+	void radec2pixelxy(double ra, double dec, double *p_x, double *p_y) {
+		tan_radec2pixelxy($self, ra, dec, p_x, p_y);
+	}
+	void xyz2pixelxy(double x, double y, double z, double *p_x, double *p_y) {
+		double xyz[3];
+		xyz[0] = x;
+		xyz[1] = y;
+		xyz[2] = z;
+		tan_xyzarr2pixelxy($self, ra, dec, p_x, p_y);
+	}
+
+
  };
 
 
