@@ -34,7 +34,7 @@ void log_use_function(logfunc_t func, void* baton);
 /**
  Make all logging commands thread-specific rather than global.
  */
-void log_set_thread_specific();
+void log_set_thread_specific(void);
 
 /**
  * Initialize global logging object. Must be called before any of the other
@@ -99,9 +99,9 @@ void log_loglevel(enum log_level level, const char* file, int line, const char* 
 // log at a particular level.
 #define loglevel(loglvl, format, ...) log_loglevel(loglvl, __FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
 
-int log_get_level();
+int log_get_level(void);
 
-FILE* log_get_fid();
+FILE* log_get_fid(void);
 
 extern log_t _logger_global;
 

@@ -1,6 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
-# Copyright 2008, 2009, 2010 Dustin Lang.
+# Copyright 2008, 2009, 2010, 2011 Dustin Lang.
 #
 # The Astrometry.net suite is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License
@@ -197,6 +197,17 @@ _sip.so: sip-utils.o gslutils.o sip.o starutil.o mathutil.o sip_qfits.o \
 
 _healpix.so: healpix-utils.o healpix.o permutedsort.o starutil.o mathutil.o errors.o ioutils.o bl.o log.o os-features.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
+
+util_wrap.c: util.i $(ANUTILS_H)
+	swig -python -I. $<
+
+_util.so: util_wrap.c setup-util.py \
+		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+	python setup-util.py build --force --build-base build --build-platlib build/lib
+	cp build/lib/_util.so $@
+
+pyutil: _util.so
+.PHONY: pyutil
 
 index_wrap.c: index.i index.h
 	swig -python -I. $<

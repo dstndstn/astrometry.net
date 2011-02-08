@@ -142,6 +142,13 @@ X := $(shell rm $(TMPFILE))
 # Turn optimization on by default; this statement only sets OPTIMIZE
 # if it hasn't been set already (eg, in ../Makefile)
 OPTIMIZE ?= yes
+PROFILE ?= no
+
+ifeq ($(PROFILE),yes)
+  FLAGS_DEF += -O2
+  FLAGS_DEF += -pg -g
+  FLAGS_DEF += -DNDEBUG
+else
 
 ifeq ($(OPTIMIZE),yes)
   # speedy!
@@ -154,6 +161,8 @@ else
   # debuggy!
   FLAGS_DEF += -O0
   FLAGS_DEF += -g
+
+endif
 
 endif
 
