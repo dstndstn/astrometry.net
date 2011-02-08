@@ -38,17 +38,11 @@ void log_init(int level);
 %include "healpix.h"
 //%include "anwcs.h"
 
- //%nodefaultctor tan_t;
- //%rename(Tan) tan_t;
-//%rename(Sip) sip_t;
+%apply double *OUTPUT { double *px, double *py, double *pz };
+//%apply double *OUTPUT { double *xyz };
+
 %include "sip.h"
 %include "sip_qfits.h"
-
-%apply double *OUTPUT { double *px, double *py, double *pz };
-
-%inline %{
-	//typedef tan_t Tan;
- %}
 
 %extend tan_t {
 	tan_t(char* fn=NULL, int ext=0) {
@@ -67,6 +61,7 @@ void log_init(int level);
 		*pz = xyz[2];
 	}
  };
+
 
 
 %pythoncode %{
