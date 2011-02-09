@@ -1,5 +1,5 @@
 from util import *
-
+import numpy as np
 
 wcs = Tan()
 
@@ -29,3 +29,8 @@ rd = wcs.pixelxy2radec(0, 0)
 print 'rd', rd
 xy = wcs.radec2pixelxy(rd[0], rd[1])
 print 'xy', xy
+
+X,Y = np.array([1,2,3]), np.array([4,5,6])
+print 'X,Y', X,Y
+R,D = wcs.pixelxy2radec(X, Y)
+print 'R,D', R,D
