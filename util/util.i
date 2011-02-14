@@ -3,6 +3,7 @@
 
 %include <typemaps.i>
 
+
 %{
 /*
 #include "index.h"
@@ -25,15 +26,17 @@
 
 %}
 
+%init %{
+      // numpy
+      import_array();
+%}
+
 // Things in keywords.h (used by healpix.h)
 #define Const
 #define WarnUnusedResult
 #define ASTROMETRY_KEYWORDS_H
 
 void log_init(int level);
-
-//%apply double *OUTPUT { double *dx };
-//%apply double *OUTPUT { double *dy };
 
 %apply double *OUTPUT { double *dx, double *dy };
 %apply double *OUTPUT { double *ra, double *dec };
@@ -44,22 +47,6 @@ void log_init(int level);
 %apply double *OUTPUT { double *p_x, double *p_y, double *p_z };
 %apply double *OUTPUT { double *p_ra, double *p_dec };
 //%apply double *OUTPUT { double *xyz };
-
-/*
-%typemap(in) double x, double y, double z (double xyz[3]) {
-    xyz[0] = x;
-    xyz[1] = y;
-    xyz[2] = z;
-    $1 = xyz;
-}
-%typemap(in) double* xyz (double temp[3]) {
-    temp[0] = xyz[0];
-    temp[1] = xyz[1];
-    temp[2] = xyz[2];
-    $1 = temp;
-}
- */
-
 
 %typemap(in) double [ANY] (double temp[$1_dim0]) {
   int i;
@@ -128,9 +115,6 @@ void log_init(int level);
 %apply double [ANY] { double crpix[2] };
 %apply double flatmatrix[ANY][ANY] { double cd[2][2] };
 
-
-
-
 %include "sip.h"
 %include "sip_qfits.h"
 
@@ -168,35 +152,40 @@ void log_init(int level);
 
 %inline %{
 
-	static int tan_numpy_pixelxy2radec(tan_t* tan, PyObject* npx, PyObject* npy, 
-									   PyObject* npra, PyObject* npdec) {
-										
-		int i, N;
-		double *x, *y, *ra, *dec;
-		
-		if (PyArray_NDIM(npx) != 1) {
-			PyErr_SetString(PyExc_ValueError, "arrays must be one-dimensional");
-			return -1;
-		}
-		if (PyArray_TYPE(npx) != PyArray_DOUBLE) {
-			PyErr_SetString(PyExc_ValueError, "array must contain doubles");
-			return -1;
-		}
-		N = PyArray_DIM(npx, 0);
-		if ((PyArray_DIM(npy, 0) != N) ||
-			(PyArray_DIM(npra, 0) != N) ||
-			(PyArray_DIM(npdec, 0) != N)) {
-			PyErr_SetString(PyExc_ValueError, "arrays must be the same size");
-			return -1;
-		}
-		x = PyArray_GETPTR1(npx, 0);
-		y = PyArray_GETPTR1(npy, 0);
-		ra = PyArray_GETPTR1(npra, 0);
-		dec = PyArray_GETPTR1(npdec, 0);
-		for (i=0; i<N; i++)
-			tan_pixelxy2radec(tan, x[i], y[i], ra+i, dec+i);
-		return 0;
-	}
+    static int tan_numpy_pixelxy2radec(tan_t* tan, PyObject* npx, PyObject* npy, 
+                                       PyObject* npra, PyObject* npdec, int reverse) {
+                                        
+        int i, N;
+        double *x, *y, *ra, *dec;
+        
+        if (PyArray_NDIM(npx) != 1) {
+            PyErr_SetString(PyExc_ValueError, "arrays must be one-dimensional");
+            return -1;
+        }
+        if (PyArray_TYPE(npx) != PyArray_DOUBLE) {
+            PyErr_SetString(PyExc_ValueError, "array must contain doubles");
+            return -1;
+        }
+        N = PyArray_DIM(npx, 0);
+        if ((PyArray_DIM(npy, 0) != N) ||
+            (PyArray_DIM(npra, 0) != N) ||
+            (PyArray_DIM(npdec, 0) != N)) {
+            PyErr_SetString(PyExc_ValueError, "arrays must be the same size");
+            return -1;
+        }
+        x = PyArray_GETPTR1(npx, 0);
+        y = PyArray_GETPTR1(npy, 0);
+        ra = PyArray_GETPTR1(npra, 0);
+        dec = PyArray_GETPTR1(npdec, 0);
+        if (!reverse) {
+                for (i=0; i<N; i++)
+                    tan_pixelxy2radec(tan, x[i], y[i], ra+i, dec+i);
+        } else {
+                for (i=0; i<N; i++)
+                    tan_radec2pixelxy(tan, ra[i], dec[i], x+i, y+i);
+        }
+        return 0;
+    }
 
 %}
 
@@ -216,20 +205,25 @@ def tan_t_pixelxy2radec_any(self, x, y):
         y = np.atleast_1d(y).astype(float)
         r = np.empty(len(x))
         d = np.empty(len(x))
-        print 'self:', self
-        print 'self.this:', self.this
-        print 'x', x
-        print type(x)
-        print 'y', y
-        print 'r', r
-        print 'd', d
-        tan_numpy_pixelxy2radec(self.this, x, y, r, d)
+        tan_numpy_pixelxy2radec(self.this, x, y, r, d, 0)
         return r,d
     else:
         return self.pixelxy2radec_single(x, y)
 tan_t.pixelxy2radec_single = tan_t.pixelxy2radec
 tan_t.pixelxy2radec = tan_t_pixelxy2radec_any
 
+def tan_t_radec2pixelxy_any(self, r, d):
+    if np.iterable(r) or np.iterable(d):
+        r = np.atleast_1d(r).astype(float)
+        d = np.atleast_1d(d).astype(float)
+        x = np.empty(len(r))
+        y = np.empty(len(r))
+        tan_numpy_pixelxy2radec(self.this, x, y, r, d, 1)
+        return x,y
+    else:
+        return self.radec2pixelxy_single(r, d)
+tan_t.radec2pixelxy_single = tan_t.radec2pixelxy
+tan_t.radec2pixelxy = tan_t_radec2pixelxy_any
 
 
 Tan = tan_t
