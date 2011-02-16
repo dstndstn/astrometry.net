@@ -28,29 +28,10 @@
 #include "anwcs.h"
 #include "permutedsort.h"
 #include "wcs-resample.h"
+#include "mathutil.h"
 
 static int plot_image_read(const plot_args_t* pargs, plotimage_t* args);
 
-/*
-const plotter_t plotter_image = {
-	.name = "image",
-	.init = plot_image_init,
-	.command = plot_image_command,
-	.doplot = plot_image_plot,
-	.free = plot_image_free
-};
- */
-/*
-plotter_t* plot_image_new() {
-	plotter_t* p = calloc(1, sizeof(plotter_t));
-	p->name = "image";
-	p->init = plot_image_init;
-	p->command = plot_image_command;
-	p->doplot = plot_image_plot;
-	p->free = plot_image_free;
-	return p;
-}
- */
 DEFINE_PLOTTER(image);
 
 static void set_format(plotimage_t* args) {
@@ -71,6 +52,9 @@ void* plot_image_init(plot_args_t* plotargs) {
 	args->alpha = 1;
 	args->image_null = 1.0 / 0.0;
 	//args->scalex = args->scaley = 1.0;
+	args->rgbscale[0] = 1.0;
+	args->rgbscale[1] = 1.0;
+	args->rgbscale[2] = 1.0;
 	return args;
 }
 
@@ -110,8 +94,6 @@ int plot_image_get_percentile(plot_args_t* pargs, plotimage_t* args,
 	}
 	return 0;
 }
-
-//void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H, double alpha) 
 
 void plot_image_rgba_data(cairo_t* cairo, plotimage_t* args) {
 	cairo_surface_t* thissurf;
@@ -331,9 +313,8 @@ static unsigned char* read_fits_image(const plot_args_t* pargs, plotimage_t* arg
 	float* fimg;
 	qfitsloader ld;
 	unsigned char* img;
-	int i,j;
-	float offset, scale;
 	float* rimg = NULL;
+	float* dimg = NULL;
 
 	ld.filename = args->fn;
 	ld.xtnum = args->fitsext;
@@ -353,6 +334,17 @@ static unsigned char* read_fits_image(const plot_args_t* pargs, plotimage_t* arg
 	args->H = ld.ly;
 	fimg = ld.fbuf;
 
+	if (args->downsample) {
+		int nw, nh;
+		dimg = average_image_f(fimg, args->W, args->H, args->downsample,
+							   EDGE_AVERAGE, &nw, &nh, NULL);
+		args->W = nw;
+		args->H = nh;
+		fimg = dimg;
+
+		anwcs_scale_wcs(args->wcs, 1.0/(float)args->downsample);
+	}
+
 	if (args->resample) {
 		// resample onto the output grid...
 		rimg = calloc(pargs->W * pargs->H, sizeof(float));
@@ -368,6 +360,18 @@ static unsigned char* read_fits_image(const plot_args_t* pargs, plotimage_t* arg
 		fimg = rimg;
 	}
 
+	img = plot_image_scale_float(args, fimg);
+
+ 	qfitsloader_free_buffers(&ld);
+	free(rimg);
+	free(dimg);
+	return img;
+}
+
+unsigned char* plot_image_scale_float(plotimage_t* args, const float* fimg) {
+	float offset, scale;
+	int i,j;
+	unsigned char* img = NULL;
 	if (args->image_low == 0 && args->image_high == 0) {
 		if (args->auto_scale) {
 			// min/max, or percentiles?
@@ -423,17 +427,13 @@ static unsigned char* read_fits_image(const plot_args_t* pargs, plotimage_t* arg
 				img[k+3] = 0;
 			} else {
 				v = MIN(255, MAX(0, (pval - offset) * scale));
-				img[k+0] = v;
-				img[k+1] = v;
-				img[k+2] = v;
+				img[k+0] = v * args->rgbscale[0];
+				img[k+1] = v * args->rgbscale[1];
+				img[k+2] = v * args->rgbscale[2];
 				img[k+3] = 255;
 			}
 		}
 	}
-	qfitsloader_free_buffers(&ld);
-
-	free(rimg);
-
 	return img;
 }
 

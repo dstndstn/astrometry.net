@@ -6,6 +6,8 @@
 #define WarnUnusedResult
 %{
 #include "numpy/arrayobject.h"
+#include <sys/param.h>
+#include <stdlib.h>
 
 #include "plotstuff.h"
 #include "plotimage.h"
@@ -22,13 +24,38 @@
 #include "log.h"
 #include "fitsioutils.h"
 #include "anwcs.h"
+#include "coadd.h"
+#include "qfits.h"
+#include "mathutil.h"
+
 #define true 1
 #define false 0
+
+	//#define Const
+	//#define InlineDeclare
+
 %}
 
 %include "typemaps.i"
 
 %include "plotstuff.h"
+%include "coadd.h"
+%include "qfits_image.h"
+%include "fitsioutils.h"
+
+ /*
+  number* coadd_create_weight_image_from_range(const number* img, int W, int H,
+  number lowval, number highval);
+  */
+
+void free(void* ptr);
+
+%apply int* OUTPUT { int* newW, int* newH };
+#define Const
+#define InlineDeclare
+%include "mathutil.h"
+#undef Const
+#undef InlineDeclare
 
 /*
 	%apply unsigned char* rgboutdouble *OUTPUT { double *result };
@@ -80,7 +107,6 @@
 }
 
 %include "plotimage.h"
-
 
 %include "plotoutline.h"
 %include "plotgrid.h"
@@ -137,6 +163,21 @@ void fits_use_error_system(void);
 	}
 }
 
+%inline %{
+	void image_debug(float* img, int W, int H) {
+		int i;
+		double mn,mx;
+		mn = 1e300;
+		mx = -1e300;
+		for (i=0; i<(W*H); i++) {
+			mn = MIN(mn, img[i]);
+			mx = MAX(mx, img[i]);
+		}
+		logmsg("Image min,max %g,%g\n", mn,mx);
+	}
+	%}
+
+
 %extend plot_args {
 	PyObject* get_image_as_numpy() {
 		npy_intp dim[3];
@@ -179,6 +220,12 @@ void fits_use_error_system(void);
   }
   int set_file(const char* fn) {
     return plot_image_set_filename(self, fn);
+  }
+
+  void set_rgbscale(double r, double g, double b) {
+	  self->rgbscale[0] = r;
+	  self->rgbscale[1] = g;
+	  self->rgbscale[2] = b;
   }
 
   int get_image_width() {

@@ -76,6 +76,12 @@ float* average_image_f(const float* image, int W, int H,
 					   int* newW, int* newH,
 					   float* output);
 
+float* average_weighted_image_f(const float* image, const float* weight,
+								int W, int H,
+								int blocksize, int edgehandling,
+								int* newW, int* newH,
+								float* output, float nilval);
+
 Const InlineDeclare int imax(int a, int b);
 
 Const InlineDeclare int imin(int a, int b);

@@ -218,10 +218,13 @@ def tan_t_radec2pixelxy_any(self, r, d):
         d = np.atleast_1d(d).astype(float)
         x = np.empty(len(r))
         y = np.empty(len(r))
+        # This looks like a bug (pixelxy2radec rather than radec2pixel)
+        # but it isn't ("reverse = 1")
         tan_numpy_pixelxy2radec(self.this, x, y, r, d, 1)
         return x,y
     else:
-        return self.radec2pixelxy_single(r, d)
+        good,x,y = self.radec2pixelxy_single(r, d)
+        return x,y
 tan_t.radec2pixelxy_single = tan_t.radec2pixelxy
 tan_t.radec2pixelxy = tan_t_radec2pixelxy_any
 

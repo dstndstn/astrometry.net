@@ -1,9 +1,19 @@
-
-
 #include "anwcs.h"
 
-
 typedef float number;
+
+double nearest_resample(double px, double py, const number* img,
+						const number* weightimg, int W, int H,
+						double* out_wt, void* token);
+
+struct lanczos_args_s {
+	int order;
+};
+typedef struct lanczos_args_s lanczos_args_t;
+
+double lanczos_resample(double px, double py,
+						const number* img, const number* weightimg,
+						int W, int H, double* out_wt, void* token);
 
 /*
  typedef bool (*isbadpix)(const number* img, const number* weightimg, int ix, int iy, void* token)
@@ -38,4 +48,9 @@ int coadd_add_image(coadd_t* c, const number* img, const number* weightimg,
 void coadd_divide_by_weight(coadd_t* c, number badpix);
 
 void coadd_free(coadd_t* c);
+
+void coadd_debug(coadd_t* co);
+
+number* coadd_create_weight_image_from_range(const number* img, int W, int H,
+											 number lowval, number highval);
 

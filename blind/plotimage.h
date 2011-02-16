@@ -12,6 +12,10 @@ struct plotimage_args {
 	// default is to use faster but approximate Cairo rendering.
 	bool resample;
 
+	int downsample;
+
+	double rgbscale[3];
+
 	double alpha;
 
 	anwcs_t* wcs;
@@ -68,10 +72,10 @@ int plot_image_get_percentile(plot_args_t* pargs, plotimage_t* args,
 
 void plot_image_add_to_pixels(plotimage_t* args, int rgb[3]);
 
+unsigned char* plot_image_scale_float(plotimage_t* args, const float* fimg);
+
 //void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H, double alpha);
 
-//extern const plotter_t plotter_image;
-//plotter_t* plot_image_new();
 DECLARE_PLOTTER(image);
 
 #endif

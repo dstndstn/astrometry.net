@@ -62,12 +62,17 @@ float* average_image_f(const float* image, int W, int H,
 					   int S, int edgehandling,
 					   int* newW, int* newH,
 					   float* output) {
+	return average_weighted_image_f(image, NULL, W, H, S, edgehandling,
+									newW, newH, output, 0.0);
+}
+
+float* average_weighted_image_f(const float* image, const float* weight,
+								int W, int H, int S, int edgehandling,
+								int* newW, int* newH, float* output, float nilval) {
 	int outw, outh;
 	int i,j;
-
 	if (get_output_image_size(W, H, S, edgehandling, &outw, &outh))
 		return NULL;
-
 	if (output == NULL) {
 		output = malloc(outw * outh * sizeof(float));
 		if (!output) {
@@ -75,22 +80,32 @@ float* average_image_f(const float* image, int W, int H,
 			return NULL;
 		}
 	}
-
     for (j=0; j<outh; j++) {
         for (i=0; i<outw; i++) {
             float sum = 0.0;
-            int I, J, N = 0;
+			float wsum = 0.0;
+            int I, J;
+			int ii;
             for (J=0; J<S; J++) {
                 if (j*S + J >= H)
                     break;
                 for (I=0; I<S; I++) {
                     if (i*S + I >= W)
                         break;
-                    sum += image[(j*S + J)*W + (i*S + I)];
-                    N++;
+					ii = (j*S + J)*W + (i*S + I);
+					if (weight) {
+						wsum += weight[ii];
+						sum += image[ii] * weight[ii];
+					} else {
+						wsum += 1.0;
+						sum += image[ii];
+					}
                 }
             }
-            output[j * outw + i] = sum / (float)N;
+			if (wsum == 0.0)
+				output[j * outw + i] = nilval;
+			else
+				output[j * outw + i] = sum / wsum;
         }
     }
 	if (newW)
@@ -99,6 +114,7 @@ float* average_image_f(const float* image, int W, int H,
 		*newH = outh;
 	return output;
 }
+
 
 
 // "borrowed" from <linux/bitops.h> from linux-2.4

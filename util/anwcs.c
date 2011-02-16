@@ -342,8 +342,10 @@ static void ansip_set_size(sip_t* sip, int W, int H) {
 }
 
 static int ansip_scale_wcs(sip_t* sip, double scale) {
-	// FIXME!!!
-	logmsg("Warning: ansip_scale_wcs only scales the TAN, not the SIP coefficients!\n");
+	if (sip->a_order || sip->b_order || sip->ap_order || sip->bp_order) {
+		// FIXME!!!
+		logmsg("Warning: ansip_scale_wcs only scales the TAN, not the SIP coefficients!\n");
+	}
 	tan_scale(&sip->wcstan, &sip->wcstan, scale);
 	return 0;
 }

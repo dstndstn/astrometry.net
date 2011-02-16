@@ -611,7 +611,7 @@ pyplotstuff: _plotstuff_c.so
 .PHONY: pyplotstuff
 
 plotstuff_wrap.c: plotstuff.i $(PLOTSTUFF_SRCS) $(PLOTSTUFF_HDRS) $(ANUTILS_DIR)/sip.h $(ANUTILS_DIR)/anwcs.h
-	swig -python $(ANUTILS_INC) $<
+	swig -python $(ANUTILS_INC) $(QFITS_INC) $<
 
 _plotstuff_c.so: plotstuff_wrap.c setup.py $(PLOTSTUFF) $(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
