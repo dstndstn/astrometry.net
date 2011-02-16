@@ -55,6 +55,10 @@ anwcs_t* anwcs_new_sip(const sip_t* sip);
 
 anwcs_t* anwcs_new_tan(const tan_t* tan);
 
+// Creates an axis-aligned TAN WCS at the given RA,Dec with "width" width in degrees
+// and W x H  pixels.
+anwcs_t* anwcs_create_box(double ra, double dec, double width, int W, int H);
+
 int anwcs_write(const anwcs_t* wcs, const char* filename);
 
 int anwcs_write_to(const anwcs_t* wcs, FILE* fid);

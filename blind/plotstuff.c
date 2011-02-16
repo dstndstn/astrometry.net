@@ -348,23 +348,8 @@ int plotstuff_set_wcs(plot_args_t* pargs, anwcs_t* wcs) {
 }
 
 int plotstuff_set_wcs_box(plot_args_t* pargs, float ra, float dec, float width) {
-	tan_t tanwcs;
-	anwcs_t* wcs;
-	double scale;
 	logverb("Setting WCS to a box centered at (%g,%g) with width %g deg.\n", ra, dec, width);
-
-	tanwcs.crval[0] = ra;
-	tanwcs.crval[1] = dec;
-	tanwcs.crpix[0] = pargs->W / 2.0;
-	tanwcs.crpix[1] = pargs->H / 2.0;
-	scale = width / (double)pargs->W;
-	tanwcs.cd[0][0] = -scale;
-	tanwcs.cd[1][0] = 0;
-	tanwcs.cd[0][1] = 0;
-	tanwcs.cd[1][1] = -scale;
-	tanwcs.imagew = pargs->W;
-	tanwcs.imageh = pargs->H;
-	wcs = anwcs_new_tan(&tanwcs);
+	anwcs_t* wcs = anwcs_create_box(ra, dec, width, pargs->W, pargs->H);
 	return plotstuff_set_wcs(pargs, wcs);
 }
 
