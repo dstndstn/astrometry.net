@@ -14,6 +14,9 @@ struct plotimage_args {
 
 	int downsample;
 
+	// 
+	double arcsinh;
+
 	double rgbscale[3];
 
 	double alpha;

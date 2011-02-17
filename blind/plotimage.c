@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009, 2010 Dustin Lang.
+  Copyright 2009, 2010, 2011 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -416,7 +416,7 @@ unsigned char* plot_image_scale_float(plotimage_t* args, const float* fimg) {
 	for (j=0; j<args->H; j++) {
 		for (i=0; i<args->W; i++) {
 			int k;
-			unsigned char v;
+			double v;
 			double pval = fimg[j*args->W + i];
 			k = 4*(j*args->W + i);
 			if ((isnan(args->image_null) && isnan(pval)) ||
@@ -426,10 +426,14 @@ unsigned char* plot_image_scale_float(plotimage_t* args, const float* fimg) {
 				img[k+2] = 0;
 				img[k+3] = 0;
 			} else {
-				v = MIN(255, MAX(0, (pval - offset) * scale));
-				img[k+0] = v * args->rgbscale[0];
-				img[k+1] = v * args->rgbscale[1];
-				img[k+2] = v * args->rgbscale[2];
+				v = (pval - offset) * scale;
+				if (args->arcsinh != 0) {
+					v = (255. / args->arcsinh) * asinh((v / 255.) * args->arcsinh);
+					v /= (asinh(args->arcsinh) / args->arcsinh);
+				}
+				img[k+0] = MIN(255, MAX(0, v * args->rgbscale[0]));
+				img[k+1] = MIN(255, MAX(0, v * args->rgbscale[1]));
+				img[k+2] = MIN(255, MAX(0, v * args->rgbscale[2]));
 				img[k+3] = 255;
 			}
 		}
