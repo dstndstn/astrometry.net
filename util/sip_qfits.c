@@ -65,6 +65,9 @@ sip_t* sip_read_tan_or_sip_header_file_ext(const char* wcsfn, int ext, sip_t* de
 int sip_write_to(const sip_t* sip, FILE* fid) {
 	qfits_header* hdr;
 	int res;
+	if ((sip->a_order == 0) && (sip->b_order == 0) &&
+		(sip->ap_order == 0) && (sip->bp_order == 0))
+		return tan_write_to(&(sip->wcstan), fid);
 	hdr = sip_create_header(sip);
 	if (!hdr) {
 		ERROR("Failed to create FITS header from WCS");
@@ -78,6 +81,10 @@ int sip_write_to(const sip_t* sip, FILE* fid) {
 int sip_write_to_file(const sip_t* sip, const char* fn) {
 	FILE* fid;
 	int res;
+	if ((sip->a_order == 0) && (sip->b_order == 0) &&
+		(sip->ap_order == 0) && (sip->bp_order == 0))
+		return tan_write_to_file(&(sip->wcstan), fn);
+		
 	fid = fopen(fn, "wb");
 	if (!fid) {
 		SYSERROR("Failed to open file \"%s\" to write WCS header", fn);
