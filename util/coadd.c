@@ -214,3 +214,12 @@ number* coadd_create_weight_image_from_range(const number* img, int W, int H,
 	return weight;
 }
 
+void coadd_weight_image_mask_value(const number* img, int W, int H,
+								   number* weight, number badval) {
+	int i;
+	for (i=0; i<(W*H); i++) {
+		if (img[i] == badval) {
+			weight[i] = 0;
+		}
+	}
+}
