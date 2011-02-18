@@ -96,10 +96,10 @@ float* convolve_separable_weighted_f(const float* img, int W, int H,
 
 				int p = i*W + j - k + K0;
 				if (weight) {
-					sum += kernel[k] * weight[p] * img[p];
+					sum  += kernel[k] * weight[p] * img[p];
 					sumw += kernel[k] * weight[p];
 				} else {
-					sum += kernel[k] * img[p];
+					sum  += kernel[k] * img[p];
 					sumw += kernel[k];
 				}
 			}
@@ -117,7 +117,7 @@ float* convolve_separable_weighted_f(const float* img, int W, int H,
 			for (k = MAX(0, i + K0 - (H-1));
 				 k < MIN(NK, i + K0 + 1); k++) {
 				int p = j*H + i - k + K0;
-				sum += kernel[k] * img[p];
+				sum  += kernel[k] * tempimg[p];
 				sumw += kernel[k];
 			}
 			outimg[i*W + j] = (sumw == 0.0) ? 0.0 : (sum / sumw);

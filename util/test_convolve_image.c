@@ -26,7 +26,7 @@
 #include "fitsioutils.h"
 
 void test_conv_1(CuTest* tc) {
-	int W = 11;
+	int W = 13;
 	int H = 11;
 	int i;
 	float* img = malloc(W * H * sizeof(float));
