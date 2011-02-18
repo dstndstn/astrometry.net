@@ -175,6 +175,17 @@ void fits_use_error_system(void);
 		}
 		logmsg("Image min,max %g,%g\n", mn,mx);
 	}
+
+	//void image_subtract_median(float* img, int W, int H) {
+	//}
+
+	void image_add(float* img, int W, int H, float val) {
+		int i;
+		for (i=0; i<(W*H); i++)
+			img[i] += val;
+	}
+
+
 	%}
 
 

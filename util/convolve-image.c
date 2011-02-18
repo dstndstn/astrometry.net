@@ -1,6 +1,26 @@
+/*
+  This file is part of the Astrometry.net suite.
+  Copyright 2011 Dustin Lang.
+
+  The Astrometry.net suite is free software; you can redistribute
+  it and/or modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation, version 2.
+
+  The Astrometry.net suite is distributed in the hope that it will be
+  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with the Astrometry.net suite ; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+*/
+
 #include <stdlib.h>
 #include <math.h>
 #include <sys/param.h>
+#include <assert.h>
+#include <stdio.h>
 
 #include "convolve-image.h"
 #include "mathutil.h"
@@ -24,9 +44,17 @@ float* convolve_get_gaussian_kernel_f(double sigma, double nsigma, int* p_k0, in
 }
 
 
-float* convolve_1d_f(const float* img, int W, int H,
+float* convolve_separable_f(const float* img, int W, int H,
 				   const float* kernel, int K0, int NK,
 				   float* outimg, float* tempimg) {
+	return convolve_separable_weighted_f(img, W, H, NULL, kernel, K0, NK, outimg, tempimg);
+}
+
+
+float* convolve_separable_weighted_f(const float* img, int W, int H,
+							  const float* weight,
+							  const float* kernel, int K0, int NK,
+							  float* outimg, float* tempimg) {
 	float* freeimg = NULL;
 	int i, j, k;
 
@@ -37,20 +65,62 @@ float* convolve_1d_f(const float* img, int W, int H,
 		outimg = malloc(W * H * sizeof(float));
 
 	for (i=0; i<H; i++) {
+		/* // DEBUG
+		 bool touchedleft = FALSE;
+		 bool touchedright = FALSE;
+		 */
 		for (j=0; j<W; j++) {
 			float sum = 0;
-			for (k=0; k<NK; k++)
-				sum += kernel[k] * img[i*W + MIN(W-1, MAX(0, j - k + K0))];
+			float sumw = 0;
+			/*
+			 This is true convolution, so the kernel is flipped;
+			 in this loop we are adding image pixels from right to left.
+			 */
+
+			/*
+			 printf("j=%i, W=%i, K0=%i, NK=%i, unrestricted j = [%i, %i),"
+			 "k -> [%i, %i), j -> [%i, %i)\n",
+			 j, W, K0, NK, j-0+K0, j-NK+K0, MAX(0, j + K0 - (W-1)), MIN(NK, j + K0 + 1),
+			 j + K0 - MAX(0, j + K0 - (W-1)), j + K0 - MIN(NK, j + K0 + 1));
+			 */
+
+			for (k = MAX(0, j + K0 - (W-1));
+				 k < MIN(NK, j + K0 + 1); k++) {
+
+				/*
+				 assert((j - k + K0) >= 0);
+				 assert((k - k + K0) <= (W-1));
+				 touchedleft |= ((j - k + K0) == 0);
+				 touchedright |= ((j - k + K0) == (W-1));
+				 */
+
+				int p = i*W + j - k + K0;
+				if (weight) {
+					sum += kernel[k] * weight[p] * img[p];
+					sumw += kernel[k] * weight[p];
+				} else {
+					sum += kernel[k] * img[p];
+					sumw += kernel[k];
+				}
+			}
 			// store into temp image in transposed order
-			tempimg[j*H + i] = sum;
+			tempimg[j*H + i] = (sumw == 0.0) ? 0.0 : (sum / sumw);
 		}
+		//assert(touchedleft);
+		//assert(touchedright);
 	}
+
 	for (j=0; j<W; j++) {
 		for (i=0; i<H; i++) {
 			float sum = 0;
-			for (k=0; k<NK; k++)
-				sum += kernel[k] * tempimg[j*H + MIN(H-1, MAX(0, i - k + K0))];
-			outimg[i*W + j] = sum;
+			float sumw = 0;
+			for (k = MAX(0, i + K0 - (H-1));
+				 k < MIN(NK, i + K0 + 1); k++) {
+				int p = j*H + i - k + K0;
+				sum += kernel[k] * img[p];
+				sumw += kernel[k];
+			}
+			outimg[i*W + j] = (sumw == 0.0) ? 0.0 : (sum / sumw);
 		}
 	}
 	free(freeimg);

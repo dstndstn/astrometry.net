@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
 		}
 		img = load.fbuf;
 
-		convolve_1d_f(img, W, H, kernel, K0, NK, outimg, tempimg);
+		convolve_separable_f(img, W, H, kernel, K0, NK, outimg, tempimg);
 
 		qfitsloader_free_buffers(&load);
 		dump.fbuf = outimg;
