@@ -27,6 +27,7 @@
 #include "coadd.h"
 #include "qfits.h"
 #include "mathutil.h"
+#include "convolve-image.h"
 
 #define true 1
 #define false 0
@@ -42,6 +43,7 @@
 %include "coadd.h"
 %include "qfits_image.h"
 %include "fitsioutils.h"
+%include "convolve-image.h"
 
  /*
   number* coadd_create_weight_image_from_range(const number* img, int W, int H,
@@ -183,6 +185,14 @@ void fits_use_error_system(void);
 		int i;
 		for (i=0; i<(W*H); i++)
 			img[i] += val;
+	}
+
+	void image_weighted_smooth(float* img, int W, int H, const float* weight,
+							   float sigma) {
+		int K0, NK;
+		float* kernel = convolve_get_gaussian_kernel_f(sigma, 5., &K0, &NK);
+		convolve_separable_weighted_f(img, W, H, weight, kernel, K0, NK, img, NULL);
+		free(kernel);
 	}
 
 

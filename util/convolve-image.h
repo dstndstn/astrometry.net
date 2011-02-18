@@ -23,6 +23,7 @@
 float* convolve_get_gaussian_kernel_f(double sigma, double nsigma, int* k0, int* NK);
 
 // Does 2-D convolution by applying the same kernel in x and y directions.
+// Output image can be the same as input image.
 float* convolve_separable_f(const float* img, int W, int H,
 							const float* kernel, int k0, int NK,
 							float* outimg, float* tempimg);
