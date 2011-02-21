@@ -436,6 +436,7 @@ if __name__ == '__main__':
 		for q in qs:
 			if q.startswith('@'):
 				q = read_file(q[1:])
+			print 'Submitting query: "%s"' % q
 			jobid = cas.submit_query(q)
 			print 'Submitted job id', jobid
 			jids.append(jobid)
