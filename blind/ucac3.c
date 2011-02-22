@@ -77,7 +77,7 @@ int ucac3_parse_entry(ucac3_entry* entry, const void* encoded) {
 
 	entry->mag = 0.001 * grab_i16(&buf);
 	entry->apmag = 0.001 * grab_i16(&buf);
-	entry->sigma_mag = 0.001 * grab_i16(&buf);
+	entry->mag_err = 0.001 * grab_i16(&buf);
 	
 	entry->objtype = grab_i8(&buf);
 	entry->doublestar = grab_i8(&buf);

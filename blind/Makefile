@@ -396,7 +396,7 @@ nomadtofits: nomadtofits.o nomad-fits.o nomad.o \
 
 ucac3tofits: ucac3tofits.o ucac3-fits.o ucac3.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ -lbz2
+	$(CC) -o $@ $^ $(LDFLAGS) -lbz2
 
 read_nomad: read_nomad.o nomad.o
 
