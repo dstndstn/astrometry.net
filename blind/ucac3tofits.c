@@ -119,6 +119,7 @@ int main(int argc, char** args) {
 			printf("\nReading file %i of %i: %s\n", optind - startoptind,
 				   argc - startoptind, infn);
 		}
+		fflush(stdout);
 
 		fid = fopen(infn, "rb");
 		if (!fid) {
@@ -130,9 +131,6 @@ int main(int argc, char** args) {
 		// 0: small -- don't use less memory
 		bzfid = BZ2_bzReadOpen(&bzerr, fid, 1, 0, NULL, 0);
 		CHECK_BZERR();
-
-		//bread_t* bread;
-		//bread = buffered_read_new(UCAC3_RECORD_SIZE, 1000, 
 
 		for (i=0;; i++) {
 			ucac3_entry entry;
