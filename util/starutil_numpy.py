@@ -1,22 +1,51 @@
 from numpy import *
 import datetime
+import numpy as np
 
 def ra_normalize(ra):
-	return mod(ra, 360.)
+	return np.mod(ra, 360.)
 
-# Galactic (l,b) to Ecliptic (ra,dec).
-# Lifted from LSST's afw.coord.Coord class by Steve Bickerton.
-def lbtoradec(l, b):
-	poleTo	 = (192.8595, 27.12825)
-	poleFrom = (122.9320, 27.12825)
+#
+def transform(long, lat, poleTo, poleFrom):
 	(alphaGP,deltaGP) = deg2rad(poleFrom[0]), deg2rad(poleFrom[1])
 	lCP = deg2rad(poleTo[0])
-	alpha = deg2rad(l)
-	delta = deg2rad(b)
+	alpha = deg2rad(long)
+	delta = deg2rad(lat)
 	ra = rad2deg(lCP - arctan2(sin(alpha - alphaGP),
-							  tan(delta) * cos(deltaGP) - cos(alpha - alphaGP) * sin(deltaGP)))
+							   tan(delta) * cos(deltaGP) - cos(alpha - alphaGP) * sin(deltaGP)))
 	dec = rad2deg(arcsin((sin(deltaGP)*sin(delta) + cos(deltaGP)*cos(delta)*cos(alpha - alphaGP))))
+	ra = ra_normalize(ra)
 	return ra,dec
+
+
+# Galactic (l,b) to equatorial (ra,dec).
+# Lifted from LSST's afw.coord.Coord class by Steve Bickerton.
+def lbtoradec(l, b):
+	# aka 'GalacticPoleInFk5'
+	poleTo	 = (192.8595, 27.12825)
+	# aka 'Fk5PoleInGalactic'
+	poleFrom = (122.9320, 27.12825)
+	return transform(l, b, poleTo, poleFrom)
+# (alphaGP,deltaGP) = deg2rad(poleFrom[0]), deg2rad(poleFrom[1])
+#lCP = deg2rad(poleTo[0])
+#	alpha = deg2rad(l)
+#	delta = deg2rad(b)
+#	ra = rad2deg(lCP - arctan2(sin(alpha - alphaGP),
+#							  tan(delta) * cos(deltaGP) - cos(alpha - alphaGP) * sin(deltaGP)))
+#	dec = rad2deg(arcsin((sin(deltaGP)*sin(delta) + cos(deltaGP)*cos(delta)*cos(alpha - alphaGP))))
+#	return ra,dec
+
+galactictoradec = lbtoradec
+
+# Also "courtesy" of Steve Bickerton in lsst.afw.Coord.
+def ecliptictoradec(a, b, epoch=2000.):
+	T = (epoch - 2000.0) / 100.0
+	eclincl = (23.0 + 26.0/60.0 +
+			   (21.448 - 46.82*T - 0.0006*T*T - 0.0018*T*T*T)/3600.0)
+	eclPoleInEquatorial = (270.0, 90.0 - eclincl)
+	equPoleInEcliptic = (90.0, 90.0 - eclincl)
+	return transform(a, b, equPoleInEcliptic, eclPoleInEquatorial)
+	
 
 
 # scalars (racenter, deccenter) in deg
