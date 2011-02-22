@@ -136,17 +136,55 @@ void coadd_debug(coadd_t* co) {
 	logmsg("Img/Weight min,max %g,%g\n", mn,mx);
 }
 
+typedef struct {
+	double xlo, xhi, ylo, yhi;
+	anwcs_t* wcs;
+} check_bounds_t;
+
+static void check_bounds(const anwcs_t* wcs, double x, double y, double ra, double dec,
+						 void* token) {
+	// project the RA,Dec into the co-add
+	check_bounds_t* cb = (check_bounds_t*)token;
+	double cx, cy;
+	if (anwcs_radec2pixelxy(cb->wcs, ra, dec, &cx, &cy)) {
+		ERROR("Failed to project RA,Dec (%g,%g) into coadd WCS\n", ra, dec);
+		return;
+	}
+	cx -= 1;
+	cy -= 1;
+	cb->xlo = MIN(cb->xlo, cx);
+	cb->xhi = MAX(cb->xhi, cx);
+	cb->ylo = MIN(cb->ylo, cy);
+	cb->yhi = MAX(cb->yhi, cy);
+}
+
+
 int coadd_add_image(coadd_t* ca, const number* img,
 					const number* weightimg,
 					number weight, const anwcs_t* wcs) {
 	int W, H;
 	int i, j;
+	int xlo,xhi,ylo,yhi;
+	check_bounds_t cb;
 
 	W = anwcs_imagew(wcs);
 	H = anwcs_imageh(wcs);
 
-	for (i=0; i<ca->H; i++) {
-		for (j=0; j<ca->W; j++) {
+	// if check_bounds:
+	cb.xlo = W;
+	cb.xhi = 0;
+	cb.ylo = H;
+	cb.yhi = 0;
+	cb.wcs = ca->wcs;
+	anwcs_walk_image_boundary(wcs, 50, check_bounds, &cb);
+	xlo = MAX(0,     floor(cb.xlo));
+	xhi = MIN(ca->W,  ceil(cb.xhi)+1);
+	ylo = MAX(0,     floor(cb.ylo));
+	yhi = MIN(ca->H,  ceil(cb.yhi)+1);
+	logmsg("Image projects to output image region: [%i,%i), [%i,%i)\n", xlo, xhi, ylo, yhi);
+
+	for (i=ylo; i<yhi; i++) {
+		for (j=xlo; j<xhi; j++) {
 			double ra, dec;
 			double px, py;
 			double wt;
