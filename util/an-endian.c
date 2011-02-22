@@ -26,6 +26,19 @@
  #endif
  */
 
+uint16_t u16_letoh(uint16_t i) {
+#if IS_BIG_ENDIAN
+    return (
+		((i & 0x00ff) <<  8) |
+		((i & 0xff00) >>  8));
+#else
+	return i;
+#endif
+}
+uint16_t u16_htole(uint16_t i) {
+    return u16_letoh(i);
+}
+
 // convert a u32 from little-endian to local.
 inline uint32_t u32_letoh(uint32_t i) {
 #if IS_BIG_ENDIAN
@@ -114,4 +127,5 @@ inline void v32_hton(void* p) {
 inline void v16_hton(void* p) {
     return v16_ntoh(p);
 }
+
 

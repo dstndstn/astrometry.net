@@ -41,6 +41,9 @@
 uint32_t u32_letoh(uint32_t i);
 uint32_t u32_htole(uint32_t i);
 
+uint16_t u16_letoh(uint16_t i);
+uint16_t u16_htole(uint16_t i);
+
 void v32_htole(void* p);
 void v16_htole(void* p);
 

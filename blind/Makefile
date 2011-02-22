@@ -394,6 +394,10 @@ catalog_analysis: catalog_analysis.o pnpoly.o $(ANUTILS_LIB) $(GSL_LIB)
 nomadtofits: nomadtofits.o nomad-fits.o nomad.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
+ucac3tofits: ucac3tofits.o ucac3-fits.o ucac3.o \
+		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $^ -lbz2
+
 read_nomad: read_nomad.o nomad.o
 
 2masstofits: $(2MASSOBJ) $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
