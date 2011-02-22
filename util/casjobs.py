@@ -370,8 +370,8 @@ def get_known_servers():
 			base_url='http://skyservice.pha.jhu.edu/casjobs/',
 			submiturl='submitjobhelper.aspx',
 			actionurl='mydbcontent.aspx?ObjName=%s&ObjType=TABLE&context=MyDB&type=normal',
-			defaultdb='DR7',
-			request_output_extra={ 'targetDDL':'Thumper_DR7' },
+			defaultdb='DR8',
+			#request_output_extra={ 'targetDDL':'Thumper_DR7' },
 			outputbaseurl='http://skyservice.pha.jhu.edu/CasJobsOutput/FITS/'
 			),
 		}
