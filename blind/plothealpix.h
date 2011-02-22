@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2010 Dustin Lang.
+  Copyright 2010, 2011 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -26,6 +26,8 @@ struct plothealpix_args {
 };
 typedef struct plothealpix_args plothealpix_t;
 
+plothealpix_t* plot_healpix_get(plot_args_t* pargs);
+
 void* plot_healpix_init(plot_args_t* args);
 
 int plot_healpix_command(const char* command, const char* cmdargs,
@@ -36,7 +38,6 @@ int plot_healpix_plot(const char* command, cairo_t* cr,
 
 void plot_healpix_free(plot_args_t* args, void* baton);
 
-//extern const plotter_t plotter_healpix;
 DECLARE_PLOTTER(healpix);
 
 #endif

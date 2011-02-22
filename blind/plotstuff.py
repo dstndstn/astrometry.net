@@ -30,6 +30,8 @@ class Plotstuff(object):
 			return plot_grid_get(self.pargs)
 		elif name in ['ann', 'annotations']:
 			return plot_annotations_get(self.pargs)
+		elif name == 'healpix':
+			return plot_healpix_get(self.pargs)
 		return self.pargs.__getattr__(name)
 
 	def __setattr__(self, name, val):

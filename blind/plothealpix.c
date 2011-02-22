@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009, 2010 Dustin Lang.
+  Copyright 2009, 2010, 2011 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -28,16 +28,11 @@
 #include "healpix-utils.h"
 #include "healpix.h"
 
-/*
-const plotter_t plotter_healpix = {
-	.name = "healpix",
-	.init = plot_healpix_init,
-	.command = plot_healpix_command,
-	.doplot = plot_healpix_plot,
-	.free = plot_healpix_free
-};
- */
 DEFINE_PLOTTER(healpix);
+
+plothealpix_t* plot_healpix_get(plot_args_t* pargs) {
+	return plotstuff_get_config(pargs, "healpix");
+}
 
 void* plot_healpix_init(plot_args_t* plotargs) {
 	plothealpix_t* args = calloc(1, sizeof(plothealpix_t));
