@@ -56,7 +56,7 @@ static void add_boilerplate(index_params_t* p, qfits_header* hdr) {
 static int step_hpquads(index_params_t* p,
 						codefile** p_codes, quadfile** p_quads,
 						char** p_codefn, char** p_quadfn, 
-						startree_t* starkd, char* skdtfn,
+						startree_t* starkd, const char* skdtfn,
 						sl* tempfiles) {
 	codefile* codes = NULL;
 	quadfile* quads = NULL;
@@ -266,7 +266,8 @@ static void step_delete_tempfiles(index_params_t* p, sl* tempfiles) {
 	}
 }
 
-int build_index_shared_skdt(startree_t* starkd, index_params_t* p,
+int build_index_shared_skdt(const char* skdtfn,
+							startree_t* starkd, index_params_t* p,
 							index_t** p_index, const char* indexfn) {
 	// assume we've got a final (ie, post-unpermute-stars) skdt
 	// we use that skdt's stars to uniformize, along with a column pulled
@@ -284,7 +285,6 @@ int build_index_shared_skdt(startree_t* starkd, index_params_t* p,
 	int rtn = -1;
 	codefile* codes = NULL;
 	quadfile* quads = NULL;
-	char* skdtfn=NULL;
 	char* quadfn=NULL;
 	char* codefn=NULL;
 	codetree* codekd = NULL;
@@ -683,7 +683,7 @@ int build_index_shared_skdt_files(const char* starkdfn, const char* indexfn,
 
 	if (p->inmemory) {
 		index_t* index;
-		if (build_index_shared_skdt(skdt, p, &index, NULL)) {
+		if (build_index_shared_skdt(starkdfn, skdt, p, &index, NULL)) {
 			return -1;
 		}
 		logmsg("Writing to file %s\n", indexfn);
@@ -697,7 +697,7 @@ int build_index_shared_skdt_files(const char* starkdfn, const char* indexfn,
 		index_close(index);
 
 	} else {
-		if (build_index_shared_skdt(skdt, p, NULL, indexfn)) {
+		if (build_index_shared_skdt(starkdfn, skdt, p, NULL, indexfn)) {
 			return -1;
 		}
 	}

@@ -4,6 +4,7 @@ matplotlib.use('Agg')
 import sys
 from optparse import *
 
+import numpy as np
 from pylab import *
 from numpy import *
 from astrometry.util.sip import *
@@ -12,14 +13,12 @@ def plot_distortions(wcsfn, ex=1, ngridx=10, ngridy=10, stepx=10, stepy=10):
 	wcs = Sip(filename=wcsfn)
 	W,H = wcs.wcstan.imagew, wcs.wcstan.imageh
 
-	sx = W / float(ngridx)
-	sy = H / float(ngridy)
-	xgrid = arange(sx/2., W, sx)
-	ygrid = arange(sy/2., H, sy)
+	xgrid = np.linspace(0, W, ngridx)
+	ygrid = np.linspace(0, H, ngridy)
+	X = np.linspace(0, W, int(ceil(W/stepx)))
+	Y = np.linspace(0, H, int(ceil(H/stepy)))
 
-	margin = 5
-	X = arange(-margin*stepx, W+margin*stepx, stepx)
-	Y = arange(-margin*stepy, H+margin*stepy, stepy)
+	xlo,xhi,ylo,yhi = 0,W,0,H
 
 	for x in xgrid:
 		DX,DY = [],[]
@@ -38,6 +37,10 @@ def plot_distortions(wcsfn, ex=1, ngridx=10, ngridy=10, stepx=10, stepy=10):
 		EY = DY + ex * (DY - yy)
 		plot(xx, yy, 'k-', alpha=0.5)
 		plot(EX, EY, 'r-')
+		xlo = min(xlo, min(EX))
+		xhi = max(xhi, max(EX))
+		ylo = min(ylo, min(EY))
+		yhi = max(yhi, max(EY))
 
 	for y in ygrid:
 		DX,DY = [],[]
@@ -56,16 +59,24 @@ def plot_distortions(wcsfn, ex=1, ngridx=10, ngridy=10, stepx=10, stepy=10):
 		EY = DY + ex * (DY - yy)
 		plot(xx, yy, 'k-', alpha=0.5)
 		plot(EX, EY, 'r-')
+		xlo = min(xlo, min(EX))
+		xhi = max(xhi, max(EX))
+		ylo = min(ylo, min(EY))
+		yhi = max(yhi, max(EY))
 
 	plot([wcs.wcstan.crpix[0]], [wcs.wcstan.crpix[1]], 'rx')
 
-	axis([0, W, 0, H])
-
+	#axis([0, W, 0, H])
+	axis('scaled')
+	axis([xlo,xhi,ylo,yhi])
+	#axis('tight')
 
 if __name__ == '__main__':
 	parser = OptionParser(usage='%prog [options] <wcs-filename> <plot-filename>')
 	parser.add_option('-e', '--ex', '--exaggerate', dest='ex', type='float', help='Exaggerate the distortion by this factor')
-	#parser.add_option('-s', '--scale', dest='scale', type='float', help='Scale the 
+	#parser.add_option('-s', '--scale', dest='scale', type='float', help='Scale the
+	parser.add_option('-n', dest='nsteps', type='int', help='Number of grid lines to plot')
+ 
 	parser.set_defaults(ex=1.)
 
 	opt,args = parser.parse_args()
@@ -77,8 +88,15 @@ if __name__ == '__main__':
 	wcsfn = args[0]
 	outfn = args[1]
 
+	args = {}
+	if opt.ex is not None:
+		args['ex'] = opt.ex
+	if opt.nsteps is not None:
+		args['ngridx'] = opt.nsteps
+		args['ngridy'] = opt.nsteps
+
 	clf()
-	plot_distortions(wcsfn, opt.ex)
+	plot_distortions(wcsfn, **args)
 	tt = 'SIP distortions: %s' % wcsfn
 	if opt.ex != 1:
 		tt += ' (exaggerated by %g)' % opt.ex
