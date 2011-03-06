@@ -292,7 +292,6 @@ int build_index_shared_skdt(const char* skdtfn,
 
 	startree_t* starkd2 = NULL;
 	quadfile* quads2 = NULL;
-	char* skdt2fn=NULL;
 	char* quad2fn=NULL;
 
 	quadfile* quads3 = NULL;
@@ -368,7 +367,6 @@ int build_index_shared_skdt(const char* skdtfn,
 	quads2 = quads;
 	quad2fn = quadfn;
 	starkd2 = starkd;
-	skdt2fn = skdtfn;
 
 	// unpermute-quads...
 	if (step_unpermute_quads(p, quads2, codekd, &quads3, &codekd2,
@@ -377,7 +375,7 @@ int build_index_shared_skdt(const char* skdtfn,
 
 	// merge-index...
 	if (step_merge_index(p, codekd2, quads3, starkd2, p_index,
-						 ckdt2fn, quad3fn, skdt2fn, indexfn))
+						 ckdt2fn, quad3fn, skdtfn, indexfn))
 		return -1;
 
 	step_delete_tempfiles(p, tempfiles);
