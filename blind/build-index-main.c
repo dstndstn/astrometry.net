@@ -82,6 +82,7 @@ static void print_help(char* progname) {
 		   "\n"
 		   "      [-M]: in-memory (don't use temp files)\n"
 		   "      [-T]: don't delete temp files\n"
+		   "      [-t <temp-dir>]: use this temp direcotry (default: /tmp)\n"
 		   "      [-v]: add verbosity.\n"
 	       "\n", progname);
 }
@@ -116,6 +117,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'j':
 			p->jitter = atof(optarg);
+			break;
+		case 't':
+			p->tempdir = optarg;
 			break;
 		case 'T':
 			p->delete_tempfiles = FALSE;
