@@ -127,6 +127,14 @@ void log_init(int level);
     }
     ~tan_t() { free($self); }
     double pixel_scale() { return tan_pixel_scale($self); }
+	void xyzcenter(double *p_x, double *p_y, double *p_z) {
+		double xyz[3];
+		tan_pixelxy2xyzarr($self, 0.5+$self->imagew/2.0, 0.5+$self->imageh/2.0, xyz);
+		*p_x = xyz[0];
+		*p_y = xyz[1];
+		*p_z = xyz[2];
+		//pixelxy2xyz(0.5+$self->imagew/2.0, 0.5+$self->imageh/2.0,p_x, p_y, p_z);
+	}
     void pixelxy2xyz(double x, double y, double *p_x, double *p_y, double *p_z) {
         double xyz[3];
         tan_pixelxy2xyzarr($self, x, y, xyz);
@@ -187,6 +195,38 @@ void log_init(int level);
         return 0;
     }
 
+    static int tan_numpy_xyz2pixelxy(tan_t* tan, PyObject* npxyz,
+		   PyObject* npx, PyObject* npy) {
+        int i, N;
+        double *x, *y; //, *xyz;
+        
+        if (PyArray_NDIM(npx) != 1) {
+            PyErr_SetString(PyExc_ValueError, "arrays must be one-dimensional");
+            return -1;
+        }
+        if (PyArray_TYPE(npx) != PyArray_DOUBLE) {
+            PyErr_SetString(PyExc_ValueError, "array must contain doubles");
+            return -1;
+        }
+        N = PyArray_DIM(npx, 0);
+        if ((PyArray_DIM(npy, 0) != N) ||
+            (PyArray_DIM(npxyz, 0) != N) ||
+            (PyArray_DIM(npxyz, 1) != 3)) {
+            PyErr_SetString(PyExc_ValueError, "arrays must be the same size");
+            return -1;
+        }
+        x = PyArray_GETPTR1(npx, 0);
+        y = PyArray_GETPTR1(npy, 0);
+        //xyz = PyArray_GETPTR2(npxyz, 0, 0);
+		for (i=0; i<N; i++)
+		   tan_xyzarr2pixelxy(tan, PyArray_GETPTR2(npxyz, i, 0),
+		   						   x+i, y+i);
+        return 0;
+    }
+
+
+
+
 %}
 
 %pythoncode %{
@@ -227,6 +267,24 @@ def tan_t_radec2pixelxy_any(self, r, d):
         return x,y
 tan_t.radec2pixelxy_single = tan_t.radec2pixelxy
 tan_t.radec2pixelxy = tan_t_radec2pixelxy_any
+
+def tan_t_xyz2pixelxy_any(self, xyz):
+    if np.iterable(xyz[0]):
+        xyz = np.atleast_2d(xyz).astype(float)
+        (N,three) = xyz.shape
+        assert(three == 3)
+        x = np.empty(N)
+        y = np.empty(N)
+        # This looks like a bug (pixelxy2radec rather than radec2pixel)
+        # but it isn't ("reverse = 1")
+        tan_numpy_xyz2pixelxy(self.this, xyz, x, y)
+        return x,y
+    else:
+        good,x,y = self.xyz2pixelxy_single(*xyz)
+        return x,y
+tan_t.xyz2pixelxy_single = tan_t.xyz2pixelxy
+tan_t.xyz2pixelxy = tan_t_xyz2pixelxy_any
+
 
 
 Tan = tan_t
