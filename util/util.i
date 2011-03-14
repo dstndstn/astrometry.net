@@ -245,7 +245,7 @@ void log_init(int level);
     static int tan_numpy_xyz2pixelxy(tan_t* tan, PyObject* npxyz,
 		   PyObject* npx, PyObject* npy) {
         int i, N;
-        double *x, *y; //, *xyz;
+        double *x, *y;
         
         if (PyArray_NDIM(npx) != 1) {
             PyErr_SetString(PyExc_ValueError, "arrays must be one-dimensional");
@@ -264,26 +264,12 @@ void log_init(int level);
         }
         x = PyArray_GETPTR1(npx, 0);
         y = PyArray_GETPTR1(npy, 0);
-        //xyz = PyArray_GETPTR2(npxyz, 0, 0);
 		for (i=0; i<N; i++) {
-			/*
-			 double* xyz = PyArray_GETPTR2(npxyz, i, 0);
-			 double* px = PyArray_GETPTR2(npxyz, i, 0);
-			 double* py = PyArray_GETPTR2(npxyz, i, 1);
-			 double* pz = PyArray_GETPTR2(npxyz, i, 2);
-			 */
 			double xyz[3];
 			xyz[0] = *((double*)PyArray_GETPTR2(npxyz, i, 0));
 			xyz[1] = *((double*)PyArray_GETPTR2(npxyz, i, 1));
 			xyz[2] = *((double*)PyArray_GETPTR2(npxyz, i, 2));
-
 			tan_xyzarr2pixelxy(tan, xyz, x+i, y+i);
-			/*
-			 printf("xyz [%g %g %g] / [%g %g %g]  x[%g] y[%g]\n",
-			 xyz[0], xyz[1], xyz[2],
-			 *px, *py, *pz,
-			 x[i], y[i]);
-			 */
 		}
         return 0;
     }
