@@ -2,6 +2,8 @@ from numpy import *
 
 def metropolis(data, model, nlinks, beta=1., keepchain=True, startlink=0):
 	'''
+	The "model" object must implement:
+	
 	p = model.get_params()
 	-- this must return an *independent copy* of the parameters.
 
@@ -12,6 +14,14 @@ def metropolis(data, model, nlinks, beta=1., keepchain=True, startlink=0):
 	model.tally(accept, linknumber)   accept: boolean
 
 	lnp = model.lnposterior(data)
+
+
+	The "data" object is an opaque object that just gets passed back to you
+
+	Returns: (bestlnp, bestparams, chain)
+
+	Where chain is a list of all the MCMC steps:
+	  [ (lnp, params), (lnp, params), ... ]
 
 	'''
 	oldparams = model.get_params()

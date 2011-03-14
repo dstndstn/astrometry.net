@@ -42,7 +42,6 @@ void log_init(int level);
 %apply double *OUTPUT { double *ra, double *dec };
 
 %include "healpix.h"
-//%include "anwcs.h"
 
 %apply double *OUTPUT { double *p_x, double *p_y, double *p_z };
 %apply double *OUTPUT { double *p_ra, double *p_dec };
@@ -155,6 +154,23 @@ void log_init(int level);
         xyz[2] = z;
         return tan_xyzarr2pixelxy($self, xyz, p_x, p_y);
     }
+	int write_to(const char* filename) {
+		return tan_write_to_file($self, filename);
+	}
+	void set_crval(double ra, double dec) {
+		$self->crval[0] = ra;
+		$self->crval[1] = dec;
+	}
+	void set_crpix(double x, double y) {
+		$self->crpix[0] = x;
+		$self->crpix[1] = y;
+	}
+	void set_imagesize(double w, double h) {
+		$self->imagew = w;
+		$self->imageh = h;
+	}
+
+
  };
 
 
@@ -268,6 +284,13 @@ def tan_t_radec2pixelxy_any(self, r, d):
 tan_t.radec2pixelxy_single = tan_t.radec2pixelxy
 tan_t.radec2pixelxy = tan_t_radec2pixelxy_any
 
+
+def tan_t_radec_bounds(self):
+    W,H = self.imagew, self.imageh
+    r,d = self.pixelxy2radec([1, W, W, 1], [1, 1, H, H])
+    return (r.min(), r.max(), d.min(), d.max())
+tan_t.radec_bounds = tan_t_radec_bounds    
+
 def tan_t_xyz2pixelxy_any(self, xyz):
     if np.iterable(xyz[0]):
         xyz = np.atleast_2d(xyz).astype(float)
@@ -285,7 +308,12 @@ def tan_t_xyz2pixelxy_any(self, xyz):
 tan_t.xyz2pixelxy_single = tan_t.xyz2pixelxy
 tan_t.xyz2pixelxy = tan_t_xyz2pixelxy_any
 
-
-
 Tan = tan_t
 %} 
+
+
+ /*
+%include "anwcs.h"
+  %extend anwcs_t {
+  %}
+  */
