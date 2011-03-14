@@ -124,7 +124,38 @@ void log_init(int level);
         tan_t* t = (tan_t*)calloc(1, sizeof(tan_t));
         return t;
     }
+	tan_t(double crval1, double crval2, double crpix1, double crpix2,
+		  double cd11, double cd12, double cd21, double cd22,
+          double imagew, double imageh) {
+        tan_t* t = (tan_t*)calloc(1, sizeof(tan_t));
+		t->crval[0] = crval1;
+		t->crval[1] = crval2;
+		t->crpix[0] = crpix1;
+		t->crpix[1] = crpix2;
+		t->cd[0][0] = cd11;
+		t->cd[0][1] = cd12;
+		t->cd[1][0] = cd21;
+		t->cd[1][1] = cd22;
+        t->imagew = imagew;
+        t->imageh = imageh;
+        return t;
+    }
     ~tan_t() { free($self); }
+	void set(double crval1, double crval2,
+		  double crpix1, double crpix2,
+		  double cd11, double cd12, double cd21, double cd22,
+          double imagew, double imageh) {
+		$self->crval[0] = crval1;
+		$self->crval[1] = crval2;
+		$self->crpix[0] = crpix1;
+		$self->crpix[1] = crpix2;
+		$self->cd[0][0] = cd11;
+		$self->cd[0][1] = cd12;
+		$self->cd[1][0] = cd21;
+		$self->cd[1][1] = cd22;
+        $self->imagew = imagew;
+        $self->imageh = imageh;
+    }
     double pixel_scale() { return tan_pixel_scale($self); }
 	void xyzcenter(double *p_x, double *p_y, double *p_z) {
 		double xyz[3];
