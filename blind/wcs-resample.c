@@ -74,7 +74,7 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
     memset(&qinimg, 0, sizeof(qinimg));
     qinimg.filename = (char*)infitsfn;
     // primary extension
-    qinimg.xtnum = 0;
+    qinimg.xtnum = infitsext;
     // first pixel plane
     qinimg.pnum = 0;
     // read as floats

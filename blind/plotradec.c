@@ -25,17 +25,6 @@
 #include "errors.h"
 #include "sip_qfits.h"
 
-/*
-const plotter_t plotter_radec = {
-	"radec", 
-	plot_radec_init,
-	NULL,
-	plot_radec_command,
-	plot_radec_plot,
-	plot_radec_free,
-	NULL
-};
- */
 DEFINE_PLOTTER(radec);
 
 plotradec_t* plot_radec_get(plot_args_t* pargs) {
@@ -116,6 +105,8 @@ int plot_radec_plot(const char* command, cairo_t* cairo,
 		ERROR("Neither rdlist filename nor radec_vals given!");
 		return -1;
 	}
+
+	plotstuff_builtin_apply(cairo, pargs);
 
 	rd = get_rd(args, &myrd);
 	if (!rd) return -1;

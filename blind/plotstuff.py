@@ -46,6 +46,8 @@ class Plotstuff(object):
 			self.set_color(val)
 		elif name == 'alpha':
 			self.set_alpha(val)
+		elif name == 'lw':
+			self.pargs.lw = float(val)
 		elif name == 'marker' and type(val) is str:
 			plotstuff_set_marker(self.pargs, val)
 		elif name == 'wcs_file':
