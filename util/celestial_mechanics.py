@@ -14,12 +14,16 @@
 #	- What to do if e is close to 1.0 in eccentric_anomaly
 #
 
+from math import pi
 import unittest
+import sys
+
 import numpy
+import numpy as np
 from numpy import *
 from scipy.special import jn
 import matplotlib.pyplot as plt
-import sys
+
 from astrometry.util.starutil_numpy import *
 
 ihat = array([1.,0.,0.])
@@ -35,7 +39,7 @@ default_K = 1.0
 c_au_per_yr = 63239.6717 # google says
 
 def norm(x):
-	return sqrt(dot(x, x))
+	return np.sqrt(np.dot(x, x))
 
 def deg2rad(x):
 	return x * pi/180.
@@ -46,7 +50,7 @@ def orbital_elements_to_xyz(E, observer, light_travel=True):
 	# ugh, it's hard to be units-agnostic.
 	assert(GM == 2.95912e-04)
 	# orbital angular velocity  [radians/yr]
-	meanfrequency = sqrt(GM / a**3)
+	meanfrequency = np.sqrt(GM / a**3)
 	# Correct for light-time delay.
 	dM = 0.
 	lastdM = dM
@@ -58,7 +62,6 @@ def orbital_elements_to_xyz(E, observer, light_travel=True):
 		r = norm(dx)
 		travel = r / c_au_per_yr
 		dM = travel * meanfrequency
-		#print 'dM', dM
 		if abs(lastdM - dM) < 1e-12:
 			break
 		lastdM = dM
@@ -77,19 +80,19 @@ def orbital_elements_to_radec(E, observer, light_travel=True):
 
 # convert orbital elements into vectors in the plane of the orbit.
 def orbital_vectors_from_orbital_elements(i, Omega, pomega):
-	ascendingnodevector = cos(Omega) * ihat + sin(Omega) * jhat
-	tmpydir= cross(khat, ascendingnodevector)
-	zhat= cos(i) * khat - sin(i) * tmpydir
-	tmpydir= cross(zhat, ascendingnodevector)
-	xhat= cos(pomega) * ascendingnodevector + sin(pomega) * tmpydir
-	yhat = cross(zhat, xhat)
+	ascendingnodevector = np.cos(Omega) * ihat + np.sin(Omega) * jhat
+	tmpydir= np.cross(khat, ascendingnodevector)
+	zhat= np.cos(i) * khat - np.sin(i) * tmpydir
+	tmpydir= np.cross(zhat, ascendingnodevector)
+	xhat= np.cos(pomega) * ascendingnodevector + np.sin(pomega) * tmpydir
+	yhat = np.cross(zhat, xhat)
 	return (xhat, yhat, zhat)
 
 def position_from_orbital_vectors(xhat, yhat, a, e, M):
 	E = eccentric_anomaly_from_mean_anomaly(M, e)
-	cosE = cos(E)
-	sinE = sin(E)
-	b = a*sqrt(1. - e**2)
+	cosE = np.cos(E)
+	sinE = np.sin(E)
+	b = a*np.sqrt(1. - e**2)
 	x =  a * (cosE - e)  * xhat + b * sinE        * yhat
 	return x
 
@@ -105,15 +108,21 @@ def position_from_orbital_vectors(xhat, yhat, a, e, M):
 #            position, velocity (length units, length units per time unit)
 def phase_space_coordinates_from_orbital_elements(a, e, i, Omega, pomega, M, GM):
 	(xhat, yhat, zhat) = orbital_vectors_from_orbital_elements(i, Omega, pomega)
-	dMdt = sqrt(GM / a**3)
+	dMdt = np.sqrt(GM / a**3)
 	E = eccentric_anomaly_from_mean_anomaly(M, e)
-	cosE = cos(E)
-	sinE = sin(E)
+	cosE = np.cos(E)
+	sinE = np.sin(E)
 	dEdt = 1.0 / (1.0 - e * cosE) * dMdt
-	b = a*sqrt(1. - e**2)
+	b = a*np.sqrt(1. - e**2)
 	x =  a * (cosE - e)  * xhat + b * sinE        * yhat
 	v = -a * sinE * dEdt * xhat + b * cosE * dEdt * yhat
 	return (x, v)
+
+class UnboundOrbitError(ValueError):
+	pass
+
+def energy_from_phase_space_coordinates(x, v, GM):
+	return 0.5 * np.dot(v, v) - GM / norm(x)
 
 # convert phase-space coordinates to orbital elements
 #  x       - position (3-vector, length units)
@@ -122,26 +131,28 @@ def phase_space_coordinates_from_orbital_elements(a, e, i, Omega, pomega, M, GM)
 #  return  - (a, e, i, Omega, pomega, M)
 #          - see "phase_space_coordinates" for definitions
 def orbital_elements_from_phase_space_coordinates(x, v, GM):
-	energy = 0.5 * dot(v, v) - GM / norm(x)
-	assert(energy < 0.)
-	angmom = cross(x, v)
+	energy = energy_from_phase_space_coordinates(x, v, GM)
+	if energy > 0:
+		raise UnboundOrbitError('orbital_elements_from_phase_space_coordinates: Unbound orbit')
+
+	angmom = np.cross(x, v)
 	zhat = angmom / norm(angmom)
-	evec = cross(v, angmom) / GM - x / norm(x)
+	evec = np.cross(v, angmom) / GM - x / norm(x)
 	e = norm(evec)
 	if e == 0:
 		# by convention:
-		xhat = cross(jhat, zhat)
+		xhat = np.cross(jhat, zhat)
 		xhat /= norm(xhat)
 	else:
 		xhat = evec / e
-	yhat = cross(zhat, xhat)
+	yhat = np.cross(zhat, xhat)
 	a = -0.5 * GM / energy
-	dMdt = sqrt(GM / a**3)
-	i = arccos(angmom[2] / norm(angmom))
+	dMdt = np.sqrt(GM / a**3)
+	i = np.arccos(angmom[2] / norm(angmom))
 	if i == 0:
 		Omega = 0.0
 	else:
-		Omega = arctan2(angmom[1], angmom[0]) + 0.5 * pi
+		Omega = np.arctan2(angmom[1], angmom[0]) + 0.5 * pi
 		if Omega < 0:
 			Omega += 2.*pi
 		if i < 0:
@@ -163,7 +174,7 @@ def orbital_elements_from_phase_space_coordinates(x, v, GM):
 		pomega += 2.0 * pi
 	if pomega > 2.0 * pi:
 		pomega -= 2.0 * pi
-	f = arctan2(dot(yhat, x), dot(xhat, x))
+	f = np.arctan2(np.dot(yhat, x), np.dot(xhat, x))
 	M = mean_anomaly_from_true_anomaly(f, e)
 	if M < 0:
 		M += 2.*pi
@@ -174,7 +185,7 @@ def orbital_elements_from_phase_space_coordinates(x, v, GM):
 #  e       - eccentricity
 #  return  - mean anomaly (radians)
 def mean_anomaly_from_eccentric_anomaly(E, e):
-	return (E - e * sin(E))
+	return (E - e * np.sin(E))
 
 def mean_anomaly_from_true_anomaly(f, e):
 	return mean_anomaly_from_eccentric_anomaly(eccentric_anomaly_from_true_anomaly(f, e), e)
@@ -187,7 +198,7 @@ def mean_anomaly_from_true_anomaly(f, e):
 #  return  - eccentric anomaly (radians)
 def eccentric_anomaly_from_mean_anomaly(M, e, tolerance = default_tolerance,
 		      maximum_iteration = default_maximum_iteration, verbose=False):
-	E = M + e * sin(M)
+	E = M + e * np.sin(M)
 	iteration = 0
 	deltaM = 100.0
 	while (iteration < maximum_iteration) and (abs(deltaM) > tolerance):
@@ -198,8 +209,8 @@ def eccentric_anomaly_from_mean_anomaly(M, e, tolerance = default_tolerance,
 	return E
 
 def eccentric_anomaly_from_true_anomaly(f, e):
-	E = arccos((cos(f) + e) / (1.0 + e * cos(f)))
-	E *= (sign(sin(f)) * sign(sin(E)))
+	E = np.arccos((np.cos(f) + e) / (1.0 + e * np.cos(f)))
+	E *= (np.sign(np.sin(f)) * np.sign(np.sin(E)))
 	return E
 
 # convert eccentric anomaly to true anomaly
@@ -207,8 +218,8 @@ def eccentric_anomaly_from_true_anomaly(f, e):
 #  e       - eccentricity
 #  return  - true anomaly (radians)
 def true_anomaly_from_eccentric_anomaly(E, e):
-	f = arccos((cos(E) - e) / (1.0 - e * cos(E)))
-	f *= (sign(sin(f)) * sign(sin(E)))
+	f = np.arccos((np.cos(E) - e) / (1.0 - e * np.cos(E)))
+	f *= (np.sign(np.sin(f)) * np.sign(np.sin(E)))
 	return f
 
 # compute radial velocity
@@ -218,7 +229,7 @@ def true_anomaly_from_eccentric_anomaly(E, e):
 #  pomega  - eccentric longitude (radians)
 #  return  - radial velocity (same units as K)
 def radial_velocity(K, f, e, pomega):
-	return K * (sin(f + pomega) + e * sin(pomega))
+	return K * (np.sin(f + pomega) + e * np.sin(pomega))
 
 # compute radial velocity
 #  K       - radial velocity amplitude
@@ -227,10 +238,10 @@ def radial_velocity(K, f, e, pomega):
 #  pomega  - eccentric longitude (radians)
 #  return  - radial velocity (same units as K)
 def radial_velocity_from_M(K, M, e, pomega):
-	E = M + e*sin(M)
-	term1 = cos(pomega) * sqrt(1 - e**2) * sin(E) / (1 - e*cos(E))
-	term2 = sin(pomega) * (cos(E) - e) / (1 - e*cos(E))
-	term3 = e*sin(pomega)
+	E = M + e*np.sin(M)
+	term1 = np.cos(pomega) * np.sqrt(1 - e**2) * np.sin(E) / (1 - e*np.cos(E))
+	term2 = np.sin(pomega) * (np.cos(E) - e) / (1 - e*np.cos(E))
+	term3 = e*np.sin(pomega)
 	return K * (term1 + term2 + term3)
 
 # compute radial velocity using a truncated Fourier series
@@ -244,8 +255,8 @@ def radial_velocity_from_M(K, M, e, pomega):
 def radial_velocity_fourier_series(K, M, e, pomega, phi, order=default_order):
 	vr = 0.0
 	for n in arange(0, order+1, 1):
-		vr += K*(fourier_coeff_A(n, pomega, phi, e) * cos(n*(M-phi)) \
-			+ fourier_coeff_B(n, pomega, phi, e) * sin(n*(M-phi)))
+		vr += K*(fourier_coeff_A(n, pomega, phi, e) * np.cos(n*(M-phi)) \
+			+ fourier_coeff_B(n, pomega, phi, e) * np.sin(n*(M-phi)))
 	return vr
 
 # the following is based on the naming convention in Itay's notes on Fourier analysis
@@ -255,16 +266,16 @@ def radial_velocity_fourier_series(K, M, e, pomega, phi, order=default_order):
 #  n       - order of the coefficient
 #  e       - eccentricity
 def aprime(n,e):
-	return sqrt(1. - e**2)*( ((sqrt(1. - e**2) - 1)/e)*jn(n,n*e) + jn(n-1,n*e))
+	return np.sqrt(1. - e**2)*( ((np.sqrt(1. - e**2) - 1)/e)*jn(n,n*e) + jn(n-1,n*e))
 
 def bprime(n,e):
-	return sqrt(1. - e**2)*( ((sqrt(1. - e**2) - 1)/e)*jn(n,n*e) - jn(n-1,n*e))
+	return np.sqrt(1. - e**2)*( ((np.sqrt(1. - e**2) - 1)/e)*jn(n,n*e) - jn(n-1,n*e))
 
 def fourier_coeff_A(n, pomega, phi, e):
-	return 0.5 * (aprime(n,e) * sin(pomega + n * phi) + bprime(n,e) * sin(pomega - n * phi))
+	return 0.5 * (aprime(n,e) * np.sin(pomega + n * phi) + bprime(n,e) * np.sin(pomega - n * phi))
 
 def fourier_coeff_B(n, pomega, phi, e):
-	return 0.5 * (aprime(n,e) * cos(pomega + n * phi) - bprime(n,e) * cos(pomega - n * phi))
+	return 0.5 * (aprime(n,e) * np.cos(pomega + n * phi) - bprime(n,e) * np.cos(pomega - n * phi))
 
 # APW: adjust function call as necessary
 #  return  - amplitudes as a list of tuples (An,Bn)
@@ -275,8 +286,8 @@ def radial_velocity_fourier_amplitudes(K, phi, e, pomega, order=default_order):
 	return amplitudes
 
 def eccentricity_from_fourier_amplitudes(amplitudes):
-	K = sqrt(amplitude[0]**2 + amplitude[1]**2)
-	phi = arctan(amplitude[1] / amplitude[0]) # WRONG?
+	K = np.sqrt(amplitude[0]**2 + amplitude[1]**2)
+	phi = np.arctan(amplitude[1] / amplitude[0]) # WRONG?
 	e = 0 # WRONG
 	pomega = 0 # WRONG
 	return (K, phi, e, pomega)
