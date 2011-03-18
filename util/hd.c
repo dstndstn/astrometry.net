@@ -33,6 +33,12 @@ hd_catalog_t* henry_draper_open(const char* fn) {
     return hd;
 }
 
+int henry_draper_n(const hd_catalog_t* hd) {
+	assert(hd);
+	assert(hd->kd);
+	return kdtree_n(hd->kd);
+}
+
 void henry_draper_close(hd_catalog_t* hd) {
     if (!hd) return;
     free(hd->fn);

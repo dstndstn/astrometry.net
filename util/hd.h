@@ -53,6 +53,9 @@ typedef struct hd_catalog hd_catalog_t;
 
 hd_catalog_t* henry_draper_open(const char* fn);
 
+// N stars
+int henry_draper_n(const hd_catalog_t* hd);
+
 void henry_draper_close(hd_catalog_t* hd);
 
 bl* henry_draper_get(hd_catalog_t* hd,

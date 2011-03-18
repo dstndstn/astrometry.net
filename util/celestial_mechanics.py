@@ -45,10 +45,13 @@ def deg2rad(x):
 	return x * pi/180.
 	#return radians(x)
 
+GM_sun = 2.9591310798672560E-04 #AU^3/d^2
+
 def orbital_elements_to_xyz(E, observer, light_travel=True):
 	(a,e,i,Omega,pomega,M,GM) = E
 	# ugh, it's hard to be units-agnostic.
-	assert(GM == 2.95912e-04)
+	# we just assert here so we have to think about this!
+	assert(GM == GM_sun)
 	# orbital angular velocity  [radians/yr]
 	meanfrequency = np.sqrt(GM / a**3)
 	# Correct for light-time delay.

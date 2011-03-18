@@ -177,6 +177,8 @@ int main(int argc, char** args) {
     double scale = 1.0;
     bool pngformat = TRUE;
 
+	bool showzero = FALSE;
+
     char* hdpath = NULL;
     bool HD = FALSE;
 
@@ -846,11 +848,13 @@ int main(int argc, char** args) {
         if (!justlist)
             cairo_set_source_rgb(cairo, 1.0, 1.0, 1.0);
 
+		logverb("Reading HD catalog: %s\n", hdpath);
         hdcat = henry_draper_open(hdpath);
         if (!hdcat) {
             ERROR("Failed to open HD catalog");
             exit(-1);
         }
+		logverb("Got %i HD stars\n", henry_draper_n(hdcat));
 
         sip_pixelxy2radec(&sip, W/(2.0*scale), H/(2.0*scale), &rac, &decc);
         sip_pixelxy2radec(&sip, 0.0, 0.0, &ra2, &dec2);
@@ -858,15 +862,20 @@ int main(int argc, char** args) {
         // Fudge
         arcsec *= 1.1;
         hdlist = henry_draper_get(hdcat, rac, decc, arcsec);
+		logverb("Found %i HD stars within range (%g arcsec of RA,Dec %g,%g)\n", bl_size(hdlist), arcsec, rac, decc);
 
         for (i=0; i<bl_size(hdlist); i++) {
             double px, py;
             char* txt;
             hd_entry_t* hd = bl_access(hdlist, i);
-            if (!sip_radec2pixelxy(&sip, hd->ra, hd->dec, &px, &py))
+            if (!sip_radec2pixelxy(&sip, hd->ra, hd->dec, &px, &py)) {
                 continue;
-            if (px < 0 || py < 0 || px*scale > W || py*scale > H)
+			}
+            if (px < 0 || py < 0 || px*scale > W || py*scale > H) {
+				logverb("  HD %i at RA,Dec (%g, %g) -> pixel (%.1f, %.1f) is out of bounds\n",
+						hd->hd, hd->ra, hd->dec, px, py);
                 continue;
+			}
             asprintf(&txt, "HD %i", hd->hd);
             if (!justlist) {
                 cairo_text_extents_t textents;
