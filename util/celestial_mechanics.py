@@ -121,8 +121,11 @@ def phase_space_coordinates_from_orbital_elements(a, e, i, Omega, pomega, M, GM)
 class UnboundOrbitError(ValueError):
 	pass
 
+def potential_energy_from_position(x, GM):
+	return -1. * GM / norm(x)
+
 def energy_from_phase_space_coordinates(x, v, GM):
-	return 0.5 * np.dot(v, v) - GM / norm(x)
+	return 0.5 * np.dot(v, v) + potential_energy_from_position(x, GM)
 
 # convert phase-space coordinates to orbital elements
 #  x       - position (3-vector, length units)
