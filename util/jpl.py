@@ -26,11 +26,11 @@ sysgmrex = re.compile(sysgmrexstr)
 
 # For parsing X,V type output
 xvrexstr = ('^' + floatvar('jd') + r' = (?P<ad>A\.D\. .*?)'
-			+ '^ +' + floatvar('x0')
+			+ r'^\s+' + floatvar('x0')
 			+ ' +' + floatvar('x1')
 			+ ' +' + floatvar('x2')
 			+ '.*?'
-			+ '^ +' + floatvar('v0')
+			+ r'^\s+' + floatvar('v0')
 			+ ' +' + floatvar('v1')
 			+ ' +' + floatvar('v2')
 			)
