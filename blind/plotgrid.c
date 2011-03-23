@@ -177,6 +177,59 @@ static int find_ra_label_location(plot_args_t* pargs, double ra, double cdec, do
 	return 0;
 }
 
+static int do_radec_labels(plot_args_t* pargs, plotgrid_t* args,
+						   double ramin, double ramax,
+						   double decmin, double decmax) {
+	double cra, cdec;
+	char label[32];
+	double x,y;
+	bool ok;
+	double ra, dec;
+	cairo_t* cairo = pargs->cairo;
+
+	args->dolabel = (args->ralabelstep > 0) && (args->declabelstep > 0);
+	if (!args->dolabel) {
+		return 0;
+	}
+
+	if (args->ralabelstep == 0 || args->declabelstep == 0) {
+		// FIXME -- choose defaults
+		ERROR("Need grid_ralabelstep, grid_declabelstep");
+		return 0;
+	}
+	logmsg("Adding grid labels...\n");
+	plotstuff_get_radec_center_and_radius(pargs, &cra, &cdec, NULL);
+	assert(cra >= ramin && cra <= ramax);
+	assert(cdec >= decmin && cdec <= decmax);
+	for (ra = args->ralabelstep * floor(ramin / args->ralabelstep);
+		 ra <= args->ralabelstep * ceil(ramax / args->ralabelstep);
+		 ra += args->ralabelstep) {
+		double lra;
+		if (find_ra_label_location(pargs, ra, cdec, decmin, decmax, &dec))
+			continue;
+		lra = ra;
+		if (lra < 0)
+			lra += 360;
+		if (lra >= 360)
+			lra -= 360;
+		pretty_label(lra, label);
+		logmsg("Label \"%s\" at (%g,%g)\n", label, ra, dec);
+		ok = plotstuff_radec2xy(pargs, ra, dec, &x, &y);
+		plotstuff_stack_text(pargs, cairo, label, x, y);
+	}
+	for (dec = args->declabelstep * floor(decmin / args->declabelstep);
+		 dec <= args->declabelstep * ceil(decmax / args->declabelstep);
+		 dec += args->declabelstep) {
+		if (find_dec_label_location(pargs, dec, cra, ramin, ramax, &ra))
+			continue;
+		pretty_label(dec, label);
+		logmsg("Label Dec=\"%s\" at (%g,%g)\n", label, ra, dec);
+		ok = plotstuff_radec2xy(pargs, ra, dec, &x, &y);
+		plotstuff_stack_text(pargs, cairo, label, x, y);
+	}
+	return 1;
+}
+
 int plot_grid_plot(const char* command,
 					cairo_t* cairo, plot_args_t* pargs, void* baton) {
 	plotgrid_t* args = (plotgrid_t*)baton;
@@ -220,49 +273,7 @@ int plot_grid_plot(const char* command,
 		}
 	}
 
-	//logmsg("Dolabel: %i\n", (int)args->dolabel);
-	args->dolabel = (args->ralabelstep > 0) && (args->declabelstep > 0);
-	if (args->dolabel) {
-		double cra, cdec;
-		char label[32];
-		double x,y;
-		bool ok;
-
-		if (args->ralabelstep == 0 || args->declabelstep == 0) {
-			// FIXME -- choose defaults
-			ERROR("Need grid_ralabelstep, grid_declabelstep");
-			return -1;
-		}
-		logmsg("Adding grid labels...\n");
-		plotstuff_get_radec_center_and_radius(pargs, &cra, &cdec, NULL);
-		assert(cra >= ramin && cra <= ramax);
-		assert(cdec >= decmin && cdec <= decmax);
-		for (ra = args->ralabelstep * floor(ramin / args->ralabelstep);
-			 ra <= args->ralabelstep * ceil(ramax / args->ralabelstep);
-			 ra += args->ralabelstep) {
-			double lra;
-			if (find_ra_label_location(pargs, ra, cdec, decmin, decmax, &dec))
-				continue;
-			lra = ra;
-			if (lra < 0)
-				lra += 360;
-			if (lra >= 360)
-				lra -= 360;
-			pretty_label(lra, label);
-			logmsg("Label \"%s\" at (%g,%g)\n", label, ra, dec);
-			ok = plotstuff_radec2xy(pargs, ra, dec, &x, &y);
-			plotstuff_stack_text(pargs, cairo, label, x, y);
-		}
-		for (dec = args->declabelstep * floor(decmin / args->declabelstep);
-			 dec <= args->declabelstep * ceil(decmax / args->declabelstep);
-			 dec += args->declabelstep) {
-			if (find_dec_label_location(pargs, dec, cra, ramin, ramax, &ra))
-				continue;
-			pretty_label(dec, label);
-			logmsg("Label Dec=\"%s\" at (%g,%g)\n", label, ra, dec);
-			ok = plotstuff_radec2xy(pargs, ra, dec, &x, &y);
-			plotstuff_stack_text(pargs, cairo, label, x, y);
-		}
+	if (do_radec_labels(pargs, args, ramin, ramax, decmin, decmax)) {
 		plotstuff_plot_stack(pargs, cairo);
 	}
 	return 0;
