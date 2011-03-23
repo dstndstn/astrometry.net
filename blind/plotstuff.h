@@ -54,6 +54,12 @@ struct plot_args {
 
 	cairo_operator_t op;
 
+	// functions to call instead of cairo_move_to / cairo_line_to.
+	void (*move_to)(struct plot_args* pargs, double x, double y, void* baton);
+	void* move_to_baton;
+	void (*line_to)(struct plot_args* pargs, double x, double y, void* baton);
+	void* line_to_baton;
+
 	anwcs_t* wcs;
 
 	int W, H;

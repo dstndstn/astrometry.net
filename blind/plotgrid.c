@@ -117,7 +117,6 @@ static int find_dec_label_location(plot_args_t* pargs, double dec, double cra, d
 	return 0;
 }
 
-
 static int find_ra_label_location(plot_args_t* pargs, double ra, double cdec, double decmin, double decmax, double* ldec) {
 	double out;
 	double in = cdec;

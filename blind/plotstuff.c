@@ -91,6 +91,20 @@ plot_args_t* plotstuff_new() {
 	return pargs;
 }
 
+static void plotstuff_move_to(plot_args_t* pargs, double x, double y) {
+	if (pargs->move_to)
+		pargs->move_to(pargs, x, y, pargs->move_to_baton);
+	else
+		cairo_move_to(pargs->cairo, x, y);
+}
+
+static void plotstuff_line_to(plot_args_t* pargs, double x, double y) {
+	if (pargs->line_to)
+		pargs->line_to(pargs, x, y, pargs->line_to_baton);
+	else
+		cairo_line_to(pargs->cairo, x, y);
+}
+
 int plotstuff_rotate_wcs(plot_args_t* pargs, double angle) {
 	if (!pargs->wcs) {
 		ERROR("No WCS has been set");
@@ -147,9 +161,9 @@ int plotstuff_line_constant_ra(plot_args_t* pargs, double ra, double dec1, doubl
 		}
 		lastok = TRUE;
 		if (lastok)
-			cairo_line_to(pargs->cairo, x, y);
+			plotstuff_line_to(pargs, x, y);
 		else
-			cairo_move_to(pargs->cairo, x, y);
+			plotstuff_move_to(pargs, x, y);
 	}
 	return 0;
 }
@@ -171,9 +185,9 @@ int plotstuff_line_constant_dec(plot_args_t* pargs, double dec, double ra1, doub
 		if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
 			continue;
 		if (ra == ra1)
-			cairo_move_to(pargs->cairo, x, y);
+			plotstuff_move_to(pargs, x, y);
 		else
-			cairo_line_to(pargs->cairo, x, y);
+			plotstuff_line_to(pargs, x, y);
 	}
 	return 0;
 }
@@ -187,7 +201,7 @@ int plotstuff_text_radec(plot_args_t* pargs, double ra, double dec, const char* 
 	assert(pargs->cairo);
 	//plotstuff_stack_text(pargs, pargs->cairo, label, x, y);
 	get_text_position(pargs, pargs->cairo, label, &x, &y);
-	cairo_move_to(pargs->cairo, x, y);
+	plotstuff_move_to(pargs, x, y);
 	cairo_show_text(pargs->cairo, label);
 	return 0;
 }
@@ -195,7 +209,7 @@ int plotstuff_text_radec(plot_args_t* pargs, double ra, double dec, const char* 
 int plotstuff_text_xy(plot_args_t* pargs, double x, double y, const char* label) {
 	assert(pargs->cairo);
 	get_text_position(pargs, pargs->cairo, label, &x, &y);
-	cairo_move_to(pargs->cairo, x, y);
+	plotstuff_move_to(pargs, x, y);
 	cairo_show_text(pargs->cairo, label);
 	return 0;
 }
@@ -207,7 +221,7 @@ static int moveto_lineto_radec(plot_args_t* pargs, double ra, double dec, bool m
 		return -1;
 	}
 	assert(pargs->cairo);
-	(move ? cairo_move_to : cairo_line_to)(pargs->cairo, x, y);
+	(move ? plotstuff_move_to : plotstuff_line_to)(pargs, x, y);
 	return 0;
 }
 
@@ -628,19 +642,19 @@ int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
 				break;
 			case LINE:
 			case ARROW:
-				cairo_move_to(cairo, cmd->x, cmd->y);
-				cairo_line_to(cairo, cmd->x2, cmd->y2);
+				plotstuff_move_to(pargs, cmd->x, cmd->y);
+				plotstuff_line_to(pargs, cmd->x2, cmd->y2);
 				{
 					double dx = cmd->x - cmd->x2;
 					double dy = cmd->y - cmd->y2;
 					double angle = atan2(dy, dx);
 					double dang = 30. * M_PI/180.0;
 					double arrowlen = 20;
-					cairo_line_to(cairo,
+					plotstuff_line_to(pargs,
 								  cmd->x2 + cos(angle+dang)*arrowlen,
 								  cmd->y2 + sin(angle+dang)*arrowlen);
-					cairo_move_to(cairo, cmd->x2, cmd->y2);
-					cairo_line_to(cairo,
+					plotstuff_move_to(pargs, cmd->x2, cmd->y2);
+					plotstuff_line_to(pargs,
 								  cmd->x2 + cos(angle-dang)*arrowlen,
 								  cmd->y2 + sin(angle-dang)*arrowlen);
 				}
