@@ -75,6 +75,12 @@ int anwcs_xyz2pixelxy(const anwcs_t* wcs, const double* xyz, double *px, double 
 
 bool anwcs_radec_is_inside_image(const anwcs_t* wcs, double ra, double dec);
 
+/**
+ The SIP implementation guarantees:
+
+   ramin <= ramax
+      ramin may be < 0, or ramax > 360, if the image straddles RA=0.
+ */
 void anwcs_get_radec_bounds(const anwcs_t* wcs, int stepsize,
 							double* pramin, double* pramax,
 							double* pdecmin, double* pdecmax);

@@ -144,6 +144,8 @@ void* plotstuff_get_config(plot_args_t* pargs, const char* name);
 int plotstuff_set_color(plot_args_t* pargs, const char* name);
 int plotstuff_set_bgcolor(plot_args_t* pargs, const char* name);
 
+float plotstuff_get_alpha(const plot_args_t* pargs);
+
 int plotstuff_set_alpha(plot_args_t* pargs, float alpha);
 
 int plotstuff_set_rgba(plot_args_t* pargs, const float* rgba);

@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009, 2010 Dustin Lang.
+  Copyright 2009, 2010, 2011 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -26,17 +26,7 @@
 #include "log.h"
 #include "errors.h"
 
-/*
-const plotter_t plotter_grid = {
-	.name = "grid",
-	.init = plot_grid_init,
-	.command = plot_grid_command,
-	.doplot = plot_grid_plot,
-	.free = plot_grid_free
-};
- */
 DEFINE_PLOTTER(grid);
-
 
 plotgrid_t* plot_grid_get(plot_args_t* pargs) {
 	return plotstuff_get_config(pargs, "grid");
@@ -71,6 +61,121 @@ static void pretty_label(double x, char* buf) {
 		buf[i] = '\0';
 		logverb("trimming trailing decimal point at %i: \"%s\"\n", i, buf);
 	}
+}
+
+static int find_dec_label_location(plot_args_t* pargs, double dec, double cra, double ramin, double ramax, double* lra) {
+	double out;
+	double in = cra;
+	int i, N;
+	bool gotit;
+	int dir;
+	logverb("Labelling Dec=%g\n", dec);
+	gotit = FALSE;
+	// dir is first 1, then -1.
+	for (dir=1; dir>=-1; dir-=2) {
+		for (i=1;; i++) {
+			// take 10-deg steps
+			out = cra + i*dir*10.0;
+			if (out > 370.0 || out <= -10)
+				break;
+			out = MIN(360, MAX(0, out));
+			logverb("ra in=%g, out=%g\n", in, out);
+			if (!plotstuff_radec_is_inside_image(pargs, out, dec)) {
+				gotit = TRUE;
+				break;
+			}
+		}
+		if (gotit)
+			break;
+	}
+	if (!gotit) {
+		ERROR("Couldn't find an RA outside the image for Dec=%g\n", dec);
+		return -1;
+	}
+	i=0;
+	N = 10;
+	while (!plotstuff_radec_is_inside_image(pargs, in, dec)) {
+		if (i == N)
+			break;
+		in = ramin + (double)i/(double)(N-1) * (ramax-ramin);
+		i++;
+	}
+	if (!plotstuff_radec_is_inside_image(pargs, in, dec))
+		return -1;
+	while (fabs(out - in) > 1e-6) {
+		// hahaha
+		double half;
+		bool isin;
+		half = (out + in) / 2.0;
+		isin = plotstuff_radec_is_inside_image(pargs, half, dec);
+		if (isin)
+			in = half;
+		else
+			out = half;
+	}
+	*lra = in;
+	return 0;
+}
+
+
+static int find_ra_label_location(plot_args_t* pargs, double ra, double cdec, double decmin, double decmax, double* ldec) {
+	double out;
+	double in = cdec;
+	int i, N;
+	bool gotit;
+	int dir;
+	logverb("Labelling RA=%g\n", ra);
+	// where does this line leave the image?
+	// cdec is inside; take steps away until we go outside.
+	gotit = FALSE;
+	// dir is first 1, then -1.
+	for (dir=1; dir>=-1; dir-=2) {
+		for (i=1;; i++) {
+			// take 10-deg steps
+			out = cdec + i*dir*10.0;
+			if (out >= 100.0 || out <= -100)
+				break;
+			out = MIN(90, MAX(-90, out));
+			logverb("dec in=%g, out=%g\n", in, out);
+			if (!plotstuff_radec_is_inside_image(pargs, ra, out)) {
+				gotit = TRUE;
+				break;
+			}
+		}
+		if (gotit)
+			break;
+	}
+	if (!gotit) {
+		ERROR("Couldn't find a Dec outside the image for RA=%g\n", ra);
+		return -1;
+	}
+	// Now we've got a Dec inside the image (cdec)
+	// and a Dec outside the image (out)
+	// Now find the boundary.
+
+	i=0;
+	N = 10;
+	while (!plotstuff_radec_is_inside_image(pargs, ra, in)) {
+		if (i == N)
+			break;
+		in = decmin + (double)i/(double)(N-1) * (decmax-decmin);
+		i++;
+	}
+	if (!plotstuff_radec_is_inside_image(pargs, ra, in))
+		return -1;
+	while (fabs(out - in) > 1e-6) {
+		// hahaha
+		double half;
+		bool isin;
+		half = (out + in) / 2.0;
+		isin = plotstuff_radec_is_inside_image(pargs, ra, half);
+		if (isin)
+			in = half;
+		else
+			out = half;
+	}
+	*ldec = in;
+	return 0;
 }
 
 int plot_grid_plot(const char* command,
@@ -120,6 +225,10 @@ int plot_grid_plot(const char* command,
 	args->dolabel = (args->ralabelstep > 0) && (args->declabelstep > 0);
 	if (args->dolabel) {
 		double cra, cdec;
+		char label[32];
+		double x,y;
+		bool ok;
+
 		if (args->ralabelstep == 0 || args->declabelstep == 0) {
 			// FIXME -- choose defaults
 			ERROR("Need grid_ralabelstep, grid_declabelstep");
@@ -132,151 +241,35 @@ int plot_grid_plot(const char* command,
 		for (ra = args->ralabelstep * floor(ramin / args->ralabelstep);
 			 ra <= args->ralabelstep * ceil(ramax / args->ralabelstep);
 			 ra += args->ralabelstep) {
-			double out;
-			double in = cdec;
-			char label[32];
-			double x,y;
-			bool ok;
-			int i, N;
 			double lra;
-			bool gotit;
-			int dir;
-			logverb("Labelling RA=%g\n", ra);
-			// where does this line leave the image?
-			// cdec is inside; take steps away until we go outside.
-			gotit = FALSE;
-			// dir is first 1, then -1.
-			for (dir=1; dir>=-1; dir-=2) {
-				for (i=1;; i++) {
-					// take 10-deg steps
-					out = cdec + i*dir*10.0;
-					if (out >= 100.0 || out <= -100)
-						break;
-					out = MIN(90, MAX(-90, out));
-					logverb("dec in=%g, out=%g\n", in, out);
-					if (!plotstuff_radec_is_inside_image(pargs, ra, out)) {
-						gotit = TRUE;
-						break;
-					}
-				}
-				if (gotit)
-					break;
-			}
-			if (!gotit) {
-				ERROR("Couldn't find a Dec outside the image for RA=%g\n", ra);
+			if (find_ra_label_location(pargs, ra, cdec, decmin, decmax, &dec))
 				continue;
-			}
-
-			i=0;
-			N = 10;
-			while (!plotstuff_radec_is_inside_image(pargs, ra, in)) {
-				if (i == N)
-					break;
-				in = decmin + (double)i/(double)(N-1) * (decmax-decmin);
-				i++;
-			}
-			if (!plotstuff_radec_is_inside_image(pargs, ra, in))
-				continue;
-			while (fabs(out - in) > 1e-6) {
-				// hahaha
-				double half;
-				bool isin;
-				half = (out + in) / 2.0;
-				isin = plotstuff_radec_is_inside_image(pargs, ra, half);
-				if (isin)
-					in = half;
-				else
-					out = half;
-			}
 			lra = ra;
 			if (lra < 0)
 				lra += 360;
 			if (lra >= 360)
 				lra -= 360;
-			//snprintf(label, sizeof(label), "%.1f", lra);
 			pretty_label(lra, label);
-			logmsg("Label \"%s\" at (%g,%g)\n", label, ra, in);
-			ok = plotstuff_radec2xy(pargs, ra, in, &x, &y);
-
-			//add_text(pargs->cairo, x, y, label, pargs, pargs->bg_rgba, NULL, NULL);
+			logmsg("Label \"%s\" at (%g,%g)\n", label, ra, dec);
+			ok = plotstuff_radec2xy(pargs, ra, dec, &x, &y);
 			plotstuff_stack_text(pargs, cairo, label, x, y);
 		}
 		for (dec = args->declabelstep * floor(decmin / args->declabelstep);
 			 dec <= args->declabelstep * ceil(decmax / args->declabelstep);
 			 dec += args->declabelstep) {
-			double out;
-			double in = cra;
-			char label[32];
-			double x,y;
-			bool ok;
-			int i, N;
-			bool gotit;
-			int dir;
-			logverb("Labelling Dec=%g\n", dec);
-			gotit = FALSE;
-			// dir is first 1, then -1.
-			for (dir=1; dir>=-1; dir-=2) {
-				for (i=1;; i++) {
-					// take 10-deg steps
-					out = cra + i*dir*10.0;
-					if (out > 370.0 || out <= -10)
-						break;
-					out = MIN(360, MAX(0, out));
-					logverb("ra in=%g, out=%g\n", in, out);
-					if (!plotstuff_radec_is_inside_image(pargs, out, dec)) {
-						gotit = TRUE;
-						break;
-					}
-				}
-				if (gotit)
-					break;
-			}
-			if (!gotit) {
-				ERROR("Couldn't find an RA outside the image for Dec=%g\n", dec);
+			if (find_dec_label_location(pargs, dec, cra, ramin, ramax, &ra))
 				continue;
-			}
-			i=0;
-			N = 10;
-			while (!plotstuff_radec_is_inside_image(pargs, in, dec)) {
-				if (i == N)
-					break;
-				in = ramin + (double)i/(double)(N-1) * (ramax-ramin);
-				i++;
-			}
-			if (!plotstuff_radec_is_inside_image(pargs, in, dec))
-				continue;
-			while (fabs(out - in) > 1e-6) {
-				// hahaha
-				double half;
-				bool isin;
-				half = (out + in) / 2.0;
-				isin = plotstuff_radec_is_inside_image(pargs, half, dec);
-				if (isin)
-					in = half;
-				else
-					out = half;
-			}
-			//snprintf(label, sizeof(label), "%.1f", dec);
 			pretty_label(dec, label);
-			logmsg("Label Dec=\"%s\" at (%g,%g)\n", label, in, dec);
-			ok = plotstuff_radec2xy(pargs, in, dec, &x, &y);
-
-			//add_text(pargs->cairo, x, y, label, pargs, pargs->bg_rgba, NULL, NULL);
+			logmsg("Label Dec=\"%s\" at (%g,%g)\n", label, ra, dec);
+			ok = plotstuff_radec2xy(pargs, ra, dec, &x, &y);
 			plotstuff_stack_text(pargs, cairo, label, x, y);
 		}
-
 		plotstuff_plot_stack(pargs, cairo);
-		
 	}
-
-
 	return 0;
 }
 
-/*
-int plot_grid_set_radec_step(plotgrid_t* args, double rastep, double decstep) {
-}
- */
+
 
 int plot_grid_command(const char* cmd, const char* cmdargs,
 					   plot_args_t* pargs, void* baton) {

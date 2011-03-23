@@ -44,6 +44,9 @@ class Plotstuff(object):
 		elif name == 'color':
 			#print 'plotstuff.py: setting color to "%s"' % val
 			self.set_color(val)
+		elif name == 'rgb':
+			plotstuff_set_rgba2(self.pargs, val[0], val[1], val[2],
+						   plotstuff_get_alpha(self.pargs))
 		elif name == 'alpha':
 			self.set_alpha(val)
 		elif name == 'lw':

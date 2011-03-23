@@ -486,6 +486,29 @@ int plot_image_plot(const char* command,
 	plotstuff_builtin_apply(cairo, pargs);
 
 	if (pargs->wcs && args->wcs) {
+
+		double ralo1, declo1, rahi1, dechi1;
+		double ralo2, declo2, rahi2, dechi2;
+
+		anwcs_get_radec_bounds(pargs->wcs, args->gridsize,
+							   &ralo1, &rahi1, &declo1, &dechi1);
+		anwcs_get_radec_bounds(args->wcs, args->gridsize,
+							   &ralo2, &rahi2, &declo2, &dechi2);
+		logverb("Plot WCS range: RA [%g,%g], Dec [%g, %g]\n",
+				ralo1, rahi1, declo1, dechi1);
+		logverb("Image WCS range: RA [%g,%g], Dec [%g, %g]\n",
+				ralo2, rahi2, declo2, dechi2);
+		if (declo1 > dechi2 || declo2 > dechi1) {
+			logverb("No overlap in Dec ranges\n");
+			return 0;
+		}
+		// FIXME -- this has not been tested for wrap-around
+		// edge cases.
+		if (ralo1 > fmod(rahi1, 360.) || ralo2 > fmod(rahi2, 360.)) {
+			logverb("No overlap in RA ranges\n");
+			return 0;
+		}
+
 		plot_image_wcs(cairo, args->img, args->W, args->H, pargs, args);
 	} else {
 		plot_image_rgba_data(cairo, args);
