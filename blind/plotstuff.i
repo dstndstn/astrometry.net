@@ -1,5 +1,8 @@
 
 %module plotstuff_c
+
+%include <typemaps.i>
+
 #undef ATTRIB_FORMAT
 #define ATTRIB_FORMAT(x,y,z)
 #undef WarnUnusedResult
@@ -38,7 +41,11 @@
 
 %}
 
-%include "typemaps.i"
+%apply double *OUTPUT { double *pramin, double *pramax, double *pdecmin, double *pdecmax };
+%apply double *OUTPUT { double *pra, double *pdec };
+%apply double *OUTPUT { double *pradius };
+%apply double *OUTPUT { double *pra, double *pdec, double *pradius };
+%apply double *OUTPUT { double *p_x, double *p_y };
 
 %include "plotstuff.h"
 %include "coadd.h"
@@ -110,7 +117,6 @@ void free(void* ptr);
 }
 
 %include "plotimage.h"
-
 %include "plotoutline.h"
 %include "plotgrid.h"
 %include "plotindex.h"

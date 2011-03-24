@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009, 2011 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -43,7 +43,15 @@ int plot_grid_plot(const char* command, cairo_t* cr,
 
 void plot_grid_free(plot_args_t* args, void* baton);
 
-//extern const plotter_t plotter_grid;
+#define DIRECTION_DEFAULT 0
+#define DIRECTION_POS     1
+#define DIRECTION_NEG     2
+#define DIRECTION_POSNEG  3
+#define DIRECTION_NEGPOS  4
+
+int plot_grid_find_ra_label_location(plot_args_t* pargs, double ra, double cdec, double decmin, double decmax, int dirn, double* pdec);
+int plot_grid_find_dec_label_location(plot_args_t* pargs, double dec, double cra, double ramin, double ramax, int dirn, double* pra);
+
 DECLARE_PLOTTER(grid);
 
 #endif

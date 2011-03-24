@@ -63,16 +63,48 @@ static void pretty_label(double x, char* buf) {
 	}
 }
 
-static int find_dec_label_location(plot_args_t* pargs, double dec, double cra, double ramin, double ramax, double* lra) {
+static int setdir(int dir, int* dirs, int* ndir) {
+	switch (dir) {
+	case DIRECTION_DEFAULT:
+	case DIRECTION_POSNEG:
+		dirs[0] = 1;
+		dirs[1] = -1;
+		*ndir = 2;
+		break;
+	case DIRECTION_POS:
+		dirs[0] = 1;
+		*ndir = 1;
+		break;
+	case DIRECTION_NEG:
+		dirs[0] = -1;
+		*ndir = 1;
+		break;
+	case DIRECTION_NEGPOS:
+		dirs[0] = -1;
+		dirs[1] = 1;
+		*ndir = 2;
+		break;
+	default:
+		return -1;
+	}
+	return 0;
+}
+
+int plot_grid_find_dec_label_location(plot_args_t* pargs, double dec, double cra, double ramin, double ramax, int dirn, double* pra) {
 	double out;
 	double in = cra;
 	int i, N;
 	bool gotit;
-	int dir;
+	int dirs[2];
+	int j, Ndir=0;
 	logverb("Labelling Dec=%g\n", dec);
 	gotit = FALSE;
+	if (setdir(dirn, dirs, &Ndir))
+		return -1;
+
 	// dir is first 1, then -1.
-	for (dir=1; dir>=-1; dir-=2) {
+	for (j=0; j<Ndir; j++) {
+		int dir = dirs[j];
 		for (i=1;; i++) {
 			// take 10-deg steps
 			out = cra + i*dir*10.0;
@@ -113,22 +145,27 @@ static int find_dec_label_location(plot_args_t* pargs, double dec, double cra, d
 		else
 			out = half;
 	}
-	*lra = in;
+	*pra = in;
 	return 0;
 }
 
-static int find_ra_label_location(plot_args_t* pargs, double ra, double cdec, double decmin, double decmax, double* ldec) {
+int plot_grid_find_ra_label_location(plot_args_t* pargs, double ra, double cdec, double decmin, double decmax, int dirn, double* pdec) {
 	double out;
 	double in = cdec;
 	int i, N;
 	bool gotit;
-	int dir;
+	int dirs[2];
+	int j, Ndir=0;
 	logverb("Labelling RA=%g\n", ra);
 	// where does this line leave the image?
 	// cdec is inside; take steps away until we go outside.
 	gotit = FALSE;
-	// dir is first 1, then -1.
-	for (dir=1; dir>=-1; dir-=2) {
+
+	if (setdir(dirn, dirs, &Ndir))
+		return -1;
+
+	for (j=0; j<Ndir; j++) {
+		int dir = dirs[j];
 		for (i=1;; i++) {
 			// take 10-deg steps
 			out = cdec + i*dir*10.0;
@@ -173,7 +210,7 @@ static int find_ra_label_location(plot_args_t* pargs, double ra, double cdec, do
 		else
 			out = half;
 	}
-	*ldec = in;
+	*pdec = in;
 	return 0;
 }
 
@@ -205,7 +242,7 @@ static int do_radec_labels(plot_args_t* pargs, plotgrid_t* args,
 		 ra <= args->ralabelstep * ceil(ramax / args->ralabelstep);
 		 ra += args->ralabelstep) {
 		double lra;
-		if (find_ra_label_location(pargs, ra, cdec, decmin, decmax, &dec))
+		if (plot_grid_find_ra_label_location(pargs, ra, cdec, decmin, decmax, 0, &dec))
 			continue;
 		lra = ra;
 		if (lra < 0)
@@ -220,7 +257,7 @@ static int do_radec_labels(plot_args_t* pargs, plotgrid_t* args,
 	for (dec = args->declabelstep * floor(decmin / args->declabelstep);
 		 dec <= args->declabelstep * ceil(decmax / args->declabelstep);
 		 dec += args->declabelstep) {
-		if (find_dec_label_location(pargs, dec, cra, ramin, ramax, &ra))
+		if (plot_grid_find_dec_label_location(pargs, dec, cra, ramin, ramax, 0, &ra))
 			continue;
 		pretty_label(dec, label);
 		logmsg("Label Dec=\"%s\" at (%g,%g)\n", label, ra, dec);
@@ -278,6 +315,7 @@ int plot_grid_plot(const char* command,
 	}
 	return 0;
 }
+
 
 
 

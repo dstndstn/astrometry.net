@@ -212,10 +212,10 @@ double plotstuff_pixel_scale(plot_args_t* pargs);
 // x,y in pixels (cairo coordinates)
 // Returns TRUE on success.
 bool plotstuff_radec2xy(plot_args_t* pargs, double ra, double dec,
-						double* x, double* y);
+						double* p_x, double* p_y);
 
 // RA,Dec,radius in deg.
-int plotstuff_get_radec_center_and_radius(plot_args_t* pargs, double* ra, double* dec, double* radius);
+int plotstuff_get_radec_center_and_radius(plot_args_t* pargs, double* pra, double* pdec, double* pradius);
 
 void plotstuff_get_radec_bounds(const plot_args_t* pargs, int stepsize,
 								double* pramin, double* pramax,
