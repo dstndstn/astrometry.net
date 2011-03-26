@@ -203,6 +203,9 @@ void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
 						  const char* txt, double px, double py);
 int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo);
 
+void plotstuff_get_maximum_rgba(plot_args_t* pargs,
+								int* p_r, int* p_g, int* p_b, int* p_a);
+
 /// WCS-related stuff:
 
 // in arcsec/pixel

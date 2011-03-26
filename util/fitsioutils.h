@@ -25,7 +25,7 @@
 #include "keywords.h"
 #include "an-bool.h"
 
-void fits_use_error_system();
+void fits_use_error_system(void);
 
 int fits_write_float_image(const float* img, int nx, int ny, const char* fn);
 

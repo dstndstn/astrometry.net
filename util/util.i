@@ -17,7 +17,7 @@
 
 #include "log.h"
 #include "healpix.h"
-//#include "anwcs.h"
+#include "anwcs.h"
 #include "sip.h"
 #include "sip_qfits.h"
 
@@ -37,6 +37,8 @@
 #define ASTROMETRY_KEYWORDS_H
 
 void log_init(int level);
+int log_get_level();
+void log_set_level(int lvl);
 
 %apply double *OUTPUT { double *dx, double *dy };
 %apply double *OUTPUT { double *ra, double *dec };
@@ -46,6 +48,12 @@ void log_init(int level);
 %apply double *OUTPUT { double *p_x, double *p_y, double *p_z };
 %apply double *OUTPUT { double *p_ra, double *p_dec };
 //%apply double *OUTPUT { double *xyz };
+
+// eg anwcs_radec2pixelxy
+%apply double *OUTPUT { double *p_x, double *p_y };
+
+%include "anwcs.h"
+
 
 %typemap(in) double [ANY] (double temp[$1_dim0]) {
   int i;
@@ -237,7 +245,10 @@ void log_init(int level);
                     tan_pixelxy2radec(tan, x[i], y[i], ra+i, dec+i);
         } else {
                 for (i=0; i<N; i++)
-                    tan_radec2pixelxy(tan, ra[i], dec[i], x+i, y+i);
+				   if (!tan_radec2pixelxy(tan, ra[i], dec[i], x+i, y+i)) {
+				   x[i] = HUGE_VAL;
+				   y[i] = HUGE_VAL;
+				   }
         }
         return 0;
     }
@@ -306,6 +317,8 @@ def tan_t_radec2pixelxy_any(self, r, d):
     if np.iterable(r) or np.iterable(d):
         r = np.atleast_1d(r).astype(float)
         d = np.atleast_1d(d).astype(float)
+        # HACK -- should broadcast...
+        assert(len(r) == len(d))
         x = np.empty(len(r))
         y = np.empty(len(r))
         # This looks like a bug (pixelxy2radec rather than radec2pixel)

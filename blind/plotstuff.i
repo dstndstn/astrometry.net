@@ -3,6 +3,9 @@
 
 %include <typemaps.i>
 
+ //%import "util.i"
+%include "util.i"
+
 #undef ATTRIB_FORMAT
 #define ATTRIB_FORMAT(x,y,z)
 #undef WarnUnusedResult
@@ -46,6 +49,7 @@
 %apply double *OUTPUT { double *pradius };
 %apply double *OUTPUT { double *pra, double *pdec, double *pradius };
 %apply double *OUTPUT { double *p_x, double *p_y };
+%apply int *OUTPUT { int* p_r, int* p_g, int* p_b, int* p_a };
 
 %include "plotstuff.h"
 %include "coadd.h"
@@ -134,6 +138,9 @@ void free(void* ptr);
    import_array();
 %}
 
+/*
+// Swig doesn't like all the preprocessor jazz in log.h...
+//%include "log.h"
 enum log_level {
 	LOG_NONE,
 	LOG_ERROR,
@@ -141,6 +148,12 @@ enum log_level {
 	LOG_VERB,
 	LOG_ALL
 };
+void log_init(int lvll);
+int log_get_level();
+void log_set_level(int lvl);
+
+void fits_use_error_system(void);
+ */
 
 // HACK!
 enum cairo_op {
@@ -160,9 +173,6 @@ enum cairo_op {
     CAIRO_OPERATOR_SATURATE
 };
 typedef enum cairo_op cairo_operator_t;
-
-void log_init(int log_level);
-void fits_use_error_system(void);
 
 %extend sip_t {
 	double crval1() {

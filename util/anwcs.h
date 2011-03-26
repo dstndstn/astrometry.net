@@ -65,7 +65,7 @@ int anwcs_write_to(const anwcs_t* wcs, FILE* fid);
 
 int anwcs_add_to_header(const anwcs_t* wcs, qfits_header* hdr);
 
-int anwcs_radec2pixelxy(const anwcs_t* wcs, double ra, double dec, double* px, double* py);
+int anwcs_radec2pixelxy(const anwcs_t* wcs, double ra, double dec, double* p_x, double* p_y);
 
 int anwcs_pixelxy2radec(const anwcs_t* wcs, double px, double py, double* ra, double* dec);
 

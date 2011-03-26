@@ -1072,6 +1072,28 @@ int plotstuff_output(plot_args_t* pargs) {
 	return 0;
 }
 
+void plotstuff_get_maximum_rgba(plot_args_t* pargs,
+								int* p_r, int* p_g, int* p_b, int* p_a) {
+	int i, r, g, b, a;
+	uint32_t* ipix = (uint32_t*)cairo_image_surface_get_data(pargs->target);
+	r = g = b = a = 0;
+	for (i=0; i<(pargs->W * pargs->H); i++) {
+        a = MAX(a, (ipix[i] >> 24) & 0xff);
+        r = MAX(r, (ipix[i] >> 16) & 0xff);
+        g = MAX(g, (ipix[i] >>  8) & 0xff);
+        b = MAX(b, (ipix[i]      ) & 0xff);
+	}
+	if (p_r)
+		*p_r = r;
+	if (p_g)
+		*p_g = g;
+	if (p_b)
+		*p_b = b;
+	if (p_a)
+		*p_a = a;
+}
+	
+
 void plotstuff_free(plot_args_t* pargs) {
 	int i;
 	for (i=0; i<pargs->NP; i++) {

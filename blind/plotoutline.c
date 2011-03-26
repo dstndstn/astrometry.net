@@ -118,13 +118,13 @@ int plot_outline_plot(const char* command,
 
 	plotstuff_builtin_apply(cairo, pargs);
 
-	logmsg("Plotting outline of WCS: image size is %g x %g\n",
-		   anwcs_imagew(args->wcs), anwcs_imageh(args->wcs));
+	logverb("Plotting outline of WCS: image size is %g x %g\n",
+			anwcs_imagew(args->wcs), anwcs_imageh(args->wcs));
 
 	token2.cairo = cairo;
 	token2.radecs = dl_new(256);
 	anwcs_walk_image_boundary(args->wcs, args->stepsize, walk_callback2, &token2);
-	logmsg("Outline: walked in %i steps\n", dl_size(token2.radecs));
+	logverb("Outline: walked in %i steps\n", dl_size(token2.radecs));
 	rd = token2.radecs;
 
 	// avoid special case when there is a break between
@@ -154,7 +154,7 @@ int plot_outline_plot(const char* command,
 
 	end = dl_size(rd)/2;
 	brk = trace_line(pargs->wcs, cairo, rd, 0, 1, end, TRUE);
-	logverb("tracing line 1: brk=%i\n", brk);
+	logdebug("tracing line 1: brk=%i\n", brk);
 
 	if (brk) {
 		int brk2;
@@ -163,7 +163,7 @@ int plot_outline_plot(const char* command,
 		cairo_new_path(cairo);
 		// trace segment 1 backwards to 0
 		brk2 = trace_line(pargs->wcs, cairo, rd, brk-1, -1, -1, TRUE);
-		logverb("traced line 1 backwards: brk2=%i\n", brk2);
+		logdebug("traced line 1 backwards: brk2=%i\n", brk2);
 		assert(brk2 == 0);
 
 		// catch edge case: there is a break between the beginning and end of the list.
@@ -173,7 +173,7 @@ int plot_outline_plot(const char* command,
 		// trace segment 2: from end of list backward, until we
 		// hit brk2 (worst case, we [should] hit brk)
 		brk2 = trace_line(pargs->wcs, cairo, rd, end-1, -1, -1, FALSE);
-		logverb("traced segment 2: brk2=%i\n", brk2);
+		logdebug("traced segment 2: brk2=%i\n", brk2);
 		// trace segment 3: from brk2 to brk.
 		// 1-pixel steps.
 		degstep = arcsec2deg(anwcs_pixel_scale(pargs->wcs));
@@ -204,7 +204,7 @@ int plot_outline_plot(const char* command,
 		// trace segments 4+5: from brk to brk2.
 		if (brk2 > brk) {
 			brk3 = trace_line(pargs->wcs, cairo, rd, brk, 1, brk2, TRUE);
-			logverb("traced segment 4/5: brk3=%i\n", brk3);
+			logdebug("traced segment 4/5: brk3=%i\n", brk3);
 			assert(brk3 == 0);
 			// trace segment 6: from brk2 to brk.
 			rd2 = anwcs_walk_discontinuity(pargs->wcs,

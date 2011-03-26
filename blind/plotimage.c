@@ -80,6 +80,7 @@ int plot_image_get_percentile(plot_args_t* pargs, plotimage_t* args,
 
 	if (!args->img) {
 		if (plot_image_read(pargs, args)) {
+			ERROR("Failed to read image file: can't get percentile!\n");
 			return -1;
 		}
 	}
@@ -486,7 +487,6 @@ int plot_image_plot(const char* command,
 	plotstuff_builtin_apply(cairo, pargs);
 
 	if (pargs->wcs && args->wcs) {
-
 		double ralo1, declo1, rahi1, dechi1;
 		double ralo2, declo2, rahi2, dechi2;
 

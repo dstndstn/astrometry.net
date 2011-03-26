@@ -265,9 +265,9 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 
 	free(bib);
 
-    logmsg("Bounds of the pixels requested from the input image:\n");
-    logmsg("  x: %g to %g\n", inxmin, inxmax);
-    logmsg("  y: %g to %g\n", inymin, inymax);
+    logverb("Bounds of the pixels requested from the input image:\n");
+    logverb("  x: %g to %g\n", inxmin, inxmax);
+    logverb("  y: %g to %g\n", inymin, inymax);
 
 	return 0;
 }
