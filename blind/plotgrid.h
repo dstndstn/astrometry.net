@@ -49,6 +49,9 @@ void plot_grid_free(plot_args_t* args, void* baton);
 #define DIRECTION_POSNEG  3
 #define DIRECTION_NEGPOS  4
 
+void plot_grid_add_label(plot_args_t* pargs, double ra, double dec,
+						 double lval);
+
 int plot_grid_find_ra_label_location(plot_args_t* pargs, double ra, double cdec, double decmin, double decmax, int dirn, double* pdec);
 int plot_grid_find_dec_label_location(plot_args_t* pargs, double dec, double cra, double ramin, double ramax, int dirn, double* pra);
 
