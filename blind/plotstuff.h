@@ -1,6 +1,6 @@
 /*
  This file is part of the Astrometry.net suite.
- Copyright 2009, 2010 Dustin Lang.
+ Copyright 2009, 2010, 2011 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -137,11 +137,12 @@ int parse_color_rgba(const char* color, float* rgba);
 int cairo_set_color(cairo_t* cairo, const char* color);
 void cairo_set_rgba(cairo_t* cairo, const float* rgba);
 
-
 plot_args_t* plotstuff_new(void);
 int plotstuff_init(plot_args_t* plotargs);
 int plotstuff_read_and_run_command(plot_args_t* pargs, FILE* f);
 int plotstuff_run_command(plot_args_t* pargs, const char* cmd);
+
+void plotstuff_set_text_bg_alpha(plot_args_t* pargs, float alpha);
 
 int plotstuff_plot_layer(plot_args_t* pargs, const char* layer);
 

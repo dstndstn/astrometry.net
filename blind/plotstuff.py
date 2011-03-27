@@ -55,6 +55,8 @@ class Plotstuff(object):
 			plotstuff_set_marker(self.pargs, val)
 		elif name == 'wcs_file':
 			plotstuff_set_wcs_file(self.pargs, val, 0)
+		elif name == 'text_bg_alpha':
+			plotstuff_set_text_bg_alpha(self.pargs, val)
 		#elif name == 'operator':
 		#	print 'val:', val
 		#	self.pargs.op = val

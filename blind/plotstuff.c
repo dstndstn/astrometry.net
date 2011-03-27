@@ -279,6 +279,10 @@ void plotstuff_builtin_apply(cairo_t* cairo, plot_args_t* args) {
 	cairo_set_font_size(cairo, args->fontsize);
 }
 
+void plotstuff_set_text_bg_alpha(plot_args_t* pargs, float alpha) {
+	pargs->bg_rgba[3] = alpha;
+}
+
 static void* plot_builtin_init(plot_args_t* args) {
 	parse_color_rgba("gray", args->rgba);
 	parse_color_rgba("black", args->bg_rgba);
@@ -579,24 +583,29 @@ static void get_text_position(plot_args_t* pargs, cairo_t* cairo,
 
 void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
 						  const char* txt, double px, double py) {
-    int dx, dy;
 	cairocmd_t cmd;
 	cairocmd_init(&cmd);
 	set_cmd_args(pargs, &cmd);
-	cmd.type = TEXT;
-	cmd.layer = pargs->text_bg_layer;
-	memcpy(cmd.rgba, pargs->bg_rgba, sizeof(cmd.rgba));
-
 	get_text_position(pargs, cairo, txt, &px, &py);
+	cmd.type = TEXT;
 
-    for (dy=-1; dy<=1; dy++) {
-        for (dx=-1; dx<=1; dx++) {
-			cmd.text = strdup(txt);
-			cmd.x = px + dx;
-			cmd.y = py + dy;
-			add_cmd(pargs, &cmd);
+	if (pargs->bg_rgba[3] > 0) {
+		int dx, dy;
+		logverb("Background text RGB [%g, %g, %g] alpha %g\n",
+				pargs->bg_rgba[0], pargs->bg_rgba[1], 
+				pargs->bg_rgba[2], pargs->bg_rgba[3]);
+		cmd.layer = pargs->text_bg_layer;
+		memcpy(cmd.rgba, pargs->bg_rgba, sizeof(cmd.rgba));
+		for (dy=-1; dy<=1; dy++) {
+			for (dx=-1; dx<=1; dx++) {
+				cmd.text = strdup(txt);
+				cmd.x = px + dx;
+				cmd.y = py + dy;
+				add_cmd(pargs, &cmd);
+			}
 		}
-	}
+	} else
+		logverb("No background behind text\n");
 
 	cmd.layer = pargs->text_fg_layer;
 	memcpy(cmd.rgba, pargs->rgba, sizeof(cmd.rgba));
@@ -605,9 +614,6 @@ void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
 	cmd.y = py;
 	add_cmd(pargs, &cmd);
 }
-
-//void plotstuff_stack_polygon(plot_args_t* pargs, cairo_t* cairo,
-							 
 
 int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
 	int i, j;
