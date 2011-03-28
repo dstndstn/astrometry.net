@@ -253,6 +253,68 @@ typedef enum cairo_op cairo_operator_t;
 
 
 %extend plotimage_args {
+	int _set_image_from_numpy(PyObject* arr) {
+		// Pirate array
+		PyObject* yarr;
+		// ?
+		//PyArray_Descr* descr = PyArray_DescrFromType(NPY_UBYTE);
+		int hasalpha = 0;
+		//PyObject* iter;
+		int i, N;
+		unsigned char* src;
+
+		// MAGIC 3: min_depth and max_depth (number of dims)
+		//yarr = PyArray_FromAny(arr, &descr, 3, 3,
+		//NPY_C_CONTIGUOUS | NPY_ALIGNED);
+		yarr = PyArray_FROMANY(arr, NPY_UBYTE, 3, 3,
+							   NPY_C_CONTIGUOUS | NPY_ALIGNED);
+		if (!yarr) {
+			PyErr_SetString(PyExc_ValueError, "Array must be 3-dimensional ubyte");
+			return -1;
+		}
+
+		switch (PyArray_DIM(yarr, 2)) {
+			// RGB
+		case 3:
+			hasalpha = 0;
+			break;
+			// RGBA
+		case 4:
+			hasalpha = 1;
+			break;
+		default:
+			PyErr_SetString(PyExc_ValueError, "Array must be RGB or RGBA");
+			return -1;
+		}
+
+		// Do I need to use both PyArray_FROMANY and iter??
+		//iter = PyArray_IterNew(yarr);
+		//void PyArray_ITER_NEXT(PyObject* iterator)
+		//void *PyArray_ITER_DATA(PyObject* iterator)
+		//Py_DECREF(iter);
+
+		src = PyArray_DATA(yarr);
+		if (self->img) {
+			free(self->img);
+		}
+		self->H = PyArray_DIM(yarr, 0);
+		self->W = PyArray_DIM(yarr, 1);
+		//printf("Allocating new %i x %i image\n", self->W, self->H);
+		self->img = malloc(self->W * self->H * 4);
+
+		N = self->W * self->H;
+		for (i=0; i<N; i++) {
+			if (hasalpha)
+				memcpy(self->img + 4*i, src + 4*i, 4);
+			else {
+				memcpy(self->img + 4*i, src + 3*i, 3);
+				self->img[4*i+3] = 255;
+			}
+		}
+
+		Py_DECREF(yarr);
+		return 0;
+	}
 
   int set_wcs_file(const char* fn, int ext) {
     return plot_image_set_wcs(self, fn, ext);
@@ -283,6 +345,17 @@ typedef enum cairo_op cairo_operator_t;
   }
 
 }
+
+%pythoncode %{
+def plotimage_set_image_from_numpy(self, img):
+    rtn = self._set_image_from_numpy(img)
+    if rtn:
+        raise RuntimeError('set_image_from_numpy() failed')
+
+plotimage_args.set_image_from_numpy = plotimage_set_image_from_numpy
+
+%}
+
 
 %extend plotindex_args {
  int add_file(const char* fn) {

@@ -125,7 +125,9 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 		assert(args->img);
 
 		// FITS images get resampled right after reading.  Others...
-		if (args->format != PLOTSTUFF_FORMAT_FITS) {
+		if (args->format == PLOTSTUFF_FORMAT_FITS) {
+			plot_image_rgba_data(cairo, args);
+		} else {
 			// resample onto the output grid...
 			unsigned char* img2 = NULL;
 			unsigned char* tmpimg = NULL;
@@ -162,8 +164,6 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			plot_image_rgba_data(cairo, args);
 			args->img = tmpimg;
 			free(img2);
-		} else {
-			plot_image_rgba_data(cairo, args);
 		}
 		return;
 	}

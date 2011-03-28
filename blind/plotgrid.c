@@ -166,14 +166,17 @@ int plot_grid_find_ra_label_location(plot_args_t* pargs, double ra, double cdec,
 
 	for (j=0; j<Ndir; j++) {
 		int dir = dirs[j];
+		logverb("direction: %i\n", dir);
 		for (i=1;; i++) {
 			// take 10-deg steps
 			out = cdec + i*dir*10.0;
+			logverb("trying Dec = %g\n", out);
 			if (out >= 100.0 || out <= -100)
 				break;
 			out = MIN(90, MAX(-90, out));
 			logverb("dec in=%g, out=%g\n", in, out);
 			if (!plotstuff_radec_is_inside_image(pargs, ra, out)) {
+				logverb("-> good!\n");
 				gotit = TRUE;
 				break;
 			}
@@ -236,12 +239,18 @@ static int do_radec_labels(plot_args_t* pargs, plotgrid_t* args,
 	assert(cra >= ramin && cra <= ramax);
 	assert(cdec >= decmin && cdec <= decmax);
 	if (args->ralabelstep > 0) {
-		for (ra = args->ralabelstep * floor(ramin / args->ralabelstep);
-			 ra <= args->ralabelstep * ceil(ramax / args->ralabelstep);
-			 ra += args->ralabelstep) {
+		double rlo, rhi;
+		if (args->ralo != 0 || args->rahi != 0) {
+			rlo = args->ralo;
+			rhi = args->rahi;
+		} else {
+			rlo = args->ralabelstep * floor(ramin / args->ralabelstep);
+			rhi = args->ralabelstep * ceil(ramax / args->ralabelstep);
+		}
+		for (ra = rlo; ra <= rhi; ra += args->ralabelstep) {
 			double lra;
 			if (plot_grid_find_ra_label_location(pargs, ra, cdec, decmin,
-												 decmax, 0, &dec))
+												 decmax, args->ralabeldir, &dec))
 				continue;
 			lra = ra;
 			if (lra < 0)
@@ -253,11 +262,17 @@ static int do_radec_labels(plot_args_t* pargs, plotgrid_t* args,
 		}
 	}
 	if (args->declabelstep > 0) {
-		for (dec = args->declabelstep * floor(decmin / args->declabelstep);
-			 dec <= args->declabelstep * ceil(decmax / args->declabelstep);
-			 dec += args->declabelstep) {
+		double dlo, dhi;
+		if (args->declo != 0 || args->dechi != 0) {
+			dlo = args->declo;
+			dhi = args->dechi;
+		} else {
+			dlo = args->declabelstep * floor(decmin / args->declabelstep);
+			dhi = args->declabelstep * ceil(decmax / args->declabelstep);
+		}
+		for (dec = dlo; dec <= dhi; dec += args->declabelstep) {
 			if (plot_grid_find_dec_label_location(pargs, dec, cra, ramin,
-												  ramax, 0, &ra))
+												  ramax, args->declabeldir, &ra))
 				continue;
 			//logmsg("Label Dec=\"%s\" at (%g,%g)\n", label, ra, dec);
 			plot_grid_add_label(pargs, ra, dec, dec);

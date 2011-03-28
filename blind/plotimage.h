@@ -77,7 +77,7 @@ void plot_image_add_to_pixels(plotimage_t* args, int rgb[3]);
 
 unsigned char* plot_image_scale_float(plotimage_t* args, const float* fimg);
 
-//void plot_image_rgba_data(cairo_t* cairo, unsigned char* img, int W, int H, double alpha);
+void plot_image_rgba_data(cairo_t* cairo, plotimage_t* args);
 
 DECLARE_PLOTTER(image);
 

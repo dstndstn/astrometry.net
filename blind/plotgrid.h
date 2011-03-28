@@ -28,6 +28,15 @@ struct plotgrid_args {
 
 	double ralabelstep;
 	double declabelstep;
+
+	int ralabeldir;
+	int declabeldir;
+
+	// Range of values to plot; default (0) is to choose sensible limits
+	double ralo;
+	double rahi;
+	double declo;
+	double dechi;
 };
 typedef struct plotgrid_args plotgrid_t;
 
