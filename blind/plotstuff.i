@@ -3,7 +3,6 @@
 
 %include <typemaps.i>
 
- //%import "util.i"
 %include "util.i"
 
 #undef ATTRIB_FORMAT
@@ -40,9 +39,6 @@
 #define true 1
 #define false 0
 
-	//#define Const
-	//#define InlineDeclare
-
 %}
 
 %apply double *OUTPUT { double *pramin, double *pramax, double *pdecmin, double *pdecmax };
@@ -71,14 +67,6 @@ void free(void* ptr);
 %include "mathutil.h"
 #undef Const
 #undef InlineDeclare
-
-/*
-	%apply unsigned char* rgboutdouble *OUTPUT { double *result };
-	%inlne %{
-	extern void add(double a, double b, double *result);
-	%}
-*/
-
 
 /* Set the input argument to point to a temporary variable */
 %typemap(in, numinputs=0) unsigned char* rgbout (unsigned char temp[3]) {
@@ -139,23 +127,6 @@ void free(void* ptr);
    import_array();
 %}
 
-/*
-// Swig doesn't like all the preprocessor jazz in log.h...
-//%include "log.h"
-enum log_level {
-	LOG_NONE,
-	LOG_ERROR,
-	LOG_MSG,
-	LOG_VERB,
-	LOG_ALL
-};
-void log_init(int lvll);
-int log_get_level();
-void log_set_level(int lvl);
-
-void fits_use_error_system(void);
- */
-
 // HACK!
 enum cairo_op {
     CAIRO_OPERATOR_CLEAR,
@@ -197,9 +168,6 @@ typedef enum cairo_op cairo_operator_t;
 		logmsg("Image min,max %g,%g\n", mn,mx);
 	}
 
-	//void image_subtract_median(float* img, int W, int H) {
-	//}
-
 	void image_add(float* img, int W, int H, float val) {
 		int i;
 		for (i=0; i<(W*H); i++)
@@ -223,41 +191,13 @@ typedef enum cairo_op cairo_operator_t;
 		npy_intp dim[3];
 		unsigned char* img;
 		PyObject* npimg;
-
-		/*
-		printf("get_image_as_numpy\n");
-		printf("  image size %i x %i\n", self->W, self->H);
-		printf("  image data: %p\n", self->outimage);
-		 */
 		dim[0] = self->H;
 		dim[1] = self->W;
 		dim[2] = 4;
-		/*{
-			int i;
-			int acc = 0;
-			unsigned char* ptr = self->outimage;
-			for (i=0; i<(dim[0] * dim[1] * dim[2]); i++) {
-				acc += (ptr[i] ? 1 : 0);
-			}
-			printf("acc %i\n", acc);
-		 }*/
-		 // return PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, img);
-
 		img = cairo_image_surface_get_data(self->target);
 		npimg = PyArray_EMPTY(3, dim, NPY_UBYTE, 0);
-		cairoutils_argb32_to_rgba_2(img, PyARRAY_DATA(npimg), self->W, self->H);
+		cairoutils_argb32_to_rgba_2(img, PyArray_DATA(npimg), self->W, self->H);
 		return npimg;
-
-		 //return PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, self->outimage);
-		/*
-		 po = PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, self->outimage);
-		 printf("po: %p\n", po);
-		 printf("dim: %i\n", (int)PyArray_DIM(po, 0));
-		 printf("dim: %i\n", (int)PyArray_DIM(po, 1));
-		 printf("dim: %i\n", (int)PyArray_DIM(po, 2));
-		 printf("itemsize: %i\n", PyArray_ITEMSIZE(po));
-		 return po;
-		 */
 	}
 }
 
@@ -266,16 +206,11 @@ typedef enum cairo_op cairo_operator_t;
 	int _set_image_from_numpy(PyObject* arr) {
 		// Pirate array
 		PyObject* yarr;
-		// ?
-		//PyArray_Descr* descr = PyArray_DescrFromType(NPY_UBYTE);
 		int hasalpha = 0;
-		//PyObject* iter;
 		int i, N;
 		unsigned char* src;
 
 		// MAGIC 3: min_depth and max_depth (number of dims)
-		//yarr = PyArray_FromAny(arr, &descr, 3, 3,
-		//NPY_C_CONTIGUOUS | NPY_ALIGNED);
 		yarr = PyArray_FROMANY(arr, NPY_UBYTE, 3, 3,
 							   NPY_C_CONTIGUOUS | NPY_ALIGNED);
 		if (!yarr) {
@@ -296,13 +231,6 @@ typedef enum cairo_op cairo_operator_t;
 			PyErr_SetString(PyExc_ValueError, "Array must be RGB or RGBA");
 			return -1;
 		}
-
-		// Do I need to use both PyArray_FROMANY and iter??
-		//iter = PyArray_IterNew(yarr);
-		//void PyArray_ITER_NEXT(PyObject* iterator)
-		//void *PyArray_ITER_DATA(PyObject* iterator)
-		//Py_DECREF(iter);
-
 		src = PyArray_DATA(yarr);
 		if (self->img) {
 			free(self->img);
@@ -311,7 +239,6 @@ typedef enum cairo_op cairo_operator_t;
 		self->W = PyArray_DIM(yarr, 1);
 		//printf("Allocating new %i x %i image\n", self->W, self->H);
 		self->img = malloc(self->W * self->H * 4);
-
 		N = self->W * self->H;
 		for (i=0; i<N; i++) {
 			if (hasalpha)
@@ -321,7 +248,6 @@ typedef enum cairo_op cairo_operator_t;
 				self->img[4*i+3] = 255;
 			}
 		}
-
 		Py_DECREF(yarr);
 		return 0;
 	}
