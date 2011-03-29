@@ -8,10 +8,12 @@ numpy_inc = numpy.get_include()
 netpbm_inc = os.environ.get('NETPBM_INC', '')
 netpbm_lib = os.environ.get('NETPBM_LIB', '-lnetpbm')
 
-compile_args = ['-O0', '-g']
+#compile_args = ['-O0', '-g']
+compile_args = []
 if len(netpbm_inc):
 	compile_args.append(netpbm_inc)
-link_args = ['-O0', '-g']
+#link_args = ['-O0', '-g']
+link_args = []
 if len(netpbm_lib):
 	link_args.append(netpbm_lib)
 

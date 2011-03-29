@@ -599,18 +599,23 @@ void cairoutils_premultiply_alpha_rgba(unsigned char* img, int W, int H) {
 }
 
 void cairoutils_argb32_to_rgba(unsigned char* img, int W, int H) {
+	cairoutils_argb32_to_rgba_2(img, img, W, H);
+}
+
+void cairoutils_argb32_to_rgba_2(const unsigned char* inimg,
+								 unsigned char* outimg, int W, int H) {
     int i;
     for (i=0; i<(H*W); i++) {
         unsigned char r,g,b,a;
-        uint32_t ipix = *((uint32_t*)(img + 4*i));
+        uint32_t ipix = *((uint32_t*)(inimg + 4*i));
         a = (ipix >> 24) & 0xff;
         r = (ipix >> 16) & 0xff;
         g = (ipix >>  8) & 0xff;
         b = (ipix      ) & 0xff;
-        img[4*i + 0] = r;
-        img[4*i + 1] = g;
-        img[4*i + 2] = b;
-        img[4*i + 3] = a;
+        outimg[4*i + 0] = r;
+        outimg[4*i + 1] = g;
+        outimg[4*i + 2] = b;
+        outimg[4*i + 3] = a;
     }
 }
 

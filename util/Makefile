@@ -207,8 +207,6 @@ _util.so: util_wrap.c setup-util.py \
 	python setup-util.py build --force --build-base build --build-platlib build/lib
 	cp build/lib/_util.so $@
 
-#WCSLIB_INC="$(WCSLIB_INC)" 
-
 pyutil: _util.so
 .PHONY: pyutil
 

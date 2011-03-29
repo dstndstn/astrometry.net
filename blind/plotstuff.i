@@ -35,6 +35,7 @@
 #include "qfits.h"
 #include "mathutil.h"
 #include "convolve-image.h"
+#include "cairoutils.h"
 
 #define true 1
 #define false 0
@@ -220,7 +221,9 @@ typedef enum cairo_op cairo_operator_t;
 %extend plot_args {
 	PyObject* get_image_as_numpy() {
 		npy_intp dim[3];
-		//PyObject* po;
+		unsigned char* img;
+		PyObject* npimg;
+
 		/*
 		printf("get_image_as_numpy\n");
 		printf("  image size %i x %i\n", self->W, self->H);
@@ -238,7 +241,14 @@ typedef enum cairo_op cairo_operator_t;
 			}
 			printf("acc %i\n", acc);
 		 }*/
-		return PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, self->outimage);
+		 // return PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, img);
+
+		img = cairo_image_surface_get_data(self->target);
+		npimg = PyArray_EMPTY(3, dim, NPY_UBYTE, 0);
+		cairoutils_argb32_to_rgba_2(img, PyARRAY_DATA(npimg), self->W, self->H);
+		return npimg;
+
+		 //return PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, self->outimage);
 		/*
 		 po = PyArray_SimpleNewFromData(3, dim, NPY_UBYTE, self->outimage);
 		 printf("po: %p\n", po);
