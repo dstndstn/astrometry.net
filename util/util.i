@@ -45,6 +45,9 @@ void log_set_level(int lvl);
 
 %include "healpix.h"
 
+// anwcs_get_radec_center_and_radius
+%apply double *OUTPUT { double *p_ra, double *p_dec, double *p_radius };
+
 %apply double *OUTPUT { double *p_x, double *p_y, double *p_z };
 %apply double *OUTPUT { double *p_ra, double *p_dec };
 //%apply double *OUTPUT { double *xyz };

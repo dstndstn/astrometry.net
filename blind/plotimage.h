@@ -79,6 +79,9 @@ unsigned char* plot_image_scale_float(plotimage_t* args, const float* fimg);
 
 void plot_image_rgba_data(cairo_t* cairo, plotimage_t* args);
 
+// After setting filename, actually open and read the image file.
+int plot_image_read(const plot_args_t* pargs, plotimage_t* args);
+
 DECLARE_PLOTTER(image);
 
 #endif

@@ -30,7 +30,6 @@
 #include "wcs-resample.h"
 #include "mathutil.h"
 
-static int plot_image_read(const plot_args_t* pargs, plotimage_t* args);
 
 DEFINE_PLOTTER(image);
 
@@ -442,7 +441,7 @@ unsigned char* plot_image_scale_float(plotimage_t* args, const float* fimg) {
 	return img;
 }
 
-static int plot_image_read(const plot_args_t* pargs, plotimage_t* args) {
+int plot_image_read(const plot_args_t* pargs, plotimage_t* args) {
 	set_format(args);
 	switch (args->format) {
 	case PLOTSTUFF_FORMAT_JPG:
