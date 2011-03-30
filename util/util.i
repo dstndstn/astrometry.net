@@ -19,6 +19,7 @@
 #include "healpix.h"
 #include "anwcs.h"
 #include "sip.h"
+#include "sip-utils.h"
 #include "sip_qfits.h"
 
 #define true 1
@@ -168,13 +169,15 @@ void log_set_level(int lvl);
         $self->imageh = imageh;
     }
     double pixel_scale() { return tan_pixel_scale($self); }
+	void radec_center(double *p_ra, double *p_dec) {
+		tan_get_radec_center($self, p_ra, p_dec);
+	}
 	void xyzcenter(double *p_x, double *p_y, double *p_z) {
 		double xyz[3];
 		tan_pixelxy2xyzarr($self, 0.5+$self->imagew/2.0, 0.5+$self->imageh/2.0, xyz);
 		*p_x = xyz[0];
 		*p_y = xyz[1];
 		*p_z = xyz[2];
-		//pixelxy2xyz(0.5+$self->imagew/2.0, 0.5+$self->imageh/2.0,p_x, p_y, p_z);
 	}
     void pixelxy2xyz(double x, double y, double *p_x, double *p_y, double *p_z) {
         double xyz[3];
