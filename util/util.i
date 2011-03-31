@@ -315,7 +315,7 @@ def tan_t_pixelxy2radec_any(self, x, y):
         tan_numpy_pixelxy2radec(self.this, x, y, r, d, 0)
         return r,d
     else:
-        return self.pixelxy2radec_single(x, y)
+        return self.pixelxy2radec_single(float(x), float(y))
 tan_t.pixelxy2radec_single = tan_t.pixelxy2radec
 tan_t.pixelxy2radec = tan_t_pixelxy2radec_any
 
