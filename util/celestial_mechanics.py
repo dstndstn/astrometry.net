@@ -47,7 +47,7 @@ def deg2rad(x):
 
 GM_sun = 2.9591310798672560E-04 #AU^3/d^2
 
-def orbital_elements_to_xyz(E, observer, light_travel=True):
+def orbital_elements_to_ss_xyz(E, observer, light_travel=True):
 	(a,e,i,Omega,pomega,M,GM) = E
 	# ugh, it's hard to be units-agnostic.
 	# we just assert here so we have to think about this!
@@ -58,7 +58,8 @@ def orbital_elements_to_xyz(E, observer, light_travel=True):
 	dM = 0.
 	lastdM = dM
 	for ii in range(100):
-		(x,v) = phase_space_coordinates_from_orbital_elements(a,e,i,Omega,pomega,M-dM,GM)
+		(x,v) = phase_space_coordinates_from_orbital_elements(
+			a,e,i,Omega,pomega,M-dM,GM)
 		dx = (x - observer)
 		if not light_travel:
 			break
@@ -69,6 +70,10 @@ def orbital_elements_to_xyz(E, observer, light_travel=True):
 			break
 		lastdM = dM
 	#print 'niters', ii
+	return x,dx
+
+def orbital_elements_to_xyz(E, observer, light_travel=True):
+	(x,dx) = orbital_elements_to_ss_xyz(E, observer, light_travel)
 	dx /= norm(dx)
 	edx = dx[0] * Equinox + dx[1] * Solstice + dx[2] * EclipticPole
 	return edx

@@ -101,6 +101,7 @@ class Plotstuff(object):
 		grid.declabelstep = declabelstep
 		self.plot('grid')
 		
-	def write(self, filename):
-		self.outfn = filename
+	def write(self, filename=None):
+		if filename is not None:
+			self.outfn = filename
 		plotstuff_output(self.pargs)
