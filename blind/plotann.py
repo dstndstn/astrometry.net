@@ -7,6 +7,9 @@ if __name__ == '__main__':
 	parser = OptionParser('usage: %prog <wcs.fits file> <image file> <output.jpg file>')
 	parser.add_option('--hdcat', dest='hdcat',
 					  help='Path to Henry Draper catalog hd.fits')
+	parser.add_option('--target', '-t', dest='target', action='append',
+					  default=[],
+					  help='Add named target (eg "M 31", "NGC 1499")')
 	
 	opt,args = parser.parse_args()
 	if len(args) != 3:
@@ -40,5 +43,11 @@ if __name__ == '__main__':
 	plot.color = 'green'
 	plot.fontsize = 18
 	plot.lw = 2.
+
+	if len(opt.target):
+		for t in opt.target:
+			if plot_annotations_add_named_target(ann, t):
+				raise RuntimeError('Unknown target', t)
+
 	plot.plot('annotations')
 	plot.write()

@@ -28,6 +28,11 @@ void plot_annotations_free(plot_args_t* args, void* baton);
 
 int plot_annotations_set_hd_catalog(plotann_t* ann, const char* hdfn);
 
+int plot_annotations_add_named_target(plotann_t* ann, const char* target);
+
+void plot_annotations_add_target(plotann_t* ann, double ra, double dec,
+								 const char* name);
+
 
 DECLARE_PLOTTER(annotations);
 

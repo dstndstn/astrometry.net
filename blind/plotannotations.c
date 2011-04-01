@@ -329,37 +329,51 @@ int plot_annotations_command(const char* cmd, const char* cmdargs,
 	} else if (streq(cmd, "annotations_ngc_size")) {
 		ann->ngc_fraction = atof(cmdargs);
 	} else if (streq(cmd, "annotations_target")) {
-		target_t tar;
 		sl* args = sl_split(NULL, cmdargs, " ");
-		memset(&tar, 0, sizeof(target_t));
-		if (sl_size(args) == 3) {
-			tar.ra = atof(sl_get(args, 0));
-			tar.dec = atof(sl_get(args, 1));
-			tar.name = strdup(sl_get(args, 2));
-			logmsg("Added target \"%s\" at (%g,%g)\n", tar.name, tar.ra, tar.dec);
-			bl_append(ann->targets, &tar);
-		} else {
+		double ra, dec;
+		char* name;
+		if (sl_size(args) != 3) {
 			ERROR("Need RA,Dec,name");
 			return -1;
 		}
+		ra = atof(sl_get(args, 0));
+		dec = atof(sl_get(args, 1));
+		name = sl_get(args, 2);
+		plot_annotations_add_target(ann, ra, dec, name);
 	} else if (streq(cmd, "annotations_targetname")) {
-		target_t tar;
 		const char* name = cmdargs;
-		ngc_entry* e = ngc_get_entry_named(name);
-		if (!e) {
-			ERROR("Failed to find target named \"%s\"", name);
-			return -1;
-		}
-		tar.name = ngc_get_name_list(e, " / ");
-		tar.ra = e->ra;
-		tar.dec = e->dec;
-		logmsg("Found %s: RA,Dec (%g,%g)\n", tar.name, tar.ra, tar.dec);
-		bl_append(ann->targets, &tar);
+		return plot_annotations_add_named_target(ann, name);
 	} else {
 		ERROR("Unknown command \"%s\"", cmd);
 		return -1;
 	}
 	return 0;
+}
+
+int plot_annotations_add_named_target(plotann_t* ann, const char* name) {
+	target_t tar;
+	ngc_entry* e = ngc_get_entry_named(name);
+	if (!e) {
+		ERROR("Failed to find target named \"%s\"", name);
+		return -1;
+	}
+	tar.name = ngc_get_name_list(e, " / ");
+	tar.ra = e->ra;
+	tar.dec = e->dec;
+	logmsg("Found %s: RA,Dec (%g,%g)\n", tar.name, tar.ra, tar.dec);
+	bl_append(ann->targets, &tar);
+	return 0;
+}
+
+void plot_annotations_add_target(plotann_t* ann, double ra, double dec,
+								 const char* name) {
+	target_t tar;
+	memset(&tar, 0, sizeof(target_t));
+	tar.ra = ra;
+	tar.dec = dec;
+	tar.name = strdup(name);
+	logmsg("Added target \"%s\" at (%g,%g)\n", tar.name, tar.ra, tar.dec);
+	bl_append(ann->targets, &tar);
 }
 
 void plot_annotations_free(plot_args_t* args, void* baton) {
