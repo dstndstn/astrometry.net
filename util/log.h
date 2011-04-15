@@ -39,6 +39,8 @@ void log_use_function(logfunc_t func, void* baton);
  */
 void log_set_thread_specific(void);
 
+void log_set_timestamp(bool b);
+
 /**
  * Initialize global logging object. Must be called before any of the other
  * log_* functions.

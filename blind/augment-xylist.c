@@ -1,7 +1,7 @@
 /*
  This file is part of the Astrometry.net suite.
  Copyright 2007-2009 Dustin Lang, Keir Mierle and Sam Roweis.
- Copyright 2010 Dustin Lang.
+ Copyright 2010, 2011 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -605,7 +605,7 @@ static void run(sl* cmd, bool verbose) {
 		sl_remove_all(cmd);
 	} else {
 		sl* lines = backtick(cmd, verbose);
-		if (verboose) {
+		if (verbose) {
 			int i;
 			for (i=0; i<sl_size(lines); i++)
 				logverb("  %s\n", sl_get(lines, i));
@@ -701,20 +701,14 @@ int augment_xylist(augment_xylist_t* axy,
 		if (axy->assume_fits_image) {
 			axy->isfits = TRUE;
 			if (!axy->pnmfn) {
-				anqfits_t* fits;
-				const qfits_header* hdr;
+				qfits_header* hdr;
 				want_pnm = FALSE;
 				// We need to get image W,H from the FITS header.
 				logverb("Reading FITS image \"%s\" to find image size\n", axy->imagefn);
-				fits = anqfits_open(axy->imagefn);
-				if (!fits) {
-					ERROR("Failed to open FITS input image \"%s\"", axy->imagefn);
-					return -1;
-				}
-				hdr = anqfits_get_header_const(fits, axy->extension);
+				hdr = qfits_header_readext(axy->imagefn, axy->extension);
 				axy->W = qfits_header_getint(hdr, "NAXIS1", -1);
 				axy->H = qfits_header_getint(hdr, "NAXIS2", -1);
-				anqfits_close(fits);
+				qfits_header_destroy(hdr);
 				if (axy->W == -1 || axy->H == -1) {
 					ERROR("Failed to find size of FITS image \"%s\": got NAXIS1 = %i, NAXIS2 = %i\n",
 						  axy->imagefn, axy->W, axy->H);

@@ -557,11 +557,13 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 		while (!outdone || !errdone) {
 			bool wait = TRUE;
 			char buf[1024];
+			//printf("outdone = %i, errdone = %i\n", outdone, errdone);
 			if (!outdone) {
 				//logverb("reading a line from stdout...\n");
 				errno = 0;
 				if (fgets(buf, sizeof(buf), fout)) {
 					int slen = strlen(buf);
+					//printf("got %i\n", slen);
 					wait = FALSE;
 					// clip newline
 					if (slen > 0 && buf[slen-1] == '\n')
@@ -571,12 +573,15 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 				} else {
 					if (feof(fout)) {
 						//logverb("stdout EOF\n");
+						//printf("EOF\n");
 						outdone = TRUE;
+						wait = FALSE;
 					} else if (ferror(fout)) {
 						if (errno != EAGAIN) {
 							SYSERROR("Error reading stdout from child process");
 							return -1;
 						}
+						//printf("EAGAIN\n");
 					}
 				}
 			}
@@ -605,6 +610,7 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 			}
 			if (wait) {
 					struct timespec ts;
+					//printf("waiting.\n");
 					ts.tv_nsec = 100000000L;
 					ts.tv_sec = 0;
 					nanosleep(&ts, NULL);

@@ -97,6 +97,8 @@ static an_option_t options[] = {
      "output filename for xylist containing the image coordinate of stars from the index"},
 	{'@', "just-augment",   no_argument, NULL,
 	 "just write the augmented xylist files; don't run backend."},
+	{'\x88', "timestamp", no_argument, NULL,
+	 "add timestamps to log messages"},
 };
 
 static void print_help(const char* progname, bl* opts) {
@@ -732,6 +734,7 @@ int main(int argc, char** args) {
 	sl* outfiles;
 	sl* tempfiles;
 	sl* tempdirs;
+	bool timestamp = FALSE;
 
     errors_print_on_exit(stderr);
     fits_use_error_system();
@@ -807,6 +810,9 @@ int main(int argc, char** args) {
         if (c == -1)
             break;
         switch (c) {
+		case '\x88':
+			timestamp = TRUE;
+			break;
 		case '\x84':
 			plotscale = atof(optarg);
 			break;
@@ -896,6 +902,8 @@ int main(int argc, char** args) {
     bl_free(opts);
 
     log_init(loglvl);
+	if (timestamp)
+		log_set_timestamp(TRUE);
 
     if (kmz && starts_with(kmz, "-"))
         logmsg("Do you really want to save KMZ to the file named \"%s\" ??\n", kmz);

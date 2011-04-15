@@ -67,6 +67,10 @@ void log_set_level(enum log_level level) {
     get_logger()->level = level;
 }
 
+void log_set_timestamp(bool b) {
+	get_logger()->timestamp = b;
+}
+
 void log_to(FILE* fid) {
 	get_logger()->f = fid;
 }
