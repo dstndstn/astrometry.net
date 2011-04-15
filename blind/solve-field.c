@@ -1,7 +1,7 @@
 /*
  This file is part of the Astrometry.net suite.
  Copyright 2007-2009 Dustin Lang, Keir Mierle and Sam Roweis.
- Copyright 2010 Dustin Lang.
+ Copyright 2010, 2011 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -83,6 +83,8 @@ static an_option_t options[] = {
     {'J', "skip-solved",    no_argument, NULL,
      "skip input files for which the 'solved' output file already exists;"
      " NOTE: this assumes single-field input files"},
+	{'\x87', "fits-image", no_argument, NULL,
+	 "assume the input files are FITS images"},
     {'N', "new-fits",    required_argument, "filename",
      "output filename of the new FITS file containing the WCS header; \"none\" to not create this file"},
     {'Z', "kmz",            required_argument, "filename",
@@ -811,6 +813,9 @@ int main(int argc, char** args) {
 		case '\x85':
 			bgfn = optarg;
 			break;
+		case '\x87':
+			allaxy->assume_fits_image = TRUE;
+			break;
 		case '(':
 			backend_batch = TRUE;
 			break;
@@ -946,6 +951,7 @@ int main(int argc, char** args) {
         int j;
 		solve_field_args_t thesf;
 		solve_field_args_t* sf = &thesf;
+		bool want_pnm = FALSE;
 
         // reset augment-xylist args.
         memcpy(axy, allaxy, sizeof(augment_xylist_t));
@@ -1186,22 +1192,30 @@ int main(int argc, char** args) {
             infile = downloadfn;
         }
 
-        logverb("Checking if file \"%s\" is xylist or image: ", infile);
-        fflush(NULL);
-        reason = NULL;
-		isxyls = xylist_is_file_xylist(infile, axy->xcol, axy->ycol, &reason);
-        logverb(isxyls ? "xyls\n" : "image\n");
-        if (!isxyls)
-            logverb("  (not xyls because: %s)\n", reason);
-        free(reason);
-        fflush(NULL);
-
-		if (isxyls)
-			axy->xylsfn = infile;
-        else
+		if (axy->assume_fits_image) {
 			axy->imagefn = infile;
+			if (axy->pnmfn)
+				want_pnm = TRUE;
+		} else {
+			logverb("Checking if file \"%s\" is xylist or image: ", infile);
+			fflush(NULL);
+			reason = NULL;
+			isxyls = xylist_is_file_xylist(infile, axy->xcol, axy->ycol, &reason);
+			logverb(isxyls ? "xyls\n" : "image\n");
+			if (!isxyls)
+				logverb("  (not xyls because: %s)\n", reason);
+			free(reason);
+			fflush(NULL);
 
-		if (axy->imagefn) {
+			if (isxyls)
+				axy->xylsfn = infile;
+			else {
+				axy->imagefn = infile;
+				want_pnm = TRUE;
+			}
+		}
+
+		if (want_pnm && !axy->pnmfn) {
             ppmfn = create_temp_file("ppm", axy->tempdir);
             sl_append_nocopy(tempfiles, ppmfn);
             axy->pnmfn = ppmfn;

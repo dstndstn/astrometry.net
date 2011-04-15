@@ -1,6 +1,6 @@
 /*
  This file is part of the Astrometry.net suite.
- Copyright 2008, 2009, 2010 Dustin Lang.
+ Copyright 2008, 2009, 2010, 2011 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -58,6 +58,8 @@ struct augment_xylist_s {
     char* imagefn;
     char* xylsfn;
     char* solvedinfn;
+
+	bool assume_fits_image;
 
     // output files
     char* outfn;

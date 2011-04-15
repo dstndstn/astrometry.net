@@ -671,86 +671,94 @@ int augment_xylist(augment_xylist_t* axy,
 		//	 -run image2xy to generate xylist
 		char *uncompressedfn;
 		char *sanitizedfn;
-		char *pnmfn;				
+		char *pnmfn;
 		sl* lines;
-        bool iscompressed;
+        bool iscompressed = FALSE;
 		char* line;
 		char pnmtype;
 		int maxval;
 		char typestr[256];
+		bool want_pnm = TRUE;
 
         uncompressedfn = create_temp_file("uncompressed", axy->tempdir);
 		sanitizedfn = create_temp_file("sanitized", axy->tempdir);
         sl_append_nocopy(tempfiles, uncompressedfn);
         sl_append_nocopy(tempfiles, sanitizedfn);
 
-		if (axy->pnmfn)
-			pnmfn = axy->pnmfn;
-		else {
-            pnmfn = create_temp_file("pnm", axy->tempdir);
-            sl_append_nocopy(tempfiles, pnmfn);
-        }
-
-        append_executable(cmd, "image2pnm.py", me);
-        //if (!verbose)
-		//sl_append(cmd, "--quiet");
-        if (axy->no_fits2fits)
-            sl_append(cmd, "--no-fits2fits");
-        else {
-            sl_append(cmd, "--sanitized-fits-outfile");
-            append_escape(cmd, sanitizedfn);
-        }
-		if (!axy->no_fix_sdss)
-			sl_append(cmd, "--fix-sdss");
-        if (axy->extension) {
-            sl_append(cmd, "--extension");
-            sl_appendf(cmd, "%i", axy->extension);
-        }
-        sl_append(cmd, "--infile");
-        append_escape(cmd, axy->imagefn);
-        sl_append(cmd, "--uncompressed-outfile");
-        append_escape(cmd, uncompressedfn);
-        sl_append(cmd, "--outfile");
-        append_escape(cmd, pnmfn);
-        if (axy->force_ppm)
-            sl_append(cmd, "--ppm");
-
-        lines = backtick(cmd, verbose);
-
-		axy->isfits = FALSE;
-        iscompressed = FALSE;
-		for (i=0; i<sl_size(lines); i++) {
-            logverb("  %s\n", sl_get(lines, i));
-			if (!strcmp("fits", sl_get(lines, i)))
-				axy->isfits = TRUE;
-			if (!strcmp("compressed", sl_get(lines, i)))
-				iscompressed = TRUE;
+		if (axy->assume_fits_image) {
+			axy->isfits = TRUE;
+			if (!axy->pnmfn)
+				want_pnm = FALSE;
 		}
-		sl_free2(lines);
 
-		// Get image W, H, depth.
-        sl_append(cmd, "pnmfile");
-        append_escape(cmd, pnmfn);
+		if (want_pnm) {
+			if (axy->pnmfn)
+				pnmfn = axy->pnmfn;
+			else {
+				pnmfn = create_temp_file("pnm", axy->tempdir);
+				sl_append_nocopy(tempfiles, pnmfn);
+			}
 
-        lines = backtick(cmd, verbose);
+			append_executable(cmd, "image2pnm.py", me);
+			//if (!verbose)
+			//sl_append(cmd, "--quiet");
+			if (axy->no_fits2fits)
+				sl_append(cmd, "--no-fits2fits");
+			else {
+				sl_append(cmd, "--sanitized-fits-outfile");
+				append_escape(cmd, sanitizedfn);
+			}
+			if (!axy->no_fix_sdss)
+				sl_append(cmd, "--fix-sdss");
+			if (axy->extension) {
+				sl_append(cmd, "--extension");
+				sl_appendf(cmd, "%i", axy->extension);
+			}
+			sl_append(cmd, "--infile");
+			append_escape(cmd, axy->imagefn);
+			sl_append(cmd, "--uncompressed-outfile");
+			append_escape(cmd, uncompressedfn);
+			sl_append(cmd, "--outfile");
+			append_escape(cmd, pnmfn);
+			if (axy->force_ppm)
+				sl_append(cmd, "--ppm");
 
-		if (sl_size(lines) == 0) {
-			ERROR("Got no output from the \"pnmfile\" program.");
-			exit(-1);
+			lines = backtick(cmd, verbose);
+
+			axy->isfits = FALSE;
+			for (i=0; i<sl_size(lines); i++) {
+				logverb("  %s\n", sl_get(lines, i));
+				if (streq("fits", sl_get(lines, i)))
+					axy->isfits = TRUE;
+				if (streq("compressed", sl_get(lines, i)))
+					iscompressed = TRUE;
+			}
+			sl_free2(lines);
+
+			// Get image W, H, depth.
+			sl_append(cmd, "pnmfile");
+			append_escape(cmd, pnmfn);
+
+			lines = backtick(cmd, verbose);
+
+			if (sl_size(lines) == 0) {
+				ERROR("Got no output from the \"pnmfile\" program.");
+				exit(-1);
+			}
+			line = sl_get(lines, 0);
+			// eg	"/tmp/pnm:	 PPM raw, 800 by 510  maxval 255"
+			if (strlen(pnmfn) + 1 >= strlen(line)) {
+				ERROR("Failed to parse output from pnmfile: \"%s\"", line);
+				exit(-1);
+			}
+			line += strlen(pnmfn) + 1;
+			if (sscanf(line, " P%cM %255s %d by %d maxval %d",
+					   &pnmtype, typestr, &axy->W, &axy->H, &maxval) != 5) {
+				ERROR("Failed to parse output from pnmfile: \"%s\"\n", line);
+				exit(-1);
+			}
+			sl_free2(lines);
 		}
-		line = sl_get(lines, 0);
-		// eg	"/tmp/pnm:	 PPM raw, 800 by 510  maxval 255"
-		if (strlen(pnmfn) + 1 >= strlen(line)) {
-			ERROR("Failed to parse output from pnmfile: \"%s\"", line);
-			exit(-1);
-		}
-		line += strlen(pnmfn) + 1;
-		if (sscanf(line, " P%cM %255s %d by %d maxval %d",
-				   &pnmtype, typestr, &axy->W, &axy->H, &maxval) != 5) {
-			ERROR("Failed to parse output from pnmfile: \"%s\"\n", line);
-			exit(-1);
-		}
-		sl_free2(lines);
 
 		if (axy->isfits) {
             if (axy->no_fits2fits) {
@@ -943,33 +951,9 @@ int augment_xylist(augment_xylist_t* axy,
 			sanexylsfn = axy->keepxylsfn;
 		} else {
 			// copy xylsfn to axy->keepxylsfn.
-			FILE* fin = fopen(xylsfn, "rb");
-			FILE* fout = fopen(axy->keepxylsfn, "wb");
-			struct stat st;
-			off_t len;
-			if (!fin) {
-				SYSERROR("Failed to open xyls file \"%s\" for copying", xylsfn);
-				return -1;
-			}
-			if (stat(xylsfn, &st)) {
-				SYSERROR("Failed to stat file \"%s\"", xylsfn);
-				return -1;
-			}
-			len = st.st_size;
-			if (!fout) {
-				SYSERROR("Failed to open output xyls file \"%s\" for copying", axy->keepxylsfn);
-				return -1;
-			}
-			if (pipe_file_offset(fin, 0, len, fout)) {
-				ERROR("Failed to copy xyls file \"%s\" to \"%s\"", xylsfn, axy->keepxylsfn);
-				return -1;
-			}
-			if (fclose(fin)) {
-				SYSERROR("Failed to close input file \"%s\"", xylsfn);
-				return -1;
-			}
-			if (fclose(fout)) {
-				SYSERROR("Failed to close output file \"%s\"", axy->keepxylsfn);
+			if (copy_file(xylsfn, axy->keepxylsfn)) {
+				ERROR("Failed to copy xyls file \"%s\" to \"%s\"",
+					  xylsfn, axy->keepxylsfn);
 				return -1;
 			}
 		}

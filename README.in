@@ -713,11 +713,17 @@ this config file:
 
 SOURCE EXTRACTION USING SEXTRACTOR
 ----------------------------------
-http://terapix.iap.fr/rubrique.php?id_rubrique=91/
+http://www.astromatic.net/software/sextractor
 
 The "Source Extractor" aka "SExtractor" program by Emmanuel Bertin can
 be used to do source extraction if you don't want to use our own
 bundled "image2xy" program.
+
+NOTE: users have reported that SExtractor 2.4.4 (available in some
+Ubuntu distributions) DOES NOT WORK -- it prints out correct source
+positions as it runs, but the "xyls" output file it produces contains
+all (0,0).  We haven't looked into why this is or how to work around
+it.  Later versions of SExtractor such as 2.8.6 work fine.
 
 You can tell solve-field to use SExtractor like this:
 

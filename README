@@ -72,20 +72,14 @@ For full functionality, you will need:
 					   zlib-devel
 
 -> On Mac OS X, possibly the easiest way is to install Fink
-   (www.finkproject.org), and then use apt-get install:
-
-    $ sudo apt-get install libjpeg cairo netpbm10 libpng3
-
-   (leave "zlib1g-dev" because it is already included with OSX).
-   Note that to use Fink you will need to
+   (www.finkproject.org), and then use apt-get install as per the
+   Debian instructions above (leaving out "zlib1g-dev" because it's
+   already included with OSX).  Note that to use Fink you will need to
    add something like this in your ~/.profile or ~/.bashrc file:
 
 . /sw/bin/init.sh
 export CFLAGS="-I/usr/local/include -I/sw/include"
 export LDFLAGS="-L/usr/local/lib -L/sw/lib"
-
-   You should also grab the "numpy" package from http://scipy.org/Download .
-
 
 
 If you don't have and can't get these libraries, you should still be
@@ -93,9 +87,9 @@ able to compile and use the core parts of the solver, but you will
 miss out on some eye-candy.
 
 Grab the code:
-  $ wget http://astrometry.net/downloads/astrometry.net-0.35.tar.bz2
-  $ tar xjf astrometry.net-0.35.tar.bz2
-  $ cd astrometry.net-0.35
+  $ wget http://astrometry.net/downloads/astrometry.net-0.38.tar.bz2
+  $ tar xjf astrometry.net-0.38.tar.bz2
+  $ cd astrometry.net-0.38
 
 Build the solving system:
   $ make
@@ -178,7 +172,7 @@ index-200.tar.bz2             2.0  -  2.8              10,058
 --------------------------------------------------------------
 
 Download the indexes you need and put them in the top-level
-(astrometry-0.35) source directory.
+(astrometry-0.38) source directory.
 
 Install them:
    $ make install-indexes
@@ -719,11 +713,17 @@ this config file:
 
 SOURCE EXTRACTION USING SEXTRACTOR
 ----------------------------------
-http://terapix.iap.fr/rubrique.php?id_rubrique=91/
+http://www.astromatic.net/software/sextractor
 
 The "Source Extractor" aka "SExtractor" program by Emmanuel Bertin can
 be used to do source extraction if you don't want to use our own
 bundled "image2xy" program.
+
+NOTE: users have reported that SExtractor 2.4.4 (available in some
+Ubuntu distributions) DOES NOT WORK -- it prints out correct source
+positions as it runs, but the "xyls" output file it produces contains
+all (0,0).  We haven't looked into why this is or how to work around
+it.  Later versions of SExtractor such as 2.8.6 work fine.
 
 You can tell solve-field to use SExtractor like this:
 

@@ -30,6 +30,8 @@
 
 extern uint32_t ENDIAN_DETECTOR;
 
+int copy_file(const char* infn, const char* outfn);
+
 int pad_fid(FILE* fid, size_t len, char pad);
 int pad_file(char* filename, size_t len, char pad);
 
