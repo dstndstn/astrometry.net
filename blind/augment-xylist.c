@@ -562,7 +562,7 @@ int parse_scale_units(const char* units) {
 	return -1;
 }
 
-// run(): ppmtopgm, pnmtofits, fits2fits.py
+// run(): ppmtopgm, pnmtofits, fits2fits.py, sextractor
 // backtick(): pnmfile, image2pnm.py
 
 static void append_escape(sl* list, const char* fn) {
@@ -593,13 +593,25 @@ static sl* backtick(sl* cmd, bool verbose) {
 }
 
 static void run(sl* cmd, bool verbose) {
-    sl* lines = backtick(cmd, verbose);
 	if (verbose) {
-		int i;
-		for (i=0; i<sl_size(lines); i++)
-			logverb("  %s\n", sl_get(lines, i));
+		char* cmdstr = sl_implode(cmd, " ");
+		logverb("Running: %s\n", cmdstr);
+		if (run_command_get_outputs(cmdstr, NULL, NULL)) {
+			ERROR("Failed to run command: %s", cmdstr);
+			free(cmdstr);
+			exit(-1);
+		}
+		free(cmdstr);
+		sl_remove_all(cmd);
+	} else {
+		sl* lines = backtick(cmd, verbose);
+		if (verboose) {
+			int i;
+			for (i=0; i<sl_size(lines); i++)
+				logverb("  %s\n", sl_get(lines, i));
+		}
+		sl_free2(lines);
 	}
-    sl_free2(lines);
 }
 
 static void add_sip_coeffs(qfits_header* hdr, const char* prefix, const sip_t* sip) {
