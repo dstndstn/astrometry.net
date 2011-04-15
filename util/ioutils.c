@@ -467,6 +467,60 @@ char* find_executable(const char* progname, const char* sibling) {
     return NULL;
 }
 
+static int readfd(int outfd, char* outbuf, int NB, char** poutcursor,
+				  sl* outlines, bool* pdone) {
+	int nr;
+	char* linecursor;
+	int end;
+	char* outcursor = *poutcursor;
+	nr = read(outfd, outcursor, outbuf + NB - outcursor);
+	// printf("nr = %i\n", nr);
+	if (nr == -1) {
+		SYSERROR("Failed to read output fd");
+		return -1;
+	}
+	if (nr == 0) {
+		*pdone = TRUE;
+		return 0;
+	}
+	linecursor = outcursor;
+	for (end=0; end<nr; end++) {
+		if (outcursor[end] == '\n') {
+			outcursor[end] = '\0';
+			sl_append(outlines, linecursor);
+			// printf("  grabbed %i\n", (int)strlen(linecursor));
+			linecursor = outcursor + end + 1;
+		}
+	}
+	// now "linecursor" points to the beginning of the
+	// partial line left in the buffer (or past the end of the
+	// read bytes).
+	if ((linecursor - outcursor) == nr) {
+		// the bytes we read ended with a newline; put the cursor
+		// back to the beginning.
+		// printf("block ended with newline\n");
+		outcursor = outbuf;
+	} else {
+		// we read a partial line
+		// if the whole 'outbuf' is filled with this line, then
+		// output it (introducing a false line break because our
+		// buffer is full)
+		if ((linecursor == outbuf) || (linecursor == outcursor)) {
+			sl_appendf(outlines, "%.*s", NB, outbuf);
+			// printf("  wrote whole line\n");
+		} else {
+			// otherwise, copy the partial line to the beginning
+			// of 'outbuf'.
+			int nf = outcursor + nr - linecursor;
+			memmove(outbuf, linecursor, nf);
+			outcursor = outbuf + nf;
+			// printf("  carried forward %i\n", nf);
+		}
+	}
+	*poutcursor = outcursor;
+	return 0;
+}
+
 int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 	int outpipe[2];
 	int errpipe[2];
@@ -514,106 +568,93 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 		}
 		// execlp doesn't return.
 	} else {
-		FILE *fout = NULL, *ferr = NULL;
+		char outbuf[1024];
+		char errbuf[1024];
 		int status;
 		bool outdone=TRUE, errdone=TRUE;
+		int outfd = -1;
+		int errfd = -1;
+		char* outcursor = outbuf;
+		char* errcursor = errbuf;
 
 		// Parent process.
 		if (outlines) {
 			close(outpipe[1]);
-			
-			if (fcntl(outpipe[0], F_SETFL, O_NONBLOCK)) {
-				SYSERROR("Failed to set O_NONBLOCK flag on stdout pipe from child process");
-				return -1;
-			}
-
+			/*
+			 if (fcntl(outpipe[0], F_SETFL, O_NONBLOCK)) {
+			 SYSERROR("Failed to set O_NONBLOCK flag on stdout pipe from child process");
+			 return -1;
+			 }
+			 */
 			outdone = FALSE;
 			*outlines = sl_new(256);
-			fout = fdopen(outpipe[0], "r");
-			if (!fout) {
-				SYSERROR("Failed to open stdout pipe");
-				return -1;
-			}
+			outfd = outpipe[0];
 		}
 		if (errlines) {
 			close(errpipe[1]);
-
-			if (fcntl(errpipe[0], F_SETFL, O_NONBLOCK)) {
-				SYSERROR("Failed to set O_NONBLOCK flag on stderr pipe from child process");
-				return -1;
-			}
-
+			/*
+			 if (fcntl(errpipe[0], F_SETFL, O_NONBLOCK)) {
+			 SYSERROR("Failed to set O_NONBLOCK flag on stderr pipe from child process");
+			 return -1;
+			 }
+			 */
 			errdone = FALSE;
 			*errlines = sl_new(256);
-			ferr = fdopen(errpipe[0], "r");
-			if (!ferr) {
-				SYSERROR("Failed to open stderr pipe");
-				return -1;
-			}
+			errfd = errpipe[0];
 		}
 
 		// Read from child process's streams...
 
+
 		while (!outdone || !errdone) {
-			bool wait = TRUE;
-			char buf[1024];
+			fd_set readset;
+			fd_set errset;
+			int ready;
+			FD_ZERO(&readset);
+			FD_ZERO(&errset);
+
 			//printf("outdone = %i, errdone = %i\n", outdone, errdone);
 			if (!outdone) {
-				//logverb("reading a line from stdout...\n");
-				errno = 0;
-				if (fgets(buf, sizeof(buf), fout)) {
-					int slen = strlen(buf);
-					//printf("got %i\n", slen);
-					wait = FALSE;
-					// clip newline
-					if (slen > 0 && buf[slen-1] == '\n')
-						buf[slen-1] = '\0';
-					//logverb("Read %i bytes\n", slen);
-					sl_append(*outlines, buf);
-				} else {
-					if (feof(fout)) {
-						//logverb("stdout EOF\n");
-						//printf("EOF\n");
-						outdone = TRUE;
-						wait = FALSE;
-					} else if (ferror(fout)) {
-						if (errno != EAGAIN) {
-							SYSERROR("Error reading stdout from child process");
-							return -1;
-						}
-						//printf("EAGAIN\n");
+				FD_SET(outfd, &readset);
+				FD_SET(outfd, &errset);
+			}
+			if (!errdone) {
+				FD_SET(errfd, &readset);
+				FD_SET(errfd, &errset);
+			}
+
+			ready = select(MAX(outfd, errfd) + 1, &readset, NULL, &errset, NULL);
+			if (ready == -1) {
+				SYSERROR("select() failed");
+				return -1;
+			}
+
+			if (!outdone) {
+				if (FD_ISSET(outfd, &readset)) {
+					// printf("reading 'out' stream\n");
+					if (readfd(outfd, outbuf, sizeof(outbuf), &outcursor,
+							   *outlines, &outdone)) {
+						return -1;
 					}
+				}
+				if (FD_ISSET(outfd, &errset)) {
+					SYSERROR("error reading from child output stream");
+					return -1;
 				}
 			}
 			if (!errdone) {
-				//logverb("reading a line from stderr...\n");
-				errno = 0;
-				if (fgets(buf, sizeof(buf), ferr)) {
-					int slen = strlen(buf);
-					wait = FALSE;
-					// clip newline
-					if (slen > 0 && buf[slen-1] == '\n')
-						buf[slen-1] = '\0';
-					//logverb("Read %i bytes\n", slen);
-					sl_append(*errlines, buf);
-				} else {
-					if (feof(ferr)) {
-						//logverb("stderr EOF\n");
-						errdone = TRUE;
-					} else if (ferror(ferr)) {
-						if (errno != EAGAIN) {
-							SYSERROR("Error reading stderr from child process");
-							return -1;
-						}
+				if (FD_ISSET(errfd, &readset)) {
+					// printf("reading 'err' stream\n");
+					if (readfd(errfd, errbuf, sizeof(errbuf), &errcursor,
+							   *errlines, &errdone)) {
+						return -1;
 					}
+					   
 				}
-			}
-			if (wait) {
-					struct timespec ts;
-					//printf("waiting.\n");
-					ts.tv_nsec = 100000000L;
-					ts.tv_sec = 0;
-					nanosleep(&ts, NULL);
+				if (FD_ISSET(errfd, &errset)) {
+					SYSERROR("error reading from child error stream");
+					return -1;
+				}
 			}
 		}
 
@@ -646,11 +687,6 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 				}
 			}
 		} while (!WIFEXITED(status) && !WIFSIGNALED(status));
-
-		if (fout)
-			fclose(fout);
-		if (ferr)
-			fclose(ferr);
 		
 	}
 	return 0;

@@ -26,6 +26,7 @@
 #include "ioutils.h"
 #include "log.h"
 #include "tic.h"
+#include "md5.h"
 
 void test_run_command(CuTest* tc) {
 	int rtn;
@@ -37,8 +38,24 @@ void test_run_command(CuTest* tc) {
 	int N;
 	int i;
 	int trial;
-
+	char* str1;
+	char* str2;
+	/*
+	 md5_context md5c;
+	 char md5_A[64];
+	 char md5_B[64];
+	 */
 	log_init(3);
+
+	str1 = "test test\ntest";
+	asprintf_safe(&cmd, "echo '%s'", str1);
+	rtn = run_command_get_outputs(cmd, &outlines, &errlines);
+	CuAssertIntEquals(tc, 0, rtn);
+	str2 = sl_join(outlines, "\n");
+	printf("got string: \"%s\"\n", str2);
+	CuAssertIntEquals(tc, TRUE, streq(str1, str2));
+	sl_free2(outlines);
+	sl_free2(errlines);
 
 	tmpfn = create_temp_file("test_run_command", "/tmp");
 	CuAssertPtrNotNull(tc, tmpfn);
@@ -49,6 +66,7 @@ void test_run_command(CuTest* tc) {
 		fid = fopen(tmpfn, "wb");
 		CuAssertPtrNotNull(tc, fid);
 		N = 102400;
+		//md5_starts(&md5c);
 		for (i=0; i<N; i++) {
 			int nw;
 			char c;
@@ -59,11 +77,13 @@ void test_run_command(CuTest* tc) {
 			} else if ((trial == 2) || (trial == 3)) {
 				c = 'A';
 			}
+			//md5_update(&md5c, &c, 1);
 			nw = fwrite(&c, 1, 1, fid);
 			CuAssertIntEquals(tc, 1, nw);
 		}
 		rtn = fclose(fid);
 		CuAssertIntEquals(tc, 0, rtn);
+		//md5_file_hex(tmpfn, md5_A);
 
 		if (trial == 3) {
 			asprintf(&cmd, "sleep 1; dd if=%s bs=1k; sleep 1", tmpfn);
@@ -74,6 +94,11 @@ void test_run_command(CuTest* tc) {
 		rtn = run_command_get_outputs(cmd, &outlines, &errlines);
 		printf("That took %g sec\n", timenow() - t0);
 		CuAssertIntEquals(tc, 0, rtn);
+
+		/*
+		 char* sout = sl_join(outlines, "\n");
+		 char* serr = sl_join(errlines, "\n");
+		 */
 
 		free(cmd);
 		sl_free2(outlines);
