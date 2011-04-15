@@ -457,7 +457,7 @@ def dec2dms(dec):
 	return (sgn, d, m, s)
 
 # RA in degrees
-def ra2hmsstring(ra, separator=' '):
+def ra2hmsstring(ra, separator=' ', sec_digits=3):
 	(h,m,s) = ra2hms(ra)
 	ss = int(floor(s))
 	ds = int(round((s - ss) * 1000.0))
@@ -470,7 +470,12 @@ def ra2hmsstring(ra, separator=' '):
 	if m >= 60:
 		m -= 60
 		h += 1
-	return separator.join(['%0.2i' % h, '%0.2i' % m, '%0.2i.%0.3i' % (ss,ds)])
+	if sec_digits == 0:
+		sstr = '%0.2i' % (ss)
+	else:
+		sfmt = '%%0.2i.%%0.%i' % (sec_digits)
+		sstr = sfmt % (ss, ds)
+	return separator.join(['%0.2i' % h, '%0.2i' % m, sstr])
 
 # Dec in degrees
 def dec2dmsstring(dec, separator=' '):

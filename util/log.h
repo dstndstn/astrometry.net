@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include "an-bool.h"
 
 enum log_level {
 	LOG_NONE,
@@ -18,6 +19,8 @@ typedef void (*logfunc_t)(void* baton, enum log_level, const char* file, int lin
 struct log_t {
 	enum log_level level;
     FILE* f;
+	bool timestamp;
+	double t0;
 	// User-specified logging functions
 	logfunc_t logfunc;
 	void* baton;

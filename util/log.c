@@ -1,11 +1,32 @@
+/*
+  This file is part of the Astrometry.net suite.
+  Copyright 2007 Keir Mierle
+  Copyright 2008-2011 Dustin Lang
+
+  The Astrometry.net suite is free software; you can redistribute
+  it and/or modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation, version 2.
+
+  The Astrometry.net suite is distributed in the hope that it will be
+  useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with the Astrometry.net suite ; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+*/
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
+#include <unistd.h>
+#include <assert.h>
 
 #include "log.h"
 #include "an-thread.h"
+#include "tic.h"
 
 static int g_thread_specific = 0;
 static log_t g_logger;
@@ -32,6 +53,8 @@ static log_t* get_logger() {
 void log_init_structure(log_t* logger, enum log_level level) {
 	logger->level = level;
     logger->f = stdout;
+	logger->timestamp = FALSE;
+	logger->t0 = timenow();
 	logger->logfunc = NULL;
 	logger->baton = NULL;
 }
@@ -79,6 +102,8 @@ static void loglvl(const log_t* logger, enum log_level level,
 		return;
 	AN_THREAD_LOCK(loglock);
 	if (logger->f) {
+		if (logger->timestamp)
+			fprintf(logger->f, "[%6i: %.3f] ", (int)getpid(), timenow() - logger->t0);
 		//fprintf(logger->f, "%s:%i ", file, line);
 		vfprintf(logger->f, format, va);
 		fflush(logger->f);
