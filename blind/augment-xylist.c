@@ -53,6 +53,7 @@
 #include "an-opts.h"
 #include "augment-xylist.h"
 #include "log.h"
+#include "anqfits.h"
 
 void augment_xylist_init(augment_xylist_t* axy) {
     memset(axy, 0, sizeof(augment_xylist_t));
@@ -671,7 +672,7 @@ int augment_xylist(augment_xylist_t* axy,
 		//	 -run image2xy to generate xylist
 		char *uncompressedfn;
 		char *sanitizedfn;
-		char *pnmfn;
+		char *pnmfn = NULL;
 		sl* lines;
         bool iscompressed = FALSE;
 		char* line;
@@ -687,8 +688,27 @@ int augment_xylist(augment_xylist_t* axy,
 
 		if (axy->assume_fits_image) {
 			axy->isfits = TRUE;
-			if (!axy->pnmfn)
+			if (!axy->pnmfn) {
+				anqfits_t* fits;
+				const qfits_header* hdr;
 				want_pnm = FALSE;
+				// We need to get image W,H from the FITS header.
+				logverb("Reading FITS image \"%s\" to find image size\n", axy->imagefn);
+				fits = anqfits_open(axy->imagefn);
+				if (!fits) {
+					ERROR("Failed to open FITS input image \"%s\"", axy->imagefn);
+					return -1;
+				}
+				hdr = anqfits_get_header_const(fits, axy->extension);
+				axy->W = qfits_header_getint(hdr, "NAXIS1", -1);
+				axy->H = qfits_header_getint(hdr, "NAXIS2", -1);
+				anqfits_close(fits);
+				if (axy->W == -1 || axy->H == -1) {
+					ERROR("Failed to find size of FITS image \"%s\": got NAXIS1 = %i, NAXIS2 = %i\n",
+						  axy->imagefn, axy->W, axy->H);
+					return -1;
+				}
+			}
 		}
 
 		if (want_pnm) {
