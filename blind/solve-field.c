@@ -1192,6 +1192,9 @@ int main(int argc, char** args) {
             infile = downloadfn;
         }
 
+		if (makeplots)
+			want_pnm = TRUE;
+
 		if (axy->assume_fits_image) {
 			axy->imagefn = infile;
 			if (axy->pnmfn)

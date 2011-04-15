@@ -708,6 +708,7 @@ int augment_xylist(augment_xylist_t* axy,
 						  axy->imagefn, axy->W, axy->H);
 					return -1;
 				}
+				logverb("  got FITS image size %i x %i\n", axy->W, axy->H);
 			}
 		}
 
