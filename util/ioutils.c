@@ -467,57 +467,59 @@ char* find_executable(const char* progname, const char* sibling) {
     return NULL;
 }
 
-static int readfd(int outfd, char* outbuf, int NB, char** poutcursor,
-				  sl* outlines, bool* pdone) {
+static int readfd(int fd, char* buf, int NB, char** pcursor,
+				  sl* lines, bool* pdone) {
 	int nr;
-	char* linecursor;
-	int end;
-	char* outcursor = *poutcursor;
-	nr = read(outfd, outcursor, outbuf + NB - outcursor);
-	// printf("nr = %i\n", nr);
+	int i, nleft;
+	char* cursor = *pcursor;
+	nr = read(fd, cursor, buf + NB - cursor);
+	printf("nr = %i\n", nr);
 	if (nr == -1) {
 		SYSERROR("Failed to read output fd");
 		return -1;
 	}
 	if (nr == 0) {
+		if (cursor != buf) {
+			printf("flushing the last line\n");
+			sl_appendf(lines, "%.*s", (cursor - buf), buf);
+		}
 		*pdone = TRUE;
 		return 0;
 	}
-	linecursor = outcursor;
-	for (end=0; end<nr; end++) {
-		if (outcursor[end] == '\n') {
-			outcursor[end] = '\0';
-			sl_append(outlines, linecursor);
-			// printf("  grabbed %i\n", (int)strlen(linecursor));
-			linecursor = outcursor + end + 1;
+
+	// join the newly-read bytes with the carried-over ones.
+	nleft = nr + (cursor - buf);
+	cursor = buf;
+	printf("nleft = %i\n", nleft);
+
+	for (i=0; i<nleft; i++) {
+		if (cursor[i] == '\n' || cursor[i] == '\0') {
+			cursor[i] = '\0';
+			sl_append(lines, cursor);
+			printf("  found line of length %i: \"%s\"\n", i, cursor);
+			cursor += (i+1);
+			nleft -= (i+1);
+			printf("  now nleft = %i\n", nleft);
+			i = -1;
 		}
 	}
-	// now "linecursor" points to the beginning of the
-	// partial line left in the buffer (or past the end of the
-	// read bytes).
-	if ((linecursor - outcursor) == nr) {
-		// the bytes we read ended with a newline; put the cursor
-		// back to the beginning.
-		// printf("block ended with newline\n");
-		outcursor = outbuf;
-	} else {
-		// we read a partial line
-		// if the whole 'outbuf' is filled with this line, then
-		// output it (introducing a false line break because our
-		// buffer is full)
-		if ((linecursor == outbuf) || (linecursor == outcursor)) {
-			sl_appendf(outlines, "%.*s", NB, outbuf);
-			// printf("  wrote whole line\n");
+
+	if (nleft == NB) {
+		printf("  buffer full with no newline\n");
+		sl_appendf(lines, "%.*s", NB, buf);
+		cursor = buf;
+	} else if (nleft) {
+		if (buf == cursor) {
+			cursor += nleft;
 		} else {
-			// otherwise, copy the partial line to the beginning
-			// of 'outbuf'.
-			int nf = outcursor + nr - linecursor;
-			memmove(outbuf, linecursor, nf);
-			outcursor = outbuf + nf;
-			// printf("  carried forward %i\n", nf);
+			printf("  moving %i to the start of the buffer\n", nleft);
+			memmove(buf, cursor, nleft);
+			cursor = buf + nleft;
 		}
+	} else {
+		cursor = buf;
 	}
-	*poutcursor = outcursor;
+	*pcursor = cursor;
 	return 0;
 }
 
@@ -580,39 +582,24 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 		// Parent process.
 		if (outlines) {
 			close(outpipe[1]);
-			/*
-			 if (fcntl(outpipe[0], F_SETFL, O_NONBLOCK)) {
-			 SYSERROR("Failed to set O_NONBLOCK flag on stdout pipe from child process");
-			 return -1;
-			 }
-			 */
 			outdone = FALSE;
 			*outlines = sl_new(256);
 			outfd = outpipe[0];
 		}
 		if (errlines) {
 			close(errpipe[1]);
-			/*
-			 if (fcntl(errpipe[0], F_SETFL, O_NONBLOCK)) {
-			 SYSERROR("Failed to set O_NONBLOCK flag on stderr pipe from child process");
-			 return -1;
-			 }
-			 */
 			errdone = FALSE;
 			*errlines = sl_new(256);
 			errfd = errpipe[0];
 		}
 
 		// Read from child process's streams...
-
-
 		while (!outdone || !errdone) {
 			fd_set readset;
 			fd_set errset;
 			int ready;
 			FD_ZERO(&readset);
 			FD_ZERO(&errset);
-
 			//printf("outdone = %i, errdone = %i\n", outdone, errdone);
 			if (!outdone) {
 				FD_SET(outfd, &readset);
@@ -622,18 +609,17 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 				FD_SET(errfd, &readset);
 				FD_SET(errfd, &errset);
 			}
-
 			ready = select(MAX(outfd, errfd) + 1, &readset, NULL, &errset, NULL);
 			if (ready == -1) {
 				SYSERROR("select() failed");
 				return -1;
 			}
-
 			if (!outdone) {
 				if (FD_ISSET(outfd, &readset)) {
 					// printf("reading 'out' stream\n");
 					if (readfd(outfd, outbuf, sizeof(outbuf), &outcursor,
 							   *outlines, &outdone)) {
+						ERROR("Failed to read from child's output stream");
 						return -1;
 					}
 				}
@@ -647,6 +633,7 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 					// printf("reading 'err' stream\n");
 					if (readfd(errfd, errbuf, sizeof(errbuf), &errcursor,
 							   *errlines, &errdone)) {
+						ERROR("Failed to read from child's error stream");
 						return -1;
 					}
 					   
@@ -668,11 +655,8 @@ int run_command_get_outputs(const char* cmd, sl** outlines, sl** errlines) {
 				return -1;
 			}
 			//logverb("waitpid() returned\n");
-			/*
-			 if (pid == 0) {
-			 // process has not finished.
-			 }
-			 */
+			//if (pid == 0)
+			// process has not finished.
 			if (WIFSIGNALED(status)) {
                 ERROR("Command was killed by signal %i", WTERMSIG(status));
 				return -1;
