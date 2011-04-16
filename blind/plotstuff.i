@@ -146,12 +146,51 @@ enum cairo_op {
 };
 typedef enum cairo_op cairo_operator_t;
 
+%{
+sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
+            double cd11, double cd12, double cd21, double cd22) {
+    sip_t* sip = sip_create();
+    tan_t* tan = &(sip->wcstan);
+    tan->crpix[0] = crpix1;
+    tan->crpix[1] = crpix2;
+    tan->crval[0] = crval1;
+    tan->crval[1] = crval2;
+    tan->cd[0][0] = cd11;
+    tan->cd[0][1] = cd12;
+    tan->cd[1][0] = cd21;
+    tan->cd[1][1] = cd22;
+    return sip;
+}
+%}
+
 %extend sip_t {
+    sip_t(double, double, double, double, double, double, double, double);
+
 	double crval1() {
 		return self->wcstan.crval[0];
 	}
 	double crval2() {
 		return self->wcstan.crval[1];
+	}
+
+	double crpix1() {
+		return self->wcstan.crpix[0];
+	}
+	double crpix2() {
+		return self->wcstan.crpix[1];
+	}
+
+	double cd11() {
+		return self->wcstan.cd[0][0];
+	}
+	double cd12() {
+		return self->wcstan.cd[0][1];
+	}
+	double cd21() {
+		return self->wcstan.cd[1][0];
+	}
+	double cd22() {
+		return self->wcstan.cd[1][1];
 	}
 }
 
