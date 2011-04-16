@@ -52,6 +52,7 @@
 #include "tic.h"
 #include "healpix.h"
 #include "sip-utils.h"
+#include "multiindex.h"
 
 void backend_add_search_path(backend_t* backend, char* path) {
     sl_append(backend->index_paths, path);
@@ -143,6 +144,42 @@ int backend_autoindex_search_paths(backend_t* backend) {
     return 0;
 }
 
+static int add_index(backend_t* backend, index_t* ind) {
+	int k;
+    // check that an index with the same id and healpix isn't already listed.
+    for (k=0; k<pl_size(backend->indexes); k++) {
+		index_t* m = pl_get(backend->indexes, k);
+        if (m->indexid == ind->indexid &&
+            m->healpix == ind->healpix) {
+            logmsg("Warning: encountered two index files with the same INDEXID = %i and HEALPIX = %i: \"%s\" and \"%s\".  Keeping both.\n",
+				   m->indexid, m->healpix, m->indexname, ind->indexname);
+			//index_free(ind);
+            //return 0;
+        }
+    }
+
+	pl_append(backend->indexes, ind);
+
+    // <= smallest we've seen?
+	if (ind->index_scale_lower < backend->sizesmallest) {
+		backend->sizesmallest = ind->index_scale_lower;
+        bl_remove_all(backend->ismallest);
+		il_append(backend->ismallest, pl_size(backend->indexes) - 1);
+	} else if (ind->index_scale_lower == backend->sizesmallest) {
+		il_append(backend->ismallest, pl_size(backend->indexes) - 1);
+    }
+
+    // >= largest we've seen?
+	if (ind->index_scale_upper > backend->sizebiggest) {
+		backend->sizebiggest = ind->index_scale_upper;
+        bl_remove_all(backend->ibiggest);
+		il_append(backend->ibiggest, pl_size(backend->indexes) - 1);
+	} else if (ind->index_scale_upper == backend->sizebiggest) {
+		il_append(backend->ibiggest, pl_size(backend->indexes) - 1);
+	}
+	return 0;
+}
+
 int backend_add_index(backend_t* backend, char* path) {
     int k;
     index_t* ind = NULL;
@@ -173,39 +210,11 @@ int backend_add_index(backend_t* backend, char* path) {
 		ERROR("Failed to load index from path %s", path);
 		return -1;
 	}
-
-    // check that an index with the same id and healpix isn't already listed.
-    for (k=0; k<pl_size(backend->indexes); k++) {
-		index_t* m = pl_get(backend->indexes, k);
-        if (m->indexid == ind->indexid &&
-            m->healpix == ind->healpix) {
-            logmsg("Warning: encountered two index files with the same INDEXID = %i and HEALPIX = %i: \"%s\" and \"%s\".  Keeping both.\n",
-				   m->indexid, m->healpix, m->indexname, path);
-			//index_free(ind);
-            //return 0;
-        }
-    }
-
-	pl_append(backend->indexes, ind);
-
-    // <= smallest we've seen?
-	if (ind->index_scale_lower < backend->sizesmallest) {
-		backend->sizesmallest = ind->index_scale_lower;
-        bl_remove_all(backend->ismallest);
-		il_append(backend->ismallest, pl_size(backend->indexes) - 1);
-	} else if (ind->index_scale_lower == backend->sizesmallest) {
-		il_append(backend->ismallest, pl_size(backend->indexes) - 1);
-    }
-
-    // >= largest we've seen?
-	if (ind->index_scale_upper > backend->sizebiggest) {
-		backend->sizebiggest = ind->index_scale_upper;
-        bl_remove_all(backend->ibiggest);
-		il_append(backend->ibiggest, pl_size(backend->indexes) - 1);
-	} else if (ind->index_scale_upper == backend->sizebiggest) {
-		il_append(backend->ibiggest, pl_size(backend->indexes) - 1);
+	if (add_index(backend, ind)) {
+		ERROR("Failed to add index \"%s\"", path);
+		return -1;
 	}
-
+	pl_append(backend->free_indexes, ind);
     return 0;
 }
 
@@ -235,6 +244,7 @@ int backend_parse_config_file(backend_t* backend, const char* fn) {
 
 int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
     sl* indices = sl_new(16);
+    sl* mindices = sl_new(16);
     bool auto_index = FALSE;
     int i;
     int rtn = 0;
@@ -268,6 +278,10 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
             // don't try to find the index yet - because search paths may be
             // added later.
             sl_append(indices, nextword);
+		} else if (is_word(line, "multiindex ", &nextword)) {
+            // don't try to find the index yet - because search paths may be
+            // added later.
+			sl_append(mindices, nextword);
         } else if (is_word(line, "autoindex", &nextword)) {
             auto_index = TRUE;
 		} else if (is_word(line, "inparallel", &nextword)) {
@@ -307,6 +321,62 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
         if (backend_add_index(backend, path))
             logmsg("Failed to add index \"%s\".\n", path);
 		free(path);
+    }
+
+    for (i=0; i<sl_size(mindices); i++) {
+        char* ind = sl_get(mindices, i);
+        char* path;
+		char* skdt;
+		int j;
+		/////// FIXME
+		sl* words = sl_split(NULL, ind, " ");
+		multiindex_t* mi;
+
+		if (sl_size(words) < 2) {
+			logmsg("Config line 'multiindex' must be followed by skdt and inds\n");
+            rtn = -1;
+            goto done;
+		}
+		skdt = sl_get(words, 0);
+		sl_remove(words, 0);
+		{
+			char* s = sl_join(words, " / ");
+			logverb("Trying multi-index %s + %s...\n", skdt, s);
+			free(s);
+		}
+		skdt = backend_find_index(backend, skdt);
+        if (!skdt) {
+            logmsg("Couldn't find skdt \"%s\".\n", skdt);
+            rtn = -1;
+            goto done;
+        }
+		for (j=0; j<sl_size(words); j++) {
+			ind = sl_get(words, j);
+			path = backend_find_index(backend, ind);
+			if (!path) {
+				logmsg("Couldn't find index \"%s\".\n", path);
+				rtn = -1;
+				goto done;
+			}
+			sl_set(words, j, path);
+		}
+
+		mi = multiindex_open(skdt, words);
+		if (!mi) {
+			char* s = sl_join(words, " / ");
+			logerr("Failed to open multiindex: %s + %s\n", skdt, s);
+			free(s);
+			rtn = -1;
+			goto done;
+		}
+		for (j=0; j<multiindex_n(mi); j++) {
+			index_t* ind = multiindex_get(mi, j);
+			if (add_index(backend, ind)) {
+				ERROR("Failed to add index \"%s\"", sl_get(words, j));
+				return -1;
+			}
+		}
+		pl_append(backend->free_mindexes, mi);
     }
 
     if (auto_index) {
@@ -836,6 +906,8 @@ backend_t* backend_new() {
 	backend_t* backend = calloc(1, sizeof(backend_t));
 	backend->index_paths = sl_new(10);
     backend->indexes = pl_new(16);
+    backend->free_indexes = pl_new(16);
+    backend->free_mindexes = pl_new(16);
 	backend->ismallest = il_new(4);
 	backend->ibiggest = il_new(4);
 	backend->default_depths = il_new(4);
@@ -853,13 +925,21 @@ void backend_free(backend_t* backend) {
 	int i;
     if (!backend)
         return;
-    if (backend->indexes) {
-        for (i=0; i<bl_size(backend->indexes); i++) {
-            index_t* ind = pl_get(backend->indexes, i);
+    if (backend->free_indexes) {
+        for (i=0; i<pl_size(backend->free_indexes); i++) {
+            index_t* ind = pl_get(backend->free_indexes, i);
             index_free(ind);
         }
-        pl_free(backend->indexes);
+        pl_free(backend->free_indexes);
     }
+    if (backend->free_mindexes) {
+        for (i=0; i<pl_size(backend->free_mindexes); i++) {
+            multiindex_t* mi = pl_get(backend->free_mindexes, i);
+            multiindex_close(mi);
+        }
+        pl_free(backend->free_mindexes);
+    }
+	pl_free(backend->indexes);
     if (backend->ismallest)
         il_free(backend->ismallest);
     if (backend->ibiggest)

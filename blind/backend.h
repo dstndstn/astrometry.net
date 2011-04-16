@@ -35,6 +35,11 @@ struct backend {
 	// they need to be loaded.
     pl* indexes;
 
+	// indexes that need to be freed
+    pl* free_indexes;
+	// multiindexes that need to be freed
+    pl* free_mindexes;
+
 	il* ibiggest;
 	il* ismallest;
     il* default_depths;
