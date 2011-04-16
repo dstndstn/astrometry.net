@@ -66,7 +66,7 @@ void test_run_command_1(CuTest* tc) {
 	rtn = run_command_get_outputs(cmd, &outlines, &errlines);
 	CuAssertIntEquals(tc, 0, rtn);
 	str2 = sl_join(outlines, "\n");
-	printf("got string: \"%s\"\n", str2);
+	//printf("got string: \"%s\"\n", str2);
 	CuAssertIntEquals(tc, 1, sl_size(outlines));
 	CuAssertIntEquals(tc, 1024, strlen(str2));
 	sl_free2(outlines);
@@ -81,7 +81,7 @@ void test_run_command_1(CuTest* tc) {
 	rtn = run_command_get_outputs(cmd, &outlines, &errlines);
 	CuAssertIntEquals(tc, 0, rtn);
 	str2 = sl_join(outlines, "\n");
-	printf("got string: \"%s\"\n", str2);
+	//printf("got string: \"%s\"\n", str2);
 	CuAssertIntEquals(tc, 1, sl_size(outlines));
 	CuAssertIntEquals(tc, 1024, strlen(str2));
 	sl_free2(outlines);
@@ -97,7 +97,7 @@ void test_run_command_1(CuTest* tc) {
 	rtn = run_command_get_outputs(cmd, &outlines, &errlines);
 	CuAssertIntEquals(tc, 0, rtn);
 	str2 = sl_join(outlines, "");
-	printf("got string: \"%s\"\n", str2);
+	//printf("got string: \"%s\"\n", str2);
 	CuAssertIntEquals(tc, 2, sl_size(outlines));
 	CuAssertIntEquals(tc, 1500, strlen(str2));
 	sl_free2(outlines);
@@ -111,7 +111,7 @@ void test_run_command_1(CuTest* tc) {
 	rtn = run_command_get_outputs(cmd, &outlines, &errlines);
 	CuAssertIntEquals(tc, 0, rtn);
 	str2 = sl_join(outlines, "\n");
-	printf("got string: \"%s\"\n", str2);
+	//printf("got string: \"%s\"\n", str2);
 	CuAssertIntEquals(tc, 3, sl_size(outlines));
 	CuAssertIntEquals(tc, 1499, strlen(str2));
 	sl_free2(outlines);
@@ -126,7 +126,7 @@ void test_run_command_1(CuTest* tc) {
 	rtn = run_command_get_outputs(cmd, &outlines, &errlines);
 	CuAssertIntEquals(tc, 0, rtn);
 	str2 = sl_join(outlines, "");
-	printf("got string: \"%s\"\n", str2);
+	//printf("got string: \"%s\"\n", str2);
 	CuAssertIntEquals(tc, 1, sl_size(outlines));
 	CuAssertIntEquals(tc, 1023, strlen(str2));
 	sl_free2(outlines);
@@ -148,7 +148,7 @@ void test_run_command_1(CuTest* tc) {
 	rtn = run_command_get_outputs(cmd, &outlines, &errlines);
 	CuAssertIntEquals(tc, 0, rtn);
 	str2 = sl_join(outlines, "");
-	printf("got string: \"%s\"\n", str2);
+	//printf("got string: \"%s\"\n", str2);
 	CuAssertIntEquals(tc, 7, sl_size(outlines));
 	CuAssertIntEquals(tc, 1993, strlen(str2));
 	sl_free2(outlines);
@@ -164,7 +164,7 @@ void test_run_command_1(CuTest* tc) {
 	rtn = run_command_get_outputs(cmd, &outlines, &errlines);
 	CuAssertIntEquals(tc, 0, rtn);
 	str2 = sl_join(outlines, "");
-	printf("got string: \"%s\"\n", str2);
+	//printf("got string: \"%s\"\n", str2);
 	CuAssertIntEquals(tc, 10, sl_size(outlines));
 	CuAssertIntEquals(tc, 10*200, strlen(str2));
 	sl_free2(outlines);

@@ -473,14 +473,14 @@ static int readfd(int fd, char* buf, int NB, char** pcursor,
 	int i, nleft;
 	char* cursor = *pcursor;
 	nr = read(fd, cursor, buf + NB - cursor);
-	printf("nr = %i\n", nr);
+	//printf("nr = %i\n", nr);
 	if (nr == -1) {
 		SYSERROR("Failed to read output fd");
 		return -1;
 	}
 	if (nr == 0) {
 		if (cursor != buf) {
-			printf("flushing the last line\n");
+			//printf("flushing the last line\n");
 			sl_appendf(lines, "%.*s", (cursor - buf), buf);
 		}
 		*pdone = TRUE;
@@ -490,29 +490,29 @@ static int readfd(int fd, char* buf, int NB, char** pcursor,
 	// join the newly-read bytes with the carried-over ones.
 	nleft = nr + (cursor - buf);
 	cursor = buf;
-	printf("nleft = %i\n", nleft);
+	//printf("nleft = %i\n", nleft);
 
 	for (i=0; i<nleft; i++) {
 		if (cursor[i] == '\n' || cursor[i] == '\0') {
 			cursor[i] = '\0';
 			sl_append(lines, cursor);
-			printf("  found line of length %i: \"%s\"\n", i, cursor);
+			//printf("  found line of length %i: \"%s\"\n", i, cursor);
 			cursor += (i+1);
 			nleft -= (i+1);
-			printf("  now nleft = %i\n", nleft);
+			//printf("  now nleft = %i\n", nleft);
 			i = -1;
 		}
 	}
 
 	if (nleft == NB) {
-		printf("  buffer full with no newline\n");
+		//printf("  buffer full with no newline\n");
 		sl_appendf(lines, "%.*s", NB, buf);
 		cursor = buf;
 	} else if (nleft) {
 		if (buf == cursor) {
 			cursor += nleft;
 		} else {
-			printf("  moving %i to the start of the buffer\n", nleft);
+			//printf("  moving %i to the start of the buffer\n", nleft);
 			memmove(buf, cursor, nleft);
 			cursor = buf + nleft;
 		}
