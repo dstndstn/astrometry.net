@@ -481,7 +481,7 @@ static int readfd(int fd, char* buf, int NB, char** pcursor,
 	if (nr == 0) {
 		if (cursor != buf) {
 			//printf("flushing the last line\n");
-			sl_appendf(lines, "%.*s", (cursor - buf), buf);
+			sl_appendf(lines, "%.*s", (int)(cursor - buf), buf);
 		}
 		*pdone = TRUE;
 		return 0;
