@@ -473,7 +473,7 @@ def ra2hmsstring(ra, separator=' ', sec_digits=3):
 	if sec_digits == 0:
 		sstr = '%0.2i' % (ss)
 	else:
-		sfmt = '%%0.2i.%%0.%i' % (sec_digits)
+		sfmt = '%%0.2i.%%0.%ii' % (sec_digits)
 		sstr = sfmt % (ss, ds)
 	return separator.join(['%0.2i' % h, '%0.2i' % m, sstr])
 
