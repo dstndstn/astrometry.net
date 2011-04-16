@@ -230,8 +230,8 @@ void sl_remove(sl* list, int index);
 int sl_remove_string(sl* list, const char* string);
 
 // Removes "string" if it is found in the list, using strcasecmp().
-// Returns the index where the string was found, or -1 if it wasn't found.
-int sl_remove_string_bycaseval(sl* list, const char* string);
+// Returns the string or NULL if not found.
+char* sl_remove_string_bycaseval(sl* list, const char* string);
 
 // Removes "string" if it is found in the list, using strcmp().
 // Returns the index where the string was found, or -1 if it wasn't found.

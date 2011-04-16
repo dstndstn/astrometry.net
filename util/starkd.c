@@ -234,8 +234,12 @@ static startree_t* my_open(const char* fn, anqfits_t* fits) {
     int i;
     kdtree_fits_t* io;
     char* treename = STARTREE_NAME;
+    const char* thefn = fn;
 
 	assert(fn || fits);
+
+    if (!thefn)
+        thefn = fits->filename;
 
 	s = startree_alloc();
 	if (!s)
@@ -250,7 +254,7 @@ static startree_t* my_open(const char* fn, anqfits_t* fits) {
     gettimeofday(&tv2, NULL);
     debug("kdtree_fits_open() took %g ms\n", millis_between(&tv1, &tv2));
 	if (!io) {
-        ERROR("Failed to open FITS file \"%s\"", fn);
+        ERROR("Failed to open FITS file \"%s\"", thefn);
         goto bailout;
     }
 
@@ -265,9 +269,19 @@ static startree_t* my_open(const char* fn, anqfits_t* fits) {
     gettimeofday(&tv2, NULL);
     debug("kdtree_fits_read_tree() took %g ms\n", millis_between(&tv1, &tv2));
     if (!s->tree) {
-        ERROR("Failed to read kdtree from file \"%s\"", fn);
+        ERROR("Failed to read kdtree from file \"%s\"", thefn);
         goto bailout;
     }
+
+    // Check the tree dimensionality.
+    // (because code trees can be confused...)
+    if (s->tree->ndim != 3) {
+        logverb("File %s contains a kd-tree with dim %i (not 3), named %s\n",
+                thefn, s->tree->ndim, treename);
+        s->tree->io = NULL;
+        goto bailout;
+    }
+
 
     gettimeofday(&tv1, NULL);
     chunks = get_chunks(s, NULL);

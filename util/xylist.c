@@ -182,10 +182,14 @@ void* xylist_read_tagalong_column(xylist_t* ls, const char* colname,
 }
 
 sl* xylist_get_tagalong_column_names(xylist_t* ls, sl* lst) {
+    char* x;
+    char* y;
 	assert(is_reading(ls));
 	lst = fitstable_get_fits_column_names(ls->table, lst);
-	sl_remove_string_bycaseval(lst, ls->xname);
-	sl_remove_string_bycaseval(lst, ls->yname);
+	x = sl_remove_string_bycaseval(lst, ls->xname);
+	y = sl_remove_string_bycaseval(lst, ls->yname);
+    free(x);
+    free(y);
     return lst;
 }
 

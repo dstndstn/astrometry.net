@@ -1221,17 +1221,18 @@ int sl_remove_string(sl* list, const char* string) {
     return pl_remove_value(list, string);
 }
 
-int sl_remove_string_bycaseval(sl* list, const char* string) {
+char* sl_remove_string_bycaseval(sl* list, const char* string) {
 	int N = sl_size(list);
 	int i;
 	for (i=0; i<N; i++) {
         char* str = sl_get(list, i);
 		if (strcasecmp(str, string) == 0) {
+            char* s = sl_get(list, i);
 			sl_remove(list, i);
-			return i;
+            return s;
 		}
 	}
-	return -1;
+	return NULL;
 }
 
 int sl_remove_string_byval(sl* list, const char* string) {

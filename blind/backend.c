@@ -1,7 +1,7 @@
 /*
  This file is part of the Astrometry.net suite.
  Copyright 2007, 2008 Dustin Lang, Keir Mierle and Sam Roweis.
- Copyright 2010 Dustin Lang.
+ Copyright 2010, 2011 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -327,8 +327,8 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
         char* ind = sl_get(mindices, i);
         char* path;
 		char* skdt;
+		char* skdtpath;
 		int j;
-		/////// FIXME
 		sl* words = sl_split(NULL, ind, " ");
 		multiindex_t* mi;
 
@@ -344,8 +344,8 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
 			logverb("Trying multi-index %s + %s...\n", skdt, s);
 			free(s);
 		}
-		skdt = backend_find_index(backend, skdt);
-        if (!skdt) {
+		skdtpath = backend_find_index(backend, skdt);
+        if (!skdtpath) {
             logmsg("Couldn't find skdt \"%s\".\n", skdt);
             rtn = -1;
             goto done;
@@ -359,9 +359,11 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
 				goto done;
 			}
 			sl_set(words, j, path);
+            // sl_set makes a copy.
+            free(path);
 		}
 
-		mi = multiindex_open(skdt, words);
+		mi = multiindex_open(skdtpath, words);
 		if (!mi) {
 			char* s = sl_join(words, " / ");
 			logerr("Failed to open multiindex: %s + %s\n", skdt, s);
@@ -377,6 +379,9 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
 			}
 		}
 		pl_append(backend->free_mindexes, mi);
+        sl_free2(words);
+        free(skdt);
+        free(skdtpath);
     }
 
     if (auto_index) {
@@ -385,6 +390,7 @@ int backend_parse_config_file_stream(backend_t* backend, FILE* fconf) {
 
  done:
     sl_free2(indices);
+    sl_free2(mindices);
 	return rtn;
 }
 
