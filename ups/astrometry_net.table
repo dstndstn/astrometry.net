@@ -7,13 +7,13 @@ envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/blind)
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/util)
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/blind)
 
-# qfits?  gsl?
-envPrepend(CFLAGS, -I${PRODUCT_DIR}/util, " ")
-envPrepend(CFLAGS, -I${PRODUCT_DIR}/libkd, " ")
-envPrepend(CFLAGS, -I${PRODUCT_DIR}/blind, " ")
-envPrepend(LDFLAGS, -L${PRODUCT_DIR}/util, " ")
-envPrepend(LDFLAGS, -L${PRODUCT_DIR}/libkd, " ")
-envPrepend(LDFLAGS, -L${PRODUCT_DIR}/blind, " ")
+# Craig says "No, please no!"
+#envPrepend(CFLAGS, -I${PRODUCT_DIR}/util, " ")
+#envPrepend(CFLAGS, -I${PRODUCT_DIR}/libkd, " ")
+#envPrepend(CFLAGS, -I${PRODUCT_DIR}/blind, " ")
+#envPrepend(LDFLAGS, -L${PRODUCT_DIR}/util, " ")
+#envPrepend(LDFLAGS, -L${PRODUCT_DIR}/libkd, " ")
+#envPrepend(LDFLAGS, -L${PRODUCT_DIR}/blind, " ")
 
 envAppend(PATH, ${PRODUCT_DIR}/util)
 envAppend(PATH, ${PRODUCT_DIR}/blind)

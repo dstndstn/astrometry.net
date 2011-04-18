@@ -1,9 +1,6 @@
 #
 # This ups file can be used for an svn "live" installation
 #
-
-# It seems to be the convention to "prepend" rather than "append"...
-
 # the symlink   "astrometry -> ." allows this to work.
 envPrepend(PYTHONPATH, ${PRODUCT_DIR})
 
@@ -12,14 +9,6 @@ envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/blind)
 
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/util)
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/blind)
-
-# qfits?  gsl?
-envPrepend(CFLAGS, -I${PRODUCT_DIR}/util)
-envPrepend(CFLAGS, -I${PRODUCT_DIR}/libkd)
-envPrepend(CFLAGS, -I${PRODUCT_DIR}/blind)
-envPrepend(LDFLAGS, -L${PRODUCT_DIR}/util)
-envPrepend(LDFLAGS, -L${PRODUCT_DIR}/libkd)
-envPrepend(LDFLAGS, -L${PRODUCT_DIR}/blind)
 
 envPrepend(PATH, ${PRODUCT_DIR}/util)
 envPrepend(PATH, ${PRODUCT_DIR}/blind)
