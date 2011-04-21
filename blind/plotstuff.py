@@ -105,3 +105,19 @@ class Plotstuff(object):
 		if filename is not None:
 			self.outfn = filename
 		plotstuff_output(self.pargs)
+
+	def text_xy(self, x, y, text):
+		plotstuff_text_xy(self.pargs, x, y, text)
+
+	def text_radec(self, ra, dec, text):
+		plotstuff_text_radec(self.pargs, ra, dec, text)
+
+	def stack_marker(self, x, y):
+		plotstuff_stack_marker(self.pargs, x, y)
+
+	def set_markersize(self, size):
+		plotstuff_set_markersize(self.pargs, size)
+
+	def plot_stack(self):
+		plotstuff_plot_stack(self.pargs, self.pargs.cairo)
+
