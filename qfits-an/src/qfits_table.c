@@ -98,7 +98,7 @@ qfits_table* qfits_table_copy(const qfits_table* t) {
 	qfits_table* dest = calloc(1, sizeof(qfits_table));
 	assert(dest);
 	memcpy(dest, t, sizeof(qfits_table));
-	dest->col = calloc(dest->nc * sizeof(qfits_col), 1);
+	dest->col = calloc(dest->nc, sizeof(qfits_col));
 	memcpy(dest->col, t->col, dest->nc * sizeof(qfits_col));
 	return dest;
 }

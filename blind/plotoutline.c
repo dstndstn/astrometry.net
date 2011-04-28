@@ -28,15 +28,6 @@
 #include "sip_qfits.h"
 #include "starutil.h"
 
-/*
-const plotter_t plotter_outline = {
-	.name = "outline",
-	.init = plot_outline_init,
-	.command = plot_outline_command,
-	.doplot = plot_outline_plot,
-	.free = plot_outline_free
-};
- */
 DEFINE_PLOTTER(outline);
 
 plotoutline_t* plot_outline_get(plot_args_t* pargs) {

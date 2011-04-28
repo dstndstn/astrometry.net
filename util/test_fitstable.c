@@ -2,8 +2,95 @@
 
 #include "fitstable.h"
 #include "fitsioutils.h"
+#include "permutedsort.h"
 
 #include "cutest.h"
+
+void test_copy_rows_inmemory(CuTest* ct) {
+	fitstable_t *t1, *t2;
+    tfits_type dubl;
+    tfits_type flot;
+	double* d1;
+	double* d2;
+	double* d3;
+	char* name1 = "RA";
+	char* name2 = "DEC";
+	char* name3 = "SORT";
+	int i, N, N1;
+	int rtn;
+	int* order;
+
+	double d1in[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+	double d2in[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+	double d3in[10] = { 4, 5, 6, 7, 0, 1, 8, 9, 2, 3 };
+
+	N = sizeof(d1in) / sizeof(double);
+	for (i=0; i<N; i++)
+		d2in[i] += 1000.;
+
+    dubl = fitscolumn_double_type();
+    flot = fitscolumn_float_type();
+	t1 = fitstable_open_in_memory();
+	t2 = fitstable_open_in_memory();
+    CuAssertPtrNotNull(ct, t1);
+    CuAssertPtrNotNull(ct, t2);
+
+	fitstable_add_write_column(t1, dubl, name1, "u1");
+	fitstable_add_write_column(t1, dubl, name2, "u2");
+	fitstable_add_write_column_convert(t1, flot, dubl, name3, "u3");
+	rtn = fitstable_write_header(t1);
+	CuAssertIntEquals(ct, rtn, 0);
+
+	for (i=0; i<N; i++)
+		rtn = fitstable_write_row(t1, d1in+i, d2in+i, d3in+3);
+
+	rtn = fitstable_fix_header(t1);
+	CuAssertIntEquals(ct, rtn, 0);
+
+	rtn = fitstable_switch_to_reading(t1);
+	CuAssertIntEquals(ct, rtn, 0);
+	
+	d1 = fitstable_read_column(t1, name1, dubl);
+	d2 = fitstable_read_column(t1, name2, dubl);
+	d3 = fitstable_read_column(t1, name3, dubl);
+    CuAssertPtrNotNull(ct, d1);
+    CuAssertPtrNotNull(ct, d2);
+    CuAssertPtrNotNull(ct, d3);
+
+	for (i=0; i<N; i++) {
+		printf("%g %g %g\n", d1[i], d2[i], d3[i]);
+	}
+
+	N1 = fitstable_nrows(t1);
+	CuAssertIntEquals(ct, N1, N);
+	order = permuted_sort(d3, sizeof(double), compare_doubles_asc, NULL, N1);
+    CuAssertPtrNotNull(ct, order);
+
+	fitstable_add_fits_columns_as_struct2(t1, t2);
+	rtn = fitstable_write_header(t2);
+	CuAssertIntEquals(ct, rtn, 0);
+
+	rtn = fitstable_row_size(t1);
+	// 2 * D + E
+	CuAssertIntEquals(ct, rtn, 8 + 8 + 4);
+	rtn = fitstable_row_size(t2);
+	CuAssertIntEquals(ct, rtn, 8 + 8 + 4);
+
+	rtn = fitstable_copy_rows_data(t1, order, N1, t2);
+	CuAssertIntEquals(ct, rtn, 0);
+	
+	rtn = fitstable_fix_header(t2);
+	CuAssertIntEquals(ct, rtn, 0);
+
+	free(order);
+	fitstable_close(t1);
+
+	
+
+
+}
+
+
 
 char* get_tmpfile(int i) {
     static char fn[256];

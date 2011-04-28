@@ -25,13 +25,7 @@
 #include "log.h"
 #include "errors.h"
 
-const plotter_t plotter_xxx = {
-	.name = "xxx",
-	.init = plot_xxx_init,
-	.command = plot_xxx_command,
-	.doplot = plot_xxx_plot,
-	.free = plot_xxx_free
-};
+DEFINE_PLOTTER(xxx);
 
 plotxxx_t* plot_xxx_get(plot_args_t* pargs) {
 	return plotstuff_get_config(pargs, "xxx");

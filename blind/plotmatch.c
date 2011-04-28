@@ -27,14 +27,6 @@
 #include "permutedsort.h"
 #include "matchfile.h"
 
-/*
-const plotter_t plotter_match = {
-	.name = "match",
-	.init = plot_match_init,
-	.command = plot_match_command,
-	.doplot = plot_match_plot,
-	.free = plot_match_free
- };*/
 DEFINE_PLOTTER(match);
 
 plotmatch_t* plot_match_get(plot_args_t* pargs) {

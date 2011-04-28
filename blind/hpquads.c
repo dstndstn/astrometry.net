@@ -453,8 +453,24 @@ int hpquads(startree_t* starkd,
 			}
 			j = xyzarrtohealpix(xyz, Nside);
 			il_insert_unique_ascending(hptotry, j);
+			if (log_get_level() > LOG_VERB) {
+				double ra,dec;
+				if (startree_get_radec(me->starkd, i, &ra, &dec)) {
+					ERROR("Failed to get RA,Dec for star %i\n", i);
+					return -1;
+				}
+				logdebug("star %i: RA,Dec %g,%g; xyz %g,%g,%g; hp %i\n",
+						 i, ra, dec, xyz[0], xyz[1], xyz[2], j);
+			}
 		}
 		logmsg("Will check %i healpixes.\n", il_size(hptotry));
+		if (log_get_level() > LOG_VERB) {
+			logdebug("Checking healpixes: [ ");
+			for (i=0; i<il_size(hptotry); i++)
+				logdebug("%i ", il_get(hptotry, i));
+			logdebug("]\n");
+		}
+
 	} else {
 		if (skhp == -1) {
 			// Try all healpixes.

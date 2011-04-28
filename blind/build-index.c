@@ -74,6 +74,10 @@ static int step_hpquads(index_params_t* p,
 			ERROR("hpquads failed");
 			return -1;
 		}
+		if (!quadfile_nquads(quads)) {
+			logmsg("Did not create any quads.  Perhaps your catalog does not have enough stars?\n");
+			return -1;
+		}
 		if (quadfile_switch_to_reading(quads)) {
 			ERROR("Failed to switch quadfile to read-mode");
 			return -1;
@@ -493,6 +497,25 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 			return -1;
 		}
 	}
+
+	// DEBUG -- print RA,Dec from uniform catalog.
+	if (log_get_level() > LOG_VERB) {
+		tfits_type dubl = fitscolumn_double_type();
+		double* ra;
+		double* dec;
+		int i,N;
+		ra = fitstable_read_column(uniform, p->racol, dubl);
+		dec = fitstable_read_column(uniform, p->deccol, dubl);
+		N = fitstable_nrows(uniform);
+		logdebug("Checking %i columns of 'uniform' catalog\n", N);
+		logdebug("  RA column: \"%s\"; Dec column: \"%s\"\n", p->racol, p->deccol);
+		assert(ra && dec);
+		for (i=0; i<N; i++)
+			logdebug("  %i RA,Dec %g,%g\n", i, ra[i], dec[i]);
+		free(ra);
+		free(dec);
+	}
+
 
 	{
 		int Nleaf = 25;

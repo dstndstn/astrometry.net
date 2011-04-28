@@ -847,7 +847,7 @@ static void* read_array_into(const fitstable_t* tab,
 	if (dest)
 		cdata = dest;
 	else
-		cdata = calloc(csize, Nread * arraysize);
+		cdata = calloc(Nread * arraysize, csize);
 
 	if (dest && deststride > 0)
 		cstride = deststride;
@@ -858,7 +858,7 @@ static void* read_array_into(const fitstable_t* tab,
 	if (csize < fitssize) {
 		// Need to allocate a bigger temp array and down-convert the data.
 		// HACK - could set data=tempdata and realloc after (if 'dest' is NULL)
-		tempdata = calloc(fitssize, Nread * arraysize);
+		tempdata = calloc(Nread * arraysize, fitssize);
 		fitsdata = tempdata;
 	} else {
 		// We'll read the data into the first fraction of the output array.

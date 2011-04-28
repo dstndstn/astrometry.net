@@ -31,7 +31,7 @@ index_t* multiindex_get(const multiindex_t* mi, int i) {
 }
 
 multiindex_t* multiindex_open(const char* skdtfn, const sl* indfns) {
-	multiindex_t* mi = calloc(sizeof(multiindex_t), 1);
+	multiindex_t* mi = calloc(1, sizeof(multiindex_t));
 	int i;
 
 	logverb("Reading star KD tree from %s...\n", skdtfn);

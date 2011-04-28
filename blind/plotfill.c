@@ -25,28 +25,7 @@
 #include "log.h"
 #include "errors.h"
 
-/*
-const plotter_t plotter_fill = {
-	.name = "fill",
-	.init = plot_fill_init,
-	.command = plot_fill_command,
-	.doplot = plot_fill_plot,
-	.free = plot_fill_free
-};
- */
-/*
-plotter_t* plot_fill_new() {
-	plotter_t* p = calloc(1, sizeof(plotter_t));
-	p->name = "fill";
-	p->init = plot_fill_init;
-	p->command = plot_fill_command;
-	p->doplot = plot_fill_plot;
-	p->free = plot_fill_free;
-	return p;
-}
- */
 DEFINE_PLOTTER(fill);
-
 
 void* plot_fill_init(plot_args_t* plotargs) {
 	plotfill_t* args = calloc(1, sizeof(plotfill_t));

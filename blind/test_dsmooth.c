@@ -70,13 +70,13 @@ void test_dsmooth_vs_dsmooth2(CuTest* tc) {
     bites = nx * ny * sizeof(float);
 
     img = random_image(nx, ny);
-    img_orig = calloc(1, bites);
+    img_orig = calloc(bites, 1);
     memcpy(img_orig, img, bites);
 
 	CuAssertIntEquals(tc, 0, compare_images(img, img_orig, nx, ny, 0.0));
 
-    smooth1 = calloc(1, bites);
-    smooth2 = calloc(1, bites);
+    smooth1 = calloc(bites, 1);
+    smooth2 = calloc(bites, 1);
 
     dsmooth(img, nx, ny, sigma, smooth1);
     // test: don't change the input image
@@ -111,8 +111,8 @@ void test_dsmooth2_inplace(CuTest* tc) {
     bites = nx * ny * sizeof(float);
 
     img = random_image(nx, ny);
-    smooth1 = calloc(1, bites);
-    smooth2 = calloc(1, bites);
+    smooth1 = calloc(bites, 1);
+    smooth2 = calloc(bites, 1);
 
     dsmooth2(img, nx, ny, sigma, smooth2);
 

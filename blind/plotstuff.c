@@ -695,18 +695,6 @@ static void plot_builtin_free(plot_args_t* pargs, void* baton) {
 }
 
 //static const plotter_t builtin = { "plot", plot_builtin_init, plot_builtin_init2, plot_builtin_command, plot_builtin_plot, plot_builtin_free, NULL };
-/*
-static plotter_t* builtin_new() {
-	plotter_t* p = calloc(1, sizeof(plotter_t));
-	p->name = "plot";
-	p->init = plot_builtin_init;
-	p->init2 = plot_builtin_init2;
-	p->command = plot_builtin_command;
-	p->doplot = plot_builtin_plot;
-	p->free = plot_builtin_free;
-	return p;
-}
- */
 
 DECLARE_PLOTTER(builtin) {
 	DEFINE_PLOTTER_BODY(builtin)

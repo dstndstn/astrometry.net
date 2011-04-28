@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-	projection=calloc(sizeof(int), W*H);
+	projection=calloc(W*H, sizeof(int));
 
 	for (; optind<argc; optind++) {
 		int i;
