@@ -6,6 +6,12 @@
 
 #include "cutest.h"
 
+static char* get_tmpfile(int i) {
+    static char fn[256];
+    sprintf(fn, "/tmp/test-fitstable-%i", i);
+    return fn;
+}
+
 static void print_hex(const void* v, int N) {
 	int i;
 	for (i=0; i<N; i++) {
@@ -14,6 +20,135 @@ static void print_hex(const void* v, int N) {
 			printf(", ");
 	}
 }
+
+void test_copy_rows_file_to_memory(CuTest* ct) {
+	fitstable_t *t1, *t2;
+    tfits_type dubl;
+    tfits_type flot;
+	double* d1;
+	double* d2;
+	double* d3;
+	char* name1 = "RA";
+	char* name2 = "DEC";
+	char* name3 = "SORT";
+	int i, N, N1;
+	int rtn;
+	int* order;
+	char* fn1 = get_tmpfile(42);
+
+	double d1in[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+	double d2in[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+	double d3in[10] = { 4, 5, 6, 7, 0, 1, 8, 9, 2, 3 };
+
+	N = sizeof(d1in) / sizeof(double);
+	for (i=0; i<N; i++)
+		d2in[i] += 1000.;
+
+    dubl = fitscolumn_double_type();
+    flot = fitscolumn_float_type();
+	t1 = fitstable_open_for_writing(fn1);
+	t2 = fitstable_open_in_memory();
+    CuAssertPtrNotNull(ct, t1);
+    CuAssertPtrNotNull(ct, t2);
+
+	fitstable_add_write_column(t1, dubl, name1, "u1");
+	fitstable_add_write_column(t1, dubl, name2, "u2");
+	fitstable_add_write_column_convert(t1, flot, dubl, name3, "u3");
+
+	rtn = fitstable_write_primary_header(t1);
+	CuAssertIntEquals(ct, rtn, 0);
+	rtn = fitstable_write_header(t1);
+	CuAssertIntEquals(ct, rtn, 0);
+
+	for (i=0; i<N; i++)
+		rtn = fitstable_write_row(t1, d1in+i, d2in+i, d3in+i);
+
+	rtn = fitstable_fix_header(t1);
+	CuAssertIntEquals(ct, rtn, 0);
+
+	//qfits_header_list(fitstable_get_header(t1), stdout);
+
+	fitstable_print_columns(t1);
+
+	rtn = fitstable_close(t1);
+	CuAssertIntEquals(ct, rtn, 0);
+	printf("Wrote to file:  %s\n", fn1);
+
+	t1 = fitstable_open(fn1);
+    CuAssertPtrNotNull(ct, t1);
+	
+	d1 = fitstable_read_column(t1, name1, dubl);
+	d2 = fitstable_read_column(t1, name2, dubl);
+	d3 = fitstable_read_column(t1, name3, dubl);
+    CuAssertPtrNotNull(ct, d1);
+    CuAssertPtrNotNull(ct, d2);
+    CuAssertPtrNotNull(ct, d3);
+
+	printf("\nT1:\n");
+	for (i=0; i<N; i++) {
+		printf("%g %g %g\n", d1[i], d2[i], d3[i]);
+	}
+
+	N1 = fitstable_nrows(t1);
+	CuAssertIntEquals(ct, N1, N);
+	order = permuted_sort(d3, sizeof(double), compare_doubles_asc, NULL, N1);
+    CuAssertPtrNotNull(ct, order);
+
+	fitstable_add_fits_columns_as_struct2(t1, t2);
+	rtn = fitstable_write_header(t2);
+	CuAssertIntEquals(ct, rtn, 0);
+
+	rtn = fitstable_row_size(t1);
+	// 2 * D + E
+	CuAssertIntEquals(ct, rtn, 8 + 8 + 4);
+	rtn = fitstable_row_size(t2);
+	CuAssertIntEquals(ct, rtn, 8 + 8 + 4);
+
+	rtn = fitstable_copy_rows_data(t1, order, N1, t2);
+	CuAssertIntEquals(ct, rtn, 0);
+	
+	rtn = fitstable_fix_header(t2);
+	CuAssertIntEquals(ct, rtn, 0);
+
+	free(order);
+	fitstable_close(t1);
+
+	rtn = fitstable_switch_to_reading(t2);
+	CuAssertIntEquals(ct, rtn, 0);
+
+	free(d1);
+	free(d2);
+	free(d3);
+
+	d1 = fitstable_read_column(t2, name1, dubl);
+	d2 = fitstable_read_column(t2, name2, dubl);
+	d3 = fitstable_read_column(t2, name3, dubl);
+    CuAssertPtrNotNull(ct, d1);
+    CuAssertPtrNotNull(ct, d2);
+    CuAssertPtrNotNull(ct, d3);
+
+	printf("\nT2:\n");
+	for (i=0; i<N; i++) {
+		printf("%g %g %g\n", d1[i], d2[i], d3[i]);
+	}
+
+	// expected values
+	double ex1[] = { 4,5,8,9,0,1,2,3,6,7 };
+	double ex2[] = { 1004,1005,1008,1009,1000,1001,1002,1003,1006,1007 };
+	double ex3[] = { 0,1,2,3,4,5,6,7,8,9 };
+	for (i=0; i<N; i++) {
+		CuAssertIntEquals(ct, ex1[i], d1[i]);
+		CuAssertIntEquals(ct, ex2[i], d2[i]);
+		CuAssertIntEquals(ct, ex3[i], d3[i]);
+	}
+
+	fitstable_close(t2);
+
+	free(d1);
+	free(d2);
+	free(d3);
+}
+
 
 void test_copy_rows_inmemory(CuTest* ct) {
 	fitstable_t *t1, *t2;
@@ -135,6 +270,16 @@ void test_copy_rows_inmemory(CuTest* ct) {
 		printf("%g %g %g\n", d1[i], d2[i], d3[i]);
 	}
 
+	// expected values
+	double ex1[] = { 4,5,8,9,0,1,2,3,6,7 };
+	double ex2[] = { 1004,1005,1008,1009,1000,1001,1002,1003,1006,1007 };
+	double ex3[] = { 0,1,2,3,4,5,6,7,8,9 };
+	for (i=0; i<N; i++) {
+		CuAssertIntEquals(ct, ex1[i], d1[i]);
+		CuAssertIntEquals(ct, ex2[i], d2[i]);
+		CuAssertIntEquals(ct, ex3[i], d3[i]);
+	}
+
 	fitstable_close(t2);
 
 	free(d1);
@@ -143,12 +288,6 @@ void test_copy_rows_inmemory(CuTest* ct) {
 }
 
 
-
-char* get_tmpfile(int i) {
-    static char fn[256];
-    sprintf(fn, "/tmp/test-fitstable-%i", i);
-    return fn;
-}
 
 void test_one_column_write_read(CuTest* ct) {
     fitstable_t* tab, *outtab;
