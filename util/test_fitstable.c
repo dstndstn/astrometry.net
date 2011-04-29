@@ -66,14 +66,15 @@ void test_copy_rows_file_to_memory(CuTest* ct) {
 	rtn = fitstable_fix_header(t1);
 	CuAssertIntEquals(ct, rtn, 0);
 
-	//qfits_header_list(fitstable_get_header(t1), stdout);
-
 	fitstable_print_columns(t1);
 
 	rtn = fitstable_close(t1);
 	CuAssertIntEquals(ct, rtn, 0);
 	printf("Wrote to file:  %s\n", fn1);
 
+	// 'tablist' etc show that the file is good (has been endian-flipped).
+
+	// now re-open that file.
 	t1 = fitstable_open(fn1);
     CuAssertPtrNotNull(ct, t1);
 	
@@ -104,6 +105,7 @@ void test_copy_rows_file_to_memory(CuTest* ct) {
 	rtn = fitstable_row_size(t2);
 	CuAssertIntEquals(ct, rtn, 8 + 8 + 4);
 
+	fitstable_add_fits_columns_as_struct(t1);
 	rtn = fitstable_copy_rows_data(t1, order, N1, t2);
 	CuAssertIntEquals(ct, rtn, 0);
 	
