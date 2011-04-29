@@ -461,15 +461,7 @@ matrix (not CROT).
 *** "I know where my image is to within 1 arcminute, how can I tell
 solve-field to only look there?"
 
-In this release of the software, you can't.  We've got plans for v0.3,
-but don't hold your breath!  There is one thing you can do: if you
-know that your image is within one HEALPix
-(http://healpix.jpl.nasa.gov/), and if you're using the
-small-angular-scale indexes with filenames like index-###-##.*.fits,
-then each of these indexes covers one HEALPix (the second number is
-the HEALPix number); you can edit the "backend.cfg" config file to
-tell the "backend" program to only load the index that contains your
-image.
+   $ solve-field --ra, --dec, --radius
 
 
 *** To convert a list of pixel coordinates to RA,Dec coordinates:
