@@ -37,7 +37,9 @@ include $(COMMON)/makefile.wcslib
 include $(COMMON)/makefile.netpbm
 
 ifneq ($(MAKECMDGOALS),clean)
-  include $(COMMON)/makefile.os-features
+  ifneq ($(MAKECMDGOALS),realclean)
+    include $(COMMON)/makefile.os-features
+  endif
 endif
 
 $(COMMON)/makefile.os-features:

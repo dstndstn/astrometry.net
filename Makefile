@@ -30,18 +30,19 @@ all:
 
 BASEDIR := .
 COMMON := $(BASEDIR)/util
+
+.PHONY: Makefile $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.cfitsio
 
-.PHONY: Makefile $(COMMON)/makefile.qfits
-
+.PHONY: all
 all: README
 	$(MAKE) remake-qfits
+	$(MAKE) -C gsl-an
 	$(MAKE) -C util
 	$(MAKE) -C libkd
 	$(MAKE) -C blind
-.PHONY: all
 
 # Targets that require extra libraries
 extra:
