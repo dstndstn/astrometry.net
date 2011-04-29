@@ -6,6 +6,15 @@
 
 #include "cutest.h"
 
+static void print_hex(const void* v, int N) {
+	int i;
+	for (i=0; i<N; i++) {
+		printf("%02x ", ((unsigned char*)v)[i]);
+		if (i%4 == 3)
+			printf(", ");
+	}
+}
+
 void test_copy_rows_inmemory(CuTest* ct) {
 	fitstable_t *t1, *t2;
     tfits_type dubl;
@@ -42,10 +51,32 @@ void test_copy_rows_inmemory(CuTest* ct) {
 	CuAssertIntEquals(ct, rtn, 0);
 
 	for (i=0; i<N; i++)
-		rtn = fitstable_write_row(t1, d1in+i, d2in+i, d3in+3);
+		rtn = fitstable_write_row(t1, d1in+i, d2in+i, d3in+i);
 
 	rtn = fitstable_fix_header(t1);
 	CuAssertIntEquals(ct, rtn, 0);
+
+	qfits_header_list(fitstable_get_header(t1), stdout);
+
+	fitstable_print_columns(t1);
+
+	printf("d1in[1]  ");
+	print_hex(d1in+1, sizeof(double));
+	printf("\n");
+	printf("d2in[1]  ");
+	print_hex(d2in+1, sizeof(double));
+	printf("\n");
+	printf("d3in[1]  ");
+	print_hex(d3in+1, sizeof(double));
+	printf("\n");
+	float f = d3in[1];
+	printf("float(d3in[1])  ");
+	print_hex(&f, sizeof(float));
+	printf("\n");
+
+	printf("row0:  ");
+	print_hex(bl_access(t1->rows, 1), bl_datasize(t1->rows));
+	printf("\n");
 
 	rtn = fitstable_switch_to_reading(t1);
 	CuAssertIntEquals(ct, rtn, 0);
@@ -85,9 +116,30 @@ void test_copy_rows_inmemory(CuTest* ct) {
 	free(order);
 	fitstable_close(t1);
 
-	
+	rtn = fitstable_switch_to_reading(t2);
+	CuAssertIntEquals(ct, rtn, 0);
 
+	free(d1);
+	free(d2);
+	free(d3);
 
+	d1 = fitstable_read_column(t2, name1, dubl);
+	d2 = fitstable_read_column(t2, name2, dubl);
+	d3 = fitstable_read_column(t2, name3, dubl);
+    CuAssertPtrNotNull(ct, d1);
+    CuAssertPtrNotNull(ct, d2);
+    CuAssertPtrNotNull(ct, d3);
+
+	printf("\nT2:\n");
+	for (i=0; i<N; i++) {
+		printf("%g %g %g\n", d1[i], d2[i], d3[i]);
+	}
+
+	fitstable_close(t2);
+
+	free(d1);
+	free(d2);
+	free(d3);
 }
 
 

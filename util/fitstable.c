@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2008, 2009 Dustin Lang.
+  Copyright 2008, 2009, 2010, 2011 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -59,9 +59,12 @@ typedef struct fitscol_t fitscol_t;
 struct fitsext {
 	qfits_header* header;
 	qfits_table* table;
+	// bl data size == row size.
 	bl* rows;
 };
 typedef struct fitsext fitsext_t;
+
+
 
 static bool need_endian_flip() {
 	return IS_BIG_ENDIAN == 0;
@@ -545,7 +548,7 @@ void fitstable_print_columns(fitstable_t* tab) {
 	printf("Table columns:\n");
 	for (i=0; i<ncols(tab); i++) {
 		fitscol_t* col = getcol(tab, i);
-		printf("  %i: %s: fits type %i, C type %i, arraysize %i, fitssize %i, C size %i, C offset %i, FITS column num: %i\n",
+		printf("  %i: %s: fits type %i, C type %i, arraysize %i, fitssize %i, C size %i, C offset %i (if in a struct), FITS column num: %i\n",
 			   i, col->colname, col->fitstype, col->ctype, col->arraysize, col->fitssize, col->csize, col->coffset, col->col);
 	}
 }
@@ -662,7 +665,8 @@ static int write_one(fitstable_t* table, const void* struc, va_list* ap) {
 		// skips the required number of bytes.
 		// This allows both structs and normal columns to coexist
 		// (in theory -- is this ever used?)
-		// (yes, by blind.c when writing rdls and correspondence files with tag-along data...)
+		// (yes, by blind.c when writing rdls and correspondence files
+		//  with tag-along data...)
 
         if (columndata && col->fitstype != col->ctype) {
             int sz = MAX(256, MAX(col->csize, col->fitssize) * col->arraysize);
