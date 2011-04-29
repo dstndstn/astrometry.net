@@ -17,6 +17,8 @@ urlpatterns = patterns('',
                        (r'^mymedia/(?P<path>.*)$', 'django.views.static.serve',
                         {'document_root': settings.MEDIA_ROOT, 'show_indexes':True}),
 
+					   # fallback
+                       (r'', 'astrometry.net2.views.login'),
 
 
     # Example:
