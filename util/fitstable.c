@@ -306,8 +306,13 @@ int fitstable_copy_rows_data(fitstable_t* intable, int* rows, int N, fitstable_t
 			ERROR("Failed to read data from input table");
 			return -1;
 		}
+		// The in-memory side (input/output) does the flip.
 		if (flip)
-			fitstable_endian_flip_row_data(intable, buf);
+			if (in_memory(intable))
+				fitstable_endian_flip_row_data(intable, buf);
+			else if (in_memory(outtable))
+				fitstable_endian_flip_row_data(outtable, buf);
+
 		if (write_row_data(outtable, buf, R)) {
 			ERROR("Failed to write data to output table");
 			return -1;
