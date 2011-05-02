@@ -66,7 +66,18 @@ if __name__ == '__main__':
 	# no diffraction spikes
 	I = logical_and(I, logical_not(X.flags[:,0]))
 	X = X[I]
-	print '%i pass cuts' % len(X)
+	print '%i pass USNO-B diffraction spike cut' % len(X)
+
+	if hasattr(X, 'an_diffraction_spike'):
+		f = X.an_diffraction_spike
+		print 'f shape', f.shape
+		#u = unique(f)
+		#print 'unique flags:', u
+		for j in range(8):
+			print 'flag', j, 'vals', unique(f[:,j])
+		good = logical_not(f[:,7]) * logical_not(f[:,6])
+		X = X[good]
+		print '%i pass AN diffraction spike cut' % len(X)
 
 	#from pylab import *
 	#clf()

@@ -290,9 +290,10 @@ class tabledata(object):
 					newX = numpy.append(val, val2, axis=0)
 				self.set(name, newX)
 				self._length = len(newX)
-			except Exception:# as e:
+			except Exception as e:
 				print 'exception appending element "%s"' % name
-                raise
+				#print 'exception:', e
+                #raise Exception('exception appending element "%s"' % name)
 
 	def write_to(self, fn, columns=None, header='default', primheader=None):
 		if columns is None and hasattr(self, '_columns'):
