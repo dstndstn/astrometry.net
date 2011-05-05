@@ -61,41 +61,11 @@ if __name__ == '__main__':
 	print 'Got %i USNO-B sources.' % len(X)
 
 	print 'Applying cuts...'
-	# USNO-B sources (not Tycho-2)
-	I = (X.num_detections >= 2)
-	# no diffraction spikes
-	I = logical_and(I, logical_not(X.flags[:,0]))
+	I = usnob_apply_cuts(X)
 	X = X[I]
-	print '%i pass USNO-B diffraction spike cut' % len(X)
+	print len(X), 'pass cuts'
 
-	if hasattr(X, 'an_diffraction_spike'):
-		f = X.an_diffraction_spike
-		print 'f shape', f.shape
-		#u = unique(f)
-		#print 'unique flags:', u
-		for j in range(8):
-			print 'flag', j, 'vals', unique(f[:,j])
-		good = logical_not(f[:,7]) * logical_not(f[:,6])
-		X = X[good]
-		print '%i pass AN diffraction spike cut' % len(X)
-
-	#from pylab import *
-	#clf()
-	#plot(X.ra, X.dec, 'r.')
-	#savefig('radec.png')
-
-	# Compute average R and B mags.
-	epoch1 = (X.field_1 > 0)
-	epoch2 = (X.field_3 > 0)
-	nmag = where(epoch1, 1, 0) + where(epoch2, 1, 0)
-	summag = where(epoch1, X.magnitude_1, 0) + where(epoch2, X.magnitude_3, 0)
-	X.r_mag = where(nmag == 0, 0, summag / nmag)
-	# B
-	epoch1 = (X.field_0 > 0)
-	epoch2 = (X.field_2 > 0)
-	nmag = where(epoch1, 1, 0) + where(epoch2, 1, 0)
-	summag = where(epoch1, X.magnitude_0, 0) + where(epoch2, X.magnitude_2, 0)
-	X.b_mag = where(nmag == 0, 0, summag / nmag)
+	usnob_compute_average_mags(X)
 
 	print 'Writing to', outfn
 	X.write_to(outfn)
