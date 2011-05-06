@@ -26,6 +26,9 @@ def add_nonstructural_headers(fromhdr, tohdr):
 			i = len(cl)
 		cl.insert(i, pyfits.Card(card.key, card.value, card.comment))
 
+#def cut_iterable(X, I):
+#	
+
 
 class tabledata(object):
 
@@ -169,6 +172,9 @@ class tabledata(object):
 		if hasattr(self, '_columns'):
 			rtn._columns = self._columns
 		return rtn
+
+	def cut(self, I):
+		pass
 
 
 	def __getitem__(self, I):
@@ -371,7 +377,12 @@ class tabledata(object):
 		return cols
 		
 
-def table_fields(dataorfn, rows=None, hdunum=1, header='default'):
+def fits_table(dataorfn, rows=None, hdunum=1, header='default',
+			   columns=None):
+	'''
+	If 'columns' (a list of strings) is passed, only those columns
+	will be read; otherwise all columns will be read.
+	'''
 	pf = None
 	hdr = None
 	if isinstance(dataorfn, str):
@@ -385,19 +396,21 @@ def table_fields(dataorfn, rows=None, hdunum=1, header='default'):
 	if data is None:
 		return None
 	fields = tabledata(header=hdr)
-	colnames = data.dtype.names
-	for c in colnames:
+	if columns is None:
+		columns = data.dtype.names
+
+	for c in columns:
 		col = data.field(c)
 		if rows is not None:
 			col = col[rows]
 		fields.set(c.lower(), col)
 	fields._length = len(data)
-	fields._columns = [c.lower() for c in colnames]
+	fields._columns = [c.lower() for c in columns]
 	if pf:
 		pf.close()
 	return fields
 
-fits_table = table_fields
+table_fields = fits_table
 
 # ultra-brittle text table parsing.
 def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, maxcols=None):
