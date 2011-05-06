@@ -26,9 +26,46 @@ def add_nonstructural_headers(fromhdr, tohdr):
 			i = len(cl)
 		cl.insert(i, pyfits.Card(card.key, card.value, card.comment))
 
-#def cut_iterable(X, I):
-#	
+def cut_array(val, I):
+	if type(I) is slice:
+		return val[I]
 
+	if type(val) in [numpy.ndarray, numpy.core.defchararray.chararray]:
+		return val[I]
+
+	if type(val) in [list,tuple] and type(I) in [int, numpy.int64]:
+		return val[I]
+
+	# HACK -- emulate numpy's boolean and int array slicing
+	# (when "val" is a normal python list)
+	if type(I) is numpy.ndarray and hasattr(I, 'dtype') and ((I.dtype.type in [bool, numpy.bool])
+															 or (I.dtype == bool)):
+		try:
+			return [val[i] for i,b in enumerate(I) if b]
+		except:
+			print 'Failed to slice field', name
+			#setattr(rtn, name, val)
+			#continue
+
+	inttypes = [int, numpy.int64, numpy.int32, numpy.int]
+	if type(I) is numpy.ndarray and all(I.astype(int) == I):
+		return [val[i] for i in I]
+
+	if (numpy.isscalar(I) and hasattr(I, 'dtype') and
+		I.dtype in inttypes):
+		return val[int(I)]
+
+	if hasattr(I, '__len__') and len(I) == 0:
+		return []
+
+	print 'Error slicing array:'
+	print 'array is'
+	print '  type:', type(val)
+	print '  ', val
+	print 'cut is'
+	print '  type:', type(I)
+	print '  ', I
+	raise Exception('Error in cut_array')
 
 class tabledata(object):
 
@@ -174,102 +211,22 @@ class tabledata(object):
 		return rtn
 
 	def cut(self, I):
-		pass
-
+		for name,val in self.__dict__.items():
+			if name.startswith('_'):
+				continue
+			if numpy.isscalar(val):
+				continue
+			self.set(name, cut_array(val, I))
 
 	def __getitem__(self, I):
 		rtn = tabledata()
-		if type(I) is slice:
-			#print 'I:', I
-			# Replace 'None' elements of the slice:
-			i0 = I.start
-			if i0 is None:
-				i0 = 0
-			i1 = I.stop
-			if i1 is None:
-				i1 = len(self)
-			step = I.step
-			if step is None:
-				step = 1
-			I = numpy.arange(i0, i1, step)
 		for name,val in self.__dict__.items():
 			if name.startswith('_'):
 				continue
 			if numpy.isscalar(val):
 				rtn.set(name, val)
 				continue
-			if type(val) in [numpy.ndarray, numpy.core.defchararray.chararray]:
-			#try:
-				rtn.set(name, val[I])
-			elif type(val) is list and type(I) in [int, numpy.int64]:
-				#print 'slice A', type(val), list, type(I)
-				rtn.set(name, val[I])
-				
-			#except Exception as e:
-			#except Exception:
-			else:
-				# HACK -- emulate numpy's boolean and int array slicing
-				# (when "val" is a normal python list)
-				ok = False
-				if type(I) is numpy.ndarray and hasattr(I, 'dtype') and ((I.dtype.type in [bool, numpy.bool])
-																		 or (I.dtype == bool)):
-					#print 'slice C', name
-					try:
-						rtn.set(name, [val[i] for i,b in enumerate(I) if b])
-						ok = True
-					except:
-						print 'Failed to slice field', name, ' -- adding it whole'
-						setattr(rtn, name, val)
-						continue
-				inttypes = [int, numpy.int64, numpy.int32, numpy.int]
-				#if type(I) is numpy.ndarray and hasattr(I, 'dtype') and I.dtype.type in inttypes:
-				if ok:
-					pass
-				elif type(I) is numpy.ndarray and all(I.astype(int) == I):
-					#print 'slice D', name
-					rtn.set(name, [val[i] for i in I])
-					ok = True
-				#if type(I) in inttypes:
-				#	rtn.set(name, val[i])
-				#	ok = True
-				elif isscalar(I) and hasattr(I, 'dtype') and I.dtype in inttypes:
-					#print 'slice E', name
-					rtn.set(name, val[int(I)])
-					ok = True
-				elif hasattr(I, '__len__') and len(I) == 0:
-					print 'slice F', name
-					rtn.set(name, [])
-					ok = True
-
-				if not ok:
-					print 'Error in slicing an astrometry.util.pyfits_utils.table_data object (__getitem__):'
-					#print '  -->', e
-					print 'While getting member:', name
-					print ' by taking elements:', I
-					#print ' from', val
-					print ' from a:', type(val)
-					if hasattr(val, 'shape'):
-						print ' shape:', val.shape
-					if hasattr(I, 'shape'):
-						print ' index shape:', I.shape
-					print 'index type:', type(I)
-					if hasattr(I, 'dtype'):
-						print '	 index dtype:', I.dtype
-						print '	 index dtype has type:', type(I.dtype)
-						print '	 index dtype.type:', I.dtype.type
-						print 'options are', inttypes
-						print 'I is numpy.ndarray?', (type(I) is numpy.ndarray)
-						print 'has dtype?', (hasattr(I, 'dtype'))
-						print 'I.dtype.type in inttypes:', (I.dtype.type in inttypes)
-						print 'equal:', [(t, (I.dtype.type == t)) for t in inttypes]
-						print 'I.astype(int)', I.astype(int)
-
-						import pdb
-						pdb.set_trace()
-
-					print 'my length:', self._length
-					raise Exception('error in fits_table indexing (table_data.__getitem__)')
-
+			rtn.set(name, cut_array(val, I))
 
 			if isscalar(I):
 				rtn._length = 1
