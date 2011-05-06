@@ -200,11 +200,11 @@ class tabledata(object):
 				#print 'copying numpy array', name
 				rtn.set(name, val.copy())
 				continue
-			if type(val) is list:
+			if type(val) in [list,tuple]:
 				#print 'copying list', name
 				rtn.set(name, val[:])
 				continue
-			print 'in pyfits_utils: copy(): can\'t copy', name, '=', valxo
+			print 'in pyfits_utils: copy(): can\'t copy', name, '=', val
 		rtn._header = self._header
 		if hasattr(self, '_columns'):
 			rtn._columns = self._columns
@@ -216,7 +216,9 @@ class tabledata(object):
 				continue
 			if numpy.isscalar(val):
 				continue
-			self.set(name, cut_array(val, I))
+			C = cut_array(val, I)
+			self.set(name, C)
+			self._length = len(C)
 
 	def __getitem__(self, I):
 		rtn = tabledata()

@@ -14,12 +14,19 @@ class TestSlices(unittest.TestCase):
 		T.about()
 		self.T = T
 
+	def testCut(self):
+		T1 = self.T.copy()
+		T1.about()
+
+		T1.cut(np.arange(10) < 4)
+		T1.about()
+		self.assertEqual(len(T1), 4)
+
 	def testIter(self):
 		for i in range(len(self.T)):
 			self.T[i].about()
 		for t in self.T:
 			t.about()
-		
 
 	def testNumpySlicing(self):
 		A = np.arange(10)
