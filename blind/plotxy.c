@@ -134,8 +134,8 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 		 */
 		for (i=0; i<Nxy; i++) {
 			anwcs_pixelxy2radec(args->wcs,
-								// HACK
-								starxy_getx(xy, i)+1, starxy_gety(xy, i)+1,
+								// I used to add 1 here
+								starxy_getx(xy, i), starxy_gety(xy, i),
 								&ra, &dec);
 			if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y))
 				continue;
@@ -147,7 +147,11 @@ int plot_xy_plot(const char* command, cairo_t* cairo,
 			/*
 			 starxy_setx(xy, i, args->scale * (x - args->xoff));
 			 starxy_sety(xy, i, args->scale * (y - args->yoff));
+			 starxy_setx(xy, i, x-1);
+			 starxy_sety(xy, i, y-1);
 			 */
+
+			// Output coords: FITS -> 0-indexed image
 			starxy_setx(xy, i, x-1);
 			starxy_sety(xy, i, y-1);
 		}

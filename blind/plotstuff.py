@@ -53,6 +53,8 @@ class Plotstuff(object):
 			self.pargs.lw = float(val)
 		elif name == 'marker' and type(val) is str:
 			plotstuff_set_marker(self.pargs, val)
+		elif name == 'markersize':
+			plotstuff_set_markersize(self.pargs, val)
 		elif name == 'wcs_file':
 			plotstuff_set_wcs_file(self.pargs, val, 0)
 		elif name == 'text_bg_alpha':

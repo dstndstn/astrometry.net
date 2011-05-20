@@ -34,6 +34,10 @@ struct plotxy_args {
 	// coordinates added with xy_val <x> <y>
 	dl* xyvals;
 
+	// if WCS is set, x,y are treated as FITS pixel coords;
+	// that is, this are pushed through the WCS unmodified, then the resulting
+	// RA,Dec is pushed through the plot WCS, producing FITS coords, from which
+	// 1,1 is subtracted to yield 0-indexed image coords.
 	anwcs_t* wcs;
 };
 typedef struct plotxy_args plotxy_t;
