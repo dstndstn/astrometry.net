@@ -279,6 +279,7 @@ test_dsmooth: $(TEST_DSMOOTH_OBJS)
 test_multiindex2: test_multiindex2.o solver.o blind_wcs.o verify.o \
 	tweak2.o tweak.o matchfile.o matchobj.o quad-utils.o \
 	$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
+ALL_TEST_EXTRA_OBJS += solver.o verify.o tweak2.o tweak.o blind_wcs.o quad-utils.o
 
 #../util/cutest.o \
 
