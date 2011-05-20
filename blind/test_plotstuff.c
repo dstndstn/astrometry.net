@@ -8,14 +8,15 @@
 #include "plotxy.h"
 #include "plotimage.h"
 #include "log.h"
+#include "cairoutils.h"
 
 void test_plot_wcs1(CuTest* tc) {
 	plot_args_t myargs;
 	plot_args_t* pargs = &myargs;
 	int W, H;
-	//unsigned char* img;
 	plotxy_t* xy;
 	//plotimage_t* img;
+
 
 	log_init(LOG_VERB);
 
@@ -61,5 +62,33 @@ void test_plot_wcs1(CuTest* tc) {
 	plotstuff_run_command(pargs, "xy");
 	plotstuff_output(pargs);
 	plotstuff_free(pargs);
+
+	{
+		unsigned char* img;
+		int ww, hh;
+		int i;
+
+		img = cairoutils_read_png("test-out2.png", &ww, &hh);
+		CuAssertPtrNotNull(tc, img);
+		CuAssertIntEquals(tc, W, ww);
+		CuAssertIntEquals(tc, H, hh);
+
+		printf("image:\n");
+		for (i=0; i<W*H; i++) {
+			printf("%02x  ", (int)img[i*4]);
+			if (i%W == (W-1))
+				printf("\n");
+		}
+		printf("\n");
+
+		/*
+		 00  00  00  00  00  
+		 00  80  e8  80  00  
+		 00  f3  44  f3  00  
+		 00  7c  e8  7c  00  
+		 00  00  00  00  00  
+		 */
+
+	}
 
 }
