@@ -401,6 +401,10 @@ void anwcs_print(const anwcs_t* anwcs, FILE* fid) {
 	ANWCS_DISPATCH(anwcs, , , print, fid);
 }
 
+void anwcs_print_stdout(const anwcs_t* wcs) {
+	anwcs_print(wcs, stdout);
+}
+
 void anwcs_free(anwcs_t* anwcs) {
 	if (!anwcs)
 		return;

@@ -67,7 +67,10 @@ install: report.txt
 	mkdir -p $(INSTALL_DIR)/ups
 	cp ups/astrometry_net.table-dist $(INSTALL_DIR)/ups/astrometry_net.table
 	cp __init__.py $(INSTALL_DIR)/python/astrometry
+
 	cp pyfits/*.py $(INSTALL_DIR)/python/pyfits
+	\# (cd pyfits-2.4.0 && python setup.py install --install-base=stage --install-lib=stage/lib --install-scripts=stage/bin --install-data=stage/data --install-headers=stage/include && cp -r stage/lib/pyfits $(INSTALL_DIR)/python/pyfits)
+
 	cp CREDITS GETTING-INDEXES LICENSE README $(INSTALL_DIR)/doc
 	cp report.txt $(INSTALL_DIR)/doc
 	cp demo/* $(INSTALL_DIR)/examples

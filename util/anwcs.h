@@ -87,6 +87,9 @@ void anwcs_get_radec_bounds(const anwcs_t* wcs, int stepsize,
 
 void anwcs_print(const anwcs_t* wcs, FILE* fid);
 
+// useful for python
+void anwcs_print_stdout(const anwcs_t* wcs);
+
 // Center and radius of the field.
 // RA,Dec,radius in degrees.
 int anwcs_get_radec_center_and_radius(const anwcs_t* anwcs,
