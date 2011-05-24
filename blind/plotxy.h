@@ -56,7 +56,7 @@ void plot_xy_clear_list(plotxy_t* args);
 void plot_xy_set_xcol(plotxy_t* args, const char* col);
 void plot_xy_set_ycol(plotxy_t* args, const char* col);
 void plot_xy_set_filename(plotxy_t* args, const char* fn);
-int plot_xy_set_wcs_filename(plotxy_t* args, const char* fn);
+int plot_xy_set_wcs_filename(plotxy_t* args, const char* fn, int ext);
 int plot_xy_set_offsets(plotxy_t* args, double xo, double yo);
 
 int plot_xy_command(const char* command, const char* cmdargs,

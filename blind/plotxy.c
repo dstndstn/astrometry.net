@@ -201,9 +201,9 @@ void plot_xy_set_filename(plotxy_t* args, const char* fn) {
 	args->fn = strdup_safe(fn);
 }
 
-int plot_xy_set_wcs_filename(plotxy_t* args, const char* fn) {
+int plot_xy_set_wcs_filename(plotxy_t* args, const char* fn, int ext) {
 	anwcs_free(args->wcs);
-	args->wcs = anwcs_open(fn, 0);
+	args->wcs = anwcs_open(fn, ext);
 	if (!args->wcs) {
 		ERROR("Failed to read WCS file \"%s\"", fn);
 		return -1;
@@ -247,8 +247,8 @@ int plot_xy_command(const char* cmd, const char* cmdargs,
 		args->nobjs = atoi(cmdargs);
 	} else if (streq(cmd, "xy_scale")) {
 		args->scale = atof(cmdargs);
-	} else if (streq(cmd, "xy_wcs")) {
-		return plot_xy_set_wcs_filename(args, cmdargs);
+		//} else if (streq(cmd, "xy_wcs")) {
+		//return plot_xy_set_wcs_filename(args, cmdargs);
 	} else if (streq(cmd, "xy_vals")) {
 		plotstuff_append_doubles(cmdargs, args->xyvals);
 	} else {
