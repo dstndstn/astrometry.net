@@ -123,7 +123,8 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 	if (args->resample) {
 		assert(args->img);
 
-		// FITS images get resampled right after reading.  Others...
+		// FITS images get resampled right after reading (in read_fits_image).
+		// Others...
 		if (args->format == PLOTSTUFF_FORMAT_FITS) {
 			plot_image_rgba_data(cairo, args);
 		} else {
