@@ -56,7 +56,10 @@ class Plotstuff(object):
 		elif name == 'markersize':
 			plotstuff_set_markersize(self.pargs, val)
 		elif name == 'wcs_file':
-			plotstuff_set_wcs_file(self.pargs, val, 0)
+			if type(val) is tuple:
+				plotstuff_set_wcs_file(self.pargs, *val)
+			else:
+				plotstuff_set_wcs_file(self.pargs, val, 0)
 		elif name == 'text_bg_alpha':
 			plotstuff_set_text_bg_alpha(self.pargs, val)
 		#elif name == 'operator':

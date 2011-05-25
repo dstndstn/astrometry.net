@@ -238,6 +238,11 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 		cairoutils_argb32_to_rgba_2(img, PyArray_DATA(npimg), self->W, self->H);
 		return npimg;
 	}
+
+	int set_wcs_file(const char* fn, int ext) {
+		return plotstuff_set_wcs_file(self, fn, ext);
+	}
+
 }
 
 
