@@ -98,14 +98,14 @@ int main(int argc, char *argv[]) {
 
 	tan = &(wcs->wcstan);
 
-    printf("crval1 %g\n", tan->crval[0]);
-    printf("crval2 %g\n", tan->crval[1]);
+    printf("crval1 %.12g\n", tan->crval[0]);
+    printf("crval2 %.12g\n", tan->crval[1]);
     printf("crpix1 %g\n", tan->crpix[0]);
     printf("crpix2 %g\n", tan->crpix[1]);
-    printf("cd11 %g\n", tan->cd[0][0]);
-    printf("cd12 %g\n", tan->cd[0][1]);
-    printf("cd21 %g\n", tan->cd[1][0]);
-    printf("cd22 %g\n", tan->cd[1][1]);
+    printf("cd11 %.12g\n", tan->cd[0][0]);
+    printf("cd12 %.12g\n", tan->cd[0][1]);
+    printf("cd21 %.12g\n", tan->cd[1][0]);
+    printf("cd22 %.12g\n", tan->cd[1][1]);
 
 	if (wcs->a_order) {
 		printf("a_order %i\n", wcs->a_order);

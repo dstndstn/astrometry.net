@@ -152,6 +152,12 @@ void log_set_level(int lvl);
         t->imageh = imageh;
         return t;
     }
+	tan_t(const tan_t* other) {
+        tan_t* t = (tan_t*)calloc(1, sizeof(tan_t));
+		memcpy(t, other, sizeof(tan_t));
+		return t;
+	}
+
     ~tan_t() { free($self); }
 	void set(double crval1, double crval2,
 		  double crpix1, double crpix2,
@@ -209,6 +215,12 @@ void log_set_level(int lvl);
 	void set_crpix(double x, double y) {
 		$self->crpix[0] = x;
 		$self->crpix[1] = y;
+	}
+	void set_cd(double cd11, double cd12, double cd21, double cd22) {
+		$self->cd[0][0] = cd11;
+		$self->cd[0][1] = cd12;
+		$self->cd[1][0] = cd21;
+		$self->cd[1][1] = cd22;
 	}
 	void set_imagesize(double w, double h) {
 		$self->imagew = w;
