@@ -141,6 +141,19 @@ class AsTrans(SdssFile):
 		return self.prime_to_pixel(xprime, yprime)
 
 	def munu_to_prime(self, mu, nu, color=0):
+		'''
+		mu = a + b * rowm + c * colm
+		nu = d + e * rowm + f * colm
+
+		So
+
+		[rowm; colm] = [b,c; e,f]^-1 * [mu-a; nu-d]
+
+		[b,c; e,f]^1 = [B,C; E,F] in the code below, so
+
+		[rowm; colm] = [B,C; E,F] * [mu-a; nu-d]
+
+		'''
 		a, b, c, d, e, f = self._get_abcdef()
 		#print 'mu,nu', mu, nu, 'a,d', a,d
 		determinant = b * f - c * e

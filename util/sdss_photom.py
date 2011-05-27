@@ -28,6 +28,8 @@ def sdss_counts_to_maggies(counts, band, calib):
 def sdss_counts_to_mag(counts, band, calib):
 	return sdss_maggies_to_mag(sdss_counts_to_maggies(counts, band, calib))
 
+#def sdss_mag_to_counts(mag, band, calib):
+
 
 if __name__ == '__main__':
 	from glob import glob
