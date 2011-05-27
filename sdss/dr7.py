@@ -23,6 +23,9 @@ class DR7(object):
 	def getFilename(self, filetype, *args, **kwargs):
 		for k,v in zip(['run', 'camcol', 'field', 'band'], args):
 			kwargs[k] = v
+		# convert band number to band character.
+		if 'band' in kwargs:
+			kwargs['band'] = band_name(kwargs['band'])
 		if not filetype in self.filenames:
 			return None
 		pat = self.filenames[filetype]

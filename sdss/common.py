@@ -57,6 +57,8 @@ class AsTrans(SdssFile):
 	whole run) or in tsField files (in astrom/ or fastrom/).
 
 	In DR8, they are in asTrans files, or in the "frames".
+
+	http://data.sdss3.org/datamodel/files/PHOTO_REDUX/RERUN/RUN/astrom/asTrans.html
 	'''
 	def __init__(self, *args, **kwargs):
 		'''
@@ -85,6 +87,10 @@ class AsTrans(SdssFile):
 						self.trans[f] = getattr(astrans, f)[self.bandi]
 				except:
 					pass
+
+	def __str__(self):
+		return (SdssFile.__str__(self) +
+				' (node=%g, incl=%g)' % (self.node, self.incl))
 
 	def _get_abcdef(self):
 		return tuple(self.trans[x] for x in 'abcdef')
@@ -131,15 +137,27 @@ class AsTrans(SdssFile):
 		return self.munu_to_pixel(mu, nu, color)
 	
 	def munu_to_pixel(self, mu, nu, color=0):
+		xprime, yprime = self.munu_to_prime(mu, nu, color)
+		return self.prime_to_pixel(xprime, yprime)
+
+	def munu_to_prime(self, mu, nu, color=0):
 		a, b, c, d, e, f = self._get_abcdef()
+		#print 'mu,nu', mu, nu, 'a,d', a,d
 		determinant = b * f - c * e
-		B = f  / determinant
+		#print 'det', determinant
+		B =  f / determinant
 		C = -c / determinant
 		E = -e / determinant
-		F = b  / determinant
-		yprime = B * (mu - a) + C * (nu - d)
-		xprime = E * (mu - a) + F * (nu - d)
-		return self.prime_to_pixel(xprime, yprime, color)
+		F =  b / determinant
+		#print 'B', B, 'mu-a', mu-a, 'C', C, 'nu-d', nu-d
+		#print 'E', E, 'mu-a', mu-a, 'F', F, 'nu-d', nu-d
+		mua = mu - a
+		# in field 6955, g3, 809 we see a~413
+		if mua < -180.:
+			mua += 360.
+		yprime = B * mua + C * (nu - d)
+		xprime = E * mua + F * (nu - d)
+		return xprime,yprime
 
 	def pixel_to_munu(self, x, y, color=0):
 		(xprime, yprime) = self.pixel_to_prime(x, y, color)
@@ -219,6 +237,11 @@ class AsTrans(SdssFile):
 		return (x, y)
 
 	def radec_to_munu(self, ra, dec):
+		'''
+		RA,Dec in degrees
+
+		mu,nu (great circle coords) in degrees
+		'''
 		node,incl = self.node, self.incl
 		ra, dec = np.deg2rad(ra), np.deg2rad(dec)
 		mu = node + np.arctan2(np.sin(ra - node) * np.cos(dec) * np.cos(incl) +
