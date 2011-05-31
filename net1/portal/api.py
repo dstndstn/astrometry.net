@@ -91,10 +91,12 @@ def requires_json_login(handler):
 def login(request):
 	uname = request.json.get('username')
 	password = request.json.get('password')
+	logmsg('Got API login: username=%s, password=%s' % (uname, password))
 	if uname is None or password is None:
 		return HttpResponseErrorJson('need "username" and "password".')
 
 	user = authenticate(username=uname, password=password)
+	logmsg('User: ' + str(user))
 	if user is None:
 		return HttpResponseErrorJson('incorrect username/password')
 
@@ -132,6 +134,7 @@ def login(request):
 	session.save()
 
 	key = session.session_key
+	logmsg('Returning session key ' + key)
 	return HttpResponseJson({ 'status': 'success',
 							  'message': 'authenticated user: ' + str(user.email),
 							  'session': key,

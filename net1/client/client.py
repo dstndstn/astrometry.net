@@ -2,7 +2,7 @@ from urllib2 import urlopen
 from urllib import urlencode
 from exceptions import Exception
 
-from astrometry.net.portal.api_util import json2python, python2json
+from astrometry.net1.portal.api_util import json2python, python2json
 
 def logverb(*msg):
     print(' '.join([str(m).decode('latin_1', 'backslashreplace') for m in msg]))
@@ -17,7 +17,8 @@ class RequestError(Exception):
 
 class Client(object):
 
-	apiurl = 'http://edge.astrometry.net/api/'
+	#apiurl = 'http://edge.astrometry.net/api/'
+	apiurl = 'http://oven.cosmo.fas.nyu.edu:9000/api/'
 
 	def __init__(self):
 		self.apiurl = Client.apiurl
@@ -79,3 +80,4 @@ if __name__ == '__main__':
 	print 'Submission id:', subid
 	substatus = c.submission_status(subid)
 	print 'Status:', substatus
+
