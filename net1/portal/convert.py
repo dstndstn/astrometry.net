@@ -51,6 +51,7 @@ def run_pnmfile(fn):
 def is_tarball(fn):
 	log('is_tarball: %s' % fn)
 	types = filetype_short(fn)
+	log('filetypes:', types)
 	for t in types:
 		if t.startswith('POSIX tar archive'):
 			return True

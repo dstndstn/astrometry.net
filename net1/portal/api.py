@@ -6,6 +6,8 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
 
+from django.views.decorators.csrf import csrf_exempt
+
 from astrometry.net1.portal.job import Job, Tag, Submission
 from astrometry.net1.portal.log import log as logmsg
 from astrometry.net1 import settings
@@ -86,7 +88,8 @@ def requires_json_login(handler):
 			return HttpResponseErrorJson('user is not authenticated.')
 		return handler(request, *args, **kwargs)
 	return handle_request
-	
+
+@csrf_exempt
 @requires_json_args
 def login(request):
 	uname = request.json.get('username')
@@ -141,6 +144,7 @@ def login(request):
 							  #'pubkey': pubkeystr,
 							  })
 
+@csrf_exempt
 @requires_json_args
 def amiloggedin(request):
 	if not 'session' in request.json:
@@ -162,6 +166,7 @@ def amiloggedin(request):
 							  'username': user.username})
 
 
+@csrf_exempt
 @requires_json_args
 @requires_json_session
 @requires_json_login
@@ -171,6 +176,7 @@ def logout(request):
 	return HttpResponseJson({ 'status': 'Success',
 							  'message': 'User "%s" logged out.' % uname })
 
+@csrf_exempt
 @requires_json_args
 @requires_json_session
 @requires_json_login
@@ -191,6 +197,7 @@ def jobstatus(request):
 							  })
 
 
+@csrf_exempt
 @requires_json_args
 @requires_json_session
 @requires_json_login
@@ -211,6 +218,7 @@ def substatus(request):
 							  'jobs-error':    [j.jobid for j in sub.jobs_error()],
 							  })
 
+@csrf_exempt
 @requires_json_args
 @requires_json_session
 @requires_json_login

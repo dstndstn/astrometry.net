@@ -3,7 +3,7 @@ import logging
 import os.path
 import os
 import random
-import sha
+import hashlib
 import shutil
 
 from django.db import models
@@ -65,10 +65,15 @@ class DiskFile(models.Model):
 	# Moves the given file into the place where it belongs.
 	@staticmethod
 	def for_file(path):
+		log('DiskFile.for_file(' + path + ')')
 		hsh = DiskFile.get_hash(path)
+		log('Hash=' + hsh)
 		existing = DiskFile.objects.all().filter(filehash=hsh)
+		log('Existing DiskFiles with this hash: ' + '\n'.join([str(x) for x in existing]))
 		if len(existing) == 1:
-			return existing[0]
+			if existing[0].file_exists():
+				return existing[0]
+			existing = []
 		assert(len(existing) == 0)
 		df = DiskFile(filehash=hsh)
 		dest = df.get_path()
@@ -103,7 +108,7 @@ class DiskFile(models.Model):
 
 	@staticmethod
 	def get_hash(fn):
-		h = sha.new()
+		h = hashlib.sha1()
 		f = open(fn, 'rb')
 		while True:
 			d = f.read(4096)

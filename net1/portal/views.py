@@ -37,6 +37,21 @@ from astrometry.util.file import file_size, read_file, write_file
 from astrometry.net1 import settings
 from astrometry.util import sip
 
+def media(req, filename=None):
+	path = os.path.join(settings.MEDIA_ROOT, filename)
+	log('media request: file="%s", path="%s"' % (str(filename), str(path)))
+	if not os.path.dirname(path)+'/' == settings.MEDIA_ROOT:
+		log('dirname = "%s"' % os.path.dirname(path))
+		return HttpResponse('meh')
+	res = HttpResponse(open(path))
+	ctmap = [('.png', 'image/png'),
+			 ]
+	for suff,ct in ctmap:
+		if path.endswith(suff):
+			res['Content-type'] = ct
+			break
+	return res
+
 def urlescape(s):
 	return s.replace('&', '&amp;')
 
@@ -468,9 +483,9 @@ def joblist(request):
 						 + '">' + obj + '</a>'
 						 ) for obj in objs])
 			elif c == 'thumbnail':
-				t = ('<img src="'
-					 + get_file_url(job, 'thumbnail')
-					 + '" alt="Thumbnail" />')
+				t = ('<a href="%s"><img src="%s" border="0" alt="Thumbnail" /></a>' %
+					 (urlescape(get_status_url(job.jobid)),
+					  get_file_url(job, 'thumbnail')))
 			elif c == 'annthumb':
 				if job.solved():
 					t = ('<img src="'

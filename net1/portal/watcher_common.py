@@ -447,6 +447,8 @@ class Watcher(object):
 			(fd, tmpfile) = tempfile.mkstemp('', 'download-')
 			os.close(fd)
 			basename = self.download_url(submission, submission.url, tmpfile)
+			log('run_sub: downloaded basename = ' + basename)
+			log('tmpfile: ' + tmpfile)
 			if self.bailedout:
 				return False
 			if basename is None:
@@ -463,9 +465,11 @@ class Watcher(object):
 
 		df = DiskFile.for_file(tmpfile)
 		df.save()
+		log('Creating DiskFile id ' + df.pk)
 		submission.diskfile = df
 		submission.fileorigname = basename
 		submission.save()
+		log('Saved submission id ' + submission.pk)
 		# Handle compressed files.
 		uncomp = convert(submission, 'uncomp-js')
 		# Handle tar files: add a Submission, create new Jobs.
