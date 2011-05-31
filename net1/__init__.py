@@ -1,7 +1,8 @@
 
 # see "astrometry.net.media" in urls.py
-def media():
-    pass
+def media(req, filename=None):
+	import astrometry.net1.portal.views as views
+	return views.media(req, filename)
 
 # likewise "logout"
 def logout():

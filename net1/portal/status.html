@@ -120,6 +120,7 @@ This field contains:
 <div id="description">
 {% ifequal user job.get_user %}
 <form method="post" action={{ set_description_url }}>
+{% csrf_token %}
 <p>
 <input type="hidden" name="jobid" value="{{ job.jobid }}" />
 <textarea name="desc" rows="4" cols="40">
@@ -164,6 +165,7 @@ This field has not been tagged yet.
 {% endif %}
 </p>
 <form method="post" action="{{ add_tag_url }}">
+{% csrf_token %}
 <p>
 Tag with:
 <input type="hidden" name="jobid" value="{{ job.jobid }}" />

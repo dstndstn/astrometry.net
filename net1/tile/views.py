@@ -327,7 +327,7 @@ def get_tile(request):
 		arglist.append('bwcsfn ' + wcsfn)
 
 	if ('images' in layers) or ('boundaries' in layers):
-		from astrometry.util.hsv import hsvtorgb
+		#from astrometry.util.hsv import hsvtorgb
 
 		imageset = get_imageset(request)
 		if not imageset:
@@ -354,20 +354,25 @@ def get_tile(request):
 			#wcsfn = fn + '.wcs'
 			#if not os.path.exists(wcsfn):
 			#	img.job.write_wcs_to_file(wcsfn)
-			wcsfn = convert(job, 'wcs')
-			arglist.append('wcsfn ' + wcsfn)
 
-			jpeg = convert(job, 'jpeg')
-			arglist.append('jpegfn ' + jpeg)
+			if 'images' in layers:
+				wcsfn = convert(job, 'wcs')
+				arglist.append('wcsfn ' + wcsfn)
+				jpeg = convert(job, 'jpeg')
+				arglist.append('jpegfn ' + jpeg)
 
-			if justdates:
-				date = img.get_date()
-				dd = float((date - datelo).days / float(dayrange))
-				dd = max(0, min(1., dd))
-				logmsg('  date', date, '-> %.3f' % dd, ', job', job.jobid)
-				(r,g,b) = hsvtorgb(dd * 0.7, 1., 1.)
-				for c in [r,g,b]:
-					arglist.append('color %f' % c)
+			if 'boundaries' in layers:
+				wcsfn = convert(job, 'wcs')
+				arglist.append('bwcsfn ' + wcsfn)
+
+			#if justdates:
+			#	date = img.get_date()
+			#	dd = float((date - datelo).days / float(dayrange))
+			#	dd = max(0, min(1., dd))
+			#	logmsg('  date', date, '-> %.3f' % dd, ', job', job.jobid)
+			#	#(r,g,b) = hsvtorgb(dd * 0.7, 1., 1.)
+			#	#for c in [r,g,b]:
+			#	#	arglist.append('color %f' % c)
  
 		#logmsg("For RA in [%f, %f] and Dec in [%f, %f], found %i files." %
 		#			  (ramin, ramax, decmin, decmax, len(filenames)))

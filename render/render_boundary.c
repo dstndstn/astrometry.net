@@ -30,10 +30,14 @@
 #include "cairoutils.h"
 #include "ioutils.h"
 
+// Ouch
 const char* wcs_dirs[] = {
-	"/home/gmaps/ontheweb-data",
-	"/home/gmaps/test/web-data",
-	"/home/gmaps/apod-solves",
+	"/home/dstn/test/web-data",
+	/* 
+	 "/home/gmaps/ontheweb-data",
+	 "/home/gmaps/test/web-data",
+	 "/home/gmaps/apod-solves",
+	 */
 	"."
 };
 
@@ -77,6 +81,7 @@ int render_boundary(cairo_t* cairo, render_args_t* args) {
 				logmsg("failed to find wcs file \"%s\"\n", fn);
 				continue;
 			}
+			logmsg("Reading WCS file \"%s\"\n", wcsfn);
 			res = sip_read_header_file(wcsfn, &wcs);
 			if (!res)
 				logmsg("failed to parse SIP header from %s\n", wcsfn);
@@ -85,6 +90,7 @@ int render_boundary(cairo_t* cairo, render_args_t* args) {
 				continue;
 			W = wcs.wcstan.imagew;
 			H = wcs.wcstan.imageh;
+			logmsg("Image W,H %i, %i\n", W, H);
 
 			if (strcmp("userdot", args->currentlayer) == 0) {
 				double px, py;
@@ -116,8 +122,8 @@ int render_boundary(cairo_t* cairo, render_args_t* args) {
 				double sx, sy;
 				int nsides = 4;
 
-				sx = W / (double)nsteps;
-				sy = H / (double)nsteps;
+				sx = W / (double)(nsteps-1);
+				sy = H / (double)(nsteps-1);
 				
 				for (i=0; i<nsides; i++) {
 					stepx[i] *= sx;
@@ -140,6 +146,8 @@ int render_boundary(cairo_t* cairo, render_args_t* args) {
 						thisvalid = (yout > 0 && xout > 0 && yout < args->H && xout < args->W);
 						wrapped = ((lastra < 90 && ra > 270) || 
 								   (lastra > 270 && ra < 90));
+						logmsg("image x,y %.1f, %.1f -> RA,Dec %.2f, %.2f -> plot x,y %.1f, %.1f.  Valid? %c; Wrapped? %c\n",
+							   xin, yin, ra, dec, xout, yout, thisvalid ? 'T':'F', wrapped ? 'T':'F');
 						if (wrapped)
 							logmsg("Wrapped: lastra=%g, ra=%g, thisvalid=%i, lastvalid=%i, first=%i.\n",
 								   lastra, ra, thisvalid, lastvalid, first);
@@ -161,7 +169,7 @@ int render_boundary(cairo_t* cairo, render_args_t* args) {
 					}
 				}
 			}
-			cairo_close_path(cairo);
+			//cairo_close_path(cairo);
 			if (fill)
 				cairo_fill(cairo);
 			else
