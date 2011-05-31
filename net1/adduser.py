@@ -1,5 +1,5 @@
 import os
-os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net1.settings'
 
 import sys
 

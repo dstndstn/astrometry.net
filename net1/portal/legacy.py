@@ -1,6 +1,6 @@
 from django.http import HttpResponse, HttpResponseRedirect
-from astrometry.net.portal.views import get_status_url
-from astrometry.net.portal.log import log
+from astrometry.net1.portal.views import get_status_url
+from astrometry.net1.portal.log import log
 
 def jobstatus_old(request):
     if not request.GET:

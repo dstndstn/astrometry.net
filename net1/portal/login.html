@@ -10,6 +10,7 @@ Login
 
 {% block content %}
 <form id="login" action="" method="post">
+{% csrf_token %}
 <div id="loginbox">
 
 <table class="boxedtable" border="0">
@@ -60,9 +61,9 @@ Login
 </form>
 
 <div class="fineprint">
-<a href="{% url astrometry.net.resetpassword %}">Forgot your password?</a>
+<a href="{% url astrometry.net1.resetpassword %}">Forgot your password?</a>
 &nbsp; &nbsp;
-<a href="{% url astrometry.net.newaccount %}">Sign up!</a>
+<a href="{% url astrometry.net1.newaccount %}">Sign up!</a>
 </div>
 
 {% endblock content %}

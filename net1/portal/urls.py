@@ -2,13 +2,13 @@ from django.conf.urls.defaults import *
 
 jobpattern = r'[a-z0-9-]+'
 
-urlpatterns = (patterns('astrometry.net.portal.newjob',
+urlpatterns = (patterns('astrometry.net1.portal.newjob',
 						(r'^newurl/$',			'newurl'  ),
 						(r'^newfile/$',			'newfile' ),
 						(r'^newlong/$',			'newlong' ),
 						)
 			   +
-			   patterns('astrometry.net.portal.views',
+			   patterns('astrometry.net1.portal.views',
 						(r'^status/(?P<jobid>' + jobpattern + r')', 'jobstatus'),
 						# forwards to status/; for ease of use with gmaps
 						(r'^jobstatus/', 'jobstatus2'),
@@ -22,17 +22,17 @@ urlpatterns = (patterns('astrometry.net.portal.newjob',
 						#(r'^run-variant/$', 'run_variant' ),
 						)
 			   +
-			   patterns('astrometry.net.portal.tags',
+			   patterns('astrometry.net1.portal.tags',
 						(r'^taglist/$',			'taglist'  ),
 						(r'^add_tag/$',			'job_add_tag' ),
 						(r'^remove_tag/$',		'job_remove_tag' ),
 						)
 			   +
-			   patterns('astrometry.net.portal.redgreen',
+			   patterns('astrometry.net1.portal.redgreen',
 						(r'^redgreen$',		'redgreen'	  ),
 						)
 			   #+
-			   #patterns('astrometry.net.portal.legacy',
+			   #patterns('astrometry.net1.portal.legacy',
 			   #		 (r'^status/$',			 'jobstatus_old'),
 			   #		 )
 			   )

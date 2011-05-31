@@ -11,8 +11,8 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
 from django.template import Context, RequestContext, loader
 
-from astrometry.net.portal.models import UserProfile
-from astrometry.net.portal.log import log as logmsg
+from astrometry.net1.portal.models import UserProfile
+from astrometry.net1.portal.log import log as logmsg
 
 class NonDuplicateEmailField(forms.EmailField):
 	def clean(self, value):
@@ -55,11 +55,11 @@ def activateaccount(request):
 	user.set_unusable_password()
 	user.save()
 	request.session['allow_set_password'] = True
-	return HttpResponseRedirect(reverse('astrometry.net.setpassword'))
+	return HttpResponseRedirect(reverse('astrometry.net1.setpassword'))
 
 def setpassword(request):
 	if not request.session.get('allow_set_password', False):
-		return HttpResponseRedirect(reverse('astrometry.net.changepassword'))
+		return HttpResponseRedirect(reverse('astrometry.net1.changepassword'))
 	if request.POST:
 		form = auth.forms.SetPasswordForm(request.user, request.POST)
 		if form.is_valid():
@@ -132,7 +132,7 @@ def newaccount(request):
 
 def logout(request):
 	auth.logout(request)
-	return HttpResponseRedirect(reverse('astrometry.net.portal.newjob.newurl'))
+	return HttpResponseRedirect(reverse('astrometry.net1.portal.newjob.newurl'))
 
 class UserProfileForm(ModelForm):
 	class Meta:

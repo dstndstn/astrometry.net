@@ -3,19 +3,18 @@ import sys
 import os.path
 import threading
 
-import astrometry.net.ice
+from astrometry.net1.portal.watcher_common import *
+watcherclass = Watcher
 
+#import astrometry.net1.ice
 ## HACK -- the ICE auto-generated code doesn't seem to work well when it is
 ## embedded in another package.
-sys.path.append(os.path.dirname(astrometry.net.ice.__file__))
+#sys.path.append(os.path.dirname(astrometry.net1.ice.__file__))
+#from astrometry.net1.portal.watcher_script_ice import WatcherIce as watcherclass
 
-from astrometry.net.portal.watcher_common import *
-
-from astrometry.net.portal.watcher_script_ice import WatcherIce as watcherclass
-
-from astrometry.net.portal.job import *
-from astrometry.net.portal.queue import *
-from astrometry.net.portal.log import log as logmsg
+from astrometry.net1.portal.job import *
+from astrometry.net1.portal.queue import *
+from astrometry.net1.portal.log import log as logmsg
 
 def runjob(qj):
 	logmsg('Running job:', qj)

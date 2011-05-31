@@ -6,8 +6,8 @@ from django.db import models
 from django.contrib.auth.models import User
 #from django.core import validators
 
-import astrometry.net.settings as settings
-from astrometry.net.portal.log import log
+import astrometry.net1.settings as settings
+from astrometry.net1.portal.log import log
 
 class UserProfile(models.Model):
 	user = models.ForeignKey(User, unique=True, related_name='profile',
@@ -51,6 +51,6 @@ class UserProfile(models.Model):
 		return user.get_profile()
 
 
-from astrometry.net.portal.job import *
-from astrometry.net.portal.wcs import *
-from astrometry.net.portal.queue import *
+from astrometry.net1.portal.job import *
+from astrometry.net1.portal.wcs import *
+from astrometry.net1.portal.queue import *

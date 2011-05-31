@@ -1,20 +1,20 @@
 from django.conf.urls.defaults import *
 from django.contrib import admin
 
-from astrometry.net import settings
-#from astrometry.net.portal.models import *
-import astrometry.net.portal.admin
+from astrometry.net1 import settings
+#from astrometry.net1.portal.models import *
+import astrometry.net1.portal.admin
 
 admin.autodiscover()
 
 urlpatterns = (patterns('',
-						(r'^tile/', include('astrometry.net.tile.urls')),
-						#(r'^upload/', include('astrometry.net.upload.urls')),
-						(r'^job/', include('astrometry.net.portal.urls')),
-						(r'^admin/(.*)', admin.site.root),
+						(r'^tile/', include('astrometry.net1.tile.urls')),
+						#(r'^upload/', include('astrometry.net1.upload.urls')),
+						(r'^job/', include('astrometry.net1.portal.urls')),
+						#(r'^admin/(.*)', admin.site.root),
 						)
 			   +
-			   patterns('astrometry.net.upload.views',
+			   patterns('astrometry.net1.upload.views',
 						(r'^upload/form/', 'uploadform',
 						 {'template_name': 'portal/uploadfile.html',
 						  'onload': 'parent.uploadframeloaded()',
@@ -57,14 +57,14 @@ urlpatterns = (patterns('',
 						(r'^resetpasswordcomplete/', 'password_reset_complete'),
 						)
 			   +
-			   patterns('astrometry.net.portal.passwordreset',
+			   patterns('astrometry.net1.portal.passwordreset',
 						(r'^resetpasswordconfirm/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$',
 						 'password_reset_confirm',
 						 {'template_name': 'portal/resetpasswordconfirm.html',
 						  'post_reset_redirect': settings.LOGIN_REDIRECT_URL}),
 						)
 			   +
-			   patterns('astrometry.net.portal.accounts',
+			   patterns('astrometry.net1.portal.accounts',
 						(r'^logout/', 'logout'),
 						(r'^userprefs/', 'userprefs'),
 						(r'^newaccount/activate', 'activateaccount'),
@@ -73,33 +73,33 @@ urlpatterns = (patterns('',
 						)
 			   +
 			   patterns('',
-						#(r'^vo/', include('astrometry.net.vo.urls')),
-						#(r'^testbed/', include('astrometry.net.testbed.urls')),
-						(r'^gmaps$', 'astrometry.net.tile.views.index'),
-						#(r'^hoggthinksimg', 'astrometry.net.portal.hoggthinks.image'),
-						#(r'^hoggthinks', 'astrometry.net.portal.hoggthinks.form'),
-						#(r'^easy-gmaps', 'astrometry.net.portal.easy_gmaps.tile'),
+						#(r'^vo/', include('astrometry.net1.vo.urls')),
+						#(r'^testbed/', include('astrometry.net1.testbed.urls')),
+						(r'^gmaps$', 'astrometry.net1.tile.views.index'),
+						#(r'^hoggthinksimg', 'astrometry.net1.portal.hoggthinks.image'),
+						#(r'^hoggthinks', 'astrometry.net1.portal.hoggthinks.form'),
+						#(r'^easy-gmaps', 'astrometry.net1.portal.easy_gmaps.tile'),
 						#
 
-						(r'^$', 'astrometry.net.portal.newjob.newurl'),
-						#(r'^$', 'astrometry.net.portal.newjob.newlong'),
+						(r'^$', 'astrometry.net1.portal.newjob.newurl'),
+						#(r'^$', 'astrometry.net1.portal.newjob.newlong'),
 
 						# These are fake placeholders to allow {% url %} and reverse() to resolve an.media to /anmedia.
 						# -> They have corresponding fake definitions in astrometry/net/__init__.py
 						# -> You also have to set the Apache url match.
-						(r'^media/', 'astrometry.net.media'),
-						(r'^logout/', 'astrometry.net.logout'),
-						(r'^login/', 'astrometry.net.login'),
-						(r'^changepassword/',  'astrometry.net.changepassword'),
-						(r'^resetpassword/',   'astrometry.net.resetpassword'),
-						#(r'^resetpasswordconfirm/',   'astrometry.net.resetpassword'),
-						#(r'^resetpassword/',	'astrometry.net.resetpassword'),
-						#(r'^resetpassword/',	'astrometry.net.resetpassword'),
-						(r'^setpassword/',	 'astrometry.net.setpassword'),
-						(r'^newaccount/',	'astrometry.net.newaccount'),
+						(r'^media/', 'astrometry.net1.media'),
+						(r'^logout/', 'astrometry.net1.logout'),
+						(r'^login/', 'astrometry.net1.login'),
+						(r'^changepassword/',  'astrometry.net1.changepassword'),
+						(r'^resetpassword/',   'astrometry.net1.resetpassword'),
+						#(r'^resetpasswordconfirm/',   'astrometry.net1.resetpassword'),
+						#(r'^resetpassword/',	'astrometry.net1.resetpassword'),
+						#(r'^resetpassword/',	'astrometry.net1.resetpassword'),
+						(r'^setpassword/',	 'astrometry.net1.setpassword'),
+						(r'^newaccount/',	'astrometry.net1.newaccount'),
 						)
 			   +
-			   patterns('astrometry.net.portal.api',
+			   patterns('astrometry.net1.portal.api',
 						(r'^api/login', 'login'),
 						(r'^api/logout', 'logout'),
 						(r'^api/amiloggedin', 'amiloggedin'),

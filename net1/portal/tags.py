@@ -3,11 +3,11 @@ from django.http import HttpResponse, HttpResponseRedirect, QueryDict
 from django.core.urlresolvers import reverse
 from django.template import Context, RequestContext, loader
 
-from astrometry.net.portal.job import Job, Submission, Tag
-#from astrometry.net.portal.views import get_status_url
+from astrometry.net1.portal.job import Job, Submission, Tag
+#from astrometry.net1.portal.views import get_status_url
 
 def job_add_tag(request):
-	from astrometry.net.portal import views
+	from astrometry.net1.portal import views
 
 	if not 'jobid' in request.POST:
 		return HttpResponse('no jobid')
@@ -36,7 +36,7 @@ def job_add_tag(request):
 
 @login_required
 def job_remove_tag(request):
-	from astrometry.net.portal import views
+	from astrometry.net1.portal import views
 
 	if not 'tag' in request.GET:
 		return HttpResponse('no tag')
@@ -52,7 +52,7 @@ def job_remove_tag(request):
 
 #@login_required
 def taglist(request):
-	from astrometry.net.portal import views
+	from astrometry.net1.portal import views
 
 	mtags = Tag.objects.all().filter(machineTag=True).values('text').distinct()
 	mtags = [d['text'] for d in mtags]

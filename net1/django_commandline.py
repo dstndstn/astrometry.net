@@ -4,14 +4,14 @@
 import os
 import sys
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
-sys.path.extend(['/home/gmaps/test',
-                 '/home/gmaps/django/lib/python2.4/site-packages'])
+os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net1.settings'
+#sys.path.extend(['/home/gmaps/test',
+#                 '/home/gmaps/django/lib/python2.4/site-packages'])
 
-import astrometry.net.settings as settings
+import astrometry.net1.settings as settings
 
 os.environ['LD_LIBRARY_PATH'] = settings.UTIL_DIR
-os.environ['PATH'] = ':'.join(['/bin', '/usr/bin',
+os.environ['PATH'] = ':'.join(['/bin', '/usr/bin', '/usr/local/bin',
                                settings.BLIND_DIR,
                                settings.UTIL_DIR,
                                ])

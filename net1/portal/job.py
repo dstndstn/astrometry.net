@@ -9,12 +9,12 @@ import shutil
 from django.db import models
 from django.contrib.auth.models import User
 
-import astrometry.net.settings as settings
-from astrometry.net.upload.models import UploadedFile
-from astrometry.net.portal.log import log
-from astrometry.net.portal.wcs import *
-from astrometry.net.portal.convert import get_objs_in_field
-from astrometry.net.portal.models import UserProfile
+import astrometry.net1.settings as settings
+from astrometry.net1.upload.models import UploadedFile
+from astrometry.net1.portal.log import log
+from astrometry.net1.portal.wcs import *
+from astrometry.net1.portal.convert import get_objs_in_field
+from astrometry.net1.portal.models import UserProfile
 from astrometry.util import healpix
 
 
@@ -461,7 +461,7 @@ class Job(models.Model):
 	calibration = models.ForeignKey(Calibration, null=True)
 
 	# Has the user granted us permission to show this job to everyone?
-	exposejob = models.BooleanField(null=True, blank=True, default=None)
+	exposejob = models.NullBooleanField(null=True, blank=True, default=None)
 
 	status = models.CharField(max_length=16)
 	failurereason = models.CharField(max_length=256)
@@ -475,7 +475,7 @@ class Job(models.Model):
 	finishtime = models.DateTimeField(default='2000-01-01')
 
 	# Is there an identical DiskFile that solved?
-	duplicate = models.BooleanField(blank=True, null=True)
+	duplicate = models.NullBooleanField(blank=True, null=True)
 	
 	def __init__(self, *args, **kwargs):
 		super(Job, self).__init__(*args, **kwargs)
@@ -558,7 +558,7 @@ class Job(models.Model):
 		self.duplicate = (others.count() > 0) and (others[0] != self)
  
 	def add_machine_tags(self):
-		from astrometry.net.portal import nearby
+		from astrometry.net1.portal import nearby
 
 		# Find the list of objects in the field and add them as
 		# machine tags to the Job.
@@ -858,7 +858,7 @@ class Job(models.Model):
 		os.umask(07)
 		j.create_job_dir()
 
-		from astrometry.net.portal.queue import QueuedJob
+		from astrometry.net1.portal.queue import QueuedJob
 		QueuedJob.submit_job_or_submission(j)
 
 		# watcher-based

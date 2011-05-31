@@ -59,7 +59,7 @@ class Upload(multipart.FileMultipart):
         self.starttime = int(time.time())
 
     def set_basedir(self, bdir):
-        from astrometry.net.upload.models import UploadedFile
+        from astrometry.net1.upload.models import UploadedFile
         #log('Upload: setting base dir to %s' % bdir)
         self.basedir = bdir
         UploadedFile.set_default_base_dir(self.basedir)
@@ -96,7 +96,7 @@ class Upload(multipart.FileMultipart):
     # called from add_part when the part containing the file is
     # encountered.
     def file_part(self, part):
-        from astrometry.net.upload.models import UploadedFile
+        from astrometry.net1.upload.models import UploadedFile
         if not self.upload:
             return
         if 'filename' in part:
@@ -107,7 +107,7 @@ class Upload(multipart.FileMultipart):
     # called from add_part when the part containing the upload_id
     # field is encountered.
     def id_part(self, part):
-        from astrometry.net.upload.models import UploadedFile
+        from astrometry.net1.upload.models import UploadedFile
 
         uid = part['data']
         if not UploadedFile.isValidId(uid):
@@ -189,7 +189,7 @@ def handler(req):
     # Need this to compensate for mod_python hiding the environment...
     os.environ.update(req.subprocess_env)
 
-    from astrometry.net.upload.models import UploadedFile
+    from astrometry.net1.upload.models import UploadedFile
 
     args = {}
     for s in req.args.split('&'):

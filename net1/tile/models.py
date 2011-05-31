@@ -3,9 +3,9 @@ from math import floor, ceil
 from django.db import models
 from django.db.models import Q
 
-from astrometry.net.util import orderby
-from astrometry.net.portal.log import log as logmsg
-from astrometry.net.portal.job import Job
+from astrometry.net1.util import orderby
+from astrometry.net1.portal.log import log as logmsg
+from astrometry.net1.portal.job import Job
 
 class MapImage(models.Model):
 	objects = orderby.OrderByManager()

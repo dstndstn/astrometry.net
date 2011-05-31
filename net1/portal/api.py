@@ -6,11 +6,11 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
 
-from astrometry.net.portal.job import Job, Tag, Submission
-from astrometry.net.portal.log import log as logmsg
-from astrometry.net import settings
-from astrometry.net.portal.api_util import *
-from astrometry.net.portal.newjob import submit_submission
+from astrometry.net1.portal.job import Job, Tag, Submission
+from astrometry.net1.portal.log import log as logmsg
+from astrometry.net1 import settings
+from astrometry.net1.portal.api_util import *
+from astrometry.net1.portal.newjob import submit_submission
 
 import os
 import pickle

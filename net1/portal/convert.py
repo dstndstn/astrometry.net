@@ -3,11 +3,11 @@ import os
 import os.path
 import re
 
-from astrometry.net import settings
+from astrometry.net1 import settings
 from astrometry.util import image2pnm
 from astrometry.util import fits2fits
 from astrometry.util.file import read_file
-from astrometry.net.portal.log import log
+from astrometry.net1.portal.log import log
 from astrometry.util.run_command import run_command
 from astrometry.util.filetype import filetype_short
 

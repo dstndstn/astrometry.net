@@ -5,10 +5,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 
 from astrometry.util.file import *
-from astrometry.net.tile.models import *
-from astrometry.net.portal.job import Submission, Job, DiskFile
-from astrometry.net.portal.convert import convert
-from astrometry.net.portal.views import send_file
+from astrometry.net1.tile.models import *
+from astrometry.net1.portal.job import Submission, Job, DiskFile
+from astrometry.net1.portal.convert import convert
+from astrometry.net1.portal.views import send_file
 
 import re
 import os.path
@@ -29,9 +29,9 @@ from astrometry.util.file import *
 
 import ctypes
 
-import astrometry.net.settings as settings
-from astrometry.net.portal.log import log as logmsg
-from astrometry.net import portal
+import astrometry.net1.settings as settings
+from astrometry.net1.portal.log import log as logmsg
+from astrometry.net1 import portal
 
 logfile		   = settings.LOGFILE
 tilerender	   = settings.TILERENDER
@@ -47,15 +47,15 @@ def index(request):
 	ctxt = {
 		'gmaps_key' : ('http://maps.google.com/maps?file=api&v=2.x&key=' +
 					   settings.GMAPS_API_KEY),
-		'map_js_url' : reverse('astrometry.net.media') + 'map.js',
-		'holmes_js_url' : reverse('astrometry.net.media') + 'holmes.js',
+		'map_js_url' : reverse('astrometry.net1.media') + 'map.js',
+		'holmes_js_url' : reverse('astrometry.net1.media') + 'holmes.js',
 		'gmaps_tile_urls' : ("[ '" +
 							 "', '".join(gmaps_urls) +
 							 "' ];"),
 		'job_status_url' : reverse(portal.views.jobstatus2),
 		'gmaps_image_url' : reverse(get_image)+ '?',
 		'gmaps_image_list_url' : reverse(get_image_list) + '?',
-		'gmaps_black_url' : reverse('astrometry.net.media') + 'black.png',
+		'gmaps_black_url' : reverse('astrometry.net1.media') + 'black.png',
 		}
 	t = loader.get_template('tile/index.html')
 	c = RequestContext(request, ctxt)

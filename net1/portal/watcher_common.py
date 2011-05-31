@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import astrometry.net.django_commandline
+import astrometry.net1.django_commandline
 
 import os
 import sys
@@ -22,16 +22,16 @@ from StringIO import StringIO
 
 from django.db import models
 
-from astrometry.net.portal.models import Job, Submission, DiskFile, Calibration, Tag
-from astrometry.net.upload.models import UploadedFile
-from astrometry.net.portal.log import log
-from astrometry.net.portal.convert import convert, is_tarball, FileConversionError
-from astrometry.net.portal.wcs import TanWCS
+from astrometry.net1.portal.models import Job, Submission, DiskFile, Calibration, Tag
+from astrometry.net1.upload.models import UploadedFile
+from astrometry.net1.portal.log import log
+from astrometry.net1.portal.convert import convert, is_tarball, FileConversionError
+from astrometry.net1.portal.wcs import TanWCS
 from astrometry.util.run_command import run_command
 from astrometry.util.file import *
 from astrometry.util.shell import *
 
-from astrometry.net.server import ssh_master
+#from astrometry.net1.server import ssh_master
 
 import astrometry.util.sip as sip
 

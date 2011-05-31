@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
-import astrometry.net.django_commandline
-
+import astrometry.net1.django_commandline
 from an.portal.job import Job
 
 if __name__ == '__main__':

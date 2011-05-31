@@ -26,15 +26,15 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render_to_response
 from django.core.mail import send_mail
 
-import astrometry.net.portal.mercator as merc
-from astrometry.net.portal.models import UserProfile
-from astrometry.net.portal.job import Job, Submission, DiskFile, Tag
-from astrometry.net.portal.convert import convert, get_objs_in_field
-from astrometry.net.portal.log import log
-from astrometry.net.portal import tags
-from astrometry.net.portal import nearby
+import astrometry.net1.portal.mercator as merc
+from astrometry.net1.portal.models import UserProfile
+from astrometry.net1.portal.job import Job, Submission, DiskFile, Tag
+from astrometry.net1.portal.convert import convert, get_objs_in_field
+from astrometry.net1.portal.log import log
+from astrometry.net1.portal import tags
+from astrometry.net1.portal import nearby
 from astrometry.util.file import file_size, read_file, write_file
-from astrometry.net import settings
+from astrometry.net1 import settings
 from astrometry.util import sip
 
 def urlescape(s):
@@ -172,7 +172,7 @@ def sub_add_tag(request):
 	return HttpResponse('Tag added')
 
 def view_jobs_in_gmaps(jobs):
-	from astrometry.net.tile.models import *
+	from astrometry.net1.tile.models import *
 
 	jobset = MapImageSet()
 	jobset.save()
@@ -192,7 +192,7 @@ def view_jobs_in_gmaps(jobs):
 			img.save()
 		jobset.images.add(img)
 
-	url = (reverse('astrometry.net.tile.views.index') +
+	url = (reverse('astrometry.net1.tile.views.index') +
 		   ('?imageset=%i' % jobset.id) +
 		   '&show=tycho,images,imageOutlines&arcsinh')
 	#'&layers=tycho,userimages&arcsinh')
@@ -707,7 +707,7 @@ def jobstatus(request, jobid=None):
 		# deg
 		fldsz = math.sqrt(df.imagew * df.imageh) * float(wcsinfo['pixscale']) / 3600.0
 
-		url = (reverse('astrometry.net.tile.views.get_tile') +
+		url = (reverse('astrometry.net1.tile.views.get_tile') +
 			   '?layers=tycho,grid,userboundary' +
 			   '&arcsinh&jobid=%s' % job.jobid)
 		smallstyle = '&w=300&h=300&lw=3'
@@ -746,7 +746,7 @@ def jobstatus(request, jobid=None):
 
 		# HACK
 		#fn = convert(job, 'fullsizepng')
-		#url = (reverse('astrometry.net.tile.views.index') +
+		#url = (reverse('astrometry.net1.tile.views.index') +
 		#	   ('?zoom=%i&ra=%.3f&dec=%.3f&userimage=%s' %
 		#		(int(wcsinfo['merczoom']), float(wcsinfo['ra_center']),
 		#		 float(wcsinfo['dec_center']), job.get_relative_job_dir())))

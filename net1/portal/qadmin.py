@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 
-import astrometry.net.django_commandline
+import astrometry.net1.django_commandline
 
 import sys
 
-from astrometry.net.portal.queue import *
-from astrometry.net.portal.job import *
+from astrometry.net1.portal.queue import *
+from astrometry.net1.portal.job import *
 
 if __name__ == '__main__':
 	if len(sys.argv) < 2:

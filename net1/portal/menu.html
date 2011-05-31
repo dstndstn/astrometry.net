@@ -6,30 +6,30 @@
 
 {% else %}
 
-<a href="{% url astrometry.net.newaccount %}">Create an account</a>
+<a href="{% url astrometry.net1.newaccount %}">Create an account</a>
  |
-<a href="{% url astrometry.net.resetpassword %}">Reset your password</a>
+<a href="{% url astrometry.net1.resetpassword %}">Reset your password</a>
 
 {% endif %}
  | |
 
-<a href="{% url astrometry.net.portal.newjob.newurl %}">Submit new image</a>
-<a href="{% url astrometry.net.portal.newjob.newfile %}">(file)</a>
-<a href="{% url astrometry.net.portal.newjob.newlong %}">(details)</a>
+<a href="{% url astrometry.net1.portal.newjob.newurl %}">Submit new image</a>
+<a href="{% url astrometry.net1.portal.newjob.newfile %}">(file)</a>
+<a href="{% url astrometry.net1.portal.newjob.newlong %}">(details)</a>
 
  | 
-<a href="{% url astrometry.net.portal.tags.taglist %}">Tags</a>
+<a href="{% url astrometry.net1.portal.tags.taglist %}">Tags</a>
  | 
 
 {% if user.is_authenticated %}
-<a href="{% url astrometry.net.portal.views.joblist %}">My images</a>
+<a href="{% url astrometry.net1.portal.views.joblist %}">My images</a>
  | 
-<a href="{% url astrometry.net.portal.accounts.userprefs %}">Set preferences</a>
+<a href="{% url astrometry.net1.portal.accounts.userprefs %}">Set preferences</a>
  | 
-<a href="{% url astrometry.net.logout %}">Sign out</a>
+<a href="{% url astrometry.net1.logout %}">Sign out</a>
 {% else %}
 
-<a href="{% url astrometry.net.login %}">Sign in</a>
+<a href="{% url astrometry.net1.login %}">Sign in</a>
 
 {% endif %}
 

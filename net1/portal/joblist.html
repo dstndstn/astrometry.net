@@ -186,7 +186,7 @@ Submission <i>{{ submission.subid }}</i>
 <tr><td>&nbsp;&nbsp;Failed with errors:</td><td>{{ submission.njobs_error }}</td></tr>
 </table>
 
-<form method="post" action="{% url astrometry.net.portal.views.sub_add_tag %}">
+<form method="post" action="{% url astrometry.net1.portal.views.sub_add_tag %}">
 <p align="center">
 <input type="hidden" name="redirect" value="{{ thisurl }}" />
 <input type="hidden" name="subid" value="{{ submission.subid }}" />

@@ -2,7 +2,7 @@ from django import forms
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import Context, RequestContext, loader
 
-from astrometry.net.portal.views import getfile
+from astrometry.net1.portal.views import getfile
 
 culurs=[(c,c) for c in ['red','green', 'blue', 'white',
                         'black', 'cyan', 'magenta', 'yellow',

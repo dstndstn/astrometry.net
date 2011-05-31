@@ -6,7 +6,7 @@ from django.test import TestCase
 #from django.core.urlresolvers import reverse
 #from django.contrib.auth.models import User
 
-from astrometry.net.portal.job import DiskFile
+from astrometry.net1.portal.job import DiskFile
 
 class DiskFileTestCases(TestCase):
     #def setUp(self):

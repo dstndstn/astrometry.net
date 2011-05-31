@@ -4,9 +4,9 @@ from django.db import models
 from django.db import transaction
 from django.contrib.auth.models import User, AnonymousUser
 
-#from astrometry.net.portal.job import Job,Submission
-from astrometry.net.portal.job import *
-from astrometry.net.portal.log import log as logmsg
+#from astrometry.net1.portal.job import Job,Submission
+from astrometry.net1.portal.job import *
+from astrometry.net1.portal.log import log as logmsg
 
 class QueuedJob(models.Model):
 	priority_high = 1500
@@ -44,7 +44,7 @@ class QueuedJob(models.Model):
 	#@transaction.commit_on_success
 	@staticmethod
 	def submit_job(job, priority=priority_normal):
-		from astrometry.net.portal.job import Job,Submission
+		from astrometry.net1.portal.job import Job,Submission
 		qj = QueuedJob(job=job,
 					   sub=None,
 					   user=job.get_user(),
@@ -57,7 +57,7 @@ class QueuedJob(models.Model):
 	@staticmethod
 	#@transaction.commit_on_success
 	def submit_submission(sub, priority=priority_normal):
-		from astrometry.net.portal.job import Job,Submission
+		from astrometry.net1.portal.job import Job,Submission
 		qj = QueuedJob(sub=sub,
 					   job=None,
 					   user=sub.user,
@@ -68,7 +68,7 @@ class QueuedJob(models.Model):
 
 	@staticmethod
 	def submit_job_or_submission(js, priority=priority_normal):
-		from astrometry.net.portal.job import Job,Submission
+		from astrometry.net1.portal.job import Job,Submission
 		if isinstance(js, Job):
 			QueuedJob.submit_job(js, priority)
 		elif isinstance(js, Submission):

@@ -1,5 +1,5 @@
-from astrometry.net.portal.log import log as logmsg
-from astrometry.net.portal.job import Tag, Job
+from astrometry.net1.portal.log import log as logmsg
+from astrometry.net1.portal.job import Tag, Job
 from astrometry.util import healpix
 
 def get_neighbouring_healpixes(nside, hp):
