@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 
 #include "svn.h"
 #include "an-thread.h"
@@ -45,8 +46,8 @@ I would do instead of 'svnversion':
 
  ***/
 
-static char date_rtnval[256];
-static char url_rtnval[256];
+static char date_rtnval[256] = "";
+static char url_rtnval[256] = "";
 static int  rev_rtnval;
 
 /* Ditto for "headurlstr". */
@@ -60,21 +61,24 @@ static void runonce(void) {
     const char* cptr;
     const char* str;
 
-	// (trim off the first seven and last two characters.)
-    strncpy(date_rtnval, date + 7, strlen(date) - 9);
+	// trim off the first seven and last two characters: "$" + "Date: " + DATE STRING + " $"
+	// for non-svn (eg git-to-svn), DATE STRING (and probably the trailing space) are not there
+	if (strlen(date) > 9)
+		strncpy(date_rtnval, date + 7, strlen(date) - 9);
 
 	// rev+1 to avoid having "$" in the format string - otherwise svn seems to
 	// consider it close enough to the Revision keyword anchor to do replacement!
     if (sscanf(rev + 1, "Revision: %i $", &rev_rtnval) != 1)
         rev_rtnval = -1;
 
-	//str = (char*)url + 10;
-	str = url + 10;
-    cptr = str + strlen(str) - 1;
-    // chomp off the filename...
-    while (cptr > str && *cptr != '/') cptr--;
-    strncpy(url_rtnval, str, cptr - str + 1);
-
+	// trim off the first ten characters: "$" + "HeadURL: " + URL + "svn.c $"
+	if (strlen(url) > 10) {
+		str = url + 10;
+		// chomp off the filename by looking for the last '/'
+		cptr = rindex(str, '/');
+		if (cptr && (cptr > str+1))
+			strncpy(url_rtnval, str, cptr - str + 1);
+	}
 }
 
 
