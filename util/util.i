@@ -19,6 +19,7 @@
 #include "healpix.h"
 #include "anwcs.h"
 #include "sip.h"
+#include "fitsioutils.h"
 #include "sip-utils.h"
 #include "sip_qfits.h"
 
@@ -36,6 +37,7 @@
 #define Const
 #define WarnUnusedResult
 #define ASTROMETRY_KEYWORDS_H
+#define ATTRIB_FORMAT(x,y,z)
 
 void log_init(int level);
 int log_get_level();
@@ -128,6 +130,73 @@ void log_set_level(int lvl);
 
 %include "sip.h"
 %include "sip_qfits.h"
+
+%extend sip_t {
+    sip_t(char* fn=NULL, int ext=0) {
+        if (fn)
+            return sip_read_header_file_ext(fn, ext, NULL);
+        sip_t* t = (sip_t*)calloc(1, sizeof(sip_t));
+        return t;
+    }
+
+	// copy constructor
+	sip_t(const sip_t* other) {
+        sip_t* t = (sip_t*)calloc(1, sizeof(sip_t));
+		memcpy(t, other, sizeof(sip_t));
+		return t;
+	}
+
+	sip_t(const tan_t* other) {
+        sip_t* t = (sip_t*)calloc(1, sizeof(sip_t));
+		memcpy(&(t->wcstan), other, sizeof(tan_t));
+		return t;
+	}
+
+
+    ~sip_t() { free($self); }
+
+	int write_to(const char* filename) {
+		return sip_write_to_file($self, filename);
+	}
+
+	void set_a_term(int i, int j, double val) {
+		assert(i >= 0);
+		assert(i < SIP_MAXORDER);
+		assert(j >= 0);
+		assert(j < SIP_MAXORDER);
+		$self->a[i][j] = val;
+	}
+	void set_b_term(int i, int j, double val) {
+		assert(i >= 0);
+		assert(i < SIP_MAXORDER);
+		assert(j >= 0);
+		assert(j < SIP_MAXORDER);
+		$self->b[i][j] = val;
+	}
+	void set_ap_term(int i, int j, double val) {
+		assert(i >= 0);
+		assert(i < SIP_MAXORDER);
+		assert(j >= 0);
+		assert(j < SIP_MAXORDER);
+		$self->ap[i][j] = val;
+	}
+	void set_bp_term(int i, int j, double val) {
+		assert(i >= 0);
+		assert(i < SIP_MAXORDER);
+		assert(j >= 0);
+		assert(j < SIP_MAXORDER);
+		$self->bp[i][j] = val;
+	}
+
+	int write_to(const char* filename) {
+		return sip_write_to_file($self, filename);
+	}
+
+
+ }
+%pythoncode %{
+Sip = sip_t
+	%}
 
 %extend tan_t {
     tan_t(char* fn=NULL, int ext=0) {
@@ -376,6 +445,8 @@ tan_t.xyz2pixelxy = tan_t_xyz2pixelxy_any
 Tan = tan_t
 %} 
 
+
+%include "fitsioutils.h"
 
  /*
 %include "anwcs.h"

@@ -43,6 +43,10 @@ qfits_header* fits_get_header_for_image2(int W, int H, int bitpix,
 qfits_header* fits_get_header_for_image3(int W, int H, int bitpix, int planes,
 										 qfits_header* addtoheader);
 
+/* Writes the FITS header to the given filename, then pads and closes the file.
+ */
+int fits_write_header(const qfits_header* hdr, const char* filename);
+
 /** Writes the given FITS header and image.
 
  If "hdr" is null, a standard image header will be written; "W" must be the image width.

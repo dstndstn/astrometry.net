@@ -58,13 +58,12 @@ def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, su
 			cmd = 'gunzip -cd %s > %s' % (gzipfn, outfn)
 			print 'Running:', cmd
 			(rtn, out, err) = run_command(cmd)
-			if rtn == 0:
-				return True
 			if rtn:
 				print 'Command failed: command', cmd
 				print 'Output:', out
 				print 'Error:', err
 				print 'Return val:', rtn
+	return outfn
 
 def sdss_das_get_fpc(run, camcol, field, band, outfn=None, reruns=None):
 	return sdss_das_get('fpC', outfn, run, camcol, field, band, reruns, suffix='.gz')

@@ -4,6 +4,9 @@ import os
 import sys
 import pyfits
 from astrometry.util.util import *
+import pyfits
+from astrometry.util.sdss_noise import *
+from astrometry.util.sdss_psfield import *
 
 
 def main():
@@ -28,41 +31,43 @@ def main():
 		print 'Input fpC', fpC, 'does not exist'
 		sys.exit(-1)
 
-	wcs = Tan(fpC)
+	if len(args) == 7:
+		cutout(fpC, ra, dec, opt.size, cutout)
+	else:
+		cutout(fpC, ra, dec, opt.size, cutout, args[4], args[5], args[6], opt.band)
+
+
+def cutout(fpC, ra, dec, size, cutout, fpMfn=None, psFieldfn=None, invvarfn=None, band=None):
+
+	wcs = Tan(fpC, 0)
 	x,y = wcs.radec2pixelxy(ra, dec)
 	x,y = int(x),int(y)
 	print 'x,y', x,y
-	dl = opt.size / 2
-	dh = opt.size - dl
+	dl = size / 2
+	dh = size - dl
 	# ??
 	xlo,xhi = max(0, x-dl), min(2048-1, x+dh-1)
 	ylo,yhi = max(0, y-dl), min(1489-1, y+dh-1)
 	os.system('imcopy %s"[%i:%i,%i:%i]" !%s' %
 			  (fpC, xlo, xhi, ylo, yhi, cutout))
 
-	if len(args) == 7:
-		import pyfits
-		from astrometry.util.sdss_noise import *
-		from astrometry.util.sdss_psfield import *
+	if invvarfn is None:
+		   return
 		
-		fpMfn = args[4]
-		psFieldfn = args[5]
-		invvarfn = args[6]
+	bandnum = 'ugriz'.index(band)
 
-		bandnum = 'ugriz'.index(opt.band)
+	fpc = pyfits.open(fpC)[0].data.astype(float)
+	fpM = pyfits.open(fpMfn)
+	(gain, darkvar, sky, skyerr) = sdss_psfield_noise(psFieldfn, band=bandnum)
 
-		fpc = pyfits.open(fpC)[0].data.astype(float)
-		fpM = pyfits.open(fpMfn)
-		(gain, darkvar, sky, skyerr) = sdss_psfield_noise(psFieldfn, band=bandnum)
-		
-		invvar = sdss_noise_invvar(fpc, fpM, xlo, xhi, ylo, yhi,
-								   gain, darkvar, sky, skyerr)
-		print invvar.shape
-		#print 'x', xlo, xhi
-		#print 'y', ylo, yhi
-		#invvar = invvar[ylo:yhi, xlo:xhi]
-		#print invvar.shape
-		pyfits.writeto(invvarfn, invvar, clobber=True)
+	invvar = sdss_noise_invvar(fpc, fpM, xlo, xhi, ylo, yhi,
+							   gain, darkvar, sky, skyerr)
+	print invvar.shape
+	#print 'x', xlo, xhi
+	#print 'y', ylo, yhi
+	#invvar = invvar[ylo:yhi, xlo:xhi]
+	#print invvar.shape
+	pyfits.writeto(invvarfn, invvar, clobber=True)
 
 
 if __name__ == '__main__':
