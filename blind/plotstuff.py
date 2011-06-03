@@ -3,11 +3,29 @@ from plotstuff_c import *
 # Could consider using swig's "addmethods" mechanism to create this "class" rep.
 
 class Plotstuff(object):
-	def __init__(self):
+	format_map = {'png': PLOTSTUFF_FORMAT_PNG,
+				  'jpg': PLOTSTUFF_FORMAT_JPG,
+				  'ppm': PLOTSTUFF_FORMAT_PPM,
+				  'pdf': PLOTSTUFF_FORMAT_PDF,
+				  'fits': PLOTSTUFF_FORMAT_FITS,
+				  }
+				  
+
+	def __init__(self, outformat=None, size=None, ra=None, dec=None, width=None,
+				 rdw=None):
 		p = plotstuff_new()
-		#print 'plotstuff.__init__, pargs=', p
 		self.pargs = p
-		#self.pargs = plotstuff_new()
+		if outformat is not None:
+			outformat = Plotstuff.format_map.get(outformat, outformat)
+			self.outformat = outformat
+		if size is not None:
+			self.size = size
+			self.color = 'black'
+			self.plot('fill')
+		if ra is not None and dec is not None and width is not None:
+			self.set_wcs_box(ra, dec, width)
+		if rdw is not None:
+			self.set_wcs_box(*rdw)
 
 	def __del__(self):
 		#print 'plotstuff.__del__, pargs=', self.pargs
