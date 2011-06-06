@@ -1,5 +1,8 @@
+import os
+import astrometry.net
 import astrometry.net.secrets.django_db as secrets
 
+WEB_DIR = os.path.dirname(astrometry.net.__file__) + '/'
 
 # FIXME
 BASEDIR = '/home/dstn/astrometry/src/'
@@ -8,7 +11,6 @@ LOG_DIR = BASEDIR + 'astrometry/net/log/'
 ANDIR = BASEDIR + 'astrometry/'
 UTIL_DIR = ANDIR + 'util/'
 BLIND_DIR = ANDIR + 'blind/'
-WEB_DIR = ANDIR + 'net/'
 JOB_QUEUE_DIR = DATADIR + 'job-queue/'
 
 SITE_NAME = 'edge'
@@ -19,7 +21,7 @@ FIELD_DIR = DATADIR + 'fields'
 BASE_URL = 'http://oven.cosmo.fas.nyu.edu:9000/'
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/job/newurl/'
+LOGIN_REDIRECT_URL = '/dashboard/'
 
 LOGFILE = LOG_DIR + 'django.log'
 PORTAL_LOGFILE = LOG_DIR + 'portal.log'
@@ -65,7 +67,7 @@ DATABASES = {
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'America/New York'
+TIME_ZONE = 'America/Toronto'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
