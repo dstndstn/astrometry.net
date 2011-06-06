@@ -1,0 +1,7 @@
+
+
+We store the database passwords in svn/secure; check out separately with:
+
+  svn co svn+ssh://astrometry.net/svn/secure/django-db secrets
+
+
