@@ -162,7 +162,16 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 	'astrometry.net',
+    'django_openid_auth',
 )
+
+AUTHENTICATION_BACKENDS = (
+    'django_openid_auth.auth.OpenIDBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+OPENID_CREATE_USERS = True
+OPENID_UPDATE_DETAILS_FROM_SREG = True
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -184,7 +193,7 @@ LOGGING = {
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler'
-        }
+        },
 		'null': {
             'level':'DEBUG',
             'class':'django.utils.log.NullHandler',

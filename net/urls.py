@@ -7,9 +7,9 @@ from astrometry.net import settings
 # admin.autodiscover()
 
 urlpatterns = (patterns('',
-
-						)
-			   )
+    (r'^login/$', include('django_openid_auth.urls')),
+    (r'^logout/$', 'django.contrib.auth.views.logout'),
+))
 
 
 '''
