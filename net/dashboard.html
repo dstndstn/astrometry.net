@@ -1,5 +1,8 @@
 {% if user.is_authenticated %}
     <b>You are logged in as {{ user.get_full_name }}</b>
+
+	<a href="{% url astrometry.net.views.get_api_key %}">Get API key</a>
+
 {% else %}
     <b>You are not logged in.</b>
 {% endif %}

@@ -4,6 +4,8 @@ import astrometry.net.secrets.django_db as secrets
 
 WEB_DIR = os.path.dirname(astrometry.net.__file__) + '/'
 
+AUTH_PROFILE_MODULE = 'net.UserProfile'
+
 # FIXME
 BASEDIR = '/home/dstn/astrometry/src/'
 DATADIR = '/home/dstn/test/'
@@ -212,10 +214,9 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
 		},
-        #'myproject.custom': {
-        #    'handlers': ['console', 'mail_admins'],
-        #    'level': 'INFO',
-        #    'filters': ['special']
-        #}
+		'astrometry': {
+			'handlers': ['console'],
+            'level': 'DEBUG',
+		},
     }
 }

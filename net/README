@@ -3,6 +3,8 @@
 We store the database passwords in svn/secure; check out separately with:
   svn co svn+ssh://astrometry.net/svn/secure/django-db secrets
 
+Choose which settings to use:
+  ln -s settings_test.py settings.py
 
 django is installed on oven in:
 /usr/local/django-1.3/lib/python

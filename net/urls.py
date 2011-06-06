@@ -9,19 +9,15 @@ from astrometry.net import settings
 urlpatterns = (patterns('',
     (r'^openid/', include('django_openid_auth.urls')),
     (r'^logout/$', 'django.contrib.auth.views.logout'),
-    (r'^dashboard/$', 'astrometry.net.views.dashboard'),
-))
-
-
-'''
-			   patterns('astrometry.net1.portal.api',
+						) +
+			   patterns('astrometry.net.views',
+	(r'^dashboard/$', 'dashboard'),
+	(r'^apikey/$', 'get_api_key'),
+						) +
+			   patterns('astrometry.net.api',
 						(r'^api/login', 'login'),
 						(r'^api/logout', 'logout'),
-						(r'^api/amiloggedin', 'amiloggedin'),
-						(r'^api/jobstatus', 'jobstatus'),
-						(r'^api/substatus', 'substatus'),
-						(r'^api/submit_url', 'submit_url'),
 						)
-			   )
-'''
+)
+
 						
