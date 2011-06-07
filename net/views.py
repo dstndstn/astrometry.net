@@ -5,9 +5,14 @@ from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 
 from astrometry.net.models import *
+from astrometry.net import settings
 from log import *
 from django import forms
 from django.http import HttpResponseRedirect
+import shutil
+import os
+import hashlib
+import tempfile
 
 def dashboard(request):
     return render_to_response("dashboard.html",
@@ -43,10 +48,11 @@ def upload_file(request):
 		context_instance = RequestContext(request))
 
 def handle_uploaded_file(f):
-    destination = open(get_new_file_path(), 'wb+')
+    file_hash = hashlib.sha1()
+    temp_file_path = tempfile.mktemp()
+    uploaded_file = open(temp_file_path, 'wb+')
     for chunk in f.chunks():
-	    destination.write(chunk)
-    destination.close()
-
-def get_new_file_path():
-	return '/tmp/file'
+        uploaded_file.write(chunk)
+        file_hash.update(chunk)
+    uploaded_file.close()
+    shutil.move(temp_file_path, DiskFile.get_file_path(file_hash.hexdigest()))

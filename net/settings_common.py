@@ -8,7 +8,7 @@ AUTH_PROFILE_MODULE = 'net.UserProfile'
 
 # FIXME
 BASEDIR = '/home/dstn/astrometry/src/'
-DATADIR = '/home/dstn/test/'
+DATADIR = WEB_DIR + 'data/'
 LOG_DIR = BASEDIR + 'astrometry/net/log/'
 ANDIR = BASEDIR + 'astrometry/'
 UTIL_DIR = ANDIR + 'util/'

@@ -1,3 +1,4 @@
+from astrometry.net.settings import *
 from django.db import models
 from django.contrib.auth.models import User
 from userprofile import UserProfile
@@ -7,6 +8,19 @@ class DiskFile(models.Model):
     file_hash = models.CharField(max_length=40, unique=True, primary_key=True)
     size = models.PositiveIntegerField()
     file_type = models.CharField(max_length=16, null=True)
+
+    @staticmethod
+    def get_file_path(file_hash_digest):
+        file_path = '/'.join((file_hash_digest[0:2],
+                              file_hash_digest[2:4],
+                              file_hash_digest[4:6],
+                              file_hash_digest)
+        )
+        file_path = DATADIR + file_path
+        return file_path
+
+    def __init__(self, fn):
+        pass
 
 class Image(models.Model):
     disk_file = models.ForeignKey(DiskFile)
