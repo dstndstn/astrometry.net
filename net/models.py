@@ -11,13 +11,12 @@ class DiskFile(models.Model):
     file_type = models.CharField(max_length=16, null=True)
 
     @staticmethod
-    def get_file_path(file_hash_digest):
+    def get_file_directory(file_hash_digest):
         file_path = '/'.join((file_hash_digest[0:2],
                               file_hash_digest[2:4],
-                              file_hash_digest[4:6],
-                              file_hash_digest)
+                              file_hash_digest[4:6])
         )
-        file_path = DATADIR + file_path
+        file_path = DATADIR + file_path + '/'
         return file_path
 
     def __init__(self, fn):

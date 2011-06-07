@@ -10,7 +10,7 @@ from log import *
 from django import forms
 from django.http import HttpResponseRedirect
 import shutil
-import os
+import os, errno
 import hashlib
 import tempfile
 
@@ -48,11 +48,24 @@ def upload_file(request):
 		context_instance = RequestContext(request))
 
 def handle_uploaded_file(f):
-    file_hash = hashlib.sha1()
-    temp_file_path = tempfile.mktemp()
-    uploaded_file = open(temp_file_path, 'wb+')
-    for chunk in f.chunks():
-        uploaded_file.write(chunk)
-        file_hash.update(chunk)
-    uploaded_file.close()
-    shutil.move(temp_file_path, DiskFile.get_file_path(file_hash.hexdigest()))
+    try:
+        # get file onto disk
+        file_hash = hashlib.sha1()
+        temp_file_path = tempfile.mktemp()
+        uploaded_file = open(temp_file_path, 'wb+')
+        for chunk in f.chunks():
+            uploaded_file.write(chunk)
+            file_hash.update(chunk)
+        uploaded_file.close()
+
+        # move file into data directory
+        file_directory = DiskFile.get_file_directory(file_hash.hexdigest())
+        os.makedirs(file_directory)
+        final_file_path = file_directory + file_hash.hexdigest()
+        shutil.move(temp_file_path, final_file_path)
+    except OSError as e:
+        # we don't care if the directory already exists
+        if e.errno == errno.EEXIST:
+            pass
+        else: raise
+
