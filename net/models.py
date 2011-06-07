@@ -1,4 +1,5 @@
 import os
+import errno
 from astrometry.net.settings import *
 from django.db import models
 from django.contrib.auth.models import User
@@ -107,13 +108,20 @@ class Calibration(models.Model):
     decmax = models.FloatField()
 
 class Job(models.Model):
-    calibration = models.ForeignKey('Calibration')
+    calibration = models.ForeignKey('Calibration', null=True)
     
     STATUS_CHOICES = (('S', 'Success'), 
               ('F', 'Failure'))    
     
     status = models.CharField(max_length=1, choices=STATUS_CHOICES)
     error_message = models.CharField(max_length=256)
+    user_image = models.ForeignKey('UserImage')
+
+    start_time = models.DateTimeField(null=True)
+
+    def set_start_time(self):
+        self.start_time = datetime.now()
+
 
 class UserImage(models.Model):
     image = models.ForeignKey(Image)
@@ -147,22 +155,8 @@ class Submission(models.Model):
         (1, 'Negative'),
     )
 
-    DATASRC_CHOICES = (
-        ('url', 'URL'),
-        ('file', 'File'),
-    )
-
-    FILETYPE_CHOICES = (
-        ('image', 'Image (jpeg, png, gif, tiff, raw, or FITS)'),
-        ('fits', 'FITS table of source locations'),
-        ('text', 'Text list of source locations'),
-    )
-
     ###
     disk_file = models.ForeignKey(DiskFile, related_name='submissions')
-    data_src = models.CharField(max_length=10, choices=DATASRC_CHOICES)
-    # image / fits / text
-    file_type = models.CharField(max_length=10, choices=FILETYPE_CHOICES)
     url = models.URLField(blank=True, null=True)
     parity = models.PositiveSmallIntegerField(choices=PARITY_CHOICES, default=2)
     scale_units = models.CharField(max_length=20, choices=SCALEUNITS_CHOICES)
@@ -175,6 +169,10 @@ class Submission(models.Model):
     original_filename = models.CharField(max_length=256)
 
     processing_started = models.DateTimeField(null=True)
+
+    def __str__(self):
+        return ('Submission: file <%s>, url %s, proc_started=%s' %
+                (str(self.disk_file), self.url, str(self.processing_started)))
 
     def get_scale_bounds(self):
         stype = self.scale_type
