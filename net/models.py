@@ -1,14 +1,34 @@
+import os
 from astrometry.net.settings import *
 from django.db import models
 from django.contrib.auth.models import User
 from userprofile import UserProfile
 from wcs import *
 from datetime import datetime
+import hashlib
+import shutil
+from astrometry.util.filetype import filetype_short
 
 class DiskFile(models.Model):
     file_hash = models.CharField(max_length=40, unique=True, primary_key=True)
     size = models.PositiveIntegerField()
-    file_type = models.CharField(max_length=16, null=True)
+    file_type = models.CharField(max_length=256, null=True)
+
+    def __str__(self):
+        return 'DiskFile: %s, size %i, type %s' % (self.file_hash, self.size, self.file_type)
+
+    def set_size_and_file_type(self):
+        fn = self.get_path()
+        st = os.stat(fn)
+        self.size = st.st_size
+        filetypes = filetype_short(fn)
+        self.file_type = ';'.join(filetypes)
+
+    def get_file_types(self):
+        return self.file_type.split(';')
+
+    def get_path(self):
+        return DiskFile.get_file_path(self.file_hash)
 
     @staticmethod
     def get_file_directory(file_hash_digest):
@@ -19,8 +39,48 @@ class DiskFile(models.Model):
         file_path = DATADIR + file_path + '/'
         return file_path
 
-    def __init__(self, fn):
-        pass
+    @staticmethod
+    def get_file_path(file_hash_digest):
+        file_path = DiskFile.get_file_directory(file_hash_digest)
+        file_path = os.path.join(DATADIR, file_path, file_hash_digest)
+        return file_path
+
+    @staticmethod
+    def make_dirs(file_hash_digest):
+        file_directory = DiskFile.get_file_directory(file_hash_digest)
+        try:
+            os.makedirs(file_directory)
+        except OSError as e:
+            # we don't care if the directory already exists
+            if e.errno == errno.EEXIST:
+                pass
+            else: raise
+
+    @staticmethod
+    def from_file(filename):
+        file_hash = DiskFile.get_hash()
+        f = open(filename)
+        while True:
+            s = f.read(8096)
+            if not len(s):
+                # EOF
+                break
+            file_hash.update(s)
+        hashkey = file_hash.hexdigest()
+        df,created = DiskFile.objects.get_or_create(file_hash=hashkey,
+                                                    defaults=dict(size=0, file_type=''))
+        if created:
+            # move it into place
+            DiskFile.make_dirs(hashkey)
+            shutil.move(filename, DiskFile.get_file_path(hashkey))
+            df.set_size_and_file_type()
+            df.save()
+        return df
+
+    @staticmethod
+    def get_hash():
+        return hashlib.sha1()
+
 
 class Image(models.Model):
     disk_file = models.ForeignKey(DiskFile)
