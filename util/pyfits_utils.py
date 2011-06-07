@@ -216,6 +216,7 @@ class tabledata(object):
 				continue
 			if numpy.isscalar(val):
 				continue
+			print 'cutting', name
 			C = cut_array(val, I)
 			self.set(name, C)
 			self._length = len(C)

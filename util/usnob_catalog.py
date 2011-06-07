@@ -8,6 +8,7 @@ from numpy import *
 from astrometry.util.pyfits_utils import *
 from astrometry.util.healpix import *
 from astrometry.util.starutil_numpy import *
+from astrometry.util.usnob_cuts import *
 
 def get_usnob_sources(ra, dec, radius=1, basefn=None):
 	usnob_nside = 9
