@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from userprofile import UserProfile
 from wcs import *
+from datetime import datetime
 
 class DiskFile(models.Model):
     file_hash = models.CharField(max_length=40, unique=True, primary_key=True)
@@ -107,7 +108,30 @@ class Submission(models.Model):
     parity = models.PositiveSmallIntegerField(choices=PARITY_CHOICES, default=2)
     scale_units = models.CharField(max_length=20, choices=SCALEUNITS_CHOICES)
     scale_type = models.CharField(max_length=2, choices=SCALETYPE_CHOICES)
+    scale_lower = models.FloatField(default=0.1, blank=True, null=True)
+    scale_upper = models.FloatField(default=180, blank=True, null=True)
+    scale_est   = models.FloatField(blank=True, null=True)
+    scale_err   = models.FloatField(blank=True, null=True)
+
     original_filename = models.CharField(max_length=256)
+
+    processing_started = models.DateTimeField(null=True)
+
+    def get_scale_bounds(self):
+        stype = self.scale_type
+        if stype == 'ul':
+            return (self.scale_lower, self.scale_upper)
+        elif stype == 'ev':
+            est = self.scale_est
+            err = self.scale_err
+            return (est * (1.0 - err / 100.0),
+                    est * (1.0 + err / 100.0))
+        else:
+            return None
+
+    def set_processing_started(self):
+        self.processing_started = datetime.now()
+
 
 class Album(models.Model):
     description = models.CharField(max_length=1024)
