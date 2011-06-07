@@ -79,7 +79,7 @@ def requires_json_login(handler):
 
 @csrf_exempt
 @requires_json_args
-def login(request):
+def api_login(request):
 	apikey = request.json.get('apikey')
 	if apikey is None:
 		return HttpResponseErrorJson('need "apikey"')
