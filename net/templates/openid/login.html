@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block content %}
+<h1>Sign in with your OpenID</h1>
+{% if form.errors %}
+<p class="errors">{% trans "Please correct errors below:" %}<br />
+    {% if form.openid_identifier.errors %}
+    <span class="error">{{ form.openid_identifier.errors|join:", " }}</span>
+    {% endif %}
+    {% if form.next.errors %}
+    <span class="error">{{ form.next.errors|join:", " }}</span>
+    {% endif %}
+</p>
+{% endif %}
+<form name="fopenid" action="{{ action }}" method="post">
+    {% csrf_token %}
+    <fieldset>
+        <legend>{% trans "Sign In Using Your OpenID" %}</legend>
+        <div class="form-row">
+            <label for="id_openid_identifier">{% trans "OpenID Provider:" %}</label><br />
+            {{ form.openid_identifier }}
+        </div>
+        <div class="submit-row ">
+            <input name="bsignin" type="submit" value="{% trans "Sign in" %}">
+        </div>
+ {% if next %}
+        <input type="hidden" name="next" value="{{ next }}" />
+ {% endif %}
+    </fieldset>
+</form>
+{% endblock %}

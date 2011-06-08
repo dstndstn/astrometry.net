@@ -28,7 +28,7 @@
 <a href="{% url django.contrib.auth.views.logout %}">Sign out</a>
 {% else %}
 
-<a href="/openid/login/">Sign in</a>
+<a href="{% url openid-login %}">Sign in</a>
 
 {% endif %}
 

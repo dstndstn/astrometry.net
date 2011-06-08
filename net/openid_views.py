@@ -51,8 +51,18 @@ from django_openid_auth import teams
 from django_openid_auth.forms import OpenIDLoginForm
 from django_openid_auth.store import DjangoOpenIDStore
 
+from django import forms
 
 next_url_re = re.compile('^/[-\w/]+$')
+
+class AstrometryLoginForm(OpenIDLoginForm):
+    OPENID_IDENTIFIER_CHOICES = (
+        ('https://www.google.com/accounts/o8/id', 'Google'),
+    )
+    openid_identifier = forms.ChoiceField(
+        widget=forms.Select(attrs={'class':'required openid'}),
+        choices=OPENID_IDENTIFIER_CHOICES,
+    )
 
 def is_valid_next_url(next):
     # When we allow this:
@@ -135,7 +145,7 @@ def parse_openid_response(request):
 
 def login_begin(request, template_name='openid/login.html',
                 login_complete_view='openid-complete',
-                form_class=OpenIDLoginForm,
+                form_class=AstrometryLoginForm,
                 render_failure=default_render_failure,
                 redirect_field_name=REDIRECT_FIELD_NAME):
     """Begin an OpenID login request, possibly asking for an identity URL."""
