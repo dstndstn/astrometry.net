@@ -1,7 +1,11 @@
 {% if user.is_authenticated %}
     <b>You are logged in as {{ user.get_full_name }} ({{ user.email }})</b>
 
-	<a href="{% url astrometry.net.views.get_api_key %}">Get API key</a>
+	<a href="{% url astrometry.net.views.get_api_key %}">Get API key</a><br>
+
+    {% for sub in user.submissions.all %}
+        {{ sub.id }}<br>
+    {% endfor %}
 
 {% else %}
     <b>You are not logged in.</b>
