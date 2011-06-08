@@ -65,7 +65,7 @@ def status(req, subid=None):
     logmsg("UserImages:")
     for ui in sub.user_images.all():
         logmsg("  %i" % ui.id)
-        for j in ui.job_set.all():
+        for j in ui.jobs.all():
             logmsg("    job " + str(j))
 
     job = None
@@ -107,6 +107,16 @@ def annotated_image(req, jobid=None):
     res['Content-type'] = 'image/png'
     return res
 
+def sdss_image(req, jobid=None):
+    job = get_object_or_404(Job, pk=jobid)
+    #ui = job.user_image
+    #img = ui.image
+    #df = img.disk_file
+    #imgfn = df.get_path()
+    wcsfn = os.path.join(job.get_dir(), 'wcs.fits')
+    f,plotfn = tempfile.mkstemp()
+    os.close(f)
+    # http://skyservice.pha.jhu.edu/DR8/ImgCutout/getjpeg.aspx?ra=179.6897098439353&dec=-0.4546214816666667&scale=0.79224&opt=&width=512&height=512
 
 def handle_uploaded_file(f):
     # get file onto disk

@@ -25,3 +25,4 @@ $BACKEND -v --to-stderr -c /data1/INDEXES/200/cfg job.axy >> backend.log
 
 # Send back all the files we generated!
 tar cf - --exclude job.axy *
+

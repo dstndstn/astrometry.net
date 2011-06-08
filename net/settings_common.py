@@ -9,6 +9,9 @@ JOBDIR = os.path.join(WEB_DIR, 'jobs')
 
 AUTH_PROFILE_MODULE = 'net.UserProfile'
 
+# The 'host' name in ~/.ssh/config for running the compute server.
+ssh_solver_config = 'an-test'
+
 # FIXME
 BASEDIR = '/home/dstn/astrometry/src/'
 LOG_DIR = BASEDIR + 'astrometry/net/log/'

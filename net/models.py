@@ -117,7 +117,7 @@ class Job(models.Model):
     
     status = models.CharField(max_length=1, choices=STATUS_CHOICES)
     error_message = models.CharField(max_length=256)
-    user_image = models.ForeignKey('UserImage')
+    user_image = models.ForeignKey('UserImage', related_name='jobs')
 
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
@@ -159,7 +159,7 @@ class UserImage(models.Model):
     submission = models.ForeignKey('Submission', related_name='user_images')
 
     def get_best_job(self):
-        jobs = self.job_set.all()
+        jobs = self.jobs.all()
         if jobs.count() == 1:
             return jobs[0]
         # Keep latest solved
@@ -207,6 +207,7 @@ class Submission(models.Model):
     original_filename = models.CharField(max_length=256)
 
     processing_started = models.DateTimeField(null=True)
+    processing_finished = models.DateTimeField(null=True)
 
     def __str__(self):
         return ('Submission %i: file <%s>, url %s, proc_started=%s' %
@@ -230,6 +231,8 @@ class Submission(models.Model):
 
     def set_processing_started(self):
         self.processing_started = datetime.now()
+    def set_processing_finished(self):
+        self.processing_finished = datetime.now()
 
 
 class Album(models.Model):

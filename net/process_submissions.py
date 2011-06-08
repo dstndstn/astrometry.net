@@ -96,11 +96,115 @@ def run_pnmfile(fn):
     return (w, h, pnmtype, maxval)
 
 
+def dojob(userimage):
+    job = Job(user_image=userimage)
+    job.set_start_time()
+    job.save()
+    dirnm = job.make_dir()
+    os.chdir(dirnm)
+    print 'Creating and entering directory', dirnm
+    axyfn = 'job.axy'
+    sub = userimage.submission
+    df = userimage.image.disk_file
+    img = userimage.image
+
+    # Build command-line arguments for the augment-xylist program, which
+    # detects sources in the image and adds processing arguments to the header
+    # to produce a "job.axy" file.
+    slo,shi = sub.get_scale_bounds()
+    wcsfile = 'wcs.fits'
+    axyargs = {
+        '--out': axyfn,
+        '--image': df.get_path(),
+        '--scale-low': slo,
+        '--scale-high': shi,
+        '--scale-units': sub.scale_units,
+        '--wcs': wcsfile,
+        '--rdls': 'rdls.fits',
+        # Other things we might want include...
+        #'--pixel-error':,
+        # --use-sextractor
+        # --ra, --dec, --radius
+        # --invert
+        # -g / --guess-scale: try to guess the image scale from the FITS headers
+        # --crpix-center: set the WCS reference point to the image center
+        # --crpix-x <pix>: set the WCS reference point to the given position
+        # --crpix-y <pix>: set the WCS reference point to the given position
+        # -w / --width <pixels>: specify the field width
+        # -e / --height <pixels>: specify the field height
+        # -X / --x-column <column-name>: the FITS column name
+        # -Y / --y-column <column-name>
+        }
+
+    # UGLY
+    if sub.parity == 0:
+        axyargs['--parity'] = 'pos'
+    elif sub.parity == 1:
+        axyargs['--parity'] = 'neg'
+
+    cmd = 'augment-xylist '
+    cmd += ' '.join(k + ((v and (' ' + str(v))) or '') for (k,v) in axyargs.items())
+    logmsg('running: ' + cmd)
+    (rtn, out, err) = run_command(cmd)
+    if rtn:
+        logmsg('out: ' + out)
+        logmsg('err: ' + err)
+        return False
+
+    logmsg('created axy file ' + axyfn)
+    # shell into compute server...
+    logfn = 'log'
+    cmd = ('(echo %(jobid)s; '
+           ' tar cf - --ignore-failed-read %(axyfile)s) | '
+           'ssh -x -T %(sshconfig)s 2>>%(logfile)s | '
+           'tar xf - --atime-preserve -m --exclude=%(axyfile)s '
+           '>>%(logfile)s 2>&1' %
+           dict(jobid='job-%i' % (job.id), axyfile=axyfn,
+                sshconfig=settings.ssh_solver_config,
+                logfile=logfn))
+    print 'command:', cmd
+    w = os.system(cmd)
+    if not os.WIFEXITED(w):
+        print 'Solver failed'
+        return
+    rtn = os.WEXITSTATUS(w)
+    if rtn:
+        logmsg('Solver failed with return value %i' % rtn)
+        return
+
+    logmsg('Solver completed successfully.')
+    
+    # Solved?
+    wcsfn = os.path.join(dirnm, wcsfile)
+    logmsg('Checking for WCS file %s' % wcsfn)
+    if os.path.exists(wcsfn):
+        logmsg('WCS file exists')
+        # Parse the wcs.fits file
+        wcs = Tan(wcsfn, 0)
+        # Convert to database model...
+        tan = TanWCS(crval1=wcs.crval[0], crval2=wcs.crval[1],
+                     crpix1=wcs.crpix[0], crpix2=wcs.crpix[1], 
+                     cd11=wcs.cd[0], cd12=wcs.cd[1],
+                     cd21=wcs.cd[2], cd22=wcs.cd[3],
+                     imagew=img.width, imageh=img.height)
+        tan.save()
+        logmsg('Created TanWCS: ' + str(tan))
+        # Find bounds for the Calibration object.
+        r0,r1,d0,d1 = wcs.radec_bounds()
+        calib = Calibration(raw_tan=tan, ramin=r0, ramax=r1, decmin=d0, decmax=d1)
+        calib.save()
+        logmsg("Created Calibration " + str(calib))
+        job.calibration = calib
+        job.save()
+        job.status = 'S'
+        logmsg('Saved job %i' % job.id)
+    else:
+        job.status = 'F'
+    job.set_end_time()
+    job.save()
+
 
 def dosub(sub):
-    ### FIXME
-    sshconfig = 'an-test'
-
     print 'Processing submission:', sub
     sub.set_processing_started()
     sub.save()
@@ -150,30 +254,30 @@ def dosub(sub):
     '''
 
     # create Image object
-    # FIXME -- should check if "df" already has an Image!
-
-    # FIXME -- move this code to Image, probably
-    # Convert file to pnm and find its size.
-    f,pnmfn = tempfile.mkstemp()
-    os.close(f)
-    logmsg('Converting %s to %s...\n' % (fn, pnmfn))
-    (filetype, errstr) = image2pnm.image2pnm(fn, pnmfn)
-    if errstr:
-        logmsg('Error converting image file: %s' % errstr)
-        #df.filetype = filetype
-        #return fullfn
-        return
-    x = run_pnmfile(pnmfn)
-    if x is None:
-        print 'couldn\'t find image file size'
-        return
-    (w, h, pnmtype, maxval) = x
-    logmsg('Type %s, w %i, h %i' % (pnmtype, w, h))
 
     # Is there already an Image for this DiskFile?
-    #img = Image(disk_file=df, width=w, height=h)
-    img,created = Image.objects.get_or_create(disk_file=df, defaults=dict(width=w, height=h))
+    img,created = Image.objects.get_or_create(disk_file=df)
     if created:
+        #img.save()
+        # defaults=dict(width=w, height=h))
+
+        # FIXME -- move this code to Image?
+        # Convert file to pnm to find its size.
+        f,pnmfn = tempfile.mkstemp()
+        os.close(f)
+        logmsg('Converting %s to %s...\n' % (fn, pnmfn))
+        (filetype, errstr) = image2pnm.image2pnm(fn, pnmfn)
+        if errstr:
+            logmsg('Error converting image file: %s' % errstr)
+            return
+        x = run_pnmfile(pnmfn)
+        if x is None:
+            print 'couldn\'t find image file size'
+            return
+        (w, h, pnmtype, maxval) = x
+        logmsg('Type %s, w %i, h %i' % (pnmtype, w, h))
+        img.width = w
+        img.height = h
         img.save()
 
     # create UserImage object.
@@ -182,149 +286,11 @@ def dosub(sub):
     if created:
         uimg.save()
 
-    # run solve-field or whatever.
-    job = Job(user_image=uimg)
-    job.set_start_time()
-    job.save()
-    dirnm = job.make_dir()
+    sub.set_processing_finished()
+    sub.save()
 
-    # create FITS image
-    # run image2xy
-    #infn = convert(job, 'fitsimg')
-    #cmd = 'image2xy -v %s-o %s %s >> %s 2>&1' % (extraargs, fullfn, infn, sxylog)
-    #run_convert_command(cmd)
 
-    # create a temp dir and cd into it...
-    #dirnm = tempfile.mkdtemp()
-    os.chdir(dirnm)
-    print 'Creating and entering directory', dirnm
-    axyfn = 'job.axy'
 
-    #f,axyfn = tempfile.mkstemp()
-    #os.close(f)
-
-    slo,shi = sub.get_scale_bounds()
-
-    wcsfile = 'wcs.fits'
-    axyargs = {
-        '--out': axyfn,
-        #'--width': img.width,
-        #'--height': img.height,
-        # Aww yah
-        # job.submission.userimage.image.file
-        '--image': df.get_path(),
-        '--scale-low': slo,
-        '--scale-high': shi,
-        '--scale-units': sub.scale_units,
-        #'--pixel-error':,
-        # --use-sextractor
-        # --ra, --dec, --radius
-        # --invert
-        '--wcs': wcsfile,
-        '--rdls': 'rdls.fits',
-        #'--cancel': 'none',
-        #'--solved': 'none',
-        #'--match': 'none',
-        #'--rdls': 'none',
-        #'--corr': 'none',
-        # -g / --guess-scale: try to guess the image scale from the FITS headers
-        # --crpix-center: set the WCS reference point to the image center
-        # --crpix-x <pix>: set the WCS reference point to the given position
-        # --crpix-y <pix>: set the WCS reference point to the given position
-        # -T / --no-tweak: don't fine-tune WCS by computing a SIP polynomial
-        # -t / --tweak-order <int>: polynomial order of SIP WCS corrections
-        # -w / --width <pixels>: specify the field width
-        # -e / --height <pixels>: specify the field height
-        # -X / --x-column <column-name>: the FITS column containing the X coordinate of
-        # the sources
-        # -Y / --y-column <column-name>: the FITS column containing the Y coordinate of
-        # the sources
-        }
-
-    # UGLY
-    if sub.parity == 0:
-        axyargs['--parity'] = 'pos'
-    elif sub.parity == 1:
-        axyargs['--parity'] = 'neg'
-
-    cmd = 'augment-xylist ' + ' '.join(k + ((v and ' ' + str(v)) or '') for (k,v) in axyargs.items())
-    logmsg('running: ' + cmd)
-    (rtn, out, err) = run_command(cmd)
-    if rtn:
-        logmsg('out: ' + out)
-        logmsg('err: ' + err)
-        #bailout(job, 'Creating axy file failed: ' + err)
-        return False
-
-    logmsg('created axy file ' + axyfn)
-
-    # shell into compute server...
-    logfn = 'log'
-    cmd = ('(echo %(jobid)s; '
-           ' tar cf - --ignore-failed-read %(axyfile)s) | '
-           'ssh -x -T %(sshconfig)s 2>>%(logfile)s | '
-           'tar xf - --atime-preserve -m --exclude=%(axyfile)s '
-           '>>%(logfile)s 2>&1' %
-           dict(jobid='job-%i' % (job.id), axyfile=axyfn,
-                sshconfig=sshconfig, logfile=logfn)
-           )
-    #+ '; chmod 664 *; chgrp www-data *')
-
-    print 'command:', cmd
-
-    w = os.system(cmd)
-
-    if not os.WIFEXITED(w):
-        print 'Solver failed'
-        return
-
-    rtn = os.WEXITSTATUS(w)
-    if rtn:
-        logmsg('Solver failed with return value %i' % rtn)
-        #bailout(job, 'Solver failed.')
-        return
-
-    logmsg('Solver completed successfully.')
-    
-    # Solved?
-    wcsfn = os.path.join(dirnm, wcsfile)
-    logmsg('Checking for WCS file %s' % wcsfn)
-    if os.path.exists(wcsfn):
-        logmsg('WCS file exists')
-
-        wcs = Tan(wcsfn, 0)
-        
-        tan = TanWCS(crval1=wcs.crval[0], crval2=wcs.crval[1],
-                     crpix1=wcs.crpix[0], crpix2=wcs.crpix[1], 
-                     cd11=wcs.cd[0], cd12=wcs.cd[1],
-                     cd21=wcs.cd[2], cd22=wcs.cd[3],
-                     imagew=img.width, imageh=img.height)
-        tan.save()
-        logmsg('Created TanWCS django object: ' + str(tan))
-
-        r0,r1,d0,d1 = wcs.radec_bounds()
-
-        if job.calibration is None:
-            logmsg('job.calibration is None')
-            calib = Calibration(raw_tan=tan, ramin=r0, ramax=r1, decmin=d0, decmax=d1)
-            calib.save()
-            logmsg("Created Calibration " + str(calib))
-            job.calibration = calib
-            job.save()
-            logmsg("Job: " + str(job))
-        else:
-            calib = job.calibration
-            logmsg('job.calibration is ' + str(calib))
-            calib.raw_tan = tan
-            calib.ramin, calib.ramax, calib.decmin, calib.decmax = r0,r1,d0,d1
-        calib.save()
-        logmsg('Saved Calibration %i' % calib.id)
-        job.status = 'S'
-        logmsg('Saved job %i' % job.id)
-    else:
-        job.status = 'F'
-    job.set_end_time()
-    job.save()
 
 def main():
     nthreads = 1
@@ -335,17 +301,41 @@ def main():
 
     # multiprocessing.Lock for django db?
 
+    # Find Submissions that have been started but not finished;
+    # reset the start times to null.
+    oldsubs = Submission.objects.filter(processing_started__isnull=False,
+                                        processing_finished__isnull=True)
+    for sub in oldsubs:
+        print 'Resetting the processing status of', sub
+        sub.processing_started = None
+        sub.save()
+
+    oldjobs = Job.objects.filter(start_time__isnull=False,
+                                 end_time__isnull=True)
+    #for job in oldjobs:
+    #    #print 'Resetting the processing status of', job
+    #    #job.start_time = None
+    #    #job.save()
+    # FIXME -- really?
+    oldjobs.delete()
+
     while True:
         print 'Checking for new Submissions'
-        # FIXME -- started, or finished?
-        #newsubs = Submission.objects.all().filter(processing_started=False)
-        print 'Found', Submission.objects.count(), 'submissions'
-        for s in Submission.objects.all():
-            print s
-        #newsubs = Submission.objects.all().filter(processing_started__isnull=True)
-        newsubs = Submission.objects.all()
+        newsubs = Submission.objects.filter(processing_started__isnull=True)
+        #newsubs = Submission.objects.all()
         print 'Found', newsubs.count(), 'unstarted submissions'
-        if newsubs.count() == 0:
+
+        print 'Checking for UserImages without Jobs'
+        # Can't figure out how to do this... tried:
+        #newuis = UserImage.objects.filter(jobs__count=0)
+        #newuis = UserImage.objects.filter(jobs__exists=False)
+        #newuis = UserImage.objects.filter(jobs__len=False)
+        newuis = UserImage.objects.all()
+        newuis = [ui for ui in newuis if not ui.jobs.exists()]
+        # --> SELECT (1) AS "a" FROM "net_job" WHERE "net_job"."user_image_id" = 1  LIMIT 1; args=(1,)
+        print 'Found', len(newuis), 'userimages without Jobs'
+
+        if len(newsubs) + len(newuis) == 0:
             time.sleep(3)
             continue
         # FIXME -- order by user, etc
@@ -355,9 +345,12 @@ def main():
             else:
                 dosub(sub)
 
-            #break
-        #break
-
+        for ui in newuis:
+            if pool:
+                pool.apply_async(dojob, (ui,))
+            else:
+                dojob(ui)
+            
     
 
 if __name__ == '__main__':
