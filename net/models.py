@@ -33,12 +33,10 @@ class DiskFile(models.Model):
 
     @staticmethod
     def get_file_directory(file_hash_digest):
-        file_path = '/'.join((file_hash_digest[0:2],
-                              file_hash_digest[2:4],
-                              file_hash_digest[4:6])
-        )
-        file_path = DATADIR + file_path + '/'
-        return file_path
+        return os.path.join(DATADIR,
+                            file_hash_digest[0:2],
+                            file_hash_digest[2:4],
+                            file_hash_digest[4:6])
 
     @staticmethod
     def get_file_path(file_hash_digest):
@@ -121,6 +119,15 @@ class Job(models.Model):
 
     def set_start_time(self):
         self.start_time = datetime.now()
+
+    def get_dir(self):
+        return os.path.join(JOBDIR, '%08i' % self.id)
+
+    def make_dir(self):
+        dirnm = self.get_dir()
+        if not os.path.exists(dirnm):
+            os.makedirs(dirnm)
+        return dirnm
 
 
 class UserImage(models.Model):

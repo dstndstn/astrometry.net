@@ -181,6 +181,7 @@ def dosub(sub):
 	job = Job(user_image=uimg)
 	job.set_start_time()
 	job.save()
+	dirnm = job.make_dir()
 
 	# create FITS image
 	# run image2xy
@@ -188,8 +189,14 @@ def dosub(sub):
 	#cmd = 'image2xy -v %s-o %s %s >> %s 2>&1' % (extraargs, fullfn, infn, sxylog)
 	#run_convert_command(cmd)
 
-	f,axyfn = tempfile.mkstemp()
-	os.close(f)
+	# create a temp dir and cd into it...
+	#dirnm = tempfile.mkdtemp()
+	os.chdir(dirnm)
+	print 'Creating and entering directory', dirnm
+	axyfn = 'job.axy'
+
+	#f,axyfn = tempfile.mkstemp()
+	#os.close(f)
 
 	slo,shi = sub.get_scale_bounds()
 	
@@ -207,11 +214,13 @@ def dosub(sub):
 		# --use-sextractor
 		# --ra, --dec, --radius
 		# --invert
-		'--cancel': 'none',
-		'--solved': 'none',
-		'--match': 'none',
-		'--rdls': 'none',
-		'--corr': 'none',
+		'--wcs': 'wcs.fits',
+		'--rdls': 'rdls.fits',
+		#'--cancel': 'none',
+		#'--solved': 'none',
+		#'--match': 'none',
+		#'--rdls': 'none',
+		#'--corr': 'none',
 		# -g / --guess-scale: try to guess the image scale from the FITS headers
 		# --crpix-center: set the WCS reference point to the image center
 		# --crpix-x <pix>: set the WCS reference point to the given position
@@ -243,7 +252,6 @@ def dosub(sub):
 
 	logmsg('created axy file ' + axyfn)
 
-	# create a temp dir and cd into it...
 	# shell into compute server...
 	logfn = 'log'
 	cmd = ('(echo %(jobid)s; '
@@ -305,6 +313,9 @@ def main():
 				pool.apply_async(dosub, (sub,))
 			else:
 				dosub(sub)
+
+			break
+		break
 
 	
 

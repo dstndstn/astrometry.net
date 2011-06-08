@@ -3,12 +3,14 @@ import astrometry.net
 import astrometry.net.secrets.django_db as secrets
 
 WEB_DIR = os.path.dirname(astrometry.net.__file__) + '/'
+DATADIR = os.path.join(WEB_DIR, 'data')
+JOBDIR = os.path.join(WEB_DIR, 'jobs')
+
 
 AUTH_PROFILE_MODULE = 'net.UserProfile'
 
 # FIXME
 BASEDIR = '/home/dstn/astrometry/src/'
-DATADIR = WEB_DIR + 'data/'
 LOG_DIR = BASEDIR + 'astrometry/net/log/'
 ANDIR = BASEDIR + 'astrometry/'
 UTIL_DIR = ANDIR + 'util/'
