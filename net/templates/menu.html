@@ -25,7 +25,7 @@
  | 
 {% endcomment %}
 
-<a href="{% url astrometry.net.views.logout %}">Sign out</a>
+<a href="{% url django.contrib.auth.views.logout %}">Sign out</a>
 {% else %}
 
 <a href="/openid/login/">Sign in</a>

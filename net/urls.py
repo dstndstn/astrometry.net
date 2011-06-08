@@ -7,24 +7,29 @@ from astrometry.net import settings
 # admin.autodiscover()
 
 urlpatterns = patterns('',
-	(r'^openid/', include('django_openid_auth.urls')),
-	(r'^logout/$', 'django.contrib.auth.views.logout'),
+    (r'^logout/?$', 'django.contrib.auth.views.logout'),
+)
+
+urlpatterns += patterns('astrometry.net.openid_views',
+    url(r'^login/?$', 'login_begin', name='openid-login'),
+    url(r'^complete/?$', 'login_complete', name='openid-complete'),
+    url(r'^logo.gif$', 'logo', name='openid-logo'),
 )
 
 jobpattern = r'[0-9-]+'
 subpattern = r'[0-9-]+'
 
 urlpatterns += patterns('astrometry.net.views',
-    (r'^dashboard/$', 'dashboard'),
-    (r'^upload/$', 'upload_file'),
-    (r'^status/(?P<subid>' + subpattern + r')', 'status'),
-    (r'^annotated/(?P<jobid>' + jobpattern + r')', 'annotated_image'),
-    (r'^apikey/$', 'get_api_key'),
+    (r'^dashboard/?$', 'dashboard'),
+    (r'^upload/?$', 'upload_file'),
+    (r'^status/(?P<subid>' + subpattern + r')/?', 'status'),
+    (r'^annotated/(?P<jobid>' + jobpattern + r')/?', 'annotated_image'),
+    (r'^apikey/?$', 'get_api_key'),
 )
 
 urlpatterns += patterns('astrometry.net.api',
-                        (r'^api/login', 'api_login'),
-                        #(r'^api/logout', 'logout'),
+                        (r'^api/login/?', 'api_login'),
+                        #(r'^api/logout/?', 'logout'),
 )
 
 # fallback
