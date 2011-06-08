@@ -12,3 +12,27 @@ django is installed on oven in:
 django-openid-auth is installed on oven in:
 /usr/local/django-openid-auth-0.3/lib/python
 
+
+
+
+Adding database users:
+
+as root, psql:
+
+create role USERNAME login;
+alter role USERNAME createdb;
+grant nova to USERNAME;
+
+
+I did, initially:
+create role nova;
+alter role nova createdb;
+grant all on database "an-test" to nova;
+as nova:
+create database "an-supernova";
+create database "an-nova";
+as root:
+grant all on database "an-supernova" to nova;
+grant all on database "an-nova" to nova;
+
+
