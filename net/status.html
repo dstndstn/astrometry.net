@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+{% if sub.is_finished %}
+{% else %}
+<meta http-equiv="refresh" content="5; URL=" />
+{% endif %}
+{% endblock extrahead %}
+
+{% block pagetitle %}
+Astrometry.net submission {{ sub.id }}
+{% endblock %}
+
+{% block title %}
+Submission {{ sub.id }}
+{% endblock %}
+
+{% block content %}
+Job {{ job.id }}
+
+{% if calib %}
+<center>
+<img src="{% url astrometry.net.views.annotated_image jobid=job.id %}" />
+</center>
+{% endif %}
+
+{% endblock %}

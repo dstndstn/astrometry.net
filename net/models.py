@@ -105,6 +105,10 @@ class Calibration(models.Model):
     decmin = models.FloatField()
     decmax = models.FloatField()
 
+    def __str__(self):
+        s = 'Calibration %i' % self.id
+        return s
+
 class Job(models.Model):
     calibration = models.ForeignKey('Calibration', null=True)
     
@@ -116,9 +120,21 @@ class Job(models.Model):
     user_image = models.ForeignKey('UserImage')
 
     start_time = models.DateTimeField(null=True)
+    end_time = models.DateTimeField(null=True)
+
+    def __str__(self):
+        s = 'Job %i' % self.id
+        if self.calibration is not None:
+            s += ', calib %i' % self.calibration.id
+        if self.end_time is not None:
+            s += ', end time ' + str(self.end_time)
+        return s
 
     def set_start_time(self):
         self.start_time = datetime.now()
+
+    def set_end_time(self):
+        self.end_time = datetime.now()
 
     def get_dir(self):
         return os.path.join(JOBDIR, '%08i' % self.id)
@@ -142,6 +158,21 @@ class UserImage(models.Model):
     original_file_name = models.CharField(max_length=256)
     submission = models.ForeignKey('Submission', related_name='user_images')
 
+    def get_best_job(self):
+        jobs = self.job_set.all()
+        if jobs.count() == 1:
+            return jobs[0]
+        # Keep latest solved
+        j1 = jobs.filter(status='S')
+        # ?
+        j1 = jobs.filter(calibration__isnull=False)
+        if j1.count():
+            jobs = j1
+        # FIXME
+        jobs = jobs.order_by('-end_time')
+        return jobs[0]
+        
+        
 class Submission(models.Model):
     SCALEUNITS_CHOICES = (
         ('arcsecperpix', 'arcseconds per pixel'),
@@ -178,8 +209,12 @@ class Submission(models.Model):
     processing_started = models.DateTimeField(null=True)
 
     def __str__(self):
-        return ('Submission: file <%s>, url %s, proc_started=%s' %
-                (str(self.disk_file), self.url, str(self.processing_started)))
+        return ('Submission %i: file <%s>, url %s, proc_started=%s' %
+                (self.id, str(self.disk_file), self.url, str(self.processing_started)))
+
+    def get_best_jobs(self):
+        uimgs = self.user_images.all()
+        return [u.get_best_job() for u in uimgs]
 
     def get_scale_bounds(self):
         stype = self.scale_type

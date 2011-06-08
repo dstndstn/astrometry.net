@@ -1,0 +1,35 @@
+<div id="menu">
+
+{% if user.is_authenticated %}
+
+<b>{{ user.get_full_name }}</b>
+
+{% else %}
+
+{% endif %}
+ | |
+
+<a href="{% url astrometry.net.views.upload_file %}">Upload new image</a>
+ | 
+{% comment %}
+<a href="{% url astrometry.net1.portal.tags.taglist %}">Tags</a>
+ | 
+{% endcomment %}
+
+{% if user.is_authenticated %}
+
+{% comment %}
+<a href="{% url astrometry.net1.portal.views.joblist %}">My images</a>
+ | 
+<a href="{% url astrometry.net1.portal.accounts.userprefs %}">Set preferences</a>
+ | 
+{% endcomment %}
+
+<a href="{% url astrometry.net.views.logout %}">Sign out</a>
+{% else %}
+
+<a href="/openid/login/">Sign in</a>
+
+{% endif %}
+
+</div>

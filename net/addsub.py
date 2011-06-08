@@ -26,4 +26,4 @@ if __name__ == '__main__':
 	sub = Submission(disk_file=df, scale_type='ul', scale_units='degwidth')
 	sub.original_filename = fn
 	sub.save()
-	print 'Make Submission', sub
+	print 'Made Submission', sub

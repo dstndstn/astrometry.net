@@ -1,6 +1,6 @@
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 
@@ -14,6 +14,9 @@ import os, errno
 import hashlib
 import tempfile
 
+from astrometry.util import image2pnm
+from astrometry.util.run_command import run_command
+      
 def dashboard(request):
     return render_to_response("dashboard.html",
         {
@@ -40,12 +43,70 @@ def upload_file(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            handle_uploaded_file(request.FILES['file'])
-            return HttpResponseRedirect('/success/url/')
+            return handle_uploaded_file(request.FILES['file'])
     else:
         form = UploadFileForm()
     return render_to_response('upload.html', {'form': form},
         context_instance = RequestContext(request))
+
+def status(req, subid=None):
+    logmsg("Submissions: " + ', '.join([str(x) for x in Submission.objects.all()]))
+
+    if subid is not None:
+        # strip leading zeros
+        subid = int(subid.lstrip('0'))
+    sub = get_object_or_404(Submission, pk=subid)
+
+    # Would be convenient to have an "is this a single-image submission?" function
+    # (This is really "UserImage" status, not Submission status)
+
+    #logmsg("UserImages: " + ', '.join(['%i'%s.id for s in sub.user_images.all()]))
+
+    logmsg("UserImages:")
+    for ui in sub.user_images.all():
+        logmsg("  %i" % ui.id)
+        for j in ui.job_set.all():
+            logmsg("    job " + str(j))
+
+    job = None
+    calib = None
+    jobs = sub.get_best_jobs()
+    logmsg("Best jobs: " + str(jobs))
+    if len(jobs) == 1:
+        job = jobs[0]
+        logmsg("Job: " + str(job) + ', ' + job.status)
+        calib = job.calibration
+        
+    return render_to_response('status.html', { 'sub': sub, 'job': job, 'calib':calib, },
+        context_instance = RequestContext(req))
+    
+def annotated_image(req, jobid=None):
+    job = get_object_or_404(Job, pk=jobid)
+    ui = job.user_image
+    img = ui.image
+    df = img.disk_file
+    imgfn = df.get_path()
+    wcsfn = os.path.join(job.get_dir(), 'wcs.fits')
+    f,pnmfn = tempfile.mkstemp()
+    os.close(f)
+    (filetype, errstr) = image2pnm.image2pnm(imgfn, pnmfn)
+    if errstr:
+        logmsg('Error converting image file %s: %s' % (imgfn, errstr))
+        return HttpResponse('plot failed')
+    f,annfn = tempfile.mkstemp()
+    os.close(f)
+    cmd = 'plot-constellations -w %s -i %s -o %s -N -C -B' % (wcsfn, pnmfn, annfn)
+    logmsg('Running: ' + cmd)
+    (rtn, out, err) = run_command(cmd)
+    if rtn:
+        logmsg('out: ' + out)
+        logmsg('err: ' + err)
+        return HttpResponse('plot failed')
+    f = open(annfn)
+    res = HttpResponse(f)
+    res['Content-type'] = 'image/png'
+    return res
+
 
 def handle_uploaded_file(f):
     # get file onto disk
@@ -57,9 +118,17 @@ def handle_uploaded_file(f):
         file_hash.update(chunk)
     uploaded_file.close()
     # move file into data directory
-	DiskFile.make_dirs(file_hash.hexdigest())
+    DiskFile.make_dirs(file_hash.hexdigest())
     shutil.move(temp_file_path, DiskFile.get_file_path(file_hash.hexdigest()))
-	# create and populate the database entry
+    # create and populate the database entry
     df = DiskFile(file_hash = file_hash.hexdigest(), size=0, file_type='')
     df.set_size_and_file_type()
     df.save()
+
+    # HACK
+    sub = Submission(disk_file=df, scale_type='ul', scale_units='degwidth')
+    sub.original_filename = f.name
+    sub.save()
+    print 'Made Submission', sub
+
+    return redirect(status, subid=sub.id)

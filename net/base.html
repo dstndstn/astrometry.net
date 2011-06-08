@@ -1,0 +1,82 @@
+{% include "header.html" %}
+
+{% block head %}
+<head>
+
+{% block favicon %}
+{% include "favicon.html" %}
+{% endblock favicon %}
+
+{% block linkcss %}
+<link rel="stylesheet" href="{{ STATIC_URL }}style.css" />
+{% endblock linkcss %}
+
+{% block inlinecssblock %}
+<style type="text/css">
+#menu { float:right; padding:0px; margin-top:0; margin-bottom:auto; font-size:75%; font-family:sans-serif; }
+#messages { font-size:150%; font-style:bold; margin-left:auto; margin-right:auto; text-align:center; }
+.bigbutton { font-size:110%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
+div.myerrors { font-size:110%; color:red; }
+.bigtext { font-size:110%; }
+.normalbutton { font-size:100%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
+#logo { float:left; }
+div.c {margin-left:auto; margin-right:auto; text-align:center;}
+h2.c {margin-left:auto; margin-right:auto; text-align:center;}
+p.c {margin-left:auto; margin-right:auto; text-align:center;}
+table.c {margin-left:auto; margin-right:auto;}
+td.r {text-align:right; padding:10px;}
+td.c {text-align:center;}
+.boxedtable {padding:15px; padding-left:30px; padding-right:30px; margin-right:auto; margin-left:auto; border-style:solid; border-color:gray; border-width:thin;}
+.fineprint { font-size:85%; text-align:center; color:#888; margin-left:auto; margin-right:auto; }
+.fineprint a { color:#999; }
+#title { clear: both; }
+#content { clear: both; }
+{% block inlinecss %}
+{% endblock inlinecss %}
+</style>
+{% endblock inlinecssblock %}
+
+{% block javascript %}
+{% endblock javascript %}
+
+<title>{% block pagetitle %}Astrometry.net{% endblock %}</title>
+
+{% block extrahead %}
+{% endblock extrahead %}
+
+</head>
+{% endblock head %}
+
+{% block thebody %}
+
+{% block bodytag %}
+<body>
+{% endblock bodytag %}
+
+{% block usernameblock %}
+<div id="username">
+{% include "menu.html" %}
+</div>
+{% endblock usernameblock %}
+
+{% block logo %}
+<div id="logo">
+{% include "logo.html" %}
+</div>
+{% endblock logo %}
+
+{% block titlediv %}
+<div id="title">
+<h3 style="text-align:center;">{% block title %}{% endblock %}</h3>
+</div>
+{% endblock %}
+
+<div id="content">
+{% block content %}
+base content
+{% endblock %}
+</div>
+
+</body>
+{% endblock thebody %}
+</html>
