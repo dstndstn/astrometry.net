@@ -79,6 +79,17 @@ def requires_json_login(handler):
 
 @csrf_exempt
 @requires_json_args
+def api_upload(request):
+    print 'request:', request
+	apikey = request.json.get('apikey')
+	if apikey is None:
+		return HttpResponseErrorJson('need "apikey"')
+    logmsg('api_upload: got request: ' + str(request))
+    #return HttpResponse('hello')
+
+
+@csrf_exempt
+@requires_json_args
 def api_login(request):
 	apikey = request.json.get('apikey')
 	if apikey is None:

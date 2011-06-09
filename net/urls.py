@@ -29,6 +29,7 @@ urlpatterns += patterns('astrometry.net.views',
 
 urlpatterns += patterns('astrometry.net.api',
                         (r'^api/login/?', 'api_login'),
+                        (r'^api/upload/?', 'api_upload'),
                         #(r'^api/logout/?', 'logout'),
 )
 
