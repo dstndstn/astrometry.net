@@ -187,6 +187,15 @@ AUTHENTICATION_BACKENDS = (
 OPENID_CREATE_USERS = True
 OPENID_UPDATE_DETAILS_FROM_SREG = True
 
+# list of open id providers to allow users to log into the site with;
+# any instance of {username} will be replaced with a username
+OPENID_PROVIDERS = (
+   #('openid_server_url', 'Provider Name'),
+    ('google.com/profiles/username', 'Google'),
+    ('username.wordpress.com', 'WordPress'),
+    ('yahoo.com', 'Yahoo'),
+)
+
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error.

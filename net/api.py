@@ -2,6 +2,7 @@ from django.contrib import auth
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
+from astrometry.net.views import handle_uploaded_file
 
 from api_util import *
 from userprofile import *
@@ -82,13 +83,15 @@ def requires_json_login(handler):
 @requires_json_args
 @requires_json_session
 def api_upload(request):
-    return HttpResponse('hello')
+    #return HttpResponse('hello')
 
-'''
     logmsg('request:' + str(request))
     logmsg('api_upload: got request: ' + str(request.FILES['file'].size))
+    logmsg('received files:')
+    for file in request.FILES:
+        handle_uploaded_file(request, request.FILES[file])
+
     return HttpResponse('hello')
-'''
 
 @csrf_exempt
 @requires_json_args

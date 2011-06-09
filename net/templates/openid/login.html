@@ -20,6 +20,10 @@
             <label for="id_openid_identifier">{% trans "OpenID Provider:" %}</label><br />
             {{ form.openid_identifier }}
         </div>
+        <div class="form-row">
+            <label for="id_openid_identifier">{% trans "Username:" %}</label><br />
+            {{ form.username }}
+        </div>
         <div class="submit-row ">
             <input name="bsignin" type="submit" value="{% trans "Sign in" %}">
         </div>

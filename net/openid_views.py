@@ -52,18 +52,18 @@ from django_openid_auth.forms import OpenIDLoginForm
 from django_openid_auth.store import DjangoOpenIDStore
 
 from django import forms
+from astrometry.net.settings import *
 
 from log import *
 
 next_url_re = re.compile('^/[-\w/]+$')
 
 class AstrometryLoginForm(OpenIDLoginForm):
-    OPENID_IDENTIFIER_CHOICES = (
-        ('https://www.google.com/accounts/o8/id', 'Google'),
-    )
+    #OPENID_PROVIDERS defined in settings_common.py
+    username = forms.CharField(max_length=255)
     openid_identifier = forms.ChoiceField(
         widget=forms.Select(attrs={'class':'required openid'}),
-        choices=OPENID_IDENTIFIER_CHOICES,
+        choices=OPENID_PROVIDERS,
     )
 
 def is_valid_next_url(next):
@@ -162,6 +162,9 @@ def login_begin(request, template_name='openid/login.html',
             login_form = form_class(data=request.POST)
             if login_form.is_valid():
                 openid_url = login_form.cleaned_data['openid_identifier']
+                username = login_form.cleaned_data['username']
+                openid_url = openid_url.replace("username", username)
+                print "OpenID url: " + openid_url
         else:
             login_form = form_class()
 
