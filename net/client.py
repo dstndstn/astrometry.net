@@ -4,6 +4,10 @@ from urllib2 import urlopen
 from urllib2 import Request
 from urllib import urlencode
 from exceptions import Exception
+from email.mime.multipart import MIMEMultipart
+
+from email.mime.base import MIMEBase
+from email.mime.application  import MIMEApplication
 
 from astrometry.net.api_util import json2python, python2json
 
@@ -23,13 +27,13 @@ class Client(object):
 	def get_url(self, service):
 		return self.apiurl + service
 
-	def send_request(self, service, args):
+	def send_request(self, service, args, file_args=None):
 		'''
 		service: string
 		args: dict
 		'''
 		if self.session is not None:
-			args += { 'session' : self.session }
+			args.update({ 'session' : self.session })
 		print 'Python:', args
 		json = python2json(args)
 		print 'Sending json:', json
@@ -39,18 +43,29 @@ class Client(object):
 		print 'Sending to URL:', url
 		#f = urlopen(url, data)
 
-		content_type = 'multipart/form-data; boundary=----------AaB03x'
-		body = ['----------AaB03x',
-			'Content-Disposition: form-data; name="request-json"',
-			'',
-			'{"apikey": "lzoszzpljmivlsqe"}',
-			'----------AaB03x'
-			]
-		body = '\r\n'.join(body)
-		print body
+		m = []
+		m1 = MIMEBase('text', 'plain')
+		m1.add_header('Content-disposition', 'form-data; name="request-json"')
+		m1.set_payload(json)
+		m += [m1]
+
+		if file_args is not None:
+			m2 = MIMEApplication(file_args[1])
+			m2.add_header('Content-disposition', 'form-data; name="file"; filename="%s"' % file_args[0])
+			m += [m2]
+
+		mp = MIMEMultipart('form-data', None, m)
+		
+		data = mp.as_string().split('\n')
+		for i,d in enumerate(data):
+			if len(d) == 0:
+				break
+		data = data[i+1:]
+		print 'data:', data
+
 		request = Request(url=url,
-    headers={'Content-Type':content_type},
-    data=body)
+				  headers={'Content-type': mp.get('Content-type')},
+				  data='\r\n'.join(data))
 
 		f = urlopen(request)
 		txt = f.read()
@@ -73,8 +88,12 @@ class Client(object):
 			raise RequestError('no session in result')
 		self.session = sess
 
-	def upload(self, f):
-		pass					
+	def upload(self, fn):
+		try:
+			f = open(fn)
+			result = self.send_request('upload', {}, (fn, f.read()))
+		except IOError:
+			print 'File %s does not exist' % fn		
 
 if __name__ == '__main__':
 	import optparse
