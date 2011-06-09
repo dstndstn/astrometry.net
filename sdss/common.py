@@ -283,20 +283,47 @@ class TsField(SdssFile):
 	def __init__(self, *args, **kwargs):
 		super(TsField, self).__init__(*args, **kwargs)
 		self.filetype = 'tsField'
+		self.exptime = 53.907456
 	def setHdus(self, p):
 		self.hdus = p
+		self.table = fits_table(self.hdus[1].data)[0]
+		T = self.table
+		self.aa = T.aa.astype(float)
+		self.kk = T.kk.astype(float)
+		self.airmass = T.airmass
+
 	def getAsTrans(self, band):
 		bandi = band_index(band)
 		band = band_name(band)
-		T = fits_table(self.hdus[1].data)
-		T = T[0]
 		#node,incl = self.getNode(), self.getIncl()
 		hdr = self.hdus[0].header
 		node = np.deg2rad(hdr.get('NODE'))
 		incl = np.deg2rad(hdr.get('INCL'))
 		asTrans = AsTrans(self.run, self.camcol, self.field, band=band,
-						  node=node, incl=incl, astrans=T)
+						  node=node, incl=incl, astrans=self.table)
 		return asTrans
+
+	#magL = -(2.5/ln(10))*[asinh((f/f0)/2b)+ln(b)]
+	# luptitude == arcsinh mag
+	# band: int
+	def luptitude_to_counts(self, L, band):
+		# from arcsinh softening parameters table
+		#   http://www.sdss.org/dr7/algorithms/fluxcal.html#counts2mag
+		b = [1.4e-10, 0.9e-10, 1.2e-10, 1.8e-10, 7.4e-10]
+
+		b = b[band]
+		maggies = 2.*b * np.sinh(-0.4 * np.log(10.) * L - np.log(b))
+		logcounts = (np.log10(maggies * self.exptime)
+					 - 0.4*(self.aa[band] + self.kk[band] * self.airmass[band]))
+		return 10.**logcounts
+		
+	# band: int
+	def mag_to_counts(self, mag, band):
+		# log_10(counts)
+		logcounts = (-0.4 * mag + np.log10(self.exptime)
+					 - 0.4*(self.aa[band] + self.kk[band] * self.airmass[band]))
+		return 10.**logcounts
+
 	
 class FpObjc(SdssFile):
 	def __init__(self, *args, **kwargs):
@@ -336,10 +363,12 @@ class PsField(SdssFile):
 		self.filetype = 'psField'
 
 	def setHdus(self, p):
+		self.hdus = p
 		t = fits_table(p[6].data)
 		# the table has only one row...
 		assert(len(t) == 1)
 		t = t[0]
+		#self.table = t
 		self.gain = t.gain
 		self.dark_variance = t.dark_variance
 		self.sky = t.sky
@@ -361,6 +390,62 @@ class PsField(SdssFile):
 		s2 = self.dgpsf_s2[bandnum]
 		b  = self.dgpsf_b[bandnum]
 		return (float(a), float(s1), float(b), float(s2))
+
+	def getPsfAtPoints(self, bandnum, x, y):
+		'''
+		Reconstruct the SDSS model PSF from KL basis functions.
+
+		x,y can be scalars or 1-d numpy arrays.
+
+		Return value:
+		if x,y are scalars: a PSF image
+		if x,y are arrays:  a list of PSF images
+		'''
+		rtnscalar = np.isscalar(x) and np.isscalar(y)
+		x = np.atleast_1d(x)
+		y = np.atleast_1d(y)
+		psf = fits_table(self.hdus[bandnum+1].data)
+		psfimgs = None
+		(outh, outw) = (None,None)
+
+		# From the IDL docs:
+		# http://photo.astro.princeton.edu/photoop_doc.html#SDSS_PSF_RECON
+		#   acoeff_k = SUM_i{ SUM_j{ (0.001*ROWC)^i * (0.001*COLC)^j * C_k_ij } }
+		#   psfimage = SUM_k{ acoeff_k * RROWS_k }
+		for k in range(len(psf)):
+			nrb = psf.nrow_b[k]
+			ncb = psf.ncol_b[k]
+			c = psf.c[k].reshape(5, 5)
+			c = c[:nrb,:ncb]
+			(gridi,gridj) = np.meshgrid(range(nrb), range(ncb))
+
+			if psfimgs is None:
+				psfimgs = [np.zeros_like(psf.rrows[k]) for xy
+						   in np.broadcast(x,y)]
+				(outh,outw) = (psf.rnrow[k], psf.rncol[k])
+			else:
+				assert(psf.rnrow[k] == outh)
+				assert(psf.rncol[k] == outw)
+
+			for i,(xi,yi) in enumerate(np.broadcast(x,y)):
+				#print 'xi,yi', xi,yi
+				acoeff_k = np.sum(((0.001 * xi)**gridi * (0.001 * yi)**gridj * c))
+				if False: # DEBUG
+					print 'coeffs:', (0.001 * xi)**gridi * (0.001 * yi)**gridj
+					print 'c:', c
+					for (coi,ci) in zip(((0.001 * xi)**gridi * (0.001 * yi)**gridj).ravel(), c.ravel()):
+						print 'co %g, c %g' % (coi,ci)
+					print 'acoeff_k', acoeff_k
+
+				#print 'acoeff_k', acoeff_k.shape, acoeff_k
+				#print 'rrows[k]', psf.rrows[k].shape, psf.rrows[k]
+				psfimgs[i] += acoeff_k * psf.rrows[k]
+
+		psfimgs = [img.reshape((outh,outw)) for img in psfimgs]
+		if rtnscalar:
+			return psfimgs[0]
+		return psfimgs
+
 
 	def getGain(self, band=None):
 		if band is not None:

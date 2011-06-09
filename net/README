@@ -32,12 +32,19 @@ Nova:
     svn+ssh://astrometry.net/svn/tags/nova/2011-06-08-2
 - database is 'an-nova'
 - ssh config entry is "an-nova"
+- process_submissions.py is running in screen "nova"
+- apache is /etc/apache2-nova
 
 Supernova:
 - svn checkout is in ~/supernova; url is like:
     svn+ssh://astrometry.net/svn/tags/supernova/2011-06-08-2
 - database is 'an-supernova'
 - ssh config entry is "an-supernova"
+- process_submissions.py is running in screen "supernova"
+- apache is /etc/apache2-supernova
+
+Run process_submissions.py by 'cd'ing into the appropriate net/ directory and:
+  python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
 
 
 
