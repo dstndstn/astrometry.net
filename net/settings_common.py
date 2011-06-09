@@ -5,6 +5,7 @@ import astrometry.net.secrets.django_db as secrets
 WEB_DIR = os.path.dirname(astrometry.net.__file__) + '/'
 DATADIR = os.path.join(WEB_DIR, 'data')
 JOBDIR = os.path.join(WEB_DIR, 'jobs')
+SDSS_TILE_DIR = os.path.join(WEB_DIR, 'sdss-tiles')
 
 
 AUTH_PROFILE_MODULE = 'net.UserProfile'

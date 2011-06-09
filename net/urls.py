@@ -24,6 +24,7 @@ urlpatterns += patterns('astrometry.net.views',
     (r'^upload/?$', 'upload_file'),
     (r'^status/(?P<subid>' + subpattern + r')/?', 'status'),
     (r'^annotated/(?P<jobid>' + jobpattern + r')/?', 'annotated_image'),
+    (r'^sdss_image/(?P<jobid>' + jobpattern + r')/?', 'sdss_image'),
     (r'^submitted_image/(?P<jobid>' + jobpattern + r')/?', 'submitted_image'),
     (r'^apikey/?$', 'get_api_key'),
 )

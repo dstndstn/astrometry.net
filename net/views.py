@@ -1,3 +1,10 @@
+import shutil
+import os, errno
+import hashlib
+import tempfile
+import math
+import urllib
+import urllib2
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render_to_response, get_object_or_404, redirect
@@ -9,14 +16,11 @@ from astrometry.net import settings
 from log import *
 from django import forms
 from django.http import HttpResponseRedirect
-import shutil
-import os, errno
-import hashlib
-import tempfile
 
 from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
-      
+from astrometry.util import util as anutil
+
 def dashboard(request):
     return render_to_response("dashboard.html",
         {
@@ -129,7 +133,46 @@ def sdss_image(req, jobid=None):
     wcsfn = os.path.join(job.get_dir(), 'wcs.fits')
     f,plotfn = tempfile.mkstemp()
     os.close(f)
-    # http://skyservice.pha.jhu.edu/DR8/ImgCutout/getjpeg.aspx?ra=179.6897098439353&dec=-0.4546214816666667&scale=0.79224&opt=&width=512&height=512
+    # Parse the wcs.fits file
+    wcs = Tan(wcsfn, 0)
+    scale = wcs.pixel_scale()
+    logmsg('scale is', scale)
+    # arcsec radius
+    #scale = math.hypot(wcs.imagew, wcs.imageh)/2. * wcs.pixel_scale()
+    # nearest power-of-2 arcsec-per-pixel scale
+    #scale = 2. ** round(math.log(scale)/math.log(2.))
+    #logmsg('power-of-2 scale is', scale)
+
+    #imsize = math.hypot(wcs.imagew, wcs.imageh)/2. * wcs.pixel_scale() / 60.
+
+    # grab SDSS tiles with about the same resolution as this image.
+    logmsg('Image scale is', wcs.pixel_scale(), 'arcsec/pix')
+    sdsssize = 512
+    scale = sdsssize * wcs.pixel_scale() / 60.
+    nside = anutil.healpix_nside_for_side_length_arcmin(scale)
+    nside = 2 ** int(round(math.log(nside)/math.log(2.)))
+    logmsg('Closest power-of-2 nside:', nside)
+    ra,dec = wcs.radec_center()
+    logmsg('Image center is RA,Dec', ra, dec)
+    hp = anutil.radecdegtohealpix(ra, dec, nside)
+    logmsg('Healpix:', hp)
+
+    fn = os.path.join(settings.SDSS_TILE_DIR, 'nside%i'%nside, '%i'%hp)
+    logmsg('Checking for filename', fn)
+
+    if not os.path.exists(fn):
+        scale = anutil.healpix_side_length_arcmin(nside) * 60. / float(sdsssize)
+        logmsg('Grabbing SDSS tile with scale', scale, 'arcsec/pix')
+        ra,dec = anutil.healpix_to_radecdeg(hp, nside, 0.5, 0.5)
+        logmsg('Healpix center is RA,Dec', ra, dec)
+
+        url = ('http://skyservice.pha.jhu.edu/DR8/ImgCutout/getjpeg.aspx?' +
+               'ra=%f&dec=%f&scale=%f&opt=&width=%i&height=%i' %
+               (ra, dec, scale, sdsssize, sdsssize))
+        urllib.urlretrieve(url, fn)
+        logmsg('Wrote', fn)
+    
+
 
 def handle_uploaded_file(req, f):
     logmsg('handle_uploaded_file: req=' + str(req))
