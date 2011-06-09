@@ -1,4 +1,16 @@
 #!/usr/bin/env python
+
+# dstn -- add .. to PYTHONPATH
+import sys
+import os
+path = os.path.abspath(__file__)
+#print 'file:', __file__
+#print 'path:', path
+#print 'dirname:', os.path.dirname(path)
+#print 'dirnamex2:', os.path.dirname(os.path.dirname(path))
+sys.path.append(os.path.dirname(os.path.dirname(path)))
+#print 'sys.path:', '\n  '.join(sys.path)
+
 from django.core.management import execute_manager
 import imp
 try:

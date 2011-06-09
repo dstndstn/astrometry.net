@@ -43,7 +43,7 @@ def upload_file(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            return handle_uploaded_file(request.FILES['file'])
+            return handle_uploaded_file(request, request.FILES['file'])
     else:
         form = UploadFileForm()
     return render_to_response('upload.html', {'form': form},
@@ -118,7 +118,7 @@ def sdss_image(req, jobid=None):
     os.close(f)
     # http://skyservice.pha.jhu.edu/DR8/ImgCutout/getjpeg.aspx?ra=179.6897098439353&dec=-0.4546214816666667&scale=0.79224&opt=&width=512&height=512
 
-def handle_uploaded_file(f):
+def handle_uploaded_file(req, f):
     # get file onto disk
     file_hash = DiskFile.get_hash()
     temp_file_path = tempfile.mktemp()
@@ -136,7 +136,7 @@ def handle_uploaded_file(f):
     df.save()
 
     # HACK
-    sub = Submission(disk_file=df, scale_type='ul', scale_units='degwidth')
+    sub = Submission(user=req.user, disk_file=df, scale_type='ul', scale_units='degwidth')
     sub.original_filename = f.name
     sub.save()
     print 'Made Submission', sub
