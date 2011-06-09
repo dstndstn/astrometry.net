@@ -170,8 +170,9 @@ class UserImage(models.Model):
             jobs = j1
         # FIXME
         jobs = jobs.order_by('-end_time')
-        return jobs[0]
-        
+        if len(jobs):
+            return jobs[0]
+        return None
         
 class Submission(models.Model):
     SCALEUNITS_CHOICES = (

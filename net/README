@@ -6,11 +6,21 @@ We store the database passwords in svn/secure; check out separately with:
 Choose which settings to use:
   ln -s settings_test.py settings.py
 
-django is installed on oven in:
-/usr/local/django-1.3/lib/python
 
-django-openid-auth is installed on oven in:
-/usr/local/django-openid-auth-0.3/lib/python
+Add some things to your PYTHONPATH:
+  /usr/local/django-1.3/lib/python
+  /usr/local/django-openid-auth-0.3/lib/python
+
+Add some things to your PKG_CONFIG_PATH:
+  /usr/local/wcslib-4.6.3/lib/pkgconfig
+
+Add some things to your LD_LIBRARY_PATH:
+  /usr/local/wcslib-4.6.3/lib
+
+
+You will also need to build the Astrometry.net tools:
+  (cd ..; make; make extra; make py)
+
 
 
 

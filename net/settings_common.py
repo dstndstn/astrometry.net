@@ -210,25 +210,25 @@ LOGGING = {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler'
         },
-		'null': {
+        'null': {
             'level':'DEBUG',
             'class':'django.utils.log.NullHandler',
-		},
+        },
         'console':{
             'level':'DEBUG',
             'class':'logging.StreamHandler',
             'formatter': 'simple'
-		},
+        },
     },
     'loggers': {
         'django.request': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,
-		},
-		'astrometry': {
-			'handlers': ['console'],
+        },
+        'astrometry': {
+            'handlers': ['console'],
             'level': 'DEBUG',
-		},
+        },
     }
 }

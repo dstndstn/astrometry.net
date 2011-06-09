@@ -2,6 +2,18 @@
 
 import os
 import sys
+
+# add .. to PYTHONPATH
+import sys
+import os
+path = os.path.abspath(__file__)
+basedir = os.path.dirname(os.path.dirname(path))
+sys.path.append(basedir)
+
+# add ../blind and ../util to PATH
+os.environ['PATH'] += ':' + os.path.join(basedir, 'blind')
+os.environ['PATH'] += ':' + os.path.join(basedir, 'util')
+
 import tempfile
 import traceback
 from urlparse import urlparse
@@ -13,8 +25,8 @@ import time
 import re
 
 import logging
-logging.basicConfig(format='%(message)s',
-                    level=logging.DEBUG)
+#logging.basicConfig(format='%(message)s',
+#                    level=logging.DEBUG)
 
 from astrometry.util import image2pnm
 from astrometry.util.filetype import filetype_short
@@ -25,8 +37,16 @@ from astrometry.util.util import Tan
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 #import astrometry.net.settings as settings
 import settings
+settings.LOGGING['loggers'][''] = {
+    'handlers': ['console'],
+    'level': 'DEBUG',
+    'propagate': True,
+}
 from astrometry.net.models import *
 from log import *
+
+from django.utils.log import dictConfig
+dictConfig(settings.LOGGING)
 
 
 
