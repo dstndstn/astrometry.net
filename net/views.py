@@ -125,6 +125,7 @@ def submitted_image(req, jobid=None):
 
 def sdss_image(req, jobid=None):
     from astrometry.util import util as anutil
+    from astrometry.blind import plotstuff as ps
 
     job = get_object_or_404(Job, pk=jobid)
     #ui = job.user_image
@@ -135,7 +136,7 @@ def sdss_image(req, jobid=None):
     f,plotfn = tempfile.mkstemp()
     os.close(f)
     # Parse the wcs.fits file
-    wcs = Tan(wcsfn, 0)
+    wcs = anutil.Tan(wcsfn, 0)
     scale = wcs.pixel_scale()
     logmsg('scale is', scale)
     # arcsec radius
@@ -158,7 +159,10 @@ def sdss_image(req, jobid=None):
     hp = anutil.radecdegtohealpix(ra, dec, nside)
     logmsg('Healpix:', hp)
 
-    fn = os.path.join(settings.SDSS_TILE_DIR, 'nside%i'%nside, '%i'%hp)
+    dirnm = os.path.join(settings.SDSS_TILE_DIR, 'nside%i'%nside)
+    if not os.path.exists(dirnm):
+        os.makedirs(dirnm)
+    fn = os.path.join(dirnm, '%i'%hp)
     logmsg('Checking for filename', fn)
 
     if not os.path.exists(fn):
@@ -172,7 +176,12 @@ def sdss_image(req, jobid=None):
                (ra, dec, scale, sdsssize, sdsssize))
         urllib.urlretrieve(url, fn)
         logmsg('Wrote', fn)
-    
+
+    plot = ps.Plotstuff(outformat='png', size=(int(wcs.imagew), int(wcs.imageh)))
+    plot.wcs_file = wcsfn
+    img = plot.image
+    #img.
+    #plot_image_
 
 
 def handle_uploaded_file(req, f):

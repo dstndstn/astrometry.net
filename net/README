@@ -57,7 +57,7 @@ Run process_submissions.py by 'cd'ing into the appropriate net/ directory and:
 
 When you're ready to tag 'supernova', do:
 
-svn copy svn+ssh://astrometry.net/svn/trunk/astrometry/src/astrometry \
+svn copy svn+ssh://astrometry.net/svn/trunk/src/astrometry \
     svn+ssh://astrometry.net/svn/tags/supernova/2011-06-08-2
 
 (where you'll set the tag name appropriately)
