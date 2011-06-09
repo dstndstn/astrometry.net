@@ -2,14 +2,16 @@ import os
 import sys
 
 #print >> sys.stderr, 'nova.wsgi: sys.path is', '\n  '.join(sys.path)
-#print >> sys.stderr, 'nova.wsgi: PYTHONPATH is', os.environ['PYTHONPATH']
 
-path = '/home/nova/nova'
+path = os.path.dirname(__file__)
 if path not in sys.path:
     sys.path.append(path)
-path = '/home/nova/nova/net'
+path = os.path.dirname(path)
 if path not in sys.path:
     sys.path.append(path)
+
+print >> sys.stderr, 'nova.wsgi: sys.path is', '\n  '.join(sys.path)
+
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
