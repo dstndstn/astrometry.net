@@ -2,12 +2,15 @@
 
 {% if user.is_authenticated %}
 
-<b>{{ user.get_full_name }}</b>
+<b>Signed in as {{ user.get_full_name }} ({{ user.email }})</b>
 
 {% else %}
 
+<b>Not signed in</b> | 
+<a href="{% url openid-login %}">Sign in</a>
+
 {% endif %}
- | |
+ |
 
 <a href="{% url astrometry.net.views.upload_file %}">Upload new image</a>
  | 
@@ -27,8 +30,6 @@
 
 <a href="{% url django.contrib.auth.views.logout %}">Sign out</a>
 {% else %}
-
-<a href="{% url openid-login %}">Sign in</a>
 
 {% endif %}
 

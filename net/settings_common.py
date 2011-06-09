@@ -20,7 +20,6 @@ UTIL_DIR = ANDIR + 'util/'
 BLIND_DIR = ANDIR + 'blind/'
 JOB_QUEUE_DIR = DATADIR + 'job-queue/'
 
-SITE_NAME = 'edge'
 JOB_DIR = DATADIR + 'web-data/'
 #FIELD_DIR = '/home/gmaps/test/web-data/fields'
 FIELD_DIR = DATADIR + 'fields'
@@ -44,7 +43,6 @@ RENDERCACHEDIR = DATADIR + 'rendercache/'
 TEMPDIR = '/tmp'
 
 SESSION_COOKIE_NAME = 'AstrometryTestSession'
-
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
