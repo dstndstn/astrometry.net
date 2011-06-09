@@ -3,7 +3,12 @@
 {% block extrahead %}
 {% if sub.is_finished %}
 {% else %}
+
+{% comment %}
 <meta http-equiv="refresh" content="5; URL=" />
+{% endcomment %}
+
+
 {% endif %}
 {% endblock extrahead %}
 
@@ -22,6 +27,15 @@ Job {{ job.id }}
 <center>
 <img src="{% url astrometry.net.views.annotated_image jobid=job.id %}" />
 </center>
+{% else %}
+
+
+{% if job %}
+<center>
+<img src="{% url astrometry.net.views.submitted_image jobid=job.id %}" />
+</center>
+{% endif %}
+
 {% endif %}
 
 {% endblock %}

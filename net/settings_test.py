@@ -1,4 +1,6 @@
 from settings_common import *
 
-DATABASES['default']['NAME'] = 'an-test'
+DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
+DATABASES['default']['NAME'] = 'django.sqlite3'
+
 

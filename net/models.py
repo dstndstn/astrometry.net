@@ -86,6 +86,9 @@ class Image(models.Model):
     width = models.PositiveIntegerField(null=True)
     height = models.PositiveIntegerField(null=True)
 
+    def get_mime_type(self):
+        return disk_file.file_type
+
 class Tag(models.Model):
     user = models.ForeignKey(User)
     text = models.CharField(max_length=4096)

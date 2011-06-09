@@ -53,9 +53,9 @@ def upload_file(request):
 def status(req, subid=None):
     logmsg("Submissions: " + ', '.join([str(x) for x in Submission.objects.all()]))
 
-    if subid is not None:
-        # strip leading zeros
-        subid = int(subid.lstrip('0'))
+    #if subid is not None:
+    #    # strip leading zeros
+    #    subid = int(subid.lstrip('0'))
     sub = get_object_or_404(Submission, pk=subid)
 
     # Would be convenient to have an "is this a single-image submission?" function
@@ -106,6 +106,18 @@ def annotated_image(req, jobid=None):
     f = open(annfn)
     res = HttpResponse(f)
     res['Content-type'] = 'image/png'
+    return res
+
+def submitted_image(req, jobid=None):
+    #sub = get_object_or_404(Submission, pk=subid)
+    job = get_object_or_404(Job, pk=jobid)
+    ui = job.user_image
+    img = ui.image
+    df = img.disk_file
+    imgfn = df.get_path()
+    f = open(imgfn)
+    res = HttpResponse(f)
+    res['Content-type'] = img.get_mime_type()
     return res
 
 def sdss_image(req, jobid=None):
