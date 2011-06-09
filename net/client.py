@@ -1,3 +1,5 @@
+import os
+import sys
 from urllib2 import urlopen
 from urllib2 import Request
 from urllib import urlencode
@@ -75,5 +77,25 @@ class Client(object):
 		pass					
 
 if __name__ == '__main__':
+	import optparse
+	parser = optparse.OptionParser()
+	parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
+	parser.add_option('--apikey', '-k', dest='apikey',
+					  help='API key for Astrometry.net web service; if not given will check AN_API_KEY environment variable')
+	opt,args = parser.parse_args()
+
+	if opt.apikey is None:
+		# try the environment
+		opt.apikey = os.environ.get('AN_API_KEY', None)
+	if opt.apikey is None:
+		parser.print_help()
+		print
+		print 'You must either specify --apikey or set AN_API_KEY'
+		sys.exit(-1)
+
 	c = Client()
-	c.login('lzoszzpljmivlsqe')
+	c.login(opt.apikey)
+
+	if opt.upload:
+		c.upload(opt.upload)
+		
