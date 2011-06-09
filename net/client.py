@@ -1,4 +1,5 @@
 from urllib2 import urlopen
+from urllib2 import Request
 from urllib import urlencode
 from exceptions import Exception
 
@@ -14,6 +15,7 @@ class Client(object):
 
 	def __init__(self,
 				 apiurl = 'http://oven.cosmo.fas.nyu.edu:9002/api/'):
+		self.session = None
 		self.apiurl = apiurl
 
 	def get_url(self, service):
@@ -24,6 +26,8 @@ class Client(object):
 		service: string
 		args: dict
 		'''
+		if self.session is not None:
+			args += { 'session' : self.session }
 		print 'Python:', args
 		json = python2json(args)
 		print 'Sending json:', json
@@ -31,7 +35,22 @@ class Client(object):
 		print 'Sending data:', data
 		url = self.get_url(service)
 		print 'Sending to URL:', url
-		f = urlopen(url, data)
+		#f = urlopen(url, data)
+
+		content_type = 'multipart/form-data; boundary=----------AaB03x'
+		body = ['----------AaB03x',
+			'Content-Disposition: form-data; name="request-json"',
+			'',
+			'{"apikey": "lzoszzpljmivlsqe"}',
+			'----------AaB03x'
+			]
+		body = '\r\n'.join(body)
+		print body
+		request = Request(url=url,
+    headers={'Content-Type':content_type},
+    data=body)
+
+		f = urlopen(request)
 		txt = f.read()
 		print 'Got json:', txt
 		result = json2python(txt)
@@ -52,7 +71,9 @@ class Client(object):
 			raise RequestError('no session in result')
 		self.session = sess
 
+	def upload(self, f):
+		pass					
 
 if __name__ == '__main__':
 	c = Client()
-	c.login('ttmxegardexovefr')
+	c.login('lzoszzpljmivlsqe')
