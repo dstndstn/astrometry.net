@@ -154,7 +154,8 @@ def handle_uploaded_file(req, f):
     df.save()
 
     # HACK
-    sub = Submission(user=req.user, disk_file=df, scale_type='ul', scale_units='degwidth')
+    submittor = req.user if req.user.is_authenticated() else None
+    sub = Submission(user=submittor, disk_file=df, scale_type='ul', scale_units='degwidth')
     sub.original_filename = f.name
     sub.save()
     logmsg('Made Submission' + str(sub))

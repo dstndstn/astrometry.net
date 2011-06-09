@@ -198,7 +198,7 @@ class Submission(models.Model):
     )
 
     ###
-    user = models.ForeignKey(User, related_name='submissions')
+    user = models.ForeignKey(User, related_name='submissions', null=True)
     disk_file = models.ForeignKey(DiskFile, related_name='submissions')
     url = models.URLField(blank=True, null=True)
     parity = models.PositiveSmallIntegerField(choices=PARITY_CHOICES, default=2)
