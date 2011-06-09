@@ -19,7 +19,6 @@ from django.http import HttpResponseRedirect
 
 from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
-from astrometry.util import util as anutil
 
 def dashboard(request):
     return render_to_response("dashboard.html",
@@ -125,6 +124,8 @@ def submitted_image(req, jobid=None):
     return res
 
 def sdss_image(req, jobid=None):
+    from astrometry.util import util as anutil
+
     job = get_object_or_404(Job, pk=jobid)
     #ui = job.user_image
     #img = ui.image
