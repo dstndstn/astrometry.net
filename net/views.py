@@ -46,7 +46,7 @@ def upload_file(request):
             return handle_uploaded_file(request, request.FILES['file'])
     else:
         form = UploadFileForm()
-    return render_to_response('upload.html', {'form': form},
+    return render_to_response('upload.html', {'form': form, 'user': request.user },
         context_instance = RequestContext(request))
 
 def status(req, subid=None):
@@ -119,6 +119,11 @@ def sdss_image(req, jobid=None):
     # http://skyservice.pha.jhu.edu/DR8/ImgCutout/getjpeg.aspx?ra=179.6897098439353&dec=-0.4546214816666667&scale=0.79224&opt=&width=512&height=512
 
 def handle_uploaded_file(req, f):
+    logmsg('handle_uploaded_file: req=' + str(req))
+    logmsg('handle_uploaded_file: req.session=' + str(req.session))
+    #logmsg('handle_uploaded_file: req.session.user=' + str(req.session.user))
+    logmsg('handle_uploaded_file: req.user=' + str(req.user))
+
     # get file onto disk
     file_hash = DiskFile.get_hash()
     temp_file_path = tempfile.mktemp()
@@ -139,6 +144,6 @@ def handle_uploaded_file(req, f):
     sub = Submission(user=req.user, disk_file=df, scale_type='ul', scale_units='degwidth')
     sub.original_filename = f.name
     sub.save()
-    print 'Made Submission', sub
+    logmsg('Made Submission' + str(sub))
 
     return redirect(status, subid=sub.id)

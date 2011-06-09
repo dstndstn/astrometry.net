@@ -53,6 +53,8 @@ from django_openid_auth.store import DjangoOpenIDStore
 
 from django import forms
 
+from log import *
+
 next_url_re = re.compile('^/[-\w/]+$')
 
 class AstrometryLoginForm(OpenIDLoginForm):
@@ -242,9 +244,12 @@ def login_complete(request, redirect_field_name=REDIRECT_FIELD_NAME,
             request, 'This is an OpenID relying party endpoint.')
 
     if openid_response.status == SUCCESS:
+        logmsg('login_complete SUCCESS')
         user = authenticate(openid_response=openid_response)
+        logmsg('user authenticated: ' + str(user))
         if user is not None:
             if user.is_active:
+                logmsg('auth_login for successful login: ' + str(user))
                 auth_login(request, user)
                 return HttpResponseRedirect(sanitise_redirect_url(redirect_to))
             else:

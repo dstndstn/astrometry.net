@@ -1,8 +1,8 @@
 import os
 import sys
 
-print >> sys.stderr, 'nova.wsgi: sys.path is', '\n  '.join(sys.path)
-print >> sys.stderr, 'nova.wsgi: PYTHONPATH is', os.environ['PYTHONPATH']
+#print >> sys.stderr, 'nova.wsgi: sys.path is', '\n  '.join(sys.path)
+#print >> sys.stderr, 'nova.wsgi: PYTHONPATH is', os.environ['PYTHONPATH']
 
 path = '/home/nova/nova'
 if path not in sys.path:

@@ -1,12 +1,20 @@
 {% if user.is_authenticated %}
     <b>You are logged in as {{ user.get_full_name }} ({{ user.email }})</b>
 
-	<a href="{% url astrometry.net.views.get_api_key %}">Get API key</a><br>
+    <br />
+    <a href="{% url astrometry.net.views.get_api_key %}">Get API key</a>
 
+    <br/>
     {% for sub in user.submissions.all %}
-        {{ sub.id }}<br>
+    <br/>
+    <a href="{% url astrometry.net.views.status subid=sub.id %}">Submission {{ sub.id }}</a>
     {% endfor %}
 
 {% else %}
     <b>You are not logged in.</b>
 {% endif %}
+
+    <br/>
+    <br />
+    <a href="{% url astrometry.net.views.upload_file %}">Upload File</a>
+    <br>
