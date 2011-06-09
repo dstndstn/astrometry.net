@@ -7,11 +7,11 @@ from astrometry.net import settings
 # admin.autodiscover()
 
 urlpatterns = patterns('',
-    (r'^logout/?$', 'django.contrib.auth.views.logout'),
 )
 
 urlpatterns += patterns('astrometry.net.openid_views',
     url(r'^login/?$', 'login_begin', name='openid-login'),
+    url(r'^logout/?$', 'logout', name='openid-logout'),
     url(r'^complete/?$', 'login_complete', name='openid-complete'),
     url(r'^logo.gif$', 'logo', name='openid-logo'),
 )

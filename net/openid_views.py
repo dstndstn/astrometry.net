@@ -35,6 +35,7 @@ from django.conf import settings
 from django.contrib.auth import (
     REDIRECT_FIELD_NAME, authenticate, login as auth_login)
 from django.contrib.auth.models import Group
+from django.contrib.auth.views import logout as django_logout
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -144,6 +145,8 @@ def parse_openid_response(request):
     consumer = make_consumer(request)
     return consumer.complete(dict(request.REQUEST.items()), current_url)
 
+def logout(request, template_name='openid/logout.html'):
+    return django_logout(request, template_name=template_name)
 
 def login_begin(request, template_name='openid/login.html',
                 login_complete_view='openid-complete',
