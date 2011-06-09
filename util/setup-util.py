@@ -1,6 +1,12 @@
 import os
+import sys
+# add .. to pythonpath
+path = os.path.abspath(__file__)
+sys.path.append(os.path.dirname(os.path.dirname(path)))
+
 from distutils.core import setup, Extension
 from numpy.distutils.misc_util import get_numpy_include_dirs
+
 from astrometry.util.setuputils import *
 
 numpy_inc = get_numpy_include_dirs()

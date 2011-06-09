@@ -77,14 +77,18 @@ def requires_json_login(handler):
                 return handler(request, *args, **kwargs)
         return handle_request
 
+
 @csrf_exempt
 @requires_json_args
 @requires_json_session
 def api_upload(request):
+    return HttpResponse('hello')
+
+'''
     logmsg('request:' + str(request))
     logmsg('api_upload: got request: ' + str(request.FILES['file'].size))
     return HttpResponse('hello')
-
+'''
 
 @csrf_exempt
 @requires_json_args

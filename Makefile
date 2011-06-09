@@ -49,6 +49,11 @@ extra:
 	$(MAKE) -C util
 	$(MAKE) -C blind cairo
 
+# Targets that require SWIG
+py:
+	$(MAKE) -C util pyutil
+	$(MAKE) -C blind pyplotstuff
+
 # Targets that support the web service
 .PHONY: web
 web:
