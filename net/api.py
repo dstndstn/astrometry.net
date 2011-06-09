@@ -88,10 +88,11 @@ def api_upload(request):
     logmsg('request:' + str(request))
     logmsg('api_upload: got request: ' + str(request.FILES['file'].size))
     logmsg('received files:')
-    for file in request.FILES:
-        handle_uploaded_file(request, request.FILES[file])
+    sub = handle_uploaded_file(request, request.FILES['file'])
 
-    return HttpResponse('hello')
+    return HttpResponseJson({'status': 'success',
+                             'subid': sub.id,
+		             'hash': sub.disk_file.file_hash}) 
 
 @csrf_exempt
 @requires_json_args

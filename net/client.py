@@ -23,7 +23,7 @@ class RequestError(Exception):
 class Client(object):
 
     def __init__(self,
-                 apiurl = 'http://oven.cosmo.fas.nyu.edu:9006/api/'):
+                 apiurl = 'http://oven.cosmo.fas.nyu.edu:9002/api/'):
         self.session = None
         self.apiurl = apiurl
 

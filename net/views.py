@@ -43,7 +43,8 @@ def upload_file(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            return handle_uploaded_file(request, request.FILES['file'])
+            sub = handle_uploaded_file(request, request.FILES['file'])
+            return redirect(status, subid=sub.id)
     else:
         form = UploadFileForm()
     return render_to_response('upload.html', {'form': form, 'user': request.user },
@@ -146,4 +147,4 @@ def handle_uploaded_file(req, f):
     sub.save()
     logmsg('Made Submission' + str(sub))
 
-    return redirect(status, subid=sub.id)
+    return sub
