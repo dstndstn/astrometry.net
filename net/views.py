@@ -137,8 +137,6 @@ def sdss_image(req, jobid=None):
     os.close(f)
     # Parse the wcs.fits file
     wcs = anutil.Tan(wcsfn, 0)
-    scale = wcs.pixel_scale()
-    logmsg('scale is', scale)
     # arcsec radius
     #scale = math.hypot(wcs.imagew, wcs.imageh)/2. * wcs.pixel_scale()
     # nearest power-of-2 arcsec-per-pixel scale
@@ -151,54 +149,81 @@ def sdss_image(req, jobid=None):
     logmsg('Image scale is', wcs.pixel_scale(), 'arcsec/pix')
     sdsssize = 512
     scale = sdsssize * wcs.pixel_scale() / 60.
-    nside = anutil.healpix_nside_for_side_length_arcmin(scale)
-    nside = 2 ** int(round(math.log(nside)/math.log(2.)))
-    logmsg('Closest power-of-2 nside:', nside)
+    # healpix-vs-north-up rotation
+    #scale /= math.sqrt(2.)
+    #scale /= 2.
+    nside = anutil.healpix_nside_for_side_length_arcmin(scale / math.sqrt(2.))
+    #nside = 2 ** int(round(math.log(nside)/math.log(2.)))
+    nside = 2 ** int(math.ceil(math.log(nside)/math.log(2.)))
+    logmsg('Next power-of-2 nside:', nside)
     ra,dec = wcs.radec_center()
     logmsg('Image center is RA,Dec', ra, dec)
-    hp = anutil.radecdegtohealpix(ra, dec, nside)
-    logmsg('Healpix:', hp)
 
     dirnm = os.path.join(settings.SDSS_TILE_DIR, 'nside%i'%nside)
     if not os.path.exists(dirnm):
         os.makedirs(dirnm)
-    fn = os.path.join(dirnm, '%i'%hp)
-    logmsg('Checking for filename', fn)
 
-    scale = anutil.healpix_side_length_arcmin(nside) * 60. / float(sdsssize)
+    hp = anutil.radecdegtohealpix(ra, dec, nside)
+    logmsg('Healpix of center:', hp)
+    #hps = anutil.healpix_get_neighbours(hp, nside)
+    #logmsg('Healpix neighbours:', hps)
+    
+    radius = math.hypot(wcs.imagew, wcs.imageh)/2. * wcs.pixel_scale() / 3600.
+    hps = anutil.healpix_rangesearch_radec(ra, dec, radius, nside)
+    logmsg('Healpixes in range:', hps)
+
+    scale = math.sqrt(2.) * anutil.healpix_side_length_arcmin(nside) * 60. / float(sdsssize)
     logmsg('Grabbing SDSS tile with scale', scale, 'arcsec/pix')
-    ra,dec = anutil.healpix_to_radecdeg(hp, nside, 0.5, 0.5)
-    logmsg('Healpix center is RA,Dec', ra, dec)
-
-    if not os.path.exists(fn):
-        url = ('http://skyservice.pha.jhu.edu/DR8/ImgCutout/getjpeg.aspx?' +
-               'ra=%f&dec=%f&scale=%f&opt=&width=%i&height=%i' %
-               (ra, dec, scale, sdsssize, sdsssize))
-        urllib.urlretrieve(url, fn)
-        logmsg('Wrote', fn)
-
-    f,swcsfn = tempfile.mkstemp()
-    os.close(f)
-    cd = scale / 3600.
-    swcs = anutil.Tan(ra, dec, sdsssize/2 + 0.5, sdsssize/2 + 0.5,
-                      -cd, 0, 0, -cd, sdsssize, sdsssize)
-    swcs.write_to(swcsfn)
 
     plot = ps.Plotstuff(outformat='png',
                         size=(int(wcs.imagew), int(wcs.imageh)))
-    plot.color = 'white'
     plot.wcs_file = wcsfn
     img = plot.image
     img.format = ps.PLOTSTUFF_FORMAT_JPG
     img.resample = 1
-    #img.image_high = 255
-    img.set_wcs_file(swcsfn, 0)
-    img.set_file(fn)
-    plot.plot('image')
-    # out = plot.outline
-    # plot.color = 'white'
-    # ps.plot_outline_set_wcs_file(out, swcsfn, 0)
-    # plot.plot('outline')
+
+    for hp in hps:
+        fn = os.path.join(dirnm, '%i.jpg'%hp)
+        logmsg('Checking for filename', fn)
+
+        ra,dec = anutil.healpix_to_radecdeg(hp, nside, 0.5, 0.5)
+        logmsg('Healpix center is RA,Dec', ra, dec)
+
+        if not os.path.exists(fn):
+            url = ('http://skyservice.pha.jhu.edu/DR8/ImgCutout/getjpeg.aspx?' +
+                   'ra=%f&dec=%f&scale=%f&opt=&width=%i&height=%i' %
+                   (ra, dec, scale, sdsssize, sdsssize))
+            urllib.urlretrieve(url, fn)
+            logmsg('Wrote', fn)
+        #
+        # Probably need a 1/sqrt(2) for healpix-vs-north-up alignment
+        #
+
+        swcsfn = os.path.join(dirnm, '%i.wcs'%hp)
+        logmsg('Checking for WCS', swcsfn)
+        #if not os.path.exists(swcsfn):
+        if True:
+            # Create WCS header
+            cd = scale / 3600.
+            swcs = anutil.Tan(ra, dec, sdsssize/2 + 0.5, sdsssize/2 + 0.5,
+                              -cd, 0, 0, -cd, sdsssize, sdsssize)
+            swcs.write_to(swcsfn)
+            logmsg('Wrote WCS to', swcsfn)
+
+        img.set_wcs_file(swcsfn, 0)
+        img.set_file(fn)
+        plot.plot('image')
+
+
+    out = plot.outline
+    plot.color = 'white'
+    plot.alpha = 0.25
+    #plot.fill = 1
+    for hp in hps:
+        swcsfn = os.path.join(dirnm, '%i.wcs'%hp)
+        ps.plot_outline_set_wcs_file(out, swcsfn, 0)
+        plot.plot('outline')
+
     plot.write(plotfn)
     
     f = open(plotfn)

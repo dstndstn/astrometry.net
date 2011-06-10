@@ -17,6 +17,7 @@
 
 #include "log.h"
 #include "healpix.h"
+#include "healpix-utils.h"
 #include "anwcs.h"
 #include "sip.h"
 #include "fitsioutils.h"
@@ -46,7 +47,47 @@ void log_set_level(int lvl);
 %apply double *OUTPUT { double *dx, double *dy };
 %apply double *OUTPUT { double *ra, double *dec };
 
+// for int healpix_get_neighbours(int hp, int* neigh, int nside)
+// --> list of neigh
+// swap the int* neighbours arg for tempneigh
+%typemap(in, numinputs=0) int *neighbours (int tempneigh[8]) {
+	$1 = tempneigh;
+}
+// in the argout typemap we don't know about the swap (but that's ok)
+%typemap(argout) int *neighbours {
+  int i;
+  int nn;
+  // convert $result to nn
+  //nn = (int)PyInt_AsLong($result);
+  nn = result;
+  $result = PyList_New(nn);
+  for (i = 0; i < nn; i++) {
+	  PyObject *o = PyInt_FromLong($1[i]);
+	  PyList_SetItem($result, i, o);
+  }
+}
+
+
+// for il* healpix_rangesearch_radec(ra, dec, double, int nside, il* hps);
+// --> list
+// swallow the int* hps arg
+%typemap(in, numinputs=0) il* hps {
+	$1 = NULL;
+}
+%typemap(out) il* {
+  int i;
+  int N;
+  N = il_size($1);
+  $result = PyList_New(N);
+  for (i = 0; i < N; i++) {
+	  PyObject *o = PyInt_FromLong(il_get($1, i));
+	  PyList_SetItem($result, i, o);
+  }
+}
+
 %include "healpix.h"
+%include "healpix-utils.h"
+
 
 // anwcs_get_radec_center_and_radius
 %apply double *OUTPUT { double *p_ra, double *p_dec, double *p_radius };

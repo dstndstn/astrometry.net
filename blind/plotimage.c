@@ -95,19 +95,24 @@ int plot_image_get_percentile(plot_args_t* pargs, plotimage_t* args,
 	return 0;
 }
 
-void plot_image_rgba_data(cairo_t* cairo, plotimage_t* args) {
+static void plot_rgba_data(cairo_t* cairo, unsigned char* img,
+						   int W, int H, double alpha) {
 	cairo_surface_t* thissurf;
 	cairo_pattern_t* pat;
-	cairoutils_rgba_to_argb32(args->img, args->W, args->H);
-	thissurf = cairo_image_surface_create_for_data(args->img, CAIRO_FORMAT_ARGB32, args->W, args->H, args->W*4);
+	cairoutils_rgba_to_argb32(img, W, H);
+	thissurf = cairo_image_surface_create_for_data(img, CAIRO_FORMAT_ARGB32, W, H, W*4);
 	pat = cairo_pattern_create_for_surface(thissurf);
 	cairo_save(cairo);
 	cairo_set_source(cairo, pat);
-	//cairo_scale(cairo, args->scalex, args->scaley);
-	cairo_paint_with_alpha(cairo, args->alpha);
+	//cairo_scale(cairo, scalex, scaley);
+	cairo_paint_with_alpha(cairo, alpha);
 	cairo_pattern_destroy(pat);
 	cairo_surface_destroy(thissurf);
 	cairo_restore(cairo);
+}
+
+void plot_image_rgba_data(cairo_t* cairo, plotimage_t* args) {
+	plot_rgba_data(cairo, args->img, args->W, args->H, args->alpha);
 }
 
 void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
@@ -130,42 +135,15 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 		} else {
 			// resample onto the output grid...
 			unsigned char* img2 = NULL;
-			unsigned char* tmpimg = NULL;
-			float* rimg = NULL;
-			float* fimg = NULL;
-			int Nin = args->W * args->H;
+			//int Nin = args->W * args->H;
 			int Nout = pargs->W * pargs->H;
-
 			img2 = calloc(Nout * 4, 1);
-			fimg = malloc(Nin * sizeof(float));
-			rimg = calloc(Nout, sizeof(float));
-			// One plane at a time...
-			for (j=0; j<3; j++) {
-				// convert the image to float...
-				for (i=0; i<Nin; i++)
-					fimg[i] = args->img[4*i + j];
-				// resample onto output grid...
-				if (resample_wcs(args->wcs, fimg, args->W, args->H,
-								 pargs->wcs, rimg, pargs->W, pargs->H)) {
-					ERROR("Failed to resample image");
-					return;
-				}
-				// convert resampled image back to uchar.
-				for (i=0; i<Nout; i++)
-					img2[4*i + j] = rimg[i];
+			if (resample_wcs_rgba(args->wcs, args->img, args->W, args->H,
+								  pargs->wcs, img2, pargs->W, pargs->H)) {
+				ERROR("Failed to resample image");
+				return;
 			}
-			free(rimg);
-			free(fimg);
-			// set alpha
-			for (i=0; i<Nout; i++)
-				img2[4*i + 3] = 255;
-
-			args->W = pargs->W;
-			args->H = pargs->H;
-			tmpimg = args->img;
-			args->img = img2;
-			plot_image_rgba_data(cairo, args);
-			args->img = tmpimg;
+			plot_rgba_data(cairo, img2, pargs->W, pargs->H, args->alpha);
 			free(img2);
 		}
 		return;

@@ -154,20 +154,16 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
 	return 0;
 }
 
-int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
-				 const anwcs_t* outwcs, float* outimg, int outW, int outH) {
-	int i,j;
-    double inxmin, inxmax, inymin, inymax;
-
-	int B = 20;
-
+// Check whether output pixels overlap with input pixels,
+// on a grid of output pixel positions.
+static bool* find_overlap_grid(int B, int outW, int outH,
+							   const anwcs_t* outwcs, const anwcs_t* inwcs,
+							   int* pBW, int* pBH) {
 	int BW, BH;
 	bool* bib = NULL;
 	bool* bib2 = NULL;
-	int bi,bj;
+	int i,j;
 
-	// Check whether output pixels overlap with input pixels,
-	// on a grid of output pixel positions.
 	BW = (int)ceil(outW / (float)B);
 	BH = (int)ceil(outH / (float)B);
 	bib = calloc(BW*BH, sizeof(bool));
@@ -214,6 +210,23 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 			logverb("\n");
 		}
 	}
+
+	*pBW = BW;
+	*pBH = BH;
+	return bib;
+}
+
+
+
+int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
+				 const anwcs_t* outwcs, float* outimg, int outW, int outH) {
+	int i,j;
+    double inxmin, inxmax, inymin, inymax;
+	int B = 20;
+	int BW, BH;
+	bool* bib;
+	int bi,bj;
+	bib = find_overlap_grid(B, outW, outH, outwcs, inwcs, &BW, &BH);
 
     inxmax = -HUGE_VAL;
     inymax = -HUGE_VAL;
@@ -270,5 +283,60 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
     logverb("  y: %g to %g\n", inymin, inymax);
 
 	return 0;
+}
+
+
+int resample_wcs_rgba(const anwcs_t* inwcs, const unsigned char* inimg,
+					  int inW, int inH,
+					  const anwcs_t* outwcs, unsigned char* outimg,
+					  int outW, int outH) {
+	int i,j;
+	int B = 20;
+	int BW, BH;
+	bool* bib;
+	int bi,bj;
+
+	bib = find_overlap_grid(B, outW, outH, outwcs, inwcs, &BW, &BH);
+
+	// We've expanded the in-bounds boxes by 1 in each direction,
+	// so this (using the lower-left corner) should be ok.
+	for (bj=0; bj<BH; bj++) {
+		for (bi=0; bi<BW; bi++) {
+			int jlo,jhi,ilo,ihi;
+			if (!bib[bj*BW + bi])
+				continue;
+			jlo = MIN(outH,  bj   *B);
+			jhi = MIN(outH, (bj+1)*B);
+			ilo = MIN(outW,  bi   *B);
+			ihi = MIN(outW, (bi+1)*B);
+			for (j=jlo; j<jhi; j++) {
+				for (i=ilo; i<ihi; i++) {
+					double xyz[3];
+					double inx, iny;
+					int x,y;
+					// +1 for FITS pixel coordinates.
+					if (anwcs_pixelxy2xyz(outwcs, i+1, j+1, xyz) ||
+						anwcs_xyz2pixelxy(inwcs, xyz, &inx, &iny))
+						continue;
+					// FIXME - Nearest-neighbour resampling!!
+					// -1 for FITS pixel coordinates.
+					x = round(inx - 1.0);
+					y = round(iny - 1.0);
+					if (x < 0 || x >= inW || y < 0 || y >= inH)
+						continue;
+					// HACK -- straight copy
+					outimg[4 * (j * outW + i) + 0] = inimg[4 * (y * inW + x) + 0];
+					outimg[4 * (j * outW + i) + 1] = inimg[4 * (y * inW + x) + 1];
+					outimg[4 * (j * outW + i) + 2] = inimg[4 * (y * inW + x) + 2];
+					outimg[4 * (j * outW + i) + 3] = inimg[4 * (y * inW + x) + 3];
+				}
+			}
+		}
+	}
+
+	free(bib);
+
+	return 0;
+
 }
 
