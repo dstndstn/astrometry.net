@@ -230,6 +230,13 @@ def sdss_image(req, jobid=None):
     res['Content-type'] = 'image/png'
     return res
 
+# 2MASS:
+# Has a SIA service; but does not make mosaics.
+# Documented here:
+# http://irsa.ipac.caltech.edu/applications/2MASS/IM/docs/siahelp.html
+# Eg:
+# http://irsa.ipac.caltech.edu/cgi-bin/2MASS/IM/nph-im_sia?POS=187.03125,16.9577633&SIZE=1&type=ql
+
 
 def handle_uploaded_file(req, f):
     logmsg('handle_uploaded_file: req=' + str(req))

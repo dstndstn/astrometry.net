@@ -87,7 +87,7 @@ class Image(models.Model):
     height = models.PositiveIntegerField(null=True)
 
     def get_mime_type(self):
-        return disk_file.file_type
+        return self.disk_file.file_type
 
 class Tag(models.Model):
     user = models.ForeignKey(User)
