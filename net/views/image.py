@@ -79,7 +79,6 @@ def sdss_image(req, jobid=None):
     # nearest power-of-2 arcsec-per-pixel scale
     #scale = 2. ** round(math.log(scale)/math.log(2.))
     #logmsg('power-of-2 scale is', scale)
-
     #imsize = math.hypot(wcs.imagew, wcs.imageh)/2. * wcs.pixel_scale() / 60.
 
     # grab SDSS tiles with about the same resolution as this image.
@@ -168,10 +167,16 @@ def sdss_image(req, jobid=None):
     return res
 
 # 2MASS:
-# Has a SIA service; but does not make mosaics.
+# Has a SIA service, but does not make mosaics.
 # Documented here:
 # http://irsa.ipac.caltech.edu/applications/2MASS/IM/docs/siahelp.html
 # Eg:
 # http://irsa.ipac.caltech.edu/cgi-bin/2MASS/IM/nph-im_sia?POS=187.03125,16.9577633&SIZE=1&type=ql
 
+# WISE:
+# -IPAC/IRSA claims to have VO services
+# -elaborate javascripty interface
 
+# GALEX:
+# -JPEG for each tile; eg:
+#  http://galex.stsci.edu/data/GR6/pipe/02-vsn/50227-AIS_227/d/01-main/0001-img/07-try/qa/AIS_227_sg84-xd-int_2color.jpg

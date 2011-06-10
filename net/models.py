@@ -8,7 +8,9 @@ from wcs import *
 from datetime import datetime
 import hashlib
 import shutil
+
 from astrometry.util.filetype import filetype_short
+from astrometry.util.run_command import run_command
 
 class DiskFile(models.Model):
     file_hash = models.CharField(max_length=40, unique=True, primary_key=True)
@@ -85,9 +87,41 @@ class Image(models.Model):
     disk_file = models.ForeignKey(DiskFile)
     width = models.PositiveIntegerField(null=True)
     height = models.PositiveIntegerField(null=True)
+    thumbnail = models.ForeignKey('Image', null=True)
 
     def get_mime_type(self):
         return self.disk_file.file_type
+
+    def get_or_create_thumbnail(self):
+        maxsize = 256
+        if self.thumbnail is not None:
+            return self.thumbnail
+        if max(self.width, self.height) <= maxsize:
+            return self
+        from astrometry.util.image2pnm import image2pnm
+        fn = self.disk_file.get_path()
+        f,tmpfn = tempfile.mkstemp()
+        os.close(f)
+        (ext,err) = image2pnm(fn, tmpfn)
+        if ext is None:
+            raise RuntimeError('Failed to make thumbnail for %s: image2pnm: %s' % (str(self), err))
+        f,thumbfn = tempfile.mkstemp()
+        os.close(f)
+        # find thumbnail scale
+        scale = float(maxsize) / float(max(self.width, self.height))
+        W,H = int(round(scale * self.width)), int(round(scale * self.height))
+        cmd = 'pnmscale -width %i -height %i %s | pnmtojpeg > %s' % (W, H, tmpfn, thumbfn)
+        logmsg("Making thumbnail: %s" % cmd)
+        rtn,out,err = run_command(cmd)
+        if rtn:
+            logmsg('pnmscale failed: rtn %i' % rtn)
+            logmsg('out: ' + out)
+            logmsg('err: ' + err)
+            raise RuntimeError('Failed to make thumbnail for %s: pnmscale: %s' % (str(self), err))
+        df = DiskFile.from_file(thumbfn)
+        self.thumbnail = df
+        self.save()
+
 
 class Tag(models.Model):
     user = models.ForeignKey(User)
