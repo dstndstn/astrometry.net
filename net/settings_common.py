@@ -190,11 +190,22 @@ OPENID_UPDATE_DETAILS_FROM_SREG = True
 
 # list of open id providers to allow users to log into the site with;
 # any instance of {username} will be replaced with a username
+'''
 OPENID_PROVIDERS = (
    #('openid_server_url', 'Provider Name'),
     ('google.com/profiles/username', 'Google'),
     ('username.wordpress.com', 'WordPress'),
     ('yahoo.com', 'Yahoo'),
+)
+'''
+
+OPENID_PROVIDERS = (
+    {'provider':'Google',
+        'url':'google.com/profiles/username',
+        'suggestion':'@gmail.com'}
+    ,{'provider':'WordPress',
+        'url':'username.wordpress.com',
+        'suggestion':'.wordpress.com'}
 )
 
 # A sample logging configuration. The only tangible logging

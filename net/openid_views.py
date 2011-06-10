@@ -54,6 +54,7 @@ from django_openid_auth.store import DjangoOpenIDStore
 
 from django import forms
 from astrometry.net.settings import *
+from astrometry.net.util import choicify
 
 from log import *
 
@@ -64,7 +65,7 @@ class AstrometryLoginForm(OpenIDLoginForm):
     username = forms.CharField(max_length=255)
     openid_identifier = forms.ChoiceField(
         widget=forms.Select(attrs={'class':'required openid'}),
-        choices=OPENID_PROVIDERS,
+        choices=choicify(OPENID_PROVIDERS,'url','provider'),
     )
 
 def is_valid_next_url(next):
