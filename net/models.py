@@ -112,6 +112,23 @@ class Calibration(models.Model):
         s = 'Calibration %i' % self.id
         return s
 
+    def get_center_radec(self):
+        (ra,dec,radius) = self.raw_tan.get_center_radecradius()
+        return (ra,dec)
+
+    def get_center_radecradius(self):
+        return self.raw_tan.get_center_radecradius()
+
+    def format_radec(self):
+        r,d = self.get_center_radec()
+        return '%.3f, %.3f' % (r, d)
+
+    def format_radius(self):
+        ## FIXME -- choose units and resolution (deg, arcmin)
+        r,d,radius = self.get_center_radecradius()
+        return '%.3f deg' % radius
+
+
 class Job(models.Model):
     calibration = models.ForeignKey('Calibration', null=True)
     

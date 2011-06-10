@@ -25,6 +25,8 @@ Job {{ job.id }}
 
 {% if calib %}
 <center>
+RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
+<br />
 <img src="{% url astrometry.net.views.annotated_image jobid=job.id %}" />
 </center>
 {% else %}

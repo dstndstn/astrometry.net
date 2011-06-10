@@ -26,6 +26,14 @@ class TanWCS(models.Model):
             #self.set_from_tanwcs(wcs)
             pass
 
+    def get_center_radecradius(self):
+        wcs = self.to_tanwcs()
+        print 'WCS:', wcs
+        ra,dec = wcs.radec_center()
+        radius = wcs.pixel_scale() * math.hypot(wcs.imagew, wcs.imageh)/2. / 3600.
+        return ra,dec,radius
+
+    # from anutil.Tan
     def set_from_tanwcs(self, wcs):
         self.crval1 = wcs.crval[0]
         self.crval2 = wcs.crval[1]
@@ -94,7 +102,13 @@ class TanWCS(models.Model):
         return tanwcs.radec_bounds(nsteps)
 
     def to_tanwcs(self):
-        tan = sip.Tan()
+        from astrometry.util import util as anutil
+        tan = anutil.Tan(self.crval1, self.crval2, self.crpix1, self.crpix2,
+                         self.cd11, self.cd12, self.cd21, self.cd22,
+                         self.imagew, self.imageh)
+        return tan
+        '''
+        tan = anutil.Tan()
         tan.crval[0] = self.crval1
         tan.crval[1] = self.crval2
         tan.crpix[0] = self.crpix1
@@ -106,6 +120,7 @@ class TanWCS(models.Model):
         tan.imagew = self.imagew
         tan.imageh = self.imageh
         return tan
+        '''
 
 class  SipWCS(models.Model):
     tan = models.OneToOneField(TanWCS)
