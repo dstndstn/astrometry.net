@@ -190,17 +190,15 @@ def sdss_image(req, jobid=None):
     plot.wcs_file = wcsfn
     img = plot.image
     img.format = ps.PLOTSTUFF_FORMAT_JPG
-    #img.resample = 1
+    img.resample = 1
     #img.image_high = 255
     img.set_wcs_file(swcsfn, 0)
     img.set_file(fn)
     plot.plot('image')
-
-    out = plot.outline
-    plot.color = 'white'
-    ps.plot_outline_set_wcs_file(out, swcsfn, 0)
-    plot.plot('outline')
-
+    # out = plot.outline
+    # plot.color = 'white'
+    # ps.plot_outline_set_wcs_file(out, swcsfn, 0)
+    # plot.plot('outline')
     plot.write(plotfn)
     
     f = open(plotfn)

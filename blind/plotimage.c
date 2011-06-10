@@ -156,6 +156,9 @@ void plot_image_wcs(cairo_t* cairo, unsigned char* img, int W, int H,
 			}
 			free(rimg);
 			free(fimg);
+			// set alpha
+			for (i=0; i<Nout; i++)
+				img2[4*i + 3] = 255;
 
 			args->W = pargs->W;
 			args->H = pargs->H;
