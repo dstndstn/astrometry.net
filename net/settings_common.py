@@ -1,6 +1,7 @@
 import os
 import astrometry.net
 import astrometry.net.secrets.django_db as secrets
+from astrometry.net.util import dict_pack
 
 WEB_DIR = os.path.dirname(astrometry.net.__file__) + '/'
 DATADIR = os.path.join(WEB_DIR, 'data')
@@ -190,22 +191,16 @@ OPENID_UPDATE_DETAILS_FROM_SREG = True
 
 # list of open id providers to allow users to log into the site with;
 # any instance of {username} will be replaced with a username
-'''
-OPENID_PROVIDERS = (
-   #('openid_server_url', 'Provider Name'),
-    ('google.com/profiles/username', 'Google'),
-    ('username.wordpress.com', 'WordPress'),
-    ('yahoo.com', 'Yahoo'),
-)
-'''
 
-OPENID_PROVIDERS = (
-    {'provider':'Google',
-        'url':'google.com/profiles/username',
-        'suggestion':'@gmail.com'}
-    ,{'provider':'WordPress',
-        'url':'username.wordpress.com',
-        'suggestion':'.wordpress.com'}
+OPENID_PROVIDERS = dict_pack(
+    ('provider', 'url', 'suggestion'),
+    ( # provider choice data
+        ('Google','google.com/profiles/username','@gmail.com'),  # works
+        ('Yahoo','yahoo.com','@yahoo.com'),                      # works
+        ('AOL','openid.aol.com/username','@aol.com'),            # works
+      # ('Launchpad','launchpad.net/~username',''),              # untested
+      # ('WordPress','username.wordpress.com','.wordpress.com'), # didn't work
+    )
 )
 
 # A sample logging configuration. The only tangible logging

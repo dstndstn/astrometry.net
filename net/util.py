@@ -1,15 +1,19 @@
 def dict_pack(struct_tuple, data_tuple):
-    pack = {}
+    pack = []
     for data in data_tuple:
         index = 0
+        packed_data = {}
         for key in struct_tuple:
-            pack.update({key:data[index]})
+            packed_data.update({key:data[index]})
             index += 1
+        pack += [packed_data]
+    print pack
+    return tuple(pack)
 
 def choicify(choice_dict_list, database_value, human_readable_value):
     choice_list = []
-    for dict in choice_dict_list:
-        choice_list.append((dict[database_value],dict[human_readable_value]))
+    for d in choice_dict_list:
+        choice_list.append((d[database_value],d[human_readable_value]))
     return tuple(choice_list)
     
 
