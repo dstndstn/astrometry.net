@@ -1,13 +1,17 @@
 import os
 import errno
-from astrometry.net.settings import *
-from django.db import models
-from django.contrib.auth.models import User
-from userprofile import UserProfile
-from wcs import *
-from datetime import datetime
 import hashlib
 import shutil
+import tempfile
+from datetime import datetime
+
+from django.db import models
+from django.contrib.auth.models import User
+
+from astrometry.net.settings import *
+from userprofile import UserProfile
+from wcs import *
+from log import *
 
 from astrometry.util.filetype import filetype_short
 from astrometry.util.run_command import run_command
@@ -119,8 +123,11 @@ class Image(models.Model):
             logmsg('err: ' + err)
             raise RuntimeError('Failed to make thumbnail for %s: pnmscale: %s' % (str(self), err))
         df = DiskFile.from_file(thumbfn)
-        self.thumbnail = df
+        thumb = Image(disk_file=df, width=W, height=H)
+        thumb.save()
+        self.thumbnail = thumb
         self.save()
+        return self.thumbnail
 
 
 class Tag(models.Model):
@@ -268,6 +275,12 @@ class Submission(models.Model):
     def __str__(self):
         return ('Submission %i: file <%s>, url %s, proc_started=%s' %
                 (self.id, str(self.disk_file), self.url, str(self.processing_started)))
+
+    def get_user_image(self):
+        uis = self.user_images.all()
+        if uis.count():
+            return uis[0]
+        return None
 
     def get_best_jobs(self):
         uimgs = self.user_images.all()

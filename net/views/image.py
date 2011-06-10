@@ -178,5 +178,6 @@ def sdss_image(req, jobid=None):
 # -elaborate javascripty interface
 
 # GALEX:
+# http://galex.stsci.edu/GR6/default.aspx?page=tilelist&survey=ais
 # -JPEG for each tile; eg:
 #  http://galex.stsci.edu/data/GR6/pipe/02-vsn/50227-AIS_227/d/01-main/0001-img/07-try/qa/AIS_227_sg84-xd-int_2color.jpg

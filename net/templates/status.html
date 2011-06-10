@@ -34,6 +34,7 @@ RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
 
 {% if job %}
 <center>
+<img src="{% url astrometry.net.views.image.serve_image imageid=sub.get_user_image.id %}" />
 <img src="{% url astrometry.net.views.submitted_image jobid=job.id %}" />
 </center>
 {% endif %}

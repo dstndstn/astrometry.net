@@ -4,8 +4,6 @@ import os
 import sys
 
 # add .. to PYTHONPATH
-import sys
-import os
 path = os.path.abspath(__file__)
 basedir = os.path.dirname(os.path.dirname(path))
 sys.path.append(basedir)
