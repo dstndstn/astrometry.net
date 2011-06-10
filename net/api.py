@@ -2,7 +2,7 @@ from django.contrib import auth
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
-from astrometry.net.views import handle_uploaded_file
+from astrometry.net.views.submission import handle_uploaded_file
 
 from api_util import *
 from userprofile import *

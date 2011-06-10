@@ -3,18 +3,18 @@
 {% block content %}
 {% if user.is_authenticated %}
     <br />
-    <a href="{% url astrometry.net.views.get_api_key %}">Get API key</a>
+    <a href="{% url astrometry.net.views.user.get_api_key %}">Get API key</a>
 
     <br/>
     {% for sub in user.submissions.all %}
     <br/>
-    <a href="{% url astrometry.net.views.status subid=sub.id %}">Submission {{ sub.id }}</a>
+    <a href="{% url astrometry.net.views.submission.status subid=sub.id %}">Submission {{ sub.id }}</a>
     {% endfor %}
 {% else %}
 {% endif %}
 
     <br/>
     <br />
-    <a href="{% url astrometry.net.views.upload_file %}">Upload File</a>
+    <a href="{% url astrometry.net.views.submission.upload_file %}">Upload File</a>
     <br>
 {% endblock content %}

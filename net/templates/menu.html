@@ -2,7 +2,10 @@
 
 {% if user.is_authenticated %}
 
-<b>Signed in as {{ user.get_full_name }} ({{ user.email }})</b>
+<b>
+Signed in as <a href="{% url astrometry.net.views.user.dashboard %}">
+{{ user.get_full_name }}</a> ({{ user.email }})
+</b>
 
 {% else %}
 
@@ -12,7 +15,7 @@
 {% endif %}
  |
 
-<a href="{% url astrometry.net.views.upload_file %}">Upload new image</a>
+<a href="{% url astrometry.net.views.submission.upload_file %}">Upload new image</a>
  | 
 {% comment %}
 <a href="{% url astrometry.net1.portal.tags.taglist %}">Tags</a>
