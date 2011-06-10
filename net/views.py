@@ -214,15 +214,14 @@ def sdss_image(req, jobid=None):
         img.set_file(fn)
         plot.plot('image')
 
-
-    out = plot.outline
-    plot.color = 'white'
-    plot.alpha = 0.25
-    #plot.fill = 1
-    for hp in hps:
-        swcsfn = os.path.join(dirnm, '%i.wcs'%hp)
-        ps.plot_outline_set_wcs_file(out, swcsfn, 0)
-        plot.plot('outline')
+    if False:
+        out = plot.outline
+        plot.color = 'white'
+        plot.alpha = 0.25
+        for hp in hps:
+            swcsfn = os.path.join(dirnm, '%i.wcs'%hp)
+            ps.plot_outline_set_wcs_file(out, swcsfn, 0)
+            plot.plot('outline')
 
     plot.write(plotfn)
     
