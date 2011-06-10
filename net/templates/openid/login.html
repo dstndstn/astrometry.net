@@ -1,5 +1,23 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% block javascript %}
+<script type="text/javascript">
+var openid_suggestions = [
+{% for s in openid_suggestions %}
+"{{ s.1 }}",
+{% endfor %}
+];
+
+function changeProviderText() {
+    select = document.getElementById("id_openid_identifier");
+    index = select.selectedIndex
+    document.getElementById("suggestion").innerHTML = openid_suggestions[index]
+}
+window.onload = function() {
+    document.getElementById("id_openid_identifier").onchange = changeProviderText
+}
+</script>
+{% endblock %}
 {% block content %}
 <h1>Sign in with your OpenID</h1>
 {% if form.errors %}
@@ -23,6 +41,7 @@
         <div class="form-row">
             <label for="id_openid_identifier">{% trans "Username:" %}</label><br />
             {{ form.username }}
+            <span id="suggestion">@gmail.com</span>
         </div>
         <div class="submit-row ">
             <input name="bsignin" type="submit" value="{% trans "Sign in" %}">

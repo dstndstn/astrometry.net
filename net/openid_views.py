@@ -176,6 +176,8 @@ def login_begin(request, template_name='openid/login.html',
         if openid_url is None:
             return render_to_response(template_name, {
                     'form': login_form,
+                    'openid_suggestions': choicify(OPENID_PROVIDERS,
+                                                   'url','suggestion'),
                     redirect_field_name: redirect_to
                     }, context_instance=RequestContext(request))
 
