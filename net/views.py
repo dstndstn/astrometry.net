@@ -165,23 +165,48 @@ def sdss_image(req, jobid=None):
     fn = os.path.join(dirnm, '%i'%hp)
     logmsg('Checking for filename', fn)
 
-    if not os.path.exists(fn):
-        scale = anutil.healpix_side_length_arcmin(nside) * 60. / float(sdsssize)
-        logmsg('Grabbing SDSS tile with scale', scale, 'arcsec/pix')
-        ra,dec = anutil.healpix_to_radecdeg(hp, nside, 0.5, 0.5)
-        logmsg('Healpix center is RA,Dec', ra, dec)
+    scale = anutil.healpix_side_length_arcmin(nside) * 60. / float(sdsssize)
+    logmsg('Grabbing SDSS tile with scale', scale, 'arcsec/pix')
+    ra,dec = anutil.healpix_to_radecdeg(hp, nside, 0.5, 0.5)
+    logmsg('Healpix center is RA,Dec', ra, dec)
 
+    if not os.path.exists(fn):
         url = ('http://skyservice.pha.jhu.edu/DR8/ImgCutout/getjpeg.aspx?' +
                'ra=%f&dec=%f&scale=%f&opt=&width=%i&height=%i' %
                (ra, dec, scale, sdsssize, sdsssize))
         urllib.urlretrieve(url, fn)
         logmsg('Wrote', fn)
 
-    plot = ps.Plotstuff(outformat='png', size=(int(wcs.imagew), int(wcs.imageh)))
+    f,swcsfn = tempfile.mkstemp()
+    os.close(f)
+    cd = scale / 3600.
+    swcs = anutil.Tan(ra, dec, sdsssize/2 + 0.5, sdsssize/2 + 0.5,
+                      -cd, 0, 0, -cd, sdsssize, sdsssize)
+    swcs.write_to(swcsfn)
+
+    plot = ps.Plotstuff(outformat='png',
+                        size=(int(wcs.imagew), int(wcs.imageh)))
+    plot.color = 'white'
     plot.wcs_file = wcsfn
     img = plot.image
-    #img.
-    #plot_image_
+    img.format = ps.PLOTSTUFF_FORMAT_JPG
+    #img.resample = 1
+    #img.image_high = 255
+    img.set_wcs_file(swcsfn, 0)
+    img.set_file(fn)
+    plot.plot('image')
+
+    out = plot.outline
+    plot.color = 'white'
+    ps.plot_outline_set_wcs_file(out, swcsfn, 0)
+    plot.plot('outline')
+
+    plot.write(plotfn)
+    
+    f = open(plotfn)
+    res = HttpResponse(f)
+    res['Content-type'] = 'image/png'
+    return res
 
 
 def handle_uploaded_file(req, f):
