@@ -7,7 +7,6 @@ def dict_pack(struct_tuple, data_tuple):
             packed_data.update({key:data[index]})
             index += 1
         pack += [packed_data]
-    print pack
     return tuple(pack)
 
 def choicify(choice_dict_list, database_value, human_readable_value):

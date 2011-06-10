@@ -168,7 +168,7 @@ def login_begin(request, template_name='openid/login.html',
                 openid_url = login_form.cleaned_data['openid_identifier']
                 username = login_form.cleaned_data['username']
                 openid_url = openid_url.replace("username", username)
-                print "OpenID url: " + openid_url
+                logmsg( "OpenID url: " + openid_url)
         else:
             login_form = form_class()
 
