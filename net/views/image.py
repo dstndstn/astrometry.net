@@ -48,16 +48,14 @@ def annotated_image(req, jobid=None):
     res['Content-type'] = 'image/png'
     return res
 
-def submitted_image(req, jobid=None):
+def serve_image(req, id=None):
     #sub = get_object_or_404(Submission, pk=subid)
-    job = get_object_or_404(Job, pk=jobid)
-    ui = job.user_image
-    img = ui.image
-    df = img.disk_file
+    image = get_object_or_404(Image, pk=id)
+    df = image.disk_file
     imgfn = df.get_path()
     f = open(imgfn)
     res = HttpResponse(f)
-    res['Content-type'] = img.get_mime_type()
+    res['Content-type'] = image.get_mime_type()
     return res
 
 def sdss_image(req, jobid=None):
