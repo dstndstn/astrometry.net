@@ -1,0 +1,7 @@
+<ul>
+    {% for sub in submissions %}
+    <li>
+        <a href="{% url astrometry.net.views.submission.status subid=sub.id %}">Submission {{ sub.id }}</a>
+    </li>
+    {% endfor %}
+</ul>

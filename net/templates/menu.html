@@ -1,39 +1,30 @@
 <div id="menu">
-
+<p id="auth_status">
 {% if user.is_authenticated %}
-
-<b>
-Signed in as <a href="{% url astrometry.net.views.user.dashboard %}">
-{{ user.get_full_name }}</a> ({{ user.email }})
-</b>
-
+    Signed in as {{ user.get_full_name }} ({{ user.email }}) |
+    <a href="{% url openid-logout %}">Sign Out</a>
 {% else %}
-
-<b>Not signed in</b> | 
-<a href="{% url openid-login %}">Sign in</a>
-
+    Not signed in | 
+    <a href="{% url openid-login %}">Sign in</a>
 {% endif %}
- |
+</p>
+<p id="menu_links">
+    {% if user.is_authenticated %}
+    <a href="{% url astrometry.net.views.user.dashboard %}">Dashboard</a>
+     |
+    {% endif %}
+    <a href="{% url astrometry.net.views.submission.upload_file %}">Upload new image</a>
+     | 
+    {% comment %}
+    <a href="{% url astrometry.net1.portal.tags.taglist %}">Tags</a>
+     | 
+    {% endcomment %}
 
-<a href="{% url astrometry.net.views.submission.upload_file %}">Upload new image</a>
- | 
-{% comment %}
-<a href="{% url astrometry.net1.portal.tags.taglist %}">Tags</a>
- | 
-{% endcomment %}
-
-{% if user.is_authenticated %}
-
-{% comment %}
-<a href="{% url astrometry.net1.portal.views.joblist %}">My images</a>
- | 
-<a href="{% url astrometry.net1.portal.accounts.userprefs %}">Set preferences</a>
- | 
-{% endcomment %}
-
-<a href="{% url openid-logout %}">Sign out</a>
-{% else %}
-
-{% endif %}
-
+    {% comment %}
+    <a href="{% url astrometry.net1.portal.views.joblist %}">My images</a>
+     | 
+    <a href="{% url astrometry.net1.portal.accounts.userprefs %}">Set preferences</a>
+     | 
+    {% endcomment %}
+</p>
 </div>

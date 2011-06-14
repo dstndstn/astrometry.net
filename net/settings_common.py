@@ -157,6 +157,10 @@ TEMPLATE_DIRS = (
     os.path.join(WEB_DIR, 'templates') ,
 )
 
+ALLOWED_INCLUDE_ROOTS = (
+    os.path.join(WEB_DIR, 'templates'),
+)
+
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
@@ -190,7 +194,7 @@ OPENID_CREATE_USERS = True
 OPENID_UPDATE_DETAILS_FROM_SREG = True
 
 # list of open id providers to allow users to log into the site with;
-# any instance of {username} will be replaced with a username
+# any instance of username will be replaced with a username
 
 OPENID_PROVIDERS = dict_pack(
     ('provider', 'url', 'suggestion'),

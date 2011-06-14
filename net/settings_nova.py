@@ -1,3 +1,4 @@
+# settings_nova.py
 from settings_common import *
 
 DATABASES['default']['NAME'] = 'an-nova'

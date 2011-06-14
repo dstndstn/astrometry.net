@@ -1,21 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
+<h2>Dashboard</h2>
 {% if user.is_authenticated %}
-    <br />
-    <a href="{% url astrometry.net.views.user.get_api_key %}">Get API key</a>
-    <br/>
-    <a href="{% url astrometry.net.views.image.image_set 'user' user.id %}">My Images</a>
-    <br/>
-    {% for sub in user.submissions.all %}
-    <br/>
-    <a href="{% url astrometry.net.views.submission.status subid=sub.id %}">Submission {{ sub.id }}</a>
-    {% endfor %}
+    <div id="control_panel">
+        {% include 'control_panel.html' %}
+    </div>
+    <div>
+        <h3>Submissions</h3>
+        {% include 'submissions_list.html' with submissions=user.submissions.all %}
+    </div>
 {% else %}
 {% endif %}
-
-    <br/>
-    <br />
-    <a href="{% url astrometry.net.views.submission.upload_file %}">Upload File</a>
-    <br>
 {% endblock content %}

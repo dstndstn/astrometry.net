@@ -1,3 +1,4 @@
+# settings_supernova.py
 from settings_common import *
 
 DATABASES['default']['NAME'] = 'an-supernova'
