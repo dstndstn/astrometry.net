@@ -89,6 +89,8 @@ void tan_get_radec_center(const tan_t* wcs,
 
 double sip_get_radius_deg(const sip_t* wcs);
 
+double tan_get_radius_deg(const tan_t* wcs);
+
 // RA hours:minutes:seconds, Dec degrees:minutes:seconds
 void sip_get_radec_center_hms(const sip_t* wcs,
                               int* rah, int* ram, double* ras,

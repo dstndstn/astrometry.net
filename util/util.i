@@ -288,6 +288,9 @@ Sip = sip_t
 	void radec_center(double *p_ra, double *p_dec) {
 		tan_get_radec_center($self, p_ra, p_dec);
 	}
+	double radius() {
+		return tan_get_radius_deg($self);
+	}
 	void xyzcenter(double *p_x, double *p_y, double *p_z) {
 		double xyz[3];
 		tan_pixelxy2xyzarr($self, 0.5+$self->imagew/2.0, 0.5+$self->imageh/2.0, xyz);

@@ -14,22 +14,38 @@ numpy_inc = numpy.get_include()
 netpbm_inc = os.environ.get('NETPBM_INC', '')
 netpbm_lib = os.environ.get('NETPBM_LIB', '-lnetpbm')
 
-#compile_args = ['-O0', '-g']
+extra_inc_dirs = []
 compile_args = []
 if len(netpbm_inc):
-	compile_args.append(netpbm_inc)
-#link_args = ['-O0', '-g']
+	# Pull "-I/dir" into extra_inc_dirs
+	for w in netpbm_inc.split(' '):
+		if w.startswith('-I'):
+			extra_inc_dirs.append(w[2:])
+		else:
+			compile_args.append(w)
+
+
+extra_link_dirs = []
+extra_link_libs = []
 link_args = []
 if len(netpbm_lib):
-	link_args.append(netpbm_lib)
+	for w in netpbm_lib.split(' '):
+		if w.startswith('-L'):
+			extra_link_dirs.append(w[2:])
+		elif w.startswith('-l'):
+			extra_link_libs.append(w[2:])
+		else:
+			link_args.append(w)
 
 c_module = Extension('_plotstuff_c',
                      sources = ['plotstuff_wrap.c'],
-                     include_dirs = [
+                     include_dirs = ([
 						 '../qfits-an/include',
 						 '../libkd',
-						 '../util', '.'] + get_include_dirs('cairo') +
-					 [numpy_inc],
+						 '../util', '.'] +
+									 get_include_dirs('cairo') +
+									 [numpy_inc] +
+									 extra_inc_dirs),
 					 extra_objects = [
 						 'plotstuff.o', 'plotfill.o', 'plotxy.o',
 						 'plotimage.o', 'plotannotations.o',
@@ -43,8 +59,8 @@ c_module = Extension('_plotstuff_c',
 						 '../qfits-an/lib/libqfits.a',
 						 '../gsl-an/libgsl-an.a',
 						 ],
-					 libraries=reduce(lambda x,y: x+y, [get_libs(x) for x in ['cairo', 'wcslib']]) + ['jpeg'], #'netpbm'],
-					 library_dirs=reduce(lambda x,y: x+y, [get_lib_dirs(x) for x in ['cairo', 'wcslib']]),
+					 libraries=reduce(lambda x,y: x+y, [get_libs(x) for x in ['cairo', 'wcslib']]) + ['jpeg'] + extra_link_libs,
+					 library_dirs=reduce(lambda x,y: x+y, [get_lib_dirs(x) for x in ['cairo', 'wcslib']]) + extra_link_dirs,
 		     extra_compile_args=compile_args,
 		     extra_link_args=link_args,
 					 )

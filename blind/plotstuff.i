@@ -245,6 +245,31 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 
 }
 
+%extend plotoutline_args {
+	int set_wcs_file(const char* fn, int ext) {
+		return plot_outline_set_wcs_file(self, fn, ext);
+	}
+}
+%pythoncode %{
+def plotoutline_setattr(self, name, val):
+	#print 'plotoutline_setattr', name, '=', val
+	if name == 'wcs_file':
+		if type(val) is tuple:
+			(fn,ext) = val
+		else:
+			fn = val
+			ext = 0
+		#print 'setting outline wcs file %s, ext %i' % (fn, ext)
+		plot_outline_set_wcs_file(self, fn, ext)
+		return
+	self.__swig__setattr__(name, val)
+
+plotoutline_args.__swig__setattr__ = plotoutline_args.__setattr__
+plotoutline_args.__setattr__ = plotoutline_setattr
+
+	%}
+
+
 
 %extend plotimage_args {
 	int _set_image_from_numpy(PyObject* arr) {
@@ -333,7 +358,6 @@ def plotimage_set_image_from_numpy(self, img):
         raise RuntimeError('set_image_from_numpy() failed')
 
 plotimage_args.set_image_from_numpy = plotimage_set_image_from_numpy
-
 %}
 
 
