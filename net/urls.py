@@ -19,6 +19,8 @@ urlpatterns += patterns('astrometry.net.openid_views',
 jobpattern = r'[0-9-]+'
 subpattern = r'[0-9-]+'
 imagepattern = r'[0-9-]+'
+idpattern = r'[0-9-]+'
+
 urlpatterns += patterns('astrometry.net.views.submission',
     (r'^upload/?$', 'upload_file'),
     (r'^status/(?P<subid>' + subpattern + r')/?', 'status'),
@@ -33,6 +35,7 @@ urlpatterns += patterns('astrometry.net.views.image',
     (r'^annotated/(?P<jobid>' + jobpattern + r')/?', 'annotated_image'),
     (r'^sdss_image/(?P<jobid>' + jobpattern + r')/?', 'sdss_image'),
     (r'^image/(?P<id>' + imagepattern + r')/?', 'serve_image'),
+    (r'^imageset/(?P<category>\w+)/(?P<id>' + idpattern + r')/?', 'image_set'),
 )
 
 urlpatterns += patterns('astrometry.net.api',

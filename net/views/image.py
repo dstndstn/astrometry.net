@@ -179,3 +179,21 @@ def sdss_image(req, jobid=None):
 # http://galex.stsci.edu/GR6/default.aspx?page=tilelist&survey=ais
 # -JPEG for each tile; eg:
 #  http://galex.stsci.edu/data/GR6/pipe/02-vsn/50227-AIS_227/d/01-main/0001-img/07-try/qa/AIS_227_sg84-xd-int_2color.jpg
+
+
+def image_set(req, category, id):
+    cat_class = User
+    if category == 'user':
+       cat_class = User
+    elif category == 'album':
+       cat_class = Album
+    elif category == 'tag':
+       cat_class = Tag
+ 
+    cat_obj = get_object_or_404(cat_class, pk=id)
+    dictionary = {'images': cat_obj.user_images}
+   
+    return render_to_response('imageset.html',
+                              dictionary,
+                              context_instance = RequestContext(req))
+ 

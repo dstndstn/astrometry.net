@@ -208,13 +208,14 @@ class Job(models.Model):
 
 
 class UserImage(models.Model):
-    image = models.ForeignKey(Image)
+    image = models.ForeignKey('Image')
+    user = models.ForeignKey(User, related_name='user_images', null=True)
     
     PERMISSION_CHOICES = (('pu', 'Public'),
              ('pr', 'Private'))
 
     permission = models.CharField(max_length=2, choices=PERMISSION_CHOICES)
-    tags = models.ManyToManyField('Tag', related_name='images')
+    tags = models.ManyToManyField('Tag', related_name='user_images')
     description = models.CharField(max_length=1024)
     original_file_name = models.CharField(max_length=256)
     submission = models.ForeignKey('Submission', related_name='user_images')

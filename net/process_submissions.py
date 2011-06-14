@@ -299,7 +299,7 @@ def dosub(sub):
         img.save()
 
     # create UserImage object.
-    uimg,created = UserImage.objects.get_or_create(submission=sub, image=img,
+    uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
                                                    defaults=dict(original_file_name=origname))
     if created:
         uimg.save()

@@ -4,7 +4,8 @@
 {% if user.is_authenticated %}
     <br />
     <a href="{% url astrometry.net.views.user.get_api_key %}">Get API key</a>
-
+    <br/>
+    <a href="{% url astrometry.net.views.image.image_set 'user' user.id %}">My Images</a>
     <br/>
     {% for sub in user.submissions.all %}
     <br/>

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block pagetitle %} {{ pagetitle }}
+{% endblock %}
+
+{% block title %}
+Images
+{% endblock %}
+
+{% block content %}
+<div align="center">
+{% for image in images.all %}
+<a href="{% url astrometry.net.views.submission.status subid=image.submission.id %}">
+<img src="{% url astrometry.net.views.image.serve_image id=image.image.get_or_create_thumbnail.id %}" />
+</a>
+{% endfor %}
+</div>
+{% endblock content %}
+
