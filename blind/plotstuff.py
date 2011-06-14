@@ -12,7 +12,7 @@ class Plotstuff(object):
 				  
 
 	def __init__(self, outformat=None, size=None, ra=None, dec=None, width=None,
-				 rdw=None):
+				 rdw=None, wcsfn=None, wcsext=0):
 		p = plotstuff_new()
 		self.pargs = p
 		if outformat is not None:
@@ -26,6 +26,10 @@ class Plotstuff(object):
 			self.set_wcs_box(ra, dec, width)
 		if rdw is not None:
 			self.set_wcs_box(*rdw)
+		if wcsfn is not None:
+			self.wcs_file = (wcsfn, wcsext)
+			if size is None:
+				plotstuff_set_size_wcs(self.pargs)
 
 	def __del__(self):
 		#print 'plotstuff.__del__, pargs=', self.pargs

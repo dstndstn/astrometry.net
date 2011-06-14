@@ -53,6 +53,7 @@ extra:
 py:
 	$(MAKE) -C util pyutil
 	$(MAKE) -C blind pyplotstuff
+	$(MAKE) -C libkd pyspherematch
 
 # Targets that support the web service
 .PHONY: web

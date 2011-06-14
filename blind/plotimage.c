@@ -423,6 +423,19 @@ unsigned char* plot_image_scale_float(plotimage_t* args, const float* fimg) {
 	return img;
 }
 
+void plot_image_make_color_transparent(plotimage_t* args, unsigned char r, unsigned char g, unsigned char b) {
+	int i;
+	assert(args->img);
+	for (i=0; i<(args->W * args->H); i++) {
+		if ((args->img[4*i + 0] == r) &&
+			(args->img[4*i + 1] == g) &&
+			(args->img[4*i + 2] == b)) {
+			args->img[4*i + 3] = 0;
+		}
+	}
+}
+
+
 int plot_image_read(const plot_args_t* pargs, plotimage_t* args) {
 	set_format(args);
 	switch (args->format) {

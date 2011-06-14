@@ -82,6 +82,8 @@ void plot_image_rgba_data(cairo_t* cairo, plotimage_t* args);
 // After setting filename, actually open and read the image file.
 int plot_image_read(const plot_args_t* pargs, plotimage_t* args);
 
+void plot_image_make_color_transparent(plotimage_t* args, unsigned char r, unsigned char g, unsigned char b);
+
 DECLARE_PLOTTER(image);
 
 #endif
