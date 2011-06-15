@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Submissions by User {{ user.id }} {% endblock %}
+{% block title %}Submissions by User {{ submitter.id }} {% endblock %}
 {% block content %}
 <div id="submission_list">
 <ul>
-    {% for sub in submissions %}
+    {% for sub in submitter.submissions.all %}
     <li>
         <a href="{% url astrometry.net.views.submission.status subid=sub.id %}">Submission {{ sub.id }}</a>
         <ul class="job_list">
@@ -13,6 +13,8 @@
         {% endfor %}
         </ul>
     </li>
+    {% empty %}
+    <li>No submissions</li>
     {% endfor %}
 </ul>
 </div>

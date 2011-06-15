@@ -22,12 +22,13 @@ from astrometry.util.run_command import run_command
 
 
 def index(req, user_id):
+    submitter = None
     if user_id == None:
         submissions = Submission.objects.all()
     else:
-        submissions = Submission.objects.filter(user=user_id)
+        submitter = get_object_or_404(User, pk=user_id)
     
-    context = {'submissions':submissions}
+    context = {'submitter':submitter}
     return render_to_response('submissions_list.html', context,
         context_instance = RequestContext(req))
 
