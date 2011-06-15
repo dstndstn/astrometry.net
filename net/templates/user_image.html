@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}User Image {{image.id}} {% endblock %}
+{% block content %}
+<div id="user_image">
+    <img src="{% url astrometry.net.views.image.serve_image image.id %}" />
+</div>
+<div id="image_tags">
+    <h3>Tags</h3>
+    <ul>
+        {% for tag in image.tags %}
+        <li>tag.text <a class="remove_tag" href="#">[remove (TODO)]</a></li>
+        {% endfor %}
+    </ul>
+    <p><a id="add_tag" href="#">Add Tag (TODO)</a></p>
+</div>
+{% endblock %}
