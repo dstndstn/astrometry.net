@@ -52,6 +52,7 @@ extra:
 # Targets that require SWIG
 py:
 	$(MAKE) -C util pyutil
+	$(MAKE) -C util cairoutils.o
 	$(MAKE) -C blind pyplotstuff
 	$(MAKE) -C libkd pyspherematch
 
