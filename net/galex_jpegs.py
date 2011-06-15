@@ -10,33 +10,39 @@ from astrometry.net.log import *
 import numpy as np
 
 def plot_into_wcs(wcsfn, plotfn, wcsext=0, basedir='.'):
-	wcs = Tan(wcsfn, wcsext)
-	ra,dec = wcs.radec_center()
-	radius = wcs.radius()
+    wcs = Tan(wcsfn, wcsext)
+    ra,dec = wcs.radec_center()
+    radius = wcs.radius()
 
     # The "index.fits" table has RA,Dec center and file paths.
-	T = fits_table(os.path.join(basedir, 'index.fits'))
+    T = fits_table(os.path.join(basedir, 'index.fits'))
     # MAGIC 1: the GALEX fields are all smaller than 1 degree (~0.95) in radius,
     # so add that to the search 
-	r = radius + 1.
+    r = radius + 1.
     # find rows in "T" that are within range.
-	J = points_within_radius(ra, dec, r, T.ra, T.dec)
-	T = T[J]
-	debug(len(T), 'GALEX fields within range of RA,Dec = ', ra, dec,
+    J = points_within_radius(ra, dec, r, T.ra, T.dec)
+    T = T[J]
+    debug(len(T), 'GALEX fields within range of RA,Dec = ', ra, dec,
           'radius', radius)
-	plot = ps.Plotstuff(outformat='png', wcsfn=wcsfn, wcsext=wcsext)
-	img = plot.image
-	img.format = ps.PLOTSTUFF_FORMAT_JPG
-	img.resample = 1
-	for jpegfn in T.path:
-		jpegfn = os.path.join(basedir, jpegfn)
-		imwcsfn = jpegfn.replace('.jpg', '.wcs')
-		debug('  Plotting GALEX fields', jpegfn, imwcsfn)
-		img.set_wcs_file(imwcsfn, 0)
-		img.set_file(jpegfn)
-		# convert black to transparent
-		ps.plot_image_read(plot.pargs, img)
-		ps.plot_image_make_color_transparent(img, 0, 0, 0)
-		plot.plot('image')
-	plot.write(plotfn)
-
+    plot = ps.Plotstuff(outformat='png', wcsfn=wcsfn, wcsext=wcsext)
+    img = plot.image
+    img.format = ps.PLOTSTUFF_FORMAT_JPG
+    img.resample = 1
+    if len(T):
+        paths = T.path
+    else:
+        paths = []
+        plot.color = 'black'
+        plot.plot('fill')
+    for jpegfn in paths:
+        jpegfn = os.path.join(basedir, jpegfn)
+        imwcsfn = jpegfn.replace('.jpg', '.wcs')
+        debug('  Plotting GALEX fields', jpegfn, imwcsfn)
+        img.set_wcs_file(imwcsfn, 0)
+        img.set_file(jpegfn)
+        # convert black to transparent
+        ps.plot_image_read(plot.pargs, img)
+        ps.plot_image_make_color_transparent(img, 0, 0, 0)
+        plot.plot('image')
+    plot.write(plotfn)
+    debug('wrote', plotfn)
