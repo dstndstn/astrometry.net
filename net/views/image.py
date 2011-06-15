@@ -182,18 +182,18 @@ def image_set(req, category, id):
         'tag':Tag,
     }
 
-    cat_class = (cat_classes[category] if category in cat_classes
-        else cat_classes[default_category]
-    )
+    if category not in cat_classes:
+        category = default_category
+
+    cat_class = cat_classes[category]
     cat_obj = get_object_or_404(cat_class, pk=id)
+    
     set_names = {
         'user':'Submitted by User %s' % cat_obj.pk,
         'album':'Album: %s' % cat_obj.pk,
         'tag':'Tag: %s' % cat_obj.pk,
-    }
-    image_set_title = (set_names[category] if category in cat_classes
-        else set_names[default_category]
-    )
+    } 
+    image_set_title = set_names[category]
 
     context = {
         'images': cat_obj.user_images.all,

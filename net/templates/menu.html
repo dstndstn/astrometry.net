@@ -1,7 +1,11 @@
+<div id="logo">
+<img src="http://astrometry.net/logo.png" alt="Astrometry.net logo" />
+</div>
+
 <div id="menu">
 <p id="auth_status">
 {% if user.is_authenticated %}
-    Signed in as {{ user.get_full_name }} ({{ user.email }}) |
+    Signed in as <b>{{ user.get_full_name }} ({{ user.email }})</b> |
     <a href="{% url openid-logout %}">Sign Out</a>
 {% else %}
     Not signed in | 
@@ -27,4 +31,8 @@
      | 
     {% endcomment %}
 </p>
+</div>
+
+<div>
+test
 </div>

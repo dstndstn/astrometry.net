@@ -1,20 +1,42 @@
 {% extends "base.html" %}
 
+{% block inlinecss %}
+div.image_container {
+    float: left;
+    width: 200px;
+    height: 200px;
+    margin: 10px;
+    background-color: #000000;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+{% endblock %}
+
 {% block title %}
-Images: {{ image_set_title }}
+{% comment %}
+{% if category == 'user' %}
+    {{ cat_obj.get_full_name }}'s Images
+{% endif %}
+{% if category == 'album' %}
+    Album {{ cat_obj.id }}
+{% endif %}
+{% if category == 'tag' %}
+    Images tagged with {{ cat_obj.text }}
+{% endif %}
+{% endcomment %}
+{{ image_set_title }}
 {% endblock %}
 
 {% block content %}
-<div>
-<ul>
+<div align="center">
 {% for image in images %}
-<li>
     <a href="{% url astrometry.net.views.image.user_image image.id %}">
-    <img src="{% url astrometry.net.views.image.serve_image id=image.image.get_or_create_thumbnail.id %}" />
+        <div class="image_container" style="background-image: url('{% url astrometry.net.views.image.serve_image id=image.image.get_or_create_thumbnail.id %}')">
+        </div>
     </a>
-</li>
+{% empty %}
+    No images.
 {% endfor %}
-</ul>
 </div>
 {% endblock content %}
 
