@@ -124,7 +124,7 @@ class Client(object):
                                  wcsfn, wcsext)
 
     def galex_plot(self, outfn, wcsfn, wcsext=0):
-        return self.overlay_plot('galex_image_for_wcs', 'galex.png',
+        return self.overlay_plot('galex_image_for_wcs', outfn,
                                  wcsfn, wcsext)
 
     
