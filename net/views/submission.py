@@ -91,14 +91,19 @@ def handle_uploaded_file(req, f):
         uploaded_file.write(chunk)
         file_hash.update(chunk)
     uploaded_file.close()
-    # move file into data directory
-    DiskFile.make_dirs(file_hash.hexdigest())
-    shutil.move(temp_file_path, DiskFile.get_file_path(file_hash.hexdigest()))
-    # create and populate the database entry
-    df = DiskFile(file_hash = file_hash.hexdigest(), size=0, file_type='')
-    df.set_size_and_file_type()
-    df.save()
 
+    # get or create DiskFile object
+    df,created = DiskFile.objects.get_or_create(file_hash=file_hash.hexdigest(),
+                                                defaults={'size':0, 'file_type':''})
+
+    # if the file doesn't already exist, set it's size/type and
+    # move file into data directory
+    if created:
+        df.set_size_and_file_type()
+        df.save()
+        DiskFile.make_dirs(file_hash.hexdigest())
+        shutil.move(temp_file_path, DiskFile.get_file_path(file_hash.hexdigest()))
+        
     # HACK
     submittor = req.user if req.user.is_authenticated() else None
     sub = Submission(user=submittor, disk_file=df, scale_type='ul', scale_units='degwidth')
