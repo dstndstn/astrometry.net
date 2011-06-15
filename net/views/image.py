@@ -20,6 +20,15 @@ from django.http import HttpResponseRedirect
 from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 
+def serve_image(req, id=None):
+    #sub = get_object_or_404(Submission, pk=subid)
+    image = get_object_or_404(Image, pk=id)
+    df = image.disk_file
+    imgfn = df.get_path()
+    f = open(imgfn)
+    res = HttpResponse(f)
+    res['Content-type'] = image.get_mime_type()
+    return res
 
 def annotated_image(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
@@ -46,16 +55,6 @@ def annotated_image(req, jobid=None):
     f = open(annfn)
     res = HttpResponse(f)
     res['Content-type'] = 'image/png'
-    return res
-
-def serve_image(req, id=None):
-    #sub = get_object_or_404(Submission, pk=subid)
-    image = get_object_or_404(Image, pk=id)
-    df = image.disk_file
-    imgfn = df.get_path()
-    f = open(imgfn)
-    res = HttpResponse(f)
-    res['Content-type'] = image.get_mime_type()
     return res
 
 def sdss_image(req, jobid=None):
