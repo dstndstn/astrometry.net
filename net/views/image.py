@@ -21,7 +21,6 @@ from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 
 def serve_image(req, id=None):
-    #sub = get_object_or_404(Submission, pk=subid)
     image = get_object_or_404(Image, pk=id)
     df = image.disk_file
     imgfn = df.get_path()
@@ -30,13 +29,29 @@ def serve_image(req, id=None):
     res['Content-type'] = image.get_mime_type()
     return res
 
+def image_set(req, category, id):
+    cat_class = User
+    if category == 'user':
+       cat_class = User
+    elif category == 'album':
+       cat_class = Album
+    elif category == 'tag':
+       cat_class = Tag
+ 
+    cat_obj = get_object_or_404(cat_class, pk=id)
+    dictionary = {'images': cat_obj.user_images}
+   
+    return render_to_response('imageset.html',
+                              dictionary,
+                              context_instance = RequestContext(req))
+
 def annotated_image(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
     ui = job.user_image
     img = ui.image
     df = img.disk_file
     imgfn = df.get_path()
-    wcsfn = os.path.join(job.get_dir(), 'wcs.fits')
+    wcsfn = job.get_wcs_file()
     f,pnmfn = tempfile.mkstemp()
     os.close(f)
     (filetype, errstr) = image2pnm.image2pnm(imgfn, pnmfn)
@@ -57,36 +72,42 @@ def annotated_image(req, jobid=None):
     res['Content-type'] = 'image/png'
     return res
 
+def galex_image(req, jobid=None):
+    from astrometry.util import util as anutil
+    from astrometry.blind import plotstuff as ps
+    from astrometry.net.galex_jpegs import plot_into_wcs
+
+    job = get_object_or_404(Job, pk=jobid)
+    wcsfn = job.get_wcs_file()
+    f,plotfn = tempfile.mkstemp()
+    os.close(f)
+    #
+    plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR)
+    f = open(plotfn)
+    res = HttpResponse(f)
+    res['Content-type'] = 'image/png'
+    return res
+
+
 def sdss_image(req, jobid=None):
     from astrometry.util import util as anutil
     from astrometry.blind import plotstuff as ps
 
     job = get_object_or_404(Job, pk=jobid)
-    #ui = job.user_image
-    #img = ui.image
-    #df = img.disk_file
-    #imgfn = df.get_path()
-    wcsfn = os.path.join(job.get_dir(), 'wcs.fits')
+    wcsfn = job.get_wcs_file()
     f,plotfn = tempfile.mkstemp()
     os.close(f)
     # Parse the wcs.fits file
     wcs = anutil.Tan(wcsfn, 0)
     # arcsec radius
     #scale = math.hypot(wcs.imagew, wcs.imageh)/2. * wcs.pixel_scale()
-    # nearest power-of-2 arcsec-per-pixel scale
-    #scale = 2. ** round(math.log(scale)/math.log(2.))
-    #logmsg('power-of-2 scale is', scale)
-    #imsize = math.hypot(wcs.imagew, wcs.imageh)/2. * wcs.pixel_scale() / 60.
-
     # grab SDSS tiles with about the same resolution as this image.
     logmsg('Image scale is', wcs.pixel_scale(), 'arcsec/pix')
+    # size of SDSS image tiles to request, in pixels
     sdsssize = 512
     scale = sdsssize * wcs.pixel_scale() / 60.
     # healpix-vs-north-up rotation
-    #scale /= math.sqrt(2.)
-    #scale /= 2.
     nside = anutil.healpix_nside_for_side_length_arcmin(scale / math.sqrt(2.))
-    #nside = 2 ** int(round(math.log(nside)/math.log(2.)))
     nside = 2 ** int(math.ceil(math.log(nside)/math.log(2.)))
     logmsg('Next power-of-2 nside:', nside)
     ra,dec = wcs.radec_center()
@@ -96,21 +117,16 @@ def sdss_image(req, jobid=None):
     if not os.path.exists(dirnm):
         os.makedirs(dirnm)
 
-    hp = anutil.radecdegtohealpix(ra, dec, nside)
-    logmsg('Healpix of center:', hp)
-    #hps = anutil.healpix_get_neighbours(hp, nside)
-    #logmsg('Healpix neighbours:', hps)
-    
-    radius = math.hypot(wcs.imagew, wcs.imageh)/2. * wcs.pixel_scale() / 3600.
+    #hp = anutil.radecdegtohealpix(ra, dec, nside)
+    #logmsg('Healpix of center:', hp)
+    radius = wcs.radius()
     hps = anutil.healpix_rangesearch_radec(ra, dec, radius, nside)
     logmsg('Healpixes in range:', hps)
 
     scale = math.sqrt(2.) * anutil.healpix_side_length_arcmin(nside) * 60. / float(sdsssize)
     logmsg('Grabbing SDSS tile with scale', scale, 'arcsec/pix')
 
-    plot = ps.Plotstuff(outformat='png',
-                        size=(int(wcs.imagew), int(wcs.imageh)))
-    plot.wcs_file = wcsfn
+    plot = ps.Plotstuff(outformat='png', wcsfn=wcsfn)
     img = plot.image
     img.format = ps.PLOTSTUFF_FORMAT_JPG
     img.resample = 1
@@ -118,24 +134,17 @@ def sdss_image(req, jobid=None):
     for hp in hps:
         fn = os.path.join(dirnm, '%i.jpg'%hp)
         logmsg('Checking for filename', fn)
-
-        ra,dec = anutil.healpix_to_radecdeg(hp, nside, 0.5, 0.5)
-        logmsg('Healpix center is RA,Dec', ra, dec)
-
         if not os.path.exists(fn):
+            ra,dec = anutil.healpix_to_radecdeg(hp, nside, 0.5, 0.5)
+            logmsg('Healpix center is RA,Dec', ra, dec)
             url = ('http://skyservice.pha.jhu.edu/DR8/ImgCutout/getjpeg.aspx?' +
                    'ra=%f&dec=%f&scale=%f&opt=&width=%i&height=%i' %
                    (ra, dec, scale, sdsssize, sdsssize))
             urllib.urlretrieve(url, fn)
             logmsg('Wrote', fn)
-        #
-        # Probably need a 1/sqrt(2) for healpix-vs-north-up alignment
-        #
-
         swcsfn = os.path.join(dirnm, '%i.wcs'%hp)
         logmsg('Checking for WCS', swcsfn)
-        #if not os.path.exists(swcsfn):
-        if True:
+        if not os.path.exists(swcsfn):
             # Create WCS header
             cd = scale / 3600.
             swcs = anutil.Tan(ra, dec, sdsssize/2 + 0.5, sdsssize/2 + 0.5,
@@ -174,25 +183,4 @@ def sdss_image(req, jobid=None):
 # -IPAC/IRSA claims to have VO services
 # -elaborate javascripty interface
 
-# GALEX:
-# http://galex.stsci.edu/GR6/default.aspx?page=tilelist&survey=ais
-# -JPEG for each tile; eg:
-#  http://galex.stsci.edu/data/GR6/pipe/02-vsn/50227-AIS_227/d/01-main/0001-img/07-try/qa/AIS_227_sg84-xd-int_2color.jpg
 
-
-def image_set(req, category, id):
-    cat_class = User
-    if category == 'user':
-       cat_class = User
-    elif category == 'album':
-       cat_class = Album
-    elif category == 'tag':
-       cat_class = Tag
- 
-    cat_obj = get_object_or_404(cat_class, pk=id)
-    dictionary = {'images': cat_obj.user_images}
-   
-    return render_to_response('imageset.html',
-                              dictionary,
-                              context_instance = RequestContext(req))
- 

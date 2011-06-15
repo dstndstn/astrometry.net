@@ -7,7 +7,7 @@ WEB_DIR = os.path.dirname(astrometry.net.__file__) + '/'
 DATADIR = os.path.join(WEB_DIR, 'data')
 JOBDIR = os.path.join(WEB_DIR, 'jobs')
 SDSS_TILE_DIR = os.path.join(WEB_DIR, 'sdss-tiles')
-
+GALEX_JPEG_DIR = '/data1/GALEX-jpegs'
 
 AUTH_PROFILE_MODULE = 'net.UserProfile'
 

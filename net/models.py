@@ -200,6 +200,9 @@ class Job(models.Model):
     def get_dir(self):
         return os.path.join(JOBDIR, '%08i' % self.id)
 
+    def get_wcs_file(self):
+        return os.path.join(self.get_dir(), 'wcs.fits')
+
     def make_dir(self):
         dirnm = self.get_dir()
         if not os.path.exists(dirnm):

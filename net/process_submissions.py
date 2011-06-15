@@ -130,6 +130,7 @@ def dojob(userimage):
     # detects sources in the image and adds processing arguments to the header
     # to produce a "job.axy" file.
     slo,shi = sub.get_scale_bounds()
+    # Note, this must match Job.get_wcs_file().
     wcsfile = 'wcs.fits'
     axyargs = {
         '--out': axyfn,
