@@ -5,12 +5,13 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 
+# astrometry.net imports
 from astrometry.net.views.submission import handle_uploaded_file
-
 from api_util import *
 from userprofile import *
 from log import *
 from tmpfile import *
+import settings
 
 json_type = 'text/plain' # 'application/json'
 
@@ -125,7 +126,7 @@ def api_sdss_image_for_wcs(req):
 @csrf_exempt
 @requires_json_args
 @requires_json_session
-def api_galex_image_for_wcs(request):
+def api_galex_image_for_wcs(req):
     from galex_jpegs import plot_into_wcs
     wcsfn = get_temp_file()
     plotfn = get_temp_file()
