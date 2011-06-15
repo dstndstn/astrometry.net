@@ -13,13 +13,16 @@
 
 {% block inlinecssblock %}
 <style type="text/css">
-#menu { float:right; padding:0px; margin-top:0; margin-bottom:auto; font-size:75%; font-family:sans-serif; }
+body {font-family: sans-serif;}
+#menu { position: relative; overflow: hidden; width: 100%; border-bottom: 1px solid #000000; }
+#logo { float:left; }
+#auth_status { float:right; padding:0px; margin-top:0; margin-bottom:auto; font-size:75%; font-family:sans-serif; }
+#menu_links { position: absolute; bottom: 10px; left: 260px; font-size: 125%; }
 #messages { font-size:150%; font-style:bold; margin-left:auto; margin-right:auto; text-align:center; }
 .bigbutton { font-size:110%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
 div.myerrors { font-size:110%; color:red; }
 .bigtext { font-size:110%; }
 .normalbutton { font-size:100%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
-#logo { float:left; }
 div.c {margin-left:auto; margin-right:auto; text-align:center;}
 h2.c {margin-left:auto; margin-right:auto; text-align:center;}
 p.c {margin-left:auto; margin-right:auto; text-align:center;}
@@ -54,11 +57,10 @@ td.c {text-align:center;}
 {% endblock bodytag %}
 
 {% block menublock %}
-<div id="username">
+<div id="menu">
 {% include "menu.html" %}
 </div>
 {% endblock menublock %}
-
 
 {% block titlediv %}
 <div id="title">

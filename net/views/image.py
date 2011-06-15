@@ -21,8 +21,16 @@ from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 
 def user_image(req, user_image_id=None):
-    image = get_object_or_404(Image, pk=user_image_id)
-    context = {'image':image}
+    image = get_object_or_404(UserImage, pk=user_image_id)
+
+    job = image.get_best_job() 
+    calib = None
+    if job:
+        calib = job.calibration
+        
+    context = {'image': image,
+               'job': job,
+               'calib': calib,}
     return render_to_response('user_image.html', context,
         context_instance = RequestContext(req))
 

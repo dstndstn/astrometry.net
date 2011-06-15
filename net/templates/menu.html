@@ -2,8 +2,7 @@
 <img src="http://astrometry.net/logo.png" alt="Astrometry.net logo" />
 </div>
 
-<div id="menu">
-<p id="auth_status">
+<div id="auth_status">
 {% if user.is_authenticated %}
     Signed in as <b>{{ user.get_full_name }} ({{ user.email }})</b> |
     <a href="{% url openid-logout %}">Sign Out</a>
@@ -11,13 +10,16 @@
     Not signed in | 
     <a href="{% url openid-login %}">Sign in</a>
 {% endif %}
-</p>
-<p id="menu_links">
+</div>
+<div id="menu_links">
+     |
+    <a href="#">Home</a>
+     | 
     {% if user.is_authenticated %}
     <a href="{% url astrometry.net.views.user.dashboard %}">Dashboard</a>
      |
     {% endif %}
-    <a href="{% url astrometry.net.views.submission.upload_file %}">Upload new image</a>
+    <a href="{% url astrometry.net.views.submission.upload_file %}">Upload</a>
      | 
     {% comment %}
     <a href="{% url astrometry.net1.portal.tags.taglist %}">Tags</a>
@@ -30,9 +32,5 @@
     <a href="{% url astrometry.net1.portal.accounts.userprefs %}">Set preferences</a>
      | 
     {% endcomment %}
-</p>
 </div>
 
-<div>
-test
-</div>
