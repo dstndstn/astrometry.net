@@ -98,16 +98,8 @@ def api_upload(request):
                              'subid': sub.id,
 		             'hash': sub.disk_file.file_hash}) 
 
-@csrf_exempt
-@requires_json_args
-@requires_json_session
-def api_sdss_image_for_wcs(req):
+def write_wcs_file(req, wcsfn):
     from astrometry.util import util as anutil
-    from sdss_image import plot_sdss_image
-
-    wcsfn = get_temp_file()
-    plotfn = get_temp_file()
-
     wcsparams = []
     wcs = req.json['wcs']
     for name in ['crval1', 'crval2', 'crpix1', 'crpix2',
@@ -116,8 +108,16 @@ def api_sdss_image_for_wcs(req):
     wcs = anutil.Tan(*wcsparams)
     wcs.write_to(wcsfn)
 
-    plot_sdss_image(wcsfn, plotfn)
 
+@csrf_exempt
+@requires_json_args
+@requires_json_session
+def api_sdss_image_for_wcs(req):
+    from sdss_image import plot_sdss_image
+    wcsfn = get_temp_file()
+    plotfn = get_temp_file()
+    write_wcs_file(req, wcsfn)
+    plot_sdss_image(wcsfn, plotfn)
     return HttpResponseJson({'status': 'success',
                              'plot': base64.b64encode(open(plotfn).read()),
                              })
@@ -126,8 +126,14 @@ def api_sdss_image_for_wcs(req):
 @requires_json_args
 @requires_json_session
 def api_galex_image_for_wcs(request):
-    pass
-
+    from galex_jpegs import plot_into_wcs
+    wcsfn = get_temp_file()
+    plotfn = get_temp_file()
+    write_wcs_file(req, wcsfn)
+    plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR)
+    return HttpResponseJson({'status': 'success',
+                             'plot': base64.b64encode(open(plotfn).read()),
+                             })
 
 @csrf_exempt
 @requires_json_args

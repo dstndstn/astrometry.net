@@ -105,7 +105,7 @@ class Client(object):
             print 'File %s does not exist' % fn     
             raise
 
-    def sdss_plot(self, wcsfn, wcsext=0):
+    def overlay_plot(self, service, outfn, wcsfn, wcsext=0):
         from astrometry.util import util as anutil
         wcs = anutil.Tan(wcsfn, wcsext)
         params = dict(crval1 = wcs.crval[0], crval2 = wcs.crval[1],
@@ -113,12 +113,21 @@ class Client(object):
                       cd11 = wcs.cd[0], cd12 = wcs.cd[1],
                       cd21 = wcs.cd[2], cd22 = wcs.cd[3],
                       imagew = wcs.imagew, imageh = wcs.imageh)
-        result = self.send_request('sdss_image_for_wcs', {'wcs':params})
+        result = self.send_request(service, {'wcs':params})
         print 'Result:', result
         plotdata = result['plot']
         plotdata = base64.b64decode(plotdata)
-        open('sdss.png', 'wb').write(plotdata)
+        open(outfn, 'wb').write(plotdata)
 
+    def sdss_plot(self, outfn, wcsfn, wcsext=0):
+        return self.overlay_plot('sdss_image_for_wcs', outfn,
+                                 wcsfn, wcsext)
+
+    def galex_plot(self, outfn, wcsfn, wcsext=0):
+        return self.overlay_plot('galex_image_for_wcs', 'galex.png',
+                                 wcsfn, wcsext)
+
+    
 if __name__ == '__main__':
     import optparse
     parser = optparse.OptionParser()
@@ -127,7 +136,8 @@ if __name__ == '__main__':
     parser.add_option('--apikey', '-k', dest='apikey',
                       help='API key for Astrometry.net web service; if not given will check AN_API_KEY environment variable')
     parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
-    parser.add_option('--sdss', dest='sdss_wcs', help='Plot SDSS image for the given WCS file')
+    parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
+    parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given JPG filename')
     opt,args = parser.parse_args()
 
     if opt.apikey is None:
@@ -148,4 +158,9 @@ if __name__ == '__main__':
     if opt.upload:
         c.upload(opt.upload)
     if opt.sdss_wcs:
-        c.sdss_plot(opt.sdss_wcs)
+        (wcsfn, outfn) = opt.sdss_wcs
+        c.sdss_plot(outfn, wcsfn)
+    if opt.galex_wcs:
+        (wcsfn, outfn) = opt.galex_wcs
+        c.galex_plot(outfn, wcsfn)
+
