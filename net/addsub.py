@@ -21,7 +21,7 @@ if __name__ == '__main__':
 	print 'Made DiskFile', df
 
 	# EVIL
-	Submission.objects.all().delete()
+	#Submission.objects.all().delete()
 	
 	sub = Submission(disk_file=df, scale_type='ul', scale_units='degwidth')
 	sub.original_filename = fn

@@ -1,5 +1,6 @@
 import os
 import sys
+import base64
 from urllib2 import urlopen
 from urllib2 import Request
 from urllib2 import HTTPError
@@ -104,12 +105,29 @@ class Client(object):
             print 'File %s does not exist' % fn     
             raise
 
+    def sdss_plot(self, wcsfn, wcsext=0):
+        from astrometry.util import util as anutil
+        wcs = anutil.Tan(wcsfn, wcsext)
+        params = dict(crval1 = wcs.crval[0], crval2 = wcs.crval[1],
+                      crpix1 = wcs.crpix[0], crpix2 = wcs.crpix[1],
+                      cd11 = wcs.cd[0], cd12 = wcs.cd[1],
+                      cd21 = wcs.cd[2], cd22 = wcs.cd[3],
+                      imagew = wcs.imagew, imageh = wcs.imageh)
+        result = self.send_request('sdss_image_for_wcs', {'wcs':params})
+        print 'Result:', result
+        plotdata = result['plot']
+        plotdata = base64.b64decode(plotdata)
+        open('sdss.png', 'wb').write(plotdata)
+
 if __name__ == '__main__':
     import optparse
     parser = optparse.OptionParser()
-    parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
+    parser.add_option('--server', dest='server',
+                      help='Set server base URL (eg, http://localhost:8000/api/)')
     parser.add_option('--apikey', '-k', dest='apikey',
                       help='API key for Astrometry.net web service; if not given will check AN_API_KEY environment variable')
+    parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
+    parser.add_option('--sdss', dest='sdss_wcs', help='Plot SDSS image for the given WCS file')
     opt,args = parser.parse_args()
 
     if opt.apikey is None:
@@ -121,9 +139,13 @@ if __name__ == '__main__':
         print 'You must either specify --apikey or set AN_API_KEY'
         sys.exit(-1)
 
-    c = Client()
+    args = {}
+    if opt.server:
+        args['apiurl'] = opt.server
+    c = Client(**args)
     c.login(opt.apikey)
 
     if opt.upload:
         c.upload(opt.upload)
-        
+    if opt.sdss_wcs:
+        c.sdss_plot(opt.sdss_wcs)
