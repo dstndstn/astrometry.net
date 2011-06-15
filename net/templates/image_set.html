@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}
+Images: {{ image_set_title }}
+{% endblock %}
+
+{% block content %}
+<div>
+<ul>
+{% for image in images %}
+<li>
+    <a href="{% url astrometry.net.views.image.user_image image.id %}">
+    <img src="{% url astrometry.net.views.image.serve_image id=image.image.get_or_create_thumbnail.id %}" />
+    </a>
+</li>
+{% endfor %}
+</ul>
+</div>
+{% endblock content %}
+

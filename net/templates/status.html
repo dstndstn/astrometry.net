@@ -24,7 +24,6 @@ Submission {{ sub.id }}
 Job {{ job.id }}
 
 {% if calib %}
-<center>
 RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
 <br />
 <img src="{% url astrometry.net.views.image.annotated_image jobid=job.id %}" />
@@ -32,15 +31,11 @@ RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
 <a href="{% url astrometry.net.views.image.sdss_image jobid=job.id %}" />Get SDSS image</a>
 <br />
 <a href="{% url astrometry.net.views.image.galex_image jobid=job.id %}" />Get GALEX image</a>
-</center>
 {% else %}
 
-
-{% if job %}
-<center>
-<img src="{% url astrometry.net.views.image.serve_image id=job.user_image.image.id %}" />
-</center>
-{% endif %}
+    {% if job %}
+    <img src="{% url astrometry.net.views.image.serve_image id=job.user_image.image.id %}" />
+    {% endif %}
 
 {% endif %}
 

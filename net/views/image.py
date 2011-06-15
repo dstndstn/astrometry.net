@@ -20,6 +20,12 @@ from django.http import HttpResponseRedirect
 from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 
+def user_image(req, user_image_id=None):
+    image = get_object_or_404(Image, pk=user_image_id)
+    context = {'image':image}
+    return render_to_response('user_image.html', context,
+        context_instance = RequestContext(req))
+
 def serve_image(req, id=None):
     image = get_object_or_404(Image, pk=id)
     df = image.disk_file
@@ -28,22 +34,6 @@ def serve_image(req, id=None):
     res = HttpResponse(f)
     res['Content-type'] = image.get_mime_type()
     return res
-
-def image_set(req, category, id):
-    cat_class = User
-    if category == 'user':
-       cat_class = User
-    elif category == 'album':
-       cat_class = Album
-    elif category == 'tag':
-       cat_class = Tag
- 
-    cat_obj = get_object_or_404(cat_class, pk=id)
-    dictionary = {'images': cat_obj.user_images}
-   
-    return render_to_response('imageset.html',
-                              dictionary,
-                              context_instance = RequestContext(req))
 
 def annotated_image(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
@@ -184,3 +174,32 @@ def sdss_image(req, jobid=None):
 # -elaborate javascripty interface
 
 
+def image_set(req, category, id):
+    default_category = 'user'
+    cat_classes = {
+        'user':User,
+        'album':Album,
+        'tag':Tag,
+    }
+
+    cat_class = (cat_classes[category] if category in cat_classes
+        else cat_classes[default_category]
+    )
+    cat_obj = get_object_or_404(cat_class, pk=id)
+    set_names = {
+        'user':'Submitted by User %s' % cat_obj.pk,
+        'album':'Album: %s' % cat_obj.pk,
+        'tag':'Tag: %s' % cat_obj.pk,
+    }
+    image_set_title = (set_names[category] if category in cat_classes
+        else set_names[default_category]
+    )
+
+    context = {
+        'images': cat_obj.user_images.all,
+        'image_set_title':image_set_title,
+    }
+   
+    return render_to_response('image_set.html',
+        context,
+        context_instance = RequestContext(req))

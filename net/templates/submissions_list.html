@@ -1,7 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Submissions by User {{ user.id }} {% endblock %}
+{% block content %}
+<div id="submission_list">
 <ul>
     {% for sub in submissions %}
     <li>
         <a href="{% url astrometry.net.views.submission.status subid=sub.id %}">Submission {{ sub.id }}</a>
+        <ul class="job_list">
+        {% for job in sub.user_images.all %}
+            <li>job {{ job.id }} - [Job Status Here]</li>
+        {% endfor %}
+        </ul>
     </li>
     {% endfor %}
 </ul>
+</div>
+{% endblock content %}

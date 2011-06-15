@@ -173,8 +173,10 @@ class Calibration(models.Model):
 class Job(models.Model):
     calibration = models.ForeignKey('Calibration', null=True)
     
-    STATUS_CHOICES = (('S', 'Success'), 
-              ('F', 'Failure'))    
+    STATUS_CHOICES = (
+        ('S', 'Success'), 
+        ('F', 'Failure'),
+    )    
     
     status = models.CharField(max_length=1, choices=STATUS_CHOICES)
     error_message = models.CharField(max_length=256)

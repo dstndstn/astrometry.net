@@ -21,6 +21,16 @@ from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 
 
+def index(req, user_id):
+    if user_id == None:
+        submissions = Submission.objects.all()
+    else:
+        submissions = Submission.objects.filter(user=user_id)
+    
+    context = {'submissions':submissions}
+    return render_to_response('submissions_list.html', context,
+        context_instance = RequestContext(req))
+
 class UploadFileForm(forms.Form):
     file  = forms.FileField()
 

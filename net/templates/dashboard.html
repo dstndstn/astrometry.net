@@ -1,14 +1,10 @@
 {% extends "base.html" %}
 
+{% block title %}Dashboard{% endblock %}
 {% block content %}
-<h2>Dashboard</h2>
 {% if user.is_authenticated %}
     <div id="control_panel">
         {% include 'control_panel.html' %}
-    </div>
-    <div>
-        <h3>Submissions</h3>
-        {% include 'submissions_list.html' with submissions=user.submissions.all %}
     </div>
 {% else %}
 {% endif %}

@@ -24,6 +24,7 @@ idpattern = r'[0-9-]+'
 urlpatterns += patterns('astrometry.net.views.submission',
     (r'^upload/?$', 'upload_file'),
     (r'^status/(?P<subid>' + subpattern + r')/?', 'status'),
+    (r'^submissions/(?P<user_id>' + idpattern + r')/?$', 'index'),
 )
 
 urlpatterns += patterns('astrometry.net.views.user',
@@ -33,8 +34,9 @@ urlpatterns += patterns('astrometry.net.views.user',
 
 urlpatterns += patterns('astrometry.net.views.image',
     (r'^annotated/(?P<jobid>' + jobpattern + r')/?', 'annotated_image'),
+    (r'^user_image/(?P<user_image_id>' + idpattern + r')/?', 'user_image'),
     (r'^image/(?P<id>' + imagepattern + r')/?', 'serve_image'),
-    (r'^imageset/(?P<category>\w+)/(?P<id>' + idpattern + r')/?', 'image_set'),
+    (r'^images/(?P<category>\w+)/(?P<id>' + idpattern + r')/?', 'image_set'),
     (r'^sdss_image/(?P<jobid>' + jobpattern + r')/?', 'sdss_image'),
     (r'^galex_image/(?P<jobid>' + jobpattern + r')/?', 'galex_image'),
 )
