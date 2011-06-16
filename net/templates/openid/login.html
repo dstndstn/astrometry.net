@@ -8,18 +8,30 @@ var openid_suggestions = [
 {% endfor %}
 ];
 
-function changeProviderText() {
+function changeProvider() {
     select = document.getElementById("id_openid_identifier");
-    index = select.selectedIndex
-    document.getElementById("suggestion").innerHTML = openid_suggestions[index]
+    username_block = document.getElementById("username_block");
+    index = select.selectedIndex;
+    if (openid_suggestions[index] == "") { // assume no username required
+        username_block.style.display = "none";
+    }
+    else {
+        document.getElementById("suggestion").innerHTML = openid_suggestions[index];
+        username_block.style.display = "block";
+    }
 }
 window.onload = function() {
-    document.getElementById("id_openid_identifier").onchange = changeProviderText
+    document.getElementById("id_openid_identifier").onchange = changeProvider;
+    changeProvider();
 }
 </script>
 {% endblock %}
+
+{% block title %}
+Sign in with your OpenID
+{% endblock %}
+
 {% block content %}
-<h1>Sign in with your OpenID</h1>
 {% if form.errors %}
 <p class="errors">{% trans "Please correct errors below:" %}<br />
     {% if form.openid_identifier.errors %}
@@ -38,11 +50,12 @@ window.onload = function() {
             <label for="id_openid_identifier">{% trans "OpenID Provider:" %}</label><br />
             {{ form.openid_identifier }}
         </div>
-        <div class="form-row">
+        <div class="form-row" id="username_block">
             <label for="id_openid_identifier">{% trans "Username:" %}</label><br />
             {{ form.username }}
-            <span id="suggestion">@gmail.com</span>
+            <span id="suggestion"></span>
         </div>
+        <br />
         <div class="submit-row ">
             <input name="bsignin" type="submit" value="{% trans "Sign in" %}">
         </div>

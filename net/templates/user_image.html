@@ -17,11 +17,11 @@ Job {{ job.id }}<br />
     RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
     <br />
     <br />
-    <a href="javascript:change_image('{% url astrometry.net.views.image.serve_image image.image.id %}')">original</a><br />
-    <a href="javascript:change_image('{% url astrometry.net.views.image.annotated_image jobid=job.id %}')">annotated</a><br />
-    <a href="javascript:change_image('{% url astrometry.net.views.image.sdss_image jobid=job.id %}')">SDSS</a><br />
+    <a href="javascript:change_image('{% url astrometry.net.views.image.serve_image image.image.id %}')">original</a> |
+    <a href="javascript:change_image('{% url astrometry.net.views.image.annotated_image jobid=job.id %}')">annotated</a> |
+    <a href="javascript:change_image('{% url astrometry.net.views.image.sdss_image jobid=job.id %}')">SDSS</a> |
     <a href="javascript:change_image('{% url astrometry.net.views.image.galex_image jobid=job.id %}')" />GALEX</a><br />
-    <img src="{% url astrometry.net.views.image.annotated_image jobid=job.id %}" />
+    <img id="user_image" src="{% url astrometry.net.views.image.annotated_image jobid=job.id %}" />
     {% else %}
     <img id="user_image" src="{% url astrometry.net.views.image.serve_image image.image.id %}" />
     {% endif %}

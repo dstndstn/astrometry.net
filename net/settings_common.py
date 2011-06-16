@@ -199,8 +199,8 @@ OPENID_UPDATE_DETAILS_FROM_SREG = True
 OPENID_PROVIDERS = dict_pack(
     ('provider', 'url', 'suggestion'),
     ( # provider choice data
-        ('Google','google.com/profiles/username','@gmail.com'),  # works
-        ('Yahoo','yahoo.com','@yahoo.com'),                      # works
+        ('Google','google.com/accounts/o8/id',''),               # works
+        ('Yahoo','yahoo.com',''),                                # works
         ('AOL','openid.aol.com/username','@aol.com'),            # works
       # ('Launchpad','launchpad.net/~username',''),              # untested
       # ('WordPress','username.wordpress.com','.wordpress.com'), # didn't work
