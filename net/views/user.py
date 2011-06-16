@@ -31,6 +31,7 @@ def dashboard(request):
 
 @login_required
 def get_api_key(request):
+    prof = None
     try:
         prof = request.user.get_profile()
     except UserProfile.DoesNotExist:
@@ -39,6 +40,11 @@ def get_api_key(request):
         prof.create_api_key()
         prof.save()
         
-    return HttpResponse(str(prof))
+    context = {
+        'apikey':prof.apikey
+    }
+    return render_to_response("api_key.html",
+        context,
+        context_instance = RequestContext(request))
 
 

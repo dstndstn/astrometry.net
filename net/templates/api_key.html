@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}My API Key: <span id="api_key">{{ apikey }}</span>
+{% endblock %}
+       
+{% block content %}
+<p>
+    Astrometry.net allows you to access parts of the service through a JSON API.
+    Your API key is required to do so, but allows the service to track your
+    usage as if you were using the service through the website interface.
+</p>
+<p>
+    To access the Astrometry.net API, first create a session by sending a JSON 
+    request with your API key as the argument <span class="code">'apikey'</span> 
+    to <span class="code">{% url astrometry.net.api.api_login %}</span>. The
+    API will return a session key, which must be included in subsequent
+    requests sent to the API.
+</p>
+{% endblock %}
