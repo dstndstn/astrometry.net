@@ -109,10 +109,10 @@ def handle_uploaded_file(req, f):
     # if the file doesn't already exist, set it's size/type and
     # move file into data directory
     if created:
-        df.set_size_and_file_type()
-        df.save()
         DiskFile.make_dirs(file_hash.hexdigest())
         shutil.move(temp_file_path, DiskFile.get_file_path(file_hash.hexdigest()))
+        df.set_size_and_file_type()
+        df.save()
         
     # HACK
     submittor = req.user if req.user.is_authenticated() else None
