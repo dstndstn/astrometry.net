@@ -54,6 +54,7 @@ class DiskFile(models.Model):
     def make_dirs(file_hash_digest):
         file_directory = DiskFile.get_file_directory(file_hash_digest)
         try:
+            print "os.makedirs(%s)" % file_directory
             os.makedirs(file_directory)
         except OSError as e:
             # we don't care if the directory already exists

@@ -1,17 +1,45 @@
 {% extends "base.html" %}
 
-{% block title %}Submissions by User {{ submitter.id }} {% endblock %}
+{% block inlinecss %}
+.submission {
+    margin-top: .5em;
+}
+.submission_job_list {
+    margin-left: 1em;
+    margin-top: .5em;
+}
+
+.submission_job_list, .submission_job_list tr td {
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+td.job_id {
+    width: 200px;
+}
+
+td.job_status {
+    width: 200px;
+}
+{% endblock %}
+
+{% block title %}Submissions Summary for User {{ submitter.id }} {% endblock %}
 {% block content %}
 <div id="submission_list">
 <ul>
     {% for sub in submitter.submissions.all %}
-    <li>
+    <li class="submission">
         <a href="{% url astrometry.net.views.submission.status subid=sub.id %}">Submission {{ sub.id }}</a>
-        <ul class="job_list">
-        {% for job in sub.user_images.all %}
-            <li>job {{ job.id }} - [Job Status Here]</li>
-        {% endfor %}
-        </ul>
+        <table class="submission_job_list">
+            {% for job in sub.user_images.all %}
+            <tr>
+                <td class="job_id">job id <span class="job_id">{{ job.id }}</span></td>
+                <td class="job_status">{% include "job_status.html" with job=job %}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2">No Jobs</td></tr>
+            {% endfor %}
+        </table>
     </li>
     {% empty %}
     <li>No submissions</li>

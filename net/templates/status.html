@@ -21,8 +21,10 @@ Submission {{ sub.id }}
 {% endblock %}
 
 {% block content %}
-Job {{ job.id }}
-
+<p>
+Job {{ job.id }}: {% include "job_status.html" with job=job %}
+</p>
+<p>
 {% if calib %}
 RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
 <br />
@@ -32,11 +34,12 @@ RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
 <br />
 <a href="{% url astrometry.net.views.image.galex_image jobid=job.id %}" />Get GALEX image</a>
 {% else %}
-
     {% if job %}
     <img src="{% url astrometry.net.views.image.serve_image id=job.user_image.image.id %}" />
+    {% else %}
+    Thanks for your submission! Please wait while we process it.
     {% endif %}
 
 {% endif %}
-
+</p>
 {% endblock %}
