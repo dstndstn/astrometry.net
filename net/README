@@ -55,6 +55,20 @@ Supernova:
 Run process_submissions.py by 'cd'ing into the appropriate net/ directory and:
   python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
 
+-You need the "an-test" ssh config to connect to the compute server:
+
+1. In your ~/.ssh/config file you need a snippet like:
+
+Host an-test
+Hostname astro.cs.toronto.edu
+User live
+IdentityFile ~/.ssh/id_an_net
+IdentitiesOnly yes
+ForwardAgent no
+ForwardX11 no
+ForwardX11Trusted no
+
+2. You need the ~/.ssh/id_an_net key -- copy it from nova@oven.
 
 
 When you're ready to tag 'supernova', do:

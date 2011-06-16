@@ -114,10 +114,11 @@ class Client(object):
                       cd21 = wcs.cd[2], cd22 = wcs.cd[3],
                       imagew = wcs.imagew, imageh = wcs.imageh)
         result = self.send_request(service, {'wcs':params})
-        print 'Result:', result
+        print 'Result status:', result['status']
         plotdata = result['plot']
         plotdata = base64.b64decode(plotdata)
         open(outfn, 'wb').write(plotdata)
+        print 'Wrote', outfn
 
     def sdss_plot(self, outfn, wcsfn, wcsext=0):
         return self.overlay_plot('sdss_image_for_wcs', outfn,
