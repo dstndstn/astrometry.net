@@ -21,11 +21,12 @@ Submission {{ sub.id }}
 {% endblock %}
 
 {% block content %}
+{% for job in jobs %}
 <p>
 Job {{ job.id }}: {% include "job_status.html" with job=job %}
 </p>
 <p>
-{% if calib %}
+{% if job.calibration %}
 RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
 <br />
 <img src="{% url astrometry.net.views.image.annotated_image jobid=job.id %}" />
@@ -36,10 +37,11 @@ RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
 {% else %}
     {% if job %}
     <img src="{% url astrometry.net.views.image.serve_image id=job.user_image.image.id %}" />
-    {% else %}
-    Thanks for your submission! Please wait while we process it.
     {% endif %}
 
 {% endif %}
 </p>
+{% empty %}
+<p>Thanks for your submission! Please bear with us while we process it.</p>
+{% endfor %}
 {% endblock %}

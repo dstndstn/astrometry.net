@@ -75,16 +75,17 @@ def status(req, subid=None):
         for j in ui.jobs.all():
             logmsg("    job " + str(j))
 
-    job = None
     calib = None
     jobs = sub.get_best_jobs()
     logmsg("Best jobs: " + str(jobs))
-    if len(jobs) == 1:
-        job = jobs[0]
-        logmsg("Job: " + str(job) + ', ' + job.status)
-        calib = job.calibration
+    #logmsg("Job: " + str(job) + ', ' + job.status)
         
-    return render_to_response('status.html', { 'sub': sub, 'job': job, 'calib':calib, },
+    return render_to_response('status.html',
+        {
+            'sub': sub,
+            'jobs': jobs,
+            'calib':calib,
+        },
         context_instance = RequestContext(req))
     
 def handle_uploaded_file(req, f):
