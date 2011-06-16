@@ -5,13 +5,6 @@
 
 
 %{
-/*
-#include "index.h"
-#include "codekd.h"
-#include "starkd.h"
-#include "qidxfile.h"
-*/
-
 // numpy.
 #include <numpy/arrayobject.h>
 
@@ -23,6 +16,13 @@
 #include "fitsioutils.h"
 #include "sip-utils.h"
 #include "sip_qfits.h"
+
+#include "index.h"
+#include "quadfile.h"
+#include "codekd.h"
+#include "starkd.h"
+#include "starutil.h"
+	//#include "qidxfile.h"
 
 #define true 1
 #define false 0
@@ -43,6 +43,55 @@
 void log_init(int level);
 int log_get_level();
 void log_set_level(int lvl);
+
+// for quadfile_get_stars(quadfile* qf, int quadid, unsigned int* stars)
+// --> list of stars
+// swap the int* neighbours arg for tempneigh
+%typemap(in, numinputs=0) unsigned int *stars (unsigned int tempstars[DQMAX]) {
+	$1 = tempstars;
+}
+// in the argout typemap we don't know about the swap (but that's ok)
+%typemap(argout) (const quadfile* qf, unsigned int quadid, unsigned int *stars) {
+  int i;
+  int D;
+  if (result == -1) {
+	  goto fail;
+  }
+  D = $1->dimquads;
+  $result = PyList_New(D);
+  for (i = 0; i < D; i++) {
+	  PyObject *o = PyInt_FromLong($3[i]);
+	  PyList_SetItem($result, i, o);
+  }
+}
+
+
+/**
+ double* startree_get_data_column(startree_t* s, const char* colname, const int* indices, int N);
+ -> list of doubles.
+ -> ASSUME indices = None
+ */
+%typemap(argout) (startree_t* s, const char* colname, const int* indices, int N) {
+	int i;
+	int N;
+	if (!result) {
+		goto fail;
+	}
+	N = $4;
+	$result = PyList_New(N);
+	for (i = 0; i < N; i++) {
+		PyObject *o = PyFloat_FromDouble(result[i]);
+		PyList_SetItem($result, i, o);
+	}
+	free(result);
+}
+
+
+%include "index.h"
+%include "quadfile.h"
+%include "codekd.h"
+%include "starkd.h"
+ //%include "qidxfile.h"
 
 %apply double *OUTPUT { double *dx, double *dy };
 %apply double *OUTPUT { double *ra, double *dec };
