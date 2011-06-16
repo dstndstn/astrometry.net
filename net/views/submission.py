@@ -33,13 +33,23 @@ def index(req, user_id):
         context_instance = RequestContext(req))
 
 class UploadFileForm(forms.Form):
-    file  = forms.FileField()
+    file  = forms.FileField(required=False)
+    url = forms.CharField(initial='http://', required=False)
+    upload_type = forms.ChoiceField(widget=forms.RadioSelect(),
+                                    choices=(('file','file'),('url','url')))
 
 def upload_file(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            sub = handle_uploaded_file(request, request.FILES['file'])
+            if request.POST['upload_type'] == 'file':
+                sub = handle_uploaded_file(request, request.FILES['file'])
+            elif request.POST['upload_type'] == 'url':
+                url = request.POST['url']
+                if url:
+                    if url.startswith('http://http://') or url.startswith('http://ftp://'):
+                        url = url[7:]
+                sub = handle_uploaded_url(request, url)
             return redirect(status, subid=sub.id)
     else:
         form = UploadFileForm()
@@ -112,3 +122,12 @@ def handle_uploaded_file(req, f):
     logmsg('Made Submission' + str(sub))
 
     return sub
+
+def handle_uploaded_url(req, url):
+    submittor = req.user if req.user.is_authenticated() else None
+    sub = Submission(user=submittor, disk_file=None, url=url, scale_type='ul', scale_units='degwidth')
+    sub.save()
+    logmsg('Made Submission' + str(sub))
+
+    return sub
+    

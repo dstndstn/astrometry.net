@@ -232,16 +232,16 @@ def dosub(sub):
         print 'Retrieving URL', sub.url
         (fn, headers) = urllib.urlretrieve(sub.url)
         print 'Wrote to file', fn
-        df = DiskFile.fromFile(fn)
+        df = DiskFile.from_file(fn)
         # Try to split the URL into a filename component and save it
-        p = urlparse(submission.url)
+        p = urlparse(sub.url)
         p = p.path
         if p:
             s = p.split('/')
             origname = s[-1]
             sub.orig_filename = origname
         df.save()
-        sub.file = df
+        sub.disk_file = df
         sub.save()
     else:
         origname = sub.original_filename

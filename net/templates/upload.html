@@ -1,12 +1,33 @@
 {% extends "base.html" %}
 
+{% block javascript %}
+<script type="text/javascript">
+function changeUploadType(type) {
+    file_block = document.getElementById("file_block");
+    url_block = document.getElementById("url_block");
+
+    file_block.style.display = (type == "file") ? "block":"none";
+    url_block.style.display = (type == "url") ? "block":"none";
+}
+window.onload = function() {
+    changeUploadType("file");
+}
+</script>
+{% endblock %}
+
 {% block title %}
 Upload
 {% endblock %}
 
 {% block content %}
-<form action="/upload/" method="post" enctype="multipart/form-data">{% csrf_token %}
-{{ form.as_p }}
+<form action="/upload/" method="post" enctype="multipart/form-data">
+{% csrf_token %}
+<input type="radio" id="id_upload_type_0" value="file" name="upload_type" onclick="changeUploadType(this.value)" checked />file
+<input type="radio" id="id_upload_type_1" value="url" name="upload_type" onclick="changeUploadType(this.value)"/>url
+
+<div id="file_block">{{ form.file }}</div>
+<div id="url_block">{{ form.url }}</div>
+<br />
 <input type="submit" value="Submit" />
 </form>
 {% endblock %}
