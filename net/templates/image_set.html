@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 
 {% block inlinecss %}
-div.image_container {
-    float: left;
+div.image_set img {
+    display: inline-block;
     width: 200px;
     height: 200px;
     margin: 10px;
     background-color: #000000;
-    background-repeat: no-repeat;
     background-position: center center;
 }
 {% endblock %}
@@ -28,11 +27,10 @@ div.image_container {
 {% endblock %}
 
 {% block content %}
-<div align="center">
+<div class="image_set">
 {% for image in images %}
     <a href="{% url astrometry.net.views.image.user_image image.id %}">
-        <div class="image_container" style="background-image: url('{% url astrometry.net.views.image.serve_image id=image.image.get_or_create_thumbnail.id %}')">
-        </div>
+    <img class="image_container" src="{% url astrometry.net.views.image.serve_image id=image.image.get_or_create_thumbnail.id %}" />
     </a>
 {% empty %}
     No images.
