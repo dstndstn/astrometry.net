@@ -422,7 +422,7 @@ test_errors: $(ANUTILS_LIB)
 
 test_sip-utils: $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 
-test_anwcs: $(ANUTILS_LIB) $(QFITS_LIB)
+test_anwcs: $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB)
 
 test_tycho2: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)

@@ -29,12 +29,21 @@
 #include "errors.h"
 #include "ioutils.h"
 
+void test_discontinuity(CuTest* tc) {
+	double ra3,dec3,ra4,dec4;
+	bool isit;
+	anwcs_t* wcs = anwcs_create_allsky_hammer_aitoff(0., 0., 400, 200);
+	isit = anwcs_find_discontinuity(wcs, 3., 15., 346, 15.,
+									&ra3, &dec3, &ra4, &dec4);
+	CuAssertIntEquals(tc, 0, isit);
+}
+
 void test_wcslib_equals_tan(CuTest* tc) {
 #ifndef WCSLIB_EXISTS
 	printf("\n\nWarning, WCSLIB support was not compiled in, so no WCSLIB functionality will be tested.\n\n\n");
 	return;
 #endif
-	anwcs_t* anwcs;
+	anwcs_t* anwcs = NULL;
 	tan_t* tan;
 	char* tmpfile = create_temp_file("test-anwcs-wcs", "/tmp");
 	double x, y, x2, y2, ra, dec, ra2, dec2;

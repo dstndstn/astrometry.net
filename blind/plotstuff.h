@@ -82,7 +82,7 @@ struct plot_args {
 
 	bl* cairocmds;
 
-	// step size in pixels for drawing curved lines in RA,Dec
+	// step size in pixels for drawing curved lines in RA,Dec; default 10
 	float linestep;
 };
 typedef struct plot_args plot_args_t;

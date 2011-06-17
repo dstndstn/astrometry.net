@@ -35,6 +35,7 @@
 #include "errors.h"
 #include "sip-utils.h"
 #include "mathutil.h"
+#include "constellations.h"
 
 DEFINE_PLOTTER(annotations);
 
@@ -142,6 +143,80 @@ static void plot_targets(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
 		distdeg = deg_between_radecdeg(cra, cdec, tar->ra, tar->dec);
 		asprintf(&txt, "%s: %.1f deg", tar->name, distdeg);
 		plotstuff_stack_text(pargs, cairo, txt, px, py);
+	}
+}
+
+static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* ann) {
+	int i, N;
+	double ra,dec,radius;
+	double xyzf[3];
+	// Find the field center and radius
+	anwcs_get_radec_center_and_radius(pargs->wcs, &ra, &dec, &radius);
+	logverb("Plotting constellations: field center %g,%g, radius %g\n",
+			ra, dec, radius);
+	radecdeg2xyzarr(ra, dec, xyzf);
+	radius = deg2dist(radius);
+
+	N = constellations_n();
+	for (i=0; i<N; i++) {
+		int j, k;
+		// Find the approximate center and radius of this constellation
+		// and see if it overlaps with the field.
+		il* stars = constellations_get_unique_stars(i);
+		double xyzj[3];
+		double xyzc[3];
+		double maxr2 = 0;
+		dl* rds;
+		xyzc[0] = xyzc[1] = xyzc[2] = 0.0;
+		for (j=0; j<il_size(stars); j++) {
+			constellations_get_star_radec(il_get(stars, j), &ra, &dec);
+			radecdeg2xyzarr(ra, dec, xyzj);
+			for (k=0; k<3; k++)
+				xyzc[k] += xyzj[k] / (double)il_size(stars);
+		}
+		for (j=0; j<il_size(stars); j++) {
+			constellations_get_star_radec(il_get(stars, j), &ra, &dec);
+			maxr2 = MAX(maxr2, distsq(xyzc, xyzj, 3));
+		}
+		il_free(stars);
+		maxr2 = square(sqrt(maxr2) + radius);
+		if (distsq(xyzf, xyzc, 3) > maxr2) {
+			xyzarr2radecdeg(xyzc, &ra, &dec);
+			logverb("Constellation %s (center %g,%g, radius %g) out of bounds\n",
+					constellations_get_shortname(i), ra, dec,
+					dist2deg(sqrt(maxr2) - radius));
+			logverb("  dist from field center to constellation center is %g deg\n",
+					distsq2deg(distsq(xyzf, xyzc, 3)));
+			logverb("  max radius: %g\n", distsq2deg(maxr2));
+			continue;
+		}
+		// Phew, plot it.
+		rds = constellations_get_lines_radec(i);
+		logverb("Constellation %s: plotting %i lines\n",
+				constellations_get_shortname(i), dl_size(rds)/4);
+		for (j=0; j<dl_size(rds)/4; j++) {
+			double r1,d1,r2,d2;
+			double r3,d3,r4,d4;
+			r1 = dl_get(rds, j*4+0);
+			d1 = dl_get(rds, j*4+1);
+			r2 = dl_get(rds, j*4+2);
+			d2 = dl_get(rds, j*4+3);
+
+			//if (anwcs_is_discontinuous(pargs->wcs, r1, d1, r2, d2)) {
+			if (anwcs_find_discontinuity(pargs->wcs, r1, d1, r2, d2, &r3, &d3, &r4, &d4)) {
+				logverb("Discontinuous: %g,%g -- %g,%g\n", r1, d1, r2, d2);
+				logverb("  %g,%g == %g,%g\n", r3,d3, r4,d4);
+				plotstuff_move_to_radec(pargs, r1, d1);
+				plotstuff_line_to_radec(pargs, r3, d3);
+				plotstuff_move_to_radec(pargs, r4, d4);
+				plotstuff_line_to_radec(pargs, r2, d2);
+			} else {
+				plotstuff_move_to_radec(pargs, r1, d1);
+				plotstuff_line_to_radec(pargs, r2, d2);
+			}
+			plotstuff_stroke(pargs);
+		}
+		dl_free(rds);
 	}
 }
 
@@ -312,6 +387,9 @@ int plot_annotations_plot(const char* cmd, cairo_t* cairo,
 
 	if (ann->HD)
 		plot_hd(cairo, pargs, ann);
+
+	if (ann->constellations)
+		plot_constellations(cairo, pargs, ann);
 
 	if (bl_size(ann->targets))
 		plot_targets(cairo, pargs, ann);

@@ -579,18 +579,28 @@ int anwcs_get_radec_center_and_radius(const anwcs_t* anwcs,
 			anwcslib_t* anwcslib = anwcs->data;
 			double x,y;
 			double ra1, dec1, ra2, dec2;
-			// FIXME -- is this right?
-			x = anwcslib->imagew + 0.5;
-			y = anwcslib->imageh + 0.5;
+			x = anwcslib->imagew/2. + 0.5;
+			y = anwcslib->imageh/2. + 0.5;
 			if (anwcs_pixelxy2radec(anwcs, x, y, &ra1, &dec1))
 				return -1;
-			// FIXME -- this is certainly not right in general....
 			if (p_ra) *p_ra = ra1;
 			if (p_dec) *p_dec = dec1;
+
+			// FIXME -- this is certainly not right in general....
+			/*
+			 if (p_radius) {
+			 if (anwcs_pixelxy2radec(anwcs, 1.0, 1.0, &ra2, &dec2))
+			 return -1;
+			 *p_radius = deg_between_radecdeg(ra1, dec1, ra2, dec2);
+			 }
+			 */
+
+			// try just moving 1 pixel and extrapolating.
 			if (p_radius) {
-				if (anwcs_pixelxy2radec(anwcs, 1.0, 1.0, &ra2, &dec2))
+				if (anwcs_pixelxy2radec(anwcs, x+1, y, &ra2, &dec2))
 					return -1;
-				*p_radius = deg_between_radecdeg(ra1, dec1, ra2, dec2);
+				*p_radius = deg_between_radecdeg(ra1, dec1, ra2, dec2) *
+					hypot(anwcslib->imagew, anwcslib->imageh)/2.0;;
 			}
 		}
 		break;
@@ -819,44 +829,60 @@ int anwcs_radec2pixelxy(const anwcs_t* anwcs, double ra, double dec, double* px,
 	return 0;
 }
 
-
-bool anwcs_is_discontinuous(const anwcs_t* wcs, double ra1, double dec1,
-							double ra2, double dec2) {
-	//double x1,y1,x2,y2;
-
+bool anwcs_find_discontinuity(const anwcs_t* wcs, double ra1, double dec1,
+							  double ra2, double dec2,
+							  double* pra3, double* pdec3,
+							  double* pra4, double* pdec4) {
 #ifdef WCSLIB_EXISTS
 	if (wcs->type == ANWCS_TYPE_WCSLIB) {
-		//anwcslib_t* wcslib = wcs->data;
 		struct wcsprm* wcslib = ((anwcslib_t*)wcs->data)->wcs;
-		/*
-		 printf("ctype[0]: %s\n", wcslib->ctype[0]);
-		 printf("ctype[1]: %s\n", wcslib->ctype[1]);
-		 */
 		if (ends_with(wcslib->ctype[0], "AIT")) {
 			// Hammer-Aitoff -- wraps at 180 deg from CRVAL0
 			double ra0 = fmod(wcslib->crval[0] + 180.0, 360.0);
+			// RA1, RA2 are closer wrapping-around than by crossing RA0.
+			if (MIN(fabs(ra1 - ra2), 360-fabs(ra1-ra2)) < (fabs(ra1-ra0) + fabs(ra2-ra0)))
+				return FALSE;
 			/*
-			 double dra1, dra2;
-			 printf("ra ref: %g\n", ra0);
-			 dra1 = ra1 - ra0;
-			 dra2 = ra2 - ra0;
-			 printf("dRA: %g %g\n", dra1, dra2);
+			 if (ra1
+			 // RA1, RA2 are on the same side of RA0
+			 if ((ra1 - ra0) * (ra2 - ra0) > 0) {
+			 return FALSE;
+			 }
 			 */
-			if ((ra1 - ra0) * (ra2 - ra0) < 0) {
-				return TRUE;
+			if (pra3)
+				*pra3 = ra0 + (ra1 > ra0 ? -360.0 : 0);
+			if (pra4)
+				*pra4 = ra0 + (ra2 > ra0 ? -360.0 : 0);
+			if (pdec3 || pdec4) {
+				// split the distance on sphere to find approximate Dec.
+				//double fulldist = deg_between_radec(ra1, dec1, ra2, dec2);
+				double dr1 = MIN(fabs(ra1 - ra0), fabs(ra1 - ra0 + 360));
+				double dr2 = MIN(fabs(ra2 - ra0), fabs(ra2 - ra0 + 360));
+				logverb("ra0 = %g.  ra1=%g, dr1=%g;   ra2=%g, dr2=%g\n",
+						ra0, ra1, dr1, ra2, dr2);
+				if (pdec3)
+					*pdec3 = dec1 + (dec2 - dec1) * dr1 / (dr1 + dr2);
+				if (pdec4)
+					*pdec4 = dec1 + (dec2 - dec1) * dr1 / (dr1 + dr2);
 			}
+			return TRUE;
 		}
 	}
 #endif
-
 	/*
 	 if (anwcs_radec2pixelxy(wcs, ra1, dec1, &x1, &y1) ||
 	 anwcs_radec2pixelxy(wcs, ra2, dec2, &x2, &y2)) {
 	 return TRUE;
 	 }
 	 */
-	
 	return FALSE;
+}
+
+
+bool anwcs_is_discontinuous(const anwcs_t* wcs, double ra1, double dec1,
+							double ra2, double dec2) {
+	return anwcs_find_discontinuity(wcs, ra1, dec1, ra2, dec2,
+									NULL, NULL, NULL, NULL);
 }
 
 /*

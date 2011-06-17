@@ -92,6 +92,17 @@ class Plotstuff(object):
 		else:
 			self.pargs.__setattr__(name, val)
 
+	def line_constant_ra(self, ra, declo, dechi):
+		return plotstuff_line_constant_ra(self.pargs, ra, declo, dechi)
+	def line_constant_dec(self, dec, ralo, rahi):
+		return plotstuff_line_constant_dec(self.pargs, dec, ralo, rahi)
+	def fill(self):
+		return plotstuff_fill(self.pargs)
+	def stroke(self):
+		return plotstuff_stroke(self.pargs)
+	def move_to_radec(self, ra, dec):
+		return plotstuff_move_to_radec(self.pargs, ra, dec)
+
 	def get_image_as_numpy(self):
 		return self.pargs.get_image_as_numpy()
 

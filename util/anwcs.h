@@ -105,6 +105,11 @@ void anwcs_walk_image_boundary(const anwcs_t* wcs, double stepsize,
 							   void (*callback)(const anwcs_t* wcs, double x, double y, double ra, double dec, void* token),
 							   void* token);
 
+bool anwcs_find_discontinuity(const anwcs_t* wcs, double ra1, double dec1,
+							  double ra2, double dec2,
+							  double* pra3, double* pdec3,
+							  double* pra4, double* pdec4);
+
 bool anwcs_is_discontinuous(const anwcs_t* wcs, double ra1, double dec1,
 							double ra2, double dec2);
 
