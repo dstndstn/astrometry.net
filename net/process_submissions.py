@@ -275,7 +275,15 @@ def dosub(sub):
     # create Image object
 
     # Is there already an Image for this DiskFile?
-    img,created = Image.objects.get_or_create(disk_file=df)
+    try:
+        img,created = Image.objects.get_or_create(disk_file=df)
+    except Image.MultipleObjectsReturned:
+        img = Image.objects.filter(disk_file=df)
+        for i in range(1,len(img)):
+            img[i].delete()
+        img = img[0]
+        created = False
+
     if created:
         #img.save()
         # defaults=dict(width=w, height=h))
@@ -311,7 +319,7 @@ def dosub(sub):
 
 
 def main():
-    nthreads = 2
+    nthreads = 1
 
     pool = None
     if nthreads > 1:
