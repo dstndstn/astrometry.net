@@ -1,5 +1,5 @@
 
-%module plotstuff_c
+%module(package="astrometry.blind") plotstuff_c
 
 %include <typemaps.i>
 

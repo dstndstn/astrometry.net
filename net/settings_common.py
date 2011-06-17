@@ -8,6 +8,7 @@ DATADIR = os.path.join(WEB_DIR, 'data')
 JOBDIR = os.path.join(WEB_DIR, 'jobs')
 SDSS_TILE_DIR = os.path.join(WEB_DIR, 'sdss-tiles')
 GALEX_JPEG_DIR = '/data1/GALEX-jpegs'
+HENRY_DRAPER_CAT = os.path.join(WEB_DIR, 'hd.fits')
 
 AUTH_PROFILE_MODULE = 'net.UserProfile'
 
@@ -36,12 +37,12 @@ PORTAL_LOGFILE = LOG_DIR + 'portal.log'
 VO_LOGFILE = LOG_DIR + 'vo.log'
 
 # Plotting
-HENRY_DRAPER_CAT = ANDIR + 'net/hd.fits'
-TYCHO_MKDT = ANDIR + 'net/tycho.mkdt.fits'
-TILERENDER = ANDIR + 'render/tilerender'
-SIPSO = ANDIR + 'util/_sip.so'
-CACHEDIR = DATADIR + 'tilecache/'
-RENDERCACHEDIR = DATADIR + 'rendercache/'
+#TYCHO_MKDT = ANDIR + 'net/tycho.mkdt.fits'
+#TILERENDER = ANDIR + 'render/tilerender'
+#SIPSO = ANDIR + 'util/_sip.so'
+#CACHEDIR = DATADIR + 'tilecache/'
+#RENDERCACHEDIR = DATADIR + 'rendercache/'
+
 TEMPDIR = '/tmp'
 
 SESSION_COOKIE_NAME = 'AstrometryTestSession'

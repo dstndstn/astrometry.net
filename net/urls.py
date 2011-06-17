@@ -38,6 +38,8 @@ urlpatterns += patterns('astrometry.net.views.image',
     (r'^image/(?P<id>' + imagepattern + r')/?', 'serve_image'),
     (r'^images/(?P<category>\w+)/(?P<id>' + idpattern + r')/?', 'image_set'),
     (r'^allsky_plot/(?P<calid>' + idpattern + r')/?', 'onthesky_image'),
+    (r'^sky_plot1/(?P<calid>' + idpattern + r')/?', 'onthesky_zoom1_image'),
+    (r'^sky_plot2/(?P<calid>' + idpattern + r')/?', 'onthesky_zoom2_image'),
     (r'^sdss_image/(?P<calid>' + idpattern + r')/?', 'sdss_image'),
     (r'^galex_image/(?P<calid>' + idpattern + r')/?', 'galex_image'),
 )

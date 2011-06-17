@@ -172,8 +172,9 @@ static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* a
 			constellations_get_star_radec(il_get(stars, j), &ra, &dec);
 			radecdeg2xyzarr(ra, dec, xyzj);
 			for (k=0; k<3; k++)
-				xyzc[k] += xyzj[k] / (double)il_size(stars);
+				xyzc[k] += xyzj[k];
 		}
+		normalize_3(xyzc);
 		for (j=0; j<il_size(stars); j++) {
 			constellations_get_star_radec(il_get(stars, j), &ra, &dec);
 			maxr2 = MAX(maxr2, distsq(xyzc, xyzj, 3));
@@ -191,32 +192,67 @@ static void plot_constellations(cairo_t* cairo, plot_args_t* pargs, plotann_t* a
 			continue;
 		}
 		// Phew, plot it.
-		rds = constellations_get_lines_radec(i);
-		logverb("Constellation %s: plotting %i lines\n",
-				constellations_get_shortname(i), dl_size(rds)/4);
-		for (j=0; j<dl_size(rds)/4; j++) {
-			double r1,d1,r2,d2;
-			double r3,d3,r4,d4;
-			r1 = dl_get(rds, j*4+0);
-			d1 = dl_get(rds, j*4+1);
-			r2 = dl_get(rds, j*4+2);
-			d2 = dl_get(rds, j*4+3);
-
-			//if (anwcs_is_discontinuous(pargs->wcs, r1, d1, r2, d2)) {
-			if (anwcs_find_discontinuity(pargs->wcs, r1, d1, r2, d2, &r3, &d3, &r4, &d4)) {
-				logverb("Discontinuous: %g,%g -- %g,%g\n", r1, d1, r2, d2);
-				logverb("  %g,%g == %g,%g\n", r3,d3, r4,d4);
-				plotstuff_move_to_radec(pargs, r1, d1);
-				plotstuff_line_to_radec(pargs, r3, d3);
-				plotstuff_move_to_radec(pargs, r4, d4);
-				plotstuff_line_to_radec(pargs, r2, d2);
-			} else {
-				plotstuff_move_to_radec(pargs, r1, d1);
-				plotstuff_line_to_radec(pargs, r2, d2);
+		if (ann->constellation_lines) {
+			rds = constellations_get_lines_radec(i);
+			logverb("Constellation %s: plotting %i lines\n",
+					constellations_get_shortname(i), dl_size(rds)/4);
+			for (j=0; j<dl_size(rds)/4; j++) {
+				double r1,d1,r2,d2;
+				double r3,d3,r4,d4;
+				r1 = dl_get(rds, j*4+0);
+				d1 = dl_get(rds, j*4+1);
+				r2 = dl_get(rds, j*4+2);
+				d2 = dl_get(rds, j*4+3);
+				if (anwcs_find_discontinuity(pargs->wcs, r1, d1, r2, d2,
+											 &r3, &d3, &r4, &d4)) {
+					logverb("Discontinuous: %g,%g -- %g,%g\n", r1, d1, r2, d2);
+					logverb("  %g,%g == %g,%g\n", r3,d3, r4,d4);
+					plotstuff_move_to_radec(pargs, r1, d1);
+					plotstuff_line_to_radec(pargs, r3, d3);
+					plotstuff_move_to_radec(pargs, r4, d4);
+					plotstuff_line_to_radec(pargs, r2, d2);
+				} else {
+					plotstuff_move_to_radec(pargs, r1, d1);
+					plotstuff_line_to_radec(pargs, r2, d2);
+				}
+				plotstuff_stroke(pargs);
 			}
-			plotstuff_stroke(pargs);
+			dl_free(rds);
 		}
-		dl_free(rds);
+
+		if (ann->constellation_labels ||
+			ann->constellation_markers) {
+			// Put the label at the center of mass of the stars that are in-bounds
+			int Nin = 0;
+			stars = constellations_get_unique_stars(i);
+			xyzc[0] = xyzc[1] = xyzc[2] = 0.0;
+			logverb("Labeling %s: %i stars\n", constellations_get_shortname(i),
+					il_size(stars));
+			for (j=0; j<il_size(stars); j++) {
+				constellations_get_star_radec(il_get(stars, j), &ra, &dec);
+				if (!anwcs_radec_is_inside_image(pargs->wcs, ra, dec))
+					continue;
+				if (ann->constellation_markers) {
+					plotstuff_marker_radec(pargs, ra, dec);
+				}
+				radecdeg2xyzarr(ra, dec, xyzj);
+				for (k=0; k<3; k++)
+					xyzc[k] += xyzj[k];
+				Nin++;
+			}
+			logverb("  %i stars in-bounds\n", Nin);
+			if (ann->constellation_labels && Nin) {
+				const char* label;
+				normalize_3(xyzc);
+				xyzarr2radecdeg(xyzc, &ra, &dec);
+				if (ann->constellation_labels_long)
+					label = constellations_get_longname(i);
+				else
+					label = constellations_get_shortname(i);
+				plotstuff_text_radec(pargs, ra, dec, label);
+			}
+			il_free(stars);
+		}
 	}
 }
 
@@ -369,6 +405,7 @@ void* plot_annotations_init(plot_args_t* args) {
 	ann->targets = bl_new(4, sizeof(target_t));
 	ann->NGC = TRUE;
 	ann->bright = TRUE;
+	ann->constellation_lines = TRUE;
 	return ann;
 }
 

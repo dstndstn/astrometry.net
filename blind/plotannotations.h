@@ -5,7 +5,13 @@
 
 struct annotation_args {
 	bool NGC;
+
 	bool constellations;
+	bool constellation_lines;
+	bool constellation_markers;
+	bool constellation_labels;
+	bool constellation_labels_long;
+
 	bool bright;
 	bool HD;
 	float ngc_fraction;

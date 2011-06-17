@@ -625,6 +625,23 @@ void plotstuff_stack_text(plot_args_t* pargs, cairo_t* cairo,
 	add_cmd(pargs, &cmd);
 }
 
+void plotstuff_marker(plot_args_t* pargs, double x, double y) {
+	cairo_t* cairo = pargs->cairo;
+	cairo_move_to(cairo, x, y);
+	cairoutils_draw_marker(cairo, pargs->marker, x, y, pargs->markersize);
+}
+
+int plotstuff_marker_radec(plot_args_t* pargs, double ra, double dec) {
+	double x,y;
+	if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y)) {
+		ERROR("Failed to convert RA,Dec (%g,%g) to pixel position in plot_marker_radec\n", ra, dec);
+		return -1;
+	}
+	assert(pargs->cairo);
+	plotstuff_marker(pargs, x, y);
+	return 0;
+}
+
 int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
 	int i, j;
 	int layer;
@@ -649,8 +666,15 @@ int plotstuff_plot_stack(plot_args_t* pargs, cairo_t* cairo) {
 				cairo_arc(cairo, cmd->x, cmd->y, cmd->radius, 0, 2*M_PI);
 				break;
 			case MARKER:
-				cairo_move_to(cairo, cmd->x, cmd->y);
-				cairoutils_draw_marker(cairo, cmd->marker, cmd->x, cmd->y, cmd->markersize);
+				{
+					double oldmarkersize = pargs->markersize;
+					int oldmarker = pargs->marker;
+					pargs->markersize = cmd->markersize;
+					pargs->marker = cmd->marker;
+					plotstuff_marker(pargs, cmd->x, cmd->y);
+					pargs->markersize = oldmarkersize;
+					pargs->marker = oldmarker;
+				}
 				break;
 			case TEXT:
 				cairo_move_to(cairo, cmd->x, cmd->y);

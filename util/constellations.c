@@ -212,7 +212,7 @@ dl* constellations_get_lines_radec(int c) {
 	check_const_num(c);
 	list = dl_new(16);
 	lines = constellation_lines[c];
-	for (i=0; i<constellation_nlines[c]; i++) {
+	for (i=0; i<constellation_nlines[c]*2; i++) {
 		int star = lines[i];
 		const double* radec = star_positions + star*2;
 		dl_append(list, radec[0]);

@@ -1,5 +1,5 @@
 
-%module util
+%module(package="astrometry.util") util
 
 %include <typemaps.i>
 

@@ -237,6 +237,9 @@ int plotstuff_line_to_radec(plot_args_t* pargs, double ra, double dec);
 int plotstuff_stroke(plot_args_t* pargs);
 int plotstuff_fill(plot_args_t* pargs);
 
+void plotstuff_marker(plot_args_t* pargs, double x, double y);
+int plotstuff_marker_radec(plot_args_t* pargs, double ra, double dec);
+
 int plotstuff_append_doubles(const char* str, dl* lst);
 
 void plotstuff_set_dashed(plot_args_t* pargs, double dashlen);
