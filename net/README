@@ -26,7 +26,8 @@ You will also need to build the Astrometry.net tools:
 Need django-openid-auth:
   https://launchpad.net/django-openid-auth
 
-
+Optionally, grab Henry Draper catalog:
+  svn cat svn+ssh://astrometry.net/svn/binary/henry-draper/hd.fits > hd.fits
 
 Nova/Supernova setup:
 
