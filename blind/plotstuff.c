@@ -246,6 +246,16 @@ int plotstuff_stroke(plot_args_t* pargs) {
 	return 0;
 }
 
+void plotstuff_set_dashed(plot_args_t* pargs, double dashlen) {
+	assert(pargs->cairo);
+	cairo_set_dash(pargs->cairo, &dashlen, 1, 0);
+}
+
+void plotstuff_set_solid(plot_args_t* pargs) {
+	assert(pargs->cairo);
+	cairo_set_dash(pargs->cairo, NULL, 0, 0);
+}
+
 int parse_color(const char* color, float* r, float* g, float* b, float* a) {
 	if (a) *a = 1.0;
 	return (cairoutils_parse_rgba(color, r, g, b, a) &&

@@ -239,4 +239,7 @@ int plotstuff_fill(plot_args_t* pargs);
 
 int plotstuff_append_doubles(const char* str, dl* lst);
 
+void plotstuff_set_dashed(plot_args_t* pargs, double dashlen);
+void plotstuff_set_solid(plot_args_t* pargs);
+
 #endif

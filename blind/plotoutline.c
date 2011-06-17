@@ -165,44 +165,15 @@ int plot_outline_plot(const char* command,
 		// hit brk2 (worst case, we [should] hit brk)
 		brk2 = trace_line(pargs->wcs, cairo, rd, end-1, -1, -1, FALSE);
 		logdebug("traced segment 2: brk2=%i\n", brk2);
-		// trace segment 3: from brk2 to brk.
-		// 1-pixel steps.
-		degstep = arcsec2deg(anwcs_pixel_scale(pargs->wcs));
-		rd2 = anwcs_walk_discontinuity(pargs->wcs,
-									   dl_get(rd, 2*(brk2+1)+0), dl_get(rd, 2*(brk2+1)+1),
-									   dl_get(rd, 2*(brk2  )+0), dl_get(rd, 2*(brk2  )+1),
-									   dl_get(rd, 2*(brk -1)+0), dl_get(rd, 2*(brk -1)+1),
-									   dl_get(rd, 2*(brk   )+0), dl_get(rd, 2*(brk   )+1),
-									   degstep, NULL);
-		for (i=0; i<dl_size(rd2)/2; i++) {
-			double x,y,ra,dec;
-			ra  = dl_get(rd2, 2*i+0);
-			dec = dl_get(rd2, 2*i+1);
-			if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
-				// oops.
-				continue;
-			cairo_line_to(cairo, x, y);
-		}
-		dl_free(rd2);
-
-		cairo_close_path(cairo);
-
-		if (args->fill)
-			cairo_fill(cairo);
-		else
-			cairo_stroke(cairo);
-
-		// trace segments 4+5: from brk to brk2.
-		if (brk2 > brk) {
-			brk3 = trace_line(pargs->wcs, cairo, rd, brk, 1, brk2, TRUE);
-			logdebug("traced segment 4/5: brk3=%i\n", brk3);
-			assert(brk3 == 0);
-			// trace segment 6: from brk2 to brk.
+		if (args->fill) {
+			// trace segment 3: from brk2 to brk.
+			// 1-pixel steps.
+			degstep = arcsec2deg(anwcs_pixel_scale(pargs->wcs));
 			rd2 = anwcs_walk_discontinuity(pargs->wcs,
-										   dl_get(rd, 2*(brk2  )+0), dl_get(rd, 2*(brk2  )+1),
 										   dl_get(rd, 2*(brk2+1)+0), dl_get(rd, 2*(brk2+1)+1),
-										   dl_get(rd, 2*(brk   )+0), dl_get(rd, 2*(brk   )+1),
+										   dl_get(rd, 2*(brk2  )+0), dl_get(rd, 2*(brk2  )+1),
 										   dl_get(rd, 2*(brk -1)+0), dl_get(rd, 2*(brk -1)+1),
+										   dl_get(rd, 2*(brk   )+0), dl_get(rd, 2*(brk   )+1),
 										   degstep, NULL);
 			for (i=0; i<dl_size(rd2)/2; i++) {
 				double x,y,ra,dec;
@@ -214,9 +185,43 @@ int plot_outline_plot(const char* command,
 				cairo_line_to(cairo, x, y);
 			}
 			dl_free(rd2);
+			cairo_close_path(cairo);
+		}
+
+		if (args->fill)
+			cairo_fill(cairo);
+		else
+			cairo_stroke(cairo);
+
+		// trace segments 4+5: from brk to brk2.
+		if (brk2 > brk) {
+			// (tracing the outline on the far side)
+			brk3 = trace_line(pargs->wcs, cairo, rd, brk, 1, brk2, TRUE);
+			logdebug("traced segment 4/5: brk3=%i\n", brk3);
+			assert(brk3 == 0);
+			// trace segment 6: from brk2 to brk.
+			// (walking the discontinuity on the far side)
+			if (args->fill) {
+				rd2 = anwcs_walk_discontinuity(pargs->wcs,
+											   dl_get(rd, 2*(brk2  )+0), dl_get(rd, 2*(brk2  )+1),
+											   dl_get(rd, 2*(brk2+1)+0), dl_get(rd, 2*(brk2+1)+1),
+											   dl_get(rd, 2*(brk   )+0), dl_get(rd, 2*(brk   )+1),
+											   dl_get(rd, 2*(brk -1)+0), dl_get(rd, 2*(brk -1)+1),
+											   degstep, NULL);
+				for (i=0; i<dl_size(rd2)/2; i++) {
+					double x,y,ra,dec;
+					ra  = dl_get(rd2, 2*i+0);
+					dec = dl_get(rd2, 2*i+1);
+					if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
+						// oops.
+						continue;
+					cairo_line_to(cairo, x, y);
+				}
+				dl_free(rd2);
+				cairo_close_path(cairo);
+			}
 		}
 	}
-	cairo_close_path(cairo);
 	dl_free(token2.radecs);
 
 	if (args->fill)

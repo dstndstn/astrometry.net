@@ -4,12 +4,11 @@ from astrometry.net.log import *
 from astrometry.net.tmpfile import *
 from astrometry.net import settings
 
-def plot_aitoff_wcs_outline(wcsfn, plotfn, width=400):
-    #from astrometry.util import util as anutil
+def plot_aitoff_wcs_outline(wcsfn, plotfn, width=400, zoom=True):
+    from astrometry.util import util as anutil
     from astrometry.blind import plotstuff as ps
-    anutil = ps
 
-    ps.log_init(3)
+    anutil.log_init(3)
 
     height = width/2
     # Create Hammer-Aitoff WCS of the appropriate size.
@@ -60,10 +59,25 @@ def plot_aitoff_wcs_outline(wcsfn, plotfn, width=400):
     anutil.anwcs_print_stdout(out.wcs)
     plot.plot('outline')
 
-    ann = plot.annotations
-    ann.NGC = ann.bright = ann.HD = 0
-    ann.constellations = 1
-    plot.plot('annotations')
+    # Not helpful to add constellations in this view
+    #ann = plot.annotations
+    #ann.NGC = ann.bright = ann.HD = 0
+    #ann.constellations = 1
+    #plot.plot('annotations')
+
+    if zoom:
+        owcs = anutil.Tan(wcsfn, 0)
+        # MAGIC 15 degrees radius
+        if owcs.radius() < 15.:
+            ra,dec = owcs.radec_center()
+            # MAGIC 36-degree width zoom-in
+            # MAGIC width, height are arbitrary
+            zoomwcs = anutil.anwcs_create_box(ra, dec, 36, 1000,1000)
+            out.wcs = zoomwcs
+            #plot.color = 'gray'
+            plot.lw = 1
+            plot.dashed(3)
+            plot.plot('outline')
 
     plot.write(plotfn)
     

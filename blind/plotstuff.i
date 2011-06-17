@@ -3,7 +3,8 @@
 
 %include <typemaps.i>
 
-%include "util.i"
+ //%include "util.i"
+%import "util.i"
 
 #undef ATTRIB_FORMAT
 #define ATTRIB_FORMAT(x,y,z)

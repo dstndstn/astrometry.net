@@ -102,6 +102,10 @@ class Plotstuff(object):
 		return plotstuff_stroke(self.pargs)
 	def move_to_radec(self, ra, dec):
 		return plotstuff_move_to_radec(self.pargs, ra, dec)
+	def dashed(self, dashlen):
+		plotstuff_set_dashed(self.pargs, dashlen)
+	def solid(self):
+		plotstuff_set_solid(self.pargs)
 
 	def get_image_as_numpy(self):
 		return self.pargs.get_image_as_numpy()
