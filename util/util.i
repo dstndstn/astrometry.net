@@ -573,8 +573,3 @@ Tan = tan_t
 
 %include "fitsioutils.h"
 
- /*
-%include "anwcs.h"
-  %extend anwcs_t {
-  %}
-  */

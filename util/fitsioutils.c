@@ -38,6 +38,28 @@
 #include "log.h"
 #include "errors.h"
 
+Malloc
+char* fits_to_string(const qfits_header* hdr, int* size) {
+	int N = qfits_header_n(hdr);
+	char* str;
+	int i;
+
+	str = malloc(N * FITS_LINESZ);
+	if (!str) {
+		SYSERROR("Failed to allocate string for %i FITS lines\n", N);
+		return NULL;
+	}
+	for (i=0; i<N; i++) {
+		if (qfits_header_write_line(hdr, i, str + i*FITS_LINESZ)) {
+			ERROR("Failed to write FITS header line %i", i);
+			free(str);
+			return NULL;
+		}
+	}
+	*size = N * FITS_LINESZ;
+	return str;
+}
+
 int fits_write_header(const qfits_header* hdr, const char* fn) {
 	FILE* fid;
 	fid = fopen(fn, "wb");

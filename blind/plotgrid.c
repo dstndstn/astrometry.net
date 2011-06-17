@@ -116,6 +116,8 @@ int plot_grid_find_dec_label_location(plot_args_t* pargs, double dec, double cra
 				gotit = TRUE;
 				break;
 			}
+			if (!isfinite(in) || !isfinite(out))
+				break;
 		}
 		if (gotit)
 			break;

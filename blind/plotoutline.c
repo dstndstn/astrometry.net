@@ -65,13 +65,13 @@ static int trace_line(anwcs_t* wcs, cairo_t* cairo, dl* rd, int istart, int idir
 		ra  = dl_get(rd, 2*i+0);
 		dec = dl_get(rd, 2*i+1);
 
-		//logverb("tracing: i=%i, ra,dec = %g,%g\n", i, ra, dec);
+		logverb("tracing: i=%i, ra,dec = %g,%g\n", i, ra, dec);
 
 		if (anwcs_radec2pixelxy(wcs, ra, dec, &x, &y))
 			// ?
 			continue;
 
-		//logverb("  x,y %g,%g\n", x, y);
+		logverb("  x,y %g,%g\n", x, y);
 
 		if (first) {
 			if (firstmove)
@@ -115,7 +115,7 @@ int plot_outline_plot(const char* command,
 	token2.cairo = cairo;
 	token2.radecs = dl_new(256);
 	anwcs_walk_image_boundary(args->wcs, args->stepsize, walk_callback2, &token2);
-	logverb("Outline: walked in %i steps\n", dl_size(token2.radecs));
+	logverb("Outline: walked in %i steps\n", dl_size(token2.radecs)/2);
 	rd = token2.radecs;
 
 	// avoid special case when there is a break between

@@ -2,10 +2,9 @@ import math
 import os
 import urllib
 
-# astrometry.net modules
-from log import *
-from tmpfile import *
-import settings
+from astrometry.net.log import *
+from astrometry.net.tmpfile import *
+from astrometry.net import settings
 
 def plot_sdss_image(wcsfn, plotfn):
     from astrometry.util import util as anutil

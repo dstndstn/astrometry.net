@@ -43,6 +43,9 @@ struct anwcs_t {
 typedef struct anwcs_t anwcs_t;
 
 
+// len: length in characters of 'str'
+anwcs_t* anwcs_wcslib_from_string(const char* str, int len);
+
 anwcs_t* anwcs_open(const char* filename, int ext);
 
 anwcs_t* anwcs_open_wcslib(const char* filename, int ext);
@@ -58,6 +61,9 @@ anwcs_t* anwcs_new_tan(const tan_t* tan);
 // Creates an axis-aligned TAN WCS at the given RA,Dec with "width" width in degrees
 // and W x H  pixels.
 anwcs_t* anwcs_create_box(double ra, double dec, double width, int W, int H);
+
+anwcs_t* anwcs_create_allsky_hammer_aitoff(double refra, double refdec,
+										   int W, int H);
 
 int anwcs_write(const anwcs_t* wcs, const char* filename);
 

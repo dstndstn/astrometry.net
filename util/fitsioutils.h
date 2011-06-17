@@ -27,6 +27,9 @@
 
 void fits_use_error_system(void);
 
+Malloc
+char* fits_to_string(const qfits_header* hdr, int* size);
+
 int fits_write_float_image(const float* img, int nx, int ny, const char* fn);
 
 int fits_write_u8_image(const uint8_t* img, int nx, int ny, const char* fn);

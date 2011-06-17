@@ -70,6 +70,19 @@ def annotated_image(req, jobid=None):
     res['Content-type'] = 'image/png'
     return res
 
+def onthesky_image(req, calid=None):
+    from astrometry.net.views.onthesky import plot_aitoff_wcs_outline
+    cal = get_object_or_404(Calibration, pk=calid)
+    wcsfn = cal.get_wcs_file()
+    plotfn = get_temp_file()
+    #
+    plot_aitoff_wcs_outline(wcsfn, plotfn)
+    f = open(plotfn)
+    res = HttpResponse(f)
+    res['Content-type'] = 'image/png'
+    return res
+
+
 def galex_image(req, calid=None):
     from astrometry.util import util as anutil
     from astrometry.blind import plotstuff as ps

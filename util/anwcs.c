@@ -35,6 +35,7 @@
 #include "starutil.h"
 #include "mathutil.h"
 #include "ioutils.h"
+#include "fitsioutils.h"
 
 struct anwcslib_t {
 	struct wcsprm* wcs;
@@ -685,54 +686,40 @@ anwcs_t* anwcs_open_sip(const char* filename, int ext) {
 	return open_tansip(filename, ext, FALSE);
 }
 
-anwcs_t* anwcs_open_wcslib(const char* filename, int ext) {
+anwcs_t* anwcs_wcslib_from_string(const char* str, int len) {
 #ifndef WCSLIB_EXISTS
 	ERROR("Wcslib support was not compiled in");
 	return NULL;
 #else
-	anqfits_t* fits = anqfits_open(filename);
-	const qfits_header* hdr;
-	char* hdrstr = NULL;
-	int Nhdr;
-	int nkeys;
-	int nwcs = 0;
 	int code;
+	int nkeys;
 	int nrej = 0;
+	int nwcs = 0;
 	struct wcsprm* wcs = NULL;
 	struct wcsprm* wcs2 = NULL;
 	anwcs_t* anwcs = NULL;
 	anwcslib_t* anwcslib;
+	qfits_header* qhdr;
 	int W, H;
-
-	if (!fits) {
-		ERROR("Failed to open file %s", filename);
+	
+	qhdr = qfits_header_read_hdr_string((const unsigned char*)str, len);
+	if (!qhdr) {
+		ERROR("Failed to parse string as qfits header");
 		return NULL;
 	}
-	hdrstr = anqfits_header_get_data(fits, ext, &Nhdr);
-	hdr = anqfits_get_header_const(fits, ext);
-
-	if (!hdrstr) {
-		ERROR("Failed to read header data from file %s, ext %i", filename, ext);
-		anqfits_close(fits);
-		fits = NULL;
-		return NULL;
-	}
-	nkeys = Nhdr / FITS_LINESZ;
-
-	if (sip_get_image_size(hdr, &W, &H)) {
-		logverb("Failed to find image size in file %s, ext %i\n", filename, ext);
+	if (sip_get_image_size(qhdr, &W, &H)) {
+		logverb("Failed to find image size in FITS WCS header\n");
+		//file %s, ext %i\n", filename, ext);
 		//logverb("Header:\n");
 		//qfits_header_debug_dump(hdr);
-		logverb("\n");
+		//logverb("\n");
 		W = H = 0;
 	}
+	qfits_header_destroy(qhdr);
 
-	anqfits_close(fits);
-	fits = NULL;
-
-	code = wcspih(hdrstr, nkeys,  WCSHDR_all, 2, &nrej, &nwcs, &wcs);
-	free(hdrstr);
-	hdrstr = NULL;
+	nkeys = len / FITS_LINESZ;
+	code = wcspih((char*)str, nkeys,  WCSHDR_all, 2, &nrej, &nwcs, &wcs);
+	str = NULL;
 	if (code) {
 		ERROR("wcslib's wcspih() failed with code %i", code);
 		return NULL;
@@ -760,6 +747,42 @@ anwcs_t* anwcs_open_wcslib(const char* filename, int ext) {
 	anwcslib->imagew = W;
 	anwcslib->imageh = H;
 
+	return anwcs;
+#endif
+}
+
+
+anwcs_t* anwcs_open_wcslib(const char* filename, int ext) {
+#ifndef WCSLIB_EXISTS
+	ERROR("Wcslib support was not compiled in");
+	return NULL;
+#else
+	anqfits_t* fits = anqfits_open(filename);
+	char* hdrstr = NULL;
+	int Nhdr;
+	anwcs_t* anwcs = NULL;
+
+	if (!fits) {
+		ERROR("Failed to open file %s", filename);
+		return NULL;
+	}
+
+	hdrstr = anqfits_header_get_data(fits, ext, &Nhdr);
+	if (!hdrstr) {
+		ERROR("Failed to read header data from file %s, ext %i", filename, ext);
+		anqfits_close(fits);
+		fits = NULL;
+		return NULL;
+	}
+	anqfits_close(fits);
+
+	anwcs = anwcs_wcslib_from_string(hdrstr, Nhdr);
+	free(hdrstr);
+	if (!anwcs) {
+		ERROR("Failed to parse FITS WCS header from file \"%s\" ext %i",
+			  filename, ext);
+		return NULL;
+	}
 	return anwcs;
 #endif
 }
@@ -1023,6 +1046,45 @@ sip_t* anwcs_get_sip(const anwcs_t* wcs) {
     if (wcs->type == ANWCS_TYPE_SIP)
         return wcs->data;
     return NULL;
+}
+
+anwcs_t* anwcs_create_allsky_hammer_aitoff(double refra, double refdec,
+										   int W, int H) {
+	qfits_header* hdr;
+	double xscale = -360. / (double)W;
+	double yscale = -180. / (double)H;
+	char* str = NULL;
+	int Nstr = 0;
+	anwcs_t* anwcs = NULL;
+
+	hdr = qfits_header_default();
+	qfits_header_add(hdr, "CTYPE1", "RA---AIT", "Hammer-Aitoff", NULL);
+	qfits_header_add(hdr, "CTYPE2", "DEC--AIT", "Hammer-Aitoff", NULL);
+	fits_header_add_double(hdr, "CRPIX1", W/2 + 0.5, NULL);
+	fits_header_add_double(hdr, "CRPIX2", H/2 + 0.5, NULL);
+	fits_header_add_double(hdr, "CRVAL1", refra,  NULL);
+	fits_header_add_double(hdr, "CRVAL2", refdec, NULL);
+	fits_header_add_double(hdr, "CD1_1", xscale, NULL);
+	fits_header_add_double(hdr, "CD1_2", 0, NULL);
+	fits_header_add_double(hdr, "CD2_1", 0, NULL);
+	fits_header_add_double(hdr, "CD2_2", yscale, NULL);
+	fits_header_add_int(hdr, "IMAGEW", W, NULL);
+	fits_header_add_int(hdr, "IMAGEH", H, NULL);
+
+	str = fits_to_string(hdr, &Nstr);
+	qfits_header_destroy(hdr);
+	if (!str) {
+		ERROR("Failed to write Hammer-Aitoff FITS header as string");
+		return NULL;
+	}
+
+	anwcs = anwcs_wcslib_from_string(str, Nstr);
+	free(str);
+	if (!anwcs) {
+		ERROR("Failed to convert parse Hammer-Aitoff header string with wcslib");
+		return NULL;
+	}
+	return anwcs;
 }
 
 
