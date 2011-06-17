@@ -1,9 +1,23 @@
 {% extends "base.html" %}
 
+{% block inlinecss %}
+#image_container {
+    background: url('/{{ STATIC_URL }}images/loading.gif') no-repeat center center;
+    width: {{ image.image.width }}px;
+    height: {{ image.image.height }}px;
+}
+{% endblock %}
+
 {% block javascript %}
 <script type="text/javascript">
-function change_image(url) {
-    document.getElementById('user_image').src = url;
+function changeImage(link) {
+    image = document.getElementById('user_image')
+    image.src = link.href;
+    image.style.visibility = 'hidden';
+    image.onload = function() {
+        this.style.visibility = 'visible';
+    }
+    return false;
 }
 </script>
 {% endblock %}
@@ -17,14 +31,16 @@ Job {{ job.id }}<br />
     RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
     <br />
     <br />
-    <a href="javascript:change_image('{% url astrometry.net.views.image.serve_image image.image.id %}')">original</a> |
-    <a href="javascript:change_image('{% url astrometry.net.views.image.annotated_image jobid=job.id %}')">annotated</a> |
-    <a href="javascript:change_image('{% url astrometry.net.views.image.sdss_image calid=job.calibration.id %}')">SDSS</a> |
-    <a href="javascript:change_image('{% url astrometry.net.views.image.galex_image calid=job.calibration.id %}')" />GALEX</a><br />
+    <a href="{% url astrometry.net.views.image.serve_image image.image.id %}" onclick="return changeImage(this)">original</a> |
+    <a href="{% url astrometry.net.views.image.annotated_image jobid=job.id %}" onclick="return changeImage(this)">annotated</a> |
+    <a href="{% url astrometry.net.views.image.sdss_image calid=job.calibration.id %}" onclick="return changeImage(this)">SDSS</a> |
+    <a href="{% url astrometry.net.views.image.galex_image calid=job.calibration.id %}" onclick="return changeImage(this)">GALEX</a><br />
+    <div id="image_container">
     <img id="user_image" src="{% url astrometry.net.views.image.annotated_image jobid=job.id %}" />
     {% else %}
     <img id="user_image" src="{% url astrometry.net.views.image.serve_image image.image.id %}" />
     {% endif %}
+    </div>
     <br />
 </div>
 <div id="tags">

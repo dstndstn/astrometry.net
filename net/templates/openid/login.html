@@ -12,7 +12,8 @@
 		openid.setDemoMode(false); //Stops form submission for client javascript-only test purposes
 	});
 </script>
-	
+
+{% comment %}	
 <script type="text/javascript">
 var openid_suggestions = [
 {% for s in openid_suggestions %}
@@ -37,6 +38,7 @@ function changeProvider() {
     changeProvider();
 }*/
 </script>
+{% endcomment %}
 {% endblock %}
 
 {% block title %}
