@@ -2,7 +2,7 @@
 <p class="comment">
 <span class="author">User {{ comment.author.id }}</span>: {{ comment.text }}
 {% if comment.recipient.owner == request.user or comment.author == request.user %}
-<br /><a href="#">[delete]</a>
+<br /><a href="{% url astrometry.net.views.comment.delete comment_id=comment.id %}?next={{request.path}}">[delete]</a>
 {% endif %}
 </p>
 {% empty %}

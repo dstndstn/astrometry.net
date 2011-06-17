@@ -44,6 +44,7 @@ urlpatterns += patterns('astrometry.net.views.image',
 
 urlpatterns += patterns('astrometry.net.views.comment',
     (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/comments/new/?', 'new'),
+    (r'^comments/(?P<comment_id>' + idpattern + r')/delete/?', 'delete'),
 )
 
 urlpatterns += patterns('astrometry.net.api',

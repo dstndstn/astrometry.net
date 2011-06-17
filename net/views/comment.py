@@ -37,3 +37,16 @@ def new(req, category=None, recipient_id=None):
     else:
         # show a generic comment form
         pass
+
+@login_required
+def delete(req, comment_id):
+    comment = get_object_or_404(Comment, pk=comment_id)
+    redirect_url = req.GET['next']
+    if redirect_url == None:
+        redirect_url = '/'
+    if comment.recipient.owner == req.user or comment.author == req.user:
+        comment.delete()
+        return HttpResponseRedirect(redirect_url)
+    else:
+        # render_to_response a "you don't have permission" view
+        pass
