@@ -42,6 +42,10 @@ urlpatterns += patterns('astrometry.net.views.image',
     (r'^galex_image/(?P<calid>' + idpattern + r')/?', 'galex_image'),
 )
 
+urlpatterns += patterns('astrometry.net.views.comment',
+    (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/comments/new/?', 'new'),
+)
+
 urlpatterns += patterns('astrometry.net.api',
                         (r'^api/login/?', 'api_login'),
                         (r'^api/upload/?', 'api_upload'),

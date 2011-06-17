@@ -22,6 +22,8 @@ from sdss_image import plot_sdss_image
 from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 
+from astrometry.net.views.comment import *
+
 def user_image(req, user_image_id=None):
     image = get_object_or_404(UserImage, pk=user_image_id)
 
@@ -29,10 +31,14 @@ def user_image(req, user_image_id=None):
     calib = None
     if job:
         calib = job.calibration
-        
-    context = {'image': image,
-               'job': job,
-               'calib': calib,}
+    comment_form = PartialCommentForm()
+    context = {
+        'image': image,
+        'job': job,
+        'calib': calib,
+        'comment_form': comment_form,
+        'request': req
+    }
     return render_to_response('user_image.html', context,
         context_instance = RequestContext(req))
 

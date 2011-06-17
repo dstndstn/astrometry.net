@@ -1,0 +1,10 @@
+{% for comment in comments %}
+<p class="comment">
+<span class="author">User {{ comment.author.id }}</span>: {{ comment.text }}
+{% if comment.recipient.owner == request.user or comment.author == request.user %}
+<br /><a href="#">[delete]</a>
+{% endif %}
+</p>
+{% empty %}
+<p><span class="empty">No comments.</p>
+{% endfor %}

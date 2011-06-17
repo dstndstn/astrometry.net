@@ -46,5 +46,3 @@ def get_api_key(request):
     return render_to_response("api_key.html",
         context,
         context_instance = RequestContext(request))
-
-

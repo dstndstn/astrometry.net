@@ -16,6 +16,10 @@ from log import *
 from astrometry.util.filetype import filetype_short
 from astrometry.util.run_command import run_command
 
+class Commentable(models.Model):
+    id = models.AutoField(primary_key=True)
+    owner = models.ForeignKey(User, null=True)
+
 class DiskFile(models.Model):
     file_hash = models.CharField(max_length=40, unique=True, primary_key=True)
     size = models.PositiveIntegerField()
@@ -244,7 +248,7 @@ class Job(models.Model):
         return dirnm
 
 
-class UserImage(models.Model):
+class UserImage(Commentable):
     image = models.ForeignKey('Image')
     user = models.ForeignKey(User, related_name='user_images', null=True)
     
@@ -260,6 +264,10 @@ class UserImage(models.Model):
     # Reverse mappings:
     #  jobs -> Job
     #  albums -> Album
+
+    def save(self, *args, **kwargs):
+        self.owner = self.user
+        return super(UserImage, self).save(*args, **kwargs)
 
     def get_best_job(self):
         jobs = self.jobs.all()
@@ -349,11 +357,12 @@ class Submission(models.Model):
         self.processing_finished = datetime.now()
 
 
-class Album(models.Model):
+class Album(Commentable):
     description = models.CharField(max_length=1024)
     user_images = models.ManyToManyField('UserImage', related_name='albums') 
-    tags = models.ManyToManyField('Tag', related_name='albums') 
+    tags = models.ManyToManyField('Tag', related_name='albums')
 
-    # Reverse mappings:
-    #   none
-    
+class Comment(models.Model):
+    recipient = models.ForeignKey('Commentable', related_name='comments')
+    author = models.ForeignKey(User, related_name='comments_left')
+    text = models.CharField(max_length=1024)
