@@ -127,12 +127,16 @@ def render_openid_request(request, openid_request, return_to, trust_root=None):
 
 
 def default_render_failure(request, message, status=403,
-                           template_name='openid/failure.html'):
+                           template_name='openid/login.html'):
     """Render an error page to the user."""
-    data = render_to_string(
-        template_name, dict(message=message),
-        context_instance=RequestContext(request))
-    return HttpResponse(data, status=status)
+    #data = render_to_string(
+    #   template_name, dict(message=message),
+    #    context_instance=RequestContext(request))
+    #return HttpResponse(data, status=status)
+    context = {'openid_error': message}
+    return render_to_response(template_name, context,
+        context_instance = RequestContext(request))
+
 
 
 def parse_openid_response(request):
@@ -163,21 +167,24 @@ def login_begin(request, template_name='openid/login.html',
 
     if openid_url is None:
         if request.POST:
-            login_form = form_class(data=request.POST)
-            if login_form.is_valid():
-                openid_url = login_form.cleaned_data['openid_identifier']
-                username = login_form.cleaned_data['username']
-                openid_url = openid_url.replace("username", username)
-                logmsg( "OpenID url: " + openid_url)
+            #login_form = form_class(data=request.POST)
+            #if login_form.is_valid():
+            #    openid_url = login_form.cleaned_data['openid_identifier']
+            #    username = login_form.cleaned_data['username']
+            #    openid_url = openid_url.replace("username", username)
+            
+            openid_url = request.POST['openid_identifier'] 
+            logmsg( "OpenID url: " + openid_url)
         else:
-            login_form = form_class()
+            pass
+            #login_form = form_class()
 
         # Invalid or no form data:
         if openid_url is None:
             return render_to_response(template_name, {
-                    'form': login_form,
-                    'openid_suggestions': choicify(OPENID_PROVIDERS,
-                                                   'url','suggestion'),
+                    #'form': login_form,
+                    #'openid_suggestions': choicify(OPENID_PROVIDERS,
+                    #                               'url','suggestion'),
                     redirect_field_name: redirect_to
                     }, context_instance=RequestContext(request))
 

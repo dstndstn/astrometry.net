@@ -55,6 +55,12 @@ urlpatterns += patterns('astrometry.net.api',
                         #(r'^api/logout/?', 'logout'),
 )
 
+# static file serving in development
+if settings.DEBUG:
+    urlpatterns += patterns('',
+        (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': 'static'}),
+    )
+
 # fallback
 urlpatterns += patterns('astrometry.net.views.user',
                         (r'', 'dashboard'),

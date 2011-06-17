@@ -54,6 +54,8 @@ class UploadFileForm(forms.Form):
                 raise forms.ValidationError("You must select a file to upload.") 
         elif upload_type == 'url':
             url = self.cleaned_data.get('url','')
+            if not (url.startswith('http://') or url.startswith('ftp://')):
+                url = 'http://' + url
             if url.startswith('http://http://') or url.startswith('http://ftp://'):
                 url = url[7:]
             if len(url) == 0:

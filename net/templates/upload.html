@@ -10,7 +10,7 @@ function changeUploadType(type) {
     url_block.style.display = (type == "url") ? "block":"none";
 }
 window.onload = function() {
-    radio_group = document.forms[0].elements["upload_type"];
+    radio_group = document.forms['upload_form'].elements["upload_type"];
     for (var i=0; i<radio_group.length; i++) {
         if (radio_group[i].checked) {
             changeUploadType(radio_group[i].value);
@@ -26,7 +26,7 @@ Upload
 {% endblock %}
 
 {% block content %}
-<form action="/upload/" method="post" enctype="multipart/form-data">
+<form name="upload_form" action="/upload/" method="post" enctype="multipart/form-data">
 {% csrf_token %}
 {{ form.non_field_errors }}
 {{ form.upload_type }}

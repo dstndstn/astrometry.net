@@ -1,6 +1,18 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block javascript %}
+<link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}css/openid-shadow.css" />
+<script type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.2.6.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/openid-jquery.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/openid-en.js"></script>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		openid.init('openid_identifier');
+		openid.setDemoMode(false); //Stops form submission for client javascript-only test purposes
+	});
+</script>
+	
 <script type="text/javascript">
 var openid_suggestions = [
 {% for s in openid_suggestions %}
@@ -20,10 +32,10 @@ function changeProvider() {
         username_block.style.display = "block";
     }
 }
-window.onload = function() {
+/*window.onload = function() {
     document.getElementById("id_openid_identifier").onchange = changeProvider;
     changeProvider();
-}
+}*/
 </script>
 {% endblock %}
 
@@ -32,6 +44,32 @@ Sign in with your OpenID
 {% endblock %}
 
 {% block content %}
+
+
+<!-- Simple OpenID Selector -->
+<form action="" method="post" id="openid_form">
+    {% csrf_token %}
+	<input type="hidden" name="action" value="verify" />
+	<div id="openid_errors">
+	{% if openid_error %}
+	    <ul class="errorlist"><li>{{ openid_error }}</li></ul>
+	{% endif %}
+	</div>
+	<div id="openid_choice">
+		<p>Please select an OpenID provider to use.</p>
+		<div id="openid_btns"></div>
+	</div>
+	<div id="openid_input_area">
+		<input id="openid_identifier" name="openid_identifier" type="text" value="http://" />
+		<input id="openid_submit" type="submit" value="Sign in"/>
+	</div>
+	<noscript>
+		<p>OpenID is service that allows you to log-on to many different websites using a single indentity.
+		Find out <a href="http://openid.net/what/">more about OpenID</a> and <a href="http://openid.net/get/">how to get an OpenID enabled account</a>.</p>
+	</noscript>
+</form>
+<!-- /Simple OpenID Selector -->
+{% comment %}
 {% if form.errors %}
 <p class="errors">{% trans "Please correct errors below:" %}<br />
     {% if form.openid_identifier.errors %}
@@ -64,4 +102,5 @@ Sign in with your OpenID
  {% endif %}
     </fieldset>
 </form>
+{% endcomment %}
 {% endblock %}
