@@ -21,6 +21,10 @@ class DiskFile(models.Model):
     size = models.PositiveIntegerField()
     file_type = models.CharField(max_length=256, null=True)
 
+    # Reverse mappings:
+    #  image_set -> Image
+    #  submissions -> Submission
+
     def __str__(self):
         return 'DiskFile: %s, size %i, type %s' % (self.file_hash, self.size, self.file_type)
 
@@ -93,6 +97,9 @@ class Image(models.Model):
     height = models.PositiveIntegerField(null=True)
     thumbnail = models.ForeignKey('Image', null=True)
 
+    # Reverse mappings:
+    #  userimage_set -> UserImage
+
     def get_mime_type(self):
         return self.disk_file.file_type
 
@@ -135,6 +142,10 @@ class Tag(models.Model):
     text = models.CharField(max_length=4096)
     added_time = models.DateTimeField(auto_now=True) 
 
+    # Reverse mappings:
+    #  user_images -> UserImage
+    #  albums -> Album
+
 class Calibration(models.Model):
     # TAN WCS, straight from the quad match
     raw_tan = models.ForeignKey('TanWCS', related_name='calibrations_raw', null=True)
@@ -142,6 +153,9 @@ class Calibration(models.Model):
     tweaked_tan = models.ForeignKey('TanWCS', related_name='calibrations_tweaked', null=True)
     # SIP
     sip = models.ForeignKey('SipWCS', null=True)
+
+    # Reverse mappings:
+    #   job_set  -> Job
 
     # RA,Dec bounding box.
     ramin  = models.FloatField()
@@ -185,6 +199,9 @@ class Job(models.Model):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
 
+    # Reverse mappings:
+    #  none
+
     def __str__(self):
         s = 'Job %i' % self.id
         if self.calibration is not None:
@@ -224,6 +241,10 @@ class UserImage(models.Model):
     description = models.CharField(max_length=1024)
     original_file_name = models.CharField(max_length=256)
     submission = models.ForeignKey('Submission', related_name='user_images')
+
+    # Reverse mappings:
+    #  jobs -> Job
+    #  albums -> Album
 
     def get_best_job(self):
         jobs = self.jobs.all()
@@ -278,6 +299,9 @@ class Submission(models.Model):
     processing_started = models.DateTimeField(null=True)
     processing_finished = models.DateTimeField(null=True)
 
+    # Reverse mappings:
+    #  user_images -> UserImage
+
     def __str__(self):
         return ('Submission %i: file <%s>, url %s, proc_started=%s' %
                 (self.id, str(self.disk_file), self.url, str(self.processing_started)))
@@ -314,3 +338,7 @@ class Album(models.Model):
     description = models.CharField(max_length=1024)
     user_images = models.ManyToManyField('UserImage', related_name='albums') 
     tags = models.ManyToManyField('Tag', related_name='albums') 
+
+    # Reverse mappings:
+    #   none
+    
