@@ -10,7 +10,8 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadReque
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
-
+from django.core.validators import URLValidator
+from django.utils.safestring import mark_safe
 from astrometry.net.models import *
 from astrometry.net import settings
 from log import *
@@ -33,10 +34,38 @@ def index(req, user_id):
         context_instance = RequestContext(req))
 
 class UploadFileForm(forms.Form):
+    class HorizontalRenderer(forms.RadioSelect.renderer):
+        def render(self):
+            return mark_safe(u'\n'.join([u'%s' % w for w in self]))
+
+
     file  = forms.FileField(required=False)
-    url = forms.CharField(initial='http://', required=False)
-    upload_type = forms.ChoiceField(widget=forms.RadioSelect(),
-                                    choices=(('file','file'),('url','url')))
+    url = forms.CharField(widget=forms.TextInput(attrs={'size':'50'}),
+                          initial='http://', required=False)
+    upload_type = forms.ChoiceField(widget=forms.RadioSelect(renderer=HorizontalRenderer,
+                                                             attrs={'onclick':'changeUploadType(this.value)'}),
+                                    choices=(('file','file'),('url','url')),
+                                    initial='file')
+
+    def clean(self):
+        upload_type = self.cleaned_data.get('upload_type','')
+        if upload_type == 'file':
+            if not self.cleaned_data.get('file'):
+                raise forms.ValidationError("You must select a file to upload.") 
+        elif upload_type == 'url':
+            url = self.cleaned_data.get('url','')
+            if url.startswith('http://http://') or url.startswith('http://ftp://'):
+                url = url[7:]
+            if len(url) == 0:
+                raise forms.ValidationError("You must enter a url to upload.")
+            urlvalidator = URLValidator()
+            try:
+                urlvalidator(url)
+            except forms.ValidationError:
+                raise forms.ValidationError("You must enter a valid url.")
+            self.cleaned_data['url'] = url
+
+        return self.cleaned_data
 
 def upload_file(request):
     if request.method == 'POST':
