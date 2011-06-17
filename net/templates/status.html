@@ -31,12 +31,12 @@ RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
 <br />
 <img src="{% url astrometry.net.views.image.annotated_image jobid=job.id %}" />
 <br />
-<a href="{% url astrometry.net.views.image.sdss_image jobid=job.id %}" />Get SDSS image</a>
+<a href="{% url astrometry.net.views.image.sdss_image calid=job.calibration.id %}" />Get SDSS image</a>
 <br />
-<a href="{% url astrometry.net.views.image.galex_image jobid=job.id %}" />Get GALEX image</a>
+<a href="{% url astrometry.net.views.image.galex_image calid=job.calibration.wcs.id %}" />Get GALEX image</a>
 {% else %}
     {% if job %}
-    <img src="{% url astrometry.net.views.image.serve_image id=job.user_image.image.id %}" />
+    <img src="{% url astrometry.net.views.image.serve_image id=job.user_image.image.get_thumbnail.id %}" />
     {% endif %}
 
 {% endif %}

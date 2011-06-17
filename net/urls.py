@@ -37,8 +37,8 @@ urlpatterns += patterns('astrometry.net.views.image',
     (r'^user_image/(?P<user_image_id>' + idpattern + r')/?', 'user_image'),
     (r'^image/(?P<id>' + imagepattern + r')/?', 'serve_image'),
     (r'^images/(?P<category>\w+)/(?P<id>' + idpattern + r')/?', 'image_set'),
-    (r'^sdss_image/(?P<jobid>' + jobpattern + r')/?', 'sdss_image'),
-    (r'^galex_image/(?P<jobid>' + jobpattern + r')/?', 'galex_image'),
+    (r'^sdss_image/(?P<calid>' + idpattern + r')/?', 'sdss_image'),
+    (r'^galex_image/(?P<calid>' + idpattern + r')/?', 'galex_image'),
 )
 
 urlpatterns += patterns('astrometry.net.api',

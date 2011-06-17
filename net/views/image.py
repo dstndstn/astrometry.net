@@ -70,13 +70,13 @@ def annotated_image(req, jobid=None):
     res['Content-type'] = 'image/png'
     return res
 
-def galex_image(req, jobid=None):
+def galex_image(req, calid=None):
     from astrometry.util import util as anutil
     from astrometry.blind import plotstuff as ps
     from astrometry.net.galex_jpegs import plot_into_wcs
 
-    job = get_object_or_404(Job, pk=jobid)
-    wcsfn = job.get_wcs_file()
+    cal = get_object_or_404(Calibration, pk=calid)
+    wcsfn = cal.get_wcs_file()
     plotfn = get_temp_file()
     #
     plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR)
@@ -86,9 +86,10 @@ def galex_image(req, jobid=None):
     return res
 
 
-def sdss_image(req, jobid=None):
-    job = get_object_or_404(Job, pk=jobid)
-    wcsfn = job.get_wcs_file()
+def sdss_image(req, calid=None):
+    cal = get_object_or_404(Calibration, pk=calid)
+    wcsfn = cal.get_wcs_file()
+
     plotfn = get_temp_file()
     #
     plot_sdss_image(wcsfn, plotfn)

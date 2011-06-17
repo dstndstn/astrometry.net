@@ -103,6 +103,9 @@ class Image(models.Model):
     def get_mime_type(self):
         return self.disk_file.file_type
 
+    def get_thumbnail(self):
+        return self.get_or_create_thumbnail()
+
     def get_or_create_thumbnail(self):
         maxsize = 256
         if self.thumbnail is not None:
@@ -166,6 +169,18 @@ class Calibration(models.Model):
     def __str__(self):
         s = 'Calibration %i' % self.id
         return s
+
+    def get_wcs_file(self):
+        jobs = self.job_set.all()
+        if len(jobs) == 0:
+            logmsg('Calibration.wcs_path: I have no Jobs: my id=%i' % self.id)
+            return None
+        job = jobs[0]
+        logmsg('Calibration: job is', job)
+        return job.get_wcs_file()
+
+    def wcs(self):
+        return self.raw_tan
 
     def get_center_radec(self):
         (ra,dec,radius) = self.raw_tan.get_center_radecradius()

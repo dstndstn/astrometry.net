@@ -311,7 +311,7 @@ def dosub(sub):
 
 
 def main():
-    nthreads = 1
+    nthreads = 2
 
     pool = None
     if nthreads > 1:

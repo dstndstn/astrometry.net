@@ -15,6 +15,10 @@ class TanWCS(models.Model):
     imagew = models.FloatField()
     imageh = models.FloatField()
 
+    # Reverse mappings:
+    #  calibrations_raw -> Calibration
+    #  calibrations_tweaked -> Calibration
+
     def __init__(self, *args, **kwargs):
         filename = None
         if 'file' in kwargs:
