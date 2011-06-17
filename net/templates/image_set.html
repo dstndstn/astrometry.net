@@ -31,8 +31,8 @@ div.image_set .image_container {
 <div class="image_set">
 {% for image in images %}
     <a href="{% url astrometry.net.views.image.user_image image.id %}">
-    <!--<img class="image_container" src="{% url astrometry.net.views.image.serve_image id=image.image.get_or_create_thumbnail.id %}" />-->
-    <div class="image_container" style="background-image: url('{% url astrometry.net.views.image.serve_image id=image.image.get_or_create_thumbnail.id %}')"></div> 
+    <!--<img class="image_container" src="{% url astrometry.net.views.image.serve_image id=image.image.thumbnail.id %}" />-->
+    <div class="image_container" style="background-image: url('{% url astrometry.net.views.image.serve_image id=image.image.thumbnail.id %}')"></div> 
     </a>
 {% empty %}
     No images.

@@ -306,6 +306,9 @@ def dosub(sub):
         img.width = w
         img.height = h
         img.save()
+        img.thumbnail = img.create_resized_image(256) 
+        img.display_image = img.create_resized_image(800) 
+        img.save()
 
     # create UserImage object.
     uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,

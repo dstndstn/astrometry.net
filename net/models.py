@@ -99,7 +99,8 @@ class Image(models.Model):
     disk_file = models.ForeignKey(DiskFile)
     width = models.PositiveIntegerField(null=True)
     height = models.PositiveIntegerField(null=True)
-    thumbnail = models.ForeignKey('Image', null=True)
+    thumbnail = models.ForeignKey('Image', related_name='image_thumbnail_set', null=True)
+    display_image = models.ForeignKey('Image', related_name='image_display_set', null=True)
 
     # Reverse mappings:
     #  userimage_set -> UserImage
@@ -108,12 +109,9 @@ class Image(models.Model):
         return self.disk_file.file_type
 
     def get_thumbnail(self):
-        return self.get_or_create_thumbnail()
+        return self.thumbnail
 
-    def get_or_create_thumbnail(self):
-        maxsize = 256
-        if self.thumbnail is not None:
-            return self.thumbnail
+    def create_resized_image(self, maxsize):
         if max(self.width, self.height) <= maxsize:
             return self
         from astrometry.util.image2pnm import image2pnm
@@ -122,26 +120,24 @@ class Image(models.Model):
         os.close(f)
         (ext,err) = image2pnm(fn, tmpfn)
         if ext is None:
-            raise RuntimeError('Failed to make thumbnail for %s: image2pnm: %s' % (str(self), err))
-        f,thumbfn = tempfile.mkstemp()
+            raise RuntimeError('Failed to make resized image for %s: image2pnm: %s' % (str(self), err))
+        f,imagefn = tempfile.mkstemp()
         os.close(f)
-        # find thumbnail scale
+        # find scale
         scale = float(maxsize) / float(max(self.width, self.height))
         W,H = int(round(scale * self.width)), int(round(scale * self.height))
-        cmd = 'pnmscale -width %i -height %i %s | pnmtojpeg > %s' % (W, H, tmpfn, thumbfn)
-        logmsg("Making thumbnail: %s" % cmd)
+        cmd = 'pnmscale -width %i -height %i %s | pnmtojpeg > %s' % (W, H, tmpfn, imagefn)
+        logmsg("Making resized image: %s" % cmd)
         rtn,out,err = run_command(cmd)
         if rtn:
             logmsg('pnmscale failed: rtn %i' % rtn)
             logmsg('out: ' + out)
             logmsg('err: ' + err)
-            raise RuntimeError('Failed to make thumbnail for %s: pnmscale: %s' % (str(self), err))
-        df = DiskFile.from_file(thumbfn)
-        thumb = Image(disk_file=df, width=W, height=H)
-        thumb.save()
-        self.thumbnail = thumb
-        self.save()
-        return self.thumbnail
+            raise RuntimeError('Failed to make resized image for %s: pnmscale: %s' % (str(self), err))
+        df = DiskFile.from_file(imagefn)
+        image = Image(disk_file=df, width=W, height=H)
+        image.save()
+        return image
 
 
 class Tag(models.Model):
