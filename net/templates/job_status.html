@@ -1,5 +1,11 @@
 {% if job.status %}
-    {{ job.status }}
+    {% if job.status == 'S' %}
+        <span class="good">Success</span>
+    {% endif %}
+    {% if job.status == 'F' %}
+        <span class="bad">Failure</span>
+    {% endif %}
+    {% if not job.status == 'F' and not job.status == 'S' %}?{% endif %}
 {% else %}
     processing...
 {% endif %}
