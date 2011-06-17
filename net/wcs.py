@@ -32,7 +32,7 @@ class TanWCS(models.Model):
 
     def get_center_radecradius(self):
         wcs = self.to_tanwcs()
-        print 'WCS:', wcs
+        #print 'WCS:', wcs
         ra,dec = wcs.radec_center()
         radius = wcs.pixel_scale() * math.hypot(wcs.imagew, wcs.imageh)/2. / 3600.
         return ra,dec,radius
