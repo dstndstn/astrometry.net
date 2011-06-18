@@ -43,14 +43,15 @@ function changeImage(link) {
         <a href="{% url astrometry.net.views.image.annotated_image jobid=job.id %}?scale={{scale}}" onclick="return changeImage(this)">annotated</a> |
         <a href="{% url astrometry.net.views.image.sdss_image calid=job.calibration.id %}?scale={{scale}}" onclick="return changeImage(this)">SDSS</a> |
         <a href="{% url astrometry.net.views.image.galex_image calid=job.calibration.id %}?scale={{scale}}" onclick="return changeImage(this)">GALEX</a><br />
-        <div id="image_container">
-        <img id="user_image" src="{% url astrometry.net.views.image.annotated_image jobid=job.id %}?scale={{scale}}" />
-        {% else %}
-        <img id="user_image" src="{% url astrometry.net.views.image.serve_image image.image.display_image.id %}" />
         {% endif %}
+        <div id="image_container">
+            <img id="user_image" src="
+                {% if calib %}{% url astrometry.net.views.image.annotated_image jobid=job.id %}?scale={{scale}}
+                {% else %}{% url astrometry.net.views.image.serve_image image.image.display_image.id %}
+                {% endif %}" />
         </div>
     </div>
-    <div style="clear: both"></div>
+    <!--<div style="clear:both"></div>-->
     <br />
 </div>
 <div id="tags">
