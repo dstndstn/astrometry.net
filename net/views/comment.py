@@ -19,7 +19,6 @@ class PartialCommentForm(forms.ModelForm):
         exclude = ('recipient', 'author')
         widgets = {'text':forms.Textarea(attrs={'cols':60,'rows':3})}
 
-@login_required
 def new(req, category=None, recipient_id=None):
     recipient = get_object_or_404(Commentable, pk=recipient_id)
     if req.method == 'POST':

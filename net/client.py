@@ -97,6 +97,9 @@ class Client(object):
             raise RequestError('no session in result')
         self.session = sess
 
+    def url_upload(self, url):
+        result = self.send_request('url_upload', {'url':url})
+
     def upload(self, fn):
         try:
             f = open(fn)
@@ -137,6 +140,7 @@ if __name__ == '__main__':
     parser.add_option('--apikey', '-k', dest='apikey',
                       help='API key for Astrometry.net web service; if not given will check AN_API_KEY environment variable')
     parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
+    parser.add_option('--urlupload', '-U', dest='upload_url', help='Upload a file at specified url')
     parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
     opt,args = parser.parse_args()
@@ -158,6 +162,8 @@ if __name__ == '__main__':
 
     if opt.upload:
         c.upload(opt.upload)
+    if opt.upload_url:
+        c.url_upload(opt.upload_url)
     if opt.sdss_wcs:
         (wcsfn, outfn) = opt.sdss_wcs
         c.sdss_plot(outfn, wcsfn)

@@ -156,10 +156,34 @@ def handle_uploaded_file(req, f):
     return sub
 
 def handle_uploaded_url(req, url):
+    file_hash = DiskFile.get_hash()
+    temp_file_path = tempfile.mktemp()
+    uploaded_file = open(temp_file_path, 'wb+')
+
+    f = urllib2.urlopen(url)
+    CHUNK_SIZE = 4096
+    while True:
+        chunk = f.read(CHUNK_SIZE)
+        if not chunk:
+            break
+        uploaded_file.write(chunk)
+        file_hash.update(chunk)
+    uploaded_file.close()
+
+    # get or create DiskFile object
+    df,created = DiskFile.objects.get_or_create(file_hash=file_hash.hexdigest(),
+                                                defaults={'size':0, 'file_type':''})
+
+    # if the file doesn't already exist, set it's size/type and
+    # move file into data directory
+    if created:
+        DiskFile.make_dirs(file_hash.hexdigest())
+        shutil.move(temp_file_path, DiskFile.get_file_path(file_hash.hexdigest()))
+        df.set_size_and_file_type()
+        df.save()
+        
     submittor = req.user if req.user.is_authenticated() else None
-    sub = Submission(user=submittor, disk_file=None, url=url, scale_type='ul', scale_units='degwidth')
+    sub = Submission(user=submittor, disk_file=df, url=url, scale_type='ul', scale_units='degwidth')
     sub.save()
     logmsg('Made Submission' + str(sub))
-
     return sub
-    

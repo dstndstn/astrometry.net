@@ -1,5 +1,7 @@
 import base64
 
+from functools import wraps
+
 from django.contrib import auth
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
@@ -7,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 # astrometry.net imports
 from astrometry.net.views.submission import handle_uploaded_file
+from astrometry.net.views.submission import handle_uploaded_url
 from api_util import *
 from userprofile import *
 from log import *
@@ -37,6 +40,7 @@ def create_session(key):
 
 # decorator for extracting JSON arguments from a POST.
 def requires_json_args(handler):
+    @wraps(handler)
     def handle_request(request, *pargs, **kwargs):
         loginfo('POST: ' + str(request.POST))
         json = request.POST.get('request-json')
@@ -55,6 +59,7 @@ def requires_json_args(handler):
 # requires "request.json" to exist: you probably need to precede this decorator
 # by the "requires_json_args" decorator.
 def requires_json_session(handler):
+    @wraps(handler)
     def handle_request(request, *args, **kwargs):
         #print 'requires_json_session decorator running.'
         if not 'session' in request.json:
@@ -74,6 +79,7 @@ def requires_json_session(handler):
     return handle_request
 
 def requires_json_login(handler):
+    @wraps(handler)
     def handle_request(request, *args, **kwargs):
         #print 'requires_json_login decorator running.'
         user = auth.get_user(request)
@@ -97,7 +103,20 @@ def api_upload(request):
 
     return HttpResponseJson({'status': 'success',
                              'subid': sub.id,
-		             'hash': sub.disk_file.file_hash}) 
+                             'hash': sub.disk_file.file_hash}) 
+
+@csrf_exempt
+@requires_json_args
+@requires_json_session
+def url_upload(req):
+    logmsg('request:' + str(req))
+    url = req.json.get('url')
+    logmsg('url: %s' % url)
+    sub = handle_uploaded_url(req, url)
+
+    return HttpResponseJson({'status': 'success',
+                             'subid': sub.id,
+                             'hash': sub.disk_file.file_hash}) 
 
 def write_wcs_file(req, wcsfn):
     from astrometry.util import util as anutil
@@ -135,7 +154,6 @@ def api_galex_image_for_wcs(req):
     return HttpResponseJson({'status': 'success',
                              'plot': base64.b64encode(open(plotfn).read()),
                              })
-
 @csrf_exempt
 @requires_json_args
 def api_login(request):
