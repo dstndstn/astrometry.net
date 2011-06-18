@@ -27,9 +27,11 @@ function changeImage(link) {
 
 <div>
     <div style="float:right;">
+    {% if calib %}
     <img src="{% url astrometry.net.views.image.onthesky_image calid=job.calibration.id %}" /><br />
     <img src="{% url astrometry.net.views.image.onthesky_zoom1_image calid=job.calibration.id %}" /><br />
     <img src="{% url astrometry.net.views.image.onthesky_zoom2_image calid=job.calibration.id %}" /><br />
+    {% endif %}
     </div>
 
     <div>
