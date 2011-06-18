@@ -1,10 +1,16 @@
 {% for comment in comments %}
-<p class="comment">
-<span class="author">User {{ comment.author.id }}</span>: {{ comment.text }}
-{% if comment.recipient.owner == request.user or comment.author == request.user %}
-<br /><a href="{% url astrometry.net.views.comment.delete comment_id=comment.id %}?next={{request.path}}">[delete]</a>
-{% endif %}
-</p>
+<div class="comment">
+    <p class="comment_header">
+        <span class="author">{{comment.author.get_full_name}}</span> on 
+        <span class="timestamp">{{comment.created_at}}</span>:
+    </p>
+    <p class="comment_text">
+        {{comment.text}}
+        {% if comment.recipient.owner == request.user or comment.author == request.user %}
+        <br /><a href="{% url astrometry.net.views.comment.delete comment_id=comment.id %}?next={{request.path}}">[delete]</a>
+        {% endif %}
+    </p>
+</div>
 {% empty %}
 <p><span class="empty">No comments.</p>
 {% endfor %}

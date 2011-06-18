@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 
-{% block inlinecss %}
+{% block inline_css %}
+{{block.super}}
+<style type="text/css">
 #image_container {
     background: url('/{{ STATIC_URL }}images/loading.gif') no-repeat center center;
     width: {{ image.image.display_image.width }}px;
     height: {{ image.image.display_image.height }}px;
 }
+</style>
 {% endblock %}
 
 {% block javascript %}
@@ -61,7 +64,7 @@ function changeImage(link) {
 </div>
 <div id="comments">
     <h3>Comments</h3>
-    {% include 'comments.html' with comments=image.comments.all %}
+    {% include 'comments.html' with comments=image.comments.all.order_by('-created_at') %}
     <div><form method="post" name="comment_form" action="{% url astrometry.net.views.comment.new category='userimage' recipient_id=image.id %}">
         {% csrf_token %}
         <p>{{ comment_form.text }}</p>

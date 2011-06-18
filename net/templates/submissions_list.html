@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
-{% block inlinecss %}
+{% block inline_css %}
+{{block.super}}
+<style type="text/css">
 .submission {
     margin-top: .5em;
 }
@@ -25,6 +27,7 @@ td.job_id {
 td.job_status {
     width: 200px;
 }
+</style>
 {% endblock %}
 
 {% block title %}Submissions Summary for User {{ submitter.id }} {% endblock %}

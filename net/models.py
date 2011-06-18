@@ -359,6 +359,7 @@ class Album(Commentable):
     tags = models.ManyToManyField('Tag', related_name='albums')
 
 class Comment(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
     recipient = models.ForeignKey('Commentable', related_name='comments')
     author = models.ForeignKey(User, related_name='comments_left')
     text = models.CharField(max_length=1024)

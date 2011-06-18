@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
-{% block inlinecss %}
+{% block inline_css %}
+{{block.super}}
+<style type="text/css">
 div.image_set .image_container {
     display: inline-block;
     width: 200px;
@@ -10,6 +12,7 @@ div.image_set .image_container {
     background-position: center center;
     background-repeat: no-repeat;
 }
+</style>
 {% endblock %}
 
 {% block title %}

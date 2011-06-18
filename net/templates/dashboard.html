@@ -1,11 +1,24 @@
 {% extends "base.html" %}
 
+{% block inline_css %}
+{{block.super}}
+<style type="text/css">
+
+</style>
+{% endblock %}
+
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 {% if user.is_authenticated %}
-    <div id="control_panel">
+<div id="dashboard">
+    <div id="dashboard_menu">
         {% include 'control_panel.html' %}
     </div>
+    <div id="dashboard_content">
+    {% block dashboard_content %}
+    {% endblock %}
+    </div>
+</div>
 {% else %}
 {% endif %}
 {% endblock content %}
