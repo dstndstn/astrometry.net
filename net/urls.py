@@ -30,6 +30,7 @@ urlpatterns += patterns('astrometry.net.views.submission',
 urlpatterns += patterns('astrometry.net.views.user',
     (r'^dashboard/?$', 'dashboard'),
     #(r'^dashboard/apikey/?$', 'get_api_key'),  # made redundant by inclusion of api key in dashboard profile
+    (r'^dashboard/submissions/?$', 'dashboard_submissions'),
     (r'^dashboard/profile/?$', 'dashboard_profile'),
     (r'^dashboard/profile/save/?$', 'save_profile'),
     (r'^users/(?P<user_id>' + idpattern + r')/?$', 'public_profile'),

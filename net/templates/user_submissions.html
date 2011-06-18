@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block inline_css %}
+{{block.super}}
+<style type="text/css">
+.submission {
+    margin-top: .5em;
+}
+.submission_job_list {
+    margin-left: 1em;
+    margin-top: .5em;
+}
+
+.submission_job_list, .submission_job_list tr td {
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+span.image_id { font-weight:bold; }
+td.image_id {
+    width: 100px;
+}
+span.job_id { font-weight:bold; }
+td.job_id {
+    width: 200px;
+}
+td.job_status {
+    width: 200px;
+}
+</style>
+{% endblock %}
+
+{% block title %}Submissions Summary for User {{ submitter.id }} {% endblock %}
+{% block content %}
+{% include 'submission/list.html' with submissions=submitter.submissions.all %}
+{% endblock content %}

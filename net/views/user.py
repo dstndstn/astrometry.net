@@ -69,5 +69,14 @@ def dashboard_profile(request):
         context,
         context_instance = RequestContext(request))
 
+@login_required
+def dashboard_submissions(req):
+    context = {
+        'user_submissions':req.user.submissions.all
+    }
+    return render_to_response("dashboard/submissions.html",
+        context,
+        context_instance = RequestContext(req))
+
 def public_profile(req):
     pass

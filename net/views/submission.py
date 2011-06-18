@@ -30,7 +30,7 @@ def index(req, user_id):
         submitter = get_object_or_404(User, pk=user_id)
     
     context = {'submitter':submitter}
-    return render_to_response('submissions_list.html', context,
+    return render_to_response('user_submissions.html', context,
         context_instance = RequestContext(req))
 
 class UploadFileForm(forms.Form):
