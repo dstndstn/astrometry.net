@@ -1,7 +1,7 @@
 <h3>Control Panel</h3>
 <ul>
 {% if user.is_authenticated %}
-    <li><a href="{% url astrometry.net.views.user.get_api_key %}">Get API key</a></li>
+    <li><a href="{% url astrometry.net.views.user.dashboard_profile %}">My Profile</a></li>
     <li><a href="{% url astrometry.net.views.image.image_set 'user' user.id %}">My Images</a></li>
     <li><a href="{% url astrometry.net.views.submission.index user.id %}">My Submissions</a></li>
 {% endif %}
