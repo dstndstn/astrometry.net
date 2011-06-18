@@ -9,7 +9,7 @@ from astrometry.net.log import *
 
 import numpy as np
 
-def plot_into_wcs(wcsfn, plotfn, wcsext=0, basedir='.'):
+def plot_into_wcs(wcsfn, plotfn, wcsext=0, basedir='.', scale=1.0):
     wcs = Tan(wcsfn, wcsext)
     ra,dec = wcs.radec_center()
     radius = wcs.radius()
@@ -24,7 +24,11 @@ def plot_into_wcs(wcsfn, plotfn, wcsext=0, basedir='.'):
     T = T[J]
     debug(len(T), 'GALEX fields within range of RA,Dec = ', ra, dec,
           'radius', radius)
-    plot = ps.Plotstuff(outformat='png', wcsfn=wcsfn, wcsext=wcsext)
+
+    size = [int(scale*wcs.imagew),int(scale*wcs.imageh)]
+
+    plot = ps.Plotstuff(outformat='png', wcsfn=wcsfn, wcsext=wcsext, size=size)
+    plot.scale_wcs(scale)
     img = plot.image
     img.format = ps.PLOTSTUFF_FORMAT_JPG
     img.resample = 1

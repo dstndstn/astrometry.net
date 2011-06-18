@@ -32,11 +32,14 @@ def user_image(req, user_image_id=None):
     if job:
         calib = job.calibration
     comment_form = PartialCommentForm()
+    scale = float(image.image.display_image.width)/image.image.width
+
     context = {
         'image': image,
         'job': job,
         'calib': calib,
         'comment_form': comment_form,
+        'scale': scale,
         'request': req
     }
     return render_to_response('user_image.html', context,
@@ -55,6 +58,9 @@ def annotated_image(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
     ui = job.user_image
     img = ui.image
+    scale = float(req.GET.get('scale','1.0'))
+    if scale != 1.0:
+        img = img.display_image
     df = img.disk_file
     imgfn = df.get_path()
     wcsfn = job.get_wcs_file()
@@ -64,7 +70,7 @@ def annotated_image(req, jobid=None):
         logmsg('Error converting image file %s: %s' % (imgfn, errstr))
         return HttpResponse('plot failed')
     annfn = get_temp_file()
-    cmd = 'plot-constellations -w %s -i %s -o %s -N -C -B' % (wcsfn, pnmfn, annfn)
+    cmd = 'plot-constellations -w %s -i %s -o %s -s %s -N -C -B' % (wcsfn, pnmfn, annfn, str(scale))
     logmsg('Running: ' + cmd)
     (rtn, out, err) = run_command(cmd)
     if rtn:
@@ -130,7 +136,8 @@ def galex_image(req, calid=None):
     wcsfn = cal.get_wcs_file()
     plotfn = get_temp_file()
     #
-    plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR)
+    scale = float(req.GET.get('scale','1.0'))
+    plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR, scale=scale)
     f = open(plotfn)
     res = HttpResponse(f)
     res['Content-type'] = 'image/png'
@@ -143,7 +150,8 @@ def sdss_image(req, calid=None):
 
     plotfn = get_temp_file()
     #
-    plot_sdss_image(wcsfn, plotfn)
+    scale = float(req.GET.get('scale','1.0'))
+    plot_sdss_image(wcsfn, plotfn, scale)
     f = open(plotfn)
     res = HttpResponse(f)
     res['Content-type'] = 'image/png'

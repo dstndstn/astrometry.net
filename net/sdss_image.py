@@ -6,7 +6,7 @@ from astrometry.net.log import *
 from astrometry.net.tmpfile import *
 from astrometry.net import settings
 
-def plot_sdss_image(wcsfn, plotfn):
+def plot_sdss_image(wcsfn, plotfn, image_scale=1.0):
     from astrometry.util import util as anutil
     from astrometry.blind import plotstuff as ps
     # Parse the wcs.fits file
@@ -38,7 +38,10 @@ def plot_sdss_image(wcsfn, plotfn):
     scale = math.sqrt(2.) * anutil.healpix_side_length_arcmin(nside) * 60. / float(sdsssize)
     logmsg('Grabbing SDSS tile with scale', scale, 'arcsec/pix')
 
-    plot = ps.Plotstuff(outformat='png', wcsfn=wcsfn)
+    size = [int(image_scale*wcs.imagew),int(image_scale*wcs.imageh)]
+
+    plot = ps.Plotstuff(outformat='png', wcsfn=wcsfn, size=size)
+    plot.scale_wcs(image_scale)
     img = plot.image
     img.format = ps.PLOTSTUFF_FORMAT_JPG
     img.resample = 1

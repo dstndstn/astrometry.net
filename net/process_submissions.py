@@ -307,7 +307,7 @@ def dosub(sub):
         img.height = h
         img.save()
         img.thumbnail = img.create_resized_image(256) 
-        img.display_image = img.create_resized_image(800) 
+        img.display_image = img.create_resized_image(640) 
         img.save()
 
     # create UserImage object.
