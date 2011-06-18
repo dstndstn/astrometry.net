@@ -363,3 +363,6 @@ class Comment(models.Model):
     recipient = models.ForeignKey('Commentable', related_name='comments')
     author = models.ForeignKey(User, related_name='comments_left')
     text = models.CharField(max_length=1024)
+
+    class Meta:
+        ordering = ["-created_at"]
