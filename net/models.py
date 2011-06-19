@@ -96,7 +96,7 @@ class DiskFile(models.Model):
 
 
 class Image(models.Model):
-    disk_file = models.ForeignKey(DiskFile)
+    disk_file = models.ForeignKey(DiskFile, primary_key=True)
     width = models.PositiveIntegerField(null=True)
     height = models.PositiveIntegerField(null=True)
     thumbnail = models.ForeignKey('Image', related_name='image_thumbnail_set', null=True)
@@ -150,8 +150,8 @@ class Image(models.Model):
 
 
 class Tag(models.Model):
-    user = models.ForeignKey(User)
-    text = models.CharField(max_length=4096)
+    # user = models.ForeignKey(User) # do we need to keep track of who tags what?
+    text = models.CharField(max_length=4096, primary_key=True)
     added_time = models.DateTimeField(auto_now=True) 
 
     # Reverse mappings:
