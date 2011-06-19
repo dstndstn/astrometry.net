@@ -33,15 +33,6 @@ def dashboard(request):
         context_instance = RequestContext(request))
 
 @login_required
-def edit_profile(req):
-    return render_to_response("dashboard/profile.html",
-        {
-            'profile':req.user.profile,
-        },
-        context_instance = RequestContext(req)
-    )
-
-@login_required
 def save_profile(request):
     profile = request.user.get_profile()
     if request.method == 'POST':
@@ -54,13 +45,13 @@ def dashboard_profile(request):
     profile = None
     try:
         profile = request.user.get_profile()
-        form = ProfileForm(instance=profile)
     except UserProfile.DoesNotExist:
         loginfo('Creating new UserProfile for', request.user)
         profile = UserProfile(user=request.user)
         profile.create_api_key()
         profile.save()
         
+    form = ProfileForm(instance=profile)
     context = {
         'profile_form':form,
         'profile':profile,
