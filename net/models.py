@@ -109,7 +109,16 @@ class Image(models.Model):
         return self.disk_file.file_type
 
     def get_thumbnail(self):
+        if self.thumbnail is None:
+            self.thumbnail = self.create_resized_image(256)
+            self.save()
         return self.thumbnail
+
+    def get_display_image(self):
+        if self.display_image is None:
+            self.display_image = self.create_resized_image(640)
+            self.save()
+        return self.display_image
 
     def create_resized_image(self, maxsize):
         if max(self.width, self.height) <= maxsize:

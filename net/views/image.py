@@ -32,9 +32,10 @@ def user_image(req, user_image_id=None):
     if job:
         calib = job.calibration
     comment_form = PartialCommentForm()
-    scale = float(image.image.display_image.width)/image.image.width
+    scale = float(image.image.get_display_image().width)/image.image.width
 
     context = {
+        'display_image': image.image.get_display_image(),
         'image': image,
         'job': job,
         'calib': calib,

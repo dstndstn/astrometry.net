@@ -5,8 +5,8 @@
 <style type="text/css">
 #image_container {
     background: url('/{{ STATIC_URL }}images/loading.gif') no-repeat center center;
-    width: {{ image.image.display_image.width }}px;
-    height: {{ image.image.display_image.height }}px;
+    width: {{ display_image.width }}px;
+    height: {{ display_image.height }}px;
 }
 </style>
 {% endblock %}
@@ -42,7 +42,7 @@ function changeImage(link) {
         {% if calib %}
         RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
         <br />
-        <a href="{% url astrometry.net.views.image.serve_image image.image.display_image.id %}" onclick="return changeImage(this)">original</a> |
+        <a href="{% url astrometry.net.views.image.serve_image display_image.id %}" onclick="return changeImage(this)">original</a> |
         <a href="{% url astrometry.net.views.image.annotated_image jobid=job.id %}?scale={{scale}}" onclick="return changeImage(this)">annotated</a> |
         <a href="{% url astrometry.net.views.image.sdss_image calid=job.calibration.id %}?scale={{scale}}" onclick="return changeImage(this)">SDSS</a> |
         <a href="{% url astrometry.net.views.image.galex_image calid=job.calibration.id %}?scale={{scale}}" onclick="return changeImage(this)">GALEX</a><br />
@@ -50,7 +50,7 @@ function changeImage(link) {
         <div id="image_container">
             <img id="user_image" src="
                 {% if calib %}{% url astrometry.net.views.image.annotated_image jobid=job.id %}?scale={{scale}}
-                {% else %}{% url astrometry.net.views.image.serve_image image.image.display_image.id %}
+                {% else %}{% url astrometry.net.views.image.serve_image display_image.id %}
                 {% endif %}" />
         </div>
     </div>
