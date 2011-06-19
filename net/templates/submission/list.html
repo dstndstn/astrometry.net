@@ -1,0 +1,24 @@
+<div id="submission_list">
+<ul>
+    {% for sub in submissions %}
+    <li class="submission">
+        <a href="{% url astrometry.net.views.submission.status subid=sub.id %}">Submission {{ sub.id }}</a>
+        <table class="submission_job_list">
+            {% for user_image in sub.user_images.all %}
+            {% for job in user_image.jobs.all %}
+            <tr>
+                <td class="image_id">image <span class="image_id">{{user_image.id}}</span></td>
+                <td class="job_id">job id <span class="job_id">{{ job.id }}</span></td>
+                <td class="job_status">{% include "job_status.html" with job=job %}</td>
+            </tr>
+            {% endfor %}
+            {% empty %}
+            <tr><td colspan="2">No Jobs</td></tr>
+            {% endfor %}
+        </table>
+    </li>
+    {% empty %}
+    <li>No submissions</li>
+    {% endfor %}
+</ul>
+</div>
