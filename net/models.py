@@ -96,7 +96,7 @@ class DiskFile(models.Model):
 
 
 class Image(models.Model):
-    disk_file = models.ForeignKey(DiskFile, primary_key=True)
+    disk_file = models.ForeignKey(DiskFile)
     width = models.PositiveIntegerField(null=True)
     height = models.PositiveIntegerField(null=True)
     thumbnail = models.ForeignKey('Image', related_name='image_thumbnail_set', null=True)
