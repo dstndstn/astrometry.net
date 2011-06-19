@@ -43,8 +43,8 @@ Nova:
 - logs are in /etc/apache2-nova/logs/
 
 Supernova:
-- svn checkout is in ~/supernova; url is like:
-    svn+ssh://astrometry.net/svn/tags/supernova/2011-06-08-2
+- svn checkout is in ~/supernova; url is trunk:
+    svn+ssh://astrometry.net/svn/trunk/src/astrometry
 - database is 'an-supernova'
 - ssh config entry is "an-supernova"
 - process_submissions.py is running in screen "supernova"
@@ -72,35 +72,40 @@ ForwardX11Trusted no
 2. You need the ~/.ssh/id_an_net key -- copy it from nova@oven.
 
 
-When you're ready to tag 'supernova', do:
-
-svn copy svn+ssh://astrometry.net/svn/trunk/src/astrometry \
-    svn+ssh://astrometry.net/svn/tags/supernova/2011-06-08-2
-
-(where you'll set the tag name appropriately)
-
-and then:
-
-ssh nova
-cd supernova
-svn info   #  see what version you're currently running
-# Switch to the new version you just tagged
-svn switch svn+ssh://astrometry.net/svn/tags/supernova/2011-06-08-2
-
-
 When you're ready to tag 'nova', do:
 
-svn copy svn+ssh://astrometry.net/svn/tags/supernova/2011-06-08-2 \
+svn copy svn+ssh://astrometry.net/svn/trunk/src/astrometry \
   svn+ssh://astrometry.net/svn/tags/nova/2011-06-08-1
+
+(choosing the name appropriately)
 
 and then:
 
 ssh nova
 cd nova
-svn info   #  see what version you're currently running
-# Switch to the new version you just tagged
+# See what version you're currently running:
+svn info   
+#
+# [future: do database snapshot, backup, transition]
+#
+# Switch to the new version you just tagged:
 svn switch svn+ssh://astrometry.net/svn/tags/nova/2011-06-08-2
-
+# Build executables
+make
+make py
+# Restart services
+screen -R nova
+# kill running process_submissions -- possible via:
+  jobs
+  fg 1
+  [ctrl-C]
+or:
+  jobs
+  kill %1
+# Restart process_submissions.py:
+python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
+# exit the "screen"
+[ctrl-A d]
 
 
 
