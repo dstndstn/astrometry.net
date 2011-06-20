@@ -54,9 +54,9 @@ function changeImage(link) {
         RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
         <br />
         <a href="{% url astrometry.net.views.image.serve_image display_image.id %}" onclick="return changeImage(this)">original</a> |
-        <a href="{% url astrometry.net.views.image.annotated_image jobid=job.id size='display' %}?scale={{scale}}" onclick="return changeImage(this)">annotated</a> |
-        <a href="{% url astrometry.net.views.image.sdss_image calid=job.calibration.id size='display' %}?scale={{scale}}" onclick="return changeImage(this)">SDSS</a> |
-        <a href="{% url astrometry.net.views.image.galex_image calid=job.calibration.id size='display' %}?scale={{scale}}" onclick="return changeImage(this)">GALEX</a><br />
+        <a href="{% url astrometry.net.views.image.annotated_image jobid=job.id size='display' %}" onclick="return changeImage(this)">annotated</a> |
+        <a href="{% url astrometry.net.views.image.sdss_image calid=job.calibration.id size='display' %}" onclick="return changeImage(this)">SDSS</a> |
+        <a href="{% url astrometry.net.views.image.galex_image calid=job.calibration.id size='display' %}" onclick="return changeImage(this)">GALEX</a><br />
         {% endif %}
         <div id="image_container">
             <img id="user_image" src="
@@ -76,11 +76,17 @@ function changeImage(link) {
 <div id="comments">
     <h3>Comments</h3>
     {% include 'comment/list.html' with comments=image.comments.all %}
-    <div><form method="post" name="comment_form" action="{% url astrometry.net.views.comment.new category='userimage' recipient_id=image.id %}">
+    <div>
+    {% if user.is_authenticated %}
+        <form method="post" name="comment_form" action="{% url astrometry.net.views.comment.new category='userimage' recipient_id=image.id %}">
         {% csrf_token %}
         <p>{{ comment_form.text }}</p>
         <input type="hidden" name="next" value="{{request.path}}" />
         <input type="submit" value="Leave Comment" />
-    </form></div>
+        </form>
+    {% else %}
+        Please <a href="/login">sign in</a> to post comments.
+    {% endif %}
+    </div>
 </div>
 {% endblock %}
