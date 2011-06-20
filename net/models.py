@@ -8,6 +8,8 @@ from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import User
 
+from django.core.urlresolvers import reverse
+
 from astrometry.net.settings import *
 from userprofile import UserProfile
 from wcs import *
@@ -289,7 +291,12 @@ class UserImage(Commentable):
         if len(jobs):
             return jobs[0]
         return None
-        
+
+    def get_absolute_url(self):
+        return (reverse('astrometry.net.views.image.user_image',
+            kwargs={'user_image_id':self.id}
+        ))
+
 class Submission(models.Model):
     SCALEUNITS_CHOICES = (
         ('arcsecperpix', 'arcseconds per pixel'),

@@ -5,14 +5,18 @@ div#submission_list ul li {
     list-style: none;
 }
 li.submission {
-    margin-top: .5em;
+    margin-bottom: 2em;
 }
 .submission_job_list {
-    margin-left: 1em;
+    width: 40em;
+    margin-left: 4em;
     margin-top: .5em;
 }
 .submission_job_list, .submission_job_list tr td {
     border: 1px solid #ddd;
     text-align: left;
+}
+.submission_job_list tr td.image_id { width: 40%; }
+.submission_job_list tr td.job_id { width: 40%; }
 }
 </style>
