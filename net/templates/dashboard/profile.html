@@ -1,8 +1,18 @@
 {% extends "dashboard.html" %}
 
+{% block inline_css %}
+{{block.super}}
+{% include 'dashboard/api_key.css' %}
+<style type="text/css">
+</style>
+{% endblock %}
+
+{% block title %}
+{{block.super}} &gt;
+<a href="{% url astrometry.net.views.user.dashboard_profile %}">My Profile</a>
+{% endblock %}
 {% block dashboard_content %}
 <div id="user_profile">
-    <h3>User Profile</h3>
     {% include 'dashboard/api_key.html' with apikey=profile.apikey %}
     <form method="post" action="{% url astrometry.net.views.user.save_profile %}">
         {% csrf_token %}

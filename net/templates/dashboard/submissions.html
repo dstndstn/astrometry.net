@@ -2,20 +2,8 @@
 
 {% block inline_css %}
 {{block.super}}
+{% include 'submission/list.css' %}
 <style type="text/css">
-.submission {
-    margin-top: .5em;
-}
-.submission_job_list {
-    margin-left: 1em;
-    margin-top: .5em;
-}
-
-.submission_job_list, .submission_job_list tr td {
-    border: 1px solid #ddd;
-    text-align: left;
-}
-
 span.image_id { font-weight:bold; }
 td.image_id {
     width: 100px;
@@ -30,8 +18,11 @@ td.job_status {
 </style>
 {% endblock %}
 
+{% block title %}
+{{block.super}} &gt;
+<a href="{% url astrometry.net.views.user.dashboard_submissions %}">My Submissions</a>
+{% endblock %}
 {% block dashboard_content %}
-<h3>My Submissions</h3>
 {% include 'submission/list.html' with submissions=user_submissions %}
 {% endblock %}
 

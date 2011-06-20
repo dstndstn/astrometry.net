@@ -8,6 +8,17 @@
     width: {{ display_image.width }}px;
     height: {{ display_image.height }}px;
 }
+#submitted_field {
+    float:left;
+    vertical-align: top;
+}
+#on_the_sky {
+    float:right;
+    text-align:right;
+    margin-left:10px;
+}
+#tags { clear:both; }
+#comments { clear:both; }
 </style>
 {% endblock %}
 
@@ -28,8 +39,8 @@ function changeImage(link) {
 {% block title %}User Image {{image.id}} {% endblock %}
 {% block content %}
 
-<div>
-    <div style="float:right;">
+<div id="visualizations">
+    <div id="on_the_sky">
     {% if calib %}
     <img src="{% url astrometry.net.views.image.onthesky_image calid=job.calibration.id %}" /><br />
     <img src="{% url astrometry.net.views.image.onthesky_zoom1_image calid=job.calibration.id %}" /><br />
@@ -37,7 +48,7 @@ function changeImage(link) {
     {% endif %}
     </div>
 
-    <div>
+    <div id="submitted_field">
         Job {{ job.id }}<br />
         {% if calib %}
         RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
