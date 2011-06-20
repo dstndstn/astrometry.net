@@ -41,35 +41,62 @@ class Client(object):
         print 'Python:', args
         json = python2json(args)
         print 'Sending json:', json
-        data = urlencode({'request-json': json})
-        print 'Sending data:', data
         url = self.get_url(service)
         print 'Sending to URL:', url
-        #f = urlopen(url, data)
 
-        m = []
-        m1 = MIMEBase('text', 'plain')
-        m1.add_header('Content-disposition', 'form-data; name="request-json"')
-        m1.set_payload(json)
-        m += [m1]
-
+        # If we're sending a file, format a multipart/form-data
         if file_args is not None:
+            m1 = MIMEBase('text', 'plain')
+            m1.add_header('Content-disposition', 'form-data; name="request-json"')
+            m1.set_payload(json)
+
             m2 = MIMEApplication(file_args[1],'octet-stream',encode_noop)
-            m2.add_header('Content-disposition', 'form-data; name="file"; filename="%s"' % file_args[0])
-            m += [m2]
+            m2.add_header('Content-disposition',
+                          'form-data; name="file"; filename="%s"' % file_args[0])
 
-        mp = MIMEMultipart('form-data', None, m)
-        
-        data = mp.as_string().split('\n')
-        for i,d in enumerate(data):
-            if len(d) == 0:
-                break
-        data = data[i+1:]
-        print 'data:', data
+            #msg.add_header('Content-Disposition', 'attachment', filename='bud.gif')
+            #msg.add_header('Content-Disposition', 'attachment',
+            #  filename=('iso-8859-1', '', 'FuSballer.ppt'))
 
-        request = Request(url=url,
-                  headers={'Content-type': mp.get('Content-type')},
-                  data='\r\n'.join(data))
+            mp = MIMEMultipart('form-data', None, [m1, m2])
+
+            # Yuck, trim off the top few lines (Content-type: ...)
+            data = mp.as_string().split('\n')
+            for i,d in enumerate(data):
+                if len(d) == 0:
+                    break
+
+            # NOTE -- you need to call "mp.as_string()" before this or else
+            # the multipart boundary isn't set!
+            headers = {'Content-type': mp.get('Content-type')}
+            print 'Headers:', headers
+
+            trimmed = data[:i+1]
+            print "Trimmed off:"
+            print '', trimmed
+            data = data[i+1:]
+            data = '\r\n'.join(data)
+
+            # HACK -- is line-wrapping preventing Django from seeing this
+            # as a file upload?  Ugh, yeah
+            data = data.replace('\r\n\tfilename=', ' filename=')
+
+            print "data: '''"
+            if len(data) > 400:
+                print data[:400], '[...]'
+            else:
+                print data
+            print "'''"
+
+        else:
+            # Else send x-www-form-encoded
+            data = {'request-json': json}
+            print 'Sending form data:', data
+            data = urlencode(data)
+            print 'Sending data:', data
+            headers = {}
+
+        request = Request(url=url, headers=headers, data=data)
 
         try:
             f = urlopen(request)
