@@ -42,8 +42,7 @@ class UploadFileForm(forms.Form):
     file  = forms.FileField(required=False)
     url = forms.CharField(widget=forms.TextInput(attrs={'size':'50'}),
                           initial='http://', required=False)
-    upload_type = forms.ChoiceField(widget=forms.RadioSelect(renderer=HorizontalRenderer,
-                                                             attrs={'onclick':'changeUploadType(this.value)'}),
+    upload_type = forms.ChoiceField(widget=forms.RadioSelect(renderer=HorizontalRenderer),
                                     choices=(('file','file'),('url','url')),
                                     initial='file')
 

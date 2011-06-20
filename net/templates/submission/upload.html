@@ -1,23 +1,18 @@
 {% extends "base.html" %}
 
 {% block javascript %}
+{{ block.super }}
 <script type="text/javascript">
 function changeUploadType(type) {
-    file_block = document.getElementById("file_block");
-    url_block = document.getElementById("url_block");
-
-    file_block.style.display = (type == "file") ? "block":"none";
-    url_block.style.display = (type == "url") ? "block":"none";
+    $('#file_block').toggle(type == 'file');
+    $('#url_block').toggle(type == 'url');
 }
-window.onload = function() {
-    radio_group = document.forms['upload_form'].elements["upload_type"];
-    for (var i=0; i<radio_group.length; i++) {
-        if (radio_group[i].checked) {
-            changeUploadType(radio_group[i].value);
-            break;
-        }
-    }
-}
+$(document).ready(function() {
+    $('input[name=upload_type]:radio').click(function() {
+        changeUploadType($(this).val());
+    });
+    changeUploadType($('input[name=upload_type]:radio:checked').val())
+});
 </script>
 {% endblock %}
 

@@ -1,5 +1,8 @@
 <div id="api_key_detailed">
-<p>My API Key: <span id="api_key">{{ apikey }}</span></p>
+<p>My API Key: <span id="api_key">{{ apikey }}</span>
+(<a href="" onclick="$('#api_key_description').slideToggle();return false;">What's this?</a>)
+</p>
+<div id="api_key_description" style="display:none">
 <p>
     Astrometry.net allows you to access parts of the service through a JSON API.
     Your API key is required to do so, but allows the service to track your
@@ -12,4 +15,6 @@
     API will return a session key, which must be included in subsequent
     requests sent to the API.
 </p>
+<br>
+</div>
 </div>

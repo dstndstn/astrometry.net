@@ -8,7 +8,7 @@
 {% endblock favicon %}
 
 {% block link_css %}
-<link rel="stylesheet" href="{{ STATIC_URL }}css/base.css" />
+<link rel="stylesheet" href="/{{ STATIC_URL }}css/base.css" />
 {% endblock %}
 
 {% block inline_css %}
@@ -45,7 +45,11 @@ div#title h2 {
     font-size: 1.2em;
     font-weight:600;
 }
-
+a          {color: #00a; text-decoration: none; background-color: transparent;}
+a:link     {background-color: transparent; color: #00a;}
+a:visited  {background-color: transparent; color: #00a;}
+a:hover    {background-color: #00a; color: #fff; text-decoration: none;}
+a.image:hover    {background-color: transparent;}
 #menu {
     width: 100%;
     border-bottom: 1px solid #000;
@@ -72,7 +76,7 @@ div#title h2 {
     height: 100%;
 }
 #menu ul li a:hover {
-    background-color: #ddf;
+    background-color: #00a;
 }
 
 #auth_status { 
@@ -116,6 +120,7 @@ td.c {text-align:center;}
 {% endblock inline_css %}
 
 {% block javascript %}
+<script type="text/javascript" src="/{{ STATIC_URL }}js/jquery.js"></script>
 {% endblock javascript %}
 
 <title>{% block pagetitle %}Astrometry.net{% endblock %}</title>

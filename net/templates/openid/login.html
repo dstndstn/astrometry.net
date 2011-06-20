@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% block javascript %}
+{{ block.super }}
 <link type="text/css" rel="stylesheet" href="{{ STATIC_URL }}css/openid-shadow.css" />
-<script type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.2.6.min.js"></script>
+
 <script type="text/javascript" src="{{ STATIC_URL }}js/openid-jquery.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/openid-en.js"></script>
 
