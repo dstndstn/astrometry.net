@@ -1,0 +1,15 @@
+{% extends 'dashboard/base.html' %}
+
+{% block inline_css %}
+{{block.super}}
+{% include 'user_image/image_set.css' %}
+{% endblock %}
+
+{% block title %}
+{{block.super}} &gt;
+<a href="{% url astrometry.net.views.user.dashboard_user_images %}">My Images</a>
+{% endblock %}
+
+{% block dashboard_content %}
+{% include 'user_image/image_set.html' with images=images %}
+{% endblock %}

@@ -27,7 +27,7 @@ class ProfileForm(forms.ModelForm):
         exclude = ('apikey')
 
 def dashboard(request):
-    return render_to_response("dashboard.html",
+    return render_to_response("dashboard/base.html",
         {
         },
         context_instance = RequestContext(request))
@@ -68,6 +68,18 @@ def dashboard_submissions(req):
     return render_to_response("dashboard/submissions.html",
         context,
         context_instance = RequestContext(req))
+
+@login_required
+def dashboard_user_images(req):
+    context = {
+        'user':req.user,
+        'images':req.user.user_images.all
+    }
+    
+    return render_to_response('dashboard/user_images.html',
+        context,
+        context_instance = RequestContext(req))
+
 
 def public_profile(req):
     pass

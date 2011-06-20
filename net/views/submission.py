@@ -30,7 +30,7 @@ def index(req, user_id):
         submitter = get_object_or_404(User, pk=user_id)
     
     context = {'submitter':submitter}
-    return render_to_response('user_submissions.html', context,
+    return render_to_response('submission/by_user.html', context,
         context_instance = RequestContext(req))
 
 class UploadFileForm(forms.Form):
@@ -84,7 +84,7 @@ def upload_file(request):
             return redirect(status, subid=sub.id)
     else:
         form = UploadFileForm()
-    return render_to_response('upload.html', {'form': form, 'user': request.user },
+    return render_to_response('submission/upload.html', {'form': form, 'user': request.user },
         context_instance = RequestContext(request))
 
 def status(req, subid=None):
@@ -111,7 +111,7 @@ def status(req, subid=None):
     logmsg("Best jobs: " + str(jobs))
     #logmsg("Job: " + str(job) + ', ' + job.status)
         
-    return render_to_response('status.html',
+    return render_to_response('submission/status.html',
         {
             'sub': sub,
             'jobs': jobs,

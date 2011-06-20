@@ -1,8 +1,8 @@
 <ul>
 {% if user.is_authenticated %}
     <li><a href="{% url astrometry.net.views.user.dashboard_profile %}">My Profile</a></li>
-    <li><a href="{% url astrometry.net.views.image.image_set 'user' user.id %}">My Images</a></li>
     <li><a href="{% url astrometry.net.views.user.dashboard_submissions %}">My Submissions</a></li>
+    <li><a href="{% url astrometry.net.views.user.dashboard_user_images %}">My Images</a></li>
 {% endif %}
     <li><a href="{% url astrometry.net.views.submission.upload_file %}">Upload File</a></li>
 </ul>

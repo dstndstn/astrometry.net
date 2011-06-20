@@ -3,7 +3,6 @@ div#submission_list ul { padding-left: 0px; }
 div#submission_list ul li {
     padding: 3px;
     list-style: none;
-    border: 1px solid #999;
 }
 li.submission {
     margin-top: .5em;

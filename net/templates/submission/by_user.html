@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block inline_css %}
+{{block.super}}
+{% include 'submission/list.css' %}
+{% endblock %}
+
+{% block title %}Submissions Summary for User {{ submitter.id }} {% endblock %}
+{% block content %}
+{% include 'submission/list.html' with submissions=submitter.submissions.all %}
+{% endblock content %}

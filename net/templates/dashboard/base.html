@@ -47,7 +47,7 @@
 {% if user.is_authenticated %}
 <div id="dashboard">
     <div id="dashboard_menu">
-        {% include 'control_panel.html' %}
+        {% include 'dashboard/menu.html' %}
     </div>
     <div id="dashboard_content">
     {% block dashboard_content %}

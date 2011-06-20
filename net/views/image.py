@@ -41,7 +41,7 @@ def user_image(req, user_image_id=None):
         'comment_form': comment_form,
         'request': req
     }
-    return render_to_response('user_image.html', context,
+    return render_to_response('user_image/view.html', context,
         context_instance = RequestContext(req))
 
 def serve_image(req, id=None):
@@ -177,7 +177,6 @@ def sdss_image(req, calid=None, size='full'):
 # -IPAC/IRSA claims to have VO services
 # -elaborate javascripty interface
 
-
 def image_set(req, category, id):
     default_category = 'user'
     cat_classes = {
@@ -204,6 +203,6 @@ def image_set(req, category, id):
         'image_set_title':image_set_title,
     }
    
-    return render_to_response('image_set.html',
+    return render_to_response('user_image/image_set.html',
         context,
         context_instance = RequestContext(req))

@@ -1,21 +1,3 @@
-{% extends "base.html" %}
-
-{% block inline_css %}
-{{block.super}}
-<style type="text/css">
-div.image_set .image_container {
-    display: inline-block;
-    width: 200px;
-    height: 200px;
-    margin: 10px;
-    background-color: #000000;
-    background-position: center center;
-    background-repeat: no-repeat;
-}
-</style>
-{% endblock %}
-
-{% block title %}
 {% comment %}
 {% if category == 'user' %}
     {{ cat_obj.get_full_name }}'s Images
@@ -27,10 +9,7 @@ div.image_set .image_container {
     Images tagged with {{ cat_obj.text }}
 {% endif %}
 {% endcomment %}
-{{ image_set_title }}
-{% endblock %}
 
-{% block content %}
 <div class="image_set">
 {% for image in images %}
     <a href="{% url astrometry.net.views.image.user_image image.id %}">
@@ -41,5 +20,4 @@ div.image_set .image_container {
     No images.
 {% endfor %}
 </div>
-{% endblock content %}
 
