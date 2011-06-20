@@ -63,10 +63,10 @@ next_url_re = re.compile('^/[-\w/]+$')
 class AstrometryLoginForm(OpenIDLoginForm):
     #OPENID_PROVIDERS defined in settings_common.py
     username = forms.CharField(max_length=255, required=False)
-    openid_identifier = forms.ChoiceField(
-        widget=forms.Select(attrs={'class':'required openid'}),
-        choices=choicify(OPENID_PROVIDERS,'url','provider'),
-    )
+    #openid_identifier = forms.ChoiceField(
+    #    widget=forms.Select(attrs={'class':'required openid'}),
+    #    choices=choicify(OPENID_PROVIDERS,'url','provider'),
+    #)
 
 def is_valid_next_url(next):
     # When we allow this:

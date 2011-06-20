@@ -32,7 +32,6 @@ def user_image(req, user_image_id=None):
     if job:
         calib = job.calibration
     comment_form = PartialCommentForm()
-    scale = float(image.image.get_display_image().width)/image.image.width
 
     context = {
         'display_image': image.image.get_display_image(),
@@ -40,7 +39,6 @@ def user_image(req, user_image_id=None):
         'job': job,
         'calib': calib,
         'comment_form': comment_form,
-        'scale': scale,
         'request': req
     }
     return render_to_response('user_image.html', context,
@@ -55,13 +53,15 @@ def serve_image(req, id=None):
     res['Content-type'] = image.get_mime_type()
     return res
 
-def annotated_image(req, jobid=None):
+def annotated_image(req, jobid=None, size='full'):
     job = get_object_or_404(Job, pk=jobid)
     ui = job.user_image
     img = ui.image
-    scale = float(req.GET.get('scale','1.0'))
-    if scale != 1.0:
-        img = img.display_image
+    if size == 'display':
+        scale = float(img.get_display_image().width)/img.width
+        img = img.get_display_image()
+    else:
+        scale = 1.0
     df = img.disk_file
     imgfn = df.get_path()
     wcsfn = job.get_wcs_file()
@@ -128,7 +128,7 @@ def onthesky_zoom2_image(req, calid=None):
     res['Content-type'] = 'image/png'
     return res
 
-def galex_image(req, calid=None):
+def galex_image(req, calid=None, size='full'):
     from astrometry.util import util as anutil
     from astrometry.blind import plotstuff as ps
     from astrometry.net.galex_jpegs import plot_into_wcs
@@ -136,8 +136,12 @@ def galex_image(req, calid=None):
     cal = get_object_or_404(Calibration, pk=calid)
     wcsfn = cal.get_wcs_file()
     plotfn = get_temp_file()
+    if size == 'display':
+        image = cal.job_set.get().user_image
+        scale = float(image.image.get_display_image().width)/image.image.width
+    else:
+        scale = 1.0
     #
-    scale = float(req.GET.get('scale','1.0'))
     plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR, scale=scale)
     f = open(plotfn)
     res = HttpResponse(f)
@@ -145,13 +149,17 @@ def galex_image(req, calid=None):
     return res
 
 
-def sdss_image(req, calid=None):
+def sdss_image(req, calid=None, size='full'):
     cal = get_object_or_404(Calibration, pk=calid)
     wcsfn = cal.get_wcs_file()
 
     plotfn = get_temp_file()
+    if size == 'display':
+        image = cal.job_set.get().user_image
+        scale = float(image.image.get_display_image().width)/image.image.width
+    else:
+        scale = 1.0
     #
-    scale = float(req.GET.get('scale','1.0'))
     plot_sdss_image(wcsfn, plotfn, scale)
     f = open(plotfn)
     res = HttpResponse(f)
