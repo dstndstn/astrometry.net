@@ -42,9 +42,9 @@ def create_session(key):
 def requires_json_args(handler):
     @wraps(handler)
     def handle_request(request, *pargs, **kwargs):
-        loginfo('POST: ' + str(request.POST))
+        #loginfo('POST: ' + str(request.POST))
         json = request.POST.get('request-json')
-        loginfo('JSON: "%s"' % json)
+        loginfo('POST: JSON: "%s"' % json)
         if not json:
             return HttpResponseErrorJson('no json')
         args = json2python(json)
@@ -94,10 +94,13 @@ def requires_json_login(handler):
 @requires_json_args
 @requires_json_session
 def api_upload(request):
-    #return HttpResponse('hello')
-
-    logmsg('request:' + str(request))
-    logmsg('api_upload: got request: ' + str(request.FILES['file'].size))
+    #logmsg('request:' + str(request))
+    upfile = request.FILES.get('file', None)
+    logmsg('api_upload: got file', upfile)
+    logmsg('request.POST has keys:', request.POST.keys())
+    logmsg('request.GET has keys:', request.GET.keys())
+    logmsg('request.FILES has keys:', request.FILES.keys())
+    #logmsg('api_upload: got request: ' + str(request.FILES['file'].size))
     logmsg('received files:')
     sub = handle_uploaded_file(request, request.FILES['file'])
 
