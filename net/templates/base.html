@@ -8,7 +8,7 @@
 {% endblock favicon %}
 
 {% block link_css %}
-<link rel="stylesheet" href="/{{ STATIC_URL }}css/base.css" />
+<link rel="stylesheet" href="{{ STATIC_URL }}css/base.css" />
 {% endblock %}
 
 {% block inline_css %}
@@ -120,7 +120,7 @@ td.c {text-align:center;}
 {% endblock inline_css %}
 
 {% block javascript %}
-<script type="text/javascript" src="/{{ STATIC_URL }}js/jquery.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.js"></script>
 {% endblock javascript %}
 
 <title>{% block pagetitle %}Astrometry.net{% endblock %}</title>

@@ -18,7 +18,7 @@ openid = {
 	
 	error_string : 'You must enter a username.',
 
-	img_path : 'static/images/',
+	img_path : '/static/images/',
 	locale : null, // is set in openid-<locale>.js
 	sprite : null, // usually equals to locale, is set in
 	// openid-<locale>.js
