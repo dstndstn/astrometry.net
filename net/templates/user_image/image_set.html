@@ -14,7 +14,7 @@
 {% for image in images %}
     <a href="{% url astrometry.net.views.image.user_image image.id %}">
     <!--<img class="image_container" src="{% url astrometry.net.views.image.serve_image id=image.image.thumbnail.id %}" />-->
-    <div class="image_container" style="background-image: url('{% url astrometry.net.views.image.serve_image id=image.image.get_thumbnail.id %}'); width: {{image.image.get_thumbnail.width}}px; height: {{image.image.get_thumbnail.height}}px"></div> 
+    <div class="image_container" style="background-image: url('{% url astrometry.net.views.image.serve_image id=image.image.get_thumbnail.id %}')"></div> 
     </a>
 {% empty %}
     No images.

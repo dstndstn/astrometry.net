@@ -42,15 +42,9 @@ def save_profile(request):
 
 @login_required
 def dashboard_profile(request):
-    profile = None
-    try:
-        profile = request.user.get_profile()
-    except UserProfile.DoesNotExist:
-        loginfo('Creating new UserProfile for', request.user)
-        profile = UserProfile(user=request.user)
-        profile.create_api_key()
-        profile.save()
-        
+    # user profile guaranteed to be created during openid login
+    profile = request.user.get_profile()
+           
     form = ProfileForm(instance=profile)
     context = {
         'profile_form':form,

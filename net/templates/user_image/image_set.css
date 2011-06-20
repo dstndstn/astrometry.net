@@ -1,8 +1,8 @@
 <style type="text/css">
-div.image_set .image_container {
+.image_container {
     display: inline-block;
-    width: 200px;
-    height: 200px;
+    width: 240px;
+    height: 240px;
     margin: 10px;
     background-color: #000000;
     background-position: center center;

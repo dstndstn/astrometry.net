@@ -53,6 +53,7 @@ from django_openid_auth.forms import OpenIDLoginForm
 from django_openid_auth.store import DjangoOpenIDStore
 
 from django import forms
+from astrometry.net.models import *
 from astrometry.net.settings import *
 from astrometry.net.util import choicify
 
@@ -267,6 +268,18 @@ def login_complete(request, redirect_field_name=REDIRECT_FIELD_NAME,
             if user.is_active:
                 logmsg('auth_login for successful login: ' + str(user))
                 auth_login(request, user)
+                try:
+                    profile = user.get_profile()
+                except UserProfile.DoesNotExist:
+                    loginfo('Creating new UserProfile for', user)
+                    profile = UserProfile(user=user)
+                    profile.create_api_key()
+                    if user.get_full_name():
+                        profile.display_name = user.get_full_name()
+                    else:
+                        profile.display_name = user.username
+                    profile.save()
+
                 return HttpResponseRedirect(sanitise_redirect_url(redirect_to))
             else:
                 return render_failure(request, 'Disabled account')

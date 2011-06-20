@@ -1,7 +1,7 @@
 {% for comment in comments %}
 <div class="comment">
     <p class="comment_header">
-        <span class="author">{{comment.author.get_full_name}}</span> on 
+        <span class="author">{{comment.author.get_profile.display_name}}</span> on 
         <span class="timestamp">{{comment.created_at}}</span>:
     </p>
     <p class="comment_text">
