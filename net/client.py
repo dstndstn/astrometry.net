@@ -54,59 +54,16 @@ class Client(object):
             m2.add_header('Content-disposition',
                           'form-data; name="file"; filename="%s"' % file_args[0])
 
-            #msg.add_header('Content-Disposition', 'attachment', filename='bud.gif')
             #msg.add_header('Content-Disposition', 'attachment',
-            #  filename=('iso-8859-1', '', 'FuSballer.ppt'))
+            # filename='bud.gif')
+            #msg.add_header('Content-Disposition', 'attachment',
+            # filename=('iso-8859-1', '', 'FuSballer.ppt'))
 
             mp = MIMEMultipart('form-data', None, [m1, m2])
 
-            # Yuck, trim off the top few lines (Content-type: ...)
-            data = mp.as_string().split('\n')
-            for i,d in enumerate(data):
-                if len(d) == 0:
-                    break
-
-            # NOTE -- you need to call "mp.as_string()" before this or else
-            # the multipart boundary isn't set!
-            headers = {'Content-type': mp.get('Content-type')}
-            print 'Headers:', headers
-
-            trimmed = data[:i+1]
-            print "Trimmed off:"
-            print '', trimmed
-            data = data[i+1:]
-            data = '\r\n'.join(data)
-
-            # HACK -- is line-wrapping preventing Django from seeing this
-            # as a file upload?  Ugh, yeah
-            data = data.replace('\r\n\tfilename=', ' filename=')
-
-            print "data: '''"
-            if len(data) > 400:
-                print data[:400], '[...]'
-            else:
-                print data
-            print "'''"
-
-
-            # HACK -- try making a custom generator to format it the way we need.
+            # Makie a custom generator to format it the way we need.
             from cStringIO import StringIO
             from email.generator import Generator
-            import email.generator
-            print email.generator.__file__
-            fp = StringIO()
-            g = Generator(fp, mangle_from_=False, maxheaderlen=0)
-            g.flatten(mp)
-            text = fp.getvalue()
-
-            print "Text:'''"
-            print text[:500], '[...]'
-            print "'''"
-
-            print
-            print
-            print
-            print
 
             class MyGenerator(Generator):
                 def __init__(self, fp, root=True):
@@ -114,12 +71,10 @@ class Client(object):
                                        maxheaderlen=0)
                     self.root = root
                 def _write_headers(self, msg):
+                    # We don't want to write the top-level headers;
+                    # they go into Request(headers) instead.
                     if self.root:
                         return                        
-                    #print '_write_headers' #: msg=', msg
-                    #print 'msg =', msg
-                    #if msg == self.root_msg:
-                    #Generator._write_headers(self, msg)
                     # We need to use \r\n line-terminator, but Generator
                     # doesn't provide the flexibility to override, so we
                     # have to copy-n-paste-n-modify.
@@ -128,33 +83,21 @@ class Client(object):
                     # A blank line always separates headers from body
                     print >> self._fp, '\r\n',
 
-                #def flatten(self, msg, unixfrom=False):
-                #    self.root_msg = msg
-                #    Generator.flatten(self, msg, unixfrom=unixfrom)
+                # The _write_multipart method calls "clone" for the
+                # subparts.  We hijack that, setting root=False
                 def clone(self, fp):
                     return MyGenerator(fp, root=False)
-
 
             fp = StringIO()
             g = MyGenerator(fp)
             g.flatten(mp)
-            text = fp.getvalue()
-
-            print "MyText:'''"
-            print text[:500], '[...]'
-            print "'''"
-
-            #data = text
-
-            # Ugh!
-            #data = fp.getvalue().replace('\n', '\r\n')
             data = fp.getvalue()
             headers = {'Content-type': mp.get('Content-type')}
 
-            print 'Sending headers:'
-            print ' ', headers
-            print 'Sending data:'
-            print data.replace('\n', '\\n\n').replace('\r', '\\r')
+            #print 'Sending headers:'
+            #print ' ', headers
+            #print 'Sending data:'
+            #print data[:400].replace('\n', '\\n\n').replace('\r', '\\r')
 
         else:
             # Else send x-www-form-encoded
