@@ -46,6 +46,8 @@ def requires_json_args(handler):
         json = request.POST.get('request-json')
         loginfo('POST: JSON: "%s"' % json)
         if not json:
+            loginfo('POST: keys: ', request.POST.keys())
+            loginfo('GET keys: ', request.GET.keys())
             return HttpResponseErrorJson('no json')
         args = json2python(json)
         if args is None:
