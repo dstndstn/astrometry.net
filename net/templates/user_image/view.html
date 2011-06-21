@@ -8,17 +8,25 @@
     width: {{ display_image.width }}px;
     height: {{ display_image.height }}px;
 }
-#submitted_field {
+#left_block {
     float:left;
-    vertical-align: top;
+}
+#right_block {
+    float: right;
+    width: 275px;
+    height: 100%;
+    padding: 10px;
+    background-color: #eee;
+}
+#right_block h3 {
+    text-align: center;
 }
 #on_the_sky {
-    float:right;
-    text-align:right;
-    margin-left:10px;
+    width: 100%;
+    text-align: center;
 }
-#tags { clear:both; }
-#comments { clear:both; }
+#tags {  }
+#comments {  }
 </style>
 {% endblock %}
 
@@ -47,20 +55,31 @@ $(document).ready(function() {
 {% block title %}User Image {{image.id}} {% endblock %}
 {% block content %}
 
-<div id="visualizations">
-    <div id="on_the_sky">
-    {% if calib %}
-    <img src="{% url astrometry.net.views.image.onthesky_image calid=job.calibration.id %}" /><br />
-    <img src="{% url astrometry.net.views.image.onthesky_zoom1_image calid=job.calibration.id %}" /><br />
-    <img src="{% url astrometry.net.views.image.onthesky_zoom2_image calid=job.calibration.id %}" /><br />
-    {% endif %}
+<div id="right_block">
+    <div id="details">
+        Submitted by <a href="#">{{ image.user.get_profile.display_name }} (TODO)</a><br />
+        {{ image.submission.processing_started|date:"DATE_FORMAT" }}<br />
+        {{ image.original_file_name }}
     </div>
-
+    <div id="on_the_sky">
+        {% if calib %}
+        <h3>Location</h3>
+        RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}<br />
+        <img src="{% url astrometry.net.views.image.onthesky_image calid=job.calibration.id %}" /><br />
+        <img src="{% url astrometry.net.views.image.onthesky_zoom1_image calid=job.calibration.id %}" /><br />
+        <img src="{% url astrometry.net.views.image.onthesky_zoom2_image calid=job.calibration.id %}" />
+        {% endif %}
+    </div>
+    <div id="tags">
+        <h3>Tags</h3>
+        {% include 'tag/list.html' with tags=image.tags.all %}
+        <p><a class="add_tag" href="#">Add Tag (TODO)</a></p>
+    </div>
+</div>
+<div id="left_block">
     <div id="submitted_field">
         Job {{ job.id }}<br />
         {% if calib %}
-        RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
-        <br />
         <a href="{% url astrometry.net.views.image.serve_image display_image.id %}" class="image_link">original</a> |
         <a href="{% url astrometry.net.views.image.annotated_image jobid=job.id size='display' %}" class="image_link">annotated</a> |
         <a href="{% url astrometry.net.views.image.sdss_image calid=job.calibration.id size='display' %}" class="image_link">SDSS</a> |
@@ -72,28 +91,27 @@ $(document).ready(function() {
                                       {% endif %}" />
         </div>
     </div>
-    <!--<div style="clear:both"></div>-->
     <br />
-</div>
-<div id="tags">
-    <h3>Tags</h3>
-    {% include 'tag/list.html' with tags=image.tags.all %}
-    <p><a class="add_tag" href="#">Add Tag (TODO)</a></p>
-</div>
-<div id="comments">
-    <h3>Comments</h3>
-    {% include 'comment/list.html' with comments=image.comments.all %}
-    <div>
-    {% if user.is_authenticated %}
-        <form method="post" name="comment_form" action="{% url astrometry.net.views.comment.new category='userimage' recipient_id=image.id %}">
-        {% csrf_token %}
-        <p>{{ comment_form.text }}</p>
-        <input type="hidden" name="next" value="{{request.path}}" />
-        <input type="submit" value="Leave Comment" />
-        </form>
-    {% else %}
-        Please <a href="/login">sign in</a> to post comments.
-    {% endif %}
+    <div id="description">
+        {{ image.description }}<br />
+    </div>
+
+    <div id="comments">
+        <h3>Comments</h3>
+        {% include 'comment/list.html' with comments=image.comments.all %}
+        <div>
+        {% if user.is_authenticated %}
+            <form method="post" name="comment_form" action="{% url astrometry.net.views.comment.new category='userimage' recipient_id=image.id %}">
+            {% csrf_token %}
+            <p>{{ comment_form.text }}</p>
+            <input type="hidden" name="next" value="{{request.path}}" />
+            <input type="submit" value="Leave Comment" />
+            </form>
+        {% else %}
+            Please <a href="/login">sign in</a> to post comments.
+        {% endif %}
+        </div>
     </div>
 </div>
+<div style="clear:both"></div>
 {% endblock %}
