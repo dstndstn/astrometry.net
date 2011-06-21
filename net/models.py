@@ -294,7 +294,7 @@ class UserImage(Commentable):
 
     def get_absolute_url(self):
         return (reverse('astrometry.net.views.image.user_image',
-            kwargs={'user_image_id':self.id}
+            user_image_id=self.id
         ))
 
 class Submission(models.Model):
@@ -330,6 +330,8 @@ class Submission(models.Model):
     scale_err   = models.FloatField(blank=True, null=True)
 
     original_filename = models.CharField(max_length=256)
+
+    submitted_on = models.DateTimeField(auto_now_add=True)
 
     processing_started = models.DateTimeField(null=True)
     processing_finished = models.DateTimeField(null=True)

@@ -1,0 +1,22 @@
+<style type="text/css">
+ul.view_menu {
+    padding-left: 0px;
+    padding-right: 10px;
+}
+ul.view_menu li {
+    height:100%;
+    margin-bottom: 10px;
+    list-style: none;
+}
+ul.view_menu li a {
+    display:inline-block;
+    padding-left: 2px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    width:100%;
+    height:100%;
+}
+ul.view_menu li a:hover {
+    background-color:#00a;
+}
+</style>

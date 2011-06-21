@@ -2,6 +2,7 @@
 
 {% block inline_css %}
 {{block.super}}
+{% include 'view_menu.css' %}
 <style type="text/css">
 #dashboard {
     overflow:auto;
@@ -14,26 +15,7 @@
 #dashboard_menu {
     width:20%;
 }
-#dashboard_menu ul {
-    padding-left: 0px;
-    padding-right: 10px;
-}
-#dashboard_menu ul li {
-    height:100%;
-    margin-bottom: 10px;
-    list-style: none;
-}
-#dashboard_menu ul li a {
-    display:inline-block;
-    padding-left: 2px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    width:100%;
-    height:100%;
-}
-#dashboard_menu ul li a:hover {
-    background-color:#00a;
-}
+
 #dashboard_content {
     width:80%;
 }

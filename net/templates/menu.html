@@ -1,5 +1,6 @@
 <ul>
 <li><a href="#">Home</a></li>
+<li><a href="{% url astrometry.net.views.image.index %}">Images</a></li>
 {% if user.is_authenticated %}
 <li><a href="{% url astrometry.net.views.user.dashboard %}">Dashboard</a></li>
 {% endif %}

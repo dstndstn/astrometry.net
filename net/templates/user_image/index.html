@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block inline_css %}
+{{block.super}}
+{% include 'user_image/image_set.css' %}
+{% include 'view_menu.css' %}
+<style type="text/css">
+div#user_image_index {
+    overflow:auto;
+    width:100%
+}
+div#user_image_index div {
+    float:left;
+    vertical-align:top;
+}
+div#user_image_index_menu {
+    width: 20%;
+}
+div#user_image_index_content {
+    width: 80%;
+}
+</style>
+{% endblock %}
+
+{% block title %}
+<a href="{% url astrometry.net.views.image.index %}">Images</a>
+{% endblock %}
+
+{% block content %}
+<div id="user_image_index">
+    <div id="user_image_index_menu">
+        {% include 'user_image/menu.html' %}
+    </div>
+    <div id="user_image_index_content">
+    {% block user_image_index_content %}
+        {% include 'user_image/image_set.html' with images=images %}
+    {% endblock %}
+    </div>
+</div>
+{% endblock %}

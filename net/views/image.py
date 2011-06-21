@@ -177,6 +177,33 @@ def sdss_image(req, calid=None, size='full'):
 # -IPAC/IRSA claims to have VO services
 # -elaborate javascripty interface
 
+def index(req, template_name='user_image/index_recent.html'):
+    context = {
+        #'images':UserImage.objects.all().order_by('submission__submitted_on')[:2]
+        'images':UserImage.objects.all().order_by('-submission__submitted_on')
+    }
+    return render_to_response(template_name,   
+        context,
+        context_instance = RequestContext(req))
+
+
+def index_recent(req):
+    return index(req, template_name='user_image/index_recent.html')
+
+def index_all(req):
+    return index(req, template_name='user_image/index_all.html')
+
+
+def index_by_user(req):
+    # make ordering case insensitive
+    context = {
+        'users':User.objects.all().order_by('profile__display_name', 'id')
+    }
+    return render_to_response('user_image/index_by_user.html',
+        context,
+        context_instance = RequestContext(req))
+        
+
 def image_set(req, category, id):
     default_category = 'user'
     cat_classes = {

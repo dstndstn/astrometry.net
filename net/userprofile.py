@@ -22,3 +22,8 @@ class UserProfile(models.Model):
 
     def get_absolute_url(self):
         return reverse('astrometry.net.views.user.public_profile', user_id=self.user.id)
+
+    def save(self, *args, **kwargs):
+        # for sorting users, enforce capitalization of first letter
+        self.display_name = self.display_name.capitalize()
+        return super(UserProfile, self).save(*args, **kwargs)

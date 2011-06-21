@@ -1,0 +1,10 @@
+{% extends 'user_image/index.html' %}
+
+{% block title %}
+{{block.super}} &gt; 
+<a href="{% url astrometry.net.views.image.index_recent %}">Recent</a>
+{% endblock %}
+
+{% block user_image_index_content %}
+    {% include 'user_image/image_set.html' with images=images|slice:":20" %}
+{% endblock %}

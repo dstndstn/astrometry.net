@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "user_image/index.html" %}
 
 {% block inline_css %}
 {{block.super}}
@@ -52,7 +52,10 @@ $(document).ready(function() {
 </script>
 {% endblock %}
 
-{% block title %}User Image {{image.id}} {% endblock %}
+{% block title %}
+{{block.super}} &gt; 
+<a href="{{ image.get_absolute_url }}">{{image.id}}</a>
+{% endblock %}
 {% block content %}
 
 <div id="right_block">
