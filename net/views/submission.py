@@ -39,8 +39,9 @@ class UploadFileForm(forms.Form):
             return mark_safe(u'\n'.join([u'%s' % w for w in self]))
 
 
-    file  = forms.FileField(required=False)
-    url = forms.CharField(widget=forms.TextInput(attrs={'size':'50'}),
+    file  = forms.FileField(required=False,
+                            widget=forms.FileInput(attrs={'size':'80'}),)
+    url = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),
                           initial='http://', required=False)
     upload_type = forms.ChoiceField(widget=forms.RadioSelect(renderer=HorizontalRenderer),
                                     choices=(('file','file'),('url','url')),
