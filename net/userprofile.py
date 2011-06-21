@@ -1,5 +1,6 @@
 import random
 
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -18,3 +19,6 @@ class UserProfile(models.Model):
         key = ''.join([chr(random.randint(ord('a'), ord('z')))
                        for i in range(self.__class__.API_KEY_LENGTH)])
         self.apikey = key
+
+    def get_absolute_url(self):
+        return reverse('astrometry.net.views.user.public_profile', user_id=self.user.id)

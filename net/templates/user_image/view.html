@@ -57,7 +57,7 @@ $(document).ready(function() {
 
 <div id="right_block">
     <div id="details">
-        Submitted by <a href="#">{{ image.user.get_profile.display_name }} (TODO)</a><br />
+        Submitted by {% include 'user/display_name.html' with user=image.user %}<br />
         {{ image.submission.processing_started|date:"DATE_FORMAT" }}<br />
         {{ image.original_file_name }}
     </div>

@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<a href="{% url astrometry.net.views.user.index %}">Users</a>
+{% endblock %}
+
+{% block content %}
+{% include 'user/list.html' %}
+{% endblock %}

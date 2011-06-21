@@ -75,5 +75,16 @@ def dashboard_user_images(req):
         context_instance = RequestContext(req))
 
 
-def public_profile(req):
-    pass
+def index(req):
+    context = {
+        'users':User.objects.all()
+    }
+    return render_to_response("user/index.html",
+        context,
+        context_instance = RequestContext(req))
+
+
+def public_profile(req, user_id=None):
+    return render_to_response('user/profile.html',
+        {},
+        context_instance = RequestContext(req))

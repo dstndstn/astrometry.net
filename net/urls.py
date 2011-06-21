@@ -34,6 +34,7 @@ urlpatterns += patterns('astrometry.net.views.user',
     (r'^dashboard/images/?', 'dashboard_user_images'),
     (r'^dashboard/profile/?$', 'dashboard_profile'),
     (r'^dashboard/profile/save/?$', 'save_profile'),
+    (r'^users/?$', 'index'),
     (r'^users/(?P<user_id>' + idpattern + r')/?$', 'public_profile'),
 )
 
