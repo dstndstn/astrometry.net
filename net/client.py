@@ -88,6 +88,74 @@ class Client(object):
                 print data
             print "'''"
 
+
+            # HACK -- try making a custom generator to format it the way we need.
+            from cStringIO import StringIO
+            from email.generator import Generator
+            import email.generator
+            print email.generator.__file__
+            fp = StringIO()
+            g = Generator(fp, mangle_from_=False, maxheaderlen=0)
+            g.flatten(mp)
+            text = fp.getvalue()
+
+            print "Text:'''"
+            print text[:500], '[...]'
+            print "'''"
+
+            print
+            print
+            print
+            print
+
+            class MyGenerator(Generator):
+                def __init__(self, fp, root=True):
+                    Generator.__init__(self, fp, mangle_from_=False,
+                                       maxheaderlen=0)
+                    self.root = root
+                def _write_headers(self, msg):
+                    if self.root:
+                        return                        
+                    #print '_write_headers' #: msg=', msg
+                    #print 'msg =', msg
+                    #if msg == self.root_msg:
+                    #Generator._write_headers(self, msg)
+                    # We need to use \r\n line-terminator, but Generator
+                    # doesn't provide the flexibility to override, so we
+                    # have to copy-n-paste-n-modify.
+                    for h, v in msg.items():
+                        print >> self._fp, ('%s: %s\r\n' % (h,v)),
+                    # A blank line always separates headers from body
+                    print >> self._fp, '\r\n',
+
+                #def flatten(self, msg, unixfrom=False):
+                #    self.root_msg = msg
+                #    Generator.flatten(self, msg, unixfrom=unixfrom)
+                def clone(self, fp):
+                    return MyGenerator(fp, root=False)
+
+
+            fp = StringIO()
+            g = MyGenerator(fp)
+            g.flatten(mp)
+            text = fp.getvalue()
+
+            print "MyText:'''"
+            print text[:500], '[...]'
+            print "'''"
+
+            #data = text
+
+            # Ugh!
+            #data = fp.getvalue().replace('\n', '\r\n')
+            data = fp.getvalue()
+            headers = {'Content-type': mp.get('Content-type')}
+
+            print 'Sending headers:'
+            print ' ', headers
+            print 'Sending data:'
+            print data.replace('\n', '\\n\n').replace('\r', '\\r')
+
         else:
             # Else send x-www-form-encoded
             data = {'request-json': json}
