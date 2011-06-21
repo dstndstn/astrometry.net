@@ -45,6 +45,11 @@ div#title h2 {
     font-size: 1.2em;
     font-weight:600;
 }
+div#messages p {
+    text-align: center;
+    font-size: 1em;
+}
+#messages p.success { color: #0e0; }
 a          {color: #00a; text-decoration: none; background-color: transparent;}
 a:link     {background-color: transparent; color: #00a;}
 a:visited  {background-color: transparent; color: #00a;}
@@ -102,7 +107,6 @@ a.image:hover    {background-color: transparent;}
     font-size:1.1em;
 }
 span#user_info { font-weight:bold; }
-#messages { font-size:150%; font-style:bold; margin-left:auto; margin-right:auto; text-align:center; }
 .bigbutton { font-size:110%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
 div.myerrors { font-size:110%; color:red; }
 .bigtext { font-size:110%; }
@@ -164,6 +168,12 @@ td.c {text-align:center;}
 <h2>{% block title %}{% endblock %}</h2>
 </div>
 {% endblock %}
+
+<div id="messages">
+{% for message in messages %}
+    <p{% if message.tags %} class="{{message.tags}}"{% endif %}>{{message}}</p>
+{% endfor %}
+</div>
 
 <div id="content">
 {% block content %}

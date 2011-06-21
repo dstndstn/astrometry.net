@@ -10,8 +10,8 @@ urlpatterns = patterns('',
 )
 
 urlpatterns += patterns('astrometry.net.openid_views',
-    url(r'^login/?$', 'login_begin', name='openid-login'),
-    url(r'^logout/?$', 'logout', name='openid-logout'),
+    url(r'^signin/?$', 'login_begin', name='openid-login'),
+    url(r'^signout/?$', 'logout', name='openid-logout'),
     url(r'^complete/?$', 'login_complete', name='openid-complete'),
     url(r'^logo.gif$', 'logo', name='openid-logo'),
 )

@@ -38,7 +38,7 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.views import logout as django_logout
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
@@ -51,6 +51,8 @@ from openid.extensions import sreg, ax
 from django_openid_auth import teams
 from django_openid_auth.forms import OpenIDLoginForm
 from django_openid_auth.store import DjangoOpenIDStore
+
+from django.contrib import messages
 
 from django import forms
 from astrometry.net.models import *
@@ -152,6 +154,8 @@ def parse_openid_response(request):
     return consumer.complete(dict(request.REQUEST.items()), current_url)
 
 def logout(request, template_name='openid/logout.html'):
+    messages.success(request, 'You have been signed out.')
+    context = {'messages':messages}
     return django_logout(request, template_name=template_name)
 
 def login_begin(request, template_name='openid/login.html',
