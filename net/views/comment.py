@@ -32,7 +32,11 @@ def new(req, category=None, recipient_id=None):
         redirect_url = req.POST['next']
         if redirect_url == None:
             redirect_url = '/'
-        return HttpResponseRedirect(redirect_url)
+        #return HttpResponseRedirect(redirect_url)
+        # HACK
+        return render_to_response('redirect.html', 
+                                  {'url': redirect_url},
+                                  context_instance = RequestContext(request))
     else:
         # show a generic comment form
         pass
@@ -45,7 +49,12 @@ def delete(req, comment_id):
         redirect_url = '/'
     if comment.recipient.owner == req.user or comment.author == req.user:
         comment.delete()
-        return HttpResponseRedirect(redirect_url)
+        #return HttpResponseRedirect(redirect_url)
+        # HACK
+        return render_to_response('redirect.html', 
+                                  {'url': redirect_url},
+                                  context_instance = RequestContext(request))
+
     else:
         # render_to_response a "you don't have permission" view
         pass

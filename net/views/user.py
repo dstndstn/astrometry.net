@@ -38,7 +38,11 @@ def save_profile(request):
     if request.method == 'POST':
         profile.display_name = request.POST['display_name']
         profile.save()
-    return redirect('astrometry.net.views.user.dashboard_profile')
+    #return redirect('astrometry.net.views.user.dashboard_profile')
+    # HACK
+    return render_to_response('redirect.html', 
+                {'url': reverse('astrometry.net.views.user.dashboard_profile')},
+                context_instance = RequestContext(request))
 
 @login_required
 def dashboard_profile(request):
