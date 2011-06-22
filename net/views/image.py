@@ -40,7 +40,7 @@ def user_image(req, user_image_id=None):
         'job': job,
         'calib': calib,
         'comment_form': comment_form,
-        'request': req
+        'request': req,
     }
     return render_to_response('user_image/view.html', context,
         context_instance = RequestContext(req))
