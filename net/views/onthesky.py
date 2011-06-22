@@ -74,7 +74,7 @@ def plot_aitoff_wcs_outline(wcsfn, plotfn, W=256, zoom=True):
     H = W/2
     # Create Hammer-Aitoff WCS of the appropriate size.
     wcs = anutil.anwcs_create_allsky_hammer_aitoff(0., 0., W, H)
-
+ 
     plot = ps.Plotstuff(outformat='png', size=(W, H))
     plot.wcs = wcs
     plot.linestep = 1.

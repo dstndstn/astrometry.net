@@ -197,6 +197,9 @@ class Calibration(models.Model):
         (ra,dec,radius) = self.raw_tan.get_center_radecradius()
         return (ra,dec)
 
+    def get_radius(self):
+        return self.raw_tan.get_radius()
+
     def get_center_radecradius(self):
         return self.raw_tan.get_center_radecradius()
 

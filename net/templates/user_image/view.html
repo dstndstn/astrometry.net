@@ -71,9 +71,17 @@ $(document).ready(function() {
         {% if calib %}
         <h3>Location</h3>
         RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}<br />
-        <img src="{% url astrometry.net.views.image.onthesky_image calid=job.calibration.id %}" /><br />
-        <img src="{% url astrometry.net.views.image.onthesky_zoom1_image calid=job.calibration.id %}" /><br />
-        <img src="{% url astrometry.net.views.image.onthesky_zoom2_image calid=job.calibration.id %}" />
+        <img src="{% url astrometry.net.views.image.onthesky_image zoom=0 calid=job.calibration.id %}" /><br />
+		{% if calib.get_radius < 15 %}
+        <img src="{% url astrometry.net.views.image.onthesky_image zoom=1 calid=job.calibration.id %}" /><br />
+		{% if calib.get_radius < 1.5 %}
+        <img src="{% url astrometry.net.views.image.onthesky_image zoom=2 calid=job.calibration.id %}" /><br />
+		{% if calib.get_radius < 0.15 %}
+        <img src="{% url astrometry.net.views.image.onthesky_image zoom=3 calid=job.calibration.id %}" /><br />
+		{% endif %}
+		{% endif %}
+		{% endif %}
+
         {% endif %}
     </div>
     <div id="tags">

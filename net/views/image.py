@@ -84,46 +84,33 @@ def annotated_image(req, jobid=None, size='full'):
     res['Content-type'] = 'image/png'
     return res
 
-def onthesky_image(req, calid=None):
+def onthesky_image(req, zoom=None, calid=None):
     from astrometry.net.views.onthesky import plot_aitoff_wcs_outline
+    from astrometry.net.views.onthesky import plot_wcs_outline
     from astrometry.util import util as anutil
+    #
     cal = get_object_or_404(Calibration, pk=calid)
     wcsfn = cal.get_wcs_file()
     plotfn = get_temp_file()
     #
     wcs = anutil.Tan(wcsfn, 0)
-    zoom = wcs.radius() < 15.
-    plot_aitoff_wcs_outline(wcsfn, plotfn, zoom=zoom)
-    f = open(plotfn)
-    res = HttpResponse(f)
-    res['Content-type'] = 'image/png'
-    return res
-
-def onthesky_zoom1_image(req, calid=None):
-    from astrometry.net.views.onthesky import plot_wcs_outline
-    from astrometry.util import util as anutil
-    cal = get_object_or_404(Calibration, pk=calid)
-    wcsfn = cal.get_wcs_file()
-    plotfn = get_temp_file()
-    #
-    wcs = anutil.Tan(wcsfn, 0)
-    zoom = wcs.radius() < 1.5
-    plot_wcs_outline(wcsfn, plotfn, zoom=zoom)
-    f = open(plotfn)
-    res = HttpResponse(f)
-    res['Content-type'] = 'image/png'
-    return res
-
-def onthesky_zoom2_image(req, calid=None):
-    from astrometry.net.views.onthesky import plot_wcs_outline
-    from astrometry.util import util as anutil
-    cal = get_object_or_404(Calibration, pk=calid)
-    wcsfn = cal.get_wcs_file()
-    plotfn = get_temp_file()
-    wcs = anutil.Tan(wcsfn, 0)
-    zoom = wcs.radius() < 0.15
-    plot_wcs_outline(wcsfn, plotfn, width=3.6, grid=1, zoom=zoom, zoomwidth=0.36)
-    #hd=True is too cluttered at this level
+    zoom = int(zoom)
+    if zoom == 0:
+        zoom = wcs.radius() < 15.
+        plot_aitoff_wcs_outline(wcsfn, plotfn, zoom=zoom)
+    elif zoom == 1:
+        zoom = wcs.radius() < 1.5
+        plot_wcs_outline(wcsfn, plotfn, zoom=zoom)
+    elif zoom == 2:
+        zoom = wcs.radius() < 0.15
+        plot_wcs_outline(wcsfn, plotfn, width=3.6, grid=1, zoom=zoom,
+                         zoomwidth=0.36)
+        # hd=True is too cluttered at this level
+    elif zoom == 3:
+        plot_wcs_outline(wcsfn, plotfn, width=0.36, grid=0.1, zoom=False,
+                         hd=False)
+    else:
+        return HttpResponse('invalid zoom')
     f = open(plotfn)
     res = HttpResponse(f)
     res['Content-type'] = 'image/png'
