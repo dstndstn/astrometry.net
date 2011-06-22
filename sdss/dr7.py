@@ -51,7 +51,7 @@ class DR7(object):
 		from astrometry.util.sdss_das import sdss_das_get
 		outfn = self.getFilename(filetype, run, camcol, field, band)
 		sdss_das_get(filetype, outfn, run, camcol, field, band,
-					 curl=curl)
+					 curl=self.curl)
 
 
 	def readTsField(self, run, camcol, field, rerun):
