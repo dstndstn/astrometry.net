@@ -25,5 +25,5 @@ class UserProfile(models.Model):
 
     def save(self, *args, **kwargs):
         # for sorting users, enforce capitalization of first letter
-        self.display_name = self.display_name.capitalize()
+        self.display_name = self.display_name[:1].capitalize() + self.display_name[1:]
         return super(UserProfile, self).save(*args, **kwargs)

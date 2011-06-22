@@ -36,7 +36,7 @@ def new(req, category=None, recipient_id=None):
         # HACK
         return render_to_response('redirect.html', 
                                   {'url': redirect_url},
-                                  context_instance = RequestContext(request))
+                                  context_instance = RequestContext(req))
     else:
         # show a generic comment form
         pass
@@ -53,7 +53,7 @@ def delete(req, comment_id):
         # HACK
         return render_to_response('redirect.html', 
                                   {'url': redirect_url},
-                                  context_instance = RequestContext(request))
+                                  context_instance = RequestContext(req))
 
     else:
         # render_to_response a "you don't have permission" view
