@@ -96,6 +96,24 @@ class DiskFile(models.Model):
     def get_hash():
         return hashlib.sha1()
 
+class CachedFile(models.Model):
+    disk_file = models.ForeignKey(DiskFile)
+    key = models.CharField(max_length=64, unique=True, primary_key=True)
+
+    @staticmethod
+    def get(key):
+        try:
+            cf = CachedFile.objects.get(key=key)
+            return cf.disk_file
+        except:
+            return None
+
+    @staticmethod
+    def add(key, filename):
+        df = DiskFile.from_file(filename)
+        cf = CachedFile(disk_file=df, key=key)
+        cf.save()
+        return df
 
 class Image(models.Model):
     disk_file = models.ForeignKey(DiskFile)

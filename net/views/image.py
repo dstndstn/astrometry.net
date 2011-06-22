@@ -15,8 +15,8 @@ from django.http import HttpResponseRedirect
 
 from astrometry.net.models import *
 from astrometry.net import settings
-from log import *
-from tmpfile import *
+from astrometry.net.log import *
+from astrometry.net.tmpfile import *
 from sdss_image import plot_sdss_image
 
 from astrometry.util import image2pnm
@@ -116,22 +116,29 @@ def onthesky_image(req, zoom=None, calid=None):
     res['Content-type'] = 'image/png'
     return res
 
+
 def galex_image(req, calid=None, size='full'):
     from astrometry.util import util as anutil
     from astrometry.blind import plotstuff as ps
     from astrometry.net.galex_jpegs import plot_into_wcs
-
     cal = get_object_or_404(Calibration, pk=calid)
-    wcsfn = cal.get_wcs_file()
-    plotfn = get_temp_file()
-    if size == 'display':
-        image = cal.job_set.get().user_image
-        scale = float(image.image.get_display_image().width)/image.image.width
+    key = 'galex_size%s_cal%i' % (size, cal.id)
+    df = CachedFile.get(key)
+    if df is None:
+        wcsfn = cal.get_wcs_file()
+        plotfn = get_temp_file()
+        if size == 'display':
+            image = cal.job_set.get().user_image
+            scale = float(image.image.get_display_image().width)/image.image.width
+        else:
+            scale = 1.0
+        plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR, scale=scale)
+        # cache
+        logmsg('Caching key "%s"' % key)
+        df = CachedFile.add(key, plotfn)
     else:
-        scale = 1.0
-    #
-    plot_into_wcs(wcsfn, plotfn, basedir=settings.GALEX_JPEG_DIR, scale=scale)
-    f = open(plotfn)
+        logmsg('Cache hit for key "%s"' % key)
+    f = open(df.get_path())
     res = HttpResponse(f)
     res['Content-type'] = 'image/png'
     return res
@@ -139,17 +146,23 @@ def galex_image(req, calid=None, size='full'):
 
 def sdss_image(req, calid=None, size='full'):
     cal = get_object_or_404(Calibration, pk=calid)
-    wcsfn = cal.get_wcs_file()
-
-    plotfn = get_temp_file()
-    if size == 'display':
-        image = cal.job_set.get().user_image
-        scale = float(image.image.get_display_image().width)/image.image.width
+    key = 'sdss_size%s_cal%i' % (size, cal.id)
+    df = CachedFile.get(key)
+    if df is None:
+        wcsfn = cal.get_wcs_file()
+        plotfn = get_temp_file()
+        if size == 'display':
+            image = cal.job_set.get().user_image
+            scale = float(image.image.get_display_image().width)/image.image.width
+        else:
+            scale = 1.0
+        plot_sdss_image(wcsfn, plotfn, scale)
+        # cache
+        logmsg('Caching key "%s"' % key)
+        df = CachedFile.add(key, plotfn)
     else:
-        scale = 1.0
-    #
-    plot_sdss_image(wcsfn, plotfn, scale)
-    f = open(plotfn)
+        logmsg('Cache hit for key "%s"' % key)
+    f = open(df.get_path())
     res = HttpResponse(f)
     res['Content-type'] = 'image/png'
     return res
