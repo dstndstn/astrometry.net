@@ -8,8 +8,8 @@ li.submission {
     margin-bottom: 2em;
 }
 .submission_job_list {
-    width: 40em;
-    margin-left: 4em;
+    width: 36em;
+    margin-left: 2em;
     margin-top: .5em;
 }
 .submission_job_list, .submission_job_list tr td {

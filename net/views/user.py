@@ -85,6 +85,12 @@ def index(req):
 
 
 def public_profile(req, user_id=None):
+    user = get_object_or_404(User, pk=user_id)
+    context = {
+        'user':user,
+        'recent_images':user.user_images.all().order_by('-submission__submitted_on')[:10],
+        'recent_submissions':user.submissions.all().order_by('-submitted_on')[:10],
+    }
     return render_to_response('user/profile.html',
-        {},
+        context,
         context_instance = RequestContext(req))

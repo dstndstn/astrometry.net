@@ -1,10 +1,49 @@
 {% extends 'user/index.html' %}
 
+{% block inline_css %}
+{{block.super}}
+{% include 'user_image/image_set.css' %}
+{% include 'submission/list.css' %}
+<style type="text/css">
+#profile_metadata {
+    padding:.5em;
+    width: 275px;
+    float:right;
+    background-color:#eee;
+}
+#profile_metadata p {
+    margin-left:1em;
+}
+#profile_data {
+    max-width: 600px;
+    float:left;
+}
+</style>
+{% endblock %}
+
 {% block title %}
 {{block.super}} &gt; 
 {% include 'user/display_name.html' %}
 {% endblock %}
 
 {% block content %}
-TODO
+<div id="profile_metadata">
+    <h2>Usage Stats</h2>
+    <p id="submission_count">{{user.submissions.all.count}} submissions</p>
+    <p id="image_count">{{user.user_images.all.count}} images</p>
+    <p id="comment_count">{{user.comments_left.all.count}} comments</p>
+    <h2>Account Info</h2>
+    <p id="registered_on">registered on: <span class="timestamp">{{user.date_joined|date:"SHORT_DATE_FORMAT"}}</span></p>
+    <p id="last_signin">last signed in: <span class="timestamp">{{user.last_login|date:"SHORT_DATETIME_FORMAT"}}</span></p>
+</div>
+<div id="profile_data">
+    <div id="profile_images">
+        <h2>Recent Images</h2>
+        {% include 'user_image/image_set.html' with images=recent_images %}
+    </div>
+    <div id="profile_submissions">
+        <h2>Recent Submissions</h2>
+        {% include 'submission/list.html' with submissions=recent_submissions %}
+    </div>
+</div>
 {% endblock %}

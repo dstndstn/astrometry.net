@@ -179,7 +179,6 @@ def sdss_image(req, calid=None, size='full'):
 
 def index(req, template_name='user_image/index_recent.html'):
     context = {
-        #'images':UserImage.objects.all().order_by('submission__submitted_on')[:2]
         'images':UserImage.objects.all().order_by('-submission__submitted_on')
     }
     return render_to_response(template_name,   
