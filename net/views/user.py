@@ -27,6 +27,12 @@ class ProfileForm(forms.ModelForm):
         model = UserProfile
         exclude = ('apikey')
 
+def redirect2(req):
+    return HttpResponse('This is Redirect 2')
+
+def redirect1(req):
+    return redirect(redirect2)
+
 def dashboard(request):
     return render_to_response("dashboard/base.html",
         {
