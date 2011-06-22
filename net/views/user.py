@@ -57,7 +57,7 @@ def dashboard_profile(request):
 @login_required
 def dashboard_submissions(req):
     context = {
-        'user_submissions':req.user.submissions.all
+        'user_submissions':req.user.submissions.all().order_by('-submitted_on')
     }
     return render_to_response("dashboard/submissions.html",
         context,
@@ -67,7 +67,7 @@ def dashboard_submissions(req):
 def dashboard_user_images(req):
     context = {
         'user':req.user,
-        'images':req.user.user_images.all
+        'images':req.user.user_images.all().order_by('-submission__submitted_on', 'id')
     }
     
     return render_to_response('dashboard/user_images.html',
