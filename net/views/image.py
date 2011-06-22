@@ -242,7 +242,7 @@ def image_set(req, category, id):
         context,
         context_instance = RequestContext(req))
 
-def wcs_file2(req, jobid=None):
+def wcs_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
     f = open(job.get_wcs_file())
     res = HttpResponse(f)

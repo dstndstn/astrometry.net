@@ -7,7 +7,8 @@ from astrometry.util.miscutils import *
 from astrometry.util.pyfits_utils import *
 
 class DR7(object):
-	def __init__(self):
+	def __init__(self, curl=False):
+		self.curl = curl
 		# These are *LOCAL* filenames -- some are different than those
 		# on the DAS.
 		self.filenames = {
@@ -49,7 +50,8 @@ class DR7(object):
 		# FIXME!
 		from astrometry.util.sdss_das import sdss_das_get
 		outfn = self.getFilename(filetype, run, camcol, field, band)
-		sdss_das_get(filetype, outfn, run, camcol, field, band)
+		sdss_das_get(filetype, outfn, run, camcol, field, band,
+					 curl=curl)
 
 
 	def readTsField(self, run, camcol, field, rerun):
