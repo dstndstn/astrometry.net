@@ -250,7 +250,7 @@ def login_begin(request, template_name='openid/login.html',
         else:
             return_to += '?'
         return_to += urllib.urlencode({redirect_field_name: redirect_to})
-
+    logmsg('login_begin done')	
     return render_openid_request(request, openid_request, return_to)
 
 
@@ -272,6 +272,7 @@ def login_complete(request, redirect_field_name=REDIRECT_FIELD_NAME,
             if user.is_active:
                 logmsg('auth_login for successful login: ' + str(user))
                 auth_login(request, user)
+		logmsg('auth_login finished')
                 try:
                     profile = user.get_profile()
                 except UserProfile.DoesNotExist:
@@ -283,8 +284,15 @@ def login_complete(request, redirect_field_name=REDIRECT_FIELD_NAME,
                     else:
                         profile.display_name = user.username
                     profile.save()
-
-                return HttpResponseRedirect(sanitise_redirect_url(redirect_to))
+		logmsg('getting ready to redirect')
+		redirect_url = sanitise_redirect_url(redirect_to)
+		logmsg('sanitising redirect url', redirect_url)
+                #return HttpResponseRedirect(redirect_url)
+                
+                # HACK
+                return render_to_response('redirect.html', 
+                           {'url': redirect_url},
+                           context_instance = RequestContext(request))
             else:
                 return render_failure(request, 'Disabled account')
         else:
@@ -304,6 +312,9 @@ def logo(request):
     return HttpResponse(
         OPENID_LOGO_BASE_64.decode('base64'), mimetype='image/gif'
     )
+
+def test(request):
+    return HttpResponseRedirect('dashboard')
 
 # Logo from http://openid.net/login-bg.gif
 # Embedded here for convenience; you should serve this as a static file

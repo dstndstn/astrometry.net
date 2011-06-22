@@ -14,6 +14,7 @@ urlpatterns += patterns('astrometry.net.openid_views',
     url(r'^signout/?$', 'logout', name='openid-logout'),
     url(r'^complete/?$', 'login_complete', name='openid-complete'),
     url(r'^logo.gif$', 'logo', name='openid-logo'),
+    (r'^test/?$', 'test')
 )
 
 jobpattern = r'[0-9-]+'
