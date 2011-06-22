@@ -63,6 +63,9 @@ $(document).ready(function() {
         Submitted by {% include 'user/display_name.html' with user=image.user %}<br />
         {{ image.submission.processing_started|date:"DATE_FORMAT" }}<br />
         {{ image.original_file_name }}
+        {% if calib %}
+            <br /><a href="{% url astrometry.net.views.image.wcs_file jobid=job.id %}">wcs.fits</a>
+        {% endif %}
     </div>
     <div id="on_the_sky">
         {% if calib %}

@@ -20,6 +20,7 @@ from django.http import HttpResponseRedirect
 
 from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
+from astrometry.net.util import get_page
 
 class ProfileForm(forms.ModelForm):
     class Meta:
@@ -69,9 +70,12 @@ def dashboard_submissions(req):
 
 @login_required
 def dashboard_user_images(req):
+    page_number = req.GET.get('page',1)
+    page = get_page(req.user.user_images.all().order_by('-submission__submitted_on', 'id'),9,page_number)
+    
     context = {
         'user':req.user,
-        'images':req.user.user_images.all().order_by('-submission__submitted_on', 'id')
+        'image_page':page
     }
     
     return render_to_response('dashboard/user_images.html',
@@ -90,9 +94,11 @@ def index(req):
 
 def public_profile(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
+    page = get_page(user.user_images.all().order_by('-submission__submitted_on')[:4],4,1)
+
     context = {
         'user':user,
-        'recent_images':user.user_images.all().order_by('-submission__submitted_on')[:10],
+        'recent_image_page':page,
         'recent_submissions':user.submissions.all().order_by('-submitted_on')[:10],
     }
     return render_to_response('user/profile.html',

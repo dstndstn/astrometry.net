@@ -11,7 +11,7 @@
 {% endcomment %}
 
 <div class="image_set">
-{% for image in images %}
+{% for image in image_page.object_list %}
     <a href="{% url astrometry.net.views.image.user_image image.id %}">
     <!--<img class="image_container" src="{% url astrometry.net.views.image.serve_image id=image.image.thumbnail.id %}" />-->
     <div class="image_container" style="background-image: url('{% url astrometry.net.views.image.serve_image id=image.image.get_thumbnail.id %}')"></div> 
@@ -21,3 +21,17 @@
 {% endfor %}
 </div>
 
+{% if image_page.has_other_pages %}
+<br>
+<div class="pagination">
+    {% if image_page.has_previous %}
+    <a href="?page={{ image_page.previous_page_number }}">&#9668; previous</a> | 
+    {% endif %}
+
+    Page {{ image_page.number }} of {{ image_page.paginator.num_pages }}
+
+    {% if image_page.has_next %}
+     | <a href="?page={{ image_page.next_page_number }}">next &#9658;</a>
+    {% endif %}
+</div>
+{% endif %}

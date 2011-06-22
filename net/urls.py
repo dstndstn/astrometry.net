@@ -53,6 +53,7 @@ urlpatterns += patterns('astrometry.net.views.image',
     (r'^sky_plot2/(?P<calid>' + idpattern + r')/?', 'onthesky_zoom2_image'),
     (r'^sdss_image_(?P<size>full|display)/(?P<calid>' + idpattern + r')/?', 'sdss_image'),
     (r'^galex_image_(?P<size>full|display)/(?P<calid>' + idpattern + r')/?', 'galex_image'),
+    (r'^wcs_file/(?P<jobid>' + idpattern + r')/?', 'wcs_file'),
 )
 
 urlpatterns += patterns('astrometry.net.views.comment',

@@ -23,6 +23,7 @@ from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 
 from astrometry.net.views.comment import *
+from astrometry.net.util import get_page
 
 def user_image(req, user_image_id=None):
     image = get_object_or_404(UserImage, pk=user_image_id)
@@ -177,9 +178,13 @@ def sdss_image(req, calid=None, size='full'):
 # -IPAC/IRSA claims to have VO services
 # -elaborate javascripty interface
 
-def index(req, template_name='user_image/index_recent.html'):
+def index(req, images=UserImage.objects.all().order_by('-submission__submitted_on')[:9], 
+            template_name='user_image/index_recent.html'):
+
+    page_number = req.GET.get('page',1)
+    page = get_page(images,9,page_number)
     context = {
-        'images':UserImage.objects.all().order_by('-submission__submitted_on')
+        'image_page':page
     }
     return render_to_response(template_name,   
         context,
@@ -187,10 +192,14 @@ def index(req, template_name='user_image/index_recent.html'):
 
 
 def index_recent(req):
-    return index(req, template_name='user_image/index_recent.html')
+    return index(req, 
+                 UserImage.objects.all().order_by('-submission__submitted_on')[:9],
+                 template_name='user_image/index_recent.html')
 
 def index_all(req):
-    return index(req, template_name='user_image/index_all.html')
+    return index(req,
+                 UserImage.objects.all().order_by('-submission__submitted_on'),
+                 template_name='user_image/index_all.html')
 
 
 def index_by_user(req):
@@ -232,3 +241,12 @@ def image_set(req, category, id):
     return render_to_response('user_image/image_set.html',
         context,
         context_instance = RequestContext(req))
+
+def wcs_file(req, jobid=None):
+    job = get_object_or_404(Job, pk=jobid)
+    f = open(job.get_wcs_file())
+    res = HttpResponse(f)
+    res['Content-type'] = 'application/fits' 
+    res['Content-Disposition'] = 'attachment; filename=wcs.fits'
+    return res
+
