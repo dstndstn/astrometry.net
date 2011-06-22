@@ -292,10 +292,6 @@ class UserImage(Commentable):
             return jobs[0]
         return None
 
-    def get_absolute_url(self):
-        return (reverse('astrometry.net.views.image.user_image',
-            user_image_id=self.id
-        ))
 
 class Submission(models.Model):
     SCALEUNITS_CHOICES = (

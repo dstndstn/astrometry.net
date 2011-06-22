@@ -8,7 +8,7 @@
             {% for job in user_image.jobs.all %}
             <tr>
                 <td class="image_id">
-                    <a href="{{job.user_image.get_absolute_url}}">image <span class="image_id">{{user_image.id}}</span></a>
+                    <a href="{% url astrometry.net.views.image.user_image job.user_image.id %}">image <span class="image_id">{{user_image.id}}</span></a>
                 </td>
                 <td class="job_id">job id <span class="job_id">{{ job.id }}</span></td>
                 <td class="job_status">{% include "job/status.html" with job=job %}</td>
