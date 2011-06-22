@@ -313,9 +313,8 @@ class TsField(SdssFile):
 
 		b = b[band]
 		maggies = 2.*b * np.sinh(-0.4 * np.log(10.) * L - np.log(b))
-		logcounts = (np.log10(maggies * self.exptime)
-					 - 0.4*(self.aa[band] + self.kk[band] * self.airmass[band]))
-		return 10.**logcounts
+		dlogcounts = -0.4 * (self.aa[band] + self.kk[band] * self.airmass[band])
+		return (maggies * self.exptime) * 10.**dlogcounts
 		
 	# band: int
 	def mag_to_counts(self, mag, band):

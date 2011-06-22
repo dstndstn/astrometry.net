@@ -8,14 +8,18 @@ from astrometry.util.pyfits_utils import *
 
 class DR7(object):
 	def __init__(self):
+		# These are *LOCAL* filenames -- some are different than those
+		# on the DAS.
 		self.filenames = {
 			'fpObjc': 'fpObjc-%(run)06i-%(camcol)i-%(field)04i.fit',
 			'fpM': 'fpM-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit',
 			'fpC': 'fpC-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit',
 			'fpAtlas': 'fpAtlas-%(run)06i-%(camcol)i-%(field)04i.fit',
 			'psField': 'psField-%(run)06i-%(camcol)i-%(field)04i.fit',
-			'tsObj': 'tsObj-%(run)06i-%(camcol)i-%(rerun)i-%(field)04i.fit',
-			'tsField': 'tsField-%(run)06i-%(camcol)i-%(rerun)i-%(field)04i.fit',
+			#'tsObj': 'tsObj-%(run)06i-%(camcol)i-%(rerun)i-%(field)04i.fit',
+			#'tsField': 'tsField-%(run)06i-%(camcol)i-%(rerun)i-%(field)04i.fit',
+			'tsObj': 'tsObj-%(run)06i-%(camcol)i-%(field)04i.fit',
+			'tsField': 'tsField-%(run)06i-%(camcol)i-%(field)04i.fit',
 			}
 		self.softbias = 1000
 		self.basedir = None
@@ -40,6 +44,13 @@ class DR7(object):
 		else:
 			path = fn
 		return pyfits.open(path)
+
+	def retrieve(self, filetype, run, camcol, field, band=None):
+		# FIXME!
+		from astrometry.util.sdss_das import sdss_das_get
+		outfn = self.getFilename(filetype, run, camcol, field, band)
+		sdss_das_get(filetype, outfn, run, camcol, field, band)
+
 
 	def readTsField(self, run, camcol, field, rerun):
 		'''

@@ -86,7 +86,6 @@ if __name__ == '__main__':
 	parser.add_option('-b', '--band', dest='band')
 	parser.add_option('-C', '--curl', dest='curl', action='store_true', default=False)
 
-
 	parser.set_defaults(run=None, field=None, camcol=None, band=None, rerun=None)
 
 	(opt, args) = parser.parse_args()
