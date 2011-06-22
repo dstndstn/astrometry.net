@@ -14,7 +14,6 @@ urlpatterns += patterns('astrometry.net.openid_views',
     url(r'^signout/?$', 'logout', name='openid-logout'),
     url(r'^complete/?$', 'login_complete', name='openid-complete'),
     url(r'^logo.gif$', 'logo', name='openid-logo'),
-    (r'^test/?$', 'test')
 )
 
 jobpattern = r'[0-9-]+'
@@ -29,11 +28,6 @@ urlpatterns += patterns('astrometry.net.views.submission',
 )
 
 urlpatterns += patterns('astrometry.net.views.user',
-
-    # DEBUGGING
-    (r'^redirect1', 'redirect1'),
-    (r'^redirect2', 'redirect2'),
-
     (r'^dashboard/?$', 'dashboard'),
     #(r'^dashboard/apikey/?$', 'get_api_key'),  # made redundant by inclusion of api key in dashboard profile
     (r'^dashboard/submissions/?$', 'dashboard_submissions'),

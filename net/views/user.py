@@ -27,12 +27,6 @@ class ProfileForm(forms.ModelForm):
         model = UserProfile
         exclude = ('apikey')
 
-def redirect2(req):
-    return HttpResponse('This is Redirect 2')
-
-def redirect1(req):
-    return redirect(redirect2)
-
 def dashboard(request):
     return render_to_response("dashboard/base.html",
         {
@@ -45,11 +39,7 @@ def save_profile(request):
     if request.method == 'POST':
         profile.display_name = request.POST['display_name']
         profile.save()
-    #return redirect('astrometry.net.views.user.dashboard_profile')
-    # HACK
-    return render_to_response('redirect.html', 
-                {'url': reverse('astrometry.net.views.user.dashboard_profile')},
-                context_instance = RequestContext(request))
+    return redirect('astrometry.net.views.user.dashboard_profile')
 
 @login_required
 def dashboard_profile(request):

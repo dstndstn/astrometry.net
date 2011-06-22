@@ -81,12 +81,7 @@ def upload_file(request):
                     if url.startswith('http://http://') or url.startswith('http://ftp://'):
                         url = url[7:]
                 sub = handle_uploaded_url(request, url)
-            #return redirect(status, subid=sub.id)
-            # HACK
-            return render_to_response('redirect.html', 
-                           {'url': reverse(status, args=[sub.id])},
-                           context_instance = RequestContext(request))
-            
+            return redirect(status, subid=sub.id)
     else:
         form = UploadFileForm()
     return render_to_response('submission/upload.html', {'form': form, 'user': request.user },
