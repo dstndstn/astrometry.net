@@ -324,8 +324,8 @@ class Submission(models.Model):
     scaleunits_default = 'degwidth'
 
     SCALETYPE_CHOICES = (
-        ('ul', 'lower and upper bounds'),
-        ('ev', 'estimate and error bound'),
+        ('ul', 'bounds'),
+        ('ev', 'estimate +/- error'),
     )
 
     PARITY_CHOICES = (
@@ -339,8 +339,8 @@ class Submission(models.Model):
     disk_file = models.ForeignKey(DiskFile, related_name='submissions', null=True)
     url = models.URLField(blank=True, null=True)
     parity = models.PositiveSmallIntegerField(choices=PARITY_CHOICES, default=2)
-    scale_units = models.CharField(max_length=20, choices=SCALEUNITS_CHOICES, default='ul')
-    scale_type = models.CharField(max_length=2, choices=SCALETYPE_CHOICES, default='degwidth')
+    scale_units = models.CharField(max_length=20, choices=SCALEUNITS_CHOICES, default='degwidth')
+    scale_type = models.CharField(max_length=2, choices=SCALETYPE_CHOICES, default='ul')
     scale_lower = models.FloatField(default=0.1, blank=True, null=True)
     scale_upper = models.FloatField(default=180, blank=True, null=True)
     scale_est   = models.FloatField(blank=True, null=True)

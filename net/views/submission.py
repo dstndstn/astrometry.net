@@ -33,10 +33,15 @@ def index(req, user_id):
     return render_to_response('submission/by_user.html', context,
         context_instance = RequestContext(req))
 
+class HorizontalRenderer(forms.RadioSelect.renderer):
+    def render(self):
+        return mark_safe(u'\n'.join([u'%s' % w for w in self]))
+
+class NoBulletsRenderer(forms.RadioSelect.renderer):
+    def render(self):
+        return mark_safe(u'<br />\n'.join([u'%s' % w for w in self]))
+
 class SubmissionForm(forms.ModelForm):
-    class HorizontalRenderer(forms.RadioSelect.renderer):
-        def render(self):
-            return mark_safe(u'\n'.join([u'%s' % w for w in self]))
 
     file  = forms.FileField(required=False,
                             widget=forms.FileInput(attrs={'size':'80'}))
@@ -50,43 +55,17 @@ class SubmissionForm(forms.ModelForm):
         fields = ('parity','scale_units','scale_type','scale_lower',
                   'scale_upper','scale_est','scale_err','positional_error',
                   'center_ra','center_dec','radius')
-
-    def clean(self):
-        upload_type = self.cleaned_data.get('upload_type','')
-        if upload_type == 'file':
-            if not self.cleaned_data.get('file'):
-                raise forms.ValidationError("You must select a file to upload.") 
-        elif upload_type == 'url':
-            url = self.cleaned_data.get('url','')
-            if not (url.startswith('http://') or url.startswith('ftp://')):
-                url = 'http://' + url
-            if url.startswith('http://http://') or url.startswith('http://ftp://'):
-                url = url[7:]
-            if len(url) == 0:
-                raise forms.ValidationError("You must enter a url to upload.")
-            urlvalidator = URLValidator()
-            try:
-                urlvalidator(url)
-            except forms.ValidationError:
-                raise forms.ValidationError("You must enter a valid url.")
-            self.cleaned_data['url'] = url
-
-        return self.cleaned_data
-
-
-class UploadFileForm(forms.Form):
-    class HorizontalRenderer(forms.RadioSelect.renderer):
-        def render(self):
-            return mark_safe(u'\n'.join([u'%s' % w for w in self]))
-
-
-    file  = forms.FileField(required=False,
-                            widget=forms.FileInput(attrs={'size':'80'}),)
-    url = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),
-                          initial='http://', required=False)
-    upload_type = forms.ChoiceField(widget=forms.RadioSelect(renderer=HorizontalRenderer),
-                                    choices=(('file','file'),('url','url')),
-                                    initial='file')
+        widgets = {'scale_type': forms.RadioSelect(renderer=HorizontalRenderer),
+                   'scale_lower': forms.TextInput(attrs={'size':'5'}),
+                   'scale_upper': forms.TextInput(attrs={'size':'5'}),
+                   'scale_est': forms.TextInput(attrs={'size':'5'}),
+                   'scale_err': forms.TextInput(attrs={'size':'5'}),
+                   'positional_error': forms.TextInput(attrs={'size':'5'}),
+                   'center_ra': forms.TextInput(attrs={'size':'5'}),
+                   'center_dec': forms.TextInput(attrs={'size':'5'}),
+                   'radius': forms.TextInput(attrs={'size':'5'}),
+                   'parity': forms.RadioSelect(renderer=NoBulletsRenderer),
+                  }
 
     def clean(self):
         upload_type = self.cleaned_data.get('upload_type','')
@@ -125,7 +104,6 @@ def upload_file(request):
             
             sub.save()
             logmsg('Made Submission' + str(sub))
-            return HttpResponse(sub.positional_error)
             return redirect(status, subid=sub.id)
     else:
         form = SubmissionForm()
@@ -205,36 +183,3 @@ def handle_upload(file=None,url=None):
         df.save()
         
     return df
-    
-def handle_uploaded_url(req, url):
-    file_hash = DiskFile.get_hash()
-    temp_file_path = tempfile.mktemp()
-    uploaded_file = open(temp_file_path, 'wb+')
-
-    f = urllib2.urlopen(url)
-    CHUNK_SIZE = 4096
-    while True:
-        chunk = f.read(CHUNK_SIZE)
-        if not chunk:
-            break
-        uploaded_file.write(chunk)
-        file_hash.update(chunk)
-    uploaded_file.close()
-
-    # get or create DiskFile object
-    df,created = DiskFile.objects.get_or_create(file_hash=file_hash.hexdigest(),
-                                                defaults={'size':0, 'file_type':''})
-
-    # if the file doesn't already exist, set it's size/type and
-    # move file into data directory
-    if created:
-        DiskFile.make_dirs(file_hash.hexdigest())
-        shutil.move(temp_file_path, DiskFile.get_file_path(file_hash.hexdigest()))
-        df.set_size_and_file_type()
-        df.save()
-        
-    submittor = req.user if req.user.is_authenticated() else None
-    sub = Submission(user=submittor, disk_file=df, url=url, scale_type='ul', scale_units='degwidth')
-    sub.save()
-    logmsg('Made Submission' + str(sub))
-    return sub

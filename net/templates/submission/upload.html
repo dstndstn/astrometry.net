@@ -1,5 +1,18 @@
 {% extends "base.html" %}
 
+{% block inline_css %}
+{{block.super}}
+<style type="text/css">
+#upload_table       {border: 0px; width: 100%;}
+#upload_table tr    {vertical-align: top;}
+#upload_table td    {vertical-align: top; padding: 20px 5px 20px 5px; border-top: #ccc 1px solid;}
+.rightcolumn        {text-align: left; width: 400px}
+.setting_title      {font-weight: bold}
+.setting_description {font-size: 75% }
+</style>
+{% endblock %}
+
+
 {% block javascript %}
 {{ block.super }}
 <script type="text/javascript">
@@ -7,11 +20,20 @@ function changeUploadType(type) {
     $('#file_block').toggle(type == 'file');
     $('#url_block').toggle(type == 'url');
 }
+function changeScaleType(type) {
+    $('#ul_block').toggle(type == 'ul');
+    $('#ev_block').toggle(type == 'ev');
+}
 $(document).ready(function() {
     $('input[name=upload_type]:radio').click(function() {
         changeUploadType($(this).val());
     });
     changeUploadType($('input[name=upload_type]:radio:checked').val())
+
+    $('input[name=scale_type]:radio').click(function() {
+        changeScaleType($(this).val());
+    });
+    changeScaleType($('input[name=scale_type]:radio:checked').val())
 });
 </script>
 {% endblock %}
@@ -28,20 +50,59 @@ Upload
 {{ form.upload_type }}
 <div id="file_block">{{ form.file }}</div>
 <div id="url_block">{{ form.url }}</div>
-<div id="advanced_options">
-    <h3>Advanced Options</h3>
-    Parity: {{ form.parity }}<br />
-    Scale Units: {{ form.scale_units }}<br />
-    Scale Type: {{ form.scale_type }}<br />
-    Lower Bound: {{ form.scale_lower }}<br />
-    Upper Bound: {{ form.scale_upper }}<br />
-    Estimate: {{ form.scale_est }}<br />
-    % Error: {{ form.scale_err }}<br />
-    Star Positional Error: {{ form.positional_error }}<br />
-    Center Ra: {{ form.center_ra }}<br />
-    Center Dec: {{ form.center_dec }}<br />
-    Radius: {{ form.radius }}<br />
-</div>
+
+<h4><a href="#" onclick="$('.advanced_settings').toggle();return false;">Advanced Settings</a></h4>
+<table id="upload_table" cellspacing="0">
+<tr class="advanced_settings"> 
+    <td class="rightcolumn">
+        <span class="setting_title">Scale:</span><br>
+        <span class="setting_description">If you provide an estimate of the size of your field, our search will be much faster. Most digital-camera images are at least 10 degrees wide; most professional-grade telescopes are narrower than 2 degrees.</span> 
+    </td> 
+    <td>
+        Units: {{ form.scale_units }}<br /><br />
+        {{ form.scale_type }}<br /><br />
+        <div id="ul_block">
+            Lower bound:<br />{{ form.scale_lower }}<br /><br />
+            Upper bound:<br />{{ form.scale_upper }}<br />
+        </div>
+        <div id="ev_block">
+            Estimate:<br />{{ form.scale_est }}<br /><br />
+            Error:<br />{{ form.scale_err }}%
+        </div>
+    </td>
+</tr> 
+<tr class="advanced_settings"> 
+    <td class="rightcolumn">
+        <span class="setting_title">Parity:</span><br>
+        <span class="setting_description">Flipping an image reverses its "parity". If you point a digital camera at the sky and submit the JPEG, it probably has negative parity. If you have a FITS image, it probably has positive parity. Selecting the right parity will make the solving process run faster, but if in doubt just try both.
+        </span> 
+    </td> 
+    <td>
+        {{ form.parity }}
+    </td>
+</tr> 
+<tr class="advanced_settings">  
+    <td class="rightcolumn">
+        <span class="setting_title">Star Positional Error:</span><br>
+        <span class="setting_description">When we find a matching "landmark", we check to see how many of the stars in your field match up with stars we know about. To do this, we need to know how much a star in your field could have moved from where it should be.
+        </span> 
+    </td> 
+    <td>
+        {{ form.positional_error }} pixels
+    </td>
+</tr> 
+<tr class="advanced_settings"> 
+    <td class="rightcolumn">
+        <span class="setting_title">Limits:</span><br>
+        <span class="setting_description">In order to narrow down our search, you can supply a field center along with a radius. We will only search in indexes which fall within this area.</span> 
+    </td> 
+    <td>
+        RA:<br />{{ form.center_ra }} degrees<br /><br />
+        Dec:<br />{{ form.center_dec }} degrees<br /><br />
+        Radius:<br />{{ form.radius }} degrees<br />
+    </td>
+</tr> 
+</table>
 <br />
 <input type="submit" value="Submit" />
 </form>
