@@ -339,12 +339,17 @@ class Submission(models.Model):
     disk_file = models.ForeignKey(DiskFile, related_name='submissions', null=True)
     url = models.URLField(blank=True, null=True)
     parity = models.PositiveSmallIntegerField(choices=PARITY_CHOICES, default=2)
-    scale_units = models.CharField(max_length=20, choices=SCALEUNITS_CHOICES)
-    scale_type = models.CharField(max_length=2, choices=SCALETYPE_CHOICES)
+    scale_units = models.CharField(max_length=20, choices=SCALEUNITS_CHOICES, default='ul')
+    scale_type = models.CharField(max_length=2, choices=SCALETYPE_CHOICES, default='degwidth')
     scale_lower = models.FloatField(default=0.1, blank=True, null=True)
     scale_upper = models.FloatField(default=180, blank=True, null=True)
     scale_est   = models.FloatField(blank=True, null=True)
     scale_err   = models.FloatField(blank=True, null=True)
+    
+    positional_error = models.FloatField(blank=True, null=True)
+    center_ra = models.FloatField(blank=True, null=True)
+    center_dec = models.FloatField(blank=True, null=True)
+    radius = models.FloatField(blank=True, null=True)
 
     original_filename = models.CharField(max_length=256)
 

@@ -24,9 +24,24 @@ Upload
 <form name="upload_form" action="/upload/" method="post" enctype="multipart/form-data">
 {% csrf_token %}
 {{ form.non_field_errors }}
+{{ form.errors }}
 {{ form.upload_type }}
 <div id="file_block">{{ form.file }}</div>
 <div id="url_block">{{ form.url }}</div>
+<div id="advanced_options">
+    <h3>Advanced Options</h3>
+    Parity: {{ form.parity }}<br />
+    Scale Units: {{ form.scale_units }}<br />
+    Scale Type: {{ form.scale_type }}<br />
+    Lower Bound: {{ form.scale_lower }}<br />
+    Upper Bound: {{ form.scale_upper }}<br />
+    Estimate: {{ form.scale_est }}<br />
+    % Error: {{ form.scale_err }}<br />
+    Star Positional Error: {{ form.positional_error }}<br />
+    Center Ra: {{ form.center_ra }}<br />
+    Center Dec: {{ form.center_dec }}<br />
+    Radius: {{ form.radius }}<br />
+</div>
 <br />
 <input type="submit" value="Submit" />
 </form>

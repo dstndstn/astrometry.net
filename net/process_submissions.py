@@ -140,6 +140,10 @@ def dojob(userimage):
         '--scale-units': sub.scale_units,
         '--wcs': wcsfile,
         '--rdls': 'rdls.fits',
+        '--pixel-error': sub.positional_error,
+        '--ra': sub.center_ra,
+        '--dec': sub.center_dec,
+        '--radius': sub.radius
         # Other things we might want include...
         #'--pixel-error':,
         # --use-sextractor
@@ -162,7 +166,11 @@ def dojob(userimage):
         axyargs['--parity'] = 'neg'
 
     cmd = 'augment-xylist '
-    cmd += ' '.join(k + ((v and (' ' + str(v))) or '') for (k,v) in axyargs.items())
+    for (k,v) in axyargs.items():
+        if v:
+            cmd += k + ' ' + str(v) + ' '
+
+    #cmd += ' '.join(k + ((v and (' ' + str(v))) or '') for (k,v) in axyargs.items())
     logmsg('running: ' + cmd)
     (rtn, out, err) = run_command(cmd)
     if rtn:

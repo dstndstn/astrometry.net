@@ -8,8 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 
 # astrometry.net imports
-from astrometry.net.views.submission import handle_uploaded_file
-from astrometry.net.views.submission import handle_uploaded_url
+from astrometry.net.views.submission import handle_upload
 from api_util import *
 from userprofile import *
 from log import *
@@ -104,7 +103,11 @@ def api_upload(request):
     logmsg('request.FILES has keys:', request.FILES.keys())
     #logmsg('api_upload: got request: ' + str(request.FILES['file'].size))
     logmsg('received files:')
-    sub = handle_uploaded_file(request, request.FILES['file'])
+    
+    df = handle_upload(file=request.FILES['file'])
+    submittor = request.user if request.user.is_authenticated() else None
+    sub = Submission(user=submittor, disk_file=df, scale_type='ul', scale_units='degwidth')
+    sub.save()
 
     return HttpResponseJson({'status': 'success',
                              'subid': sub.id,
@@ -117,7 +120,11 @@ def url_upload(req):
     logmsg('request:' + str(req))
     url = req.json.get('url')
     logmsg('url: %s' % url)
-    sub = handle_uploaded_url(req, url)
+
+    df = handle_upload(url=url)
+    submittor = request.user if request.user.is_authenticated() else None
+    sub = Submission(user=submittor, disk_file=df, url=url, scale_type='ul', scale_units='degwidth')
+    sub.save()
 
     return HttpResponseJson({'status': 'success',
                              'subid': sub.id,
