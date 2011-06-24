@@ -8,6 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
 
 # astrometry.net imports
+from astrometry.net.models import *
 from astrometry.net.views.submission import handle_upload
 from api_util import *
 from userprofile import *
@@ -122,7 +123,7 @@ def url_upload(req):
     logmsg('url: %s' % url)
 
     df = handle_upload(url=url)
-    submittor = request.user if request.user.is_authenticated() else None
+    submittor = req.user if req.user.is_authenticated() else None
     sub = Submission(user=submittor, disk_file=df, url=url, scale_type='ul', scale_units='degwidth')
     sub.save()
 

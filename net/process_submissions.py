@@ -44,6 +44,7 @@ from astrometry.net.models import *
 from log import *
 
 from django.utils.log import dictConfig
+from django.db.models import Count
 dictConfig(settings.LOGGING)
 
 
@@ -114,10 +115,18 @@ def run_pnmfile(fn):
     return (w, h, pnmtype, maxval)
 
 
-def dojob(userimage):
-    job = Job(user_image=userimage)
-    job.set_start_time()
-    job.save()
+def makejobs(userimages, job_queue):
+    for userimage in userimages:
+        job = Job(user_image=userimage)
+        job.set_start_time()
+        job.save()
+        job_queue.put({
+            'job':job,
+            'userimage':userimage
+        })
+
+
+def dojob(job,userimage):
     dirnm = job.make_dir()
     os.chdir(dirnm)
     print 'Creating and entering directory', dirnm
@@ -231,10 +240,14 @@ def dojob(userimage):
     job.save()
 
 
+def queue_subs(newsubs, sub_queue):
+    for sub in newsubs:
+        print 'Processing submission:', sub
+        sub.set_processing_started()
+        sub.save()
+        sub_queue.put(sub)
+        
 def dosub(sub):
-    print 'Processing submission:', sub
-    sub.set_processing_started()
-    sub.save()
     origname = None
     if sub.disk_file is None:
         print 'Retrieving URL', sub.url
@@ -331,11 +344,19 @@ def dosub(sub):
 
 
 def main():
-    nthreads = 1
+    sub_db_lock = multiprocessing.Lock()
+    job_db_lock = multiprocessing.Lock()
+    dosub_queue = multiprocessing.Queue()
+    job_queue = multiprocessing.Queue()
+    dojob_nthreads = 3
+    dosub_nthreads = 2
 
-    pool = None
-    if nthreads > 1:
-        pool = multiprocessing.Pool(nthreads)
+    dojob_pool = None
+    dosub_pool = None
+    if dojob_nthreads > 1:
+        dojob_pool = multiprocessing.Pool(processes=dojob_nthreads)
+    if dosub_nthreads > 1:
+        dosub_pool = multiprocessing.Pool(processes=dosub_nthreads)
 
     # multiprocessing.Lock for django db?
 
@@ -360,36 +381,43 @@ def main():
     while True:
         print 'Checking for new Submissions'
         newsubs = Submission.objects.filter(processing_started__isnull=True)
-        #newsubs = Submission.objects.all()
         print 'Found', newsubs.count(), 'unstarted submissions'
 
+
         print 'Checking for UserImages without Jobs'
-        # Can't figure out how to do this... tried:
-        #newuis = UserImage.objects.filter(jobs__count=0)
-        #newuis = UserImage.objects.filter(jobs__exists=False)
-        #newuis = UserImage.objects.filter(jobs__len=False)
-        newuis = UserImage.objects.all()
-        newuis = [ui for ui in newuis if not ui.jobs.exists()]
-        # --> SELECT (1) AS "a" FROM "net_job" WHERE "net_job"."user_image_id" = 1  LIMIT 1; args=(1,)
+        all_user_images = UserImage.objects.annotate(job_count=Count('jobs'))
+        newuis = all_user_images.filter(job_count=0)
         print 'Found', len(newuis), 'userimages without Jobs'
 
-        if len(newsubs) + len(newuis) == 0:
-            time.sleep(3)
-            continue
+        time.sleep(2)
         # FIXME -- order by user, etc
-        for sub in newsubs:
-            if pool:
-                pool.apply_async(dosub, (sub,))
-            else:
-                dosub(sub)
+        queue_subs(newsubs,dosub_queue)
 
-        for ui in newuis:
-            if pool:
-                pool.apply_async(dojob, (ui,))
-            else:
-                dojob(ui)
-            
-    
+        while not dosub_queue.empty():
+            try:
+                sub = dosub_queue.get()
+                if dosub_pool:
+                    dosub_pool.apply_async(dosub, (sub,))
+                else:
+                    dosub(sub)
+            except multiprocessing.Queue.Empty as e:
+                pass
+
+        makejobs(newuis, job_queue)
+
+        while not job_queue.empty():
+            try:
+                job_ui = job_queue.get()
+                if dojob_pool:
+                    dojob_pool.apply_async(dojob, (
+                        job_ui['job'],
+                        job_ui['userimage'],
+                        )
+                    )
+                else:
+                    dojob(job)
+            except multiprocessing.Queue.Empty as e:
+                pass
 
 if __name__ == '__main__':
     main()
