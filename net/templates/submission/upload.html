@@ -8,7 +8,8 @@
 #upload_table td    {vertical-align: top; padding: 20px 5px 20px 5px; border-top: #ccc 1px solid;}
 .rightcolumn        {text-align: left; width: 400px}
 .setting_title      {font-weight: bold}
-.setting_description {font-size: 75% }
+.setting_description {font-size: 75%}
+#scale_custom_block  {padding-left: 50px}
 </style>
 {% endblock %}
 
@@ -24,16 +25,24 @@ function changeScaleType(type) {
     $('#ul_block').toggle(type == 'ul');
     $('#ev_block').toggle(type == 'ev');
 }
+function changeScalePreset(type) {
+    $('#scale_custom_block').toggle(type == '5');
+}
 $(document).ready(function() {
     $('input[name=upload_type]:radio').click(function() {
         changeUploadType($(this).val());
     });
-    changeUploadType($('input[name=upload_type]:radio:checked').val())
+    changeUploadType($('input[name=upload_type]:radio:checked').val());
 
     $('input[name=scale_type]:radio').click(function() {
         changeScaleType($(this).val());
     });
-    changeScaleType($('input[name=scale_type]:radio:checked').val())
+    changeScaleType($('input[name=scale_type]:radio:checked').val());
+
+    $('input[name=scale_preset]:radio').click(function() {
+        changeScalePreset($(this).val());
+    });
+    changeScalePreset($('input[name=scale_preset]:radio:checked').val());
 });
 </script>
 {% endblock %}
@@ -45,12 +54,13 @@ Upload
 {% block content %}
 <form name="upload_form" action="/upload/" method="post" enctype="multipart/form-data">
 {% csrf_token %}
-{{ form.non_field_errors }}
-{{ form.errors }}
+{% if form.errors %}
+Sorry, your submission could not be completed. Please fix all of the <span class="errorlist">highlighted</span> errors:<br /><br />
+{% endif %}
 {{ form.upload_type }}
 <div id="file_block">{{ form.file }}</div>
 <div id="url_block">{{ form.url }}</div>
-
+{{ form.non_field_errors }}
 <h4><a href="#" onclick="$('.advanced_settings').toggle();return false;">Advanced Settings</a></h4>
 <table id="upload_table" cellspacing="0">
 <tr class="advanced_settings"> 
@@ -59,15 +69,19 @@ Upload
         <span class="setting_description">If you provide an estimate of the size of your field, our search will be much faster. Most digital-camera images are at least 10 degrees wide; most professional-grade telescopes are narrower than 2 degrees.</span> 
     </td> 
     <td>
-        Units: {{ form.scale_units }}<br /><br />
-        {{ form.scale_type }}<br /><br />
-        <div id="ul_block">
-            Lower bound:<br />{{ form.scale_lower }}<br /><br />
-            Upper bound:<br />{{ form.scale_upper }}<br />
-        </div>
-        <div id="ev_block">
-            Estimate:<br />{{ form.scale_est }}<br /><br />
-            Error:<br />{{ form.scale_err }}%
+        {{ form.scale_preset }}<br />
+        <br />
+        <div id="scale_custom_block">
+            Units: {{ form.scale_units }}<br /><br />
+            {{ form.scale_type }}<br /><br />
+            <div id="ul_block">
+                Lower bound:<br />{{ form.scale_lower.errors }}{{ form.scale_lower }}<br /><br />
+                Upper bound:<br />{{ form.scale_upper.errors }}{{ form.scale_upper }}<br />
+            </div>
+            <div id="ev_block">
+                Estimate:<br />{{ form.scale_est.errors }}{{ form.scale_est }}<br /><br />
+                Error:<br />{{ form.scale_err.errors }}{{ form.scale_err }}%
+            </div>
         </div>
     </td>
 </tr> 
@@ -78,7 +92,7 @@ Upload
         </span> 
     </td> 
     <td>
-        {{ form.parity }}
+        {{ form.parity.errors }}{{ form.parity }}
     </td>
 </tr> 
 <tr class="advanced_settings">  
@@ -88,7 +102,7 @@ Upload
         </span> 
     </td> 
     <td>
-        {{ form.positional_error }} pixels
+        {{ form.positional_error.errors }}{{ form.positional_error }} pixels
     </td>
 </tr> 
 <tr class="advanced_settings"> 
@@ -97,9 +111,18 @@ Upload
         <span class="setting_description">In order to narrow down our search, you can supply a field center along with a radius. We will only search in indexes which fall within this area.</span> 
     </td> 
     <td>
-        RA:<br />{{ form.center_ra }} degrees<br /><br />
-        Dec:<br />{{ form.center_dec }} degrees<br /><br />
-        Radius:<br />{{ form.radius }} degrees<br />
+        RA:<br />{{ form.center_ra.errors }}{{ form.center_ra }} degrees<br /><br />
+        Dec:<br />{{ form.center_dec.errors }}{{ form.center_dec }} degrees<br /><br />
+        Radius:<br />{{ form.radius.errors }}{{ form.radius }} degrees<br />
+    </td>
+</tr> 
+<tr class="advanced_settings"> 
+    <td class="rightcolumn">
+        <span class="setting_title">Downsample:</span><br>
+        <span class="setting_description">We can downsample your image by a given factor before performing the source extraction.</span> 
+    </td> 
+    <td>
+        {{ form.downsample_factor.errors }}{{ form.downsample_factor }} (factor)<br />
     </td>
 </tr> 
 </table>

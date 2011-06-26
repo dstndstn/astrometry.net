@@ -329,9 +329,9 @@ class Submission(models.Model):
     )
 
     PARITY_CHOICES = (
-        (2, 'Try both simultaneously'),
-        (0, 'Positive'),
-        (1, 'Negative'),
+        (2, 'try both simultaneously'),
+        (0, 'positive'),
+        (1, 'negative'),
     )
 
     ###
@@ -350,6 +350,7 @@ class Submission(models.Model):
     center_ra = models.FloatField(blank=True, null=True)
     center_dec = models.FloatField(blank=True, null=True)
     radius = models.FloatField(blank=True, null=True)
+    downsample_factor = models.PositiveIntegerField(blank=True, null=True)
 
     original_filename = models.CharField(max_length=256)
 

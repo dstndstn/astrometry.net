@@ -42,6 +42,10 @@ class NoBulletsRenderer(forms.RadioSelect.renderer):
         return mark_safe(u'<br />\n'.join([u'%s' % w for w in self]))
 
 class SubmissionForm(forms.ModelForm):
+    SCALE_PRESET_SETTINGS = {'1':(0.1,180),
+                             '2':(1,180),
+                             '3':(10,180),
+                             '4':(0.05,0.015)}
 
     file  = forms.FileField(required=False,
                             widget=forms.FileInput(attrs={'size':'80'}))
@@ -50,11 +54,18 @@ class SubmissionForm(forms.ModelForm):
     upload_type = forms.ChoiceField(widget=forms.RadioSelect(renderer=HorizontalRenderer),
                                     choices=(('file','file'),('url','url')),
                                     initial='file')
+    scale_preset = forms.ChoiceField(widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+                                    choices=(('1','default (0.1 to 180 degrees)'),
+                                             ('2','wide field (1 to 180 degrees)'),
+                                             ('3','very wide field (10 to 180 degrees)'),
+                                             ('4','tiny (3 to 9 arcmin)'),
+                                             ('5','custom')),
+                                    initial='1')
     class Meta:
         model = Submission
         fields = ('parity','scale_units','scale_type','scale_lower',
                   'scale_upper','scale_est','scale_err','positional_error',
-                  'center_ra','center_dec','radius')
+                  'center_ra','center_dec','radius','downsample_factor')
         widgets = {'scale_type': forms.RadioSelect(renderer=HorizontalRenderer),
                    'scale_lower': forms.TextInput(attrs={'size':'5'}),
                    'scale_upper': forms.TextInput(attrs={'size':'5'}),
@@ -64,10 +75,49 @@ class SubmissionForm(forms.ModelForm):
                    'center_ra': forms.TextInput(attrs={'size':'5'}),
                    'center_dec': forms.TextInput(attrs={'size':'5'}),
                    'radius': forms.TextInput(attrs={'size':'5'}),
+                   'downsample_factor': forms.TextInput(attrs={'size':'5'}),
                    'parity': forms.RadioSelect(renderer=NoBulletsRenderer),
                   }
 
     def clean(self):
+        number_message = "Enter a number."
+
+        scale_preset = self.cleaned_data.get('scale_preset','')
+        if scale_preset == '5':
+            # custom preset error handling
+            scale_type = self.cleaned_data.get('scale_type','')
+            if scale_type == 'ul':
+                scale_lower = self.cleaned_data.get('scale_lower')
+                scale_upper = self.cleaned_data.get('scale_upper')
+                if not scale_lower:
+                    self._errors['scale_lower'] = self.error_class([number_message])
+                if not scale_err:
+                    self._errors['scale_upper'] = self.error_class([number_message])
+            elif scale_type == 'ev':
+                scale_est = self.cleaned_data.get('scale_est')
+                scale_err = self.cleaned_data.get('scale_err')
+                if not scale_est:
+                    self._errors['scale_est'] = self.error_class([number_message])
+                if not scale_err:
+                    self._errors['scale_err'] = self.error_class([number_message])
+        else:
+            # if scale isn't custom, use preset settings
+            self.cleaned_data['scale_type'] = 'ul'
+            self.cleaned_data['scale_units'] = 'degwidth'
+            self.cleaned_data['scale_lower'] = self.SCALE_PRESET_SETTINGS[scale_preset][0]
+            self.cleaned_data['scale_upper'] = self.SCALE_PRESET_SETTINGS[scale_preset][1]
+
+        center_ra = self.cleaned_data.get('center_ra')
+        center_dec = self.cleaned_data.get('center_dec')
+        radius = self.cleaned_data.get('radius')
+        if center_ra or center_dec or radius:
+            if not center_ra:
+                self._errors['center_ra'] = self.error_class([number_message])
+            if not center_dec:
+                self._errors['center_dec'] = self.error_class([number_message])
+            if not radius:
+                self._errors['radius'] = self.error_class([number_message])
+
         upload_type = self.cleaned_data.get('upload_type','')
         if upload_type == 'file':
             if not self.cleaned_data.get('file'):
@@ -86,6 +136,8 @@ class SubmissionForm(forms.ModelForm):
             except forms.ValidationError:
                 raise forms.ValidationError("You must enter a valid url.")
             self.cleaned_data['url'] = url
+        
+
 
         return self.cleaned_data
 

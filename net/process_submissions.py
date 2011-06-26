@@ -152,7 +152,9 @@ def dojob(job,userimage):
         '--pixel-error': sub.positional_error,
         '--ra': sub.center_ra,
         '--dec': sub.center_dec,
-        '--radius': sub.radius
+        '--radius': sub.radius,
+        '--downsample': sub.downsample_factor
+
         # Other things we might want include...
         #'--pixel-error':,
         # --use-sextractor
@@ -393,6 +395,7 @@ def main():
         # FIXME -- order by user, etc
         queue_subs(newsubs,dosub_queue)
 
+        print "________________________TEST"
         while not dosub_queue.empty():
             try:
                 sub = dosub_queue.get()
@@ -403,9 +406,11 @@ def main():
             except multiprocessing.Queue.Empty as e:
                 pass
 
+        print "________________________TEST2"
         makejobs(newuis, job_queue)
 
         while not job_queue.empty():
+            print "_______________________TEST3"
             try:
                 job_ui = job_queue.get()
                 if dojob_pool:
