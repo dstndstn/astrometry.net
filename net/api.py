@@ -167,6 +167,23 @@ def api_galex_image_for_wcs(req):
     return HttpResponseJson({'status': 'success',
                              'plot': base64.b64encode(open(plotfn).read()),
                              })
+
+@csrf_exempt
+@requires_json_args
+@requires_json_session
+def api_submission_images(req):
+    logmsg('request:' + str(req))
+    subid = req.json.get('subid')
+    try:
+        sub = Submission.objects.get(pk=subid)
+    except Submission.DoesNotExist:
+        return HttpResponseErrorJson("submission does not exist")
+    image_ids = []
+    for image in sub.user_images.all():
+        image_ids += [image.id]
+    return HttpResponseJson({'status': 'success',
+                             'image_ids': image_ids})
+
 @csrf_exempt
 @requires_json_args
 def api_login(request):

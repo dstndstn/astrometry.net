@@ -37,7 +37,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 import settings
 settings.LOGGING['loggers'][''] = {
     'handlers': ['console'],
-    'level': 'DEBUG',
+    'level': 'INFO',
     'propagate': True,
 }
 from astrometry.net.models import *
@@ -128,8 +128,8 @@ def makejobs(userimages, job_queue):
 
 def dojob(job,userimage):
     dirnm = job.make_dir()
-    os.chdir(dirnm)
-    print 'Creating and entering directory', dirnm
+    #os.chdir(dirnm) - not thread safe (working directory is global)!
+    print 'Creating directory', dirnm
     axyfn = 'job.axy'
     sub = userimage.submission
     df = userimage.image.disk_file
@@ -142,7 +142,7 @@ def dojob(job,userimage):
     # Note, this must match Job.get_wcs_file().
     wcsfile = 'wcs.fits'
     axyargs = {
-        '--out': axyfn,
+        '--out': os.path.join(dirnm, axyfn),
         '--image': df.get_path(),
         '--scale-low': slo,
         '--scale-high': shi,
@@ -191,13 +191,13 @@ def dojob(job,userimage):
 
     logmsg('created axy file ' + axyfn)
     # shell into compute server...
-    logfn = 'log'
+    logfn = os.path.join(dirnm, 'log')
     cmd = ('(echo %(jobid)s; '
-           ' tar cf - --ignore-failed-read %(axyfile)s) | '
+           ' tar cf - --ignore-failed-read -C %(dirnm)s %(axyfile)s) | '
            'ssh -x -T %(sshconfig)s 2>>%(logfile)s | '
-           'tar xf - --atime-preserve -m --exclude=%(axyfile)s '
+           'tar xf - --atime-preserve -m --exclude=%(axyfile)s -C %(dirnm)s '
            '>>%(logfile)s 2>&1' %
-           dict(jobid='job-%i' % (job.id), axyfile=axyfn,
+           dict(jobid='job-%i' % (job.id), axyfile=axyfn, dirnm=dirnm,
                 sshconfig=settings.ssh_solver_config,
                 logfile=logfn))
     print 'command:', cmd
@@ -395,7 +395,6 @@ def main():
         # FIXME -- order by user, etc
         queue_subs(newsubs,dosub_queue)
 
-        print "________________________TEST"
         while not dosub_queue.empty():
             try:
                 sub = dosub_queue.get()
@@ -406,11 +405,9 @@ def main():
             except multiprocessing.Queue.Empty as e:
                 pass
 
-        print "________________________TEST2"
         makejobs(newuis, job_queue)
 
         while not job_queue.empty():
-            print "_______________________TEST3"
             try:
                 job_ui = job_queue.get()
                 if dojob_pool:

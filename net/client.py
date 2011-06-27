@@ -145,6 +145,10 @@ class Client(object):
         except IOError:
             print 'File %s does not exist' % fn     
             raise
+    
+    def submission_images(self, subid):
+        result = self.send_request('submission_images', {'subid':subid})
+        return result.get('image_ids')
 
     def overlay_plot(self, service, outfn, wcsfn, wcsext=0):
         from astrometry.util import util as anutil
@@ -208,4 +212,6 @@ if __name__ == '__main__':
     if opt.galex_wcs:
         (wcsfn, outfn) = opt.galex_wcs
         c.galex_plot(outfn, wcsfn)
+
+    print c.submission_images(1)
 

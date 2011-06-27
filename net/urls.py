@@ -64,6 +64,7 @@ urlpatterns += patterns('astrometry.net.api',
                         (r'^api/url_upload/?', 'url_upload'),
                         (r'^api/sdss_image_for_wcs/?', 'api_sdss_image_for_wcs'),
                         (r'^api/galex_image_for_wcs/?', 'api_galex_image_for_wcs'),
+                        (r'^api/submission_images/?', 'api_submission_images')
                         #(r'^api/logout/?', 'logout'),
 )
 
