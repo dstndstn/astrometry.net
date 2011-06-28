@@ -41,6 +41,7 @@ settings.LOGGING['loggers'][''] = {
     'propagate': True,
 }
 from astrometry.net.models import *
+from astrometry.net.nearby import *
 from log import *
 
 from django.utils.log import dictConfig
@@ -347,8 +348,6 @@ def dosub(sub):
 
 
 def main():
-    sub_db_lock = multiprocessing.Lock()
-    job_db_lock = multiprocessing.Lock()
     dosub_queue = multiprocessing.Queue()
     job_queue = multiprocessing.Queue()
     dojob_nthreads = 3
@@ -418,7 +417,7 @@ def main():
                         )
                     )
                 else:
-                    dojob(job)
+                    dojob(job_ui['job'], job_ui['userimage'])
             except multiprocessing.Queue.Empty as e:
                 pass
 
