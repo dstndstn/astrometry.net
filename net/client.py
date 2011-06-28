@@ -20,7 +20,6 @@ class MalformedResponse(Exception):
 class RequestError(Exception):
     pass
 
-
 class Client(object):
 
     def __init__(self,
@@ -173,12 +172,11 @@ class Client(object):
         return self.overlay_plot('galex_image_for_wcs', outfn,
                                  wcsfn, wcsext)
 
-    
 if __name__ == '__main__':
     import optparse
     parser = optparse.OptionParser()
     parser.add_option('--server', dest='server',
-                      help='Set server base URL (eg, http://localhost:8000/api/)')
+                      help='Set server base URL (eg, http://nova.astrometry.net/api/)')
     parser.add_option('--apikey', '-k', dest='apikey',
                       help='API key for Astrometry.net web service; if not given will check AN_API_KEY environment variable')
     parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
@@ -214,4 +212,3 @@ if __name__ == '__main__':
         c.galex_plot(outfn, wcsfn)
 
     print c.submission_images(1)
-
