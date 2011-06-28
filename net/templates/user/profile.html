@@ -23,22 +23,23 @@
 
 {% block title %}
 {{block.super}} &gt; 
-{% include 'user/display_name.html' %}
+{% include 'user/display_name.html' with user=display_user%}
 {% endblock %}
 
 {% block content %}
 <div id="profile_metadata">
     <h2>Usage Stats</h2>
-    <p id="submission_count">{{user.submissions.all.count}} submissions</p>
-    <p id="image_count">{{user.user_images.all.count}} images</p>
-    <p id="comment_count">{{user.comments_left.all.count}} comments</p>
+    <p id="submission_count">{{display_user.submissions.all.count}} submissions</p>
+    <p id="image_count">{{display_user.user_images.all.count}} images</p>
+    <p id="comment_count">{{display_user.comments_left.all.count}} comments</p>
     <h2>Account Info</h2>
-    <p id="registered_on">registered on: <span class="timestamp">{{user.date_joined|date:"SHORT_DATE_FORMAT"}}</span></p>
-    <p id="last_signin">last signed in: <span class="timestamp">{{user.last_login|date:"SHORT_DATETIME_FORMAT"}}</span></p>
+    <p id="registered_on">registered on: <span class="timestamp">{{display_user.date_joined|date:"SHORT_DATE_FORMAT"}}</span></p>
+    <p id="last_signin">last signed in: <span class="timestamp">{{display_user.last_login|date:"SHORT_DATETIME_FORMAT"}}</span></p>
 </div>
 <div id="profile_data">
     <div id="profile_images">
         <h2>Recent Images</h2>
+        <a href="{% url astrometry.net.views.image.index_user user_id=display_user.id %}">View all</a>
         {% include 'user_image/image_set.html' with image_page=recent_image_page %}
     </div>
     <div id="profile_submissions">

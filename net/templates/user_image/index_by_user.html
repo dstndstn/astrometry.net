@@ -20,7 +20,11 @@
 <ul id="images_by_user">
 {% for user in users %}
     <li><h3>{% include 'user/display_name.html' with user=user %}</h3>
-        <p>{{user.user_images.all.count}} image{% if user.user_images.all.count != 1 %}s{% endif %}</p>
+        <p>
+            <a href="{% url astrometry.net.views.image.index_user user_id=user.id %}">
+                {{user.user_images.all.count}} image{{ user.user_images.all.count|pluralize }}
+            </a>
+        </p>
     </li>
 {% endfor %}
 </ul>

@@ -179,13 +179,11 @@ def sdss_image(req, calid=None, size='full'):
 # -elaborate javascripty interface
 
 def index(req, images=UserImage.objects.all().order_by('-submission__submitted_on')[:9], 
-            template_name='user_image/index_recent.html'):
+            template_name='user_image/index_recent.html', context={}):
 
     page_number = req.GET.get('page',1)
     page = get_page(images,9,page_number)
-    context = {
-        'image_page':page
-    }
+    context.update({'image_page':page})
     return render_to_response(template_name,   
         context,
         context_instance = RequestContext(req))
@@ -201,6 +199,12 @@ def index_all(req):
                  UserImage.objects.all().order_by('-submission__submitted_on'),
                  template_name='user_image/index_all.html')
 
+def index_user(req, user_id=None):
+    user = get_object_or_404(User, pk=user_id)
+    return index(req,
+                 user.user_images.all().order_by('-submission__submitted_on'),
+                 template_name='user_image/index_user.html',
+                 context={'display_user':user})
 
 def index_by_user(req):
     # make ordering case insensitive

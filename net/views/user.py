@@ -93,7 +93,7 @@ def public_profile(req, user_id=None):
     page = get_page(user.user_images.all().order_by('-submission__submitted_on')[:4],4,1)
 
     context = {
-        'user':user,
+        'display_user':user,
         'recent_image_page':page,
         'recent_submissions':user.submissions.all().order_by('-submitted_on')[:10],
     }
