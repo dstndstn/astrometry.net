@@ -8,3 +8,5 @@ LOGGING['loggers']['django.request']['level'] = 'WARN'
 SESSION_COOKIE_NAME = 'NovaAstrometrySession'
 
 ssh_solver_config = 'an-nova'
+sitename = 'nova'
+

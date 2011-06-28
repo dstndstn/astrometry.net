@@ -16,6 +16,8 @@ read -s jobid
 cd /tmp
 mkdir -p $jobid
 cd $jobid
+# Delete previous contents... carefully
+rm -f wcs.fits job.axy
 
 echo "In job dir $(pwd)" > backend.log
 tar xvf - >> backend.log

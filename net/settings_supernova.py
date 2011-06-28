@@ -7,4 +7,7 @@ LOGGING['loggers']['django.request']['level'] = 'WARN'
 
 SESSION_COOKIE_NAME = 'SupernovaAstrometrySession'
 
+# Used in process_submissions
 ssh_solver_config = 'an-supernova'
+sitename = 'supernova'
+

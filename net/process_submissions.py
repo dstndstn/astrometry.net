@@ -197,7 +197,8 @@ def dojob(job,userimage):
            'ssh -x -T %(sshconfig)s 2>>%(logfile)s | '
            'tar xf - --atime-preserve -m --exclude=%(axyfile)s -C %(dirnm)s '
            '>>%(logfile)s 2>&1' %
-           dict(jobid='job-%i' % (job.id), axyfile=axyfn, dirnm=dirnm,
+           dict(jobid='job-%s-%i' % (settings.sitename, job.id),
+                axyfile=axyfn, dirnm=dirnm,
                 sshconfig=settings.ssh_solver_config,
                 logfile=logfn))
     print 'command:', cmd

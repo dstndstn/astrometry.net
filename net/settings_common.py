@@ -14,6 +14,8 @@ AUTH_PROFILE_MODULE = 'net.UserProfile'
 
 # The 'host' name in ~/.ssh/config for running the compute server.
 ssh_solver_config = 'an-test'
+# the "site" part of the directory name to put files in on the compute server
+sitename = 'test'
 
 # FIXME
 BASEDIR = '/home/dstn/astrometry/src/'
