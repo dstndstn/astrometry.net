@@ -172,8 +172,7 @@ class Image(models.Model):
 class Tag(models.Model):
     # user = models.ForeignKey(User) # do we need to keep track of who tags what?
     text = models.CharField(max_length=4096, primary_key=True)
-    added_time = models.DateTimeField(auto_now=True) 
-
+    
     # Reverse mappings:
     #  user_images -> UserImage
     #  albums -> Album
@@ -230,9 +229,47 @@ class Calibration(models.Model):
         r,d,radius = self.get_center_radecradius()
         return '%.3f deg' % radius
 
+    def get_objs_in_field(self):
+        def run_convert_command(cmd, deleteonfail=None):
+            logmsg('Command: ' + cmd)
+            (rtn, stdout, stderr) = run_command(cmd)
+            if rtn:
+                errmsg = 'Command failed: ' + cmd + ': ' + stderr
+                logmsg(errmsg + '; rtn val %d' % rtn)
+                logmsg('out: ' + stdout);
+                logmsg('err: ' + stderr);
+                if deleteonfail:
+                    os.unlink(deleteonfail)
+                raise FileConversionError(errmsg)
+
+        def annotate_command(job):
+            hd = False
+            wcs = job.calibration.tweaked_tan
+            if wcs:
+                # one square degree
+                hd = (wcs.get_field_area() < 1.)
+            wcsfn = job.get_wcs_file()
+            cmd = 'plot-constellations -w %s -N -C -B -b 10 -j' % wcsfn
+            if hd:
+                cmd += ' -D -d %s' % settings.HENRY_DRAPER_CAT
+            return cmd
+        
+        objs = []
+        for job in self.jobs.all():
+            cmd = annotate_command(job)
+            cmd += '-L > %s' % job.get_obj_file()
+            run_convert_command(cmd)
+            objtxt = read_file(job.get_obj_file()).decode('utf_8')
+            job_objs = objtxt.strip()
+            if len(objs):
+                objs += job_objs.split('\n')
+
+        return objs
+
 
 class Job(models.Model):
-    calibration = models.ForeignKey('Calibration', null=True)
+    calibration = models.ForeignKey('Calibration', null=True,
+        related_name="jobs")
     
     STATUS_CHOICES = (
         ('S', 'Success'), 
@@ -269,11 +306,21 @@ class Job(models.Model):
     def get_wcs_file(self):
         return os.path.join(self.get_dir(), 'wcs.fits')
 
+    def get_obj_file(self):
+        return os.path.join(self.get_dir(), 'objsinfield')
+
     def make_dir(self):
         dirnm = self.get_dir()
         if not os.path.exists(dirnm):
             os.makedirs(dirnm)
         return dirnm
+
+
+class TaggedUserImage(models.Model):
+    user_image = models.ForeignKey('UserImage')
+    tag = models.ForeignKey('Tag')
+    tagger = models.ForeignKey(User)
+    added_time = models.DateTimeField(auto_now=True) 
 
 
 class UserImage(Commentable):
@@ -284,7 +331,10 @@ class UserImage(Commentable):
              ('pr', 'Private'))
 
     permission = models.CharField(max_length=2, choices=PERMISSION_CHOICES)
-    tags = models.ManyToManyField('Tag', related_name='user_images')
+
+    tags = models.ManyToManyField('Tag',related_name='user_images',
+        through='TaggedUserImage')
+
     description = models.CharField(max_length=1024)
     original_file_name = models.CharField(max_length=256)
     submission = models.ForeignKey('Submission', related_name='user_images')
@@ -296,6 +346,29 @@ class UserImage(Commentable):
     def save(self, *args, **kwargs):
         self.owner = self.user
         return super(UserImage, self).save(*args, **kwargs)
+
+
+    def add_machine_tags(self):
+        logmsg('adding machine tags for %s' % self)
+        for job in self.jobs.filter(calibration__isnull=False):
+            sky_objects = job.calibration.get_objs_in_field()
+            for sky_object in sky_objects:
+                machine_tag = None
+                try:
+                    machine_tag = Tag.objects.get(text=obj)
+                except models.Model.DoesNotExist:
+                    machine_tag = Tag.objects.create(text=obj)
+                
+                # associate this UserImage with the machine tag
+                print('adding machine tag: %s' % obj)
+                logmsg('adding machine tag: %s' % obj)
+                tagged_user_image = TaggedUserImage(
+                    user_image=self,
+                    tag=machine_tag,
+                    tagger=None,
+                )
+        self.save()
+                
 
     def get_best_job(self):
         jobs = self.jobs.all()

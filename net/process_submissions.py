@@ -41,7 +41,6 @@ settings.LOGGING['loggers'][''] = {
     'propagate': True,
 }
 from astrometry.net.models import *
-from astrometry.net.nearby import *
 from log import *
 
 from django.utils.log import dictConfig
@@ -235,8 +234,9 @@ def dojob(job,userimage):
         calib.save()
         logmsg("Created Calibration " + str(calib))
         job.calibration = calib
-        job.save()
         job.status = 'S'
+        job.save()
+        job.user_image.add_machine_tags()
         logmsg('Saved job %i' % job.id)
     else:
         job.status = 'F'
