@@ -33,8 +33,8 @@
     <p id="image_count">{{display_user.user_images.all.count}} images</p>
     <p id="comment_count">{{display_user.comments_left.all.count}} comments</p>
     <h2>Account Info</h2>
-    <p id="registered_on">registered on: <span class="timestamp">{{display_user.date_joined|date:"SHORT_DATE_FORMAT"}}</span></p>
-    <p id="last_signin">last signed in: <span class="timestamp">{{display_user.last_login|date:"SHORT_DATETIME_FORMAT"}}</span></p>
+    <p id="registered_on">registered on: <span class="timestamp">{{display_user.date_joined|date:"Y-m-d"}}</span></p>
+    <p id="last_signin">last signed in: <span class="timestamp">{{display_user.last_login|date:"Y-m-d H:i"}}</span></p>
 </div>
 <div id="profile_data">
     <div id="profile_images">

@@ -5,7 +5,7 @@
         {{comment.text}}
     </p>
     <p class="comment_footer">
-        <span class="timestamp">({{comment.created_at|timesince}} ago)</span>
+        <span class="timestamp">{{ comment.created_at|date:"Y-m-d H:i" }} ({{comment.created_at|timesince}} ago)</span>
         {% if comment.recipient.owner == request.user or comment.author == request.user %}
         <br /><a href="{% url astrometry.net.views.comment.delete comment_id=comment.id %}?next={{request.path}}">[delete]</a>
         {% endif %}
