@@ -1,5 +1,13 @@
+# Copyright 2011 David W. Hogg.
+# All rights reserved.
+
+# BUGS:
+# - Brittle code; must be run from directory client/examples; dies if APOD reformats urls or html.
+# - Runs client using os.system() instead of importing client and executing it; see if False block at end.
+
 import urllib as url
 import re as re
+import os as os
 
 def apod_baseurl():
     return "http://apod.nasa.gov/apod/"
@@ -19,7 +27,7 @@ def get_apod_image_url(aurl):
 if __name__ == '__main__':
     import optparse
     parser = optparse.OptionParser()
-    parser.add_option('--server', dest='server', default='http://nova.astrometry.net/api/',
+    parser.add_option('--server', dest='server', default='http://supernova.astrometry.net/api/',
                       help='Set server base URL (eg, http://nova.astrometry.net/api/)')
     parser.add_option('--apikey', '-k', dest='apikey',
                       help='API key for Astrometry.net web service; if not given will check AN_API_KEY environment variable')
@@ -40,6 +48,7 @@ if __name__ == '__main__':
                 if True:
                     cmd = "python ../client.py --server %s --apikey %s --urlupload \"%s\"" % (opt.server, opt.apikey, iurl)
                     print cmd
+                    os.system(cmd)
                 if False:
                     if iurl is None:
                         continue
