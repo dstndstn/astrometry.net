@@ -310,6 +310,13 @@ class Job(models.Model):
     def get_obj_file(self):
         return os.path.join(self.get_dir(), 'objsinfield')
 
+    def get_log_tail(self):
+        fn = os.path.join(self.get_dir(), 'log')
+        if not os.path.exists(fn):
+            return None
+        lines = open(fn).readlines()
+        return '\n'.join(lines[-20:])
+
     def make_dir(self):
         dirnm = self.get_dir()
         if not os.path.exists(dirnm):

@@ -25,6 +25,8 @@ Submission {{ sub.id }}
 <p>
 Job {{ job.id }}: {% include "job/status.html" with job=job %}
 </p>
+
+
 <p>
 {% if job.calibration %}
 RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
@@ -37,6 +39,16 @@ RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
 {% else %}
     {% if job %}
     <img src="{% url astrometry.net.views.image.serve_image id=job.user_image.image.get_thumbnail.id %}" />
+
+<table border="1">
+<tr><th>Tail of the Log File</th></tr>
+<tr><td>
+<pre>
+{{ job.get_log_tail }}
+</pre>
+</td></tr>
+</table>
+
     {% endif %}
 
 {% endif %}

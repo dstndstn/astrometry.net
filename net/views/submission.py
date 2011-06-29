@@ -164,10 +164,6 @@ def upload_file(request):
 
 def status(req, subid=None):
     logmsg("Submissions: " + ', '.join([str(x) for x in Submission.objects.all()]))
-
-    #if subid is not None:
-    #    # strip leading zeros
-    #    subid = int(subid.lstrip('0'))
     sub = get_object_or_404(Submission, pk=subid)
 
     # Would be convenient to have an "is this a single-image submission?" function

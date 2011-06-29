@@ -249,11 +249,11 @@ def dojob(job,userimage):
 
 def queue_subs(newsubs, sub_queue):
     for sub in newsubs:
-        print 'Processing submission:', sub
+        print 'Enqueuing submission:', sub
         sub.set_processing_started()
         sub.save()
         sub_queue.put(sub)
-        
+
 def dosub(sub):
     if sub.disk_file is None:
         print 'Retrieving URL', sub.url
@@ -426,7 +426,6 @@ def main():
         print 'Checking for new Submissions'
         newsubs = Submission.objects.filter(processing_started__isnull=True)
         print 'Found', newsubs.count(), 'unstarted submissions'
-
 
         print 'Checking for UserImages without Jobs'
         all_user_images = UserImage.objects.annotate(job_count=Count('jobs'))
