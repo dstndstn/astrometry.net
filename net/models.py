@@ -187,7 +187,7 @@ class Calibration(models.Model):
     sip = models.ForeignKey('SipWCS', null=True)
 
     # Reverse mappings:
-    #   job_set  -> Job
+    #   jobs  -> Job
 
     # RA,Dec bounding box.
     ramin  = models.FloatField()
@@ -200,7 +200,7 @@ class Calibration(models.Model):
         return s
 
     def get_wcs_file(self):
-        jobs = self.job_set.all()
+        jobs = self.jobs.all()
         if len(jobs) == 0:
             logmsg('Calibration.wcs_path: I have no Jobs: my id=%i' % self.id)
             return None

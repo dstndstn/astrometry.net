@@ -21,6 +21,9 @@ import shutil
 import multiprocessing
 import time
 import re
+import tarfile
+import gzip
+import zipfile
 
 import logging
 #logging.basicConfig(format='%(message)s',
@@ -252,7 +255,6 @@ def queue_subs(newsubs, sub_queue):
         sub_queue.put(sub)
         
 def dosub(sub):
-    origname = None
     if sub.disk_file is None:
         print 'Retrieving URL', sub.url
         (fn, headers) = urllib.urlretrieve(sub.url)
@@ -264,23 +266,23 @@ def dosub(sub):
         if p:
             s = p.split('/')
             origname = s[-1]
-            sub.orig_filename = origname
+            sub.original_filename = origname
         df.save()
         sub.disk_file = df
         sub.save()
-    else:
-        origname = sub.original_filename
 
-    # compressed .gz?
+    # compressed .gz
     df = sub.disk_file
     fn = df.get_path()
+
+    '''
     f,tmpfn = tempfile.mkstemp()
     os.close(f)
     comp = image2pnm.uncompress_file(fn, tmpfn)
     if comp:
         print 'Input file compression: %s' % comp
         fn = tmpfn
-
+    '''
     # This is sort of crazy -- look at python's 'gzip' and 'tarfile' modules.
     '''
     if is_tarball(fn):
@@ -297,8 +299,56 @@ def dosub(sub):
         return True
     '''
 
-    # create Image object
+    if tarfile.is_tarfile(fn):
+        logmsg('file is a tarball')
+        tar = tarfile.open(fn)
+        dirnm = tempfile.mkdtemp()
+        for tarinfo in tar.getmembers():
+            if tarinfo.isfile():
+                logmsg('extracting file %s' % tarinfo.name)
+                tar.extract(tarinfo, dirnm)
+                tempfn = os.path.join(dirnm, tarinfo.name)
+                df = DiskFile.from_file(tempfn)
+                # create Image object
+                img = get_or_create_image(df)
+                # create UserImage object.
+                uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
+                                                               defaults=dict(original_file_name=tarinfo.name))
+        tar.close()
+        os.remove(dirnm)
+    else:
+        original_filename = sub.original_filename
+        # check if file is a gzipped file
+        try:
+            gzip_file = gzip.open(fn)
+            f,tempfn = tempfile.mkstemp()
+            os.close(f)
+            f = open(tempfn,'wb')
+            f.write(gzip_file.read())
+            f.close()
+            gzip_file.close()
+            df = DiskFile.from_file(tempfn)
+            i = original_filename.find('.gz')
+            if i != -1:
+                original_filename = original_filename[:i]
+            logmsg('extracted gzip file %s' % original_filename)
+        except:
+            logmsg("ioerror %s" % e)
+            # not a gzip file
+            pass
+        
+        # assume file is single image
 
+        # create Image object
+        img = get_or_create_image(df)
+        # create UserImage object.
+        uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
+                                                       defaults=dict(original_file_name=original_filename))
+
+    sub.set_processing_finished()
+    sub.save()
+
+def get_or_create_image(df):
     # Is there already an Image for this DiskFile?
     try:
         img,created = Image.objects.get_or_create(disk_file=df)
@@ -309,6 +359,7 @@ def dosub(sub):
         img = img[0]
         created = False
 
+    fn = df.get_path()
     if created:
         #img.save()
         # defaults=dict(width=w, height=h))
@@ -336,16 +387,7 @@ def dosub(sub):
         img.get_display_image()
         img.save()
 
-    # create UserImage object.
-    uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
-                                                   defaults=dict(original_file_name=origname))
-    if created:
-        uimg.save()
-
-    sub.set_processing_finished()
-    sub.save()
-
-
+    return img
 
 def main():
     dosub_queue = multiprocessing.Queue()
