@@ -5,9 +5,12 @@
 # - Brittle code; must be run from directory client/examples; dies if APOD reformats urls or html.
 # - Runs client using os.system() instead of importing client and executing it; see if False block at end.
 
+import re
+import os
+import sys
 import urllib as url
-import re as re
-import os as os
+
+from astrometry.net.client import Client
 
 def apod_baseurl():
     return "http://apod.nasa.gov/apod/"
@@ -40,21 +43,23 @@ if __name__ == '__main__':
         print
         print 'You must either specify --apikey or set AN_API_KEY'
         sys.exit(-1)
+
+    useclient = True
+    if useclient:
+        client = Client(apiurl=opt.server)
+        client.login(opt.apikey)
+
     for year in range(1996, 2013):
         for month in range(1, 13):
             print "apod.py __main__: working on month %d-%02d" % (year, month)
             for day in range(1, 32):
                 iurl = get_apod_image_url(apod_url(month, day, year))
-                if True:
+                if iurl is None:
+                    continue
+                if useclient:
+                    client.url_upload(iurl)
+                    print client.submission_images(1)
+                else:
                     cmd = "python ../client.py --server %s --apikey %s --urlupload \"%s\"" % (opt.server, opt.apikey, iurl)
                     print cmd
                     os.system(cmd)
-                if False:
-                    if iurl is None:
-                        continue
-                    args = {}
-                    args['apiurl'] = opt.server
-                    c = Client(**args)
-                    c.login(opt.apikey)
-                    c.url_upload(iurl)
-                    print c.submission_images(1)
