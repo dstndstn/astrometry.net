@@ -324,6 +324,7 @@ def dosub(sub):
             f,tempfn = tempfile.mkstemp()
             os.close(f)
             f = open(tempfn,'wb')
+            # should fail on the following line if not a gzip file
             f.write(gzip_file.read())
             f.close()
             gzip_file.close()
@@ -333,12 +334,11 @@ def dosub(sub):
                 original_filename = original_filename[:i]
             logmsg('extracted gzip file %s' % original_filename)
         except:
-            logmsg("ioerror %s" % e)
             # not a gzip file
             pass
-        
+         
         # assume file is single image
-
+        logmsg('single file')
         # create Image object
         img = get_or_create_image(df)
         # create UserImage object.
