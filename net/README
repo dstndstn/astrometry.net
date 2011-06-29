@@ -109,6 +109,12 @@ python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
 
 
 
+Using the client:
+
+see client/README for more information
+
+
+
 Adding database users:
 
 as root, psql:

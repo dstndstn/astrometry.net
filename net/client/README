@@ -1,0 +1,20 @@
+
+Make sure simplejson is installed on your python path.
+On oven, it's found in:
+  /usr/lib/pymodules/python2.6
+
+Supernova API is at:
+  http://supernova.astrometry.net/api
+
+Nova API is at:
+  http://nova.astrometry.net/api
+
+
+Note on supernova:
+  Since supernova is undergoing continuous development, consider your API
+  key for it short lived and volatile.
+  
+  That said:
+    If you find that the client is no longer able to connect to the
+    (experimental) supernova API, please check that your API key hasn't
+    changed by visiting http://supernova.astrometry.net/dashboard/profile/
