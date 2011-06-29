@@ -2,6 +2,7 @@
 Make sure simplejson is installed on your python path.
 On oven, it's found in:
   /usr/lib/pymodules/python2.6
+(which means it is already on the python search path)
 
 Supernova API is at:
   http://supernova.astrometry.net/api
