@@ -19,5 +19,5 @@ if __name__ == '__main__':
         sz = file_size(path)
         print '  %-32s' % cf.key, '=>', path, '  (size: %i bytes)' % sz
         nbytes += sz
-    print 'Total of', sz, 'bytes'
+    print 'Total of', nbytes, 'bytes'
         
