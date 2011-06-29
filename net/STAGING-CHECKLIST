@@ -1,0 +1,56 @@
+
+Instructions for preparing a "staging" release.
+-----------------------------------------------
+
+(0.) Become nova@oven.
+
+(1.) Tag the code:
+
+cd ~/supernova
+svn copy -m "tag" . ^/tags/nova/2011-06-29-1 
+
+(with today's date, and an appropriate release number)
+
+(2.) Update the staging area.
+
+cd ~/staging
+svn switch ^/tags/nova/2011-06-29-1
+
+(3.) Build.
+
+make
+make py
+make extra
+
+(4.) Restart process_submissions.py
+
+screen -R staging
+# kill running process_submissions -- possible via:
+  jobs
+  fg 1
+  [ctrl-C]
+or:
+  jobs
+  kill %1
+# Restart process_submissions.py:
+python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
+# exit the "screen"
+[ctrl-A d]
+
+(5.) Backup the nova database and data:
+
+~/database-backups/backup-nova.sh
+~/data-backups/backup-nova.sh
+
+(6.) Migrate the nova database and data:
+
+pg_dump an-nova > nova.sql
+
+What you do next depends on whether you have to run any elaborate
+schema migration scripts.  If not:
+
+psql an-staging < nova.sql
+
+(7.) Test it out!
+
+

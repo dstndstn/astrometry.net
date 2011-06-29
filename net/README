@@ -149,5 +149,7 @@ Now nova@oven can "pg_dump an-nova".
 -added crontab for nova: do a daily dump of an-nova database to ~/database-backups
 -added crontab for dstn@broiler: rsync the database backups to /data1/nova
 
+-added ~/data-backups, with script "backup-nova.sh" that rsyncs to
+oven:/data2/nova-data-backup
 
 
