@@ -12,6 +12,7 @@ from optparse import *
 
 from pylab import *
 from numpy import *
+import os
 
 if __name__ == '__main__':
 	parser = OptionParser()
@@ -90,6 +91,49 @@ if __name__ == '__main__':
 		print 'Index has "quads" with %i stars' % (DQ)
 		DC = index_get_quad_dim(I)
 		print 'Index has %i-dimensional codes' % (DC)
+
+		iname = os.path.basename(I.indexname).replace('.fits', '')
+		# stars
+		print 'Getting stars...'
+		stars = index_get_stars(I)
+		print stars.shape
+
+		ra,dec = xyztoradec(stars)
+		ra += (ra > 180)*-360
+
+		# FIXME --!
+		#ra *= cos(deg2rad(ra))
+		rng = [[-10,10],[-10,10]]
+		clf()
+		(H,xe,ye) = histogram2d(ra, dec, bins=(100,100), range=rng)
+		H=H.T
+		binarea = (xe[1]-xe[0])*(ye[1]-ye[0])
+		print 'Bin area:', binarea, 'deg^2'
+		binarea *= 3600.
+		print binarea, 'arcmin^2'
+		imshow(H/binarea, extent=(min(xe), max(xe), min(ye), max(ye)),
+			   aspect='auto',
+			   interpolation='nearest', origin='lower', cmap=antigray)
+		colorbar()
+		axis('equal')
+		xlabel('RA (deg)')
+		ylabel('Dec (deg)')
+		title('Reference source density in %s' % iname)
+		savefig(opt.prefix + 'stars-2.png')
+
+		R = opt.range
+		print 'Finding pairs within', R, 'arcsec'
+		inds,dists = match(stars, stars, deg2rad(R/3600.))
+		print 'inds', inds.shape, 'dists', dists.shape
+
+		notself = (inds[:,0] != inds[:,1])
+		clf()
+		hist(rad2deg(dists[notself]) * 3600., 200)
+		xlabel('Star pair distances (arcsec)')
+		ylabel('Counts')
+		xlim(0, R)
+		savefig(opt.prefix + 'stars-1.png')
+
 
 		# codes
 		print 'Getting codes...'
@@ -172,35 +216,6 @@ if __name__ == '__main__':
 						ylabel(anames[i])
 			savefig(opt.prefix + 'codes-%i.png' % pnum)
 
-		# stars
-		print 'Getting stars...'
-		stars = index_get_stars(I)
-		print stars.shape
-		R = opt.range
-		print 'Finding pairs within', R, 'arcsec'
-		inds,dists = match(stars, stars, deg2rad(R/3600.))
-		print 'inds', inds.shape, 'dists', dists.shape
-
-		notself = (inds[:,0] != inds[:,1])
-		clf()
-		hist(rad2deg(dists[notself]) * 3600., 200)
-		xlabel('Star pair distances (arcsec)')
-		ylabel('Counts')
-		xlim(0, R)
-		savefig(opt.prefix + 'stars-1.png')
-
-		ra,dec = xyztoradec(stars)
-		ra += (ra > 180)*-360
-
-		clf()
-		(H,xe,ye) = histogram2d(ra, dec, bins=(100,100))
-		H=H.T
-		imshow(H, extent=(min(xe), max(xe), min(ye), max(ye)), aspect='auto',
-			   interpolation='nearest', origin='lower', cmap=antigray)
-		axis('equal')
-		xlabel('RA (deg)')
-		ylabel('Dec (deg)')
-		savefig(opt.prefix + 'stars-2.png')
 
 		index_free(I)
 		

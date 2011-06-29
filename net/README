@@ -136,3 +136,18 @@ grant all on database "an-supernova" to nova;
 grant all on database "an-nova" to nova;
 
 
+--2011-06-29--
+
+-changed pg_hba and database secrets -- django uses user 'nova' too
+
+-changed db tables owner to nova:
+(for x in $(echo "\d+" | psql an-nova | awk -F '|' '{print $2}' | tail -n+3 | grep -v '^$'); do echo "alter table $x owner to nova;"; done) | psql an-nova
+(for x in $(echo "\d+" | psql an-supernova | awk -F '|' '{print $2}' | tail -n+3 | grep -v '^$'); do echo "alter table $x owner to nova;"; done) | psql an-supernova
+
+Now nova@oven can "pg_dump an-nova".
+
+-added crontab for nova: do a daily dump of an-nova database to ~/database-backups
+-added crontab for dstn@broiler: rsync the database backups to /data1/nova
+
+
+
