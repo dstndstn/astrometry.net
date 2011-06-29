@@ -4,6 +4,7 @@
 {{block.super}}
 {% include 'user_image/image_set.css' %}
 {% include 'submission/list.css' %}
+{% include 'dashboard/api_key.css' %}
 <style type="text/css">
 #profile_metadata {
     padding:.5em;
@@ -35,6 +36,9 @@
     <h2>Account Info</h2>
     <p id="registered_on">registered on: <span class="timestamp">{{display_user.date_joined|date:"Y-m-d"}}</span></p>
     <p id="last_signin">last signed in: <span class="timestamp">{{display_user.last_login|date:"Y-m-d H:i"}}</span></p>
+    {% if user.is_authenticated %}
+    <p>my API key: {% include 'user/api_key.html' with apikey=user.get_profile.apikey %}</p>
+    {% endif %}
 </div>
 <div id="profile_data">
     <div id="profile_images">

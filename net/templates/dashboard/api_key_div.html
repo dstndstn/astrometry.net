@@ -1,5 +1,5 @@
 <div id="api_key_detailed">
-<p>My API Key: <span id="api_key">{{ apikey }}</span>
+<p>My API Key: {% include 'user/api_key.html' with apikey=apikey %}</p>
 (<a href="" onclick="$('#api_key_description').slideToggle();return false;">What's this?</a>)
 </p>
 <div id="api_key_description" style="display:none">

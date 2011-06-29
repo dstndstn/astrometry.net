@@ -13,7 +13,7 @@
 {% endblock %}
 {% block dashboard_content %}
 <div id="user_profile">
-    {% include 'dashboard/api_key.html' with apikey=profile.apikey %}
+    {% include 'dashboard/api_key_div.html' with apikey=profile.apikey %}
     <form method="post" action="{% url astrometry.net.views.user.save_profile %}">
         {% csrf_token %}
         {{ profile_form.as_p }}
