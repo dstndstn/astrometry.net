@@ -234,8 +234,8 @@ def dojob(job,userimage):
         calib.save()
         logmsg("Created Calibration " + str(calib))
         job.calibration = calib
-        job.status = 'S'
         job.save()
+        job.status = 'S'
         job.user_image.add_machine_tags()
         logmsg('Saved job %i' % job.id)
     else:

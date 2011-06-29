@@ -8,6 +8,7 @@ from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import User
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 
 from astrometry.net.settings import *
@@ -259,11 +260,11 @@ class Calibration(models.Model):
             cmd = annotate_command(job)
             cmd += '-L > %s' % job.get_obj_file()
             run_convert_command(cmd)
-            objtxt = read_file(job.get_obj_file()).decode('utf_8')
+            objfile = open(job.get_obj_file(), 'r')
+            objtxt = objfile.read()
+            objfile.close()
             job_objs = objtxt.strip()
-            if len(objs):
-                objs += job_objs.split('\n')
-
+            objs.extend(job_objs.split('\n'))
         return objs
 
 
@@ -319,7 +320,7 @@ class Job(models.Model):
 class TaggedUserImage(models.Model):
     user_image = models.ForeignKey('UserImage')
     tag = models.ForeignKey('Tag')
-    tagger = models.ForeignKey(User)
+    tagger = models.ForeignKey(User, null=True)
     added_time = models.DateTimeField(auto_now=True) 
 
 
@@ -349,24 +350,29 @@ class UserImage(Commentable):
 
 
     def add_machine_tags(self):
-        logmsg('adding machine tags for %s' % self)
         for job in self.jobs.filter(calibration__isnull=False):
+            logmsg('adding machine tags for %s' % self)
             sky_objects = job.calibration.get_objs_in_field()
             for sky_object in sky_objects:
                 machine_tag = None
+                logmsg('getting or creating machine tag %s' % sky_object)
                 try:
-                    machine_tag = Tag.objects.get(text=obj)
-                except models.Model.DoesNotExist:
-                    machine_tag = Tag.objects.create(text=obj)
+                    machine_tag = Tag.objects.get(text=sky_object)
+                    logmsg('got machine tag')
+                except ObjectDoesNotExist:
+                    machine_tag = Tag.objects.create(text=sky_object)
+                    logmsg('created machine tag')
                 
                 # associate this UserImage with the machine tag
-                print('adding machine tag: %s' % obj)
-                logmsg('adding machine tag: %s' % obj)
+                logmsg('adding machine tag: %s' % machine_tag.text)
                 tagged_user_image = TaggedUserImage(
                     user_image=self,
                     tag=machine_tag,
                     tagger=None,
                 )
+                tagged_user_image.save()
+                logmsg('tagged user image saved')
+        logmsg('done adding machine tags')
         self.save()
                 
 
