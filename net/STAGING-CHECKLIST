@@ -49,6 +49,9 @@ pg_dump an-nova > nova.sql
 What you do next depends on whether you have to run any elaborate
 schema migration scripts.  If not:
 
+dropdb an-staging
+createdb an-staging
+python manage.py syncdb
 psql an-staging < nova.sql
 
 (7.) Test it out!
