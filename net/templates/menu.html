@@ -1,10 +1,11 @@
 <ul>
-<li><a href="#">Home</a></li>
+<li><a href="{% url astrometry.net.views.home.home %}">Home</a></li>
 <li><a href="{% url astrometry.net.views.image.index %}">Images</a></li>
 {% if user.is_authenticated %}
 <li><a href="{% url astrometry.net.views.user.dashboard %}">Dashboard</a></li>
 {% endif %}
 <li><a href="{% url astrometry.net.views.submission.upload_file %}">Upload</a></li>
+<li><a href="{% url astrometry.net.views.home.support %}">Support</a></li>
 
 
 {% comment %}

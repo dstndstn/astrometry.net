@@ -9,6 +9,11 @@ from astrometry.net import settings
 urlpatterns = patterns('',
 )
 
+urlpatterns += patterns('astrometry.net.views.home',
+    (r'^/?$', 'home'),
+    (r'^support/?$', 'support'),
+)
+
 urlpatterns += patterns('astrometry.net.openid_views',
     url(r'^signin/?$', 'login_begin', name='openid-login'),
     url(r'^signout/?$', 'logout', name='openid-logout'),
@@ -76,6 +81,6 @@ if settings.DEBUG:
     )
 
 # fallback
-urlpatterns += patterns('astrometry.net.views.user',
-                        (r'', 'dashboard'),
+urlpatterns += patterns('astrometry.net.views.home',
+                        (r'', 'home'),
                         )

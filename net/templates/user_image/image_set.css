@@ -4,6 +4,8 @@
     width: 240px;
     height: 240px;
     margin: 10px;
+    margin-left: 0px;
+    margin-right: 20px;
     background-color: #000000;
     background-position: center center;
     background-repeat: no-repeat;

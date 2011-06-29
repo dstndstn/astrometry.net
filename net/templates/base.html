@@ -21,11 +21,17 @@ body {
     font-family: sans-serif;
     font-size: 100%;
 }
-div#root {
+div.root {
+    display: inline-block;
+    width: 1000px;
+}
+div#root_header, div#root_content {
     text-align: left;
     border: 1px solid #000;
     border-top: none;
-    width: 1000px;
+}
+div#root_content {
+    padding-top: 20px;
 }
 div#site_header {
     overflow:auto;
@@ -42,8 +48,16 @@ div#title {
 }
 div#title h2 {
     margin: 0px;
-    font-size: 1.2em;
+    font-size: 1.1em;
     font-weight:600;
+}
+div#footer p {
+    text-align: left;
+    margin: 20px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    color: #aaa;
+    font-size: .75em;
 }
 div#messages p {
     text-align: center;
@@ -74,9 +88,11 @@ a.image:hover    {background-color: transparent;}
 #menu {
     width: 100%;
     border-bottom: 1px solid #000;
+    font-size: .9em;
 }
 #menu ul {
     margin: 0px;
+    padding-left: 20px;
     display: inline-block;
 }
 #menu ul li {
@@ -91,8 +107,8 @@ a.image:hover    {background-color: transparent;}
 }
 #menu ul li a {
     display: inline-block;
-    padding-top: 8px;
-    padding-bottom: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
     width: 100%;
     height: 100%;
 }
@@ -113,7 +129,8 @@ a.image:hover    {background-color: transparent;}
 }
 #content {
     overflow:auto;
-    margin: 10px;
+    margin: 20px;
+    margin-top: 0px;
 }
 .good { color:#0e0; }
 .bad { color:#e00; }
@@ -121,6 +138,10 @@ a.image:hover    {background-color: transparent;}
     color: #666;
     font-family:monospace;
     font-size:1.1em;
+}
+h2 {
+    font-size: 1.2em;
+    font-weight: 600;
 }
 span#user_info { font-weight:bold; }
 .bigbutton { font-size:110%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
@@ -158,47 +179,52 @@ td.c {text-align:center;}
 <body>
 {% endblock bodytag %}
 
-<div id="root">
-<div id="site_header">
-    <div id="auth_status">
-    {% if user.is_authenticated %}
-        Signed in as <span id="user_info">{{ user.get_profile.display_name }} ({{ user.email }})</span> |
-        <a href="{% url openid-logout %}">Sign Out</a>
-    {% else %}
-        Not signed in | 
-        <a href="{% url openid-login %}">Sign in</a>
-    {% endif %}
+<div class="root" id="root_header">
+    <div id="site_header">
+        <div id="auth_status">
+        {% if user.is_authenticated %}
+            Signed in as <span id="user_info">{{ user.get_profile.display_name }} ({{ user.email }})</span> |
+            <a href="{% url openid-logout %}">Sign Out</a>
+        {% else %}
+            Not signed in | 
+            <a href="{% url openid-login %}">Sign in</a>
+        {% endif %}
+        </div>
+        <div id="logo">
+            <img src="http://astrometry.net/logo.png" alt="Astrometry.net logo" />
+        </div>
     </div>
-    <div id="logo">
-        <img src="http://astrometry.net/logo.png" alt="Astrometry.net logo" />
+
+    {% block menublock %}
+    <div id="menu">
+    {% include "menu.html" %}
+    </div>
+    {% endblock menublock %}
+
+    {% block titlediv %}
+    <div id="title">
+    <h2>{% block title %}{% endblock %}</h2>
+    </div>
+    {% endblock %}
+</div>
+
+<div class="root" id="root_content">
+    <div id="messages">
+    {% for message in messages %}
+        <p{% if message.tags %} class="{{message.tags}}"{% endif %}>{{message}}</p>
+    {% endfor %}
+    </div>
+
+    <div id="content">
+    {% block content %}
+    {% endblock %}
     </div>
 </div>
 
-{% block menublock %}
-<div id="menu">
-{% include "menu.html" %}
-</div>
-{% endblock menublock %}
-
-{% block titlediv %}
-<div id="title">
-<h2>{% block title %}{% endblock %}</h2>
-</div>
-{% endblock %}
-
-<div id="messages">
-{% for message in messages %}
-    <p{% if message.tags %} class="{{message.tags}}"{% endif %}>{{message}}</p>
-{% endfor %}
+<div class="root" id="footer">
+{% include 'footer.html' %}
 </div>
 
-<div id="content">
-{% block content %}
-base content
-{% endblock %}
-</div>
-
-</div>
 </body>
 {% endblock thebody %}
 </html>
