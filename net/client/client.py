@@ -120,7 +120,7 @@ class Client(object):
                 errstr = result.get('errormessage', '(none)')
                 raise RequestError('server error message: ' + errstr)
             return result
-        except HTTPError as e:
+        except HTTPError, e:
             print 'HTTPError', e
             txt = e.read()
             open('err.html', 'wb').write(txt)
