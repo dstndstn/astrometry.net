@@ -129,6 +129,7 @@ class MyLogger(object):
     msg = info
 
 def create_job_logger(job):
+    logmsg("getlogger")
     logger = logging.getLogger('job.%i' % job.id)
     logger.setLevel(logging.DEBUG)
     fh = logging.FileHandler(job.get_log_file2())
@@ -151,8 +152,10 @@ def makejobs(userimages, job_queue):
 
 
 def dojob(job,userimage):
+    logmsg("dojob")
     log = create_job_logger(job)
     log.msg('Starting Job processing for', job)
+    logmsg("createlogger")
     job.set_start_time()
     job.save()
     dirnm = job.make_dir()
@@ -490,7 +493,7 @@ def main():
             try:
                 sub = dosub_queue.get()
                 if dosub_pool:
-                    res = dosub_pool.apply_async(dosub, (sub,), None, sub_callback)
+                    res = dosub_pool.apply_async(dosub, (sub,), callback=sub_callback)
                     subresults.append(res)
                 else:
                     dosub(sub)
