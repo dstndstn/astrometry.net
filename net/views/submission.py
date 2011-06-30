@@ -162,6 +162,20 @@ def upload_file(request):
     return render_to_response('submission/upload.html', {'form': form, 'user': request.user },
         context_instance = RequestContext(request))
 
+def job_log_file(req, jobid=None):
+    job = get_object_or_404(Job, pk=jobid)
+    f = open(job.get_log_file())
+    res = HttpResponse(f)
+    res['Content-type'] = 'text/plain'
+    return res
+
+def job_log_file2(req, jobid=None):
+    job = get_object_or_404(Job, pk=jobid)
+    f = open(job.get_log_file2())
+    res = HttpResponse(f)
+    res['Content-type'] = 'text/plain'
+    return res
+
 def status(req, subid=None):
     logmsg("Submissions: " + ', '.join([str(x) for x in Submission.objects.all()]))
     sub = get_object_or_404(Submission, pk=subid)

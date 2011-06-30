@@ -99,6 +99,7 @@ Submission {{ sub.id }}
 {% endif %}
 </table>
 
+
 <table>
 {% for image in sub.user_images.all %}
 <tr>
@@ -110,6 +111,9 @@ Submission {{ sub.id }}
 <td>    
     {% for job in image.jobs.all %}
     Job {{ job.id }}: {% include "job/status.html" with job=job %}<br />
+
+	<a href={% url astrometry.net.views.submission.job_log_file jobid=job.id %}>Log file</a><br />
+	<a href={% url astrometry.net.views.submission.job_log_file2 jobid=job.id %}>Log file 2</a>
     {% empty %}
     No Jobs.
     {% endfor %}

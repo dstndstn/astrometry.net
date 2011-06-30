@@ -281,6 +281,7 @@ class Job(models.Model):
     error_message = models.CharField(max_length=256)
     user_image = models.ForeignKey('UserImage', related_name='jobs')
 
+    queued_time = models.DateTimeField(null=True)
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
 
@@ -294,6 +295,9 @@ class Job(models.Model):
         if self.end_time is not None:
             s += ', end time ' + str(self.end_time)
         return s
+
+    def set_queued_time(self):
+        self.queued_time = datetime.now()
 
     def set_start_time(self):
         self.start_time = datetime.now()
@@ -310,12 +314,31 @@ class Job(models.Model):
     def get_obj_file(self):
         return os.path.join(self.get_dir(), 'objsinfield')
 
-    def get_log_tail(self):
-        fn = os.path.join(self.get_dir(), 'log')
+    def get_log_file(self):
+        return os.path.join(self.get_dir(), 'log')
+
+    def get_log_tail(self, nlines=20):
+        fn = self.get_log_file()
         if not os.path.exists(fn):
             return None
+        if nlines is None:
+            return open(fn).read()
         lines = open(fn).readlines()
-        return ''.join(lines[-20:])
+        return ''.join(lines[-nlines:])
+
+    # HACK
+    def get_log_file2(self):
+        return os.path.join(self.get_dir(), 'job.log')
+
+    # HACK
+    def get_log_tail2(self, nlines=20):
+        fn = self.get_log_file2()
+        if not os.path.exists(fn):
+            return None
+        if nlines is None:
+            return open(fn).read()
+        lines = open(fn).readlines()
+        return ''.join(lines[-nlines:])
 
     def make_dir(self):
         dirnm = self.get_dir()

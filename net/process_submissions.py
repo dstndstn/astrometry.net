@@ -48,6 +48,8 @@ from log import *
 
 from django.utils.log import dictConfig
 from django.db.models import Count
+from django.db.models import Q
+
 dictConfig(settings.LOGGING)
 
 
@@ -117,11 +119,30 @@ def run_pnmfile(fn):
     logmsg('Type %s, w %i, h %i, maxval %i' % (pnmtype, w, h, maxval))
     return (w, h, pnmtype, maxval)
 
+class MyLogger(object):
+    def __init__(self, logger):
+        self.logger = logger
+    def debug(self, *args):
+        return self.logger.debug(' '.join(str(x) for x in args))
+    def info(self, *args):
+        return self.logger.info(' '.join(str(x) for x in args))
+    msg = info
+
+def create_job_logger(job):
+    logger = logging.getLogger('job.%i' % job.id)
+    logger.setLevel(logging.DEBUG)
+    fh = logging.FileHandler(job.get_log_file2())
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    return MyLogger(logger)
+
 
 def makejobs(userimages, job_queue):
     for userimage in userimages:
         job = Job(user_image=userimage)
-        job.set_start_time()
+        job.set_queued_time()
         job.save()
         job_queue.put({
             'job':job,
@@ -130,9 +151,13 @@ def makejobs(userimages, job_queue):
 
 
 def dojob(job,userimage):
+    log = create_job_logger(job)
+    log.msg('Starting Job processing for', job)
+    job.set_start_time()
+    job.save()
     dirnm = job.make_dir()
     #os.chdir(dirnm) - not thread safe (working directory is global)!
-    print 'Creating directory', dirnm
+    log.msg('Creating directory', dirnm)
     axyfn = 'job.axy'
     sub = userimage.submission
     df = userimage.image.disk_file
@@ -184,7 +209,6 @@ def dojob(job,userimage):
         if v:
             cmd += k + ' ' + str(v) + ' '
 
-    #cmd += ' '.join(k + ((v and (' ' + str(v))) or '') for (k,v) in axyargs.items())
     logmsg('running: ' + cmd)
     (rtn, out, err) = run_command(cmd)
     if rtn:
@@ -347,6 +371,7 @@ def dosub(sub):
 
     sub.set_processing_finished()
     sub.save()
+    return sub.id
 
 def get_or_create_image(df):
     # Is there already an Image for this DiskFile?
@@ -392,8 +417,8 @@ def get_or_create_image(df):
 def main():
     dosub_queue = multiprocessing.Queue()
     job_queue = multiprocessing.Queue()
-    dojob_nthreads = 3
-    dosub_nthreads = 2
+    dojob_nthreads = 4
+    dosub_nthreads = 4
 
     dojob_pool = None
     dosub_pool = None
@@ -413,14 +438,17 @@ def main():
         sub.processing_started = None
         sub.save()
 
-    oldjobs = Job.objects.filter(start_time__isnull=False,
-                                 end_time__isnull=True)
+    oldjobs = Job.objects.filter(Q(end_time__isnull=True),
+                                 Q(start_time__isnull=False) |
+                                 Q(queued_time__isnull=False))
     #for job in oldjobs:
     #    #print 'Resetting the processing status of', job
     #    #job.start_time = None
     #    #job.save()
     # FIXME -- really?
     oldjobs.delete()
+
+    subresults = []
 
     while True:
         print 'Checking for new Submissions'
@@ -432,15 +460,38 @@ def main():
         newuis = all_user_images.filter(job_count=0)
         print 'Found', len(newuis), 'userimages without Jobs'
 
-        time.sleep(2)
+        print 'Submission async results:', subresults
+
+        print 'dosub_queue:', dosub_queue
+        print 'job_queue:', job_queue
+
+        if ((len(newsubs) + len(newuis) == 0) and
+            dosub_queue.empty() and
+            job_queue.empty()):
+            time.sleep(5)
+            continue
+
         # FIXME -- order by user, etc
         queue_subs(newsubs,dosub_queue)
+
+        ''' dstn asks:
+        What is the point of using queues here?  queue_subs just adds everything
+        in 'newsubs' to the queue, and then you immediately pull them out and
+        submit them to the pool for processing, all in this main thread.
+
+        I agree that stamping the Submission/Job before giving it to the pool
+        is necessary, but that is a separate issue.
+        '''
+
+        def sub_callback(result):
+            print 'Submission callback: Result:', result
 
         while not dosub_queue.empty():
             try:
                 sub = dosub_queue.get()
                 if dosub_pool:
-                    dosub_pool.apply_async(dosub, (sub,))
+                    res = dosub_pool.apply_async(dosub, (sub,), None, sub_callback)
+                    subresults.append(res)
                 else:
                     dosub(sub)
             except multiprocessing.Queue.Empty as e:

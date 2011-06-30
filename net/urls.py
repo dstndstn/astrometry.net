@@ -29,6 +29,8 @@ idpattern = r'[0-9-]+'
 urlpatterns += patterns('astrometry.net.views.submission',
     (r'^upload/?$', 'upload_file'),
     (r'^status/(?P<subid>' + subpattern + r')/?', 'status'),
+    (r'^joblog/(?P<jobid>' + jobpattern + r')/?', 'job_log_file'),
+    (r'^joblog2/(?P<jobid>' + jobpattern + r')/?', 'job_log_file2'),
     (r'^submissions/(?P<user_id>' + idpattern + r')/?$', 'index'),
 )
 
