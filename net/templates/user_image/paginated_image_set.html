@@ -1,0 +1,42 @@
+{% comment %}
+{% if category == 'user' %}
+    {{ cat_obj.get_full_name }}'s Images
+{% endif %}
+{% if category == 'album' %}
+    Album {{ cat_obj.id }}
+{% endif %}
+{% if category == 'tag' %}
+    Images tagged with {{ cat_obj.text }}
+{% endif %}
+{% endcomment %}
+
+{% if image_page.has_other_pages %}
+<div class="pagination">
+    {% if image_page.has_previous %}
+    <a href="?page={{ image_page.previous_page_number }}">&#9668; previous</a> | 
+    {% endif %}
+
+    Page {{ image_page.number }} of {{ image_page.paginator.num_pages }}
+
+    {% if image_page.has_next %}
+     | <a href="?page={{ image_page.next_page_number }}">next &#9658;</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% include 'user_image/image_set.html' with images=image_page.object_list %}
+
+{% if image_page.has_other_pages %}
+<br>
+<div class="pagination">
+    {% if image_page.has_previous %}
+    <a href="?page={{ image_page.previous_page_number }}">&#9668; previous</a> | 
+    {% endif %}
+
+    Page {{ image_page.number }} of {{ image_page.paginator.num_pages }}
+
+    {% if image_page.has_next %}
+     | <a href="?page={{ image_page.next_page_number }}">next &#9658;</a>
+    {% endif %}
+</div>
+{% endif %}
