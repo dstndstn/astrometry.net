@@ -98,7 +98,7 @@ Submission {{ sub.id }}
 </tr>
 {% endif %}
 </table>
-
+<br />
 
 <table>
 {% for image in sub.user_images.all %}
@@ -120,7 +120,7 @@ Submission {{ sub.id }}
 </td>
 </tr>
 {% empty %}
-<p>Thanks for your submission! Please bear with us while we process it.</p>
+<tr><td><p>Thanks for your submission! Please bear with us while we process it.</p></td></tr>
 {% endfor %}
-
+</table>
 {% endblock %}

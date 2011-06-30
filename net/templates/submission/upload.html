@@ -3,7 +3,7 @@
 {% block inline_css %}
 {{block.super}}
 <style type="text/css">
-#upload_table       {border: 0px; width: 100%;}
+#upload_table       {border: 0px; width: 100%; display: none}
 #upload_table tr    {vertical-align: top;}
 #upload_table td    {vertical-align: top; padding: 20px 5px 20px 5px; border-top: #ccc 1px solid;}
 .leftcolumn        {text-align: left; width: 400px}
@@ -61,9 +61,9 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 <div id="file_block">{{ form.file }}</div>
 <div id="url_block">{{ form.url }}</div>
 {{ form.non_field_errors }}
-<h4><a href="#" onclick="$('.advanced_settings').toggle();return false;">Advanced Settings</a></h4>
+<h4><a href="#" onclick="$('#upload_table').toggle();return false;">Advanced Settings</a></h4>
 <table id="upload_table" cellspacing="0">
-<tr class="advanced_settings"> 
+<tr> 
     <td class="leftcolumn">
         <span class="setting_title">Scale:</span><br>
         <span class="setting_description">If you provide an estimate of the size of your field, our search will be much faster. Most digital-camera images are at least 10 degrees wide; most professional-grade telescopes are narrower than 2 degrees.</span> 
@@ -85,7 +85,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
         </div>
     </td>
 </tr> 
-<tr class="advanced_settings"> 
+<tr> 
     <td class="leftcolumn">
         <span class="setting_title">Parity:</span><br>
         <span class="setting_description">Flipping an image reverses its "parity". If you point a digital camera at the sky and submit the JPEG, it probably has negative parity. If you have a FITS image, it probably has positive parity. Selecting the right parity will make the solving process run faster, but if in doubt just try both.
@@ -95,7 +95,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
         {{ form.parity.errors }}{{ form.parity }}
     </td>
 </tr> 
-<tr class="advanced_settings">  
+<tr>  
     <td class="leftcolumn">
         <span class="setting_title">Star Positional Error:</span><br>
         <span class="setting_description">When we find a matching "landmark", we check to see how many of the stars in your field match up with stars we know about. To do this, we need to know how much a star in your field could have moved from where it should be.
@@ -105,7 +105,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
         {{ form.positional_error.errors }}{{ form.positional_error }} pixels
     </td>
 </tr> 
-<tr class="advanced_settings"> 
+<tr> 
     <td class="leftcolumn">
         <span class="setting_title">Limits:</span><br>
         <span class="setting_description">In order to narrow down our search, you can supply a field center along with a radius. We will only search in indexes which fall within this area.</span> 
@@ -116,7 +116,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
         Radius:<br />{{ form.radius.errors }}{{ form.radius }} degrees<br />
     </td>
 </tr> 
-<tr class="advanced_settings"> 
+<tr> 
     <td class="leftcolumn">
         <span class="setting_title">Downsample:</span><br>
         <span class="setting_description">We can downsample your image by a given factor before performing the source extraction.</span> 

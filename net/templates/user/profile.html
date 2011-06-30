@@ -36,14 +36,16 @@
     <h2>Account Info</h2>
     <p id="registered_on">registered on: <span class="timestamp">{{display_user.date_joined|date:"Y-m-d"}}</span></p>
     <p id="last_signin">last signed in: <span class="timestamp">{{display_user.last_login|date:"Y-m-d H:i"}}</span></p>
-    {% if user.is_authenticated %}
+    {% if user.is_authenticated and user == display_user %}
     <p>my API key: {% include 'user/api_key.html' with apikey=user.get_profile.apikey %}</p>
     {% endif %}
 </div>
 <div id="profile_data">
     <div id="profile_images">
         <h2>Recent Images</h2>
+        {% if display_user.user_images.all %}  
         <a href="{% url astrometry.net.views.image.index_user user_id=display_user.id %}">View all</a>
+        {% endif %}
         {% include 'user_image/image_set.html' with image_page=recent_image_page %}
     </div>
     <div id="profile_submissions">

@@ -263,8 +263,9 @@ class Calibration(models.Model):
             objfile = open(job.get_obj_file(), 'r')
             objtxt = objfile.read()
             objfile.close()
-            job_objs = objtxt.strip()
-            objs.extend(job_objs.split('\n'))
+            for objline in objtxt.split('\n'):
+                for obj in objline.split('/'):
+                    objs.append(obj.strip())
         return objs
 
 
