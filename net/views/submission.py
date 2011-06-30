@@ -177,16 +177,9 @@ def status(req, subid=None):
         for j in ui.jobs.all():
             logmsg("    job " + str(j))
 
-    calib = None
-    jobs = sub.get_best_jobs()
-    logmsg("Best jobs: " + str(jobs))
-    #logmsg("Job: " + str(job) + ', ' + job.status)
-        
     return render_to_response('submission/status.html',
         {
             'sub': sub,
-            'jobs': jobs,
-            'calib':calib,
         },
         context_instance = RequestContext(req))
     

@@ -119,13 +119,4 @@ Submission {{ sub.id }}
 <p>Thanks for your submission! Please bear with us while we process it.</p>
 {% endfor %}
 
-<table border="1">
-<tr><th>Tail of the Log File</th></tr>
-<tr><td>
-<pre>
-{{ job.get_log_tail }}
-</pre>
-</td></tr>
-</table>
-
 {% endblock %}
