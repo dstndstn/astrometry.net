@@ -153,12 +153,12 @@ def makejobs(userimages, job_queue):
 
 def dojob(job,userimage):
     logmsg("dojob")
+    dirnm = job.make_dir()
     log = create_job_logger(job)
     log.msg('Starting Job processing for', job)
     logmsg("createlogger")
     job.set_start_time()
     job.save()
-    dirnm = job.make_dir()
     #os.chdir(dirnm) - not thread safe (working directory is global)!
     log.msg('Creating directory', dirnm)
     axyfn = 'job.axy'
@@ -420,8 +420,8 @@ def get_or_create_image(df):
 def main():
     dosub_queue = multiprocessing.Queue()
     job_queue = multiprocessing.Queue()
-    dojob_nthreads = 4
-    dosub_nthreads = 4
+    dojob_nthreads = 3
+    dosub_nthreads = 2
 
     dojob_pool = None
     dosub_pool = None
