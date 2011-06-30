@@ -6,7 +6,7 @@
 #upload_table       {border: 0px; width: 100%;}
 #upload_table tr    {vertical-align: top;}
 #upload_table td    {vertical-align: top; padding: 20px 5px 20px 5px; border-top: #ccc 1px solid;}
-.rightcolumn        {text-align: left; width: 400px}
+.leftcolumn        {text-align: left; width: 400px}
 .setting_title      {font-weight: bold}
 .setting_description {font-size: 75%}
 #scale_custom_block  {padding-left: 50px}
@@ -64,7 +64,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 <h4><a href="#" onclick="$('.advanced_settings').toggle();return false;">Advanced Settings</a></h4>
 <table id="upload_table" cellspacing="0">
 <tr class="advanced_settings"> 
-    <td class="rightcolumn">
+    <td class="leftcolumn">
         <span class="setting_title">Scale:</span><br>
         <span class="setting_description">If you provide an estimate of the size of your field, our search will be much faster. Most digital-camera images are at least 10 degrees wide; most professional-grade telescopes are narrower than 2 degrees.</span> 
     </td> 
@@ -86,7 +86,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
     </td>
 </tr> 
 <tr class="advanced_settings"> 
-    <td class="rightcolumn">
+    <td class="leftcolumn">
         <span class="setting_title">Parity:</span><br>
         <span class="setting_description">Flipping an image reverses its "parity". If you point a digital camera at the sky and submit the JPEG, it probably has negative parity. If you have a FITS image, it probably has positive parity. Selecting the right parity will make the solving process run faster, but if in doubt just try both.
         </span> 
@@ -96,7 +96,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
     </td>
 </tr> 
 <tr class="advanced_settings">  
-    <td class="rightcolumn">
+    <td class="leftcolumn">
         <span class="setting_title">Star Positional Error:</span><br>
         <span class="setting_description">When we find a matching "landmark", we check to see how many of the stars in your field match up with stars we know about. To do this, we need to know how much a star in your field could have moved from where it should be.
         </span> 
@@ -106,7 +106,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
     </td>
 </tr> 
 <tr class="advanced_settings"> 
-    <td class="rightcolumn">
+    <td class="leftcolumn">
         <span class="setting_title">Limits:</span><br>
         <span class="setting_description">In order to narrow down our search, you can supply a field center along with a radius. We will only search in indexes which fall within this area.</span> 
     </td> 
@@ -117,7 +117,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
     </td>
 </tr> 
 <tr class="advanced_settings"> 
-    <td class="rightcolumn">
+    <td class="leftcolumn">
         <span class="setting_title">Downsample:</span><br>
         <span class="setting_description">We can downsample your image by a given factor before performing the source extraction.</span> 
     </td> 

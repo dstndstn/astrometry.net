@@ -8,9 +8,17 @@
 <meta http-equiv="refresh" content="5; URL=" />
 {% endcomment %}
 
-
 {% endif %}
 {% endblock extrahead %}
+
+{% block inline_css %}
+{{ block.super }}
+<style type="text/css">
+#submission_details {background-color: #eee; padding: 10px; width: 100%}
+#submission_details td {vertical-align: top}
+.leftcolumn {width: 20%}
+</style>
+{% endblock %}
 
 {% block pagetitle %}
 Astrometry.net submission {{ sub.id }}
@@ -21,24 +29,95 @@ Submission {{ sub.id }}
 {% endblock %}
 
 {% block content %}
-{% for job in jobs %}
-<p>
-Job {{ job.id }}: {% include "job/status.html" with job=job %}
-</p>
 
-
-<p>
-{% if job.calibration %}
-RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
-<br />
-<img src="{% url astrometry.net.views.image.annotated_image jobid=job.id size='display' %}" />
-<br />
-<a href="{% url astrometry.net.views.image.sdss_image calid=job.calibration.id size='display' %}" />Get SDSS image</a>
-<br />
-<a href="{% url astrometry.net.views.image.galex_image calid=job.calibration.wcs.id size='display' %}" />Get GALEX image</a>
+<table id="submission_details">
+<tr>
+    <td class="leftcolumn">Submitter:</td>
+    <td>{% include "user/display_name.html" with user=sub.user %}</td>
+</tr>
+<tr>
+    <td class="leftcolumn">Date Submitted:</td>
+    <td><span class="timestamp">{{ sub.submitted_on|date:"Y-m-d H:i" }}</span></td>
+</tr>
+<tr>
+    <td class="leftcolumn">Filename:</td>
+    <td>{{ sub.original_filename }}</td>
+</tr>
+<tr><td colspan="2"><br />
+    <b>Upload Settings</b></td>
+</tr>
+<tr>
+    <td class="leftcolumn">Parity:</td>
+    <td>{{ sub.get_parity_display }}</td>
+</tr>
+<tr>
+    <td class="leftcolumn">Scale Units:</td>
+    <td>{{ sub.get_scale_units_display }}</td>
+</tr>
+<tr>
+    <td class="leftcolumn">Scale Type:</td>
+    <td>{{ sub.get_scale_type_display }}</td>
+</tr>
+{% if sub.scale_type == "ul" %}
+<tr>
+    <td class="leftcolumn">Scale Lower Bound:</td>
+    <td>{{ sub.scale_lower }}</td>
+</tr>
+<tr>
+    <td class="leftcolumn">Scale Upper Bound:</td>
+    <td>{{ sub.scale_upper }}</td>
+</tr>
 {% else %}
-    {% if job %}
-    <img src="{% url astrometry.net.views.image.serve_image id=job.user_image.image.get_thumbnail.id %}" />
+<tr>
+    <td class="leftcolumn">Scale Estimate:</td>
+    <td>{{ sub.scale_est }}</td>
+</tr>
+<tr>
+    <td class="leftcolumn">Scale Error:</td>
+    <td>{{ sub.scale_err }}%</td>
+</tr>
+{% endif %}
+{% if sub.positional_error %}
+<tr>
+    <td class="leftcolumn">Star Positional Error:</td>
+    <td>{{ sub.positional_error }} pixels</td>
+</tr>
+{% endif %}
+{% if sub.center_ra and sub.center_dec and sub.radius %}
+<tr>
+    <td class="leftcolumn">Limits:</td>
+    <td>RA, Dec - ({{ sub.center_ra }}, {{ sub.center_dec }})<br />
+        radius - {{ sub.radius }}
+    </td>
+</tr>
+{% endif %}
+{% if sub.downsample_factor %}
+<tr>
+    <td class="leftcolumn">Downsample Factor:</td>
+    <td>{{ sub.downsample_factor }}</td>
+</tr>
+{% endif %}
+</table>
+
+<table>
+{% for image in sub.user_images.all %}
+<tr>
+<td>
+    <a href="{% url astrometry.net.views.image.user_image image.id %}">
+    <img src="{% url astrometry.net.views.image.serve_image id=image.image.thumbnail.id %}" />
+    </a>
+</td>
+<td>    
+    {% for job in image.jobs.all %}
+    Job {{ job.id }}: {% include "job/status.html" with job=job %}<br />
+    {% empty %}
+    No Jobs.
+    {% endfor %}
+</td>
+</tr>
+{% empty %}
+<p>Thanks for your submission! Please bear with us while we process it.</p>
+{% endfor %}
 
 <table border="1">
 <tr><th>Tail of the Log File</th></tr>
@@ -49,11 +128,4 @@ RA,Dec center: ({{ calib.format_radec }}), radius {{ calib.format_radius }}
 </td></tr>
 </table>
 
-    {% endif %}
-
-{% endif %}
-</p>
-{% empty %}
-<p>Thanks for your submission! Please bear with us while we process it.</p>
-{% endfor %}
 {% endblock %}

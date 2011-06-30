@@ -315,7 +315,7 @@ class Job(models.Model):
         if not os.path.exists(fn):
             return None
         lines = open(fn).readlines()
-        return '\n'.join(lines[-20:])
+        return ''.join(lines[-20:])
 
     def make_dir(self):
         dirnm = self.get_dir()

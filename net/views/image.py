@@ -182,7 +182,7 @@ def index(req, images=UserImage.objects.all().order_by('-submission__submitted_o
             template_name='user_image/index_recent.html', context={}):
 
     page_number = req.GET.get('page',1)
-    page = get_page(images,9,page_number)
+    page = get_page(images,3*10,page_number)
     context.update({'image_page':page})
     return render_to_response(template_name,   
         context,
