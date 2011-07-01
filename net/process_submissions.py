@@ -261,7 +261,7 @@ def dojob(job,userimage):
         calib.save()
         logmsg("Created Calibration " + str(calib))
         job.calibration = calib
-        job.save() # needed to update relations (calibration)
+        job.save() # save calib before adding machine tags
         job.status = 'S'
         job.user_image.add_machine_tags(job)
     else:
