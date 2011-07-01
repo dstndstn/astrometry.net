@@ -129,9 +129,9 @@ class MyLogger(object):
     msg = info
 
 def create_job_logger(job):
-	'''
-	Create a MyLogger object that writes to a log file within a Job directory.
-	'''
+    '''
+    Create a MyLogger object that writes to a log file within a Job directory.
+    '''
     logmsg("getlogger")
     logger = logging.getLogger('job.%i' % job.id)
     logger.setLevel(logging.DEBUG)
@@ -142,17 +142,13 @@ def create_job_logger(job):
     logger.addHandler(fh)
     return MyLogger(logger)
 
-
-def makejobs(userimages, job_queue):
-    for userimage in userimages:
-        job = Job(user_image=userimage)
-        job.set_queued_time()
-        job.save()
-        job_queue.put({
-            'job':job,
-            'userimage':userimage
-        })
-
+def try_dojob(job, userimage):
+    try:
+        return dojob(job, userimage)
+    except:
+        print 'Caught exception while processing Job', job
+        traceback.print_exc(None, sys.stdout)
+        # FIXME -- job.set_status()...
 
 def dojob(job,userimage):
     dirnm = job.make_dir()
@@ -273,14 +269,17 @@ def dojob(job,userimage):
     job.set_end_time()
     job.save()
     logmsg('Saved job %i' % job.id)
+    return job.id
 
 
-def queue_subs(newsubs, sub_queue):
-    for sub in newsubs:
-        print 'Enqueuing submission:', sub
-        sub.set_processing_started()
-        sub.save()
-        sub_queue.put(sub)
+def try_dosub(sub):
+    try:
+        return dosub(sub)
+    except:
+        print 'Caught exception while processing Submission', sub
+        traceback.print_exc(None, sys.stdout)
+        # FIXME -- sub.set_status()...
+        return 'exception'
 
 def dosub(sub):
     if sub.disk_file is None:
@@ -394,6 +393,13 @@ def get_or_create_image(df):
 
     return img
 
+## DEBUG
+def sub_callback(result):
+    print 'Submission callback: Result:', result
+def job_callback(result):
+    print 'Job callback: Result:', result
+
+
 def main():
     dosub_queue = multiprocessing.Queue()
     job_queue = multiprocessing.Queue()
@@ -406,8 +412,6 @@ def main():
         dojob_pool = multiprocessing.Pool(processes=dojob_nthreads)
     if dosub_nthreads > 1:
         dosub_pool = multiprocessing.Pool(processes=dosub_nthreads)
-
-    # multiprocessing.Lock for django db?
 
     # Find Submissions that have been started but not finished;
     # reset the start times to null.
@@ -429,6 +433,7 @@ def main():
     oldjobs.delete()
 
     subresults = []
+    jobresults = []
 
     while True:
         print 'Checking for new Submissions'
@@ -440,10 +445,22 @@ def main():
         newuis = all_user_images.filter(job_count=0)
         print 'Found', len(newuis), 'userimages without Jobs'
 
-        print 'Submission async results:', subresults
-
-        print 'dosub_queue:', dosub_queue
-        print 'job_queue:', job_queue
+        print 'Submission async results:', len(subresults)
+        for res in subresults:
+            print '  ready:', res.ready(),
+            if res.ready():
+                print 'success:', res.successful()
+                if res.successful():
+                    print 'result:', res.get(),
+            print
+        print 'Job async results:', len(jobresults)
+        for res in jobresults:
+            print '  ready:', res.ready(),
+            if res.ready():
+                print 'success:', res.successful(),
+                if res.successful():
+                    print 'result:', res.get(),
+            print
 
         if ((len(newsubs) + len(newuis) == 0) and
             dosub_queue.empty() and
@@ -452,46 +469,31 @@ def main():
             continue
 
         # FIXME -- order by user, etc
-        queue_subs(newsubs,dosub_queue)
 
-        ''' dstn asks:
-        What is the point of using queues here?  queue_subs just adds everything
-        in 'newsubs' to the queue, and then you immediately pull them out and
-        submit them to the pool for processing, all in this main thread.
+        for sub in newsubs:
+            print 'Enqueuing submission:', sub
+            sub.set_processing_started()
+            sub.save()
 
-        I agree that stamping the Submission/Job before giving it to the pool
-        is necessary, but that is a separate issue.
-        '''
+            if dosub_pool:
+                res = dosub_pool.apply_async(try_dosub, (sub,),
+                                             callback=sub_callback)
+                subresults.append(res)
+            else:
+                dosub(sub)
 
-        def sub_callback(result):
-            print 'Submission callback: Result:', result
 
-        while not dosub_queue.empty():
-            try:
-                sub = dosub_queue.get()
-                if dosub_pool:
-                    res = dosub_pool.apply_async(dosub, (sub,), callback=sub_callback)
-                    subresults.append(res)
-                else:
-                    dosub(sub)
-            except multiprocessing.Queue.Empty as e:
-                pass
+        for userimage in newuis:
+            job = Job(user_image=userimage)
+            job.set_queued_time()
+            job.save()
 
-        makejobs(newuis, job_queue)
-
-        while not job_queue.empty():
-            try:
-                job_ui = job_queue.get()
-                if dojob_pool:
-                    dojob_pool.apply_async(dojob, (
-                        job_ui['job'],
-                        job_ui['userimage'],
-                        )
-                    )
-                else:
-                    dojob(job_ui['job'], job_ui['userimage'])
-            except multiprocessing.Queue.Empty as e:
-                pass
+            if dojob_pool:
+                res = dojob_pool.apply_async(try_dojob, (job, userimage),
+                                             callback=job_callback)
+                jobresults.append(res)
+            else:
+                dojob(job, userimage)
 
 if __name__ == '__main__':
     main()
