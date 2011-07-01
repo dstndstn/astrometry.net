@@ -445,26 +445,26 @@ def main():
         newuis = all_user_images.filter(job_count=0)
         print 'Found', len(newuis), 'userimages without Jobs'
 
-        print 'Submission async results:', len(subresults)
-        for res in subresults:
-            print '  ready:', res.ready(),
+        print 'Submissions running:', len(subresults)
+        for sid,res in subresults:
+            print '  Submission id', sid, 'ready:', res.ready(),
             if res.ready():
-                print 'success:', res.successful()
+                subresults.remove((sid,res))
+                print 'success:', res.successful(),
                 if res.successful():
                     print 'result:', res.get(),
             print
-        print 'Job async results:', len(jobresults)
-        for res in jobresults:
-            print '  ready:', res.ready(),
+        print 'Jobs running:', len(jobresults)
+        for jid,res in jobresults:
+            print '  Job id', jid, 'ready:', res.ready(),
             if res.ready():
+                jobresults.remove((jid,res))
                 print 'success:', res.successful(),
                 if res.successful():
                     print 'result:', res.get(),
             print
 
-        if ((len(newsubs) + len(newuis) == 0) and
-            dosub_queue.empty() and
-            job_queue.empty()):
+        if (len(newsubs) + len(newuis)) == 0:
             time.sleep(5)
             continue
 
@@ -478,7 +478,7 @@ def main():
             if dosub_pool:
                 res = dosub_pool.apply_async(try_dosub, (sub,),
                                              callback=sub_callback)
-                subresults.append(res)
+                subresults.append((sub.id, res))
             else:
                 dosub(sub)
 
@@ -491,7 +491,7 @@ def main():
             if dojob_pool:
                 res = dojob_pool.apply_async(try_dojob, (job, userimage),
                                              callback=job_callback)
-                jobresults.append(res)
+                jobresults.append((job.id, res))
             else:
                 dojob(job, userimage)
 
