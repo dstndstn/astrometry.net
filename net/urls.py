@@ -25,6 +25,7 @@ jobpattern = r'[0-9-]+'
 subpattern = r'[0-9-]+'
 imagepattern = r'[0-9-]+'
 idpattern = r'[0-9-]+'
+tagpattern = r'[\s|\S]+'
 
 urlpatterns += patterns('astrometry.net.views.submission',
     (r'^upload/?$', 'upload_file'),
@@ -61,6 +62,11 @@ urlpatterns += patterns('astrometry.net.views.image',
     (r'^wcs_file/(?P<jobid>' + idpattern + r')/?', 'wcs_file'),
 )
 
+urlpatterns += patterns('astrometry.net.views.tag',
+    (r'^user_images/(?P<user_image_id>' + idpattern + r')/tags/(?P<tag_id>' + tagpattern + r')/remove/?', 'remove_userimagetag'),
+)
+
+
 urlpatterns += patterns('astrometry.net.views.comment',
     (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/comments/new/?', 'new'),
     (r'^comments/(?P<comment_id>' + idpattern + r')/delete/?', 'delete'),
@@ -75,6 +81,7 @@ urlpatterns += patterns('astrometry.net.api',
                         (r'^api/submission_images/?', 'api_submission_images')
                         #(r'^api/logout/?', 'logout'),
 )
+
 
 # static file serving in development
 if settings.DEBUG:

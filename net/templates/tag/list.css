@@ -1,0 +1,12 @@
+<style type="text/css">
+ul.tag_list {
+    list-style: none;
+    padding-left: 0px;
+}
+ul.tag_list li {
+    padding-bottom: 1em;
+}
+ul.tag_list .remove_tag {
+    font-size:.8em;
+}
+</style>

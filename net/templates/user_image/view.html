@@ -2,6 +2,7 @@
 
 {% block inline_css %}
 {{block.super}}
+{% include "tag/list.css" %}
 <style type="text/css">
 #image_container {
     background: url('{{ STATIC_URL }}images/loading.gif') no-repeat center center;
@@ -91,7 +92,7 @@ $(document).ready(function() {
     </div>
     <div id="tags">
         <h3>Tags</h3>
-        {% include 'tag/list.html' with tags=image.tags.all %}
+        {% include 'tag/user_image_tag_list.html' with user_image_id=image.id tags=image.tags.all tagged_object_owner=image.user next=request.path %}
         <p><a class="add_tag" href="#">Add Tag (TODO)</a></p>
     </div>
 </div>
