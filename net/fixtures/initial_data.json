@@ -3,10 +3,29 @@
     "model"     :   "auth.user",
     "pk"        :   1,
     "fields"    :   {
-        "first_name"    :   "astrometry",
-        "last_name"     :   ".net",
-        "username"      :   "astrometry.net",
+        "first_name"    :   "astrometry.net",
+        "last_name"     :   "machine",
+        "username"      :   "an-machine",
         "password"      :   "e330d375c4be0915e3ee1d6a2166a20f062f868d"
+    }
+},
+{
+    "model"     :   "auth.user",
+    "pk"        :   2,
+    "fields"    :   {
+        "first_name"    :   "anonymous",
+        "last_name"     :   "",
+        "username"      :   "anonymous",
+        "password"      :   "0"
+    }
+},
+{
+    "model"     :   "net.userprofile",
+    "pk"        :   1,
+    "fields"    :   {
+        "display_name"  :   "anonymous",
+        "user"          :   2,
+        "apikey"        :   "0jcrmadfnxngxscd"
     }
 }
 ]

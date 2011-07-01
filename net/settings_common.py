@@ -38,6 +38,9 @@ LOGFILE = LOG_DIR + 'django.log'
 PORTAL_LOGFILE = LOG_DIR + 'portal.log'
 VO_LOGFILE = LOG_DIR + 'vo.log'
 
+# must match fixtures/initial_data.json
+MACHINE_USERNAME = "an-machine"
+
 # Plotting
 #TYCHO_MKDT = ANDIR + 'net/tycho.mkdt.fits'
 #TILERENDER = ANDIR + 'render/tilerender'

@@ -393,10 +393,11 @@ class UserImage(Commentable):
 
             # associate this UserImage with the machine tag
             logmsg('adding machine tag: %s' % machine_tag.text)
+            machine_user = User.objects.get(username=MACHINE_USERNAME)
             tagged_user_image = TaggedUserImage.objects.get_or_create(
                 user_image=self,
                 tag=machine_tag,
-                defaults={'tagger': None}
+                tagger=machine_user,
             )
             logmsg('tagged user image saved')
         logmsg('done adding machine tags')
