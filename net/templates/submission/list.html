@@ -14,6 +14,8 @@
                 <td class="job_id">job id <span class="job_id">{{ job.id }}</span></td>
                 <td class="job_status">{% include "job/status.html" with job=job %}</td>
             </tr>
+            {% empty %}
+            <tr><td colspan="2">No Jobs</td></tr>
             {% endfor %}
             {% empty %}
             <tr><td colspan="2">No Jobs</td></tr>

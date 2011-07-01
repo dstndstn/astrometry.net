@@ -265,7 +265,9 @@ class Calibration(models.Model):
             objfile.close()
             for objline in objtxt.split('\n'):
                 for obj in objline.split('/'):
-                    objs.append(obj.strip())
+                    obj = obj.strip()
+                    if obj != '':
+                        objs.append(obj)
         return objs
 
 
@@ -380,31 +382,25 @@ class UserImage(Commentable):
         return super(UserImage, self).save(*args, **kwargs)
 
 
-    def add_machine_tags(self):
-        for job in self.jobs.filter(calibration__isnull=False):
-            logmsg('adding machine tags for %s' % self)
-            sky_objects = job.calibration.get_objs_in_field()
-            for sky_object in sky_objects:
-                machine_tag = None
-                logmsg('getting or creating machine tag %s' % sky_object)
-                try:
-                    machine_tag = Tag.objects.get(text=sky_object)
-                    logmsg('got machine tag')
-                except ObjectDoesNotExist:
-                    machine_tag = Tag.objects.create(text=sky_object)
-                    logmsg('created machine tag')
-                
-                # associate this UserImage with the machine tag
-                logmsg('adding machine tag: %s' % machine_tag.text)
-                tagged_user_image = TaggedUserImage(
-                    user_image=self,
-                    tag=machine_tag,
-                    tagger=None,
-                )
-                tagged_user_image.save()
-                logmsg('tagged user image saved')
+    def add_machine_tags(self, job):
+        logmsg('adding machine tags for %s' % self)
+        sky_objects = job.calibration.get_objs_in_field()
+        for sky_object in sky_objects:
+            logmsg('getting or creating machine tag %s' % sky_object)
+            machine_tag,created = Tag.objects.get_or_create(text=sky_object)
+            if created:
+                logmsg('created machine tag')
+
+            # associate this UserImage with the machine tag
+            logmsg('adding machine tag: %s' % machine_tag.text)
+            tagged_user_image = TaggedUserImage.objects.get_or_create(
+                user_image=self,
+                tag=machine_tag,
+                defaults={'tagger': None}
+            )
+            logmsg('tagged user image saved')
         logmsg('done adding machine tags')
-        self.save()
+        #self.save()
                 
 
     def get_best_job(self):

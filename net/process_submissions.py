@@ -152,11 +152,9 @@ def makejobs(userimages, job_queue):
 
 
 def dojob(job,userimage):
-    logmsg("dojob")
     dirnm = job.make_dir()
     log = create_job_logger(job)
     log.msg('Starting Job processing for', job)
-    logmsg("createlogger")
     job.set_start_time()
     job.save()
     #os.chdir(dirnm) - not thread safe (working directory is global)!
@@ -264,14 +262,14 @@ def dojob(job,userimage):
         calib.save()
         logmsg("Created Calibration " + str(calib))
         job.calibration = calib
+        job.save() # needed to update relations (calibration)
         job.status = 'S'
-        job.save()
-        job.user_image.add_machine_tags()
-        logmsg('Saved job %i' % job.id)
+        job.user_image.add_machine_tags(job)
     else:
         job.status = 'F'
     job.set_end_time()
     job.save()
+    logmsg('Saved job %i' % job.id)
 
 
 def queue_subs(newsubs, sub_queue):
