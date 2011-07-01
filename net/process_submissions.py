@@ -129,6 +129,9 @@ class MyLogger(object):
     msg = info
 
 def create_job_logger(job):
+	'''
+	Create a MyLogger object that writes to a log file within a Job directory.
+	'''
     logmsg("getlogger")
     logger = logging.getLogger('job.%i' % job.id)
     logger.setLevel(logging.DEBUG)
@@ -299,30 +302,6 @@ def dosub(sub):
     # compressed .gz
     df = sub.disk_file
     fn = df.get_path()
-
-    '''
-    f,tmpfn = tempfile.mkstemp()
-    os.close(f)
-    comp = image2pnm.uncompress_file(fn, tmpfn)
-    if comp:
-        print 'Input file compression: %s' % comp
-        fn = tmpfn
-    '''
-    # This is sort of crazy -- look at python's 'gzip' and 'tarfile' modules.
-    '''
-    if is_tarball(fn):
-        logmsg('file is tarball.')
-        fns = get_tarball_files(fn)
-        if fns is None:
-            return
-
-        for fn in fns:
-            df = DiskFile.for_file(fn)
-            df.save()
-            logmsg('New diskfile ' + df)
-        shutil.rmtree(tempdir)
-        return True
-    '''
 
     if tarfile.is_tarfile(fn):
         logmsg('file is a tarball')
