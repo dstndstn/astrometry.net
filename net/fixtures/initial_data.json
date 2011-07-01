@@ -1,0 +1,12 @@
+[
+{
+    "model"     :   "auth.user",
+    "pk"        :   1,
+    "fields"    :   {
+        "first_name"    :   "astrometry",
+        "last_name"     :   ".net",
+        "username"      :   "astrometry.net",
+        "password"      :   "e330d375c4be0915e3ee1d6a2166a20f062f868d"
+    }
+}
+]
