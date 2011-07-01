@@ -151,14 +151,15 @@ def try_dojob(job, userimage):
         # FIXME -- job.set_status()...
 
 def dojob(job,userimage):
-    dirnm = job.make_dir()
+    jobdir = job.make_dir()
     log = create_job_logger(job)
     log.msg('Starting Job processing for', job)
     job.set_start_time()
     job.save()
     #os.chdir(dirnm) - not thread safe (working directory is global)!
-    log.msg('Creating directory', dirnm)
-    axyfn = 'job.axy'
+    log.msg('Creating directory', jobdir)
+    axyfn = os.path.join(jobdir, 'job.axy')
+    log.msg('submission id', sub.id)
     sub = userimage.submission
     df = userimage.image.disk_file
     img = userimage.image
@@ -170,7 +171,7 @@ def dojob(job,userimage):
     # Note, this must match Job.get_wcs_file().
     wcsfile = 'wcs.fits'
     axyargs = {
-        '--out': os.path.join(dirnm, axyfn),
+        '--out': axyfn,
         '--image': df.get_path(),
         '--scale-low': slo,
         '--scale-high': shi,
@@ -184,9 +185,7 @@ def dojob(job,userimage):
         '--downsample': sub.downsample_factor
 
         # Other things we might want include...
-        #'--pixel-error':,
         # --use-sextractor
-        # --ra, --dec, --radius
         # --invert
         # -g / --guess-scale: try to guess the image scale from the FITS headers
         # --crpix-center: set the WCS reference point to the image center
@@ -209,42 +208,45 @@ def dojob(job,userimage):
         if v:
             cmd += k + ' ' + str(v) + ' '
 
-    logmsg('running: ' + cmd)
+    log.msg('running: ' + cmd)
     (rtn, out, err) = run_command(cmd)
     if rtn:
-        logmsg('out: ' + out)
-        logmsg('err: ' + err)
+        log.msg('out: ' + out)
+        log.msg('err: ' + err)
+        logmsg('augment-xylist failed: rtn val', rtn, 'err', err)
         return False
 
-    logmsg('created axy file ' + axyfn)
+    log.msg('created axy file', axyfn)
     # shell into compute server...
-    logfn = os.path.join(dirnm, 'log')
+    logfn = os.path.join(jobdir, 'log')
     cmd = ('(echo %(jobid)s; '
-           ' tar cf - --ignore-failed-read -C %(dirnm)s %(axyfile)s) | '
+           ' tar cf - --ignore-failed-read -C %(jobdir)s %(axyfile)s) | '
            'ssh -x -T %(sshconfig)s 2>>%(logfile)s | '
-           'tar xf - --atime-preserve -m --exclude=%(axyfile)s -C %(dirnm)s '
+           'tar xf - --atime-preserve -m --exclude=%(axyfile)s -C %(jobdir)s '
            '>>%(logfile)s 2>&1' %
            dict(jobid='job-%s-%i' % (settings.sitename, job.id),
-                axyfile=axyfn, dirnm=dirnm,
+                axyfile=axyfn, jobdir=jobdir,
                 sshconfig=settings.ssh_solver_config,
                 logfile=logfn))
-    print 'command:', cmd
+    log.msg('command:', cmd)
     w = os.system(cmd)
     if not os.WIFEXITED(w):
-        print 'Solver failed'
+        log.msg('Solver failed (sent signal?)')
+        logmsg('Call to solver failed for job', job.id)
         return
     rtn = os.WEXITSTATUS(w)
     if rtn:
-        logmsg('Solver failed with return value %i' % rtn)
+        log.msg('Solver failed with return value %i' % rtn)
+        logmsg('Call to solver failed for job', job.id, 'with return val', rtn)
         return
 
-    logmsg('Solver completed successfully.')
+    log.msg('Solver completed successfully.')
     
     # Solved?
-    wcsfn = os.path.join(dirnm, wcsfile)
-    logmsg('Checking for WCS file %s' % wcsfn)
+    wcsfn = os.path.join(jobdir, wcsfile)
+    log.msg('Checking for WCS file', wcsfn)
     if os.path.exists(wcsfn):
-        logmsg('WCS file exists')
+        log.msg('WCS file exists')
         # Parse the wcs.fits file
         wcs = Tan(wcsfn, 0)
         # Convert to database model...
@@ -254,12 +256,12 @@ def dojob(job,userimage):
                      cd21=wcs.cd[2], cd22=wcs.cd[3],
                      imagew=img.width, imageh=img.height)
         tan.save()
-        logmsg('Created TanWCS: ' + str(tan))
+        log.msg('Created TanWCS:', tan)
         # Find bounds for the Calibration object.
         r0,r1,d0,d1 = wcs.radec_bounds()
         calib = Calibration(raw_tan=tan, ramin=r0, ramax=r1, decmin=d0, decmax=d1)
         calib.save()
-        logmsg("Created Calibration " + str(calib))
+        log.msg('Created Calibration', calib)
         job.calibration = calib
         job.save() # save calib before adding machine tags
         job.status = 'S'
@@ -268,9 +270,9 @@ def dojob(job,userimage):
         job.status = 'F'
     job.set_end_time()
     job.save()
-    logmsg('Saved job %i' % job.id)
+    log.msg('Finished job', job.id)
+    logmsg('Finished job',job.id)
     return job.id
-
 
 def try_dosub(sub):
     try:
