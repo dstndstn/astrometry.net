@@ -143,24 +143,29 @@ def create_job_logger(job):
     return MyLogger(logger)
 
 def try_dojob(job, userimage):
+    jobdir = job.make_dir()
+    log = create_job_logger(job)
     try:
         return dojob(job, userimage)
     except:
         print 'Caught exception while processing Job', job
         traceback.print_exc(None, sys.stdout)
         # FIXME -- job.set_status()...
+        log.msg('Caught exception while processing Job', job.id)
+        log.msg(traceback.format_exc(None))
 
-def dojob(job,userimage):
+def dojob(job, userimage, log=None):
     jobdir = job.make_dir()
-    log = create_job_logger(job)
+    if log is None:
+        log = create_job_logger(job)
     log.msg('Starting Job processing for', job)
     job.set_start_time()
     job.save()
     #os.chdir(dirnm) - not thread safe (working directory is global)!
     log.msg('Creating directory', jobdir)
     axyfn = os.path.join(jobdir, 'job.axy')
-    log.msg('submission id', sub.id)
     sub = userimage.submission
+    log.msg('submission id', sub.id)
     df = userimage.image.disk_file
     img = userimage.image
 
