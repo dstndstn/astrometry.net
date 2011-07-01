@@ -1,6 +1,6 @@
 <style type="text/css">
 div#submission_list ul { padding-left: 0px; }
-div#submission_list ul li {
+div#submission_list ul li.submission {
     padding: 3px;
     list-style: none;
 }
@@ -8,15 +8,17 @@ li.submission {
     margin-bottom: 2em;
 }
 .submission_job_list {
-    width: 36em;
+    width: 40em;
     margin-left: 2em;
     margin-top: .5em;
 }
 .submission_job_list, .submission_job_list tr td {
+    vertical-align:top;
     border: 1px solid #ddd;
     text-align: left;
 }
-.submission_job_list tr td.image_id { width: 40%; }
-.submission_job_list tr td.job_id { width: 40%; }
+.submission_job_list tr td.image_id { width: 30%; }
+.submission_job_list tr td.job_id { width: 30%; }
 }
+ul.job_milestones li { text-align: right; }
 </style>

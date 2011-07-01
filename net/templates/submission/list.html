@@ -15,10 +15,10 @@
                 <td class="job_status">{% include "job/status.html" with job=job %}</td>
             </tr>
             {% empty %}
-            <tr><td colspan="2">No Jobs</td></tr>
+            <tr><td>No Jobs</td></tr>
             {% endfor %}
             {% empty %}
-            <tr><td colspan="2">No Jobs</td></tr>
+            <tr><td>No Jobs</td></tr>
             {% endfor %}
         </table>
     </li>

@@ -64,8 +64,11 @@ $(document).ready(function() {
         Submitted by {% include 'user/display_name.html' with user=image.user %}<br />
         <span class="timestamp">{{ image.submission.submitted_on|date:"Y-m-d" }}</span><br />
         {{ image.original_file_name }}
+        <br />
         {% if calib %}
-            <br /><a href="{% url astrometry.net.views.image.wcs_file jobid=job.id %}">wcs.fits</a>
+            <a href="{% url astrometry.net.views.image.wcs_file jobid=job.id %}">wcs.fits</a>
+        {% else %}
+            Sorry, no calibration data available
         {% endif %}
     </div>
     <div id="on_the_sky">
