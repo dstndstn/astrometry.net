@@ -146,7 +146,7 @@ def try_dojob(job, userimage):
     jobdir = job.make_dir()
     log = create_job_logger(job)
     try:
-        return dojob(job, userimage)
+        return dojob(job, userimage, log=log)
     except:
         print 'Caught exception while processing Job', job
         traceback.print_exc(None, sys.stdout)
