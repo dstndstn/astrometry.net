@@ -185,15 +185,20 @@ def status(req, subid=None):
 
     #logmsg("UserImages: " + ', '.join(['%i'%s.id for s in sub.user_images.all()]))
 
+    # might want to make this a field in Submission
+    finished = (len(sub.user_images.all()) > 0)
     logmsg("UserImages:")
     for ui in sub.user_images.all():
         logmsg("  %i" % ui.id)
         for j in ui.jobs.all():
             logmsg("    job " + str(j))
+            if j.end_time is None:
+                finished = False
 
     return render_to_response('submission/status.html',
         {
             'sub': sub,
+            'finished': finished,
         },
         context_instance = RequestContext(req))
     

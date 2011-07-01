@@ -17,7 +17,26 @@
 #submission_details {background-color: #eee; padding: 10px; width: 100%}
 #submission_details td {vertical-align: top}
 .leftcolumn {width: 20%}
+#submission_images td {padding: 5px; vertical-align: top}
+.log_tail {
+    width:640px;
+    overflow: auto;
+    display: none;
+}
 </style>
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+refresh_timer = setTimeout("location.reload()", 10000);
+
+function stop_refresh() {
+    $('#refresh_block').hide('flash');
+    clearTimeout(refresh_timer);
+    return false;
+}
+</script>
 {% endblock %}
 
 {% block pagetitle %}
@@ -29,6 +48,13 @@ Submission {{ sub.id }}
 {% endblock %}
 
 {% block content %}
+{% if not finished %}
+<div id="refresh_block">
+    This page will automatically refresh every 10 seconds.
+    <a href="" onclick="return stop_refresh();">Stop</a>
+    <br /><br />
+</div>
+{% endif %}
 
 <table id="submission_details">
 <tr>
@@ -100,7 +126,7 @@ Submission {{ sub.id }}
 </table>
 <br />
 
-<table>
+<table id="submission_images">
 {% for image in sub.user_images.all %}
 <tr>
 <td>
@@ -112,8 +138,13 @@ Submission {{ sub.id }}
     {% for job in image.jobs.all %}
     Job {{ job.id }}: {% include "job/status.html" with job=job %}<br />
 
-	<a href={% url astrometry.net.views.submission.job_log_file jobid=job.id %}>Log file</a><br />
+    <a href="" onclick="$('#log_tail{{job.id}}').slideToggle(); return false;">Log File Tail</a><br />
+    <div class="log_tail" id="log_tail{{job.id}}">
+	<a href={% url astrometry.net.views.submission.job_log_file jobid=job.id %}>(full)</a><br />
+<pre>{{ job.get_log_tail }}</pre>
+    </div>
 	<a href={% url astrometry.net.views.submission.job_log_file2 jobid=job.id %}>Log file 2</a>
+
     {% empty %}
     No Jobs.
     {% endfor %}

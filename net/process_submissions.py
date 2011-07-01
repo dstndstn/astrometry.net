@@ -324,8 +324,9 @@ def dosub(sub):
                 # create UserImage object.
                 uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
                                                                defaults=dict(original_file_name=tarinfo.name))
+                os.remove(tempfn)
         tar.close()
-        os.remove(dirnm)
+        os.removedirs(dirnm)
     else:
         original_filename = sub.original_filename
         # check if file is a gzipped file

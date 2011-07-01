@@ -28,11 +28,6 @@
 }
 #tags {  }
 #comments {  }
-#log_tail {
-    width:640px;
-    overflow: auto;
-    display: none;
-}
 </style>
 {% endblock %}
 
@@ -114,10 +109,6 @@ $(document).ready(function() {
     <br />
     <div id="description">
         {{ image.description }}<br />
-    </div>
-    <h3><a href="" onclick="$('#log_tail').slideToggle(); return false;">Log File Tail</a></h3>
-    <div id="log_tail">
-<pre>{{ job.get_log_tail }}</pre>
     </div>
     <div id="comments">
         <h3>Comments</h3>
