@@ -9,6 +9,6 @@
 {% else %}
 		Processing...
 		<br />
-		Queued: {{ job.queued_time|date:"Y-m-d H:i" }}<br />
-		Started: {{ job.queued_time|date:"Y-m-d H:i" }}<br />
+		Queued: {{ job.queued_time|date:"Y-m-d H:i:s" }}<br />
+		Started: {{ job.queued_time|date:"Y-m-d H:i:s" }}<br />
 {% endif %}
