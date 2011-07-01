@@ -58,7 +58,7 @@ class DiskFile(models.Model):
     @staticmethod
     def get_file_path(file_hash_digest):
         file_path = DiskFile.get_file_directory(file_hash_digest)
-        file_path = os.path.join(DATADIR, file_path, file_hash_digest)
+        file_path = os.path.join(file_path, file_hash_digest)
         return file_path
 
     @staticmethod
