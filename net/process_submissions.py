@@ -163,7 +163,8 @@ def dojob(job, userimage, log=None):
     job.save()
     #os.chdir(dirnm) - not thread safe (working directory is global)!
     log.msg('Creating directory', jobdir)
-    axyfn = os.path.join(jobdir, 'job.axy')
+    axyfn = 'job.axy'
+    axypath = os.path.join(jobdir, axyfn)
     sub = userimage.submission
     log.msg('submission id', sub.id)
     df = userimage.image.disk_file
@@ -176,7 +177,7 @@ def dojob(job, userimage, log=None):
     # Note, this must match Job.get_wcs_file().
     wcsfile = 'wcs.fits'
     axyargs = {
-        '--out': axyfn,
+        '--out': axypath,
         '--image': df.get_path(),
         '--scale-low': slo,
         '--scale-high': shi,
@@ -221,11 +222,13 @@ def dojob(job, userimage, log=None):
         logmsg('augment-xylist failed: rtn val', rtn, 'err', err)
         return False
 
-    log.msg('created axy file', axyfn)
+    log.msg('created axy file', axypath)
     # shell into compute server...
-    logfn = os.path.join(jobdir, 'log')
+    logfn = job.get_log_file()
+    # the "tar" commands both use "-C" to chdir, and the ssh command
+    # and redirect uses absolute paths.
     cmd = ('(echo %(jobid)s; '
-           ' tar cf - --ignore-failed-read -C %(jobdir)s %(axyfile)s) | '
+           'tar cf - --ignore-failed-read -C %(jobdir)s %(axyfile)s) | '
            'ssh -x -T %(sshconfig)s 2>>%(logfile)s | '
            'tar xf - --atime-preserve -m --exclude=%(axyfile)s -C %(jobdir)s '
            '>>%(logfile)s 2>&1' %

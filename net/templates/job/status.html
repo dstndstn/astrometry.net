@@ -7,5 +7,8 @@
     {% endif %}
     {% if not job.status == 'F' and not job.status == 'S' %}?{% endif %}
 {% else %}
-    processing...
+		Processing...
+		<br />
+		Queued: {{ job.queued_time|date:"Y-m-d H:i" }}<br />
+		Started: {{ job.queued_time|date:"Y-m-d H:i" }}<br />
 {% endif %}
