@@ -40,6 +40,7 @@ VO_LOGFILE = LOG_DIR + 'vo.log'
 
 # must match fixtures/initial_data.json
 MACHINE_USERNAME = "an-machine"
+ANONYMOUS_USERNAME = "anonymous"
 
 # Plotting
 #TYCHO_MKDT = ANDIR + 'net/tycho.mkdt.fits'

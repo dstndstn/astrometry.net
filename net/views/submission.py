@@ -146,7 +146,7 @@ def upload_file(request):
         form = SubmissionForm(request.POST, request.FILES)
         if form.is_valid():
             sub = form.save(commit=False)
-            sub.user = request.user if request.user.is_authenticated() else None
+            sub.user = request.user if request.user.is_authenticated() else User.objects.get(username=ANONYMOUS_USERNAME)
             if form.cleaned_data['upload_type'] == 'file':
                 sub.disk_file = handle_upload(file=request.FILES['file'])
                 sub.original_filename = request.FILES['file'].name
