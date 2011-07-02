@@ -67,7 +67,7 @@ def dashboard_submissions(req):
 @login_required
 def dashboard_user_images(req):
     page_number = req.GET.get('page',1)
-    page = get_page(req.user.user_images.all().order_by('-submission__submitted_on', 'id'),9,page_number)
+    page = get_page(req.user.user_images.all().order_by('-submission__submitted_on', 'id'),3*10,page_number)
     
     context = {
         'user':req.user,
@@ -90,11 +90,9 @@ def index(req):
 
 def public_profile(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
-    page = get_page(user.user_images.all().order_by('-submission__submitted_on')[:4],4,1)
 
     context = {
         'display_user':user,
-        'recent_image_page':page,
         'recent_submissions':user.submissions.all().order_by('-submitted_on')[:10],
     }
     return render_to_response('user/profile.html',

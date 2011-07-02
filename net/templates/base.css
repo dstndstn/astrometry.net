@@ -1,4 +1,7 @@
 <style type="text/css">
+html {
+    overflow-Y: scroll;
+}
 body {
     text-align: center;
     margin-top: 0px;

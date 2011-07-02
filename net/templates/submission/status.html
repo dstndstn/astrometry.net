@@ -29,17 +29,27 @@
 
 {% block javascript %}
 {{ block.super }}
+<script type="text/javascript">
 {% if not finished %}
-    <script type="text/javascript">
-    refresh_timer = setTimeout("location.reload()", 10000);
+refresh_timer = setTimeout("location.reload()", 10000);
 
-    function stop_refresh() {
-        $('#refresh_block').hide('flash');
-        clearTimeout(refresh_timer);
-        return false;
-    }
-    </script>
+function stop_refresh() {
+    $('#refresh_block').hide('flash');
+    clearTimeout(refresh_timer);
+    return false;
+}
 {% endif %}
+
+$(document).ready(function() {
+    $('.log_tail_link').click(function() {
+        $(this).next('.log_tail').slideToggle();
+    }).toggle(function() {
+        $(this).children('span').text("[-]");
+    }, function() {
+        $(this).children('span').text("[+]");
+    });
+});
+</script>
 {% endblock %}
 
 {% block pagetitle %}
@@ -141,8 +151,8 @@ Submission {{ sub.id }}
     {% for job in image.jobs.all %}
     Job {{ job.id }}: {% include "job/status.html" with job=job %}<br />
 
-    <a href="" onclick="$('#log_tail{{job.id}}').slideToggle(); return false;">Log File Tail</a><br />
-    <div class="log_tail" id="log_tail{{job.id}}">
+    <a href="" class="log_tail_link">Log File Tail <span>[+]</span><br /></a>
+    <div class="log_tail">
 	<a href={% url astrometry.net.views.submission.job_log_file jobid=job.id %}>(full)</a><br />
 <pre>{{ job.get_log_tail }}</pre>
     </div>
