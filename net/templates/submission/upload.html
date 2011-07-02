@@ -45,8 +45,9 @@ $(document).ready(function() {
     });
     changeScalePreset($('input[name=scale_preset]:radio:checked').val());
     
-    $('#settings_link').click(function() {
+    $('#settings_link').click(function(e) {
         $('#settings_block').slideToggle();
+        e.preventDefault();
     }).toggle(function() {
         $(this).children('span').text("[-]");
     }, function() {

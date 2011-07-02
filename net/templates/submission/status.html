@@ -41,8 +41,9 @@ function stop_refresh() {
 {% endif %}
 
 $(document).ready(function() {
-    $('.log_tail_link').click(function() {
+    $('.log_tail_link').click(function(e) {
         $(this).next('.log_tail').slideToggle();
+        e.preventDefault();
     }).toggle(function() {
         $(this).children('span').text("[-]");
     }, function() {

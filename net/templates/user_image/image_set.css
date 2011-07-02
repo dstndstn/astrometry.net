@@ -1,10 +1,18 @@
 <style type="text/css">
-.image_container {
+.loading_container {
     display: inline-block;
     width: 235px;
     height: 235px;
     margin: 5px;
     background-color: #000000;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-image: url('{{ STATIC_URL }}images/loading-black.gif');
+}
+.image_container {
+    width: 235px;
+    height: 235px;
+    background-color: transparent;
     background-position: center center;
     background-repeat: no-repeat;
 }

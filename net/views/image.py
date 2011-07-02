@@ -25,6 +25,7 @@ from astrometry.util.run_command import run_command
 from astrometry.net.views.comment import *
 from astrometry.net.util import get_page
 
+from string import strip
 def user_image(req, user_image_id=None):
     image = get_object_or_404(UserImage, pk=user_image_id)
 
@@ -254,3 +255,71 @@ def wcs_file(req, jobid=None):
     res['Content-Disposition'] = 'attachment; filename=wcs.fits'
     return res
 
+class ImageSearchForm(forms.Form):
+    SEARCH_CATEGORIES = (('tag', 'By Tag'),
+                         ('user', 'By User'),
+                         ('location', 'By Location'))
+
+    search_category = forms.ChoiceField(widget=forms.HiddenInput(),
+                                        choices=SEARCH_CATEGORIES,
+                                        initial='tag',
+                                        required=False)
+
+    tags = forms.CharField(required=False)
+    user = forms.CharField(required=False)
+    calibrated_only = forms.BooleanField(initial=False,required=False)
+    
+    def clean(self):
+        category = self.cleaned_data.get('search_category');
+        if not category:
+            self.cleaned_data['search_category'] = 'tag'
+
+        return self.cleaned_data
+    
+
+def search(req):
+    form = ImageSearchForm(req.GET)
+
+    context = {}
+    page = None
+    if form.is_valid(): 
+        all_images = UserImage.objects.all()
+        images = all_images
+        category = form.cleaned_data.get('search_category');
+        if category == 'tag':
+            tags = form.cleaned_data.get('tags','')
+            if tags.strip():
+                images = UserImage.objects.none()
+                tag_objs = []
+                tags = map(strip,tags.split(','))
+                tags = list(set(tags)) # remove duplicate tags
+                
+                images = all_images.filter(tags__text__in=tags).distinct()
+                tag_objs = Tag.objects.filter(text__in=tags)
+                context['tags'] = tag_objs
+
+        elif category == 'user':
+            username = form.cleaned_data.get('user','')
+
+            if username.strip():
+                user = User.objects.filter(profile__display_name=username)[:1]
+                images = UserImage.objects.none()
+                if len(user) > 0:
+                    images = all_images.filter(user=user)
+                    context['display_user'] = user[0] 
+                else:
+                    context['display_users'] = User.objects.filter(profile__display_name__startswith=username)[:5]
+        
+        calibrated_only = form.cleaned_data.get('calibrated_only')
+        if calibrated_only:
+            images = images.filter(jobs__calibration__isnull=False)
+        page_number = req.GET.get('page',1)
+        page = get_page(images.order_by('-submission__submitted_on'),4*5,page_number)
+        print len(images)
+
+    context.update({'form': form,
+                    'search_category': form.cleaned_data.get('search_category'),
+                    'image_page': page})
+    return render_to_response('user_image/search.html',
+        context,
+        context_instance = RequestContext(req))

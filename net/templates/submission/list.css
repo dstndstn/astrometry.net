@@ -1,6 +1,6 @@
 <style type="text/css">
 div#submission_list ul { padding-left: 0px; }
-div#submission_list ul li.submission {
+div#submission_list ul li {
     padding: 3px;
     list-style: none;
 }

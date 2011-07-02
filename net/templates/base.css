@@ -37,7 +37,7 @@ div#title {
 div#title h2 {
     margin: 0px;
     font-size: 1.1em;
-    font-weight:600;
+    font-weight:bold;
 }
 div#footer p {
     text-align: left;
@@ -67,7 +67,7 @@ div.comment p.comment_footer {
     margin-left: 3em;
     font-size: .8em;
 }
-#messages p.success { color: #0e0; }
+#messages p.success { color: #0c0; }
 a          {color: #00a; text-decoration: none; background-color: transparent;}
 a:link     {background-color: transparent; color: #00a;}
 a:visited  {background-color: transparent; color: #00a;}
@@ -117,7 +117,7 @@ a:hover    {background-color: #00a; color: #fff; text-decoration: none;}
     margin: 10px;
     margin-top: 0px;
 }
-.good { color:#0e0; }
+.good { color:#0c0; }
 .bad { color:#e00; }
 .code {
     color: #666;
@@ -126,7 +126,7 @@ a:hover    {background-color: #00a; color: #fff; text-decoration: none;}
 }
 h2 {
     font-size: 1.2em;
-    font-weight: 600;
+    font-weight: bold;
 }
 span#user_info { font-weight:bold; }
 .bigbutton { font-size:110%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
