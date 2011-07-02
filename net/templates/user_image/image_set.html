@@ -1,12 +1,14 @@
 <div class="image_set">
+{% spaceless %}
 {% for image in images %}
-    <a href="{% url astrometry.net.views.image.user_image image.id %}">
     <!--<img class="image_container" src="{% url astrometry.net.views.image.serve_image id=image.image.thumbnail.id %}" />-->
-    <div class="image_container" style="background-image: url('{% url astrometry.net.views.image.serve_image id=image.image.get_thumbnail.id %}')"></div> 
-    </a>
+    <div class="image_container" style="background-image: url('{% url astrometry.net.views.image.serve_image id=image.image.get_thumbnail.id %}')"> 
+        <a href="{% url astrometry.net.views.image.user_image image.id %}"></a>
+    </div>
 {% empty %}
     No images.
 {% endfor %}
+{% endspaceless %}
 </div>
 
 

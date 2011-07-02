@@ -1,4 +1,5 @@
 <ul>
+{% spaceless %}
 <li><a href="{% url astrometry.net.views.home.home %}">Home</a></li>
 <li><a href="{% url astrometry.net.views.image.index %}">Images</a></li>
 {% if user.is_authenticated %}
@@ -6,7 +7,7 @@
 {% endif %}
 <li><a href="{% url astrometry.net.views.submission.upload_file %}">Upload</a></li>
 <li><a href="{% url astrometry.net.views.home.support %}">Support</a></li>
-
+{% endspaceless %}
 
 {% comment %}
 <!--

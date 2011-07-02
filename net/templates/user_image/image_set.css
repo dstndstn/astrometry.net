@@ -1,17 +1,22 @@
 <style type="text/css">
 .image_container {
     display: inline-block;
-    width: 240px;
-    height: 240px;
-    margin: 10px;
-    margin-left: 0px;
-    margin-right: 20px;
+    width: 235px;
+    height: 235px;
+    margin: 5px;
     background-color: #000000;
     background-position: center center;
     background-repeat: no-repeat;
 }
+.image_container a {
+    display: block;
+    width: 235px;
+    height: 235px;
+}
+.image_container a:hover {
+    background-color: transparent;
+}
 .pagination {
-    clear: both;
     width: 100%;
     text-align: center;
 }

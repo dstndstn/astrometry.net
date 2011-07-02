@@ -29,15 +29,17 @@
 
 {% block javascript %}
 {{ block.super }}
-<script type="text/javascript">
-refresh_timer = setTimeout("location.reload()", 10000);
+{% if not finished %}
+    <script type="text/javascript">
+    refresh_timer = setTimeout("location.reload()", 10000);
 
-function stop_refresh() {
-    $('#refresh_block').hide('flash');
-    clearTimeout(refresh_timer);
-    return false;
-}
-</script>
+    function stop_refresh() {
+        $('#refresh_block').hide('flash');
+        clearTimeout(refresh_timer);
+        return false;
+    }
+    </script>
+{% endif %}
 {% endblock %}
 
 {% block pagetitle %}

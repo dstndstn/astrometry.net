@@ -5,19 +5,22 @@
 {% include 'user_image/image_set.css' %}
 {% include 'view_menu.css' %}
 <style type="text/css">
-div#user_image_index {
+/*div#user_image_index {
     overflow:auto;
     width:100%
 }
 div#user_image_index div {
     float:left;
     vertical-align:top;
-}
+}*/
 div#user_image_index_menu {
+    float: left;
     width: 20%;
 }
 div#user_image_index_content {
-    width: 80%;
+    float: left;
+    width: 75%;
+    margin-left: 5%;
 }
 </style>
 {% endblock %}
@@ -37,4 +40,5 @@ div#user_image_index_content {
     {% endblock %}
     </div>
 </div>
+<div style="clear:both"></div>
 {% endblock %}
