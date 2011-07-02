@@ -4,7 +4,7 @@ from astrometry.net.models import *
 
 def home(req):
     context = {
-        'images':UserImage.objects.all(),
+        'images':UserImage.objects.all().order_by('-submission__submitted_on'),
     }
     return render_to_response('home.html', context,
         context_instance = RequestContext(req))
