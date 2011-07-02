@@ -315,7 +315,6 @@ def search(req):
             images = images.filter(jobs__calibration__isnull=False)
         page_number = req.GET.get('page',1)
         page = get_page(images.order_by('-submission__submitted_on'),4*5,page_number)
-        print len(images)
 
     context.update({'form': form,
                     'search_category': form.cleaned_data.get('search_category'),
