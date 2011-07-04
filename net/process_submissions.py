@@ -411,18 +411,21 @@ def job_callback(result):
     print 'Job callback: Result:', result
 
 
-def main():
+def main(dojob_nthreads, dosub_nthreads, refresh_rate):
     dosub_queue = multiprocessing.Queue()
     job_queue = multiprocessing.Queue()
-    dojob_nthreads = 3
-    dosub_nthreads = 2
 
     dojob_pool = None
     dosub_pool = None
     if dojob_nthreads > 1:
+        print 'Processing jobs with %d threads' % dojob_nthreads
         dojob_pool = multiprocessing.Pool(processes=dojob_nthreads)
     if dosub_nthreads > 1:
+        print 'Processing submissions with %d threads' % dosub_nthreads
+        dojob_pool = multiprocessing.Pool(processes=dojob_nthreads)
         dosub_pool = multiprocessing.Pool(processes=dosub_nthreads)
+
+    print 'Refresh rate: %f seconds' % refresh_rate
 
     # Find Submissions that have been started but not finished;
     # reset the start times to null.
@@ -476,7 +479,7 @@ def main():
             print
 
         if (len(newsubs) + len(newuis)) == 0:
-            time.sleep(5)
+            time.sleep(refresh_rate)
             continue
 
         # FIXME -- order by user, etc
@@ -507,5 +510,24 @@ def main():
                 dojob(job, userimage)
 
 if __name__ == '__main__':
-    main()
+    import optparse
+    parser = optparse.OptionParser()
+    parser.add_option('--jobthreads', '-j', dest='jobthreads', type='int', help='Set the number of threads to process jobs')
+    parser.add_option('--subthreads', '-s', dest='subthreads', type='int', help='Set the number of threads to process submissions')
+    parser.add_option('--refreshrate', '-r', dest='refreshrate', type='float', help='Set how often to check for new jobs and submissions (in seconds)')
+    opt,args = parser.parse_args()
+    args = {
+        'dojob_nthreads':3,
+        'dosub_nthreads':2,
+        'refresh_rate':5
+    }
+    if opt.jobthreads:
+        args['dojob_nthreads'] = opt.jobthreads
+    if opt.subthreads:
+        args['dosub_nthreads'] = opt.subthreads
+    if opt.refreshrate:
+        args['refresh_rate'] = opt.refreshrate
+
+    main(dojob_nthreads = args['dojob_nthreads'], dosub_nthreads=args['dosub_nthreads'],
+        refresh_rate = args['refresh_rate'])
 
