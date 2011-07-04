@@ -3,6 +3,7 @@
 {% block inline_css %}
 {{block.super}}
 {% include "tag/list.css" %}
+{% include 'job/status.css' %}
 <style type="text/css">
 #image_container {
     background: url('{{ STATIC_URL }}images/loading.gif') no-repeat center center;
@@ -21,6 +22,10 @@
 }
 #right_block h3 {
     text-align: center;
+}
+div#job_status {
+    border: none;
+    border-bottom: 1px solid #999;
 }
 div#calibration {
     padding-top: .5em;
@@ -84,6 +89,12 @@ $(document).ready(function() {
         <p class="indent">on <span class="timestamp">{{ image.submission.submitted_on|date:"Y-m-d" }}</span></p>
         <p class="indent">as "{{ image.original_file_name }}"</p>
     </div>
+    <div id="job_status">
+        <p>Job {{ job.id }}</p>
+        <div class="indent">
+            {% include 'job/status.html' with job=job %}
+        </div>
+    </div>
     <div id="calibration">
         {% if calib %}
         <p><a href="{% url astrometry.net.views.image.wcs_file jobid=job.id %}">wcs.fits</a></p>
@@ -113,7 +124,6 @@ $(document).ready(function() {
 </div>
 <div id="left_block">
     <div id="submitted_field">
-        Job {{ job.id }}<br />
         {% if calib %}
         <a href="{% url astrometry.net.views.image.serve_image display_image.id %}" class="image_link">original</a> |
         <a href="{% url astrometry.net.views.image.annotated_image jobid=job.id size='display' %}" class="image_link">annotated</a> |
