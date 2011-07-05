@@ -48,11 +48,8 @@ def user_image(req, user_image_id=None):
 
 def serve_image(req, id=None):
     image = get_object_or_404(Image, pk=id)
-    df = image.disk_file
-    imgfn = df.get_path()
-    f = open(imgfn)
-    res = HttpResponse(f)
-    res['Content-type'] = image.get_mime_type()
+    res = HttpResponse(mimetype=image.get_mime_type())
+    image.render(res)
     return res
 
 def annotated_image(req, jobid=None, size='full'):

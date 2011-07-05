@@ -355,6 +355,7 @@ def dosub(sub):
         logmsg('single file')
         # create Image object
         img = get_or_create_image(df)
+        #img = get_or_create_source_list(df)
         # create UserImage object.
         uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
                                                        defaults=dict(original_file_name=original_filename))
@@ -404,6 +405,37 @@ def get_or_create_image(df):
 
     return img
 
+def get_or_create_source_list(df):
+    # Is there already an SourceList for this DiskFile?
+    try:
+        img,created = SourceList.objects.get_or_create(disk_file=df)
+    except SourceList.MultipleObjectsReturned:
+        img = Image.objects.filter(disk_file=df)
+        for i in range(1,len(img)):
+            img[i].delete()
+        img = img[0]
+        created = False
+
+    fn = df.get_path()
+    if created:
+        #img.source_type = 'text'
+        img.save()
+        fits = img.get_fits_table()
+        w = fits.x.max()-fits.x.min()
+        h = fits.y.max()-fits.y.min()
+        w = int(1.2*w)
+        h = int(1.2*h)
+        logmsg('w %i, h %i' % (w, h))
+        img.width = w
+        img.height = h
+        img.save()
+        # cache
+        img.get_thumbnail()
+        img.get_display_image()
+        img.save()
+
+    return img
+    
 ## DEBUG
 def sub_callback(result):
     print 'Submission callback: Result:', result

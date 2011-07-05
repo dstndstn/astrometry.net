@@ -18,6 +18,10 @@ from log import *
 
 from astrometry.util.filetype import filetype_short
 from astrometry.util.run_command import run_command
+from astrometry.util.pyfits_utils import *
+from astrometry.net.tmpfile import *
+
+import PIL.Image, PIL.ImageDraw
 
 class Commentable(models.Model):
     id = models.AutoField(primary_key=True)
@@ -168,6 +172,86 @@ class Image(models.Model):
         image = Image(disk_file=df, width=W, height=H)
         image.save()
         return image
+
+    def render(self, f):
+        if hasattr(self,'sourcelist'):
+            # image is a source list
+            self.sourcelist.render(f)
+        else:
+            df = open(self.disk_file.get_path())
+            f.write(df.read())
+            df.close()
+
+class SourceList(Image):
+    SOURCE_TYPE_CHOICES = (('fits','FITS binary table'),
+                           ('text','Text list'))
+
+    source_type = models.CharField(max_length=4, choices=SOURCE_TYPE_CHOICES)
+    
+    def get_fits_table(self):
+        table = None
+        if self.source_type == 'fits':
+            pass
+            #table = fits_table(self.disk_file.get_path())
+        elif self.source_type == 'text':
+            key = 'fits_table_df%s' % self.disk_file.file_hash
+            df = CachedFile.get(key)
+            if df is None:
+                fitsfn = get_temp_file()
+                cmd = 'text2fits.py %s %s' % (self.disk_file.get_path(), fitsfn)
+                logmsg("Creating fits table from text list: %s" % cmd)
+                rtn,out,err = run_command(cmd)
+                if rtn:
+                    logmsg('text2fits.py failed: rtn %i' % rtn)
+                    logmsg('out: ' + out)
+                    logmsg('err: ' + err)
+                    raise RuntimeError('Failed to create fits table from %s: text2fits.py: %s' % (str(self), err))
+
+                # cache
+                logmsg('Caching key "%s"' % key)
+                df = CachedFile.add(key, fitsfn)
+            else:
+                logmsg('Cache hit for key "%s"' % key)
+            logmsg('Cache file path: %s' % df.get_path())
+            table = fits_table(str(df.get_path()))
+
+        return table
+
+    def get_mime_type(self):
+        return 'image/png'
+
+    def create_resized_image(self, maxsize):
+        if max(self.width, self.height) <= maxsize:
+            return self
+
+        scale = float(maxsize) / float(max(self.width, self.height))
+        W,H = int(round(scale * self.width)), int(round(scale * self.height))
+        image = SourceList(disk_file=self.disk_file, width=W, height=H)
+        image.source_type = self.source_type
+        image.save()
+        return image
+    
+    def render(self, f):
+        fits = self.get_fits_table()
+        w = fits.x.max()-fits.x.min()
+        h = fits.y.max()-fits.y.min()
+        scale = float(self.width)/(1.2*w) 
+        xmin = fits.x.min()-0.1*w
+        ymin = fits.y.min()-0.1*h
+        
+        img = PIL.Image.new('RGB',(self.width,self.height))
+        draw = PIL.ImageDraw.Draw(img)
+
+        r = int(0.005*self.width)
+        if r < 1:
+            r = 1
+        for (x, y) in zip(fits.x,fits.y):
+            x = int((x-xmin)*scale)
+            y = int((y-ymin)*scale)
+            draw.ellipse((x-r,y-r,x+r,y+r),fill="rgb(255,255,255)")
+        del draw
+        img.save(f, 'PNG')
+        
 
 
 class Tag(models.Model):
