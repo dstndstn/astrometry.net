@@ -17,7 +17,6 @@ def transform(long, lat, poleTo, poleFrom):
 	ra = ra_normalize(ra)
 	return ra,dec
 
-
 # Galactic (l,b) to equatorial (ra,dec).
 # Lifted from LSST's afw.coord.Coord class by Steve Bickerton.
 def lbtoradec(l, b):
@@ -26,14 +25,6 @@ def lbtoradec(l, b):
 	# aka 'Fk5PoleInGalactic'
 	poleFrom = (122.9320, 27.12825)
 	return transform(l, b, poleTo, poleFrom)
-# (alphaGP,deltaGP) = deg2rad(poleFrom[0]), deg2rad(poleFrom[1])
-#lCP = deg2rad(poleTo[0])
-#	alpha = deg2rad(l)
-#	delta = deg2rad(b)
-#	ra = rad2deg(lCP - arctan2(sin(alpha - alphaGP),
-#							  tan(delta) * cos(deltaGP) - cos(alpha - alphaGP) * sin(deltaGP)))
-#	dec = rad2deg(arcsin((sin(deltaGP)*sin(delta) + cos(deltaGP)*cos(delta)*cos(alpha - alphaGP))))
-#	return ra,dec
 
 galactictoradec = lbtoradec
 

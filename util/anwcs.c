@@ -1119,13 +1119,13 @@ anwcs_t* anwcs_create_box(double ra, double dec, double width, int W, int H) {
 	double scale;
 	tan.crval[0] = ra;
 	tan.crval[1] = dec;
-	tan.crpix[0] = W / 2.0;
-	tan.crpix[1] = H / 2.0;
+	tan.crpix[0] = W / 2.0 + 0.5;
+	tan.crpix[1] = H / 2.0 + 0.5;
 	scale = width / (double)W;
 	tan.cd[0][0] = -scale;
 	tan.cd[1][0] = 0;
 	tan.cd[0][1] = 0;
-	tan.cd[1][1] = -scale;
+	tan.cd[1][1] = scale;
 	tan.imagew = W;
 	tan.imageh = H;
 	return anwcs_new_tan(&tan);

@@ -104,14 +104,14 @@ InlineDeclare void radec2xyz(double ra, double dec, double* x, double* y, double
 InlineDeclare Flatten void xyz2radec(double x, double y, double z, double *ra, double *dec);
 InlineDeclare Flatten void xyzarr2radec(const double* xyz, double *ra, double *dec);
 InlineDeclare void xyzarr2radecarr(const double* xyz, double *radec);
-InlineDeclare void radec2xyzarr(double ra, double dec, double* xyz);
+InlineDeclare void radec2xyzarr(double ra, double dec, double* p_xyz);
 InlineDeclare void radec2xyzarrmany(double *ra, double *dec, double* xyz, int n);
 
 // RA,Dec in degrees:
 InlineDeclare void radecdeg2xyz(double ra, double dec, double* x, double* y, double* z);
 InlineDeclare Flatten void xyzarr2radecdeg(const double* xyz, double *ra, double *dec);
 InlineDeclare Flatten void xyzarr2radecdegarr(double* xyz, double *radec);
-InlineDeclare void radecdeg2xyzarr(double ra, double dec, double* xyz);
+InlineDeclare void radecdeg2xyzarr(double ra, double dec, double* p_xyz);
 InlineDeclare void radecdegarr2xyzarr(double* radec, double* xyz);
 InlineDeclare void radecdeg2xyzarrmany(double *ra, double *dec, double* xyz, int n);
 

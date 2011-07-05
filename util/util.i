@@ -37,6 +37,8 @@
 // Things in keywords.h (used by healpix.h)
 #define Const
 #define WarnUnusedResult
+#define InlineDeclare
+#define Flatten
 #define ASTROMETRY_KEYWORDS_H
 #define ATTRIB_FORMAT(x,y,z)
 
@@ -148,8 +150,18 @@ void log_set_level(int lvl);
 // eg anwcs_radec2pixelxy
 %apply double *OUTPUT { double *p_x, double *p_y };
 
+// anwcs_pixelxy2xyz
+%typemap(in, numinputs=0) double* p_xyz (double tempxyz[3]) {
+	$1 = tempxyz;
+}
+// in the argout typemap we don't know about the swap (but that's ok)
+%typemap(argout) double* p_xyz {
+  $result = Py_BuildValue("(ddd)", $1[0], $1[1], $1[2]);
+}
+
 %include "anwcs.h"
 
+%include "starutil.h"
 
 %typemap(in) double [ANY] (double temp[$1_dim0]) {
   int i;

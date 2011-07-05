@@ -75,7 +75,7 @@ int anwcs_radec2pixelxy(const anwcs_t* wcs, double ra, double dec, double* p_x, 
 
 int anwcs_pixelxy2radec(const anwcs_t* wcs, double px, double py, double* ra, double* dec);
 
-int anwcs_pixelxy2xyz(const anwcs_t* wcs, double px, double py, double* xyz);
+int anwcs_pixelxy2xyz(const anwcs_t* wcs, double px, double py, double* p_xyz);
 
 int anwcs_xyz2pixelxy(const anwcs_t* wcs, const double* xyz, double *px, double *py);
 
