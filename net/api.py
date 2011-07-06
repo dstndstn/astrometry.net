@@ -258,3 +258,17 @@ def tags(req, job_id):
     return HttpResponseJson({
         'tags':json_tags}
     )
+
+@csrf_exempt
+def machine_tags(req, job_id):
+    job = get_object_or_404(Job, pk=job_id)
+    machine_user = User.objects.get(username=MACHINE_USERNAME)
+    tags = TaggedUserImage.objects.filter(
+        user_image = job.user_image,
+        tagger = machine_user
+    )
+    json_tags = [tagged_user_image.tag.text for tagged_user_image in tags]
+    return HttpResponseJson({
+        'tags':json_tags}
+    )
+
