@@ -65,7 +65,7 @@ class SubmissionForm(forms.ModelForm):
         model = Submission
         fields = ('parity','scale_units','scale_type','scale_lower',
                   'scale_upper','scale_est','scale_err','positional_error',
-                  'center_ra','center_dec','radius','downsample_factor')
+                  'center_ra','center_dec','radius','downsample_factor','source_type')
         widgets = {'scale_type': forms.RadioSelect(renderer=HorizontalRenderer),
                    'scale_lower': forms.TextInput(attrs={'size':'5'}),
                    'scale_upper': forms.TextInput(attrs={'size':'5'}),
@@ -77,6 +77,7 @@ class SubmissionForm(forms.ModelForm):
                    'radius': forms.TextInput(attrs={'size':'5'}),
                    'downsample_factor': forms.TextInput(attrs={'size':'5'}),
                    'parity': forms.RadioSelect(renderer=NoBulletsRenderer),
+                   'source_type': forms.RadioSelect(renderer=NoBulletsRenderer),
                   }
 
     def clean(self):
@@ -136,8 +137,6 @@ class SubmissionForm(forms.ModelForm):
             except forms.ValidationError:
                 raise forms.ValidationError("You must enter a valid url.")
             self.cleaned_data['url'] = url
-        
-
 
         return self.cleaned_data
 

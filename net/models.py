@@ -188,11 +188,9 @@ class SourceList(Image):
 
     source_type = models.CharField(max_length=4, choices=SOURCE_TYPE_CHOICES)
     
-    def get_fits_table(self):
-        table = None
+    def get_fits_path(self):
         if self.source_type == 'fits':
-            pass
-            #table = fits_table(self.disk_file.get_path())
+            return self.disk_file.get_path()
         elif self.source_type == 'text':
             key = 'fits_table_df%s' % self.disk_file.file_hash
             df = CachedFile.get(key)
@@ -212,9 +210,10 @@ class SourceList(Image):
                 df = CachedFile.add(key, fitsfn)
             else:
                 logmsg('Cache hit for key "%s"' % key)
-            logmsg('Cache file path: %s' % df.get_path())
-            table = fits_table(str(df.get_path()))
+            return df.get_path()
 
+    def get_fits_table(self):
+        table = fits_table(str(self.get_fits_path()))
         return table
 
     def get_mime_type(self):
@@ -226,8 +225,7 @@ class SourceList(Image):
 
         scale = float(maxsize) / float(max(self.width, self.height))
         W,H = int(round(scale * self.width)), int(round(scale * self.height))
-        image = SourceList(disk_file=self.disk_file, width=W, height=H)
-        image.source_type = self.source_type
+        image = SourceList(disk_file=self.disk_file, source_type=self.source_type, width=W, height=H)
         image.save()
         return image
     
@@ -525,6 +523,11 @@ class Submission(models.Model):
         (1, 'negative'),
     )
 
+    SOURCE_TYPE_CHOICES = (
+        ('image', 'image'),
+        ('fits', 'FITS binary table'),
+        ('text', 'text list'),
+    )
     ###
     user = models.ForeignKey(User, related_name='submissions', null=True)
     disk_file = models.ForeignKey(DiskFile, related_name='submissions', null=True)
@@ -542,6 +545,8 @@ class Submission(models.Model):
     center_dec = models.FloatField(blank=True, null=True)
     radius = models.FloatField(blank=True, null=True)
     downsample_factor = models.PositiveIntegerField(blank=True, null=True)
+
+    source_type = models.CharField(max_length=5, choices=SOURCE_TYPE_CHOICES, default='image')
 
     original_filename = models.CharField(max_length=256)
 

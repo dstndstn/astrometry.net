@@ -178,7 +178,6 @@ def dojob(job, userimage, log=None):
     wcsfile = 'wcs.fits'
     axyargs = {
         '--out': axypath,
-        '--image': df.get_path(),
         '--scale-low': slo,
         '--scale-high': shi,
         '--scale-units': sub.scale_units,
@@ -202,6 +201,14 @@ def dojob(job, userimage, log=None):
         # -X / --x-column <column-name>: the FITS column name
         # -Y / --y-column <column-name>
         }
+
+    if hasattr(img,'sourcelist'):
+        # image is a source list; use --xylist
+        axyargs['--xylist'] = img.sourcelist.get_fits_path()
+        axyargs['--width'] = img.width
+        axyargs['--height'] = img.height
+    else:
+        axyargs['--image'] = df.get_path()
 
     # UGLY
     if sub.parity == 0:
@@ -323,7 +330,10 @@ def dosub(sub):
                 tempfn = os.path.join(dirnm, tarinfo.name)
                 df = DiskFile.from_file(tempfn)
                 # create Image object
-                img = get_or_create_image(df)
+                if sub.source_type == 'image':
+                    img = get_or_create_image(df)
+                else:
+                    img = get_or_create_source_list(df, sub.source_type)
                 # create UserImage object.
                 uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
                                                                defaults=dict(original_file_name=tarinfo.name))
@@ -354,8 +364,10 @@ def dosub(sub):
         # assume file is single image
         logmsg('single file')
         # create Image object
-        img = get_or_create_image(df)
-        #img = get_or_create_source_list(df)
+        if sub.source_type == 'image':
+            img = get_or_create_image(df)
+        else:
+            img = get_or_create_source_list(df, sub.source_type)
         # create UserImage object.
         uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
                                                        defaults=dict(original_file_name=original_filename))
@@ -367,8 +379,9 @@ def dosub(sub):
 def get_or_create_image(df):
     # Is there already an Image for this DiskFile?
     try:
-        img,created = Image.objects.get_or_create(disk_file=df)
+        img,created = Image.objects.get_or_create(disk_file=df, sourcelist__isnull=True)
     except Image.MultipleObjectsReturned:
+        logmsg("multiple found")
         img = Image.objects.filter(disk_file=df)
         for i in range(1,len(img)):
             img[i].delete()
@@ -377,6 +390,7 @@ def get_or_create_image(df):
 
     fn = df.get_path()
     if created:
+        logmsg("created")
         #img.save()
         # defaults=dict(width=w, height=h))
 
@@ -405,12 +419,14 @@ def get_or_create_image(df):
 
     return img
 
-def get_or_create_source_list(df):
+def get_or_create_source_list(df, source_type):
     # Is there already an SourceList for this DiskFile?
     try:
-        img,created = SourceList.objects.get_or_create(disk_file=df)
+        img,created = SourceList.objects.get_or_create(disk_file=df, 
+                                                       source_type=source_type,
+                                                       display_image__isnull=False)
     except SourceList.MultipleObjectsReturned:
-        img = Image.objects.filter(disk_file=df)
+        img = SourceList.objects.filter(disk_file=df,source_type=source_type)
         for i in range(1,len(img)):
             img[i].delete()
         img = img[0]
@@ -418,8 +434,6 @@ def get_or_create_source_list(df):
 
     fn = df.get_path()
     if created:
-        #img.source_type = 'text'
-        img.save()
         fits = img.get_fits_table()
         w = fits.x.max()-fits.x.min()
         h = fits.y.max()-fits.y.min()
@@ -433,6 +447,7 @@ def get_or_create_source_list(df):
         img.get_thumbnail()
         img.get_display_image()
         img.save()
+    
 
     return img
     
