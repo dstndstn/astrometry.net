@@ -234,3 +234,18 @@ def job_status(req, job_id):
     return HttpResponseJson({
         'status':status,
     })
+
+@csrf_exempt
+def calibration(req, job_id):
+    job = get_object_or_404(Job, pk=job_id)
+    if job.calibration:
+        (ra, dec, radius) = job.calibration.get_center_radecradius()
+        return HttpResponseJson({
+            'ra':ra,
+            'dec':dec,
+            'radius':radius,
+        })
+    else:
+        return HttpResponseJson({
+            'error':'no calibration data available for job %d' % int(job_id)
+        })
