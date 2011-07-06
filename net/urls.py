@@ -82,6 +82,7 @@ urlpatterns += patterns('astrometry.net.api',
                         (r'^api/submission_images/?', 'api_submission_images'),
                         (r'^api/jobs/(?P<job_id>' + idpattern + r')/?$', 'job_status'),
                         (r'^api/jobs/(?P<job_id>' + idpattern + r')/calibration/?', 'calibration'),
+                        (r'^api/jobs/(?P<job_id>' + idpattern + r')/tags/?', 'tags'),
                         #(r'^api/logout/?', 'logout'),
 )
 

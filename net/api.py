@@ -249,3 +249,12 @@ def calibration(req, job_id):
         return HttpResponseJson({
             'error':'no calibration data available for job %d' % int(job_id)
         })
+
+@csrf_exempt
+def tags(req, job_id):
+    job = get_object_or_404(Job, pk=job_id)
+    tags = job.user_image.tags.all()
+    json_tags = [tag.text for tag in tags]
+    return HttpResponseJson({
+        'tags':json_tags}
+    )
