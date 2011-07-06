@@ -172,6 +172,10 @@ class Client(object):
         return self.overlay_plot('galex_image_for_wcs', outfn,
                                  wcsfn, wcsext)
 
+    def job_status(self, job_id):
+        result = self.send_request('job_status/%s' % job_id, {})
+        return result.get('status')
+
 if __name__ == '__main__':
     import optparse
     parser = optparse.OptionParser()
@@ -183,6 +187,7 @@ if __name__ == '__main__':
     parser.add_option('--urlupload', '-U', dest='upload_url', help='Upload a file at specified url')
     parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
+    parser.add_option('--jobstatus', '-j', dest='job_id', help='Get status of a job')
     opt,args = parser.parse_args()
 
     if opt.apikey is None:
@@ -210,5 +215,7 @@ if __name__ == '__main__':
     if opt.galex_wcs:
         (wcsfn, outfn) = opt.galex_wcs
         c.galex_plot(outfn, wcsfn)
+    if opt.job_id:
+        print c.job_status(opt.job_id)
 
     print c.submission_images(1)

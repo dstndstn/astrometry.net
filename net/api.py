@@ -3,6 +3,7 @@ import base64
 from functools import wraps
 
 from django.contrib import auth
+from django.shortcuts import get_object_or_404
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
@@ -226,3 +227,10 @@ def api_login(request):
                               'session': key,
                               })
 
+@csrf_exempt
+def job_status(req, job_id):
+    job = get_object_or_404(Job, pk=job_id)
+    status = job.get_status_blurb()
+    return HttpResponseJson({
+        'status':status,
+    })

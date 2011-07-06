@@ -431,6 +431,20 @@ class Job(models.Model):
             os.makedirs(dirnm)
         return dirnm
 
+    
+    def get_status_blurb(self):
+        blurb = "processing"
+        if self.start_time:
+            if not self.end_time:
+                blurb = "solving"
+            else:
+                if self.status == 'S':
+                    blurb = "success"
+                elif self.status == 'F':
+                    blurb = "failure"
+                else:
+                    blurb = '?'
+        return blurb
 
 class TaggedUserImage(models.Model):
     user_image = models.ForeignKey('UserImage')
