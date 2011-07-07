@@ -198,7 +198,7 @@ _sip.so: sip-utils.o gslutils.o sip.o starutil.o mathutil.o sip_qfits.o \
 _healpix.so: healpix-utils.o healpix.o permutedsort.o starutil.o mathutil.o errors.o ioutils.o bl.o log.o tic.o os-features.o
 	$(CC) $(SHAREDLIBFLAGS) -o $@ $^
 
-util_wrap.c: util.i $(ANUTILS_H)
+util.py util_wrap.c: util.i $(ANUTILS_H)
 	swig -python -I. $<
 
 _util.so: util_wrap.c setup-util.py \
@@ -207,7 +207,8 @@ _util.so: util_wrap.c setup-util.py \
 	python setup-util.py build --force --build-base build --build-platlib build/lib
 	cp build/lib/_util.so $@
 
-pyutil: _util.so
+PYUTIL := _util.so util.py
+pyutil: $(PYUTIL)
 .PHONY: pyutil
 
 index_wrap.c: index.i index.h
@@ -295,6 +296,11 @@ install: $(PYTHON_LIBS) $(PYTHON_EXECS) $(PROGS) $(ANUTILS_H) $(ANFILES_LIB) $(A
 		echo cp $$x $(LIB_INSTALL_DIR)/$$x; \
 		cp $$x $(LIB_INSTALL_DIR)/$$x; \
 	done
+	@echo "The following copy commands may fail; they are optional."
+	-cp _util.so $(PY_INSTALL_DIR)
+	-cp util.py $(PY_INSTALL_DIR)
+	@echo ok
+
 .PHONY: install
 
 os-features-config.h: os-features-test.c
