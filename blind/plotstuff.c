@@ -904,6 +904,11 @@ int plotstuff_init2(plot_args_t* pargs) {
 	}
 	pargs->cairo = cairo_create(pargs->target);
 
+	// Flip the cairo reference frame (make 0,0 the bottom-left)
+	cairo_scale(pargs->cairo, 1.0, -1.0);
+	// FIXME -- could deal with 0.5 issues here!
+	cairo_translate(pargs->cairo, 0.0, -pargs->H);
+
 	for (i=0; i<pargs->NP; i++) {
 		if (pargs->plotters[i].init2 &&
 			pargs->plotters[i].init2(pargs, pargs->plotters[i].baton)) {
@@ -911,6 +916,7 @@ int plotstuff_init2(plot_args_t* pargs) {
 			exit(-1);
 		}
 	}
+
 	return 0;
 }
 
