@@ -296,6 +296,8 @@ def try_dosub(sub):
         print 'Caught exception while processing Submission', sub
         traceback.print_exc(None, sys.stdout)
         # FIXME -- sub.set_status()...
+        sub.set_processing_finished()
+        sub.save()
         return 'exception'
 
 def dosub(sub):
@@ -335,8 +337,9 @@ def dosub(sub):
                 else:
                     img = get_or_create_source_list(df, sub.source_type)
                 # create UserImage object.
-                uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
-                                                               defaults=dict(original_file_name=tarinfo.name))
+                if img:
+                    uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
+                                                                   defaults=dict(original_file_name=tarinfo.name))
                 os.remove(tempfn)
         tar.close()
         os.removedirs(dirnm)
@@ -369,7 +372,8 @@ def dosub(sub):
         else:
             img = get_or_create_source_list(df, sub.source_type)
         # create UserImage object.
-        uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
+        if img:
+            uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
                                                        defaults=dict(original_file_name=original_filename))
 
     sub.set_processing_finished()
@@ -382,41 +386,48 @@ def get_or_create_image(df):
         img,created = Image.objects.get_or_create(disk_file=df, sourcelist__isnull=True)
     except Image.MultipleObjectsReturned:
         logmsg("multiple found")
-        img = Image.objects.filter(disk_file=df)
+        img = Image.objects.filter(disk_file=df, sourelist_isnull=True)
         for i in range(1,len(img)):
             img[i].delete()
         img = img[0]
         created = False
 
-    fn = df.get_path()
     if created:
-        logmsg("created")
-        #img.save()
-        # defaults=dict(width=w, height=h))
-
-        # FIXME -- move this code to Image?
-        # Convert file to pnm to find its size.
-        f,pnmfn = tempfile.mkstemp()
-        os.close(f)
-        logmsg('Converting %s to %s...\n' % (fn, pnmfn))
-        (filetype, errstr) = image2pnm.image2pnm(fn, pnmfn)
-        if errstr:
-            logmsg('Error converting image file: %s' % errstr)
-            return
-        x = run_pnmfile(pnmfn)
-        if x is None:
-            print 'couldn\'t find image file size'
-            return
-        (w, h, pnmtype, maxval) = x
-        logmsg('Type %s, w %i, h %i' % (pnmtype, w, h))
-        img.width = w
-        img.height = h
-        img.save()
-        # cache
-        img.get_thumbnail()
-        img.get_display_image()
-        img.save()
-
+        try:
+            # FIXME -- move this code to Image?
+            # Convert file to pnm to find its size.
+            fn = df.get_path()
+            f,pnmfn = tempfile.mkstemp()
+            os.close(f)
+            logmsg('Converting %s to %s...\n' % (fn, pnmfn))
+            (filetype, errstr) = image2pnm.image2pnm(fn, pnmfn)
+            if errstr:
+                raise RuntimeError('Error converting image file: %s' % errstr)
+            x = run_pnmfile(pnmfn)
+            if x is None:
+                raise RuntimeError('Could not find image file size')
+            (w, h, pnmtype, maxval) = x
+            logmsg('Type %s, w %i, h %i' % (pnmtype, w, h))
+            img.width = w
+            img.height = h
+            img.save()
+            # cache
+            img.get_thumbnail()
+            img.get_display_image()
+            img.save()
+        except Exception as e:
+            # delete image if anything fails
+            logmsg(e)
+            logmsg('deleting Image')
+            img.delete()
+            img = None
+        except:
+            # FIXME (something throws a SystemExit..)
+            # delete image if anything fails
+            logmsg(sys.exc_info()[0])
+            logmsg('deleting Image')
+            img.delete()
+            img = None
     return img
 
 def get_or_create_source_list(df, source_type):
@@ -426,29 +437,36 @@ def get_or_create_source_list(df, source_type):
                                                        source_type=source_type,
                                                        display_image__isnull=False)
     except SourceList.MultipleObjectsReturned:
-        img = SourceList.objects.filter(disk_file=df,source_type=source_type)
+        img = SourceList.objects.filter(disk_file=df,
+                                        source_type=source_type,
+                                        display_image__isnull=False)
         for i in range(1,len(img)):
             img[i].delete()
         img = img[0]
         created = False
 
-    fn = df.get_path()
     if created:
-        fits = img.get_fits_table()
-        w = fits.x.max()-fits.x.min()
-        h = fits.y.max()-fits.y.min()
-        w = int(1.2*w)
-        h = int(1.2*h)
-        logmsg('w %i, h %i' % (w, h))
-        img.width = w
-        img.height = h
-        img.save()
-        # cache
-        img.get_thumbnail()
-        img.get_display_image()
-        img.save()
+        try:
+            fits = img.get_fits_table()
+            w = fits.x.max()-fits.x.min()
+            h = fits.y.max()-fits.y.min()
+            w = int(1.2*w)
+            h = int(1.2*h)
+            logmsg('w %i, h %i' % (w, h))
+            img.width = w
+            img.height = h
+            img.save()
+            # cache
+            img.get_thumbnail()
+            img.get_display_image()
+            img.save()
+        except Exception as e:
+            # delete image if anything fails
+            logmsg(e)
+            logmsg('deleting SourceList')
+            img.delete()
+            img = None
     
-
     return img
     
 ## DEBUG

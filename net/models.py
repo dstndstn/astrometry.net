@@ -431,7 +431,6 @@ class Job(models.Model):
             os.makedirs(dirnm)
         return dirnm
 
-    
     def get_status_blurb(self):
         blurb = "processing"
         if self.start_time:
