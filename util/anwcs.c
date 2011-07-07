@@ -1114,7 +1114,9 @@ anwcs_t* anwcs_create_allsky_hammer_aitoff(double refra, double refdec,
 }
 
 
-anwcs_t* anwcs_create_box(double ra, double dec, double width, int W, int H) {
+static anwcs_t*
+anwcs_create_box_scaled(double ra, double dec, double width, int W, int H,
+						double yscale) {
 	tan_t tan;
 	double scale;
 	tan.crval[0] = ra;
@@ -1125,10 +1127,18 @@ anwcs_t* anwcs_create_box(double ra, double dec, double width, int W, int H) {
 	tan.cd[0][0] = -scale;
 	tan.cd[1][0] = 0;
 	tan.cd[0][1] = 0;
-	tan.cd[1][1] = scale;
+	tan.cd[1][1] = scale * yscale;
 	tan.imagew = W;
 	tan.imageh = H;
 	return anwcs_new_tan(&tan);
+}
+
+anwcs_t* anwcs_create_box(double ra, double dec, double width, int W, int H) {
+	return anwcs_create_box_scaled(ra, dec, width, W, H, 1);
+}
+
+anwcs_t* anwcs_create_box_upsidedown(double ra, double dec, double width, int W, int H) {
+	return anwcs_create_box_scaled(ra, dec, width, W, H, -1);
 }
 
 

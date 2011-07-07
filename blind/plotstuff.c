@@ -377,7 +377,7 @@ int plotstuff_set_wcs(plot_args_t* pargs, anwcs_t* wcs) {
 
 int plotstuff_set_wcs_box(plot_args_t* pargs, float ra, float dec, float width) {
 	logverb("Setting WCS to a box centered at (%g,%g) with width %g deg.\n", ra, dec, width);
-	anwcs_t* wcs = anwcs_create_box(ra, dec, width, pargs->W, pargs->H);
+	anwcs_t* wcs = anwcs_create_box_upsidedown(ra, dec, width, pargs->W, pargs->H);
 	return plotstuff_set_wcs(pargs, wcs);
 }
 
@@ -904,10 +904,12 @@ int plotstuff_init2(plot_args_t* pargs) {
 	}
 	pargs->cairo = cairo_create(pargs->target);
 
-	// Flip the cairo reference frame (make 0,0 the bottom-left)
-	cairo_scale(pargs->cairo, 1.0, -1.0);
-	// FIXME -- could deal with 0.5 issues here!
-	cairo_translate(pargs->cairo, 0.0, -pargs->H);
+	/* D'oh, this flips the coord sys, but not text!
+	 // Flip the cairo reference frame (make 0,0 the bottom-left)
+	 cairo_scale(pargs->cairo, 1.0, -1.0);
+	 // FIXME -- could deal with 0.5 issues here!
+	 cairo_translate(pargs->cairo, 0.0, -pargs->H);
+	 */
 
 	for (i=0; i<pargs->NP; i++) {
 		if (pargs->plotters[i].init2 &&

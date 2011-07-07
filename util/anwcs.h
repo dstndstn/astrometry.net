@@ -62,6 +62,8 @@ anwcs_t* anwcs_new_tan(const tan_t* tan);
 // and W x H  pixels.
 anwcs_t* anwcs_create_box(double ra, double dec, double width, int W, int H);
 
+anwcs_t* anwcs_create_box_upsidedown(double ra, double dec, double width, int W, int H);
+
 anwcs_t* anwcs_create_allsky_hammer_aitoff(double refra, double refdec,
 										   int W, int H);
 
