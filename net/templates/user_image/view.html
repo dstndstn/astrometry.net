@@ -6,12 +6,29 @@
 {% include 'job/status.css' %}
 <style type="text/css">
 #image_container {
+    position: relative;
     background-color: #000;
     background-image: url('{{ STATIC_URL }}images/loading-black.gif');
     background-position: center center;
     background-repeat: no-repeat;
     height: {{ display_image.height }}px;
     text-align: center;
+}
+#hover_bar {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 665px;
+    padding: 5px;
+    color: #000;
+    background-color: #fff;
+    display: none;
+}
+#hover_bar #image_link_block {
+    float: left;
+}
+#hover_bar #fullsize_link_block {
+    float: right;
 }
 #left_block {
     float: left;
@@ -35,9 +52,26 @@ div#solver_output li {
 {% block javascript %}
 {{ block.super }}
 <script type="text/javascript">
-function changeImage(link) {
-    image = $("#user_image");
-    if ($.trim(image.attr("src")) != link) {
+    
+var images = new Array();
+var current_image = "none";
+images['original_display'] ="{% url astrometry.net.views.image.serve_image display_image.id %}";
+images['original'] ="{% url astrometry.net.views.image.serve_image image.image.id %}";
+{% if calib %}
+images['annotated_display'] = "{% url astrometry.net.views.image.annotated_image jobid=job.id size='display' %}";
+images['annotated'] = "{% url astrometry.net.views.image.annotated_image jobid=job.id size='full' %}";
+images['sdss_display'] = "{% url astrometry.net.views.image.sdss_image calid=job.calibration.id size='display' %}";
+images['sdss'] = "{% url astrometry.net.views.image.sdss_image calid=job.calibration.id size='full' %}";
+images['galex_display'] = "{% url astrometry.net.views.image.galex_image calid=job.calibration.id size='display' %}";
+images['galex'] = "{% url astrometry.net.views.image.galex_image calid=job.calibration.id size='full' %}";
+{% endif %}
+
+function changeImage(key) {
+    if (current_image != key) {
+        current_image = key;
+        $('#fullsize_link').attr('href',images[key]);
+        link = images[key + "_display"];
+        image = $("#user_image");
         image.attr("src", link);
         image.hide();
         image.load(function() {
@@ -47,9 +81,19 @@ function changeImage(link) {
 }
 $(document).ready(function() {
     $('a.image_link').click(function(event) {
-        changeImage($(this).attr('href'));
+        changeImage($(this).attr('title'));
         event.preventDefault();
     });
+    $('#image_container').hover(function() {
+        $('#hover_bar').stop().fadeTo(500,0.8);
+    },function() {
+        $('#hover_bar').stop().fadeTo(500,0);
+    });
+    {% if calib %}
+    changeImage('annotated');
+    {% else %}
+    changeImage('original');
+    {% endif %}
 });
 </script>
 {% endblock %}
@@ -63,8 +107,8 @@ $(document).ready(function() {
 <div class="side_bar">
     <div id="details">
         Submitted by {% include 'user/display_name.html' with user=image.user %}<br />
-        <span class="indent">on <span class="timestamp">{{ image.submission.submitted_on|date:"Y-m-d" }}</span></span><br />
-        <span class="indent">as "{{ image.original_file_name }}"</span>
+        <div class="indent">on <span class="timestamp">{{ image.submission.submitted_on|date:"Y-m-d" }}</span></div>
+        <div class="indent">as "{{ image.original_file_name }}"</div>
     </div>
     <hr />
     <div id="job_status">
@@ -107,16 +151,21 @@ $(document).ready(function() {
 <div id="left_block">
     <div id="submitted_field">
         <div id="image_container">
-            <img id="user_image" src="{% if calib %}{% url astrometry.net.views.image.annotated_image jobid=job.id size='display' %}
-                                      {% else %}{% url astrometry.net.views.image.serve_image display_image.id %}
-                                      {% endif %}" />
+            <img id="user_image" src="{% url astrometry.net.views.image.serve_image display_image.id %}" />
+            <div id="hover_bar">
+                {% if calib %}
+                <div id="image_link_block">
+                    <a href="" title="original" class="image_link">original</a> |
+                    <a href="" title="annotated" class="image_link">annotated</a> |
+                    <a href="" title="sdss" class="image_link">SDSS</a> |
+                    <a href="" title="galex" class="image_link">GALEX</a><br />
+                </div>
+                {% endif %}
+                <div id="fullsize_link_block">
+                    <a href="" id="fullsize_link">fullsize ({{image.image.width}}x{{image.image.height}} pixels)</a>
+                </div>
+            </div>
         </div>
-        {% if calib %}
-        <a href="{% url astrometry.net.views.image.serve_image display_image.id %}" class="image_link">original</a> |
-        <a href="{% url astrometry.net.views.image.annotated_image jobid=job.id size='display' %}" class="image_link">annotated</a> |
-        <a href="{% url astrometry.net.views.image.sdss_image calid=job.calibration.id size='display' %}" class="image_link">SDSS</a> |
-        <a href="{% url astrometry.net.views.image.galex_image calid=job.calibration.id size='display' %}" class="image_link">GALEX</a><br />
-        {% endif %}
     </div>
     <br />
     <div id="description">

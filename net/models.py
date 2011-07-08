@@ -481,13 +481,13 @@ class UserImage(Commentable):
         logmsg('adding machine tags for %s' % self)
         sky_objects = job.calibration.get_objs_in_field()
         for sky_object in sky_objects:
-            logmsg('getting or creating machine tag %s' % sky_object)
+            logmsg(u'getting or creating machine tag %s' % sky_object)
             machine_tag,created = Tag.objects.get_or_create(text=sky_object)
             if created:
                 logmsg('created machine tag')
 
             # associate this UserImage with the machine tag
-            logmsg('adding machine tag: %s' % machine_tag.text)
+            logmsg(u'adding machine tag: %s' % machine_tag.text)
             machine_user = User.objects.get(username=MACHINE_USERNAME)
             tagged_user_image = TaggedUserImage.objects.get_or_create(
                 user_image=self,
