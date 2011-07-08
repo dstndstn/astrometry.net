@@ -7,17 +7,8 @@
 {% include 'job/status.css' %}
 {% include 'dashboard/api_key.css' %}
 <style type="text/css">
-#profile_metadata {
-    padding:.5em;
-    width: 275px;
-    float:right;
-    background-color:#eee;
-}
-#profile_metadata p {
-    margin-left:1em;
-}
 #profile_data {
-    max-width: 600px;
+    max-width: 675px;
     float:left;
 }
 </style>
@@ -29,17 +20,22 @@
 {% endblock %}
 
 {% block content %}
-<div id="profile_metadata">
-    <h2>Usage Stats</h2>
-    <p id="submission_count">{{display_user.submissions.all.count}} submissions</p>
-    <p id="image_count">{{display_user.user_images.all.count}} images</p>
-    <p id="comment_count">{{display_user.comments_left.all.count}} comments</p>
-    <h2>Account Info</h2>
-    <p id="registered_on">registered on: <span class="timestamp">{{display_user.date_joined|date:"Y-m-d"}}</span></p>
-    <p id="last_signin">last signed in: <span class="timestamp">{{display_user.last_login|date:"Y-m-d H:i"}}</span></p>
-    {% if user.is_authenticated and user == display_user %}
-    <p>my API key: {% include 'user/api_key.html' with apikey=user.get_profile.apikey %}</p>
-    {% endif %}
+<div class="side_bar">
+    <div>
+        <h3>Account Info</h3>
+        <div id="registered_on">registered on: <span class="timestamp">{{display_user.date_joined|date:"Y-m-d"}}</span></div>
+        <div id="last_signin">last signed in: <span class="timestamp">{{display_user.last_login|date:"Y-m-d H:i"}}</span></div>
+        {% if user.is_authenticated and user == display_user %}
+        <br /><div>my API key: {% include 'user/api_key.html' with apikey=user.get_profile.apikey %}</div>
+        {% endif %}
+    </div>
+    <hr />
+    <div>
+        <h3>Usage Stats</h3>
+        <div id="submission_count">{{display_user.submissions.all.count}} submissions</div>
+        <div id="image_count">{{display_user.user_images.all.count}} images</div>
+        <div id="comment_count">{{display_user.comments_left.all.count}} comments</div>
+    </div>
 </div>
 <div id="profile_data">
     <div id="profile_images">

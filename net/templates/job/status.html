@@ -1,15 +1,15 @@
 {% if job.status %}
     {% if job.status == 'S' %}
-        <span class="good">Success</span>
+        <div class="good">Success</div>
     {% endif %}
     {% if job.status == 'F' %}
-        <span class="bad">Failure</span>
+        <div class="bad">Failed</div>
     {% endif %}
     {% if not job.status == 'F' and not job.status == 'S' %}?{% endif %}
 {% else %}
-    <ul class="job_milestones">
-        <li style="color:#666">Processing...</li>
-        <li style="color:#666">Queued: <span class="timestamp">{{ job.queued_time|date:"Y-m-d H:i:s" }}</span></li>
-        <li style="color:#080">Started: <span class="timestamp">{{ job.queued_time|date:"Y-m-d H:i:s" }}</span></li>
-    </ul>
+    <div>
+        <div style="color:#666">Processing...</div>
+        <div style="color:#666">Queued: <span class="timestamp">{{ job.queued_time|date:"Y-m-d H:i:s" }}</span></div>
+        <div style="color:#080">Started: <span class="timestamp">{{ job.queued_time|date:"Y-m-d H:i:s" }}</span></div>
+    </div>
 {% endif %}

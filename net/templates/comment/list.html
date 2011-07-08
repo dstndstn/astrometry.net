@@ -1,16 +1,17 @@
 {% for comment in comments %}
 <div class="comment">
-    <p class="comment_text">
+    <div class="comment_text">
         <span class="author">{% include 'user/display_name.html' with user=comment.author %}</span>: 
         {{comment.text}}
-    </p>
-    <p class="comment_footer">
+    </div>
+    <div class="comment_footer">
         <span class="timestamp">{{ comment.created_at|date:"Y-m-d H:i" }} ({{comment.created_at|timesince}} ago)</span>
         {% if comment.recipient.owner == request.user or comment.author == request.user %}
         <br /><a href="{% url astrometry.net.views.comment.delete comment_id=comment.id %}?next={{request.path}}">[delete]</a>
         {% endif %}
-    </p>
+    </div>
 </div>
+<br />
 {% empty %}
 <p><span class="empty">No comments.</p>
 {% endfor %}

@@ -15,10 +15,22 @@
 {{ block.super }}
 {% include 'job/status.css' %}
 <style type="text/css">
-#submission_details {background-color: #eee; padding: 10px; width: 100%}
-#submission_details td {vertical-align: top}
-.leftcolumn {width: 20%}
-#submission_images td {padding: 5px; vertical-align: top}
+#submission_details {
+    font-size: 90%; 
+    background-color: #eee;
+    padding: 10px;
+    width: 100%
+}
+#submission_details td {
+    vertical-align: top
+}
+.leftcolumn {
+    width: 20%
+}
+#submission_images td {
+    padding: 5px; 
+    vertical-align: top
+}
 .log_tail {
     width:640px;
     overflow: auto;

@@ -59,11 +59,7 @@ span.user_id {
     color: #999;
     font-style: italic;
 }
-div.comment p {
-    margin-top: 0px;
-    margin-bottom: 0px;
-}
-div.comment p.comment_footer {
+div.comment div.comment_footer {
     margin-left: 3em;
     font-size: .8em;
 }
@@ -143,4 +139,23 @@ td.c {text-align:center;}
 .fineprint { font-size:85%; text-align:center; color:#888; margin-left:auto; margin-right:auto; }
 .fineprint a { color:#999; }
 .errorlist {margin: 0px; color: #a00; background-color: #faa}
+
+.side_bar {
+    float: right;
+    width: 275px;
+    height: 100%;
+    padding: 10px;
+    background-color: #eee;
+    font-size: 90%;
+}
+.side_bar hr {
+    color: #999;
+    background-color: #999;
+    height: 1px;
+    border: 0px;
+}
+.side_bar h3 {
+    text-align: center;
+    margin-top: 0px;
+}
 </style>
