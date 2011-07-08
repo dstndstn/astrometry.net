@@ -189,10 +189,13 @@ def status(req, subid=None):
     logmsg("UserImages:")
     for ui in sub.user_images.all():
         logmsg("  %i" % ui.id)
-        for j in ui.jobs.all():
-            logmsg("    job " + str(j))
-            if j.end_time is None:
-                finished = False
+        if len(ui.jobs.all()) == 0:
+            finished = False
+        else:
+            for j in ui.jobs.all():
+                logmsg("    job " + str(j))
+                if j.end_time is None:
+                    finished = False
 
     return render_to_response('submission/status.html',
         {

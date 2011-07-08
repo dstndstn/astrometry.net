@@ -1,6 +1,6 @@
 <ul class="tag_list">
     {% for user_image_tag in tags %}
-    <li>{{ user_image_tag.text }} 
+    <li><a href="{% url astrometry.net.views.image.search %}?search_category=tag&tags={{user_image_tag.text|urlencode}}">{{ user_image_tag.text }}</a> 
     {% if user == user_image_tag.tagger or user == tagged_object_owner %}
     <a class="remove_tag" href="{% url astrometry.net.views.tag.remove_userimagetag user_image_id=user_image_id tag_id=user_image_tag.pk %}{% if next %}?next={{next}}{% endif %}">[remove]</a></li>
     {% endif %}
