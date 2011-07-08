@@ -577,22 +577,13 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate):
 if __name__ == '__main__':
     import optparse
     parser = optparse.OptionParser()
-    parser.add_option('--jobthreads', '-j', dest='jobthreads', type='int', help='Set the number of threads to process jobs')
-    parser.add_option('--subthreads', '-s', dest='subthreads', type='int', help='Set the number of threads to process submissions')
-    parser.add_option('--refreshrate', '-r', dest='refreshrate', type='float', help='Set how often to check for new jobs and submissions (in seconds)')
+    parser.add_option('--jobthreads', '-j', dest='jobthreads', type='int',
+                      default=3, help='Set the number of threads to process jobs')
+    parser.add_option('--subthreads', '-s', dest='subthreads', type='int',
+                      default=2, help='Set the number of threads to process submissions')
+    parser.add_option('--refreshrate', '-r', dest='refreshrate', type='float',
+                      default=5, help='Set how often to check for new jobs and submissions (in seconds)')
     opt,args = parser.parse_args()
-    args = {
-        'dojob_nthreads':3,
-        'dosub_nthreads':2,
-        'refresh_rate':5
-    }
-    if opt.jobthreads:
-        args['dojob_nthreads'] = opt.jobthreads
-    if opt.subthreads:
-        args['dosub_nthreads'] = opt.subthreads
-    if opt.refreshrate:
-        args['refresh_rate'] = opt.refreshrate
 
-    main(dojob_nthreads = args['dojob_nthreads'], dosub_nthreads=args['dosub_nthreads'],
-        refresh_rate = args['refresh_rate'])
+    main(opt.jobthreads, opt.subthreads, opt.refreshrate)
 
