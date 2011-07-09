@@ -41,7 +41,7 @@ VO_LOGFILE = LOG_DIR + 'vo.log'
 # must match fixtures/initial_data.json
 MACHINE_USERNAME = "an-machine"
 ANONYMOUS_USERNAME = "anonymous"
-DEFAULT_LICENSE_ID = 0
+DEFAULT_LICENSE_ID = 1
 
 # Plotting
 #TYCHO_MKDT = ANDIR + 'net/tycho.mkdt.fits'

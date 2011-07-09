@@ -26,7 +26,7 @@
         "display_name"      :   "an-machine",
         "user"              :   0,
         "apikey"            :   "0jdajkdajkdfffae",
-        "default_license"   :   0
+        "default_license"   :   1
     }
 },
 {
@@ -36,17 +36,17 @@
         "display_name"      :   "anonymous",
         "user"              :   1,
         "apikey"            :   "1jcrmadfnxngxscd",
-        "default_license"   :   0
+        "default_license"   :   1
     }
 },
 {
     "model"     :   "net.license",
-    "pk"        :   0,
+    "pk"        :   1,
     "fields"    :   {}
 },
 {
     "model"     :   "net.licensable",
-    "pk"        :   0,
+    "pk"        :   1,
     "fields"    :   {
         "allow_commercial_use"  :   "y",
         "allow_modifications"   :   "y"
