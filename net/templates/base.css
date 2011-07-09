@@ -71,6 +71,8 @@ a          {color: #00a; text-decoration: none; background-color: transparent;}
 a:link     {background-color: transparent; color: #00a;}
 a:visited  {background-color: transparent; color: #00a;}
 a:hover    {background-color: #00a; color: #fff; text-decoration: none;}
+a.disabled {color: #000; text-decoration: underline;}
+a.disabled:hover {background-color: transparent; color: #000}
 #menu {
     width: 100%;
     border-bottom: 1px solid #000;

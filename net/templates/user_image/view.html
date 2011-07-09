@@ -69,10 +69,14 @@ images['galex'] = "{% url astrometry.net.views.image.galex_image calid=job.calib
 function changeImage(key) {
     if (current_image != key) {
         current_image = key;
+
+        link = $('a[title='+key+']')
+        link.addClass('disabled')
+        link.siblings().removeClass('disabled')
         $('#fullsize_link').attr('href',images[key]);
-        link = images[key + "_display"];
+        
         image = $("#user_image");
-        image.attr("src", link);
+        image.attr("src", images[key + "_display"]);
         image.hide();
         image.load(function() {
             image.show();
@@ -81,6 +85,7 @@ function changeImage(key) {
 }
 $(document).ready(function() {
     $('a.image_link').click(function(event) {
+
         changeImage($(this).attr('title'));
         event.preventDefault();
     });
@@ -154,14 +159,15 @@ $(document).ready(function() {
         <div id="image_container">
             <img id="user_image" src="{% url astrometry.net.views.image.serve_image display_image.id %}" />
             <div id="hover_bar">
-                {% if calib %}
                 <div id="image_link_block">
-                    <a href="" title="original" class="image_link">original</a> |
+                    <a href="" title="original" class="image_link">original</a>
+                    {% if calib %}
+                    |
                     <a href="" title="annotated" class="image_link">annotated</a> |
                     <a href="" title="sdss" class="image_link">SDSS</a> |
                     <a href="" title="galex" class="image_link">GALEX</a><br />
+                    {% endif %}
                 </div>
-                {% endif %}
                 <div id="fullsize_link_block">
                     <a href="" id="fullsize_link">fullsize ({{image.image.width}}x{{image.image.height}} pixels)</a>
                 </div>
