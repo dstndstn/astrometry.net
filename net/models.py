@@ -1,9 +1,14 @@
+import random
 import os
 import errno
 import hashlib
 import shutil
 import tempfile
 from datetime import datetime
+from copy import deepcopy
+
+import xml.dom.minidom
+from xml.dom.minidom import Node
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -12,7 +17,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 
 from astrometry.net.settings import *
-from userprofile import UserProfile
 from wcs import *
 from log import *
 
@@ -22,6 +26,95 @@ from astrometry.util.pyfits_utils import *
 from astrometry.net.tmpfile import *
 
 import PIL.Image, PIL.ImageDraw
+
+from urllib2 import urlopen
+
+    
+
+# uses creative commons rest api
+class Licensable(models.Model):
+    YES_NO = (
+        ('y','yes'),
+        ('n','no'),
+        ('','use default'),
+    )
+    YES_SA_NO = (
+        ('y','yes'),
+        ('sa','yes, but share alike'),
+        ('n','no'),
+        ('','use default'),
+    )
+
+    # CC "answer" data
+    allow_commercial_use = models.CharField(choices=YES_NO, max_length=1,
+        blank=True, default='')
+    allow_modifications = models.CharField(choices=YES_SA_NO, max_length=2,
+        blank=True, default='')
+
+    # CC issued license
+    license_name = models.CharField(max_length=1024)
+    license_uri = models.CharField(max_length=1024)
+
+    # attribution and other optional fields here
+
+
+    def get_license_uri(self):
+        if self.license_uri == '':
+            self.save()
+        return self.license_uri
+
+    def get_license_name(self):
+        if self.license_name == '':
+            self.save()
+        return self.license_name
+
+    def get_license_xml(self):
+        try:
+            url = (
+                'http://api.creativecommons.org/rest/1.5/license/standard/get?commercial=%s&derivatives=%s&jurisdiction=' %
+                (self.allow_commercial_use,
+                self.allow_modifications,)
+            )
+            logmsg("getting license via url: %s" % url)
+            f = urlopen(url)
+            xml = f.read()
+            f.close()
+            return xml
+        except Exception as e:
+            logmsg('error getting license xml: %s' % str(e))
+            return None
+
+    # uses CC "answer" data to retrieve CC issued license data
+    def get_license_name_uri(self):
+        def get_text(node_list):
+            rc = []
+            for node in node_list:
+                if node.nodeType == node.TEXT_NODE:
+                    rc.append(node.data)
+            return ''.join(rc)
+        try:
+            license_xml = self.get_license_xml()
+            license_doc = xml.dom.minidom.parseString(license_xml)
+            self.license_name = get_text(license_doc.getElementsByTagName('license-name')[0].childNodes)
+            self.license_uri = get_text(license_doc.getElementsByTagName('license-uri')[0].childNodes)
+            # can add rdf stuff here if we want..
+            
+        except Exception as e:
+            logmsg('error getting issued license data: %s' % str(e))
+
+
+class License(Licensable):
+    def save(self, *args, **kwargs):
+        self.get_license_name_uri()
+        return super(License, self).save(*args,**kwargs)
+
+    @staticmethod
+    def get_default():
+        # DEFAULT_LICENSE_ID  defined in settings_common.py
+        return License.objects.get(pk=DEFAULT_LICENSE_ID)
+
+
+
 
 class Commentable(models.Model):
     id = models.AutoField(primary_key=True)
@@ -452,7 +545,7 @@ class TaggedUserImage(models.Model):
     added_time = models.DateTimeField(auto_now=True) 
 
 
-class UserImage(Commentable):
+class UserImage(Commentable, Licensable):
     image = models.ForeignKey('Image')
     user = models.ForeignKey(User, related_name='user_images', null=True)
     
@@ -474,6 +567,12 @@ class UserImage(Commentable):
 
     def save(self, *args, **kwargs):
         self.owner = self.user
+        default_license = self.user.get_profile().default_license
+        if not self.allow_commercial_use:
+            self.allow_commercial_use = default_license.allow_commercial_use
+        if not self.allow_modifications:
+            self.allow_modifications = default_license.allow_modifications
+        self.get_license_name_uri()
         return super(UserImage, self).save(*args, **kwargs)
 
 
@@ -517,7 +616,7 @@ class UserImage(Commentable):
         return None
 
 
-class Submission(models.Model):
+class Submission(Licensable):
     SCALEUNITS_CHOICES = (
         ('arcsecperpix', 'arcseconds per pixel'),
         ('arcminwidth' , 'width of the field (in arcminutes)'), 
@@ -609,6 +708,7 @@ class Album(Commentable):
     user_images = models.ManyToManyField('UserImage', related_name='albums') 
     tags = models.ManyToManyField('Tag', related_name='albums')
 
+
 class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     recipient = models.ForeignKey('Commentable', related_name='comments')
@@ -617,3 +717,57 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+class Hideable(models.Model):
+    YES_NO = (('y','yes'),('n','no'))
+
+    publicly_visible = models.CharField(choices=YES_NO, max_length=1,
+        default='y')
+
+    share_with = models.ManyToManyField(User, through="SharedHideable")
+
+
+class SharedHideable(models.Model):
+    hideable = models.ForeignKey('Hideable')
+    shared_with = models.ForeignKey(User)
+    
+    # so it may be possible in the future to include "recently shared with
+    # you" view
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class UserProfile(models.Model):
+    API_KEY_LENGTH = 16
+    display_name = models.CharField(max_length=256)
+    user = models.ForeignKey(User, unique=True, related_name='profile',
+                             editable=False)
+    apikey = models.CharField(max_length = API_KEY_LENGTH)
+    default_license = models.ForeignKey('License', default=DEFAULT_LICENSE_ID)
+
+    def __str__(self):
+        s = ('UserProfile: user %s, API key %s' % (self.user.get_full_name(), self.apikey))
+        return s
+
+    def create_api_key(self):
+        key = ''.join([chr(random.randint(ord('a'), ord('z')))
+                       for i in range(self.__class__.API_KEY_LENGTH)])
+        self.apikey = key
+
+    def get_absolute_url(self):
+        return reverse('astrometry.net.views.user.public_profile', user_id=self.user.id)
+
+    def save(self, *args, **kwargs):
+        # for sorting users, enforce capitalization of first letter
+        self.display_name = self.display_name[:1].capitalize() + self.display_name[1:]
+
+        # make a user their own copy of the sitewide default license
+        sdl = License.get_default()
+        if self.default_license == None or self.default_license.id == sdl.id:
+            self.default_license = License.objects.create(
+                allow_modifications=sdl.allow_modifications,
+                allow_commercial_use=sdl.allow_commercial_use
+            )
+        self.default_license.save()
+
+        return super(UserProfile, self).save(*args, **kwargs)

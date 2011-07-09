@@ -44,6 +44,15 @@ $(document).ready(function() {
         changeScalePreset($(this).val());
     });
     changeScalePreset($('input[name=scale_preset]:radio:checked').val());
+
+    $('#license_link').click(function(e) {
+        $('#license_block').stop(true, true).slideToggle();
+        e.preventDefault();
+    }).toggle(function() {
+        $(this).children('span').text("[-]");
+    }, function() {
+        $(this).children('span').text("[+]");
+    });
     
     $('#settings_link').click(function(e) {
         $('#settings_block').stop(true, true).slideToggle();
@@ -70,27 +79,58 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 {{ form.upload_type }}
 <div id="file_block">{{ form.file }}</div>
 <div id="url_block">{{ form.url }}</div>
-{{ form.non_field_errors }}
+{{ form.non_field_errors }}<br />
+{{ form.errors }}
 <br />
 <table class="settings_table" cellspacing="0">
 <tr>
     <td class="leftcolumn">
         <span class="setting_title">File Type:</span><br />
-        <span class="setting_description">
-            <b>image</b> - A JPEG, GIF, PNG, or FITS image.<br /><br />
-            <b>FITS binary table</b> - Must contain a BINTABLE of detected objects, with X and Y pixel positions in "D" (double) or "E" (float) columns, with one object per row.<br /><br />
-            <b>text list</b> - A text file, containing two columns of digits separated by commas or whitespace, listing the X,Y positions of sources, sorted with the brightest sources first.<br />
-        </span>
+        <dl class="setting_description">
+            <dt>image</dt>
+                <dd>A JPEG, GIF, PNG, or FITS image.</dd><br />
+            <dt>FITS binary table</dt>
+                <dd>Must contain a BINTABLE of detected objects, with X and Y pixel positions in "D" (double) or "E" (float) columns, with one object per row.</dd><br />
+            <dt>text list</dt>
+                <dd>A text file, containing two columns of digits separated by commas or whitespace, listing the X,Y positions of sources, sorted with the brightest sources first.</dd><br />
+        </dl>
     </td>
     <td>
         {{ form.source_type }}
     </td>
 </tr>
 </table>
-    
+
 <h4><a href="#" id="settings_link">Advanced Settings <span>[+]</span></a></h4>
 <div id="settings_block">
 <table class="settings_table" cellspacing="0">
+<tr>
+    <td class="leftcolumn">
+        <span class="setting_title">License:</span><br />
+        <p class="setting_description">
+            {% if user.is_authenticated %}
+                Your default license setting is
+                {% include 'license/license_link.html' with licensable=default_license %}
+            {% else %}
+                By submitting anonymously, you agree that the submitted image
+                will be governed by
+                {% include 'license/license_link.html' with licensable=default_license %}.
+                <a href="{% url openid-login %}">Sign in</a> to change the
+                license setting.
+            {% endif %}
+        </p>
+    </td>
+    <td>
+        {% if user.is_authenticated %}
+            <h5>Allow commercial use?</h5>
+            {{ form.allow_commercial_use }}
+            <h5>Allow modifications?</h5>
+            {{ form.allow_modifications }}
+        {% else %}
+            <input type="hidden" name="allow_commercial_use" value />
+            <input type="hidden" name="allow_modifications" value />
+        {% endif %}
+    </td>
 <tr> 
     <td class="leftcolumn">
         <span class="setting_title">Scale:</span><br />

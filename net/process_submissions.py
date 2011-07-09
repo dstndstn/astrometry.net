@@ -301,6 +301,9 @@ def try_dosub(sub):
         return 'exception'
 
 def dosub(sub):
+    logmsg('sub license settings: commercial=%s, modifications=%s' % (
+        sub.allow_commercial_use,
+        sub.allow_modifications))
     if sub.disk_file is None:
         print 'Retrieving URL', sub.url
         (fn, headers) = urllib.urlretrieve(sub.url)
@@ -338,8 +341,15 @@ def dosub(sub):
                     img = get_or_create_source_list(df, sub.source_type)
                 # create UserImage object.
                 if img:
-                    uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
-                                                                   defaults=dict(original_file_name=tarinfo.name))
+                    uimg,created = UserImage.objects.get_or_create(
+                        submission=sub,
+                        image=img,
+                        user=sub.user,
+                        defaults=dict(original_file_name=tarinfo.name))
+                    uimg.allow_modifications = sub.allow_modifications
+                    uimg.allow_commercial_use = sub.allow_commercial_use
+                    uimg.save()
+
                 os.remove(tempfn)
         tar.close()
         os.removedirs(dirnm)
@@ -375,6 +385,9 @@ def dosub(sub):
         if img:
             uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
                                                        defaults=dict(original_file_name=original_filename))
+            uimg.allow_modifications = sub.allow_modifications
+            uimg.allow_commercial_use = sub.allow_commercial_use
+            uimg.save()
 
     sub.set_processing_finished()
     sub.save()

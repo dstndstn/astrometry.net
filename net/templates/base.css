@@ -63,6 +63,9 @@ div.comment div.comment_footer {
     margin-left: 3em;
     font-size: .8em;
 }
+dt {
+    font-weight:bold;
+}
 #messages p.success { color: #0c0; }
 a          {color: #00a; text-decoration: none; background-color: transparent;}
 a:link     {background-color: transparent; color: #00a;}

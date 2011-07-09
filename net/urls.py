@@ -74,17 +74,17 @@ urlpatterns += patterns('astrometry.net.views.comment',
 )
 
 urlpatterns += patterns('astrometry.net.api',
-                        (r'^api/login/?', 'api_login'),
-                        (r'^api/upload/?', 'api_upload'),
-                        (r'^api/url_upload/?', 'url_upload'),
-                        (r'^api/sdss_image_for_wcs/?', 'api_sdss_image_for_wcs'),
-                        (r'^api/galex_image_for_wcs/?', 'api_galex_image_for_wcs'),
-                        (r'^api/submission_images/?', 'api_submission_images'),
-                        (r'^api/jobs/(?P<job_id>' + idpattern + r')/?$', 'job_status'),
-                        (r'^api/jobs/(?P<job_id>' + idpattern + r')/calibration/?', 'calibration'),
-                        (r'^api/jobs/(?P<job_id>' + idpattern + r')/tags/?', 'tags'),
-                        (r'^api/jobs/(?P<job_id>' + idpattern + r')/machine_tags/?', 'machine_tags'),
-                        #(r'^api/logout/?', 'logout'),
+    (r'^api/login/?', 'api_login'),
+    (r'^api/upload/?', 'api_upload'),
+    (r'^api/url_upload/?', 'url_upload'),
+    (r'^api/sdss_image_for_wcs/?', 'api_sdss_image_for_wcs'),
+    (r'^api/galex_image_for_wcs/?', 'api_galex_image_for_wcs'),
+    (r'^api/submission_images/?', 'api_submission_images'),
+    (r'^api/jobs/(?P<job_id>' + idpattern + r')/?$', 'job_status'),
+    (r'^api/jobs/(?P<job_id>' + idpattern + r')/calibration/?', 'calibration'),
+    (r'^api/jobs/(?P<job_id>' + idpattern + r')/tags/?', 'tags'),
+    (r'^api/jobs/(?P<job_id>' + idpattern + r')/machine_tags/?', 'machine_tags'),
+    #(r'^api/logout/?', 'logout'),
 )
 
 

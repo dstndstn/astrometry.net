@@ -4,6 +4,7 @@
 {{block.super}}
 {% include 'dashboard/api_key.css' %}
 <style type="text/css">
+div#license { font-style:italic }
 </style>
 {% endblock %}
 
@@ -16,7 +17,14 @@
     {% include 'dashboard/api_key_div.html' with apikey=profile.apikey %}
     <form method="post" action="{% url astrometry.net.views.user.save_profile %}">
         {% csrf_token %}
+        <h3>My Info</h3>
         {{ profile_form.as_p }}
+        <h3>Default License Settings</h3>
+        {{ license_form.as_p }}
+        <div id="license">
+            By default, your submissions will be governed by: <br />
+            {% include 'license/license_link.html' with licensable=profile.default_license %}
+        </div>
         <input type="submit" value="Update Profile" />
     </form>
 </div>

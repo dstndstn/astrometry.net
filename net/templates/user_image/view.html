@@ -109,6 +109,7 @@ $(document).ready(function() {
         Submitted by {% include 'user/display_name.html' with user=image.user %}<br />
         <div class="indent">on <span class="timestamp">{{ image.submission.submitted_on|date:"Y-m-d" }}</span></div>
         <div class="indent">as "{{ image.original_file_name }}"</div>
+        <div class="indent" id="license">under {% include 'license/license_link.html' with licensable=image %}</a></div>
     </div>
     <hr />
     <div id="job_status">

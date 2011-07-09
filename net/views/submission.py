@@ -61,11 +61,25 @@ class SubmissionForm(forms.ModelForm):
                                              ('4','tiny (3 to 9 arcmin)'),
                                              ('5','custom')),
                                     initial='1')
+    allow_modifications = forms.ChoiceField(
+        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        choices = Licensable.YES_SA_NO,
+        initial=(''),
+        required=False
+    )
+    allow_commercial_use = forms.ChoiceField(
+        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        choices = Licensable.YES_NO,
+        initial=(''),
+        required=False
+    )
     class Meta:
         model = Submission
-        fields = ('parity','scale_units','scale_type','scale_lower',
-                  'scale_upper','scale_est','scale_err','positional_error',
-                  'center_ra','center_dec','radius','downsample_factor','source_type')
+        fields = (
+            'allow_commercial_use', 'allow_modifications',
+            'parity','scale_units','scale_type','scale_lower',
+            'scale_upper','scale_est','scale_err','positional_error',
+            'center_ra','center_dec','radius','downsample_factor','source_type')
         widgets = {'scale_type': forms.RadioSelect(renderer=HorizontalRenderer),
                    'scale_lower': forms.TextInput(attrs={'size':'5'}),
                    'scale_upper': forms.TextInput(attrs={'size':'5'}),
@@ -111,6 +125,8 @@ class SubmissionForm(forms.ModelForm):
         center_ra = self.cleaned_data.get('center_ra')
         center_dec = self.cleaned_data.get('center_dec')
         radius = self.cleaned_data.get('radius')
+        allow_commercial_use = self.cleaned_data.get('allow_commercial_use')
+        allow_modifications = self.cleaned_data.get('allow_modifications')
         if center_ra or center_dec or radius:
             if not center_ra:
                 self._errors['center_ra'] = self.error_class([number_message])
@@ -141,6 +157,7 @@ class SubmissionForm(forms.ModelForm):
         return self.cleaned_data
 
 def upload_file(request):
+    default_license = License.get_default()
     if request.method == 'POST':
         form = SubmissionForm(request.POST, request.FILES)
         if form.is_valid():
@@ -157,8 +174,15 @@ def upload_file(request):
             logmsg('Made Submission' + str(sub))
             return redirect(status, subid=sub.id)
     else:
+        if request.user.is_authenticated():
+            default_license = request.user.get_profile().default_license 
         form = SubmissionForm()
-    return render_to_response('submission/upload.html', {'form': form, 'user': request.user },
+    return render_to_response('submission/upload.html',
+        {
+            'form': form,
+            'user': request.user,
+            'default_license': default_license,
+        },
         context_instance = RequestContext(request))
 
 def job_log_file(req, jobid=None):

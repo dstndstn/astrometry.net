@@ -25,7 +25,12 @@ from astrometry.net.util import get_page
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        exclude = ('apikey')
+        exclude = ('apikey', 'default_license')
+
+class LicenseForm(forms.ModelForm):
+    class Meta:
+        model = License
+        exclude = ('license_uri','license_name')
 
 def dashboard(request):
     return render_to_response("dashboard/base.html",
@@ -38,6 +43,14 @@ def save_profile(request):
     profile = request.user.get_profile()
     if request.method == 'POST':
         profile.display_name = request.POST['display_name']
+        profile.default_license.allow_modifications = request.POST['allow_modifications']
+        profile.default_license.allow_commercial_use = request.POST['allow_commercial_use']
+
+        if profile.default_license.allow_modifications == '':
+            profile.default_license.allow_modifications = License.get_default().allow_modifications
+        if profile.default_license.allow_commercial_use == '':
+            profile.default_license.allow_commercial_use = License.get_default().allow_commercial_use
+
         profile.save()
     return redirect('astrometry.net.views.user.dashboard_profile')
 
@@ -46,9 +59,11 @@ def dashboard_profile(request):
     # user profile guaranteed to be created during openid login
     profile = request.user.get_profile()
            
-    form = ProfileForm(instance=profile)
+    profile_form = ProfileForm(instance=profile)
+    license_form = LicenseForm(instance=profile.default_license)
     context = {
-        'profile_form':form,
+        'profile_form':profile_form,
+        'license_form':license_form,
         'profile':profile,
     }
     return render_to_response("dashboard/profile.html",
