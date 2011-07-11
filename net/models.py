@@ -7,9 +7,6 @@ import tempfile
 from datetime import datetime
 from copy import deepcopy
 
-import xml.dom.minidom
-from xml.dom.minidom import Node
-
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -29,79 +26,7 @@ import PIL.Image, PIL.ImageDraw
 
 from urllib2 import urlopen
 
-    
-
-# uses creative commons rest api
-class Licensable(models.Model):
-    YES_NO = (
-        ('y','yes'),
-        ('n','no'),
-        ('','use default'),
-    )
-    YES_SA_NO = (
-        ('y','yes'),
-        ('sa','yes, but share alike'),
-        ('n','no'),
-        ('','use default'),
-    )
-
-    # CC "answer" data
-    allow_commercial_use = models.CharField(choices=YES_NO, max_length=1,
-        blank=True, default='')
-    allow_modifications = models.CharField(choices=YES_SA_NO, max_length=2,
-        blank=True, default='')
-
-    # CC issued license
-    license_name = models.CharField(max_length=1024)
-    license_uri = models.CharField(max_length=1024)
-
-    # attribution and other optional fields here
-
-
-    def get_license_uri(self):
-        if self.license_uri == '':
-            self.save()
-        return self.license_uri
-
-    def get_license_name(self):
-        if self.license_name == '':
-            self.save()
-        return self.license_name
-
-    def get_license_xml(self):
-        try:
-            url = (
-                'http://api.creativecommons.org/rest/1.5/license/standard/get?commercial=%s&derivatives=%s&jurisdiction=' %
-                (self.allow_commercial_use,
-                self.allow_modifications,)
-            )
-            logmsg("getting license via url: %s" % url)
-            f = urlopen(url)
-            xml = f.read()
-            f.close()
-            return xml
-        except Exception as e:
-            logmsg('error getting license xml: %s' % str(e))
-            return None
-
-    # uses CC "answer" data to retrieve CC issued license data
-    def get_license_name_uri(self):
-        def get_text(node_list):
-            rc = []
-            for node in node_list:
-                if node.nodeType == node.TEXT_NODE:
-                    rc.append(node.data)
-            return ''.join(rc)
-        try:
-            license_xml = self.get_license_xml()
-            license_doc = xml.dom.minidom.parseString(license_xml)
-            self.license_name = get_text(license_doc.getElementsByTagName('license-name')[0].childNodes)
-            self.license_uri = get_text(license_doc.getElementsByTagName('license-uri')[0].childNodes)
-            # can add rdf stuff here if we want..
-            
-        except Exception as e:
-            logmsg('error getting issued license data: %s' % str(e))
-
+from astrometry.net.abstract_models import *
 
 class License(Licensable):
     def save(self, *args, **kwargs):
@@ -114,11 +39,6 @@ class License(Licensable):
         return License.objects.get(pk=DEFAULT_LICENSE_ID)
 
 
-
-
-class Commentable(models.Model):
-    id = models.AutoField(primary_key=True)
-    owner = models.ForeignKey(User, null=True)
 
 class DiskFile(models.Model):
     file_hash = models.CharField(max_length=40, unique=True, primary_key=True)
@@ -545,7 +465,7 @@ class TaggedUserImage(models.Model):
     added_time = models.DateTimeField(auto_now=True) 
 
 
-class UserImage(Commentable, Licensable):
+class UserImage(Commentable, Licensable, Hideable):
     image = models.ForeignKey('Image')
     user = models.ForeignKey(User, related_name='user_images', null=True)
     
@@ -615,8 +535,13 @@ class UserImage(Commentable, Licensable):
             return jobs[0]
         return None
 
+    def get_absolute_url(self):
+        kwargs = {'user_image_id':self.id}
+        abs_url = reverse('astrometry.net.views.image.user_image', kwargs=kwargs)
+        return abs_url
 
-class Submission(Licensable):
+
+class Submission(Licensable, Hideable):
     SCALEUNITS_CHOICES = (
         ('arcsecperpix', 'arcseconds per pixel'),
         ('arcminwidth' , 'width of the field (in arcminutes)'), 
@@ -703,7 +628,7 @@ class Submission(Licensable):
         self.processing_finished = datetime.now()
 
 
-class Album(Commentable):
+class Album(Commentable, Hideable):
     description = models.CharField(max_length=1024)
     user_images = models.ManyToManyField('UserImage', related_name='albums') 
     tags = models.ManyToManyField('Tag', related_name='albums')
@@ -717,24 +642,6 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
-
-
-class Hideable(models.Model):
-    YES_NO = (('y','yes'),('n','no'))
-
-    publicly_visible = models.CharField(choices=YES_NO, max_length=1,
-        default='y')
-
-    share_with = models.ManyToManyField(User, through="SharedHideable")
-
-
-class SharedHideable(models.Model):
-    hideable = models.ForeignKey('Hideable')
-    shared_with = models.ForeignKey(User)
-    
-    # so it may be possible in the future to include "recently shared with
-    # you" view
-    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class UserProfile(models.Model):

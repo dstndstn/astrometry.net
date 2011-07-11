@@ -348,6 +348,7 @@ def dosub(sub):
                         defaults=dict(original_file_name=tarinfo.name))
                     uimg.allow_modifications = sub.allow_modifications
                     uimg.allow_commercial_use = sub.allow_commercial_use
+                    uimg.publicly_visible = sub.publicly_visible
                     uimg.save()
 
                 os.remove(tempfn)
@@ -387,6 +388,7 @@ def dosub(sub):
                                                        defaults=dict(original_file_name=original_filename))
             uimg.allow_modifications = sub.allow_modifications
             uimg.allow_commercial_use = sub.allow_commercial_use
+            uimg.publicly_visible = sub.publicly_visible
             uimg.save()
 
     sub.set_processing_finished()

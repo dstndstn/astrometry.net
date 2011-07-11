@@ -1,0 +1,5 @@
+{% if hideable.publicly_visible == 'y' %}
+<span class="chosen">yes</span> | <a href="{{ hideable.get_absolute_url }}/hide/">no</a>
+{% else %}
+<a href="{{ hideable.get_absolute_url }}/unhide/">yes</a> | <span class="chosen">no</span>
+{% endif %}

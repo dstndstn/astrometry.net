@@ -38,15 +38,6 @@ $(document).ready(function() {
         changeScalePreset($(this).val());
     });
     changeScalePreset($('input[name=scale_preset]:radio:checked').val());
-
-    $('#license_link').click(function(e) {
-        $('#license_block').stop(true, true).slideToggle();
-        e.preventDefault();
-    }).toggle(function() {
-        $(this).children('span').text("[-]");
-    }, function() {
-        $(this).children('span').text("[+]");
-    });
     
     $('#settings_link').click(function(e) {
         $('#settings_block').stop(true, true).slideToggle();
@@ -98,6 +89,27 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 <div id="settings_block">
 <table class="settings_table" cellspacing="0">
 <tr>
+    <td class="leftcolumn">
+        <div class="setting_title">Visibility:</div>
+        <div class="setting_description">
+            {% if user.is_authenticated %}
+                Permit anyone to view the content contained in and resulting from this submission?
+            {% else %}
+                By submitting anonymously, you agree that the content contained
+                in and resulting from this submission may be viewed publicly.
+                To change this setting, please
+                <a href="{% url openid-login %}">Sign In</a>.
+            {% endif %}
+        </div>
+    </td>
+    <td>
+        {% if user.is_authenticated %}
+            {{form.publicly_visible}}
+        {% else %}
+            <input type="hidden" name="publicly_visible" value='y' />
+        {% endif %}
+    </td>
+</tr>
     <td class="leftcolumn">
         <div class="setting_title">License:</div>
         <div class="setting_description">

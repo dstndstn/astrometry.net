@@ -115,6 +115,12 @@ $(document).ready(function() {
         <div class="indent">on <span class="timestamp">{{ image.submission.submitted_on|date:"Y-m-d" }}</span></div>
         <div class="indent">as "{{ image.original_file_name }}"</div>
         <div class="indent" id="license">under {% include 'license/license_link.html' with licensable=image %}</a></div>
+        {% if user.is_authenticated and user == image.user %}
+        <br />
+        <div class="indent">publicly visible:
+            {% include 'hideable/publicly_visible.html' with hideable=image %}
+        </div>
+        {% endif %}
     </div>
     <hr />
     <div id="job_status">

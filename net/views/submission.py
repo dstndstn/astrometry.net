@@ -73,10 +73,17 @@ class SubmissionForm(forms.ModelForm):
         initial=(''),
         required=False
     )
+
+    publicly_visible = forms.ChoiceField(
+        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        choices = Hideable.YES_NO,
+        initial=('y'),
+    )
     class Meta:
         model = Submission
         fields = (
             'allow_commercial_use', 'allow_modifications',
+            'publicly_visible',
             'parity','scale_units','scale_type','scale_lower',
             'scale_upper','scale_est','scale_err','positional_error',
             'center_ra','center_dec','radius','downsample_factor','source_type')
@@ -162,6 +169,8 @@ def upload_file(request):
         form = SubmissionForm(request.POST, request.FILES)
         if form.is_valid():
             sub = form.save(commit=False)
+            if not request.user.is_authenticated():
+                sub.publicly_visible = 'y'
             sub.user = request.user if request.user.is_authenticated() else User.objects.get(username=ANONYMOUS_USERNAME)
             if form.cleaned_data['upload_type'] == 'file':
                 sub.disk_file = handle_upload(file=request.FILES['file'])

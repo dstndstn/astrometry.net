@@ -12,6 +12,7 @@ from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 from django import forms
 from django.http import HttpResponseRedirect
+from django.contrib import messages
 
 from astrometry.net.models import *
 from astrometry.net import settings
@@ -26,6 +27,7 @@ from astrometry.net.views.comment import *
 from astrometry.net.util import get_page
 
 from string import strip
+
 def user_image(req, user_image_id=None):
     image = get_object_or_404(UserImage, pk=user_image_id)
 
@@ -35,6 +37,7 @@ def user_image(req, user_image_id=None):
         calib = job.calibration
     comment_form = PartialCommentForm()
 
+    logmsg(image.get_absolute_url())
     context = {
         'display_image': image.image.get_display_image(),
         'image': image,
@@ -44,7 +47,14 @@ def user_image(req, user_image_id=None):
         'request': req,
     }
 
-    return render_to_response('user_image/view.html', context,
+    if image.is_public() or (image.user == req.user and req.user.is_authenticated()):
+        template = 'user_image/view.html'
+    elif SharedHideable.objects.filter(shared_with=req.user.id, hideable=image).count():
+        template = 'user_image/view.html'
+    else:
+        messages.error(req, "Sorry, you don't have permission to view this content")
+        template = 'user_image/permission_denied.html'
+    return render_to_response(template, context,
         context_instance = RequestContext(req))
 
 def serve_image(req, id=None):
@@ -274,7 +284,18 @@ class ImageSearchForm(forms.Form):
 
         return self.cleaned_data
     
-
+def unhide(req, user_image_id):
+    image = get_object_or_404(UserImage, pk=user_image_id)
+    if req.user.is_authenticated and req.user == image.user:
+        image.unhide()
+    return redirect('astrometry.net.views.image.user_image', user_image_id)
+    
+def hide(req, user_image_id):
+    image = get_object_or_404(UserImage, pk=user_image_id)
+    if req.user.is_authenticated and req.user == image.user:
+        image.hide()
+    return redirect('astrometry.net.views.image.user_image', user_image_id)
+    
 def search(req):
     form = ImageSearchForm(req.GET)
 
