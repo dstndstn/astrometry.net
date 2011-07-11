@@ -108,7 +108,18 @@ def api_upload(request):
     
     df = handle_upload(file=request.FILES['file'])
     submittor = request.user if request.user.is_authenticated() else None
-    sub = Submission(user=submittor, disk_file=df, scale_type='ul', scale_units='degwidth')
+    allow_commercial_use = request.json.get('allow_commercial_use')
+    allow_modifications = request.json.get('allow_modifications')
+    publicly_visible = request.json.get('publicly_visible')
+    sub = Submission(
+        user=submittor,
+        disk_file=df,
+        scale_type='ul',
+        scale_units='degwidth',
+        allow_commercial_use=allow_commercial_use,
+        allow_modifications=allow_modifications,
+        publicly_visible=publicly_visible,
+    )
     sub.save()
 
     return HttpResponseJson({'status': 'success',
@@ -125,7 +136,18 @@ def url_upload(req):
 
     df = handle_upload(url=url)
     submittor = req.user if req.user.is_authenticated() else None
-    sub = Submission(user=submittor, disk_file=df, url=url, scale_type='ul', scale_units='degwidth')
+    allow_commercial_use = req.json.get('allow_commercial_use')
+    allow_modifications = req.json.get('allow_modifications')
+    publicly_visible = req.json.get('publicly_visible')
+    sub = Submission(user=submittor,
+        disk_file=df,
+        url=url,
+        scale_type='ul',
+        scale_units='degwidth',
+        allow_commercial_use=allow_commercial_use,
+        allow_modifications=allow_modifications,
+        publicly_visible=publicly_visible,
+    )
     sub.save()
 
     return HttpResponseJson({'status': 'success',

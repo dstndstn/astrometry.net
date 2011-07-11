@@ -134,13 +134,33 @@ class Client(object):
             raise RequestError('no session in result')
         self.session = sess
 
-    def url_upload(self, url):
-        result = self.send_request('url_upload', {'url':url})
+    def url_upload(self, url, allow_commercial_use='y', allow_modifications='y',
+        publicly_visible='y'
+    ):
+        result = self.send_request('url_upload',
+            {
+                'url':url,
+                'allow_commercial_use':allow_commercial_use,
+                'allow_modifications':allow_modifications,
+                'publicly_visible':publicly_visible,
+            }
+        )
+        return result
 
-    def upload(self, fn):
+    def upload(self, fn, allow_commercial_use='y', allow_modifications='y',
+        publicly_visible='y'
+    ):
         try:
             f = open(fn)
-            result = self.send_request('upload', {}, (fn, f.read()))
+            result = self.send_request('upload', 
+                {
+                    'allow_commercial_use':allow_commercial_use,
+                    'allow_modifications':allow_modifications,
+                    'publicly_visible':publicly_visible,
+                },
+                (fn, f.read())
+            )
+            return result
         except IOError:
             print 'File %s does not exist' % fn     
             raise
@@ -188,6 +208,30 @@ if __name__ == '__main__':
     parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--jobstatus', '-j', dest='job_id', help='Get status of a job')
+    parser.add_option( '--private', '-p',
+        dest='public',
+        action='store_const',
+        const='n',
+        default='y',
+        help='Hide this submission from other users')
+    parser.add_option('--allow_mod_sa','-m',
+        dest='allow_mod',
+        action='store_const',
+        const='sa',
+        default='y',
+        help='Select license to allow derivative works of submission, but only if shared under same conditions of original license') 
+    parser.add_option('--no_mod','-M',
+        dest='allow_mod',
+        action='store_const',
+        const='n',
+        default='y',
+        help='Select license to disallow derivative works of submission')
+    parser.add_option('--no_commercial','-c',
+        dest='allow_commercial',
+        action='store_const',
+        const='n',
+        default='y',
+        help='Select license to disallow commercial use of submission') 
     opt,args = parser.parse_args()
 
     if opt.apikey is None:
@@ -206,9 +250,19 @@ if __name__ == '__main__':
     c.login(opt.apikey)
 
     if opt.upload:
-        c.upload(opt.upload)
+        c.upload(
+            opt.upload,
+            allow_commercial_use=opt.allow_commercial,
+            allow_modifications=opt.allow_mod,
+            publicly_visible=opt.public
+        )
     if opt.upload_url:
-        c.url_upload(opt.upload_url)
+        c.url_upload(
+            opt.upload_url,
+            allow_commercial_use=opt.allow_commercial,
+            allow_modifications=opt.allow_mod,
+            publicly_visible=opt.public
+        )
     if opt.sdss_wcs:
         (wcsfn, outfn) = opt.sdss_wcs
         c.sdss_plot(outfn, wcsfn)
@@ -218,4 +272,4 @@ if __name__ == '__main__':
     if opt.job_id:
         print c.job_status(opt.job_id)
 
-    print c.submission_images(1)
+    #print c.submission_images(1)
