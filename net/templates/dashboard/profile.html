@@ -13,19 +13,58 @@ div#license { font-style:italic }
 <a href="{% url astrometry.net.views.user.dashboard_profile %}">Edit Profile</a>
 {% endblock %}
 {% block dashboard_content %}
-<div id="user_profile">
-    {% include 'dashboard/api_key_div.html' with apikey=profile.apikey %}
-    <form method="post" action="{% url astrometry.net.views.user.save_profile %}">
-        {% csrf_token %}
-        <h3>My Info</h3>
-        {{ profile_form.as_p }}
-        <h3>Default License Settings</h3>
-        {{ license_form.as_p }}
-        <div id="license">
-            By default, your submissions will be governed by: <br />
-            {% include 'license/license_link.html' with licensable=profile.default_license %}
+<form method="post" action="{% url astrometry.net.views.user.save_profile %}">
+{% csrf_token %}
+<table class="settings_table">
+<tr>
+    <td class="leftcolumn" style="border:0px">
+        <div class="setting_title">Display Name:</div>
+        <div class="setting_description">
         </div>
-        <input type="submit" value="Update Profile" />
-    </form>
-</div>
+    </td>
+    <td style="border:0px">
+        {{ profile_form.display_name }}
+    </td>
+</tr>
+<tr>
+    <td class="leftcolumn">
+        <div class="setting_title">API Key:</div>
+        <div class="setting_description">
+            <p>
+                Astrometry.net allows you to access parts of the service through a JSON API.
+                Your API key is required to do so, but allows the service to track your
+                usage as if you were using the service through the website interface.
+            </p>
+            <p>
+                To access the Astrometry.net API, first create a session by sending a JSON 
+                request with your API key as the argument <span class="code">'apikey'</span> 
+                to <span class="code">{% url astrometry.net.api.api_login %}</span>. The
+                API will return a session key, which must be included in subsequent
+                requests sent to the API.
+            </p>
+        </div>
+    </td>
+    <td>
+        {% comment %}{% include 'dashboard/api_key_div.html' with apikey=profile.apikey %}{% endcomment %}
+        {% include 'user/api_key.html' with apikey=profile.apikey %}
+    </td>
+</tr>
+<tr>
+    <td class="leftcolumn">
+        <div class="setting_title">Default License:</div>
+        <div class="setting_description">
+            <div id="license">
+                By default, your submissions will be governed by: <br />
+                {% include 'license/license_link.html' with licensable=profile.default_license %}
+            </div>
+        </div>
+    </td>
+    <td>
+        <div>Allow commercial use: {{ license_form.allow_commercial_use }}</div>
+        <div>Allow modifications: {{ license_form.allow_modifications }}</div>
+    </td>
+</tr>
+</table>
+<input type="submit" value="Update Profile" />
+</form>
 {% endblock %}

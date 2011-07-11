@@ -163,4 +163,28 @@ td.c {text-align:center;}
     text-align: center;
     margin-top: 0px;
 }
+
+.settings_table {
+    border: 0px;
+    border-spacing: 0px;
+    width: 100%;
+}
+.settings_table tr {
+    vertical-align: top;
+}
+.settings_table td {
+    vertical-align: top;
+    padding: 10px 5px 10px 5px;
+    border-top: #ccc 1px solid;
+}
+.settings_table .leftcolumn {
+    text-align: left;
+    width: 40%;
+}
+.setting_title {
+    font-weight: bold;
+}
+.setting_description {
+    font-size: 75%;
+}
 </style>

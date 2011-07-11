@@ -4,20 +4,13 @@
 {{block.super}}
 {% include 'view_menu.css' %}
 <style type="text/css">
-#dashboard {
-    overflow:auto;
-    width: 100%;
-}
-#dashboard div {
-    vertical-align:top;
-    float:left;
-}
 #dashboard_menu {
-    width:20%;
+    float: left;
+    width: 20%;
 }
-
 #dashboard_content {
-    width:80%;
+    float: left;
+    width: 80%;
 }
 </style>
 {% endblock %}
@@ -35,6 +28,7 @@
     {% endblock %}
     </div>
 </div>
+<div style="clear:both"></div>
 {% else %}
 {% endif %}
 {% endblock content %}

@@ -1,7 +1,7 @@
 <div id="api_key_detailed">
-<p>My API Key: {% include 'user/api_key.html' with apikey=apikey %}</p>
+My API Key: {% include 'user/api_key.html' with apikey=apikey %}
 (<a href="" onclick="$('#api_key_description').stop(true, true).slideToggle();return false;">What's this?</a>)
-</p>
+<br>
 <div id="api_key_description" style="display:none">
 <p>
     Astrometry.net allows you to access parts of the service through a JSON API.
@@ -15,6 +15,5 @@
     API will return a session key, which must be included in subsequent
     requests sent to the API.
 </p>
-<br />
 </div>
 </div>
