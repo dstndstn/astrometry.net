@@ -54,20 +54,20 @@ class Licensable(models.Model):
     YES_NO = (
         ('y','yes'),
         ('n','no'),
-        ('','use default'),
+        ('d','use default'),
     )
     YES_SA_NO = (
         ('y','yes'),
         ('sa','yes, but share alike'),
         ('n','no'),
-        ('','use default'),
+        ('d','use default'),
     )
 
     # CC "answer" data
     allow_commercial_use = models.CharField(choices=YES_NO, max_length=1,
-        blank=True, default='')
+        default='d')
     allow_modifications = models.CharField(choices=YES_SA_NO, max_length=2,
-        blank=True, default='')
+        default='d')
 
     # CC issued license
     license_name = models.CharField(max_length=1024)

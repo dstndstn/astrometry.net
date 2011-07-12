@@ -487,11 +487,6 @@ class UserImage(Commentable, Licensable, Hideable):
 
     def save(self, *args, **kwargs):
         self.owner = self.user
-        default_license = self.user.get_profile().default_license
-        if not self.allow_commercial_use:
-            self.allow_commercial_use = default_license.allow_commercial_use
-        if not self.allow_modifications:
-            self.allow_modifications = default_license.allow_modifications
         self.get_license_name_uri()
         return super(UserImage, self).save(*args, **kwargs)
 
@@ -585,11 +580,10 @@ class Submission(Licensable, Hideable):
     downsample_factor = models.PositiveIntegerField(blank=True, null=True)
 
     source_type = models.CharField(max_length=5, choices=SOURCE_TYPE_CHOICES, default='image')
-
     original_filename = models.CharField(max_length=256)
+    album = models.ForeignKey('Album', blank=True, null=True)
 
     submitted_on = models.DateTimeField(auto_now_add=True)
-
     processing_started = models.DateTimeField(null=True)
     processing_finished = models.DateTimeField(null=True)
 
@@ -629,10 +623,15 @@ class Submission(Licensable, Hideable):
 
 
 class Album(Commentable, Hideable):
+    user = models.ForeignKey(User, related_name='albums', null=True)
+    title = models.CharField(max_length=64)
     description = models.CharField(max_length=1024)
     user_images = models.ManyToManyField('UserImage', related_name='albums') 
     tags = models.ManyToManyField('Tag', related_name='albums')
 
+    def save(self, *args, **kwargs):
+        self.owner = self.user
+        return super(Album, self).save(*args, **kwargs)
 
 class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -646,7 +645,7 @@ class Comment(models.Model):
 
 class UserProfile(models.Model):
     API_KEY_LENGTH = 16
-    display_name = models.CharField(max_length=256)
+    display_name = models.CharField(max_length=64)
     user = models.ForeignKey(User, unique=True, related_name='profile',
                              editable=False)
     apikey = models.CharField(max_length = API_KEY_LENGTH)
@@ -657,9 +656,20 @@ class UserProfile(models.Model):
         return s
 
     def create_api_key(self):
+        # called in openid_views.py (where profile is first created)
         key = ''.join([chr(random.randint(ord('a'), ord('z')))
                        for i in range(self.__class__.API_KEY_LENGTH)])
         self.apikey = key
+     
+    def create_default_license(self):
+        # make a user their own copy of the sitewide default license
+        # called in openid_views.py (where profile is first created)
+        sdl = License.get_default()
+        if self.default_license == None or self.default_license.id == sdl.id:
+            self.default_license = License.objects.create(
+                allow_modifications=sdl.allow_modifications,
+                allow_commercial_use=sdl.allow_commercial_use
+            )
 
     def get_absolute_url(self):
         return reverse('astrometry.net.views.user.public_profile', user_id=self.user.id)
@@ -668,13 +678,5 @@ class UserProfile(models.Model):
         # for sorting users, enforce capitalization of first letter
         self.display_name = self.display_name[:1].capitalize() + self.display_name[1:]
 
-        # make a user their own copy of the sitewide default license
-        sdl = License.get_default()
-        if self.default_license == None or self.default_license.id == sdl.id:
-            self.default_license = License.objects.create(
-                allow_modifications=sdl.allow_modifications,
-                allow_commercial_use=sdl.allow_commercial_use
-            )
         self.default_license.save()
-
         return super(UserProfile, self).save(*args, **kwargs)

@@ -4,6 +4,7 @@
 {{block.super}}
 <style type="text/css">
 #settings_block    {display: none}
+#new_album_title_block {padding-left: 50px}
 #scale_custom_block  {padding-left: 50px}
 </style>
 {% endblock %}
@@ -23,6 +24,9 @@ function changeScaleType(type) {
 function changeScalePreset(type) {
     $('#scale_custom_block').toggle(type == '5');
 }
+function changeAlbum(album_val) {
+    $('#new_album_title_block').toggle(album_val == 'new');
+}
 $(document).ready(function() {
     $('input[name=upload_type]:radio').click(function() {
         changeUploadType($(this).val());
@@ -38,6 +42,11 @@ $(document).ready(function() {
         changeScalePreset($(this).val());
     });
     changeScalePreset($('input[name=scale_preset]:radio:checked').val());
+    
+    $("select[name=album]").change(function () {
+        changeAlbum($("select[name=album] option:selected").val());
+    });
+    changeAlbum($("select[name=album] option:selected").val());
     
     $('#settings_link').click(function(e) {
         $('#settings_block').stop(true, true).slideToggle();
@@ -65,6 +74,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 <div id="file_block">{{ form.file }}</div>
 <div id="url_block">{{ form.url }}</div>
 {{ form.non_field_errors }}<br />
+{{ form.errors }}<br />
 <br />
 <table class="settings_table">
 <tr>
@@ -87,7 +97,31 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 
 <h4><a href="#" id="settings_link">Advanced Settings <span>[+]</span></a></h4>
 <div id="settings_block">
-<table class="settings_table" cellspacing="0">
+<table class="settings_table">
+<tr>
+    <td class="leftcolumn">
+        <div class="setting_title">Album:</div>
+        <div class="setting_description">
+            {% if user.is_authenticated %}
+                Select an optional album to add the image(s) from this submission to.
+            {% else %}
+                To create albums, please
+                <a href="{% url openid-login %}">Sign In</a>.
+            {% endif %}
+        </div>
+    </td>
+    <td>
+        {% if user.is_authenticated %}
+            {{ form.album }}
+            {{ form.album.errors }}
+            <br /><br />
+            <div id="new_album_title_block">
+                Title: {{ form.new_album_title }}
+                {{ form.new_album_title.errors }}
+            </div>
+        {% endif %}
+    </td>
+</tr>
 <tr>
     <td class="leftcolumn">
         <div class="setting_title">Visibility:</div>
@@ -104,12 +138,14 @@ Sorry, your submission could not be completed. Please fix all of the <span class
     </td>
     <td>
         {% if user.is_authenticated %}
-            {{form.publicly_visible}}
+            {{ form.publicly_visible.errors }}
+            {{ form.publicly_visible }}
         {% else %}
-            <input type="hidden" name="publicly_visible" value='y' />
+            <input type="hidden" name="publicly_visible" value="y" />
         {% endif %}
     </td>
 </tr>
+<tr>
     <td class="leftcolumn">
         <div class="setting_title">License:</div>
         <div class="setting_description">
@@ -127,14 +163,17 @@ Sorry, your submission could not be completed. Please fix all of the <span class
     <td>
         {% if user.is_authenticated %}
             <h5>Allow commercial use?</h5>
+            {{ form.allow_commercial_use.errors }}
             {{ form.allow_commercial_use }}
             <h5>Allow modifications?</h5>
+            {{ form.allow_modifications.errors }}
             {{ form.allow_modifications }}
         {% else %}
-            <input type="hidden" name="allow_commercial_use" value />
-            <input type="hidden" name="allow_modifications" value />
+            <input type="hidden" name="allow_commercial_use" value="d" />
+            <input type="hidden" name="allow_modifications" value="d" />
         {% endif %}
     </td>
+</tr>
 <tr> 
     <td class="leftcolumn">
         <div class="setting_title">Scale:</div>

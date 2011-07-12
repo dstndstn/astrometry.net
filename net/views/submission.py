@@ -61,24 +61,12 @@ class SubmissionForm(forms.ModelForm):
                                              ('4','tiny (3 to 9 arcmin)'),
                                              ('5','custom')),
                                     initial='1')
-    allow_modifications = forms.ChoiceField(
-        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
-        choices = Licensable.YES_SA_NO,
-        initial=(''),
-        required=False
-    )
-    allow_commercial_use = forms.ChoiceField(
-        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
-        choices = Licensable.YES_NO,
-        initial=(''),
-        required=False
-    )
 
-    publicly_visible = forms.ChoiceField(
-        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
-        choices = Hideable.YES_NO,
-        initial=('y'),
-    )
+    album = forms.ChoiceField(choices=(), required=False)
+    new_album_title = forms.CharField(widget=forms.TextInput(attrs={'size':'40'}),
+                                      max_length=64,
+                                      required=False)
+
     class Meta:
         model = Submission
         fields = (
@@ -87,19 +75,23 @@ class SubmissionForm(forms.ModelForm):
             'parity','scale_units','scale_type','scale_lower',
             'scale_upper','scale_est','scale_err','positional_error',
             'center_ra','center_dec','radius','downsample_factor','source_type')
-        widgets = {'scale_type': forms.RadioSelect(renderer=HorizontalRenderer),
-                   'scale_lower': forms.TextInput(attrs={'size':'5'}),
-                   'scale_upper': forms.TextInput(attrs={'size':'5'}),
-                   'scale_est': forms.TextInput(attrs={'size':'5'}),
-                   'scale_err': forms.TextInput(attrs={'size':'5'}),
-                   'positional_error': forms.TextInput(attrs={'size':'5'}),
-                   'center_ra': forms.TextInput(attrs={'size':'5'}),
-                   'center_dec': forms.TextInput(attrs={'size':'5'}),
-                   'radius': forms.TextInput(attrs={'size':'5'}),
-                   'downsample_factor': forms.TextInput(attrs={'size':'5'}),
-                   'parity': forms.RadioSelect(renderer=NoBulletsRenderer),
-                   'source_type': forms.RadioSelect(renderer=NoBulletsRenderer),
-                  }
+        widgets = {
+            'scale_type': forms.RadioSelect(renderer=HorizontalRenderer),
+            'scale_lower': forms.TextInput(attrs={'size':'5'}),
+            'scale_upper': forms.TextInput(attrs={'size':'5'}),
+            'scale_est': forms.TextInput(attrs={'size':'5'}),
+            'scale_err': forms.TextInput(attrs={'size':'5'}),
+            'positional_error': forms.TextInput(attrs={'size':'5'}),
+            'center_ra': forms.TextInput(attrs={'size':'5'}),
+            'center_dec': forms.TextInput(attrs={'size':'5'}),
+            'radius': forms.TextInput(attrs={'size':'5'}),
+            'downsample_factor': forms.TextInput(attrs={'size':'5'}),
+            'parity': forms.RadioSelect(renderer=NoBulletsRenderer),
+            'source_type': forms.RadioSelect(renderer=NoBulletsRenderer),
+            'allow_commercial_use': forms.RadioSelect(renderer=NoBulletsRenderer),
+            'allow_modifications': forms.RadioSelect(renderer=NoBulletsRenderer),
+            'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer),
+        }
 
     def clean(self):
         number_message = "Enter a number."
@@ -132,8 +124,6 @@ class SubmissionForm(forms.ModelForm):
         center_ra = self.cleaned_data.get('center_ra')
         center_dec = self.cleaned_data.get('center_dec')
         radius = self.cleaned_data.get('radius')
-        allow_commercial_use = self.cleaned_data.get('allow_commercial_use')
-        allow_modifications = self.cleaned_data.get('allow_modifications')
         if center_ra or center_dec or radius:
             if not center_ra:
                 self._errors['center_ra'] = self.error_class([number_message])
@@ -162,15 +152,52 @@ class SubmissionForm(forms.ModelForm):
             self.cleaned_data['url'] = url
 
         return self.cleaned_data
+        
+    def __init__(self, user, *args, **kwargs):
+        super(SubmissionForm, self).__init__(*args, **kwargs)
+        #if user.is_authenticated():
+        #    self.fields['album'].queryset = user.albums
+        self.fields['album'].choices = [('', 'none')]
+        if user.is_authenticated():
+            for album in Album.objects.filter(user=user).all():
+                self.fields['album'].choices += [(album.id, album.title)]
+            self.fields['album'].choices += [('new', 'create new album...')]
+        self.fields['album'].initial = ''
+
 
 def upload_file(request):
     default_license = License.get_default()
+    if request.user.is_authenticated():
+        default_license = request.user.get_profile().default_license 
+
     if request.method == 'POST':
-        form = SubmissionForm(request.POST, request.FILES)
+        form = SubmissionForm(request.user, request.POST, request.FILES)
         if form.is_valid():
             sub = form.save(commit=False)
+            
+            if request.user.is_authenticated():
+                if form.cleaned_data['album'] == '':
+                    # don't create an album
+                    pass
+                elif form.cleaned_data['album'] == 'new':
+                    # create a new album
+                    title = form.cleaned_data['new_album_title']
+                    if title:
+                        album,created = Album.objects.get_or_create(user=request.user, title=title)
+                        sub.album = album
+                else:
+                    try:
+                        sub.album = Album.objects.get(pk=int(form.cleaned_data['album']))
+                    except Exception as e:
+                        print e
+
             if not request.user.is_authenticated():
                 sub.publicly_visible = 'y'
+            if form.cleaned_data['allow_commercial_use'] == 'd':
+                sub.allow_commercial_use = default_license.allow_commercial_use
+            if form.cleaned_data['allow_modifications'] == 'd':
+                sub.allow_modifications = default_license.allow_modifications
+
             sub.user = request.user if request.user.is_authenticated() else User.objects.get(username=ANONYMOUS_USERNAME)
             if form.cleaned_data['upload_type'] == 'file':
                 sub.disk_file = handle_upload(file=request.FILES['file'])
@@ -183,9 +210,7 @@ def upload_file(request):
             logmsg('Made Submission' + str(sub))
             return redirect(status, subid=sub.id)
     else:
-        if request.user.is_authenticated():
-            default_license = request.user.get_profile().default_license 
-        form = SubmissionForm()
+        form = SubmissionForm(request.user)
     return render_to_response('submission/upload.html',
         {
             'form': form,

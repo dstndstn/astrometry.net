@@ -385,11 +385,11 @@ def dosub(sub):
         # create UserImage object.
         if img:
             uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
-                                                       defaults=dict(original_file_name=original_filename))
-            uimg.allow_modifications = sub.allow_modifications
-            uimg.allow_commercial_use = sub.allow_commercial_use
-            uimg.publicly_visible = sub.publicly_visible
-            uimg.save()
+                                                       defaults=dict(original_file_name=original_filename,
+                                                                     allow_modifications = sub.allow_modifications,
+                                                                     allow_commercial_use = sub.allow_commercial_use,
+                                                                     publicly_visible = sub.publicly_visible))
+            #uimg.save()
 
     sub.set_processing_finished()
     sub.save()

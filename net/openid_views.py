@@ -279,6 +279,7 @@ def login_complete(request, redirect_field_name=REDIRECT_FIELD_NAME,
                     loginfo('Creating new UserProfile for', user)
                     profile = UserProfile(user=user)
                     profile.create_api_key()
+                    profile.create_default_license()
                     if user.get_full_name():
                         profile.display_name = user.get_full_name()
                     else:
