@@ -123,6 +123,7 @@ def user_profile(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
 
     context = {
+        'request': req,
         'display_user': user,
         'recent_submissions':user.submissions.all().order_by('-submitted_on')[:10],
     }
