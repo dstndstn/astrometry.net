@@ -28,6 +28,29 @@ from urllib2 import urlopen
 
 from astrometry.net.abstract_models import *
 
+### Admin view -- running Submissions and Jobs
+
+class ProcessSubmissions(models.Model):
+    pid = models.IntegerField()
+    watchdog = models.DateTimeField(null=True)
+    # subs
+    # jobs
+
+    def set_watchdog(self):
+        self.watchdog = datetime.now()
+
+class QueuedSubmission(models.Model):
+    submission = models.ForeignKey('Submission')
+    procsub = models.ForeignKey('ProcessSubmissions', related_name='subs')
+    finished = models.BooleanField()
+    success = models.BooleanField()
+
+class QueuedJob(models.Model):
+    job = models.ForeignKey('Job')
+    procsub = models.ForeignKey('ProcessSubmissions', related_name='jobs')
+    finished = models.BooleanField()
+    success = models.BooleanField()
+
 class License(Licensable):
     def save(self, *args, **kwargs):
         self.get_license_name_uri()
@@ -587,6 +610,7 @@ class Submission(Licensable, Hideable):
 
     # Reverse mappings:
     #  user_images -> UserImage
+    #  -> QueuedSubmission
 
     def __str__(self):
         return ('Submission %i: file <%s>, url %s, proc_started=%s' %

@@ -496,9 +496,6 @@ def job_callback(result):
 
 
 def main(dojob_nthreads, dosub_nthreads, refresh_rate):
-    dosub_queue = multiprocessing.Queue()
-    job_queue = multiprocessing.Queue()
-
     dojob_pool = None
     dosub_pool = None
     if dojob_nthreads > 1:
@@ -533,7 +530,15 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate):
     subresults = []
     jobresults = []
 
+    #
+    me = ProcessSubmissions(pid=os.getpid())
+    me.set_watchdog()
+    me.save()
+
     while True:
+        me.set_watchdog()
+        me.save()
+
         print 'Checking for new Submissions'
         newsubs = Submission.objects.filter(processing_started__isnull=True)
         print 'Found', newsubs.count(), 'unstarted submissions'
@@ -543,21 +548,38 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate):
         newuis = all_user_images.filter(job_count=0)
         print 'Found', len(newuis), 'userimages without Jobs'
 
+        runsubs = me.subs.filter(finished=False)
         print 'Submissions running:', len(subresults)
         for sid,res in subresults:
             print '  Submission id', sid, 'ready:', res.ready(),
             if res.ready():
                 subresults.remove((sid,res))
                 print 'success:', res.successful(),
+
+                qs = runsubs.get(submission__id=sid)
+                qs.finished = True
+                qs.success = res.successful()
+                qs.save()
+
                 if res.successful():
                     print 'result:', res.get(),
             print
+
+
+
+        runjobs = me.jobs.filter(finished=False)
         print 'Jobs running:', len(jobresults)
         for jid,res in jobresults:
             print '  Job id', jid, 'ready:', res.ready(),
             if res.ready():
                 jobresults.remove((jid,res))
                 print 'success:', res.successful(),
+
+                qj = runjobs.get(job__id=jid)
+                qj.finished = True
+                qj.success = res.successful()
+                qj.save()
+
                 if res.successful():
                     print 'result:', res.get(),
             print
@@ -573,6 +595,9 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate):
             sub.set_processing_started()
             sub.save()
 
+            qs = QueuedSubmission(procsub=me, submission=sub)
+            qs.save()
+
             if dosub_pool:
                 res = dosub_pool.apply_async(try_dosub, (sub,),
                                              callback=sub_callback)
@@ -585,6 +610,9 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate):
             job = Job(user_image=userimage)
             job.set_queued_time()
             job.save()
+
+            qj = QueuedJob(procsub=me, job=job)
+            qj.save()
 
             if dojob_pool:
                 res = dojob_pool.apply_async(try_dojob, (job, userimage),
