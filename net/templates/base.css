@@ -165,6 +165,15 @@ td.c {text-align:center;}
     margin-top: 0px;
 }
 
+.top_bar {
+    font-size: 90%; 
+    background-color: #eee;
+    padding: 10px;
+}
+.top_bar h3 {
+    margin-top: 0px;
+}
+
 .settings_table {
     border: 0px;
     border-spacing: 0px;

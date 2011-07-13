@@ -18,8 +18,8 @@
 }
 .image_container a {
     display: block;
-    width: 235px;
-    height: 235px;
+    width: 100%;
+    height: 100%;
 }
 .image_container a:hover {
     background-color: transparent;

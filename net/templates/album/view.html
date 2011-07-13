@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block inline_css %}
+{{block.super}}
+{% include 'user_image/image_set.css' %}
+{% include 'tag/list.css' %}
+{% include 'job/status.css' %}
+<style type="text/css">
+#album_info {
+    float: left;
+    width: 50%;
+}
+#tags {
+    float: left;
+    padding-left: 10px;
+    border-left: 1px solid #ccc;
+}
+</style>
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+{% endblock %}
+
+{% block title %}
+Albums &gt; 
+<a href="{{ album.get_absolute_url }}">{{ album.title }}</a>
+{% endblock %}
+{% block content %}
+    
+
+<div class="top_bar">
+    <div id="album_info">
+        Submitted by {% include 'user/display_name.html' with user=album.user %}<br />
+        {{ album.user_images.all|length }} image{{ album.user_images.all|pluralize }}<br />
+        {% comment %}{% if user.is_authenticated and user == album.user %}
+        <br />
+        <div class="indent">publicly visible:
+            {% include 'hideable/publicly_visible.html' with hideable=album %}
+        </div>
+        {% endif %}
+        {% endcomment %}
+    </div>
+    <div id="tags">
+        <h3>Tags</h3>
+        {%comment %}{% include 'tag/user_image_tag_list.html' with user_image_id=image.id tags=image.tags.all tagged_object_owner=image.user next=request.path %}
+        {% endcomment %}
+        <p><a class="add_tag" href="#">Add Tag (TODO)</a></p>
+    </div>
+    <div style="clear:both"></div>
+</div>
+<br />
+<div id="album_images">
+    {% include 'user_image/paginated_image_set.html' with image_page=image_page %}
+</div>
+<div id="comments">
+    <h3>Comments</h3>
+    {% include 'comment/list.html' with comments=album.comments.all %}
+    <div>
+    <br />
+    {% if user.is_authenticated %}
+        <form method="post" name="comment_form" action="{% url astrometry.net.views.comment.new category='album' recipient_id=album.id %}">
+        {% csrf_token %}
+        <p>{{ comment_form.text }}</p>
+        <input type="hidden" name="next" value="{{request.path}}" />
+        <input type="submit" value="Leave Comment" />
+        </form>
+    {% else %}
+        Please <a href="{% url openid-login %}?next={{request.path}}">sign in</a> to post comments.
+    {% endif %}
+    </div>
+</div>
+{% endblock %}

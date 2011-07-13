@@ -43,7 +43,10 @@ urlpatterns += patterns('astrometry.net.views.user',
     (r'^dashboard/profile/?$', 'dashboard_profile'),
     (r'^dashboard/profile/save/?$', 'save_profile'),
     (r'^users/?$', 'index'),
-    (r'^users/(?P<user_id>' + idpattern + r')/?$', 'public_profile'),
+    (r'^users/(?P<user_id>' + idpattern + r')/?$', 'user_profile'),
+    (r'^users/(?P<user_id>' + idpattern + r')/images/?$', 'user_images'),
+    (r'^users/(?P<user_id>' + idpattern + r')/albums/?$', 'user_albums'),
+    (r'^users/(?P<user_id>' + idpattern + r')/submissions/?$', 'user_submissions'),
 )
 
 urlpatterns += patterns('astrometry.net.views.image',
@@ -53,6 +56,7 @@ urlpatterns += patterns('astrometry.net.views.image',
     (r'^user_images/all/?$', 'index_all'),
     (r'^user_images/by_user/?$', 'index_by_user'),
     (r'^user_images/user/(?P<user_id>' + idpattern + r')/?$', 'index_user'),
+    (r'^user_images/album/(?P<album_id>' + idpattern + r')/?$', 'index_album'),
     (r'^user_images/(?P<user_image_id>' + idpattern + r')/hide/?$', 'hide'),
     (r'^user_images/(?P<user_image_id>' + idpattern + r')/unhide/?$', 'unhide'),
     (r'^user_images/(?P<user_image_id>' + idpattern + r')/?$', 'user_image'),
@@ -65,6 +69,9 @@ urlpatterns += patterns('astrometry.net.views.image',
     (r'^wcs_file/(?P<jobid>' + idpattern + r')/?', 'wcs_file'),
 )
 
+urlpatterns += patterns('astrometry.net.views.album',
+    (r'^albums/(?P<album_id>' + idpattern + r')/?', 'album'),
+)
 urlpatterns += patterns('astrometry.net.views.tag',
     (r'^user_images/(?P<user_image_id>' + idpattern + r')/tags/(?P<tag_id>' + tagpattern + r')/remove/?', 'remove_userimagetag'),
 )

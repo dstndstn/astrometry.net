@@ -1,0 +1,15 @@
+{% extends 'user/base.html' %}
+
+{% block inline_css %}
+{{block.super}}
+{% include 'user_image/image_set.css' %}
+{% endblock %}
+
+{% block title %}
+{{block.super}} &gt;
+<a href="{% url astrometry.net.views.user.user_images user_id=display_user.id %}">Images</a>
+{% endblock %}
+
+{% block user_content %}
+{% include 'user_image/paginated_image_set.html' with image_page=image_page %}
+{% endblock %}

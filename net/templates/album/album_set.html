@@ -1,0 +1,31 @@
+<div class="album_set">
+{% spaceless %}
+{% for album in albums %}
+    <div class="album_container">
+        <div class="album_images">
+            <div class="image_frame" style="background-color:#444;left:10px;top:15px">test</div>
+            <div class="image_frame" style="background-color:#222;left:5px;top:7px">test</div>
+            {% with images=album.user_images.all %}
+            {% if images.0 %}
+            <div class="image_frame loading_container">
+                <div class="image_container" 
+                     style="background-image: url('{% url astrometry.net.views.image.serve_image id=images.0.image.thumbnail.id %}')">
+                </div>
+            </div>
+            {% else %}
+            <div class="image_frame" style="background-color:#eee">No images.</div>
+            {% endif %}
+            {% endwith %}
+        </div>
+        <div class="album_title">
+            {{ album.title }}
+        </div>
+        <a href="{{ album.get_absolute_url }}"></a>
+    </div>
+{% empty %}
+    No albums.
+{% endfor %}
+{% endspaceless %}
+</div>
+
+

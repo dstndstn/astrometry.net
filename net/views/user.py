@@ -104,13 +104,54 @@ def index(req):
         context_instance = RequestContext(req))
 
 
-def public_profile(req, user_id=None):
+def user_profile(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
 
     context = {
-        'display_user':user,
+        'display_user': user,
         'recent_submissions':user.submissions.all().order_by('-submitted_on')[:10],
     }
     return render_to_response('user/profile.html',
+        context,
+        context_instance = RequestContext(req))
+
+def user_images(req, user_id=None):
+    user = get_object_or_404(User, pk=user_id)
+
+    page_number = req.GET.get('page',1)
+    page = get_page(user.user_images.all().order_by('-submission__submitted_on', 'id'),3*10,page_number)
+    
+    context = {
+        'display_user': user,
+        'image_page': page
+    }
+    
+    return render_to_response('user/user_images.html',
+        context,
+        context_instance = RequestContext(req))
+
+def user_albums(req, user_id=None):
+    user = get_object_or_404(User, pk=user_id)
+
+    page_number = req.GET.get('page',1)
+    page = get_page(user.albums.all(),3*10,page_number)
+    
+    context = {
+        'display_user': user,
+        'album_page': page
+    }
+    
+    return render_to_response('user/albums.html',
+        context,
+        context_instance = RequestContext(req))
+
+def user_submissions(req, user_id=None):
+    user = get_object_or_404(User, pk=user_id)
+
+    context = {
+        'display_user': user,
+        'user_submissions': user.submissions.all().order_by('-submitted_on')
+    }
+    return render_to_response("user/submissions.html",
         context,
         context_instance = RequestContext(req))

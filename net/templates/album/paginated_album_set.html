@@ -1,0 +1,29 @@
+{% if album_page.has_other_pages %}
+<div class="pagination">
+    {% if album_page.has_previous %}
+    <a href="?page={{ album_page.previous_page_number }}">&#9668; previous</a> | 
+    {% endif %}
+
+    Page {{ album_page.number }} of {{ album_page.paginator.num_pages }}
+
+    {% if album_page.has_next %}
+     | <a href="?page={{ album_page.next_page_number }}">next &#9658;</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% include 'album/album_set.html' with albums=album_page.object_list %}
+
+{% if album_page.has_other_pages %}
+<div class="pagination">
+    {% if album_page.has_previous %}
+    <a href="?page={{ album_page.previous_page_number }}">&#9668; previous</a> | 
+    {% endif %}
+
+    Page {{ album_page.number }} of {{ album_page.paginator.num_pages }}
+
+    {% if album_page.has_next %}
+     | <a href="?page={{ album_page.next_page_number }}">next &#9658;</a>
+    {% endif %}
+</div>
+{% endif %}

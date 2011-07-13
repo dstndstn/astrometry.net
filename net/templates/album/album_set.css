@@ -1,0 +1,54 @@
+<style type="text/css">
+.album_container {
+    position: relative;
+    display: inline-block;
+    margin: 5px;
+}
+.album_container a {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.album_container a:hover {
+    background-color: transparent;
+}
+.album_images {
+    position: relative;
+    width: 235px;
+    height: 235px;
+}
+.album_title {
+    text-align: center;
+}
+.loading_container {
+    background-color: #000;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-image: url('{{ STATIC_URL }}images/loading-black.gif');
+}
+.image_container {
+    position: absolute;
+    width: 215px;
+    height: 215px;
+    background-color: transparent;
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+.image_frame {
+    position: absolute;
+    width: 215px;
+    height: 215px;
+    border: 1px solid #ccc;
+    line-height: 215px;
+    text-align: center;
+    font-size: 75%;
+}
+.pagination {
+    width: 100%;
+    text-align: center;
+}
+</style>
+

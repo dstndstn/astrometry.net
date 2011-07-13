@@ -345,11 +345,12 @@ def dosub(sub):
                         submission=sub,
                         image=img,
                         user=sub.user,
-                        defaults=dict(original_file_name=tarinfo.name))
-                    uimg.allow_modifications = sub.allow_modifications
-                    uimg.allow_commercial_use = sub.allow_commercial_use
-                    uimg.publicly_visible = sub.publicly_visible
-                    uimg.save()
+                        defaults=dict(original_file_name=tarinfo.name,
+                                      allow_modifications = sub.allow_modifications,
+                                      allow_commercial_use = sub.allow_commercial_use,
+                                      publicly_visible = sub.publicly_visible))
+                    if sub.album:
+                        sub.album.user_images.add(uimg)
 
                 os.remove(tempfn)
         tar.close()
@@ -384,11 +385,14 @@ def dosub(sub):
             img = get_or_create_source_list(df, sub.source_type)
         # create UserImage object.
         if img:
-            uimg,created = UserImage.objects.get_or_create(submission=sub, image=img, user=sub.user,
-                                                       defaults=dict(original_file_name=original_filename,
-                                                                     allow_modifications = sub.allow_modifications,
-                                                                     allow_commercial_use = sub.allow_commercial_use,
-                                                                     publicly_visible = sub.publicly_visible))
+            uimg,created = UserImage.objects.get_or_create(
+                submission=sub, image=img, user=sub.user,
+                defaults=dict(original_file_name=original_filename,
+                             allow_modifications = sub.allow_modifications,
+                             allow_commercial_use = sub.allow_commercial_use,
+                             publicly_visible = sub.publicly_visible))
+            if sub.album:
+                sub.album.user_images.add(uimg)
             #uimg.save()
 
     sub.set_processing_finished()

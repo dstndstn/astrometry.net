@@ -1,0 +1,33 @@
+{% extends "user/index.html" %}
+
+{% block inline_css %}
+{{block.super}}
+{% include 'view_menu.css' %}
+<style type="text/css">
+#user_menu {
+    float: left;
+    width: 20%;
+}
+#user_content {
+    float: left;
+    width: 80%;
+}
+</style>
+{% endblock %}
+
+{% block title %}
+{{ block.super }} &gt;
+{% include 'user/display_name.html' with user=display_user%}
+{% endblock %}
+{% block content %}
+<div>
+    <div id="user_menu">
+        {% include 'user/menu.html' %}
+    </div>
+    <div id="user_content">
+    {% block user_content %}
+    {% endblock %}
+    </div>
+</div>
+<div style="clear:both"></div>
+{% endblock content %}

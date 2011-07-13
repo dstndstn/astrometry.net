@@ -15,24 +15,18 @@
 {{ block.super }}
 {% include 'job/status.css' %}
 <style type="text/css">
-#submission_details {
-    font-size: 90%; 
-    background-color: #eee;
-    padding: 10px;
-    width: 100%
-}
 #submission_details td {
-    vertical-align: top
+   vertical-align: top;
 }
 .leftcolumn {
-    width: 20%
+    width: 20%;
 }
 #submission_images td {
     padding: 5px; 
-    vertical-align: top
+    vertical-align: top;
 }
 .log_tail {
-    width:640px;
+    width: 640px;
     overflow: auto;
     display: none;
 }
@@ -82,7 +76,8 @@ Submission {{ sub.id }}
 </div>
 {% endif %}
 
-<table id="submission_details">
+<div class="top_bar" id="submission_details">
+<table width="100%">
 <tr>
     <td class="leftcolumn">Submitter:</td>
     <td>{% include "user/display_name.html" with user=sub.user %}</td>
@@ -150,6 +145,7 @@ Submission {{ sub.id }}
 </tr>
 {% endif %}
 </table>
+</div>
 <br />
 
 <table id="submission_images">

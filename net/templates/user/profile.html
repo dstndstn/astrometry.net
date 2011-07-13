@@ -1,4 +1,4 @@
-{% extends 'user/index.html' %}
+{% extends 'user/base.html' %}
 
 {% block inline_css %}
 {{block.super}}
@@ -7,21 +7,25 @@
 {% include 'job/status.css' %}
 {% include 'dashboard/api_key.css' %}
 <style type="text/css">
-#profile_data {
-    max-width: 675px;
-    float:left;
+#account_info {
+    float: left;
+    width: 50%;
+    border-right: 1px solid #ccc;
+}
+#usage_stats {
+    float: left;
+    padding-left: 10px;
 }
 </style>
 {% endblock %}
 
 {% block title %}
-{{block.super}} &gt; 
-{% include 'user/display_name.html' with user=display_user%}
+{{block.super}} 
 {% endblock %}
 
-{% block content %}
-<div class="side_bar">
-    <div>
+{% block user_content %}
+<div class="top_bar">
+    <div id="account_info">
         <h3>Account Info</h3>
         <div id="registered_on">registered on: <span class="timestamp">{{display_user.date_joined|date:"Y-m-d"}}</span></div>
         <div id="last_signin">last signed in: <span class="timestamp">{{display_user.last_login|date:"Y-m-d H:i"}}</span></div>
@@ -29,24 +33,27 @@
         <br /><div>my API key: {% include 'user/api_key.html' with apikey=user.get_profile.apikey %}</div>
         {% endif %}
     </div>
-    <hr />
-    <div>
+    <div id="usage_stats">
         <h3>Usage Stats</h3>
         <div id="submission_count">{{display_user.submissions.all.count}} submissions</div>
         <div id="image_count">{{display_user.user_images.all.count}} images</div>
         <div id="comment_count">{{display_user.comments_left.all.count}} comments</div>
     </div>
+    <div style="clear:both"></div>
 </div>
 <div id="profile_data">
     <div id="profile_images">
-        <h2>Recent Images</h2>
+        <h2 style="display:inline-block">Recent Images</h2>
         {% if display_user.user_images.all %}  
-        <a href="{% url astrometry.net.views.image.index_user user_id=display_user.id %}">View all</a>
+        (<a href="{% url astrometry.net.views.user.user_images user_id=display_user.id %}">View All</a>)
         {% endif %}
-        {% include 'user_image/image_set.html' with images=display_user.user_images.all|slice:":4" %}
+        {% include 'user_image/image_set.html' with images=display_user.user_images.all|slice:":3" %}
     </div>
     <div id="profile_submissions">
-        <h2>Recent Submissions</h2>
+        <h2 style="display:inline-block">Recent Submissions</h2>
+        {% if display_user.submissions.all %}  
+        (<a href="{% url astrometry.net.views.user.user_submissions user_id=display_user.id %}">View All</a>)
+        {% endif %}
         {% include 'submission/list.html' with submissions=recent_submissions %}
     </div>
 </div>

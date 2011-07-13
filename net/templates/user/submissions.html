@@ -1,0 +1,16 @@
+{% extends 'user/base.html' %}
+
+{% block inline_css %}
+{{block.super}}
+{% include 'submission/list.css' %}
+{% include 'job/status.css' %}
+{% endblock %}
+
+{% block title %}
+{{block.super}} &gt;
+<a href="{% url astrometry.net.views.user.user_submissions user_id=display_user.id%}">Submissions</a>
+{% endblock %}
+{% block user_content %}
+{% include 'submission/list.html' with submissions=user_submissions %}
+{% endblock %}
+

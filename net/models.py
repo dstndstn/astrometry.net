@@ -633,6 +633,11 @@ class Album(Commentable, Hideable):
         self.owner = self.user
         return super(Album, self).save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        kwargs = {'album_id':self.id}
+        abs_url = reverse('astrometry.net.views.album.album', kwargs=kwargs)
+        return abs_url
+        
 class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     recipient = models.ForeignKey('Commentable', related_name='comments')

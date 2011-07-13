@@ -224,6 +224,12 @@ def index_by_user(req):
         context,
         context_instance = RequestContext(req))
         
+def index_album(req, album_id=None):
+    album = get_object_or_404(Album, pk=album_id)
+    return index(req,
+                 album.user_images.all(),
+                 template_name='user_image/index_album.html',
+                 context={'album':album})
 
 def image_set(req, category, id):
     default_category = 'user'

@@ -1,4 +1,5 @@
 <div id="submission_list">
+{% if submissions %}
 <ul>
     {% for sub in submissions %}
     <li class="submission">
@@ -22,8 +23,9 @@
             {% endfor %}
         </table>
     </li>
-    {% empty %}
-    <li>No submissions</li>
     {% endfor %}
 </ul>
+{% else %}
+No submissions.
+{% endif %}
 </div>
