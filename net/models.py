@@ -246,9 +246,9 @@ class SourceList(Image):
         fits = self.get_fits_table()
         w = fits.x.max()-fits.x.min()
         h = fits.y.max()-fits.y.min()
-        scale = float(self.width)/(1.1*w) 
-        xmin = fits.x.min()-0.05*w
-        ymin = fits.y.min()-0.05*h
+        scale = float(self.width)/(1.01*w) 
+        xmin = fits.x.min()-0.005*w
+        ymin = fits.y.min()-0.005*h
         
         img = PIL.Image.new('RGB',(self.width,self.height))
         draw = PIL.ImageDraw.Draw(img)
