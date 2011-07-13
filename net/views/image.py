@@ -72,8 +72,15 @@ def annotated_image(req, jobid=None, size='full'):
         img = img.get_display_image()
     else:
         scale = 1.0
-    df = img.disk_file
-    imgfn = df.get_path()
+        
+    if hasattr(img, 'sourcelist'):
+        imgfn = get_temp_file()
+        f = open(imgfn,'wb')
+        img.render(f)
+        f.close()
+    else:
+        df = img.disk_file
+        imgfn = df.get_path()
     wcsfn = job.get_wcs_file()
     pnmfn = get_temp_file()
     (filetype, errstr) = image2pnm.image2pnm(imgfn, pnmfn)

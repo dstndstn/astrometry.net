@@ -1,0 +1,15 @@
+{% extends 'dashboard/base.html' %}
+
+{% block inline_css %}
+{{block.super}}
+{% include 'album/album_set.css' %}
+{% endblock %}
+
+{% block title %}
+{{block.super}} &gt;
+<a href="{% url astrometry.net.views.user.dashboard_albums %}">My Albums</a>
+{% endblock %}
+
+{% block dashboard_content %}
+{% include 'album/paginated_album_set.html' with album_page=album_page %}
+{% endblock %}

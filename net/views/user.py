@@ -94,6 +94,19 @@ def dashboard_user_images(req):
         context,
         context_instance = RequestContext(req))
 
+@login_required
+def dashboard_albums(req):
+    page_number = req.GET.get('page',1)
+    page = get_page(req.user.albums.all(),3*10,page_number)
+    
+    context = {
+        'user': req.user,
+        'album_page': page
+    }
+    
+    return render_to_response('dashboard/albums.html',
+        context,
+        context_instance = RequestContext(req))
 
 def index(req):
     context = {

@@ -246,20 +246,18 @@ class SourceList(Image):
         fits = self.get_fits_table()
         w = fits.x.max()-fits.x.min()
         h = fits.y.max()-fits.y.min()
-        scale = float(self.width)/(1.2*w) 
-        xmin = fits.x.min()-0.1*w
-        ymin = fits.y.min()-0.1*h
+        scale = float(self.width)/(1.1*w) 
+        xmin = fits.x.min()-0.05*w
+        ymin = fits.y.min()-0.05*h
         
         img = PIL.Image.new('RGB',(self.width,self.height))
         draw = PIL.ImageDraw.Draw(img)
 
-        r = int(0.005*self.width)
-        if r < 1:
-            r = 1
+        r = round(0.001*self.width)
         for (x, y) in zip(fits.x,fits.y):
             x = int((x-xmin)*scale)
             y = int((y-ymin)*scale)
-            draw.ellipse((x-r,y-r,x+r,y+r),fill="rgb(255,255,255)")
+            draw.ellipse((x-r,y-r,x+r+1,y+r+1),fill="rgb(255,255,255)")
         del draw
         img.save(f, 'PNG')
         

@@ -2,8 +2,9 @@
 {% if user.is_authenticated %}
     <li><a href="{% url astrometry.net.views.user.user_profile user.id %}">My Profile</a></li>
     <li><a href="{% url astrometry.net.views.user.dashboard_profile %}">Edit Profile</a></li>
-    <li><a href="{% url astrometry.net.views.user.dashboard_submissions %}">My Submissions</a></li>
     <li><a href="{% url astrometry.net.views.user.dashboard_user_images %}">My Images</a></li>
+    <li><a href="{% url astrometry.net.views.user.dashboard_albums %}">My Albums</a></li>
+    <li><a href="{% url astrometry.net.views.user.dashboard_submissions %}">My Submissions</a></li>
 {% endif %}
     <li><a href="{% url astrometry.net.views.submission.upload_file %}">Upload File</a></li>
 </ul>

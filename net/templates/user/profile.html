@@ -35,9 +35,13 @@
     </div>
     <div id="usage_stats">
         <h3>Usage Stats</h3>
-        <div id="submission_count">{{display_user.submissions.all.count}} submissions</div>
-        <div id="image_count">{{display_user.user_images.all.count}} images</div>
-        <div id="comment_count">{{display_user.comments_left.all.count}} comments</div>
+        {% with submission_count=display_user.submissions.all.count %}
+        {% with image_count=display_user.user_images.all.count %}
+        {% with comment_count=display_user.comments_left.all.count %}
+        <div id="submission_count">{{submission_count}} submission{{submission_count|pluralize}}</div>
+        <div id="image_count">{{image_count}} image{{image_count|pluralize}}</div>
+        <div id="comment_count">{{comment_count}} comment{{comment_count|pluralize}}</div>
+        {% endwith %}{% endwith %}{% endwith %}
     </div>
     <div style="clear:both"></div>
 </div>
