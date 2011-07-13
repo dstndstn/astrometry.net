@@ -6,7 +6,6 @@ import shutil
 import tempfile
 from datetime import datetime
 from copy import deepcopy
-from itertools import chain
 
 from django.db import models
 from django.contrib.auth.models import User
