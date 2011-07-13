@@ -234,6 +234,7 @@ int plotstuff_text_xy(plot_args_t* pargs, double ra, double dec, const char* lab
 int plotstuff_text_radec(plot_args_t* pargs, double ra, double dec, const char* label);
 int plotstuff_move_to_radec(plot_args_t* pargs, double ra, double dec);
 int plotstuff_line_to_radec(plot_args_t* pargs, double ra, double dec);
+int plotstuff_close_path(plot_args_t* pargs);
 int plotstuff_stroke(plot_args_t* pargs);
 int plotstuff_fill(plot_args_t* pargs);
 

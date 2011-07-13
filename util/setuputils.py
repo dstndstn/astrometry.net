@@ -1,4 +1,5 @@
-from astrometry.util.run_command import run_command
+#from astrometry.util.run_command import run_command
+from run_command import run_command
 
 def get_libs(pkg):
 	(rtn,out,err) = run_command('pkg-config --libs-only-l ' + pkg)

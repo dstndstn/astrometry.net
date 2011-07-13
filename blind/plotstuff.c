@@ -235,6 +235,12 @@ int plotstuff_line_to_radec(plot_args_t* pargs, double ra, double dec) {
 	return moveto_lineto_radec(pargs, ra, dec, FALSE);
 }
 
+int plotstuff_close_path(plot_args_t* pargs) {
+	assert(pargs->cairo);
+	cairo_close_path(pargs->cairo);
+	return 0;
+}
+
 int plotstuff_fill(plot_args_t* pargs) {
 	assert(pargs->cairo);
 	cairo_fill(pargs->cairo);
