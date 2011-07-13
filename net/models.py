@@ -30,6 +30,10 @@ from astrometry.net.abstract_models import *
 
 ### Admin view -- running Submissions and Jobs
 
+# = dt.total_seconds() in python 2.7
+def dtsec(dt):
+    return (dt.microseconds + (dt.seconds + dt.days * 24. * 3600.) * 10.**6) / 10.**6
+
 class ProcessSubmissions(models.Model):
     pid = models.IntegerField()
     watchdog = models.DateTimeField(null=True)
@@ -39,17 +43,59 @@ class ProcessSubmissions(models.Model):
     def set_watchdog(self):
         self.watchdog = datetime.now()
 
-class QueuedSubmission(models.Model):
-    procsub = models.ForeignKey('ProcessSubmissions', related_name='subs')
-    submission = models.ForeignKey('Submission')
+    def count_queued_subs(self):
+        return self.subs.filter(finished=False,
+                                submission__processing_started__isnull=True).count()
+
+    def count_running_subs(self):
+        return self.subs.filter(finished=False,
+                                submission__processing_started__isnull=False).count()
+
+    def count_queued_jobs(self):
+        return self.jobs.filter(finished=False,
+                                job__start_time__isnull=True).count()
+
+    def count_running_jobs(self):
+        return self.jobs.filter(finished=False,
+                                job__start_time__isnull=False).count()
+
+    def watchdog_ago(self):
+        return datetime.now() - self.watchdog
+    def watchdog_sec_ago(self):
+        dt = self.watchdog_ago()
+        sec = dtsec(dt)
+        return '%i' % int(round(sec))
+
+
+class QueuedThing(models.Model):
     finished = models.BooleanField()
     success = models.BooleanField()
 
-class QueuedJob(models.Model):
+    class Meta:
+        abstract = True
+
+    def get_time_string(self, t):
+        if t is None:
+            return '-'
+        t = t.replace(microsecond=0)
+        return t.isoformat() + ' (%i sec ago)' % dtsec(datetime.now() - t)
+
+class QueuedSubmission(QueuedThing):
+    procsub = models.ForeignKey('ProcessSubmissions', related_name='subs')
+    submission = models.ForeignKey('Submission')
+    def get_start_time_string(self):
+        return self.get_time_string(self.submission.processing_started)
+    def get_end_time_string(self):
+        return self.get_time_string(self.submission.processing_finished)
+        
+
+class QueuedJob(QueuedThing):
     procsub = models.ForeignKey('ProcessSubmissions', related_name='jobs')
     job = models.ForeignKey('Job')
-    finished = models.BooleanField()
-    success = models.BooleanField()
+    def get_start_time_string(self):
+        return self.get_time_string(self.job.start_time)
+    def get_end_time_string(self):
+        return self.get_time_string(self.job.end_time)
 
 ###
 
@@ -623,6 +669,7 @@ class Submission(Licensable, Hideable):
     submitted_on = models.DateTimeField(auto_now_add=True)
     processing_started = models.DateTimeField(null=True)
     processing_finished = models.DateTimeField(null=True)
+    error_message = models.CharField(max_length=256, null=True)
 
     # Reverse mappings:
     #  user_images -> UserImage

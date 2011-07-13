@@ -26,7 +26,11 @@ def procsub(req, psid=None):
         logmsg('  ', j.job)
         logmsg('  ', j.job.user_image)
         logmsg('  ', j.job.user_image.submission)
+    now = datetime.now()
+    now = now.replace(microsecond=0)
+    now = now.isoformat()
     return render_to_response('procsub.html',
                               { 'procsub':ps,
+                                'now':now,
                                 },
                               context_instance = RequestContext(req))

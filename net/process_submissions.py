@@ -296,6 +296,9 @@ def try_dosub(sub):
         print 'Caught exception while processing Submission', sub
         traceback.print_exc(None, sys.stdout)
         # FIXME -- sub.set_status()...
+        sub.error_message = (
+            'Caught exception while processing Submission: ' +  sub + '\n'
+            + traceback.format_exc(None))
         sub.set_processing_finished()
         sub.save()
         return 'exception'

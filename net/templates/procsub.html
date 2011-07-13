@@ -9,12 +9,29 @@
 <b>process_submissions.py</b> process: PID is {{ procsub.pid }}</b>
 
 <br />
+<br />
+Last timestamped: {{ procsub.watchdog_sec_ago }} seconds ago (as of {{ now }})
+
+<br />
+<br />
+Submissions: {{ procsub.count_running_subs }} running; {{ procsub.count_queued_subs }} queued.
+<br />
+Jobs: {{ procsub.count_running_jobs }} running; {{ procsub.count_queued_jobs }} queued.
+
+<br />
+<br />
 <table border="1">
-<tr><th>Submission</th><th>Finished?</th><th>Success?</th></tr>
+<tr><th>Submission</th>
+<th>Finished?</th>
+<th>Started</th>
+<th>Finished</th>
+<th>Success?</th></tr>
 {% for sub in procsub.subs.all %}
 <tr>
-<td><a href="{% url astrometry.net.views.submission.status subid=sub.submission.id %}">{{ sub.submission }}</a></td>
+<td><a href="{% url astrometry.net.views.submission.status subid=sub.submission.id %}">{{ sub.id }}</a></td>
 <td>{{ sub.finished }}</td>
+<td>{{ sub.get_start_time_string }}</td>
+<td>{{ sub.get_end_time_string }}</td>
 <td>{{ sub.success }}</td>
 </tr>
 {% endfor %}
@@ -24,12 +41,17 @@
 <table border="1">
 <tr><th>Job</th>
 <th>Submission</th>
-<th>Finished?</th><th>Success?</th></tr>
+<th>Finished?</th>
+<th>Started</th>
+<th>Finished</th>
+<th>Success?</th></tr>
 {% for job in procsub.jobs.all %}
 <tr>
-<td>{{ job.job }}</td>
-<td><a href="{% url astrometry.net.views.submission.status subid=job.job.user_image.submission.id %}">{{ job.job.user_image.submission }}</a>
+<td>{{ job.job.id }}</td>
+<td><a href="{% url astrometry.net.views.submission.status subid=job.job.user_image.submission.id %}">{{ job.job.user_image.submission.id }}</a>
 <td>{{ job.finished }}</td>
+<td>{{ job.get_start_time_string }}</td>
+<td>{{ job.get_end_time_string }}</td>
 <td>{{ job.success }}</td>
 </tr>
 {% endfor %}
