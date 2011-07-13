@@ -73,8 +73,10 @@ def dashboard_profile(request):
 
 @login_required
 def dashboard_submissions(req):
+    page_number = req.GET.get('page',1)
+    page = get_page(req.user.submissions.all().order_by('-submitted_on'),15,page_number)
     context = {
-        'user_submissions':req.user.submissions.all().order_by('-submitted_on')
+        'submission_page': page
     }
     return render_to_response("dashboard/submissions.html",
         context,
@@ -161,9 +163,12 @@ def user_albums(req, user_id=None):
 def user_submissions(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
 
+    page_number = req.GET.get('page',1)
+    page = get_page(user.submissions.all().order_by('-submitted_on'),15,page_number)
+    
     context = {
         'display_user': user,
-        'user_submissions': user.submissions.all().order_by('-submitted_on')
+        'submission_page': page
     }
     return render_to_response("user/submissions.html",
         context,

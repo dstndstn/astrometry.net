@@ -5,17 +5,20 @@ div#submission_list ul li {
     list-style: none;
 }
 li.submission {
-    margin-bottom: 2em;
+    margin-bottom: 1.5em;
 }
 .submission_job_list {
     width: 40em;
     margin-left: 2em;
     margin-top: .5em;
+    border-spacing: 0px;
+    border: 1px solid #ccc;
 }
-.submission_job_list, .submission_job_list tr td {
+.submission_job_list td {
+    padding-left: 5px; 
     vertical-align:top;
-    border: 1px solid #ddd;
-    text-align: left;
+    border-bottom: 1px solid #ddd;
+    border-right: 1px solid #ddd;
 }
 .submission_job_list tr td.image_id { width: 30%; }
 .submission_job_list tr td.job_id { width: 30%; }
