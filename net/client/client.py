@@ -134,7 +134,7 @@ class Client(object):
             raise RequestError('no session in result')
         self.session = sess
 
-    def url_upload(self, url, allow_commercial_use='y', allow_modifications='y',
+    def url_upload(self, url, allow_commercial_use='d', allow_modifications='d',
         publicly_visible='y'
     ):
         result = self.send_request('url_upload',
@@ -147,7 +147,7 @@ class Client(object):
         )
         return result
 
-    def upload(self, fn, allow_commercial_use='y', allow_modifications='y',
+    def upload(self, fn, allow_commercial_use='d', allow_modifications='d',
         publicly_visible='y'
     ):
         try:
@@ -218,19 +218,19 @@ if __name__ == '__main__':
         dest='allow_mod',
         action='store_const',
         const='sa',
-        default='y',
+        default='d',
         help='Select license to allow derivative works of submission, but only if shared under same conditions of original license') 
     parser.add_option('--no_mod','-M',
         dest='allow_mod',
         action='store_const',
         const='n',
-        default='y',
+        default='d',
         help='Select license to disallow derivative works of submission')
     parser.add_option('--no_commercial','-c',
         dest='allow_commercial',
         action='store_const',
         const='n',
-        default='y',
+        default='d',
         help='Select license to disallow commercial use of submission') 
     opt,args = parser.parse_args()
 
