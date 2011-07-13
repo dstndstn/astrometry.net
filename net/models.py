@@ -40,16 +40,18 @@ class ProcessSubmissions(models.Model):
         self.watchdog = datetime.now()
 
 class QueuedSubmission(models.Model):
-    submission = models.ForeignKey('Submission')
     procsub = models.ForeignKey('ProcessSubmissions', related_name='subs')
+    submission = models.ForeignKey('Submission')
     finished = models.BooleanField()
     success = models.BooleanField()
 
 class QueuedJob(models.Model):
-    job = models.ForeignKey('Job')
     procsub = models.ForeignKey('ProcessSubmissions', related_name='jobs')
+    job = models.ForeignKey('Job')
     finished = models.BooleanField()
     success = models.BooleanField()
+
+###
 
 class License(Licensable):
     def save(self, *args, **kwargs):

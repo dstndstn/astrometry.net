@@ -83,6 +83,13 @@ urlpatterns += patterns('astrometry.net.views.comment',
     (r'^comments/(?P<comment_id>' + idpattern + r')/delete/?', 'delete'),
 )
 
+psidpattern = r'[0-9-]+'
+
+urlpatterns += patterns('astrometry.net.views.admin',
+                        (r'^admin/procsub/(?P<psid>'+psidpattern + r')?', 'procsub'),
+                        (r'^admin/?', 'index'),
+                        )
+
 urlpatterns += patterns('astrometry.net.api',
     (r'^api/login/?', 'api_login'),
     (r'^api/upload/?', 'api_upload'),

@@ -11,7 +11,6 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 from django import forms
-from django.http import HttpResponseRedirect
 from django.contrib import messages
 
 from astrometry.net.models import *

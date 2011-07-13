@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{block.super}} &gt; Admin
+{% endblock %}
+
+{% block content %}
+
+<b>process_submissions.py</b> processes running:</b>
+<table border="1">
+<tr><th>pid</th><th>watchdog</th></tr>
+{% for p in procsubs %}
+<tr>
+<td><a href="{% url astrometry.net.views.admin.procsub psid=p.id %}">{{ p.pid }}</a></td>
+<td>{{ p.watchdog }}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}
