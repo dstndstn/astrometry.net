@@ -6,6 +6,7 @@ import shutil
 import tempfile
 from datetime import datetime
 from copy import deepcopy
+from itertools import chain
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -488,7 +489,21 @@ class TaggedUserImage(models.Model):
     added_time = models.DateTimeField(auto_now=True) 
 
 
+class UserImageManager(models.Manager):
+    def admin_all(self):
+        return super(UserImageManager, self)
+
+    def all(self):
+        anonymous = User.objects.get(username=ANONYMOUS_USERNAME)
+        non_anonymous_uis = super(UserImageManager, self).filter(user=anonymous, jobs__calibration__isnull=False)
+        solved_anonymous_uis = super(UserImageManager, self).exclude(user=anonymous)
+        valid_uis = non_anonymous_uis | solved_anonymous_uis
+        return valid_uis.order_by('-submission__submitted_on')
+
+
 class UserImage(Commentable, Licensable, Hideable):
+    objects = UserImageManager()
+
     image = models.ForeignKey('Image')
     user = models.ForeignKey(User, related_name='user_images', null=True)
     
