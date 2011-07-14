@@ -15,11 +15,17 @@
 {{ block.super }}
 {% include 'job/status.css' %}
 <style type="text/css">
-#submission_details td {
-   vertical-align: top;
+#submission_details {
+    float: left;
+    width: 50%;
+}
+#upload_settings {
+    float: left;
+    padding-left: 10px;
+    border-left: 1px solid #ccc;
 }
 .leftcolumn {
-    width: 20%;
+    width: 150px;
 }
 #submission_images td {
     padding: 5px; 
@@ -28,7 +34,6 @@
 .log_tail {
     width: 640px;
     overflow: auto;
-    display: none;
 }
 </style>
 {% endblock %}
@@ -76,7 +81,8 @@ Submission {{ sub.id }}
 </div>
 {% endif %}
 
-<div class="top_bar" id="submission_details">
+<div class="top_bar">
+<div id="submission_details">
 <table width="100%">
 <tr>
     <td class="leftcolumn">Submitter:</td>
@@ -90,7 +96,12 @@ Submission {{ sub.id }}
     <td class="leftcolumn">Filename:</td>
     <td>{{ sub.original_filename }}</td>
 </tr>
-<tr><td colspan="2"><br />
+</table>
+</div>
+
+<div id="upload_settings">
+<table>
+<tr><td colspan="2">
     <b>Upload Settings</b></td>
 </tr>
 <tr>
@@ -146,6 +157,8 @@ Submission {{ sub.id }}
 {% endif %}
 </table>
 </div>
+<div style="clear:both"></div>
+</div>
 <br />
 
 <table id="submission_images">
@@ -160,7 +173,7 @@ Submission {{ sub.id }}
     {% for job in image.jobs.all %}
     Job {{ job.id }}: {% include "job/status.html" with job=job %}<br />
 
-    <a href="" class="log_tail_link">Log File Tail <span>[+]</span><br /></a>
+    <a href="" class="log_tail_link">Log File Tail <span>[-]</span><br /></a>
     <div class="log_tail">
 	<a href={% url astrometry.net.views.submission.job_log_file jobid=job.id %}>(full)</a><br />
 <pre>{{ job.get_log_tail }}</pre>
@@ -173,7 +186,14 @@ Submission {{ sub.id }}
 </td>
 </tr>
 {% empty %}
-<tr><td><p>Thanks for your submission! Please bear with us while we process it.</p></td></tr>
+    <tr><td>
+    {% if sub.processing_finished and sub.error_message %}
+        Unfortunately, we couldn't process this submission properly:<br/>
+        <div style="width:640px; overflow:auto"><pre>{{ sub.error_message }}</pre>
+    {% else %}
+        Thanks for your submission! Please bear with us while we process it.
+    {% endif %}
+    </td></tr>
 {% endfor %}
 </table>
 {% endblock %}

@@ -244,6 +244,8 @@ def status(req, subid=None):
 
     # might want to make this a field in Submission
     finished = (len(sub.user_images.all()) > 0)
+    if finished == False and sub.processing_finished != None:
+        finished = True
     logmsg("UserImages:")
     for ui in sub.user_images.all():
         logmsg("  %i" % ui.id)
@@ -254,6 +256,7 @@ def status(req, subid=None):
                 logmsg("    job " + str(j))
                 if j.end_time is None:
                     finished = False
+     
 
     return render_to_response('submission/status.html',
         {

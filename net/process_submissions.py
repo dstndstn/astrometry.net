@@ -297,7 +297,7 @@ def try_dosub(sub):
         traceback.print_exc(None, sys.stdout)
         # FIXME -- sub.set_status()...
         sub.error_message = (
-            'Caught exception while processing Submission: ' +  sub + '\n'
+            'Caught exception while processing Submission: ' +  str(sub) + '\n'
             + traceback.format_exc(None))
         sub.set_processing_finished()
         sub.save()
@@ -439,17 +439,19 @@ def get_or_create_image(df):
             img.save()
         except Exception as e:
             # delete image if anything fails
-            logmsg(e)
+            #logmsg(e)
             logmsg('deleting Image')
             img.delete()
             img = None
+            raise e
         except:
             # FIXME (something throws a SystemExit..)
             # delete image if anything fails
-            logmsg(sys.exc_info()[0])
+            #logmsg(sys.exc_info()[0])
             logmsg('deleting Image')
             img.delete()
             img = None
+            raise Exception
     return img
 
 def get_or_create_source_list(df, source_type):
@@ -484,10 +486,11 @@ def get_or_create_source_list(df, source_type):
             img.save()
         except Exception as e:
             # delete image if anything fails
-            logmsg(e)
+            #logmsg(e)
             logmsg('deleting SourceList')
             img.delete()
             img = None
+            raise e
     
     return img
     
