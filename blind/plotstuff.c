@@ -639,11 +639,13 @@ void plotstuff_marker(plot_args_t* pargs, double x, double y) {
 
 int plotstuff_marker_radec(plot_args_t* pargs, double ra, double dec) {
 	double x,y;
+	//printf("plotstuff_marker_radec(%.3f, %.3f)\n", ra, dec);
 	if (!plotstuff_radec2xy(pargs, ra, dec, &x, &y)) {
 		ERROR("Failed to convert RA,Dec (%g,%g) to pixel position in plot_marker_radec\n", ra, dec);
 		return -1;
 	}
 	assert(pargs->cairo);
+	//logverb("plotstuff_marker_radec (%.3f, %.3f) -> (%.1f, %.1f)\n", ra, dec, x, y);
 	plotstuff_marker(pargs, x, y);
 	return 0;
 }

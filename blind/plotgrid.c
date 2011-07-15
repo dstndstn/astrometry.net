@@ -35,12 +35,22 @@ plotgrid_t* plot_grid_get(plot_args_t* pargs) {
 void* plot_grid_init(plot_args_t* plotargs) {
 	plotgrid_t* args = calloc(1, sizeof(plotgrid_t));
 	args->dolabel = TRUE;
+	args->raformat = strdup("%.2f");
+	args->decformat = strdup("%.2f");
 	return args;
 }
 
-static void pretty_label(double x, char* buf) {
+int plot_grid_set_formats(plotgrid_t* args, const char* raformat, const char* decformat) {
+	free(args->raformat);
+	free(args->decformat);
+	args->raformat = strdup_safe(raformat);
+	args->decformat = strdup_safe(decformat);
+	return 0;
+}
+
+static void pretty_label(const char* fmt, double x, char* buf) {
 	int i;
-	sprintf(buf, "%.2f", x);
+	sprintf(buf, fmt, x);
 	logverb("label: \"%s\"\n", buf);
 	// Look for decimal point.
 	if (!strchr(buf, '.')) {
@@ -260,7 +270,7 @@ static int do_radec_labels(plot_args_t* pargs, plotgrid_t* args,
 			if (lra >= 360)
 				lra -= 360;
 			//logmsg("Label \"%s\" at (%g,%g)\n", label, ra, dec);
-			plot_grid_add_label(pargs, ra, dec, lra);
+			plot_grid_add_label(pargs, ra, dec, lra, args->raformat);
 		}
 	}
 	if (args->declabelstep > 0) {
@@ -277,19 +287,19 @@ static int do_radec_labels(plot_args_t* pargs, plotgrid_t* args,
 												  ramax, args->declabeldir, &ra))
 				continue;
 			//logmsg("Label Dec=\"%s\" at (%g,%g)\n", label, ra, dec);
-			plot_grid_add_label(pargs, ra, dec, dec);
+			plot_grid_add_label(pargs, ra, dec, dec, args->decformat);
 		}
 	}
 	return 1;
 }
 
 void plot_grid_add_label(plot_args_t* pargs, double ra, double dec,
-						 double lval) {
+						 double lval, const char* format) {
 	char label[32];
 	double x,y;
 	bool ok;
 	cairo_t* cairo = pargs->cairo;
-	pretty_label(lval, label);
+	pretty_label(format, lval, label);
 	ok = plotstuff_radec2xy(pargs, ra, dec, &x, &y);
 	plotstuff_stack_text(pargs, cairo, label, x, y);
 	plotstuff_plot_stack(pargs, cairo);
@@ -370,6 +380,8 @@ int plot_grid_command(const char* cmd, const char* cmdargs,
 
 void plot_grid_free(plot_args_t* plotargs, void* baton) {
 	plotgrid_t* args = (plotgrid_t*)baton;
+	free(args->raformat);
+	free(args->decformat);
 	free(args);
 }
 

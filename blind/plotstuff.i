@@ -260,7 +260,7 @@ def plotoutline_setattr(self, name, val):
 		else:
 			fn = val
 			ext = 0
-		#print 'setting outline wcs file %s, ext %i' % (fn, ext)
+		print 'setting outline wcs file %s, ext %i' % (fn, ext)
 		plot_outline_set_wcs_file(self, fn, ext)
 		return
 	self.__swig__setattr__(name, val)

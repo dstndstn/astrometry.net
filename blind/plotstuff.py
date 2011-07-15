@@ -163,6 +163,10 @@ class Plotstuff(object):
 	def stack_marker(self, x, y):
 		plotstuff_stack_marker(self.pargs, x, y)
 
+	def marker_radec(self, ra, dec):
+		#print 'marker_radec', ra, dec
+		rtn = plotstuff_marker_radec(self.pargs, ra, dec)
+		#print '-> ', rtn
 	def set_markersize(self, size):
 		plotstuff_set_markersize(self.pargs, size)
 
