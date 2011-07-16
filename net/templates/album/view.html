@@ -27,8 +27,15 @@ Albums &gt;
 <a href="{{ album.get_absolute_url }}">{{ album.title }}</a>
 {% endblock %}
 {% block content %}
-    
 
+{% if user == album.user %}
+<div>
+    <a class="confirm"
+       title="Are you sure you would like to delete this album? (The images in this album will not be deleted.)"
+       href="{% url astrometry.net.views.album.delete album_id=album.id %}?next={% url astrometry.net.views.user.dashboard_albums %}">Delete Album</a>
+    <hr />
+</div>
+{%endif %}
 <div class="top_bar">
     <div id="album_info">
         Submitted by {% include 'user/display_name.html' with user=album.user %}<br />

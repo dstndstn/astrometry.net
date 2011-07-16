@@ -1,4 +1,14 @@
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django import forms
+from django.utils.safestring import mark_safe
+
+class HorizontalRenderer(forms.RadioSelect.renderer):
+    def render(self):
+        return mark_safe(u'\n'.join([u'%s' % w for w in self]))
+
+class NoBulletsRenderer(forms.RadioSelect.renderer):
+    def render(self):
+        return mark_safe(u'<br />\n'.join([u'%s' % w for w in self]))
 
 def dict_pack(struct_tuple, data_tuple):
     pack = []

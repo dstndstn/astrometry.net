@@ -41,6 +41,7 @@ urlpatterns += patterns('astrometry.net.views.user',
     (r'^dashboard/submissions/?$', 'dashboard_submissions'),
     (r'^dashboard/images/?', 'dashboard_user_images'),
     (r'^dashboard/albums/?', 'dashboard_albums'),
+    (r'^dashboard/create_album/?', 'dashboard_create_album'),
     (r'^dashboard/profile/?$', 'dashboard_profile'),
     (r'^dashboard/profile/save/?$', 'save_profile'),
     (r'^users/?$', 'index'),
@@ -71,7 +72,9 @@ urlpatterns += patterns('astrometry.net.views.image',
 )
 
 urlpatterns += patterns('astrometry.net.views.album',
+    (r'^albums/(?P<album_id>' + idpattern + r')/delete/?', 'delete'),
     (r'^albums/(?P<album_id>' + idpattern + r')/?', 'album'),
+    (r'^albums/new/?', 'new'),
 )
 urlpatterns += patterns('astrometry.net.views.tag',
     (r'^user_images/(?P<user_image_id>' + idpattern + r')/tags/(?P<tag_id>' + tagpattern + r')/remove/?', 'remove_userimagetag'),

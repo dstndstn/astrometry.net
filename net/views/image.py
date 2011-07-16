@@ -43,7 +43,6 @@ def user_image(req, user_image_id=None):
         'job': job,
         'calib': calib,
         'comment_form': comment_form,
-        'request': req,
     }
 
     if image.is_public() or (image.user == req.user and req.user.is_authenticated()):

@@ -31,7 +31,7 @@ FIELD_DIR = DATADIR + 'fields'
 
 BASE_URL = 'http://oven.cosmo.fas.nyu.edu:9000/'
 
-LOGIN_URL = '/login'
+LOGIN_URL = '/signin'
 LOGIN_REDIRECT_URL = '/dashboard/'
 
 LOGFILE = LOG_DIR + 'django.log'
@@ -174,6 +174,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
     'django.core.context_processors.static',
+    'django.core.context_processors.request',
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
 )

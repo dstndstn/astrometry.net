@@ -21,6 +21,7 @@ from django.http import HttpResponseRedirect
 from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 from astrometry.net.util import get_page
+from astrometry.net.views.album import *
 
 class ProfileForm(forms.ModelForm):
     class Meta:
@@ -110,6 +111,16 @@ def dashboard_albums(req):
         context,
         context_instance = RequestContext(req))
 
+@login_required
+def dashboard_create_album(request):
+    album_form = AlbumForm()
+    context = {
+        'album_form': album_form,
+    }
+    return render_to_response("dashboard/create_album.html",
+        context,
+        context_instance = RequestContext(request))
+    
 def index(req):
     context = {
         'users':User.objects.all()
@@ -123,7 +134,6 @@ def user_profile(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
 
     context = {
-        'request': req,
         'display_user': user,
         'recent_submissions':user.submissions.all().order_by('-submitted_on')[:10],
     }

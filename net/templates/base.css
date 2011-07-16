@@ -146,6 +146,12 @@ td.c {text-align:center;}
 .fineprint a { color:#999; }
 .errorlist {margin: 0px; color: #a00; background-color: #faa}
 
+hr {
+    color: #999;
+    background-color: #999;
+    height: 1px;
+    border: 0px;
+}
 .side_bar {
     float: right;
     width: 275px;

@@ -18,7 +18,7 @@ from log import *
 from django import forms
 from django.http import HttpResponseRedirect
 
-from astrometry.util import image2pnm
+from astrometry.util import *
 from astrometry.util.run_command import run_command
 
 

@@ -188,7 +188,6 @@ $(document).ready(function() {
         <h3>Comments</h3>
         {% include 'comment/list.html' with comments=image.comments.all %}
         <div>
-        <br />
         {% if user.is_authenticated %}
             <form method="post" name="comment_form" action="{% url astrometry.net.views.comment.new category='userimage' recipient_id=image.id %}">
             {% csrf_token %}

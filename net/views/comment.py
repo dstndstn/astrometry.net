@@ -19,6 +19,7 @@ class PartialCommentForm(forms.ModelForm):
         exclude = ('recipient', 'author')
         widgets = {'text':forms.Textarea(attrs={'cols':60,'rows':3})}
 
+@login_required
 def new(req, category=None, recipient_id=None):
     recipient = get_object_or_404(Commentable, pk=recipient_id)
     if req.method == 'POST':
@@ -26,12 +27,10 @@ def new(req, category=None, recipient_id=None):
         comment = Comment(
             author=author,
             recipient=recipient,
-            text=req.POST['text']
+            text=req.POST.get('text')
         )
         comment.save()
-        redirect_url = req.POST['next']
-        if redirect_url == None:
-            redirect_url = '/'
+        redirect_url = req.POST.get('next','/')
         return HttpResponseRedirect(redirect_url)
     else:
         # show a generic comment form
@@ -40,9 +39,7 @@ def new(req, category=None, recipient_id=None):
 @login_required
 def delete(req, comment_id):
     comment = get_object_or_404(Comment, pk=comment_id)
-    redirect_url = req.GET['next']
-    if redirect_url == None:
-        redirect_url = '/'
+    redirect_url = req.GET.get('next','/')
     if comment.recipient.owner == req.user or comment.author == req.user:
         comment.delete()
         return HttpResponseRedirect(redirect_url)

@@ -713,6 +713,7 @@ class Album(Commentable, Hideable):
     description = models.CharField(max_length=1024)
     user_images = models.ManyToManyField('UserImage', related_name='albums') 
     tags = models.ManyToManyField('Tag', related_name='albums')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         self.owner = self.user
@@ -735,7 +736,7 @@ class Comment(models.Model):
 
 class UserProfile(models.Model):
     API_KEY_LENGTH = 16
-    display_name = models.CharField(max_length=64)
+    display_name = models.CharField(max_length=32)
     user = models.ForeignKey(User, unique=True, related_name='profile',
                              editable=False)
     apikey = models.CharField(max_length = API_KEY_LENGTH)

@@ -17,6 +17,17 @@
 
 {% block javascript %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    $('a.confirm').click(function(event) {
+        var answer = confirm($(this).attr("title"));
+        if (answer) {
+            window.location = $(this).attr("href");
+        }
+        event.preventDefault();
+    });
+});
+</script>
 {% endblock javascript %}
 
 <title>{% block pagetitle %}Astrometry.net{% endblock %}</title>
