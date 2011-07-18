@@ -10,7 +10,14 @@ if path not in sys.path:
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
-import astrometry.net.settings
+#import astrometry.net.settings
+
+# DEBUG
+#print >> sys.stderr, 'settings.ROOT_URLCONF', astrometry.net.settings.ROOT_URLCONF
+#from django.conf import settings
+#print >> sys.stderr, 'settings:', dir(settings)
+#print >> sys.stderr, 'settings.ROOT_URLCONF', settings.ROOT_URLCONF
+
 
 import django.core.handlers.wsgi
 application = django.core.handlers.wsgi.WSGIHandler()
