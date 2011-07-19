@@ -552,11 +552,6 @@ class UserImage(Commentable, Licensable, Hideable):
     image = models.ForeignKey('Image')
     user = models.ForeignKey(User, related_name='user_images', null=True)
     
-    PERMISSION_CHOICES = (('pu', 'Public'),
-             ('pr', 'Private'))
-
-    permission = models.CharField(max_length=2, choices=PERMISSION_CHOICES)
-
     tags = models.ManyToManyField('Tag',related_name='user_images',
         through='TaggedUserImage')
 
