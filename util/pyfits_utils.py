@@ -329,7 +329,19 @@ class tabledata(object):
 			else:
 				fitstype = '1'+fitstype
 			#print 'fits type', fitstype
-			col = pyfits.Column(name=name, array=val, format=fitstype)
+			try:
+				col = pyfits.Column(name=name, array=val, format=fitstype)
+			except:
+				print 'Error converting column', name, 'to a pyfits column:'
+				print 'fitstype:', fitstype
+				try:
+					print 'numpy dtype:'
+					print val.dtype
+					print val.dtype.type
+				except:
+					pass
+				print 'value:', val
+				raise
 			cols.append(col)
 			#print 'fits type', fitstype, 'column', col
 			#print repr(col)
