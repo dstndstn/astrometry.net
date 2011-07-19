@@ -5,6 +5,7 @@
 {% include 'user_image/image_set.css' %}
 {% include 'tag/list.css' %}
 {% include 'job/status.css' %}
+{% include 'comment/form.css' %}
 <style type="text/css">
 #album_info {
     float: left;
@@ -20,6 +21,7 @@
 
 {% block javascript %}
 {{ block.super }}
+{% include 'comment/comment.js' %}
 {% endblock %}
 
 {% block title %}
@@ -62,19 +64,7 @@ Albums &gt;
 </div>
 <div id="comments">
     <h3>Comments</h3>
-    {% include 'comment/list.html' with comments=album.comments.all %}
-    <div>
-    <br />
-    {% if user.is_authenticated %}
-        <form method="post" name="comment_form" action="{% url astrometry.net.views.comment.new category='album' recipient_id=album.id %}">
-        {% csrf_token %}
-        <p>{{ comment_form.text }}</p>
-        <input type="hidden" name="next" value="{{request.path}}" />
-        <input type="submit" value="Leave Comment" />
-        </form>
-    {% else %}
-        Please <a href="{% url openid-login %}?next={{request.path}}">sign in</a> to post comments.
-    {% endif %}
-    </div>
+    {% include 'comment/list.html' with comments=album.comments.all next=request.path %}
+    {% include 'comment/form.html' with comment_form=comment_form category='album' recipient_id=album.id next=request.path %}
 </div>
 {% endblock %}

@@ -45,7 +45,7 @@
 refresh_timer = setTimeout("location.reload()", 10000);
 
 function stop_refresh() {
-    $('#refresh_block').hide('flash');
+    $('#refresh_block').hide('fast');
     clearTimeout(refresh_timer);
     return false;
 }

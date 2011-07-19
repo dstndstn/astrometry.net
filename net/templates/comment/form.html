@@ -1,0 +1,23 @@
+<div id="comment_form_block">
+{% if user.is_authenticated %}
+    <form method="post" name="comment_form" action="{% url astrometry.net.views.comment.new category=category recipient_id=recipient_id %}">
+    {% csrf_token %}
+    <p>
+        {{ comment_form.text }}
+        {{ comment_form.text.errors }}
+    </p>
+    <input type="hidden" name="next" value="{{next}}" />
+    <input type="submit" value="Leave Comment" />
+    <span id="form_status">
+        <span id="posting">
+            <img src="{{ STATIC_URL }}images/loading.gif" id="status_icon" width="16" height="16"/>
+            Posting comment...
+        </span>
+        <span id="success" class="good">Comment posted!</span>
+        <span id="failure" class="bad">Could not post comment.</span>
+    </span>
+    </form>
+{% else %}
+    Please <a href="{% url openid-login %}?next={{next}}">Sign In</a> to post comments.
+{% endif %}
+</div>

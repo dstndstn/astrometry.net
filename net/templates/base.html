@@ -19,12 +19,12 @@
 <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
-    $('a.confirm').click(function(event) {
+    $('a.confirm').live('click', function(event) {
         var answer = confirm($(this).attr("title"));
-        if (answer) {
-            window.location = $(this).attr("href");
+        if (!answer) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
         }
-        event.preventDefault();
     });
 });
 </script>
