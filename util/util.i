@@ -143,6 +143,9 @@ void log_set_level(int lvl);
 // anwcs_get_radec_center_and_radius
 %apply double *OUTPUT { double *p_ra, double *p_dec, double *p_radius };
 
+// anwcs_get_radec_bounds
+%apply double *OUTPUT { double* pramin, double* pramax, double* pdecmin, double* pdecmax };
+
 %apply double *OUTPUT { double *p_x, double *p_y, double *p_z };
 %apply double *OUTPUT { double *p_ra, double *p_dec };
 //%apply double *OUTPUT { double *xyz };

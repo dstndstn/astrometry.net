@@ -646,7 +646,8 @@ int plotstuff_marker_radec(plot_args_t* pargs, double ra, double dec) {
 	}
 	assert(pargs->cairo);
 	//logverb("plotstuff_marker_radec (%.3f, %.3f) -> (%.1f, %.1f)\n", ra, dec, x, y);
-	plotstuff_marker(pargs, x, y);
+	// MAGIC 0.5 -- cairo/FITS coord offset
+	plotstuff_marker(pargs, x-0.5, y-0.5);
 	return 0;
 }
 
