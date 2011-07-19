@@ -24,6 +24,7 @@ from astrometry.util.run_command import run_command
 
 from astrometry.net.views.comment import *
 from astrometry.net.util import get_page
+from astrometry.net.views.tag import TagForm
 
 from string import strip
 
@@ -35,6 +36,7 @@ def user_image(req, user_image_id=None):
     if job:
         calib = job.calibration
     comment_form = PartialCommentForm()
+    tag_form = TagForm()
 
     logmsg(image.get_absolute_url())
     context = {
@@ -43,6 +45,7 @@ def user_image(req, user_image_id=None):
         'job': job,
         'calib': calib,
         'comment_form': comment_form,
+        'tag_form': tag_form,
     }
 
     if image.is_public() or (image.user == req.user and req.user.is_authenticated()):

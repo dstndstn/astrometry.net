@@ -77,7 +77,8 @@ urlpatterns += patterns('astrometry.net.views.album',
     (r'^albums/new/?', 'new'),
 )
 urlpatterns += patterns('astrometry.net.views.tag',
-    (r'^user_images/(?P<user_image_id>' + idpattern + r')/tags/(?P<tag_id>' + tagpattern + r')/remove/?', 'remove_userimagetag'),
+    (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/tags/(?P<tag_id>' + tagpattern + r')/delete/?', 'delete'),
+    (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/tags/new/?', 'new'),
 )
 
 

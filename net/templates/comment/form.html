@@ -8,13 +8,13 @@
     </p>
     <input type="hidden" name="next" value="{{next}}" />
     <input type="submit" value="Leave Comment" />
-    <span id="form_status">
-        <span id="posting">
-            <img src="{{ STATIC_URL }}images/loading.gif" id="status_icon" width="16" height="16"/>
+    <span class="form_status">
+        <span class="submitting">
+            <img src="{{ STATIC_URL }}images/loading.gif" />
             Posting comment...
         </span>
-        <span id="success" class="good">Comment posted!</span>
-        <span id="failure" class="bad">Could not post comment.</span>
+        <span class="success good">Comment posted!</span>
+        <span class="failure bad">Could not post comment.</span>
     </span>
     </form>
 {% else %}

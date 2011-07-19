@@ -1,0 +1,19 @@
+{% if user == recipient_owner %}
+<div id="tag_form_block">
+    <form method="post" name="tag_form" action="{% url astrometry.net.views.tag.new category=category recipient_id=recipient_id %}">
+    {% csrf_token %}
+    {{ tag_form.text }}
+    {{ tag_form.text.errors }}
+    <input type="hidden" name="next" value="{{next}}" />
+    <input type="submit" value="Add Tag" />
+    <span class="form_status">
+        <span class="submitting">
+            <img src="{{ STATIC_URL }}images/loading.gif" />
+            Adding tag...
+        </span>
+        <span class="success good"></span>
+        <span class="failure bad">Could not add tag.</span>
+    </span>
+    </form>
+</div>
+{% endif %}

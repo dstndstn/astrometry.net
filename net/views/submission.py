@@ -11,14 +11,13 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 from django.core.validators import URLValidator
-from django.utils.safestring import mark_safe
 from astrometry.net.models import *
 from astrometry.net import settings
 from log import *
 from django import forms
 from django.http import HttpResponseRedirect
 
-from astrometry.util import *
+from astrometry.net.util import HorizontalRenderer, NoBulletsRenderer
 from astrometry.util.run_command import run_command
 
 
@@ -32,14 +31,6 @@ def index(req, user_id):
     context = {'submitter':submitter}
     return render_to_response('submission/by_user.html', context,
         context_instance = RequestContext(req))
-
-class HorizontalRenderer(forms.RadioSelect.renderer):
-    def render(self):
-        return mark_safe(u'\n'.join([u'%s' % w for w in self]))
-
-class NoBulletsRenderer(forms.RadioSelect.renderer):
-    def render(self):
-        return mark_safe(u'<br />\n'.join([u'%s' % w for w in self]))
 
 class SubmissionForm(forms.ModelForm):
     SCALE_PRESET_SETTINGS = {'1':(0.1,180),

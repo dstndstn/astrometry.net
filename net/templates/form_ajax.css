@@ -1,11 +1,13 @@
 <style type="text/css">
-#form_status {
+.form_status {
     font-size: 90%;    
 }
-#form_status span {
+.form_status span {
     display: none;
 }
-#form_status img {
+.form_status img {
     vertical-align: middle;
+    width: 16px;
+    height 16px;
 }
 </style>

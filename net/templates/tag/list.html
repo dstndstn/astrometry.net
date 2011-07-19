@@ -1,5 +1,5 @@
-<ul>
+<ul id="tag_list">
     {% for tag in tags %}
-    <li>{{ tag.text }}<a class="remove_tag" href="#">[remove (TODO)]</a></li>
+        {% include 'tag/tag.html' with tag=tag recipient_id=recipient_id recipient_onwer=recipient_owner category=category next=next %}
     {% endfor %}
 </ul>

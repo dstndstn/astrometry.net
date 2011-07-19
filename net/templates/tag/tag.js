@@ -1,34 +1,34 @@
 <script type="text/javascript">
-function addComment(form) {
-    setFormStatus('comment_form', 'submitting');
+function addTag(form) {
+    setFormStatus('tag_form', 'submitting');
     $.ajax({
         url: form.attr('action'),
         type: form.attr('method'),
         data: form.serialize(),
         dataType: 'json',
         success: function(json) {
-            $('#comment_form_block').replaceWith(json.form_html);
+            $('#tag_form_block').replaceWith(json.form_html);
             if (json.success) {
-                $(json.comment_html).hide().prependTo('#comment_list').show('fast');
-                setFormStatus('comment_form', 'success');
+                $(json.tag_html).hide().appendTo('#tag_list').show('fast');
+                setFormStatus('tag_form', 'success');
             }
             else {
-                setFormStatus('comment_form', 'failure');
+                setFormStatus('tag_form', 'failure');
             }
         },
         error: function(xhr, ajaxOptions, thrownError) {
-            setFormStatus('comment_form', 'failure');
+            setFormStatus('tag_form', 'failure');
         }
     });
 }
-function deleteComment(comment) {
+function deleteTag(tag) {
     $.ajax({
-        url: comment.find('a.comment_delete').attr('href'),
+        url: tag.find('a.tag_delete').attr('href'),
         type: 'GET',
         dataType: 'json',
         success: function(json) {
             if (json.success) {
-                comment.hide('fast', function() {
+                tag.hide('fast', function() {
                     $(this).remove();
                 });
             }
@@ -42,12 +42,12 @@ function deleteComment(comment) {
 }
 
 $(document).ready(function() {
-    $('form[name=comment_form]').live('submit', function(event) {
-        addComment($(this));
+    $('form[name=tag_form]').live('submit', function(event) {
+        addTag($(this));
         event.preventDefault();
     });
-    $('a.comment_delete').live('click', function(event) {
-        deleteComment($(this).closest('div.comment'));
+    $('a.tag_delete').live('click', function(event) {
+        deleteTag($(this).closest('li.tag'));
         event.preventDefault();
     });
 });

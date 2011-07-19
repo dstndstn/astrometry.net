@@ -4,7 +4,7 @@
 {{block.super}}
 {% include 'tag/list.css' %}
 {% include 'job/status.css' %}
-{% include 'comment/form.css' %}
+{% include 'form_ajax.css' %}
 <style type="text/css">
 #image_container {
     position: relative;
@@ -102,7 +102,9 @@ $(document).ready(function() {
     {% endif %}
 });
 </script>
+{% include 'form_ajax.js' %}
 {% include 'comment/comment.js' %}
+{% include 'tag/tag.js' %}
 {% endblock %}
 
 {% block title %}
@@ -158,7 +160,8 @@ $(document).ready(function() {
     <hr />
     <div id="tags">
         <h3>Tags</h3>
-        {% include 'tag/user_image_tag_list.html' with user_image_id=image.id tags=image.tags.all tagged_object_owner=image.user next=request.path %}
+        {% include 'tag/list.html' with category='user_image' recipient_id=image.id tags=image.tags.all recipient_owner=image.user next=request.path %}
+        {% include 'tag/form.html' with category='user_image' recipient_id=image.id recipient_owner=image.user next=request.path %}
         <p><a class="add_tag" href="#">Add Tag (TODO)</a></p>
     </div>
 </div>
@@ -189,7 +192,7 @@ $(document).ready(function() {
     <div id="comments">
         <h3>Comments</h3>
         {% include 'comment/list.html' with comments=image.comments.all next=request.path %}
-        {% include 'comment/form.html' with comment_form=comment_form category='userimage' recipient_id=image.id next=request.path %}
+        {% include 'comment/form.html' with comment_form=comment_form category='user_image' recipient_id=image.id next=request.path %}
     </div>
 </div>
 <div style="clear:both"></div>

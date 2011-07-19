@@ -1,11 +1,11 @@
 <style type="text/css">
-ul.tag_list {
+ul#tag_list {
     list-style: none;
     padding-left: 0px;
 }
-ul.tag_list li {
+ul#tag_list li {
 }
-ul.tag_list .remove_tag {
+ul#tag_list .tag_delete {
     font-size:.8em;
 }
 </style>
