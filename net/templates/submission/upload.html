@@ -137,8 +137,8 @@ Sorry, your submission could not be completed. Please fix all of the <span class
     </td>
     <td>
         {% if user.is_authenticated %}
-            {{ form.publicly_visible.errors }}
             {{ form.publicly_visible }}
+            {{ form.publicly_visible.errors }}
         {% else %}
             <input type="hidden" name="publicly_visible" value="y" />
         {% endif %}
@@ -162,8 +162,8 @@ Sorry, your submission could not be completed. Please fix all of the <span class
     <td>
         {% if user.is_authenticated %}
             <h5>Allow commercial use?</h5>
-            {{ form.allow_commercial_use.errors }}
             {{ form.allow_commercial_use }}
+            {{ form.allow_commercial_use.errors }}
             <h5>Allow modifications?</h5>
             {{ form.allow_modifications.errors }}
             {{ form.allow_modifications }}
@@ -185,12 +185,12 @@ Sorry, your submission could not be completed. Please fix all of the <span class
             Units: {{ form.scale_units }}<br /><br />
             {{ form.scale_type }}<br /><br />
             <div id="ul_block">
-                Lower bound:<br />{{ form.scale_lower.errors }}{{ form.scale_lower }}<br /><br />
-                Upper bound:<br />{{ form.scale_upper.errors }}{{ form.scale_upper }}<br />
+                Lower bound:<br />{{ form.scale_lower }}{{ form.scale_lower.errors }}<br /><br />
+                Upper bound:<br />{{ form.scale_upper }}{{ form.scale_upper.errors }}<br />
             </div>
             <div id="ev_block">
-                Estimate:<br />{{ form.scale_est.errors }}{{ form.scale_est }}<br /><br />
-                Error:<br />{{ form.scale_err.errors }}{{ form.scale_err }}%
+                Estimate:<br />{{ form.scale_est }}{{ form.scale_est.errors }}<br /><br />
+                Error:<br />{{ form.scale_err }}% {{ form.scale_err.errors }}
             </div>
         </div>
     </td>
@@ -202,7 +202,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
         </div> 
     </td> 
     <td>
-        {{ form.parity.errors }}{{ form.parity }}
+        {{ form.parity }}{{ form.parity.errors }}
     </td>
 </tr> 
 <tr>  
@@ -212,7 +212,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
         </div> 
     </td> 
     <td>
-        {{ form.positional_error.errors }}{{ form.positional_error }} pixels
+        {{ form.positional_error }} pixels {{ form.positional_error.errors }}
     </td>
 </tr> 
 <tr> 
@@ -221,9 +221,9 @@ Sorry, your submission could not be completed. Please fix all of the <span class
         <div class="setting_description">In order to narrow down our search, you can supply a field center along with a radius. We will only search in indexes which fall within this area.</div> 
     </td> 
     <td>
-        RA:<br />{{ form.center_ra.errors }}{{ form.center_ra }} degrees<br /><br />
-        Dec:<br />{{ form.center_dec.errors }}{{ form.center_dec }} degrees<br /><br />
-        Radius:<br />{{ form.radius.errors }}{{ form.radius }} degrees<br />
+        RA:<br />{{ form.center_ra }} degrees {{ form.center_ra.errors }}<br /><br />
+        Dec:<br />{{ form.center_dec }} degrees {{ form.center_dec.errors }}<br /><br />
+        Radius:<br />{{ form.radius }} degrees {{ form.radius.errors }}<br />
     </td>
 </tr> 
 <tr> 
@@ -232,7 +232,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
         <div class="setting_description">We can downsample your image by a given factor before performing the source extraction.</div> 
     </td> 
     <td>
-        {{ form.downsample_factor.errors }}{{ form.downsample_factor }} (factor)<br />
+        {{ form.downsample_factor }} (factor) {{ form.downsample_factor.errors }}<br />
     </td>
 </tr> 
 </table>

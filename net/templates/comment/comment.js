@@ -9,7 +9,12 @@ function addComment(form) {
         success: function(json) {
             $('#comment_form_block').replaceWith(json.form_html);
             if (json.success) {
+                if ($('#comment_list > .comment').length == 0) {
+                    // hide "no comments"
+                    $('#comment_list').empty();
+                }
                 $(json.comment_html).hide().prependTo('#comment_list').show('fast');
+                
                 setFormStatus('comment_form', 'success');
             }
             else {

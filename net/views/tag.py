@@ -24,7 +24,7 @@ class TagForm(forms.ModelForm):
 def delete(req, category=None, recipient_id=None, tag_id=None):
     if category == 'user_image':
         tag = get_object_or_404(TaggedUserImage, user_image=recipient_id, tag=tag_id)
-        if tag.tagger == req.user:
+        if tag.tagger == req.user or tag.user_image.user == req.user:
             tag.delete()
     else:
         # TODO - do something useful?

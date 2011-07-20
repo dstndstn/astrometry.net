@@ -9,6 +9,10 @@ function addTag(form) {
         success: function(json) {
             $('#tag_form_block').replaceWith(json.form_html);
             if (json.success) {
+                if ($('#tag_list > .tag').length == 0) {
+                    // hide "no tags"
+                    $('#tag_list').empty();
+                }
                 $(json.tag_html).hide().appendTo('#tag_list').show('fast');
                 setFormStatus('tag_form', 'success');
             }

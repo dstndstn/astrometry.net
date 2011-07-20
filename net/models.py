@@ -705,7 +705,7 @@ class Submission(Licensable, Hideable):
 class Album(Commentable, Hideable):
     user = models.ForeignKey(User, related_name='albums', null=True)
     title = models.CharField(max_length=64)
-    description = models.CharField(max_length=1024)
+    description = models.CharField(max_length=1024, blank=True)
     user_images = models.ManyToManyField('UserImage', related_name='albums') 
     tags = models.ManyToManyField('Tag', related_name='albums')
     created_at = models.DateTimeField(auto_now_add=True)

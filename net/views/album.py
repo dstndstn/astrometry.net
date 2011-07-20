@@ -7,7 +7,7 @@ import urllib
 import urllib2
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.shortcuts import render_to_response, get_object_or_404, redirect, render
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 from django import forms
@@ -51,11 +51,41 @@ def album(req, album_id=None):
 class AlbumForm(forms.ModelForm):
     class Meta:
         model = Album
-        include = ('title', 'description', 'publicly_visible')
+        exclude = ('user', 'owner', 'user_images', 'tags', 'created_at')
         widgets = {
             'description': forms.Textarea(attrs={'cols':60,'rows':3}),
             'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer)
         }
+
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        title = cleaned_data.get('title')
+        if title:
+            query = Album.objects.filter(user=self.instance.user, title=title)
+            query = query.exclude(pk=self.instance.id)
+            if query.count() != 0:
+                self._errors['title'] = self.error_class(['You already have an album with this title.'])
+                del cleaned_data['title']
+
+        return cleaned_data
+        
+@login_required
+def edit(req, album_id=None):
+    album = get_object_or_404(Album, pk=album_id) 
+    if req.method == 'POST':
+        form = AlbumForm(req.POST, instance=album)
+        if form.is_valid():
+            form.save()
+            return redirect(album)
+    else:
+        form = AlbumForm(instance=album)
+        
+    context = {
+        'album_form': form,
+        'album': album,
+    }
+    return render(req, 'album/edit.html', context)
+
 
 @login_required
 def new(req):
@@ -67,8 +97,7 @@ def new(req):
         album,created = Album.objects.get_or_create(user=req.user, title=title,
                                             defaults=dict(description=description,
                                                           publicly_visible=publicly_visible))
-        redirect_url = reverse('astrometry.net.views.album.album', kwargs={'album_id':album.id})
-        return HttpResponseRedirect(redirect_url)
+        return redirect(album)
     else:
         pass
 

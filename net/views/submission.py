@@ -96,7 +96,7 @@ class SubmissionForm(forms.ModelForm):
                 scale_upper = self.cleaned_data.get('scale_upper')
                 if not scale_lower:
                     self._errors['scale_lower'] = self.error_class([number_message])
-                if not scale_err:
+                if not scale_upper:
                     self._errors['scale_upper'] = self.error_class([number_message])
             elif scale_type == 'ev':
                 scale_est = self.cleaned_data.get('scale_est')
