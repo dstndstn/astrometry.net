@@ -44,6 +44,7 @@ Albums &gt;
 <div class="top_bar">
     <div id="album_info">
         Submitted by {% include 'user/display_name.html' with user=album.user %}<br />
+        <span class="timestamp">{{ album.created_at|date:"Y-m-d" }}</span><br />
         {{ album.user_images.all|length }} image{{ album.user_images.all|pluralize }}<br />
         {% comment %}{% if user.is_authenticated and user == album.user %}
         <br />

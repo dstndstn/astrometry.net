@@ -10,6 +10,18 @@ class NoBulletsRenderer(forms.RadioSelect.renderer):
     def render(self):
         return mark_safe(u'<br />\n'.join([u'%s' % w for w in self]))
 
+def store_session_form(session, form_class, data):
+    session[form_class.__name__] = data
+
+def get_session_form(session, form_class):
+    if session.get(form_class.__name__):
+        form = form_class(session[form_class.__name__])
+        form.is_valid()
+        del session[form_class.__name__]
+    else:
+        form = form_class()
+    return form 
+
 def dict_pack(struct_tuple, data_tuple):
     pack = []
     for data in data_tuple:

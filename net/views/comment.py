@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 
 from astrometry.net.models import *
 from astrometry.net import settings
+from astrometry.net.util import store_session_form
 from log import *
 from django import forms
 from django.http import HttpResponseRedirect
@@ -26,7 +27,7 @@ def new(req, category=None, recipient_id=None):
     recipient = get_object_or_404(Commentable, pk=recipient_id)
     if req.method == 'POST':
         form = PartialCommentForm(req.POST)
-        redirect_url = req.POST.get('next','/')
+        redirect_url = req.POST.get('next', '/')
         json = {}
         if form.is_valid():
             comment = form.save(commit=False)
@@ -34,33 +35,38 @@ def new(req, category=None, recipient_id=None):
             comment.author = req.user
             comment.save()
         
-            form = PartialCommentForm()
+            if req.is_ajax():
+                form = PartialCommentForm()
+                context = {
+                    'comment': comment,
+                    'next': redirect_url,
+                }
+                comment_html = render_to_string('comment/comment.html', context,
+                                    context_instance=RequestContext(req))
+                json['success'] = True
+                json['comment_html'] = comment_html
+        else:
+            if req.is_ajax():
+                json['success'] = False
+            else:
+                store_session_form(req.session, PartialCommentForm, req.POST)
+
+        if req.is_ajax():
             context = {
-                'comment': comment,
+                'comment_form': form,
+                'recipient_id': recipient.id,
+                'category': category,
                 'next': redirect_url,
             }
-            comment_html = render_to_string('comment/comment.html', context,
+            form_html = render_to_string('comment/form.html', context,
                                 context_instance=RequestContext(req))
-            json['success'] = True
-            json['comment_html'] = comment_html
-        else:
-            json['success'] = False
-
-        context = {
-            'comment_form': form,
-            'recipient_id': recipient.id,
-            'category': category,
-            'next': redirect_url,
-        }
-        form_html = render_to_string('comment/form.html', context,
-                            context_instance=RequestContext(req))
-        json['form_html'] = form_html
+            json['form_html'] = form_html
         
-        if req.is_ajax():
             response = simplejson.dumps(json)
             return HttpResponse(response, content_type='application/javascript')
         else:
-            return HttpResponseRedirect(redirect_url)
+            return redirect(redirect_url)
+             
     else:
         # show a generic comment form
         pass

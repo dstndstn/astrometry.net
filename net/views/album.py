@@ -18,16 +18,17 @@ from astrometry.net.models import *
 from astrometry.net import settings
 from astrometry.net.log import *
 from astrometry.net.tmpfile import *
+from astrometry.net.util import NoBulletsRenderer, get_page, get_session_form, store_session_form
 
 from astrometry.util.run_command import run_command
 
 from astrometry.net.views.comment import *
-from astrometry.net.util import *
 
 
 def album(req, album_id=None):
     album = get_object_or_404(Album, pk=album_id)
-    comment_form = PartialCommentForm()
+
+    comment_form = get_session_form(req.session, PartialCommentForm)
 
     page_number = req.GET.get('page',1)
     page = get_page(album.user_images.all(),4*3,page_number)
@@ -45,8 +46,7 @@ def album(req, album_id=None):
     else:
         messages.error(req, "Sorry, you don't have permission to view this content")
         template = 'album/permission_denied.html'
-    return render_to_response(template, context,
-        context_instance = RequestContext(req))
+    return render(req, template, context)
 
 class AlbumForm(forms.ModelForm):
     class Meta:
@@ -91,13 +91,14 @@ def edit(req, album_id=None):
 def new(req):
     if req.method == 'POST':
         form = AlbumForm(req.POST)
-        title = req.POST.get('title','')
-        description = req.POST.get('description','')
-        publicly_visible = req.POST.get('publicly_visible','y')
-        album,created = Album.objects.get_or_create(user=req.user, title=title,
-                                            defaults=dict(description=description,
-                                                          publicly_visible=publicly_visible))
-        return redirect(album)
+        if form.is_valid():
+            album = form.save(commit=False)
+            album.user = req.user
+            album.save()
+            return redirect(album)
+        else:
+            store_session_form(req.session, AlbumForm, req.POST)
+            return redirect(req.POST.get('from','/'))
     else:
         pass
 

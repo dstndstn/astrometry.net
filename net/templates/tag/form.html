@@ -2,8 +2,10 @@
 <div id="tag_form_block">
     <form method="post" name="tag_form" action="{% url astrometry.net.views.tag.new category=category recipient_id=recipient_id %}">
     {% csrf_token %}
-    {{ tag_form.text }}
-    {{ tag_form.text.errors }}
+    <div>
+        {{ tag_form.text }}<br />
+        {{ tag_form.text.errors }}
+    </div>
     <input type="hidden" name="next" value="{{next}}" />
     <input type="submit" value="Add Tag" />
     <span class="form_status">

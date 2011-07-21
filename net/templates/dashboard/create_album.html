@@ -20,6 +20,7 @@
     </td>
     <td style="border:0px">
         {{ album_form.title }}
+        {{ album_form.title.errors }}
     </td>
 </tr>
 <tr>
@@ -30,6 +31,7 @@
     </td>
     <td>
         {{ album_form.description }}
+        {{ album_form.description.errors }}
     </td>
 </tr>
 <tr>
@@ -41,9 +43,11 @@
     </td>
     <td>
         {{ album_form.publicly_visible }}
+        {{ album_form.publicly_visible.errors }}
     </td>
 </tr>
 </table>
+<input type="hidden" name="from" value="{{ request.path }}" />
 <input type="submit" value="Create Album" />
 </form>
 {% endblock %}

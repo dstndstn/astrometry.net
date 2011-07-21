@@ -23,7 +23,7 @@ from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 
 from astrometry.net.views.comment import *
-from astrometry.net.util import get_page
+from astrometry.net.util import get_page, get_session_form
 from astrometry.net.views.tag import TagForm
 
 from string import strip
@@ -35,8 +35,9 @@ def user_image(req, user_image_id=None):
     calib = None
     if job:
         calib = job.calibration
-    comment_form = PartialCommentForm()
-    tag_form = TagForm()
+
+    comment_form = get_session_form(req.session, PartialCommentForm)
+    tag_form = get_session_form(req.session, TagForm)
 
     logmsg(image.get_absolute_url())
     context = {
