@@ -42,11 +42,6 @@
 {
     "model"     :   "net.license",
     "pk"        :   1,
-    "fields"    :   {}
-},
-{
-    "model"     :   "net.licensable",
-    "pk"        :   1,
     "fields"    :   {
         "allow_commercial_use"  :   "y",
         "allow_modifications"   :   "y"

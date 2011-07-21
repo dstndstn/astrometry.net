@@ -15,6 +15,7 @@ from astrometry.net.models import *
 from astrometry.net import settings
 from log import *
 from django import forms
+from django.forms.models import inlineformset_factory
 from django.http import HttpResponseRedirect
 
 from astrometry.net.util import HorizontalRenderer, NoBulletsRenderer
@@ -58,10 +59,16 @@ class SubmissionForm(forms.ModelForm):
                                       max_length=64,
                                       required=False)
 
+    allow_commercial_use = forms.ChoiceField(choices=License.YES_NO,
+        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        initial='d')
+    allow_modifications = forms.ChoiceField(choices=License.YES_SA_NO,
+        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        initial='d')
+
     class Meta:
         model = Submission
         fields = (
-            'allow_commercial_use', 'allow_modifications',
             'publicly_visible',
             'parity','scale_units','scale_type','scale_lower',
             'scale_upper','scale_est','scale_err','positional_error',
@@ -79,8 +86,6 @@ class SubmissionForm(forms.ModelForm):
             'downsample_factor': forms.TextInput(attrs={'size':'5'}),
             'parity': forms.RadioSelect(renderer=NoBulletsRenderer),
             'source_type': forms.RadioSelect(renderer=NoBulletsRenderer),
-            'allow_commercial_use': forms.RadioSelect(renderer=NoBulletsRenderer),
-            'allow_modifications': forms.RadioSelect(renderer=NoBulletsRenderer),
             'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer),
         }
 
@@ -182,12 +187,14 @@ def upload_file(request):
                     except Exception as e:
                         print e
 
+            sub.license = License.objects.create()
             if not request.user.is_authenticated():
                 sub.publicly_visible = 'y'
             if form.cleaned_data['allow_commercial_use'] == 'd':
-                sub.allow_commercial_use = default_license.allow_commercial_use
+                sub.license.allow_commercial_use = default_license.allow_commercial_use
             if form.cleaned_data['allow_modifications'] == 'd':
-                sub.allow_modifications = default_license.allow_modifications
+                sub.license.allow_modifications = default_license.allow_modifications
+            sub.license.save()
 
             sub.user = request.user if request.user.is_authenticated() else User.objects.get(username=ANONYMOUS_USERNAME)
             if form.cleaned_data['upload_type'] == 'file':

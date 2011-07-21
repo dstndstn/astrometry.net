@@ -23,6 +23,7 @@ from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 
 from astrometry.net.views.comment import *
+from astrometry.net.views.license import *
 from astrometry.net.util import get_page, get_session_form
 from astrometry.net.views.tag import TagForm
 
@@ -36,6 +37,7 @@ def user_image(req, user_image_id=None):
     if job:
         calib = job.calibration
 
+    license_form = get_session_form(req.session, PartialLicenseForm)
     comment_form = get_session_form(req.session, PartialCommentForm)
     tag_form = get_session_form(req.session, TagForm)
 
@@ -46,6 +48,7 @@ def user_image(req, user_image_id=None):
         'job': job,
         'calib': calib,
         'comment_form': comment_form,
+        'license_form': license_form,
         'tag_form': tag_form,
     }
 

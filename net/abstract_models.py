@@ -51,6 +51,9 @@ class SharedHideable(models.Model):
 
 # uses creative commons rest api
 class Licensable(models.Model):
+    class Meta:
+        abstract = True
+
     YES_NO = (
         ('y','yes'),
         ('n','no'),
@@ -86,12 +89,22 @@ class Licensable(models.Model):
             self.save()
         return self.license_name
 
+    # replaces 'd' with actual setting from default license
+    def replace_license_default(self, default):
+        if self.allow_commercial_use == 'd':
+            self.allow_commercial_use = default.allow_commercial_use
+        if self.allow_modifications == 'd':
+            self.allow_modifications = default.allow_modifications
+
     def get_license_xml(self):
         try:
+            allow_commercial_use = self.allow_commercial_use
+            allow_modifications = self.allow_modifications
+
             url = (
                 'http://api.creativecommons.org/rest/1.5/license/standard/get?commercial=%s&derivatives=%s&jurisdiction=' %
-                (self.allow_commercial_use,
-                self.allow_modifications,)
+                (allow_commercial_use,
+                allow_modifications,)
             )
             logmsg("getting license via url: %s" % url)
             f = urllib2.urlopen(url)

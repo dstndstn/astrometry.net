@@ -85,6 +85,9 @@ urlpatterns += patterns('astrometry.net.views.comment',
     (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/comments/new/?$', 'new'),
     (r'^comments/(?P<comment_id>' + idpattern + r')/delete/?$', 'delete'),
 )
+urlpatterns += patterns('astrometry.net.views.license',
+    (r'^(?P<licensable_type>\w+)/(?P<licensable_id>' + idpattern + r')/license/edit/?$', 'edit'),
+)
 
 psidpattern = r'[0-9-]+'
 

@@ -101,6 +101,7 @@ class QueuedJob(QueuedThing):
 
 class License(Licensable):
     def save(self, *args, **kwargs):
+        self.replace_license_default(License.get_default())
         self.get_license_name_uri()
         return super(License, self).save(*args,**kwargs)
 
@@ -564,6 +565,7 @@ class UserImage(Commentable, Licensable, Hideable):
 
     def save(self, *args, **kwargs):
         self.owner = self.user
+        self.replace_license_default(self.user.get_profile().default_license)
         self.get_license_name_uri()
         return super(UserImage, self).save(*args, **kwargs)
 
