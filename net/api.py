@@ -106,7 +106,7 @@ def api_upload(request):
     #logmsg('api_upload: got request: ' + str(request.FILES['file'].size))
     logmsg('received files:')
     
-    df = handle_upload(file=request.FILES['file'])
+    df, original_filename = handle_upload(file=request.FILES['file'])
     submittor = request.user if request.user.is_authenticated() else None
     allow_commercial_use = request.json.get('allow_commercial_use')
     allow_modifications = request.json.get('allow_modifications')
@@ -119,6 +119,7 @@ def api_upload(request):
     sub = Submission(
         user=submittor,
         disk_file=df,
+        original_filename=original_filename,
         scale_type='ul',
         scale_units='degwidth',
         allow_commercial_use=allow_commercial_use,

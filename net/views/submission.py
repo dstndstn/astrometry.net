@@ -19,7 +19,7 @@ from django.http import HttpResponseRedirect
 
 from astrometry.net.util import HorizontalRenderer, NoBulletsRenderer
 from astrometry.util.run_command import run_command
-
+from urlparse import urlparse
 
 def index(req, user_id):
     submitter = None
@@ -191,11 +191,10 @@ def upload_file(request):
 
             sub.user = request.user if request.user.is_authenticated() else User.objects.get(username=ANONYMOUS_USERNAME)
             if form.cleaned_data['upload_type'] == 'file':
-                sub.disk_file = handle_upload(file=request.FILES['file'])
-                sub.original_filename = request.FILES['file'].name
+                sub.disk_file, sub.original_filename = handle_upload(file=request.FILES['file'])
             elif form.cleaned_data['upload_type'] == 'url':
                 sub.url = form.cleaned_data['url']
-                sub.disk_file = handle_upload(url=sub.url)
+                sub.disk_file, sub.original_filename = handle_upload(url=sub.url)
             
             sub.save()
             logmsg('Made Submission' + str(sub))
@@ -266,11 +265,13 @@ def handle_upload(file=None,url=None):
     file_hash = DiskFile.get_hash()
     temp_file_path = tempfile.mktemp()
     uploaded_file = open(temp_file_path, 'wb+')
+    original_filename = ''
 
     if file:
         for chunk in file.chunks():
             uploaded_file.write(chunk)
             file_hash.update(chunk)
+        original_filename = file.name
     elif url:
         f = urllib2.urlopen(url)
         CHUNK_SIZE = 4096
@@ -280,6 +281,12 @@ def handle_upload(file=None,url=None):
                 break
             uploaded_file.write(chunk)
             file_hash.update(chunk)
+
+        p = urlparse(url)
+        p = p.path
+        if p:
+            s = p.split('/')
+            original_filename = s[-1]
     else:
         return None
     uploaded_file.close()
@@ -296,4 +303,4 @@ def handle_upload(file=None,url=None):
         df.set_size_and_file_type()
         df.save()
         
-    return df
+    return df, original_filename

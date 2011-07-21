@@ -253,8 +253,7 @@ class Image(models.Model):
             logmsg('err: ' + err)
             raise RuntimeError('Failed to make resized image for %s: pnmscale: %s' % (str(self), err))
         df = DiskFile.from_file(imagefn)
-        image = Image(disk_file=df, width=W, height=H)
-        image.save()
+        image, created = Image.objects.get_or_create(disk_file=df, width=W, height=H)
         return image
 
     def render(self, f):

@@ -112,7 +112,13 @@ $(document).ready(function() {
 
 {% block title %}
 {{block.super}} &gt; 
-<a href="{{ image.get_absolute_url }}">{{image.original_file_name}}</a>
+<a href="{{ image.get_absolute_url }}">
+    {% if image.original_file_name %}
+        {{ image.original_file_name }}
+    {% else %}
+        no name
+    {% endif %}
+</a>
 {% endblock %}
 {% block content %}
 
