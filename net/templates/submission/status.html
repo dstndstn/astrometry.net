@@ -192,6 +192,12 @@ Submission {{ sub.id }}
         <div style="width:640px; overflow:auto"><pre>{{ sub.error_message }}</pre>
     {% else %}
         Thanks for your submission! Please bear with us while we process it.
+        {% if sub.user.username == anonymous_username %}
+        <p class="notice">
+        Please note: the contents and results of your submission will only be
+        available upon a successful calibration.
+        </p>
+        {% endif %}
     {% endif %}
     </td></tr>
 {% endfor %}

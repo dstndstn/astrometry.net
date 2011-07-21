@@ -127,6 +127,7 @@ a.disabled:hover {background-color: transparent; color: #000}
     font-size:1.1em;
 }
 .chosen { font-weight:bold; }
+.notice { font-style:italic; }
 h2 {
     font-size: 1.2em;
     font-weight: bold;

@@ -258,6 +258,7 @@ def status(req, subid=None):
     return render_to_response('submission/status.html',
         {
             'sub': sub,
+            'anonymous_username':ANONYMOUS_USERNAME,
             'finished': finished,
         },
         context_instance = RequestContext(req))
