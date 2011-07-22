@@ -1,5 +1,8 @@
 #! /usr/bin/env python
-
+if __name__ == '__main__':
+	import matplotlib
+	matplotlib.use('Agg')
+	
 from pylab import *
 from numpy import *
 from astrometry.util.sip import *
@@ -67,6 +70,13 @@ def plotDistortion(sip, W, H, ncells, exaggerate=1.):
 	axis('scaled')
 	axis([0, W, 0, H])
 
+def plotDistortionFile(sipfn, ext, ncells, exaggerate=1.):
+	wcs = Sip(sipfn, ext)
+	if wcs is None:
+		raise RuntimeError('Failed to open WCS file %s' % sipfn)
+
+	plotDistortion(wcs, wcs.get_width(), wcs.get_height(), ncells,
+				   exaggerate)
 
 
 if __name__ == '__main__':
@@ -83,10 +93,5 @@ if __name__ == '__main__':
 	wcsfn = args[0]
 	outfn = args[1]
 
-	wcs = Sip(wcsfn, opt.ext)
-	if wcs is None:
-		print 'Failed to open WCS file', wcsfn
-		sys.exit(-1)
-
-	plotDistortion(wcs, wcs.get_width(), wcs.get_height(), opt.cells, opt.exaggerate)
+	plotDistortionFile(wcsfn, opt.ext, opt.cells, opt.exaggerate)
 	savefig(outfn)
