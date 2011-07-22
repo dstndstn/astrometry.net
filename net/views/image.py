@@ -21,6 +21,7 @@ from sdss_image import plot_sdss_image
 
 from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
+from astrometry.util.file import *
 
 from astrometry.net.views.comment import *
 from astrometry.net.views.license import *
@@ -279,6 +280,30 @@ def wcs_file(req, jobid=None):
     res = HttpResponse(f)
     res['Content-type'] = 'application/fits' 
     res['Content-Disposition'] = 'attachment; filename=wcs.fits'
+    return res
+
+def new_fits_file(req, jobid=None):
+    job = get_object_or_404(Job, pk=jobid)
+    wcsfn = job.get_wcs_file()
+    img = job.user_image.image
+    df = img.disk_file
+    infn = df.get_path()
+    ## FIXME -- could convert other formats to FITS...
+    if not df.is_fits_image():
+        return HttpResponse('Image is not FITS format: %s' % df.file_type)
+    fitsinfn = infn
+    outfn = get_temp_file()
+    cmd = 'new-wcs -i %s -w %s -o %s -d' % (fitsinfn, wcsfn, outfn)
+    logmsg('Running: ' + cmd)
+    (rtn, out, err) = run_command(cmd)
+    if rtn:
+        logmsg('out: ' + out)
+        logmsg('err: ' + err)
+        return HttpResponse('plot failed')
+    res = HttpResponse(open(outfn))
+    res['Content-type'] = 'application/fits' 
+    res['Content-length'] = file_size(outfn)
+    res['Content-Disposition'] = 'attachment; filename=new.fits'
     return res
 
 class ImageSearchForm(forms.Form):

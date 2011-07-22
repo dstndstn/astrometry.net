@@ -124,6 +124,9 @@ class DiskFile(models.Model):
     def __str__(self):
         return 'DiskFile: %s, size %i, type %s' % (self.file_hash, self.size, self.file_type)
 
+    def is_fits_image(self):
+        return self.file_type == 'FITS image data'
+
     def set_size_and_file_type(self):
         fn = self.get_path()
         st = os.stat(fn)

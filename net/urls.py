@@ -69,6 +69,7 @@ urlpatterns += patterns('astrometry.net.views.image',
     (r'^sdss_image_(?P<size>full|display)/(?P<calid>' + idpattern + r')/?$', 'sdss_image'),
     (r'^galex_image_(?P<size>full|display)/(?P<calid>' + idpattern + r')/?$', 'galex_image'),
     (r'^wcs_file/(?P<jobid>' + idpattern + r')/?$', 'wcs_file'),
+    (r'^new_fits_file/(?P<jobid>' + idpattern + r')/?$', 'new_fits_file'),
 )
 
 urlpatterns += patterns('astrometry.net.views.album',
