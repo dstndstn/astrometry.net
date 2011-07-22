@@ -71,6 +71,8 @@ For full functionality, you will need:
                        netpbm-devel.x86_64 fontconfig-devel.x86_64 \
                        libXrender-devel.x86_64 xorg-x11-proto-devel.x86_64 \
 					   zlib-devel
+   On Fedora, you may also need:
+    $ sudo yum install netpbm-progs
 
 -> On Mac OS X, possibly the easiest way is to install Fink
    (www.finkproject.org), and then use apt-get install as per the
