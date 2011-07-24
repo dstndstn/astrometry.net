@@ -1,0 +1,62 @@
+{% extends "user_image/view.html" %}
+
+{% block inline_css %}
+{% endblock %}
+
+{% block javascript %}
+{% endblock %}
+
+{% block title %}
+{{block.super}} &gt;
+<a href="{% url astrometry.net.views.image.edit user_image_id=image.id %}">Edit</a>
+{% endblock %}
+
+{% block content %}
+<form method="post" action="{% url astrometry.net.views.image.edit user_image_id=image.id %}">
+{% csrf_token %}
+{{ image_form.errors }}
+<table class="settings_table">
+<tr>
+    <td class="leftcolumn" style="border:0px">
+        <div class="setting_title">Description:</div>
+        <div class="setting_description">
+        </div>
+    </td>
+    <td style="border:0px">
+        {{ image_form.description }}
+        {{ image_form.description.errors }}
+    </td>
+</tr>
+<tr>
+    <td class="leftcolumn">
+        <div class="setting_title">Visibility:</div>
+        <div class="setting_description">
+            Permit anyone to view this image?
+        </div>
+    </td>
+    <td>
+        {{ image_form.publicly_visible }}
+        {{ image_form.publicly_visible.errors }}
+    </td>
+</tr>
+<tr>
+    <td class="leftcolumn">
+        <div class="setting_title">License:</div>
+        <div class="setting_description">
+            Your default license setting is
+            {% include 'license/license_link.html' with licensable=user.get_profile.default_license %}.
+        </div>
+    </td>
+    <td>
+        <h5>Allow commercial use?</h5>
+        {{ image_form.allow_commercial_use }}
+        {{ image_form.allow_commercial_use.errors }}
+        <h5>Allow modifications?</h5>
+        {{ image_form.allow_modifications.errors }}
+        {{ image_form.allow_modifications }}
+    </td>
+</tr>
+</table>
+<input type="submit" value="Save Changes" />
+</form>
+{% endblock %}
