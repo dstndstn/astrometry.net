@@ -7,7 +7,7 @@ import urllib
 import urllib2
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.shortcuts import render_to_response, get_object_or_404, redirect, render
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 from django import forms
@@ -25,10 +25,22 @@ from astrometry.util.file import *
 
 from astrometry.net.views.comment import *
 from astrometry.net.views.license import *
-from astrometry.net.util import get_page, get_session_form
+from astrometry.net.util import get_page, get_session_form, NoBulletsRenderer
 from astrometry.net.views.tag import TagForm
 
 from string import strip
+
+class UserImageForm(forms.ModelForm):
+    class Meta:
+        model = UserImage
+        exclude = ('image','user', 'tags', 'original_file_name', 'submission',
+            'owner', 'license_name', 'license_uri')
+        widgets = {
+            'description': forms.Textarea(attrs={'cols':60,'rows':3}),
+            'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer),
+            'allow_commercial_use': forms.RadioSelect(renderer=NoBulletsRenderer),
+            'allow_modifications': forms.RadioSelect(renderer=NoBulletsRenderer)
+        }
 
 def user_image(req, user_image_id=None):
     image = get_object_or_404(UserImage, pk=user_image_id)
@@ -38,7 +50,7 @@ def user_image(req, user_image_id=None):
     if job:
         calib = job.calibration
 
-    license_form = get_session_form(req.session, PartialLicenseForm)
+    #license_form = get_session_form(req.session, PartialLicenseForm)
     comment_form = get_session_form(req.session, PartialCommentForm)
     tag_form = get_session_form(req.session, TagForm)
 
@@ -49,7 +61,7 @@ def user_image(req, user_image_id=None):
         'job': job,
         'calib': calib,
         'comment_form': comment_form,
-        'license_form': license_form,
+        #'license_form': license_form,
         'tag_form': tag_form,
     }
 
@@ -58,10 +70,31 @@ def user_image(req, user_image_id=None):
     elif SharedHideable.objects.filter(shared_with=req.user.id, hideable=image).count():
         template = 'user_image/view.html'
     else:
-        messages.error(req, "Sorry, you don't have permission to view this content")
+        messages.error(req, "Sorry, you don't have permission to view this content.")
         template = 'user_image/permission_denied.html'
     return render_to_response(template, context,
         context_instance = RequestContext(req))
+
+@login_required
+def edit(req, user_image_id=None):
+    user_image = get_object_or_404(UserImage, pk=user_image_id) 
+    if user_image.user != req.user:
+        messages.error(req, "Sorry, you don't have permission to edit this content.")
+        return render(req, 'user_image/permission_denied.html')
+
+    if req.method == 'POST':
+        form = UserImageForm(req.POST, instance=user_image)
+        if form.is_valid():
+            form.save()
+            return redirect(user_image)
+    else:
+        form = UserImageForm(instance=user_image)
+        
+    context = {
+        'image_form': form,
+        'image': user_image,
+    }
+    return render(req, 'user_image/edit.html', context)
 
 def serve_image(req, id=None):
     image = get_object_or_404(Image, pk=id)

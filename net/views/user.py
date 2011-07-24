@@ -67,7 +67,6 @@ def dashboard_profile(request):
         'profile_form':profile_form,
         'license_form':license_form,
         'profile':profile,
-        'request':request,
     }
     return render_to_response("dashboard/profile.html",
         context,

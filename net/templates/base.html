@@ -11,11 +11,10 @@
 <!--<link rel="stylesheet" href="{{ STATIC_URL }}css/base.css" />-->
 {% endblock %}
 
-{% block inline_css %}
 {% include 'base.css' %}
+{% block inline_css %}
 {% endblock inline_css %}
 
-{% block javascript %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
@@ -28,6 +27,7 @@ $(document).ready(function() {
     });
 });
 </script>
+{% block javascript %}
 {% endblock javascript %}
 
 <title>{% block pagetitle %}Astrometry.net{% endblock %}</title>

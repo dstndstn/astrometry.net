@@ -44,7 +44,7 @@ def album(req, album_id=None):
     elif SharedHideable.objects.filter(shared_with=req.user.id, hideable=album).count():
         template = 'album/view.html'
     else:
-        messages.error(req, "Sorry, you don't have permission to view this content")
+        messages.error(req, "Sorry, you don't have permission to view this content.")
         template = 'album/permission_denied.html'
     return render(req, template, context)
 
@@ -61,6 +61,7 @@ class AlbumForm(forms.ModelForm):
         cleaned_data = self.cleaned_data
         title = cleaned_data.get('title')
         if title:
+            # make sure the user doesn't have another album with the same title
             query = Album.objects.filter(user=self.instance.user, title=title)
             query = query.exclude(pk=self.instance.id)
             if query.count() != 0:
@@ -72,6 +73,10 @@ class AlbumForm(forms.ModelForm):
 @login_required
 def edit(req, album_id=None):
     album = get_object_or_404(Album, pk=album_id) 
+    if album.user != req.user:
+        messages.error(req, "Sorry, you don't have permission to view this content.")
+        return render(req, 'album/permission_denied.html')
+
     if req.method == 'POST':
         form = AlbumForm(req.POST, instance=album)
         if form.is_valid():

@@ -133,10 +133,12 @@ $(document).ready(function() {
         <div class="indent">as "{{ image.original_file_name }}"</div>
         <div class="indent" id="license">under {% include 'license/license_link.html' with licensable=image %}</a></div>
         {% if user.is_authenticated and user == image.user %}
+        {% comment %}
         <br />
         <div class="indent" id="edit_license">
             {% include 'license/form.html' with license_form=license_form next=request.path licensable_id=image.id licensable_type='UserImage' %}
         </div>
+        {% endcomment %}
         <br />
         <div class="indent">publicly visible:
             {% include 'hideable/publicly_visible.html' with hideable=image %}
@@ -186,6 +188,12 @@ $(document).ready(function() {
     </div>
 </div>
 <div id="left_block">
+    {% if user == image.user %}
+    <div>
+        <a href="{% url astrometry.net.views.image.edit user_image_id=image.id %}">Edit Image</a>
+        <hr />
+    </div>
+    {% endif %}
     <div id="submitted_field">
         <div id="image_container">
             <img id="user_image" src="{% url astrometry.net.views.image.serve_image display_image.id %}" />

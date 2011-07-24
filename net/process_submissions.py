@@ -474,8 +474,8 @@ def get_or_create_source_list(df, source_type):
             fits = img.get_fits_table()
             w = fits.x.max()-fits.x.min()
             h = fits.y.max()-fits.y.min()
-            w = int(1.01*w)
-            h = int(1.01*h)
+            w = int(w)
+            h = int(h)
             logmsg('w %i, h %i' % (w, h))
             img.width = w
             img.height = h

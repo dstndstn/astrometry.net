@@ -320,9 +320,9 @@ class SourceList(Image):
         fits = self.get_fits_table()
         w = fits.x.max()-fits.x.min()
         h = fits.y.max()-fits.y.min()
-        scale = float(self.width)/(1.01*w) 
-        xmin = fits.x.min()-0.005*w
-        ymin = fits.y.min()-0.005*h
+        scale = float(self.width)/w
+        xmin = fits.x.min()
+        ymin = fits.y.min()
         
         img = PIL.Image.new('RGB',(self.width,self.height))
         draw = PIL.ImageDraw.Draw(img)
@@ -558,7 +558,7 @@ class UserImage(Commentable, Licensable, Hideable):
     tags = models.ManyToManyField('Tag',related_name='user_images',
         through='TaggedUserImage')
 
-    description = models.CharField(max_length=1024)
+    description = models.CharField(max_length=1024, blank=True)
     original_file_name = models.CharField(max_length=256)
     submission = models.ForeignKey('Submission', related_name='user_images')
 
