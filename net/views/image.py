@@ -222,6 +222,30 @@ def sdss_image(req, calid=None, size='full'):
     res['Content-type'] = 'image/png'
     return res
 
+
+def red_green_plot(req, calid=None, size='full'):
+    cal = get_object_or_404(Calibration, pk=calid)
+    key = 'red_green_size%s_cal%i' % (size, cal.id)
+    df = CachedFile.get(key)
+    if df is None:
+        wcsfn = cal.get_wcs_file()
+        plotfn = get_temp_file()
+        if size == 'display':
+            image = cal.jobs.get().user_image
+            scale = float(image.image.get_display_image().width)/image.image.width
+        else:
+            scale = 1.0
+        plot_sdss_image(wcsfn, plotfn, scale)
+        # cache
+        logmsg('Caching key "%s"' % key)
+        df = CachedFile.add(key, plotfn)
+    else:
+        logmsg('Cache hit for key "%s"' % key)
+    f = open(df.get_path())
+    res = HttpResponse(f)
+    res['Content-type'] = 'image/png'
+    return res
+
 # 2MASS:
 # Has a SIA service, but does not make mosaics.
 # Documented here:

@@ -12,7 +12,6 @@ from django.views.decorators.csrf import csrf_exempt
 from astrometry.net.models import *
 from astrometry.net.views.submission import handle_upload
 from api_util import *
-from userprofile import *
 from log import *
 from tmpfile import *
 import settings
