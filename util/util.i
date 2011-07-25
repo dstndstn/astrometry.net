@@ -27,6 +27,16 @@
 #define true 1
 #define false 0
 
+
+// For sip.h
+static void checkorder(int i, int j) {
+	assert(i >= 0);
+	assert(i < SIP_MAXORDER);
+	assert(j >= 0);
+	assert(j < SIP_MAXORDER);
+}
+
+
 %}
 
 %init %{
@@ -284,35 +294,40 @@ void log_set_level(int lvl);
 		return sip_xyzarr2pixelxy($self, xyz, p_x, p_y);
 	}
 
-
 	void set_a_term(int i, int j, double val) {
-		assert(i >= 0);
-		assert(i < SIP_MAXORDER);
-		assert(j >= 0);
-		assert(j < SIP_MAXORDER);
+		checkorder(i, j);
 		$self->a[i][j] = val;
 	}
 	void set_b_term(int i, int j, double val) {
-		assert(i >= 0);
-		assert(i < SIP_MAXORDER);
-		assert(j >= 0);
-		assert(j < SIP_MAXORDER);
+		checkorder(i, j);
 		$self->b[i][j] = val;
 	}
 	void set_ap_term(int i, int j, double val) {
-		assert(i >= 0);
-		assert(i < SIP_MAXORDER);
-		assert(j >= 0);
-		assert(j < SIP_MAXORDER);
+		checkorder(i, j);
 		$self->ap[i][j] = val;
 	}
 	void set_bp_term(int i, int j, double val) {
-		assert(i >= 0);
-		assert(i < SIP_MAXORDER);
-		assert(j >= 0);
-		assert(j < SIP_MAXORDER);
+		checkorder(i, j);
 		$self->bp[i][j] = val;
 	}
+
+	double get_a_term(int i, int j) {
+		checkorder(i, j);
+		return $self->a[i][j];
+	}
+	double get_b_term(int i, int j) {
+		checkorder(i, j);
+		return $self->b[i][j];
+	}
+	double get_ap_term(int i, int j) {
+		checkorder(i, j);
+		return $self->ap[i][j];
+	}
+	double get_bp_term(int i, int j) {
+		checkorder(i, j);
+		return $self->bp[i][j];
+	}
+
 
 	int write_to(const char* filename) {
 		return sip_write_to_file($self, filename);
