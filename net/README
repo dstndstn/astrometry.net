@@ -60,7 +60,7 @@ To specify the number of threads for processing jobs and submissions, use the
 --jobthreads and --subthreads options. For example, to process submissions
 with 8 threads for jobs, and 4 threads for submissions:
   python -u process_submissions.py --jobthreads=8 --subthreads=4 \
-  /dev/null >> proc.log 2>&1 &
+  < /dev/null >> proc.log 2>&1 &
 
 -You need the "an-test" ssh config to connect to the compute server:
 
