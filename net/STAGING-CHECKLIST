@@ -30,35 +30,46 @@ screen -R staging
 or:
   jobs
   kill %1
+
 # Restart process_submissions.py:
-python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
+  python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
+
 # exit the "screen"
-[ctrl-A d]
+  [ctrl-A d]
 
 (4.) Backup the nova database and data:
 
-~/database-backups/backup-nova.sh
-~/data-backups/backup-nova.sh
+    ~/database-backups/backup-nova.sh
+    ~/data-backups/backup-nova.sh
 
 (5.) Migrate the nova database and data:
 
 The exact details will depend on whether you have to run any elaborate
-schema migration scripts.  In the simplest case, copy the database:
+schema migration scripts.  In the simplest case, copy the database.
 
-cd ~/staging/net
-pg_dump an-nova > nova.sql
-dropdb an-staging
-createdb an-staging
-python manage.py syncdb
-psql an-staging < nova.sql
+#stop process_submissions.py on nova temporarily, to allow access of an-nova
+    screen -R nova
+    fg 1
+    [ctrl-C]
+#exit the 'screen'
+    [ctrl-A d]
+
+#recreate the an-staging database as a duplicate of an-nova as it is
+    dropdb an-staging
+    createdb -O nova -T an-nova an-staging
+
+#restart process_submissions.py on nova
+    screen -R nova
+    python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
+    [ctrl-A d]
 
 And copy the data:
 
-cd ~/staging/net
+    cd ~/staging/net
 # remove current staging data
-rm -Rf data jobs
+    rm -Rf data jobs
 # copy all nova's files
-cp -a ~/nova/net/{data,jobs} .
+    cp -a ~/nova/net/{data,jobs} .
 
 (7.) Test it out, email the group when it's ready for review.
 
