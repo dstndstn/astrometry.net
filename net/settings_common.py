@@ -192,6 +192,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
 	'astrometry.net',
     'django_openid_auth',
+    'south',
 )
 
 AUTHENTICATION_BACKENDS = (
