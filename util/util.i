@@ -275,6 +275,10 @@ void log_set_level(int lvl);
 		return sip_write_to_file($self, filename);
 	}
 
+	int ensure_inverse_polynomials() {
+		return sip_ensure_inverse_polynomials($self);
+	}
+
 	void pixelxy2xyz(double x, double y, double *p_x, double *p_y, double *p_z) {
 		double xyz[3];
 		sip_pixelxy2xyzarr($self, x, y, xyz);
