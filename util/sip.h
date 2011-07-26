@@ -23,7 +23,7 @@
 #include "an-bool.h"
 #include "keywords.h"
 
-#define SIP_MAXORDER 10
+#define SIP_MAXORDER 100
 
 // WCS TAN header.
 typedef struct tan_s {
