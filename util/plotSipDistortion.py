@@ -2,13 +2,14 @@
 if __name__ == '__main__':
 	import matplotlib
 	matplotlib.use('Agg')
-	
-from pylab import *
-from numpy import *
+
+import pylab as plt
+import numpy as np
+from math import sqrt, floor, ceil
 from astrometry.util.sip import *
 from optparse import OptionParser
 
-def plotDistortion(sip, W, H, ncells, exaggerate=1.):
+def plotDistortion(sip, W, H, ncells, exaggerate=1., doclf=True):
 	'''
 	Produces a plot showing the SIP distortion that was found, by drawing
 	a grid and distorting it.  Allows exaggeration of the distortion for ease
@@ -25,18 +26,19 @@ def plotDistortion(sip, W, H, ncells, exaggerate=1.):
 	cellsize = sqrt(W * H / ncells)
 	nw = int(floor(W / cellsize))
 	nh = int(floor(H / cellsize))
-	print 'Grid cell size', cellsize
-	print 'N cells', nw, 'x', nh
-	cx = arange(nw+1) * cellsize + ((W - (nw*cellsize))/2.)
-	cy = arange(nh+1) * cellsize + ((H - (nh*cellsize))/2.)
+	#print 'Grid cell size', cellsize
+	#print 'N cells', nw, 'x', nh
+	cx = np.arange(nw+1) * cellsize + ((W - (nw*cellsize))/2.)
+	cy = np.arange(nh+1) * cellsize + ((H - (nh*cellsize))/2.)
 
 	# pixel step size for grid lines
 	step = 50
 
-	xx = arange(-step, W+2*step, step)
-	yy = arange(-step, H+2*step, step)
+	xx = np.arange(-step, W+2*step, step)
+	yy = np.arange(-step, H+2*step, step)
 
-	clf()
+	if doclf:
+		plt.clf()
 
 	for y in cy:
 		dx,dy = [],[]
@@ -44,13 +46,13 @@ def plotDistortion(sip, W, H, ncells, exaggerate=1.):
 			dxi,dyi = sip.get_distortion(x, y)
 			dx.append(dxi)
 			dy.append(dyi)
-		plot(xx, y*ones_like(xx), 'k-', zorder=10)
-		dx = array(dx)
-		dy = array(dy)
+		plt.plot(xx, y*np.ones_like(xx), 'k-', zorder=10)
+		dx = np.array(dx)
+		dy = np.array(dy)
 		if exaggerate != 1:
 			dx += (exaggerate * (dx - xx))
 			dy += (exaggerate * (dy - y))
-		plot(dx, dy, 'r-', zorder=20)
+		plt.plot(dx, dy, 'r-', zorder=20)
 
 	for x in cx:
 		dx,dy = [],[]
@@ -58,25 +60,24 @@ def plotDistortion(sip, W, H, ncells, exaggerate=1.):
 			dxi,dyi = sip.get_distortion(x, y)
 			dx.append(dxi)
 			dy.append(dyi)
-		plot(x*ones_like(yy), yy, 'k-', zorder=10)
-		dx = array(dx)
-		dy = array(dy)
+		plt.plot(x*np.ones_like(yy), yy, 'k-', zorder=10)
+		dx = np.array(dx)
+		dy = np.array(dy)
 		if exaggerate != 1:
 			dx += (exaggerate * (dx - x))
 			dy += (exaggerate * (dy - yy))
-		plot(dx, dy, 'r-', zorder=20)
-
+		plt.plot(dx, dy, 'r-', zorder=20)
 	
-	axis('scaled')
-	axis([0, W, 0, H])
+	plt.axis('scaled')
+	plt.axis([0, W, 0, H])
 
-def plotDistortionFile(sipfn, ext, ncells, exaggerate=1.):
+def plotDistortionFile(sipfn, ext, ncells, **kwargs):
 	wcs = Sip(sipfn, ext)
 	if wcs is None:
 		raise RuntimeError('Failed to open WCS file %s' % sipfn)
 
-	plotDistortion(wcs, wcs.get_width(), wcs.get_height(), ncells,
-				   exaggerate)
+	plotDistortion(wcs, wcs.get_width(), wcs.get_height(), ncells, **kwargs)
+
 
 
 if __name__ == '__main__':

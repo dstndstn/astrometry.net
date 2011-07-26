@@ -269,6 +269,8 @@ void log_set_level(int lvl);
 
 	~sip_t() { free($self); }
 
+	double pixel_scale() { return sip_pixel_scale($self); }
+
 	int write_to(const char* filename) {
 		return sip_write_to_file($self, filename);
 	}
