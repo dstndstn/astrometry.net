@@ -6,7 +6,8 @@ if __name__ == '__main__':
 import pylab as plt
 import numpy as np
 from math import sqrt, floor, ceil
-from astrometry.util.sip import *
+#from astrometry.util.sip import *
+from astrometry.util.util import Sip
 from optparse import OptionParser
 
 def plotDistortion(sip, W, H, ncells, exaggerate=1., doclf=True):
@@ -75,7 +76,6 @@ def plotDistortionFile(sipfn, ext, ncells, **kwargs):
 	wcs = Sip(sipfn, ext)
 	if wcs is None:
 		raise RuntimeError('Failed to open WCS file %s' % sipfn)
-
 	plotDistortion(wcs, wcs.get_width(), wcs.get_height(), ncells, **kwargs)
 
 

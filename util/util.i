@@ -334,6 +334,15 @@ void log_set_level(int lvl);
 		return $self->bp[i][j];
 	}
 
+	double get_width() {
+		return $self->wcstan.imagew;
+	}
+	double get_height() {
+		return $self->wcstan.imageh;
+	}
+	void get_distortion(double x, double y, double *p_x, double *p_y) {
+		return sip_pixel_distortion($self, x, y, p_x, p_y);
+	}
 
 	int write_to(const char* filename) {
 		return sip_write_to_file($self, filename);
