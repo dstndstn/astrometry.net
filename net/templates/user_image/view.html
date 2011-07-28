@@ -161,8 +161,9 @@ $(document).ready(function() {
         radius: {{ calib.format_radius }}<br />
         <a href="{% url astrometry.net.views.image.wcs_file jobid=job.id %}">wcs.fits</a><br />
         {% if job.user_image.image.disk_file.is_fits_image %}
-        <a href="{% url astrometry.net.views.image.new_fits_file jobid=job.id %}">new-image.fits</a><br /><br />
+        <a href="{% url astrometry.net.views.image.new_fits_file jobid=job.id %}">new-image.fits</a><br />
         {% endif %}
+        <br />
 
         <div id="on_the_sky">
             <img src="{% url astrometry.net.views.image.onthesky_image zoom=0 calid=job.calibration.id %}" /><br />

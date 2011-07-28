@@ -318,11 +318,11 @@ class SourceList(Image):
     
     def render(self, f):
         fits = self.get_fits_table()
-        w = fits.x.max()-fits.x.min()
-        h = fits.y.max()-fits.y.min()
+        w = int(fits.x.max()-fits.x.min())
+        h = int(fits.y.max()-fits.y.min())
         scale = float(self.width)/w
-        xmin = fits.x.min()
-        ymin = fits.y.min()
+        xmin = int(fits.x.min())
+        ymin = int(fits.y.min())
         
         img = PIL.Image.new('RGB',(self.width,self.height))
         draw = PIL.ImageDraw.Draw(img)
@@ -478,6 +478,9 @@ class Job(models.Model):
     def get_dir(self):
         return os.path.join(JOBDIR, '%08i' % self.id)
 
+    def get_axy_file(self):
+        return os.path.join(self.get_dir(), 'job.axy')
+        
     def get_wcs_file(self):
         return os.path.join(self.get_dir(), 'wcs.fits')
 

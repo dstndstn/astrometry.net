@@ -86,7 +86,12 @@ $(document).ready(function() {
                 {{ form.location }}
             </div>
             <br />
-            {{ form.calibrated_only }} <label for="id_calibrated_only">Show only calibrated images</label><br />
+            Show: {{ form.show }} 
+                {{ form.calibrated }}<label for="id_calibrated">calibrated</label>&nbsp;&nbsp;
+                {{ form.processing }}<label for="id_processing">processing</label>&nbsp;&nbsp;
+                {{ form.failed }}<label for="id_failed">failed</label>&nbsp;&nbsp;
+
+            <br />
             <input type="submit" value="Search" />
         </div>
         </form>

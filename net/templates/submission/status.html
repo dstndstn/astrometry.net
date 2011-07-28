@@ -56,9 +56,9 @@ $(document).ready(function() {
         $(this).next('.log_tail').stop(true, true).slideToggle();
         e.preventDefault();
     }).toggle(function() {
-        $(this).children('span').text("[-]");
-    }, function() {
         $(this).children('span').text("[+]");
+    }, function() {
+        $(this).children('span').text("[-]");
     });
 });
 </script>
@@ -173,7 +173,9 @@ Submission {{ sub.id }}
     {% for job in image.jobs.all %}
     Job {{ job.id }}: {% include "job/status.html" with job=job %}<br />
 
-    <a href="" class="log_tail_link">Log File Tail <span>[-]</span><br /></a>
+    <a href="{% url astrometry.net.views.image.extraction_image job_id=job.id size='display' %}">Source extraction image</a> 
+    <a href="{% url astrometry.net.views.image.extraction_image job_id=job.id size='full' %}">(fullsize)</a><br />
+    <a href="" class="log_tail_link">Log file tail <span>[-]</span><br /></a>
     <div class="log_tail">
 	<a href={% url astrometry.net.views.submission.job_log_file jobid=job.id %}>(full)</a><br />
 <pre>{{ job.get_log_tail }}</pre>

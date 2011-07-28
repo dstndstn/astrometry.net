@@ -19,6 +19,7 @@ from astrometry.net.log import *
 from astrometry.net.tmpfile import *
 from sdss_image import plot_sdss_image
 
+from astrometry.blind.plotstuff import *
 from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 from astrometry.util.file import *
@@ -133,7 +134,7 @@ def annotated_image(req, jobid=None, size='full'):
     if rtn:
         logmsg('out: ' + out)
         logmsg('err: ' + err)
-        return HttpResponse('plot failed')
+        return HttpResponse('plot failed' + err)
     f = open(annfn)
     res = HttpResponse(f)
     res['Content-type'] = 'image/png'
@@ -242,6 +243,90 @@ def red_green_plot(req, calid=None, size='full'):
     else:
         logmsg('Cache hit for key "%s"' % key)
     f = open(df.get_path())
+    res = HttpResponse(f)
+    res['Content-type'] = 'image/png'
+    return res
+
+def extraction_image(req, job_id=None, size='full'):
+    job = get_object_or_404(Job, pk=job_id)
+    ui = job.user_image
+    img = ui.image
+    if size == 'display':
+        scale = float(img.get_display_image().width)/img.width
+        img = img.get_display_image()
+    else:
+        scale = 1.0
+        
+    if hasattr(img, 'sourcelist'):
+        imgfn = get_temp_file()
+        f = open(imgfn,'wb')
+        img.render(f)
+        f.close()
+    else:
+        df = img.disk_file
+        imgfn = df.get_path()
+    axyfn = job.get_axy_file()
+    exfn = get_temp_file()
+
+    pnmfn = get_temp_file()
+    (filetype, errstr) = image2pnm.image2pnm(imgfn, pnmfn)
+    if errstr:
+        logmsg('Error converting image file %s: %s' % (imgfn, errstr))
+        return HttpResponse('plot failed')
+
+    try:
+        plot = Plotstuff()
+        plot.size = [img.width, img.height]
+        plot.outformat = PLOTSTUFF_FORMAT_PNG
+        plot.outfn = exfn
+
+        # plot image
+        img = plot.image
+        img.set_file(str(pnmfn))
+        img.format = PLOTSTUFF_FORMAT_PPM
+        plot.plot('image')
+
+        # plot sources
+        xy = plot.xy
+        plot_xy_set_filename(xy, str(axyfn))
+        xy.scale = scale
+        plot.color = 'red'
+        # plot 50 brightest
+        xy.firstobj = 0
+        xy.nobjs = 50
+        plot.lw = 2.
+        plot.markersize = 6
+        plot.plot('xy')
+        # plot 200 other next brightest sources
+        xy.firstobj = 50
+        xy.nobjs = 250
+        plot.alpha = 0.9
+        plot.lw = 1.
+        plot.markersize = 4
+        plot.plot('xy')
+        # plot 250 other next brightest sources
+        xy.firstobj = 250
+        xy.nobjs = 500
+        plot.alpha = 0.5
+        plot.lw = 1.
+        plot.markersize = 3
+        plot.plot('xy')
+        plot.write()
+    except:
+        return HttpResponse("plot failed") 
+
+    '''
+    exfn = get_temp_file()
+    cmd = 'plotxy -i %s -I %s -o %s -S %s -w 2 -C red -r 4 -X x -Y y' % (axyfn, pnmfn, exfn, str(scale))
+    logmsg('Running: ' + cmd)
+    (rtn, out, err) = run_command(cmd)
+    if rtn:
+        logmsg('out: ' + out)
+        logmsg('err: ' + err)
+        print err
+        return HttpResponse('plot failed')
+    '''
+    f = open(exfn)
     res = HttpResponse(f)
     res['Content-type'] = 'image/png'
     return res
@@ -372,10 +457,12 @@ class ImageSearchForm(forms.Form):
                                         choices=SEARCH_CATEGORIES,
                                         initial='tag',
                                         required=False)
-
     tags = forms.CharField(required=False)
     user = forms.CharField(required=False)
-    calibrated_only = forms.BooleanField(initial=False,required=False)
+
+    calibrated = forms.BooleanField(initial=True, required=False)
+    processing = forms.BooleanField(initial=False, required=False)
+    failed = forms.BooleanField(initial=False, required=False)
     
     def clean(self):
         category = self.cleaned_data.get('search_category');
@@ -397,10 +484,14 @@ def hide(req, user_image_id):
     return redirect('astrometry.net.views.image.user_image', user_image_id)
     
 def search(req):
-    form = ImageSearchForm(req.GET)
-
+    if req.GET:
+        form = ImageSearchForm(req.GET)
+    else:
+        form = ImageSearchForm()
+    
     context = {}
     page = None
+    category = 'tag'
     if form.is_valid(): 
         all_images = UserImage.objects.all()
         images = all_images
@@ -429,14 +520,17 @@ def search(req):
                 else:
                     context['display_users'] = User.objects.filter(profile__display_name__startswith=username)[:5]
         
-        calibrated_only = form.cleaned_data.get('calibrated_only')
-        if calibrated_only:
-            images = images.filter(jobs__calibration__isnull=False)
+        if form.cleaned_data.get('calibrated') is False:
+            images = images.exclude(jobs__status='S')
+        if form.cleaned_data.get('processing') is False:
+            images = images.exclude(jobs__status__isnull=True)
+        if form.cleaned_data.get('failed') is False:
+            images = images.exclude(jobs__status='F')
         page_number = req.GET.get('page',1)
         page = get_page(images.order_by('-submission__submitted_on'),4*5,page_number)
 
     context.update({'form': form,
-                    'search_category': form.cleaned_data.get('search_category'),
+                    'search_category': category,
                     'image_page': page})
     return render_to_response('user_image/search.html',
         context,
