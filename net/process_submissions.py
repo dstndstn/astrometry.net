@@ -151,11 +151,14 @@ def try_dojob(job, userimage):
         print 'Caught exception while processing Job', job
         traceback.print_exc(None, sys.stdout)
         # FIXME -- job.set_status()...
+        job.set_end_time()
+        job.status = 'F'
+        job.save()
         log.msg('Caught exception while processing Job', job.id)
         log.msg(traceback.format_exc(None))
 
 def dojob(job, userimage, log=None):
-    jobdir = job.make_dir()
+    jobdir = job.get_dir()
     if log is None:
         log = create_job_logger(job)
     log.msg('Starting Job processing for', job)
@@ -227,7 +230,7 @@ def dojob(job, userimage, log=None):
         log.msg('out: ' + out)
         log.msg('err: ' + err)
         logmsg('augment-xylist failed: rtn val', rtn, 'err', err)
-        return False
+        raise Exception
 
     log.msg('created axy file', axypath)
     # shell into compute server...
@@ -248,12 +251,12 @@ def dojob(job, userimage, log=None):
     if not os.WIFEXITED(w):
         log.msg('Solver failed (sent signal?)')
         logmsg('Call to solver failed for job', job.id)
-        return
+        raise Exception
     rtn = os.WEXITSTATUS(w)
     if rtn:
         log.msg('Solver failed with return value %i' % rtn)
         logmsg('Call to solver failed for job', job.id, 'with return val', rtn)
-        return
+        raise Exception
 
     log.msg('Solver completed successfully.')
     
@@ -357,7 +360,7 @@ def dosub(sub):
 
                 #os.remove(tempfn)
         tar.close()
-        os.removedirs(dirnm)
+        shutil.rmtree(dirnm, ignore_errors=True)
     else:
         original_filename = sub.original_filename
         # check if file is a gzipped file

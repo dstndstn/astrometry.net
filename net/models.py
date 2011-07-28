@@ -515,6 +515,8 @@ class Job(models.Model):
 
     def make_dir(self):
         dirnm = self.get_dir()
+        # remove any previous contents
+        shutil.rmtree(dirnm, ignore_errors=True)
         if not os.path.exists(dirnm):
             os.makedirs(dirnm)
         return dirnm
