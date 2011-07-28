@@ -488,13 +488,20 @@ def search(req):
         form = ImageSearchForm(req.GET)
     else:
         form = ImageSearchForm()
-    
+
     context = {}
-    page = None
+    images = UserImage.objects.all()
+    page_number = req.GET.get('page',1)
     category = 'tag'
+    calibrated = True
+    processing = False
+    failed = False
+
     if form.is_valid(): 
-        all_images = UserImage.objects.all()
-        images = all_images
+        calibrated = form.cleaned_data.get('calibrated')
+        processing = form.cleaned_data.get('processing')
+        failed = form.cleaned_data.get('failed')
+
         category = form.cleaned_data.get('search_category');
         if category == 'tag':
             tags = form.cleaned_data.get('tags','')
@@ -520,15 +527,15 @@ def search(req):
                 else:
                     context['display_users'] = User.objects.filter(profile__display_name__startswith=username)[:5]
         
-        if form.cleaned_data.get('calibrated') is False:
-            images = images.exclude(jobs__status='S')
-        if form.cleaned_data.get('processing') is False:
-            images = images.exclude(jobs__status__isnull=True)
-        if form.cleaned_data.get('failed') is False:
-            images = images.exclude(jobs__status='F')
-        page_number = req.GET.get('page',1)
-        page = get_page(images.order_by('-submission__submitted_on'),4*5,page_number)
 
+    if calibrated is False:
+        images = images.exclude(jobs__status='S')
+    if processing is False:
+        images = images.exclude(jobs__status__isnull=True)
+    if failed is False:
+        images = images.exclude(jobs__status='F')
+
+    page = get_page(images, 4*5, page_number)
     context.update({'form': form,
                     'search_category': category,
                     'image_page': page})
