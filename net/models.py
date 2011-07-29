@@ -20,6 +20,7 @@ from log import *
 from astrometry.util.filetype import filetype_short
 from astrometry.util.run_command import run_command
 from astrometry.util.pyfits_utils import *
+from astrometry.util import util as anutil
 from astrometry.net.tmpfile import *
 
 import PIL.Image, PIL.ImageDraw
@@ -361,6 +362,8 @@ class Calibration(models.Model):
     ramax  = models.FloatField()
     decmin = models.FloatField()
     decmax = models.FloatField()
+    
+    sky_location = models.ForeignKey('SkyLocation', related_name='calibrations', null=True)
 
     def __str__(self):
         s = 'Calibration %i' % self.id
@@ -534,6 +537,48 @@ class Job(models.Model):
                 else:
                     blurb = '?'
         return blurb
+
+
+class SkyLocation(models.Model):
+    nside = models.PositiveSmallIntegerField()
+    healpix = models.BigIntegerField()
+
+    # Reverse mappings:
+    #  calibrations -> Calibration
+
+    def __str__(self):
+        s = '<SkyLocation: nside(%i) healpix(%i)>' % (self.nside, self.healpix)
+        return s
+    
+    def get_user_images(self, nside=None, healpix=None):
+        # NOTE: this returns a queryset
+        if nside is None or healpix is None:
+            nside = self.nside
+            healpix = self.healpix
+        user_images = UserImage.objects.all()
+        user_images = user_images.filter(jobs__calibration__sky_location__nside=nside)
+        user_images = user_images.filter(jobs__calibration__sky_location__healpix=healpix)
+        return user_images
+        
+    def get_neighbouring_user_images(self):
+        user_images = self.get_user_images()
+        # add neighbors at current scale
+        neighbours = anutil.healpix_get_neighbours(self.healpix, self.nside)
+        for hp in neighbours:
+            user_images |= self.get_user_images(self.nside, hp)
+
+        # next bigger scale
+        user_images |= self.get_user_images(self.nside-1, self.healpix/4)
+
+        # next smaller scale
+        neighbours = set()
+        for i in range(4):
+            n = anutil.healpix_get_neighbours(self.healpix*4+i, self.nside+1)
+            neighbours.update(n)
+        for hp in neighbours:
+            user_images |= self.get_user_images(self.nside+1, hp)
+        
+        return user_images
 
 class TaggedUserImage(models.Model):
     user_image = models.ForeignKey('UserImage')

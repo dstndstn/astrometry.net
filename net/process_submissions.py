@@ -24,6 +24,7 @@ import re
 import tarfile
 import gzip
 import zipfile
+import math
 
 import logging
 #logging.basicConfig(format='%(message)s',
@@ -34,6 +35,7 @@ from astrometry.util.filetype import filetype_short
 from astrometry.util.run_command import run_command
 
 from astrometry.util.util import Tan
+from astrometry.util import util as anutil
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 #import astrometry.net.settings as settings
@@ -275,9 +277,19 @@ def dojob(job, userimage, log=None):
                      imagew=img.width, imageh=img.height)
         tan.save()
         log.msg('Created TanWCS:', tan)
+
+        # Find field's healpix nside and index
+        ra, dec, radius = tan.get_center_radecradius()
+        nside = anutil.healpix_nside_for_side_length_arcmin(radius*60)
+        nside = int(2**round(math.log(nside, 2)))
+        healpix = anutil.radecdegtohealpix(ra, dec, nside)
+        sky_location, created = SkyLocation.objects.get_or_create(nside=nside, healpix=healpix)
+        log.msg('SkyLocation:', sky_location)
+
         # Find bounds for the Calibration object.
         r0,r1,d0,d1 = wcs.radec_bounds()
-        calib = Calibration(raw_tan=tan, ramin=r0, ramax=r1, decmin=d0, decmax=d1)
+        calib = Calibration(raw_tan=tan, ramin=r0, ramax=r1, decmin=d0, decmax=d1, 
+                            sky_location=sky_location)
         calib.save()
         log.msg('Created Calibration', calib)
         job.calibration = calib
