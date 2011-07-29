@@ -47,6 +47,8 @@ def radec_to_sdss_rcf(ra, dec, spherematch=True, radius=0, tablefn=None, contain
 		xyz = radectoxyz(rds[:,0], rds[:,1]).astype(double)
 		(inds,dists) = spherematch.match(xyz, sdssxyz, sqrt(radius2))
 		print 'found %i matches' % len(inds)
+		if len(inds) == 0:
+			sys.exit(0)
 		#print 'inds:', inds.shape
 		I = argsort(dists[:,0])
 		#print 'dists:', dists.shape
@@ -107,6 +109,7 @@ if __name__ == '__main__':
 	parser.add_option('-c', dest='contains', action='store_true', help='Print only fields that *contain* the given point; requires RAMIN,RAMAX,DECMIN,DECMAX fields.')
 	parser.add_option('-b', '--bands', dest='bands', help='Retrieve fpCs of the given bands; default "ugriz"')
 	parser.add_option('-t', dest='filetypes', help='Retrieve this file type (fpC, fpM, psField, tsField, tsObj, etc)', action='append', default=['fpC'])
+	parser.add_option('-r', dest='radius', type=float, default=15., help='Search radius (arcmin)')
 	parser.set_defaults(fields=None, contains=False, bands='ugriz')
 
 	(opt, args) = parser.parse_args()
@@ -137,7 +140,7 @@ if __name__ == '__main__':
 			sys.exit(-1)
 	
 	# arcmin
-	radius = 15.
+	radius = opt.radius
 	rcfs = radec_to_sdss_rcf(ra,dec,radius=radius, tablefn=tablefn, contains=opt.contains)
 	print 'ra,dec', ra,dec
 	print 'rcfs:', rcfs
