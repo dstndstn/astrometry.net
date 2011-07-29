@@ -30,6 +30,12 @@ Add some things to your LD_LIBRARY_PATH:
 And to your PATH:
   /usr/local/netpbm/bin
 
+And also add NETPBM config settings, eg:
+
+export NETPBM_INC="-I/usr/local/netpbm/include"
+export NETPBM_LIB="-L/usr/local/netpbm/lib -lnetpbm"
+
+
 You will also need to build the Astrometry.net tools:
   (cd ..; make; make extra; make py)
 

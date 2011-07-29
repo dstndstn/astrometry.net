@@ -33,7 +33,7 @@ def sdss_filename(filetype, run, camcol, field, band=None, rerun=0):
 	format = ftmap.get(filetype, None)
 	if format is None:
 		return None
-	print 'format', format, 'x', x
+	#print 'format', format, 'x', x
 	return format % x
 
 def sdss_path(filetype, run, camcol, field, band=None, rerun=None):

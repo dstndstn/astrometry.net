@@ -106,6 +106,7 @@ if __name__ == '__main__':
 	parser.add_option('-f', dest='fields', help='FITS table of fields to use; default is astrometry/data/dr7fields.fits')
 	parser.add_option('-c', dest='contains', action='store_true', help='Print only fields that *contain* the given point; requires RAMIN,RAMAX,DECMIN,DECMAX fields.')
 	parser.add_option('-b', '--bands', dest='bands', help='Retrieve fpCs of the given bands; default "ugriz"')
+	parser.add_option('-t', dest='filetypes', help='Retrieve this file type (fpC, fpM, psField, tsField, tsObj, etc)', action='append', default=['fpC'])
 	parser.set_defaults(fields=None, contains=False, bands='ugriz')
 
 	(opt, args) = parser.parse_args()
@@ -154,17 +155,21 @@ if __name__ == '__main__':
 
 	from sdss_das import *
 	for (r,c,f,ra1,dec1) in rcfs:
-		for b in opt.bands:
-			sdss_das_get('fpC', None, r, c, f, b)
-			fpc = sdss_filename('fpC', r, c, f, b)
-			os.system('gunzip -cd %s.gz > %s' % (fpc,fpc))
-			wcs = Tan(filename=fpc)
-			x,y = wcs.radec2pixelxy(ra, dec)
-			x,y = int(x),int(y)
-			os.system('imcopy %s"[%i:%i,%i:%i]" !/tmp/cut-%s' % (fpc, max(0, x-100), x+100, max(0, y-100), y+100, fpc))
-			os.system('an-fitstopnm -i /tmp/cut-%s -N 1150 -X 1400 | pnmtopng > cut-%s.png' % (fpc, fpc))
-			print 'R,C,F', r,c,f
-			print 'x,y', x,y
+		for t in opt.filetypes:
+			for b in opt.bands:
+				R = sdss_das_get(t, None, r, c, f, b)
+				if R is False:
+					continue
+				if t == 'fpC':
+					fpc = sdss_filename('fpC', r, c, f, b)
+					os.system('gunzip -cd %s.gz > %s' % (fpc,fpc))
+					wcs = Tan(filename=fpc)
+					x,y = wcs.radec2pixelxy(ra, dec)
+					x,y = int(x),int(y)
+					os.system('imcopy %s"[%i:%i,%i:%i]" !/tmp/cut-%s' % (fpc, max(0, x-100), x+100, max(0, y-100), y+100, fpc))
+					os.system('an-fitstopnm -i /tmp/cut-%s -N 1150 -X 1400 | pnmtopng > cut-%s.png' % (fpc, fpc))
+					print 'R,C,F', r,c,f
+					print 'x,y', x,y
 			
 	#from sdss_das import *
 	#for (r,c,f,ra,dec) in rcfs:

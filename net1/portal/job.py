@@ -856,7 +856,7 @@ class Job(models.Model):
 		jobid = '%s-%i%02i-%08i' % (settings.SITE_NAME, today.year,
 									today.month, random.randint(0, 99999999))
 		#log('Chose jobid', jobid)
-		return jobid
+ return jobid
 
 	@staticmethod
 	def submit_job_or_submission(j):
