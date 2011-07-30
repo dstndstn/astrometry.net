@@ -529,7 +529,9 @@ def hide(req, user_image_id):
     return redirect('astrometry.net.views.image.user_image', user_image_id)
     
 def search(req):
-    if req.GET:
+    if req.GET and (req.GET.get('calibrated')
+                    or req.GET.get('processing')
+                    or req.GET.get('failed')):
         form = ImageSearchForm(req.GET)
     else:
         form = ImageSearchForm()
@@ -556,7 +558,7 @@ def search(req):
                 tags = map(strip,tags.split(','))
                 tags = list(set(tags)) # remove duplicate tags
                 
-                images = all_images.filter(tags__text__in=tags).distinct()
+                images = UserImage.objects.all().filter(tags__text__in=tags).distinct()
                 tag_objs = Tag.objects.filter(text__in=tags)
                 context['tags'] = tag_objs
 

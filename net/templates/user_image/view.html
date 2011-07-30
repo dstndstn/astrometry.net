@@ -57,7 +57,6 @@ div#edit_license {
     width: 100%;
 }
 #calibration_table td {
-    padding-right: 10px;
 }
 </style>
 {% endblock %}
@@ -184,7 +183,7 @@ $(document).ready(function() {
         </tr>
         {% endif %}
         <tr>
-            <td>Google Sky KMZ:</td>
+            <td>KMZ (Google Sky):</td>
             <td><a href="{% url astrometry.net.views.image.kml_file jobid=job.id %}">image.kmz</a></td>
         </tr>
         </table>
