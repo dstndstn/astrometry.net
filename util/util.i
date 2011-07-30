@@ -77,7 +77,7 @@ void log_set_level(int lvl);
 		int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
 		double *img, *weight, *outimg, *outweight;
 		weight = NULL;
-
+        outweight = NULL;
 		lanczos.order = order;
 
 		np_img = PyArray_FromAny(np_img, dtype, 2, 2, req, NULL);
@@ -102,9 +102,7 @@ void log_set_level(int lvl);
 		W = PyArray_DIM(np_img, 1);
 
 		if ((PyArray_DIM(np_outimg, 0) != H) ||
-			(PyArray_DIM(np_outimg, 1) != W) ||
-			(PyArray_DIM(np_outweight, 0) != H) ||
-			(PyArray_DIM(np_outweight, 1) != W)) {
+			(PyArray_DIM(np_outimg, 1) != W)) {
 			ERR("All images must have the same dimensions.");
 			return -1;
 		}
@@ -116,10 +114,17 @@ void log_set_level(int lvl);
 			}
 			weight    = PyArray_DATA(np_weight);
 		}
+		if (np_outweight != Py_None) {
+			if ((PyArray_DIM(np_outweight, 0) != H) ||
+				(PyArray_DIM(np_outweight, 1) != W)) {
+				ERR("All images must have the same dimensions.");
+				return -1;
+			}
+			outweight = PyArray_DATA(np_outweight);
+	    }
 
 		img       = PyArray_DATA(np_img);
 		outimg    = PyArray_DATA(np_outimg);
-		outweight = PyArray_DATA(np_outweight);
 
 		for (i=0; i<H; i++) {
 			for (j=0; j<W; j++) {
@@ -129,8 +134,12 @@ void log_set_level(int lvl);
 				py = i + dy;
 				val = lanczos_resample_d(px, py, img, weight, W, H, &wt,
 										 &lanczos);
-				outimg[i*W + j] = val;
-				outweight[i*W + j] = wt;
+				if (outweight) {
+				    outimg[i*W + j] = val;
+				    outweight[i*W + j] = wt;
+				} else {
+				    outimg[i*W + j] = val / wt;
+				}
 			}
 		}
 
@@ -148,13 +157,11 @@ def lanczos_shift_image(img, dx, dy, order=3, weight=None,
         assert(img.shape == weight.shape)
     if outimg is None:
         outimg = np.zeros_like(img)
+    if outweight is not None:
+		assert(outweight.shape == img.shape)
+
+    lanczos_shift_image_c(img, weight, outimg, outweight, order, dx, dy)
     if outweight is None:
-        w = np.zeros_like(img)
-    else:
-        w = outweight
-    lanczos_shift_image_c(img, weight, outimg, w, order, dx, dy)
-    if outweight is None:
-        outimg /= w
         return outimg
     return outimg,outweight
 	%}
