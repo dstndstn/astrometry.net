@@ -167,7 +167,7 @@ ngc2000entries.c: parse-ngc2000.awk $(DATA)/ngc2000.dat
 ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
 	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate.awk > $@
 
-resample: resample.o \
+resample: resample-main.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB)
 ALL_OBJ += resampe.o

@@ -22,6 +22,7 @@
 #include "codekd.h"
 #include "starkd.h"
 #include "starutil.h"
+#include "coadd.h"
 	//#include "qidxfile.h"
 
 #define true 1
@@ -55,6 +56,50 @@ static void checkorder(int i, int j) {
 void log_init(int level);
 int log_get_level();
 void log_set_level(int lvl);
+
+%include "coadd.h"
+
+%inline %{
+#define ERR(x, ...)								\
+	printf(x, ## __VA_ARGS__)
+
+	static int lanczos_shift_image(PyObject* np_img, PyObject* np_weight,
+								   PyObject* np_outimg, PyObject* np_outweight,
+								   double dx, double dy) {
+		int W,H;
+
+		PyArray_Descr* dtype = PyArray_DescrFromType(PyArray_DOUBLE);
+		int req = NPY_C_CONTIGUOUS | NPY_ALIGNED;
+		int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
+
+		np_img = PyArray_FromAny(np_pos, dtype, 2, 2, req, NULL);
+		np_weight = PyArray_FromAny(np_weight, dtype, 2, 2, req, NULL);
+		// FIXME -- does this work?  How do we return the new arrays?
+		np_outimg = PyArray_FromAny(np_outimg, dtype, 1, 1, reqout, NULL);
+		np_outweight = PyArray_FromAny(np_outimg, dtype, 1, 1, reqout, NULL);
+
+		H = PyArray_DIM(np_img, 0);
+		W = PyArray_DIM(np_img, 1);
+
+		if ((PyArray_DIM(np_weight, 0) != H) ||
+			(PyArray_DIM(np_weight, 1) != W) ||
+			(PyArray_DIM(np_outimg, 0) != H) ||
+			(PyArray_DIM(np_outimg, 1) != W) ||
+			(PyArray_DIM(np_outweight, 0) != H) ||
+			(PyArray_DIM(np_outweight, 1) != W)) {
+			ERR("All images must have the same dimensions.");
+			return -1;
+		}
+
+		
+
+		return 0;
+	}
+	%}
+
+ /*%pythoncode %{
+	%}
+  */
 
 // for quadfile_get_stars(quadfile* qf, int quadid, unsigned int* stars)
 // --> list of stars
