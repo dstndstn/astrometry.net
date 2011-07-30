@@ -63,9 +63,10 @@ void log_set_level(int lvl);
 #define ERR(x, ...)								\
 	printf(x, ## __VA_ARGS__)
 
-	static int lanczos_shift_image(PyObject* np_img, PyObject* np_weight,
-								   PyObject* np_outimg, PyObject* np_outweight,
-								   int order, double dx, double dy) {
+	static int lanczos_shift_image_c(PyObject* np_img, PyObject* np_weight,
+									 PyObject* np_outimg,
+									 PyObject* np_outweight,
+									 int order, double dx, double dy) {
 		int W,H;
 		int i,j;
 
@@ -75,19 +76,24 @@ void log_set_level(int lvl);
 		int req = NPY_C_CONTIGUOUS | NPY_ALIGNED;
 		int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
 		double *img, *weight, *outimg, *outweight;
+		weight = NULL;
 
 		lanczos.order = order;
 
 		np_img = PyArray_FromAny(np_img, dtype, 2, 2, req, NULL);
-		np_weight = PyArray_FromAny(np_weight, dtype, 2, 2, req, NULL);
-
-		// FIXME -- does this work?  How do we return the new arrays?
+		if (np_weight != Py_None) {
+			np_weight = PyArray_FromAny(np_weight, dtype, 2, 2, req, NULL);
+			if (!np_weight) {
+				ERR("Failed to run PyArray_FromAny on weight image");
+				return -1;
+			}
+		}
 		/*
 		 np_outimg = PyArray_FromAny(np_outimg, dtype, 2, 2, reqout, NULL);
 		 np_outweight = PyArray_FromAny(np_outimg, dtype, 2, 2, reqout, NULL);
 		 */
 
-		if (!np_img || !np_weight || !np_outimg || !np_outweight) {
+		if (!np_img || !np_outimg || !np_outweight) {
 			ERR("Failed to PyArray_FromAny the images");
 			return -1;
 		}
@@ -95,18 +101,23 @@ void log_set_level(int lvl);
 		H = PyArray_DIM(np_img, 0);
 		W = PyArray_DIM(np_img, 1);
 
-		if ((PyArray_DIM(np_weight, 0) != H) ||
-			(PyArray_DIM(np_weight, 1) != W) ||
-			(PyArray_DIM(np_outimg, 0) != H) ||
+		if ((PyArray_DIM(np_outimg, 0) != H) ||
 			(PyArray_DIM(np_outimg, 1) != W) ||
 			(PyArray_DIM(np_outweight, 0) != H) ||
 			(PyArray_DIM(np_outweight, 1) != W)) {
 			ERR("All images must have the same dimensions.");
 			return -1;
 		}
+		if (np_weight != Py_None) {
+			if ((PyArray_DIM(np_weight, 0) != H) ||
+				(PyArray_DIM(np_weight, 1) != W)) {
+				ERR("All images must have the same dimensions.");
+				return -1;
+			}
+			weight    = PyArray_DATA(np_weight);
+		}
 
 		img       = PyArray_DATA(np_img);
-		weight    = PyArray_DATA(np_weight);
 		outimg    = PyArray_DATA(np_outimg);
 		outweight = PyArray_DATA(np_outweight);
 
@@ -127,9 +138,26 @@ void log_set_level(int lvl);
 	}
 	%}
 
- /*%pythoncode %{
+%pythoncode %{
+
+def lanczos_shift_image(img, dx, dy, order=3, weight=None,
+						outimg=None, outweight=None):
+    img = img.astype(float)
+    if weight is not None:
+        weight = weight.astype(float)
+        assert(img.shape == weight.shape)
+    if outimg is None:
+        outimg = np.zeros_like(img)
+    if outweight is None:
+        w = np.zeros_like(img)
+    else:
+        w = outweight
+    lanczos_shift_image_c(img, weight, outimg, w, order, dx, dy)
+    if outweight is None:
+        outimg /= w
+        return outimg
+    return outimg,outweight
 	%}
-  */
 
 // for quadfile_get_stars(quadfile* qf, int quadid, unsigned int* stars)
 // --> list of stars
