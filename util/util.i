@@ -63,6 +63,45 @@ void log_set_level(int lvl);
 #define ERR(x, ...)								\
 	printf(x, ## __VA_ARGS__)
 
+	static void print_array(PyObject* arr) {
+		PyArrayObject *obj;
+		int i;
+		PyArray_Descr *desc;
+	    printf("Array: %p\n", arr);
+		if (!arr) return;
+		if (!PyArray_Check(arr)) {
+		    printf("  Not a Numpy Array\n");
+			if (arr == Py_None)
+				printf("  is None\n");
+			return;
+		}
+		printf("  Contiguous: %s\n",
+			   PyArray_ISCONTIGUOUS(arr) ? "yes" : "no");
+		printf("  Writeable: %s\n",
+			   PyArray_ISWRITEABLE(arr) ? "yes" : "no");
+		printf("  Aligned: %s\n",
+			   PyArray_ISALIGNED(arr) ? "yes" : "no");
+		printf("  C array: %s\n",
+			   PyArray_ISCARRAY(arr) ? "yes" : "no");
+
+		//printf("  typeobj: %p (float is %p)\n", arr->typeobj,
+		//&PyFloat_Type);
+
+		obj = (PyArrayObject*)arr;
+
+		printf("  data: %p\n", obj->data);
+		printf("  N dims: %i\n", obj->nd);
+		for (i=0; i<obj->nd; i++)
+			printf("  dim %i: %i\n", i, (int)obj->dimensions[i]);
+		for (i=0; i<obj->nd; i++)
+			printf("  stride %i: %i\n", i, (int)obj->strides[i]);
+		desc = obj->descr;
+		printf("  descr kind: '%c'\n", desc->kind);
+		printf("  descr type: '%c'\n", desc->type);
+		printf("  descr byteorder: '%c'\n", desc->byteorder);
+		printf("  descr elsize: %i\n", desc->elsize);
+	}
+
 	static int lanczos_shift_image_c(PyObject* np_img, PyObject* np_weight,
 									 PyObject* np_outimg,
 									 PyObject* np_outweight,
@@ -73,28 +112,44 @@ void log_set_level(int lvl);
 		lanczos_args_t lanczos;
 
 		PyArray_Descr* dtype = PyArray_DescrFromType(PyArray_DOUBLE);
-		int req = NPY_C_CONTIGUOUS | NPY_ALIGNED;
+		// in numpy v2.0 these constants have a NPY_ARRAY_ prefix
+		int req = NPY_C_CONTIGUOUS | NPY_ALIGNED |
+			   NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
 		int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
 		double *img, *weight, *outimg, *outweight;
 		weight = NULL;
         outweight = NULL;
 		lanczos.order = order;
 
-		np_img = PyArray_FromAny(np_img, dtype, 2, 2, req, NULL);
+		/*
+		 printf("np_img:\n");
+		 print_array(np_img);
+		 printf("np_weight:\n");
+		 print_array(np_weight);
+		 printf("np_outimg:\n");
+		 print_array(np_outimg);
+		 printf("np_outweight:\n");
+		 print_array(np_outweight);
+		 */
+
+		np_img = PyArray_CheckFromAny(np_img, dtype, 2, 2, req, NULL);
 		if (np_weight != Py_None) {
-			np_weight = PyArray_FromAny(np_weight, dtype, 2, 2, req, NULL);
+			np_weight = PyArray_CheckFromAny(np_weight, dtype, 2, 2, req, NULL);
 			if (!np_weight) {
-				ERR("Failed to run PyArray_FromAny on weight image");
+				ERR("Failed to run PyArray_FromAny on np_weight\n");
 				return -1;
 			}
 		}
-		/*
-		 np_outimg = PyArray_FromAny(np_outimg, dtype, 2, 2, reqout, NULL);
-		 np_outweight = PyArray_FromAny(np_outimg, dtype, 2, 2, reqout, NULL);
-		 */
+		np_outimg = PyArray_CheckFromAny(np_outimg, dtype, 2, 2, reqout, NULL);
+		//printf("np_outweight = %p (None=%p)\n", np_outweight, Py_None);
+		if (np_outweight != Py_None) {
+			np_outweight = PyArray_CheckFromAny(np_outweight, dtype, 2, 2, reqout, NULL);
+			//printf("np_outweight = %p\n", np_outweight);
+		}
 
 		if (!np_img || !np_outimg || !np_outweight) {
-			ERR("Failed to PyArray_FromAny the images");
+			ERR("Failed to PyArray_FromAny the images (np_img=%p, np_outimg=%p, np_outweight=%p)\n",
+				np_img, np_outimg, np_outweight);
 			return -1;
 		}
 
@@ -103,13 +158,13 @@ void log_set_level(int lvl);
 
 		if ((PyArray_DIM(np_outimg, 0) != H) ||
 			(PyArray_DIM(np_outimg, 1) != W)) {
-			ERR("All images must have the same dimensions.");
+			ERR("All images must have the same dimensions.\n");
 			return -1;
 		}
 		if (np_weight != Py_None) {
 			if ((PyArray_DIM(np_weight, 0) != H) ||
 				(PyArray_DIM(np_weight, 1) != W)) {
-				ERR("All images must have the same dimensions.");
+				ERR("All images must have the same dimensions.\n");
 				return -1;
 			}
 			weight    = PyArray_DATA(np_weight);
@@ -117,11 +172,24 @@ void log_set_level(int lvl);
 		if (np_outweight != Py_None) {
 			if ((PyArray_DIM(np_outweight, 0) != H) ||
 				(PyArray_DIM(np_outweight, 1) != W)) {
-				ERR("All images must have the same dimensions.");
+				ERR("All images must have the same dimensions.\n");
 				return -1;
 			}
 			outweight = PyArray_DATA(np_outweight);
+			//printf("set outweight = %p\n", outweight);
 	    }
+
+		/*
+		 printf("np_img:\n");
+		 print_array(np_img);
+		 printf("np_weight:\n");
+		 print_array(np_weight);
+		 printf("np_outimg:\n");
+		 print_array(np_outimg);
+		 printf("np_outweight:\n");
+		 print_array(np_outweight);
+		 printf("weight = %p, outweight = %p\n", weight, outweight);
+		 */
 
 		img       = PyArray_DATA(np_img);
 		outimg    = PyArray_DATA(np_outimg);
@@ -130,10 +198,11 @@ void log_set_level(int lvl);
 			for (j=0; j<W; j++) {
 				double wt, val;
 				double px, py;
-				px = j + dx;
-				py = i + dy;
+				px = j - dx;
+				py = i - dy;
 				val = lanczos_resample_d(px, py, img, weight, W, H, &wt,
 										 &lanczos);
+				//printf("pixel %i,%i: wt %g\n", j, i, wt);
 				if (outweight) {
 				    outimg[i*W + j] = val;
 				    outweight[i*W + j] = wt;
@@ -142,6 +211,12 @@ void log_set_level(int lvl);
 				}
 			}
 		}
+
+		// ???
+		Py_XDECREF(np_img);
+		Py_XDECREF(np_weight);
+		Py_XDECREF(np_outweight);
+		Py_XDECREF(np_outimg);
 
 		return 0;
 	}
@@ -159,6 +234,8 @@ def lanczos_shift_image(img, dx, dy, order=3, weight=None,
         outimg = np.zeros_like(img)
     if outweight is not None:
 		assert(outweight.shape == img.shape)
+
+	# print 'outweight:', outweight
 
     lanczos_shift_image_c(img, weight, outimg, outweight, order, dx, dy)
     if outweight is None:

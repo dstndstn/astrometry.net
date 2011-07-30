@@ -69,9 +69,9 @@ class DR7(object):
 		'''
 		f = TsField(run, camcol, field, rerun=rerun)
 		fn = self.getFilename('tsField', run, camcol, field, rerun=rerun)
-		print 'reading file', fn
+		#print 'reading file', fn
 		p = self._open(fn)
-		print 'got', len(p), 'HDUs'
+		#print 'got', len(p), 'HDUs'
 		f.setHdus(p)
 		return f
 
@@ -84,9 +84,9 @@ class DR7(object):
 		f = FpC(run, camcol, field, band)
 		# ...
 		fn = self.getFilename('fpC', run, camcol, field, band)
-		print 'reading file', fn
+		#print 'reading file', fn
 		p = self._open(fn)
-		print 'got', len(p), 'HDUs'
+		#print 'got', len(p), 'HDUs'
 		f.image = p[0].data
 		return f
 
@@ -97,9 +97,9 @@ class DR7(object):
 		f = FpObjc(run, camcol, field)
 		# ...
 		fn = self.getFilename('fpObjc', run, camcol, field)
-		print 'reading file', fn
+		#print 'reading file', fn
 		p = self._open(fn)
-		print 'got', len(p), 'HDUs'
+		#print 'got', len(p), 'HDUs'
 		return f
 
 	def readFpM(self, run, camcol, field, band):
@@ -109,9 +109,9 @@ class DR7(object):
 		f = FpM(run, camcol, field, band)
 		# ...
 		fn = self.getFilename('fpM', run, camcol, field, band)
-		print 'reading file', fn
+		#print 'reading file', fn
 		p = self._open(fn)
-		print 'got', len(p), 'HDUs'
+		#print 'got', len(p), 'HDUs'
 		f.setHdus(p)
 		return f
 
@@ -122,19 +122,22 @@ class DR7(object):
 		f = PsField(run, camcol, field)
 		# ...
 		fn = self.getFilename('psField', run, camcol, field)
-		print 'reading file', fn
+		#print 'reading file', fn
 		p = self._open(fn)
-		print 'got', len(p), 'HDUs'
+		#print 'got', len(p), 'HDUs'
 		f.setHdus(p)
 		return f
 
 	def getInvvar(self, fpC, fpM, gain, darkvar, sky, skyerr,
-				  x0=0, x1=None, y0=0, y1=None):
+				  x0=0, x1=None, y0=0, y1=None, invvar_and_mask=False):
 		'''
 		Produces a (cut-out of) the inverse-variance noise image, from columns
 		[x0,x1] and rows [y0,y1] (inclusive).  Default is the whole image.
 
 		fpC is the image pixels (eg FpC.getImage())
+		#### CHECK THIS -- below we have  (img + sky), but fpCs have *not*
+		had sky subtracted.
+
 		fpM is the FpM
 		gain, darkvar, sky, and skyerr can be retrieved from the psField file.
 		'''
@@ -151,6 +154,12 @@ class DR7(object):
 		# from http://www.sdss.org/dr7/algorithms/fluxcal.html
 		ivarimg = 1./((img + sky) / gain + darkvar + skyerr)
 
+		if invvar_and_mask:
+			mask = np.ones(ivarimg.shape, np.bool)
+			maskimg = mask
+		else:
+			maskimg = ivarimg
+		
 		# Noise model:
 		#  -mask coordinates are wrt fpC coordinates.
 		#  -INTERP, SATUR, CR,
@@ -167,7 +176,10 @@ class DR7(object):
 				(outy,nil) = get_overlapping_region(r0-y0, r1+1-y0, 0, y1-y0)
 				#print 'Mask col [%i, %i], row [%i, %i]' % (c0, c1, r0, r1)
 				#print '  outx', outx, 'outy', outy
-				ivarimg[outy,outx] = 0
+				maskimg[outy,outx] = 0
+
+		if invvar_and_mask:
+			return ivarimg, mask
 		return ivarimg
 
 

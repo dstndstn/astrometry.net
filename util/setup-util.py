@@ -25,8 +25,9 @@ c_swig_module = Extension('_util',
 							  ],
 						  extra_link_args=[os.environ.get('WCSLIB_LIB', ''),
 										   os.environ.get('GSL_LIB', ''),
-										   '-O0 -g'],
-						  extra_compile_args = ['-O0 -g'],
+										   #'-O0 -g'
+										   ],
+						  #extra_compile_args = ['-O0 -g'],
 
 						  )
 
