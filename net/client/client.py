@@ -13,7 +13,7 @@ from email.mime.application  import MIMEApplication
 
 from email.encoders import encode_noop
 
-from astrometry.net.api_util import json2python, python2json
+from api_util import json2python, python2json
 
 class MalformedResponse(Exception):
     pass
@@ -23,7 +23,7 @@ class RequestError(Exception):
 class Client(object):
 
     def __init__(self,
-                 apiurl = 'http://oven.cosmo.fas.nyu.edu:9002/api/'):
+                 apiurl = 'http://nova.astrometry.net/api/'):
         self.session = None
         self.apiurl = apiurl
 
