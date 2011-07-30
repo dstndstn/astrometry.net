@@ -114,14 +114,7 @@ def annotated_image(req, jobid=None, size='full'):
     else:
         scale = 1.0
         
-    if hasattr(img, 'sourcelist'):
-        imgfn = get_temp_file()
-        f = open(imgfn,'wb')
-        img.render(f)
-        f.close()
-    else:
-        df = img.disk_file
-        imgfn = df.get_path()
+    imgfn = img.get_image_path()
     wcsfn = job.get_wcs_file()
     pnmfn = get_temp_file()
     (filetype, errstr) = image2pnm.image2pnm(imgfn, pnmfn)
@@ -224,26 +217,64 @@ def sdss_image(req, calid=None, size='full'):
     res['Content-type'] = 'image/png'
     return res
 
-
-def red_green_plot(req, calid=None, size='full'):
-    cal = get_object_or_404(Calibration, pk=calid)
-    key = 'red_green_size%s_cal%i' % (size, cal.id)
-    df = CachedFile.get(key)
-    if df is None:
-        wcsfn = cal.get_wcs_file()
-        plotfn = get_temp_file()
-        if size == 'display':
-            image = cal.jobs.get().user_image
-            scale = float(image.image.get_display_image().width)/image.image.width
-        else:
-            scale = 1.0
-        plot_sdss_image(wcsfn, plotfn, scale)
-        # cache
-        logmsg('Caching key "%s"' % key)
-        df = CachedFile.add(key, plotfn)
+def red_green_image(req, job_id=None, size='full'):
+    job = get_object_or_404(Job, pk=job_id)
+    ui = job.user_image
+    img = ui.image
+    if size == 'display':
+        scale = float(img.get_display_image().width)/img.width
+        img = img.get_display_image()
     else:
-        logmsg('Cache hit for key "%s"' % key)
-    f = open(df.get_path())
+        scale = 1.0
+        
+    imgfn = img.get_image_path()
+    axyfn = job.get_axy_file()
+    wcsfn = job.get_wcs_file()
+    rdlsfn = job.get_rdls_file()
+    exfn = get_temp_file()
+
+    pnmfn = get_temp_file()
+    (filetype, errstr) = image2pnm.image2pnm(imgfn, pnmfn)
+    if errstr:
+        logmsg('Error converting image file %s: %s' % (imgfn, errstr))
+        return HttpResponse('plot failed')
+
+    try:
+        plot = Plotstuff()
+        plot.wcs_file = wcsfn
+        plot.outformat = PLOTSTUFF_FORMAT_PNG
+        plot.outfn = exfn
+        plot.scale_wcs(scale)
+        plotstuff_set_size_wcs(plot.pargs)
+
+        # plot image
+        img = plot.image
+        img.set_file(str(pnmfn))
+        img.format = PLOTSTUFF_FORMAT_PPM
+        plot.plot('image')
+
+        # plot red
+        xy = plot.xy
+        plot_xy_set_filename(xy, str(axyfn))
+        xy.scale = scale
+        plot.color = 'red'
+        xy.nobjs = 200
+        plot.lw = 2.
+        plot.markersize = 6
+        plot.plot('xy')
+        
+        # plot green 
+        rd = plot.radec
+        plot_radec_set_filename(rd, str(rdlsfn))
+        plot.color = 'green'
+        plot.markersize = 4
+        plot.plot('radec')
+
+        plot.write()
+    except:
+        return HttpResponse("plot failed") 
+
+    f = open(exfn)
     res = HttpResponse(f)
     res['Content-type'] = 'image/png'
     return res
@@ -258,14 +289,7 @@ def extraction_image(req, job_id=None, size='full'):
     else:
         scale = 1.0
         
-    if hasattr(img, 'sourcelist'):
-        imgfn = get_temp_file()
-        f = open(imgfn,'wb')
-        img.render(f)
-        f.close()
-    else:
-        df = img.disk_file
-        imgfn = df.get_path()
+    imgfn = img.get_image_path()
     axyfn = job.get_axy_file()
     exfn = get_temp_file()
 

@@ -234,6 +234,13 @@ class Image(models.Model):
             self.save()
         return self.display_image
 
+    def get_image_path(self):
+        if hasattr(self, 'sourcelist'):
+            return self.sourcelist.get_image_path()
+        else:
+            return self.disk_file.get_path()
+
+
     def create_resized_image(self, maxsize):
         if max(self.width, self.height) <= maxsize:
             return self
@@ -262,7 +269,7 @@ class Image(models.Model):
         return image
 
     def render(self, f):
-        if hasattr(self,'sourcelist'):
+        if hasattr(self, 'sourcelist'):
             # image is a source list
             self.sourcelist.render(f)
         else:
@@ -303,6 +310,13 @@ class SourceList(Image):
     def get_fits_table(self):
         table = fits_table(str(self.get_fits_path()))
         return table
+
+    def get_image_path(self):
+        imgfn = get_temp_file()
+        f = open(imgfn,'wb')
+        self.render(f)
+        f.close()
+        return imgfn
 
     def get_mime_type(self):
         return 'image/png'
@@ -486,6 +500,9 @@ class Job(models.Model):
         
     def get_wcs_file(self):
         return os.path.join(self.get_dir(), 'wcs.fits')
+
+    def get_rdls_file(self):
+        return os.path.join(self.get_dir(), 'rdls.fits')
 
     def get_obj_file(self):
         return os.path.join(self.get_dir(), 'objsinfield')
