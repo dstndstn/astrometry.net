@@ -73,6 +73,7 @@ urlpatterns += patterns('astrometry.net.views.image',
     (r'^extraction_image_(?P<size>full|display)/(?P<job_id>' + idpattern + r')/?$', 'extraction_image'),
     (r'^wcs_file/(?P<jobid>' + idpattern + r')/?$', 'wcs_file'),
     (r'^new_fits_file/(?P<jobid>' + idpattern + r')/?$', 'new_fits_file'),
+    (r'^kml_file/(?P<jobid>' + idpattern + r')/?$', 'kml_file'),
 )
 
 urlpatterns += patterns('astrometry.net.views.album',

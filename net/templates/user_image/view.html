@@ -50,6 +50,15 @@ div#edit_license {
     margin-top: 1em;
     width: 300px;
 }
+#calibration_table {
+    padding: 0px;
+    margin: 0px;
+    border-spacing: 0px;
+    width: 100%;
+}
+#calibration_table td {
+    padding-right: 10px;
+}
 </style>
 {% endblock %}
 
@@ -157,12 +166,28 @@ $(document).ready(function() {
     <div id="calibration">
         <h3>Calibration</h3>
         {% if calib %}
-        center (RA, Dec): ({{ calib.format_radec }})<br />
-        radius: {{ calib.format_radius }}<br />
-        <a href="{% url astrometry.net.views.image.wcs_file jobid=job.id %}">wcs.fits</a><br />
+        <table id="calibration_table">
+        <tr>
+            <td>Center (RA, Dec):</td><td>({{ calib.format_radec }})</td>
+        </tr>
+        <tr>
+            <td>Radius:</td><td>{{ calib.format_radius }}</td>
+        </tr>
+        <tr>
+            <td>WCS file:</td>
+            <td><a href="{% url astrometry.net.views.image.wcs_file jobid=job.id %}">wcs.fits</a></td>
+        </tr>
         {% if job.user_image.image.disk_file.is_fits_image %}
-        <a href="{% url astrometry.net.views.image.new_fits_file jobid=job.id %}">new-image.fits</a><br />
+        <tr>
+            <td>New FITS image:</td>
+            <td><a href="{% url astrometry.net.views.image.new_fits_file jobid=job.id %}">new-image.fits</a></td>
+        </tr>
         {% endif %}
+        <tr>
+            <td>Google Sky KMZ:</td>
+            <td><a href="{% url astrometry.net.views.image.kml_file jobid=job.id %}">image.kmz</a></td>
+        </tr>
+        </table>
         <br />
 
         <div id="on_the_sky">

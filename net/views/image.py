@@ -5,6 +5,7 @@ import tempfile
 import math
 import urllib
 import urllib2
+import PIL.Image
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render_to_response, get_object_or_404, redirect, render
@@ -420,7 +421,7 @@ def wcs_file(req, jobid=None):
     job = get_object_or_404(Job, pk=jobid)
     f = open(job.get_wcs_file())
     res = HttpResponse(f)
-    res['Content-type'] = 'application/fits' 
+    res['Content-Type'] = 'application/fits' 
     res['Content-Disposition'] = 'attachment; filename=wcs.fits'
     return res
 
@@ -443,9 +444,53 @@ def new_fits_file(req, jobid=None):
         logmsg('err: ' + err)
         return HttpResponse('plot failed')
     res = HttpResponse(open(outfn))
-    res['Content-type'] = 'application/fits' 
-    res['Content-length'] = file_size(outfn)
-    res['Content-Disposition'] = 'attachment; filename=new.fits'
+    res['Content-Type'] = 'application/fits' 
+    res['Content-Length'] = file_size(outfn)
+    res['Content-Disposition'] = 'attachment; filename=new-image.fits'
+    return res
+
+def kml_file(req, jobid=None):
+    job = get_object_or_404(Job, pk=jobid)
+    wcsfn = job.get_wcs_file()
+    img = job.user_image.image
+    df = img.disk_file
+    imgfn = df.get_path()
+   
+    pnmfn = get_temp_file()
+    (filetype, errstr) = image2pnm.image2pnm(imgfn, pnmfn)
+    if errstr:
+        logmsg('Error converting image file %s: %s' % (imgfn, errstr))
+        return HttpResponse('kml generation failed')
+
+    imgfn = get_temp_file()
+    image = PIL.Image.open(pnmfn)
+    image.save(imgfn, 'PNG') 
+
+    dirnm = tempfile.mkdtemp()
+    warpedimgfn = 'image.png'
+    kmlfn = 'doc.kml'
+    outfn = get_temp_file()
+    cmd = ('cd %(dirnm)s'
+           '; /usr/local/wcs2kml/bin/wcs2kml ' 
+           '--input_image_origin_is_upper_left '
+           '--fitsfile=%(wcsfn)s '
+           '--imagefile=%(imgfn)s '
+           '--kmlfile=%(kmlfn)s '
+           '--outfile=%(warpedimgfn)s '
+           '; zip -j - %(warpedimgfn)s %(kmlfn)s > %(outfn)s ' %
+           dict(dirnm=dirnm, wcsfn=wcsfn, imgfn=imgfn, kmlfn=kmlfn, 
+                warpedimgfn=warpedimgfn, outfn=outfn))
+    logmsg('Running: ' + cmd)
+    (rtn, out, err) = run_command(cmd)
+    if rtn:
+        logmsg('out: ' + out)
+        logmsg('err: ' + err)
+        return HttpResponse('kml generation failed: ' + err)
+
+    res = HttpResponse(open(outfn))
+    res['Content-Type'] = 'application/x-zip-compressed'
+    res['Content-Length'] = file_size(outfn)
+    res['Content-Disposition'] = 'attachment; filename=image.kmz'
     return res
 
 class ImageSearchForm(forms.Form):
