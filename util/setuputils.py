@@ -1,4 +1,3 @@
-#from astrometry.util.run_command import run_command
 from run_command import run_command
 
 def get_libs(pkg):

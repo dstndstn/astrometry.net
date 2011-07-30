@@ -34,7 +34,14 @@ class DR7(object):
 		if not filetype in self.filenames:
 			return None
 		pat = self.filenames[filetype]
-		return pat % kwargs
+		fn = pat % kwargs
+		return fn
+
+	def getPath(self, *args, **kwargs):
+		fn = self.getFilename(*args, **kwargs)
+		if self.basedir is not None:
+			fn = os.path.join(self.basedir, fn)
+		return fn
 
 	def setBasedir(self, dirnm):
 		self.basedir = dirnm
@@ -121,7 +128,6 @@ class DR7(object):
 		f.setHdus(p)
 		return f
 
-
 	def getInvvar(self, fpC, fpM, gain, darkvar, sky, skyerr,
 				  x0=0, x1=None, y0=0, y1=None):
 		'''
@@ -149,14 +155,18 @@ class DR7(object):
 		#  -mask coordinates are wrt fpC coordinates.
 		#  -INTERP, SATUR, CR,
 		#  -GHOST?
-		# HACK -- MAGIC -- these are the indices of INTER, SATUR, CR, and GHOST
 		for plane in [ 'INTER', 'SATUR', 'CR', 'GHOST' ]:
 			M = fpM.getMaskPlane(plane)
 			if M is None:
 				continue
-			for (c0,c1,r0,r1) in zip(M.cmin,M.cmax,M.rmin,M.rmax):
+			for (c0,c1,r0,r1,coff,roff) in zip(M.cmin,M.cmax,M.rmin,M.rmax,
+											   M.col0, M.row0):
+				assert(coff == 0)
+				assert(roff == 0)
 				(outx,nil) = get_overlapping_region(c0-x0, c1+1-x0, 0, x1-x0)
 				(outy,nil) = get_overlapping_region(r0-y0, r1+1-y0, 0, y1-y0)
+				#print 'Mask col [%i, %i], row [%i, %i]' % (c0, c1, r0, r1)
+				#print '  outx', outx, 'outy', outy
 				ivarimg[outy,outx] = 0
 		return ivarimg
 

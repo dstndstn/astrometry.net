@@ -339,6 +339,7 @@ class FpM(SdssFile):
 
 	def getMaskPlane(self, name):
 		# HACK -- this must be described somewhere sensible...
+		# (yeah, fpM extension 11 !)
 		maskmap = { 'INTER': 0,
 					'SATUR': 1,
 					'CR'   : 8,
@@ -377,13 +378,18 @@ class PsField(SdssFile):
 		self.dgpsf_s1 = t.psf_sigma1_2g
 		self.dgpsf_s2 = t.psf_sigma2_2g
 		self.dgpsf_b  = t.psf_b_2g
+		# summary PSF width.
+		self.psf_fwhm = t.psf_width
+
+	def getPsfFwhm(self, bandnum):
+		return self.psf_fwhm[bandnum]
 
 	def getDoubleGaussian(self, bandnum):
 		# http://www.sdss.org/dr7/dm/flatFiles/psField.html
 		# good = PSP_FIELD_OK
 		status = self.psp_status[bandnum]
 		if status != 0:
-			print 'Warning: PsField status[band=%s] =' % (bandnum, status)
+			print 'Warning: PsField status[band=%s] =' % (bandnum), status
 		a  = 1.0
 		s1 = self.dgpsf_s1[bandnum]
 		s2 = self.dgpsf_s2[bandnum]

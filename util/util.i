@@ -65,18 +65,32 @@ void log_set_level(int lvl);
 
 	static int lanczos_shift_image(PyObject* np_img, PyObject* np_weight,
 								   PyObject* np_outimg, PyObject* np_outweight,
-								   double dx, double dy) {
+								   int order, double dx, double dy) {
 		int W,H;
+		int i,j;
+
+		lanczos_args_t lanczos;
 
 		PyArray_Descr* dtype = PyArray_DescrFromType(PyArray_DOUBLE);
 		int req = NPY_C_CONTIGUOUS | NPY_ALIGNED;
 		int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
+		double *img, *weight, *outimg, *outweight;
 
-		np_img = PyArray_FromAny(np_pos, dtype, 2, 2, req, NULL);
+		lanczos.order = order;
+
+		np_img = PyArray_FromAny(np_img, dtype, 2, 2, req, NULL);
 		np_weight = PyArray_FromAny(np_weight, dtype, 2, 2, req, NULL);
+
 		// FIXME -- does this work?  How do we return the new arrays?
-		np_outimg = PyArray_FromAny(np_outimg, dtype, 1, 1, reqout, NULL);
-		np_outweight = PyArray_FromAny(np_outimg, dtype, 1, 1, reqout, NULL);
+		/*
+		 np_outimg = PyArray_FromAny(np_outimg, dtype, 2, 2, reqout, NULL);
+		 np_outweight = PyArray_FromAny(np_outimg, dtype, 2, 2, reqout, NULL);
+		 */
+
+		if (!np_img || !np_weight || !np_outimg || !np_outweight) {
+			ERR("Failed to PyArray_FromAny the images");
+			return -1;
+		}
 
 		H = PyArray_DIM(np_img, 0);
 		W = PyArray_DIM(np_img, 1);
@@ -91,7 +105,23 @@ void log_set_level(int lvl);
 			return -1;
 		}
 
-		
+		img       = PyArray_DATA(np_img);
+		weight    = PyArray_DATA(np_weight);
+		outimg    = PyArray_DATA(np_outimg);
+		outweight = PyArray_DATA(np_outweight);
+
+		for (i=0; i<H; i++) {
+			for (j=0; j<W; j++) {
+				double wt, val;
+				double px, py;
+				px = j + dx;
+				py = i + dy;
+				val = lanczos_resample_d(px, py, img, weight, W, H, &wt,
+										 &lanczos);
+				outimg[i*W + j] = val;
+				outweight[i*W + j] = wt;
+			}
+		}
 
 		return 0;
 	}
