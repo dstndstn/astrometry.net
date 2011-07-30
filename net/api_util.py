@@ -8,6 +8,4 @@ def json2python(json):
 	return None
 
 python2json = simplejson.dumps
-#def python2json(py):
-#	return simplejson.dumps(py)
 
