@@ -1,19 +1,7 @@
 #include "anwcs.h"
+#include "resample.h"
 
 typedef float number;
-
-double nearest_resample(double px, double py, const number* img,
-						const number* weightimg, int W, int H,
-						double* out_wt, void* token);
-
-struct lanczos_args_s {
-	int order;
-};
-typedef struct lanczos_args_s lanczos_args_t;
-
-double lanczos_resample(double px, double py,
-						const number* img, const number* weightimg,
-						int W, int H, double* out_wt, void* token);
 
 /*
  typedef bool (*isbadpix)(const number* img, const number* weightimg, int ix, int iy, void* token)
@@ -34,7 +22,6 @@ struct coadd_s {
 							//void* isbadpix_token,
 							void* resample_token);
 	void* resample_token;
-	//resample_t* resample;
 };
 typedef struct coadd_s coadd_t;
 
