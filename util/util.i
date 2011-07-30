@@ -141,10 +141,8 @@ void log_set_level(int lvl);
 			}
 		}
 		np_outimg = PyArray_CheckFromAny(np_outimg, dtype, 2, 2, reqout, NULL);
-		//printf("np_outweight = %p (None=%p)\n", np_outweight, Py_None);
 		if (np_outweight != Py_None) {
 			np_outweight = PyArray_CheckFromAny(np_outweight, dtype, 2, 2, reqout, NULL);
-			//printf("np_outweight = %p\n", np_outweight);
 		}
 
 		if (!np_img || !np_outimg || !np_outweight) {
@@ -176,7 +174,6 @@ void log_set_level(int lvl);
 				return -1;
 			}
 			outweight = PyArray_DATA(np_outweight);
-			//printf("set outweight = %p\n", outweight);
 	    }
 
 		/*
@@ -212,12 +209,20 @@ void log_set_level(int lvl);
 			}
 		}
 
-		// ???
-		Py_XDECREF(np_img);
-		Py_XDECREF(np_weight);
-		Py_XDECREF(np_outweight);
-		Py_XDECREF(np_outimg);
-
+		/*
+		 if (np_img != Py_None) {
+		 Py_XDECREF(np_img);
+		 }
+		 if (np_weight != Py_None) {
+		 Py_XDECREF(np_weight);
+		 }
+		 if (np_outweight != Py_None) {
+		 Py_XDECREF(np_outweight);
+		 }
+		 if (np_outimg != Py_None) {
+		 Py_XDECREF(np_outimg);
+		 }
+		 */
 		return 0;
 	}
 	%}
