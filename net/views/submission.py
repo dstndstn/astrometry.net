@@ -37,7 +37,7 @@ class SubmissionForm(forms.ModelForm):
     SCALE_PRESET_SETTINGS = {'1':(0.1,180),
                              '2':(1,180),
                              '3':(10,180),
-                             '4':(0.05,0.015)}
+                             '4':(0.05,0.15)}
 
     file  = forms.FileField(required=False,
                             widget=forms.FileInput(attrs={'size':'80'}))

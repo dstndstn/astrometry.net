@@ -3,6 +3,10 @@ import astrometry.net
 import astrometry.net.secrets.django_db as secrets
 from astrometry.net.util import dict_pack
 
+DATE_FORMAT = 'Y-m-d'
+DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z'
+TIME_FORMAT = 'H:i:s\Z'
+
 WEB_DIR = os.path.dirname(astrometry.net.__file__) + '/'
 DATADIR = os.path.join(WEB_DIR, 'data')
 JOBDIR = os.path.join(WEB_DIR, 'jobs')
@@ -96,7 +100,7 @@ USE_I18N = True
 
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale
-USE_L10N = True
+USE_L10N = False
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"

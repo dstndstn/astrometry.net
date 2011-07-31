@@ -27,8 +27,8 @@
 <div class="top_bar">
     <div id="account_info">
         <h3>Account Info</h3>
-        <div id="registered_on">registered on: <span class="timestamp">{{display_user.date_joined|date:"Y-m-d"}}</span></div>
-        <div id="last_signin">last signed in: <span class="timestamp">{{display_user.last_login|date:"Y-m-d H:i"}}</span></div>
+        <div id="registered_on">registered on: <span class="timestamp">{{ display_user.date_joined }}</span></div>
+        <div id="last_signin">last signed in: <span class="timestamp">{{ display_user.last_login }}</span></div>
         {% if user.is_authenticated and user == display_user %}
         <br /><div>my API key: {% include 'user/api_key.html' with apikey=user.get_profile.apikey %}</div>
         {% endif %}
