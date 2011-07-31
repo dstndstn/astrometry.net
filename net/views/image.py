@@ -100,6 +100,7 @@ def edit(req, user_image_id=None):
 
 def serve_image(req, id=None):
     image = get_object_or_404(Image, pk=id)
+    print image.get_mime_type()
     res = HttpResponse(mimetype=image.get_mime_type())
     image.render(res)
     return res
@@ -114,13 +115,8 @@ def annotated_image(req, jobid=None, size='full'):
     else:
         scale = 1.0
         
-    imgfn = img.get_image_path()
     wcsfn = job.get_wcs_file()
-    pnmfn = get_temp_file()
-    (filetype, errstr) = image2pnm.image2pnm(imgfn, pnmfn)
-    if errstr:
-        logmsg('Error converting image file %s: %s' % (imgfn, errstr))
-        return HttpResponse('plot failed')
+    pnmfn = img.get_pnm_path()
     annfn = get_temp_file()
     cmd = 'plot-constellations -w %s -i %s -o %s -s %s -N -C -B' % (wcsfn, pnmfn, annfn, str(scale))
     logmsg('Running: ' + cmd)
@@ -131,7 +127,7 @@ def annotated_image(req, jobid=None, size='full'):
         return HttpResponse('plot failed' + err)
     f = open(annfn)
     res = HttpResponse(f)
-    res['Content-type'] = 'image/png'
+    res['Content-Type'] = 'image/png'
     return res
 
 def onthesky_image(req, zoom=None, calid=None):
@@ -227,17 +223,11 @@ def red_green_image(req, job_id=None, size='full'):
     else:
         scale = 1.0
         
-    imgfn = img.get_image_path()
     axyfn = job.get_axy_file()
     wcsfn = job.get_wcs_file()
     rdlsfn = job.get_rdls_file()
+    pnmfn = img.get_pnm_path()
     exfn = get_temp_file()
-
-    pnmfn = get_temp_file()
-    (filetype, errstr) = image2pnm.image2pnm(imgfn, pnmfn)
-    if errstr:
-        logmsg('Error converting image file %s: %s' % (imgfn, errstr))
-        return HttpResponse('plot failed')
 
     try:
         plot = Plotstuff()
@@ -276,7 +266,7 @@ def red_green_image(req, job_id=None, size='full'):
 
     f = open(exfn)
     res = HttpResponse(f)
-    res['Content-type'] = 'image/png'
+    res['Content-Type'] = 'image/png'
     return res
 
 def extraction_image(req, job_id=None, size='full'):
@@ -289,15 +279,9 @@ def extraction_image(req, job_id=None, size='full'):
     else:
         scale = 1.0
         
-    imgfn = img.get_image_path()
     axyfn = job.get_axy_file()
+    pnmfn = img.get_pnm_path()
     exfn = get_temp_file()
-
-    pnmfn = get_temp_file()
-    (filetype, errstr) = image2pnm.image2pnm(imgfn, pnmfn)
-    if errstr:
-        logmsg('Error converting image file %s: %s' % (imgfn, errstr))
-        return HttpResponse('plot failed')
 
     try:
         plot = Plotstuff()
@@ -478,14 +462,8 @@ def kml_file(req, jobid=None):
     wcsfn = job.get_wcs_file()
     img = job.user_image.image
     df = img.disk_file
-    imgfn = df.get_path()
    
-    pnmfn = get_temp_file()
-    (filetype, errstr) = image2pnm.image2pnm(imgfn, pnmfn)
-    if errstr:
-        logmsg('Error converting image file %s: %s' % (imgfn, errstr))
-        return HttpResponse('kml generation failed')
-
+    pnmfn = img.get_pnm_path()
     imgfn = get_temp_file()
     image = PIL.Image.open(pnmfn)
     image.save(imgfn, 'PNG') 

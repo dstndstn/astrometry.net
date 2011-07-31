@@ -20,6 +20,7 @@ from log import *
 from astrometry.util.filetype import filetype_short
 from astrometry.util.run_command import run_command
 from astrometry.util.pyfits_utils import *
+from astrometry.util.image2pnm import image2pnm
 from astrometry.util import util as anutil
 from astrometry.net.tmpfile import *
 
@@ -210,6 +211,13 @@ class CachedFile(models.Model):
         return df
 
 class Image(models.Model):
+    MIME_TYPES = {
+        'PNG image': 'image/png',
+        'JPEG image data': 'image/jpeg',
+        'GIF image data': 'image/gif',
+        'FITS image data': 'image/fits',
+    }
+
     disk_file = models.ForeignKey(DiskFile)
     width = models.PositiveIntegerField(null=True)
     height = models.PositiveIntegerField(null=True)
@@ -220,7 +228,10 @@ class Image(models.Model):
     #  userimage_set -> UserImage
 
     def get_mime_type(self):
-        return self.disk_file.file_type
+        if hasattr(self, 'sourcelist'):
+            return self.sourcelist.get_mime_type()
+        else:
+            return self.MIME_TYPES.get(self.disk_file.file_type, '')
 
     def get_thumbnail(self):
         if self.thumbnail is None:
@@ -240,11 +251,17 @@ class Image(models.Model):
         else:
             return self.disk_file.get_path()
 
+    def get_pnm_path(self):
+        imgfn = self.get_image_path()
+        pnmfn = get_temp_file()
+        (filetype, errstr) = image2pnm(imgfn, pnmfn)
+        if errstr:
+            raise RuntimeError('Error converting image file %s: %s' % (imgfn, errstr))
+        return pnmfn
 
     def create_resized_image(self, maxsize):
         if max(self.width, self.height) <= maxsize:
             return self
-        from astrometry.util.image2pnm import image2pnm
         fn = self.disk_file.get_path()
         f,tmpfn = tempfile.mkstemp()
         os.close(f)
