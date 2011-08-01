@@ -320,8 +320,8 @@ def try_dosub(sub):
 
 def dosub(sub):
     logmsg('sub license settings: commercial=%s, modifications=%s' % (
-        sub.allow_commercial_use,
-        sub.allow_modifications))
+        sub.license.allow_commercial_use,
+        sub.license.allow_modifications))
     if sub.disk_file is None:
         print 'Retrieving URL', sub.url
         (fn, headers) = urllib.urlretrieve(sub.url)
@@ -403,11 +403,18 @@ def dosub(sub):
             img = get_or_create_source_list(df, sub.source_type)
         # create UserImage object.
         if img:
+            license = License.objects.create(
+                 allow_modifications = sub.license.allow_modifications,
+                 allow_commercial_use = sub.license.allow_commercial_use,
+            )
+            license.save()
             uimg,created = UserImage.objects.get_or_create(
-                submission=sub, image=img, user=sub.user,
+                submission=sub,
+                image=img,
+                user=sub.user,
+                license=license,
+                comment_receiver=CommentReceiver.objects.create(),
                 defaults=dict(original_file_name=original_filename,
-                             allow_modifications = sub.allow_modifications,
-                             allow_commercial_use = sub.allow_commercial_use,
                              publicly_visible = sub.publicly_visible))
             if sub.album:
                 sub.album.user_images.add(uimg)
@@ -437,7 +444,7 @@ def get_or_create_image(df):
             f,pnmfn = tempfile.mkstemp()
             os.close(f)
             logmsg('Converting %s to %s...\n' % (fn, pnmfn))
-            (filetype, errstr) = image2pnm.image2pnm(fn, pnmfn)
+            (filetype, errstr) = image2pnm(fn, pnmfn)
             if errstr:
                 raise RuntimeError('Error converting image file: %s' % errstr)
             x = run_pnmfile(pnmfn)
