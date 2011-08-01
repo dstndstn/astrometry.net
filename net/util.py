@@ -13,9 +13,9 @@ class NoBulletsRenderer(forms.RadioSelect.renderer):
 def store_session_form(session, form_class, data):
     session[form_class.__name__] = data
 
-def get_session_form(session, form_class):
+def get_session_form(session, form_class, **kwargs):
     if session.get(form_class.__name__):
-        form = form_class(session[form_class.__name__])
+        form = form_class(session[form_class.__name__], **kwargs)
         form.is_valid()
         del session[form_class.__name__]
     else:

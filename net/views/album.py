@@ -95,11 +95,10 @@ def edit(req, album_id=None):
 @login_required
 def new(req):
     if req.method == 'POST':
-        form = AlbumForm(req.POST)
+        album = Album(user=req.user)
+        form = AlbumForm(req.POST, instance=album)
         if form.is_valid():
-            album = form.save(commit=False)
-            album.user = req.user
-            album.save()
+            form.save()
             return redirect(album)
         else:
             store_session_form(req.session, AlbumForm, req.POST)

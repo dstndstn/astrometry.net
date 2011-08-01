@@ -113,7 +113,8 @@ def dashboard_albums(req):
 
 @login_required
 def dashboard_create_album(req):
-    form = get_session_form(req.session, AlbumForm)
+    album = Album(user=req.user)
+    form = get_session_form(req.session, AlbumForm, instance=album)
         
     context = {
         'album_form': form,
