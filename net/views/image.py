@@ -100,7 +100,6 @@ def edit(req, user_image_id=None):
 
 def serve_image(req, id=None):
     image = get_object_or_404(Image, pk=id)
-    print image.get_mime_type()
     res = HttpResponse(mimetype=image.get_mime_type())
     image.render(res)
     return res
