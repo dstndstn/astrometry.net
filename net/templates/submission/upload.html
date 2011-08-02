@@ -154,7 +154,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
             {% else %}
                 By submitting anonymously, you agree that your submitted image
                 will be governed by
-                {% include 'license/license_link.html' with licensable=default_license %}.
+                {% include 'license/license_link.html' with license=default_license %}.
                 To change this license setting, please <a href="{% url openid-login %}?next={{ request.path }}">Sign In</a>.
             {% endif %}
         </div>
