@@ -503,8 +503,10 @@ class ImageSearchForm(forms.Form):
                                         choices=SEARCH_CATEGORIES,
                                         initial='tag',
                                         required=False)
-    tags = forms.CharField(required=False)
-    user = forms.CharField(required=False)
+    tags = forms.CharField(widget=forms.TextInput(attrs={'autocomplete':'off'}),
+                                                  required=False)
+    user = forms.CharField(widget=forms.TextInput(attrs={'autocomplete':'off'}),
+                                                  required=False)
 
     calibrated = forms.BooleanField(initial=True, required=False)
     processing = forms.BooleanField(initial=False, required=False)
@@ -570,7 +572,7 @@ def search(req):
                 user = User.objects.filter(profile__display_name=username)[:1]
                 images = UserImage.objects.none()
                 if len(user) > 0:
-                    images = all_images.filter(user=user)
+                    images = UserImage.objects.all().filter(user=user)
                     context['display_user'] = user[0] 
                 else:
                     context['display_users'] = User.objects.filter(profile__display_name__startswith=username)[:5]

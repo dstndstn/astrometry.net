@@ -49,6 +49,7 @@ urlpatterns += patterns('astrometry.net.views.user',
     (r'^users/(?P<user_id>' + idpattern + r')/images/?$', 'user_images'),
     (r'^users/(?P<user_id>' + idpattern + r')/albums/?$', 'user_albums'),
     (r'^users/(?P<user_id>' + idpattern + r')/submissions/?$', 'user_submissions'),
+    (r'^users/autocomplete/?$', 'user_autocomplete'),
 )
 
 urlpatterns += patterns('astrometry.net.views.image',
@@ -85,6 +86,7 @@ urlpatterns += patterns('astrometry.net.views.album',
 urlpatterns += patterns('astrometry.net.views.tag',
     (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/tags/(?P<tag_id>' + tagpattern + r')/delete/?$', 'delete'),
     (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/tags/new/?$', 'new'),
+    (r'^tags/autocomplete/?$', 'tag_autocomplete'),
 )
 urlpatterns += patterns('astrometry.net.views.comment',
     (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/comments/new/?$', 'new'),

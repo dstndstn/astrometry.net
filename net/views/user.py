@@ -184,3 +184,12 @@ def user_submissions(req, user_id=None):
     return render_to_response("user/submissions.html",
         context,
         context_instance = RequestContext(req))
+
+def user_autocomplete(req):
+    name = req.GET.get('q','')
+    users = User.objects.filter(profile__display_name__istartswith=name)[:8]
+    response = HttpResponse(mimetype='text/plain')
+    for user in users:
+        response.write(user.get_profile().display_name + '\n')
+    return response
+

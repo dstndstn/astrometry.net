@@ -4,6 +4,7 @@
 {{block.super}}
 {% include 'user_image/image_set.css' %}
 {% include 'view_menu.css' %}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}css/jquery.autocomplete.css">
 <style type="text/css">
 #search_block {
     padding: 10px;
@@ -26,6 +27,7 @@
 
 {% block javascript %}
 {{ block.super }}
+<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.autocomplete.js"></script>
 <script type="text/javascript">
 function change_search_category(cat) {
     $('#id_search_category').val(cat);
@@ -42,6 +44,8 @@ $(document).ready(function() {
         e.preventDefault();
     });
     change_search_category('{{ search_category }}');
+    $("#id_user").autocomplete('/users/autocomplete');
+    $("#id_tags").autocomplete('/tags/autocomplete');
 });
 </script>
 {% endblock %}
@@ -90,8 +94,6 @@ $(document).ready(function() {
                 {{ form.calibrated }}<label for="id_calibrated">calibrated</label>&nbsp;&nbsp;
                 {{ form.processing }}<label for="id_processing">processing</label>&nbsp;&nbsp;
                 {{ form.failed }}<label for="id_failed">failed</label>&nbsp;&nbsp;
-
-                <input type="hidden" name="calibrated" value="off" />
             <br />
             <input type="submit" value="Search" />
         </div>
