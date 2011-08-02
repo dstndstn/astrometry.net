@@ -33,8 +33,118 @@ from astrometry.net.abstract_models import *
 ### Admin view -- running Submissions and Jobs
 
 # = dt.total_seconds() in python 2.7
+
+class License(models.Model):
+    YES_NO = (
+        ('y','yes'),
+        ('n','no'),
+        ('d','use default'),
+    )
+    YES_SA_NO = (
+        ('y','yes'),
+        ('sa','yes, but share alike'),
+        ('n','no'),
+        ('d','use default'),
+    )
+
+    # CC "answer" data
+    allow_commercial_use = models.CharField(choices=YES_NO, max_length=1,
+        default='d')
+    allow_modifications = models.CharField(choices=YES_SA_NO, max_length=2,
+        default='d')
+
+    # CC issued license
+    license_name = models.CharField(max_length=1024)
+    license_uri = models.CharField(max_length=1024)
+
+    # attribution and other optional fields here
+
+
+    def get_license_uri(self):
+        if self.license_uri == '':
+            self.save()
+        return self.license_uri
+
+    def get_license_name(self):
+        if self.license_name == '':
+            self.save()
+        return self.license_name
+
+    # replaces 'd' with actual setting from default license
+    def replace_license_default(self, default):
+        if self.allow_commercial_use == 'd':
+            self.allow_commercial_use = default.allow_commercial_use
+        if self.allow_modifications == 'd':
+            self.allow_modifications = default.allow_modifications
+
+    def get_license_xml(self):
+        try:
+            allow_commercial_use = self.allow_commercial_use
+            allow_modifications = self.allow_modifications
+
+            url = (
+                'http://api.creativecommons.org/rest/1.5/license/standard/get?commercial=%s&derivatives=%s&jurisdiction=' %
+                (allow_commercial_use,
+                allow_modifications,)
+            )
+            logmsg("getting license via url: %s" % url)
+            f = urllib2.urlopen(url)
+            xml = f.read()
+            f.close()
+            return xml
+        except Exception as e:
+            logmsg('error getting license xml: %s' % str(e))
+            raise e
+
+    # uses CC "answer" data to retrieve CC issued license data
+    def get_license_name_uri(self):
+        def get_text(node_list):
+            rc = []
+            for node in node_list:
+                if node.nodeType == node.TEXT_NODE:
+                    rc.append(node.data)
+            return ''.join(rc)
+        try:
+            license_xml = self.get_license_xml()
+            license_doc = xml.dom.minidom.parseString(license_xml)
+            self.license_name = get_text(license_doc.getElementsByTagName('license-name')[0].childNodes)
+            self.license_uri = get_text(license_doc.getElementsByTagName('license-uri')[0].childNodes)
+            # can add rdf stuff here if we want..
+            
+        except Exception as e:
+            logmsg('error getting issued license data: %s' % str(e))
+
+    # provide cascading default replacement; replace instances of "use default"
+    # with the default value specified by the default keyword argument, and
+    # replace instances of "use default" from the keyword arg with the site
+    # wide license defaults
+    def save(self, default_license=None, *args, **kwargs):
+        if default_license != None:
+            self.replace_license_default(default_license)
+
+        self.replace_license_default(License.get_default())
+        self.get_license_name_uri()
+        return super(License, self).save(*args,**kwargs)
+
+    @staticmethod
+    def get_default():
+        # DEFAULT_LICENSE_ID  defined in settings_common.py
+        return License.objects.get(pk=DEFAULT_LICENSE_ID)
+
+
+
+class CommentReceiver(models.Model):
+    owner = models.ForeignKey(User, null=True)
+
+    # Reverse mappings:
+    #   comments -> Comment
+
+
+
 def dtsec(dt):
     return (dt.microseconds + (dt.seconds + dt.days * 24. * 3600.) * 10.**6) / 10.**6
+
+
 
 class ProcessSubmissions(models.Model):
     pid = models.IntegerField()
@@ -100,18 +210,6 @@ class QueuedJob(QueuedThing):
         return self.get_time_string(self.job.end_time)
 
 ###
-
-class License(Licensable):
-    def save(self, *args, **kwargs):
-        self.replace_license_default(License.get_default())
-        self.get_license_name_uri()
-        return super(License, self).save(*args,**kwargs)
-
-    @staticmethod
-    def get_default():
-        # DEFAULT_LICENSE_ID  defined in settings_common.py
-        return License.objects.get(pk=DEFAULT_LICENSE_ID)
-
 
 
 class DiskFile(models.Model):
@@ -633,7 +731,7 @@ class UserImageManager(models.Manager):
         return valid_uis.order_by('-submission__submitted_on')
 
 
-class UserImage(Commentable, Licensable, Hideable):
+class UserImage(Hideable):
     objects = UserImageManager()
 
     image = models.ForeignKey('Image')
@@ -646,14 +744,18 @@ class UserImage(Commentable, Licensable, Hideable):
     original_file_name = models.CharField(max_length=256)
     submission = models.ForeignKey('Submission', related_name='user_images')
 
+    license = models.OneToOneField('License')
+    comment_receiver = models.OneToOneField('CommentReceiver')
+
     # Reverse mappings:
     #  jobs -> Job
     #  albums -> Album
 
     def save(self, *args, **kwargs):
         self.owner = self.user
-        self.replace_license_default(self.user.get_profile().default_license)
-        self.get_license_name_uri()
+        self.license.replace_license_default(self.user.get_profile().default_license)
+        self.license.get_license_name_uri()
+        self.license.save()
         return super(UserImage, self).save(*args, **kwargs)
 
     def add_machine_tags(self, job):
@@ -714,8 +816,7 @@ class UserImage(Commentable, Licensable, Hideable):
 
 
 
-
-class Submission(Licensable, Hideable):
+class Submission(Hideable):
     SCALEUNITS_CHOICES = (
         ('arcsecperpix', 'arcseconds per pixel'),
         ('arcminwidth' , 'width of the field (in arcminutes)'), 
@@ -767,6 +868,9 @@ class Submission(Licensable, Hideable):
     processing_finished = models.DateTimeField(null=True)
     error_message = models.CharField(max_length=256, null=True)
 
+    license = models.OneToOneField('License')
+    comment_receiver = models.OneToOneField('CommentReceiver')
+
     # Reverse mappings:
     #  user_images -> UserImage
     #  -> QueuedSubmission
@@ -802,14 +906,38 @@ class Submission(Licensable, Hideable):
     def set_processing_finished(self):
         self.processing_finished = datetime.now()
 
+    def save(self, *args, **kwargs):
+        default_license=self.user.get_profile().default_license
+        try:
+            self.license
+        except:
+            self.license = License.objects.create(
+                allow_modifications=default.allow_modifications,
+                allow_commercial_use=default.allow_commercial_use,
+            )
+        try:
+            self.comment_receiver
+        except:
+            self.comment_receiver = CommentReceiver.objects.create()
 
-class Album(Commentable, Hideable):
+        self.comment_receiver.save()
+        self.license.save(default_license=default_license)
+            
+        logmsg('saving submission: license id = %d' % self.license.id)
+        logmsg('saving submission: commentreceiver id = %d' % self.comment_receiver.id)
+
+        return super(Submission, self).save(*args, **kwargs)
+
+
+class Album(Hideable):
     user = models.ForeignKey(User, related_name='albums', null=True)
     title = models.CharField(max_length=64)
     description = models.CharField(max_length=1024, blank=True)
     user_images = models.ManyToManyField('UserImage', related_name='albums') 
     tags = models.ManyToManyField('Tag', related_name='albums')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    comment_receiver = models.OneToOneField('CommentReceiver')
 
     def save(self, *args, **kwargs):
         self.owner = self.user
@@ -822,7 +950,7 @@ class Album(Commentable, Hideable):
         
 class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-    recipient = models.ForeignKey('Commentable', related_name='comments')
+    recipient = models.ForeignKey('CommentReceiver', related_name='comments')
     author = models.ForeignKey(User, related_name='comments_left')
     text = models.CharField(max_length=1024)
 

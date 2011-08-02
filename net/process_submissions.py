@@ -407,7 +407,9 @@ def dosub(sub):
                  allow_modifications = sub.license.allow_modifications,
                  allow_commercial_use = sub.license.allow_commercial_use,
             )
-            license.save()
+            license.save(
+                default_license=sub.user.get_profile().default_license
+            )
             uimg,created = UserImage.objects.get_or_create(
                 submission=sub,
                 image=img,
@@ -416,9 +418,9 @@ def dosub(sub):
                 comment_receiver=CommentReceiver.objects.create(),
                 defaults=dict(original_file_name=original_filename,
                              publicly_visible = sub.publicly_visible))
+
             if sub.album:
                 sub.album.user_images.add(uimg)
-            #uimg.save()
 
     sub.set_processing_finished()
     sub.save()

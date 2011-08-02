@@ -129,7 +129,7 @@ $(document).ready(function() {
         <div class="indent">on <span class="timestamp">{{ image.submission.submitted_on }}</span></div>
         <div class="indent">as "<a href="{% url astrometry.net.views.image.serve_image id=image.image.id %}?filename={{ image.original_file_name }}">
             {{ image.original_file_name }}</a>"</div>
-        <div class="indent" id="license">under {% include 'license/license_link.html' with licensable=image %}</a></div>
+        <div class="indent" id="license">under {% include 'license/license_link.html' with license=image.license %}</a></div>
         {% if user.is_authenticated and user == image.user %}
         {% comment %}
         <br />

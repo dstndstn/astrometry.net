@@ -25,6 +25,8 @@ from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 from astrometry.util.file import *
 
+from astrometry.net.models import License
+
 from astrometry.net.views.comment import *
 from astrometry.net.views.license import *
 from astrometry.net.util import get_page, get_session_form, NoBulletsRenderer
@@ -34,15 +36,31 @@ from string import strip
 import simplejson
 
 class UserImageForm(forms.ModelForm):
+    allow_commercial_use = forms.ChoiceField(
+        choices=License.YES_NO,
+        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        initial='d',
+    )
+    allow_modifications = forms.ChoiceField(
+        choices=License.YES_SA_NO,
+        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        initial='d',
+    )
     class Meta:
         model = UserImage
-        exclude = ('image','user', 'tags', 'original_file_name', 'submission',
-            'owner', 'license_name', 'license_uri')
+        exclude = (
+            'image',
+            'user',
+            'tags',
+            'original_file_name',
+            'submission',
+            'owner',
+            'comment_receiver',
+            'license',
+        )
         widgets = {
             'description': forms.Textarea(attrs={'cols':60,'rows':3}),
             'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer),
-            'allow_commercial_use': forms.RadioSelect(renderer=NoBulletsRenderer),
-            'allow_modifications': forms.RadioSelect(renderer=NoBulletsRenderer)
         }
 
 def user_image(req, user_image_id=None):
@@ -116,6 +134,11 @@ def edit(req, user_image_id=None):
     if req.method == 'POST':
         form = UserImageForm(req.POST, instance=user_image)
         if form.is_valid():
+            user_image.license.allow_modifications = req.POST.get('allow_modifications')
+            user_image.license.allow_commercial_use = req.POST.get('allow_commercial_use')
+
+            user_image.license.save(default_license=req.user.get_profile().default_license)
+
             form.save()
             return redirect(user_image)
     else:

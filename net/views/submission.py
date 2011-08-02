@@ -39,31 +39,59 @@ class SubmissionForm(forms.ModelForm):
                              '3':(10,180),
                              '4':(0.05,0.15)}
 
-    file  = forms.FileField(required=False,
-                            widget=forms.FileInput(attrs={'size':'80'}))
-    url = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),
-                          initial='http://', required=False)
-    upload_type = forms.ChoiceField(widget=forms.RadioSelect(renderer=HorizontalRenderer),
-                                    choices=(('file','file'),('url','url')),
-                                    initial='file')
-    scale_preset = forms.ChoiceField(widget=forms.RadioSelect(renderer=NoBulletsRenderer),
-                                    choices=(('1','default (0.1 to 180 degrees)'),
-                                             ('2','wide field (1 to 180 degrees)'),
-                                             ('3','very wide field (10 to 180 degrees)'),
-                                             ('4','tiny (3 to 9 arcmin)'),
-                                             ('5','custom')),
-                                    initial='1')
+    file  = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={'size':'80'})
+    )
+
+    url = forms.CharField(
+        widget=forms.TextInput(attrs={'size':'80'}),
+        initial='http://',
+        required=False
+    )
+
+    upload_type = forms.ChoiceField(
+        widget=forms.RadioSelect(renderer=HorizontalRenderer),
+        choices=(('file','file'),('url','url')),
+        initial='file'
+    )
+
+    scale_preset = forms.ChoiceField(
+        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        choices=(
+            ('1','default (0.1 to 180 degrees)'),
+            ('2','wide field (1 to 180 degrees)'),
+            ('3','very wide field (10 to 180 degrees)'),
+            ('4','tiny (3 to 9 arcmin)'),
+            ('5','custom')
+        ),
+        initial='1'
+    )
 
     album = forms.ChoiceField(choices=(), required=False)
-    new_album_title = forms.CharField(widget=forms.TextInput(attrs={'size':'40'}),
-                                      max_length=64,
-                                      required=False)
+    new_album_title = forms.CharField(
+        widget=forms.TextInput(attrs={'size':'40'}),
+        max_length=64,
+        required=False
+    )
+
+    allow_commercial_use = forms.ChoiceField(
+        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        choices=License.YES_NO,
+        initial='d',
+    )
+
+    allow_modifications = forms.ChoiceField(
+        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
+        choices=License.YES_SA_NO,
+        initial='d',
+    )
 
     class Meta:
         model = Submission
         fields = (
             'publicly_visible',
-            'allow_commercial_use', 'allow_modifications',
+            #'allow_commercial_use', 'allow_modifications',
             'parity','scale_units','scale_type','scale_lower',
             'scale_upper','scale_est','scale_err','positional_error',
             'center_ra','center_dec','radius','downsample_factor','source_type')
@@ -81,8 +109,8 @@ class SubmissionForm(forms.ModelForm):
             'parity': forms.RadioSelect(renderer=NoBulletsRenderer),
             'source_type': forms.RadioSelect(renderer=NoBulletsRenderer),
             'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer),
-            'allow_commercial_use':forms.RadioSelect(renderer=NoBulletsRenderer),
-            'allow_modifications':forms.RadioSelect(renderer=NoBulletsRenderer),
+            #'allow_commercial_use':forms.RadioSelect(renderer=NoBulletsRenderer),
+            #'allow_modifications':forms.RadioSelect(renderer=NoBulletsRenderer),
         }
 
     def clean(self):
@@ -185,10 +213,13 @@ def upload_file(request):
 
             if not request.user.is_authenticated():
                 sub.publicly_visible = 'y'
-            if form.cleaned_data['allow_commercial_use'] == 'd':
-                sub.allow_commercial_use = default_license.allow_commercial_use
-            if form.cleaned_data['allow_modifications'] == 'd':
-                sub.allow_modifications = default_license.allow_modifications
+            new_license = License()
+
+            new_license.allow_commercial_use = form.cleaned_data['allow_commercial_use']
+            new_license.allow_modifications = form.cleaned_data['allow_commercial_use']
+            new_license.save(default_license=default_license)
+
+            sub.license = new_license
 
             sub.user = request.user if request.user.is_authenticated() else User.objects.get(username=ANONYMOUS_USERNAME)
             if form.cleaned_data['upload_type'] == 'file':

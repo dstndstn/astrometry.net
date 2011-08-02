@@ -109,11 +109,10 @@ def api_upload(request):
     submittor = request.user if request.user.is_authenticated() else None
     allow_commercial_use = request.json.get('allow_commercial_use')
     allow_modifications = request.json.get('allow_modifications')
-    default_license = submittor.get_profile().default_license
-    if allow_commercial_use == 'd':
-        allow_commercial_use = default_license.allow_commercial_use
-    if allow_modifications == 'd':
-        allow_modifications = default_license.allow_modifications
+    license = License.objects.create(
+        allow_commercial_use=allow_commercial_use,
+        allow_modifications=allow_modifications,
+    )
     publicly_visible = request.json.get('publicly_visible')
     sub = Submission(
         user=submittor,
@@ -121,8 +120,7 @@ def api_upload(request):
         original_filename=original_filename,
         scale_type='ul',
         scale_units='degwidth',
-        allow_commercial_use=allow_commercial_use,
-        allow_modifications=allow_modifications,
+        license=license,
         publicly_visible=publicly_visible,
     )
     sub.save()
@@ -143,23 +141,21 @@ def url_upload(req):
     submittor = req.user if req.user.is_authenticated() else None
     allow_commercial_use = req.json.get('allow_commercial_use')
     allow_modifications = req.json.get('allow_modifications')
+    license = License.objects.create(
+        allow_commercial_use=allow_commercial_use,
+        allow_modifications=allow_modifications,
+    )
     publicly_visible = req.json.get('publicly_visible')
-    default_license = submittor.get_profile().default_license
-    if allow_commercial_use == 'd':
-        allow_commercial_use = default_license.allow_commercial_use
-    if allow_modifications == 'd':
-        allow_modifications = default_license.allow_modifications
-    sub = Submission(user=submittor,
+    sub = Submission(
+        user=submittor,
         disk_file=df,
         url=url,
         scale_type='ul',
         scale_units='degwidth',
-        allow_commercial_use=allow_commercial_use,
-        allow_modifications=allow_modifications,
+        license=license,
         publicly_visible=publicly_visible,
     )
     sub.save()
-
     return HttpResponseJson({'status': 'success',
                              'subid': sub.id,
                              'hash': sub.disk_file.file_hash}) 

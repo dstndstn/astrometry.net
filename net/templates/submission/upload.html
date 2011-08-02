@@ -150,7 +150,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
         <div class="setting_description">
             {% if user.is_authenticated %}
                 Your default license setting is
-                {% include 'license/license_link.html' with licensable=default_license %}.
+                {% include 'license/license_link.html' with license=default_license %}.
             {% else %}
                 By submitting anonymously, you agree that your submitted image
                 will be governed by

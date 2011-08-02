@@ -11,31 +11,27 @@ from django.http import HttpResponseRedirect
 
 class LicenseForm(forms.ModelForm):
     class Meta:
-        model = Licensable
+        model = License
 
 
 class PartialLicenseForm(forms.ModelForm):
     class Meta:
-        model = Licensable
+        model = License
         exclude = ('license_name','license_uri')
 
 @login_required
-def edit(req, licensable_type=None, licensable_id=None):
+def edit(req, license_id):
     if req.method == 'POST':
         try:
-            types = {
-                'UserImage':UserImage,
-                'License':License
-            }
-            licensee = get_object_or_404(types[licensable_type], pk=licensable_id)
+            license = get_object_or_404(License, pk=license_id)
             default_license = License.get_default()
 
             allow_commercial = req.POST.get('allow_commercial_use',default_license.allow_commercial_use)
             allow_mod = req.POST.get('allow_modifications',default_license.allow_modifications)
 
-            licensee.allow_commercial_use = allow_commercial
-            licensee.allow_modifications = allow_mod
-            licensee.save()
+            license.allow_commercial_use = allow_commercial
+            license.allow_modifications = allow_mod
+            license.save()
             redirect_url = req.POST.get('next','/')
         except:
             print 'failed'
