@@ -306,6 +306,7 @@ def handle_upload(file=None,url=None):
             file_hash.update(chunk)
         original_filename = file.name
     elif url:
+        logmsg('handling url upload')
         f = urllib2.urlopen(url)
         CHUNK_SIZE = 4096
         while True:

@@ -137,7 +137,7 @@ def url_upload(req):
     url = req.json.get('url')
     logmsg('url: %s' % url)
 
-    df = handle_upload(url=url)
+    df, original_filename = handle_upload(url=url)
     submittor = req.user if req.user.is_authenticated() else None
     allow_commercial_use = req.json.get('allow_commercial_use')
     allow_modifications = req.json.get('allow_modifications')
@@ -149,6 +149,7 @@ def url_upload(req):
     sub = Submission(
         user=submittor,
         disk_file=df,
+        original_filename=original_filename,
         url=url,
         scale_type='ul',
         scale_units='degwidth',
