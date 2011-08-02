@@ -31,6 +31,7 @@ from astrometry.net.util import get_page, get_session_form, NoBulletsRenderer
 from astrometry.net.views.tag import TagForm
 
 from string import strip
+import simplejson
 
 class UserImageForm(forms.ModelForm):
     class Meta:
@@ -56,6 +57,30 @@ def user_image(req, user_image_id=None):
     comment_form = get_session_form(req.session, PartialCommentForm)
     tag_form = get_session_form(req.session, TagForm)
 
+    images = {}
+    images['original_display'] = reverse('astrometry.net.views.image.serve_image', kwargs={'id':image.image.display_image.id})
+    images['original'] = reverse('astrometry.net.views.image.serve_image', kwargs={'id':image.image.id})
+    image_type = 'original'
+    if job:
+        if job.calibration:
+            images['annotated_display'] = reverse('annotated_image', kwargs={'jobid':job.id,'size':'display'})
+            images['annotated'] = reverse('annotated_image', kwargs={'jobid':job.id,'size':'full'})
+            images['sdss_display'] = reverse('sdss_image', kwargs={'calid':job.calibration.id,'size':'display'})
+            images['sdss'] = reverse('sdss_image', kwargs={'calid':job.calibration.id,'size':'full'})
+            images['galex_display'] = reverse('galex_image', kwargs={'calid':job.calibration.id,'size':'display'})
+            images['galex'] = reverse('galex_image', kwargs={'calid':job.calibration.id,'size':'full'})
+            images['redgreen_display'] = reverse('red_green_image', kwargs={'job_id':job.id,'size':'display'})
+            images['redgreen'] = reverse('red_green_image', kwargs={'job_id':job.id,'size':'full'})
+            image_type = 'annotated'
+        else:
+            images['extraction_display'] = reverse('astrometry.net.views.image.extraction_image', kwargs={'job_id':job.id,'size':'display'})
+            images['extraction'] = reverse('astrometry.net.views.image.extraction_image', kwargs={'job_id':job.id,'size':'full'})
+
+    image_type = req.GET.get('image', image_type)
+    if image_type in images:
+        display_url = images[image_type + '_display']
+        fullsize_url = images[image_type]
+        
     logmsg(image.get_absolute_url())
     context = {
         'display_image': image.image.get_display_image(),
@@ -65,6 +90,10 @@ def user_image(req, user_image_id=None):
         'comment_form': comment_form,
         #'license_form': license_form,
         'tag_form': tag_form,
+        'images': simplejson.dumps(images),
+        'display_url': display_url,
+        'fullsize_url': fullsize_url,
+        'image_type': image_type,
     }
 
     if image.is_public() or (image.user == req.user and req.user.is_authenticated()):
@@ -101,6 +130,8 @@ def edit(req, user_image_id=None):
 def serve_image(req, id=None):
     image = get_object_or_404(Image, pk=id)
     res = HttpResponse(mimetype=image.get_mime_type())
+    if 'filename' in req.GET:
+        res['Content-Disposition'] = 'filename=%s' % req.GET['filename']
     image.render(res)
     return res
 

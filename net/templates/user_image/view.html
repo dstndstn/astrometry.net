@@ -67,31 +67,14 @@ div#edit_license {
 {% include 'comment/comment.js' %}
 {% include 'tag/tag.js' %}
 <script type="text/javascript">
-    
-var images = new Array();
+var images = {{ images|safe }}
 var current_image = "none";
-images['original_display'] ="{% url astrometry.net.views.image.serve_image display_image.id %}";
-images['original'] ="{% url astrometry.net.views.image.serve_image image.image.id %}";
-{% if calib %}
-images['annotated_display'] = "{% url astrometry.net.views.image.annotated_image jobid=job.id size='display' %}";
-images['annotated'] = "{% url astrometry.net.views.image.annotated_image jobid=job.id size='full' %}";
-images['sdss_display'] = "{% url astrometry.net.views.image.sdss_image calid=job.calibration.id size='display' %}";
-images['sdss'] = "{% url astrometry.net.views.image.sdss_image calid=job.calibration.id size='full' %}";
-images['galex_display'] = "{% url astrometry.net.views.image.galex_image calid=job.calibration.id size='display' %}";
-images['galex'] = "{% url astrometry.net.views.image.galex_image calid=job.calibration.id size='full' %}";
-images['redgreen_display'] = "{% url astrometry.net.views.image.red_green_image job_id=job.id size='display' %}";
-images['redgreen'] = "{% url astrometry.net.views.image.red_green_image job_id=job.id size='full' %}";
-{% else %}
-    {% if job %}
-    images['extraction_display'] = "{% url astrometry.net.views.image.extraction_image job_id=job.id size='display' %}";
-    images['extraction'] = "{% url astrometry.net.views.image.extraction_image job_id=job.id size='full' %}";
-    {% endif %}
-{% endif %}
 
 function changeImage(key) {
     if (current_image != key) {
         current_image = key;
 
+        window.location.hash = key;
         link = $('a[title='+key+']')
         link.addClass('disabled')
         link.siblings().removeClass('disabled')
@@ -116,15 +99,14 @@ $(document).ready(function() {
         $('#hover_bar').stop().fadeTo('fast',0);
     });
     $('#hover_bar').stop().fadeTo('fast',0);
-    {% if request.GET.image %}
-        changeImage('{{ request.GET.image }}');
-    {% else %} 
-        {% if calib %}
-        changeImage('annotated');
-        {% else %}
-        changeImage('original');
-        {% endif %}
-    {% endif %}
+    
+    hash = window.location.hash.substring(1);
+    if (hash) {
+        changeImage(window.location.hash.substring(1));
+    }
+    else {
+        changeImage('{{ image_type }}');
+    }
 });
 </script>
 {% endblock %}
@@ -145,7 +127,8 @@ $(document).ready(function() {
     <div id="details">
         Submitted by {% include 'user/display_name.html' with user=image.user %}<br />
         <div class="indent">on <span class="timestamp">{{ image.submission.submitted_on }}</span></div>
-        <div class="indent">as "{{ image.original_file_name }}"</div>
+        <div class="indent">as "<a href="{% url astrometry.net.views.image.serve_image id=image.image.id %}?filename={{ image.original_file_name }}">
+            {{ image.original_file_name }}</a>"</div>
         <div class="indent" id="license">under {% include 'license/license_link.html' with licensable=image %}</a></div>
         {% if user.is_authenticated and user == image.user %}
         {% comment %}
@@ -228,7 +211,7 @@ $(document).ready(function() {
     {% endif %}
     <div id="submitted_field">
         <div id="image_container">
-            <img id="user_image" src="{% url astrometry.net.views.image.serve_image display_image.id %}" />
+            <img id="user_image" src="{{ display_url }}" />
             <div id="hover_bar">
                 <div id="image_link_block">
                     <a href="?image=original" title="original" class="image_link">original</a> |
@@ -244,7 +227,7 @@ $(document).ready(function() {
                     {% endif %}
                 </div>
                 <div id="fullsize_link_block">
-                    <a href="" id="fullsize_link">fullsize ({{image.image.width}}x{{image.image.height}} pixels)</a>
+                    <a href="{{ fullsize_url }}" id="fullsize_link">fullsize ({{image.image.width}}x{{image.image.height}} pixels)</a>
                 </div>
             </div>
         </div>
