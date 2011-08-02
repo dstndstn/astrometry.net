@@ -62,6 +62,10 @@ $(document).ready(function() {
     &gt; User:
     {% include 'user/display_name.html' with user=display_user %}
 {% endif %}
+{% if search_category == 'image' and image %}
+    &gt; Nearby:
+    <a href="{{ image.get_absolute_url }}">{{ image.original_file_name }}</a>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -73,6 +77,7 @@ $(document).ready(function() {
                 <li><a href="" title="tag" class="search_category_link">By Tag</a></li>
                 <li><a href="" title="user" class="search_category_link">By User</a></li>
                 <li><a href="" title="location" class="search_category_link">By Location</a></li>
+                <li><a href="" title="image" class="search_category_link">By Image</a></li>
             </ul>
         </div>
         <div id="search_settings">
@@ -88,6 +93,9 @@ $(document).ready(function() {
             <div id="location_block" class="category_block">
                 cone search [TODO]
                 {{ form.location }}
+            </div>
+            <div id="image_block" class="category_block">
+                {{ form.image }}
             </div>
             <br />
             Show: {{ form.show }} 

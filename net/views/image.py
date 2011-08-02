@@ -189,7 +189,7 @@ def onthesky_image(req, zoom=None, calid=None):
         return HttpResponse('invalid zoom')
     f = open(plotfn)
     res = HttpResponse(f)
-    res['Content-type'] = 'image/png'
+    res['Content-Type'] = 'image/png'
     return res
 
 
@@ -216,7 +216,7 @@ def galex_image(req, calid=None, size='full'):
         logmsg('Cache hit for key "%s"' % key)
     f = open(df.get_path())
     res = HttpResponse(f)
-    res['Content-type'] = 'image/png'
+    res['Content-Type'] = 'image/png'
     return res
 
 
@@ -240,7 +240,7 @@ def sdss_image(req, calid=None, size='full'):
         logmsg('Cache hit for key "%s"' % key)
     f = open(df.get_path())
     res = HttpResponse(f)
-    res['Content-type'] = 'image/png'
+    res['Content-Type'] = 'image/png'
     return res
 
 def red_green_image(req, job_id=None, size='full'):
@@ -367,7 +367,7 @@ def extraction_image(req, job_id=None, size='full'):
     '''
     f = open(exfn)
     res = HttpResponse(f)
-    res['Content-type'] = 'image/png'
+    res['Content-Type'] = 'image/png'
     return res
 
 # 2MASS:
@@ -528,7 +528,8 @@ def kml_file(req, jobid=None):
 class ImageSearchForm(forms.Form):
     SEARCH_CATEGORIES = (('tag', 'By Tag'),
                          ('user', 'By User'),
-                         ('location', 'By Location'))
+                         ('location', 'By Location'),
+                         ('image', 'By Image'))
 
     search_category = forms.ChoiceField(widget=forms.HiddenInput(),
                                         choices=SEARCH_CATEGORIES,
@@ -538,6 +539,7 @@ class ImageSearchForm(forms.Form):
                                                   required=False)
     user = forms.CharField(widget=forms.TextInput(attrs={'autocomplete':'off'}),
                                                   required=False)
+    image = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
     calibrated = forms.BooleanField(initial=True, required=False)
     processing = forms.BooleanField(initial=False, required=False)
@@ -563,13 +565,16 @@ def hide(req, user_image_id):
     return redirect('astrometry.net.views.image.user_image', user_image_id)
     
 def search(req):
-    if req.GET and (req.GET.get('calibrated')
-                    or req.GET.get('processing')
-                    or req.GET.get('failed')):
-        form = ImageSearchForm(req.GET)
+    if req.GET:
+        form_data = req.GET.copy()
+        if not (req.GET.get('calibrated')
+                or req.GET.get('processing')
+                or req.GET.get('failed')):
+            form_data['calibrated'] = 'on'
     else:
-        form = ImageSearchForm()
+        form_data = None
 
+    form = ImageSearchForm(form_data)
     context = {}
     images = UserImage.objects.all()
     page_number = req.GET.get('page',1)
@@ -607,7 +612,14 @@ def search(req):
                     context['display_user'] = user[0] 
                 else:
                     context['display_users'] = User.objects.filter(profile__display_name__startswith=username)[:5]
-        
+        elif category == 'image':
+            print "test"
+            image_id = form.cleaned_data.get('image')
+            if image_id:
+                image = get_object_or_404(UserImage, pk=image_id)
+                context['image'] = image
+                images = image.get_neighbouring_user_images()
+
 
     if calibrated is False:
         images = images.exclude(jobs__status='S')

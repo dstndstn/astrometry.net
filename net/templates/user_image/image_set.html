@@ -2,8 +2,11 @@
 {% spaceless %}
 {% for image in images %}
     <!--<img class="image_container" src="{% url astrometry.net.views.image.serve_image id=image.image.thumbnail.id %}" />-->
-    <div class="loading_container">
-    <div class="image_container" style="background-image: url('{% url astrometry.net.views.image.serve_image id=image.image.get_thumbnail.id %}')"> 
+    <div class="loading_container" 
+    {% if thumbnail_size == 'small' %}
+        style="width: 100px; height: 100px;"
+    {% endif %}>
+    <div class="image_container" style="background-image: url('{% url serve_image id=image.image.get_thumbnail.id %}')"> 
         <a href="{% url astrometry.net.views.image.user_image image.id %}"></a>
     </div>
     </div>

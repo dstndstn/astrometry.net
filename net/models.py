@@ -656,7 +656,6 @@ class UserImage(Commentable, Licensable, Hideable):
         self.get_license_name_uri()
         return super(UserImage, self).save(*args, **kwargs)
 
-
     def add_machine_tags(self, job):
         logmsg('adding machine tags for %s' % self)
         sky_objects = job.calibration.get_objs_in_field()
@@ -679,7 +678,6 @@ class UserImage(Commentable, Licensable, Hideable):
         logmsg('done adding machine tags')
         #self.save()
                 
-
     def get_best_job(self):
         jobs = self.jobs.all()
         if jobs.count() == 1:
@@ -700,6 +698,21 @@ class UserImage(Commentable, Licensable, Hideable):
         kwargs = {'user_image_id':self.id}
         abs_url = reverse('astrometry.net.views.image.user_image', kwargs=kwargs)
         return abs_url
+    
+    def is_calibrated(self):
+        job = self.get_best_job()
+        return (job and job.calibration)
+
+    def get_neighbouring_user_images(self):
+        if self.is_calibrated():
+            job = self.get_best_job()
+            images = job.calibration.sky_location.get_neighbouring_user_images()
+            images = images.exclude(pk=self.id)
+        else:
+            images = UserImage.objects.none()
+        return images
+
+
 
 
 class Submission(Licensable, Hideable):
