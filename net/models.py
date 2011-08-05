@@ -5,7 +5,6 @@ import hashlib
 import shutil
 import tempfile
 from datetime import datetime
-from copy import deepcopy
 
 from django.db import models
 from django.contrib.auth.models import User
