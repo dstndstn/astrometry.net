@@ -410,12 +410,13 @@ def dosub(sub):
             license.save(
                 default_license=sub.user.get_profile().default_license
             )
+            comment_receiver = CommentReceiver.objects.create()
             uimg,created = UserImage.objects.get_or_create(
                 submission=sub,
                 image=img,
                 user=sub.user,
                 license=license,
-                comment_receiver=CommentReceiver.objects.create(),
+                comment_receiver=comment_receiver,
                 defaults=dict(original_file_name=original_filename,
                              publicly_visible = sub.publicly_visible))
 
