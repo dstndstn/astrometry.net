@@ -70,7 +70,7 @@ Albums &gt;
 </div>
 <div id="comments">
     <h3>Comments</h3>
-    {% include 'comment/list.html' with comments=album.comments.all next=request.path %}
-    {% include 'comment/form.html' with comment_form=comment_form category='album' recipient_id=album.id next=request.path %}
+    {% include 'comment/list.html' with comments=album.comment_receiver.comments.all next=request.path %}
+    {% include 'comment/form.html' with comment_form=comment_form category='album' recipient_id=album.comment_receiver.id next=request.path %}
 </div>
 {% endblock %}

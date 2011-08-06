@@ -249,8 +249,8 @@ $(document).ready(function() {
     {% endif %}
     <div id="comments">
         <h3>Comments</h3>
-        {% include 'comment/list.html' with comments=image.comments.all next=request.path %}
-        {% include 'comment/form.html' with comment_form=comment_form category='user_image' recipient_id=image.id next=request.path %}
+        {% include 'comment/list.html' with comments=image.comment_receiver.comments.all next=request.path %}
+        {% include 'comment/form.html' with comment_form=comment_form category='user_image' recipient_id=image.comment_receiver.id next=request.path %}
     </div>
 </div>
 <div style="clear:both"></div>

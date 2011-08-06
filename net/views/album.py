@@ -51,7 +51,7 @@ def album(req, album_id=None):
 class AlbumForm(forms.ModelForm):
     class Meta:
         model = Album
-        exclude = ('user', 'owner', 'user_images', 'tags', 'created_at')
+        exclude = ('user', 'owner', 'user_images', 'tags', 'created_at', 'comment_receiver')
         widgets = {
             'description': forms.Textarea(attrs={'cols':60,'rows':3}),
             'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer)
@@ -98,7 +98,9 @@ def new(req):
         album = Album(user=req.user)
         form = AlbumForm(req.POST, instance=album)
         if form.is_valid():
-            form.save()
+            form.save(commit=False)
+            album.comment_receiver=CommentReceiver.objects.create()
+            album.save()
             return redirect(album)
         else:
             store_session_form(req.session, AlbumForm, req.POST)

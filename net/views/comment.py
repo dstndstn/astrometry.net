@@ -24,7 +24,7 @@ class PartialCommentForm(forms.ModelForm):
 
 @login_required
 def new(req, category=None, recipient_id=None):
-    recipient = get_object_or_404(Commentable, pk=recipient_id)
+    recipient = get_object_or_404(CommentReceiver, pk=recipient_id)
     if req.method == 'POST':
         form = PartialCommentForm(req.POST)
         redirect_url = req.POST.get('next', '/')
