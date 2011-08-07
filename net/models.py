@@ -466,6 +466,10 @@ class SourceList(Image):
         
 
 
+class SkyObject(models.Model):
+    name = models.CharField(max_length=1024, primary_key=True)
+
+
 class Tag(models.Model):
     # user = models.ForeignKey(User) # do we need to keep track of who tags what?
     text = models.CharField(max_length=4096, primary_key=True)
@@ -739,6 +743,8 @@ class UserImage(Hideable):
     tags = models.ManyToManyField('Tag',related_name='user_images',
         through='TaggedUserImage')
 
+    sky_objects = models.ManyToManyField('SkyObject', related_name='user_images')
+
     description = models.CharField(max_length=1024, blank=True)
     original_file_name = models.CharField(max_length=256)
     submission = models.ForeignKey('Submission', related_name='user_images')
@@ -756,6 +762,21 @@ class UserImage(Hideable):
         self.license.get_license_name_uri()
         self.license.save()
         return super(UserImage, self).save(*args, **kwargs)
+
+
+    def add_sky_objects(self, job):
+        logmsg('adding sky objects for %s' % self)
+        sky_objects = job.calibration.get_objs_in_field()
+        for sky_object in sky_objects:
+            log_tag = unicode(sky_object,errors='ignore')
+            logmsg(u'getting or creating sky object %s' % log_tag)
+            sky_obj,created = SkyObject.objects.get_or_create(name=sky_object)
+            if created:
+                logmsg('created sky objects')
+            self.sky_objects.add(sky_obj)
+        logmsg('done adding machine tags')
+        #self.save()
+
 
     def add_machine_tags(self, job):
         logmsg('adding machine tags for %s' % self)
@@ -865,6 +886,9 @@ class Submission(Hideable):
     submitted_on = models.DateTimeField(auto_now_add=True)
     processing_started = models.DateTimeField(null=True)
     processing_finished = models.DateTimeField(null=True)
+
+    processing_retries = models.PositiveIntegerField(default=0)
+
     error_message = models.CharField(max_length=256, null=True)
 
     license = models.OneToOneField('License')
