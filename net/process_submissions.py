@@ -304,19 +304,28 @@ def dojob(job, userimage, log=None):
     logmsg('Finished job',job.id)
     return job.id
 
-def try_dosub(sub):
+def try_dosub(sub, max_retries):
     try:
         return dosub(sub)
     except:
         print 'Caught exception while processing Submission', sub
         traceback.print_exc(None, sys.stdout)
         # FIXME -- sub.set_status()...
-        sub.error_message = (
-            'Caught exception while processing Submission: ' +  str(sub) + '\n'
-            + traceback.format_exc(None))
-        sub.set_processing_finished()
         sub.save()
-        return 'exception'
+
+        if (sub.processing_retries < 2):
+            print 'Retrying processing Submission %s' % str(sub)
+            sub.processing_retries += 1
+            sub.save()
+            return try_dosub(sub, max_retries)
+        else:
+            print 'Submission retry limit reached'
+            sub.error_message = (
+                'Caught exception while processing Submission: ' +  str(sub) + '\n'
+                + traceback.format_exc(None))
+            sub.set_processing_finished()
+            sub.save()
+            return 'exception'
 
 def dosub(sub):
     logmsg('sub license settings: commercial=%s, modifications=%s' % (
@@ -526,7 +535,7 @@ def job_callback(result):
     print 'Job callback: Result:', result
 
 
-def main(dojob_nthreads, dosub_nthreads, refresh_rate):
+def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
     dojob_pool = None
     dosub_pool = None
     if dojob_nthreads > 1:
@@ -538,6 +547,7 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate):
         dosub_pool = multiprocessing.Pool(processes=dosub_nthreads)
 
     print 'Refresh rate: %f seconds' % refresh_rate
+    print 'Submission processing retry limit: %d' % max_sub_retries
 
     # Find Submissions that have been started but not finished;
     # reset the start times to null.
@@ -630,11 +640,14 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate):
             qs.save()
 
             if dosub_pool:
-                res = dosub_pool.apply_async(try_dosub, (sub,),
-                                             callback=sub_callback)
+                res = dosub_pool.apply_async(
+                    try_dosub,
+                    (sub, max_sub_retries),
+                    callback=sub_callback
+                )
                 subresults.append((sub.id, res))
             else:
-                dosub(sub)
+                try_dosub(sub, max_sub_retries)
 
 
         for userimage in newuis:
@@ -659,9 +672,11 @@ if __name__ == '__main__':
                       default=3, help='Set the number of threads to process jobs')
     parser.add_option('--subthreads', '-s', dest='subthreads', type='int',
                       default=2, help='Set the number of threads to process submissions')
+    parser.add_option('--maxsubretries', '-m', dest='maxsubretries', type='int',
+                      default=20, help='Set the maximum number of times to retry processing a submission')
     parser.add_option('--refreshrate', '-r', dest='refreshrate', type='float',
                       default=5, help='Set how often to check for new jobs and submissions (in seconds)')
     opt,args = parser.parse_args()
 
-    main(opt.jobthreads, opt.subthreads, opt.refreshrate)
+    main(opt.jobthreads, opt.subthreads, opt.refreshrate, opt.maxsubretries)
 
