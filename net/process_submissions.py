@@ -50,6 +50,7 @@ from log import *
 
 from django.utils.log import dictConfig
 from django.db.models import Count
+from django.db import DatabaseError
 from django.db.models import Q
 
 dictConfig(settings.LOGGING)
@@ -307,13 +308,8 @@ def dojob(job, userimage, log=None):
 def try_dosub(sub, max_retries):
     try:
         return dosub(sub)
-    except:
-        print 'Caught exception while processing Submission', sub
-        traceback.print_exc(None, sys.stdout)
-        # FIXME -- sub.set_status()...
-        sub.save()
-
-        if (sub.processing_retries < 2):
+    except DatabaseError as e:
+        if (sub.processing_retries < max_retries):
             print 'Retrying processing Submission %s' % str(sub)
             sub.processing_retries += 1
             sub.save()
@@ -326,6 +322,16 @@ def try_dosub(sub, max_retries):
             sub.set_processing_finished()
             sub.save()
             return 'exception'
+    except Exception:
+        print 'Caught exception while processing Submission', sub
+        traceback.print_exc(None, sys.stdout)
+        # FIXME -- sub.set_status()...
+        sub.error_message = (
+            'Caught exception while processing Submission: ' +  str(sub) + '\n'
+            + traceback.format_exc(None))
+        sub.set_processing_finished()
+        sub.save()
+        return 'exception'
 
 def dosub(sub):
     logmsg('sub license settings: commercial=%s, modifications=%s' % (
