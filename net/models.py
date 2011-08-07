@@ -902,6 +902,11 @@ class Submission(Hideable):
         return ('Submission %i: file <%s>, url %s, proc_started=%s' %
                 (self.id, str(self.disk_file), self.url, str(self.processing_started)))
 
+    def set_error_message(self, msg):
+        if len(msg) > 255:
+            msg = msg[:252] + '...'
+        self.error_message = msg
+
     def get_user_image(self):
         uis = self.user_images.all()
         if uis.count():

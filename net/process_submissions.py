@@ -316,17 +316,17 @@ def try_dosub(sub, max_retries):
             return try_dosub(sub, max_retries)
         else:
             print 'Submission retry limit reached'
-            sub.error_message = (
+            sub.set_error_message(
                 'Caught exception while processing Submission: ' +  str(sub) + '\n'
                 + traceback.format_exc(None))
             sub.set_processing_finished()
             sub.save()
             return 'exception'
-    except Exception:
+    except:
         print 'Caught exception while processing Submission', sub
         traceback.print_exc(None, sys.stdout)
         # FIXME -- sub.set_status()...
-        sub.error_message = (
+        sub.set_error_message(
             'Caught exception while processing Submission: ' +  str(sub) + '\n'
             + traceback.format_exc(None))
         sub.set_processing_finished()
