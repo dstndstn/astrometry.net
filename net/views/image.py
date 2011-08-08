@@ -57,6 +57,7 @@ class UserImageForm(forms.ModelForm):
             'owner',
             'comment_receiver',
             'license',
+            'sky_objects',
         )
         widgets = {
             'description': forms.Textarea(attrs={'cols':60,'rows':3}),
@@ -564,6 +565,10 @@ class ImageSearchForm(forms.Form):
                                                   required=False)
     image = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
+    ra = forms.FloatField(required=False)
+    dec = forms.FloatField(required=False)
+    radius = forms.FloatField(required=False)
+
     calibrated = forms.BooleanField(initial=True, required=False)
     processing = forms.BooleanField(initial=False, required=False)
     failed = forms.BooleanField(initial=False, required=False)
@@ -635,14 +640,34 @@ def search(req):
                     context['display_user'] = user[0] 
                 else:
                     context['display_users'] = User.objects.filter(profile__display_name__startswith=username)[:5]
+        elif category == 'location':
+            ra = form.cleaned_data.get('ra')
+            dec = form.cleaned_data.get('dec')
+            radius = form.cleaned_data.get('radius')
+
+            ra *= math.pi/180
+            dec *= math.pi/180
+            tempr = math.cos(dec)
+            x = tempr*math.cos(ra)
+            y = tempr*math.sin(ra)
+            z = math.sin(dec)
+            r = radius/180*math.pi
+           
+            # HACK - there's probably a better way to do this..?
+            where = ('(x-(%(x)f))*(x-(%(x)f))+(y-(%(y)f))*(y-(%(y)f))+(z-(%(z)f))*(z-(%(z)f)) < (%(r)f)*(%(r)f)'
+                    % dict(x=x,y=y,z=z,r=r))
+            cals = Calibration.objects.extra(where=[where]).select_related('job__user_image')
+            images = []
+            for cal in cals:
+                images += [cal.job.user_image.id]
+            images = UserImage.objects.filter(pk__in=images)
+
         elif category == 'image':
-            print "test"
             image_id = form.cleaned_data.get('image')
             if image_id:
                 image = get_object_or_404(UserImage, pk=image_id)
                 context['image'] = image
                 images = image.get_neighbouring_user_images()
-
 
     if calibrated is False:
         images = images.exclude(jobs__status='S')

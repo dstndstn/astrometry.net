@@ -289,7 +289,17 @@ def dojob(job, userimage, log=None):
 
         # Find bounds for the Calibration object.
         r0,r1,d0,d1 = wcs.radec_bounds()
-        calib = Calibration(raw_tan=tan, ramin=r0, ramax=r1, decmin=d0, decmax=d1, 
+        # Find cartesian coordinates
+        ra *= math.pi/180
+        dec *= math.pi/180
+        tempr = math.cos(dec)
+        x = tempr*math.cos(ra)
+        y = tempr*math.sin(ra)
+        z = math.sin(dec)
+        r = radius/180*math.pi
+
+        calib = Calibration(raw_tan=tan, ramin=r0, ramax=r1, decmin=d0, decmax=d1,
+                            x=x,y=y,z=z,r=r,
                             sky_location=sky_location)
         calib.save()
         log.msg('Created Calibration', calib)
@@ -374,18 +384,23 @@ def dosub(sub):
                     img = get_or_create_source_list(df, sub.source_type)
                 # create UserImage object.
                 if img:
+                    license = License(
+                         allow_modifications = sub.license.allow_modifications,
+                         allow_commercial_use = sub.license.allow_commercial_use,
+                    )
+                    license.save(
+                        default_license=sub.user.get_profile().default_license
+                    )
+                    comment_receiver = CommentReceiver.objects.create()
                     uimg,created = UserImage.objects.get_or_create(
                         submission=sub,
                         image=img,
                         user=sub.user,
+                        license=license,
+                        comment_receiver=comment_receiver,
                         defaults=dict(original_file_name=tarinfo.name,
-                                      allow_modifications = sub.allow_modifications,
-                                      allow_commercial_use = sub.allow_commercial_use,
-                                      publicly_visible = sub.publicly_visible))
-                    if sub.album:
-                        sub.album.user_images.add(uimg)
+                                     publicly_visible = sub.publicly_visible))
 
-                #os.remove(tempfn)
         tar.close()
         shutil.rmtree(dirnm, ignore_errors=True)
     else:
@@ -418,7 +433,7 @@ def dosub(sub):
             img = get_or_create_source_list(df, sub.source_type)
         # create UserImage object.
         if img:
-            license = License.objects.create(
+            license = License(
                  allow_modifications = sub.license.allow_modifications,
                  allow_commercial_use = sub.license.allow_commercial_use,
             )

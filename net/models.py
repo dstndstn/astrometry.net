@@ -487,13 +487,19 @@ class Calibration(models.Model):
     sip = models.ForeignKey('SipWCS', null=True)
 
     # Reverse mappings:
-    #   jobs  -> Job
+    #   job  -> Job
 
     # RA,Dec bounding box.
     ramin  = models.FloatField()
     ramax  = models.FloatField()
     decmin = models.FloatField()
     decmax = models.FloatField()
+    
+    # cartesian coordinates on unit sphere (for cone search)
+    x = models.FloatField()
+    y = models.FloatField()
+    z = models.FloatField()
+    r = models.FloatField()
     
     sky_location = models.ForeignKey('SkyLocation', related_name='calibrations', null=True)
 
@@ -502,13 +508,8 @@ class Calibration(models.Model):
         return s
 
     def get_wcs_file(self):
-        jobs = self.jobs.all()
-        if len(jobs) == 0:
-            logmsg('Calibration.wcs_path: I have no Jobs: my id=%i' % self.id)
-            return None
-        job = jobs[0]
-        logmsg('Calibration: job is', job)
-        return job.get_wcs_file()
+        logmsg('Calibration: job is', self.job)
+        return self.job.get_wcs_file()
 
     def wcs(self):
         return self.raw_tan
@@ -558,24 +559,23 @@ class Calibration(models.Model):
             return cmd
         
         objs = []
-        for job in self.jobs.all():
-            cmd = annotate_command(job)
-            cmd += '-L > %s' % job.get_obj_file()
-            run_convert_command(cmd)
-            objfile = open(job.get_obj_file(), 'r')
-            objtxt = objfile.read()
-            objfile.close()
-            for objline in objtxt.split('\n'):
-                for obj in objline.split('/'):
-                    obj = obj.strip()
-                    if obj != '':
-                        objs.append(obj)
+        cmd = annotate_command(self.job)
+        cmd += '-L > %s' % self.job.get_obj_file()
+        run_convert_command(cmd)
+        objfile = open(self.job.get_obj_file(), 'r')
+        objtxt = objfile.read()
+        objfile.close()
+        for objline in objtxt.split('\n'):
+            for obj in objline.split('/'):
+                obj = obj.strip()
+                if obj != '':
+                    objs.append(obj)
         return objs
 
 
 class Job(models.Model):
-    calibration = models.ForeignKey('Calibration', null=True,
-        related_name="jobs")
+    calibration = models.OneToOneField('Calibration', null=True,
+        related_name="job")
     
     STATUS_CHOICES = (
         ('S', 'Success'), 
@@ -758,9 +758,7 @@ class UserImage(Hideable):
 
     def save(self, *args, **kwargs):
         self.owner = self.user
-        self.license.replace_license_default(self.user.get_profile().default_license)
-        self.license.get_license_name_uri()
-        self.license.save()
+        self.license.save(self.user.get_profile().default_license)
         return super(UserImage, self).save(*args, **kwargs)
 
 
@@ -904,7 +902,7 @@ class Submission(Hideable):
 
     def set_error_message(self, msg):
         if len(msg) > 255:
-            msg = msg[:252] + '...'
+            msg = '...' + msg[-252:]
         self.error_message = msg
 
     def get_user_image(self):
