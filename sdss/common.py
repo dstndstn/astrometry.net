@@ -378,8 +378,8 @@ class PsField(SdssFile):
 		self.dgpsf_s1 = t.psf_sigma1_2g
 		self.dgpsf_s2 = t.psf_sigma2_2g
 		self.dgpsf_b  = t.psf_b_2g
-		# summary PSF width.
-		self.psf_fwhm = t.psf_width
+		# summary PSF width (sigmas)
+		self.psf_fwhm = t.psf_width * (2.*np.sqrt(2.*np.log(2.)))
 
 	def getPsfFwhm(self, bandnum):
 		return self.psf_fwhm[bandnum]
