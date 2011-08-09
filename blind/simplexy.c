@@ -196,6 +196,8 @@ int simplexy_run(simplexy_t* s) {
 	void* bgfree = NULL;
 	// PSF-smoothed image.
 	float* smoothed = NULL;
+	// malloc'd smoothed image to free.
+	void* smoothfree = NULL;
 	// Connected-components image.
 	int* ccimg = NULL;
 	int nblobs;
@@ -285,17 +287,29 @@ int simplexy_run(simplexy_t* s) {
 		}
 	}
 
-	smoothed = malloc(nx * ny * sizeof(float));
-
-	/* smooth by the point spread function (the optimal detection
-	   filter, since we assume a symmetric Gaussian PSF) */
-	if (bgsub)
-		dsmooth2(bgsub, nx, ny, s->dpsf, smoothed);
-	else
-		dsmooth2_i16(bgsub_i16, nx, ny, s->dpsf, smoothed);
+	if (s->dpsf > 0.0) {
+		smoothed = malloc(nx * ny * sizeof(float));
+		smoothfree = smoothed;
+		/* smooth by the point spread function (the optimal detection
+		 filter, since we assume a symmetric Gaussian PSF) */
+		if (bgsub)
+			dsmooth2(bgsub, nx, ny, s->dpsf, smoothed);
+		else
+			dsmooth2_i16(bgsub_i16, nx, ny, s->dpsf, smoothed);
+	} else {
+		if (bgsub)
+			smoothed = bgsub;
+		else {
+			smoothed = malloc(nx * ny * sizeof(float));
+			smoothfree = smoothed;
+			for (i=0; i<(nx*ny); i++)
+				smoothed[i] = bgsub_i16[i];
+		}
+	}
 
 	if (s->smoothimgfn) {
-		logverb("Writing smoothed background-subtracted image \"%s\"\n", s->smoothimgfn);
+		logverb("Writing smoothed background-subtracted image \"%s\"\n",
+				s->smoothimgfn);
 		write_fits_float_image(smoothed, nx, ny, s->smoothimgfn);
 	}
 
@@ -328,10 +342,10 @@ int simplexy_run(simplexy_t* s) {
 	/* find pixels above the noise level, and flag a box of pixels around each one. */
 	mask = malloc(nx*ny);
 	if (!dmask(smoothed, nx, ny, limit, s->dpsf, mask)) {
-		free(smoothed);
+		FREEVEC(smoothfree);
 		return 0;
 	}
-	FREEVEC(smoothed);
+	FREEVEC(smoothfree);
 
 	/* save the mask image, if requested. */
 	if (s->maskimgfn) {

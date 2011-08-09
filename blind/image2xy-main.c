@@ -31,7 +31,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hi:Oo:8Hd:D:ve:B:S:M:s:p:P:bU:g:C:m:a:G:";
+static const char* OPTIONS = "hi:Oo:8Hd:D:ve:B:S:M:s:p:P:bU:g:C:m:a:G:w:";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -47,14 +47,15 @@ static void printHelp() {
             "   [-H]  downsample by a factor of 2 before running simplexy.\n"
             "   [-d <downsample-factor>]  downsample by an integer factor before running simplexy.\n"
             "   [-D <downsample-factor>] downsample, if necessary, by this many factors of two.\n"
-			"   [-s <median-filtering scale>]: set median-filter box size (default 100 pixels)\n"
+			"   [-s <median-filtering scale>]: set median-filter box size (default %i pixels)\n"
+			"   [-w <PSF width>]: set Gaussian PSF sigma (default %g pixel)\n"
 			"   [-g <sigma>]: set image noise level\n"
-			"   [-p <sigmas>]: set significance level of peaks (default 8 sigmas)\n"
-			"   [-a <saddle-sigmas>]: set \"saddle\" level joining peaks (default 5 sigmas)\n"
+			"   [-p <sigmas>]: set significance level of peaks (default %g sigmas)\n"
+			"   [-a <saddle-sigmas>]: set \"saddle\" level joining peaks (default %g sigmas)\n"
 			"   [-P <image plane>]: pull out a single plane of a multi-color image (default: first plane)\n"
 			"   [-b]: don't do (median-based) background subtraction\n"
 			"   [-G <background>]: subtract this 'global' background value; implies -b\n"
-			"   [-m]: set maximum extended object size for deblending (default 1000 pixels)\n"
+			"   [-m]: set maximum extended object size for deblending (default %i pixels)\n"
 			"\n"
 			"   [-S <background-subtracted image>]: save background-subtracted image to this filename (FITS float image)\n"
 			"   [-B <background image>]: save background image to filename\n"
@@ -67,7 +68,12 @@ static void printHelp() {
 			"   image2xy 'file.fits[1]'   - process first extension.\n"
 			"   image2xy 'file.fits[2]'   - process second extension \n"
 			"   image2xy file.fits+2      - same as above \n"
-			"\n");
+			"\n",
+			SIMPLEXY_DEFAULT_HALFBOX,
+			SIMPLEXY_DEFAULT_DPSF,
+			SIMPLEXY_DEFAULT_PLIM,
+			SIMPLEXY_DEFAULT_SADDLE,
+			SIMPLEXY_DEFAULT_MAXSIZE);
 }
 
 extern char *optarg;
@@ -92,6 +98,9 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'w':
+			params->dpsf = atof(optarg);
+			break;
 		case 'a':
 			params->saddle = atof(optarg);
 			break;
