@@ -386,7 +386,8 @@ if __name__ == '__main__':
 	parser.add_option('-s', '--survey', dest='survey', default='dr7',
 					  help=('Set the CasJobs instance to use: one of: ' +
 							', '.join(surveys.keys())))
-
+	parser.add_option('-c', '--context', '--db', dest='dbcontext',
+					  help='Database context ("DR7", "Stripe82", etc)')
 	opt,args = parser.parse_args()
 	cas = surveys[opt.survey]
 
@@ -437,7 +438,7 @@ if __name__ == '__main__':
 			if q.startswith('@'):
 				q = read_file(q[1:])
 			print 'Submitting query: "%s"' % q
-			jobid = cas.submit_query(q)
+			jobid = cas.submit_query(q, dbcontext=opt.dbcontext)
 			print 'Submitted job id', jobid
 			jids.append(jobid)
 		if cmd == 'querywait':

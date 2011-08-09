@@ -192,6 +192,8 @@ int simplexy_run(simplexy_t* s) {
 	// background-subtracted image.
 	float* bgsub = NULL;
 	int16_t* bgsub_i16 = NULL;
+	// malloc'd background image to free.
+	void* bgfree = NULL;
 	// PSF-smoothed image.
 	float* smoothed = NULL;
 	// Connected-components image.
@@ -223,6 +225,7 @@ int simplexy_run(simplexy_t* s) {
 			bgsub = s->image;
 		else {
 			bgsub_i16 = malloc(nx * ny * sizeof(int16_t));
+			bgfree = bgsub_i16;
 			for (i=0; i<nx*ny; i++)
 				bgsub_i16[i] = s->image_u8[i];
 		}
@@ -234,6 +237,7 @@ int simplexy_run(simplexy_t* s) {
 		if (s->image) {
 			float* medianfiltered;
 			medianfiltered = malloc(nx * ny * sizeof(float));
+			bgfree = medianfiltered;
 			dmedsmooth(s->image, nx, ny, s->halfbox, medianfiltered);
 
 			if (s->bgimgfn) {
@@ -265,6 +269,7 @@ int simplexy_run(simplexy_t* s) {
 
 			// Background-subtracted image.
 			bgsub_i16 = malloc(nx * ny * sizeof(int16_t));
+			bgfree = bgsub_i16;
 			for (i=0; i<nx*ny; i++)
 				//bgsub_i16[i] = (int16_t)s->image_u8[i] - (int16_t)medianfiltered_u8[i];
 				bgsub_i16[i] = s->image_u8[i] - medianfiltered_u8[i];
@@ -314,6 +319,11 @@ int simplexy_run(simplexy_t* s) {
 	 */
     logverb("simplexy: finding objects...\n");
 	limit = (s->sigma / (2.0 * sqrt(M_PI) * s->dpsf)) * s->plim;
+
+	if (s->globalbg != 0.0) {
+		limit += s->globalbg;
+		logverb("Increased detection limit by %g to %g to compensate for global background level\n", s->globalbg, limit);
+	}
 
 	/* find pixels above the noise level, and flag a box of pixels around each one. */
 	mask = malloc(nx*ny);
@@ -412,12 +422,12 @@ int simplexy_run(simplexy_t* s) {
 			s->flux[i]       = bgsub_i16[ix + iy * nx];
 			s->background[i] = (float)s->image_u8[ix + iy * nx] - s->flux[i];
 		}
+
+		s->flux[i] -= s->globalbg;
+		s->background[i] += s->globalbg;
     }
 
-	if (!s->nobgsub) {
-		FREEVEC(bgsub);
-		FREEVEC(bgsub_i16);
-	}
+	FREEVEC(bgfree);
 
 	return 1;
 }

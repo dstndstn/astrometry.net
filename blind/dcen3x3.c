@@ -100,7 +100,7 @@ int dcen3x3(float *image, float *xcen, float *ycen)
 	float bx, by, mx , my;
 	int badcen = 0;
 
-	// Find the peak of the quadratic along each rows...
+	// Find the peak of the quadratic along each row...
 	badcen += dcen3(image[0 + 3*0], image[1 + 3*0], image[2 + 3*0], &mx0);
 	badcen += dcen3(image[0 + 3*1], image[1 + 3*1], image[2 + 3*1], &mx1);
 	badcen += dcen3(image[0 + 3*2], image[1 + 3*2], image[2 + 3*2], &mx2);

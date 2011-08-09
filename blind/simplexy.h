@@ -62,6 +62,9 @@ struct simplexy_t {
 	// don't do background subtraction.
 	bool nobgsub;
 
+	// global background.
+	float globalbg;
+
 	// invert the image before processing (for black-on-white images)
 	bool invert;
 

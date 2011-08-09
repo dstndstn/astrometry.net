@@ -28,16 +28,25 @@ def lbtoradec(l, b):
 
 galactictoradec = lbtoradec
 
-# Also "courtesy" of Steve Bickerton in lsst.afw.Coord.
-def ecliptictoradec(a, b, epoch=2000.):
+def eclipticPoleInclination(epoch):
 	T = (epoch - 2000.0) / 100.0
 	eclincl = (23.0 + 26.0/60.0 +
 			   (21.448 - 46.82*T - 0.0006*T*T - 0.0018*T*T*T)/3600.0)
+	return eclincl
+
+# Thanks to Steve Bickerton in lsst.afw.Coord : EclipticCoord::toFk5
+def ecliptictoradec(a, b, epoch=2000.):
+	eclincl = eclipticPoleInclination(epoch)
+	eclipticPoleInFk5(270.0, 90.0 - eclincl)
+	fk5PoleInEcliptic(90.0, 90.0 - eclincl)
+	transform(a, b, eclipticPoleInFk5, fk5PoleInEcliptic)
+
+# Thanks to Steve Bickerton in lsst.afw.Coord : Fk5Coord::toEcliptic
+def radectoecliptic(ra, dec, epoch=2000.):
+	eclincl = eclipticPoleInclination(epoch)
 	eclPoleInEquatorial = (270.0, 90.0 - eclincl)
 	equPoleInEcliptic = (90.0, 90.0 - eclincl)
-	return transform(a, b, equPoleInEcliptic, eclPoleInEquatorial)
-	
-
+	return transform(ra, dec, equPoleInEcliptic, eclPoleInEquatorial)
 
 # scalars (racenter, deccenter) in deg
 # scalar radius in deg
