@@ -257,6 +257,21 @@ def api_login(request):
                               })
 
 @csrf_exempt
+def submission_status(req, sub_id):
+    sub = get_object_or_404(Submission, pk=sub_id)
+    json_response = {
+        'user':sub.user.id,
+        'processing_started':str(sub.processing_started),
+        'processing_finished':str(sub.processing_finished),
+        'user_images':[image.id for image in sub.user_images.all()],
+        'jobs':[job.id for job in sub.get_best_jobs()],
+    }
+
+    if sub.error_message:
+        json_response.update({'error_message':sub.error_message})
+    return HttpResponseJson(json_response)
+
+@csrf_exempt
 def job_status(req, job_id):
     job = get_object_or_404(Job, pk=job_id)
     status = job.get_status_blurb()
