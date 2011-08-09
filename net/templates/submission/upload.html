@@ -27,6 +27,9 @@ function changeScalePreset(type) {
 function changeAlbum(album_val) {
     $('#new_album_title_block').toggle(album_val == 'new');
 }
+function disableSubmit() {
+    $('input[type=submit]').attr('disabled','true');
+}
 $(document).ready(function() {
     $('input[name=upload_type]:radio').click(function() {
         changeUploadType($(this).val());
@@ -65,7 +68,7 @@ Upload
 {% endblock %}
 
 {% block content %}
-<form name="upload_form" action="/upload/" method="post" enctype="multipart/form-data">
+<form onsubmit="disableSubmit()" id="upload_form" name="upload_form" action="/upload/" method="post" enctype="multipart/form-data">
 {% csrf_token %}
 {% if form.errors %}
 Sorry, your submission could not be completed. Please fix all of the <span class="errorlist">highlighted</span> errors:<br /><br />
@@ -241,6 +244,6 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 </tbody>
 </table>
 </div>
-<input type="submit" value="Submit" />
+<input type="submit" value="Submit" class="bigbutton" />
 </form>
 {% endblock %}
