@@ -359,18 +359,12 @@ class Image(models.Model):
     def create_resized_image(self, maxsize):
         if max(self.width, self.height) <= maxsize:
             return self
-        fn = self.disk_file.get_path()
-        f,tmpfn = tempfile.mkstemp()
-        os.close(f)
-        (ext,err) = image2pnm(fn, tmpfn)
-        if ext is None:
-            raise RuntimeError('Failed to make resized image for %s: image2pnm: %s' % (str(self), err))
-        f,imagefn = tempfile.mkstemp()
-        os.close(f)
+        pnmfn = self.get_pnm_path()
+        imagefn = get_temp_file()
         # find scale
         scale = float(maxsize) / float(max(self.width, self.height))
         W,H = int(round(scale * self.width)), int(round(scale * self.height))
-        cmd = 'pnmscale -width %i -height %i %s | pnmtojpeg > %s' % (W, H, tmpfn, imagefn)
+        cmd = 'pnmscale -width %i -height %i %s | pnmtojpeg > %s' % (W, H, pnmfn, imagefn)
         logmsg("Making resized image: %s" % cmd)
         rtn,out,err = run_command(cmd)
         if rtn:
@@ -854,11 +848,11 @@ class Submission(Hideable):
         (1, 'negative'),
     )
 
-    SOURCE_TYPE_CHOICES = (
+    '''SOURCE_TYPE_CHOICES = (
         ('image', 'image'),
         ('fits', 'FITS binary table'),
         ('text', 'text list'),
-    )
+    )'''
     ###
     user = models.ForeignKey(User, related_name='submissions', null=True)
     disk_file = models.ForeignKey(DiskFile, related_name='submissions', null=True)
@@ -877,7 +871,7 @@ class Submission(Hideable):
     radius = models.FloatField(blank=True, null=True)
     downsample_factor = models.PositiveIntegerField(blank=True, null=True)
 
-    source_type = models.CharField(max_length=5, choices=SOURCE_TYPE_CHOICES, default='image')
+    #source_type = models.CharField(max_length=5, choices=SOURCE_TYPE_CHOICES, default='image')
     original_filename = models.CharField(max_length=256)
     album = models.ForeignKey('Album', blank=True, null=True)
 

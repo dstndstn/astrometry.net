@@ -94,7 +94,9 @@ class SubmissionForm(forms.ModelForm):
             #'allow_commercial_use', 'allow_modifications',
             'parity','scale_units','scale_type','scale_lower',
             'scale_upper','scale_est','scale_err','positional_error',
-            'center_ra','center_dec','radius','downsample_factor','source_type')
+            'center_ra','center_dec','radius','downsample_factor',
+            #'source_type'
+            )
         widgets = {
             'scale_type': forms.RadioSelect(renderer=HorizontalRenderer),
             'scale_lower': forms.TextInput(attrs={'size':'5'}),
@@ -107,7 +109,7 @@ class SubmissionForm(forms.ModelForm):
             'radius': forms.TextInput(attrs={'size':'5'}),
             'downsample_factor': forms.TextInput(attrs={'size':'5'}),
             'parity': forms.RadioSelect(renderer=NoBulletsRenderer),
-            'source_type': forms.RadioSelect(renderer=NoBulletsRenderer),
+            #'source_type': forms.RadioSelect(renderer=NoBulletsRenderer),
             'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer),
             #'allow_commercial_use':forms.RadioSelect(renderer=NoBulletsRenderer),
             #'allow_modifications':forms.RadioSelect(renderer=NoBulletsRenderer),

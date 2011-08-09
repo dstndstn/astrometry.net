@@ -36,6 +36,7 @@ from astrometry.util.run_command import run_command
 
 from astrometry.util.util import Tan
 from astrometry.util import util as anutil
+from astrometry.util.pyfits_utils import *
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 #import astrometry.net.settings as settings
@@ -378,28 +379,10 @@ def dosub(sub):
                 tempfn = os.path.join(dirnm, tarinfo.name)
                 df = DiskFile.from_file(tempfn)
                 # create Image object
-                if sub.source_type == 'image':
-                    img = get_or_create_image(df)
-                else:
-                    img = get_or_create_source_list(df, sub.source_type)
+                img = get_or_create_image(df)
                 # create UserImage object.
                 if img:
-                    license = License(
-                         allow_modifications = sub.license.allow_modifications,
-                         allow_commercial_use = sub.license.allow_commercial_use,
-                    )
-                    license.save(
-                        default_license=sub.user.get_profile().default_license
-                    )
-                    comment_receiver = CommentReceiver.objects.create()
-                    uimg,created = UserImage.objects.get_or_create(
-                        submission=sub,
-                        image=img,
-                        user=sub.user,
-                        license=license,
-                        comment_receiver=comment_receiver,
-                        defaults=dict(original_file_name=tarinfo.name,
-                                     publicly_visible = sub.publicly_visible))
+                    create_user_image(sub, img, tarinfo.name)
 
         tar.close()
         shutil.rmtree(dirnm, ignore_errors=True)
@@ -427,106 +410,112 @@ def dosub(sub):
         # assume file is single image
         logmsg('single file')
         # create Image object
-        if sub.source_type == 'image':
-            img = get_or_create_image(df)
-        else:
-            img = get_or_create_source_list(df, sub.source_type)
+        img = get_or_create_image(df)
         # create UserImage object.
         if img:
-            license = License(
-                 allow_modifications = sub.license.allow_modifications,
-                 allow_commercial_use = sub.license.allow_commercial_use,
-            )
-            license.save(
-                default_license=sub.user.get_profile().default_license
-            )
-            comment_receiver = CommentReceiver.objects.create()
-            uimg,created = UserImage.objects.get_or_create(
-                submission=sub,
-                image=img,
-                user=sub.user,
-                license=license,
-                comment_receiver=comment_receiver,
-                defaults=dict(original_file_name=original_filename,
-                             publicly_visible = sub.publicly_visible))
-
-            if sub.album:
-                sub.album.user_images.add(uimg)
+            create_user_image(sub, img, original_filename)
 
     sub.set_processing_finished()
     sub.save()
     return sub.id
 
+def create_user_image(sub, img, original_filename):
+    license = License(
+         allow_modifications = sub.license.allow_modifications,
+         allow_commercial_use = sub.license.allow_commercial_use,
+    )
+    license.save(
+        default_license=sub.user.get_profile().default_license
+    )
+    comment_receiver = CommentReceiver.objects.create()
+    uimg,created = UserImage.objects.get_or_create(
+        submission=sub,
+        image=img,
+        user=sub.user,
+        license=license,
+        comment_receiver=comment_receiver,
+        defaults=dict(original_file_name=original_filename,
+                     publicly_visible = sub.publicly_visible))
+
+    if sub.album:
+        sub.album.user_images.add(uimg)
+
 def get_or_create_image(df):
     # Is there already an Image for this DiskFile?
     try:
-        img,created = Image.objects.get_or_create(disk_file=df, sourcelist__isnull=True)
+        img = Image.objects.get(disk_file=df, display_image__isnull=False, thumbnail__isnull=False)
     except Image.MultipleObjectsReturned:
         logmsg("multiple found")
-        img = Image.objects.filter(disk_file=df, sourelist_isnull=True)
         for i in range(1,len(img)):
             img[i].delete()
         img = img[0]
-        created = False
+    except Image.DoesNotExist:
+        # try to create image assume disk file is an image file (png, jpg, etc)
+        img = create_image(df)
+        if img is None:
+            # try to create sourcelist image
+            img = create_source_list(df)
 
-    if created:
-        try:
-            # FIXME -- move this code to Image?
-            # Convert file to pnm to find its size.
-            fn = df.get_path()
-            f,pnmfn = tempfile.mkstemp()
-            os.close(f)
-            logmsg('Converting %s to %s...\n' % (fn, pnmfn))
-            (filetype, errstr) = image2pnm(fn, pnmfn)
-            if errstr:
-                raise RuntimeError('Error converting image file: %s' % errstr)
-            x = run_pnmfile(pnmfn)
-            if x is None:
-                raise RuntimeError('Could not find image file size')
-            (w, h, pnmtype, maxval) = x
-            logmsg('Type %s, w %i, h %i' % (pnmtype, w, h))
-            img.width = w
-            img.height = h
-            img.save()
+        if img:
             # cache
             img.get_thumbnail()
             img.get_display_image()
             img.save()
-        except Exception as e:
-            # delete image if anything fails
-            #logmsg(e)
-            logmsg('deleting Image')
-            img.delete()
-            img = None
-            raise e
-        except:
-            # FIXME (something throws a SystemExit..)
-            # delete image if anything fails
-            #logmsg(sys.exc_info()[0])
-            logmsg('deleting Image')
-            img.delete()
-            img = None
-            raise Exception
+        else:
+            raise Exception('This file\'s type is not supported.')
+        
     return img
 
-def get_or_create_source_list(df, source_type):
-    # Is there already an SourceList for this DiskFile?
-    try:
-        img,created = SourceList.objects.get_or_create(disk_file=df, 
-                                                       source_type=source_type,
-                                                       display_image__isnull=False)
-    except SourceList.MultipleObjectsReturned:
-        img = SourceList.objects.filter(disk_file=df,
-                                        source_type=source_type,
-                                        display_image__isnull=False)
-        for i in range(1,len(img)):
-            img[i].delete()
-        img = img[0]
-        created = False
 
-    if created:
+def create_image(df):
+    img = None
+    try:
+        img = Image(disk_file=df)
+        # FIXME -- move this code to Image?
+        # Convert file to pnm to find its size.
+        pnmfn = img.get_pnm_path()
+        x = run_pnmfile(pnmfn)
+        if x is None:
+            raise RuntimeError('Could not find image file size')
+        (w, h, pnmtype, maxval) = x
+        logmsg('Type %s, w %i, h %i' % (pnmtype, w, h))
+        img.width = w
+        img.height = h
+        img.save()
+    except:
+        logmsg('file is not an image file')    
+        img = None
+    return img
+
+def create_source_list(df):
+    img = None
+    fits = None
+    source_type = None
+    try:
+        # see if disk file is a fits list
+        fits = fits_table(str(df.get_path()))
+        source_type = 'fits'
+    except:
+        logmsg('file is not a fits table')
+        # otherwise, check to see if it is a text list
         try:
-            fits = img.get_fits_table()
+            fitsfn = get_temp_file()
+            cmd = 'text2fits.py %s %s' % (df.get_path(), fitsfn)
+            logmsg("Creating fits table from text list: %s" % cmd)
+            rtn,out,err = run_command(cmd)
+            if rtn:
+                logmsg('text2fits.py failed: rtn %i' % rtn)
+                logmsg('out: ' + out)
+                logmsg('err: ' + err)
+                raise RuntimeError('Failed to create fits table from %s: text2fits.py: %s' % (str(self), err))
+            fits = fits_table(fitsfn)
+            source_type = 'text'
+        except:
+            logmsg('file is not a text list')
+            
+    if fits:
+        try:
+            img = SourceList(disk_file=df, source_type=source_type)
             w = fits.x.max()-fits.x.min()
             h = fits.y.max()-fits.y.min()
             w = int(w)
@@ -535,18 +524,11 @@ def get_or_create_source_list(df, source_type):
             img.width = w
             img.height = h
             img.save()
-            # cache
-            img.get_thumbnail()
-            img.get_display_image()
-            img.save()
         except Exception as e:
-            # delete image if anything fails
-            #logmsg(e)
-            logmsg('deleting SourceList')
-            img.delete()
+            logmsg(e)
             img = None
             raise e
-    
+        
     return img
     
 ## DEBUG

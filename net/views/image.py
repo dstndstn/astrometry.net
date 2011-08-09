@@ -292,13 +292,19 @@ def red_green_image(req, job_id=None, size='full'):
         plotstuff_set_size_wcs(plot.pargs)
 
         # plot image
-        img = plot.image
-        img.set_file(str(pnmfn))
-        img.format = PLOTSTUFF_FORMAT_PPM
+        pimg = plot.image
+        pimg.set_file(str(pnmfn))
+        pimg.format = PLOTSTUFF_FORMAT_PPM
         plot.plot('image')
 
         # plot red
         xy = plot.xy
+        if hasattr(img, 'sourcelist'):
+            # set xy offsets for source lists
+            fits = img.sourcelist.get_fits_table()
+            xy.xoff = int(fits.x.min())
+            xy.yoff = int(fits.y.min())
+
         plot_xy_set_filename(xy, str(axyfn))
         xy.scale = scale
         plot.color = 'red'
@@ -344,13 +350,18 @@ def extraction_image(req, job_id=None, size='full'):
         plot.outfn = exfn
 
         # plot image
-        img = plot.image
-        img.set_file(str(pnmfn))
-        img.format = PLOTSTUFF_FORMAT_PPM
+        pimg = plot.image
+        pimg.set_file(str(pnmfn))
+        pimg.format = PLOTSTUFF_FORMAT_PPM
         plot.plot('image')
 
         # plot sources
         xy = plot.xy
+        if hasattr(img, 'sourcelist'):
+            # set xy offsets for source lists
+            fits = img.sourcelist.get_fits_table()
+            xy.xoff = int(fits.x.min())
+            xy.yoff = int(fits.y.min())
         plot_xy_set_filename(xy, str(axyfn))
         xy.scale = scale
         plot.color = 'red'
