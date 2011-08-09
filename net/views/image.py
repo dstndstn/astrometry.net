@@ -565,9 +565,9 @@ class ImageSearchForm(forms.Form):
                                                   required=False)
     image = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
-    ra = forms.FloatField(required=False)
-    dec = forms.FloatField(required=False)
-    radius = forms.FloatField(required=False)
+    ra = forms.FloatField(widget=forms.TextInput(attrs={'size':'5'}),required=False)
+    dec = forms.FloatField(widget=forms.TextInput(attrs={'size':'5'}),required=False)
+    radius = forms.FloatField(widget=forms.TextInput(attrs={'size':'5'}),required=False)
 
     calibrated = forms.BooleanField(initial=True, required=False)
     processing = forms.BooleanField(initial=False, required=False)
@@ -641,27 +641,25 @@ def search(req):
                 else:
                     context['display_users'] = User.objects.filter(profile__display_name__startswith=username)[:5]
         elif category == 'location':
-            ra = form.cleaned_data.get('ra')
-            dec = form.cleaned_data.get('dec')
-            radius = form.cleaned_data.get('radius')
+            ra = form.cleaned_data.get('ra', 0)
+            dec = form.cleaned_data.get('dec', 0)
+            radius = form.cleaned_data.get('radius', 0)
 
-            ra *= math.pi/180
-            dec *= math.pi/180
-            tempr = math.cos(dec)
-            x = tempr*math.cos(ra)
-            y = tempr*math.sin(ra)
-            z = math.sin(dec)
-            r = radius/180*math.pi
-           
-            # HACK - there's probably a better way to do this..?
-            where = ('(x-(%(x)f))*(x-(%(x)f))+(y-(%(y)f))*(y-(%(y)f))+(z-(%(z)f))*(z-(%(z)f)) < (%(r)f)*(%(r)f)'
-                    % dict(x=x,y=y,z=z,r=r))
-            cals = Calibration.objects.extra(where=[where]).select_related('job__user_image')
-            images = []
-            for cal in cals:
-                images += [cal.job.user_image.id]
-            images = UserImage.objects.filter(pk__in=images)
-
+            if ra and dec and radius: 
+                ra *= math.pi/180
+                dec *= math.pi/180
+                tempr = math.cos(dec)
+                x = tempr*math.cos(ra)
+                y = tempr*math.sin(ra)
+                z = math.sin(dec)
+                r = radius/180*math.pi
+               
+                # HACK - there's probably a better way to do this..?
+                where = ('(x-(%(x)f))*(x-(%(x)f))+(y-(%(y)f))*(y-(%(y)f))+(z-(%(z)f))*(z-(%(z)f)) < (%(r)f)*(%(r)f)'
+                        % dict(x=x,y=y,z=z,r=r))
+                where2= '(r <= %f)' % r
+                cals = Calibration.objects.extra(where=[where,where2])
+                images = UserImage.objects.filter(jobs__calibration__in=cals)
         elif category == 'image':
             image_id = form.cleaned_data.get('image')
             if image_id:

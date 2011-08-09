@@ -97,6 +97,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 <h4><a href="#" id="settings_link">Advanced Settings <span>[+]</span></a></h4>
 <div id="settings_block">
 <table class="settings_table">
+<tbody>
 <tr>
     <td class="leftcolumn">
         <div class="setting_title">Album:</div>
@@ -221,9 +222,11 @@ Sorry, your submission could not be completed. Please fix all of the <span class
         <div class="setting_description">In order to narrow down our search, you can supply a field center along with a radius. We will only search in indexes which fall within this area.</div> 
     </td> 
     <td>
-        RA:<br />{{ form.center_ra }} degrees {{ form.center_ra.errors }}<br /><br />
-        Dec:<br />{{ form.center_dec }} degrees {{ form.center_dec.errors }}<br /><br />
-        Radius:<br />{{ form.radius }} degrees {{ form.radius.errors }}<br />
+        <table>
+        <tr><td>RA:</td><td>{{ form.center_ra }} degrees {{ form.center_ra.errors }}</td></tr>
+        <tr><td>Dec:</td><td>{{ form.center_dec }} degrees {{ form.center_dec.errors }}</td></tr>
+        <tr><td>Radius:</td><td>{{ form.radius }} degrees {{ form.radius.errors }}</td></tr>
+        </table>
     </td>
 </tr> 
 <tr> 
@@ -235,6 +238,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
         {{ form.downsample_factor }} (factor) {{ form.downsample_factor.errors }}<br />
     </td>
 </tr> 
+</tbody>
 </table>
 </div>
 <input type="submit" value="Submit" />

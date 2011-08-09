@@ -62,6 +62,9 @@ $(document).ready(function() {
     &gt; User:
     {% include 'user/display_name.html' with user=display_user %}
 {% endif %}
+{% if search_category == 'location' and form.ra.data and form.dec.data and form.radius.data %}
+    &gt; Location: center ({{ form.ra.data }}, {{ form.dec.data }}); radius {{ form.radius.data }} deg
+{% endif %}
 {% if search_category == 'image' and image %}
     &gt; Nearby:
     <a href="{{ image.get_absolute_url }}">{{ image.original_file_name }}</a>
@@ -71,6 +74,15 @@ $(document).ready(function() {
 {% block content %}
     <div id="search_block">
         <form name="search_form" method="get">
+        <div>
+        Show: {{ form.show }} 
+            {{ form.calibrated }}<label for="id_calibrated">calibrated</label>&nbsp;&nbsp;
+            {{ form.processing }}<label for="id_processing">processing</label>&nbsp;&nbsp;
+            {{ form.failed }}<label for="id_failed">failed</label>&nbsp;&nbsp;
+        <input type="submit" value="Search" style="float:right; font-size:150%"/>
+        <div style="clear:both"></div>
+        </div>
+        <hr />
         {{ form.search_category }}
         <div id="search_menu">
             <ul class="view_menu">
@@ -91,20 +103,15 @@ $(document).ready(function() {
                 {{ form.user }}
             </div>
             <div id="location_block" class="category_block">
-                {{ form.ra }}
-                {{ form.dec }}
-                {{ form.radius }}
+                <table>
+                <tr><td>RA:</td><td>{{ form.ra }} degrees</td></tr>
+                <tr><td>Dec:</td><td>{{ form.dec }} degrees</td></tr>
+                <tr><td>Radius:</td><td>{{ form.radius }} degrees</td></tr>
+                </table>
             </div>
             <div id="image_block" class="category_block">
                 {{ form.image }}
             </div>
-            <br />
-            Show: {{ form.show }} 
-                {{ form.calibrated }}<label for="id_calibrated">calibrated</label>&nbsp;&nbsp;
-                {{ form.processing }}<label for="id_processing">processing</label>&nbsp;&nbsp;
-                {{ form.failed }}<label for="id_failed">failed</label>&nbsp;&nbsp;
-            <br />
-            <input type="submit" value="Search" />
         </div>
         </form>
         <div style="clear:both"></div>
@@ -112,7 +119,7 @@ $(document).ready(function() {
     <br />
     <div id="user_image_content">
     {% if search_category == 'user' %}
-    {% if not display_user %}
+    {% if not display_user and form.user.data %}
         No users named '{{ form.user.data }}'.<br />
     {% endif %}
     {% if display_users %}

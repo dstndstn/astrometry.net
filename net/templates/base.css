@@ -74,6 +74,7 @@ a:visited  {background-color: transparent; color: #00a;}
 a:hover    {background-color: #00a; color: #fff; text-decoration: none;}
 a.disabled {color: #000; text-decoration: underline;}
 a.disabled:hover {background-color: transparent; color: #000}
+a img      {border: 0px;}
 #menu {
     width: 100%;
     border-bottom: 1px solid #000;
@@ -187,10 +188,10 @@ hr {
     border-spacing: 0px;
     width: 100%;
 }
-.settings_table tr {
+.settings_table > tbody > tr {
     vertical-align: top;
 }
-.settings_table td {
+.settings_table > tbody > tr > td {
     vertical-align: top;
     padding: 10px 5px 10px 5px;
     border-top: #ccc 1px solid;
