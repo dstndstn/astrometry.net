@@ -301,3 +301,11 @@ def machine_tags(req, job_id):
         'tags':json_tags}
     )
 
+@csrf_exempt
+def objects_in_field(req, job_id):
+    job = get_object_or_404(Job, pk=job_id)
+    sky_objects = job.user_image.sky_objects.all()
+    json_sky_objects = [sky_obj.name for sky_obj in sky_objects]
+    return HttpResponseJson({
+        'objects_in_field':json_sky_objects}
+    )

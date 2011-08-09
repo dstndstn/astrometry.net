@@ -54,12 +54,25 @@ schema migration scripts.  In the simplest case, copy the database.
 #exit the 'screen'
     [ctrl-A d]
 
-#recreate the an-staging database as a duplicate of an-nova as it is
-    dropdb an-staging
-    createdb -O nova -T an-nova an-staging
+#Recreate the an-staging-source database as a duplicate of an-nova as it is.
+#(an-staging-source is used as an intermediary db, so that an-nova and
+#nova's process_submissions.py can be left alone as much as possible)
+    dropdb an-staging-source
+    createdb -O nova -T an-nova an-staging-source
 
 #restart process_submissions.py on nova
     screen -R nova
+    cd ~/nova/net
+    python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
+    [ctrl-A d]
+
+#recreate the an-staging database from an-staging-source
+    dropdb an-staging
+    createdb -O nova -T an-staging-source an-staging
+
+#restart process_submissions.py on staging
+    screen -R staging
+    cd ~/staging/net
     python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
     [ctrl-A d]
 
@@ -70,6 +83,11 @@ And copy the data:
     rm -Rf data jobs
 # copy all nova's files
     cp -a ~/nova/net/{data,jobs} .
+#restart process_submissions.py on nova
+    screen -R nova
+    python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
+    [ctrl-A d]
+
 
 (7.) Test it out, email the group when it's ready for review.
 

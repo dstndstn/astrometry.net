@@ -308,6 +308,7 @@ def dojob(job, userimage, log=None):
         job.save() # save calib before adding machine tags
         job.status = 'S'
         job.user_image.add_machine_tags(job)
+        job.user_image.add_sky_objects(job)
     else:
         job.status = 'F'
     job.set_end_time()
