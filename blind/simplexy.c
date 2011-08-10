@@ -456,10 +456,17 @@ int simplexy_run(simplexy_t* s) {
 			double fL, iL;
 			L.order = s->Lorder;
 			if (bgsub) {
-				fL = lanczos_resample_f(s->x[i], s->y[i],
-										bgsub, NULL, nx, ny, NULL, &L);
-				iL = lanczos_resample_f(s->x[i], s->y[i],
-										s->image, NULL, nx, ny, NULL, &L);
+				/*
+				 fL = lanczos_resample_f(s->x[i], s->y[i],
+				 bgsub, NULL, nx, ny, NULL, &L);
+				 iL = lanczos_resample_f(s->x[i], s->y[i],
+				 s->image, NULL, nx, ny, NULL, &L);
+				 */
+				fL = lanczos_resample_unw_sep_f(s->x[i], s->y[i],
+												bgsub, nx, ny, &L);
+				iL = lanczos_resample_unw_sep_f(s->x[i], s->y[i],
+												s->image, nx, ny, &L);
+
 			} else {
 				int N = 2*L.order+1;
 				float* tempimg = malloc(N*N*sizeof(float));
@@ -472,13 +479,17 @@ int simplexy_run(simplexy_t* s) {
 				for (j=ylo; j<=yhi; j++)
 					for (k=xlo; k<=xhi; k++)
 						tempimg[(j-ylo)*N+(k-xlo)] = bgsub_i16[j*nx+k];
-				fL = lanczos_resample_f(s->x[i]-xlo, s->y[i]-ylo,
-										tempimg, NULL, N, N, NULL, &L);
+				//fL = lanczos_resample_f(s->x[i]-xlo, s->y[i]-ylo,
+				//tempimg, NULL, N, N, NULL, &L);
+				fL = lanczos_resample_unw_sep_f(s->x[i]-xlo, s->y[i]-ylo,
+												tempimg, N, N, &L);
 				for (j=ylo; j<=yhi; j++)
 					for (k=xlo; k<=xhi; k++)
 						tempimg[(j-ylo)*N+(k-xlo)] = s->image_u8[j*nx+k];
-				iL = lanczos_resample_f(s->x[i]-xlo, s->y[i]-ylo,
-										tempimg, NULL, N, N, NULL, &L);
+				//iL = lanczos_resample_f(s->x[i]-xlo, s->y[i]-ylo,
+				//tempimg, NULL, N, N, NULL, &L);
+				iL = lanczos_resample_unw_sep_f(s->x[i]-xlo, s->y[i]-ylo,
+												tempimg, N, N, &L);
 				free(tempimg);
 			}
 			s->fluxL[i] = fL;
