@@ -66,9 +66,10 @@ def dashboard_profile(req):
     profile_form = get_session_form(req.session, ProfileForm, instance=profile)
     license_form = get_session_form(req.session, LicenseForm, instance=profile.default_license)
     context = {
-        'profile_form':profile_form,
-        'license_form':license_form,
-        'profile':profile,
+        'profile_form': profile_form,
+        'license_form': license_form,
+        'profile': profile,
+        'site_default_license': License.get_default(),
     }
     return render(req, "dashboard/profile.html", context)
 

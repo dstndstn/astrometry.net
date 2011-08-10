@@ -5,6 +5,10 @@
 {% include 'user_image/image_set.css' %}
 {% endblock %}
 
+{% block title %}
+<h2>Home</h2>
+{% endblock %}
+
 {% block content %}
 <h2>About Astrometry.net</h2>
 <p>
@@ -13,6 +17,6 @@ If you have astronomical imaging of the sky with celestial coordinates you do no
 <p>
 We have built this astrometric calibration service to create correct, standards-compliant astrometric meta-data for every useful astronomical image ever taken, past and future, in any state of archival disarray. We hope this will help organize, annotate and make searchable all the world's astronomical information.
 </p>
-<h2>Recently Submitted Images</h2>
+<h2 style="display:inline-block">Recently Submitted Images</h2> (<a href="{% url astrometry.net.views.image.index_all %}">See More</a>)
 {% include 'user_image/image_set.html' with images=images|slice:":4" %}
 {% endblock %}

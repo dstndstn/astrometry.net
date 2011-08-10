@@ -385,6 +385,12 @@ class Image(models.Model):
             f.write(df.read())
             df.close()
 
+    def get_thumbnail_offset_x(self):
+        return (235-self.width)/2
+
+    def get_thumbnail_offset_y(self):
+        return (235-self.height)/2
+
 class SourceList(Image):
     SOURCE_TYPE_CHOICES = (('fits','FITS binary table'),
                            ('text','Text list'))

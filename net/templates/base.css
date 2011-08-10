@@ -24,8 +24,8 @@ div#root_content {
     padding-top: 10px;
 }
 div#site_header {
-    width: 995px;
-    padding-left: 5px;
+    width: 990px;
+    padding: 5px;
     border-bottom: 1px solid #000000;
 }
 div#title {
@@ -212,5 +212,8 @@ hr {
 }
 input[type=text] {
     border: 1px solid #000;
+}
+.license {
+    font-style: italic; 
 }
 </style>

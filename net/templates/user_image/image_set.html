@@ -2,13 +2,41 @@
 {% spaceless %}
 {% for image in images %}
     <!--<img class="image_container" src="{% url astrometry.net.views.image.serve_image id=image.image.thumbnail.id %}" />-->
-    <div class="loading_container" 
+    <div class="thumbnail_container
     {% if thumbnail_size == 'small' %}
-        style="width: 100px; height: 100px;"
-    {% endif %}>
-    <div class="image_container" style="background-image: url('{% url serve_image id=image.image.get_thumbnail.id %}')"> 
+        thumbnail_small
+    {% else %}
+    {% if thumbnail_size == 'medium' %}
+        thumbnail_medium
+    {% else %}
+        thumbnail_large
+    {% endif %}{% endif %}
+    ">
+    <!--<div class="image_container" style="background-image: url('{% url serve_image id=image.image.get_thumbnail.id %}')"> 
         <a href="{% url astrometry.net.views.image.user_image image.id %}"></a>
-    </div>
+    </div>-->
+        <a href="{% url astrometry.net.views.image.user_image image.id %}">
+            {% with thumbnail=image.image.get_thumbnail %}
+            {% with offset_x=thumbnail.get_thumbnail_offset_x offset_y=thumbnail.get_thumbnail_offset_y %}
+            <img class="image" src="{% url serve_image id=thumbnail.id %}"
+                 {% if thumbnail_size == 'small' %}
+                 style="left: {% widthratio offset_x 235 100 %}px;
+                        top: {% widthratio offset_y 235 100 %}px;
+                        width: {% widthratio thumbnail.width 235 100 %}px;
+                        height: auto;"
+                 {% else %}
+                 {% if thumbnail_size == 'medium' %}
+                 style="left: {% widthratio offset_x 235 170 %}px;
+                        top: {% widthratio offset_y 235 170 %}px;
+                        width: {% widthratio thumbnail.width 235 170 %}px;
+                        height: auto;"
+                 {% else %}
+                 style="left: {{ offset_x }}px;
+                        top: {{ offset_y }}px;"
+                 {% endif %}{% endif %}
+             />
+            {% endwith %}{% endwith %}
+        </a>
     </div>
 {% empty %}
     No images.

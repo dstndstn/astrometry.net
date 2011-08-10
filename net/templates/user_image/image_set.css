@@ -1,5 +1,6 @@
 <style type="text/css">
-.loading_container {
+.thumbnail_container {
+    position: relative;
     display: inline-block;
     width: 235px;
     height: 235px;
@@ -8,6 +9,19 @@
     background-position: center center;
     background-repeat: no-repeat;
     background-image: url('{{ STATIC_URL }}images/loading-black.gif');
+    overflow: hidden;
+}
+.thumbnail_small {
+    width: 100px;
+    height: 100px;
+}
+.thumbnail_medium {
+    width: 170px;
+    height: 170px;
+}
+.thumbnail_large {
+    width: 235px;
+    height: 235px;
 }
 .image_container {
     width: 100%;
@@ -16,13 +30,16 @@
     background-position: center center;
     background-repeat: no-repeat;
 }
-.image_container a {
+.thumbnail_container a {
     display: block;
     width: 100%;
     height: 100%;
 }
-.image_container a:hover {
+.thumbnail_container a:hover {
     background-color: transparent;
+}
+.image {
+    position: absolute;
 }
 </style>
 

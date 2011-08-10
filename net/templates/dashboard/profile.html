@@ -4,7 +4,6 @@
 {{block.super}}
 {% include 'dashboard/api_key.css' %}
 <style type="text/css">
-div#license { font-style:italic }
 </style>
 {% endblock %}
 
@@ -28,7 +27,7 @@ div#license { font-style:italic }
         {{ profile_form.display_name }} {{ profile_form.display_name.errors }}
     </td>
 </tr>
-<tr>
+<!--<tr>
     <td class="leftcolumn">
         <div class="setting_title">API Key:</div>
         <div class="setting_description">
@@ -50,15 +49,20 @@ div#license { font-style:italic }
         {% comment %}{% include 'dashboard/api_key_div.html' with apikey=profile.apikey %}{% endcomment %}
         {% include 'user/api_key.html' with apikey=profile.apikey %}
     </td>
-</tr>
+</tr>-->
 <tr>
     <td class="leftcolumn">
         <div class="setting_title">Default License:</div>
         <div class="setting_description">
-            <div id="license">
-                By default, your submissions will be governed by: <br />
-                {% include 'license/license_link.html' with license=profile.default_license %}
-            </div>
+            You can set a default license that will govern any new submissions you upload (unless otherwise specified in the upload form).
+            <br /><br />
+
+            Your current default license is
+            {% include 'license/license_link.html' with license=profile.default_license %}.
+            <br /><br />
+
+            The 'use default' option refers to the site-wide default license, which is 
+            {% include 'license/license_link.html' with license=site_default_license %}.
         </div>
     </td>
     <td>

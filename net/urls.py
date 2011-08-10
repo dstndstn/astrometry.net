@@ -12,6 +12,7 @@ urlpatterns = patterns('',
 urlpatterns += patterns('astrometry.net.views.home',
     (r'^/?$', 'home'),
     (r'^support/?$', 'support'),
+    (r'^api_help/?$', 'api_help'),
 )
 
 urlpatterns += patterns('astrometry.net.openid_views',
