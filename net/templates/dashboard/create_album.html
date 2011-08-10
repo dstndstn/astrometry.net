@@ -48,6 +48,10 @@
 </tr>
 </table>
 <input type="hidden" name="from" value="{{ request.path }}" />
-<input type="submit" value="Create Album" />
+<br />
+<div style="text-align:center">
+    <input type="submit" value="Create Album" class="bigbutton" />
+    <a href="{% url astrometry.net.views.user.dashboard_albums %}" style="margin-left:10px">Cancel</a>
+</div>
 </form>
 {% endblock %}

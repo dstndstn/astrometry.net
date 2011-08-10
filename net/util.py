@@ -19,7 +19,7 @@ def get_session_form(session, form_class, **kwargs):
         form.is_valid()
         del session[form_class.__name__]
     else:
-        form = form_class()
+        form = form_class(**kwargs)
     return form 
 
 def dict_pack(struct_tuple, data_tuple):

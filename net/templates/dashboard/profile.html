@@ -15,6 +15,8 @@ div#license { font-style:italic }
 {% block dashboard_content %}
 <form method="post" action="{% url astrometry.net.views.user.save_profile %}">
 {% csrf_token %}
+{{ profile_form.errors }}
+{{ license_form.errors }}
 <table class="settings_table">
 <tr>
     <td class="leftcolumn" style="border:0px">
@@ -23,7 +25,7 @@ div#license { font-style:italic }
         </div>
     </td>
     <td style="border:0px">
-        {{ profile_form.display_name }}
+        {{ profile_form.display_name }} {{ profile_form.display_name.errors }}
     </td>
 </tr>
 <tr>
@@ -60,11 +62,19 @@ div#license { font-style:italic }
         </div>
     </td>
     <td>
-        <div>Allow commercial use: {{ license_form.allow_commercial_use }}</div>
-        <div>Allow modifications: {{ license_form.allow_modifications }}</div>
+        <b>Allow commercial use?</b><br />
+        {{ license_form.allow_commercial_use }}
+        {{ license_form.allow_commercial_use.errors }}
+        <br /><br />
+        <b>Allow modifications?</b><br />
+        {{ license_form.allow_modifications.errors }}
+        {{ license_form.allow_modifications }}
     </td>
 </tr>
 </table>
-<input type="submit" value="Update Profile" />
+<br />
+<div style="text-align:center">
+    <input type="submit" value="Update Profile" class="bigbutton" />
+</div>
 </form>
 {% endblock %}

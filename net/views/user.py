@@ -20,7 +20,7 @@ from django.http import HttpResponseRedirect
 
 from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
-from astrometry.net.util import get_page, get_session_form
+from astrometry.net.util import get_page, get_session_form, store_session_form
 from astrometry.net.views.album import *
 
 class ProfileForm(forms.ModelForm):
@@ -32,6 +32,10 @@ class LicenseForm(forms.ModelForm):
     class Meta:
         model = License
         exclude = ('license_uri','license_name')
+        widgets = {
+            'allow_commercial_use':forms.RadioSelect(renderer=NoBulletsRenderer),
+            'allow_modifications':forms.RadioSelect(renderer=NoBulletsRenderer),
+        }
 
 def dashboard(request):
     return render_to_response("dashboard/base.html",
@@ -40,37 +44,33 @@ def dashboard(request):
         context_instance = RequestContext(request))
 
 @login_required
-def save_profile(request):
-    profile = request.user.get_profile()
-    if request.method == 'POST':
-        profile.display_name = request.POST['display_name']
-        profile.default_license.allow_modifications = request.POST['allow_modifications']
-        profile.default_license.allow_commercial_use = request.POST['allow_commercial_use']
-
-        if profile.default_license.allow_modifications == 'd':
-            profile.default_license.allow_modifications = License.get_default().allow_modifications
-        if profile.default_license.allow_commercial_use == 'd':
-            profile.default_license.allow_commercial_use = License.get_default().allow_commercial_use
-
-        profile.save()
-
-    return redirect('astrometry.net.views.user.dashboard_profile')
+def save_profile(req):
+    if req.method == 'POST':
+        profile = req.user.get_profile()
+        profile_form = ProfileForm(req.POST, instance=profile)
+        license_form = LicenseForm(req.POST, instance=profile.default_license)
+        
+        if profile_form.is_valid() and license_form.is_valid():
+            profile_form.save()
+            license_form.save()
+        else:
+            store_session_form(req.session, ProfileForm, req.POST)
+            store_session_form(req.session, LicenseForm, req.POST)
+        return redirect('astrometry.net.views.user.dashboard_profile')
 
 @login_required
-def dashboard_profile(request):
+def dashboard_profile(req):
     # user profile guaranteed to be created during openid login
-    profile = request.user.get_profile()
+    profile = req.user.get_profile()
            
-    profile_form = ProfileForm(instance=profile)
-    license_form = LicenseForm(instance=profile.default_license)
+    profile_form = get_session_form(req.session, ProfileForm, instance=profile)
+    license_form = get_session_form(req.session, LicenseForm, instance=profile.default_license)
     context = {
         'profile_form':profile_form,
         'license_form':license_form,
         'profile':profile,
     }
-    return render_to_response("dashboard/profile.html",
-        context,
-        context_instance = RequestContext(request))
+    return render(req, "dashboard/profile.html", context)
 
 @login_required
 def dashboard_submissions(req):

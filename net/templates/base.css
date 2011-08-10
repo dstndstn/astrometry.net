@@ -134,7 +134,7 @@ h2 {
     font-weight: bold;
 }
 span#user_info { font-weight:bold; }
-.bigbutton { font-size:110%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }
+.bigbutton { font-size:125%; padding:2px; padding-left:10px; padding-right:10px; font-weight: bold}
 div.myerrors { font-size:110%; color:red; }
 .bigtext { font-size:110%; }
 .normalbutton { font-size:100%; padding:2px; padding-left:10px; padding-right:10px; margin:10px; }

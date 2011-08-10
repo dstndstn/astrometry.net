@@ -10,6 +10,7 @@
 #upload_block {
     width: 75%;
     margin: auto; 
+    padding: 10px;
     background-color: #eee; 
     border: 1px solid #000; 
     text-align: center;
@@ -99,19 +100,22 @@ Upload
 Sorry, your submission could not be completed. Please fix all of the <span class="errorlist">highlighted</span> errors:<br /><br />
 {% endif %}
 <div id="upload_block">
-    <div style="padding:5px;">
+    <div style="padding-bottom:5px">
         <b>Select a file or url to upload</b><br />
         <div id="file_block">{{ form.file }}</div>
         <div id="url_block">{{ form.url }}</div>
-        {{ form.non_field_errors }}<br />
+        {% if form.non_field_errors %}
+            {{ form.non_field_errors }}<br />
+        {% endif %}
         {{ form.upload_type }}
     </div>
     <div class="setting_description" style="width:75%; margin:auto; text-align: left">
         The following file types are supported:
         <ul>
-            <li><b>JPEG, GIF, PNG, or FITS images</b></li>
-            <li><b>FITS binary tables</b>, containing BINTABLEs of detected objects, with X and Y pixel positions in "D" (double) or "E" (float) columns, with one object per row</li>
-            <li><b>text lists</b>, containing two columns of digits separated by commas or whitespace, listing the X,Y positions of sources, sorted with the brightest sources first.</li>
+            <li><b>JPEG, GIF, PNG, or FITS image</b></li>
+            <li><b>FITS binary table</b>, containing a BINTABLE of detected objects, with X and Y pixel positions in "D" (double) or "E" (float) columns, with one object per row</li>
+            <li><b>text list</b>, containing two columns of digits separated by commas or whitespace, listing the X,Y positions of sources, sorted with the brightest sources first</li>
+            <li><b>tarball (.tar, .gz)</b>, containing files of any of the above types
         </ul>
     </div>
     <input type="submit" value="Upload" class="bigbutton" />
@@ -205,10 +209,11 @@ Sorry, your submission could not be completed. Please fix all of the <span class
     </td>
     <td>
         {% if user.is_authenticated %}
-            <h5>Allow commercial use?</h5>
+            <b>Allow commercial use?</b><br />
             {{ form.allow_commercial_use }}
             {{ form.allow_commercial_use.errors }}
-            <h5>Allow modifications?</h5>
+            <br /><br />
+            <b>Allow modifications?</b><br />
             {{ form.allow_modifications.errors }}
             {{ form.allow_modifications }}
         {% else %}
