@@ -32,6 +32,7 @@
 #include "simplexy-common.h"
 #include "log.h"
 #include "errors.h"
+#include "resample.h"
 
 /*
  * simplexy.c
@@ -181,6 +182,9 @@ void simplexy_free_contents(simplexy_t* s) {
 	s->flux = NULL;
 	free(s->background);
 	s->background = NULL;
+	free(s->fluxL);
+	free(s->backgroundL);
+	s->fluxL = s->backgroundL = NULL;
 }
 
 int simplexy_run(simplexy_t* s) {
@@ -417,7 +421,13 @@ int simplexy_run(simplexy_t* s) {
     s->flux       = malloc(s->npeaks * sizeof(float));
     s->background = malloc(s->npeaks * sizeof(float));
 
+	if (s->Lorder) {
+		s->fluxL       = malloc(s->npeaks * sizeof(float));
+		s->backgroundL = malloc(s->npeaks * sizeof(float));
+	}
+
 	for (i = 0; i < s->npeaks; i++) {
+		// round
         int ix = (int)(s->x[i] + 0.5);
         int iy = (int)(s->y[i] + 0.5);
         bool finite;
@@ -425,6 +435,7 @@ int simplexy_run(simplexy_t* s) {
         assert(finite);
         finite = isfinite(s->y[i]);
         assert(finite);
+		// these coordinates are now 0,0 is center of first pixel.
         assert(ix >= 0);
         assert(iy >= 0);
         assert(ix < nx);
@@ -439,6 +450,45 @@ int simplexy_run(simplexy_t* s) {
 
 		s->flux[i] -= s->globalbg;
 		s->background[i] += s->globalbg;
+
+		if (s->Lorder) {
+			lanczos_args_t L;
+			double fL, iL;
+			L.order = s->Lorder;
+			if (bgsub) {
+				fL = lanczos_resample_f(s->x[i], s->y[i],
+										bgsub, NULL, nx, ny, NULL, &L);
+				iL = lanczos_resample_f(s->x[i], s->y[i],
+										s->image, NULL, nx, ny, NULL, &L);
+			} else {
+				int N = 2*L.order+1;
+				float* tempimg = malloc(N*N*sizeof(float));
+				int xlo,xhi,ylo,yhi;
+				int j,k;
+				xlo = MAX(0, ix-L.order);
+				xhi = MIN(nx-1, ix+L.order);
+				ylo = MAX(0, iy-L.order);
+				yhi = MIN(ny-1, iy+L.order);
+				for (j=ylo; j<=yhi; j++)
+					for (k=xlo; k<=xhi; k++)
+						tempimg[(j-ylo)*N+(k-xlo)] = bgsub_i16[j*nx+k];
+				fL = lanczos_resample_f(s->x[i]-xlo, s->y[i]-ylo,
+										tempimg, NULL, N, N, NULL, &L);
+				for (j=ylo; j<=yhi; j++)
+					for (k=xlo; k<=xhi; k++)
+						tempimg[(j-ylo)*N+(k-xlo)] = s->image_u8[j*nx+k];
+				iL = lanczos_resample_f(s->x[i]-xlo, s->y[i]-ylo,
+										tempimg, NULL, N, N, NULL, &L);
+				free(tempimg);
+			}
+			s->fluxL[i] = fL;
+			s->backgroundL[i] = iL - fL;
+
+			s->fluxL[i] -= s->globalbg;
+			s->backgroundL[i] += s->globalbg;
+
+		}
+
     }
 
 	FREEVEC(bgfree);

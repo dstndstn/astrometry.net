@@ -31,7 +31,7 @@
 #include "errors.h"
 #include "ioutils.h"
 
-static const char* OPTIONS = "hi:Oo:8Hd:D:ve:B:S:M:s:p:P:bU:g:C:m:a:G:w:";
+static const char* OPTIONS = "hi:Oo:8Hd:D:ve:B:S:M:s:p:P:bU:g:C:m:a:G:w:L:";
 
 static void printHelp() {
 	fprintf(stderr,
@@ -43,6 +43,7 @@ static void printHelp() {
             "   [-e <extension>]: read from a single FITS extension\n"
 			"   [-O]  overwrite existing output file.\n"
 			"   [-o <output-filename>]  write XYlist to given filename.\n"
+			"   [-L <Lanczos-order>]\n"
             "   [-8]  don't use optimization for byte (u8) images.\n"
             "   [-H]  downsample by a factor of 2 before running simplexy.\n"
             "   [-d <downsample-factor>]  downsample by an integer factor before running simplexy.\n"
@@ -98,6 +99,9 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'L':
+			params->Lorder = atoi(optarg);
+			break;
 		case 'w':
 			params->dpsf = atof(optarg);
 			break;

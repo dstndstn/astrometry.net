@@ -109,13 +109,14 @@ int image2xy_files(const char* infn, const char* outfn,
 
 	// Run simplexy on each HDU
 	for (kk=1; kk <= nhdus; kk++) {
-		char* ttype[] = {"X","Y","FLUX","BACKGROUND"};
-		char* tform[] = {"E","E","E","E"};
-		char* tunit[] = {"pix","pix","unknown","unknown"};
+		char* ttype[] = {"X","Y","FLUX","BACKGROUND", "LFLUX", "LBG"};
+		char* tform[] = {"E","E","E","E","E","E"};
+		char* tunit[] = {"pix","pix","unknown","unknown","unknown","unknown"};
 		long* fpixel;
 		int a;
 		int w, h;
         int bitpix;
+		int ncols;
 
         if (extension && kk != extension)
             continue;
@@ -188,7 +189,11 @@ int image2xy_files(const char* infn, const char* outfn,
 
 		image2xy_run(params, downsample, downsample_as_required);
 
-		fits_create_tbl(ofptr, BINARY_TBL, params->npeaks, 4, ttype, tform,
+		if (params->Lorder)
+			ncols = 6;
+		else
+			ncols = 4;
+		fits_create_tbl(ofptr, BINARY_TBL, params->npeaks, ncols, ttype, tform,
                         tunit, "SOURCES", &status);
         CFITS_CHECK("Failed to create output table");
 
@@ -203,6 +208,14 @@ int image2xy_files(const char* infn, const char* outfn,
 
 		fits_write_col(ofptr, TFLOAT, 4, 1, 1, params->npeaks, params->background, &status);
         CFITS_CHECK("Failed to write BACKGROUND column");
+
+		if (params->Lorder) {
+			fits_write_col(ofptr, TFLOAT, 5, 1, 1, params->npeaks, params->fluxL, &status);
+			CFITS_CHECK("Failed to write LFLUX column");
+
+			fits_write_col(ofptr, TFLOAT, 6, 1, 1, params->npeaks, params->backgroundL, &status);
+			CFITS_CHECK("Failed to write LBG column");
+		}
 
 		fits_modify_comment(ofptr, "TTYPE1", "X coordinate", &status);
         CFITS_CHECK("Failed to set X TTYPE");

@@ -81,6 +81,12 @@ struct simplexy_t {
     float *background;
     int npeaks;
 
+	// Lanczos-interpolated flux and backgrounds;
+	// measured if Lorder > 0.
+	int Lorder;
+	float* fluxL;
+	float* backgroundL;
+
 	/***
 	 Debug
 	 ***/
