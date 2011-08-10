@@ -210,4 +210,7 @@ hr {
     width: 100%;
     text-align: center;
 }
+input[type=text] {
+    border: 1px solid #000;
+}
 </style>

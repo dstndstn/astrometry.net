@@ -41,7 +41,7 @@ class SubmissionForm(forms.ModelForm):
 
     file  = forms.FileField(
         required=False,
-        widget=forms.FileInput(attrs={'size':'80'})
+        widget=forms.FileInput(attrs={'size':'80','style':'border:0px'})
     )
 
     url = forms.CharField(
@@ -86,6 +86,9 @@ class SubmissionForm(forms.ModelForm):
         choices=License.YES_SA_NO,
         initial='d',
     )
+    
+    advanced_settings = forms.BooleanField(widget=forms.HiddenInput(), 
+                                           initial=False, required=False)
 
     class Meta:
         model = Submission

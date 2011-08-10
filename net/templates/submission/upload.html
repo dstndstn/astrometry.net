@@ -3,9 +3,17 @@
 {% block inline_css %}
 {{block.super}}
 <style type="text/css">
-#settings_block    {display: none}
 #new_album_title_block {padding-left: 50px}
 #scale_custom_block  {padding-left: 50px}
+#file_block {height: 2em}
+#url_block {height: 2em; display: none}
+#upload_block {
+    width: 75%;
+    margin: auto; 
+    background-color: #eee; 
+    border: 1px solid #000; 
+    text-align: center;
+}
 </style>
 {% endblock %}
 
@@ -16,6 +24,25 @@
 function changeUploadType(type) {
     $('#file_block').toggle(type == 'file');
     $('#url_block').toggle(type == 'url');
+
+    // clear file upload by replacing it
+    if (type == 'url') {
+        $("#file_block").html('{{ form.file }}');
+    }
+}
+var advanced_settings = {% if form.advanced_settings.data == 'True' %}true{% else %}false{% endif %};
+function toggleAdvancedSettings() {
+    if (advanced_settings) {
+        $('#settings_block').stop(true, true).slideDown();
+        $('input[name=advanced_settings]').val('True');
+        $('#settings_link').children('span').text("[-]");
+    }
+    else {
+        $('#settings_block').stop(true, true).slideUp();
+        $('input[name=advanced_settings]').val('False');
+        $('#settings_link').children('span').text("[+]");
+    }
+    advanced_settings = !advanced_settings;
 }
 function changeScaleType(type) {
     $('#ul_block').toggle(type == 'ul');
@@ -52,13 +79,11 @@ $(document).ready(function() {
     changeAlbum($("select[name=album] option:selected").val());
     
     $('#settings_link').click(function(e) {
-        $('#settings_block').stop(true, true).slideToggle();
+        toggleAdvancedSettings();
         e.preventDefault();
-    }).toggle(function() {
-        $(this).children('span').text("[-]");
-    }, function() {
-        $(this).children('span').text("[+]");
     });
+    toggleAdvancedSettings();
+    $('#settings_block').stop(true, true);
 });
 </script>
 {% endblock %}
@@ -73,10 +98,24 @@ Upload
 {% if form.errors %}
 Sorry, your submission could not be completed. Please fix all of the <span class="errorlist">highlighted</span> errors:<br /><br />
 {% endif %}
-{{ form.upload_type }}
-<div id="file_block">{{ form.file }}</div>
-<div id="url_block">{{ form.url }}</div>
-{{ form.non_field_errors }}<br />
+<div id="upload_block">
+    <div style="padding:5px;">
+        <b>Select a file or url to upload</b><br />
+        <div id="file_block">{{ form.file }}</div>
+        <div id="url_block">{{ form.url }}</div>
+        {{ form.non_field_errors }}<br />
+        {{ form.upload_type }}
+    </div>
+    <div class="setting_description" style="width:75%; margin:auto; text-align: left">
+        The following file types are supported:
+        <ul>
+            <li><b>JPEG, GIF, PNG, or FITS images</b></li>
+            <li><b>FITS binary tables</b>, containing BINTABLEs of detected objects, with X and Y pixel positions in "D" (double) or "E" (float) columns, with one object per row</li>
+            <li><b>text lists</b>, containing two columns of digits separated by commas or whitespace, listing the X,Y positions of sources, sorted with the brightest sources first.</li>
+        </ul>
+    </div>
+    <input type="submit" value="Upload" class="bigbutton" />
+</div>
 <!--<br />
 <table class="settings_table">
 <tr>
@@ -97,8 +136,9 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 </tr>
 </table>-->
 
-<h4><a href="#" id="settings_link">Advanced Settings <span>[+]</span></a></h4>
+<h4 style="text-align: center"><a href="#" id="settings_link">Advanced Settings <span>[+]</span></a></h4>
 <div id="settings_block">
+{{ form.advanced_settings }}
 <table class="settings_table">
 <tbody>
 <tr>
@@ -243,7 +283,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
 </tr> 
 </tbody>
 </table>
+<div style="text-align: center"><input type="submit" value="Upload" class="bigbutton" /></div>
 </div>
-<input type="submit" value="Submit" class="bigbutton" />
 </form>
 {% endblock %}
