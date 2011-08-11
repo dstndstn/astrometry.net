@@ -312,7 +312,7 @@ class Image(models.Model):
         'PNG image': 'image/png',
         'JPEG image data': 'image/jpeg',
         'GIF image data': 'image/gif',
-        'FITS image data': 'image/fits',
+        'FITS image data': 'image/jpeg', # fits images are converted to jpg for the browser
     }
 
     disk_file = models.ForeignKey(DiskFile)
@@ -381,9 +381,33 @@ class Image(models.Model):
             # image is a source list
             self.sourcelist.render(f)
         else:
-            df = open(self.disk_file.get_path())
-            f.write(df.read())
-            df.close()
+            if self.disk_file.is_fits_image():
+                # convert fits image to jpg for browser rendering
+                key = 'jpg_image%i' % self.id
+                df = CachedFile.get(key)
+                if df is None:
+                    imagefn = get_temp_file()
+                    pnmfn = self.get_pnm_path()
+                    cmd = 'pnmtojpeg < %s > %s' % (pnmfn, imagefn)
+                    logmsg("Making resized image: %s" % cmd)
+                    rtn,out,err = run_command(cmd)
+                    if rtn:
+                        logmsg('pnmtojpeg failed: rtn %i' % rtn)
+                        logmsg('out: ' + out)
+                        logmsg('err: ' + err)
+                        raise RuntimeError('Failed to make jpg image for %s: pnmtojpeg: %s' % (str(self), err))
+
+                    # cache
+                    logmsg('Caching key "%s"' % key)
+                    df = CachedFile.add(key, imagefn)
+                else:
+                    logmsg('Cache hit for key "%s"' % key)
+            else:
+                df = self.disk_file
+
+            dfile = open(df.get_path())
+            f.write(dfile.read())
+            dfile.close()
 
     def get_thumbnail_offset_x(self):
         return (235-self.width)/2
