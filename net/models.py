@@ -987,7 +987,7 @@ class Submission(Hideable):
 
     error_message = models.CharField(max_length=256, null=True)
 
-    license = models.OneToOneField('License')
+    license = models.ForeignKey('License')
     comment_receiver = models.OneToOneField('CommentReceiver')
 
     # Reverse mappings:
