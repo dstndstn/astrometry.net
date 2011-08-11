@@ -9,7 +9,8 @@ from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import User
 
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+
 from django.core.urlresolvers import reverse
 
 from astrometry.net.settings import *
@@ -33,6 +34,37 @@ from astrometry.net.abstract_models import *
 
 # = dt.total_seconds() in python 2.7
 
+class LicenseManager(models.Manager):
+    def get_or_create(self, default_license=None, *args, **kwargs):
+        return_value = None
+        try:
+            default_replaced_license = License(
+                allow_commercial_use=kwargs.get('allow_commercial_use', 'd'),
+                allow_modifications=kwargs.get('allow_modifications', 'd')
+            )
+            default_replaced_license.replace_license_default(default_license)
+
+            kwargs = {
+                'allow_commercial_use':default_replaced_license.allow_commercial_use,
+                'allow_modifications':default_replaced_license.allow_modifications,
+            }
+            return_value = super(LicenseManager, self).get_or_create(*args, **kwargs)
+        except MultipleObjectsReturned:
+            default_replaced_license = License(
+                allow_commercial_use=kwargs.get('allow_commercial_use', 'd'),
+                allow_modifications=kwargs.get('allow_modifications', 'd')
+            )
+            default_replaced_license.replace_license_default(default_license)
+
+            license = License.objects.filter(
+                allow_commercial_use=default_replaced_license.allow_commercial_use,
+                allow_modifications=default_replaced_license.allow_modifications,
+            )[0]
+            return_value = (license, False)
+
+        return return_value
+            
+
 class License(models.Model):
     YES_NO = (
         ('y','yes'),
@@ -45,6 +77,8 @@ class License(models.Model):
         ('n','no'),
         ('d','use default'),
     )
+
+    objects = LicenseManager()
 
     # CC "answer" data
     allow_commercial_use = models.CharField(choices=YES_NO, max_length=1,
@@ -793,7 +827,7 @@ class UserImage(Hideable):
     original_file_name = models.CharField(max_length=256)
     submission = models.ForeignKey('Submission', related_name='user_images')
 
-    license = models.OneToOneField('License')
+    license = models.ForeignKey('License')
     comment_receiver = models.OneToOneField('CommentReceiver')
 
     # Reverse mappings:
@@ -802,7 +836,7 @@ class UserImage(Hideable):
 
     def save(self, *args, **kwargs):
         self.owner = self.user
-        self.license.save(self.user.get_profile().default_license)
+        #self.license.save(self.user.get_profile().default_license)
         return super(UserImage, self).save(*args, **kwargs)
 
 

@@ -109,7 +109,8 @@ def api_upload(request):
     submittor = request.user if request.user.is_authenticated() else None
     allow_commercial_use = request.json.get('allow_commercial_use')
     allow_modifications = request.json.get('allow_modifications')
-    license = License.objects.create(
+    license,created = License.objects.get_or_create(
+        default_license=submittor.get_profile().default_license,
         allow_commercial_use=allow_commercial_use,
         allow_modifications=allow_modifications,
     )
@@ -141,7 +142,8 @@ def url_upload(req):
     submittor = req.user if req.user.is_authenticated() else None
     allow_commercial_use = req.json.get('allow_commercial_use')
     allow_modifications = req.json.get('allow_modifications')
-    license = License.objects.create(
+    license,created = License.objects.get_or_create(
+        default_license=submittor.get_profile().default_license,
         allow_commercial_use=allow_commercial_use,
         allow_modifications=allow_modifications,
     )

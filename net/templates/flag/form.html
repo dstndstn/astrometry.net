@@ -1,0 +1,12 @@
+{% if user.is_authenticated %}
+<div id="flag_form_block">
+    <form method="post" name="flag_form" action="{% url astrometry.net.views.flag.update_flags category=category recipient_id=recipient_id %}">
+    {% csrf_token %}
+    <div>
+        {% include 'flag/chooser.html' with flags=flags selected_flags=selected_flags %}
+    </div>
+    <input type="hidden" name="next" value="{{next}}" />
+    <input type="submit" value="Update Flags" />
+    </form>
+</div>
+{% endif %}

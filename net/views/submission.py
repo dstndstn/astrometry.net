@@ -218,11 +218,12 @@ def upload_file(request):
 
             if not request.user.is_authenticated():
                 sub.publicly_visible = 'y'
-            new_license = License()
 
-            new_license.allow_commercial_use = form.cleaned_data['allow_commercial_use']
-            new_license.allow_modifications = form.cleaned_data['allow_commercial_use']
-            new_license.save(default_license=default_license)
+            new_license, created = License.objects.get_or_create(
+                default_license=request.user.get_profile().default_license,
+                allow_commercial_use = form.cleaned_data['allow_commercial_use'],
+                allow_modifications = form.cleaned_data['allow_commercial_use'],
+            )
 
             sub.license = new_license
 

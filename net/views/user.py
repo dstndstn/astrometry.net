@@ -45,7 +45,12 @@ def save_profile(req):
         
         if profile_form.is_valid() and license_form.is_valid():
             profile_form.save()
-            license_form.save()
+            license,created = License.objects.get_or_create(
+                default_license=profile.default_license,
+                allow_commercial_use=license_form.cleaned_data['allow_commercial_use'],
+                allow_modifications=license_form.cleaned_data['allow_modifications'],
+            )
+            profile.default_license = license
         else:
             store_session_form(req.session, ProfileForm, req.POST)
             store_session_form(req.session, LicenseForm, req.POST)

@@ -421,12 +421,10 @@ def dosub(sub):
     return sub.id
 
 def create_user_image(sub, img, original_filename):
-    license = License(
-         allow_modifications = sub.license.allow_modifications,
-         allow_commercial_use = sub.license.allow_commercial_use,
-    )
-    license.save(
-        default_license=sub.user.get_profile().default_license
+    license, created = License.objects.get_or_create(
+        default_license=sub.user.get_profile().default_license,
+        allow_modifications = sub.license.allow_modifications,
+        allow_commercial_use = sub.license.allow_commercial_use,
     )
     comment_receiver = CommentReceiver.objects.create()
     uimg,created = UserImage.objects.get_or_create(

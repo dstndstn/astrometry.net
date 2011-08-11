@@ -147,13 +147,20 @@ def edit(req, user_image_id=None):
 
     if req.method == 'POST':
         image_form = UserImageForm(req.POST, instance=user_image)
-        license_form = LicenseForm(req.POST, instance=user_image.license)
+        license_form = LicenseForm(req.POST)
         if image_form.is_valid() and license_form.is_valid():
             image_form.save()
-            license = license_form.save(commit=False)
+
+            license,created = License.objects.get_or_create(
+                default_license=req.user.get_profile().default_license,
+                allow_commercial_use=license_form.cleaned_data['allow_commercial_use'],
+                allow_modifications=license_form.cleaned_data['allow_modifications'],
+            )
+            user_image.license = license
+
             selected_flags = req.POST.getlist('flags')
             user_image.update_flags(selected_flags, req.user)
-            license.save(default_license=req.user.get_profile().default_license)
+            user_image.save()
 
             return redirect(user_image)
     else:
