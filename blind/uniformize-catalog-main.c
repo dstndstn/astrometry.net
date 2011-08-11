@@ -67,6 +67,7 @@ int main(int argc, char *argv[]) {
 	int Nside = 100;
 	double dedup = 0.0;
 	int margin = 0;
+	double mincut = -HUGE_VAL;
 	
 	fitstable_t* intable;
 	fitstable_t* outtable;
@@ -153,7 +154,7 @@ int main(int argc, char *argv[]) {
 	 }
 	 */
 	if (uniformize_catalog(intable, outtable, racol, deccol,
-						   sortcol, sortasc,
+						   sortcol, sortasc, mincut,
 						   bighp, bignside, margin,
 						   Nside, dedup, sweeps,
 						   argv, argc)) {

@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009, 2010 Dustin Lang.
+  Copyright 2009, 2010, 2011 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -461,7 +461,7 @@ int build_index(fitstable_t* catalog, index_params_t* p,
 	}
 
 	if (uniformize_catalog(catalog, uniform, p->racol, p->deccol,
-						   p->sortcol, p->sortasc,
+						   p->sortcol, p->sortasc, p->brightcut,
 						   p->bighp, p->bignside, p->margin,
 						   p->UNside, p->dedup, p->sweeps, p->args, p->argc)) {
 		return -1;
@@ -736,6 +736,7 @@ void build_index_defaults(index_params_t* p) {
 	p->Nloosen = 20;
 	p->dimquads = 4;
 	p->sortasc = TRUE;
+	p->brightcut = -HUGE_VAL;
 	// default to all-sky
 	p->bighp = -1;
 	//p->inmemory = TRUE;

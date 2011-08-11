@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009, 2011 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -77,6 +77,7 @@ static bool is_duplicate(int hp, double ra, double dec, int Nside,
 int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 					   const char* racol, const char* deccol,
 					   const char* sortcol, bool sort_ascending,
+					   double sort_min_cut,
 					   // ?  Or do this cut in a separate process?
 					   int bighp, int bignside,
 					   int nmargin,
@@ -144,6 +145,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	}
 
 	N = fitstable_nrows(intable);
+	logverb("Have %i objects\n", N);
 
 	// FIXME -- argsort and seek around the input table, and append to
 	// starlists in order; OR read from the input table in sequence and
@@ -154,6 +156,28 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 		inorder = permuted_sort(sortval, sizeof(double),
 								sort_ascending ? compare_doubles_asc : compare_doubles_desc,
 								NULL, N);
+		if (sort_min_cut > -HUGE_VAL) {
+			logverb("Cutting to %s > %g...\n", sortcol, sort_min_cut);
+			// Cut objects with sortval < sort_min_cut.
+			if (sort_ascending) {
+				// skipped objects are at the front -- find the first obj
+				// to keep
+				for (i=0; i<N; i++)
+					if (sortval[inorder[i]] > sort_min_cut)
+						break;
+				// move the "inorder" indices down.
+				if (i)
+					memmove(inorder, inorder+i, (N-i)*sizeof(int));
+				N -= i;
+			} else {
+				// skipped objects are at the end -- find the last obj to keep.
+				for (i=N-1; i>=0; i--)
+					if (sortval[inorder[i]] > sort_min_cut)
+						break;
+				N = i+1;
+			}
+			logverb("Cut to %i objects\n", N);
+		}
 		//free(sortval);
 	}
 

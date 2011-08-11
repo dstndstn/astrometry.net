@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009 Dustin Lang.
+  Copyright 2009, 2011 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -48,6 +48,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 					   const char* racol, const char* deccol,
 					   // ? Or do this sorting in a separate step?
 					   const char* sortcol, bool sort_ascending,
+					   double sort_min_cut,
 					   // ?  Or do this cut in a separate step?
 					   int healpix, int hpnside,
 					   int nmargin,

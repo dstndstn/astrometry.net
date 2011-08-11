@@ -31,8 +31,12 @@ struct index_params {
 	double jitter;
 
 	// uniformization:
-	const char* sortcol; bool sortasc;
-	int bighp; int bignside;
+	const char* sortcol;
+	bool sortasc;
+
+	double brightcut;
+	int bighp;
+	int bignside;
 	int sweeps;
 	double dedup;
 	int margin;

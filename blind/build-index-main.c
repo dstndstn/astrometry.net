@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009, 2010 Dustin Lang.
+  Copyright 2009, 2010, 2011 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -33,7 +33,7 @@
 #include "log.h"
 #include "starutil.h"
 
-const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:P:";
+const char* OPTIONS = "hvi:o:N:l:u:S:fU:H:s:m:n:r:d:p:R:L:EI:MTj:1:P:B:";
 
 static void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -63,6 +63,7 @@ static void print_help(char* progname) {
 		   "      )\n"
 		   "      [-S]: sort column (default: assume the input file is already sorted)\n"
 		   "      [-f]: sort in descending order (eg, for FLUX); default ascending (eg, for MAG)\n"
+		   "      [-B <val>]: cut any object whose sort-column value is less than 'val'; for mags this is a bright limit\n"
 		   "      [-U]: healpix Nside for uniformization (default: same as -n)\n"
 		   "      [-H <big healpix>]; default is all-sky\n"
            "      [-s <big healpix Nside>]; default is 1\n"
@@ -109,6 +110,9 @@ int main(int argc, char** argv) {
 
 	while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
 		switch (argchar) {
+		case 'B':
+			p->brightcut = atof(optarg);
+			break;
 		case 'P':
 			preset = atoi(optarg);
 			break;
