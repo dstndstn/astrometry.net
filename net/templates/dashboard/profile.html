@@ -14,8 +14,6 @@
 {% block dashboard_content %}
 <form method="post" action="{% url astrometry.net.views.user.save_profile %}">
 {% csrf_token %}
-{{ profile_form.errors }}
-{{ license_form.errors }}
 <table class="settings_table">
 <tr>
     <td class="leftcolumn" style="border:0px">

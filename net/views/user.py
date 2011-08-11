@@ -22,20 +22,13 @@ from astrometry.util import image2pnm
 from astrometry.util.run_command import run_command
 from astrometry.net.util import get_page, get_session_form, store_session_form
 from astrometry.net.views.album import *
+from astrometry.net.views.license import LicenseForm
 
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         exclude = ('apikey', 'default_license')
 
-class LicenseForm(forms.ModelForm):
-    class Meta:
-        model = License
-        exclude = ('license_uri','license_name')
-        widgets = {
-            'allow_commercial_use':forms.RadioSelect(renderer=NoBulletsRenderer),
-            'allow_modifications':forms.RadioSelect(renderer=NoBulletsRenderer),
-        }
 
 def dashboard(request):
     return render_to_response("dashboard/base.html",

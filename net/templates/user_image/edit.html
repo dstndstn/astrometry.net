@@ -14,7 +14,6 @@
 {% block content %}
 <form method="post" action="{% url astrometry.net.views.image.edit user_image_id=image.id %}">
 {% csrf_token %}
-{{ image_form.errors }}
 <table class="settings_table">
 <tr>
     <td class="leftcolumn" style="border:0px">
@@ -48,12 +47,13 @@
         </div>
     </td>
     <td>
-        <h5>Allow commercial use?</h5>
-        {{ image_form.allow_commercial_use }}
-        {{ image_form.allow_commercial_use.errors }}
-        <h5>Allow modifications?</h5>
-        {{ image_form.allow_modifications.errors }}
-        {{ image_form.allow_modifications }}
+        <b>Allow commercial use?</b><br />
+        {{ license_form.allow_commercial_use }}
+        {{ license_form.allow_commercial_use.errors }}
+        <br /><br />
+        <b>Allow modifications?</b><br />
+        {{ license_form.allow_modifications.errors }}
+        {{ license_form.allow_modifications }}
     </td>
 </tr>
 </table>

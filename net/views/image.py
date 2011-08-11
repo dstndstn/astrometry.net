@@ -31,6 +31,7 @@ from astrometry.net.views.comment import *
 from astrometry.net.views.license import *
 from astrometry.net.util import get_page, get_session_form, NoBulletsRenderer
 from astrometry.net.views.tag import TagForm
+from astrometry.net.views.license import LicenseForm
 
 from string import strip
 import simplejson
@@ -133,20 +134,21 @@ def edit(req, user_image_id=None):
         return render(req, 'user_image/permission_denied.html')
 
     if req.method == 'POST':
-        form = UserImageForm(req.POST, instance=user_image)
-        if form.is_valid():
-            user_image.license.allow_modifications = req.POST.get('allow_modifications')
-            user_image.license.allow_commercial_use = req.POST.get('allow_commercial_use')
+        image_form = UserImageForm(req.POST, instance=user_image)
+        license_form = LicenseForm(req.POST, instance=user_image.license)
+        if image_form.is_valid() and license_form.is_valid():
+            image_form.save()
+            license = license_form.save(commit=False)
+            license.save(default_license=req.user.get_profile().default_license)
 
-            user_image.license.save(default_license=req.user.get_profile().default_license)
-
-            form.save()
             return redirect(user_image)
     else:
-        form = UserImageForm(instance=user_image)
+        image_form = UserImageForm(instance=user_image)
+        license_form = LicenseForm(instance=user_image.license)
         
     context = {
-        'image_form': form,
+        'image_form': image_form,
+        'license_form': license_form,
         'image': user_image,
     }
     return render(req, 'user_image/edit.html', context)
