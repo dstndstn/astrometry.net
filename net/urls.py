@@ -89,6 +89,9 @@ urlpatterns += patterns('astrometry.net.views.tag',
     (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/tags/new/?$', 'new'),
     (r'^tags/autocomplete/?$', 'tag_autocomplete'),
 )
+urlpatterns += patterns('astrometry.net.views.flag',
+    (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/flags/update/?$', 'update_flags'),
+)
 urlpatterns += patterns('astrometry.net.views.comment',
     (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/comments/new/?$', 'new'),
     (r'^comments/(?P<comment_id>' + idpattern + r')/delete/?$', 'delete'),

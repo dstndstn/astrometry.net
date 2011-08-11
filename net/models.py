@@ -140,6 +140,17 @@ class CommentReceiver(models.Model):
 
 
 
+class Flag(models.Model):
+    class Meta:
+        ordering = ['name']
+
+    name = models.CharField(max_length=56, primary_key=True)
+    explanation = models.CharField(max_length=2048, blank=True)
+
+    def input_name(self):
+        return 'flag-%s' % self.name
+
+
 def dtsec(dt):
     return (dt.microseconds + (dt.seconds + dt.days * 24. * 3600.) * 10.**6) / 10.**6
 
@@ -739,6 +750,12 @@ class SkyLocation(models.Model):
         
         return user_images
 
+class FlaggedUserImage(models.Model):
+    user_image = models.ForeignKey('UserImage')
+    flag = models.ForeignKey('Flag')
+    user = models.ForeignKey(User)
+    flagged_time = models.DateTimeField(auto_now=True)
+
 class TaggedUserImage(models.Model):
     user_image = models.ForeignKey('UserImage')
     tag = models.ForeignKey('Tag')
@@ -766,6 +783,9 @@ class UserImage(Hideable):
     
     tags = models.ManyToManyField('Tag',related_name='user_images',
         through='TaggedUserImage')
+
+    flags = models.ManyToManyField('Flag', related_name='user_images',
+        through='FlaggedUserImage')
 
     sky_objects = models.ManyToManyField('SkyObject', related_name='user_images')
 
@@ -856,6 +876,26 @@ class UserImage(Hideable):
             images = UserImage.objects.none()
         return images
 
+    def update_flags(self, selected_flag_names, flagger):
+        flags = Flag.objects.all()
+        for flag in flags:
+            if flag.name in selected_flag_names:
+                logmsg('flagging ui %d: %s' % (self.pk, flag.name))
+                FlaggedUserImage.objects.get_or_create(
+                    user_image=self,
+                    flag=Flag.objects.get(pk=flag.name),
+                    user=flagger,
+                )
+            else:
+                try:
+                    logmsg('removing flag %s from ui %d' % (flag.name, self.pk))
+                    FlaggedUserImage.objects.filter(
+                        user_image=self,
+                        flag=Flag.objects.get(pk=flag.name),
+                        user=flagger,
+                    ).delete()
+                except ObjectDoesNotExist:
+                    pass
 
 
 class Submission(Hideable):

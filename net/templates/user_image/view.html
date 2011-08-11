@@ -201,6 +201,11 @@ $(document).ready(function() {
         {% include 'tag/list.html' with category='user_image' recipient_id=image.id tags=image.tags.all recipient_owner=image.user next=request.path %}
         {% include 'tag/form.html' with category='user_image' recipient_id=image.id recipient_owner=image.user next=request.path %}
     </div>
+    <hr />
+    <div id="flags">
+        <h3>Flags</h3>
+        {% include 'flag/form.html' with user=request.user flags=flags selected_flags=selected_flags category='user_image' recipient_id=image.id next=request.path %}
+    </div>
 </div>
 <div id="left_block">
     {% if user == image.user %}

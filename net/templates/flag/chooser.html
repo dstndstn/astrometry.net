@@ -1,0 +1,3 @@
+{% for flag in flags %}
+    <input type="checkbox" value="{{flag.name}}" name="flags" title="{{flag.explanation}}"{% if flag in selected_flags %} checked="checked"{% endif %} /><label for="flag.input_name" title="{{flag.explanation}}">{{flag.name}}</label><br />
+{% endfor %}

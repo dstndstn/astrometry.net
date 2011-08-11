@@ -53,6 +53,7 @@ class UserImageForm(forms.ModelForm):
             'image',
             'user',
             'tags',
+            'flags',
             'original_file_name',
             'submission',
             'owner',
@@ -100,9 +101,18 @@ def user_image(req, user_image_id=None):
     if image_type in images:
         display_url = images[image_type + '_display']
         fullsize_url = images[image_type]
+
+    flags = Flag.objects.all()
+    selected_flags = [flagged_ui.flag for flagged_ui in
+        FlaggedUserImage.objects.filter(
+            user_image=image,
+            user=req.user,
+        )
+    ]
         
     logmsg(image.get_absolute_url())
     context = {
+        'request': req,
         'display_image': image.image.get_display_image(),
         'image': image,
         'job': job,
@@ -114,6 +124,8 @@ def user_image(req, user_image_id=None):
         'display_url': display_url,
         'fullsize_url': fullsize_url,
         'image_type': image_type,
+        'flags': flags,
+        'selected_flags': selected_flags,
     }
 
     if image.is_public() or (image.user == req.user and req.user.is_authenticated()):
@@ -139,16 +151,27 @@ def edit(req, user_image_id=None):
         if image_form.is_valid() and license_form.is_valid():
             image_form.save()
             license = license_form.save(commit=False)
+            selected_flags = req.POST.getlist('flags')
+            user_image.update_flags(selected_flags, req.user)
             license.save(default_license=req.user.get_profile().default_license)
 
             return redirect(user_image)
     else:
         image_form = UserImageForm(instance=user_image)
         license_form = LicenseForm(instance=user_image.license)
+        flags = Flag.objects.all()
+        selected_flags = [flagged_ui.flag for flagged_ui in
+            FlaggedUserImage.objects.filter(
+                user_image=user_image,
+                user=req.user,
+            )
+        ]
         
     context = {
         'image_form': image_form,
         'license_form': license_form,
+        'flags': flags,
+        'selected_flags':selected_flags,
         'image': user_image,
     }
     return render(req, 'user_image/edit.html', context)

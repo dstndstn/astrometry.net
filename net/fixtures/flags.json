@@ -1,0 +1,37 @@
+[
+{
+    "model"     :   "net.flag",
+    "pk"        :   "report abuse",
+    "fields"    :   {
+        "explanation"   :   "This is spam, inappropriate, or unrelated."
+    }
+},
+{
+    "model"     :   "net.flag",
+    "pk"        :   "nice solve",
+    "fields"    :   {
+        "explanation"   :   "The solver has impressed you with its powers."
+    }
+},
+{
+    "model"     :   "net.flag",
+    "pk"        :   "should have solved",
+    "fields"    :   {
+        "explanation"   :   "The solver has disappointed you."
+    }
+},
+{
+    "model"     :   "net.flag",
+    "pk"        :   "good demo",
+    "fields"    :   {
+        "explanation"   :   "This is a good demonstration of the capabilities of Astrometry.net."
+    }
+},
+{
+    "model"     :   "net.flag",
+    "pk"        :   "report bug",
+    "fields"    :   {
+        "explanation"   :   "You believe this image has caused an error."
+    }
+}
+]
