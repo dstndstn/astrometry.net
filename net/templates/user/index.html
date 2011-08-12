@@ -1,5 +1,10 @@
 {% extends 'base.html' %}
 
+{% block inline_css %}
+{{ block.super }}
+{% include 'user/list.css' %}
+{% endblock %}
+
 {% block title %}
 <a href="{% url astrometry.net.views.user.index %}">Users</a>
 {% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'search/index.html' %}
+
+{% block inline_css %}
+{{ block.super }}
+{% include 'user/list.css' %}
+{% endblock %}
+
+{% block title %}
+{{ block.super }} &gt;
+Users
+{% endblock %}
+
+{% block search_settings %}
+<form method="GET" action="">
+{{ user_search_form.query }}
+<input type="submit" value="Search" />
+</form>
+{% endblock %}
+
+{% block search_results %}
+{% include 'user/paginated_list.html' with user_page=user_page %}
+{% endblock %}
+

@@ -1,0 +1,18 @@
+{% extends 'search/index.html' %}
+
+{% block title %}
+{{ block.super }} &gt;
+Images
+{% endblock %}
+
+{% block search_settings %}
+<form method="GET" action="">
+{{ image_search_form.query }}
+<input type="submit" value="Search" />
+</form>
+{% endblock %}
+
+{% block search_results %}
+{% include 'user_image/paginated_image_set.html' with image_page=image_page %}
+{% endblock %}
+

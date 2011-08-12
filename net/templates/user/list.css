@@ -1,0 +1,16 @@
+<style type="text/css">
+.user_list {
+    padding: 10px;
+}
+.user_info {
+    width: 500px;
+    padding: 5px;
+    border-bottom: 1px solid #ccc;
+}
+.user_details {
+    float: right;
+    text-align: right;
+    font-size: 80%;
+}
+
+</style>

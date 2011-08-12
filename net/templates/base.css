@@ -26,7 +26,7 @@ div#root_content {
 div#site_header {
     width: 990px;
     padding: 5px;
-    border-bottom: 1px solid #000000;
+    border-bottom: 1px solid #000;
 }
 div#title {
     margin: 0px;
@@ -77,8 +77,10 @@ a.disabled:hover {background-color: transparent; color: #000}
 a img      {border: 0px;}
 #menu {
     width: 100%;
+    height: 30px;
     border-bottom: 1px solid #000;
     font-size: .9em;
+    line-height: 30px;
 }
 #menu ul {
     margin: 0px;
@@ -90,21 +92,25 @@ a img      {border: 0px;}
     margin: 0px;
     border-right: 1px solid #ccc;
     width: 8em;
-    height: 100%;
+    height: 30px;
     display: inline-block;
     list-style: none;
 }
 #menu ul li a {
     display: inline-block;
-    padding-top: 4px;
-    padding-bottom: 4px;
     width: 100%;
-    height: 100%;
+    height: 30px;
 }
 #menu ul li a:hover {
     background-color: #00a;
 }
-
+#menu #search {
+    float: right;
+    margin-right: 10px;
+}
+#menu input[type=text] {
+    width: 200px;
+}
 #auth_status { 
     float:right;
     text-align: right;

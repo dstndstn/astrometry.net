@@ -24,3 +24,9 @@
 {% endcomment %}
 </ul>
 
+<div id="search">
+<form method="GET" action="{% url astrometry.net.views.search.images %}">
+<input type="text" name="query" />
+<input type="submit" value="Search" />
+</form>
+</div>

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block inline_css %}
+{{block.super}}
+{% include 'user_image/image_set.css' %}
+{% include 'view_menu.css' %}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}css/jquery.autocomplete.css">
+<style type="text/css">
+#search_block {
+    padding: 10px;
+    background-color: #eee;
+}
+#search_menu {
+    float: left;
+    width: 20%;
+    border-right: 1px solid #ccc;
+}
+#search_settings {
+    float: left;
+    padding-left: 10px;
+}
+#search_menu ul.view_menu li {
+    margin-bottom: 0px;
+}
+</style>
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+{% endblock %}
+
+{% block title %}
+<a href="{% url astrometry.net.views.image.search %}">Search</a>
+{% endblock %}
+
+{% block content %}
+    <div id="search_block">
+        <div id="search_menu">
+            <ul class="view_menu">
+                <li><a href="{% url astrometry.net.views.search.images %}">Images</a></li>
+                <li><a href="{% url astrometry.net.views.search.users %}">Users</a></li>
+            </ul>
+        </div>
+        <div id="search_settings">
+            {% block search_settings %}
+            {% endblock %}
+        </div>
+        </form>
+        <div style="clear:both"></div>
+    </div>
+    <br />
+    <div id="search_results">
+    {% block search_results %}
+    {% endblock %}
+    </div>
+{% endblock %}

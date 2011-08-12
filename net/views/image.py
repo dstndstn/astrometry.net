@@ -260,7 +260,7 @@ def galex_image(req, calid=None, size='full'):
         wcsfn = cal.get_wcs_file()
         plotfn = get_temp_file()
         if size == 'display':
-            image = cal.jobs.get().user_image
+            image = cal.job.user_image
             scale = float(image.image.get_display_image().width)/image.image.width
         else:
             scale = 1.0
@@ -284,7 +284,7 @@ def sdss_image(req, calid=None, size='full'):
         wcsfn = cal.get_wcs_file()
         plotfn = get_temp_file()
         if size == 'display':
-            image = cal.jobs.get().user_image
+            image = cal.job.user_image
             scale = float(image.image.get_display_image().width)/image.image.width
         else:
             scale = 1.0

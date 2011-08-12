@@ -22,6 +22,11 @@ urlpatterns += patterns('astrometry.net.openid_views',
     url(r'^logo.gif$', 'logo', name='openid-logo'),
 )
 
+urlpatterns += patterns('astrometry.net.views.search',
+    (r'^search/images/?$', 'images'),
+    (r'^search/users/?$', 'users'),
+)
+
 jobpattern = r'[0-9-]+'
 subpattern = r'[0-9-]+'
 imagepattern = r'[0-9-]+'
