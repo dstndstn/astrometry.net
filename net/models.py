@@ -37,29 +37,19 @@ from astrometry.net.abstract_models import *
 class LicenseManager(models.Manager):
     def get_or_create(self, default_license=None, *args, **kwargs):
         return_value = None
+        default_replaced_license = License(
+            allow_commercial_use=kwargs.get('allow_commercial_use', 'd'),
+            allow_modifications=kwargs.get('allow_modifications', 'd')
+        )
+        default_replaced_license.replace_license_default(default_license)
+        kwargs = {
+            'allow_commercial_use': default_replaced_license.allow_commercial_use,
+            'allow_modifications': default_replaced_license.allow_modifications,
+        }
         try:
-            default_replaced_license = License(
-                allow_commercial_use=kwargs.get('allow_commercial_use', 'd'),
-                allow_modifications=kwargs.get('allow_modifications', 'd')
-            )
-            default_replaced_license.replace_license_default(default_license)
-
-            kwargs = {
-                'allow_commercial_use':default_replaced_license.allow_commercial_use,
-                'allow_modifications':default_replaced_license.allow_modifications,
-            }
             return_value = super(LicenseManager, self).get_or_create(*args, **kwargs)
         except MultipleObjectsReturned:
-            default_replaced_license = License(
-                allow_commercial_use=kwargs.get('allow_commercial_use', 'd'),
-                allow_modifications=kwargs.get('allow_modifications', 'd')
-            )
-            default_replaced_license.replace_license_default(default_license)
-
-            license = License.objects.filter(
-                allow_commercial_use=default_replaced_license.allow_commercial_use,
-                allow_modifications=default_replaced_license.allow_modifications,
-            )[0]
+            license = License.objects.filter(**kwargs)[0]
             return_value = (license, False)
 
         return return_value
@@ -917,7 +907,7 @@ class UserImage(Hideable):
                 logmsg('flagging ui %d: %s' % (self.pk, flag.name))
                 FlaggedUserImage.objects.get_or_create(
                     user_image=self,
-                    flag=Flag.objects.get(pk=flag.name),
+                    flag=flag,
                     user=flagger,
                 )
             else:
@@ -925,7 +915,7 @@ class UserImage(Hideable):
                     logmsg('removing flag %s from ui %d' % (flag.name, self.pk))
                     FlaggedUserImage.objects.filter(
                         user_image=self,
-                        flag=Flag.objects.get(pk=flag.name),
+                        flag=flag,
                         user=flagger,
                     ).delete()
                 except ObjectDoesNotExist:
