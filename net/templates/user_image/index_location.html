@@ -1,0 +1,24 @@
+{% extends 'user_image/index.html' %}
+
+{% block inline_css %}
+{{ block.super }}
+<style type="text/css">
+.search_item {margin-right: 25px;}
+</style>
+{% endblock %}
+
+{% block title %}
+{{ block.super }}
+{% with form=location_search_form %}
+{% if form.ra.data and form.dec.data and form.radius.data %}
+    &gt; Location: center ({{ form.ra.data }}, {{ form.dec.data }}); radius {{ form.radius.data }} deg
+{% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block search_settings %}
+<span class="search_item">RA: {{ location_search_form.ra }} degrees</span>
+<span class="search_item">Dec: {{ location_search_form.dec }} degrees</span>
+<span class="search_item">Radius: {{ location_search_form.radius }} degrees</span>
+<input type="submit" value="Search" />
+{% endblock %}

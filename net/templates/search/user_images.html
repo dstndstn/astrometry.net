@@ -13,6 +13,12 @@ Images
 {% endblock %}
 
 {% block search_results %}
-{% include 'user_image/paginated_image_set.html' with image_page=image_page %}
+{% with size=request.GET.thumbnail_size %}
+View:
+<a {% if size == 'small' %}class="selected" {% endif %}href="?{{ query_string }}&thumbnail_size=small">small</a> | 
+<a {% if size == 'medium' %}class="selected" {% endif %}href="?{{ query_string }}&thumbnail_size=medium">medium</a> | 
+<a {% if size == 'large' or not size %}class="selected" {% endif %}href="?{{ query_string }}&thumbnail_size=large">large</a>
+{% include 'user_image/paginated_image_set.html' with image_page=image_page thumbnail_size=size%}
+{% endwith %}
 {% endblock %}
 

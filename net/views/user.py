@@ -11,6 +11,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadReque
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count
 
 from astrometry.net.models import *
 from astrometry.net import settings
@@ -120,14 +121,45 @@ def dashboard_create_album(req):
     }
     return render(req, "dashboard/create_album.html", context)
     
-def index(req):
-    context = {
-        'users':User.objects.all()
-    }
-    return render_to_response("user/index.html",
-        context,
-        context_instance = RequestContext(req))
+def index(req, users=User.objects.all(),
+          template_name='user/index.html', context={}):
 
+    sort = req.GET.get('sort', 'name')
+    order = 'profile__display_name'
+    if sort == 'name':
+        #profiles = (UserProfilek.extra(select={'lower_name':'lower(profile.display_name)'})
+        #             .order_by('lower_name'))
+        order = 'profile__display_name'
+    elif sort == 'date':
+        order = 'date_joined'
+    elif sort == 'images':
+        users = users.annotate(Count('user_images'))
+        order = '-user_images__count'
+    
+    users = users.order_by(order)
+    page_number = req.GET.get('page',1)
+    user_page = get_page(users,20,page_number)
+    context.update({'user_page': user_page})
+    return render(req, template_name, context)
+
+class NameSearchForm(forms.Form):
+    query = forms.CharField(widget=forms.TextInput(attrs={'autocomplete':'off'}),
+                                                  required=False)
+def index_name(req):
+    users = User.objects.all()
+    form = NameSearchForm(req.GET)
+    query_string = ''
+    if form.is_valid():
+        query_string = urllib.urlencode(form.cleaned_data)
+        query = form.cleaned_data.get('query')
+        if query:
+            users = users.filter(profile__display_name__icontains=query)
+
+    context = {
+        'name_search_form': form,
+        'query_string': query_string,
+    }
+    return index(req, users, 'user/index_name.html', context)
 
 def user_profile(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)

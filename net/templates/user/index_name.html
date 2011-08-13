@@ -1,0 +1,10 @@
+{% extends 'user/index.html' %}
+
+{% block search_settings %}
+{{ name_search_form.query }}
+<input type="submit" value="Search" />
+{% endblock %}
+
+{% block search_results %}
+{{ block.super }}
+{% endblock %}

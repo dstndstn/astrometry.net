@@ -98,7 +98,7 @@ def new(req, category=None, recipient_id=None):
 
 def tag_autocomplete(req):
     name = req.GET.get('q','')
-    tags = Tag.objects.filter(text__istartswith=name)[:8]
+    tags = Tag.objects.filter(text__icontains=name)[:8]
     response = HttpResponse(mimetype='text/plain')
     for tag in tags:
         response.write(tag.text + '\n')

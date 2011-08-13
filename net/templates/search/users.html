@@ -5,6 +5,14 @@
 {% include 'user/list.css' %}
 {% endblock %}
 
+{% block javascript %}
+<script type="text/javascript">
+$(document).ready(function () {
+
+});
+</script>
+{% endblock %}
+
 {% block title %}
 {{ block.super }} &gt;
 Users
@@ -18,6 +26,12 @@ Users
 {% endblock %}
 
 {% block search_results %}
+{% with sort=request.GET.sort %}
+Sort:
+<a {% if sort == 'name' %}class="disabled" {% endif %}href="?{{ query_string }}&sort=name">Name</a> | 
+<a {% if sort == 'date' %}class="disabled" {% endif %}href="?{{ query_string }}&sort=date">Date Joined</a> | 
+<a {% if sort == 'images' %}class="disabled" {% endif %}href="?{{ query_string }}&sort=images">Images Submitted</a>
+{% endwith %}
 {% include 'user/paginated_list.html' with user_page=user_page %}
 {% endblock %}
 

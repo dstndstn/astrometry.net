@@ -1,8 +1,27 @@
 {% extends 'base.html' %}
+{% load query_string %}
 
 {% block inline_css %}
-{{ block.super }}
+{{block.super}}
 {% include 'user/list.css' %}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}css/jquery.autocomplete.css">
+<style type="text/css">
+#search_block {
+    padding: 10px;
+    background-color: #eee;
+}
+#search_menu {
+}
+#search_settings {
+    padding-left: 10px;
+}
+#search_menu ul.view_menu li {
+    margin-bottom: 0px;
+}
+#sort_menu {
+    padding: 10px;
+}
+</style>
 {% endblock %}
 
 {% block title %}
@@ -10,5 +29,36 @@
 {% endblock %}
 
 {% block content %}
-{% include 'user/list.html' %}
+    <form method="GET" action=""> 
+    <input type="hidden" name="sort" value="{{ request.GET.sort }}" />
+    <div id="search_block">
+        <div id="search_menu">
+            {% url astrometry.net.views.user.index_name as name_url %}
+            {% with curr_url=request.path %}
+            Search:
+            <a {% if curr_url == name_url %}class="selected" {% endif %}href="{{ name_url }}">Name</a>
+            {% endwith %}
+        </div>
+        <div id="search_settings">
+            {% block search_settings %}
+            {% endblock %}
+        </div>
+        </form>
+        <div style="clear:both"></div>
+    </div>
+    <div id="search_results">
+        {% block search_results %}
+            <div id="sort_menu">
+                {% with sort=request.GET.sort %}
+                Sort:
+                <a {% if sort == 'name' %}class="selected" {% endif %}href="?{% query_string 'sort' 'name' %}">Name</a> | 
+                <a {% if sort == 'date' %}class="selected" {% endif %}href="?{% query_string 'sort' 'date' %}">Date Joined</a> | 
+                <a {% if sort == 'images' %}class="selected" {% endif %}href="?{% query_string 'sort' 'images' %}">Images Submitted</a>
+                {% endwith %}
+            </div>
+            {% include 'user/paginated_list.html' with user_page=user_page %}
+        {% endblock %}
+    </div>
+    </form>
 {% endblock %}
+

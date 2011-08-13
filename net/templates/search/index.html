@@ -37,8 +37,8 @@
     <div id="search_block">
         <div id="search_menu">
             <ul class="view_menu">
-                <li><a href="{% url astrometry.net.views.search.images %}">Images</a></li>
-                <li><a href="{% url astrometry.net.views.search.users %}">Users</a></li>
+                <li><a href="{% url astrometry.net.views.search.images %}?query={{ request.GET.query }}">Images</a></li>
+                <li><a href="{% url astrometry.net.views.search.users %}?query={{ request.GET.query }}">Users</a></li>
             </ul>
         </div>
         <div id="search_settings">

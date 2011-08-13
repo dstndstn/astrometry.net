@@ -1,26 +1,34 @@
 {% extends 'base.html' %}
+{% load query_string %}
 
 {% block inline_css %}
 {{block.super}}
 {% include 'user_image/image_set.css' %}
 {% include 'view_menu.css' %}
 <style type="text/css">
-/*div#user_image_index {
-    overflow:auto;
-    width:100%
+#search_block {
+    padding: 10px;
+    background-color: #eee;
 }
-div#user_image_index div {
-    float:left;
-    vertical-align:top;
-}*/
-div#user_image_index_menu {
-    float: left;
-    width: 20%;
+#search_menu {
 }
-div#user_image_index_content {
+#show_images_menu {
+    float: right;
+}
+#search_settings {
+    padding-left: 10px;
+}
+#search_menu ul.view_menu li {
+    margin-bottom: 0px;
+}
+#image_settings {
+    padding: 10px; 
+}
+#sort_menu {
     float: left;
-    width: 75%;
-    margin-left: 5%;
+}
+#thumbnail_size_menu {
+    float: right;
 }
 </style>
 {% endblock %}
@@ -30,15 +38,55 @@ div#user_image_index_content {
 {% endblock %}
 
 {% block content %}
-<div id="user_image_index">
-    <div id="user_image_index_menu">
-        {% include 'user_image/menu.html' %}
+    <form method="GET" action="">
+    <input type="hidden" name="thumbnail_size" value="{{ request.GET.thumbnail_size }}" />
+    <input type="hidden" name="sort" value="{{ request.GET.sort }}" />
+
+    <div id="search_block">
+        <div id="search_menu">
+            {% url astrometry.net.views.image.index_tag as tag_url %}
+            {% url astrometry.net.views.image.index_location as location_url %}
+            {% with curr_url=request.path %}
+            Search:
+            <a {% if curr_url == tag_url %}class="selected" {% endif %}href="{{ tag_url }}">Tag</a> |
+            <a {% if curr_url == location_url %}class="selected" {% endif %}href="{{ location_url }}">Location</a>
+            {% endwith %}
+            
+            <div id="show_images_menu">
+                Show: 
+                {{ show_images_form.calibrated }}<label for="id_calibrated">calibrated</label>&nbsp;&nbsp;
+                {{ show_images_form.processing }}<label for="id_processing">processing</label>&nbsp;&nbsp;
+                {{ show_images_form.failed }}<label for="id_failed">failed</label>&nbsp;&nbsp;
+                </form>
+            </div>
+            <div style="clear:both"></div>
+        </div>
+        <div id="search_settings">
+            {% block search_settings %}
+            {% endblock %}
+        </div>
+        </form>
     </div>
-    <div id="user_image_index_content">
-    {% block user_image_index_content %}
-        {% include 'user_image/image_set.html' with images=images %}
-    {% endblock %}
+    <div id="search_results">
+        {% block search_results %}
+            <div id="image_settings">
+                <div id="sort_menu">
+                    Sort:
+                    <a href="">date submitted</a>
+                </div>
+                <div id="thumbnail_size_menu">
+                    {% with size=request.GET.thumbnail_size %}
+                    View:
+                    <a {% if size == 'small' %}class="selected" {% endif %}href="?{% query_string 'thumbnail_size' 'small' %}">small</a> | 
+                    <a {% if size == 'medium' %}class="selected" {% endif %}href="?{% query_string 'thumbnail_size' 'medium' %}">medium</a> | 
+                    <a {% if size == 'large' or not size %}class="selected" {% endif %}href="?{% query_string 'thumbnail_size' 'large' %}">large</a>
+                    {% endwith %}
+                </div>
+                <div style="clear:both"></div>
+            </div>
+            {% include 'user_image/paginated_image_set.html' with image_page=image_page thumbnail_size=request.GET.thumbnail_size %}
+        {% endblock %}
     </div>
-</div>
-<div style="clear:both"></div>
+    </form>
 {% endblock %}
+

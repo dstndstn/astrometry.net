@@ -76,8 +76,8 @@ function changeImage(key) {
 
         window.location.hash = key;
         link = $('a[title='+key+']')
-        link.addClass('disabled')
-        link.siblings().removeClass('disabled')
+        link.addClass('selected')
+        link.siblings().removeClass('selected')
         $('#fullsize_link').attr('href',images[key]);
         
         image = $("#user_image");

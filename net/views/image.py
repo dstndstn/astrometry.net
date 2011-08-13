@@ -448,16 +448,109 @@ def extraction_image(req, job_id=None, size='full'):
 # -IPAC/IRSA claims to have VO services
 # -elaborate javascripty interface
 
-def index(req, images=UserImage.objects.all().order_by('-submission__submitted_on')[:9], 
-            template_name='user_image/index_recent.html', context={}):
+class ShowImagesForm(forms.Form):
+    calibrated = forms.BooleanField(widget=forms.CheckboxInput(
+                                        attrs={'onClick':'this.form.submit();'}),
+                                    initial=True, required=False)
+    processing = forms.BooleanField(widget=forms.CheckboxInput(
+                                        attrs={'onClick':'this.form.submit();'}),
+                                    initial=False, required=False)
+    failed = forms.BooleanField(widget=forms.CheckboxInput(
+                                        attrs={'onClick':'this.form.submit();'}),
+                                    initial=False, required=False)
 
-    page_number = req.GET.get('page',1)
-    page = get_page(images,3*10,page_number)
-    context.update({'image_page':page})
-    return render_to_response(template_name,   
-        context,
-        context_instance = RequestContext(req))
+def index(req, images=UserImage.objects.all(), 
+          template_name='user_image/index.html', context={}):
 
+    form_data = req.GET.copy()
+    if not (req.GET.get('calibrated')
+            or req.GET.get('processing')
+            or req.GET.get('failed')):
+        form_data['calibrated'] = 'on'
+    form = ShowImagesForm(form_data)
+    calibrated = True
+    processing = False
+    failed = False
+    if form.is_valid():
+        calibrated = form.cleaned_data.get('calibrated')
+        processing = form.cleaned_data.get('processing')
+        failed = form.cleaned_data.get('failed')
+        
+    if calibrated is False:
+        images = images.exclude(jobs__status='S')
+    if processing is False:
+        images = images.exclude(jobs__status__isnull=True)
+    if failed is False:
+        images = images.exclude(jobs__status='F')
+
+    images = images.order_by('-submission__submitted_on')
+    page_number = req.GET.get('page', 1)
+    page = get_page(images, 3*10, page_number)
+    context.update({
+        'image_page': page,
+        'show_images_form': form,
+    })
+    return render(req, template_name, context)
+
+class TagSearchForm(forms.Form):
+    query = forms.CharField(widget=forms.TextInput(attrs={'autocomplete':'off'}),
+                                                  required=False)
+
+def index_tag(req):
+    images = UserImage.objects.all()
+    form = TagSearchForm(req.GET)
+    query_string = ''
+    if form.is_valid():
+        query_string = urllib.urlencode(form.cleaned_data)
+        query = form.cleaned_data.get('query')
+        if query:
+            images = images.filter(tags__text__icontains=query)
+
+    images = images.distinct()
+
+    context = {
+        'tag_search_form': form,
+        'query_string': query_string,
+    }
+    return index(req, images, 'user_image/index_tag.html', context)
+   
+class LocationSearchForm(forms.Form):
+    ra = forms.FloatField(widget=forms.TextInput(attrs={'size':'5'}))
+    dec = forms.FloatField(widget=forms.TextInput(attrs={'size':'5'}))
+    radius = forms.FloatField(widget=forms.TextInput(attrs={'size':'5'}))
+
+def index_location(req):
+    images = UserImage.objects.all()
+    form = LocationSearchForm(req.GET)
+    query_string = ''
+    if form.is_valid():
+        query_string = urllib.urlencode(form.cleaned_data)
+        ra = form.cleaned_data.get('ra', 0)
+        dec = form.cleaned_data.get('dec', 0)
+        radius = form.cleaned_data.get('radius', 0)
+
+        if ra and dec and radius: 
+            ra *= math.pi/180
+            dec *= math.pi/180
+            tempr = math.cos(dec)
+            x = tempr*math.cos(ra)
+            y = tempr*math.sin(ra)
+            z = math.sin(dec)
+            r = radius/180*math.pi
+           
+            # HACK - there's probably a better way to do this..?
+            where = ('(x-(%(x)f))*(x-(%(x)f))+(y-(%(y)f))*(y-(%(y)f))+(z-(%(z)f))*(z-(%(z)f)) < (%(r)f)*(%(r)f)'
+                    % dict(x=x,y=y,z=z,r=r))
+            where2 = '(r <= %f)' % r
+            cals = Calibration.objects.extra(where=[where,where2])
+            images = UserImage.objects.filter(jobs__calibration__in=cals)
+
+    images = images.distinct()
+    context = {
+        'location_search_form': form,
+        'query_string': query_string,
+    }
+    return index(req, images, 'user_image/index_location.html', context)
 
 def index_recent(req):
     return index(req, 

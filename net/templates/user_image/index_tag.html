@@ -1,0 +1,19 @@
+{% extends 'user_image/index.html' %}
+
+{% block title %}
+{{ block.super }}
+{% with form=tag_search_form %}
+{% if form.query.data %}
+    &gt; Tag Search: '{{ form.query.data }}'
+{% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block search_settings %}
+{{ tag_search_form.query }}
+<input type="submit" value="Search" />
+{% endblock %}
+
+{% block search_results %}
+{{ block.super }}
+{% endblock %}
