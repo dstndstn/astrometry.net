@@ -1,7 +1,8 @@
 <ul>
 {% spaceless %}
 <li><a href="{% url astrometry.net.views.home.home %}">Home</a></li>
-<li><a href="{% url astrometry.net.views.image.index %}">Images</a></li>
+<!--<li><a href="{% url astrometry.net.views.image.index %}">Images</a></li>-->
+<li><a href="{% url astrometry.net.views.home.explore %}">Explore</a></li>
 {% if user.is_authenticated %}
 <li><a href="{% url astrometry.net.views.user.dashboard %}">Dashboard</a></li>
 {% endif %}

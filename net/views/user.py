@@ -148,16 +148,13 @@ class NameSearchForm(forms.Form):
 def index_name(req):
     users = User.objects.all()
     form = NameSearchForm(req.GET)
-    query_string = ''
     if form.is_valid():
-        query_string = urllib.urlencode(form.cleaned_data)
         query = form.cleaned_data.get('query')
         if query:
             users = users.filter(profile__display_name__icontains=query)
 
     context = {
         'name_search_form': form,
-        'query_string': query_string,
     }
     return index(req, users, 'user/index_name.html', context)
 

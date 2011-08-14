@@ -1,0 +1,44 @@
+{% extends 'user_image/index.html' %}
+{% load custom_tags %} 
+
+{% block inline_css %}
+{{ block.super }}
+<style type="text/css">
+#image_thumbnail {
+    float:left;
+}
+#image_details {
+    font-size: 80%;
+}
+</style>
+{% endblock %}
+
+{% block title %}
+{{ block.super }} &gt;
+Nearby:
+<a href="{{ image.get_absolute_url }}">{{ image.original_file_name }}</a>
+{% endblock %}
+
+{% block search_menu %}
+{{ block.super }} |
+<a href="" class="selected">nearby</a>
+{% endblock %}
+
+{% block search_settings %}
+<div id="image_thumbnail">
+    {% include 'user_image/image_set.html' with images=image|list thumbnail_size='small' %}
+</div>
+<table id="image_details">
+    <tr><td colspan="2"><a href="{{ image.get_absolute_url }}">{{ image.original_file_name }}</a></td></tr>
+    {% with calib=image.get_best_job.calibration %}
+    <tr><td><b>Center (RA, Dec):</b></td><td>({{ calib.format_radec }})</td></tr>
+    <tr><td><b>Radius:</b></td><td>{{ calib.format_radius }}</td></tr>
+    {% endwith %}
+</table>
+<div style="clear:both"></div>
+{% endblock %}
+
+
+{% block search_results %}
+{{ block.super }}
+{% endblock %}

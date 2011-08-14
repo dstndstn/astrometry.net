@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load query_string %}
+{% load custom_tags %}
 
 {% block inline_css %}
 {{block.super}}
@@ -11,12 +11,15 @@
     background-color: #eee;
 }
 #search_menu {
+    float: left;
 }
 #show_images_menu {
     float: right;
 }
 #search_settings {
+    padding: 10px 10px 0px 10px;
     padding-left: 10px;
+    
 }
 #search_menu ul.view_menu li {
     margin-bottom: 0px;
@@ -44,23 +47,24 @@
 
     <div id="search_block">
         <div id="search_menu">
+            {% block search_menu %}
             {% url astrometry.net.views.image.index_tag as tag_url %}
             {% url astrometry.net.views.image.index_location as location_url %}
             {% with curr_url=request.path %}
             Search:
-            <a {% if curr_url == tag_url %}class="selected" {% endif %}href="{{ tag_url }}">Tag</a> |
-            <a {% if curr_url == location_url %}class="selected" {% endif %}href="{{ location_url }}">Location</a>
+            <a {% if curr_url == tag_url %}class="selected" {% endif %}href="{{ tag_url }}">tag</a> |
+            <a {% if curr_url == location_url %}class="selected" {% endif %}href="{{ location_url }}">location</a>
             {% endwith %}
-            
-            <div id="show_images_menu">
-                Show: 
-                {{ show_images_form.calibrated }}<label for="id_calibrated">calibrated</label>&nbsp;&nbsp;
-                {{ show_images_form.processing }}<label for="id_processing">processing</label>&nbsp;&nbsp;
-                {{ show_images_form.failed }}<label for="id_failed">failed</label>&nbsp;&nbsp;
-                </form>
-            </div>
-            <div style="clear:both"></div>
+            {% endblock %}
         </div>
+        <div id="show_images_menu">
+            Show: 
+            {{ show_images_form.calibrated }}<label for="id_calibrated">calibrated</label>&nbsp;&nbsp;
+            {{ show_images_form.processing }}<label for="id_processing">processing</label>&nbsp;&nbsp;
+            {{ show_images_form.failed }}<label for="id_failed">failed</label>&nbsp;&nbsp;
+            </form>
+        </div>
+        <div style="clear:both"></div>
         <div id="search_settings">
             {% block search_settings %}
             {% endblock %}

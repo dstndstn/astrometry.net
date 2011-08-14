@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load query_string %}
+{% load custom_tags %}
 
 {% block inline_css %}
 {{block.super}}
@@ -36,7 +36,7 @@
             {% url astrometry.net.views.user.index_name as name_url %}
             {% with curr_url=request.path %}
             Search:
-            <a {% if curr_url == name_url %}class="selected" {% endif %}href="{{ name_url }}">Name</a>
+            <a {% if curr_url == name_url %}class="selected" {% endif %}href="{{ name_url }}">name</a>
             {% endwith %}
         </div>
         <div id="search_settings">
@@ -51,9 +51,9 @@
             <div id="sort_menu">
                 {% with sort=request.GET.sort %}
                 Sort:
-                <a {% if sort == 'name' %}class="selected" {% endif %}href="?{% query_string 'sort' 'name' %}">Name</a> | 
-                <a {% if sort == 'date' %}class="selected" {% endif %}href="?{% query_string 'sort' 'date' %}">Date Joined</a> | 
-                <a {% if sort == 'images' %}class="selected" {% endif %}href="?{% query_string 'sort' 'images' %}">Images Submitted</a>
+                <a {% if sort == 'name' or not sort %}class="selected" {% endif %}href="?{% query_string 'sort' 'name' %}">name</a> | 
+                <a {% if sort == 'date' %}class="selected" {% endif %}href="?{% query_string 'sort' 'date' %}">date joined</a> | 
+                <a {% if sort == 'images' %}class="selected" {% endif %}href="?{% query_string 'sort' 'images' %}">images submitted</a>
                 {% endwith %}
             </div>
             {% include 'user/paginated_list.html' with user_page=user_page %}

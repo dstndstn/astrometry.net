@@ -9,3 +9,9 @@ def query_string(context, key, value):
     GET[key] = value
     return urllib.urlencode(GET)
     
+def create_list(obj):
+    return [obj]
+
+register.filter('list', create_list)
+
+    

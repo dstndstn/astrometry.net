@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block inline_css %}
+{% include 'user_image/image_set.css' %}
+<style type="text/css">
+#recent_images {
+    float: left;
+    width: 705px;
+}
+#popular_tags {
+    float: right;
+    width: 250px;
+    height: 580px;
+    padding: 10px;
+    overflow: hidden;
+    background-color: #eee;
+}
+#tag_text {
+    font-size: 90%;
+}
+</style>
+{% endblock %}
+
+{% block title %}
+Explore
+{% endblock %}
+
+{% block content %}
+<div id="recent_images"> 
+    <h2 style="display:inline-block">Recent Images</h2> (<a href="{% url astrometry.net.views.image.index %}">Browse All / Search</a>)<br />
+    {% include 'user_image/image_set.html' with images=recent_images thumbnail_size='medium' %}
+</div>
+
+<div id="popular_tags">
+    <h2 style="display:inline-block">Popular Tags</h2> (<a href="">View All</a>)<br />
+    <form method="get" action="">
+        <input type="text" name="query" /> 
+        <input type="submit" value="Search" />
+    </form>
+    <br />
+    <div id="tag_text">
+    {% for tag in popular_tags %}
+        <a href="">{{ tag.text }}</a><br />
+    {% endfor %}
+    </div>
+</div>
+<div style="clear:both"></div>
+<div id="newest_users">
+    <h2>Newest Members</h2>
+    {% for user in newest_users %}
+        {% include 'user/display_name.html' with user=user %}<br />
+    {% endfor %}
+</div>
+{% endblock %}
+

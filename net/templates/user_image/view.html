@@ -246,7 +246,7 @@ $(document).ready(function() {
         {% if nearby_images %}
         <div id="nearby_images">
             <h3 style="display:inline-block">Nearby Images</h3>
-            (<a href="{% url astrometry.net.views.image.search %}?search_category=image&image={{ image.id }}">View All</a>)
+            (<a href="{% url astrometry.net.views.image.index_nearby user_image_id=image.id %}">View All</a>)
             {% include 'user_image/image_set.html' with images=nearby_images|slice:'6' thumbnail_size='small' %}
         </div>
         {% endif %}

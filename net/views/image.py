@@ -479,7 +479,7 @@ def index(req, images=UserImage.objects.all(),
     if calibrated is False:
         images = images.exclude(jobs__status='S')
     if processing is False:
-        images = images.exclude(jobs__status__isnull=True)
+        images = images.exclude(jobs__status='')
     if failed is False:
         images = images.exclude(jobs__status='F')
 
@@ -499,9 +499,7 @@ class TagSearchForm(forms.Form):
 def index_tag(req):
     images = UserImage.objects.all()
     form = TagSearchForm(req.GET)
-    query_string = ''
     if form.is_valid():
-        query_string = urllib.urlencode(form.cleaned_data)
         query = form.cleaned_data.get('query')
         if query:
             images = images.filter(tags__text__icontains=query)
@@ -510,7 +508,6 @@ def index_tag(req):
 
     context = {
         'tag_search_form': form,
-        'query_string': query_string,
     }
     return index(req, images, 'user_image/index_tag.html', context)
    
@@ -522,9 +519,7 @@ class LocationSearchForm(forms.Form):
 def index_location(req):
     images = UserImage.objects.all()
     form = LocationSearchForm(req.GET)
-    query_string = ''
     if form.is_valid():
-        query_string = urllib.urlencode(form.cleaned_data)
         ra = form.cleaned_data.get('ra', 0)
         dec = form.cleaned_data.get('dec', 0)
         radius = form.cleaned_data.get('radius', 0)
@@ -548,10 +543,18 @@ def index_location(req):
     images = images.distinct()
     context = {
         'location_search_form': form,
-        'query_string': query_string,
     }
     return index(req, images, 'user_image/index_location.html', context)
 
+def index_nearby(req, user_image_id=None):
+    image = get_object_or_404(UserImage, pk=user_image_id)
+    images = image.get_neighbouring_user_images()
+
+    context = {
+        'image': image,
+    }
+    return index(req, images, 'user_image/index_nearby.html', context)
+    
 def index_recent(req):
     return index(req, 
                  UserImage.objects.all().order_by('-submission__submitted_on')[:9],

@@ -72,7 +72,7 @@ a          {color: #00a; text-decoration: none; background-color: transparent;}
 a:link     {background-color: transparent; color: #00a;}
 a:visited  {background-color: transparent; color: #00a;}
 a:hover    {background-color: #00a; color: #fff; text-decoration: none;}
-a.selected {color: #000; text-decoration: underline;}
+a.selected {color: #000; font-weight: bold;}
 a.selected:hover {background-color: transparent; color: #000}
 a img      {border: 0px;}
 #menu {

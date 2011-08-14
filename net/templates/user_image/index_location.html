@@ -17,8 +17,7 @@
 {% endblock %}
 
 {% block search_settings %}
-<span class="search_item">RA: {{ location_search_form.ra }} degrees</span>
-<span class="search_item">Dec: {{ location_search_form.dec }} degrees</span>
+<span class="search_item">RA, Dec: ({{ location_search_form.ra }}, {{ location_search_form.dec }}) degrees</span>
 <span class="search_item">Radius: {{ location_search_form.radius }} degrees</span>
 <input type="submit" value="Search" />
 {% endblock %}
