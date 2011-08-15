@@ -1,13 +1,14 @@
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
-from django.shortcuts import render_to_response, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.template import Context, RequestContext, loader
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
+from django.db.models import Count
 
 from astrometry.net.models import *
 from astrometry.net import settings
-from astrometry.net.util import store_session_form
+from astrometry.net.util import get_page, store_session_form
 from log import *
 from django import forms
 from django.http import HttpResponseRedirect
@@ -95,6 +96,26 @@ def new(req, category=None, recipient_id=None):
             return HttpResponse(response, content_type='application/javascript')
         else:
             return redirect(redirect_url)
+
+def index(req, tags=Tag.objects.all(), 
+          template_name='tag/index.html', context={}):
+
+    sort = req.GET.get('sort', 'freq')
+    order = '-user_images__count'
+    if sort == 'name':
+        order = 'text'
+    elif sort == 'freq':
+        tags = tags.annotate(Count('user_images'))
+        order = '-user_images__count'
+    
+    tags = tags.order_by(order)
+    page_number = req.GET.get('page', 1)
+    page = get_page(tags, 10, page_number)
+    context.update({
+        'tag_page': page,
+        'tags': tags,
+    })
+    return render(req, template_name, context)
 
 def tag_autocomplete(req):
     name = req.GET.get('q','')

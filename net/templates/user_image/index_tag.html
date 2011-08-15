@@ -3,8 +3,12 @@
 {% block title %}
 {{ block.super }}
 {% with form=tag_search_form %}
-{% if form.query.data %}
-    &gt; Tag Search: '{{ form.query.data }}'
+{% if tag %}
+    &gt; Tagged with {{ tag.text }}
+{% else %}
+    {% if form.query.data %}
+        &gt; Tag Search: '{{ form.query.data }}'
+    {% endif %}
 {% endif %}
 {% endwith %}
 {% endblock %}
@@ -12,6 +16,8 @@
 {% block search_settings %}
 {{ tag_search_form.query }}
 <input type="submit" value="Search" />
+{{ tag_search_form.exact }}
+<label for="id_exact">match exact</label>
 {% endblock %}
 
 {% block search_results %}

@@ -95,6 +95,7 @@ urlpatterns += patterns('astrometry.net.views.album',
     (r'^albums/new/?$', 'new'),
 )
 urlpatterns += patterns('astrometry.net.views.tag',
+    (r'^tags/?$', 'index'),
     (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/tags/(?P<tag_id>' + tagpattern + r')/delete/?$', 'delete'),
     (r'^(?P<category>\w+)/(?P<recipient_id>' + idpattern + r')/tags/new/?$', 'new'),
     (r'^tags/autocomplete/?$', 'tag_autocomplete'),

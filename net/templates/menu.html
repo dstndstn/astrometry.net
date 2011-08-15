@@ -2,9 +2,27 @@
 {% spaceless %}
 <li><a href="{% url astrometry.net.views.home.home %}">Home</a></li>
 <!--<li><a href="{% url astrometry.net.views.image.index %}">Images</a></li>-->
-<li><a href="{% url astrometry.net.views.home.explore %}">Explore</a></li>
+<li>
+    <a href="{% url astrometry.net.views.home.explore %}">Explore</a>
+    <ul class="dropdown"> 
+        <li><a href="{% url astrometry.net.views.image.index %}">Images</a></li>
+        <li><a href="{% url astrometry.net.views.user.index %}">Users</a></li>
+        <li><a href="{% url astrometry.net.views.tag.index %}">Tags</a></li>
+    </ul>
+</li>
+
+
 {% if user.is_authenticated %}
-<li><a href="{% url astrometry.net.views.user.dashboard %}">Dashboard</a></li>
+<li>
+    <a href="{% url astrometry.net.views.user.dashboard %}">Dashboard</a>
+    <ul class="dropdown"> 
+        <li><a href="{% url astrometry.net.views.user.user_profile user_id=user.id %}">My Profile</a></li>
+        <li><a href="{% url astrometry.net.views.user.dashboard_profile %}">Edit Profile</a></li>
+        <li><a href="{% url astrometry.net.views.user.dashboard_user_images %}">My Images</a></li>
+        <li><a href="{% url astrometry.net.views.user.dashboard_albums %}">My Albums</a></li>
+        <li><a href="{% url astrometry.net.views.user.dashboard_submissions %}">My Submissions</a></li>
+    </ul>
+</li>
 {% endif %}
 <li><a href="{% url astrometry.net.views.submission.upload_file %}">Upload</a></li>
 <li><a href="{% url astrometry.net.views.home.api_help %}">API</a></li>
@@ -26,7 +44,7 @@
 </ul>
 
 <div id="search">
-<form method="GET" action="{% url astrometry.net.views.image.index_tag %}">
+<form method="get" action="{% url astrometry.net.views.image.index_tag %}">
 <input type="text" name="query" />
 <input type="submit" value="Search" />
 </form>

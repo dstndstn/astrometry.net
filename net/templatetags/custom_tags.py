@@ -1,5 +1,7 @@
 from django import template
+from django.utils.http import urlquote
 import urllib
+import types
 
 register = template.Library()
 
@@ -7,7 +9,12 @@ register = template.Library()
 def query_string(context, key, value):
     GET = context['request'].GET.copy()
     GET[key] = value
-    return urllib.urlencode(GET)
+    
+    strings = []
+    for k, v in GET.items():
+        strings += [urlquote(k) + '=' + urlquote(v)]
+        
+    return '&'.join(strings)
     
 def create_list(obj):
     return [obj]

@@ -2,6 +2,7 @@
 
 {% block inline_css %}
 {% include 'user_image/image_set.css' %}
+{% include 'tag/list.css' %}
 <style type="text/css">
 #recent_images {
     float: left;
@@ -32,21 +33,23 @@ Explore
 </div>
 
 <div id="popular_tags">
-    <h2 style="display:inline-block">Popular Tags</h2> (<a href="">View All</a>)<br />
+    <h2 style="display:inline-block">Popular Tags</h2> (<a href="{% url astrometry.net.views.tag.index %}">View All</a>)<br />
     <form method="get" action="">
         <input type="text" name="query" /> 
         <input type="submit" value="Search" />
     </form>
-    <br />
     <div id="tag_text">
-    {% for tag in popular_tags %}
-        <a href="">{{ tag.text }}</a><br />
-    {% endfor %}
+        {% include 'tag/list.html' with tags=popular_tags %}
     </div>
 </div>
 <div style="clear:both"></div>
 <div id="newest_users">
     <h2>Newest Members</h2>
+    <form method="get" action="{% url astrometry.net.views.user.index_name %}">
+        <input type="text" name="query" /> 
+        <input type="submit" value="Search" />
+    </form>
+    <br />
     {% for user in newest_users %}
         {% include 'user/display_name.html' with user=user %}<br />
     {% endfor %}

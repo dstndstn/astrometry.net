@@ -1,6 +1,6 @@
 <ul id="tag_list">
     {% for tag in tags %}
-        {% include 'tag/tag.html' with tag=tag recipient_id=recipient_id recipient_onwer=recipient_owner category=category next=next %}
+        {% include 'tag/tag.html' with tag=tag recipient_id=recipient_id recipient_owner=recipient_owner category=category next=next %}
     {% empty %}
         No tags.
     {% endfor %}

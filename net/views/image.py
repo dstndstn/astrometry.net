@@ -495,19 +495,30 @@ def index(req, images=UserImage.objects.all(),
 class TagSearchForm(forms.Form):
     query = forms.CharField(widget=forms.TextInput(attrs={'autocomplete':'off'}),
                                                   required=False)
+    exact = forms.BooleanField(initial=False, required=False)
 
 def index_tag(req):
     images = UserImage.objects.all()
     form = TagSearchForm(req.GET)
+    tag = None
     if form.is_valid():
         query = form.cleaned_data.get('query')
+        exact = form.cleaned_data.get('exact')
         if query:
-            images = images.filter(tags__text__icontains=query)
+            if exact:
+                try:
+                    tag = Tag.objects.filter(text__iexact=query).get()
+                    images = images.filter(tags=tag)
+                except Tag.DoesNotExist:
+                    images = UserImage.objects.none() 
+            else:
+                images = images.filter(tags__text__icontains=query)
 
     images = images.distinct()
 
     context = {
         'tag_search_form': form,
+        'tag': tag,
     }
     return index(req, images, 'user_image/index_tag.html', context)
    

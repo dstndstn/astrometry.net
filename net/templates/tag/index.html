@@ -3,7 +3,7 @@
 
 {% block inline_css %}
 {{block.super}}
-{% include 'user/list.css' %}
+{% include 'tag/list.css' %}
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}css/jquery.autocomplete.css">
 <style type="text/css">
 #search_block {
@@ -25,7 +25,7 @@
 {% endblock %}
 
 {% block title %}
-<a href="{% url astrometry.net.views.user.index %}">Users</a>
+<a href="{% url astrometry.net.views.user.index %}">Tags</a>
 {% endblock %}
 
 {% block content %}
@@ -51,12 +51,11 @@
             <div id="sort_menu">
                 {% with sort=request.GET.sort %}
                 Sort:
-                <a {% if sort == 'name' or not sort %}class="selected" {% endif %}href="?{% query_string 'sort' 'name' %}?page=1">name</a> | 
-                <a {% if sort == 'date' %}class="selected" {% endif %}href="?{% query_string 'sort' 'date' %}?page=1">date joined</a> | 
-                <a {% if sort == 'images' %}class="selected" {% endif %}href="?{% query_string 'sort' 'images' %}?page=1">images submitted</a>
+                <a {% if sort == 'name' %}class="selected" {% endif %}href="?{% query_string 'sort' 'name' %}&page=1">name</a> | 
+                <a {% if sort == 'freq' or not sort %}class="selected" {% endif %}href="?{% query_string 'sort' 'freq' %}&page=1">frequency</a>
                 {% endwith %}
             </div>
-            {% include 'user/paginated_list.html' with user_page=user_page %}
+            {% include 'tag/paginated_list.html' with tag_page=tag_page %}
         {% endblock %}
     </div>
     </form>
