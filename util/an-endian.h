@@ -38,6 +38,8 @@
 #define IS_BIG_ENDIAN 0
 #endif
 
+int is_big_endian();
+
 uint32_t u32_letoh(uint32_t i);
 uint32_t u32_htole(uint32_t i);
 

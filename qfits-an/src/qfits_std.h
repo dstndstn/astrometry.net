@@ -32,6 +32,10 @@
                                    Defines
  -----------------------------------------------------------------------------*/
 
+// does qfits think this platform is big-endian?
+int qfits_is_platform_big_endian();
+
+
 #define QFITS_THREAD_UNSAFE {}
 
 /* FITS header constants */

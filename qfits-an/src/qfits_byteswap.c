@@ -33,6 +33,16 @@
 
 #include "qfits_byteswap.h"
 
+// does qfits think this platform is big-endian?
+int qfits_is_platform_big_endian() {
+#ifdef WORDS_BIGENDIAN
+    return 1;
+#else
+    return 0;
+#endif
+}
+
+
 /*----------------------------------------------------------------------------*/
 /**
  * @defgroup    qfits_byteswap  Low-level byte-swapping routines

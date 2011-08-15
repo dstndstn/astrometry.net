@@ -26,6 +26,10 @@
  #endif
  */
 
+int is_big_endian() {
+    return IS_BIG_ENDIAN;
+}
+
 uint16_t u16_letoh(uint16_t i) {
 #if IS_BIG_ENDIAN
     return (

@@ -3,6 +3,8 @@
 #include "fitstable.h"
 #include "fitsioutils.h"
 #include "permutedsort.h"
+#include "an-endian.h"
+#include "qfits.h"
 
 #include "cutest.h"
 
@@ -39,6 +41,12 @@ void test_copy_rows_file_to_memory(CuTest* ct) {
 	double d1in[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	double d2in[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	double d3in[10] = { 4, 5, 6, 7, 0, 1, 8, 9, 2, 3 };
+
+    printf("Big endian: %i\n", is_big_endian());
+    printf("qfits thinks: %i\n", qfits_is_platform_big_endian());
+    CuAssertIntEquals(ct, is_big_endian(), qfits_is_platform_big_endian());
+
+    fits_use_error_system();
 
 	N = sizeof(d1in) / sizeof(double);
 	for (i=0; i<N; i++)
