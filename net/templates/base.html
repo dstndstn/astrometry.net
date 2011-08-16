@@ -47,52 +47,55 @@ $(document).ready(function() {
 <body>
 {% endblock bodytag %}
 
-<div class="root" id="root_header">
-    <div id="site_header">
-        <div id="auth_status">
-        {% if user.is_authenticated %}
-            Signed in as <span id="user_info">{{ user.get_profile.display_name }} ({{ user.email }})</span> |
-            <a href="{% url openid-logout %}">Sign Out</a>
-        {% else %}
-            Not signed in | 
-            <a href="{% url openid-login %}">Sign In</a>
-        {% endif %}
+<div class="root" id="not_footer">
+    <div id="root_header">
+        <div id="site_header">
+            <div id="auth_status">
+            {% if user.is_authenticated %}
+                Signed in as <span id="user_info">{{ user.get_profile.display_name }} ({{ user.email }})</span> |
+                <a href="{% url openid-logout %}">Sign Out</a>
+            {% else %}
+                Not signed in | 
+                <a href="{% url openid-login %}">Sign In</a>
+            {% endif %}
+            </div>
+            <div id="logo">
+                <a href="{% url astrometry.net.views.home.home %}"><img src="http://astrometry.net/logo.png" alt="Astrometry.net logo" /></a>
+            </div>
         </div>
-        <div id="logo">
-            <a href="{% url astrometry.net.views.home.home %}"><img src="http://astrometry.net/logo.png" alt="Astrometry.net logo" /></a>
+
+        {% block menublock %}
+        <div id="menu">
+        {% include "menu.html" %}
+        </div>
+        {% endblock menublock %}
+
+        {% block titlediv %}
+        <div id="title">
+        <h2>{% block title %}{% endblock %}</h2>
+        </div>
+        {% endblock %}
+    </div>
+
+    <div id="root_content">
+        <div id="messages">
+        {% for message in messages %}
+            <p{% if message.tags %} class="{{message.tags}}"{% endif %}>{{message}}</p>
+        {% endfor %}
+        </div>
+
+        <div id="content">
+        {% block content %}
+        {% endblock %}
         </div>
     </div>
 
-    {% block menublock %}
-    <div id="menu">
-    {% include "menu.html" %}
-    </div>
-    {% endblock menublock %}
-
-    {% block titlediv %}
-    <div id="title">
-    <h2>{% block title %}{% endblock %}</h2>
-    </div>
-    {% endblock %}
+    <div id="push_footer"></div>
 </div>
 
-<div class="root" id="root_content">
-    <div id="messages">
-    {% for message in messages %}
-        <p{% if message.tags %} class="{{message.tags}}"{% endif %}>{{message}}</p>
-    {% endfor %}
-    </div>
-
-    <div id="content">
-    {% block content %}
-    {% endblock %}
-    </div>
+<div class="root" id="root_footer">
+     {% include 'footer.html' %}
 </div>
-
-<div class="root" id="footer">
-{% include 'footer.html' %}
-</div>
-
 </body>
 {% endblock thebody %}
 </html>
