@@ -90,6 +90,7 @@ class SubmissionForm(forms.ModelForm):
     advanced_settings = forms.BooleanField(widget=forms.HiddenInput(), 
                                            initial=False, required=False)
 
+
     class Meta:
         model = Submission
         fields = (
@@ -98,6 +99,7 @@ class SubmissionForm(forms.ModelForm):
             'parity','scale_units','scale_type','scale_lower',
             'scale_upper','scale_est','scale_err','positional_error',
             'center_ra','center_dec','radius','downsample_factor',
+            #'deduplication_nonce',
             #'source_type'
             )
         widgets = {
@@ -116,7 +118,12 @@ class SubmissionForm(forms.ModelForm):
             'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer),
             #'allow_commercial_use':forms.RadioSelect(renderer=NoBulletsRenderer),
             #'allow_modifications':forms.RadioSelect(renderer=NoBulletsRenderer),
+            #'deduplication_nonce':forms.HiddenInput(),
         }
+
+    def deduplication_nonce_token(self):
+        nonce = Submission.get_deduplication_nonce()
+        return '<input type="hidden" name="deduplication_nonce" value="%d" />' % nonce
 
     def clean(self):
         number_message = "Enter a number."
@@ -216,13 +223,17 @@ def upload_file(request):
                     except Exception as e:
                         print e
 
+            default_license = None
             if not request.user.is_authenticated():
                 sub.publicly_visible = 'y'
+                default_license = License.get_default()
+            else:
+                default_license = request.user.get_profile().default_license
 
             new_license, created = License.objects.get_or_create(
-                default_license=request.user.get_profile().default_license,
+                default_license=default_license,
                 allow_commercial_use = form.cleaned_data['allow_commercial_use'],
-                allow_modifications = form.cleaned_data['allow_commercial_use'],
+                allow_modifications = form.cleaned_data['allow_modifications'],
             )
 
             sub.license = new_license
@@ -234,11 +245,20 @@ def upload_file(request):
                 sub.url = form.cleaned_data['url']
                 sub.disk_file, sub.original_filename = handle_upload(url=sub.url)
             
-            sub.save()
+            try:
+                sub.save()
+            except DuplicateSubmissionException:
+                sub.comment_receiver.delete()
+                successful_sub = Submission.objects.get(
+                    deduplication_nonce=sub.deduplication_nonce,
+                )
+                sub = successful_sub
+                logmsg('duplicate submission detected for submission %d' % sub.id)
             logmsg('Made Submission' + str(sub))
             return redirect(status, subid=sub.id)
     else:
         form = SubmissionForm(request.user)
+
     return render_to_response('submission/upload.html',
         {
             'form': form,

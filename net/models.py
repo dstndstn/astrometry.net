@@ -33,6 +33,8 @@ from astrometry.net.abstract_models import *
 ### Admin view -- running Submissions and Jobs
 
 # = dt.total_seconds() in python 2.7
+class DuplicateSubmissionException(Exception):
+    pass
 
 class LicenseManager(models.Manager):
     def get_or_create(self, default_license=None, *args, **kwargs):
@@ -980,10 +982,37 @@ class Submission(Hideable):
     license = models.ForeignKey('License')
     comment_receiver = models.OneToOneField('CommentReceiver')
 
+    # a number unique to all submissions submitted in the same day
+    deduplication_nonce = models.IntegerField(null=True)
+
     # Reverse mappings:
     #  user_images -> UserImage
     #  -> QueuedSubmission
 
+    @staticmethod
+    def is_valid_deduplication_nonce(nonce,day,year):
+        collisions = Submission.objects.filter(
+            deduplication_nonce=nonce,
+            submitted_on__day=day,
+            submitted_on__year=year
+        )
+        return len(collisions) == 0
+        
+
+    @staticmethod
+    def get_deduplication_nonce():
+        now = datetime.now()
+        day = now.day
+        year = now.year
+        while True:
+            candidate = random.randrange(1,1073741824) #between 1 and 2^30
+            if Submission.is_valid_deduplication_nonce(candidate, day, year):
+                break
+        return candidate
+
+
+
+        
     def __str__(self):
         return ('Submission %i: file <%s>, url %s, proc_started=%s' %
                 (self.id, str(self.disk_file), self.url, str(self.processing_started)))
@@ -1044,6 +1073,11 @@ class Submission(Hideable):
             
         logmsg('saving submission: license id = %d' % self.license.id)
         logmsg('saving submission: commentreceiver id = %d' % self.comment_receiver.id)
+
+        now = datetime.now()
+        if self.deduplication_nonce and not Submission.is_valid_deduplication_nonce(self.deduplication_nonce, now.day, now.year):
+            logmsg('deduplication nonce: %d' % self.deduplication_nonce)
+            raise DuplicateSubmissionException('duplicate submission detected')
 
         return super(Submission, self).save(*args, **kwargs)
 
