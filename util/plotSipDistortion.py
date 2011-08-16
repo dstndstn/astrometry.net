@@ -67,7 +67,7 @@ def plotDistortion(sip, W, H, ncells, exaggerate=1., doclf=True):
 		if exaggerate != 1:
 			dx += (exaggerate * (dx - x))
 			dy += (exaggerate * (dy - yy))
-		plt.plot(dx, dy, 'r-', zorder=20)
+		plt.plot(dx, dy, 'r-', zorder=20, clip_on=False)
 	
 	plt.axis('scaled')
 	plt.axis([0, W, 0, H])

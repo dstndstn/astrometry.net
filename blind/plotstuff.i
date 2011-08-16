@@ -35,6 +35,7 @@
 #include "qfits.h"
 #include "mathutil.h"
 #include "convolve-image.h"
+#include "resample.h"
 #include "cairoutils.h"
 
 #define true 1
