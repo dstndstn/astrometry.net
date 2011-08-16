@@ -24,8 +24,20 @@
 </style>
 {% endblock %}
 
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#id_query").autocomplete('/tags/autocomplete');
+});
+</script>
+{% endblock %}
+
 {% block title %}
 <a href="{% url astrometry.net.views.user.index %}">Tags</a>
+{% if tag_search_form.query.data %}
+    &gt; Search: '{{ tag_search_form.query.data }}'
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -33,11 +45,9 @@
     <input type="hidden" name="sort" value="{{ request.GET.sort }}" />
     <div id="search_block">
         <div id="search_menu">
-            {% url astrometry.net.views.user.index_name as name_url %}
-            {% with curr_url=request.path %}
             Search:
-            <a {% if curr_url == name_url %}class="selected" {% endif %}href="{{ name_url }}">name</a>
-            {% endwith %}
+            {{ tag_search_form.query }}
+            <input type="submit" value="Search" />
         </div>
         <div id="search_settings">
             {% block search_settings %}

@@ -993,6 +993,11 @@ class Submission(Hideable):
             msg = '...' + msg[-252:]
         self.error_message = msg
 
+    def get_absolute_url(self):
+        kwargs = {'subid':self.id}
+        abs_url = reverse('astrometry.net.views.submission.status', kwargs=kwargs)
+        return abs_url
+
     def get_user_image(self):
         uis = self.user_images.all()
         if uis.count():

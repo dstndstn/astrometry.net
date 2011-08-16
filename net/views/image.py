@@ -30,23 +30,14 @@ from astrometry.net.models import License
 from astrometry.net.views.comment import *
 from astrometry.net.views.license import *
 from astrometry.net.util import get_page, get_session_form, NoBulletsRenderer
-from astrometry.net.views.tag import TagForm
+from astrometry.net.views.tag import TagForm, TagSearchForm
 from astrometry.net.views.license import LicenseForm
 
 from string import strip
 import simplejson
 
 class UserImageForm(forms.ModelForm):
-    allow_commercial_use = forms.ChoiceField(
-        choices=License.YES_NO,
-        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
-        initial='d',
-    )
-    allow_modifications = forms.ChoiceField(
-        choices=License.YES_SA_NO,
-        widget=forms.RadioSelect(renderer=NoBulletsRenderer),
-        initial='d',
-    )
+    album = forms.ChoiceField(choices=(), required=False)
     class Meta:
         model = UserImage
         exclude = (
@@ -65,6 +56,17 @@ class UserImageForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'cols':60,'rows':3}),
             'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer),
         }
+
+    def __init__(self, user, *args, **kwargs):
+        super(UserImageForm, self).__init__(*args, **kwargs)
+        self.fields['album'].choices = [('', 'none')]
+        self.fields['album'].initial = ''
+        user_image = kwargs.get('instance')
+        if user.is_authenticated():
+            for album in Album.objects.filter(user=user).all():
+                self.fields['album'].choices += [(album.id, album.title)]
+                if user_image and user_image in album.user_images.all():
+                    self.fields['album'].initial = album.id
 
 def user_image(req, user_image_id=None):
     image = get_object_or_404(UserImage, pk=user_image_id)
@@ -103,12 +105,15 @@ def user_image(req, user_image_id=None):
         fullsize_url = images[image_type]
 
     flags = Flag.objects.all()
-    selected_flags = [flagged_ui.flag for flagged_ui in
-        FlaggedUserImage.objects.filter(
-            user_image=image,
-            user=req.user,
-        )
-    ]
+    if req.user.is_authenticated():
+        selected_flags = [flagged_ui.flag for flagged_ui in
+            FlaggedUserImage.objects.filter(
+                user_image=image,
+                user=req.user,
+            )
+        ]
+    else:
+        selected_flags = None
         
     logmsg(image.get_absolute_url())
     context = {
@@ -146,7 +151,7 @@ def edit(req, user_image_id=None):
         return render(req, 'user_image/permission_denied.html')
 
     if req.method == 'POST':
-        image_form = UserImageForm(req.POST, instance=user_image)
+        image_form = UserImageForm(req.user, req.POST, instance=user_image)
         license_form = LicenseForm(req.POST)
         if image_form.is_valid() and license_form.is_valid():
             image_form.save()
@@ -157,6 +162,23 @@ def edit(req, user_image_id=None):
                 allow_modifications=license_form.cleaned_data['allow_modifications'],
             )
             user_image.license = license
+            
+            album_id = image_form.cleaned_data['album']
+            albums = Album.objects.filter(user=req.user).filter(user_images__in=[user_image])
+            if album_id == '':
+                # remove user_image from album
+                for album in albums:
+                    album.user_images.remove(user_image)
+            else:
+                try:
+                    album = Album.objects.get(pk=int(album_id))
+                    if album not in albums:
+                        # move user_image to new album
+                        for album in albums:
+                            album.user_images.remove(user_image)
+                        album.user_images.add(user_image)
+                except Exception as e:
+                    pass
 
             selected_flags = req.POST.getlist('flags')
             user_image.update_flags(selected_flags, req.user)
@@ -164,7 +186,7 @@ def edit(req, user_image_id=None):
 
             return redirect(user_image)
     else:
-        image_form = UserImageForm(instance=user_image)
+        image_form = UserImageForm(req.user, instance=user_image)
         license_form = LicenseForm(instance=user_image.license)
         flags = Flag.objects.all()
         selected_flags = [flagged_ui.flag for flagged_ui in
@@ -491,11 +513,6 @@ def index(req, images=UserImage.objects.all(),
         'show_images_form': form,
     })
     return render(req, template_name, context)
-
-class TagSearchForm(forms.Form):
-    query = forms.CharField(widget=forms.TextInput(attrs={'autocomplete':'off'}),
-                                                  required=False)
-    exact = forms.BooleanField(initial=False, required=False)
 
 def index_tag(req):
     images = UserImage.objects.all()

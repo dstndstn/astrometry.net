@@ -97,9 +97,21 @@ def new(req, category=None, recipient_id=None):
         else:
             return redirect(redirect_url)
 
+class TagSearchForm(forms.Form):
+    query = forms.CharField(widget=forms.TextInput(attrs={'autocomplete':'off'}),
+                                                  required=False)
+    exact = forms.BooleanField(initial=False, required=False)
+
 def index(req, tags=Tag.objects.all(), 
           template_name='tag/index.html', context={}):
 
+    form = TagSearchForm(req.GET)
+    if form.is_valid():
+        query = form.cleaned_data.get('query')
+        if query:
+            tags = tags.filter(text__icontains=query)
+
+    tags = tags.annotate(Count('user_images'))
     sort = req.GET.get('sort', 'freq')
     order = '-user_images__count'
     if sort == 'name':
@@ -114,6 +126,7 @@ def index(req, tags=Tag.objects.all(),
     context.update({
         'tag_page': page,
         'tags': tags,
+        'tag_search_form': form,
     })
     return render(req, template_name, context)
 

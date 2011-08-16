@@ -9,6 +9,7 @@
 
 {% block link_css %}
 <!--<link rel="stylesheet" href="{{ STATIC_URL }}css/base.css" />-->
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL}}css/jquery.autocomplete.css">
 {% endblock %}
 
 {% include 'base.css' %}
@@ -16,6 +17,7 @@
 {% endblock inline_css %}
 
 <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.autocomplete.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
     $('a.confirm').live('click', function(event) {
@@ -25,6 +27,7 @@ $(document).ready(function() {
             event.stopImmediatePropagation();
         }
     });
+    $('#search_query').autocomplete('/tags/autocomplete');
 });
 </script>
 {% block javascript %}

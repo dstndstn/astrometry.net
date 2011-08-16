@@ -1,5 +1,14 @@
 {% extends 'user_image/index.html' %}
 
+{% block javascript %}
+{{ block.super }}
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#id_query").autocomplete('/tags/autocomplete');
+});
+</script>
+{% endblock %}
+
 {% block title %}
 {{ block.super }}
 {% with form=tag_search_form %}

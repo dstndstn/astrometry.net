@@ -45,7 +45,7 @@
 
 <div id="search">
 <form method="get" action="{% url astrometry.net.views.image.index_tag %}">
-<input type="text" name="query" />
+<input type="text" name="query" id="search_query" autocomplete="off" />
 <input type="submit" value="Search" />
 </form>
 </div>

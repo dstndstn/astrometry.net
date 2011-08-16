@@ -124,6 +124,12 @@ def dashboard_create_album(req):
 def index(req, users=User.objects.all(),
           template_name='user/index.html', context={}):
 
+    form = UserSearchForm(req.GET)
+    if form.is_valid():
+        query = form.cleaned_data.get('query')
+        if query:
+            users = users.filter(profile__display_name__icontains=query)
+
     sort = req.GET.get('sort', 'name')
     order = 'profile__display_name'
     if sort == 'name':
@@ -139,24 +145,15 @@ def index(req, users=User.objects.all(),
     users = users.order_by(order)
     page_number = req.GET.get('page',1)
     user_page = get_page(users,20,page_number)
-    context.update({'user_page': user_page})
+    context.update({
+        'user_page': user_page,
+        'user_search_form': form,
+    })
     return render(req, template_name, context)
 
-class NameSearchForm(forms.Form):
+class UserSearchForm(forms.Form):
     query = forms.CharField(widget=forms.TextInput(attrs={'autocomplete':'off'}),
                                                   required=False)
-def index_name(req):
-    users = User.objects.all()
-    form = NameSearchForm(req.GET)
-    if form.is_valid():
-        query = form.cleaned_data.get('query')
-        if query:
-            users = users.filter(profile__display_name__icontains=query)
-
-    context = {
-        'name_search_form': form,
-    }
-    return index(req, users, 'user/index_name.html', context)
 
 def user_profile(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
