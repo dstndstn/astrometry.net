@@ -1078,8 +1078,8 @@ class Submission(Hideable):
         if self.deduplication_nonce and not Submission.is_valid_deduplication_nonce(self.deduplication_nonce, now.day, now.year):
             logmsg('deduplication nonce: %d' % self.deduplication_nonce)
             raise DuplicateSubmissionException('duplicate submission detected')
-
-        return super(Submission, self).save(*args, **kwargs)
+        else:
+            return super(Submission, self).save(*args, **kwargs)
 
 
 class Album(Hideable):

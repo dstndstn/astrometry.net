@@ -99,7 +99,6 @@ class SubmissionForm(forms.ModelForm):
             'parity','scale_units','scale_type','scale_lower',
             'scale_upper','scale_est','scale_err','positional_error',
             'center_ra','center_dec','radius','downsample_factor',
-            #'deduplication_nonce',
             #'source_type'
             )
         widgets = {
@@ -118,7 +117,6 @@ class SubmissionForm(forms.ModelForm):
             'publicly_visible': forms.RadioSelect(renderer=NoBulletsRenderer),
             #'allow_commercial_use':forms.RadioSelect(renderer=NoBulletsRenderer),
             #'allow_modifications':forms.RadioSelect(renderer=NoBulletsRenderer),
-            #'deduplication_nonce':forms.HiddenInput(),
         }
 
     def deduplication_nonce_token(self):
@@ -248,10 +246,15 @@ def upload_file(request):
             try:
                 sub.save()
             except DuplicateSubmissionException:
+                # clean up the duplicate's foreign keys
                 sub.comment_receiver.delete()
-                successful_sub = Submission.objects.get(
+
+                # find the latest successful submission to use this nonce
+                # and redirect to that submission's status page
+                successful_sub = Submission.objects.filter(
                     deduplication_nonce=sub.deduplication_nonce,
-                )
+                ).order_by('-submitted_on')[0]
+
                 sub = successful_sub
                 logmsg('duplicate submission detected for submission %d' % sub.id)
             logmsg('Made Submission' + str(sub))
