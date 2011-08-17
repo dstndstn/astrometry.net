@@ -1054,6 +1054,22 @@ class Submission(Hideable):
     def set_processing_finished(self):
         self.processing_finished = datetime.now()
 
+    def has_valid_deduplication_nonce(self,day,year):
+        collisions = Submission.objects.filter(
+            deduplication_nonce=self.deduplication_nonce,
+            submitted_on__day=day,
+            submitted_on__year=year
+        )
+        valid = len(collisions) == 0
+        if not valid:
+            collision_ids = [collision.id for collision in collisions]
+            valid = (
+                self.id is not None
+                and self.id in collision_ids
+                and len(collisions) == 1
+            )
+        return valid
+
     def save(self, *args, **kwargs):
         default_license=self.user.get_profile().default_license
         try:
@@ -1075,7 +1091,7 @@ class Submission(Hideable):
         logmsg('saving submission: commentreceiver id = %d' % self.comment_receiver.id)
 
         now = datetime.now()
-        if self.deduplication_nonce and not Submission.is_valid_deduplication_nonce(self.deduplication_nonce, now.day, now.year):
+        if self.deduplication_nonce and not self.has_valid_deduplication_nonce(now.day, now.year):
             logmsg('deduplication nonce: %d' % self.deduplication_nonce)
             raise DuplicateSubmissionException('duplicate submission detected')
         else:
