@@ -6,6 +6,9 @@ import math
 import urllib
 import urllib2
 import PIL.Image
+import stat
+import time
+from datetime import datetime, timedelta
 
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render_to_response, get_object_or_404, redirect, render
@@ -133,10 +136,10 @@ def user_image(req, user_image_id=None):
         'selected_flags': selected_flags,
     }
 
-    if image.is_public() or (image.user == req.user and req.user.is_authenticated()):
+    if image.is_public() or (req.user.is_authenticated() and image.user == req.user):
         template = 'user_image/view.html'
-    elif SharedHideable.objects.filter(shared_with=req.user.id, hideable=image).count():
-        template = 'user_image/view.html'
+    #elif SharedHideable.objects.filter(shared_with=req.user.id, hideable=image).count():
+    #    template = 'user_image/view.html'
     else:
         messages.error(req, "Sorry, you don't have permission to view this content.")
         template = 'user_image/permission_denied.html'
@@ -184,7 +187,10 @@ def edit(req, user_image_id=None):
             user_image.update_flags(selected_flags, req.user)
             user_image.save()
 
+            messages.success(req, 'Image details successfully updated.')
             return redirect(user_image)
+        else:
+            messages.error(req, 'Please fix the following errors:')
     else:
         image_form = UserImageForm(req.user, instance=user_image)
         license_form = LicenseForm(instance=user_image.license)
@@ -208,6 +214,11 @@ def edit(req, user_image_id=None):
 def serve_image(req, id=None):
     image = get_object_or_404(Image, pk=id)
     res = HttpResponse(mimetype=image.get_mime_type())
+
+    date = datetime.now() + timedelta(days=7)
+    res['Expires'] = time.asctime(date.timetuple())
+    mtime = os.stat(image.disk_file.get_path())[stat.ST_MTIME]
+    res['Last-Modified'] = time.asctime(time.gmtime(mtime))
     if 'filename' in req.GET:
         res['Content-Disposition'] = 'filename=%s' % req.GET['filename']
     image.render(res)
@@ -507,7 +518,7 @@ def index(req, images=UserImage.objects.all(),
 
     images = images.order_by('-submission__submitted_on')
     page_number = req.GET.get('page', 1)
-    page = get_page(images, 3*10, page_number)
+    page = get_page(images, 27, page_number)
     context.update({
         'image_page': page,
         'show_images_form': form,

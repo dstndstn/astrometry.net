@@ -60,7 +60,9 @@ $(document).ready(function() {
             {% endif %}
             </div>
             <div id="logo">
-                <a href="{% url astrometry.net.views.home.home %}"><img src="http://astrometry.net/logo.png" alt="Astrometry.net logo" /></a>
+                <a class="selected" href="{% url astrometry.net.views.home.home %}">
+                    <img src="http://astrometry.net/logo.png" alt="Astrometry.net logo" />
+                </a>
             </div>
         </div>
 
@@ -80,7 +82,7 @@ $(document).ready(function() {
     <div id="root_content">
         <div id="messages">
         {% for message in messages %}
-            <p{% if message.tags %} class="{{message.tags}}"{% endif %}>{{message}}</p>
+            <div{% if message.tags %} class="{{message.tags}}"{% endif %}>{{message}}</div>
         {% endfor %}
         </div>
 

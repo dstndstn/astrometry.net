@@ -764,15 +764,15 @@ class SkyLocation(models.Model):
             user_images |= self.get_user_images(self.nside, hp)
 
         # next bigger scale
-        user_images |= self.get_user_images(self.nside-1, self.healpix/4)
+        user_images |= self.get_user_images(self.nside/2, self.healpix/4)
 
         # next smaller scale
         neighbours = set()
         for i in range(4):
-            n = anutil.healpix_get_neighbours(self.healpix*4+i, self.nside+1)
+            n = anutil.healpix_get_neighbours(self.healpix*4+i, self.nside*2)
             neighbours.update(n)
         for hp in neighbours:
-            user_images |= self.get_user_images(self.nside+1, hp)
+            user_images |= self.get_user_images(self.nside*2, hp)
         
         return user_images
 
@@ -1085,7 +1085,7 @@ class Submission(Hideable):
             self.comment_receiver = CommentReceiver.objects.create()
 
         self.comment_receiver.save()
-        self.license.save(default_license=default_license)
+        #self.license.save(default_license=default_license)
             
         logmsg('saving submission: license id = %d' % self.license.id)
         logmsg('saving submission: commentreceiver id = %d' % self.comment_receiver.id)
@@ -1162,5 +1162,4 @@ class UserProfile(models.Model):
         # for sorting users, enforce capitalization of first letter
         self.display_name = self.display_name[:1].capitalize() + self.display_name[1:]
 
-        self.default_license.save()
         return super(UserProfile, self).save(*args, **kwargs)

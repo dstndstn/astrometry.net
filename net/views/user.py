@@ -47,14 +47,18 @@ def save_profile(req):
         if profile_form.is_valid() and license_form.is_valid():
             profile_form.save()
             license,created = License.objects.get_or_create(
-                default_license=profile.default_license,
+                default_license=License.get_default(),
                 allow_commercial_use=license_form.cleaned_data['allow_commercial_use'],
                 allow_modifications=license_form.cleaned_data['allow_modifications'],
             )
             profile.default_license = license
+            profile.save()
+
+            messages.success(req, 'Profile successfully updated.')
         else:
             store_session_form(req.session, ProfileForm, req.POST)
             store_session_form(req.session, LicenseForm, req.POST)
+            messages.error(req, 'Please fix the following errors:')
         return redirect('astrometry.net.views.user.dashboard_profile')
 
 @login_required
@@ -212,7 +216,7 @@ def user_submissions(req, user_id=None):
 
 def user_autocomplete(req):
     name = req.GET.get('q','')
-    users = User.objects.filter(profile__display_name__istartswith=name)[:8]
+    users = User.objects.filter(profile__display_name__icontains=name)[:8]
     response = HttpResponse(mimetype='text/plain')
     for user in users:
         response.write(user.get_profile().display_name + '\n')

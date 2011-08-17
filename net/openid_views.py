@@ -153,8 +153,8 @@ def parse_openid_response(request):
     consumer = make_consumer(request)
     return consumer.complete(dict(request.REQUEST.items()), current_url)
 
-def logout(request, template_name='openid/logout.html'):
-    messages.success(request, 'You have been signed out.')
+def logout(request, template_name='openid/login.html'):
+    messages.success(request, 'You have been successfully signed out.')
     context = {'messages':messages}
     return django_logout(request, template_name=template_name)
 

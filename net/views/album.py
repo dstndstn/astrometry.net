@@ -41,8 +41,8 @@ def album(req, album_id=None):
 
     if album.is_public() or (album.user == req.user and req.user.is_authenticated()):
         template = 'album/view.html'
-    elif SharedHideable.objects.filter(shared_with=req.user.id, hideable=album).count():
-        template = 'album/view.html'
+    #elif SharedHideable.objects.filter(shared_with=req.user.id, hideable=album).count():
+    #    template = 'album/view.html'
     else:
         messages.error(req, "Sorry, you don't have permission to view this content.")
         template = 'album/permission_denied.html'
@@ -81,7 +81,10 @@ def edit(req, album_id=None):
         form = AlbumForm(req.POST, instance=album)
         if form.is_valid():
             form.save()
+            messages.success(req, 'Album details successfully updated.')
             return redirect(album)
+        else:
+            messages.error(req, 'Please fix the following errors:')
     else:
         form = AlbumForm(instance=album)
         
@@ -101,9 +104,11 @@ def new(req):
             form.save(commit=False)
             album.comment_receiver=CommentReceiver.objects.create()
             album.save()
+            messages.success(req, "Album '%s' successfully created." % album.title)
             return redirect(album)
         else:
             store_session_form(req.session, AlbumForm, req.POST)
+            messages.error(req, 'Please fix the following errors:')
             return redirect(req.POST.get('from','/'))
     else:
         pass
@@ -114,6 +119,7 @@ def delete(req, album_id):
     redirect_url = req.GET.get('next','/')
     if album.user == req.user:
         album.delete()
+        messages.success(req, "Album '%s' successfully deleted." % album.title)
         return HttpResponseRedirect(redirect_url)
     else:
         # render_to_response a "you don't have permission" view

@@ -54,10 +54,12 @@ div#root_footer p {
     color: #777;
     font-size: 75%;
 }
-div#messages p {
+div#messages {
     text-align: center;
-    font-size: 1em;
+    font-size: 90%;
 }
+#messages .success { color: #0c0; }
+#messages .error { color: #e00; }
 span.display_name { }
 span.user_id {
     color: #333;
@@ -73,7 +75,6 @@ div.comment div.comment_footer {
 dt {
     font-weight:bold;
 }
-#messages p.success { color: #0c0; }
 a          {color: #00a; text-decoration: none; background-color: transparent;}
 a:link     {background-color: transparent; color: #00a;}
 a:visited  {background-color: transparent; color: #00a;}
@@ -81,6 +82,7 @@ a:hover    {background-color: #06c; color: #fff; text-decoration: none;}
 a.selected {color: #000; font-weight: bold;}
 a.selected:hover {background-color: transparent; color: #000}
 a img      {border: 0px;}
+
 #menu {
     position: relative;
     width: 100%;

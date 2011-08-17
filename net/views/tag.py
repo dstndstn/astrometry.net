@@ -122,7 +122,7 @@ def index(req, tags=Tag.objects.all(),
     
     tags = tags.order_by(order)
     page_number = req.GET.get('page', 1)
-    page = get_page(tags, 10, page_number)
+    page = get_page(tags, 50, page_number)
     context.update({
         'tag_page': page,
         'tags': tags,
