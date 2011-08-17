@@ -204,6 +204,7 @@ def upload_file(request):
         form = SubmissionForm(request.user, request.POST, request.FILES)
         if form.is_valid():
             sub = form.save(commit=False)
+            sub.deduplication_nonce = int(request.POST.get('deduplication_nonce'))
             
             if request.user.is_authenticated():
                 if form.cleaned_data['album'] == '':
