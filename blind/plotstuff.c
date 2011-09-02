@@ -91,18 +91,22 @@ plot_args_t* plotstuff_new() {
 	return pargs;
 }
 
-static void plotstuff_move_to(plot_args_t* pargs, double x, double y) {
+void plotstuff_move_to(plot_args_t* pargs, double x, double y) {
 	if (pargs->move_to)
 		pargs->move_to(pargs, x, y, pargs->move_to_baton);
-	else
+	else {
+		assert(pargs->cairo);
 		cairo_move_to(pargs->cairo, x, y);
+	}
 }
 
-static void plotstuff_line_to(plot_args_t* pargs, double x, double y) {
+void plotstuff_line_to(plot_args_t* pargs, double x, double y) {
 	if (pargs->line_to)
 		pargs->line_to(pargs, x, y, pargs->line_to_baton);
-	else
+	else {
+		assert(pargs->cairo);
 		cairo_line_to(pargs->cairo, x, y);
+	}
 }
 
 int plotstuff_rotate_wcs(plot_args_t* pargs, double angle) {

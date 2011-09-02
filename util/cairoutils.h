@@ -61,7 +61,7 @@ unsigned char* cairoutils_read_png(const char* fn, int* pW, int *pH);
 
 unsigned char* cairoutils_read_jpeg(const char* fn, int* pW, int* pH);
 
-void cairoutils_fake_ppm_init();
+void cairoutils_fake_ppm_init(void);
 
 // You must call ppm_init() or (preferably) cairoutils_fake_ppm_init()
 unsigned char* cairoutils_read_ppm(const char* infn, int* pW, int* pH);

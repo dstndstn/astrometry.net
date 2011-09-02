@@ -104,6 +104,10 @@ class Plotstuff(object):
 		return plotstuff_move_to_radec(self.pargs, ra, dec)
 	def line_to_radec(self, ra, dec):
 		return plotstuff_line_to_radec(self.pargs, ra, dec)
+	def move_to_xy(self, x, y):
+		plotstuff_move_to(self.pargs, x, y)
+	def line_to_xy(self, x, y):
+		plotstuff_line_to(self.pargs, x, y)
 	def close_path(self):
 		return plotstuff_close_path(self.pargs)
 	def dashed(self, dashlen):
