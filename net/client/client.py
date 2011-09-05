@@ -151,7 +151,7 @@ class Client(object):
         publicly_visible='y'
     ):
         try:
-            f = open(fn)
+            f = open(fn, 'rb')
             result = self.send_request('upload', 
                 {
                     'allow_commercial_use':allow_commercial_use,
@@ -193,7 +193,21 @@ class Client(object):
                                  wcsfn, wcsext)
 
     def job_status(self, job_id):
-        result = self.send_request('job_status/%s' % job_id, {})
+        result = self.send_request('jobs/%s' % job_id, {})
+        stat = result.get('status')
+        if stat == 'success':
+            result = self.send_request('jobs/%s/calibration' % job_id, {})
+            print 'Calibration:', result
+            result = self.send_request('jobs/%s/tags' % job_id, {})
+            print 'Tags:', result
+            result = self.send_request('jobs/%s/machine_tags' % job_id, {})
+            print 'Machine Tags:', result
+            result = self.send_request('jobs/%s/objects_in_field' % job_id, {})
+            print 'Objects in field:', result
+        return stat
+
+    def sub_status(self, sub_id):
+        result = self.send_request('submissions/%s' % sub_id, {})
         return result.get('status')
 
     def jobs_by_tag(self, tag, exact):
@@ -215,6 +229,7 @@ if __name__ == '__main__':
     parser.add_option('--urlupload', '-U', dest='upload_url', help='Upload a file at specified url')
     parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
+    parser.add_option('--substatus', '-s', dest='sub_id', help='Get status of a submission')
     parser.add_option('--jobstatus', '-j', dest='job_id', help='Get status of a job')
     parser.add_option('--jobsbyexacttag', '-T', dest='jobs_by_exact_tag', help='Get a list of jobs associated with a given tag--exact match')
     parser.add_option('--jobsbytag', '-t', dest='jobs_by_tag', help='Get a list of jobs associated with a given tag')
@@ -279,6 +294,8 @@ if __name__ == '__main__':
     if opt.galex_wcs:
         (wcsfn, outfn) = opt.galex_wcs
         c.galex_plot(outfn, wcsfn)
+    if opt.sub_id:
+        print c.sub_status(opt.sub_id)
     if opt.job_id:
         print c.job_status(opt.job_id)
     if opt.jobs_by_tag:
