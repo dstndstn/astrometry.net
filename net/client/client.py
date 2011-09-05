@@ -214,7 +214,7 @@ class Client(object):
     def jobs_by_tag(self, tag, exact):
         exact_option = 'exact=yes' if exact else ''
         result = self.send_request(
-            'jobs_by_tag?query=%s&%s' % (tag, exact_option),
+            'jobs_by_tag?query=%s&%s' % (quote(tag.strip()), exact_option),
             {},
         )
         return result
@@ -304,6 +304,6 @@ if __name__ == '__main__':
         print c.jobs_by_tag(tag, None)
     if opt.jobs_by_exact_tag:
         tag = opt.jobs_by_exact_tag
-        print c.jobs_by_tag(quote(tag), 'yes')
+        print c.jobs_by_tag(tag, 'yes')
 
     #print c.submission_images(1)
