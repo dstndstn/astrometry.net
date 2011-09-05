@@ -1,0 +1,3 @@
+<span title="{{ filename }}">
+{% if filename|length > 30 %}{{ filename|slice:":21" }}...{{filename|slice:"-6:"}}{% else %}{{ filename }}{% endif %}
+</span> 
