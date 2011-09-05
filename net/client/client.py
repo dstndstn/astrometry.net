@@ -5,6 +5,7 @@ from urllib2 import urlopen
 from urllib2 import Request
 from urllib2 import HTTPError
 from urllib import urlencode
+from urllib import quote
 from exceptions import Exception
 from email.mime.multipart import MIMEMultipart
 
@@ -303,6 +304,6 @@ if __name__ == '__main__':
         print c.jobs_by_tag(tag, None)
     if opt.jobs_by_exact_tag:
         tag = opt.jobs_by_exact_tag
-        print c.jobs_by_tag(tag, 'yes')
+        print c.jobs_by_tag(quote(tag), 'yes')
 
     #print c.submission_images(1)
