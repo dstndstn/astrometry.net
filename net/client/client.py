@@ -196,6 +196,14 @@ class Client(object):
         result = self.send_request('job_status/%s' % job_id, {})
         return result.get('status')
 
+    def jobs_by_tag(self, tag, exact):
+        exact_option = 'exact=yes' if exact else ''
+        result = self.send_request(
+            'jobs_by_tag?query=%s&%s' % (tag, exact_option),
+            {},
+        )
+        return result
+
 if __name__ == '__main__':
     import optparse
     parser = optparse.OptionParser()
@@ -208,6 +216,8 @@ if __name__ == '__main__':
     parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--jobstatus', '-j', dest='job_id', help='Get status of a job')
+    parser.add_option('--jobsbyexacttag', '-T', dest='jobs_by_exact_tag', help='Get a list of jobs associated with a given tag--exact match')
+    parser.add_option('--jobsbytag', '-t', dest='jobs_by_tag', help='Get a list of jobs associated with a given tag')
     parser.add_option( '--private', '-p',
         dest='public',
         action='store_const',
@@ -271,5 +281,11 @@ if __name__ == '__main__':
         c.galex_plot(outfn, wcsfn)
     if opt.job_id:
         print c.job_status(opt.job_id)
+    if opt.jobs_by_tag:
+        tag = opt.jobs_by_tag
+        print c.jobs_by_tag(tag, None)
+    if opt.jobs_by_exact_tag:
+        tag = opt.jobs_by_exact_tag
+        print c.jobs_by_tag(tag, 'yes')
 
     #print c.submission_images(1)

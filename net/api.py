@@ -326,3 +326,28 @@ def objects_in_field(req, job_id):
     return HttpResponseJson({
         'objects_in_field':json_sky_objects}
     )
+
+@csrf_exempt
+def jobs_by_tag(req):
+    query = req.GET.get('query')
+    exact = req.GET.get('exact')
+    images = UserImage.objects.all()
+    job_ids = []
+    if exact:
+        try:
+            tag = Tag.objects.filter(text__iexact=query).get()
+            images = images.filter(tags=tag)
+            job_ids = [[job.id for job in image.jobs.all()] for image in images]
+        except Tag.DoesNotExist:
+            images = UserImage.objects.none() 
+    else:
+        images = images.filter(tags__text__icontains=query)
+        job_ids = [[job.id for job in image.jobs.all()] for image in images]
+
+    # flatten job_ids list
+    if job_ids:
+        job_ids = [id for sublist in job_ids for id in sublist]
+
+    return HttpResponseJson({
+        'job_ids':job_ids}
+    )
