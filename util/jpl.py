@@ -1,7 +1,7 @@
 import re
 import datetime
 from astrometry.util.starutil_numpy import *
-from numpy import array
+import numpy as np
 
 ## FIXME -- requires at least one digit before the decimal place.
 floatre = r'[+-]?[\d]+(.[\d]*)?([eE][+-]?[\d]*)?'
@@ -74,9 +74,10 @@ def parse_orbital_elements(s, needSystemGM=True):
 	alljd = []
 	for m in elemrex.finditer(s):
 		d = m.groupdict()
-		E = [deg2rad(x) if rad else x
-			 for (x,rad) in zip([float(d[x]) for x in ['a','e','i','Omega','pomega','M']],
-								[False, False, True, True, True, True])]
+		E = [np.deg2rad(x) if rad else x
+			 for (x,rad) in zip([float(d[x]) for x in
+								 ['a',  'e',   'i',  'Omega', 'pomega','M' ]],
+								[False, False, True, True,    True,    True])]
 		E.append(gm)
 		allE.append(E)
 		alljd.append(float(d['jd']))
@@ -91,12 +92,12 @@ def parse_phase_space(s):
 	all_jd = []
 	for m in xvrex.finditer(s):
 		d = m.groupdict()
-		x = array([float(d[k]) for k in ['x0','x1','x2']])
-		v = array([float(d[k]) for k in ['v0','v1','v2']])
+		x = np.array([float(d[k]) for k in ['x0','x1','x2']])
+		v = np.array([float(d[k]) for k in ['v0','v1','v2']])
 		all_x.append(x)
 		all_v.append(v)
 		all_jd.append(float(d['jd']))
-	return (array(all_x), array(all_v), array(all_jd))
+	return (np.array(all_x), np.array(all_v), np.array(all_jd))
 
 # Returns (ra,dec,jd), each as numpy arrays.
 #   RA,Dec in J2000 deg
@@ -111,4 +112,4 @@ def parse_radec(s):
 		t = datetime.datetime.strptime(d['datetime'], '%Y-%b-%d %H:%M')
 		# 2000-Jan-01 12:00
 		all_jd.append(datetojd(t))
-	return (array(all_ra), array(all_dec), array(all_jd))
+	return (np.array(all_ra), np.array(all_dec), np.array(all_jd))

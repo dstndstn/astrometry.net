@@ -38,34 +38,50 @@ default_K = 1.0
 
 c_au_per_yr = 63239.6717 # google says
 
+#GM_sun = 2.9591310798672560E-04 #AU^3/d^2
+# Google says mass of the sun * G = 39.4775743 (au^3) / (yr^2)
+GM_sun = 39.4775743 # AU^3 / yr^2
+
 def norm1d(x):
 	assert(len(x.shape) == 1)
-	return np.sqrt(np.dot(x, x))
+	return np.sqrt(np.sum(x**2))
 
 def deg2rad(x):
 	return x * pi/180.
 	#return radians(x)
 
-GM_sun = 2.9591310798672560E-04 #AU^3/d^2
-
-def orbital_elements_to_ss_xyz(E, observer, light_travel=True):
+def orbital_elements_to_ss_xyz(E, observer=None, light_travel=True):
 	(a,e,i,Omega,pomega,M,GM) = E
 	# ugh, it's hard to be units-agnostic.
 	# we just assert here so we have to think about this!
+	# This means:
+	#  distances in AU
+	#  angles in radians
+	#  times in years
 	assert(GM == GM_sun)
-	# orbital angular velocity  [radians/yr]
-	meanfrequency = np.sqrt(GM / a**3)
+	if light_travel:
+		assert(observer is not None)
+		# orbital angular velocity  [radians/yr]
+		meanfrequency = np.sqrt(GM / a**3)
 	# Correct for light-time delay.
+	# dM: [radians]
 	dM = 0.
 	lastdM = dM
+	dx = None
 	for ii in range(100):
 		(x,v) = phase_space_coordinates_from_orbital_elements(
 			a,e,i,Omega,pomega,M-dM,GM)
-		dx = (x - observer)
 		if not light_travel:
+			if observer is not None:
+				dx = (x - observer)
 			break
+		dx = (x - observer)
+		# light-travel distance [AU]
 		r = norm1d(dx)
+		# light-travel time [yr]
 		travel = r / c_au_per_yr
+		#print 'light-travel time:', travel, 'yr, or', travel*365.25, 'd'
+		# light travel in angular periods [radians]
 		dM = travel * meanfrequency
 		if abs(lastdM - dM) < 1e-12:
 			break
@@ -117,13 +133,17 @@ def position_from_orbital_vectors(xhat, yhat, a, e, M):
 #            position, velocity (length units, length units per time unit)
 def phase_space_coordinates_from_orbital_elements(a, e, i, Omega, pomega, M, GM):
 	(xhat, yhat, zhat) = orbital_vectors_from_orbital_elements(i, Omega, pomega)
+	# [radians/yr]
 	dMdt = np.sqrt(GM / a**3)
 	E = eccentric_anomaly_from_mean_anomaly(M, e)
 	cosE = np.cos(E)
 	sinE = np.sin(E)
+	# [radians/yr]
 	dEdt = 1.0 / (1.0 - e * cosE) * dMdt
+	# [AU]
 	b = a*np.sqrt(1. - e**2)
 	x =  a * (cosE - e)  * xhat + b * sinE        * yhat
+	# [AU/yr]
 	v = -a * sinE * dEdt * xhat + b * cosE * dEdt * yhat
 	return (x, v)
 
@@ -175,7 +195,7 @@ def orbital_elements_from_phase_space_coordinates(x, v, GM):
 	if e == 0:
 		pomega = 0. - Omega
 	else:
-		pomega = arccos(min(1.0, (evec[0] * cosOmega + evec[1] * sinOmega) / e))
+		pomega = np.arccos(min(1.0, (evec[0] * cosOmega + evec[1] * sinOmega) / e))
 	horriblescalar = ( sinOmega * evec[2] * angmom[0]
 			 - cosOmega * evec[2] * angmom[1]
 			 + cosOmega * evec[1] * angmom[2]
