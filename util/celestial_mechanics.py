@@ -38,7 +38,8 @@ default_K = 1.0
 
 c_au_per_yr = 63239.6717 # google says
 
-def norm(x):
+def norm1d(x):
+	assert(len(x.shape) == 1)
 	return np.sqrt(np.dot(x, x))
 
 def deg2rad(x):
@@ -63,7 +64,7 @@ def orbital_elements_to_ss_xyz(E, observer, light_travel=True):
 		dx = (x - observer)
 		if not light_travel:
 			break
-		r = norm(dx)
+		r = norm1d(dx)
 		travel = r / c_au_per_yr
 		dM = travel * meanfrequency
 		if abs(lastdM - dM) < 1e-12:
@@ -74,7 +75,7 @@ def orbital_elements_to_ss_xyz(E, observer, light_travel=True):
 
 def orbital_elements_to_xyz(E, observer, light_travel=True):
 	(x,dx) = orbital_elements_to_ss_xyz(E, observer, light_travel)
-	dx /= norm(dx)
+	dx /= norm1d(dx)
 	edx = dx[0] * Equinox + dx[1] * Solstice + dx[2] * EclipticPole
 	return edx
 
@@ -130,7 +131,7 @@ class UnboundOrbitError(ValueError):
 	pass
 
 def potential_energy_from_position(x, GM):
-	return -1. * GM / norm(x)
+	return -1. * GM / norm1d(x)
 
 def energy_from_phase_space_coordinates(x, v, GM):
 	return 0.5 * np.dot(v, v) + potential_energy_from_position(x, GM)
@@ -147,19 +148,19 @@ def orbital_elements_from_phase_space_coordinates(x, v, GM):
 		raise UnboundOrbitError('orbital_elements_from_phase_space_coordinates: Unbound orbit')
 
 	angmom = np.cross(x, v)
-	zhat = angmom / norm(angmom)
-	evec = np.cross(v, angmom) / GM - x / norm(x)
-	e = norm(evec)
+	zhat = angmom / norm1d(angmom)
+	evec = np.cross(v, angmom) / GM - x / norm1d(x)
+	e = norm1d(evec)
 	if e == 0:
 		# by convention:
 		xhat = np.cross(jhat, zhat)
-		xhat /= norm(xhat)
+		xhat /= norm1d(xhat)
 	else:
 		xhat = evec / e
 	yhat = np.cross(zhat, xhat)
 	a = -0.5 * GM / energy
 	dMdt = np.sqrt(GM / a**3)
-	i = np.arccos(angmom[2] / norm(angmom))
+	i = np.arccos(angmom[2] / norm1d(angmom))
 	if i == 0:
 		Omega = 0.0
 	else:
