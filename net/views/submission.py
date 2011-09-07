@@ -214,7 +214,13 @@ def upload_file(request):
                     # create a new album
                     title = form.cleaned_data['new_album_title']
                     if title:
-                        album,created = Album.objects.get_or_create(user=request.user, title=title)
+                        try:
+                            album = Album.objects.get(user=request.user, title=title)
+                        except Album.DoesNotExist:
+                            comment_receiver = CommentReceiver.objects.create()
+                            album = Album.objects.create(user=request.user, title=title,
+                                                         comment_receiver=comment_receiver)
+
                         sub.album = album
                 else:
                     try:
