@@ -465,14 +465,20 @@ class SourceList(Image):
             df = CachedFile.get(key)
             if df is None:
                 fitsfn = get_temp_file()
-                cmd = 'text2fits.py %s %s' % (self.disk_file.get_path(), fitsfn)
-                logmsg("Creating fits table from text list: %s" % cmd)
-                rtn,out,err = run_command(cmd)
-                if rtn:
-                    logmsg('text2fits.py failed: rtn %i' % rtn)
-                    logmsg('out: ' + out)
-                    logmsg('err: ' + err)
-                    raise RuntimeError('Failed to create fits table from %s: text2fits.py: %s' % (str(self), err))
+
+                text_file = open(str(self.disk_file.get_path()))
+                text = text_file.read()
+                text_file.close()
+
+                # add x y header
+                # potential hack, assumes it doesn't exist...
+                text = "# x y\n" + text
+
+                text_table = text_table_fields("", text=text)
+                text_table.write_to(fitsfn)
+                logmsg("Creating fits table from text list")
+
+                fits = fits_table(fitsfn)
 
                 # cache
                 logmsg('Caching key "%s"' % key)
@@ -802,8 +808,8 @@ class UserImageManager(models.Manager):
     def public_only(self, user=None):
         if user and not user.is_authenticated():
             user = None
-        return self.all().filter(Q(publicly_visible='y') | Q(user=user))	
-	
+        return self.all().filter(Q(publicly_visible='y') | Q(user=user))    
+    
 
 class UserImage(Hideable):
     objects = UserImageManager()
