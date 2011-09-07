@@ -73,9 +73,9 @@ def orbital_elements_to_ss_xyz(E, observer=None, light_travel=True):
 			a,e,i,Omega,pomega,M-dM,GM)
 		if not light_travel:
 			if observer is not None:
-				dx = (x - observer)
+				dx = x - observer
 			break
-		dx = (x - observer)
+		dx = x - observer
 		# light-travel distance [AU]
 		r = norm1d(dx)
 		# light-travel time [yr]
@@ -86,7 +86,8 @@ def orbital_elements_to_ss_xyz(E, observer=None, light_travel=True):
 		if abs(lastdM - dM) < 1e-12:
 			break
 		lastdM = dM
-	#print 'niters', ii
+	if ii == 99:
+		print 'Warning: orbital_elements_to_ss_xyz: niters', ii
 	return x,dx
 
 def orbital_elements_to_xyz(E, observer, light_travel=True):
@@ -98,7 +99,7 @@ def orbital_elements_to_xyz(E, observer, light_travel=True):
 # E = (a,e,i,Omega,pomega,M, GM)
 # observer = 3-vector
 # light_travel: correct for light travel time?
-# Returns Ra,Dec in degrees.
+# Returns RA,Dec in degrees.
 def orbital_elements_to_radec(E, observer, light_travel=True):
 	xyz = orbital_elements_to_xyz(E, observer, light_travel)
 	return xyztoradec(xyz)
@@ -179,7 +180,6 @@ def orbital_elements_from_phase_space_coordinates(x, v, GM):
 		xhat = evec / e
 	yhat = np.cross(zhat, xhat)
 	a = -0.5 * GM / energy
-	dMdt = np.sqrt(GM / a**3)
 	i = np.arccos(angmom[2] / norm1d(angmom))
 	if i == 0:
 		Omega = 0.0
