@@ -396,6 +396,11 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
 			data = forfn.read()
 	else:
 		data = text
+
+	# replace newline variations with a single newline character
+	data = data.replace('\r\n','\n') # windows
+	data = data.replace('\r','\n') # mac os
+
 	txtrows = data.split('\n')
 
 	txtrows = txtrows[skiplines:]
