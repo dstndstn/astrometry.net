@@ -499,17 +499,23 @@ def create_source_list(df):
         # otherwise, check to see if it is a text list
         try:
             fitsfn = get_temp_file()
-            cmd = 'text2fits.py %s %s' % (df.get_path(), fitsfn)
-            logmsg("Creating fits table from text list: %s" % cmd)
-            rtn,out,err = run_command(cmd)
-            if rtn:
-                logmsg('text2fits.py failed: rtn %i' % rtn)
-                logmsg('out: ' + out)
-                logmsg('err: ' + err)
-                raise RuntimeError('Failed to create fits table from %s: text2fits.py: %s' % (str(self), err))
+
+            text_file = open(str(df.get_path()))
+            text = text_file.read()
+            text_file.close()
+
+            # add x y header
+            # potential hack, assumes it doesn't exist...
+            text = "# x y\n" + text
+
+            text_table = text_table_fields("", text=text)
+            text_table.write_to(fitsfn)
+            logmsg("Creating fits table from text list")
+
             fits = fits_table(fitsfn)
             source_type = 'text'
-        except:
+        except Exception as e:
+            logmsg(e)
             logmsg('file is not a text list')
             
     if fits:

@@ -90,7 +90,7 @@ def dashboard_submissions(req):
 @login_required
 def dashboard_user_images(req):
     page_number = req.GET.get('page',1)
-    page = get_page(req.user.user_images.all().order_by('-submission__submitted_on', 'id'),3*10,page_number)
+    page = get_page(req.user.user_images.public_only(req.user),3*10,page_number)
     
     context = {
         'user':req.user,
@@ -164,7 +164,8 @@ def user_profile(req, user_id=None):
 
     context = {
         'display_user': user,
-        'recent_submissions':user.submissions.all().order_by('-submitted_on')[:10],
+		'recent_images': user.user_images.public_only(req.user),	
+        'recent_submissions': user.submissions.all().order_by('-submitted_on')[:10],
     }
     return render_to_response('user/profile.html',
         context,
@@ -174,7 +175,7 @@ def user_images(req, user_id=None):
     user = get_object_or_404(User, pk=user_id)
 
     page_number = req.GET.get('page',1)
-    page = get_page(user.user_images.all().order_by('-submission__submitted_on', 'id'),3*10,page_number)
+    page = get_page(user.user_images.public_only(req.user),3*10,page_number)
     
     context = {
         'display_user': user,

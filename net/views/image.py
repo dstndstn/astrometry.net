@@ -492,9 +492,10 @@ class ShowImagesForm(forms.Form):
                                         attrs={'onClick':'this.form.submit();'}),
                                     initial=False, required=False)
 
-def index(req, images=UserImage.objects.all(), 
+def index(req, images=None, 
           template_name='user_image/index.html', context={}):
-
+    if images is None:
+        images = UserImage.objects.public_only(req.user)
     form_data = req.GET.copy()
     if not (req.GET.get('calibrated')
             or req.GET.get('processing')
@@ -526,7 +527,7 @@ def index(req, images=UserImage.objects.all(),
     return render(req, template_name, context)
 
 def index_tag(req):
-    images = UserImage.objects.all()
+    images = UserImage.objects.public_only(req.user)
     form = TagSearchForm(req.GET)
     tag = None
     if form.is_valid():
@@ -556,7 +557,7 @@ class LocationSearchForm(forms.Form):
     radius = forms.FloatField(widget=forms.TextInput(attrs={'size':'5'}))
 
 def index_location(req):
-    images = UserImage.objects.all()
+    images = UserImage.objects.public_only(req.user)
     form = LocationSearchForm(req.GET)
     if form.is_valid():
         ra = form.cleaned_data.get('ra', 0)
@@ -577,7 +578,7 @@ def index_location(req):
                     % dict(x=x,y=y,z=z,r=r))
             where2 = '(r <= %f)' % r
             cals = Calibration.objects.extra(where=[where,where2])
-            images = UserImage.objects.filter(jobs__calibration__in=cals)
+            images = images.filter(jobs__calibration__in=cals)
 
     images = images.distinct()
     context = {

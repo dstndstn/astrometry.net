@@ -5,7 +5,7 @@ from astrometry.net.models import *
 
 def home(req):
     context = {
-        'images':UserImage.objects.all().order_by('-submission__submitted_on'),
+        'images':UserImage.objects.public_only(req.user),
     }
     return render(req, 'home.html', context)
 
@@ -18,8 +18,7 @@ def api_help(req):
     return render(req, 'api_help.html', context)
     
 def explore(req):
-    recent_images = (UserImage.objects.all()
-                        .order_by('-submission__submitted_on')[:12])
+    recent_images = (UserImage.objects.public_only(req.user)[:12])
     newest_users = User.objects.all().order_by('-date_joined')[:10]
     popular_tags = (Tag.objects.all().annotate(Count('user_images'))
                                      .order_by('-user_images__count')[:35])

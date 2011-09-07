@@ -7,10 +7,9 @@ import tempfile
 from datetime import datetime
 
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import User
-
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-
 from django.core.urlresolvers import reverse
 
 from astrometry.net.settings import *
@@ -795,11 +794,16 @@ class UserImageManager(models.Manager):
 
     def all(self):
         anonymous = User.objects.get(username=ANONYMOUS_USERNAME)
-        non_anonymous_uis = super(UserImageManager, self).filter(user=anonymous, jobs__calibration__isnull=False)
-        solved_anonymous_uis = super(UserImageManager, self).exclude(user=anonymous)
+        solved_anonymous_uis = super(UserImageManager, self).filter(user=anonymous, jobs__calibration__isnull=False)
+        non_anonymous_uis = super(UserImageManager, self).exclude(user=anonymous)
         valid_uis = non_anonymous_uis | solved_anonymous_uis
         return valid_uis.order_by('-submission__submitted_on')
 
+    def public_only(self, user=None):
+        if user and not user.is_authenticated():
+            user = None
+        return self.all().filter(Q(publicly_visible='y') | Q(user=user))	
+	
 
 class UserImage(Hideable):
     objects = UserImageManager()

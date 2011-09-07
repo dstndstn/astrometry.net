@@ -51,7 +51,7 @@
         {% if display_user.user_images.all %}  
         (<a href="{% url astrometry.net.views.user.user_images user_id=display_user.id %}">View All</a>)
         {% endif %}
-        {% include 'user_image/image_set.html' with images=display_user.user_images.all|slice:":3" %}
+        {% include 'user_image/image_set.html' with images=recent_images|slice:":3" %}
     </div>
     <div id="profile_submissions">
         <h2 style="display:inline-block">Recent Submissions</h2>

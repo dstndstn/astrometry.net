@@ -31,7 +31,7 @@ def album(req, album_id=None):
     comment_form = get_session_form(req.session, PartialCommentForm)
 
     page_number = req.GET.get('page',1)
-    page = get_page(album.user_images.all(),4*3,page_number)
+    page = get_page(album.user_images.public_only(req.user),4*3,page_number)
     context = {
         'album': album,
         'comment_form': comment_form,
