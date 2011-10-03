@@ -251,6 +251,9 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 	int set_wcs_file(const char* fn, int ext) {
 		return plot_outline_set_wcs_file(self, fn, ext);
 	}
+	int set_wcs_size(int W, int H) {
+		return plot_outline_set_wcs_size(self, W, H);
+	}
 }
 %pythoncode %{
 def plotoutline_setattr(self, name, val):

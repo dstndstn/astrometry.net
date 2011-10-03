@@ -163,11 +163,11 @@ int plotstuff_line_constant_ra(plot_args_t* pargs, double ra, double dec1, doubl
 			lastok = FALSE;
 			continue;
 		}
-		lastok = TRUE;
 		if (lastok)
 			plotstuff_line_to(pargs, x, y);
 		else
 			plotstuff_move_to(pargs, x, y);
+		lastok = TRUE;
 	}
 	return 0;
 }

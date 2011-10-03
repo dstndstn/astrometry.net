@@ -26,11 +26,13 @@ def add_nonstructural_headers(fromhdr, tohdr):
 			i = len(cl)
 		cl.insert(i, pyfits.Card(card.key, card.value, card.comment))
 
-def cut_array(val, I):
+def cut_array(val, I, name=None):
 	if type(I) is slice:
 		return val[I]
 
 	if type(val) in [numpy.ndarray, numpy.core.defchararray.chararray]:
+		#print 'slicing numpy array "%s": val shape' % name, val.shape
+		#print 'slice shape:', I.shape
 		return val[I]
 
 	if type(val) in [list,tuple] and type(I) in [int, numpy.int64]:
@@ -98,13 +100,17 @@ class tabledata(object):
 			v = self.get(k)
 			print '(%s)' % (str(type(v))),
 			if numpy.isscalar(v):
-				print v
+				print v,
 			elif hasattr(v, 'shape'):
-				print 'shape', v.shape
+				print 'shape', v.shape,
 			elif hasattr(v, '__len__'):
-				print 'length', len(v)
+				print 'length', len(v),
 			else:
-				print v
+				print v,
+
+			if hasattr(v, 'dtype'):
+				print 'dtype', v.dtype,
+			print
 			
 	def __setattr__(self, name, val):
 		object.__setattr__(self, name, val)
@@ -217,7 +223,7 @@ class tabledata(object):
 			if numpy.isscalar(val):
 				continue
 			print 'cutting', name
-			C = cut_array(val, I)
+			C = cut_array(val, I, name)
 			self.set(name, C)
 			self._length = len(C)
 
@@ -229,7 +235,12 @@ class tabledata(object):
 			if numpy.isscalar(val):
 				rtn.set(name, val)
 				continue
-			rtn.set(name, cut_array(val, I))
+			try:
+				C = cut_array(val, I, name)
+			except:
+				print 'Error in cut_array() via __getitem__, name', name
+				raise
+			rtn.set(name, C)
 
 			if isscalar(I):
 				rtn._length = 1

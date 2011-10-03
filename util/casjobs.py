@@ -140,11 +140,13 @@ class Cas(object):
 	def get_job_status(self, jobid):
 		# print 'Getting job status for', jobid
 		url = self.job_details_url() % jobid
+		print 'Job details URL:', url
 		doc = urllib2.urlopen(url).read()
 		for line in doc.split('\n'):
 			for stat in ['Finished', 'Ready', 'Started', 'Failed', 'Cancelled']:
 				if ('<td > <p class = "%s">%s</p></td>' %(stat,stat) in line or
-					'<td > <p class="%s">%s</p></td>' %(stat,stat) in line or
+					#'<td > <p class="%s">%s</p></td>' %(stat,stat) in line or
+					'<p class="%s">%s</p>' % (stat,stat) in line or
 					'<td class="center"> <p class = "%s">%s</p></td>' %(stat,stat) in line or
 					'<td class="center"> <p class = "%s">Running</p></td>' %(stat) in line): # Galex "Started"/Running
 					return stat
