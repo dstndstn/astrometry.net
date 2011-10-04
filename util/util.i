@@ -471,6 +471,12 @@ def lanczos_shift_image(img, dx, dy, order=3, weight=None,
 		return sip_ensure_inverse_polynomials($self);
 	}
 
+	/*
+	 double* get_cd_matrix() {
+	 return $self->wcstan.cd;
+	 }
+	 */
+
 	void pixelxy2xyz(double x, double y, double *p_x, double *p_y, double *p_z) {
 		double xyz[3];
 		sip_pixelxy2xyzarr($self, x, y, xyz);
@@ -553,6 +559,11 @@ def sip_t_tostring(self):
 			 tan.imagew, tan.imageh, self.a_order, self.b_order,
 			 self.ap_order, self.bp_order))
 sip_t.__str__ = sip_t_tostring
+
+def sip_t_get_cd(self):
+    cd = self.wcstan.cd
+    return (cd[0], cd[1], cd[2], cd[3])
+sip_t.get_cd = sip_t_get_cd
 
 Sip = sip_t
 	%}
@@ -658,6 +669,12 @@ Sip = sip_t
 		$self->imageh = h;
 	}
 
+	/*
+	 double* get_cd_matrix() {
+	 return $self->cd;
+	 }
+	 */
+
 
  };
 
@@ -748,6 +765,11 @@ def tan_t_tostring(self):
 			 self.cd[0], self.cd[1], self.cd[2], self.cd[3],
 			 self.imagew, self.imageh))
 tan_t.__str__ = tan_t_tostring
+
+def tan_t_get_cd(self):
+    cd = self.cd
+    return (cd[0], cd[1], cd[2], cd[3])
+tan_t.get_cd = tan_t_get_cd
 
 def tan_t_pixelxy2radec_any(self, x, y):
 	if np.iterable(x) or np.iterable(y):
