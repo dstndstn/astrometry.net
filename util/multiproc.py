@@ -1,19 +1,21 @@
+import multiprocessing
+
 class multiproc(object):
 	def __init__(self, nthreads=1):
 		if nthreads == 1:
 			self.pool = None
 			self.map = map
-			self.apply = apply
+			self.applyfunc = apply
 		else:
 			self.pool = multiprocessing.Pool(nthreads)
 			self.map = self.pool.map
-			self.apply = self.pool.apply_async
+			self.applyfunc = self.pool.apply_async
 		self.async_results = []
 
-	def apply(self, f, args, kwargs):
+	def apply(self, f, args, kwargs={}):
 		if self.pool is None:
 			return apply(f, args, kwargs)
-		res = self.apply(f, args, kwargs)
+		res = self.applyfunc(f, args, kwargs)
 		self.async_results.append(res)
 		return res
 
