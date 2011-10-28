@@ -38,7 +38,9 @@ def get_usnob_images(ra, dec, raw=15., decw=15., fieldname='',
 		'pixflg': 'yes', # images, please
 		'whorbl': 'Light Stars/Dark Sky',
 		'pixgraph': 'JPEG',
-		#'pixfits': (fits and 'Yes' or 'No'), # FITS also?
+		'cextract': 'rect',
+		'ori': 'NW - North Up, East Left',
+		'cat': 'USNO B1.0',
 		}
 
 	if fits:
@@ -46,8 +48,11 @@ def get_usnob_images(ra, dec, raw=15., decw=15., fieldname='',
 	else:
 		formvals['pixfits'] = 'No'
 	if sources is None:
-		# overplot stars?
-		formvals['opstars'] = 'No'
+		formvals.update({
+			'opstars': 'No', # overplot stars?
+			'colbits': 'cb_ra',
+			})
+
 	else:
 		knownsources = ['R1','R2','B1','B2']
 		if not sources in knownsources:
@@ -64,7 +69,8 @@ def get_usnob_images(ra, dec, raw=15., decw=15., fieldname='',
 	if basefn is None:
 		basefn = 'usnob-%g-%g-' % (ra,dec)
 
-	queryurl = 'http://www.nofs.navy.mil/cgi-bin/tfch3tI.cgi'
+	#queryurl = 'http://www.nofs.navy.mil/cgi-bin/tfch3tI.cgi'
+	queryurl = 'http://www.nofs.navy.mil/cgi-bin/tfch4.test.cgi'
 	print 'submitting form values:'
 	for k,v in formvals.items():
 		print '  ',k,'=',v
@@ -75,10 +81,11 @@ def get_usnob_images(ra, dec, raw=15., decw=15., fieldname='',
 	socket.setdefaulttimeout(300)
 	f = urlopen(queryurl, urlencode(formvals))
 	doc = f.read()
-	write_file(doc, 'res.html')
+	fn = 'res.html'
+	write_file(doc, fn)
 	m = re.search(r'<A HREF="(.*)">', doc)
 	if not m:
-		raise 'no results page: server output written to file'
+		raise RuntimeError('Failed to parse results page: server output written to file ' + fn)
 	resurl = m.group(1)
 	print 'result url', resurl
 
