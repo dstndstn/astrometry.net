@@ -427,9 +427,6 @@ def hmsstring2ra(st):
 
 	>>> ra2hmsstring(hmsstring2ra(st), sec_digits=2) == st
 	True
-
-
-
 	
 	'''
 	(h,m,s) = tokenize_hms(st)
@@ -498,25 +495,36 @@ def ra2hmsstring(ra, separator=' ', sec_digits=3):
 
 # Dec in degrees
 def dec2dmsstring(dec, separator=' ', sec_digits=3):
+	'''
+	>>> dec2dmsstring(41.5955538864, sec_digits=3)
+	'+41 35 43.994'
+
+	>>> dec2dmsstring(41.5955538864, sec_digits=2)
+	'+41 35 43.99'
+
+	>>> dec2dmsstring(41.5955538864, sec_digits=1)
+	'+41 35 44.0'
+
+	'''
 	(sgn, d,m,s) = dec2dms(dec)
 	ss = int(floor(s))
-	#ds = int(round((s - ss) * 1000.0))
-	# fractional seconds
 	fs = s - ss
 	if sgn > 0:
 		signc = '+'
 	else:
 		signc = '-'
-
 	if sec_digits == 0:
 		sstr = '%0.2i' % (ss)
 	else:
-		#sfmt = '%%0.2i.%%0.%ii' % (sec_digits)
-		#sstr = sfmt % (ss, ds)
-		sstr = '%0.2i' % ss
 		# fractional seconds string -- 0.XXX
 		fracstr = '%.*f' % (sec_digits, fs)
-		sstr += fracstr[1:]
+		# but it can be 1.00 ...
+		if fracstr[0] == '1':
+			ss += 1
+		if ss >= 60:
+			ss -= 60
+			d += 1
+		sstr = '%0.2i' % ss + fracstr[1:]
 
 	return separator.join(['%c%0.2i' % (signc, d), '%0.2i' % m, sstr])
 
