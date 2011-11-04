@@ -419,6 +419,12 @@ def tokenize_hms(s):
 	return (h,m,s)
 
 def hmsstring2ra(st):
+	'''
+    >>> st = "00 44 02.08"
+	>>> ra2hmsstring(hmsstring2ra(st), sec_digits=2) == st
+    True
+	
+	'''
 	(h,m,s) = tokenize_hms(st)
 	return hms2ra(h, m, s)
 
@@ -478,7 +484,7 @@ def ra2hmsstring(ra, separator=' ', sec_digits=3):
 	return separator.join(['%0.2i' % h, '%0.2i' % m, sstr])
 
 # Dec in degrees
-def dec2dmsstring(dec, separator=' '):
+def dec2dmsstring(dec, separator=' ', sec_digits=3):
 	(sgn, d,m,s) = dec2dms(dec)
 	ss = int(floor(s))
 	ds = int(round((s - ss) * 1000.0))
@@ -486,7 +492,14 @@ def dec2dmsstring(dec, separator=' '):
 		signc = '+'
 	else:
 		signc = '-'
-	return separator.join(['%c%0.2i' % (signc, d), '%0.2i' % m, '%0.2i.%0.3i' % (ss,ds)])
+
+	if sec_digits == 0:
+		sstr = '%0.2i' % (ss)
+	else:
+		sfmt = '%%0.2i.%%0.%ii' % (sec_digits)
+		sstr = sfmt % (ss, ds)
+
+	return separator.join(['%c%0.2i' % (signc, d), '%0.2i' % m, sstr])
 
 def xyzarrtoradec(xyz):
 	return (degrees(xy2ra(xyz[0], xyz[1])), degrees(z2dec(xyz[2])))

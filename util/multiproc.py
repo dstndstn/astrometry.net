@@ -1,13 +1,13 @@
 import multiprocessing
 
 class multiproc(object):
-	def __init__(self, nthreads=1):
+	def __init__(self, nthreads=1, init=None, initargs=None):
 		if nthreads == 1:
 			self.pool = None
 			self.map = map
 			self.applyfunc = apply
 		else:
-			self.pool = multiprocessing.Pool(nthreads)
+			self.pool = multiprocessing.Pool(nthreads, init, initargs)
 			self.map = self.pool.map
 			self.applyfunc = self.pool.apply_async
 		self.async_results = []
