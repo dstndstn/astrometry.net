@@ -19,9 +19,9 @@ To compile everything and run with full functionality, you will need:
 
 
 Grab the code:
-  $ wget http://astrometry.net/downloads/pyspherematch-0.2.tar.bz2
-  $ tar xjf pyspherematch-0.2.tar.bz2
-  $ cd  pyspherematch-0.2
+  $ wget http://astrometry.net/downloads/pyspherematch-0.3.tar.bz2
+  $ tar xjf pyspherematch-0.3.tar.bz2
+  $ cd  pyspherematch-0.3
 
 Check if extra compling/linking flags are needed (Mac OS X only)
   $ ./configure

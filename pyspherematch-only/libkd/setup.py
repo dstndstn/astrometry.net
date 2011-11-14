@@ -19,7 +19,7 @@ c_module = Extension('spherematch_c',
 
 setup(name = 'pyspherematch',
       ext_package='pyspherematch',
-      version = '0.2',
+      version = '0.3',
       description = 'This package finds near neighbours in two sets of points. Stand-alone python lib, extracted from Astrometry.net',
       author = 'Astrometry.net (Dustin Lang), python release by Sjoert van Velzen',
       author_email = 'dstn@cs.toronto.edu, s.vanvelzen@astro.ru.nl',

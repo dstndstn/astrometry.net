@@ -251,7 +251,8 @@ hpsplit: hpsplit.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += hpsplit.o
 
-PYTHON_INSTALL := fits2fits.py image2pnm.py healpix.py sip.py starutil.py \
+PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py healpix.py sip.py
+	starutil.py \
 	starutil_numpy.py \
 	shell.py __init__.py file.py run_command.py w3c_validator.py \
 	filetype.py pyfits_utils.py fix_sdss_idr.py removelines.py \

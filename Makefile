@@ -162,7 +162,7 @@ reconfig:
 .PHONE: reconfig
 
 RELEASE_VER := 0.38
-SP_RELEASE_VER := 0.2
+SP_RELEASE_VER := 0.3
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
 RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data pyfits etc ups
