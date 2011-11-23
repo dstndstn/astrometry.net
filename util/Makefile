@@ -74,7 +74,9 @@ CFLAGS += -DWCSLIB_EXISTS
 endif
 
 LDFLAGS += $(LDFLAGS_DEF)
-LDFLAGS += -lm
+
+LDLIBS := $(LDLIBS_DEF)
+LDLIBS += -lm
 
 ifndef NO_QFITS
 CFLAGS += $(QFITS_INC)
@@ -169,7 +171,7 @@ ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DAT
 
 resample: resample-main.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += resampe.o
 
 tycho2tofits: tycho2tofits.o \
@@ -221,18 +223,17 @@ _index_util.so _index_c.so: index_wrap.c index_pyutils.c setup-index.py \
 	cp build/lib/_index_util.so _index_util.so
 
 coadd: coadd-main.o $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += coadd.o coadd-main.o
 
 pad-file: pad-file.o $(ANUTILS_LIB)
 ALL_OBJ += pad-file.o
 
 an-fitstopnm: an-fitstopnm.o $(ANUTILS_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CFLAGS) $^ $(LDFLAGS)
 ALL_OBJ += an-fitstopnm.o
 
 an-pnmtofits: an-pnmtofits.o $(ANUTILS_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CFLAGS) $^ $(NETPBM_LIB) $(LDFLAGS)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
 ALL_OBJ += an-pnmtofits.o
 
 downsample-fits: downsample-fits.o $(ANUTILS_LIB) $(QFITS_LIB)
@@ -377,7 +378,7 @@ stellarium-constellations.c:
 
 grab-stellarium-constellations: grab-stellarium-constellations.o \
 		starutil.o mathutil.o bl.o an-endian.o
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ -lm
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 
 hd1.fits: henry-draper.tsv build-hd-tree
 	build-hd-tree -s -R 16 henry-draper.tsv $@

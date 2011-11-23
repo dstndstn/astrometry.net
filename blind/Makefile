@@ -52,8 +52,10 @@ NETPBM_LIB :=
 endif
 
 LDFLAGS := $(LDFLAGS_DEF)
-LDFLAGS += -lm
 LDFLAGS += -fPIC
+
+LDLIBS := $(LDLIBS_DEF)
+LDLIBS += -lm
 
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(QFITS_INC)
@@ -326,7 +328,7 @@ ALL_EXECS += $(ALL_TEST_FILES) test
 
 demo_dsmooth: demo_dsmooth.o dsmooth.o \
 	$(COMMON)/cairoutils.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) 
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) -pg $(LDLIBS)
 
 control-program: control-program.o \
 		$(BACKEND_OBJS) $(SIMPLEXY_OBJ) \
@@ -364,12 +366,12 @@ get-wcs: get-wcs.o \
 
 wcs-xy2rd: wcs-xy2rd-main.o wcs-xy2rd.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CCFLAGS) $^ $(LDFLAGS) $(WCSLIB_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += wcs-xy2rd-main.o
 
 wcs-rd2xy: wcs-rd2xy-main.o wcs-rd2xy.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CCFLAGS) $^ $(LDFLAGS) $(WCSLIB_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += wcs-rd2xy-main.o
 
 wcs-pv2sip: wcs-pv2sip.o tweak.o \
@@ -399,12 +401,12 @@ nomadtofits: nomadtofits.o nomad-fits.o nomad.o \
 
 ucac3tofits: ucac3tofits.o ucac3-fits.o ucac3.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS) -lbz2
+	$(CC) -o $@ $^ $(LDFLAGS) -lbz2 $(LDLIBS)
 
 read_nomad: read_nomad.o nomad.o
 
 2masstofits: $(2MASSOBJ) $(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(ZLIB_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(ZLIB_LIB) $(LDLIBS)
 
 diffractionFlag_check: diffractionFlag_check.o usnob-fits.o usnob.o \
 		$(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
@@ -468,7 +470,7 @@ local-index: local-index.o build-index.o codetree.o startree2.o codetree.o \
 		hpquads.o uniformize-catalog.o merge-index.o unpermute-quads.o unpermute-stars.o \
 		quad-builder.o quad-utils.o codefile.o wcs-xy2rd.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CCFLAGS) $^ $(LDFLAGS) $(WCSLIB_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += local-index.o
 
 index-to-table: index-to-table.o \
@@ -494,7 +496,7 @@ keirthing: keirthing.o blind_wcs.o tweak.o \
 
 dstnthing: dstnthing.o tweak2.o blind_wcs.o tweak.o matchfile.o matchobj.o verify.o scamp.o $(PLOTSTUFF) \
 		$(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB) 
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += dstnthing.o
 
 ALL_OBJ += verify-main.o
@@ -504,7 +506,7 @@ solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o matchobj.o 
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
 		scamp.o \
 		$(SIMPLEXY_OBJ) $(CFITS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CCFLAGS) $^ $(LDFLAGS) $(WCSLIB_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
 
 ALL_OBJ += scamp.o cut-table.o
 
@@ -519,20 +521,20 @@ blind: blind-main.o blind.o solver.o quad-utils.o matchfile.o matchobj.o \
 		blind_wcs.o tweak.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^ $(LDLIBS)
 	mv $@.tmp $@
 
 tweak: tweak-main.o blind_wcs.o verify.o matchfile.o \
 		$(COMMON)/cairoutils.o $(PLOTSTUFF) \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
 
 whynot: whynot.o matchfile.o matchobj.o codefile.o solvedclient.o \
 		solvedfile.o verify.o blind_wcs.o quad-utils.o \
 		$(COMMON)/cairoutils.o $(PLOTSTUFF) \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB) 
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += whynot.o
 
 quadcenters: quadcenters.o \
@@ -568,7 +570,7 @@ mergesolved: mergesolved.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $
 
 solvedserver: solvedserver.o solvedfile.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) \
 		$(QFITS_LIB)
-	$(CC) $(CFLAGS) -o $@ $^ -lm
+	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
 
 plotcat: plotcat.o 2mass-fits.o 2mass.o nomad-fits.o nomad.o catalog.o usnob-fits.o usnob.o \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(LIBKD_LIB) \
@@ -581,34 +583,34 @@ $(COMMON)/cairoutils.o:
 	$(MAKE) -C $(COMMON) cairoutils.o
 
 onepixel: onepixel.o $(COMMON)/cairoutils.o
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(LDLIBS)
 
 plotquad: plotquad.o matchfile.o matchobj.o $(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) 
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(LDLIBS)
 
 plot-xy-and-quad: plot-xy-and-quad.o matchfile.o $(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) 
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(LDLIBS)
 
 plot-constellations.o: plot-constellations.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
 plot-constellations: plot-constellations.o $(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB)
+	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB) $(LDLIBS)
 
 catalog-dists: catalog-dists.o 2mass-fits.o usnob-fits.o usnob.o \
 		$(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
 add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB)
+	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB) $(LDLIBS)
 
 plotstuff.o: plotstuff.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
 plotstuff: plotstuff-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += plotstuff-main.o
 
 PLOTSTUFF_SRCS = $(subst .o,.c,$(PLOTSTUFF))
@@ -632,11 +634,11 @@ plotxy-main.o: plotxy-main.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c $< -o $@
 
 plotxy: plotxy-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += plotxy-main.o
 
 test_plotstuff: test_plotstuff-main.o test_plotstuff.o $(COMMON)/cutest.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(LDLIBS)
 test_plotstuff-main.c: test_plotstuff.c
 	$(AN_SHELL) $(MAKE_TESTS) $^ > $@
 
@@ -664,7 +666,7 @@ fitsgetext: fitsgetext.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 fits-dedup: fits-dedup.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
 wcs-resample: wcs-resample-main.o wcs-resample.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS) $(WCSLIB_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(WCSLIB_LIB) $(LDLIBS)
 
 ALL_OBJ += wcs-resample-main.o
 
@@ -684,7 +686,7 @@ resort-xylist: resort-xylist-main.o resort-xylist.o $(UTIL_OBJS) \
 ALL_OBJ += resort-xylist-main.o
 
 bgsubtract: bgsubtract.o ctmf.o $(COMMON)/cairoutils.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(LDLIBS)
 
 usnob-scamp-catalog: usnob-scamp-catalog.o usnob-fits.o usnob.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)

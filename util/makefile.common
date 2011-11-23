@@ -201,3 +201,9 @@ CFLAGS_DEF += -D_GNU_SOURCE
 # fold in the user's LDFLAGS, if set...
 LDFLAGS_DEF := $(LDFLAGS) $(FLAGS_DEF)
 
+LDLIBS_DEF := $(LDLIBS)
+
+# Make's default link recipe is:
+#    $(CC) $(LDFLAGS) n.o $(LOADLIBES) $(LDLIBS)
+# and some linkers demand that libraries appear *after* the object files,
+# so if you want a lib always linked in, add it to LDLIBS.
