@@ -666,6 +666,7 @@ fits-dedup: fits-dedup.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 wcs-resample: wcs-resample-main.o wcs-resample.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(WCSLIB_LIB)
 
+ALL_OBJ += wcs-resample-main.o
 
 subtable: subtable.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
