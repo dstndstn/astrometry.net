@@ -37,6 +37,8 @@ $(DATA)/%.dat: ;
 #   export NO_QFITS
 
 include $(COMMON)/makefile.common
+include $(COMMON)/makefile.utils
+include $(COMMON)/makefile.anfiles
 ifndef NO_QFITS
 include $(COMMON)/makefile.qfits
 endif
@@ -96,15 +98,10 @@ PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-fl
 
 all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS)
 
-# Things that it depends on but which aren't linked in
+# Things that it depends on but that aren't linked in
 ANUTILS_DEPS :=
 
-ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
-	permutedsort.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
-	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
-	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
-	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
-	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o
+# ANUTILS_OBJ -- in makefile.utils
 
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h \
@@ -127,16 +124,7 @@ ifndef NO_KDTREE
 ANUTILS_OBJ += dualtree.o dualtree_rangesearch.o dualtree_nearestneighbour.o
 endif
 
-# Things that it depends on but which aren't linked in
-ANFILES_DEPS :=
-
-ANFILES_OBJ := 
-ifndef NO_QFITS
-ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
-	starxy.o an-catalog.o qidxfile.o quadfile.o scamp-catalog.o \
-	hd.o
-ANFILES_DEPS += $(QFITS_LIB)
-endif
+## ANFILES_DEPS, ANFILES_OBJ -- in makefile.anfiles
 
 MISC_OBJ := grab-stellarium-constellations.o 
 

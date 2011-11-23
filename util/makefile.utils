@@ -18,15 +18,19 @@ ANUTILS_DIR := $(BASEDIR)/util
 ANUTILS_INC := -I$(ANUTILS_DIR)
 ANUTILS_LIB := $(ANUTILS_DIR)/libanutils.a
 
-$(ANUTILS_LIB):
-	cd $(ANUTILS_DIR) && $(MAKE) libanutils.a
+ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
+	permutedsort.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
+	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
+	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
+	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
+	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o
 
-#REMAKE_ANUTILS := remake-anutils
-#.PHONY: $(REMAKE_ANUTILS)
-#$(REMAKE_ANUTILS):
+$(ANUTILS_LIB): $(addprefix $(ANUTILS_DIR)/,$(ANUTILS_OBJ))
+	$(MAKE) -C $(ANUTILS_DIR) libanutils.a
+
 #	cd $(ANUTILS_DIR) && $(MAKE) libanutils.a
 
-REMAKE_ANUTILS := $(ANUTILS_DIR)/remake-anutils
-.PHONY: $(REMAKE_ANUTILS)
-$(REMAKE_ANUTILS):
-	cd $(ANUTILS_DIR) && $(MAKE) libanutils.a
+# REMAKE_ANUTILS := $(ANUTILS_DIR)/remake-anutils
+# .PHONY: $(REMAKE_ANUTILS)
+# $(REMAKE_ANUTILS):
+# 	cd $(ANUTILS_DIR) && $(MAKE) libanutils.a
