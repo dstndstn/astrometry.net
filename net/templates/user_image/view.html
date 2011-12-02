@@ -175,7 +175,7 @@ $(document).ready(function() {
         {% endif %}
         <tr>
             <td>KMZ (Google Sky):</td>
-            <td><a href="{% url astrometry.net.views.image.kml_file jobid=job.id %}">image.kmz</a></td>
+            <td><a href="{% url astrometry.net.views.image.kml_file jobid=job.id %}?ignore=.kmz">image.kmz</a></td>
         </tr>
         </table>
         <br />
