@@ -16,6 +16,7 @@ from astrometry.net.settings import *
 from wcs import *
 from log import *
 
+from astrometry.util.starutil_numpy import ra2hmsstring, dec2dmsstring
 from astrometry.util.filetype import filetype_short
 from astrometry.util.run_command import run_command
 from astrometry.util.pyfits_utils import *
@@ -593,6 +594,16 @@ class Calibration(models.Model):
     def format_radec(self):
         r,d = self.get_center_radec()
         return '%.3f, %.3f' % (r, d)
+
+    def format_ra_hms(self):
+        r,d = self.get_center_radec()
+        h,m,s  = ra2hmsstring(r).split()
+        return '%s<sup>h</sup>&nbsp;%s<sup>m</sup>&nbsp;%s<sup>s</sup>' % (h, m, s)
+
+    def format_dec_dms(self):
+        r,_d = self.get_center_radec()
+        d,m,s = dec2dmsstring(_d).split()
+        return '%s&deg;&nbsp;%s\'&nbsp;%s"' % (d, m, s)
 
     def format_radius(self):
         ## FIXME -- choose units and resolution (deg, arcmin)

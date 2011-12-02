@@ -161,6 +161,12 @@ $(document).ready(function() {
             <td>Center (RA, Dec):</td><td>({{ calib.format_radec }})</td>
         </tr>
         <tr>
+            <td>Center (RA, hms):</td><td>{{ calib.format_ra_hms|safe }}</td>
+        </tr>
+        <tr>
+            <td>Center (Dec, dms):</td><td>{{ calib.format_dec_dms|safe }}</td>
+        </tr>
+        <tr>
             <td>Radius:</td><td>{{ calib.format_radius }}</td>
         </tr>
         <tr>
