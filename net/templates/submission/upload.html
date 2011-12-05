@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block bodytag %}
+<body onLoad="enableSubmit()">
+{% endblock bodytag %}
+
 {% block inline_css %}
 {{block.super}}
 <style type="text/css">
@@ -57,6 +61,9 @@ function changeAlbum(album_val) {
 }
 function disableSubmit() {
     $('input[type=submit]').attr('disabled','true');
+}
+function enableSubmit() {
+    $('input[type=submit]').removeAttribute('disabled');
 }
 $(document).ready(function() {
     $('input[name=upload_type]:radio').click(function() {
