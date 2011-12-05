@@ -59,11 +59,14 @@ function changeScalePreset(type) {
 function changeAlbum(album_val) {
     $('#new_album_title_block').toggle(album_val == 'new');
 }
-function disableSubmit() {
-    $('input[type=submit]').attr('disabled','true');
-}
 function enableSubmit() {
-    $('input[type=submit]').removeAttribute('disabled');
+    submit = document.getElementById('submit');
+    submit.removeAttribute('disabled');
+}
+function disableSubmit() {
+    submit = document.getElementById('submit');
+    submit.disabled = true;
+    setTimeout("enableSubmit()", 1000);
 }
 $(document).ready(function() {
     $('input[name=upload_type]:radio').click(function() {
@@ -125,7 +128,7 @@ Sorry, your submission could not be completed. Please fix all of the <span class
             <li><b>tarball (.tar, .gz)</b>, containing files of any of the above types
         </ul>
     </div>
-    <input type="submit" value="Upload" class="bigbutton" />
+    <input type="submit" name="submit" id="submit" value="Upload" class="bigbutton" />
 </div>
 <!--<br />
 <table class="settings_table">
