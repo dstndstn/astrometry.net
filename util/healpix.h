@@ -29,8 +29,7 @@
 
 /**
  The HEALPix paper is here:
- http://www.journals.uchicago.edu/ApJ/journal/issues/ApJ/v622n2/61342/61342.web.pdf
- (this one seems to have gone 404)
+ http://iopscience.iop.org/0004-637X/622/2/759/pdf/0004-637X_622_2_759.pdf
  See:
  http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=2005ApJ...622..759G&db_key=AST&high=41069202cf02947
 */
