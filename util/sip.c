@@ -241,7 +241,7 @@ bool sip_radec2pixelxy(const sip_t* sip, double ra, double dec, double *px, doub
 
 	// Sanity check:
 	if (sip->a_order != 0 && sip->ap_order == 0) {
-		fprintf(stderr, "suspicious inversion; no inversion SIP coeffs "
+		fprintf(stderr, "suspicious inversion; no inverse SIP coeffs "
 				"yet there are forward SIP coeffs\n");
 	}
 
@@ -275,7 +275,7 @@ bool sip_radec2pixelxy_check(const sip_t* sip, double ra, double dec, double *px
 	U = *px - sip->wcstan.crpix[0];
 	V = *py - sip->wcstan.crpix[1];
 	sip_calc_inv_distortion(sip, U, V, &u, &v);
-    // Check that we're dealing with the right range of the polynomial be inverting it and
+    // Check that we're dealing with the right range of the polynomial by inverting it and
     // checking that we end up back in the right place.
     sip_calc_distortion(sip, u, v, &U2, &V2);
     if (fabs(U2 - U) + fabs(V2 - V) > 10.0)

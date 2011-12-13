@@ -213,7 +213,7 @@ class tabledata(object):
 			print 'in pyfits_utils: copy(): can\'t copy', name, '=', val
 		rtn._header = self._header
 		if hasattr(self, '_columns'):
-			rtn._columns = self._columns
+			rtn._columns = [c for c in self._columns]
 		return rtn
 
 	def cut(self, I):
@@ -248,7 +248,7 @@ class tabledata(object):
 				rtn._length = len(getattr(rtn, name))
 		rtn._header = self._header
 		if hasattr(self, '_columns'):
-			rtn._columns = self._columns
+			rtn._columns = [c for c in self._columns]
 		return rtn
 	def __iter__(self):
 		return tabledata.td_iter(self)

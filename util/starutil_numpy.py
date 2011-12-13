@@ -37,9 +37,9 @@ def eclipticPoleInclination(epoch):
 # Thanks to Steve Bickerton in lsst.afw.Coord : EclipticCoord::toFk5
 def ecliptictoradec(a, b, epoch=2000.):
 	eclincl = eclipticPoleInclination(epoch)
-	eclipticPoleInFk5(270.0, 90.0 - eclincl)
-	fk5PoleInEcliptic(90.0, 90.0 - eclincl)
-	transform(a, b, eclipticPoleInFk5, fk5PoleInEcliptic)
+	eclipticPoleInFk5 = (270.0, 90.0 - eclincl)
+	fk5PoleInEcliptic = (90.0, 90.0 - eclincl)
+	return transform(a, b, eclipticPoleInFk5, fk5PoleInEcliptic)
 
 # Thanks to Steve Bickerton in lsst.afw.Coord : Fk5Coord::toEcliptic
 def radectoecliptic(ra, dec, epoch=2000.):

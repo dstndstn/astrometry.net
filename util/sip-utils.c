@@ -72,6 +72,9 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 	assert(sip->ap_order == sip->bp_order);
 	tan = &(sip->wcstan);
 
+	logverb("sip_compute-inverse_polynomials: A %i, AP %i\n",
+			sip->a_order, sip->ap_order);
+
 	/*
      basic idea: lay down a grid in image, for each gridpoint, push
      through the polynomial to get yourself into warped image
@@ -90,6 +93,8 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 		xhi = tan->imagew;
 	if (yhi == 0)
 		yhi = tan->imageh;
+
+	logverb("NX,NY %i,%i\n", NX,NY);
 
 	// Number of coefficients to solve for:
 	// We only compute the upper triangle polynomial terms, and we
@@ -210,7 +215,7 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 		}
 		sumdu /= (NX*NY);
 		sumdv /= (NX*NY);
-		debug("RMS error of inverting a distortion (at the grid points):\n");
+		debug("RMS error of inverting a distortion (at the grid points, in pixels):\n");
 		debug("  du: %g\n", sqrt(sumdu));
 		debug("  dv: %g\n", sqrt(sumdu));
 		debug("  dist: %g\n", sqrt(sumdu + sumdv));
@@ -229,7 +234,7 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 		}
 		sumdu /= Z;
 		sumdv /= Z;
-		debug("RMS error of inverting a distortion (at random points):\n");
+		debug("RMS error of inverting a distortion (at random points, in pixels):\n");
 		debug("  du: %g\n", sqrt(sumdu));
 		debug("  dv: %g\n", sqrt(sumdu));
 		debug("  dist: %g\n", sqrt(sumdu + sumdv));
