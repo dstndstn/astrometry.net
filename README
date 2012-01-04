@@ -363,7 +363,7 @@ ImportError: No module named pyfits
 augment-xylist.c:586:backtick Failed to run command: /usr/local/astrometry/bin/removelines.py /tmp/tmp.xyls.UjOdFo /tmp/tmp.removelines.8LHW36
 ioutils.c:669:run_command_get_outputs Command failed: return value 1
 
-Solution A: get the "pyfits" module and install it, as per
+Solution A: get the "pyfits" module and install it;
   http://www.stsci.edu/resources/software_hardware/pyfits  .
 
 It must be installed so that this command runs without error:
