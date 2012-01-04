@@ -14,28 +14,36 @@ numpy_inc = numpy.get_include()
 netpbm_inc = os.environ.get('NETPBM_INC', '')
 netpbm_lib = os.environ.get('NETPBM_LIB', '-lnetpbm')
 
+jpeg_inc = os.environ.get('JPEG_INC', '')
+jpeg_lib = os.environ.get('JPEG_LIB', '-ljpeg')
+
 extra_inc_dirs = []
 compile_args = []
-if len(netpbm_inc):
-	# Pull "-I/dir" into extra_inc_dirs
-	for w in netpbm_inc.split(' '):
-		if w.startswith('-I'):
-			extra_inc_dirs.append(w[2:])
-		else:
-			compile_args.append(w)
 
+# Pull "-I/dir" into extra_inc_dirs
+for w in (' '.join([netpbm_inc, jpeg_inc])).split(' '):
+	print 'word "%s"' % w
+	if len(w) == 0:
+		continue
+	if w.startswith('-I'):
+		extra_inc_dirs.append(w[2:])
+	else:
+		compile_args.append(w)
 
 extra_link_dirs = []
 extra_link_libs = []
 link_args = []
-if len(netpbm_lib):
-	for w in netpbm_lib.split(' '):
-		if w.startswith('-L'):
-			extra_link_dirs.append(w[2:])
-		elif w.startswith('-l'):
-			extra_link_libs.append(w[2:])
-		else:
-			link_args.append(w)
+
+for w in (' '.join([netpbm_lib, jpeg_lib])).split(' '):
+	print 'word "%s"' % w
+	if len(w) == 0:
+		continue
+	if w.startswith('-L'):
+		extra_link_dirs.append(w[2:])
+	elif w.startswith('-l'):
+		extra_link_libs.append(w[2:])
+	else:
+		link_args.append(w)
 
 c_module = Extension('_plotstuff_c',
                      sources = ['plotstuff_wrap.c'],

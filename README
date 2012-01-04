@@ -59,12 +59,14 @@ For full functionality, you will need:
   * libz
   * python (probably >= 2.4)
   * numpy
+  * pyfits
+      http://www.stsci.edu/resources/software_hardware/pyfits
 
 -> On Ubuntu or Debian-like systems, the following should suffice:
 
     $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
                            libpng12-dev libjpeg-dev python-numpy \
-						   zlib1g-dev
+						   zlib1g-dev python-pyfits
 
 -> On RHEL, you'll need something like:
     $ sudo yum install cairo.x86_64 cairo-devel.x86_64 netpbm.x86_64 \
@@ -347,6 +349,30 @@ OUTPUT FILES
                       to have "wcs2kml" in your PATH.  See
                        http://code.google.com/p/wcs2kml/downloads/list
                        http://code.google.com/p/google-gflags/downloads/list
+
+
+COMMON ERRORS AND FIXES/WORKAROUNDS
+-----------------------------------
+
+Error 1. solve-field fails with:
+
+Traceback (most recent call last):
+File "/usr/local/astrometry/bin/removelines.py", line 12, in
+import pyfits
+ImportError: No module named pyfits
+augment-xylist.c:586:backtick Failed to run command: /usr/local/astrometry/bin/removelines.py /tmp/tmp.xyls.UjOdFo /tmp/tmp.removelines.8LHW36
+ioutils.c:669:run_command_get_outputs Command failed: return value 1
+
+Solution A: get the "pyfits" module and install it, as per
+  http://www.stsci.edu/resources/software_hardware/pyfits  .
+
+It must be installed so that this command runs without error:
+  python -c "import pyfits"
+
+Solution B: turn off "features" that require pyfits:
+
+  solve-field --uniformize 0 --no-remove-lines --no-fits2fits  [...]
+
 
 
 TRICKS AND TIPS

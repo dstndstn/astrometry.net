@@ -26,6 +26,7 @@
 #include <cairo.h>
 #include <png.h>
 #include <jpeglib.h>
+#include <zlib.h>
 
 #include "an-bool.h"
 #include "os-features.h"
