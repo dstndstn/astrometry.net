@@ -292,7 +292,6 @@ def job_log_file2(req, jobid=None):
     return res
 
 def status(req, subid=None):
-    logmsg("Submissions: " + ', '.join([str(x) for x in Submission.objects.all()]))
     sub = get_object_or_404(Submission, pk=subid)
 
     # Would be convenient to have an "is this a single-image submission?" function

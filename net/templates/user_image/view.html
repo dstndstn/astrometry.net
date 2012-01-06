@@ -127,7 +127,10 @@ $(document).ready(function() {
     <div id="details">
         Submitted by {% include 'user/display_name.html' with user=image.user %}<br />
         <div class="indent">on <span class="timestamp">{{ image.submission.submitted_on }}</span></div>
-        <div class="indent">as "<a href="{% url astrometry.net.views.image.serve_image id=image.image.id %}?filename={{ image.original_file_name }}">{% include 'user_image/filename.html' with filename=image.original_file_name %}</a>"
+        <div class="indent">as 
+            "<a href="{% url astrometry.net.views.image.serve_image id=image.image.id %}?filename={{ image.original_file_name }}">
+                {% include 'user_image/filename.html' with filename=image.original_file_name %}
+            </a>"
             (<a href="{{ image.submission.get_absolute_url }}">Submission {{ image.submission.id }}</a>)
         </div>
         <div class="indent" id="license">under {% include 'license/license_link.html' with license=image.license %}</a></div>

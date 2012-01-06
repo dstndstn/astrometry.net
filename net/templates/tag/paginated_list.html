@@ -1,3 +1,4 @@
-{% include 'pagination.html' with page=tag_page %}
+{% load custom_tags %}
+{% paginator tag_page 'tag' %}
 {% include 'tag/list.html' with tags=tag_page.object_list %}
-{% include 'pagination.html' with page=user_page %}
+{% paginator tag_page %}

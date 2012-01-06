@@ -1,14 +1,22 @@
-{% load custom_tags %}
-{% if page.has_other_pages %}
+{% spaceless %}
 <div class="pagination">
-    {% if page.has_previous %}
-    <a href="?{% query_string 'page' page.previous_page_number %}">&#9668; previous</a> | 
-    {% endif %}
-
-    Page {{ page.number }} of {{ page.paginator.num_pages }}
-
-    {% if page.has_next %}
-     | <a href="?{% query_string 'page' page.next_page_number %}">next &#9658;</a>
-    {% endif %}
+{% if page_numbers|length > 1 %}
+    {% if show_first %}<a class="paginate_first" href="?page=1" title="First Page">&laquo;</a>{% endif %}
+    {% if has_previous %}<a class="paginate_previous" href="?page={{ previous }}" title="Previous Page">&lt;</a>{% endif %}
+    {% for num in page_numbers %}
+    {% ifequal num page %}
+      <span class="paginate_link paginate_current" title="Current Page">{{ num }}</span>
+    {% else %}
+    <a class="paginate_link" href="?page={{ num }}" title="Page {{ num }}">{{ num }}</a>
+    {% endifequal %}
+    {% endfor %}
+    {% if has_next %}<a class="paginate_next" href="?page={{ next }}" title="Next Page">&gt;</a>{% endif %}
+    {% if show_last %}<a class="paginate_last" href="?page={{ pages }}" title="Last Page">&raquo;</a>{% endif %}
+{% endif %}
+{% if text %}
+<div class="paginate_stats">
+    (showing {{ results_per_page }} of {{ total_results }} {{ text }}{{ total_results|pluralize }})
 </div>
 {% endif %}
+</div>
+{% endspaceless %}

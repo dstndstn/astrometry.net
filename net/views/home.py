@@ -18,7 +18,8 @@ def api_help(req):
     return render(req, 'api_help.html', context)
     
 def explore(req):
-    recent_images = (UserImage.objects.public_only(req.user)[:12])
+    recent_images = UserImage.objects.public_only(req.user)[:12]
+    recent_comments = Comment.objects.filter(recipient__userimage__isnull=False)[:8]
     newest_users = User.objects.all().order_by('-date_joined')[:10]
     popular_tags = (Tag.objects.all().annotate(Count('user_images'))
                                      .order_by('-user_images__count')[:35])
@@ -26,6 +27,7 @@ def explore(req):
         'recent_images': recent_images,
         'newest_users': newest_users,
         'popular_tags': popular_tags,
+		'recent_comments': recent_comments,
     }
     return render(req, 'explore.html', context)
     

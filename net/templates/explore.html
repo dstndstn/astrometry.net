@@ -19,6 +19,14 @@
 #tag_text {
     font-size: 90%;
 }
+#newest_users {
+    float: left;
+}
+#recent_comments {
+    float: right;
+    width: 600px;
+    padding-right: 10px;
+}
 </style>
 {% endblock %}
 
@@ -53,6 +61,7 @@ Explore
     </div>
 </div>
 <div style="clear:both"></div>
+
 <div id="newest_users">
     <h2>Newest Members</h2>
     <form method="get" action="{% url astrometry.net.views.user.index %}">
@@ -64,5 +73,25 @@ Explore
         {% include 'user/display_name.html' with user=user %}<br />
     {% endfor %}
 </div>
+
+<div id="recent_comments">
+    <h2>Recent Comments</h2>
+    {% for comment in recent_comments %}
+    <div class="comment">
+        <div class="comment_text">
+            {% include 'user/display_name.html' with user=comment.author %} commented on 
+            <a href="{{ comment.recipient.userimage.get_absolute_url }}">
+                {% include 'user_image/filename.html' with filename=comment.recipient.userimage.original_file_name %}
+            </a>: 
+            {{comment.text|slice:":100"}}{% if comment.text|length > 100 %}...{% endif %}
+        </div>
+        <div class="comment_footer">
+            <span class="timestamp">{{ comment.created_at }} ({{comment.created_at|timesince}} ago)</span>
+        </div>
+    </div>
+    <hr />
+    {% endfor %}
+</div>
+<div style="clear:both"></div>
 {% endblock %}
 

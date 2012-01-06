@@ -519,7 +519,7 @@ def index(req, images=None,
 
     images = images.order_by('-submission__submitted_on')
     page_number = req.GET.get('page', 1)
-    page = get_page(images, 27, page_number)
+    page = get_page(images, 1, page_number)
     context.update({
         'image_page': page,
         'show_images_form': form,

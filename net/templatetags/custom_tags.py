@@ -21,4 +21,32 @@ def create_list(obj):
 
 register.filter('list', create_list)
 
+def paginator(context, page, text="", total_pages=9):
+    number = page.number
+    num_pages = page.paginator.num_pages
+    start = number - (total_pages-1)/2
+    end   = number + (total_pages-1)/2
+    if start <= 0:
+        end += 1-start
+    if end > num_pages:
+        start -= end-num_pages
     
+    page_numbers = [n for n in range(start, end+1) if n > 0 and n <= num_pages]
+
+    return {
+        "results_per_page": len(page.object_list),
+        "total_results": page.paginator.count,
+        "page": number,
+        "pages": num_pages,
+        "page_numbers": page_numbers,
+        "next": page.next_page_number(),
+        "previous": page.previous_page_number(),
+        "has_next": page.has_next(),
+        "has_previous": page.has_previous(),
+        "show_first": 1 not in page_numbers,
+        "show_last": num_pages not in page_numbers,
+        "text": text,
+    }
+
+register.inclusion_tag("pagination.html", takes_context=True)(paginator)
+

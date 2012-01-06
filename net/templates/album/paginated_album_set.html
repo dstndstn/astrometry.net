@@ -1,3 +1,4 @@
-{% include 'pagination.html' with page=album_page %}
+{% load custom_tags %}
+{% paginator album_page 'album' %}
 {% include 'album/album_set.html' with albums=album_page.object_list %}
-{% include 'pagination.html' with page=album_page %}
+{% paginator album_page %}

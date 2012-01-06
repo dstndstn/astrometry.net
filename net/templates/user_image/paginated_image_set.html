@@ -1,3 +1,4 @@
-{% include 'pagination.html' with page=image_page %}
+{% load custom_tags %}
+{% paginator image_page 'image' %}
 {% include 'user_image/image_set.html' with images=image_page.object_list %}
-{% include 'pagination.html' with page=image_page %}
+{% paginator image_page %}

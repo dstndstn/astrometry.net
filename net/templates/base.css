@@ -242,6 +242,13 @@ hr {
     width: 100%;
     text-align: center;
 }
+.paginate_pages { padding: 2px 3px; border: 1px solid #ddd; cursor: pointer; text-decoration: underline; }
+.paginate_first, .paginate_last { margin: 1px; padding: 2px 6px; border: 1px solid #ddd; font-weight: bold; }
+.paginate_previous, .paginate_next { margin: 1px; padding: 2px 3px; border: 1px solid #ddd; }
+.paginate_link { margin: 1px; padding: 2px 4px; border: 1px solid #ddd; }
+.paginate_current { font-weight: bold; border: 0px; color: #000; }
+.paginate_stats { padding: 5px; color: #999; font-size: 85% }
+
 input[type=text] {
     border: 1px solid #000;
 }
