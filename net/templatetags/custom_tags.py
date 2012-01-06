@@ -46,6 +46,7 @@ def paginator(context, page, text="", total_pages=9):
         "show_first": 1 not in page_numbers,
         "show_last": num_pages not in page_numbers,
         "text": text,
+        "request": context['request'],
     }
 
 register.inclusion_tag("pagination.html", takes_context=True)(paginator)
