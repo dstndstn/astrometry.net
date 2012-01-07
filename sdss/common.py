@@ -323,6 +323,14 @@ class TsField(SdssFile):
 					 - 0.4*(self.aa[band] + self.kk[band] * self.airmass[band]))
 		return 10.**logcounts
 
+	def counts_to_mag(self, counts, band):
+		# http://www.sdss.org/dr5/algorithms/fluxcal.html#counts2mag
+		# f/f0 = counts/exptime * 10**0.4*(aa + kk * airmass)
+		# mag = -2.5 * log10(f/f0)
+		return -2.5 * (np.log10(counts / self.exptime) +
+					   0.4 * (self.aa[band] + self.kk[band] * self.airmass[band]))
+
+
 	
 class FpObjc(SdssFile):
 	def __init__(self, *args, **kwargs):
