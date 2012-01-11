@@ -158,7 +158,7 @@ upgrade-indexes:
 
 reconfig:
 	-rm -f util/os-features-config.h util/makefile.os-features
-.PHONE: reconfig
+.PHONY: reconfig
 
 RELEASE_VER := 0.38
 SP_RELEASE_VER := 0.3

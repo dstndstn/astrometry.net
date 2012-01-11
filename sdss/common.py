@@ -256,6 +256,8 @@ class AsTrans(SdssFile):
 		mu,nu (great circle coords) in degrees
 		'''
 		node,incl = self.node, self.incl
+		#print 'np:', np
+		#print dir(np)
 		ra, dec = np.deg2rad(ra), np.deg2rad(dec)
 		mu = node + np.arctan2(np.sin(ra - node) * np.cos(dec) * np.cos(incl) +
 							   np.sin(dec) * np.sin(incl),
@@ -321,7 +323,12 @@ class TsField(SdssFile):
 		# log_10(counts)
 		logcounts = (-0.4 * mag + np.log10(self.exptime)
 					 - 0.4*(self.aa[band] + self.kk[band] * self.airmass[band]))
-		return 10.**logcounts
+		#logcounts = np.minimum(logcounts, 308.)
+		#print 'logcounts', logcounts
+		olderrs = np.seterr(all='print')
+		rtn = 10.**logcounts
+		np.seterr(**olderrs)
+		return rtn
 
 	def counts_to_mag(self, counts, band):
 		# http://www.sdss.org/dr5/algorithms/fluxcal.html#counts2mag

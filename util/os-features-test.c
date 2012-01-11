@@ -55,8 +55,8 @@ int main() {
 #ifdef TEST_SWAP_QSORT_R
 // Test whether qsort_r works when we swap the argument order.
 static int sortfunc(void* thunk, const void* v1, const void* v2) {
-    int* i1 = v1;
-    int* i2 = v2;
+    const int* i1 = v1;
+    const int* i2 = v2;
     if (*i1 < *i2)
         return -1;
     if (*i1 > *i2)
@@ -74,7 +74,7 @@ int main() {
 }
 #endif
 
-#ifdef TEST_NETPBM
+#if defined(TEST_NETPBM) || defined(TEST_NETPBM_MAKE)
 #include "pam.h"
 int main(int argc, char** args) {
 	struct pam img;
@@ -83,14 +83,3 @@ int main(int argc, char** args) {
     return 0;
 }
 #endif
-
-#ifdef TEST_NETPBM_MAKE
-#include "pam.h"
-int main(int argc, char** args) {
-	struct pam img;
-	pm_init(args[0], 0);
-    //printf("HAVE_NETPBM := yes\n");
-    return 0;
-}
-#endif
-
