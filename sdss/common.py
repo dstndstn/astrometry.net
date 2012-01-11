@@ -256,8 +256,8 @@ class AsTrans(SdssFile):
 		mu,nu (great circle coords) in degrees
 		'''
 		node,incl = self.node, self.incl
-		#print 'np:', np
-		#print dir(np)
+		assert(ra is not None)
+		assert(dec is not None)
 		ra, dec = np.deg2rad(ra), np.deg2rad(dec)
 		mu = node + np.arctan2(np.sin(ra - node) * np.cos(dec) * np.cos(incl) +
 							   np.sin(dec) * np.sin(incl),
@@ -270,6 +270,8 @@ class AsTrans(SdssFile):
 
 	def munu_to_radec(self, mu, nu):
 		node,incl = self.node, self.incl
+		assert(mu is not None)
+		assert(nu is not None)
 		mu, nu = np.deg2rad(mu), np.deg2rad(nu)
 		ra = node + np.arctan2(np.sin(mu - node) * np.cos(nu) * np.cos(incl) -
 							   np.sin(nu) * np.sin(incl),
@@ -325,9 +327,9 @@ class TsField(SdssFile):
 					 - 0.4*(self.aa[band] + self.kk[band] * self.airmass[band]))
 		#logcounts = np.minimum(logcounts, 308.)
 		#print 'logcounts', logcounts
-		olderrs = np.seterr(all='print')
+		#olderrs = np.seterr(all='print')
 		rtn = 10.**logcounts
-		np.seterr(**olderrs)
+		#np.seterr(**olderrs)
 		return rtn
 
 	def counts_to_mag(self, counts, band):
