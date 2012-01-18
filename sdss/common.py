@@ -2,15 +2,18 @@ from astrometry.util.pyfits_utils import fits_table
 
 import numpy as np
 
+def band_names():
+	return ['u','g','r','i','z']
+
 def band_name(b):
-	if b in ['u','g','r','i','z']:
+	if b in band_names():
 		return b
 	if b in [0,1,2,3,4]:
 		return 'ugriz'[b]
 	raise Exception('Invalid SDSS band: "' + str(b) + '"')
 
 def band_index(b):
-	if b in ['u','g','r','i','z']:
+	if b in band_names():
 		return 'ugriz'.index(b)
 	if b in [0,1,2,3,4]:
 		return b
