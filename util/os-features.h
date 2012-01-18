@@ -31,7 +31,18 @@ int fdatasync(int fd);
    The qsort_r story:
 
    -qsort_r appears in BSD (including Mac OSX)
-   -qsort_r appears in glibc 2.8, but with a different argument order.
+         void qsort_r(void *, size_t, size_t,
+                      void *,
+                      int (*)(void *, const void *, const void *));
+
+   -qsort_r appears in glibc 2.8, but with a different argument order:
+         void qsort_r(void*, size_t, size_t,
+                      int (*)(const void*, const void*, void*),
+                      void*);
+
+   Notice that the "thunk" and "comparison function" arguments to qsort_r are
+   swapped, and the "thunk" appears either at the beginning or end of the comparison
+   function.
 
    We check a few things:
    -is qsort_r declared?
@@ -40,6 +51,8 @@ int fdatasync(int fd);
 
    Those using qsort_r in Astrometry.net should instead use the macro QSORT_R()
    to take advantage of these tests.
+
+   Its signature is:
 
    QSORT_R(void* base, size_t nmembers, size_t member_size, void* token,
            comparison_function);

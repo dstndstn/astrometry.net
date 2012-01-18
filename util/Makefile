@@ -298,38 +298,47 @@ os-features-config.h: os-features-test.c
 	@echo "---- Error messages in the next few commands are not necessarily bugs ----"
 	@echo "     (we're checking how things works on your computer)"
 	-rm -f os-features.log
-	( \
-	 (($(CC) -o os-features-test-canonicalize \
-	   $(CFLAGS) -DTEST_CANONICALIZE_FILE_NAME $(LDFLAGS) $^  >> os-features.log && \
-	   ./os-features-test-canonicalize >> os-features.log && \
-	   echo "#define NEED_CANONICALIZE_FILE_NAME 0") \
-	|| echo "#define NEED_CANONICALIZE_FILE_NAME 1") \
-	; \
-	 (($(CC) -o os-features-test-declare-qsort \
+	-rm -f $@
+	@echo
+	@echo "Testing canonicalize_file_name..."
+	@echo "Testing canonicalize_file_name..." >> os-features.log
+	(($(CC) -o os-features-test-canonicalize \
+	  $(CFLAGS) -DTEST_CANONICALIZE_FILE_NAME $(LDFLAGS) $^  >> os-features.log && \
+	  ./os-features-test-canonicalize >> os-features.log && \
+	  echo "#define NEED_CANONICALIZE_FILE_NAME 0") \
+	|| echo "#define NEED_CANONICALIZE_FILE_NAME 1") >> $@
+	@echo
+	@echo "Testing declare qsort_r..."
+	@echo "Testing declare qsort_r..." >> os-features.log
+	(($(CC) -o os-features-test-declare-qsort \
 	   $(CFLAGS) -DTEST_DECLARE_QSORT_R $(LDFLAGS) $^ >> os-features.log && \
 	   ./os-features-test-declare-qsort >> os-features.log && \
 	   echo "#define NEED_DECLARE_QSORT_R 1") \
-	|| echo "#define NEED_DECLARE_QSORT_R 0") \
-	; \
-	 (($(CC) -o os-features-test-qsort \
+	|| echo "#define NEED_DECLARE_QSORT_R 0") >> $@
+	@echo
+	@echo "Testing qsort_r..."
+	@echo "Testing qsort_r..." >> os-features.log
+	(($(CC) -o os-features-test-qsort \
 	   $(CFLAGS) -DTEST_QSORT_R $(LDFLAGS) $^ >> os-features.log && \
 	   ./os-features-test-qsort >> os-features.log && \
 	   echo "#define NEED_QSORT_R 0") \
-	|| echo "#define NEED_QSORT_R 1") \
-	; \
-	 (($(CC) -Werror -o os-features-test-swap-qsort \
+	|| echo "#define NEED_QSORT_R 1") >> $@
+	@echo
+	@echo "Testing swap qsort_r..."
+	@echo "Testing swap qsort_r..." >> os-features.log
+	(($(CC) -Werror -o os-features-test-swap-qsort \
 	   $(CFLAGS) -DTEST_SWAP_QSORT_R $(LDFLAGS) $^ >> os-features.log && \
 	   ./os-features-test-swap-qsort >> os-features.log && \
-	   echo "#define NEED_SWAP_QSORT_R 1") \
-	|| echo "#define NEED_SWAP_QSORT_R 0") \
-	; \
-	 (($(CC) -o os-features-test-netpbm \
+	   echo "#define NEED_SWAP_QSORT_R 0") \
+	|| echo "#define NEED_SWAP_QSORT_R 1") >> $@
+	@echo
+	@echo "Testing netpbm..."
+	@echo "Testing netpbm..." >> os-features.log
+	(($(CC) -o os-features-test-netpbm \
 	   $(CFLAGS) -DTEST_NETPBM $(LDFLAGS) $(NETPBM_INC_ORIG) $(NETPBM_LIB_ORIG) $^ >> os-features.log && \
 	   ./os-features-test-netpbm >> os-features.log && \
 	   echo "#define HAVE_NETPBM 1") \
-	|| echo "#define HAVE_NETPBM 0") \
-	; \
-	echo) > $@
+	|| echo "#define HAVE_NETPBM 0") >> $@
 	@echo "--------------- End of expected error messages -----------------"
 	@echo
 
@@ -440,7 +449,7 @@ test_anwcs: $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 
 test_tycho2: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
-test_hd: $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+test_hd: $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 test_fitstable: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 

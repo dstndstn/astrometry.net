@@ -93,8 +93,13 @@ void test_run_command_1(CuTest* tc) {
 	// (three reads, not exactly aligned)
 	memset(txt, 'X', 500);
 	txt[500] = '\0';
-	asprintf_safe(&cmd, "for ((i=0; i<3; i++)); do printf %%s '%s'; done", txt);
+	// oops, this is not portable /bin/sh!
+	//asprintf_safe(&cmd, "for ((i=0; i<3; i++)); do printf %%s '%s'; done", txt);
+	asprintf_safe(&cmd, "for x in 1 2 3; do printf %%s '%s'; done", txt);
+	printf("Command: \"%s\"\n", cmd);
 	rtn = run_command_get_outputs(cmd, &outlines, &errlines);
+	//rtn = run_command_get_outputs(cmd, NULL, NULL);
+	//printf("return value: %i\n", rtn);
 	CuAssertIntEquals(tc, 0, rtn);
 	str2 = sl_join(outlines, "");
 	//printf("got string: \"%s\"\n", str2);
@@ -107,7 +112,8 @@ void test_run_command_1(CuTest* tc) {
 	memset(txt, 'X', 500);
 	txt[499] = '\n';
 	txt[500] = '\0';
-	asprintf_safe(&cmd, "for ((i=0; i<3; i++)); do printf %%s '%s'; done", txt);
+	//asprintf_safe(&cmd, "for ((i=0; i<3; i++)); do printf %%s '%s'; done", txt);
+	asprintf_safe(&cmd, "for x in 1 2 3; do printf %%s '%s'; done", txt);
 	rtn = run_command_get_outputs(cmd, &outlines, &errlines);
 	CuAssertIntEquals(tc, 0, rtn);
 	str2 = sl_join(outlines, "\n");
@@ -160,7 +166,8 @@ void test_run_command_1(CuTest* tc) {
 	memset(txt, 'X', 200);
 	txt[200] = '\n';
 	txt[201] = '\0';
-	asprintf_safe(&cmd, "for ((i=0; i<10; i++)); do printf %%s '%s'; sleep 0.1; done", txt);
+	//asprintf_safe(&cmd, "for ((i=0; i<10; i++)); do printf %%s '%s'; sleep 0.1; done", txt);
+	asprintf_safe(&cmd, "for x in 1 2 3 4 5 6 7 8 9 10; do printf %%s '%s'; sleep 0.1; done", txt);
 	rtn = run_command_get_outputs(cmd, &outlines, &errlines);
 	CuAssertIntEquals(tc, 0, rtn);
 	str2 = sl_join(outlines, "");

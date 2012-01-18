@@ -350,6 +350,7 @@ void print_node(double z, double phi, int Nside) {
 void test_healpix_distance_to_radec(CuTest *ct) {
 	double d;
 	double xyz[3];
+	double rd[2];
 	double ra,dec;
 
 	d = healpix_distance_to_radec(4, 1, 0, 0, NULL);
@@ -393,32 +394,43 @@ void test_healpix_distance_to_radec(CuTest *ct) {
 	// this one actually has the midpoint further than A and B.
     CuAssertDblEquals(ct, 158.189685, d, 1e-6);
 
-	d = healpix_distance_to_radec(4, 1, 0, 0, xyz);
-	xyzarr2radecdeg(xyz, &ra, &dec);
-    CuAssertDblEquals(ct, 0, ra, 0);
-    CuAssertDblEquals(ct, 0, dec, 0);
+	/*
+	 xyz[0] = -100.0;
+	 ra = dec = -1.0;
+	 d = healpix_distance_to_xyz(4, 1, 0, 0, xyz);
+	 xyzarr2radecdeg(xyz, &ra, &dec);
+	 CuAssertDblEquals(ct, 0, ra, 0);
+	 CuAssertDblEquals(ct, 0, dec, 0);
+	 */
+	rd[0] = rd[1] = -1.0;
+	d = healpix_distance_to_radec(4, 1, 0, 0, rd);
+    CuAssertDblEquals(ct, 0, rd[0], 0);
+    CuAssertDblEquals(ct, 0, rd[1], 0);
 
-	d = healpix_distance_to_radec(4, 1, 45, 0, xyz);
-	xyzarr2radecdeg(xyz, &ra, &dec);
-    CuAssertDblEquals(ct, 45, ra, 0);
-    CuAssertDblEquals(ct, 0, dec, 0);
 
-	d = healpix_distance_to_radec(4, 1, 45+1, 0, xyz);
-	xyzarr2radecdeg(xyz, &ra, &dec);
-    CuAssertDblEquals(ct, 45, ra, 0);
-    CuAssertDblEquals(ct, 0, dec, 1e-8);
+	/*
+	 xyz[0] = -100.0;
+	 ra = dec = -1.0;
+	 d = healpix_distance_to_xyz(4, 1, 45, 0, xyz);
+	 xyzarr2radecdeg(xyz, &ra, &dec);
+	 CuAssertDblEquals(ct, 45, ra, 0);
+	 CuAssertDblEquals(ct, 0, dec, 0);
+	 */
 
-	d = healpix_distance_to_radec(4, 1, 45+1, 0+1, xyz);
-	xyzarr2radecdeg(xyz, &ra, &dec);
-    CuAssertDblEquals(ct, 45, ra, 0);
-    CuAssertDblEquals(ct, 0, dec, 0);
+	rd[0] = rd[1] = -1.0;
+	d = healpix_distance_to_radec(4, 1, 45+1, 0, rd);
+    CuAssertDblEquals(ct, 45, rd[0], 0);
+    CuAssertDblEquals(ct, 0,  rd[1], 1e-8);
+
+	d = healpix_distance_to_radec(4, 1, 45+1, 0+1, rd);
+    CuAssertDblEquals(ct, 45, rd[0], 0);
+    CuAssertDblEquals(ct, 0,  rd[1], 0);
 	// really??
 
-	d = healpix_distance_to_radec(4, 1, 20, 25, xyz);
+	d = healpix_distance_to_radec(4, 1, 20, 25, rd);
     CuAssertDblEquals(ct, d, 2.297298, 1e-6);
-	xyzarr2radecdeg(xyz, &ra, &dec);
-    CuAssertDblEquals(ct, 18.200995, ra, 1e-6);
-    CuAssertDblEquals(ct, 23.392159, dec, 1e-6);
+    CuAssertDblEquals(ct, 18.200995, rd[0], 1e-6);
+    CuAssertDblEquals(ct, 23.392159, rd[1], 1e-6);
 
 }
 

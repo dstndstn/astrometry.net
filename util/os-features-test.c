@@ -53,7 +53,8 @@ int main() {
 #endif
 
 #ifdef TEST_SWAP_QSORT_R
-// Test whether qsort_r works when we swap the argument order.
+// Test whether qsort_r works unswapped. (ie, qsort_r matches the definition of
+// QSORT_R defined in the os-features.h documentation.)
 static int sortfunc(void* thunk, const void* v1, const void* v2) {
     const int* i1 = v1;
     const int* i2 = v2;
@@ -67,9 +68,8 @@ int main() {
     int array[] = { 4, 17, 88, 34, 12, 12, 17 };
     int N = sizeof(array)/sizeof(int);
     int mythunk = 42;
-    // glibc 2.8 swaps the last two args compared to BSD.
-    qsort_r(array, N, sizeof(int), sortfunc, &mythunk);
-    //printf("#define NEED_SWAP_QSORT_R 1\n");
+    qsort_r(array, N, sizeof(int), &mythunk, sortfunc);
+    //printf("#define NEED_SWAP_QSORT_R 0\n");
     return 0;
 }
 #endif
