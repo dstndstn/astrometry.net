@@ -57,7 +57,9 @@ include $(COMMON)/makefile.netpbm
 ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),realclean)
     ifneq ($(MAKECMDGOALS),alllclean)
-      include $(COMMON)/makefile.os-features
+      ifneq ($(MAKECMDGOALS),reconfig)
+        include $(COMMON)/makefile.os-features
+      endif
     endif
   endif
 endif
@@ -510,4 +512,12 @@ clean:
 		$(PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN) \
 		cairoutils.dep makefile.os-features
 
+ifneq ($(MAKECMDGOALS),clean)
+  ifneq ($(MAKECMDGOALS),realclean)
+    ifneq ($(MAKECMDGOALS),alllclean)
+      ifneq ($(MAKECMDGOALS),reconfig)
 include $(COMMON)/makefile.deps
+      endif
+    endif
+  endif
+endif
