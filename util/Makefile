@@ -53,7 +53,14 @@ include $(COMMON)/makefile.gsl
 include $(COMMON)/makefile.wcslib
 
 include $(COMMON)/makefile.netpbm
-include $(COMMON)/makefile.os-features
+# D'oh
+ifneq ($(MAKECMDGOALS),clean)
+  ifneq ($(MAKECMDGOALS),realclean)
+    ifneq ($(MAKECMDGOALS),alllclean)
+      include $(COMMON)/makefile.os-features
+    endif
+  endif
+endif
 
 NETPBM_INC_ORIG := $(NETPBM_INC)
 NETPBM_LIB_ORIG := $(NETPBM_LIB)
