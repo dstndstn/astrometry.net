@@ -435,7 +435,7 @@ ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log test_ioutils \
 	test_dualtree_nn test_scamp_catalog test_starutil test_svd test_hd \
 	test_tycho2 test_anwcs test_sip-utils test_errors test_multiindex \
-	test_convolve_image
+	test_convolve_image test_qsort_r
 # test_hd depends on hd.fits...
 ALL_TEST_EXTRA_OBJS = 
 ALL_TEST_LIBS = $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
@@ -444,6 +444,8 @@ ALL_TEST_EXTRA_LDFLAGS = $(WCSLIB_LIB)
 include $(COMMON)/makefile.tests
 
 DEP_OBJ += $(ALL_TEST_FILES_O)
+
+test_qsort_r: $(ANUTILS_LIB)
 
 test_convolve_image: $(ANUTILS_LIB) $(QFITS_LIB)
 

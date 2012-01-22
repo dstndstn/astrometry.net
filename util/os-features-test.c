@@ -53,6 +53,13 @@ int main() {
 #endif
 
 #ifdef TEST_SWAP_QSORT_R
+// Use the result of TEST_DECLARE_QSORT_R and TEST_NEED_QSORT_R, or else
+// this test will fail with a warning about undefined qsort_r
+// Include .c rather than .h because we test with:
+//     gcc -o (exec) os-features-test.c
+// and if NEED_QSORT_R, os-features.c includes qsort_reentrant.c
+//#include "os-features.h"
+#include "os-features.c"
 // Test whether qsort_r works unswapped. (ie, qsort_r matches the definition of
 // QSORT_R defined in the os-features.h documentation.)
 static int sortfunc(void* thunk, const void* v1, const void* v2) {

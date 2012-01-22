@@ -54,8 +54,8 @@ int fdatasync(int fd);
 
    Its signature is:
 
-   QSORT_R(void* base, size_t nmembers, size_t member_size, void* token,
-           comparison_function);
+   void QSORT_R(void* base, size_t nmembers, size_t member_size,
+                void* token, comparison_function);
 
    You should define the "comparison" function like this:
 
