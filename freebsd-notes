@@ -1,0 +1,61 @@
+freebsd 6.2 base install
+
+# pkg_add -r subversion
+
+> make
+"Makefile", line 21: Need an operator
+make: fatal errors encountered -- cannot continue
+
+# pkg_add -r gmake
+
+> gmake > /dev/null
+../an-common/makefile.deps:40: deps: No such file or directory
+Makefile:751: warning: overriding commands for target `install-html-recursive'
+Makefile:313: warning: ignoring old commands for target `install-html-recursive'
+Makefile:751: warning: overriding commands for target `install-html-recursive'
+Makefile:313: warning: ignoring old commands for target `install-html-recursive'
+Makefile:751: warning: overriding commands for target `install-html-recursive'
+Makefile:313: warning: ignoring old commands for target `install-html-recursive'
+gcc: Internal error: Illegal instruction: 4 (program cc1)
+Please submit a full bug report.
+See <URL:http://gcc.gnu.org/bugs.html> for instructions.
+gmake[4]: *** [qfits_table.lo] Error 1
+gmake[3]: *** [all-recursive] Error 1
+gmake[2]: *** [all] Error 2
+gmake[1]: *** [../qfits-an/stage/lib/libqfits.a] Error 2
+gmake: *** [all] Error 2
+
+> gcc --version
+gcc (GCC) 3.4.6 [FreeBSD] 20060305
+Copyright (C) 2006 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+> gmake --version
+GNU Make 3.81
+Copyright (C) 2006  Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.
+There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.
+
+This program built for i386-portbld-freebsd6.2
+
+# pkg_add -r gcc42
+
+> export CC=gcc42
+> gmake > /dev/null
+
+> gmake extra > /dev/null
+plotquad.c:26:19: error: cairo.h: No such file or directory
+plotquad.c:27:17: error: ppm.h: No such file or directory
+[...]
+
+# pkg_add -r cairo netpbm netpbm-devel
+
+> gmake extra > /dev/null
+[hmm, I'm getting repeated gcc42 internal errors which go away when don't
+reoccur when I re-run make... something wrong with this machine?]
+
+> gmake web > /dev/null
+[watcher doesn't work - it depends on Linux-only inotify]
+
