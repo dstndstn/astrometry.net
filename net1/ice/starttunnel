@@ -1,9 +1,0 @@
-#! /bin/bash
-
-DIR=/home/gmaps/test/astrometry/net/ice
-
-daemon --name=tunnel --pidfile=$DIR/tunnel.pid \
-    --output=$DIR/tunnel.log --errlog=$DIR/tunneldaemon.log \
-    -v $* -X "ssh -v -T glaciertunnel"
-#"ssh -v -N -T glaciertunnel"
-

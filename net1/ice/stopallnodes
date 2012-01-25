@@ -1,3 +1,0 @@
-#! /bin/bash
-
-cluster-fork --bg --nodes neuron-0-%d:0-24 /data1/dstn/dsolver/astrometry/net/ice/stopdaemon

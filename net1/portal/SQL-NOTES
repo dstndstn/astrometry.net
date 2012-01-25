@@ -1,4 +1,0 @@
-If you add a "null=True" to the Django model, you can change the db like so:
-
->> alter table portal_submission alter column user_id drop NOT NULL;
-

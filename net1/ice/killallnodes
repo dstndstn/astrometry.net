@@ -1,4 +1,0 @@
-#! /bin/bash
-
-cluster-fork       --nodes neuron-0-%d:0-11 killall daemon icegridnode python
-

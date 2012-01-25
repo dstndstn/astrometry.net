@@ -1,6 +1,0 @@
-
---you have to check out this package separately:
-svn co svn+ssh://astrometry.net/svn/secure/django-db secrets
-
---python manage.py loaddata fixtures/site.json
-

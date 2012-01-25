@@ -1,9 +1,0 @@
-#! /bin/bash
-
-./startadmin <<EOF
-adapter endpoints RSolver-scale2
-adapter endpoints RSolver-scale3
-adapter endpoints RSolver-scale4
-adapter endpoints RSolver-scale5
-adapter endpoints RSolver-scale10
-EOF
