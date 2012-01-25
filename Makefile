@@ -1,6 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
-# Copyright 2010, 2011 Dustin Lang.
+# Copyright 2010, 2011, 2012 Dustin Lang.
 #
 # The Astrometry.net suite is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License
@@ -55,11 +55,6 @@ py:
 	$(MAKE) -C util cairoutils.o
 	$(MAKE) -C blind pyplotstuff
 	$(MAKE) -C libkd pyspherematch
-
-# Targets that support the web service
-.PHONY: web
-web:
-	$(MAKE) -C render
 
 install: report.txt
 	mkdir -p $(INSTALL_DIR)/data
@@ -246,7 +241,6 @@ clean:
 	$(MAKE) -C gsl-an clean
 	$(MAKE) -C libkd clean
 	$(MAKE) -C blind clean
-	-$(MAKE) -C render clean
 
 realclean:
 	$(MAKE) -C util realclean
@@ -256,7 +250,6 @@ realclean:
 	$(MAKE) -C gsl-an clean
 	$(MAKE) -C libkd realclean
 	$(MAKE) -C blind realclean
-	-$(MAKE) -C render realclean
 
 TAGS:
 	etags -I `find . -name "*.c" -o -name "*.h"`
