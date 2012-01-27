@@ -90,9 +90,10 @@ def orbital_elements_to_ss_xyz(E, observer=None, light_travel=True):
 		print 'Warning: orbital_elements_to_ss_xyz: niters', ii
 	return x,dx
 
-def orbital_elements_to_xyz(E, observer, light_travel=True):
+def orbital_elements_to_xyz(E, observer, light_travel=True, normalize=True):
 	(x,dx) = orbital_elements_to_ss_xyz(E, observer, light_travel)
-	dx /= norm1d(dx)
+	if normalize:
+		dx /= norm1d(dx)
 	edx = dx[0] * Equinox + dx[1] * Solstice + dx[2] * EclipticPole
 	return edx
 
