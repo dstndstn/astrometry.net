@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2008 Dustin Lang.
+  Copyright 2008, 2012 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -21,6 +21,7 @@
 #include <stdint.h>
 
 // MacOSX doesn't have endian.h
+// (actually 10.5 does)
 #if __APPLE__
 # include <sys/types.h>
 #elif __FreeBSD__
