@@ -781,6 +781,30 @@ def tan_t_tostring(self):
 			 self.imagew, self.imageh))
 tan_t.__str__ = tan_t_tostring
 
+## picklable?
+def tan_t_getstate(self):
+	return (self.crpix[0], self.crpix[1], self.crval[0], self.crval[1],
+			self.cd[0], self.cd[1], self.cd[2], self.cd[3],
+			self.imagew, self.imageh)
+def tan_t_setstate(self, state):
+	#print 'setstate: self', self, 'state', state
+	#print 'state', state
+	self.this = _util.new_tan_t()
+	#print 'self', repr(self)
+	p0,p1,v0,v1,cd0,cd1,cd2,cd3,w,h = state
+	self.set_crpix(p0,p1)
+	self.set_crval(v0,v1)
+	self.set_cd(cd0,cd1,cd2,cd3)
+	self.set_imagesize(w,h)
+	#(self.crpix[0], self.crpix[1], self.crval[0], self.crval[1],
+	#self.cd[0], self.cd[1], self.cd[2], self.cd[3],
+	#self.imagew, self.imageh) = state
+def tan_t_getnewargs(self):
+	return ()
+tan_t.__getstate__ = tan_t_getstate
+tan_t.__setstate__ = tan_t_setstate
+tan_t.__getnewargs__ = tan_t_getnewargs
+
 def tan_t_get_cd(self):
     cd = self.cd
     return (cd[0], cd[1], cd[2], cd[3])
