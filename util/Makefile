@@ -76,6 +76,7 @@ endif
 CFLAGS += $(CFLAGS_DEF)
 CFLAGS += $(CAIRO_INC)
 CFLAGS += $(JPEG_INC)
+CFLAGS += $(PNG_INC)
 CFLAGS += $(GSL_INC)
 CFLAGS += $(WCSLIB_INC)
 CFLAGS += $(NETPBM_INC)
@@ -497,7 +498,9 @@ test_svd: $(ANUTILS_LIB) $(GSL_LIB)
 # we'll just tack this on here... It depends on cairo, libjpeg, etc, so it's not part
 # of the anX.a libraries.
 ifeq ($(MAKECMDGOALS),cairoutils.o)
-  include cairoutils.dep
+
+include cairoutils.dep
+
 endif
 
 .PHONY: allclean realclean clean

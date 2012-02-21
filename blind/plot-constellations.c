@@ -697,7 +697,7 @@ int main(int argc, char** args) {
             else
                 text = strdup(bs->name);
 
-            logverb("%s at (%g, %g)\n", text, px + label_offset, py + dy);
+            logverb("%s at (%g, %g)\n", text, px, py);
 
             if (json) {
                 sl* names = sl_new(4);
