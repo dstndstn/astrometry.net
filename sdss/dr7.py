@@ -56,7 +56,8 @@ class DR7(object):
 	def retrieve(self, filetype, run, camcol, field, band=None):
 		# FIXME!
 		from astrometry.util.sdss_das import sdss_das_get
-		outfn = self.getFilename(filetype, run, camcol, field, band)
+		outfn = self.getPath(filetype, run, camcol, field, band)
+		print 'Output filename:', outfn
 		sdss_das_get(filetype, outfn, run, camcol, field, band,
 					 curl=self.curl)
 

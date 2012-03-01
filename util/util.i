@@ -653,6 +653,12 @@ Sip = sip_t
 		$self->imagew = imagew;
 		$self->imageh = imageh;
 	}
+	double get_width() {
+		return $self->imagew;
+	}
+	double get_height() {
+		return $self->imageh;
+	}
 	double pixel_scale() { return tan_pixel_scale($self); }
 	void radec_center(double *p_ra, double *p_dec) {
 		tan_get_radec_center($self, p_ra, p_dec);
