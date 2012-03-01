@@ -12,6 +12,7 @@ from numpy import argsort
 from optparse import OptionParser
 
 # RA,Dec are either scalars or iterables.
+# Radius is in *arcmin*.  sigh.
 # If scalars, returns a list of (run, camcol, field, ra, dec) tuples, one for each matching field.
 # If iterable, returns a list containing one list per query (ra,dec) of the same tuple.
 def radec_to_sdss_rcf(ra, dec, spherematch=True, radius=0, tablefn=None, contains=False):

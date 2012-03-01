@@ -47,7 +47,7 @@ Malloc
 char* dirname_safe(const char* path);
 
 // Returns (system + user) CPU time, in seconds.
-float get_cpu_usage();
+float get_cpu_usage(void);
 
 //int log_resource_usage(int loglevel);
 
@@ -156,8 +156,8 @@ int ends_with(const char* str, const char* prefix);
 
 char* strdup_safe(const char* str);
 
-void add_sigbus_mmap_warning();
-void reset_sigbus_mmap_warning();
+void add_sigbus_mmap_warning(void);
+void reset_sigbus_mmap_warning(void);
 
 int write_u8(FILE* fout, unsigned char val);
 int write_u16(FILE* fout, unsigned int val);

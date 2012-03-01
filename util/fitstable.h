@@ -169,30 +169,30 @@ typedef struct fitstable_t fitstable_t;
 
 
 // Returns the FITS type of "int" on this machine.
-tfits_type fitscolumn_int_type();
-tfits_type fitscolumn_double_type();
-tfits_type fitscolumn_float_type();
-tfits_type fitscolumn_char_type();
-tfits_type fitscolumn_boolean_type();
-tfits_type fitscolumn_u8_type();
-tfits_type fitscolumn_i16_type();
-tfits_type fitscolumn_i32_type();
-tfits_type fitscolumn_i64_type();
-tfits_type fitscolumn_bitfield_type();
+tfits_type fitscolumn_int_type(void);
+tfits_type fitscolumn_double_type(void);
+tfits_type fitscolumn_float_type(void);
+tfits_type fitscolumn_char_type(void);
+tfits_type fitscolumn_boolean_type(void);
+tfits_type fitscolumn_u8_type(void);
+tfits_type fitscolumn_i16_type(void);
+tfits_type fitscolumn_i32_type(void);
+tfits_type fitscolumn_i64_type(void);
+tfits_type fitscolumn_bitfield_type(void);
 
 //const char* fitscolumn_format_string(tfits_type t);
 
 // an-bool type.
-tfits_type fitscolumn_bool_type();
+tfits_type fitscolumn_bool_type(void);
 
 // When reading: allow this column to match to any FITS type.
-tfits_type fitscolumn_any_type();
+tfits_type fitscolumn_any_type(void);
 
 // see also, in fitsioutils:
 //    int fits_get_atom_size(tfits_type type);
 
 
-fitstable_t* fitstable_open_in_memory();
+fitstable_t* fitstable_open_in_memory(void);
 
 // for in-memory tables: done writing, start reading.
 int fitstable_switch_to_reading(fitstable_t* tab);

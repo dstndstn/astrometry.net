@@ -211,7 +211,7 @@ void startree_compute_inverse_perm(startree_t* s);
 int startree_check_inverse_perm(startree_t* s);
 
 // for writing
-startree_t* startree_new();
+startree_t* startree_new(void);
 
 int startree_write_to_file(startree_t* s, const char* fn);
 

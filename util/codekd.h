@@ -54,7 +54,7 @@ qfits_header* codetree_header(codetree* s);
 int codetree_close(codetree* s);
 
 // for writing
-codetree* codetree_new();
+codetree* codetree_new(void);
 
 int codetree_append_to(codetree* s, FILE* fid);
 

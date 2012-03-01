@@ -55,7 +55,7 @@ char* quadfile_get_filename(const quadfile* qf);
 
 quadfile* quadfile_open_for_writing(const char* quadfname);
 
-quadfile* quadfile_open_in_memory();
+quadfile* quadfile_open_in_memory(void);
 
 int quadfile_switch_to_reading(quadfile* qf);
 

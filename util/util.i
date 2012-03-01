@@ -366,6 +366,46 @@ def lanczos_shift_image(img, dx, dy, order=3, weight=None,
 
 %include "anwcs.h"
 
+%extend anwcs_t {
+	anwcs_t(char* fn, int ext=0) {
+		anwcs_t* w = anwcs_open(fn, ext);
+		return w;
+	}
+	~anwcs_t() { free($self); }
+
+	bool is_inside(double ra, double dec) {
+		return anwcs_radec_is_inside_image($self, ra, dec);
+	}
+	double get_width() {
+		return anwcs_imagew($self);
+	}
+	double get_height() {
+		return anwcs_imageh($self);
+	}
+	void set_width(int W) {
+		int H = anwcs_imageh($self);
+		anwcs_set_size($self, W, H);
+	}
+	void set_height(int H) {
+		int W = anwcs_imagew($self);
+		anwcs_set_size($self, W, H);
+	}
+	void pixelxy2radec(double x, double y, double *p_ra, double *p_dec) {
+		anwcs_pixelxy2radec($self, x, y, p_ra, p_dec);
+	}
+	int radec2pixelxy(double ra, double dec, double *p_x, double *p_y) {
+		return anwcs_radec2pixelxy($self, ra, dec, p_x, p_y);
+	}
+
+ }
+%pythoncode %{
+anwcs = anwcs_t
+anwcs.imagew = property(anwcs.get_width,  anwcs.set_width,  None, 'image width')
+anwcs.imageh = property(anwcs.get_height, anwcs.set_height, None, 'image height')
+	%}
+
+
+
 %include "starutil.h"
 
 %typemap(in) double [ANY] (double temp[$1_dim0]) {

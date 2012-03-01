@@ -80,7 +80,7 @@ static void get_filenames(const char* indexname,
             *singlefile = TRUE;
             return;
         }
-        asprintf(&fits, "%s.fits", indexname);
+        asprintf_safe(&fits, "%s.fits", indexname);
         if (file_readable(fits)) {
             // assume single-file index.
             indexname = fits;
@@ -94,9 +94,9 @@ static void get_filenames(const char* indexname,
         free(fits);
         basename = strdup(indexname);
     }
-    if (ckdtfn) asprintf(ckdtfn, "%s.ckdt.fits", basename);
-    if (skdtfn) asprintf(skdtfn, "%s.skdt.fits", basename);
-    if (quadfn) asprintf(quadfn, "%s.quad.fits", basename);
+    if (ckdtfn) asprintf_safe(ckdtfn, "%s.ckdt.fits", basename);
+    if (skdtfn) asprintf_safe(skdtfn, "%s.skdt.fits", basename);
+    if (quadfn) asprintf_safe(quadfn, "%s.quad.fits", basename);
     *singlefile = FALSE;
     free(basename);
     return;
@@ -120,15 +120,15 @@ char* index_get_qidx_filename(const char* indexname) {
     get_filenames(indexname, &quadfn, NULL, NULL, &singlefile);
     if (singlefile) {
         if (ends_with(quadfn, ".fits")) {
-            asprintf(&qidxfn, "%.*s.qidx.fits", (int)(strlen(quadfn)-5), quadfn);
+            asprintf_safe(&qidxfn, "%.*s.qidx.fits", (int)(strlen(quadfn)-5), quadfn);
         } else {
-            asprintf(&qidxfn, "%s.qidx.fits", quadfn);
+            asprintf_safe(&qidxfn, "%s.qidx.fits", quadfn);
         }
     } else {
         if (ends_with(quadfn, ".quad.fits")) {
-            asprintf(&qidxfn, "%.*s.qidx.fits", (int)(strlen(quadfn)-10), quadfn);
+            asprintf_safe(&qidxfn, "%.*s.qidx.fits", (int)(strlen(quadfn)-10), quadfn);
         } else {
-            asprintf(&qidxfn, "%s.qidx.fits", quadfn);
+            asprintf_safe(&qidxfn, "%s.qidx.fits", quadfn);
         }
     }
     free(quadfn);
