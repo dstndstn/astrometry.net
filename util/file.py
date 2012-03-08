@@ -1,5 +1,6 @@
 import os
 import cPickle as pickle
+#import pickle
 
 def _filesize(fn):
 	st = os.stat(fn)
