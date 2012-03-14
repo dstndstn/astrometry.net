@@ -544,6 +544,7 @@ static double real_verify_star_lists(verify_t* v,
 		int refi;
 		int tmpi;
 		double d2;
+		//double reallogfg;
 		double logfg;
 		int ti;
 
@@ -582,10 +583,10 @@ static double real_verify_star_lists(verify_t* v,
 		}
 
 		if (logfg < logd) {
+			//reallogfg = 
 			logfg = logd;
 			debug2("  Distractor.\n");
 			theta[i] = THETA_DISTRACTOR;
-
 		} else {
 			// duplicate match?
 			if (rmatches[refi] != -1) {
@@ -600,6 +601,7 @@ static double real_verify_star_lists(verify_t* v,
 				// ... and the old one becomes a distractor...
 				int oldj = rmatches[refi];
 				int muj = 0;
+				//reallogfg = logfg;
 				for (j=0; j<oldj; j++)
 					if (theta[j] >= 0)
 						muj++;
@@ -638,22 +640,29 @@ static double real_verify_star_lists(verify_t* v,
 
 					// FIXME -- Do we need to repeat the distractor-adjustment
 					// loop above, updating all_logodds entries??
+					// No, not really -- we update "logfg" in this loop, and record it below
+					// and that's sort of right -- it's THIS star that resulting in all the changes.
 					/*
 					 if (all_logodds) {
 					 muj = 0;
 					 for (j=0; j<oldj; j++)
 					 if (theta[j] >= 0)
 					 muj++;
-					 all_logodds[j] += (logd_at(distractors, muj, v->NR, logbg) - oldfg);
+					 all_logodds[oldj] = logd_at(distractors, muj, v->NR, logbg) - logbg;
 					 for (j=oldj; j<i; j++)
 					 if (theta[j] < 0) {
-					 all_logodds[j] += (logd_at(distractors, muj, v->NR, logbg) -
-					 logd_at(distractors, muj+1, v->NR, logbg));
+					 all_logodds[j] = logd_at(distractors, muj, v->NR, logbg) - logbg;
 					 } else {
 					 muj++;
 					 }
+					 double logp = 0.;
+					 for (j=0; j<i; j++)
+					 logp += all_logodds[j];
+					 logverb("updated all_logodds = %g, vs logodds %g\n",
+					 logp, logodds);
 					 }
 					 */
+
 
 				} else {
 					// old match was better: this match becomes a distractor.
@@ -709,6 +718,9 @@ static double real_verify_star_lists(verify_t* v,
 		for (i=0; i<iend; i++)
 			dlog(DLOG_ODDS, "%s%g", (i ? ", ":""), all_logodds[i]);
 		dlog(DLOG_ODDS, "]");
+		data_log_end_item(DATALOG_MASK_VERIFY, DLOG_ODDS);
+		data_log_start_item(DATALOG_MASK_VERIFY, DLOG_ODDS, "bestlogodds");
+		dlog(DLOG_ODDS, "%g", bestlogodds);
 		data_log_end_item(DATALOG_MASK_VERIFY, DLOG_ODDS);
 	}
 
