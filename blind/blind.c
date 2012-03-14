@@ -320,7 +320,7 @@ static void check_time_limits(blind_t* bp) {
 		}
 	}
 	if (bp->total_cpulimit || bp->cpulimit) {
-		float now = get_cpu_usage(bp);
+		float now = get_cpu_usage();
 		if ((bp->total_cpulimit > 0.0) &&
             (now - bp->cpu_total_start > bp->total_cpulimit)) {
 			logmsg("Total CPU time limit reached!\n");
@@ -348,7 +348,7 @@ void blind_run(blind_t* bp) {
 	bp->time_total_start = timenow();
 
 	// Record current CPU usage for total cpu-usage limit.
-	bp->cpu_total_start = get_cpu_usage(bp);
+	bp->cpu_total_start = get_cpu_usage();
 
 	get_fields_from_solvedserver(bp, sp);
 
@@ -456,7 +456,7 @@ void blind_run(blind_t* bp) {
 		}
 
 		// Record current CPU usage.
-		bp->cpu_start = get_cpu_usage(bp);
+		bp->cpu_start = get_cpu_usage();
 		// Record current wall-clock time.
 		bp->time_start = time(NULL);
 
@@ -488,7 +488,7 @@ void blind_run(blind_t* bp) {
 			logverb("Trying index %s...\n", index->indexname);
 
 			// Record current CPU usage.
-			bp->cpu_start = get_cpu_usage(bp);
+			bp->cpu_start = get_cpu_usage();
 			// Record current wall-clock time.
 			bp->time_start = time(NULL);
 

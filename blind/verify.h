@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2012 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -43,6 +44,24 @@ struct verify_field_t {
 	bool do_ror;
 };
 typedef struct verify_field_t verify_field_t;
+
+
+/*
+ This function must be called once for each field before verification
+ begins.  We build a kdtree out of the field stars (in pixel space)
+ which will be used during deduplication.
+ */
+verify_field_t* verify_field_preprocess(const starxy_t* fieldxy);
+
+/*
+ This function must be called after all verification calls for a field
+ are finished; we clean up the data structures we created in the
+ verify_field_preprocess() function.
+ */
+void verify_field_free(verify_field_t* vf);
+
+
+
 
 void verify_count_hits(int* theta, int besti, int* p_nmatch, int* p_nconflict, int* p_ndistractor);
 
@@ -139,10 +158,6 @@ double verify_star_lists(double* refxys, int NR,
 						 double** p_all_logodds, int** p_theta,
 						 double* p_worstlogodds,
 	int** p_testperm);
-
-verify_field_t* verify_field_preprocess(const starxy_t* fieldxy);
-
-void verify_field_free(verify_field_t* vf);
 
 void verify_get_uniformize_scale(int cutnside, double scale, int W, int H, int* uni_nw, int* uni_nh);
 

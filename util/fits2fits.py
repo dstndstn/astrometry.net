@@ -59,6 +59,14 @@ def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 		# Fix input header
 		hdu.verify('fix')
 
+		# UGH!  Work around stupid pyfits handling of scaled data...
+		# (it fails to round-trip scaled data correctly!)
+		bzero = hdr.get('BZERO', None)
+		bscale = hdr.get('BSCALE', None)
+		if bzero is not None and bscale is not None:
+			logging.debug('Scaling to bzero=%g, bscale=%g' % (bzero, bscale))
+			hdu.scale('int16', '', bscale, bzero)
+
 	# Describe output file we're about to write...
 	if verbose:
 		print 'Outputting:'
@@ -96,7 +104,8 @@ def main():
 
 	infn = args[0]
 	outfn = args[1]
-	errmsg = fits2fits(infn, outfn, fix_idr=options.fix_idr)
+	errmsg = fits2fits(infn, outfn, fix_idr=options.fix_idr,
+					   verbose=options.verbose)
 	if errmsg is not None:
 		print 'fits2fits.py failed:', errmsg
 		return -1

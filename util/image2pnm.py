@@ -161,6 +161,7 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 			(f, fixidr) = tempfile.mkstemp('fix_sdss_idr', outfile_file, outfile_dir)
 			os.close(f)
 			tempfiles.append(fixidr)
+			logging.debug('fix_sdss_idr(in="%s", out="%s")' % (infile, fixidr))
 			fix_sdss_idr_file(infile, fixidr)
 			infile = fixidr
 
@@ -176,6 +177,8 @@ def image2pnm(infile, outfile, sanitized=None, force_ppm=False,
 			tempfiles.append(sanitized)
 		else:
 			assert sanitized != infile
+		logging.debug('fits2fits(in="%s", out="%s", fix_idr=%s)' %
+					  (infile, sanitized, str(fix_sdss)))
 		errstr = fits2fits(infile, sanitized, fix_idr=fix_sdss)
 		if errstr:
 			return (None, errstr)

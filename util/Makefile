@@ -377,6 +377,9 @@ reconfig:
 	-rm -f os-features-config.h makefile.os-features
 .PHONY: reconfig
 
+config: os-features-config.h makefile.os-features
+.PHONY: config
+
 ALL_OBJ += os-features.o
 ALL_TARGETS := os-features-test.o \
 	os-features-test-canonicalize \

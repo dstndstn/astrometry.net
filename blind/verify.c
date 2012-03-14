@@ -45,7 +45,8 @@
 // level
 #define DLOG_ODDS 10
 
-#define DLOG_ODDS_MIN log(1e6)
+//#define DLOG_ODDS_MIN log(1e6)
+#define DLOG_ODDS_MIN -HUGE_VAL
 
 #define dlog(lev, fmt, ...) data_log(DATALOG_MASK_VERIFY, lev, fmt, ##__VA_ARGS__)
 
@@ -76,11 +77,6 @@ typedef struct verify_s verify_t;
 
 static bool* verify_deduplicate_field_stars(verify_t* v, const verify_field_t* vf, double nsigmas);
 
-/*
- This gets called once for each field before verification begins.  We
- build a kdtree out of the field stars (in pixel space) which will be
- used during deduplication.
- */
 verify_field_t* verify_field_preprocess(const starxy_t* fieldxy) {
     verify_field_t* vf;
     int Nleaf = 5;
@@ -112,11 +108,6 @@ verify_field_t* verify_field_preprocess(const starxy_t* fieldxy) {
     return vf;
 }
 
-/*
- This gets called after all verification calls for a field are finished;
- we clean up the data structures we created in the verify_field_preprocess()
- function.
- */
 void verify_field_free(verify_field_t* vf) {
     if (!vf)
         return;
@@ -583,7 +574,7 @@ static double real_verify_star_lists(verify_t* v,
 			if (loggmax < logbg)
 				debug2("  This star is uninformative: peak %.1f, bg %.1f.\n", loggmax, logbg);
 
-			// value of the Gaussian
+			// value of the foreground Gaussian
 			logfg = loggmax - d2 / (2.0 * sig2);
 			
 			debug2("  NN: ref star %i, dist %.2f, sigmas: %.3f, logfg: %.1f (%.1f above distractor, %.1f above bg)\n",
@@ -601,10 +592,10 @@ static double real_verify_star_lists(verify_t* v,
 				double oldfg = rprobs[refi];
 				//debug2("Conflict: odds was %g, now %g.\n", oldfg, logfg);
 				// Conflict.  Compute probabilities of old vs new theta.
-				// keep the old one: the new star is a distractor
+				// if we keep the old one: the new star is a distractor
 				double keepfg = logd;
 
-				// switch to the new one: the new star is a match...
+				// if we switch to the new one: the new star is a match...
 				double switchfg = logfg;
 				// ... and the old one becomes a distractor...
 				int oldj = rmatches[refi];
@@ -644,6 +635,25 @@ static double real_verify_star_lists(verify_t* v,
 
 					// "switchfg" incorporates the cost of adjusting the previous probabilities.
 					logfg = switchfg;
+
+					// FIXME -- Do we need to repeat the distractor-adjustment
+					// loop above, updating all_logodds entries??
+					/*
+					 if (all_logodds) {
+					 muj = 0;
+					 for (j=0; j<oldj; j++)
+					 if (theta[j] >= 0)
+					 muj++;
+					 all_logodds[j] += (logd_at(distractors, muj, v->NR, logbg) - oldfg);
+					 for (j=oldj; j<i; j++)
+					 if (theta[j] < 0) {
+					 all_logodds[j] += (logd_at(distractors, muj, v->NR, logbg) -
+					 logd_at(distractors, muj+1, v->NR, logbg));
+					 } else {
+					 muj++;
+					 }
+					 }
+					 */
 
 				} else {
 					// old match was better: this match becomes a distractor.

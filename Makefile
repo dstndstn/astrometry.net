@@ -152,7 +152,12 @@ upgrade-indexes:
 
 reconfig:
 	-rm -f util/os-features-config.h util/makefile.os-features
+	$(MAKE) -C util config
 .PHONY: reconfig
+
+config: util/os-features-config.h util/makefile.os-features
+	$(MAKE) -C util config
+.PHONY: config
 
 RELEASE_VER := 0.38
 SP_RELEASE_VER := 0.3
