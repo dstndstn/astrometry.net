@@ -205,14 +205,7 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order, sip_t* verifysip) {
 					 &startsip, NULL, &theta, &odds,
 					 sp->set_crpix ? sp->crpix : NULL,
 					 &newodds, &besti, mo->testperm, startorder);
-	assert(mo->sip);
 	free(refradec);
-
-	// Yoink the TAN solution (?)
-	memcpy(&(mo->wcstan), &(mo->sip->wcstan), sizeof(tan_t));
-	// Plug in the new "theta" and "odds".
-	free(mo->theta);
-	free(mo->matchodds);
 
 	// FIXME -- update refxy?  Nobody uses it, right?
 	free(mo->refxy);
@@ -221,16 +214,24 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order, sip_t* verifysip) {
 	free(mo->testperm);
 	mo->testperm = NULL;
 
-	mo->theta = theta;
-	mo->matchodds = odds;
-	mo->logodds = newodds;
+	if (mo->sip) {
+		// Yoink the TAN solution (?)
+		memcpy(&(mo->wcstan), &(mo->sip->wcstan), sizeof(tan_t));
 
-	verify_count_hits(theta, besti, &nm, &nc, &nd);
-	mo->nmatch = nm;
-	mo->nconflict = nc;
-	mo->ndistractor = nd;
-	matchobj_compute_derived(mo);
+		// Plug in the new "theta" and "odds".
+		free(mo->theta);
+		free(mo->matchodds);
+		mo->theta = theta;
+		mo->matchodds = odds;
 
+		mo->logodds = newodds;
+
+		verify_count_hits(theta, besti, &nm, &nc, &nd);
+		mo->nmatch = nm;
+		mo->nconflict = nc;
+		mo->ndistractor = nd;
+		matchobj_compute_derived(mo);
+	}
 	free(xy);
 }
 

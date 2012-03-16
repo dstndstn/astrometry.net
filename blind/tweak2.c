@@ -480,6 +480,19 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			}
 			debug("\n");
 
+			if (Nmatch == 0) {
+				logverb("No matches -- aborting tweak attempt\n");
+				free(theta);
+				sip_free(sipout);
+				free(matchxy);
+				free(matchxyz);
+				free(weights);
+				free(fieldsigma2s);
+				free(indexpix);
+				free(indexin);
+				return NULL;
+			}
+
 			// Update the "quad center" to be the weighted average matched star posn.
 			qc[0] = qc[1] = 0.0;
 			totalweight = 0.0;

@@ -719,9 +719,44 @@ static double real_verify_star_lists(verify_t* v,
 			dlog(DLOG_ODDS, "%s%g", (i ? ", ":""), all_logodds[i]);
 		dlog(DLOG_ODDS, "]");
 		data_log_end_item(DATALOG_MASK_VERIFY, DLOG_ODDS);
+
 		data_log_start_item(DATALOG_MASK_VERIFY, DLOG_ODDS, "bestlogodds");
 		dlog(DLOG_ODDS, "%g", bestlogodds);
 		data_log_end_item(DATALOG_MASK_VERIFY, DLOG_ODDS);
+
+		double lnp = 0.0;
+		for (i=0; i<5; i++)
+			lnp += all_logodds[i];
+		if (lnp > 0) {
+			printf("lnp at step 5: %g\n", lnp);
+			printf("test perm:");
+			for (i=0; i<10; i++)
+				printf(" %i", v->testperm[i]);
+			printf("\n");
+			printf("theta:");
+			for (i=0; i<10; i++)
+				printf(" %i", theta[i]);
+			printf("\n");
+
+			data_log_start_item(DATALOG_MASK_VERIFY, DLOG_ODDS, "match");
+			dlog(DLOG_ODDS, "{ 'refxy': [");
+			for (i=0; i<v->NRall; i++)
+				dlog(DLOG_ODDS, "(%.3f,%.3f),", v->refxy[2*i+0], v->refxy[2*i+1]);
+			dlog(DLOG_ODDS, "], 'testxy': [");
+			for (i=0; i<v->NTall; i++)
+				dlog(DLOG_ODDS, "(%.3f,%.3f),", v->testxy[2*i+0], v->testxy[2*i+1]);
+			dlog(DLOG_ODDS, "], 'testperm': [");
+			for (i=0; i<v->NT; i++)
+				dlog(DLOG_ODDS, "%i,", v->testperm[i]);
+			dlog(DLOG_ODDS, "], 'refperm': [");
+			for (i=0; i<v->NR; i++)
+				dlog(DLOG_ODDS, "%i,", v->refperm[i]);
+			dlog(DLOG_ODDS, "], 'theta': [");
+			for (i=0; i<v->NT; i++)
+				dlog(DLOG_ODDS, "%i,", theta[i]);
+			dlog(DLOG_ODDS, "] }");
+			data_log_end_item(DATALOG_MASK_VERIFY, DLOG_ODDS);
+		}
 	}
 
 	free(rmatches);
@@ -1593,12 +1628,12 @@ double verify_star_lists_ror(double* refxys, int NR,
 							 int** p_testperm, int** p_refperm) {
 	double X;
 	verify_t v;
-	double* eodds;
-	int* etheta;
+	double* eodds = NULL;
+	int* etheta = NULL;
 	int ibailed, istopped;
-	int besti;
-	int* theta;
-	double* allodds;
+	int besti = -1;
+	int* theta = NULL;
+	double* allodds = NULL;
 	// RoR
 	double ror2;
 	int igood, ibad;
@@ -1690,31 +1725,38 @@ double verify_star_lists_ror(double* refxys, int NR,
 	v.NR = igood;
 	logverb("Ref stars in RoR: %i of %i\n", v.NR, v.NRall);
 
-	X = real_verify_star_lists(&v, effective_area, distractors,
-							   logodds_bail, logodds_stoplooking, &besti,
-							   &allodds, &theta,
-							   p_worstlogodds, &ibailed, &istopped);
-	fixup_theta(theta, allodds, ibailed, istopped, &v, besti, NR, NULL,
-				&etheta, &eodds);
-	free(theta);
-	free(allodds);
+	if (v.NR) {
+		X = real_verify_star_lists(&v, effective_area, distractors,
+								   logodds_bail, logodds_stoplooking, &besti,
+								   &allodds, &theta,
+								   p_worstlogodds, &ibailed, &istopped);
+		fixup_theta(theta, allodds, ibailed, istopped, &v, besti, NR, NULL,
+					&etheta, &eodds);
+		free(theta);
+		free(allodds);
 
-	if (p_all_logodds)
-		*p_all_logodds = eodds;
-	else
-		free(eodds);
-	if (p_theta)
-		*p_theta = etheta;
-	else
-		free(etheta);
+		if (p_all_logodds)
+			*p_all_logodds = eodds;
+		else
+			free(eodds);
+		if (p_theta)
+			*p_theta = etheta;
+		else
+			free(etheta);
 
-	if (p_besti)
-		*p_besti = besti;
+		if (p_besti)
+			*p_besti = besti;
+
+	} else {
+		X = -HUGE_VAL;
+	}
+
 
 	if (p_testperm)
 		*p_testperm = v.testperm;
 	else
 		free(v.testperm);
+
 
 	if (p_refperm)
 		*p_refperm = v.refperm;
