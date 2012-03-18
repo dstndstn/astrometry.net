@@ -34,7 +34,7 @@ X := $(shell $(CCTEST) && rm -f cc-out.tmp)
 ifeq ($(X),)
   DEP_OUT := -MF
 else
-  DEP_OUT := \>
+  DEP_OUT := >
 endif
 
 %.dep : %.c
