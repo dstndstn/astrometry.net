@@ -610,6 +610,10 @@ class Calibration(models.Model):
         r,d,radius = self.get_center_radecradius()
         return '%.3f deg' % radius
 
+    def format_size(self):
+        w,h,units = self.raw_tan.get_field_size()
+        return '%.3g x %.3g %s' % (w, h, units)
+
     def get_objs_in_field(self):
         def run_convert_command(cmd, deleteonfail=None):
             logmsg('Command: ' + cmd)
