@@ -1076,12 +1076,22 @@ sip_t* anwcs_get_sip(const anwcs_t* wcs) {
 
 anwcs_t* anwcs_create_allsky_hammer_aitoff(double refra, double refdec,
 										   int W, int H) {
+	return anwcs_create_hammer_aitoff(refra, refdec, 1.0, W, H);
+}
+
+
+anwcs_t* anwcs_create_hammer_aitoff(double refra, double refdec,
+									double zoomfactor,
+									int W, int H) {
 	qfits_header* hdr;
 	double xscale = -360. / (double)W;
 	double yscale = -180. / (double)H;
 	char* str = NULL;
 	int Nstr = 0;
 	anwcs_t* anwcs = NULL;
+
+	xscale *= zoomfactor;
+	yscale *= zoomfactor;
 
 	hdr = qfits_header_default();
 	qfits_header_add(hdr, "CTYPE1", "RA---AIT", "Hammer-Aitoff", NULL);
