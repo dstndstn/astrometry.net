@@ -58,8 +58,8 @@ class DR7(object):
 		from astrometry.util.sdss_das import sdss_das_get
 		outfn = self.getPath(filetype, run, camcol, field, band)
 		print 'Output filename:', outfn
-		sdss_das_get(filetype, outfn, run, camcol, field, band,
-					 curl=self.curl)
+		return sdss_das_get(filetype, outfn, run, camcol, field, band,
+							curl=self.curl)
 
 
 	def readTsField(self, run, camcol, field, rerun):
@@ -89,6 +89,7 @@ class DR7(object):
 		p = self._open(fn)
 		#print 'got', len(p), 'HDUs'
 		f.image = p[0].data
+		f.header = p[0].header
 		return f
 
 	def readFpObjc(self, run, camcol, field):

@@ -59,6 +59,8 @@ class AsTrans(SdssFile):
 	In DR7, asTrans structures can appear in asTrans files (for a
 	whole run) or in tsField files (in astrom/ or fastrom/).
 
+	http://www.sdss.org/dr7/dm/flatFiles/asTrans.html
+
 	In DR8, they are in asTrans files, or in the "frames".
 
 	http://data.sdss3.org/datamodel/files/PHOTO_REDUX/RERUN/RUN/astrom/asTrans.html
@@ -376,6 +378,8 @@ class FpC(SdssFile):
 		self.filetype = 'fpC'
 	def getImage(self):
 		return self.image
+	def getHeader(self):
+		return self.header
 
 class PsField(SdssFile):
 	def __init__(self, *args, **kwargs):
