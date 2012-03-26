@@ -118,7 +118,7 @@ printf("     - EXTNAME, EXTVER, or EXTLEVEL keyword in primary array\n");
 printf("     - BSCALE or TSCALn value = 0.\n");
 printf("     - BLANK OR TNULLn value exceeds the legal range\n");
 printf("     - TFORMn has 'rAw' format and r is not a multiple of w\n");
-printf("     - DATE = 'dd/mm/yy' and yy is less than 10 (Y2K problem??)\n");
+printf("     - DATE = 'dd/mm/yy' and yy is less than 10 (Y2K problem?)\n");
 printf("     - Index of any WCS keyword (CRPIXn, CRVALn, etc.) greater than\n");
 printf("       value of NAXIS, if the WCSAXES keyword is not present\n");
 printf("     - Duplicated keyword (except COMMENT, HISTORY, blank, etc.)\n");

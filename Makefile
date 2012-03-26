@@ -38,7 +38,7 @@ include $(COMMON)/makefile.cfitsio
 
 .PHONY: all
 all: README
-	$(MAKE) remake-qfits
+	$(MAKE) $(QFITS_LIB)
 	$(MAKE) -C gsl-an
 	$(MAKE) -C util
 	$(MAKE) -C libkd
@@ -252,6 +252,7 @@ realclean:
 	-$(MAKE) -C qfits-an clean
 	-rm __init__.pyc
 	$(MAKE) -C gsl-an clean
+	-rm gsl-an/config.h
 	$(MAKE) -C libkd realclean
 	$(MAKE) -C blind realclean
 

@@ -47,7 +47,7 @@ RANLIB := ranlib
 
 AWK := LC_ALL=C LC_NUMERIC=EN_US awk
 
-SED := sed
+SED ?= sed
 
 FLAGS_DEF := -g -Wall
 
@@ -56,6 +56,7 @@ TMPFILE := cc-out.tmp
 #CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - < /dev/null > /dev/null 2> /dev/null && echo $(ARG)
 # On MacOS, unrecognized gcc args don't cause it to return 1... look for error messages on stderr.
 CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - 2>&1 > /dev/null < /dev/null | grep "unrecognized\|invalid\|error:" > /dev/null || echo $(ARG)
+#CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - 2>&1 < /dev/null | tee "CCTEST-$(ARG)" | grep "unrecognized\|invalid\|error:" > /dev/null || echo $(ARG)
 # Test whether a particular string appears in the compiler's default environment;
 # set STR before running.
 DEFTEST = $(CC) -dM -E - < /dev/null 2> /dev/null | grep "$(STR)" > /dev/null

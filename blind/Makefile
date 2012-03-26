@@ -212,7 +212,7 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 		cp $$x $(INSTALL_DIR)/bin; \
 	done
 	mkdir -p $(INSTALL_DIR)/etc
-	sed "s+add_path /usr/local/astrometry/+add_path $(INSTALL_DIR)/+" < ../etc/backend.cfg-dist > $(INSTALL_DIR)/etc/backend.cfg
+	$(SED) "s+add_path /usr/local/astrometry/+add_path $(INSTALL_DIR)/+" < ../etc/backend.cfg-dist > $(INSTALL_DIR)/etc/backend.cfg
 	mkdir -p $(INSTALL_DIR)/include
 	@for x in $(INSTALL_H); do \
 		echo cp $$x $(INSTALL_DIR)/include; \
