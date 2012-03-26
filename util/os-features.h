@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2008, 2010 Dustin Lang.
+  Copyright 2008, 2010, 2012 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -18,7 +18,9 @@
 #ifndef OS_FEATURES_H
 #define OS_FEATURES_H
 
+#ifndef DONT_INCLUDE_OS_FEATURES_CONFIG_H
 #include "os-features-config.h"
+#endif
 
 // Features we use that aren't standard across all supported platforms
 

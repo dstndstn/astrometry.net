@@ -27,6 +27,7 @@
 #include "catalog.h"
 #include "fitsioutils.h"
 #include "ioutils.h"
+#include "starutil.h"
 #include "mathutil.h"
 #include "errors.h"
 

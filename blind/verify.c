@@ -727,7 +727,7 @@ static double real_verify_star_lists(verify_t* v,
 		double lnp = 0.0;
 		for (i=0; i<5; i++)
 			lnp += all_logodds[i];
-		if (lnp > 0) {
+		if (lnp > 4.) {
 			printf("lnp at step 5: %g\n", lnp);
 			printf("test perm:");
 			for (i=0; i<10; i++)
@@ -754,6 +754,9 @@ static double real_verify_star_lists(verify_t* v,
 			dlog(DLOG_ODDS, "], 'theta': [");
 			for (i=0; i<v->NT; i++)
 				dlog(DLOG_ODDS, "%i,", theta[i]);
+			dlog(DLOG_ODDS, "], 'logodds5': %g, 'all_logodds': [", lnp);
+			for (i=0; i<iend; i++)
+				dlog(DLOG_ODDS, "%g,", all_logodds[i]);
 			dlog(DLOG_ODDS, "] }");
 			data_log_end_item(DATALOG_MASK_VERIFY, DLOG_ODDS);
 		}

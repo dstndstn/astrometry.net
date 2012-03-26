@@ -620,6 +620,9 @@ ALL_OBJ += plotstuff-main.o
 PLOTSTUFF_SRCS = $(subst .o,.c,$(PLOTSTUFF))
 PLOTSTUFF_HDRS = $(subst .o,.h,$(PLOTSTUFF))
 
+py: pyplotstuff
+.PHONY: py
+
 pyplotstuff: _plotstuff_c.so 
 .PHONY: pyplotstuff
 

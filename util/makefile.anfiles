@@ -31,7 +31,3 @@ endif
 $(ANFILES_LIB): $(addprefix $(ANFILES_DIR)/,$(ANFILES_OBJ))
 	$(MAKE) -C $(ANFILES_DIR) libanfiles.a
 
-# REMAKE_ANFILES := remake-anfiles
-# .PHONY: $(REMAKE_ANFILES)
-# $(REMAKE_ANFILES):
-# 	cd $(ANFILES_DIR) && $(MAKE) libanfiles.a

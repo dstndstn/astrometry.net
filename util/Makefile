@@ -1,6 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
-# Copyright 2008, 2009, 2010, 2011 Dustin Lang.
+# Copyright 2008, 2009, 2010, 2011, 2012 Dustin Lang.
 #
 # The Astrometry.net suite is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License
@@ -115,7 +115,7 @@ ANUTILS_DEPS :=
 
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h \
-	an-thread.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph brightstars.h bt.h cairoutils.h \
+	an-thread.h anwcs.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph brightstars.h bt.h cairoutils.h \
 	codekd.h constellations.h dualtree.h dualtree_nearestneighbour.h \
 	dualtree_rangesearch.h errors.h fitsbin.h fitsfile.h fitsioutils.h \
 	fitstable.h os-features-config.h os-features.h gslutils.h hd.h \
@@ -210,6 +210,8 @@ _util.so: util_wrap.c setup-util.py \
 PYUTIL := _util.so util.py
 pyutil: $(PYUTIL)
 .PHONY: pyutil
+py: $(PYUTIL)
+.PHONY: py
 
 index_wrap.c: index.i index.h
 	swig -python -I. $<
@@ -308,7 +310,7 @@ os-features-config.h: os-features-test.c
 	@echo "---- Error messages in the next few commands are not necessarily bugs ----"
 	@echo "     (we're checking how things works on your computer)"
 	-rm -f os-features.log
-	-rm -f $@
+	-rm -f $@ $@.tmp
 	@echo
 	@echo "Testing canonicalize_file_name..."
 	@echo "Testing canonicalize_file_name..." >> os-features.log
@@ -316,7 +318,7 @@ os-features-config.h: os-features-test.c
 	  $(CFLAGS) -DTEST_CANONICALIZE_FILE_NAME $(LDFLAGS) $^  >> os-features.log && \
 	  ./os-features-test-canonicalize >> os-features.log && \
 	  echo "#define NEED_CANONICALIZE_FILE_NAME 0") \
-	|| echo "#define NEED_CANONICALIZE_FILE_NAME 1") >> $@
+	|| echo "#define NEED_CANONICALIZE_FILE_NAME 1") >> $@.tmp
 	@echo
 	@echo "Testing declare qsort_r..."
 	@echo "Testing declare qsort_r..." >> os-features.log
@@ -324,7 +326,7 @@ os-features-config.h: os-features-test.c
 	   $(CFLAGS) -DTEST_DECLARE_QSORT_R $(LDFLAGS) $^ >> os-features.log && \
 	   ./os-features-test-declare-qsort >> os-features.log && \
 	   echo "#define NEED_DECLARE_QSORT_R 1") \
-	|| echo "#define NEED_DECLARE_QSORT_R 0") >> $@
+	|| echo "#define NEED_DECLARE_QSORT_R 0") >> $@.tmp
 	@echo
 	@echo "Testing qsort_r..."
 	@echo "Testing qsort_r..." >> os-features.log
@@ -332,7 +334,7 @@ os-features-config.h: os-features-test.c
 	   $(CFLAGS) -DTEST_QSORT_R $(LDFLAGS) $^ >> os-features.log && \
 	   ./os-features-test-qsort >> os-features.log && \
 	   echo "#define NEED_QSORT_R 0") \
-	|| echo "#define NEED_QSORT_R 1") >> $@
+	|| echo "#define NEED_QSORT_R 1") >> $@.tmp
 	@echo
 	@echo "Testing swap qsort_r..."
 	@echo "Testing swap qsort_r..." >> os-features.log
@@ -340,7 +342,7 @@ os-features-config.h: os-features-test.c
 	   $(CFLAGS) -DTEST_SWAP_QSORT_R $(LDFLAGS) $^ >> os-features.log && \
 	   ./os-features-test-swap-qsort >> os-features.log && \
 	   echo "#define NEED_SWAP_QSORT_R 0") \
-	|| echo "#define NEED_SWAP_QSORT_R 1") >> $@
+	|| echo "#define NEED_SWAP_QSORT_R 1") >> $@.tmp
 	@echo
 	@echo "Testing netpbm..."
 	@echo "Testing netpbm..." >> os-features.log
@@ -348,9 +350,10 @@ os-features-config.h: os-features-test.c
 	   $(CFLAGS) -DTEST_NETPBM $(LDFLAGS) $(NETPBM_INC_ORIG) $(NETPBM_LIB_ORIG) $^ >> os-features.log && \
 	   ./os-features-test-netpbm >> os-features.log && \
 	   echo "#define HAVE_NETPBM 1") \
-	|| echo "#define HAVE_NETPBM 0") >> $@
+	|| echo "#define HAVE_NETPBM 0") >> $@.tmp
 	@echo "--------------- End of expected error messages -----------------"
 	@echo
+	mv $@.tmp $@
 
 makefile.os-features: os-features-test.c
 	@echo
@@ -369,9 +372,10 @@ makefile.os-features: os-features-test.c
 		echo "# Or to do it yourself, just uncomment this line:"; \
 		echo "# HAVE_NETPBM := yes")) \
 	; \
-	echo) > $@
+	echo) > $@.tmp
 	@echo "--------------- End of expected error messages -----------------"
 	@echo
+	mv $@.tmp $@
 
 reconfig:
 	-rm -f os-features-config.h makefile.os-features
@@ -520,11 +524,20 @@ clean:
 		$(PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN) \
 		cairoutils.dep makefile.os-features
 
+
+# Try to compensate for clang's lack of -MG to handle generated header
+# files by making everything depend explicitly on os-features-config.h.
+
+DEP_SRC := $(subst .o,.c,$(DEP_OBJ))
+$(DEP_SRC): os-features-config.h
+
 ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),realclean)
     ifneq ($(MAKECMDGOALS),alllclean)
       ifneq ($(MAKECMDGOALS),reconfig)
-include $(COMMON)/makefile.deps
+        ifneq ($(MAKECMDGOALS),makefile.os-features)
+          include $(COMMON)/makefile.deps
+        endif
       endif
     endif
   endif

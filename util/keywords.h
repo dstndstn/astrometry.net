@@ -33,18 +33,27 @@
 
 #if GNUC_PREREQ (3, 0)
 
-#define INCLUDE_INLINE_SOURCE 1
-//#define InlineDeclare  inline extern
-//#define InlineDefine   
+// Clang masquerades as gcc but isn't compatible.  Someone should file a
+// lawsuit.  Clang treats inlining differently; see
+//    http://clang.llvm.org/compatibility.html#inline
 
-//#define InlineDeclare  extern
-//#define InlineDefine   inline
+#if defined __clang__
+
+#define InlineDeclare
+#define InlineDefineH
+#define InlineDefineC
+
+#else
+
+// plain old gcc
+
+#define INCLUDE_INLINE_SOURCE 1
 
 #define InlineDeclare  extern inline
 #define InlineDefineH  extern inline
 #define InlineDefineC
 
-//# define Inline inline __attribute__ ((always_inline))
+#endif
 
 // See:
 //   http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
@@ -81,12 +90,21 @@
 
 // new in gcc-4.1:
 #if GNUC_PREREQ (4, 1)
+
+#if defined __clang__
+// clang complains very loudly about this being ignored...
+# define Flatten
+#else
 # define Flatten          __attribute__ (( flatten))
+#endif
+
 #else
 # define Flatten
 #endif
 
 #else
+
+// not gnuc >= 3.0
 
 # define Inline
 # define Pure

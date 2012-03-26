@@ -1,7 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
-  Copyright 2009, 2010 Dustin Lang.
+  Copyright 2009, 2010, 2012 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <sys/param.h>
+#include <assert.h>
 
 #include <cairo.h>
 #include <cairo-pdf.h>
@@ -141,28 +142,36 @@ int plotstuff_append_doubles(const char* str, dl* lst) {
 	return 0;
 }
 
-int plotstuff_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2) {
+int plotstuff_line_constant_ra(plot_args_t* pargs, double ra, double dec1, double dec2,
+							   bool startwithmove) {
 	double decstep;
 	double dec;
 	double s;
 	double pixscale;
 	bool lastok = FALSE;
+	if (!startwithmove)
+		lastok = TRUE;
 	assert(pargs->wcs);
 	pixscale = anwcs_pixel_scale(pargs->wcs);
 	assert(pixscale > 0.0);
 	decstep = arcsec2deg(pixscale * pargs->linestep);
 	logverb("plotstuff_line_constant_ra: RA=%g, Dec=[%g,%g], pixscale %g, decstep %g\n",
 			ra, dec1, dec2, anwcs_pixel_scale(pargs->wcs), decstep);
+	//printf("plotstuff_line_constant_ra: RA=%g, Dec=[%g,%g], pixscale %g, decstep %g\n",
+	//ra, dec1, dec2, anwcs_pixel_scale(pargs->wcs), decstep);
 	s = 1.0;
 	if (dec1 > dec2)
 		s = -1;
 	for (dec=dec1; (s*dec)<=(s*dec2); dec+=(decstep*s)) {
 		double x, y;
 		//logverb("  line_constant_ra: RA,Dec %g,%g\n", ra, dec);
+		//printf("  line_constant_ra: RA,Dec %g,%g\n", ra, dec);
 		if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y)) {
+			printf("  bad xy\n");
 			lastok = FALSE;
 			continue;
 		}
+		//printf("  x,y %.1f, %.1f\n", x, y);
 		if (lastok)
 			plotstuff_line_to(pargs, x, y);
 		else
@@ -192,6 +201,52 @@ int plotstuff_line_constant_dec(plot_args_t* pargs, double dec, double ra1, doub
 			plotstuff_move_to(pargs, x, y);
 		else
 			plotstuff_line_to(pargs, x, y);
+	}
+	return 0;
+}
+
+static double normra(double ra) {
+	while (ra < 0.)
+		ra += 360.;
+	while (ra > 360.)
+		ra -= 360.;
+	return ra;
+}
+
+int plotstuff_line_constant_dec2(plot_args_t* pargs, double dec, double ra1, double ra2, double rastep) {
+	double ra;
+	double f;
+	double s;
+	int n;
+	int done = 0;
+	ra1 = normra(ra1);
+	ra2 = normra(ra2);
+	assert(pargs->wcs);
+	for (ra=ra1, n=0; n<1000000; n++) {
+		double x, y;
+		double ranext;
+		ra = normra(ra);
+		//if (ra > 360.)
+		//	ra -= 360.;
+		//if (ra < 0.)
+		//x	ra += 360.;
+		//printf("RA %.1f\n", ra);
+
+		if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
+			continue;
+		if (n == 0)
+			plotstuff_move_to(pargs, x, y);
+		else
+			plotstuff_line_to(pargs, x, y);
+		if (done)
+			break;
+		ranext = ra + rastep;
+		// will the next step take us past ra2?
+		if (MIN(ra, ranext) < ra2 && ra2 < MAX(ra, ranext)) {
+			ra = ra2;
+			done = 1;
+		} else
+			ra = ranext;
 	}
 	return 0;
 }

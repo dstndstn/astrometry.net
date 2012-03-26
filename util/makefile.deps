@@ -20,12 +20,19 @@ DEPS := $(subst .o,.dep,$(DEP_OBJ))
 deps: $(DEP_PREREQS) $(DEPS)
 	cat $(DEPS) > deps
 
-DEP_ARGS := $(CFLAGS) -MM -MG
+DEP_ARGS := $(CFLAGS) -MM
 
-CCTEST = $(CC) -x c -E $(ARG) - < /dev/null > /dev/null 2> /dev/null && echo $(ARG)
+CCTEST = $(CC) -x c -E $(ARG_PRE) $(ARG) - < /dev/null > /dev/null 2> /dev/null && echo $(ARG)
+
+ARG_PRE :=
 
 # -MP is new in gcc-3.0
 ARG := -MP
+DEP_ARGS += $(shell $(CCTEST))
+
+# -MG is not supported in clang 1.1
+ARG_PRE := -MM
+ARG := -MG
 DEP_ARGS += $(shell $(CCTEST))
 
 # -MF is new in gcc-3.0

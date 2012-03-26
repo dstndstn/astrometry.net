@@ -92,10 +92,12 @@ class Plotstuff(object):
 		else:
 			self.pargs.__setattr__(name, val)
 
-	def line_constant_ra(self, ra, declo, dechi):
-		return plotstuff_line_constant_ra(self.pargs, ra, declo, dechi)
+	def line_constant_ra(self, ra, declo, dechi, startwithmove=True):
+		return plotstuff_line_constant_ra(self.pargs, ra, declo, dechi, startwithmove)
 	def line_constant_dec(self, dec, ralo, rahi):
 		return plotstuff_line_constant_dec(self.pargs, dec, ralo, rahi)
+	def line_constant_dec2(self, dec, ralo, rahi, rastep):
+		return plotstuff_line_constant_dec2(self.pargs, dec, ralo, rahi, rastep)
 	def fill(self):
 		return plotstuff_fill(self.pargs)
 	def stroke(self):

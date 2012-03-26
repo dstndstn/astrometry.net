@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2010 Dustin Lang.
+  Copyright 2010, 2012 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <sys/param.h>
+#include <assert.h>
 
 #ifdef WCSLIB_EXISTS
 #include <wcshdr.h>
@@ -1090,8 +1091,8 @@ anwcs_t* anwcs_create_hammer_aitoff(double refra, double refdec,
 	int Nstr = 0;
 	anwcs_t* anwcs = NULL;
 
-	xscale *= zoomfactor;
-	yscale *= zoomfactor;
+	xscale /= zoomfactor;
+	yscale /= zoomfactor;
 
 	hdr = qfits_header_default();
 	qfits_header_add(hdr, "CTYPE1", "RA---AIT", "Hammer-Aitoff", NULL);

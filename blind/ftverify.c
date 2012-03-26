@@ -97,12 +97,6 @@ HISTORY
 
 long totalerr, totalwrn;
 
-#ifdef STANDALONE
-#include "fitsverify.c"
-#else
-#include "headas_main.c"
-#endif
-
 /* Function Prototypes */
 int ftverify (void);
 int ftverify_getpar (char *infile, char *outfile,int * prehead,
@@ -111,6 +105,12 @@ int ftverify_getpar (char *infile, char *outfile,int * prehead,
 int ftverify_work (char *infile, char *outfile,int prehead,
     int prstat, char* errreport, int testdata, int testcsum,
     int testfill, int heasarc_conv);
+
+#ifdef STANDALONE
+#include "fitsverify.c"
+#else
+#include "headas_main.c"
+#endif
 
 int err_report=0;
 int prhead=0;

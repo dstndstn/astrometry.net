@@ -28,9 +28,3 @@ ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 $(ANUTILS_LIB): $(addprefix $(ANUTILS_DIR)/,$(ANUTILS_OBJ))
 	$(MAKE) -C $(ANUTILS_DIR) libanutils.a
 
-#	cd $(ANUTILS_DIR) && $(MAKE) libanutils.a
-
-# REMAKE_ANUTILS := $(ANUTILS_DIR)/remake-anutils
-# .PHONY: $(REMAKE_ANUTILS)
-# $(REMAKE_ANUTILS):
-# 	cd $(ANUTILS_DIR) && $(MAKE) libanutils.a

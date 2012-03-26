@@ -1,7 +1,7 @@
 /*
  This file is part of the Astrometry.net suite.
  Copyright 2007-2009 Dustin Lang, Keir Mierle and Sam Roweis.
- Copyright 2010, 2011 Dustin Lang.
+ Copyright 2010, 2011, 2012 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -34,6 +34,7 @@
 #include <libgen.h>
 #include <errors.h>
 #include <getopt.h>
+#include <assert.h>
 
 #include "boilerplate.h"
 #include "an-bool.h"

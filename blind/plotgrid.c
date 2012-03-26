@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2009, 2010, 2011 Dustin Lang.
+  Copyright 2009, 2010, 2011, 2012 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -18,6 +18,7 @@
 #include <string.h>
 #include <math.h>
 #include <sys/param.h>
+#include <assert.h>
 
 #include "plotgrid.h"
 #include "sip-utils.h"
@@ -335,7 +336,7 @@ int plot_grid_plot(const char* command,
 		for (ra = args->rastep * floor(ramin / args->rastep);
 			 ra <= args->rastep * ceil(ramax / args->rastep);
 			 ra += args->rastep) {
-			plotstuff_line_constant_ra(pargs, ra, decmin, decmax);
+			plotstuff_line_constant_ra(pargs, ra, decmin, decmax, TRUE);
 			cairo_stroke(pargs->cairo);
 		}
 	}

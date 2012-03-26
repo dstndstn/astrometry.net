@@ -58,8 +58,10 @@ int main() {
 // Include .c rather than .h because we test with:
 //     gcc -o (exec) os-features-test.c
 // and if NEED_QSORT_R, os-features.c includes qsort_reentrant.c
-//#include "os-features.h"
+#include "os-features-config.h.tmp"
+#define DONT_INCLUDE_OS_FEATURES_CONFIG_H 1
 #include "os-features.c"
+#undef DONT_INCLUDE_OS_FEATURES_CONFIG_H
 // Test whether qsort_r works unswapped. (ie, qsort_r matches the definition of
 // QSORT_R defined in the os-features.h documentation.)
 static int sortfunc(void* thunk, const void* v1, const void* v2) {
