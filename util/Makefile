@@ -164,6 +164,9 @@ ALL_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 SVN_C_DEPS := $(subst svn.o,,$(ANUTILS_OBJ))
 SVN_C_DEPS := $(subst .o,.c,$(SVN_C_DEPS)) $(subst .o,.h,$(SVN_C_DEPS))
 
+DEP_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
+DEP_PREREQS :=
+
 $(ANUTILS_LIB): $(ANUTILS_OBJ) $(ANUTILS_DEPS) 
 	-rm -f $@
 	$(AR) rc $@ $(ANUTILS_OBJ)
@@ -181,6 +184,8 @@ ngc2000.o: ngc2000.c ngc2000names.c ngc2000entries.c
 
 ngc2000names.c: parse-ngc2000names.awk $(DATA)/ngc2000names.dat
 	$(AWK) -f parse-ngc2000names.awk < $(DATA)/ngc2000names.dat  > $@
+
+DEP_PREREQS += ngc2000names.c ngc2000entries.c
 
 ngc2000entries.py: parse-ngc2000-py.awk $(DATA)/ngc2000.dat
 	$(AWK) -f parse-ngc2000-py.awk < $(DATA)/ngc2000.dat  > $@
@@ -415,9 +420,8 @@ ALL_TARGETS := os-features-test.o \
 
 
 
-DEP_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 ifndef NO_QFITS
-DEP_PREREQS := $(QFITS_LIB)
+DEP_PREREQS += $(QFITS_LIB)
 endif
 
 PROG_MAIN_OBJS := $(addsuffix .o,$(PROGS))
