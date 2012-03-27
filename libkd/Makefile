@@ -1,5 +1,6 @@
 #  This file is part of libkd.
 #  Copyright 2006-2008 Dustin Lang and Keir Mierle.
+#  Copyright 2012 Dustin Lang.
 #
 #  libkd is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -70,10 +71,7 @@ DEP_OBJ := $(KD) $(KD_FITS) $(INTERNALS) $(INTERNALS_NOIO)
 %_noio.o: %.c
 	$(CC) -o $@ -c $< $(CFLAGS) -DKDTREE_NO_FITS
 
-all: $(ANUTILS_LIB) $(LIBKD) checktree fix-bb
-
-#$(REMAKE_ANUTILS) 
-#spherematch_c.so
+all: $(LIBKD) checktree fix-bb
 
 $(LIBKD): $(KD) $(KD_FITS) $(INTERNALS)
 	-rm -f $@
@@ -90,12 +88,18 @@ pyspherematch: spherematch_c.so
 
 PYSPHEREMATCH_OBJ := pyspherematch.o
 
-#spherematch_c.so: pyspherematch.c setup.py $(LIBKD_NOIO) $(ANUTILS_LIB)
 spherematch_c.so: pyspherematch.c setup.py $(LIBKD) $(QFITS_LIB) $(ANUTILS_LIB)
 	python setup.py build --force --build-base build --build-platlib build/lib
 	cp build/lib/spherematch_c.so $@
 
-DEP_OBJ += $(PYSPHEREMATCH_OBJ)
+# pyspherematch.c includes Python.h
+ifeq ($(MAKECMDGOALS),spherematch_c.so)
+  DEP_OBJ += $(PYSPHEREMATCH_OBJ)
+endif
+ifeq ($(MAKECMDGOALS),pyspherematch)
+  DEP_OBJ += $(PYSPHEREMATCH_OBJ)
+endif
+
 
 checktree: checktree.o $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 

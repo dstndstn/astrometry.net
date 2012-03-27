@@ -1,5 +1,5 @@
 # This file is part of the Astrometry.net suite.
-# Copyright 2007 Dustin Lang.
+# Copyright 2007, 2012 Dustin Lang.
 #
 # The Astrometry.net suite is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License
@@ -18,14 +18,14 @@ BASEDIR := ..
 COMMON := $(BASEDIR)/util
 
 GSL_LIB := libgsl-an.a
-all: config.h lib
+all: $(GSL_LIB)
 .PHONY: all
 
 # Add a level of indirection so that when building GSL_LIB, the "make" variable
 # MAKECMDGOALS = $(GSL_LIB); we use that to import the dependency files.
-lib:
-	$(MAKE) $(GSL_LIB)
+lib: $(GSL_LIB)
 .PHONY: lib
+#	$(MAKE) $(GSL_LIB)
 
 include $(COMMON)/makefile.common
 
@@ -186,6 +186,8 @@ config.h: configure config.h.in
 	./configure --enable-shared=no --prefix=`pwd`/stage
 	touch $@
 
+config.h.in: ;
+
 DEP_OBJ := $(GSL_OBJS)
 # Don't try to include "*.dep" before config.h is built.
 ifeq ($(MAKECMDGOALS),$(GSL_LIB))
@@ -199,3 +201,9 @@ clean:
 	qr-demo.o chol-demo.o svd-demo.o \
 	qr-demo   chol-demo   svd-demo
 
+
+# no default rules
+.SUFFIXES :=
+
+# These are files
+configure: ;

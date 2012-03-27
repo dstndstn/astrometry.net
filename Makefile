@@ -31,12 +31,24 @@ all:
 BASEDIR := .
 COMMON := $(BASEDIR)/util
 
-.PHONY: Makefile $(COMMON)/makefile.qfits
+### .PHONY: Makefile $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.cfitsio
 
 .PHONY: all
+# all: README gsl util libkd blind
+# .PHONY: qfits gsl util libkd blind
+# qfits: $(QFITS_LIB)
+# gsl:
+# 	$(MAKE) -C gsl-an
+# util: gsl
+# 	$(MAKE) -C util
+# libkd: util qfits
+# 	$(MAKE) -C libkd
+# blind: util qfits gsl libkd
+# 	$(MAKE) -C blind
+
 all: README
 	$(MAKE) $(QFITS_LIB)
 	$(MAKE) -C gsl-an

@@ -19,9 +19,5 @@ GSL_INC := -I$(GSL_DIR)
 GSL_LIB := $(GSL_DIR)/libgsl-an.a
 
 $(GSL_LIB):
-	cd $(GSL_DIR) && $(MAKE)
+	$(MAKE) -C $(GSL_DIR)
 
-REMAKE_GSL := remake-gsl
-.PHONY: $(REMAKE_GSL)
-$(REMAKE_GSL):
-	cd $(GSL_DIR) && $(MAKE)

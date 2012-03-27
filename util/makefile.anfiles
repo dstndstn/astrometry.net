@@ -18,16 +18,13 @@ ANFILES_DIR := $(BASEDIR)/util
 ANFILES_INC := -I$(ANFILES_DIR)
 ANFILES_LIB := $(ANFILES_DIR)/libanfiles.a
 
-# Things that it depends on but that aren't linked in
-ANFILES_DEPS :=
-ANFILES_OBJ := 
-ifndef NO_QFITS
-ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
-	starxy.o an-catalog.o qidxfile.o quadfile.o scamp-catalog.o \
-	hd.o
-ANFILES_DEPS += $(QFITS_LIB)
-endif
+## When included from, eg blind/, we want the recipe to be a sub-make;
+## when included from util/, we want to use the real recipe.
+
+INCLUDE_ANFILES_LIB_RULE ?= yes
+ifeq ($(INCLUDE_ANFILES_LIB_RULE),yes)
 
 $(ANFILES_LIB): $(addprefix $(ANFILES_DIR)/,$(ANFILES_OBJ))
 	$(MAKE) -C $(ANFILES_DIR) libanfiles.a
 
+endif

@@ -49,7 +49,7 @@ else
 endif
 
 %.dep : %.c
-	$(CC) $(DEP_ARGS) $< $(DEP_OUT) $@
+	$(CC) $(DEP_ARGS) $< $(DEP_OUT) $@.tmp && $(MV) $@.tmp $@
 
 ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),realclean)

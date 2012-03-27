@@ -37,8 +37,33 @@ $(DATA)/%.dat: ;
 #   export NO_QFITS
 
 include $(COMMON)/makefile.common
-include $(COMMON)/makefile.utils
-include $(COMMON)/makefile.anfiles
+
+#INCLUDE_ANUTILS_LIB_RULE := no
+#include $(COMMON)/makefile.utils
+
+ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
+	permutedsort.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
+	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
+	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
+	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
+	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o
+ANUTILS_LIB := libanutils.a
+
+#INCLUDE_ANFILES_LIB_RULE := no
+#include $(COMMON)/makefile.anfiles
+
+ANFILES_LIB := libanfiles.a
+# Things that it depends on but that aren't linked in
+ANFILES_DEPS :=
+ANFILES_OBJ := 
+
+ifndef NO_QFITS
+ANFILES_OBJ += multiindex.o index.o codekd.o starkd.o rdlist.o xylist.o \
+	starxy.o an-catalog.o qidxfile.o quadfile.o scamp-catalog.o \
+	hd.o
+ANFILES_DEPS += $(QFITS_LIB)
+endif
+
 ifndef NO_QFITS
 include $(COMMON)/makefile.qfits
 endif
@@ -98,8 +123,9 @@ CFLAGS += $(LIBKD_INC)
 endif
 CFLAGS += -I.
 
-ANFILES_LIB := libanfiles.a
-ANUTILS_LIB := libanutils.a
+# These should already be defined in makefile.utils, makefiles.anfiles
+#ANFILES_LIB := libanfiles.a
+#ANUTILS_LIB := libanutils.a
 
 PYTHON_LIBS := _sip.so _healpix.so
 
@@ -144,6 +170,16 @@ ALL_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 SVN_C_DEPS := $(subst svn.o,,$(ANUTILS_OBJ))
 SVN_C_DEPS := $(subst .o,.c,$(SVN_C_DEPS)) $(subst .o,.h,$(SVN_C_DEPS))
 
+$(ANUTILS_LIB): $(ANUTILS_OBJ) $(ANUTILS_DEPS) 
+	-rm -f $@
+	$(AR) rc $@ $(ANUTILS_OBJ)
+	$(RANLIB) $@
+
+$(ANFILES_LIB): $(ANFILES_OBJ) $(ANFILES_DEPS)
+	-rm -f $@
+	$(AR) rc $@ $(ANFILES_OBJ)
+	$(RANLIB) $@
+
 svn.c: $(SVN_C_DEPS)
 	echo "//" >> svn.c
 
@@ -177,16 +213,6 @@ tycho2tofits: tycho2tofits.o \
 ALL_OBJ += tycho2tofits.o
 
 tycho2tostellarium: tycho2tostellarium.o $(ANUTILS_LIB) $(QFITS_LIB)
-
-$(ANUTILS_LIB): $(ANUTILS_OBJ) $(ANUTILS_DEPS) 
-	-rm -f $@
-	$(AR) rc $@ $(ANUTILS_OBJ)
-	$(RANLIB) $@
-
-$(ANFILES_LIB): $(ANFILES_OBJ) $(ANFILES_DEPS)
-	-rm -f $@
-	$(AR) rc $@ $(ANFILES_OBJ)
-	$(RANLIB) $@
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
@@ -528,8 +554,13 @@ clean:
 # Try to compensate for clang's lack of -MG to handle generated header
 # files by making everything depend explicitly on os-features-config.h.
 
+# the bar "|" indicates an "order-only" dependency: must be built
+# before, but doesn't imply a rebuild is necessary.
+# Should this perhaps go on the .dep files rather than the .c?
 DEP_SRC := $(subst .o,.c,$(DEP_OBJ))
-$(DEP_SRC): os-features-config.h
+$(DEP_SRC): | os-features-config.h
+os-features.h: | os-features-config.h
+$(DEP_OBJ): os-features-config.h
 
 ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),realclean)
