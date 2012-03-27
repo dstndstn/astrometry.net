@@ -117,10 +117,6 @@ CFLAGS += $(LIBKD_INC)
 endif
 CFLAGS += -I.
 
-# These should already be defined in makefile.utils, makefiles.anfiles
-#ANFILES_LIB := libanfiles.a
-#ANUTILS_LIB := libanutils.a
-
 PYTHON_LIBS := _sip.so _healpix.so
 
 PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian smooth-image search-index hpsplit
