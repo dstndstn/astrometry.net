@@ -185,7 +185,7 @@ ngc2000.o: ngc2000.c ngc2000names.c ngc2000entries.c
 ngc2000names.c: parse-ngc2000names.awk $(DATA)/ngc2000names.dat
 	$(AWK) -f parse-ngc2000names.awk < $(DATA)/ngc2000names.dat  > $@
 
-DEP_PREREQS += ngc2000names.c ngc2000entries.c
+DEP_PREREQS += ngc2000names.c ngc2000entries.c ngcic-accurate-entries.c
 
 ngc2000entries.py: parse-ngc2000-py.awk $(DATA)/ngc2000.dat
 	$(AWK) -f parse-ngc2000-py.awk < $(DATA)/ngc2000.dat  > $@
