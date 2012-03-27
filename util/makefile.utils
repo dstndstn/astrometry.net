@@ -18,10 +18,6 @@ ANUTILS_DIR := $(BASEDIR)/util
 ANUTILS_INC := -I$(ANUTILS_DIR)
 ANUTILS_LIB := $(ANUTILS_DIR)/libanutils.a
 
-INCLUDE_ANUTILS_LIB_RULE ?= yes
-ifeq ($(INCLUDE_ANUTILS_LIB_RULE),yes)
-
 $(ANUTILS_LIB): #$(addprefix $(ANUTILS_DIR)/,$(ANUTILS_OBJ))
 	$(MAKE) -C $(ANUTILS_DIR) libanutils.a
 
-endif

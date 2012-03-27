@@ -38,19 +38,13 @@ $(DATA)/%.dat: ;
 
 include $(COMMON)/makefile.common
 
-#INCLUDE_ANUTILS_LIB_RULE := no
-#include $(COMMON)/makefile.utils
-
+ANUTILS_LIB := libanutils.a
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	permutedsort.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
 	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
 	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
 	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
 	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o
-ANUTILS_LIB := libanutils.a
-
-#INCLUDE_ANFILES_LIB_RULE := no
-#include $(COMMON)/makefile.anfiles
 
 ANFILES_LIB := libanfiles.a
 # Things that it depends on but that aren't linked in
