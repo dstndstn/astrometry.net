@@ -31,30 +31,28 @@ all:
 BASEDIR := .
 COMMON := $(BASEDIR)/util
 
-### .PHONY: Makefile $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.common
 include $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.cfitsio
 
 .PHONY: all
-# all: README gsl util libkd blind
-# .PHONY: qfits gsl util libkd blind
-# qfits: $(QFITS_LIB)
-# gsl:
-# 	$(MAKE) -C gsl-an
-# util: gsl
-# 	$(MAKE) -C util
-# libkd: util qfits
-# 	$(MAKE) -C libkd
-# blind: util qfits gsl libkd
-# 	$(MAKE) -C blind
+all: README subdirs
 
-all: README
-	$(MAKE) $(QFITS_LIB)
-	$(MAKE) -C gsl-an
+subdirs: thirdparty
 	$(MAKE) -C util
 	$(MAKE) -C libkd
 	$(MAKE) -C blind
+
+thirdparty: qfits-an gsl-an cfitsio
+
+qfits-an:
+	$(MAKE) $(QFITS_LIB)
+gsl-an:
+	$(MAKE) -C gsl-an
+cfitsio:
+	$(MAKE) $(CFITS_LIB)
+
+.PHONY: subdirs thirdparty qfits-an gsl-an cfitsio
 
 # Targets that require extra libraries
 extra:
