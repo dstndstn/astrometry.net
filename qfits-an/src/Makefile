@@ -75,7 +75,7 @@ $(LIB): $(OBJS)
 	$(RANLIB) $@
 
 clean:
-	-rm $(LIB) $(OBJS) ../lib/$(LIB) ../include/*
+	-rm -f $(LIB) $(OBJS) $(STAGED_LIB) $(STAGED_HEADERS)
 
 #.SUFFIXES:
 

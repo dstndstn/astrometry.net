@@ -122,7 +122,7 @@ PYTHON_LIBS := _sip.so _healpix.so
 PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian smooth-image search-index hpsplit
 # tycho2tostellarium build-hd-tree
 
-all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS)
+all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS) ngc2000.py
 
 # Things that it depends on but that aren't linked in
 ANUTILS_DEPS :=

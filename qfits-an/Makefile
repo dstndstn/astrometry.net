@@ -11,8 +11,12 @@ install:
 	$(MAKE) -C src install
 .PHONY: install
 
+# src/Makefile's clean also cleans the stage directories
 clean:
 	$(MAKE) -C src clean
+
+
+
 .PHONY: clean
 
 
