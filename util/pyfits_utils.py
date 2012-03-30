@@ -2,6 +2,35 @@ import pyfits
 import numpy
 from numpy import array, isscalar, ndarray
 
+def merge_tables(TT):
+	assert(len(TT) > 0)
+	cols = set(TT[0].get_columns())
+	for T in TT[1:]:
+		# They must have the same set of columns
+		assert(len(cols.symmetric_difference(T.get_columns())) == 0)
+	N = sum([len(T) for T in TT])
+	cols = TT[0].get_columns()
+	td = tabledata()
+	for col in cols:
+		v0 = TT[0].getcolumn(col)
+		if isinstance(v0, numpy.ndarray):
+			V = numpy.concatenate([T.getcolumn(col) for T in TT])
+		elif type(v0) is list:
+			V = v0
+			for T in TT[1:]:
+				V.extend(T.getcolumn(col))
+		elif numpy.isscalar(v0):
+			print 'merge_tables: copying scalar from first table:', col, '=', v0
+			V = v0
+		else:
+			raise RuntimeError("pyfits_utils.merge_tables: Don't know how to concatenate type: %s" % str(type(v0)))
+			
+		td.set(col, V)
+	#td._columns = cols
+	assert(td._length == N)
+	return td
+	
+
 def add_nonstructural_headers(fromhdr, tohdr):
 	for card in fromhdr.ascardlist():
 		if ((card.key in ['SIMPLE','XTENSION', 'BITPIX', 'END', 'PCOUNT', 'GCOUNT',
@@ -111,7 +140,7 @@ class tabledata(object):
 			if hasattr(v, 'dtype'):
 				print 'dtype', v.dtype,
 			print
-			
+
 	def __setattr__(self, name, val):
 		object.__setattr__(self, name, val)
 		#print 'set', name, 'to', val
