@@ -45,8 +45,8 @@
 // level
 #define DLOG_ODDS 10
 
-//#define DLOG_ODDS_MIN log(1e6)
-#define DLOG_ODDS_MIN -HUGE_VAL
+#define DLOG_ODDS_MIN log(1e6)
+//#define DLOG_ODDS_MIN -HUGE_VAL
 
 #define dlog(lev, fmt, ...) data_log(DATALOG_MASK_VERIFY, lev, fmt, ##__VA_ARGS__)
 
@@ -724,7 +724,8 @@ static double real_verify_star_lists(verify_t* v,
 		dlog(DLOG_ODDS, "%g", bestlogodds);
 		data_log_end_item(DATALOG_MASK_VERIFY, DLOG_ODDS);
 
-		double lnp = 0.0;
+		/*
+ 		double lnp = 0.0;
 		for (i=0; i<5; i++)
 			lnp += all_logodds[i];
 		if (lnp > 4.) {
@@ -760,6 +761,7 @@ static double real_verify_star_lists(verify_t* v,
 			dlog(DLOG_ODDS, "] }");
 			data_log_end_item(DATALOG_MASK_VERIFY, DLOG_ODDS);
 		}
+		 */
 	}
 
 	free(rmatches);
