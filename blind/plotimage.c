@@ -402,8 +402,10 @@ unsigned char* plot_image_scale_float(plotimage_t* args, const float* fimg) {
 			double v;
 			double pval = fimg[j*args->W + i];
 			k = 4*(j*args->W + i);
-			if ((isnan(args->image_null) && isnan(pval)) ||
-				(args->image_null == pval)) {
+			if ((args->image_null == pval) ||
+				(isnan(args->image_null) && isnan(pval)) ||
+				((args->image_valid_low != 0.0) && (args->image_valid_high != 0.0) &&
+				 ((pval < args->image_valid_low) || (pval > args->image_valid_high)))) {
 				img[k+0] = 0;
 				img[k+1] = 0;
 				img[k+2] = 0;

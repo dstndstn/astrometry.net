@@ -57,9 +57,11 @@ void matchobj_print(MatchObj* mo, int loglvl) {
 	xyzarr2radecdeg(mo->center, &ra, &dec);
 	loglevel(loglvl, "  RA,Dec = (%g,%g), pixel scale %g arcsec/pix.\n",
 			 ra, dec, mo->scale);
-	loglevel(loglvl, "  Hit/miss: ");
-	matchobj_log_hit_miss(mo->theta, mo->testperm, mo->nbest, mo->nfield, loglvl);
-	loglevel(loglvl, "\n");
+	if (mo->theta && mo->testperm) {
+		loglevel(loglvl, "  Hit/miss: ");
+		matchobj_log_hit_miss(mo->theta, mo->testperm, mo->nbest, mo->nfield, loglvl);
+		loglevel(loglvl, "\n");
+	}
 }
 
 void matchobj_compute_derived(MatchObj* mo) {

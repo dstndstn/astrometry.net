@@ -11,7 +11,11 @@ def merge_tables(TT):
 	N = sum([len(T) for T in TT])
 	cols = TT[0].get_columns()
 	td = tabledata()
+	print 'merge_tables: columns =', cols
 	for col in cols:
+		print 'merging column', col
+		if col.startswith('_'):
+			continue
 		v0 = TT[0].getcolumn(col)
 		if isinstance(v0, numpy.ndarray):
 			V = numpy.concatenate([T.getcolumn(col) for T in TT])
@@ -251,7 +255,7 @@ class tabledata(object):
 				continue
 			if numpy.isscalar(val):
 				continue
-			print 'cutting', name
+			#print 'cutting', name
 			C = cut_array(val, I, name)
 			self.set(name, C)
 			self._length = len(C)

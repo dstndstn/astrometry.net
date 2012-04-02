@@ -1306,6 +1306,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 	debug2("%i reference stars in the bounding circle\n", v->NRall);
 	if (!refxyz) {
 		// no stars in range.
+		logverb("No reference stars in the bounding circle\n");
 		goto bailout;
 	}
 	// Find index stars within the rectangular field.
@@ -1377,8 +1378,10 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		debug2("After removing stars in the quad: %i reference stars.\n", v->NR);
 	}
 	
-	if (!v->NR)
+	if (!v->NR) {
+		logverb("After removing quad stars: no reference stars\n");
 		goto bailout;
+	}
 
 	///// FIXME -- we could compute the RoR and search for ref stars
 	// based on the quad center and RoR rather than the image center
@@ -1398,8 +1401,10 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		effA = fieldW * fieldH;
 		debug2("Number of test stars: %i\n", v->NT);
 	}
-	if (!v->NR || !v->NT)
+	if (!v->NR || !v->NT) {
+		logverb("After applying RoR, NR=%i, NT=%i\n", v->NR, v->NT);
 		goto bailout;
+	}
 
 	worst = -HUGE_VAL;
 	K = real_verify_star_lists(v, effA, distractors,

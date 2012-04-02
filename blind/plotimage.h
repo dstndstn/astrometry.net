@@ -33,6 +33,12 @@ struct plotimage_args {
 	double image_high;
 	// image value that will be made transparent.
 	double image_null;
+
+	// image values outside this range will be made transparent
+	// (if non-zero)
+	double image_valid_low;
+	double image_valid_high;
+
 	// FITS extension
 	int fitsext;
 	// FITS image plane
