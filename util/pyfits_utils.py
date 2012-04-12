@@ -66,6 +66,10 @@ def cut_array(val, I, name=None):
 	if type(val) in [numpy.ndarray, numpy.core.defchararray.chararray]:
 		#print 'slicing numpy array "%s": val shape' % name, val.shape
 		#print 'slice shape:', I.shape
+		# You can't slice a two-dimensional, length-zero, numpy array,
+		# with an empty array.
+		if len(val) == 0:
+			return val
 		return val[I]
 
 	if type(val) in [list,tuple] and type(I) in [int, numpy.int64]:

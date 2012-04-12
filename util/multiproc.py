@@ -12,6 +12,9 @@ class FakeAsyncResult(object):
 	def successful(self):
 		return True
 
+#class PostprocessedAsyncResult(object):
+#	pass
+
 class funcwrapper(object):
 	def __init__(self, func):
 		self.func = func
