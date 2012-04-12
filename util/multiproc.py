@@ -1,5 +1,33 @@
 import multiprocessing
 
+class FakeAsyncResult(object):
+	def __init__(self, X):
+		self.X = X
+	def wait(self, *a):
+		pass
+	def get(self, *a):
+		return self.X
+	def ready(self):
+		return True
+	def successful(self):
+		return True
+
+class funcwrapper(object):
+	def __init__(self, func):
+		self.func = func
+	def __call__(self, *X):
+		#print 'Trying to call', self.func
+		#print 'with args', X
+		try:
+			return self.func(*X)
+		except:
+			import traceback
+			print 'Exception while calling your function:'
+			print '	 params:', X
+			print '	 exception:'
+			traceback.print_exc()
+			raise
+
 class multiproc(object):
 	def __init__(self, nthreads=1, init=None, initargs=None,
 				 map_chunksize=1):
@@ -21,6 +49,13 @@ class multiproc(object):
 		if self.pool:
 			return self.pool.map(f, args, cs)
 		return map(f, args)
+
+	def map_async(self, func, iterable, wrap=False):
+		if self.pool is None:
+			return FakeAsyncResult(map(func, iterable))
+		if wrap:
+			return self.pool.map_async(funcwrapper(func), iterable)
+		return self.pool.map_async(func, iterable)
 		
 	def apply(self, f, args, kwargs={}):
 		if self.pool is None:
