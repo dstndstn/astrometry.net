@@ -75,6 +75,18 @@ class AsTrans(SdssFile):
 		 {drow0, drow1, drow2, drow3, dcol0, dcol1, dcol2, dcol3}[band]
 		 {csrow, cscol, ccrow, cccol}[band]
 
+		Note about units in this class:
+
+		mu,nu are in degrees (great circle coords)
+
+		a,d are in degrees (mu0, nu0)
+		b,c,e,f are in degrees/pixel (dmu,dnu/drow,dcol)
+		drow0,dcol0 are in pixels (distortion coefficients order 0); dpixels
+		drow1,dcol1 are unitless dpixels / pixel (distortion coefficients order 1)
+		drow2,dcol2 are in 1/pixels (dpixels/pixel**2) (distortion coefficients order 2)
+		drow3,dcol3 are in 1/pixels**2 (dpixels/pixel**3) (distortion coefficients order 3)
+		csrow,cscol are in pixels/mag (color-dependent shift)
+		ccrow,cccol are in pixels (non-color-dependent shift)
 		'''
 		super(AsTrans, self).__init__(*args, **kwargs)
 		self.filetype = 'asTrans'

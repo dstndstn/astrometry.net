@@ -31,6 +31,29 @@ class funcwrapper(object):
 			traceback.print_exc()
 			raise
 
+class memberfuncwrapper(object):
+	def __init__(self, obj, funcname):
+		self.obj = obj
+		self.funcname = funcname
+	def __call__(self, *X):
+		func = self.obj.getattr(self.funcname)
+		#print 'Trying to call', self.func
+		#print 'with args', X
+		try:
+			return func(self.obj, *X)
+		except:
+			import traceback
+			print 'Exception while calling your function:'
+			print '  object:', self.obj
+			print '  member function:', self.funcname
+			print '  ', func
+			print '	 params:', X
+			print '	 exception:'
+			traceback.print_exc()
+			raise
+
+
+
 class multiproc(object):
 	def __init__(self, nthreads=1, init=None, initargs=None,
 				 map_chunksize=1, pool=None):
@@ -49,11 +72,13 @@ class multiproc(object):
 		self.async_results = []
 		self.map_chunksize = map_chunksize
 
-	def map(self, f, args, chunksize=None):
+	def map(self, f, args, chunksize=None, wrap=False):
 		cs = chunksize
 		if cs is None:
 			cs = self.map_chunksize
 		if self.pool:
+			if wrap:
+				f = funcwrapper(f)
 			return self.pool.map(f, args, cs)
 		return map(f, args)
 
