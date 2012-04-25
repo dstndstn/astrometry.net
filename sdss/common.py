@@ -155,6 +155,11 @@ class AsTrans(SdssFile):
 		mu, nu = self.pixel_to_munu(x, y, color)
 		return self.munu_to_radec(mu, nu)
 
+	def radec_to_pixel_single(self, ra, dec, color=0):
+		'''RA,Dec -> x,y for scalar RA,Dec.'''
+		mu, nu = self.radec_to_munu_single(ra, dec)
+		return self.munu_to_pixel_single(mu, nu, color)
+
 	def radec_to_pixel(self, ra, dec, color=0):
 		mu, nu = self.radec_to_munu(ra, dec)
 		return self.munu_to_pixel(mu, nu, color)
@@ -162,6 +167,8 @@ class AsTrans(SdssFile):
 	def munu_to_pixel(self, mu, nu, color=0):
 		xprime, yprime = self.munu_to_prime(mu, nu, color)
 		return self.prime_to_pixel(xprime, yprime)
+
+	munu_to_pixel_single = munu_to_pixel
 
 	def munu_to_prime(self, mu, nu, color=0):
 		'''
@@ -189,8 +196,9 @@ class AsTrans(SdssFile):
 		#print 'E', E, 'mu-a', mu-a, 'F', F, 'nu-d', nu-d
 		mua = mu - a
 		# in field 6955, g3, 809 we see a~413
-		if mua < -180.:
-			mua += 360.
+		#if mua < -180.:
+		#	mua += 360.
+		mua = 360. * (mua < -180.)
 		yprime = B * mua + C * (nu - d)
 		xprime = E * mua + F * (nu - d)
 		return xprime,yprime
@@ -272,14 +280,12 @@ class AsTrans(SdssFile):
 		y = yprime - (g0 + g1 * x + g2 * x**2 + g3 * x**3)
 		return (x, y)
 
-	def radec_to_munu_c(self, ra, dec):
+	def radec_to_munu_single_c(self, ra, dec):
+		''' Compute ra,dec to mu,nu for a single RA,Dec, calling C code'''
 		mu,nu = cutils.radec_to_munu(ra, dec, self.node, self.incl)
-		#mu2,nu2 = self.radec_to_munu_py(ra, dec)
-		#print 'mu', mu,mu2
-		#print 'nu', nu,nu2
 		return mu,nu
 
-	def radec_to_munu_py(self, ra, dec):
+	def radec_to_munu(self, ra, dec):
 		'''
 		RA,Dec in degrees
 
@@ -313,9 +319,9 @@ class AsTrans(SdssFile):
 		return (ra, dec)
 
 if cutils is not None:
-	AsTrans.radec_to_munu = AsTrans.radec_to_munu_c
+	AsTrans.radec_to_munu_single = AsTrans.radec_to_munu_single_c
 else:
-	AsTrans.radec_to_munu = AsTrans.radec_to_munu_py
+	AsTrans.radec_to_munu_single = AsTrans.radec_to_munu_py
 
 
 class TsField(SdssFile):

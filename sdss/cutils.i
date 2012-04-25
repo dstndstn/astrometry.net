@@ -16,10 +16,7 @@ static double rad2deg(double x) {
  }
 #endif
 
-//void 
-PyObject*
-radec_to_munu(double ra, double dec, double node, double incl) {
-	//, double* pmu, double* pnu) {
+PyObject* radec_to_munu(double ra, double dec, double node, double incl) {
 	ra = deg2rad(ra);
 	dec = deg2rad(dec);
 	/*
@@ -41,9 +38,6 @@ radec_to_munu(double ra, double dec, double node, double incl) {
 	nu = rad2deg(nu);
 	if (mu < 0)
 		mu += 360.0;
-	//if (pmu) *pmu = mu;
-	//if (pnu) *pnu = nu;
-	//return Py_BuildValue("(dd)", mu, nu);
 	return PyTuple_Pack(2, PyFloat_FromDouble(mu), PyFloat_FromDouble(nu));
 }
 %}
