@@ -2,6 +2,12 @@ from astrometry.util.pyfits_utils import fits_table
 
 import numpy as np
 
+try:
+	import cutils
+except:
+	cutils = None
+
+
 def band_names():
 	return ['u','g','r','i','z']
 
@@ -266,7 +272,14 @@ class AsTrans(SdssFile):
 		y = yprime - (g0 + g1 * x + g2 * x**2 + g3 * x**3)
 		return (x, y)
 
-	def radec_to_munu(self, ra, dec):
+	def radec_to_munu_c(self, ra, dec):
+		mu,nu = cutils.radec_to_munu(ra, dec, self.node, self.incl)
+		#mu2,nu2 = self.radec_to_munu_py(ra, dec)
+		#print 'mu', mu,mu2
+		#print 'nu', nu,nu2
+		return mu,nu
+
+	def radec_to_munu_py(self, ra, dec):
 		'''
 		RA,Dec in degrees
 
@@ -298,6 +311,11 @@ class AsTrans(SdssFile):
 		ra, dec = np.rad2deg(ra), np.rad2deg(dec)
 		ra += (360. * (ra < 0))
 		return (ra, dec)
+
+if cutils is not None:
+	AsTrans.radec_to_munu = AsTrans.radec_to_munu_c
+else:
+	AsTrans.radec_to_munu = AsTrans.radec_to_munu_py
 
 
 class TsField(SdssFile):
