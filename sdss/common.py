@@ -25,10 +25,6 @@ def band_index(b):
 		return b
 	raise Exception('Invalid SDSS band: "' + str(b) + '"')
 
-#def munu_to_radec(node, incl, mu, nu):
-#	# 
-	
-
 class SdssFile(object):
 	def __init__(self, run=None, camcol=None, field=None, band=None, rerun=None,
 				 **kwargs):
@@ -157,6 +153,7 @@ class AsTrans(SdssFile):
 
 	def radec_to_pixel_single(self, ra, dec, color=0):
 		'''RA,Dec -> x,y for scalar RA,Dec.'''
+		# RA,Dec -> mu,nu -> prime -> pixel
 		mu, nu = self.radec_to_munu_single(ra, dec)
 		return self.munu_to_pixel_single(mu, nu, color)
 
@@ -283,6 +280,9 @@ class AsTrans(SdssFile):
 	def radec_to_munu_single_c(self, ra, dec):
 		''' Compute ra,dec to mu,nu for a single RA,Dec, calling C code'''
 		mu,nu = cutils.radec_to_munu(ra, dec, self.node, self.incl)
+		#mu2,nu2 = self.radec_to_munu(ra, dec)
+		#print 'mu,mu2', mu, mu2
+		#print 'nu,nu2', nu, nu2
 		return mu,nu
 
 	def radec_to_munu(self, ra, dec):
@@ -321,7 +321,7 @@ class AsTrans(SdssFile):
 if cutils is not None:
 	AsTrans.radec_to_munu_single = AsTrans.radec_to_munu_single_c
 else:
-	AsTrans.radec_to_munu_single = AsTrans.radec_to_munu_py
+	AsTrans.radec_to_munu_single = AsTrans.radec_to_munu
 
 
 class TsField(SdssFile):
