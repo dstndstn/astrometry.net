@@ -200,12 +200,11 @@ WarnUnusedResult InlineDefine bool star_coords(const double *s, const double *r,
 		*x =  s[0] * inv_s2;
 		*y = -s[1] * inv_s2;
 	} else {
-		double etax, etay, etaz, xix, xiy, xiz, eta_norm;
+		double etax, etay, xix, xiy, xiz, eta_norm;
 		double inv_en, inv_sdotr;
-		// eta is a vector perpendicular to r pointing in the direction of increasing RA
+		// eta is a vector perpendicular to r pointing in the direction of increasing RA.  eta_z = 0 by definition.
  		etax = -r[1];
 		etay =  r[0];
-		etaz = 0.0;
 		eta_norm = hypot(etax, etay); //sqrt(etax * etax + etay * etay);
 		inv_en = 1.0 / eta_norm;
 		etax *= inv_en;
