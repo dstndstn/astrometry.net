@@ -195,7 +195,7 @@ class AsTrans(SdssFile):
 		# in field 6955, g3, 809 we see a~413
 		#if mua < -180.:
 		#	mua += 360.
-		mua = 360. * (mua < -180.)
+		mua += 360. * (mua < -180.)
 		yprime = B * mua + C * (nu - d)
 		xprime = E * mua + F * (nu - d)
 		return xprime,yprime
