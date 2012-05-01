@@ -53,11 +53,13 @@ class DR7(object):
 			path = fn
 		return pyfits.open(path)
 
-	def retrieve(self, filetype, run, camcol, field, band=None):
+	def retrieve(self, filetype, run, camcol, field, band=None, skipExisting=True):
 		# FIXME!
 		from astrometry.util.sdss_das import sdss_das_get
 		outfn = self.getPath(filetype, run, camcol, field, band)
-		print 'Output filename:', outfn
+		#print 'Output filename:', outfn
+		if skipExisting and os.path.exists(outfn):
+			return
 		return sdss_das_get(filetype, outfn, run, camcol, field, band,
 							curl=self.curl)
 

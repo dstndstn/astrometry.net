@@ -57,8 +57,6 @@ PyObject* munu_to_prime(double mu, double nu, double color) {
 
 PyObject* prime_to_pixel(double xp, double yp) {
 	return NULL;
-	// return (x,y)
-
 	/*
 	def prime_to_pixel(self, xprime, yprime,  color=0):
 		color0 = self._get_ricut()
