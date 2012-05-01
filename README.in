@@ -21,8 +21,8 @@ This release includes a snapshot of all of the components of our
 current research code, including routines to:
   * Convert raw USNO-B and Tycho2 into FITS format for easier use
   * Uniformize, deduplicate, and cut the FITSified catalogs
-  * Build indexes from these cuts
-  * Solve the astrometry of images using these indexes
+  * Build index files from these cuts
+  * Solve the astrometry of images using these index files
 
 The code includes:
   * A simple but powerful HEALPIX implementation
@@ -33,8 +33,8 @@ In principle, the code in the tarball is sufficient to reproduce our
 entire astrometry system and replicate our blind astrometry results
 (e.g. on the SDSS fields).  However, this requires the entire USNO-B
 1.0 catalogue which is about 80GB in size.  For ease of use, we are
-distributing our pre-cooked indexes (about 25 GB total), which are the
-same files we're using for our web service.
+distributing our pre-cooked index files (about 25 GB total), which are
+the same files we're using for our web service.
 
 INSTALLING
 ----------
@@ -59,18 +59,21 @@ For full functionality, you will need:
   * libz
   * python (probably >= 2.4)
   * numpy
+  * pyfits
+      http://www.stsci.edu/resources/software_hardware/pyfits
+ 
 
 -> On Ubuntu or Debian-like systems, the following should suffice:
 
     $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
                            libpng12-dev libjpeg-dev python-numpy \
-						   zlib1g-dev
+                           zlib-devel python-pyfits
 
 -> On RHEL, you'll need something like:
     $ sudo yum install cairo.x86_64 cairo-devel.x86_64 netpbm.x86_64 \
                        netpbm-devel.x86_64 fontconfig-devel.x86_64 \
                        libXrender-devel.x86_64 xorg-x11-proto-devel.x86_64 \
-					   zlib-devel
+					   zlib-devel libjpeg-devel
 
 -> On Mac OS X, possibly the easiest way is to install Fink
    (www.finkproject.org), and then use apt-get install as per the
@@ -82,6 +85,9 @@ For full functionality, you will need:
 export CFLAGS="-I/usr/local/include -I/sw/include"
 export LDFLAGS="-L/usr/local/lib -L/sw/lib"
 
+-> On Mac OSX, "homebrew" seems to be the newfangled way to install
+   stuff.  We currently have no experience with this, so any notes you
+   have would be appreciated!
 
 If you don't have and can't get these libraries, you should still be
 able to compile and use the core parts of the solver, but you will
@@ -125,35 +131,42 @@ want to add the INSTALL_DIR/bin directory to your path:
      $ setenv PATH "$PATH:/usr/local/astrometry/bin"
 
 
-GETTING INDEXES
----------------
-Next, grab some pre-cooked indexes.  See the file GETTING-INDEXES for
-details about how to do this.
+GETTING INDEX FILES
+-------------------
+Next, grab some pre-cooked index files.  See the file GETTING-INDEXES
+for details about how to do this.
 
-(If you have indexes from a previous version of the Astrometry.net
+(If you have index files from version 0.1 of the Astrometry.net
 software, see the "Upgrading" section below.)
 
-Each index is designed to solve images within a narrow range of
-scales.  The indexes designed to solve small (angular size) images are
-rather large files, so you probably only want to grab the indexes
-required for the images you wish to solve.  If you grab extra indexes,
-the solver will run more slowly, but the results should be the same.
+Each index file is designed to solve images within a narrow range of
+scales.  The index files designed to solve small (angular size) images
+are rather large files, so you probably only want to grab the index
+files required for the images you wish to solve.  If you grab extra
+index files, the solver will run more slowly, but the results should
+be the same.
 
-Each index contains a large number of "skymarks" (landmarks for the
-sky) that allow our solver to identify your images.  The skymarks
-contained in each index have sizes (diameters) within a narrow range.
-You probably want to download indexes whose quads are, say, 10% to
-100% of the sizes of the images you want to solve.
+Each index file contains a large number of "skymarks" (landmarks for
+the sky) that allow our solver to identify your images.  The skymarks
+contained in each index file have sizes (diameters) within a narrow
+range.  You probably want to download index files whose quads are,
+say, 10% to 100% of the sizes of the images you want to solve.
 
 For example, let's say you have some 1-degree square images.  You
-should grab indexes that contain skymarks of size 0.1 to 1 degree, or
-6 to 60 arcminutes.  Referring to the table below, you should grab
-indexes 203 through 209.  You might find that the same number of
-fields solve, and faster, using just one or two of the indexes in the
-middle of that range - in our example you might try 205, 206 and 207.
+should grab index files that contain skymarks of size 0.1 to 1 degree,
+or 6 to 60 arcminutes.  Referring to the table below, you should grab
+index files 203 through 209.  You might find that the same number of
+fields solve, and faster, using just one or two of the index files in
+the middle of that range - in our example you might try 205, 206 and
+207.
 
-For reference, we used index 202 alone for our SDSS tests (13x9 arcmin
-fields).
+For reference, we used index files 202 alone for our SDSS tests (13x9
+arcmin fields).
+
+The 204- and smaller index files are split into 12 "healpix" tiles;
+each one covers 1/12th of the sky.  See the map here; you might not
+need all of them.
+  http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp.png
 
 ---------------------------------------------------------------
 Index Filename          Range of skymark diameters    File Size
@@ -172,7 +185,7 @@ index-201.tar.bz2             2.8  -  4.0               5,878
 index-200.tar.bz2             2.0  -  2.8              10,058
 --------------------------------------------------------------
 
-Download the indexes you need and put them in the top-level
+Download the index files you need and put them in the top-level
 (astrometry-$VERSION) source directory.
 
 Install them:
@@ -214,11 +227,11 @@ and util/os-features-config.h, or running:
 (which just deletes those files)
 
 
-UPGRADING INDEX FILES (only necessary if you have old old index files!)
+UPGRADING INDEX FILES (only necessary if you have OLD OLD index files!)
 ---------------------
 
 The format of the index files changed after the 0.11 release.  There
-is a program for updating them, and there is also a makefile target.
+is a program for updating them, and there is also a Makefile target.
 
   $ make upgrade-indexes
 
@@ -269,22 +282,22 @@ Finally, solve some fields.
 (If you didn't build the plotting commands, add "--no-plots" to the
 command lines below.)
 
-If you have any of indexes 213 to 218:
+If you have any of index files 213 to 218:
    $ solve-field --scale-low 10 demo/apod4.jpg
 
 If you have index 219:
    $ solve-field --scale-low 30 demo/apod5.jpg
 
-If you have any of indexes 210 to 214:
+If you have any of index files 210 to 214:
    $ solve-field --scale-low 1 demo/apod3.jpg
 
-If you have any of indexes 206 to 211:
+If you have any of index files 206 to 211:
    $ solve-field --scale-low 1 demo/apod2.jpg
 
-If you have any of indexes 203 to 205:
+If you have any of index files 203 to 205:
    $ solve-field apod1.jpg
 
-If you have any of indexes 200 to 203:
+If you have any of index files 200 to 203:
    $ solve-field demo/sdss.jpg
 
 
@@ -297,22 +310,22 @@ Note that you can also give solve-field a URL rather than a file as input:
 
 If you don't have the netpbm tools (eg jpegtopnm), do this instead:
 
-If you have any of indexes 213 to 218:
+If you have any of index files 213 to 218:
    $ solve-field --scale-low 10 demo/apod4.xyls
 
 If you have index 219:
    $ solve-field --scale-low 30 demo/apod5.xyls
 
-If you have any of indexes 210 to 214:
+If you have any of index files 210 to 214:
    $ solve-field --scale-low 1 demo/apod3.xyls
 
-If you have any of indexes 206 to 211:
+If you have any of index files 206 to 211:
    $ solve-field --scale-low 1 demo/apod2.xyls
 
-If you have any of indexes 203 to 205:
+If you have any of index files 203 to 205:
    $ solve-field demo/apod1.xyls
 
-If you have any of indexes 200 to 203:
+If you have any of index files 200 to 203:
    $ solve-field demo/sdss.xyls
 
 
@@ -361,7 +374,8 @@ can reduce this but not increase it.)
 on the size of the image you are trying to solve, solving can be much
 faster.  In the last examples above, for example, we specified that
 the field is at least 30 degrees wide: this means that we don't need
-to search for matches in the indexes that contain only tiny skymarks.
+to search for matches in the index files that contain only tiny
+skymarks.
 
 Eg, to specify that the image is between 1 and 2 degrees wide:
 
@@ -373,17 +387,17 @@ If you know the pixel scale instead:
        --scale-low 0.386 --scale-high 0.406 ...
 
 When you tell solve-field the scale of your image, it uses this to
-decide which indexes to try to use to solve your image; each index
-contains quads whose scale is within a certain range, so if these
+decide which index files to try to use to solve your image; each index
+file contains quads whose scale is within a certain range, so if these
 quads are too big or too small to be in your image, there is no need
-to look in that index.  It is also used while matching quads: a small
-quad in your image is not allowed to match a large quad in the index
-if such a match would cause the image scale to be outside the bounds
-you specified.  However, all these checks are done before computing a
-best-fit WCS solution and polynomial distortion terms, so it is
-possible (though rare) for the final solution to fall outside the
-limits you specified.  This should only happen when the solution is
-correct, but you gave incorrect inputs, so you shouldn't be
+to look in that index file.  It is also used while matching quads: a
+small quad in your image is not allowed to match a large quad in the
+index file if such a match would cause the image scale to be outside
+the bounds you specified.  However, all these checks are done before
+computing a best-fit WCS solution and polynomial distortion terms, so
+it is possible (though rare) for the final solution to fall outside
+the limits you specified.  This should only happen when the solution
+is correct, but you gave incorrect inputs, so you shouldn't be
 complaining! :)
 
 
@@ -394,18 +408,24 @@ much.  Enable this with:
 
    $ solve-field --guess-scale ...
 
+*** If you've got big images: you might want to downsample them before
+doing source extraction:
+ 
+    $ solve-field --downsample 2 ...
+ or $ solve-field --downsample 4 ...
+
 *** Depth.  The solver works by looking at sources in your image,
 starting with the brightest.  It searches for all "skymarks" that can
 be built from the N brightest stars before considering star N+1.  When
-using several indexes, it can be much faster to search for many
-skymarks in one index before switching to the next one.  This flag
-lets you control when the solver switches between indexes.  It also
-lets you control how much effort the solver puts in before giving up -
-by default it looks at all the sources in your image, and usually
-times out before this finishes.
+using several index files, it can be much faster to search for many
+skymarks in one index file before switching to the next one.  This
+flag lets you control when the solver switches between index files.
+It also lets you control how much effort the solver puts in before
+giving up - by default it looks at all the sources in your image, and
+usually times out before this finishes.
 
-Eg, to first look at sources 1-20 in all indexes, then sources 21-30
-in all indexes, then 31-40:
+Eg, to first look at sources 1-20 in all index files, then sources
+21-30 in all index files, then 31-40:
 
     $ solve-field --depth 20,30,40 ...
  or $ solve-field --depth 1-20 --depth 21-30 --depth 31-40 ...
@@ -463,6 +483,7 @@ solve-field to only look there?"
 
    $ solve-field --ra, --dec, --radius
 
+Tells it to look within "radius" degrees of the given RA,Dec position.
 
 *** To convert a list of pixel coordinates to RA,Dec coordinates:
 
@@ -588,8 +609,8 @@ Miscellany:
 
   * hpowned: which small healpixels are inside a big healpixel?
 
-  * control-program: sample code for how you might use astrometry.net
-code in your own software.
+  * control-program: sample code for how you might use the
+Astrometry.net code in your own software.
 
   * xylist2fits: converts a text list of x,y positions to a FITS
 binary table.
@@ -646,8 +667,8 @@ subtraction).
 Index-building programs
 -----------------------
 
-  * build-index: given a FITS binary table with RA,Dec, build an
-    index.  This is the "easy", recent way.  The old way uses the rest
+  * build-index: given a FITS binary table with RA,Dec, build an index
+    file.  This is the "easy", recent way.  The old way uses the rest
     of these programs:
 
     * usnobtofits, tycho2tofits, nomadtofits, 2masstofits: convert
@@ -723,12 +744,12 @@ encoding this information.  We call this file an "augmented xylist";
 we use the filename suffix ".axy".  "solve-field" then calls the
 "backend" program, passing it your axy file.  "backend" reads a config
 file (by default /usr/local/astrometry/etc/backend.cfg) that describes
-things like where to find index files, whether to load all the indexes
-at once or run them one at a time, how long to spend on each field,
-and so on.  If you want to force only a certain set of indexes to
-load, you can copy the backend.cfg file to a local version and change
-the list of indexes that are loaded, and then tell solve-field to use
-this config file:
+things like where to find index files, whether to load all the index
+files at once or run them one at a time, how long to spend on each
+field, and so on.  If you want to force only a certain set of index
+files to load, you can copy the backend.cfg file to a local version
+and change the list of index files that are loaded, and then tell
+solve-field to use this config file:
 
    $ solve-field --backend-config mybackend.cfg ...
 
@@ -870,6 +891,11 @@ GETTING-INDEXES for details.
 
 CONTACT
 -------
-Please send inquiries and bug reports to the email address "code2" at
-the domain "astrometry.net".
+You can post questions (or maybe even find the answer to your
+questions) at http://forum.astrometry.net .  However, please also send
+an email to "code2 at astrometry dot net" pointing out your post to
+the forum -- we never remember to check the forum!  We would also be
+happy to hear via email any bug reports, comments, critiques, feature
+requests, and in general any reports on your experiences, good or bad.
+
 
