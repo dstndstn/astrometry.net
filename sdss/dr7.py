@@ -6,8 +6,14 @@ from common import *
 from astrometry.util.miscutils import *
 from astrometry.util.pyfits_utils import *
 
-class DR7(object):
-	def __init__(self, curl=False):
+class DR7(SdssDR):
+	def __init__(self, **kwargs):
+		'''
+		kwargs:
+		
+		curl=False: use curl rather than wget?
+		'''
+		SdssDR.__init__(self, **kwargs)
 		self.curl = curl
 		# These are *LOCAL* filenames -- some are different than those
 		# on the DAS.

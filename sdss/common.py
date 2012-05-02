@@ -25,6 +25,41 @@ def band_index(b):
 		return b
 	raise Exception('Invalid SDSS band: "' + str(b) + '"')
 
+class SdssDR(object):
+	def __init__(self, curl=False, basedir=None):
+		self.curl = curl
+		self.basedir = basedir
+		self.filenames = {}
+
+	def getFilename(self, filetype, *args, **kwargs):
+		for k,v in zip(['run', 'camcol', 'field', 'band'], args):
+			kwargs[k] = v
+		# convert band number to band character.
+		if 'band' in kwargs:
+			kwargs['band'] = band_name(kwargs['band'])
+		if not filetype in self.filenames:
+			return None
+		pat = self.filenames[filetype]
+		fn = pat % kwargs
+		return fn
+
+	def getPath(self, *args, **kwargs):
+		fn = self.getFilename(*args, **kwargs)
+		if self.basedir is not None:
+			fn = os.path.join(self.basedir, fn)
+		return fn
+
+	def setBasedir(self, dirnm):
+		self.basedir = dirnm
+
+	def _open(self, fn):
+		if self.basedir is not None:
+			path = os.path.join(self.basedir, fn)
+		else:
+			path = fn
+		return pyfits.open(path)
+
+
 class SdssFile(object):
 	def __init__(self, run=None, camcol=None, field=None, band=None, rerun=None,
 				 **kwargs):
