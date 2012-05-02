@@ -19,6 +19,38 @@ class runlist(object):
 	pass
 
 class DR8(DR7):
+	_lup_to_mag_b = np.array([1.4e-10, 0.9e-10, 1.2e-10, 1.8e-10, 7.4e-10])
+	_two_lup_to_mag_b = 2.*DR8._lup_to_mag_b
+	_ln_lup_to_mag_b = np.log(DR8._lup_to_mag_b)
+
+	'''
+	From
+	http://data.sdss3.org/datamodel/glossary.html#asinh
+
+	m = -(2.5/ln(10))*[asinh(f/2b)+ln(b)].
+
+	The parameter b is a softening parameter measured in maggies, and
+	for the [u, g, r, i, z] bands has the values
+	[1.4, 0.9, 1.2, 1.8, 7.4] x 1e-10
+	'''
+	@staticmethod
+	def luptitude_to_mag(Lmag, bandnum):
+		if bandnum is None:
+			# assume Lmag is broadcastable to a 5-vector
+			twobi = DR8._two_lup_to_mag_b
+			lnbi = DR8._ln_lup_to_mag_b
+		else:
+			twobi = DR8._two_lup_to_mag_b[bandnum]
+			lnbi = DR8._ln_lup_to_mag_b[bandnum]
+		# MAGIC -1.08.... = -2.5/np.log(10.)
+		f = np.sinh(Lmag/-1.0857362047581294 - lnbi) * twobi
+		return -2.5 * np.log10(f)
+
+	@staticmethod
+	def nmgy_to_mag(nmgy):
+		return 22.5 - 2.5 * np.log10(nmgy)
+		
+
 	def __init__(self, **kwargs):
 		DR7.__init__(self, **kwargs)
 		self.filenames.update({
