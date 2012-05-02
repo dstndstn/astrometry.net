@@ -1,7 +1,10 @@
+import os
 import pyfits
 
 from common import *
 from dr7 import *
+from astrometry.util.yanny import *
+from astrometry.util.run_command import run_command
 
 class Frame(SdssFile):
 	def __init__(self, *args, **kwargs):
@@ -12,22 +15,73 @@ class Frame(SdssFile):
 	def getImage(self):
 		return self.image
 
-class DR8(SdssDR):
-	def __init__(self):
+class runlist(object):
+	pass
+
+class DR8(DR7):
+	def __init__(self, **kwargs):
+		DR7.__init__(self, **kwargs)
 		self.filenames.update({
 			'frame': 'frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits',
+			'photoObj': 'photoObj-%(run)06i-%(camcol)i-%(field)04i.fits',
 			})
 
+		self.daspaths = {
+			'fpObjc': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpObjc-%(run)06i-%(camcol)i-%(field)04i.fit',
+			'photoObj': 'photoObj/%(rerun)s/%(run)i/%(camcol)i/photoObj-%(run)06i-%(camcol)i-%(field)04i.fits',
+			}
+
+		y = read_yanny(self._get_data_file('runList-dr8.par'))
+		y = y['RUNDATA']
+		rl = runlist()
+		rl.run = np.array(y['run'])
+		rl.startfield = np.array(y['startfield'])
+		rl.endfield = np.array(y['endfield'])
+		rl.rerun = np.array(y['rerun'])
+		print 'Rerun type:', type(rl.rerun), rl.rerun.dtype
+		self.runlist = rl
+		self.dasurl = 'http://data.sdss3.org/sas/dr8/groups/boss/'
+
+	# read a data file describing the DR8 data
+	def _get_data_file(self, fn):
+		return os.path.join(os.path.dirname(__file__), fn)
+
+	def get_rerun(self, run, field=None):
+		I = (self.runlist.run == run)
+		if field is not None:
+			I *= (self.runlist.startfield <= field) * (self.runlist.endfield >= field)
+		I = np.flatnonzero(I)
+		reruns = np.unique(self.runlist.rerun[I])
+		print 'Reruns:', reruns
+		if len(reruns) == 0:
+			return None
+		return reruns[0]
 	
 	def retrieve(self, filetype, run, camcol, field, band=None, skipExisting=True):
-		# FIXME!
-		from astrometry.util.sdss_das import sdss_das_get
 		outfn = self.getPath(filetype, run, camcol, field, band)
-		#print 'Output filename:', outfn
+		if outfn is None:
+			return None
 		if skipExisting and os.path.exists(outfn):
-			return
-		return sdss_das_get(filetype, outfn, run, camcol, field, band,
-							curl=self.curl)
+			return outfn
+		rerun = self.get_rerun(run, field)
+		path = self.daspaths[filetype]
+		url = self.dasurl + path % dict(run=run, camcol=camcol, field=field, rerun=rerun,
+										band=band)
+		print 'URL:', url
+		if self.curl:
+			cmd = "curl -o '%(outfn)s' '%(url)s"
+		else:
+			cmd = "wget --continue -nv -O %(outfn)s '%(url)s'"
+		cmd = cmd % dict(outfn=outfn, url=url)
+		print 'cmd:', cmd
+		(rtn,out,err) = run_command(cmd)
+		if rtn:
+			print 'Command failed: command', cmd
+			print 'Output:', out
+			print 'Error:', err
+			print 'Return val:', rtn
+			return None
+		return outfn
 
 	def readFrame(self, run, camcol, field, band, filename=None):
 		'''

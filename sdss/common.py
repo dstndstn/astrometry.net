@@ -1,5 +1,5 @@
+import os
 from astrometry.util.pyfits_utils import fits_table
-
 import numpy as np
 
 try:
@@ -45,6 +45,8 @@ class SdssDR(object):
 
 	def getPath(self, *args, **kwargs):
 		fn = self.getFilename(*args, **kwargs)
+		if fn is None:
+			return None
 		if self.basedir is not None:
 			fn = os.path.join(self.basedir, fn)
 		return fn

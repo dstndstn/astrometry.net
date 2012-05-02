@@ -11,10 +11,11 @@ class DR7(SdssDR):
 		'''
 		kwargs:
 		
+		(base class:)
 		curl=False: use curl rather than wget?
+		basedir=None: base directory for local files
 		'''
 		SdssDR.__init__(self, **kwargs)
-		self.curl = curl
 		# These are *LOCAL* filenames -- some are different than those
 		# on the DAS.
 		self.filenames = {
@@ -29,35 +30,6 @@ class DR7(SdssDR):
 			'tsField': 'tsField-%(run)06i-%(camcol)i-%(field)04i.fit',
 			}
 		self.softbias = 1000
-		self.basedir = None
-
-	def getFilename(self, filetype, *args, **kwargs):
-		for k,v in zip(['run', 'camcol', 'field', 'band'], args):
-			kwargs[k] = v
-		# convert band number to band character.
-		if 'band' in kwargs:
-			kwargs['band'] = band_name(kwargs['band'])
-		if not filetype in self.filenames:
-			return None
-		pat = self.filenames[filetype]
-		fn = pat % kwargs
-		return fn
-
-	def getPath(self, *args, **kwargs):
-		fn = self.getFilename(*args, **kwargs)
-		if self.basedir is not None:
-			fn = os.path.join(self.basedir, fn)
-		return fn
-
-	def setBasedir(self, dirnm):
-		self.basedir = dirnm
-
-	def _open(self, fn):
-		if self.basedir is not None:
-			path = os.path.join(self.basedir, fn)
-		else:
-			path = fn
-		return pyfits.open(path)
 
 	def retrieve(self, filetype, run, camcol, field, band=None, skipExisting=True):
 		# FIXME!
@@ -68,7 +40,6 @@ class DR7(SdssDR):
 			return
 		return sdss_das_get(filetype, outfn, run, camcol, field, band,
 							curl=self.curl)
-
 
 	def readTsField(self, run, camcol, field, rerun):
 		'''
