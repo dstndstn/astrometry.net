@@ -14,14 +14,16 @@ class Frame(SdssFile):
 	#def __str__(self):
 	def getImage(self):
 		return self.image
+	def getAsTrans(self):
+		return self.astrans
 
 class runlist(object):
 	pass
 
 class DR8(DR7):
 	_lup_to_mag_b = np.array([1.4e-10, 0.9e-10, 1.2e-10, 1.8e-10, 7.4e-10])
-	_two_lup_to_mag_b = 2.*DR8._lup_to_mag_b
-	_ln_lup_to_mag_b = np.log(DR8._lup_to_mag_b)
+	_two_lup_to_mag_b = 2.*_lup_to_mag_b
+	_ln_lup_to_mag_b = np.log(_lup_to_mag_b)
 
 	'''
 	From
@@ -53,14 +55,26 @@ class DR8(DR7):
 
 	def __init__(self, **kwargs):
 		DR7.__init__(self, **kwargs)
+		# Local filenames
 		self.filenames.update({
 			'frame': 'frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits',
 			'photoObj': 'photoObj-%(run)06i-%(camcol)i-%(field)04i.fits',
 			})
 
+		# URLs on DAS server
+		self.dasurl = 'http://data.sdss3.org/sas/dr8/groups/boss/'
 		self.daspaths = {
 			'fpObjc': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpObjc-%(run)06i-%(camcol)i-%(field)04i.fit',
+			'frame': 'photoObj/frames/%(rerun)s/%(run)i/%(camcol)i/frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits.bz2',
 			'photoObj': 'photoObj/%(rerun)s/%(run)i/%(camcol)i/photoObj-%(run)06i-%(camcol)i-%(field)04i.fits',
+			}
+
+		self.dassuffix = {
+			'frame': '.bz2'
+			}
+
+		self.processcmds = {
+			'frame': 'bunzip2 -cd %(input)s > %(output)s'
 			}
 
 		y = read_yanny(self._get_data_file('runList-dr8.par'))
@@ -72,7 +86,6 @@ class DR8(DR7):
 		rl.rerun = np.array(y['rerun'])
 		print 'Rerun type:', type(rl.rerun), rl.rerun.dtype
 		self.runlist = rl
-		self.dasurl = 'http://data.sdss3.org/sas/dr8/groups/boss/'
 
 	# read a data file describing the DR8 data
 	def _get_data_file(self, fn):
@@ -104,7 +117,11 @@ class DR8(DR7):
 			cmd = "curl -o '%(outfn)s' '%(url)s"
 		else:
 			cmd = "wget --continue -nv -O %(outfn)s '%(url)s'"
-		cmd = cmd % dict(outfn=outfn, url=url)
+
+		# suffix to add to the downloaded filename
+		suff = self.dassuffix.get(filetype, '')
+		
+		cmd = cmd % dict(outfn=outfn + suff, url=url)
 		print 'cmd:', cmd
 		(rtn,out,err) = run_command(cmd)
 		if rtn:
@@ -113,6 +130,19 @@ class DR8(DR7):
 			print 'Error:', err
 			print 'Return val:', rtn
 			return None
+
+		if filetype in self.processcmds:
+			cmd = self.processcmds[filetype]
+			cmd = cmd % dict(input = outfn + suff, output = outfn)
+			print 'cmd:', cmd
+			(rtn,out,err) = run_command(cmd)
+			if rtn:
+				print 'Command failed: command', cmd
+				print 'Output:', out
+				print 'Error:', err
+				print 'Return val:', rtn
+				return None
+
 		return outfn
 
 	def readFrame(self, run, camcol, field, band, filename=None):
@@ -122,13 +152,13 @@ class DR8(DR7):
 		f = Frame(run, camcol, field, band)
 		# ...
 		if filename is None:
-			fn = self.getFilename('frame', run, camcol, field, band)
+			fn = self.getPath('frame', run, camcol, field, band)
 		else:
 			fn = filename
 		print 'reading file', fn
- 		p = self._open(fn)
+ 		p = pyfits.open(fn)
 		print 'got', len(p), 'HDUs'
-		# in nanomaggies?
+		# in nanomaggies
 		f.image = p[0].data
 		# converts counts -> nanomaggies
 		f.calib = p[1].data

@@ -1,6 +1,7 @@
 import os
 from astrometry.util.pyfits_utils import fits_table
 import numpy as np
+import pyfits
 
 try:
 	import cutils
@@ -35,11 +36,12 @@ class SdssDR(object):
 		for k,v in zip(['run', 'camcol', 'field', 'band'], args):
 			kwargs[k] = v
 		# convert band number to band character.
-		if 'band' in kwargs:
+		if 'band' in kwargs and kwargs['band'] is not None:
 			kwargs['band'] = band_name(kwargs['band'])
 		if not filetype in self.filenames:
 			return None
 		pat = self.filenames[filetype]
+		#print 'pat', pat, 'kwargs', kwargs
 		fn = pat % kwargs
 		return fn
 
