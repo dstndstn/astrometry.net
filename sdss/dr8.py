@@ -16,6 +16,8 @@ class Frame(SdssFile):
 		return self.image
 	def getAsTrans(self):
 		return self.astrans
+	def getCalibVec(self):
+		return self.calib
 
 class runlist(object):
 	pass
@@ -67,14 +69,18 @@ class DR8(DR7):
 			'fpObjc': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpObjc-%(run)06i-%(camcol)i-%(field)04i.fit',
 			'frame': 'photoObj/frames/%(rerun)s/%(run)i/%(camcol)i/frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits.bz2',
 			'photoObj': 'photoObj/%(rerun)s/%(run)i/%(camcol)i/photoObj-%(run)06i-%(camcol)i-%(field)04i.fits',
+			'psField': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/psField-%(run)06i-%(camcol)i-%(field)04i.fit',
+			'fpM': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpM-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit',
 			}
 
 		self.dassuffix = {
-			'frame': '.bz2'
+			'frame': '.bz2',
+			'fpM': '.gz',
 			}
 
 		self.processcmds = {
-			'frame': 'bunzip2 -cd %(input)s > %(output)s'
+			'frame': 'bunzip2 -cd %(input)s > %(output)s',
+			'fpM': 'gunzip -cd %(input)s > %(output)s',
 			}
 
 		y = read_yanny(self._get_data_file('runList-dr8.par'))
@@ -163,7 +169,13 @@ class DR8(DR7):
 		# converts counts -> nanomaggies
 		f.calib = p[1].data
 		# table with val,x,y -- binned; use bilinear interpolation to expand
-		f.sky = p[2].data
+		sky = p[2].data
+		f.sky = sky.field('allsky')[0]
+		#print 'sky shape', f.sky.shape
+		if len(f.sky.shape) != 2:
+			f.sky = f.sky.reshape((-1, 256))
+		f.skyxi = sky.field('xinterp')[0]
+		f.skyyi = sky.field('yinterp')[0]
 		#print 'p3:', p[3]
 		# table -- asTrans structure
 		f.astrans = p[3].data
