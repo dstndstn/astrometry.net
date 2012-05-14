@@ -6,6 +6,6 @@
 
 for file in $(ls ~/rc3/*hard.jpg)
 do
-    cmd="python ../client.py --server http://nova.astrometry.net/api/ --apikey $1 --upload $file"
+    cmd="python ../client.py --server http://staging.astrometry.net/api/ --apikey $1 --upload $file"
     echo $cmd
 done
