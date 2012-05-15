@@ -315,7 +315,7 @@ int main(int argc, char** args) {
 										0.25,
 										log(1e-100),
 										log(1e100),
-										&besti, NULL, &theta, NULL);
+										&besti, NULL, &theta, NULL, NULL);
 
 			logmsg("Logodds: %g\n", logodds);
 

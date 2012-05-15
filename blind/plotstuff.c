@@ -215,8 +215,6 @@ static double normra(double ra) {
 
 int plotstuff_line_constant_dec2(plot_args_t* pargs, double dec, double ra1, double ra2, double rastep) {
 	double ra;
-	double f;
-	double s;
 	int n;
 	int done = 0;
 	ra1 = normra(ra1);
@@ -226,12 +224,6 @@ int plotstuff_line_constant_dec2(plot_args_t* pargs, double dec, double ra1, dou
 		double x, y;
 		double ranext;
 		ra = normra(ra);
-		//if (ra > 360.)
-		//	ra -= 360.;
-		//if (ra < 0.)
-		//x	ra += 360.;
-		//printf("RA %.1f\n", ra);
-
 		if (anwcs_radec2pixelxy(pargs->wcs, ra, dec, &x, &y))
 			continue;
 		if (n == 0)

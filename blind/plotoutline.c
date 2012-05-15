@@ -98,10 +98,10 @@ int plot_outline_plot(const char* command,
 					cairo_t* cairo, plot_args_t* pargs, void* baton) {
 	plotoutline_t* args = (plotoutline_t*)baton;
 	struct walk_token2 token2;
+	double degstep = 1;
 	dl* rd;
 	int brk, end;
 	dl* rd2;
-	double degstep;
 	int i;
 
 	assert(args->stepsize > 0);
@@ -169,7 +169,7 @@ int plot_outline_plot(const char* command,
 		if (args->fill) {
 			// trace segment 3: from brk2 to brk.
 			// 1-pixel steps.
-			degstep = arcsec2deg(anwcs_pixel_scale(pargs->wcs));
+			arcsec2deg(anwcs_pixel_scale(pargs->wcs));
 			rd2 = anwcs_walk_discontinuity(pargs->wcs,
 										   dl_get(rd, 2*(brk2+1)+0), dl_get(rd, 2*(brk2+1)+1),
 										   dl_get(rd, 2*(brk2  )+0), dl_get(rd, 2*(brk2  )+1),
