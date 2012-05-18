@@ -1,15 +1,8 @@
-Astrometry.net code release
-===========================
+Astrometry.net code README
+==========================
 
-
-Note: the sphinx-generated documentation in doc/html contains much
-more information.  A current snapshot of this documentation is kept at
-http://astrometry.net/doc
-
-
-Copyright 2006-2010 Michael Blanton, David W. Hogg, Dustin Lang, Keir
-Mierle and Sam Roweis.
-Copyright 2011 Dustin Lang and David W. Hogg.
+| Copyright 2006-2010 Michael Blanton, David W. Hogg, Dustin Lang, Keir Mierle and Sam Roweis.  
+| Copyright 2011 Dustin Lang and David W. Hogg.
 
 This code is accompanied by the paper:
 
@@ -43,9 +36,9 @@ distributing our pre-cooked index files (about 25 GB total), which are
 the same files we're using for our web service.
 
 INSTALLING
-----------
+===========
 
-The short version:
+The short version::
 
    make
    make extra
@@ -56,6 +49,9 @@ The short version:
 
 The long version:
 
+Prerequisites
+-------------
+
 For full functionality, you will need:
   * GNU build tools (gcc, make, etc.)
   * cairo
@@ -65,75 +61,101 @@ For full functionality, you will need:
   * libz
   * python (probably >= 2.4)
   * numpy
-  * pyfits
-      http://www.stsci.edu/resources/software_hardware/pyfits
+  * pyfits: http://www.stsci.edu/resources/software_hardware/pyfits
  
 
--> On Ubuntu or Debian-like systems, the following should suffice:
+Ubuntu or Debian-like systems:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+::
 
     $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
                            libpng12-dev libjpeg-dev python-numpy \
                            zlib-devel python-pyfits
 
--> On RHEL, you'll need something like:
+RHEL / RedHat-like distributions:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+::
+
     $ sudo yum install cairo.x86_64 cairo-devel.x86_64 netpbm.x86_64 \
                        netpbm-devel.x86_64 fontconfig-devel.x86_64 \
                        libXrender-devel.x86_64 xorg-x11-proto-devel.x86_64 \
 					   zlib-devel libjpeg-devel
 
--> On Mac OS X, possibly the easiest way is to install Fink
-   (www.finkproject.org), and then use apt-get install as per the
-   Debian instructions above (leaving out "zlib1g-dev" because it's
-   already included with OSX).  Note that to use Fink you will need to
-   add something like this in your ~/.profile or ~/.bashrc file:
+Mac OS X:
+^^^^^^^^^
 
-. /sw/bin/init.sh
-export CFLAGS="-I/usr/local/include -I/sw/include"
-export LDFLAGS="-L/usr/local/lib -L/sw/lib"
+Possibly the easiest way is to install Fink (www.finkproject.org), and
+then use apt-get install as per the Debian instructions above (leaving
+out ``zlib1g-dev`` because it's already included with OSX).  Note that
+to use Fink you will need to add something like this in your
+``~/.profile`` or ``~/.bashrc`` file::
 
--> On Mac OSX, "homebrew" seems to be the newfangled way to install
-   stuff.  We currently have no experience with this, so any notes you
-   have would be appreciated!
+    . /sw/bin/init.sh
+    export CFLAGS="-I/usr/local/include -I/sw/include"
+    export LDFLAGS="-L/usr/local/lib -L/sw/lib"
+
+BUT, ``homebrew`` seems to be the newfangled way to install stuff.  We
+currently have no experience with this, so any notes you have would
+be appreciated!
+
+Getting/Building
+----------------
+
 
 If you don't have and can't get these libraries, you should still be
 able to compile and use the core parts of the solver, but you will
 miss out on some eye-candy.
 
-Grab the code:
-  $ wget http://astrometry.net/downloads/astrometry.net-$VERSION.tar.bz2
-  $ tar xjf astrometry.net-$VERSION.tar.bz2
-  $ cd astrometry.net-$VERSION
+Grab the code::
 
-Build the solving system:
+    $ wget http://astrometry.net/downloads/astrometry.net-$VERSION.tar.bz2
+    $ tar xjf astrometry.net-$VERSION.tar.bz2
+    $ cd astrometry.net-$VERSION
+
+Build the solving system::
+
   $ make
 
-If you installed the libraries listed above, build the plotting code:
+If you installed the libraries listed above, build the plotting code::
+
   $ make extra
 
-Install it:
+Install it::
+
   $ make install
 
 You might see some error message during compilation; see the section
 ERROR MESSAGES below for fixes to common problems.
 
-By default it will be installed in  /usr/local/astrometry .
+By default it will be installed in  ``/usr/local/astrometry`` .
 You can override this by either:
-     * editing the top-level Makefile (look for INSTALL_DIR)
-  or * defining INSTALL_DIR on the command-line:
-        For bash shell:
+ * editing the top-level Makefile (look for INSTALL_DIR); or
+ * defining INSTALL_DIR on the command-line:
+        For bash shell::
+
           $ export INSTALL_DIR=/path/to/astrometry
           $ make install
-        or
+
+        or::
+
           $ INSTALL_DIR=/path/to/astrometry make install
-        For tcsh shell:
+
+        For tcsh shell::
+
           $ setenv INSTALL_DIR /path/to/astrometry
           $ make install
 
 The astrometry solver is composed of several executables.  You may
 want to add the INSTALL_DIR/bin directory to your path:
-   For bash shell:
+
+   For bash shell::
+
      $ export PATH="$PATH:/usr/local/astrometry/bin"
-   For tcsh shell:
+
+   For tcsh shell::
+
      $ setenv PATH "$PATH:/usr/local/astrometry/bin"
 
 
@@ -174,33 +196,45 @@ each one covers 1/12th of the sky.  See the map here; you might not
 need all of them.
   http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp.png
 
----------------------------------------------------------------
-Index Filename          Range of skymark diameters    File Size
-                               (arcminutes)              (MB)
----------------------------------------------------------------
-index-210+.tar.bz2           60  - 2000                    29
-index-209.tar.bz2            42  -   60                    30
-index-208.tar.bz2            30  -   42                    61
-index-207.tar.bz2            22  -   30                   125
-index-206.tar.bz2            16  -   22                   255
-index-205.tar.bz2            11  -   16                   526
-index-204.tar.bz2             8  -   11                 1,023
-index-203.tar.bz2             5.6  -  8.0               2,089
-index-202.tar.bz2             4.0  -  5.6               4,260
-index-201.tar.bz2             2.8  -  4.0               5,878
-index-200.tar.bz2             2.0  -  2.8              10,058
---------------------------------------------------------------
++----------------------+------------------------------+-------------+
+| Index Filename       |   Range of skymark diameters |   File Size |
+|                      |         (arcminutes)         |     (MB)    |
++======================+==============================+=============+
+| index-210+.tar.bz2   |        60  - 2000            |        29   |
++----------------------+------------------------------+-------------+
+| index-209.tar.bz2    |        42  -   60            |        30   |
++----------------------+------------------------------+-------------+
+| index-208.tar.bz2    |        30  -   42            |        61   |
++----------------------+------------------------------+-------------+
+| index-207.tar.bz2    |        22  -   30            |       125   |
++----------------------+------------------------------+-------------+
+| index-206.tar.bz2    |        16  -   22            |       255   |
++----------------------+------------------------------+-------------+
+| index-205.tar.bz2    |        11  -   16            |       526   |
++----------------------+------------------------------+-------------+
+| index-204.tar.bz2    |         8  -   11            |     1,023   |
++----------------------+------------------------------+-------------+
+| index-203.tar.bz2    |         5.6  -  8.0          |     2,089   |
++----------------------+------------------------------+-------------+
+| index-202.tar.bz2    |         4.0  -  5.6          |     4,260   |
++----------------------+------------------------------+-------------+
+| index-201.tar.bz2    |         2.8  -  4.0          |     5,878   |
++----------------------+------------------------------+-------------+
+| index-200.tar.bz2    |         2.0  -  2.8          |    10,058   |
++----------------------+------------------------------+-------------+
 
 Download the index files you need and put them in the top-level
 (astrometry-$VERSION) source directory.
 
-Install them:
+Install them::
+
    $ make install-indexes
 
-(Or you can extract them into the INSTALL_DIR/data directory by hand.)
+(Or you can extract them into the ``INSTALL_DIR/data`` directory by hand.)
 
 
-Next, you can (optionally) configure the solver by editing the file
+Next, you can (optionally) configure the solver by editing the file::
+
    INSTALL_DIR/etc/backend.cfg
 
 
@@ -208,28 +242,31 @@ AUTO-CONFIGURATION
 ------------------
 
 We use a do-it-yourself auto-config system that tries to detect what
-is available on your machine.  It is called "os-features", and it
+is available on your machine.  It is called ``os-features``, and it
 works by trying to compile, link, and run a number of executables to
 detect:
 
--whether the "netpbm" library is available
--whether certain GNU-specific function calls exist
+ * whether the "netpbm" library is available
+ * whether certain GNU-specific function calls exist
 
 You can change the flags used to compile and link "netpbm" by either:
 
--editing util/makefile.netpbm
--setting NETPBM_INC or NETPBM_LIB, like this:
-  $ make NETPBM_INC="-I/tmp" NETPBM_LIB="-L/tmp -lnetpbm"
+ *editing util/makefile.netpbm
+ *setting NETPBM_INC or NETPBM_LIB, like this::
 
-You can see whether netpbm was successfully detected by:
+    $ make NETPBM_INC="-I/tmp" NETPBM_LIB="-L/tmp -lnetpbm"
 
-  $ cat util/makefile.os-features 
-  # This file is generated by util/Makefile.
-  HAVE_NETPBM := yes
+You can see whether netpbm was successfully detected by::
+
+    $ cat util/makefile.os-features 
+    # This file is generated by util/Makefile.
+    HAVE_NETPBM := yes
 
 You can force a re-detection either by deleting util/makefile.os-features
-and util/os-features-config.h, or running:
+and util/os-features-config.h, or running::
+
   $ make reconfig
+
 (which just deletes those files)
 
 
@@ -237,12 +274,12 @@ UPGRADING INDEX FILES (only necessary if you have OLD OLD index files!)
 ---------------------
 
 The format of the index files changed after the 0.11 release.  There
-is a program for updating them, and there is also a Makefile target.
+is a program for updating them, and there is also a Makefile target::
 
   $ make upgrade-indexes
 
-If you want to do it by hand, use the program "fix-bb".  Run it on
-each of the ckdt.fits and skdt.fits files in your INSTALL_DIR/data
+If you want to do it by hand, use the program ``fix-bb``.  Run it on
+each of the ckdt.fits and skdt.fits files in your ``INSTALL_DIR/data``
 directory.
 
 
@@ -255,30 +292,30 @@ recent times is the PowerPC used in Macs.  If you have one of these,
 read on.
 
 The index files we are distributing are for little-endian machines.
-For big-endian machines, you must do the following:
+For big-endian machines, you must do the following::
 
-cd /usr/local/astrometry/data
-for f in index-*.fits; do
-  fits-flip-endian -i $f -o flip-$f -e 1 -s 4 -e 3 -s 4 -e 4 -s 2 -e 5 -s 8 -e 6 -s 2 -e 8 -s 4 -e 9 -s 4 -e 10 -s 8 -e 11 -s 4
-  for e in 0 2 7; do
-    modhead flip-$f"[$e]" ENDIAN 01:02:03:04
-  done
-done
+    cd /usr/local/astrometry/data
+    for f in index-*.fits; do
+      fits-flip-endian -i $f -o flip-$f -e 1 -s 4 -e 3 -s 4 -e 4 -s 2 -e 5 -s 8 -e 6 -s 2 -e 8 -s 4 -e 9 -s 4 -e 10 -s 8 -e 11 -s 4
+      for e in 0 2 7; do
+        modhead flip-$f"[$e]" ENDIAN 01:02:03:04
+      done
+    done
 
-assuming "fits-flip-endian" and "modhead" are in your path.  The files
-"flip-index-*.fits" will contain the flipped index files.
+assuming ``fits-flip-endian`` and ``modhead`` are in your path.  The files
+``flip-index-*.fits`` will contain the flipped index files.
 
 If that worked, you can swap the flipped ones into place (while
-saving the originals) with:
+saving the originals) with::
 
-cd /usr/local/astrometry/data
-mkdir -p orig
-for f in index-*.fits; do
-  echo "backing up $f"
-  mv -n $f orig/$f
-  echo "moving $f into place"
-  mv -n flip-$f $f
-done
+    cd /usr/local/astrometry/data
+    mkdir -p orig
+    for f in index-*.fits; do
+      echo "backing up $f"
+      mv -n $f orig/$f
+      echo "moving $f into place"
+      mv -n flip-$f $f
+    done
 
 SOLVING
 -------
@@ -288,84 +325,109 @@ Finally, solve some fields.
 (If you didn't build the plotting commands, add "--no-plots" to the
 command lines below.)
 
-If you have any of index files 213 to 218:
+If you have any of index files 213 to 218::
+
    $ solve-field --scale-low 10 demo/apod4.jpg
 
-If you have index 219:
+If you have index 219::
+
    $ solve-field --scale-low 30 demo/apod5.jpg
 
-If you have any of index files 210 to 214:
+If you have any of index files 210 to 214::
+
    $ solve-field --scale-low 1 demo/apod3.jpg
 
-If you have any of index files 206 to 211:
+If you have any of index files 206 to 211::
+
    $ solve-field --scale-low 1 demo/apod2.jpg
 
-If you have any of index files 203 to 205:
+If you have any of index files 203 to 205::
+
    $ solve-field apod1.jpg
 
-If you have any of index files 200 to 203:
+If you have any of index files 200 to 203::
+
    $ solve-field demo/sdss.jpg
 
 
 Copyrights and credits for the demo images are listed in the file
-demo/CREDITS .
+``demo/CREDITS`` .
 
-Note that you can also give solve-field a URL rather than a file as input:
+Note that you can also give solve-field a URL rather than a file as input::
+
    $ solve-field --out apod1b http://antwrp.gsfc.nasa.gov/apod/image/0302/ngc2264_croman_c3.jpg 
 
 
 If you don't have the netpbm tools (eg jpegtopnm), do this instead:
 
-If you have any of index files 213 to 218:
+If you have any of index files 213 to 218::
+
    $ solve-field --scale-low 10 demo/apod4.xyls
 
-If you have index 219:
+If you have index 219::
+
    $ solve-field --scale-low 30 demo/apod5.xyls
 
-If you have any of index files 210 to 214:
+If you have any of index files 210 to 214::
+
    $ solve-field --scale-low 1 demo/apod3.xyls
 
-If you have any of index files 206 to 211:
+If you have any of index files 206 to 211::
+
    $ solve-field --scale-low 1 demo/apod2.xyls
 
-If you have any of index files 203 to 205:
+If you have any of index files 203 to 205::
+
    $ solve-field demo/apod1.xyls
 
-If you have any of index files 200 to 203:
+If you have any of index files 200 to 203::
+
    $ solve-field demo/sdss.xyls
 
 
 OUTPUT FILES
 ------------
 
-   <base>-ngc.png   : an annotation of the image.
-   <base>.wcs       : a FITS WCS header for the solution.
-   <base>.new       : a new FITS file containing the WCS header.
-   <base>-objs.png  : a plot of the sources (stars) we extracted from
-                      the image.
-   <base>-indx.png  : sources (red), plus stars from the index (green),
-                      plus the skymark ("quad") used to solve the
-                      image.
-   <base>-indx.xyls : a FITS BINTABLE with the pixel locations of
-                      stars from the index.
-   <base>.rdls      : a FITS BINTABLE with the RA,Dec of sources we
-                      extracted from the image.
-   <base>.axy       : a FITS BINTABLE of the sources we extracted, plus
-                      headers that describe the job (how the image is
-                      going to be solved).
-   <base>.solved    : exists and contains (binary) 1 if the field solved.
-   <base>.match     : a FITS BINTABLE describing the quad match that
-                      solved the image.
-   <base>.kmz       : (optional) KMZ file for Google Sky-in-Earth.  You need
-                      to have "wcs2kml" in your PATH.  See
-                       http://code.google.com/p/wcs2kml/downloads/list
-                       http://code.google.com/p/google-gflags/downloads/list
++--------------------+-------------------------------------------------------------+
+|   <base>-ngc.png   |  an annotation of the image.                                |
++--------------------+-------------------------------------------------------------+
+|   <base>.wcs       |  a FITS WCS header for the solution.                        |
++--------------------+-------------------------------------------------------------+
+|   <base>.new       |  a new FITS file containing the WCS header.                 |
++--------------------+-------------------------------------------------------------+
+|   <base>-objs.png  |  a plot of the sources (stars) we extracted from            |
+|                    |  the image.                                                 |
++--------------------+-------------------------------------------------------------+
+|   <base>-indx.png  |  sources (red), plus stars from the index (green),          |
+|                    |  plus the skymark ("quad") used to solve the                |
+|                    |  image.                                                     |
++--------------------+-------------------------------------------------------------+
+|   <base>-indx.xyls |  a FITS BINTABLE with the pixel locations of                |
+|                    |  stars from the index.                                      |
++--------------------+-------------------------------------------------------------+
+|   <base>.rdls      |  a FITS BINTABLE with the RA,Dec of sources we              |
+|                    |  extracted from the image.                                  |
++--------------------+-------------------------------------------------------------+
+|   <base>.axy       |  a FITS BINTABLE of the sources we extracted, plus          |
+|                    |  headers that describe the job (how the image is            |
+|                    |  going to be solved).                                       |
++--------------------+-------------------------------------------------------------+
+|   <base>.solved    |  exists and contains (binary) 1 if the field solved.        |
++--------------------+-------------------------------------------------------------+
+|   <base>.match     |  a FITS BINTABLE describing the quad match that             |
+|                    |  solved the image.                                          |
++--------------------+-------------------------------------------------------------+
+|   <base>.kmz       |  (optional) KMZ file for Google Sky-in-Earth.  You need     |
+|                    |  to have "wcs2kml" in your PATH.  See                       |
+|                    |   http://code.google.com/p/wcs2kml/downloads/list           |
+|                    |   http://code.google.com/p/google-gflags/downloads/list     |
++--------------------+-------------------------------------------------------------+
 
 
 TRICKS AND TIPS
 ---------------
 
-*** To lower the CPU time limit before giving up:
+*** To lower the CPU time limit before giving up::
 
     $  solve-field --cpulimit 30 ...
 
@@ -383,11 +445,11 @@ the field is at least 30 degrees wide: this means that we don't need
 to search for matches in the index files that contain only tiny
 skymarks.
 
-Eg, to specify that the image is between 1 and 2 degrees wide:
+Eg, to specify that the image is between 1 and 2 degrees wide::
 
    $ solve-field --scale-units degwidth --scale-low 1 --scale-high 2 ...
 
-If you know the pixel scale instead:
+If you know the pixel scale instead::
 
    $ solve-field --scale-units arcsecperpix \
        --scale-low 0.386 --scale-high 0.406 ...
@@ -410,15 +472,15 @@ complaining! :)
 *** Guess the scale: solve-field can try to guess your image's scale
 from a number of different FITS header values.  When it's right, this
 often speeds up solving a lot, and when it's wrong it doesn't cost
-much.  Enable this with:
+much.  Enable this with::
 
    $ solve-field --guess-scale ...
 
 *** If you've got big images: you might want to downsample them before
-doing source extraction:
+doing source extraction::
  
     $ solve-field --downsample 2 ...
- or $ solve-field --downsample 4 ...
+    $ solve-field --downsample 4 ...
 
 *** Depth.  The solver works by looking at sources in your image,
 starting with the brightest.  It searches for all "skymarks" that can
@@ -431,14 +493,17 @@ giving up - by default it looks at all the sources in your image, and
 usually times out before this finishes.
 
 Eg, to first look at sources 1-20 in all index files, then sources
-21-30 in all index files, then 31-40:
+21-30 in all index files, then 31-40::
 
     $ solve-field --depth 20,30,40 ...
- or $ solve-field --depth 1-20 --depth 21-30 --depth 31-40 ...
+
+or::
+
+    $ solve-field --depth 1-20 --depth 21-30 --depth 31-40 ...
 
 Sources are numbered starting at one, and ranges are inclusive.  If
 you don't give a lower limit, it will take 1 + the previous upper
-limit.  To look at a single source, do
+limit.  To look at a single source, do::
 
     $ solve-field --depth 42-42 ...
 
@@ -447,17 +512,19 @@ limit.  To look at a single source, do
 by default we sort the stars by brightness using a compromise between
 the raw and background-subtracted flux estimates.  For images without
 much nebulosity, you might find that using the background-subtracted
-fluxes yields faster results.  Enable this by:
+fluxes yields faster results.  Enable this by::
 
     $ solve-field --resort ...
 
 
 *** If you've got big images: you might want to downsample them before
-doing source extraction:
+doing source extraction::
 
    $ solve-field --downsample 2 ...
-or $ solve-field --downsample 4 ...
-or etc
+
+or::
+
+ $ solve-field --downsample 4 ...
 
 
 *** When solve-field processes FITS files, it runs them through a
@@ -465,12 +532,14 @@ or etc
 If your FITS files are compliant, this is a waste of time, and you can
 avoid doing it.
 
+::
+
    $ solve-field --no-fits2fits ...
 
 
 *** When solve-field processes FITS images, it looks for an existing
 WCS header.  If one is found, it tries to verify that header before
-trying to solve the image blindly.  You can prevent this with:
+trying to solve the image blindly.  You can prevent this with::
 
    $ solve-field --no-verify ...
 
@@ -479,7 +548,7 @@ valid WCS headers: essentially just the TAN projection with a CD
 matrix (not CROT).
 
 
-*** If you don't want the plots to be produced:
+*** If you don't want the plots to be produced::
 
    $ solve-field --no-plots ...
 
@@ -487,11 +556,13 @@ matrix (not CROT).
 *** "I know where my image is to within 1 arcminute, how can I tell
 solve-field to only look there?"
 
+::
+
    $ solve-field --ra, --dec, --radius
 
 Tells it to look within "radius" degrees of the given RA,Dec position.
 
-*** To convert a list of pixel coordinates to RA,Dec coordinates:
+*** To convert a list of pixel coordinates to RA,Dec coordinates::
 
    $ wcs-xy2rd -w wcs-file -i xy-list -o radec-list
 
@@ -500,7 +571,7 @@ recall that FITS specifies that the center of the first pixel is pixel
 coordinate (1,1).
 
 
-*** To convert from RA,Dec to pixels:
+*** To convert from RA,Dec to pixels::
 
    $ wcs-rd2xy -w wcs-file -i radec-list -o xy-list
 
@@ -514,24 +585,43 @@ files: each of the output filename options listed below can include
 default for --wcs is "%s.wcs").  If you really want a "%" character in
 your output filename, you have to put "%%".
 
-Outputs include: --new-fits, --kmz, --solved, --cancel, --match,
---rdls, --corr, --wcs --keep-xylist --pnm
-Also included: --solved-in, --verify
+Outputs include: 
+
+* --new-fits
+* --kmz
+* --solved
+* --cancel
+* --match
+* --rdls
+* --corr
+* --wcs
+* --keep-xylist
+*  --pnm
+
+also included:
+
+* --solved-in
+* --verify
 
 
 *** Reusing files between runs:
 
 The first time you run solve-field, save the source extraction
-results:
+results::
+
    $ solve-field --keep-xylist %s.xy input.fits ...
 
 On subsequent runs, instead of using the original input file, use the
 saved xylist instead.  Also add --continue to overwrite any output
 file that already exists.
+
+::
+
    $ solve-field input.xy --no-fits2fits --continue ...
 
 To skip previously solved inputs (note that this assumes single-HDU
-inputs):
+inputs)::
+
    $ solve-field --skip-solved ...
 
 
@@ -567,107 +657,77 @@ them give at least a brief summary of what they do).
 
 Image-solving programs
 ----------------------
-  * solve-field: main high-level command-line user interface.
 
+  * solve-field: main high-level command-line user interface.
   * backend: higher-level solver that reads "augmented xylists";
 called by solve-field.
-
   * augment-xylist: creates "augmented xylists" from images, which
 include star positions and hints and instructions for solving.
-
   * blind: low-level command-line solver.
-
   * image2xy: source extractor.
 
 Plotting programs
 -----------------
+
   * plotxy: plots circles, crosses, etc over images.
-
   * plotquad: draws polygons over images.
-
   * plot-constellations: annotates images with constellations, bright
 stars, Messier/NGC objects, Henry Draper catalog stars, etc.
-
   * plotcat: produces density plots given lists of stars.
 
 WCS utilities
 -------------
+
   * new-wcs: merge a WCS solution with existing FITS header cards; can
 be used to create a new image file containing the WCS headers.
-
   * fits-guess-scale: try to guess the scale of an image based on FITS
 headers.
-
   * wcsinfo: print simple properties of WCS headers (scale, rotation, etc)
-
   * wcs-xy2rd, wcs-rd2xy: convert between lists of pixel (x,y) and
 (RA,Dec) positions.
-
   * wcs-resample: projects one FITS image onto another image.  
-
   * wcs-grab/get-wcs: try to interpret an existing WCS header.
 
 Miscellany:
 -----------
+
   * an-fitstopnm: converts FITS images into ugly PNM images.
-
   * get-healpix: which healpix covers a given RA,Dec?
-
   * hpowned: which small healpixels are inside a big healpixel?
-
   * control-program: sample code for how you might use the
 Astrometry.net code in your own software.
-
   * xylist2fits: converts a text list of x,y positions to a FITS
 binary table.
-
   * rdlsinfo: print stats about a list of RA,Dec positions (rdlist).
-
   * xylsinfo: print stats about a list of x,y positions (xylist).
 
 FITS utilities
 --------------
+
   * tablist: list values in a FITS binary table.
-
   * modhead: print or modify FITS header cards.
-
   * fitscopy: general FITS image / table copier.
-
   * tabmerge: combines rows in two FITS tables.
-
   * fitstomatlab: prints out FITS binary tables in a silly format.
-
   * liststruc: shows the structure of a FITS file.
-
   * listhead: prints FITS header cards.
-
   * imcopy: copies FITS images.
-
   * imarith: does (very) simple arithmetic on FITS images.
-
   * imstat: computes statistics on FITS images.
-
   * fitsgetext: pull out individual header or data blocks from
 multi-HDU FITS files.
-
   * subtable: pull out a set of columns from a many-column FITS binary
 table.
-
   * tabsort: sort a FITS binary table based on values in one column.
-
   * column-merge: create a FITS binary table that includes columns
 from two input tables.
-
   * add-healpix-column: given a FITS binary table containing RA and
 DEC columns, compute the HEALPIX and add it as a column.
-
   * resort-xylist: used by solve-field to sort a list of stars using a
 compromise between background-subtracted and non-background-subtracted
 flux (because our source extractor sometimes messes up the background
 subtraction).
-
   * fits-flip-endian: does endian-swapping of FITS binary tables.
-
   * fits-dedup: removes duplicate header cards.
 
 Index-building programs
@@ -676,24 +736,18 @@ Index-building programs
   * build-index: given a FITS binary table with RA,Dec, build an index
     file.  This is the "easy", recent way.  The old way uses the rest
     of these programs:
-
     * usnobtofits, tycho2tofits, nomadtofits, 2masstofits: convert
 catalogs into FITS binary tables.
-
     * build-an-catalog: convert input catalogs into a standard FITS
 binary table format.
-
     * cut-an: grab a bright, uniform subset of stars from a catalog.
-
     * startree: build a star kdtree from a catalog.
-
     * hpquads: find a bright, uniform set of N-star features.
-
     * codetree: build a kdtree from N-star shape descriptors.
-
     * unpermute-quads, unpermute-stars: reorder index files for
 efficiency.
 
+  * hpsplit: splits a list of FITS tables into healpix tiles
 
 
 XYLISTS
@@ -704,21 +758,27 @@ which are just FITS BINTABLE files which contain two columns (float or
 double (E or D) format) which list the pixel coordinates of sources
 (stars, etc) in the image.
 
-To specify the column names (eg, "XIMAGE" and "YIMAGE"):
+To specify the column names (eg, "XIMAGE" and "YIMAGE")::
+
   $ solve-field --x-column XIMAGE --y-column YIMAGE ...
 
 Our solver assumes that the sources are listed in order of brightness,
 with the brightest sources first.  If your files aren't sorted, you
 can specify a column by which the file should be sorted.
+
+::
+
   $ solve-field --sort-column FLUX ...
 
 By default it sorts with the largest value first (so it works
 correctly if the column contains FLUX values), but you can reverse
-that by:
+that by::
+
   $ solve-field --sort-ascending --sort-column MAG ...
 
 When using xylists, you should also specify the original width and
-height of the image, in pixels:
+height of the image, in pixels::
+
   $ solve-field --width 2000 --height 1500 ...
 
 Alternatively, if the FITS header contains "IMAGEW" and "IMAGEH" keys,
@@ -726,7 +786,8 @@ these will be used.
 
 The solver can deal with multi-extension xylists; indeed, this is a
 convenient way to solve a large number of fields at once.  You can
-tell it which extensions it should solve by:
+tell it which extensions it should solve by::
+
   $ solve-field --fields 1-100,120,130-200
 
 (Ranges of fields are inclusive, and the first FITS extension is 1, as
@@ -734,7 +795,8 @@ per the FITS standard.)
 
 Unfortunately, the plotting code isn't smart about handling multiple
 fields, so if you're using multi-extension xylists you probably want
-to turn off plotting:
+to turn off plotting::
+
   $ solve-field --no-plots ...
 
 
@@ -755,7 +817,7 @@ files at once or run them one at a time, how long to spend on each
 field, and so on.  If you want to force only a certain set of index
 files to load, you can copy the backend.cfg file to a local version
 and change the list of index files that are loaded, and then tell
-solve-field to use this config file:
+solve-field to use this config file::
 
    $ solve-field --backend-config mybackend.cfg ...
 
@@ -774,7 +836,7 @@ positions as it runs, but the "xyls" output file it produces contains
 all (0,0).  We haven't looked into why this is or how to work around
 it.  Later versions of SExtractor such as 2.8.6 work fine.
 
-You can tell solve-field to use SExtractor like this:
+You can tell solve-field to use SExtractor like this::
 
   $ solve-field --use-sextractor ...
 
@@ -795,16 +857,17 @@ exceptions are:
   4) We set CATALOG_NAME to a temp filename.
 
 
-If you want to override any of the settings we use, you can use:
+If you want to override any of the settings we use, you can use::
 
   $ solve-field --use-sextractor --sextractor-config <sex.conf>
 
-In order to reproduce the default behavior, you must:
+In order to reproduce the default behavior, you must::
 
   1) Create a parameters file like the one we make, and set
      PARAMETERS_NAME to its filename
 
-  2) Set:
+  2) Set::
+
   $ solve-field --x-column X_IMAGE --y-column Y_IMAGE \
        --sort-column MAG_AUTO --sort-ascending
 
@@ -812,7 +875,7 @@ In order to reproduce the default behavior, you must:
      its filename
 
 
-Note that you can tell solve-field where to find SExtractor with
+Note that you can tell solve-field where to find SExtractor with::
 
   $ solve-field --use-sextractor --sextractor-path <path-to-sex-executable>
 

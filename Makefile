@@ -45,6 +45,13 @@ subdirs: thirdparty
 
 thirdparty: qfits-an gsl-an cfitsio
 
+doc:
+	$(MAKE) -C doc html
+.PHONY: doc
+html:
+.PHONY: html
+	$(MAKE) -C doc html
+
 qfits-an:
 	$(MAKE) $(QFITS_LIB)
 gsl-an:

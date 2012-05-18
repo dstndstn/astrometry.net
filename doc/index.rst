@@ -9,7 +9,16 @@ Welcome to Astrometry.net's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+
+   readme
+   oaq
+
+Other places:
+
+* `Forum.astrometry.net <http://forum.astrometry.net>`_
+* `home page <http://astrometry.net>`_
+* `web service <http://nova.astrometry.net>`_
 
 Indices and tables
 ==================
