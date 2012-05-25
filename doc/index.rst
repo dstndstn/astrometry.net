@@ -14,12 +14,22 @@ Contents:
    readme
    oaq
 
+.. toctree::
+   :hidden:
+
+   net/orientation
+
 Other places:
 
 * `This document on the web <http://astrometry.net/doc>`_
 * `Forum.astrometry.net <http://forum.astrometry.net>`_
 * `home page <http://astrometry.net>`_
 * `web service <http://nova.astrometry.net>`_
+
+Internal docs:
+
+* :ref:`nova_orient`
+
 
 Indices and tables
 ==================
