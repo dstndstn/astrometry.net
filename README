@@ -1,6 +1,12 @@
 Astrometry.net code release
 ===========================
 
+
+Note: the sphinx-generated documentation in doc/html contains much
+more information.  A current snapshot of this documentation is kept at
+http://astrometry.net/doc
+
+
 Copyright 2006-2010 Michael Blanton, David W. Hogg, Dustin Lang, Keir
 Mierle and Sam Roweis.
 Copyright 2011 Dustin Lang and David W. Hogg.
@@ -61,20 +67,19 @@ For full functionality, you will need:
   * numpy
   * pyfits
       http://www.stsci.edu/resources/software_hardware/pyfits
+ 
 
 -> On Ubuntu or Debian-like systems, the following should suffice:
 
     $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
                            libpng12-dev libjpeg-dev python-numpy \
-						   zlib1g-dev python-pyfits
+                           zlib-devel python-pyfits
 
 -> On RHEL, you'll need something like:
     $ sudo yum install cairo.x86_64 cairo-devel.x86_64 netpbm.x86_64 \
                        netpbm-devel.x86_64 fontconfig-devel.x86_64 \
                        libXrender-devel.x86_64 xorg-x11-proto-devel.x86_64 \
-					   zlib-devel
-   On Fedora, you may also need:
-    $ sudo yum install netpbm-progs
+					   zlib-devel libjpeg-devel
 
 -> On Mac OS X, possibly the easiest way is to install Fink
    (www.finkproject.org), and then use apt-get install as per the
@@ -86,6 +91,9 @@ For full functionality, you will need:
 export CFLAGS="-I/usr/local/include -I/sw/include"
 export LDFLAGS="-L/usr/local/lib -L/sw/lib"
 
+-> On Mac OSX, "homebrew" seems to be the newfangled way to install
+   stuff.  We currently have no experience with this, so any notes you
+   have would be appreciated!
 
 If you don't have and can't get these libraries, you should still be
 able to compile and use the core parts of the solver, but you will
@@ -131,7 +139,6 @@ want to add the INSTALL_DIR/bin directory to your path:
 
 GETTING INDEX FILES
 -------------------
-
 Next, grab some pre-cooked index files.  See the file GETTING-INDEXES
 for details about how to do this.
 
@@ -140,17 +147,16 @@ software, see the "Upgrading" section below.)
 
 Each index file is designed to solve images within a narrow range of
 scales.  The index files designed to solve small (angular size) images
-are rather large in file size, so you probably only want to grab the
-index files required for the range of image scales you wish to solve.
-If you grab extra index files, the solver will run more slowly, but
-the results should be the same.
+are rather large files, so you probably only want to grab the index
+files required for the images you wish to solve.  If you grab extra
+index files, the solver will run more slowly, but the results should
+be the same.
 
-Each index contains a large number of "skymarks" (landmarks for the
-sky) that allow our solver to identify your images.  The skymarks
-contained in each index have sizes (diameters) within a range of
-scales (a factor of sqrt(2)).  You probably want to download indexes
-whose quads are, say, 10% to 100% of the sizes of the images you want
-to solve.
+Each index file contains a large number of "skymarks" (landmarks for
+the sky) that allow our solver to identify your images.  The skymarks
+contained in each index file have sizes (diameters) within a narrow
+range.  You probably want to download index files whose quads are,
+say, 10% to 100% of the sizes of the images you want to solve.
 
 For example, let's say you have some 1-degree square images.  You
 should grab index files that contain skymarks of size 0.1 to 1 degree,
@@ -160,8 +166,13 @@ fields solve, and faster, using just one or two of the index files in
 the middle of that range - in our example you might try 205, 206 and
 207.
 
-For reference, we used index 202 alone for our SDSS tests (13x9 arcmin
-fields).
+For reference, we used index files 202 alone for our SDSS tests (13x9
+arcmin fields).
+
+The 204- and smaller index files are split into 12 "healpix" tiles;
+each one covers 1/12th of the sky.  See the map here; you might not
+need all of them.
+  http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp.png
 
 ---------------------------------------------------------------
 Index Filename          Range of skymark diameters    File Size
@@ -222,7 +233,7 @@ and util/os-features-config.h, or running:
 (which just deletes those files)
 
 
-UPGRADING INDEX FILES (only necessary if you have old old index files!)
+UPGRADING INDEX FILES (only necessary if you have OLD OLD index files!)
 ---------------------
 
 The format of the index files changed after the 0.11 release.  There
@@ -257,8 +268,8 @@ done
 assuming "fits-flip-endian" and "modhead" are in your path.  The files
 "flip-index-*.fits" will contain the flipped index files.
 
-If that worked, you can swap the flipped ones into place (while saving
-the originals) with:
+If that worked, you can swap the flipped ones into place (while
+saving the originals) with:
 
 cd /usr/local/astrometry/data
 mkdir -p orig
@@ -351,30 +362,6 @@ OUTPUT FILES
                        http://code.google.com/p/google-gflags/downloads/list
 
 
-COMMON ERRORS AND FIXES/WORKAROUNDS
------------------------------------
-
-Error 1. solve-field fails with:
-
-Traceback (most recent call last):
-File "/usr/local/astrometry/bin/removelines.py", line 12, in
-import pyfits
-ImportError: No module named pyfits
-augment-xylist.c:586:backtick Failed to run command: /usr/local/astrometry/bin/removelines.py /tmp/tmp.xyls.UjOdFo /tmp/tmp.removelines.8LHW36
-ioutils.c:669:run_command_get_outputs Command failed: return value 1
-
-Solution A: get the "pyfits" module and install it;
-  http://www.stsci.edu/resources/software_hardware/pyfits  .
-
-It must be installed so that this command runs without error:
-  python -c "import pyfits"
-
-Solution B: turn off "features" that require pyfits:
-
-  solve-field --uniformize 0 --no-remove-lines --no-fits2fits  [...]
-
-
-
 TRICKS AND TIPS
 ---------------
 
@@ -389,18 +376,12 @@ puts a limit on the CPU time that is spent on an image; solve-field
 can reduce this but not increase it.)
 
 
-*** "I know where my image is to within 1 arcminute, how can I tell
-solve-field to only look there?"
-
-   $ solve-field --ra, --dec, --radius
-
-Tells it to look within "radius" degrees of the given RA,Dec position.
-
 *** Scale of the image: if you provide bounds (lower and upper limits)
 on the size of the image you are trying to solve, solving can be much
 faster.  In the last examples above, for example, we specified that
 the field is at least 30 degrees wide: this means that we don't need
-to search for matches in the indexes that contain only tiny skymarks.
+to search for matches in the index files that contain only tiny
+skymarks.
 
 Eg, to specify that the image is between 1 and 2 degrees wide:
 
@@ -413,16 +394,16 @@ If you know the pixel scale instead:
 
 When you tell solve-field the scale of your image, it uses this to
 decide which index files to try to use to solve your image; each index
-contains quads whose scale is within a certain range, so if these
+file contains quads whose scale is within a certain range, so if these
 quads are too big or too small to be in your image, there is no need
-to look in that index.  It is also used while matching quads: a small
-quad in your image is not allowed to match a large quad in the index
-if such a match would cause the image scale to be outside the bounds
-you specified.  However, all these checks are done before computing a
-best-fit WCS solution and polynomial distortion terms, so it is
-possible (though rare) for the final solution to fall outside the
-limits you specified.  This should only happen when the solution is
-correct, but you gave incorrect inputs, so you shouldn't be
+to look in that index file.  It is also used while matching quads: a
+small quad in your image is not allowed to match a large quad in the
+index file if such a match would cause the image scale to be outside
+the bounds you specified.  However, all these checks are done before
+computing a best-fit WCS solution and polynomial distortion terms, so
+it is possible (though rare) for the final solution to fall outside
+the limits you specified.  This should only happen when the solution
+is correct, but you gave incorrect inputs, so you shouldn't be
 complaining! :)
 
 
@@ -433,19 +414,24 @@ much.  Enable this with:
 
    $ solve-field --guess-scale ...
 
+*** If you've got big images: you might want to downsample them before
+doing source extraction:
+ 
+    $ solve-field --downsample 2 ...
+ or $ solve-field --downsample 4 ...
 
 *** Depth.  The solver works by looking at sources in your image,
 starting with the brightest.  It searches for all "skymarks" that can
 be built from the N brightest stars before considering star N+1.  When
-using several indexes, it can be much faster to search for many
-skymarks in one index before switching to the next one.  This flag
-lets you control when the solver switches between indexes.  It also
-lets you control how much effort the solver puts in before giving up -
-by default it looks at all the sources in your image, and usually
-times out before this finishes.
+using several index files, it can be much faster to search for many
+skymarks in one index file before switching to the next one.  This
+flag lets you control when the solver switches between index files.
+It also lets you control how much effort the solver puts in before
+giving up - by default it looks at all the sources in your image, and
+usually times out before this finishes.
 
-Eg, to first look at sources 1-20 in all indexes, then sources 21-30
-in all indexes, then 31-40:
+Eg, to first look at sources 1-20 in all index files, then sources
+21-30 in all index files, then 31-40:
 
     $ solve-field --depth 20,30,40 ...
  or $ solve-field --depth 1-20 --depth 21-30 --depth 31-40 ...
@@ -466,8 +452,8 @@ fluxes yields faster results.  Enable this by:
     $ solve-field --resort ...
 
 
-*** If you've got big (or saturated) images: you might want to
-downsample them before doing source extraction:
+*** If you've got big images: you might want to downsample them before
+doing source extraction:
 
    $ solve-field --downsample 2 ...
 or $ solve-field --downsample 4 ...
@@ -497,6 +483,13 @@ matrix (not CROT).
 
    $ solve-field --no-plots ...
 
+
+*** "I know where my image is to within 1 arcminute, how can I tell
+solve-field to only look there?"
+
+   $ solve-field --ra, --dec, --radius
+
+Tells it to look within "radius" degrees of the given RA,Dec position.
 
 *** To convert a list of pixel coordinates to RA,Dec coordinates:
 
@@ -599,18 +592,16 @@ stars, Messier/NGC objects, Henry Draper catalog stars, etc.
 
 WCS utilities
 -------------
-
   * new-wcs: merge a WCS solution with existing FITS header cards; can
-    be used to create a new image file containing the WCS headers.
+be used to create a new image file containing the WCS headers.
 
   * fits-guess-scale: try to guess the scale of an image based on FITS
-    headers.
+headers.
 
-  * wcsinfo: print simple properties of WCS headers (scale, rotation,
-    etc)
+  * wcsinfo: print simple properties of WCS headers (scale, rotation, etc)
 
   * wcs-xy2rd, wcs-rd2xy: convert between lists of pixel (x,y) and
-    (RA,Dec) positions.
+(RA,Dec) positions.
 
   * wcs-resample: projects one FITS image onto another image.  
 
@@ -624,11 +615,11 @@ Miscellany:
 
   * hpowned: which small healpixels are inside a big healpixel?
 
-  * control-program: sample code for how you might use Astrometry.net
-    code in your own software.
+  * control-program: sample code for how you might use the
+Astrometry.net code in your own software.
 
   * xylist2fits: converts a text list of x,y positions to a FITS
-    binary table.
+binary table.
 
   * rdlsinfo: print stats about a list of RA,Dec positions (rdlist).
 
@@ -657,23 +648,23 @@ FITS utilities
   * imstat: computes statistics on FITS images.
 
   * fitsgetext: pull out individual header or data blocks from
-    multi-HDU FITS files.
+multi-HDU FITS files.
 
   * subtable: pull out a set of columns from a many-column FITS binary
-    table.
+table.
 
   * tabsort: sort a FITS binary table based on values in one column.
 
   * column-merge: create a FITS binary table that includes columns
-    from two input tables.
+from two input tables.
 
   * add-healpix-column: given a FITS binary table containing RA and
-    DEC columns, compute the HEALPIX and add it as a column.
+DEC columns, compute the HEALPIX and add it as a column.
 
   * resort-xylist: used by solve-field to sort a list of stars using a
-    compromise between background-subtracted and
-    non-background-subtracted flux (because our source extractor
-    sometimes messes up the background subtraction).
+compromise between background-subtracted and non-background-subtracted
+flux (because our source extractor sometimes messes up the background
+subtraction).
 
   * fits-flip-endian: does endian-swapping of FITS binary tables.
 
@@ -682,15 +673,15 @@ FITS utilities
 Index-building programs
 -----------------------
 
-  * build-index: given a FITS binary table with RA,Dec, build an
-    index.  This is the "easy", recent way.  The old way uses the rest
+  * build-index: given a FITS binary table with RA,Dec, build an index
+    file.  This is the "easy", recent way.  The old way uses the rest
     of these programs:
 
     * usnobtofits, tycho2tofits, nomadtofits, 2masstofits: convert
-      catalogs into FITS binary tables.
+catalogs into FITS binary tables.
 
     * build-an-catalog: convert input catalogs into a standard FITS
-      binary table format.
+binary table format.
 
     * cut-an: grab a bright, uniform subset of stars from a catalog.
 
@@ -701,7 +692,7 @@ Index-building programs
     * codetree: build a kdtree from N-star shape descriptors.
 
     * unpermute-quads, unpermute-stars: reorder index files for
-      efficiency.
+efficiency.
 
 
 
@@ -733,9 +724,9 @@ height of the image, in pixels:
 Alternatively, if the FITS header contains "IMAGEW" and "IMAGEH" keys,
 these will be used.
 
-The solver can deal with multi-extension xylists.  Tis is a convenient
-way to solve a large number of fields at once.  You can tell it which
-extensions it should solve by:
+The solver can deal with multi-extension xylists; indeed, this is a
+convenient way to solve a large number of fields at once.  You can
+tell it which extensions it should solve by:
   $ solve-field --fields 1-100,120,130-200
 
 (Ranges of fields are inclusive, and the first FITS extension is 1, as
@@ -749,7 +740,6 @@ to turn off plotting:
 
 BACKEND CONFIG
 --------------
-
 Because we also operate a web service using most of the same software,
 the local version of the solver is a bit more complicated than it
 really needs to be.  The "solve-field" program takes your input files,
@@ -772,7 +762,6 @@ solve-field to use this config file:
 
 SOURCE EXTRACTION USING SEXTRACTOR
 ----------------------------------
-
 http://www.astromatic.net/software/sextractor
 
 The "Source Extractor" aka "SExtractor" program by Emmanuel Bertin can
@@ -831,11 +820,9 @@ Note that you can tell solve-field where to find SExtractor with
 
 WORKAROUNDS
 -----------
-
 *** No python
 
-There are two places we use python: handling images, and filtering
-FITS files.
+There are two places we use python: handling images, and filtering FITS files.
 
 You can avoid the image-handling code by doing source extraction
 yourself; see the "No netpbm" section below.
@@ -910,11 +897,11 @@ GETTING-INDEXES for details.
 
 CONTACT
 -------
-
 You can post questions (or maybe even find the answer to your
 questions) at http://forum.astrometry.net .  However, please also send
 an email to "code2 at astrometry dot net" pointing out your post to
 the forum -- we never remember to check the forum!  We would also be
 happy to hear via email any bug reports, comments, critiques, feature
 requests, and in general any reports on your experiences, good or bad.
+
 
