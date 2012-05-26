@@ -18,6 +18,7 @@ Contents:
    :hidden:
 
    net/orientation
+   dev
 
 Other places:
 
@@ -29,7 +30,7 @@ Other places:
 Internal docs:
 
 * :ref:`nova_orient`
-
+* :ref:`svn_checkout`
 
 Indices and tables
 ==================
