@@ -32,22 +32,22 @@
 
 static char* exclude_input[] = {
 	// TAN
-	"^CTYPE.*",
+	"^CTYPE[12]$",
 	"^WCSAXES$",
 	"^EQUINOX$",
 	"^LONPOLE$",
 	"^LATPOLE$",
-	"^CRVAL.*",
-	"^CRPIX.*",
-	"^CUNIT.*",
+	"^CRVAL[12]$",
+	"^CRPIX[12]$",
+	"^CUNIT[12]$",
 	"^CD[12]_[12]$",
-	"^CDELT.*",
+	"^CDELT[12]$",
 	// SIP
 	"^[AB]P?_ORDER$",
 	"^[AB]P?_[[:digit:]]_[[:digit:]]$",
 	// Other
 	"^PV[[:digit:]]*_[[:digit:]]*.?$",
-	"^CROTA.*",
+	"^CROTA[12]$",
 	"^END$",
 };
 static int NE1 = sizeof(exclude_input) / sizeof(char*);
