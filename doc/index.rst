@@ -19,6 +19,7 @@ Contents:
 
    net/orientation
    dev
+   backups
 
 Other places:
 
@@ -31,6 +32,7 @@ Internal docs:
 
 * :ref:`nova_orient`
 * :ref:`svn_checkout`
+* :ref:`backups`
 
 Indices and tables
 ==================
