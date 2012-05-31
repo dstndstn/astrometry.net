@@ -35,7 +35,7 @@ Backups of Astrometry.net stuff
 
     $ rsync --progress -Rarvz nova:nova/net/./data/ nova-data
 
-  (There is a snapshot dump of the nova database there too.)
+  (There is a snapshot dump of the nova database there too, along with a snapshot of the ``jobs`` directory.)
 
   There is a script to dump the nova database::
 

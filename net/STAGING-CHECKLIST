@@ -12,15 +12,7 @@ svn copy -m "tag" . ^/tags/nova/2011-06-29-1
 
 (with today's date, and an appropriate release number)
 
-(2.) Update the staging area and build:
-
-cd ~/staging
-svn switch ^/tags/nova/2011-06-29-1
-make
-make py
-make extra
-
-(3.) Restart process_submissions.py
+(2.) Stop staging's process_submissions.py:
 
 screen -R staging
 # kill running process_submissions -- possible via:
@@ -31,63 +23,64 @@ or:
   jobs
   kill %1
 
-# Restart process_submissions.py:
-  python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
-
 # exit the "screen"
   [ctrl-A d]
 
+(3.) Update the staging area and build:
+
+    cd ~/staging
+    svn switch ^/tags/nova/2011-06-29-1
+    make
+    make py
+    make extra
+
 (4.) Backup the nova database and data:
 
-    ~/database-backups/backup-nova.sh
-    ~/data-backups/backup-nova.sh
+    cd ~/staging/net
+    ./backup-nova.sh
 
-(5.) Migrate the nova database and data:
+(5.) Prepare the staging data area.  We use the "unionfs-fuse" union
+filesystem for this.  Staging has a read-only view of nova's data,
+plus a read-write overlay.  This lets us test out staging with a full
+data set without worrying about corrupting nova's data or making the
+data and database inconsistent.  (Ditto for the "jobs" directory.)
+
+    cd ~/staging/net
+    ./remake-data-dir.sh
+
+(6.) Migrate the nova database and data:
 
 The exact details will depend on whether you have to run any elaborate
 schema migration scripts.  In the simplest case, copy the database.
 
-#stop process_submissions.py on nova temporarily, to allow access of an-nova
+    # stop process_submissions.py on nova temporarily, to allow access to an-nova database
     screen -R nova
     fg 1
     [ctrl-C]
-#exit the 'screen'
+    #exit the 'screen'
     [ctrl-A d]
 
-#Recreate the an-staging-source database as a duplicate of an-nova as it is.
-#(an-staging-source is used as an intermediary db, so that an-nova and
-#nova's process_submissions.py can be left alone as much as possible)
+	# Recreate the an-staging-source database as a duplicate of an-nova as it is.
+    # (an-staging-source is used as an intermediary db, so that an-nova and
+    # nova's process_submissions.py can be left alone as much as possible)
     dropdb an-staging-source
     createdb -O nova -T an-nova an-staging-source
 
-#restart process_submissions.py on nova
+    # restart process_submissions.py on nova
     screen -R nova
     cd ~/nova/net
     python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
     [ctrl-A d]
 
-#recreate the an-staging database from an-staging-source
+    # recreate the an-staging database from an-staging-source
     dropdb an-staging
     createdb -O nova -T an-staging-source an-staging
 
-#restart process_submissions.py on staging
+    # restart process_submissions.py on staging
     screen -R staging
     cd ~/staging/net
     python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
     [ctrl-A d]
-
-And copy the data:
-
-    cd ~/staging/net
-# remove current staging data
-    rm -Rf data jobs
-# copy all nova's files
-    cp -a ~/nova/net/{data,jobs} .
-#restart process_submissions.py on nova
-    screen -R nova
-    python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
-    [ctrl-A d]
-
 
 (7.) Test it out, email the group when it's ready for review.
 
@@ -95,6 +88,8 @@ And copy the data:
 
 
 
+
+THE INSTRUCTIONS BELOW STILL NEED TO BE UPDATED (as of 2012-05-31) --dstn
 
 -----------------------------------------------
      So you decided to launch.  Now what?
