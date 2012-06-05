@@ -30,12 +30,14 @@ Backups of Astrometry.net stuff
 
   Hogg has an independent backup of this.... RIGHT?
 
-* **Nova**.  dstn has a snapshot (2012-05-30) of the nova/net/data
+* **Nova**.  dstn has a snapshot (2012-06-05) of the nova/net/data
   directory at ``dstn@broiler:/data2/dstn/BACKUP-nova/nova-data``::
 
-    $ rsync --progress -Rarvz nova:nova/net/./data/ nova-data
+    cd /data2/dstn/BACKUP-nova
+    rsync --progress -Rarvz nova:nova/net/./data/ nova-data
+    rsync --progress -Rarvz nova:nova/net/jobs/./ nova-jobs
 
-  (There is a snapshot dump of the nova database there too, along with a snapshot of the ``jobs`` directory.)
+  (There is a snapshot dump of the nova database there too.)
 
   There is a script to dump the nova database::
 
