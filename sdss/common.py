@@ -116,6 +116,9 @@ class AsTrans(SdssFile):
 		 {drow0, drow1, drow2, drow3, dcol0, dcol1, dcol2, dcol3}[band]
 		 {csrow, cscol, ccrow, cccol}[band]
 
+		cut_to_band: in DR8 frames files, the astrans elements are not arrays;
+		in DR7 tsField files they are.
+
 		Note about units in this class:
 
 		mu,nu are in degrees (great circle coords)
@@ -135,6 +138,7 @@ class AsTrans(SdssFile):
 		self.incl = kwargs.get('incl', None)
 		astrans = kwargs.get('astrans', None)
 		self.trans = {}
+		cut = kwargs.get('cut_to_band', True)
 		if astrans is not None and hasattr(self, 'bandi'):
 			for f in ['a','b','c','d','e','f', 'ricut',
 					  'drow0', 'drow1', 'drow2', 'drow3',
@@ -142,8 +146,14 @@ class AsTrans(SdssFile):
 					  'csrow', 'cscol', 'ccrow', 'cccol']:
 				try:
 					if hasattr(astrans, f):
-						self.trans[f] = getattr(astrans, f)[self.bandi]
+						el = getattr(astrans, f)
+						if cut:
+							el = el[self.bandi]
+						self.trans[f] = el
 				except:
+					print 'failed to get astrans.' + f
+					import traceback
+					traceback.print_exc()
 					pass
 
 	def __str__(self):

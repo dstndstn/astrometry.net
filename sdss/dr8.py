@@ -1,5 +1,7 @@
 import os
 import pyfits
+from astrometry.util.pyfits_utils import fits_table
+import numpy as np
 
 from common import *
 from dr7 import *
@@ -38,7 +40,7 @@ class DR8(DR7):
 	[1.4, 0.9, 1.2, 1.8, 7.4] x 1e-10
 	'''
 	@staticmethod
-	def luptitude_to_mag(Lmag, bandnum):
+	def luptitude_to_mag(Lmag, bandnum, badmag=25):
 		if bandnum is None:
 			# assume Lmag is broadcastable to a 5-vector
 			twobi = DR8._two_lup_to_mag_b
@@ -48,12 +50,15 @@ class DR8(DR7):
 			lnbi = DR8._ln_lup_to_mag_b[bandnum]
 		# MAGIC -1.08.... = -2.5/np.log(10.)
 		f = np.sinh(Lmag/-1.0857362047581294 - lnbi) * twobi
-		return -2.5 * np.log10(f)
+		# prevent log10(-flux)
+		mag = np.zeros_like(f) + badmag
+		I = (f > 0)
+		mag[I] = -2.5 * np.log10(f[I])
+		return mag
 
 	@staticmethod
 	def nmgy_to_mag(nmgy):
 		return 22.5 - 2.5 * np.log10(nmgy)
-		
 
 	def __init__(self, **kwargs):
 		DR7.__init__(self, **kwargs)
@@ -90,7 +95,7 @@ class DR8(DR7):
 		rl.startfield = np.array(y['startfield'])
 		rl.endfield = np.array(y['endfield'])
 		rl.rerun = np.array(y['rerun'])
-		print 'Rerun type:', type(rl.rerun), rl.rerun.dtype
+		#print 'Rerun type:', type(rl.rerun), rl.rerun.dtype
 		self.runlist = rl
 
 	# read a data file describing the DR8 data
@@ -103,7 +108,7 @@ class DR8(DR7):
 			I *= (self.runlist.startfield <= field) * (self.runlist.endfield >= field)
 		I = np.flatnonzero(I)
 		reruns = np.unique(self.runlist.rerun[I])
-		print 'Reruns:', reruns
+		#print 'Reruns:', reruns
 		if len(reruns) == 0:
 			return None
 		return reruns[0]
@@ -118,7 +123,7 @@ class DR8(DR7):
 		path = self.daspaths[filetype]
 		url = self.dasurl + path % dict(run=run, camcol=camcol, field=field, rerun=rerun,
 										band=band)
-		print 'URL:', url
+		#print 'URL:', url
 		if self.curl:
 			cmd = "curl -o '%(outfn)s' '%(url)s"
 		else:
@@ -128,7 +133,7 @@ class DR8(DR7):
 		suff = self.dassuffix.get(filetype, '')
 		
 		cmd = cmd % dict(outfn=outfn + suff, url=url)
-		print 'cmd:', cmd
+		#print 'cmd:', cmd
 		(rtn,out,err) = run_command(cmd)
 		if rtn:
 			print 'Command failed: command', cmd
@@ -161,9 +166,9 @@ class DR8(DR7):
 			fn = self.getPath('frame', run, camcol, field, band)
 		else:
 			fn = filename
-		print 'reading file', fn
+		#print 'reading file', fn
  		p = pyfits.open(fn)
-		print 'got', len(p), 'HDUs'
+		#print 'got', len(p), 'HDUs'
 		# in nanomaggies
 		f.image = p[0].data
 		# converts counts -> nanomaggies
@@ -178,6 +183,13 @@ class DR8(DR7):
 		f.skyyi = sky.field('yinterp')[0]
 		#print 'p3:', p[3]
 		# table -- asTrans structure
-		f.astrans = p[3].data
+		tab = fits_table(p[3].data)
+		assert(len(tab) == 1)
+		tab = tab[0]
+		# DR7 has NODE, INCL in radians...
+		f.astrans = AsTrans(run, camcol, field, band,
+							node=np.deg2rad(tab.node), incl=np.deg2rad(tab.incl),
+							astrans=tab, cut_to_band=False)
+							
 		return f
 	
