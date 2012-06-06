@@ -935,13 +935,10 @@ static void solve_fields(blind_t* bp, sip_t* verify_wcs) {
 	double last_utime, last_stime;
 	double utime, stime;
 	struct timeval wtime, last_wtime;
-	int nfields;
 	int fi;
 
 	get_resource_stats(&last_utime, &last_stime, NULL);
 	gettimeofday(&last_wtime, NULL);
-
-	nfields = xylist_n_fields(bp->xyls);
 
 	for (fi = 0; fi < il_size(bp->fieldlist); fi++) {
 		int fieldnum;

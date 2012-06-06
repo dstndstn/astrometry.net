@@ -77,10 +77,10 @@ int get_resource_stats(double* p_usertime, double* p_systime, long* p_maxrss) {
 void toc() {
 	double utime, stime;
 	long rss;
-	int dtime;
+	//int dtime;
 	double dtime2;
-	time_t endtime = time(NULL);
-	dtime = (int)(endtime - starttime);
+	//time_t endtime = time(NULL);
+	//dtime = (int)(endtime - starttime);
 	dtime2 = timenow() - starttime2;
 	if (get_resource_stats(&utime, &stime, &rss)) {
 		ERROR("Failed to get_resource_stats()");

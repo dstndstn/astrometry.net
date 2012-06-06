@@ -45,7 +45,7 @@ int image2xy_files(const char* infn, const char* outfn,
 	fitsfile *ofptr = NULL;
 	int status = 0; // FIXME should have ostatus too
 	int naxis;
-	long naxisn[2];
+	long naxisn[3];
 	int kk;
 	int nhdus, hdutype, nimgs;
     char* str;

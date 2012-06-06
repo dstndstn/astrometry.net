@@ -111,7 +111,6 @@ int main(int argc, char** args) {
     char* solvedfn = NULL;
     int loglvl = LOG_MSG;
     bool tostderr = FALSE;
-    bool verbose = FALSE;
     char* infn = NULL;
     FILE* fin = NULL;
     bool fromstdin = FALSE;
@@ -152,7 +151,6 @@ int main(int argc, char** args) {
 			break;
         case 'v':
             loglvl++;
-            verbose = TRUE;
             break;
 		case 's':
 		  solvedfn = optarg;

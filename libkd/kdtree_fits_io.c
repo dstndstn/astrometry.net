@@ -178,7 +178,7 @@ qfits_header* kdtree_fits_get_primary_header(kdtree_fits_t* io) {
 
 int kdtree_fits_read_chunk(kdtree_fits_t* io, fitsbin_chunk_t* chunk) {
 	int rtn;
-	double t0 = timenow();
+	//double t0 = timenow();
     rtn = fitsbin_read_chunk(io, chunk);
     //debug("kdtree_fits_read_chunk(%s) took %g ms\n", chunk->tablename, 1000. * (timenow() - t0));
 	return rtn;
@@ -309,7 +309,7 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
 	qfits_header* header;
     int rtn = 0;
     char* fn = fb->filename;
-	double t0;
+	//double t0;
 
     kd = CALLOC(1, sizeof(kdtree_t));
     if (!kd) {
@@ -344,7 +344,7 @@ kdtree_t* kdtree_fits_read_tree(kdtree_fits_t* io, const char* treename,
     kd->nlevels = kdtree_nnodes_to_nlevels(nnodes);
 	kd->treetype = tt;
 
-	t0 = timenow();
+	//t0 = timenow();
 	KD_DISPATCH(kdtree_read_fits, tt, rtn = , (io, kd));
 	//debug("kdtree_read_fits(%s) took %g ms\n", fn, 1000. * (timenow() - t0));
 

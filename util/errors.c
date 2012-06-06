@@ -241,7 +241,10 @@ void errors_regex_error(int errcode, const regex_t* re) {
 
 void error_stack_add_entryv(err_t* e, const char* file, int line, const char* func, const char* format, va_list va) {
 	char* str;
-	vasprintf(&str, format, va);
+	if (vasprintf(&str, format, va)) {
+		fprintf(stderr, "vasprintf failed with format string: \"%s\"\n", format);
+		return;
+	}
 	error_stack_add_entry(e, file, line, func, str);
 	free(str);
 }

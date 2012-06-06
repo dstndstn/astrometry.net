@@ -357,7 +357,9 @@ int file_truncate(int handle, LONGLONG filesize)
     int fdesc;
 
     fdesc = fileno(handleTable[handle].fileptr);
-    ftruncate(fdesc, (OFF_T) filesize);
+    if (ftruncate(fdesc, (OFF_T) filesize)) {
+		return(WRITE_ERROR);
+	}
 
     handleTable[handle].currentpos = filesize;
     handleTable[handle].last_io_op = IO_WRITE;
@@ -552,7 +554,7 @@ int file_compress_open(char *filename, int rwmode, int *hdl)
 */
 {
     FILE *indiskfile, *outdiskfile;
-    int status, clobber = 0;
+    int status;
     char *cptr;
 
     /* open the compressed disk file */
@@ -571,7 +573,6 @@ int file_compress_open(char *filename, int rwmode, int *hdl)
     if (*cptr == '!')
     {
         /* clobber any existing file with the same name */
-        clobber = 1;
         cptr++;
         remove(cptr);
     }

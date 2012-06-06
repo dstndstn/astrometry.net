@@ -188,11 +188,11 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 
 	if (!allsky && nmargin) {
 		int bigbighp, bighpx, bighpy;
-		int ninside;
+		//int ninside;
 		il* seeds = il_new(256);
 		logverb("Finding healpixes in range...\n");
         healpix_decompose_xy(bighp, &bigbighp, &bighpx, &bighpy, bignside);
-		ninside = (Nside/bignside)*(Nside/bignside);
+		//ninside = (Nside/bignside)*(Nside/bignside);
 		// Prime the queue with the fine healpixes that are on the
 		// boundary of the big healpix.
 		for (i=0; i<((Nside / bignside) - 1); i++) {

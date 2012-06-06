@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <libgen.h>
 
+#include "ioutils.h"
 #include "qidxfile.h"
 
 #define OPTIONS "h"
@@ -71,7 +72,7 @@ int main(int argc, char** args) {
 		char* fn;
 
 		basefn = args[optind];
-        asprintf(&fn, "%s.qidx.fits", basefn);
+        asprintf_safe(&fn, "%s.qidx.fits", basefn);
 		fprintf(stderr, "Reading qidx from %s...\n", fn);
 		fflush(stderr);
 		qf = qidxfile_open(fn);

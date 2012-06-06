@@ -430,7 +430,7 @@ int simplexy_run(simplexy_t* s) {
 		// round
         int ix = (int)(s->x[i] + 0.5);
         int iy = (int)(s->y[i] + 0.5);
-        bool finite;
+        Unused bool finite;
         finite = isfinite(s->x[i]);
         assert(finite);
         finite = isfinite(s->y[i]);

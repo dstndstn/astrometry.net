@@ -409,12 +409,12 @@ int startree_check_inverse_perm(startree_t* s) {
 	uint8_t* counts;
 	N = Ndata(s);
 	counts = calloc(Ndata(s), sizeof(uint8_t));
-	for (i=0; i<Ndata(s); i++) {
+	for (i=0; i<N; i++) {
 		assert(s->inverse_perm[i] >= 0);
 		assert(s->inverse_perm[i] < N);
 		counts[s->inverse_perm[i]]++;
 	}
-	for (i=0; i<Ndata(s); i++) {
+	for (i=0; i<N; i++) {
 		assert(counts[i] == 1);
 	}
 	return 0;

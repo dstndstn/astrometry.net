@@ -92,7 +92,7 @@ int blind_wcs_solve(const double* starxyz,
 		// Use original WCS to set the center of projection to the new crpix.
 		tan_pixelxy2xyzarr(tanin, crpix[0], crpix[1], crxyz);
 		for (i=0; i<N; i++) {
-			bool ok;
+			Unused bool ok;
 			// -project the stars around crval
 			ok = star_coords(starxyz + i*3, crxyz, p + 2*i, p + 2*i + 1);
 			assert(ok);
@@ -108,7 +108,7 @@ int blind_wcs_solve(const double* starxyz,
 		normalize_3(star_cm);
 		// -project the stars around their center of mass
 		for (i=0; i<N; i++) {
-			bool ok;
+			Unused bool ok;
 			ok = star_coords(starxyz + i*3, star_cm, p + 2*i, p + 2*i + 1);
 			assert(ok);
 		}

@@ -75,7 +75,7 @@ static void get_next_field(char* fits_image_fn,
 						   double** starflux, sip_t** sip,
 						   double* ra, double* dec) {
 	int i, N;
-	int W, H;
+	//int W, H;
 	simplexy_t simxy;
 	// For this sample program I'm just going to read from a FITS image,
 	// but you probably want to grab data fresh from the CCD...
@@ -90,8 +90,8 @@ static void get_next_field(char* fits_image_fn,
         ERROR("Failed to read FITS image from file \"%s\"\n", fits_image_fn);
 		exit(-1);
 	}
-	W = qimg.lx;
-	H = qimg.ly;
+	//W = qimg.lx;
+	//H = qimg.ly;
     if (qimg.np != 1) {
         logmsg("Warning, image has %i planes but this program only looks at the first one.\n", qimg.np);
     }

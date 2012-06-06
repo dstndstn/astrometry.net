@@ -390,7 +390,6 @@ void write_radeclist(bool* owned, int Nside, char* fn) {
 int main(int argc, char** args) {
 	char* outfn = NULL;
 	int c;
-	int startoptind;
 	int i, k;
 	int64_t HP;
 	int Nside = 100;
@@ -678,7 +677,6 @@ int main(int argc, char** args) {
 	else
 		nkeep = 0;
 
-	startoptind = optind;
 	for (; optind<argc; optind++) {
 		char* infn;
 		int i, N = 0;

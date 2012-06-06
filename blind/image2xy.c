@@ -67,9 +67,7 @@ static void rebin(float** thedata,
 
 int image2xy_run(simplexy_t* s,
 				 int downsample, int downsample_as_required) {
-	int fullW=-1, fullH=-1;
 	int newW, newH;
-	bool did_downsample = FALSE;
 	bool free_fimage = FALSE;
 	// the factor by which to downsample.
 	int S = downsample ? downsample : 1;
@@ -77,8 +75,6 @@ int image2xy_run(simplexy_t* s,
     bool tryagain;
     int rtn = -1;
 
-	fullW = s->nx;
-	fullH = s->ny;
 	if (downsample) {
 		logmsg("Downsampling by %i...\n", S);
         if (!s->image) {
@@ -90,7 +86,6 @@ int image2xy_run(simplexy_t* s,
 		rebin(&s->image, s->nx, s->ny, S, &newW, &newH);
 		s->nx = newW;
 		s->ny = newH;
-		did_downsample = TRUE;
 	}
 
 	do {
@@ -113,7 +108,6 @@ int image2xy_run(simplexy_t* s,
 			S *= 2;
 			tryagain = TRUE;
 			downsample_as_required--;
-			did_downsample = TRUE;
 		}
 	} while (tryagain);
 

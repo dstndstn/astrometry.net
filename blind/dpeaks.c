@@ -23,6 +23,7 @@
 #include <math.h>
 #include <assert.h>
 
+#include "keywords.h"
 #include "dimage.h"
 #include "permutedsort.h"
 #include "simplexy-common.h"
@@ -96,7 +97,7 @@ int dpeaks(float *image,
 
 	// DEBUG
 	for (i=0; i<(*npeaks); i++) {
-		float pk = smooth[peaks[i]];
+		Unused float pk = smooth[peaks[i]];
 		assert((peaks[i] % nx) >= 1);
 		assert((peaks[i] % nx) <= (nx-2));
 		assert((peaks[i] / nx) >= 1);
@@ -119,7 +120,7 @@ int dpeaks(float *image,
 
 	// DEBUG
 	for (i=0; i<(*npeaks); i++) {
-		float pk = smooth[indx[i]];
+		Unused float pk = smooth[indx[i]];
 		assert((indx[i] % nx) >= 1);
 		assert((indx[i] % nx) <= (nx-2));
 		assert((indx[i] / nx) >= 1);

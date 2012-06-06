@@ -1402,7 +1402,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 			weights[Ngood] = verify_logodds_to_weight(mo->matchodds[i]);
 
 			double xx,yy;
-			bool ok;
+			Unused bool ok;
 			ok = tan_xyzarr2pixelxy(&mo->wcstan, matchxyz+3*Ngood, &xx, &yy);
 			assert(ok);
 			logverb("match: ref(%.1f, %.1f) -- img(%.1f, %.1f) --> dist(%.1f, %.1f)\n",
@@ -1439,7 +1439,7 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 
 			for (i=0; i<Ngood; i++) {
 				double xx,yy;
-				bool ok;
+				Unused bool ok;
 				ok = sip_xyzarr2pixelxy(&sip, matchxyz+3*i, &xx, &yy);
 				assert(ok);
 				logverb("match: ref(%.1f, %.1f) -- dist(%.1f, %.1f)\n",

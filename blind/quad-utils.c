@@ -33,7 +33,7 @@ void quad_compute_star_code(const double* starxyz, double* code, int dimquads) {
 	double scale, invscale;
 	double costheta, sintheta;
 	double midAB[3];
-	bool ok;
+	Unused bool ok;
 	int i;
 	const double *sA, *sB;
 

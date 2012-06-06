@@ -71,7 +71,7 @@ char* backend_find_index(backend_t* backend, char* name) {
                 continue;
             }
         else
-            asprintf(&path, "%s/%s", sl_get(backend->index_paths, j), name);
+            asprintf_safe(&path, "%s/%s", sl_get(backend->index_paths, j), name);
         
         logverb("Trying path %s...\n", path);
         if (index_is_file_index(path))
@@ -109,7 +109,7 @@ int backend_autoindex_search_paths(backend_t* backend) {
                 break;
             }
             name = de->d_name;
-            asprintf(&fullpath, "%s/%s", path, name);
+            asprintf_safe(&fullpath, "%s/%s", path, name);
             if (path_is_dir(fullpath)) {
                 logverb("Skipping directory %s\n", fullpath);
                 free(fullpath);

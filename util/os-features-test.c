@@ -90,6 +90,8 @@ int main(int argc, char** args) {
 	struct pam img;
 	pm_init(args[0], 0);
     //printf("#define HAVE_NETPBM 1\n");
+	img.size = 42;
+	printf("the answer is %i\n", img.size);
     return 0;
 }
 #endif

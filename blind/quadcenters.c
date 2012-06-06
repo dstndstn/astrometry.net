@@ -99,7 +99,7 @@ int main(int argc, char** args) {
     }
 
 	for (; optind<argc; optind++) {
-		int Nstars;
+		//int Nstars;
         int dimquads;
 
 		basename = args[optind];
@@ -113,7 +113,7 @@ int main(int argc, char** args) {
 
 		qf = index->quads;
         skdt = index->starkd;
-        Nstars = startree_N(skdt);
+        //Nstars = startree_N(skdt);
         
         if (rdlist_write_header(rdls)) {
             fprintf(stderr, "Failed to write new RDLS field header.\n");

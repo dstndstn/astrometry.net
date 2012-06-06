@@ -657,7 +657,7 @@ int augment_xylist(augment_xylist_t* axy,
     sl* cmd;
     bool verbose = axy->verbosity > 0;
     int i, I;
-	bool guessed_scale = FALSE;
+	//bool guessed_scale = FALSE;
     bool dosort = FALSE;
     char* xylsfn;
 	qfits_header* hdr = NULL;
@@ -953,7 +953,7 @@ int augment_xylist(augment_xylist_t* axy,
             logverb("Scale estimate: %g\n", scale);
             dl_append(scales, scale * 0.99);
             dl_append(scales, scale * 1.01);
-            guessed_scale = TRUE;
+            //guessed_scale = TRUE;
         }
         dl_free(estscales);
     }

@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
 
 	for (i=0; i<quads->numstars; i++) {
 		int thisnumq;
-		int thisstar;
+		//int thisstar;
 		int* stars; // bad variable name - list of quads this star is in.
 		il* list = quadlist[i];
 		if (list) {
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
 			thisnumq = 0;
 			stars = NULL;
 		}
-		thisstar = i;
+		//thisstar = i;
 
 		if (qidxfile_write_star(qidx,  stars, thisnumq)) {
 			logmsg("Couldn't write star to qidx file (%s).\n", idxfname);

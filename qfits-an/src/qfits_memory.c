@@ -253,7 +253,6 @@ void * qfits_memory_malloc(
     int         nbufs;
     int         memtype;
     int         i;
-    int         pos;
 #ifdef __linux__
     int         p;
 #endif
@@ -389,7 +388,7 @@ void * qfits_memory_malloc(
     );
 
     /* Add cell into general table */
-    pos = qfits_memory_addcell(  ptr,
+    qfits_memory_addcell(  ptr,
                             size,
                             filename,
                             lineno,

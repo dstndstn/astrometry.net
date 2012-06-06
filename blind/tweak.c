@@ -187,7 +187,7 @@ static void get_shift(double* ximg, double* yimg, int nimg,
 // sip_pixelxy2radec(wcs, crpix0 +- xs, crpix1 +- ys, wcs->wcstan.crval+0, wcs->wcstan.crval+1);
 sip_t* wcs_shift(sip_t* wcs, double xs, double ys) {
 	// UNITS: crpix and xs/ys in pixels, crvals in degrees, nx/nyref and theta in degrees
-	double crpix0, crpix1, crval0, crval1;
+	double crpix0, crpix1, crval0;
 	double nxref, nyref, theta, sintheta, costheta;
 	double newCD[2][2]; //the new CD matrix
 	sip_t* swcs = malloc(sizeof(sip_t));
@@ -197,7 +197,6 @@ sip_t* wcs_shift(sip_t* wcs, double xs, double ys) {
 	crpix0 = wcs->wcstan.crpix[0];
 	crpix1 = wcs->wcstan.crpix[1];
 	crval0 = wcs->wcstan.crval[0];
-	crval1 = wcs->wcstan.crval[1];
 
     // compute the desired projection of the new tangent point by
     // shifting the projection of the current tangent point
@@ -625,7 +624,7 @@ static double figure_of_merit2(tweak_t* t) {
 	int i;
 	for (i = 0; i < il_size(t->image); i++) {
 		double x, y, dx, dy;
-		bool ok;
+		Unused bool ok;
 		ok = sip_radec2pixelxy(t->sip, t->a_ref[il_get(t->ref, i)], t->d_ref[il_get(t->ref, i)], &x, &y);
 		assert(ok);
 		dx = t->x[il_get(t->image, i)] - x;
@@ -725,7 +724,7 @@ void tchebyshev_tweak(tweak_t* t, int W, int H) {
         double weight = 1.0;
         double u;
         double v;
-        bool ok;
+        Unused bool ok;
 
 		// convert to Tchebyshev domain: [-1,1]
         u = (t->x[il_get(t->image, i)] - t->sip->wcstan.crpix[0]) / (double)W;
@@ -1062,7 +1061,7 @@ static void do_sip_tweak(tweak_t* t) {
         double weight = 1.0;
         double u;
         double v;
-        bool ok;
+        Unused bool ok;
 
         u = t->x[il_get(t->image, i)] - t->sip->wcstan.crpix[0];
         v = t->y[il_get(t->image, i)] - t->sip->wcstan.crpix[1];
@@ -1363,7 +1362,7 @@ unsigned int tweak_advance_to(tweak_t* t, unsigned int flag) {
 		t->x_ref = malloc(sizeof(double) * t->n_ref);
 		t->y_ref = malloc(sizeof(double) * t->n_ref);
 		for (jj = 0; jj < t->n_ref; jj++) {
-			bool ok;
+			Unused bool ok;
 			ok = sip_radec2pixelxy(t->sip, t->a_ref[jj], t->d_ref[jj],
 								   t->x_ref + jj, t->y_ref + jj);
 			assert(ok);

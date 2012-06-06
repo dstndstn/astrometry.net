@@ -51,7 +51,6 @@ extern int optind, opterr, optopt;
 int main(int argc, char** args) {
 	char* outfn = NULL;
     int c;
-	int startoptind;
 	int nrecords, nobs;
 	int Nside = 8;
 	tycho2_fits** tycs;
@@ -102,7 +101,6 @@ int main(int argc, char** args) {
 	printf("Reading Tycho-2 files... \n");
 	fflush(stdout);
 
-	startoptind = optind;
 	for (; optind<argc; optind++) {
 		char* infn;
 		FILE* fid;

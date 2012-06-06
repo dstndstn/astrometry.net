@@ -69,10 +69,6 @@ int main(int argc, char *argv[]) {
 
     int nfields;
 
-    char* truefn = NULL;
-    char* fpfn = NULL;
-    char* negfn = NULL;
-
     int Ncenter = 0;
 
     char* fpsolved = NULL;
@@ -113,15 +109,6 @@ int main(int argc, char *argv[]) {
             break;
         case 'R':
             rdlsfname = optarg;
-            break;
-        case 't':
-            truefn = optarg;
-            break;
-        case 'f':
-            fpfn = optarg;
-            break;
-        case 'n':
-            negfn = optarg;
             break;
         case 'T':
             tpsolved = optarg;

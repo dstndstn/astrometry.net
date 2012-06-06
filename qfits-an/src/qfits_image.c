@@ -1100,7 +1100,8 @@ static float * qfits_pixin_float(
 #ifndef WORDS_BIGENDIAN
             qfits_swap_bytes(XLpix, 8);
 #endif
-            dpix = *((double*)XLpix);
+            //dpix = *((double*)XLpix);
+			memcpy(&dpix, XLpix, sizeof(double));
             *p_dest ++ = (float)(bscale * dpix + bzero);
         }
         break;
@@ -1200,7 +1201,8 @@ static int * qfits_pixin_int(
 #ifndef WORDS_BIGENDIAN
             qfits_swap_bytes(XLpix, 8);
 #endif
-            dpix = *((double*)XLpix);
+            //dpix = *((double*)XLpix);
+			memcpy(&dpix, XLpix, sizeof(double));
             *p_dest ++ = (int)(bscale * dpix + bzero);
         }
         break;
@@ -1301,7 +1303,8 @@ static double * qfits_pixin_double(
 #ifndef WORDS_BIGENDIAN
             qfits_swap_bytes(XLpix, 8);
 #endif
-            dpix = *((double*)XLpix);
+            //dpix = *((double*)XLpix);
+			memcpy(&dpix, XLpix, sizeof(double));
             *p_dest ++ = (double)(bscale * dpix + bzero);
         }
         break;

@@ -187,7 +187,7 @@ int main(int argc, char *argv[]) {
 
 	if (!outfn) {
 		// Create xylist filename (by trimming '.fits')
-		asprintf(&outfn, "%.*s.xy.fits", (int)(strlen(infn)-5), infn);
+		asprintf_safe(&outfn, "%.*s.xy.fits", (int)(strlen(infn)-5), infn);
         logverb("outfile=%s\n", outfn);
 	}
 

@@ -520,12 +520,14 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 					char name[32];
 					double* ixy;
 					int i;
+					Unused bool ok;
 					ixy = malloc(2*Nin*sizeof(double));
 					for (i=0; i<Nin; i++) {
 						int ii = indexin[refperm[i]];
 						ra  = indexradec[ii*2+0];
 						dec = indexradec[ii*2+1];
-						sip_radec2pixelxy(sipout, ra, dec, ixy+2*i, ixy+2*i+1);
+						ok = sip_radec2pixelxy(sipout, ra, dec, ixy+2*i, ixy+2*i+1);
+						assert(ok);
 					}
 					sprintf(name, "o%is%02ipost", order, step);
 					TWEAK_DEBUG_PLOT(name, W, H, Nfield, fieldxy, fieldsigma2s,
@@ -554,12 +556,14 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 						char name[32];
 						double* ixy;
 						int i;
+						Unused bool ok;
 						ixy = malloc(2*Nin*sizeof(double));
 						for (i=0; i<Nin; i++) {
 							int ii = indexin[refperm[i]];
 							ra  = indexradec[ii*2+0];
 							dec = indexradec[ii*2+1];
-							sip_radec2pixelxy(sipout, ra, dec, ixy+2*i, ixy+2*i+1);
+							ok = sip_radec2pixelxy(sipout, ra, dec, ixy+2*i, ixy+2*i+1);
+							assert(ok);
 						}
 						sprintf(name, "o%is%02icrpix", order, step);
 						TWEAK_DEBUG_PLOT(name, W, H, Nfield, fieldxy, fieldsigma2s,

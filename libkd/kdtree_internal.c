@@ -568,7 +568,7 @@ static bool ttype_query(const kdtree_t* kd, const etype* query, ttype* tquery) {
 }
 
 double MANGLE(kdtree_get_splitval)(const kdtree_t* kd, int nodeid) {
-    int dim;
+    Unused int dim;
     ttype split = *KD_SPLIT(kd, nodeid);
     if (EQUAL_ET) {
         return split;
@@ -1063,7 +1063,7 @@ kdtree_qres_t* MANGLE(kdtree_rangesearch_options)
 	bool do_l1precheck = FALSE;
 
     bool use_bboxes = FALSE;
-    bool use_splits = FALSE;
+    Unused bool use_splits = FALSE;
 
 	double dtl1=0.0, dtl2=0.0, dtlinf=0.0;
 

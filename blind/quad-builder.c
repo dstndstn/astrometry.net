@@ -35,7 +35,7 @@ static void check_scale(quadbuilder_t* qb, pquad_t* pq) {
 	double Bx=0, By=0;
 	double invscale;
 	double ABx, ABy;
-	bool ok;
+	Unused bool ok;
 	if (!(qb->check_scale_low || qb->check_scale_high))
 		return;
 	sA = qb->starxyz + pq->iA * 3;

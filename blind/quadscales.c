@@ -87,7 +87,7 @@ int main(int argc, char** args) {
 				fixed_basename[i] = '_';
 		}
 
-        asprintf(&fn, "%s.quad.fits", basename);
+        asprintf_safe(&fn, "%s.quad.fits", basename);
 		fprintf(stderr, "Opening quad file %s...\n", fn);
 		qf = quadfile_open(fn);
 		if (!qf) {
@@ -96,7 +96,7 @@ int main(int argc, char** args) {
 		}
 		free(fn);
 
-        asprintf(&fn, "%s.skdt.fits", basename);
+        asprintf_safe(&fn, "%s.skdt.fits", basename);
 		fprintf(stderr, "Opening skdt file %s...\n", fn);
 		skdt = startree_open(fn);
 		if (!skdt) {

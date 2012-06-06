@@ -327,7 +327,7 @@ int hpquads(startree_t* starkd,
 	bool circle = TRUE;
 	double radius2;
 	il* hptotry;
-	int Nhptotry;
+	int Nhptotry = 0;
 	int nquads;
 	double hprad;
 	double quadscale;
@@ -485,7 +485,6 @@ int hpquads(startree_t* starkd,
 			// that rectangle.
 			int x0, x1, y0, y1;
 			int x, y;
-			int nhp;
 
 			healpix_decompose_xy(skhp, &starhp, &starx, &stary, sknside);
 			x0 =  starx    * (Nside / sknside);
@@ -493,7 +492,6 @@ int hpquads(startree_t* starkd,
 			y0 =  stary    * (Nside / sknside);
 			y1 = (stary+1) * (Nside / sknside);
 
-			nhp = 0;
 			for (y=y0; y<y1; y++) {
 				for (x=x0; x<x1; x++) {
 					int j = healpix_compose_xy(starhp, x, y, Nside);

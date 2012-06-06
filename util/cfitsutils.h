@@ -34,7 +34,7 @@ static void cfitserr(int status) {
         sl_append(msgs, errmsg);
     // ... and push it onto the astrometry.net error message stack... sigh.
     for (i=sl_size(msgs)-1; i>=0; i--)
-        ERROR(sl_get(msgs, i));
+        ERROR("%s", sl_get(msgs, i));
     sl_free2(msgs);
 }
 

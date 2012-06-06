@@ -131,7 +131,7 @@ char* scamp_get_config_options(const char* refcatfn) {
         "#\n"
         "## End of Astrometry.net Scamp integration config items\n"
         ;
-    asprintf(&res, fmt, refcatfn);
+    asprintf_safe(&res, fmt, refcatfn);
     return res;
 }
 

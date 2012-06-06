@@ -177,7 +177,7 @@ char* fitsbin_get_filename(const fitsbin_t* fb);
 
 // Reading: returns a new copy of the given FITS extension header.
 // (-> *qfits_get_header)
-qfits_header* fitsbin_get_header(fitsbin_t* fb, int ext);
+qfits_header* fitsbin_get_header(const fitsbin_t* fb, int ext);
 
 // Reading: how many extensions in this file?  (-> *qfits_query_n_ext)
 int fitsbin_n_ext(const fitsbin_t* fb);

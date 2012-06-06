@@ -2109,7 +2109,6 @@ static void Do_Offset( Node *this )
    Node *col;
    long fRow, nRowOverlap, nRowReload, rowOffset;
    long nelem, elem, offset, nRealElem;
-   int status;
 
    col       = gParse.Nodes + this->SubNodes[0];
    rowOffset = gParse.Nodes[  this->SubNodes[1] ].value.data.lng;
@@ -2194,22 +2193,22 @@ static void Do_Offset( Node *this )
       switch( this->type ) {
       case BITSTR:
       case STRING:
-	 status = (*gParse.loadData)( -col->operation, fRow, nRowReload,
+	(*gParse.loadData)( -col->operation, fRow, nRowReload,
 				      this->value.data.strptr+offset,
 				      this->value.undef+offset );
 	 break;
       case BOOLEAN:
-	 status = (*gParse.loadData)( -col->operation, fRow, nRowReload,
+	 (*gParse.loadData)( -col->operation, fRow, nRowReload,
 				      this->value.data.logptr+offset,
 				      this->value.undef+offset );
 	 break;
       case LONG:
-	 status = (*gParse.loadData)( -col->operation, fRow, nRowReload,
+	 (*gParse.loadData)( -col->operation, fRow, nRowReload,
 				      this->value.data.lngptr+offset,
 				      this->value.undef+offset );
 	 break;
       case DOUBLE:
-	 status = (*gParse.loadData)( -col->operation, fRow, nRowReload,
+	 (*gParse.loadData)( -col->operation, fRow, nRowReload,
 				      this->value.data.dblptr+offset,
 				      this->value.undef+offset );
 	 break;

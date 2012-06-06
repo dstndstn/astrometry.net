@@ -1085,7 +1085,7 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, int istopped, 
 	int* etheta;
 	double* eodds;
 	int* invrperm;
-	int i, ri, ti;
+	int i, ti;
 
 	if (DEBUGVERIFY) {
 		// The "testperm" permutation should be "complete".
@@ -1118,6 +1118,7 @@ static void fixup_theta(int* theta, double* allodds, int ibailed, int istopped, 
 
 	if (DEBUGVERIFY) {
 		for (i=0; i<v->NT; i++) {
+			Unused int ri;
 			if (i == besti)
 				debug2("* ");
 			debug2("Theta[%i] = %i", i, theta[i]);

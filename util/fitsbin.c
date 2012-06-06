@@ -41,7 +41,7 @@ struct fitsext {
 };
 typedef struct fitsext fitsext_t;
 
-qfits_header* fitsbin_get_header(fitsbin_t* fb, int ext) {
+qfits_header* fitsbin_get_header(const fitsbin_t* fb, int ext) {
 	if (fb->fits)
 		return anqfits_get_header(fb->fits, ext);
 	return qfits_header_readext(fb->filename, ext);
@@ -459,8 +459,8 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 		chunk->header = qfits_header_copy(inmemext->header);
 
 	} else {
-		double t0;
-		t0 = timenow();
+		//double t0;
+		//t0 = timenow();
 		if (find_table_column(fb, chunk->tablename, &tabstart, &tabsize, &ext)) {
 			if (chunk->required)
 				ERROR("Couldn't find table \"%s\" in file \"%s\"",
@@ -469,7 +469,7 @@ static int read_chunk(fitsbin_t* fb, fitsbin_chunk_t* chunk) {
 		}
 		//debug("fits_find_table_column(%s) took %g ms\n", chunk->tablename, 1000 * (timenow() - t0));
 
-		t0 = timenow();
+		//t0 = timenow();
 		chunk->header = fitsbin_get_header(fb, ext);
 		if (!chunk->header) {
 			ERROR("Couldn't read FITS header from file \"%s\" extension %i", fb->filename, ext);
