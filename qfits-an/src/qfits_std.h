@@ -33,7 +33,7 @@
  -----------------------------------------------------------------------------*/
 
 // does qfits think this platform is big-endian?
-int qfits_is_platform_big_endian();
+int qfits_is_platform_big_endian(void);
 
 
 #define QFITS_THREAD_UNSAFE {}

@@ -16,14 +16,13 @@
 #include "fitsioutils.h"
 #include "sip-utils.h"
 #include "sip_qfits.h"
-
 #include "index.h"
 #include "quadfile.h"
 #include "codekd.h"
 #include "starkd.h"
 #include "starutil.h"
+
 #include "coadd.h"
-	//#include "qidxfile.h"
 
 #define true 1
 #define false 0
@@ -783,6 +782,7 @@ Sip = sip_t
 	static int tan_numpy_xyz2pixelxy(tan_t* tan, PyObject* npxyz,
 		   PyObject* npx, PyObject* npy) {
 		int i, N;
+		int rtn = 0;
 		double *x, *y;
 		
 		if (PyArray_NDIM(npx) != 1) {
@@ -804,12 +804,18 @@ Sip = sip_t
 		y = PyArray_GETPTR1(npy, 0);
 		for (i=0; i<N; i++) {
 			double xyz[3];
+			bool ok;
 			xyz[0] = *((double*)PyArray_GETPTR2(npxyz, i, 0));
 			xyz[1] = *((double*)PyArray_GETPTR2(npxyz, i, 1));
 			xyz[2] = *((double*)PyArray_GETPTR2(npxyz, i, 2));
-			tan_xyzarr2pixelxy(tan, xyz, x+i, y+i);
+			ok = tan_xyzarr2pixelxy(tan, xyz, x+i, y+i);
+			if (!ok) {
+				x[i] = -1.0;
+				y[i] = -1.0;
+				rtn = -1;
+			}
 		}
-		return 0;
+		return rtn;
 	}
 
 
