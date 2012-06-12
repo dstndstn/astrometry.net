@@ -6,8 +6,6 @@ from numpy import array, append, flatnonzero
 import numpy as np
 import pylab as plt
 
-from matplotlib.colors import LinearSegmentedColormap
-
 def setRadecAxes(ramin, ramax, decmin, decmax):
 	rl,rh = ramin,ramax
 	dl,dh = decmin,decmax
@@ -19,6 +17,51 @@ def setRadecAxes(ramin, ramax, decmin, decmax):
 	plt.ylabel('Dec (deg)')
 	return ax
 
+import matplotlib.colors as mc
+class ArcsinhNormalize(mc.Normalize):
+ 	def __init__(self, mean=None, std=None, **kwargs):
+ 		self.mean = mean
+ 		self.std = std
+		mc.Normalize.__init__(self, **kwargs)
+
+	def _map(self, X, out=None):
+		Y = (X - self.mean) / self.std
+		args = (Y,)
+		if out is not None:
+			args = args + (out,)
+		return np.arcsinh(*args)
+
+	def __call__(self, value, clip=None):
+		# copied from Normalize since it's not easy to subclass
+		if clip is None:
+			clip = self.clip
+		result, is_scalar = self.process_value(value)
+		self.autoscale_None(result)
+		vmin, vmax = self.vmin, self.vmax
+		if vmin > vmax:
+			raise ValueError("minvalue must be less than or equal to maxvalue")
+		elif vmin == vmax:
+			result.fill(0)	 # Or should it be all masked?	Or 0.5?
+		else:
+			vmin = float(vmin)
+			vmax = float(vmax)
+			if clip:
+				mask = ma.getmask(result)
+				result = ma.array(np.clip(result.filled(vmax), vmin, vmax), mask=mask)
+			# ma division is very slow; we can take a shortcut
+			resdat = result.data
+			self._map(resdat, resdat)
+			vmin = self._map(vmin)
+			vmax = self._map(vmax)
+			resdat -= vmin
+			resdat /= (vmax - vmin)
+			result = np.ma.array(resdat, mask=result.mask, copy=False)
+		if is_scalar:
+			result = result[0]
+		return result
+
+
+from matplotlib.colors import LinearSegmentedColormap
 
 # a colormap that goes from white to black: the opposite of matplotlib.gray()
 antigray = LinearSegmentedColormap('antigray',
