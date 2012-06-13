@@ -147,3 +147,39 @@ of hexadecimal digits::
 (We sort them into subdirectories like that to avoid having a huge number 
 of files in a single directory.)
 
+
+Running a local machine (your laptop, say)
+------------------------------------------
+
+Prerequisites:
+
+* `django <https://www.djangoproject.com/>`_
+* `python-openid <http://pypi.python.org/pypi/python-openid/>`_
+* `django-openid-auth <http://pypi.python.org/pypi/django-openid-auth/>`_
+* `South <http://pypi.python.org/pypi/South>`_
+* `PIL <http://www.pythonware.com/products/pil/>`_
+* `sqlite3`
+* `simplejson <http://pypi.python.org/pypi/simplejson/>`_
+
+Once you've got the code checked out, you need to symlink one of the
+``settings_*.py`` files to ``settings.py``::
+
+    ln -s settings_test.py settings.py
+
+for local testing, ``settings_test.py`` is the best bet, since it uses
+a local sqlite3 database rather than a real external database.
+
+Initialize the database::
+
+    python manage.py syncdb
+    python manage.py migrate
+
+Then you can run the Django web server by running::
+
+    python manage.py runserver
+
+And then go to:  http://localhost:8000
+
+ 
+
+
