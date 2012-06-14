@@ -21,6 +21,14 @@ class Frame(SdssFile):
 	def getCalibVec(self):
 		return self.calib
 
+class PhotoObj(SdssFile):
+	def __init__(self, *args, **kwargs):
+		super(PhotoObj, self).__init__(*args, **kwargs)
+		self.filetype = 'photoObj'
+		self.table = None
+	def getTable(self):
+		return self.table
+
 class runlist(object):
 	pass
 
@@ -155,6 +163,15 @@ class DR8(DR7):
 				return None
 
 		return outfn
+
+	def readPhotoObj(self, run, camcol, field, filename=None):
+		obj = PhotoObj(run, camcol, field)
+		if filename is None:
+			fn = self.getPath('photoObj', run, camcol, field)
+		else:
+			fn = filename
+		obj.table = fits_table(fn)
+		return obj
 
 	def readFrame(self, run, camcol, field, band, filename=None):
 		'''
