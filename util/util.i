@@ -604,6 +604,12 @@ def sip_t_get_cd(self):
     return (cd[0], cd[1], cd[2], cd[3])
 sip_t.get_cd = sip_t_get_cd
 
+def sip_t_radec_bounds(self):
+	W,H = self.wcstan.imagew, self.wcstan.imageh
+	r,d = self.pixelxy2radec([1, W, W, 1], [1, 1, H, H])
+	return (r.min(), r.max(), d.min(), d.max())
+sip_t.radec_bounds = sip_t_radec_bounds	   
+
 Sip = sip_t
 	%}
 

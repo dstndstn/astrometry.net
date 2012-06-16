@@ -12,7 +12,7 @@ class Plotstuff(object):
 				  
 
 	def __init__(self, outformat=None, size=None, ra=None, dec=None, width=None,
-				 rdw=None, wcsfn=None, wcsext=0):
+				 rdw=None, wcsfn=None, wcsext=0, alpha=1.):
 		p = plotstuff_new()
 		self.pargs = p
 		if outformat is not None:
@@ -21,6 +21,7 @@ class Plotstuff(object):
 		if size is not None:
 			self.size = size
 			self.color = 'black'
+			self.alpha = alpha
 			self.plot('fill')
 		if ra is not None and dec is not None and width is not None:
 			self.set_wcs_box(ra, dec, width)

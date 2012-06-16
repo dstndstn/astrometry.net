@@ -24,12 +24,32 @@ def test_astrans(sdss):
 	plt.plot(r2, d2, 'bo', mec='b', mfc='none')
 	plt.savefig('rd.png')
 
+	r3,d3 = [],[]
+	for xi,yi in zip(x,y):
+		ri,di = astrans.pixel_to_radec(xi, yi)
+		r3.append(ri)
+		d3.append(di)
+	plt.clf()
+	plt.plot(ra, dec, 'r.')
+	plt.plot(r3, d3, 'bo', mec='b', mfc='none')
+	plt.savefig('rd3.png')
+
 	x2,y2 = astrans.radec_to_pixel(ra, dec)
 	plt.clf()
 	plt.plot(x, y, 'r.')
 	plt.plot(x2, y2, 'bo', mec='b', mfc='none')
 	plt.savefig('xy.png')
-	
+
+	x3,y3 = [],[]
+	for ri,di in zip(ra, dec):
+		xi,yi = astrans.radec_to_pixel(ri, di)
+		x3.append(xi)
+		y3.append(yi)
+	plt.clf()
+	plt.plot(x, y, 'r.')
+	plt.plot(x3, y3, 'bo', mec='b', mfc='none')
+	plt.savefig('xy3.png')
+
 
 if __name__ == '__main__':
 	sdss = DR8()
