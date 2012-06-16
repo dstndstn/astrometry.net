@@ -70,6 +70,8 @@ class Plotstuff(object):
 		elif name == 'rgb':
 			plotstuff_set_rgba2(self.pargs, val[0], val[1], val[2],
 						   plotstuff_get_alpha(self.pargs))
+		elif name == 'rgba':
+			plotstuff_set_rgba2(self.pargs, val[0], val[1], val[2], val[3])
 		elif name == 'alpha':
 			self.set_alpha(val)
 		elif name == 'lw':
