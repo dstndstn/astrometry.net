@@ -330,11 +330,27 @@ static unsigned char* read_fits_image(const plot_args_t* pargs, plotimage_t* arg
 
 	if (args->resample) {
 		// resample onto the output grid...
-		rimg = calloc(pargs->W * pargs->H, sizeof(float));
+		//rimg = calloc(pargs->W * pargs->H, sizeof(float));
+		rimg = malloc(pargs->W * pargs->H * sizeof(float));
+		int i;
+		for (i=0; i<(pargs->W * pargs->H); i++) {
+			rimg[i] = args->image_null;
+		}
 		if (resample_wcs(args->wcs, fimg, args->W, args->H,
 						 pargs->wcs, rimg, pargs->W, pargs->H)) {
 			ERROR("Failed to resample image");
 			return NULL;
+		}
+		{
+			// DEBUG
+			double plo = HUGE_VAL;
+			double phi = -HUGE_VAL;
+			int i;
+			for (i=0; i<(pargs->W * pargs->H); i++) {
+				plo = MIN(plo, rimg[i]);
+				phi = MAX(phi, rimg[i]);
+			}
+			logverb("Resampled pixel value range: %g, %g\n", plo, phi);
 		}
 
 		// ?
@@ -404,12 +420,24 @@ unsigned char* plot_image_scale_float(plotimage_t* args, const float* fimg) {
 			k = 4*(j*args->W + i);
 			if ((args->image_null == pval) ||
 				(isnan(args->image_null) && isnan(pval)) ||
-				((args->image_valid_low != 0.0) && (args->image_valid_high != 0.0) &&
-				 ((pval < args->image_valid_low) || (pval > args->image_valid_high)))) {
+				((args->image_valid_low != 0.0) && (pval < args->image_valid_low)) ||
+				((args->image_valid_high != 0.0) && (pval > args->image_valid_high))) {
 				img[k+0] = 0;
 				img[k+1] = 0;
 				img[k+2] = 0;
 				img[k+3] = 0;
+
+				if ((pval == args->image_null) ||
+					(isnan(args->image_null) && isnan(pval))) {
+					args->n_invalid_null++;
+				}
+				if (pval < args->image_valid_low) {
+					args->n_invalid_low++;
+				}
+				if (pval > args->image_valid_high) {
+					args->n_invalid_high++;
+				}
+
 			} else {
 				v = (pval - offset) * scale;
 				if (args->arcsinh != 0) {

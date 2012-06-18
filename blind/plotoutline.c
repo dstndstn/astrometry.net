@@ -60,19 +60,19 @@ static int trace_line(anwcs_t* wcs, cairo_t* cairo, dl* rd, int istart, int idir
 	int i;
 	double lastra=0, lastdec=0;
 	double first = TRUE;
-	logverb("trace_line: start %i, dir %i, end %i\n", istart, idir, iend);
+	//logverb("trace_line: start %i, dir %i, end %i\n", istart, idir, iend);
 	for (i = istart; i != iend; i += idir) {
 		double x,y,ra,dec;
 		ra  = dl_get(rd, 2*i+0);
 		dec = dl_get(rd, 2*i+1);
 
-		logverb("tracing: i=%i, ra,dec = %g,%g\n", i, ra, dec);
+		//logverb("tracing: i=%i, ra,dec = %g,%g\n", i, ra, dec);
 
 		if (anwcs_radec2pixelxy(wcs, ra, dec, &x, &y))
 			// ?
 			continue;
 
-		logverb("  x,y %g,%g\n", x, y);
+		//logverb("  x,y %g,%g\n", x, y);
 
 		if (first) {
 			if (firstmove)

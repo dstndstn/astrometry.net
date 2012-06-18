@@ -245,6 +245,10 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 		return plotstuff_set_wcs_file(self, fn, ext);
 	}
 
+	void loginit(int level) {
+		log_init(level);
+	}
+
 }
 
 %extend plotoutline_args {

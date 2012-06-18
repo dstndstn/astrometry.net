@@ -39,6 +39,10 @@ struct plotimage_args {
 	double image_valid_low;
 	double image_valid_high;
 
+	int n_invalid_low;
+	int n_invalid_high;
+	int n_invalid_null;
+
 	// FITS extension
 	int fitsext;
 	// FITS image plane
