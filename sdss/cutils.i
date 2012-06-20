@@ -122,6 +122,8 @@ PyObject* radec_to_munu(double ra, double dec, double node, double incl) {
 	nu = rad2deg(nu);
 	if (mu < 0)
 		mu += 360.0;
+	if (mu > 360)
+		mu -= 360.0;
 	return PyTuple_Pack(2, PyFloat_FromDouble(mu), PyFloat_FromDouble(nu));
 }
 %}

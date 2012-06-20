@@ -5,8 +5,7 @@ import pylab as plt
 import sys
 from astrometry.sdss.dr8 import *
 
-def test_astrans(sdss):
-	r,c,f,b = 4623, 1, 203, 'r'
+def test_astrans(sdss, r,c,f,b):
 	bandnum = band_index(b)
 	sdss.retrieve('frame', r, c, f, b)
 	frame = sdss.readFrame(r, c, f, b)
@@ -53,7 +52,8 @@ def test_astrans(sdss):
 
 if __name__ == '__main__':
 	sdss = DR8()
-	test_astrans(sdss)
+	#test_astrans(sdss, 4623, 1, 203, 'r')
+	test_astrans(sdss, 5065, 1, 68, 'r')
 	sys.exit(0)
 
 	fnew  = sdss.readFrame(4623, 1, 203, 'r', filename='frame-r-004623-1-0203.fits')

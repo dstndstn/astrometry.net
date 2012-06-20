@@ -351,6 +351,7 @@ class AsTrans(SdssFile):
 					   np.sin(dec) * np.cos(incl))
 		mu, nu = np.rad2deg(mu), np.rad2deg(nu)
 		mu += (360. * (mu < 0))
+		mu -= (360. * (mu > 360))
 		return (mu, nu)
 
 	def munu_to_radec(self, mu, nu):
@@ -365,6 +366,7 @@ class AsTrans(SdssFile):
 						np.sin(nu) * np.cos(incl))
 		ra, dec = np.rad2deg(ra), np.rad2deg(dec)
 		ra += (360. * (ra < 0))
+		ra -= (360. * (ra > 360))
 		return (ra, dec)
 
 if cutils is not None:
