@@ -15,7 +15,7 @@ This code is accompanied by the paper:
 
 Lang, D., Hogg, D. W.; Mierle, K., Blanton, M., & Roweis, S., 2010,
 Astrometry.net: Blind astrometric calibration of arbitrary
-astronomical images, Astronomical Journal 137, 1782–1800.
+astronomical images, Astronomical Journal 139, 1782–1800.
 http://arxiv.org/abs/0910.2233
 
 The original purpose of this code release was to back up the claims in
