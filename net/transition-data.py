@@ -30,6 +30,19 @@ for sub in subs:
         print 'DiskFile', df
         keepdfs.add(df)
 
+        im2 = im.thumbnail
+        if im2:
+            print 'Thumbnail', im2
+            df = im2.disk_file
+            print 'DiskFile', df
+            keepdfs.add(df)
+        im2 = im.display_image
+        if im2:
+            print 'Display-size', im2
+            df = im2.disk_file
+            print 'DiskFile', df
+            keepdfs.add(df)
+
 keepdfs = list(keepdfs)
 keepdfs.sort()
 print len(keepdfs), 'DiskFiles to keep'

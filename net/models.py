@@ -317,18 +317,7 @@ class DiskFile(models.Model):
     get_file_path = OLD_get_file_path
 
     @staticmethod
-    def OLD_make_dirs(file_hash_digest):
-        file_directory = DiskFile.OLD_get_file_directory(file_hash_digest)
-        try:
-            os.makedirs(file_directory)
-        except OSError as e:
-            # we don't care if the directory already exists
-            if e.errno == errno.EEXIST:
-                pass
-            else: raise
-
-    @staticmethod
-    def NEW_make_dirs(file_hash_digest,
+    def make_dirs(file_hash_digest,
                       collection=DiskFile.DEFAULT_COLLECTION):
         file_directory = DiskFile.NEW_get_file_directory(file_hash_digest,
                                                          collection)
@@ -340,33 +329,10 @@ class DiskFile(models.Model):
                 pass
             else: raise
 
-    make_dirs = OLD_make_dirs
-                
     @staticmethod
-    def OLD_from_file(filename):
-        file_hash = DiskFile.get_hash()
-        f = open(filename)
-        while True:
-            s = f.read(8096)
-            if not len(s):
-                # EOF
-                break
-            file_hash.update(s)
-        hashkey = file_hash.hexdigest()
-        df,created = DiskFile.objects.get_or_create(file_hash=hashkey,
-                                                    defaults=dict(size=0, file_type=''))
-        if created:
-            # move it into place
-            DiskFile.make_dirs(hashkey)
-            shutil.move(filename, DiskFile.get_file_path(hashkey))
-            df.set_size_and_file_type()
-            df.save()
-        return df
-
-    @staticmethod
-    def NEW_from_file(filename,
-                      collection=DiskFile.DEFAULT_COLLECTION,
-                      hashkey=None):
+    def from_file(filename,
+                  collection=DiskFile.DEFAULT_COLLECTION,
+                  hashkey=None):
         if hashkey is None:
             file_hash = DiskFile.get_hash()
             f = open(filename)
@@ -383,19 +349,19 @@ class DiskFile(models.Model):
             defaults=dict(size=0, file_type='', collection=collection))
         if created:
             # move it into place
-            DiskFile.NEW_make_dirs(hashkey, collection)
-            shutil.move(filename, DiskFile.NEW_get_file_path(hashkey, collection))
+            df.make_dirs()
+            shutil.move(filename, df.NEW_get_path())
             df.set_size_and_file_type()
             df.save()
         return df
-
-    from_file = OLD_from_file
 
     @staticmethod
     def get_hash():
         return hashlib.sha1()
 
 class CachedFile(models.Model):
+    DEFAULT_COLLECTION = 'cached'
+
     disk_file = models.ForeignKey(DiskFile)
     key = models.CharField(max_length=64, unique=True, primary_key=True)
 
@@ -408,8 +374,8 @@ class CachedFile(models.Model):
             return None
 
     @staticmethod
-    def add(key, filename):
-        df = DiskFile.from_file(filename)
+    def add(key, filename, collection=CachedFile.DEFAULT_COLLECTION):
+        df = DiskFile.from_file(filename, collection)
         cf = CachedFile(disk_file=df, key=key)
         cf.save()
         return df
