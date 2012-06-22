@@ -360,16 +360,6 @@ def handle_upload(file=None,url=None):
         return None
     uploaded_file.close()
 
-    # get or create DiskFile object
-    df,created = DiskFile.objects.get_or_create(file_hash=file_hash.hexdigest(),
-                                                defaults={'size':0, 'file_type':''})
-
-    # if the file doesn't already exist, set its size/type and
-    # move file into data directory
-    if created:
-        DiskFile.make_dirs(file_hash.hexdigest())
-        shutil.move(temp_file_path, DiskFile.get_file_path(file_hash.hexdigest()))
-        df.set_size_and_file_type()
-        df.save()
-        
+    df = DiskFile.from_file(temp_file_path, collection='uploaded',
+                            hashkey=file_hash.hexdigest())
     return df, original_filename

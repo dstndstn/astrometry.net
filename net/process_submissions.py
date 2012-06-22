@@ -353,7 +353,7 @@ def dosub(sub):
         print 'Retrieving URL', sub.url
         (fn, headers) = urllib.urlretrieve(sub.url)
         print 'Wrote to file', fn
-        df = DiskFile.from_file(fn)
+        df = DiskFile.from_file(fn, 'uploaded')
         # Try to split the URL into a filename component and save it
         p = urlparse(sub.url)
         p = p.path
@@ -365,9 +365,29 @@ def dosub(sub):
         sub.disk_file = df
         sub.save()
 
-    # compressed .gz
     df = sub.disk_file
     fn = df.get_path()
+
+    original_filename = sub.original_filename
+    # check if file is a gzipped file
+    try:
+        gzip_file = gzip.open(fn)
+        f,tempfn = tempfile.mkstemp()
+        os.close(f)
+        f = open(tempfn,'wb')
+        # should fail on the following line if not a gzip file
+        f.write(gzip_file.read())
+        f.close()
+        gzip_file.close()
+        df = DiskFile.from_file(tempfn, 'uploaded-gunzip')
+        i = original_filename.find('.gz')
+        if i != -1:
+            original_filename = original_filename[:i]
+        logmsg('extracted gzip file %s' % original_filename)
+        fn = tempfn
+    except:
+        # not a gzip file
+        pass
 
     if tarfile.is_tarfile(fn):
         logmsg('file is a tarball')
@@ -378,7 +398,7 @@ def dosub(sub):
                 logmsg('extracting file %s' % tarinfo.name)
                 tar.extract(tarinfo, dirnm)
                 tempfn = os.path.join(dirnm, tarinfo.name)
-                df = DiskFile.from_file(tempfn)
+                df = DiskFile.from_file(tempfn, 'uploaded-untar')
                 # create Image object
                 img = get_or_create_image(df)
                 # create UserImage object.
@@ -388,26 +408,6 @@ def dosub(sub):
         tar.close()
         shutil.rmtree(dirnm, ignore_errors=True)
     else:
-        original_filename = sub.original_filename
-        # check if file is a gzipped file
-        try:
-            gzip_file = gzip.open(fn)
-            f,tempfn = tempfile.mkstemp()
-            os.close(f)
-            f = open(tempfn,'wb')
-            # should fail on the following line if not a gzip file
-            f.write(gzip_file.read())
-            f.close()
-            gzip_file.close()
-            df = DiskFile.from_file(tempfn)
-            i = original_filename.find('.gz')
-            if i != -1:
-                original_filename = original_filename[:i]
-            logmsg('extracted gzip file %s' % original_filename)
-        except:
-            # not a gzip file
-            pass
-         
         # assume file is single image
         logmsg('single file')
         # create Image object
