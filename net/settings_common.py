@@ -8,11 +8,16 @@ DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z'
 TIME_FORMAT = 'H:i:s\Z'
 
 WEB_DIR = os.path.dirname(astrometry.net.__file__) + '/'
+
 DATADIR = os.path.join(WEB_DIR, 'data')
 JOBDIR = os.path.join(WEB_DIR, 'jobs')
 SDSS_TILE_DIR = os.path.join(WEB_DIR, 'sdss-tiles')
 GALEX_JPEG_DIR = '/data1/GALEX-jpegs'
 HENRY_DRAPER_CAT = os.path.join(WEB_DIR, 'hd.fits')
+
+NEW_DATADIR = os.path.join(WEB_DIR, 'data', 'uploads')
+NEW_JOBDIR = os.path.join(WEB_DIR, 'data', 'jobs')
+
 
 AUTH_PROFILE_MODULE = 'net.UserProfile'
 

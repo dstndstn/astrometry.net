@@ -276,6 +276,9 @@ class DiskFile(models.Model):
     def get_path(self):
         return DiskFile.get_file_path(self.file_hash)
 
+    def NEW_get_path(self):
+        return DiskFile.NEW_get_file_path(self.file_hash)
+
     @staticmethod
     def get_file_directory(file_hash_digest):
         return os.path.join(DATADIR,
@@ -284,8 +287,19 @@ class DiskFile(models.Model):
                             file_hash_digest[4:6])
 
     @staticmethod
+    def NEW_get_file_directory(file_hash_digest):
+        return os.path.join(NEW_DATADIR,
+                            file_hash_digest[:3])
+
+    @staticmethod
     def get_file_path(file_hash_digest):
         file_path = DiskFile.get_file_directory(file_hash_digest)
+        file_path = os.path.join(file_path, file_hash_digest)
+        return file_path
+
+    @staticmethod
+    def NEW_get_file_path(file_hash_digest):
+        file_path = DiskFile.NEW_get_file_directory(file_hash_digest)
         file_path = os.path.join(file_path, file_hash_digest)
         return file_path
 
@@ -693,6 +707,10 @@ class Job(models.Model):
 
     def get_dir(self):
         return os.path.join(JOBDIR, '%08i' % self.id)
+
+    def NEW_get_dir(self):
+        jtxt = '%08i' % self.id
+        return os.path.join(NEW_JOBDIR, jtxt[:4], jtxt)
 
     def get_axy_file(self):
         return os.path.join(self.get_dir(), 'job.axy')
