@@ -175,7 +175,6 @@ void solver_tweak2(solver_t* sp, MatchObj* mo, int order, sip_t* verifysip) {
 	for (i=0; i<mo->nindex; i++)
 		xyzarr2radecdegarr(mo->refxyz + i*3, refradec + i*2);
 
-
 	// Verifying an existing WCS?
 	if (verifysip) {
 		memcpy(&startsip, verifysip, sizeof(sip_t));
@@ -1346,6 +1345,21 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 		logverb("Trying to tune up this solution (logodds = %g; %g)...\n", mo->logodds, exp(mo->logodds));
 		solver_tweak2(sp, mo, 1, NULL);
 		logverb("After tuning, logodds = %g (%g)\n", mo->logodds, exp(mo->logodds));
+
+		// Since we tuned up this solution, we can't just accept the
+		// resulting log-odds at face value.
+		if (!fake_match) {
+			verify_hit(sp->index->starkd, sp->index->cutnside,
+					   mo, mo->sip, sp->vf, match_distance_in_pixels2,
+					   sp->distractor_ratio,
+					   sp->field_maxx, sp->field_maxy,
+					   sp->logratio_bail_threshold,
+					   sp->logratio_tokeep,
+					   sp->logratio_stoplooking,
+					   sp->distance_from_quad_bonus,
+					   fake_match);
+			logverb("Checking tuned result: logodds = %g (%g)\n", mo->logodds, exp(mo->logodds));
+		}
 	}
 
 	if (mo->logodds < sp->logratio_toprint)
