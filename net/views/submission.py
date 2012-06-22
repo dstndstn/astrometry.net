@@ -364,7 +364,7 @@ def handle_upload(file=None,url=None):
     df,created = DiskFile.objects.get_or_create(file_hash=file_hash.hexdigest(),
                                                 defaults={'size':0, 'file_type':''})
 
-    # if the file doesn't already exist, set it's size/type and
+    # if the file doesn't already exist, set its size/type and
     # move file into data directory
     if created:
         DiskFile.make_dirs(file_hash.hexdigest())

@@ -249,6 +249,10 @@ class QueuedJob(QueuedThing):
 
 
 class DiskFile(models.Model):
+    DEFAULT_COLLECTION = 'misc'
+
+    collection = models.CharField(max_length=40,
+                                  default=DiskFile.DEFAULT_COLLECTION)
     file_hash = models.CharField(max_length=40, unique=True, primary_key=True)
     size = models.PositiveIntegerField()
     file_type = models.CharField(max_length=256, null=True)
@@ -258,7 +262,7 @@ class DiskFile(models.Model):
     #  submissions -> Submission
 
     def __str__(self):
-        return 'DiskFile: %s, size %i, type %s' % (self.file_hash, self.size, self.file_type)
+        return 'DiskFile: %s, size %i, type %s, coll %s' % (self.file_hash, self.size, self.file_type, self.collection)
 
     def is_fits_image(self):
         return self.file_type == 'FITS image data'
@@ -273,39 +277,48 @@ class DiskFile(models.Model):
     def get_file_types(self):
         return self.file_type.split(';')
 
-    def get_path(self):
-        return DiskFile.get_file_path(self.file_hash)
+    def OLD_get_path(self):
+        return DiskFile.OLD_get_file_path(self.file_hash)
 
     def NEW_get_path(self):
-        return DiskFile.NEW_get_file_path(self.file_hash)
+        return DiskFile.NEW_get_file_path(self.file_hash, self.collection)
+
+    get_path = OLD_get_path
 
     @staticmethod
-    def get_file_directory(file_hash_digest):
+    def OLD_get_file_directory(file_hash_digest):
         return os.path.join(DATADIR,
                             file_hash_digest[0:2],
                             file_hash_digest[2:4],
                             file_hash_digest[4:6])
 
     @staticmethod
-    def NEW_get_file_directory(file_hash_digest):
+    def NEW_get_file_directory(file_hash_digest,
+                               collection=DiskFile.DEFAULT_COLLECTION):
         return os.path.join(NEW_DATADIR,
+                            collection,
                             file_hash_digest[:3])
 
+    get_file_directory = OLD_get_file_directory
+
     @staticmethod
-    def get_file_path(file_hash_digest):
-        file_path = DiskFile.get_file_directory(file_hash_digest)
+    def OLD_get_file_path(file_hash_digest):
+        file_path = DiskFile.OLD_get_file_directory(file_hash_digest)
         file_path = os.path.join(file_path, file_hash_digest)
         return file_path
 
     @staticmethod
-    def NEW_get_file_path(file_hash_digest):
-        file_path = DiskFile.NEW_get_file_directory(file_hash_digest)
+    def NEW_get_file_path(file_hash_digest,
+                          collection=DiskFile.DEFAULT_COLLECTION):
+        file_path = DiskFile.NEW_get_file_directory(file_hash_digest, collection)
         file_path = os.path.join(file_path, file_hash_digest)
         return file_path
 
+    get_file_path = OLD_get_file_path
+
     @staticmethod
-    def make_dirs(file_hash_digest):
-        file_directory = DiskFile.get_file_directory(file_hash_digest)
+    def OLD_make_dirs(file_hash_digest):
+        file_directory = DiskFile.OLD_get_file_directory(file_hash_digest)
         try:
             os.makedirs(file_directory)
         except OSError as e:
@@ -315,7 +328,22 @@ class DiskFile(models.Model):
             else: raise
 
     @staticmethod
-    def from_file(filename):
+    def NEW_make_dirs(file_hash_digest,
+                      collection=DiskFile.DEFAULT_COLLECTION):
+        file_directory = DiskFile.NEW_get_file_directory(file_hash_digest,
+                                                         collection)
+        try:
+            os.makedirs(file_directory)
+        except OSError as e:
+            # we don't care if the directory already exists
+            if e.errno == errno.EEXIST:
+                pass
+            else: raise
+
+    make_dirs = OLD_make_dirs
+                
+    @staticmethod
+    def OLD_from_file(filename):
         file_hash = DiskFile.get_hash()
         f = open(filename)
         while True:
@@ -334,6 +362,34 @@ class DiskFile(models.Model):
             df.set_size_and_file_type()
             df.save()
         return df
+
+    @staticmethod
+    def NEW_from_file(filename,
+                      collection=DiskFile.DEFAULT_COLLECTION,
+                      hashkey=None):
+        if hashkey is None:
+            file_hash = DiskFile.get_hash()
+            f = open(filename)
+            while True:
+                s = f.read(8096)
+                if not len(s):
+                    # EOF
+                    break
+                file_hash.update(s)
+            hashkey = file_hash.hexdigest()
+
+        df,created = DiskFile.objects.get_or_create(
+            file_hash=hashkey,
+            defaults=dict(size=0, file_type='', collection=collection))
+        if created:
+            # move it into place
+            DiskFile.NEW_make_dirs(hashkey, collection)
+            shutil.move(filename, DiskFile.NEW_get_file_path(hashkey, collection))
+            df.set_size_and_file_type()
+            df.save()
+        return df
+
+    from_file = OLD_from_file
 
     @staticmethod
     def get_hash():
