@@ -23,6 +23,7 @@ mkdir -p ${STAGINGJOBS}
  fusermount -u ${STAGINGJOBS}) || true
 
 # Clear/create the overlay area
+echo "Creating overlay directories..."
 rm -Rf ${OVERLAYDATA}
 mkdir ${OVERLAYDATA}
 
@@ -31,10 +32,14 @@ mkdir ${OVERLAYJOBS}
 
 ## create the union filesystem:
 echo Mounting ${STAGINGDATA}
+echo unionfs-fuse -o cow,use_ino,suid,dev,nonempty,allow_other,default_permissions \
+    "${OVERLAYDATA}=RW:${NOVADATA}=RO" "${STAGINGDATA}"
 unionfs-fuse -o cow,use_ino,suid,dev,nonempty,allow_other,default_permissions \
     "${OVERLAYDATA}=RW:${NOVADATA}=RO" "${STAGINGDATA}"
 
 echo Mounting ${STAGINGJOBS}
+echo unionfs-fuse -o cow,use_ino,suid,dev,nonempty,allow_other,default_permissions \
+    "${OVERLAYJOBS}=RW:${NOVAJOBS}=RO" "${STAGINGJOBS}"
 unionfs-fuse -o cow,use_ino,suid,dev,nonempty,allow_other,default_permissions \
     "${OVERLAYJOBS}=RW:${NOVAJOBS}=RO" "${STAGINGJOBS}"
 

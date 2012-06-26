@@ -27,6 +27,8 @@ for sub in subs:
         im = ui.image
         print 'Image', im
         df = im.disk_file
+        df.collection = Image.ORIG_COLLECTION
+        df.save()
         print 'DiskFile', df
         keepdfs.add(df)
 
@@ -34,12 +36,16 @@ for sub in subs:
         if im2:
             print 'Thumbnail', im2
             df = im2.disk_file
+            df.collection = Image.RESIZED_COLLECTION
+            df.save()
             print 'DiskFile', df
             keepdfs.add(df)
         im2 = im.display_image
         if im2:
             print 'Display-size', im2
             df = im2.disk_file
+            df.collection = Image.RESIZED_COLLECTION
+            df.save()
             print 'DiskFile', df
             keepdfs.add(df)
 

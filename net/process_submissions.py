@@ -353,7 +353,7 @@ def dosub(sub):
         print 'Retrieving URL', sub.url
         (fn, headers) = urllib.urlretrieve(sub.url)
         print 'Wrote to file', fn
-        df = DiskFile.from_file(fn, 'uploaded')
+        df = DiskFile.from_file(fn, Image.ORIG_COLLECTION)
         # Try to split the URL into a filename component and save it
         p = urlparse(sub.url)
         p = p.path

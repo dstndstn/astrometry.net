@@ -252,7 +252,7 @@ class DiskFile(models.Model):
     DEFAULT_COLLECTION = 'misc'
 
     collection = models.CharField(max_length=40,
-                                  default=DiskFile.DEFAULT_COLLECTION)
+                                  default=DEFAULT_COLLECTION)
     file_hash = models.CharField(max_length=40, unique=True, primary_key=True)
     size = models.PositiveIntegerField()
     file_type = models.CharField(max_length=256, null=True)
@@ -294,7 +294,7 @@ class DiskFile(models.Model):
 
     @staticmethod
     def NEW_get_file_directory(file_hash_digest,
-                               collection=DiskFile.DEFAULT_COLLECTION):
+                               collection=DEFAULT_COLLECTION):
         return os.path.join(NEW_DATADIR,
                             collection,
                             file_hash_digest[:3])
@@ -309,7 +309,7 @@ class DiskFile(models.Model):
 
     @staticmethod
     def NEW_get_file_path(file_hash_digest,
-                          collection=DiskFile.DEFAULT_COLLECTION):
+                          collection=DEFAULT_COLLECTION):
         file_path = DiskFile.NEW_get_file_directory(file_hash_digest, collection)
         file_path = os.path.join(file_path, file_hash_digest)
         return file_path
@@ -318,7 +318,7 @@ class DiskFile(models.Model):
 
     @staticmethod
     def make_dirs(file_hash_digest,
-                      collection=DiskFile.DEFAULT_COLLECTION):
+                      collection=DEFAULT_COLLECTION):
         file_directory = DiskFile.NEW_get_file_directory(file_hash_digest,
                                                          collection)
         try:
@@ -331,7 +331,7 @@ class DiskFile(models.Model):
 
     @staticmethod
     def from_file(filename,
-                  collection=DiskFile.DEFAULT_COLLECTION,
+                  collection=DEFAULT_COLLECTION,
                   hashkey=None):
         if hashkey is None:
             file_hash = DiskFile.get_hash()
@@ -374,13 +374,16 @@ class CachedFile(models.Model):
             return None
 
     @staticmethod
-    def add(key, filename, collection=CachedFile.DEFAULT_COLLECTION):
+    def add(key, filename, collection=DEFAULT_COLLECTION):
         df = DiskFile.from_file(filename, collection)
         cf = CachedFile(disk_file=df, key=key)
         cf.save()
         return df
 
 class Image(models.Model):
+    RESIZED_COLLECTION = 'resized'
+    ORIG_COLLECTION = 'uploaded'
+
     MIME_TYPES = {
         'PNG image': 'image/png',
         'JPEG image data': 'image/jpeg',
@@ -445,7 +448,7 @@ class Image(models.Model):
             logmsg('out: ' + out)
             logmsg('err: ' + err)
             raise RuntimeError('Failed to make resized image for %s: pnmscale: %s' % (str(self), err))
-        df = DiskFile.from_file(imagefn, 'resized')
+        df = DiskFile.from_file(imagefn, RESIZED_COLLECTION)
         image, created = Image.objects.get_or_create(disk_file=df, width=W, height=H)
         return image
 
