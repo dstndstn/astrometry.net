@@ -18,6 +18,8 @@ print subs.count(), 'Submissions'
 for sub in subs:
     print 'Submission', sub
     df = sub.disk_file
+    df.collection = Image.ORIG_COLLECTION
+    df.save()
     print 'DiskFile', df
     keepdfs.add(df)
     uis = sub.user_images.all()
@@ -66,8 +68,11 @@ for df in keepdfs:
     if os.path.exists(newpath) and not os.path.exists(oldpath):
         print 'Already moved', oldpath, newpath
         continue
-    shutil.move(oldpath, newpath)
-    
+    try:
+        shutil.move(oldpath, newpath)
+    except Exception as e:
+        print 'Failed to move', oldpath, 'to', newpath
+        print e
 
 
 jobs = Job.objects.all()

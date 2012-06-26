@@ -360,6 +360,6 @@ def handle_upload(file=None,url=None):
         return None
     uploaded_file.close()
 
-    df = DiskFile.from_file(temp_file_path, collection='uploaded',
+    df = DiskFile.from_file(temp_file_path, collection=Image.ORIG_COLLECTION,
                             hashkey=file_hash.hexdigest())
     return df, original_filename

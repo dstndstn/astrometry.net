@@ -15,7 +15,7 @@ SDSS_TILE_DIR = os.path.join(WEB_DIR, 'sdss-tiles')
 GALEX_JPEG_DIR = '/data1/GALEX-jpegs'
 HENRY_DRAPER_CAT = os.path.join(WEB_DIR, 'hd.fits')
 
-NEW_DATADIR = os.path.join(WEB_DIR, 'data', 'uploads')
+NEW_DATADIR = os.path.join(WEB_DIR, 'data', 'files')
 NEW_JOBDIR = os.path.join(WEB_DIR, 'data', 'jobs')
 
 
