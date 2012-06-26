@@ -18,6 +18,7 @@ HENRY_DRAPER_CAT = os.path.join(WEB_DIR, 'hd.fits')
 NEW_DATADIR = os.path.join(WEB_DIR, 'data', 'files')
 NEW_JOBDIR = os.path.join(WEB_DIR, 'data', 'jobs')
 
+TEMPDIR = '/tmp'
 
 AUTH_PROFILE_MODULE = 'net.UserProfile'
 
@@ -59,7 +60,6 @@ DEFAULT_LICENSE_ID = 1
 #CACHEDIR = DATADIR + 'tilecache/'
 #RENDERCACHEDIR = DATADIR + 'rendercache/'
 
-TEMPDIR = '/tmp'
 
 SESSION_COOKIE_NAME = 'AstrometryTestSession'
 

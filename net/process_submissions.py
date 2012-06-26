@@ -194,7 +194,9 @@ def dojob(job, userimage, log=None):
         '--ra': sub.center_ra,
         '--dec': sub.center_dec,
         '--radius': sub.radius,
-        '--downsample': sub.downsample_factor
+        '--downsample': sub.downsample_factor,
+        # tuning-up maybe fixed; if not, turn it off with:
+        #'--odds-to-tune': 1e9,
 
         # Other things we might want include...
         # --use-sextractor
@@ -412,9 +414,11 @@ def dosub(sub):
         logmsg('single file')
         # create Image object
         img = get_or_create_image(df)
+        logmsg('Got/created Image %i' % img.id)
         # create UserImage object.
         if img:
-            create_user_image(sub, img, original_filename)
+            uimg = create_user_image(sub, img, original_filename)
+            logmsg('Created UserImage %i' % uimg.id)
 
     sub.set_processing_finished()
     sub.save()
@@ -435,9 +439,9 @@ def create_user_image(sub, img, original_filename):
         comment_receiver=comment_receiver,
         defaults=dict(original_file_name=original_filename,
                      publicly_visible = sub.publicly_visible))
-
     if sub.album:
         sub.album.user_images.add(uimg)
+    return uimg
 
 def get_or_create_image(df):
     # Is there already an Image for this DiskFile?
@@ -445,9 +449,10 @@ def get_or_create_image(df):
         img = Image.objects.get(disk_file=df, display_image__isnull=False, thumbnail__isnull=False)
     except Image.MultipleObjectsReturned:
         logmsg("multiple found")
-        for i in range(1,len(img)):
-            img[i].delete()
-        img = img[0]
+        imgs = Image.objects.filter(disk_file=df, display_image__isnull=False, thumbnail__isnull=False)
+        for i in range(1,len(imgs)):
+            imgs[i].delete()
+        img = imgs[0]
     except Image.DoesNotExist:
         # try to create image assume disk file is an image file (png, jpg, etc)
         img = create_image(df)
@@ -613,8 +618,6 @@ def main(dojob_nthreads, dosub_nthreads, refresh_rate, max_sub_retries):
                 if res.successful():
                     print 'result:', res.get(),
             print
-
-
 
         runjobs = me.jobs.filter(finished=False)
         print 'Jobs running:', len(jobresults)

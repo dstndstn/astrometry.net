@@ -10,8 +10,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from astrometry.net.settings import *
 
-    
-
 class Hideable(models.Model):
     class Meta:
         abstract = True

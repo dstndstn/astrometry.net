@@ -66,6 +66,13 @@ $(document).ready(function() {
             </div>
         </div>
 
+        {% block messageblock %}
+        <div id="messages">
+        {% include "messages.html" %}
+        </div>
+        {% endblock messageblock %}
+
+
         {% block menublock %}
         <div id="menu">
         {% include "menu.html" %}

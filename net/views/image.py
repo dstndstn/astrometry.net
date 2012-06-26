@@ -454,17 +454,6 @@ def extraction_image(req, job_id=None, size='full'):
     except:
         return HttpResponse("plot failed") 
 
-    '''
-    exfn = get_temp_file()
-    cmd = 'plotxy -i %s -I %s -o %s -S %s -w 2 -C red -r 4 -X x -Y y' % (axyfn, pnmfn, exfn, str(scale))
-    logmsg('Running: ' + cmd)
-    (rtn, out, err) = run_command(cmd)
-    if rtn:
-        logmsg('out: ' + out)
-        logmsg('err: ' + err)
-        print err
-        return HttpResponse('plot failed')
-    '''
     f = open(exfn)
     res = HttpResponse(f)
     res['Content-Type'] = 'image/png'
@@ -683,7 +672,7 @@ def new_fits_file(req, jobid=None):
     if rtn:
         logmsg('out: ' + out)
         logmsg('err: ' + err)
-        return HttpResponse('plot failed')
+        return HttpResponse('plot failed: out ' + out + ', err ' + err)
     res = HttpResponse(open(outfn))
     res['Content-Type'] = 'application/fits' 
     res['Content-Length'] = file_size(outfn)

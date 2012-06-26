@@ -5,7 +5,7 @@
 {% else %}
 
 {% comment %}
-<meta http-equiv="refresh" content="5; URL=" />
+<meta http-equiv="refresh" content="10; URL=" />
 {% endcomment %}
 
 {% endif %}
@@ -193,13 +193,32 @@ Submission {{ sub.id }}
         Unfortunately, we couldn't process this submission properly:<br/>
         <div style="width:640px; overflow:auto"><pre>{{ sub.error_message }}</pre>
     {% else %}
-        Thanks for your submission! Please bear with us while we process it.
-        {% if sub.user.username == anonymous_username %}
-        <p class="notice">
-        Please note: the contents and results of your submission will only be
-        available upon a successful calibration.
-        </p>
-        {% endif %}
+
+       {% if sub.processing_finished %}
+
+       Unfortunately, we failed to identify your image.
+
+       {% if sub.user.username == anonymous_username %}
+       <p class="notice">
+       Since you are not logged in, we <b>intentionally</b> don't show your image
+       here.  (We don't want to host arbitrary images for anonymous users!)
+       </p>
+       {% endif %}
+
+       {% else %}
+
+       Thanks for your submission! Please bear with us while we
+       process it.  Usually we will have results within 10 minutes.
+
+       {% if sub.user.username == anonymous_username %}
+       <p class="notice">
+         Please note: since you are not logged in, the contents and
+         results of your submission will only be available upon a
+         successful calibration.
+       </p>
+       {% endif %}
+
+       {% endif %}
     {% endif %}
     </td></tr>
 {% endfor %}
