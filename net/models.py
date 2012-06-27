@@ -280,6 +280,9 @@ class DiskFile(models.Model):
     def get_path(self):
         return DiskFile.get_file_path(self.file_hash, self.collection)
 
+    def make_dirs(self):
+        return DiskFile.make_dirs_for(self.file_hash, self.collection)
+
     @staticmethod
     def get_file_directory(file_hash_digest,
                                collection=DEFAULT_COLLECTION):
@@ -295,10 +298,10 @@ class DiskFile(models.Model):
         return file_path
 
     @staticmethod
-    def make_dirs(file_hash_digest,
+    def make_dirs_for(file_hash_digest,
                       collection=DEFAULT_COLLECTION):
         file_directory = DiskFile.get_file_directory(file_hash_digest,
-                                                         collection)
+                                                     collection)
         try:
             os.makedirs(file_directory)
         except OSError as e:
@@ -326,11 +329,15 @@ class DiskFile(models.Model):
             file_hash=hashkey,
             defaults=dict(size=0, file_type='', collection=collection))
         if created:
-            # move it into place
-            df.make_dirs()
-            shutil.move(filename, df.get_path())
-            df.set_size_and_file_type()
-            df.save()
+            try:
+                # move it into place
+                df.make_dirs()
+                shutil.move(filename, df.get_path())
+                df.set_size_and_file_type()
+                df.save()
+            except:
+                df.delete()
+                raise
         return df
 
     @staticmethod
@@ -347,7 +354,14 @@ class CachedFile(models.Model):
     def get(key):
         try:
             cf = CachedFile.objects.get(key=key)
-            return cf.disk_file
+            df = cf.disk_file
+            if not os.path.exists(df.get_path()):
+                logmsg("CachedFile's DiskFile '%s' does not exist at path '%s'; deleting database entry."
+                       % (str(df), df.get_path()))
+                df.delete()
+                cf.delete()
+                return None
+            return df
         except:
             return None
 
@@ -426,7 +440,7 @@ class Image(models.Model):
             logmsg('out: ' + out)
             logmsg('err: ' + err)
             raise RuntimeError('Failed to make resized image for %s: pnmscale: %s' % (str(self), err))
-        df = DiskFile.from_file(imagefn, RESIZED_COLLECTION)
+        df = DiskFile.from_file(imagefn, Image.RESIZED_COLLECTION)
         image, created = Image.objects.get_or_create(disk_file=df, width=W, height=H)
         return image
 
@@ -1020,42 +1034,15 @@ class Submission(Hideable):
 
     processing_retries = models.PositiveIntegerField(default=0)
 
-    error_message = models.CharField(max_length=256, null=True)
+    error_message = models.CharField(max_length=2048, null=True)
 
     license = models.ForeignKey('License')
     comment_receiver = models.OneToOneField('CommentReceiver')
-
-    # a number unique to all submissions submitted in the same day
-    deduplication_nonce = models.IntegerField(null=True)
 
     # Reverse mappings:
     #  user_images -> UserImage
     #  -> QueuedSubmission
 
-    @staticmethod
-    def is_valid_deduplication_nonce(nonce,day,year):
-        collisions = Submission.objects.filter(
-            deduplication_nonce=nonce,
-            submitted_on__day=day,
-            submitted_on__year=year
-        )
-        return len(collisions) == 0
-        
-
-    @staticmethod
-    def get_deduplication_nonce():
-        now = datetime.now()
-        day = now.day
-        year = now.year
-        while True:
-            candidate = random.randrange(1,1073741824) #between 1 and 2^30
-            if Submission.is_valid_deduplication_nonce(candidate, day, year):
-                break
-        return candidate
-
-
-
-        
     def __str__(self):
         return ('Submission %i: file <%s>, url %s, proc_started=%s' %
                 (self.id, str(self.disk_file), self.url, str(self.processing_started)))
@@ -1097,22 +1084,6 @@ class Submission(Hideable):
     def set_processing_finished(self):
         self.processing_finished = datetime.now()
 
-    def has_valid_deduplication_nonce(self,day,year):
-        collisions = Submission.objects.filter(
-            deduplication_nonce=self.deduplication_nonce,
-            submitted_on__day=day,
-            submitted_on__year=year
-        )
-        valid = len(collisions) == 0
-        if not valid:
-            collision_ids = [collision.id for collision in collisions]
-            valid = (
-                self.id is not None
-                and self.id in collision_ids
-                and len(collisions) == 1
-            )
-        return valid
-
     def save(self, *args, **kwargs):
         default_license=self.user.get_profile().default_license
         try:
@@ -1134,11 +1105,7 @@ class Submission(Hideable):
         logmsg('saving submission: commentreceiver id = %d' % self.comment_receiver.id)
 
         now = datetime.now()
-        if self.deduplication_nonce and not self.has_valid_deduplication_nonce(now.day, now.year):
-            logmsg('deduplication nonce: %d' % self.deduplication_nonce)
-            raise DuplicateSubmissionException('duplicate submission detected')
-        else:
-            return super(Submission, self).save(*args, **kwargs)
+        return super(Submission, self).save(*args, **kwargs)
 
 
 class Album(Hideable):

@@ -4,8 +4,10 @@ import os
 import sys
 
 # add .. to PYTHONPATH
-path = os.path.abspath(__file__)
+path = os.path.realpath(__file__)
+print 'Path', path
 basedir = os.path.dirname(os.path.dirname(path))
+print 'Adding basedir', basedir, 'to PYTHONPATH'
 sys.path.append(basedir)
 
 # add ../blind and ../util to PATH
@@ -345,6 +347,8 @@ def try_dosub(sub, max_retries):
             + traceback.format_exc(None))
         sub.set_processing_finished()
         sub.save()
+        logmsg('Caught exception while processing Submission ' + str(sub))
+        logmsg('  ' + traceback.format_exc(None))
         return 'exception'
 
 def dosub(sub):
@@ -367,8 +371,12 @@ def dosub(sub):
         sub.disk_file = df
         sub.save()
 
+    else:
+        logmsg('uploaded disk file for this submission is ' + str(sub.disk_file))
+
     df = sub.disk_file
     fn = df.get_path()
+    logmsg('DiskFile path ' + fn)
 
     original_filename = sub.original_filename
     # check if file is a gzipped file
