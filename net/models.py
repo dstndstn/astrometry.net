@@ -277,49 +277,27 @@ class DiskFile(models.Model):
     def get_file_types(self):
         return self.file_type.split(';')
 
-    def OLD_get_path(self):
-        return DiskFile.OLD_get_file_path(self.file_hash)
-
-    def NEW_get_path(self):
-        return DiskFile.NEW_get_file_path(self.file_hash, self.collection)
-
-    get_path = OLD_get_path
+    def get_path(self):
+        return DiskFile.get_file_path(self.file_hash, self.collection)
 
     @staticmethod
-    def OLD_get_file_directory(file_hash_digest):
-        return os.path.join(DATADIR,
-                            file_hash_digest[0:2],
-                            file_hash_digest[2:4],
-                            file_hash_digest[4:6])
-
-    @staticmethod
-    def NEW_get_file_directory(file_hash_digest,
+    def get_file_directory(file_hash_digest,
                                collection=DEFAULT_COLLECTION):
-        return os.path.join(NEW_DATADIR,
+        return os.path.join(DATADIR,
                             collection,
                             file_hash_digest[:3])
 
-    get_file_directory = OLD_get_file_directory
-
     @staticmethod
-    def OLD_get_file_path(file_hash_digest):
-        file_path = DiskFile.OLD_get_file_directory(file_hash_digest)
-        file_path = os.path.join(file_path, file_hash_digest)
-        return file_path
-
-    @staticmethod
-    def NEW_get_file_path(file_hash_digest,
+    def get_file_path(file_hash_digest,
                           collection=DEFAULT_COLLECTION):
-        file_path = DiskFile.NEW_get_file_directory(file_hash_digest, collection)
+        file_path = DiskFile.get_file_directory(file_hash_digest, collection)
         file_path = os.path.join(file_path, file_hash_digest)
         return file_path
-
-    get_file_path = OLD_get_file_path
 
     @staticmethod
     def make_dirs(file_hash_digest,
                       collection=DEFAULT_COLLECTION):
-        file_directory = DiskFile.NEW_get_file_directory(file_hash_digest,
+        file_directory = DiskFile.get_file_directory(file_hash_digest,
                                                          collection)
         try:
             os.makedirs(file_directory)
@@ -350,7 +328,7 @@ class DiskFile(models.Model):
         if created:
             # move it into place
             df.make_dirs()
-            shutil.move(filename, df.NEW_get_path())
+            shutil.move(filename, df.get_path())
             df.set_size_and_file_type()
             df.save()
         return df
@@ -731,11 +709,8 @@ class Job(models.Model):
         self.end_time = datetime.now()
 
     def get_dir(self):
-        return os.path.join(JOBDIR, '%08i' % self.id)
-
-    def NEW_get_dir(self):
         jtxt = '%08i' % self.id
-        return os.path.join(NEW_JOBDIR, jtxt[:4], jtxt)
+        return os.path.join(JOBDIR, jtxt[:4], jtxt)
 
     def get_axy_file(self):
         return os.path.join(self.get_dir(), 'job.axy')
