@@ -442,22 +442,50 @@ class FpM(SdssFile):
 	def __init__(self, *args, **kwargs):
 		super(FpM, self).__init__(*args, **kwargs)
 		self.filetype = 'fpM'
+		self.maskmap = None
 
 	def setHdus(self, p):
 		self.hdus = p
 
 	def getMaskPlane(self, name):
-		# HACK -- this must be described somewhere sensible...
-		# (yeah, fpM extension 11 !)
-		maskmap = { 'INTER': 0,
-					'SATUR': 1,
-					'CR'   : 8,
-					'GHOST': 9,
-					}
-		if not name in maskmap:
-			raise RuntimeException('Unknown mask plane \"%s\"' % name)
+		# Mask planes are described in HDU 11 (the last HDU)
+		if self.maskmap is None:
+			self.maskmap = {}
+			T = fits_table(self.hdus[-1].data)
+			#print 'Got mask definition table'
+			#T.about()
+			T.cut(T.defname == 'S_MASKTYPE')
+			for k,v in zip(T.attributename, T.value):
+				k = k.replace('S_MASK_', '')
+				if k == 'S_NMASK_TYPES':
+					continue
+				#print '  Mask', k, '=', v
+				self.maskmap[k] = v
+		if not name in self.maskmap:
+			raise RuntimeError('Unknown mask plane \"%s\"' % name)
 
-		return fits_table(self.hdus[1 + maskmap[name]].data)
+		return fits_table(self.hdus[1 + self.maskmap[name]].data)
+
+	def setMaskedPixels(self, name, img, val, roi=None):
+		M = self.getMaskPlane(name)
+		if M is None:
+			return
+		if roi is not None:
+			x0,x1,y0,y1 = roi
+
+		for (c0,c1,r0,r1,coff,roff) in zip(M.cmin,M.cmax,M.rmin,M.rmax,
+										   M.col0, M.row0):
+			assert(coff == 0)
+			assert(roff == 0)
+			if roi is not None:
+				(outx,nil) = get_overlapping_region(c0-x0, c1+1-x0, 0, x1-x0)
+				(outy,nil) = get_overlapping_region(r0-y0, r1+1-y0, 0, y1-y0)
+				# print 'Mask col [%i, %i], row [%i, %i]' % (c0, c1, r0, r1)
+				# print  '  outx', outx, 'outy', outy
+				img[outy,outx] = val
+			else:
+				img[r0:r1, c0:c1] = val
+		
 
 class FpC(SdssFile):
 	def __init__(self, *args, **kwargs):

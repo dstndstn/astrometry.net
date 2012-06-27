@@ -145,19 +145,8 @@ class DR7(SdssDR):
 		#  -mask coordinates are wrt fpC coordinates.
 		#  -INTERP, SATUR, CR,
 		#  -GHOST?
-		for plane in [ 'INTER', 'SATUR', 'CR', 'GHOST' ]:
-			M = fpM.getMaskPlane(plane)
-			if M is None:
-				continue
-			for (c0,c1,r0,r1,coff,roff) in zip(M.cmin,M.cmax,M.rmin,M.rmax,
-											   M.col0, M.row0):
-				assert(coff == 0)
-				assert(roff == 0)
-				(outx,nil) = get_overlapping_region(c0-x0, c1+1-x0, 0, x1-x0)
-				(outy,nil) = get_overlapping_region(r0-y0, r1+1-y0, 0, y1-y0)
-				#print 'Mask col [%i, %i], row [%i, %i]' % (c0, c1, r0, r1)
-				#print '  outx', outx, 'outy', outy
-				maskimg[outy,outx] = 0
+		for plane in [ 'INTERP', 'SATUR', 'CR', 'GHOST' ]:
+			fpM.setMaskedPixels(plane, maskimg, 0)
 
 		if invvar_and_mask:
 			return ivarimg, mask
