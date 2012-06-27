@@ -92,6 +92,63 @@ def requires_json_login(handler):
     return handle_request
 
 
+
+def upload_common(request, url=None, file=None):
+    df, original_filename = handle_upload(file=file, url=url)
+    submittor = req.user if request.user.is_authenticated() else None
+
+    json = request.json
+    allow_commercial_use = json.get('allow_commercial_use')
+    allow_modifications = json.get('allow_modifications')
+    license,created = License.objects.get_or_create(
+        default_license=submittor.get_profile().default_license,
+        allow_commercial_use=allow_commercial_use,
+        allow_modifications=allow_modifications,
+    )
+    publicly_visible = json.get('publicly_visible')
+
+    subargs = dict(
+        user=submittor,
+        disk_file=df,
+        original_filename=original_filename,
+        license=license,
+        publicly_visible=publicly_visible,
+        )
+    if url is not None:
+        subargs.update(url=url)
+
+    for key,typ in [('scale_units', str),
+                    ('scale_type', str),
+                    ('scale_lower', float),
+                    ('scale_upper', float),
+                    ('scale_est', float),
+                    ('scale_err', float),
+                    ('center_ra', float)
+                    ('center_dec', float),
+                    ('radius', float),
+                    ('downsample_factor', int),
+                    ('parity', int),
+                    ]:
+        if key in json:
+            subargs.update(key = typ(json[key]))
+
+    sub = Submission(**subargs)
+    sub.save()
+    return HttpResponseJson({'status': 'success',
+                             'subid': sub.id,
+                             'hash': sub.disk_file.file_hash}) 
+
+
+
+@csrf_exempt
+@requires_json_args
+@requires_json_session
+def url_upload(req):
+    logmsg('request:' + str(req))
+    url = req.json.get('url')
+    logmsg('url: %s' % url)
+    return upload_common(req, url=url)
+
 @csrf_exempt
 @requires_json_args
 @requires_json_session
@@ -103,65 +160,7 @@ def api_upload(request):
     logmsg('request.GET has keys:', request.GET.keys())
     logmsg('request.FILES has keys:', request.FILES.keys())
     #logmsg('api_upload: got request: ' + str(request.FILES['file'].size))
-    logmsg('received files:')
-    
-    df, original_filename = handle_upload(file=request.FILES['file'])
-    submittor = request.user if request.user.is_authenticated() else None
-    allow_commercial_use = request.json.get('allow_commercial_use')
-    allow_modifications = request.json.get('allow_modifications')
-    license,created = License.objects.get_or_create(
-        default_license=submittor.get_profile().default_license,
-        allow_commercial_use=allow_commercial_use,
-        allow_modifications=allow_modifications,
-    )
-    publicly_visible = request.json.get('publicly_visible')
-    sub = Submission(
-        user=submittor,
-        disk_file=df,
-        original_filename=original_filename,
-        scale_type='ul',
-        scale_units='degwidth',
-        license=license,
-        publicly_visible=publicly_visible,
-    )
-    sub.save()
-
-    return HttpResponseJson({'status': 'success',
-                             'subid': sub.id,
-                             'hash': sub.disk_file.file_hash}) 
-
-@csrf_exempt
-@requires_json_args
-@requires_json_session
-def url_upload(req):
-    logmsg('request:' + str(req))
-    url = req.json.get('url')
-    logmsg('url: %s' % url)
-
-    df, original_filename = handle_upload(url=url)
-    submittor = req.user if req.user.is_authenticated() else None
-    allow_commercial_use = req.json.get('allow_commercial_use')
-    allow_modifications = req.json.get('allow_modifications')
-    license,created = License.objects.get_or_create(
-        default_license=submittor.get_profile().default_license,
-        allow_commercial_use=allow_commercial_use,
-        allow_modifications=allow_modifications,
-    )
-    publicly_visible = req.json.get('publicly_visible')
-    sub = Submission(
-        user=submittor,
-        disk_file=df,
-        original_filename=original_filename,
-        url=url,
-        scale_type='ul',
-        scale_units='degwidth',
-        license=license,
-        publicly_visible=publicly_visible,
-    )
-    sub.save()
-    return HttpResponseJson({'status': 'success',
-                             'subid': sub.id,
-                             'hash': sub.disk_file.file_hash}) 
+    return upload_common(file=request.FILES['file'])
 
 def write_wcs_file(req, wcsfn):
     from astrometry.util import util as anutil

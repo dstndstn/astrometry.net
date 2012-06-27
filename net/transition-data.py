@@ -9,9 +9,6 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 import settings
 from astrometry.net.models import *
 
-#NEW_DATADIR = 'newdata'
-newdata = 'newdata'
-
 subs = Submission.objects.all()
 keepdfs = set()
 print subs.count(), 'Submissions'
@@ -57,13 +54,10 @@ print len(keepdfs), 'DiskFiles to keep'
 print DiskFile.objects.all().count(), 'total DiskFiles'
 for df in keepdfs:
     oldpath = df.get_path()
-    #newdir = os.path.join(newdata, 'uploads', df.file_hash[:3])
     newpath = df.NEW_get_path()
-    #newpath = newpath.replace(settings.DATADIR, os.path.join(newdata, 'data'))
     newdir = os.path.dirname(newpath)
     if not os.path.exists(newdir):
         os.makedirs(newdir)
-    #newpath = os.path.join(newdir, df.file_hash)
     print 'Moving', oldpath, 'to', newpath
     if os.path.exists(newpath) and not os.path.exists(oldpath):
         print 'Already moved', oldpath, newpath
@@ -79,13 +73,10 @@ jobs = Job.objects.all()
 print jobs.count(), 'jobs'
 for job in jobs:
     oldpath = job.get_dir()
-    #jtxt = '%08i' % job.id
-    #newdir = os.path.join(newdata, 'jobs', jtxt[:4])
     newpath = job.NEW_get_dir()
     newdir = os.path.dirname(newpath)
     if not os.path.exists(newdir):
         os.makedirs(newdir)
-    #newpath = os.path.join(newdir, jtxt)
     if os.path.exists(newpath) and not os.path.exists(oldpath):
         print 'Already moved', oldpath, newpath
         continue

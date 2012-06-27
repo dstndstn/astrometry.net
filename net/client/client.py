@@ -135,32 +135,40 @@ class Client(object):
             raise RequestError('no session in result')
         self.session = sess
 
-    def url_upload(self, url, allow_commercial_use='d', allow_modifications='d',
-        publicly_visible='y'
-    ):
-        result = self.send_request('url_upload',
-            {
-                'url':url,
-                'allow_commercial_use':allow_commercial_use,
-                'allow_modifications':allow_modifications,
-                'publicly_visible':publicly_visible,
-            }
-        )
+    def _get_upload_args(self, **kwargs):
+        args = {}
+        for key,default,typ in [('allow_commercial_use', 'd', str),
+                                ('allow_modifications', 'd', str),
+                                ('publicly_visible', 'y', str),
+                                ('scale_units', None, str),
+                                ('scale_type', None, str),
+                                ('scale_lower', None, float),
+                                ('scale_upper', None, float),
+                                ('scale_est', None, float),
+                                ('scale_err', None, float),
+                                ('center_ra', None, float)
+                                ('center_dec', None, float),
+                                ('radius', None, float),
+                                ('downsample_factor', None, int),
+                                ]:
+            if key in kwargs:
+                args.update(key=typ(kwargs.pop(key)))
+            elif default is not None:
+                args.update(key=default)
+        return args
+    
+    def url_upload(self, url, **kwargs):
+        args = dict(url=url)
+        args.update(self._get_upload_args(**kwargs))
+        
+        result = self.send_request('url_upload', args)
         return result
 
-    def upload(self, fn, allow_commercial_use='d', allow_modifications='d',
-        publicly_visible='y'
-    ):
+    def upload(self, fn, **kwargs):
+        args = self._get_upload_args(**kwargs)
         try:
             f = open(fn, 'rb')
-            result = self.send_request('upload', 
-                {
-                    'allow_commercial_use':allow_commercial_use,
-                    'allow_modifications':allow_modifications,
-                    'publicly_visible':publicly_visible,
-                },
-                (fn, f.read())
-            )
+            result = self.send_request('upload', args, (fn, f.read()))
             return result
         except IOError:
             print 'File %s does not exist' % fn     
@@ -228,6 +236,19 @@ if __name__ == '__main__':
                       help='API key for Astrometry.net web service; if not given will check AN_API_KEY environment variable')
     parser.add_option('--upload', '-u', dest='upload', help='Upload a file')
     parser.add_option('--urlupload', '-U', dest='upload_url', help='Upload a file at specified url')
+    parser.add_option('--scale-units', dest='scale_units',
+                      choices=('arcsecperpix', 'arcminwidth', 'degwidth', 'focalmm'), help='Units for scale estimate')
+    #parser.add_option('--scale-type', dest='scale_type',
+    #                  choices=('ul', 'ev'), help='Scale bounds: lower/upper or estimate/error')
+    parser.add_option('--scale-lower', dest='scale_lower', type=float, help='Scale lower-bound')
+    parser.add_option('--scale-upper', dest='scale_upper', type=float, help='Scale upper-bound')
+    parser.add_option('--scale-est', dest='scale_est', type=float, help='Scale estimate')
+    parser.add_option('--scale-err', dest='scale_err', type=float, help='Scale estimate error')
+    parser.add_option('--ra', dest='center_ra', type=float, help='RA center')
+    parser.add_option('--dec', dest='center_dec', type=float, help='Dec center')
+    parser.add_option('--radius', dest='radius', type=float, help='Search radius around RA,Dec center')
+    parser.add_option('--downsample', dest='downsample_factor', type=int, help='Downsample image by this factor')
+    parser.add_option('--parity', dest='parity', type=int, choices=(0,1), help='Parity (flip) of image')
     parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--substatus', '-s', dest='sub_id', help='Get status of a submission')
@@ -275,20 +296,29 @@ if __name__ == '__main__':
     c = Client(**args)
     c.login(opt.apikey)
 
-    if opt.upload:
-        c.upload(
-            opt.upload,
+    if opt.upload or opt.upload_url:
+        kwargs = dict(
             allow_commercial_use=opt.allow_commercial,
             allow_modifications=opt.allow_mod,
-            publicly_visible=opt.public
-        )
-    if opt.upload_url:
-        c.url_upload(
-            opt.upload_url,
-            allow_commercial_use=opt.allow_commercial,
-            allow_modifications=opt.allow_mod,
-            publicly_visible=opt.public
-        )
+            publicly_visible=opt.public)
+        if opt.scale_lower and opt.scale_upper:
+            kwargs.update(scale_lower=opt.scale_lower,
+                          scale_upper=opt.scale_upper,
+                          scale_type='ul')
+        elif opt.scale_est and opt.scale_err:
+            kwargs.update(scale_est=opt.scale_est,
+                          scale_err=opt.scale_err,
+                          scale_type='ev')
+        for key in ['scale_units', 'center_ra', 'center_dec', 'radius', 'downsample_factor',
+                    'parity']:
+            if opt.getattr(key) is not None:
+                kwargs.update(key=opt.getattr(key))
+
+        if opt.upload:
+            c.upload(opt.upload, **kwargs)
+        if opt.upload_url:
+            c.url_upload(opt.upload_url, **kwargs)
+
     if opt.sdss_wcs:
         (wcsfn, outfn) = opt.sdss_wcs
         c.sdss_plot(outfn, wcsfn)

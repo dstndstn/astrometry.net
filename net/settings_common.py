@@ -7,7 +7,7 @@ DATE_FORMAT = 'Y-m-d'
 DATETIME_FORMAT = 'Y-m-d\TH:i:s\Z'
 TIME_FORMAT = 'H:i:s\Z'
 
-WEB_DIR = os.path.dirname(astrometry.net.__file__) + '/'
+WEB_DIR = os.path.realpath(os.path.dirname(astrometry.net.__file__)) + '/'
 
 SDSS_TILE_DIR = os.path.join(WEB_DIR, 'sdss-tiles')
 GALEX_JPEG_DIR = '/data1/GALEX-jpegs'
