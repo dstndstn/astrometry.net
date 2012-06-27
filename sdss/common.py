@@ -1,5 +1,6 @@
 import os
 from astrometry.util.pyfits_utils import fits_table
+from astrometry.util.miscutils import get_overlapping_region
 import numpy as np
 import pyfits
 
