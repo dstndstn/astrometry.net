@@ -146,21 +146,23 @@ class Client(object):
                                 ('scale_upper', None, float),
                                 ('scale_est', None, float),
                                 ('scale_err', None, float),
-                                ('center_ra', None, float)
+                                ('center_ra', None, float),
                                 ('center_dec', None, float),
                                 ('radius', None, float),
                                 ('downsample_factor', None, int),
                                 ]:
             if key in kwargs:
-                args.update(key=typ(kwargs.pop(key)))
+                val = kwargs.pop(key)
+                val = typ(val)
+                args.update({key: val})
             elif default is not None:
-                args.update(key=default)
+                args.update({key: default})
+        print 'Upload args:', args
         return args
     
     def url_upload(self, url, **kwargs):
         args = dict(url=url)
         args.update(self._get_upload_args(**kwargs))
-        
         result = self.send_request('url_upload', args)
         return result
 
@@ -248,7 +250,7 @@ if __name__ == '__main__':
     parser.add_option('--dec', dest='center_dec', type=float, help='Dec center')
     parser.add_option('--radius', dest='radius', type=float, help='Search radius around RA,Dec center')
     parser.add_option('--downsample', dest='downsample_factor', type=int, help='Downsample image by this factor')
-    parser.add_option('--parity', dest='parity', type=int, choices=(0,1), help='Parity (flip) of image')
+    parser.add_option('--parity', dest='parity', choices=('0','1'), help='Parity (flip) of image')
     parser.add_option('--sdss', dest='sdss_wcs', nargs=2, help='Plot SDSS image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--galex', dest='galex_wcs', nargs=2, help='Plot GALEX image for the given WCS file; write plot to given PNG filename')
     parser.add_option('--substatus', '-s', dest='sub_id', help='Get status of a submission')
@@ -309,10 +311,11 @@ if __name__ == '__main__':
             kwargs.update(scale_est=opt.scale_est,
                           scale_err=opt.scale_err,
                           scale_type='ev')
-        for key in ['scale_units', 'center_ra', 'center_dec', 'radius', 'downsample_factor',
-                    'parity']:
-            if opt.getattr(key) is not None:
-                kwargs.update(key=opt.getattr(key))
+        for key in ['scale_units', 'center_ra', 'center_dec', 'radius', 'downsample_factor',]:
+            if getattr(opt, key) is not None:
+                kwargs.update(key=getattr(opt, key))
+        if opt.parity is not None:
+            kwargs.update(parity=int(opt.parity))
 
         if opt.upload:
             c.upload(opt.upload, **kwargs)
