@@ -18,6 +18,8 @@ Contents:
    :hidden:
 
    net/orientation
+   net/api
+   net/models
    dev
    backups
 
