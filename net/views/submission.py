@@ -119,10 +119,6 @@ class SubmissionForm(forms.ModelForm):
             #'allow_modifications':forms.RadioSelect(renderer=NoBulletsRenderer),
         }
 
-    def deduplication_nonce_token(self):
-        nonce = Submission.get_deduplication_nonce()
-        return '<input type="hidden" name="deduplication_nonce" value="%d" />' % nonce
-
     def clean(self):
         number_message = "Enter a number."
 
@@ -204,7 +200,6 @@ def upload_file(request):
         form = SubmissionForm(request.user, request.POST, request.FILES)
         if form.is_valid():
             sub = form.save(commit=False)
-            sub.deduplication_nonce = int(request.POST.get('deduplication_nonce'))
             
             if request.user.is_authenticated():
                 if form.cleaned_data['album'] == '':
@@ -253,16 +248,9 @@ def upload_file(request):
             try:
                 sub.save()
             except DuplicateSubmissionException:
+                ### FIXME -- necessary after nonce removed?
                 # clean up the duplicate's foreign keys
                 sub.comment_receiver.delete()
-
-                # find the latest successful submission to use this nonce
-                # and redirect to that submission's status page
-                successful_sub = Submission.objects.filter(
-                    deduplication_nonce=sub.deduplication_nonce,
-                ).order_by('-submitted_on')[0]
-
-                sub = successful_sub
                 logmsg('duplicate submission detected for submission %d' % sub.id)
             logmsg('Made Submission' + str(sub))
             return redirect(status, subid=sub.id)

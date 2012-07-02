@@ -95,7 +95,7 @@ def requires_json_login(handler):
 
 def upload_common(request, url=None, file=None):
     df, original_filename = handle_upload(file=file, url=url)
-    submittor = req.user if request.user.is_authenticated() else None
+    submittor = request.user if request.user.is_authenticated() else None
 
     json = request.json
     allow_commercial_use = json.get('allow_commercial_use')
@@ -123,14 +123,14 @@ def upload_common(request, url=None, file=None):
                     ('scale_upper', float),
                     ('scale_est', float),
                     ('scale_err', float),
-                    ('center_ra', float)
+                    ('center_ra', float),
                     ('center_dec', float),
                     ('radius', float),
                     ('downsample_factor', int),
                     ('parity', int),
                     ]:
         if key in json:
-            subargs.update(key = typ(json[key]))
+            subargs[key] = typ(json[key])
 
     sub = Submission(**subargs)
     sub.save()

@@ -8,9 +8,9 @@
 	float: left;
 	margin-right: 10px;
 }
-#blocks a          {color: #000; text-decoration: none; background-color: transparent;}
-#blocks a:link     {background-color: transparent; color: #000;}
-#blocks a:visited  {background-color: transparent; color: #000;}
+#blocks a          {color: #000; text-decoration: none; background-color: #ccc;}
+#blocks a:link     {background-color: #ccc; color: #000;}
+#blocks a:visited  {background-color: #ccc; color: #000;}
 #blocks a:hover    {background-color: #06c; color: #fff; text-decoration: none;}
 #intro {
 }
@@ -21,15 +21,6 @@
 	background: #ccc;
 	margin: 10px;
 	padding: 15px;
-}
-#explore_block {
-	background-color: #9ce;
-}
-#share_block {
-	background-color: #ace;
-}
-#create_block {
-	background-color: #bde;
 }
 .block h1 {
 	margin-top: 0px;
@@ -43,24 +34,18 @@
 
 {% block content %}
 <div id="blocks">
-	<div id="explore_block">
-		<a class="block" href="{% url astrometry.net.views.home.explore %}">
-			<h1>Explore</h1>
-			Browse images others have been uploading or search for photos of specific astronomical objects.
-		</a>
-	</div>
-	<div id="share_block">
-		<a class="block" href="{% url astrometry.net.views.submission.upload_file %}">
-			<h1>Calibrate & Share</h1>
-			Upload your own images to get accurate calibrations and share them with the world.
-		</a>
-	</div>
-	<div id="create_block">
-		<a id="create_block" class="block" href="{% url astrometry.net.views.home.api_help %}">
-			<h1>Create</h1>
-			Take advantage of the API of this web service to program your own applications.
-		</a>
-	</div>
+    <a id="explore_block" class="block" href="{% url astrometry.net.views.home.explore %}">
+        <h1>Explore</h1>
+        Browse images others have been uploading or search for photos of specific astronomical objects.
+    </a>
+    <a id="share_block" class="block" href="{% url astrometry.net.views.submission.upload_file %}">
+        <h1>Calibrate & Share</h1>
+        Upload your own images to get accurate calibrations and share them with the world.
+    </a>
+    <a id="create_block" class="block" href="{% url astrometry.net.views.home.api_help %}">
+        <h1>Create</h1>
+        Take advantage of the API of this web service to program your own applications.
+    </a>
 </div>
 <div id="intro">
 	<h2 style="display:inline-block">About Astrometry.net</h2>
@@ -75,4 +60,5 @@
 	<h2 style="display:inline-block">Recently Submitted Images</h2> (<a href="{% url astrometry.net.views.home.explore %}">See More</a>)
 	{% include 'user_image/image_set.html' with images=images|slice:":8" thumbnail_size='medium' %}
 </div>
+<div style="clear: both"></div>
 {% endblock %}
