@@ -72,7 +72,7 @@ ALL_WCSLIB_TARGETS :=
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
 QFITS_UTILS := fitsgetext subtable tabsort column-merge add-healpix-column \
-		resort-xylist fits-dedup wcs-resample
+		resort-xylist fits-dedup
 
 CFITS_UTILS := tablist modhead fitscopy tabmerge fitstomatlab liststruc \
 		listhead imcopy imarith imstat
@@ -125,7 +125,7 @@ BACKEND_OBJS := \
 
 PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o \
 		plotannotations.o plotgrid.o plotoutline.o plotindex.o plotradec.o \
-		plothealpix.o plotmatch.o matchfile.o matchobj.o wcs-resample.o
+		plothealpix.o plotmatch.o matchfile.o matchobj.o
 
 $(BACKEND_LIB): $(BACKEND_OBJS)
 	-rm -f $@
@@ -671,11 +671,6 @@ quadsperstar: quadsperstar.o \
 fitsgetext: fitsgetext.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
 fits-dedup: fits-dedup.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-wcs-resample: wcs-resample-main.o wcs-resample.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS) $(WCSLIB_LIB) $(LDLIBS)
-
-ALL_OBJ += wcs-resample-main.o
 
 subtable: subtable.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 

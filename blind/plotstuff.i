@@ -61,6 +61,32 @@
   number lowval, number highval);
   */
 
+%pythoncode %{
+def qfits_load_image(fn, ext=1, plane=0, map=1, ptype=PTYPE_FLOAT):
+	ld = qfitsloader()
+	ld.filename = fn
+	ld.xtnum = ext
+	ld.pnum = plane
+	ld.map = map
+	ld.ptype = ptype
+	if qfitsloader_init(ld):
+		raise RuntimeError('qfitsloader_init(file "%s", ext %i) failed' % (fn, ext))
+	if qfits_loadpix(ld):
+		raise RuntimeError('qfits_loadpix(file "%s", ext %i) failed' % (fn, ext))
+
+	class qfits_image(object):
+		def __init__(self, pix, nx, ny, ld):
+			self.pix = pix
+			self.nx = nx
+			self.ny = ny
+			self.ld = ld
+		def __del__(self):
+			qfitsloader_free_buffer(self.ld)
+			
+	return qfits_image(ld.fbuf, ld.lx, ld.ly, ld)
+	%}
+
+
 void free(void* ptr);
 
 %apply int* OUTPUT { int* newW, int* newH };

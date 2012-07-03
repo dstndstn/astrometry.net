@@ -44,7 +44,7 @@ ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
 	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
 	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
 	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
-	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o
+	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o wcs-resample.o
 
 ANFILES_LIB := libanfiles.a
 # Things that it depends on but that aren't linked in
@@ -119,10 +119,12 @@ CFLAGS += -I.
 
 PYTHON_LIBS := _sip.so _healpix.so
 
-PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian smooth-image search-index hpsplit
+PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian smooth-image search-index hpsplit 
+MAIN_PROGS := wcs-resample
+
 # tycho2tostellarium build-hd-tree
 
-all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS) ngc2000.py
+all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS) $(MAIN_PROGS) ngc2000.py
 
 # Things that it depends on but that aren't linked in
 ANUTILS_DEPS :=
@@ -247,6 +249,10 @@ coadd: coadd-main.o $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += coadd.o coadd-main.o
 
+wcs-resample: wcs-resample-main.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $^ $(LDFLAGS) $(WCSLIB_LIB) $(LDLIBS)
+AL_OBJ += wcs-resample-main.o
+
 pad-file: pad-file.o $(ANUTILS_LIB)
 ALL_OBJ += pad-file.o
 
@@ -293,7 +299,7 @@ INCLUDE_INSTALL_DIR := $(INSTALL_DIR)/include
 LIB_INSTALL_DIR := $(INSTALL_DIR)/lib
 LINK_DIR := ../python/astrometry/util
 
-install: $(PYTHON_LIBS) $(PYTHON_EXECS) $(PROGS) $(ANUTILS_H) $(ANFILES_LIB) $(ANUTILS_LIB)
+install: $(PYTHON_LIBS) $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H) $(ANFILES_LIB) $(ANUTILS_LIB)
 	@echo Installing in base directory $(INSTALL_DIR)
 	mkdir -p $(PY_INSTALL_DIR)
 	@for x in $(PYTHON_INSTALL); do \
@@ -307,7 +313,7 @@ install: $(PYTHON_LIBS) $(PYTHON_EXECS) $(PROGS) $(ANUTILS_H) $(ANFILES_LIB) $(A
 		ln -f -s $(LINK_DIR)/$$x $(BIN_INSTALL_DIR)/$$x; \
 	done
 	@echo Installing executables into $(BIN_INSTALL_DIR)...
-	@for x in $(PROGS); do \
+	@for x in $(PROGS) $(MAIN_PROGS); do \
 		echo cp $$x $(BIN_INSTALL_DIR)/$$x; \
 		cp $$x $(BIN_INSTALL_DIR)/$$x; \
 	done
@@ -420,7 +426,7 @@ ifndef NO_QFITS
 DEP_PREREQS += $(QFITS_LIB)
 endif
 
-PROG_MAIN_OBJS := $(addsuffix .o,$(PROGS))
+PROG_MAIN_OBJS := $(addsuffix .o,$(PROGS)) $(addsuffix -main.o,$(MAIN_PROGS))
 DEP_OBJ += $(PROG_MAIN_OBJS)
 
 stellarium-constellations.c:
@@ -541,7 +547,7 @@ clean:
 	rm -f $(ANUTILS_LIB) $(ANFILES_LIB) $(ALL_OBJ) \
 		$(DEPS) deps cairoutils.o $(PYTHON_LIBS) \
 		grab-stellarium-constellations \
-		$(PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN) \
+		$(PROGS) $(MAIN_PROGS) $(ALL_TARGETS) $(ALL_TESTS_CLEAN) \
 		cairoutils.dep makefile.os-features
 
 

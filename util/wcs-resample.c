@@ -98,7 +98,7 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
     outimg = calloc(outW * outH, sizeof(float));
 
 	if (resample_wcs(inwcs, inimg, inW, inH,
-					 outwcs, outimg, outW, outH)) {
+					 outwcs, outimg, outW, outH, 1)) {
 		ERROR("Failed to resample");
 		return -1;
 	}
@@ -219,7 +219,8 @@ static bool* find_overlap_grid(int B, int outW, int outH,
 
 
 int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
-				 const anwcs_t* outwcs, float* outimg, int outW, int outH) {
+				 const anwcs_t* outwcs, float* outimg, int outW, int outH,
+				 int overlap_grid) {
 	int i,j;
     double inxmin, inxmax, inymin, inymax;
 	int B = 20;
@@ -227,7 +228,6 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 	bool* bib;
 	int bi,bj;
 	bib = find_overlap_grid(B, outW, outH, outwcs, inwcs, &BW, &BH);
-
     inxmax = -HUGE_VAL;
     inymax = -HUGE_VAL;
     inxmin =  HUGE_VAL;
@@ -238,7 +238,7 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 	for (bj=0; bj<BH; bj++) {
 		for (bi=0; bi<BW; bi++) {
 			int jlo,jhi,ilo,ihi;
-			if (!bib[bj*BW + bi])
+			if (overlap_grid && !bib[bj*BW + bi])
 				continue;
 			jlo = MIN(outH,  bj   *B);
 			jhi = MIN(outH, (bj+1)*B);
@@ -276,7 +276,8 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 		}
 	}
 
-	free(bib);
+	if (bib)
+		free(bib);
 
     logverb("Bounds of the pixels requested from the input image:\n");
     logverb("  x: %g to %g\n", inxmin, inxmax);

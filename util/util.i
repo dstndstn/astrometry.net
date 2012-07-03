@@ -658,6 +658,11 @@ Sip = sip_t
 		$self->imagew = imagew;
 		$self->imageh = imageh;
 	}
+	tan_t* scale(double factor) {
+		tan_t* t = (tan_t*)calloc(1, sizeof(tan_t));
+		tan_scale($self, t, factor);
+		return t;
+	}
 	double get_width() {
 		return $self->imagew;
 	}
