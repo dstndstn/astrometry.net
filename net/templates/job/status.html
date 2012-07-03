@@ -10,6 +10,9 @@
     <div>
         <div style="color:#666">Processing...</div>
         <div style="color:#666">Queued: <span class="timestamp">{{ job.queued_time|date:"Y-m-d H:i:s" }}</span></div>
-        <div style="color:#080">Started: <span class="timestamp">{{ job.queued_time|date:"Y-m-d H:i:s" }}</span></div>
+
+    {% if job.start_time %}
+        <div style="color:#080">Started: <span class="timestamp">{{ job.start_time|date:"Y-m-d H:i:s" }}</span></div>
+    {% endif %}
     </div>
 {% endif %}
