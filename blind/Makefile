@@ -123,6 +123,7 @@ BACKEND_OBJS := \
 		matchfile.o matchobj.o solvedclient.o solvedfile.o tweak2.o \
 		verify.o blind_wcs.o tweak.o 
 
+# see also setup.py dependency list...
 PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o \
 		plotannotations.o plotgrid.o plotoutline.o plotindex.o plotradec.o \
 		plothealpix.o plotmatch.o matchfile.o matchobj.o
