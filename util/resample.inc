@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2011 Dustin Lang.
+  Copyright 2011, 2012 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -17,7 +17,7 @@
 */
 
 double MANGLE(lanczos_resample_unw_sep)(double px, double py,
-										const float* img,
+										const number* img,
 										int W, int H, void* token) {
 	lanczos_args_t* args = token;
 	int order = args->order;
@@ -25,29 +25,51 @@ double MANGLE(lanczos_resample_unw_sep)(double px, double py,
 	double weight;
 	double sum;
 	int x0,x1,y0,y1;
-	int ix,iy;
+	//int ix,iy;
+
+	// pre-compute Lanczos kernel weights
+	double KY[12];
+	double KX[12];
+
 	x0 = MAX(0,   (int)floor(px - support));
 	y0 = MAX(0,   (int)floor(py - support));
 	x1 = MIN(W-1, (int) ceil(px + support));
 	y1 = MIN(H-1, (int) ceil(py + support));
+
+	int nx,ny,dx,dy;
+	nx = 1+x1-x0;
+	ny = 1+y1-y0;
+	assert(nx < 12);
+	assert(ny < 12);
+
+	for (dy=0; dy<ny; dy++)
+		KY[dy] = lanczos(py - (y0+dy), order);
+	for (dx=0; dx<nx; dx++)
+		KX[dx] = lanczos(px - (x0+dx), order);
+
 	weight = 0.0;
 	sum = 0.0;
-	for (iy=y0; iy<=y1; iy++) {
+	//for (iy=y0; iy<=y1; iy++) {
+	for (dy=0; dy<ny; dy++) {
 		double Ky;
 		double xweight;
 		double xsum;
-		Ky = lanczos(py - iy, order);
+		//Ky = lanczos(py - iy, order);
+		Ky = KY[dy];
 		if (Ky == 0)
 			continue;
 		xweight = 0.0;
 		xsum = 0.0;
-		for (ix=x0; ix<=x1; ix++) {
+		//for (ix=x0; ix<=x1; ix++) {
+		for (dx=0; dx<nx; dx++) {
 			double K;
 			number pix;
-			K = lanczos(px - ix, order);
+			//K = lanczos(px - ix, order);
+			K = KX[dx];
 			if (K == 0)
 				continue;
-			pix = img[iy*W + ix];
+			//pix = img[iy*W + ix];
+			pix = img[(dy+y0)*W + (dx+x0)];
 			if (isnan(pix))
 				// out-of-bounds pixel
 				continue;
