@@ -95,7 +95,7 @@ int main(int argc, char** args) {
         inwcsfn = infitsfn;
 
 	if (resample_wcs_files(infitsfn, inimgext, inwcsfn, inwcsext,
-						   outwcsfn, outwcsext, outfitsfn)) {
+						   outwcsfn, outwcsext, outfitsfn, 0)) {
 		ERROR("Failed to resample image");
 		exit(-1);
 	}

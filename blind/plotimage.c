@@ -337,7 +337,7 @@ static unsigned char* read_fits_image(const plot_args_t* pargs, plotimage_t* arg
 			rimg[i] = args->image_null;
 		}
 		if (resample_wcs(args->wcs, fimg, args->W, args->H,
-						 pargs->wcs, rimg, pargs->W, pargs->H, 0)) {
+						 pargs->wcs, rimg, pargs->W, pargs->H, 0, 0)) {
 			ERROR("Failed to resample image");
 			return NULL;
 		}

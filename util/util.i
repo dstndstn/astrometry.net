@@ -23,6 +23,7 @@
 #include "starutil.h"
 
 #include "coadd.h"
+#include "wcs-resample.h"
 
 #define true 1
 #define false 0
@@ -736,6 +737,58 @@ Sip = sip_t
 
 
 %inline %{
+
+	static int tan_wcs_resample(tan_t* inwcs, tan_t* outwcs,
+								PyObject* np_inimg, PyObject* np_outimg,
+								int lorder) {
+		/*
+		 if ((PyArray_NDIM(np_inimg ) != 2) ||
+		 (PyArray_NDIM(np_outimg) != 2)) {
+		 PyErr_SetString(PyExc_ValueError, "images must be two-dimensional");
+		 return -1;
+		 }
+		 // Not completely necessary... but probably super slow without this...
+		 if ((PyArray_TYPE(np_inimg ) != NPY_FLOAT) ||
+		 (PyArray_TYPE(np_outimg) != NPY_FLOAT)) {
+		 PyErr_SetString(PyExc_ValueError, "images must contain floats");
+		 return -1;
+		 }
+		 */
+		PyArray_Descr* dtype = PyArray_DescrFromType(NPY_FLOAT);
+		// in numpy v2.0 these constants have a NPY_ARRAY_ prefix
+		int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
+		int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
+
+		np_inimg = PyArray_CheckFromAny(np_inimg, dtype, 2, 2, req, NULL);
+		np_outimg = PyArray_CheckFromAny(np_outimg, dtype, 2, 2, reqout, NULL);
+		if (!np_inimg || !np_outimg) {
+			ERR("Failed to PyArray_FromAny the images (np_inimg=%p, np_outimg=%p)\n",
+				np_inimg, np_outimg);
+			return -1;
+		}
+
+		int inW, inH, outW, outH;
+		float *inimg, *outimg;
+		inH = PyArray_DIM(np_inimg, 0);
+		inW = PyArray_DIM(np_inimg, 1);
+		outH = PyArray_DIM(np_outimg, 0);
+		outW = PyArray_DIM(np_outimg, 1);
+		inimg = PyArray_DATA(np_inimg);
+		outimg = PyArray_DATA(np_outimg);
+
+		anwcs_t* inanwcs = anwcs_new_tan(inwcs);
+		anwcs_t* outanwcs = anwcs_new_tan(outwcs);
+
+		int res = resample_wcs(inanwcs, inimg, inW, inH,
+							   outanwcs, outimg, outW, outH,
+							   0, lorder);
+
+		anwcs_free(inanwcs);
+		anwcs_free(outanwcs);
+
+		return res;
+	}
+
 
 	static int tansip_numpy_pixelxy2radec(tan_t* tan, sip_t* sip, PyObject* npx, PyObject* npy, 
 									   PyObject* npra, PyObject* npdec, int reverse) {

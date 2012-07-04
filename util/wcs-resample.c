@@ -34,11 +34,12 @@
 #include "errors.h"
 #include "fitsioutils.h"
 #include "anwcs.h"
+#include "resample.h"
 
 int resample_wcs_files(const char* infitsfn, int infitsext,
 					   const char* inwcsfn, int inwcsext,
 					   const char* outwcsfn, int outwcsext,
-					   const char* outfitsfn) {
+					   const char* outfitsfn, int lorder) {
 
     anwcs_t* inwcs;
     anwcs_t* outwcs;
@@ -98,7 +99,7 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
     outimg = calloc(outW * outH, sizeof(float));
 
 	if (resample_wcs(inwcs, inimg, inW, inH,
-					 outwcs, outimg, outW, outH, 1)) {
+					 outwcs, outimg, outW, outH, 1, lorder)) {
 		ERROR("Failed to resample");
 		return -1;
 	}
@@ -220,18 +221,29 @@ static bool* find_overlap_grid(int B, int outW, int outH,
 
 int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 				 const anwcs_t* outwcs, float* outimg, int outW, int outH,
-				 int overlap_grid) {
+				 int overlap_grid, int lorder) {
 	int i,j;
-    double inxmin, inxmax, inymin, inymax;
+    //double inxmin, inxmax, inymin, inymax;
 	int B = 20;
 	int BW, BH;
-	bool* bib;
+	bool* bib = NULL;
 	int bi,bj;
-	bib = find_overlap_grid(B, outW, outH, outwcs, inwcs, &BW, &BH);
-    inxmax = -HUGE_VAL;
-    inymax = -HUGE_VAL;
-    inxmin =  HUGE_VAL;
-    inymin =  HUGE_VAL;
+	lanczos_args_t largs;
+	largs.order = lorder;
+
+	if (overlap_grid)
+		bib = find_overlap_grid(B, outW, outH, outwcs, inwcs, &BW, &BH);
+	else {
+		BH = outH;
+		BW = outW;
+		B = 1;
+	}
+	/*
+	 inxmax = -HUGE_VAL;
+	 inymax = -HUGE_VAL;
+	 inxmin =  HUGE_VAL;
+	 inymin =  HUGE_VAL;
+	 */
 
 	// We've expanded the in-bounds boxes by 1 in each direction,
 	// so this (using the lower-left corner) should be ok.
@@ -250,27 +262,39 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 
 					double xyz[3];
 					double inx, iny;
-					int x,y;
+					float pix;
 					// +1 for FITS pixel coordinates.
 					if (anwcs_pixelxy2xyz(outwcs, i+1, j+1, xyz) ||
 						anwcs_xyz2pixelxy(inwcs, xyz, &inx, &iny))
 						continue;
 
-					// FIXME - Nearest-neighbour resampling!!
-					// -1 for FITS pixel coordinates.
-					x = round(inx - 1.0);
-					y = round(iny - 1.0);
-					
-					// keep track of the bounds of the requested pixels in the
-					// input image.
-					inxmax = MAX(inxmax, x);
-					inymax = MAX(inymax, y);
-					inxmin = MIN(inxmin, x);
-					inymin = MIN(inymin, y);
+					inx -= 1.0;
+					iny -= 1.0;
 
-					if (x < 0 || x >= inW || y < 0 || y >= inH)
-						continue;
-					outimg[j * outW + i] = inimg[y * inW + x];
+					if (lorder == 0) {
+						int x,y;
+						// Nearest-neighbour resampling
+						x = round(inx);
+						y = round(iny);
+						if (x < 0 || x >= inW || y < 0 || y >= inH)
+							continue;
+						pix = inimg[y * inW + x];
+
+						/*
+						 // keep track of the bounds of the requested pixels in the
+						 // input image.
+						 inxmax = MAX(inxmax, x);
+						 inymax = MAX(inymax, y);
+						 inxmin = MIN(inxmin, x);
+						 inymin = MIN(inymin, y);
+						 */
+					} else {
+						if (inx < (-lorder) || inx >= (inW+lorder) ||
+							iny < (-lorder) || iny >= (inH+lorder))
+							continue;
+						pix = lanczos_resample_unw_sep_f(inx, iny, inimg, inW, inH, &largs);
+					}
+					outimg[j * outW + i] = pix;
 				}
 			}
 		}
@@ -279,9 +303,11 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 	if (bib)
 		free(bib);
 
-    logverb("Bounds of the pixels requested from the input image:\n");
-    logverb("  x: %g to %g\n", inxmin, inxmax);
-    logverb("  y: %g to %g\n", inymin, inymax);
+	/*
+	 logverb("Bounds of the pixels requested from the input image:\n");
+	 logverb("  x: %g to %g\n", inxmin, inxmax);
+	 logverb("  y: %g to %g\n", inymin, inymax);
+	 */
 
 	return 0;
 }
