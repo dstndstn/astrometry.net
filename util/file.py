@@ -1,6 +1,7 @@
 import os
-import cPickle as pickle
+#import cPickle as pickle
 #import pickle
+import cPickle
 
 def _filesize(fn):
 	st = os.stat(fn)
@@ -25,12 +26,12 @@ def write_file(data, fn):
 def pickle_to_file(data, fn):
 	f = open(fn, 'wb')
 	# MAGIC -1: highest pickle protocol
-	pickle.dump(data, f, -1)
+	cPickle.dump(data, f, -1)
 	f.close()
 
 def unpickle_from_file(fn):
 	f = open(fn, 'rb')
-	data = pickle.load(f)
+	data = cPickle.load(f)
 	# necessary?
 	f.close()
 	return data

@@ -56,7 +56,8 @@ class memberfuncwrapper(object):
 
 class multiproc(object):
 	def __init__(self, nthreads=1, init=None, initargs=None,
-				 map_chunksize=1, pool=None):
+				 map_chunksize=1, pool=None, wrap_all=False):
+		self.wrap_all = wrap_all
 		if pool is not None:
 			self.pool = pool
 			self.applyfunc = self.pool.apply_async
@@ -77,15 +78,18 @@ class multiproc(object):
 		if cs is None:
 			cs = self.map_chunksize
 		if self.pool:
-			if wrap:
+			if wrap or self.wrap_all:
 				f = funcwrapper(f)
+			#print 'pool.map: f', f
+			#print 'args', args
+			#print 'cs', cs
 			return self.pool.map(f, args, cs)
 		return map(f, args)
 
 	def map_async(self, func, iterable, wrap=False):
 		if self.pool is None:
 			return FakeAsyncResult(map(func, iterable))
-		if wrap:
+		if wrap or self.wrap_all:
 			return self.pool.map_async(funcwrapper(func), iterable)
 		return self.pool.map_async(func, iterable)
 		
