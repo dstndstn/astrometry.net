@@ -25,7 +25,8 @@ double MANGLE(lanczos_resample_unw_sep)(double px, double py,
 	double weight;
 	double sum;
 	int x0,x1,y0,y1;
-	//int ix,iy;
+	const number* imgrow;
+	int weighted = args->weighted;
 
 	// pre-compute Lanczos kernel weights
 	double KY[12];
@@ -49,29 +50,24 @@ double MANGLE(lanczos_resample_unw_sep)(double px, double py,
 
 	weight = 0.0;
 	sum = 0.0;
-	//for (iy=y0; iy<=y1; iy++) {
 	for (dy=0; dy<ny; dy++) {
 		double Ky;
 		double xweight;
 		double xsum;
-		//Ky = lanczos(py - iy, order);
 		Ky = KY[dy];
 		if (Ky == 0)
 			continue;
+		imgrow = img + (dy+y0)*W + x0;
 		xweight = 0.0;
 		xsum = 0.0;
-		//for (ix=x0; ix<=x1; ix++) {
 		for (dx=0; dx<nx; dx++) {
 			double K;
 			number pix;
-			//K = lanczos(px - ix, order);
 			K = KX[dx];
 			if (K == 0)
 				continue;
-			//pix = img[iy*W + ix];
-			pix = img[(dy+y0)*W + (dx+x0)];
+			pix = imgrow[dx];
 			if (isnan(pix))
-				// out-of-bounds pixel
 				continue;
 			xweight += K;
 			xsum += K * pix;
@@ -79,9 +75,15 @@ double MANGLE(lanczos_resample_unw_sep)(double px, double py,
 		if (xweight == 0.0)
 			continue;
 		weight += Ky;
-		sum += Ky * (xsum / xweight);
+		if (weighted)
+			sum += Ky * (xsum / xweight);
+		else
+			sum += Ky * xsum;
 	}
-	return sum / weight;
+	if (weighted)
+		return sum / weight;
+	else
+		return sum;
 }
 
 double MANGLE(lanczos_resample)(double px, double py,

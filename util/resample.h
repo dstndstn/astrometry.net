@@ -21,9 +21,16 @@
 
 struct lanczos_args_s {
 	int order;
+	int weighted;
 };
 typedef struct lanczos_args_s lanczos_args_t;
 
+/***
+ All the lanczos_* functions take a "lanczos_args_t*". for their "void* token".
+
+ They're declared this way for ease of generic use as callbacks
+ (eg in coadd.c)
+ */
 
 double nearest_resample_f(double px, double py, const float* img,
 						  const float* weightimg, int W, int H,
