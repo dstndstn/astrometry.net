@@ -69,16 +69,20 @@ double MANGLE(lanczos_resample_unw_sep)(double px, double py,
 			pix = imgrow[dx];
 			if (isnan(pix))
 				continue;
-			xweight += K;
+			if (weighted)
+				xweight += K;
 			xsum += K * pix;
 		}
-		if (xweight == 0.0)
+		if (weighted && xweight == 0.0)
 			continue;
-		weight += Ky;
-		if (weighted)
-			sum += Ky * (xsum / xweight);
-		else
-			sum += Ky * xsum;
+		if (weighted) {
+			/*
+			 weight += Ky;
+			 sum += Ky * (xsum / xweight);
+			 */
+			weight += Ky * xweight;
+		}
+		sum += Ky * xsum;
 	}
 	if (weighted)
 		return sum / weight;

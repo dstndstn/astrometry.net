@@ -24,6 +24,7 @@
 
 #include "coadd.h"
 #include "wcs-resample.h"
+#include "resample.h"
 
 #define true 1
 #define false 0
@@ -58,6 +59,7 @@ int log_get_level();
 void log_set_level(int lvl);
 
 %include "coadd.h"
+%include "resample.h"
 
 %inline %{
 #define ERR(x, ...)								\

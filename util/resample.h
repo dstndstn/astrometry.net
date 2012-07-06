@@ -32,6 +32,8 @@ typedef struct lanczos_args_s lanczos_args_t;
  (eg in coadd.c)
  */
 
+double lanczos(double x, int order);
+
 double nearest_resample_f(double px, double py, const float* img,
 						  const float* weightimg, int W, int H,
 						  double* out_wt, void* token);

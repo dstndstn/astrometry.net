@@ -26,7 +26,7 @@
 #include "errors.h"
 #include "log.h"
 
-static double lanczos(double x, int order) {
+double lanczos(double x, int order) {
 	if (x == 0)
 		return 1.0;
 	if (x > order || x < -order)
