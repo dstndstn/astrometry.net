@@ -742,20 +742,7 @@ Sip = sip_t
 
 	static int tan_wcs_resample(tan_t* inwcs, tan_t* outwcs,
 								PyObject* np_inimg, PyObject* np_outimg,
-								int lorder) {
-		/*
-		 if ((PyArray_NDIM(np_inimg ) != 2) ||
-		 (PyArray_NDIM(np_outimg) != 2)) {
-		 PyErr_SetString(PyExc_ValueError, "images must be two-dimensional");
-		 return -1;
-		 }
-		 // Not completely necessary... but probably super slow without this...
-		 if ((PyArray_TYPE(np_inimg ) != NPY_FLOAT) ||
-		 (PyArray_TYPE(np_outimg) != NPY_FLOAT)) {
-		 PyErr_SetString(PyExc_ValueError, "images must contain floats");
-		 return -1;
-		 }
-		 */
+								int weighted, int lorder) {
 		PyArray_Descr* dtype = PyArray_DescrFromType(NPY_FLOAT);
 		// in numpy v2.0 these constants have a NPY_ARRAY_ prefix
 		int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
@@ -788,7 +775,7 @@ Sip = sip_t
 
 		int res = resample_wcs(inanwcs, inimg, inW, inH,
 							   outanwcs, outimg, outW, outH,
-							   0, lorder);
+							   weighted, lorder);
 
 		anwcs_free(inanwcs);
 		anwcs_free(outanwcs);

@@ -28,7 +28,7 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
 
 int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 				 const anwcs_t* outwcs, float* outimg, int outW, int outH,
-				 int overlap_grid, int lanczos_order);
+				 int weighted, int lanczos_order);
 
 int resample_wcs_rgba(const anwcs_t* inwcs, const unsigned char* inimg,
 					  int inW, int inH,

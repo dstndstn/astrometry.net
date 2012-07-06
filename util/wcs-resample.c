@@ -221,12 +221,14 @@ static bool* find_overlap_grid(int B, int outW, int outH,
 
 int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 				 const anwcs_t* outwcs, float* outimg, int outW, int outH,
-				 int overlap_grid, int lorder) {
+				 int weighted, int lorder) {
 	int i,j;
 	int jlo,jhi,ilo,ihi;
 	lanczos_args_t largs;
 	double xyz[3];
+	bzero(&largs, sizeof(largs));
 	largs.order = lorder;
+	largs.weighted = weighted;
 
 	jlo = ilo = 0;
 	ihi = outW;
