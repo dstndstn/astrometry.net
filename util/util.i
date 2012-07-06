@@ -132,6 +132,8 @@ void log_set_level(int lvl);
 		 print_array(np_outweight);
 		 */
 
+		// FIXME ???? do the CheckFromAny() calls need INCREFS on the dtypes?
+
 		np_img = PyArray_CheckFromAny(np_img, dtype, 2, 2, req, NULL);
 		if (np_weight != Py_None) {
 			np_weight = PyArray_CheckFromAny(np_weight, dtype, 2, 2, req, NULL);
@@ -759,11 +761,16 @@ Sip = sip_t
 		int req = NPY_C_CONTIGUOUS | NPY_ALIGNED | NPY_NOTSWAPPED | NPY_ELEMENTSTRIDES;
 		int reqout = req | NPY_WRITEABLE | NPY_UPDATEIFCOPY;
 
+		Py_INCREF(dtype);
+		Py_INCREF(dtype);
 		np_inimg = PyArray_CheckFromAny(np_inimg, dtype, 2, 2, req, NULL);
 		np_outimg = PyArray_CheckFromAny(np_outimg, dtype, 2, 2, reqout, NULL);
 		if (!np_inimg || !np_outimg) {
 			ERR("Failed to PyArray_FromAny the images (np_inimg=%p, np_outimg=%p)\n",
 				np_inimg, np_outimg);
+			Py_XDECREF(np_inimg);
+			Py_XDECREF(np_outimg);
+			Py_DECREF(dtype);
 			return -1;
 		}
 
@@ -785,6 +792,10 @@ Sip = sip_t
 
 		anwcs_free(inanwcs);
 		anwcs_free(outanwcs);
+
+		Py_DECREF(dtype);
+		Py_DECREF(np_inimg);
+		Py_DECREF(np_outimg);
 
 		return res;
 	}
