@@ -223,92 +223,89 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 				 const anwcs_t* outwcs, float* outimg, int outW, int outH,
 				 int overlap_grid, int lorder) {
 	int i,j;
-    //double inxmin, inxmax, inymin, inymax;
-	int B = 20;
-	int BW, BH;
-	bool* bib = NULL;
-	int bi,bj;
+	int jlo,jhi,ilo,ihi;
 	lanczos_args_t largs;
+	double xyz[3];
 	largs.order = lorder;
 
-	if (overlap_grid)
-		bib = find_overlap_grid(B, outW, outH, outwcs, inwcs, &BW, &BH);
-	else {
-		BH = outH;
-		BW = outW;
-		B = 1;
-	}
-	/*
-	 inxmax = -HUGE_VAL;
-	 inymax = -HUGE_VAL;
-	 inxmin =  HUGE_VAL;
-	 inymin =  HUGE_VAL;
-	 */
+	jlo = ilo = 0;
+	ihi = outW;
+	jhi = outH;
 
-	// We've expanded the in-bounds boxes by 1 in each direction,
-	// so this (using the lower-left corner) should be ok.
-	for (bj=0; bj<BH; bj++) {
-		for (bi=0; bi<BW; bi++) {
-			int jlo,jhi,ilo,ihi;
-			if (overlap_grid && !bib[bj*BW + bi])
-				continue;
-			jlo = MIN(outH,  bj   *B);
-			jhi = MIN(outH, (bj+1)*B);
-			ilo = MIN(outW,  bi   *B);
-			ihi = MIN(outW, (bi+1)*B);
+	// find the center of "outwcs", and describe the boundary as a
+	// polygon in ~IWC coordinates.  Then find the extent of "inwcs".
 
-			for (j=jlo; j<jhi; j++) {
-				for (i=ilo; i<ihi; i++) {
-
-					double xyz[3];
-					double inx, iny;
-					float pix;
-					// +1 for FITS pixel coordinates.
-					if (anwcs_pixelxy2xyz(outwcs, i+1, j+1, xyz) ||
-						anwcs_xyz2pixelxy(inwcs, xyz, &inx, &iny))
-						continue;
-
-					inx -= 1.0;
-					iny -= 1.0;
-
-					if (lorder == 0) {
-						int x,y;
-						// Nearest-neighbour resampling
-						x = round(inx);
-						y = round(iny);
-						if (x < 0 || x >= inW || y < 0 || y >= inH)
-							continue;
-						pix = inimg[y * inW + x];
-
-						/*
-						 // keep track of the bounds of the requested pixels in the
-						 // input image.
-						 inxmax = MAX(inxmax, x);
-						 inymax = MAX(inymax, y);
-						 inxmin = MIN(inxmin, x);
-						 inymin = MIN(inymin, y);
-						 */
-					} else {
-						if (inx < (-lorder) || inx >= (inW+lorder) ||
-							iny < (-lorder) || iny >= (inH+lorder))
-							continue;
-						pix = lanczos_resample_unw_sep_f(inx, iny, inimg, inW, inH, &largs);
-					}
-					outimg[j * outW + i] = pix;
+	{
+		int ok = 1;
+		double xmin, xmax, ymin, ymax;
+		int x, y, W, H;
+		double xx,yy;
+		xmin = ymin = HUGE_VAL;
+		xmax = ymax = -HUGE_VAL;
+		// HACK -- just look at the corners.  Could anwcs_walk_boundary.
+		W = anwcs_imagew(inwcs);
+		H = anwcs_imageh(inwcs);
+		for (x=0; x<2; x++) {
+			for (y=0; y<2; y++) {
+				if (anwcs_pixelxy2xyz(inwcs, 1+x * (W-1), 1+y * (H-1), xyz) ||
+					anwcs_xyz2pixelxy(outwcs, xyz, &xx, &yy)) {
+					ok = 0;
+					break;
 				}
+				xmin = MIN(xmin, xx);
+				xmax = MAX(xmax, xx);
+				ymin = MIN(ymin, yy);
+				ymax = MAX(ymax, yy);
 			}
+			if (!ok)
+				break;
+		}
+		if (ok) {
+			W = anwcs_imagew(outwcs);
+			H = anwcs_imageh(outwcs);
+			if ((xmin >= W) || (xmax < 0) ||
+				(ymin >= H) || (ymax < 0)) {
+				logverb("No overlap between input and output images\n");
+				return 0;
+			}
+			ilo = MAX(0, xmin);
+			ihi = MIN(W, xmax);
+			jlo = MAX(0, ymin);
+			jhi = MIN(H, ymax);
+			logverb("Clipped resampling output box to [%i,%i], [%i,%i]\n",
+					ilo,ihi,jlo,jhi);
 		}
 	}
 
-	if (bib)
-		free(bib);
+	for (j=jlo; j<jhi; j++) {
+		for (i=ilo; i<ihi; i++) {
+			double inx, iny;
+			float pix;
+			// +1 for FITS pixel coordinates.
+			if (anwcs_pixelxy2xyz(outwcs, i+1, j+1, xyz) ||
+				anwcs_xyz2pixelxy(inwcs, xyz, &inx, &iny))
+				continue;
 
-	/*
-	 logverb("Bounds of the pixels requested from the input image:\n");
-	 logverb("  x: %g to %g\n", inxmin, inxmax);
-	 logverb("  y: %g to %g\n", inymin, inymax);
-	 */
+			inx -= 1.0;
+			iny -= 1.0;
 
+			if (lorder == 0) {
+				int x,y;
+				// Nearest-neighbour resampling
+				x = round(inx);
+				y = round(iny);
+				if (x < 0 || x >= inW || y < 0 || y >= inH)
+					continue;
+				pix = inimg[y * inW + x];
+			} else {
+				if (inx < (-lorder) || inx >= (inW+lorder) ||
+					iny < (-lorder) || iny >= (inH+lorder))
+					continue;
+				pix = lanczos_resample_unw_sep_f(inx, iny, inimg, inW, inH, &largs);
+			}
+			outimg[j * outW + i] = pix;
+		}
+	}
 	return 0;
 }
 
