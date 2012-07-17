@@ -73,6 +73,9 @@ py:
 	$(MAKE) -C blind pyplotstuff
 	$(MAKE) -C libkd pyspherematch
 
+SDSS :=	Makefile __init__.py common.py dr7.py dr8.py runList-dr8.par setup.py test_dr7.py test_dr8.py \
+	testdata _cutils.so cutils.py
+
 install: report.txt
 	mkdir -p $(INSTALL_DIR)/data
 	mkdir -p $(INSTALL_DIR)/bin
@@ -81,12 +84,16 @@ install: report.txt
 	mkdir -p $(INSTALL_DIR)/lib
 	mkdir -p $(INSTALL_DIR)/examples
 	mkdir -p $(INSTALL_DIR)/python/astrometry
+	mkdir -p $(INSTALL_DIR)/python/astrometry/sdss
 	mkdir -p $(INSTALL_DIR)/ups
 	cp ups/astrometry_net.table-dist $(INSTALL_DIR)/ups/astrometry_net.table
 	cp __init__.py $(INSTALL_DIR)/python/astrometry
 	cp CREDITS GETTING-INDEXES LICENSE README $(INSTALL_DIR)/doc
 	cp report.txt $(INSTALL_DIR)/doc
 	cp demo/* $(INSTALL_DIR)/examples
+	@for x in $(SDSS); do \
+		cp -r sdss/$$x $(INSTALL_DIR)/python/astrometry/sdss; \
+	done
 	$(MAKE) -C util  install
 	$(MAKE) -C libkd install
 	$(MAKE) -C qfits-an install
@@ -180,7 +187,7 @@ RELEASE_VER := 0.38
 SP_RELEASE_VER := 0.3
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
-RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data etc ups
+RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data etc ups sdss
 
 README: README.in
 	$(SED) 's/$$VERSION/$(RELEASE_VER)/g' $< > $@
