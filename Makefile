@@ -73,9 +73,6 @@ py:
 	$(MAKE) -C blind pyplotstuff
 	$(MAKE) -C libkd pyspherematch
 
-SDSS :=	Makefile __init__.py common.py dr7.py dr8.py runList-dr8.par setup.py test_dr7.py test_dr8.py \
-	testdata _cutils.so cutils.py
-
 install: report.txt
 	mkdir -p $(INSTALL_DIR)/data
 	mkdir -p $(INSTALL_DIR)/bin
@@ -91,9 +88,7 @@ install: report.txt
 	cp CREDITS GETTING-INDEXES LICENSE README $(INSTALL_DIR)/doc
 	cp report.txt $(INSTALL_DIR)/doc
 	cp demo/* $(INSTALL_DIR)/examples
-	@for x in $(SDSS); do \
-		cp -r sdss/$$x $(INSTALL_DIR)/python/astrometry/sdss; \
-	done
+	-$(MAKE) -C sdss install
 	$(MAKE) -C util  install
 	$(MAKE) -C libkd install
 	$(MAKE) -C qfits-an install

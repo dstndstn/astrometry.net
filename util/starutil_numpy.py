@@ -376,6 +376,7 @@ def datetojd(d):
 
 # UTC for 2000 January 1.5
 J2000 = datetime.datetime(2000,1,1,12,0,0,0,tzinfo=None)
+# -> jd 2451545.0
 
 def ecliptic_basis(eclipticangle = 23.439281):
 	Equinox= array([1,0,0])

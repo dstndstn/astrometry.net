@@ -5,7 +5,7 @@ setup(name='C utils for Astrometry.net SDSS routines',
 	  author = 'Lang & Hogg',
 	  author_email = 'dstn@astro.princeton.edu',
 	  url = 'http://astrometry.net',
-	  py_modules = ['cutils'],
 	  ext_modules = [Extension('_cutils', ['cutils.i'])],
+	  #py_modules = ['cutils'],
 	  #swig_opts = ['-modern'],
 	  )
