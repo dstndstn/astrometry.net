@@ -88,11 +88,15 @@ install: report.txt
 	cp CREDITS GETTING-INDEXES LICENSE README $(INSTALL_DIR)/doc
 	cp report.txt $(INSTALL_DIR)/doc
 	cp demo/* $(INSTALL_DIR)/examples
-	-$(MAKE) -C sdss install
 	$(MAKE) -C util  install
 	$(MAKE) -C libkd install
 	$(MAKE) -C qfits-an install
 	$(MAKE) -C blind install
+	@echo
+	@echo The following command may fail if you don\'t have "swig" installed.
+	@echo This is not required for normal astrometric solutions.
+	@echo
+	-$(MAKE) -C sdss install
 	@echo
 	@echo The following command may fail if you don\'t have the cairo, netpbm, and
 	@echo png libraries and headers installed.  You will lose out on some eye-candy
