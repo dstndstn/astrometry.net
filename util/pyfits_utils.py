@@ -1,3 +1,4 @@
+import os
 import pyfits
 import numpy
 from numpy import array, isscalar, ndarray
