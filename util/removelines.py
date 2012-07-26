@@ -12,6 +12,7 @@ import numpy
 import pyfits
 from numpy import *
 from numpy.random import rand
+from astrometry.util.pyfits_utils import pyfits_writeto
 
 # Returns a numpy array of booleans
 def hist_remove_lines(x, binwidth, binoffset, logcut):
@@ -34,6 +35,7 @@ def hist_remove_lines(x, binwidth, binoffset, logcut):
 	badpoints = sum(array([(x >= L)*(x < R) for (L,R) in zip(badleft, badright)]), 0)
 	return (badpoints == 0)
 
+
 def removelines(infile, outfile, xcol='X', ycol='Y', cut=None, **kwargs):
 	if cut is None:
 		cut = 100
@@ -42,7 +44,7 @@ def removelines(infile, outfile, xcol='X', ycol='Y', cut=None, **kwargs):
 	hdr = p[1].header
 	if xy is None:
 		print 'removelines.py: Input file contains no sources.'
-		p.writeto(outfile, clobber=True)
+		pyfits_writeto(p, outfile)
 		return 0
 
 	x = xy.field(xcol)
@@ -60,7 +62,7 @@ def removelines(infile, outfile, xcol='X', ycol='Y', cut=None, **kwargs):
 	p[1].header.update('REMLINEN', len(x) - len(xc), 'Number of sources removed by "removelines.py"')
 
 	p[1].data = p[1].data[I]
-	p.writeto(outfile, clobber=True)
+	pyfits_writeto(p, outfile)
 
 	return 0
 

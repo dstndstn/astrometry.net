@@ -9,6 +9,7 @@ from pylab import *
 from optparse import OptionParser
 
 from removelines import hist_remove_lines
+from astrometry.util.pyfits_utils import pyfits_writeto
 
 if __name__ == '__main__':
 	try:
@@ -151,7 +152,7 @@ def removelines(infile, outfile, xcol='X', ycol='Y', plots=False, cut=None, **kw
 	p[1].header.update('REMLINEN', len(x) - len(xc), 'Number of sources removed by "removelines"')
 
 	p[1].data = p[1].data[I]
-	p.writeto(outfile, clobber=True)
+	pyfits_writeto(p, outfile)
 
 	return 0
 

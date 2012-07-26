@@ -2,6 +2,19 @@ import pyfits
 import numpy
 from numpy import array, isscalar, ndarray
 
+def pyfits_writeto(p, filename, **kwargs):
+	'''
+	*p*: HDUList object
+	*filename*: uh, the filename to write to
+	'''
+	# old pyfits versions (eg the one in Ubuntu 10.04)
+	# fail when used with python2.7 (warning.showwarning changed)
+	# so work-around pyfits printing a warning when it overwrites an
+	# existing file.
+	if os.path.exists(filename):
+		os.remove(filename)
+	p.writeto(filename, **kwargs)
+
 def merge_tables(TT):
 	assert(len(TT) > 0)
 	cols = set(TT[0].get_columns())
@@ -322,7 +335,7 @@ class tabledata(object):
 			add_nonstructural_headers(primheader, P.header)
 			pyfits.HDUList([P, T]).writeto(fn, clobber=True)
 		else:
-			T.writeto(fn, clobber=True)
+			pyfits_writeto(T, fn)
 
 	writeto = write_to
 

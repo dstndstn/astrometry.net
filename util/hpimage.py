@@ -7,6 +7,7 @@ from numpy import *
 from astrometry.util.healpix import *
 from astrometry.util.sip import *
 from astrometry.util.starutil_numpy import *
+from astrometry.util.pyfits_utils import *
 
 if __name__ == '__main__':
 	args = sys.argv[1:]
@@ -101,5 +102,5 @@ if __name__ == '__main__':
 	print 'nans:', nans
 	print 'oobs:', oobs
 	p = pyfits.PrimaryHDU(Himg)
-	p.writeto(base + '-hp.fits', clobber=True)
+	pyfits_writeto(p, base + '-hp.fits')
 

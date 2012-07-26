@@ -33,7 +33,7 @@ def match_to_wcs(matchfn, row, wcsfn, imgw=0, imgh=0):
 
 	for (k,v,c) in hdrs:
 		h.update(k, v, c)
-	wcs.writeto(wcsfn, clobber=True)
+	pyfits_writeto(wcs, wcsfn)
 
 
 if __name__ == '__main__':

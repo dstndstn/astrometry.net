@@ -24,14 +24,14 @@ import numpy
 import pyfits
 from numpy import *
 from numpy.random import rand
-#from astrometry.util.pyfits_utils import *
+from astrometry.util.pyfits_utils import *
 
 def uniformize(infile, outfile, n, xcol='X', ycol='Y', **kwargs):
 	p = pyfits.open(infile)
 	xy = p[1].data
 	if xy is None:
 		print 'No sources'
-		p.writeto(outfile, clobber=True)
+		pyfits_writeto(p, outfile)
 		return
 	hdr = p[1].header
 	x = xy.field(xcol)
@@ -49,7 +49,7 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', **kwargs):
 	H = max(y) - min(y)
 	if W == 0 or H == 0:
 		print 'Area of the rectangle enclosing all image sources: %i x %i' % (W,H)
-		p.writeto(outfile, clobber=True)
+		pyfits_writeto(p, outfile)
 		return
 	NX = int(max(1, round(W / sqrt(W*H / float(n)))))
 	NY = int(max(1, round(n / float(NX))))
@@ -88,7 +88,7 @@ def uniformize(infile, outfile, n, xcol='X', ycol='Y', **kwargs):
 	#print 'len(J):', len(J)
 	p[1].header.add_history('This xylist was filtered by the "uniformize.py" program')
 	p[1].data = p[1].data[J]
-	p.writeto(outfile, clobber=True)
+	pyfits_writeto(p, outfile)
 	return 0
 
 

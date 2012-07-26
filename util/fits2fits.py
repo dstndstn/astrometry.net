@@ -19,6 +19,7 @@ if __name__ == '__main__':
 	import pyfits
 
 import pyfits
+from astrometry.util.pyfits_utils import pyfits_writeto
 
 def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 	"""
@@ -73,7 +74,7 @@ def fits2fits(infile, outfile, verbose=False, fix_idr=False):
 		fitsin.info()
 
 	try:
-		fitsin.writeto(outfile, clobber=True, output_verify='warn')
+		pyfits_writeto(fitsin, outfile, output_verify='warn')
 	except pyfits.VerifyError, ve:
 		return ('Verification of output file failed: your FITS file is probably too broken to automatically fix.' +
 				'  Error message is:' + str(ve))

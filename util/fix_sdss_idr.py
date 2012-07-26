@@ -2,6 +2,8 @@ import sys
 import pyfits
 import numpy
 
+from astrometry.util.pyfits_utils import pyfits_writeto
+
 def is_sdss_idr(hdu):
 	hdr = hdu.header
 	return (hdr.get('SIMPLE', True) == False
@@ -56,7 +58,7 @@ def fix_sdss_idr_file(infile, outfile):
 	print 'Reading', infile
 	newhdu = fix_sdss_idr(pyfits.open(infile)[0])
 	print 'Writing', outfile
-	newhdu.writeto(outfile, clobber=True)
+	pyfits_wireto(newhdu, outfile)
 
 
 if __name__ == '__main__':

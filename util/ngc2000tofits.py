@@ -1,6 +1,7 @@
 import pyfits
 from numpy import *
 from ngc2000 import ngc2000, ngc2000accurate
+from astrometry.util.pyfits_utils import *
 
 if __name__ == '__main__':
 
@@ -38,7 +39,7 @@ if __name__ == '__main__':
 		 pyfits.Column(name='DEC', format='1E', array=dec[isngc], unit='deg'),
 		 pyfits.Column(name='RADIUS', format='1E', array=radius[isngc], unit='deg'),
 		 ])
-	pyfits.HDUList([prim, table]).writeto('ngc.fits', clobber=True)
+	pyfits_writeto(pyfits.HDUList([prim, table]), 'ngc.fits')
 
 	isic = logical_not(isngc)
 
@@ -51,4 +52,4 @@ if __name__ == '__main__':
 		 pyfits.Column(name='DEC', format='1E', array=dec[isic], unit='deg'),
 		 pyfits.Column(name='RADIUS', format='1E', array=radius[isic], unit='deg'),
 		 ])
-	pyfits.HDUList([prim, table]).writeto('ic.fits', clobber=True)
+	pyfits_writeto(pyfits.HDUList([prim, table]), 'ic.fits')

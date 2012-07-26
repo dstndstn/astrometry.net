@@ -7,6 +7,7 @@ from math import *
 from numpy import *
 from pylab import *
 from scipy.ndimage.filters import *
+from astrometry.util.pyfits_utils import pyfits_writeto
 
 def normalized_hough(x, y, imgw, imgh, rlo, rhi, tlo, thi, nr, nt):
 	houghimg = zeros((nr, nt)).astype(int)
@@ -170,7 +171,7 @@ def removelines_general(infile, outfile, nt=180, nr=180, thresh1=2.,
 		savefig('xy4.png')
 
 	p[1].data = p[1].data[keep]
-	p.writeto(outfile, clobber=True)
+	pyfits_writeto(p, outfile)
 	return 0
 
 def exact_hough_normalization():
