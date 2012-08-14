@@ -48,8 +48,7 @@ def radec_to_sdss_rcf(ra, dec, spherematch=True, radius=0, tablefn=None, contain
 		xyz = radectoxyz(rds[:,0], rds[:,1]).astype(double)
 		(inds,dists) = spherematch.match(xyz, sdssxyz, sqrt(radius2))
 		print 'found %i matches' % len(inds)
-		if len(inds) == 0:
-			sys.exit(0)
+		assert(len(inds)>0)
 		#print 'inds:', inds.shape
 		I = argsort(dists[:,0])
 		#print 'dists:', dists.shape
