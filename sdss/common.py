@@ -163,6 +163,24 @@ class SdssFile(object):
 		return s
 
 
+def munu_to_radec_rad(mu, nu, node, incl):
+	ra = node + np.arctan2(np.sin(mu - node) * np.cos(nu) * np.cos(incl) -
+						   np.sin(nu) * np.sin(incl),
+						   np.cos(mu - node) * np.cos(nu))
+	dec = np.arcsin(np.sin(mu - node) * np.cos(nu) * np.sin(incl) +
+					np.sin(nu) * np.cos(incl))
+	return ra,dec
+
+def munu_to_radec_deg(mu, nu, node, incl):
+	mu, nu = np.deg2rad(mu), np.deg2rad(nu)
+	node, incl = np.deg2rad(node), np.deg2rad(incl)
+	ra,dec = munu_to_radec_rad(mu, nu, node, incl)
+	ra, dec = np.rad2deg(ra), np.rad2deg(dec)
+	ra += (360. * (ra < 0))
+	ra -= (360. * (ra > 360))
+	return (ra, dec)
+
+
 class AsTrans(SdssFile):
 	'''
 	In DR7, asTrans structures can appear in asTrans files (for a
@@ -426,16 +444,9 @@ class AsTrans(SdssFile):
 		node,incl = self.node, self.incl
 		assert(mu is not None)
 		assert(nu is not None)
-		mu, nu = np.deg2rad(mu), np.deg2rad(nu)
-		ra = node + np.arctan2(np.sin(mu - node) * np.cos(nu) * np.cos(incl) -
-							   np.sin(nu) * np.sin(incl),
-							   np.cos(mu - node) * np.cos(nu))
-		dec = np.arcsin(np.sin(mu - node) * np.cos(nu) * np.sin(incl) +
-						np.sin(nu) * np.cos(incl))
-		ra, dec = np.rad2deg(ra), np.rad2deg(dec)
-		ra += (360. * (ra < 0))
-		ra -= (360. * (ra > 360))
-		return (ra, dec)
+		# just in case you thought we needed *more* rad/deg conversions...
+		return munu_to_radec_deg(mu, nu, np.rad2deg(node), np.rad2deg(incl))
+
 
 if cutils is not None:
 	AsTrans.radec_to_munu_single = AsTrans.radec_to_munu_single_c
