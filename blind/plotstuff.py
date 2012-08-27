@@ -105,6 +105,10 @@ class Plotstuff(object):
 		return plotstuff_fill(self.pargs)
 	def stroke(self):
 		return plotstuff_stroke(self.pargs)
+	def fill_preserve(self):
+		return plotstuff_fill_preserve(self.pargs)
+	def stroke_preserve(self):
+		return plotstuff_stroke_preserve(self.pargs)
 	def move_to_radec(self, ra, dec):
 		return plotstuff_move_to_radec(self.pargs, ra, dec)
 	def line_to_radec(self, ra, dec):

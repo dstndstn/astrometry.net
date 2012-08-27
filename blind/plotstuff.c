@@ -303,6 +303,17 @@ int plotstuff_stroke(plot_args_t* pargs) {
 	return 0;
 }
 
+int plotstuff_fill_preserve(plot_args_t* pargs) {
+	assert(pargs->cairo);
+	cairo_fill_preserve(pargs->cairo);
+	return 0;
+}
+int plotstuff_stroke_preserve(plot_args_t* pargs) {
+	assert(pargs->cairo);
+	cairo_stroke_preserve(pargs->cairo);
+	return 0;
+}
+
 void plotstuff_set_dashed(plot_args_t* pargs, double dashlen) {
 	assert(pargs->cairo);
 	cairo_set_dash(pargs->cairo, &dashlen, 1, 0);

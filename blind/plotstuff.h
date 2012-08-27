@@ -240,6 +240,8 @@ int plotstuff_line_to_radec(plot_args_t* pargs, double ra, double dec);
 int plotstuff_close_path(plot_args_t* pargs);
 int plotstuff_stroke(plot_args_t* pargs);
 int plotstuff_fill(plot_args_t* pargs);
+int plotstuff_stroke_preserve(plot_args_t* pargs);
+int plotstuff_fill_preserve(plot_args_t* pargs);
 
 void plotstuff_move_to(plot_args_t* pargs, double x, double y);
 void plotstuff_line_to(plot_args_t* pargs, double x, double y);
