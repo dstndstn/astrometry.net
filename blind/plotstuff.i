@@ -61,6 +61,17 @@
   number lowval, number highval);
   */
 
+%inline %{
+PyObject* c_image_numpy_view(float* data, int nx, int ny) {
+	npy_intp dims[2];
+	dims[0] = ny;
+	dims[1] = nx;
+	return PyArray_SimpleNewFromData(2, dims, NPY_FLOAT, data);
+  //PyArray_NewFromDescr(PyTypeObject* subtype, PyArray_Descr* descr, int nd, npy_intp* dims, npy_intp* strides, void* data, int flags, PyObject* obj)
+}
+
+%}
+
 %pythoncode %{
 def qfits_load_image(fn, ext=1, plane=0, map=1, ptype=PTYPE_FLOAT):
 	ld = qfitsloader()

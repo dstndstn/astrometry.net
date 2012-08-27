@@ -5,6 +5,55 @@ from numpy import array, append, flatnonzero
 
 import numpy as np
 import pylab as plt
+from matplotlib.ticker import FixedFormatter
+
+def loghist(x, y, nbins=100,
+			hot=True, doclf=True, docolorbar=True, lo=0.3,
+			imshowargs={}, **kwargs):
+	#np.seterr(all='warn')
+	if doclf:
+		plt.clf()
+	myargs = kwargs.copy()
+	if not 'bins' in myargs:
+		myargs['bins'] = nbins
+	(H,xe,ye) = np.histogram2d(x, y, **myargs)
+
+	L = np.log10(np.maximum(lo, H.T))
+	myargs = dict(extent=(min(xe), max(xe), min(ye), max(ye)),
+				  aspect='auto',
+				  interpolation='nearest', origin='lower')
+	myargs.update(imshowargs)
+	plt.imshow(L, **myargs)
+	if hot:
+		plt.hot()
+	if docolorbar:
+		r = [np.log10(lo)] + range(int(np.ceil(L.max())))
+		# print 'loghist: L max', L.max(), 'r', r
+		plt.colorbar(ticks=r, format=FixedFormatter(
+			['0'] + ['%i'%(10**ri) for ri in r[1:]]))
+	#set_fp_err()
+	return H, xe, ye
+
+def plothist(x, y, nbins=100, log=False,
+			 doclf=True, docolorbar=True, dohot=True,
+			 imshowargs={}, **hist2dargs):
+	if log:
+		return loghist(x, y, nbins=nbins, doclf=doclf, docolorbar=docolobar,
+					   dohot=dohit, imshowargs=imshowargs, **kwargs)
+					   
+	if doclf:
+		plt.clf()
+	(H,xe,ye) = np.histogram2d(x, y, nbins, **hist2dargs)
+	myargs = dict(extent=(min(xe), max(xe), min(ye), max(ye)),
+				  aspect='auto',
+				  interpolation='nearest', origin='lower')
+	myargs.update(imshowargs)
+	plt.imshow(H.T, **myargs)
+	if dohot:
+		plt.hot()
+	if docolorbar:
+		plt.colorbar()
+	return H, xe, ye
 
 def setRadecAxes(ramin, ramax, decmin, decmax):
 	rl,rh = ramin,ramax

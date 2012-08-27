@@ -274,8 +274,8 @@ int resample_wcs(const anwcs_t* inwcs, const float* inimg, int inW, int inH,
 			ihi = MIN(W, xmax);
 			jlo = MAX(0, ymin);
 			jhi = MIN(H, ymax);
-			logverb("Clipped resampling output box to [%i,%i], [%i,%i]\n",
-					ilo,ihi,jlo,jhi);
+			//logverb("Clipped resampling output box to [%i,%i], [%i,%i]\n",
+			//ilo,ihi,jlo,jhi);
 		}
 	}
 

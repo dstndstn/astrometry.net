@@ -25,9 +25,9 @@ def merge_tables(TT):
 	N = sum([len(T) for T in TT])
 	cols = TT[0].get_columns()
 	td = tabledata()
-	print 'merge_tables: columns =', cols
+	#print 'merge_tables: columns =', cols
 	for col in cols:
-		print 'merging column', col
+		#print 'merging column', col
 		if col.startswith('_'):
 			continue
 		v0 = TT[0].getcolumn(col)
@@ -38,7 +38,7 @@ def merge_tables(TT):
 			for T in TT[1:]:
 				V.extend(T.getcolumn(col))
 		elif numpy.isscalar(v0):
-			print 'merge_tables: copying scalar from first table:', col, '=', v0
+			#print 'merge_tables: copying scalar from first table:', col, '=', v0
 			V = v0
 		else:
 			raise RuntimeError("pyfits_utils.merge_tables: Don't know how to concatenate type: %s" % str(type(v0)))
