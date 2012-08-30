@@ -69,6 +69,11 @@ class DR8(DR7):
 		return 22.5 - 2.5 * np.log10(nmgy)
 
 	def __init__(self, **kwargs):
+		'''
+		Useful kwargs:
+		
+		basedir : (string) - local directory where data will be stored.
+		'''
 		DR7.__init__(self, **kwargs)
 		# Local filenames
 		self.filenames.update({
@@ -96,7 +101,7 @@ class DR8(DR7):
 			'fpM': 'gunzip -cd %(input)s > %(output)s',
 			}
 
-		y = read_yanny(self._get_data_file('runList-dr8.par'))
+		y = read_yanny(self._get_runlist_filename())
 		y = y['RUNDATA']
 		rl = runlist()
 		rl.run = np.array(y['run'])
@@ -105,6 +110,9 @@ class DR8(DR7):
 		rl.rerun = np.array(y['rerun'])
 		#print 'Rerun type:', type(rl.rerun), rl.rerun.dtype
 		self.runlist = rl
+
+	def _get_runlist_filename(self):
+		return self._get_data_file('runList-dr8.par')
 
 	# read a data file describing the DR8 data
 	def _get_data_file(self, fn):
