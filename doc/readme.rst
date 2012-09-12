@@ -85,22 +85,48 @@ RHEL / RedHat-like distributions:
                        libXrender-devel.x86_64 xorg-x11-proto-devel.x86_64 \
 					   zlib-devel libjpeg-devel
 
-Mac OS X:
-^^^^^^^^^
+Mac OS X using homebrew:
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-Possibly the easiest way is to install Fink (www.finkproject.org), and
-then use apt-get install as per the Debian instructions above (leaving
-out ``zlib1g-dev`` because it's already included with OSX).  Note that
-to use Fink you will need to add something like this in your
+These instructions Worked For Me as of September 2012 on OSX 10.8.1.
+
+First set up homebrew:
+  * grab [https://developer.apple.com/xcode/ XCode] (from the Apps Store.  Free, but you still need a credit card.  Argh.)
+  * grab [https://developer.apple.com/downloads/index.action XCode Command-line utilities]
+  * grab [http://xquartz.macosforge.org/landing/ XQuartz]
+  * grab [http://mxcl.github.com/homebrew/ Homebrew]
+  * grab [http://www.pip-installer.org/en/latest/installing.html pip] if you don't have it already
+
+Get the required homebrew packages::
+
+    $ brew install wget swig pkg-config
+    $ brew install wcslib                 # not *required*, but handy [***]
+    $ brew install --HEAD netpbm          # for plotting [***]
+    $ brew install cairo jpeg libpng      # for plotting
+
+Get the required pip packages::
+
+    $ pip install pyfits
+
+I had to include the following in my ``~/.bashrc`` file::
+
+    PCP=
+    PCP=${PCP}:/usr/local/lib/pkgconfig
+    PCP=${PCP}:/opt/X11/lib/pkgconfig
+    export PKG_CONFIG_PATH=${PCP}
+
+
+Mac OS X using Fink:
+^^^^^^^^^^^^^^^^^^^^
+
+Use apt-get install as per the Debian instructions above (leaving out
+``zlib1g-dev`` because it's already included with OSX).  Note that to
+use Fink you will need to add something like this in your
 ``~/.profile`` or ``~/.bashrc`` file::
 
     . /sw/bin/init.sh
     export CFLAGS="-I/usr/local/include -I/sw/include"
     export LDFLAGS="-L/usr/local/lib -L/sw/lib"
-
-BUT, ``homebrew`` seems to be the newfangled way to install stuff.  We
-currently have no experience with this, so any notes you have would
-be appreciated!
 
 Getting/Building
 ----------------
