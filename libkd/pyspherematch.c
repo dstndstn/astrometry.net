@@ -237,9 +237,11 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
 
 	// YUCK!
 	tempinds = (int*)malloc(NY * sizeof(int));
+	double* tempdists = (double*)malloc(NY * sizeof(double));
 
     pinds   = tempinds; //PyArray_DATA(inds);
-    pdist2s = PyArray_DATA(dist2s);
+    //pdist2s = PyArray_DATA(dist2s);
+	pdist2s = tempdists;
 
     dualtree_nearestneighbour(kd1, kd2, rad*rad, &pdist2s, &pinds, notself);
 
@@ -248,14 +250,24 @@ static PyObject* spherematch_nn(PyObject* self, PyObject* args) {
 		if (pinds[i] != -1)
 			pinds[i] = kdtree_permute(kd1, pinds[i]);
 
-	// and kd2's permutation array!
+
 	pinds = PyArray_DATA(inds);
+    pdist2s = PyArray_DATA(dist2s);
+
 	for (i=0; i<NY; i++) {
 		pinds[i] = -1;
-		if (tempinds[i] != -1)
-			pinds[kdtree_permute(kd2, i)] = tempinds[i];
+		pdist2s[i] = HUGE_VAL;
+	}
+	// and apply kd2's permutation array!
+	for (i=0; i<NY; i++) {
+		if (tempinds[i] != -1) {
+			int j = kdtree_permute(kd2, i);
+			pinds[j] = tempinds[i];
+			pdist2s[j] = tempdists[i];
+		}
 	}
 	free(tempinds);
+	free(tempdists);
 
     return Py_BuildValue("(OO)", inds, dist2s);
 }
