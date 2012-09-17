@@ -100,15 +100,19 @@ First set up homebrew:
 Get the required homebrew packages::
 
     $ brew install wget swig pkg-config
-    $ brew install wcslib                 # not *required*, but handy [***]
-    $ brew install --HEAD netpbm          # for plotting [***]
-    $ brew install cairo jpeg libpng      # for plotting
+    $ brew install --HEAD --use-gcc netpbm  # for plotting
+    $ brew install cairo jpeg libpng        # for plotting
+
+Get homebrew-science::
+
+    $ brew tap homebrew/science
+    $ brew install wcslib                   # not *required*, but very handy
 
 Get the required pip packages::
 
     $ pip install pyfits
 
-I had to include the following in my ``~/.bashrc`` file::
+I had to include the following in my ``~/.bashrc`` file (for homebrew)::
 
     PCP=
     PCP=${PCP}:/usr/local/lib/pkgconfig
