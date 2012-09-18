@@ -1,5 +1,6 @@
 from numpy import sin, atleast_1d, zeros, logical_and
 from math import pi
+import numpy as np
 
 def point_in_poly(x, y, poly):
 	'''
