@@ -31,7 +31,7 @@ def get_urls(urls, outfn, curl=False):
 def sdss_das_get_suffix(filetype):
 	return ({'fpC': '.gz'}).get(filetype, '')
 
-def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, suffix=None, gunzip=True, curl=False):
+def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, suffix=None, gunzip=True, curl=False, ):
 	if suffix is None:
 		suffix = sdss_das_get_suffix(filetype)
 	if reruns is None:

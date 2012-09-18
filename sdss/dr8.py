@@ -129,7 +129,8 @@ class DR8(DR7):
 			return None
 		return reruns[0]
 	
-	def retrieve(self, filetype, run, camcol, field, band=None, skipExisting=True):
+	def retrieve(self, filetype, run, camcol, field, band=None, skipExisting=True,
+				 tempsuffix='.tmp'):
 		outfn = self.getPath(filetype, run, camcol, field, band)
 		if outfn is None:
 			return None
@@ -147,8 +148,12 @@ class DR8(DR7):
 
 		# suffix to add to the downloaded filename
 		suff = self.dassuffix.get(filetype, '')
+
+		oo = outfn + suff
+		if tempsuffix is not None:
+			oo += tempsuffix
 		
-		cmd = cmd % dict(outfn=outfn + suff, url=url)
+		cmd = cmd % dict(outfn=oo, url=url)
 		#print 'cmd:', cmd
 		(rtn,out,err) = run_command(cmd)
 		if rtn:
@@ -157,6 +162,10 @@ class DR8(DR7):
 			print 'Error:', err
 			print 'Return val:', rtn
 			return None
+
+		if tempsuffix is not None:
+			#
+			os.rename(oo, outfn + suff)
 
 		if filetype in self.processcmds:
 			cmd = self.processcmds[filetype]

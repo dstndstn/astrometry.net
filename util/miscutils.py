@@ -1,6 +1,24 @@
 from numpy import sin, atleast_1d, zeros, logical_and
 from math import pi
 
+def point_in_poly(x, y, poly):
+	'''
+	Performs a point-in-polygon test for numpy arrays of *x* and *y*
+	values, and a polygon described as 2-d numpy array.
+	Returns a numpy array of bools.
+	'''
+	inside = np.zeros(np.atleast_1d(x).shape, bool)
+	for i in range(len(poly)):
+		j = (i-1 + len(poly)) % len(poly)
+		xi,xj = poly[i,0], poly[j,0]
+		yi,yj = poly[i,1], poly[j,1]
+		I = np.logical_and(
+			np.logical_or(np.logical_and(yi <= y, y < yj),
+						  np.logical_and(yj <= y, y < yi)),
+			x < (xi + ((xj - xi) * (y - yi) / (yj - yi))))
+		inside[I] = np.logical_not(inside[I])
+	return inside
+
 def lanczos_filter(order, x):
 	x = atleast_1d(x)
 	nz = logical_and(x != 0., logical_and(x < order, x > -order))

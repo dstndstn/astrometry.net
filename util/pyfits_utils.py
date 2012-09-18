@@ -21,6 +21,11 @@ def merge_tables(TT):
 	cols = set(TT[0].get_columns())
 	for T in TT[1:]:
 		# They must have the same set of columns
+		if len(cols.symmetric_difference(T.get_columns())):
+			print 'Tables to merge must have the same set of columns.'
+			print 'First table columns:', cols
+			print 'Target table columns:', T.get_columns()
+			print 'Difference:', cols.symmetric_difference(T.get_columns())
 		assert(len(cols.symmetric_difference(T.get_columns())) == 0)
 	N = sum([len(T) for T in TT])
 	cols = TT[0].get_columns()
@@ -73,9 +78,13 @@ def add_nonstructural_headers(fromhdr, tohdr):
 			i = len(cl)
 		cl.insert(i, pyfits.Card(card.key, card.value, card.comment))
 
-def cut_array(val, I, name=None):
+def cut_array(val, I, name=None, to=None):
 	if type(I) is slice:
-		return val[I]
+		if to is None:
+			return val[I]
+		else:
+			val[I] = to
+			return
 
 	if type(val) in [numpy.ndarray, numpy.core.defchararray.chararray]:
 		#print 'slicing numpy array "%s": val shape' % name, val.shape
@@ -84,29 +93,53 @@ def cut_array(val, I, name=None):
 		# with an empty array.
 		if len(val) == 0:
 			return val
-		return val[I]
+		if to is None:
+			return val[I]
+		else:
+			val[I] = to
+			return
 
-	if type(val) in [list,tuple] and type(I) in [int, numpy.int64]:
-		return val[I]
+	inttypes = [int, numpy.int64, numpy.int32, numpy.int]
+
+	if type(val) in [list,tuple] and type(I) in inttypes:
+		if to is None:
+			return val[I]
+		else:
+			val[I] = to
+			return
 
 	# HACK -- emulate numpy's boolean and int array slicing
 	# (when "val" is a normal python list)
 	if type(I) is numpy.ndarray and hasattr(I, 'dtype') and ((I.dtype.type in [bool, numpy.bool])
 															 or (I.dtype == bool)):
 		try:
-			return [val[i] for i,b in enumerate(I) if b]
+			if to is None:
+				return [val[i] for i,b in enumerate(I) if b]
+			else:
+				for i,(b,t) in enumerate(zip(I,to)):
+					if b:
+						val[i] = t
+				return
 		except:
 			print 'Failed to slice field', name
 			#setattr(rtn, name, val)
 			#continue
 
-	inttypes = [int, numpy.int64, numpy.int32, numpy.int]
 	if type(I) is numpy.ndarray and all(I.astype(int) == I):
-		return [val[i] for i in I]
-
+		if to is None:
+			return [val[i] for i in I]
+		else:
+			#[val[i] = t for i,t in zip(I,to)]
+			for i,t in zip(I,to):
+				val[i] = t
+				
 	if (numpy.isscalar(I) and hasattr(I, 'dtype') and
 		I.dtype in inttypes):
-		return val[int(I)]
+		if to is None:
+			return val[int(I)]
+		else:
+			val[int(I)] = to
+			return
 
 	if hasattr(I, '__len__') and len(I) == 0:
 		return []
@@ -179,8 +212,10 @@ class tabledata(object):
 	def get(self, name):
 		return self.getcolumn(name)
 	# Returns the list of column names, as they were ordered in the input FITS or text table.
-	def get_columns(self):
-		return self._columns
+	def get_columns(self, internal=False):
+		if internal:
+			return self._columns[:]
+		return [x for x in self._columns if not x.startswith('_')]
 	# Returns the original FITS header.
 	def get_header(self):
 		return self._header
@@ -193,6 +228,17 @@ class tabledata(object):
 		del self.__dict__[c]
 		self._columns.remove(c)
 	def __setitem__(self, I, O):
+
+		#### TEST
+
+		for name,val in self.__dict__.items():
+			if name.startswith('_'):
+				continue
+			cut_array(val, I, name, to=O.get(name))
+		return
+		####
+
+		
 		if type(I) is slice:
 			print 'I:', I
 			# HACK... "[:]" -> slice(None, None, None)
