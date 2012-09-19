@@ -9,13 +9,70 @@ from matplotlib.ticker import FixedFormatter
 
 def loghist(x, y, nbins=100,
 			hot=True, doclf=True, docolorbar=True, lo=0.3,
-			imshowargs={}, **kwargs):
+			imshowargs={},
+			clampxlo=False, clampxlo_val=None, clampxlo_to=None,
+			clampxhi=False, clampxhi_val=None, clampxhi_to=None,
+			clampylo=False, clampylo_val=None, clampylo_to=None,
+			clampyhi=False, clampyhi_val=None, clampyhi_to=None,
+			clamp=None, clamp_to=None,
+			**kwargs):
 	#np.seterr(all='warn')
 	if doclf:
 		plt.clf()
 	myargs = kwargs.copy()
 	if not 'bins' in myargs:
 		myargs['bins'] = nbins
+
+	rng = kwargs.get('range', None)
+	x = np.array(x)
+	y = np.array(y)
+
+	if clamp is True:
+		clamp = rng
+	if clamp is not None:
+		((clampxlo_val, clampxhi_val),(clampylo_val, clampyhi_val)) = clamp
+	if clamp_to is not None:
+		((clampxlo_to, clampxhi_to),(clampylo_to, clampyhi_to)) = clamp_to
+	if clampxlo:
+		if clampxlo_val is None:
+			if rng is None:
+				raise RuntimeError('clampxlo, but no clampxlo_val or range')
+			clampxlo_val = rng[0][0]
+	if clampxlo_val is not None:
+		if clampxlo_to is None:
+			clampxlo_to = clampxlo_val
+		x[x < clampxlo_val] = clampxlo_to
+	if clampxhi:
+		if clampxhi_val is None:
+			if rng is None:
+				raise RuntimeError('clampxhi, but no clampxhi_val or range')
+			clampxhi_val = rng[0][1]
+	if clampxhi_val is not None:
+		if clampxhi_to is None:
+			clampxhi_to = clampxhi_val
+		x[x > clampxhi_val] = clampxhi_to
+	if clampylo:
+		if clampylo_val is None:
+			if rng is None:
+				raise RuntimeError('clampylo, but no clampylo_val or range')
+			clampylo_val = rng[1][0]
+	if clampylo_val is not None:
+		if clampylo_to is None:
+			clampylo_to = clampylo_val
+		y[y < clampylo_val] = clampylo_to
+	if clampyhi:
+		if clampyhi_val is None:
+			if rng is None:
+				raise RuntimeError('clampyhi, but no clampyhi_val or range')
+			clampyhi_val = rng[1][1]
+	if clampyhi_val is not None:
+		if clampyhi_to is None:
+			clampyhi_to = clampyhi_val
+		y[y > clampyhi_val] = clampyhi_to
+
+
+
+
 	(H,xe,ye) = np.histogram2d(x, y, **myargs)
 
 	L = np.log10(np.maximum(lo, H.T))
