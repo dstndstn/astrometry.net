@@ -64,7 +64,7 @@ CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - 2>&1 > /dev/null < /dev/null | gre
 
 LINKTEST = $(CC) -x c -o $(TMPFILE) $(ARG) - 2>&1 > /dev/null < /dev/null | grep "unrecognized\|invalid\|error:\|warning:" > /dev/null || echo $(ARG)
 
-PROGLINKTEST = echo "int main() { return 0; }" | $(CC) -x c -o $(TMPFILE).o - && $(CC) -o $(TMPFILE) $(TMPFILE).o $(ARG) 2>&1 > /dev/null | grep "unrecognized\|invalid\|error:\|warning:" > /dev/null || echo $(ARG)
+#PROGLINKTEST = echo "int main() { return 0; }" | $(CC) -x c -o $(TMPFILE).o - && $(CC) -o $(TMPFILE) $(TMPFILE).o $(ARG) 2>&1 > /dev/null | grep "unrecognized\|invalid\|error:\|warning:" > /dev/null || echo $(ARG)
 
 #CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - 2>&1 < /dev/null | tee "CCTEST-$(ARG)" | grep "unrecognized\|invalid\|error:" > /dev/null || echo $(ARG)
 # Test whether a particular string appears in the compiler's default environment;
@@ -82,10 +82,9 @@ ARG := -fno-signaling-nans
 FLAGS_DEF += $(shell $(CCTEST))
 
 # gcc 3.3 on Mac doesn't support -pthread
-# clang 4.1: warns about including -pthread during linking programs but not shared libs
-# See separate tests for CFLAGS, LDFLAGS, and SHAREDLIBFLAGS below.
-#ARG := -pthread
-#FLAGS_DEF += $(shell $(CCTEST))
+# clang 4.1: warns about including -pthread
+ARG := -pthread
+FLAGS_DEF += $(shell $(CCTEST))
 
 ## Below, we try to guess good compiler flags for this CPU / architecture.
 ## If we make an incorrect choice -- ie, the code fails in some way on the
@@ -220,8 +219,8 @@ CFLAGS_DEF := $(CFLAGS) $(FLAGS_DEF)
 CFLAGS_DEF += -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 CFLAGS_DEF += -D_GNU_SOURCE
 
-ARG := -pthread
-CFLAGS_DEF += $(shell $(CCTEST))
+#ARG := -pthread
+#CFLAGS_DEF += $(shell $(CCTEST))
 
 
 #CFLAGS_DEF += -Wextra
@@ -238,8 +237,8 @@ CFLAGS_DEF += $(shell $(CCTEST))
 # fold in the user's LDFLAGS, if set...
 LDFLAGS_DEF := $(LDFLAGS) $(FLAGS_DEF)
 
-ARG := -pthread
-LDFLAGS_DEF += $(shell $(PROGLINKTEST))
+#ARG := -pthread
+#LDFLAGS_DEF += $(shell $(PROGLINKTEST))
 
 LDLIBS_DEF := $(LDLIBS)
 
