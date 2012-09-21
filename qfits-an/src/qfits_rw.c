@@ -495,12 +495,12 @@ int qfits_get_hdrinfo_long(
     }
     if (seg_start!=NULL) {
         *seg_start = qfits_query_long(filename, QFITS_QUERY_HDR_START | xtnum);
-        if (*seg_start<0)
+        if (*seg_start ==QFITS_QUERY_ERROR)
             return -1;
     }
     if (seg_size!=NULL) {
         *seg_size = qfits_query_long(filename, QFITS_QUERY_HDR_SIZE | xtnum);
-        if (*seg_size<0)
+        if (*seg_size == QFITS_QUERY_ERROR)
             return -1;
     }
     return 0;
@@ -558,12 +558,12 @@ int qfits_get_datinfo_long(
     }
     if (seg_start!=NULL) {
         *seg_start = qfits_query_long(filename, QFITS_QUERY_DAT_START | xtnum);
-        if (*seg_start<0)
+        if (*seg_start == QFITS_QUERY_ERROR)
             return -1;
     }
     if (seg_size!=NULL) {
         *seg_size = qfits_query_long(filename, QFITS_QUERY_DAT_SIZE | xtnum);
-        if (*seg_size<0)
+        if (*seg_size == QFITS_QUERY_ERROR)
             return -1;
     }
     return 0;  

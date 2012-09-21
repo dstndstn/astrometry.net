@@ -105,8 +105,9 @@ Get the required homebrew packages::
 
 Get homebrew-science::
 
-    $ brew tap homebrew/science
-    $ brew install wcslib                   # not *required*, but very handy
+    $ # brew tap homebrew/science
+    $ brew tap camphogg/science     # homebrew/science development is slow!
+    $ brew install wcslib
 
 Get the required pip packages::
 

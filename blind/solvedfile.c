@@ -29,6 +29,14 @@
 #include "solvedfile.h"
 #include "errors.h"
 
+#if defined(__APPLE__)
+// MacOS 10.3 with gcc 3.3 doesn't have O_SYNC.
+#if !defined(O_SYNC)
+#define O_SYNC 0
+#endif
+#endif
+
+
 int solvedfile_getsize(char* fn) {
 	FILE* f;
 	off_t end;
@@ -205,11 +213,6 @@ int solvedfile_set_array(char* fn, bool* vals, int N) {
 
 	solvedfile_setsize(fn, N);
 
-#if defined(__APPLE__)
-    // MacOS 10.3 with gcc 3.3 doesn't have O_SYNC.
-    #define O_SYNC 0
-#endif
-
 	// (file mode 777; umask will modify this, if set).
 	f = open(fn, O_WRONLY | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG | S_IRWXO);
 	if (f == -1) {
@@ -265,11 +268,6 @@ int solvedfile_set(char* fn, int fieldnum) {
 
     // 1-index
     fieldnum--;
-
-#if defined(__APPLE__)
-    // MacOS 10.3 with gcc 3.3 doesn't have O_SYNC.
-    #define O_SYNC 0
-#endif
 
 	// (file mode 777; umask will modify this, if set).
 	f = open(fn, O_WRONLY | O_CREAT | O_SYNC, S_IRWXU | S_IRWXG | S_IRWXO);

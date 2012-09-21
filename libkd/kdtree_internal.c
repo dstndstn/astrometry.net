@@ -1813,7 +1813,7 @@ static int kdtree_check_node(const kdtree_t* kd, int nodeid) {
 			sum += kd->perm[i];
 			assert(kd->perm[i] >= 0);
 			assert(kd->perm[i] < kd->ndata);
-			if (kd->perm[i] < 0 || kd->perm[i] >= kd->ndata) {
+			if (kd->perm[i] >= kd->ndata) {
 				ERROR("kdtree_check: permutation vector range failure");
 				return -1;
 			}

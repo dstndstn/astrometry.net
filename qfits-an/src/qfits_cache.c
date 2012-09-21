@@ -250,11 +250,11 @@ size_t qfits_query_impl_long(const char * filename, int what) {
     }
     if (rank==-1) {
         qfits_error("error adding file \"%s\" to cache", filename);
-        return -1;
+        return QFITS_QUERY_ERROR;
     }
 
     /* See what was requested */
-    answer=-1;
+    answer=QFITS_QUERY_ERROR;
     if (what & QFITS_QUERY_N_EXT) {
         answer = qfits_cache[rank].exts;
         qdebug(
