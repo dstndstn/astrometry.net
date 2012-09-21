@@ -26,7 +26,7 @@
 #define SIP_MAXORDER 100
 
 // WCS TAN header.
-typedef struct tan_s {
+typedef struct {
 
 	// World coordinate of the tangent point, in ra,dec.
 	double crval[2];
@@ -63,7 +63,7 @@ typedef struct tan_s {
 // information to effectively represent any image, provided it is possible to
 // convert that image's projecton to a TAN projection and the distortion to SIP
 // distortion.
-typedef struct sip_s {
+typedef struct {
 
 	// A basic TAN header.
 	tan_t wcstan;

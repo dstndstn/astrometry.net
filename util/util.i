@@ -155,8 +155,8 @@ void log_set_level(int lvl);
 			return -1;
 		}
 
-		H = PyArray_DIM(np_img, 0);
-		W = PyArray_DIM(np_img, 1);
+		H = (int)PyArray_DIM(np_img, 0);
+		W = (int)PyArray_DIM(np_img, 1);
 
 		if ((PyArray_DIM(np_outimg, 0) != H) ||
 			(PyArray_DIM(np_outimg, 1) != W)) {
@@ -765,10 +765,10 @@ Sip = sip_t
 
 		int inW, inH, outW, outH;
 		float *inimg, *outimg;
-		inH = PyArray_DIM(np_inimg, 0);
-		inW = PyArray_DIM(np_inimg, 1);
-		outH = PyArray_DIM(np_outimg, 0);
-		outW = PyArray_DIM(np_outimg, 1);
+		inH = (int)PyArray_DIM(np_inimg, 0);
+		inW = (int)PyArray_DIM(np_inimg, 1);
+		outH = (int)PyArray_DIM(np_outimg, 0);
+		outW = (int)PyArray_DIM(np_outimg, 1);
 		inimg = PyArray_DATA(np_inimg);
 		outimg = PyArray_DATA(np_outimg);
 

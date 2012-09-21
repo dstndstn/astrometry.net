@@ -169,7 +169,7 @@ int plot_outline_plot(const char* command,
 		if (args->fill) {
 			// trace segment 3: from brk2 to brk.
 			// 1-pixel steps.
-			arcsec2deg(anwcs_pixel_scale(pargs->wcs));
+			degstep = arcsec2deg(anwcs_pixel_scale(pargs->wcs));
 			rd2 = anwcs_walk_discontinuity(pargs->wcs,
 										   dl_get(rd, 2*(brk2+1)+0), dl_get(rd, 2*(brk2+1)+1),
 										   dl_get(rd, 2*(brk2  )+0), dl_get(rd, 2*(brk2  )+1),

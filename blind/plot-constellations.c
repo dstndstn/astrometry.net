@@ -177,8 +177,6 @@ int main(int argc, char** args) {
     double scale = 1.0;
     bool pngformat = TRUE;
 
-	bool showzero = FALSE;
-
     char* hdpath = NULL;
     bool HD = FALSE;
 

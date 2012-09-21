@@ -54,10 +54,18 @@ MV ?= mv
 FLAGS_DEF := -g -Wall
 
 TMPFILE := cc-out.tmp
+
 # Test whether $(CC) accepts a particular argument; set ARG before running.
+
 #CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - < /dev/null > /dev/null 2> /dev/null && echo $(ARG)
+
 # On MacOS, unrecognized gcc args don't cause it to return 1... look for error messages on stderr.
-CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - 2>&1 > /dev/null < /dev/null | grep "unrecognized\|invalid\|error:" > /dev/null || echo $(ARG)
+CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - 2>&1 > /dev/null < /dev/null | grep "unrecognized\|invalid\|error:\|warning:" > /dev/null || echo $(ARG)
+
+LINKTEST = $(CC) -x c -o $(TMPFILE) $(ARG) - 2>&1 > /dev/null < /dev/null | grep "unrecognized\|invalid\|error:\|warning:" > /dev/null || echo $(ARG)
+
+PROGLINKTEST = echo "int main() { return 0; }" | $(CC) -x c -o $(TMPFILE).o - && $(CC) -o $(TMPFILE) $(TMPFILE).o $(ARG) 2>&1 > /dev/null | grep "unrecognized\|invalid\|error:\|warning:" > /dev/null || echo $(ARG)
+
 #CCTEST = $(CC) -x c -c -o $(TMPFILE) $(ARG) - 2>&1 < /dev/null | tee "CCTEST-$(ARG)" | grep "unrecognized\|invalid\|error:" > /dev/null || echo $(ARG)
 # Test whether a particular string appears in the compiler's default environment;
 # set STR before running.
@@ -66,12 +74,18 @@ DEFTEST = $(CC) -dM -E - < /dev/null 2> /dev/null | grep "$(STR)" > /dev/null
 ARG := -shared
 SHAREDLIBFLAGS_DEF := $(shell $(CCTEST))
 
-ARG := -ffinite-math-only -fno-signaling-nans
+ARG := -ffinite-math-only
+FLAGS_DEF += $(shell $(CCTEST))
+
+# clang: warning: argument unused during compilation: '-fno-signaling-nans'
+ARG := -fno-signaling-nans
 FLAGS_DEF += $(shell $(CCTEST))
 
 # gcc 3.3 on Mac doesn't support -pthread
-ARG := -pthread
-FLAGS_DEF += $(shell $(CCTEST))
+# clang 4.1: warns about including -pthread during linking programs but not shared libs
+# See separate tests for CFLAGS, LDFLAGS, and SHAREDLIBFLAGS below.
+#ARG := -pthread
+#FLAGS_DEF += $(shell $(CCTEST))
 
 ## Below, we try to guess good compiler flags for this CPU / architecture.
 ## If we make an incorrect choice -- ie, the code fails in some way on the
@@ -127,11 +141,27 @@ endif
 
 STR := __APPLE__
 X := $(shell $(DEFTEST) && echo "-DNOBOOL")
+
 ifneq ($(X),)
   # Darwin does dynamic libs differently
-  ARG := -dynamic -dynamiclib
+  ARG := -dynamic
   X := $(shell $(CCTEST))
   SHAREDLIBFLAGS_DEF += $(X)
+
+  # clang 4.1 doesn't support -dynamiclib
+  ARG := -dynamiclib
+  X := $(shell $(CCTEST))
+  SHAREDLIBFLAGS_DEF += $(X)
+
+  # clang 4.1 seems to need this instead:
+  ARG := -Wl,-dylib
+  X := $(shell $(LINKTEST))
+  SHAREDLIBFLAGS_DEF += $(X)
+
+  ARG := -pthread
+  X := $(shell $(LINKTEST))
+  SHAREDLIBFLAGS_DEF += $(X)
+
 endif
 
 SHAREDLIBFLAGS_DEF += -fPIC
@@ -190,6 +220,10 @@ CFLAGS_DEF := $(CFLAGS) $(FLAGS_DEF)
 CFLAGS_DEF += -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
 CFLAGS_DEF += -D_GNU_SOURCE
 
+ARG := -pthread
+CFLAGS_DEF += $(shell $(CCTEST))
+
+
 #CFLAGS_DEF += -Wextra
 #CFLAGS_DEF += -Wpointer-arith
 #CFLAGS_DEF += -fmudflap
@@ -203,6 +237,9 @@ CFLAGS_DEF += -D_GNU_SOURCE
 
 # fold in the user's LDFLAGS, if set...
 LDFLAGS_DEF := $(LDFLAGS) $(FLAGS_DEF)
+
+ARG := -pthread
+LDFLAGS_DEF += $(shell $(PROGLINKTEST))
 
 LDLIBS_DEF := $(LDLIBS)
 
