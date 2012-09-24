@@ -426,9 +426,16 @@ makefile.os-features: os-features-test.c
 	@echo "------------------------------"
 	@echo
 	cat $@
-	@echo
 	@echo "------------------------------"
 	@echo
+	@echo "And, by the way, is WCSlib support being compiled in?"
+	@echo
+	pkg-config --exists wcslib && echo yes || echo no
+	@echo
+	@echo "  WCSLIB_INC: $(WCSLIB_INC)"
+	@echo "  WCSLIB_LIB: $(WCSLIB_LIB)"
+	@echo
+	@echo "------------------------------"
 
 reconfig:
 	-rm -f os-features-config.h makefile.os-features
