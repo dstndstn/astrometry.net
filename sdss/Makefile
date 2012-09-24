@@ -8,7 +8,7 @@ _cutils.so cutils.py: setup.py cutils.i
 	cp build/lib/_cutils.so .
 
 INSTALL_PY := __init__.py common.py dr7.py dr8.py runList-dr8.par \
-	dr9.py runList-dr9.par
+	dr9.py runList-dr9.par \
 	cutils.py _cutils.so
 
 .PHONY: install
