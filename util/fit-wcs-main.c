@@ -11,7 +11,7 @@
 #include "log.h"
 #include "errors.h"
 
-static const char* OPTIONS = "hx:X:Y:r:o:v";
+static const char* OPTIONS = "hx:X:Y:R:D:c:r:o:v";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
@@ -20,6 +20,9 @@ void print_help(char* progname) {
 		   "     [-X <x-column-name> -Y <y-column-name>]\n"
 		   "   -r <rdls input file>\n"
 		   "     [-R <RA-column-name> -D <Dec-column-name>]\n"
+		   " OR\n"
+		   "   -c <corr file>\n"
+		   "\n"
 		   "   -o <WCS output file>\n"
            "   [-v]: verbose\n"
 		   "\n", progname);
@@ -32,6 +35,7 @@ int main(int argc, char** args) {
 	int c;
 	char* xylsfn = NULL;
 	char* rdlsfn = NULL;
+	char* corrfn = NULL;
 	char* outfn = NULL;
 	char* xcol = NULL;
 	char* ycol = NULL;
@@ -42,7 +46,7 @@ int main(int argc, char** args) {
 	rdlist_t* rdls = NULL;
 	rd_t rd;
 	starxy_t xy;
-	int fieldnum = 0;
+	int fieldnum = 1;
 	int N;
 	double* fieldxy = NULL;
 	double* xyz = NULL;
@@ -57,6 +61,9 @@ int main(int argc, char** args) {
         case 'h':
 			print_help(args[0]);
 			exit(0);
+		case 'c':
+			corrfn = optarg;
+			break;
 		case 'r':
 			rdlsfn = optarg;
 			break;
@@ -87,11 +94,24 @@ int main(int argc, char** args) {
 		print_help(args[0]);
 		exit(-1);
 	}
-	if (!xylsfn || !rdlsfn || !outfn) {
+	if (! ((xylsfn && rdlsfn) || corrfn) || !outfn) {
 		print_help(args[0]);
 		exit(-1);
 	}
     log_init(loglvl);
+
+	if (corrfn) {
+		xylsfn = corrfn;
+		rdlsfn = corrfn;
+		if (!xcol)
+			xcol = "FIELD_X";
+		if (!ycol)
+			ycol = "FIELD_Y";
+		if (!rcol)
+			rcol = "INDEX_RA";
+		if (!dcol)
+			dcol = "INDEX_DEC";
+	}
 
 	// read XYLS.
 	xyls = xylist_open(xylsfn);
@@ -132,6 +152,7 @@ int main(int argc, char** args) {
 			  "but found %i vs %i", N, rd_n(&rd));
 		goto bailout;
 	}
+	logverb("Read %i points from %s and %s\n", N, rdlsfn, xylsfn);
 
 	xyz = (double*)malloc(sizeof(double) * 3 * N);
 	if (!xyz) {
@@ -146,6 +167,7 @@ int main(int argc, char** args) {
 		goto bailout;
 	}
 
+	logverb("Fitting WCS\n");
 	if (fit_tan_wcs(xyz, fieldxy, N, &wcs, NULL)) {
 		ERROR("Failed to fit for TAN WCS");
 		goto bailout;
@@ -155,6 +177,7 @@ int main(int argc, char** args) {
 		ERROR("Failed to write TAN WCS header to file \"%s\"", outfn);
 		goto bailout;
 	}
+	logverb("Wrote WCS to %s\n", outfn);
 
 	starxy_free_data(&xy);
 	rd_free_data(&rd);
