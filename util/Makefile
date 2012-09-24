@@ -380,6 +380,8 @@ os-features-config.h: os-features-test.c
 	|| echo "#define NEED_SWAP_QSORT_R 1") >> $@.tmp
 	@echo
 	@echo "Testing netpbm..."
+	@echo "   NETPBM_INC is $(NETPBM_INC_ORIG)"
+	@echo "   NETPBM_LIB is $(NETPBM_LIB_ORIG)"
 	@echo "Testing netpbm..." >> os-features.log
 	(($(CC) -o os-features-test-netpbm \
 	   $(CFLAGS) -DTEST_NETPBM $(NETPBM_INC_ORIG) $^ $(LDFLAGS) $(NETPBM_LIB_ORIG) >> os-features.log && \
@@ -389,6 +391,14 @@ os-features-config.h: os-features-test.c
 	@echo "--------------- End of expected error messages -----------------"
 	@echo
 	mv $@.tmp $@
+	@echo
+	@echo "Config results:"
+	@echo "------------------------------"
+	@echo
+	cat $@
+	@echo
+	@echo "------------------------------"
+	@echo
 
 makefile.os-features: os-features-test.c
 	@echo
@@ -411,6 +421,14 @@ makefile.os-features: os-features-test.c
 	@echo "--------------- End of expected error messages -----------------"
 	@echo
 	mv $@.tmp $@
+	@echo
+	@echo "Config results:"
+	@echo "------------------------------"
+	@echo
+	cat $@
+	@echo
+	@echo "------------------------------"
+	@echo
 
 reconfig:
 	-rm -f os-features-config.h makefile.os-features

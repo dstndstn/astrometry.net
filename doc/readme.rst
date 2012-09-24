@@ -103,6 +103,11 @@ Get the required homebrew packages::
     $ brew install --HEAD --use-gcc netpbm  # for plotting
     $ brew install cairo jpeg libpng        # for plotting
 
+Optionally, grab some other handy homebrew packages::
+
+    $ brew install cfitsio --with-examples
+    $ brew install md5sha1sum     # OSX doesn't come with this?!  For shame
+
 Get homebrew-science::
 
     $ # brew tap homebrew/science
