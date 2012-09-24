@@ -88,7 +88,7 @@ RHEL / RedHat-like distributions:
 Mac OS X using homebrew:
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-These instructions Worked For Me as of September 2012 on OSX 10.8.1.
+These instructions Worked For Me as of September 2012 on OSX 10.8.
 
 First set up homebrew:
   * grab [https://developer.apple.com/xcode/ XCode] (from the Apps Store.  Free, but you still need a credit card.  Argh.)
@@ -96,6 +96,10 @@ First set up homebrew:
   * grab [http://xquartz.macosforge.org/landing/ XQuartz]
   * grab [http://mxcl.github.com/homebrew/ Homebrew]
   * grab [http://www.pip-installer.org/en/latest/installing.html pip] if you don't have it already
+
+Get the required pip packages::
+
+    $ pip install pyfits
 
 Get the required homebrew packages::
 
@@ -107,18 +111,14 @@ Optionally, grab some other handy homebrew packages::
 
     $ brew install cfitsio --with-examples
     $ brew install md5sha1sum     # OSX doesn't come with this?!  For shame
-
+ 
 Get homebrew-science::
 
     $ # brew tap homebrew/science
     $ brew tap camphogg/science     # homebrew/science development is slow!
     $ brew install wcslib
 
-Get the required pip packages::
-
-    $ pip install pyfits
-
-I had to include the following in my ``~/.bashrc`` file (for homebrew)::
+I had to include the following in my ``~/.bashrc`` file (in general, for homebrew)::
 
     PCP=
     PCP=${PCP}:/usr/local/lib/pkgconfig
