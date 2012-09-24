@@ -20,8 +20,6 @@
 #ifndef FIT_WCS_H
 #define FIT_WCS_H
 
-#include "qfits.h"
-#include "matchobj.h"
 #include "sip.h"
 #include "starkd.h"
 

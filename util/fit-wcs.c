@@ -20,6 +20,7 @@
 #include <assert.h>
 
 #include "fit-wcs.h"
+#include "starutil.h"
 #include "mathutil.h"
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_linalg.h"
