@@ -118,11 +118,11 @@ Get our fork of homebrew-science::
     $ brew tap camphogg/science     # homebrew/science development is slow!
     $ brew install wcslib
 
-And finally:
+And finally::
 
     $ brew install astrometry.net
 
-Or
+Or::
 
     $ brew install --HEAD astrometry.net
 
