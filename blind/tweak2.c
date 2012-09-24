@@ -20,7 +20,7 @@
 #include <assert.h>
 
 #include "bl.h"
-#include "blind_wcs.h"
+#include "fit-wcs.h"
 #include "sip.h"
 #include "sip_qfits.h"
 #include "sip-utils.h"
@@ -508,7 +508,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 
 			if (order == 1) {
 				tan_t newtan;
-				blind_wcs_compute_weighted(matchxyz, matchxy, weights, Nmatch, &newtan, NULL);
+				fit_tan_wcs_weighted(matchxyz, matchxy, weights, Nmatch, &newtan, NULL);
 				newtan.imagew = W;
 				newtan.imageh = H;
 				sip_wrap_tan(&newtan, sipout);
@@ -540,9 +540,9 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 					tan_t temptan;
 					logverb("Moving tangent point to given CRPIX (%g,%g)\n", crpix[0], crpix[1]);
 
-					blind_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
+					fit_tan_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
 														  crpix, &newtan, &temptan);
-					blind_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
+					fit_tan_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
 														  crpix, &temptan, &newtan);
 					newtan.imagew = W;
 					newtan.imageh = H;
@@ -583,9 +583,9 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 				if (crpix) {
 					tan_t temptan;
 					logverb("Moving tangent point to given CRPIX (%g,%g)\n", crpix[0], crpix[1]);
-					blind_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
+					fit_tan_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
 														  crpix, &sipout->wcstan, &temptan);
-					blind_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
+					fit_tan_wcs_move_tangent_point_weighted(matchxyz, matchxy, weights, Nmatch,
 														  crpix, &temptan, &sipout->wcstan);
 				}
 

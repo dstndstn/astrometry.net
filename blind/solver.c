@@ -34,7 +34,7 @@
 #include "tic.h"
 #include "solvedclient.h"
 #include "solvedfile.h"
-#include "blind_wcs.h"
+#include "fit-wcs.h"
 #include "keywords.h"
 #include "log.h"
 #include "pquad.h"
@@ -1259,7 +1259,7 @@ static void resolve_matches(kdtree_qres_t* krez, const double *field,
 		}
 
 		// compute TAN projection from the matching quad alone.
-		if (blind_wcs_compute(starxyz, field, dimquads, &wcs, &scale)) {
+		if (fit_tan_wcs(starxyz, field, dimquads, &wcs, &scale)) {
             // bad quad.
 			logverb("bad quad at %s:%i\n", __FILE__, __LINE__);
             continue;
@@ -1462,12 +1462,12 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 
 		} else {
 			// Compute new TAN WCS...?
-			blind_wcs_compute_weighted(matchxyz, matchxy, weights, Ngood,
-									   &mo->wcstan, NULL);
+			fit_tan_wcs_weighted(matchxyz, matchxy, weights, Ngood,
+								 &mo->wcstan, NULL);
 			if (sp->set_crpix) {
 				tan_t wcs2;
-				blind_wcs_move_tangent_point(matchxyz, matchxy, Ngood, sp->crpix, &mo->wcstan, &wcs2);
-				blind_wcs_move_tangent_point(matchxyz, matchxy, Ngood, sp->crpix, &wcs2, &mo->wcstan);
+				fit_tan_wcs_move_tangent_point(matchxyz, matchxy, Ngood, sp->crpix, &mo->wcstan, &wcs2);
+				fit_tan_wcs_move_tangent_point(matchxyz, matchxy, Ngood, sp->crpix, &wcs2, &mo->wcstan);
 			}
 		}
 
@@ -1481,8 +1481,8 @@ static int solver_handle_hit(solver_t* sp, MatchObj* mo, sip_t* sip, bool fake_m
 	} else if (!sip && sp->set_crpix) {
 		tan_t wcs2;
 		tan_t wcs3;
-		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, sp->crpix, &(mo->wcstan), &wcs2);
-		blind_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, sp->crpix, &wcs2, &wcs3);
+		fit_tan_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, sp->crpix, &(mo->wcstan), &wcs2);
+		fit_tan_wcs_move_tangent_point(mo->quadxyz, mo->quadpix, mo->dimquads, sp->crpix, &wcs2, &wcs3);
 		memcpy(&(mo->wcstan), &wcs3, sizeof(tan_t));
 		/*
 		 Good test case:

@@ -40,7 +40,7 @@ include $(COMMON)/makefile.common
 
 ANUTILS_LIB := libanutils.a
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
-	permutedsort.o ioutils.o sip.o sip-utils.o md5.o constellations.o \
+	permutedsort.o ioutils.o sip-utils.o fit-wcs.o sip.o md5.o constellations.o \
 	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
 	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
 	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
@@ -139,7 +139,7 @@ ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h 
 	fitstable.h os-features-config.h os-features.h gslutils.h hd.h \
 	healpix-utils.h healpix.h index.h intmap.h ioutils.h keywords.h log.h \
 	mathutil.h ngc2000.h ngcic-accurate.h permutedsort.h qidxfile.h \
-	quadfile.h rdlist.h scamp-catalog.h sip-utils.h sip.h sip_qfits.h \
+	quadfile.h rdlist.h scamp-catalog.h fit-wcs.h sip-utils.h sip.h sip_qfits.h \
 	starkd.h starutil.h starutil.inc starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
 	xylist.h coadd.h convolve-image.h resample.h
 

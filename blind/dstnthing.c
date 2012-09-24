@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "bl.h"
-#include "blind_wcs.h"
+#include "fit-wcs.h"
 #include "sip.h"
 #include "sip_qfits.h"
 #include "sip-utils.h"

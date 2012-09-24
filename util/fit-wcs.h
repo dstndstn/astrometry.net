@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2012 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -16,8 +17,8 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-#ifndef BLIND_WCS_H
-#define BLIND_WCS_H
+#ifndef FIT_WCS_H
+#define FIT_WCS_H
 
 #include "qfits.h"
 #include "matchobj.h"
@@ -28,24 +29,24 @@
  Move the tangent point to the given CRPIX, keeping the corresponding
  stars in "starxyz" and "fieldxy" aligned.  It's assumed that "tanin"
  contains a reasonably close WCS solution (eg, from
- blind_wcs_compute).  The output is put in "tanout".  You might want
+ fit_wcs).  The output is put in "tanout".  You might want
  to iterate this process, though in my tests the adjustments in the
  second iteration are very minor.
  */
-int blind_wcs_move_tangent_point(const double* starxyz,
-								 const double* fieldxy,
-								 int N,
-								 const double* crpix,
-								 const tan_t* tanin,
-								 tan_t* tanout);
+int fit_tan_wcs_move_tangent_point(const double* starxyz,
+								   const double* fieldxy,
+								   int N,
+								   const double* crpix,
+								   const tan_t* tanin,
+								   tan_t* tanout);
 
-int blind_wcs_move_tangent_point_weighted(const double* starxyz,
-										  const double* fieldxy,
-										  const double* weights,
-										  int N,
-										  const double* crpix,
-										  const tan_t* tanin,
-										  tan_t* tanout);
+int fit_tan_wcs_move_tangent_point_weighted(const double* starxyz,
+											const double* fieldxy,
+											const double* weights,
+											int N,
+											const double* crpix,
+											const tan_t* tanin,
+											tan_t* tanout);
 
 /*
  Computes a rigid (conformal) TAN WCS projection, based on the correspondence
@@ -58,19 +59,19 @@ int blind_wcs_move_tangent_point_weighted(const double* starxyz,
  If "p_scale" is specified, the scale of the field will be placed in it.
  It is in units of degrees per pixel.
 */
-int blind_wcs_compute(const double* starxyz,
-                      const double* fieldxy,
-                      int nobjs,
-                      // output:
-                      tan_t* wcstan,
-                      double* p_scale);
+int fit_tan_wcs(const double* starxyz,
+				const double* fieldxy,
+				int nobjs,
+				// output:
+				tan_t* wcstan,
+				double* p_scale);
 
-int blind_wcs_compute_weighted(const double* starxyz,
-							   const double* fieldxy,
-							   const double* weights,
-							   int N,
-							   // output:
-							   tan_t* tan,
-							   double* p_scale);
+int fit_tan_wcs_weighted(const double* starxyz,
+						 const double* fieldxy,
+						 const double* weights,
+						 int N,
+						 // output:
+						 tan_t* tan,
+						 double* p_scale);
 
 #endif

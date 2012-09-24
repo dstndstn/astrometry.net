@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2012 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -18,7 +19,7 @@
 #include <math.h>
 #include <assert.h>
 
-#include "blind_wcs.h"
+#include "fit-wcs.h"
 #include "mathutil.h"
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_linalg.h"
@@ -28,7 +29,7 @@
 #include "log.h"
 
 static
-int blind_wcs_solve(const double* starxyz,
+int fit_tan_wcs_solve(const double* starxyz,
 					const double* fieldxy,
 					const double* weights,
 					int N,
@@ -226,45 +227,45 @@ int blind_wcs_solve(const double* starxyz,
 
 
 
-int blind_wcs_move_tangent_point_weighted(const double* starxyz,
+int fit_tan_wcs_move_tangent_point_weighted(const double* starxyz,
 										  const double* fieldxy,
 										  const double* weights,
 										  int N,
 										  const double* crpix,
 										  const tan_t* tanin,
 										  tan_t* tanout) {
-	return blind_wcs_solve(starxyz, fieldxy, weights, N, crpix, tanin, tanout,
+	return fit_tan_wcs_solve(starxyz, fieldxy, weights, N, crpix, tanin, tanout,
 						   NULL);
 }
 
-int blind_wcs_move_tangent_point(const double* starxyz,
+int fit_tan_wcs_move_tangent_point(const double* starxyz,
 								 const double* fieldxy,
 								 int N,
 								 const double* crpix,
 								 const tan_t* tanin,
 								 tan_t* tanout) {
-	return blind_wcs_move_tangent_point_weighted(starxyz, fieldxy, NULL,
+	return fit_tan_wcs_move_tangent_point_weighted(starxyz, fieldxy, NULL,
 												 N, crpix, tanin, tanout);
 }
 
 
-int blind_wcs_compute_weighted(const double* starxyz,
-							   const double* fieldxy,
-							   const double* weights,
-							   int N,
-							   // output:
-							   tan_t* tan,
-							   double* p_scale) {
-	return blind_wcs_solve(starxyz, fieldxy, weights, N, NULL, NULL, tan, p_scale);
+int fit_tan_wcs_weighted(const double* starxyz,
+					 const double* fieldxy,
+					 const double* weights,
+					 int N,
+					 // output:
+					 tan_t* tan,
+					 double* p_scale) {
+	return fit_tan_wcs_solve(starxyz, fieldxy, weights, N, NULL, NULL, tan, p_scale);
 }
 
-int blind_wcs_compute(const double* starxyz,
-                      const double* fieldxy,
-                      int N,
-                      // output:
-                      tan_t* tan,
-                      double* p_scale) {
-	return blind_wcs_compute_weighted(starxyz, fieldxy, NULL, N,
-									  tan, p_scale);
+int fit_tan_wcs(const double* starxyz,
+			const double* fieldxy,
+			int N,
+			// output:
+			tan_t* tan,
+			double* p_scale) {
+	return fit_tan_wcs_weighted(starxyz, fieldxy, NULL, N,
+									tan, p_scale);
 }
 

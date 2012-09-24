@@ -87,7 +87,7 @@ UTIL_OBJS :=
 OTHER_OBJS := usnob.o usnob-fits.o catalog.o \
 	codefile.o verify.o \
 	solver.o matchfile.o matchobj.o solvedclient.o solvedfile.o pnpoly.o \
-	blind_wcs.o tweak.o blind-main.o \
+	tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	nomad.o nomad-fits.o \
 	noisesim.o noise.o blindutils.o \
@@ -121,7 +121,7 @@ INSTALL_LIB := $(BACKEND_LIB) $(BACKEND_SO)
 BACKEND_OBJS := \
 		backend.o blindutils.o blind.o solver.o quad-utils.o \
 		matchfile.o matchobj.o solvedclient.o solvedfile.o tweak2.o \
-		verify.o blind_wcs.o tweak.o 
+		verify.o tweak.o 
 
 # see also setup.py dependency list...
 PLOTSTUFF := plotstuff.o plotfill.o plotxy.o plotimage.o \
@@ -161,7 +161,7 @@ INSTALL_EXECS := $(FITS_UTILS) $(PIPELINE) $(PROGS)
 INSTALL_CAIRO_EXECS := $(CAIROEXECS)
 
 INSTALL_H := 2mass-fits.h 2mass.h allquads.h augment-xylist.h axyfile.h \
-	backend.h blind.h blind_wcs.h blindutils.h build-index.h catalog.h \
+	backend.h blind.h blindutils.h build-index.h catalog.h \
 	codefile.h codetree.h ctmf.h dimage.h fits-guess-scale.h hpquads.h \
 	image2xy-files.h image2xy.h matchfile.h matchobj.h merge-index.h \
 	new-wcs.h nomad-fits.h nomad.h quad-builder.h quad-utils.h radix.h \
@@ -238,9 +238,9 @@ install-extra: $(INSTALL_CAIRO_EXECS)
 		cp $$x $(INSTALL_DIR)/include; \
 	done
 
-test-solver: test-solver.o solver_test.o blind_wcs.o verify.o matchfile.o \
+test-solver: test-solver.o solver_test.o verify.o matchfile.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
-test-solver-2: test-solver-2.o solver_test_2.o blind_wcs.o verify.o matchfile.o quad-utils.o codefile.o \
+test-solver-2: test-solver-2.o solver_test_2.o verify.o matchfile.o quad-utils.o codefile.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 
 NODEP_OBJS += solver_test.o solver_test_2.o
@@ -283,10 +283,10 @@ TEST_DSMOOTH_OBJS := dsmooth.o
 ALL_TEST_EXTRA_OBJS += $(TEST_DSMOOTH_OBJS)
 test_dsmooth: $(TEST_DSMOOTH_OBJS)
 
-test_multiindex2: test_multiindex2.o solver.o blind_wcs.o verify.o \
+test_multiindex2: test_multiindex2.o solver.o verify.o \
 	tweak2.o tweak.o matchfile.o matchobj.o quad-utils.o \
 	$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
-ALL_TEST_EXTRA_OBJS += solver.o verify.o tweak2.o tweak.o blind_wcs.o quad-utils.o
+ALL_TEST_EXTRA_OBJS += solver.o verify.o tweak2.o tweak.o quad-utils.o
 
 #../util/cutest.o \
 
@@ -496,10 +496,10 @@ verify: verify-main.o verify.o verify2.o matchfile.o matchobj.o $(PLOTSTUFF) $(C
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB)
 
-keirthing: keirthing.o blind_wcs.o tweak.o \
+keirthing: keirthing.o tweak.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 
-dstnthing: dstnthing.o tweak2.o blind_wcs.o tweak.o matchfile.o matchobj.o verify.o scamp.o $(PLOTSTUFF) \
+dstnthing: dstnthing.o tweak2.o tweak.o matchfile.o matchobj.o verify.o scamp.o $(PLOTSTUFF) \
 		$(COMMON)/cairoutils.o $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB) 
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += dstnthing.o
@@ -523,20 +523,20 @@ ALL_OBJ += augment-xylist-main.o
 
 blind: blind-main.o blind.o solver.o quad-utils.o matchfile.o matchobj.o \
 		solvedclient.o solvedfile.o tweak2.o verify.o \
-		blind_wcs.o tweak.o \
+		tweak.o \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@.tmp $^ $(LDLIBS)
 	mv $@.tmp $@
 
-tweak: tweak-main.o blind_wcs.o verify.o matchfile.o \
+tweak: tweak-main.o verify.o matchfile.o \
 		$(COMMON)/cairoutils.o $(PLOTSTUFF) \
 		$(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
 
 whynot: whynot.o matchfile.o matchobj.o codefile.o solvedclient.o \
-		solvedfile.o verify.o blind_wcs.o quad-utils.o \
+		solvedfile.o verify.o quad-utils.o \
 		$(COMMON)/cairoutils.o $(PLOTSTUFF) \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB) 
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)

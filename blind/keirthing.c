@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "bl.h"
-#include "blind_wcs.h"
+#include "fit-wcs.h"
 #include "sip.h"
 #include "sip_qfits.h"
 #include "log.h"
@@ -94,7 +94,7 @@ int main(int argc, char** args) {
 	dl_free(xys);
 	dl_free(radecs);
 
-	blind_wcs_compute(xyz, xy, N, &tan, NULL);
+	fit_tan_wcs(xyz, xy, N, &tan, NULL);
 	tan.imagew = W;
 	tan.imageh = H;
 

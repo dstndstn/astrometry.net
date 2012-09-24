@@ -52,7 +52,7 @@
 #include "sip_qfits.h"
 #include "log.h"
 #include "fitsioutils.h"
-#include "blind_wcs.h"
+#include "fit-wcs.h"
 #include "verify.h"
 #include "histogram2d.h"
 

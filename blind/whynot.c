@@ -48,7 +48,7 @@
 #include "sip_qfits.h"
 #include "log.h"
 #include "fitsioutils.h"
-#include "blind_wcs.h"
+#include "fit-wcs.h"
 #include "codefile.h"
 #include "solver.h"
 #include "permutedsort.h"
@@ -925,7 +925,7 @@ int main(int argc, char** args) {
 			codedist = sqrt(distsq(realcode, fieldcode, dimcodes));
             logmsg("  code distance (flip parity): %g\n", codedist);
 
-            blind_wcs_compute(mo.quadxyz, mo.quadpix, dimquads, &wcs, NULL);
+            fit_tan_wcs(mo.quadxyz, mo.quadpix, dimquads, &wcs, NULL);
 			wcs.imagew = W;
 			wcs.imageh = H;
 
