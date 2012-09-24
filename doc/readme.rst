@@ -112,11 +112,22 @@ Optionally, grab some other handy homebrew packages::
     $ brew install cfitsio --with-examples
     $ brew install md5sha1sum     # OSX doesn't come with this?!  For shame
  
-Get homebrew-science::
+Get our fork of homebrew-science::
 
     $ # brew tap homebrew/science
     $ brew tap camphogg/science     # homebrew/science development is slow!
     $ brew install wcslib
+
+And finally:
+
+    $ brew install astrometry.net
+
+Or
+
+    $ brew install --HEAD astrometry.net
+
+if you like to live dangerously and trendily.
+
 
 I had to include the following in my ``~/.bashrc`` file (in general, for homebrew)::
 
