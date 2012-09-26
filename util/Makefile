@@ -101,8 +101,22 @@ CFLAGS += $(WCSLIB_INC)
 CFLAGS += $(NETPBM_INC)
 
 ifdef WCSLIB_EXISTS
-CFLAGS += -DWCSLIB_EXISTS
+  ifdef NOWCSLIB
+  else
+    CFLAGS += -DWCSLIB_EXISTS
+  endif
 endif
+
+####
+# WCSTOOLS_EXISTS := 1
+
+ifdef WCSTOOLS_EXISTS
+  CFLAGS += -DWCSTOOLS_EXISTS
+  WCSTOOLS_LIB ?= libwcs.a
+endif
+
+WCS_LIB := $(WCSTOOLS_LIB) $(WCSLIB_LIB)
+WCS_LIB_DEP :=
 
 LDFLAGS += $(LDFLAGS_DEF)
 
@@ -201,8 +215,8 @@ ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DAT
 	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate.awk > $@
 
 resample: resample-main.o \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += resampe.o
 
 tycho2tofits: tycho2tofits.o \
@@ -245,20 +259,20 @@ _index_util.so _index_c.so: index_wrap.c index_pyutils.c setup-index.py \
 	cp build/lib/_index_c.so _index_c.so
 	cp build/lib/_index_util.so _index_util.so
 
-coadd: coadd-main.o $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
+coadd: coadd-main.o $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB) $(WCS_LIB_DEP)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += coadd.o coadd-main.o
 
-wcs-resample: wcs-resample-main.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS) $(WCSLIB_LIB) $(LDLIBS)
+wcs-resample: wcs-resample-main.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
+	$(CC) -o $@ $^ $(LDFLAGS) $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += wcs-resample-main.o
 
-fit-wcs: fit-wcs-main.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS) $(WCSLIB_LIB) $(LDLIBS)
+fit-wcs: fit-wcs-main.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
+	$(CC) -o $@ $^ $(LDFLAGS) $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += fit-wcs-main.o
 
-wcs-to-tan: wcs-to-tan.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS) $(WCSLIB_LIB) $(LDLIBS)
+wcs-to-tan: wcs-to-tan.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
+	$(CC) -o $@ $^ $(LDFLAGS) $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += wcs-to-tan.o
 
 pad-file: pad-file.o $(ANUTILS_LIB)

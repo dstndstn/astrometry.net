@@ -30,19 +30,20 @@
 #include "wcs-xy2rd.h"
 #include "log.h"
 
-const char* OPTIONS = "hi:o:w:f:R:D:te:x:y:X:Y:Lv";
+const char* OPTIONS = "hi:o:w:f:R:D:te:x:y:X:Y:LTv";
 
 void print_help(char* progname) {
 	boilerplate_help_header(stdout);
 	printf("\nUsage: %s\n"
 		   "   -w <WCS input file>\n"
 		   "   [-e <extension>] FITS HDU number to read WCS from (default 0 = primary)\n"
+		   "   [-t]: just use TAN projection, even if SIP extension exists.\n"
+		   "   [-L]: force WCSlib\n"
+		   "   [-T]: force WCStools\n"
 		   "   -i <xyls input file>\n"
 		   "   -o <rdls output file>\n"
 		   "  [-f <xyls field index>] (default: all)\n"
 		   "  [-X <x-column-name> -Y <y-column-name>]\n"
-		   "  [-t]: just use TAN projection, even if SIP extension exists.\n"
-		   "  [-L]: force WCSlib\n"
 		   "  [-v]: +verbose\n"
 		   "\n"
 		   "You can also specify a single point to convert (result is printed to stdout):\n"
@@ -63,6 +64,7 @@ int main(int argc, char** args) {
 	char* ycol = NULL;
 	bool forcetan = FALSE;
 	bool forcewcslib = FALSE;
+	bool forcewcstools = FALSE;
 	il* fields;
 	int ext = 0;
 	double x, y;
@@ -78,6 +80,9 @@ int main(int argc, char** args) {
 			break;
 		case 'L':
 			forcewcslib = TRUE;
+			break;
+		case 'T':
+			forcewcstools = TRUE;
 			break;
 		case 'x':
 			x = atof(optarg);
@@ -134,6 +139,8 @@ int main(int argc, char** args) {
 		// read WCS.
 		if (forcewcslib) {
 			wcs = anwcs_open_wcslib(wcsfn, ext);
+		} else if (forcewcstools) {
+			wcs = anwcs_open_wcstools(wcsfn, ext);
 		} else if (forcetan) {
 			wcs = anwcs_open_tan(wcsfn, ext);
 		} else {

@@ -369,14 +369,22 @@ ALL_OBJ += fits-guess-scale-main.o
 get-wcs: get-wcs.o \
 		$(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
+
+ifdef WCSTOOLS_EXISTS
+  WCSTOOLS_LIB ?= libwcs.a
+endif
+
+WCS_LIB := $(WCSTOOLS_LIB) $(WCSLIB_LIB)
+WCS_LIB_DEP :=
+
 wcs-xy2rd: wcs-xy2rd-main.o wcs-xy2rd.o $(UTIL_OBJS) \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += wcs-xy2rd-main.o
 
 wcs-rd2xy: wcs-rd2xy-main.o wcs-rd2xy.o $(UTIL_OBJS) \
-		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
+		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += wcs-rd2xy-main.o
 
 wcs-pv2sip: wcs-pv2sip.o tweak.o \

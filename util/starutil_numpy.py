@@ -470,13 +470,24 @@ def dec2dms(dec):
 # RA in degrees
 def ra2hmsstring(ra, separator=' ', sec_digits=3):
 	(h,m,s) = ra2hms(ra)
+	#print 'hms', h,m,s
 	ss = int(floor(s))
 	#ds = int(round((s - ss) * 1000.0))
 	# fractional seconds
 	fs = s - ss
+	#print 'ss,fs', ss, fs
+	fracstr = '%.*f' % (sec_digits, fs)
+	#print 'fracstr', fracstr
+
 	if fs >= 1.:
 		ss += 1
-		ds -= 1.
+		fs -= 1.
+
+	if sec_digits > 0:
+		fracstr = '%.*f' % (sec_digits, fs)
+		if fracstr[0] == '1':
+			ss += 1
+			fs -= 1.
 	if ss >= 60:
 		ss -= 60
 		m += 1
@@ -491,6 +502,10 @@ def ra2hmsstring(ra, separator=' ', sec_digits=3):
 		sstr = '%0.2i' % ss
 		# fractional seconds string -- 0.XXX
 		fracstr = '%.*f' % (sec_digits, fs)
+		#print 'fracstr', fracstr
+		if fracstr[0] == '-':
+			fracstr = fracstr[1:]
+		assert(fracstr[0] == '0')
 		sstr += fracstr[1:]
 	return separator.join(['%0.2i' % h, '%0.2i' % m, sstr])
 
@@ -520,11 +535,15 @@ def dec2dmsstring(dec, separator=' ', sec_digits=3):
 		# fractional seconds string -- 0.XXX
 		fracstr = '%.*f' % (sec_digits, fs)
 		# but it can be 1.00 ...
+		#print 'dec fracstr', fracstr
 		if fracstr[0] == '1':
 			ss += 1
 		if ss >= 60:
 			ss -= 60
-			d += 1
+			m += 1
+			if m >= 60:
+				m -= 60
+				d += 1
 		sstr = '%0.2i' % ss + fracstr[1:]
 
 	return separator.join(['%c%0.2i' % (signc, d), '%0.2i' % m, sstr])

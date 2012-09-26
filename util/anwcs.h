@@ -25,17 +25,22 @@
 #include "bl.h"
 
 /** Interface to Mark Calabretta's wcslib, if available, and
- Astrometry.net's TAN/SIP implementation. */
+ Astrometry.net's TAN/SIP implementation.  Also WCSTools. */
 
 #define ANWCS_TYPE_WCSLIB 1
 #define ANWCS_TYPE_SIP 2
+#define ANWCS_TYPE_WCSTOOLS 3
 
 struct anwcs_t {
 	/**
 	 If type == ANWCS_TYPE_WCSLIB:
 	   data is a private struct containing a wcslib  "struct wcsprm*".
+
 	 If type == ANWCS_TYPE_SIP:
 	   data is a "sip_t*"
+
+	 If type == ANWCS_TYPE_WCSTOOLS:
+	   data is a "struct WorldCoor*"
 	 */
 	int type;
 	void* data;
@@ -49,6 +54,10 @@ anwcs_t* anwcs_wcslib_from_string(const char* str, int len);
 anwcs_t* anwcs_open(const char* filename, int ext);
 
 anwcs_t* anwcs_open_wcslib(const char* filename, int ext);
+
+anwcs_t* anwcs_open_wcstools(const char* filename, int ext);
+
+anwcs_t* anwcs_wcstools_from_string(const char* str, int len);
 
 anwcs_t* anwcs_open_sip(const char* filename, int ext);
 

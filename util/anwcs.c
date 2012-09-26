@@ -25,6 +25,10 @@
 #include <wcs.h>
 #endif
 
+#ifdef WCSTOOLS_EXISTS
+#include <libwcs/wcs.h>
+#endif
+
 #include "anwcs.h"
 #include "anqfits.h"
 #include "qfits_std.h"
@@ -52,7 +56,37 @@ typedef struct anwcslib_t anwcslib_t;
  the #ifdef inside the macro definition to make it cleaner.
  */
 
-#ifdef WCSLIB_EXISTS
+#if defined(WCSLIB_EXISTS) && defined(WCSTOOLS_EXISTS)
+
+#define ANWCS_DISPATCH(anwcs, action, defaction, func, ...)	\
+	do {													\
+		assert(anwcs);										\
+		switch (anwcs->type) {								\
+		case ANWCS_TYPE_WCSLIB:											\
+			{															\
+				anwcslib_t* anwcslib = anwcs->data;						\
+				action wcslib_##func(anwcslib, ##__VA_ARGS__);			\
+				break;													\
+			}															\
+		case ANWCS_TYPE_SIP:											\
+			{															\
+				sip_t* sip = anwcs->data;								\
+				action ansip_##func(sip, ##__VA_ARGS__);				\
+				break;													\
+			}															\
+		case ANWCS_TYPE_WCSTOOLS:										\
+			{															\
+				struct WorldCoor* wcs = anwcs->data;					\
+				action wcstools_##func(wcs, ##__VA_ARGS__);				\
+					break;												\
+			}															\
+		default:														\
+			ERROR("Unknown anwcs type %i", anwcs->type);				\
+			defaction;													\
+		}																\
+	} while (0)
+
+#elif defined(WCSLIB_EXISTS)
 
 #define ANWCS_DISPATCH(anwcs, action, defaction, func, ...)	\
 	do {													\
@@ -76,6 +110,30 @@ typedef struct anwcslib_t anwcslib_t;
 		}																\
 	} while (0)
 
+#elif defined(WCSTOOLS_EXISTS)
+
+#define ANWCS_DISPATCH(anwcs, action, defaction, func, ...)	\
+	do {													\
+		assert(anwcs);										\
+		switch (anwcs->type) {								\
+		case ANWCS_TYPE_SIP:											\
+			{															\
+				sip_t* sip = anwcs->data;								\
+				action ansip_##func(sip, ##__VA_ARGS__);				\
+				break;													\
+			}															\
+		case ANWCS_TYPE_WCSTOOLS:										\
+			{															\
+				struct WorldCoor* wc = anwcs->data;						\
+				action wcstools_##func(wc, ##__VA_ARGS__);				\
+					break;												\
+			}															\
+		default:														\
+			ERROR("Unknown anwcs type %i", anwcs->type);				\
+			defaction;													\
+		}																\
+	} while (0)
+
 #else
 
 // No WCSLIB.
@@ -84,7 +142,7 @@ typedef struct anwcslib_t anwcslib_t;
 		assert(anwcs);										\
 		switch (anwcs->type) {								\
 		case ANWCS_TYPE_WCSLIB:									\
-			ERROR("Wcslib support was not compiled in");				\
+			ERROR("WCSlib support was not compiled in");				\
 			defaction;													\
 			break;														\
 		case ANWCS_TYPE_SIP:											\
@@ -101,6 +159,75 @@ typedef struct anwcslib_t anwcslib_t;
 
 #endif
 
+
+/////////////////// wcstools implementations //////////////////////////
+
+#if defined(WCSTOOLS_EXISTS)
+
+static double wcstools_imagew(const struct WorldCoor* wcs) {
+	return wcs->nxpix;
+}
+static double wcstools_imageh(const struct WorldCoor* wcs) {
+	return wcs->nypix;
+}
+
+static int wcstools_pixelxy2radec(const struct WorldCoor* wcs,
+								  double px, double py,
+								  double* ra, double* dec) {
+	pix2wcs(wcs, px, py, ra, dec);
+	return 0;
+}
+
+static int wcstools_radec2pixelxy(const struct WorldCoor* wcs,
+								  double ra, double dec,
+								  double* px, double* py) {
+	int offscl;
+	wcs2pix(wcs, ra, dec, px, py, &offscl);
+	return offscl;
+}
+
+static void wcstools_print(const struct WorldCoor* wcs, FILE* fid) {
+	fprintf(fid, "AN WCS type: wcstools\n");
+}
+
+static void wcstools_free(struct WorldCoor* wcs) {
+	wcsfree(wcs);
+}
+
+static int wcstools_add_to_header(struct WorldCoor* wcs, qfits_header* hdr) {
+	logerr("UNIMPLEMENTED");
+	return -1;
+}
+static void wcstools_set_size(struct WorldCoor* wcs, int w, int h) {
+	logerr("UNIMPLEMENTED");
+}
+static bool wcstools_radec_is_inside_image(struct WorldCoor* wcs, double ra, double dec) {
+	logerr("UNIMPLEMENTED");
+	return FALSE;
+}
+static double wcstools_pixel_scale(struct WorldCoor* wcs) {
+	logerr("UNIMPLEMENTED");
+	return 0.0;
+}
+static int wcstools_write(struct WorldCoor* wcs, const char* filename) {
+	logerr("UNIMPLEMENTED");
+	return -1;
+}
+static int wcstools_write_to(const struct WorldCoor* wcs, FILE* fid) {
+	logerr("UNIMPLEMENTED");
+	return -1;
+}
+static int wcstools_scale_wcs(struct WorldCoor* anwcs, double scale) {
+	logerr("UNIMPLEMENTED");
+	return -1;
+}
+static int wcstools_rotate_wcs(struct WorldCoor* anwcs, double rot) {
+	logerr("UNIMPLEMENTED");
+	return -1;
+}
+
+
+#endif
 
 
 /////////////////// wcslib implementations //////////////////////////
@@ -365,8 +492,8 @@ static int ansip_add_to_header(const sip_t* sip, qfits_header* hdr) {
 
 /////////////////// dispatched anwcs_t entry points //////////////////////////
 
-void anwcs_set_size(anwcs_t* wcs, int W, int H) {
-	ANWCS_DISPATCH(wcs, , , set_size, W, H);
+void anwcs_set_size(anwcs_t* anwcs, int W, int H) {
+	ANWCS_DISPATCH(anwcs, , , set_size, W, H);
 }
 
 void anwcs_get_radec_bounds(const anwcs_t* wcs, int stepsize,
@@ -665,6 +792,17 @@ anwcs_t* anwcs_open(const char* filename, int ext) {
 		free(errmsg);
 	}
 
+	// try as WCStools:
+	anwcs = anwcs_open_wcstools(filename, ext);
+	if (anwcs) {
+		errors_pop_state();
+		return anwcs;
+	} else {
+		errmsg = errors_stop_logging_to_string(": ");
+		logverb("Failed to open file %s, ext %i using WCStools: %s", filename, ext, errmsg);
+		free(errmsg);
+	}
+
 	return NULL;
 }
 
@@ -695,6 +833,26 @@ anwcs_t* anwcs_open_tan(const char* filename, int ext) {
 
 anwcs_t* anwcs_open_sip(const char* filename, int ext) {
 	return open_tansip(filename, ext, FALSE);
+}
+
+static char* getheader(const char* filename, int ext, int* N) {
+	anqfits_t* fits;
+	char* hdrstr = NULL;
+	assert(N);
+	assert(filename);
+	fits = anqfits_open(filename);
+	if (!fits) {
+		ERROR("Failed to open file %s", filename);
+		return NULL;
+	}
+	hdrstr = anqfits_header_get_data(fits, ext, N);
+	if (!hdrstr) {
+		ERROR("Failed to read header data from file %s, ext %i", filename, ext);
+		anqfits_close(fits);
+		return NULL;
+	}
+	anqfits_close(fits);
+	return hdrstr;
 }
 
 anwcs_t* anwcs_wcslib_from_string(const char* str, int len) {
@@ -768,32 +926,61 @@ anwcs_t* anwcs_open_wcslib(const char* filename, int ext) {
 	ERROR("Wcslib support was not compiled in");
 	return NULL;
 #else
-	anqfits_t* fits = anqfits_open(filename);
-	char* hdrstr = NULL;
-	int Nhdr;
 	anwcs_t* anwcs = NULL;
-
-	if (!fits) {
-		ERROR("Failed to open file %s", filename);
+	char* hdrstr;
+	int Nhdr;
+	hdrstr = getheader(filename, ext, &Nhdr);
+	if (!hdrstr)
 		return NULL;
-	}
-
-	hdrstr = anqfits_header_get_data(fits, ext, &Nhdr);
-	if (!hdrstr) {
-		ERROR("Failed to read header data from file %s, ext %i", filename, ext);
-		anqfits_close(fits);
-		fits = NULL;
-		return NULL;
-	}
-	anqfits_close(fits);
-
 	anwcs = anwcs_wcslib_from_string(hdrstr, Nhdr);
 	free(hdrstr);
 	if (!anwcs) {
-		ERROR("Failed to parse FITS WCS header from file \"%s\" ext %i",
+		ERROR("Failed to parse FITS WCS header from file \"%s\" ext %i using WCSlib",
 			  filename, ext);
 		return NULL;
 	}
+	return anwcs;
+#endif
+}
+
+anwcs_t* anwcs_open_wcstools(const char* filename, int ext) {
+#ifndef WCSTOOLS_EXISTS
+	ERROR("WCStools support was not compiled in");
+	return NULL;
+#else
+	anwcs_t* anwcs = NULL;
+	char* hdrstr;
+	int Nhdr;
+	hdrstr = getheader(filename, ext, &Nhdr);
+	if (!hdrstr)
+		return NULL;
+	anwcs = anwcs_wcstools_from_string(hdrstr, Nhdr);
+	free(hdrstr);
+	if (!anwcs) {
+		ERROR("Failed to parse FITS WCS header from file \"%s\" ext %i using WCSTools",
+			  filename, ext);
+		return NULL;
+	}
+	return anwcs;
+#endif
+}
+
+anwcs_t* anwcs_wcstools_from_string(const char* str, int len) {
+#ifndef WCSTOOLS_EXISTS
+	ERROR("WCStools support was not compiled in");
+	return NULL;
+#else
+	anwcs_t* anwcs = NULL;
+	struct WorldCoor* wcs = wcsninit(str, len);
+	if (!wcs) {
+		ERROR("Failed to parse FITS WCS header using WCStools");
+		// print to stderr.
+		wcserr();
+		return NULL;
+	}
+	anwcs = calloc(1, sizeof(anwcs_t));
+	anwcs->type = ANWCS_TYPE_WCSTOOLS;
+	anwcs->data = wcs;
 	return anwcs;
 #endif
 }
