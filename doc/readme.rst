@@ -91,21 +91,15 @@ Mac OS X using homebrew:
 These instructions Worked For Me as of September 2012 on OSX 10.8.
 
 First set up homebrew:
-  * grab [https://developer.apple.com/xcode/ XCode] (from the Apps Store.  Free, but you still need a credit card.  Argh.)
-  * grab [https://developer.apple.com/downloads/index.action XCode Command-line utilities]
-  * grab [http://xquartz.macosforge.org/landing/ XQuartz]
-  * grab [http://mxcl.github.com/homebrew/ Homebrew]
-  * grab [http://www.pip-installer.org/en/latest/installing.html pip] if you don't have it already
+  * grab `XCode <https://developer.apple.com/xcode/>`_ (from the Apps Store.  Free, but you still need a credit card.  Argh.)
+  * grab `XCode Command-line utilities <https://developer.apple.com/downloads/index.action>`_
+  * grab `XQuartz <http://xquartz.macosforge.org/landing/>`_
+  * grab `Homebrew <http://mxcl.github.com/homebrew/>`_
+  * grab `pip <http://www.pip-installer.org/en/latest/installing.html>`_ if you don't have it already
 
-Get the required pip packages::
+Get homebrew dependencies that need special instructions::
 
-    $ pip install pyfits
-
-Get the required homebrew packages::
-
-    $ brew install wget swig pkg-config
-    $ brew install --HEAD --use-gcc netpbm  # for plotting
-    $ brew install cairo jpeg libpng        # for plotting
+    $ brew install --HEAD --use-gcc netpbm
 
 Optionally, grab some other handy homebrew packages::
 
@@ -114,9 +108,7 @@ Optionally, grab some other handy homebrew packages::
  
 Get our fork of homebrew-science::
 
-    $ # brew tap homebrew/science
     $ brew tap camphogg/science     # homebrew/science development is slow!
-    $ brew install wcslib
 
 And finally::
 
@@ -126,15 +118,7 @@ Or::
 
     $ brew install --HEAD astrometry.net
 
-if you like to live dangerously and trendily.
-
-
-I had to include the following in my ``~/.bashrc`` file (in general, for homebrew)::
-
-    PCP=
-    PCP=${PCP}:/usr/local/lib/pkgconfig
-    PCP=${PCP}:/opt/X11/lib/pkgconfig
-    export PKG_CONFIG_PATH=${PCP}
+if you like to live dangerously (but trendily).
 
 
 Mac OS X using Fink:
