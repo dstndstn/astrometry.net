@@ -22,8 +22,10 @@
 #include <unistd.h>
 
 #include "healpix.h"
+#include "healpix-utils.h"
 #include "starutil.h"
 #include "mathutil.h"
+#include "bl.h"
 
 #define OPTIONS "hdN:npH:drR:"
 
@@ -44,7 +46,6 @@ void print_help(char* progname) {
 
 int main(int argc, char** args) {
     int healpix = -1;
-    double argvals[argc];
     int i;
     bool degrees = TRUE;
 	double radius = HUGE_VAL;

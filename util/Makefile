@@ -133,7 +133,7 @@ CFLAGS += -I.
 
 PYTHON_LIBS := _sip.so _healpix.so
 
-PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian smooth-image search-index hpsplit wcs-to-tan
+PROGS := an-fitstopnm an-pnmtofits downsample-fits pad-file tycho2tofits fits-flip-endian smooth-image search-index hpsplit wcs-to-tan get-healpix
 MAIN_PROGS := wcs-resample fit-wcs
 
 # tycho2tostellarium build-hd-tree
@@ -270,6 +270,9 @@ ALL_OBJ += wcs-resample-main.o
 fit-wcs: fit-wcs-main.o $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
 	$(CC) -o $@ $^ $(LDFLAGS) $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += fit-wcs-main.o
+
+get-healpix: get-healpix.o $(ANUTILS_LIB) $(GSL_LIB)
+ALL_OBJ += get-healpix.o
 
 wcs-to-tan: wcs-to-tan.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
 	$(CC) -o $@ $^ $(LDFLAGS) $(WCS_LIB) $(LDLIBS)

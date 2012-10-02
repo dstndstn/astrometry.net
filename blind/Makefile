@@ -100,7 +100,7 @@ PIPELINE := usnobtofits build-an-catalog hpowned cut-an \
 	solvedserver printsolved xylist2fits mergesolved rdlsinfo xylsinfo \
 	wcsinfo subwcs wcs-grab fits-guess-scale agreeable new-wcs get-wcs \
 	augment-xylist solve-field plotcat wcs-xy2rd wcs-rd2xy \
-	certifiable get-healpix 2masstofits nomadtofits \
+	certifiable 2masstofits nomadtofits \
 	merge-index index-to-table setsolved \
 	startree2 uniformize-catalog build-index query-starkd \
 	local-index index-info
@@ -396,8 +396,6 @@ noisesim: noisesim.o noise.o $(ANUTILS_LIB) $(GSL_LIB)
 noisesim2: noisesim2.o noise.o $(ANUTILS_LIB) $(GSL_LIB)
 
 hpgrid: hpgrid.o $(ANUTILS_LIB) $(GSL_LIB)
-
-get-healpix: get-healpix.o $(ANUTILS_LIB) $(GSL_LIB)
 
 $(CFITS_UTILS) :: %: %.o $(CFITS_LIB)
 
