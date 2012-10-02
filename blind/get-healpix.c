@@ -25,18 +25,20 @@
 #include "starutil.h"
 #include "mathutil.h"
 
-#define OPTIONS "hdN:npH:"
+#define OPTIONS "hdN:npH:drR:"
 
 void print_help(char* progname) {
     printf("usage:\n"
-		   "  %s [-d] ra dec\n"
-		   "     (-d means values are in degree; by default they're in radians)\n"
+		   "  %s [options] ra dec\n"
+		   "     [-r]: values in radians; default is in decimal degrees or H:M:S\n"
+		   "  OR,\n"
 		   "  %s x y z\n\n"
-		   "  [-H <healpix>]: take healpix number as input and print center as output.\n"
-		   "  [-N nside]  (default 1)\n"
-		   "  [-n]: print neighbours\n"
-		   "  [-p]: project position within healpix\n"
-		   "If your values are negative, add \"--\" in between \"-d\" (if you're using it) and \"ra\" or \"x\".\n\n",
+ 		   "    [-H <healpix>]: take healpix number as input and print center as output.\n"
+		   "    [-N nside]  (default 1)\n"
+		   "    [-n]: print neighbours\n"
+		   "    [-R <range>]: print healpixes within radius <range> in degrees\n"
+		   "    [-p]: project position within healpix\n"
+		   "If your values are negative, add \"--\" in between \"-r\" (if you're using it) and \"ra\" or \"x\".\n\n",
 		   progname, progname);
 }
 
@@ -44,7 +46,8 @@ int main(int argc, char** args) {
     int healpix = -1;
     double argvals[argc];
     int i;
-    bool degrees = FALSE;
+    bool degrees = TRUE;
+	double radius = HUGE_VAL;
     int nargs;
     int c;
 	int Nside = 1;
@@ -69,7 +72,13 @@ int main(int argc, char** args) {
 			healpix = atoi(optarg);
 			break;
 		case 'd':
-			degrees = TRUE;
+			// No-op
+			break;
+		case 'r':
+			degrees = FALSE;
+			break;
+		case 'R':
+			radius = atof(optarg);
 			break;
 		case 'N':
 			Nside = atoi(optarg);
@@ -83,41 +92,35 @@ int main(int argc, char** args) {
     }
 
     nargs = argc - optind;
-
-    for (i=0; i<nargs; i++) {
-		argvals[i] = atof(args[optind + i]);
-    }
+	args += optind;
 
 	if (!fromhp) {
+		double ra, dec;
 		if (!((nargs == 2) || (nargs == 3))) {
 			print_help(args[0]);
 			exit(-1);
 		}
-		
 		if (nargs == 2) {
-			double ra = argvals[0];
-			double dec = argvals[1];
-
-			if (degrees) {
-				ra=deg2rad(ra);
-				dec=deg2rad(dec);
+			ra  = atora (args[0]);
+			dec = atodec(args[1]);
+			if (!degrees) {
+				ra  = rad2deg(ra);
+				dec = rad2deg(dec);
 			}
-			
-			healpix = radectohealpix(ra, dec, Nside);
-	
-			printf("(RA, DEC) = (%g, %g) degrees\n", rad2deg(ra), rad2deg(dec));
-			printf("(RA, DEC) = (%g, %g) radians\n", ra, dec);
-
-			radec2xyzarr(ra, dec, xyz);
+			healpix = radecdegtohealpix(ra, dec, Nside);
+			if (!degrees)
+				printf("(RA, DEC) = (%g, %g) radians\n", ra, dec);
+			printf("(RA, DEC) = (%g, %g) degrees\n", ra, dec);
+			radecdeg2xyzarr(ra, dec, xyz);
 
 		} else if (nargs == 3) {
-			xyz[0] = argvals[0];
-			xyz[1] = argvals[1];
-			xyz[2] = argvals[2];
-
+			xyz[0] = atof(args[0]);
+			xyz[1] = atof(args[1]);
+			xyz[2] = atof(args[2]);
 			healpix = xyzarrtohealpix(xyz, Nside);
-
 			printf("(x, y, z) = (%g, %g, %g)\n", xyz[0], xyz[1], xyz[2]);
+			xyzarr2radecdeg(xyz, &ra, &dec);
+			printf("(RA, DEC) = (%g, %g) degrees\n", ra, dec);
 		}
 	}
 	{
@@ -160,8 +163,17 @@ int main(int argc, char** args) {
 		printf("]\n");
 	}
 
-	printf("Healpix scale is %g arcsec.\n", 60*healpix_side_length_arcmin(Nside));
+	if (radius != HUGE_VAL) {
+		il* hps;
+		printf("Healpixes within radius %g degrees: [", radius);
+		hps = healpix_rangesearch_xyz(xyz, radius, Nside, NULL);
+		for (i=0; i<il_size(hps); i++) {
+			printf("%i ", il_get(hps, i));
+		}
+		printf("]\n");
+	}
 
+	printf("Healpix scale is %g arcsec.\n", 60*healpix_side_length_arcmin(Nside));
 
 	if (!fromhp && project) {
 		double origin[3];
