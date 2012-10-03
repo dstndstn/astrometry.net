@@ -25,6 +25,8 @@
 #include "errors.h"
 #include "log.h"
 
+#include "anqfits.h"
+
 sip_t* sip_from_string(const char* str, int slen, sip_t* dest) {
 	qfits_header* hdr;
 	sip_t* rtn;
@@ -231,11 +233,15 @@ qfits_header* tan_create_header(const tan_t* tan) {
 	return hdr;
 }
 
-static void* read_header_file(const char* fn, int ext, void* dest,
+static void* read_header_file(const char* fn, int ext, bool only, void* dest,
 							  void* (*readfunc)(const qfits_header*, void*)) {
 	qfits_header* hdr;
 	void* result;
-	hdr = qfits_header_readext(fn, ext);
+	if (only) {
+	  hdr = qfits_header_readext(fn, ext);
+	} else {
+	  hdr = anqfits_get_header_only(fn, ext);
+	}
 	if (!hdr) {
 		ERROR("Failed to read FITS header from file \"%s\" extension %i", fn, ext);
 		return NULL;
@@ -253,21 +259,25 @@ static void* call_sip_read_header(const qfits_header* hdr, void* dest) {
 	return sip_read_header(hdr, dest);
 }
 sip_t* sip_read_header_file(const char* fn, sip_t* dest) {
-	return read_header_file(fn, 0, dest, call_sip_read_header);
+  return read_header_file(fn, 0, FALSE, dest, call_sip_read_header);
 }
 sip_t* sip_read_header_file_ext(const char* fn, int ext, sip_t* dest) {
-	return read_header_file(fn, ext, dest, call_sip_read_header);
+  return read_header_file(fn, ext, FALSE, dest, call_sip_read_header);
 }
 
 static void* call_tan_read_header(const qfits_header* hdr, void* dest) {
 	return tan_read_header(hdr, dest);
 }
 tan_t* tan_read_header_file(const char* fn, tan_t* dest) {
-	return read_header_file(fn, 0, dest, call_tan_read_header);
+  return read_header_file(fn, 0, FALSE, dest, call_tan_read_header);
 }
 tan_t* tan_read_header_file_ext(const char* fn, int ext, tan_t* dest) {
-	return read_header_file(fn, ext, dest, call_tan_read_header);
+  return read_header_file(fn, ext, FALSE, dest, call_tan_read_header);
 }
+tan_t* tan_read_header_file_ext_only(const char* fn, int ext, tan_t* dest) {
+  return read_header_file(fn, ext, TRUE, dest, call_tan_read_header);
+}
+
 
 static bool read_polynomial(const qfits_header* hdr, const char* format,
 							int order, double* data, int datastride,

@@ -68,6 +68,12 @@ qfits_header* anqfits_get_header(const anqfits_t* qf, int ext) {
 	return qfits_header_copy(hdr);
 }
 
+qfits_header* anqfits_get_header_only(const char* fn, int ext) {
+  printf("UNIMPLEMENTED anqfits_get_header_only\n");
+  assert(0);
+  return NULL;
+}
+
 const qfits_header* anqfits_get_header_const(const anqfits_t* qf, int ext) {
 	assert(ext >= 0 && ext < qf->Nexts);
 	if (!qf->exts[ext].header)

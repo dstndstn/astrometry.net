@@ -1,9 +1,13 @@
 from run_command import run_command
 
-def get_libs(pkg):
+def get_libs(pkg, required=True):
 	(rtn,out,err) = run_command('pkg-config --libs-only-l ' + pkg)
 	if rtn:
-		raise Exception('Failed to find libraries for package ' + pkg)
+		if required:
+			raise Exception('Failed to find libraries for package ' + pkg)
+		else:
+			print 'Failed to find libraries for (optional) package', pkg
+			return []
 	if err and len(err):
 		print 'pkg-config complained:', err
 	#print 'pkg-config said:', out
@@ -28,10 +32,14 @@ def get_include_dirs(pkg):
 	print 'returning include dirs:', dirs
 	return dirs
 
-def get_lib_dirs(pkg):
+def get_lib_dirs(pkg, required=True):
 	(rtn,out,err) = run_command('pkg-config --libs-only-L ' + pkg)
 	if rtn:
-		raise Exception('Failed to find libraries for package ' + pkg)
+		if required:
+			raise Exception('Failed to find libraries for package ' + pkg)
+		else:
+			print 'Failed to find libraries for (optional) package', pkg
+			return []
 	if err and len(err):
 		print 'pkg-config said:', err
 	libs = out.split()

@@ -67,6 +67,8 @@ off_t anqfits_data_size(const anqfits_t* qf, int ext);
 
 qfits_header* anqfits_get_header(const anqfits_t* qf, int ext);
 
+qfits_header* anqfits_get_header_only(const char* fn, int ext);
+
 const qfits_header* anqfits_get_header_const(const anqfits_t* qf, int ext);
 
 // Returns a newly-allocated array containing the raw header bytes for the

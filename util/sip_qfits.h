@@ -42,6 +42,8 @@ tan_t* tan_read_header_file(const char* fn, tan_t* dest);
 
 tan_t* tan_read_header_file_ext(const char* fn, int ext, tan_t* dest);
 
+tan_t* tan_read_header_file_ext_only(const char* fn, int ext, tan_t* dest);
+
 sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest);
 
 tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest);

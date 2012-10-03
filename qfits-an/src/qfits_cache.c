@@ -315,6 +315,310 @@ int qfits_query_impl(const char * filename, int what) {
 
 /**@}*/
 
+/**
+   target_hdu: if != -1, the HDU you wish to know about; reading will stop after this
+   HDU, and the cache cell will be incomplete.
+ */
+int qfits_parse_file(const char* filename,
+		     qfits_cache_cell* qc,
+		     int target_hdu) {
+  struct stat sta;
+  FILE    *    in = NULL;
+  char        buf[FITS_BLOCK_SIZE];
+
+  char    *    buf_c;
+  int            n_blocks;
+  int            found_it;
+  int            xtend;
+  int            naxis;
+  char    *    read_val;
+  int            last;
+  int            end_of_file;
+  int            data_bytes;
+  int            skip_blocks;
+  int         seeked;
+  int            i;
+
+  int rtn = -1;
+
+  int *off_hdr = NULL;
+  int *off_dat = NULL;
+  int off_size = QFITS_MAX_EXTS;
+  char getval_buf[FITS_LINESZ+1];
+
+  /* Stat file to get its size */
+  if (stat(filename, &sta)!=0) {
+    qfits_error("cannot stat file \"%s\": %s", filename, strerror(errno));
+    return -1;
+  }
+
+  /* Initialize cache cell */
+  qc->exts=0;
+  qc->inode= sta.st_ino;
+
+  /* Open input file */
+  if ((in=fopen(filename, "r"))==NULL) {
+    qfits_error("cannot open file \"%s\": %s", filename, strerror(errno));
+    goto cleanup;
+  }
+
+  /* Read first block in */
+  if (fread(buf, 1, FITS_BLOCK_SIZE, in)!=FITS_BLOCK_SIZE) {
+    qfits_error("error reading first block from \"%s\": %s\n", filename, strerror(errno));
+    goto cleanup;
+  }
+
+  /* Identify FITS magic number */
+  if (strncmp(buf, "SIMPLE  =", 9)) {
+    qfits_error("file \"%s\" is not FITS (does not start with \"SIMPLE  =\")", filename);
+    goto cleanup;
+  }
+
+  /*
+   * Browse through file to identify primary HDU size and see if there
+   * might be some extensions. The size of the primary data zone will
+   * also be estimated from the gathering of the NAXIS?? values and
+   * BITPIX.
+   */
+
+  /* Rewind input file, END card might be in first block */
+  rewind(in);
+
+  /* Initialize all counters */
+  n_blocks = 0;
+  found_it = 0;
+  xtend = 0;
+  naxis = 0;
+  data_bytes = 1;
+
+  /* Start looking for END card */
+  while (found_it==0) {
+    /* Read one FITS block */
+    if (fread(buf, 1, FITS_BLOCK_SIZE, in)!=FITS_BLOCK_SIZE) {
+      qfits_error("error reading file %s\n", filename);
+      goto cleanup;
+    }
+    n_blocks ++;
+    /* Browse through current block */
+    buf_c = buf;
+    for (i=0; i<FITS_NCARDS; i++) {
+      /* Look for BITPIX keyword */
+      if (strncmp(buf_c, "BITPIX ", 7) == 0) {
+	read_val = qfits_getvalue_r(buf_c, getval_buf);
+	data_bytes *= (int)atoi(read_val) / 8;
+	if (data_bytes<0) data_bytes *= -1;
+      }
+      /* Look for NAXIS keyword */
+      else if (strncmp(buf_c, "NAXIS", 5) == 0) {
+	if (buf_c[5]==' ') {
+	  /* NAXIS keyword */
+	  read_val = qfits_getvalue_r(buf_c, getval_buf);
+	  naxis = (int)atoi(read_val);
+	} else {
+	  /* NAXIS?? keyword (axis size) */
+	  read_val = qfits_getvalue_r(buf_c, getval_buf);
+	  data_bytes *= (int)atoi(read_val);
+	}
+      }
+      /* Look for EXTEND keyword */
+      else if (strncmp(buf_c, "EXTEND ", 7) == 0) {
+	/* The EXTEND keyword is present: might be some extensions */
+	read_val = qfits_getvalue_r(buf_c, getval_buf);
+	if (read_val[0]=='T' || read_val[0]=='1') {
+	  xtend=1;
+	}
+      }
+      /* Look for END keyword */
+      else if (strncmp(buf_c, "END ", 4) == 0) {
+	found_it = 1;
+      }
+      buf_c += FITS_LINESZ;
+    }
+  }
+
+  /* Set first HDU offsets */
+  off_hdr = malloc(off_size * sizeof(int));
+  off_dat = malloc(off_size * sizeof(int));
+  assert(off_hdr);
+  assert(off_dat);
+  off_hdr[0] = 0;
+  off_dat[0] = n_blocks;
+    
+  /* Last is the pointer to the last added extension, plus one. */
+  last = 1;
+
+  if (xtend) {
+    /* Look for extensions */
+    qdebug(
+	   printf("qfits: searching for extensions in %s\n", filename);
+	   );
+
+    /*
+     * Register all extension offsets
+     */
+    end_of_file = 0;
+    while (end_of_file==0) {
+
+      if ((last-1) == target_hdu) {
+	printf("Early-quitting FITS file parsing at HDU %i (file \"%s\")\n",
+	       target_hdu, filename);
+	break;
+      }
+
+      /*
+       * Skip the previous data section if pixels were declared
+       */
+      if (naxis>0) {
+	/* Skip as many blocks as there are declared pixels */
+	skip_blocks = data_bytes/FITS_BLOCK_SIZE;
+	if ((data_bytes % FITS_BLOCK_SIZE)!=0) {
+	  skip_blocks ++;
+	}
+	seeked = fseek(in, skip_blocks*FITS_BLOCK_SIZE, SEEK_CUR);
+	if (seeked<0) {
+	  qfits_error("error seeking file \"%s\"\n", filename);
+	  goto cleanup;
+	}
+	/* Increase counter of current seen blocks. */
+	n_blocks += skip_blocks;
+      }
+
+      /* Look for extension start */
+      found_it=0;
+      while ((found_it==0) && (end_of_file==0)) {
+	if (fread(buf,1,FITS_BLOCK_SIZE,in)!=FITS_BLOCK_SIZE) {
+	  /* Reached end of file */
+	  end_of_file=1;
+	  break;
+	}
+	n_blocks ++;
+	/* Search for XTENSION at block top */
+	if (strncmp(buf, "XTENSION=", 9) == 0) {
+	  /* Got an extension */
+	  found_it=1;
+	  off_hdr[last] = n_blocks-1;
+	}
+      }
+      if (end_of_file) break;
+
+      /*
+       * Look for extension END
+       * Rewind one block backwards, END might be in same section as
+       * XTENSION start.
+       */
+      if (fseek(in, -FITS_BLOCK_SIZE, SEEK_CUR)==-1) {
+	qfits_error("error fseeking file \"%s\" backwards\n", filename);
+	goto cleanup;
+      }
+      n_blocks--;
+      found_it = 0;
+      data_bytes = 1;
+      naxis = 0;
+      while ((found_it==0) && (end_of_file==0)) {
+	if (fread(buf,1,FITS_BLOCK_SIZE,in)!=FITS_BLOCK_SIZE) {
+	  qfits_error("XTENSION without END in %s\n", filename);
+	  end_of_file=1;
+	  break;
+	}
+	n_blocks++;
+
+	/* Browse current block */
+	buf_c = buf;
+	for (i=0; i<FITS_NCARDS; i++) {
+	  /* Look for BITPIX keyword */
+	  if (strncmp(buf_c, "BITPIX ", 7) == 0) {
+	    read_val = qfits_getvalue_r(buf_c, getval_buf);
+	    data_bytes *= (int)atoi(read_val) / 8;
+	    if (data_bytes<0) data_bytes *= -1;
+	  } else
+	    /* Look for NAXIS keyword */
+	    if (strncmp(buf_c, "NAXIS", 5) == 0) {
+	      if (buf_c[5]==' ') {
+		/* NAXIS keyword */
+		read_val = qfits_getvalue_r(buf_c, getval_buf);
+		naxis = (int)atoi(read_val);
+	      } else {
+		/* NAXIS?? keyword (axis size) */
+		read_val = qfits_getvalue_r(buf_c, getval_buf);
+		data_bytes *= (int)atoi(read_val);
+	      }
+	    } else
+	      /* Look for END keyword */
+	      if (strncmp(buf_c, "END ", 4) == 0) {
+		/* Got the END card */
+		found_it=1;
+		/* Update registered extension list */
+		off_dat[last] = n_blocks;
+		last ++;
+		qc->exts ++;
+		if (last >= off_size) {
+		  off_size *= 2;
+		  off_hdr = realloc(off_hdr, off_size * sizeof(int));
+		  off_dat = realloc(off_dat, off_size * sizeof(int));
+		  assert(off_hdr);
+		  assert(off_dat);
+		}
+		break;
+	      }
+	  buf_c+=FITS_LINESZ;
+	}
+      }
+    }
+  }
+
+  /* Close file */
+  fclose(in);
+  in = NULL;
+
+  /* Allocate buffers in cache */
+  qc->ohdr = qfits_malloc(last * sizeof(int));
+  qc->data = qfits_malloc(last * sizeof(int));
+  qc->shdr = qfits_malloc(last * sizeof(int));
+  qc->dsiz = qfits_malloc(last * sizeof(int));
+  /* Store retrieved pointers in the cache */
+  for (i=0; i<last; i++) {
+    /* Offsets to start */
+    qc->ohdr[i] = off_hdr[i];
+    qc->data[i] = off_dat[i];
+    /* Sizes */
+    qc->shdr[i] = off_dat[i] - off_hdr[i];
+    if (i==last-1) {    
+      qc->dsiz[i] = (sta.st_size/FITS_BLOCK_SIZE) - off_dat[i];
+    } else {
+      qc->dsiz[i] = off_hdr[i+1] - off_dat[i];
+    }
+  }
+  qc->fsize = sta.st_size / FITS_BLOCK_SIZE;
+  /* Add last modification date */
+  qc->mtime = sta.st_mtime;
+  qc->filesize  = sta.st_size;
+  qc->ctime = sta.st_ctime;
+  qc->name = qfits_strdup(filename);
+  qfits_cache_entries ++;
+
+  qdebug(
+	 qfits_cache_dump();
+	 );
+  rtn = 0;
+
+ cleanup:
+  if (in)
+    fclose(in);
+  free(off_hdr);
+  free(off_dat);
+  if (rtn) {
+    qfits_free(qc->name);
+    qfits_free(qc->ohdr);
+    qfits_free(qc->data);
+    qfits_free(qc->shdr);
+    qfits_free(qc->dsiz);
+  }
+
+  return rtn;
+}
+
+
+
 /*----------------------------------------------------------------------------*/
 /**
   @brief    Add pointer information about a file into the qfits cache.
@@ -343,149 +647,12 @@ int qfits_query_impl(const char * filename, int what) {
 /*----------------------------------------------------------------------------*/
 static int qfits_cache_add(const char * filename)
 {
-    FILE    *    in;
-	int *off_hdr = NULL;
-	int *off_dat = NULL;
-	int off_size = QFITS_MAX_EXTS;
-    char        buf[FITS_BLOCK_SIZE];
-	char getval_buf[FITS_LINESZ+1];
-    char    *    buf_c;
-    int            n_blocks;
-    int            found_it;
-    int            xtend;
-    int            naxis;
-    char    *    read_val;
-    int            last;
-    int            end_of_file;
-    int            data_bytes;
-    int            skip_blocks;
-    struct stat sta;
-    int         seeked;
-    int            i;
-
     qfits_cache_cell * qc;
 
     /* Initialize cache if not done yet (done only once) */
     if (qfits_cache_init==0) {
         qfits_cache_init++;
         qfits_cache_activate();
-    }
-
-    /* Stat file to get its size */
-    if (stat(filename, &sta)!=0) {
-        qfits_error("cannot stat file \"%s\": %s", filename, strerror(errno));
-        return -1;
-    }
-
-    /* Open input file */
-    if ((in=fopen(filename, "r"))==NULL) {
-        qfits_error("cannot open file \"%s\": %s", filename, strerror(errno));
-        return -1;
-    }
-
-    /* Read first block in */
-    if (fread(buf, 1, FITS_BLOCK_SIZE, in)!=FITS_BLOCK_SIZE) {
-        qfits_error("error reading first block from \"%s\": %s\n", filename, strerror(errno));
-        fclose(in);
-        return -1;
-    }
-    /* Identify FITS magic number */
-    if (buf[0]!='S' ||
-        buf[1]!='I' ||
-        buf[2]!='M' ||
-        buf[3]!='P' ||
-        buf[4]!='L' ||
-        buf[5]!='E' ||
-        buf[6]!=' ' ||
-        buf[7]!=' ' ||
-        buf[8]!='=') {
-        qfits_error("file \"%s\" is not FITS (does not start with \"SIMPLE  =\")", filename);
-        fclose(in);
-        return -1;
-    }
-
-    /*
-     * Browse through file to identify primary HDU size and see if there
-     * might be some extensions. The size of the primary data zone will
-     * also be estimated from the gathering of the NAXIS?? values and
-     * BITPIX.
-     */
-
-    /* Rewind input file, END card might be in first block */
-    rewind(in);
-
-    /* Initialize all counters */
-    n_blocks = 0;
-    found_it = 0;
-    xtend = 0;
-    naxis = 0;
-    data_bytes = 1;
-
-    /* Start looking for END card */
-    while (found_it==0) {
-        /* Read one FITS block */
-        if (fread(buf, 1, FITS_BLOCK_SIZE, in)!=FITS_BLOCK_SIZE) {
-			qfits_error("error reading file %s\n", filename);
-            fclose(in);
-            return -1;
-        }
-        n_blocks ++;
-        /* Browse through current block */
-        buf_c = buf;
-        for (i=0; i<FITS_NCARDS; i++) {
-
-            /* Look for BITPIX keyword */
-            if (buf_c[0]=='B' &&
-                buf_c[1]=='I' &&
-                buf_c[2]=='T' &&
-                buf_c[3]=='P' &&
-                buf_c[4]=='I' &&
-                buf_c[5]=='X' &&
-                buf_c[6]==' ') {
-                read_val = qfits_getvalue_r(buf_c, getval_buf);
-                data_bytes *= (int)atoi(read_val) / 8;
-                if (data_bytes<0) data_bytes *= -1;
-            } else
-            /* Look for NAXIS keyword */
-            if (buf_c[0]=='N' &&
-                buf_c[1]=='A' &&
-                buf_c[2]=='X' &&
-                buf_c[3]=='I' &&
-                buf_c[4]=='S') {
-
-                if (buf_c[5]==' ') {
-                    /* NAXIS keyword */
-                    read_val = qfits_getvalue_r(buf_c, getval_buf);
-                    naxis = (int)atoi(read_val);
-                } else {
-                    /* NAXIS?? keyword (axis size) */
-                    read_val = qfits_getvalue_r(buf_c, getval_buf);
-                    data_bytes *= (int)atoi(read_val);
-                }
-            } else
-            /* Look for EXTEND keyword */
-            if (buf_c[0]=='E' &&
-                buf_c[1]=='X' &&
-                buf_c[2]=='T' &&
-                buf_c[3]=='E' &&
-                buf_c[4]=='N' &&
-                buf_c[5]=='D' &&
-                buf_c[6]==' ') {
-                /* The EXTEND keyword is present: might be some extensions */
-                read_val = qfits_getvalue_r(buf_c, getval_buf);
-                if (read_val[0]=='T' || read_val[0]=='1') {
-                    xtend=1;
-                }
-            } else
-            /* Look for END keyword */
-            if (buf_c[0] == 'E' &&
-                buf_c[1] == 'N' &&
-                buf_c[2] == 'D' &&
-                buf_c[3] == ' ') {
-                found_it = 1;
-            }
-            buf_c += FITS_LINESZ;
-        }
     }
 
     /*
@@ -507,205 +674,16 @@ static int qfits_cache_add(const char * filename)
         qfits_free(qc->data);
         qfits_free(qc->shdr);
         qfits_free(qc->dsiz);
+	qc->ohdr = qc->shdr = qc->data = qc->dsiz = NULL;
         qfits_cache_entries --;
     }
     
-    /* Initialize cache cell */
-    qc->exts=0;
-    qc->name = qfits_strdup(filename);
-    qc->inode= sta.st_ino;
-
-    /* Set first HDU offsets */
-	off_hdr = malloc(off_size * sizeof(int));
-	off_dat = malloc(off_size * sizeof(int));
-	assert(off_hdr);
-	assert(off_dat);
-    off_hdr[0] = 0;
-    off_dat[0] = n_blocks;
-    
-    /* Last is the pointer to the last added extension, plus one. */
-    last = 1;
-
-    if (xtend) {
-        /* Look for extensions */
-        qdebug(
-            printf("qfits: searching for extensions in %s\n", filename);
-        );
-
-        /*
-         * Register all extension offsets
-         */
-        end_of_file = 0;
-        while (end_of_file==0) {
-            /*
-             * Skip the previous data section if pixels were declared
-             */
-            if (naxis>0) {
-                /* Skip as many blocks as there are declared pixels */
-                skip_blocks = data_bytes/FITS_BLOCK_SIZE;
-                if ((data_bytes % FITS_BLOCK_SIZE)!=0) {
-                    skip_blocks ++;
-                }
-                seeked = fseek(in, skip_blocks*FITS_BLOCK_SIZE, SEEK_CUR);
-                if (seeked<0) {
-                    qfits_error("error seeking file \"%s\"\n", filename);
-                    qfits_free(qc->name);
-					free(off_hdr);
-					free(off_dat);
-                    fclose(in);
-                    return -1;
-                }
-                /* Increase counter of current seen blocks. */
-                n_blocks += skip_blocks;
-            }
-            
-            /* Look for extension start */
-            found_it=0;
-            while ((found_it==0) && (end_of_file==0)) {
-                if (fread(buf,1,FITS_BLOCK_SIZE,in)!=FITS_BLOCK_SIZE) {
-                    /* Reached end of file */
-                    end_of_file=1;
-                    break;
-                }
-                n_blocks ++;
-                /* Search for XTENSION at block top */
-                if (buf[0]=='X' &&
-                    buf[1]=='T' &&
-                    buf[2]=='E' &&
-                    buf[3]=='N' &&
-                    buf[4]=='S' &&
-                    buf[5]=='I' &&
-                    buf[6]=='O' &&
-                    buf[7]=='N' &&
-                    buf[8]=='=') {
-                    /* Got an extension */
-                    found_it=1;
-                    off_hdr[last] = n_blocks-1;
-                }
-            }
-            if (end_of_file) break;
-
-            /*
-             * Look for extension END
-             * Rewind one block backwards, END might be in same section as
-             * XTENSION start.
-             */
-            if (fseek(in, -FITS_BLOCK_SIZE, SEEK_CUR)==-1) {
-                qfits_error("error fseeking file \"%s\" backwards\n", filename);
-                qfits_free(qc->name);
-				free(off_hdr);
-				free(off_dat);
-                fclose(in);
-                return -1;
-            }
-            n_blocks --;
-            found_it=0;
-            data_bytes = 1;
-            naxis = 0;
-            while ((found_it==0) && (end_of_file==0)) {
-                if (fread(buf,1,FITS_BLOCK_SIZE,in)!=FITS_BLOCK_SIZE) {
-                    qfits_error("XTENSION without END in %s\n", filename);
-                    end_of_file=1;
-                    break;
-                }
-                n_blocks++;
-
-                /* Browse current block */
-                buf_c = buf;
-                for (i=0; i<FITS_NCARDS; i++) {
-                    /* Look for BITPIX keyword */
-                    if (buf_c[0]=='B' &&
-                        buf_c[1]=='I' &&
-                        buf_c[2]=='T' &&
-                        buf_c[3]=='P' &&
-                        buf_c[4]=='I' &&
-                        buf_c[5]=='X' &&
-                        buf_c[6]==' ') {
-                        read_val = qfits_getvalue_r(buf_c, getval_buf);
-                        data_bytes *= (int)atoi(read_val) / 8;
-                        if (data_bytes<0) data_bytes *= -1;
-                    } else
-                    /* Look for NAXIS keyword */
-                    if (buf_c[0]=='N' &&
-                        buf_c[1]=='A' &&
-                        buf_c[2]=='X' &&
-                        buf_c[3]=='I' &&
-                        buf_c[4]=='S') {
-
-                        if (buf_c[5]==' ') {
-                            /* NAXIS keyword */
-                            read_val = qfits_getvalue_r(buf_c, getval_buf);
-                            naxis = (int)atoi(read_val);
-                        } else {
-                            /* NAXIS?? keyword (axis size) */
-                            read_val = qfits_getvalue_r(buf_c, getval_buf);
-                            data_bytes *= (int)atoi(read_val);
-                        }
-                    } else
-                    /* Look for END keyword */
-                    if (buf_c[0]=='E' &&
-                        buf_c[1]=='N' &&
-                        buf_c[2]=='D' &&
-                        buf_c[3]==' ') {
-                        /* Got the END card */
-                        found_it=1;
-                        /* Update registered extension list */
-                        off_dat[last] = n_blocks;
-                        last ++;
-                        qc->exts ++;
-						if (last >= off_size) {
-							off_size *= 2;
-							off_hdr = realloc(off_hdr, off_size * sizeof(int));
-							off_dat = realloc(off_dat, off_size * sizeof(int));
-							assert(off_hdr);
-							assert(off_dat);
-						}
-                        break;
-                    }
-                    buf_c+=FITS_LINESZ;
-                }
-            }
-        }
+    if (qfits_parse_file(filename, qc, -1)) {
+      return -1;
     }
-
-    /* Close file */
-    fclose(in);
-
-    /* Allocate buffers in cache */
-    qc->ohdr = qfits_malloc(last * sizeof(int));
-    qc->data = qfits_malloc(last * sizeof(int));
-    qc->shdr = qfits_malloc(last * sizeof(int));
-    qc->dsiz = qfits_malloc(last * sizeof(int));
-    /* Store retrieved pointers in the cache */
-    for (i=0; i<last; i++) {
-        /* Offsets to start */
-        qc->ohdr[i] = off_hdr[i];
-        qc->data[i] = off_dat[i];
-
-        /* Sizes */
-        qc->shdr[i] = off_dat[i] - off_hdr[i];
-        if (i==last-1) {    
-            qc->dsiz[i] = (sta.st_size/FITS_BLOCK_SIZE) - off_dat[i];
-        } else {
-            qc->dsiz[i] = off_hdr[i+1] - off_dat[i];
-        }
-    }
-    qc->fsize = sta.st_size / FITS_BLOCK_SIZE;
-    /* Add last modification date */
-    qc->mtime = sta.st_mtime;
-    qc->filesize  = sta.st_size;
-    qc->ctime = sta.st_ctime;
-    qfits_cache_entries ++;
-
-    qdebug(
-        qfits_cache_dump();
-    );
-
-	free(off_hdr);
-	free(off_dat);
 
     /* Return index of the added file in the cache */
-	return qfits_cache_last;
+    return qfits_cache_last;
 }
 
 #if QFITS_CACHE_DEBUG
