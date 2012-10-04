@@ -49,6 +49,11 @@ typedef struct anqfits_t anqfits_t;
 
 anqfits_t* anqfits_open(const char* filename);
 
+// Open the given file, but only parse up to the given HDU number.
+// Attempts to get headers or data beyond that HDU will fail, and the
+// number of HDUs the file is reported to contain will be hdu+1.
+anqfits_t* anqfits_open_hdu(const char* filename, int hdu);
+
 void anqfits_close(anqfits_t* qf);
 
 int anqfits_n_ext(const anqfits_t* qf);

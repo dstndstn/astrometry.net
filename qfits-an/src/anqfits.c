@@ -22,11 +22,11 @@
 #include "qfits_card.h"
 
 #if 0
-  #define qdebug( code ) { code }
-  #define debug printf
+#define qdebug( code ) { code }
+#define debug printf
 #else
-  #define qdebug( code ) {}
-  #define debug(args...)
+#define qdebug( code ) {}
+#define debug(args...)
 #endif
 
 int anqfits_n_ext(const anqfits_t* qf) {
@@ -69,9 +69,15 @@ qfits_header* anqfits_get_header(const anqfits_t* qf, int ext) {
 }
 
 qfits_header* anqfits_get_header_only(const char* fn, int ext) {
-  printf("UNIMPLEMENTED anqfits_get_header_only\n");
-  assert(0);
-  return NULL;
+	qfits_header* hdr;
+	const anqfits_t* anq = anqfits_open_hdu(fn, ext);
+	if (!anq) {
+		qfits_error("Failed to read FITS file \"%s\" to extension %i", fn, ext);
+		return NULL;
+	}
+	hdr = anqfits_get_header(anq, ext);
+	anqfits_close(anq);
+	return hdr;
 }
 
 const qfits_header* anqfits_get_header_const(const anqfits_t* qf, int ext) {
@@ -189,9 +195,13 @@ static int get_data_bytes(const qfits_header* hdr) {
 	return data_bytes;
 }
 
-// from qfits_cache.c: qfits_cache_add()
 anqfits_t* anqfits_open(const char* filename) {
+	return anqfits_open_hdu(filename, -1);
+}
+
+anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
     anqfits_t* qf = NULL;
+	// copied from qfits_cache.c: qfits_cache_add()
     FILE* in = NULL;
     struct stat sta;
     int n_blocks;
@@ -270,8 +280,6 @@ anqfits_t* anqfits_open(const char* filename) {
     xtend = qfits_header_getboolean(hdr, "EXTEND", 0);
 	data_bytes = get_data_bytes(hdr);
 
-    //qf->inode= sta.st_ino;
-
     qf = calloc(1, sizeof(anqfits_t));
     qf->filename = strdup(filename);
 	qf->exts = calloc(off_size, sizeof(anqfits_ext_t));
@@ -298,6 +306,12 @@ anqfits_t* anqfits_open(const char* filename) {
 		hdr = qfits_header_new();
         end_of_file = 0;
         while (!end_of_file) {
+
+			if (qf->Nexts-1 == hdu) {
+				debug("Stopped reading after finding HDU %i\n", hdu);
+				// Could cache the file offset to continue reading later...
+				break;
+			}
             /*
              * Skip the previous data section if pixels were declared
              */
@@ -407,11 +421,6 @@ anqfits_t* anqfits_open(const char* filename) {
     }
     qf->filesize = sta.st_size / FITS_BLOCK_SIZE;
 
-    /* Add last modification date
-     qc->mtime = sta.st_mtime ;
-     qc->filesize  = sta.st_size ;
-     qc->ctime = sta.st_ctime ;
-     */
     return qf;
 
  bailout:
@@ -463,30 +472,30 @@ void anqfits_close(anqfits_t* qf) {
 
 
 /*
-char* qfits_query_ext_2(const qfits_t* qf, int ext, const char* keyword) {
-    qfits_header* hdr;
-    char* str;
-    // HACK - return pointer to static memory!!
-    static char val[81];
-    hdr = qfits_get_header(qf, ext);
-    if (!hdr)
-        return NULL;
-    str = qfits_header_getstr(hdr, keyword);
-    if (!str)
-        return NULL;
-    strncpy(val, str, sizeof(val));
-    val[sizeof(val)-1]='\0';
-    qfits_header_destroy(hdr);
-    return val;
-}
-int qfits_is_table_2(const qfits_t* qf, int ext) {
-    qfits_header* hdr;
-    int ttype;
-    hdr = qfits_get_header(qf, ext);
-    ttype = qfits_is_table_header(hdr);
-    qfits_header_destroy(hdr);
-    return ttype;
-}
+ char* qfits_query_ext_2(const qfits_t* qf, int ext, const char* keyword) {
+ qfits_header* hdr;
+ char* str;
+ // HACK - return pointer to static memory!!
+ static char val[81];
+ hdr = qfits_get_header(qf, ext);
+ if (!hdr)
+ return NULL;
+ str = qfits_header_getstr(hdr, keyword);
+ if (!str)
+ return NULL;
+ strncpy(val, str, sizeof(val));
+ val[sizeof(val)-1]='\0';
+ qfits_header_destroy(hdr);
+ return val;
+ }
+ int qfits_is_table_2(const qfits_t* qf, int ext) {
+ qfits_header* hdr;
+ int ttype;
+ hdr = qfits_get_header(qf, ext);
+ ttype = qfits_is_table_header(hdr);
+ qfits_header_destroy(hdr);
+ return ttype;
+ }
  */
 
 #if 0
@@ -616,10 +625,10 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
         }
         /* Interpret the type in header */
         if (qfits_table_interpret_type(qfits_pretty_string(str_val), 
-                        &(atom_nb), 
-                        &(atom_dec_nb),
-                        &(atom_type), 
-                        table_type) == -1) {
+									   &(atom_nb), 
+									   &(atom_dec_nb),
+									   &(atom_type), 
+									   table_type) == -1) {
             qfits_error("cannot interpret the type: %s", str_val) ;
             qfits_table_close(table) ;
             qfits_header_destroy(hdr);
@@ -628,48 +637,48 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
         
         /* Set atom_size */
         switch (atom_type) {
-            case TFITS_BIN_TYPE_A:
-            case TFITS_BIN_TYPE_L:
-            case TFITS_BIN_TYPE_B:
-                atom_size = 1 ;
-                break ;
-            case TFITS_BIN_TYPE_I:
-                atom_size = 2 ;
-                break ;
-            case TFITS_BIN_TYPE_J:
-            case TFITS_BIN_TYPE_E:
-            case TFITS_ASCII_TYPE_I:
-            case TFITS_ASCII_TYPE_E:
-            case TFITS_ASCII_TYPE_F:
-                atom_size = 4 ;
-                break ;
-            case TFITS_BIN_TYPE_C:
-            case TFITS_BIN_TYPE_P:
-                atom_size = 4 ;
-                atom_nb *= 2 ;
-                break ;
-            case TFITS_BIN_TYPE_K:
-            case TFITS_BIN_TYPE_D:
-            case TFITS_ASCII_TYPE_D:
-                atom_size = 8 ;
-                break ;
-            case TFITS_BIN_TYPE_M:
-                atom_size = 8 ;
-                atom_nb *= 2 ;
-                break ;
-            case TFITS_BIN_TYPE_X:
-                atom_size = 1 ;
-                nb_bits = atom_nb ;
-                atom_nb = (int)((nb_bits - 1)/ 8) + 1 ;
-                break ;
-            case TFITS_ASCII_TYPE_A:
-                atom_size = atom_nb ;
-                break ;
-            default:
-                qfits_error("unrecognized type") ;
-                qfits_table_close(table) ;
-                qfits_header_destroy(hdr);
-                return NULL;
+		case TFITS_BIN_TYPE_A:
+		case TFITS_BIN_TYPE_L:
+		case TFITS_BIN_TYPE_B:
+			atom_size = 1 ;
+			break ;
+		case TFITS_BIN_TYPE_I:
+			atom_size = 2 ;
+			break ;
+		case TFITS_BIN_TYPE_J:
+		case TFITS_BIN_TYPE_E:
+		case TFITS_ASCII_TYPE_I:
+		case TFITS_ASCII_TYPE_E:
+		case TFITS_ASCII_TYPE_F:
+			atom_size = 4 ;
+			break ;
+		case TFITS_BIN_TYPE_C:
+		case TFITS_BIN_TYPE_P:
+			atom_size = 4 ;
+			atom_nb *= 2 ;
+			break ;
+		case TFITS_BIN_TYPE_K:
+		case TFITS_BIN_TYPE_D:
+		case TFITS_ASCII_TYPE_D:
+			atom_size = 8 ;
+			break ;
+		case TFITS_BIN_TYPE_M:
+			atom_size = 8 ;
+			atom_nb *= 2 ;
+			break ;
+		case TFITS_BIN_TYPE_X:
+			atom_size = 1 ;
+			nb_bits = atom_nb ;
+			atom_nb = (int)((nb_bits - 1)/ 8) + 1 ;
+			break ;
+		case TFITS_ASCII_TYPE_A:
+			atom_size = atom_nb ;
+			break ;
+		default:
+			qfits_error("unrecognized type") ;
+			qfits_table_close(table) ;
+			qfits_header_destroy(hdr);
+			return NULL;
         }
     
         /* zero <-> TZERO */
@@ -694,8 +703,8 @@ qfits_table* anqfits_get_table(const anqfits_t* qf, int ext) {
 
         /* Fill the current column object */
         qfits_col_fill(curr_col, atom_nb, atom_dec_nb, atom_size, atom_type, 
-                label, unit, nullval, disp, zero_present, zero, scale_present, 
-                scale, offset_beg) ;
+					   label, unit, nullval, disp, zero_present, zero, scale_present, 
+					   scale, offset_beg) ;
         
         /* Compute offset_beg but for the last column */
         if (i < table->nc - 1) {

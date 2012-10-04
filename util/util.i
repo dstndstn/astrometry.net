@@ -619,9 +619,14 @@ Sip = sip_t
 	%}
 
 %extend tan_t {
-	tan_t(char* fn=NULL, int ext=0) {
-		if (fn)
-			return tan_read_header_file_ext(fn, ext, NULL);
+	tan_t(char* fn=NULL, int ext=0, int only=0) {
+		if (fn) {
+			if (only) {
+				return tan_read_header_file_ext_only(fn, ext, NULL);
+			} else {
+				return tan_read_header_file_ext(fn, ext, NULL);
+			}
+		}
 		tan_t* t = (tan_t*)calloc(1, sizeof(tan_t));
 		return t;
 	}
