@@ -490,6 +490,10 @@ class TsField(SdssFile):
 		maggies = 2.*b * np.sinh(-0.4 * np.log(10.) * L - np.log(b))
 		dlogcounts = -0.4 * (self.aa[band] + self.kk[band] * self.airmass[band])
 		return (maggies * self.exptime) * 10.**dlogcounts
+
+	def get_zeropoint(self, band):
+		return (2.5 * np.log10(self.exptime)
+				-(self.aa[band] + self.kk[band] * self.airmass[band]))
 		
 	# band: int
 	def mag_to_counts(self, mag, band):
