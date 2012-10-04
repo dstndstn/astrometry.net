@@ -16,19 +16,28 @@ def pyfits_writeto(p, filename, **kwargs):
 		os.remove(filename)
 	p.writeto(filename, **kwargs)
 
-def merge_tables(TT):
+def merge_tables(TT, columns=None):
 	assert(len(TT) > 0)
-	cols = set(TT[0].get_columns())
-	for T in TT[1:]:
-		# They must have the same set of columns
-		if len(cols.symmetric_difference(T.get_columns())):
-			print 'Tables to merge must have the same set of columns.'
-			print 'First table columns:', cols
-			print 'Target table columns:', T.get_columns()
-			print 'Difference:', cols.symmetric_difference(T.get_columns())
-		assert(len(cols.symmetric_difference(T.get_columns())) == 0)
+	if columns is None:
+		cols = set(TT[0].get_columns())
+		for T in TT[1:]:
+			# They must have the same set of columns
+			if len(cols.symmetric_difference(T.get_columns())):
+				print 'Tables to merge must have the same set of columns.'
+				print 'First table columns:', cols
+				print 'Target table columns:', T.get_columns()
+				print 'Difference:', cols.symmetric_difference(T.get_columns())
+			assert(len(cols.symmetric_difference(T.get_columns())) == 0)
+		cols = TT[0].get_columns()
+	else:
+		for i,T in enumerate(TT):
+			# ensure they all have the requested columns
+			if not set(T.get_columns()).issubset(set(columns)):
+				print 'Each table to be merged must have the requested columns'
+				print 'Table', i, 'is missing columns:', set(columns)-set(T.get_columns())
+				assert(False)
+		cols = columns
 	N = sum([len(T) for T in TT])
-	cols = TT[0].get_columns()
 	td = tabledata()
 	#print 'merge_tables: columns =', cols
 	for col in cols:
