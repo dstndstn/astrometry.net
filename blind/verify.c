@@ -1270,7 +1270,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
     fieldr2 = square(mo->radius);
     debug("Field center %g,%g,%g, radius2 %g\n", fieldcenter[0], fieldcenter[1], fieldcenter[2], fieldr2);
 
-	if (log_get_level() >= LOG_ALL) {
+	if (log_get_level() >= LOG_VERB) {
 		double ra,dec, r;
 		xyzarr2radecdeg(fieldcenter, &ra, &dec);
 		r = distsq2deg(fieldr2);
@@ -1310,6 +1310,7 @@ void verify_hit(const startree_t* skdt, int index_cutnside, MatchObj* mo,
 		logverb("No reference stars in the bounding circle\n");
 		goto bailout;
 	}
+	//logverb("Found %i reference stars in the bounding circle\n", v->NRall);
 	// Find index stars within the rectangular field.
 	v->refxy = malloc(v->NRall * 2 * sizeof(double));
 	v->refperm = malloc(v->NRall * sizeof(int));

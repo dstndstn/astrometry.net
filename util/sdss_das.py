@@ -31,18 +31,26 @@ def get_urls(urls, outfn, curl=False):
 def sdss_das_get_suffix(filetype):
 	return ({'fpC': '.gz'}).get(filetype, '')
 
-def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, suffix=None, gunzip=True, curl=False, ):
+def sdss_das_get_url(filetype, run, camcol, field, rerun, band, suffix=None):
 	if suffix is None:
 		suffix = sdss_das_get_suffix(filetype)
+	path = sdss_path(filetype, run, camcol, field, band, rerun)
+	if path is None:
+		print 'Unknown SDSS filetype', filetype
+		return None
+	return 'http://das.sdss.org/imaging/' + path + suffix
+
+def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, suffix=None, gunzip=True, curl=False, ):
 	if reruns is None:
 		reruns = [40,41,42,44]
 	urls = []
 	for rerun in reruns:
-		path = sdss_path(filetype, run, camcol, field, band, rerun)
-		if path is None:
-			print 'Unknown SDSS filetype', filetype
+		url = sdss_das_get_url(filetype, run, camcol, field, rerun, band,
+							   suffix=suffix)
+		if url is None:
 			return False
-		urls.append('http://das.sdss.org/imaging/' + path + suffix)
+		urls.append(url)
+		
 	if outfn:
 		outfn = outfn % { 'run':run, 'camcol':camcol, 'field':field, 'band':band } + suffix
 	else:

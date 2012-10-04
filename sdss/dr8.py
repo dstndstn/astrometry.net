@@ -16,6 +16,8 @@ class Frame(SdssFile):
 	#def __str__(self):
 	def getImage(self):
 		return self.image
+	def getHeader(self):
+		return self.header
 	def getAsTrans(self):
 		return self.astrans
 	def getCalibVec(self):
@@ -128,6 +130,14 @@ class DR8(DR7):
 		if len(reruns) == 0:
 			return None
 		return reruns[0]
+
+	def get_url(self, filetype, run, camcol, field, band=None):
+		rerun = self.get_rerun(run, field)
+		path = self.daspaths[filetype]
+		url = (self.dasurl +
+			   path % dict(run=run, camcol=camcol, field=field, rerun=rerun,
+						   band=band))
+		return url
 	
 	def retrieve(self, filetype, run, camcol, field, band=None, skipExisting=True,
 				 tempsuffix='.tmp'):
@@ -136,10 +146,8 @@ class DR8(DR7):
 			return None
 		if skipExisting and os.path.exists(outfn):
 			return outfn
-		rerun = self.get_rerun(run, field)
-		path = self.daspaths[filetype]
-		url = self.dasurl + path % dict(run=run, camcol=camcol, field=field, rerun=rerun,
-										band=band)
+
+		url = self.get_url(filetype, run, camcol, field, band=band)
 		#print 'URL:', url
 		if self.curl:
 			cmd = "curl -o '%(outfn)s' '%(url)s"
@@ -205,12 +213,13 @@ class DR8(DR7):
 		#print 'got', len(p), 'HDUs'
 		# in nanomaggies
 		f.image = p[0].data
+		f.header = p[0].header
 		# converts counts -> nanomaggies
 		f.calib = p[1].data
 		# table with val,x,y -- binned; use bilinear interpolation to expand
 		sky = p[2].data
 		f.sky = sky.field('allsky')[0]
-		#print 'sky shape', f.sky.shape
+		print 'sky shape', f.sky.shape
 		if len(f.sky.shape) != 2:
 			f.sky = f.sky.reshape((-1, 256))
 		f.skyxi = sky.field('xinterp')[0]
