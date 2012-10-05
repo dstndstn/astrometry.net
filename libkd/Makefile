@@ -111,31 +111,31 @@ LIBKD_INSTALL := fix-bb checktree
 
 .PHONY: install
 install: $(LIBKD_INSTALL) $(LIBKD)
-	@echo Installing in directory $(INSTALL_DIR)
-	mkdir -p $(INSTALL_DIR)/bin
+	@echo Installing in directory '$(INSTALL_DIR)'
+	mkdir -p '$(INSTALL_DIR)/bin'
 	@for x in $(LIBKD_INSTALL); do \
-		echo cp $$x $(INSTALL_DIR)/bin; \
-		cp $$x $(INSTALL_DIR)/bin; \
+		echo cp $$x '$(INSTALL_DIR)/bin'; \
+		cp $$x '$(INSTALL_DIR)/bin'; \
 	done
-	mkdir -p $(INSTALL_DIR)/include
+	mkdir -p '$(INSTALL_DIR)/include'
 	@for x in $(INSTALL_H); do \
-		echo cp $$x $(INSTALL_DIR)/include; \
-		cp $$x $(INSTALL_DIR)/include; \
+		echo cp $$x '$(INSTALL_DIR)/include'; \
+		cp $$x '$(INSTALL_DIR)/include'; \
 	done
-	mkdir -p $(INSTALL_DIR)/lib
+	mkdir -p '$(INSTALL_DIR)/lib'
 	@for x in $(LIBKD); do \
-		echo cp $$x $(INSTALL_DIR)/lib; \
-		cp $$x $(INSTALL_DIR)/lib; \
+		echo cp $$x '$(INSTALL_DIR)/lib'; \
+		cp $$x '$(INSTALL_DIR)/lib'; \
 	done
 	# Try building and installing python spherematch module
 	-$(MAKE) install-spherematch
 
 .PHONY: install-spherematch
 install-spherematch: spherematch_c.so
-	mkdir -p $(INSTALL_DIR)/python/astrometry/libkd
+	mkdir -p '$(INSTALL_DIR)/python/astrometry/libkd'
 	@for x in spherematch_c.so spherematch.py __init__.py; do \
-		echo cp $$x $(INSTALL_DIR)/python/astrometry/libkd; \
-		cp $$x $(INSTALL_DIR)/python/astrometry/libkd; \
+		echo cp $$x '$(INSTALL_DIR)/python/astrometry/libkd'; \
+		cp $$x '$(INSTALL_DIR)/python/astrometry/libkd'; \
 	done
 
 

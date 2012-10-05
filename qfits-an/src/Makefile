@@ -30,8 +30,8 @@ HEADERS := \
 INSTALL_DIR ?= ..
 
 install: $(LIB)
-	$(CP) $(LIB) $(INSTALL_DIR)/lib
-	$(CP) $(HEADERS) $(INSTALL_DIR)/include
+	$(CP) $(LIB) '$(INSTALL_DIR)/lib'
+	$(CP) $(HEADERS) '$(INSTALL_DIR)/include'
 .PHONY: install
 
 STAGED_LIB_DIR := $(CURDIR)/../lib

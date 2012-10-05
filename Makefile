@@ -74,20 +74,20 @@ py:
 	$(MAKE) -C libkd pyspherematch
 
 install: report.txt
-	mkdir -p $(INSTALL_DIR)/data
-	mkdir -p $(INSTALL_DIR)/bin
-	mkdir -p $(INSTALL_DIR)/doc
-	mkdir -p $(INSTALL_DIR)/include
-	mkdir -p $(INSTALL_DIR)/lib
-	mkdir -p $(INSTALL_DIR)/examples
-	mkdir -p $(INSTALL_DIR)/python/astrometry
-	mkdir -p $(INSTALL_DIR)/python/astrometry/sdss
-	mkdir -p $(INSTALL_DIR)/ups
-	cp ups/astrometry_net.table-dist $(INSTALL_DIR)/ups/astrometry_net.table
-	cp __init__.py $(INSTALL_DIR)/python/astrometry
-	cp CREDITS GETTING-INDEXES LICENSE README $(INSTALL_DIR)/doc
-	cp report.txt $(INSTALL_DIR)/doc
-	cp demo/* $(INSTALL_DIR)/examples
+	mkdir -p '$(INSTALL_DIR)/data'
+	mkdir -p '$(INSTALL_DIR)/bin'
+	mkdir -p '$(INSTALL_DIR)/doc'
+	mkdir -p '$(INSTALL_DIR)/include'
+	mkdir -p '$(INSTALL_DIR)/lib'
+	mkdir -p '$(INSTALL_DIR)/examples'
+	mkdir -p '$(INSTALL_DIR)/python/astrometry'
+	mkdir -p '$(INSTALL_DIR)/python/astrometry/sdss'
+	mkdir -p '$(INSTALL_DIR)/ups'
+	cp ups/astrometry_net.table-dist '$(INSTALL_DIR)/ups/astrometry_net.table'
+	cp __init__.py '$(INSTALL_DIR)/python/astrometry'
+	cp CREDITS GETTING-INDEXES LICENSE README '$(INSTALL_DIR)/doc'
+	cp report.txt '$(INSTALL_DIR)/doc'
+	cp demo/* '$(INSTALL_DIR)/examples'
 	$(MAKE) -C util  install
 	$(MAKE) -C libkd install
 	$(MAKE) -C qfits-an install

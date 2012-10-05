@@ -325,34 +325,34 @@ LIB_INSTALL_DIR := $(INSTALL_DIR)/lib
 LINK_DIR := ../python/astrometry/util
 
 install: $(PYTHON_LIBS) $(PYTHON_EXECS) $(PROGS) $(MAIN_PROGS) $(ANUTILS_H) $(ANFILES_LIB) $(ANUTILS_LIB)
-	@echo Installing in base directory $(INSTALL_DIR)
-	mkdir -p $(PY_INSTALL_DIR)
+	@echo Installing in base directory '$(INSTALL_DIR)'
+	mkdir -p '$(PY_INSTALL_DIR)'
 	@for x in $(PYTHON_INSTALL); do \
-		echo cp $$x $(PY_INSTALL_DIR)/$$x; \
-		cp $$x $(PY_INSTALL_DIR)/$$x; \
+		echo cp $$x '$(PY_INSTALL_DIR)/$$x'; \
+		cp $$x '$(PY_INSTALL_DIR)/$$x'; \
 	done
-	@echo Making symlinks in directory $(BIN_INSTALL_DIR)
-	mkdir -p $(BIN_INSTALL_DIR)
+	@echo Making symlinks in directory '$(BIN_INSTALL_DIR)'
+	mkdir -p '$(BIN_INSTALL_DIR)'
 	@for x in $(PYTHON_EXECS); do \
-		echo ln -f -s $(PY_INSTALL_DIR)/$$x $(BIN_INSTALL_DIR)/$$x; \
-		ln -f -s $(LINK_DIR)/$$x $(BIN_INSTALL_DIR)/$$x; \
+		echo ln -f -s '$(PY_INSTALL_DIR)/$$x' '$(BIN_INSTALL_DIR)/$$x'; \
+		ln -f -s '$(LINK_DIR)/$$x' '$(BIN_INSTALL_DIR)/$$x'; \
 	done
-	@echo Installing executables into $(BIN_INSTALL_DIR)...
+	@echo Installing executables into '$(BIN_INSTALL_DIR)'...
 	@for x in $(PROGS) $(MAIN_PROGS); do \
-		echo cp $$x $(BIN_INSTALL_DIR)/$$x; \
-		cp $$x $(BIN_INSTALL_DIR)/$$x; \
+		echo cp $$x '$(BIN_INSTALL_DIR)/$$x'; \
+		cp $$x '$(BIN_INSTALL_DIR)/$$x'; \
 	done
 	@for x in $(ANUTILS_H); do \
-		echo cp $$x $(INCLUDE_INSTALL_DIR)/$$x; \
-		cp $$x $(INCLUDE_INSTALL_DIR)/$$x; \
+		echo cp $$x '$(INCLUDE_INSTALL_DIR)/$$x'; \
+		cp $$x '$(INCLUDE_INSTALL_DIR)/$$x'; \
 	done
 	@for x in $(ANFILES_LIB) $(ANUTILS_LIB); do \
-		echo cp $$x $(LIB_INSTALL_DIR)/$$x; \
-		cp $$x $(LIB_INSTALL_DIR)/$$x; \
+		echo cp $$x '$(LIB_INSTALL_DIR)/$$x'; \
+		cp $$x '$(LIB_INSTALL_DIR)/$$x'; \
 	done
 	@echo "The following copy commands may fail; they are optional."
-	-cp _util.so $(PY_INSTALL_DIR)
-	-cp util.py $(PY_INSTALL_DIR)
+	-cp _util.so '$(PY_INSTALL_DIR)'
+	-cp util.py '$(PY_INSTALL_DIR)'
 	@echo ok
 
 .PHONY: install

@@ -205,37 +205,42 @@ fitsutils: $(FITS_UTILS)
 simplexy: image2xy
 .PHONY: simplexy
 
+# Problem with "+" in INSTALL_DIR...
+#$(SED) "s+add_path /usr/local/astrometry/+add_path $(INSTALL_DIR)/+" < ../etc/backend.cfg-dist > $(INSTALL_DIR)/etc/backend.cfg
+
 install: $(INSTALL_EXECS) $(INSTALL_LIB)
-	@echo Installing in directory $(INSTALL_DIR)
-	mkdir -p $(INSTALL_DIR)/bin
+	@echo Installing in directory '$(INSTALL_DIR)'
+	mkdir -p '$(INSTALL_DIR)/bin'
 	@for x in $(INSTALL_EXECS); do \
-		echo cp $$x $(INSTALL_DIR)/bin; \
-		cp $$x $(INSTALL_DIR)/bin; \
+		echo cp $$x '$(INSTALL_DIR)/bin'; \
+		cp $$x '$(INSTALL_DIR)/bin'; \
 	done
-	mkdir -p $(INSTALL_DIR)/etc
-	$(SED) "s+add_path /usr/local/astrometry/+add_path $(INSTALL_DIR)/+" < ../etc/backend.cfg-dist > $(INSTALL_DIR)/etc/backend.cfg
-	mkdir -p $(INSTALL_DIR)/include
+	mkdir -p '$(INSTALL_DIR)/etc'
+
+	echo '$(INSTALL_DIR)' | python -c "print open('../etc/backend.cfg-dist').read().replace('add_path /usr/local/astrometry', 'add_path '+raw_input());" > '$(INSTALL_DIR)/etc/backend.cfg'
+
+	mkdir -p '$(INSTALL_DIR)/include'
 	@for x in $(INSTALL_H); do \
-		echo cp $$x $(INSTALL_DIR)/include; \
-		cp $$x $(INSTALL_DIR)/include; \
+		echo cp $$x '$(INSTALL_DIR)/include'; \
+		cp $$x '$(INSTALL_DIR)/include'; \
 	done
-	mkdir -p $(INSTALL_DIR)/lib
+	mkdir -p '$(INSTALL_DIR)/lib'
 	@for x in $(INSTALL_LIB); do \
-		echo cp $$x $(INSTALL_DIR)/lib; \
-		cp $$x $(INSTALL_DIR)/lib; \
+		echo cp $$x '$(INSTALL_DIR)/lib'; \
+		cp $$x '$(INSTALL_DIR)/lib'; \
 	done
 
 install-extra: $(INSTALL_CAIRO_EXECS)
-	@echo Installing in directory $(INSTALL_DIR)
-	mkdir -p $(INSTALL_DIR)/bin
+	@echo Installing in directory '$(INSTALL_DIR)'
+	mkdir -p '$(INSTALL_DIR)/bin'
 	@for x in $(INSTALL_CAIRO_EXECS); do \
-		echo cp $$x $(INSTALL_DIR)/bin; \
-		cp $$x $(INSTALL_DIR)/bin; \
+		echo cp $$x '$(INSTALL_DIR)/bin'; \
+		cp $$x '$(INSTALL_DIR)/bin'; \
 	done
-	mkdir -p $(INSTALL_DIR)/include
+	mkdir -p '$(INSTALL_DIR)/include'
 	@for x in $(PLOT_INSTALL_H); do \
-		echo cp $$x $(INSTALL_DIR)/include; \
-		cp $$x $(INSTALL_DIR)/include; \
+		echo cp $$x '$(INSTALL_DIR)/include'; \
+		cp $$x '$(INSTALL_DIR)/include'; \
 	done
 
 test-solver: test-solver.o solver_test.o verify.o matchfile.o \
