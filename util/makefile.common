@@ -157,6 +157,11 @@ ifneq ($(X),)
   X := $(shell $(LINKTEST))
   SHAREDLIBFLAGS_DEF += $(X)
 
+  # 
+  ARG := -dynamic -dynamiclib
+  X :+ $(shell $(LINKTEST))
+  SHAREDLIBFLAGS_DEF += $(X)
+
   ARG := -pthread
   X := $(shell $(LINKTEST))
   SHAREDLIBFLAGS_DEF += $(X)
