@@ -147,6 +147,11 @@ ifneq ($(X),)
   X := $(shell $(CCTEST))
   SHAREDLIBFLAGS_DEF += $(X)
 
+  # clang 3.1 wants...
+  ARG := -dynamic -dynamiclib
+  X :+ $(shell $(LINKTEST))
+  SHAREDLIBFLAGS_DEF += $(X)
+
   # clang 4.1 doesn't support -dynamiclib
   ARG := -dynamiclib
   X := $(shell $(CCTEST))
@@ -155,11 +160,6 @@ ifneq ($(X),)
   # clang 4.1 seems to need this instead:
   ARG := -Wl,-dylib
   X := $(shell $(LINKTEST))
-  SHAREDLIBFLAGS_DEF += $(X)
-
-  # 
-  ARG := -dynamic -dynamiclib
-  X :+ $(shell $(LINKTEST))
   SHAREDLIBFLAGS_DEF += $(X)
 
   ARG := -pthread

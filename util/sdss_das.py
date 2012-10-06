@@ -51,6 +51,8 @@ def sdss_das_get(filetype, outfn, run, camcol, field, band=None, reruns=None, su
 			return False
 		urls.append(url)
 		
+	if suffix is None:
+		suffix = ''
 	if outfn:
 		outfn = outfn % { 'run':run, 'camcol':camcol, 'field':field, 'band':band } + suffix
 	else:
