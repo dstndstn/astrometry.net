@@ -896,6 +896,11 @@ anwcs_t* anwcs_wcslib_from_string(const char* str, int len) {
 	anwcslib_t* anwcslib;
 	qfits_header* qhdr;
 	int W, H;
+
+	// printf("Parsing string: length %i\n", len);
+	// printf("--------------------------\n");
+	// printf("%s\n", str);
+	// printf("--------------------------\n");
 	
 	qhdr = qfits_header_read_hdr_string((const unsigned char*)str, len);
 	if (!qhdr) {

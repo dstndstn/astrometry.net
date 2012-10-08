@@ -422,10 +422,15 @@ anwcs.imagew = property(anwcs.get_width,  anwcs.set_width,  None, 'image width')
 anwcs.imageh = property(anwcs.get_height, anwcs.set_height, None, 'image height')
 
 def anwcs_from_string(s):
-    return anwcs_t(s, -1)
+    return anwcs_t(s, -1, len(s))
 
 def anwcs_get_header_string(self):
-	return anwcs_wcslib_to_string(self)
+	s = anwcs_wcslib_to_string(self)
+	return (s +
+		 'NAXIS   = 2' + ' '*69 +
+		 'NAXIS1  = % 20i' % self.imagew + ' '*50 +
+		 'NAXIS2  = % 20i' % self.imageh + ' '*50 +
+		 'END'+' '*77)
 anwcs.getHeaderString = anwcs_get_header_string
 
 
