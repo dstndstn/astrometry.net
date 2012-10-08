@@ -50,6 +50,7 @@ typedef struct anwcs_t anwcs_t;
 
 // len: length in characters of 'str'
 anwcs_t* anwcs_wcslib_from_string(const char* str, int len);
+char* anwcs_wcslib_to_string(const anwcs_t* wcs, char** s, int* len);
 
 anwcs_t* anwcs_open(const char* filename, int ext);
 

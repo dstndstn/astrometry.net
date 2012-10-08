@@ -855,6 +855,32 @@ static char* getheader(const char* filename, int ext, int* N) {
 	return hdrstr;
 }
 
+char* anwcs_wcstools_to_string(const anwcs_t* wcs, char** s, int* len) {
+#ifndef WCSLIB_EXISTS
+	ERROR("Wcslib support was not compiled in");
+	return NULL;
+#else
+	const anwcslib_t* anwcslib = NULL;
+	int res;
+	char* hdrstr = NULL;
+	assert(wcs);
+	assert(wcs->type == ANWCS_TYPE_WCSLIB);
+	anwcslib = (const anwcslib_t*)wcs->data;
+	if (!s)
+		s = &hdrstr;
+
+	res = wcshdo(-1, anwcslib->wcs, len, s);
+	if (res) {
+		ERROR("wcshdo() failed: %s", wcshdr_errmsg[res]);
+		return NULL;
+	}
+	// wcshdo() returns the number of 80-char cards.
+	(*len) *= 80;
+	/// FIXME -- WIDTH, HEIGHT?
+	return *s;
+#endif
+}
+
 anwcs_t* anwcs_wcslib_from_string(const char* str, int len) {
 #ifndef WCSLIB_EXISTS
 	ERROR("Wcslib support was not compiled in");
