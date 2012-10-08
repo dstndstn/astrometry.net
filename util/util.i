@@ -368,61 +368,23 @@ def lanczos_shift_image(img, dx, dy, order=3, weight=None,
   $result = Py_BuildValue("(ddd)", $1[0], $1[1], $1[2]);
 }
 
-#if 0
-%typemap(in, numinputs=0) char **stringparam, int *stringsizeparam {
-}
-
-	%typemap(argout) char **stringparam, int *stringsizeparam {
-					  $result = PyString_FromStringAndSize($result, *stringsizeparam);
-}
-
-%typemap(in, numinputs=0) char **stringparam, int *stringsizeparam {
-}
-/*(char* tempstr) {
-			 $1 = &tempstr;
-}*/
-%typemap(argout) char **stringparam, int *stringsizeparam {
-				 $result = PyString_FromStringAndSize(, *stringsizeparam);
-}
-//%cstring_output_allocate_size(stringparam, stringsizeparam, free($1));
-
-%typemap(in, numinputs=0) char **stringparam, int *stringsizeparam (char* tempstr, int slen) {
-			 $2 = &tempstr;
-			 $3 = &slen;
-}
-
-#endif
-
 %typemap(in, numinputs=0) char **stringparam (char* tempstr) {
 			 $1 = &tempstr;
 }
 %typemap(in, numinputs=0) int *stringsizeparam (int slen) {
 			 $1 = &slen;
 }
-
-/*
-%typemap(argout) char **stringparam, int *stringsizeparam {
-				 $result = PyString_FromStringAndSize(arg2, *arg3);
-}
-*/
-char* anwcs_wcstools_to_string(const anwcs_t* wcs,
+char* anwcs_wcslib_to_string(const anwcs_t* wcs,
 	  char **stringparam, int *stringsizeparam);
 
-/*
-void test_to_string(const anwcs_t* wcs,
-	 char **stringparam, int *stringsizeparam) {
-	 anwcs_wcstools_to_string(wcs, stringparam, stringsizeparam);
-}
-*/
-
-%ignore anwcs_wcstools_to_string;
+%ignore anwcs_wcslib_to_string;
 %include "anwcs.h"
 
 %extend anwcs_t {
 	anwcs_t(char* fn, int ext=0, int slen=0) {
 		if (ext == -1) {
 			# assume header string
-			return anwcs_wcstools_from_string(fn, slen);
+			return anwcs_wcslib_from_string(fn, slen);
 		}
 		anwcs_t* w = anwcs_open(fn, ext);
 		return w;
@@ -463,7 +425,7 @@ def anwcs_from_string(s):
     return anwcs_t(s, -1)
 
 def anwcs_get_header_string(self):
-	return anwcs_wcstools_to_string(self)
+	return anwcs_wcslib_to_string(self)
 anwcs.getHeaderString = anwcs_get_header_string
 
 

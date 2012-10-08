@@ -855,7 +855,7 @@ static char* getheader(const char* filename, int ext, int* N) {
 	return hdrstr;
 }
 
-char* anwcs_wcstools_to_string(const anwcs_t* wcs, char** s, int* len) {
+char* anwcs_wcslib_to_string(const anwcs_t* wcs, char** s, int* len) {
 #ifndef WCSLIB_EXISTS
 	ERROR("Wcslib support was not compiled in");
 	return NULL;
