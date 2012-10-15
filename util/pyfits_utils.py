@@ -466,7 +466,8 @@ class tabledata(object):
 		return cols
 		
 
-def fits_table(dataorfn, rows=None, hdunum=1, header='default',
+def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
+			   header='default',
 			   columns=None):
 	'''
 	If 'columns' (a list of strings) is passed, only those columns
@@ -474,6 +475,11 @@ def fits_table(dataorfn, rows=None, hdunum=1, header='default',
 	'''
 	pf = None
 	hdr = None
+	# aliases
+	if hdu is not None:
+		hdunum = hdu
+	if ext is not None:
+		hdunum = ext
 	if isinstance(dataorfn, str):
 		pf = pyfits.open(dataorfn)
 		data = pf[hdunum].data
