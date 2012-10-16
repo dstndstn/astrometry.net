@@ -236,6 +236,11 @@ class tabledata(object):
 	def delete_column(self, c):
 		del self.__dict__[c]
 		self._columns.remove(c)
+
+	def rename(self, c_old, c_new):
+		setattr(self, c_new, getattr(self, c_old))
+		self.delete_column(c_old)
+		
 	def __setitem__(self, I, O):
 
 		#### TEST
@@ -468,7 +473,8 @@ class tabledata(object):
 
 def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 			   header='default',
-			   columns=None):
+			   columns=None,
+			   column_map=None):
 	'''
 	If 'columns' (a list of strings) is passed, only those columns
 	will be read; otherwise all columns will be read.
@@ -494,13 +500,17 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 	if columns is None:
 		columns = data.dtype.names
 
+	fields._columns = []
 	for c in columns:
 		col = data.field(c)
 		if rows is not None:
 			col = col[rows]
-		fields.set(c.lower(), col)
+		if column_map is not None:
+			c = column_map.get(c, c)
+		c = c.lower()
+		fields.set(c, col)
+		fields._columns.append(c)
 	fields._length = len(data)
-	fields._columns = [c.lower() for c in columns]
 	if pf:
 		pf.close()
 	return fields
