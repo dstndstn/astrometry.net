@@ -80,12 +80,14 @@ class DR8(DR7):
 		# Local filenames
 		self.filenames.update({
 			'frame': 'frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits',
+			'idR': 'idR-%(run)06i-%(band)s-%(camcol)i-%(field)04i.fits',
 			'photoObj': 'photoObj-%(run)06i-%(camcol)i-%(field)04i.fits',
 			})
 
 		# URLs on DAS server
 		self.dasurl = 'http://data.sdss3.org/sas/dr8/groups/boss/'
 		self.daspaths = {
+			'idR': 'photo/data/%(run)i/fields/%(camcol)i/idR-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit.Z',
 			'fpObjc': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpObjc-%(run)06i-%(camcol)i-%(field)04i.fit',
 			'frame': 'photoObj/frames/%(rerun)s/%(run)i/%(camcol)i/frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits.bz2',
 			'photoObj': 'photoObj/%(rerun)s/%(run)i/%(camcol)i/photoObj-%(run)06i-%(camcol)i-%(field)04i.fits',
@@ -96,11 +98,13 @@ class DR8(DR7):
 		self.dassuffix = {
 			'frame': '.bz2',
 			'fpM': '.gz',
+			'idR': '.Z',
 			}
 
 		self.processcmds = {
 			'frame': 'bunzip2 -cd %(input)s > %(output)s',
 			'fpM': 'gunzip -cd %(input)s > %(output)s',
+			'idR': 'gunzip -cd %(input)s > %(output)s',
 			}
 
 		y = read_yanny(self._get_runlist_filename())

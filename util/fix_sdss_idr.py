@@ -6,9 +6,11 @@ from astrometry.util.pyfits_utils import pyfits_writeto
 
 def is_sdss_idr(hdu):
 	hdr = hdu.header
-	return (hdr.get('SIMPLE', True) == False
-			and hdr.get('SDSS', None) == pyfits.UNDEFINED
-			and hdr.get('UNSIGNED', None) == pyfits.UNDEFINED)
+	return ((hdr.get('SIMPLE', True) == False)
+			and ('SDSS' in hdr)
+			and ('UNSIGNED' in hdr))
+			#and hdr.get('SDSS', None) == pyfits.UNDEFINED
+			#and hdr.get('UNSIGNED', None) == pyfits.UNDEFINED)
 
 def is_sdss_idr_file(infile):
 	p = pyfits.open(infile)
@@ -27,25 +29,26 @@ def fix_sdss_idr(hdu):
 	print 'Setting SIMPLE = True'
 	hdr.update('SIMPLE', True, 'FITS compliant (via fix-sdss-idr.py)')
 
-	if hdr.get('SDSS', None) == pyfits.UNDEFINED:
+	if 'SDSS' in hdr:
 		print 'Setting SDSS = True'
 		hdr['SDSS'] = True
 	else:
 		print 'No SDSS header card: not an SDSS idR file.'
 		return hdu
 
-	if hdr.get('UNSIGNED', None) == pyfits.UNDEFINED:
+	if 'UNSIGNED' in hdr:
 		print 'Setting UNSIGNED = True'
 		hdr['UNSIGNED'] = True
 	else:
 		print 'No UNSIGNED header card: not an SDSS idR file.'
 		return hdu
 
-	hdr._updateHDUtype()
-	newhdu = hdr._hdutype(data=pyfits.DELAYED, header=hdr)
+	#hdr._updateHDUtype()
+	#newhdu = hdr._hdutype(data=pyfits.DELAYED, header=hdr)
+	newhdu = pyfits.PrimaryHDU(data=pyfits.DELAYED, header=hdr)
 	## HACK - encapsulation violation
 	newhdu._file = hdu._file
-	newhdu._ffile = hdu._ffile
+	#newhdu._ffile = hdu._ffile
 	newhdu._datLoc = hdu._datLoc
 
 	newhdu.data = newhdu.data.astype(numpy.int32)
