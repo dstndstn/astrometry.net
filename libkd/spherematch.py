@@ -1,6 +1,7 @@
 from astrometry.libkd import spherematch_c
 from math import *
 from numpy import *
+import numpy as np
 
 # for LSST (use things defined in astrometry.net 0.30)
 try:
@@ -24,7 +25,8 @@ except:
 
 
 # Copied from "celestial.py" by Sjoert van Velzen.
-def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False):
+def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
+				nearest=False):
 	'''
 	(m1,m2,d12) = match_radec(ra1,dec1, ra2,dec2, radius_in_deg)
 
@@ -37,7 +39,9 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False):
 	radius_in_deg: search radius in degrees.
 	notself: if True, avoids returning 'identity' matches;
 		ASSUMES that ra1,dec1 == ra2,dec2.
-
+    nearest: if True, returns only the nearest match in (ra2,dec2)
+	    for each point in (ra1,dec1).
+		
 	Returns:
 
 	m1: indices into the "ra1,dec1" arrays of matching points.
@@ -54,11 +58,18 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False):
 		xyz2 = radectoxyz(ra2, dec2)
 	r = deg2dist(radius_in_deg)
 
-	(inds,dists) = match(xyz1, xyz2, r, notself)
-	
-	dist_in_deg = dist2deg(dists)
-	
-	return	inds[:,0], inds[:,1], dist_in_deg[:,0]
+	if nearest:
+		(inds,dists2) = _nearest_func(xyz2, xyz1, r, notself=notself)
+		I = np.flatnonzero(inds >= 0)
+		J = inds[I]
+		d = np.sqrt(dists2)
+	else:
+		(inds,dists) = match(xyz1, xyz2, r, notself)
+		dist_in_deg = dist2deg(dists)
+		I,J = inds[:,0], inds[:,1]
+		d = dist_in_deg[:,0]
+		
+	return (I, J, d)
 
 
 def _cleaninputs(x1, x2):
@@ -220,6 +231,7 @@ def nearest(x1, x2, maxradius, notself=False):
 	(inds,dist2s) = spherematch_c.nearest(kd1, kd2, maxradius, notself)
 	_freetrees(kd1, kd2)
 	return (inds,dist2s)
+_nearest_func = nearest
 
 def tree_build(ra=None, dec=None, xyz=None):
 	if ra is not None:

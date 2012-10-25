@@ -27,18 +27,21 @@ def fix_sdss_idr(hdu):
 		print 'SIMPLE = T: not an SDSS idR file.'
 		return hdu
 	print 'Setting SIMPLE = True'
-	hdr.update('SIMPLE', True, 'FITS compliant (via fix-sdss-idr.py)')
+	hdr.remove('SIMPLE')
+	hdr.set('SIMPLE', True, 'FITS compliant (via fix-sdss-idr.py)')
 
 	if 'SDSS' in hdr:
 		print 'Setting SDSS = True'
-		hdr['SDSS'] = True
+		hdr.remove('SDSS')
+		hdr.set('SDSS', True, 'SDSS (via fix-sdss-idr.py)')
 	else:
 		print 'No SDSS header card: not an SDSS idR file.'
 		return hdu
 
 	if 'UNSIGNED' in hdr:
 		print 'Setting UNSIGNED = True'
-		hdr['UNSIGNED'] = True
+		hdr.remove('UNSIGNED')
+		hdr.set('UNSIGNED', True, 'SDSS unsigned ints')
 	else:
 		print 'No UNSIGNED header card: not an SDSS idR file.'
 		return hdu

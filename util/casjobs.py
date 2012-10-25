@@ -255,7 +255,10 @@ class Cas(object):
 			dbs = [dbs]
 			assert(type(fns) is str)
 			fns = [fns]
-
+		# copy lists
+		dbs = dbs[:]
+		fns = fns[:]
+			
 		print 'Getting list of available downloads...'
 		(preurls,nil) = self.get_ready_outputs()
 		for db in dbs:
