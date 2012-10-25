@@ -238,9 +238,9 @@ static void* read_header_file(const char* fn, int ext, bool only, void* dest,
 	qfits_header* hdr;
 	void* result;
 	if (only) {
-	  hdr = qfits_header_readext(fn, ext);
-	} else {
 	  hdr = anqfits_get_header_only(fn, ext);
+	} else {
+	  hdr = qfits_header_readext(fn, ext);
 	}
 	if (!hdr) {
 		ERROR("Failed to read FITS header from file \"%s\" extension %i", fn, ext);

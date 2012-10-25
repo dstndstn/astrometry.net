@@ -309,6 +309,7 @@ anqfits_t* anqfits_open_hdu(const char* filename, int hdu) {
 
 			if (qf->Nexts-1 == hdu) {
 				debug("Stopped reading after finding HDU %i\n", hdu);
+				//printf("Stopped reading after HDU %i\n", hdu);
 				// Could cache the file offset to continue reading later...
 				break;
 			}

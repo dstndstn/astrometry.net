@@ -28,20 +28,24 @@ def merge_tables(TT, columns=None):
 				print 'Target table columns:', T.get_columns()
 				print 'Difference:', cols.symmetric_difference(T.get_columns())
 			assert(len(cols.symmetric_difference(T.get_columns())) == 0)
-		cols = TT[0].get_columns()
+		# ordered set
+		cols = []
+		for c in TT[0].get_columns():
+			if not c in cols:
+				cols.append(c)
 	else:
 		for i,T in enumerate(TT):
 			# ensure they all have the requested columns
-			if not set(T.get_columns()).issubset(set(columns)):
+			if not set(columns).issubset(set(T.get_columns())):
 				print 'Each table to be merged must have the requested columns'
 				print 'Table', i, 'is missing columns:', set(columns)-set(T.get_columns())
+				print 'columns', columns
+				print 'T.columns', T.get_columns()
 				assert(False)
 		cols = columns
 	N = sum([len(T) for T in TT])
 	td = tabledata()
-	#print 'merge_tables: columns =', cols
 	for col in cols:
-		#print 'merging column', col
 		if col.startswith('_'):
 			continue
 		v0 = TT[0].getcolumn(col)
@@ -509,7 +513,7 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 			c = column_map.get(c, c)
 		c = c.lower()
 		fields.set(c, col)
-		fields._columns.append(c)
+		#fields._columns.append(c)
 	fields._length = len(data)
 	if pf:
 		pf.close()
