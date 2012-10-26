@@ -478,7 +478,8 @@ class tabledata(object):
 def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 			   header='default',
 			   columns=None,
-			   column_map=None):
+			   column_map=None,
+			   lower=True):
 	'''
 	If 'columns' (a list of strings) is passed, only those columns
 	will be read; otherwise all columns will be read.
@@ -511,10 +512,11 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 			col = col[rows]
 		if column_map is not None:
 			c = column_map.get(c, c)
-		c = c.lower()
+		if lower:
+			c = c.lower()
 		fields.set(c, col)
 		#fields._columns.append(c)
-	fields._length = len(data)
+	#fields._length = len(data)
 	if pf:
 		pf.close()
 	return fields
