@@ -12,7 +12,7 @@ class CallGlobal(object):
 		return func(*self.args, **kwa)
 
 def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
-			 **kwargs):
+			 update=True, **kwargs):
 	print 'Runstage', stage
 
 	pfn = picklepat % stage
@@ -31,13 +31,14 @@ def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
 
 		P = runstage(prereq, picklepat, stagefunc,
 					 force=force, prereqs=prereqs, **kwargs)
-	else:
-		P = {}
 
 	print 'Running stage', stage
 	R = stagefunc(stage, **P)
 	print 'Stage', stage, 'finished'
 
+	if update:
+		P.update(R)
+	
 	print 'Saving pickle', pfn
 	pickle_to_file(R, pfn)
 	print 'Saved', pfn
