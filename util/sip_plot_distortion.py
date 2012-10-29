@@ -7,10 +7,11 @@ from optparse import *
 import numpy as np
 from pylab import *
 from numpy import *
-from astrometry.util.sip import *
+#from astrometry.util.sip import *
+from astrometry.util.util import *
 
 def plot_distortions(wcsfn, ex=1, ngridx=10, ngridy=10, stepx=10, stepy=10):
-	wcs = Sip(filename=wcsfn)
+	wcs = Sip(wcsfn)
 	W,H = wcs.wcstan.imagew, wcs.wcstan.imageh
 
 	xgrid = np.linspace(0, W, ngridx)
