@@ -133,7 +133,7 @@ def OLD_radec_to_sdss_rcf(ra, dec, spherematch=True, radius=0, tablefn=None, con
 		if len(inds) == 0:
 			return []
 		#print 'inds:', inds.shape
-		I = argsort(dists[:,0])
+		I = np.argsort(dists[:,0])
 		#print 'dists:', dists.shape
 		inds = inds[I,:]
 		rcfs = [[] for i in range(len(rds))]
