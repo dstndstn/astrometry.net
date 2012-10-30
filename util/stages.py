@@ -37,8 +37,10 @@ def runstage(stage, picklepat, stagefunc, force=[], prereqs={},
 	print 'Stage', stage, 'finished'
 
 	if update:
-		P.update(R)
-	
+		if R is not None:
+			P.update(R)
+		R = P
+		
 	print 'Saving pickle', pfn
 	pickle_to_file(R, pfn)
 	print 'Saved', pfn

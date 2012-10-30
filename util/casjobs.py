@@ -242,6 +242,31 @@ class Cas(object):
 			fns.append(m.group(2))
 		return (urls, fns)
 
+	def sql_to_fits(self, sql, outfn, dbcontext=None, sleeptime=10):
+		import random
+		dbname = ''.join(chr(ord('A') + random.randrange(26))
+						 for x in range(10))
+		if sql.lower().startswith('select '):
+			sql = 'select into mydb.%s' % dbname + sql[6:]
+		print 'Submitting query: "%s"' % sql
+		if dbcontext is not None:
+			kwargs = dict(dbcontext=dbcontext)
+		else:
+			kwargs = {}
+		jid = self.submit_query(sql, **kwargs)
+		print 'Submitted job id', jid
+		print 'Waiting for job id:', jid
+		while True:
+			jobstatus = self.get_job_status(jid)
+			print 'Job id', jid, 'is', jobstatus
+			if jobstatus in ['Finished', 'Failed', 'Cancelled']:
+				break
+			print 'Sleeping...'
+			time.sleep(sleeptime)
+		print 'Output-downloads-delete'
+		dodelete = True
+		self.output_and_download([dbname], [outfn], dodelete)
+	
 	# Requests output of the given list of databases, waits for them to appear,
 	# downloads them, and writes them to the given list of local filenames.
 	#
@@ -472,7 +497,6 @@ if __name__ == '__main__':
 		sys.exit(0)
 
 	if cmd == 'sqltofits':
-		import random
 		if len(args) != 5:
 			print 'Usage: ... sqltofits [<sql> or <@file>] output.fits'
 			sys.exit(-1)
@@ -480,24 +504,7 @@ if __name__ == '__main__':
 		outfn = args[4]
 		if q.startswith('@'):
 			q = read_file(q[1:])
-		dbname = ''.join(chr(ord('A') + random.randrange(26))
-						 for x in range(10))
-		if q.lower().startswith('select '):
-			q = 'select into mydb.%s' % dbname + q[6:]
-		print 'Submitting query: "%s"' % q
-		jid = cas.submit_query(q, dbcontext=opt.dbcontext)
-		print 'Submitted job id', jid
-		print 'Waiting for job id:', jid
-		while True:
-			jobstatus = cas.get_job_status(jid)
-			print 'Job id', jid, 'is', jobstatus
-			if jobstatus in ['Finished', 'Failed', 'Cancelled']:
-				break
-			print 'Sleeping...'
-			time.sleep(10)
-		print 'Output-downloads-delete'
-		dodelete = True
-		cas.output_and_download([dbname], [outfn], dodelete)
+		cas.sql_to_fits(q, outfn, dbcontext=opt.dbcontext)
 		sys.exit(0)
 			
 	if cmd == 'output':
