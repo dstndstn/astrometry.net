@@ -233,6 +233,15 @@ class Cas(object):
 		print 'Wrote ready downloads to ready.html'
 		urls = []
 		fns = []
+
+		# split into successful and failed parts
+		ifailed = doc.index('Failed Output:')
+		if ifailed > -1:
+			failed = doc[ifailed:]
+			doc = doc[:ifailed]
+		else:
+			failed = ''
+		
 		rex = re.compile('<a href="(' + re.escape(self.params['outputbaseurl']) + '(.*))">Download</a>')
 		for line in doc.split('\n'):
 			m = rex.search(line)
@@ -240,7 +249,18 @@ class Cas(object):
 				continue
 			urls.append(m.group(1))
 			fns.append(m.group(2))
-		return (urls, fns)
+
+		
+		fails = []
+		rex = re.compile(r'^\s*<td>(.*?)</td><td>.*?</td><td>(.*?)</td><td>(.*?)</td>', flags=re.MULTILINE | re.DOTALL)
+		for m in rex.finditer(failed):
+			tab = m.group(1)
+			if '<br>' in tab:
+				continue
+			msg = m.group(3).replace('\r', ' ').replace('\n', ' ')
+			fails.append((tab, m.group(2), msg))
+			# ( table name, date string, failure message )
+		return (urls, fns, fails)
 
 	def sql_to_fits(self, sql, outfn, dbcontext=None, sleeptime=10):
 		import random
@@ -275,7 +295,8 @@ class Cas(object):
 	#
 	# If 'dodelete' is True, the databases will be deleted after download.
 	#
-	def output_and_download(self, dbs, fns, dodelete=False, sleeptime=10):
+	def output_and_download(self, dbs, fns, dodelete=False, sleeptime=10,
+							raiseonfail=True):
 		if type(dbs) is str:
 			dbs = [dbs]
 			assert(type(fns) is str)
@@ -285,15 +306,21 @@ class Cas(object):
 		fns = fns[:]
 			
 		print 'Getting list of available downloads...'
-		(preurls,nil) = self.get_ready_outputs()
+		(preurls,nil,prefails) = self.get_ready_outputs()
+		#print 'Preurls:', preurls
+		#print 'Prefails:', prefails
 		for db in dbs:
 			print 'Requesting output of', db
 			self.request_output(db)
 		while True:
 			print 'Waiting for output to appear...'
-			(durls,dfns) = self.get_ready_outputs()
+			(durls,dfns,dfails) = self.get_ready_outputs()
 			(newurls, newfns) = find_new_outputs(durls, dfns, preurls)
-			print 'New outputs available:', dfns
+			#print 'URLs:', durls
+			#print 'New URLs:', newurls
+			print 'New outputs available:', newfns
+			newfails = [f for f in dfails if not f in prefails]
+			print 'New failures:', newfails
 			for (fn,db) in zip(fns,dbs):
 				for (dfn,durl) in zip(newfns,newurls):
 					# the filename will contain the db name.
@@ -312,6 +339,17 @@ class Cas(object):
 					if dodelete:
 						print 'Deleting database', db
 						self.drop_table(db)
+			for (fn,db) in zip(fns,dbs):
+				for tab,date,msg in newfails:
+					if db != tab:
+						continue
+					print 'Failure:', tab, 'date', date, 'message', msg
+					print 'looks like it belongs to database', db
+					dbs.remove(db)
+					fns.remove(fn)
+					if raiseonfail:
+						raise RuntimeError('Error from CasJobs on output of table "%s": "%s"' % (db, msg))
+					
 			if not len(dbs):
 			   	break
 			print 'Waiting...'
