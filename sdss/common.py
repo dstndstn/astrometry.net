@@ -75,7 +75,95 @@ cas_flags = dict(
 	HAS_CENTER = 0x4000000000000000,
 	RESERVED = 0x8000000000000000,
 	)
-	
+
+# From:
+# http://www.sdss3.org/svn/repo/idlutils/trunk/data/sdss/sdssMaskbits.par
+# via
+#     s = open('sdssMaskbits.par').read()
+#     bits = []
+#     for line in s.split('\n'):
+#     	sp = line.split()
+#     	line = (int(sp[2]), sp[3], ' '.join(sp[4:]))
+#     	bits.append(line)
+#     	print repr(bits).replace('), ', '),\n ')
+#
+photo_flags1_info = [
+	# masktype OBJECT1 32 "Object flags from photo reductions for SDSS (first 32)"
+	(0, 'CANONICAL_CENTER', '"The quantities (psf counts, model fits and likelihoods) that are usually determined at an object\'s center as determined band-by-band were in fact determined at the canonical center (suitably transformed). This is due to the object being to close to the edge to extract a profile at the local center, and OBJECT1_EDGE is also set."'),
+	(1, 'BRIGHT', '"Indicates that the object was detected as a bright object. Since these are typically remeasured as faint objects, most users can ignore BRIGHT objects."'),
+	(2, 'EDGE', '"Object is too close to edge of frame in this band."'),
+	(3, 'BLENDED', '"Object was determined to be a blend. The flag is set if: more than one peak is detected within an object in a single band together; distinct peaks are found when merging different colours of one object together; or distinct peaks result when merging different objects together. "'),
+	(4, 'CHILD', '"Object is a child, created by the deblender."'),
+	(5, 'PEAKCENTER', '"Given center is position of peak pixel, as attempts to determine a better centroid failed."'),
+	(6, 'NODEBLEND', '"Although this object was marked as a blend, no deblending was attempted."'),
+	(7, 'NOPROFILE', '"Frames couldn\'t extract a radial profile."'),
+	(8, 'NOPETRO', '" No Petrosian radius or other Petrosian quanties could be measured."'),
+	(9, 'MANYPETRO', '"Object has more than one possible Petrosian radius."'),
+	(10, 'NOPETRO_BIG', '"The Petrosian ratio has not fallen to the value at which the Petrosian radius is defined at the outermost point of the extracted radial profile. NOPETRO is set, and the Petrosian radius is set to the outermost point in the profile."'),
+	(11, 'DEBLEND_TOO_MANY_PEAKS', '"The object had the OBJECT1_DEBLEND flag set, but it contained too many candidate children to be fully deblended. This flag is only set in the parent, i.e. the object with too many peaks."'),
+	(12, 'CR', '"Object contains at least one pixel which was contaminated by a cosmic ray. The OBJECT1_INTERP flag is also set. This flag does not mean that this object is a cosmic ray; rather it means that a cosmic ray has been removed. "'),
+	(13, 'MANYR50', '" More than one radius was found to contain 50% of the Petrosian flux. (For this to happen part of the radial profile must be negative)."'),
+	(14, 'MANYR90', '"More than one radius was found to contain 90% of the Petrosian flux. (For this to happen part of the radial profile must be negative)."'),
+	(15, 'BAD_RADIAL', '" Measured profile includes points with a S/N <= 0. In practice this flag is essentially meaningless."'),
+	(16, 'INCOMPLETE_PROFILE', '"A circle, centerd on the object, of radius the canonical Petrosian radius extends beyond the edge of the frame. The radial profile is still measured from those parts of the object that do lie on the frame."'),
+	(17, 'INTERP', '" The object contains interpolated pixels (e.g. cosmic rays or bad columns)."'),
+	(18, 'SATUR', '"The object contains saturated pixels; INTERP is also set."'),
+	(19, 'NOTCHECKED', '"Object includes pixels that were not checked for peaks, for example the unsmoothed edges of frames, and the cores of subtracted or saturated stars."'),
+	(20, 'SUBTRACTED', '"Object (presumably a star) had wings subtracted."'),
+	(21, 'NOSTOKES', '"Object has no measured Stokes parameters."'),
+	(22, 'BADSKY', '"The estimated sky level is so bad that the central value of the radial profile is crazily negative; this is usually the result of the subtraction of the wings of bright stars failing."'),
+	(23, 'PETROFAINT', '"At least one candidate Petrosian radius occured at an unacceptably low surface brightness."'),
+	(24, 'TOO_LARGE', '" The object is (as it says) too large. Either the object is still detectable at the outermost point of the extracted radial profile (a radius of approximately 260 arcsec), or when attempting to deblend an object, at least one child is larger than half a frame (in either row or column)."'),
+	(25, 'DEBLENDED_AS_PSF', '"When deblending an object, in this band this child was treated as a PSF."'),
+	(26, 'DEBLEND_PRUNED', '"When solving for the weights to be assigned to each child the deblender encountered a nearly singular matrix, and therefore deleted at least one of them."'),
+	(27, 'ELLIPFAINT', '"No isophotal fits were performed."'),
+	(28, 'BINNED1', '"The object was detected in an unbinned image."'),
+	(29, 'BINNED2', '" The object was detected in a 2x2 binned image after all unbinned detections have been replaced by the background level."'),
+	(30, 'BINNED4', '"The object was detected in a 4x4 binned image. The objects detected in the 2x2 binned image are not removed before doing this."'),
+	(31, 'MOVED', '"The object appears to have moved during the exposure. Such objects are candidates to be deblended as moving objects."'),
+]
+
+photo_flags2_info = [
+  (0, 'DEBLENDED_AS_MOVING', '"The object has the MOVED flag set, and was deblended on the assumption that it was moving."'),
+  (1, 'NODEBLEND_MOVING', '"The object has the MOVED flag set, but was not deblended as a moving object."'),
+  (2, 'TOO_FEW_DETECTIONS', '"The object has the MOVED flag set, but has too few detection to be deblended as moving."'),
+  (3, 'BAD_MOVING_FIT', '"The fit to the object as a moving object is too bad to be believed."'),
+  (4, 'STATIONARY', '"A moving objects velocity is consistent with zero"'),
+  (5, 'PEAKS_TOO_CLOSE', '"Peaks in object were too close (set only in parent objects)."'),
+  (6, 'BINNED_CENTER', '"When centroiding the object the object\'s size is larger than the (PSF) filter used to smooth the image."'),
+  (7, 'LOCAL_EDGE', '"The object\'s center in some band was too close to the edge of the frame to extract a profile."'),
+  (8, 'BAD_COUNTS_ERROR', '"An object containing interpolated pixels had too few good pixels to form a reliable estimate of its error"'),
+  (9, 'BAD_MOVING_FIT_CHILD', '"A putative moving child\'s velocity fit was too poor, so it was discarded, and the parent was not deblended as moving"'),
+  (10, 'DEBLEND_UNASSIGNED_FLUX', '"After deblending, the fraction of flux assigned to none of the children was too large (this flux is then shared out as described elsewhere)."'),
+  (11, 'SATUR_CENTER', '"An object\'s center is very close to at least one saturated pixel; the object may well be causing the saturation."'),
+  (12, 'INTERP_CENTER', '"An object\'s center is very close to at least one interpolated pixel."'),
+  (13, 'DEBLENDED_AT_EDGE', '"An object so close to the edge of the frame that it would not ordinarily be deblended has been deblended anyway. Only set for objects large enough to be EDGE in all fields/strips."'),
+  (14, 'DEBLEND_NOPEAK', '"A child had no detected peak in a given band, but we centroided it anyway and set the BINNED1"'),
+  (15, 'PSF_FLUX_INTERP', '"The fraction of light actually detected (as opposed to guessed at by the interpolator) was less than some number (currently 80%) of the total."'),
+  (16, 'TOO_FEW_GOOD_DETECTIONS', '"A child of this object had too few good detections to be deblended as moving."'),
+  (17, 'CENTER_OFF_AIMAGE', '"At least one peak\'s center lay off the atlas image in some band. This can happen when the object\'s being deblended as moving, or if the astrometry is badly confused."'),
+  (18, 'DEBLEND_DEGENERATE', '"At least one potential child has been pruned because its template was too similar to some other child\'s template."'),
+  (19, 'BRIGHTEST_GALAXY_CHILD', '"This is the brightest child galaxy in a blend."'),
+  (20, 'CANONICAL_BAND', '"This band was the canonical band. This is the band used to measure the Petrosian radius used to calculate the Petrosian counts in each band, and to define the model used to calculate model colors; it has no effect upon the coordinate system used for the OBJC center."'),
+  (21, 'AMOMENT_UNWEIGHTED', '"`Adaptive\' moments are actually unweighted."'),
+  (22, 'AMOMENT_SHIFT', '"Object\'s center moved too far while determining adaptive moments. In this case, the M_e1 and M_e2 give the (row, column) shift, not the object\'s shape."'),
+  (23, 'AMOMENT_MAXITER', '"Too many iterations while determining adaptive moments."'),
+  (24, 'MAYBE_CR', '"This object may be a cosmic ray. This bit can get set in the cores of bright stars, and is quite likely to be set for the cores of saturated stars."'),
+  (25, 'MAYBE_EGHOST', '"Object appears in the right place to be an electronics ghost."'),
+  (26, 'NOTCHECKED_CENTER', '"Center of object lies in a NOTCHECKED region. The object is almost certainly bogus."'),
+  (27, 'HAS_SATUR_DN', '"This object is saturated in this band and the bleed trail doesn\'t touch the edge of the frame, we we\'ve made an attempt to add up all the flux in the bleed trails, and to include it in the object\'s photometry. "'),
+  (28, 'DEBLEND_PEEPHOLE', '"The deblend was modified by the optimizer"'),
+  (29, 'SPARE3', '""'),
+  (30, 'SPARE2', '""'),
+  (31, 'SPARE1', '""'),
+]
+
+
+photo_flags1_map = dict([(nm, 1<<bit)
+						 for bit,nm,desc in photo_flags1_info])
+photo_flags2_map = dict([(nm, 1<<bit)
+						 for bit,nm,desc in photo_flags2_info])
+
 
 def band_names():
 	return ['u','g','r','i','z']

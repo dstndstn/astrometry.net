@@ -223,7 +223,7 @@ class DR8(DR7):
 		# table with val,x,y -- binned; use bilinear interpolation to expand
 		sky = p[2].data
 		f.sky = sky.field('allsky')[0]
-		print 'sky shape', f.sky.shape
+		#print 'sky shape', f.sky.shape
 		if len(f.sky.shape) != 2:
 			f.sky = f.sky.reshape((-1, 256))
 		f.skyxi = sky.field('xinterp')[0]
