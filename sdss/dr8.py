@@ -23,6 +23,35 @@ class Frame(SdssFile):
 	def getCalibVec(self):
 		return self.calib
 
+	def getSky(self):
+		skyim = self.sky
+		(sh,sw) = skyim.shape
+		if sw != 256:
+			skyim = skyim.T
+		(sh,sw) = skyim.shape
+		xi = np.round(self.skyxi).astype(int)
+		yi = np.round(self.skyyi).astype(int)
+		yi = np.minimum(yi,sh-1)
+		assert(all(xi >= 0) and all(xi < sw))
+		assert(all(yi >= 0) and all(yi < sh))
+		XI,YI = np.meshgrid(xi, yi)
+		# Nearest-neighbour interpolation -- we just need this
+		# for approximate invvar.
+		bigsky = skyim[YI,XI]
+		return bigsky
+
+	def getInvvar(self, psfield, bandnum):
+		image = self.getImage()
+		calibvec = self.getCalibVec()
+		bigsky = self.getSky()
+		assert(bigsky.shape == image.shape)
+		dn = (image / calibvec) + bigsky
+		gain = psfield.getGain(bandnum)
+		darkvar = psfield.getDarkVariance(bandnum)
+		dnvar = (dn / gain) + darkvar
+		invvar = 1./(dnvar * calibvec**2)
+		return invvar
+
 class PhotoObj(SdssFile):
 	def __init__(self, *args, **kwargs):
 		super(PhotoObj, self).__init__(*args, **kwargs)
