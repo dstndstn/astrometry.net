@@ -41,6 +41,14 @@ class Frame(SdssFile):
 		return bigsky
 
 	def getInvvar(self, psfield, bandnum):
+		'''
+		NOTE that this does NOT blank out masked pixels; use, eg,
+
+		fpM = sdss.readFpM(run, camcol, field, bandname)
+		for plane in [ 'INTERP', 'SATUR', 'CR', 'GHOST' ]:
+		    fpM.setMaskedPixels(plane, invvar, 0, roi=roi)
+		
+		'''
 		image = self.getImage()
 		calibvec = self.getCalibVec()
 		bigsky = self.getSky()

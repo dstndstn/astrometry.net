@@ -691,6 +691,38 @@ class PsField(SdssFile):
 		# summary PSF width (sigmas)
 		self.psf_fwhm = t.psf_width * (2.*np.sqrt(2.*np.log(2.)))
 
+		# 2-gaussian plus power-law PSF params
+		self.plpsf_s1 = t.psf_sigma1
+		self.plpsf_s2 = t.psf_sigma2
+		self.plpsf_b = t.psf_b
+		self.plpsf_p0 = t.psf_p0
+		self.plpsf_beta = t.psf_beta
+		self.plpsf_sigmap = t.psf_sigmap
+
+	def getPowerLaw(self, bandnum):
+		''' Returns:
+
+		(a1, sigma_1,
+		a2, sigma_2,
+		a3, sigma_power, beta_power)
+
+		Where a1 is the amplitude of the first Gaussian and sigma_1 is
+		its standard deviation; a2 and sigma_2 are the same for the
+		second Gaussian component, and a3 is the amplitude for the
+		power-law component.  Sigma is the scale length, beta the
+		power.
+
+		RHL claims:
+		  func = a*[exp(-x^2/(2*sigmax1^2) - y^2/(2*sigmay1^2)) +
+		            b*exp(-x^2/(2*sigmax2^2) - y^2/(2*sigmay2^2)) +
+		            p0*(1 + r^2/(beta*sigmap^2))^{-beta/2}]
+
+		'''
+		return (1., self.plpsf_s1[bandnum],
+				self.plpsf_b[bandnum], self.plpsf_s1[bandnum],
+				self.plpsf_p0[bandnum], self.plpsf_sigmap[bandnum],
+				self.plpsf_beta[bandnum])
+
 	def getPsfFwhm(self, bandnum):
 		return self.psf_fwhm[bandnum]
 
