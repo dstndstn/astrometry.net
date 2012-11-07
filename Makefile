@@ -110,10 +110,15 @@ install: report.txt
 
 install-indexes:
 	mkdir -p $(INSTALL_DIR)/data
-	@for x in `ls index-*.bz2 2>/dev/null`; do \
+	@for x in `ls index-*.tar.bz2 2>/dev/null`; do \
 		echo Installing $$x in $(INSTALL_DIR)/data...; \
 		echo tar xvjf $$x -C $(INSTALL_DIR)/data; \
 		tar xvjf $$x -C $(INSTALL_DIR)/data; \
+	done
+	@for x in `ls index-*.bz2 | grep -v tar.bz2 2>/dev/null`; do \
+		echo Installing $$x in $(INSTALL_DIR)/data...; \
+		echo "cp $$x $(INSTALL_DIR)/data && bunzip2 --force $(INSTALL_DIR)/data/$$x;"; \
+		cp $$x $(INSTALL_DIR)/data && bunzip2 --force $(INSTALL_DIR)/data/$$x; \
 	done
 	@for x in `ls index-*.tar.gz 2>/dev/null`; do \
 		echo Installing $$x in $(INSTALL_DIR)/data...; \
