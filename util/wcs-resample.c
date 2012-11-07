@@ -61,12 +61,18 @@ int resample_wcs_files(const char* infitsfn, int infitsext,
 		return -1;
     }
 
+	logmsg("Read input WCS from file \"%s\" ext %i\n", inwcsfn, inwcsext);
+	anwcs_print(inwcs, stdout);
+
 	// read output WCS.
 	outwcs = anwcs_open(outwcsfn, outwcsext);
     if (!outwcs) {
         ERROR("Failed to parse WCS header from %s extension %i", outwcsfn, outwcsext);
 		return -1;
     }
+
+	logmsg("Read output (target) WCS from file \"%s\" ext %i\n", outwcsfn, outwcsext);
+	anwcs_print(outwcs, stdout);
 
     outW = anwcs_imagew(outwcs);
     outH = anwcs_imageh(outwcs);

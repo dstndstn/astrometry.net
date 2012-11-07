@@ -110,7 +110,7 @@ install: report.txt
 
 install-indexes:
 	mkdir -p $(INSTALL_DIR)/data
-	@for x in `ls index-*.tar.bz2 2>/dev/null`; do \
+	@for x in `ls index-*.bz2 2>/dev/null`; do \
 		echo Installing $$x in $(INSTALL_DIR)/data...; \
 		echo tar xvjf $$x -C $(INSTALL_DIR)/data; \
 		tar xvjf $$x -C $(INSTALL_DIR)/data; \
