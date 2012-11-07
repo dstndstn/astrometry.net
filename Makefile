@@ -109,21 +109,21 @@ install: report.txt
 # (cd pyfits-2.4.0 && python setup.py install --install-base=stage --install-lib=stage/lib --install-scripts=stage/bin --install-data=stage/data --install-headers=stage/include && cp -r stage/lib/pyfits $(INSTALL_DIR)/python/pyfits)
 
 install-indexes:
-	mkdir -p $(INSTALL_DIR)/data
+	mkdir -p '$(INSTALL_DIR)/data'
 	@for x in `ls index-*.tar.bz2 2>/dev/null`; do \
-		echo Installing $$x in $(INSTALL_DIR)/data...; \
-		echo tar xvjf $$x -C $(INSTALL_DIR)/data; \
-		tar xvjf $$x -C $(INSTALL_DIR)/data; \
+		echo Installing $$x in '$(INSTALL_DIR)/data'...; \
+		echo tar xvjf $$x -C '$(INSTALL_DIR)/data'; \
+		tar xvjf $$x -C '$(INSTALL_DIR)/data'; \
 	done
 	@for x in `ls index-*.bz2 | grep -v tar.bz2 2>/dev/null`; do \
-		echo Installing $$x in $(INSTALL_DIR)/data...; \
-		echo "cp $$x $(INSTALL_DIR)/data && bunzip2 --force $(INSTALL_DIR)/data/$$x;"; \
-		cp $$x $(INSTALL_DIR)/data && bunzip2 --force $(INSTALL_DIR)/data/$$x; \
+		echo Installing $$x in '$(INSTALL_DIR)/data'...; \
+		echo "cp $$x '$(INSTALL_DIR)/data' && bunzip2 --force '$(INSTALL_DIR)/data/'$$x;"; \
+		cp $$x '$(INSTALL_DIR)/data' && bunzip2 --force '$(INSTALL_DIR)/data/'$$x; \
 	done
 	@for x in `ls index-*.tar.gz 2>/dev/null`; do \
-		echo Installing $$x in $(INSTALL_DIR)/data...; \
-		echo tar xvzf $$x -C $(INSTALL_DIR)/data; \
-		tar xvzf $$x -C $(INSTALL_DIR)/data; \
+		echo Installing $$x in '$(INSTALL_DIR)/data'...; \
+		echo tar xvzf $$x -C '$(INSTALL_DIR)/data'; \
+		tar xvzf $$x -C '$(INSTALL_DIR)/data'; \
 	done
 
 upgrade-indexes:
