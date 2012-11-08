@@ -317,7 +317,7 @@ class tabledata(object):
 				#print 'copying scalar', name
 				rtn.set(name, val)
 				continue
-			if type(val) is numpy.ndarray:
+			if type(val) in [numpy.ndarray, numpy.core.defchararray.chararray]:
 				#print 'copying numpy array', name
 				rtn.set(name, val.copy())
 				continue
@@ -325,7 +325,7 @@ class tabledata(object):
 				#print 'copying list', name
 				rtn.set(name, val[:])
 				continue
-			print 'in pyfits_utils: copy(): can\'t copy', name, '=', val
+			print 'in pyfits_utils: copy(): can\'t copy', name, '=', val[:10], 'type', type(val)
 		rtn._header = self._header
 		if hasattr(self, '_columns'):
 			rtn._columns = [c for c in self._columns]
