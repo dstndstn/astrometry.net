@@ -726,16 +726,28 @@ class PsField(SdssFile):
 	def getPsfFwhm(self, bandnum):
 		return self.psf_fwhm[bandnum]
 
-	def getDoubleGaussian(self, bandnum):
+	def getDoubleGaussian(self, bandnum, normalize=False):
 		# http://www.sdss.org/dr7/dm/flatFiles/psField.html
 		# good = PSP_FIELD_OK
 		status = self.psp_status[bandnum]
 		if status != 0:
 			print 'Warning: PsField status[band=%s] =' % (bandnum), status
+
+		# b is the "ratio of G2 to G1 at the origin", ie, not the
+		# straight Gaussian amplitudes
 		a  = 1.0
 		s1 = self.dgpsf_s1[bandnum]
 		s2 = self.dgpsf_s2[bandnum]
 		b  = self.dgpsf_b[bandnum]
+
+		# value at center is 1./(2.*pi*sigma**2)
+
+		if normalize:
+			b *= (s2/s1)**2
+			absum = (a + b)
+			a /= absum
+			b /= absum
+		
 		return (float(a), float(s1), float(b), float(s2))
 
 	def getPsfAtPoints(self, bandnum, x, y):
