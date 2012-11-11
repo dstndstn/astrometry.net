@@ -1,6 +1,4 @@
 from astrometry.libkd import spherematch_c
-from math import *
-from numpy import *
 import numpy as np
 
 # for LSST (use things defined in astrometry.net 0.30)
@@ -10,16 +8,16 @@ except:
     from astrometry.util.starutil_numpy import radectoxyz, rad2distsq
 
     def rad2dist(r):
-        return sqrt(rad2distsq(r))
+        return np.sqrt(rad2distsq(r))
 
     def distsq2rad(dist2):
-        return arccos(1. - dist2 / 2.)
+        return np.arccos(1. - dist2 / 2.)
     def distsq2deg(dist2):
-        return rad2deg(distsq2rad(dist2))
+        return np.rad2deg(distsq2rad(dist2))
 
     # deg2dist, dist2deg
     def deg2dist(deg):
-        return rad2dist(deg2rad(deg))
+        return rad2dist(np.deg2rad(deg))
     def dist2deg(dist):
         return distsq2deg(dist**2)
 
@@ -73,11 +71,11 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
 
 
 def _cleaninputs(x1, x2):
-	fx1 = x1.astype(float64)
+	fx1 = x1.astype(np.float64)
 	if x2 is x1:
 		fx2 = fx1
 	else:
-		fx2 = x2.astype(float64)
+		fx2 = x2.astype(np.float64)
 	(N1,D1) = fx1.shape
 	(N2,D2) = fx2.shape
 	if D1 != D2:
