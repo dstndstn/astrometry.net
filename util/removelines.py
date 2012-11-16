@@ -46,10 +46,15 @@ def removelines(infile, outfile, xcol='X', ycol='Y', cut=None, **kwargs):
 		print 'removelines.py: Input file contains no sources.'
 		pyfits_writeto(p, outfile)
 		return 0
-
+	
 	x = xy.field(xcol)
 	y = xy.field(ycol)
 
+	if len(x) == 0:
+		print 'removelines.py: Your FITS file contains 0 sources (rows)'
+		pyfits_writeto(p, outfile)
+		return 0
+	
 	ix = hist_remove_lines(x, 1, 0.5, logcut=-cut)
 	iy = hist_remove_lines(y, 1, 0.5, logcut=-cut)
 	I = ix * iy
