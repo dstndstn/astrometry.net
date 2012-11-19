@@ -10,7 +10,8 @@ if path not in sys.path:
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
-#os.environ['TMPDIR'] = '/data1/
+os.environ['PATH'] += ':/usr/local/netpbm/bin:/home/nova/nova/blind:/home/nova/nova/util'
+
 #import astrometry.net.settings
 # DEBUG
 #print >> sys.stderr, 'settings.ROOT_URLCONF', astrometry.net.settings.ROOT_URLCONF
