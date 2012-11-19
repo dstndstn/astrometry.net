@@ -277,6 +277,10 @@ class DiskFile(models.Model):
     def get_file_types(self):
         return self.file_type.split(';')
 
+    def OLD_get_path(self):
+        h = self.file_hash
+        return os.path.join(DATADIR, h[0:2], h[2:4], h[4:6], h)
+
     def get_path(self):
         return DiskFile.get_file_path(self.file_hash, self.collection)
 
@@ -721,6 +725,9 @@ class Job(models.Model):
 
     def set_end_time(self):
         self.end_time = datetime.now()
+
+    def OLD_get_dir(self):
+        return os.path.join(JOBDIR, '%08i' % self.id)
 
     def get_dir(self):
         jtxt = '%08i' % self.id

@@ -53,8 +53,8 @@ keepdfs.sort()
 print len(keepdfs), 'DiskFiles to keep'
 print DiskFile.objects.all().count(), 'total DiskFiles'
 for df in keepdfs:
-    oldpath = df.get_path()
-    newpath = df.NEW_get_path()
+    oldpath = df.OLD_get_path()
+    newpath = df.get_path()
     newdir = os.path.dirname(newpath)
     if not os.path.exists(newdir):
         os.makedirs(newdir)
@@ -72,8 +72,8 @@ for df in keepdfs:
 jobs = Job.objects.all()
 print jobs.count(), 'jobs'
 for job in jobs:
-    oldpath = job.get_dir()
-    newpath = job.NEW_get_dir()
+    oldpath = job.OLD_get_dir()
+    newpath = job.get_dir()
     newdir = os.path.dirname(newpath)
     if not os.path.exists(newdir):
         os.makedirs(newdir)
