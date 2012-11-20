@@ -215,29 +215,31 @@ Anonymous: {{ anonymous_username }}
         <div style="width:640px; overflow:auto"><pre>{{ sub.error_message }}</pre>
     {% else %}
 
-       {% if sub.processing_finished %}
+       {% if sub.processing_finished and sub.user_images.count == 0 %}
 
-       Unfortunately, we failed to identify your image.
+          {# Avoid a race condition where a user_image has been created between when we checked above, and now. #}
 
-       {% if sub.user.username == anonymous_username %}
-       <p class="notice">
-       Since you are not logged in, we <b>intentionally</b> don't show your image
-       here.  (We don't want to host arbitrary images for anonymous users!)
-       </p>
-       {% endif %}
+          Unfortunately, we failed to identify your image.
 
-       {% else %}
+          {% if sub.user.username == anonymous_username %}
+          <p class="notice">
+            Since you are not logged in, we <b>intentionally</b> don't show your image
+            here.  (We don't want to host arbitrary images for anonymous users!)
+          </p>
+          {% endif %}
 
-       Thanks for your submission! Please bear with us while we
-       process it.  Usually we will have results within 10 minutes.
+        {% else %}
 
-       {% if sub.user.username == anonymous_username %}
-       <p class="notice">
-         Please note: since you are not logged in, the contents and
-         results of your submission will only be available upon a
-         successful calibration.
-       </p>
-       {% endif %}
+          Thanks for your submission! Please bear with us while we
+          process it.  Usually we will have results within 10 minutes.
+
+          {% if sub.user.username == anonymous_username %}
+          <p class="notice">
+            Please note: since you are not logged in, the contents and
+            results of your submission will only be available upon a
+            successful calibration.
+          </p>
+          {% endif %}
 
        {% endif %}
     {% endif %}
