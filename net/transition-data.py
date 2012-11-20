@@ -48,6 +48,18 @@ for sub in subs:
             print 'DiskFile', df
             keepdfs.add(df)
 
+dropdfs = set()
+cached = CachedFile.objects.all()
+print cached.count(), 'CachedFiles'
+for c in cached:
+    dropdfs.add(c.disk_file)
+
+alldfs = dropdfs.union(keepdfs)
+    
+print len(alldfs), 'DiskFiles of', DiskFile.objects.all().count(), 'total accounted for'
+print len(keepdfs), 'to keep'
+print len(dropdfs), 'to drop'
+            
 keepdfs = list(keepdfs)
 keepdfs.sort()
 print len(keepdfs), 'DiskFiles to keep'
@@ -83,13 +95,5 @@ for job in jobs:
     print 'Moving', oldpath, 'to', newpath
     shutil.move(oldpath, newpath)
     
-
-keepdfs = set(keepdfs)
-cached = CachedFile.objects.all()
-print cached.count(), 'CachedFiles'
-for c in cached:
-    keepdfs.add(c.disk_file)
-
-print len(keepdfs), 'DiskFiles of', DiskFile.objects.all().count(), 'total accounted for'
 
     
