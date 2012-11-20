@@ -161,6 +161,27 @@ Submission {{ sub.id }}
 </div>
 <br />
 
+<p>
+<pre>
+sub.user_images:
+{% for image in sub.user_images.all %}
+Image: {{image}}
+{% for job in image.jobs.all %}
+Job {{ job.id }}: {{ job }}
+{% empty %}
+No jobs
+{% endfor %}
+{% empty %}
+No user_images
+{% endfor %}
+
+Sub.processing_finished: {{ sub.processing_finished }}
+Sub.error_message: {{ sub.error_message }}
+Sub.username: {{ sub.user.username }}
+Anonymous: {{ anonymous_username }}
+</pre>
+</p>
+
 <table id="submission_images">
 {% for image in sub.user_images.all %}
 <tr>
@@ -183,7 +204,7 @@ Submission {{ sub.id }}
 	<a href={% url astrometry.net.views.submission.job_log_file2 jobid=job.id %}>Log file 2</a>
 
     {% empty %}
-    No Jobs.
+	Waiting for processing to start...
     {% endfor %}
 </td>
 </tr>
