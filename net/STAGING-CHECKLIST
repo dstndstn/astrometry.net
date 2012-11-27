@@ -82,6 +82,12 @@ schema migration scripts.  In the simplest case, copy the database.
     python -u process_submissions.py < /dev/null >> proc.log 2>&1 &
     [ctrl-A d]
 
+
+############
+python manage.py migrate
+
+
+
 (7.) Test it out, email the group when it's ready for review.
 
 (8.) Decide to launch!

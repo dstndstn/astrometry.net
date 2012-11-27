@@ -95,5 +95,3 @@ for job in jobs:
     print 'Moving', oldpath, 'to', newpath
     shutil.move(oldpath, newpath)
     
-
-    

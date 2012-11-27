@@ -48,7 +48,7 @@
 #include "log.h"
 #include "svn.h"
 
-const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:JF:";
+const char* OPTIONS = "hi:o:w:W:H:s:NCBpb:cjvLn:f:MDd:G:JF:V:O:";
 
 void print_help(char* progname) {
     boilerplate_help_header(stdout);
@@ -75,6 +75,8 @@ void print_help(char* progname) {
            "   [-M]: show only NGC/IC and Messier numbers (no common names)\n"
            "   [-G <grid spacing in arcmin>]: plot RA,Dec grid\n"
            "   [-J]: print JSON output to stderr\n"
+		   "   [-V]: vertical alignment of text labels, \"C\"enter/\"T\"op/\"B\"ottom: default C\n"
+		   "   [-O]: horizontal alignment of text labels, \"L\"eft/\"C\"enter/\"R\"ight, default L\n"
            "\n", progname);
 }
 
@@ -102,11 +104,14 @@ struct cairos_t {
 typedef struct cairos_t cairos_t;
 
 static void add_text(cairos_t* cairos,
-                     const char* txt, double px, double py) {
+                     const char* txt, double px, double py,
+					 char halign, char valign) {
     cairo_text_extents_t textents;
     double l,r,t,b;
     double margin = 2.0;
     int dx, dy;
+
+	float offset = 15.;
 
     cairo_text_extents(cairos->fg, txt, &textents);
     l = px + textents.x_bearing;
@@ -117,6 +122,30 @@ static void add_text(cairos_t* cairos,
     t -= margin;
     r += margin + 1;
     b += margin + 1;
+
+	switch (valign) {
+	case 'T':
+		py -= (0.5 * textents.y_bearing);
+		break;
+	case 'B':
+		py += (0.5 * textents.y_bearing) - offset;
+		break;
+	case 'C':
+		break;
+	}
+
+	logverb("halign=%c, width=%f\n", halign, textents.width);
+	switch (halign) {
+	case 'L':
+		break;
+	case 'C':
+		px -= (0.5 * textents.width);
+		break;
+	case 'R':
+		px -= (1.0 * textents.width);
+		break;
+	}
+
 
     // move text away from the edges of the image.
     if (l < 0) {
@@ -234,10 +263,18 @@ int main(int argc, char** args) {
 
     int loglvl = LOG_MSG;
 
+	char halign = 'L';
+	char valign = 'C';
     sl* json = NULL;
 
     while ((c = getopt(argc, args, OPTIONS)) != -1) {
         switch (c) {
+		case 'V':
+			valign = optarg[0];
+			break;
+		case 'O':
+			halign = optarg[0];
+			break;
         case 'F':
             ngc_fraction = atof(optarg);
             break;
@@ -601,6 +638,8 @@ int main(int argc, char** args) {
 
             // If the label will be off-screen, move it back on.
             cairo_text_extents(cairo, shortname, &textents);
+
+			
             if (px < 0)
                 px = 0;
             if (py < textents.height)
@@ -611,7 +650,7 @@ int main(int argc, char** args) {
                 py = H/scale - textents.height;
             logverb("%s at (%g, %g)\n", shortname, px, py);
 
-            add_text(cairos, longname, px, py);
+            add_text(cairos, longname, px, py, halign, valign);
 
             // Draw the lines.
             cairo_set_line_width(cairo, lw);
@@ -726,7 +765,8 @@ int main(int argc, char** args) {
                 printf("The star %s\n", bs->name);
 
             if (!justlist)
-                add_text(cairos, text, px + label_offset, py + dy);
+                add_text(cairos, text, px + label_offset, py + dy,
+						 halign, valign);
 
             free(text);
 
@@ -816,7 +856,8 @@ int main(int argc, char** args) {
                 debug("size: %f arcsec, pixsize: %f pixels\n", ngc->size, pixsize);
                 cairo_stroke(cairoshapes);
 
-                add_text(cairos, text, px + label_offset, py + dy);
+                add_text(cairos, text, px + label_offset, py + dy,
+						 halign, valign);
             }
 
             if (json) {
@@ -886,7 +927,7 @@ int main(int argc, char** args) {
                 px -= (textents.width * 0.5);
                 py -= (crad + 4.0);
 
-                add_text(cairos, txt, px, py);
+                add_text(cairos, txt, px, py, halign, valign);
             }
 
             if (json)
