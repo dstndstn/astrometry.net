@@ -124,6 +124,24 @@ class Plotstuff(object):
 	def solid(self):
 		plotstuff_set_solid(self.pargs)
 
+	def polygon(self, xy, makeConvex=True):
+		import numpy as np
+		if makeConvex:
+			cx = sum(x for x,y in xy) / float(len(xy))
+			cy = sum(y for x,y in xy) / float(len(xy))
+			angles = np.array([np.arctan2(y - cy, x - cx)
+							   for x,y in xy])
+			I = np.argsort(angles)
+		else:
+			I = np.arange(len(xy))
+
+		for j,i in enumerate(I):
+			x,y = xy[i]
+			if j == 0:
+				self.move_to_xy(x, y)
+			else:
+				self.line_to_xy(x, y)
+		
 	def get_image_as_numpy(self):
 		return self.pargs.get_image_as_numpy()
 

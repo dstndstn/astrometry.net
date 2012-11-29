@@ -374,6 +374,8 @@ static void* plot_builtin_init(plot_args_t* args) {
 	args->linestep = 10;
 	args->op = CAIRO_OPERATOR_OVER;
 	args->fontsize = 20;
+	args->halign = 'C';
+	args->valign = 'B';
 	args->cairocmds = bl_new(256, sizeof(cairocmd_t));
 	args->label_offset_x = 10.0;
 	args->label_offset_y =  5.0;
@@ -614,23 +616,35 @@ static void get_text_position(plot_args_t* pargs, cairo_t* cairo,
 	y += pargs->label_offset_y;
 
     cairo_text_extents(cairo, txt, &textents);
-    // If horizontalalignment == left
-    //l = x + textents.x_bearing;
-    //r = l + textents.width + textents.x_bearing;
-    // if horizontalalignment == center
-    l = x + textents.x_bearing - 0.5*textents.width;
-    r = l + textents.width + textents.x_bearing;
 
-    // If verticalalignment == bottom
-    //t = y + textents.y_bearing;
-    //b = t + textents.height;
+	switch (pargs->halign) {
+	case 'L':
+		l = x + textents.x_bearing;
+		break;
+	case 'C':
+		l = x + textents.x_bearing - 0.5*textents.width;
+		break;
+	case 'R':
+		l = x + textents.x_bearing - textents.width;
+		break;
+	}
+	x = l;
+	r = l + textents.width + textents.x_bearing;
 
-    // If verticalalignment == center
-    t = y + textents.y_bearing + 0.5*textents.height;
-    b = t + textents.height;
-
-    x = l;
-    y = b;
+	switch (pargs->valign) {
+	case 'T':
+		t = y + textents.y_bearing + textents.height;
+		//y -= (0.5 * textents.y_bearing);
+		break;
+	case 'C':
+		t = y + textents.y_bearing + 0.5*textents.height;
+		break;
+	case 'B':
+		t = y + textents.y_bearing;
+		break;
+	}
+	b = t + textents.height;
+	y = b;
 
     l -= margin;
     t -= margin;

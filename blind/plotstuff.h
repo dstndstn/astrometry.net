@@ -73,6 +73,10 @@ struct plot_args {
 
 	float fontsize; // default: 20
 
+	// text alignment
+	char halign; // L, R, C
+	char valign; // T, B, C
+
     double label_offset_x;
     double label_offset_y;
 

@@ -2,14 +2,38 @@ import sys
 from optparse import OptionParser
 
 from astrometry.blind.plotstuff import *
+from astrometry.util.fits import *
 
 if __name__ == '__main__':
-	parser = OptionParser('usage: %prog <wcs.fits file> <image file> <output.jpg file>')
+	parser = OptionParser('usage: %prog <wcs.fits file> <image file> <output.{jpg,png,pdf} file>')
 	parser.add_option('--hdcat', dest='hdcat',
 					  help='Path to Henry Draper catalog hd.fits')
 	parser.add_option('--target', '-t', dest='target', action='append',
 					  default=[],
 					  help='Add named target (eg "M 31", "NGC 1499")')
+	parser.add_option('--no-grid', dest='grid', action='store_false',
+					  default=True, help='Turn off grid lines')
+
+	parser.add_option('--tcolor', dest='textcolor', default='green',
+					  help='Text color')
+	parser.add_option('--tsize', dest='textsize', default=18, type=float,
+					  help='Text font size')
+	parser.add_option('--halign', dest='halign', default='C',
+					  help='Text horizontal alignment')
+	parser.add_option('--valign', dest='valign', default='B',
+					  help='Text vertical alignment')
+	parser.add_option('--tox', dest='tox', default=0, type=float,
+					  help='Text offset x')
+	parser.add_option('--toy', dest='toy', default=0, type=float,
+					  help='Text offset y')
+	parser.add_option('--lw', dest='lw', default=2, type=float,
+					  help='Annotations line width')
+	parser.add_option('--ms', dest='ms', default=12, type=float,
+					  help='Marker size')
+	parser.add_option('--rd', dest='rd', action='append', default=[],
+					  help='Plot RA,Dec markers')
+	parser.add_option('--quad', dest='quad', action='append', default=[],
+					  help='Plot quad from given match file')
 	
 	opt,args = parser.parse_args()
 	if len(args) != 3:
@@ -20,17 +44,24 @@ if __name__ == '__main__':
 	imgfn = args[1]
 	outfn = args[2]
 	
-	plot = Plotstuff()
-	plot.wcs_file = wcsfn
-	plot.outformat = PLOTSTUFF_FORMAT_JPG
+	fmt = PLOTSTUFF_FORMAT_JPG
+	s = outfn.split('.')
+	if len(s):
+		s = s[-1].lower()
+		if s in Plotstuff.format_map:
+			fmt = s
+	plot = Plotstuff(outformat=fmt, wcsfn=wcsfn)
+	#plot.wcs_file = wcsfn
+	#plot.outformat = fmt
+	#plotstuff_set_size_wcs(plot.pargs)
 	plot.outfn = outfn
-	plotstuff_set_size_wcs(plot.pargs)
 	img = plot.image
 	img.set_file(imgfn)
 	plot.plot('image')
 
-	plot.color = 'gray'
-	plot.plot_grid(0.1, 0.1, 0.2, 0.2)
+	if opt.grid:
+		plot.color = 'gray'
+		plot.plot_grid(0.1, 0.1, 0.2, 0.2)
 
 	ann = plot.annotations
 	ann.NGC = True
@@ -40,14 +71,40 @@ if __name__ == '__main__':
 	if opt.hdcat:
 		ann.HD = True
 		ann.hd_catalog = opt.hdcat
-	plot.color = 'green'
-	plot.fontsize = 18
-	plot.lw = 2.
 
+	plot.color = opt.textcolor
+	plot.fontsize = opt.textsize
+	plot.lw = opt.lw
+	plot.valign = opt.valign
+	plot.halign = opt.halign
+	plot.label_offset_x = opt.tox;
+	plot.label_offset_y = opt.toy;
+	
 	if len(opt.target):
 		for t in opt.target:
 			if plot_annotations_add_named_target(ann, t):
 				raise RuntimeError('Unknown target', t)
 
 	plot.plot('annotations')
+
+	for rdfn in opt.rd:
+		rd = plot.radec
+		rd.fn = rdfn
+		plot.markersize = opt.ms
+		plot.plot('radec')
+
+	for mfn in opt.quad:
+		match = fits_table(mfn)
+		for m in match:
+			qp = m.quadpix
+			xy = [(qp[0], qp[1])]
+			#plot.move_to_xy(qp[0], qp[1])
+			for d in range(1, m.dimquads):
+				#plot.line_to_xy(qp[2 * d], qp[2 * d + 1])
+				xy.append((qp[2 * d], qp[2 * d + 1]))
+			#plot.stroke()
+			plot.polygon(xy)
+			plot.close_path()
+			plot.stroke()
+		
 	plot.write()
