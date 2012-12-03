@@ -9,9 +9,12 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 import settings
 from astrometry.net.models import *
 
-readonly = True
+#readonly = True
+readonly = False
 
-subs = Submission.objects.all()
+readonlydb = False
+
+subs = Submission.objects.select_related().all()
 keepdfs = set()
 print subs.count(), 'Submissions'
 for i,sub in enumerate(subs):
@@ -20,7 +23,7 @@ for i,sub in enumerate(subs):
     #print 'Submission', i, 'of', len(subs), ':', sub
     df = sub.disk_file
     df.collection = Image.ORIG_COLLECTION
-    if not readonly:
+    if not readonlydb:
         df.save()
     #print 'DiskFile', df
     keepdfs.add(df)
@@ -32,7 +35,7 @@ for i,sub in enumerate(subs):
         #print 'Image', im
         df = im.disk_file
         df.collection = Image.ORIG_COLLECTION
-        if not readonly:
+        if not readonlydb:
             df.save()
         #print 'DiskFile', df
         keepdfs.add(df)
@@ -42,7 +45,7 @@ for i,sub in enumerate(subs):
             #print 'Thumbnail', im2
             df = im2.disk_file
             df.collection = Image.RESIZED_COLLECTION
-            if not readonly:
+            if not readonlydb:
                 df.save()
             #print 'DiskFile', df
             keepdfs.add(df)
@@ -51,7 +54,7 @@ for i,sub in enumerate(subs):
             #print 'Display-size', im2
             df = im2.disk_file
             df.collection = Image.RESIZED_COLLECTION
-            if not readonly:
+            if not readonlydb:
                 df.save()
             #print 'DiskFile', df
             keepdfs.add(df)
@@ -94,6 +97,7 @@ keepdfs = list(keepdfs)
 keepdfs.sort()
 print len(keepdfs), 'DiskFiles to keep'
 print DiskFile.objects.all().count(), 'total DiskFiles'
+missing = []
 for df in keepdfs:
     oldpath = df.OLD_get_path()
     newpath = df.get_path()
@@ -109,7 +113,9 @@ for df in keepdfs:
         continue
     if readonly:
         print 'fake move', oldpath, '->', newpath
-        assert(os.path.exists(oldpath))
+        if not os.path.exists(oldpath):
+            missing.append(oldpath)
+        #assert(os.path.exists(oldpath))
     else:
         try:
             shutil.move(oldpath, newpath)
@@ -117,9 +123,13 @@ for df in keepdfs:
             print 'Failed to move', oldpath, 'to', newpath
             print e
 
+print len(missing), 'missing:'
+for x in missing:
+    print x
 
-jobs = Job.objects.all()
+jobs = Job.objects.select_related().all()
 print jobs.count(), 'jobs'
+missing = []
 for job in jobs:
     oldpath = job.OLD_get_dir()
     newpath = job.get_dir()
@@ -136,5 +146,10 @@ for job in jobs:
     if not readonly:
         shutil.move(oldpath, newpath)
     else:
-        assert(os.path.exists(oldpath))
-    
+        #assert(os.path.exists(oldpath))
+        if not os.path.exists(oldpath):
+            missing.append(oldpath)
+
+print len(missing), 'missing:'
+for x in missing:
+    print x
