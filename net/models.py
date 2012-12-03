@@ -260,6 +260,8 @@ class DiskFile(models.Model):
     # Reverse mappings:
     #  image_set -> Image
     #  submissions -> Submission
+    #  cachedfile_set -> CachedFile ?
+    
 
     def __str__(self):
         return 'DiskFile: %s, size %i, type %s, coll %s' % (self.file_hash, self.size, self.file_type, self.collection)
@@ -395,6 +397,9 @@ class Image(models.Model):
 
     # Reverse mappings:
     #  userimage_set -> UserImage
+
+    #  image_thumbnail_set -> Image
+    #  image_display_set -> Image
 
     def get_mime_type(self):
         if hasattr(self, 'sourcelist'):

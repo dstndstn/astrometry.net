@@ -66,6 +66,8 @@ class multiproc(object):
 				self.pool = None
 				# self.map = map
 				self.applyfunc = apply
+				if init is not None:
+					init(*initargs)
 			else:
 				self.pool = multiprocessing.Pool(nthreads, init, initargs)
 				# self.map = self.pool.map
