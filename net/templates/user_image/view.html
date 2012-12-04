@@ -176,6 +176,12 @@ $(document).ready(function() {
             <td>Radius:</td><td>{{ calib.format_radius }}</td>
         </tr>
         <tr>
+          <td>Pixel scale:</td><td>{{ calib.format_pixscale }}</td>
+        </tr>
+        <tr>
+          <td>Orientation:</td><td>{{ calib.format_orientation }}</td>
+        </tr>
+        <tr>
             <td>WCS file:</td>
             <td><a href="{% url astrometry.net.views.image.wcs_file jobid=job.id %}">wcs.fits</a></td>
         </tr>

@@ -654,6 +654,14 @@ class Calibration(models.Model):
         w,h,units = self.raw_tan.get_field_size()
         return '%.3g x %.3g %s' % (w, h, units)
 
+    def format_pixscale(self):
+        s = self.raw_tan.get_pixscale()
+        return '%.3g arcsec/pixel'
+
+    def format_orientation(self):
+        o = self.raw_tan.get_orientation()
+        return 'Up is %.3g degrees E of N'
+    
     def get_objs_in_field(self):
         def run_convert_command(cmd, deleteonfail=None):
             logmsg('Command: ' + cmd)

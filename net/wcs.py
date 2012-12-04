@@ -62,10 +62,25 @@ class TanWCS(models.Model):
                 ' Image size (%f, %f)>' % (self.imagew, self.imageh)
                 )
 
+    def _det_cd(self):
+        return self.cd11 * self.cd22 - self.cd12 * self.cd21
+    
     # returns pixel scale in arcseconds per pixel
     def get_pixscale(self):
-        return 3600.0 * math.sqrt(abs(self.cd11 * self.cd22 - self.cd12 * self.cd21))
+        return 3600.0 * math.sqrt(abs(self._det_cd()))
 
+    def get_orientation(self):
+        # From sip.c:
+        det = self._det_cd()
+        if det >= 0:
+            parity = 1.
+        else:
+            parity = -1.
+        T = parity * self.cd11 + self.cd22
+        A = parity * self.cd21 - self.cd12
+        orient = -math.degrees(math.atan2(A, T))
+        return orient
+    
     # returns the field area in square degrees.
     def get_field_area(self):
         scale = self.get_pixscale() / 3600.0
