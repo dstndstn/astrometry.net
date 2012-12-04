@@ -25,8 +25,8 @@ Contents:
 
 Other places:
 
+* `New documentation center on github <http://github.com/astrometry/usermanual>`_
 * `This document on the web <http://astrometry.net/doc>`_
-* `Forum.astrometry.net <http://forum.astrometry.net>`_
 * `home page <http://astrometry.net>`_
 * `web service <http://nova.astrometry.net>`_
 

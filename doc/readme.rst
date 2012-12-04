@@ -229,11 +229,7 @@ and util/os-features-config.h, or running::
 Getting Index Files
 ===================
 
-Next, grab some pre-cooked index files.  See the file GETTING-INDEXES
-for details about how to do this.
-
-(If you have index files from version 0.1 of the Astrometry.net
-software, see the "Upgrading" section below.)
+Get pre-cooked index files from: <http://broiler.astrometry.net/~dstn/4000>_
 
 Each index file is designed to solve images within a narrow range of
 scales.  The index files designed to solve small (angular size) images
@@ -241,6 +237,10 @@ are rather large files, so you probably only want to grab the index
 files required for the images you wish to solve.  If you grab extra
 index files, the solver will run more slowly, but the results should
 be the same.
+
+The files are named like *index-40XX.fits* or *index-40XX-YY.fits*.
+*XX* is the "scale", *YY* is the "healpix" number.  These are called
+the "4000-series" index files.
 
 Each index file contains a large number of "skymarks" (landmarks for
 the sky) that allow our solver to identify your images.  The skymarks
@@ -251,45 +251,64 @@ say, 10% to 100% of the sizes of the images you want to solve.
 For example, let's say you have some 1-degree square images.  You
 should grab index files that contain skymarks of size 0.1 to 1 degree,
 or 6 to 60 arcminutes.  Referring to the table below, you should grab
-index files 203 through 209.  You might find that the same number of
+index files 4003 through 4009.  You might find that the same number of
 fields solve, and faster, using just one or two of the index files in
-the middle of that range - in our example you might try 205, 206 and
-207.
+the middle of that range - in our example you might try 4005, 4006 and
+4007.
 
 For reference, we used index files 202 alone for our SDSS tests (13x9
-arcmin fields).
+arcmin fields); these are the same scale is the new 4002 files.
 
-The 204- and smaller index files are split into 12 "healpix" tiles;
-each one covers 1/12th of the sky.  See the map here; you might not
-need all of them.
-  http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp.png
+The medium-sized index files are split into 12 "healpix" tiles; each
+one covers 1/12th of the sky.  The small-sized ones are split into 48
+healpixes.   See the maps here; you might not need all of them.
+http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp.png
+http://trac.astrometry.net/browser/trunk/src/astrometry/util/hp2.png
 
-+----------------------+------------------------------+-------------+
-| Index Filename       |   Range of skymark diameters |   File Size |
-|                      |         (arcminutes)         |     (MB)    |
-+======================+==============================+=============+
-| index-210+.tar.bz2   |        60  - 2000            |        29   |
-+----------------------+------------------------------+-------------+
-| index-209.tar.bz2    |        42  -   60            |        30   |
-+----------------------+------------------------------+-------------+
-| index-208.tar.bz2    |        30  -   42            |        61   |
-+----------------------+------------------------------+-------------+
-| index-207.tar.bz2    |        22  -   30            |       125   |
-+----------------------+------------------------------+-------------+
-| index-206.tar.bz2    |        16  -   22            |       255   |
-+----------------------+------------------------------+-------------+
-| index-205.tar.bz2    |        11  -   16            |       526   |
-+----------------------+------------------------------+-------------+
-| index-204.tar.bz2    |         8  -   11            |     1,023   |
-+----------------------+------------------------------+-------------+
-| index-203.tar.bz2    |         5.6  -  8.0          |     2,089   |
-+----------------------+------------------------------+-------------+
-| index-202.tar.bz2    |         4.0  -  5.6          |     4,260   |
-+----------------------+------------------------------+-------------+
-| index-201.tar.bz2    |         2.8  -  4.0          |     5,878   |
-+----------------------+------------------------------+-------------+
-| index-200.tar.bz2    |         2.0  -  2.8          |    10,058   |
-+----------------------+------------------------------+-------------+
++------------------------+------------------------------+
+| Index Filename         |   Range of skymark diameters |
+|                        |         (arcminutes)         |
++========================+==============================+
+| index-4019.fits.bz2    |      1400  - 2000            |
++------------------------+------------------------------+
+| index-4018.fits.bz2    |      1000  - 1400            |
++------------------------+------------------------------+
+| index-4017.fits.bz2    |       680  - 1000            |
++------------------------+------------------------------+
+| index-4016.fits.bz2    |       480  -  680            |
++------------------------+------------------------------+
+| index-4015.fits.bz2    |       340  -  480            |
++------------------------+------------------------------+
+| index-4014.fits.bz2    |       240  -  340            |
++------------------------+------------------------------+
+| index-4013.fits.bz2    |       170  -  240            |
++------------------------+------------------------------+
+| index-4012.fits.bz2    |       120  -  170            |
++------------------------+------------------------------+
+| index-4011.fits.bz2    |        85  -  120            |
++------------------------+------------------------------+
+| index-4010.fits.bz2    |        60  -   85            |
++------------------------+------------------------------+
+| index-4009.fits.bz2    |        42  -   60            |
++------------------------+------------------------------+
+| index-4008.fits.bz2    |        30  -   42            |
++------------------------+------------------------------+
+| index-4007-*.fits.bz2  |        22  -   30            |
++------------------------+------------------------------+
+| index-4006-*.fits.bz2  |        16  -   22            |
++------------------------+------------------------------+
+| index-4005-*.fits.bz2  |        11  -   16            |
++------------------------+------------------------------+
+| index-4004-*.fits.bz2  |         8  -   11            |
++------------------------+------------------------------+
+| index-4003-*.fits.bz2  |         5.6  -  8.0          |
++------------------------+------------------------------+
+| index-4002-*.fits.bz2  |         4.0  -  5.6          |
++------------------------+------------------------------+
+| index-4001-*.fits.bz2  |         2.8  -  4.0          |
++------------------------+------------------------------+
+| index-4000-*.fits.bz2  |         2.0  -  2.8          |
++------------------------+------------------------------+
 
 Download the index files you need and put them in the top-level
 (astrometry-$VERSION) source directory.
@@ -305,19 +324,6 @@ Next, you can (optionally) configure the solver by editing the file::
 
    INSTALL_DIR/etc/backend.cfg
 
-
-
-Upgrading Index files (only necessary if you have OLD OLD index files!)
-----------------------
-
-The format of the index files changed after the 0.11 release.  There
-is a program for updating them, and there is also a Makefile target::
-
-  $ make upgrade-indexes
-
-If you want to do it by hand, use the program ``fix-bb``.  Run it on
-each of the ckdt.fits and skdt.fits files in your ``INSTALL_DIR/data``
-directory.
 
 
 Big-Endian Machines
