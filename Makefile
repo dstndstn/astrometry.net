@@ -85,7 +85,7 @@ install: report.txt
 	mkdir -p '$(INSTALL_DIR)/ups'
 	cp ups/astrometry_net.table-dist '$(INSTALL_DIR)/ups/astrometry_net.table'
 	cp __init__.py '$(INSTALL_DIR)/python/astrometry'
-	cp CREDITS GETTING-INDEXES LICENSE README '$(INSTALL_DIR)/doc'
+	cp CREDITS LICENSE README '$(INSTALL_DIR)/doc'
 	cp report.txt '$(INSTALL_DIR)/doc'
 	cp demo/* '$(INSTALL_DIR)/examples'
 	$(MAKE) -C util  install
@@ -210,7 +210,7 @@ release:
 SP_RELEASE_DIR := pyspherematch-$(SP_RELEASE_VER)
 SP_RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER)/astrometry
 SP_RELEASE_SUBDIRS := gsl-an qfits-an util libkd data
-SP_RELEASE_REMOVE := FAQ GETTING-INDEXES
+SP_RELEASE_REMOVE := FAQ
 SP_ONLY := pyspherematch-only
 
 release-pyspherematch:
