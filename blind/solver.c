@@ -242,12 +242,13 @@ void solver_log_params(const solver_t* sp) {
   logverb("  Quad size range: %g, %g\n", sp->quadsize_min, sp->quadsize_max);
   logverb("  Objs: %i, %i\n", sp->startobj, sp->endobj);
   logverb("  Parity: %i, %s\n", sp->parity, sp->parity == PARITY_NORMAL ? "normal" : (sp->parity == PARITY_FLIP ? "flip" : "both"));
-  logverb("  Use_radec? %s", sp->use_radec ? "yes" : "no\n");
   if (sp->use_radec) {
-    double ra,dec,rad;
-    xyzarr2radecdeg(sp->centerxyz, &ra, &dec);
-    rad = distsq2deg(sp->r2);
-    logverb(", (%g, %g), radius %g deg\n", ra, dec, rad);
+	  double ra,dec,rad;
+	  xyzarr2radecdeg(sp->centerxyz, &ra, &dec);
+	  rad = distsq2deg(sp->r2);
+	  logverb("  Use_radec? yes, (%g, %g), radius %g deg\n", ra, dec, rad);
+  } else {
+	  logverb("  Use_radec? no\n");
   }
   logverb("  Verify_pix: %g\n", sp->verify_pix);
   logverb("  Code tol: %g\n", sp->codetol);
