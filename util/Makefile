@@ -155,7 +155,7 @@ ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h 
 	mathutil.h ngc2000.h ngcic-accurate.h permutedsort.h qidxfile.h \
 	quadfile.h rdlist.h scamp-catalog.h fit-wcs.h sip-utils.h sip.h sip_qfits.h \
 	starkd.h starutil.h starutil.inc starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
-	xylist.h coadd.h convolve-image.h resample.h
+	xylist.h coadd.h convolve-image.h resample.h multiindex.h
 
 ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \

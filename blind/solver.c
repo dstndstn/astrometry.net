@@ -723,6 +723,7 @@ void solver_run(solver_t* solver) {
 	int numxy, newpoint;
 	int i;
 	double usertime, systime;
+	// first timer callback is called after 1 second
 	time_t next_timer_callback_time = time(NULL) + 1;
 	pquad* pquads;
 	int num_indexes;
@@ -859,6 +860,7 @@ void solver_run(solver_t* solver) {
 				time_t delay;
                 time_t now = time(NULL);
 				if (now > next_timer_callback_time) {
+					update_timeused(solver);
 					delay = solver->timer_callback(solver->userdata);
 					if (delay == 0) // Canceled
 						break;

@@ -425,9 +425,7 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 			verify_count_hits(theta, Nfield-1, &nmatch, &nconf, &ndist);
 			logverb("%i matches, %i distractors, %i conflicts (all sources)\n", nmatch, ndist, nconf);
 			if (log_get_level() >= LOG_VERB) {
-				logverb("Hit/miss: ");
-				matchobj_log_hit_miss(theta, testperm, besti+1, Nfield, LOG_VERB);
-				logverb("\n");
+				matchobj_log_hit_miss(theta, testperm, besti+1, Nfield, LOG_VERB, "Hit/miss: ");
 			}
 
 			/*
@@ -657,9 +655,8 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 		verify_count_hits(theta, Nfield-1, &nmatch, &nconf, &ndist);
 		logverb("%i matches, %i distractors, %i conflicts (all sources)\n", nmatch, ndist, nconf);
 		if (log_get_level() >= LOG_VERB) {
-			logverb("Hit/miss: ");
-			matchobj_log_hit_miss(theta, testperm, besti+1, Nfield, LOG_VERB);
-			logverb("\n");
+			matchobj_log_hit_miss(theta, testperm, besti+1, Nfield, LOG_VERB,
+								  "Hit/miss: ");
 		}
 
 		if (TWEAK_DEBUG_PLOTS) {
@@ -668,9 +665,6 @@ sip_t* tweak2(const double* fieldxy, int Nfield,
 							 sipout->wcstan.crpix, testperm, qc);
 		}
 	}
-
-
-
 
 
 	if (newtheta) {

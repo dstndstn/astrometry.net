@@ -1,6 +1,6 @@
 /*
  This file is part of the Astrometry.net suite.
- Copyright 2010 Dustin Lang.
+ Copyright 2010, 2012 Dustin Lang.
 
  The Astrometry.net suite is free software; you can redistribute
  it and/or modify it under the terms of the GNU General Public License
@@ -30,6 +30,9 @@ struct multiindex {
 typedef struct multiindex multiindex_t;
 
 multiindex_t* multiindex_open(const char* skdtfn, const sl* indfns);
+
+multiindex_t* multiindex_new(const char* skdtfn);
+int multiindex_add_index(multiindex_t* mi, const char* indexfn);
 
 void multiindex_close(multiindex_t* mi);
 

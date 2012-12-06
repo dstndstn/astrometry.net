@@ -24,29 +24,62 @@
 #include "log.h"
 #include "verify.h"
 
-void matchobj_log_hit_miss(int* theta, int* testperm, int nbest, int nfield, int loglev) {
+char* matchobj_hit_miss_string(int* theta, int* testperm, int nbest,
+							   int nfield, char* target) {
 	int i;
+	char* cur;
+	if (!target) {
+		target = malloc(256);
+	}
+	cur = target;
 	for (i=0; i<MIN(nfield, 100); i++) {
 		int ti = (testperm ? theta[testperm[i]] : theta[i]);
 		if (ti == THETA_DISTRACTOR) {
-			loglevel(loglev, "-");
+			//loglevel(loglev, "-");
+			*cur = '-';
+			cur++;
 		} else if (ti == THETA_CONFLICT) {
-			loglevel(loglev, "c");
+			//loglevel(loglev, "c");
+			*cur = 'c';
+			cur++;
 		} else if (ti == THETA_FILTERED) {
-			loglevel(loglev, "f");
+			//loglevel(loglev, "f");
+			*cur = 'f';
+			cur++;
 		} else if (ti == THETA_BAILEDOUT) {
-			loglevel(loglev, " bail");
+			//loglevel(loglev, " bail");
+			strcpy(cur, " bail");
+			cur += 5;
 			break;
 		} else if (ti == THETA_STOPPEDLOOKING) {
-			loglevel(loglev, " stopped");
+			//loglevel(loglev, " stopped");
+			strcpy(cur, " stopped");
+			cur += 8;
 			break;
 		} else {
-			loglevel(loglev, "+");
+			//loglevel(loglev, "+");
+			*cur = '+';
+			cur++;
 		}
 		if (i+1 == nbest) {
-			loglevel(loglev, "(best)");
+			//loglevel(loglev, "(best)");
+			strcpy(cur, "(best)");
+			cur += 6;
 		}
 	}
+	*cur = '\n';
+	cur++;
+	*cur = '\0';
+	return target;
+}
+
+void matchobj_log_hit_miss(int* theta, int* testperm, int nbest, int nfield, int loglev, const char* prefix) {
+	int n = strlen(prefix);
+	char* buf = malloc(120 + n);
+	strcpy(buf, prefix);
+	matchobj_hit_miss_string(theta, testperm, nbest, nfield, buf + n);
+	loglevel(loglev, buf);
+	free(buf);
 }
 
 
@@ -59,8 +92,8 @@ void matchobj_print(MatchObj* mo, int loglvl) {
 			 ra, dec, mo->scale);
 	if (mo->theta && mo->testperm) {
 		loglevel(loglvl, "  Hit/miss: ");
-		matchobj_log_hit_miss(mo->theta, mo->testperm, mo->nbest, mo->nfield, loglvl);
-		loglevel(loglvl, "\n");
+		matchobj_log_hit_miss(mo->theta, mo->testperm, mo->nbest, mo->nfield,
+							  loglvl, "  Hit/miss: ");
 	}
 }
 
