@@ -40,7 +40,7 @@
  Some of the functions below only read the metadata, leaving the
  "codekd", "quads", and "starkd" fields NULL.
  */
-struct index_s {
+typedef struct {
 	// The actual components of an index.
 	codetree* codekd;
 	quadfile* quads;
@@ -81,8 +81,7 @@ struct index_s {
     int dimquads;
     int nstars;
     int nquads;
-};
-typedef struct index_s index_t;
+} index_t;
 
 /**
  Simple accessor (indx->dimquads): returns the dimensionality of quads

@@ -23,11 +23,10 @@
 #include "bl.h"
 #include "starkd.h"
 
-struct multiindex {
+typedef struct {
 	pl* inds;
 	startree_t* starkd;
-};
-typedef struct multiindex multiindex_t;
+} multiindex_t;
 
 multiindex_t* multiindex_open(const char* skdtfn, const sl* indfns);
 

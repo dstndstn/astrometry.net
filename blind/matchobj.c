@@ -78,7 +78,7 @@ void matchobj_log_hit_miss(int* theta, int* testperm, int nbest, int nfield, int
 	char* buf = malloc(120 + n);
 	strcpy(buf, prefix);
 	matchobj_hit_miss_string(theta, testperm, nbest, nfield, buf + n);
-	loglevel(loglev, buf);
+	loglevel(loglev, "%s", buf);
 	free(buf);
 }
 
