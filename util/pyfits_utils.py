@@ -575,7 +575,9 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
 			cols = r.split(',')
 			
 		if len(cols) != len(colnames):
-			raise Exception('Expected to find %i columns of data to match headers (%s) in row %i; got %i\n	"%s"' % (len(colnames), ', '.join(colnames), i, len(cols), r))
+			#raise Exception('Expected to find %i columns of data to match headers (%s) in row %i; got %i\n	"%s"' % (len(colnames), ', '.join(colnames), i, len(cols), r))
+			print 'Expected to find %i columns of data to match headers (%s) in row %i; got %i\n	"%s"' % (len(colnames), ', '.join(colnames), i, len(cols), r)
+			continue
 		#assert(len(cols) == len(colnames))
 		for i,c in enumerate(cols):
 			coldata[i].append(c)

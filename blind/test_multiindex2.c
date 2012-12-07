@@ -94,7 +94,7 @@ void test_solve_multiindex(CuTest* ct) {
 	solver_cleanup_field(s);
 	solver_free(s);
 
-	multiindex_close(mi);
+	multiindex_free(mi);
 	sl_free2(fns);
 }
 

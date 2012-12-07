@@ -41,7 +41,7 @@ multiindex_t* multiindex_new(const char* skdtfn) {
 	mi->inds = pl_new(16);
 	return mi;
 bailout:
-	multiindex_close(mi);
+	multiindex_free(mi);
 	return NULL;
 }
 
@@ -105,7 +105,7 @@ multiindex_t* multiindex_open(const char* skdtfn, const sl* indfns) {
 	}
 	return mi;
  bailout:
-	multiindex_close(mi);
+	multiindex_free(mi);
 	return NULL;
 }
 
@@ -114,6 +114,7 @@ void multiindex_close(multiindex_t* mi) {
 		return;
 	if (mi->starkd) {
 		startree_close(mi->starkd);
+		mi->starkd = NULL;
 	}
 	if (mi->inds) {
 		int i;
@@ -123,7 +124,12 @@ void multiindex_close(multiindex_t* mi) {
 			index_free(ind);
 		}
 		pl_free(mi->inds);
+		mi->inds = NULL;
 	}
+}
+
+void multiindex_free(multiindex_t* mi) {
+	multiindex_close(mi);
 	free(mi);
 }
 

@@ -941,7 +941,7 @@ void backend_free(backend_t* backend) {
     if (backend->free_mindexes) {
         for (i=0; i<pl_size(backend->free_mindexes); i++) {
             multiindex_t* mi = pl_get(backend->free_mindexes, i);
-            multiindex_close(mi);
+            multiindex_free(mi);
         }
         pl_free(backend->free_mindexes);
     }

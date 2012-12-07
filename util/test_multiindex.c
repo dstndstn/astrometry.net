@@ -36,7 +36,7 @@ void test_multiindex(CuTest* ct) {
 			   ind->index_scale_lower/60., ind->index_scale_upper/60.);
 	}
 
-	multiindex_close(mi);
+	multiindex_free(mi);
 	sl_free2(fns);
 }
 

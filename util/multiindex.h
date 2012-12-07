@@ -35,6 +35,9 @@ int multiindex_add_index(multiindex_t* mi, const char* indexfn);
 
 void multiindex_close(multiindex_t* mi);
 
+// close and free
+void multiindex_free(multiindex_t* mi);
+
 // How many indices?
 int multiindex_n(const multiindex_t* mi);
 // Get an index
