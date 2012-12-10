@@ -558,6 +558,7 @@ static void after_solved(augment_xylist_t* axy,
 	// print info about the field.
 	logmsg("Field: %s\n", axy->imagefn ? axy->imagefn : axy->xylsfn);
 	if (file_exists(axy->wcsfn)) {
+		double orient;
 		if (axy->wcs_last_mod) {
 			time_t t = file_get_last_modified_time(axy->wcsfn);
 			if (t == axy->wcs_last_mod) {
@@ -571,9 +572,11 @@ static void after_solved(augment_xylist_t* axy,
 		sip_get_radec_center(&wcs, &ra, &dec);
 		sip_get_radec_center_hms_string(&wcs, rastr, decstr);
 		sip_get_field_size(&wcs, &fieldw, &fieldh, &fieldunits);
+		orient = sip_get_orientation(&wcs);
 		logmsg("Field center: (RA,Dec) = (%.4g, %.4g) deg.\n", ra, dec);
 		logmsg("Field center: (RA H:M:S, Dec D:M:S) = (%s, %s).\n", rastr, decstr);
 		logmsg("Field size: %g x %g %s\n", fieldw, fieldh, fieldunits);
+		logmsg("Field rotation angle: up is %g degrees E of N\n", orient);
 	} else {
 		logmsg("Did not solve (or no WCS file was written).\n");
 	}
