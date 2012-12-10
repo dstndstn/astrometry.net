@@ -160,7 +160,7 @@ def api_upload(request):
     logmsg('request.GET has keys:', request.GET.keys())
     logmsg('request.FILES has keys:', request.FILES.keys())
     #logmsg('api_upload: got request: ' + str(request.FILES['file'].size))
-    return upload_common(file=request.FILES['file'])
+    return upload_common(request, file=request.FILES['file'])
 
 def write_wcs_file(req, wcsfn):
     from astrometry.util import util as anutil
