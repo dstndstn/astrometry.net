@@ -34,6 +34,8 @@ if __name__ == '__main__':
 					  help='Scale plot by this factor')
 	parser.add_option('--hdcat', dest='hdcat',
 					  help='Path to Henry Draper catalog hd.fits')
+	parser.add_option('--uzccat', dest='uzccat',
+					  help='Path to Updated Zwicky Catalog uzc2000.fits')
 	parser.add_option('--target', '-t', dest='target', action='append',
 					  default=[],
 					  help='Add named target (eg "M 31", "NGC 1499")')
@@ -104,6 +106,12 @@ if __name__ == '__main__':
 	if opt.hdcat:
 		ann.HD = True
 		ann.hd_catalog = opt.hdcat
+	if opt.uzccat:
+		# FIXME -- is this fast enough, or do we need to cut these
+		# targets first?
+		T = fits_table(opt.uzccat)
+		for i in range(let(T)):
+			ann.add_target(T.ra[i], T.dec[i], 'UZC %s' % T.zname)
 
 	plot.color = opt.textcolor
 	plot.fontsize = opt.textsize
