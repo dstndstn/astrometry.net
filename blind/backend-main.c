@@ -271,7 +271,12 @@ int main(int argc, char** args) {
 	}
 
 	if (!pl_size(backend->indexes)) {
-		logerr("You must list at least one index in the config file (%s)\n", configfn);
+		logerr("\n\n"
+			   "---------------------------------------------------------------------\n"
+			   "You must list at least one index in the config file (%s)\n\n"
+			   "See http://astrometry.net/use.html about how to get some index files.\n"
+			   "---------------------------------------------------------------------\n"
+			   "\n", configfn);
 		exit(-1);
 	}
 
