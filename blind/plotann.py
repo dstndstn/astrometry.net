@@ -4,24 +4,24 @@ import os
 
 # from util/addpath.py
 if __name__ == '__main__':
-    try:
-        import astrometry
-        from astrometry.util.shell import shell_escape
-        from astrometry.util.filetype import filetype_short
-    except ImportError:
-        me = __file__
-        path = os.path.realpath(me)
-        blinddir = os.path.dirname(path)
-        assert(os.path.basename(blinddir) == 'blind')
-        andir = os.path.dirname(blinddir)
-        if os.path.basename(andir) == 'astrometry':
-            rootdir = os.path.dirname(andir)
-            sys.path.insert(1, andir)
-        else:
-            # assume there's a symlink astrometry -> .
-            rootdir = andir
-        #sys.path += [rootdir]
-        sys.path.insert(1, rootdir)
+	try:
+		import astrometry
+		from astrometry.util.shell import shell_escape
+		from astrometry.util.filetype import filetype_short
+	except ImportError:
+		me = __file__
+		path = os.path.realpath(me)
+		blinddir = os.path.dirname(path)
+		assert(os.path.basename(blinddir) == 'blind')
+		andir = os.path.dirname(blinddir)
+		if os.path.basename(andir) == 'astrometry':
+			rootdir = os.path.dirname(andir)
+			sys.path.insert(1, andir)
+		else:
+			# assume there's a symlink astrometry -> .
+			rootdir = andir
+		#sys.path += [rootdir]
+		sys.path.insert(1, rootdir)
 
 from optparse import OptionParser
 
@@ -89,8 +89,8 @@ if __name__ == '__main__':
 
 	if opt.scale:
 		plot.scale_wcs(opt.scale)
-        plot.set_size_from_wcs()
-        #W,H = img.get_size()
+		plot.set_size_from_wcs()
+		#W,H = img.get_size()
 
 	plot.plot('image')
 
@@ -109,8 +109,12 @@ if __name__ == '__main__':
 	if opt.uzccat:
 		# FIXME -- is this fast enough, or do we need to cut these
 		# targets first?
+		#print >> sys.stderr, 'Plot size', plot.W, plot.H, 'wcs', plot.wcs
+
 		T = fits_table(opt.uzccat)
-		for i in range(let(T)):
+		for i in range(len(T)):
+			if not plot.wcs.is_inside(T.ra[i], T.dec[i]):
+				continue
 			ann.add_target(T.ra[i], T.dec[i], 'UZC %s' % T.zname)
 
 	plot.color = opt.textcolor

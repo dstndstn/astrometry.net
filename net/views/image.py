@@ -237,9 +237,16 @@ def annotated_image(req, jobid=None, size='full'):
     wcsfn = job.get_wcs_file()
     pnmfn = img.get_pnm_path()
     annfn = get_temp_file()
-    #cmd = 'plotann.py --scale %s %s %s %s' % (str(scale), wcsfn, pnmfn, annfn)
-    logmsg('pnm file: %s' % pnmfn)
-    cmd = 'plotann.py --no-grid --scale %s %s %s %s' % (str(scale), wcsfn, pnmfn, annfn)
+
+    #uzcfn = 
+    uzcfn = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)),
+                         'data', 'uzc2000.fits')
+    #logmsg('pnm file: %s' % pnmfn)
+    cmd = ' '.join(['plotann.py --no-grid',
+                    '--scale %s' % (str(scale)),
+                    '--uzccat %s' % uzcfn,
+                    '%s %s %s' % (wcsfn, pnmfn, annfn)])
+
     #cmd = 'plot-constellations -w %s -i %s -o %s -s %s -N -C -B -c' % (wcsfn, pnmfn, annfn, str(scale))
     logmsg('Running: ' + cmd)
     (rtn, out, err) = run_command(cmd)
