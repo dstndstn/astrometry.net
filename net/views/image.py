@@ -238,13 +238,15 @@ def annotated_image(req, jobid=None, size='full'):
     pnmfn = img.get_pnm_path()
     annfn = get_temp_file()
 
-    #uzcfn = 
-    uzcfn = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)),
-                         'data', 'uzc2000.fits')
+    datadir = os.path.join(os.path.dirname(os.path.dirname(settings.WEB_DIR)), 'data')
+    uzcfn = os.path.join(datadir, 'uzc2000.fits')
+    abellfn = os.path.join(datadir, 'abell-all.fits')
+
     #logmsg('pnm file: %s' % pnmfn)
     cmd = ' '.join(['plotann.py --no-grid',
                     '--scale %s' % (str(scale)),
                     '--uzccat %s' % uzcfn,
+                    '--abellcat %s' % abellfn,
                     '%s %s %s' % (wcsfn, pnmfn, annfn)])
 
     #cmd = 'plot-constellations -w %s -i %s -o %s -s %s -N -C -B -c' % (wcsfn, pnmfn, annfn, str(scale))
