@@ -282,6 +282,10 @@ sip_t* new_sip_t(double crpix1, double crpix2, double crval1, double crval2,
 		return plotstuff_set_wcs_file(self, fn, ext);
 	}
 
+    int set_size_from_wcs() {
+      return plotstuff_set_size_wcs(self);
+    }
+
 	void loginit(int level) {
 		log_init(level);
 	}

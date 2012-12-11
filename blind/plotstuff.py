@@ -124,6 +124,9 @@ class Plotstuff(object):
 	def solid(self):
 		plotstuff_set_solid(self.pargs)
 
+	def set_size_from_wcs(self):
+		self.pargs.set_size_from_wcs()
+
 	def polygon(self, xy, makeConvex=True):
 		import numpy as np
 		if makeConvex:

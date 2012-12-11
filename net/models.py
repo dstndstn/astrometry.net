@@ -427,8 +427,10 @@ class Image(models.Model):
 
     def get_pnm_path(self):
         imgfn = self.get_image_path()
-        pnmfn = get_temp_file()
-        (filetype, errstr) = image2pnm(imgfn, pnmfn)
+        #pnmfn = get_temp_file(suffix='.pnm')
+        #(filetype, errstr) = image2pnm(imgfn, pnmfn)
+        pnmfn = get_temp_file(suffix='.ppm')
+        (filetype, errstr) = image2pnm(imgfn, pnmfn, force_ppm=True)
         if errstr:
             raise RuntimeError('Error converting image file %s: %s' % (imgfn, errstr))
         return pnmfn

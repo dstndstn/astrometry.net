@@ -81,12 +81,15 @@ if __name__ == '__main__':
 	#plot.outformat = fmt
 	#plotstuff_set_size_wcs(plot.pargs)
 
-	if opt.scale:
-		plot.scale_wcs(opt.scale)
-
 	plot.outfn = outfn
 	img = plot.image
 	img.set_file(imgfn)
+
+	if opt.scale:
+		plot.scale_wcs(opt.scale)
+        plot.set_size_from_wcs()
+        #W,H = img.get_size()
+
 	plot.plot('image')
 
 	if opt.grid:

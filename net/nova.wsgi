@@ -10,7 +10,10 @@ if path not in sys.path:
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'astrometry.net.settings'
 
-os.environ['PATH'] += ':/usr/local/netpbm/bin:/home/nova/nova/blind:/home/nova/nova/util'
+path = os.path.dirname(__file__)
+path = os.path.dirname(path)
+
+os.environ['PATH'] += ':/usr/local/netpbm/bin:%s/blind:%s/util' % (path,path)
 
 #import astrometry.net.settings
 # DEBUG
@@ -19,6 +22,10 @@ os.environ['PATH'] += ':/usr/local/netpbm/bin:/home/nova/nova/blind:/home/nova/n
 #print >> sys.stderr, 'settings:', dir(settings)
 #print >> sys.stderr, 'settings.ROOT_URLCONF', settings.ROOT_URLCONF
 
+import logging
+logfn = os.path.join(path, 'nova.log')
+print >> sys.stderr, 'Logging to', logfn
+logging.basicConfig(filename=logfn, level=logging.DEBUG)
 
 import django.core.handlers.wsgi
 application = django.core.handlers.wsgi.WSGIHandler()
