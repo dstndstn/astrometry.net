@@ -187,7 +187,7 @@ config: util/os-features-config.h util/makefile.os-features
 	$(MAKE) -C util config
 .PHONY: config
 
-RELEASE_VER := 0.40
+RELEASE_VER := 0.41
 SP_RELEASE_VER := 0.3
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
@@ -202,6 +202,9 @@ release:
 	for x in $(RELEASE_SUBDIRS); do \
 		svn export $(RELEASE_SVN)/$$x $(RELEASE_DIR)/$$x; \
 	done
+	(cd util && swig -python -I. util.i)
+	(cd util && swig -python -I. index.i)
+	(cd blind && swig -python -I. -I../util -I../qfits-an/include plotstuff.i)
 	tar cf $(RELEASE_DIR).tar $(RELEASE_DIR)
 	gzip --best -c $(RELEASE_DIR).tar > $(RELEASE_DIR).tar.gz
 	bzip2 --best $(RELEASE_DIR).tar
