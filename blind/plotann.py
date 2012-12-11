@@ -36,6 +36,8 @@ if __name__ == '__main__':
 					  help='Path to Henry Draper catalog hd.fits')
 	parser.add_option('--uzccat', dest='uzccat',
 					  help='Path to Updated Zwicky Catalog uzc2000.fits')
+	parser.add_option('--abellcat', dest='abellcat',
+					  help='Path to Abell catalog abell-all.fits')
 	parser.add_option('--target', '-t', dest='target', action='append',
 					  default=[],
 					  help='Add named target (eg "M 31", "NGC 1499")')
@@ -110,13 +112,18 @@ if __name__ == '__main__':
 		# FIXME -- is this fast enough, or do we need to cut these
 		# targets first?
 		#print >> sys.stderr, 'Plot size', plot.W, plot.H, 'wcs', plot.wcs
-
 		T = fits_table(opt.uzccat)
 		for i in range(len(T)):
 			if not plot.wcs.is_inside(T.ra[i], T.dec[i]):
 				continue
 			ann.add_target(T.ra[i], T.dec[i], 'UZC %s' % T.zname)
-
+	if opt.abellcat:
+		T = fits_table(opt.abellcat)
+		for i in range(len(T)):
+			if not plot.wcs.is_inside(T.ra[i], T.dec[i]):
+				continue
+			ann.add_target(T.ra[i], T.dec[i], 'Abell %i' % T.aco[i])
+			
 	plot.color = opt.textcolor
 	plot.fontsize = opt.textsize
 	plot.lw = opt.lw
