@@ -1,4 +1,28 @@
+#! /usr/bin/env python
 import sys
+import os
+
+# from util/addpath.py
+if __name__ == '__main__':
+    try:
+        import astrometry
+        from astrometry.util.shell import shell_escape
+        from astrometry.util.filetype import filetype_short
+    except ImportError:
+        me = __file__
+        path = os.path.realpath(me)
+        blinddir = os.path.dirname(path)
+        assert(os.path.basename(blinddir) == 'blind')
+        andir = os.path.dirname(blinddir)
+        if os.path.basename(andir) == 'astrometry':
+            rootdir = os.path.dirname(andir)
+            sys.path.insert(1, andir)
+        else:
+            # assume there's a symlink astrometry -> .
+            rootdir = andir
+        #sys.path += [rootdir]
+        sys.path.insert(1, rootdir)
+
 from optparse import OptionParser
 
 from astrometry.blind.plotstuff import *
@@ -6,6 +30,8 @@ from astrometry.util.fits import *
 
 if __name__ == '__main__':
 	parser = OptionParser('usage: %prog <wcs.fits file> <image file> <output.{jpg,png,pdf} file>')
+	parser.add_option('--scale', dest='scale', type=float,
+					  help='Scale plot by this factor')
 	parser.add_option('--hdcat', dest='hdcat',
 					  help='Path to Henry Draper catalog hd.fits')
 	parser.add_option('--target', '-t', dest='target', action='append',
@@ -54,6 +80,10 @@ if __name__ == '__main__':
 	#plot.wcs_file = wcsfn
 	#plot.outformat = fmt
 	#plotstuff_set_size_wcs(plot.pargs)
+
+	if opt.scale:
+		plot.scale_wcs(opt.scale)
+
 	plot.outfn = outfn
 	img = plot.image
 	img.set_file(imgfn)

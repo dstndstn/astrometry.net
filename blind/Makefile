@@ -230,6 +230,19 @@ install: $(INSTALL_EXECS) $(INSTALL_LIB)
 		cp $$x '$(INSTALL_DIR)/lib'; \
 	done
 
+	mkdir -p '$(PY_INSTALL_DIR)'
+	@for x in $(PYTHON_INSTALL); do \
+		echo cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+		cp $$x '$(PY_INSTALL_DIR)/'$$x; \
+	done
+	@echo Making symlinks in directory '$(BIN_INSTALL_DIR)'
+	mkdir -p '$(BIN_INSTALL_DIR)'
+	@for x in $(PYTHON_EXECS); do \
+		echo ln -f -s '$(PY_INSTALL_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
+		ln -f -s '$(LINK_DIR)/'$$x '$(BIN_INSTALL_DIR)/'$$x; \
+	done
+
+
 install-extra: $(INSTALL_CAIRO_EXECS)
 	@echo Installing in directory '$(INSTALL_DIR)'
 	mkdir -p '$(INSTALL_DIR)/bin'
@@ -621,6 +634,14 @@ catalog-dists: catalog-dists.o 2mass-fits.o usnob-fits.o usnob.o \
 
 add-text: add-text.o $(COMMON)/cairoutils.o $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB) $(LDLIBS)
+
+PYTHON_EXECS := plotann.py
+PYTHON_INSTALL := $(PYTHON_EXECS)
+
+PY_INSTALL_DIR := $(INSTALL_DIR)/python/astrometry/blind
+BIN_INSTALL_DIR := $(INSTALL_DIR)/bin
+LINK_DIR := ../python/astrometry/blind
+
 
 plotstuff.o: plotstuff.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<

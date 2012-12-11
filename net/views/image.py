@@ -237,7 +237,8 @@ def annotated_image(req, jobid=None, size='full'):
     wcsfn = job.get_wcs_file()
     pnmfn = img.get_pnm_path()
     annfn = get_temp_file()
-    cmd = 'plot-constellations -w %s -i %s -o %s -s %s -N -C -B -c' % (wcsfn, pnmfn, annfn, str(scale))
+    cmd = 'plotann.py --scale %s %s %s %s' % (str(scale), wcsfn, pnmfn, annfn)
+    #cmd = 'plot-constellations -w %s -i %s -o %s -s %s -N -C -B -c' % (wcsfn, pnmfn, annfn, str(scale))
     logmsg('Running: ' + cmd)
     (rtn, out, err) = run_command(cmd)
     if rtn:

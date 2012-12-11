@@ -682,6 +682,9 @@ class Calibration(models.Model):
                 # one square degree
                 hd = (wcs.get_field_area() < 1.)
             wcsfn = job.get_wcs_file()
+
+            #cmd = 'plotann.py %s' % wcsfn
+            
             cmd = 'plot-constellations -w %s -N -C -B -b 10 -j' % wcsfn
             if hd:
                 cmd += ' -D -d %s' % settings.HENRY_DRAPER_CAT
