@@ -1,6 +1,7 @@
 import os
 import pyfits
 import numpy
+import numpy as np
 from numpy import array, isscalar, ndarray
 
 def pyfits_writeto(p, filename, **kwargs):
@@ -437,7 +438,7 @@ class tabledata(object):
 			#print val.size
 			#print val.itemsize
 			if type(val) is list:
-				val = array(val)
+				val = np.array(val)
 			try:
 				fitstype = fmap.get(val.dtype.type, 'D')
 			except:
@@ -524,7 +525,7 @@ def fits_table(dataorfn, rows=None, hdunum=1, hdu=None, ext=None,
 table_fields = fits_table
 
 # ultra-brittle text table parsing.
-def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, maxcols=None):
+def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, maxcols=None, headerline=None, coltypes=None):
 	if text is None:
 		f = None
 		if isinstance(forfn, str):
@@ -544,11 +545,13 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
 
 	txtrows = txtrows[skiplines:]
 
-	# column names are in the first (un-skipped) line.
-	txt = txtrows.pop(0)
-	header = txt
-	if header[0] == '#':
-		header = header[1:]
+	if headerline is None:
+		# column names are in the first (un-skipped) line.
+		header = txtrows.pop(0)
+		if header[0] == '#':
+			header = header[1:]
+	else:
+		header = headerline
 	header = header.split()
 	if len(header) == 0:
 		raise Exception('Expected to find column names in the first row of text; got \"%s\".' % txt)
@@ -557,6 +560,11 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
 		# try CSV
 		header = header[0].split(',')
 	colnames = header
+
+	if coltypes is not None:
+		if len(coltypes) != len(colnames):
+			raise Exception('Column types: length %i, vs column names, length %i' %
+							(len(coltypes), len(colnames)))
 
 	fields = tabledata()
 	txtrows = [r for r in txtrows if not r.startswith('#')]
@@ -579,38 +587,49 @@ def text_table_fields(forfn, text=None, skiplines=0, split=None, trycsv=True, ma
 			print 'Expected to find %i columns of data to match headers (%s) in row %i; got %i\n	"%s"' % (len(colnames), ', '.join(colnames), i, len(cols), r)
 			continue
 		#assert(len(cols) == len(colnames))
-		for i,c in enumerate(cols):
-			coldata[i].append(c)
-
-	for i,col in enumerate(coldata):
-		isint = True
-		isfloat = True
-		for x in col:
-			try:
-				float(x)
-			except:
-				isfloat = False
-				#isint = False
-				#break
-			try:
-				int(x, 0)
-			except:
-				isint = False
-				#break
-			if not isint and not isfloat:
-				break
-		if isint:
-			isfloat = False
-
-		if isint:
-			vals = [int(x, 0) for x in col]
-		elif isfloat:
-			vals = [float(x) for x in col]
+		if coltypes is not None:
+			for i,(cd,c,t) in enumerate(zip(coldata, cols, coltypes)):
+				if len(c) == 0 and t in [float,np.float32,np.float64]:
+					cd.append(np.nan)
+				else:
+					cd.append(t(c))
 		else:
-			vals = col
+			for cd,c in zip(coldata, cols):
+				cd.append(c)
 
-		fields.set(colnames[i].lower(), array(vals))
-		fields._length = len(vals)
+	if coltypes is None:
+		for i,col in enumerate(coldata):
+			isint = True
+			isfloat = True
+			for x in col:
+				try:
+					float(x)
+				except:
+					isfloat = False
+					#isint = False
+					#break
+				try:
+					int(x, 0)
+				except:
+					isint = False
+					#break
+				if not isint and not isfloat:
+					break
+			if isint:
+				isfloat = False
+	
+			if isint:
+				vals = [int(x, 0) for x in col]
+			elif isfloat:
+				vals = [float(x) for x in col]
+			else:
+				vals = col
+	
+			fields.set(colnames[i].lower(), np.array(vals))
+			fields._length = len(vals)
+	else:
+		for i,(col,ct) in enumerate(zip(coldata, coltypes)):
+			fields.set(colnames[i].lower(), np.array(col)) #, dtype=ct))
 
 	fields._columns = [c.lower() for c in colnames]
 
