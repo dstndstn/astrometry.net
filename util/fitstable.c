@@ -1085,6 +1085,10 @@ fitstable_t* fitstable_open(const char* fn) {
     tab->fn = strdup_safe(fn);
 
 	tab->anq = anqfits_open(fn);
+	if (!tab->anq) {
+		ERROR("Failed to open FITS file \"%s\"", fn);
+		goto bailout;
+	}
 	tab->primheader = anqfits_get_header(tab->anq, 0);
     if (!tab->primheader) {
         ERROR("Failed to read primary FITS header from %s", fn);
