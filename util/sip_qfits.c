@@ -197,8 +197,13 @@ static void add_polynomial(qfits_header* hdr, const char* format,
 }
 
 void sip_add_to_header(qfits_header* hdr, const sip_t* sip) {
-	qfits_header_add(hdr, "CTYPE1", "RA---TAN-SIP", "TAN (gnomic) projection + SIP distortions", NULL);
-	qfits_header_add(hdr, "CTYPE2", "DEC--TAN-SIP", "TAN (gnomic) projection + SIP distortions", NULL);
+	if (sip->wcstan.sin) {
+		qfits_header_add(hdr, "CTYPE1", "RA---SIN-SIP", "SIN projection + SIP distortions", NULL);
+		qfits_header_add(hdr, "CTYPE2", "DEC--SIN-SIP", "SIN projection + SIP distortions", NULL);
+	} else {
+		qfits_header_add(hdr, "CTYPE1", "RA---TAN-SIP", "TAN (gnomic) projection + SIP distortions", NULL);
+		qfits_header_add(hdr, "CTYPE2", "DEC--TAN-SIP", "TAN (gnomic) projection + SIP distortions", NULL);
+	}
 
 	wcs_hdr_common(hdr, &(sip->wcstan));
 
@@ -222,8 +227,13 @@ qfits_header* sip_create_header(const sip_t* sip) {
 }
 
 void tan_add_to_header(qfits_header* hdr, const tan_t* tan) {
-	qfits_header_add(hdr, "CTYPE1", "RA---TAN", "TAN (gnomic) projection", NULL);
-	qfits_header_add(hdr, "CTYPE2", "DEC--TAN", "TAN (gnomic) projection", NULL);
+	if (tan->sin) {
+		qfits_header_add(hdr, "CTYPE1", "RA---SIN", "SIN projection", NULL);
+		qfits_header_add(hdr, "CTYPE2", "DEC--SIN", "SIN projection", NULL);
+	} else {
+		qfits_header_add(hdr, "CTYPE1", "RA---TAN", "TAN (gnomic) projection", NULL);
+		qfits_header_add(hdr, "CTYPE2", "DEC--TAN", "TAN (gnomic) projection", NULL);
+	}
 	wcs_hdr_common(hdr, tan);
 }
 
@@ -313,18 +323,24 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 	char* str;
 	const char* key;
 	const char* expect;
+	const char* expect2;
+	bool is_sin;
+	bool is_tan;
 
 	memset(&sip, 0, sizeof(sip_t));
 
 	key = "CTYPE1";
-	expect = "RA---TAN-SIP";
+	expect  = "RA---TAN-SIP";
+	expect2 = "RA---SIN-SIP";
 	str = qfits_header_getstr(hdr, key);
 	str = qfits_pretty_string(str);
 	if (!str) {
 		ERROR("SIP header: no key \"%s\"", key);
 		return NULL;
 	}
-	if (strncmp(str, expect, strlen(expect))) {
+	is_tan = (strncmp(str, expect, strlen(expect)) == 0);
+	is_sin = (strncmp(str, expect, strlen(expect2)) == 0);
+	if (!(is_tan || is_sin)) {
 		if (!tan_read_header(hdr, &(sip.wcstan))) {
 			ERROR("SIP: failed to read TAN header");
 			return NULL;
@@ -333,7 +349,11 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 	}
 
 	key = "CTYPE2";
-	expect = "DEC--TAN-SIP";
+	if (is_sin) {
+		expect = "DEC--SIN-SIP";
+	} else {
+		expect = "DEC--TAN-SIP";
+	}
 	str = qfits_header_getstr(hdr, key);
 	str = qfits_pretty_string(str);
 	if (!str || strncmp(str, expect, strlen(expect))) {
@@ -388,10 +408,13 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 	return dest;
 }
 
-static int check_tan_ctypes(char* ct1, char* ct2) {
-	const char* ra = "RA---TAN";
+static int check_tan_ctypes(char* ct1, char* ct2, bool* is_sin) {
+	const char* ra  = "RA---TAN";
 	const char* dec = "DEC--TAN";
+	const char* ra2  = "RA---SIN";
+	const char* dec2 = "DEC--SIN";
 	int NC = 8;
+	*is_sin = FALSE;
 	if (!ct1 || !ct2)
 		return -1;
 	if (strlen(ct1) < NC || strlen(ct2) < NC)
@@ -400,6 +423,15 @@ static int check_tan_ctypes(char* ct1, char* ct2) {
 		return 0;
 	if ((strncmp(ct1, dec, NC) == 0) && (strncmp(ct2, ra, NC) == 0))
 		return 1;
+
+	if ((strncmp(ct1, ra2, NC) == 0) && (strncmp(ct2, dec2, NC) == 0)) {
+		*is_sin = TRUE;
+		return 0;
+	}
+	if ((strncmp(ct1, dec2, NC) == 0) && (strncmp(ct2, ra2, NC) == 0)) {
+		*is_sin = TRUE;
+		return 1;
+	}
 	return -1;
 }
 
@@ -410,14 +442,17 @@ tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
 	char* ct2;
 	int swap;
 	int W, H;
+	bool is_sin;
 
 	memset(&tan, 0, sizeof(tan_t));
 
 	ct1 = fits_get_dupstring(hdr, "CTYPE1");
 	ct2 = fits_get_dupstring(hdr, "CTYPE2");
-	swap = check_tan_ctypes(ct1, ct2);
+	swap = check_tan_ctypes(ct1, ct2, &is_sin);
 	if (swap == -1) {
-		ERROR("TAN header: expected CTYPE1 = RA---TAN, CTYPE2 = DEC--TAN (or vice versa), get CTYPE1 = \"%s\", CYTPE2 = \"%s\"\n",
+		ERROR("TAN header: expected CTYPE1 = RA---TAN, CTYPE2 = DEC--TAN "
+			  "(or vice versa), or RA---SIN, DEC--SIN or vice versa; "
+			  "got CTYPE1 = \"%s\", CYTPE2 = \"%s\"\n",
 			  ct1, ct2);
 	}
 	free(ct1);
@@ -461,6 +496,8 @@ tan_t* tan_read_header(const qfits_header* hdr, tan_t* dest) {
 		tan.cd[0][1] = tan.cd[1][1];
 		tan.cd[1][1] = tmp;
 	}
+
+	tan.sin = is_sin;
 
 	if (!dest)
 		dest = malloc(sizeof(tan_t));

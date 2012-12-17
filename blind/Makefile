@@ -282,7 +282,8 @@ solver_test_2.o: solver.c
 # Add the basename of your test sources here...
 ALL_TEST_FILES = test_dfind test_ctmf test_dsmooth test_2mass \
 	test_usnob test_nomad test_matchfile test_blindutils \
-	test_dcen3x3 test_resort-xylist test_simplexy test_tweak
+	test_dcen3x3 test_resort-xylist test_simplexy test_tweak \
+	test_multiindex2
 
 ALL_TEST_EXTRA_OBJS :=
 ALL_TEST_LIBS :=
