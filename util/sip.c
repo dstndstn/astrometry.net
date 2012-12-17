@@ -175,12 +175,10 @@ void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz)
 	double rx, ry, rz;
 	double ix,iy,norm;
 	double jx,jy,jz;
-	double wx,wy,wz;
 
-	// Mysterious factor of -1 correcting for stray negatives in the vector
-	// directions below.
+	// Mysterious factor of -1 correcting for vector directions below.
 	x = -deg2rad(x);
-	y = -deg2rad(y);
+	y =  deg2rad(y);
 
 	// Take r to be the threespace vector of crval
 	radecdeg2xyz(tan->crval[0], tan->crval[1], &rx, &ry, &rz);
@@ -189,37 +187,41 @@ void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz)
 	// Form i = r cross north pole (0,0,1)
 	ix = ry;
 	iy = -rx;
-	//     iz = 0 because the the north pole is at (0,0,1)
+	// iz = 0
 	norm = hypot(ix, iy);
 	ix /= norm;
 	iy /= norm;
 	//	printf("ix=%lf iy=%lf iz=0.0\n",ix,iy);
 	//	printf("r.i = %lf\n",ix*rx+iy*ry);
 
-	// Form j = r cross i, which is in the direction of y
-	jx =  rx*rz;
-	jy =  rz*ry;
-	jz = -rx*rx - ry*ry;
+	// Form j = i cross r;   iz=0 so some terms drop out
+	jx = iy * rz;
+	jy =         - ix * rz;
+	jz = ix * ry - iy * rx;
 	// norm should already be 1, but normalize anyway
 	normalize(&jx, &jy, &jz);
 	//	printf("jx=%lf jy=%lf jz=%lf\n",jx,jy,jz);
 	//	printf("r.j = %lf\n",jx*rx+jy*ry+jz*rz);
 	//	printf("i.j = %lf\n",ix*jx+iy*jy);
 
-	// Form the point on the tangent plane relative to observation point,
-	// and normalize back onto the unit sphere
-	wx = ix*x + jx*y + rx;
-	wy = iy*x + jy*y + ry;
-	wz =        jz*y + rz; // iz = 0
+	if (tan->sin) {
+		assert((x*x + y*y) < 1.0);
+		// Figure out what factor of r we have to add in to make the resulting length = 1
+		double rfrac = sqrt(1.0 - (x*x + y*y));
+		// Don't scale the projected x,y positions, just add in the right amount of r to
+		// bring it onto the unit sphere
+		xyz[0] = ix*x + jx*y + rx * rfrac;
+		xyz[1] = iy*x + jy*y + ry * rfrac;
+		xyz[2] =        jz*y + rz * rfrac; // iz = 0
 
-	if (!tan->sin) {
-		normalize(&wx, &wy, &wz);
+	} else {
+		// Form the point on the tangent plane relative to observation point,
+		xyz[0] = ix*x + jx*y + rx;
+		xyz[1] = iy*x + jy*y + ry;
+		xyz[2] =        jz*y + rz; // iz = 0
+		// and normalize back onto the unit sphere
+		normalize_3(xyz);
 	}
-	//	printf("wx=%lf wy=%lf wz=%lf\n",wx,wy,wz);
-
-	xyz[0] = wx;
-	xyz[1] = wy;
-	xyz[2] = wz;
 }
 
 // Pixels to XYZ unit vector.
@@ -400,7 +402,11 @@ static void print_to(const tan_t* tan, FILE* f, char* type) {
 }
 
 void tan_print_to(const tan_t* tan, FILE* f) {
-	print_to(tan, f, "TAN");
+	if (tan->sin) {
+		print_to(tan, f, "SIN");
+	} else {
+		print_to(tan, f, "TAN");
+	}
 }
 
 void tan_print(const tan_t* tan) {
@@ -410,7 +416,11 @@ void tan_print(const tan_t* tan) {
 void sip_print_to(const sip_t* sip, FILE* f) {
    double det,pixsc;
 
-   print_to(&(sip->wcstan), f, "SIP");
+   if (sip->wcstan.sin) {
+	   print_to(&(sip->wcstan), f, "SIN-SIP");
+   } else {
+	   print_to(&(sip->wcstan), f, "TAN-SIP");
+   }
 
    fprintf(f, "  SIP order: A=%i, B=%i, AP=%i, BP=%i\n",
 		   sip->a_order, sip->b_order, sip->ap_order, sip->bp_order);

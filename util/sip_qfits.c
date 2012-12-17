@@ -339,7 +339,7 @@ sip_t* sip_read_header(const qfits_header* hdr, sip_t* dest) {
 		return NULL;
 	}
 	is_tan = (strncmp(str, expect, strlen(expect)) == 0);
-	is_sin = (strncmp(str, expect, strlen(expect2)) == 0);
+	is_sin = (strncmp(str, expect2, strlen(expect2)) == 0);
 	if (!(is_tan || is_sin)) {
 		if (!tan_read_header(hdr, &(sip.wcstan))) {
 			ERROR("SIP: failed to read TAN header");
