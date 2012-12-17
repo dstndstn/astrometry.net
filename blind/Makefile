@@ -90,7 +90,7 @@ OTHER_OBJS := usnob.o usnob-fits.o catalog.o \
 	tweak.o blind-main.o \
 	plot-constellations.o quadcenters.o startree2rdls.o \
 	nomad.o nomad-fits.o \
-	noisesim.o noise.o blindutils.o \
+	blindutils.o \
 	backend-main.o backend.o plotquad.o plotxy.o add-text.o tweak2.o
 
 2MASSOBJ := 2masstofits.o 2mass-fits.o 2mass.o
@@ -282,8 +282,7 @@ solver_test_2.o: solver.c
 # Add the basename of your test sources here...
 ALL_TEST_FILES = test_dfind test_ctmf test_dsmooth test_2mass \
 	test_usnob test_nomad test_matchfile test_blindutils \
-	test_dcen3x3 test_resort-xylist test_simplexy test_tweak \
-	test_multiindex2
+	test_dcen3x3 test_resort-xylist test_simplexy test_tweak
 
 ALL_TEST_EXTRA_OBJS :=
 ALL_TEST_LIBS :=
@@ -408,10 +407,6 @@ ALL_OBJ += wcs-rd2xy-main.o
 wcs-pv2sip: wcs-pv2sip.o tweak.o \
 		$(ANLIBS) $(GSL_LIB)
 ALL_OBJ += wcs-pv2sip.o
-
-noisesim: noisesim.o noise.o $(ANUTILS_LIB) $(GSL_LIB)
-
-noisesim2: noisesim2.o noise.o $(ANUTILS_LIB) $(GSL_LIB)
 
 hpgrid: hpgrid.o $(ANUTILS_LIB) $(GSL_LIB)
 

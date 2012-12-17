@@ -40,9 +40,9 @@ void quad_compute_star_code(const double* starxyz, double* code, int dimquads) {
 	sA = starxyz;
 	sB = starxyz + 3;
 	star_midpoint(midAB, sA, sB);
-	ok = star_coords(sA, midAB, &Ax, &Ay);
+	ok = star_coords(sA, midAB, TRUE, &Ay, &Ax);
 	assert(ok);
-	ok = star_coords(sB, midAB, &Bx, &By);
+	ok = star_coords(sB, midAB, TRUE, &By, &Bx);
 	assert(ok);
 	ABx = Bx - Ax;
 	ABy = By - Ay;
@@ -57,7 +57,7 @@ void quad_compute_star_code(const double* starxyz, double* code, int dimquads) {
         double ADx, ADy;
         double x, y;
 		starpos = starxyz + 3*i;
-		ok = star_coords(starpos, midAB, &Dx, &Dy);
+		ok = star_coords(starpos, midAB, TRUE, &Dy, &Dx);
 		assert(ok);
 		ADx = Dx - Ax;
 		ADy = Dy - Ay;

@@ -187,35 +187,69 @@ InlineDefine void radecdeg2xyzarrmany(double *ra, double *dec, double* xyz, int 
 	}
 }
 
-WarnUnusedResult InlineDefine bool star_coords(const double *s, const double *r, double *x, double *y) {
+WarnUnusedResult InlineDefine
+bool star_coords(const double *s, const double *r,
+	 bool tangent, double *x, double *y) {
+	// As used by the sip.c code, this does the TAN projection
+	// (if "tangent" is TRUE; SIN projection other)
+	// r: CRVAL
+    // s: RA,Dec to be projected
+	// ASSUME r,s are unit vectors
+	// sdotr:  s dot r = |r||s| cos(theta) = cos(theta)
 	double sdotr = s[0] * r[0] + s[1] * r[1] + s[2] * r[2];
-	if (sdotr <= 0.0)
+	if (sdotr <= 0.0) {
+	    // on the opposite side of the sky
 		return FALSE;
+	}
 	if (unlikely(r[2] == 1.0)) {
+	    // North pole
 		double inv_s2 = 1.0 / s[2];
-		*x = s[0] * inv_s2;
-		*y = s[1] * inv_s2;
+		if (tangent) {
+			*x = s[0] * inv_s2;
+			*y = s[1] * inv_s2;
+		} else {
+			*x = s[0];
+			*y = s[1];
+		}
 	} else if (unlikely(r[2] == -1.0)) {
+	    // South pole
 		double inv_s2 = 1.0 / s[2];
-		*x =  s[0] * inv_s2;
-		*y = -s[1] * inv_s2;
+		if (tangent) {
+			*x =  s[0] * inv_s2;
+			*y = -s[1] * inv_s2;
+		} else {
+			*x =  s[0];
+			*y = -s[1];
+		}
 	} else {
 		double etax, etay, xix, xiy, xiz, eta_norm;
 		double inv_en, inv_sdotr;
-		// eta is a vector perpendicular to r pointing in the direction of increasing RA.  eta_z = 0 by definition.
+		// eta is a vector perpendicular to r pointing in the direction
+		// of increasing RA.  eta_z = 0 by definition.
  		etax = -r[1];
 		etay =  r[0];
-		eta_norm = hypot(etax, etay); //sqrt(etax * etax + etay * etay);
+		eta_norm = hypot(etax, etay);
 		inv_en = 1.0 / eta_norm;
 		etax *= inv_en;
 		etay *= inv_en;
-		// xi =  r cross eta, a vector pointing northwards, in direction of increasing DEC
+
+		// xi =  r cross eta, a vector pointing northwards,
+		// in direction of increasing DEC
 		xix = -r[2] * etay;
 		xiy =  r[2] * etax;
 		xiz =  r[0] * etay - r[1] * etax;
-		inv_sdotr = 1.0 / sdotr;
-		*x = (s[0] * xix + s[1] * xiy + s[2] * xiz) * inv_sdotr;
-		*y = (s[0] * etax + s[1] * etay) * inv_sdotr;
+
+		// project s-r onto eta and xi.  No need to subtract r from s, though,
+		// since eta and xi are orthogonal to r by construction.
+		*x = (s[0] * etax + s[1] * etay             );
+		*y = (s[0] *  xix + s[1] *  xiy + s[2] * xiz);
+
+		// The "inv_sdotr" applies the TAN scaling
+		if (tangent) {
+			inv_sdotr = 1.0 / sdotr;
+			*x *= inv_sdotr;
+			*y *= inv_sdotr;
+		}
 	}
 	return TRUE;
 }

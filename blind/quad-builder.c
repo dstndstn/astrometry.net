@@ -55,9 +55,9 @@ static void check_scale(quadbuilder_t* qb, pquad_t* pq) {
 	pq->scale_ok = TRUE;
 	pq->staridA = qb->starinds[pq->iA];
 	pq->staridB = qb->starinds[pq->iB];
-	ok = star_coords(sA, pq->midAB, &pq->Ax, &pq->Ay);
+	ok = star_coords(sA, pq->midAB, TRUE, &pq->Ay, &pq->Ax);
 	assert(ok);
-	ok = star_coords(sB, pq->midAB, &Bx, &By);
+	ok = star_coords(sB, pq->midAB, TRUE, &By, &Bx);
 	assert(ok);
 	ABx = Bx - pq->Ax;
 	ABy = By - pq->Ay;
@@ -80,7 +80,7 @@ check_inbox(pquad_t* pq, int* inds, int ninds, double* stars) {
 		double r;
 		ind = inds[i];
 		starpos = stars + ind*3;
-		ok = star_coords(starpos, pq->midAB, &Dx, &Dy);
+		ok = star_coords(starpos, pq->midAB, TRUE, &Dy, &Dx);
 		if (!ok)
 			continue;
 		ADx = Dx - pq->Ax;

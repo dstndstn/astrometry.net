@@ -299,7 +299,8 @@ bool tan_xyzarr2pixelxy(const tan_t* tan, const double* xyzpt, double *px, doubl
 	// FIXME be robust near the poles
 	// Calculate intermediate world coordinates (x,y) on the tangent plane
 	radecdeg2xyzarr(tan->crval[0],tan->crval[1],xyzcrval);
-	if (!star_coords(xyzpt, xyzcrval, &y, &x))
+
+	if (!star_coords(xyzpt, xyzcrval, !tan->sin, &x, &y))
 		return FALSE;
 
 	// Switch intermediate world coordinates into degrees

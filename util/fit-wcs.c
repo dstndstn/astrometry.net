@@ -96,7 +96,7 @@ int fit_tan_wcs_solve(const double* starxyz,
 		for (i=0; i<N; i++) {
 			Unused bool ok;
 			// -project the stars around crval
-			ok = star_coords(starxyz + i*3, crxyz, p + 2*i, p + 2*i + 1);
+			ok = star_coords(starxyz + i*3, crxyz, TRUE, p + 2*i, p + 2*i + 1);
 			assert(ok);
 		}
 	} else {
@@ -111,7 +111,7 @@ int fit_tan_wcs_solve(const double* starxyz,
 		// -project the stars around their center of mass
 		for (i=0; i<N; i++) {
 			Unused bool ok;
-			ok = star_coords(starxyz + i*3, star_cm, p + 2*i, p + 2*i + 1);
+			ok = star_coords(starxyz + i*3, star_cm, TRUE, p + 2*i, p + 2*i + 1);
 			assert(ok);
 		}
 	}
@@ -176,12 +176,11 @@ int fit_tan_wcs_solve(const double* starxyz,
 
 	// -compute WCS parameters.
 	scale = rad2deg(scale);
-	// The CD rows are reversed from R because star_coords and the Intermediate
-	// World Coordinate System consider x and y to be exchanged.
-	tanout->cd[0][0] = R[2] * scale; // CD1_1
-	tanout->cd[0][1] = R[3] * scale; // CD1_2
-	tanout->cd[1][0] = R[0] * scale; // CD2_1
-	tanout->cd[1][1] = R[1] * scale; // CD2_2
+
+	tanout->cd[0][0] = R[0] * scale; // CD1_1
+	tanout->cd[0][1] = R[1] * scale; // CD1_2
+	tanout->cd[1][0] = R[2] * scale; // CD2_1
+	tanout->cd[1][1] = R[3] * scale; // CD2_2
 
     assert(isfinite(tanout->cd[0][0]));
     assert(isfinite(tanout->cd[0][1]));
@@ -201,9 +200,8 @@ int fit_tan_wcs_solve(const double* starxyz,
 			double dx,dy;
 			double dxyz[3];
 			tan_pixelxy2iwc(tanout, field_cm[0], field_cm[1], &ix, &iy);
-			// crossed over due to differences in star_coords and IWC.
-			dx = rad2deg(pcm[1]) - ix;
-			dy = rad2deg(pcm[0]) - iy;
+			dx = rad2deg(pcm[0]) - ix;
+			dy = rad2deg(pcm[1]) - iy;
 			tan_iwc2xyzarr(tanout, dx, dy, dxyz);
 			xyzarr2radecdeg(dxyz, tanout->crval + 0, tanout->crval + 1);
 		}

@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
+  Copyright 2012 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -206,14 +207,21 @@ void make_rand_star(double* star, double ramin, double ramax,
  Computes the 2D coordinates (x,y) (in units of a celestial sphere of
  radius 1) that star s would have in a TANGENTIAL PROJECTION defined
  by (centred at) star r.  s and r are both given in xyz coordinates,
- the parameters are pointers to arrays of size3.
+ the parameters are pointers to arrays of size 3.
+
+ If "tangent" is true, the projection is the WCS TAN projection; if
+ not, it is the WCS SIN projection.
+
+ The resulting x,y coordinates are intermediate world coordinates in
+ degrees.  The "x" direction should be positive for increasing RA, "y"
+ is increasing Dec.
 
  WARNING -- this code assumes s and r are UNIT vectors (ie normalized
- to have length 1), the resulting x direction is increasing DEC, the
- resulting y direction is increasing RA, which might not be the normal
- convention.
+ to have length 1).
 */
-WarnUnusedResult InlineDeclare bool star_coords(const double *s, const double *r, double *x, double *y);
+WarnUnusedResult InlineDeclare
+bool star_coords(const double *s, const double *r, 
+				 bool tangent, double *x, double *y);
 
 InlineDeclare void star_midpoint(double* mid, const double* A, const double* B);
 

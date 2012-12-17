@@ -760,7 +760,8 @@ void tchebyshev_tweak(tweak_t* t, int W, int H) {
         // B contains Intermediate World Coordinates (in degrees)
         refi = il_get(t->ref, i);
         radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], xyzpt);
-        ok = star_coords(xyzpt, xyzcrval, &y, &x); // tangent-plane projection
+		// tangent-plane projection
+        ok = star_coords(xyzpt, xyzcrval, TRUE, &x, &y);
         assert(ok);
 
         gsl_vector_set(b1, i, weight * rad2deg(x));
@@ -1107,7 +1108,8 @@ static void do_sip_tweak(tweak_t* t) {
         // B contains Intermediate World Coordinates (in degrees)
         refi = il_get(t->ref, i);
         radecdeg2xyzarr(t->a_ref[refi], t->d_ref[refi], xyzpt);
-        ok = star_coords(xyzpt, xyzcrval, &y, &x); // tangent-plane projection
+        ok = star_coords(xyzpt, xyzcrval, TRUE, &x, &y);
+		// tangent-plane projection
         assert(ok);
 
         gsl_vector_set(b1, i, weight * rad2deg(x));

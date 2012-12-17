@@ -57,6 +57,9 @@ typedef struct {
     double imagew;
     double imageh;
 
+	// SIP projection rather than TAN.
+	bool sin;
+
 } tan_t;
 
 // Flat structure for minimal SIP wcs. This structure should contain enough
