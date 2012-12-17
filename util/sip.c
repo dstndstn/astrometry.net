@@ -1,6 +1,7 @@
 /*
   This file is part of the Astrometry.net suite.
   Copyright 2006, 2007 Keir Mierle, David W. Hogg, Sam Roweis and Dustin Lang.
+  Copyright 2012 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -176,7 +177,8 @@ void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz)
 	double jx,jy,jz;
 	double wx,wy,wz;
 
-	// Mysterious! Who knows, but negating these coordinates makes WCStools match with SIP. 
+	// Mysterious factor of -1 correcting for stray negatives in the vector
+	// directions below.
 	x = -deg2rad(x);
 	y = -deg2rad(y);
 
@@ -184,7 +186,7 @@ void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz)
 	radecdeg2xyz(tan->crval[0], tan->crval[1], &rx, &ry, &rz);
 	//	printf("rx=%lf ry=%lf rz=%lf\n",rx,ry,rz);
 
-	// Form i = r cross north pole, which is in direction of z
+	// Form i = r cross north pole (0,0,1)
 	ix = ry;
 	iy = -rx;
 	//     iz = 0 because the the north pole is at (0,0,1)
@@ -209,7 +211,10 @@ void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz)
 	wx = ix*x + jx*y + rx;
 	wy = iy*x + jy*y + ry;
 	wz =        jz*y + rz; // iz = 0
-	normalize(&wx, &wy, &wz);
+
+	if (!tan->sin) {
+		normalize(&wx, &wy, &wz);
+	}
 	//	printf("wx=%lf wy=%lf wz=%lf\n",wx,wy,wz);
 
 	xyz[0] = wx;
