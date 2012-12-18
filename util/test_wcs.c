@@ -155,7 +155,7 @@ void test_tan1(CuTest* tc) {
 	tst_xy2rd(1.0, 1.0, 10.3717392951, -74.0152067481,
 			  an3, sip3, &(sip3->wcstan), tc);
 
-	// Round-trip TAN-SIP
+	// TAN-SIP / SIN-SIP
 
 	/*
 	 > wcs-xy2rd -w ../tan2.wcs -x 1 -y 1
@@ -165,5 +165,60 @@ void test_tan1(CuTest* tc) {
 	tst_xy2rd(1.0, 1.0, 10.3709060366, -74.0138433058,
 			  NULL, sip2, NULL, tc);
 
-   
+
+	/*
+	 > wcs-rd2xy -w tan2.wcs -r 10.4 -d -74.1
+	 RA,Dec (10.4000000000, -74.1000000000) -> pixel (-30.6539962452, 0.4508839887)
+	 */
+	tst_rd2xy(10.4, -74.1, -30.6539962452, 0.4508839887,
+			  NULL, sip2, NULL, tc);
+
+
+	/*
+	 > wcs-xy2rd -w sin2.wcs -x 1 -y 1
+	 Pixel (1.0000000000, 1.0000000000) -> RA,Dec (10.3725100913, -74.0143432622)
+	 */
+
+	tst_xy2rd(1.0, 1.0, 10.3725100913, -74.0143432622,
+			  NULL, sip4, NULL, tc);
+
+	/*
+	 > wcs-rd2xy -w sin2.wcs -r 10.4 -d -74.1
+	 RA,Dec (10.4000000000, -74.1000000000) -> pixel (-30.4283749577, 0.6111635583)
+	 */
+
+	tst_rd2xy(10.4, -74.1, -30.4283749577, 0.6111635583,
+			  NULL, sip4, NULL, tc);
+
+
+	// SIP round-trips
+
+	double x, y, ra, dec, x2, y2;
+	bool ok;
+
+	x = y = 100.0;
+
+	ra = dec = 0.0;
+	sip_pixelxy2radec(sip2, x, y, &ra, &dec);
+	printf("x,y (%g, %g) -> RA,Dec (%g, %g)\n", x, y, ra, dec);
+
+	x2 = y2 = 0.0;
+	ok = sip_radec2pixelxy(sip2, ra, dec, &x2, &y2);
+	printf("RA,Dec (%g, %g) -> x,y (%g, %g)\n", ra, dec, x2, y2);
+	CuAssertIntEquals(tc, TRUE, ok);
+
+	CuAssertDblEquals(tc, x, x2, 1e-3);
+	CuAssertDblEquals(tc, y, y2, 1e-3);
+
+
+	ra = dec = 0.0;
+	sip_pixelxy2radec(sip4, x, y, &ra, &dec);
+	printf("x,y (%g, %g) -> RA,Dec (%g, %g)\n", x, y, ra, dec);
+	x2 = y2 = 0.0;
+	ok = sip_radec2pixelxy(sip4, ra, dec, &x2, &y2);
+	printf("RA,Dec (%g, %g) -> x,y (%g, %g)\n", ra, dec, x2, y2);
+	CuAssertIntEquals(tc, TRUE, ok);
+	CuAssertDblEquals(tc, x, x2, 1e-3);
+	CuAssertDblEquals(tc, y, y2, 1e-3);
+
 }
