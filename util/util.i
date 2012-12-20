@@ -824,7 +824,7 @@ Sip = sip_t
 
 
 	static int tansip_numpy_pixelxy2radec(tan_t* tan, sip_t* sip, PyObject* npx, PyObject* npy, 
-									   PyObject* npra, PyObject* npdec, int reverse) {
+										  PyObject* npra, PyObject* npdec, int reverse, int iwc) {
 										
 		int i, N;
 		double *x, *y, *ra, *dec;
@@ -851,6 +851,10 @@ Sip = sip_t
 		ra = PyArray_GETPTR1(npra, 0);
 		dec = PyArray_GETPTR1(npdec, 0);
 		if (!reverse) {
+			if (iwc) {
+				PyErr_SetString(PyExc_ValueError, "reverse=0, iwc=1 not supported (yet)");
+				return -1;
+			}
 			if (tan) {
 				for (i=0; i<N; i++)
 					tan_pixelxy2radec(tan, x[i], y[i], ra+i, dec+i);
@@ -860,17 +864,33 @@ Sip = sip_t
 			}
 		} else {
 			if (tan) {
-				for (i=0; i<N; i++)
-					if (!tan_radec2pixelxy(tan, ra[i], dec[i], x+i, y+i)) {
-						x[i] = HUGE_VAL;
-						y[i] = HUGE_VAL;
-					}
+				if (iwc) {
+					for (i=0; i<N; i++)
+						if (!tan_radec2iwc(tan, ra[i], dec[i], x+i, y+i)) {
+							x[i] = HUGE_VAL;
+							y[i] = HUGE_VAL;
+						}
+				} else {
+					for (i=0; i<N; i++)
+						if (!tan_radec2pixelxy(tan, ra[i], dec[i], x+i, y+i)) {
+							x[i] = HUGE_VAL;
+							y[i] = HUGE_VAL;
+						}
+				}
 			} else {
-				for (i=0; i<N; i++)
-					if (!sip_radec2pixelxy(sip, ra[i], dec[i], x+i, y+i)) {
-						x[i] = HUGE_VAL;
-						y[i] = HUGE_VAL;
-					}
+				if (iwc) {
+					for (i=0; i<N; i++)
+						if (!sip_radec2iwc(sip, ra[i], dec[i], x+i, y+i)) {
+							x[i] = HUGE_VAL;
+							y[i] = HUGE_VAL;
+						}
+				} else {
+					for (i=0; i<N; i++)
+						if (!sip_radec2pixelxy(sip, ra[i], dec[i], x+i, y+i)) {
+							x[i] = HUGE_VAL;
+							y[i] = HUGE_VAL;
+						}
+				}
 			}				
 		}
 		return 0;
@@ -965,7 +985,7 @@ def tan_t_pixelxy2radec_any(self, x, y):
 		y = np.atleast_1d(y).astype(float)
 		r = np.empty(len(x))
 		d = np.empty(len(x))
-		tansip_numpy_pixelxy2radec(self.this, None, x, y, r, d, 0)
+		tansip_numpy_pixelxy2radec(self.this, None, x, y, r, d, 0, 0)
 		return r,d
 	else:
 		return self.pixelxy2radec_single(float(x), float(y))
@@ -982,13 +1002,30 @@ def tan_t_radec2pixelxy_any(self, r, d):
 		y = np.empty(len(r))
 		# This looks like a bug (pixelxy2radec rather than radec2pixel)
 		# but it isn't ("reverse = 1")
-		tansip_numpy_pixelxy2radec(self.this, None, x, y, r, d, 1)
+		tansip_numpy_pixelxy2radec(self.this, None, x, y, r, d, 1, 0)
 		return x,y
 	else:
 		good,x,y = self.radec2pixelxy_single(r, d)
 		return x,y
 tan_t.radec2pixelxy_single = tan_t.radec2pixelxy
 tan_t.radec2pixelxy = tan_t_radec2pixelxy_any
+
+def tan_t_radec2iwc_any(self, r, d):
+	if np.iterable(r) or np.iterable(d):
+		r = np.atleast_1d(r).astype(float)
+		d = np.atleast_1d(d).astype(float)
+		assert(len(r) == len(d))
+		ix = np.empty(len(r))
+		iy = np.empty(len(r))
+		# Call the general-purpose numpy wrapper with reverse=1, iwc=1
+		tansip_numpy_pixelxy2radec(self.this, None, x, y, r, d, 1, 1)
+		return x,y
+	else:
+		good,x,y = self.radec2iwc_single(r, d)
+		return x,y
+tan_t.radec2iwc_single = tan_t.radec2iwc
+tan_t.radec2iwc = tan_t_radec2iwc_any
+
 
 
 

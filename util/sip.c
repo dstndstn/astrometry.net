@@ -298,24 +298,46 @@ bool sip_xyzarr2pixelxy(const sip_t* sip, const double* xyz, double *px, double 
 	return sip_radec2pixelxy(sip, ra, dec, px, py);
 }
 
-// xyz unit vector to Pixels.
-bool tan_xyzarr2pixelxy(const tan_t* tan, const double* xyzpt, double *px, double *py) {
-	double x=0, y=0;
+
+bool sip_xyzarr2iwc(const sip_t* sip, const double* xyz,
+					double* iwcx, double* iwcy) {
+	return tan_xyzarr2iwc(&(sip->wcstan), xyz, iwcx, iwcy);
+}
+bool sip_radec2iwc(const sip_t* sip, double ra, double dec,
+				   double* iwcx, double* iwcy) {
+	return tan_radec2iwc(&(sip->wcstan), ra, dec, iwcx, iwcy);
+}
+
+bool tan_xyzarr2iwc(const tan_t* tan, const double* xyz,
+					double* iwcx, double* iwcy) {
 	double xyzcrval[3];
 
 	// FIXME be robust near the poles
 	// Calculate intermediate world coordinates (x,y) on the tangent plane
-	radecdeg2xyzarr(tan->crval[0],tan->crval[1],xyzcrval);
+	radecdeg2xyzarr(tan->crval[0], tan->crval[1], xyzcrval);
 
-	if (!star_coords(xyzpt, xyzcrval, !tan->sin, &x, &y))
+	if (!star_coords(xyz, xyzcrval, !tan->sin, iwcx, iwcy))
 		return FALSE;
 
-	// Switch intermediate world coordinates into degrees
-	x = rad2deg(x);
-	y = rad2deg(y);
+	*iwcx = rad2deg(*iwcx);
+	*iwcy = rad2deg(*iwcy);
+	return TRUE;
+}
 
-	tan_iwc2pixelxy(tan, x, y, px, py);
+bool tan_radec2iwc(const tan_t* tan, double ra, double dec,
+				   double* iwcx, double* iwcy) {
+	double xyz[3];
+	radecdeg2xyzarr(ra, dec, xyz);
+	return tan_xyzarr2iwc(tan, xyz, iwcx, iwcy);
+}
 
+// xyz unit vector to Pixels.
+bool tan_xyzarr2pixelxy(const tan_t* tan, const double* xyzpt, double *px, double *py) {
+	double iwx=0, iwy=0;
+	if (!tan_xyzarr2iwc(tan, xyzpt, &iwx, &iwy)) {
+		return FALSE;
+	}
+	tan_iwc2pixelxy(tan, iwx, iwy, px, py);
 	return TRUE;
 }
 

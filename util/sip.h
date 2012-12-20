@@ -218,6 +218,16 @@ void tan_iwc2xyzarr(const tan_t* tan, double x, double y, double *xyz);
  */
 void tan_pixelxy2iwc(const tan_t* tan, double px, double py, double *iwcx, double* iwcy);
 
+bool tan_xyzarr2iwc(const tan_t* tan, const double* xyz,
+					double* iwcx, double* iwcy);
+bool tan_radec2iwc(const tan_t* tan, double ra, double dec,
+				   double* iwcx, double* iwcy);
+
+bool sip_xyzarr2iwc(const sip_t* sip, const double* xyz,
+					double* iwcx, double* iwcy);
+bool sip_radec2iwc(const sip_t* sip, double ra, double dec,
+				   double* iwcx, double* iwcy);
+
 void   sip_print(const sip_t*);
 void   sip_print_to(const sip_t*, FILE* fid);
 
