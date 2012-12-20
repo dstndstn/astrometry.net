@@ -562,6 +562,9 @@ anwcs.getHeaderString = anwcs_get_header_string
 	int radec2pixelxy(double ra, double dec, double *p_x, double *p_y) {
 		return sip_radec2pixelxy($self, ra, dec, p_x, p_y);
 	}
+	int radec2iwc(double ra, double dec, double *p_x, double *p_y) {
+		return sip_radec2iwc($self, ra, dec, p_x, p_y);
+	}
 	int xyz2pixelxy(double x, double y, double z, double *p_x, double *p_y) {
 		double xyz[3];
 		xyz[0] = x;
@@ -733,6 +736,9 @@ Sip = sip_t
 	}
 	int radec2pixelxy(double ra, double dec, double *p_x, double *p_y) {
 		return tan_radec2pixelxy($self, ra, dec, p_x, p_y);
+	}
+	int radec2iwc(double ra, double dec, double *p_x, double *p_y) {
+		return tan_radec2iwc($self, ra, dec, p_x, p_y);
 	}
 	int xyz2pixelxy(double x, double y, double z, double *p_x, double *p_y) {
 		double xyz[3];
@@ -1015,8 +1021,8 @@ def tan_t_radec2iwc_any(self, r, d):
 		r = np.atleast_1d(r).astype(float)
 		d = np.atleast_1d(d).astype(float)
 		assert(len(r) == len(d))
-		ix = np.empty(len(r))
-		iy = np.empty(len(r))
+		x = np.empty(len(r))
+		y = np.empty(len(r))
 		# Call the general-purpose numpy wrapper with reverse=1, iwc=1
 		tansip_numpy_pixelxy2radec(self.this, None, x, y, r, d, 1, 1)
 		return x,y
@@ -1064,7 +1070,7 @@ def sip_t_pixelxy2radec_any(self, x, y):
 		y = np.atleast_1d(y).astype(float)
 		r = np.empty(len(x))
 		d = np.empty(len(x))
-		tansip_numpy_pixelxy2radec(None, self.this, x, y, r, d, 0)
+		tansip_numpy_pixelxy2radec(None, self.this, x, y, r, d, 0, 0)
 		return r,d
 	else:
 		return self.pixelxy2radec_single(float(x), float(y))
@@ -1081,7 +1087,7 @@ def sip_t_radec2pixelxy_any(self, r, d):
 		y = np.empty(len(r))
 		# This looks like a bug (pixelxy2radec rather than radec2pixel)
 		# but it isn't ("reverse = 1")
-		tansip_numpy_pixelxy2radec(None, self.this, x, y, r, d, 1)
+		tansip_numpy_pixelxy2radec(None, self.this, x, y, r, d, 1, 0)
 		return x,y
 	else:
 		good,x,y = self.radec2pixelxy_single(r, d)
