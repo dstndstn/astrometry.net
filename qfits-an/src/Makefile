@@ -1,6 +1,17 @@
 
 all:
 
+BASEDIR := ../..
+COMMON := $(BASEDIR)/util
+ifneq ($(MAKECMDGOALS),clean)
+  include $(COMMON)/makefile.common
+endif
+
+LDFLAGS := $(LDFLAGS_DEF)
+LDFLAGS += -fPIC
+CFLAGS += $(CFLAGS_DEF)
+
+
 LIB := libqfits.a
 
 HEADERS := \
