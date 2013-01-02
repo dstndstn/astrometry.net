@@ -106,7 +106,10 @@ static void plot_rgba_data(cairo_t* cairo, unsigned char* img,
 	cairo_save(cairo);
 	cairo_set_source(cairo, pat);
 	//cairo_scale(cairo, scalex, scaley);
-	cairo_paint_with_alpha(cairo, alpha);
+	if (alpha == 1.0)
+		cairo_paint(cairo);
+	else
+		cairo_paint_with_alpha(cairo, alpha);
 	cairo_pattern_destroy(pat);
 	cairo_surface_destroy(thissurf);
 	cairo_restore(cairo);

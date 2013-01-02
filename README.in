@@ -73,7 +73,7 @@ For full functionality, you will need:
 
     $ sudo apt-get install libcairo2-dev libnetpbm10-dev netpbm \
                            libpng12-dev libjpeg-dev python-numpy \
-                           zlib-devel python-pyfits
+                           zlib-devel python-pyfits cfitsio-dev
 
 -> On RHEL, you'll need something like:
     $ sudo yum install cairo.x86_64 cairo-devel.x86_64 netpbm.x86_64 \

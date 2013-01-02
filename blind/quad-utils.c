@@ -124,7 +124,7 @@ void quad_enforce_invariants(unsigned int* quad, double* code,
 		sum += code[2*i];
 	sum /= (dimcodes/2);
 	if (sum > 0.5) {
-		logverb("Flipping code to ensure mean(x)<=0.5\n");
+		logdebug("Flipping code to ensure mean(x)<=0.5\n");
 		// swap the labels of A,B.
 		int tmp = quad[0];
 		quad[0] = quad[1];
