@@ -142,6 +142,7 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	dec = fitstable_read_column(intable, deccol, dubl);
 	if (!dec) {
 		ERROR("Failed to find DEC column (%s) in table", deccol);
+		free(ra);
 		return -1;
 	}
 
@@ -154,6 +155,12 @@ int uniformize_catalog(fitstable_t* intable, fitstable_t* outtable,
 	if (sortcol) {
 		logverb("Sorting by %s...\n", sortcol);
 		sortval = fitstable_read_column(intable, sortcol, dubl);
+		if (!sortval) {
+			ERROR("Failed to read sorting column \"%s\"", sortcol);
+			free(ra);
+			free(dec);
+			return -1;
+		}
 		inorder = permuted_sort(sortval, sizeof(double),
 								sort_ascending ? compare_doubles_asc : compare_doubles_desc,
 								NULL, N);
