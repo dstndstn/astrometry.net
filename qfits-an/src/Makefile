@@ -3,12 +3,6 @@ all:
 
 LIB := libqfits.a
 
-all: $(LIB)
-
-# Programs
-RANLIB := ranlib
-CP := cp
-
 HEADERS := \
 	qfits.h \
 	qfits_cache.h \
@@ -34,6 +28,10 @@ install: $(LIB)
 	$(CP) $(HEADERS) '$(INSTALL_DIR)/include'
 .PHONY: install
 
+# Programs we use
+RANLIB := ranlib
+CP := cp
+
 STAGED_LIB_DIR := $(CURDIR)/../lib
 STAGED_INCLUDE_DIR := $(CURDIR)/../include
 
@@ -42,6 +40,8 @@ STAGED_HEADERS := $(addprefix $(STAGED_INCLUDE_DIR)/, $(HEADERS))
 
 stage: $(STAGED_LIB) $(STAGED_HEADERS)
 .PHONY: stage
+
+all: stage
 
 $(STAGED_LIB): $(LIB)
 	$(CP) $< $@

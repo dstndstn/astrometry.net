@@ -70,7 +70,7 @@ qfits_header* anqfits_get_header(const anqfits_t* qf, int ext) {
 
 qfits_header* anqfits_get_header_only(const char* fn, int ext) {
 	qfits_header* hdr;
-	const anqfits_t* anq = anqfits_open_hdu(fn, ext);
+	anqfits_t* anq = anqfits_open_hdu(fn, ext);
 	if (!anq) {
 		qfits_error("Failed to read FITS file \"%s\" to extension %i", fn, ext);
 		return NULL;

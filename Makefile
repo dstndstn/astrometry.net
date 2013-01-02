@@ -60,7 +60,8 @@ html:
 	$(MAKE) -C doc html
 
 qfits-an:
-	$(MAKE) $(QFITS_LIB)
+	$(MAKE) -C qfits-an/src
+
 gsl-an:
 	$(MAKE) -C gsl-an
 
@@ -109,10 +110,6 @@ install: report.txt
 	@echo
 	-$(MAKE) -C blind install-extra
 
-## FIXME -- pyfits is no longer bundled -- but we could still include a makefile target to retrieve, build, and install it... maybe
-#cp pyfits/*.py $(INSTALL_DIR)/python/pyfits
-# (cd pyfits-2.4.0 && python setup.py install --install-base=stage --install-lib=stage/lib --install-scripts=stage/bin --install-data=stage/data --install-headers=stage/include && cp -r stage/lib/pyfits $(INSTALL_DIR)/python/pyfits)
-
 install-indexes:
 	mkdir -p '$(INSTALL_DIR)/data'
 	@for x in `ls index-*.tar.bz2 2>/dev/null`; do \
@@ -129,58 +126,6 @@ install-indexes:
 		echo Installing $$x in '$(INSTALL_DIR)/data'...; \
 		echo tar xvzf $$x -C '$(INSTALL_DIR)/data'; \
 		tar xvzf $$x -C '$(INSTALL_DIR)/data'; \
-	done
-
-upgrade-indexes:
-	@echo
-	@echo
-	@echo "Warning: this process will modify the index files that you downloaded"
-	@echo "and installed (in the directory $(INSTALL_DIR)/data -- if that's not"
-	@echo "correct then edit the INSTALL_DIR variable in the Makefile)"
-	@echo
-	@echo "This process is not reversible, so you will not be able to use the"
-	@echo "old version of the code with the new version of the index files."
-	@echo
-	@echo "If you want to continue experimenting with the old code, please quit"
-	@echo "this process (control-C now), copy the index files in the directory"
-	@echo "$(INSTALL_DIR)/data to some safe place, then re-run this command."
-	@echo
-	@echo
-	@echo
-	@echo "Waiting 10 seconds for you to read the message above..."
-	@echo
-	sleep 10
-	@echo
-	@echo "All right, you had your chance.  Proceeding."
-	@echo
-	$(MAKE) -C libkd
-	@echo
-	@echo
-
-	@echo "Upgrading:"
-	@ls -1 $(INSTALL_DIR)/data/index-*.skdt.fits $(INSTALL_DIR)/data/index-*.ckdt.fits
-	@echo
-	@echo "Waiting 5 seconds for you to read that..."
-	sleep 5
-	@echo
-	@echo "Hold on to your socks."
-	@echo
-	@for x in `ls $(INSTALL_DIR)/data/index-*.skdt.fits $(INSTALL_DIR)/data/index-*.ckdt.fits 2>/dev/null`; do \
-		echo "Upgrading $$x in $(INSTALL_DIR)/data ..."; \
-		echo; \
-		echo ./libkd/fix-bb "$$x" "$$x.tmp"; \
-		./libkd/fix-bb "$$x" "$$x.tmp"; \
-		if [ $$? -eq 0 ]; then \
-			echo mv "$$x.tmp" "$$x"; \
-			mv "$$x.tmp" "$$x"; \
-		elif [ $$? -eq 1 ]; then \
-			echo; \
-		else \
-			echo; \
-			echo "Command failed.  Aborting."; \
-			echo; \
-			break; \
-		fi; \
 	done
 
 reconfig:
@@ -315,6 +260,10 @@ report:
 	-python -V
 	@echo "PYTHONPATH: $${PYTHONPATH}"
 	@echo "PATH: $${PATH}"
+	@echo "pkg-config --cflags cfitsio:"
+	-pkg-config --cflags cfitsio
+	@echo "pkg-config --libs cfitsio:"
+	-pkg-config --libs cfitsio
 	@echo "pkg-config --cflags cairo:"
 	-pkg-config --cflags cairo
 	@echo "pkg-config --libs cairo: "
@@ -325,4 +274,4 @@ report.txt: Makefile
 
 
 .SUFFIXES:            # Delete the default suffixes
-#.SUFFIXES: .c .o .h   # Define our suffix list
+
