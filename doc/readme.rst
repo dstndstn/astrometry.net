@@ -4,7 +4,7 @@ Astrometry.net code README
 
 
 | Copyright 2006-2010 Michael Blanton, David W. Hogg, Dustin Lang, Keir Mierle and Sam Roweis.  
-| Copyright 2011 Dustin Lang and David W. Hogg.
+| Copyright 2011-2013 Dustin Lang and David W. Hogg.
 
 This code is accompanied by the paper:
 
