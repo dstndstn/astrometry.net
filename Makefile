@@ -1,6 +1,6 @@
 # This file is part of the Astrometry.net suite.
 # Copyright 2006-2008 Dustin Lang, Keir Mierle and Sam Roweis.
-# Copyright 2010, 2011, 2012 Dustin Lang.
+# Copyright 2010, 2011, 2012, 2013 Dustin Lang.
 #
 # The Astrometry.net suite is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License
@@ -36,14 +36,20 @@ include $(COMMON)/makefile.qfits
 include $(COMMON)/makefile.cfitsio
 
 .PHONY: all
-all: README subdirs
+all: README pkgconfig subdirs
+
+# Just check that we have pkg-config, since it's needed to get
+# wcslib, cfitsio, cairo, etc config information.
+pkgconfig:
+	pkg-config --version
+.PHONY: pkgconfig
 
 subdirs: thirdparty
 	$(MAKE) -C util
 	$(MAKE) -C libkd
 	$(MAKE) -C blind
 
-thirdparty: qfits-an gsl-an cfitsio
+thirdparty: qfits-an gsl-an
 
 doc:
 	$(MAKE) -C doc html
@@ -56,17 +62,15 @@ qfits-an:
 	$(MAKE) $(QFITS_LIB)
 gsl-an:
 	$(MAKE) -C gsl-an
-cfitsio:
-	$(MAKE) $(CFITS_LIB)
 
-.PHONY: subdirs thirdparty qfits-an gsl-an cfitsio
+.PHONY: subdirs thirdparty qfits-an gsl-an
 
 # Targets that require extra libraries
 extra:
 	$(MAKE) -C util
 	$(MAKE) -C blind cairo
 
-# Targets that require SWIG
+# Targets that create python bindings (requiring swig)
 py:
 	$(MAKE) -C util pyutil
 	$(MAKE) -C util cairoutils.o
@@ -191,7 +195,7 @@ RELEASE_VER := 0.41
 SP_RELEASE_VER := 0.3
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
-RELEASE_SUBDIRS := cfitsio qfits-an gsl-an util libkd blind demo data etc ups sdss
+RELEASE_SUBDIRS := qfits-an gsl-an util libkd blind demo data etc ups sdss
 
 README: README.in
 	$(SED) 's/$$VERSION/$(RELEASE_VER)/g' $< > $@
@@ -222,7 +226,6 @@ release-pyspherematch:
 	for x in $(SP_RELEASE_SUBDIRS); do \
 		svn export $(SP_RELEASE_SVN)/$$x $(SP_RELEASE_DIR)/$$x; \
 	done
-
 	# replace, add and remove files from spherematch-only release
 	cp -r $(SP_ONLY)/* $(SP_RELEASE_DIR)
 	for x in $(SP_RELEASE_REMOVE); do \
@@ -270,7 +273,6 @@ test:
 
 clean:
 	$(MAKE) -C util clean
-	-$(MAKE) -C cfitsio distclean
 	-$(MAKE) -C qfits-an clean
 	-rm __init__.pyc
 	$(MAKE) -C gsl-an clean
@@ -279,7 +281,6 @@ clean:
 
 realclean:
 	$(MAKE) -C util realclean
-	-$(MAKE) -C cfitsio distclean
 	-$(MAKE) -C qfits-an clean
 	-rm __init__.pyc
 	$(MAKE) -C gsl-an clean

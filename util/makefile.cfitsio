@@ -1,5 +1,5 @@
 # This file is part of the Astrometry.net suite.
-# Copyright 2006, 2007 Dustin Lang, Keir Mierle and Sam Roweis.
+# Copyright 2013 Dustin Lang.
 #
 # The Astrometry.net suite is free software; you can redistribute
 # it and/or modify it under the terms of the GNU General Public License
@@ -14,17 +14,11 @@
 # along with the Astrometry.net suite ; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-CFITS_DIR := $(BASEDIR)/cfitsio
-CFITS_INC := -I$(CFITS_DIR)
-CFITS_LIB := $(CFITS_DIR)/libcfitsio.a
+CFITS_INC := $(shell pkg-config --cflags cfitsio 2>/dev/null)
+CFITS_LIB := $(shell pkg-config --libs cfitsio 2>/dev/null)
+CFITS_DEP :=
 
-# CFLAGS to pass to CFITSIO's configure.
-CFITS_CONFIG_CFLAGS := $(CFLAGS_DEF)
-
-$(CFITS_LIB): $(CFITS_DIR)/Makefile # $(wildcard $(CFITS_DIR)/*.c) $(wildcard $(CFITS_DIR)/*.h) $(CFITS_DIR)/Makefile
-	$(MAKE) -C $(CFITS_DIR)
-
-$(CFITS_DIR)/Makefile: $(CFITS_DIR)/Makefile.in
-	cd $(CFITS_DIR) && ./configure CFLAGS="$(CFITS_CONFIG_CFLAGS)" CC="$(CC)"
-$(CFITS_DIR)/Makefile.in: ;
-
+X := $(shell pkg-config --exists cfitsio && echo yes || echo no)
+ifeq ($(X), yes)
+  CFITS_EXISTS := 1
+endif

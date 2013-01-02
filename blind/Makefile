@@ -181,14 +181,10 @@ ALL_EXECS :=
 
 ALL_OBJ += $(PLOTSTUFF)
 
-all: $(QFITS_LIB) $(CFITS_LIB) $(LIBKD_LIB) \
+all: $(QFITS_LIB) $(LIBKD_LIB) \
 	$(ANUTILS_LIB) $(ANFILES_LIB) \
 	$(PROGS) $(PIPELINE) $(PROSPECTUS) $(FITS_UTILS) fitsverify \
 	$(BACKEND_LIB) $(BACKEND_SO)
-
-#$(REMAKE_LIBKD) 
-#$(REMAKE_ANFILES) 
-#$(REMAKE_ANUTILS)
 
 cairo: $(CAIROEXECS)
 .PHONY: cairo
@@ -359,7 +355,8 @@ control-program: control-program.o \
 ALL_OBJ += control-program.o
 
 # qfits is only needed for writing debugging images...
-image2xy: image2xy-main.o image2xy-files.o $(SIMPLEXY_OBJ) $(CFITS_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+image2xy: image2xy-main.o image2xy-files.o $(SIMPLEXY_OBJ) $(CFITS_DEP) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 
 ALL_OBJ += image2xy-main.o image2xy-files.o
 
@@ -397,7 +394,7 @@ WCS_LIB_DEP :=
 
 wcs-xy2rd: wcs-xy2rd-main.o wcs-xy2rd.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(WCS_LIB) $(LDLIBS)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCS_LIB) $(LDLIBS)
 ALL_OBJ += wcs-xy2rd-main.o
 
 wcs-rd2xy: wcs-rd2xy-main.o wcs-rd2xy.o $(UTIL_OBJS) \
@@ -411,10 +408,11 @@ ALL_OBJ += wcs-pv2sip.o
 
 hpgrid: hpgrid.o $(ANUTILS_LIB) $(GSL_LIB)
 
-$(CFITS_UTILS) :: %: %.o $(CFITS_LIB)
+$(CFITS_UTILS) :: %: %.o $(CFITS_DEP)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 
-fitsverify: ftverify.c fvrf_data.c fvrf_file.c fvrf_head.c fvrf_key.c fvrf_misc.c $(CFITS_LIB)
-	$(CC) -DSTANDALONE -trigraphs $(CFITS_INC) -o $@ $^ -lm
+fitsverify: ftverify.c fvrf_data.c fvrf_file.c fvrf_head.c fvrf_key.c fvrf_misc.c $(CFITS_DEP)
+	$(CC) -DSTANDALONE -trigraphs $(CFITS_INC) -o $@ $^ $(CFITS_LIB) -lm
 
 $(OLDEXECS) :: %: %.o $(OLDEXECS_OBJS) \
 		$(ANUTILS_LIB) $(GSL_LIB) $(LIBKD_LIB) $(QFITS_LIB)
@@ -530,14 +528,15 @@ solve-field: solve-field.o augment-xylist.o blindutils.o matchfile.o matchobj.o 
 		image2xy-files.o resort-xylist.o tabsort.o cut-table.o \
 		fits-guess-scale.o wcs-rd2xy.o new-wcs.o \
 		scamp.o \
-		$(SIMPLEXY_OBJ) $(CFITS_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(LDLIBS)
+		$(SIMPLEXY_OBJ) $(CFITS_DEP) $(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(WCSLIB_LIB) $(CFITS_LIB) $(LDLIBS)
 
 ALL_OBJ += scamp.o cut-table.o
 
 augment-xylist: augment-xylist-main.o augment-xylist.o tabsort.o cut-table.o fits-guess-scale.o \
 		image2xy-files.o resort-xylist.o blindutils.o \
-		$(SIMPLEXY_OBJ) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_LIB)
+		$(SIMPLEXY_OBJ) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(CFITS_DEP)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(CFITS_LIB) $(LDLIBS)
 
 ALL_OBJ += augment-xylist-main.o
 
@@ -728,7 +727,6 @@ create-scamp-catalog: create-scamp-catalog.o \
 DEP_OBJ := $(ALL_OBJ)
 DEP_PREREQS := $(QFITS_LIB)
 
-CFLAGS += $(CFITSIO_CFLAGS)
 CFLAGS += $(CAIRO_INC)
 include $(COMMON)/makefile.deps
 
