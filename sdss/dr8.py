@@ -55,6 +55,7 @@ class Frame(SdssFile):
 		assert(bigsky.shape == image.shape)
 		dn = (image / calibvec) + bigsky
 		gain = psfield.getGain(bandnum)
+		# Note, "darkvar" includes dark current *and* read noise.
 		darkvar = psfield.getDarkVariance(bandnum)
 		dnvar = (dn / gain) + darkvar
 		invvar = 1./(dnvar * calibvec**2)
