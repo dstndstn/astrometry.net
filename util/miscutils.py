@@ -21,12 +21,15 @@ def point_in_poly(x, y, poly):
 	return inside
 
 def lanczos_filter(order, x):
-	x = atleast_1d(x)
-	nz = logical_and(x != 0., logical_and(x < order, x > -order))
-	filt = zeros(len(x), float)
+	x = np.atleast_1d(x)
+	nz = np.logical_and(x != 0., np.logical_and(x < order, x > -order))
+	nz = np.flatnonzero(nz)
+									   
+	#filt = np.zeros(len(x), float)
+	filt = np.zeros(x.shape, dtype=float)
 	#filt[nz] = order * sin(pi * x[nz]) * sin(pi * x[nz] / order) / ((pi * x[nz])**2)
-	pinz = pi * x[nz]
-	filt[nz] = order * sin(pinz) * sin(pinz / order) / (pinz**2)
+	pinz = pi * x.flat[nz]
+	filt.flat[nz] = order * np.sin(pinz) * np.sin(pinz / order) / (pinz**2)
 	filt[x == 0] = 1.
 	#filt[x >  order] = 0.
 	#filt[x < -order] = 0.
