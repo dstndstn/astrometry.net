@@ -94,10 +94,15 @@ class Client(object):
             data = fp.getvalue()
             headers = {'Content-type': mp.get('Content-type')}
 
-            #print 'Sending headers:'
-            #print ' ', headers
-            #print 'Sending data:'
-            #print data[:400].replace('\n', '\\n\n').replace('\r', '\\r')
+            if False:
+                print 'Sending headers:'
+                print ' ', headers
+                print 'Sending data:'
+                print data[:1024].replace('\n', '\\n\n').replace('\r', '\\r')
+                if len(data) > 1024:
+                    print '...'
+                    print data[-256:].replace('\n', '\\n\n').replace('\r', '\\r')
+                    print
 
         else:
             # Else send x-www-form-encoded
