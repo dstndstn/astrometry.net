@@ -750,6 +750,51 @@ class PsField(SdssFile):
 		
 		return (float(a), float(s1), float(b), float(s2))
 
+	def getEigenPsfs(self, bandnum):
+		'''
+		Returns an numpy array of shape, eg, (4, 51, 51).
+		'''
+		T = fits_table(self.hdus[bandnum+1].data)
+		psfs = []
+		for psf,h,w in zip(T.rrows, T.rnrow, T.rncol):
+			psfs.append(psf.reshape((h,w)))
+		psfs = np.array(psfs)
+		return psfs
+
+	def getEigenPolynomials(self, bandnum):
+		'''
+		Returns [ (xorder, yorder, coeffs),  (xorder, yorder, coeffs), ...]
+		one tuple per eigen-PSF.
+		xorder and yorder are np arrays of integers
+		coeffs is a numpy array of floating-point coefficients
+		'''
+		T = fits_table(self.hdus[bandnum+1].data)
+		terms = []
+		for k in range(len(T)):
+			nrb = T.nrow_b[k]
+			ncb = T.ncol_b[k]
+			c = T.c[k].reshape(5, 5)
+			c = c[:nrb,:ncb]
+			(gridc,gridr) = np.meshgrid(np.arange(ncb), np.arange(nrb))
+			c *= 1e-3**gridr * 1e-3**gridc
+			I = np.flatnonzero(c)
+			terms.append((gridc.flat[I], gridr.flat[I], c.flat[I]))
+		return terms
+
+	def convolveEigenPsf(self, bandnum, img):
+		from scipy.ndimage.filters import correlate
+
+		eigenpsfs = self.getEigenPsfs(bandnum)
+		eigenterms = self.getEigenPolynomials(bandnum)
+		H,W = img.shape
+		conv = np.zeros((H,W))
+		xx,yy = np.arange(W), np.arange(H)
+		for epsf, (XO,YO,C) in zip(eigenpsfs, eigenterms):
+			k = reduce(np.add, [np.outer(yy**yo, xx**xo) * c
+								for xo,yo,c in zip(XO,YO,C)])
+			conv += k * correlate(img, epsf)
+		return conv
+
 	def getPsfAtPoints(self, bandnum, x, y):
 		'''
 		Reconstruct the SDSS model PSF from KL basis functions.
@@ -763,47 +808,32 @@ class PsField(SdssFile):
 		rtnscalar = np.isscalar(x) and np.isscalar(y)
 		x = np.atleast_1d(x)
 		y = np.atleast_1d(y)
-		psf = fits_table(self.hdus[bandnum+1].data)
-		psfimgs = None
-		(outh, outw) = (None,None)
+
+		eigenpsfs = self.getEigenPsfs(bandnum)
+		eigenpolys = self.getEigenPolynomials(bandnum)
 
 		# From the IDL docs:
 		# http://photo.astro.princeton.edu/photoop_doc.html#SDSS_PSF_RECON
 		#   acoeff_k = SUM_i{ SUM_j{ (0.001*ROWC)^i * (0.001*COLC)^j * C_k_ij } }
 		#   psfimage = SUM_k{ acoeff_k * RROWS_k }
-		for k in range(len(psf)):
-			nrb = psf.nrow_b[k]
-			ncb = psf.ncol_b[k]
-			c = psf.c[k].reshape(5, 5)
-			c = c[:nrb,:ncb]
-			(gridi,gridj) = np.meshgrid(range(nrb), range(ncb))
 
-			if psfimgs is None:
-				psfimgs = [np.zeros_like(psf.rrows[k]) for xy
-						   in np.broadcast(x,y)]
-				(outh,outw) = (psf.rnrow[k], psf.rncol[k])
-			else:
-				assert(psf.rnrow[k] == outh)
-				assert(psf.rncol[k] == outw)
+		# we assume all the eigen-psfs are the same size.
+		assert(len(np.unique([psf.shape for psf in eigenpsfs])) == 1)
 
-			for i,(xi,yi) in enumerate(np.broadcast(x,y)):
-				#print 'xi,yi', xi,yi
-				acoeff_k = np.sum(((0.001 * xi)**gridi * (0.001 * yi)**gridj * c))
-				if False: # DEBUG
-					print 'coeffs:', (0.001 * xi)**gridi * (0.001 * yi)**gridj
-					print 'c:', c
-					for (coi,ci) in zip(((0.001 * xi)**gridi * (0.001 * yi)**gridj).ravel(), c.ravel()):
-						print 'co %g, c %g' % (coi,ci)
-					print 'acoeff_k', acoeff_k
+		xx,yy = np.broadcast_arrays(x, y)
+		N = len(xx.flat)
+		#print 'N', N
+		psfimgs = np.zeros((N,) + eigenpsfs[0].shape)
+		for epsf, (XO, YO, C) in zip(eigenpsfs, eigenpolys):
+			kk = reduce(np.add, [(xx.flat**xo) * (yy.flat**yo) * c for (xo,yo,c) in zip(XO,YO,C)])
+			#print 'kk shape', kk.shape
+			psfimgs += epsf[np.newaxis,:,:] * kk[:,np.newaxis,np.newaxis]
 
-				#print 'acoeff_k', acoeff_k.shape, acoeff_k
-				#print 'rrows[k]', psf.rrows[k].shape, psf.rrows[k]
-				psfimgs[i] += acoeff_k * psf.rrows[k]
-
-		psfimgs = [img.reshape((outh,outw)) for img in psfimgs]
 		if rtnscalar:
-			return psfimgs[0]
-		return psfimgs
+			return psfimgs[0,:,:]
+		# convert back to a list...
+		return [psfimgs[i,:,:] for i in range(N)]
+		#return psfimgs
 
 
 	def getGain(self, band=None):
