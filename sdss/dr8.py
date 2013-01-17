@@ -120,6 +120,7 @@ class DR8(DR7):
 			'frame': 'frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits',
 			'idR': 'idR-%(run)06i-%(band)s-%(camcol)i-%(field)04i.fits',
 			'photoObj': 'photoObj-%(run)06i-%(camcol)i-%(field)04i.fits',
+			'photoField': 'photoField-%(run)06i-%(camcol)i.fits',
 			})
 
 		# URLs on DAS server
@@ -130,6 +131,7 @@ class DR8(DR7):
 			'frame': 'photoObj/frames/%(rerun)s/%(run)i/%(camcol)i/frame-%(band)s-%(run)06i-%(camcol)i-%(field)04i.fits.bz2',
 			'photoObj': 'photoObj/%(rerun)s/%(run)i/%(camcol)i/photoObj-%(run)06i-%(camcol)i-%(field)04i.fits',
 			'psField': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/psField-%(run)06i-%(camcol)i-%(field)04i.fit',
+			'photoField': 'photoObj/%(rerun)s/%(run)i/photoField-%(run)06i-%(camcol)i.fits',
 			'fpM': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpM-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit',
 			}
 
@@ -181,7 +183,7 @@ class DR8(DR7):
 						   band=band))
 		return url
 	
-	def retrieve(self, filetype, run, camcol, field, band=None, skipExisting=True,
+	def retrieve(self, filetype, run, camcol, field=None, band=None, skipExisting=True,
 				 tempsuffix='.tmp'):
 		outfn = self.getPath(filetype, run, camcol, field, band)
 		if outfn is None:
