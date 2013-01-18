@@ -699,6 +699,10 @@ class PsField(SdssFile):
 		self.plpsf_beta = t.psf_beta
 		self.plpsf_sigmap = t.psf_sigmap
 
+
+		t = fits_table(p[8].data)
+		self.per_run_apcorrs = t.ap_corr_run
+
 	def getPowerLaw(self, bandnum):
 		''' Returns:
 
@@ -752,7 +756,7 @@ class PsField(SdssFile):
 
 	def getEigenPsfs(self, bandnum):
 		'''
-		Returns an numpy array of shape, eg, (4, 51, 51).
+		Returns a numpy array of shape, eg, (4, 51, 51).
 		'''
 		T = fits_table(self.hdus[bandnum+1].data)
 		psfs = []
@@ -773,12 +777,15 @@ class PsField(SdssFile):
 		for k in range(len(T)):
 			nrb = T.nrow_b[k]
 			ncb = T.ncol_b[k]
-			c = T.c[k].reshape(5, 5)
+			c = T.c[k]
+			# !!!
+			c = c.copy()
+			c = c.reshape(5, 5)
 			c = c[:nrb,:ncb]
 			(gridc,gridr) = np.meshgrid(np.arange(ncb), np.arange(nrb))
 			c *= 1e-3**gridr * 1e-3**gridc
 			I = np.flatnonzero(c)
-			terms.append((gridc.flat[I], gridr.flat[I], c.flat[I]))
+			terms.append((gridr.flat[I], gridc.flat[I], c.flat[I]))
 		return terms
 
 	def convolveEigenPsf(self, bandnum, img):
@@ -792,6 +799,19 @@ class PsField(SdssFile):
 		for epsf, (XO,YO,C) in zip(eigenpsfs, eigenterms):
 			k = reduce(np.add, [np.outer(yy**yo, xx**xo) * c
 								for xo,yo,c in zip(XO,YO,C)])
+			# Trim symmetric zero-padding off the epsf.
+			# This will fail spectacularly given an all-zero eigen-component.
+			#print 'epsf shape:', epsf.shape
+			while True:
+				H,W = epsf.shape
+				if (np.all(epsf[:,0] == 0) and np.all(epsf[:,-1] == 0) and
+					np.all(epsf[0,:] == 0) and np.all(epsf[-1,:] == 0)):
+					# Trim!
+					epsf = epsf[1:-1, 1:-1]
+				else:
+					break
+			#print 'trimmed epsf shape to:', epsf.shape
+
 			conv += k * correlate(img, epsf)
 		return conv
 
@@ -822,10 +842,13 @@ class PsField(SdssFile):
 
 		xx,yy = np.broadcast_arrays(x, y)
 		N = len(xx.flat)
-		#print 'N', N
+		#print 'xx,yy', xx,yy
 		psfimgs = np.zeros((N,) + eigenpsfs[0].shape)
 		for epsf, (XO, YO, C) in zip(eigenpsfs, eigenpolys):
 			kk = reduce(np.add, [(xx.flat**xo) * (yy.flat**yo) * c for (xo,yo,c) in zip(XO,YO,C)])
+			#for (xo,yo,c) in zip(XO,YO,C):
+			#	print ' term:', xo, yo, c, xx.flat**xo, yy.flat**yo, (xx.flat**xo) * (yy.flat**yo) * c
+			#print 'kk', kk
 			#print 'kk shape', kk.shape
 			psfimgs += epsf[np.newaxis,:,:] * kk[:,np.newaxis,np.newaxis]
 
