@@ -38,7 +38,10 @@ def test_vs_idl():
 				   (600.,500.,'psf.fits')]:
 
 		psf0 = pyfits.open(os.path.join(datadir, fn))[0].data
-		psf = psfield.getPsfAtPoints(bandnum, x, y)
+
+		#psf = psfield.getPsfAtPoints(bandnum, x, y)
+		psf = psfield.getPsfAtPoints(bandnum, x + 0.5, y + 0.5)
+
 		psf = psf.astype(np.float32)
 
 		def show(im):
@@ -68,8 +71,8 @@ def test_vs_idl():
 		print 'Diff:', diff.min(), diff.max()
 		rms = np.sqrt(np.mean(diff**2))
 		print 'RMS:', rms
-		assert(np.all(np.abs(diff) < 2e-5))
-		assert(rms < 1e-6)
+		assert(np.all(np.abs(diff) < 5e-8))
+		assert(rms < 2e-8)
 
 def test_vs_stars():
 	run, camcol, field = 1752, 3, 163
@@ -269,5 +272,6 @@ def test_vs_stars():
 			
 		
 if __name__ == '__main__':
-	test_vs_stars()
+	test_vs_idl()
+	#test_vs_stars()
 	
