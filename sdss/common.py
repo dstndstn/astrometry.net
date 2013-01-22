@@ -783,7 +783,8 @@ class PsField(SdssFile):
 			c = c.reshape(5, 5)
 			c = c[:nrb,:ncb]
 			(gridc,gridr) = np.meshgrid(np.arange(ncb), np.arange(nrb))
-			c *= 1e-3**gridr * 1e-3**gridc
+			# remove the 1e-3 coordinate prescaling
+			c *= (1e-3 ** (gridr + gridc))
 			I = np.flatnonzero(c)
 			terms.append((gridr.flat[I], gridc.flat[I], c.flat[I]))
 		return terms

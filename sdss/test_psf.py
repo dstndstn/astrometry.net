@@ -39,7 +39,7 @@ def test_vs_idl():
 
 		psf0 = pyfits.open(os.path.join(datadir, fn))[0].data
 
-		#psf = psfield.getPsfAtPoints(bandnum, x, y)
+		# The IDL code adds 0.5 to the pixel coords
 		psf = psfield.getPsfAtPoints(bandnum, x + 0.5, y + 0.5)
 
 		psf = psf.astype(np.float32)
@@ -75,17 +75,27 @@ def test_vs_idl():
 		assert(rms < 2e-8)
 
 def test_vs_stars():
+	ps = PlotSequence('klpsf')
+
+	#run, camcol, field, band = 4948, 6, 249, 'r'
+	run, camcol, field, band = 94, 6, 11, 'r'
+	test_vs_stars_on(run, camcol, field, band, ps)
+
+	return
 	run, camcol, field = 1752, 3, 163
 	band ='r'
-
+	test_vs_stars_on(run, camcol, field, band, ps)
+	
 	#756-z6-700
 	run, camcol, field = 756, 6, 700
 	band ='z'
+	test_vs_stars_on(run, camcol, field, band, ps)
+
+def test_vs_stars_on(run, camcol, field, band, ps):
 
 	bandnum = band_index(band)
 	datadir = os.path.join(os.path.dirname(__file__), 'testdata')
 	sdss = DR9(basedir=datadir)
-	ps = PlotSequence('klpsf')
 
 	sdss.retrieve('psField', run, camcol, field)
 	psfield = sdss.readPsField(run, camcol, field)
@@ -107,8 +117,11 @@ def test_vs_stars():
 	T.cut(T.parent == -1)
 	T.cut(T.flux > 1.)
 	print len(T), 'after flux cut'
-	T.cut(T.flux > 10.)
-	print len(T), 'after flux cut'
+	#T.cut(T.flux > 10.)
+	#print len(T), 'after flux cut'
+	#T.cut(T.flux > 20.)
+	#print len(T), 'after flux cut'
+	T.cut(np.argsort(-T.flux)[:25])
 	# margin
 	m = 30
 	T.cut((T.x >= m) * (T.x < (W-m)) * (T.y >= m) * (T.y < (H-m)))
@@ -129,6 +142,7 @@ def test_vs_stars():
 	ima = dict(interpolation='nearest', origin='lower')
 	
 	plt.clf()
+	mx = None
 	for i,(psf,poly) in enumerate(zip(eigenpsfs, eigenpolys)):
 		print
 		print 'Eigen-PSF', i
@@ -144,6 +158,10 @@ def test_vs_stars():
 		
 		plt.subplot(RR,CC, i+1)
 		plt.imshow(psf * kk.max(), **ima)
+		if mx is None:
+			mx = (psf * kk.max()).max()
+		else:
+			plt.clim(-mx * 0.05, mx * 0.05)
 		plt.colorbar()
 	ps.savefig()
 
@@ -162,11 +180,8 @@ def test_vs_stars():
 	plt.imshow(np.log10(np.maximum(psfmos + 1e-3, 1e-3)), **ima)
 	ps.savefig()
 	
-	
-	diff1 = None
-	diff2 = None
-	rms1 = None
-	rms2 = None
+	diffs = None
+	rmses = None
 	
 	for i in range(len(T)):
 
@@ -193,18 +208,19 @@ def test_vs_stars():
 
 		psf2 = psfield.getPsfAtPoints(bandnum, yy, xx)
 		mod2 = psf2 / psf2.sum() * T.flux[i]
-		
-		if diff1 is None:
-			diff1 = np.zeros_like(mod)
-			diff2 = np.zeros_like(mod)
-			rms1 = np.zeros_like(mod)
-			rms2 = np.zeros_like(mod)
-			
-		diff1 += (mod  - shim)
-		diff2 += (mod2 - shim)
 
-		rms1 += (mod - shim)**2
-		rms2 += (mod2 - shim)**2
+		psf3 = psfield.getPsfAtPoints(bandnum, xx, yy).T
+		mod3 = psf3 / psf3.sum() * T.flux[i]
+
+		mods = [mod, mod2, mod3]
+
+		if diffs is None:
+			diffs = [np.zeros_like(m) for m in mods]
+			rmses = [np.zeros_like(m) for m in mods]
+			
+		for m,rms,diff in zip(mods, rmses, diffs):
+			diff += (m - shim)
+			rms +=  (m - shim)**2
 
 		if i > 10:
 			continue
@@ -214,64 +230,74 @@ def test_vs_stars():
 			plt.hot()
 			plt.colorbar()
 		
-		R,C = 2,3
+		R,C = 3,4
 		plt.clf()
 		plt.subplot(R,C,1)
 		show(shim)
 		plt.subplot(R,C,2)
-		show(mod)
+		show(mods[0])
+		plt.subplot(R,C,2+C)
+		plt.imshow(mods[0] - shim, vmin=-0.05, vmax=0.05, **ima)
+		plt.hot()
+		plt.colorbar()
+
 		plt.subplot(R,C,3)
-		plt.imshow(mod - shim, vmin=-0.05, vmax=0.05, **ima)
+		show(mods[1])
+
+		plt.subplot(R,C,3+C)
+		plt.imshow(mods[1] - shim, vmin=-0.05, vmax=0.05, **ima)
 		plt.hot()
 		plt.colorbar()
-
+		
 		plt.subplot(R,C,4)
-		plt.imshow(mod2 - shim, vmin=-0.05, vmax=0.05, **ima)
+		show(mods[2])
+		
+		plt.subplot(R,C,4+C)
+		plt.imshow(mods[2] - shim, vmin=-0.05, vmax=0.05, **ima)
 		plt.hot()
 		plt.colorbar()
 
-		plt.subplot(R,C,5)
-		plt.imshow(mod2 - mod, vmin=-0.05, vmax=0.05, **ima)
+		plt.subplot(R,C,3+2*C)
+		plt.imshow(mods[1] - mods[0], vmin=-0.05, vmax=0.05, **ima)
+		plt.hot()
+		plt.colorbar()
+
+		plt.subplot(R,C,4+2*C)
+		plt.imshow(mods[2] - mods[0], vmin=-0.05, vmax=0.05, **ima)
 		plt.hot()
 		plt.colorbar()
 
 		plt.suptitle('%.0f, %.0f' % (xx,yy))
 		ps.savefig()
 
+	for diff in diffs:
+		diff /= len(T)
 
-	diff1 /= len(T)
-	diff2 /= len(T)
+	rmses = [np.sqrt(rms / len(T)) for rms in rmses]
 
-	rms1 = np.sqrt(rms1 / len(T))
-	rms2 = np.sqrt(rms2 / len(T))
+	print 'rms median', np.median(rmses[0]), 'mean', np.mean(rmses[0])
 
-	print 'rms median', np.median(rms1), 'mean', np.mean(rms1)
+	r0,r1 = [np.percentile(rmses[0], p) for p in [10,90]]
 	
-	R,C = 2,2
+	R,C = 2,len(diffs)
 	plt.clf()
-	plt.subplot(R,C,1)
-	plt.imshow(diff1, vmin=-0.05, vmax=0.05, **ima)
-	plt.colorbar()
-	plt.hot()
-	plt.subplot(R,C,2)
-	plt.imshow(diff2, vmin=-0.05, vmax=0.05, **ima)
-	plt.colorbar()
-	plt.hot()
 
-	plt.subplot(R,C,3)
-	plt.imshow(rms1, vmin=0.1, vmax=0.2, **ima)
-	plt.colorbar()
-	plt.hot()
-	plt.subplot(R,C,4)
-	plt.imshow(rms2, vmin=0.1, vmax=0.2, **ima)
-	plt.colorbar()
-	plt.hot()
+	for i,(d,r) in enumerate(zip(diffs, rmses)):
+		plt.subplot(R,C, 1+i)
+		plt.imshow(d, vmin=-0.05, vmax=0.05, **ima)
+		plt.colorbar()
+		plt.hot()
+
+		plt.subplot(R,C, 1+i+C)
+		plt.imshow(r, vmin=r0, vmax=r1, **ima)
+		plt.colorbar()
+		plt.hot()
 	
 	ps.savefig()
 
 			
 		
 if __name__ == '__main__':
-	test_vs_idl()
-	#test_vs_stars()
+	#test_vs_idl()
+	test_vs_stars()
 	
