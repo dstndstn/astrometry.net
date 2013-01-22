@@ -826,8 +826,8 @@ class PsField(SdssFile):
 		if x,y are arrays:  a list of PSF images
 		'''
 		rtnscalar = np.isscalar(x) and np.isscalar(y)
-		x = np.atleast_1d(x)
-		y = np.atleast_1d(y)
+		x = np.atleast_1d(x).astype(float)
+		y = np.atleast_1d(y).astype(float)
 
 		eigenpsfs = self.getEigenPsfs(bandnum)
 		eigenpolys = self.getEigenPolynomials(bandnum)
@@ -845,7 +845,8 @@ class PsField(SdssFile):
 		#print 'xx,yy', xx,yy
 		psfimgs = np.zeros((N,) + eigenpsfs[0].shape)
 		for epsf, (XO, YO, C) in zip(eigenpsfs, eigenpolys):
-			kk = reduce(np.add, [(xx.flat**xo) * (yy.flat**yo) * c for (xo,yo,c) in zip(XO,YO,C)])
+			kk = reduce(np.add, [(xx.flat ** xo) * (yy.flat ** yo) * c
+								 for (xo,yo,c) in zip(XO,YO,C)])
 			#for (xo,yo,c) in zip(XO,YO,C):
 			#	print ' term:', xo, yo, c, xx.flat**xo, yy.flat**yo, (xx.flat**xo) * (yy.flat**yo) * c
 			#print 'kk', kk

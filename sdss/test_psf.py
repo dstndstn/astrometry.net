@@ -9,7 +9,9 @@ from astrometry.sdss.dr9 import *
 from astrometry.sdss import *
 from astrometry.util.plotutils import *
 
-if __name__ == '__main__':
+from scipy.ndimage.filters import *
+
+def test_vs_idl():
 	run, camcol, field = 1752, 3, 163
 	band ='r'
 	bandnum = band_index(band)
@@ -17,6 +19,7 @@ if __name__ == '__main__':
 	datadir = os.path.join(os.path.dirname(__file__), 'testdata')
 
 	sdss = DR9(basedir=datadir)
+	sdss.retrieve('psField', run, camcol, field)
 	psfield = sdss.readPsField(run, camcol, field)
 
 	ps = PlotSequence('klpsf')
@@ -67,3 +70,204 @@ if __name__ == '__main__':
 		print 'RMS:', rms
 		assert(np.all(np.abs(diff) < 2e-5))
 		assert(rms < 1e-6)
+
+def test_vs_stars():
+	run, camcol, field = 1752, 3, 163
+	band ='r'
+
+	#756-z6-700
+	run, camcol, field = 756, 6, 700
+	band ='z'
+
+	bandnum = band_index(band)
+	datadir = os.path.join(os.path.dirname(__file__), 'testdata')
+	sdss = DR9(basedir=datadir)
+	ps = PlotSequence('klpsf')
+
+	sdss.retrieve('psField', run, camcol, field)
+	psfield = sdss.readPsField(run, camcol, field)
+
+	sdss.retrieve('frame', run, camcol, field, band)
+	frame = sdss.readFrame(run, camcol, field, band)
+	img = frame.image
+	H,W = img.shape
+
+	fn = sdss.retrieve('photoObj', run, camcol, field)
+	T = fits_table(fn)
+	T.mag  = T.get('psfmag')[:,bandnum]
+	T.flux = T.get('psfflux')[:,bandnum]
+	# !!
+	T.x = T.colc[:,bandnum] - 0.5
+	T.y = T.rowc[:,bandnum] - 0.5
+	T.cut(T.prob_psf[:,bandnum] == 1)
+	T.cut(T.nchild == 0)
+	T.cut(T.parent == -1)
+	T.cut(T.flux > 1.)
+	print len(T), 'after flux cut'
+	T.cut(T.flux > 10.)
+	print len(T), 'after flux cut'
+	# margin
+	m = 30
+	T.cut((T.x >= m) * (T.x < (W-m)) * (T.y >= m) * (T.y < (H-m)))
+	#T.cut(np.argsort(T.mag))
+	T.cut(np.argsort(-np.abs(T.x - T.y)))
+	
+	print len(T), 'PSF stars'
+		
+	#R,C = 5,5
+	#plt.clf()
+
+	eigenpsfs  = psfield.getEigenPsfs(bandnum)
+	eigenpolys = psfield.getEigenPolynomials(bandnum)
+	RR,CC = 2,2
+	
+	xx,yy = np.meshgrid(np.linspace(0, W, 12), np.linspace(0, H, 8))
+
+	ima = dict(interpolation='nearest', origin='lower')
+	
+	plt.clf()
+	for i,(psf,poly) in enumerate(zip(eigenpsfs, eigenpolys)):
+		print
+		print 'Eigen-PSF', i
+		XO,YO,C = poly
+		kk = np.zeros_like(xx)
+		for xo,yo,c in zip(XO,YO,C):
+			dk = (xx ** xo) * (yy ** yo) * c
+			#print 'xo,yo,c', xo,yo,c, '-->', dk
+			kk += dk
+		print 'Max k:', kk.max(), 'min', kk.min()
+		print 'PSF range:', psf.min(), psf.max()
+		print 'Max effect:', max(np.abs(kk.min()), kk.max()) * max(np.abs(psf.min()), psf.max())
+		
+		plt.subplot(RR,CC, i+1)
+		plt.imshow(psf * kk.max(), **ima)
+		plt.colorbar()
+	ps.savefig()
+
+	psfs = psfield.getPsfAtPoints(bandnum, xx,yy)
+	#print 'PSFs:', psfs
+	ph,pw = psfs[0].shape
+	psfs = np.array(psfs).reshape(xx.shape + (ph,pw))
+	print 'PSFs shape:', psfs.shape
+	psfs = psfs[:,:,15:36,15:36]
+	ny,nx,ph,pw = psfs.shape
+	psfmos = np.concatenate([psfs[i,:,:,:] for i in range(ny)], axis=1)
+	print 'psfmos', psfmos.shape
+	psfmos = np.concatenate([psfmos[i,:,:] for i in range(nx)], axis=1)
+	print 'psfmos', psfmos.shape
+	plt.clf()
+	plt.imshow(np.log10(np.maximum(psfmos + 1e-3, 1e-3)), **ima)
+	ps.savefig()
+	
+	
+	diff1 = None
+	diff2 = None
+	rms1 = None
+	rms2 = None
+	
+	for i in range(len(T)):
+
+		xx = T.x[i]
+		yy = T.y[i]
+		
+		ix = int(np.round(xx))
+		iy = int(np.round(yy))
+		dx = xx - ix
+		dy = yy - iy
+
+		S = 25
+		stamp = img[iy-S:iy+S+1, ix-S:ix+S+1]
+
+		L = 6
+		Lx = lanczos_filter(L, np.arange(-L, L+1) - dx)
+		Ly = lanczos_filter(L, np.arange(-L, L+1) - dy)
+		sx = correlate1d(stamp, Lx, axis=1, mode='constant')
+		shim = correlate1d(sx,  Ly, axis=0, mode='constant')
+		shim /= (Lx.sum() * Ly.sum())
+		
+		psf = psfield.getPsfAtPoints(bandnum, xx, yy)
+		mod = psf / psf.sum() * T.flux[i]
+
+		psf2 = psfield.getPsfAtPoints(bandnum, yy, xx)
+		mod2 = psf2 / psf2.sum() * T.flux[i]
+		
+		if diff1 is None:
+			diff1 = np.zeros_like(mod)
+			diff2 = np.zeros_like(mod)
+			rms1 = np.zeros_like(mod)
+			rms2 = np.zeros_like(mod)
+			
+		diff1 += (mod  - shim)
+		diff2 += (mod2 - shim)
+
+		rms1 += (mod - shim)**2
+		rms2 += (mod2 - shim)**2
+
+		if i > 10:
+			continue
+		
+		def show(im):
+			plt.imshow(np.log10(np.maximum(1e-3, im + 1e-3)), vmin=-3, vmax=0, **ima)
+			plt.hot()
+			plt.colorbar()
+		
+		R,C = 2,3
+		plt.clf()
+		plt.subplot(R,C,1)
+		show(shim)
+		plt.subplot(R,C,2)
+		show(mod)
+		plt.subplot(R,C,3)
+		plt.imshow(mod - shim, vmin=-0.05, vmax=0.05, **ima)
+		plt.hot()
+		plt.colorbar()
+
+		plt.subplot(R,C,4)
+		plt.imshow(mod2 - shim, vmin=-0.05, vmax=0.05, **ima)
+		plt.hot()
+		plt.colorbar()
+
+		plt.subplot(R,C,5)
+		plt.imshow(mod2 - mod, vmin=-0.05, vmax=0.05, **ima)
+		plt.hot()
+		plt.colorbar()
+
+		plt.suptitle('%.0f, %.0f' % (xx,yy))
+		ps.savefig()
+
+
+	diff1 /= len(T)
+	diff2 /= len(T)
+
+	rms1 = np.sqrt(rms1 / len(T))
+	rms2 = np.sqrt(rms2 / len(T))
+
+	print 'rms median', np.median(rms1), 'mean', np.mean(rms1)
+	
+	R,C = 2,2
+	plt.clf()
+	plt.subplot(R,C,1)
+	plt.imshow(diff1, vmin=-0.05, vmax=0.05, **ima)
+	plt.colorbar()
+	plt.hot()
+	plt.subplot(R,C,2)
+	plt.imshow(diff2, vmin=-0.05, vmax=0.05, **ima)
+	plt.colorbar()
+	plt.hot()
+
+	plt.subplot(R,C,3)
+	plt.imshow(rms1, vmin=0.1, vmax=0.2, **ima)
+	plt.colorbar()
+	plt.hot()
+	plt.subplot(R,C,4)
+	plt.imshow(rms2, vmin=0.1, vmax=0.2, **ima)
+	plt.colorbar()
+	plt.hot()
+	
+	ps.savefig()
+
+			
+		
+if __name__ == '__main__':
+	test_vs_stars()
+	
