@@ -68,7 +68,9 @@ int fit_tan_wcs_solve(const double* starxyz,
 	if (tanin) {
 		// default vals...
 		memcpy(tanout, tanin, sizeof(tan_t));
-	} 
+	} else {
+		memset(tanout, 0, sizeof(tan_t));
+	}
 
 	// -allocate and fill "p" and "f" arrays. ("projected" and "field")
 	p = malloc(N * 2 * sizeof(double));

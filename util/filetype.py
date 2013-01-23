@@ -26,10 +26,14 @@ def filetype(fn):
 
     out = out.strip()
     logverb('File: "%s"' % out)
-    parts = [line.split(', ', 1) for line in out.split('\n- ')]
     lst = []
-    for p in parts:
-        if len(p) == 2:
+	for line in out.split('\n- '):
+		if line.endswith('\n-'):
+			line = line[:-2]
+		if len(line) == 0:
+			continue
+		p = line.split(', ', 1)
+		if len(p) == 2:
             lst.append(tuple(p))
         else:
             lst.append((p[0], ''))
