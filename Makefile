@@ -153,7 +153,7 @@ RELEASE_VER := 0.41
 SP_RELEASE_VER := 0.3
 RELEASE_DIR := astrometry.net-$(RELEASE_VER)
 RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-$(RELEASE_VER)/astrometry
-RELEASE_SUBDIRS := qfits-an gsl-an util libkd blind demo data etc ups sdss
+RELEASE_SUBDIRS := qfits-an gsl-an util libkd blind demo catalogs etc ups sdss
 
 README: README.in
 	$(SED) 's/$$VERSION/$(RELEASE_VER)/g' $< > $@
@@ -174,7 +174,7 @@ release:
 # spherematch-only release
 SP_RELEASE_DIR := pyspherematch-$(SP_RELEASE_VER)
 SP_RELEASE_SVN	:= svn+ssh://astrometry.net/svn/tags/tarball-pyspherematch-$(SP_RELEASE_VER)/astrometry
-SP_RELEASE_SUBDIRS := gsl-an qfits-an util libkd data
+SP_RELEASE_SUBDIRS := gsl-an qfits-an util libkd catalogs
 SP_RELEASE_REMOVE := FAQ
 SP_ONLY := pyspherematch-only
 
