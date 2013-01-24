@@ -47,6 +47,7 @@ pkgconfig:
 
 subdirs: thirdparty
 	$(MAKE) -C util
+	$(MAKE) -C catalogs
 	$(MAKE) -C libkd
 	$(MAKE) -C blind
 
@@ -95,6 +96,7 @@ install: report.txt
 	cp report.txt '$(INSTALL_DIR)/doc'
 	cp demo/* '$(INSTALL_DIR)/examples'
 	$(MAKE) -C util  install
+	$(MAKE) -C catalogs install
 	$(MAKE) -C libkd install
 	$(MAKE) -C qfits-an install
 	$(MAKE) -C blind install
@@ -215,10 +217,12 @@ snapshot:
 test:
 	$(MAKE) -C blind test
 	$(MAKE) -C util  test
+	$(MAKE) -C catalogs test
 	$(MAKE) -C libkd test
 
 clean:
 	$(MAKE) -C util clean
+	$(MAKE) -C catalogs clean
 	-$(MAKE) -C qfits-an clean
 	-rm __init__.pyc
 	$(MAKE) -C gsl-an clean
@@ -227,6 +231,7 @@ clean:
 
 realclean:
 	$(MAKE) -C util realclean
+	$(MAKE) -C catalogs clean
 	-$(MAKE) -C qfits-an clean
 	-rm __init__.pyc
 	$(MAKE) -C gsl-an clean

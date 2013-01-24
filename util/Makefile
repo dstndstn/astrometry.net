@@ -17,13 +17,9 @@
 
 BASEDIR := ..
 COMMON := .
-DATA := $(BASEDIR)/data
 
 all:
 .PHONY: all
-
-$(DATA)/%.txt: ;
-$(DATA)/%.dat: ;
 
 %.o: %.c
 	$(CC) -o $@ $(CFLAGS) -c $<
@@ -40,9 +36,9 @@ include $(COMMON)/makefile.common
 
 ANUTILS_LIB := libanutils.a
 ANUTILS_OBJ := starutil.o mathutil.o bl.o bt.o healpix-utils.o healpix.o \
-	permutedsort.o ioutils.o sip-utils.o fit-wcs.o sip.o md5.o constellations.o \
+	permutedsort.o ioutils.o sip-utils.o fit-wcs.o sip.o md5.o \
 	os-features.o an-endian.o errors.o an-opts.o svn.o tic.o log.o datalog.o \
-	gslutils.o ngc2000.o ngcic-accurate.o brightstars.o \
+	gslutils.o \
 	boilerplate.o tycho2.o intmap.o histogram.o histogram2d.o \
 	anwcs.o sparsematrix.o lsqr.o coadd.o convolve-image.o resample.o wcs-resample.o
 
@@ -138,7 +134,7 @@ MAIN_PROGS := wcs-resample fit-wcs
 
 # tycho2tostellarium build-hd-tree
 
-all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS) $(MAIN_PROGS) ngc2000.py
+all: $(ANUTILS_LIB) $(ANFILES_LIB) $(PYTHON_LIBS) $(PROGS) $(MAIN_PROGS)
 
 # Things that it depends on but that aren't linked in
 ANUTILS_DEPS :=
@@ -147,12 +143,12 @@ ANUTILS_DEPS :=
 
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h \
-	an-thread.h anwcs.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph brightstars.h bt.h cairoutils.h \
-	codekd.h constellations.h \
+	an-thread.h anwcs.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph  bt.h cairoutils.h \
+	codekd.h \
 	errors.h fitsbin.h fitsfile.h fitsioutils.h \
 	fitstable.h os-features-config.h os-features.h gslutils.h hd.h \
 	healpix-utils.h healpix.h index.h intmap.h ioutils.h keywords.h log.h \
-	mathutil.h ngc2000.h ngcic-accurate.h permutedsort.h qidxfile.h \
+	mathutil.h permutedsort.h qidxfile.h \
 	quadfile.h rdlist.h scamp-catalog.h fit-wcs.h sip-utils.h sip.h sip_qfits.h \
 	starkd.h starutil.h starutil.inc starxy.h svn.h tic.h tycho2-fits.h tycho2.h \
 	xylist.h coadd.h convolve-image.h resample.h multiindex.h
@@ -164,8 +160,6 @@ ANUTILS_DEPS += $(QFITS_LIB)
 endif
 
 ## ANFILES_DEPS, ANFILES_OBJ -- in makefile.anfiles
-
-MISC_OBJ := grab-stellarium-constellations.o 
 
 ALL_OBJ := $(ANUTILS_OBJ) $(ANFILES_OBJ) $(MISC_OBJ)
 
@@ -188,28 +182,6 @@ $(ANFILES_LIB): $(ANFILES_OBJ) $(ANFILES_DEPS)
 
 svn.c: $(SVN_C_DEPS)
 	echo "//" >> svn.c
-
-ngc2000.o: ngc2000.c ngc2000names.c ngc2000entries.c
-
-ngc2000names.c: parse-ngc2000names.awk $(DATA)/ngc2000names.dat
-	$(AWK) -f parse-ngc2000names.awk < $(DATA)/ngc2000names.dat  > $@
-
-DEP_PREREQS += ngc2000names.c ngc2000entries.c ngcic-accurate-entries.c
-
-ngc2000entries.py: parse-ngc2000-py.awk $(DATA)/ngc2000.dat
-	$(AWK) -f parse-ngc2000-py.awk < $(DATA)/ngc2000.dat  > $@
-
-ngc2000accurate.py: parse-ngcic-accurate-py.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
-	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate-py.awk > $@
-
-ngc2000.py: ngc2000-pre.py ngc2000entries.py ngc2000-mid.py ngc2000accurate.py ngc2000-post.py
-	cat $^ > $@
-
-ngc2000entries.c: parse-ngc2000.awk $(DATA)/ngc2000.dat
-	$(AWK) -f parse-ngc2000.awk < $(DATA)/ngc2000.dat  > $@
-
-ngcic-accurate-entries.c: parse-ngcic-accurate.awk $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt
-	cat $(DATA)/ngc2000_pos.txt $(DATA)/ic2000_pos.txt | $(AWK) -f parse-ngcic-accurate.awk > $@
 
 resample: resample-main.o \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(WCS_LIB_DEP)
@@ -306,7 +278,7 @@ PYTHON_INSTALL := fits2fits.py image2pnm.py addpath.py healpix.py sip.py \
 	starutil.py starutil_numpy.py \
 	shell.py __init__.py file.py run_command.py w3c_validator.py \
 	filetype.py pyfits_utils.py fix_sdss_idr.py removelines.py \
-	ngc2000.py uniformize.py lsstutils.py casjobs.py \
+	uniformize.py lsstutils.py casjobs.py \
 	sdss_das.py sdss_filenames.py sdss_get_catalog.py sdss_noise.py \
 	sdss_psf.py sdss_psfield.py sdss_radec_to_rcf.py sqlcl.py \
 	usnob_catalog.py usnob_get_image.py usnob_get_region.py \
@@ -475,14 +447,6 @@ endif
 
 PROG_MAIN_OBJS := $(addsuffix .o,$(PROGS)) $(addsuffix -main.o,$(MAIN_PROGS))
 DEP_OBJ += $(PROG_MAIN_OBJS)
-
-stellarium-constellations.c:
-	-$(MAKE) grab-stellarium-constellations
-	-(./grab-stellarium-constellations > $@.tmp  &&  mv $@.tmp $@) || touch $@
-
-grab-stellarium-constellations: grab-stellarium-constellations.o \
-		starutil.o mathutil.o bl.o an-endian.o
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS)
 
 hd1.fits: henry-draper.tsv build-hd-tree
 	build-hd-tree -s -R 16 henry-draper.tsv $@
