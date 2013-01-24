@@ -148,8 +148,8 @@ ANUTILS_DEPS :=
 # Actually there are ANFILES_H mixed in here too....
 ANUTILS_H := an-bool.h an-catalog.h  an-endian.h an-opts.h an-thread-pthreads.h \
 	an-thread.h anwcs.h bl.h bl.inc bl.ph bl-nl.h bl-nl.inc bl-nl.ph brightstars.h bt.h cairoutils.h \
-	codekd.h constellations.h dualtree.h dualtree_nearestneighbour.h \
-	dualtree_rangesearch.h errors.h fitsbin.h fitsfile.h fitsioutils.h \
+	codekd.h constellations.h \
+	errors.h fitsbin.h fitsfile.h fitsioutils.h \
 	fitstable.h os-features-config.h os-features.h gslutils.h hd.h \
 	healpix-utils.h healpix.h index.h intmap.h ioutils.h keywords.h log.h \
 	mathutil.h ngc2000.h ngcic-accurate.h permutedsort.h qidxfile.h \
@@ -161,9 +161,6 @@ ifndef NO_QFITS
 ANUTILS_OBJ += fitsioutils.o sip_qfits.o fitstable.o fitsbin.o fitsfile.o \
 	tycho2-fits.o tic.o
 ANUTILS_DEPS += $(QFITS_LIB)
-endif
-ifndef NO_KDTREE
-ANUTILS_OBJ += dualtree.o dualtree_rangesearch.o dualtree_nearestneighbour.o
 endif
 
 ## ANFILES_DEPS, ANFILES_OBJ -- in makefile.anfiles
@@ -517,7 +514,7 @@ ALL_OBJ += build-hd-tree.o
 
 ALL_TEST_FILES = test_bl test_bt test_endian test_fitstable test_xylist \
 	test_rdlist test_healpix test_fitsioutils test_fitsbin test_log test_ioutils \
-	test_dualtree_nn test_scamp_catalog test_starutil test_svd test_hd \
+	test_scamp_catalog test_starutil test_svd test_hd \
 	test_tycho2 test_anwcs test_sip-utils test_errors test_multiindex \
 	test_convolve_image test_qsort_r test_wcs
 # test_hd depends on hd.fits...
@@ -570,8 +567,6 @@ test_healpix: $(ANUTILS_LIB)
 test_log: $(ANUTILS_LIB)
 
 test_ioutils: $(ANUTILS_LIB)
-
-test_dualtree_nn: $(LIBKD_LIB) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 test_scamp_catalog: $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 

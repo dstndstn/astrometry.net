@@ -37,7 +37,10 @@ INTERNALS := \
 KD := kdtree.o kdtree_dim.o kdtree_mem.o
 KD_FITS := kdtree_fits_io.o
 
-INSTALL_H := kdtree.h kdtree_fits_io.h
+DT := dualtree.o dualtree_rangesearch.o dualtree_nearestneighbour.o
+
+INSTALL_H := kdtree.h kdtree_fits_io.h dualtree.h \
+	dualtree_nearestneighbour.h dualtree_rangesearch.h
 
 # These are #included by other source files.
 INTERNAL_SOURCES := kdtree_internal.c kdtree_internal_fits.c
@@ -66,19 +69,19 @@ INTERNALS_NOIO := \
 	kdint_dds_noio.o \
 	kdint_dss_noio.o
 
-DEP_OBJ := $(KD) $(KD_FITS) $(INTERNALS) $(INTERNALS_NOIO)
+DEP_OBJ := $(KD) $(KD_FITS) $(INTERNALS) $(INTERNALS_NOIO) $(DT)
 
 %_noio.o: %.c
 	$(CC) -o $@ -c $< $(CFLAGS) -DKDTREE_NO_FITS
 
 all: $(LIBKD) checktree fix-bb
 
-$(LIBKD): $(KD) $(KD_FITS) $(INTERNALS)
+$(LIBKD): $(KD) $(KD_FITS) $(INTERNALS) $(DT)
 	-rm -f $@
 	$(AR) rc $@ $^
 	$(RANLIB) $@
 
-$(LIBKD_NOIO): $(KD) $(INTERNALS_NOIO)
+$(LIBKD_NOIO): $(KD) $(INTERNALS_NOIO) $(DT)
 	-rm -f $@
 	$(AR) rc $@ $^
 	$(RANLIB) $@
@@ -99,7 +102,6 @@ endif
 ifeq ($(MAKECMDGOALS),pyspherematch)
   DEP_OBJ += $(PYSPHEREMATCH_OBJ)
 endif
-
 
 checktree: checktree.o $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -141,7 +143,7 @@ install-spherematch: spherematch_c.so
 
 ### TESTS are great
 
-ALL_TEST_FILES = test_libkd test_libkd_io
+ALL_TEST_FILES = test_libkd test_libkd_io test_dualtree_nn
 ALL_TEST_EXTRA_OBJS =
 ALL_TEST_LIBS = $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
@@ -150,6 +152,8 @@ include $(COMMON)/makefile.tests
 test_libkd: $(LIBKD_NOIO) $(ANUTILS_LIB)
 
 test_libkd_io: $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+
+test_dualtree_nn: $(LIBKD) $(ANFILES_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
 
 DEP_OBJ += $(ALL_TEST_FILES_O) $(ALL_TEST_FILES_MAIN_O)
 
