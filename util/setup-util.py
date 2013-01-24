@@ -22,10 +22,11 @@ c_swig_module = Extension('_util',
 							  '../libkd/libkd.a',
 							  'libanutils.a',
 							  '../qfits-an/lib/libqfits.a',
+							  '../gsl-an/libgsl-an.a',
 							  ],
 						  extra_link_args=[os.environ.get('WCSLIB_LIB', ''),
-										   os.environ.get('GSL_LIB', ''),
-										   #'-O0 -g'
+#os.environ.get('GSL_LIB', ''),
+#'-O0 -g'
 										   ],
 						  #extra_compile_args = ['-O0 -g'],
 

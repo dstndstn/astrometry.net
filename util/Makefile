@@ -208,7 +208,7 @@ util.py util_wrap.c: util.i $(ANUTILS_H)
 	swig -python -I. $<
 
 _util.so: util_wrap.c setup-util.py \
-		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB)
+		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(QFITS_LIB) $(GSL_LIB)
 	WCSLIB_LIB="$(WCSLIB_LIB)" GSL_LIB="$(GSL_LIB)" \
 	python setup-util.py build --force --build-base build --build-platlib build/lib
 	cp build/lib/_util.so $@

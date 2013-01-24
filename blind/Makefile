@@ -561,7 +561,7 @@ tweak: tweak-main.o verify.o matchfile.o \
 
 whynot: whynot.o matchfile.o matchobj.o codefile.o solvedclient.o \
 		solvedfile.o verify.o quad-utils.o \
-		$(COMMON)/cairoutils.o $(PLOTSTUFF) \
+		$(PLOTSTUFF) $(COMMON)/cairoutils.o $(CATS_LIB) \
 		$(UTIL_OBJS) $(ANFILES_LIB) $(ANUTILS_LIB) $(LIBKD_LIB) $(QFITS_LIB) $(GSL_LIB) 
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += whynot.o
@@ -625,7 +625,7 @@ plot-xy-and-quad: plot-xy-and-quad.o matchfile.o $(COMMON)/cairoutils.o \
 plot-constellations.o: plot-constellations.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) $(CATS_INC) -c -o $@ $<
 
-plot-constellations: plot-constellations.o $(COMMON)/cairoutils.o \
+plot-constellations: plot-constellations.o $(CATS_LIB) $(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 	$(CC) $(LDFLAGS) $^ -o $@ $(CAIRO_LIB) $(NETPBM_LIB) $(PNG_LIB) $(JPEG_LIB) $(LDLIBS)
 

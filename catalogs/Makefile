@@ -18,10 +18,10 @@ BASEDIR := ..
 COMMON := $(BASEDIR)/util
 DATA := .
 
-include $(COMMON)/makefile.common
-
 all:
 .PHONY: all
+
+include $(COMMON)/makefile.common
 
 $(DATA)/%.txt: ;
 $(DATA)/%.dat: ;
@@ -30,8 +30,6 @@ ngc2000.o: ngc2000.c ngc2000names.c ngc2000entries.c
 
 ngc2000names.c: parse-ngc2000names.awk $(DATA)/ngc2000names.dat
 	$(AWK) -f parse-ngc2000names.awk < $(DATA)/ngc2000names.dat  > $@
-
-DEP_PREREQS += ngc2000names.c ngc2000entries.c ngcic-accurate-entries.c
 
 ngc2000entries.py: parse-ngc2000-py.awk $(DATA)/ngc2000.dat
 	$(AWK) -f parse-ngc2000-py.awk < $(DATA)/ngc2000.dat  > $@
@@ -72,6 +70,7 @@ LINK_DIR := ../python/astrometry/catalogs
 
 DEP_OBJ := $(OBJS)
 DEP_PREREQS :=
+DEP_PREREQS += ngc2000names.c ngc2000entries.c ngcic-accurate-entries.c
 
 CFLAGS += $(CFLAGS_DEF)
 
@@ -87,7 +86,7 @@ LIBCAT := libcatalogs.a
 
 $(LIBCAT): $(OBJS)
 	-rm -f $@
-	$(AR) rc $@ $<
+	$(AR) rc $@ $(OBJS)
 	$(RANLIB) $@
 
 all: ngc2000.py $(LIBCAT)
@@ -112,7 +111,7 @@ install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS)
 .PHONY: install
 
 clean:
-	rm -f $(LIBCAT) $(OBJS) $(DEPS) \
+	rm -f $(LIBCAT) $(OBJS) $(DEPS) deps \
 		grab-stellarium-constellations
 
 ifneq ($(MAKECMDGOALS),clean)

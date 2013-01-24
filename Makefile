@@ -70,15 +70,25 @@ gsl-an:
 
 # Targets that require extra libraries
 extra:
+	$(MAKE) -C qfits-an
 	$(MAKE) -C util
+	$(MAKE) -C catalogs
 	$(MAKE) -C blind cairo
 
 # Targets that create python bindings (requiring swig)
 py:
+	$(MAKE) -C qfits-an
+	$(MAKE) -C gsl-an
+	$(MAKE) -C catalogs
 	$(MAKE) -C util pyutil
 	$(MAKE) -C util cairoutils.o
 	$(MAKE) -C blind pyplotstuff
 	$(MAKE) -C libkd pyspherematch
+
+pyutil:
+	$(MAKE) -C qfits-an
+	$(MAKE) -C gsl-an
+	$(MAKE) -C util pyutil
 
 install: report.txt
 	mkdir -p '$(INSTALL_DIR)/data'
