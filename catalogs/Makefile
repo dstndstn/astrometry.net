@@ -83,8 +83,6 @@ LDLIBS += -lm
 CFLAGS += -I.
 CFLAGS += -I$(COMMON)
 
-all: ngc2000.py $(LIBCAT)
-
 LIBCAT := libcatalogs.a
 
 $(LIBCAT): $(OBJS)
@@ -92,6 +90,7 @@ $(LIBCAT): $(OBJS)
 	$(AR) rc $@ $<
 	$(RANLIB) $@
 
+all: ngc2000.py $(LIBCAT)
 
 install: $(PYTHON_INSTALL) $(LIBCAT) $(HEADERS)
 	@echo Installing in base directory '$(INSTALL_DIR)'

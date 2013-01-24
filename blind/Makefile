@@ -16,7 +16,10 @@
 
 BASEDIR := ..
 COMMON := $(BASEDIR)/util
-DATA := $(BASEDIR)/data
+CATALOGS := $(BASEDIR)/catalogs
+
+CATS_INC := -I$(CATALOGS)
+CATS_LIB := $(CATALOGS)/libcatalogs.a
 
 .PHONY: all
 all:
@@ -66,6 +69,8 @@ CFLAGS += $(ANFILES_INC)
 CFLAGS += $(GSL_INC)
 CFLAGS += $(ZLIB_INC)
 CFLAGS += $(WCSLIB_INC)
+
+CFLAGS += $(CATS_INC)
 
 ALL_WCSLIB_TARGETS :=
 
@@ -618,7 +623,7 @@ plot-xy-and-quad: plot-xy-and-quad.o matchfile.o $(COMMON)/cairoutils.o \
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(LDLIBS)
 
 plot-constellations.o: plot-constellations.c
-	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
+	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) $(CATS_INC) -c -o $@ $<
 
 plot-constellations: plot-constellations.o $(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
@@ -641,7 +646,7 @@ LINK_DIR := ../python/astrometry/blind
 plotstuff.o: plotstuff.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c -o $@ $<
 
-plotstuff: plotstuff-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+plotstuff: plotstuff-main.o $(PLOTSTUFF) $(CATS_LIB) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += plotstuff-main.o
 
@@ -657,7 +662,8 @@ pyplotstuff: _plotstuff_c.so
 plotstuff_wrap.c: plotstuff.i $(PLOTSTUFF_SRCS) $(PLOTSTUFF_HDRS) $(ANUTILS_DIR)/sip.h $(ANUTILS_DIR)/anwcs.h
 	swig -python $(ANUTILS_INC) $(QFITS_INC) $<
 
-_plotstuff_c.so: plotstuff_wrap.c setup.py $(PLOTSTUFF) $(COMMON)/cairoutils.o \
+_plotstuff_c.so: plotstuff_wrap.c setup.py $(PLOTSTUFF) $(CATS_LIB) \
+		$(COMMON)/cairoutils.o \
 		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 	python setup.py build --force --build-base build --build-platlib build/lib
 	cp build/lib/_plotstuff_c.so $@
@@ -668,7 +674,8 @@ plotxy.o: plotxy.c
 plotxy-main.o: plotxy-main.c
 	$(CC) $(CFLAGS) $(CAIRO_INC) $(NETPBM_INC) -c $< -o $@
 
-plotxy: plotxy-main.o $(PLOTSTUFF) $(COMMON)/cairoutils.o $(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
+plotxy: plotxy-main.o $(PLOTSTUFF) $(CATS_LIB) $(COMMON)/cairoutils.o \
+		$(ANFILES_LIB) $(LIBKD_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS) $(CAIRO_LIB) $(PNG_LIB) $(NETPBM_LIB) $(JPEG_LIB) $(WCSLIB_LIB) $(LDLIBS)
 ALL_OBJ += plotxy-main.o
 
