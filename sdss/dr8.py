@@ -194,7 +194,7 @@ class DR8(DR7):
 		url = self.get_url(filetype, run, camcol, field, band=band)
 		#print 'URL:', url
 		if self.curl:
-			cmd = "curl -o '%(outfn)s' '%(url)s"
+			cmd = "curl -o '%(outfn)s' '%(url)s'"
 		else:
 			cmd = "wget --continue -nv -O %(outfn)s '%(url)s'"
 
