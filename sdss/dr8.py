@@ -133,6 +133,7 @@ class DR8(DR7):
 			'psField': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/psField-%(run)06i-%(camcol)i-%(field)04i.fit',
 			'photoField': 'photoObj/%(rerun)s/%(run)i/photoField-%(run)06i-%(camcol)i.fits',
 			'fpM': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpM-%(run)06i-%(band)s%(camcol)i-%(field)04i.fit',
+			'fpAtlas': 'photo/redux/%(rerun)s/%(run)i/objcs/%(camcol)i/fpAtlas-%(run)06i-%(camcol)i-%(field)04i.fit',
 			}
 
 		self.dassuffix = {
