@@ -789,17 +789,18 @@ class PsField(SdssFile):
 			terms.append((gridr.flat[I], gridc.flat[I], c.flat[I]))
 		return terms
 
-	def convolveEigenPsf(self, bandnum, img):
+	def correlateEigenPsf(self, bandnum, img):
 		from scipy.ndimage.filters import correlate
 
 		eigenpsfs = self.getEigenPsfs(bandnum)
 		eigenterms = self.getEigenPolynomials(bandnum)
 		H,W = img.shape
-		conv = np.zeros((H,W))
-		xx,yy = np.arange(W), np.arange(H)
+		corr = np.zeros((H,W))
+		xx,yy = np.arange(W).astype(float), np.arange(H).astype(float)
 		for epsf, (XO,YO,C) in zip(eigenpsfs, eigenterms):
 			k = reduce(np.add, [np.outer(yy**yo, xx**xo) * c
 								for xo,yo,c in zip(XO,YO,C)])
+			assert(k.shape == img.shape)
 			# Trim symmetric zero-padding off the epsf.
 			# This will fail spectacularly given an all-zero eigen-component.
 			#print 'epsf shape:', epsf.shape
@@ -812,9 +813,8 @@ class PsField(SdssFile):
 				else:
 					break
 			#print 'trimmed epsf shape to:', epsf.shape
-
-			conv += k * correlate(img, epsf)
-		return conv
+			corr += k * correlate(img, epsf)
+		return corr
 
 	def getPsfAtPoints(self, bandnum, x, y):
 		'''
