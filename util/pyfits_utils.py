@@ -391,7 +391,9 @@ class tabledata(object):
 	def write_to(self, fn, columns=None, header='default', primheader=None):
 		if columns is None and hasattr(self, '_columns'):
 			columns = self._columns
-		T = pyfits.new_table(self.to_fits_columns(columns))
+		fc = self.to_fits_columns(columns)
+		print 'FITS columns:', fc
+		T = pyfits.new_table(fc)
 		if header == 'default':
 			header = self._header
 		if header is not None:

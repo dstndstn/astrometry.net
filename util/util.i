@@ -391,6 +391,10 @@ char* anwcs_wcslib_to_string(const anwcs_t* wcs,
 	}
 	~anwcs_t() { free($self); }
 
+	void get_center(double *p_ra, double *p_dec) {
+		anwcs_get_radec_center_and_radius($self, p_ra, p_dec, NULL);
+	}
+
 	bool is_inside(double ra, double dec) {
 		return anwcs_radec_is_inside_image($self, ra, dec);
 	}
@@ -511,11 +515,16 @@ anwcs.getHeaderString = anwcs_get_header_string
 %include "sip_qfits.h"
 
 %extend sip_t {
-	sip_t(char* fn=NULL, int ext=0) {
+	sip_t(const char* fn=NULL, int ext=0) {
 		if (fn)
 			return sip_read_header_file_ext(fn, ext, NULL);
 		sip_t* t = (sip_t*)calloc(1, sizeof(sip_t));
 		return t;
+	}
+
+	// from string -- third arg is just to distinguish this signature.
+	sip_t(const char* s, int len, int XXX) {
+		return sip_from_string(s, len, NULL);
 	}
 
 	// copy constructor
@@ -627,9 +636,10 @@ anwcs.getHeaderString = anwcs_get_header_string
 
 def sip_t_tostring(self):
 	tan = self.wcstan
-	return (('Sip: crpix (%.1f, %.1f), crval (%g, %g), cd (%g, %g, %g, %g), '
+	ct = 'SIN' if tan.sin else 'TAN'
+	return (('Sip(%s): crpix (%.1f, %.1f), crval (%g, %g), cd (%g, %g, %g, %g), '
 			 + 'image %g x %g; SIP orders A=%i, B=%i, AP=%i, BP=%i') %
-			(tan.crpix[0], tan.crpix[1], tan.crval[0], tan.crval[1],
+			(ct, tan.crpix[0], tan.crpix[1], tan.crval[0], tan.crval[1],
 			 tan.cd[0], tan.cd[1], tan.cd[2], tan.cd[3],
 			 tan.imagew, tan.imageh, self.a_order, self.b_order,
 			 self.ap_order, self.bp_order))
@@ -645,6 +655,9 @@ def sip_t_radec_bounds(self):
 	r,d = self.pixelxy2radec([1, W, W, 1], [1, 1, H, H])
 	return (r.min(), r.max(), d.min(), d.max())
 sip_t.radec_bounds = sip_t_radec_bounds	   
+
+#def sip_t_fromstring(s):
+#	sip = sip_from_string(s, len(s),
 
 Sip = sip_t
 	%}
