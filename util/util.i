@@ -637,7 +637,7 @@ anwcs.getHeaderString = anwcs_get_header_string
 def sip_t_tostring(self):
 	tan = self.wcstan
 	ct = 'SIN' if tan.sin else 'TAN'
-	return (('Sip(%s): crpix (%.1f, %.1f), crval (%g, %g), cd (%g, %g, %g, %g), '
+	return (('SIP(%s): crpix (%.1f, %.1f), crval (%g, %g), cd (%g, %g, %g, %g), '
 			 + 'image %g x %g; SIP orders A=%i, B=%i, AP=%i, BP=%i') %
 			(ct, tan.crpix[0], tan.crpix[1], tan.crval[0], tan.crval[1],
 			 tan.cd[0], tan.cd[1], tan.cd[2], tan.cd[3],
@@ -963,8 +963,9 @@ Sip = sip_t
 import numpy as np
 
 def tan_t_tostring(self):
-	return ('Tan: crpix (%.1f, %.1f), crval (%g, %g), cd (%g, %g, %g, %g), image %g x %g' %
-			(self.crpix[0], self.crpix[1], self.crval[0], self.crval[1],
+	ct = 'SIN' if self.sin else 'TAN'
+	return ('%s: crpix (%.1f, %.1f), crval (%g, %g), cd (%g, %g, %g, %g), image %g x %g' %
+			(ct, self.crpix[0], self.crpix[1], self.crval[0], self.crval[1],
 			 self.cd[0], self.cd[1], self.cd[2], self.cd[3],
 			 self.imagew, self.imageh))
 tan_t.__str__ = tan_t_tostring

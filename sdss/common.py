@@ -1,5 +1,5 @@
 import os
-from astrometry.util.pyfits_utils import fits_table
+from astrometry.util.fits import fits_table
 from astrometry.util.miscutils import get_overlapping_region
 import numpy as np
 import pyfits
@@ -188,6 +188,9 @@ class SdssDR(object):
 		self.basedir = basedir
 		self.filenames = {}
 
+	def getDRNumber(self):
+		return -1
+		
 	def getFilename(self, filetype, *args, **kwargs):
 		for k,v in zip(['run', 'camcol', 'field', 'band'], args):
 			kwargs[k] = v

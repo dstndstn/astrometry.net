@@ -17,6 +17,9 @@ class DR9(DR8):
 		'''
 		DR8.__init__(self, **kwargs)
 		self.dasurl = 'http://data.sdss3.org/sas/dr9/boss/'
+
+	def getDRNumber(self):
+		return 9
 		
 	def _get_runlist_filename(self):
 		return self._get_data_file('runList-dr9.par')

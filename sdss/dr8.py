@@ -108,6 +108,9 @@ class DR8(DR7):
 	def nmgy_to_mag(nmgy):
 		return 22.5 - 2.5 * np.log10(nmgy)
 
+	def getDRNumber(self):
+		return 8
+	
 	def __init__(self, **kwargs):
 		'''
 		Useful kwargs:

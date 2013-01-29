@@ -31,6 +31,9 @@ class DR7(SdssDR):
 			}
 		self.softbias = 1000
 
+	def getDRNumber(self):
+		return 7
+		
 	def retrieve(self, filetype, run, camcol, field, band=None, skipExisting=True):
 		# FIXME!
 		from astrometry.util.sdss_das import sdss_das_get

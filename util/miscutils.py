@@ -6,6 +6,9 @@ def point_in_poly(x, y, poly):
 	'''
 	Performs a point-in-polygon test for numpy arrays of *x* and *y*
 	values, and a polygon described as 2-d numpy array.
+
+	poly: N x 2 array
+
 	Returns a numpy array of bools.
 	'''
 	inside = np.zeros(np.atleast_1d(x).shape, bool)
