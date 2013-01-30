@@ -3,7 +3,7 @@ import numpy as np
 
 # for LSST (use things defined in astrometry.net 0.30)
 try:
-    from astrometry.util.starutil_numpy import radectoxyz, deg2dist, dist2deg
+    from astrometry.util.starutil_numpy import radectoxyz, deg2dist, dist2deg, distsq2deg
 except:
     from astrometry.util.starutil_numpy import radectoxyz, rad2distsq
 
@@ -61,7 +61,7 @@ def match_radec(ra1, dec1, ra2, dec2, radius_in_deg, notself=False,
 		(inds,dists2) = _nearest_func(xyz2, xyz1, r, notself=notself)
 		I = np.flatnonzero(inds >= 0)
 		J = inds[I]
-		d = np.sqrt(dists2)
+		d = distsq2deg(dists2[I])
 	else:
 		(inds,dists) = match(xyz1, xyz2, r, notself)
 		dist_in_deg = dist2deg(dists)
