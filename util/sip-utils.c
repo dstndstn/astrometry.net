@@ -249,8 +249,12 @@ int sip_compute_inverse_polynomials(sip_t* sip, int NX, int NY,
 	return 0;
 }
 
+bool tan_pixel_is_inside_image(const tan_t* wcs, double x, double y) {
+	return (x >= 1 && x <= wcs->imagew && y >= 1 && y <= wcs->imageh);
+}
+
 bool sip_pixel_is_inside_image(const sip_t* wcs, double x, double y) {
-	return (x >= 1 && x <= wcs->wcstan.imagew && y >= 1 && y <= wcs->wcstan.imageh);
+	return tan_pixel_is_inside_image(&(wcs->wcstan), x, y);
 }
 
 bool sip_is_inside_image(const sip_t* wcs, double ra, double dec) {
@@ -258,6 +262,13 @@ bool sip_is_inside_image(const sip_t* wcs, double ra, double dec) {
 	if (!sip_radec2pixelxy(wcs, ra, dec, &x, &y))
 		return FALSE;
 	return sip_pixel_is_inside_image(wcs, x, y);
+}
+
+bool tan_is_inside_image(const tan_t* wcs, double ra, double dec) {
+	double x,y;
+	if (!tan_radec2pixelxy(wcs, ra, dec, &x, &y))
+		return FALSE;
+	return tan_pixel_is_inside_image(wcs, x, y);
 }
 
 int* sip_filter_stars_in_field(const sip_t* sip, const tan_t* tan,

@@ -712,6 +712,11 @@ Sip = sip_t
 		$self->imagew = imagew;
 		$self->imageh = imageh;
 	}
+
+	bool is_inside(double ra, double dec) {
+		return tan_is_inside_image($self, ra, dec);
+	}
+
 	tan_t* scale(double factor) {
 		tan_t* t = (tan_t*)calloc(1, sizeof(tan_t));
 		tan_scale($self, t, factor);

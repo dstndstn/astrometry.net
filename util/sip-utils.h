@@ -108,6 +108,10 @@ void sip_get_field_size(const sip_t* wcs,
                         double* pw, double* ph,
                         char** units);
 
+bool tan_pixel_is_inside_image(const tan_t* wcs, double px, double py);
+
+bool tan_is_inside_image(const tan_t* wcs, double ra, double dec);
+
 void tan_transform(const tan_t* tanin, tan_t* tanout,
 				   double xlo, double xhi, double ylo, double yhi,
 				   double scale);
