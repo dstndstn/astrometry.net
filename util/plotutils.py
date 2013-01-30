@@ -50,6 +50,12 @@ def loghist(x, y, nbins=100,
 	x = np.array(x)
 	y = np.array(y)
 
+	if not (np.all(np.isfinite(x)) and np.all(np.isfinite(y))):
+		K = np.flatnonzero(np.isfinite(x) * np.isfinite(y))
+		print 'loghist: cutting to', len(K), 'of', len(x), 'finite values'
+		x = x[K]
+		y = y[K]
+		
 	if clamp is True:
 		clamp = rng
 	if clamp is not None:
