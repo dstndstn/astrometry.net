@@ -19,6 +19,7 @@ void test_tagalong(CuTest* ct) {
     starxy_t fld;
     starxy_t infld;
 
+	fits_use_error_system();
 	log_init(LOG_VERB);
 
     out = xylist_open_for_writing(fn);
@@ -100,6 +101,7 @@ void test_simple_xy(CuTest* ct) {
     char* fn = get_tmpfile(1);
     starxy_t fld;
     starxy_t infld;
+	fits_use_error_system();
 
     out = xylist_open_for_writing(fn);
     CuAssertPtrNotNull(ct, out);
@@ -163,6 +165,7 @@ void test_read_write_xy(CuTest* ct) {
 
 	log_init(LOG_VERB);
 	logverb("using temp file %s\n", fn);
+	fits_use_error_system();
 
     out = xylist_open_for_writing(fn);
     CuAssertPtrNotNull(ct, out);

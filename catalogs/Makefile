@@ -114,6 +114,9 @@ clean:
 	rm -f $(LIBCAT) $(OBJS) $(DEPS) deps \
 		grab-stellarium-constellations
 
+test:
+.PHONY: test
+
 ifneq ($(MAKECMDGOALS),clean)
           include $(COMMON)/makefile.deps
 endif

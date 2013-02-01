@@ -42,6 +42,7 @@
 #include <sys/mman.h>
 #include <sys/resource.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "qfits_error.h"
 
@@ -445,6 +446,20 @@ void * qfits_memory_calloc(
     return memset(ptr, 0, nmemb * size);
 }
 
+
+// copied from ioutils.c
+
+static void get_mmap_size(int start, int size, off_t* mapstart, size_t* mapsize, int* pgap) {
+	int ps = getpagesize();
+	int gap = start % ps;
+	// start must be a multiple of pagesize.
+	*mapstart = start - gap;
+	*mapsize  = size  + gap;
+	*pgap = gap;
+}
+
+
+
 /*----------------------------------------------------------------------------*/
 /**
   @brief    Map a file's contents to memory as a char pointer.
@@ -481,6 +496,11 @@ char * qfits_memory_falloc(
     int             nptrs;
     int             i;
 	int eno;
+	size_t len;
+
+	off_t mapstart;
+	size_t maplen;
+	int mapoff;
 
     /* If QFITS_MEMORY_MODE is 0 or 1, do not use the qfits_memory model  */
     if ((QFITS_MEMORY_MODE == 0) || (QFITS_MEMORY_MODE == 1)) {
@@ -511,13 +531,17 @@ char * qfits_memory_falloc(
         }
 
         /* Memory-map input file */
-        ptr = (char*)mmap(0, sta.st_size, 
-                PROT_READ | PROT_WRITE, MAP_PRIVATE,fd,0);
+		assert(offs >= 0);
+		// mmap requires page-aligned offsets.
+		len = sta.st_size - offs;
+		get_mmap_size(offs, len, &mapstart, &maplen, &mapoff);
+        ptr = (char*)mmap(0, maplen, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd,
+						  mapstart);
 		eno = errno;
         
         /* Close file */
         close(fd);
-        if (ptr == (char*)-1 || ptr==NULL) {
+        if (ptr == MAP_FAILED || ptr==NULL) {
 			qfits_warning("qfits_memory_falloc(%s:%i): failed to mmap file \"%s\": %s\n",
 						  srcname, srclin, name, strerror(eno));
             if (QFITS_MEMORY_MODE == 0) return NULL;
@@ -532,7 +556,7 @@ char * qfits_memory_falloc(
 
         if (size!=NULL) (*size) = sta.st_size;
         
-        return ptr + offs;
+        return ptr + mapoff;
     }
 
     /* Protect the call */
