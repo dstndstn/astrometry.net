@@ -202,7 +202,7 @@ int main(int argc, char** args) {
         ra  = fits_get_double_val(table, racol,  rowdata);
         dec = fits_get_double_val(table, deccol, rowdata);
         hp  = radecdegtohealpix(ra, dec, Nside);
-        if (fits_write_data_I(fout, hp)) {
+        if (fits_write_data_I(fout, hp, TRUE)) {
             fprintf(stderr, "Failed to write healpix value for row %i.\n", i);
             exit(-1);
         }

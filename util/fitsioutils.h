@@ -206,20 +206,20 @@ int fits_convert_data(void* dest, int deststride, tfits_type desttype,
 // write single column fields:
 int fits_write_data_A(FILE* fid, char value);
 int fits_write_data_B(FILE* fid, uint8_t value);
-int fits_write_data_D(FILE* fid, double value);
-int fits_write_data_E(FILE* fid, float value);
-int fits_write_data_I(FILE* fid, int16_t value);
-int fits_write_data_J(FILE* fid, int32_t value);
-int fits_write_data_K(FILE* fid, int64_t value);
+int fits_write_data_D(FILE* fid, double value, bool flip);
+int fits_write_data_E(FILE* fid, float value, bool flip);
+int fits_write_data_I(FILE* fid, int16_t value, bool flip);
+int fits_write_data_J(FILE* fid, int32_t value, bool flip);
+int fits_write_data_K(FILE* fid, int64_t value, bool flip);
 int fits_write_data_L(FILE* fid, char value);
 int fits_write_data_X(FILE* fid, unsigned char value);
 
-int fits_write_data(FILE* fid, void* pvalue, tfits_type type);
+int fits_write_data(FILE* fid, void* pvalue, tfits_type type, bool flip);
 
 // Writes one cell of a FITS table (which may be an array or scalar)
 // that has already been converted to FITS format "type".
 // If "vvalue" is NULL, just skips past that number of bytes.
 int fits_write_data_array(FILE* fid, const void* vvalue, tfits_type type,
-                          int N);
+                          int N, bool flip);
 
 #endif

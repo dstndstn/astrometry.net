@@ -371,6 +371,10 @@ void* fitstable_read_column_offset(const fitstable_t* tab,
 // NOTE NOTE NOTE, you must call this with *pointers* to the data to write.
 int fitstable_write_row(fitstable_t* table, ...);
 
+// same as above, but DO NOT do any endian-flipping before writing out.
+int fitstable_write_row_noflip(fitstable_t* table, ...);
+
+
 /**
  Reads/writes raw row data, without endian-flipping.
 
@@ -394,6 +398,9 @@ void fitstable_endian_flip_row_data(fitstable_t* table, void* data);
 
 // Writes one row, with data drawn from the given structure.
 int fitstable_write_struct(fitstable_t* table, const void* struc);
+
+// same, but no endian-flipping.
+int fitstable_write_struct_noflip(fitstable_t* table, const void* struc);
 
 int fitstable_write_structs(fitstable_t* table, const void* struc, int stride, int N);
 

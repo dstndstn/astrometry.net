@@ -450,7 +450,7 @@ int fitstable_add_fits_columns_as_struct3(const fitstable_t* intab,
 	for (i=0; i<NC; i++) {
 		const qfits_col* qcol;
 		fitscol_t* col;
-		const char* name = sl_get(colnames, i);
+		const char* name = sl_get_const(colnames, i);
 		int j = fits_find_column(intab->table, name);
 		int off;
 		if (j == -1) {
@@ -665,7 +665,8 @@ int fitstable_read_struct(fitstable_t* tab, int offset, void* struc) {
 }
 
 // One of "struc" or "ap" should be non-null.
-static int write_one(fitstable_t* table, const void* struc, va_list* ap) {
+static int write_one(fitstable_t* table, const void* struc, bool flip,
+					 va_list* ap) {
     int i;
     char* buf = NULL;
     int Nbuf = 0;
@@ -720,7 +721,7 @@ static int write_one(fitstable_t* table, const void* struc, va_list* ap) {
 			rowoff += nb;
 		} else {
 			ret = fits_write_data_array(table->fid, columndata,
-										col->fitstype, col->arraysize);
+										col->fitstype, col->arraysize, flip);
 			if (ret)
 				break;
 		}
@@ -735,8 +736,13 @@ static int write_one(fitstable_t* table, const void* struc, va_list* ap) {
 
 
 int fitstable_write_struct(fitstable_t* table, const void* struc) {
-	return write_one(table, struc, NULL);
+	return write_one(table, struc, TRUE, NULL);
 }
+
+int fitstable_write_struct_noflip(fitstable_t* table, const void* struc) {
+	return write_one(table, struc, FALSE, NULL);
+}
+
 
 int fitstable_write_structs(fitstable_t* table, const void* struc, int stride, int N) {
 	int i;
@@ -756,14 +762,27 @@ int fitstable_write_row(fitstable_t* table, ...) {
 	if (!table->table)
 		fitstable_create_table(table);
 	va_start(ap, table);
-	ret = write_one(table, NULL, &ap);
+	ret = write_one(table, NULL, TRUE, &ap);
 	va_end(ap);
     return ret;
 }
 
+int fitstable_write_row_noflip(fitstable_t* table, ...) {
+	int ret;
+	va_list ap;
+	if (!table->table)
+		fitstable_create_table(table);
+	va_start(ap, table);
+	ret = write_one(table, NULL, FALSE, &ap);
+	va_end(ap);
+    return ret;
+}
+
+
 int fitstable_write_one_column(fitstable_t* table, int colnum,
                                int rowoffset, int nrows,
                                const void* src, int src_stride) {
+	bool flip = TRUE;
     off_t foffset = 0;
     off_t start = 0;
     int i;
@@ -802,7 +821,7 @@ int fitstable_write_one_column(fitstable_t* table, int colnum,
 	} else {
 		for (i=0; i<nrows; i++) {
 			if (fseeko(table->fid, start + i * table->table->tab_w, SEEK_SET) ||
-				fits_write_data_array(table->fid, src, col->fitstype, col->arraysize)) {
+				fits_write_data_array(table->fid, src, col->fitstype, col->arraysize, flip)) {
 				SYSERROR("Failed to write row %i of column %i", rowoffset+i, colnum);
 				return -1;
 			}

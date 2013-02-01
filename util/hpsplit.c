@@ -280,7 +280,6 @@ int main(int argc, char *argv[]) {
 			int j;
 			double* rd;
 			void* rowdata;
-			bool flipped = FALSE;
 
 			rd = fitstable_next_struct(intable);
 			ra = rd[0];
@@ -370,14 +369,7 @@ int main(int argc, char *argv[]) {
 				}
 
 				if (cols) {
-				  if (!flipped) {
-				    //
-				    // !!! Need to write an endian-flip that works on OUTPUT;
-				    // or add a "noflip" option to fitstable_write_struct.
-				    fitstable_endian_flip_row_data(outtables[hp], rowdata);
-				    flipped = TRUE;
-				  }
-				  if (fitstable_write_struct(outtables[hp], rowdata)) {
+				  if (fitstable_write_struct_noflip(outtables[hp], rowdata)) {
 				    ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
 				  }
 				} else {

@@ -1031,9 +1031,10 @@ int fits_offset_of_column(qfits_table* table, int colnum) {
 	return off;
 }
 
-int fits_write_data_D(FILE* fid, double value) {
+int fits_write_data_D(FILE* fid, double value, bool flip) {
 	assert(sizeof(double) == 8);
-	v64_hton(&value);
+	if (flip)
+		v64_hton(&value);
 	if (fwrite(&value, 8, 1, fid) != 1) {
 		fprintf(stderr, "Failed to write a double to FITS file: %s\n", strerror(errno));
 		return -1;
@@ -1041,9 +1042,10 @@ int fits_write_data_D(FILE* fid, double value) {
 	return 0;
 }
 
-int fits_write_data_E(FILE* fid, float value) {
+int fits_write_data_E(FILE* fid, float value, bool flip) {
 	assert(sizeof(float) == 4);
-	v32_hton(&value);
+	if (flip)
+		v32_hton(&value);
 	if (fwrite(&value, 4, 1, fid) != 1) {
 		fprintf(stderr, "Failed to write a float to FITS file: %s\n", strerror(errno));
 		return -1;
@@ -1071,8 +1073,9 @@ int fits_write_data_X(FILE* fid, unsigned char value) {
 	return fits_write_data_B(fid, value);
 }
 
-int fits_write_data_I(FILE* fid, int16_t value) {
-	v16_hton(&value);
+int fits_write_data_I(FILE* fid, int16_t value, bool flip) {
+	if (flip)
+		v16_hton(&value);
 	if (fwrite(&value, 2, 1, fid) != 1) {
 		fprintf(stderr, "Failed to write a short to FITS file: %s\n", strerror(errno));
 		return -1;
@@ -1080,8 +1083,9 @@ int fits_write_data_I(FILE* fid, int16_t value) {
 	return 0;
 }
 
-int fits_write_data_J(FILE* fid, int32_t value) {
-	v32_hton(&value);
+int fits_write_data_J(FILE* fid, int32_t value, bool flip) {
+	if (flip)
+		v32_hton(&value);
 	if (fwrite(&value, 4, 1, fid) != 1) {
 		fprintf(stderr, "Failed to write an int to FITS file: %s\n", strerror(errno));
 		return -1;
@@ -1089,8 +1093,9 @@ int fits_write_data_J(FILE* fid, int32_t value) {
 	return 0;
 }
 
-int fits_write_data_K(FILE* fid, int64_t value) {
-	v64_hton(&value);
+int fits_write_data_K(FILE* fid, int64_t value, bool flip) {
+	if (flip)
+		v64_hton(&value);
 	if (fwrite(&value, 8, 1, fid) != 1) {
 		fprintf(stderr, "Failed to write an int64 to FITS file: %s\n", strerror(errno));
 		return -1;
@@ -1099,7 +1104,7 @@ int fits_write_data_K(FILE* fid, int64_t value) {
 }
 
 int fits_write_data_array(FILE* fid, const void* vvalue, tfits_type type,
-                          int N) {
+                          int N, bool flip) {
     int i;
     int rtn = 0;
     const char* pvalue = (const char*)vvalue;
@@ -1128,23 +1133,23 @@ int fits_write_data_array(FILE* fid, const void* vvalue, tfits_type type,
             pvalue += sizeof(bool);
             break;
         case TFITS_BIN_TYPE_D:
-            rtn = fits_write_data_D(fid, *(double*)pvalue);
+            rtn = fits_write_data_D(fid, *(double*)pvalue, flip);
             pvalue += sizeof(double);
             break;
         case TFITS_BIN_TYPE_E:
-            rtn = fits_write_data_E(fid, *(float*)pvalue);
+            rtn = fits_write_data_E(fid, *(float*)pvalue, flip);
             pvalue += sizeof(float);
             break;
         case TFITS_BIN_TYPE_I:
-            rtn = fits_write_data_I(fid, *(int16_t*)pvalue);
+            rtn = fits_write_data_I(fid, *(int16_t*)pvalue, flip);
             pvalue += sizeof(int16_t);
             break;
         case TFITS_BIN_TYPE_J:
-            rtn = fits_write_data_J(fid, *(int32_t*)pvalue);
+            rtn = fits_write_data_J(fid, *(int32_t*)pvalue, flip);
             pvalue += sizeof(int32_t);
             break;
         case TFITS_BIN_TYPE_K:
-            rtn = fits_write_data_K(fid, *(int64_t*)pvalue);
+            rtn = fits_write_data_K(fid, *(int64_t*)pvalue, flip);
             pvalue += sizeof(int64_t);
             break;
         case TFITS_BIN_TYPE_X:
@@ -1162,8 +1167,8 @@ int fits_write_data_array(FILE* fid, const void* vvalue, tfits_type type,
     return rtn;
 }
 
-int fits_write_data(FILE* fid, void* pvalue, tfits_type type) {
-    return fits_write_data_array(fid, pvalue, type, 1);
+int fits_write_data(FILE* fid, void* pvalue, tfits_type type, bool flip) {
+    return fits_write_data_array(fid, pvalue, type, 1, flip);
 }
 
 int fits_bytes_needed(int size) {

@@ -316,7 +316,7 @@ int main(int argc, char** args) {
 				if (outformat == BPP_8_UNSIGNED)
 					rtn = fits_write_data_B(fout, pixval);
 				else
-					rtn = fits_write_data_I(fout, pixval-bzero);
+					rtn = fits_write_data_I(fout, pixval-bzero, TRUE);
 				if (rtn) {
 					ERROR("Failed to write FITS pixel");
 					exit(-1);
@@ -365,7 +365,7 @@ int main(int argc, char** args) {
 					rtn = fits_write_data_B(fout, *pix);
 				} else {
 					int16_t* pix = bl_access(pixcache, j);
-					rtn = fits_write_data_I(fout, *pix);
+					rtn = fits_write_data_I(fout, *pix, TRUE);
 				}
 				if (rtn) {
 					ERROR("Failed to write FITS pixel");
