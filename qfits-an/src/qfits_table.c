@@ -992,8 +992,9 @@ static int qfits_query_column_seq_to_array_endian(
 	} else
 		maxind = nb_rows - 1;
 
-	mapoffset = col->off_beg + table_width * start_ind;
-	maplen = (maxind + 1) * table_width;
+	// these size_t casts are *essential* to avoid overflow in > 2GB files!
+	mapoffset = col->off_beg + (size_t)table_width * (size_t)start_ind;
+	maplen = (size_t)(maxind + 1) * (size_t)table_width;
 
 	if ((inbuf = qfits_falloc2(th->filename, mapoffset, maplen,
 							   &freeaddr, &freesize)) == NULL) {
