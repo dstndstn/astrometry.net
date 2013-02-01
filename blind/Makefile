@@ -76,7 +76,7 @@ ALL_WCSLIB_TARGETS :=
 
 SHAREDLIBFLAGS := $(SHAREDLIBFLAGS_DEF)
 
-QFITS_UTILS := fitsgetext subtable tabsort column-merge add-healpix-column \
+QFITS_UTILS := fitsgetext subtable tabsort column-merge \
 		resort-xylist fits-dedup
 
 CFITS_UTILS := tablist modhead fitscopy tabmerge fitstomatlab liststruc \
@@ -714,8 +714,6 @@ tabsort: tabsort-main.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 ALL_OBJ += tabsort-main.o
 
 column-merge: column-merge.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
-
-add-healpix-column: add-healpix-column.o $(UTIL_OBJS) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
 
 resort-xylist: resort-xylist-main.o resort-xylist.o $(UTIL_OBJS) \
 		$(ANFILES_LIB) $(ANUTILS_LIB) $(GSL_LIB) $(QFITS_LIB)
