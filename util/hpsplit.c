@@ -280,6 +280,7 @@ int main(int argc, char *argv[]) {
 			int j;
 			double* rd;
 			void* rowdata;
+			bool flipped = FALSE;
 
 			rd = fitstable_next_struct(intable);
 			ra = rd[0];
@@ -330,6 +331,7 @@ int main(int argc, char *argv[]) {
 			rowdata = buffered_read(rowbuf);
 			assert(rowdata);
 
+
 			j=0;
 			while (1) {
 				if (hps) {
@@ -353,9 +355,11 @@ int main(int argc, char *argv[]) {
 						exit(-1);
 					}
 					// Set the output table structure.
-					if (cols)
+					if (cols) {
 						fitstable_add_fits_columns_as_struct3(intable, out, cols);
-					else
+						printf("Output table:\n");
+						fitstable_print_columns(out);
+					} else
 						fitstable_add_fits_columns_as_struct2(intable, out);
 					if (fitstable_write_primary_header(out) ||
 						fitstable_write_header(out)) {
@@ -365,8 +369,18 @@ int main(int argc, char *argv[]) {
 					outtables[hp] = out;
 				}
 
-				if (fitstable_write_row_data(outtables[hp], rowdata)) {
-					ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
+				if (cols) {
+				  if (!flipped) {
+				    fitstable_endian_flip_row_data(outtables[hp], rowdata);
+				    flipped = TRUE;
+				  }
+				  if (fitstable_write_struct(outtables[hp], rowdata)) {
+				    ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
+				  }
+				} else {
+				  if (fitstable_write_row_data(outtables[hp], rowdata)) {
+				    ERROR("Failed to copy a row of data from input table \"%s\" to output healpix %i", infn, hp);
+				  }
 				}
 
 				if (!hps)
