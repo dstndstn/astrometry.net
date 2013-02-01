@@ -1279,7 +1279,7 @@ int fits_find_table_column(const char* fn, const char* colname, int* pstart, int
 int fits_find_column(const qfits_table* table, const char* colname) {
 	int c;
 	for (c=0; c<table->nc; c++) {
-		qfits_col* col = table->col + c;
+		const qfits_col* col = table->col + c;
 		//debug("column: \"%s\"\n", col->tlabel);
 		if (strcasecmp(col->tlabel, colname) == 0)
 			return c;

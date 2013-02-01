@@ -442,6 +442,36 @@ int fitstable_n_fits_columns(const fitstable_t* tab) {
 	return tab->table->nc;
 }
 
+int fitstable_add_fits_columns_as_struct3(const fitstable_t* intab,
+										  fitstable_t* outtab,
+										  const sl* colnames) {
+	int i, NC;
+	int off = 0;
+	NC = sl_size(colnames);
+	for (i=0; i<NC; i++) {
+		const qfits_col* qcol;
+		fitscol_t* col;
+		const char* name = sl_get(colnames, i);
+		int j = fits_find_column(intab->table, name);
+		if (j == -1) {
+			ERROR("Failed to find FITS column \"%s\"", name);
+			return -1;
+		}
+		qcol = qfits_table_get_col(intab->table, i);
+		/*
+		 if (qcol->atom_type == TFITS_BIN_TYPE_X) {
+		 }
+		 */
+		fitstable_add_read_column_struct(outtab, qcol->atom_type, qcol->atom_nb,
+										 off, qcol->atom_type, qcol->tlabel, TRUE);
+		// set the FITS column number.
+		col = getcol(outtab, ncols(outtab)-1);
+		col->col = i;
+		off += fitscolumn_get_size(col);
+	}
+	return 0;
+}
+
 void fitstable_add_fits_columns_as_struct2(const fitstable_t* intab,
 										   fitstable_t* outtab) {
 	int i, NC;
