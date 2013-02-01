@@ -1,6 +1,6 @@
 /*
   This file is part of the Astrometry.net suite.
-  Copyright 2011, 2012 Dustin Lang.
+  Copyright 2011, 2012, 2013 Dustin Lang.
 
   The Astrometry.net suite is free software; you can redistribute
   it and/or modify it under the terms of the GNU General Public License
@@ -48,7 +48,7 @@
  rows that are within (or within range) of the healpix.
  */
 
-const char* OPTIONS = "hvn:r:d:m:o:";
+const char* OPTIONS = "hvn:r:d:m:o:g";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
@@ -58,6 +58,7 @@ void printHelp(char* progname) {
 		   "    [-d <dec-column-name>]: name of DEC in FITS table (default DEC)\n"
 		   "    [-n <healpix Nside>]: default is 1\n"
 		   "    [-m <margin in deg>]: add a margin of this many degrees around the healpixes; default 0\n"
+		   "    [-g]: gzip'd inputs\n"
 		   "    [-v]: +verbose\n"
 		   "\n", progname);
 }
@@ -93,6 +94,7 @@ int main(int argc, char *argv[]) {
 	char* outfnpat = NULL;
 	char* racol = "RA";
 	char* deccol = "DEC";
+	bool gzip = FALSE;
 	int loglvl = LOG_MSG;
 	int nside = 1;
 	double margin = 0.0;
@@ -108,6 +110,9 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 'g':
+			gzip = TRUE;
+			break;
 		case 'o':
 			outfnpat = optarg;
 			break;
@@ -216,8 +221,23 @@ int main(int argc, char *argv[]) {
 		il* hps = NULL;
 		bread_t* rowbuf;
 		int R;
+		char* tempfn = NULL;
 
 		logmsg("Reading input \"%s\"...\n", infn);
+
+		if (gzip) {
+			char* cmd;
+			int rtn;
+			tempfn = create_temp_file("hpsplit", "/tmp");
+			asprintf_safe(&cmd, "gunzip -cd %s > %s", infn, tempfn);
+			rtn = run_command_get_outputs(cmd, NULL, NULL);
+			if (rtn) {
+				ERROR("Failed to run command: \"%s\"", cmd);
+				exit(-1);
+			}
+			free(cmd);
+			infn = tempfn;
+		}
 
 		intable = fitstable_open(infn);
 		if (!intable) {
@@ -313,7 +333,7 @@ int main(int argc, char *argv[]) {
 				if (!outtables[hp]) {
 					char* outfn;
 					fitstable_t* out;
-					// MEMLEAK
+					// MEMLEAK the output filename.  You'll live.
 					asprintf_safe(&outfn, outfnpat, hp);
 					logmsg("Opening output file \"%s\"...\n", outfn);
 					out = fitstable_open_for_writing(outfn);
@@ -349,6 +369,13 @@ int main(int argc, char *argv[]) {
 
 		fitstable_close(intable);
 		il_free(hps);
+
+		if (tempfn) {
+			if (unlink(tempfn)) {
+				SYSERROR("Failed to unlink() temp file \"%s\"");
+			}
+			tempfn = NULL;
+		}
 	}
 
 	for (i=0; i<NHP; i++) {
