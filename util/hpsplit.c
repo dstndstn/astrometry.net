@@ -48,7 +48,7 @@
  rows that are within (or within range) of the healpix.
  */
 
-const char* OPTIONS = "hvn:r:d:m:o:gc:";
+const char* OPTIONS = "hvn:r:d:m:o:gc:t:";
 
 void printHelp(char* progname) {
 	boilerplate_help_header(stdout);
@@ -60,6 +60,7 @@ void printHelp(char* progname) {
 		   "    [-m <margin in deg>]: add a margin of this many degrees around the healpixes; default 0\n"
 		   "    [-g]: gzip'd inputs\n"
 		   "    [-c <name>]: copy given column name to the output files\n"
+		   "    [-t <temp-dir>]: use the given temp dir; default is /tmp\n"
 		   "    [-v]: +verbose\n"
 		   "\n", progname);
 }
@@ -95,6 +96,7 @@ int main(int argc, char *argv[]) {
 	char* outfnpat = NULL;
 	char* racol = "RA";
 	char* deccol = "DEC";
+	char* tempdir = "/tmp";
 	bool gzip = FALSE;
 	sl* cols = sl_new(16);
 	int loglvl = LOG_MSG;
@@ -112,6 +114,9 @@ int main(int argc, char *argv[]) {
 
     while ((argchar = getopt (argc, argv, OPTIONS)) != -1)
         switch (argchar) {
+		case 't':
+			tempdir = optarg;
+			break;
 		case 'c':
 			sl_append(cols, optarg);
 			break;
@@ -238,7 +243,7 @@ int main(int argc, char *argv[]) {
 		if (gzip) {
 			char* cmd;
 			int rtn;
-			tempfn = create_temp_file("hpsplit", "/tmp");
+			tempfn = create_temp_file("hpsplit", tempdir);
 			asprintf_safe(&cmd, "gunzip -cd %s > %s", infn, tempfn);
 			logverb("Running command: \"%s\"\n", cmd);
 			rtn = run_command_get_outputs(cmd, NULL, NULL);

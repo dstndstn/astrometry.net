@@ -254,6 +254,7 @@ an-fitstopnm: an-fitstopnm.o $(ANUTILS_LIB) $(QFITS_LIB)
 ALL_OBJ += an-fitstopnm.o
 
 add-healpix-column: add-healpix-column.o $(ANUTILS_LIB) $(QFITS_LIB)
+ALL_OBJ += add-healpix-column.o
 
 an-pnmtofits: an-pnmtofits.o $(ANUTILS_LIB) $(QFITS_LIB)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^ $(NETPBM_LIB) $(LDLIBS)
